@@ -31,29 +31,11 @@
 #ifndef S_REVERB_H__
 #define S_REVERB_H__
 
-// reverb parameters
-enum s_reverbparam_e
-{
-   S_REVERB_MODE,
-   S_REVERB_ROOMSIZE,
-   S_REVERB_DAMP,
-   S_REVERB_WET,
-   S_REVERB_DRY,
-   S_REVERB_WIDTH,
-   S_REVERB_PREDELAY
-};
-
-// equalization types
-enum s_reverbeq_e
-{
-   S_REVERB_LPF,
-   S_REVERB_HPF,
-   S_REVERB_BPF
-};
+struct ereverb_t;
 
 void S_SuspendReverb();
 void S_ResumeReverb();
-void S_ReverbSetParam(s_reverbparam_e param, double value);
+void S_ReverbSetState(ereverb_t *ereverb);
 void S_ProcessReverb(double *stream, int samples);
 void S_ProcessReverbReplace(double *stream, int samples);
 

@@ -31,20 +31,13 @@
 #ifndef Z_ZONE_H__
 #define Z_ZONE_H__
 
-#include "d_keywds.h" // haleyjd 05/22/02
-
-// Remove all definitions before including system definitions
-// - haleyjd 10/11/11: eliminated non-portable standards-violating idiom from 
-//   BOOM
-
-// Include system definitions so that prototypes become
-// active before macro replacements below are in effect.
+// haleyjd 05/22/02
+#include "d_keywds.h" 
 
 #ifndef __STDC_CONSTANT_MACROS
 #define __STDC_CONSTANT_MACROS 1
 #endif
 
-#include <assert.h>
 #include <errno.h>
 #include <float.h>
 #include <math.h>
@@ -110,7 +103,7 @@ void *(Z_Malloc)(size_t size, int tag, void **ptr, const char *, int);
 void  (Z_Free)(void *ptr, const char *, int);
 void  (Z_FreeTags)(int lowtag, int hightag, const char *, int);
 void  (Z_ChangeTag)(void *ptr, int tag, const char *, int);
-void   Z_Init(void);
+void   Z_Init();
 void *(Z_Calloc)(size_t n, size_t n2, int tag, void **user, const char *, int);
 void *(Z_Realloc)(void *p, size_t n, int tag, void **user, const char *, int);
 char *(Z_Strdup)(const char *s, int tag, void **user, const char *, int);
@@ -169,7 +162,7 @@ void  Z_SysFree(void *p);
 
 // Define a struct var and ensure it is fully initialized
 #define edefstructvar(type, name)  \
-   type name;                    \
+   type name;                      \
    memset(&name, 0, sizeof(name))
 
 // Doom-style printf
@@ -180,9 +173,9 @@ extern size_t memorybytag[PU_MAX]; // haleyjd  04/01/11
 extern int printstats;             // killough 08/23/98
 #endif
 
-void Z_PrintZoneHeap(void);
+void Z_PrintZoneHeap();
 
-void Z_DumpCore(void);
+void Z_DumpCore();
 
 //
 // ZoneObject Class

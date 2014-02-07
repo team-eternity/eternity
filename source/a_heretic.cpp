@@ -587,9 +587,7 @@ void A_Srcr2Attack(actionargs_t *actionargs)
    if(!actor->target)
       return;
    
-   // haleyjd 10/01/08: use CHAN_WEAPON; D'Sparil never seems to cut off his
-   // own sounds.
-   S_StartSoundAtVolume(actor, actor->info->attacksound, 127, ATTN_NONE, CHAN_WEAPON);
+   S_StartSound(actor, actor->info->attacksound);
 
    if(P_CheckMeleeRange(actor))
    {
@@ -1449,7 +1447,7 @@ void A_LichFire(actionargs_t *actionargs)
 
    S_StartSound(actor, sfx_hedat1);
 
-   for(i = 0; i < 5; ++i)
+   for(i = 0; i < 5; i++)
    {
       fire = P_SpawnMobj(baseFire->x, baseFire->y, baseFire->z, headfxType);
     

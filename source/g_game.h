@@ -123,6 +123,7 @@ extern bool scriptSecret;   // haleyjd
 extern bool sendpause;
 
 extern int novert; // haleyjd
+extern int smooth_turning;
 
 #define VERSIONSIZE   16
 

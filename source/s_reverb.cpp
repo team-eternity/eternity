@@ -30,6 +30,8 @@
 
 #include "z_zone.h"
 
+#include "e_reverbs.h"
+#include "i_sound.h"
 #include "s_reverb.h"
 
 //
@@ -250,8 +252,8 @@ public:
 #define INITIALLG    1.0
 #define INITIALMG    1.0
 #define INITIALHG    1.0
-#define INITIALLF    880.0
-#define INITIALHF    5000.0
+#define INITIALLF    250.0
+#define INITIALHF    4000.0
 
 struct EQSTATE
 {
@@ -450,21 +452,19 @@ public:
       
       // set initial parameters
       wet      = INITIALWET * SCALEWET;
-      roomsize = (0.87/*INITIALROOM*/ * SCALEROOM) + OFFSETROOM;
+      roomsize = (INITIALROOM * SCALEROOM) + OFFSETROOM;
       dry      = INITIALDRY * SCALEDRY;
-      damp     = 0.57 /*INITIALDAMP*/ * SCALEDAMP;
+      damp     = INITIALDAMP * SCALEDAMP;
       width    = INITIALWIDTH;
       mode     = INITIALMODE;
-      //delay    = INITIALDELAY;
-      delay = 20;
+      delay    = INITIALDELAY;
       delay_set(delay);
-      doEQ = true; //INITIALEQ;
-      eqparams.lowgain  = 0.98; //INITIALLG;
-      eqparams.midgain  = 0.45; //INITIALMG;
-      eqparams.highgain = 0.00; //INITIALHG;
+      doEQ = INITIALEQ;
+      eqparams.lowgain  = INITIALLG;
+      eqparams.midgain  = INITIALMG;
+      eqparams.highgain = INITIALHG;
       eqparams.lowfreq  = INITIALLF;
       eqparams.highfreq = INITIALHF;
-      init_3band(eqparams, eql, eqr);
       update();
 
       // Buffer will be full of rubbish - so we MUST mute them
@@ -624,34 +624,27 @@ public:
          combR[i].feedback = roomsize1;
          combR[i].setdamp(damp1);
       }
+
+      init_3band(eqparams, eql, eqr);
    }
 
    void setRoomSize(double value)
    {
-      double curroomsize = roomsize;
       roomsize = (value * SCALEROOM) + OFFSETROOM;
-      if(roomsize != curroomsize)
-         update();
    }
 
    double getRoomSize() const { return (roomsize - OFFSETROOM) / SCALEROOM; }
 
    void setDamp(double value)
    {
-      double curdamp = damp;
       damp = value * SCALEDAMP;
-      if(damp != curdamp)
-         update();
    }
 
    double getDamp() const { return damp / SCALEDAMP; }
 
    void setWet(double value)
    {
-      double curwet = wet;
       wet = value * SCALEWET;
-      if(wet != curwet)
-         update();
    }
 
    double getWet() const { return wet / SCALEWET; }
@@ -661,18 +654,12 @@ public:
 
    void setWidth(double value)
    {
-      double curwidth = width;
       width = value;
-      if(width != curwidth)
-         update();
    }
 
    void setMode(double value)
    {
-      double curmode = mode;
       mode = value;
-      if(mode != curmode)
-         update();
    }
 
    void setDelay(size_t value)
@@ -701,41 +688,61 @@ void S_ResumeReverb()
    reverb.mute();
 }
 
-void S_ReverbSetParam(s_reverbparam_e param, double value)
+//
+// S_ReverbSetState
+//
+// Set the reverberation state from an ereverb definition.
+//
+void S_ReverbSetState(ereverb_t *ereverb)
 {
-   switch(param)
+   // if moving into an area with no effect, stop the reverb engine.
+   if(!(ereverb->flags & REVERB_ENABLED))
    {
-   case S_REVERB_MODE:
-      reverb.setMode(value);
-      break;
-   case S_REVERB_ROOMSIZE:
-      reverb.setRoomSize(value);
-      break;
-   case S_REVERB_DAMP:
-      reverb.setDamp(value);
-      break;
-   case S_REVERB_WET:
-      reverb.setWet(value);
-      break;
-   case S_REVERB_DRY:
-      reverb.setDry(value);
-      break;
-   case S_REVERB_WIDTH:
-      reverb.setWidth(value);
-      break;
-   case S_REVERB_PREDELAY:
-      reverb.setDelay((size_t)value);
-      break;
-   default:
-      break;
+      reverb.mute();
+      s_reverbactive = false;
+      return;
    }
+
+   // copy in parameters from the EDF reverb definition
+   reverb.setRoomSize(ereverb->roomsize);
+   reverb.setDamp(ereverb->dampening);
+   reverb.setWet(ereverb->wetscale);
+   reverb.setDry(ereverb->dryscale);
+   reverb.setWidth(ereverb->width);
+   reverb.setDelay((size_t)ereverb->predelay);
+
+   if(ereverb->flags & REVERB_EQUALIZED)
+   {
+      reverb.doEQ = true;
+      reverb.eqparams.lowfreq  = ereverb->eqlowfreq;
+      reverb.eqparams.highfreq = ereverb->eqhighfreq;
+      reverb.eqparams.lowgain  = ereverb->eqlowgain;
+      reverb.eqparams.midgain  = ereverb->eqmidgain;
+      reverb.eqparams.highgain = ereverb->eqhighgain;
+   }
+   else
+      reverb.doEQ = false;
+
+   reverb.update();
+
+   s_reverbactive = true;
 }
 
+//
+// S_ProcessReverb
+//
+// Mix the reverb engine's output into the input sound stream.
+//
 void S_ProcessReverb(double *stream, int samples)
 {
    reverb.processMix(stream, stream+1, stream, stream+1, samples, 2);
 }
 
+//
+// S_ProcessReverbReplace
+//
+// Replace the input sound stream with the reverb engine's output.
+//
 void S_ProcessReverbReplace(double *stream, int samples)
 {
    reverb.processReplace(stream, stream+1, stream, stream+1, samples, 2);

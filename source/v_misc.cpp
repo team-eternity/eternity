@@ -25,7 +25,6 @@
 //---------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "i_system.h"
 
 #include "autopalette.h"
 #include "c_io.h"
@@ -34,6 +33,8 @@
 #include "doomdef.h"
 #include "doomstat.h"
 #include "e_fonts.h"
+#include "hal/i_timer.h"
+#include "i_system.h"
 #include "i_video.h"
 #include "m_qstr.h"
 #include "m_swap.h"
@@ -296,7 +297,7 @@ void V_FPSTicker()
    int thistic;
    int i;
    
-   thistic = I_GetTime() / 7;
+   thistic = i_haltimer.GetTime() / 7;
    
    if(lasttic != thistic)
    {
@@ -319,7 +320,7 @@ void V_ClassicFPSDrawer()
 {
   static int lasttic;
   
-  int i = I_GetTime();
+  int i = i_haltimer.GetTime();
   int tics = i - lasttic;
   lasttic = i;
   if (tics > 20)
@@ -355,7 +356,7 @@ void V_TextFPSDrawer()
    float fps = 0;
    int   i, thistic, totaltics = 0;
    
-   thistic = I_GetTime();
+   thistic = i_haltimer.GetTime();
    
    fhistory[slot & 15] = thistic != lasttic ? thistic - lasttic : 1;
    slot++;

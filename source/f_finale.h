@@ -31,13 +31,13 @@
 struct event_t;
 
 // haleyjd: this stuff is now needed in e_edf.c
-typedef struct castinfo_s
+struct castinfo_t
 {
    char       *name;
    mobjtype_t  type;   
    bool        stopattack;
-   struct castsound_s { int frame; int sound; } sounds[4];
-} castinfo_t;
+   struct castsound_t { int frame; int sound; } sounds[4];
+};
 
 extern int max_castorder;
 extern castinfo_t *castorder;
@@ -59,22 +59,24 @@ enum
    FINALE_HTIC_CREDITS, // text, then Heretic credits screen
    FINALE_HTIC_WATER,   // text, then underwater pic
    FINALE_HTIC_DEMON,   // text, then demon scroller
-   FINALE_NUMFINALES
+   FINALE_NUMFINALES,
+
+   FINALE_UNSPECIFIED   // not specified explicitly
 };
 
 // haleyjd 02/25/09
-void F_Init(void);
+void F_Init();
 
 // Called by main loop.
 bool F_Responder(event_t *ev);
 
 // Called by main loop.
-void F_Ticker(void);
+void F_Ticker();
 
 // Called by main loop.
-void F_Drawer(void);
+void F_Drawer();
 
-void F_StartFinale(void);
+void F_StartFinale(bool secret);
 
 #endif
 

@@ -1204,6 +1204,19 @@ lumpinfo_t *WadDirectory::getLumpNameChain(const char *name) const
 }
 
 //
+// WadDirectory::getLumpName
+//
+// haleyjd 02/04/14: Sometimes we need to go the opposite direction conveniently.
+//
+const char *WadDirectory::getLumpName(int lumpnum)
+{
+   if(lumpnum < 0 || lumpnum >= numlumps)
+      I_Error("WadDirectory::getLumpName: bad lump number %d\n", lumpnum);
+
+   return lumpinfo[lumpnum]->name;
+}
+
+//
 // WadDirectory::getLumpFileName
 //
 // Get the filename of the file from which a particular lump came.

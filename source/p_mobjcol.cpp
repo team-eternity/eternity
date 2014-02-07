@@ -160,6 +160,7 @@ void MobjCollection::moveToRandom(Mobj *actor)
    actor->copyPosition(spot);
    P_SetThingPosition(actor);
    P_AdjustFloorClip(actor);
+   actor->backupPosition();
 }
 
 //=============================================================================

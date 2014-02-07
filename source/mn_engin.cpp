@@ -892,7 +892,7 @@ bool MN_Responder(event_t *ev)
          else
          {
             MN_ClearMenus();
-            S_StartSound(NULL, menuSounds[MN_SND_DEACTIVATE]);
+            S_StartInterfaceSound(menuSounds[MN_SND_DEACTIVATE]);
          }
       }
       else 
@@ -956,7 +956,7 @@ bool MN_Responder(event_t *ev)
       while(is_a_gap(&current_menu->menuitems[current_menu->selected]));
       
       if(!cancelsnd)
-         S_StartSound(NULL, menuSounds[MN_SND_KEYUPDOWN]); // make sound
+         S_StartInterfaceSound(menuSounds[MN_SND_KEYUPDOWN]); // make sound
       
       return true;  // eatkey
    }
@@ -995,7 +995,7 @@ bool MN_Responder(event_t *ev)
       while(is_a_gap(&current_menu->menuitems[current_menu->selected]));
       
       if(!cancelsnd)
-         S_StartSound(NULL, menuSounds[MN_SND_KEYUPDOWN]); // make sound
+         S_StartInterfaceSound(menuSounds[MN_SND_KEYUPDOWN]); // make sound
 
       return true;  // eatkey
    }
@@ -1024,7 +1024,7 @@ bool MN_Responder(event_t *ev)
          if(current_menu->prevpage)
             MN_PageMenu(current_menu->prevpage);
          else
-            S_StartSound(NULL, GameModeInfo->c_BellSound);
+            S_StartInterfaceSound(GameModeInfo->c_BellSound);
          
          return true;
       }
@@ -1045,7 +1045,7 @@ bool MN_Responder(event_t *ev)
          if(current_menu->nextpage)
             MN_PageMenu(current_menu->nextpage);
          else
-            S_StartSound(NULL, GameModeInfo->c_BellSound);
+            S_StartInterfaceSound(GameModeInfo->c_BellSound);
          
          return true;
       }
@@ -1063,7 +1063,7 @@ bool MN_Responder(event_t *ev)
       if(current_menu->prevpage)
          MN_PageMenu(current_menu->prevpage);
       else
-         S_StartSound(NULL, GameModeInfo->c_BellSound);
+         S_StartInterfaceSound(GameModeInfo->c_BellSound);
       
       return true;
    }
@@ -1074,7 +1074,7 @@ bool MN_Responder(event_t *ev)
       if(current_menu->nextpage)
          MN_PageMenu(current_menu->nextpage);
       else
-         S_StartSound(NULL, GameModeInfo->c_BellSound);
+         S_StartInterfaceSound(GameModeInfo->c_BellSound);
 
       return true;
    }
@@ -1085,7 +1085,7 @@ bool MN_Responder(event_t *ev)
       if(current_menu->content_names && current_menu->content_pages)
          MN_ShowContents();
       else
-         S_StartSound(NULL, GameModeInfo->c_BellSound);
+         S_StartInterfaceSound(GameModeInfo->c_BellSound);
 
       return true;
    }
@@ -1136,12 +1136,12 @@ bool MN_Responder(event_t *ev)
 //
 // make menu 'clunk' sound on opening
 //
-void MN_ActivateMenu(void)
+void MN_ActivateMenu()
 {
    if(!menuactive)  // activate menu if not already
    {
       menuactive = true;
-      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_ACTIVATE]);
+      S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_ACTIVATE]);
    }
 }
 
@@ -1199,7 +1199,7 @@ static void MN_PageMenu(menu_t *newpage)
 
    menu_error_time = 0;
 
-   S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
+   S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
 }
 
 //
@@ -1207,7 +1207,7 @@ static void MN_PageMenu(menu_t *newpage)
 //
 // go back to a previous menu
 //
-void MN_PrevMenu(void)
+void MN_PrevMenu()
 {
    if(--menu_history_num < 0)
       MN_ClearMenus();
@@ -1216,7 +1216,7 @@ void MN_PrevMenu(void)
    
    menu_error_time = 0;          // clear errors
 
-   S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_PREVIOUS]);
+   S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_PREVIOUS]);
 }
 
 //
@@ -1224,7 +1224,7 @@ void MN_PrevMenu(void)
 //
 // turn off menus
 //
-void MN_ClearMenus(void)
+void MN_ClearMenus()
 {
    Console.enabled = true; // haleyjd 03/11/06: re-enable console
    menuactive = false;
@@ -1507,7 +1507,7 @@ static bool MN_BoxWidgetResponder(event_t *ev, int action)
    if(action == ka_menu_toggle || action == ka_menu_previous)
    {
       MN_PopWidget();
-      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]); // cha!
+      S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_DEACTIVATE]); // cha!
       return true;
    }
 
@@ -1516,7 +1516,7 @@ static bool MN_BoxWidgetResponder(event_t *ev, int action)
    {
       if(--box->selection_idx < 0)
          box->selection_idx = box->maxidx;
-      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
+      S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
       return true;
    }
 
@@ -1525,7 +1525,7 @@ static bool MN_BoxWidgetResponder(event_t *ev, int action)
    {
       if(++box->selection_idx > box->maxidx)
          box->selection_idx = 0;
-      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
+      S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
       return true;
    }
 
@@ -1548,7 +1548,7 @@ static bool MN_BoxWidgetResponder(event_t *ev, int action)
          break;
       }
       
-      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_COMMAND]); // pow!
+      S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_COMMAND]); // pow!
       return true;
    }
 
@@ -1652,7 +1652,7 @@ static void MN_ShowContents(void)
 
    MN_PushWidget(&(menu_box_widget.widget));
 
-   S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
+   S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
 }
 
 

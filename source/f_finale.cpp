@@ -58,8 +58,8 @@
 
 // Stage of animation:
 //  0 = text, 1 = art screen, 2 = character cast, 3 = Heretic underwater scene
-int finalestage;
-int finalecount;
+static int finalestage;
+static int finalecount;
 
 // defines for the end mission display text                     // phares
 
@@ -68,27 +68,56 @@ int finalecount;
 #define NEWTEXTSPEED 0.01  // new value                         // phares
 #define NEWTEXTWAIT  1000  // new value                         // phares
 
-void F_StartCast(void);
-void F_CastTicker(void);
+void F_StartCast();
+void F_CastTicker();
 bool F_CastResponder(event_t *ev);
-void F_CastDrawer(void);
+void F_CastDrawer();
 
-void IN_checkForAccelerate(void);    // killough 3/28/98: used to
-extern int acceleratestage;          // accelerate intermission screens
-static int midstage;                 // whether we're in "mid-stage"
+void IN_checkForAccelerate();    // killough 3/28/98: used to
+extern int acceleratestage;      // accelerate intermission screens
+static int midstage;             // whether we're in "mid-stage"
 
-static void F_InitDemonScroller(void);
+static void F_InitDemonScroller();
 static byte *DemonBuffer; // haleyjd 08/23/02
 
 vfont_t *f_font;
 char *f_fontname;
+
+static const char *finaletext;
+static int         finaletype;
+
+//
+// F_setupFinale
+//
+// haleyjd 01/26/14: Determine finale parameters to use.
+//
+static void F_setupFinale(bool secret)
+{
+   if(secret)
+   {
+      if(LevelInfo.finaleSecretType != FINALE_UNSPECIFIED)
+         finaletype = LevelInfo.finaleSecretType;
+      else
+         finaletype = LevelInfo.finaleType;
+
+      if(LevelInfo.interTextSecret)
+         finaletext = LevelInfo.interTextSecret;
+      else
+         finaletext = LevelInfo.interText;
+   }
+   else
+   {
+      finaletype = LevelInfo.finaleType;
+      finaletext = LevelInfo.interText;
+   }
+}
 
 //
 // F_Init
 //
 // haleyjd 02/25/09: Added to resolve finale font.
 //
-void F_Init(void)
+void F_Init()
 {
    if(!(f_font = E_FontForName(f_fontname)))
       I_Error("F_Init: bad EDF font name %s\n", f_fontname);
@@ -97,7 +126,7 @@ void F_Init(void)
 //
 // F_StartFinale
 //
-void F_StartFinale(void)
+void F_StartFinale(bool secret)
 {
    gameaction = ga_nothing;
    gamestate = GS_FINALE;
@@ -110,8 +139,10 @@ void F_StartFinale(void)
 
    S_ChangeMusicName(LevelInfo.interMusic, true);
    
-   finalestage = 0;
-   finalecount = 0;
+   finalestage  = 0;
+   finalecount  = 0;
+   
+   F_setupFinale(secret);
 }
 
 //
@@ -140,7 +171,7 @@ bool F_Responder(event_t *event)
 // Returns the value of the text display speed  // phares
 // Rewritten to allow user-directed acceleration -- killough 3/28/98
 //
-static float Get_TextSpeed(void)
+static float Get_TextSpeed()
 {
    return 
       (float)(midstage ? NEWTEXTSPEED : 
@@ -162,7 +193,7 @@ static float Get_TextSpeed(void)
 // killough 5/10/98: add back v1.9 demo compatibility
 // haleyjd 10/12/01: reformatted, added cast call for any level
 //
-void F_Ticker(void)
+void F_Ticker()
 {
    int i;
    
@@ -171,14 +202,14 @@ void F_Ticker(void)
       // killough 3/28/98: check for acceleration
       IN_checkForAccelerate();
    }
-   else if(LevelInfo.finaleType == FINALE_TEXT && finalecount > 50)
+   else if(finaletype == FINALE_TEXT && finalecount > 50)
    {
       // haleyjd 05/26/06: do this for all FINALE_TEXT finales
       // check for skipping
-      for(i = 0; i < MAXPLAYERS; ++i)
+      for(i = 0; i < MAXPLAYERS; i++)
+      {
          if(players[i].cmd.buttons)
          {
-            // haleyjd 12/27/10: No goto here!
             // go on to the next level
             if(LevelInfo.endOfGame)
                F_StartCast(); // cast of Doom 2 characters
@@ -186,6 +217,7 @@ void F_Ticker(void)
                gameaction = ga_worlddone;  // next level, e.g. MAP07
             return;
          }
+      }
    }
    
    // advance animation
@@ -198,24 +230,24 @@ void F_Ticker(void)
    {
       float speed = demo_compatibility ? TEXTSPEED : Get_TextSpeed();
 
-      if(finalecount > strlen(LevelInfo.interText)*speed + // phares
+      if(finalecount > strlen(finaletext)*speed + // phares
          (midstage ? NEWTEXTWAIT : TEXTWAIT) ||   // killough 2/28/98:
          (midstage && acceleratestage))           // changed to allow acceleration
       {
          // Doom 1 / Ultimate Doom episode end: with enough time, it's automatic
          // haleyjd 05/26/06: all finales except just text use this
-         if(LevelInfo.finaleType != FINALE_TEXT)
+         if(finaletype != FINALE_TEXT)
          {                          
             finalecount = 0;
             finalestage = 1;
 
             // no wipe before Heretic E2 or E3 finales
-            if(LevelInfo.finaleType != FINALE_HTIC_WATER &&
-               LevelInfo.finaleType != FINALE_HTIC_DEMON)
+            if(finaletype != FINALE_HTIC_WATER &&
+               finaletype != FINALE_HTIC_DEMON)
                wipegamestate = GS_NOSTATE;     // force a wipe
 
             // special actions
-            switch(LevelInfo.finaleType)
+            switch(finaletype)
             {
             case FINALE_DOOM_BUNNY: // bunny scroller
                S_StartMusic(mus_bunny);
@@ -251,7 +283,7 @@ void F_Ticker(void)
 // text can be increased, and there's still time to read what's     //   |
 // written.                                                         // phares
 //
-void F_TextWrite(void)
+void F_TextWrite()
 {
    int         w, h;         // killough 8/9/98: move variables below
    int         count;
@@ -286,7 +318,7 @@ void F_TextWrite(void)
    // draw some of the text onto the screen
    cx = textpos->x;
    cy = textpos->y;
-   ch = LevelInfo.interText;
+   ch = finaletext;
       
    count = (int)((finalecount - 10)/Get_TextSpeed()); // phares
    if(count < 0)
@@ -334,20 +366,17 @@ void F_TextWrite(void)
 //
 
 // haleyjd 07/05/03: modified to be dynamic through EDF
+int         max_castorder;
+castinfo_t *castorder; // Ty 03/22/98 - externalized and init moved into f_startcast()
 
-// define MAX_CASTORDER 18 /* Ty - hard coded for now */
-// castinfo_t      castorder[MAX_CASTORDER]; 
-int             max_castorder;
-castinfo_t      *castorder; // Ty 03/22/98 - externalized and init moved into f_startcast()
-
-int             castnum;
-int             casttics;
-state_t*        caststate;
-int             castrot;
-bool            castdeath;
-int             castframes;
-int             castonmelee;
-bool            castattacking;
+int         castnum;
+int         casttics;
+state_t    *caststate;
+int         castrot;
+bool        castdeath;
+int         castframes;
+int         castonmelee;
+bool        castattacking;
 
 extern  gamestate_t     wipegamestate;
 
@@ -390,7 +419,7 @@ void F_StartCast()
 
    // if a cast name was left NULL by EDF, it means we're going to
    // use the old DeHackEd names
-   for(i = 0; i < OLDCASTMAX && i < max_castorder; ++i)
+   for(i = 0; i < OLDCASTMAX && i < max_castorder; i++)
    {
       if(!castorder[i].name)
          castorder[i].name = estrdup(DEH_String(oldnames[i]));
@@ -427,7 +456,7 @@ void F_CastTicker()
       castdeath = false;
       if(castorder[castnum].name == NULL)
          castnum = 0;
-      S_StartSound(NULL, mobjinfo[castorder[castnum].type]->seesound);
+      S_StartInterfaceSound(mobjinfo[castorder[castnum].type]->seesound);
       caststate = states[mobjinfo[castorder[castnum].type]->seestate];
       castframes = 0;
    }
@@ -460,7 +489,7 @@ void F_CastTicker()
             sfx = castorder[castnum].sounds[i].sound;
       }
       
-      S_StartSound(NULL, sfx);
+      S_StartInterfaceSound(sfx);
    }
       
    if(castframes == 12)
@@ -497,7 +526,7 @@ void F_CastTicker()
                sfx = castorder[castnum].sounds[i].sound;
          }
          
-         S_StartSound(NULL, sfx);
+         S_StartInterfaceSound(sfx);
       }
    }
       
@@ -559,10 +588,9 @@ bool F_CastResponder(event_t* ev)
    if(mobjinfo[castorder[castnum].type]->deathsound)
    {
       if(castorder[castnum].type == players[consoleplayer].pclass->type)
-         S_StartSoundName(NULL, 
-            players[consoleplayer].skin->sounds[sk_pldeth]);
+         S_StartInterfaceSound(players[consoleplayer].skin->sounds[sk_pldeth]);
       else
-         S_StartSound(NULL, mobjinfo[castorder[castnum].type]->deathsound);
+         S_StartInterfaceSound(mobjinfo[castorder[castnum].type]->deathsound);
    }
    
    return true;
@@ -641,7 +669,7 @@ void F_CastDrawer()
 //
 // F_BunnyScroll
 //
-void F_BunnyScroll(void)
+void F_BunnyScroll()
 {
    int         scrolled;
    patch_t*    p1;
@@ -681,7 +709,7 @@ void F_BunnyScroll(void)
       stage = 6;
    if(stage > laststage)
    {
-      S_StartSound (NULL, sfx_pistol);
+      S_StartInterfaceSound(sfx_pistol);
       laststage = stage;
    }
    
@@ -692,7 +720,7 @@ void F_BunnyScroll(void)
 }
 
 // haleyjd: heretic e2 ending -- sort of hackish
-void F_DrawUnderwater(void)
+void F_DrawUnderwater()
 {
    switch(finalestage)
    {
@@ -729,7 +757,7 @@ void F_DrawUnderwater(void)
 //
 // Sets up the Heretic episode 3 ending sequence.
 //
-static void F_InitDemonScroller(void)
+static void F_InitDemonScroller()
 {
    int lnum1, lnum2;
    int lsize1, lsize2;
@@ -770,7 +798,7 @@ static void F_InitDemonScroller(void)
 //
 // haleyjd: Heretic episode 3 demon scroller
 //
-void F_DemonScroll(void)
+void F_DemonScroll()
 {
    static int yval = 0;
    static int nextscroll = 0;
@@ -778,7 +806,7 @@ void F_DemonScroll(void)
    // show first screen for a while
    if(finalecount < 70)
    {
-      V_DrawBlock(0,0,&subscreen43,SCREENWIDTH,SCREENHEIGHT,DemonBuffer+64000);
+      V_DrawBlock(0, 0, &subscreen43, SCREENWIDTH, SCREENHEIGHT, DemonBuffer+64000);
       nextscroll = finalecount;
       yval = 0;
       return;
@@ -788,7 +816,7 @@ void F_DemonScroll(void)
    {
       // scroll up one line at a time until only the top screen
       // shows
-      V_DrawBlock(0,0,&subscreen43,SCREENWIDTH,SCREENHEIGHT,
+      V_DrawBlock(0, 0, &subscreen43, SCREENWIDTH, SCREENHEIGHT,
                   DemonBuffer + 64000 - yval);
       
       if(finalecount >= nextscroll)
@@ -800,7 +828,7 @@ void F_DemonScroll(void)
    else
    {
       // finished scrolling
-      V_DrawBlock(0,0,&subscreen43,SCREENWIDTH,SCREENHEIGHT,DemonBuffer);
+      V_DrawBlock(0, 0, &subscreen43, SCREENWIDTH, SCREENHEIGHT, DemonBuffer);
    }
 }
 
@@ -810,12 +838,12 @@ void F_DemonScroll(void)
 // haleyjd 05/26/06: new combined routine which determines what final screen
 // to show based on LevelInfo.finaleType.
 //
-static void F_FinaleEndDrawer(void)
+static void F_FinaleEndDrawer()
 {
    // haleyjd 05/18/09: handle shareware once up here
    bool sw = ((GameModeInfo->flags & GIF_SHAREWARE) == GIF_SHAREWARE);
 
-   switch(LevelInfo.finaleType)
+   switch(finaletype)
    {
    case FINALE_DOOM_CREDITS:
       V_DrawPatch(0, 0, &subscreen43, 
@@ -855,7 +883,7 @@ static void F_FinaleEndDrawer(void)
 // Either runs a text mode finale, draws the DOOM II cast, or calls
 // F_FinaleEndDrawer above.
 //
-void F_Drawer(void)
+void F_Drawer()
 {
    switch(finalestage)
    {

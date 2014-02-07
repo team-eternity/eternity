@@ -232,6 +232,12 @@
     <Filter Include="Source Files\S_\S_ Source">
       <UniqueIdentifier>{db06d03f-cab2-4823-98b6-8b2bd21b98be}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\XL_\XL_ Headers">
+      <UniqueIdentifier>{83a57dbd-d96f-4232-9c63-ed719eee9717}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\XL_\XL_ Source">
+      <UniqueIdentifier>{09ccd1ab-91bb-4216-9ff4-c314b45f28c8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\acs_acs0.cpp">
@@ -828,9 +834,6 @@
     <ClCompile Include="..\source\a_hexen.cpp">
       <Filter>Source Files\A_\A_ Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\xl_scripts.cpp">
-      <Filter>Source Files\XL_</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\hal\i_gamepads.cpp">
       <Filter>Source Files\HAL\HAL Source</Filter>
     </ClCompile>
@@ -926,6 +929,27 @@
     </ClCompile>
     <ClCompile Include="..\source\s_formats.cpp">
       <Filter>Source Files\S_\S_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\hal\i_timer.cpp">
+      <Filter>Source Files\HAL\HAL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\sdl\i_sdltimer.cpp">
+      <Filter>Source Files\SDL\SDL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\xl_scripts.cpp">
+      <Filter>Source Files\XL_\XL_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\xl_musinfo.cpp">
+      <Filter>Source Files\XL_\XL_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\xl_sndinfo.cpp">
+      <Filter>Source Files\XL_\XL_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\xl_mapinfo.cpp">
+      <Filter>Source Files\XL_\XL_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\xl_emapinfo.cpp">
+      <Filter>Source Files\XL_\XL_ Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1526,9 +1550,6 @@
     <ClInclude Include="..\source\a_doom.h">
       <Filter>Source Files\A_\A_ Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\xl_scripts.h">
-      <Filter>Source Files\XL_</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\hal\i_gamepads.h">
       <Filter>Source Files\HAL\HAL Headers</Filter>
     </ClInclude>
@@ -1642,6 +1663,36 @@
     </ClInclude>
     <ClInclude Include="..\source\s_formats.h">
       <Filter>Source Files\S_\S_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\r_interpolate.h">
+      <Filter>Source Files\R_\R_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\p_sector.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\hal\i_timer.h">
+      <Filter>Source Files\HAL\HAL Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\sdl\i_sdltimer.h">
+      <Filter>Source Files\SDL\SDL Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\r_textur.h">
+      <Filter>Source Files\R_\R_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\xl_scripts.h">
+      <Filter>Source Files\XL_\XL_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\xl_musinfo.h">
+      <Filter>Source Files\XL_\XL_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\xl_sndinfo.h">
+      <Filter>Source Files\XL_\XL_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\xl_mapinfo.h">
+      <Filter>Source Files\XL_\XL_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\xl_emapinfo.h">
+      <Filter>Source Files\XL_\XL_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

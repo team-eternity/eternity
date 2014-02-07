@@ -129,8 +129,6 @@ void P_PopClipStack(void)
 int spechits_emulation;
 #define MAXSPECHIT_OLD 8         // haleyjd 09/20/06: old limit for overflow emu
 
-extern bool reset_viewz;
-
 // haleyjd 09/20/06: moved to top for maximum visibility
 static int crushchange;
 static int nofit;
@@ -466,6 +464,7 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    thing->x = x;
    thing->y = y;
    
+   thing->backupPosition();   
    P_SetThingPosition(thing);
    
    return true;

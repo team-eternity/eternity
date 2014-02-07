@@ -1148,7 +1148,6 @@ static void do_draw_plane(visplane_t *pl)
    {  
       texture_t *tex;
       int        stop, light;
-      bool       lptex64 = false; // haleyjd 06/09/10
       int        stylenum;
 
       int picnum = texturetranslation[pl->picnum];
@@ -1195,10 +1194,6 @@ static void do_draw_plane(visplane_t *pl)
       else
          span.fg2rgb = span.bg2rgb = NULL;
 
-      // haleyjd: check for combination of low precision and texture size 64x64
-      if(r_span_engine->haslp64 && !tex->flatsize)
-         lptex64 = true;
-
       if(pl->pslope)
          plane.slope = &pl->rslope;
       else
@@ -1224,15 +1219,8 @@ static void do_draw_plane(visplane_t *pl)
             span.xshift = span.yshift - rw;
             span.xmask = (tex->width - 1) << (32 - rw - span.xshift);
             
-            // haleyjd: we must allow for low-precision drawing to affect this
-            // here since it's no longer looked up from an array
-            if(lptex64)
-               plane.fixedunitx = plane.fixedunity = FRACUNIT;
-            else
-            {
-               plane.fixedunitx = (float)(1 << (32 - rw));
-               plane.fixedunity = (float)(1 << span.yshift);
-            }
+            plane.fixedunitx = (float)(1 << (32 - rw));
+            plane.fixedunity = (float)(1 << span.yshift);
          }
       }
        

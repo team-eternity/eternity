@@ -871,9 +871,8 @@ static void P_InitTagLists()
 int P_FindMinSurroundingLight(sector_t *sector, int min)
 {
    const sector_t *check;
-   int i;
 
-   for(i=0; i < sector->linecount; i++)
+   for(int i = 0; i < sector->linecount; i++)
    {
       if((check = getNextSector(sector->lines[i], sector)) &&
          check->lightlevel < min)

@@ -40,6 +40,7 @@ struct particle_t;
 struct planehash_t;
 struct portal_t;
 struct sector_t;
+struct ereverb_t;
 struct ETerrain;
 
 // Silhouette, needed for clipping Segs (mainly)
@@ -163,6 +164,30 @@ struct sectoraction_t
    int special;
    int args[NUMLINEARGS];
    int actionflags;
+};
+
+// sector interpolation values
+struct sectorinterp_t
+{
+   bool    interpolated;       // if true, interpolated
+
+   fixed_t prevfloorheight;    // previous values, stored for interpolation
+   fixed_t prevceilingheight;
+   float   prevfloorheightf;
+   float   prevceilingheightf;
+
+   fixed_t backfloorheight;    // backup values, used as cache during rendering
+   fixed_t backceilingheight;
+   float   backfloorheightf;
+   float   backceilingheightf;
+};
+
+//
+// Sound Zones
+//
+struct soundzone_t
+{
+   ereverb_t *reverb;
 };
 
 //
@@ -303,6 +328,9 @@ struct sector_t
 
    // haleyjd 01/15/12: sector actions
    DLListItem<sectoraction_t> *actions;
+
+   // haleyjd 01/12/14: sound environment
+   int soundzone;
 };
 
 //

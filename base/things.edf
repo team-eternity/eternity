@@ -122,6 +122,22 @@ thingtype SMMUCameraSpot : Mobj, 5003, 143
 
 // Eternity Engine Objects -----------------------------------------------------
 
+// Environmental Sequence Point
+
+thingtype EEEnviroSequence : Mobj, 1300
+{
+  spawnstate S_TNT1
+  cflags     NOBLOCKMAP|NOGRAVITY
+}
+
+// Sector Sequence Override
+
+thingtype EESectorSequence : Mobj, 1500
+{
+  spawnstate S_TNT1
+  cflags     NOBLOCKMAP|NOGRAVITY
+}
+
 thingtype Unknown : Mobj, 5005
 {
   spawnstate  S_UNKNOWN
@@ -139,57 +155,6 @@ thingtype EESkyboxCam : Mobj, 5006
   flags       NOBLOCKMAP|NOGRAVITY
 }
 
-thingtype EEParticleFountain 
-{
-  spawnstate S_TNT1
-  height     0.0
-}
-
-thingtype EETerrainLavaSplash : Mobj, -1, 145
-{
-  spawnstate  S_LAVASPLASH1
-  cflags      NOBLOCKMAP|NOGRAVITY|NOSPLASH
-}
-
-thingtype EETerrainLavaSmoke : Mobj, -1, 146
-{
-  spawnstate   S_LAVASMOKE1
-  cflags       NOBLOCKMAP|NOGRAVITY|NOSPLASH
-  translucency 26624
-
-}
-
-thingtype EETerrainWaterSplash : Mobj, -1, 147
-{
-  spawnstate  S_SPLASH1
-  deathstate  S_SPLASHX
-  radius      2.0
-  height      4.0
-  cflags      NOBLOCKMAP|DROPOFF|MISSILE|LOGRAV|NOSPLASH|NOCROSS|CANNOTPUSH|NOZERODAMAGE
-}
-
-thingtype EETerrainWaterBase : Mobj, -1, 148
-{
-  spawnstate  S_SPLASHBASE1
-  cflags      NOBLOCKMAP|NOGRAVITY|NOSPLASH
-}
-
-thingtype EETerrainSludgeChunk : Mobj, -1, 149
-{
-  spawnstate  S_SLUDGE1
-  deathstate  S_SLUDGEX
-  radius      2.0
-  height      4.0
-  mass        150
-  cflags      NOBLOCKMAP|DROPOFF|MISSILE|LOGRAV|NOSPLASH|NOCROSS|CANNOTPUSH|NOZERODAMAGE
-}
-
-thingtype EETerrainSludgeBase : Mobj, -1, 150
-{
-  spawnstate  S_SLUDGEBASE1
-  cflags      NOBLOCKMAP|NOGRAVITY|NOSPLASH
-}
-
 thingtype EEParticleDrip : Mobj, 5007, 151
 {
   spawnstate  S_TNT1
@@ -197,6 +162,13 @@ thingtype EEParticleDrip : Mobj, 5007, 151
   height      1.0
   flags       NOBLOCKMAP|NOGRAVITY
   particlefx  DRIP
+}
+
+// What's this??? o_O
+
+thingtype EERavenObj : Unknown, 5008
+{
+  skinsprite EERV
 }
 
 // Hexen compatible map spots for scripting
@@ -211,6 +183,22 @@ thingtype EEMapSpotGravity : Mobj, 9013, 153
 {
   spawnstate  S_TNT1
   cflags      DONTDRAW|NOSPLASH
+}
+
+// Particle fountains (9027 - 9033)
+
+thingtype EEParticleFountain 
+{
+  spawnstate S_TNT1
+  height     0.0
+}
+
+// Sound Environment Zone controller
+
+thingtype EESoundEnvironment : Mobj, 9048
+{
+  spawnstate S_TNT1
+  cflags     NOBLOCKMAP|NOSECTOR|NOGRAVITY
 }
 
 // Polyobject spots
@@ -255,35 +243,59 @@ thingtype EEMusicChanger : Mobj, 14165
   cflags     NOBLOCKMAP|NOSECTOR|NOGRAVITY
 }
 
-// Environmental Sequence Point
-
-thingtype EEEnviroSequence : Mobj, 1300
-{
-  spawnstate S_TNT1
-  cflags     NOBLOCKMAP|NOGRAVITY
-}
-
-// Sector Sequence Override
-
-thingtype EESectorSequence : Mobj, 1500
-{
-  spawnstate S_TNT1
-  cflags     NOBLOCKMAP|NOGRAVITY
-}
-
-// What's this??? o_O
-
-thingtype EERavenObj : Unknown, 5008
-{
-  skinsprite EERV
-}
-
 // Doom Builder's 3D mode camera spots often get left in maps.
 // Let's define an Unknown object with the default DoomEdNum.
 
 thingtype DoomBuilderCameraSpot : Unknown
 {
   translucency 33%
+}
+
+// Terrain Objects
+
+thingtype EETerrainLavaSplash : Mobj, -1, 145
+{
+  spawnstate  S_LAVASPLASH1
+  cflags      NOBLOCKMAP|NOGRAVITY|NOSPLASH
+}
+
+thingtype EETerrainLavaSmoke : Mobj, -1, 146
+{
+  spawnstate   S_LAVASMOKE1
+  cflags       NOBLOCKMAP|NOGRAVITY|NOSPLASH
+  translucency 26624
+
+}
+
+thingtype EETerrainWaterSplash : Mobj, -1, 147
+{
+  spawnstate  S_SPLASH1
+  deathstate  S_SPLASHX
+  radius      2.0
+  height      4.0
+  cflags      NOBLOCKMAP|DROPOFF|MISSILE|LOGRAV|NOSPLASH|NOCROSS|CANNOTPUSH|NOZERODAMAGE
+}
+
+thingtype EETerrainWaterBase : Mobj, -1, 148
+{
+  spawnstate  S_SPLASHBASE1
+  cflags      NOBLOCKMAP|NOGRAVITY|NOSPLASH
+}
+
+thingtype EETerrainSludgeChunk : Mobj, -1, 149
+{
+  spawnstate  S_SLUDGE1
+  deathstate  S_SLUDGEX
+  radius      2.0
+  height      4.0
+  mass        150
+  cflags      NOBLOCKMAP|DROPOFF|MISSILE|LOGRAV|NOSPLASH|NOCROSS|CANNOTPUSH|NOZERODAMAGE
+}
+
+thingtype EETerrainSludgeBase : Mobj, -1, 150
+{
+  spawnstate  S_SLUDGEBASE1
+  cflags      NOBLOCKMAP|NOGRAVITY|NOSPLASH
 }
 
 // Eternity TC Objects ---------------------------------------------------------

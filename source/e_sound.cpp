@@ -65,7 +65,7 @@
 #include "s_sndseq.h"
 #include "s_sound.h"
 #include "w_wad.h"
-#include "xl_scripts.h"
+#include "xl_sndinfo.h"
 
 //
 // Sound keywords
@@ -894,6 +894,7 @@ void E_ProcessSoundDeltas(cfg_t *cfg, bool add)
 #define ITEM_SEQ_PLAT   "platsequence"
 #define ITEM_SEQ_FLOOR  "floorsequence"
 #define ITEM_SEQ_CEIL   "ceilingsequence"
+#define ITEM_SEQ_REVERB "reverb"
 
 // attenuation types -- also used by ambience
 static const char *attenuation_types[] =
@@ -972,12 +973,15 @@ cfg_opt_t edf_sndseq_opts[] =
    CFG_STR(ITEM_SEQ_ATTN,    "normal",  CFGF_NONE),
    CFG_INT(ITEM_SEQ_VOL,     127,       CFGF_NONE),
    CFG_INT(ITEM_SEQ_MNVOL,   -1,        CFGF_NONE),
-   CFG_BOOL(ITEM_SEQ_NSCO,   false,     CFGF_NONE),
-   CFG_BOOL(ITEM_SEQ_RNDVOL, false,     CFGF_NONE),
    CFG_STR(ITEM_SEQ_DOOR,    NULL,      CFGF_NONE),
    CFG_STR(ITEM_SEQ_PLAT,    NULL,      CFGF_NONE),
    CFG_STR(ITEM_SEQ_FLOOR,   NULL,      CFGF_NONE),
    CFG_STR(ITEM_SEQ_CEIL,    NULL,      CFGF_NONE),
+
+   CFG_BOOL(ITEM_SEQ_NSCO,   false,     CFGF_NONE),
+   CFG_BOOL(ITEM_SEQ_RNDVOL, false,     CFGF_NONE),
+   CFG_FLAG(ITEM_SEQ_REVERB, 1,         CFGF_SIGNPREFIX),
+
    CFG_END()
 };
 
@@ -1325,7 +1329,7 @@ static void E_ParseSeqCmds(cfg_t *cfg, ESoundSeq_t *newSeq)
 
    tempcmdbuf = ecalloc(seqcmd_t *, 1, cmdalloc);
 
-   for(i = 0; i < numcmds; ++i)
+   for(i = 0; i < numcmds; i++)
    {
       tempcmd_t tempcmd;
       char *tempstr = estrdup(cfg_getnstr(cfg, ITEM_SEQ_CMDS, i));
@@ -1525,6 +1529,9 @@ static void E_ProcessSndSeq(cfg_t *cfg, unsigned int i)
    // haleyjd 01/12/11: support for proper Heretic randomization behavior
    newSeq->randomplayvol = cfg_getbool(cfg, ITEM_SEQ_RNDVOL);
 
+   // 01/16/14: reverb flag
+   newSeq->reverb = !!cfg_getflag(cfg, ITEM_SEQ_REVERB);
+
    // process command list
 
    // if a command list already exists, destroy it first
@@ -1684,6 +1691,7 @@ void E_ProcessSndSeqs(cfg_t *cfg)
 #define ITEM_AMB_PERIOD      "period"
 #define ITEM_AMB_MINPERIOD   "minperiod"
 #define ITEM_AMB_MAXPERIOD   "maxperiod"
+#define ITEM_AMB_REVERB      "reverb"
 
 static const char *ambience_types[] =
 {
@@ -1704,6 +1712,9 @@ cfg_opt_t edf_ambience_opts[] =
    CFG_INT(ITEM_AMB_PERIOD,      35,           CFGF_NONE),
    CFG_INT(ITEM_AMB_MINPERIOD,   35,           CFGF_NONE),
    CFG_INT(ITEM_AMB_MAXPERIOD,   35,           CFGF_NONE),
+
+   CFG_FLAG(ITEM_AMB_REVERB,     1,            CFGF_SIGNPREFIX),
+
    CFG_END()
 };
 
@@ -1817,6 +1828,9 @@ static void E_ProcessAmbienceSec(cfg_t *cfg, unsigned int i)
    newAmb->minperiod = cfg_getint(cfg, ITEM_AMB_MINPERIOD);
    newAmb->maxperiod = cfg_getint(cfg, ITEM_AMB_MAXPERIOD);
 
+   // 01/16/14: reverb flag
+   newAmb->reverb = !!cfg_getflag(cfg, ITEM_AMB_REVERB);
+
    E_EDFLogPrintf("\t\tFinished ambience #%d (index %d)\n", i, newAmb->index);
 }
 
@@ -1827,15 +1841,13 @@ static void E_ProcessAmbienceSec(cfg_t *cfg, unsigned int i)
 //
 void E_ProcessAmbience(cfg_t *cfg)
 {
-   unsigned int i, numambience;
-
    E_EDFLogPuts("\t* Processing ambience\n");
 
-   numambience = cfg_size(cfg, EDF_SEC_AMBIENCE);
+   unsigned int numambience = cfg_size(cfg, EDF_SEC_AMBIENCE);
 
    E_EDFLogPrintf("\t\t%d ambience section(s) defined\n", numambience);
 
-   for(i = 0; i < numambience; ++i)
+   for(unsigned int i = 0; i < numambience; i++)
       E_ProcessAmbienceSec(cfg_getnsec(cfg, EDF_SEC_AMBIENCE, i), i);
 }
 

@@ -36,6 +36,7 @@
 #include "doomstat.h"
 #include "e_things.h"
 #include "g_game.h"
+#include "hal/i_timer.h"
 #include "hu_over.h"
 #include "i_video.h"
 #include "m_bbox.h"
@@ -48,6 +49,7 @@
 #include "r_draw.h"
 #include "r_drawq.h"
 #include "r_dynseg.h"
+#include "r_interpolate.h"
 #include "r_main.h"
 #include "r_plane.h"
 #include "r_portal.h"
@@ -91,9 +93,6 @@ camera_t *viewcamera;
 
 // SoM: removed the old zoom code infavor of actual field of view!
 int fov = 90;
-
-// SoM: Used by a hack to fix some hom when traveling through portals.
-int viewgroup;
 
 // SoM: Displays red on the screen if a portal becomes "tainted"
 int showtainted = 0;
@@ -172,7 +171,6 @@ int r_span_engine_num;
 static spandrawer_t *r_span_engines[NUMSPANENGINES] =
 {
    &r_spandrawer,    // normal engine
-   &r_lpspandrawer,  // low-precision optimized
 };
 
 //
@@ -726,7 +724,7 @@ unsigned int frameid = 0;
 // be searched and all frameids reset to prevent mishaps in the rendering 
 // process.
 //
-void R_IncrementFrameid(void)
+void R_IncrementFrameid()
 {
    frameid++;
 
@@ -742,37 +740,151 @@ void R_IncrementFrameid(void)
    }
 }
 
+//
+// R_interpolateViewPoint
+//
+// Interpolate a rendering view point based on the player's location.
+//
+static void R_interpolateViewPoint(player_t *player, fixed_t lerp)
+{
+   if(lerp == FRACUNIT)
+   {
+      viewx     = player->mo->x;
+      viewy     = player->mo->y;
+      viewz     = player->viewz;
+      viewangle = player->mo->angle; //+ viewangleoffset;
+   }
+   else
+   {
+      viewx     = lerpCoord(lerp, player->mo->prevpos.x,     player->mo->x);
+      viewy     = lerpCoord(lerp, player->mo->prevpos.y,     player->mo->y);
+      viewz     = lerpCoord(lerp, player->prevviewz,         player->viewz);
+      viewangle = lerpAngle(lerp, player->mo->prevpos.angle, player->mo->angle);
+   }
+}
+
+//
+// R_interpolateViewPoint
+//
+// Interpolate a rendering view point based on the camera's location.
+//
+static void R_interpolateViewPoint(camera_t *camera, fixed_t lerp)
+{
+   if(lerp == FRACUNIT)
+   {
+      viewx     = camera->x;
+      viewy     = camera->y;
+      viewz     = camera->z;
+      viewangle = camera->angle;
+   }
+   else
+   {
+      viewx     = lerpCoord(lerp, camera->prevpos.x,     camera->x);
+      viewy     = lerpCoord(lerp, camera->prevpos.y,     camera->y);
+      viewz     = lerpCoord(lerp, camera->prevpos.z,     camera->z);
+      viewangle = lerpAngle(lerp, camera->prevpos.angle, camera->angle);
+   }
+}
+
+enum secinterpstate_e
+{
+   SEC_INTERPOLATE,
+   SEC_NORMAL
+};
+
+//
+// R_setSectorInterpolationState
+//
+// If passed SEC_INTERPOLATE, current floor and ceiling heights are backed up
+// and then replaced with interpolated values. If passed SEC_NORMAL, backed up
+// sector heights are restored.
+//
+static void R_setSectorInterpolationState(secinterpstate_e state)
+{
+   int i;
+
+   switch(state)
+   {
+   case SEC_INTERPOLATE:
+      for(i = 0; i < numsectors; i++)
+      {
+         auto &si  = sectorinterps[i];
+         auto &sec = sectors[i];
+         
+         if(si.prevfloorheight   != sec.floorheight ||
+            si.prevceilingheight != sec.ceilingheight)
+         {
+            si.interpolated = true;
+
+            // backup heights
+            si.backfloorheight    = sec.floorheight;
+            si.backfloorheightf   = sec.floorheightf;
+            si.backceilingheight  = sec.ceilingheight;
+            si.backceilingheightf = sec.ceilingheightf;
+
+            // set interpolated heights
+            sec.floorheight    = lerpCoord(view.lerp, si.prevfloorheight,   sec.floorheight);
+            sec.ceilingheight  = lerpCoord(view.lerp, si.prevceilingheight, sec.ceilingheight);
+            sec.floorheightf   = M_FixedToFloat(sec.floorheight);
+            sec.ceilingheightf = M_FixedToFloat(sec.ceilingheight);
+         }
+         else
+            si.interpolated = false;
+      }
+      break;
+   case SEC_NORMAL:
+      for(i = 0; i < numsectors; i++)
+      {
+         auto &si  = sectorinterps[i];
+         auto &sec = sectors[i];
+         
+         // restore backed up heights
+         if(si.interpolated)
+         {
+            sec.floorheight    = si.backfloorheight;
+            sec.floorheightf   = si.backfloorheightf;
+            sec.ceilingheight  = si.backceilingheight;
+            sec.ceilingheightf = si.backceilingheightf;
+         }
+      }
+      break;
+   }
+}
+
+//
+// R_getLerp
+//
+static fixed_t R_getLerp()
+{
+   if(d_fastrefresh && d_interpolate &&
+      !(paused || ((menuactive || consoleactive) && !demoplayback && !netgame)))
+      return i_haltimer.GetFrac();
+   else
+      return FRACUNIT;
+}
 
 //
 // R_SetupFrame
 //
-void R_SetupFrame(player_t *player, camera_t *camera)
+static void R_SetupFrame(player_t *player, camera_t *camera)
 {               
-   Mobj *mobj;
-   fixed_t pitch;
-   fixed_t dy;
-   fixed_t viewheightfrac;
+   fixed_t  pitch;
+   fixed_t  viewheightfrac;
+   fixed_t  lerp = R_getLerp();
    
    // haleyjd 09/04/06: set or change column drawing engine
    // haleyjd 09/10/06: set or change span drawing engine
    R_SetColumnEngine();
    R_SetSpanEngine();
-   // Cardboard
-   R_IncrementFrameid();
+   R_IncrementFrameid(); // Cardboard
    
    viewplayer = player;
-   mobj = player->mo;
-
    viewcamera = camera;
+
    if(!camera)
    {
-      viewx = mobj->x;
-      viewy = mobj->y;
-      viewz = player->viewz;
-      viewangle = mobj->angle;// + viewangleoffset;
-      pitch = player->pitch;
-      // SoM
-      viewgroup = mobj->groupid;
+      R_interpolateViewPoint(player, lerp);
+      pitch = player->pitch; // INTERP_FIXME
 
       // haleyjd 01/21/07: earthquakes
       if(player->quake &&
@@ -786,12 +898,8 @@ void R_SetupFrame(player_t *player, camera_t *camera)
    }
    else
    {
-      viewx = camera->x;
-      viewy = camera->y;
-      viewz = camera->z;
-      viewangle = camera->angle;
-      pitch = camera->pitch;
-      viewgroup = camera->groupid;
+      R_interpolateViewPoint(camera, lerp);
+      pitch = camera->pitch;   // INTERP_FIXME
    }
 
    extralight = player->extralight;
@@ -799,13 +907,19 @@ void R_SetupFrame(player_t *player, camera_t *camera)
    viewcos = finecosine[viewangle>>ANGLETOFINESHIFT];
 
    // SoM: Cardboard
-   view.x = M_FixedToFloat(viewx);
-   view.y = M_FixedToFloat(viewy);
-   view.z = M_FixedToFloat(viewz);
-   view.angle = (ANG90 - viewangle) * PI / ANG180;
-   view.pitch = (ANG90 - pitch) * PI / ANG180;
-   view.sin = (float)sin(view.angle);
-   view.cos = (float)cos(view.angle);
+   view.x      = M_FixedToFloat(viewx);
+   view.y      = M_FixedToFloat(viewy);
+   view.z      = M_FixedToFloat(viewz);
+   view.angle  = (ANG90 - viewangle) * PI / ANG180;
+   view.pitch  = (ANG90 - pitch) * PI / ANG180;
+   view.sin    = sin(view.angle);
+   view.cos    = cos(view.angle);
+   view.lerp   = lerp;
+   view.sector = R_PointInSubsector(viewx, viewy)->sector;
+
+   // set interpolated sector heights
+   if(view.lerp != FRACUNIT)
+      R_setSectorInterpolationState(SEC_INTERPOLATE);
 
    // y shearing
    // haleyjd 04/03/05: perform calculation for true pitch angle
@@ -818,8 +932,8 @@ void R_SetupFrame(player_t *player, camera_t *camera)
    // appear a half-pixel too low (the entire display was too low actually).
    if(pitch)
    {
-      dy = FixedMul(focallen_y, 
-                    finetangent[(ANG90 - pitch) >> ANGLETOFINESHIFT]);
+      fixed_t dy = FixedMul(focallen_y, 
+                            finetangent[(ANG90 - pitch) >> ANGLETOFINESHIFT]);
             
       // haleyjd: must bound after zooming
       if(dy < -viewheightfrac)
@@ -830,9 +944,7 @@ void R_SetupFrame(player_t *player, camera_t *camera)
       centeryfrac = viewheightfrac + dy;
    }
    else
-   {
       centeryfrac = viewheightfrac;
-   }
    
    centery = centeryfrac >> FRACBITS;
 
@@ -844,8 +956,6 @@ void R_SetupFrame(player_t *player, camera_t *camera)
    ++validcount;
 }
 
-//
-
 typedef enum
 {
    area_normal,
@@ -853,28 +963,36 @@ typedef enum
    area_above
 } area_t;
 
+bool r_boomcolormaps;
+
+//
+// R_SectorColormap
+//
+// killough 3/20/98, 4/4/98: select colormap based on player status
+// haleyjd 03/04/07: rewritten to get colormaps from the sector itself
+// instead of from its heightsec if it has one (heightsec colormaps are
+// transferred to their affected sectors at level setup now).
+//
 void R_SectorColormap(sector_t *s)
 {
    int cm = 0;
    area_t viewarea;
-   
-   // killough 3/20/98, 4/4/98: select colormap based on player status
-   // haleyjd 03/04/07: rewritten to get colormaps from the sector itself
-   // instead of from its heightsec if it has one (heightsec colormaps are
-   // transferred to their affected sectors at level setup now).
-   
+
+   // haleyjd: Under BOOM logic, the view sector determines the colormap of
+   // all sectors in view. This is supported for backward compatibility.
+   if(r_boomcolormaps)
+      s = view.sector;
+
    if(s->heightsec == -1)
       viewarea = area_normal;
    else
    {
-      sector_t *viewsector = R_PointInSubsector(viewx, viewy)->sector;
-      
       // find which area the viewpoint is in
-      viewarea =
-         viewsector->heightsec == -1 ? area_normal :
-         viewz < sectors[viewsector->heightsec].floorheight ? area_below :
-         viewz > sectors[viewsector->heightsec].ceilingheight ? area_above :
-         area_normal;
+      int hs = view.sector->heightsec;
+      viewarea = 
+         (hs == -1 ? area_normal :
+          viewz < sectors[hs].floorheight ? area_below :
+          viewz > sectors[hs].ceilingheight ? area_above : area_normal);
    }
 
    switch(viewarea)
@@ -896,7 +1014,6 @@ void R_SectorColormap(sector_t *s)
 
    if(viewplayer->fixedcolormap)
    {
-      int i;
       // killough 3/20/98: localize scalelightfixed (readability/optimization)
       static lighttable_t *scalelightfixed[MAXLIGHTSCALE];
 
@@ -905,7 +1022,7 @@ void R_SectorColormap(sector_t *s)
         
       walllights = scalelightfixed;
 
-      for(i = 0; i < MAXLIGHTSCALE; ++i)
+      for(int i = 0; i < MAXLIGHTSCALE; i++)
          scalelightfixed[i] = fixedcolormap;
    }
    else
@@ -925,13 +1042,13 @@ angle_t R_WadToAngle(int wadangle)
 
 static int render_ticker = 0;
 
-extern void R_ResetColumnBuffer(void);
-
 // haleyjd: temporary debug
-extern void R_UntaintPortals(void);
+extern void R_UntaintPortals();
 
 //
-// R_RenderView
+// R_RenderPlayerView
+//
+// Primary renderer entry point.
 //
 void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
 {
@@ -993,6 +1110,10 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    // haleyjd 09/04/06: handle through column engine
    if(r_column_engine->ResetBuffer)
       r_column_engine->ResetBuffer();
+
+   // haleyjd: remove sector interpolations
+   if(view.lerp != FRACUNIT)
+      R_setSectorInterpolationState(SEC_NORMAL);
    
    // Check for new console commands.
    NetUpdate();
@@ -1005,7 +1126,7 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
 //
 // sf: rewritten
 //
-void R_HOMdrawer(void)
+void R_HOMdrawer()
 {
    int colour;
    
@@ -1170,7 +1291,7 @@ void R_DoomTLStyle()
 static const char *handedstr[]  = { "right", "left" };
 static const char *ptranstr[]   = { "none", "smooth", "general" };
 static const char *coleng[]     = { "normal", "quad" };
-static const char *spaneng[]    = { "highprecision", "lowprecision" }; // SoM: Removed old.
+static const char *spaneng[]    = { "highprecision" };
 static const char *tlstylestr[] = { "none", "boom", "new" };
 
 VARIABLE_BOOLEAN(lefthanded, NULL,                  handedstr);
@@ -1182,6 +1303,7 @@ VARIABLE_BOOLEAN(stretchsky, NULL,                  onoff);
 VARIABLE_BOOLEAN(r_swirl, NULL,                     onoff);
 VARIABLE_BOOLEAN(general_translucency, NULL,        onoff);
 VARIABLE_BOOLEAN(autodetect_hom, NULL,              yesno);
+VARIABLE_TOGGLE(r_boomcolormaps, NULL,              onoff);
 
 // SoM: Variable FOV
 VARIABLE_INT(fov, NULL, 20, 179, NULL);
@@ -1264,7 +1386,7 @@ CONSOLE_VARIABLE(r_tranpct, tran_filter_pct, 0)
 CONSOLE_VARIABLE(screensize, screenSize, cf_buffered)
 {
    // haleyjd 10/09/05: get sound from gameModeInfo
-   S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
+   S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
    
    if(gamestate == GS_LEVEL) // not in intercam
    {
@@ -1291,9 +1413,6 @@ CONSOLE_VARIABLE(r_ptcltrans, particle_trans, 0) {}
 CONSOLE_VARIABLE(r_columnengine, r_column_engine_num, 0) {}
 CONSOLE_VARIABLE(r_spanengine,   r_span_engine_num,   0) {}
 
-VARIABLE_INT(r_vissprite_limit, NULL, -1, D_MAXINT, NULL);
-CONSOLE_VARIABLE(r_vissprite_limit, r_vissprite_limit, 0) {}
-
 CONSOLE_COMMAND(p_dumphubs, 0)
 {
    extern void P_DumpHubs();
@@ -1304,6 +1423,8 @@ CONSOLE_VARIABLE(r_tlstyle, r_tlstyle, 0)
 {
    R_DoomTLStyle();
 }
+
+CONSOLE_VARIABLE(r_boomcolormaps, r_boomcolormaps, 0) {}
 
 CONSOLE_COMMAND(r_changesky, 0)
 {

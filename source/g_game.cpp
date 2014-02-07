@@ -29,8 +29,9 @@
 #include "z_zone.h"
 #include "i_system.h"
 
-// Need gamepad HAL
+// Need gamepad and timer HALs
 #include "hal/i_gamepads.h"
+#include "hal/i_timer.h"
 
 #include "a_small.h"
 #include "acs_intr.h"
@@ -323,11 +324,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       cmd->buttons |= BT_ATTACK;
 
    if(gameactions[ka_use])
-   {
       cmd->buttons |= BT_USE;
-      // clear double clicks if hit use button
-      dclicks = 0;
-   }
 
    // phares:
    // Toggle between the top 2 favorite weapons.
@@ -1237,7 +1234,7 @@ void G_DoPlayDemo(void)
       static int first = 1;
       if(first)
       {
-         starttime = I_GetTime_RealTime();
+         starttime = i_haltimer.GetRealTime();
          startgametic = gametic;
          first = 0;
       }
@@ -1387,7 +1384,7 @@ static bool secretexit;
 // haleyjd: true if a script called exitsecret()
 bool scriptSecret = false; 
 
-void G_ExitLevel(void)
+void G_ExitLevel()
 {
    secretexit = scriptSecret = false;
    gameaction = ga_completed;
@@ -1400,7 +1397,7 @@ void G_ExitLevel(void)
 // IF NO WOLF3D LEVELS, NO SECRET EXIT!
 // (unless it's a script secret exit)
 //
-void G_SecretExitLevel(void)
+void G_SecretExitLevel()
 {
    secretexit = 
       !(GameModeInfo->flags & GIF_WOLFHACK) || haswolflevels || scriptSecret;
@@ -1418,9 +1415,10 @@ static void G_PlayerFinishLevel(int player)
 
    // INVENTORY_TODO: convert powers to inventory
    memset(p->powers, 0, sizeof p->powers);
-   p->mo->flags  &= ~MF_SHADOW;    // cancel invisibility
-   p->mo->flags2 &= ~MF2_DONTDRAW; // haleyjd: cancel total invis.
-   p->mo->flags3 &= ~MF3_GHOST;    // haleyjd: cancel ghost
+   p->mo->flags  &= ~MF_SHADOW;             // cancel invisibility
+   p->mo->flags2 &= ~MF2_DONTDRAW;          // haleyjd: cancel total invis.
+   p->mo->flags4 &= ~MF4_TOTALINVISIBLE; 
+   p->mo->flags3 &= ~MF3_GHOST;             // haleyjd: cancel ghost
 
    E_InventoryEndHub(p);   // haleyjd: strip inventory
 
@@ -1436,13 +1434,13 @@ static void G_PlayerFinishLevel(int player)
 // haleyjd 07/03/09: Replaces gamemode-dependent exit determination
 // functions with interpretation of a rule set held in GameModeInfo.
 //
-static void G_SetNextMap(void)
+static void G_SetNextMap()
 {
    exitrule_t *exitrule = GameModeInfo->exitRules;
    exitrule_t *theRule = NULL;
 
    // find a rule
-   for(; exitrule->gameepisode != -2; ++exitrule)
+   for(; exitrule->gameepisode != -2; exitrule++)
    {
       if((exitrule->gameepisode == -1 || exitrule->gameepisode == gameepisode) &&
          (exitrule->gamemap == -1 || exitrule->gamemap == gamemap) &&
@@ -1460,18 +1458,53 @@ static void G_SetNextMap(void)
 }
 
 //
+// G_doFinale
+//
+// Test whether or not a level should have a finale done for it.
+//
+static bool G_doFinale()
+{
+   if(LevelInfo.killFinale) // "kill finale" flag disables unconditionally
+      return false;
+
+   // determine which finale will be run
+   if(secretexit)
+   {
+      if(LevelInfo.finaleNormalOnly) // normal exit only?
+         return false;
+
+      // at least one of the texts must be defined; secret will be preferred,
+      // but intertext will be used if it is undefined
+      if(!LevelInfo.interTextSecret && !LevelInfo.interText)
+         return false;
+   }  
+   else
+   {
+      if(LevelInfo.finaleSecretOnly) // secret exit only?
+         return false;
+
+      // only normal text is used here
+      if(!LevelInfo.interText)
+         return false;
+   }
+
+   return true;
+}
+
+
+//
 // G_DoCompleted
 //
 // Called upon level completion. Figures out what map is next and
 // starts the intermission.
 //
-static void G_DoCompleted(void)
+static void G_DoCompleted()
 {
    int i;
    
    gameaction = ga_nothing;
    
-   for(i = 0; i < MAXPLAYERS; ++i)
+   for(i = 0; i < MAXPLAYERS; i++)
    {
       if(playeringame[i])
          G_PlayerFinishLevel(i);        // take away cards and stuff
@@ -1483,21 +1516,18 @@ static void G_DoCompleted(void)
    if(automapactive)
       AM_Stop();
 
+   if(LevelInfo.finaleEarly && G_doFinale())
+   {
+      gameaction = ga_victory;
+      return;
+   }
+
    if(!(GameModeInfo->flags & GIF_MAPXY)) // kilough 2/7/98
    {
-      switch(gamemap)
+      if(gamemap == 9)
       {
-      case 8:
-         if(!LevelInfo.killFinale) // haleyjd 05/26/10: long-forgotten
-         {
-            gameaction = ga_victory;
-            return;
-         }
-         break;
-      case 9:
-         for(i = 0; i < MAXPLAYERS; ++i)
+         for(i = 0; i < MAXPLAYERS; i++)
             players[i].didsecret = true;
-         break;
       }
    }
 
@@ -1617,7 +1647,6 @@ static void G_DoWorldDone()
    hub_changelevel = false;
    G_DoLoadLevel();
    gameaction = ga_nothing;
-   AM_clearMarks(); //jff 4/12/98 clear any marks on the automap
    // haleyjd 01/07/07: run deferred ACS scripts
    ACS_RunDeferredScripts();
 }
@@ -1629,7 +1658,7 @@ static void G_DoWorldDone()
 // If the map does not have a finale sequence defined, it will be given
 // a default sequence.
 //
-void G_ForceFinale(void)
+void G_ForceFinale()
 {
    // in DOOM 2, we want a cast call
    if(GameModeInfo->flags & GIF_SETENDOFGAME)
@@ -1643,7 +1672,8 @@ void G_ForceFinale(void)
       LevelInfo.interText = "You have won.";
 
    // set other variables for consistency
-   LevelInfo.killFinale = false;
+   LevelInfo.killFinale       = false;
+   LevelInfo.finaleNormalOnly = false;
    LevelInfo.finaleSecretOnly = false;
 
    gameaction = ga_victory;
@@ -1869,7 +1899,7 @@ void G_Ticker()
          G_DoCompleted();
          break;
       case ga_victory:
-         F_StartFinale();
+         F_StartFinale(secretexit);
          break;
       case ga_worlddone:
          G_DoWorldDone();
@@ -2478,18 +2508,15 @@ void G_WorldDone()
 
    if(secretexit)
       players[consoleplayer].didsecret = true;
-   
-   if(LevelInfo.interText && !LevelInfo.killFinale &&
-      (!LevelInfo.finaleSecretOnly || secretexit))
-   {
-      F_StartFinale();
-   }
+
+   if(G_doFinale())
+      F_StartFinale(secretexit);
 }
 
-static skill_t   d_skill;
-static int       d_episode;
-static int       d_map;
-static char      d_mapname[10];
+static skill_t d_skill;
+static int     d_episode;
+static int     d_map;
+static char    d_mapname[10];
 
 int G_GetMapForName(const char *name)
 {
@@ -2897,9 +2924,6 @@ void G_InitNew(skill_t skill, char *name)
 
    G_SetGameMap();  // sf
   
-   //jff 4/16/98 force marks on automap cleared every new level start
-   AM_clearMarks();
-
    if(demo_version >= 203)
       M_LoadOptions();     // killough 11/98: read OPTIONS lump from wad
   
@@ -3405,7 +3429,7 @@ bool G_CheckDemoStatus()
 
    if(timingdemo)
    {
-      int endtime = I_GetTime_RealTime();
+      int endtime = i_haltimer.GetRealTime();
 
       // killough -- added fps information and made it work for longer demos:
       unsigned int realtics = endtime - starttime;

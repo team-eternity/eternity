@@ -31,10 +31,12 @@
 
 #include "../z_zone.h"
 
-#include "../i_system.h"
 #include "../m_dllist.h"
 #include "../m_vector.h"
 #include "i_xinput.h"
+
+// Need timer HAL
+#include "../hal/i_timer.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -674,7 +676,7 @@ void XInputHapticInterface::zeroState()
 //
 void XInputHapticInterface::startEffect(effect_e effect, int data1, int data2)
 {
-   uint32_t curTime = I_GetTicks();
+   uint32_t curTime = i_haltimer.GetTicks();
 
    switch(effect)
    {
@@ -752,7 +754,7 @@ void XInputHapticInterface::updateEffects()
    }
 
    XINPUT_VIBRATION xvib = { 0, 0 };
-   auto curTime = I_GetTicks();
+   auto curTime = i_haltimer.GetTicks();
 
    XIBaseEffect::RunEffectsList(xvib, curTime);
    

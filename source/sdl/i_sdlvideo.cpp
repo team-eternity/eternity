@@ -435,10 +435,6 @@ bool SDLVideoDriver::InitGraphicsMode()
    fallback_bd    = v_bd;
    fallback_flags = flags;
 
-   // haleyjd 10/14/09: wait for a bit so the screen can settle
-   if(flags & SDL_FULLSCREEN)
-      I_Sleep(500);
-
    // haleyjd 10/09/05: keep track of fullscreen state
    fullscreen = (sdlscreen->flags & SDL_FULLSCREEN) == SDL_FULLSCREEN;
 

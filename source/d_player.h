@@ -122,6 +122,7 @@ struct player_t
    //  including viewpoint bobbing during movement.
   
    fixed_t        viewz;           // Focal origin above r.z  
+   fixed_t        prevviewz;       // haleyjd 01/04/14: previous vewz, for interpolation
    fixed_t        viewheight;      // Base height above floor for viewz.  
    fixed_t        deltaviewheight; // Bob/squat speed.
    fixed_t        bob;             // bounded/scaled total momentum.

@@ -73,8 +73,8 @@ static const char *titles[NUMPICKIWADS] =
    "Heretic Shareware Version",
    "Heretic Registered Version",
    "Heretic: Shadow of the Serpent Riders",
-   "Freedoom",
-   "Ultimate Freedoom",
+   "Freedoom Phase 2",
+   "Freedoom Phase 1",
    "FreeDM",
 };
 

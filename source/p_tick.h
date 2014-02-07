@@ -188,9 +188,6 @@ typedef enum
 
 extern Thinker thinkerclasscap[];
 
-// sf: jumping-viewz-on-hyperlift bug
-extern bool reset_viewz;
-
 //
 // DECLARE_THINKER_TYPE
 //

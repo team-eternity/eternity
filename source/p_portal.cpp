@@ -585,7 +585,7 @@ bool P_BuildLinkTable()
       if(!P_CheckLinkedPortal(sec->f_portal, sec))
          return false;
 
-      for(p = 0; p < sec->linecount; ++p)
+      for(p = 0; p < sec->linecount; p++)
       {
          if(!P_CheckLinkedPortal(sec->lines[p]->portal, sec))
            return false;
@@ -596,9 +596,9 @@ bool P_BuildLinkTable()
    // Now the fun begins! Checking the actual groups for correct backlinks.
    // this needs to be done before the indirect link information is gathered to
    // make sure every link is two-way.
-   for(i = 0; i < groupcount; ++i)
+   for(i = 0; i < groupcount; i++)
    {
-      for(p = 0; p < groupcount; ++p)
+      for(p = 0; p < groupcount; p++)
       {
          if(p == i)
             continue;
@@ -621,7 +621,7 @@ bool P_BuildLinkTable()
    }
 
    // That first loop has to complete before this can be run!
-   for(i = 0; i < groupcount; ++i)
+   for(i = 0; i < groupcount; i++)
       P_GatherLinks(i, 0, 0, 0, R_NOGROUP);
 
    // SoM: one last step. Find all map architecture with a group id of -1 and 
@@ -633,7 +633,7 @@ bool P_BuildLinkTable()
    }
    
    // Last step is to put zerolink in every link that goes from a group to that same group
-   for(i = 0; i < groupcount; ++i)
+   for(i = 0; i < groupcount; i++)
    {
       if(!linktable[i * groupcount + i])
          linktable[i * groupcount + i] = &zerolink;
@@ -721,6 +721,8 @@ bool EV_PortalTeleport(Mobj *mo, linkoffset_t *link)
       // Set player's view according to the newly set parameters
       P_CalcHeight(mo->player);
 
+      mo->player->prevviewz = mo->player->viewz;
+
       // Reset the delta to have the same dynamics as before
       mo->player->deltaviewheight = deltaviewheight;
 
@@ -728,6 +730,7 @@ bool EV_PortalTeleport(Mobj *mo, linkoffset_t *link)
           P_ResetChasecam();
    }
 
+   mo->backupPosition();
    P_AdjustFloorClip(mo);
    
    return 1;
@@ -820,9 +823,11 @@ void P_CheckLPortalState(line_t *line)
 //
 void P_SetFloorHeight(sector_t *sec, fixed_t h)
 {
+   // set new value
    sec->floorheight = h;
    sec->floorheightf = M_FixedToFloat(sec->floorheight);
-   
+
+   // check floor portal state
    P_CheckFPortalState(sec);
 }
 
@@ -834,9 +839,11 @@ void P_SetFloorHeight(sector_t *sec, fixed_t h)
 //
 void P_SetCeilingHeight(sector_t *sec, fixed_t h)
 {
+   // set new value
    sec->ceilingheight = h;
    sec->ceilingheightf = M_FixedToFloat(sec->ceilingheight);
 
+   // check ceiling portal state
    P_CheckCPortalState(sec);
 }
 
@@ -854,7 +861,6 @@ void P_SetPortalBehavior(portal_t *portal, int newbehavior)
       if(sec->f_portal == portal)
          P_CheckFPortalState(sec);
    }
-   
    
    for(i = 0; i < numlines; i++)
    {

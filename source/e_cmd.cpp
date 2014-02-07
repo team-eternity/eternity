@@ -340,7 +340,7 @@ CONSOLE_COMMAND(e_dumpitems, 0)
 //
 CONSOLE_COMMAND(e_playsound, 0)
 {
-   sfxinfo_t *sfx;
+   soundparams_t params;
 
    if(Console.argc < 1)
    {
@@ -348,17 +348,16 @@ CONSOLE_COMMAND(e_playsound, 0)
       return;
    }
 
-   sfx = E_SoundForName(Console.argv[0]->constPtr());
-
-   if(!sfx)
+   if(!(params.sfx = E_SoundForName(Console.argv[0]->constPtr())))
    {
       C_Printf("No such sound '%s'\n", Console.argv[0]->constPtr());
       return;
    }
 
-   C_Printf("Sound info: %s:%s:%d\n", sfx->mnemonic, sfx->name, sfx->dehackednum);
+   C_Printf("Sound info: %s:%s:%d\n", 
+            params.sfx->mnemonic, params.sfx->name, params.sfx->dehackednum);
 
-   S_StartSfxInfo(NULL, sfx, 127, ATTN_NORMAL, false, CHAN_AUTO);
+   S_StartSfxInfo(params.setNormalDefaults(NULL));
 }
 
 CONSOLE_COMMAND(e_listmapthings, cf_level)

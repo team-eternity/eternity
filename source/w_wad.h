@@ -304,7 +304,7 @@ public:
    int   getNumForName(const char *name);
    int   checkNumForLFN(const char *lfn, int li_namespace = lumpinfo_t::ns_global);
    int   checkNumForLFNNSG(const char *name, int ns);
-   
+
    // sf: add a new wad file after the game has already begun
    bool  addNewFile(const char *filename);
    // haleyjd 06/15/10: special private wad file support
@@ -323,6 +323,7 @@ public:
 
    lumpinfo_t *getLumpNameChain(const char *name) const;
 
+   const char *getLumpName(int lumpnum);
    const char *getLumpFileName(int lump);
 
    // Accessors

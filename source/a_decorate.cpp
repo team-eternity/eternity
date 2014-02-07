@@ -397,53 +397,54 @@ static argkeywd_t attnkwdsnew = { kwds_attn_new, ATTN_NUM };
 // args[2] : loop?
 // args[3] : attenuation
 // args[4] : EE extension - volume
+// args[5] : EE extension - reverb
 //
 void A_PlaySoundEx(actionargs_t *actionargs)
 {
-   Mobj      *mo   = actionargs->actor;
-   arglist_t *args = actionargs->args;
-   sfxinfo_t *sfx  = NULL;
-   int channel, attn, volume;
-   bool loop;
+   arglist_t *args = actionargs->args;   
+   soundparams_t params;
 
-   sfx = E_ArgAsSound(args, 0);
+   params.origin = actionargs->actor;
+   params.sfx    = E_ArgAsSound(args, 0);
+
+   if(!params.sfx)
+      return;
    
    // handle channel
-   channel = E_ArgAsKwd(args, 1, &channelkwdsold, -1);
-   if(channel == -1)
+   params.subchannel = E_ArgAsKwd(args, 1, &channelkwdsold, -1);
+   if(params.subchannel == -1)
    {
       E_ResetArgEval(args, 1);
-      channel = E_ArgAsKwd(args, 1, &channelkwdsnew, 0);
+      params.subchannel = E_ArgAsKwd(args, 1, &channelkwdsnew, 0);
    }
 
-   loop = !!E_ArgAsInt(args, 2, 0);
+   params.loop = !!E_ArgAsInt(args, 2, 0);
 
    // handle attenuation
-   attn = E_ArgAsKwd(args, 3, &attnkwdsold, -1);
+   params.attenuation = E_ArgAsKwd(args, 3, &attnkwdsold, -1);
    
-   if(attn == -1)
+   if(params.attenuation == -1)
    {
       E_ResetArgEval(args, 3);
-      attn = E_ArgAsKwd(args, 3, &attnkwdsnew, 0);
+      params.attenuation = E_ArgAsKwd(args, 3, &attnkwdsnew, 0);
    }
 
-   volume = E_ArgAsInt(args, 4, 0);
+   params.volumeScale = E_ArgAsInt(args, 4, 0);
 
-   if(!sfx)
-      return;
+   params.reverb = !!E_ArgAsInt(args, 5, 1);
 
    // rangechecking
-   if(attn < 0 || attn >= ATTN_NUM)
-      attn = ATTN_NORMAL;
+   if(params.attenuation < 0 || params.attenuation >= ATTN_NUM)
+      params.attenuation = ATTN_NORMAL;
 
-   if(channel < CHAN_AUTO || channel >= NUMSCHANNELS)
-      channel = CHAN_AUTO;
+   if(params.subchannel < CHAN_AUTO || params.subchannel >= NUMSCHANNELS)
+      params.subchannel = CHAN_AUTO;
 
    // note: volume 0 == 127, for convenience
-   if(volume <= 0 || volume > 127)
-      volume = 127;
+   if(params.volumeScale <= 0 || params.volumeScale > 127)
+      params.volumeScale = 127;
 
-   S_StartSfxInfo(mo, sfx, volume, attn, loop, channel);
+   S_StartSfxInfo(params);
 }
 
 // EOF

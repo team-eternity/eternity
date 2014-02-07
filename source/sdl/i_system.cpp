@@ -33,6 +33,7 @@
 
 // HAL modules
 #include "../hal/i_gamepads.h"
+#include "../hal/i_timer.h"
 
 #include "../z_zone.h"
 #include "../c_io.h"
@@ -64,90 +65,6 @@ ticcmd_t *I_BaseTiccmd()
    static ticcmd_t emptycmd; // killough
    return &emptycmd;
 }
-
-//
-// I_WaitVBL
-//
-// SoM 3/13/2002: SDL time. 1000 ticks per second.
-//
-void I_WaitVBL(int count)
-{
-   SDL_Delay((count*500)/TICRATE);
-}
-
-//=============================================================================
-//
-// I_GetTime
-// Most of the following has been rewritten by Lee Killough
-//
-
-static Uint32 basetime=0;
-
-//
-// I_GetTime_RealTime
-//
-int I_GetTime_RealTime()
-{
-   Uint32        ticks;
-   
-   // milliseconds since SDL initialization
-   ticks = SDL_GetTicks();
-   
-   return ((ticks - basetime)*TICRATE)/1000;
-}
-
-//
-// I_GetTicks
-//
-// haleyjd 10/26/08
-//
-unsigned int I_GetTicks()
-{
-   return SDL_GetTicks();
-}
-
-//
-// I_SetTime
-//
-void I_SetTime(int newtime)
-{
-   // SoM 3/14/2002: Uh, this function is never called. ??
-}
-
-//sf: made a #define, changed to 16
-#define CLOCK_BITS 16
-
-// killough 4/13/98: Make clock rate adjustable by scale factor
-int realtic_clock_rate = 100;
-static int64_t I_GetTime_Scale = 1 << CLOCK_BITS;
-
-//
-// I_GetTime_Scaled
-//
-int I_GetTime_Scaled()
-{
-   return (int)(((int64_t)I_GetTime_RealTime() * I_GetTime_Scale) >> CLOCK_BITS);
-}
-
-//
-// I_GetTime_FastDemo
-//
-static int I_GetTime_FastDemo()
-{
-   static int fasttic;
-   return fasttic++;
-}
-
-//
-// I_GetTime_Error
-//
-static int I_GetTime_Error()
-{
-   I_Error("Error: GetTime() used before initialization\n");
-   return 0;
-}
-
-int (*I_GetTime)(void) = I_GetTime_Error;  // killough
 
 int mousepresent;
 
@@ -190,35 +107,12 @@ void I_InitKeyboard()
 //
 void I_Init()
 {
-   int clock_rate = realtic_clock_rate, p;
-   
-   if((p = M_CheckParm("-speed")) && p < myargc-1 &&
-      (p = atoi(myargv[p+1])) >= 10 && p <= 1000)
-      clock_rate = p;
-   
-   basetime = SDL_GetTicks();
-   
-   // killough 4/14/98: Adjustable speedup based on realtic_clock_rate
-   if(fastdemo)
-   {
-      I_GetTime = I_GetTime_FastDemo;
-   }
-   else
-   {
-      if (clock_rate != 100)
-      {
-         I_GetTime_Scale = ((int64_t) clock_rate << CLOCK_BITS) / 100;
-         I_GetTime = I_GetTime_Scaled;
-      }
-      else
-         I_GetTime = I_GetTime_RealTime;
-   }
+   // haleyjd 01/10/14: initialize timer
+   I_InitHALTimer();
 
    // haleyjd 04/15/02: initialize joystick
    I_InitGamePads();
-      
-   // killough 3/6/98: end of keyboard / autorun state changes
-      
+ 
    atexit(I_Shutdown);
    
    // killough 2/21/98: avoid sound initialization if no sound & no music
@@ -408,16 +302,6 @@ void I_ErrorVA(const char *error, va_list args)
       I_FatalError(I_ERR_ABORT, "I_ErrorVA: double faulted\n");
 }
 
-//
-// I_Sleep
-//
-// haleyjd: routine to sleep a fixed number of milliseconds.
-//
-void I_Sleep(int ms)
-{
-   SDL_Delay(ms);
-}
-
 // haleyjd: made everything optional
 int showendoom;
 int endoomdelay;
@@ -459,9 +343,9 @@ void I_EndDoom()
    // Wait for 10 seconds, or until a keypress or mouse click
    // haleyjd: delay period specified in config (default = 350)
    waiting = true;
-   start_ms = I_GetTime();
+   start_ms = i_haltimer.GetTime();
    
-   while(waiting && I_GetTime() < start_ms + endoomdelay)
+   while(waiting && i_haltimer.GetTime() < start_ms + endoomdelay)
    {
       TXT_UpdateScreen();
 
@@ -501,21 +385,6 @@ int I_CheckAbort()
 int leds_always_off;
 
 VARIABLE_BOOLEAN(leds_always_off, NULL,     yesno);
-VARIABLE_INT(realtic_clock_rate, NULL,  0, 500, NULL);
-
-CONSOLE_VARIABLE(i_gamespeed, realtic_clock_rate, 0)
-{
-   if (realtic_clock_rate != 100)
-   {
-      I_GetTime_Scale = ((int64_t) realtic_clock_rate << CLOCK_BITS) / 100;
-      I_GetTime = I_GetTime_Scaled;
-   }
-   else
-      I_GetTime = I_GetTime_RealTime;
-   
-   //ResetNet();         // reset the timers and stuff
-}
-
 CONSOLE_VARIABLE(i_ledsoff, leds_always_off, 0) {}
 
 #ifdef _SDL_VER

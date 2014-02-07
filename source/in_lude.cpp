@@ -132,14 +132,9 @@ void IN_StartCamera()
       intercam.angle = wi_camera->angle;
       intercam.pitch = 0;
 
-      {
-         // haleyjd: camera deep water HOM bug fix
-         subsector_t *subsec =
-            R_PointInSubsector(intercam.x, intercam.y);
-         
-         intercam.z = subsec->sector->floorheight + 41*FRACUNIT;
-         intercam.heightsec = subsec->sector->heightsec;
-      }
+      subsector_t *subsec = R_PointInSubsector(intercam.x, intercam.y);
+      intercam.z = subsec->sector->floorheight + 41*FRACUNIT;
+      
       // FIXME: does this bite the player's setting for the next map?
       R_SetViewSize(11);     // force fullscreen
    }

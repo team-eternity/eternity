@@ -226,10 +226,11 @@ void A_Scratch(actionargs_t *actionargs)
          S_StartSound(mo, mo->state->misc2);
       else
       {
+         soundparams_t params;
+
          // check to see if args[2] is a valid sound
-         sfxinfo_t *sfx = E_ArgAsSound(args, 2);
-         if(sfx)
-            S_StartSfxInfo(mo, sfx, 127, ATTN_NORMAL, false, CHAN_AUTO);
+         if((params.sfx = E_ArgAsSound(args, 2)))
+            S_StartSfxInfo(params.setNormalDefaults(mo));
       }
 
       P_DamageMobj(mo->target, mo, mo, damage, MOD_HIT);
@@ -910,13 +911,13 @@ void A_BulletAttack(actionargs_t *actionargs)
 {
    Mobj      *actor = actionargs->actor;
    arglist_t *args = actionargs->args;
-   sfxinfo_t *sfx;
+   soundparams_t params;
    int i, accurate, numbullets, damage, dmgmod, slope;
    
    if(!actor->target)
       return;
 
-   sfx        = E_ArgAsSound(args, 0);
+   params.sfx = E_ArgAsSound(args, 0);
    numbullets = E_ArgAsInt(args,   2, 0);
    damage     = E_ArgAsInt(args,   3, 0);
    dmgmod     = E_ArgAsInt(args,   4, 0);
@@ -942,7 +943,7 @@ void A_BulletAttack(actionargs_t *actionargs)
       dmgmod = 256;
 
    A_FaceTarget(actionargs);
-   S_StartSfxInfo(actor, sfx, 127, ATTN_NORMAL, false, CHAN_AUTO);
+   S_StartSfxInfo(params.setNormalDefaults(actor));
 
    slope = P_AimLineAttack(actor, actor->angle, MISSILERANGE, 0);
 
@@ -1232,13 +1233,15 @@ void A_ShowMessage(actionargs_t *actionargs)
 //
 void A_AmbientThinker(actionargs_t *actionargs)
 {
-   Mobj *mo = actionargs->actor;
-   EAmbience_t *amb = E_AmbienceForNum(mo->args[0]);
-   bool loop = false;
+   soundparams_t  params;
+   Mobj          *mo  = actionargs->actor;
+   EAmbience_t   *amb = E_AmbienceForNum(mo->args[0]);
 
    // nothing to play?
    if(!amb || !amb->sound)
       return;
+
+   params.loop = false;
 
    // run thinker actions for corresponding ambience type
    switch(amb->type)
@@ -1246,7 +1249,7 @@ void A_AmbientThinker(actionargs_t *actionargs)
    case E_AMBIENCE_CONTINUOUS:
       if(S_CheckSoundPlaying(mo, amb->sound)) // not time yet?
          return;
-      loop = true;
+      params.loop = true;
       break;
    case E_AMBIENCE_PERIODIC:
       if(mo->counters[0]-- >= 0) // not time yet?
@@ -1262,8 +1265,15 @@ void A_AmbientThinker(actionargs_t *actionargs)
       return;
    }
 
+   params.origin      = mo;
+   params.sfx         = amb->sound;
+   params.volumeScale = amb->volume;
+   params.attenuation = amb->attenuation;
+   params.subchannel  = CHAN_AUTO;
+   params.reverb      = amb->reverb;
+
    // time to play the sound
-   S_StartSfxInfo(mo, amb->sound, amb->volume, amb->attenuation, loop, CHAN_AUTO);
+   S_StartSfxInfo(params);
 }
 
 void A_SteamSpawn(actionargs_t *actionargs)

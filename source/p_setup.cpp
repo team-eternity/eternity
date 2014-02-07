@@ -30,6 +30,7 @@
 #include "acs_intr.h"
 #include "autodoom/b_botmap.h"   // IOANCH
 #include "autodoom/b_think.h"
+#include "am_map.h"
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_gi.h"
@@ -38,6 +39,7 @@
 #include "d_mod.h"
 #include "doomstat.h"
 #include "e_exdata.h" // haleyjd: ExtraData!
+#include "e_reverbs.h"
 #include "e_ttypes.h"
 #include "ev_specials.h"
 #include "g_game.h"
@@ -98,7 +100,14 @@ seg_t    *segs;
 int      numsectors;
 sector_t *sectors;
 
-int      numsubsectors;
+// haleyjd 01/05/14: sector interpolation data
+sectorinterp_t *sectorinterps;
+
+// haleyjd 01/12/14: sector sound environment zones
+int         numsoundzones;
+soundzone_t *soundzones;
+
+int         numsubsectors;
 subsector_t *subsectors;
 
 int      numnodes;
@@ -469,6 +478,9 @@ static void P_InitSector(sector_t *ss)
    // haleyjd 09/24/06: sound sequences -- set default
    ss->sndSeqID = defaultSndSeq;
 
+   // haleyjd 01/12/14: set sound zone to -1 
+   ss->soundzone = -1;
+
    // CPP_FIXME: temporary placement construction for sound origins
    ::new (&ss->soundorg)  PointThinker;
    ::new (&ss->csoundorg) PointThinker;
@@ -592,6 +604,89 @@ void P_LoadSectors(int lumpnum)
     
       P_InitSector(ss);
    }
+}
+
+//
+// P_CreateSectorInterps
+//
+// haleyjd 01/05/14: Create sector interpolation structures.
+//
+static void P_CreateSectorInterps()
+{
+   sectorinterps = estructalloctag(sectorinterp_t, numsectors, PU_LEVEL);
+
+   for(int i = 0; i < numsectors; i++)
+   {
+      sectorinterps[i].prevfloorheight    = sectors[i].floorheight;
+      sectorinterps[i].prevceilingheight  = sectors[i].ceilingheight;
+      sectorinterps[i].prevfloorheightf   = sectors[i].floorheightf;
+      sectorinterps[i].prevceilingheightf = sectors[i].ceilingheightf;
+   }
+}
+
+//
+// P_propagateSoundZone
+//
+// haleyjd 01/12/14: Recursive routine to propagate a sound zone from a
+// sector to all its neighboring sectors which border it by a 2S line which
+// is not marked as a sound boundary.
+//
+static void P_propagateSoundZone(sector_t *sector, int zoneid)
+{
+   // if we already touched this sector somehow, return immediately
+   if(sector->soundzone == zoneid)
+      return;
+
+   // set the zone to the sector
+   sector->soundzone = zoneid;
+
+   // iterate on the sector linedef list to find neighboring sectors
+   for(int ln = 0; ln < sector->linecount; ln++)
+   {
+      auto line = sector->lines[ln];
+
+      // must be 2S and not a zone boundary line
+      if(!line->backsector || (line->extflags & EX_ML_ZONEBOUNDARY))
+         continue;
+
+      auto next = ((line->backsector != sector) ? line->backsector : line->frontsector);
+
+      // if not already in the same sound zone, propagate recursively.
+      if(next->soundzone != zoneid)
+         P_propagateSoundZone(next, zoneid);
+   }
+}
+
+//
+// P_CreateSoundZones
+//
+// haleyjd 01/12/14: create sound environment zones for the map by using an
+// alert-like propagation method.
+//
+static void P_CreateSoundZones()
+{
+   numsoundzones = 0;
+
+   for(int secnum = 0; secnum < numsectors; secnum++)
+   {
+      auto sec = &sectors[secnum];
+      
+      // if the sector hasn't become part of a zone yet, do propagation for it
+      if(sec->soundzone == -1)
+         P_propagateSoundZone(sec, numsoundzones++);
+   }
+
+   // allocate soundzones
+   soundzones = estructalloctag(soundzone_t, numsoundzones, PU_LEVEL);
+   
+   // set all zones to level default reverb, or engine default if level default
+   // is not a valid reverb.
+   ereverb_t *defReverb;
+   if(!(defReverb = E_ReverbForID(LevelInfo.defaultEnvironment)))
+      defReverb = E_GetDefaultReverb();
+
+   for(int zonenum = 0; zonenum < numsoundzones; zonenum++)
+      soundzones[zonenum].reverb = defReverb;
 }
 
 //
@@ -1076,7 +1171,7 @@ void P_LoadHexenThings(int lump)
    // haleyjd 03/03/07: allocate full mapthings
    mapthings = ecalloc(mapthing_t *, numthings, sizeof(mapthing_t));
    
-   for(i = 0; i < numthings; ++i)
+   for(i = 0; i < numthings; i++)
    {
       mapthinghexen_t *mt = (mapthinghexen_t *)data + i;
       mapthing_t      *ft = &mapthings[i];
@@ -1347,7 +1442,7 @@ void P_LoadHexenLineDefs(int lump)
       ld->flags   = SwapShort(mld->flags);
       ld->special = mld->special;
       
-      for(int argnum = 0; argnum < NUMHXLINEARGS; ++argnum)
+      for(int argnum = 0; argnum < NUMHXLINEARGS; argnum++)
          ld->args[argnum] = mld->args[argnum];
 
       // Convert line flags after setting special?
@@ -1401,12 +1496,17 @@ void P_LoadLineDefs2()
             ld->extflags |= EX_ML_ADDITIVE;
          }
 
-         // 2S line midtextures without any of the 3 flags set don't draw.
-         if(ld->sidenum[1] != -1 &&
-            !(ld->flags & (ML_PSX_MIDMASKED|ML_PSX_MIDTRANSLUCENT|ML_PSX_MIDSOLID)))
+         if(ld->sidenum[1] != -1)
          {
-            sides[ld->sidenum[0]].midtexture = 0;
-            sides[ld->sidenum[1]].midtexture = 0;
+            // 2S line midtextures without any of the 3 flags set don't draw.
+            if(!(ld->flags & (ML_PSX_MIDMASKED|ML_PSX_MIDTRANSLUCENT|ML_PSX_MIDSOLID)))
+            {
+               sides[ld->sidenum[0]].midtexture = 0;
+               sides[ld->sidenum[1]].midtexture = 0;
+            }
+
+            // All 2S lines clip their textures to their sector heights
+            ld->extflags |= EX_ML_CLIPMIDTEX;
          }
 
          ld->flags &= 0x1FF; // clear all extended flags
@@ -1477,7 +1577,7 @@ void P_LoadSideDefs2(int lumpnum)
    // IOANCH: hash it
    g_levelHash.addData(data, numsides * sizeof(mapsidedef_t));
 
-   for(i = 0; i < numsides; ++i)
+   for(i = 0; i < numsides; i++)
    {
       register side_t *sd = sides + i;
       register sector_t *sec;
@@ -1595,7 +1695,7 @@ static void P_CreateBlockMap(void)
 
    // First find limits of map
    
-   for(i = 0; i < (unsigned int)numvertexes; ++i)
+   for(i = 0; i < (unsigned int)numvertexes; i++)
    {
       if((vertexes[i].x >> FRACBITS) < minx)
          minx = vertexes[i].x >> FRACBITS;
@@ -1639,7 +1739,7 @@ static void P_CreateBlockMap(void)
       unsigned tot = bmapwidth * bmapheight;                  // size of blockmap
       bmap_t *bmap = ecalloc(bmap_t *, sizeof *bmap, tot);    // array of blocklists
 
-      for(i = 0; i < (unsigned int)numlines; ++i)
+      for(i = 0; i < (unsigned int)numlines; i++)
       {
          // starting coordinates
          int x = (lines[i].v1->x >> FRACBITS) - minx;
@@ -1709,7 +1809,7 @@ static void P_CreateBlockMap(void)
          // we need at least 1 word per block, plus reserved's
          int count = tot + 6;
 
-         for(i = 0; i < tot; ++i)
+         for(i = 0; i < tot; i++)
          {
             // 1 header word + 1 trailer word + blocklist
             if(bmap[i].n)
@@ -1764,9 +1864,9 @@ static bool P_VerifyBlockMap(int count)
 
    bmaperrormsg = NULL;
 
-   for(y = 0; y < bmapheight; ++y)
+   for(y = 0; y < bmapheight; y++)
    {
-      for(x = 0; x < bmapwidth; ++x)
+      for(x = 0; x < bmapwidth; x++)
       {
          int offset;
          int *list, *tmplist;
@@ -1787,7 +1887,7 @@ static bool P_VerifyBlockMap(int count)
          list   = blockmaplump + offset;
 
          // scan forward for a -1 terminator before maxoffs
-         for(tmplist = list; ; ++tmplist)
+         for(tmplist = list; ; tmplist++)
          {
             // we have overflowed the lump?
             if(tmplist >= maxoffs)
@@ -1803,7 +1903,7 @@ static bool P_VerifyBlockMap(int count)
             break;
 
          // scan the list for out-of-range linedef indicies in list
-         for(tmplist = list; *tmplist != -1; ++tmplist)
+         for(tmplist = list; *tmplist != -1; tmplist++)
          {
             if(*tmplist < 0 || *tmplist >= numlines)
             {
@@ -1920,17 +2020,17 @@ static void AddLineToSector(sector_t *s, line_t *l)
 // killough 5/3/98: reformatted, cleaned up
 // killough 8/24/98: rewrote to use faster algorithm
 //
-void P_GroupLines(void)
+void P_GroupLines()
 {
    int i, total;
    line_t **linebuffer;
 
    // look up sector number for each subsector
-   for(i = 0; i < numsubsectors; ++i)
+   for(i = 0; i < numsubsectors; i++)
       subsectors[i].sector = segs[subsectors[i].firstline].sidedef->sector;
 
    // count number of lines in each sector
-   for(i = 0; i < numlines; ++i)
+   for(i = 0; i < numlines; i++)
    {
       lines[i].frontsector->linecount++;
       if(lines[i].backsector && 
@@ -1941,7 +2041,7 @@ void P_GroupLines(void)
    }
 
    // compute total number of lines and clear bounding boxes
-   for(total = 0, i = 0; i < numsectors; ++i)
+   for(total = 0, i = 0; i < numsectors; i++)
    {
       total += sectors[i].linecount;
       M_ClearBox(sectors[i].blockbox);
@@ -1950,13 +2050,13 @@ void P_GroupLines(void)
    // build line tables for each sector
    linebuffer = (line_t **)(Z_Malloc(total * sizeof(*linebuffer), PU_LEVEL, 0));
 
-   for(i = 0; i < numsectors; ++i)
+   for(i = 0; i < numsectors; i++)
    {
       sectors[i].lines = linebuffer;
       linebuffer += sectors[i].linecount;
    }
   
-   for(i = 0; i < numlines; ++i)
+   for(i = 0; i < numlines; i++)
    {
       AddLineToSector(lines[i].frontsector, &lines[i]);
       if(lines[i].backsector && 
@@ -1966,7 +2066,7 @@ void P_GroupLines(void)
       }
    }
 
-   for(i = 0; i < numsectors; ++i)
+   for(i = 0; i < numsectors; i++)
    {
       sector_t *sector = sectors+i;
       int block;
@@ -2056,7 +2156,7 @@ void P_GroupLines(void)
 //
 // Firelines (TM) is a Rezistered Trademark of MBF Productions
 //
-void P_RemoveSlimeTrails(void)             // killough 10/98
+void P_RemoveSlimeTrails()             // killough 10/98
 {
    byte *hit; 
    int i;
@@ -2067,7 +2167,7 @@ void P_RemoveSlimeTrails(void)             // killough 10/98
 
    hit = ecalloc(byte *, 1, numvertexes); // Hitlist for vertices
 
-   for(i = 0; i < numsegs; ++i)            // Go through each seg
+   for(i = 0; i < numsegs; i++)            // Go through each seg
    {
       const line_t *l = segs[i].linedef;   // The parent linedef
       if(l->dx && l->dy)                   // We can ignore orthogonal lines
@@ -2244,6 +2344,41 @@ int P_CheckLevel(WadDirectory *dir, int lumpnum)
    return LEVEL_FORMAT_HEXEN;
 }
 
+//
+// P_CheckLevelName
+//
+// haleyjd 01/21/14: Check for a level's existence and format by lump name.
+//
+int P_CheckLevelName(WadDirectory *dir, const char *mapname)
+{
+   int lumpnum;
+   return ((lumpnum = dir->checkNumForName(mapname)) >= 0 ? 
+      P_CheckLevel(dir, lumpnum) : LEVEL_FORMAT_INVALID);
+}
+
+//
+// P_CheckLevelMapNum
+//
+// haleyjd 01/21/14: Check for a level's existence and format from a map
+// number. Note behavior here for ExMy levels is ZDoom-compatible (episode
+// is base 0, not base 1).
+//
+int P_CheckLevelMapNum(WadDirectory *dir, int mapnum)
+{
+   qstring mapname;
+
+   if(GameModeInfo->flags & GIF_MAPXY)
+      mapname.Printf(9, "MAP%02d", mapnum);
+   else
+   {
+      int episode = mapnum / 10 + 1;
+      int map     = mapnum % 10;
+      mapname.Printf(9, "E%dM%d", episode, map);
+   }
+
+   return P_CheckLevelName(dir, mapname.constPtr());
+}
+
 void P_ConvertHereticSpecials(); // haleyjd
 
 void P_InitThingLists(); // haleyjd
@@ -2272,11 +2407,11 @@ static void P_SetupLevelError(const char *msg, const char *levelname)
 // Called when loading a new map.
 // haleyjd 06/04/05: moved here and renamed from HU_NewLevel
 //
-static void P_NewLevelMsg(void)
+static void P_NewLevelMsg()
 {   
    C_Printf("\n");
    C_Separator();
-   C_Printf("%c  %s\n\n", 128+CR_GRAY, LevelInfo.levelName);
+   C_Printf(FC_GRAY "  %s\n\n", LevelInfo.levelName);
    C_InstaPopup();       // put console away
 }
 
@@ -2285,11 +2420,9 @@ static void P_NewLevelMsg(void)
 //
 // haleyjd 2/18/10: clears various player-related data.
 //
-static void P_ClearPlayerVars(void)
+static void P_ClearPlayerVars()
 {
-   int i;
-
-   for(i = 0; i < MAXPLAYERS; ++i)
+   for(int i = 0; i < MAXPLAYERS; i++)
    {
       if(playeringame[i] && players[i].playerstate == PST_DEAD)
          players[i].playerstate = PST_REBORN;
@@ -2309,7 +2442,7 @@ static void P_ClearPlayerVars(void)
    wminfo.partime = 180;
 
    // Initial height of PointOfView will be set by player think.
-   players[consoleplayer].viewz = 1;
+   players[consoleplayer].viewz = players[consoleplayer].prevviewz = 1;
 }
 
 //
@@ -2318,7 +2451,7 @@ static void P_ClearPlayerVars(void)
 // haleyjd 2/18/10: actions that must be performed immediately prior to 
 // Z_FreeTags should be kept here.
 //
-static void P_PreZoneFreeLevel(void)
+static void P_PreZoneFreeLevel()
 {
    //==============================================
    // Clear player data
@@ -2393,7 +2526,7 @@ static void P_InitNewLevel(int lumpnum, WadDirectory *waddir)
    // Map data scripts
 
    // load MapInfo
-   P_LoadLevelInfo(lumpnum, W_GetManagedDirFN(waddir));
+   P_LoadLevelInfo(waddir, lumpnum, W_GetManagedDirFN(waddir));
    
    // haleyjd 10/08/03: load ExtraData
    E_LoadExtraData();         
@@ -2410,6 +2543,9 @@ static void P_InitNewLevel(int lumpnum, WadDirectory *waddir)
    //==============================================
    // Wake up subsystems
 
+   // haleyjd 01/21/14: clear marks here along with everything else
+   AM_clearMarks();
+
    // wake up heads-up display
    HU_Start();
    
@@ -2425,13 +2561,11 @@ static void P_InitNewLevel(int lumpnum, WadDirectory *waddir)
 //
 // If deathmatch, randomly spawn the active players
 //
-static void P_DeathMatchSpawnPlayers(void)
+static void P_DeathMatchSpawnPlayers()
 {
    if(GameType == gt_dm)
    {
-      int i;
-
-      for(i = 0; i < MAXPLAYERS; ++i)
+      for(int i = 0; i < MAXPLAYERS; i++)
       {
          if(playeringame[i])
          {
@@ -2558,6 +2692,9 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    // possible error: missing flats
    CHECK_ERROR();
 
+   // haleyjd 01/05/14: create sector interpolation data
+   P_CreateSectorInterps();
+
    P_LoadSideDefs(lumpnum + ML_SIDEDEFS); // killough 4/4/98
 
    // haleyjd 10/03/05: handle multiple map formats
@@ -2600,6 +2737,9 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    P_LoadReject(lumpnum + ML_REJECT); // haleyjd 01/26/04
    P_GroupLines();
+
+   // haleyjd 01/12/14: build sound environment zones
+   P_CreateSoundZones();
 
    // killough 10/98: remove slime trails from wad
    P_RemoveSlimeTrails(); 

@@ -548,7 +548,7 @@ static char **iwadVarForNum[NUMPICKIWADS] =
    &gi_path_tnt,    &gi_path_plut,                      // Final Doom
    &gi_path_hacx,                                       // HACX
    &gi_path_hticsw, &gi_path_hticreg,  &gi_path_sosr,   // Heretic
-   &gi_path_fdoom,  &gi_path_fdoomu,   &gi_path_freedm, // FreeDoom
+   &gi_path_fdoom,  &gi_path_fdoomu,   &gi_path_freedm, // Freedoom
 };
 
 //
@@ -648,8 +648,8 @@ static iwadpathmatch_t iwadMatchers[] =
    { MATCH_IWAD, "hacx",      { &gi_path_hacx,     NULL,              NULL            } },
    { MATCH_IWAD, "heretic1",  { &gi_path_hticsw,   NULL,              NULL            } },
    { MATCH_IWAD, "heretic",   { &gi_path_sosr,     &gi_path_hticreg,  NULL            } },
-   { MATCH_IWAD, "freedoom",  { &gi_path_fdoom,    NULL,              NULL            } },
-   { MATCH_IWAD, "freedoomu", { &gi_path_fdoomu,   NULL,              NULL            } },
+   { MATCH_IWAD, "freedoom2", { &gi_path_fdoom,    NULL,              NULL            } },
+   { MATCH_IWAD, "freedoom1", { &gi_path_fdoomu,   NULL,              NULL            } },
    { MATCH_IWAD, "freedm",    { &gi_path_freedm,   NULL,              NULL            } },
    { MATCH_IWAD, "bfgdoom2",  { &gi_path_bfgdoom2, NULL,              NULL,           } },
    
@@ -1000,9 +1000,10 @@ const char *const standard_iwads[]=
    "/heretic1.wad",  // Shareware Heretic
 
    // Unofficial IWADs
-   "/freedoom.wad",  // Freedoom                -- haleyjd 01/31/03
-   "/freedoomu.wad", // "Ultimate" Freedoom     -- haleyjd 03/07/10
-   "/freedoom1.wad", // Freedoom "Demo"         -- haleyjd 03/07/10
+   "/freedoom2.wad", // Freedoom Phase 2        -- haleyjd 01/11/14
+   "/freedoom1.wad", // Freedoom "Demo"/Phase 1 -- haleyjd 03/07/10
+   "/freedoom.wad",  // Freedoom                -- haleyjd 01/31/03 (deprecated)
+   "/freedoomu.wad", // "Ultimate" Freedoom     -- haleyjd 03/07/10 (deprecated)
    "/freedm.wad",    // FreeDM IWAD             -- haleyjd 08/28/11
    "/hacx.wad",      // HACX standalone version -- haleyjd 08/19/09
    "/bfgdoom.wad",   // BFG Edition UDoom IWAD  -- haleyjd 11/03/12

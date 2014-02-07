@@ -46,6 +46,8 @@ enum
 
 class WadDirectory;
 int P_CheckLevel(WadDirectory *dir, int lumpnum); // haleyjd: now used in d_main.c
+int P_CheckLevelName(WadDirectory *dir, const char *mapname);
+int P_CheckLevelMapNum(WadDirectory *dir, int mapnum);
 
 void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask, skill_t skill);
 void P_Init();                   // Called by startup code.

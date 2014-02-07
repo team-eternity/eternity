@@ -16,37 +16,38 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+// Additional terms and conditions compatible with the GPLv3 apply. See the
+// file COPYING-EE for details.
+//
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //    Directory Manipulation
 //
 //-----------------------------------------------------------------------------
 
+#include "../z_zone.h"
+
 #include "i_directory.h"
 
 #include "i_platform.h"
 #include "../m_qstr.h"
 
-#if EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX
-#include <sys/stat.h>
-#include <sys/types.h>
-#endif
 
-
-//----------------------------------------------------------------------------|
-// Global Functions                                                           |
+//=============================================================================
+//
+// Global Functions
 //
 
 //
 // I_CreateDirectory
 //
-bool I_CreateDirectory(qstring const &path)
+bool I_CreateDirectory(const qstring &path)
 {
-   #if EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX
    if(!mkdir(path.constPtr(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH))
       return true;
-   #endif
+#endif
 
    return false;
 }
@@ -56,9 +57,15 @@ bool I_CreateDirectory(qstring const &path)
 //
 const char *I_PlatformInstallDirectory()
 {
-   #if EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX
-   return "/usr/share/eternity/base";
-   #endif
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX
+   struct stat sbuf;
+
+   // Prefer /usr/local, but fall back to just /usr.
+   if(!stat("/usr/local/share/eternity/base", &sbuf) && S_ISDIR(sbuf.st_mode))
+      return "/usr/local/share/eternity/base";
+   else
+      return "/usr/share/eternity/base";
+#endif
 
    return nullptr;
 }

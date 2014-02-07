@@ -518,10 +518,6 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
                    v_w, v_h, colordepth);
    }
 
-   // wait for a bit so the screen can settle
-   if(flags & SDL_FULLSCREEN)
-      I_Sleep(500);
-
    // Try loading the ARB PBO extension
    LoadPBOExtension();
 

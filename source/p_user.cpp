@@ -576,6 +576,10 @@ void P_PlayerThink(player_t *player)
 {
    ticcmd_t*    cmd;
 
+   // haleyjd 01/04/14: backup viewz and mobj location for interpolation
+   player->prevviewz = player->viewz;
+   player->mo->backupPosition();
+
    // killough 2/8/98, 3/21/98:
    // (this code is necessary despite questions raised elsewhere in a comment)
 
@@ -789,7 +793,10 @@ void P_PlayerThink(player_t *player)
    if(player->powers[pw_totalinvis] > 0) // haleyjd
    {
       if(!--player->powers[pw_totalinvis])
+      {
          player->mo->flags2 &= ~MF2_DONTDRAW;
+         player->mo->flags4 &= ~MF4_TOTALINVISIBLE;
+      }
    }
 
    if(player->powers[pw_flight] > 0) // haleyjd 06/05/12

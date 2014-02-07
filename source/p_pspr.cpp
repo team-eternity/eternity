@@ -552,13 +552,16 @@ weaponinfo_t *P_GetPlayerWeapon(player_t *player, int index)
 //
 static void P_WeaponSoundInfo(Mobj *mo, sfxinfo_t *sound)
 {
-   int volume = 127;
+   soundparams_t params;
+   
+   params.sfx = sound;
+   params.setNormalDefaults(mo);
 
    if(mo->player && mo->player->powers[pw_silencer] &&
       P_GetReadyWeapon(mo->player)->flags & WPF_SILENCER)
-      volume = WEAPON_VOLUME_SILENCED;
+      params.volumeScale = WEAPON_VOLUME_SILENCED;
 
-   S_StartSfxInfo(mo, sound, volume, ATTN_NORMAL, false, CHAN_AUTO);
+   S_StartSfxInfo(params);
 }
 
 //

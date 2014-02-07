@@ -77,6 +77,7 @@ const char ee_wmCaption[] = "Eternity Engine v3.40.46 \"Bifrost\"";
 // 3.40.25 'Midgard'   -- 08/26/12
 // 3.40.30 'Alfheim'   -- 11/04/12
 // 3.40.37 'Gungnir'   -- 05/27/13
+// 3.40.46 'Bifrost'   -- 01/19/14
 
 // auxilliary releases
 // Caverns of Darkness -- 3.29 dev beta 5 joel-2 04/24/02

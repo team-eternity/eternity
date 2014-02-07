@@ -35,7 +35,7 @@ typedef struct i_sounddriver_s
    void (*UpdateSound)(void);
    void (*SubmitSound)(void);
    void (*ShutdownSound)(void);
-   int  (*StartSound)(sfxinfo_t *, int, int, int, int, int, int);
+   int  (*StartSound)(sfxinfo_t *, int, int, int, int, int, int, bool);
    int  (*SoundID)(int);
    void (*StopSound)(int, int);
    int  (*SoundIsPlaying)(int);
@@ -62,7 +62,7 @@ void I_CacheSound(sfxinfo_t *sound);
 
 // Starts a sound in a particular sound channel.
 int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch,
-                 int pri, int loop);
+                 int pri, int loop, bool reverb);
 
 // Returns unique instance ID for a playing sound.
 int I_SoundID(int handle);
@@ -135,6 +135,8 @@ extern double  s_eqpreamp;  // preamp factor
 extern double  s_lowgain;   // low band gain
 extern double  s_midgain;   // mid band gain
 extern double  s_highgain;  // high band gain
+
+extern bool    s_reverbactive;
 
 static inline bool I_IsSoundBufferSizePowerOf2(int i)
 {

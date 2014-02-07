@@ -41,6 +41,8 @@
 
 @class ELDumpConsole, ELFileViewDataSource, ELTextFieldDelegate, ELCommandLineArray;
 
+@class ELAboutController;
+
 //
 // LauncherController
 //
@@ -81,17 +83,18 @@
 	NSArray *pwadTypes;
 	NSMutableArray *pwadArray;
   	NSMutableSet *iwadSet;  // set of IWADs
-   NSMutableSet *userSet;  // set of user configurations
 	
 	ELCommandLineArray *param;
 	char *callName;
 	
-	NSMutableString *userPath, *basePath;
+	NSString *userPath;
+	NSString *basePath;
 	
 	NSTask *task;
     
     BOOL dontUndo;
 	
+	ELAboutController* m_aboutController;
 }
 @property (readonly) NSMutableArray *pwadArray;
 
@@ -110,6 +113,8 @@
 
 -(IBAction)saveAsGFS:(id)sender;
 
+-(IBAction)showAboutPanel:(id)sender;
+
 
 // Kind of ugly… but safe
 -(IBAction)updateParameters:(id)sender;
@@ -120,8 +125,6 @@
 -(IBAction)showUserInFinder:(id)sender;
 -(IBAction)showFileInFinder:(id)sender;
 -(IBAction)accessBaseFolder:(id)sender;
-
--(IBAction)showLicense:(id)sender;
 
 -(IBAction)makeCheckboxUndo:(id)sender;
 

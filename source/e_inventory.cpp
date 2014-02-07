@@ -224,7 +224,7 @@ cfg_opt_t edf_ammofx_opts[] =
    CFG_INT(KEY_AMOUNT,      0, CFGF_NONE), // amount of ammo given
    CFG_INT(KEY_DROPAMOUNT,  0, CFGF_NONE), // amount of ammo given when item is dropped
 
-   CFG_FLAG(KEY_IGNORESKILL, 0, CFGF_NONE), // if +, does not double on skills that double ammo
+   CFG_FLAG(KEY_IGNORESKILL, 0, CFGF_SIGNPREFIX), // if +, does not double on skills that double ammo
 
    CFG_END()
 };
@@ -1409,7 +1409,6 @@ int E_GetMaxAmountForArtifact(player_t *player, itemeffect_t *artifact)
    if(!artifact)
       return 0;
 
-   inventoryslot_t *backpackSlot = NULL;
    int subType = artifact->getInt(keyArtifactType, ARTI_NORMAL);
 
    switch(subType)

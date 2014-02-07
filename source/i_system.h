@@ -31,14 +31,6 @@ struct ticcmd_t;
 // Called by DoomMain.
 void I_Init();
 
-// Called by D_DoomLoop,
-// returns current time in tics.
-
-extern int (*I_GetTime)();    // killough
-int I_GetTime_RealTime();     // killough
-void I_SetTime(int newtime);
-unsigned int I_GetTicks();
-
 //
 // Called by D_DoomLoop,
 // called before processing any tics in a frame
@@ -107,9 +99,6 @@ extern int mousepresent;                // killough
 void I_EndDoom();         // killough 2/22/98: endgame screen
 
 int I_CheckAbort();
-
-// haleyjd 06/16/09: I_Sleep prototype
-void I_Sleep(int ms);
 
 #endif
 

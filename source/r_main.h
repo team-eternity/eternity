@@ -52,6 +52,7 @@ extern int      linecount;
 extern int      loopcount;
 
 extern bool     showpsprites;
+extern bool     r_boomcolormaps;
 
 // haleyjd 11/21/09: enumeration for R_DoomTLStyle
 enum
@@ -64,15 +65,15 @@ enum
 
 extern int r_tlstyle;
 
-void R_DoomTLStyle(void);
+void R_DoomTLStyle();
 
-void R_ResetTrans(void);
+void R_ResetTrans();
 
 //
 // Function pointer to switch refresh/drawing functions.
 //
 
-extern void (*colfunc)(void);
+extern void (*colfunc)();
 
 //
 // Utility functions.
@@ -98,9 +99,8 @@ void R_SectorColormap(sector_t *s);
 struct camera_t;
 struct player_t;
 
-// sf: camera point added
-void R_RenderPlayerView(player_t *player, camera_t *viewcamera); // Called by G_Drawer.
-                                                                 // sf: G_Drawer???
+void R_RenderPlayerView(player_t *player, camera_t *viewcamera);
+
 //
 // R_ResetFOV
 // 
@@ -125,7 +125,7 @@ extern int viewdir;
 
 // haleyjd 09/04/06
 #define NUMCOLUMNENGINES 2
-#define NUMSPANENGINES 2
+#define NUMSPANENGINES 1
 extern int r_column_engine_num;
 extern int r_span_engine_num;
 extern columndrawer_t *r_column_engine;
@@ -137,7 +137,7 @@ void R_SetSpanEngine();
 // haleyjd 09/19/07: missing extern!
 extern const float PI;
 
-typedef struct cb_view_s
+struct cb_view_t
 {
    float x, y, z;
    float angle, pitch;
@@ -152,7 +152,10 @@ typedef struct cb_view_s
 
    float pspritexscale, pspriteyscale;
    float pspriteystep;
-} cb_view_t;
+
+   fixed_t   lerp;   // haleyjd: linear interpolation factor
+   sector_t *sector; // haleyjd: view sector, because of interpolation
+};
 
 // haleyjd 3/11/10: markflags
 enum
@@ -220,11 +223,9 @@ extern cb_seg_t   seg;
 extern cb_seg_t   segclip;
 
 // SoM: frameid frame counter.
-void R_IncrementFrameid(void); // Needed by the portal functions... 
+void R_IncrementFrameid(); // Needed by the portal functions... 
 extern unsigned   frameid;
 
-// SoM: include these prototypes after the map data definitions:
-//#include "r_pcheck.h"
 #endif
 
 //----------------------------------------------------------------------------

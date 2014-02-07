@@ -52,7 +52,7 @@ IMPLEMENT_THINKER_TYPE(QuakeThinker)
 void QuakeThinker::Think()
 {
    int i, tics;
-   sfxinfo_t *quakesound;
+   soundparams_t params;
    
    // quake is finished?
    if(this->duration == 0)
@@ -62,11 +62,15 @@ void QuakeThinker::Think()
       return;
    }
    
-   quakesound = E_SoundForName("Earthquake");
+   params.sfx = E_SoundForName("Earthquake");
 
    // loop quake sound
-   if(quakesound && !S_CheckSoundPlaying(this, quakesound))
-      S_StartSfxInfo(this, quakesound, 127, ATTN_NORMAL, true, CHAN_AUTO);
+   if(params.sfx && !S_CheckSoundPlaying(this, params.sfx))
+   {
+      params.setNormalDefaults(this);
+      params.loop = true;
+      S_StartSfxInfo(params);
+   }
 
    tics = this->duration--;
 

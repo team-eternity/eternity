@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>250B233F-16BF-49F7-AD16-036492CDB92E</string>
+	<key>IDESourceControlProjectName</key>
+	<string>EternityLaunch</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>39819699-8FBB-4983-9B9A-311F874C54C5</key>
+		<string>https://bitbucket.org/ichera/autodoom.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>macosx/launcher/EternityLaunch.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>39819699-8FBB-4983-9B9A-311F874C54C5</key>
+		<string>../../../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://bitbucket.org/ichera/autodoom.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>110</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>39819699-8FBB-4983-9B9A-311F874C54C5</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>39819699-8FBB-4983-9B9A-311F874C54C5</string>
+			<key>IDESourceControlWCCName</key>
+			<string>autodoom</string>
+		</dict>
+	</array>
+</dict>
+</plist>

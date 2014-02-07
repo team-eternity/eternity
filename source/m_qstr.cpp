@@ -995,7 +995,7 @@ int qstring::toInt() const
 //
 // Returns the qstring converted to a long integer via strtol.
 //
-long qstring::toLong(char **endptr, int radix) 
+long qstring::toLong(char **endptr, int radix) const
 {
    return strtol(buffer, endptr, radix);
 }

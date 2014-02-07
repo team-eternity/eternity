@@ -472,7 +472,7 @@ static bool MN_FileResponder(event_t *ev, int action)
       if(selected_item > 0) 
       {
          selected_item--;
-         S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
+         S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
       }
       return true;
    }
@@ -482,7 +482,7 @@ static bool MN_FileResponder(event_t *ev, int action)
       if(selected_item < (mn_currentdir->numfiles - 1)) 
       {
          selected_item++;
-         S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
+         S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
       }
       return true;
    }
@@ -494,7 +494,7 @@ static bool MN_FileResponder(event_t *ev, int action)
          selected_item -= numfileboxlines;
          if(selected_item < 0)
             selected_item = 0;
-         S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
+         S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
       }
       return true;
    }
@@ -506,7 +506,7 @@ static bool MN_FileResponder(event_t *ev, int action)
          selected_item += numfileboxlines;
          if(selected_item >= mn_currentdir->numfiles) 
             selected_item = mn_currentdir->numfiles - 1;
-         S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
+         S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
       }
       return true;
    }
@@ -518,12 +518,12 @@ static bool MN_FileResponder(event_t *ev, int action)
       {
          MN_QuestionFunc("Are you sure you want to exit?\n\n(Press y to exit)", 
                          MN_doExitFileWidget);
-         S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_ACTIVATE]);
+         S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_ACTIVATE]);
       }
       else
       {
          MN_PopWidget(); // cancel widget
-         S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
+         S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
       }
       return true;
    }
@@ -540,7 +540,7 @@ static bool MN_FileResponder(event_t *ev, int action)
          psnprintf(tempstr, sizeof(tempstr), 
             "%s \"%s\"", variable_name, mn_currentdir->filenames[selected_item]);
          C_RunTextCmd(tempstr);
-         S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_COMMAND]);
+         S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_COMMAND]);
       }
       return true;
    }
@@ -563,8 +563,6 @@ static bool MN_FileResponder(event_t *ev, int action)
             n = 0; // loop round
          
          const char *fn = mn_currentdir->filenames[n];
-         size_t len     = strlen(fn);
-
          if(strlen(fn) > 1 && fn[0] == '/')
             ++fn;
 
@@ -574,7 +572,7 @@ static bool MN_FileResponder(event_t *ev, int action)
             if(n != selected_item) // only make sound if actually moving
             {
                selected_item = n;
-               S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
+               S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
             }
             return true; // eat key
          }

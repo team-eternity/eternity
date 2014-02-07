@@ -3297,6 +3297,7 @@ thingtype EENightmareSpectre : Demon, 889, 158
 {
   spawnhealth 300
   addflags    TLSTYLESUB
+  aimshift    21
   
   obituary_melee "was devoured by a Nightmare Spectre!"
 }
@@ -3308,6 +3309,7 @@ thingtype EEPSXSpectre : Spectre, 890, 159
   addflags     TLSTYLEADD
   remflags     SHADOW
   translucency 30%
+  aimshift     21
 }
 
 // PlayStation bloody chain object
