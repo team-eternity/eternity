@@ -428,6 +428,7 @@ static void D_addDefaultDirectories(Collection<qstring> &paths)
    paths.addNew() = "/usr/local/share/games/doom";
    paths.addNew() = "/usr/share/games/doom";
    paths.addNew() = "/usr/share/doom";
+   paths.addNew() = "/usr/share/games/doom3bfg/base/wads";
 #endif
 
    // add base/game paths
