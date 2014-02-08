@@ -641,15 +641,30 @@ static void D_checkForNoRest()
    if(!PATHEMPTY(w_norestpath))
       return;
 
+   DIR    *dir;
    qstring nrvpath;
-   struct stat sbuf;
 
    nrvpath = gi_path_bfgdoom2;
    nrvpath.removeFileSpec();
-   nrvpath.pathConcatenate("nerve.wad");
 
-   if(!stat(nrvpath.constPtr(), &sbuf) && !S_ISDIR(sbuf.st_mode))
-      w_norestpath = nrvpath.duplicate(PU_STATIC);
+   if((dir = opendir(nrvpath.constPtr())))
+   {
+      dirent *ent;
+
+      while((ent = readdir(dir)))
+      {
+         qstring fname(ent->d_name);
+
+         if(!fname.strCaseCmp("nerve.wad"))
+         {
+            nrvpath.pathConcatenate(ent->d_name);
+            w_norestpath = nrvpath.duplicate();
+            break;
+         }
+      }
+
+      closedir(dir);
+   }
 }
 
 //
