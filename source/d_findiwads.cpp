@@ -653,9 +653,7 @@ static void D_checkForNoRest()
 
       while((ent = readdir(dir)))
       {
-         qstring fname(ent->d_name);
-
-         if(!fname.strCaseCmp("nerve.wad"))
+         if(!strcasecmp(ent->d_name, "nerve.wad"))
          {
             nrvpath.pathConcatenate(ent->d_name);
             w_norestpath = nrvpath.duplicate();
