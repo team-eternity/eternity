@@ -3302,13 +3302,13 @@ thingtype EENightmareSpectre : Demon, 889, 158
   obituary_melee "was devoured by a Nightmare Spectre!"
 }
 
-// PlayStation-style Spectre
+// PlayStation-style Spectre (25%)
 
 thingtype EEPSXSpectre : Spectre, 890, 159
 {
   addflags     TLSTYLEADD
   remflags     SHADOW
-  translucency 30%
+  translucency 25%
   aimshift     21
 }
 
