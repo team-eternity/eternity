@@ -428,6 +428,7 @@ static void D_addDefaultDirectories(Collection<qstring> &paths)
    paths.addNew() = "/usr/local/share/games/doom";
    paths.addNew() = "/usr/share/games/doom";
    paths.addNew() = "/usr/share/doom";
+   paths.addNew() = "/usr/share/games/doom3bfg/base/wads";
 #endif
 
    // add base/game paths
@@ -640,15 +641,28 @@ static void D_checkForNoRest()
    if(!PATHEMPTY(w_norestpath))
       return;
 
+   DIR    *dir;
    qstring nrvpath;
-   struct stat sbuf;
 
    nrvpath = gi_path_bfgdoom2;
    nrvpath.removeFileSpec();
-   nrvpath.pathConcatenate("nerve.wad");
 
-   if(!stat(nrvpath.constPtr(), &sbuf) && !S_ISDIR(sbuf.st_mode))
-      w_norestpath = nrvpath.duplicate(PU_STATIC);
+   if((dir = opendir(nrvpath.constPtr())))
+   {
+      dirent *ent;
+
+      while((ent = readdir(dir)))
+      {
+         if(!strcasecmp(ent->d_name, "nerve.wad"))
+         {
+            nrvpath.pathConcatenate(ent->d_name);
+            w_norestpath = nrvpath.duplicate();
+            break;
+         }
+      }
+
+      closedir(dir);
+   }
 }
 
 //

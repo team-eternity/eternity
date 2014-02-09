@@ -79,7 +79,7 @@ extern int snd_card, mus_card;
 extern bool nosfxparm, nomusicparm;
 //jff end sound enabling variables readable here
 
-typedef struct channel_s
+struct channel_t
 {
   sfxinfo_t *sfxinfo;      // sound information (if null, channel avail.)
   PointThinker *origin;    // origin of sound
@@ -93,7 +93,7 @@ typedef struct channel_s
   int singularity;         // haleyjd 09/27/06: stored singularity value
   int idnum;               // haleyjd 09/30/06: unique id num for sound event
   bool looping;            // haleyjd 10/06/06: is this channel looping?
-} channel_t;
+};
 
 // the set of channels available
 static channel_t *channels;
