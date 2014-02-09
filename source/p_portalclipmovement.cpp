@@ -125,27 +125,6 @@ bool PortalClipEngine::makeZMove(Mobj *thing, fixed_t z, ClipContext *cc)
 }
 
 
-bool PortalClipEngine::teleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
-{
-   return false;
-}
-
-bool PortalClipEngine::teleportMoveStrict(Mobj *thing, fixed_t x, fixed_t y, bool boss)
-{
-   return false;
-}
-
-bool PortalClipEngine::portalTeleportMove(Mobj *thing, fixed_t x, fixed_t y)
-{
-   return false;
-}
-
-
-void PortalClipEngine::slideMove(Mobj *mo)
-{
-}
-
-
 void PortalClipEngine::lineOpening(line_t *linedef, Mobj *mo, open_t *opening, ClipContext *cc)
 {
    fixed_t frontceilz, frontfloorz, backceilz, backfloorz;

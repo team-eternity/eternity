@@ -473,19 +473,19 @@ void P_RemoveMobjBlockLinks(Mobj *mo)
    do
    {
       link = next;
-      
+      link->mo = NULL;
+
       if(!link->bprev)
          blocklinks[link->nodeindex] = link->bnext;
       else
          link->bprev->bnext = link->bnext;
-      
+
       if(link->bnext)
          link->bnext->bprev = link->bprev;
-      
+
       next = link->mnext;
    } while(next);
    
-   link->mo = NULL;
    link->mnext = freeBlockLinkHead;
    freeBlockLinkHead = mo->blocklinks;
    mo->blocklinks = NULL;
