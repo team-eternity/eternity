@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //      Handling interactions (i.e., collisions).
@@ -366,6 +366,7 @@ bool P_GivePower(player_t *player, int power)
       break;
    case pw_totalinvis:   // haleyjd: total invisibility
       player->mo->flags2 |= MF2_DONTDRAW;
+      player->mo->flags4 |= MF4_TOTALINVISIBLE;
       break;
    case pw_ghost:        // haleyjd: heretic ghost
       player->mo->flags3 |= MF3_GHOST;
@@ -552,8 +553,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    
    // INVENTORY_TODO: transitional logic is in place below until this function
    // can be fully converted to being based on itemeffects
-   itemeffect_t    *effect = NULL;
-   inventoryslot_t *slot   = NULL;
+   itemeffect_t *effect = NULL;
 
    if(delta > toucher->height || delta < -8*FRACUNIT)
       return;        // out of reach
@@ -1854,6 +1854,7 @@ void P_Whistle(Mobj *actor, int mobjtype)
          P_SetMobjState(mo, mo->info->spawnstate);
          mo->z = mo->floorz;
          mo->momx = mo->momy = mo->momz = 0;
+         mo->backupPosition();
 
          return;
       }

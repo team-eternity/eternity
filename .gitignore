@@ -20,3 +20,8 @@ Release
 Eternity.opt
 Eternity.ncb
 Eternity.plg
+macosx/EternityEngine.xcodeproj/xcuserdata
+macosx/launcher/EternityLaunch.xcodeproj/xcuserdata
+macosx/libc++/libc++.1.dylib
+macosx/libc++/libc++.dylib
+macosx/libc++/libc++abi.dylib

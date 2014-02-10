@@ -684,7 +684,7 @@ static void C_AddMessage(const char *s)
       }
       if(*c == '\a') // alert
       {
-         S_StartSound(NULL, GameModeInfo->c_BellSound); // 'tink'!
+         S_StartInterfaceSound(GameModeInfo->c_BellSound); // 'tink'!
       }
       if(*c == '\n')
       {

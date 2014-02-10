@@ -167,7 +167,7 @@ bool MN_PopupResponder(event_t *ev, int action)
          menuactive = popupMenuActive;
          // kill message
          MN_PopWidget();
-         S_StartSound(NULL, menuSounds[MN_SND_DEACTIVATE]);
+         S_StartInterfaceSound(menuSounds[MN_SND_DEACTIVATE]);
       }
       break;
 
@@ -187,7 +187,7 @@ bool MN_PopupResponder(event_t *ev, int action)
             Console.cmdtype = c_menu;
             C_RunTextCmd(popup_message_command);
          }
-         S_StartSound(NULL, menuSounds[MN_SND_COMMAND]);
+         S_StartInterfaceSound(menuSounds[MN_SND_COMMAND]);
          MN_PopWidget();  // kill message
       }
       if(ch == 'n' || action == ka_menu_toggle || action == ka_menu_previous) // no!
@@ -195,7 +195,7 @@ bool MN_PopupResponder(event_t *ev, int action)
          // kill message
          // haleyjd 02/24/02: restore saved menuactive state
          menuactive = popupMenuActive;
-         S_StartSound(NULL, menuSounds[MN_SND_DEACTIVATE]);
+         S_StartInterfaceSound(menuSounds[MN_SND_DEACTIVATE]);
          MN_PopWidget(); // kill message
       }
       break;
@@ -456,7 +456,7 @@ void MN_DrawCredits(void)
    }
 
    V_FontWriteText(menu_font_normal, 
-                   FC_ABSCENTER "Copyright 2013 Team Eternity et al.", 
+                   FC_ABSCENTER "Copyright 2014 Team Eternity et al.", 
                    0, y, &subscreen43);
 }
 
@@ -503,7 +503,7 @@ bool MN_HelpResponder(event_t *ev, int action)
          goto cancel;
       }
       else
-         S_StartSound(NULL, menuSounds[MN_SND_PREVIOUS]);
+         S_StartInterfaceSound(menuSounds[MN_SND_PREVIOUS]);
    }
 
    if(action == ka_menu_confirm)
@@ -516,7 +516,7 @@ bool MN_HelpResponder(event_t *ev, int action)
          goto cancel;
       }
       else
-         S_StartSound(NULL, menuSounds[MN_SND_COMMAND]);
+         S_StartInterfaceSound(menuSounds[MN_SND_COMMAND]);
    }
 
    if(action == ka_menu_toggle)
@@ -527,7 +527,7 @@ cancel:
       // haleyjd 05/29/06: maintain previous menu activation state
       if(!help_prev_menuactive)
          menuactive = false;
-      S_StartSound(NULL, menuSounds[MN_SND_DEACTIVATE]);
+      S_StartInterfaceSound(menuSounds[MN_SND_DEACTIVATE]);
    }
 
    // always eatkey

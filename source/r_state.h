@@ -37,8 +37,10 @@ struct node_t;
 struct fnode_t;
 struct player_t;
 struct sector_t;
+struct sectorinterp_t;
 struct seg_t;
 struct side_t;
+struct soundzone_t;
 struct spritedef_t;
 struct subsector_t;
 struct vertex_t;
@@ -84,6 +86,10 @@ extern seg_t            *segs;
 
 extern int              numsectors;
 extern sector_t         *sectors;
+extern sectorinterp_t   *sectorinterps;
+
+extern int              numsoundzones;
+extern soundzone_t      *soundzones;
 
 extern int              numsubsectors;
 extern subsector_t      *subsectors;
@@ -113,7 +119,6 @@ extern camera_t         *viewcamera;
 extern angle_t          clipangle;
 extern int              viewangletox[FINEANGLES/2];
 extern angle_t          *xtoviewangle;  // killough 2/8/98
-extern int              viewgroup; // SoM
 
 extern visplane_t       *floorplane;
 extern visplane_t       *ceilingplane;

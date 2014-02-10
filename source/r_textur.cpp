@@ -32,6 +32,7 @@
 #include "d_io.h"
 #include "d_main.h"
 #include "e_hash.h"
+#include "m_compare.h"
 #include "m_swap.h"
 #include "p_setup.h"
 #include "p_skin.h"
@@ -154,15 +155,15 @@ static void R_DetermineFlatSize(texture_t *t)
 // Allocates and initializes a new texture_t struct, filling in all needed data
 // for the given parameters.
 //
-static texture_t *R_AllocTexStruct(const char *name, uint16_t width, 
-                                   uint16_t height, int16_t compcount)
+static texture_t *R_AllocTexStruct(const char *name, int16_t width, 
+                                   int16_t height, int16_t compcount)
 {
    size_t    size;
    texture_t *ret;
    int       j;
   
 #ifdef RANGECHECK
-   if(!width || !height || !name || compcount < 0)
+   if(!name || compcount < 0)
    {
       I_Error("R_AllocTexStruct: Invalid parameters: %s, %i, %i, %i\n", 
               name, width, height, compcount);
@@ -175,8 +176,8 @@ static texture_t *R_AllocTexStruct(const char *name, uint16_t width,
    
    ret->name = ret->namebuf;
    strncpy(ret->namebuf, name, 8);
-   ret->width = width;
-   ret->height = height;
+   ret->width  = emax<int16_t>(1, width);
+   ret->height = emax<int16_t>(1, height);
    ret->ccount = compcount;
    
    // SoM: no longer use global lists. This is now done for every texture.
@@ -378,11 +379,10 @@ static void R_FreeTextureLump(texturelump_t *tlump)
 //
 static void R_DetectTextureFormat(texturelump_t *tlump)
 {
-   int i;
    int format = texture_doom; // we start out assuming DOOM format...
    byte *directory = tlump->directory;
 
-   for(i = 0; i < tlump->numtextures; ++i)
+   for(int i = 0; i < tlump->numtextures; i++)
    {
       int offset;
       byte *mtexture;
@@ -410,17 +410,14 @@ static void R_DetectTextureFormat(texturelump_t *tlump)
 }
 
 //
-// R_TextureHacks
+// R_DoomTextureHacks
 //
-// SoM: This function determines special cases for some textures with known 
-// erroneous data.
+// GameModeInfo routine to fix up bad Doom textures
 //
-static void R_TextureHacks(texture_t *t)
-{   
+void R_DoomTextureHacks(texture_t *t)
+{
    // Adapted from Zdoom's FMultiPatchTexture::CheckForHacks
-   if(GameModeInfo->type == Game_DOOM &&
-      GameModeInfo->missionInfo->id == doom &&
-      t->ccount == 1 &&
+   if(t->ccount == 1 &&
       t->height == 128 &&
       t->name[0] == 'S' &&
       t->name[1] == 'K' &&
@@ -429,27 +426,10 @@ static void R_TextureHacks(texture_t *t)
       t->name[4] == 0)
    {
       t->components->originy = 0;
-      return;
-   }
-   
-   if(GameModeInfo->type == Game_Heretic &&
-      t->height == 128 &&
-      t->name[0] == 'S' &&
-      t->name[1] == 'K' &&
-      t->name[2] == 'Y' &&
-      t->name[3] >= '1' &&
-      t->name[3] <= '3' &&
-      t->name[4] == 0)
-   {
-      t->height = 200;
-      t->heightfrac = 200*FRACUNIT;
-      return;
    }
 
    // BIGDOOR7 in Doom also has patches at y offset -4 instead of 0.
-   if (GameModeInfo->type == Game_DOOM &&
-      GameModeInfo->missionInfo->id == doom &&
-      t->ccount == 2 &&
+   if(t->ccount == 2 &&
       t->height == 128 &&
       t->components[0].originy == -4 &&
       t->components[1].originy == -4 &&
@@ -463,7 +443,26 @@ static void R_TextureHacks(texture_t *t)
       t->name[7] == '7')
    {
       t->components[0].originy = t->components[1].originy = 0;
-      return;
+   }
+}
+
+//
+// R_HticTextureHacks
+//
+// GameModeInfo routine to fix up bad Heretic textures
+//
+void R_HticTextureHacks(texture_t *t)
+{
+   if(t->height == 128 &&
+      t->name[0] == 'S' &&
+      t->name[1] == 'K' &&
+      t->name[2] == 'Y' &&
+      t->name[3] >= '1' &&
+      t->name[3] <= '3' &&
+      t->name[4] == 0)
+   {
+      t->height = 200;
+      t->heightfrac = 200*FRACUNIT;
    }
 }
 
@@ -479,7 +478,7 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int texnum,
    int i, j;
    byte *directory = tlump->directory;
 
-   for(i = 0; i < tlump->numtextures; ++i, ++texnum)
+   for(i = 0; i < tlump->numtextures; i++, texnum++)
    {
       int            offset;
       byte           *rawtex, *rawpatch;
@@ -502,7 +501,7 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int texnum,
          
       component = texture->components;
 
-      for(j = 0; j < texture->ccount; ++j, ++component)
+      for(j = 0; j < texture->ccount; j++, component++)
       {
          rawpatch = TextureHandlers[tlump->format].ReadPatch(rawpatch);
 
@@ -517,7 +516,6 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int texnum,
             // sf: error_printf
             C_Printf(FC_ERROR "R_ReadTextureLump: Missing patch %d in texture %.8s\n",
                          tp.patch, (const char *)(texture->name));
-            //++*errors;
             
             component->width = component->height = 0;
          }
@@ -529,7 +527,9 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int texnum,
          }
       }
       
-      R_TextureHacks(texture);
+      // haleyjd: apply texture hacks on a gamemode-dependent basis
+      if(GameModeInfo->TextureHacks)
+         GameModeInfo->TextureHacks(texture);
    }
 
    return texnum;
@@ -903,7 +903,7 @@ static void FinishTexture(texture_t *tex)
    }
    
    // Allocate column pointers
-   tex->columns = (texcol_t **)(Z_Calloc(sizeof(texcol_t **), tex->width, PU_RENDERER, 0));
+   tex->columns = ecalloctag(texcol_t **, sizeof(texcol_t **), tex->width, PU_RENDERER, NULL);
    
    // Build the columns based on mask info
    maskp = tempmask.buffer;
@@ -1004,7 +1004,7 @@ texture_t *R_CacheTexture(int num)
    {
       tcomponent_t *component = tex->components + i;
       
-      // SoM: Do NOT add lumps with a -1 lump
+      // SoM: Do NOT add lumps with a -1 lumpnum
       if(component->lump == -1)
          continue;
          
@@ -1115,7 +1115,7 @@ static int *R_LoadPNames()
    name_p = names + 4;
    patchlookup = emalloc(int *, nummappatches * sizeof(*patchlookup)); // killough
    
-   for(i = 0; i < nummappatches; ++i)
+   for(i = 0; i < nummappatches; i++)
    {
       strncpy(name, name_p + i * 8, 8);
       
@@ -1152,15 +1152,13 @@ static int *R_LoadPNames()
 //
 static void R_InitTranslationLUT()
 {
-   int i;
-
    // Create translation table for global animation.
    // killough 4/9/98: make column offsets 32-bit;
    // clean up malloc-ing to use sizeof   
-   texturetranslation =
-      (int *)(Z_Malloc((texturecount + 1) * sizeof(*texturetranslation), PU_RENDERER, 0));
+   texturetranslation = 
+      emalloctag(int *, (texturecount + 1) * sizeof(*texturetranslation), PU_RENDERER, NULL);
 
-   for(i = 0; i < texturecount; ++i)
+   for(int i = 0; i < texturecount; i++)
       texturetranslation[i] = i;
 }
 
@@ -1222,7 +1220,7 @@ static void R_CountFlats()
 // Rational log2(N) courtesy of Sean Eron Anderson's famous bit hacks:
 // http://graphics.stanford.edu/~seander/bithacks.html#IntegerLogObvious
 //
-static void R_linearOptimalSize(size_t lumpsize, uint16_t &w, uint16_t &h)
+static void R_linearOptimalSize(size_t lumpsize, int16_t &w, int16_t &h)
 {
    if(!lumpsize)
    {
@@ -1236,8 +1234,8 @@ static void R_linearOptimalSize(size_t lumpsize, uint16_t &w, uint16_t &h)
    while(v >>= 1)
       ++r;
 
-   h = static_cast<uint16_t>(1 << (r / 2));
-   w = static_cast<uint16_t>(lumpsize / h);
+   h = static_cast<int16_t>(1 << (r / 2));
+   w = static_cast<int16_t>(lumpsize / h);
 }
 
 //
@@ -1248,7 +1246,7 @@ static void R_linearOptimalSize(size_t lumpsize, uint16_t &w, uint16_t &h)
 static void R_AddFlats()
 {
    byte     flatsize;
-   uint16_t width, height;
+   int16_t width, height;
    lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
    
    for(int i = 0; i < numflats; i++)
@@ -1675,14 +1673,12 @@ void R_LoadDoom1()
 
 static int R_Doom1Texture(const char *name)
 {
-   int i;
-   
    // slow i know; should be hash tabled
    // mind you who cares? it's only going to be
    // used by a few people and only at the start of 
    // the level
    
-   for(i = 0; i < numconvs; i++)
+   for(int i = 0; i < numconvs; i++)
    {
       if(!strncasecmp(name, txtrconv[i].doom1, 8))   // found it
       {

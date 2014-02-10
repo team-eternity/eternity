@@ -26,7 +26,6 @@
 // killough 5/2/98: reindented, removed useless code, beautified
 
 #include "z_zone.h"
-#include "i_system.h"
 
 #include "a_small.h"
 #include "c_io.h"
@@ -36,8 +35,10 @@
 #include "d_io.h"     // SoM 3/14/2002: strncasecmp
 #include "d_main.h"
 #include "doomstat.h"
+#include "e_reverbs.h"
 #include "e_sound.h"
 #include "i_sound.h"
+#include "i_system.h"
 #include "m_compare.h"
 #include "m_random.h"
 #include "m_queue.h"
@@ -50,6 +51,7 @@
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_state.h"
+#include "s_reverb.h"
 #include "s_sound.h"
 #include "v_misc.h"
 #include "v_video.h"
@@ -77,7 +79,7 @@ extern int snd_card, mus_card;
 extern bool nosfxparm, nomusicparm;
 //jff end sound enabling variables readable here
 
-typedef struct channel_s
+struct channel_t
 {
   sfxinfo_t *sfxinfo;      // sound information (if null, channel avail.)
   PointThinker *origin;    // origin of sound
@@ -91,7 +93,7 @@ typedef struct channel_s
   int singularity;         // haleyjd 09/27/06: stored singularity value
   int idnum;               // haleyjd 09/30/06: unique id num for sound event
   bool looping;            // haleyjd 10/06/06: is this channel looping?
-} channel_t;
+};
 
 // the set of channels available
 static channel_t *channels;
@@ -165,14 +167,13 @@ static void S_StopChannel(int cnum)
 // haleyjd: isolated code to check for sector sound killing.
 // Returns true if the sound should be killed.
 //
-static bool S_CheckSectorKill(const camera_t *ear, const PointThinker *src)
+static bool S_CheckSectorKill(const sector_t *earsec, const PointThinker *src)
 {
    // haleyjd 05/29/06: moved up to here and fixed a major bug
    if(gamestate == GS_LEVEL)
    { 
       // are we in a killed-sound sector?
-      if(ear && 
-         R_PointInSubsector(ear->x, ear->y)->sector->flags & SECF_KILLSOUND)
+      if(earsec && earsec->flags & SECF_KILLSOUND)
          return true;
       
       // source in a killed-sound sector?
@@ -401,12 +402,11 @@ static int S_getChannel(const PointThinker *origin, sfxinfo_t *sfxinfo,
 //
 // haleyjd 04/28/10: gets a count of the currently active sound channels.
 //
-static int S_countChannels(void)
+static int S_countChannels()
 {
-   int cnum;
    int numchannels = 0;
 
-   for(cnum = 0; cnum < numChannels; ++cnum)
+   for(int cnum = 0; cnum < numChannels; cnum++)
       if(channels[cnum].sfxinfo)
          ++numchannels;
 
@@ -422,16 +422,20 @@ static int S_countChannels(void)
 // range from 0 to 127. Also added customizable attenuation types.
 // haleyjd 06/03/06: added ability to loop sound samples
 //
-void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx, 
-                    int volumeScale, int attenuation, bool loop, int subchannel)
+void S_StartSfxInfo(const soundparams_t &params)
 {
    int  sep = 0, pitch, singularity, cnum, handle, o_priority, priority, chancount;
    int  volume         = snd_SfxVolume;
+   int  volumeScale    = params.volumeScale;
+   int  subchannel     = params.subchannel;
    bool priority_boost = false;
    bool extcamera      = false;
    bool nocutoff       = false;
-   camera_t playercam;
-   camera_t *listener = &playercam;
+   camera_t      playercam;
+   camera_t     *listener = &playercam;
+   sector_t     *earsec   = NULL;
+   sfxinfo_t    *sfx      = params.sfx;
+   PointThinker *origin   = params.origin;
    Mobj *mo;
 
    // haleyjd 09/03/03: allow NULL sounds to fall through
@@ -507,10 +511,7 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
       pitch = NORM_PITCH;
 
    // haleyjd 09/29/06: rangecheck volumeScale now!
-   if(volumeScale < 0)
-      volumeScale = 0;
-   else if(volumeScale > 127)
-      volumeScale = 127;
+   volumeScale = eclamp(volumeScale, 0, 127);
 
    // haleyjd 04/28/10: adjust volume for channel overload
    if((chancount = S_countChannels()) >= 4)
@@ -554,10 +555,12 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
             listener = NULL;
          }
       }
+
+      earsec = R_PointInSubsector(playercam.x, playercam.y)->sector;
    }
 
    // haleyjd 09/29/06: check for sector sound kill here.
-   if(S_CheckSectorKill(listener, origin))
+   if(S_CheckSectorKill(earsec, origin))
       return;
 
    // Check to see if it is audible, modify the params
@@ -568,15 +571,14 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
    {
       sep = NORM_SEP;
       volume = (volume * volumeScale) / 15; // haleyjd 05/29/06: scale volume
-      if(volume < 1)
+      volume = eclamp(volume, 0, 127);
+      if(volume < 1) // clip due to inaudibility
          return;
-      if(volume > 127)
-         volume = 127;
    }
    else
    {     
       // use an external cam?
-      if(!S_AdjustSoundParams(listener, origin, volumeScale, attenuation,
+      if(!S_AdjustSoundParams(listener, origin, volumeScale, params.attenuation,
                               &volume, &sep, &pitch, &priority, sfx))
          return;
       else if(origin->x == playercam.x && origin->y == playercam.y)
@@ -606,11 +608,7 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
          break;
       }
 
-      if(pitch < 0)
-         pitch = 0;
-      
-      if(pitch > 255)
-         pitch = 255;
+      pitch = eclamp(pitch, 0, 255);
    }
 
    // haleyjd 06/12/08: determine subchannel. If auto, try using the sound's
@@ -637,7 +635,7 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
       sfx = sfx->link;     // sf: skip thru link(s)
 
    // Assigns the handle to one of the channels in the mix/output buffer.
-   handle = I_StartSound(sfx, cnum, volume, sep, pitch, priority, loop);
+   handle = I_StartSound(sfx, cnum, volume, sep, pitch, priority, params.loop, params.reverb);
 
    // haleyjd: check to see if the sound was started
    if(handle >= 0)
@@ -649,12 +647,12 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
       // haleyjd 09/27/06: store priority and singularity values (!!!)
       // haleyjd 06/12/08: store subchannel
       channels[cnum].volume      = volumeScale;
-      channels[cnum].attenuation = attenuation;
+      channels[cnum].attenuation = params.attenuation;
       channels[cnum].pitch       = pitch;
       channels[cnum].o_priority  = o_priority;  // original priority
       channels[cnum].priority    = priority;    // scaled priority
       channels[cnum].singularity = singularity;
-      channels[cnum].looping     = loop;
+      channels[cnum].looping     = params.loop;
       channels[cnum].subchannel  = subchannel;
       channels[cnum].idnum       = I_SoundID(handle); // unique instance id
    }
@@ -676,15 +674,21 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
 void S_StartSoundAtVolume(PointThinker *origin, int sfx_id, 
                           int volume, int attn, int subchannel)
 {
+   soundparams_t params;
+
    // haleyjd: changed to use EDF DeHackEd number hashing,
    // to enable full use of dynamically defined sounds ^_^
-   sfxinfo_t *sfx = E_SoundForDEHNum(sfx_id);
+   if((params.sfx = E_SoundForDEHNum(sfx_id)))
+   {
+      params.origin      = origin;
+      params.volumeScale = volume;
+      params.attenuation = attn;
+      params.loop        = false;
+      params.subchannel  = subchannel;
+      params.reverb      = true;
 
-   // ignore any invalid sounds
-   if(!sfx)
-      return;
-
-   S_StartSfxInfo(origin, sfx, volume, attn, false, subchannel);
+      S_StartSfxInfo(params);
+   }
 }
 
 //
@@ -708,14 +712,22 @@ void S_StartSound(PointThinker *origin, int sfx_id)
 void S_StartSoundNameAtVolume(PointThinker *origin, const char *name, 
                               int volume, int attn, int subchannel)
 {
-   sfxinfo_t *sfx;
+   soundparams_t params;
    
    // haleyjd 03/17/03: allow NULL sound names to fall through
    if(!name)
       return;
 
-   if((sfx = S_SfxInfoForName(name)))
-      S_StartSfxInfo(origin, sfx, volume, attn, false, subchannel);
+   if((params.sfx = S_SfxInfoForName(name)))
+   {
+      params.origin      = origin;
+      params.volumeScale = volume;
+      params.attenuation = attn;
+      params.loop        = false;
+      params.subchannel  = subchannel;
+      params.reverb      = true;
+      S_StartSfxInfo(params);
+   }
 }
 
 //
@@ -739,13 +751,55 @@ void S_StartSoundName(PointThinker *origin, const char *name)
 void S_StartSoundLooped(PointThinker *origin, char *name, int volume, 
                         int attn, int subchannel)
 {
-   sfxinfo_t *sfx;
+   soundparams_t params;
    
    if(!name)
       return;
 
-   if((sfx = S_SfxInfoForName(name)))
-      S_StartSfxInfo(origin, sfx, volume, attn, true, subchannel);
+   if((params.sfx = S_SfxInfoForName(name)))
+   {
+      params.origin      = origin;
+      params.volumeScale = volume;
+      params.attenuation = attn;
+      params.loop        = true;
+      params.subchannel  = subchannel;
+      params.reverb      = true;
+      S_StartSfxInfo(params);
+   }
+}
+
+//
+// S_StartInterfaceSound(int)
+//
+// Start an interface sound by DeHackEd number.
+//
+void S_StartInterfaceSound(int sound_id)
+{
+   soundparams_t params;
+
+   if((params.sfx = E_SoundForDEHNum(sound_id)))
+   {
+      params.setNormalDefaults(NULL);
+      params.reverb = false;
+      S_StartSfxInfo(params);
+   }
+}
+
+//
+// S_StartInterfaceSound(const char *)
+//
+// Start an interface sound by name.
+//
+void S_StartInterfaceSound(const char *name)
+{
+   soundparams_t params;
+
+   if((params.sfx = E_SoundForName(name)))
+   {
+      params.setNormalDefaults(NULL);
+      params.reverb = false;
+      S_StartSfxInfo(params);
+   }
 }
 
 //
@@ -775,7 +829,7 @@ void S_StopSound(const PointThinker *origin, int subchannel)
 //
 // Stop music, during game PAUSE.
 //
-void S_PauseSound(void)
+void S_PauseSound()
 {
    if(mus_playing && !mus_paused)
    {
@@ -789,12 +843,36 @@ void S_PauseSound(void)
 //
 // Start music back up.
 //
-void S_ResumeSound(void)
+void S_ResumeSound()
 {
    if(mus_playing && mus_paused)
    {
       I_ResumeSong(mus_playing->handle);
       mus_paused = false;
+   }
+}
+
+// Currently active reverberation environment
+static ereverb_t *s_currentEnvironment;
+
+//
+// S_updateEnvironment
+//
+// Update the active sound environment.
+//
+static void S_updateEnvironment(sector_t *earsec)
+{
+   ereverb_t *reverb;
+   
+   if(!earsec || gamestate != GS_LEVEL)
+      reverb = E_GetDefaultReverb();
+   else
+      reverb = soundzones[earsec->soundzone].reverb;
+
+   if(reverb != s_currentEnvironment)
+   {
+      s_currentEnvironment = reverb;
+      S_ReverbSetState(reverb);
    }
 }
 
@@ -805,10 +883,9 @@ void S_ResumeSound(void)
 //
 void S_UpdateSounds(const Mobj *listener)
 {
-   int cnum;
-
    // sf: a camera_t holding the information about the player
    camera_t playercam = { 0 }; 
+   sector_t *earsec = NULL;
 
    //jff 1/22/98 return if sound is not enabled
    if(!snd_card || nosfxparm)
@@ -817,7 +894,6 @@ void S_UpdateSounds(const Mobj *listener)
    if(listener)
    {
       // haleyjd 08/12/04: fix possible bugs with external cameras
-      
       if(camera) // an external camera is active
       {
          playercam = *camera; // assign directly
@@ -829,11 +905,15 @@ void S_UpdateSounds(const Mobj *listener)
          playercam.z = listener->z;
          playercam.angle = listener->angle;
          playercam.groupid = listener->groupid;
-      }      
+      }
+      earsec = R_PointInSubsector(playercam.x, playercam.y)->sector;
    }
 
+   // update sound environment
+   S_updateEnvironment(earsec);
+
    // now update each individual channel
-   for(cnum = 0; cnum < numChannels; ++cnum)
+   for(int cnum = 0; cnum < numChannels; cnum++)
    {
       channel_t *c = &channels[cnum];
       sfxinfo_t *sfx = c->sfxinfo;
@@ -870,7 +950,7 @@ void S_UpdateSounds(const Mobj *listener)
          // inappropriately. The only reason he changed this was to get to
          // the code in S_AdjustSoundParams that checks for sector sound
          // killing. We do that here now instead.
-         if(listener && S_CheckSectorKill(&playercam, c->origin))
+         if(listener && S_CheckSectorKill(earsec, c->origin))
             S_StopChannel(cnum);
          else if(c->origin && (PointThinker *)listener != c->origin) // killough 3/20/98
          {
@@ -907,7 +987,7 @@ bool S_CheckSoundPlaying(PointThinker *mo, sfxinfo_t *sfx)
 
    if(mo && sfx)
    {   
-      for(cnum = 0; cnum < numChannels; ++cnum)
+      for(cnum = 0; cnum < numChannels; cnum++)
       {
          if(channels[cnum].origin == mo && channels[cnum].sfxinfo == sfx)
          {
@@ -947,7 +1027,7 @@ void S_StopSounds(bool killall)
 // haleyjd 10/06/06: Looped sounds need to stop playing when the intermission
 // starts up, or else they'll play all the way til the next level.
 //
-void S_StopLoopedSounds(void)
+void S_StopLoopedSounds()
 {
    int cnum;
 
@@ -1004,7 +1084,7 @@ sfxinfo_t *S_SfxInfoForName(const char *name)
 // detected. This allows the sound to be used separately without 
 // use of EDF.
 //
-void S_Chgun(void)
+void S_Chgun()
 {
    sfxinfo_t *s_chgun = E_SoundForName("chgun");
 
@@ -1158,7 +1238,7 @@ void S_ChangeMusicName(const char *name, int looping)
 //
 // S_StopMusic
 //
-void S_StopMusic(void)
+void S_StopMusic()
 {
    if(!mus_playing || !mus_playing->data)
       return;
@@ -1277,6 +1357,51 @@ void S_Start()
    }
 }
 
+//=============================================================================
+//
+// Music Cheat Routines
+//
+
+int S_DoomMusicCheat(const char *buf)
+{
+   int input = (buf[0] - '1') * 9 + (buf[1] - '1');
+          
+   // jff 4/11/98: prevent IDMUS0x IDMUSx0 in DOOM I and greater than introa
+   if(buf[0] < '1' || buf[1] < '1' || input > 31)
+      return -1;
+   else
+      return mus_e1m1 + input;
+}
+
+int S_Doom2MusicCheat(const char *buf)
+{
+   int input = (buf[0] - '0') * 10 + buf[1] - '0';
+
+   // jff 4/11/98: prevent IDMUS00 in DOOM II and IDMUS36 or greater
+   if(input < 1 || input > 35)
+      return -1;
+   else
+      return mus_runnin + input - 1;
+}
+
+int S_HereticMusicCheat(const char *buf)
+{
+   // haleyjd 03/10/03: heretic support
+   // use H_Mus_Matrix for easy access
+   int episodenum = (buf[0] - '0') - 1;
+   int mapnum     = (buf[1] - '0') - 1;
+
+   if(episodenum < 0 || episodenum > 5 || mapnum < 0 || mapnum > 8)
+      return -1;
+   else
+      return H_Mus_Matrix[episodenum][mapnum];
+}
+
+//=============================================================================
+//
+// Sound Initialization
+//
+
 static void S_HookMusic(musicinfo_t *);
 
 //
@@ -1288,8 +1413,7 @@ static void S_HookMusic(musicinfo_t *);
 //
 void S_Init(int sfxVolume, int musicVolume)
 {
-   // haleyjd 09/03/03: the sound hash is now maintained by
-   // EDF
+   // haleyjd 09/03/03: the sound hash is now maintained by EDF
 
    //jff 1/22/98 skip sound init if sound not enabled
    if(snd_card && !nosfxparm)
@@ -1411,13 +1535,9 @@ musicinfo_t *S_MusicForName(const char *name)
    // Not found? Create a new musicinfo if the indicated lump is found.
    if(lumpnum >= 0)
    {
-      mus = ecalloc(musicinfo_t *, 1, sizeof(musicinfo_t));
-      mus->name = estrdup(nameToUse);
-
-      // The music code should prefix the sound name to get the lump if:
-      // 1. The sound name does not have the prefix, AND
-      // 2. The lump does DOES have the prefix.
-      mus->prefix = (!nameHasPrefix && lumpHasPrefix);
+      mus = estructalloc(musicinfo_t, 1);
+      mus->name   = estrdup(nameToUse);
+      mus->prefix = lumpHasPrefix;
       S_HookMusic(mus);
    }
    

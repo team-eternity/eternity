@@ -404,7 +404,7 @@ public:
 
    virtual void onConfirm(menuitem_t *item)
    {
-      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_COMMAND]); // make sound
+      S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_COMMAND]); // make sound
       Console.cmdtype = c_menu;
       C_RunTextCmd(item->data);
    }
@@ -594,7 +594,7 @@ public:
          tempstr << item->data << " -";
 
       C_RunTextCmd(tempstr.constPtr());
-      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
+      S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
    }
 
    virtual void onRight(menuitem_t *item, bool altdown, bool shiftdown)
@@ -633,7 +633,7 @@ public:
          tempstr << item->data << " +";
 
       C_RunTextCmd(tempstr.constPtr());
-      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
+      S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
    }
 };
 
@@ -679,7 +679,7 @@ public:
       // toggle value now
       tempstr << item->data << " /";
       C_RunTextCmd(tempstr.constPtr());
-      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_COMMAND]);
+      S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_COMMAND]);
    }
 };
 

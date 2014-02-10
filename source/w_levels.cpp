@@ -306,12 +306,11 @@ const char *W_GetManagedDirFN(WadDirectory *waddir)
 //
 char *W_FindMapInLevelWad(WadDirectory *dir, bool mapxy)
 {
-   int i;
    char *name = NULL;
    int          numlumps = dir->getNumLumps();
    lumpinfo_t **lumpinfo = dir->getLumpInfo();
 
-   for(i = 0; i < numlumps; ++i)
+   for(int i = 0; i < numlumps; i++)
    {
       lumpinfo_t *lump = lumpinfo[i];
 
@@ -405,7 +404,7 @@ wadlevel_t *W_FindLevelInDir(WadDirectory *waddir, const char *name)
    if(waddir->getType() == WadDirectory::MANAGED)
    {
       // get the managed directory
-      ManagedDirectory *dir = static_cast<ManagedDirectory *>(waddir);
+      auto dir = static_cast<ManagedDirectory *>(waddir);
       retlevel = dir->findLevel(name);
    }
 

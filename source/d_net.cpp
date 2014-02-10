@@ -41,6 +41,7 @@
 #include "f_wipe.h"
 #include "g_dmflag.h"
 #include "g_game.h"
+#include "hal/i_timer.h"
 #include "m_random.h"
 #include "mn_engin.h"
 #include "i_net.h"
@@ -67,8 +68,6 @@ doomdata_t *netbuffer; // points inside doomcom
 #define RESENDCOUNT 10
 #define PL_DRONE    0x80    /* bit flag in doomdata->player */
 
-//void (*netdisconnect)() = NULL;  // function ptr for disconnect function
-
 static ticcmd_t localcmds[BACKUPTICS];
 
 ticcmd_t    netcmds[MAXPLAYERS][BACKUPTICS];
@@ -79,18 +78,14 @@ static int  resendto[MAXNETNODES];        // set when remote needs tics
 static int  resendcount[MAXNETNODES];
 static int  nodeforplayer[MAXPLAYERS];
 
-//int      isconsoletic;          // is the current tic a gametic
-                                  // or a list of console commands?
 int        maketic;
 static int skiptics;
 int        ticdup;         
 static int maxsend;               // BACKUPTICS/(2*ticdup)-1
 
-//doomcom_t  singleplayer;        // single player doomcom
-
-void D_ProcessEvents(void); 
+void D_ProcessEvents(); 
 void G_BuildTiccmd(ticcmd_t *cmd); 
-void D_DoAdvanceDemo(void);
+void D_DoAdvanceDemo();
 
 static bool       reboundpacket;
 static doomdata_t reboundstore;
@@ -115,37 +110,6 @@ static int ExpandTics(int low)
 
    return 0;
 }
-
-/*
-int  oldentertics;
-
-//
-// ResetNet
-//
-// NETCODE_FIXME: Remove this and go back to not allowing connections
-// from within the game engine to simplify system.
-//
-void ResetNet(void)
-{
-   int i;
-   int nowtime = I_GetTime();
-   
-   if(!in_textmode)
-      C_SetConsole();
-   
-   oldentertics = nowtime;
-   
-   maketic = 1;
-   gametic = levelstarttic = basetic = 0;
-   
-   for(i = 0; i < MAXNETNODES; ++i)
-   {
-      nettics[i] = resendto[i] = 0;
-      remoteresend[i] = false; 
-   }
-   //  netbuffer->starttic = 0;
-}
-*/
 
 //
 // HSendPacket
@@ -326,12 +290,11 @@ void NetUpdate()
 {
    int nowtime;
    int newtics;
-   int i,j;
    int realstart;
    int gameticdiv;
    
    // check time
-   nowtime = I_GetTime() / ticdup;
+   nowtime = i_haltimer.GetTime() / ticdup;
    newtics = nowtime - gametime;
    gametime = nowtime;
    
@@ -357,7 +320,7 @@ void NetUpdate()
    // build new ticcmds for console player
    gameticdiv = gametic / ticdup;
 
-   for(i = 0; i < newtics; ++i)
+   for(int i = 0; i < newtics; i++)
    {
       I_StartTic();
       D_ProcessEvents();
@@ -372,7 +335,7 @@ void NetUpdate()
       return; // singletic update is syncronous
   
    // send the packet to the other nodes
-   for(i = 0; i < doomcom->numnodes; ++i)
+   for(int i = 0; i < doomcom->numnodes; i++)
    {
       if(nodeingame[i])
       {
@@ -383,7 +346,7 @@ void NetUpdate()
          
          resendto[i] = maketic - doomcom->extratics;
          
-         for(j = 0; j < netbuffer->numtics; ++j)
+         for(int j = 0; j < netbuffer->numtics; j++)
             netbuffer->d.cmds[j] = localcmds[(realstart + j) % BACKUPTICS];
          
          if(remoteresend[i])
@@ -394,7 +357,7 @@ void NetUpdate()
          else
          {
             netbuffer->retransmitfrom = 0;
-            HSendPacket (i, 0);
+            HSendPacket(i, 0);
          }
       }
    }
@@ -420,9 +383,9 @@ static void CheckAbort()
 {
    int stoptic;
    
-   stoptic = I_GetTime() + 2; 
+   stoptic = i_haltimer.GetTime() + 2; 
    
-   while(I_GetTime() < stoptic)
+   while(i_haltimer.GetTime() < stoptic)
       if(I_CheckAbort())
          I_ExitWithMessage("Network game synchronisation aborted.\n");
 }
@@ -440,13 +403,11 @@ static void CheckAbort()
 //
 static void D_InitPlayers()
 {
-   int i;
-
-   // haleyjd 04/10/10: brougt up out of defunct console net init for now
+   // haleyjd 04/10/10: brought up out of defunct console net init for now
    players[consoleplayer].colormap = default_colour;
    strncpy(players[consoleplayer].name, default_name, 20);
 
-   for(i = 0; i < MAXPLAYERS; ++i)
+   for(int i = 0; i < MAXPLAYERS; i++)
    {
       // FIXME / TODO: BRAINDEAD!
       if(i != consoleplayer)
@@ -467,7 +428,6 @@ static void D_InitPlayers()
 //
 static void D_ArbitrateNetStart()
 {
-   int     i;
    bool gotinfo[MAXNETNODES];
    
    autostart = true;
@@ -488,25 +448,25 @@ static void D_ArbitrateNetStart()
 
             usermsg("Received %d %d\n",
                     netbuffer->retransmitfrom, netbuffer->starttic);
-            startskill = (skill_t)(netbuffer->retransmitfrom & 15);
-            dm = !!((netbuffer->retransmitfrom & 0xc0) >> 6);
-            nomonsters = (netbuffer->retransmitfrom & 0x20) > 0;
-            respawnparm = (netbuffer->retransmitfrom & 0x10) > 0;
-            startmap = netbuffer->starttic & 0x3f;
+            // FIXME: various insufficient variable sizes
+            startskill   = (skill_t)(netbuffer->retransmitfrom & 15);
+            dm           = !!((netbuffer->retransmitfrom & 0xc0) >> 6);
+            nomonsters   = (netbuffer->retransmitfrom & 0x20) > 0;
+            respawnparm  = (netbuffer->retransmitfrom & 0x10) > 0;
+            startmap     = netbuffer->starttic & 0x3f;
             startepisode = 1 + (netbuffer->starttic >> 6);
 
             if(dm)
                DefaultGameType = GameType = gt_dm;
 
             G_ReadOptions(netbuffer->d.data);
-
-            D_InitPlayers();
-            return;
+            break;
          }
       }
    }
    else
    {
+      int numnodesgotten = 0;
       usermsg("Sending network start info...");
 
       G_ScrambleRand();
@@ -515,21 +475,24 @@ static void D_ArbitrateNetStart()
       do
       {
          CheckAbort();
-         for(i = 0; i < doomcom->numnodes; ++i)
+         for(int i = 0; i < doomcom->numnodes; i++)
          {
             netbuffer->retransmitfrom = startskill;
-            if (GameType == gt_dm)
+            if(GameType == gt_dm)
                netbuffer->retransmitfrom |= (1 << 6);
-            if (nomonsters)
+            if(nomonsters)
                netbuffer->retransmitfrom |= 0x20;
-            if (respawnparm)
+            if(respawnparm)
                netbuffer->retransmitfrom |= 0x10;
-            netbuffer->starttic = (startepisode-1) * 64 + startmap;
+            // FIXME: not large enough for Heretic!
+            netbuffer->starttic = (startepisode - 1) * 64 + startmap;
             netbuffer->player = version;
 
+#ifdef RANGECHECK
             if(GAME_OPTION_SIZE > sizeof(netbuffer->d.data))
                I_Error("D_ArbitrateNetStart: GAME_OPTION_SIZE"
                        " too large w.r.t. BACKUPTICS\n");
+#endif
 
             G_WriteOptions(netbuffer->d.data);    // killough 12/98
             
@@ -539,23 +502,23 @@ static void D_ArbitrateNetStart()
             HSendPacket(i, NCMD_SETUP);
          }
 
-         for(i = 10; i && HGetPacket(); --i)
+         for(int i = 10; i && HGetPacket(); i--)
          {
             if((netbuffer->player & 0x7f) < MAXNETNODES)
                gotinfo[netbuffer->player & 0x7f] = true;
          }
 
-         for(i = 1; i < doomcom->numnodes; ++i)
-            if(!gotinfo[i])
-               break;
+         numnodesgotten = 1;
+         for(int i = 1; i < doomcom->numnodes; i++)
+         {
+            if(gotinfo[i])
+               ++numnodesgotten;
+         }
       }
-      while(i < doomcom->numnodes);
+      while(numnodesgotten < doomcom->numnodes);
    }
    
-   //
    // NETCODE_FIXME: See note above about D_InitPlayers
-   //
-   
    D_InitPlayers();   
 }
 
@@ -568,9 +531,7 @@ extern int viewangleoffset;
 //
 void D_CheckNetGame()
 {
-   int i;
-   
-   for(i = 0; i < MAXNETNODES; i++)
+   for(int i = 0; i < MAXNETNODES; i++)
    {
       nodeingame[i] = false;
       nettics[i] = 0;
@@ -591,8 +552,6 @@ void D_CheckNetGame()
 
 void D_InitNetGame()
 {
-   int i;
-   
    if(doomcom->id != DOOMCOM_ID)
       I_Error("Doomcom buffer invalid!\n");
    
@@ -608,9 +567,9 @@ void D_InitNetGame()
    if(maxsend<1)
       maxsend = 1;
   
-   for(i = 0; i < doomcom->numplayers; ++i)
+   for(int i = 0; i < doomcom->numplayers; i++)
       playeringame[i] = true;
-   for(i = 0; i < doomcom->numnodes; ++i)
+   for(int i = 0; i < doomcom->numnodes; i++)
       nodeingame[i] = true;
   
    usermsg("player %i of %i (%i nodes)",
@@ -626,8 +585,6 @@ void D_InitNetGame()
 //
 void D_QuitNetGame()
 {
-   int i, j;
-      
    if(!netgame || !usergame || consoleplayer == -1 || demoplayback)
       return;
   
@@ -635,14 +592,14 @@ void D_QuitNetGame()
    netbuffer->player = consoleplayer;
    netbuffer->numtics = 0;
 
-   for(i = 0; i < 4; ++i)
+   for(int i = 0; i < 4; i++)
    {
-      for(j = 1; j < doomcom->numnodes; ++j)
+      for(int j = 1; j < doomcom->numnodes; j++)
       {
          if(nodeingame[j])
             HSendPacket(j, NCMD_EXIT);
       }
-      I_WaitVBL(1);
+      i_haltimer.Sleep(15);
    }  
 }
 
@@ -671,6 +628,7 @@ void D_QuitNetGame()
 
 // haleyjd 01/04/2010
 bool d_fastrefresh;
+bool d_interpolate;
 
 int  frametics[4];
 int  frameon;
@@ -681,13 +639,14 @@ bool opensocket;
 
 extern bool advancedemo;
 
-// Run new game tics.  Returns true if at least one tic
-// was run.
-
+//
+// RunGameTics
+//
+// Run new game tics.
+//
 static bool RunGameTics()
 {
    static int  oldentertic;
-   int         i;
    int         lowtic;
    int         entertic;
    int         realtics;
@@ -696,7 +655,7 @@ static bool RunGameTics()
    int         numplaying;
 
    // get real tics            
-   entertic = I_GetTime() / ticdup;
+   entertic = i_haltimer.GetTime() / ticdup;
    realtics = entertic - oldentertic;
    oldentertic = entertic;
   
@@ -705,7 +664,7 @@ static bool RunGameTics()
       
    lowtic = D_MAXINT;
    numplaying = 0;
-   for(i = 0; i < doomcom->numnodes; ++i)
+   for(int i = 0; i < doomcom->numnodes; i++)
    {
       if(nodeingame[i])
       {
@@ -726,7 +685,7 @@ static bool RunGameTics()
   
    // haleyjd 09/07/10: enhanced d_fastrefresh w/early return when no tics to run
    if(counts <= 0 && d_fastrefresh && !timingdemo) // 10/03/10: not in timedemos!
-      return true;
+      return false;
 
    if(counts < 1)
       counts = 1;
@@ -735,22 +694,24 @@ static bool RunGameTics()
    
    if(!demoplayback)
    {   
+      int pnum;
+
       // ideally nettics[0] should be 1 - 3 tics above lowtic
       // if we are consistantly slower, speed up time
-      for(i = 0; i < MAXPLAYERS; ++i)
+      for(pnum = 0; pnum < MAXPLAYERS; pnum++)
       {
-         if(playeringame[i])
+         if(playeringame[pnum])
             break;
       }
 
       // the key player does not adapt
-      if(consoleplayer != i)
+      if(consoleplayer != pnum)
       {
-         if(nettics[0] <= nettics[nodeforplayer[i]])
+         if(nettics[0] <= nettics[nodeforplayer[pnum]])
          {
             gametime--;
          }
-         frameskip[frameon&3] = (oldnettics > nettics[nodeforplayer[i]]);
+         frameskip[frameon&3] = (oldnettics > nettics[nodeforplayer[pnum]]);
          oldnettics = nettics[0];
          if(frameskip[0] && frameskip[1] && frameskip[2] && frameskip[3])
          {
@@ -799,7 +760,7 @@ static bool RunGameTics()
       }
       
       // Sleep until a tic is available, so we don't hog the CPU.
-      I_Sleep(1);
+      i_haltimer.Sleep(1);
 
       return false;
    }
@@ -810,12 +771,13 @@ static bool RunGameTics()
    // run the count * ticdup tics
    while(counts--)
    {
-      for(i = 0; i < ticdup; ++i)
+      for(int i = 0; i < ticdup; i++)
       {
          if(gametic/ticdup > lowtic)
             I_Error("gametic>lowtic\n");
          if(advancedemo)
             D_DoAdvanceDemo();
+         i_haltimer.SaveMS();
          G_Ticker();
          gametic++;
          
@@ -823,14 +785,11 @@ static bool RunGameTics()
 
          if(i != ticdup-1)
          {
-            ticcmd_t *cmd;
-            int buf;
-            int j;
+            int buf = (gametic / ticdup) % BACKUPTICS; 
 
-            buf = (gametic/ticdup)%BACKUPTICS; 
-            for(j = 0; j < MAXPLAYERS; j++)
+            for(int j = 0; j < MAXPLAYERS; j++)
             {
-               cmd = &netcmds[j][buf];
+               auto cmd = &netcmds[j][buf];
                cmd->chatchar = 0;
                if(cmd->buttons & BT_SPECIAL)
                   cmd->buttons = 0;
@@ -846,10 +805,9 @@ static bool RunGameTics()
 
 void TryRunTics()
 {
-   int i;
    static int oldentertic;
    int entertic, realtics;
-   bool game_advanced;
+   int game_advanced = 0;
 
    // Loop until we have done some kind of useful work.  If no
    // game tics are run, RunGameTics() will send the game to
@@ -857,7 +815,7 @@ void TryRunTics()
 
    do
    {
-      entertic = I_GetTime() / ticdup;
+      entertic = i_haltimer.GetTime() / ticdup;
       realtics = entertic - oldentertic;
       oldentertic = entertic;
 
@@ -869,7 +827,7 @@ void TryRunTics()
       I_StartTic();        // run these here now to get keyboard
       D_ProcessEvents();   // input for console/menu
 
-      for(i = 0; i < realtics; ++i)   // run tics
+      for(int i = 0; i < realtics; i++)   // run tics
       {
          // all independent tickers here
          MN_Ticker();
@@ -921,9 +879,12 @@ CONSOLE_COMMAND(disconnect, cf_netonly)
    C_SetConsole();
 }
 */
-
+ 
 VARIABLE_TOGGLE(d_fastrefresh, NULL, onoff);
 CONSOLE_VARIABLE(d_fastrefresh, d_fastrefresh, 0) {}
+
+VARIABLE_TOGGLE(d_interpolate, NULL, onoff);
+CONSOLE_VARIABLE(d_interpolate, d_interpolate, 0) {}
 
 //----------------------------------------------------------------------------
 //

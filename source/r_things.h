@@ -39,9 +39,6 @@ extern float *screenheightarray;
 
 extern float *mfloorclip, *mceilingclip;
 
-// haleyjd 10/09/06: optional vissprite limit
-extern int r_vissprite_limit;
-
 // SoM 12/13/03: the stack for use with portals
 struct maskedrange_t
 {

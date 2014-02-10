@@ -47,6 +47,7 @@
 #include "metaapi.h"
 #include "m_cheat.h"
 #include "m_misc.h"
+#include "p_info.h"
 #include "p_inter.h"
 #include "p_mobj.h"
 #include "p_tick.h"
@@ -330,6 +331,7 @@ dehflags_t deh_mobjflags[] =
   {"ALWAYSTORQUE",     0x00004000, 3}, // torque not restricted by comp_falloff
   {"NOZERODAMAGE",     0x00008000, 3}, // missile won't inflict damage if damage is 0
   {"TLSTYLESUB",       0x00010000, 3}, // use subtractive blending map
+  {"TOTALINVISIBLE",   0x00020000, 3}, // thing is totally invisible to monsters
 
   { NULL,              0 }             // NULL terminator
 };

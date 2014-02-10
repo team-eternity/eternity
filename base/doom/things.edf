@@ -3297,17 +3297,19 @@ thingtype EENightmareSpectre : Demon, 889, 158
 {
   spawnhealth 300
   addflags    TLSTYLESUB
+  aimshift    21
   
   obituary_melee "was devoured by a Nightmare Spectre!"
 }
 
-// PlayStation-style Spectre
+// PlayStation-style Spectre (25%)
 
 thingtype EEPSXSpectre : Spectre, 890, 159
 {
   addflags     TLSTYLEADD
   remflags     SHADOW
-  translucency 30%
+  translucency 25%
+  aimshift     21
 }
 
 // PlayStation bloody chain object
@@ -3354,10 +3356,11 @@ thingtype EEBetaLostSoul : LostSoul, 9037, 161
     EEBS I 4 bright
     goto See
   Death:
-    EEBS JKLM 5 bright
-    EEBS N    5 bright A_Scream
+    EEBS JKL  5 bright
+    EEBS M    5 bright A_Scream
+    EEBS N    5 bright A_Fall
     EEBS O    5 bright
-    EEBS P    5 bright A_Fall
+    EEBS P    5 bright 
     EEBS Q   -1
     stop
   "@

@@ -108,9 +108,15 @@ void S_StopSequence(PointThinker *mo)
          // if a stopsound is defined, play it
          if(curSeq->sequence->stopsound)
          {
-            S_StartSfxInfo(curSeq->origin, curSeq->sequence->stopsound,
-                           curSeq->volume, curSeq->attenuation, false,
-                           CHAN_AUTO);
+            soundparams_t params;
+            params.origin      = curSeq->origin;
+            params.sfx         = curSeq->sequence->stopsound;
+            params.volumeScale = curSeq->volume;
+            params.attenuation = curSeq->attenuation;
+            params.loop        = false;
+            params.subchannel  = CHAN_AUTO;
+            params.reverb      = curSeq->sequence->reverb;
+            S_StartSfxInfo(params);
          }
 
          // unlink and delete this object
@@ -407,8 +413,15 @@ static void S_StartSeqSound(SndSeq_t *seq, bool loop)
       // clear the NORANDOM flag
       seq->flags &= ~SEQ_FLAG_NORANDOM;
 
-      S_StartSfxInfo(seq->origin, seq->currentSound, seq->volume, 
-                     seq->attenuation, loop, CHAN_AUTO);
+      soundparams_t params;
+      params.origin      = seq->origin;
+      params.sfx         = seq->currentSound;
+      params.volumeScale = seq->volume;
+      params.attenuation = seq->attenuation;
+      params.loop        = loop;
+      params.subchannel  = CHAN_AUTO;
+      params.reverb      = seq->sequence->reverb;
+      S_StartSfxInfo(params);
    }
 }
 
@@ -536,15 +549,15 @@ static void S_RunSequence(SndSeq_t *curSeq)
 }
 
 // prototypes for enviro functions from below
-static void S_RunEnviroSequence(void);
-static void S_StopEnviroSequence(void);
+static void S_RunEnviroSequence();
+static void S_StopEnviroSequence();
 
 //
 // S_RunSequences
 //
 // Updates all running sound sequences.
 //
-void S_RunSequences(void)
+void S_RunSequences()
 {
    DLListItem<SndSeq_t> *link = SoundSequences;
 
@@ -566,7 +579,7 @@ void S_RunSequences(void)
 //
 // Stops all running sound sequences. Called at the end of a level.
 //
-void S_StopAllSequences(void)
+void S_StopAllSequences()
 {
    // Because everything is allocated PU_LEVEL, simply disconnecting the list
    // head is all that is needed to stop all sequences from playing. The sndseq
@@ -606,7 +619,7 @@ static SndSeq_t enviroSeq;
 //
 // Resets the environmental sequence engine.
 //
-static void S_ResetEnviroSeqEngine(void)
+static void S_ResetEnviroSeqEngine()
 {
    EnviroSequence    = NULL;
    enviroSeqFinished = true;
@@ -643,7 +656,7 @@ void S_InitEnviroSpots()
 // commands or else they'll lock out any other sequence for the rest of the
 // map.
 //
-static void S_RunEnviroSequence(void)
+static void S_RunEnviroSequence()
 {
    // nothing to do?
    if(enviroSpots.isEmpty())
@@ -708,7 +721,7 @@ static void S_RunEnviroSequence(void)
 // Unconditionally stops the environmental sequence engine. Called from
 // S_StopAllSequences above.
 //
-static void S_StopEnviroSequence(void)
+static void S_StopEnviroSequence()
 {
    // stomp on everything to stop it from running any more sequences
    EnviroSequence = NULL;     // no playing sequence
@@ -753,7 +766,7 @@ void S_SetSequenceStatus(SndSeq_t *seq)
 // This is called from the savegame loading code to reset the sound sequence
 // engine.
 //
-void S_SequenceGameLoad(void)
+void S_SequenceGameLoad()
 {
    DLListItem<SndSeq_t> *link;
 

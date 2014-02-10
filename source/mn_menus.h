@@ -21,10 +21,14 @@
 #ifndef MN_MENUS_H__
 #define MN_MENUS_H__
 
-void MN_InitMenus(void);
+void MN_InitMenus();
 void MN_LinkClassicMenus(int link);
 
+void MN_DoomNewGame();
+void MN_Doom2NewGame();
+
 extern menu_t menu_main;
+extern menu_t menu_main_doom2;
 extern menu_t menu_newgame;
 
 extern int mn_classic_menus;

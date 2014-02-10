@@ -2,6 +2,386 @@
 Changes since Eternity Engine v3.40.37
 ================================================================================
 --------------------------------------------------------------------------------
+01/19/14
+
+Added one last feature, "aimshift", which allows customizing the way that 
+enemies mis-aim at monsters in the way that normally happens for SHADOW, GHOST,
+and totally invisible monsters. This is needed so that the PSX spectre varieties
+can have this behavior without making it an intrinsic property of another flag
+they have.
+
+I also took care of a related problem I'd been meaning to address for a while of
+the DONTDRAW flag having this inaccuracy effect when it is needed to only 
+disable vissprite generation without having other side effects by most of the
+game engine. This would be a compatibility break, if anybody ever actually
+used EE for anything :P
+
+--------------------------------------------------------------------------------
+01/18/14
+
+Doing prep work for the lead-up to Bifrost release:
+
+* Added framerate options d_fastrefresh and d_interpolate to the video options
+  menu and rearranged the pages of that menu to put more important settings
+  first. Also, interpolation is now on by default. We'll see how the community
+  reacts :)
+  
+* Added smooth_turning to the config file as someone earlier reported that it
+  was not being saved.
+  
+* Changed the "dampening" keyword in EDF to "damping" as I see the latter much
+  more frequently and thus suspect it to be the correct term.
+  
+* printz sent me a list of some warnings about unused variables of the type that
+  Visual Studio ignores, and I fixed all the ones that are not simply due to
+  unfinished features.
+
+--------------------------------------------------------------------------------
+01/16/14
+
+Fine tuning of the reverb effects and bug fixes have occurred:
+
+* The EQ parameters in the reverb engine weren't being updated except the first
+  time, so I mysteriously couldn't hear any difference between the "bright" and
+  "dark" presets.
+  
+* Tweaked the default "corner" frequencies of the reverb's 3-band EQ to 250 and 
+  4000 respectively, based on various advice from different audio tech web 
+  pages. Seems much more effective.
+  
+* Fine-tuned parameters in the presets to make them slightly more distinguished
+  between bright and dark variations.
+  
+Being unsatisfied with the way that environments could apply to global sounds, I
+have also rewritten the sound loop so that a secondary buffer is used for sound
+channels that want reverberation, and then the two buffers are mixed together
+before being output by the global EQ pass.
+
+By adding a new function S_StartInterfaceSound, there is now full semantic
+separation between playsim audio and global sounds made by systems such as the
+menus and console.
+
+As a result of this change, I am also able to add reverb as a parameter to 
+various sound-playing action functions, as well as to EDF ambience and sound
+sequence definitions.
+
+--------------------------------------------------------------------------------
+01/15/14
+
+Finished integration of reverb with the playsim:
+
+* The high-level sound engine now keeps track of the active environment for the
+  display player and notifies the reverb engine when a change occurs.
+  
+* The reverb engine now sets a flag to notify the low-level sound update loop
+  that it needs to call into the reverb engine effect processor.
+  
+* Nine environmental presets (basic reverb effects including the Freeverb
+  default settings and 8 different room sizes with different "luminosities" via
+  equalization parameters) are now defined in base/sounds.edf.
+  
+* Added a p_testenvironment console command which sets the zone that the player
+  running the command is in to the indicated reverb.
+
+--------------------------------------------------------------------------------
+01/14/14
+
+Finishing up work on integration of reverb with the playsim:
+
+* Added EESoundEnvironment with a ZDoom-compatible doomednum of 9048 and the
+  ability to alter its spawn sector's sound zone by setting it to the EDF
+  reverb specified by its args[0] and args[1] fields.
+
+* Data from an ereverb_t can now be propagated into the reverb class and its
+  subordinate data structures in s_reverb.cpp.
+
+* Sound engine now gets "earsec" when there's a valid listener during sound
+  origin adjustment, so that the currently active zone can be adjusted from it
+  in addition to the existing sound kill flag checks that are done.
+
+--------------------------------------------------------------------------------
+01/12/14
+
+Made interface changes to the IWAD picker, startup acknowledgment messages, and
+menus to call the two main Freedoom IWADs by their new names "Phase 1" and 
+"Phase 2", as opposed to Ultimate Freedoom and Freedoom.
+
+My solution to D_DDTBLU looping did turn out to be insufficient, both by being
+not good enough to cover Freedoom's D_RUNNIN, which has a stuck note on a
+different channel, and by being overkill by causing notes to potentially end 
+at the end of a song before they are supposed to end, such as in D_BUNNY.
+
+I corrected this by inserting the All Notes Off event with the proper channel
+number for each track (for some reason, mmus2mid generates a track for every
+MIDI channel it uses, one channel per track...) at the very beginning of songs,
+with time offset 0. This prevents it from interfering with normal playback of
+the program, but kills any notes that have hung over past a loop.
+
+Gearing up for 3.40.46 "Bifrost" release, I am finishing the last feature 
+slated for it, which is playsim and high-level sound engine support for the 
+reverb engine in the form of "sound environment zones," which will be partially
+compatible with ZDoom (the range of available effects is considerably smaller 
+and will not likely include any of the same presets).
+
+Done so far:
+
+* Sound zones are created at map load with a flood-fill-like algorithm over
+  the sectors by recursively walking through them to adjacent sectors which 
+  adjoin by 2S lines which are not marked as a boundary. Very similar to sound
+  propagation for alerting monsters.
+
+* The extended line flag EX_ML_ZONEBOUNDARY can be specified via ExtraData to
+  mark a line as a sound zone boundary.
+
+* A no-op ereverb_t structure with a reserved ID of 0 is defined and added to
+  the reverb hash during EDF processing. This default environment will cause 
+  the sound engine to turn off reverberation. A function is also provided for
+  getting the default environment directly without doing a hash lookup.
+  
+* EMAPINFO can override the default sound environment for all sectors in a map
+  by specifying defaultenvironment <id1> <id2>, where the two IDs that range
+  from 0 to 255 match the corresponding EDF reverb definition.
+  
+While working on the above I fixed two unrelated problems:
+
+* qstring::toLong was needlessly missing this-constness, possibly because it
+  uses a non-const char ** argument, which in my mind made it potentially
+  mutating, but, it's not. Use of the char ** to write into *after* the method
+  call returns would be mutating, and extremely ill-advised.
+
+* Found a place in the inventory system where a flag-style option was being
+  specified without the CFGF_SIGNPREFIX flag, meaning it wouldn't have allowed
+  use of + and - before the option name as was intended.
+
+--------------------------------------------------------------------------------
+01/11/14
+
+Reverted out some changes to the d_net core gameloop code which aren't needed
+for the new interpolation system (chiefly, returning the number of tics run 
+down from RunGameTics to TryRunTics and then to D_DoomLoop).
+
+I was alerted of adoption of new official alternate names for the Freedoom IWADs
+("freedoom1.wad" and "freedoom2.wad" respectively) and made alterations to EE
+so that it allows and prefers these names when searching for IWADs. The older
+unofficial names are still supported for now but are considered deprecated.
+
+--------------------------------------------------------------------------------
+01/10/14
+
+Due to architectural differences, the Odamex approach to interpolation wasn't
+behaving optimally in EE when the framerate would go below 35 fps, and would
+introduce a large amount of lag in the renderer. With some additional help from
+Kaiser, I adapted the approach he uses in Doom64 EX, which was originally based
+on prboom-plus's code.
+
+To do this I first introduced a HAL for timer implementation, which was a long-
+standing TODO on the path to getting everything that's done through SDL only
+abstracted behind the HAL. The HALTimer structure has function pointers that can
+be initialized by a timer driver implementation for interpolation calculations.
+This way the most accurate timing method available can be used on a per-platform
+basis.
+
+Implementing the Odamex approach first was still a very useful exercise, though,
+which made the re-implementation easier, having an understanding of the problem
+being solved.
+
+--------------------------------------------------------------------------------
+01/08/14
+
+Recoded portions of the renderer to get sector properties of the viewpoint from
+view.sector, which guarantees proper interaction of interpolation with features
+such as BOOM deep water.
+
+Added an r_boomcolormaps cvar (may add to configuration later?) which re-enables
+the old BOOM behavior of applying the view.sector's colormap properties to
+everything that is in view. This fixes some maps such as Freedoom E1M1/MAP01.
+Some maps like BOOMEDIT look worse with it on, though, IMO. Right now it's 
+default off.
+
+--------------------------------------------------------------------------------
+01/07/14
+
+Made some tweaks to interpolation that seem to make it work without screenwipes
+being enabled. I shouldn't add in more than one frame's worth of time, because
+if the game IS running behind, we can't interpolate that anyway. It needs a
+chance to catch up.
+
+--------------------------------------------------------------------------------
+01/06/14
+
+Added interpolation when the viewpoint is a camera.
+
+Removed the "low precision" span drawer engine, which is another example of an
+option nobody ever needed or wanted ("Look ugly" vs "Look correct").
+
+Along the same lines as the above, I have also removed the optional vissprite
+limit, which is equivalent to an unnecessary potential branch prediction stall 
+on every vissprite projection.
+
+--------------------------------------------------------------------------------
+01/05/14
+
+Ability to interpolate the player viewpoint, position of vissprites, and sector
+heights is now in place, after significant help in understanding the problem 
+provided earlier by Dr. Sean of the Odamex team. Big thanks to him.
+
+--------------------------------------------------------------------------------
+01/01/14
+
+Happy New Year!
+
+More work on elimination of branches on GMI enumeration values:
+
+* The mn_newgame command now has a callback in GMI which implements proper
+  new game behavior for each game mode. This eliminates need for a redundant
+  mn_hnewgame command for Heretic entirely.
+  
+* Par time determination now has a callback in GMI.
+
+* The ability of Lost Souls to bounce while old demos are playing back is now
+  controlled through a GMI flag. Because this behavior varies both between
+  gamemodes AND game missions (ie. not in Doom 2, but in Final Doom), this
+  needed a handy ability for missions to add and remove flags from their base
+  gamemode (this works similar to addflags and remflags in EDF thingtypes).
+  
+* Missions which support changing the names of MAP31/32 to match BFG Edition are
+  now controlled with the MI_WOLFNAMEHACKS missioninfo flag.
+  
+* Missions which add MAP33 "Betray" are now controlled by the MI_HASBETRAY
+  missioninfo flag.
+  
+* Missions which support Doom 2 managed mission pack selection via the episode
+  menu are now determined with an MI_DOOM2MISSIONS mission flag.
+  
+* Missions which do not set things' z height when teleporting during playback of
+  old demos are now controlled with an MI_NOTELEPORTZ mission flag.
+  
+Beta Lost Souls have been further tweaked to mesh better with the modern engine.
+The Pre-Beta didn't have flying monsters yet so id just offset the sprite a
+certain height above the floor. With flying logic in place, the offsets should
+just be based on the monster's position. Also slightly changed its death
+behavior so that it more closely matches how the Pain Elemental falls when it
+explodes.
+
+By user request, the ability to save custom comments in the configuration files
+has been entirely removed, which completely resolves the BOOM problem of the
+help comments getting out of sync with the variables any time one is added or
+removed from the program. Nobody used this anyway.
+
+--------------------------------------------------------------------------------
+12/31/13
+
+I am currently working on eliminating more branches on GameModeInfo->id, 
+GameModeInfo->missionInfo->id, and GameModeInfo->type.
+
+Work so far:
+
+* The music changing cheat now calls a function pointer in GameModeInfo that
+  implements the proper behavior for that game.
+  
+* Conditional playing of DSPDIEHI is controlled by a GMI flag.
+
+* MN_PatchOldMainMenu is no longer necessary; Doom 2 games now reference a 
+  separate main menu through the already existing GMI pointer.
+  
+I also found that I forgot to add emulation of the A_RavenPlayerScream pointer
+to the skin viewer when I added that action function for proper Heretic player
+death sound behavior.
+
+--------------------------------------------------------------------------------
+12/30/13
+
+While performing more code audits (just looking for weird stuff in the source
+code), I cleaned up a number of things:
+
+* C++ style adjustments
+* Variables with excessive scope (declared at top of function when only used in
+  a single control statement, for example).
+  
+printz sent a small list of warnings from OS X compile that needed addressing
+(printf security, incorrect formatting characters, and a signed-vs-unsigned 
+problem in the new wave sound format reader).
+
+Researched possible solutions to D_DDTBLU no longer looping correctly. It seems
+that inserting an all-notes-off event at the end of each MIDI track in the
+converted MUS data will emulate the behavior of DMX with respect to program
+loops without introducing any issues, at least for the stock MUS lumps. I am not
+entirely confident that this isn't overkill, but, I'll leave it be as the 
+solution for now until somebody complains about finding a WAD with broken music.
+
+--------------------------------------------------------------------------------
+12/29/13
+
+A major announcement is that starting with r2790, the Eternity Engine is now
+under the GNU General Public License v3.0. This is mostly prompted by increasing
+interest in porting of Doom to phone and tablet devices, many of which do not
+support free software development.
+
+I feel it would be grossly unfair to my team and I to have our work monetized on
+iPhone and then be unable to compile our own competing version of the program
+without paying Apple's developer tax and then being subject to their highly
+objectionable terms of service, which include the ability to revoke your license
+to develop at any time, including because you competed with their own products
+(or one of their select friends' products) too much.
+
+The basic freedoms that were intended to be protected by the GPL are not met 
+under those kinds of conditions, on what I like to call "prison platforms."
+
+By transitioning to the GPLv3, Eternity gains the following:
+
+* Protection from TiVoization (the above phenomenon of being locked to a
+  private developer code signing key).
+
+* Ability to specify that we desire proper recognition when our work is used
+  in other ports, even if the terms are legally removable from the license.
+  
+* Exclusion from the GPLv2's outdated allowance for requiring a written request
+  for the source code. GPLv3 only allows this when the product is being 
+  distributed on a physical medium, where such a restriction may actually make
+  sense based on the medium's storage capacity for example. This has been
+  abused by some non-mainstream devs in the Doom community against projects
+  such as Chocolate Doom and is deeply disturbing to me as it represents, from
+  my POV, an attempt to restrict distribution of the source code by making it
+  needlessly inconvenient to obtain. There's no valid reason for this in the
+  age of file sharing, online storage, and universal broadband.
+  
+Now, in order to avoid creating unnecessary schisms in the community, where the
+vast majority of projects are still GPLv2, I've also added an additional 
+permission clause for what I term "license reciprocity." This means if I use 
+your GPLv2 code, and your personal team isn't violating the spirit of the GPLv3
+(ie. by publishing locked down iPhone versions) then you're free to adapt back
+any changes I make to your code *without* upgrading to GPLv3.
+
+These terms do not survive (ie. once you back adapt the code, it is just under
+plain jane GPLv2 again). This does mean somebody else can then take your 
+project and use parts of my code in ways against my wishes, but since that 
+isn't *your* fault you can't be punished for it. I'd just encourage more
+projects to follow suit and convert up to the newest version of the GPL.
+
+As for original code written by Team Eternity, permission will virtually always
+be granted to use it under GPLv2 if such permission is properly requested either
+verbally or in writing. Just taking the code and using it without getting 
+permission is not acceptable though. Please talk to me about it.  
+
+--------------------------------------------------------------------------------
+12/28/13
+
+I converted MBFHelperDog's definitions to use DECORATE state format.
+
+--------------------------------------------------------------------------------
+12/27/13
+
+In advance of further support for Heretic, Hexen, and Strife, I have defined
+functions which remap doomednums for all of those games into the 7000 range, 
+which is pretty much fully allocated at this point for translation purposes.
+
+I also allocated the low end of the unused 6000 range to "reverse translation" 
+of Doom's objects, so that they are available in all games by non-conflicting 
+numbers in this range. For example, an Archvile could be spawned in Heretic, 
+Hexen, or Strife by using doomednum 6064 instead of 64. Objects in the 2000 and
+3000 range fall under 6200 and 6300 respectively.
+
+--------------------------------------------------------------------------------
 12/25/13
 
 Fixed the ability to play back internal demos using -playdemo on the command
@@ -12,6 +392,35 @@ existence.
 
 Demos have always been allowed to float through the initial loading check and
 then cause an error later if they're not found when they actually start to play.
+
+Removed my old half-finished attempt at generalizing the SMMU LevelInfo system
+so that it could store multiple definitions in memory and push them to the 
+active LevelInfo object, which was part of a plan to support Hexen MAPINFO 
+which was active around June 2010 when I got hired at the tribe. The shift in my
+routines threw off EE development for about 2 months and that project basically
+was ruined. Either way, I have different ideas on how to support Hexen MAPINFO
+now.
+
+While testing the above using vapordemo to make sure I didn't break anything, I
+found several problems suddenly surfaced in the portal system:
+
+* When portal groups are setup, the scan done for Mobjs in sectors needs to scan
+  the thinker list for all objects in that sector, NOT the sector's touching
+  thinglist. Otherwise, MF_NOSECTOR objects get skipped and, since these include
+  such things as MapSpots and Ambience, which can play sounds, that's bad. They
+  need valid groupids.
+  
+* Mobjs cannot clear groupid when they are removed, because they may continue to
+  be referenced by things that still target them. This would cause invalid group
+  lookups when those objects tried to get the position of their targets.
+  
+* SoM had a bit of a hack going where the link getting functions were inline
+  conditionally on RANGECHECK. I don't like that because having two copies of 
+  the functions creates the possibility of them going out of sync. I removed the
+  inlines, as I don't think it's performance critical enough to warrant being
+  inline in the first place. I also changed the way invalid group lookup 
+  warning messages work, so that they go to the console rather than the player
+  message widget.
 
 --------------------------------------------------------------------------------
 12/24/13

@@ -82,7 +82,8 @@ static int      skview_rot       = 0;
 static bool     skview_halfspeed = false;
 static int      skview_typenum;                 // 07/12/03
 static bool     skview_haswdth   = false;       // 03/29/08
-static int      skview_light     = 0;          // 01/22/12
+static bool     skview_gibbed    = false;
+static int      skview_light     = 0;           // 01/22/12
 
 // haleyjd 09/29/07: rewrites for player class engine
 static statenum_t skview_atkstate2;
@@ -95,6 +96,7 @@ extern void A_PlaySoundEx(actionargs_t *);
 extern void A_Pain(actionargs_t *);
 extern void A_Scream(actionargs_t *);
 extern void A_PlayerScream(actionargs_t *);
+extern void A_RavenPlayerScream(actionargs_t *);
 extern void A_XScream(actionargs_t *);
 extern void A_FlameSnd(actionargs_t *);
 
@@ -107,25 +109,27 @@ static void MN_skinEmulateAction(state_t *state)
 {
    if(state->action == A_PlaySoundEx)
    {
-      sfxinfo_t *snd;
+      sfxinfo_t *sfx = E_ArgAsSound(state->args, 0);
 
-      if((snd = E_ArgAsSound(state->args, 0)))
-         S_StartSfxInfo(NULL, snd, 127, ATTN_NORMAL, false, CHAN_AUTO);
+      if(sfx)
+         S_StartInterfaceSound(sfx->name);
    }
    else if(state->action == A_Pain)
    {
-      S_StartSoundName(NULL, players[consoleplayer].skin->sounds[sk_plpain]);
+      S_StartInterfaceSound(players[consoleplayer].skin->sounds[sk_plpain]);
    }
    else if(state->action == A_Scream)
    {
-      S_StartSoundName(NULL, players[consoleplayer].skin->sounds[sk_pldeth]);
+      S_StartInterfaceSound(players[consoleplayer].skin->sounds[sk_pldeth]);
    }
-   else if(state->action == A_PlayerScream)
+   else if(state->action == A_PlayerScream || state->action == A_RavenPlayerScream)
    {
-      // 03/29/08: sometimes play wimpy death if the player skin specifies one
-      if(skview_haswdth)
+      if(skview_gibbed) // may gib when using Raven player behavior
+         S_StartInterfaceSound(players[consoleplayer].skin->sounds[sk_slop]);
+      else if(skview_haswdth)
       {
-         int rnd = M_Random() % ((GameModeInfo->id == shareware) ? 2 : 3);
+         // 03/29/08: sometimes play wimpy death if the player skin specifies one
+         int rnd = M_Random() % ((GameModeInfo->flags & GIF_NODIEHI) ? 2 : 3);
          int sndnum = 0;
 
          switch(rnd)
@@ -141,24 +145,26 @@ static void MN_skinEmulateAction(state_t *state)
             break;
          }
 
-         S_StartSoundName(NULL, players[consoleplayer].skin->sounds[sndnum]);
+         S_StartInterfaceSound(players[consoleplayer].skin->sounds[sndnum]);
       }
       else
       {
-         S_StartSoundName(NULL,
-            (GameModeInfo->id == shareware || M_Random() % 2) ? 
+         S_StartInterfaceSound(
+            ((GameModeInfo->flags & GIF_NODIEHI) || M_Random() % 2) ? 
              players[consoleplayer].skin->sounds[sk_pldeth] :
              players[consoleplayer].skin->sounds[sk_pdiehi]);
       }
    }
    else if(state->action == A_XScream)
    {
-      S_StartSoundName(NULL, players[consoleplayer].skin->sounds[sk_slop]);
+      S_StartInterfaceSound(players[consoleplayer].skin->sounds[sk_slop]);
    }
    else if(state->action == A_FlameSnd)
    {
-      S_StartSoundName(NULL, "ht_hedat1");
+      S_StartInterfaceSound("ht_hedat1");
    }
+
+   skview_gibbed = false;
 }
 
 //
@@ -195,7 +201,7 @@ static bool MN_SkinResponder(event_t *ev, int action)
    {
       // kill the widget
       skview_metadeaths.clear();
-      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
+      S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
       MN_PopWidget();
       return true;
    }
@@ -246,7 +252,7 @@ static bool MN_SkinResponder(event_t *ev, int action)
       // attack!
       if(skview_action == SKV_WALKING)
       {
-         S_StartSound(NULL, GameModeInfo->skvAtkSound);
+         S_StartInterfaceSound(GameModeInfo->skvAtkSound);
          MN_SkinSetState(states[skview_atkstate2]);
          skview_action = SKV_FIRING;
       }
@@ -284,6 +290,7 @@ static bool MN_SkinResponder(event_t *ev, int action)
       // gib
       if(skview_action != SKV_DEAD)
       {
+         skview_gibbed = true;
          MN_SkinSetState(states[mobjinfo[skview_typenum]->xdeathstate]);
          skview_action = SKV_DEAD;
       }
@@ -297,7 +304,7 @@ static bool MN_SkinResponder(event_t *ev, int action)
       // "respawn" the player if dead
       if(skview_action == SKV_DEAD)
       {
-         S_StartSound(NULL, GameModeInfo->teleSound);
+         S_StartInterfaceSound(GameModeInfo->teleSound);
          MN_SkinSetState(states[mobjinfo[skview_typenum]->seestate]);
          skview_action = SKV_WALKING;
       }
@@ -480,6 +487,7 @@ void MN_InitSkinViewer()
    skview_halfspeed = false;
    skview_typenum   = pclass->type;
    skview_light     = 0;
+   skview_gibbed    = false;
 
    // haleyjd 09/29/07: save alternate attack state number
    skview_atkstate2 = pclass->altattack;

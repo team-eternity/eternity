@@ -513,6 +513,7 @@ static void P_ArchivePlayers(SaveArchive &arc)
             p.attackdown  = false; // sf
             p.usedown     = false; // sf
             p.cmd.buttons = 0;     // sf
+            p.prevviewz   = p.viewz;
          }
       }
    }

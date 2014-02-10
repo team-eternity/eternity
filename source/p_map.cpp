@@ -91,7 +91,6 @@ void DoomClipEngine::releaseContext(ClipContext *cc)
 }
 
 
-
 //
 // TELEPORT MOVE
 //
@@ -301,7 +300,8 @@ bool DoomClipEngine::teleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    
    thing->x = x;
    thing->y = y;
-   
+
+   thing->backupPosition();
    setThingPosition(thing);
 
    releaseContext(cc);   
@@ -471,7 +471,6 @@ int DoomClipEngine::getMoveFactor(Mobj *mo, int *frictionp)
    
    return movefactor;
 }
-
 
 
 //

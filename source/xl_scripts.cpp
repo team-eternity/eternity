@@ -34,11 +34,11 @@
 #include "z_zone.h"
 
 #include "e_lib.h"
-#include "e_sound.h"
 #include "m_misc.h"
-#include "m_qstr.h"
-#include "p_info.h"
 #include "w_wad.h"
+#include "xl_emapinfo.h"
+#include "xl_mapinfo.h"
+#include "xl_musinfo.h"
 #include "xl_scripts.h"
 
 //=============================================================================
@@ -48,56 +48,6 @@
 // This class does proper FSA tokenization for Hexen lump parsers.
 //
 
-class XLTokenizer
-{
-public:
-   // Tokenizer states
-   enum
-   {
-      STATE_SCAN,    // scanning for a string token
-      STATE_INTOKEN, // in a string token
-      STATE_COMMENT, // reading out a comment (eat rest of line)
-      STATE_DONE     // finished the current token
-   };
-
-   // Token types
-   enum
-   {
-      TOKEN_NONE,    // Nothing identified yet
-      TOKEN_KEYWORD, // Starts with a $; otherwise, same as a string
-      TOKEN_STRING,  // Generic string token; ex: 92 foobar
-      TOKEN_EOF,     // End of input
-      TOKEN_ERROR    // An unknown token
-   };
-
-protected:
-   int state;         // state of the scanner
-   const char *input; // input string
-   int idx;           // current position in input string
-   int tokentype;     // type of current token
-   qstring token;     // current token value
-
-   void doStateScan();
-   void doStateInToken();
-   void doStateComment();
-
-   // State table declaration
-   static void (XLTokenizer::*States[])();
-
-public:
-   // Constructor / Destructor
-   XLTokenizer(const char *str) 
-      : state(STATE_SCAN), input(str), idx(0), tokentype(TOKEN_NONE), token(32)
-   { 
-   }
-
-   int getNextToken();
-   
-   // Accessors
-   int getTokenType() const { return tokentype; }
-   qstring &getToken() { return token; }
-};
-
 //
 // Tokenizer States
 //
@@ -105,14 +55,24 @@ public:
 // Looking for the start of a new token
 void XLTokenizer::doStateScan()
 {
-   switch(input[idx])
+   char c = input[idx];
+
+   switch(c)
    {
    case ' ':
    case '\t':
    case '\r':
-   case '\n':
       // remain in this state
       break; 
+   case '\n':
+      // if linebreak tokens are enabled, return one now
+      if(flags & TF_LINEBREAKS)
+      {
+         tokentype = TOKEN_LINEBREAK;
+         state     = STATE_DONE;
+      }
+      // otherwise, remain in STATE_SCAN
+      break;
    case '\0': // end of input
       tokentype = TOKEN_EOF;
       state     = STATE_DONE;
@@ -120,14 +80,34 @@ void XLTokenizer::doStateScan()
    case ';': // start of a comment
       state = STATE_COMMENT;
       break;
+   case '"': // start of quoted string
+      tokentype = TOKEN_STRING;
+      state     = STATE_QUOTED;
+      break;
    default:
       // anything else is the start of a new token
-      if(input[idx] == '$') // detect $ keywords
+      if(c == '#' && (flags & TF_HASHCOMMENTS)) // possible start of hash comment
+      {
+         state = STATE_COMMENT;
+         break;
+      }
+      else if(c == '/' && input[idx+1] == '/' && (flags & TF_SLASHCOMMENTS))
+      {
+         state = STATE_COMMENT;
+         break;
+      }
+      else if(c == '[' && (flags & TF_BRACKETS))
+      {
+         tokentype = TOKEN_BRACKETSTR;
+         state     = STATE_INBRACKETS;
+         break;
+      }
+      else if(c == '$') // detect $ keywords
          tokentype = TOKEN_KEYWORD;
       else
          tokentype = TOKEN_STRING;
       state = STATE_INTOKEN;
-      token += input[idx];
+      token += c;
       break;
    }
 }
@@ -135,12 +115,17 @@ void XLTokenizer::doStateScan()
 // Scanning inside a token
 void XLTokenizer::doStateInToken() 
 {
-   switch(input[idx])
+   char c = input[idx];
+
+   switch(c)
    {
+   case '\n':
+      if(flags & TF_LINEBREAKS) // if linebreaks are tokens, we need to back up
+         --idx;
+      // fall through
    case ' ':  // whitespace
    case '\t':
    case '\r':
-   case '\n':
       // end of token
       state = STATE_DONE;
       break;
@@ -150,6 +135,56 @@ void XLTokenizer::doStateInToken()
       state = STATE_DONE;
       break;
    default: 
+      if(c == '#' && (flags & TF_HASHCOMMENTS))
+      {
+         // hashes may conditionally be supported as comments
+         --idx;
+         state = STATE_DONE;
+         break;
+      }
+      else if(c == '/' && input[idx+1] == '/' && (flags & TF_SLASHCOMMENTS))
+      {
+         // double slashes may conditionally be supported as comments
+         --idx;
+         state = STATE_DONE;
+         break;
+      }
+      token += c;
+      break;
+   }
+}
+
+// Reading out a bracketed string token
+void XLTokenizer::doStateInBrackets()
+{
+   switch(input[idx])
+   {
+   case ']':  // end of bracketed token
+      state = STATE_DONE;
+      break;
+   case '\0': // end of input (technically, malformed)
+      --idx;
+      state = STATE_DONE;
+      break;
+   default:   // anything else is part of the token
+      token += input[idx];
+      break;
+   }
+}
+
+// Reading out a quoted string token
+void XLTokenizer::doStateQuoted()
+{
+   switch(input[idx])
+   {
+   case '"':  // end of quoted string
+      state = STATE_DONE;
+      break;
+   case '\0': // end of input (technically, this is malformed)
+      --idx;
+      state = STATE_DONE;
+      break;
+   default:
       token += input[idx];
       break;
    }
@@ -160,7 +195,16 @@ void XLTokenizer::doStateComment()
 {
    // consume all input to the end of the line
    if(input[idx] == '\n')
-      state = STATE_SCAN;
+   {
+      // if linebreak tokens are enabled, send one now
+      if(flags & TF_LINEBREAKS)
+      {
+         tokentype = TOKEN_LINEBREAK;
+         state     = STATE_DONE;
+      }
+      else
+         state = STATE_SCAN;
+   }
    else if(input[idx] == '\0') // end of input
    {
       tokentype = TOKEN_EOF;
@@ -173,6 +217,8 @@ void (XLTokenizer::* XLTokenizer::States[])() =
 {
    &XLTokenizer::doStateScan,
    &XLTokenizer::doStateInToken,
+   &XLTokenizer::doStateInBrackets,
+   &XLTokenizer::doStateQuoted,
    &XLTokenizer::doStateComment
 };
 
@@ -208,53 +254,15 @@ int XLTokenizer::getNextToken()
 // 
 // XLParser
 //
-// This is a module-local base class for Hexen lump parsers.
+// Base class for Hexen lump parsers
 //
-
-class XLParser
-{
-protected:
-   // Data
-   const char   *lumpname; // Name of lump handled by this parser
-   char         *lumpdata; // Cached lump data
-   WadDirectory *waddir;   // Current directory
-
-   // Override me!
-   virtual void startLump() {} // called at beginning of a new lump
-   virtual void doToken(XLTokenizer &token) {} // called for each token
-
-   void parseLump(WadDirectory &dir, lumpinfo_t *lump);
-   void parseLumpRecursive(WadDirectory &dir, lumpinfo_t *curlump);
-
-public:
-   // Constructors
-   XLParser(const char *pLumpname) : lumpname(pLumpname), lumpdata(NULL) {}
-
-   // Destructor
-   virtual ~XLParser() 
-   {
-      // kill off any lump that might still be cached
-      if(lumpdata)
-      {
-         efree(lumpdata);
-         lumpdata = NULL;
-      }
-   }
-
-   void parseAll(WadDirectory &dir);
-   void parseNew(WadDirectory &dir);
-
-   // Accessors
-   const char *getLumpName() const { return lumpname; }
-   void setLumpName(const char *s) { lumpname = s;    }
-};
 
 //
 // XLParser::parseLump
 //
 // Parses a single lump.
 //
-void XLParser::parseLump(WadDirectory &dir, lumpinfo_t *lump) 
+void XLParser::parseLump(WadDirectory &dir, lumpinfo_t *lump, bool global) 
 {
    // free any previously loaded lump
    if(lumpdata)
@@ -263,20 +271,38 @@ void XLParser::parseLump(WadDirectory &dir, lumpinfo_t *lump)
       lumpdata = NULL;
    }
 
+   // can't parse empty lumps
+   if(!lump->size)
+      return;
+
    waddir = &dir;
    startLump();
 
-   // allocate at lump->size + 1 for null termination
-   lumpdata = ecalloc(char *, 1, lump->size + 1);
+   // allocate at lump->size + 2 for null termination and look-ahead padding
+   lumpdata = ecalloc(char *, 1, lump->size + 2);
    dir.readLump(lump->selfindex, lumpdata);
 
-   // check with EDF SHA-1 cache that this lump hasn't already been processed
-   if(E_CheckInclude(lumpdata, lump->size))
+   // check with EDF SHA-1 cache that this lump hasn't already been processed,
+   // unless the data source is marked as non-global (which means, parse it every time)
+   if(!global || E_CheckInclude(lumpdata, lump->size))
    {
-      XLTokenizer tokenizer = XLTokenizer(lumpdata);
+      XLTokenizer tokenizer(lumpdata);
+      bool early = false;
+
+      // allow subclasses to alter properties of the tokenizer now before parsing begins
+      initTokenizer(tokenizer);
 
       while(tokenizer.getNextToken() != XLTokenizer::TOKEN_EOF)
-         doToken(tokenizer);
+      {
+         if(!doToken(tokenizer))
+         {
+            early = true;
+            break; // the subclassed parser wants to stop parsing
+         }
+      }
+
+      // allow subclasses to handle EOF
+      onEOF(early);
    }
 }
 
@@ -297,7 +323,7 @@ void XLParser::parseLumpRecursive(WadDirectory &dir, lumpinfo_t *curlump)
    // Parse this lump, provided it matches by name and is global
    if(!strncasecmp(curlump->name, lumpname, 8) &&
       curlump->li_namespace == lumpinfo_t::ns_global)
-      parseLump(dir, curlump);
+      parseLump(dir, curlump, true);
 }
 
 //
@@ -322,438 +348,7 @@ void XLParser::parseNew(WadDirectory &dir)
 {
    int lumpnum = dir.checkNumForName(lumpname);
    if(lumpnum >= 0)
-      parseLump(dir, dir.getLumpInfo()[lumpnum]);
-}
-
-//=============================================================================
-//
-// XLSndInfoParser
-//
-// Parser for Hexen SNDINFO lumps.
-//
-
-class XLSndInfoParser : public XLParser
-{
-protected:
-   static const char *sndInfoKwds[]; // see below class.
-   
-   // keyword enumeration
-   enum
-   {
-     KWD_ALIAS,
-     KWD_AMBIENT,     
-     KWD_ARCHIVEPATH,
-     KWD_ENDIF,
-     KWD_IFDOOM,
-     KWD_IFHERETIC,
-     KWD_IFHEXEN,
-     KWD_IFSTRIFE,
-     KWD_LIMIT,
-     KWD_MAP,
-     KWD_MIDIDEVICE,
-     KWD_MUSICVOLUME,
-     KWD_PITCHSHIFT,
-     KWD_PLAYERALIAS,
-     KWD_PLAYERCOMPAT,
-     KWD_PLAYERSOUND,
-     KWD_PLAYERSOUNDDUP,
-     KWD_RANDOM,
-     KWD_REGISTERED,
-     KWD_ROLLOFF,
-     KWD_SINGULAR,
-     KWD_VOLUME,
-     NUMKWDS
-   };
-
-   // state enumeration
-   enum
-   {
-      STATE_EXPECTCMD,
-      STATE_EXPECTMAPNUM,
-      STATE_EXPECTMUSLUMP,
-      STATE_EXPECTSNDLUMP,
-      STATE_EATTOKEN
-   };
-
-   int     state;
-   qstring soundname;
-   int     musicmapnum;
-
-   void doStateExpectCmd(XLTokenizer &token);
-   void doStateExpectMapNum(XLTokenizer &token);
-   void doStateExpectMusLump(XLTokenizer &token);
-   void doStateExpectSndLump(XLTokenizer &token);
-   void doStateEatToken(XLTokenizer &token);
-
-   // State table declaration
-   static void (XLSndInfoParser::*States[])(XLTokenizer &);
-
-   virtual void doToken(XLTokenizer &token);
-   virtual void startLump();
-
-public:
-   // Constructor
-   XLSndInfoParser() 
-      : XLParser("SNDINFO"), soundname(32), musicmapnum(0)
-   {
-   }
-};
-
-// Keywords for SNDINFO
-// Note that all ZDoom extensions are included, even though they are not 
-// supported yet. This is so that they are properly documented and ignored in
-// the meanwhile.
-const char *XLSndInfoParser::sndInfoKwds[] =
-{
-   "$alias",
-   "$ambient",
-   "$archivepath",
-   "$endif",
-   "$ifdoom",
-   "$ifheretic",
-   "$ifhexen",
-   "$ifstrife",
-   "$limit",
-   "$map",
-   "$mididevice",
-   "$musicvolume",
-   "$pitchshift",
-   "$playeralias",
-   "$playercompat",
-   "$playersound",
-   "$playersounddup",
-   "$random",   
-   "$registered",
-   "$rolloff",
-   "$singular",
-   "$volume"
-};
-
-//
-// State Handlers
-//
-   
-// Expecting the start of a SNDINFO command or sound definition
-void XLSndInfoParser::doStateExpectCmd(XLTokenizer &token)
-{
-   int cmdnum;
-   qstring &tokenText = token.getToken();
-
-   switch(token.getTokenType())
-   {
-   case XLTokenizer::TOKEN_KEYWORD: // a $ keyword
-      cmdnum = E_StrToNumLinear(sndInfoKwds, NUMKWDS, tokenText.constPtr());
-      switch(cmdnum)
-      {
-      case KWD_ARCHIVEPATH:
-         state = STATE_EATTOKEN; // eat the path token
-         break;
-      case KWD_MAP:
-         state = STATE_EXPECTMAPNUM;
-         break;
-      default: // unknown or inconsequential command (ie. $registered)
-         break;
-      }
-      break;
-   case XLTokenizer::TOKEN_STRING:  // a normal string
-      soundname = tokenText; // remember the sound name
-      state = STATE_EXPECTSNDLUMP;
-      break;
-   default: // unknown token
-      break;
-   }
-}
-
-// Expecting the map number after a $map command
-void XLSndInfoParser::doStateExpectMapNum(XLTokenizer &token)
-{
-   if(token.getTokenType() != XLTokenizer::TOKEN_STRING)
-   {
-      state = STATE_EXPECTCMD;
-      doStateExpectCmd(token);
-   }
-   else
-   {
-      musicmapnum = token.getToken().toInt();
-
-      // Expect music lump name next.
-      state = STATE_EXPECTMUSLUMP;
-   }
-}
-
-// Expecting the music lump name after a map number
-void XLSndInfoParser::doStateExpectMusLump(XLTokenizer &token)
-{
-   if(token.getTokenType() != XLTokenizer::TOKEN_STRING)
-   {
-      state = STATE_EXPECTCMD;
-      doStateExpectCmd(token);
-   }
-   else
-   {
-      qstring &muslump = token.getToken();
-
-      // Lump must exist
-      if(muslump.length() <= 8 &&
-         waddir->checkNumForName(muslump.constPtr()) != -1)
-      {
-         P_AddSndInfoMusic(musicmapnum, muslump.constPtr());
-
-         // Return to expecting a command
-         state = STATE_EXPECTCMD;
-      }
-      else // Otherwise we might be off due to unknown tokens; return to ExpectCmd
-      {
-         state = STATE_EXPECTCMD;
-         doStateExpectCmd(token);
-      }
-   }
-}
-
-// Expecting the lump name after a sound definition
-void XLSndInfoParser::doStateExpectSndLump(XLTokenizer &token)
-{
-   if(token.getTokenType() != XLTokenizer::TOKEN_STRING)
-   {
-      // Not a string? We are probably in an error state.
-      // Get out with an immediate call to the expect command state
-      state = STATE_EXPECTCMD;
-      doStateExpectCmd(token);
-   }
-   else
-   {
-      qstring &soundlump = token.getToken();
-
-      // Lump must exist, otherwise we create erroneous sounds if there are
-      // unknown keywords in the lump. Thanks to ZDoom for defining such a 
-      // clean, context-free, grammar-based language with delimiters :>
-      if(soundlump.length() <= 8 &&
-         waddir->checkNumForName(soundlump.constPtr()) != -1)
-      {
-         sfxinfo_t *sfx;
-
-         if((sfx = E_SoundForName(soundname.constPtr()))) // defined already?
-         {
-            sfx->flags &= ~SFXF_PREFIX;
-            soundname.copyInto(sfx->name, 9);
-         } 
-         else
-         {
-            // create a new sound
-            E_NewSndInfoSound(soundname.constPtr(), soundlump.constPtr());
-         }
-
-         // Return to expecting a command
-         state = STATE_EXPECTCMD;
-      }
-      else // Otherwise we might be off due to unknown tokens; return to ExpectCmd
-      {
-         state = STATE_EXPECTCMD;
-         doStateExpectCmd(token);
-      }
-   }
-}
-
-// Throw away a token unconditionally
-void XLSndInfoParser::doStateEatToken(XLTokenizer &token)
-{
-   state = STATE_EXPECTCMD; // return to expecting a command
-}
-
-// State table for SNDINFO parser
-void (XLSndInfoParser::* XLSndInfoParser::States[])(XLTokenizer &) =
-{
-   &XLSndInfoParser::doStateExpectCmd,
-   &XLSndInfoParser::doStateExpectMapNum,
-   &XLSndInfoParser::doStateExpectMusLump,
-   &XLSndInfoParser::doStateExpectSndLump,
-   &XLSndInfoParser::doStateEatToken
-};
-
-//
-// XLSndInfoParser::DoToken
-//
-// Processes a token extracted from the SNDINFO input
-//
-void XLSndInfoParser::doToken(XLTokenizer &token)
-{
-   // Call handler method for the current state. Why is this done from
-   // a virtual call-down? Because parent classes cannot call child
-   // class method pointers! :P
-   (this->*States[state])(token);
-}
-
-//
-// XLSndInfoParser::StartLump
-//
-// Resets the parser at the beginning of a new SNDINFO lump.
-//
-void XLSndInfoParser::startLump()
-{
-   state = STATE_EXPECTCMD; // starting state
-}
-
-//=============================================================================
-//
-// Risen3D MUSINFO 
-//
-
-class XLMusInfoParser : public XLParser
-{
-protected:
-   // state enumeration
-   enum
-   {
-      STATE_EXPECTMAP,
-      STATE_EXPECTMAPNUM,
-      STATE_EXPECTMAPNUM2,
-      STATE_EXPECTMUSLUMP
-   };
-
-   int     state;
-   qstring mapname;
-   qstring lumpname;
-   int     mapnum;
-
-   void doStateExpectMap(XLTokenizer &token);
-   void doStateExpectMapNum(XLTokenizer &token);
-   void doStateExpectMapNum2(XLTokenizer &token);
-   void doStateExpectMusLump(XLTokenizer &token);
-
-   void pushMusInfoDef();
-
-   // State table declaration
-   static void (XLMusInfoParser::*States[])(XLTokenizer &);
-
-   virtual void doToken(XLTokenizer &token);
-   virtual void startLump();
-
-public:
-   // Constructor
-   XLMusInfoParser() 
-      : XLParser("MUSINFO"), state(STATE_EXPECTMAP), mapname(), mapnum(0)
-   {
-   }
-};
-
-//
-// XLMusInfoParser::DoStateExpectMap
-//
-// Expecting a map name.
-//
-void XLMusInfoParser::doStateExpectMap(XLTokenizer &token)
-{
-   qstring &tokenText = token.getToken();
-
-   switch(token.getTokenType())
-   {
-   case XLTokenizer::TOKEN_STRING:  // a normal string
-      mapname = tokenText;          // remember the map name
-      state = STATE_EXPECTMAPNUM;
-      break;
-   default:
-      break;
-   }
-}
-
-//
-// XLMusInfoParser::doStateExpectMapNum
-//
-// Expecting a map number.
-//
-void XLMusInfoParser::doStateExpectMapNum(XLTokenizer &token)
-{
-   mapnum = token.getToken().toInt();
-   state = STATE_EXPECTMUSLUMP;
-}
-
-//
-// XLMusInfoParser::pushMusInfoDef
-//
-// Called when enough information is available to push a MUSINFO definition.
-//
-void XLMusInfoParser::pushMusInfoDef()
-{
-   if(mapnum >= 0 &&
-      waddir->checkNumForName(mapname.constPtr())  >= 0 &&
-      waddir->checkNumForName(lumpname.constPtr()) >= 0)
-   {
-      P_AddMusInfoMusic(mapname.constPtr(), mapnum, lumpname.constPtr());
-   }
-   mapnum = -1;
-   lumpname.clear();
-}
-
-//
-// XLMusInfoParser::doStateExpectMapNum2
-//
-// Expecting a map number, or the next map name.
-//
-void XLMusInfoParser::doStateExpectMapNum2(XLTokenizer &token)
-{
-   char *end = NULL;
-   qstring &tokenText = token.getToken();
-   long num = tokenText.toLong(&end, 10);
-
-   if(end && *end != '\0') // not a number?
-   {
-      // push out any current definition
-      pushMusInfoDef();
-
-      // return to STATE_EXPECTMAP immediately
-      state = STATE_EXPECTMAP;
-      doStateExpectMap(token);
-   }
-   else
-   {
-      mapnum = (int)num;
-      state = STATE_EXPECTMUSLUMP;
-   }
-}
-
-//
-// XLMusInfoParser::doStateExpectMusLump
-//
-// Expecting a music lump.
-//
-void XLMusInfoParser::doStateExpectMusLump(XLTokenizer &token)
-{
-   lumpname = token.getToken();
-   pushMusInfoDef(); // push out the complete definition
-   
-   // expecting either another mapnum, or a new mapname token
-   state = STATE_EXPECTMAPNUM2;
-}
-
-// State table for MUSINFO parser
-void (XLMusInfoParser::* XLMusInfoParser::States[])(XLTokenizer &) =
-{
-   &XLMusInfoParser::doStateExpectMap,
-   &XLMusInfoParser::doStateExpectMapNum,
-   &XLMusInfoParser::doStateExpectMapNum2,
-   &XLMusInfoParser::doStateExpectMusLump
-};
-
-//
-// XLMusInfoParser::doToken
-//
-// Dispatch a token via this class's state table.
-//
-void XLMusInfoParser::doToken(XLTokenizer &token)
-{
-   (this->*States[state])(token);
-}
-
-//
-// XLMusInfoParser::startLump
-//
-void XLMusInfoParser::startLump()
-{
-   // clear all data
-   state = STATE_EXPECTMAP;
-   mapname.clear();
-   lumpname.clear();
-   mapnum = -1;
+      parseLump(dir, dir.getLumpInfo()[lumpnum], true);
 }
 
 //=============================================================================
@@ -762,27 +357,15 @@ void XLMusInfoParser::startLump()
 //
 
 //
-// XL_ParseSoundInfo
-//
-// Parse SNDINFO scripts
-//
-void XL_ParseSoundInfo()
-{
-   XLSndInfoParser sndInfoParser;
-
-   sndInfoParser.parseAll(wGlobalDir);
-}
-
-//
 // XL_ParseHexenScripts
 //
-// Parses all Hexen script lumps.
+// Parses Hexen script lumps not handled elsewhere.
 //
 void XL_ParseHexenScripts()
 {
-   XLMusInfoParser musInfoParser;
-
-   musInfoParser.parseAll(wGlobalDir);
+   XL_ParseEMapInfo(); // Eternity: EMAPINFO
+   XL_ParseMapInfo();  // Hexen:    MAPINFO
+   XL_ParseMusInfo();  // Risen3D:  MUSINFO
 }
 
 // EOF

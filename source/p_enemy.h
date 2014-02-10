@@ -111,6 +111,8 @@ void P_BossTeleport(bossteleport_t *bt);
 
 void P_SkullFly(Mobj *actor, fixed_t speed);
 
+int P_GetAimShift(Mobj *target, bool missile);
+
 #endif // __P_ENEMY__
 
 //----------------------------------------------------------------------------

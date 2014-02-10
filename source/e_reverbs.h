@@ -32,11 +32,18 @@
 
 #include "m_dllist.h"
 
+// reverb flags
+enum
+{
+   REVERB_ENABLED   = 0x00000001, // represents an actual effect
+   REVERB_EQUALIZED = 0x00000002  // equalizer is enabled.
+};
+
 // EDF reverb data structure
 struct ereverb_t
 {
    DLListItem<ereverb_t> links; // hash by id
-   int id;                      // id number
+   int    id;                   // id number
 
    double roomsize;
    double dampening;
@@ -44,15 +51,17 @@ struct ereverb_t
    double dryscale;
    double width;
    int    predelay;
-   bool   equalized;
    double eqlowfreq;
    double eqhighfreq;
    double eqlowgain;
    double eqmidgain;
    double eqhighgain;
+   unsigned int flags;
 };
 
-ereverb_t *E_ReverbForID(int id1, int id2);
+ereverb_t *E_GetDefaultReverb();            // returns the built-in default reverb
+ereverb_t *E_ReverbForID(int id1, int id2); // for two separate IDs
+ereverb_t *E_ReverbForID(int id);           // for combined ID
 
 #ifdef NEED_EDF_DEFINITIONS
 

@@ -104,28 +104,22 @@ char *mn_start_mapname;
 // haleyjd: keep track of valid save slots
 bool savegamepresent[SAVESLOTS];
 
-static void MN_PatchOldMainMenu();
 static void MN_InitCustomMenu();
 static void MN_InitSearchStr();
 static bool MN_tweakD2EpisodeMenu();
 
 void MN_InitMenus()
 {
-   int i; // haleyjd
-   
    mn_demoname = estrdup("demo1");
    mn_wadname  = estrdup("");
    mn_start_mapname = estrdup(""); // haleyjd 05/14/06
    
    // haleyjd: initialize via zone memory
-   for(i = 0; i < SAVESLOTS; ++i)
+   for(int i = 0; i < SAVESLOTS; i++)
    {
-      savegamenames[i] = Z_Strdup("", PU_STATIC, 0);
+      savegamenames[i]   = estrdup("");
       savegamepresent[i] = false;
    }
-
-   if(GameModeInfo->id == commercial)
-      MN_PatchOldMainMenu(); // haleyjd 05/16/04
 
    MN_InitCustomMenu();      // haleyjd 03/14/06
    MN_InitSearchStr();       // haleyjd 03/15/06
@@ -145,7 +139,7 @@ void MN_InitMenus()
 // Note: The main menu is modified dynamically to point to
 // the rest of the old menu system when appropriate.
 
-void MN_MainMenuDrawer(void)
+void MN_MainMenuDrawer()
 {
    // hack for m_doom compatibility
    V_DrawPatch(94, 2, &subscreen43, 
@@ -173,19 +167,25 @@ menu_t menu_main =
    MN_MainMenuDrawer
 };
 
-//
-// MN_PatchOldMainMenu
-//
-// haleyjd 05/16/04: patches the old main menu for DOOM II, for full
-// compatibility.
-//
-static void MN_PatchOldMainMenu(void)
+static menuitem_t mn_main_doom2_items[] =
 {
-   // turn "Read This!" into "Quit Game" and move down 8 pixels
-   menu_main.menuitems[4] = menu_main.menuitems[5];
-   menu_main.menuitems[5].type = it_end;
-   menu_main.y += 8;
-}
+   { it_runcmd, "New Game",   "mn_newgame",  "M_NGAME"  },
+   { it_runcmd, "Options",    "mn_options",  "M_OPTION" },
+   { it_runcmd, "Load Game",  "mn_loadgame", "M_LOADG"  },
+   { it_runcmd, "Save Game",  "mn_savegame", "M_SAVEG"  },
+   { it_runcmd, "Quit",       "mn_quit",     "M_QUITG"  },
+   { it_end }
+};
+
+menu_t menu_main_doom2 =
+{
+   mn_main_doom2_items,
+   NULL, NULL, NULL,           // pages
+   97, 72,
+   0,
+   mf_skullmenu | mf_emulated, // 08/30/06: use emulated flag
+   MN_MainMenuDrawer
+};
 
 // haleyjd 05/14/06: moved these up here
 int start_episode;
@@ -217,11 +217,39 @@ CONSOLE_VARIABLE(mn_start_mapname, mn_start_mapname, cf_handlerset)
       MN_StartMenu(GameModeInfo->newGameMenu);
 }
 
-// mn_newgame called from main menu:
-// goes to start map OR
-// starts menu
-// according to use_startmap, gametype and modifiedgame
+//
+// MN_DoomNewGame
+//
+// GameModeInfo function for starting a new game in Doom modes.
+//
+void MN_DoomNewGame()
+{
+   // hack -- cut off thy flesh consumed if not retail
+   if(GameModeInfo->numEpisodes < 4)
+      menu_episode.menuitems[3].type = it_end;
 
+   MN_StartMenu(&menu_episode);
+}
+
+//
+// MN_Doom2NewGame
+//
+// GameModeInfo function for starting a new game in Doom II modes.
+//
+void MN_Doom2NewGame()
+{
+   if(MN_tweakD2EpisodeMenu())
+      MN_StartMenu(&menu_d2episode);
+   else
+      MN_StartMenu(&menu_newgame);
+}
+
+//
+// mn_newgame
+// 
+// called from main menu:
+// starts menu according to use_startmap, gametype and modifiedgame
+//
 CONSOLE_COMMAND(mn_newgame, 0)
 {
    if(netgame && !demoplayback)
@@ -241,50 +269,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
       return;
    }
    
-   if(GameModeInfo->id == commercial)
-   {
-// haleyjd 08/19/2012: startmap is currently deprecated, may return later
-#ifdef EE_STARTMAP_PROMPT
-      // determine startmap presence and origin
-      int startMapLump = W_CheckNumForName("START");
-      bool mapPresent = true;
-      lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
-
-      // if lump not found or the game is modified and the
-      // lump comes from the first loaded wad, consider it not
-      // present -- FIXME: this assumes the resource wad is loaded first.
-      if(startMapLump < 0 || 
-         (modifiedgame && 
-          lumpinfo[startMapLump]->source == WadDirectory::ResWADSource))
-         mapPresent = false;
-
-      // dont use new game menu if not needed
-      if(use_startmap && mapPresent)
-      {
-         if(use_startmap == -1)              // not asked yet
-            MN_StartMenu(&menu_startmap);
-         else
-         {  
-            // use start map 
-            G_DeferedInitNew((skill_t)(defaultskill - 1), "START");
-            MN_ClearMenus();
-         }
-      }
-      else
-#endif
-         if(MN_tweakD2EpisodeMenu())
-            MN_StartMenu(&menu_d2episode);
-         else
-            MN_StartMenu(&menu_newgame);
-   }
-   else
-   {
-      // hack -- cut off thy flesh consumed if not retail
-      if(GameModeInfo->id != retail)
-         menu_episode.menuitems[3].type = it_end;
-      
-      MN_StartMenu(&menu_episode);
-   }
+   GameModeInfo->OnNewGame();
 }
 
 // menu item to quit doom:
@@ -476,8 +461,7 @@ static bool MN_tweakD2EpisodeMenu()
    int curitem = 1;
 
    // Not for TNT, Plutonia, HacX
-   if(GameModeInfo->missionInfo->id != doom2 &&
-      GameModeInfo->missionInfo->id != pack_disk)
+   if(!(GameModeInfo->missionInfo->flags & MI_DOOM2MISSIONS))
       return false;
 
    // Also not when playing PWADs
@@ -801,13 +785,13 @@ static menuitem_t mn_wadiwad2_items[] =
 
 static menuitem_t mn_wadiwad3_items[] =
 {
-   {it_title,    "Wad Options",           NULL,             "M_WADOPT"},
+   {it_title,    "Wad Options",             NULL,             "M_WADOPT"},
    {it_gap},
-   {it_info,     "IWAD Paths - Freedoom", NULL,             NULL, MENUITEM_CENTERED },
+   {it_info,     "IWAD Paths - Freedoom",   NULL,             NULL, MENUITEM_CENTERED },
    {it_gap}, 
-   {it_variable, "Freedoom:",             "iwad_freedoom",  NULL, MENUITEM_LALIGNED },
-   {it_variable, "Ultimate Freedoom:",    "iwad_freedoomu", NULL, MENUITEM_LALIGNED },
-   {it_variable, "FreeDM:",               "iwad_freedm",    NULL, MENUITEM_LALIGNED },
+   {it_variable, "Freedoom Phase 1:",       "iwad_freedoomu", NULL, MENUITEM_LALIGNED },
+   {it_variable, "Freedoom Phase 2:",       "iwad_freedoom",  NULL, MENUITEM_LALIGNED },
+   {it_variable, "FreeDM:",                 "iwad_freedm",    NULL, MENUITEM_LALIGNED },
    {it_gap},
    {it_info,     "Mission Packs",           NULL,            NULL, MENUITEM_CENTERED },
    {it_gap}, 
@@ -1226,7 +1210,7 @@ menu_t menu_player =
 #define SPRITEBOX_X 200
 #define SPRITEBOX_Y (menu_player.menuitems[7].y + 16)
 
-void MN_PlayerDrawer(void)
+void MN_PlayerDrawer()
 {
    int lump, w, h, toff, loff;
    spritedef_t *sprdef;
@@ -1315,7 +1299,7 @@ void MN_SaveGame()
 
    // haleyjd 10/08/08: GIF_SAVESOUND flag
    if(GameModeInfo->flags & GIF_SAVESOUND)
-      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
+      S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
 }
 
 // create the savegame console commands
@@ -1328,7 +1312,7 @@ void MN_CreateSaveCmds()
       char tempstr[16];
 
       // create the variable first
-      save_variable = (variable_t *)(Z_Malloc(sizeof(*save_variable), PU_STATIC, 0)); // haleyjd
+      save_variable = estructalloc(variable_t, 1);
       save_variable->variable  = &savegamenames[i];
       save_variable->v_default = NULL;
       save_variable->type      = vt_string;      // string value
@@ -1337,7 +1321,7 @@ void MN_CreateSaveCmds()
       save_variable->defines   = NULL;
       
       // now the command
-      save_command = (command_t *)(Z_Malloc(sizeof(*save_command), PU_STATIC, 0)); // haleyjd
+      save_command = estructalloc(command_t, 1);
       
       sprintf(tempstr, "savegame_%i", i);
       save_command->name     = estrdup(tempstr);
@@ -1359,9 +1343,7 @@ void MN_CreateSaveCmds()
 //
 void MN_ReadSaveStrings()
 {
-   int i;
-   
-   for(i = 0; i < SAVESLOTS; i++)
+   for(int i = 0; i < SAVESLOTS; i++)
    {
       char *name = NULL;    // killough 3/22/98
       size_t len;
@@ -1512,7 +1494,7 @@ CONSOLE_COMMAND(mn_load, 0)
 
    // haleyjd 10/08/08: GIF_SAVESOUND flag
    if(GameModeInfo->flags & GIF_SAVESOUND)
-      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
+      S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
 }
 
 // haleyjd 02/23/02: Quick Load -- restored from MBF and converted
@@ -1624,7 +1606,7 @@ CONSOLE_COMMAND(quicksave, 0)
 
    if(!usergame && (!demoplayback || netgame))  // killough 10/98
    {
-      S_StartSound(NULL, GameModeInfo->playerSounds[sk_oof]);
+      S_StartInterfaceSound(GameModeInfo->playerSounds[sk_oof]);
       return;
    }
    
@@ -1743,7 +1725,7 @@ CONSOLE_COMMAND(mn_options, 0)
 // If not, the "custom menu" item on the second page of the
 // options menu will be disabled.
 //
-static void MN_InitCustomMenu(void)
+static void MN_InitCustomMenu()
 {
    if(!MN_DynamicMenuForName("_MN_Custom"))
    {
@@ -1807,7 +1789,7 @@ CONSOLE_VARIABLE(mn_favscreentype, mn_favscreentype, 0) {}
 // Legacy settings, w/aspect-corrected variants
 static const char *legacyModes[] =
 {
-   "320x200",  // Mode 13h (16:10 logical, 4:3 physical)
+   "320x200",  // Mode Y (16:10 logical, 4:3 physical)
    "320x240",  // QVGA
    "640x400",  // VESA Extension (same as 320x200)
    "640x480",  // VGA
@@ -2020,11 +2002,11 @@ extern menu_t menu_vidadv;
 
 static const char *mn_vidpage_names[] =
 {
-   "Mode / Rendering / Misc",
+   "Mode / Rendering",
+   "Framerate / Screen Wipe / Misc",
    "System / Console / Screenshots",
-   "Screen Wipe",
    "Particles",
-   "Advanced",
+   "Advanced / OpenGL",
    NULL
 };
 
@@ -2038,7 +2020,7 @@ static menu_t *mn_vidpage_menus[] =
    NULL
 };
 
-void MN_VideoModeDrawer(void);
+void MN_VideoModeDrawer();
 
 static menuitem_t mn_video_items[] =
 {
@@ -2074,7 +2056,7 @@ menu_t menu_video =
    mn_vidpage_menus
 };
 
-void MN_VideoModeDrawer(void)
+void MN_VideoModeDrawer()
 {
    int lump, y;
    patch_t *patch;
@@ -2110,24 +2092,19 @@ CONSOLE_COMMAND(mn_video, 0)
 
 static menuitem_t mn_sysvideo_items[] =
 {
-   {it_title,    "Video Options",           NULL, "m_video"},
-   {it_gap},
-   {it_info,     "System"},
-   {it_toggle,   "DOS-like startup",        "textmode_startup"},
-#ifdef _SDL_VER
-   {it_toggle,   "Wait at exit",            "i_waitatexit"},
-   {it_toggle,   "Show ENDOOM",             "i_showendoom"},
-   {it_variable, "ENDOOM delay",            "i_endoomdelay"},
-#endif
-   {it_gap},
-   {it_info,     "Console"},
-   {it_variable, "Dropdown speed",           "c_speed"},
-   {it_variable, "Console size",             "c_height"},
-   {it_gap},
-   {it_info,     "Screenshots"},
-   {it_toggle,   "Screenshot format",       "shot_type"},
-   {it_toggle,   "Gamma correct shots",     "shot_gamma"},
-   {it_end}
+   { it_title,  "Video Options",            NULL, "m_video" },
+   { it_gap },
+   { it_info,   "Framerate"   },
+   { it_toggle, "Uncapped framerate",       "d_fastrefresh" },
+   { it_toggle, "Interpolation",            "d_interpolate" },
+   { it_gap },
+   { it_info,   "Screen Wipe" },
+   { it_toggle, "Wipe style",               "wipetype"      },
+   { it_toggle, "Game waits for wipe",      "wipewait"      },
+   { it_gap },
+   { it_info,   "Misc." },
+   { it_toggle, "Loading disk icon",       "v_diskicon"     },
+   { it_end }
 };
 
 menu_t menu_sysvideo =
@@ -2146,14 +2123,23 @@ menu_t menu_sysvideo =
 
 static menuitem_t mn_video_page2_items[] =
 {
-   {it_title,   "Video Options",            NULL, "m_video"},
+   {it_title,    "Video Options",           NULL, "m_video"},
    {it_gap},
-   {it_info,    "Screen Wipe"},
-   {it_toggle,  "Wipe style",               "wipetype"},
-   {it_toggle,  "Game waits for wipe",      "wipewait"},
+   {it_info,     "System"},
+   {it_toggle,   "DOS-like startup",        "textmode_startup"},
+#ifdef _SDL_VER
+   {it_toggle,   "Wait at exit",            "i_waitatexit"},
+   {it_toggle,   "Show ENDOOM",             "i_showendoom"},
+   {it_variable, "ENDOOM delay",            "i_endoomdelay"},
+#endif
    {it_gap},
-   {it_info,    "Misc."},
-   {it_toggle,  "Loading disk icon",       "v_diskicon"},
+   {it_info,     "Console"},
+   {it_variable, "Dropdown speed",           "c_speed"},
+   {it_variable, "Console size",             "c_height"},
+   {it_gap},
+   {it_info,     "Screenshots"},
+   {it_toggle,   "Screenshot format",       "shot_type"},
+   {it_toggle,   "Gamma correct shots",     "shot_gamma"},
    {it_end}
 };
 
@@ -2723,7 +2709,7 @@ static bool MN_padTestResponder(event_t *ev, int action)
    if(ev->data1 == KEYD_ESCAPE) // Must be keyboard ESC
    {
       // kill the widget
-      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
+      S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
       MN_PopWidget();
    }
 
@@ -3752,7 +3738,7 @@ CONSOLE_COMMAND(mn_search, 0)
 
    if(!mn_searchstr || !mn_searchstr[0])
    {
-      MN_ErrorMsg("invalid search string");
+      MN_ErrorMsg("Invalid search string");
       return;
    }
 
@@ -3772,8 +3758,6 @@ CONSOLE_COMMAND(mn_search, 0)
          // run through items
          while((item = &(curPage->menuitems[j++])))
          {
-            char *desc;
-
             if(item->type == it_end)
                break;
 
@@ -3789,21 +3773,20 @@ CONSOLE_COMMAND(mn_search, 0)
             if(!pastLast)
                continue;
 
-            desc = M_Strlwr(estrdup(item->description));
+            qstring desc(item->description);
+            desc.toLower();
 
             // found a match
-            if(strstr(desc, mn_searchstr))
+            if(desc.findSubStr(mn_searchstr))
             {
                // go to it
                lastMatch = item;
                MN_StartMenu(curPage);
-               MN_ErrorMsg("found: %s", desc);
+               MN_ErrorMsg("Found: %s", desc.constPtr());
                if(!is_a_gap(item))
                   curPage->selected = j - 1;
-               efree(desc);
                return;
             }
-            efree(desc);
          }
 
          curPage = curPage->nextpage;
@@ -3813,10 +3796,10 @@ CONSOLE_COMMAND(mn_search, 0)
    if(lastMatch) // if doing a valid search, reset it now
    {
       lastMatch = NULL;
-      MN_ErrorMsg("reached end of search");
+      MN_ErrorMsg("Reached end of search");
    }
    else
-      MN_ErrorMsg("no match found for '%s'", mn_searchstr);
+      MN_ErrorMsg("No match found for '%s'", mn_searchstr);
 }
 
 static menuitem_t mn_menus_items[] =
@@ -3859,11 +3842,11 @@ CONSOLE_COMMAND(mn_menus, 0)
 
 static menuitem_t mn_config_items[] =
 {
-   {it_title,    "Configuration" },
-   {it_gap},
-   {it_info,     "Doom Game Modes"},
-   {it_toggle,   "Use base/doom config",     "use_doom_config" },
-   {it_end}
+   { it_title,    "Configuration" },
+   { it_gap },
+   { it_info,     "Doom Game Modes" },
+   { it_toggle,   "Use user/doom config",     "use_doom_config" },
+   { it_end }
 };
 
 menu_t menu_config =

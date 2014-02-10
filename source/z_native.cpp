@@ -33,7 +33,6 @@
 // * Purgables are never currently dumped unless the machine runs out of RAM.
 // * Instrumentation cannot track the amount of free memory.
 // * Heap check is limited to a zone ID check.
-// * Core dump function is not supported.
 //
 //-----------------------------------------------------------------------------
 
@@ -1133,7 +1132,7 @@ void ZoneObject::FreeTags(int lowtag, int hightag)
    if(hightag > PU_CACHE)
       hightag = PU_CACHE;
    
-   for(; lowtag <= hightag; ++lowtag)
+   for(; lowtag <= hightag; lowtag++)
    {
       for(obj = objectbytag[lowtag], objectbytag[lowtag] = NULL; obj;)
       {

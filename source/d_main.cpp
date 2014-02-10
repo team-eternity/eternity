@@ -58,12 +58,14 @@
 #include "g_dmflag.h"
 #include "g_game.h"
 #include "g_gfs.h"
+#include "hal/i_timer.h"
 #include "hu_stuff.h"
 #include "i_sound.h"
 #include "i_system.h"
 #include "i_video.h"
 #include "in_lude.h"
 #include "m_argv.h"
+#include "m_compare.h"
 #include "m_misc.h"
 #include "m_syscfg.h"
 #include "m_qstr.h"
@@ -248,7 +250,7 @@ void D_PageTicker(void)
 //
 // killough 11/98: add credits screen
 //
-void D_PageDrawer(void)
+void D_PageDrawer()
 {
    int l;
 
@@ -412,7 +414,7 @@ void D_StartTitle()
 
 gamestate_t oldgamestate  = GS_NOSTATE;  // sf: globaled
 gamestate_t wipegamestate = GS_DEMOSCREEN;
-void        R_ExecuteSetViewSize(void);
+void        R_ExecuteSetViewSize();
 camera_t    *camera;
 extern bool setsizeneeded;
 int         wipewait;        // haleyjd 10/09/07
@@ -422,7 +424,7 @@ bool        d_drawfps;       // haleyjd 09/07/10: show drawn fps
 //
 // D_showFPS
 //
-static void D_showDrawnFPS(void)
+static void D_showDrawnFPS()
 {
    static unsigned int lastms, accms, frames;
    unsigned int curms;
@@ -430,7 +432,7 @@ static void D_showDrawnFPS(void)
    vfont_t *font;
    char msg[64];
    
-   accms += (curms = I_GetTicks()) - lastms;
+   accms += (curms = i_haltimer.GetTicks()) - lastms;
    lastms = curms;
    ++frames;
 
@@ -569,6 +571,8 @@ void D_Display()
    if(nodrawers)                // for comparative timing / profiling
       return;
 
+   i_haltimer.StartDisplay();
+
    if(setsizeneeded)            // change the view size if needed
    {
       R_ExecuteSetViewSize();
@@ -603,7 +607,7 @@ void D_Display()
          else
          {
             R_DrawViewBorder();    // redraw border
-            R_RenderPlayerView (&players[displayplayer], camera);
+            R_RenderPlayerView(&players[displayplayer], camera);
          }
          
          ST_Drawer(scaledwindow.height == SCREENHEIGHT);  // killough 11/98
@@ -658,17 +662,17 @@ void D_Display()
             
             do
             {
-               int starttime = I_GetTime();
+               int starttime = i_haltimer.GetTime();
                int tics = 0;
                
                Wipe_Drawer();
                
                do
                {
-                  tics = I_GetTime() - starttime;
+                  tics = i_haltimer.GetTime() - starttime;
 
                   // haleyjd 06/16/09: sleep to avoid hogging 100% CPU
-                  I_Sleep(1);
+                  i_haltimer.Sleep(1);
                }
                while(!tics);
                
@@ -710,10 +714,9 @@ void D_Display()
       D_showMemStats();
 #endif
    
-   // sf: wipe changed: runs alongside the rest of the game rather
-   //     than in its own loop
-   
    I_FinishUpdate();              // page flip or blit buffer
+
+   i_haltimer.EndDisplay();
 }
 
 //=============================================================================
@@ -1231,7 +1234,7 @@ extern int levelFragLimit;
 static void D_StartupMessage()
 {
    puts("The Eternity Engine\n"
-        "Copyright 2013 James Haley, Stephen McGranahan, et al.\n"
+        "Copyright 2014 James Haley, Stephen McGranahan, et al.\n"
         "http://www.doomworld.com/eternity\n"
         "\n"
         "This program is free software distributed under the terms of\n"
@@ -1889,7 +1892,7 @@ static void D_DoomInit()
 //
 // D_DoomMain
 //
-void D_DoomMain(void)
+void D_DoomMain()
 {
    D_DoomInit();
 
@@ -1900,13 +1903,12 @@ void D_DoomMain(void)
       oldgamestate = GS_NOSTATE;
 
    // killough 12/98: inlined D_DoomLoop
-
    while(1)
    {
       // frame synchronous IO operations
       I_StartFrame();
 
-      TryRunTics(); // will run at least one tic
+      TryRunTics();
 
       // killough 3/16/98: change consoleplayer to displayplayer
       S_UpdateSounds(players[displayplayer].mo); // move positional sounds

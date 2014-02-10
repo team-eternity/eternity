@@ -154,6 +154,8 @@ static dehflags_t gmi_flags[] =
    { "SKILL5WARNING",  GIF_SKILL5WARNING  },
    { "HUDSTATBARNAME", GIF_HUDSTATBARNAME },
    { "CENTERHUDMSG",   GIF_CENTERHUDMSG   },
+   { "NODIEHI",        GIF_NODIEHI        },
+   { "LOSTSOULBOUNCE", GIF_LOSTSOULBOUNCE },
    { NULL,             0                  }
 };
 
@@ -166,9 +168,13 @@ static dehflagset_t gmi_flagset =
 // missionInfo flags
 static dehflags_t mission_flags[] =
 {
-   { "DEMOIFDEMO4",  MI_DEMOIFDEMO4  },
-   { "CONBACKTITLE", MI_CONBACKTITLE },
-   { NULL,           0               }
+   { "DEMOIFDEMO4",   MI_DEMOIFDEMO4   },
+   { "CONBACKTITLE",  MI_CONBACKTITLE  },
+   { "WOLFNAMEHACKS", MI_WOLFNAMEHACKS },
+   { "HASBETRAY",     MI_HASBETRAY     },
+   { "DOOM2MISSIONS", MI_DOOM2MISSIONS },
+   { "NOTELEPORTZ",   MI_NOTELEPORTZ   },
+   { NULL,            0                }
 };
 
 static dehflagset_t mission_flagset =

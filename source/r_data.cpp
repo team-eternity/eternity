@@ -122,6 +122,8 @@ void R_InitSpriteLumps(void)
    }
 }
 
+static int r_numglobalmaps;
+
 //
 // R_InitColormaps
 //
@@ -135,17 +137,28 @@ void R_InitColormaps()
    const WadDirectory::namespace_t &ns =
       wGlobalDir.getNamespace(lumpinfo_t::ns_colormaps);
 
-   numcolormaps = ns.numLumps + 1;
+   r_numglobalmaps = 1; // always at least 1, for COLORMAP
+
+   // check for global FOGMAP, for Hexen's benefit
+   int fogmap;
+   if((fogmap = W_CheckNumForName("FOGMAP")) >= 0)
+      ++r_numglobalmaps;
+
+   numcolormaps = ns.numLumps + r_numglobalmaps;
 
    // colormaps[0] is always the global COLORMAP lump
    size_t numbytes = sizeof(*colormaps) * numcolormaps;
    int    cmlump   = W_GetNumForName("COLORMAP");
 
-   colormaps = (lighttable_t **)(Z_Malloc(numbytes, PU_RENDERER, 0));
+   colormaps    = emalloctag(lighttable_t **, numbytes, PU_RENDERER, 0);
    colormaps[0] = (lighttable_t *)(wGlobalDir.cacheLumpNum(cmlump, PU_RENDERER));
 
+   // colormaps[1] is FOGMAP, if it exists
+   if(fogmap >= 0)
+      colormaps[1] = (lighttable_t *)(wGlobalDir.cacheLumpNum(fogmap, PU_RENDERER));
+
    // load other colormaps from the colormaps namespace
-   int i = 1;
+   int i = r_numglobalmaps;
    WadNamespaceIterator nsi(wGlobalDir, lumpinfo_t::ns_colormaps);
   
    for(nsi.begin(); nsi.current(); nsi.next(), i++)
@@ -164,7 +177,7 @@ void R_InitColormaps()
 int global_cmap_index = 0;
 int global_fog_index  = 0;
 
-void R_SetGlobalLevelColormap(void)
+void R_SetGlobalLevelColormap()
 {
    global_cmap_index = R_ColormapNumForName(LevelInfo.colorMap);
    global_fog_index  = R_ColormapNumForName(LevelInfo.outdoorFog);
@@ -182,10 +195,17 @@ void R_SetGlobalLevelColormap(void)
 
 int R_ColormapNumForName(const char *name)
 {
-   register int i = 0;
-   if(strncasecmp(name, "COLORMAP", 8))     // COLORMAP predefined to return 0
-      if((i = W_CheckNumForNameNS(name, lumpinfo_t::ns_colormaps)) != -1)
-         i = (i - firstcolormaplump) + 1;
+   int i = 0;
+
+   // special cases
+   if(!strncasecmp(name, "COLORMAP", 8))
+      return 0;
+   if(r_numglobalmaps > 1 && !strncasecmp(name, "FOGMAP", 8))
+      return 1;
+
+   if((i = W_CheckNumForNameNS(name, lumpinfo_t::ns_colormaps)) != -1)
+      i = (i - firstcolormaplump) + r_numglobalmaps;
+
    return i;
 }
 

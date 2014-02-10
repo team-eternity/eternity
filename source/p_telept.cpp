@@ -83,8 +83,7 @@ int EV_Teleport(line_t *line, int side, Mobj *thing)
             // haleyjd 12/15/02: cph found out this was removed
             // in Final DOOM, so don't do it for Final DOOM demos.
             if(!(demo_compatibility &&
-               (GameModeInfo->missionInfo->id == pack_plut || 
-                GameModeInfo->missionInfo->id == pack_tnt)))
+               (GameModeInfo->missionInfo->flags & MI_NOTELEPORTZ)))
             {
                // SoM: so yeah... Need this for linked portals.
                if(demo_version >= 333)
@@ -93,14 +92,10 @@ int EV_Teleport(line_t *line, int side, Mobj *thing)
                   thing->z = thing->floorz;
             }
 
-            // sf: use this instead of affecting viewz directly
-            // haleyjd 10/09/05: made demo safe
             if(player)
             {
-               if(demo_version < 303)
-                  player->viewz = thing->z + player->viewheight;
-               else
-                  reset_viewz = true;
+               player->viewz = thing->z + player->viewheight;
+               player->prevviewz = player->viewz;
             }
 
             thing->angle = m->angle;
@@ -123,7 +118,8 @@ int EV_Teleport(line_t *line, int side, Mobj *thing)
                                      thing->z + GameModeInfo->teleFogHeight, 
                                      E_SafeThingName(GameModeInfo->teleFogType)),
                          GameModeInfo->teleSound);
-
+            
+            thing->backupPosition();
             P_AdjustFloorClip(thing);
 
             // don't move for a bit // killough 10/98
@@ -219,6 +215,8 @@ int EV_SilentTeleport(line_t *line, int side, Mobj *thing)
                
                // Set player's view according to the newly set parameters
                P_CalcHeight(player);
+
+               player->prevviewz = player->viewz;
                
                // Reset the delta to have the same dynamics as before
                player->deltaviewheight = deltaviewheight;
@@ -227,6 +225,7 @@ int EV_SilentTeleport(line_t *line, int side, Mobj *thing)
                   P_ResetChasecam();
             }
 
+            thing->backupPosition();
             P_AdjustFloorClip(thing);
 
             return 1;
@@ -349,7 +348,7 @@ int EV_SilentLineTeleport(line_t *line, int side, Mobj *thing,
          thing->momy = FixedMul(y, c) + FixedMul(x, s);
 
          // Adjust a player's view, in case there has been a height change
-         if (player)
+         if(player)
          {
             // Save the current deltaviewheight, used in stepping
             fixed_t deltaviewheight = player->deltaviewheight;
@@ -360,6 +359,8 @@ int EV_SilentLineTeleport(line_t *line, int side, Mobj *thing,
             // Set player's view according to the newly set parameters
             P_CalcHeight(player);
 
+            player->prevviewz = player->viewz;
+
             // Reset the delta to have the same dynamics as before
             player->deltaviewheight = deltaviewheight;
 
@@ -367,6 +368,7 @@ int EV_SilentLineTeleport(line_t *line, int side, Mobj *thing,
                 P_ResetChasecam();
          }
 
+         thing->backupPosition();
          P_AdjustFloorClip(thing);
          
          return 1;

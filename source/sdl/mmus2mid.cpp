@@ -422,7 +422,7 @@ int mmus2mid(UBYTE *mus, size_t size, MIDI *mididata, UWORD division, int nocomp
    // set the divisions (ticks per quarter note)
    mididata->divisions = division;
    
-   // allocat for midi tempo/key track, allow for end of track 
+   // allocate for midi tempo/key track, allow for end of track 
    if(!(mididata->track[0].data =
       erealloc(unsigned char *, mididata->track[0].data,sizeof(midikey)+sizeof(miditempo)+4)))
       return MEMALLOC;
@@ -454,6 +454,15 @@ int mmus2mid(UBYTE *mus, size_t size, MIDI *mididata, UWORD division, int nocomp
             (MUSchannel == 15 ? 9 : FirstChannelAvailable(MUS2MIDchannel));
          // proff: Added typecast to avoid warning
          MIDItrack = MIDIchan2track[MIDIchannel] = (unsigned char)(TrackCnt++);
+
+         if(TWriteByte(mididata, MIDItrack, 0x00)) // haleyjd 12/30/13: send all notes off 
+            goto err;
+         if(TWriteByte(mididata, MIDItrack, 0xB0|MIDIchannel))
+            goto err;
+         if(TWriteByte(mididata, MIDItrack, 0x7B))
+            goto err;
+         if(TWriteByte(mididata, MIDItrack, 0x00))
+            goto err;        
       }
       else // channel already allocated as a track, use those values
       {

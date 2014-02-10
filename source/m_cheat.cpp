@@ -51,6 +51,7 @@
 #include "m_argv.h"
 #include "m_cheat.h"
 #include "p_inter.h"
+#include "p_mobj.h"
 #include "p_setup.h"
 #include "p_user.h"
 #include "r_data.h"
@@ -221,7 +222,6 @@ static void cheat_printstats(const void *arg)    // killough 8/23/98
 
 static void cheat_mus(const void *arg)
 {
-   int musnum;
    const char *buf = (const char *)arg;
    
    //jff 3/20/98 note: this cheat allowed in netgame/demorecord
@@ -230,49 +230,14 @@ static void cheat_mus(const void *arg)
    if(!ectype::isDigit(buf[0]) || !ectype::isDigit(buf[1]))
       return;
 
-   doom_printf("%s", DEH_String("STSTR_MUS")); // Ty 03/27/98 - externalized
-  
-   if(GameModeInfo->id == commercial)
-   {
-      musnum = mus_runnin + (buf[0]-'0')*10 + buf[1]-'0' - 1;
-          
-      //jff 4/11/98 prevent IDMUS00 in DOOMII and IDMUS36 or greater
-      if(musnum < mus_runnin ||  ((buf[0]-'0')*10 + buf[1]-'0') > 35)
-         doom_printf("%s", DEH_String("STSTR_NOMUS")); // Ty 03/27/98 - externalized
-      else
-      {
-         S_ChangeMusicNum(musnum, 1);
-         idmusnum = musnum; //jff 3/17/98 remember idmus number for restore
-      }
-   }
-   else if(GameModeInfo->type == Game_Heretic)
-   {
-      // haleyjd 03/10/03: heretic support
-      // use H_Mus_Matrix for easy access
-      int episodenum = (buf[0] - '0') - 1;
-      int mapnum     = (buf[1] - '0') - 1;
-
-      if(episodenum < 0 || episodenum > 5 || mapnum < 0 || mapnum > 8)
-         doom_printf("%s", DEH_String("STSTR_NOMUS"));
-      else
-      {
-         musnum = H_Mus_Matrix[episodenum][mapnum];
-         S_ChangeMusicNum(musnum, 1);
-         idmusnum = musnum;
-      }
-   }
+   int musnum = GameModeInfo->MusicCheat(buf);
+   if(musnum < 0)
+      doom_printf("%s", DEH_String("STSTR_NOMUS")); // Ty 03/27/98 - externalized
    else
    {
-      musnum = mus_e1m1 + (buf[0]-'1')*9 + (buf[1]-'1');
-          
-      //jff 4/11/98 prevent IDMUS0x IDMUSx0 in DOOMI and greater than introa
-      if(buf[0] < '1' || buf[1] < '1' || ((buf[0]-'1')*9 + buf[1]-'1') > 31)
-         doom_printf("%s", DEH_String("STSTR_NOMUS")); // Ty 03/27/98 - externalized
-      else
-      {
-         S_ChangeMusicNum(musnum, 1);
-         idmusnum = musnum; //jff 3/17/98 remember idmus number for restore
-      }
+      doom_printf("%s", DEH_String("STSTR_MUS")); // Ty 03/27/98 - externalized
+      S_ChangeMusicNum(musnum, 1);
+      idmusnum = musnum; // jff 3/17/98: remember idmus number for restore
    }
 }
 
@@ -576,7 +541,7 @@ static void cheat_keyxx(const void *arg)
       msg = "Key Removed";
    }
 
-   doom_printf(msg);
+   doom_printf("%s", msg);
 }
 
 // killough 2/16/98: generalized weapon cheats

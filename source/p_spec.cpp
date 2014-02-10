@@ -834,9 +834,8 @@ int P_FindSectorFromTag(const int tag, int start)
 int P_FindMinSurroundingLight(sector_t *sector, int min)
 {
    const sector_t *check;
-   int i;
 
-   for(i=0; i < sector->linecount; i++)
+   for(int i = 0; i < sector->linecount; i++)
    {
       if((check = getNextSector(sector->lines[i], sector)) &&
          check->lightlevel < min)
@@ -2417,13 +2416,14 @@ void P_AttachSectors(line_t *line, int staticFn)
 //
 // haleyjd 08/14/02:
 // This function converts old Heretic levels to a BOOM-compatible format.
+// FIXME/TODO: eliminate with generalized sector special binding
 //
 void P_ConvertHereticSpecials()
 {
    fixed_t pushForces[5] = { 2048*5,  2048*10, 2048*25, 2048*30, 2048*35 };
 
    // sector types
-   for(int i = 0; i < numsectors; ++i)
+   for(int i = 0; i < numsectors; i++)
    {
       sector_t *sector = &(sectors[i]);
 

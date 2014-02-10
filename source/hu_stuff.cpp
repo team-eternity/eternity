@@ -958,7 +958,7 @@ void HUDCrossHairWidget::ticker()
 
       if(((tc->linetarget->flags  & MF_SHADOW || 
            tc->linetarget->flags3 & MF3_GHOST) && M_Random() & 0x0F) ||
-         tc->linetarget->flags2 & MF2_DONTDRAW)
+         tc->linetarget->flags4 & MF4_TOTALINVISIBLE)
       {
          color = notargetcolour;
       }
@@ -1557,7 +1557,7 @@ CONSOLE_VARIABLE(hu_messages, showMessages, 0) {}
 CONSOLE_VARIABLE(hu_messagecolor, mess_colour, 0) {}
 CONSOLE_NETCMD(say, cf_netvar, netcmd_chat)
 {
-   S_StartSound(NULL, GameModeInfo->c_ChatSound);
+   S_StartInterfaceSound(GameModeInfo->c_ChatSound);
    
    doom_printf("%s: %s", players[Console.cmdsrc].name, Console.args.constPtr());
 }

@@ -125,6 +125,7 @@ int UnknownThingType;
 #define ITEM_TNG_MASS         "mass"
 #define ITEM_TNG_RESPAWNTIME  "respawntime"
 #define ITEM_TNG_RESPCHANCE   "respawnchance"
+#define ITEM_TNG_AIMSHIFT     "aimshift"
 
 // Special Spawning
 #define ITEM_TNG_COLSPAWN     "collectionspawn"
@@ -497,6 +498,7 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_INT(ITEM_TNG_MASS,            100,           CFGF_NONE), \
    CFG_INT(ITEM_TNG_RESPAWNTIME,     (12*35),       CFGF_NONE), \
    CFG_INT(ITEM_TNG_RESPCHANCE,      4,             CFGF_NONE), \
+   CFG_INT(ITEM_TNG_AIMSHIFT,        -1,            CFGF_NONE), \
    CFG_INT(ITEM_TNG_DAMAGE,          0,             CFGF_NONE), \
    CFG_STR(ITEM_TNG_DMGSPECIAL,      "NONE",        CFGF_NONE), \
    CFG_INT(ITEM_TNG_TOPDAMAGE,       0,             CFGF_NONE), \
@@ -2165,6 +2167,10 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
 
    if(IS_SET(ITEM_TNG_RESPCHANCE))
       mobjinfo[i]->respawnchance = cfg_getint(thingsec, ITEM_TNG_RESPCHANCE);
+
+   // aim shift
+   if(cfg_size(thingsec, ITEM_TNG_AIMSHIFT) > 0)
+      mobjinfo[i]->meta->setInt("aimshift", cfg_getint(thingsec, ITEM_TNG_AIMSHIFT));
 
    // process damage
    if(IS_SET(ITEM_TNG_DAMAGE))

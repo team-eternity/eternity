@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4F015B83187598D500ADB3F4 /* libc++.1.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 4F015B7F187598D100ADB3F4 /* libc++.1.dylib */; };
+		4F015B84187598D800ADB3F4 /* libc++abi.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 4F015B80187598D100ADB3F4 /* libc++abi.dylib */; };
+		4F015B8C18775CB100ADB3F4 /* AUTHORS in Resources */ = {isa = PBXBuildFile; fileRef = 4F015B8A18775CB100ADB3F4 /* AUTHORS */; };
+		4F015B8D18775CB100ADB3F4 /* COPYING in Resources */ = {isa = PBXBuildFile; fileRef = 4F015B8B18775CB100ADB3F4 /* COPYING */; };
+		4F015B901877613100ADB3F4 /* About.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4F015B8E1877613100ADB3F4 /* About.xib */; };
+		4F015B961877636F00ADB3F4 /* ELAboutController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4F015B951877636F00ADB3F4 /* ELAboutController.m */; };
 		4F2F32BA186710F300EED7DE /* eternity in Resources */ = {isa = PBXBuildFile; fileRef = 4F2F32B9186710B200EED7DE /* eternity */; };
 		4F2F32BB1867111400EED7DE /* base in Resources */ = {isa = PBXBuildFile; fileRef = FA82164B1647128900FF998A /* base */; };
 		4F2F32BC1867111400EED7DE /* docs in Resources */ = {isa = PBXBuildFile; fileRef = FA8216761647128900FF998A /* docs */; };
@@ -18,7 +24,6 @@
 		FA3011F1168A427B005D25A8 /* ELCommandLineArgument.m in Sources */ = {isa = PBXBuildFile; fileRef = FA3011F0168A427B005D25A8 /* ELCommandLineArgument.m */; };
 		FA3011F4168A44E0005D25A8 /* ELCommandLineArray.m in Sources */ = {isa = PBXBuildFile; fileRef = FA3011F3168A44DF005D25A8 /* ELCommandLineArray.m */; };
 		FA601C7B1696246800046D2D /* Launcher.xib in Resources */ = {isa = PBXBuildFile; fileRef = FA601C791696246800046D2D /* Launcher.xib */; };
-		FA730D1B168DFC0D00E39907 /* COPYING.pdf in Resources */ = {isa = PBXBuildFile; fileRef = FA730D1A168DFC0D00E39907 /* COPYING.pdf */; };
 		FA891468165424E40034E860 /* ELTextFieldDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = FA891467165424E40034E860 /* ELTextFieldDelegate.m */; };
 		FAB103DC15911F4E00393DE3 /* DumpConsole.xib in Resources */ = {isa = PBXBuildFile; fileRef = FAB103DB15911F4E00393DE3 /* DumpConsole.xib */; };
 		FAB103E21591214400393DE3 /* ELDumpConsole.m in Sources */ = {isa = PBXBuildFile; fileRef = FAB103E11591214400393DE3 /* ELDumpConsole.m */; };
@@ -47,6 +52,13 @@
 /* Begin PBXFileReference section */
 		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		256AC3F00F4B6AF500CF3369 /* EternityLaunch_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EternityLaunch_Prefix.pch; sourceTree = "<group>"; };
+		4F015B7F187598D100ADB3F4 /* libc++.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libc++.1.dylib"; path = "../libc++/libc++.1.dylib"; sourceTree = "<group>"; };
+		4F015B80187598D100ADB3F4 /* libc++abi.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libc++abi.dylib"; path = "../libc++/libc++abi.dylib"; sourceTree = "<group>"; };
+		4F015B8A18775CB100ADB3F4 /* AUTHORS */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = AUTHORS; path = ../../AUTHORS; sourceTree = "<group>"; };
+		4F015B8B18775CB100ADB3F4 /* COPYING */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = COPYING; path = ../../COPYING; sourceTree = "<group>"; };
+		4F015B8F1877613100ADB3F4 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/About.xib; sourceTree = "<group>"; };
+		4F015B941877636F00ADB3F4 /* ELAboutController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ELAboutController.h; sourceTree = "<group>"; };
+		4F015B951877636F00ADB3F4 /* ELAboutController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ELAboutController.m; sourceTree = "<group>"; };
 		4F2F32B1186710B100EED7DE /* EternityEngine.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = EternityEngine.xcodeproj; path = ../EternityEngine.xcodeproj; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* EternityLaunch-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "EternityLaunch-Info.plist"; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* Eternity Engine.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Eternity Engine.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -58,7 +70,6 @@
 		FA3011F2168A44DF005D25A8 /* ELCommandLineArray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ELCommandLineArray.h; sourceTree = "<group>"; };
 		FA3011F3168A44DF005D25A8 /* ELCommandLineArray.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ELCommandLineArray.m; sourceTree = "<group>"; };
 		FA601C7A1696246800046D2D /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/Launcher.xib; sourceTree = "<group>"; };
-		FA730D1A168DFC0D00E39907 /* COPYING.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; name = COPYING.pdf; path = Resources/COPYING.pdf; sourceTree = "<group>"; };
 		FA82164B1647128900FF998A /* base */ = {isa = PBXFileReference; lastKnownFileType = folder; name = base; path = ../../base; sourceTree = SOURCE_ROOT; };
 		FA8216761647128900FF998A /* docs */ = {isa = PBXFileReference; lastKnownFileType = folder; name = docs; path = ../../docs; sourceTree = SOURCE_ROOT; };
 		FA8216871647128900FF998A /* user */ = {isa = PBXFileReference; lastKnownFileType = folder; name = user; path = ../../user; sourceTree = SOURCE_ROOT; };
@@ -119,7 +130,10 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				FA730D1A168DFC0D00E39907 /* COPYING.pdf */,
+				4F015B8A18775CB100ADB3F4 /* AUTHORS */,
+				4F015B8B18775CB100ADB3F4 /* COPYING */,
+				4F015B7F187598D100ADB3F4 /* libc++.1.dylib */,
+				4F015B80187598D100ADB3F4 /* libc++abi.dylib */,
 				FA8216B2164712B100FF998A /* Eternity companions */,
 				FABF5F00158C710400C49E93 /* Eternity.icns */,
 				8D1107310486CEB800E47090 /* EternityLaunch-Info.plist */,
@@ -127,6 +141,7 @@
 				FABF5FFF158C8F6300C49E93 /* Credits.rtf */,
 				FA601C791696246800046D2D /* Launcher.xib */,
 				FAB103DB15911F4E00393DE3 /* DumpConsole.xib */,
+				4F015B8E1877613100ADB3F4 /* About.xib */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -165,6 +180,8 @@
 				FA062C0916503EFF005A65FF /* ELFileViewDataSource.m */,
 				FA891466165424E40034E860 /* ELTextFieldDelegate.h */,
 				FA891467165424E40034E860 /* ELTextFieldDelegate.m */,
+				4F015B941877636F00ADB3F4 /* ELAboutController.h */,
+				4F015B951877636F00ADB3F4 /* ELAboutController.m */,
 			);
 			name = Main;
 			sourceTree = "<group>";
@@ -260,12 +277,16 @@
 				FABF5F01158C710400C49E93 /* Eternity.icns in Resources */,
 				FABF6000158C8F6300C49E93 /* Credits.rtf in Resources */,
 				FAB103DC15911F4E00393DE3 /* DumpConsole.xib in Resources */,
-				FA730D1B168DFC0D00E39907 /* COPYING.pdf in Resources */,
 				FA601C7B1696246800046D2D /* Launcher.xib in Resources */,
+				4F015B83187598D500ADB3F4 /* libc++.1.dylib in Resources */,
+				4F015B84187598D800ADB3F4 /* libc++abi.dylib in Resources */,
 				4F2F32BA186710F300EED7DE /* eternity in Resources */,
 				4F2F32BB1867111400EED7DE /* base in Resources */,
+				4F015B8D18775CB100ADB3F4 /* COPYING in Resources */,
+				4F015B8C18775CB100ADB3F4 /* AUTHORS in Resources */,
 				4F2F32BC1867111400EED7DE /* docs in Resources */,
 				4F2F32BD1867111400EED7DE /* user in Resources */,
+				4F015B901877613100ADB3F4 /* About.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -282,6 +303,7 @@
 				FA891468165424E40034E860 /* ELTextFieldDelegate.m in Sources */,
 				FA3011EE1689D1BB005D25A8 /* MainStart.m in Sources */,
 				FA3011F1168A427B005D25A8 /* ELCommandLineArgument.m in Sources */,
+				4F015B961877636F00ADB3F4 /* ELAboutController.m in Sources */,
 				FA3011F4168A44E0005D25A8 /* ELCommandLineArray.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -295,6 +317,14 @@
 				089C165DFE840E0CC02AAC07 /* English */,
 			);
 			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		4F015B8E1877613100ADB3F4 /* About.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				4F015B8F1877613100ADB3F4 /* English */,
+			);
+			name = About.xib;
 			sourceTree = "<group>";
 		};
 		FA601C791696246800046D2D /* Launcher.xib */ = {
@@ -321,6 +351,10 @@
 				GCC_PREFIX_HEADER = EternityLaunch_Prefix.pch;
 				INFOPLIST_FILE = "EternityLaunch-Info.plist";
 				INSTALL_PATH = /Applications;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"/Users/ioan/dezvoltare/cross/eternity/macosx/libc++",
+				);
 				MACH_O_TYPE = mh_execute;
 				PRODUCT_NAME = "Eternity Engine";
 			};
@@ -343,6 +377,10 @@
 					"CMAKE_INTDIR=\"Release\"",
 				);
 				INSTALL_PATH = /Applications;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"/Users/ioan/dezvoltare/cross/eternity/macosx/libc++",
+				);
 				MACH_O_TYPE = mh_execute;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "Eternity Engine";

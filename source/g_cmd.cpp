@@ -42,6 +42,7 @@
 #include "e_player.h" // haleyjd: turbo cmd must alter playerclass info
 #include "f_wipe.h"
 #include "g_game.h"
+#include "hal/i_timer.h"
 #include "hu_stuff.h"
 #include "i_system.h"
 #include "i_video.h"
@@ -52,6 +53,7 @@
 #include "mn_engin.h"
 #include "mn_misc.h"  // haleyjd
 #include "p_inter.h"
+#include "p_mobj.h"
 #include "p_partcl.h" // haleyjd: add particle event cmds
 #include "p_setup.h"
 #include "p_user.h"
@@ -119,7 +121,7 @@ CONSOLE_COMMAND(pause, cf_server)
 //
 // haleyjd: Restoration of original exit behavior
 //
-void G_QuitDoom(void)
+void G_QuitDoom()
 {
    // haleyjd: re-added code for playing random sound before exit
    extern int snd_card;
@@ -127,8 +129,8 @@ void G_QuitDoom(void)
    if((!netgame || demoplayback) && !nosfxparm && snd_card &&
       GameModeInfo->flags & GIF_HASEXITSOUNDS)
    {
-      S_StartSound(NULL, GameModeInfo->exitSounds[(gametic>>2)&7]);
-      I_WaitVBL(105);
+      S_StartInterfaceSound(GameModeInfo->exitSounds[(gametic>>2)&7]);
+      i_haltimer.Sleep(1500);
    }
 
    exit(0);
@@ -606,12 +608,6 @@ CONSOLE_VARIABLE(w_norestpath, w_norestpath, cf_allowblank)
 
 VARIABLE_BOOLEAN(use_doom_config, NULL, yesno);
 CONSOLE_VARIABLE(use_doom_config, use_doom_config, 0) {}
-
-CONSOLE_COMMAND(m_resetcomments, 0)
-{
-   M_ResetDefaultComments();
-   M_ResetSysComments();
-}
 
 CONSOLE_COMMAND(spectate_prev, 0)
 {

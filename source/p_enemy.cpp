@@ -48,6 +48,7 @@
 #include "g_game.h"
 #include "m_bbox.h"
 #include "m_random.h"
+#include "metaapi.h"
 #include "p_anim.h"      // haleyjd
 #include "p_enemy.h"
 #include "p_info.h"
@@ -858,7 +859,7 @@ void P_NewChaseDir(Mobj *actor)
 //
 static bool P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
 {
-   if(mo->flags2 & MF2_DONTDRAW)
+   if(mo->flags4 & MF4_TOTALINVISIBLE)
       return 0;  // haleyjd: total invisibility!
 
    // haleyjd 11/14/02: Heretic ghost effects
@@ -1374,7 +1375,34 @@ void P_BossTeleport(bossteleport_t *bt)
       boss->z = boss->floorz;
       boss->angle = targ->angle;
       boss->momx = boss->momy = boss->momz = 0;
+      boss->backupPosition();
    }
+}
+
+//
+// P_GetAimShift
+//
+// Get the aiming inaccuracy shift for an enemy. Returns -1 if there is none.
+//
+int P_GetAimShift(Mobj *target, bool missile)
+{
+   static MetaKeyIndex aimShiftKey("aimshift");
+   int shiftamount = -1;
+
+   // some thing flags set a shift amount
+   if(target->flags & MF_SHADOW || target->flags4 & MF4_TOTALINVISIBLE)
+      shiftamount = missile ? 20 : 21;
+   if(target->flags3 & MF3_GHOST)
+      shiftamount = 21;
+
+   // check out the metatable aimshift amount; if it is within range, it
+   // will override the shift amount set by any flags. If it is out of 
+   // range, it will remove any aim shifting.
+   int metashift = target->info->meta->getInt(aimShiftKey, -1);
+   if(metashift >= 0)
+      shiftamount = (metashift <= 24 ? metashift : -1);
+
+   return shiftamount;
 }
 
 //=============================================================================
@@ -1501,17 +1529,6 @@ void P_ClericTeleport(Mobj *actor)
    bt.soundNum  = sfx_itmbk;                // use item respawn sound
 
    P_BossTeleport(&bt);
-}
-
-void A_DwarfAlterEgoChase(Mobj *actor)
-{
-   if(actor->counters[0])
-   {
-      actor->counters[0]--;
-      A_Chase(actor);
-   }
-   else
-      A_Die(actor);
 }
 #endif
 
@@ -1731,9 +1748,9 @@ CONSOLE_COMMAND(viles, cf_notnet|cf_level|cf_hidden)
       
       S_ChangeMusicNum(mus_stalks, true);
       
-      P_ConsoleSummon(vileType,  0,     1, "FRIEND");
-      P_ConsoleSummon(vileType,  ANG45, 1, "FRIEND");
-      P_ConsoleSummon(vileType, -ANG45, 1, "FRIEND");
+      P_ConsoleSummon(vileType, 0,            1, "FRIEND");
+      P_ConsoleSummon(vileType, ANG45,        1, "FRIEND");
+      P_ConsoleSummon(vileType, ANG270+ANG45, 1, "FRIEND");
    }
 }
 
@@ -1820,11 +1837,10 @@ CONSOLE_COMMAND(mdk, cf_notnet|cf_level)
 CONSOLE_COMMAND(mdkbomb, cf_notnet|cf_level)
 {
    player_t *plyr = &players[consoleplayer];
-   int i;
    fixed_t slope;
    int damage = 10000;
 
-   for(i = 0; i < 60; ++i)  // offset angles from its attack angle
+   for(int i = 0; i < 60; i++)  // offset angles from its attack angle
    {
       angle_t an = (ANG360/60)*i;
       
@@ -1875,16 +1891,14 @@ CONSOLE_COMMAND(vilehit, cf_notnet|cf_level)
 
 void P_SpawnPlayer(mapthing_t* mthing);
 
-static void P_ResurrectPlayer(void)
+static void P_ResurrectPlayer()
 {
    player_t *p = &players[consoleplayer];
 
    if(p->health <= 0 || p->mo->health <= 0 || p->playerstate == PST_DEAD)
    {
-      mapthing_t mthing;
+      edefstructvar(mapthing_t, mthing);
       Mobj *oldmo = p->mo;
-
-      memset(&mthing, 0, sizeof(mapthing_t));
 
       mthing.x     = (int16_t)(p->mo->x >> FRACBITS);
       mthing.y     = (int16_t)(p->mo->y >> FRACBITS);

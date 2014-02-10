@@ -23,7 +23,9 @@
 
 #include "doomdef.h"
 
-void P_LoadLevelInfo(int lumpnum, const char *lvname);
+class WadDirectory;
+
+void P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname);
 
 void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus, 
                       int next, int secr, bool finale, const char *intertext,
@@ -48,76 +50,12 @@ enum
 };
 
 //
-// LevelInfo Field Enumeration
-//
-// haleyjd 06/21/10: This is needed to keep track of what fields are stored in
-// a LevelInfo prototype. The order does not have to match that in the 
-// structure, but there must be one enumeration value for every structure 
-// field.
-//
-enum
-{
-   LI_FIELD_LEVELTYPE,
-   LI_FIELD_BOSSSPECS,
-   LI_FIELD_PARTIME,
-   LI_FIELD_INTERPIC,
-   LI_FIELD_INTERTEXT,
-   LI_FIELD_INTERTEXTLUMP,
-   LI_FIELD_BACKDROP,
-   LI_FIELD_INTERMUSIC,
-   LI_FIELD_LEVELPIC,
-   LI_FIELD_NEXTLEVELPIC,
-   LI_FIELD_NEXTSECRETPIC,
-   LI_FIELD_FINALETYPE,
-   LI_FIELD_KILLSTATS,
-   LI_FIELD_KILLFINALE,
-   LI_FIELD_FINALESECRETONLY,
-   LI_FIELD_ENDOFGAME,
-   LI_FIELD_USEEDFINTERNAME,
-   LI_FIELD_NEXTLEVEL,
-   LI_FIELD_NEXTSECRET,
-   LI_FIELD_LEVELNAME,
-   LI_FIELD_MUSICNAME,
-   LI_FIELD_COLORMAP,
-   LI_FIELD_OUTDOORFOG,
-   LI_FIELD_USEFULLBRIGHT,
-   LI_FIELD_UNEVENLIGHT,
-   LI_FIELD_SKYNAME,
-   LI_FIELD_ALTSKYNAME,
-   LI_FIELD_SKY2NAME,
-   LI_FIELD_DOUBLESKY,
-   LI_FIELD_HASLIGHTNING,
-   LI_FIELD_SKYDELTA,
-   LI_FIELD_SKY2DELTA,
-   LI_FIELD_GRAVITY,
-   LI_FIELD_CREATOR,
-   LI_FIELD_HASSCRIPT,
-   LI_FIELD_SCRIPTLUMP,
-   LI_FIELD_ACSSCRIPTLUMP,
-   LI_FIELD_EXTRADATA,
-   LI_FIELD_SOUNDSWTCHN,
-   LI_FIELD_SOUNDSWTCHX,
-   LI_FIELD_SOUNDSTNMOV,
-   LI_FIELD_SOUNDPSTOP,
-   LI_FIELD_SOUNDBDCLS,
-   LI_FIELD_SOUNDBDOPN,
-   LI_FIELD_SOUNDDOROPN,
-   LI_FIELD_SOUNDDORCLS,
-   LI_FIELD_SOUNDPSTART,
-   LI_FIELD_SOUNDFCMOVE,
-   LI_FIELD_NOAUTOSEQUENCES,
-   
-   // count of fields
-   LI_FIELD_NUMFIELDS
-};
-
-//
 // LevelInfo_t
 //
 // haleyjd: This structure is a singleton and now contains all of what were
 // previously a bunch of messy global variables.
 //
-typedef struct LevelInfo_s
+struct LevelInfo_t
 {
    // map type selection
    int mapFormat;            // format of the map (Doom or Hexen)
@@ -127,21 +65,26 @@ typedef struct LevelInfo_s
    unsigned int bossSpecs;  // boss special flags for BossDeath, HticBossDeath
 
    // intermission and finale stuff
-   int  partime;              // intermission par time in seconds
-   const char *interPic;      // intermission background
-   const char *interText;     // presence of this determines if a finale will occur
-   const char *interTextLump; // this can be set in the file
-   const char *backDrop;      // pic used during text finale
-   const char *interMusic;    // text finale music
-   const char *levelPic;      // intermission level name graphics lump
-   const char *nextLevelPic;  // level name lump for NEXT level 06/17/06
-   const char *nextSecretPic; // level name lump for SECRET level 06/17/06
-   int  finaleType;           // type of finale sequence -- haleyjd 05/26/06
-   bool killStats;            // level has no statistics intermission
-   bool killFinale;           // level has no finale even if text is given
-   bool finaleSecretOnly;     // level only has finale if secret exit
-   bool endOfGame;            // DOOM II: last map, trigger cast call
-   bool useEDFInterName;      // use an intermission map name from EDF
+   int  partime;                // intermission par time in seconds
+   const char *interPic;        // intermission background
+   const char *interText;       // presence of this determines if a finale will occur
+   const char *interTextSecret; // alternate text for secret exit finale
+   const char *interTextLump;   // this can be set in the file
+   const char *interTextSLump;  // lump for secret exit finale
+   const char *backDrop;        // pic used during text finale
+   const char *interMusic;      // text finale music
+   const char *levelPic;        // intermission level name graphics lump
+   const char *nextLevelPic;    // level name lump for NEXT level 06/17/06
+   const char *nextSecretPic;   // level name lump for SECRET level 06/17/06
+   int  finaleType;             // type of finale sequence -- haleyjd 05/26/06
+   int  finaleSecretType;       // type of finale sequence for secret
+   bool killStats;              // level has no statistics intermission
+   bool killFinale;             // level has no finale even if text is given
+   bool finaleNormalOnly;       // level only has finale if normal exit
+   bool finaleSecretOnly;       // level only has finale if secret exit
+   bool finaleEarly;            // finale is before intermission
+   bool endOfGame;              // DOOM II: last map, trigger cast call
+   bool useEDFInterName;        // use an intermission map name from EDF
 
    // level transfer stuff
    const char *nextLevel;     // name of next map for normal exit
@@ -171,8 +114,6 @@ typedef struct LevelInfo_s
    const char *creator;       // creator: name of who made this map
 
    // attached scripts
-   bool hasScripts;           // true if scriptLump is valid
-   char *scriptLump;          // name of Levelscript lump
    char *acsScriptLump;       // name of ACS script lump, for DOOM-format maps
    char *extraData;           // name of ExtraData lump
 
@@ -191,12 +132,29 @@ typedef struct LevelInfo_s
    // sound sequences
    bool noAutoSequences;      // auto sequence behavior
 
-} LevelInfo_t;
+   // sound environments
+   int  defaultEnvironment;   // ID of default sound environment
+};
 
 // the one and only LevelInfo object
 extern LevelInfo_t LevelInfo;
 
 extern int default_weaponowned[NUMWEAPONS];
+
+// killough 5/2/98: moved from d_deh.c:
+// Par times (new item with BOOM)
+extern int pars[][10];  // hardcoded array size
+extern int cpars[];     // hardcoded array size
+
+int P_DoomParTime(int episode, int map);
+int P_Doom2ParTime(int episode, int map);
+int P_NoParTime(int episode, int map);
+
+struct levelnamedata_t;
+
+void P_DoomDefaultLevelName(levelnamedata_t &lnd);
+void P_Doom2DefaultLevelName(levelnamedata_t &lnd);
+void P_HticDefaultLevelName(levelnamedata_t &lnd);
 
 #endif
 

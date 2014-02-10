@@ -58,8 +58,8 @@ int audio_buffers;
 // haleyjd 12/18/13: size at which mix buffers must be allocated
 static Uint32 mixbuffer_size;
 
-// haleyjd 12/18/13: primary floating point mixing buffer
-static double *mixbuffer;
+// haleyjd 12/18/13: primary floating point mixing buffers
+static double *mixbuffer[2];
 
 // MWM 2000-01-08: Sample rate in samples/second
 // haleyjd 10/28/05: updated for Julian's music code, need full quality now
@@ -83,7 +83,10 @@ typedef struct channel_info_s
   double  leftvol, rightvol;
   // haleyjd 06/03/06: looping
   int loop;
+  // unique instance id
   unsigned int idnum;
+  // if true, channel is affected by reverb
+  bool reverb;
 
   // haleyjd 10/02/08: SDL semaphore to protect channel
   SDL_sem *semaphore;
@@ -111,7 +114,7 @@ static int steptable[256];
 // haleyjd: needs to take a sfxinfo_t ptr, not a sound id num
 // haleyjd 06/03/06: changed to return boolean for failure or success
 //
-static bool addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id)
+static bool addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id, bool reverb)
 {
 #ifdef RANGECHECK
    if(channel < 0 || channel >= MAX_CHANNELS)
@@ -144,6 +147,9 @@ static bool addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id)
       
       // Set looping
       channelinfo[channel].loop = loop;
+
+      // Set reverb
+      channelinfo[channel].reverb = reverb;
       
       // Set instance ID
       channelinfo[channel].idnum = id;
@@ -191,7 +197,6 @@ static void updateSoundParams(int handle, int volume, int separation, int pitch)
    // Per left/right channel.
    //  x^2 separation,
    //  adjust volume properly.
-   //volume *= 8;
 
    leftvol    = volume - ((volume*separation*separation) >> 16);
    separation = separation - 257;
@@ -214,12 +219,7 @@ static void updateSoundParams(int handle, int volume, int separation, int pitch)
    if(pitched_sounds)
       channelinfo[slot].step = step;
    else
-      channelinfo[slot].step = 1 << 16;
-   
-   // Get the proper lookup table piece
-   //  for this volume level???
-   //channelinfo[slot].leftvol_lookup  = &vol_lookup[leftvol*256];
-   //channelinfo[slot].rightvol_lookup = &vol_lookup[rightvol*256];
+      channelinfo[slot].step = 1 << 16;   
 }
 
 //=============================================================================
@@ -392,13 +392,33 @@ static void inline I_SDLConvertSoundBuffer(Uint8 *stream, int len)
    leftend = (Sint16 *)(stream + len);
 
    // convert input to mixbuffer
-   double *bptr = mixbuffer;
+   double *bptr0 = mixbuffer[0];
+   double *bptr1 = mixbuffer[1];
    while(leftout != leftend)
    {
-      *(bptr + 0) = (double)(*(leftout + 0)) * (1.0/32768.0); // L
-      *(bptr + 1) = (double)(*(leftout + 1)) * (1.0/32768.0); // R
+      *(bptr0 + 0) = (double)(*(leftout + 0)) * (1.0/32768.0); // L
+      *(bptr0 + 1) = (double)(*(leftout + 1)) * (1.0/32768.0); // R
+      *bptr1 = *(bptr1 + 1) = 0.0; // clear secondary reverb buffer
       leftout += STEP;
-      bptr    += STEP;
+      bptr0   += STEP;
+      bptr1   += STEP;
+   }
+}
+
+//
+// I_SDLMixBuffers
+//
+// Mix the two primary mixing buffers together. This allows sounds to bypass
+// environmental effects on a per-channel basis.
+//
+static inline void I_SDLMixBuffers()
+{
+   double *bptr = mixbuffer[0];
+   double *end  = bptr + mixbuffer_size;
+   while(bptr != end)
+   {
+      *bptr = *bptr + *(bptr + mixbuffer_size);
+      ++bptr;
    }
 }
 
@@ -415,7 +435,9 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
 
    double *leftout;
    // Pointer to end of mixbuffer
-   double *leftend = mixbuffer + (len/SAMPLESIZE);
+   double *leftend0 = mixbuffer[0] + (len/SAMPLESIZE);
+   double *leftend1 = mixbuffer[1] + (len/SAMPLESIZE);
+   double *leftend;
 
    // Mix audio channels
    for(channel_info_t *chan = channelinfo; chan != &channelinfo[numChannels]; chan++)
@@ -430,7 +452,16 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
          continue;
 
       // Left and right channel are in audio stream, alternating.
-      leftout = mixbuffer;
+      if(chan->reverb)
+      {
+         leftout  = mixbuffer[1];
+         leftend  = leftend1;
+      }
+      else
+      {
+         leftout = mixbuffer[0];
+         leftend = leftend0;
+      }
 
       // Lost before semaphore acquired? (very unlikely, but must check for 
       // safety). BTW, don't move this up or you'll chew major CPU whenever this
@@ -482,11 +513,15 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
       SDL_SemPost(chan->semaphore);
    }
 
-   // TEST REVERB
-   //S_ProcessReverb(mixbuffer, mixbuffer_size/2);
+   // do reverberation if an effect is active
+   if(s_reverbactive)
+      S_ProcessReverb(mixbuffer[1], mixbuffer_size/2);
+
+   // mix reverberated sound with unreverberated buffer
+   I_SDLMixBuffers();
 
    // haleyjd 04/21/10: equalization output pass
-   do_3band(mixbuffer, leftend, (Sint16 *)stream);
+   do_3band(mixbuffer[0], leftend0, (Sint16 *)stream);
 }
 
 //
@@ -517,8 +552,10 @@ static void I_SetChannels()
    for(i = -128; i < 128; i++)
       steptablemid[i] = (int)(pow(1.2, ((double)i/(64.0)))*FPFRACUNIT);
    
-   // allocate mixing buffer
-   mixbuffer = ecalloc(double *, mixbuffer_size, sizeof(double));
+   // allocate mixing buffers
+   auto buf = ecalloc(double *, 2*mixbuffer_size, sizeof(double));
+   mixbuffer[0] = buf;
+   mixbuffer[1] = buf + mixbuffer_size;
 
    // haleyjd 10/02/08: create semaphores
    for(i = 0; i < MAX_CHANNELS; i++)
@@ -587,13 +624,13 @@ static void I_SDLUpdateSoundParams(int handle, int vol, int sep, int pitch)
 // I_SDLStartSound
 //
 static int I_SDLStartSound(sfxinfo_t *sound, int cnum, int vol, int sep, 
-                           int pitch, int pri, int loop)
+                           int pitch, int pri, int loop, bool reverb)
 {
    static unsigned int id = 1;
    int handle;
 
    // haleyjd 06/03/06: look for an unused hardware channel
-   for(handle = 0; handle < numChannels; ++handle)
+   for(handle = 0; handle < numChannels; handle++)
    {
       if(channelinfo[handle].data == NULL || channelinfo[handle].shouldstop)
          break;
@@ -604,7 +641,7 @@ static int I_SDLStartSound(sfxinfo_t *sound, int cnum, int vol, int sep,
    if(handle == numChannels)
       return -1;
  
-   if(addsfx(sound, handle, loop, id))
+   if(addsfx(sound, handle, loop, id, reverb))
    {
       updateSoundParams(handle, vol, sep, pitch);
       ++id; // increment id to keep each sound instance unique

@@ -429,6 +429,7 @@ void A_SkelMissile(actionargs_t *actionargs)
    
    mo->x += mo->momx;
    mo->y += mo->momy;
+   mo->backupPosition();
    P_SetTarget<Mobj>(&mo->tracer, actor->target);  // killough 11/98
 }
 
@@ -769,6 +770,7 @@ void A_Fire(actionargs_t *actionargs)
    actor->x = dest->x + FixedMul(24*FRACUNIT, finecosine[an]);
    actor->y = dest->y + FixedMul(24*FRACUNIT, finesine[an]);
    actor->z = dest->z;
+   actor->backupPosition();
    clip->setThingPosition(actor);
 }
 

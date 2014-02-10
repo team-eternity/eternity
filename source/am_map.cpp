@@ -331,7 +331,7 @@ static void AM_getIslope(mline_t *ml, islope_t *is )
 //
 // Passed nothing, returns nothing
 //
-static void AM_activateNewScale(void)
+static void AM_activateNewScale()
 {
    m_x += m_w / 2.0;
    m_y += m_h / 2.0;
@@ -351,7 +351,7 @@ static void AM_activateNewScale(void)
 //
 // Passed nothing, returns nothing
 //
-static void AM_saveScaleAndLoc(void)
+static void AM_saveScaleAndLoc()
 {
    old_m_x = m_x;
    old_m_y = m_y;
@@ -408,7 +408,7 @@ static void AM_restoreScaleAndLoc()
 //
 // Passed nothing, returns nothing
 //
-static void AM_addMark(void)
+static void AM_addMark()
 {
    // killough 2/22/98:
    // remove limit on automap marks
@@ -431,16 +431,15 @@ static void AM_addMark(void)
 //
 // Passed nothing, returns nothing
 //
-static void AM_findMinMaxBoundaries(void)
+static void AM_findMinMaxBoundaries()
 {
-   int i;
    double a, b;
    
    min_x = min_y =  DBL_MAX;
    max_x = max_y = -DBL_MAX;
    
    // haleyjd: rewritten to work by line so as to have access to portal groups
-   for(i = 0; i < numlines; ++i)
+   for(int i = 0; i < numlines; i++)
    {
       double x1, x2, y1, y2;
 
@@ -600,13 +599,13 @@ static void AM_initVariables()
 // Sets the marknums[i] variables to the patches for each digit
 // Passed nothing, returns nothing;
 //
-static void AM_loadPics(void)
+static void AM_loadPics()
 {
-   int i, lumpnum;
+   int lumpnum;
    char namebuf[9];
    
    // haleyjd 10/09/05: get format string from GameModeInfo
-   for(i = 0; i < 10; ++i)
+   for(int i = 0; i < 10; i++)
    {
       sprintf(namebuf, GameModeInfo->markNumFmt, i);
       marknums[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
@@ -654,9 +653,7 @@ static void AM_loadPics(void)
 //
 static void AM_unloadPics()
 {
-   int i;
-   
-   for(i = 0; i < 10; ++i)
+   for(int i = 0; i < 10; i++)
       Z_ChangeTag(marknums[i], PU_CACHE);
    
    // haleyjd 12/22/02: backdrop support
@@ -787,7 +784,7 @@ static void AM_minOutWindowScale()
 //
 // Passed nothing, returns nothing
 //
-static void AM_maxOutWindowScale(void)
+static void AM_maxOutWindowScale()
 {
    scale_mtof = max_scale_mtof;
    scale_ftom = 1.0 / scale_mtof;
@@ -976,7 +973,7 @@ static void AM_changeWindowScale()
 //
 // Passed nothing, returns nothing
 //
-static void AM_doFollowPlayer(void)
+static void AM_doFollowPlayer()
 {
    if(f_oldloc.x != plr->mo->x || f_oldloc.y != plr->mo->y)
    {
@@ -1030,7 +1027,7 @@ void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z)
 //
 // Passed nothing, returns nothing
 //
-void AM_Ticker(void)
+void AM_Ticker()
 {
    if(!automapactive)
       return;
@@ -1656,7 +1653,7 @@ inline static bool AM_drawAsClosedDoor(line_t *line)
 // jff 4/3/98 changed mapcolor_xxxx=0 as control to disable feature
 // jff 4/3/98 changed mapcolor_xxxx=-1 to disable drawing line completely
 //
-static void AM_drawWalls(void)
+static void AM_drawWalls()
 {
    int i;
    static mline_t l;
@@ -1721,7 +1718,7 @@ static void AM_drawWalls(void)
    }
 
    // draw the unclipped visible portions of all lines
-   for(i = 0; i < numlines; ++i)
+   for(i = 0; i < numlines; i++)
    {
       line_t *line = &lines[i];
 
@@ -1962,14 +1959,13 @@ static void AM_drawLineCharacter(mline_t *lineguy, int lineguylines,
                                  double scale, angle_t angle, int color,
                                  fixed_t x, fixed_t y)
 {
-   int   i;
    mline_t l;
    double fx, fy;
 
    fx = M_FixedToDouble(x);
    fy = M_FixedToDouble(y);
    
-   for(i = 0; i < lineguylines; ++i)
+   for(int i = 0; i < lineguylines; i++)
    {
       l.a.x = lineguy[i].a.x;
       l.a.y = lineguy[i].a.y;
@@ -2013,9 +2009,8 @@ static void AM_drawLineCharacter(mline_t *lineguy, int lineguylines,
 //
 // Passed nothing, returns nothing
 //
-static void AM_drawPlayers(void)
+static void AM_drawPlayers()
 {
-   int   i;
    player_t* p;
    int   their_color = -1;
    int   color;
@@ -2065,7 +2060,7 @@ static void AM_drawPlayers(void)
       return;
    }
   
-   for(i = 0; i < MAXPLAYERS; ++i)
+   for(int i = 0; i < MAXPLAYERS; i++)
    {
       their_color = players[i].colormap;
       p = &players[i];
@@ -2133,14 +2128,12 @@ static void AM_drawPlayers(void)
 //
 static void AM_drawThings(int colors, int colorrange)
 {
-   int     i;
-   Mobj    *t;
    fixed_t tx, ty; // SoM: Moved thing coords to variables for linked portals
    
    // for all sectors
-   for(i = 0; i < numsectors; ++i)
+   for(int i = 0; i < numsectors; i++)
    {
-      t = sectors[i].thinglist;
+      Mobj *t = sectors[i].thinglist;
 
       while(t) // for all things in that sector
       {
@@ -2235,10 +2228,10 @@ static void AM_drawThings(int colors, int colorrange)
 //
 // SoM: ANYRES support
 //
-static void AM_drawMarks(void)
+static void AM_drawMarks()
 {
-   int i;
-   for(i = 0; i < markpointnum; ++i) // killough 2/22/98: remove automap mark limit
+   // killough 2/22/98: remove automap mark limit
+   for(int i = 0; i < markpointnum; i++) 
    {
       if(markpoints[i].x != -1)
       {
@@ -2294,7 +2287,7 @@ inline static void AM_drawCrosshair(int color)
 //
 // Passed nothing, returns nothing
 //
-void AM_Drawer(void)
+void AM_Drawer()
 {
    if(!automapactive)
       return;

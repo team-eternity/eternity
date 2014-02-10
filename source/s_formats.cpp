@@ -200,7 +200,7 @@ static bool S_isWaveSample(byte *data, size_t len, sounddata_t &sd)
    if(len <= minLength)
       return false;
 
-   int16_t fmt = GetBinaryWord(&r);
+   uint16_t fmt = GetBinaryUWord(&r);
    if(fmt != 0x0001 && fmt != 0xFFFE) // PCM or EXTENSIBLE formats only
       return false;
    if(GetBinaryWord(&r) != 1)    // mono only

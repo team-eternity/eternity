@@ -46,6 +46,7 @@
 #include "in_lude.h"
 #include "m_random.h"
 #include "p_chase.h"
+#include "p_enemy.h"
 #include "p_info.h"
 #include "p_inter.h"
 #include "p_clipen.h"
@@ -56,6 +57,7 @@
 #include "p_partcl.h"
 #include "p_portal.h"
 #include "p_saveg.h"
+#include "p_sector.h"
 #include "p_skin.h"
 #include "p_tick.h"
 #include "p_spec.h"    // haleyjd 04/05/99: TerrainTypes
@@ -772,15 +774,8 @@ static void P_ZMovement(Mobj* mo, ClipContext *cc)
    bool correct_lost_soul_bounce;
    bool moving_down;
 
-   // 10/13/05: fraggle says original DOOM has no bounce either,
-   // so if gamemode != retail, no bounce.
-
    if(demo_compatibility) // v1.9 demos
-   {
-      correct_lost_soul_bounce =
-         ((GameModeInfo->id == retail || GameModeInfo->id == commercial) &&
-          GameModeInfo->missionInfo->id != doom2);
-   }
+      correct_lost_soul_bounce = ((GameModeInfo->flags & GIF_LOSTSOULBOUNCE) != 0);
    else if(demo_version < 331) // BOOM - EE v3.29
       correct_lost_soul_bounce = true;
    else // from now on...
@@ -1226,6 +1221,11 @@ void Mobj::Think()
    int oldwaterstate, waterstate = 0;
    fixed_t lz;
 
+   // haleyjd 01/04/14: backup current position at start of frame;
+   // note players do this for themselves in P_PlayerThink.
+   if(!player)
+      backupPosition();
+
    // killough 11/98:
    // removed old code which looked at target references
    // (we use pointer reference counting now)
@@ -1540,6 +1540,7 @@ void Mobj::serialize(SaveArchive &arc)
             skin = NULL;
       }
 
+      backupPosition();
       clip->setThingPosition(this);
       P_AddThingTID(this, tid);
 
@@ -1604,6 +1605,21 @@ void Mobj::updateThinker()
 }
 
 //
+// Mobj::backupPosition
+//
+// Save the Mobj's position data which is relevant to interpolation.
+// Done at the beginning of each gametic, and occasionally when the position of
+// an Mobj is abruptly changed (such as when teleporting).
+//
+void Mobj::backupPosition()
+{
+   prevpos.x     = x;
+   prevpos.y     = y;
+   prevpos.z     = z;
+   prevpos.angle = angle; // NB: only used for player objects
+}
+
+//
 // Mobj::copyPosition
 //
 // Copy all the location data from one Mobj to another.
@@ -1613,6 +1629,7 @@ void Mobj::copyPosition(const Mobj *other)
    x          = other->x;
    y          = other->y;
    z          = other->z;
+   angle      = other->angle;
    groupid    = other->groupid;
    floorz     = other->floorz;
    ceilingz   = other->ceilingz;
@@ -1749,6 +1766,9 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    P_AdjustFloorClip(mobj);
 
    mobj->addThinker();
+
+   // haleyjd 01/04/14: set initial position as backup position
+   mobj->backupPosition();
 
    // e6y
    mobj->friction = ORIG_FRICTION;
@@ -1962,6 +1982,7 @@ void P_SpawnPlayer(mapthing_t* mthing)
    mobj->angle  = R_WadToAngle(mthing->angle);
    mobj->player = p;
    mobj->health = p->health;
+   mobj->backupPosition();
 
    // haleyjd: verify that the player skin is valid
    if(!p->skin)
@@ -1979,6 +2000,7 @@ void P_SpawnPlayer(mapthing_t* mthing)
    p->fixedcolormap = 0;
    p->viewheight    = VIEWHEIGHT;
    p->viewz         = mobj->z + VIEWHEIGHT;
+   p->prevviewz     = p->viewz;
 
    p->momx = p->momy = 0;   // killough 10/98: initialize bobbing to 0.
 
@@ -2288,6 +2310,10 @@ spawnit:
    if(mthing->type >= 9027 && mthing->type <= 9033)
       mobj->effects |= (mthing->type - 9026u) << FX_FOUNTAINSHIFT;
 
+   // haleyjd: sector sound zones
+   if(mthing->type == 9048)
+      P_SetSectorZoneFromMobj(mobj);
+
    // haleyjd: set ambience sequence # for first 64 types
    if(mthing->type >= 14001 && mthing->type <= 14064)
       mobj->args[0] = mthing->type - 14000;
@@ -2295,6 +2321,8 @@ spawnit:
    // haleyjd: set music number for first 64 types
    if(mthing->type >= 14101 && mthing->type <= 14164)
       mobj->args[0] = mthing->type - 14100;
+
+   mobj->backupPosition();
 
    return mobj;
 }
@@ -2376,17 +2404,11 @@ void P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, Mobj
    }
 }
 
-// FIXME: These two functions are left over from an mobj-based
+// FIXME: This function is left over from an mobj-based
 // particle system attempt in SMMU -- the particle line
 // function could be useful for real particles maybe?
 
 /*
-void P_SpawnParticle(fixed_t x, fixed_t y, fixed_t z)
-{
-   P_SpawnMobj(x, y, z, MT_PARTICLE);
-}
-
-
 void P_ParticleLine(Mobj *source, Mobj *dest)
 {
    fixed_t sourcex, sourcey, sourcez;
@@ -2513,12 +2535,9 @@ Mobj *P_SpawnMissileEx(const missileinfo_t &missileinfo)
    // fuzzy player -- haleyjd: add total invisibility, ghost
    if(dest && !(missileinfo.flags & missileinfo_t::NOFUZZ))
    {
-      if(dest->flags & MF_SHADOW || dest->flags2 & MF2_DONTDRAW ||
-         dest->flags3 & MF3_GHOST)
-      {
-         int shamt = (dest->flags3 & MF3_GHOST) ? 21 : 20; // haleyjd
-         an += P_SubRandom(pr_shadow) << shamt;
-      }
+      int shiftamount = P_GetAimShift(dest, true);
+      if(shiftamount >= 0)
+         an += P_SubRandom(pr_shadow) << shiftamount;
    }
    
    mo->angle = an;

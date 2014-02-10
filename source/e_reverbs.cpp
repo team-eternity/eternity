@@ -67,6 +67,16 @@ ereverb_t *E_ReverbForID(int id1, int id2)
    return hash.objectForKey(id);
 }
 
+//
+// E_ReverbForID
+//
+// Overload accepting a pre-combined ID value.
+//
+ereverb_t *E_ReverbForID(int id)
+{
+   return hash.objectForKey(id);
+}
+
 //=============================================================================
 // 
 // EDF Processing
@@ -76,7 +86,7 @@ ereverb_t *E_ReverbForID(int id1, int id2)
 #define ITEM_TP_ID2 "id2"
 
 #define ITEM_REVERB_ROOMSIZE  "roomsize"
-#define ITEM_REVERB_DAMPENING "dampening"
+#define ITEM_REVERB_DAMPING   "damping"
 #define ITEM_REVERB_WETSCALE  "wetscale"
 #define ITEM_REVERB_DRYSCALE  "dryscale"
 #define ITEM_REVERB_WIDTH     "width"
@@ -102,17 +112,17 @@ cfg_opt_t edf_reverb_opts[] =
    CFG_TPROPS(titleprops, CFGF_NOCASE),
 
    CFG_FLOAT(ITEM_REVERB_ROOMSIZE,  0.5,     CFGF_NONE),
-   CFG_FLOAT(ITEM_REVERB_DAMPENING, 0.5,     CFGF_NONE),
+   CFG_FLOAT(ITEM_REVERB_DAMPING,   0.5,     CFGF_NONE),
    CFG_FLOAT(ITEM_REVERB_WETSCALE,  1.0/3.0, CFGF_NONE),
    CFG_FLOAT(ITEM_REVERB_DRYSCALE,  0.0,     CFGF_NONE),
    CFG_FLOAT(ITEM_REVERB_WIDTH,     1.0,     CFGF_NONE),
 
    CFG_INT(ITEM_REVERB_PREDELAY,    0,       CFGF_NONE),
    
-   CFG_FLAG(ITEM_REVERB_EQUALIZED,  false,   CFGF_NONE),
+   CFG_FLAG(ITEM_REVERB_EQUALIZED,  0,       CFGF_SIGNPREFIX),
    
-   CFG_FLOAT(ITEM_REVERB_EQLOWFREQ, 880.0,   CFGF_NONE),
-   CFG_FLOAT(ITEM_REVERB_EQHIFREQ,  5000.0,  CFGF_NONE),
+   CFG_FLOAT(ITEM_REVERB_EQLOWFREQ, 250.0,   CFGF_NONE),
+   CFG_FLOAT(ITEM_REVERB_EQHIFREQ,  4000.0,  CFGF_NONE),
    CFG_FLOAT(ITEM_REVERB_EQLOWGAIN, 1.0,     CFGF_NONE),
    CFG_FLOAT(ITEM_REVERB_EQMIDGAIN, 1.0,     CFGF_NONE),
    CFG_FLOAT(ITEM_REVERB_EQHIGAIN,  1.0,     CFGF_NONE),
@@ -137,6 +147,38 @@ static void E_getFloatAndClamp(cfg_t *cfg, const char *name, double &dest,
       dest = cfg_getfloat(cfg, name);
       dest = eclamp(dest, min, max);
    }
+}
+
+// This built-in default environment reverb is a "non-reverb"; it is not
+// marked as being "enabled" which means that the sound engine will skip the
+// effect processing pass entirely while it is the active environment. It
+// has ID 0 0, which is reserved.
+static ereverb_t e_defaultEnvironment;
+
+//
+// E_GetDefaultReverb
+//
+// Get the built-in default no-op reverb environment.
+//
+ereverb_t *E_GetDefaultReverb()
+{
+   return &e_defaultEnvironment;
+}
+
+//
+// E_initDefaultEnvironment
+//
+// haleyjd 01/12/14: One-time setup of the default environment object.
+//
+static void E_initDefaultEnvironment()
+{
+   static bool firsttime = true;
+
+   if(!firsttime)
+      return;
+   firsttime = false;
+
+   E_addReverb(&e_defaultEnvironment);
 }
 
 //
@@ -165,19 +207,25 @@ static void E_processReverb(cfg_t *sec)
       E_EDFLoggedWarning(2, "Invalid id2 %d for reverb %s, ignoring\n", id2, title);
       return;
    }
+   if(id1 == 0 && id2 == 0) // 0 0 is a reserved ID for the default environment
+   {
+      E_EDFLoggedWarning(2, "ID 0 0 for reverb %s is reserved, ignoring\n", title);
+      return;
+   }
 
    // if it already exists, edit it; otherwise, create a new one
    ereverb_t *newReverb;
    if(!(newReverb = E_ReverbForID(id1, id2)))
    {
       newReverb = estructalloc(ereverb_t, 1);
+      newReverb->flags |= REVERB_ENABLED;
       newReverb->id = (id1 << 8) | id2;
       E_addReverb(newReverb);
       def = true;
    }
 
    E_getFloatAndClamp(sec, ITEM_REVERB_ROOMSIZE,  newReverb->roomsize,  0.0, 1.07143, def);
-   E_getFloatAndClamp(sec, ITEM_REVERB_DAMPENING, newReverb->dampening, 0.0, 1.0,     def);
+   E_getFloatAndClamp(sec, ITEM_REVERB_DAMPING,   newReverb->dampening, 0.0, 1.0,     def);
    E_getFloatAndClamp(sec, ITEM_REVERB_WETSCALE,  newReverb->wetscale,  0.0, 1.0,     def);
    E_getFloatAndClamp(sec, ITEM_REVERB_DRYSCALE,  newReverb->dryscale,  0.0, 1.0,     def);
    E_getFloatAndClamp(sec, ITEM_REVERB_WIDTH,     newReverb->width,     0.0, 1.0,     def);
@@ -191,13 +239,18 @@ static void E_processReverb(cfg_t *sec)
 
    // equalization enabled
    if(IS_SET(sec, ITEM_REVERB_EQUALIZED, def))
-      newReverb->equalized = !!cfg_getflag(sec, ITEM_REVERB_EQUALIZED);
+   {
+      if(!!cfg_getflag(sec, ITEM_REVERB_EQUALIZED))
+         newReverb->flags |= REVERB_EQUALIZED;
+      else
+         newReverb->flags &= ~REVERB_EQUALIZED;
+   }
 
-   E_getFloatAndClamp(sec, ITEM_REVERB_EQLOWFREQ, newReverb->eqlowfreq,  0.0, 20000.0, def);
-   E_getFloatAndClamp(sec, ITEM_REVERB_EQHIFREQ,  newReverb->eqhighfreq, 0.0, 20000.0, def);
-   E_getFloatAndClamp(sec, ITEM_REVERB_EQLOWGAIN, newReverb->eqlowgain,  0.0,     1.5, def);
-   E_getFloatAndClamp(sec, ITEM_REVERB_EQMIDGAIN, newReverb->eqmidgain,  0.0,     1.5, def);
-   E_getFloatAndClamp(sec, ITEM_REVERB_EQHIGAIN,  newReverb->eqhighgain, 0.0,     1.5, def);
+   E_getFloatAndClamp(sec, ITEM_REVERB_EQLOWFREQ, newReverb->eqlowfreq,  20.0, 20000.0, def);
+   E_getFloatAndClamp(sec, ITEM_REVERB_EQHIFREQ,  newReverb->eqhighfreq, 20.0, 20000.0, def);
+   E_getFloatAndClamp(sec, ITEM_REVERB_EQLOWGAIN, newReverb->eqlowgain,   0.0,     1.5, def);
+   E_getFloatAndClamp(sec, ITEM_REVERB_EQMIDGAIN, newReverb->eqmidgain,   0.0,     1.5, def);
+   E_getFloatAndClamp(sec, ITEM_REVERB_EQHIGAIN,  newReverb->eqhighgain,  0.0,     1.5, def);
 
    E_EDFLogPrintf("\t\t* Finished reverb definition %s (%d %d)\n", title, id1, id2);
 }
@@ -206,6 +259,9 @@ void E_ProcessReverbs(cfg_t *cfg)
 {
    E_EDFLogPuts("\t* Processing reverb definitions\n");
    unsigned int numreverbs = cfg_size(cfg, EDF_SEC_REVERB);
+
+   // add the default environment if it hasn't been added already
+   E_initDefaultEnvironment();
 
    for(unsigned int i = 0; i < numreverbs; i++)
       E_processReverb(cfg_getnsec(cfg, EDF_SEC_REVERB, i));

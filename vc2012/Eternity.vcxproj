@@ -432,6 +432,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\source\hal\i_directory.cpp" />
+    <ClCompile Include="..\source\hal\i_timer.cpp" />
     <ClCompile Include="..\Source\hu_frags.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -468,6 +469,7 @@
     <ClCompile Include="..\source\p_portalclip.cpp" />
     <ClCompile Include="..\source\p_portalcliplinking.cpp" />
     <ClCompile Include="..\source\p_portalclipmovement.cpp" />
+    <ClCompile Include="..\source\sdl\i_sdltimer.cpp" />
     <ClCompile Include="..\source\s_formats.cpp" />
     <ClCompile Include="..\source\s_reverb.cpp" />
     <ClCompile Include="..\source\v_image.cpp" />
@@ -1050,6 +1052,10 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\source\w_zip.cpp" />
+    <ClCompile Include="..\source\xl_emapinfo.cpp" />
+    <ClCompile Include="..\source\xl_mapinfo.cpp" />
+    <ClCompile Include="..\source\xl_musinfo.cpp" />
+    <ClCompile Include="..\source\xl_sndinfo.cpp" />
     <ClCompile Include="..\source\z_native.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1287,6 +1293,7 @@
     <ClInclude Include="..\Source\g_game.h" />
     <ClInclude Include="..\Source\g_gfs.h" />
     <ClInclude Include="..\source\hal\i_directory.h" />
+    <ClInclude Include="..\source\hal\i_timer.h" />
     <ClInclude Include="..\Source\Hu_frags.h" />
     <ClInclude Include="..\Source\Hu_over.h" />
     <ClInclude Include="..\Source\Hu_stuff.h" />
@@ -1302,6 +1309,10 @@
     <ClInclude Include="..\source\p_mapcontext.h" />
     <ClInclude Include="..\source\p_portalclip.h" />
     <ClInclude Include="..\source\p_traceengine.h" />
+    <ClInclude Include="..\source\p_sector.h" />
+    <ClInclude Include="..\source\r_interpolate.h" />
+    <ClInclude Include="..\source\r_textur.h" />
+    <ClInclude Include="..\source\sdl\i_sdltimer.h" />
     <ClInclude Include="..\source\s_formats.h" />
     <ClInclude Include="..\source\s_reverb.h" />
     <ClInclude Include="..\source\v_image.h" />
@@ -1408,6 +1419,10 @@
     <ClInclude Include="..\source\w_levels.h" />
     <ClInclude Include="..\Source\w_wad.h" />
     <ClInclude Include="..\source\w_zip.h" />
+    <ClInclude Include="..\source\xl_emapinfo.h" />
+    <ClInclude Include="..\source\xl_mapinfo.h" />
+    <ClInclude Include="..\source\xl_musinfo.h" />
+    <ClInclude Include="..\source\xl_sndinfo.h" />
     <ClInclude Include="..\source\z_auto.h" />
     <ClInclude Include="..\Source\z_zone.h" />
     <ClInclude Include="..\source\autopalette.h" />

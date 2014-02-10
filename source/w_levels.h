@@ -40,7 +40,7 @@ struct wadlevel_t
 
 extern char *w_masterlevelsdirname;
 extern char *w_norestpath;
-extern int   inmanageddir;   // non-zoer if we are playing a managed dir level
+extern int   inmanageddir;   // non-zero if we are playing a managed dir level
 
 // managed directory level/mission types
 enum

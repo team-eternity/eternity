@@ -16,7 +16,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+// Additional terms and conditions compatible with the GPLv3 apply. See the
+// file COPYING-EE for details.
+//
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //      Creating, managing, and rendering portals.
@@ -37,6 +40,11 @@
 #include "r_things.h"
 #include "v_alloc.h"
 #include "v_misc.h"
+
+//=============================================================================
+//
+// Portal Spawning and Management
+//
 
 static portal_t *portals = NULL, *last = NULL;
 static pwindow_t *unusedhead = NULL, *windowhead = NULL, *windowlast = NULL;
@@ -72,7 +80,6 @@ static void R_RenderPortalNOP(pwindow_t *window)
 {
    I_Error("R_RenderPortalNOP called\n");
 }
-
 
 static void R_SetPortalFunction(pwindow_t *window);
 
@@ -177,7 +184,7 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
    if((ybottom >= view.height || ytop < 0) && ytop < ybottom)
    {
       I_Error("R_WindowAdd portal supplied with bad column data.\n"
-              "\tx:%i, top:%i, bottom:%i\n", x, ytop, ybottom);
+              "\tx:%i, top:%f, bottom:%f\n", x, ytop, ybottom);
    }
 #endif
 
@@ -189,7 +196,7 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
       (ptop < 0 || pbottom < 0 || ptop >= view.height || pbottom >= view.height))
    {
       I_Error("R_WindowAdd portal had bad opening data.\n"
-              "\tx:%i, top:%i, bottom:%i\n", x, ptop, pbottom);
+              "\tx:%i, top:%f, bottom:%f\n", x, ptop, pbottom);
    }
 #endif
 
@@ -512,11 +519,16 @@ portal_t *R_GetPlanePortal(int *pic, fixed_t *delta,
 // Portals are allocated at PU_LEVEL cache level, so they'll
 // be implicitly freed.
 //
-void R_InitPortals(void)
+void R_InitPortals()
 {
    portals = last = NULL;
    windowhead = unusedhead = windowlast = NULL;
 }
+
+//=============================================================================
+//
+// Plane and Horizon Portals
+//
 
 //
 // R_RenderPlanePortal
@@ -652,6 +664,11 @@ static void R_RenderHorizonPortal(pwindow_t *window)
    view.z = lastzf;
 }
 
+//=============================================================================
+//
+// Skybox Portals
+//
+
 extern void R_ClearSlopeMark(int minx, int maxx, pwindowtype_e type);
 
 //
@@ -670,19 +687,16 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
       return;
 
 #ifdef RANGECHECK
+   for(int i = 0; i < MAX_SCREENWIDTH; i++)
    {
-      int i;
-      for(i = 0; i < MAX_SCREENWIDTH; ++i)
+      if(window->bottom[i] > window->top[i] && (window->bottom[i] < -1 
+         || window->bottom[i] > viewwindow.height || window->top[i] < -1 
+         || window->top[i] > viewwindow.height))
       {
-         if(window->bottom[i] > window->top[i] && (window->bottom[i] < -1 
-            || window->bottom[i] > viewwindow.height || window->top[i] < -1 
-            || window->top[i] > viewwindow.height))
-         {
-            I_Error("R_RenderSkyboxPortal: clipping array contained invalid "
-                    "information:\n"
-                    "   x:%i, ytop:%i, ybottom:%i\n", 
-                    i, window->top[i], window->bottom[i]);
-         }
+         I_Error("R_RenderSkyboxPortal: clipping array contained invalid "
+                 "information:\n"
+                 "   x:%i, ytop:%f, ybottom:%f\n", 
+                 i, window->top[i], window->bottom[i]);
       }
    }
 #endif
@@ -756,20 +770,21 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
       R_RenderSkyboxPortal(window->child);
 }
 
+//=============================================================================
 //
-// R_RenderAnchoredPortal
+// Anchored and Linked Portals
 //
+
 extern byte **ylookup;
 extern int   *columnofs;
 extern int    showtainted;
 
-
 static void R_ShowTainted(pwindow_t *window)
 {
    static byte taintcolor = 0;
-   int i, y1, y2, count;
+   int y1, y2, count;
 
-   for(i = window->minx; i <= window->maxx; i++)
+   for(int i = window->minx; i <= window->maxx; i++)
    {
       byte *dest;
 
@@ -793,7 +808,9 @@ static void R_ShowTainted(pwindow_t *window)
    taintcolor += 16;
 }
 
-
+//
+// R_RenderAnchoredPortal
+//
 static void R_RenderAnchoredPortal(pwindow_t *window)
 {
    fixed_t lastx, lasty, lastz;
@@ -813,27 +830,22 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
          R_ShowTainted(window);         
 
       portal->tainted++;
-      doom_printf("refused to draw portal (line=%i) (t=%d)", 
-                  portal->data.anchor.maker, 
-                  portal->tainted);
-
+      C_Printf(FC_ERROR "Refused to draw portal (line=%i) (t=%d)\n", 
+               portal->data.anchor.maker, portal->tainted);
       return;
    } 
 
 #ifdef RANGECHECK
+   for(int i = 0; i < MAX_SCREENWIDTH; i++)
    {
-      int i;
-      for(i = 0; i < MAX_SCREENWIDTH; i++)
+      if(window->bottom[i] > window->top[i] && (window->bottom[i] < -1 
+         || window->bottom[i] > viewwindow.height || window->top[i] < -1 
+         || window->top[i] > viewwindow.height))
       {
-         if(window->bottom[i] > window->top[i] && (window->bottom[i] < -1 
-            || window->bottom[i] > viewwindow.height || window->top[i] < -1 
-            || window->top[i] > viewwindow.height))
-         {
-            I_Error("R_RenderAnchoredPortal: clipping array contained invalid "
-                    "information:\n" 
-                    "   x:%i, ytop:%i, ybottom:%i\n", 
-                    i, window->top[i], window->bottom[i]);
-         }
+         I_Error("R_RenderAnchoredPortal: clipping array contained invalid "
+                 "information:\n" 
+                 "   x:%i, ytop:%f, ybottom:%f\n", 
+                 i, window->top[i], window->bottom[i]);
       }
    }
 #endif
@@ -909,27 +921,22 @@ static void R_RenderLinkedPortal(pwindow_t *window)
          R_ShowTainted(window);         
 
       portal->tainted++;
-      doom_printf("refused to draw portal (line=%i) (t=%d)", 
-                  portal->data.link.maker, 
-                  portal->tainted);
-
+      C_Printf(FC_ERROR "Refused to draw portal (line=%i) (t=%d)", 
+               portal->data.link.maker, portal->tainted);
       return;
    } 
 
 #ifdef RANGECHECK
+   for(int i = 0; i < MAX_SCREENWIDTH; i++)
    {
-      int i;
-      for(i = 0; i < MAX_SCREENWIDTH; i++)
+      if(window->bottom[i] > window->top[i] && (window->bottom[i] < -1 
+         || window->bottom[i] > viewwindow.height || window->top[i] < -1 
+         || window->top[i] > viewwindow.height))
       {
-         if(window->bottom[i] > window->top[i] && (window->bottom[i] < -1 
-            || window->bottom[i] > viewwindow.height || window->top[i] < -1 
-            || window->top[i] > viewwindow.height))
-         {
-            I_Error("R_RenderAnchoredPortal: clipping array contained invalid "
-                    "information:\n" 
-                    "   x:%i, ytop:%i, ybottom:%i\n", 
-                    i, window->top[i], window->bottom[i]);
-         }
+         I_Error("R_RenderAnchoredPortal: clipping array contained invalid "
+                 "information:\n" 
+                 "   x:%i, ytop:%f, ybottom:%f\n", 
+                 i, window->top[i], window->bottom[i]);
       }
    }
 #endif
@@ -1003,7 +1010,7 @@ static void R_RenderLinkedPortal(pwindow_t *window)
 // anchored portals in two-way situations. Only anchored portals and skyboxes
 // are susceptible to this problem.
 //
-void R_UntaintPortals(void)
+void R_UntaintPortals()
 {
    portal_t *r;
 
@@ -1105,7 +1112,7 @@ pwindow_t *R_GetLinePortalWindow(portal_t *portal, line_t *line)
 // R_ClearPortals
 //
 // Called at the start of each frame
-void R_ClearPortals(void)
+void R_ClearPortals()
 {
    portal_t *r = portals;
    
@@ -1121,7 +1128,7 @@ void R_ClearPortals(void)
 //
 // Primary portal rendering function.
 //
-void R_RenderPortals(void)
+void R_RenderPortals()
 {
    pwindow_t *w;
 
