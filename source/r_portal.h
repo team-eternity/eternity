@@ -29,8 +29,10 @@
 
 #include "doomdef.h"
 
+struct line_t;
 class  Mobj;
 struct planehash_t;
+struct pwindow_t;
 
 typedef enum
 {
@@ -95,35 +97,35 @@ typedef enum
 
 
 // Contains information representing a link from one portal group to another
-typedef struct linkdata_s
+struct linkdata_t
 {
    // SoM: linked portals are similar to anchored portals
    fixed_t   deltax, deltay, deltaz;
    fixed_t   planez;
    
-   // gromid is the group where the portal actually is, toid is the group on 
+   // fromid is the group where the portal actually is, toid is the group on 
    // the 'other side' of the portal.
    int       fromid, toid;
       
    // These are for debug purposes (so mappers can find the portats 
    // causing problems)
    int       maker, anchor;
-} linkdata_t;
+};
 
 
 // Represents the information needed for an anchored portal
-typedef struct anchordata_s
+struct anchordata_t
 {
    fixed_t   deltax, deltay, deltaz;
    
    // These are for debug purposes (so mappers can find the portats 
    // causing problems)
    int       maker, anchor;
-} anchordata_t;
+};
 
 
 // Represents the data needed for a horizon portal
-typedef struct horizondata_s
+struct horizondata_t
 {
    int     *floorpic, *ceilingpic;
    fixed_t *floorz, *ceilingz;
@@ -132,18 +134,18 @@ typedef struct horizondata_s
    fixed_t *ceilingxoff, *ceilingyoff;
    float   *floorbaseangle, *floorangle;     // haleyjd 01/05/08: flat angles
    float   *ceilingbaseangle, *ceilingangle;
-} horizondata_t;
+};
 
 
 // The data needed for a skyplane portal
-typedef struct skyplanedata_s
+struct skyplanedata_t
 {
    int     *pic;
    fixed_t *delta;
    int16_t *lightlevel;
    fixed_t *xoff, *yoff;
    float   *baseangle, *angle; // haleyjd 01/05/08: angles
-} skyplanedata_t;
+};
 
 
 // The portal struct. This is what is assigned to sectors and can represent any
@@ -158,7 +160,7 @@ struct portal_t
       horizondata_t  horizon;
       anchordata_t   anchor;
       linkdata_t     link;
-      Mobj         *camera;
+      Mobj          *camera;
    } data;
 
    // See: portalflag_e
@@ -190,8 +192,8 @@ portal_t *R_GetPlanePortal(int *pic, fixed_t *delta, int16_t *lightlevel,
                            fixed_t *xoff, fixed_t *yoff, float *baseangle,
                            float *angle);
 
-void R_ClearPortals(void);
-void R_RenderPortals(void);
+void R_ClearPortals();
+void R_RenderPortals();
 
 portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum, 
                             fixed_t planez, int fromid, int toid);
@@ -211,8 +213,6 @@ typedef enum
    pw_line
 } pwindowtype_e;
 
-struct line_t;
-struct pwindow_t;	// prototype to shut up gcc warnings
 typedef void (*R_WindowFunc)(pwindow_t *);
 typedef void (*R_ClipSegFunc)();
 
@@ -251,7 +251,7 @@ pwindow_t *R_GetLinePortalWindow(portal_t *portal, line_t *line);
 
 
 // SoM 3/14/2004: flag if we are rendering portals.
-typedef struct portalrender_s
+struct portalrender_t
 {
    bool  active;
    int   minx, maxx;
@@ -262,7 +262,7 @@ typedef struct portalrender_s
    void (*segClipFunc)();
    
    planehash_t *overlay;
-} portalrender_t;
+};
 
 extern portalrender_t  portalrender;
 #endif

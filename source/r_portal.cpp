@@ -706,7 +706,7 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
 
    R_ClearSlopeMark(window->minx, window->maxx, window->type);
 
-   floorclip = window->bottom;
+   floorclip   = window->bottom;
    ceilingclip = window->top;
    
    R_ClearOverlayClips();
@@ -858,7 +858,7 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    // haleyjd: temporary debug
    portal->tainted++;
 
-   floorclip = window->bottom;
+   floorclip   = window->bottom;
    ceilingclip = window->top;
 
    R_ClearOverlayClips();
@@ -949,7 +949,7 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    // haleyjd: temporary debug
    portal->tainted++;
 
-   floorclip = window->bottom;
+   floorclip   = window->bottom;
    ceilingclip = window->top;
 
    R_ClearOverlayClips();
