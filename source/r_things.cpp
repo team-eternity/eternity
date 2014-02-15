@@ -179,8 +179,19 @@ typedef struct drawsegs_xrange_s
 //
 
 // top and bottom of portal silhouette
-static float portaltop[MAX_SCREENWIDTH];
-static float portalbottom[MAX_SCREENWIDTH];
+static float *portaltop;
+static float *portalbottom;
+
+VALLOCATION(portaltop)
+{
+   float *buf = emalloctag(float *, 2 * w * sizeof(*portaltop), PU_VALLOC, NULL);
+
+   for(int i = 0; i < 2*w; i++)
+      buf[i] = 0.0f;
+
+   portaltop    = buf;
+   portalbottom = buf + w;
+}
 
 static float *ptop, *pbottom;
 
@@ -240,19 +251,19 @@ void R_SetMaskedSilhouette(float *top, float *bottom)
 {
    if(!top || !bottom)
    {
-      register float *topp = portaltop, *bottomp = portalbottom, 
-                     *stopp = portaltop + MAX_SCREENWIDTH;
+      register float *topp  = portaltop, *bottomp = portalbottom, 
+                     *stopp = portaltop + video.width;
 
       while(topp < stopp)
       {
-         *topp++ = 0;
+         *topp++ = 0.0f;
          *bottomp++ = view.height - 1.0f;
       }
    }
    else
    {
-      memcpy(portaltop,    top,    sizeof(float) * MAX_SCREENWIDTH);
-      memcpy(portalbottom, bottom, sizeof(float) * MAX_SCREENWIDTH);
+      memcpy(portaltop,    top,    sizeof(*portaltop   ) * video.width);
+      memcpy(portalbottom, bottom, sizeof(*portalbottom) * video.width);
    }
 }
 
@@ -537,8 +548,8 @@ void R_PushPost(bool pushmasked, planehash_t *overlay)
       post->masked->lastds     = ds_p - drawsegs;
       post->masked->lastsprite = num_vissprite;
       
-      memcpy(post->masked->ceilingclip, portaltop,    MAX_SCREENWIDTH * sizeof(float));
-      memcpy(post->masked->floorclip,   portalbottom, MAX_SCREENWIDTH * sizeof(float));
+      memcpy(post->masked->ceilingclip, portaltop,    sizeof(*portaltop)    * video.width);
+      memcpy(post->masked->floorclip,   portalbottom, sizeof(*portalbottom) * video.width);
    }
    else
       post->masked = NULL;
