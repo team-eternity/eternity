@@ -1214,7 +1214,7 @@ void Mobj::Think()
 
    // haleyjd 01/04/14: backup current position at start of frame;
    // note players do this for themselves in P_PlayerThink.
-   if(!player)
+   if(!player || player->mo != this)
       backupPosition();
 
    // killough 11/98:
