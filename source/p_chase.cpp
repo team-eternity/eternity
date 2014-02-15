@@ -52,20 +52,6 @@
 // Shared Camera Code
 //
 
-//
-// P_backupCameraPosition
-//
-// Save the current camera position for interpolation purposes.
-//
-static void P_backupCameraPosition(camera_t &cam)
-{
-   cam.prevpos.x     = cam.x;
-   cam.prevpos.y     = cam.y;
-   cam.prevpos.z     = cam.z;
-   cam.prevpos.angle = cam.angle;
-
-   // TODO: pitch, heightsec, etc.
-}
 
 //=============================================================================
 //
@@ -222,7 +208,7 @@ void P_ChaseTicker()
    int xdist, ydist, zdist;
 
    // backup current position for interpolation
-   P_backupCameraPosition(chasecam);
+   chasecam.backupPosition();
 
    // find the target
    P_GetChasecamTarget();
@@ -307,7 +293,7 @@ void P_ResetChasecam()
    chasecam.groupid = targetgroupid;
 #endif
 
-   P_backupCameraPosition(chasecam);
+   chasecam.backupPosition();
 }
 
 
@@ -329,7 +315,7 @@ void P_WalkTicker()
    angle_t fwan, san;
 
    // backup position for interpolation
-   P_backupCameraPosition(walkcamera);
+   walkcamera.backupPosition();
 
    walkcamera.angle += walktic->angleturn << 16;
    
@@ -410,7 +396,7 @@ static void P_ResetWalkcam()
    sec = R_PointInSubsector(walkcamera.x, walkcamera.y)->sector;
    walkcamera.z = sec->floorheight + 41*FRACUNIT;
 
-   P_backupCameraPosition(walkcamera);
+   walkcamera.backupPosition();
 }
 
 VARIABLE_BOOLEAN(walkcam_active, NULL,    onoff);
@@ -546,7 +532,7 @@ void P_SetFollowCam(fixed_t x, fixed_t y, Mobj *target)
    followcam.z = subsec->sector->floorheight + 41*FRACUNIT;
 
    P_setFollowPitch();
-   P_backupCameraPosition(followcam);
+   followcam.backupPosition();
 }
 
 void P_FollowCamOff()
@@ -561,7 +547,7 @@ bool P_FollowCamTicker()
    if(!followtarget)
       return false;
 
-   P_backupCameraPosition(followcam);
+   followcam.backupPosition();
 
    followcam.angle = P_PointToAngle(followcam.x, followcam.y,
                                     followtarget->x, followtarget->y);

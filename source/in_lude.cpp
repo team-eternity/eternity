@@ -134,6 +134,8 @@ void IN_StartCamera()
 
       subsector_t *subsec = R_PointInSubsector(intercam.x, intercam.y);
       intercam.z = subsec->sector->floorheight + 41*FRACUNIT;
+
+      intercam.backupPosition();
       
       // FIXME: does this bite the player's setting for the next map?
       R_SetViewSize(11);     // force fullscreen
