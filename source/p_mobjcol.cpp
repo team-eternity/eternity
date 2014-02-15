@@ -155,9 +155,8 @@ void MobjCollection::moveToRandom(Mobj *actor)
    if(isEmpty())
       return;
 
-   const Mobj *spot = getRandom(pr_moverandom);
    P_UnsetThingPosition(actor);
-   actor->copyPosition(spot);
+   actor->copyPosition(getRandom(pr_moverandom));
    P_SetThingPosition(actor);
    P_AdjustFloorClip(actor);
    actor->backupPosition();
