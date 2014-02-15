@@ -68,7 +68,7 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop);
 
 bool R_CompareSlopes(const pslope_t *s1, const pslope_t *s2);
 
-typedef struct cb_span_s
+struct cb_span_t
 {
    int x1, x2, y;
    unsigned xfrac, yfrac, xstep, ystep;
@@ -78,9 +78,9 @@ typedef struct cb_span_s
 
    // SoM: some values for the generalizede span drawers
    unsigned int xshift, xmask, yshift, ymask;
-} cb_span_t;
+};
 
-typedef struct cb_plane_s
+struct cb_plane_t
 {
    float xoffset, yoffset;
    float height;
@@ -104,9 +104,9 @@ typedef struct cb_plane_s
    rslope_t *slope;
 
    void (*MapFunc)(int, int, int);
-} cb_plane_t;
+};
 
-typedef struct cb_slopespan_s
+struct cb_slopespan_t
 {
    int y, x1, x2;
 
@@ -115,8 +115,8 @@ typedef struct cb_slopespan_s
 
    void *source;
 
-   lighttable_t *colormap[MAX_SCREENWIDTH];
-} cb_slopespan_t;
+   lighttable_t **colormap;
+};
 
 
 extern cb_span_t  span;

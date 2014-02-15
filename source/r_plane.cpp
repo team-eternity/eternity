@@ -149,16 +149,22 @@ cb_span_t      span;
 cb_plane_t     plane;
 cb_slopespan_t slopespan;
 
+VALLOCATION(slopespan)
+{
+   size_t size = sizeof(lighttable_t *) * w;
+   slopespan.colormap = ecalloctag(lighttable_t **, 1, size, PU_VALLOC, NULL);
+}
+
 float slopevis; // SoM: used in slope lighting
 
 // BIG FLATS
-void R_Throw(void)
+void R_Throw()
 {
    I_Error("R_Throw called.\n");
 }
 
-void (*flatfunc)(void)  = R_Throw;
-void (*slopefunc)(void) = R_Throw;
+void (*flatfunc)()  = R_Throw;
+void (*slopefunc)() = R_Throw;
 
 //
 // R_SpanLight
@@ -178,7 +184,7 @@ static int R_SpanLight(float dist)
 //
 // Sets up the internal light level barriers inside the plane struct
 //
-static void R_PlaneLight(void)
+static void R_PlaneLight()
 {
    // This formula was taken (almost) directly from r_main.c where the zlight
    // table is generated.
@@ -397,6 +403,11 @@ static void R_SlopeLights(int len, double startcmap, double endcmap)
 {
    int i;
    fixed_t map, map2, step;
+
+#ifdef RANGECHECK
+   if(len > video.width)
+      I_Error("R_SlopeLights: len > video.width (%d)\n", len);
+#endif
 
    if(plane.fixedcolormap)
    {
