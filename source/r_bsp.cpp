@@ -44,6 +44,7 @@
 #include "r_state.h"
 #include "r_things.h"
 #include "v_alloc.h"
+#include "v_misc.h"
 
 drawseg_t *ds_p;
 
@@ -345,9 +346,9 @@ static void R_ClipPassWallSegment(int x1, int x2)
 void R_ClearClipSegs()
 {
    solidsegs[0].first = D_MININT + 1;
-   solidsegs[0].last = -1;
+   solidsegs[0].last  = -1;
    solidsegs[1].first = viewwindow.width;
-   solidsegs[1].last = D_MAXINT - 1;
+   solidsegs[1].last  = D_MAXINT - 1;
    newend = solidsegs+2;
    addend = addedsegs;
 
@@ -367,7 +368,7 @@ bool R_SetupPortalClipsegs(int minx, int maxx, float *top, float *bottom)
    R_ClearClipSegs();
 
    // SoM: This should be done here instead of having an additional loop
-   portalrender.miny = MAX_SCREENHEIGHT;
+   portalrender.miny = (float)(video.height);
    portalrender.maxy = 0;
    
    // extend first solidseg to one column left of first open post
