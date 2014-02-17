@@ -175,7 +175,7 @@ static void R_CreateChildWindow(pwindow_t *parent)
 //
 void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
 {
-   float ptop, pbottom;
+   float windowtop, windowbottom;
 
 #ifdef RANGECHECK
    if(!window)
@@ -188,15 +188,16 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
    }
 #endif
 
-   ptop    = window->top[x];
-   pbottom = window->bottom[x];
+   windowtop    = window->top[x];
+   windowbottom = window->bottom[x];
 
 #ifdef RANGECHECK
-   if(pbottom > ptop && 
-      (ptop < 0 || pbottom < 0 || ptop >= view.height || pbottom >= view.height))
+   if(windowbottom > windowtop && 
+      (windowtop < 0 || windowbottom < 0 || 
+       windowtop >= view.height || windowbottom >= view.height))
    {
       I_Error("R_WindowAdd portal had bad opening data.\n"
-              "\tx:%i, top:%f, bottom:%f\n", x, ptop, pbottom);
+              "\tx:%i, top:%f, bottom:%f\n", x, windowtop, windowbottom);
    }
 #endif
 
@@ -208,7 +209,7 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
       // column falls inside the range of the portal.
 
       // check to see if the portal column isn't occupied
-      if(ptop > pbottom)
+      if(windowtop > windowbottom)
       {
          window->top[x]    = ytop;
          window->bottom[x] = ybottom;
@@ -216,7 +217,7 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
       }
 
       // if the column lays completely outside the existing portal, create child
-      if(ytop > pbottom || ybottom < ptop)
+      if(ytop > windowbottom || ybottom < windowtop)
       {
          if(!window->child)
             R_CreateChildWindow(window);
@@ -227,10 +228,10 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
 
       // because a check has already been made to reject the column, the columns
       // must intersect; expand as needed
-      if(ytop < ptop)
+      if(ytop < windowtop)
          window->top[x] = ytop;
 
-      if(ybottom > pbottom)
+      if(ybottom > windowbottom)
          window->bottom[x] = ybottom;
       return;
    }
