@@ -227,8 +227,8 @@ struct pwindow_t
 
    fixed_t  vx, vy, vz;
 
-   float top[MAX_SCREENWIDTH];
-   float bottom[MAX_SCREENWIDTH];
+   float *top;
+   float *bottom;
    int minx, maxx;
 
    R_WindowFunc func;
