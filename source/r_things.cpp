@@ -35,6 +35,7 @@
 #include "e_edf.h"
 #include "g_game.h"
 #include "m_argv.h"
+#include "m_compare.h"
 #include "m_swap.h"
 #include "p_chase.h"
 #include "p_info.h"
@@ -1368,16 +1369,16 @@ static void R_SortVisSpriteRange(int first, int last)
 //
 // Draws a sprite within a given drawseg range, for portals.
 //
-static void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
+static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
 {
    drawseg_t *ds;
-   int     x;
-   int     r1;
-   int     r2;
-   float dist;
-   float fardist;
+   int        x;
+   int        r1;
+   int        r2;
+   float      dist;
+   float      fardist;
 
-   for(x = spr->x1; x <= spr->x2; ++x)
+   for(x = spr->x1; x <= spr->x2; x++)
       clipbot[x] = cliptop[x] = -2;
 
    // haleyjd 04/25/10:
@@ -1429,15 +1430,23 @@ static void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
 
          // bottom sil
          if(ds->silhouette & SIL_BOTTOM && spr->gz < ds->bsilheight)
-            for(x = r1; x <= r2; ++x)
+         {
+            for(x = r1; x <= r2; x++)
+            {
                if(clipbot[x] == -2)
                   clipbot[x] = ds->sprbottomclip[x];
+            }
+         }
 
          // top sil
          if(ds->silhouette & SIL_TOP && spr->gzt > ds->tsilheight)
-            for(x = r1; x <= r2; ++x)
+         {
+            for(x = r1; x <= r2; x++)
+            {
                if(cliptop[x] == -2)
                   cliptop[x] = ds->sprtopclip[x];
+            }
+         }
       }
    }
    else
@@ -1479,15 +1488,23 @@ static void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
 
          // bottom sil
          if(ds->silhouette & SIL_BOTTOM && spr->gz < ds->bsilheight)
-            for(x = r1; x <= r2; ++x)
+         {
+            for(x = r1; x <= r2; x++)
+            {
                if(clipbot[x] == -2)
                   clipbot[x] = ds->sprbottomclip[x];
+            }
+         }
 
          // top sil
          if(ds->silhouette & SIL_TOP && spr->gzt > ds->tsilheight)
-            for(x = r1; x <= r2; ++x)
+         {
+            for(x = r1; x <= r2; x++)
+            {
                if(cliptop[x] == -2)
                   cliptop[x] = ds->sprtopclip[x];
+            }
+         }
       }
    }
 
@@ -1507,15 +1524,23 @@ static void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
          if(mh <= 0.0 || (phs != -1 && viewz > sectors[phs].floorheight))
          {
             // clip bottom
-            for(x = spr->x1; x <= spr->x2; ++x)
+            for(x = spr->x1; x <= spr->x2; x++)
+            {
                if(clipbot[x] == -2 || h < clipbot[x])
                   clipbot[x] = h;
+            }
          }
          else  // clip top
+         {
             if(phs != -1 && viewz <= sectors[phs].floorheight) // killough 11/98
-               for(x = spr->x1; x <= spr->x2; ++x)
+            {
+               for(x = spr->x1; x <= spr->x2; x++)
+               {
                   if(cliptop[x] == -2 || h > cliptop[x])
                      cliptop[x] = h;
+               }
+            }
+         }
       }
 
       mh = M_FixedToFloat(sectors[spr->heightsec].ceilingheight) - view.z;
@@ -1526,14 +1551,20 @@ static void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
          if(phs != -1 && viewz >= sectors[phs].ceilingheight)
          {
             // clip bottom
-            for(x = spr->x1; x <= spr->x2; ++x)
+            for(x = spr->x1; x <= spr->x2; x++)
+            {
                if(clipbot[x] == -2 || h < clipbot[x])
                   clipbot[x] = h;
+            }
          }
          else  // clip top
-            for(x = spr->x1; x <= spr->x2; ++x)
+         {
+            for(x = spr->x1; x <= spr->x2; x++)
+            {
                if(cliptop[x] == -2 || h > cliptop[x])
                   cliptop[x] = h;
+            }
+         }
       }
    }
    // killough 3/27/98: end special clipping for deep water / fake ceilings
@@ -1548,41 +1579,41 @@ static void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
       mh = M_FixedToFloat(sector->floorheight) - view.z;
       if(sector->f_pflags & PS_PASSABLE && sector->floorheight > spr->gz)
       {
-         h = view.ycenter - (mh * spr->scale);
-         if(h < 0) h = 0;
-         if(h >= view.height) h = view.height - 1;
+         h = eclamp(view.ycenter - (mh * spr->scale), 0.0f, view.height - 1);
 
          for(x = spr->x1; x <= spr->x2; x++)
+         {
             if(clipbot[x] == -2 || h < clipbot[x])
                clipbot[x] = h;
+         }
       }
 
       mh = M_FixedToFloat(sector->ceilingheight) - view.z;
       if(sector->c_pflags & PS_PASSABLE && sector->ceilingheight < spr->gzt)
       {
-         h = view.ycenter - (mh * spr->scale);
-         if(h < 0) h = 0;
-         if(h >= view.height) h = view.height - 1;
+         h = eclamp(view.ycenter - (mh * spr->scale), 0.0f, view.height - 1);
 
          for(x = spr->x1; x <= spr->x2; x++)
+         {
             if(cliptop[x] == -2 || h > cliptop[x])
                cliptop[x] = h;
+         }
       }
    }
 
    // all clipping has been performed, so draw the sprite
    // check for unclipped columns
    
-   for(x = spr->x1; x <= spr->x2; ++x)
+   for(x = spr->x1; x <= spr->x2; x++)
    {
       if(clipbot[x] == -2 || clipbot[x] > pbottom[x])
          clipbot[x] = pbottom[x];
-      
+
       if(cliptop[x] == -2 || cliptop[x] < ptop[x])
          cliptop[x] = ptop[x];
-    }
+   }
 
-   mfloorclip = clipbot;
+   mfloorclip   = clipbot;
    mceilingclip = cliptop;
    R_DrawVisSprite(spr, spr->x1, spr->x2);
 }
@@ -1592,12 +1623,11 @@ static void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
 //
 // Draws the items in the Post-BSP stack.
 //
-void R_DrawPostBSP(void)
+void R_DrawPostBSP()
 {
-   maskedrange_t  *masked;
-   drawseg_t      *ds;
-   int            firstds, lastds, firstsprite, lastsprite;
-   int            i;
+   maskedrange_t *masked;
+   drawseg_t     *ds;
+   int           firstds, lastds, firstsprite, lastsprite;
  
    while(stacksize > 0)
    {
@@ -1647,7 +1677,7 @@ void R_DrawPostBSP(void)
             ptop    = masked->ceilingclip;
             pbottom = masked->floorclip;
 
-            for(i = lastsprite - firstsprite; --i >= 0; )
+            for(int i = lastsprite - firstsprite; --i >= 0; )
                R_DrawSpriteInDSRange(vissprite_ptrs[i], firstds, lastds);         // killough
          }
 
@@ -1657,9 +1687,11 @@ void R_DrawPostBSP(void)
          // (pointer check was originally nonportable
          // and buggy, by going past LEFT end of array):
 
-         for(ds=drawsegs + lastds ; ds-- > drawsegs + firstds; )  // new -- killough
+         for(ds = drawsegs + lastds; ds-- > drawsegs + firstds; )  // new -- killough
+         {
             if(ds->maskedtexturecol)
                R_RenderMaskedSegRange(ds, ds->x1, ds->x2);
+         }
          
          // Done with the masked range
          pstack[stacksize].masked = NULL;
@@ -1667,8 +1699,7 @@ void R_DrawPostBSP(void)
          unusedmasked = masked;
          
          masked = NULL;
-      }
-       
+      }       
       
       if(pstack[stacksize].overlay)
       {
@@ -1730,7 +1761,7 @@ void R_DrawPostBSP(void)
 // Tries to find an inactive particle in the Particles list
 // Returns NULL on failure
 //
-particle_t *newParticle(void)
+particle_t *newParticle()
 {
    particle_t *result = NULL;
    if(inactiveParticles != -1)
@@ -1749,7 +1780,7 @@ particle_t *newParticle(void)
 //
 // Allocate the particle list and initialize it
 //
-void R_InitParticles(void)
+void R_InitParticles()
 {
    int i;
 
@@ -1772,7 +1803,7 @@ void R_InitParticles(void)
 //
 // set up the particle list
 //
-void R_ClearParticles(void)
+void R_ClearParticles()
 {
    int i;
    
