@@ -1004,7 +1004,6 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    lastyf = view.y;
    lastzf = view.z;
 
-
    // SoM 3/10/2005: Use the coordinates stored in the portal struct
    viewx  = window->vx + portal->data.link.deltax;
    viewy  = window->vy + portal->data.link.deltay;
