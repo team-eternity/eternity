@@ -122,14 +122,14 @@ cb_maskedcolumn_t maskedcolumn;
 // Structures
 //
 
-typedef struct maskdraw_s
+struct maskdraw_t
 {
   int x1;
   int x2;
   int column;
   int topclip;
   int bottomclip;
-} maskdraw_t;
+};
 
 //
 // A vissprite_t is a thing that will be drawn during a refresh.
@@ -137,7 +137,7 @@ typedef struct maskdraw_s
 //
 // haleyjd 12/15/10: Moved out of r_defs.h
 //
-typedef struct vissprite_s
+struct vissprite_t
 {
   int     x1, x2;
   fixed_t gx, gy;              // for line side calculation
@@ -165,14 +165,14 @@ typedef struct vissprite_s
 
   int    sector; // SoM: sector the sprite is in.
 
-} vissprite_t;
+};
 
 // haleyjd 04/25/10: drawsegs optimization
-typedef struct drawsegs_xrange_s
+struct drawsegs_xrange_t
 {
    int x1, x2;
    drawseg_t *user;
-} drawsegs_xrange_t;
+};
 
 //=============================================================================
 //
@@ -221,9 +221,43 @@ static size_t num_vissprite, num_vissprite_alloc, num_vissprite_ptrs;
 
 // SoM 12/13/03: the post-BSP stack
 static poststack_t   *pstack       = NULL;
-static int            stacksize    = 0;
-static int            stackmax     = 0;
+static int            pstacksize   = 0;
+static int            pstackmax    = 0;
 static maskedrange_t *unusedmasked = NULL;
+
+VALLOCATION(pstack)
+{
+   if(pstack)
+   {
+      // free all maskedrange_t on the pstack
+      for(int i = 0; i < pstacksize; i++)
+      {
+         if(pstack[i].masked)
+         {
+            efree(pstack[i].masked->ceilingclip);
+            efree(pstack[i].masked);
+         }
+      }
+
+      // free the pstack
+      efree(pstack);
+   }
+
+   // free the maskedrange freelist 
+   maskedrange_t *mr = unusedmasked;
+   while(mr)
+   {
+      maskedrange_t *next = mr->next;
+      efree(mr->ceilingclip);
+      efree(mr);
+      mr = next;
+   }
+
+   pstack       = NULL;
+   pstacksize   = 0;
+   pstackmax    = 0;
+   unusedmasked = NULL;
+}
 
 // haleyjd: made static global
 static float *clipbot;
@@ -507,13 +541,13 @@ void R_PushPost(bool pushmasked, planehash_t *overlay)
 {
    poststack_t *post;
    
-   if(stacksize == stackmax)
+   if(pstacksize == pstackmax)
    {
-      stackmax += 10;
-      pstack = erealloc(poststack_t *, pstack, sizeof(poststack_t) * stackmax);
+      pstackmax += 10;
+      pstack = erealloc(poststack_t *, pstack, sizeof(poststack_t) * pstackmax);
    }
    
-   post = pstack + stacksize;
+   post = pstack + pstacksize;
    
    post->overlay = overlay;
 
@@ -526,13 +560,21 @@ void R_PushPost(bool pushmasked, planehash_t *overlay)
       {
          post->masked = unusedmasked;
          unusedmasked = unusedmasked->next;
+
+         post->masked->next = NULL;
+         post->masked->firstds = post->masked->lastds =
+            post->masked->firstsprite = post->masked->lastsprite = 0;
       }
       else
+      {
          post->masked = estructalloc(maskedrange_t, 1);
+       
+         float *buf = emalloc(float *, 2 * video.width * sizeof(float));
+         post->masked->ceilingclip = buf;
+         post->masked->floorclip   = buf + video.width;
+      }
          
-      memset(post->masked, 0, sizeof(*post->masked));
-      
-      for(i = stacksize - 1; i >= 0; i--)
+      for(i = pstacksize - 1; i >= 0; i--)
       {
          if(pstack[i].masked)
             break;
@@ -540,8 +582,8 @@ void R_PushPost(bool pushmasked, planehash_t *overlay)
       
       if(i >= 0)
       {
-         post->masked->firstds      = pstack[i].masked->lastds;
-         post->masked->firstsprite  = pstack[i].masked->lastsprite;
+         post->masked->firstds     = pstack[i].masked->lastds;
+         post->masked->firstsprite = pstack[i].masked->lastsprite;
       }
       else
          post->masked->firstds = post->masked->firstsprite = 0;
@@ -555,7 +597,7 @@ void R_PushPost(bool pushmasked, planehash_t *overlay)
    else
       post->masked = NULL;
 
-   stacksize++;
+   pstacksize++;
 }
 
 //
@@ -563,7 +605,7 @@ void R_PushPost(bool pushmasked, planehash_t *overlay)
 //
 // Creates a new vissprite if needed, or recycles an unused one.
 //
-static vissprite_t *R_NewVisSprite(void)
+static vissprite_t *R_NewVisSprite()
 {
    if(num_vissprite >= num_vissprite_alloc)             // killough
    {
@@ -1629,14 +1671,14 @@ void R_DrawPostBSP()
    drawseg_t     *ds;
    int           firstds, lastds, firstsprite, lastsprite;
  
-   while(stacksize > 0)
+   while(pstacksize > 0)
    {
-      --stacksize;
+      --pstacksize;
 
-      if((masked = pstack[stacksize].masked))
+      if((masked = pstack[pstacksize].masked))
       {
-         firstds = masked->firstds;
-         lastds  = masked->lastds;
+         firstds     = masked->firstds;
+         lastds      = masked->lastds;
          firstsprite = masked->firstsprite;
          lastsprite  = masked->lastsprite;
 
@@ -1694,20 +1736,20 @@ void R_DrawPostBSP()
          }
          
          // Done with the masked range
-         pstack[stacksize].masked = NULL;
+         pstack[pstacksize].masked = NULL;
          masked->next = unusedmasked;
          unusedmasked = masked;
          
          masked = NULL;
       }       
       
-      if(pstack[stacksize].overlay)
+      if(pstack[pstacksize].overlay)
       {
          // haleyjd 09/04/06: handle through column engine
          if(r_column_engine->ResetBuffer)
             r_column_engine->ResetBuffer();
             
-         R_DrawPlanes(pstack[stacksize].overlay);
+         R_DrawPlanes(pstack[pstacksize].overlay);
       }
    }
 
