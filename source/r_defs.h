@@ -571,7 +571,7 @@ struct visplane_t
    lighttable_t *fixedcolormap;  // haleyjd 10/16/06
    fixed_t xoffs, yoffs;         // killough 2/28/98: Support scrolling flats
 
-   // SoM: The plain silhouette arrays are allocated based on screen-size now.
+   // SoM: The plane silhouette arrays are allocated based on screen-size now.
    int *top;
    int *bottom;
 
