@@ -14,3 +14,5 @@
 .#*
 .*.swp
 .DS_store
+
+build/
