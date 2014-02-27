@@ -11,8 +11,9 @@
 *.pyo
 *.rej
 *~
-.#*
+.\#*
 .*.swp
 .DS_store
+\#*\#
 
 build/
