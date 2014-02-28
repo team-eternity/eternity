@@ -90,6 +90,43 @@ cpack -G STGZ
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Quasar should probably write this.
 
-// Building with Xcode
-// ~~~~~~~~~~~~~~~~~~~
-// printz should probably write this.
+Building with Xcode
+~~~~~~~~~~~~~~~~~~~
+You may need Mac OS X 10.7 or more to be able to compile Eternity,
+though the executable product should work for 10.6 and possibly 
+earlier.
+
+* Get the static (*.a) libraries and put them in macosx/staticlib/
+They can be obtained through a ports manager like MacPorts, and are
+listed below, followed by their MD5 checksums. Make sure you get the
+universal versions:
++
+ libFLAC.a       ef096f70c267b277da68816f1d12d853
+ libmikmod.a     03228aa9fd83b0f86d75f20d4204a7c1
+ libogg.a        122dd5d64951f58e08bc951807a55b82
+ libSDL_mixer.a  c6a85b0f56728f3585caa2d85882c4c2
+ libSDL_net.a    744d0e25f6b75ddf7be73dfd938ee0ed
+ libSDL.a        44535151c6d2cf805c4d823c882649e2
+ libsmpeg.a      b02d04c02c77cbdee889a0511bf58d76
+ libvorbis.a     3589c39ea3c2bf0eca4647b67f9d8dee
+ libvorbisfile.a 54ceadfa67aadb15eae39f68dd53aa3c
+ 
+However, to save you the time, just download them from this
+https://dl.dropboxusercontent.com/u/5103936/permanent/eternity/eternity-osx-static-lib.zip[link]. Put them in macosx/staticlib/
+ 
+
+* You need portable versions of the Clang C+\+11 runtime libraries.
+They may need to be downloaded from LLVM/Clang's website, and built
+through a process hinted by the macosx/libc+\+/libc++-builder/buildit
+script file. The files and their checksums are as follows:
++
+ libc++.1.dylib   b5d4b02adf73ab6350bc1f9afd0653b9
+ libc+\+.dylib    just a symbolic link to libc++.1.dylib
+ libc++abi.dylib  05f6f03908a8174511946788bc13e6e9
+ 
+Like above, download them from this
+https://dl.dropboxusercontent.com/u/5103936/permanent/eternity/eternity-osx-clang-c%2B%2B11-runtime.zip[link]. Put them in macosx/libc++/
+ 
+
+* Now it should build. You can choose the base project or the user-friendly
+front-end ("launcher").
