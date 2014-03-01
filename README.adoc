@@ -121,7 +121,7 @@ through a process hinted by the macosx/libc+\+/libc++-builder/buildit
 script file. The files and their checksums are as follows:
 +
  libc++.1.dylib   b5d4b02adf73ab6350bc1f9afd0653b9
- libc+\+.dylib    just a symbolic link to libc++.1.dylib
+ libc++.dylib    just a symbolic link to libc++.1.dylib
  libc++abi.dylib  05f6f03908a8174511946788bc13e6e9
  
 Like above, download them from this
