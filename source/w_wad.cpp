@@ -1680,10 +1680,8 @@ static size_t W_DirectReadLump(lumpinfo_t *l, void *dest)
    directlump_t &direct = l->direct;
 
    // killough 10/98: Add flashing disk indicator
-   I_BeginRead();
    fseek(direct.file, direct.position, SEEK_SET);
    ret = fread(dest, 1, size, direct.file);
-   I_EndRead();
 
    return ret;
 }
@@ -1716,10 +1714,7 @@ static size_t W_FileReadLump(lumpinfo_t *l, void *dest)
 
    if((f = fopen(l->lfn, "rb")))
    {
-      I_BeginRead();
       sizeread = fread(dest, 1, size, f);
-      I_EndRead();
-
       fclose(f);
    }
    

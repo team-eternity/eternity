@@ -42,9 +42,6 @@ protected:
 public:
    virtual void FinishUpdate()            = 0;
    virtual void ReadScreen(byte *scr)     = 0;
-   virtual void InitDiskFlash()           = 0;
-   virtual void BeginRead()               = 0;
-   virtual void EndRead()                 = 0;
    virtual void SetPalette(byte *pal)     = 0;
    virtual void ShutdownGraphics()        = 0;
    virtual void ShutdownGraphicsPartway() = 0;
@@ -71,7 +68,6 @@ void I_ParseGeom(const char *geom, int *w, int *h, bool *fs, bool *vs, bool *hw,
                  bool *wf);
 
 extern int use_vsync;  // killough 2/8/98: controls whether vsync is called
-extern int disk_icon;  // killough 10/98
 
 // video modes
 

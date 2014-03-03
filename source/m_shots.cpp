@@ -633,8 +633,6 @@ void M_ScreenShot(void)
          V_BlitVBuffer(&backscreen2, 0, 0, &vbscreen, 0, 0, 
                        vbscreen.width, vbscreen.height);
          
-         I_BeginRead();
-
          // killough 10/98: detect failure and remove file if error
          success = format->writer(&ob, backscreen2.data, 
                                   (uint32_t)(backscreen2.width), 
@@ -651,8 +649,6 @@ void M_ScreenShot(void)
             remove(lbmname);
             errno = t;
          }
-
-         I_EndRead();
 
          // killough 4/18/98: now you can mark it PU_CACHE
          // Z_ChangeTag(pal, PU_CACHE); - haleyjd 9/30/12: not needed now.

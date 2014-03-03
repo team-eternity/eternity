@@ -188,7 +188,6 @@ enum
 //
 enum
 {
-   GIF_HASDISK        = 0x00000001, // has flashing io disk
    GIF_SHAREWARE      = 0x00000002, // shareware game (no -file)
    GIF_MNBIGFONT      = 0x00000004, // uses big font for menu titles
    GIF_MAPXY          = 0x00000008, // gamemode uses MAPxy maps by default
