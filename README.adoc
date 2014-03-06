@@ -1,0 +1,132 @@
+The Eternity Engine
+===================
+
+Eternity is an advanced http://doomwiki.org/wiki/Doom[DOOM] source
+port maintained by James ``Quasar'' Haley, descended from Simon
+``fraggle'' Howard's SMMU. It has a whole host of advanced features
+for editors and players alike, including:
+
+* http://doomwiki.org/wiki/ACS[ACS], including many of ZDoom's
+  enhancements
+
+* http://eternity.youfailit.net/index.php?title=EDF[EDF], Eternity
+  Definition File, a language to define and modify monsters,
+  decorations, sounds, text strings, menus, terrain types, and other
+  kinds of data.
+
+* http://doomwiki.org/wiki/ENDOOM[ENDOOM] and animated startup screen
+  support.
+
+* High-resolution support (practically unlimited).
+
+* Support for _Master Levels_ and _No Rest for the Living_, allowing
+  to play them without command line options.
+
+* Portals which can be used to create skyboxes and fake 3D
+  architecture. Linked portal allow objects to pass through them, as
+  well.
+
+* http://www.libpng.org/pub/png/[PNG] support
+
+* Aided with http://libsdl.org/[SDL], Eternity is very portable and
+  runs on a large range of operating systems: Windows (confirmed as
+  low as NT 3.51/95, and all the way through Windows 8.1), Linux, Mac
+  OS X, FreeBSD, OpenBSD, and more.
+
+* Heretic, Hexen, and Strife support in-progress.
+
+* Includes the Kate monster.
+
+For more on its features, check out the
+http://eternity.youfailit.net/index.php?title=Main_Page[Eternity
+Engine Wiki].
+
+Eternity Engine is maintained using the Git version control system,
+and the canonical source of the repository is available at
+https://github.com/team-eternity/eternity[GitHub].
+
+Compiling
+---------
+There are three ways available for building Eternity: CMake, Visual
+Studio, and Xcode files, for Unix, Windows, and Mac OS X respectively.
+
+Building with CMake
+~~~~~~~~~~~~~~~~~~~
+CMake should be capable of generating build files for all platforms,
+but it is most commonly used only for Unix (non-OS X) OSes and not
+thoroughly tested outside of it.
+
+. If you haven't already, extract the source *.zip file or clone the
+Git repository, in the top-level directory you should see a
++CMakeLists.txt+ file. You should be in this directory.
+
+. Create a new empty directory and change to it, eg: +mkdir build+
+followed by +cd build+. You cannot do an in-tree build.
+
+. Run CMake. Usually you will want to run +cmake ..+, but you might
+want to change the generator with a special command, for example:
++
+----
+cmake .. -G "Unix Makefiles"
+cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=C:\sdk\x64 -G "NMake Makefiles"
+cmake .. -DCMAKE_BUILD_TYPE=MinSizRel -G "Visual Studio 9 2008 Win64"
+----
+
+. Run your build tool. On Unix, you probably want to just run +make+.
+
+As an optional final step, you can create a binary installation
+package with CPack. For Windows, it will collect all the needed
+runtime libraries and bundle it with the Eternity engine. Some
+examples:
+
+----
+cpack -G ZIP
+cpack -G DEB
+cpack -G RPM
+cpack -G STGZ
+----
+
+// Building with Visual Studio
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Quasar should probably write this.
+
+Building with Xcode
+~~~~~~~~~~~~~~~~~~~
+You may need Mac OS X 10.7 or more to be able to compile Eternity,
+though the executable product should work for 10.6 and possibly 
+earlier.
+
+* Get the static (*.a) libraries and put them in macosx/staticlib/
+They can be obtained through a ports manager like MacPorts, and are
+listed below, followed by their MD5 checksums. Make sure you get the
+universal versions:
++
+ libFLAC.a       ef096f70c267b277da68816f1d12d853
+ libmikmod.a     03228aa9fd83b0f86d75f20d4204a7c1
+ libogg.a        122dd5d64951f58e08bc951807a55b82
+ libSDL_mixer.a  c6a85b0f56728f3585caa2d85882c4c2
+ libSDL_net.a    744d0e25f6b75ddf7be73dfd938ee0ed
+ libSDL.a        44535151c6d2cf805c4d823c882649e2
+ libsmpeg.a      b02d04c02c77cbdee889a0511bf58d76
+ libvorbis.a     3589c39ea3c2bf0eca4647b67f9d8dee
+ libvorbisfile.a 54ceadfa67aadb15eae39f68dd53aa3c
+ 
+However, to save you the time, just download them from this
+https://dl.dropboxusercontent.com/u/5103936/permanent/eternity/eternity-osx-static-lib.zip[link]. Put them in macosx/staticlib/
+ 
+
+* You need portable versions of the Clang C+\+11 runtime libraries.
+They may need to be downloaded from LLVM/Clang's website, and built
+through a process hinted by the macosx/libc+\+/libc++-builder/buildit
+script file. The files and their checksums are as follows:
++
+ libc++.1.dylib   b5d4b02adf73ab6350bc1f9afd0653b9
+ libc++.dylib    just a symbolic link to libc++.1.dylib
+ libc++abi.dylib  05f6f03908a8174511946788bc13e6e9
+ 
+Like above, download them from this
+https://dl.dropboxusercontent.com/u/5103936/permanent/eternity/eternity-osx-clang-c%2B%2B11-runtime.zip[link]. Put them in macosx/libc++/
+ 
+
+* Now it should build. You can choose the base project or the user-friendly
+front-end ("launcher").

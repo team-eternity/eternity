@@ -141,7 +141,6 @@ static const char *finaleTypeStrs[FINALE_NUMFINALES] =
 // GameModeInfo flags
 static dehflags_t gmi_flags[] =
 {
-   { "HASDISK",        GIF_HASDISK        },
    { "MNBIGFONT",      GIF_MNBIGFONT      },
    { "MAPXY",          GIF_MAPXY          },
    { "SAVESOUND",      GIF_SAVESOUND      },

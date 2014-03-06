@@ -230,30 +230,6 @@ void SDLGL2DVideoDriver::ReadScreen(byte *scr)
 }
 
 //
-// SDLGL2DVideoDriver::InitDiskFlash
-//
-void SDLGL2DVideoDriver::InitDiskFlash()
-{
-   // Not implemented.
-}
-
-//
-// SDLGL2DVideoDriver::BeginRead
-//
-void SDLGL2DVideoDriver::BeginRead()
-{
-   // Not implemented.
-}
-
-//
-// SDLGL2DVideoDriver::EndRead
-//
-void SDLGL2DVideoDriver::EndRead()
-{
-   // Not implemented.
-}
-
-//
 // SDLGL2DVideoDriver::SetPalette
 //
 void SDLGL2DVideoDriver::SetPalette(byte *pal)

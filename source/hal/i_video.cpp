@@ -194,36 +194,6 @@ void I_ReadScreen(byte *scr)
    i_video_driver->ReadScreen(scr);
 }
 
-int disk_icon;
-
-//
-// killough 10/98: init disk icon
-//
-static void I_InitDiskFlash()
-{
-   // haleyjd 05/21/06: no disk in some game modes...
-   if(GameModeInfo->flags & GIF_HASDISK)
-      i_video_driver->InitDiskFlash();
-}
-
-//
-// killough 10/98: draw disk icon
-//
-void I_BeginRead()
-{
-   if(disk_icon && in_graphics_mode)
-      i_video_driver->BeginRead();
-}
-
-//
-// killough 10/98: erase disk icon
-//
-void I_EndRead()
-{
-   if(disk_icon && in_graphics_mode)
-      i_video_driver->EndRead();
-}
-
 //
 // I_SetPalette
 //
@@ -454,8 +424,6 @@ static bool I_InitGraphicsMode()
       in_graphics_mode = true;  // now in graphics mode
       in_textmode      = false; // no longer in text mode
       setsizeneeded    = true;  // should initialize screen size
-
-      I_InitDiskFlash();        // initialize disk flasher
    }
 
    return result;
@@ -470,12 +438,6 @@ static bool I_InitGraphicsMode()
 //
 static void I_ResetScreen()
 {
-   int old_disk_icon = disk_icon;
-
-   // [CG] Set disk_icon to 0, so disk reads don't try to flash the disk when
-   //      there is no surface.
-   disk_icon = 0;
-
    // Switch out of old graphics mode
    if(in_graphics_mode)
    {
@@ -487,10 +449,7 @@ static void I_ResetScreen()
    // Switch to new graphics mode
    // check for errors -- we may be setting to a different mode instead
    if(I_InitGraphicsMode())
-   {
-      disk_icon = old_disk_icon; // [CG] Reset disk icon to its original value.
       return;
-   }
    
    // reset other modules
    
@@ -506,8 +465,6 @@ static void I_ResetScreen()
    
    // A LOT of heap activity just happened, so check it.
    Z_CheckHeap();
-
-   disk_icon = old_disk_icon; // [CG] Reset disk icon to its original value.
 }
 
 void I_InitGraphics()
@@ -571,9 +528,7 @@ void I_SetMode()
  ************************/
 
 VARIABLE_BOOLEAN(use_vsync, NULL,  yesno);
-VARIABLE_BOOLEAN(disk_icon, NULL,  onoff);
 
-CONSOLE_VARIABLE(v_diskicon, disk_icon, 0) {}
 CONSOLE_VARIABLE(v_retrace, use_vsync, 0)
 {
    I_SetMode();
@@ -596,16 +551,6 @@ CONSOLE_VARIABLE(i_videomode, i_videomode, cf_buffered)
       efree(i_default_videomode);
 
    i_default_videomode = estrdup(i_videomode);
-}
-
-CONSOLE_COMMAND(i_default_videomode, 0)
-{
-   /*
-   if(i_default_videomode)
-      efree(i_default_videomode);
-
-   i_default_videomode = estrdup(i_videomode);
-   */
 }
 
 static const char *i_videodrivernames[] = 

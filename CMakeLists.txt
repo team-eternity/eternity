@@ -128,6 +128,29 @@ INCLUDE(CPack)
 
 
 ################################################################################
+######################### Documentation  #######################################
+
+# Generate RADME.txt via simple copy.
+configure_file(
+   ${CMAKE_SOURCE_DIR}/README.adoc
+   ${CMAKE_BINARY_DIR}/README.txt
+   COPYONLY)
+
+# If present on system, use asciidoc to generate README.html.
+find_program(ASCIIDOC_EXE asciidoc)
+if(ASCIIDOC_EXE)
+   message(STATUS "Found asciidoc: ${ASCIIDOC_EXE}")
+   add_custom_target(readme-asciidoc ALL
+      COMMAND "${ASCIIDOC_EXE}"
+         --backend=html
+         --out-file=${CMAKE_BINARY_DIR}/README.html
+         ${CMAKE_SOURCE_DIR}/README.adoc
+      SOURCES ${CMAKE_SOURCE_DIR}/README.adoc
+      )
+endif()
+
+
+################################################################################
 ######################### Compiler: Features  ##################################
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
    TRY_CXX_COMPILER_FLAG(-std=c++11 FLAG_CXX_stdcxx11)
