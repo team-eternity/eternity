@@ -745,6 +745,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\source\hal\i_directory.cpp" />
+    <ClCompile Include="..\source\hal\i_timer.cpp" />
     <ClCompile Include="..\Source\hu_frags.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -796,6 +797,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\source\mn_items.cpp" />
+    <ClCompile Include="..\source\sdl\i_sdltimer.cpp" />
     <ClCompile Include="..\source\s_formats.cpp" />
     <ClCompile Include="..\source\s_reverb.cpp" />
     <ClCompile Include="..\source\v_image.cpp" />
@@ -1365,16 +1367,6 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\source\r_drawl.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
     <ClCompile Include="..\source\r_drawq.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1770,6 +1762,10 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\source\w_zip.cpp" />
+    <ClCompile Include="..\source\xl_emapinfo.cpp" />
+    <ClCompile Include="..\source\xl_mapinfo.cpp" />
+    <ClCompile Include="..\source\xl_musinfo.cpp" />
+    <ClCompile Include="..\source\xl_sndinfo.cpp" />
     <ClCompile Include="..\source\z_native.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -2123,6 +2119,7 @@
     <ClInclude Include="..\Source\g_game.h" />
     <ClInclude Include="..\Source\g_gfs.h" />
     <ClInclude Include="..\source\hal\i_directory.h" />
+    <ClInclude Include="..\source\hal\i_timer.h" />
     <ClInclude Include="..\Source\Hu_frags.h" />
     <ClInclude Include="..\Source\Hu_over.h" />
     <ClInclude Include="..\Source\Hu_stuff.h" />
@@ -2132,6 +2129,7 @@
     <ClInclude Include="..\source\m_binary.h" />
     <ClInclude Include="..\source\m_compare.h" />
     <ClInclude Include="..\source\m_ctype.h" />
+    <ClInclude Include="..\source\sdl\i_sdltimer.h" />
     <ClInclude Include="..\source\s_formats.h" />
     <ClInclude Include="..\source\s_reverb.h" />
     <ClInclude Include="..\source\v_image.h" />
@@ -2239,6 +2237,10 @@
     <ClInclude Include="..\source\w_levels.h" />
     <ClInclude Include="..\Source\w_wad.h" />
     <ClInclude Include="..\source\w_zip.h" />
+    <ClInclude Include="..\source\xl_emapinfo.h" />
+    <ClInclude Include="..\source\xl_mapinfo.h" />
+    <ClInclude Include="..\source\xl_musinfo.h" />
+    <ClInclude Include="..\source\xl_sndinfo.h" />
     <ClInclude Include="..\source\z_auto.h" />
     <ClInclude Include="..\Source\z_zone.h" />
     <ClInclude Include="..\source\autopalette.h" />

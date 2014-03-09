@@ -603,9 +603,6 @@
     <ClCompile Include="..\Source\r_draw.cpp">
       <Filter>Source Files\R_\R_ Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\r_drawl.cpp">
-      <Filter>Source Files\R_\R_ Source</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\r_drawq.cpp">
       <Filter>Source Files\R_\R_ Source</Filter>
     </ClCompile>
@@ -998,6 +995,24 @@
     </ClCompile>
     <ClCompile Include="..\jsoncpp-src-0.5.0\src\lib_json\json_writer.cpp">
       <Filter>JSONCpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\xl_emapinfo.cpp">
+      <Filter>Source Files\XL_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\xl_mapinfo.cpp">
+      <Filter>Source Files\XL_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\xl_musinfo.cpp">
+      <Filter>Source Files\XL_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\xl_sndinfo.cpp">
+      <Filter>Source Files\XL_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\hal\i_timer.cpp">
+      <Filter>Source Files\HAL\HAL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\sdl\i_sdltimer.cpp">
+      <Filter>Source Files\SDL\SDL Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1771,6 +1786,24 @@
     </ClInclude>
     <ClInclude Include="..\source\s_formats.h">
       <Filter>Source Files\S_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\xl_emapinfo.h">
+      <Filter>Source Files\XL_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\xl_mapinfo.h">
+      <Filter>Source Files\XL_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\xl_musinfo.h">
+      <Filter>Source Files\XL_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\xl_sndinfo.h">
+      <Filter>Source Files\XL_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\hal\i_timer.h">
+      <Filter>Source Files\HAL\HAL Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\sdl\i_sdltimer.h">
+      <Filter>Source Files\SDL\SDL Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
