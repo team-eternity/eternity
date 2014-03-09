@@ -217,10 +217,10 @@ public:
    int pointOnSide(fixed_t x, fixed_t y, const Node &node) const;
    Subsec &pointInSubsector(fixed_t x, fixed_t y);
    void getTouchedBlocks(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
-                         std::function<void(int)> func) const;
+                         const std::function<void(int)> &func) const;
    void getBoxTouchedBlocks(fixed_t top, fixed_t bottom,
                             fixed_t left, fixed_t right,
-                            std::function<void(int)> func) const;
+                            const std::function<void(int)> &func) const;
    void unsetThingPosition(const Mobj *thing);
    void setThingPosition(const Mobj *thing);
    

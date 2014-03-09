@@ -360,8 +360,8 @@ static bool B_stateCantBeSolidDecor(statenum_t sn, const mobjinfo_t &mi)
 //
 static bool B_stateEncounters(statenum_t firstState,
                                Mobj &mo,
-                              std::function<bool(statenum_t,
-                                                 const mobjinfo_t &)> statecase)
+                              const std::function<bool(statenum_t,
+                                                 const mobjinfo_t &)> &statecase)
 {
    StateSet stateSet;  // set of visited states
    StateQue alterQueue;        // set of alternate chains

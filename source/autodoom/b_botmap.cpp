@@ -71,7 +71,7 @@ const int CACHE_BUFFER_SIZE = 512 * 1024;
 // P_CreateBlockmap
 //
 void BotMap::getTouchedBlocks(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
-                              std::function<void(int)> func) const
+                              const std::function<void(int)> &func) const
 {
    fixed_t minx = botMap->bMapOrgX >> FRACBITS;
    fixed_t miny = botMap->bMapOrgY >> FRACBITS;
@@ -129,7 +129,7 @@ void BotMap::getTouchedBlocks(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
 //
 void BotMap::getBoxTouchedBlocks(fixed_t top, fixed_t bottom,
                                   fixed_t left, fixed_t right,
-                                  std::function<void(int b)> func) const
+                                  const std::function<void(int b)> &func) const
 {
    
    int xl, xh, yl, yh, bx, by;
