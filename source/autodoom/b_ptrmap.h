@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2013 Ioan Chera
+// Copyright(C) 2014 Ioan Chera
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -29,37 +29,25 @@
 #ifndef __EternityEngine__b_ptrmap__
 #define __EternityEngine__b_ptrmap__
 
+#include "../m_collection.h"
+#include "../m_dllist.h"
+
 // A and B should be expressed without *
 template <typename A, typename B> class PointerMap
 {
-	struct Unit
-	{
-		B* pointer;
-		size_t index;
-	};
+//	struct Unit
+//	{
+//		B* pointer;
+//		size_t index;
+//	};
 	
-	Unit* m_buffer;
-	size_t m_length;
-	size_t m_alloc;
+	
+	PODCollection<DLListItem<B>> m_pointers;
+	
+	PODCollection<size_t> m_table;
 	
 public:
-	PointerMap() : m_buffer(nullptr), m_length(0), m_alloc(0)
-	{
-	}
-	PointerMap(const PointerMap<A, B> &o) : m_length(o.m_length), m_alloc(o.m_alloc)
-	{
-		m_buffer = estructalloc(Unit, m_alloc);
-		memcpy(m_buffer, o.m_buffer, m_alloc * sizeof(Unit));
-	}
-	PointerMap(PointerMap<A, B> &&o) : m_length(o.m_length), m_alloc(o.m_alloc), m_buffer(o.m_buffer)
-	{
-		o.m_buffer = nullptr;
-		o.m_length = o.m_alloc = 0;
-	}
-	~PointerMap()
-	{
-		efree(m_buffer);
-	}
+	
 };
 
 #endif /* defined(__EternityEngine__b_ptrmap__) */
