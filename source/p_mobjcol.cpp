@@ -159,7 +159,7 @@ void MobjCollection::moveToRandom(Mobj *actor)
    clip->unsetThingPosition(actor);
    actor->copyPosition(getRandom(pr_moverandom));
    clip->setThingPosition(actor);
-   clip->adjustFloorClip(actor);
+   P_AdjustFloorClip(actor);
    actor->backupPosition();
 }
 
