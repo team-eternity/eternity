@@ -67,6 +67,41 @@ VALLOCATION(portals)
             hash->chains[i] = NULL;
       }
    }
+
+   // free portal window structures on the main list
+   pwindow_t *rover = windowhead;
+   while(rover)
+   {
+      pwindow_t *child = rover->child;
+      pwindow_t *next;
+
+      // free any child windows
+      while(child)
+      {
+         next = child->child;
+         efree(child->top);
+         efree(child);
+         child = next;
+      }
+
+      // free this window
+      next = rover->next;
+      efree(rover->top);
+      efree(rover);
+      rover = next;
+   }
+
+   // free portal window structures on the freelist
+   rover = unusedhead;
+   while(rover)
+   {
+      pwindow_t *next = rover->next;
+      efree(rover->top);
+      efree(rover);
+      rover = next;
+   }
+
+   windowhead = windowlast = unusedhead = NULL;   
 }
 
 // This flag is set when a portal is being rendered. This flag is checked in 
@@ -85,21 +120,20 @@ static void R_SetPortalFunction(pwindow_t *window);
 
 static void R_ClearPortalWindow(pwindow_t *window)
 {
-   int i;
    window->maxx = 0;
    window->minx = viewwindow.width - 1;
 
-   for(i = 0; i < MAX_SCREENWIDTH; i++)
+   for(int i = 0; i < video.width; i++)
    {
-      window->top[i] = view.height;
+      window->top[i]    = view.height;
       window->bottom[i] = -1.0f;
    }
 
-   window->child = NULL;
-   window->next = NULL;
-   window->portal = NULL;
-   window->line = NULL;
-   window->func = R_RenderPortalNOP;
+   window->child    = NULL;
+   window->next     = NULL;
+   window->portal   = NULL;
+   window->line     = NULL;
+   window->func     = R_RenderPortalNOP;
    window->clipfunc = NULL;
    window->vx = window->vy = window->vz = 0;
 }
@@ -114,7 +148,13 @@ static pwindow_t *newPortalWindow()
       unusedhead = unusedhead->next;
    }
    else
-      ret = (pwindow_t *)(Z_Malloc(sizeof(pwindow_t), PU_LEVEL, 0));
+   {
+      ret = estructalloctag(pwindow_t, 1, PU_LEVEL);
+      
+      float *buf  = emalloctag(float *, 2*video.width*sizeof(float), PU_LEVEL, NULL);
+      ret->top    = buf;
+      ret->bottom = buf + video.width;
+   }
 
    R_ClearPortalWindow(ret);
    
@@ -126,9 +166,9 @@ static pwindow_t *R_NewPortalWindow(portal_t *p, line_t *l, pwindowtype_e type)
    pwindow_t *ret = newPortalWindow();
    
    ret->portal = p;
-   ret->line = l;
-   ret->type = type;
-   ret->head = ret;
+   ret->line   = l;
+   ret->type   = type;
+   ret->head   = ret;
    
    R_SetPortalFunction(ret);
    
@@ -151,19 +191,19 @@ static pwindow_t *R_NewPortalWindow(portal_t *p, line_t *l, pwindowtype_e type)
 //
 static void R_CreateChildWindow(pwindow_t *parent)
 {
-   pwindow_t *child;
-
+#ifdef RANGECHECK
    if(parent->child)
       I_Error("R_CreateChildWindow: child portal displaced\n");
+#endif
 
-   child = newPortalWindow();
+   auto child = newPortalWindow();
 
-   parent->child = child;
-   child->head = parent->head;
-   child->portal = parent->portal;
-   child->line = parent->line;
-   child->type = parent->type;
-   child->func = parent->func;
+   parent->child   = child;
+   child->head     = parent->head;
+   child->portal   = parent->portal;
+   child->line     = parent->line;
+   child->type     = parent->type;
+   child->func     = parent->func;
    child->clipfunc = parent->clipfunc;
 }
 
@@ -175,28 +215,32 @@ static void R_CreateChildWindow(pwindow_t *parent)
 //
 void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
 {
-   float ptop, pbottom;
+   float windowtop, windowbottom;
 
 #ifdef RANGECHECK
    if(!window)
       I_Error("R_WindowAdd: null portal window\n");
 
+   if(x < 0 || x >= video.width)
+      I_Error("R_WindowAdd: column out of bounds (%d)\n", x);
+
    if((ybottom >= view.height || ytop < 0) && ytop < ybottom)
    {
       I_Error("R_WindowAdd portal supplied with bad column data.\n"
-              "\tx:%i, top:%f, bottom:%f\n", x, ytop, ybottom);
+              "\tx:%d, top:%f, bottom:%f\n", x, ytop, ybottom);
    }
 #endif
 
-   ptop    = window->top[x];
-   pbottom = window->bottom[x];
+   windowtop    = window->top[x];
+   windowbottom = window->bottom[x];
 
 #ifdef RANGECHECK
-   if(pbottom > ptop && 
-      (ptop < 0 || pbottom < 0 || ptop >= view.height || pbottom >= view.height))
+   if(windowbottom > windowtop && 
+      (windowtop < 0 || windowbottom < 0 || 
+       windowtop >= view.height || windowbottom >= view.height))
    {
       I_Error("R_WindowAdd portal had bad opening data.\n"
-              "\tx:%i, top:%f, bottom:%f\n", x, ptop, pbottom);
+              "\tx:%i, top:%f, bottom:%f\n", x, windowtop, windowbottom);
    }
 #endif
 
@@ -208,7 +252,7 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
       // column falls inside the range of the portal.
 
       // check to see if the portal column isn't occupied
-      if(ptop > pbottom)
+      if(windowtop > windowbottom)
       {
          window->top[x]    = ytop;
          window->bottom[x] = ybottom;
@@ -216,7 +260,7 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
       }
 
       // if the column lays completely outside the existing portal, create child
-      if(ytop > pbottom || ybottom < ptop)
+      if(ytop > windowbottom || ybottom < windowtop)
       {
          if(!window->child)
             R_CreateChildWindow(window);
@@ -227,10 +271,10 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
 
       // because a check has already been made to reject the column, the columns
       // must intersect; expand as needed
-      if(ytop < ptop)
+      if(ytop < windowtop)
          window->top[x] = ytop;
 
-      if(ybottom > pbottom)
+      if(ybottom > windowbottom)
          window->bottom[x] = ybottom;
       return;
    }
@@ -276,10 +320,7 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
 //
 static portal_t *R_CreatePortal()
 {
-   portal_t *ret;
-
-   ret = (portal_t *)(Z_Malloc(sizeof(portal_t), PU_LEVEL, NULL));
-   memset(ret, 0, sizeof(*ret));
+   portal_t *ret = estructalloctag(portal_t, 1, PU_LEVEL);
 
    if(!portals)
       portals = last = ret;
@@ -289,7 +330,7 @@ static portal_t *R_CreatePortal()
       last = ret;
    }
    
-   ret->poverlay = R_NewPlaneHash(32);
+   ret->poverlay  = R_NewPlaneHash(32);
    ret->globaltex = 1;
 
    return ret;
@@ -311,7 +352,6 @@ static void R_CalculateDeltas(int markerlinenum, int anchorlinenum,
    *dz = 0; /// ???
 }
 
-
 //
 // R_GetAnchoredPortal
 //
@@ -321,9 +361,7 @@ static void R_CalculateDeltas(int markerlinenum, int anchorlinenum,
 portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum)
 {
    portal_t *rover, *ret;
-   anchordata_t adata;
-
-   memset(&adata, 0, sizeof(adata));
+   edefstructvar(anchordata_t, adata);
 
    R_CalculateDeltas(markerlinenum, anchorlinenum, 
                      &adata.deltax, &adata.deltay, &adata.deltaz);
@@ -361,9 +399,7 @@ portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum)
 portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum)
 {
    portal_t *rover, *ret;
-   anchordata_t adata;
-
-   memset(&adata, 0, sizeof(adata));
+   edefstructvar(anchordata_t, adata);
 
    R_CalculateDeltas(markerlinenum, anchorlinenum, 
                      &adata.deltax, &adata.deltay, &adata.deltaz);
@@ -373,7 +409,7 @@ portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum)
 
    for(rover = portals; rover; rover = rover->next)
    {
-      if(rover->type != R_TWOWAY || 
+      if(rover->type  != R_TWOWAY                  || 
          adata.deltax != rover->data.anchor.deltax ||
          adata.deltay != rover->data.anchor.deltay ||
          adata.deltaz != rover->data.anchor.deltaz)
@@ -431,7 +467,7 @@ portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic,
                              float *ceilingbaseangle, float *ceilingangle)
 {
    portal_t *rover, *ret;
-   horizondata_t horizon;
+   edefstructvar(horizondata_t, horizon);
 
    if(!floorpic || !ceilingpic || !floorz || !ceilingz || 
       !floorlight || !ceilinglight || !floorxoff || !flooryoff || 
@@ -439,7 +475,6 @@ portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic,
       !ceilingbaseangle || !ceilingangle)
       return NULL;
 
-   memset(&horizon, 0, sizeof(horizon));
    horizon.ceilinglight     = ceilinglight;
    horizon.floorlight       = floorlight;
    horizon.ceilingpic       = ceilingpic;
@@ -482,13 +517,11 @@ portal_t *R_GetPlanePortal(int *pic, fixed_t *delta,
                            float *baseangle, float *angle)
 {
    portal_t *rover, *ret;
-   skyplanedata_t skyplane;
+   edefstructvar(skyplanedata_t, skyplane);
 
    if(!pic || !delta || !lightlevel || !xoff || !yoff || !baseangle || !angle)
       return NULL;
       
-   memset(&skyplane, 0, sizeof(skyplane));
-
    skyplane.pic        = pic;
    skyplane.delta      = delta;
    skyplane.lightlevel = lightlevel;
@@ -640,7 +673,9 @@ static void R_RenderHorizonPortal(pwindow_t *window)
       }
    }
 
-   lastx = viewx; lasty = viewy; lastz = viewz;
+   lastx  = viewx; 
+   lasty  = viewy; 
+   lastz  = viewz;
    lastxf = view.x;
    lastyf = view.y;
    lastzf = view.z;
@@ -658,7 +693,9 @@ static void R_RenderHorizonPortal(pwindow_t *window)
    if(window->child)
       R_RenderHorizonPortal(window->child);
 
-   viewx = lastx; viewy = lasty; viewz = lastz;
+   viewx  = lastx; 
+   viewy  = lasty; 
+   viewz  = lastz;
    view.x = lastxf;
    view.y = lastyf;
    view.z = lastzf;
@@ -687,7 +724,7 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
       return;
 
 #ifdef RANGECHECK
-   for(int i = 0; i < MAX_SCREENWIDTH; i++)
+   for(int i = 0; i < video.width; i++)
    {
       if(window->bottom[i] > window->top[i] && (window->bottom[i] < -1 
          || window->bottom[i] > viewwindow.height || window->top[i] < -1 
@@ -706,7 +743,7 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
 
    R_ClearSlopeMark(window->minx, window->maxx, window->type);
 
-   floorclip = window->bottom;
+   floorclip   = window->bottom;
    ceilingclip = window->top;
    
    R_ClearOverlayClips();
@@ -761,8 +798,8 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
    view.z = lastzf;
    view.angle = lastanglef;
 
-   viewsin = finesine[viewangle>>ANGLETOFINESHIFT];
-   viewcos = finecosine[viewangle>>ANGLETOFINESHIFT];
+   viewsin  = finesine[viewangle>>ANGLETOFINESHIFT];
+   viewcos  = finecosine[viewangle>>ANGLETOFINESHIFT];
    view.sin = (float)sin(view.angle);
    view.cos = (float)cos(view.angle);
 
@@ -836,7 +873,7 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    } 
 
 #ifdef RANGECHECK
-   for(int i = 0; i < MAX_SCREENWIDTH; i++)
+   for(int i = 0; i < video.width; i++)
    {
       if(window->bottom[i] > window->top[i] && (window->bottom[i] < -1 
          || window->bottom[i] > viewwindow.height || window->top[i] < -1 
@@ -858,7 +895,7 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    // haleyjd: temporary debug
    portal->tainted++;
 
-   floorclip = window->bottom;
+   floorclip   = window->bottom;
    ceilingclip = window->top;
 
    R_ClearOverlayClips();
@@ -927,7 +964,7 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    } 
 
 #ifdef RANGECHECK
-   for(int i = 0; i < MAX_SCREENWIDTH; i++)
+   for(int i = 0; i < video.width; i++)
    {
       if(window->bottom[i] > window->top[i] && (window->bottom[i] < -1 
          || window->bottom[i] > viewwindow.height || window->top[i] < -1 
@@ -949,7 +986,7 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    // haleyjd: temporary debug
    portal->tainted++;
 
-   floorclip = window->bottom;
+   floorclip   = window->bottom;
    ceilingclip = window->top;
 
    R_ClearOverlayClips();
@@ -960,13 +997,12 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    ++validcount;
    R_SetMaskedSilhouette(ceilingclip, floorclip);
 
-   lastx = viewx;
-   lasty = viewy;
-   lastz = viewz;
+   lastx  = viewx;
+   lasty  = viewy;
+   lastz  = viewz;
    lastxf = view.x;
    lastyf = view.y;
    lastzf = view.z;
-
 
    // SoM 3/10/2005: Use the coordinates stored in the portal struct
    viewx  = window->vx + portal->data.link.deltax;
@@ -1112,6 +1148,7 @@ pwindow_t *R_GetLinePortalWindow(portal_t *portal, line_t *line)
 // R_ClearPortals
 //
 // Called at the start of each frame
+//
 void R_ClearPortals()
 {
    portal_t *r = portals;
@@ -1154,11 +1191,13 @@ void R_RenderPortals()
          w->next = unusedhead;
          unusedhead = w;
          w = w->child;
+         unusedhead->child = NULL;
       }
 
       w = windowhead->next;
       windowhead->next = unusedhead;
       unusedhead = windowhead;
+      unusedhead->child = NULL;
 
       windowhead = w;
    }
@@ -1176,11 +1215,10 @@ portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,
                             int toid)
 {
    portal_t *rover, *ret;
-   linkdata_t ldata;
+   edefstructvar(linkdata_t, ldata);
 
-   memset(&ldata, 0, sizeof(ldata));
    ldata.fromid = fromid;
-   ldata.toid = toid;
+   ldata.toid   = toid;
    ldata.planez = planez;
 
    R_CalculateDeltas(markerlinenum, anchorlinenum, 
@@ -1191,12 +1229,12 @@ portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,
 
    for(rover = portals; rover; rover = rover->next)
    {
-      if(rover->type != R_LINKED || 
+      if(rover->type  != R_LINKED                || 
          ldata.deltax != rover->data.link.deltax ||
          ldata.deltay != rover->data.link.deltay ||
          ldata.deltaz != rover->data.link.deltaz ||
          ldata.fromid != rover->data.link.fromid ||
-         ldata.toid != rover->data.link.toid ||
+         ldata.toid   != rover->data.link.toid   ||
          ldata.planez != rover->data.link.planez)
          continue;
 

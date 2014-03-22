@@ -152,10 +152,6 @@ default_t defaults[] =
    DEFAULT_INT("s_precache", &s_precache, NULL, 0, 0, 1, default_t::wad_no,
                "precache sounds at startup"),
   
-   // killough 10/98
-   DEFAULT_INT("disk_icon", &disk_icon, NULL, 0, 0, 1, default_t::wad_no, 
-               "1 to enable flashing icon during disk IO"),
-  
    // killough 2/21/98
    DEFAULT_INT("pitched_sounds", &pitched_sounds, NULL, 0, 0, 1, default_t::wad_yes,
                "1 to enable variable pitch in sound effects (from id's original code)"),
@@ -860,7 +856,6 @@ default_t defaults[] =
 default_or_t HereticDefaultORs[] =
 {
    // misc
-   { "disk_icon",        0 }, // no disk icon (makes consistent)
    { "pitched_sounds",   1 }, // pitched sounds should be on
    { "allowmlook",       1 }, // mlook defaults to on
    { "wipetype",         2 }, // use crossfade wipe by default
@@ -1751,10 +1746,8 @@ bool M_WriteFile(char const *name, void *source, size_t length)
    if(!(fp = fopen(name, "wb")))         // Try opening file
       return 0;                          // Could not open file for writing
    
-   I_BeginRead();                       // Disk icon on
    result = (fwrite(source, 1, length, fp) == length);   // Write data
    fclose(fp);
-   I_EndRead();                         // Disk icon off
    
    if(!result)                          // Remove partially written file
       remove(name);
@@ -1777,7 +1770,6 @@ int M_ReadFile(char const *name, byte **buffer)
    {
       size_t length;
 
-      I_BeginRead();
       fseek(fp, 0, SEEK_END);
       length = ftell(fp);
       fseek(fp, 0, SEEK_SET);
@@ -1787,7 +1779,6 @@ int M_ReadFile(char const *name, byte **buffer)
       if(fread(*buffer, 1, length, fp) == length)
       {
          fclose(fp);
-         I_EndRead();
          return length;
       }
       fclose(fp);

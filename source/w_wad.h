@@ -350,8 +350,6 @@ int         W_LumpLength(int lump);
 uint32_t    W_LumpCheckSum(int lumpnum);
 int         W_ReadLumpHeader(int lump, void *dest, size_t size);
 
-void I_BeginRead(void), I_EndRead(void); // killough 10/98
-
 #endif
 
 //----------------------------------------------------------------------------

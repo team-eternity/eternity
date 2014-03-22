@@ -2003,8 +2003,8 @@ extern menu_t menu_vidadv;
 static const char *mn_vidpage_names[] =
 {
    "Mode / Rendering",
-   "Framerate / Screen Wipe / Misc",
-   "System / Console / Screenshots",
+   "Framerate / Screenshots/ Screen Wipe",
+   "System / Console",
    "Particles",
    "Advanced / OpenGL",
    NULL
@@ -2098,12 +2098,13 @@ static menuitem_t mn_sysvideo_items[] =
    { it_toggle, "Uncapped framerate",       "d_fastrefresh" },
    { it_toggle, "Interpolation",            "d_interpolate" },
    { it_gap },
+   { it_info,   "Screenshots"},
+   { it_toggle, "Screenshot format",        "shot_type"     },
+   { it_toggle, "Gamma correct shots",      "shot_gamma"    },
+   { it_gap },
    { it_info,   "Screen Wipe" },
    { it_toggle, "Wipe style",               "wipetype"      },
    { it_toggle, "Game waits for wipe",      "wipewait"      },
-   { it_gap },
-   { it_info,   "Misc." },
-   { it_toggle, "Loading disk icon",       "v_diskicon"     },
    { it_end }
 };
 
@@ -2136,10 +2137,6 @@ static menuitem_t mn_video_page2_items[] =
    {it_info,     "Console"},
    {it_variable, "Dropdown speed",           "c_speed"},
    {it_variable, "Console size",             "c_height"},
-   {it_gap},
-   {it_info,     "Screenshots"},
-   {it_toggle,   "Screenshot format",       "shot_type"},
-   {it_toggle,   "Gamma correct shots",     "shot_gamma"},
    {it_end}
 };
 

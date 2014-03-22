@@ -36,11 +36,21 @@ struct camera_t
    fixed_t z;
    angle_t angle;
    fixed_t pitch;
-   //int heightsec;  // haleyjd: for deep water handling
-   int groupid;
-   bool flying;
+   int     groupid;
+   bool    flying;
 
    prevpos_t prevpos; // previous position for interpolation
+   
+   // Save the current camera position for interpolation purposes.
+   void backupPosition()
+   {
+      prevpos.x     = x;
+      prevpos.y     = y;
+      prevpos.z     = z;
+      prevpos.angle = angle;
+
+      // TODO: pitch etc.
+   }
 };
 
 extern int chasex;

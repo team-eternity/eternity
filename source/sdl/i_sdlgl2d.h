@@ -51,9 +51,6 @@ public:
    // Overrides
    virtual void FinishUpdate();
    virtual void ReadScreen(byte *scr);
-   virtual void InitDiskFlash();
-   virtual void BeginRead();
-   virtual void EndRead();
    virtual void SetPalette(byte *pal);
    virtual void ShutdownGraphics();
    virtual void ShutdownGraphicsPartway();

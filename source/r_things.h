@@ -46,8 +46,8 @@ struct maskedrange_t
    int firstsprite, lastsprite;
 
    // SoM: Cardboard
-   float floorclip[MAX_SCREENWIDTH];
-   float ceilingclip[MAX_SCREENWIDTH];
+   float *floorclip;
+   float *ceilingclip;
    
    // for unused head
    struct maskedrange_t *next;

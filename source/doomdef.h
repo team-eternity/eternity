@@ -55,13 +55,13 @@ typedef enum {
 #define SCREEN_MUL         1
 #define INV_ASPECT_RATIO   0.625 /* 0.75, ideally */
 
-// killough 2/8/98: MAX versions for maximum screen sizes
-// allows us to avoid the overhead of dynamic allocation
-// when multiple screen sizes are supported
+// haleyjd 02/17/14: MAX_SCREENWIDTH/HEIGHT are now only a limit on the highest
+// resolution that Eternity will allow to attempt to be set. They are no longer
+// used to size any arrays in the renderer.
 
 // SoM 2-4-04: ANYRES
-#define MAX_SCREENWIDTH  2880
-#define MAX_SCREENHEIGHT 1800
+#define MAX_SCREENWIDTH  32767
+#define MAX_SCREENHEIGHT 32767
 
 #define SCREENWIDTH      320
 #define SCREENHEIGHT     200

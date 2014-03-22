@@ -321,6 +321,7 @@ SPAN_FUNC(R_DrawSpanTL_8_512, TL_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 14, 23, 0x3F
 
 SPAN_FUNC(R_DrawSpanTL_8_GEN, TL_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, (span.xshift), 
           (span.yshift), (span.xmask), TL_PUTPIXEL_8, TL_PUTPIXEL_EXTRA_8, DESTSTEP_8)
+
 // Additive blending
 
 SPAN_FUNC(R_DrawSpanAdd_8_64,  ADD_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 20, 26, 0xFC0, 
@@ -348,9 +349,9 @@ SPAN_FUNC(R_DrawSpanAdd_8_GEN, ADD_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, (span.xshi
 
 void R_DrawSlope_8_64(void)
 {
-   double iu = slopespan.iufrac, iv = slopespan.ivfrac;
+   double iu  = slopespan.iufrac, iv  = slopespan.ivfrac;
    double ius = slopespan.iustep, ivs = slopespan.ivstep;
-   double id = slopespan.idfrac, ids = slopespan.idstep;
+   double id  = slopespan.idfrac, ids = slopespan.idstep;
    
    byte *src, *dest, *colormap;
    int count;
@@ -406,7 +407,7 @@ void R_DrawSlope_8_64(void)
       incount = SPANJUMP;
       while(incount--)
       {
-         colormap = slopespan.colormap[mapindex ++];
+         colormap = slopespan.colormap[mapindex++];
          *dest++ = colormap[src[((vfrac >> 10) & 0xFC0) | ((ufrac >> 16) & 63)]];
          ufrac += ustep;
          vfrac += vstep;
@@ -439,7 +440,7 @@ void R_DrawSlope_8_64(void)
       incount = count;
       while(incount--)
       {
-         colormap = slopespan.colormap[mapindex ++];
+         colormap = slopespan.colormap[mapindex++];
          *dest++ = colormap[src[((vfrac >> 10) & 0xFC0) | ((ufrac >> 16) & 63)]];
          ufrac += ustep;
          vfrac += vstep;
@@ -451,9 +452,9 @@ void R_DrawSlope_8_64(void)
 
 void R_DrawSlope_8_128(void)
 {
-   double iu = slopespan.iufrac, iv = slopespan.ivfrac;
+   double iu  = slopespan.iufrac, iv  = slopespan.ivfrac;
    double ius = slopespan.iustep, ivs = slopespan.ivstep;
-   double id = slopespan.idfrac, ids = slopespan.idstep;
+   double id  = slopespan.idfrac, ids = slopespan.idstep;
    
    byte *src, *dest, *colormap;
    int count;
@@ -491,7 +492,7 @@ void R_DrawSlope_8_128(void)
       incount = SPANJUMP;
       while(incount--)
       {
-         colormap = slopespan.colormap[mapindex ++];
+         colormap = slopespan.colormap[mapindex++];
          *dest++ = colormap[src[((vfrac >> 9) & 0x3F80) | ((ufrac >> 16) & 0x7F)]];
          ufrac += ustep;
          vfrac += vstep;
@@ -524,7 +525,7 @@ void R_DrawSlope_8_128(void)
       incount = count;
       while(incount--)
       {
-         colormap = slopespan.colormap[mapindex ++];
+         colormap = slopespan.colormap[mapindex++];
          *dest++ = colormap[src[((vfrac >> 9) & 0x3F80) | ((ufrac >> 16) & 0x7F)]];
          ufrac += ustep;
          vfrac += vstep;
@@ -534,9 +535,9 @@ void R_DrawSlope_8_128(void)
 
 void R_DrawSlope_8_256(void)
 {
-   double iu = slopespan.iufrac, iv = slopespan.ivfrac;
+   double iu  = slopespan.iufrac, iv  = slopespan.ivfrac;
    double ius = slopespan.iustep, ivs = slopespan.ivstep;
-   double id = slopespan.idfrac, ids = slopespan.idstep;
+   double id  = slopespan.idfrac, ids = slopespan.idstep;
    
    byte *src, *dest, *colormap;
    int count;
@@ -574,7 +575,7 @@ void R_DrawSlope_8_256(void)
       incount = SPANJUMP;
       while(incount--)
       {
-         colormap = slopespan.colormap[mapindex ++];
+         colormap = slopespan.colormap[mapindex++];
          *dest++ = colormap[src[((vfrac >> 8) & 0xFF00) | ((ufrac >> 16) & 0xFF)]];
          ufrac += ustep;
          vfrac += vstep;
@@ -607,7 +608,7 @@ void R_DrawSlope_8_256(void)
       incount = count;
       while(incount--)
       {
-         colormap = slopespan.colormap[mapindex ++];
+         colormap = slopespan.colormap[mapindex++];
          *dest++ = colormap[src[((vfrac >> 8) & 0xFF00) | ((ufrac >> 16) & 0xFF)]];
          ufrac += ustep;
          vfrac += vstep;
@@ -617,9 +618,9 @@ void R_DrawSlope_8_256(void)
 
 void R_DrawSlope_8_512(void)
 {
-   double iu = slopespan.iufrac, iv = slopespan.ivfrac;
+   double iu  = slopespan.iufrac, iv  = slopespan.ivfrac;
    double ius = slopespan.iustep, ivs = slopespan.ivstep;
-   double id = slopespan.idfrac, ids = slopespan.idstep;
+   double id  = slopespan.idfrac, ids = slopespan.idstep;
    
    byte *src, *dest, *colormap;
    int count;
@@ -657,7 +658,7 @@ void R_DrawSlope_8_512(void)
       incount = SPANJUMP;
       while(incount--)
       {
-         colormap = slopespan.colormap[mapindex ++];
+         colormap = slopespan.colormap[mapindex++];
          *dest++ = colormap[src[((vfrac >> 7) & 0x3FE00) | ((ufrac >> 16) & 0x1FF)]];
          ufrac += ustep;
          vfrac += vstep;
@@ -690,7 +691,7 @@ void R_DrawSlope_8_512(void)
       incount = count;
       while(incount--)
       {
-         colormap = slopespan.colormap[mapindex ++];
+         colormap = slopespan.colormap[mapindex++];
          *dest++ = colormap[src[((vfrac >> 7) & 0x3FE00) | ((ufrac >> 16) & 0x1FF)]];
          ufrac += ustep;
          vfrac += vstep;
@@ -700,9 +701,9 @@ void R_DrawSlope_8_512(void)
 
 void R_DrawSlope_8_GEN()
 {
-   double iu = slopespan.iufrac, iv = slopespan.ivfrac;
+   double iu  = slopespan.iufrac, iv  = slopespan.ivfrac;
    double ius = slopespan.iustep, ivs = slopespan.ivstep;
-   double id = slopespan.idfrac, ids = slopespan.idstep;
+   double id  = slopespan.idfrac, ids = slopespan.idstep;
    
    byte *src, *dest, *colormap;
    int count;
@@ -740,7 +741,7 @@ void R_DrawSlope_8_GEN()
       incount = SPANJUMP;
       while(incount--)
       {
-         colormap = slopespan.colormap[mapindex ++];
+         colormap = slopespan.colormap[mapindex++];
          *dest++ = colormap[src[((vfrac >> span.xshift) & span.xmask) | ((ufrac >> 16) & span.ymask)]];
          ufrac += ustep;
          vfrac += vstep;
@@ -773,7 +774,7 @@ void R_DrawSlope_8_GEN()
       incount = count;
       while(incount--)
       {
-         colormap = slopespan.colormap[mapindex ++];
+         colormap = slopespan.colormap[mapindex++];
          *dest++ = colormap[src[((vfrac >> span.xshift) & span.xmask) | ((ufrac >> 16) & span.ymask)]];
          ufrac += ustep;
          vfrac += vstep;
