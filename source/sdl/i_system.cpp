@@ -319,7 +319,6 @@ void I_EndDoom()
    unsigned char *endoom_data;
    unsigned char *screendata;
    int start_ms;
-   bool waiting;
    
    // haleyjd: it's possible to have quit before we even initialized
    // GameModeInfo, so be sure it's valid before using it here. Also,
@@ -342,17 +341,16 @@ void I_EndDoom()
    
    // Wait for 10 seconds, or until a keypress or mouse click
    // haleyjd: delay period specified in config (default = 350)
-   waiting = true;
    start_ms = i_haltimer.GetTime();
    
-   while(waiting && i_haltimer.GetTime() < start_ms + endoomdelay)
+   while(i_haltimer.GetTime() < start_ms + endoomdelay)
    {
       TXT_UpdateScreen();
 
-      if(TXT_GetChar() >= 0)
-         waiting = false;
+      if(TXT_GetChar() > 0)
+         break;
 
-      TXT_Sleep(1);
+      TXT_Sleep(0);
    }
    
    // Shut down text mode screen   
