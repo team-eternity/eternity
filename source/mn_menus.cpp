@@ -3922,13 +3922,16 @@ int mn_classic_menus;
 //
 void MN_LinkClassicMenus(int link)
 {
+   if(!(GameModeInfo->flags & GIF_CLASSICMENUS))
+      return;
+
    if(link) // turn on classic menus
    {
-      menu_main.menuitems[1].data = "mn_old_options";
+      GameModeInfo->mainMenu->menuitems[1].data = "mn_old_options";
    }
    else // turn off classic menus
    {
-      menu_main.menuitems[1].data = "mn_options";
+      GameModeInfo->mainMenu->menuitems[1].data = "mn_options";
    }
 }
 
@@ -3964,8 +3967,14 @@ static void MN_OldOptionsDrawer()
    V_DrawPatch(60 + 120, 37 + EMULATED_ITEM_SIZE, &subscreen43,
                PatchLoader::CacheName(wGlobalDir, msgNames[showMessages], PU_CACHE));
 
+   const char *detailstr;
+   if(GameModeInfo->missionInfo->flags & MI_NOGDHIGH) // stupid BFG Edition.
+      detailstr = msgNames[1];
+   else
+      detailstr = detailNames[0];
+
    V_DrawPatch(60 + 175, 37 + EMULATED_ITEM_SIZE*2, &subscreen43,
-               PatchLoader::CacheName(wGlobalDir, detailNames[0], PU_CACHE));
+               PatchLoader::CacheName(wGlobalDir, detailstr, PU_CACHE));
 }
 
 menu_t menu_old_options =

@@ -785,15 +785,23 @@ static missioninfo_t gmFinalPlutonia =
    mapnamesp,          // levelNamesOR
 };
 
+// Special properties of BFG Edition mission:
+// * DOOM II maps 31/32 rename themselves if not DEH or MAPINFO modified
+// * Has MAP33: Betray w/secret exit on MAP02
+// * Supports Doom 2 managed mission pack selection menu
+// * Has a stupid M_GDHIGH lump
+#define BFGMISSIONFLAGS \
+   (MI_WOLFNAMEHACKS|MI_HASBETRAY|MI_DOOM2MISSIONS|MI_NOGDHIGH)
+
 //
 // Disk version (Xbox and BFG Edition)
 //
 static missioninfo_t gmDisk =
 {
-   pack_disk,                                      // id
-   MI_WOLFNAMEHACKS|MI_HASBETRAY|MI_DOOM2MISSIONS, // flags
-   "doom2",                                        // gamePathName
-   NULL,                                           // sameLevels
+   pack_disk,          // id
+   BFGMISSIONFLAGS,    // flags
+   "doom2",            // gamePathName
+   NULL,               // sameLevels
 
    GIF_LOSTSOULBOUNCE, // addGMIFlags
    0,                  // remGMIFlags
