@@ -209,6 +209,9 @@ static default_t sysdefaults[] =
    DEFAULT_STR("i_videomode", &i_default_videomode, &i_videomode, "640x480w", default_t::wad_no,
                "Description of video mode parameters (WWWWxHHHH[flags])"),
 
+   DEFAULT_BOOL("i_letterbox", &i_letterbox, NULL, false, default_t::wad_no, 
+                "Letterbox video modes with aspect ratios narrower than 4:3"),
+
    DEFAULT_INT("use_vsync", &use_vsync, NULL, 1, 0, 1, default_t::wad_no,
                "1 to enable wait for vsync to avoid display tearing"),
 

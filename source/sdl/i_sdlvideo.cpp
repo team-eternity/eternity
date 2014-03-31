@@ -52,13 +52,17 @@ void UpdateGrab();
 bool MouseShouldBeGrabbed();
 void UpdateFocus();
 
-SDL_Surface *sdlscreen;
-static SDL_Surface *primary_surface = NULL;
-
 //=============================================================================
 //
 // Graphics Code
 //
+
+static SDL_Surface *sdlscreen;
+static SDL_Surface *primary_surface;
+static SDL_Rect    *destrect;
+
+// used when rendering to a subregion, such as for letterboxing
+static SDL_Rect staticDestRect;
 
 extern int  use_vsync;     // killough 2/8/98: controls whether vsync is called
 extern bool noblit;
@@ -102,7 +106,7 @@ void SDLVideoDriver::FinishUpdate()
 
    // haleyjd 11/12/09: blit *after* palette set improves behavior.
    if(primary_surface)
-      SDL_BlitSurface(primary_surface, NULL, sdlscreen, NULL);
+      SDL_BlitSurface(primary_surface, NULL, sdlscreen, destrect);
 
    // haleyjd 11/12/09: ALWAYS update. Causes problems with some video surface
    // types otherwise.
@@ -131,9 +135,7 @@ void SDLVideoDriver::ReadScreen(byte *scr)
 //
 static void I_SDLSetPaletteDirect(byte *palette)
 {
-   int i;
-
-   for(i = 0; i < 256; ++i)
+   for(int i = 0; i < 256; i++)
    {
       colors[i].r = gammatable[usegamma][(basepal[i].r = *palette++)];
       colors[i].g = gammatable[usegamma][(basepal[i].g = *palette++)];
@@ -155,12 +157,10 @@ static void I_SDLSetPaletteDirect(byte *palette)
 //
 void SDLVideoDriver::SetPalette(byte *palette)
 {
-   int i;
-
    if(!palette)
    {
       // Gamma change
-      for(i = 0; i < 256; ++i)
+      for(int i = 0; i < 256; i++)
       {
          colors[i].r = gammatable[usegamma][basepal[i].r];
          colors[i].g = gammatable[usegamma][basepal[i].g];
@@ -169,7 +169,7 @@ void SDLVideoDriver::SetPalette(byte *palette)
    }
    else
    {
-      for(i = 0; i < 256; ++i)
+      for(int i = 0; i < 256; i++)
       {
          colors[i].r = gammatable[usegamma][(basepal[i].r = *palette++)];
          colors[i].g = gammatable[usegamma][(basepal[i].g = *palette++)];
@@ -360,8 +360,27 @@ bool SDLVideoDriver::InitGraphicsMode()
    UpdateFocus();
    UpdateGrab();
 
-   video.width     = v_w;
-   video.height    = v_h;
+   // check for letterboxing
+   if(I_VideoShouldLetterbox(v_w, v_h))
+   {
+      int hs = I_VideoLetterboxHeight(v_w);
+
+      staticDestRect.x = 0;
+      staticDestRect.y = static_cast<Sint16>(I_VideoLetterboxOffset(v_h, hs));
+      staticDestRect.w = static_cast<Uint16>(v_w);
+      staticDestRect.h = static_cast<Uint16>(hs);
+
+      video.width  = v_w;
+      video.height = hs;
+      destrect     = &staticDestRect;
+   }
+   else
+   {
+      video.width  = v_w;
+      video.height = v_h;
+      destrect     = NULL;
+   }
+
    video.bitdepth  = 8;
    video.pixelsize = 1;
 
