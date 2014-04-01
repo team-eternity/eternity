@@ -4011,7 +4011,7 @@ static menuitem_t mn_old_sound_items[] =
    { it_end }
 };
 
-static void MN_OldSoundDrawer(void)
+static void MN_OldSoundDrawer()
 {
    V_DrawPatch(60, 38, &subscreen43, 
                PatchLoader::CacheName(wGlobalDir, "M_SVOL", PU_CACHE));
