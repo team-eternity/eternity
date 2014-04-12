@@ -555,7 +555,7 @@ static void deh_OpenLog(const char *fn)
 //
 // Closes the DeHackEd log if one is open.
 //
-static void deh_CloseLog(void)
+static void deh_CloseLog()
 {
    // haleyjd 05/21/02: must check fileout for validity!
    if(fileout && fileout != stdout)
