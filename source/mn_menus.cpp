@@ -2003,7 +2003,7 @@ extern menu_t menu_vidadv;
 static const char *mn_vidpage_names[] =
 {
    "Mode / Rendering",
-   "Framerate / Screenshots/ Screen Wipe",
+   "Framerate / Screenshots / Screen Wipe",
    "System / Console",
    "Particles",
    "Advanced / OpenGL",
