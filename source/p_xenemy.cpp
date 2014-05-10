@@ -57,7 +57,6 @@ void QuakeThinker::Think()
    // quake is finished?
    if(this->duration == 0)
    {
-      S_StopSound(this, CHAN_ALL);
       this->removeThinker();
       return;
    }
@@ -75,7 +74,7 @@ void QuakeThinker::Think()
    tics = this->duration--;
 
    // do some rumbling
-   for(i = 0; i < MAXPLAYERS; ++i)
+   for(i = 0; i < MAXPLAYERS; i++)
    {
       if(playeringame[i])
       {
