@@ -152,10 +152,6 @@ static void S_StopChannel(int cnum)
    {
       I_StopSound(c->handle, c->idnum); // stop the sound playing
       
-      // haleyjd 08/13/10: sound origins should count as thinker references
-      if(demo_version >= 337 && c->origin)
-         P_SetTarget<PointThinker>(&(c->origin), NULL);
-
       // haleyjd 09/27/06: clear the entire channel
       memset(c, 0, sizeof(channel_t));
    }
@@ -626,10 +622,7 @@ void S_StartSfxInfo(const soundparams_t &params)
 #endif
 
    channels[cnum].sfxinfo = sfx;
-   if(demo_version >= 337) // haleyjd 08/13/10: sound channels are thinker references.
-      P_SetTarget<PointThinker>(&(channels[cnum].origin), origin);
-   else
-      channels[cnum].origin = origin;
+   channels[cnum].origin  = origin;
 
    while(sfx->link)
       sfx = sfx->link;     // sf: skip thru link(s)
@@ -658,8 +651,6 @@ void S_StartSfxInfo(const soundparams_t &params)
    }
    else // haleyjd: the sound didn't start, so clear the channel info
    {
-      if(demo_version >= 337)
-         P_SetTarget<PointThinker>(&(channels[cnum].origin), NULL);
       memset(&channels[cnum], 0, sizeof(channel_t));
    }
 }
@@ -925,8 +916,6 @@ void S_UpdateSounds(const Mobj *listener)
       if(c->idnum != I_SoundID(c->handle))
       {
          // clear the channel and keep going
-         if(demo_version >= 337 && c->origin)
-            P_SetTarget<PointThinker>(&(c->origin), NULL);
          memset(c, 0, sizeof(channel_t));
          continue;
       }
