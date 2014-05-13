@@ -153,6 +153,7 @@ already set up Homebrew and the required dependencies.
  libvorbis
  flac
  libmpeg2
+ libmikmod
 
 * Follow the cmake instructions, with the exception of one command:
 +
