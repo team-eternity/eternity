@@ -133,7 +133,7 @@ https://dl.dropboxusercontent.com/u/5103936/permanent/eternity/eternity-osx-clan
 front-end ("launcher").
 
 Building with Homebrew
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
 
 The benefit of Homebrew compilation is that you don't need to "install"
 Eternity like a standard Mac application. However, this will require some
