@@ -304,6 +304,7 @@ struct missioninfo_t
    const char   *interPicOR;         // if not NULL, overrides interPic
    exitrule_t   *exitRulesOR;        // if not NULL, overrides exitRules
    const char  **levelNamesOR;       // if not NULL, overrides levelNames
+   int           randMusMaxOR;       // if not    0, overrides randMusMax
 };
 
 // function pointer types

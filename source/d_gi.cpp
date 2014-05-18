@@ -878,6 +878,14 @@ static missioninfo_t gmHereticBeta =
    0,                   // numEpisodesOR
    NULL,                // iwadPathOR
    NULL,                // finaleDataOR
+   NULL,                // menuBackgroundOR
+   NULL,                // creditBackgroundOR
+   NULL,                // consoleBackOR
+   NULL,                // demoStatesOR
+   NULL,                // interPicOR
+   NULL,                // exitRulesOR
+   NULL,                // levelNamesOR
+   hmus_e1m3,           // randMusMaxOR
 };
 
 //
@@ -1031,7 +1039,7 @@ static gamemodeinfo_t giDoomSW =
    mus_None,          // musMin
    NUMMUSIC,          // numMusic
    mus_e1m1,          // randMusMin
-   mus_e3m9,          // randMusMax
+   mus_e1m9,          // randMusMax
    "D_",              // musPrefix
    "e1m1",            // defMusName
    DOOMDEFSOUND,      // defSoundName
@@ -1467,7 +1475,7 @@ static gamemodeinfo_t giHereticSW =
    hmus_None,           // musMin
    NUMHTICMUSIC,        // numMusic
    hmus_e1m1,           // randMusMin
-   hmus_e3m3,           // randMusMax
+   hmus_e1m9,           // randMusMax
    "MUS_",              // musPrefix
    "e1m1",              // defMusName
    HTICDEFSOUND,        // defSoundName
@@ -1664,6 +1672,7 @@ void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
    OVERRIDE(interPic,         NULL);
    OVERRIDE(exitRules,        NULL);
    OVERRIDE(levelNames,       NULL);
+   OVERRIDE(randMusMax,          0);
    
    // Note: demostates are not overridden here, see below.
 }
