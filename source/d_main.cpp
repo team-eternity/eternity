@@ -1516,6 +1516,7 @@ static void D_DoomInit()
       bool nosound = !!M_CheckParm("-nosound");
       nomusicparm  = nosound || M_CheckParm("-nomusic");
       nosfxparm    = nosound || M_CheckParm("-nosfx");
+      s_randmusic  = !!M_CheckParm("-randmusic");
    }
    //jff end of sound/music command line parms
 

@@ -421,6 +421,8 @@ struct gamemodeinfo_t
    gimuscheatfn_t  MusicCheat;    // pointer to music cheat routine
    int musMin;                    // smallest music index value (0)
    int numMusic;                  // maximum music index value
+   int randMusMin;                // beginning of randomizable music 
+   int randMusMax;                // end of randomizable music
    const char *musPrefix;         // "D_" for DOOM, "MUS_" for Heretic
    const char *defMusName;        // default music name
    const char *defSoundName;      // default sound if one is missing

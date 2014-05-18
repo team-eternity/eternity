@@ -1030,6 +1030,8 @@ static gamemodeinfo_t giDoomSW =
    S_DoomMusicCheat,  // MusicCheat
    mus_None,          // musMin
    NUMMUSIC,          // numMusic
+   mus_e1m1,          // randMusMin
+   mus_e3m9,          // randMusMax
    "D_",              // musPrefix
    "e1m1",            // defMusName
    DOOMDEFSOUND,      // defSoundName
@@ -1137,6 +1139,8 @@ static gamemodeinfo_t giDoomReg =
    S_DoomMusicCheat,  // MusicCheat
    mus_None,          // musMin
    NUMMUSIC,          // numMusic
+   mus_e1m1,          // randMusMin
+   mus_e3m9,          // randMusMax
    "D_",              // musPrefix
    "e1m1",            // defMusName
    DOOMDEFSOUND,      // defSoundName
@@ -1244,6 +1248,8 @@ static gamemodeinfo_t giDoomRetail =
    S_DoomMusicCheat,  // MusicCheat
    mus_None,          // musMin
    NUMMUSIC,          // numMusic
+   mus_e1m1,          // randMusMin
+   mus_e3m9,          // randMusMax
    "D_",              // musPrefix
    "e1m1",            // defMusName
    DOOMDEFSOUND,      // defSoundName
@@ -1351,6 +1357,8 @@ static gamemodeinfo_t giDoomCommercial =
    S_Doom2MusicCheat,  // MusicCheat
    mus_None,           // musMin
    NUMMUSIC,           // numMusic
+   mus_runnin,         // randMusMin
+   mus_ultima,         // randMusMax
    "D_",               // musPrefix
    "runnin",           // defMusName
    DOOMDEFSOUND,       // defSoundName
@@ -1458,6 +1466,8 @@ static gamemodeinfo_t giHereticSW =
    S_HereticMusicCheat, // MusicCheat
    hmus_None,           // musMin
    NUMHTICMUSIC,        // numMusic
+   hmus_e1m1,           // randMusMin
+   hmus_e3m3,           // randMusMax
    "MUS_",              // musPrefix
    "e1m1",              // defMusName
    HTICDEFSOUND,        // defSoundName
@@ -1569,6 +1579,8 @@ static gamemodeinfo_t giHereticReg =
    S_HereticMusicCheat, // MusicCheat
    hmus_None,           // musMin
    NUMHTICMUSIC,        // numMusic
+   hmus_e1m1,           // randMusMin
+   hmus_e3m3,           // randMusMax
    "MUS_",              // musPrefix
    "e1m1",              // defMusName
    HTICDEFSOUND,        // defSoundName

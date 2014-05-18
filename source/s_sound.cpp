@@ -123,6 +123,9 @@ int default_numChannels;  // killough 9/98
 //jff 3/17/98 to keep track of last IDMUS specified music num
 int idmusnum;
 
+// haleyjd 05/18/14: music randomization
+bool s_randmusic = false;
+
 // sf:
 // haleyjd: sound hashing is now kept up by EDF
 musicinfo_t *musicinfos[SOUND_HASHSLOTS];
@@ -1184,6 +1187,13 @@ void S_ChangeMusic(musicinfo_t *music, int looping)
 void S_ChangeMusicNum(int musnum, int looping)
 {
    musicinfo_t *music;
+
+   // haleyjd 05/18/14: check for Tarnsman's random music
+   if(s_randmusic && 
+      musnum >= GameModeInfo->randMusMin && musnum <= GameModeInfo->randMusMax)
+   {
+      musnum = M_RangeRandomEx(GameModeInfo->randMusMin, GameModeInfo->randMusMax);
+   }
    
    if(musnum <= GameModeInfo->musMin || musnum >= GameModeInfo->numMusic)
    {
@@ -1564,6 +1574,9 @@ CONSOLE_VARIABLE(music_volume, snd_MusicVolume, 0)
 CONSOLE_VARIABLE(s_flippan, forceFlipPan, 0) {}
 
 CONSOLE_VARIABLE(s_hidefmusic, s_hidefmusic, 0) {}
+
+VARIABLE_TOGGLE(s_randmusic,      NULL, onoff);
+CONSOLE_VARIABLE(s_randmusic, s_randmusic, 0) {}
 
 CONSOLE_COMMAND(s_playmusic, 0)
 {
