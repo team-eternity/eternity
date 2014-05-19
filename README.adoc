@@ -54,7 +54,7 @@ Mac OS X respectively.
 Building with CMake
 ~~~~~~~~~~~~~~~~~~~
 CMake should be capable of generating build files for all platforms,
-but it is most commonly used only for Unix/BSD-style OSes and not
+but it is most commonly used only for Unix OSes and not
 thoroughly tested outside of it.
 
 . If you haven't already, extract the source *.zip file or clone the
