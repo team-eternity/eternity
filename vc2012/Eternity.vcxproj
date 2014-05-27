@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -1043,6 +1043,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\source\wp_weapons.cpp" />
     <ClCompile Include="..\source\w_formats.cpp" />
     <ClCompile Include="..\source\w_hacks.cpp" />
     <ClCompile Include="..\source\w_levels.cpp" />
@@ -1410,6 +1411,7 @@
     <ClInclude Include="..\source\v_patchfmt.h" />
     <ClInclude Include="..\source\v_png.h" />
     <ClInclude Include="..\Source\v_video.h" />
+    <ClInclude Include="..\source\wp_weapons.h" />
     <ClInclude Include="..\source\w_formats.h" />
     <ClInclude Include="..\source\w_hacks.h" />
     <ClInclude Include="..\source\w_iterator.h" />
