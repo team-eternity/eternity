@@ -1204,8 +1204,6 @@ void A_FireShotgun(actionargs_t *actionargs)
    if(!player)
       return;
 
-   // PCLASS_FIXME: second attack state
-
    P_WeaponSound(mo, sfx_shotgn);
    P_SetMobjState(mo, player->pclass->altattack);
    
@@ -1231,8 +1229,6 @@ void A_FireShotgun2(actionargs_t *actionargs)
    if(!player)
       return;
 
-   // PCLASS_FIXME: secondary attack state
-   
    P_WeaponSound(mo, sfx_dshtgn);
    P_SetMobjState(mo, player->pclass->altattack);
 
@@ -1626,11 +1622,6 @@ void P_MovePsprites(player_t *player)
 // New Eternity Weapon Functions
 //
 //===============================
-
-// FIXME/TODO: get rid of this?
-void A_FireGrenade(actionargs_t *actionargs)
-{
-}
 
 static const char *kwds_A_FireCustomBullets[] =
 {
