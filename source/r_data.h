@@ -68,13 +68,15 @@ struct texcol_t
 typedef enum
 {
    // Set if the texture contains see-thru portions
-   TF_MASKED    = 0x1,
+   TF_MASKED    = 0x01u,
    // Set by animation code marks this texture as being swirly
-   TF_SWIRLY    = 0x2,
+   TF_SWIRLY    = 0x02u,
    // Set if the texture can be used as a flat. 
-   TF_CANBEFLAT = 0x4,
+   TF_CANBEFLAT = 0x04u,
    // Set if the texture is animated
-   TF_ANIMATED  = 0x8,
+   TF_ANIMATED  = 0x08u,
+   // Set if texture width is non-power-of-two
+   TF_WIDTHNP2  = 0x10u,
 } texflag_e;
 
 struct texture_t
