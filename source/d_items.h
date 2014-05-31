@@ -36,16 +36,16 @@ class MetaTable;
 //
 enum
 {
-   WPF_NOTHRUST      = 0x00000001, // doesn't thrust Mobj's
-   WPF_NOHITGHOSTS   = 0x00000002, // tracer-based weapon can't hit ghosts
-   WPF_NOTSHAREWARE  = 0x00000004, // not in shareware gamemodes
-   WPF_UNUSED        = 0x00000008, // (was WPF_COMMERCIAL, free for use)
-   WPF_SILENCER      = 0x00000010, // weapon supports silencer powerup
-   WPF_SILENT        = 0x00000020, // weapon is always silent
-   WPF_NOAUTOFIRE    = 0x00000040, // weapon won't autofire in A_WeaponReady
-   WPF_FLEEMELEE     = 0x00000080, // monsters consider it a melee weapon
-   WPF_ALWAYSRECOIL  = 0x00000100, // weapon always has recoil
-   WPF_HAPTICRECOIL  = 0x00000200, // use recoil-style haptic effect
+   WPF_NOTHRUST      = 0x00000001u, // doesn't thrust Mobj's
+   WPF_NOHITGHOSTS   = 0x00000002u, // tracer-based weapon can't hit ghosts
+   WPF_NOTSHAREWARE  = 0x00000004u, // not in shareware gamemodes
+   WPF_ENABLEAPS     = 0x00000008u, // enables ammo-per-shot field
+   WPF_SILENCER      = 0x00000010u, // weapon supports silencer powerup
+   WPF_SILENT        = 0x00000020u, // weapon is always silent
+   WPF_NOAUTOFIRE    = 0x00000040u, // weapon won't autofire in A_WeaponReady
+   WPF_FLEEMELEE     = 0x00000080u, // monsters consider it a melee weapon
+   WPF_ALWAYSRECOIL  = 0x00000100u, // weapon always has recoil
+   WPF_HAPTICRECOIL  = 0x00000200u, // use recoil-style haptic effect
 };
 
 // Weapon info: sprite frames, ammunition use.
@@ -61,10 +61,13 @@ struct weaponinfo_t
    int          atkstate;
    int          flashstate;
    int          ammopershot;  // haleyjd 08/10/02: ammo per shot field
-   int          enableaps;    // haleyjd: enables above field, off by default
-   
+
+   // haleyjd 05/31/14: more dynamic weapons work
+   weaponinfo_t *nextInCycle; // next weapon in cycle order
+   weaponinfo_t *prevInCycle; // previous weapon in cycle order
+
    // haleyjd 09/11/07: new fields in prep. for dynamic weapons
-   int          flags;
+   unsigned int flags;
    int          mod;
    int          recoil;
    int          hapticrecoil; // haptic recoil strength, from 1 to 10
