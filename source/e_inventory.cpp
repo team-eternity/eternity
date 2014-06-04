@@ -67,6 +67,7 @@ static const char *e_ItemEffectTypeNames[NUMITEMFX] =
    "Armor",
    "Ammo",
    "Power",
+   "WeaponGiver",
    "Artifact"
 };
 
@@ -242,6 +243,13 @@ cfg_opt_t edf_powerfx_opts[] =
    CFG_END()
 };
 
+// Weapon Giver effect fields
+cfg_opt_t edf_weapgfx_opts[] =
+{
+   CFG_INT("dummy", 0, CFGF_NONE), // TODO
+   CFG_END()
+};
+
 // Artifact subtype names
 static const char *artiTypeNames[NUMARTITYPES] =
 {
@@ -307,6 +315,7 @@ static const char *e_ItemSectionNames[NUMITEMFX] =
    EDF_SEC_ARMORFX,
    EDF_SEC_AMMOFX,
    EDF_SEC_POWERFX,
+   EDF_SEC_WEAPGFX,
    EDF_SEC_ARTIFACT
 };
 
@@ -1067,9 +1076,9 @@ e_pickupfx_t *pickupfx = NULL;
 //
 // E_processPickupItems
 //
-// Allocates the pickupfx array used in P_TouchSpecialThing,
-// and loads all pickupitem definitions, using the sprite hash
-// table to resolve what sprite owns the specified effect.
+// Allocates the pickupfx array used in P_TouchSpecialThing, and loads all 
+// pickupitem definitions, using the sprite hash table to resolve what sprite
+// owns the specified effect.
 //
 static void E_processPickupItems(cfg_t *cfg)
 {
