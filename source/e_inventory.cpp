@@ -149,6 +149,10 @@ MetaTable *E_GetItemEffects()
 #define KEY_ARTIFACTTYPE   "artifacttype"
 #define KEY_BACKPACKAMOUNT "ammo.backpackamount"
 #define KEY_BACKPACKMAXAMT "ammo.backpackmaxamount"
+#define KEY_AMMOCOOPSTAY   "ammo.coopstay"
+#define KEY_AMMODMSTAY     "ammo.dmstay"
+#define KEY_AMMODROPPED    "ammo.dropped"
+#define KEY_AMMOGIVE       "ammo.give"
 #define KEY_BONUS          "bonus"
 #define KEY_CLASS          "class"
 #define KEY_CLASSNAME      "classname"
@@ -173,6 +177,7 @@ MetaTable *E_GetItemEffects()
 #define KEY_UNDROPPABLE    "undroppable"
 #define KEY_USEEFFECT      "useeffect"
 #define KEY_USESOUND       "usesound"
+#define KEY_WEAPON         "weapon"
 
 // Interned metatable keys
 static MetaKeyIndex keyAmount        (KEY_AMOUNT        );
@@ -246,7 +251,11 @@ cfg_opt_t edf_powerfx_opts[] =
 // Weapon Giver effect fields
 cfg_opt_t edf_weapgfx_opts[] =
 {
-   CFG_INT("dummy", 0, CFGF_NONE), // TODO
+   CFG_STR(KEY_WEAPON,       "", CFGF_NONE), // name of weapon to give
+   CFG_INT(KEY_AMMODMSTAY,    0, CFGF_NONE), // amount of ammo given in DM w/weapons stay
+   CFG_INT(KEY_AMMOCOOPSTAY,  0, CFGF_NONE), // amount of ammo given in coop w/weapon stay
+   CFG_INT(KEY_AMMOGIVE,      0, CFGF_NONE), // amount of ammo given normally
+   CFG_INT(KEY_AMMODROPPED,   0, CFGF_NONE), // amount of ammo given when dropped
    CFG_END()
 };
 
