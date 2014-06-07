@@ -477,8 +477,6 @@ static void D_collectIWADPaths(Collection<qstring> &paths)
 #endif
 }
 
-#define PATHEMPTY(str) (!str || !*str)
-
 //
 // D_determineIWADVersion
 //
@@ -506,26 +504,26 @@ static void D_determineIWADVersion(const qstring &fullpath)
    switch(version.gamemode)
    {
    case shareware: // DOOM Shareware
-      if(PATHEMPTY(gi_path_doomsw))
+      if(estrempty(gi_path_doomsw))
          var = &gi_path_doomsw;
       break;
    case registered: // DOOM Registered
-      if(PATHEMPTY(gi_path_doomreg))
+      if(estrempty(gi_path_doomreg))
          var = &gi_path_doomreg;
       break;
    case retail: // The Ultimate DOOM   
       if(version.freedoom)
       { 
-         if(PATHEMPTY(gi_path_fdoomu)) // Ultimate FreeDoom
+         if(estrempty(gi_path_fdoomu)) // Ultimate FreeDoom
             var = &gi_path_fdoomu;
       }
-      else if(PATHEMPTY(gi_path_doomu)) // Ultimate Doom
+      else if(estrempty(gi_path_doomu)) // Ultimate Doom
          var = &gi_path_doomu;
       break;
    case commercial: // DOOM II
       if(version.freedoom)
       {
-         if(PATHEMPTY(gi_path_fdoom)) // FreeDoom
+         if(estrempty(gi_path_fdoom)) // FreeDoom
             var = &gi_path_fdoom;
       }
       else
@@ -533,23 +531,23 @@ static void D_determineIWADVersion(const qstring &fullpath)
          switch(version.gamemission)
          {
          case doom2:     // DOOM II
-            if(PATHEMPTY(gi_path_doom2))
+            if(estrempty(gi_path_doom2))
                var = &gi_path_doom2;
             break;
          case pack_disk: // DOOM II BFG Edition
-            if(PATHEMPTY(gi_path_bfgdoom2))
+            if(estrempty(gi_path_bfgdoom2))
                var = &gi_path_bfgdoom2;
             break;
          case pack_tnt:  // Final Doom: TNT - Evilution
-            if(PATHEMPTY(gi_path_tnt))
+            if(estrempty(gi_path_tnt))
                var = &gi_path_tnt;
             break;
          case pack_plut: // Final Doom: The Plutonia Experiment
-            if(PATHEMPTY(gi_path_plut))
+            if(estrempty(gi_path_plut))
                var = &gi_path_plut;
             break;
          case pack_hacx: // HACX: Twitch 'n Kill 1.2
-            if(PATHEMPTY(gi_path_hacx))
+            if(estrempty(gi_path_hacx))
                var = &gi_path_hacx;
             break;
          default:
@@ -558,18 +556,18 @@ static void D_determineIWADVersion(const qstring &fullpath)
       }
       break;
    case hereticsw: // Heretic Shareware
-      if(PATHEMPTY(gi_path_hticsw)) 
+      if(estrempty(gi_path_hticsw)) 
          var = &gi_path_hticsw;
       break;
    case hereticreg: // Heretic Registered
       switch(version.gamemission)
       {
       case heretic: // Registered Version (3 episodes)
-         if(PATHEMPTY(gi_path_hticreg))
+         if(estrempty(gi_path_hticreg))
             var = &gi_path_hticreg;
          break;
       case hticsosr: // Heretic: Shadow of the Serpent Riders
-         if(PATHEMPTY(gi_path_sosr))
+         if(estrempty(gi_path_sosr))
             var = &gi_path_sosr;
          break;
       default:
@@ -634,11 +632,11 @@ static void D_checkPathForIWADs(const qstring &path)
 static void D_checkForNoRest()
 {
    // Need BFG Edition DOOM II IWAD
-   if(PATHEMPTY(gi_path_bfgdoom2))
+   if(estrempty(gi_path_bfgdoom2))
       return;
 
    // Need no NR4TL path already configured
-   if(!PATHEMPTY(w_norestpath))
+   if(estrnonempty(w_norestpath))
       return;
 
    DIR    *dir;
@@ -678,7 +676,7 @@ static void D_findMasterLevels()
    struct stat sbuf;
 
    // Need no Master Levels path already configured
-   if(!PATHEMPTY(w_masterlevelsdirname))
+   if(estrnonempty(w_masterlevelsdirname))
       return;
 
 #ifdef EE_FEATURE_REGISTRYSCAN

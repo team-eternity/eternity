@@ -173,6 +173,7 @@ static dehflags_t mission_flags[] =
    { "HASBETRAY",     MI_HASBETRAY     },
    { "DOOM2MISSIONS", MI_DOOM2MISSIONS },
    { "NOTELEPORTZ",   MI_NOTELEPORTZ   },
+   { "NOGDHIGH",      MI_NOGDHIGH      },
    { NULL,            0                }
 };
 

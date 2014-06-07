@@ -47,8 +47,9 @@ https://github.com/team-eternity/eternity[GitHub].
 
 Compiling
 ---------
-There are three ways available for building Eternity: CMake, Visual
-Studio, and Xcode files, for Unix, Windows, and Mac OS X respectively.
+There are four ways available for building Eternity: CMake, Visual
+Studio, Xcode files, and Homebrew, for Unix, Windows, and both
+Mac OS X respectively.
 
 Building with CMake
 ~~~~~~~~~~~~~~~~~~~
@@ -130,3 +131,30 @@ https://dl.dropboxusercontent.com/u/5103936/permanent/eternity/eternity-osx-clan
 
 * Now it should build. You can choose the base project or the user-friendly
 front-end ("launcher").
+
+Building with Homebrew
+~~~~~~~~~~~~~~~~~~~~~~
+
+The benefit of Homebrew compilation is that you don't need to "install"
+Eternity like a standard Mac application. However, this will require some
+extra work. You will also need to run Eternity as you would in Unix.
+
+These instructions are written with the assumption that the user has
+already set up Homebrew and the required dependencies.
+
+* You will need the following libraries:
++
+ cmake
+ gcc49
+ sdl
+ sdl_mixer
+ sdl_net
+ libogg
+ libvorbis
+ flac
+ libmpeg2
+ libmikmod
+
+* Follow the cmake instructions, with the exception of one command:
++
+ CC=gcc-4.9 CXX=g++-4.9 cmake ..

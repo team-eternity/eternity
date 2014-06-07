@@ -123,6 +123,9 @@ int default_numChannels;  // killough 9/98
 //jff 3/17/98 to keep track of last IDMUS specified music num
 int idmusnum;
 
+// haleyjd 05/18/14: music randomization
+bool s_randmusic = false;
+
 // sf:
 // haleyjd: sound hashing is now kept up by EDF
 musicinfo_t *musicinfos[SOUND_HASHSLOTS];
@@ -152,10 +155,6 @@ static void S_StopChannel(int cnum)
    {
       I_StopSound(c->handle, c->idnum); // stop the sound playing
       
-      // haleyjd 08/13/10: sound origins should count as thinker references
-      if(demo_version >= 337 && c->origin)
-         P_SetTarget<PointThinker>(&(c->origin), NULL);
-
       // haleyjd 09/27/06: clear the entire channel
       memset(c, 0, sizeof(channel_t));
    }
@@ -626,10 +625,7 @@ void S_StartSfxInfo(const soundparams_t &params)
 #endif
 
    channels[cnum].sfxinfo = sfx;
-   if(demo_version >= 337) // haleyjd 08/13/10: sound channels are thinker references.
-      P_SetTarget<PointThinker>(&(channels[cnum].origin), origin);
-   else
-      channels[cnum].origin = origin;
+   channels[cnum].origin  = origin;
 
    while(sfx->link)
       sfx = sfx->link;     // sf: skip thru link(s)
@@ -658,8 +654,6 @@ void S_StartSfxInfo(const soundparams_t &params)
    }
    else // haleyjd: the sound didn't start, so clear the channel info
    {
-      if(demo_version >= 337)
-         P_SetTarget<PointThinker>(&(channels[cnum].origin), NULL);
       memset(&channels[cnum], 0, sizeof(channel_t));
    }
 }
@@ -925,8 +919,6 @@ void S_UpdateSounds(const Mobj *listener)
       if(c->idnum != I_SoundID(c->handle))
       {
          // clear the channel and keep going
-         if(demo_version >= 337 && c->origin)
-            P_SetTarget<PointThinker>(&(c->origin), NULL);
          memset(c, 0, sizeof(channel_t));
          continue;
       }
@@ -1195,6 +1187,13 @@ void S_ChangeMusic(musicinfo_t *music, int looping)
 void S_ChangeMusicNum(int musnum, int looping)
 {
    musicinfo_t *music;
+
+   // haleyjd 05/18/14: check for Tarnsman's random music
+   if(s_randmusic && 
+      musnum >= GameModeInfo->randMusMin && musnum <= GameModeInfo->randMusMax)
+   {
+      musnum = M_RangeRandomEx(GameModeInfo->randMusMin, GameModeInfo->randMusMax);
+   }
    
    if(musnum <= GameModeInfo->musMin || musnum >= GameModeInfo->numMusic)
    {
@@ -1575,6 +1574,9 @@ CONSOLE_VARIABLE(music_volume, snd_MusicVolume, 0)
 CONSOLE_VARIABLE(s_flippan, forceFlipPan, 0) {}
 
 CONSOLE_VARIABLE(s_hidefmusic, s_hidefmusic, 0) {}
+
+VARIABLE_TOGGLE(s_randmusic,      NULL, onoff);
+CONSOLE_VARIABLE(s_randmusic, s_randmusic, 0) {}
 
 CONSOLE_COMMAND(s_playmusic, 0)
 {

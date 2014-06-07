@@ -555,7 +555,7 @@ static void deh_OpenLog(const char *fn)
 //
 // Closes the DeHackEd log if one is open.
 //
-static void deh_CloseLog(void)
+static void deh_CloseLog()
 {
    // haleyjd 05/21/02: must check fileout for validity!
    if(fileout && fileout != stdout)
@@ -1557,7 +1557,7 @@ void deh_procWeapon(DWFILE *fpin, char *line)
       {
          weaponinfo[indexnum].ammopershot = value;
          // enable ammo per shot value usage for this weapon
-         weaponinfo[indexnum].enableaps = 1;
+         weaponinfo[indexnum].flags |= WPF_ENABLEAPS;
       }
       else
          deh_LogPrintf("Invalid weapon string index for '%s'\n", key);

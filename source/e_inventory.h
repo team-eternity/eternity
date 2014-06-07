@@ -38,12 +38,13 @@ class MetaTable;
 // Effect Types
 enum
 {
-   ITEMFX_NONE,     // has no effect
-   ITEMFX_HEALTH,   // an immediate-use health item
-   ITEMFX_ARMOR,    // an immediate-use armor item
-   ITEMFX_AMMO,     // an ammo giving item; not to be confused with an ammo type
-   ITEMFX_POWER,    // a power-up giver
-   ITEMFX_ARTIFACT, // an item that enters the inventory, for later use or tracking
+   ITEMFX_NONE,        // has no effect
+   ITEMFX_HEALTH,      // an immediate-use health item
+   ITEMFX_ARMOR,       // an immediate-use armor item
+   ITEMFX_AMMO,        // an ammo giving item; not to be confused with an ammo type
+   ITEMFX_POWER,       // a power-up giver
+   ITEMFX_WEAPONGIVER, // gives a weapon
+   ITEMFX_ARTIFACT,    // an item that enters the inventory, for later use or tracking
    NUMITEMFX
 };
 typedef int itemeffecttype_t;
@@ -248,6 +249,7 @@ bool E_WantInventoryItem(player_t *player, itemeffect_t *artifact, int amount,
 #define EDF_SEC_ARMORFX  "armoreffect"
 #define EDF_SEC_AMMOFX   "ammoeffect"
 #define EDF_SEC_POWERFX  "powereffect"
+#define EDF_SEC_WEAPGFX  "weapongiver"
 #define EDF_SEC_ARTIFACT "artifact"
 #define EDF_SEC_PICKUPFX "pickupitem"
 #define EDF_SEC_LOCKDEF  "lockdef"
@@ -257,6 +259,7 @@ extern cfg_opt_t edf_healthfx_opts[];
 extern cfg_opt_t edf_armorfx_opts[];
 extern cfg_opt_t edf_ammofx_opts[];
 extern cfg_opt_t edf_powerfx_opts[];
+extern cfg_opt_t edf_weapgfx_opts[];
 extern cfg_opt_t edf_artifact_opts[];
 extern cfg_opt_t edf_pickup_opts[];
 extern cfg_opt_t edf_lockdef_opts[];

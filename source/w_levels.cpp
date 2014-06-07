@@ -421,9 +421,9 @@ char *w_masterlevelsdirname;
 int   inmanageddir;          // non-zero if we are playing a managed dir level
 
 // statics
-static mndir_t masterlevelsdir;      // menu file loader directory structure
-static bool masterlevelsenum;        // if true, the folder has been enumerated
-static int  masterlevelsskill = -1;  // skill level
+static mndir_t masterlevelsdir;        // menu file loader directory structure
+static bool    masterlevelsenum;       // if true, the folder has been enumerated
+static int     masterlevelsskill = -1; // skill level
 
 //
 // W_loadMasterLevelWad
@@ -435,7 +435,7 @@ static WadDirectory *W_loadMasterLevelWad(const char *filename)
    char *fullpath = NULL;
    WadDirectory *dir = NULL;
    
-   if(!w_masterlevelsdirname || !*w_masterlevelsdirname)
+   if(estrempty(w_masterlevelsdirname))
       return NULL;
 
    // construct full file path
@@ -486,7 +486,7 @@ static void W_doMasterLevelsStart(const char *filename, const char *levelname)
       mapname = W_FindMapInLevelWad(dir, !!(GameModeInfo->flags & GIF_MAPXY));
 
    // none??
-   if(!mapname || !*mapname)
+   if(estrempty(mapname))
    {
       if(menuactive)
          MN_ErrorMsg("No maps found in wad");
@@ -525,7 +525,7 @@ void W_EnumerateMasterLevels(bool forceRefresh)
    if(masterlevelsenum && !forceRefresh)
       return;
 
-   if(!w_masterlevelsdirname || !*w_masterlevelsdirname)
+   if(estrempty(w_masterlevelsdirname))
    {
       C_Printf(FC_ERROR "Set master_levels_dir first!\n");
       return;
@@ -589,7 +589,7 @@ static WadDirectory *W_loadNR4TL()
 {
    WadDirectory *dir = NULL;
    
-   if(!w_norestpath || !*w_norestpath)
+   if(estrempty(w_norestpath))
       return NULL;
 
    // make sure it wasn't already opened

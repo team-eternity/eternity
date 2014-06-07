@@ -177,6 +177,9 @@ char *i_videomode;
 // haleyjd 06/17/11: software-mode bitdepth setting (for better -8in32)
 int i_softbitdepth;
 
+// haleyjd 03/30/14: support for letterboxing narrow resolutions
+bool i_letterbox;
+
 //
 // I_FinishUpdate
 //
@@ -521,7 +524,42 @@ void I_SetMode()
       I_ResetScreen();
    
    firsttime = false;
-}        
+}
+
+//
+// I_VideoShouldLetterbox
+//
+// Determine from the screen aspect ratio and user settings whether or not 
+// letterboxing should be active.
+//
+bool I_VideoShouldLetterbox(int w, int h)
+{
+   fixed_t aspect = w * FRACUNIT / h;
+   fixed_t cutoff = 5 * FRACUNIT / 4; // 5:4 is the upper bound of letterboxed aspects
+
+   return (i_letterbox && aspect <= cutoff);
+}
+
+//
+// I_VideoLetterboxHeight
+//
+// Calculate the height of a 4:3 subregion for a letterboxed resolution.
+//
+int I_VideoLetterboxHeight(int w)
+{
+   return (((w * 3 / 4) + 1) & ~1); // round up and make even
+}
+
+//
+// I_VideoLetterboxOffset
+//
+// Given the real height and the letterboxed height, calculates the vertical
+// offset of the letterboxed subregion.
+//
+int I_VideoLetterboxOffset(int h, int hl)
+{
+   return ((h - hl) / 2);
+}
 
 /************************
         CONSOLE COMMANDS
@@ -565,6 +603,12 @@ CONSOLE_VARIABLE(i_videodriverid, i_videodriverid, 0) {}
 
 VARIABLE_INT(i_softbitdepth, NULL, 8, 32, NULL);
 CONSOLE_VARIABLE(i_softbitdepth, i_softbitdepth, 0) {}
+
+VARIABLE_TOGGLE(i_letterbox, NULL, yesno);
+CONSOLE_VARIABLE(i_letterbox, i_letterbox, cf_buffered)
+{
+   I_SetMode();
+}
 
 // EOF
 

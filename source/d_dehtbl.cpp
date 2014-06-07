@@ -1298,7 +1298,6 @@ void A_StartScript(actionargs_t *); // haleyjd 1/25/00: Script wrapper
 void A_StartScriptNamed(actionargs_t *);
 void A_PlayerStartScript(actionargs_t *);
 void A_GenRefire(actionargs_t *);
-void A_FireGrenade(actionargs_t *);
 void A_FireCustomBullets(actionargs_t *);
 void A_FirePlayerMissile(actionargs_t *);
 void A_CustomPlayerMelee(actionargs_t *);
@@ -1616,7 +1615,6 @@ deh_bexptr deh_bexptrs[] =
    POINTER(UnSetFlags),
    POINTER(BetaSkullAttack),
    POINTER(GenRefire),
-   POINTER(FireGrenade),
    POINTER(FireCustomBullets),
    POINTER(FirePlayerMissile),
    POINTER(CustomPlayerMelee),

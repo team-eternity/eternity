@@ -238,6 +238,15 @@
     <Filter Include="Source Files\XL_\XL_ Source">
       <UniqueIdentifier>{09ccd1ab-91bb-4216-9ff4-c314b45f28c8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\WP_">
+      <UniqueIdentifier>{7d1c8890-0e77-41bc-9dc2-db3e13d08688}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\WP_\WP_ Headers">
+      <UniqueIdentifier>{5ef7e60e-a10f-4ecf-9ed1-db9f17359e44}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\WP_\WP_ Source">
+      <UniqueIdentifier>{09473ac8-a83b-4868-9d0b-fb77678f5556}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\acs_acs0.cpp">
@@ -950,6 +959,9 @@
     </ClCompile>
     <ClCompile Include="..\source\xl_emapinfo.cpp">
       <Filter>Source Files\XL_\XL_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\wp_weapons.cpp">
+      <Filter>Source Files\WP_\WP_ Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1693,6 +1705,9 @@
     </ClInclude>
     <ClInclude Include="..\source\xl_emapinfo.h">
       <Filter>Source Files\XL_\XL_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\wp_weapons.h">
+      <Filter>Source Files\WP_\WP_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

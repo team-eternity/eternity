@@ -442,7 +442,7 @@ static void cheat_mypos(const void *arg)
                  plyr->mo->x / FRACUNIT,
                  plyr->mo->y / FRACUNIT,
                  plyr->mo->z / FRACUNIT,
-                 plyr->mo->angle / ANGLE_1);
+                 (double)plyr->mo->angle / ANGLE_1);
 }
 
 // compatibility cheat

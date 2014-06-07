@@ -164,6 +164,9 @@ extern musicinfo_t *musicinfos[];
 // haleyjd 12/24/11: hi-def music support
 extern bool s_hidefmusic;
 
+// haleyjd 05/18/14: music randomization
+extern bool s_randmusic;
+
 //
 // GameModeInfo music routines
 //

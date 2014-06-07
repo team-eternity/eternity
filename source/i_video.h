@@ -53,19 +53,24 @@ public:
 // determines the hardware configuration
 // and sets up the video mode
 
-void I_InitGraphics(void);
-void I_ShutdownGraphics(void);
+void I_InitGraphics();
+void I_ShutdownGraphics();
 
 // Takes full 8 bit values.
-void I_SetPalette (byte* palette);
+void I_SetPalette(byte *palette);
 
-void I_FinishUpdate (void);
+void I_FinishUpdate();
 
-void I_ReadScreen (byte* scr);
+void I_ReadScreen(byte *scr);
 
 void I_CheckVideoCmds(int *w, int *h, bool *fs, bool *vs, bool *hw, bool *wf);
 void I_ParseGeom(const char *geom, int *w, int *h, bool *fs, bool *vs, bool *hw,
                  bool *wf);
+
+// letterboxing utilities
+bool I_VideoShouldLetterbox(int w, int h);
+int  I_VideoLetterboxHeight(int w);
+int  I_VideoLetterboxOffset(int h, int hl);
 
 extern int use_vsync;  // killough 2/8/98: controls whether vsync is called
 
@@ -77,6 +82,7 @@ extern char *i_videomode;
 extern char *i_default_videomode;
 extern int   i_videodriverid;
 extern int   i_softbitdepth;
+extern bool  i_letterbox;
 
 // Driver enumeration
 enum

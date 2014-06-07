@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //  Generalized texture system
@@ -160,7 +160,6 @@ static texture_t *R_AllocTexStruct(const char *name, int16_t width,
 {
    size_t    size;
    texture_t *ret;
-   int       j;
   
 #ifdef RANGECHECK
    if(!name || compcount < 0)
@@ -179,12 +178,23 @@ static texture_t *R_AllocTexStruct(const char *name, int16_t width,
    ret->width  = emax<int16_t>(1, width);
    ret->height = emax<int16_t>(1, height);
    ret->ccount = compcount;
-   
-   // SoM: no longer use global lists. This is now done for every texture.
-   for(j = 1; j * 2 <= ret->width; j <<= 1)
-     ;
-     
-   ret->widthmask = j - 1;
+
+   // haleyjd 05/28/14: support non-power-of-two widths
+   if(ret->width & (ret->width - 1))
+   {
+      ret->flags |= TF_WIDTHNP2;
+      ret->widthmask = ret->width - 1;
+   }
+   else
+   {
+      int j;
+
+      // SoM: no longer use global lists. This is now done for every texture.
+      for(j = 1; j * 2 <= ret->width; j <<= 1)
+         ;
+      ret->widthmask = j - 1;
+   }
+
    ret->heightfrac = ret->height << FRACBITS;
 
    R_DetermineFlatSize(ret);
@@ -1393,7 +1403,11 @@ byte *R_GetRawColumn(int tex, int32_t col)
 {
    texture_t  *t = textures[tex];
 
-   col = (col & t->widthmask) * t->height;
+   // haleyjd 05/28/14: support non-power-of-two widths
+   if(t->flags & TF_WIDTHNP2)
+      col = (col % t->width) * t->height;
+   else
+      col = (col & t->widthmask) * t->height;
 
    // Lee Killough, eat your heart out! ... well this isn't really THAT bad...
    return (t->flags & TF_SWIRLY && t->flatsize == FLAT_64) ?
@@ -1412,7 +1426,8 @@ texcol_t *R_GetMaskedColumn(int tex, int32_t col)
    if(!t->buffer)
       R_CacheTexture(tex);
 
-   return t->columns[col & t->widthmask];
+   // haleyjd 05/28/14: support non-power-of-two widths
+   return t->columns[(t->flags & TF_WIDTHNP2) ? col % t->width : col & t->widthmask];
 }
 
 //

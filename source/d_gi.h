@@ -269,7 +269,8 @@ enum
    MI_WOLFNAMEHACKS = 0x00000004, // overrides Wolf level names if not replaced
    MI_HASBETRAY     = 0x00000008, // has Betray secret MAP33 level
    MI_DOOM2MISSIONS = 0x00000010, // supports Doom 2 mission packs
-   MI_NOTELEPORTZ   = 0x00000020  // teleporters don't set z height in old demos
+   MI_NOTELEPORTZ   = 0x00000020, // teleporters don't set z height in old demos
+   MI_NOGDHIGH      = 0x00000040  // M_GDHIGH lump is stupid
 };
 
 //
@@ -303,6 +304,7 @@ struct missioninfo_t
    const char   *interPicOR;         // if not NULL, overrides interPic
    exitrule_t   *exitRulesOR;        // if not NULL, overrides exitRules
    const char  **levelNamesOR;       // if not NULL, overrides levelNames
+   int           randMusMaxOR;       // if not    0, overrides randMusMax
 };
 
 // function pointer types
@@ -420,6 +422,8 @@ struct gamemodeinfo_t
    gimuscheatfn_t  MusicCheat;    // pointer to music cheat routine
    int musMin;                    // smallest music index value (0)
    int numMusic;                  // maximum music index value
+   int randMusMin;                // beginning of randomizable music 
+   int randMusMax;                // end of randomizable music
    const char *musPrefix;         // "D_" for DOOM, "MUS_" for Heretic
    const char *defMusName;        // default music name
    const char *defSoundName;      // default sound if one is missing

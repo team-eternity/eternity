@@ -102,10 +102,52 @@ static PFNGLBUFFERDATAARBPROC    pglBufferDataARB    = NULL;
 static PFNGLMAPBUFFERARBPROC     pglMapBufferARB     = NULL;
 static PFNGLUNMAPBUFFERARBPROC   pglUnmapBufferARB   = NULL;
 
+// Data for vertex binding
+static GLfloat screenVertices[4*2];
+static GLfloat screenTexCoords[4*2];
+
+static const GLubyte screenVtxOrder[3*2] = { 0, 1, 3, 3, 1, 2 };
+
 //=============================================================================
 //
 // Graphics Code
 //
+
+//
+// GL2D_setupVertexArray
+//
+// Static routine to setup vertex and texture coordinate arrays for use with
+// glDrawElements.
+//
+static void GL2D_setupVertexArray(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
+                                  GLfloat smax, GLfloat tmax)
+{
+   // enable vertex and texture coordinate arrays
+   glEnableClientState(GL_VERTEX_ARRAY);
+   glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+   // Framebuffer Layout:
+   //
+   // 0-------3  0 = (x,  y  ) [0,   0   ]   Tris:
+   // |       |  1 = (x,  y+h) [0,   tmax]   1: 0->1->3
+   // |       |  2 = (x+w,y+h) [smax,tmax]   2: 3->1->2
+   // 1-------2  3 = (x+w,y  ) [smax,0   ]
+
+   // populate vertex coordinates
+   screenVertices[0] = screenVertices[2] = x;
+   screenVertices[1] = screenVertices[7] = y;
+   screenVertices[3] = screenVertices[5] = y + h;
+   screenVertices[4] = screenVertices[6] = x + w;
+
+   // populate texture coordinates
+   screenTexCoords[0] = screenTexCoords[1] = screenTexCoords[2] = screenTexCoords[7] = 0.0f;
+   screenTexCoords[3] = screenTexCoords[5] = tmax;
+   screenTexCoords[4] = screenTexCoords[6] = smax;
+
+   // bind arrays
+   glTexCoordPointer(2, GL_FLOAT, sizeof(GLfloat) * 2, screenTexCoords);
+   glVertexPointer  (2, GL_FLOAT, sizeof(GLfloat) * 2, screenVertices );
+}
 
 //
 // SDLGL2DVideoDriver::DrawPixels
@@ -196,11 +238,8 @@ void SDLGL2DVideoDriver::FinishUpdate()
       pglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
    }
 
-   // push screen quad w/tex coords
-   glBegin(GL_QUADS);
-   GL_OrthoQuadTextured(0.0f, 0.0f, (GLfloat)video.width, (GLfloat)video.height,
-                        texcoord_smax, texcoord_tmax);
-   glEnd();
+   // draw vertex array
+   glDrawElements(GL_TRIANGLES, 3*2, GL_UNSIGNED_BYTE, screenVtxOrder);
 
    // push the frame
    SDL_GL_SwapBuffers();
@@ -513,6 +552,8 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    // calculate right- and bottom-side texture coordinates
    texcoord_smax = (GLfloat)v_w / framebuffer_umax;
    texcoord_tmax = (GLfloat)v_h / framebuffer_vmax;
+
+   GL2D_setupVertexArray(0.0f, 0.0f, (float)v_w, (float)v_h, texcoord_smax, texcoord_tmax);
 
    // Create texture
    glGenTextures(1, &textureid);

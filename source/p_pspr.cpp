@@ -178,24 +178,6 @@ static void P_BringUpWeapon(player_t *player)
    }
 }
 
-// weaponinfo are in a stupid order, so let's do next/last in 
-// a more proper manner. Come EDF weapon support, this will become
-// unnecessary, as we can go by "slots" instead.
-//
-// mapping: from ordinal to wp_*
-//
-static int ordinalToWp[NUMWEAPONS] =
-{
-   wp_fist, wp_chainsaw, wp_pistol, wp_shotgun,
-   wp_supershotgun, wp_chaingun, wp_missile, wp_plasma, wp_bfg
-};
-
-// reverse mapping: from wp_* to ordinal number
-static int wpToOrdinal[NUMWEAPONS] =
-{
-   0, 2, 3, 5, 6, 7, 8, 1, 4
-};
-
 //
 // P_WeaponHasAmmo
 //
@@ -216,35 +198,24 @@ bool P_WeaponHasAmmo(player_t *player, weaponinfo_t *weapon)
 //
 // P_NextWeapon
 //
-// haleyjd 03/06/09: Yes this will have to be rewritten for EDF weapons,
-// but I'm tired of not having it, so here is the temporary version.
+// haleyjd 05/31/14: Rewritten to use next and previous in cycle pointers
+// in weaponinfo_t, for friendliness with future dynamic weapons system.
 //
 int P_NextWeapon(player_t *player)
 {
-   int  currentweapon = wpToOrdinal[player->readyweapon];
-   int  newweapon     = currentweapon;
-   int  weaptotry;
-   bool ammototry;
+   weaponinfo_t *currentweapon = P_GetReadyWeapon(player);
+   weaponinfo_t *newweapon     = currentweapon;
+   bool          ammototry;
 
    do
    {
-      ++newweapon;
-
-      if(newweapon >= NUMWEAPONS)
-         newweapon = 0;
-
-      weaptotry = ordinalToWp[newweapon];
-      ammototry = P_WeaponHasAmmo(player, &weaponinfo[weaptotry]);
+      newweapon = newweapon->nextInCycle;
+      ammototry = P_WeaponHasAmmo(player, newweapon);
    }
-   while((!player->weaponowned[weaptotry] || !ammototry) && 
-          newweapon != currentweapon);
+   while((!player->weaponowned[newweapon->id] || !ammototry) &&
+         newweapon != currentweapon);
 
-   newweapon = ordinalToWp[newweapon];
-
-   if(newweapon == player->readyweapon)
-      newweapon = wp_nochange;
-
-   return newweapon;
+   return newweapon != currentweapon ? newweapon->id : wp_nochange;
 }
 
 //
@@ -254,30 +225,19 @@ int P_NextWeapon(player_t *player)
 //
 int P_PrevWeapon(player_t *player)
 {
-   int  currentweapon = wpToOrdinal[player->readyweapon];
-   int  newweapon     = currentweapon;
-   int  weaptotry;
-   bool ammototry;
+   weaponinfo_t *currentweapon = P_GetReadyWeapon(player);
+   weaponinfo_t *newweapon     = currentweapon;
+   bool          ammototry;
 
    do
    {
-      --newweapon;
-
-      if(newweapon < 0)
-         newweapon = NUMWEAPONS - 1;
-
-      weaptotry = ordinalToWp[newweapon];
-      ammototry = P_WeaponHasAmmo(player, &weaponinfo[weaptotry]);
+      newweapon = newweapon->prevInCycle;
+      ammototry = P_WeaponHasAmmo(player, newweapon);
    }
-   while((!player->weaponowned[weaptotry] || !ammototry) && 
+   while((!player->weaponowned[newweapon->id] || !ammototry) &&
          newweapon != currentweapon);
 
-   newweapon = ordinalToWp[newweapon];
-
-   if(newweapon == player->readyweapon)
-      newweapon = wp_nochange;
-
-   return newweapon;
+   return newweapon != currentweapon ? newweapon->id : wp_nochange;
 }
 
 // The first set is where the weapon preferences from             // killough,
@@ -425,13 +385,7 @@ bool P_CheckAmmo(player_t *player)
       // Now set appropriate weapon overlay.
       P_SetPsprite(player,ps_weapon,weaponinfo[player->readyweapon].downstate);
    }
-   
-#if 0 /* PROBABLY UNSAFE */
-   else
-      if (demo_version >= 203)  // killough 9/5/98: force switch if out of ammo
-         P_SetPsprite(player,ps_weapon,weaponinfo[player->readyweapon].downstate);
-#endif
-      
+     
    return false;
 }
 
@@ -449,7 +403,7 @@ void P_SubtractAmmo(player_t *player, int compat_amt)
    if(player->cheats & CF_INFAMMO || !weapon->ammo)
       return;
 
-   int amount = (weapon->enableaps || compat_amt < 0) ? weapon->ammopershot : compat_amt;
+   int amount = ((weapon->flags & WPF_ENABLEAPS) || compat_amt < 0) ? weapon->ammopershot : compat_amt;
    E_RemoveInventoryItem(player, weapon->ammo, amount);
 }
 
@@ -1204,8 +1158,6 @@ void A_FireShotgun(actionargs_t *actionargs)
    if(!player)
       return;
 
-   // PCLASS_FIXME: second attack state
-
    P_WeaponSound(mo, sfx_shotgn);
    P_SetMobjState(mo, player->pclass->altattack);
    
@@ -1231,8 +1183,6 @@ void A_FireShotgun2(actionargs_t *actionargs)
    if(!player)
       return;
 
-   // PCLASS_FIXME: secondary attack state
-   
    P_WeaponSound(mo, sfx_dshtgn);
    P_SetMobjState(mo, player->pclass->altattack);
 
@@ -1626,11 +1576,6 @@ void P_MovePsprites(player_t *player)
 // New Eternity Weapon Functions
 //
 //===============================
-
-// FIXME/TODO: get rid of this?
-void A_FireGrenade(actionargs_t *actionargs)
-{
-}
 
 static const char *kwds_A_FireCustomBullets[] =
 {

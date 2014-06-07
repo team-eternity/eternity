@@ -153,6 +153,7 @@ public:
 
    // Methods
    virtual void serialize(SaveArchive &arc);
+   virtual void removeThinker();
    
    // Data Members
    fixed_t x, y, z;

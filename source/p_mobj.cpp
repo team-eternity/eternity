@@ -132,6 +132,19 @@ void PointThinker::serialize(SaveArchive &arc)
    arc << x << y << z << groupid;
 }
 
+//
+// PointThinker::removeThinker
+//
+// Stop any sounds related to this PointThinker instance, and then invoke the
+// parent implementation.
+//
+void PointThinker::removeThinker()
+{
+   // stop any playing sound
+   S_StopSound(this, CHAN_ALL);
+   Super::removeThinker();
+}
+
 //=============================================================================
 //
 // Mobj
@@ -1837,9 +1850,6 @@ void Mobj::removeThinker()
       this->old_sectorlist = NULL; 
    }
 
-   // stop any playing sound
-   S_StopSound(this, CHAN_ALL);
-
    // killough 11/98: Remove any references to other mobjs.
    // Older demos might depend on the fields being left alone, however, if 
    // multiple thinkers reference each other indirectly before the end of the
@@ -1852,7 +1862,7 @@ void Mobj::removeThinker()
    }
 
    // remove from thinker list
-   Thinker::removeThinker();
+   Super::removeThinker();
 }
 
 //

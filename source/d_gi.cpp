@@ -785,15 +785,23 @@ static missioninfo_t gmFinalPlutonia =
    mapnamesp,          // levelNamesOR
 };
 
+// Special properties of BFG Edition mission:
+// * DOOM II maps 31/32 rename themselves if not DEH or MAPINFO modified
+// * Has MAP33: Betray w/secret exit on MAP02
+// * Supports Doom 2 managed mission pack selection menu
+// * Has a stupid M_GDHIGH lump
+#define BFGMISSIONFLAGS \
+   (MI_WOLFNAMEHACKS|MI_HASBETRAY|MI_DOOM2MISSIONS|MI_NOGDHIGH)
+
 //
 // Disk version (Xbox and BFG Edition)
 //
 static missioninfo_t gmDisk =
 {
-   pack_disk,                                      // id
-   MI_WOLFNAMEHACKS|MI_HASBETRAY|MI_DOOM2MISSIONS, // flags
-   "doom2",                                        // gamePathName
-   NULL,                                           // sameLevels
+   pack_disk,          // id
+   BFGMISSIONFLAGS,    // flags
+   "doom2",            // gamePathName
+   NULL,               // sameLevels
 
    GIF_LOSTSOULBOUNCE, // addGMIFlags
    0,                  // remGMIFlags
@@ -870,6 +878,14 @@ static missioninfo_t gmHereticBeta =
    0,                   // numEpisodesOR
    NULL,                // iwadPathOR
    NULL,                // finaleDataOR
+   NULL,                // menuBackgroundOR
+   NULL,                // creditBackgroundOR
+   NULL,                // consoleBackOR
+   NULL,                // demoStatesOR
+   NULL,                // interPicOR
+   NULL,                // exitRulesOR
+   NULL,                // levelNamesOR
+   hmus_e1m3,           // randMusMaxOR
 };
 
 //
@@ -1022,6 +1038,8 @@ static gamemodeinfo_t giDoomSW =
    S_DoomMusicCheat,  // MusicCheat
    mus_None,          // musMin
    NUMMUSIC,          // numMusic
+   mus_e1m1,          // randMusMin
+   mus_e1m9,          // randMusMax
    "D_",              // musPrefix
    "e1m1",            // defMusName
    DOOMDEFSOUND,      // defSoundName
@@ -1129,6 +1147,8 @@ static gamemodeinfo_t giDoomReg =
    S_DoomMusicCheat,  // MusicCheat
    mus_None,          // musMin
    NUMMUSIC,          // numMusic
+   mus_e1m1,          // randMusMin
+   mus_e3m9,          // randMusMax
    "D_",              // musPrefix
    "e1m1",            // defMusName
    DOOMDEFSOUND,      // defSoundName
@@ -1236,6 +1256,8 @@ static gamemodeinfo_t giDoomRetail =
    S_DoomMusicCheat,  // MusicCheat
    mus_None,          // musMin
    NUMMUSIC,          // numMusic
+   mus_e1m1,          // randMusMin
+   mus_e3m9,          // randMusMax
    "D_",              // musPrefix
    "e1m1",            // defMusName
    DOOMDEFSOUND,      // defSoundName
@@ -1343,6 +1365,8 @@ static gamemodeinfo_t giDoomCommercial =
    S_Doom2MusicCheat,  // MusicCheat
    mus_None,           // musMin
    NUMMUSIC,           // numMusic
+   mus_runnin,         // randMusMin
+   mus_ultima,         // randMusMax
    "D_",               // musPrefix
    "runnin",           // defMusName
    DOOMDEFSOUND,       // defSoundName
@@ -1450,6 +1474,8 @@ static gamemodeinfo_t giHereticSW =
    S_HereticMusicCheat, // MusicCheat
    hmus_None,           // musMin
    NUMHTICMUSIC,        // numMusic
+   hmus_e1m1,           // randMusMin
+   hmus_e1m9,           // randMusMax
    "MUS_",              // musPrefix
    "e1m1",              // defMusName
    HTICDEFSOUND,        // defSoundName
@@ -1561,6 +1587,8 @@ static gamemodeinfo_t giHereticReg =
    S_HereticMusicCheat, // MusicCheat
    hmus_None,           // musMin
    NUMHTICMUSIC,        // numMusic
+   hmus_e1m1,           // randMusMin
+   hmus_e3m3,           // randMusMax
    "MUS_",              // musPrefix
    "e1m1",              // defMusName
    HTICDEFSOUND,        // defSoundName
@@ -1644,6 +1672,7 @@ void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
    OVERRIDE(interPic,         NULL);
    OVERRIDE(exitRules,        NULL);
    OVERRIDE(levelNames,       NULL);
+   OVERRIDE(randMusMax,          0);
    
    // Note: demostates are not overridden here, see below.
 }

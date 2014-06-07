@@ -157,6 +157,10 @@ void  Z_SysFree(void *p);
 
 #define efree(p)   (Z_Free)(p, __FILE__, __LINE__)
 
+//
+// Globally useful macros
+//
+
 // Get the size of a static array
 #define earrlen(a) (sizeof(a) / sizeof(*a))
 
@@ -164,6 +168,10 @@ void  Z_SysFree(void *p);
 #define edefstructvar(type, name)  \
    type name;                      \
    memset(&name, 0, sizeof(name))
+
+// Classify a string as either lengthful (non-NULL, not zero length), or empty
+#define estrnonempty(str) ((str) && *(str))
+#define estrempty(str)    (!estrnonempty((str)))
 
 // Doom-style printf
 void doom_printf(const char *, ...) __attribute__((format(printf,1,2)));
