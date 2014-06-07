@@ -812,9 +812,9 @@ static void C_StripColorChars(const unsigned char *src,
                               unsigned char *dest, 
                               int len)
 {
-   register int srcidx = 0, destidx = 0;
+   int srcidx = 0, destidx = 0;
 
-   for(; srcidx < len; ++srcidx)
+   for(; srcidx < len; srcidx++)
    {
       if(src[srcidx] < 128)
       {

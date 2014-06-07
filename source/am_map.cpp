@@ -1099,9 +1099,9 @@ static bool AM_clipMline(mline_t *ml, fline_t *fl)
       TOP    = 8
    };
    
-   register int outcode1 = 0;
-   register int outcode2 = 0;
-   register int outside;
+   int outcode1 = 0;
+   int outcode2 = 0;
+   int outside;
 
    fpoint_t tmp = { 0, 0 };
    int   dx;
@@ -1227,15 +1227,11 @@ static bool AM_clipMline(mline_t *ml, fline_t *fl)
 //
 static void AM_drawFline(fline_t *fl, int color )
 {
-   register int x;
-   register int y;
-   register int dx;
-   register int dy;
-   register int sx;
-   register int sy;
-   register int ax;
-   register int ay;
-   register int d;
+   int x,  y;
+   int dx, dy;
+   int sx, sy;
+   int ax, ay;
+   int d;
 
 #ifdef RANGECHECK         // killough 2/22/98    
    //static int fuck = 0;

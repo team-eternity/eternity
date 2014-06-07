@@ -92,11 +92,11 @@ static void R_QuadFlushNil(void)
 // This is used when a quad flush isn't possible.
 // Opaque version -- no remapping whatsoever.
 //
-static void R_FlushWholeOpaque(void)
+static void R_FlushWholeOpaque()
 {
-   register byte *source;
-   register byte *dest;
-   register int  count, yl;
+   byte *source;
+   byte *dest;
+   int  count, yl;
 
    while(--temp_x >= 0)
    {
@@ -123,9 +123,9 @@ static void R_FlushWholeOpaque(void)
 //
 static void R_FlushHTOpaque(void)
 {
-   register byte *source;
-   register byte *dest;
-   register int count, colnum = 0;
+   byte *source;
+   byte *dest;
+   int count, colnum = 0;
    int yl, yh;
 
    while(colnum < 4)
@@ -166,11 +166,11 @@ static void R_FlushHTOpaque(void)
    }
 }
 
-static void R_FlushWholeTL(void)
+static void R_FlushWholeTL()
 {
-   register byte *source;
-   register byte *dest;
-   register int  count, yl;
+   byte *source;
+   byte *dest;
+   int  count, yl;
 
    while(--temp_x >= 0)
    {
@@ -189,11 +189,11 @@ static void R_FlushWholeTL(void)
    }
 }
 
-static void R_FlushHTTL(void)
+static void R_FlushHTTL()
 {
-   register byte *source;
-   register byte *dest;
-   register int count;
+   byte *source;
+   byte *dest;
+   int count;
    int colnum = 0, yl, yh;
 
    while(colnum < 4)
@@ -240,11 +240,11 @@ static void R_FlushHTTL(void)
 #define SRCPIXEL \
    tempfuzzmap[6*256+dest[fuzzoffset[fuzzpos] ? video.pitch: -video.pitch]]
 
-static void R_FlushWholeFuzz(void)
+static void R_FlushWholeFuzz()
 {
-   register byte *source;
-   register byte *dest;
-   register int  count, yl;
+   byte *source;
+   byte *dest;
+   int  count, yl;
 
    while(--temp_x >= 0)
    {
@@ -269,11 +269,11 @@ static void R_FlushWholeFuzz(void)
 }
 
 /*
-static void R_FlushHTFuzz(void)
+static void R_FlushHTFuzz()
 {
-   register byte *source;
-   register byte *dest;
-   register int count;
+   byte *source;
+   byte *dest;
+   int count;
    int colnum = 0, yl, yh;
 
    while(colnum < 4)
@@ -330,11 +330,11 @@ static void R_FlushHTFuzz(void)
 
 #undef SRCPIXEL
 
-static void R_FlushWholeFlex(void)
+static void R_FlushWholeFlex()
 {
-   register byte *source;
-   register byte *dest;
-   register int  count, yl;
+   byte *source;
+   byte *dest;
+   int  count, yl;
    unsigned int fg, bg;
 
    while(--temp_x >= 0)
@@ -358,11 +358,11 @@ static void R_FlushWholeFlex(void)
    }
 }
 
-static void R_FlushHTFlex(void)
+static void R_FlushHTFlex()
 {
-   register byte *source;
-   register byte *dest;
-   register int count;
+   byte *source;
+   byte *dest;
+   int count;
    int colnum = 0, yl, yh;
    unsigned int fg, bg;
 
@@ -415,11 +415,11 @@ static void R_FlushHTFlex(void)
    }
 }
 
-static void R_FlushWholeFlexAdd(void)
+static void R_FlushWholeFlexAdd()
 {
-   register byte *source;
-   register byte *dest;
-   register int  count, yl;
+   byte *source;
+   byte *dest;
+   int  count, yl;
    unsigned int a, b;
 
    while(--temp_x >= 0)
@@ -449,11 +449,11 @@ static void R_FlushWholeFlexAdd(void)
    }
 }
 
-static void R_FlushHTFlexAdd(void)
+static void R_FlushHTFlexAdd()
 {
-   register byte *source;
-   register byte *dest;
-   register int count;
+   byte *source;
+   byte *dest;
+   int count;
    int colnum = 0, yl, yh;
    unsigned int a, b;
 
@@ -522,12 +522,12 @@ static void (*R_FlushWholeColumns)(void) = R_FlushWholeNil;
 static void (*R_FlushHTColumns)(void)    = R_FlushHTNil;
 
 // Begin: Quad column flushing functions.
-static void R_FlushQuadOpaque(void)
+static void R_FlushQuadOpaque()
 {
-   register int *source = (int *)(tempbuf + (commontop << 2));
-   register int *dest = (int *)(ylookup[commontop] + columnofs[startx]);
-   register int count;
-   register int deststep = linesize / 4;
+   int *source = (int *)(tempbuf + (commontop << 2));
+   int *dest = (int *)(ylookup[commontop] + columnofs[startx]);
+   int count;
+   int deststep = linesize / 4;
 
    count = commonbot - commontop + 1;
 
@@ -538,11 +538,11 @@ static void R_FlushQuadOpaque(void)
    }
 }
 
-static void R_FlushQuadTL(void)
+static void R_FlushQuadTL()
 {
-   register byte *source = tempbuf + (commontop << 2);
-   register byte *dest = ylookup[commontop] + columnofs[startx];
-   register int count;
+   byte *source = tempbuf + (commontop << 2);
+   byte *dest = ylookup[commontop] + columnofs[startx];
+   int count;
 
    count = commonbot - commontop + 1;
 
@@ -561,11 +561,11 @@ static void R_FlushQuadTL(void)
 #define SRCPIXEL(n, p) \
    tempfuzzmap[6*256+dest[(n) + fuzzoffset[(p)] ? video.pitch: -video.pitch]];
 
-static void R_FlushQuadFuzz(void)
+static void R_FlushQuadFuzz()
 {
-   register byte *source = tempbuf + (commontop << 2);
-   register byte *dest = ylookup[commontop] + columnofs[startx];
-   register int count;
+   byte *source = tempbuf + (commontop << 2);
+   byte *dest = ylookup[commontop] + columnofs[startx];
+   int count;
    int fuzz1, fuzz2, fuzz3, fuzz4;
 
    // haleyjd 11/11/06: changed to be more like original;
@@ -600,11 +600,11 @@ static void R_FlushQuadFuzz(void)
 #undef SRCPIXEL
 */
 
-static void R_FlushQuadFlex(void)
+static void R_FlushQuadFlex()
 {
-   register byte *source = tempbuf + (commontop << 2);
-   register byte *dest = ylookup[commontop] + columnofs[startx];
-   register int count;
+   byte *source = tempbuf + (commontop << 2);
+   byte *dest = ylookup[commontop] + columnofs[startx];
+   int count;
    unsigned int fg, bg;
 
    count = commonbot - commontop + 1;
@@ -637,11 +637,11 @@ static void R_FlushQuadFlex(void)
    }
 }
 
-static void R_FlushQuadFlexAdd(void)
+static void R_FlushQuadFlexAdd()
 {
-   register byte *source = tempbuf + (commontop << 2);
-   register byte *dest = ylookup[commontop] + columnofs[startx];
-   register int count;
+   byte *source = tempbuf + (commontop << 2);
+   byte *dest = ylookup[commontop] + columnofs[startx];
+   int count;
    unsigned int a, b;
 
    count = commonbot - commontop + 1;
@@ -907,12 +907,12 @@ static byte *R_GetBufferFuzz(void)
    return tempbuf + (column.y1 << 2) + temp_x++;
 }
 
-static void R_QDrawColumn(void) 
+static void R_QDrawColumn() 
 { 
-   int              count; 
-   register byte    *dest;            // killough
-   register fixed_t frac;            // killough
-   fixed_t          fracstep;     
+   int      count; 
+   byte    *dest;            // killough
+   fixed_t  frac;            // killough
+   fixed_t  fracstep;     
 
    count = column.y2 - column.y1 + 1; 
 
@@ -944,9 +944,9 @@ static void R_QDrawColumn(void)
    // killough 2/1/98: more performance tuning
 
    {
-      register const byte *source = (const byte *)(column.source);
-      register const lighttable_t *colormap = column.colormap; 
-      register int heightmask = column.texheight-1;
+      const byte *source = (const byte *)(column.source);
+      const lighttable_t *colormap = column.colormap; 
+      int heightmask = column.texheight-1;
 
       if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
@@ -990,12 +990,12 @@ static void R_QDrawColumn(void)
    }
 } 
 
-static void R_QDrawTLColumn(void)                                           
+static void R_QDrawTLColumn()                                           
 { 
-   int              count; 
-   register byte    *dest;           // killough
-   register fixed_t frac;            // killough
-   fixed_t          fracstep;
+   int      count; 
+   byte    *dest;           // killough
+   fixed_t  frac;           // killough
+   fixed_t  fracstep;
    
    count = column.y2 - column.y1 + 1; 
    
@@ -1016,9 +1016,9 @@ static void R_QDrawTLColumn(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
      
    {
-      register const byte *source = (const byte *)(column.source);
-      register const lighttable_t *colormap = column.colormap; 
-      register int heightmask = column.texheight-1;
+      const byte *source = (const byte *)(column.source);
+      const lighttable_t *colormap = column.colormap; 
+      int heightmask = column.texheight-1;
 
       if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
@@ -1065,12 +1065,12 @@ static void R_QDrawTLColumn(void)
 #define SRCPIXEL \
    colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]
 
-static void R_QDrawTLTRColumn(void)
+static void R_QDrawTLTRColumn()
 { 
-   int              count; 
-   register byte    *dest;           // killough
-   register fixed_t frac;            // killough
-   fixed_t          fracstep;
+   int      count; 
+   byte    *dest;           // killough
+   fixed_t  frac;           // killough
+   fixed_t  fracstep;
    
    count = column.y2 - column.y1 + 1; 
    
@@ -1092,9 +1092,9 @@ static void R_QDrawTLTRColumn(void)
 
   
    {
-      register const byte *source = (const byte *)(column.source);
-      register const lighttable_t *colormap = column.colormap; 
-      register int heightmask = column.texheight-1;
+      const byte *source = (const byte *)(column.source);
+      const lighttable_t *colormap = column.colormap; 
+      int heightmask = column.texheight-1;
       if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
@@ -1198,9 +1198,9 @@ static void R_QDrawTRColumn(void)
 
    // Here we do an additional index re-mapping.
    {
-      register const byte *source = (const byte *)(column.source);
-      register const lighttable_t *colormap = column.colormap; 
-      register int heightmask = column.texheight-1;
+      const byte *source = (const byte *)(column.source);
+      const lighttable_t *colormap = column.colormap; 
+      int heightmask = column.texheight-1;
 
       if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
@@ -1246,12 +1246,12 @@ static void R_QDrawTRColumn(void)
 //
 // haleyjd 09/01/02: zdoom-style translucency
 //
-static void R_QDrawFlexColumn(void)
+static void R_QDrawFlexColumn()
 { 
-   int              count; 
-   register byte    *dest;           // killough
-   register fixed_t frac;            // killough
-   fixed_t          fracstep;
+   int      count; 
+   byte    *dest;            // killough
+   fixed_t  frac;            // killough
+   fixed_t  fracstep;
    
    count = column.y2 - column.y1 + 1; 
 
@@ -1272,9 +1272,9 @@ static void R_QDrawFlexColumn(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      register const byte *source = (const byte *)(column.source);
-      register const lighttable_t *colormap = column.colormap; 
-      register int heightmask = column.texheight-1;
+      const byte *source = (const byte *)(column.source);
+      const lighttable_t *colormap = column.colormap; 
+      int heightmask = column.texheight-1;
 
       if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
@@ -1350,9 +1350,9 @@ static void R_QDrawFlexTRColumn(void)
    
    // Here we do an additional index re-mapping.
    {
-      register const byte *source = (const byte *)(column.source);
-      register const lighttable_t *colormap = column.colormap; 
-      register int heightmask = column.texheight-1;
+      const byte *source = (const byte *)(column.source);
+      const lighttable_t *colormap = column.colormap; 
+      int heightmask = column.texheight-1;
 
       if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
@@ -1398,12 +1398,12 @@ static void R_QDrawFlexTRColumn(void)
 //
 // haleyjd 02/08/05: additive translucency
 //
-static void R_QDrawAddColumn(void)
+static void R_QDrawAddColumn()
 { 
-   int              count; 
-   register byte    *dest;           // killough
-   register fixed_t frac;            // killough
-   fixed_t          fracstep;
+   int      count; 
+   byte    *dest;           // killough
+   fixed_t  frac;           // killough
+   fixed_t  fracstep;
    
    count = column.y2 - column.y1 + 1; 
 
@@ -1424,9 +1424,9 @@ static void R_QDrawAddColumn(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      register const byte *source = (const byte *)(column.source);
-      register const lighttable_t *colormap = column.colormap; 
-      register int heightmask = column.texheight-1;
+      const byte *source = (const byte *)(column.source);
+      const lighttable_t *colormap = column.colormap; 
+      int heightmask = column.texheight-1;
 
       if(column.texheight & heightmask)   // not a power of 2 -- killough
       {
@@ -1501,9 +1501,9 @@ static void R_QDrawAddTRColumn(void)
    
    // Here we do an additional index re-mapping.
    {
-      register const byte *source = (const byte *)(column.source);
-      register const lighttable_t *colormap = column.colormap; 
-      register int heightmask = column.texheight-1;
+      const byte *source = (const byte *)(column.source);
+      const lighttable_t *colormap = column.colormap; 
+      int heightmask = column.texheight-1;
 
       if(column.texheight & heightmask)   // not a power of 2 -- killough
       {

@@ -51,7 +51,7 @@ extern int   *columnofs;
 #define SPAN_PROLOGUE_8() \
    unsigned int xf = span.xfrac, xs = span.xstep; \
    unsigned int yf = span.yfrac, ys = span.ystep; \
-   register byte *dest; \
+   byte *dest; \
    byte *source = (byte *)span.source; \
    lighttable_t *colormap = span.colormap; \
    int count = span.x2 - span.x1 + 1;
@@ -247,7 +247,7 @@ SPAN_FUNC(R_DrawSpanCB_8_GEN, SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, (span.xshift),
 // This is the optimized version of the original flat drawing function.
 static void R_DrawSpan_OLD() 
 { 
-   register unsigned int position;
+   unsigned int position;
    unsigned int step;
    
    byte *source;

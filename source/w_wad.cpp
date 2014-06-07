@@ -1060,7 +1060,7 @@ int WadDirectory::checkNumForName(const char *name, int li_namespace)
    // It has been tuned so that the average chain length never exceeds 2.
    
    unsigned int hashkey = LumpNameHash(name) % (unsigned int)numlumps;
-   register int i = lumpinfo[hashkey]->namehash.index;
+   int i = lumpinfo[hashkey]->namehash.index;
 
    // We search along the chain until end, looking for case-insensitive
    // matches which also match a namespace tag. Separate hash tables are
@@ -1081,7 +1081,7 @@ int WadDirectory::checkNumForName(const char *name, int li_namespace)
 //
 // haleyjd: Now a global directory convenience routine.
 //
-int W_CheckNumForName(register const char *name)
+int W_CheckNumForName(const char *name)
 {
    return wGlobalDir.checkNumForName(name);
 }
@@ -1091,7 +1091,7 @@ int W_CheckNumForName(register const char *name)
 //
 // haleyjd: Separated from W_CheckNumForName. Looks in a specific namespace.
 //
-int W_CheckNumForNameNS(register const char *name, register int li_namespace)
+int W_CheckNumForNameNS(const char *name, int li_namespace)
 {
    return wGlobalDir.checkNumForName(name, li_namespace);
 }
@@ -1151,7 +1151,7 @@ int W_GetNumForName(const char *name)
 int WadDirectory::checkNumForLFN(const char *lfn, int li_namespace)
 {
    unsigned int hashkey = D_HashTableKeyCase(lfn) % (unsigned int)numlumps;
-   register int i = lumpinfo[hashkey]->lfnhash.index;
+   int i = lumpinfo[hashkey]->lfnhash.index;
 
    for(; i >= 0; i = lumpinfo[i]->lfnhash.next)
    {

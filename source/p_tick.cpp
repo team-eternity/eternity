@@ -89,7 +89,7 @@ void Thinker::InitThinkers(void)
 //
 void Thinker::addToThreadedList(int tclass)
 {
-   register Thinker *th;
+   Thinker *th;
    
    // Remove from current thread, if in one -- haleyjd: from PrBoom
    if((th = this->cnext) != NULL)

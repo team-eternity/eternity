@@ -444,8 +444,8 @@ void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y,
                     int w, int h, int tl)
 {
    byte *dest, *row;
-   register int tw;
-   register unsigned int col;
+   int tw;
+   unsigned int col;
    unsigned int *fg2rgb, *bg2rgb;
 
 #ifdef RANGECHECK

@@ -543,8 +543,8 @@ void ACSThinker::Think()
 #endif
 
    // cache vm data in local vars for efficiency
-   register int32_t *ip  = this->ip;
-   register int32_t *stp = this->stack + this->stackPtr;
+   int32_t *ip  = this->ip;
+   int32_t *stp = this->stack + this->stackPtr;
    int count = 0;
    uint32_t opcode;
    int32_t temp;

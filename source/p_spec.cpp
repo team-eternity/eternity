@@ -827,7 +827,7 @@ int P_FindSectorFromTag(const int tag, int start)
 //
 static void P_InitTagLists()
 {
-   register int i;
+   int i;
    
    for(i = numsectors; --i >= 0; )   // Initially make all slots empty.
       sectors[i].firsttag = -1;

@@ -115,8 +115,8 @@ static void Wipe_meltStartScreen(void)
 
 static void Wipe_meltDrawer(void)
 {
-   register int x, y;
-   register byte *dest, *src;
+   int x, y;
+   byte *dest, *src;
 
    // SoM 2-4-04: ANYRES
    for(x = 0; x < video.width; ++x)

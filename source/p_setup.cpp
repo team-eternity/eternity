@@ -1431,7 +1431,7 @@ void P_LoadHexenLineDefs(int lump)
 //
 void P_LoadLineDefs2()
 {
-   register line_t *ld = lines;
+   line_t *ld = lines;
 
    for(int i = numlines; i--; ld++)
    {
@@ -1535,8 +1535,8 @@ void P_LoadSideDefs2(int lumpnum)
 
    for(i = 0; i < numsides; i++)
    {
-      register side_t *sd = sides + i;
-      register sector_t *sec;
+      side_t *sd = sides + i;
+      sector_t *sec;
       int cmap, secnum;
 
       sd->textureoffset = GetBinaryWord(&data) << FRACBITS;
@@ -1641,9 +1641,9 @@ typedef struct bmap_s { int n, nalloc, *list; } bmap_t; // blocklist structure
 // Please note: This section of code is not interchangable with TeamTNT's
 // code which attempts to fix the same problem.
 //
-static void P_CreateBlockMap(void)
+static void P_CreateBlockMap()
 {
-   register unsigned int i;
+   unsigned int i;
    fixed_t minx = INT_MAX, miny = INT_MAX,
            maxx = INT_MIN, maxy = INT_MIN;
 

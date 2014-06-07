@@ -287,11 +287,11 @@ void R_InitTranMap(bool force)
       // First, convert playpal into long int type, and transpose array,
       // for fast inner-loop calculations. Precompute tot array.
       {
-         register int i = 255;
-         register const unsigned char *p = playpal + 255 * 3;
+         int i = 255;
+         const unsigned char *p = playpal + 255 * 3;
          do
          {
-            register int t,d;
+            int t,d;
             pal_w1[0][i] = (pal[0][i] = t = p[0]) * w1;
             d = t*t;
             pal_w1[1][i] = (pal[1][i] = t = p[1]) * w1;
@@ -317,8 +317,8 @@ void R_InitTranMap(bool force)
 
          for(int j = 0; j < 256; ++j, ++tp)
          {
-            register int color = 255;
-            register int err;
+            int color = 255;
+            int err;
             int r = pal_w1[0][j] + r1;
             int g = pal_w1[1][j] + g1;
             int b = pal_w1[2][j] + b1;
@@ -398,11 +398,11 @@ void R_InitSubMap(bool force)
       // First, convert playpal into long int type, and transpose array,
       // for fast inner-loop calculations. Precompute tot array.
       {
-         register int i = 255;
-         register const unsigned char *p = playpal + 255 * 3;
+         int i = 255;
+         const unsigned char *p = playpal + 255 * 3;
          do
          {
-            register int t,d;
+            int t,d;
             pal[0][i] = t = p[0];
             d = t*t;
             pal[1][i] = t = p[1];
@@ -425,8 +425,8 @@ void R_InitSubMap(bool force)
 
          for(int j = 0; j < 256; j++, tp++)
          {
-            register int color = 255;
-            register int err;
+            int color = 255;
+            int err;
             // haleyjd: subtract and clamp to 0
             int r = emax(r1 - pal[0][j], 0);
             int g = emax(g1 - pal[1][j], 0);
@@ -508,8 +508,8 @@ int r_precache = 1;     //sf: option not to precache the levels
 
 void R_PrecacheLevel(void)
 {
-   register int i;
-   register byte *hitlist;
+   int i;
+   byte *hitlist;
    int numalloc;
 
    if(demoplayback)

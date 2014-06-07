@@ -190,9 +190,9 @@ static const crdef_t crdefs[] =
 };
 
 // killough 5/2/98: tiny engine driven by table above
-void V_InitColorTranslation(void)
+void V_InitColorTranslation()
 {
-   register const crdef_t *p;
+   const crdef_t *p;
    for(p = crdefs; p->name; p++)
       *p->map1 = *p->map2 = (byte *)(wGlobalDir.cacheLumpName(p->name, PU_STATIC));
 

@@ -909,7 +909,7 @@ static unsigned int default_hash(defaultfile_t *df, const char *name)
 //
 static default_t *M_LookupDefault(defaultfile_t *df, const char *name)
 {
-   register default_t *dp;
+   default_t *dp;
 
    // Initialize hash table if not initialized already
    if(!df->hashInit)
@@ -1413,7 +1413,7 @@ void M_SaveDefaultFile(defaultfile_t *df)
 {
    char *tmpfile = NULL;
    size_t len;
-   register default_t *dp;
+   default_t *dp;
    unsigned int line, blanks;
    FILE *f;
 
@@ -1603,7 +1603,7 @@ void M_LoadOptions(void)
 //
 void M_LoadDefaultFile(defaultfile_t *df)
 {
-   register default_t *dp;
+   default_t *dp;
    FILE *f;
 
    // haleyjd 07/03/10: set default object methods for easy calls

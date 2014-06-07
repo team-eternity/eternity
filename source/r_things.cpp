@@ -286,8 +286,8 @@ void R_SetMaskedSilhouette(float *top, float *bottom)
 {
    if(!top || !bottom)
    {
-      register float *topp  = portaltop, *bottomp = portalbottom, 
-                     *stopp = portaltop + video.width;
+      float *topp  = portaltop, *bottomp = portalbottom, 
+            *stopp = portaltop + video.width;
 
       while(topp < stopp)
       {

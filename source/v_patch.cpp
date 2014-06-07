@@ -47,12 +47,12 @@ static int ytop;
 //
 // Draws a plain patch column with no remappings.
 //
-static void V_DrawPatchColumn(void) 
+static void V_DrawPatchColumn() 
 { 
-   int              count;
-   register byte    *dest;    // killough
-   register fixed_t frac;     // killough
-   fixed_t          fracstep;
+   int      count;
+   byte    *dest;    // killough
+   fixed_t  frac;    // killough
+   fixed_t  fracstep;
    
    if((count = patchcol.y2 - patchcol.y1 + 1) <= 0)
       return; // Zero length, column does not exceed a pixel.
@@ -77,7 +77,7 @@ static void V_DrawPatchColumn(void)
    // haleyjd 06/21/06: rewrote and specialized for screen patches
 
    {
-      register const byte *source = patchcol.source;
+      const byte *source = patchcol.source;
             
       while((count -= 2) >= 0)
       {
@@ -98,12 +98,12 @@ static void V_DrawPatchColumn(void)
 //
 // Draws a plain patch column with color translation.
 //
-static void V_DrawPatchColumnTR(void) 
+static void V_DrawPatchColumnTR() 
 { 
-   int              count;
-   register byte    *dest;    // killough
-   register fixed_t frac;     // killough
-   fixed_t          fracstep;
+   int      count;
+   byte    *dest;    // killough
+   fixed_t  frac;    // killough
+   fixed_t  fracstep;
    
    if((count = patchcol.y2 - patchcol.y1 + 1) <= 0)
       return; // Zero length, column does not exceed a pixel.
@@ -128,7 +128,7 @@ static void V_DrawPatchColumnTR(void)
    // haleyjd 06/21/06: rewrote and specialized for screen patches
 
    {
-      register const byte *source = patchcol.source;
+      const byte *source = patchcol.source;
             
       while((count -= 2) >= 0)
       {
@@ -149,12 +149,12 @@ static void V_DrawPatchColumnTR(void)
 //
 // Draws a plain patch column with color translation and light remapping
 //
-static void V_DrawPatchColumnTRLit(void) 
+static void V_DrawPatchColumnTRLit() 
 { 
-   int              count;
-   register byte    *dest;    // killough
-   register fixed_t frac;     // killough
-   fixed_t          fracstep;
+   int      count;
+   byte    *dest;    // killough
+   fixed_t  frac;    // killough
+   fixed_t  fracstep;
    
    if((count = patchcol.y2 - patchcol.y1 + 1) <= 0)
       return; // Zero length, column does not exceed a pixel.
@@ -179,7 +179,7 @@ static void V_DrawPatchColumnTRLit(void)
    // haleyjd 06/21/06: rewrote and specialized for screen patches
 
    {
-      register const byte *source = patchcol.source;
+      const byte *source = patchcol.source;
             
       while((count -= 2) >= 0)
       {
@@ -210,11 +210,11 @@ static void V_DrawPatchColumnTRLit(void)
 //
 void V_DrawPatchColumnTL(void)
 { 
-   int              count; 
-   register byte    *dest;           // killough
-   register fixed_t frac;            // killough
-   fixed_t          fracstep;
-   unsigned int     fg, bg;
+   int      count; 
+   byte    *dest;           // killough
+   fixed_t  frac;           // killough
+   fixed_t  fracstep;
+   unsigned int fg, bg;
    
    if((count = patchcol.y2 - patchcol.y1 + 1) <= 0)
       return; // Zero length, column does not exceed a pixel.
@@ -233,7 +233,7 @@ void V_DrawPatchColumnTL(void)
 
    // haleyjd 06/21/06: rewrote and specialized for screen patches
    {
-      register const byte *source = patchcol.source;
+      const byte *source = patchcol.source;
             
       while((count -= 2) >= 0)
       {
@@ -268,13 +268,13 @@ void V_DrawPatchColumnTL(void)
 // Draws translated translucent patch columns.
 // Requires both translucency lookups and a translation table.
 //
-void V_DrawPatchColumnTRTL(void)
+void V_DrawPatchColumnTRTL()
 { 
-   int              count; 
-   register byte    *dest;           // killough
-   register fixed_t frac;            // killough
-   fixed_t          fracstep;
-   unsigned int     fg, bg;
+   int      count; 
+   byte    *dest;           // killough
+   fixed_t  frac;           // killough
+   fixed_t  fracstep;
+   unsigned int fg, bg;
    
    if((count = patchcol.y2 - patchcol.y1 + 1) <= 0)
       return; // Zero length, column does not exceed a pixel.
@@ -293,7 +293,7 @@ void V_DrawPatchColumnTRTL(void)
 
    // haleyjd 06/21/06: rewrote and specialized for screen patches
    {
-      register const byte *source = patchcol.source;
+      const byte *source = patchcol.source;
       
       while((count -= 2) >= 0)
       {
@@ -333,13 +333,13 @@ void V_DrawPatchColumnTRTL(void)
 //
 // Draws a patch column with additive translucency.
 //
-void V_DrawPatchColumnAdd(void)
+void V_DrawPatchColumnAdd()
 { 
-   int              count; 
-   register byte    *dest;           // killough
-   register fixed_t frac;            // killough
-   fixed_t          fracstep;
-   unsigned int     a, b;
+   int      count; 
+   byte    *dest;           // killough
+   fixed_t  frac;           // killough
+   fixed_t  fracstep;
+   unsigned int a, b;
    
    if((count = patchcol.y2 - patchcol.y1 + 1) <= 0)
       return; // Zero length, column does not exceed a pixel.
@@ -358,7 +358,7 @@ void V_DrawPatchColumnAdd(void)
 
    // haleyjd 06/21/06: rewrote and specialized for screen patches
    {
-      register const byte *source = patchcol.source;
+      const byte *source = patchcol.source;
       
       while((count -= 2) >= 0)
       {
@@ -398,13 +398,13 @@ void V_DrawPatchColumnAdd(void)
 // Draws a patch column with additive translucency and
 // translation.
 //
-void V_DrawPatchColumnAddTR(void)
+void V_DrawPatchColumnAddTR()
 { 
-   int              count; 
-   register byte    *dest;           // killough
-   register fixed_t frac;            // killough
-   fixed_t          fracstep;
-   unsigned int     a, b;
+   int      count; 
+   byte    *dest;           // killough
+   fixed_t  frac;           // killough
+   fixed_t  fracstep;
+   unsigned int a, b;
    
    if((count = patchcol.y2 - patchcol.y1 + 1) <= 0)
       return; // Zero length, column does not exceed a pixel.
@@ -423,7 +423,7 @@ void V_DrawPatchColumnAddTR(void)
 
    // haleyjd 06/21/06: rewrote and specialized for screen patches
    {
-      register const byte *source = patchcol.source;
+      const byte *source = patchcol.source;
       
       while((count -= 2) >= 0)
       {
@@ -728,9 +728,9 @@ byte *V_PatchToLinear(patch_t *patch, bool flipped, byte fillcolor,
       while(column->topdelta != 0xff)
       {
          // killough 2/21/98: Unrolled and performance-tuned         
-         register const byte *source = (byte *)column + 3;
-         register byte *dest = desttop + column->topdelta * w;
-         register int count = column->length;
+         const byte *source = (byte *)column + 3;
+         byte *dest = desttop + column->topdelta * w;
+         int count = column->length;
          int diff;
 
          // haleyjd 11/02/08: clip to indicated height
@@ -745,7 +745,7 @@ byte *V_PatchToLinear(patch_t *patch, bool flipped, byte fillcolor,
          {
             do
             {
-               register byte s0, s1;
+               byte s0, s1;
                s0 = source[0];
                s1 = source[1];
                dest[0] = s0;

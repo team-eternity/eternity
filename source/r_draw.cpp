@@ -116,8 +116,8 @@ int fuzzpos = 0;
 void CB_DrawColumn_8(void)
 {
    int count;
-   register byte *dest;
-   register fixed_t frac;
+   byte *dest;
+   fixed_t frac;
    fixed_t fracstep;
 
    count = column.y2 - column.y1 + 1;
@@ -134,9 +134,9 @@ void CB_DrawColumn_8(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      register byte *source = (byte *)(column.source);
-      register lighttable_t *colormap = column.colormap;
-      register int heightmask = column.texheight - 1;
+      byte *source = (byte *)(column.source);
+      lighttable_t *colormap = column.colormap;
+      int heightmask = column.texheight - 1;
       
       if(column.texheight & heightmask)
       {
@@ -193,8 +193,8 @@ void CB_DrawColumn_8(void)
 void CB_DrawTLColumn_8(void)
 {
    int count;
-   register byte *dest;
-   register fixed_t frac;
+   byte *dest;
+   fixed_t frac;
    fixed_t fracstep;
 
    count = column.y2 - column.y1 + 1;
@@ -212,9 +212,9 @@ void CB_DrawTLColumn_8(void)
 
    // killough 2/1/98, 2/21/98: more performance tuning
    {
-      register byte *source = (byte *)(column.source);
-      register lighttable_t *colormap = column.colormap;
-      register int heightmask = column.texheight - 1;
+      byte *source = (byte *)(column.source);
+      lighttable_t *colormap = column.colormap;
+      int heightmask = column.texheight - 1;
       
       if(column.texheight & heightmask)
       {
@@ -268,8 +268,8 @@ void CB_DrawTLColumn_8(void)
 void CB_DrawTLTRColumn_8(void)
 {
    int count;
-   register byte *dest;
-   register fixed_t frac;
+   byte *dest;
+   fixed_t frac;
    fixed_t fracstep;
 
    count = column.y2 - column.y1 + 1;
@@ -286,9 +286,9 @@ void CB_DrawTLTRColumn_8(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      register byte *source = (byte *)(column.source);
-      register lighttable_t *colormap = column.colormap;
-      register int heightmask = column.texheight - 1;
+      byte *source = (byte *)(column.source);
+      lighttable_t *colormap = column.colormap;
+      int heightmask = column.texheight - 1;
       
       if(column.texheight & heightmask)
       {
@@ -357,7 +357,7 @@ void CB_DrawTLTRColumn_8(void)
 void CB_DrawFuzzColumn_8(void)
 {
    int count;
-   register byte *dest;
+   byte *dest;
 
    // Adjust borders. Low...
    if(!column.y1) 
@@ -379,7 +379,7 @@ void CB_DrawFuzzColumn_8(void)
    dest = ylookup[column.y1] + columnofs[column.x];
 
    {
-      register lighttable_t *colormap = column.colormap;
+      lighttable_t *colormap = column.colormap;
       
       while((count -= 2) >= 0) // texture height is a power of 2 -- killough
       {
@@ -424,8 +424,8 @@ int numtranslations = 0;
 void CB_DrawTRColumn_8(void)
 {
    int count;
-   register byte *dest;
-   register fixed_t frac;
+   byte *dest;
+   fixed_t frac;
    fixed_t fracstep;
 
    count = column.y2 - column.y1 + 1;
@@ -442,9 +442,9 @@ void CB_DrawTRColumn_8(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      register byte *source = (byte *)(column.source);
-      register lighttable_t *colormap = column.colormap;
-      register int heightmask = column.texheight - 1;
+      byte *source = (byte *)(column.source);
+      lighttable_t *colormap = column.colormap;
+      int heightmask = column.texheight - 1;
       
       if(column.texheight & heightmask)
       {
@@ -493,11 +493,11 @@ void CB_DrawTRColumn_8(void)
 void CB_DrawFlexColumn_8(void)
 {
    int count;
-   register byte *dest;
-   register fixed_t frac;
+   byte *dest;
+   fixed_t frac;
    fixed_t fracstep;
    unsigned int *fg2rgb, *bg2rgb;
-   register unsigned int fg, bg;
+   unsigned int fg, bg;
 
    count = column.y2 - column.y1 + 1;
    if(count <= 0) return;
@@ -522,9 +522,9 @@ void CB_DrawFlexColumn_8(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      register byte *source = (byte *)(column.source);
-      register lighttable_t *colormap = column.colormap;
-      register int heightmask = column.texheight - 1;
+      byte *source = (byte *)(column.source);
+      lighttable_t *colormap = column.colormap;
+      int heightmask = column.texheight - 1;
       
       if (column.texheight & heightmask)   // not a power of 2 -- killough
       {
@@ -603,11 +603,11 @@ void CB_DrawFlexColumn_8(void)
 void CB_DrawFlexTRColumn_8(void)
 {
    int count;
-   register byte *dest;
-   register fixed_t frac;
+   byte *dest;
+   fixed_t frac;
    fixed_t fracstep;
    unsigned int *fg2rgb, *bg2rgb;
-   register unsigned int fg, bg;
+   unsigned int fg, bg;
 
    count = column.y2 - column.y1 + 1;
    if(count <= 0) return;
@@ -632,9 +632,9 @@ void CB_DrawFlexTRColumn_8(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      register byte *source = (byte *)(column.source);
-      register lighttable_t *colormap = column.colormap;
-      register int heightmask = column.texheight - 1;
+      byte *source = (byte *)(column.source);
+      lighttable_t *colormap = column.colormap;
+      int heightmask = column.texheight - 1;
       
       if(column.texheight & heightmask)
       {
@@ -714,8 +714,8 @@ void CB_DrawFlexTRColumn_8(void)
 void CB_DrawAddColumn_8(void)
 {
    int count;
-   register byte *dest;
-   register fixed_t frac;
+   byte *dest;
+   fixed_t frac;
    fixed_t fracstep;
    unsigned int *fg2rgb, *bg2rgb;
    unsigned int a, b;
@@ -743,9 +743,9 @@ void CB_DrawAddColumn_8(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      register byte *source = (byte *)(column.source);
-      register lighttable_t *colormap = column.colormap;
-      register int heightmask = column.texheight - 1;
+      byte *source = (byte *)(column.source);
+      lighttable_t *colormap = column.colormap;
+      int heightmask = column.texheight - 1;
       
       if(column.texheight & heightmask)
       {
@@ -842,8 +842,8 @@ void CB_DrawAddColumn_8(void)
 void CB_DrawAddTRColumn_8(void)
 {
    int count;
-   register byte *dest;
-   register fixed_t frac;
+   byte *dest;
+   fixed_t frac;
    fixed_t fracstep;
    unsigned int *fg2rgb, *bg2rgb;
    unsigned int a, b;
@@ -871,9 +871,9 @@ void CB_DrawAddTRColumn_8(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      register byte *source = (byte *)(column.source);
-      register lighttable_t *colormap = column.colormap;
-      register int heightmask = column.texheight - 1;
+      byte *source = (byte *)(column.source);
+      lighttable_t *colormap = column.colormap;
+      int heightmask = column.texheight - 1;
       
       if(column.texheight & heightmask)
       {
@@ -1329,12 +1329,12 @@ void R_DrawViewBorder()
 } 
 
 // haleyjd: experimental column drawer for masked sky textures
-void R_DrawNewSkyColumn(void) 
+void R_DrawNewSkyColumn() 
 { 
-  int              count; 
-  register byte    *dest;            // killough
-  register fixed_t frac;            // killough
-  fixed_t          fracstep;     
+  int      count; 
+  byte    *dest;            // killough
+  fixed_t  frac;            // killough
+  fixed_t  fracstep;     
 
   count = column.y2 - column.y1 + 1; 
 
@@ -1367,9 +1367,9 @@ void R_DrawNewSkyColumn(void)
   // killough 2/1/98: more performance tuning
 
   {
-    register const byte *source = (byte *)(column.source);
-    register const lighttable_t *colormap = column.colormap; 
-    register int heightmask = column.texheight-1;
+    const byte *source = (byte *)(column.source);
+    const lighttable_t *colormap = column.colormap; 
+    int heightmask = column.texheight-1;
     if (column.texheight & heightmask)   // not a power of 2 -- killough
       {
         heightmask++;

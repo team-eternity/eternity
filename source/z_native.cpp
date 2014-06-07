@@ -310,7 +310,7 @@ void Z_Init(void)
 //
 void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
 {
-   register memblock_t *block;
+   memblock_t *block;
    byte *ret;
 
    DEBUG_CHECKHEAP();

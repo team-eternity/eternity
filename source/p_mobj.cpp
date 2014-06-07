@@ -1875,14 +1875,14 @@ void Mobj::removeThinker()
 int P_FindDoomedNum(int type)
 {
    static struct dnumhash_s { int first, next; } *hash;
-   register int i;
+   int i;
 
    if(!hash)
    {
       hash = (dnumhash_s *)(Z_Malloc(sizeof(*hash) * NUMMOBJTYPES, PU_CACHE, (void **)&hash));
-      for(i = 0; i < NUMMOBJTYPES; ++i)
+      for(i = 0; i < NUMMOBJTYPES; i++)
          hash[i].first = NUMMOBJTYPES;
-      for(i = 0; i < NUMMOBJTYPES; ++i)
+      for(i = 0; i < NUMMOBJTYPES; i++)
       {
          if(mobjinfo[i]->doomednum != -1)
          {
