@@ -40,172 +40,6 @@ extern int   *columnofs;
 
 //==============================================================================
 //
-// Span Macros
-//
-
-//
-// SPAN_PROLOGUE_8
-//
-// 8-bit prologue code. This is shared between all span drawers.
-//
-#define SPAN_PROLOGUE_8() \
-   unsigned int xf = span.xfrac, xs = span.xstep; \
-   unsigned int yf = span.yfrac, ys = span.ystep; \
-   byte *dest; \
-   byte *source = (byte *)span.source; \
-   lighttable_t *colormap = span.colormap; \
-   int count = span.x2 - span.x1 + 1;
-
-//
-// TL_SPAN_PROLOGUE_8
-//
-// Extra prologue for translucent spans
-//
-#define TL_SPAN_PROLOGUE_8() \
-   unsigned int t; \
-   SPAN_PROLOGUE_8()
-
-//
-// ADD_SPAN_PROLOGUE_8
-//
-// Extra prologue for additive spans
-//
-#define ADD_SPAN_PROLOGUE_8() \
-   unsigned int a, b; \
-   SPAN_PROLOGUE_8()
-
-//
-// SPAN_PRIMEDEST_8
-//
-// Should follow prologue code.
-// Sets up the destination pointer.
-//
-#define SPAN_PRIMEDEST_8() dest = ylookup[span.y] + columnofs[span.x1];
-
-//
-// PUTPIXEL_8
-//
-// Normal pixel write, and step to the next texel.
-//
-#define PUTPIXEL_8(i, xshift, yshift, xmask) \
-   dest[i] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]; \
-   xf += xs; \
-   yf += ys;
-
-//
-// PUTPIXEL_EXTRA_8
-//
-// Pixel write for wrap-up after unrolled loop.
-//
-#define PUTPIXEL_EXTRA_8(xshift, yshift, xmask) \
-   *dest++ = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]; \
-   xf += xs; \
-   yf += ys;
-
-//
-// TL_PUTPIXEL_8
-//
-// Translucent pixel write.
-//
-#define TL_PUTPIXEL_8(i, xshift, yshift, xmask) \
-   t = span.bg2rgb[dest[i]] + \
-       span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]]; \
-   t |= 0x01f07c1f; \
-   dest[i] = RGB32k[0][0][t & (t >> 15)]; \
-   xf += xs; \
-   yf += ys;
-
-//
-// TL_PUTPIXEL_EXTRA_8
-//
-#define TL_PUTPIXEL_EXTRA_8(xshift, yshift, xmask) \
-   t = span.bg2rgb[*dest] + \
-       span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]]; \
-   t |= 0x01f07c1f; \
-   *dest++ = RGB32k[0][0][t & (t >> 15)]; \
-   xf += xs; \
-   yf += ys;
-
-//
-// ADD_PUTPIXEL_8
-//
-// Additive blend pixel write.
-//
-#define ADD_PUTPIXEL_8(i, xshift, yshift, xmask) \
-   a = span.bg2rgb[dest[i]] + \
-       span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]]; \
-   b = a; \
-   a |= 0x01f07c1f; \
-   b &= 0x40100400; \
-   a &= 0x3fffffff; \
-   b  = b - (b >> 5); \
-   a |= b; \
-   dest[i] = RGB32k[0][0][a & (a >> 15)]; \
-   xf += xs; \
-   yf += ys;
-
-//
-// ADD_PUTPIXEL_EXTRA_8
-//
-#define ADD_PUTPIXEL_EXTRA_8(xshift, yshift, xmask) \
-   a = span.bg2rgb[*dest] + \
-       span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]]; \
-   b = a; \
-   a |= 0x01f07c1f; \
-   b &= 0x40100400; \
-   a &= 0x3fffffff; \
-   b  = b - (b >> 5); \
-   a |= b; \
-   *dest++ = RGB32k[0][0][a & (a >> 15)]; \
-   xf += xs; \
-   yf += ys;
-
-//
-// DESTSTEP_8
-//
-// Steps to next destination and counts down pixels in unrolled loop.
-//
-#define DESTSTEP_8() \
-   dest += 4; \
-   count -= 4;
-
-//
-// SPAN_FUNC_8
-//
-// Defines a span drawer with an unrolled span drawing loop.
-// Note: this may not be ideal for use with complex blending modes.
-// We may need to define a normal loop for those, as code complexity may
-// negate the speed benefit of unrolling by causing a cache miss.
-//
-// SoM: Why didn't I see this earlier? the spot variable is a waste now
-// because we don't have the uber complicated math to calculate it now, 
-// so that was a memory write we didn't need!
-//
-#define SPAN_FUNC(name, plog, pdest, xshift, yshift, xmask, pp, ppx, dstp) \
-   static void name (void) \
-   { \
-      plog() \
-      pdest() \
-      while(count >= 4) \
-      { \
-         pp(0, xshift, yshift, xmask) \
-         \
-         pp(1, xshift, yshift, xmask) \
-         \
-         pp(2, xshift, yshift, xmask) \
-         \
-         pp(3, xshift, yshift, xmask) \
-         \
-         dstp() \
-      } \
-      while(count-- > 0) \
-      { \
-         ppx(xshift, yshift, xmask) \
-      } \
-   }
-
-//==============================================================================
-//
 // R_DrawSpan_*
 //
 // With DOOM style restrictions on view orientation,
@@ -219,6 +53,10 @@ extern int   *columnofs;
 //  and the inner loop has to step in texture space u and v.
 //
 
+// SoM: Why didn't I see this earlier? the spot variable is a waste now
+// because we don't have the uber complicated math to calculate it now, 
+// so that was a memory write we didn't need!
+
 // SoM: we only need 6 bits for the integer part (0 thru 63) so the rest
 // can be used for the fraction part. This allows calculation of the memory
 // address in the texture with two shifts, an OR and one AND. (see below)
@@ -227,20 +65,76 @@ extern int   *columnofs;
 // Ok, because I was able to eliminate the variable spot below, this function
 // is now FASTER than doom's original span renderer. Whodathunkit?
 
-SPAN_FUNC(R_DrawSpanCB_8_64,  SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 20, 26, 0xFC0, 
-          PUTPIXEL_8, PUTPIXEL_EXTRA_8, DESTSTEP_8)
+template<int xshift, int yshift, int xmask>
+static void R_DrawSpanSolid_8()
+{
+   unsigned int xf = span.xfrac, xs = span.xstep; 
+   unsigned int yf = span.yfrac, ys = span.ystep; 
+   lighttable_t *colormap = span.colormap; 
+   int count = span.x2 - span.x1 + 1;
 
-SPAN_FUNC(R_DrawSpanCB_8_128, SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 18, 25, 0x3F80, 
-          PUTPIXEL_8, PUTPIXEL_EXTRA_8, DESTSTEP_8)
+   byte *source = (byte *)span.source;
+   byte *dest   = ylookup[span.y] + columnofs[span.x1];
+   
+   while(count >= 4) 
+   {
+      dest[0] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
+      xf += xs;
+      yf += ys;
+      dest[1] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
+      xf += xs;
+      yf += ys;
+      dest[2] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
+      xf += xs;
+      yf += ys;
+      dest[3] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
+      xf += xs;
+      yf += ys;
+      dest  += 4;
+      count -= 4;
+   }
+   while(count-- > 0)
+   {
+      *dest++ = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
+      xf += xs;
+      yf += ys;
+   }
+}
 
-SPAN_FUNC(R_DrawSpanCB_8_256, SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 16, 24, 0xFF00, 
-          PUTPIXEL_8, PUTPIXEL_EXTRA_8, DESTSTEP_8)
+static void R_DrawSpanSolid_8_GEN()
+{
+   unsigned int xf = span.xfrac, xs = span.xstep; 
+   unsigned int yf = span.yfrac, ys = span.ystep; 
+   lighttable_t *colormap = span.colormap; 
+   int count = span.x2 - span.x1 + 1;
 
-SPAN_FUNC(R_DrawSpanCB_8_512, SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 14, 23, 0x3FE00,
-          PUTPIXEL_8, PUTPIXEL_EXTRA_8, DESTSTEP_8)
-
-SPAN_FUNC(R_DrawSpanCB_8_GEN, SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, (span.xshift), 
-          (span.yshift), (span.xmask), PUTPIXEL_8, PUTPIXEL_EXTRA_8, DESTSTEP_8)
+   byte *source = (byte *)span.source;
+   byte *dest   = ylookup[span.y] + columnofs[span.x1];
+   
+   while(count >= 4) 
+   {
+      dest[0] = colormap[source[((xf >> span.xshift) & span.xmask) | (yf >> span.yshift)]];
+      xf += xs;
+      yf += ys;
+      dest[1] = colormap[source[((xf >> span.xshift) & span.xmask) | (yf >> span.yshift)]];
+      xf += xs;
+      yf += ys;
+      dest[2] = colormap[source[((xf >> span.xshift) & span.xmask) | (yf >> span.yshift)]];
+      xf += xs;
+      yf += ys;
+      dest[3] = colormap[source[((xf >> span.xshift) & span.xmask) | (yf >> span.yshift)]];
+      xf += xs;
+      yf += ys;
+      dest  += 4;
+      count -= 4;
+   }
+   while(count-- > 0)
+   {
+      *dest++ = colormap[source[((xf >> span.xshift) & span.xmask) | (yf >> span.yshift)]];
+      xf += xs;
+      yf += ys;
+   }
+}
 
 #if 0
 // SoM: Archive
@@ -307,61 +201,112 @@ static void R_DrawSpan_OLD()
 // visplane layering.
 //
 
-SPAN_FUNC(R_DrawSpanTL_8_64,  TL_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 20, 26, 0xFC0, 
-          TL_PUTPIXEL_8, TL_PUTPIXEL_EXTRA_8, DESTSTEP_8)
+template<int xshift, int yshift, int xmask>
+static void R_DrawSpanTL_8()
+{
+   unsigned int t;
+   unsigned int xf = span.xfrac, xs = span.xstep;
+   unsigned int yf = span.yfrac, ys = span.ystep;
+   lighttable_t *colormap = span.colormap;
+   int count = span.x2 - span.x1 + 1;
 
-SPAN_FUNC(R_DrawSpanTL_8_128, TL_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 18, 25, 0x3F80, 
-          TL_PUTPIXEL_8, TL_PUTPIXEL_EXTRA_8, DESTSTEP_8)
+   byte *source = (byte *)span.source;
+   byte *dest   = ylookup[span.y] + columnofs[span.x1];
 
-SPAN_FUNC(R_DrawSpanTL_8_256, TL_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 16, 24, 0xFF00, 
-          TL_PUTPIXEL_8, TL_PUTPIXEL_EXTRA_8, DESTSTEP_8)
+   while(count-- > 0)
+   {
+      t = span.bg2rgb[*dest] +
+          span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]];
+      t |= 0x01f07c1f;
+      *dest++ = RGB32k[0][0][t & (t >> 15)];
+      xf += xs;
+      yf += ys;
+   }
+}
 
-SPAN_FUNC(R_DrawSpanTL_8_512, TL_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 14, 23, 0x3FE00,
-          TL_PUTPIXEL_8, TL_PUTPIXEL_EXTRA_8, DESTSTEP_8)
+static void R_DrawSpanTL_8_GEN()
+{
+   unsigned int t;
+   unsigned int xf = span.xfrac, xs = span.xstep;
+   unsigned int yf = span.yfrac, ys = span.ystep;
+   lighttable_t *colormap = span.colormap;
+   int count = span.x2 - span.x1 + 1;
 
-SPAN_FUNC(R_DrawSpanTL_8_GEN, TL_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, (span.xshift), 
-          (span.yshift), (span.xmask), TL_PUTPIXEL_8, TL_PUTPIXEL_EXTRA_8, DESTSTEP_8)
+   byte *source = (byte *)span.source;
+   byte *dest   = ylookup[span.y] + columnofs[span.x1];
+
+   while(count-- > 0)
+   {
+      t = span.bg2rgb[*dest] +
+          span.fg2rgb[colormap[source[((xf >> span.xshift) & span.xmask) | (yf >> span.yshift)]]];
+      t |= 0x01f07c1f;
+      *dest++ = RGB32k[0][0][t & (t >> 15)];
+      xf += xs;
+      yf += ys;
+   }
+}
 
 // Additive blending
 
-SPAN_FUNC(R_DrawSpanAdd_8_64,  ADD_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 20, 26, 0xFC0, 
-          ADD_PUTPIXEL_8, ADD_PUTPIXEL_EXTRA_8, DESTSTEP_8)
+template<int xshift, int yshift, int xmask>
+static void R_DrawSpanAdd_8()
+{
+   unsigned int a, b;
+   unsigned int xf = span.xfrac, xs = span.xstep;
+   unsigned int yf = span.yfrac, ys = span.ystep;
+   lighttable_t *colormap = span.colormap;
+   int count = span.x2 - span.x1 + 1;
 
-SPAN_FUNC(R_DrawSpanAdd_8_128, ADD_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 18, 25, 0x3F80, 
-          ADD_PUTPIXEL_8, ADD_PUTPIXEL_EXTRA_8, DESTSTEP_8)
+   byte *source = (byte *)span.source;
+   byte *dest   = ylookup[span.y] + columnofs[span.x1];
 
-SPAN_FUNC(R_DrawSpanAdd_8_256, ADD_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 16, 24, 0xFF00, 
-          ADD_PUTPIXEL_8, ADD_PUTPIXEL_EXTRA_8, DESTSTEP_8)
+   while(count-- > 0)
+   {
+      a = span.bg2rgb[*dest] +
+          span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]];
+      b = a;
+      a |= 0x01f07c1f;
+      b &= 0x40100400;
+      a &= 0x3fffffff;
+      b  = b - (b >> 5);
+      a |= b;
+      *dest++ = RGB32k[0][0][a & (a >> 15)];
+      xf += xs;
+      yf += ys;
+   }
+}
 
-SPAN_FUNC(R_DrawSpanAdd_8_512, ADD_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, 14, 23, 0x3FE00,
-          ADD_PUTPIXEL_8, ADD_PUTPIXEL_EXTRA_8, DESTSTEP_8)
+static void R_DrawSpanAdd_8_GEN()
+{
+   unsigned int a, b;
+   unsigned int xf = span.xfrac, xs = span.xstep;
+   unsigned int yf = span.yfrac, ys = span.ystep;
+   lighttable_t *colormap = span.colormap;
+   int count = span.x2 - span.x1 + 1;
 
-SPAN_FUNC(R_DrawSpanAdd_8_GEN, ADD_SPAN_PROLOGUE_8, SPAN_PRIMEDEST_8, (span.xshift), 
-          (span.yshift), (span.xmask), ADD_PUTPIXEL_8, ADD_PUTPIXEL_EXTRA_8, DESTSTEP_8)
+   byte *source = (byte *)span.source;
+   byte *dest   = ylookup[span.y] + columnofs[span.x1];
+
+   while(count-- > 0)
+   {
+      a = span.bg2rgb[*dest] +
+          span.fg2rgb[colormap[source[((xf >> span.xshift) & span.xmask) | (yf >> span.yshift)]]];
+      b = a;
+      a |= 0x01f07c1f;
+      b &= 0x40100400;
+      a &= 0x3fffffff;
+      b  = b - (b >> 5);
+      a |= b;
+      *dest++ = RGB32k[0][0][a & (a >> 15)];
+      xf += xs;
+      yf += ys;
+   }
+}
 
 //==============================================================================
 //
 // Slope span drawers
 //
-
-#define SPANJUMP 16
-#define INTERPSTEP (0.0625f)
-
-void R_DrawSlope_8_64(void)
-{
-   double iu  = slopespan.iufrac, iv  = slopespan.ivfrac;
-   double ius = slopespan.iustep, ivs = slopespan.ivstep;
-   double id  = slopespan.idfrac, ids = slopespan.idstep;
-   
-   byte *src, *dest, *colormap;
-   int count;
-   fixed_t mapindex = 0;
-
-   if((count = slopespan.x2 - slopespan.x1 + 1) < 0)
-      return;
-
-   src = (byte *)slopespan.source;
-   dest = ylookup[slopespan.y] + columnofs[slopespan.x1];
 
 #if 0
    // Perfect *slow* render
@@ -380,91 +325,27 @@ void R_DrawSlope_8_64(void)
       iv += ivs;
       id += ids;
    }
-#else
-   while(count >= SPANJUMP)
-   {
-      double ustart, uend;
-      double vstart, vend;
-      double mulstart, mulend;
-      unsigned int ustep, vstep, ufrac, vfrac;
-      int incount;
-
-      // TODO: 
-      mulstart = 65536.0f / id;
-      id += ids * SPANJUMP;
-      mulend = 65536.0f / id;
-
-      ufrac = (int)(ustart = iu * mulstart);
-      vfrac = (int)(vstart = iv * mulstart);
-      iu += ius * SPANJUMP;
-      iv += ivs * SPANJUMP;
-      uend = iu * mulend;
-      vend = iv * mulend;
-
-      ustep = (int)((uend - ustart) * INTERPSTEP);
-      vstep = (int)((vend - vstart) * INTERPSTEP);
-
-      incount = SPANJUMP;
-      while(incount--)
-      {
-         colormap = slopespan.colormap[mapindex++];
-         *dest++ = colormap[src[((vfrac >> 10) & 0xFC0) | ((ufrac >> 16) & 63)]];
-         ufrac += ustep;
-         vfrac += vstep;
-      }
-
-      count -= SPANJUMP;
-   }
-   if(count > 0)
-   {
-      double ustart, uend;
-      double vstart, vend;
-      double mulstart, mulend;
-      unsigned int ustep, vstep, ufrac, vfrac;
-      int incount;
-
-      mulstart = 65536.0f / id;
-      id += ids * count;
-      mulend = 65536.0f / id;
-
-      ufrac = (int)(ustart = iu * mulstart);
-      vfrac = (int)(vstart = iv * mulstart);
-      iu += ius * count;
-      iv += ivs * count;
-      uend = iu * mulend;
-      vend = iv * mulend;
-
-      ustep = (int)((uend - ustart) / count);
-      vstep = (int)((vend - vstart) / count);
-
-      incount = count;
-      while(incount--)
-      {
-         colormap = slopespan.colormap[mapindex++];
-         *dest++ = colormap[src[((vfrac >> 10) & 0xFC0) | ((ufrac >> 16) & 63)]];
-         ufrac += ustep;
-         vfrac += vstep;
-      }
-   }
 #endif
-}
 
+#define SPANJUMP 16
+#define INTERPSTEP (0.0625f)
 
-void R_DrawSlope_8_128(void)
+template<int xshift, int xmask, int ymask>
+static void R_DrawSlope_8()
 {
    double iu  = slopespan.iufrac, iv  = slopespan.ivfrac;
    double ius = slopespan.iustep, ivs = slopespan.ivstep;
    double id  = slopespan.idfrac, ids = slopespan.idstep;
    
-   byte *src, *dest, *colormap;
+   byte *colormap;
    int count;
    fixed_t mapindex = 0;
 
    if((count = slopespan.x2 - slopespan.x1 + 1) < 0)
       return;
 
-   src = (byte *)slopespan.source;
-   dest = ylookup[slopespan.y] + columnofs[slopespan.x1];
+   byte *src = (byte *)slopespan.source;
+   byte *dest = ylookup[slopespan.y] + columnofs[slopespan.x1];
 
    while(count >= SPANJUMP)
    {
@@ -474,7 +355,6 @@ void R_DrawSlope_8_128(void)
       unsigned int ustep, vstep, ufrac, vfrac;
       int incount;
 
-      // TODO: 
       mulstart = 65536.0f / id;
       id += ids * SPANJUMP;
       mulend = 65536.0f / id;
@@ -493,7 +373,7 @@ void R_DrawSlope_8_128(void)
       while(incount--)
       {
          colormap = slopespan.colormap[mapindex++];
-         *dest++ = colormap[src[((vfrac >> 9) & 0x3F80) | ((ufrac >> 16) & 0x7F)]];
+         *dest++ = colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]];
          ufrac += ustep;
          vfrac += vstep;
       }
@@ -526,180 +406,14 @@ void R_DrawSlope_8_128(void)
       while(incount--)
       {
          colormap = slopespan.colormap[mapindex++];
-         *dest++ = colormap[src[((vfrac >> 9) & 0x3F80) | ((ufrac >> 16) & 0x7F)]];
+         *dest++ = colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]];
          ufrac += ustep;
          vfrac += vstep;
       }
    }
 }
 
-void R_DrawSlope_8_256(void)
-{
-   double iu  = slopespan.iufrac, iv  = slopespan.ivfrac;
-   double ius = slopespan.iustep, ivs = slopespan.ivstep;
-   double id  = slopespan.idfrac, ids = slopespan.idstep;
-   
-   byte *src, *dest, *colormap;
-   int count;
-   fixed_t mapindex = 0;
-
-   if((count = slopespan.x2 - slopespan.x1 + 1) < 0)
-      return;
-
-   src = (byte *)slopespan.source;
-   dest = ylookup[slopespan.y] + columnofs[slopespan.x1];
-
-   while(count >= SPANJUMP)
-   {
-      double ustart, uend;
-      double vstart, vend;
-      double mulstart, mulend;
-      unsigned int ustep, vstep, ufrac, vfrac;
-      int incount;
-
-      // TODO: 
-      mulstart = 65536.0f / id;
-      id += ids * SPANJUMP;
-      mulend = 65536.0f / id;
-
-      ufrac = (int)(ustart = iu * mulstart);
-      vfrac = (int)(vstart = iv * mulstart);
-      iu += ius * SPANJUMP;
-      iv += ivs * SPANJUMP;
-      uend = iu * mulend;
-      vend = iv * mulend;
-
-      ustep = (int)((uend - ustart) * INTERPSTEP);
-      vstep = (int)((vend - vstart) * INTERPSTEP);
-
-      incount = SPANJUMP;
-      while(incount--)
-      {
-         colormap = slopespan.colormap[mapindex++];
-         *dest++ = colormap[src[((vfrac >> 8) & 0xFF00) | ((ufrac >> 16) & 0xFF)]];
-         ufrac += ustep;
-         vfrac += vstep;
-      }
-
-      count -= SPANJUMP;
-   }
-   if(count > 0)
-   {
-      double ustart, uend;
-      double vstart, vend;
-      double mulstart, mulend;
-      unsigned int ustep, vstep, ufrac, vfrac;
-      int incount;
-
-      mulstart = 65536.0f / id;
-      id += ids * count;
-      mulend = 65536.0f / id;
-
-      ufrac = (int)(ustart = iu * mulstart);
-      vfrac = (int)(vstart = iv * mulstart);
-      iu += ius * count;
-      iv += ivs * count;
-      uend = iu * mulend;
-      vend = iv * mulend;
-
-      ustep = (int)((uend - ustart) / count);
-      vstep = (int)((vend - vstart) / count);
-
-      incount = count;
-      while(incount--)
-      {
-         colormap = slopespan.colormap[mapindex++];
-         *dest++ = colormap[src[((vfrac >> 8) & 0xFF00) | ((ufrac >> 16) & 0xFF)]];
-         ufrac += ustep;
-         vfrac += vstep;
-      }
-   }
-}
-
-void R_DrawSlope_8_512(void)
-{
-   double iu  = slopespan.iufrac, iv  = slopespan.ivfrac;
-   double ius = slopespan.iustep, ivs = slopespan.ivstep;
-   double id  = slopespan.idfrac, ids = slopespan.idstep;
-   
-   byte *src, *dest, *colormap;
-   int count;
-   fixed_t mapindex = 0;
-
-   if((count = slopespan.x2 - slopespan.x1 + 1) < 0)
-      return;
-
-   src = (byte *)slopespan.source;
-   dest = ylookup[slopespan.y] + columnofs[slopespan.x1];
-
-   while(count >= SPANJUMP)
-   {
-      double ustart, uend;
-      double vstart, vend;
-      double mulstart, mulend;
-      unsigned int ustep, vstep, ufrac, vfrac;
-      int incount;
-
-      // TODO: 
-      mulstart = 65536.0f / id;
-      id += ids * SPANJUMP;
-      mulend = 65536.0f / id;
-
-      ufrac = (int)(ustart = iu * mulstart);
-      vfrac = (int)(vstart = iv * mulstart);
-      iu += ius * SPANJUMP;
-      iv += ivs * SPANJUMP;
-      uend = iu * mulend;
-      vend = iv * mulend;
-
-      ustep = (int)((uend - ustart) * INTERPSTEP);
-      vstep = (int)((vend - vstart) * INTERPSTEP);
-
-      incount = SPANJUMP;
-      while(incount--)
-      {
-         colormap = slopespan.colormap[mapindex++];
-         *dest++ = colormap[src[((vfrac >> 7) & 0x3FE00) | ((ufrac >> 16) & 0x1FF)]];
-         ufrac += ustep;
-         vfrac += vstep;
-      }
-
-      count -= SPANJUMP;
-   }
-   if(count > 0)
-   {
-      double ustart, uend;
-      double vstart, vend;
-      double mulstart, mulend;
-      unsigned int ustep, vstep, ufrac, vfrac;
-      int incount;
-
-      mulstart = 65536.0f / id;
-      id += ids * count;
-      mulend = 65536.0f / id;
-
-      ufrac = (int)(ustart = iu * mulstart);
-      vfrac = (int)(vstart = iv * mulstart);
-      iu += ius * count;
-      iv += ivs * count;
-      uend = iu * mulend;
-      vend = iv * mulend;
-
-      ustep = (int)((uend - ustart) / count);
-      vstep = (int)((vend - vstart) / count);
-
-      incount = count;
-      while(incount--)
-      {
-         colormap = slopespan.colormap[mapindex++];
-         *dest++ = colormap[src[((vfrac >> 7) & 0x3FE00) | ((ufrac >> 16) & 0x1FF)]];
-         ufrac += ustep;
-         vfrac += vstep;
-      }
-   }
-}
-
-void R_DrawSlope_8_GEN()
+static void R_DrawSlope_8_GEN()
 {
    double iu  = slopespan.iufrac, iv  = slopespan.ivfrac;
    double ius = slopespan.iustep, ivs = slopespan.ivstep;
@@ -793,18 +507,59 @@ void R_DrawSlope_8_GEN()
 // the normal, high-precision span drawer
 spandrawer_t r_spandrawer =
 {
+   // Orthogonal span drawers
    {
-      { R_DrawSpanCB_8_64,  R_DrawSpanCB_8_128,  R_DrawSpanCB_8_256,  R_DrawSpanCB_8_512,  R_DrawSpanCB_8_GEN},
-      { R_DrawSpanTL_8_64,  R_DrawSpanTL_8_128,  R_DrawSpanTL_8_256,  R_DrawSpanTL_8_512,  R_DrawSpanTL_8_GEN},
-      { R_DrawSpanAdd_8_64, R_DrawSpanAdd_8_128, R_DrawSpanAdd_8_256, R_DrawSpanAdd_8_512, R_DrawSpanAdd_8_GEN},
+      // Solid
+      { 
+         R_DrawSpanSolid_8<20, 26, 0x00FC0>, // 64x64
+         R_DrawSpanSolid_8<18, 25, 0x03F80>, // 128x128
+         R_DrawSpanSolid_8<16, 24, 0x0FF00>, // 256x256
+         R_DrawSpanSolid_8<14, 23, 0x3FE00>, // 512x512
+         R_DrawSpanSolid_8_GEN               // General
+      },
+      // Translucent
+      { 
+         R_DrawSpanTL_8<20, 26, 0x00FC0>,    // 64x64
+         R_DrawSpanTL_8<18, 25, 0x03F80>,    // 128x128
+         R_DrawSpanTL_8<16, 24, 0x0FF00>,    // 256x256
+         R_DrawSpanTL_8<14, 23, 0x3FE00>,    // 512x512
+         R_DrawSpanTL_8_GEN                  // General
+      },
+      // Additive
+      { 
+         R_DrawSpanAdd_8<20, 26, 0x00FC0>,   // 64x64
+         R_DrawSpanAdd_8<18, 25, 0x03F80>,   // 128x128
+         R_DrawSpanAdd_8<16, 24, 0x0FF00>,   // 256x256
+         R_DrawSpanAdd_8<14, 23, 0x3FE00>,   // 512x512
+         R_DrawSpanAdd_8_GEN                 // General
+      }
    },
 
    // SoM: Sloped span drawers
-   // TODO: TL and ADD drawers
    {
-      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSlope_8_GEN},
-      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSlope_8_GEN},
-      { R_DrawSlope_8_64,   R_DrawSlope_8_128,   R_DrawSlope_8_256,   R_DrawSlope_8_512,  R_DrawSlope_8_GEN},
+      { 
+         R_DrawSlope_8<10, 0x00FC0, 0x03F>,  // 64x64 
+         R_DrawSlope_8< 9, 0x03F80, 0x07F>,  // 128x128
+         R_DrawSlope_8< 8, 0x0FF00, 0x0FF>,  // 256x256
+         R_DrawSlope_8< 7, 0x3FE00, 0x1FF>,  // 512x512
+         R_DrawSlope_8_GEN                   // General
+      },
+      // Translucent - TODO
+      { 
+         R_DrawSlope_8<10, 0x00FC0, 0x03F>,  // 64x64 
+         R_DrawSlope_8< 9, 0x03F80, 0x07F>,  // 128x128
+         R_DrawSlope_8< 8, 0x0FF00, 0x0FF>,  // 256x256
+         R_DrawSlope_8< 7, 0x3FE00, 0x1FF>,  // 512x512
+         R_DrawSlope_8_GEN                   // General
+      },
+      // Additive - TODO
+      {
+         R_DrawSlope_8<10, 0x00FC0, 0x03F>,  // 64x64 
+         R_DrawSlope_8< 9, 0x03F80, 0x07F>,  // 128x128
+         R_DrawSlope_8< 8, 0x0FF00, 0x0FF>,  // 256x256
+         R_DrawSlope_8< 7, 0x3FE00, 0x1FF>,  // 512x512
+         R_DrawSlope_8_GEN                   // General
+      }
    }
 };
 
