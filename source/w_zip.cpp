@@ -397,7 +397,7 @@ bool ZipFile::readCentralDirEntry(InBuffer &fin, ZipLump &lump, bool &skip)
    namestr.replace("\\", '/');
 
    // Save important directory information
-   lump.name       = namestr.duplicate(PU_STATIC);
+   lump.name       = namestr.duplicate();
    lump.gpFlags    = entry.gpFlags;
    lump.method     = entry.method;
    lump.compressed = entry.compressed;
@@ -427,7 +427,7 @@ bool ZipFile::readCentralDirEntry(InBuffer &fin, ZipLump &lump, bool &skip)
 //
 bool ZipFile::readCentralDirectory(InBuffer &fin, long offset, uint32_t size)
 {
-   int lumpidx   = 0; // current index into lumps[]
+   int lumpidx = 0; // current index into lumps[]
 
    // seek to start of directory
    if(fin.seek(offset, SEEK_SET))
@@ -552,9 +552,30 @@ ZipLump &ZipFile::getLump(int lumpNum)
    return lumps[lumpNum];
 }
 
+//
+// ZipFile::findLump
+//
+// For use in a pinch only; does a linear search on the loaded directory to
+// find a given lump, if it exists. Returns the highest matching lump number,
+// or -1 if not found. WadDirectory takes care of hashing at runtime, so this 
+// class doesn't bother.
+//
+int ZipFile::findLump(const char *name) const
+{
+   int lumpnum = -1;
+
+   for(int i = 0; i < numLumps; i++)
+   {
+      if(!strcasecmp(lumps[i].name, name))
+         lumpnum = i;
+   }
+
+   return lumpnum;
+}
+
 //=============================================================================
 //
-// ZipFile::Lump Methods
+// ZipLump Methods
 //
 // The structure is a POD, but supports various methods.
 //
@@ -696,7 +717,7 @@ void ZipLump::setAddress(InBuffer &fin)
 }
 
 //
-// ZipLump::read
+// ZipLump::read(void *)
 //
 // Read a zip lump out of the zip file.
 //
@@ -731,6 +752,23 @@ void ZipLump::read(void *buffer)
       I_Error("ZipLump::read: internal error - unsupported compression type %d\n",
               method);
       break;
+   }
+}
+
+//
+// ZipLump::read(ZAutoBuffer &, bool)
+//
+// Read a lump's contents into an auto buffer object.
+//
+void ZipLump::read(ZAutoBuffer &buf, bool asString)
+{
+   uint32_t totalSize = size;
+   if(asString)
+      totalSize += 1;
+   if(totalSize)
+   {
+      buf.alloc(totalSize, true);
+      read(buf.get());
    }
 }
 

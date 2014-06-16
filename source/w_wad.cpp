@@ -561,7 +561,7 @@ bool WadDirectory::addWadFile(openwad_t &openData, wfileadd_t &addInfo,
 bool WadDirectory::addZipFile(openwad_t &openData, wfileadd_t &addInfo,
                               int startlump)
 {
-   std::auto_ptr<ZipFile> zip(new ZipFile());
+   std::unique_ptr<ZipFile> zip(new ZipFile());
    int         numZipLumps;
    lumpinfo_t *lump_p;
 
@@ -576,6 +576,13 @@ bool WadDirectory::addZipFile(openwad_t &openData, wfileadd_t &addInfo,
    {
       // load was successful, but this zip file is useless.
       return true;
+   }
+
+   // update IWAD handle? 
+   if(!(addInfo.flags & WFA_PRIVATE) && this->ispublic)
+   {
+      if(IWADSource < 0 && (addInfo.flags & WFA_ISIWADFILE))
+         IWADSource = source;
    }
 
    // Allocate lumpinfo_t structures for the zip file's internal file lumps

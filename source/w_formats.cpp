@@ -97,7 +97,7 @@ typedef bool (*FormatFunc)(FILE *, long);
 // Detect an id IWAD or PWAD file, as used in DOOM itself and its direct spawn,
 // Heretic, Hexen, and Strife, as well as in numerous other games directly,
 // such as RoTT, Amulets and Armor, Bloodmasters, etc. It also formed the 
-// basis of the GRP (Duke3D) and PAK (Quake, Quake 2) formats.
+// basis of the GRP (Duke3D) and BSP (Quake, Quake 2) formats.
 //
 static bool W_isWadFile(FILE *f, long baseoffset)
 {
