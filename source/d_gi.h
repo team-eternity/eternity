@@ -45,11 +45,12 @@ struct texture_t;
 
 // inspired by, but not taken from, zdoom
 
-// Menu cursor -- a 2 patch alternating graphic
+// Menu cursor
 struct gimenucursor_t
 {
-   const char *patch1;
-   const char *patch2;
+   int blinktime;
+   int numpatches;
+   const char **patches;
 };
 
 // Screen border used to fill backscreen for small screen sizes

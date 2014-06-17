@@ -342,14 +342,11 @@ static texturehandler_t TextureHandlers[] =
 //
 // Sets up a texturelump structure.
 //
-static texturelump_t *R_InitTextureLump(const char *lname, bool required)
+static texturelump_t *R_InitTextureLump(const char *lname)
 {
    texturelump_t *tlump = ecalloc(texturelump_t *, 1, sizeof(texturelump_t));
 
-   if(required)
-      tlump->lumpnum = W_GetNumForName(lname);
-   else
-      tlump->lumpnum = W_CheckNumForName(lname);
+   tlump->lumpnum = W_CheckNumForName(lname);
 
    if(tlump->lumpnum >= 0)
    {
@@ -487,6 +484,10 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int texnum,
 {
    int i, j;
    byte *directory = tlump->directory;
+
+   // need a valid patch lookup to proceed
+   if(!patchlookup)
+      return texnum;
 
    for(i = 0; i < tlump->numtextures; i++, texnum++)
    {
@@ -1111,16 +1112,19 @@ static void R_InitLoading()
 //
 static int *R_LoadPNames()
 {
-   int  i;
+   int  i, lumpnum;
    int  nummappatches;
    int  *patchlookup;
    char name[9];
    char *names;
    char *name_p;
 
+   if((lumpnum = wGlobalDir.checkNumForName("PNAMES")) < 0)
+      return nullptr;
+
    // Load the patch names from pnames.lmp.
    name[8] = 0;
-   names = (char *)wGlobalDir.cacheLumpName("PNAMES", PU_STATIC);
+   names = (char *)wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC);
    nummappatches = SwapLong(*((int *)names));
    name_p = names + 4;
    patchlookup = emalloc(int *, nummappatches * sizeof(*patchlookup)); // killough
@@ -1323,11 +1327,15 @@ void R_InitTextures()
    // Load the map texture definitions from textures.lmp.
    // The data is contained in one or two lumps,
    //  TEXTURE1 for shareware, plus TEXTURE2 for commercial.
-   maptex1 = R_InitTextureLump("TEXTURE1", true);
-   maptex2 = R_InitTextureLump("TEXTURE2", false);
+   maptex1 = R_InitTextureLump("TEXTURE1");
+   maptex2 = R_InitTextureLump("TEXTURE2");
 
    // calculate total textures
-   numwalls  = maptex1->numtextures + maptex2->numtextures + tns.numLumps;
+   numwalls = maptex1->numtextures + maptex2->numtextures + tns.numLumps;
+
+   if(!numwalls)
+      I_Error("R_InitTextures: no wall textures defined\n");
+
    wallstart = 0;
    wallstop  = wallstart + numwalls;
    
@@ -1360,7 +1368,8 @@ void R_InitTextures()
    texnum = R_ReadTextureNamespace(texnum);
 
    // done with patch lookup
-   efree(patchlookup);
+   if(patchlookup)
+      efree(patchlookup);
 
    // done with texturelumps
    R_FreeTextureLump(maptex1);

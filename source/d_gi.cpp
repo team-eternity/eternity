@@ -171,17 +171,32 @@ gamemodeinfo_t *GameModeInfo;
 //
 
 // doom menu skull cursor
-static gimenucursor_t giSkullCursor =
+static const char *skullCursorPatches[] =
 {
    "M_SKULL1",
    "M_SKULL2",
 };
 
+static gimenucursor_t giSkullCursor =
+{
+   8,                 // blinktime
+   2,                 // numpatches
+   skullCursorPatches // patches
+};
+
 // heretic menu arrow cursor
-static gimenucursor_t giArrowCursor =
+
+static const char *arrowCursorPatches[] =
 {
    "M_SLCTR1",
    "M_SLCTR2",
+};
+
+static gimenucursor_t giArrowCursor =
+{
+   16,                // blinktime
+   2,                 // numpatches
+   arrowCursorPatches // patch array
 };
 
 //
