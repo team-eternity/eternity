@@ -1145,6 +1145,17 @@ int WadDirectory::getNumForName(const char* name)     // killough -- const added
    return i;
 }
 
+//
+// WadDirectory::getNumForNameNSG
+//
+int WadDirectory::getNumForNameNSG(const char *name, int ns)
+{
+   int i = checkNumForNameNSG(name, ns);
+   if(i == -1)
+      I_Error("WadDirectory::getNumForNameNSG: %.8s not found!\n", name);
+   return i;
+}
+
 int W_GetNumForName(const char *name)
 {
    return wGlobalDir.getNumForName(name);

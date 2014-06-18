@@ -462,7 +462,7 @@ bool S_LoadDigitalSoundEffect(sfxinfo_t *sfx)
   
    // replace missing sounds with a reasonable default
    if(lump == -1)
-      lump = wGlobalDir.getNumForName(GameModeInfo->defSoundName);
+      lump = wGlobalDir.getNumForNameNSG(GameModeInfo->defSoundName, lumpinfo_t::ns_sounds);
    
    size_t lumplen = (size_t)wGlobalDir.lumpLength(lump);
    if(!lumplen)
@@ -513,7 +513,7 @@ void S_CacheDigitalSoundLump(sfxinfo_t *sfx)
    
    // replace missing sounds with a reasonable default
    if(lump == -1)
-      lump = wGlobalDir.getNumForName(GameModeInfo->defSoundName);
+      lump = wGlobalDir.getNumForNameNSG(GameModeInfo->defSoundName, lumpinfo_t::ns_sounds);
    
    wGlobalDir.cacheLumpNum(lump, PU_CACHE);
 }
