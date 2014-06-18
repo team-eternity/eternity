@@ -864,6 +864,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerOutput Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NoListing</AssemblerOutput>
     </ClCompile>
     <ClCompile Include="..\source\r_textur.cpp" />
     <ClCompile Include="..\Source\r_things.cpp">
@@ -1307,6 +1308,7 @@
     <ClInclude Include="..\source\m_compare.h" />
     <ClInclude Include="..\source\m_ctype.h" />
     <ClInclude Include="..\source\p_sector.h" />
+    <ClInclude Include="..\source\p_things.h" />
     <ClInclude Include="..\source\r_interpolate.h" />
     <ClInclude Include="..\source\r_textur.h" />
     <ClInclude Include="..\source\sdl\i_sdltimer.h" />
