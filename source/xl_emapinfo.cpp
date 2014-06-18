@@ -30,6 +30,7 @@
 
 #include "c_io.h"
 #include "c_runcmd.h"
+#include "e_lib.h"
 #include "m_qstr.h"
 #include "metaapi.h"
 #include "v_misc.h"
@@ -113,6 +114,7 @@ protected:
    MetaTable *curInfo;
    qstring    key;
    qstring    value;
+   bool       allowMultiValue;
 
    virtual bool doToken(XLTokenizer &token);
    virtual void startLump();
@@ -122,7 +124,7 @@ protected:
 public:
    XLEMapInfoParser() 
       : XLParser("EMAPINFO"), state(STATE_EXPECTHEADER), nextstate(-1),
-        isGlobal(true), curInfo(NULL), key(), value()
+        isGlobal(true), curInfo(NULL), key(), value(), allowMultiValue(false)
    {
    }
 
@@ -156,6 +158,7 @@ void XLEMapInfoParser::startLump()
    curInfo   = NULL;
    key       = "";
    value     = "";
+   allowMultiValue = false;
 }
 
 // Setup tokenizer state before parsing begins
@@ -217,6 +220,18 @@ bool XLEMapInfoParser::doStateExpectHeader(XLTokenizer &tokenizer)
    return true;
 }
 
+enum multivalkw_e
+{
+   MVKW_LEVELACTION,
+   MVKW_NUMKEYWORDS
+};
+
+// Keywords which allow multiple values
+static const char *multiValKeywords[MVKW_NUMKEYWORDS] =
+{
+   "levelaction"
+};
+
 // Expecting a MapInfo keyword
 bool XLEMapInfoParser::doStateExpectKeyword(XLTokenizer &tokenizer)
 {
@@ -235,6 +250,10 @@ bool XLEMapInfoParser::doStateExpectKeyword(XLTokenizer &tokenizer)
       key   = tokenizer.getToken();
       value = "";
       state = STATE_EXPECTEQUAL;
+      if(E_StrToNumLinear(multiValKeywords, MVKW_NUMKEYWORDS, key.constPtr()) != MVKW_NUMKEYWORDS)
+         allowMultiValue = true;
+      else
+         allowMultiValue = false;
       break;
 
    default:
@@ -271,7 +290,12 @@ bool XLEMapInfoParser::doStateExpectValue(XLTokenizer &tokenizer)
    {
       // push the key/value pair
       if(key.length() && value.length())
-         curInfo->setString(key.constPtr(), value.constPtr());
+      {
+         if(allowMultiValue)
+            curInfo->addString(key.constPtr(), value.constPtr());
+         else
+            curInfo->setString(key.constPtr(), value.constPtr());
+      }
       state = STATE_EXPECTKEYWORD;
       key   = "";
       value = "";
