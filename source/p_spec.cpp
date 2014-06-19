@@ -63,6 +63,7 @@
 #include "p_skin.h"
 #include "p_slopes.h"
 #include "p_spec.h"
+#include "p_things.h"
 #include "p_tick.h"
 #include "p_user.h"
 #include "polyobj.h"
@@ -1216,7 +1217,7 @@ void P_SpawnSpecials()
 
    // Init special sectors.
    sector = sectors;
-   for(i = 0; i < numsectors; ++i, ++sector)
+   for(i = 0; i < numsectors; i++, sector++)
    {
       // haleyjd: count generalized secrets here
       if(sector->flags & SECF_SECRET) // jff 3/15/98 count extended
@@ -1355,7 +1356,7 @@ void P_SpawnSpecials()
    
    P_SpawnPushers();   // phares 3/20/98: New pusher model using linedefs
 
-   for(i = 0; i < numlines; ++i)
+   for(i = 0; i < numlines; i++)
    {
       line_t *line = &lines[i];
       int staticFn = EV_StaticInitForSpecial(line->special);
@@ -1483,6 +1484,9 @@ void P_SpawnSpecials()
 
    // haleyjd 02/20/06: spawn polyobjects
    Polyobj_InitLevel();
+
+   // haleyjd 06/18/14: spawn level actions
+   P_SpawnLevelActions();
 }
 
 // 

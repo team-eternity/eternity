@@ -45,6 +45,8 @@ public:
    static void Spawn(int pSpecial, int *pArgs, int pMobjType);
 };
 
+void P_SpawnLevelActions();
+
 #endif
 
 // EOF

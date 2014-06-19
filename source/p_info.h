@@ -22,6 +22,7 @@
 #define P_INFO_H__
 
 #include "doomdef.h"
+#include "r_defs.h"  // needed for NUMLINEARGS
 
 class WadDirectory;
 
@@ -49,6 +50,15 @@ enum
    BSPEC_E5M8    = 0x00000080,
 };
 
+// levelaction structures
+struct levelaction_t
+{
+   int special;
+   int mobjtype;
+   int args[NUMLINEARGS];
+   levelaction_t *next;
+};
+
 //
 // LevelInfo_t
 //
@@ -63,6 +73,7 @@ struct LevelInfo_t
 
    // specials: lines, sectors, etc.
    unsigned int bossSpecs;  // boss special flags for BossDeath, HticBossDeath
+   levelaction_t *actions;  // special level actions
 
    // intermission and finale stuff
    int  partime;                // intermission par time in seconds

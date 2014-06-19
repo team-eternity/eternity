@@ -36,6 +36,7 @@
 #include "acs_intr.h"
 #include "e_states.h"
 #include "e_things.h"
+#include "p_info.h"
 #include "s_sound.h"
 
 //
@@ -293,6 +294,18 @@ void LevelActionThinker::Spawn(int pSpecial, int *pArgs, int pMobjType)
    memcpy(lva->args, pArgs, sizeof(lva->args));
  
    lva->addThinker();
+}
+
+//
+// P_SpawnLevelActions
+//
+// Spawn all the levelactions specified in LevelInfo as LevelActionThinker 
+// instances.
+//
+void P_SpawnLevelActions()
+{
+   for(auto action = LevelInfo.actions; action; action = action->next)
+      LevelActionThinker::Spawn(action->special, action->args, action->mobjtype);
 }
 
 // EOF
