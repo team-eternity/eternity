@@ -837,9 +837,6 @@ public:
    // when it reaches 0, start going down
    int topcountdown;
 
-   //jff 1/31/98 keep track of line door is triggered by
-   line_t *line;
-
    int lighttag; //killough 10/98: sector tag for gradual lighting effects
 
    bool turbo;     // haleyjd: behave as a turbo door, independent of speed

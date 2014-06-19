@@ -1173,8 +1173,6 @@ manual_door:
       door->topwait = dd->delay_value;
       door->speed   = dd->speed_value;
 
-      door->line = line; // jff 1/31/98 remember line that triggered us
-
       // killough 10/98: implement gradual lighting
       // haleyjd 02/28/05: support light changes from alternate tag
       if(dd->flags & DDF_USEALTLIGHTTAG)
