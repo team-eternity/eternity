@@ -75,7 +75,7 @@ menuwidget_t popup_widget = { MN_PopupDrawer, MN_PopupResponder };
 // haleyjd 07/27/05: not all questions should have to run console
 // commands. It's inefficient.
 //
-static void (*popup_callback)(void) = NULL;
+static void (*popup_callback)(void) = nullptr;
 
 static enum
 {
@@ -180,7 +180,6 @@ bool MN_PopupResponder(event_t *ev, int action)
          if(popup_callback)
          {
             popup_callback();
-            popup_callback = NULL;
          }
          else
          {
@@ -254,6 +253,7 @@ void MN_Question(const char *message, const char *command)
    strncpy(popup_message, message, 1024);
    popup_message_type = popup_question;
    popup_message_command = command;
+   popup_callback = nullptr;
 }
 
 //
@@ -279,6 +279,7 @@ void MN_QuestionFunc(const char *message, void (*handler)(void))
    
    strncpy(popup_message, message, 1024);
    popup_message_type = popup_question;
+   popup_message_command = nullptr;
    popup_callback = handler;
 }
 
