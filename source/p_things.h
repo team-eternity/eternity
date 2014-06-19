@@ -41,6 +41,7 @@ protected:
 
 public:
    virtual void Think();
+   virtual void serialize(SaveArchive &arc);
 
    static void Spawn(int pSpecial, int *pArgs, int pMobjType);
 };

@@ -31,6 +31,7 @@
 #include "ev_specials.h"
 #include "p_mobj.h"
 #include "p_map3d.h"
+#include "p_saveg.h"
 #include "p_things.h"
 #include "a_small.h"
 #include "acs_intr.h"
@@ -278,6 +279,18 @@ void LevelActionThinker::Think()
    ev_action_t *action = EV_HexenActionForSpecial(special);
    if(action && EV_ActivateAction(action, args, thePlayer->mo))
       removeThinker();
+}
+
+//
+// LevelActionThinker::serialize
+//
+// Save or load the LevelActionThinker from a save game.
+//
+void LevelActionThinker::serialize(SaveArchive &arc)
+{
+   arc << special;
+   arc << mobjtype;
+   P_ArchiveArray(arc, args, NUMLINEARGS);
 }
 
 //
