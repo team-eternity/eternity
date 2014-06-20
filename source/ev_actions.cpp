@@ -32,6 +32,7 @@
 #include "ev_macros.h"
 #include "ev_specials.h"
 #include "g_game.h"
+#include "p_info.h"
 #include "p_skin.h"
 #include "p_spec.h"
 #include "p_xenemy.h"
@@ -466,13 +467,21 @@ DEFINE_ACTION(EV_ActionCeilingLowerAndCrush)
 //
 DEFINE_ACTION(EV_ActionExitLevel)
 {
-   Mobj *thing = instance->actor;
+   Mobj *thing   = instance->actor;
+   int   destmap = 0;
+
+   if(LevelInfo.allowExitTags)
+   {
+      destmap = instance->tag;
+      if(!destmap)
+         destmap = gamemap + 1;
+   }
 
    // case  52: (W1)
    // EXIT!
    // killough 10/98: prevent zombies from exiting levels
    if(!(thing->player && thing->player->health <= 0 && !comp[comp_zombie]))
-      G_ExitLevel();
+      G_ExitLevel(destmap);
 
    return true;
 }
@@ -484,7 +493,15 @@ DEFINE_ACTION(EV_ActionExitLevel)
 //
 DEFINE_ACTION(EV_ActionSwitchExitLevel)
 {
-   Mobj *thing = instance->actor;
+   Mobj *thing   = instance->actor;
+   int   destmap = 0;
+
+   if(LevelInfo.allowExitTags)
+   {
+      destmap = instance->tag;
+      if(!destmap)
+         destmap = gamemap + 1;
+   }
 
    // case 11:
    // Exit level
@@ -495,7 +512,7 @@ DEFINE_ACTION(EV_ActionSwitchExitLevel)
       return false;
    }
 
-   G_ExitLevel();
+   G_ExitLevel(destmap);
    return true;
 }
 
@@ -506,13 +523,21 @@ DEFINE_ACTION(EV_ActionSwitchExitLevel)
 //
 DEFINE_ACTION(EV_ActionGunExitLevel)
 {
-   Mobj *thing = instance->actor;
+   Mobj *thing   = instance->actor;
+   int   destmap = 0;
+
+   if(LevelInfo.allowExitTags)
+   {
+      destmap = instance->tag;
+      if(!destmap)
+         destmap = gamemap + 1;
+   }
 
    // case 197: (G1 - BOOM Extended)
    if(thing->player && thing->player->health <= 0 && !comp[comp_zombie])
       return false;
 
-   G_ExitLevel();
+   G_ExitLevel(destmap);
    return true;
 }
 
@@ -690,13 +715,21 @@ DEFINE_ACTION(EV_ActionPlatBlazeDWUS)
 //
 DEFINE_ACTION(EV_ActionSecretExit)
 {
-   Mobj *thing = instance->actor;
+   Mobj *thing   = instance->actor;
+   int   destmap = 0;
+
+   if(LevelInfo.allowSecretTags)
+   {
+      destmap = instance->tag;
+      if(!destmap)
+         destmap = gamemap + 1;
+   }
 
    // case 124: (W1)
    // Secret EXIT
    // killough 10/98: prevent zombies from exiting levels
    if(!(thing->player && thing->player->health <= 0 && !comp[comp_zombie]))
-      G_SecretExitLevel();
+      G_SecretExitLevel(destmap);
 
    return true;
 }
@@ -708,7 +741,15 @@ DEFINE_ACTION(EV_ActionSecretExit)
 //
 DEFINE_ACTION(EV_ActionSwitchSecretExit)
 {
-   Mobj *thing = instance->actor;
+   Mobj *thing   = instance->actor;
+   int   destmap = 0;
+
+   if(LevelInfo.allowSecretTags)
+   {
+      destmap = instance->tag;
+      if(!destmap)
+         destmap = gamemap + 1;
+   }
 
    // case 51: (S1)
    // Secret EXIT
@@ -719,7 +760,7 @@ DEFINE_ACTION(EV_ActionSwitchSecretExit)
       return false;
    }
 
-   G_SecretExitLevel();
+   G_SecretExitLevel(destmap);
    return true;
 }
 
@@ -730,13 +771,21 @@ DEFINE_ACTION(EV_ActionSwitchSecretExit)
 //
 DEFINE_ACTION(EV_ActionGunSecretExit)
 {
-   Mobj *thing = instance->actor;
+   Mobj *thing   = instance->actor;
+   int   destmap = 0;
+
+   if(LevelInfo.allowSecretTags)
+   {
+      destmap = instance->tag;
+      if(!destmap)
+         destmap = gamemap + 1;
+   }
 
    // case 198: (G1 - BOOM Extended)
    if(thing->player && thing->player->health <= 0 && !comp[comp_zombie])
       return false;
 
-   G_SecretExitLevel();
+   G_SecretExitLevel(destmap);
    return true;
 }
 
