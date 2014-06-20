@@ -288,6 +288,7 @@ void LevelActionThinker::Think()
 //
 void LevelActionThinker::serialize(SaveArchive &arc)
 {
+   Super::serialize(arc);
    arc << special;
    arc << mobjtype;
    P_ArchiveArray(arc, args, NUMLINEARGS);
