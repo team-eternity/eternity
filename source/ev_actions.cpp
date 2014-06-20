@@ -1422,7 +1422,6 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToHighest)
 // * ExtraData: 307
 //
 // NB: Not ZDoom-compatible with special of same name
-// TODO: implement compatible spec for Hexen-format special 242
 //
 DEFINE_ACTION(EV_ActionParamEEFloorLowerToHighest)
 {
@@ -1433,10 +1432,34 @@ DEFINE_ACTION(EV_ActionParamEEFloorLowerToHighest)
    fd.spac        = instance->spac; // activated Hexen-style
    fd.flags       = FDF_HAVESPAC;
    fd.speed_type  = SpeedParam;
-   fd.speed_value = instance->args[1] * FRACUNIT /8; // speed
-   EV_floorChangeForArg(fd, instance->args[2]);      // change
+   fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   EV_floorChangeForArg(fd, instance->args[2]);       // change
    fd.crush       = -1;
    
+   return !!EV_DoParamFloor(instance->line, instance->tag, &fd);
+}
+
+//
+// EV_ActionParamFloorLowerToHighest
+//
+// Implements Floor_LowerToHighest(tag, speed, adjust, force_adjust)
+// * ExtraData: 416
+// * Hexen (ZDoom Extension): 242
+//
+DEFINE_ACTION(EV_ActionParamFloorLowerToHighest)
+{
+   INIT_STRUCT(floordata_t, fd);
+
+   fd.direction = 0;
+   fd.target_type = FtoHnF;
+   fd.spac = instance->spac;
+   fd.flags = FDF_HAVESPAC | FDF_HACKFORDESTHNF;
+   fd.speed_type = SpeedParam;
+   fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   fd.crush = -1;
+   fd.adjust = instance->args[2];
+   fd.force_adjust = instance->args[3];
+
    return !!EV_DoParamFloor(instance->line, instance->tag, &fd);
 }
 
