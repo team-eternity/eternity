@@ -956,6 +956,7 @@ static zipmission_t zipMissions[] =
    { "doom2 plutonia",     commercial, pack_plut },
    { "doom2 hacx",         commercial, pack_hacx },
    { "doom2 bfg",          commercial, pack_disk },
+   { "doom2 psx",          commercial, pack_psx  },
    { "heretic sosr",       hereticreg, hticsosr  },
    { "heretic registered", hereticreg, heretic   },
    { "heretic shareware",  hereticsw,  heretic   },
