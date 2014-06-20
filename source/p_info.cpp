@@ -1487,6 +1487,7 @@ struct levelvar_t
    const char *name;     // key of the MetaTable value
    void       *variable; // pointer to destination LevelInfo field
    void       *extra;    // pointer to any "extra" info needed for this parsing
+   bool        multi;    // if true, allows multiple definitions
 };
 
 //
@@ -1496,25 +1497,25 @@ struct levelvar_t
 // structure.
 //
 #define LI_STRING(name, field) \
-   { IVT_STRING, name, (void *)(&(LevelInfo . field)), NULL }
+   { IVT_STRING, name, (void *)(&(LevelInfo . field)), nullptr, false }
 
 #define LI_STRNUM(name, field, extra) \
-   { IVT_STRNUM, name, (void *)(&(LevelInfo . field)), &(extra) }
+   { IVT_STRNUM, name, (void *)(&(LevelInfo . field)), &(extra), false }
 
 #define LI_INTEGR(name, field) \
-   { IVT_INT, name, &(LevelInfo . field), NULL }
+   { IVT_INT, name, &(LevelInfo . field), nullptr, false }
 
 #define LI_BOOLNF(name, field) \
-   { IVT_BOOLEAN, name, &(LevelInfo . field), NULL }
+   { IVT_BOOLEAN, name, &(LevelInfo . field), nullptr, false }
 
 #define LI_FLAGSF(name, field, extra) \
-   { IVT_FLAGS, name, &(LevelInfo . field), &(extra) }
+   { IVT_FLAGS, name, &(LevelInfo . field), &(extra), false }
 
 #define LI_ENVIRO(name, field) \
-   { IVT_ENVIRONMENT, name, &(LevelInfo . field), NULL }
+   { IVT_ENVIRONMENT, name, &(LevelInfo . field), nullptr, false }
 
 #define LI_ACTION(name, field) \
-   { IVT_LEVELACTION, name, &(LevelInfo . field), NULL }
+   { IVT_LEVELACTION, name, &(LevelInfo . field), nullptr, true }
 
 static levelvar_t levelvars[]=
 {
@@ -1830,10 +1831,14 @@ static void P_processEMapInfo(MetaTable *info)
    for(size_t i = 0; i < earrlen(levelvars); i++)
    {
       levelvar_t *levelvar  = &levelvars[i];
-      MetaString *str       = NULL;
+      MetaString *str       = nullptr;
 
-      if((str = info->getObjectKeyAndTypeEx<MetaString>(levelvar->name)))
+      while((str = info->getNextKeyAndTypeEx<MetaString>(str, levelvar->name)))
+      {
          infoVarParsers[levelvar->type](levelvar, qstring(str->getValue()));
+         if(!levelvar->multi)
+            break;
+      }
    }
 }
 
