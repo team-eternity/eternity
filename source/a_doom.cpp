@@ -1205,7 +1205,7 @@ void A_BossDeath(actionargs_t *actionargs)
    int      i;
 
    // make sure there is a player alive for victory
-   for(i = 0; i < MAXPLAYERS; ++i)
+   for(i = 0; i < MAXPLAYERS; i++)
    {
       if(playeringame[i] && players[i].health > 0)
          break;
@@ -1215,7 +1215,7 @@ void A_BossDeath(actionargs_t *actionargs)
    if(i == MAXPLAYERS)
       return;
 
-   for(i = 0; i < NUM_BOSS_SPECS; ++i)
+   for(i = 0; i < NUM_BOSS_SPECS; i++)
    {
       // to activate a special, the thing must be a boss that triggers
       // it, and the map must have the special enabled.
