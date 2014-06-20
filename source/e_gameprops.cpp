@@ -167,14 +167,16 @@ static dehflagset_t gmi_flagset =
 // missionInfo flags
 static dehflags_t mission_flags[] =
 {
-   { "DEMOIFDEMO4",   MI_DEMOIFDEMO4   },
-   { "CONBACKTITLE",  MI_CONBACKTITLE  },
-   { "WOLFNAMEHACKS", MI_WOLFNAMEHACKS },
-   { "HASBETRAY",     MI_HASBETRAY     },
-   { "DOOM2MISSIONS", MI_DOOM2MISSIONS },
-   { "NOTELEPORTZ",   MI_NOTELEPORTZ   },
-   { "NOGDHIGH",      MI_NOGDHIGH      },
-   { NULL,            0                }
+   { "DEMOIFDEMO4",    MI_DEMOIFDEMO4    },
+   { "CONBACKTITLE",   MI_CONBACKTITLE   },
+   { "WOLFNAMEHACKS",  MI_WOLFNAMEHACKS  },
+   { "HASBETRAY",      MI_HASBETRAY      },
+   { "DOOM2MISSIONS",  MI_DOOM2MISSIONS  },
+   { "NOTELEPORTZ",    MI_NOTELEPORTZ    },
+   { "NOGDHIGH",       MI_NOGDHIGH       },
+   { "ALLOWEXITTAG",   MI_ALLOWEXITTAG   },
+   { "ALLOWSECRETTAG", MI_ALLOWSECRETTAG },
+   { NULL,             0                 }
 };
 
 static dehflagset_t mission_flagset =

@@ -100,6 +100,8 @@ struct LevelInfo_t
    // level transfer stuff
    const char *nextLevel;     // name of next map for normal exit
    const char *nextSecret;    // name of next map for secret exit
+   bool allowExitTags;        // map allows tagged normal exit switches
+   bool allowSecretTags;      // map allows tagged secret exit switches
 
    // level variables
    const char *levelName;     // name used in automap

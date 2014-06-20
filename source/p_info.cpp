@@ -1412,6 +1412,11 @@ static void P_ClearLevelVars()
       LevelInfo.nextSecret = nextsecret;
    }
 
+   // haleyjd 06/20/14: set default allow normal/secret exit line tags
+   unsigned int mflags = GameModeInfo->missionInfo->flags;
+   LevelInfo.allowExitTags   = ((mflags & MI_ALLOWEXITTAG  ) == MI_ALLOWEXITTAG  );
+   LevelInfo.allowSecretTags = ((mflags & MI_ALLOWSECRETTAG) == MI_ALLOWSECRETTAG);
+
    // haleyjd 08/31/12: Master Levels mode hacks
    if(inmanageddir == MD_MASTERLEVELS && GameModeInfo->type == Game_DOOM)
       LevelInfo.interPic = "INTRMLEV";
@@ -1514,6 +1519,8 @@ struct levelvar_t
 static levelvar_t levelvars[]=
 {
    LI_STRING("acsscript",          acsScriptLump),
+   LI_BOOLNF("allowexittags",      allowExitTags),
+   LI_BOOLNF("allowsecrettags",    allowSecretTags),
    LI_STRING("altskyname",         altSkyName),
    LI_FLAGSF("boss-specials",      bossSpecs,         boss_flagset),
    LI_STRING("colormap",           colorMap),
@@ -1537,6 +1544,7 @@ static levelvar_t levelvars[]=
    LI_STRING("intertext-secret",   interTextSLump),
    LI_BOOLNF("killfinale",         killFinale),
    LI_BOOLNF("killstats",          killStats),
+   LI_ACTION("levelaction",        actions),
    LI_STRING("levelname",          levelName),
    LI_STRING("levelpic",           levelPic),
    LI_STRING("levelpicnext",       nextLevelPic),
@@ -1563,7 +1571,6 @@ static levelvar_t levelvars[]=
    LI_STRING("sound-pstart",       sound_pstart),
    LI_STRING("sound-fcmove",       sound_fcmove),
    LI_BOOLNF("unevenlight",        unevenLight),
-   LI_ACTION("levelaction",        actions),
 
    //{ IVT_STRING,  "defaultweapons", &info_weapons },
 };
