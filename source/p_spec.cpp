@@ -1118,11 +1118,10 @@ void P_PlayerOnSpecialFlat(player_t *player)
 int             levelTimeLimit;
 int             levelFragLimit; // Ty 03/18/98 Added -frags support
 
-void P_UpdateSpecials(void)
+void P_UpdateSpecials()
 {
    anim_t *anim;
    int    pic;
-   int    i;
 
    // Downcount level timer, exit level if elapsed
    if(levelTimeLimit && leveltime >= levelTimeLimit*35*60 )
@@ -1147,9 +1146,9 @@ void P_UpdateSpecials(void)
    }
 
    // Animate flats and textures globally
-   for(anim = anims; anim < lastanim; ++anim)
+   for(anim = anims; anim < lastanim; anim++)
    {
-      for(i = anim->basepic; i < anim->basepic + anim->numpics; ++i)
+      for(int i = anim->basepic; i < anim->basepic + anim->numpics; i++)
       {
          if((i >= flatstart && i < flatstop && r_swirl) || anim->speed > 65535 || anim->numpics == 1)
             texturetranslation[i] = i;
@@ -1496,12 +1495,9 @@ void P_SpawnSpecials()
 //
 void P_SpawnDeferredSpecials()
 {
-   int      i;
-   line_t   *line;
-
-   for(i = 0; i < numlines; i++)
+   for(int i = 0; i < numlines; i++)
    {
-      line = &lines[i];
+      line_t *line = &lines[i];
 
       // haleyjd 02/05/13: lookup the static init function
       int staticFn = EV_StaticInitForSpecial(line->special);
