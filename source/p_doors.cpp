@@ -594,14 +594,14 @@ int EV_VerticalDoor(line_t *line, Mobj *thing, int lockID)
 // Passed the sector of the door, whose type specified the door action
 // Returns nothing
 //
-void P_SpawnDoorCloseIn30 (sector_t* sec)
+void P_SpawnDoorCloseIn30(sector_t* sec)
 {
    VerticalDoorThinker *door = new VerticalDoorThinker;
    
    door->addThinker();
    
    sec->ceilingdata = door; //jff 2/22/98
-   sec->special = 0;
+   P_ZeroSectorSpecial(sec);
    
    door->sector       = sec;
    door->direction    = plat_stop;
