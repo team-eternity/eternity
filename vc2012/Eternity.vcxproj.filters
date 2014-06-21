@@ -963,6 +963,9 @@
     <ClCompile Include="..\source\wp_weapons.cpp">
       <Filter>Source Files\WP_\WP_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\ev_sectors.cpp">
+      <Filter>Source Files\EV_\EV_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1711,6 +1714,9 @@
     </ClInclude>
     <ClInclude Include="..\source\p_things.h">
       <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\ev_sectors.h">
+      <Filter>Source Files\EV_\EV_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
