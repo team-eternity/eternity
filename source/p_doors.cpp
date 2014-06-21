@@ -620,14 +620,14 @@ void P_SpawnDoorCloseIn30(sector_t* sec)
 // Passed the sector of the door, whose type specified the door action
 // Returns nothing
 //
-void P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum)
+void P_SpawnDoorRaiseIn5Mins(sector_t *sec)
 {
    VerticalDoorThinker *door = new VerticalDoorThinker;
    
    door->addThinker();
    
    sec->ceilingdata = door; //jff 2/22/98
-   sec->special = 0;
+   P_ZeroSectorSpecial(sec);
    
    door->sector       = sec;
    door->direction    = plat_special; // haleyjd: changed from 2

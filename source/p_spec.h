@@ -1408,7 +1408,7 @@ void P_PlatSequence(sector_t *s, const char *seqname);
 
 void P_SpawnDoorCloseIn30(sector_t *sec);
 
-void P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum);
+void P_SpawnDoorRaiseIn5Mins(sector_t *sec);
 
 void P_DoorSequence(bool raise, bool turbo, bool bounced, sector_t *s); // haleyjd
 
