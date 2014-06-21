@@ -1038,31 +1038,21 @@ texture_t *R_CacheTexture(int num)
 }
 
 //
-// R_MakeMissingTexture
+// R_checkerBoardTexture
 //
-// Creates a checkerboard texture to fill in for unknown textures.
+// Fill in a 64x64 texture with a checkerboard pattern.
 //
-static void R_MakeMissingTexture(int count)
+static void R_checkerBoardTexture(texture_t *tex)
 {
-   texture_t   *tex;
-   int         i;
-   byte        c1, c2;
-   
-   if(count >= texturecount)
-   {
-      usermsg("R_MakeMissingTexture: count >= texturecount\n");
-      return;
-   }
-   
-   badtex = count;
-   textures[badtex] = tex = R_AllocTexStruct("BAADF00D", 64, 64, 0);
-   tex->buffer = (byte *)(Z_Malloc(64*64, PU_RENDERER, NULL));
-   
-   // Allocate column pointers
-   tex->columns = (texcol_t **)(Z_Calloc(sizeof(texcol_t **), tex->width, PU_RENDERER, 0));
+   // allocate buffer
+   tex->buffer = emalloctag(byte *, 64*64, PU_RENDERER, nullptr);
 
-   // Make columns
-   for(i = 0; i < tex->width; i++)
+   // allocate column pointers
+   tex->columns = ecalloctag(texcol_t **, sizeof(texcol_t *), tex->width, 
+                             PU_RENDERER, nullptr);
+
+   // make columns
+   for(int i = 0; i < tex->width; i++)
    {
       tex->columns[i] = estructalloctag(texcol_t, 1, PU_RENDERER);
       tex->columns[i]->next = NULL;
@@ -1071,11 +1061,42 @@ static void R_MakeMissingTexture(int count)
       tex->columns[i]->ptroff = i * tex->height;
    }
    
-   // Fill pixels
-   c1 = GameModeInfo->whiteIndex;
-   c2 = GameModeInfo->blackIndex;
-   for(i = 0; i < 4096; i++)
+   // fill pixels
+   byte c1 = GameModeInfo->whiteIndex;
+   byte c2 = GameModeInfo->blackIndex;
+   for(int i = 0; i < 4096; i++)
       tex->buffer[i] = ((i & 8) == 8) != ((i & 512) == 512) ? c1 : c2;
+}
+
+//
+// R_MakeDummyTexture
+//
+// haleyjd 06/20/14: creates a dummy texture in textures[0] if there are no
+// textures defined via TEXTURE1/2 lumps, to prevent problems with mods making
+// exclusive use of the ns_textures namespace.
+//
+static void R_MakeDummyTexture()
+{
+   textures[0] = R_AllocTexStruct("-BADTEX-", 64, 64, 0);
+   R_checkerBoardTexture(textures[0]);
+}
+
+//
+// R_MakeMissingTexture
+//
+// Creates a checkerboard texture to fill in for unknown textures.
+//
+static void R_MakeMissingTexture(int count)
+{
+   if(count >= texturecount)
+   {
+      usermsg("R_MakeMissingTexture: count >= texturecount\n");
+      return;
+   }
+   
+   badtex = count;
+   textures[badtex] = R_AllocTexStruct("BAADF00D", 64, 64, 0);
+   R_checkerBoardTexture(textures[badtex]);   
 }
 
 //=============================================================================
@@ -1316,7 +1337,8 @@ void R_InitTextures()
    auto &tns = wGlobalDir.getNamespace(lumpinfo_t::ns_textures);
    int *patchlookup;
    int errors = 0;
-   int i, texnum = 0;   
+   int i, texnum = 0;
+   bool needDummy = false;
    
    texturelump_t *maptex1;
    texturelump_t *maptex2;
@@ -1330,11 +1352,18 @@ void R_InitTextures()
    maptex1 = R_InitTextureLump("TEXTURE1");
    maptex2 = R_InitTextureLump("TEXTURE2");
 
-   // calculate total textures
-   numwalls = maptex1->numtextures + maptex2->numtextures + tns.numLumps;
+   // calculate total textures before ns_textures namespace
+   numwalls = maptex1->numtextures + maptex2->numtextures;
 
+   // if there are no TEXTURE1/2 lookups, we need to create a dummy texture
    if(!numwalls)
-      I_Error("R_InitTextures: no wall textures defined\n");
+   {
+      ++numwalls;
+      needDummy = true;
+   }
+
+   // add in ns_textures namespace
+   numwalls += tns.numLumps;
 
    wallstart = 0;
    wallstop  = wallstart + numwalls;
@@ -1361,6 +1390,13 @@ void R_InitTextures()
    // detect texture formats
    R_DetectTextureFormat(maptex1);
    R_DetectTextureFormat(maptex2);
+
+   // if we need a dummy texture, add it now.
+   if(needDummy)
+   {
+      R_MakeDummyTexture();
+      ++texnum;
+   }
 
    // read texture lumps
    texnum = R_ReadTextureLump(maptex1, patchlookup, texnum, &errors);
