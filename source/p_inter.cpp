@@ -1600,7 +1600,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
          damage = 10000;
 
       // end of game hell hack
-      if(target->subsector->sector->special == 11 && damage >= target->health)
+      if(target->subsector->sector->damageflags & SDMG_EXITLEVEL && damage >= target->health)
          damage = target->health - 1;
 
       // Below certain threshold,
