@@ -310,6 +310,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
    sound = "EE_SwitchOn"; // haleyjd
    
    // EXIT SWITCH?
+   // FIXME: should apply to all exits? Go through special binding system
    if(line->special == 11)
       sound = "EE_SwitchEx"; // haleyjd
 

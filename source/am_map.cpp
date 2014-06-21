@@ -1534,6 +1534,7 @@ static int AM_DoorColor(int type)
 //
 inline static bool AM_drawAsExitLine(line_t *line)
 {
+   // FIXME: needs to be controlled by line special bindings
    return (mapcolor_exit &&
            (line->special==11  ||
             line->special==52  ||
@@ -1593,6 +1594,7 @@ inline static bool AM_drawAs2sSecret(line_t *line)
 //
 inline static bool AM_drawAsTeleporter(line_t *line)
 {
+   // FIXME: needs to be controlled by line special bindings
    return (mapcolor_tele && !(line->flags & ML_SECRET) && 
            (line->special == 39  || line->special == 97 ||
             line->special == 125 || line->special == 126));
@@ -1708,8 +1710,7 @@ static void AM_drawWalls()
                   AM_drawMline(&l, mapcolor_prtl);
                }
             }
-         } // end else if
-      
+         } // end else if      
       }
    }
 

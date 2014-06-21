@@ -998,8 +998,7 @@ int enable_nuke = 1;  // killough 12/98: nukage disabling cheat
 //
 // P_PlayerInSpecialSector
 //
-// Called every tick frame
-//  that the player origin is in a special sector
+// Called every tic that the player origin is in a special sector
 //
 // Changed to ignore sector types the engine does not recognize
 //
