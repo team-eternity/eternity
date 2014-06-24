@@ -162,7 +162,11 @@ static void EV_SectorLightGlow(sector_t *sector)
 //
 static void EV_SectorSecret(sector_t *sector)
 {
-   sector->flags |= SECF_SECRET;
+   if(!(sector->flags & SECF_SECRET))
+   {
+      ++totalsecret;
+      sector->flags |= SECF_SECRET;
+   }
 }
 
 //
@@ -610,6 +614,21 @@ bool EV_IsGenSectorSpecial(int special)
 }
 
 //
+// EV_setGeneralizedSectorFlags
+//
+// Pull out the flag bits from a BOOM generalized sector special and set them
+// as sector flags.
+// 
+static void EV_setGeneralizedSectorFlags(sector_t *sector)
+{
+   // haleyjd 12/28/08: convert BOOM generalized sector types into sector flags
+   //         12/31/08: convert BOOM generalized damage
+
+   // convert special bits into flags (correspondence is direct by design)
+   sector->flags |= (sector->special & GENSECTOFLAGSMASK) >> SECRET_SHIFT;
+}
+
+//
 // EV_initGeneralizedSector
 //
 // Called to initialize a generalized sector. The types considered generalized
@@ -617,12 +636,6 @@ bool EV_IsGenSectorSpecial(int special)
 //
 static void EV_initGeneralizedSector(sector_t *sector)
 {
-   // haleyjd 12/28/08: convert BOOM generalized sector types into sector flags
-   //         12/31/08: convert BOOM generalized damage
-
-   // convert special bits into flags (correspondence is direct by design)
-   sector->flags |= (sector->special & GENSECTOFLAGSMASK) >> SECRET_SHIFT;
-
    // convert damage
    int damagetype = (sector->special & DAMAGE_MASK) >> DAMAGE_SHIFT;
 
@@ -661,6 +674,14 @@ void EV_SpawnSectorSpecials()
    for(int i = 0; i < numsectors; i++)
    {
       auto sector = &sectors[i];
+      bool isgen  = EV_IsGenSectorSpecial(sector->special);
+      
+      if(isgen)
+        EV_setGeneralizedSectorFlags(sector);
+
+      // count generalized secrets
+      if(sector->flags & SECF_SECRET)
+         ++totalsecret;
 
       if(!sector->special)
          continue;
@@ -671,12 +692,8 @@ void EV_SpawnSectorSpecials()
       {
          auto binding = EV_BindingForSectorSpecial(sector->special);
          if(binding)
-            binding->apply(sector);
+            binding->apply(sector);         
       }
-
-      // count secrets
-      if(sector->flags & SECF_SECRET)
-         ++totalsecret;
    }
 }
 
