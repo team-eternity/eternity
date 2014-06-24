@@ -442,16 +442,16 @@ static void P_InitSector(sector_t *ss)
       ((ss->intflags & SIF_SKY) ? global_fog_index : global_cmap_index);
 
    // SoM 9/19/02: Initialize the attached sector list for 3dsides
-   ss->c_attached = ss->f_attached = NULL;
+   ss->c_attached = ss->f_attached = nullptr;
    // SoM 11/9/04: 
-   ss->c_attsectors = ss->f_attsectors = NULL;
+   ss->c_attsectors = ss->f_attsectors = nullptr;
 
    // SoM 10/14/07:
-   ss->c_asurfaces = ss->f_asurfaces = NULL;
+   ss->c_asurfaces = ss->f_asurfaces = nullptr;
 
    // SoM: init portals
    ss->c_pflags = ss->f_pflags = 0;
-   ss->c_portal = ss->f_portal = NULL;
+   ss->c_portal = ss->f_portal = nullptr;
    ss->groupid = R_NOGROUP;
 
    // SoM: These are kept current with floorheight and ceilingheight now
@@ -467,40 +467,6 @@ static void P_InitSector(sector_t *ss)
    // CPP_FIXME: temporary placement construction for sound origins
    ::new (&ss->soundorg)  PointThinker;
    ::new (&ss->csoundorg) PointThinker;
-
-   // haleyjd 12/28/08: convert BOOM generalized sector types into sector flags
-   //         12/31/08: convert BOOM generalized damage
-   if(LevelInfo.mapFormat == LEVEL_FORMAT_DOOM && LevelInfo.levelType == LI_TYPE_DOOM)
-   {
-      int damagetype;
-
-      // convert special bits into flags (correspondence is direct by design)
-      ss->flags |= (ss->special & GENSECTOFLAGSMASK) >> SECRET_SHIFT;
-
-      // convert damage
-      damagetype = (ss->special & DAMAGE_MASK) >> DAMAGE_SHIFT;
-      switch(damagetype)
-      {
-      case 1:
-         ss->damage     = 5;
-         ss->damagemask = 32;
-         ss->damagemod  = MOD_SLIME;
-         break;
-      case 2:
-         ss->damage     = 10;
-         ss->damagemask = 32;
-         ss->damagemod  = MOD_SLIME;
-         break;
-      case 3:
-         ss->damage       = 20;
-         ss->damagemask   = 32;
-         ss->damagemod    = MOD_SLIME;
-         ss->damageflags |= SDMG_LEAKYSUIT;
-         break;
-      default:
-         break;
-      }
-   }
 }
 
 #define DOOM_SECTOR_SIZE 26
@@ -2335,8 +2301,6 @@ int P_CheckLevelMapNum(WadDirectory *dir, int mapnum)
    return P_CheckLevelName(dir, mapname.constPtr());
 }
 
-void P_ConvertHereticSpecials(); // haleyjd
-
 void P_InitThingLists(); // haleyjd
 
 //=============================================================================
@@ -2722,10 +2686,6 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    // clear special respawning queue
    iquehead = iquetail = 0;
-   
-   // haleyjd 10/05/05: convert heretic specials
-   if(LevelInfo.mapFormat == LEVEL_FORMAT_DOOM && LevelInfo.levelType == LI_TYPE_HERETIC)
-      P_ConvertHereticSpecials();
    
    // set up world state
    P_SpawnSpecials();

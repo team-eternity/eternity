@@ -48,6 +48,7 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "ev_sectors.h"
 #include "ev_specials.h"
 #include "g_game.h"
 #include "hu_stuff.h"
@@ -1204,9 +1205,6 @@ static void P_SetupHeightTransfer(int linenum, int secnum)
 //
 void P_SpawnSpecials()
 {
-   sector_t *sector;
-   int      i;
-      
    // sf: -timer moved to d_main.c
    //     -avg also
    
@@ -1214,127 +1212,7 @@ void P_SpawnSpecials()
    //     to allow changing by console
 
    // Init special sectors.
-   sector = sectors;
-   for(i = 0; i < numsectors; i++, sector++)
-   {
-      // haleyjd: count generalized secrets here
-      if(sector->flags & SECF_SECRET) // jff 3/15/98 count extended
-         ++totalsecret;               // secret sectors too
-
-      if(!sector->special)
-         continue;
-
-      switch(sector->special & 31)
-      {
-      case 1:
-         // random off
-         P_SpawnLightFlash(sector);
-         break;
-
-      case 2:
-         // strobe fast
-         P_SpawnStrobeFlash(sector, FASTDARK, 0);
-         break;
-
-      case 3:
-         // strobe slow
-         P_SpawnStrobeFlash(sector, SLOWDARK, 0);
-         break;
-
-      case 4:
-         // strobe fast/death slime
-         P_SpawnStrobeFlash(sector, FASTDARK, 0);
-         // haleyjd 12/31/08: sector damage conversion
-         // sector->special |= 3 << DAMAGE_SHIFT; //jff 3/14/98 put damage bits in
-         sector->damage       = 20;
-         sector->damagemask   = 32;
-         sector->damagemod    = MOD_SLIME;
-         sector->damageflags |= SDMG_LEAKYSUIT;
-         break;
-
-      case 5:
-         // haleyjd 12/31/08: sector damage conversion
-         if(sector->special < 32)
-         {
-            sector->damage     = 10;
-            sector->damagemask = 32;
-            sector->damagemod  = MOD_SLIME;
-         }
-         break;
-
-      case 7:
-         // haleyjd 12/31/08: sector damage conversion
-         if(sector->special < 32)
-         {
-            sector->damage     = 5;
-            sector->damagemask = 32;
-            sector->damagemod  = MOD_SLIME;
-         }
-         break;
-
-      case 8:
-         // glowing light
-         P_SpawnGlowingLight(sector);
-         break;
-
-      case 9:
-         // secret sector
-         if(!(sector->flags & SECF_SECRET) && 
-            sector->special < 32)    // jff 3/14/98 bits don't count unless not
-         {                           // a generalized sector type
-            ++totalsecret;
-            sector->flags |= SECF_SECRET; // haleyjd: set flag
-         }
-         break;
-
-      case 10:
-         // door close in 30 seconds
-         P_SpawnDoorCloseIn30(sector);
-         break;
-
-      case 11:
-         // haleyjd 12/31/08: sector damage conversion
-         if(sector->special < 32)
-         {
-            sector->damage       = 20;
-            sector->damagemask   = 32;
-            sector->damagemod    = MOD_SLIME;
-            sector->damageflags |= SDMG_IGNORESUIT|SDMG_ENDGODMODE|SDMG_EXITLEVEL;
-         }
-         break;
-         
-      case 12:
-         // sync strobe slow
-         P_SpawnStrobeFlash(sector, SLOWDARK, 1);
-         break;
-         
-      case 13:
-         // sync strobe fast
-         P_SpawnStrobeFlash(sector, FASTDARK, 1);
-         break;
-         
-      case 14:
-         // door raise in 5 minutes
-         P_SpawnDoorRaiseIn5Mins(sector);
-         break;
-
-      case 16:
-         // haleyjd 12/31/08: sector damage conversion
-         if(sector->special < 32)
-         {
-            sector->damage       = 20;
-            sector->damagemask   = 32;
-            sector->damagemod    = MOD_SLIME;
-            sector->damageflags |= SDMG_LEAKYSUIT;
-         }
-         break;
-         
-      case 17:
-         // fire flickering
-         P_SpawnFireFlicker(sector);
-         break;
-      }
-   }
+   EV_SpawnSectorSpecials();
 
    P_RemoveAllActiveCeilings();  // jff 2/22/98 use killough's scheme
    
@@ -1354,7 +1232,7 @@ void P_SpawnSpecials()
    
    P_SpawnPushers();   // phares 3/20/98: New pusher model using linedefs
 
-   for(i = 0; i < numlines; i++)
+   for(int i = 0; i < numlines; i++)
    {
       line_t *line = &lines[i];
       int staticFn = EV_StaticInitForSpecial(line->special);
@@ -1476,7 +1354,7 @@ void P_SpawnSpecials()
    if(!P_BuildLinkTable())
    {
       // SoM: There was an error... so kill the groupids
-      for(i = 0; i < numsectors; i++)
+      for(int i = 0; i < numsectors; i++)
          R_SetSectorGroupID(sectors + i, 0);
    }
 
@@ -2424,139 +2302,6 @@ void P_AttachSectors(line_t *line, int staticFn)
       sector->f_asurfaces = 
          (attachedsurface_t *)(Z_Malloc(sizeof(attachedsurface_t) * numattached, PU_LEVEL, 0));
       memcpy(sector->f_asurfaces, attached, sizeof(attachedsurface_t) * numattached);
-   }
-}
-
-//
-// P_ConvertHereticSpecials
-//
-// haleyjd 08/14/02:
-// This function converts old Heretic levels to a BOOM-compatible format.
-// FIXME/TODO: eliminate with generalized sector special binding
-//
-void P_ConvertHereticSpecials()
-{
-   fixed_t pushForces[5] = { 2048*5,  2048*10, 2048*25, 2048*30, 2048*35 };
-
-   // sector types
-   for(int i = 0; i < numsectors; i++)
-   {
-      sector_t *sector = &(sectors[i]);
-
-      switch(sector->special)
-      {
-      case 4: // Scroll_EastLavaDamage
-         // custom damage parameters:
-         sector->damage       = 5;
-         sector->damagemask   = 16;
-         sector->damagemod    = MOD_LAVA;
-         sector->damageflags |= SDMG_TERRAINHIT;
-         // heretic current pusher type:
-         sector->hticPushType  = SECTOR_HTIC_CURRENT;
-         sector->hticPushAngle = 0;
-         sector->hticPushForce = 2048*28;
-         // scrolls to the east:
-         Add_Scroller(ScrollThinker::sc_floor, (-FRACUNIT/2)<<3, 0, -1, sector - sectors, 0);
-         sector->special = 0;
-         continue;
-      case 5: // Damage_LavaWimpy
-         sector->damage       = 5;
-         sector->damagemask   = 16;
-         sector->damagemod    = MOD_LAVA;
-         sector->damageflags |= SDMG_TERRAINHIT;
-         sector->special      = 0;
-         continue;
-      case 7: // Damage_Sludge
-         sector->damage     = 4;
-         sector->damagemask = 32;
-         sector->special    = 0;
-         continue;
-      case 16: // Damage_LavaHefty
-         sector->damage       = 8;
-         sector->damagemask   = 16;
-         sector->damagemod    = MOD_LAVA;
-         sector->damageflags |= SDMG_TERRAINHIT;
-         sector->special      = 0;
-         continue;
-      case 15: // Friction_Low
-         sector->friction   = 0xf900;
-         //sector->movefactor = 0x276;
-         sector->movefactor = ORIG_FRICTION_FACTOR >> 2;
-         sector->special    = 0;             // clear special
-         sector->flags     |= SECF_FRICTION; // set friction bit
-         continue;
-      default:
-         break;
-      }
-
-      // 03/12/03: Heretic current and wind specials
-
-      if(sector->special >= 20 && sector->special <= 24)
-      {
-         // Scroll_East
-         sector->hticPushType  = SECTOR_HTIC_CURRENT;
-         sector->hticPushAngle = 0;
-         sector->hticPushForce = pushForces[sector->special - 20];         
-         Add_Scroller(ScrollThinker::sc_floor, (-FRACUNIT/2)<<(sector->special - 20),
-                      0, -1, sector-sectors, 0);
-         sector->special = 0;
-      }
-      else if(sector->special >= 25 && sector->special <= 29)
-      {
-         // Scroll_North
-         sector->hticPushType  = SECTOR_HTIC_CURRENT;
-         sector->hticPushAngle = ANG90;
-         sector->hticPushForce = pushForces[sector->special - 25];
-         sector->special = 0;
-      }
-      else if(sector->special >= 30 && sector->special <= 34)
-      {
-         // Scroll_South
-         sector->hticPushType  = SECTOR_HTIC_CURRENT;
-         sector->hticPushAngle = ANG270;
-         sector->hticPushForce = pushForces[sector->special - 30];
-         sector->special = 0;
-      }
-      else if(sector->special >= 35 && sector->special <= 39)
-      {
-         // Scroll_West
-         sector->hticPushType  = SECTOR_HTIC_CURRENT;
-         sector->hticPushAngle = ANG180;
-         sector->hticPushForce = pushForces[sector->special - 35];
-         sector->special = 0;
-      }
-      else if(sector->special >= 40 && sector->special <= 42)
-      {
-         // Wind_East
-         sector->hticPushType  = SECTOR_HTIC_WIND;
-         sector->hticPushAngle = 0;
-         sector->hticPushForce = pushForces[sector->special - 40];
-         sector->special = 0;
-      }
-      else if(sector->special >= 43 && sector->special <= 45)
-      {
-         // Wind_North
-         sector->hticPushType  = SECTOR_HTIC_WIND;
-         sector->hticPushAngle = ANG90;
-         sector->hticPushForce = pushForces[sector->special - 43];
-         sector->special = 0;
-      }
-      else if(sector->special >= 46 && sector->special <= 48)
-      {
-         // Wind_South
-         sector->hticPushType  = SECTOR_HTIC_WIND;
-         sector->hticPushAngle = ANG270;
-         sector->hticPushForce = pushForces[sector->special - 46];
-         sector->special = 0;
-      }
-      else if(sector->special >= 49 && sector->special <= 51)
-      {
-         // Wind_West
-         sector->hticPushType  = SECTOR_HTIC_WIND;
-         sector->hticPushAngle = ANG180;
-         sector->hticPushForce = pushForces[sector->special - 49];
-         sector->special = 0;
-      }
    }
 }
 
