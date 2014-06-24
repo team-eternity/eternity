@@ -162,11 +162,7 @@ static void EV_SectorLightGlow(sector_t *sector)
 //
 static void EV_SectorSecret(sector_t *sector)
 {
-   if(!(sector->flags & SECF_SECRET))
-   {
-      ++totalsecret;
-      sector->flags |= SECF_SECRET;
-   }
+   sector->flags |= SECF_SECRET;
 }
 
 //
@@ -199,7 +195,7 @@ static void EV_SectorExitSuperDamage(sector_t *sector)
 }
 
 //
-// EV_SectorLightStrobeSlow
+// EV_SectorLightStrobeSlowSync
 //
 // Spawns a StrobeThinker set to SLOWDARK, synchronized
 // * DOOM: 12
@@ -213,7 +209,7 @@ static void EV_SectorLightStrobeSlowSync(sector_t *sector)
 }
 
 //
-// EV_SectorLightStrobeFast
+// EV_SectorLightStrobeFastSync
 //
 // Spawns a StrobeThinker set to FASTDARK, synchronized
 // * DOOM: 13
@@ -436,8 +432,8 @@ static ev_sectorbinding_t DoomSectorBindings[] =
    {  9, EV_SectorSecret               },
    { 10, EV_SectorDoorCloseIn30        },
    { 11, EV_SectorExitSuperDamage      },
-   { 12, EV_SectorLightStrobeSlow      },
-   { 13, EV_SectorLightStrobeFast      },
+   { 12, EV_SectorLightStrobeSlowSync  },
+   { 13, EV_SectorLightStrobeFastSync  },
    { 14, EV_SectorDoorRaiseIn5Mins     },
    { 16, EV_SectorDamageSuperHellSlime },
    { 17, EV_SectorLightFireFlicker     }
@@ -456,8 +452,8 @@ static ev_sectorbinding_t HticSectorBindings[] =
    {  9, EV_SectorSecret                   },
    { 10, EV_SectorDoorCloseIn30            },
    { 11, EV_SectorExitSuperDamage          },
-   { 12, EV_SectorLightStrobeSlow          },
-   { 13, EV_SectorLightStrobeFast          },
+   { 12, EV_SectorLightStrobeSlowSync      },
+   { 13, EV_SectorLightStrobeFastSync      },
    { 14, EV_SectorDoorRaiseIn5Mins         },
    { 15, EV_SectorHticFrictionLow          },
    { 16, EV_SectorHticDamageLavaHefty      },
@@ -499,16 +495,16 @@ static ev_sectorbinding_t HticSectorBindings[] =
 // Sector specials allowed as the low 5 bits of generalized specials
 static ev_sectorbinding_t GenBindings[] =
 {
-   {  1, EV_SectorLightRandomOff   },
-   {  2, EV_SectorLightStrobeFast  },
-   {  3, EV_SectorLightStrobeSlow  },
-   {  4, EV_SectorLightStrobeHurt  },
-   {  8, EV_SectorLightGlow        },
-   { 10, EV_SectorDoorCloseIn30    },
-   { 12, EV_SectorLightStrobeSlow  },
-   { 13, EV_SectorLightStrobeFast  },
-   { 14, EV_SectorDoorCloseIn30    },
-   { 17, EV_SectorLightFireFlicker }
+   {  1, EV_SectorLightRandomOff       },
+   {  2, EV_SectorLightStrobeFast      },
+   {  3, EV_SectorLightStrobeSlow      },
+   {  4, EV_SectorLightStrobeHurt      },
+   {  8, EV_SectorLightGlow            },
+   { 10, EV_SectorDoorCloseIn30        },
+   { 12, EV_SectorLightStrobeSlowSync  },
+   { 13, EV_SectorLightStrobeFastSync  },
+   { 14, EV_SectorDoorCloseIn30        },
+   { 17, EV_SectorLightFireFlicker     }
 };
 
 //
@@ -644,10 +640,6 @@ static void EV_initGeneralizedSector(sector_t *sector)
       break;
    }
 
-   // count generalized secrets
-   if(sector->flags & SECF_SECRET)
-      ++totalsecret;
-
    // apply "light" specials (some are allowed that are not lighting specials)
    auto binding = EV_GenBindingForSectorSpecial(sector->special);
    if(binding)
@@ -681,6 +673,10 @@ void EV_SpawnSectorSpecials()
          if(binding)
             binding->apply(sector);
       }
+
+      // count secrets
+      if(sector->flags & SECF_SECRET)
+         ++totalsecret;
    }
 }
 
