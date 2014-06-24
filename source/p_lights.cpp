@@ -342,7 +342,7 @@ void P_SpawnFireFlicker(sector_t *sector)
    
    // Note that we are resetting sector attributes.
    // Nothing special about it during gameplay.
-   sector->special &= ~31; //jff 3/14/98 clear non-generalized sector type
+   sector->special &= ~LIGHT_MASK; //jff 3/14/98 clear non-generalized sector type
    
    flick = new FireFlickerThinker;
    flick->addThinker();
@@ -366,7 +366,7 @@ void P_SpawnLightFlash(sector_t *sector)
    LightFlashThinker *flash;
    
    // nothing special about it during gameplay
-   sector->special &= ~31; //jff 3/14/98 clear non-generalized sector type
+   sector->special &= ~LIGHT_MASK; //jff 3/14/98 clear non-generalized sector type
    
    flash = new LightFlashThinker;
    flash->addThinker();
@@ -407,7 +407,7 @@ void P_SpawnStrobeFlash(sector_t *sector, int fastOrSlow, int inSync)
       flash->minlight = 0;
    
    // nothing special about it during gameplay
-   sector->special &= ~31; //jff 3/14/98 clear non-generalized sector type
+   sector->special &= ~LIGHT_MASK; //jff 3/14/98 clear non-generalized sector type
    
    if(!inSync)
       flash->count = (P_Random(pr_lights)&7)+1;
@@ -436,7 +436,7 @@ void P_SpawnGlowingLight(sector_t *sector)
    g->maxlight = sector->lightlevel;
    g->direction = -1;
    
-   sector->special &= ~31; //jff 3/14/98 clear non-generalized sector type
+   sector->special &= ~LIGHT_MASK; //jff 3/14/98 clear non-generalized sector type
 }
 
 //////////////////////////////////////////////////////////
