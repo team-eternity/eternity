@@ -29,17 +29,25 @@
 #ifndef EV_SECTORS_H__
 #define EV_SECTORS_H__
 
+struct sector_t;
 
-
-// Sector special structure
-struct ev_sectorspecial_t
-{
-};
+typedef void (*EVSectorSpecialFunc)(sector_t *);
 
 // Sector special binding
 struct ev_sectorbinding_t
 {
+   int special;               // special number
+   EVSectorSpecialFunc apply; // function which applies the special
 };
+
+ev_sectorbinding_t *EV_DOOMBindingForSectorSpecial(int special);
+ev_sectorbinding_t *EV_HereticBindingForSectorSpecial(int special);
+ev_sectorbinding_t *EV_GenBindingForSectorSpecial(int special);
+ev_sectorbinding_t *EV_BindingForSectorSpecial(int special);
+
+bool EV_IsGenSectorSpecial(int special);
+
+void EV_SpawnSectorSpecials();
 
 #endif
 
