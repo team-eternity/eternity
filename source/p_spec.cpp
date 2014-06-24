@@ -2452,7 +2452,7 @@ void P_ConvertHereticSpecials()
          sector->damagemod    = MOD_LAVA;
          sector->damageflags |= SDMG_TERRAINHIT;
          // heretic current pusher type:
-         sector->hticPushType  = 20;
+         sector->hticPushType  = SECTOR_HTIC_CURRENT;
          sector->hticPushAngle = 0;
          sector->hticPushForce = 2048*28;
          // scrolls to the east:
@@ -2494,7 +2494,7 @@ void P_ConvertHereticSpecials()
       if(sector->special >= 20 && sector->special <= 24)
       {
          // Scroll_East
-         sector->hticPushType  = sector->special;
+         sector->hticPushType  = SECTOR_HTIC_CURRENT;
          sector->hticPushAngle = 0;
          sector->hticPushForce = pushForces[sector->special - 20];         
          Add_Scroller(ScrollThinker::sc_floor, (-FRACUNIT/2)<<(sector->special - 20),
@@ -2504,7 +2504,7 @@ void P_ConvertHereticSpecials()
       else if(sector->special >= 25 && sector->special <= 29)
       {
          // Scroll_North
-         sector->hticPushType  = sector->special;
+         sector->hticPushType  = SECTOR_HTIC_CURRENT;
          sector->hticPushAngle = ANG90;
          sector->hticPushForce = pushForces[sector->special - 25];
          sector->special = 0;
@@ -2512,7 +2512,7 @@ void P_ConvertHereticSpecials()
       else if(sector->special >= 30 && sector->special <= 34)
       {
          // Scroll_South
-         sector->hticPushType  = sector->special;
+         sector->hticPushType  = SECTOR_HTIC_CURRENT;
          sector->hticPushAngle = ANG270;
          sector->hticPushForce = pushForces[sector->special - 30];
          sector->special = 0;
@@ -2520,7 +2520,7 @@ void P_ConvertHereticSpecials()
       else if(sector->special >= 35 && sector->special <= 39)
       {
          // Scroll_West
-         sector->hticPushType  = sector->special;
+         sector->hticPushType  = SECTOR_HTIC_CURRENT;
          sector->hticPushAngle = ANG180;
          sector->hticPushForce = pushForces[sector->special - 35];
          sector->special = 0;
@@ -2528,7 +2528,7 @@ void P_ConvertHereticSpecials()
       else if(sector->special >= 40 && sector->special <= 42)
       {
          // Wind_East
-         sector->hticPushType  = sector->special;
+         sector->hticPushType  = SECTOR_HTIC_WIND;
          sector->hticPushAngle = 0;
          sector->hticPushForce = pushForces[sector->special - 40];
          sector->special = 0;
@@ -2536,7 +2536,7 @@ void P_ConvertHereticSpecials()
       else if(sector->special >= 43 && sector->special <= 45)
       {
          // Wind_North
-         sector->hticPushType  = sector->special;
+         sector->hticPushType  = SECTOR_HTIC_WIND;
          sector->hticPushAngle = ANG90;
          sector->hticPushForce = pushForces[sector->special - 43];
          sector->special = 0;
@@ -2544,7 +2544,7 @@ void P_ConvertHereticSpecials()
       else if(sector->special >= 46 && sector->special <= 48)
       {
          // Wind_South
-         sector->hticPushType  = sector->special;
+         sector->hticPushType  = SECTOR_HTIC_WIND;
          sector->hticPushAngle = ANG270;
          sector->hticPushForce = pushForces[sector->special - 46];
          sector->special = 0;
@@ -2552,7 +2552,7 @@ void P_ConvertHereticSpecials()
       else if(sector->special >= 49 && sector->special <= 51)
       {
          // Wind_West
-         sector->hticPushType  = sector->special;
+         sector->hticPushType  = SECTOR_HTIC_WIND;
          sector->hticPushAngle = ANG180;
          sector->hticPushForce = pushForces[sector->special - 49];
          sector->special = 0;

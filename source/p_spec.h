@@ -81,7 +81,7 @@ struct side_t;
 #define SLOWDARK        35
 
 //jff 3/14/98 add bits and shifts for generalized sector types
-
+#define LIGHT_MASK      0x1f
 #define DAMAGE_MASK     0x60
 #define DAMAGE_SHIFT    5
 #define SECRET_MASK     0x80

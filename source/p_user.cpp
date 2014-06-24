@@ -471,7 +471,7 @@ static void P_HereticCurrent(player_t *player)
    {
       sector_t *sec = m->m_sector;
 
-      if(sec->hticPushType >= 20 && sec->hticPushType <= 39)
+      if(sec->hticPushType == SECTOR_HTIC_CURRENT)
          P_Thrust(player, sec->hticPushAngle, 0, sec->hticPushForce);
    }
 }

@@ -1250,7 +1250,7 @@ void Mobj::Think()
    {
       sector_t *sec = subsector->sector;
 
-      if(sec->hticPushType >= 40 && sec->hticPushType <= 51)
+      if(sec->hticPushType == SECTOR_HTIC_WIND)
          P_ThrustMobj(this, sec->hticPushAngle, sec->hticPushForce);
    }
 

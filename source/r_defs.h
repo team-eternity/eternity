@@ -119,6 +119,14 @@ enum
    SIF_WASSECRET = 0x00000002, // sector was previously secret
 };
 
+// haleyjd 06/22/14: Heretic push types
+enum
+{
+   SECTOR_HTIC_NONE,    // nothing
+   SECTOR_HTIC_CURRENT, // created by types 20-39
+   SECTOR_HTIC_WIND     // created by types 40-51
+};
+
 //
 // Slope Structures
 //
