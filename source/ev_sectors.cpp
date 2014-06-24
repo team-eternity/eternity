@@ -686,7 +686,7 @@ void EV_SpawnSectorSpecials()
       if(!sector->special)
          continue;
 
-      if(EV_IsGenSectorSpecial(sector->special))
+      if(isgen)
          EV_initGeneralizedSector(sector);
       else
       {
