@@ -1368,7 +1368,7 @@ void P_SpawnSpecials()
 // 
 // P_SpawnDeferredSpecials
 //
-// SoM: Specials that copy slopes, ect., need to be collected in a separate pass
+// SoM: Specials that copy slopes, etc., need to be collected in a separate pass
 //
 void P_SpawnDeferredSpecials()
 {
@@ -1391,6 +1391,15 @@ void P_SpawnDeferredSpecials()
       default: // Not a function handled here
          break;
       }
+   }
+
+   for(int i = 0; i < numsectors; i++)
+   {
+      sector_t *sec = &sectors[i];
+
+      // spawn phased light sequences
+      if(sec->flags & SECF_PHASEDLIGHT)
+         PhasedLightThinker::SpawnSequence(sec, 1);
    }
 }
 

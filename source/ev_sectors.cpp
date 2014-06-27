@@ -358,7 +358,7 @@ static void EV_SectorHticDamageLavaHefty(sector_t *sector)
 static void EV_setupHereticPusher(sector_t *sector, angle_t angle, int type, int force)
 {
    // Heretic push forces table
-   static fixed_t pushForces[5] = { 2048*5,  2048*10, 2048*25, 2048*30, 2048*35 };
+   static fixed_t pushForces[5] = { 2048*5, 2048*10, 2048*25, 2048*30, 2048*35 };
 
    sector->hticPushType  = type;
    sector->hticPushAngle = angle;
@@ -416,6 +416,53 @@ template<angle_t angle, int force>
 static void EV_SectorHticWind(sector_t *sector)
 {
    EV_setupHereticPusher(sector, angle, SECTOR_HTIC_WIND, force);
+}
+
+//
+// Hexen Types
+//
+
+//
+// EV_SectorHexenLightPhased
+//
+// Spawn a PhasedLightThinker base 80 and index determined by the sector's
+// initial light level taken modulus 64.
+// * Hexen: 1
+//
+static void EV_SectorHexenLightPhased(sector_t *sector)
+{
+   PhasedLightThinker::Spawn(sector, 80, -1);
+}
+
+//
+// EV_SectorHexenLightSeqStart
+//
+// Marks the beginning of a phased light sequence.
+//
+static void EV_SectorHexenLightSeqStart(sector_t *sector)
+{
+   sector->flags |= SECF_PHASEDLIGHT;
+}
+
+//
+// EV_SectorHexenLightSequence
+//
+// Marks a sector to step to in a phased light sequence. Must alternate with
+// the below special.
+//
+static void EV_SectorHexenLightSequence(sector_t *sector)
+{
+   sector->flags |= SECF_LIGHTSEQUENCE;
+}
+
+//
+// EV_SectorHexenLightSeqAlt
+//
+// Alternates with the above special to create phased light sequences.
+//
+static void EV_SectorHexenLightSeqAlt(sector_t *sector)
+{
+   sector->flags |= SECF_LIGHTSEQALT;
 }
 
 //=============================================================================
@@ -496,6 +543,34 @@ static ev_sectorbinding_t HticSectorBindings[] =
    { 51, EV_SectorHticWind<ANG180, 2>      }
 };
 
+// Hexen sector specials
+static ev_sectorbinding_t HexenSectorBindings[] =
+{
+   {  1, EV_SectorHexenLightPhased         },
+   {  2, EV_SectorHexenLightSeqStart       },
+   {  3, EV_SectorHexenLightSequence       },
+   {  4, EV_SectorHexenLightSeqAlt         },
+   {  9, EV_SectorSecret                   },
+   // TODO: 26, 27 for stairs
+   { 40, EV_SectorHticWind<0,      0>      },
+   { 41, EV_SectorHticWind<0,      1>      },
+   { 42, EV_SectorHticWind<0,      2>      },
+   { 43, EV_SectorHticWind<ANG90,  0>      },
+   { 44, EV_SectorHticWind<ANG90,  1>      },
+   { 45, EV_SectorHticWind<ANG90,  2>      },
+   { 46, EV_SectorHticWind<ANG270, 0>      },
+   { 47, EV_SectorHticWind<ANG270, 1>      },
+   { 48, EV_SectorHticWind<ANG270, 2>      },
+   { 49, EV_SectorHticWind<ANG180, 0>      },
+   { 50, EV_SectorHticWind<ANG180, 1>      },
+   { 51, EV_SectorHticWind<ANG180, 2>      }
+   // TODO: 198 Lightning
+   // TODO: 199 Lightning Flash
+   // TODO: 200 Sky2
+   // TODO: 201-224 current scrollers
+   // TODO: ZDoom extensions
+};
+
 // Sector specials allowed as the low 5 bits of generalized specials
 static ev_sectorbinding_t GenBindings[] =
 {
@@ -554,6 +629,16 @@ ev_sectorbinding_t *EV_HereticBindingForSectorSpecial(int special)
 }
 
 //
+// EV_HexenBindingForSectorSpecial
+//
+// Look up a Hexen sector special binding.
+//
+ev_sectorbinding_t *EV_HexenBindingForSectorSpecial(int special)
+{
+   return EV_findBinding(HexenSectorBindings, earrlen(HexenSectorBindings), special);
+}
+
+//
 // EV_GenBindingForSectorSpecial
 //
 // Find the "lighting" special for a generalized sector.
@@ -575,7 +660,7 @@ ev_sectorbinding_t *EV_BindingForSectorSpecial(int special)
 
    if(LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN)
    {
-      ; // TODO
+      binding = EV_HexenBindingForSectorSpecial(special);
    }
    else
    {

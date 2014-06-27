@@ -751,6 +751,26 @@ public:
    int     type;
 };
 
+class PhasedLightThinker : public SectorThinker
+{
+   DECLARE_THINKER_TYPE(PhasedLightThinker, SectorThinker)
+
+protected:
+   void Think();
+
+   // Data members
+   int base;
+   int index;
+
+public:
+   // Methods
+   virtual void serialize(SaveArchive &arc);
+
+   // Statics
+   static void Spawn(sector_t *sector, int base, int index);
+   static void SpawnSequence(sector_t *sector, int step);
+};
+
 // p_plats
 
 class PlatThinker : public SectorThinker

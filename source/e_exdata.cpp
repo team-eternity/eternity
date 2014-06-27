@@ -254,6 +254,9 @@ static dehflags_t sectorflags[] =
    { "PUSH",          SECF_PUSH          },
    { "KILLSOUND",     SECF_KILLSOUND     },
    { "KILLMOVESOUND", SECF_KILLMOVESOUND },
+   { "PHASEDLIGHT",   SECF_PHASEDLIGHT   },
+   { "LIGHTSEQUENCE", SECF_LIGHTSEQUENCE },
+   { "LIGHTSEQALT",   SECF_LIGHTSEQALT   },
    { NULL,            0                  }
 };
 

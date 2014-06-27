@@ -319,6 +319,135 @@ void LightFadeThinker::serialize(SaveArchive &arc)
        << glowspeed << type;
 }
 
+IMPLEMENT_THINKER_TYPE(PhasedLightThinker)
+
+//
+// phaseTable for PhasedLightThinker
+//
+// Wrapped around modulus 64; defines a delta to the thinker's base light level
+//
+static int phaseTable[64] =
+{
+   128, 112,  96,  80,  64,  48,  32,  32,
+    16,  16,  16,   0,   0,   0,   0,   0,
+     0,   0,   0,   0,   0,   0,   0,   0,
+     0,   0,   0,   0,   0,   0,   0,   0,
+     0,   0,   0,   0,   0,   0,   0,   0,
+     0,   0,   0,   0,   0,   0,   0,   0,
+     0,   0,   0,   0,   0,  16,  16,  16,
+    32,  32,  48,  64,  80,  96, 112, 128
+};
+
+//
+// PhasedLightThinker::Think
+//
+// Think for Hexen-style phased light effect.
+//
+void PhasedLightThinker::Think()
+{
+   index = (index + 1) & 63;
+   sector->lightlevel = base + phaseTable[index];
+}
+
+//
+// PhasedLightThinker::serialize
+//
+// Save or restore a Hexen-style phased light effect.
+//
+void PhasedLightThinker::serialize(SaveArchive &arc)
+{
+   Super::serialize(arc);
+
+   arc << base << index;
+}
+
+//
+// PhasedLightThinker::Spawn
+//
+// Static function. Creates a new PhasedLightThinker attached to the provided
+// sector with the given base level and initial phase index. If -1 is passed
+// in index, then the initial phase is set by the sector's light level mod 64.
+//
+void PhasedLightThinker::Spawn(sector_t *sector, int base, int index)
+{
+   auto phase = new PhasedLightThinker;
+   phase->addThinker();
+
+   phase->sector = sector;
+   phase->base   = base & 255;
+   phase->index  = ((index == -1) ? sector->lightlevel : index) & 63;
+
+   sector->lightlevel = phase->base + phaseTable[phase->index];
+}
+
+//
+// PhasedLightThinker::SpawnSequence
+//
+// Called on sectors with SECF_PHASEDLIGHT; walks into neighboring sectors with
+// SECF_LIGHTSEQUENCE and SECF_LIGHTSEQALT, in alternating order, to create
+// multiple phased light thinkers in a stepped sequence.
+//
+void PhasedLightThinker::SpawnSequence(sector_t *sector, int step)
+{
+   sector_t *sec, *nextSec, *tempSec;
+   unsigned int flag = SECF_LIGHTSEQUENCE; // look for light sequence first
+   int count = 1;
+
+   // find the sectors and mark them all with SECF_PHASEDLIGHT
+   // (the initial sector is already marked with that flag via its special)
+   sec = sector;
+   do
+   {
+      nextSec = nullptr;
+      sec->intflags |= SIF_PHASESCAN; // make sure the search doesn't back up
+      for(int i = 0; i < sec->linecount; i++)
+      {
+         if(!(tempSec = getNextSector(sec->lines[i], sec)))
+            continue;
+         if(tempSec->intflags & SIF_PHASESCAN) // already processed
+            continue;
+         if((tempSec->flags & (SECF_LIGHTSEQUENCE|SECF_LIGHTSEQALT)) == flag)
+         {
+            if(flag == SECF_LIGHTSEQUENCE)
+               flag = SECF_LIGHTSEQALT;
+            else
+               flag = SECF_LIGHTSEQUENCE;
+            nextSec = tempSec;
+            ++count;
+         }
+      }
+      sec = nextSec;
+   }
+   while(sec);
+
+   sec = sector;
+   count *= step;
+
+   fixed_t index = 0;
+   fixed_t indexDelta = 64 * FRACUNIT / count;
+   int     base = sec->lightlevel;
+   
+   // spawn thinkers on all the marked sectors
+   do
+   {
+      nextSec = nullptr;
+      if(sec->lightlevel)
+         base = sec->lightlevel;
+      PhasedLightThinker::Spawn(sec, base, index >> FRACBITS);
+      sec->intflags &= ~SIF_PHASESCAN; // clear the marker flag
+      index += indexDelta;
+      for(int i = 0; i < sec->linecount; i++)
+      {
+         if(!(tempSec = getNextSector(sec->lines[i], sec)))
+            continue;
+         if(tempSec->intflags & SIF_PHASESCAN)
+            nextSec = tempSec;
+      }
+      sec = nextSec;
+   }
+   while(sec);
+}
+
 //////////////////////////////////////////////////////////
 //
 // Sector lighting type spawners
