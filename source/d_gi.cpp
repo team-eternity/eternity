@@ -66,17 +66,20 @@
 // menu background flats
 #define DOOMMENUBACK "FLOOR4_6"
 #define HACXMENUBACK "CONS1_5"
+#define PSXMENUBACK  "BRN07"
 #define HTICMENUBACK "FLOOR16"
 
 // credit background flats
 #define DOOMCREDITBK "NUKAGE1"
 #define DM2CREDITBK  "SLIME05"
 #define HACXCREDITBK "SLIME01"
+#define PSXCREDITBK  "WATER01"
 #define HTICCREDITBK "FLTWAWA1"
 
 // border flats
 #define DOOMBRDRFLAT "FLOOR7_2"
 #define DM2BRDRFLAT  "GRNROCK"
+#define PSXBRDRFLAT  "ROK01"
 #define HREGBRDRFLAT "FLAT513"
 #define HSWBRDRFLAT  "FLOOR04"
 
@@ -867,13 +870,22 @@ static missioninfo_t gmPSX =
    "doom2",           // gamePathName - FIXME/TODO
    NULL,              // sameLevels
 
-   0,          // addGMIFlags
-   0,          // remGMIFlags
-   VNAME_PSX,  // versionNameOR
-   BANNER_PSX, // startupBannerOR
-   0,          // numEpisodesOR
-   NULL,       // iwadPathOR
-   NULL,       // finaleDataOR
+   0,           // addGMIFlags
+   0,           // remGMIFlags
+   VNAME_PSX,   // versionNameOR
+   BANNER_PSX,  // startupBannerOR
+   0,           // numEpisodesOR
+   NULL,        // iwadPathOR
+   NULL,        // finaleDataOR
+   PSXMENUBACK, // menuBackgroundOR
+   PSXCREDITBK, // creditBackgroundOR
+   NULL,        // consoleBackOR
+   NULL,        // demoStatesOR
+   NULL,        // interPicOR
+   NULL,        // exitRulesOR
+   NULL,        // levelNamesOR
+   0,           // randMusMaxOR
+   PSXBRDRFLAT  // borderFlatOR
 };
 
 //
@@ -1710,6 +1722,7 @@ void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
    OVERRIDE(exitRules,        NULL);
    OVERRIDE(levelNames,       NULL);
    OVERRIDE(randMusMax,          0);
+   OVERRIDE(borderFlat,       NULL);
    
    // Note: demostates are not overridden here, see below.
 }

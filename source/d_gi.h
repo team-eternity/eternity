@@ -309,6 +309,7 @@ struct missioninfo_t
    exitrule_t   *exitRulesOR;        // if not NULL, overrides exitRules
    const char  **levelNamesOR;       // if not NULL, overrides levelNames
    int           randMusMaxOR;       // if not    0, overrides randMusMax
+   const char   *borderFlatOR;       // if not NULL, overrides borderFlat
 };
 
 // function pointer types
