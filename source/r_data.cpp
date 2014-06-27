@@ -315,7 +315,7 @@ void R_InitTranMap(bool force)
          if(!(i & 31) && force)
             V_LoadingIncrease();        //sf 
 
-         for(int j = 0; j < 256; ++j, ++tp)
+         for(int j = 0; j < 256; j++, tp++)
          {
             int color = 255;
             int err;
@@ -469,8 +469,7 @@ void R_InitData()
    else
    {
       // sf: fill in dots missing from no translucency build
-      int i;
-      for(i = 0; i < 8; ++i)
+      for(int i = 0; i < 8; i++)
          V_LoadingIncrease();    // 8 '.'s
    }
 
