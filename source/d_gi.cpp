@@ -79,7 +79,7 @@
 // border flats
 #define DOOMBRDRFLAT "FLOOR7_2"
 #define DM2BRDRFLAT  "GRNROCK"
-#define PSXBRDRFLAT  "ROK01"
+#define PSXBRDRFLAT  "METX02"
 #define HREGBRDRFLAT "FLAT513"
 #define HSWBRDRFLAT  "FLOOR04"
 
@@ -105,7 +105,7 @@
 #define VNAME_PLUT      "Final DOOM: The Plutonia Experiment version"
 #define VNAME_HACX      "HACX - Twitch 'n Kill version"
 #define VNAME_DISK      "DOOM II disk version"
-#define VNAME_PSX       "PSX DOOM version"
+#define VNAME_PSX       "DOOM version"
 #define VNAME_HTIC_SW   "Heretic Shareware version"
 #define VNAME_HTIC_REG  "Heretic Registered version"
 #define VNAME_HTIC_BETA "Heretic Beta version"
@@ -870,22 +870,22 @@ static missioninfo_t gmPSX =
    "doom2",           // gamePathName - FIXME/TODO
    NULL,              // sameLevels
 
-   0,           // addGMIFlags
-   0,           // remGMIFlags
-   VNAME_PSX,   // versionNameOR
-   BANNER_PSX,  // startupBannerOR
-   0,           // numEpisodesOR
-   NULL,        // iwadPathOR
-   NULL,        // finaleDataOR
-   PSXMENUBACK, // menuBackgroundOR
-   PSXCREDITBK, // creditBackgroundOR
-   NULL,        // consoleBackOR
-   NULL,        // demoStatesOR
-   NULL,        // interPicOR
-   NULL,        // exitRulesOR
-   NULL,        // levelNamesOR
-   0,           // randMusMaxOR
-   PSXBRDRFLAT  // borderFlatOR
+   GIF_MNBIGFONT, // addGMIFlags
+   0,             // remGMIFlags
+   VNAME_PSX,     // versionNameOR
+   BANNER_PSX,    // startupBannerOR
+   0,             // numEpisodesOR
+   NULL,          // iwadPathOR
+   NULL,          // finaleDataOR
+   PSXMENUBACK,   // menuBackgroundOR
+   PSXCREDITBK,   // creditBackgroundOR
+   NULL,          // consoleBackOR
+   NULL,          // demoStatesOR
+   NULL,          // interPicOR
+   NULL,          // exitRulesOR
+   NULL,          // levelNamesOR
+   0,             // randMusMaxOR
+   PSXBRDRFLAT    // borderFlatOR
 };
 
 //
