@@ -76,6 +76,7 @@ struct side_t;
 // p_lights
 
 #define GLOWSPEED       8
+#define GLOWSPEEDSLOW   2
 #define STROBEBRIGHT    5
 #define FASTDARK        15
 #define SLOWDARK        35
@@ -229,7 +230,7 @@ typedef enum
    GunOnce,
    GunMany,
    PushOnce,
-   PushMany,
+   PushMany
 } triggertype_e;
 
 // define names for the Speed field of the general linedefs
@@ -240,7 +241,7 @@ typedef enum
    SpeedNormal,
    SpeedFast,
    SpeedTurbo,  
-   SpeedParam, // haleyjd 05/04/04: parameterized extension 
+   SpeedParam  // haleyjd 05/04/04: parameterized extension 
 } motionspeed_e;
 
 // define names for the Target field of the general floor
@@ -258,7 +259,7 @@ typedef enum
   
    FbyParam, // haleyjd 05/07/04: parameterized extensions
    FtoAbs,
-   FInst,
+   FInst
 } floortarget_e;
 
 // define names for the Changer Type field of the general floor
@@ -268,7 +269,7 @@ typedef enum
    FNoChg,
    FChgZero,
    FChgTxt,
-   FChgTyp,
+   FChgTyp
 } floorchange_e;
 
 // define names for the Change Model field of the general floor
@@ -276,7 +277,7 @@ typedef enum
 typedef enum
 {
    FTriggerModel,
-   FNumericModel,
+   FNumericModel
 } floormodel_t;
 
 // define names for the Target field of the general ceiling
@@ -294,7 +295,7 @@ typedef enum
 
    CbyParam, // haleyjd 05/07/04: parameterized extensions
    CtoAbs,
-   CInst,
+   CInst
 } ceilingtarget_e;
 
 // define names for the Changer Type field of the general ceiling
@@ -304,7 +305,7 @@ typedef enum
    CNoChg,
    CChgZero,
    CChgTxt,
-   CChgTyp,
+   CChgTyp
 } ceilingchange_e;
 
 // define names for the Change Model field of the general ceiling
@@ -312,7 +313,7 @@ typedef enum
 typedef enum
 {
    CTriggerModel,
-   CNumericModel,
+   CNumericModel
 } ceilingmodel_t;
 
 // define names for the Target field of the general lift
@@ -322,7 +323,7 @@ typedef enum
    F2LnF,
    F2NnF,
    F2LnC,
-   LnF2HnF,
+   LnF2HnF
 } lifttarget_e;
 
 // haleyjd 10/06/05: defines for generalized stair step sizes
@@ -334,7 +335,7 @@ typedef enum
    StepSize16,
    StepSize24,
 
-   StepSizeParam, // haleyjd 10/06/05: parameterized extension
+   StepSizeParam  // haleyjd 10/06/05: parameterized extension
 } genstairsize_e;
 
 // define names for the door Kind field of the general ceiling
@@ -348,7 +349,7 @@ typedef enum
   
    // haleyjd 03/01/05: new param types with initial delays
    pDOdCDoor,
-   pDCDoor,
+   pDCDoor
 } doorkind_e;
 
 // define names for the locked door Kind field of the general ceiling
@@ -378,14 +379,14 @@ typedef enum
 {
    floor_special,
    ceiling_special,
-   lighting_special,
+   lighting_special
 } special_e;
 
 //jff 3/15/98 pure texture/type change for better generalized support
 typedef enum
 {
    trigChangeOnly,
-   numChangeOnly,
+   numChangeOnly
 } change_e;
 
 // p_plats
@@ -435,7 +436,7 @@ typedef enum
    // haleyjd 01/22/12: no distinction is necessary any longer
 
    // haleyjd 03/01/05: exclusively param door types
-   paramCloseIn,
+   paramCloseIn
 } vldoor_e;
 
 // haleyjd 05/04/04: door wait types
@@ -445,7 +446,7 @@ typedef enum
    doorWaitStd,
    doorWaitStd2x,
    doorWaitStd7x,
-   doorWaitParam,
+   doorWaitParam
 } doorwait_e;
 
 // p_ceilng
@@ -469,7 +470,7 @@ typedef enum
 
    //jff 02/05/98 add types for generalized ceiling mover
    genCrusher,
-   genSilentCrusher,
+   genSilentCrusher
 } ceiling_e;
 
 // p_floor
@@ -534,7 +535,7 @@ typedef enum
    genResetStair, 
 
    // new types for supporting other idTech games
-   turboLowerA,   // haleyjd 02/09/13: for Heretic turbo floors
+   turboLowerA    // haleyjd 02/09/13: for Heretic turbo floors
 } floor_e;
 
 typedef enum
@@ -547,7 +548,7 @@ typedef enum
 {
    elevateUp,
    elevateDown,
-   elevateCurrent,
+   elevateCurrent
 } elevator_e;
 
 // haleyjd 01/09/07: p_lights
@@ -556,14 +557,21 @@ typedef enum
 {
    setlight_set, // set light to given level
    setlight_add, // add to light level
-   setlight_sub, // subtract from light level
+   setlight_sub  // subtract from light level
 } setlight_e;
 
 typedef enum
 {
    fade_once, // just a normal fade effect
-   fade_glow, // glow effect
+   fade_glow  // glow effect
 } lightfade_e;
+
+// haleyjd 06/29/14: second argument to P_SpawnPSXGlowingLight
+typedef enum
+{
+   psxglow_10,  // glow down to 10 from sector->lightlevel
+   psxglow_255  // glow up to 255 from sector->lightlevel
+} psxglow_e;
 
 //////////////////////////////////////////////////////////////////
 //
@@ -725,6 +733,7 @@ public:
    int minlight;
    int maxlight;
    int direction;
+   int speed;     // haleyjd 06/29/14
 };
 
 // sf 13/10/99
@@ -1376,9 +1385,9 @@ int EV_ThingDeactivate(int tid);
 ////////////////////////////////////////////////////////////////
 
 // at game start
-void P_InitPicAnims(void);
+void P_InitPicAnims();
 
-void P_InitSwitchList(void);
+void P_InitSwitchList();
 
 // at map load
 void P_SpawnSpecials();
@@ -1391,7 +1400,7 @@ void P_SpawnSpecials();
 void P_SpawnDeferredSpecials();
 
 // every tic
-void P_UpdateSpecials(void);
+void P_UpdateSpecials();
 
 // when needed
 bool P_UseSpecialLine(Mobj *thing, line_t *line, int side);
@@ -1419,6 +1428,7 @@ void P_SpawnStrobeFlash(sector_t *sector, int fastOrSlow, int inSync);
 
 void P_SpawnGlowingLight(sector_t *sector);
 
+void P_SpawnPSXGlowingLight(sector_t *sector, psxglow_e glowtype);
 
 // p_plats
 

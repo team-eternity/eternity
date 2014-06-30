@@ -227,20 +227,20 @@ void GlowThinker::Think()
    {
    case -1:
       // light dims
-      this->sector->lightlevel -= GLOWSPEED;
+      this->sector->lightlevel -= this->speed;
       if(this->sector->lightlevel <= this->minlight)
       {
-         this->sector->lightlevel += GLOWSPEED;
+         this->sector->lightlevel += this->speed;
          this->direction = 1;
       }
       break;
       
    case 1:
       // light brightens
-      this->sector->lightlevel += GLOWSPEED;
+      this->sector->lightlevel += this->speed;
       if(this->sector->lightlevel >= this->maxlight)
       {
-         this->sector->lightlevel -= GLOWSPEED;
+         this->sector->lightlevel -= this->speed;
          this->direction = -1;
       }
       break;
@@ -256,7 +256,7 @@ void GlowThinker::serialize(SaveArchive &arc)
 {
    Super::serialize(arc);
 
-   arc << minlight << maxlight << direction;
+   arc << minlight << maxlight << direction << speed;
 }
 
 
@@ -554,18 +554,44 @@ void P_SpawnStrobeFlash(sector_t *sector, int fastOrSlow, int inSync)
 //
 void P_SpawnGlowingLight(sector_t *sector)
 {
-   GlowThinker *g;
-   
-   g = new GlowThinker;
-   
+   auto g = new GlowThinker;
    g->addThinker();
    
-   g->sector = sector;
-   g->minlight = P_FindMinSurroundingLight(sector,sector->lightlevel);
-   g->maxlight = sector->lightlevel;
+   g->sector    = sector;
+   g->minlight  = P_FindMinSurroundingLight(sector, sector->lightlevel);
+   g->maxlight  = sector->lightlevel;
    g->direction = -1;
+   g->speed     = GLOWSPEED;
    
    sector->special &= ~LIGHT_MASK; //jff 3/14/98 clear non-generalized sector type
+}
+
+//
+// P_SpawnPSXGlowingLight
+//
+// Spawn a GlowThinker setup for PSX sector type 200 or 201.
+//
+void P_SpawnPSXGlowingLight(sector_t *sector, psxglow_e glowtype)
+{
+   auto g = new GlowThinker;
+   g->addThinker();
+
+   g->sector = sector;
+   g->speed  = GLOWSPEEDSLOW;
+
+   switch(glowtype)
+   {
+   case psxglow_10:
+      g->minlight  = 10;
+      g->maxlight  = sector->lightlevel;
+      g->direction = -1;
+      break;
+   case psxglow_255:
+      g->minlight  = sector->lightlevel;
+      g->maxlight  = 255;
+      g->direction = 1;
+      break;
+   }
 }
 
 //////////////////////////////////////////////////////////

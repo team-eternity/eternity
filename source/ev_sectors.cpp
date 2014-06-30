@@ -465,6 +465,32 @@ static void EV_SectorHexenLightSeqAlt(sector_t *sector)
    sector->flags |= SECF_LIGHTSEQALT;
 }
 
+//
+// PSX Sector Types
+//
+
+//
+// EV_SectorLightPSXGlow10
+//
+// Glows from sector->lightlevel down to 10, and then back up in a cycle.
+// * PSX: 200
+//
+static void EV_SectorLightPSXGlow10(sector_t *sector)
+{
+   P_SpawnPSXGlowingLight(sector, psxglow_10);
+}
+
+//
+// EV_SectorLightPSXGlow255
+//
+// Glows from sector->lightlevel up to 255, and then back down in a cycle.
+// * PSX: 201
+//
+static void EV_SectorLightPSXGlow255(sector_t *sector)
+{
+   P_SpawnPSXGlowingLight(sector, psxglow_255);
+}
+
 //=============================================================================
 //
 // Sector Special Bindings
@@ -571,6 +597,13 @@ static ev_sectorbinding_t HexenSectorBindings[] =
    // TODO: ZDoom extensions
 };
 
+// PSX sector types
+static ev_sectorbinding_t PSXSectorBindings[] =
+{
+   { 200, EV_SectorLightPSXGlow10  },
+   { 201, EV_SectorLightPSXGlow255 }
+};
+
 // Sector specials allowed as the low 5 bits of generalized specials
 static ev_sectorbinding_t GenBindings[] =
 {
@@ -619,6 +652,23 @@ ev_sectorbinding_t *EV_DOOMBindingForSectorSpecial(int special)
 }
 
 //
+// EV_PSXBindingForSectorSpecial
+//
+// Look up a PSX sector type. Defers to DOOM's lookup if a PSX type is not
+// found first.
+//
+ev_sectorbinding_t *EV_PSXBindingForSectorSpecial(int special)
+{
+   ev_sectorbinding_t *binding;
+
+   if(!(binding = EV_findBinding(PSXSectorBindings, earrlen(PSXSectorBindings), special)))
+      binding = EV_DOOMBindingForSectorSpecial(special);
+
+   return binding;
+}
+   
+
+//
 // EV_HereticBindingForSectorSpecial
 //
 // Look up a Heretic sector special binding.
@@ -658,12 +708,15 @@ ev_sectorbinding_t *EV_BindingForSectorSpecial(int special)
 {
    ev_sectorbinding_t *binding = nullptr;
 
-   if(LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN)
+   switch(LevelInfo.mapFormat)
    {
+   case LEVEL_FORMAT_HEXEN:
       binding = EV_HexenBindingForSectorSpecial(special);
-   }
-   else
-   {
+      break;
+   case LEVEL_FORMAT_PSX:
+      binding = EV_PSXBindingForSectorSpecial(special);
+      break;
+   default:
       switch(LevelInfo.levelType)
       {
       case LI_TYPE_DOOM:
@@ -675,6 +728,7 @@ ev_sectorbinding_t *EV_BindingForSectorSpecial(int special)
       default:
          break; // others TODO
       }
+      break;
    }
 
    return binding;
