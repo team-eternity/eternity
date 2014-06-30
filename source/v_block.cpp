@@ -519,7 +519,7 @@ static void V_TileBlock64(VBuffer *buffer, byte *src)
       for(y = 0; y < buffer->height; y++)
       {
          row = dest;         
-         for(x = 0; x < buffer->width >> 6; ++x)
+         for(x = 0; x < buffer->width >> 6; x++)
          {
             memcpy(row, src + ((y & 63) << 6), 64);
             row += 64;

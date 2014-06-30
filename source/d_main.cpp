@@ -414,7 +414,6 @@ void D_StartTitle()
 
 gamestate_t oldgamestate  = GS_NOSTATE;  // sf: globaled
 gamestate_t wipegamestate = GS_DEMOSCREEN;
-void        R_ExecuteSetViewSize();
 camera_t    *camera;
 extern bool setsizeneeded;
 int         wipewait;        // haleyjd 10/09/07
@@ -1203,7 +1202,7 @@ static void D_LoadSysConfig(void)
 // a seperate function
 // this stuff needs to be kept together
 //
-static void D_SetGraphicsMode(void)
+static void D_SetGraphicsMode()
 {
    // set graphics mode
    I_InitGraphics();
