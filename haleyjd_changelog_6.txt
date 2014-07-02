@@ -1,4 +1,587 @@
 ================================================================================
+Changes since Eternity Engine v3.40.46
+================================================================================
+--------------------------------------------------------------------------------
+06/24/14
+
+Fixed a couple of bugs in the new sector special binding system:
+
+* I messed up and populated the synchronized strobe sector types with the 
+  callbacks for the non-synchronized versions. It's what I get for using 
+  copypasta.
+  
+* Secret handling needs to be done more carefully to be fully compatible with
+  BOOM generalized secrets, normal secrets, and secrets created through
+  ExtraData sector flags assignment.
+
+--------------------------------------------------------------------------------
+06/23/14
+
+Refactored Heretic push types in sector_t so that they do not rely on sector
+special numbers but instead use a descriptive constant.
+
+Changed instances of & 31 and & ~31 to strip away or isolate BOOM generalized
+sector special bits to use a LIGHT_MASK define. This'll make it easier later to
+allow those bits to occur in different positions like ZDoom does.
+
+Finished up and integrated the new sector special system. Old code for handling
+sector types has been removed from p_setup and p_spec and centralized into
+the new ev_sectors module. Lookups for bindings are currently linear searches,
+as the arrays are very small. There's no appreciable speed impact during level
+load, but this might be less than ideal if runtime sector special assignment is
+to be supported later.
+
+--------------------------------------------------------------------------------
+06/21/14
+
+Since allowing execution of the game without a TEXTURE1 directory, I need to
+generate a dummy texture for the textures[0] slot, or the first texture loaded
+from ns_textures namespace becomes arbitrarily unusable, in the same manner that
+AASTINKY/AASHITTY/ABADONE/etc. are unusable when specified via TEXTURE1. I just
+generalized the code used to build the BAADF00D missing texture replacement to
+also be able to generate a -BADTEX- texture for index zero when it is required.
+
+The case in P_DamageMobj handling sector type 11 specially should have been
+generalized at the time that sector damage flags were added to respect the
+SDMG_EXITLEVEL flag instead of testing specifically for type 11, but this had
+been missed. I found this while doing a code sweep in preparation for the 
+previously planned implementation of a generic sector special binding system to
+match the one already completed for linedef actions, clearing the way for
+eventual further Hexen, Strife, PSX, and UDMF support.
+
+Also found a compatibility problem with the P_SpawnDoorCloseIn30 and 
+P_SpawnDoorRaiseIn5Mins functions. These two specials are incorrectly allowed to
+be specified in the lower 5 bits of a BOOM generalized line special, contrary to
+BOOMREF.TXT information, and when they are so specified, they wipe out all of
+the generalized properties of the sector, *including* the SECRET_MASK. This is
+*after* the secrets have already been counted, however, creating secrets that
+are tallied but uncollectable, making 100% secrets totally impossible. This
+happens because these two specials have a sector->special = 0; assignment in
+their thinker spawning routines. The compatibility problem arose because I 
+failed to turn these assignments into calls to P_ZeroSectorSpecial() when the 
+sector special transfer system was created, to allow transition of BOOM gensec
+props into proper sector flags - this would result in the cancellation NOT fully
+occurring in EE as it would in BOOM, representing both a mapping and demo comp
+hazard.
+
+Started work on the new sector special system itself by writing up EV_Sector*
+functions that spawn DOOM's various sector types.
+
+--------------------------------------------------------------------------------
+06/20/14
+
+LevelActionThinker needs to call Super::serialize or it breaks savegames.
+
+Added support for specifying the destination of a normal or secret exit in Doom
+format maps via the line tag, optioned on EMAPINFO variables allowexittags and
+allowsecrettags, and also enforceable by default on a gamemission basis by use
+of the MI_ALLOWEXITTAG and MI_ALLOWSECRETTAG flags.
+
+This is immediately useful for PSX, which uses tags on 51 W1 Secret Exit and
+the corresponding walkover type to specify not only the secret levels, but the
+level you return to from the secret levels. With this data already in the map,
+there's no need to have to double specify it through EMAPINFO.
+
+This will also come in handy later for Strife, although its specials work
+differently in some cases (specifying level as tag % 100), the underlying code
+to support this in g_game will work just the same - the linedef action binding 
+system will take care of that detail by providing separate actions for Strife
+exits that translate the tag and destination riftspot (where applicable).
+
+Added a new Doom 2 gamemission for PSX, and the ability to specify this mission
+in the PKE gameversion.txt file.
+
+Multi-value EMAPINFO keys weren't quite working when they had multiple values
+because I forgot to add code for them on the p_info side to actually scan all
+the way down the hash chain and process values other than the first one.
+
+Added support for the ZDoom Hexen map extended linedef type 242,
+Floor_LowerToHighest, which implements semantics that can recreate Doom and
+Heretic's floorLower behaviors. I need to talk to them about adding support to
+this special for Strife's behavior, however, because it is different from both
+Doom and Heretic in a subtle manner. Allowing an additional value of the 
+force_adjust argument to toggle on said behavior seems like a sane option to
+me. This special is also available as type 416 in ExtraData.
+
+--------------------------------------------------------------------------------
+06/18/14
+
+Added a LevelActionThinker which drives logic for generic "boss special" actions
+that trigger when all of a particular enemy on a level is dead, without 
+requiring any kind of scripting beyond EMAPINFO, and without vulnerabilities
+like the vanilla A_BossDeath actions have such as monsters being destroyed by
+fast crushers, or respawning in Nightmare before the last monster finishes its
+death frames, or not triggering when the game is in -nomonsters mode.
+
+This required support for multi-valued keys in the XLEMapInfo parser (MetaTable
+is good for allowing this; just have to call a different method).
+
+Fixed a bug that's apparently been in the menu system for years. If a popup
+question which executes a function callback was dismissed with a no response or
+ESC key press, then the next popup question to execute a console command would
+instead execute that previous question's callback function.
+
+This would result in dismissing the prompt for starting a Nightmare! game 
+causing the next attempt to quit the game from the main menus starting a new
+game in Nightmare! mode instead. Quite bizarre.
+
+Removed an unused line_t pointer field from VerticalDoorThinker, which was
+added by Jim Flynn with comments stating "remember line that triggered us".
+While it did, the field was never actually used for anything and I have no idea
+what he had intended it for, so it's just been using up space in memory and in
+savegames all this time for nothing. Unfortunately this breaks savegames from
+previous releases again :P
+
+--------------------------------------------------------------------------------
+06/17/14
+
+To make PKE-as-IWAD support fully useful, some more resources need to be made
+non-mandatory:
+
+* The console background should go unrendered if the resource it wants to load
+  does not exist. This results in a pure black background which is functional,
+  even if somewhat ugly.
+  
+* PNAMES and TEXTURE1 need not be required so long as a /textures namespace
+  exists and defines at least one texture.
+  
+* The game should not crash if GameModeInfo->endTextName does not exist as a
+  valid DOS text screen resource; instead, just don't try to show the ENDOOM.
+  
+* Menu pointers have no special reason to be required, and no longer are. While
+  making this change, I also generalized the menu pointer drawing code so that
+  it is fully generic, and added proper timing for Heretic's arrow pointer in 
+  the process (it blinks twice as slow as DOOM's skull pointer does).
+  
+* The sound lump named by GameModeInfo->defSoundName should be looked for in
+  ns_sounds first, as are other sounds, otherwise it won't be found if it
+  exists there.
+
+--------------------------------------------------------------------------------
+06/16/14
+
+Untested support for use of PKEs as the primary game archive (or "IWAD") is now
+in place, in interest of advancing the PSX support project (psxwadgen currently
+supports psxdoom.pke as its output target, and this is meant to function as a
+standalone game not dependent on doom2.wad).
+
+For version recognition, a gameversion.txt is required to exist in the PKE's
+root directory and is required to contain strictly one of several recognized
+game mode/mission strings. If such a file isn't found in the archive, the game
+will go into indetermined game mission mode, which is usually pretty broken but
+tries to act mostly like DOOM registered.
+
+--------------------------------------------------------------------------------
+06/14/14
+
+Further templatized the span drawers so that separate GEN versions of the 
+functions are not required, with some ideas from DavidPH.
+
+--------------------------------------------------------------------------------
+06/12/14
+
+Implemented an idea to rewrite r_span.cpp to use template functions instead of
+grotesque macros. The compiler generates the same assembly when optimizing
+(verified via the listing) as it did from the macros. The downside is in debug
+mode where the code is a LOT slower.
+
+--------------------------------------------------------------------------------
+06/08/14
+
+At some point the formatting of the rndtable array got broken, so I fixed it :P
+
+--------------------------------------------------------------------------------
+06/07/14
+
+Merged another pull request from ConSiGno to further tweak his README changes.
+
+It was pointed out to me that C++11 has deprecated the register keyword, and
+that most modern compilers, including Visual C++ of any version, completely
+ignore it for optimization purposes (Visual C++ does not even bother to enforce
+the standard's requirement that you not take the address of such a variable).
+As a result, I removed all instances of the keyword from Eternity's code.
+
+Lee really went overboard with that in some places too, let me tell ya. The x86
+only has four to six usable registers (esi and edi can't be used as targets for
+some opcodes and thus aren't fully general purpose regs), so I question his
+logic in declaring as many as 8 variables in one subroutine as "register" >_>
+
+--------------------------------------------------------------------------------
+06/05/14
+
+Added the various ammo fields to the libConfuse cfg_opt_t for weapon giver,
+though they are not yet actually used for anything.
+
+--------------------------------------------------------------------------------
+06/04/14
+
+A WeaponGiver effect type has been defined for EDF, and the various ammo amounts
+that have currently been stashed in weaponinfo_t to get them out of the 
+P_GiveWeapon routine earlier during folding of ammo into the inventory system
+will soon be moved into that itemeffect definition as they are part of the 
+process of picking up a weapon, and not a property of the weapon itself.
+
+WeaponGiver will be different than its corresponding ZDoom class in that it will
+be required to exist for each weapon - a WeaponGiver item effect is what will 
+give an actual weapon - a special artifact type - to the player, along with the
+indicated amount of the weapon's ammo type. I have tried with Eternity's
+inventory system to avoid to the greatest extent possible this type of 
+functionality entanglement that pervades ZDoom's system, as it would otherwise
+be a major source of implementation obstacles and compatibility problems for us.
+
+--------------------------------------------------------------------------------
+05/31/14
+
+More work has been done on the new weapon engine, transitioning some code to
+function agnostically with respect to the set of weapons that it is operating
+on. In particular, weapon cycling (such as is available on gamepads) now traces
+through pointers in the weaponinfo_t structs to the next and previous weapon in
+cycle order, rather than using a complicated set of two indexing arrays to
+walk back and forth from ordinal numbers to hard-coded wp_* constants.
+
+--------------------------------------------------------------------------------
+05/28/14
+
+A small tweak to the texture loader appears to allow non-power-of-2 width wall
+textures without any issues. This makes the Eye of Sauron (384 wide) appear 
+correctly in Deus Vult II, which was, this texture aside, 100% compatible with
+Eternity (the texture appeared normally in the first 256 units, and then drew
+either repeated or cut off with a HOM effect depending on whether it occurred
+on a 1S or 2S line respectively).
+
+--------------------------------------------------------------------------------
+05/27/14
+
+Started work on a new idea for an object-oriented weapon engine that tries to
+isolate EDF from all the game-specific hackery that is required for the original
+vanilla weapon behaviors and all the accumulated cruft from BOOM and MBF. This
+design is still somewhat shakey though and could change drastically without
+warning.
+
+--------------------------------------------------------------------------------
+05/18/14
+
+Fixed several issues I found in the sprite loading code while doing a code
+review due to an end-user issue on Doomworld Forums:
+
+* The rotate field of spritedef_t has values -1, 0, and 1 stored into it, and
+  therefore should be declared int and not bool.
+
+* SMMU has had a major memory leak in R_InitSpriteDefs when WADs were loaded at
+  runtime, and this escaped detection until now - structures allocated through
+  this function must be done so at PU_RENDERER tag level in order to get freed
+  before runtime WAD loading re-invokes P_Init() (why this is called from P_Init
+  instead of R_Init in the first place is another issue altogether...).
+
+* The error message from R_InstallSpriteLump for a missing sprite frame was
+  ridiculously vague by not actually naming the offending lump; this has been
+  resolved by passing that information down to the function for reporting
+  purposes.
+  
+Added a cool feature inspired by Tarnsman's ongoing run through the hell that is
+Maximum Doom on his twitch stream - set s_randmusic or start Eternity with the
+-randmusic command-line parameter in order to select a random music track during
+levels. This only works with built-in music lumps such as D_RUNNIN and not ones
+named via MAPINFO/EMAPINFO or invoked purely via ACS.  
+  
+--------------------------------------------------------------------------------
+05/17/14
+
+Merged a pull request from ConSiGno to add Homebrew build instructions to the
+README.adoc file. 
+
+--------------------------------------------------------------------------------
+05/10/14
+
+Stopping of sounds when descendents of PointThinker are removed should be a
+shared behavior of the base class, as it is done for both Mobj and QuakeThinker,
+and would need to be done for any other hypothetical future descendents that
+play sounds. These calls have been moved to a new PointThinker::removeThinker
+virtual method implementation, which is called from the descendents via their
+Super ref as usual (Mobj already made this call, but it previously directly
+executed Thinker::removeThinker).
+
+On further consideration, sound channels also cannot be treated as counted
+thinker references, because the behavior of the sound engine is client-based and
+differs between nodes during netgames. This could theoretically cause desyncs by
+deleting objects from the deferred removal list at different times. The original
+reason I added this (the idea of a thinker that would die once the sound it was
+playing stopped) has fallen by the wayside anyway.
+
+Fixed a missing space in the page names array for the video options menu.
+
+--------------------------------------------------------------------------------
+04/12/14
+
+The GL2D backend has been rewritten to use vertex and texture coordinate arrays
+via glTexCoordPointer and glVertexPointer rather than immediate mode calls to
+glVertex2d and glTexCoord2d. I mainly did this as this is an approach that is
+compatible with GLES and will make porting the GL2D backend to platforms with
+GLES graphics easier, if we should undertake such in the future.
+
+--------------------------------------------------------------------------------
+04/01/14
+
+Added estrempty and estrnonempty macros to z_zone.h to handle the extremely 
+common operation of testing a string for "is null or empty", which looks like
+the often overly verbose (str && *str), or (!str || !*str).
+
+--------------------------------------------------------------------------------
+03/31/14
+
+A couple fixes for the menu system:
+
+* Classic menu support was broken in Doom 2 due to the way Doom 2 used a 
+  different main menu; it now properly modifies its main menu through 
+  GameModeInfo instead of hacking up menu_main.
+
+* If we're playing BFG Edition, we will follow in the footsteps of Chocolate 
+  Doom and display the "ON" graphic next to "Detail", rather than the M_GDHIGH
+  lump which in BFG Edition was inexplicably changed to read "Fullscreen:",
+  you know, instead of them just making a differently named lump to contain
+  that string... 9_9  It looked weird and ran off the edge of the screen.
+
+--------------------------------------------------------------------------------
+03/30/14
+
+I've added experimental letter boxing support for resolutions that are narrower
+than 4:3. The largest ratio supported is 5:4. This is currently only implemented
+in the software backend and needs a separate solution for GL2D. Unlike 4:3 
+pillarboxing, which is handled entirely at the VBuffer level, this requires 
+low-level tweaks to the resolution setting and framebuffer creation/blitting.
+
+--------------------------------------------------------------------------------
+03/29/14
+
+After replacing the screenshot of the E4M9 location of Super Turbo Turkey
+Puncher on http://doomwiki.org with a copy that didn't feature the custom EE
+graphical HUD and crosshair, I noticed that the angle output of the idmypos
+cheat has been broken for some unknown amount of time by using the wrong 
+formatting character for the calculation performed.
+
+ConSiGno reported that the ENDOOM display was using 100% CPU and causing
+problems on the Pi as a result, so I reviewed the code for it in Chocolate
+Doom and found a mistake I made when translating it into Eternity originally.
+Repaired this and the issue was resolved.
+
+--------------------------------------------------------------------------------
+03/03/14
+
+Removed support for the flashing disk icon from the video HAL and the software
+SDL backend, as this feature has:
+
+A. been disabled by default everywhere for several years
+B. has never worked on Mac
+C. cannot be likewise implemented in the GL backend
+D. is just another instance of more drawing code that stands in the way of
+   features like true color support.
+
+--------------------------------------------------------------------------------
+02/27/14
+
+Merged a pull request from chungy to update the README file and remove some
+unnecessary files that shouldn't be version controlled (Mac OS related stuff).
+Oh did I mention we're using git now? ^_^
+
+--------------------------------------------------------------------------------
+02/17/14
+
+As with portaltop and portalbottom, the pwindow_t structures are now destroyed
+en masse when a resolution change occurs, so that on the next rendering pass,
+new windows of the proper size will be constructed.
+
+Likewise for maskedrange_t, which are now sized at video.width instead of
+MAX_SCREENWIDTH. The masked stack and its freelist will be cleared at 
+resolution change and then get naturally rebuilt on the next rendering pass.
+
+With this, the last uses of MAX_SCREENWIDTH are gone. I have redefined both
+MAX_SCREENWIDTH and MAX_SCREENHEIGHT to 65535, the maximum window dimensions
+that are allowed on a Windows desktop due to DWORD packing of X/Y coordinates
+in native window messages. This effectively removes the resolution cap.
+
+--------------------------------------------------------------------------------
+02/16/14
+
+The portal engine was making use of variables named ptop and pbottom, and there
+are globals declared with the same names in r_things.cpp, so these were very
+easily conflated with each other and made searching the code difficult. I have
+eliminated the scope shadowing by renaming the variables used in the portal 
+engine code.
+
+--------------------------------------------------------------------------------
+02/15/14
+
+ConSiGno noticed that interpolation did not properly apply to voodoo dolls; 
+these were being excluded along with real players from interpolation data 
+storage in Mobj::Think. They have to be handled here as they have no player to
+do their movement for them.
+
+While testing on vapordemo, I also found that the intermission camera was
+neglected while implementing interpolation of camera viewpoints. I turned the
+local static code in p_chase.cpp into a method of the camera_t structure so
+that it can be invoked in in_lude.cpp as well.
+
+Getting back to work on removing the resolution cap, I have converted the
+slopespan colormap array to a VALLOCATION successfully this time by being very
+careful, and by throwing away all the tables when a resolution change occurs,
+rather than trying to resize them as they get used again.
+
+Later on, applied the same approach to the global portaltop and portalbottom
+silhouette clipping arrays, with similar success. Along with initializing the
+value of portalrender.miny to video.height instead of a hard-coded constant, 
+this leaves only the arrays inside each individual portal which track the 
+windows, and the maskedrange_t structures that get pushed onto the "masked 
+stack", as MAX_SCREENWIDTH dependencies.
+
+--------------------------------------------------------------------------------
+02/08/14
+
+After additional research into the PlayStation's hardware blending modes, I was
+able to decipher the true meaning of the 3 bits used by thing types to control
+their appearance and published this information on the Doomworld Forums for the
+possible benefit of the PSX TC project (I do not know if they made any use of
+it or not). As a result, I changed the currently implemented EEPSXSpectre's
+translucency level from my guesstimate of 30% to the proper 25%. Results are not
+identical, of course, because PSX DOOM operates in a 24-bit color mode.
+
+I am regretting not implementing the actual blending flags in the PSX amp format
+at this point however, and may yet revisit them, as we found an additional
+variant of Spectre that is 100% additive, and a Cacodemon on Tenements that is
+accidentally marked as being translucent. My approach of redirecting spawn
+numbers is insufficient for handling these corner cases.
+
+Added chungy's Arch Linux Doom 3: BFG Edition distro data install path as an 
+IWAD search location for Linux, at his request. Also adjusted the code that
+looks for nerve.wad to use opendir to find the canonical form of the filename,
+since by default it is uppercased ("NERVE.WAD") and Linux is cranky about that.
+
+--------------------------------------------------------------------------------
+02/06/14
+
+Zero-size textures are now allowed without an I_Error, by turning them into 1x1
+empty textures. Not really tested in a map, but I don't see any reason it won't
+work.
+
+Logic for finding music lumps specified by EMAPINFO was still incorrect even
+after the fixes previously applied for essel and could result in prefixed lumps
+(ie. D_RUNNIN, vs simply RUNNIN) not being found.
+
+--------------------------------------------------------------------------------
+02/04/14
+
+Finished up integration of the new EMAPINFO parser into the game engine and
+removed the old SMMU parser after doing some testing against existing EMAPINFO
+lumps with total success. As part of this, I added a getLumpName method to
+WadDirectory which is a convenience routine for getting lumpinfo[i]->name if you
+already have the lump number and need to walk backward. This just happens to be
+the case in the EMAPINFO parser, as it is passed a lump number by the code in
+p_setup in the event that we are parsing legacy SMMU map header information.
+
+--------------------------------------------------------------------------------
+02/02/14
+
+Added more code to XLTokenizer to support // comments in languages it can 
+handle, as the old EMAPINFO parser had support for them added to it in an early
+Eternity version.
+
+--------------------------------------------------------------------------------
+01/31/14
+
+Added a new experimental XLEMapInfo parser class that is meant to replace the
+ad hoc parser inherited and heavily modified from SMMU, with maximum backward
+compatibility while transitioning to a formal state-based tokenizer and parser
+framework. This necessitated some changes to the XLTokenizer and XLParser core
+to support some additional token types and parsing states of which the Hexen-
+style scripts implemented to date do not make use.
+
+--------------------------------------------------------------------------------
+01/27/14
+
+I refactored the new XLMapInfo parser to store its data in MetaTables rather 
+than in native structures, as this provides an easily queried database of values
+retrievable by their MAPINFO keys with minimal memory management boilerplate.
+Did another code stream tonight.
+
+--------------------------------------------------------------------------------
+01/26/14
+
+Started and largely finished work on parsing and storage of Hexen MAPINFO data 
+with a new XLParser descendent. By request, I did a good chunk of the coding on
+a live twitch stream, which was fun.
+
+MAPINFO is treated as lower priority than EMAPINFO, on a per-map basis. If an
+EMAPINFO entry exists for a given map, all the MAPINFO data for that map is 
+thrown out. This is necessary due to existing mods that include both MAPINFO,
+intended for ZDoom, and EMAPINFO, with differing data between the two.
+
+Some other changes were necessitated, chiefly being that lumps named FOGMAP will
+now automatically be merged into the colormaps[] array during R_Init even if 
+they are not in ns_colormaps, in the same manner as COLORMAP, for the benefit of
+Hexen. Its FOGMAP lump is contained in the "global namespace" of the WAD 
+directory. 
+
+Also added EMAPINFO fields that allow secret exits to have fully different 
+finale behaviors as compared to the normal exit from the same map, and a finale
+early flag that can cause the finale to kick in before any intermission, as
+finales on the ExM8 maps of DOOM ordinarily do.
+
+HEXEN SUPPORT MILESTONES:
+* Map names now appear on the automap.
+* Darkmere, Sacred Grove, and Orchard of Lamentations now have fog.
+
+--------------------------------------------------------------------------------
+01/25/14
+
+The XL parser module was overgrown and had multiple functionalities enjambed
+within it, so I've split it up into separate modules, one for each descendent
+of the generic XLParser class.
+
+--------------------------------------------------------------------------------
+01/24/14
+
+ConSiGno has reported strange behavior with mouse button double click actions 
+and I have spent the last two days trying various hacks on the code to test for
+a resolution without any success so I have concluded that he's seeing some kind
+of glitch in SDL on the Pi and have reverted out most of the experimental
+changes. The few that remain don't seem to fix the problem he is having.
+
+--------------------------------------------------------------------------------
+01/22/14
+
+Eliminated the last substantial branch on the value of GMI's missionInfo->id by
+moving texture hacks applied during R_InitTextures into a callback function by
+game mode. The only remaining such branch now is one used to display special
+IWAD recognition for DOOM II's various localized versions (doom2f.wad for French
+and the German doom2.wad which has no secret levels), and since this will only 
+ever apply to DOOM II, that branch is OK to keep in place.
+
+Added variants of the P_CheckLevel function that can take a map header lump name
+and a map number respectively, and will kick off the level verification process
+by doing the necessary transformations and lookups all in one place.
+
+Fixed a bug in the EDF translation string parser which could have caused an
+I_Error call in qstring::operator [] if an expected component of the translation
+string had zero length. Found this while recoding it to use ectype::isDigit 
+instead of the SMMU "isnumchar" macro.
+
+--------------------------------------------------------------------------------
+01/21/14
+
+AM_clearMarks is now performed in P_SetupLevel uniformly with the rest of the
+subsystem wake-up calls performed when changing maps, so that it does not need
+to be invoked in multiple places in g_game.cpp, where it could potentially be
+missed if new codepaths are added in the future.
+
+--------------------------------------------------------------------------------
+01/20/14
+
+Added a new extended and ExtraData-usable line flag EX_ML_CLIPMIDTEX, which
+forces lines to clip their middle textures to their floor and ceiling heights
+even if they otherwise would not due to having identical sectors on both sides.
+This is needed for PSX map support, besides being a generically useful editing
+feature.
+
+================================================================================
 Changes since Eternity Engine v3.40.37
 ================================================================================
 --------------------------------------------------------------------------------

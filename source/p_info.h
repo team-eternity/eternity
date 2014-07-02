@@ -22,6 +22,7 @@
 #define P_INFO_H__
 
 #include "doomdef.h"
+#include "r_defs.h"  // needed for NUMLINEARGS
 
 class WadDirectory;
 
@@ -49,6 +50,15 @@ enum
    BSPEC_E5M8    = 0x00000080,
 };
 
+// levelaction structures
+struct levelaction_t
+{
+   int special;
+   int mobjtype;
+   int args[NUMLINEARGS];
+   levelaction_t *next;
+};
+
 //
 // LevelInfo_t
 //
@@ -63,6 +73,7 @@ struct LevelInfo_t
 
    // specials: lines, sectors, etc.
    unsigned int bossSpecs;  // boss special flags for BossDeath, HticBossDeath
+   levelaction_t *actions;  // special level actions
 
    // intermission and finale stuff
    int  partime;                // intermission par time in seconds
@@ -89,6 +100,8 @@ struct LevelInfo_t
    // level transfer stuff
    const char *nextLevel;     // name of next map for normal exit
    const char *nextSecret;    // name of next map for secret exit
+   bool allowExitTags;        // map allows tagged normal exit switches
+   bool allowSecretTags;      // map allows tagged secret exit switches
 
    // level variables
    const char *levelName;     // name used in automap

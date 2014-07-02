@@ -395,7 +395,7 @@ extern float slopevis; // SoM: used in slope lighting
 //
 static void R_InitTextureMapping()
 {
-   register int i, x, limit;
+   int i, x, limit;
    float vtan, ratio, slopet;
    
    // Use tangent table to generate viewangletox:

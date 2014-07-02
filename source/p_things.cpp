@@ -25,14 +25,19 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
 #include "doomstat.h"
 #include "d_gi.h"
+#include "ev_specials.h"
 #include "p_mobj.h"
 #include "p_map3d.h"
+#include "p_saveg.h"
+#include "p_things.h"
 #include "a_small.h"
 #include "acs_intr.h"
 #include "e_states.h"
 #include "e_things.h"
+#include "p_info.h"
 #include "s_sound.h"
 
 //
@@ -223,6 +228,98 @@ int EV_ThingDeactivate(int tid)
    }
 
    return success;
+}
+
+//=============================================================================
+//
+// LevelActionThinker
+//
+// Allows execution of arbitrary line actions when monsters die on a level.
+//
+
+IMPLEMENT_THINKER_TYPE(LevelActionThinker)
+
+//
+// LevelActionThinker::Think
+//
+// Check the thinker list for things of the type specified. If any are living,
+// return. Otherwise, if a player is alive, activate the action on that player's
+// behalf and remove self.
+//
+void LevelActionThinker::Think()
+{
+   player_t *thePlayer = nullptr;
+
+   // Check for first living player
+   for(int i = 0; i < MAXPLAYERS; i++)
+   {
+      if(playeringame[i] && players[i].health > 0)
+      {
+         thePlayer = &players[i];
+         break;
+      }
+   }
+   if(!thePlayer)
+      return;
+
+   // Check if all monsters dead
+   Thinker *cap = &thinkerclasscap[th_enemies];
+   for(Thinker *th = cap->cnext; th != cap; th = th->cnext)
+   {
+      Mobj *mo;
+
+      if((mo = thinker_cast<Mobj *>(th)))
+      {
+         if(mo->type == mobjtype && mo->health > 0)
+            return;
+      }
+   }
+
+   // Execute special
+   ev_action_t *action = EV_HexenActionForSpecial(special);
+   if(action && EV_ActivateAction(action, args, thePlayer->mo))
+      removeThinker();
+}
+
+//
+// LevelActionThinker::serialize
+//
+// Save or load the LevelActionThinker from a save game.
+//
+void LevelActionThinker::serialize(SaveArchive &arc)
+{
+   Super::serialize(arc);
+   arc << special;
+   arc << mobjtype;
+   P_ArchiveArray(arc, args, NUMLINEARGS);
+}
+
+//
+// LevelActionThinker::Spawn
+//
+// Spawn a LevelActionThinker.
+//
+void LevelActionThinker::Spawn(int pSpecial, int *pArgs, int pMobjType)
+{
+   auto lva = new LevelActionThinker();
+
+   lva->mobjtype = pMobjType;
+   lva->special  = pSpecial;
+   memcpy(lva->args, pArgs, sizeof(lva->args));
+ 
+   lva->addThinker();
+}
+
+//
+// P_SpawnLevelActions
+//
+// Spawn all the levelactions specified in LevelInfo as LevelActionThinker 
+// instances.
+//
+void P_SpawnLevelActions()
+{
+   for(auto action = LevelInfo.actions; action; action = action->next)
+      LevelActionThinker::Spawn(action->special, action->args, action->mobjtype);
 }
 
 // EOF

@@ -1101,9 +1101,9 @@ static bool AM_clipMline(mline_t *ml, fline_t *fl)
       TOP    = 8
    };
    
-   register int outcode1 = 0;
-   register int outcode2 = 0;
-   register int outside;
+   int outcode1 = 0;
+   int outcode2 = 0;
+   int outside;
 
    fpoint_t tmp = { 0, 0 };
    int   dx;
@@ -1216,7 +1216,7 @@ static bool AM_clipMline(mline_t *ml, fline_t *fl)
 #undef DOOUTCODE
 
 // haleyjd 06/12/09: this macro is now shared by Bresenham and Wu
-#define PUTDOT(xx,yy,cc) *(vbscreen.ylut[(yy)] + vbscreen.xlut[(xx)]) = (cc)
+#define PUTDOT(xx,yy,cc) *(VBADDRESS(&vbscreen, xx, yy)) = (cc)
 
 //
 // AM_drawFline()
@@ -1229,15 +1229,11 @@ static bool AM_clipMline(mline_t *ml, fline_t *fl)
 //
 static void AM_drawFline(fline_t *fl, int color )
 {
-   register int x;
-   register int y;
-   register int dx;
-   register int dy;
-   register int sx;
-   register int sy;
-   register int ax;
-   register int ay;
-   register int d;
+   int x,  y;
+   int dx, dy;
+   int sx, sy;
+   int ax, ay;
+   int d;
 
 #ifdef RANGECHECK         // killough 2/22/98    
    //static int fuck = 0;
@@ -1306,7 +1302,7 @@ static void AM_drawFline(fline_t *fl, int color )
 //
 static void AM_putWuDot(int x, int y, int color, int weight)
 {
-   byte *dest = vbscreen.ylut[y] + vbscreen.xlut[x];
+   byte *dest = VBADDRESS(&vbscreen, x, y);
    unsigned int *fg2rgb = Col2RGB8[weight];
    unsigned int *bg2rgb = Col2RGB8[64 - weight];
    unsigned int fg, bg;
@@ -1540,6 +1536,7 @@ static int AM_DoorColor(int type)
 //
 inline static bool AM_drawAsExitLine(line_t *line)
 {
+   // FIXME: needs to be controlled by line special bindings
    return (mapcolor_exit &&
            (line->special==11  ||
             line->special==52  ||
@@ -1599,6 +1596,7 @@ inline static bool AM_drawAs2sSecret(line_t *line)
 //
 inline static bool AM_drawAsTeleporter(line_t *line)
 {
+   // FIXME: needs to be controlled by line special bindings
    return (mapcolor_tele && !(line->flags & ML_SECRET) && 
            (line->special == 39  || line->special == 97 ||
             line->special == 125 || line->special == 126));
@@ -1714,8 +1712,7 @@ static void AM_drawWalls()
                   AM_drawMline(&l, mapcolor_prtl);
                }
             }
-         } // end else if
-      
+         } // end else if      
       }
    }
 

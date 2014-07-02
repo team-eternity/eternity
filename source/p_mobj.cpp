@@ -1250,7 +1250,7 @@ void Mobj::Think()
    {
       sector_t *sec = subsector->sector;
 
-      if(sec->hticPushType >= 40 && sec->hticPushType <= 51)
+      if(sec->hticPushType == SECTOR_HTIC_WIND)
          P_ThrustMobj(this, sec->hticPushAngle, sec->hticPushForce);
    }
 
@@ -1875,14 +1875,14 @@ void Mobj::removeThinker()
 int P_FindDoomedNum(int type)
 {
    static struct dnumhash_s { int first, next; } *hash;
-   register int i;
+   int i;
 
    if(!hash)
    {
       hash = (dnumhash_s *)(Z_Malloc(sizeof(*hash) * NUMMOBJTYPES, PU_CACHE, (void **)&hash));
-      for(i = 0; i < NUMMOBJTYPES; ++i)
+      for(i = 0; i < NUMMOBJTYPES; i++)
          hash[i].first = NUMMOBJTYPES;
-      for(i = 0; i < NUMMOBJTYPES; ++i)
+      for(i = 0; i < NUMMOBJTYPES; i++)
       {
          if(mobjinfo[i]->doomednum != -1)
          {

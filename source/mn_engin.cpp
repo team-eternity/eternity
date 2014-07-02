@@ -379,8 +379,10 @@ static void MN_drawPointer(menu_t *menu, int y, int itemnum, int item_height)
          item_y = menu->y - 5 + itemnum * 16; // fixed-height items
       }
 
-      V_DrawPatch(item_x, item_y, &subscreen43,
-         PatchLoader::CacheNum(wGlobalDir, skulls[(menutime / BLINK_TIME) % 2], PU_CACHE));
+      gimenucursor_t *cursor = GameModeInfo->menuCursor;
+      const char *patch = cursor->patches[(menutime / cursor->blinktime) % cursor->numpatches];
+
+      V_DrawPatch(item_x, item_y, &subscreen43, PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE));
    }
    else
    {
@@ -682,15 +684,10 @@ static void MN_SetBackground()
 //
 void MN_Init()
 {
-   const char *cursorPatch1 = GameModeInfo->menuCursor->patch1;
-   const char *cursorPatch2 = GameModeInfo->menuCursor->patch2;
    int i;
 
-   skulls[0] = W_GetNumForName(cursorPatch1);
-   skulls[1] = W_GetNumForName(cursorPatch2);
-
    // haleyjd 02/04/06: load small pointer
-   for(i = 0; i < NUMSMALLPTRS; ++i)
+   for(i = 0; i < NUMSMALLPTRS; i++)
    {
       char name[9];
 

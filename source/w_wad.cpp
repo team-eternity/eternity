@@ -561,7 +561,7 @@ bool WadDirectory::addWadFile(openwad_t &openData, wfileadd_t &addInfo,
 bool WadDirectory::addZipFile(openwad_t &openData, wfileadd_t &addInfo,
                               int startlump)
 {
-   std::auto_ptr<ZipFile> zip(new ZipFile());
+   std::unique_ptr<ZipFile> zip(new ZipFile());
    int         numZipLumps;
    lumpinfo_t *lump_p;
 
@@ -576,6 +576,13 @@ bool WadDirectory::addZipFile(openwad_t &openData, wfileadd_t &addInfo,
    {
       // load was successful, but this zip file is useless.
       return true;
+   }
+
+   // update IWAD handle? 
+   if(!(addInfo.flags & WFA_PRIVATE) && this->ispublic)
+   {
+      if(IWADSource < 0 && (addInfo.flags & WFA_ISIWADFILE))
+         IWADSource = source;
    }
 
    // Allocate lumpinfo_t structures for the zip file's internal file lumps
@@ -1060,7 +1067,7 @@ int WadDirectory::checkNumForName(const char *name, int li_namespace)
    // It has been tuned so that the average chain length never exceeds 2.
    
    unsigned int hashkey = LumpNameHash(name) % (unsigned int)numlumps;
-   register int i = lumpinfo[hashkey]->namehash.index;
+   int i = lumpinfo[hashkey]->namehash.index;
 
    // We search along the chain until end, looking for case-insensitive
    // matches which also match a namespace tag. Separate hash tables are
@@ -1081,7 +1088,7 @@ int WadDirectory::checkNumForName(const char *name, int li_namespace)
 //
 // haleyjd: Now a global directory convenience routine.
 //
-int W_CheckNumForName(register const char *name)
+int W_CheckNumForName(const char *name)
 {
    return wGlobalDir.checkNumForName(name);
 }
@@ -1091,7 +1098,7 @@ int W_CheckNumForName(register const char *name)
 //
 // haleyjd: Separated from W_CheckNumForName. Looks in a specific namespace.
 //
-int W_CheckNumForNameNS(register const char *name, register int li_namespace)
+int W_CheckNumForNameNS(const char *name, int li_namespace)
 {
    return wGlobalDir.checkNumForName(name, li_namespace);
 }
@@ -1138,6 +1145,17 @@ int WadDirectory::getNumForName(const char* name)     // killough -- const added
    return i;
 }
 
+//
+// WadDirectory::getNumForNameNSG
+//
+int WadDirectory::getNumForNameNSG(const char *name, int ns)
+{
+   int i = checkNumForNameNSG(name, ns);
+   if(i == -1)
+      I_Error("WadDirectory::getNumForNameNSG: %.8s not found!\n", name);
+   return i;
+}
+
 int W_GetNumForName(const char *name)
 {
    return wGlobalDir.getNumForName(name);
@@ -1151,7 +1169,7 @@ int W_GetNumForName(const char *name)
 int WadDirectory::checkNumForLFN(const char *lfn, int li_namespace)
 {
    unsigned int hashkey = D_HashTableKeyCase(lfn) % (unsigned int)numlumps;
-   register int i = lumpinfo[hashkey]->lfnhash.index;
+   int i = lumpinfo[hashkey]->lfnhash.index;
 
    for(; i >= 0; i = lumpinfo[i]->lfnhash.next)
    {

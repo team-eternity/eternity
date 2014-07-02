@@ -102,6 +102,7 @@ static byte    *demobuffer;   // made some static -- killough
 static size_t   maxdemosize;
 static byte    *demo_p;
 static int16_t  consistency[MAXPLAYERS][BACKUPTICS];
+static int      g_destmap;
 
 WadDirectory *g_dir = &wGlobalDir;
 
@@ -1384,8 +1385,9 @@ static bool secretexit;
 // haleyjd: true if a script called exitsecret()
 bool scriptSecret = false; 
 
-void G_ExitLevel()
+void G_ExitLevel(int destmap)
 {
+   g_destmap  = destmap;
    secretexit = scriptSecret = false;
    gameaction = ga_completed;
 }
@@ -1397,10 +1399,10 @@ void G_ExitLevel()
 // IF NO WOLF3D LEVELS, NO SECRET EXIT!
 // (unless it's a script secret exit)
 //
-void G_SecretExitLevel()
+void G_SecretExitLevel(int destmap)
 {
-   secretexit = 
-      !(GameModeInfo->flags & GIF_WOLFHACK) || haswolflevels || scriptSecret;
+   secretexit = !(GameModeInfo->flags & GIF_WOLFHACK) || haswolflevels || scriptSecret;
+   g_destmap  = destmap;
    gameaction = ga_completed;
 }
 
@@ -1500,11 +1502,9 @@ static bool G_doFinale()
 //
 static void G_DoCompleted()
 {
-   int i;
-   
    gameaction = ga_nothing;
    
-   for(i = 0; i < MAXPLAYERS; i++)
+   for(int i = 0; i < MAXPLAYERS; i++)
    {
       if(playeringame[i])
          G_PlayerFinishLevel(i);        // take away cards and stuff
@@ -1526,7 +1526,7 @@ static void G_DoCompleted()
    {
       if(gamemap == 9)
       {
-         for(i = 0; i < MAXPLAYERS; i++)
+         for(int i = 0; i < MAXPLAYERS; i++)
             players[i].didsecret = true;
       }
    }
@@ -1556,9 +1556,24 @@ static void G_DoCompleted()
       {
          wminfo.next = G_GetMapForName(LevelInfo.nextSecret);
          if(!(GameModeInfo->flags & GIF_MAPXY))
-            wminfo.next = wminfo.next % 10;
+            wminfo.next %= 10;
          wminfo.next--;
       }
+   }
+
+   // haleyjd: possibly override with g_destmap value
+   if(g_destmap)
+   {
+      wminfo.next = g_destmap;
+      if(!(GameModeInfo->flags & GIF_MAPXY))
+      {
+         if(wminfo.next < 1)
+            wminfo.next = 1;
+         else if(wminfo.next > 9)
+            wminfo.next = 9;
+      }
+      wminfo.next--;
+      g_destmap = 0;
    }
 
    wminfo.maxkills  = totalkills;
@@ -1570,15 +1585,14 @@ static void G_DoCompleted()
 
    wminfo.pnum = consoleplayer;
 
-   for(i = 0; i < MAXPLAYERS; i++)
+   for(int i = 0; i < MAXPLAYERS; i++)
    {
       wminfo.plyr[i].in      = playeringame[i];
       wminfo.plyr[i].skills  = players[i].killcount;
       wminfo.plyr[i].sitems  = players[i].itemcount;
       wminfo.plyr[i].ssecret = players[i].secretcount;
       wminfo.plyr[i].stime   = leveltime;
-      memcpy(wminfo.plyr[i].frags, players[i].frags,
-             sizeof(wminfo.plyr[i].frags));
+      memcpy(wminfo.plyr[i].frags, players[i].frags, sizeof(wminfo.plyr[i].frags));
    }
   
    gamestate = GS_INTERMISSION;

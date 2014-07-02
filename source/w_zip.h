@@ -34,6 +34,7 @@
 
 class  InBuffer;
 class  WadDirectory;
+class  ZAutoBuffer;
 struct ZIPEndOfCentralDir;
 class  ZipFile;
 
@@ -50,6 +51,7 @@ struct ZipLump
 
    void setAddress(InBuffer &fin);
    void read(void *buffer);
+   void read(ZAutoBuffer &buf, bool asString);
 };
 
 struct ZipWad
@@ -109,6 +111,7 @@ public:
 
    void     linkTo(DLListItem<ZipFile> **head);
    ZipLump &getLump(int lumpNum);
+   int      findLump(const char *name) const;
    int      getNumLumps() const { return numLumps; }   
    FILE    *getFile()     const { return file;     }
 };

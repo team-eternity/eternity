@@ -302,6 +302,7 @@ public:
    int   checkNumForName(const char *name, int li_namespace = lumpinfo_t::ns_global);
    int   checkNumForNameNSG(const char *name, int li_namespace);
    int   getNumForName(const char *name);
+   int   getNumForNameNSG(const char *name, int ns);
    int   checkNumForLFN(const char *lfn, int li_namespace = lumpinfo_t::ns_global);
    int   checkNumForLFNNSG(const char *name, int ns);
 

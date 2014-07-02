@@ -319,6 +319,7 @@ void I_EndDoom()
    unsigned char *endoom_data;
    unsigned char *screendata;
    int start_ms;
+   int lumpnum;
    
    // haleyjd: it's possible to have quit before we even initialized
    // GameModeInfo, so be sure it's valid before using it here. Also,
@@ -326,7 +327,10 @@ void I_EndDoom()
    if(!GameModeInfo || !showendoom)
       return;
    
-   endoom_data = (unsigned char *)wGlobalDir.cacheLumpName(GameModeInfo->endTextName, PU_STATIC);
+   if((lumpnum = wGlobalDir.checkNumForName(GameModeInfo->endTextName)) < 0)
+      return;
+
+   endoom_data = (unsigned char *)wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC);
    
    // Set up text mode screen   
    if(!TXT_Init())

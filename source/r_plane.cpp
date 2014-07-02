@@ -817,12 +817,11 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
       check->viewzf =  view.z;
    }
    
-   // SoM: memset should use the check->max_width
-   //memset(check->top, 0xff, sizeof(unsigned int) * check->max_width);
    {
-      register unsigned int i = 0;
-      register int *p = check->top;
-      while(i < check->max_width) p[i++] = 0x7FFFFFFF;
+      unsigned int i = 0;
+      int *p = check->top;
+      while(i < check->max_width) 
+         p[i++] = 0x7FFFFFFF;
    }
    
    return check;
@@ -893,9 +892,10 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
       pl->minx = start;
       pl->maxx = stop;
       {
-         register int *p = pl->top;
-         register unsigned i = 0;
-         while(i < pl->max_width) p[i++] = 0x7FFFFFFF;
+         int *p = pl->top;
+         unsigned i = 0;
+         while(i < pl->max_width)
+            p[i++] = 0x7FFFFFFF;
       }
    }
    
@@ -1049,7 +1049,7 @@ static const int MultiplyDeBruijnBitPosition2[32] =
 //
 static void do_draw_plane(visplane_t *pl)
 {
-   register int x;
+   int x;
 
    if(!(pl->minx <= pl->maxx))
       return;

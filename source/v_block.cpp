@@ -72,7 +72,7 @@ static void V_BlockDrawer(int x, int y, VBuffer *buffer,
       return;
 
    src  = source + dy * width + dx;
-   dest = buffer->ylut[cy1] + buffer->xlut[cx1];
+   dest = VBADDRESS(buffer, cx1, cy1);
 
    while(ch--)
    {
@@ -129,7 +129,7 @@ static void V_BlockDrawerS(int x, int y, VBuffer *buffer,
    yfrac = 0;
 
    src  = source + dy * width + dx;
-   dest = buffer->ylut[realy] + buffer->xlut[realx];
+   dest = VBADDRESS(buffer, realx, realy);
 
 #ifdef RANGECHECK
    // sanity check
@@ -204,7 +204,7 @@ static void V_MaskedBlockDrawer(int x, int y, VBuffer *buffer,
       return;
 
    src  = source + dy * srcpitch + dx;
-   dest = buffer->ylut[cy1] + buffer->xlut[cx1];
+   dest = VBADDRESS(buffer, cx1, cy1);
 
    while(ch--)
    {
@@ -266,7 +266,7 @@ static void V_MaskedBlockDrawerS(int x, int y, VBuffer *buffer,
    yfrac = 0;
 
    src  = source + dy * srcpitch + dx;
-   dest = buffer->ylut[realy] + buffer->xlut[realx];
+   dest = VBADDRESS(buffer, realx, realy);
 
 #ifdef RANGECHECK
    // sanity check
@@ -336,7 +336,7 @@ void V_ColorBlockScaled(VBuffer *dest, byte color, int x, int y, int w, int h)
    w = x2 - x + 1;
    h = y2 - y + 1;
 
-   d = dest->ylut[y] + dest->xlut[x];
+   d    = VBADDRESS(dest, x, y);
    size = w;
 
    for(i = 0; i < h; i++)
@@ -395,7 +395,7 @@ void V_ColorBlockTLScaled(VBuffer *dest, byte color, int x, int y, int w, int h,
    w = x2 - x + 1;
    h = y2 - y + 1;
 
-   d = dest->ylut[y] + dest->xlut[x];
+   d = VBADDRESS(dest, x, y);
 
    for(i = 0; i < h; i++)
    {
@@ -426,7 +426,7 @@ void V_ColorBlock(VBuffer *buffer, byte color, int x, int y, int w, int h)
       I_Error("V_ColorBlock: block exceeds buffer boundaries.\n");
 #endif
 
-   dest = buffer->ylut[y] + buffer->xlut[x];
+   dest = VBADDRESS(buffer, x, y);
    
    while(h--)
    {
@@ -444,8 +444,8 @@ void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y,
                     int w, int h, int tl)
 {
    byte *dest, *row;
-   register int tw;
-   register unsigned int col;
+   int tw;
+   unsigned int col;
    unsigned int *fg2rgb, *bg2rgb;
 
 #ifdef RANGECHECK
@@ -467,7 +467,7 @@ void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y,
    fg2rgb  = Col2RGB8[fglevel >> 10];
    bg2rgb  = Col2RGB8[bglevel >> 10];
 
-   dest = buffer->ylut[y] + buffer->xlut[x];
+   dest = VBADDRESS(buffer, x, y);
    
    while(h--)
    { 
@@ -519,7 +519,7 @@ static void V_TileBlock64(VBuffer *buffer, byte *src)
       for(y = 0; y < buffer->height; y++)
       {
          row = dest;         
-         for(x = 0; x < buffer->width >> 6; ++x)
+         for(x = 0; x < buffer->width >> 6; x++)
          {
             memcpy(row, src + ((y & 63) << 6), 64);
             row += 64;

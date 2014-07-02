@@ -134,6 +134,14 @@ manual_floor:
       {
       case FtoHnF:
          floor->floordestheight = P_FindHighestFloorSurrounding(sec);
+         if(fd->flags & FDF_HACKFORDESTHNF) // haleyjd 06/20/14: hacks
+         {
+            fixed_t amt = (fd->adjust - 128) * FRACUNIT;
+            if(fd->force_adjust == 1)
+               floor->floordestheight += amt;
+            else if(floor->floordestheight != sec->floorheight)
+               floor->floordestheight += amt;
+         }
          break;
       case FtoLnF:
          floor->floordestheight = P_FindLowestFloorSurrounding(sec);
@@ -1172,8 +1180,6 @@ manual_door:
 
       door->topwait = dd->delay_value;
       door->speed   = dd->speed_value;
-
-      door->line = line; // jff 1/31/98 remember line that triggered us
 
       // killough 10/98: implement gradual lighting
       // haleyjd 02/28/05: support light changes from alternate tag

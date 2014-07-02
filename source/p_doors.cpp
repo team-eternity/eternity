@@ -286,7 +286,7 @@ void VerticalDoorThinker::serialize(SaveArchive &arc)
    Super::serialize(arc);
 
    arc << type << topheight << speed << direction << topwait
-       << topcountdown << line << lighttag << turbo;
+       << topcountdown << lighttag << turbo;
 }
 
 //
@@ -375,7 +375,6 @@ int EV_DoDoor(line_t *line, vldoor_e type)
       door->type      = type;
       door->topwait   = VDOORWAIT;
       door->speed     = VDOORSPEED;
-      door->line      = line;  // jff 1/31/98 remember line that triggered us
       door->lighttag  = 0;     // killough 10/98: no light effects with tagged doors
 
       // setup door parameters according to type of door
@@ -536,7 +535,6 @@ int EV_VerticalDoor(line_t *line, Mobj *thing, int lockID)
    door->speed     = VDOORSPEED;
    door->turbo     = false;
    door->topwait   = VDOORWAIT;
-   door->line      = line; // jff 1/31/98 remember line that triggered us
 
    // killough 10/98: use gradual lighting changes if nonzero tag given
    door->lighttag = comp[comp_doorlight] ? 0 : line->tag; // killough 10/98
@@ -596,14 +594,14 @@ int EV_VerticalDoor(line_t *line, Mobj *thing, int lockID)
 // Passed the sector of the door, whose type specified the door action
 // Returns nothing
 //
-void P_SpawnDoorCloseIn30 (sector_t* sec)
+void P_SpawnDoorCloseIn30(sector_t* sec)
 {
    VerticalDoorThinker *door = new VerticalDoorThinker;
    
    door->addThinker();
    
    sec->ceilingdata = door; //jff 2/22/98
-   sec->special = 0;
+   P_ZeroSectorSpecial(sec);
    
    door->sector       = sec;
    door->direction    = plat_stop;
@@ -611,7 +609,6 @@ void P_SpawnDoorCloseIn30 (sector_t* sec)
    door->speed        = VDOORSPEED;
    door->turbo        = false;
    door->topcountdown = 30 * 35;
-   door->line         = NULL; // jff 1/31/98 remember line that triggered us
    door->lighttag     = 0;  // killough 10/98: no lighting changes
 }
 
@@ -623,14 +620,14 @@ void P_SpawnDoorCloseIn30 (sector_t* sec)
 // Passed the sector of the door, whose type specified the door action
 // Returns nothing
 //
-void P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum)
+void P_SpawnDoorRaiseIn5Mins(sector_t *sec)
 {
    VerticalDoorThinker *door = new VerticalDoorThinker;
    
    door->addThinker();
    
    sec->ceilingdata = door; //jff 2/22/98
-   sec->special = 0;
+   P_ZeroSectorSpecial(sec);
    
    door->sector       = sec;
    door->direction    = plat_special; // haleyjd: changed from 2
@@ -641,7 +638,6 @@ void P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum)
    door->topheight   -= 4*FRACUNIT;
    door->topwait      = VDOORWAIT;
    door->topcountdown = 5 * 60 * 35;
-   door->line         = NULL; // jff 1/31/98 remember line that triggered us
    door->lighttag     = 0;    // killough 10/98: no lighting changes
 }
 

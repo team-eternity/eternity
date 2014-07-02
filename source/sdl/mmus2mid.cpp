@@ -155,7 +155,7 @@ static UBYTE trackhdr[]  =
 
 // proff: changed type for byte from char to unsigned char to avoid warning
 static int TWriteByte(MIDI *mididata, int MIDItrack, unsigned char byte);
-static int TWriteVarLen(MIDI *mididata, int MIDItrack, register ULONG value);
+static int TWriteVarLen(MIDI *mididata, int MIDItrack, ULONG value);
 static ULONG ReadTime(UBYTE **musptrp);
 static char FirstChannelAvailable(signed char MUS2MIDchannel[]);
 static UBYTE MidiEvent(MIDI *mididata,UBYTE midicode,UBYTE MIDIchannel,
@@ -211,9 +211,9 @@ static int TWriteByte(MIDI *mididata, int MIDItrack, unsigned char byte)
 //
 // Returns 0 if sucessful, MEMALLOC if a memory allocation error occurs
 //
-static int TWriteVarLen(MIDI *mididata, int tracknum, register ULONG value)
+static int TWriteVarLen(MIDI *mididata, int tracknum, ULONG value)
 {
-   register ULONG buffer;
+   ULONG buffer;
    
    buffer = value & 0x7f;
 
@@ -251,7 +251,7 @@ static int TWriteVarLen(MIDI *mididata, int tracknum, register ULONG value)
 //
 static ULONG ReadTime(UBYTE **musptrp)
 {
-   register ULONG timeval = 0;
+   ULONG timeval = 0;
    int byte;
    
    do    // shift each byte read up in the result until a byte with bit 8 clear

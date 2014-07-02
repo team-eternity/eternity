@@ -25,6 +25,8 @@
 //
 //-----------------------------------------------------------------------------
 
+#include <memory>
+
 #include "z_zone.h"
 
 #include "hal/i_picker.h"
@@ -48,8 +50,10 @@
 #include "m_swap.h"
 #include "p_info.h"
 #include "sounds.h"
+#include "w_formats.h"
 #include "w_levels.h"
 #include "w_wad.h"
+#include "w_zip.h"
 #include "z_auto.h"
 
 // D_FIXME:
@@ -673,7 +677,7 @@ static char *D_IWADPathForGame(const char *game)
       {
          if(!strcasecmp(cur->name, game)) // should be an exact match
          {
-            for(int i = 0; i < 3; ++i) // try each path in order
+            for(int i = 0; i < 3; i++) // try each path in order
             {
                if(!cur->iwadpaths[i]) // no more valid paths to try
                   break;
@@ -713,7 +717,7 @@ static char *D_IWADPathForIWADParam(const char *iwad)
       {
          if(!strcasecmp(cur->name, tmpname)) // should be an exact match
          {
-            for(int i = 0; i < 3; ++i) // try each path in order
+            for(int i = 0; i < 3; i++) // try each path in order
             {
                if(!cur->iwadpaths[i]) // no more valid paths to try
                   break;
@@ -761,7 +765,7 @@ static int lumpnamecmp(const char *lumpname, const char *str)
 }
 
 //
-// D_CheckIWAD
+// D_checkIWAD_WAD
 //
 // Verify a file is indeed tagged as an IWAD
 // Scan its lumps for levelnames and return gamemode as indicated
@@ -779,25 +783,13 @@ static int lumpnamecmp(const char *lumpname, const char *str)
 //
 // joel 10/17/98 Final DOOM fix: added gmission
 //
-void D_CheckIWAD(const char *iwadname, iwadcheck_t &version)
+static void D_checkIWAD_WAD(FILE *fp, const char *iwadname, iwadcheck_t &version)
 {
-   FILE *fp;
    int ud = 0, rg = 0, sw = 0, cm = 0, sc = 0, tnt = 0, plut = 0, hacx = 0, bfg = 0;
    int raven = 0, sosr = 0;
    filelump_t lump;
    wadinfo_t header;
    const char *n = lump.name;
-
-   if(!(fp = fopen(iwadname, "rb")))
-   {
-      if(version.flags & IWADF_FATALNOTOPEN)
-      {
-         I_Error("Can't open IWAD: %s (%s)\n", iwadname,
-                 errno ? strerror(errno) : "unknown error");
-      }
-      version.error = true;
-      return;
-   }
 
    // read IWAD header
    if(fread(&header, sizeof header, 1, fp) < 1 ||
@@ -942,6 +934,125 @@ void D_CheckIWAD(const char *iwadname, iwadcheck_t &version)
          version.gamemode = shareware;
       else
          version.gamemode = indetermined;
+   }
+}
+
+// Structure storing information on ZIP-format supported missions
+struct zipmission_t
+{
+   const char    *name;
+   GameMode_t     mode;
+   GameMission_t  mission;
+};
+
+// Table of ZIP-format supported mission data
+static zipmission_t zipMissions[] =
+{
+   { "doom retail",        retail,     doom      },
+   { "doom registered",    registered, doom      },
+   { "doom shareware",     shareware,  doom      },
+   { "doom2 commercial",   commercial, doom2     },
+   { "doom2 tnt",          commercial, pack_tnt  },
+   { "doom2 plutonia",     commercial, pack_plut },
+   { "doom2 hacx",         commercial, pack_hacx },
+   { "doom2 bfg",          commercial, pack_disk },
+   { "doom2 psx",          commercial, pack_psx  },
+   { "heretic sosr",       hereticreg, hticsosr  },
+   { "heretic registered", hereticreg, heretic   },
+   { "heretic shareware",  hereticsw,  heretic   },
+   { "heretic beta",       hereticsw,  hticbeta  },
+};
+
+//
+// D_checkIWAD_ZIP
+//
+// Not technically an "IWAD", but we allow use of PKE archives as the main
+// game archive, with different semantics - the PKE must explicitly designate
+// what game mode/mission it implements within the archive. There is no
+// heuristic-based scan over the broad contents as there is for WAD files.
+//
+static void D_checkIWAD_ZIP(FILE *fp, const char *iwadname, iwadcheck_t &version)
+{
+   std::unique_ptr<ZipFile> zip(new ZipFile());
+
+   if(!zip->readFromFile(fp))
+   {
+      if(version.flags & IWADF_FATALNOTWAD)
+         I_Error("Could not read ZIP format archive: %s\n", iwadname);
+      version.error = true;
+      return;
+   }
+
+   int infolump;
+   if((infolump = zip->findLump("gameversion.txt")) >= 0)
+   {
+      ZAutoBuffer buf;
+      zip->getLump(infolump).read(buf, true);
+      auto verName = buf.getAs<const char *>();
+      if(verName)
+      {
+         for(size_t i = 0; i < earrlen(zipMissions); i++)
+         {
+            zipmission_t &zm = zipMissions[i];
+            if(!strcasecmp(zm.name, verName))
+            {
+               version.gamemode    = zm.mode;
+               version.gamemission = zm.mission;
+
+               // keep special case fields consistent
+               if(version.gamemode == commercial)
+                  version.hassecrets = true;
+               if(version.gamemission == pack_disk)
+                  version.bfgedition = true;
+               
+               return; // successful!
+            }
+         }
+      }
+   }
+
+   // Unknown gamemode or mission
+   version.gamemission = doom;
+   version.gamemode    = indetermined;
+}
+
+//
+// D_CheckIWAD
+//
+// Check the format and contents of a candidate IWAD file and return the
+// detected game mode and mission properties in the iwadcheck_t structure.
+// Dispatches to subroutines above for supported archive formats.
+//
+void D_CheckIWAD(const char *iwadname, iwadcheck_t &version)
+{
+   FILE *fp;
+
+   if(!(fp = fopen(iwadname, "rb")))
+   {
+      if(version.flags & IWADF_FATALNOTOPEN)
+      {
+         I_Error("Can't open IWAD: %s (%s)\n", iwadname,
+                 errno ? strerror(errno) : "unknown error");
+      }
+      version.error = true;
+      return;
+   }
+
+   WResourceFmt fmt = W_DetermineFileFormat(fp, 0);
+   switch(fmt)
+   {
+   case W_FORMAT_WAD: // WAD file
+      D_checkIWAD_WAD(fp, iwadname, version);
+      break;
+   case W_FORMAT_ZIP: // ZIP file
+      D_checkIWAD_ZIP(fp, iwadname, version);
+      break;
+   default:           // Unknown
+      if(version.flags & IWADF_FATALNOTWAD)
+         I_Error("Unknown archive format: %s\n", iwadname);
+      version.error = true;
+      fclose(fp);
+      break;
    }
 }
 
@@ -1148,8 +1259,10 @@ static void D_findIWADFile(qstring &iwad)
       switch(j)
       {
       case 0:
+         iwad = ".";
+         break;
       case 1:
-         iwad = (j ? D_DoomExeDir() : ".");
+         iwad = D_DoomExeDir();
          break;
       case 2:
          // haleyjd: try basegamepath too when -game was used
@@ -1217,7 +1330,6 @@ static void D_findIWADFile(qstring &iwad)
 
       if((p = getenv(envvars[i])))
       {
-         //iwad = ecalloc(char *, 1, sizeof(p) + 1024);
          iwad = p;
          iwad.normalizeSlashes();
          if(WadFileStatus(iwad, &isdir))

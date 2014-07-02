@@ -167,14 +167,16 @@ static dehflagset_t gmi_flagset =
 // missionInfo flags
 static dehflags_t mission_flags[] =
 {
-   { "DEMOIFDEMO4",   MI_DEMOIFDEMO4   },
-   { "CONBACKTITLE",  MI_CONBACKTITLE  },
-   { "WOLFNAMEHACKS", MI_WOLFNAMEHACKS },
-   { "HASBETRAY",     MI_HASBETRAY     },
-   { "DOOM2MISSIONS", MI_DOOM2MISSIONS },
-   { "NOTELEPORTZ",   MI_NOTELEPORTZ   },
-   { "NOGDHIGH",      MI_NOGDHIGH      },
-   { NULL,            0                }
+   { "DEMOIFDEMO4",    MI_DEMOIFDEMO4    },
+   { "CONBACKTITLE",   MI_CONBACKTITLE   },
+   { "WOLFNAMEHACKS",  MI_WOLFNAMEHACKS  },
+   { "HASBETRAY",      MI_HASBETRAY      },
+   { "DOOM2MISSIONS",  MI_DOOM2MISSIONS  },
+   { "NOTELEPORTZ",    MI_NOTELEPORTZ    },
+   { "NOGDHIGH",       MI_NOGDHIGH       },
+   { "ALLOWEXITTAG",   MI_ALLOWEXITTAG   },
+   { "ALLOWSECRETTAG", MI_ALLOWSECRETTAG },
+   { NULL,             0                 }
 };
 
 static dehflagset_t mission_flagset =
@@ -333,15 +335,15 @@ static void E_processGamePropsBlock(cfg_t *props)
    if(IS_SET(ITEM_GPROP_MENUOFFSET))
       GameModeInfo->menuOffset = cfg_getint(props, ITEM_GPROP_MENUOFFSET);
 
-   if(IS_SET(ITEM_GPROP_MENUPTR1))
+   if(IS_SET(ITEM_GPROP_MENUPTR1) && GameModeInfo->menuCursor->numpatches >= 1)
    {
-      E_setDynamicString(GameModeInfo->menuCursor->patch1, GI_STR_MENUPTR1,
+      E_setDynamicString(GameModeInfo->menuCursor->patches[0], GI_STR_MENUPTR1,
                          cfg_getstr(props, ITEM_GPROP_MENUPTR1));
    }
 
-   if(IS_SET(ITEM_GPROP_MENUPTR2))
+   if(IS_SET(ITEM_GPROP_MENUPTR2) && GameModeInfo->menuCursor->numpatches >= 2)
    {
-      E_setDynamicString(GameModeInfo->menuCursor->patch2, GI_STR_MENUPTR2,
+      E_setDynamicString(GameModeInfo->menuCursor->patches[1], GI_STR_MENUPTR2,
                          cfg_getstr(props, ITEM_GPROP_MENUPTR2));
    }
 

@@ -799,7 +799,7 @@ void R_StoreWallRange(const int start, const int stop)
 
       if(segclip.maskedtex)
       {
-         register int i;
+         int i;
          float *mtc;
          int xlen;
          xlen = segclip.x2 - segclip.x1 + 1;

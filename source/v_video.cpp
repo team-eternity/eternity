@@ -190,9 +190,9 @@ static const crdef_t crdefs[] =
 };
 
 // killough 5/2/98: tiny engine driven by table above
-void V_InitColorTranslation(void)
+void V_InitColorTranslation()
 {
-   register const crdef_t *p;
+   const crdef_t *p;
    for(p = crdefs; p->name; p++)
       *p->map1 = *p->map2 = (byte *)(wGlobalDir.cacheLumpName(p->name, PU_STATIC));
 
@@ -351,20 +351,19 @@ void V_CopyRect(int srcx, int srcy, VBuffer *src, int width,
       V_scaleRect(&srcrect, src);
       V_scaleRect(&dstrect, dest);
 
-      srcp = src->ylut[srcrect.sy]  + src->xlut[srcrect.sx];
-      dstp = dest->ylut[dstrect.sy] + dest->xlut[dstrect.sx];
+      srcp = VBADDRESS(src,  srcrect.sx, srcrect.sy);
+      dstp = VBADDRESS(dest, dstrect.sx, dstrect.sy);
 
-	  // use the smaller of the two scaled rect widths / heights
-	  usew = (srcrect.sw < dstrect.sw ? srcrect.sw : dstrect.sw);
-	  useh = (srcrect.sh < dstrect.sh ? srcrect.sh : dstrect.sh);
-
+      // use the smaller of the two scaled rect widths / heights
+      usew = (srcrect.sw < dstrect.sw ? srcrect.sw : dstrect.sw);
+      useh = (srcrect.sh < dstrect.sh ? srcrect.sh : dstrect.sh);
    }
    else
    {
-      srcp = src->ylut[srcrect.cy1]  + src->xlut[srcrect.cx1];
-      dstp = dest->ylut[dstrect.cy1] + dest->xlut[dstrect.cx1];
+      srcp = VBADDRESS(src,  srcrect.cx1, srcrect.cy1);
+      dstp = VBADDRESS(dest, dstrect.cx1, dstrect.cy1);
 
-	  // use the smaller of the two clipped rect widths / heights
+      // use the smaller of the two clipped rect widths / heights
       usew = (srcrect.cw < dstrect.cw ? srcrect.cw : dstrect.cw);
       useh = (srcrect.ch < srcrect.ch ? srcrect.ch : dstrect.ch);
    }

@@ -227,20 +227,20 @@ void GlowThinker::Think()
    {
    case -1:
       // light dims
-      this->sector->lightlevel -= GLOWSPEED;
+      this->sector->lightlevel -= this->speed;
       if(this->sector->lightlevel <= this->minlight)
       {
-         this->sector->lightlevel += GLOWSPEED;
+         this->sector->lightlevel += this->speed;
          this->direction = 1;
       }
       break;
       
    case 1:
       // light brightens
-      this->sector->lightlevel += GLOWSPEED;
+      this->sector->lightlevel += this->speed;
       if(this->sector->lightlevel >= this->maxlight)
       {
-         this->sector->lightlevel -= GLOWSPEED;
+         this->sector->lightlevel -= this->speed;
          this->direction = -1;
       }
       break;
@@ -256,7 +256,7 @@ void GlowThinker::serialize(SaveArchive &arc)
 {
    Super::serialize(arc);
 
-   arc << minlight << maxlight << direction;
+   arc << minlight << maxlight << direction << speed;
 }
 
 
@@ -319,6 +319,135 @@ void LightFadeThinker::serialize(SaveArchive &arc)
        << glowspeed << type;
 }
 
+IMPLEMENT_THINKER_TYPE(PhasedLightThinker)
+
+//
+// phaseTable for PhasedLightThinker
+//
+// Wrapped around modulus 64; defines a delta to the thinker's base light level
+//
+static int phaseTable[64] =
+{
+   128, 112,  96,  80,  64,  48,  32,  32,
+    16,  16,  16,   0,   0,   0,   0,   0,
+     0,   0,   0,   0,   0,   0,   0,   0,
+     0,   0,   0,   0,   0,   0,   0,   0,
+     0,   0,   0,   0,   0,   0,   0,   0,
+     0,   0,   0,   0,   0,   0,   0,   0,
+     0,   0,   0,   0,   0,  16,  16,  16,
+    32,  32,  48,  64,  80,  96, 112, 128
+};
+
+//
+// PhasedLightThinker::Think
+//
+// Think for Hexen-style phased light effect.
+//
+void PhasedLightThinker::Think()
+{
+   index = (index + 1) & 63;
+   sector->lightlevel = base + phaseTable[index];
+}
+
+//
+// PhasedLightThinker::serialize
+//
+// Save or restore a Hexen-style phased light effect.
+//
+void PhasedLightThinker::serialize(SaveArchive &arc)
+{
+   Super::serialize(arc);
+
+   arc << base << index;
+}
+
+//
+// PhasedLightThinker::Spawn
+//
+// Static function. Creates a new PhasedLightThinker attached to the provided
+// sector with the given base level and initial phase index. If -1 is passed
+// in index, then the initial phase is set by the sector's light level mod 64.
+//
+void PhasedLightThinker::Spawn(sector_t *sector, int base, int index)
+{
+   auto phase = new PhasedLightThinker;
+   phase->addThinker();
+
+   phase->sector = sector;
+   phase->base   = base & 255;
+   phase->index  = ((index == -1) ? sector->lightlevel : index) & 63;
+
+   sector->lightlevel = phase->base + phaseTable[phase->index];
+}
+
+//
+// PhasedLightThinker::SpawnSequence
+//
+// Called on sectors with SECF_PHASEDLIGHT; walks into neighboring sectors with
+// SECF_LIGHTSEQUENCE and SECF_LIGHTSEQALT, in alternating order, to create
+// multiple phased light thinkers in a stepped sequence.
+//
+void PhasedLightThinker::SpawnSequence(sector_t *sector, int step)
+{
+   sector_t *sec, *nextSec, *tempSec;
+   unsigned int flag = SECF_LIGHTSEQUENCE; // look for light sequence first
+   int count = 1;
+
+   // find the sectors and mark them all with SECF_PHASEDLIGHT
+   // (the initial sector is already marked with that flag via its special)
+   sec = sector;
+   do
+   {
+      nextSec = nullptr;
+      sec->intflags |= SIF_PHASESCAN; // make sure the search doesn't back up
+      for(int i = 0; i < sec->linecount; i++)
+      {
+         if(!(tempSec = getNextSector(sec->lines[i], sec)))
+            continue;
+         if(tempSec->intflags & SIF_PHASESCAN) // already processed
+            continue;
+         if((tempSec->flags & (SECF_LIGHTSEQUENCE|SECF_LIGHTSEQALT)) == flag)
+         {
+            if(flag == SECF_LIGHTSEQUENCE)
+               flag = SECF_LIGHTSEQALT;
+            else
+               flag = SECF_LIGHTSEQUENCE;
+            nextSec = tempSec;
+            ++count;
+         }
+      }
+      sec = nextSec;
+   }
+   while(sec);
+
+   sec = sector;
+   count *= step;
+
+   fixed_t index = 0;
+   fixed_t indexDelta = 64 * FRACUNIT / count;
+   int     base = sec->lightlevel;
+   
+   // spawn thinkers on all the marked sectors
+   do
+   {
+      nextSec = nullptr;
+      if(sec->lightlevel)
+         base = sec->lightlevel;
+      PhasedLightThinker::Spawn(sec, base, index >> FRACBITS);
+      sec->intflags &= ~SIF_PHASESCAN; // clear the marker flag
+      index += indexDelta;
+      for(int i = 0; i < sec->linecount; i++)
+      {
+         if(!(tempSec = getNextSector(sec->lines[i], sec)))
+            continue;
+         if(tempSec->intflags & SIF_PHASESCAN)
+            nextSec = tempSec;
+      }
+      sec = nextSec;
+   }
+   while(sec);
+}
+
 //////////////////////////////////////////////////////////
 //
 // Sector lighting type spawners
@@ -342,7 +471,7 @@ void P_SpawnFireFlicker(sector_t *sector)
    
    // Note that we are resetting sector attributes.
    // Nothing special about it during gameplay.
-   sector->special &= ~31; //jff 3/14/98 clear non-generalized sector type
+   sector->special &= ~LIGHT_MASK; //jff 3/14/98 clear non-generalized sector type
    
    flick = new FireFlickerThinker;
    flick->addThinker();
@@ -366,7 +495,7 @@ void P_SpawnLightFlash(sector_t *sector)
    LightFlashThinker *flash;
    
    // nothing special about it during gameplay
-   sector->special &= ~31; //jff 3/14/98 clear non-generalized sector type
+   sector->special &= ~LIGHT_MASK; //jff 3/14/98 clear non-generalized sector type
    
    flash = new LightFlashThinker;
    flash->addThinker();
@@ -407,7 +536,7 @@ void P_SpawnStrobeFlash(sector_t *sector, int fastOrSlow, int inSync)
       flash->minlight = 0;
    
    // nothing special about it during gameplay
-   sector->special &= ~31; //jff 3/14/98 clear non-generalized sector type
+   sector->special &= ~LIGHT_MASK; //jff 3/14/98 clear non-generalized sector type
    
    if(!inSync)
       flash->count = (P_Random(pr_lights)&7)+1;
@@ -425,18 +554,44 @@ void P_SpawnStrobeFlash(sector_t *sector, int fastOrSlow, int inSync)
 //
 void P_SpawnGlowingLight(sector_t *sector)
 {
-   GlowThinker *g;
-   
-   g = new GlowThinker;
-   
+   auto g = new GlowThinker;
    g->addThinker();
    
-   g->sector = sector;
-   g->minlight = P_FindMinSurroundingLight(sector,sector->lightlevel);
-   g->maxlight = sector->lightlevel;
+   g->sector    = sector;
+   g->minlight  = P_FindMinSurroundingLight(sector, sector->lightlevel);
+   g->maxlight  = sector->lightlevel;
    g->direction = -1;
+   g->speed     = GLOWSPEED;
    
-   sector->special &= ~31; //jff 3/14/98 clear non-generalized sector type
+   sector->special &= ~LIGHT_MASK; //jff 3/14/98 clear non-generalized sector type
+}
+
+//
+// P_SpawnPSXGlowingLight
+//
+// Spawn a GlowThinker setup for PSX sector type 200 or 201.
+//
+void P_SpawnPSXGlowingLight(sector_t *sector, psxglow_e glowtype)
+{
+   auto g = new GlowThinker;
+   g->addThinker();
+
+   g->sector = sector;
+   g->speed  = GLOWSPEEDSLOW;
+
+   switch(glowtype)
+   {
+   case psxglow_10:
+      g->minlight  = 10;
+      g->maxlight  = sector->lightlevel;
+      g->direction = -1;
+      break;
+   case psxglow_255:
+      g->minlight  = sector->lightlevel;
+      g->maxlight  = 255;
+      g->direction = 1;
+      break;
+   }
 }
 
 //////////////////////////////////////////////////////////

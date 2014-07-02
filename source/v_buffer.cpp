@@ -36,25 +36,6 @@
 #include "r_state.h"
 
 //
-// VB_MakeXYLUT
-//
-static void VB_MakeXYLUT(VBuffer *vb)
-{
-   int i;
-
-   if(!vb->ylut)
-      vb->ylut = ecalloc(byte **, sizeof(byte *), vb->height);
-   if(!vb->xlut)
-      vb->xlut = ecalloc(int *, sizeof(int), vb->width);
-
-   for(i = 0; i < vb->height; i++)
-      vb->ylut[i] = vb->data + vb->pitch * i;
-
-   for(i = 0; i < vb->width; i++)
-      vb->xlut[i] = i * vb->pixelsize;
-}
-
-//
 // VB_AllocateData
 //
 static void VB_AllocateData(VBuffer *buffer)
@@ -64,8 +45,6 @@ static void VB_AllocateData(VBuffer *buffer)
 
    buffer->data = ecalloc(byte *, buffer->width*buffer->height, buffer->pixelsize);
    buffer->owndata = true;
-
-   VB_MakeXYLUT(buffer);
 }
 
 //
@@ -78,8 +57,6 @@ static void VB_SetData(VBuffer *buffer, byte *pixels)
 
    buffer->data = pixels;
    buffer->owndata = false;
-
-   VB_MakeXYLUT(buffer);
 }
 
 //
@@ -283,18 +260,6 @@ void V_FreeVBuffer(VBuffer *buffer)
       efree(buffer->data);
       buffer->data = NULL;
       buffer->owndata = false;
-   }
-
-   if(buffer->ylut)
-   {
-      efree(buffer->ylut);
-      buffer->ylut = NULL;
-   }
-
-   if(buffer->xlut)
-   {
-      efree(buffer->xlut);
-      buffer->xlut = NULL;
    }
 
    if(buffer->needfree)

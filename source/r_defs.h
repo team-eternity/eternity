@@ -95,11 +95,17 @@ typedef struct attachedsurface_s
 // haleyjd 12/28/08: sector flags
 enum
 {
+   // BOOM generalized sector properties
    SECF_SECRET        = 0x00000001, // bit 7 of generalized special
    SECF_FRICTION      = 0x00000002, // bit 8 of generalized special
    SECF_PUSH          = 0x00000004, // bit 9 of generalized special
    SECF_KILLSOUND     = 0x00000008, // bit A of generalized special
    SECF_KILLMOVESOUND = 0x00000010, // bit B of generalized special
+
+   // Hexen phased lighting
+   SECF_PHASEDLIGHT   = 0x00000020, // spawned with sequence start special
+   SECF_LIGHTSEQUENCE = 0x00000040, // spawned with sequence special
+   SECF_LIGHTSEQALT   = 0x00000080  // spawned with sequence alt special
 };
 
 // haleyjd 12/31/08: sector damage flags
@@ -117,6 +123,15 @@ enum
 {
    SIF_SKY       = 0x00000001, // sector is sky
    SIF_WASSECRET = 0x00000002, // sector was previously secret
+   SIF_PHASESCAN = 0x00000004  // being scanned for phased light
+};
+
+// haleyjd 06/22/14: Heretic push types
+enum
+{
+   SECTOR_HTIC_NONE,    // nothing
+   SECTOR_HTIC_CURRENT, // created by types 20-39
+   SECTOR_HTIC_WIND     // created by types 40-51
 };
 
 //

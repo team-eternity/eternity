@@ -61,6 +61,8 @@
 #include "e_lib.h"
 #include "e_hash.h"
 #include "e_sound.h"
+#include "e_things.h"
+#include "ev_specials.h"
 #include "f_finale.h"
 #include "g_game.h"
 #include "m_collection.h"
@@ -1169,13 +1171,15 @@ static void P_InfoDefaultSky()
 //
 static void P_InfoDefaultBossSpecials()
 {
-   bspecrule_t *rule = GameModeInfo->bossRules;
-
+   // clear out the list of levelaction_t structures (already freed if existed
+   // for previous level)
+   LevelInfo.actions = nullptr;
+   
    // most maps have no specials, so set to zero here
    LevelInfo.bossSpecs = 0;
 
    // look for a level-specific default
-   for(; rule->episode != -1; rule++)
+   for(bspecrule_t *rule = GameModeInfo->bossRules; rule->episode != -1; rule++)
    {
       if(gameepisode == rule->episode && gamemap == rule->map)
       {
@@ -1408,6 +1412,11 @@ static void P_ClearLevelVars()
       LevelInfo.nextSecret = nextsecret;
    }
 
+   // haleyjd 06/20/14: set default allow normal/secret exit line tags
+   unsigned int mflags = GameModeInfo->missionInfo->flags;
+   LevelInfo.allowExitTags   = ((mflags & MI_ALLOWEXITTAG  ) == MI_ALLOWEXITTAG  );
+   LevelInfo.allowSecretTags = ((mflags & MI_ALLOWSECRETTAG) == MI_ALLOWSECRETTAG);
+
    // haleyjd 08/31/12: Master Levels mode hacks
    if(inmanageddir == MD_MASTERLEVELS && GameModeInfo->type == Game_DOOM)
       LevelInfo.interPic = "INTRMLEV";
@@ -1467,6 +1476,7 @@ enum
    IVT_BOOLEAN,     // data is boolean true or false
    IVT_FLAGS,       // data is a BEX-style flags string
    IVT_ENVIRONMENT, // data is a pair of sound environment ID numbers
+   IVT_LEVELACTION, // data is a level action string
    IVT_END
 };
 
@@ -1477,6 +1487,7 @@ struct levelvar_t
    const char *name;     // key of the MetaTable value
    void       *variable; // pointer to destination LevelInfo field
    void       *extra;    // pointer to any "extra" info needed for this parsing
+   bool        multi;    // if true, allows multiple definitions
 };
 
 //
@@ -1486,26 +1497,31 @@ struct levelvar_t
 // structure.
 //
 #define LI_STRING(name, field) \
-   { IVT_STRING, name, (void *)(&(LevelInfo . field)), NULL }
+   { IVT_STRING, name, (void *)(&(LevelInfo . field)), nullptr, false }
 
 #define LI_STRNUM(name, field, extra) \
-   { IVT_STRNUM, name, (void *)(&(LevelInfo . field)), &(extra) }
+   { IVT_STRNUM, name, (void *)(&(LevelInfo . field)), &(extra), false }
 
 #define LI_INTEGR(name, field) \
-   { IVT_INT, name, &(LevelInfo . field), NULL }
+   { IVT_INT, name, &(LevelInfo . field), nullptr, false }
 
 #define LI_BOOLNF(name, field) \
-   { IVT_BOOLEAN, name, &(LevelInfo . field), NULL }
+   { IVT_BOOLEAN, name, &(LevelInfo . field), nullptr, false }
 
 #define LI_FLAGSF(name, field, extra) \
-   { IVT_FLAGS, name, &(LevelInfo . field), &(extra) }
+   { IVT_FLAGS, name, &(LevelInfo . field), &(extra), false }
 
 #define LI_ENVIRO(name, field) \
-   { IVT_ENVIRONMENT, name, &(LevelInfo . field), NULL }
+   { IVT_ENVIRONMENT, name, &(LevelInfo . field), nullptr, false }
+
+#define LI_ACTION(name, field) \
+   { IVT_LEVELACTION, name, &(LevelInfo . field), nullptr, true }
 
 static levelvar_t levelvars[]=
 {
    LI_STRING("acsscript",          acsScriptLump),
+   LI_BOOLNF("allowexittags",      allowExitTags),
+   LI_BOOLNF("allowsecrettags",    allowSecretTags),
    LI_STRING("altskyname",         altSkyName),
    LI_FLAGSF("boss-specials",      bossSpecs,         boss_flagset),
    LI_STRING("colormap",           colorMap),
@@ -1529,6 +1545,7 @@ static levelvar_t levelvars[]=
    LI_STRING("intertext-secret",   interTextSLump),
    LI_BOOLNF("killfinale",         killFinale),
    LI_BOOLNF("killstats",          killStats),
+   LI_ACTION("levelaction",        actions),
    LI_STRING("levelname",          levelName),
    LI_STRING("levelpic",           levelPic),
    LI_STRING("levelpicnext",       nextLevelPic),
@@ -1679,6 +1696,118 @@ static void P_parseLevelEnvironment(levelvar_t *var, const qstring &value)
    *(int *)var->variable = (id1.toInt() << 8) | id2.toInt();
 }
 
+enum
+{
+   LVACT_STATE_EXPECTMOBJ,
+   LVACT_STATE_INMOBJ,
+   LVACT_STATE_EXPECTSPECIAL,
+   LVACT_STATE_INSPECIAL,
+   LVACT_STATE_EXPECTARGS,
+   LVACT_STATE_INARG,
+   LVACT_STATE_END
+};
+
+//
+// P_parseLevelAction
+//
+// Parse a level action value.
+//
+static void P_parseLevelAction(levelvar_t *var, const qstring &value)
+{
+   int state = LVACT_STATE_EXPECTMOBJ;
+   const char *rover = value.constPtr();
+   qstring mobjName, lineSpec, argStr[5];
+   qstring *curArg;
+   int argcount = 0;
+   int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
+   int mobjType;
+   ev_binding_t *binding;
+
+   // parse with a small state machine
+   while(state != LVACT_STATE_END)
+   {
+      char c = *rover++;
+
+      if(!c)
+         break;
+
+      switch(state)
+      {
+      case LVACT_STATE_EXPECTMOBJ:
+         if(c == ' ' || c == '\t') // skip whitespace
+            continue;
+         else                      // start of mobj type name
+         {
+            mobjName.Putc(c);
+            state = LVACT_STATE_INMOBJ;
+         }
+         break;
+      case LVACT_STATE_INMOBJ:
+         if(c == ' ' || c == '\t') // end of mobj name
+            state = LVACT_STATE_EXPECTSPECIAL;
+         else
+            mobjName += c;
+         break;
+      case LVACT_STATE_EXPECTSPECIAL:
+         if(c == ' ' || c == '\t') // skip whitespace
+            continue;
+         else                      // start of special name
+         {
+            lineSpec.Putc(c);
+            state = LVACT_STATE_INSPECIAL;
+         }
+         break;
+      case LVACT_STATE_INSPECIAL:
+         if(c == ' ' || c == '\t') // end of special
+            state = LVACT_STATE_EXPECTARGS;
+         else
+            lineSpec += c;
+         break;
+      case LVACT_STATE_EXPECTARGS:
+         if(argcount == NUMLINEARGS) // only up to five arguments allowed
+            state = LVACT_STATE_END;
+         else if(c == ' ' || c == '\t') // skip whitespace
+            continue;
+         else
+         {
+            curArg = &argStr[argcount];
+            curArg->Putc(c);
+            state = LVACT_STATE_INARG;
+         }
+         break;
+      case LVACT_STATE_INARG:
+         if(c == ' ' || c == '\t') // end of argument
+         {
+            ++argcount;
+            state = LVACT_STATE_EXPECTARGS;
+         }
+         else
+            *curArg += c;
+         break;
+      }
+   }
+
+   // lookup thing and special; both must be valid
+   if((mobjType = E_ThingNumForName(mobjName.constPtr())) == -1)
+      return;
+   if(!(binding = EV_HexenBindingForName(lineSpec.constPtr())))
+      return;
+
+   // translate arguments
+   for(int i = 0; i < NUMLINEARGS; i++)
+      args[i] = argStr[i].toInt();
+
+   // create a new levelaction structure
+   auto newAction = estructalloctag(levelaction_t, 1, PU_LEVEL);
+   newAction->mobjtype = mobjType;
+   newAction->special  = binding->actionNumber;
+   memcpy(newAction->args, args, sizeof(args));
+
+   // put it onto the linked list in LevelInfo
+   newAction->next = LevelInfo.actions;
+   LevelInfo.actions = newAction;
+}
+
 typedef void (*varparserfn_t)(levelvar_t *, const qstring &);
 static varparserfn_t infoVarParsers[IVT_END] =
 {
@@ -1687,7 +1816,8 @@ static varparserfn_t infoVarParsers[IVT_END] =
    P_parseLevelInt,
    P_parseLevelBool,
    P_parseLevelFlags,
-   P_parseLevelEnvironment
+   P_parseLevelEnvironment,
+   P_parseLevelAction
 };
 
 //
@@ -1701,10 +1831,14 @@ static void P_processEMapInfo(MetaTable *info)
    for(size_t i = 0; i < earrlen(levelvars); i++)
    {
       levelvar_t *levelvar  = &levelvars[i];
-      MetaString *str       = NULL;
+      MetaString *str       = nullptr;
 
-      if((str = info->getObjectKeyAndTypeEx<MetaString>(levelvar->name)))
+      while((str = info->getNextKeyAndTypeEx<MetaString>(str, levelvar->name)))
+      {
          infoVarParsers[levelvar->type](levelvar, qstring(str->getValue()));
+         if(!levelvar->multi)
+            break;
+      }
    }
 }
 
