@@ -1214,7 +1214,7 @@ static bool AM_clipMline(mline_t *ml, fline_t *fl)
 #undef DOOUTCODE
 
 // haleyjd 06/12/09: this macro is now shared by Bresenham and Wu
-#define PUTDOT(xx,yy,cc) *(vbscreen.ylut[(yy)] + vbscreen.xlut[(xx)]) = (cc)
+#define PUTDOT(xx,yy,cc) *(VBADDRESS(&vbscreen, xx, yy)) = (cc)
 
 //
 // AM_drawFline()
@@ -1300,7 +1300,7 @@ static void AM_drawFline(fline_t *fl, int color )
 //
 static void AM_putWuDot(int x, int y, int color, int weight)
 {
-   byte *dest = vbscreen.ylut[y] + vbscreen.xlut[x];
+   byte *dest = VBADDRESS(&vbscreen, x, y);
    unsigned int *fg2rgb = Col2RGB8[weight];
    unsigned int *bg2rgb = Col2RGB8[64 - weight];
    unsigned int fg, bg;

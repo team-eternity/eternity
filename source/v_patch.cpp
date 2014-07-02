@@ -63,7 +63,7 @@ static void V_DrawPatchColumn()
       I_Error("V_DrawPatchColumn: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
-   dest = patchcol.buffer->ylut[patchcol.y1] + patchcol.buffer->xlut[patchcol.x];
+   dest = VBADDRESS(patchcol.buffer, patchcol.x, patchcol.y1);
 
    // Determine scaling, which is the only mapping to be done.
    fracstep = patchcol.step;
@@ -114,7 +114,7 @@ static void V_DrawPatchColumnTR()
       I_Error("V_DrawPatchColumnTR: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
-   dest = patchcol.buffer->ylut[patchcol.y1] + patchcol.buffer->xlut[patchcol.x];
+   dest = VBADDRESS(patchcol.buffer, patchcol.x, patchcol.y1);
 
    // Determine scaling, which is the only mapping to be done.
    fracstep = patchcol.step;
@@ -165,7 +165,7 @@ static void V_DrawPatchColumnTRLit()
       I_Error("V_DrawPatchColumnTR: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
-   dest = patchcol.buffer->ylut[patchcol.y1] + patchcol.buffer->xlut[patchcol.x];
+   dest = VBADDRESS(patchcol.buffer, patchcol.x, patchcol.y1);
 
    // Determine scaling, which is the only mapping to be done.
    fracstep = patchcol.step;
@@ -225,7 +225,7 @@ void V_DrawPatchColumnTL(void)
       I_Error("V_DrawPatchColumnTL: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
-   dest = patchcol.buffer->ylut[patchcol.y1] + patchcol.buffer->xlut[patchcol.x];
+   dest = VBADDRESS(patchcol.buffer, patchcol.x, patchcol.y1);
 
    // Determine scaling, which is the only mapping to be done.
    fracstep = patchcol.step;
@@ -285,7 +285,7 @@ void V_DrawPatchColumnTRTL()
       I_Error("V_DrawPatchColumnTRTL: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
-   dest = patchcol.buffer->ylut[patchcol.y1] + patchcol.buffer->xlut[patchcol.x];
+   dest = VBADDRESS(patchcol.buffer, patchcol.x, patchcol.y1);
 
    // Determine scaling, which is the only mapping to be done.
    fracstep = patchcol.step; 
@@ -350,7 +350,7 @@ void V_DrawPatchColumnAdd()
       I_Error("V_DrawPatchColumnAdd: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
-   dest = patchcol.buffer->ylut[patchcol.y1] + patchcol.buffer->xlut[patchcol.x];
+   dest = VBADDRESS(patchcol.buffer, patchcol.x, patchcol.y1);
 
    // Determine scaling, which is the only mapping to be done.
    fracstep = patchcol.step; 
@@ -415,7 +415,7 @@ void V_DrawPatchColumnAddTR()
       I_Error("V_DrawPatchColumnAddTR: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
-   dest = patchcol.buffer->ylut[patchcol.y1] + patchcol.buffer->xlut[patchcol.x];
+   dest = VBADDRESS(patchcol.buffer, patchcol.x, patchcol.y1);
 
    // Determine scaling, which is the only mapping to be done.
    fracstep = patchcol.step; 

@@ -507,7 +507,7 @@ void P_LoadPSXSectors(int lumpnum)
       ss->tag                = GetBinaryWord(&data);
       data += 2;             // skip padding/unknown field for now
 
-      // scale up light levels
+      // scale up light levels (experimental)
       ss->lightlevel = (ss->lightlevel * 5 / 9) + 114;
 
       P_InitSector(ss);

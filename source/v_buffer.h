@@ -32,6 +32,9 @@
 
 #include "m_fixed.h"
 
+#define VBADDRESS(vb, x, y) \
+   ((vb)->data + (vb)->pitch * (y) + (vb)->pixelsize * (x))
+
 struct VBuffer
 {
    int  width;
@@ -56,9 +59,6 @@ struct VBuffer
    int  *y2lookup;
    fixed_t ixscale;
    fixed_t iyscale;
-
-   byte **ylut;
-   int  *xlut;
 
    // Only change this if you want memory leaks and/or crashes :P
    bool needfree;
