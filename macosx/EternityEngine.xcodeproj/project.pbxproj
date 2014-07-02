@@ -287,6 +287,7 @@
 		4F5F399D182D9C160027813A /* libFLAC.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF691753482C00E70FEC /* libFLAC.a */; };
 		4F5F399E182D9C1A0027813A /* libmikmod.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF6A1753482C00E70FEC /* libmikmod.a */; };
 		4F5F399F182D9C1C0027813A /* libsmpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF6B1753482C00E70FEC /* libsmpeg.a */; };
+		4F68CE8D1963D88100E7B8BE /* ev_sectors.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F68CE8B1963D88100E7B8BE /* ev_sectors.cpp */; };
 		4F873EC9193467DB0003BEFF /* wp_weapons.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F873EC7193467DB0003BEFF /* wp_weapons.cpp */; };
 /* End PBXBuildFile section */
 
@@ -336,6 +337,8 @@
 		4F5F386B182D97A10027813A /* eternity */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = eternity; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F5F386C182D97A20027813A /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		4F5F3872182D97A20027813A /* eternity-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "eternity-Prefix.pch"; sourceTree = "<group>"; };
+		4F68CE8B1963D88100E7B8BE /* ev_sectors.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ev_sectors.cpp; path = ../source/ev_sectors.cpp; sourceTree = "<group>"; };
+		4F68CE8C1963D88100E7B8BE /* ev_sectors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ev_sectors.h; path = ../source/ev_sectors.h; sourceTree = "<group>"; };
 		4F69650416C3B1EB00FF2028 /* ev_actions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ev_actions.cpp; path = ../source/ev_actions.cpp; sourceTree = "<group>"; };
 		4F69650516C3B1EB00FF2028 /* ev_actions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ev_actions.h; path = ../source/ev_actions.h; sourceTree = "<group>"; };
 		4F69650616C3B1EB00FF2028 /* ev_bindings.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ev_bindings.cpp; path = ../source/ev_bindings.cpp; sourceTree = "<group>"; };
@@ -1840,6 +1843,8 @@
 		FAEB990316666A46004B0CD1 /* EV_ */ = {
 			isa = PBXGroup;
 			children = (
+				4F68CE8B1963D88100E7B8BE /* ev_sectors.cpp */,
+				4F68CE8C1963D88100E7B8BE /* ev_sectors.h */,
 				4F69650416C3B1EB00FF2028 /* ev_actions.cpp */,
 				4F69650516C3B1EB00FF2028 /* ev_actions.h */,
 				4F69650616C3B1EB00FF2028 /* ev_bindings.cpp */,
@@ -2108,6 +2113,7 @@
 				4F5F391C182D9AC00027813A /* p_trace.cpp in Sources */,
 				4F5F391D182D9AC00027813A /* p_user.cpp in Sources */,
 				4F5F391E182D9AC00027813A /* p_xenemy.cpp in Sources */,
+				4F68CE8D1963D88100E7B8BE /* ev_sectors.cpp in Sources */,
 				4F5F391F182D9AC00027813A /* polyobj.cpp in Sources */,
 				4F5F389A182D99090027813A /* e_args.cpp in Sources */,
 				4F5F389C182D99090027813A /* e_cmd.cpp in Sources */,
