@@ -812,8 +812,6 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
 // Anchored and Linked Portals
 //
 
-extern byte **ylookup;
-extern int   *columnofs;
 extern int    showtainted;
 
 static void R_ShowTainted(pwindow_t *window)
@@ -832,7 +830,7 @@ static void R_ShowTainted(pwindow_t *window)
       if(count <= 0)
          continue;
 
-      dest = ylookup[y1] + columnofs[i];
+      dest = R_ADDRESS(i, y1);
 
       while(count > 0)
       {

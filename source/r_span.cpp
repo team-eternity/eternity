@@ -35,9 +35,6 @@
 #include "d_gi.h"
 #include "r_plane.h"
 
-extern byte **ylookup; 
-extern int   *columnofs; 
-
 // Template structure for inlining constant values for orthogonal spans
 template<int xshift, int yshift, int xmask>
 struct spanconsts
@@ -108,7 +105,7 @@ static void R_DrawSpanSolid_8()
    int count = span.x2 - span.x1 + 1;
 
    byte *source = (byte *)span.source;
-   byte *dest   = ylookup[span.y] + columnofs[span.x1];
+   byte *dest   = R_ADDRESS(span.x1, span.y);
    
    while(count >= 4) 
    {
@@ -210,7 +207,7 @@ static void R_DrawSpanTL_8()
    int count = span.x2 - span.x1 + 1;
 
    byte *source = (byte *)span.source;
-   byte *dest   = ylookup[span.y] + columnofs[span.x1];
+   byte *dest   = R_ADDRESS(span.x1, span.y);
 
    while(count-- > 0)
    {
@@ -235,7 +232,7 @@ static void R_DrawSpanAdd_8()
    int count = span.x2 - span.x1 + 1;
 
    byte *source = (byte *)span.source;
-   byte *dest   = ylookup[span.y] + columnofs[span.x1];
+   byte *dest   = R_ADDRESS(span.x1, span.y);
 
    while(count-- > 0)
    {
@@ -294,8 +291,8 @@ static void R_DrawSlope_8()
    if((count = slopespan.x2 - slopespan.x1 + 1) < 0)
       return;
 
-   byte *src = (byte *)slopespan.source;
-   byte *dest = ylookup[slopespan.y] + columnofs[slopespan.x1];
+   byte *src  = (byte *)slopespan.source;
+   byte *dest = R_ADDRESS(slopespan.x1, slopespan.y);
 
    while(count >= SPANJUMP)
    {

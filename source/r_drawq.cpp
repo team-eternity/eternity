@@ -102,7 +102,7 @@ static void R_FlushWholeOpaque()
    {
       yl     = tempyl[temp_x];
       source = tempbuf + temp_x + (yl << 2);
-      dest   = ylookup[yl] + columnofs[startx + temp_x];
+      dest   = R_ADDRESS(startx + temp_x, yl);
       count  = tempyh[temp_x] - yl + 1;
       
       while(--count >= 0)
@@ -137,7 +137,7 @@ static void R_FlushHTOpaque(void)
       if(yl < commontop)
       {
          source = tempbuf + colnum + (yl << 2);
-         dest   = ylookup[yl] + columnofs[startx + colnum];
+         dest   = R_ADDRESS(startx + colnum, yl);
          count  = commontop - yl;
          
          while(--count >= 0)
@@ -152,7 +152,7 @@ static void R_FlushHTOpaque(void)
       if(yh > commonbot)
       {
          source = tempbuf + colnum + ((commonbot + 1) << 2);
-         dest   = ylookup[(commonbot + 1)] + columnofs[startx + colnum];
+         dest   = R_ADDRESS(startx + colnum, commonbot + 1);
          count  = yh - commonbot;
          
          while(--count >= 0)
@@ -176,7 +176,7 @@ static void R_FlushWholeTL()
    {
       yl     = tempyl[temp_x];
       source = tempbuf + temp_x + (yl << 2);
-      dest   = ylookup[yl] + columnofs[startx + temp_x];
+      dest   = R_ADDRESS(startx + temp_x, yl);
       count  = tempyh[temp_x] - yl + 1;
 
       while(--count >= 0)
@@ -205,7 +205,7 @@ static void R_FlushHTTL()
       if(yl < commontop)
       {
          source = tempbuf + colnum + (yl << 2);
-         dest   = ylookup[yl] + columnofs[startx + colnum];
+         dest   = R_ADDRESS(startx + colnum, yl);
          count  = commontop - yl;
 
          while(--count >= 0)
@@ -221,7 +221,7 @@ static void R_FlushHTTL()
       if(yh > commonbot)
       {
          source = tempbuf + colnum + ((commonbot + 1) << 2);
-         dest   = ylookup[(commonbot + 1)] + columnofs[startx + colnum];
+         dest   = R_ADDRESS(startx + colnum, commonbot + 1);
          count  = yh - commonbot;
 
          while(--count >= 0)
@@ -250,7 +250,7 @@ static void R_FlushWholeFuzz()
    {
       yl     = tempyl[temp_x];
       source = tempbuf + temp_x + (yl << 2);
-      dest   = ylookup[yl] + columnofs[startx + temp_x];
+      dest   = R_ADDRESS(startx + temp_x, yl);
       count  = tempyh[temp_x] - yl + 1;
 
       while(--count >= 0)
@@ -341,7 +341,7 @@ static void R_FlushWholeFlex()
    {
       yl     = tempyl[temp_x];
       source = tempbuf + temp_x + (yl << 2);
-      dest   = ylookup[yl] + columnofs[startx + temp_x];
+      dest   = R_ADDRESS(startx + temp_x, yl);
       count  = tempyh[temp_x] - yl + 1;
 
       while(--count >= 0)
@@ -375,7 +375,7 @@ static void R_FlushHTFlex()
       if(yl < commontop)
       {
          source = tempbuf + colnum + (yl << 2);
-         dest   = ylookup[yl] + columnofs[startx + colnum];
+         dest   = R_ADDRESS(startx + colnum, yl);
          count  = commontop - yl;
 
          while(--count >= 0)
@@ -395,7 +395,7 @@ static void R_FlushHTFlex()
       if(yh > commonbot)
       {
          source = tempbuf + colnum + ((commonbot + 1) << 2);
-         dest   = ylookup[(commonbot + 1)] + columnofs[startx + colnum];
+         dest   = R_ADDRESS(startx + colnum, commonbot + 1);
          count  = yh - commonbot;
 
          while(--count >= 0)
@@ -426,7 +426,7 @@ static void R_FlushWholeFlexAdd()
    {
       yl     = tempyl[temp_x];
       source = tempbuf + temp_x + (yl << 2);
-      dest   = ylookup[yl] + columnofs[startx + temp_x];
+      dest   = R_ADDRESS(startx + temp_x, yl);
       count  = tempyh[temp_x] - yl + 1;
 
       while(--count >= 0)
@@ -466,7 +466,7 @@ static void R_FlushHTFlexAdd()
       if(yl < commontop)
       {
          source = tempbuf + colnum + (yl << 2);
-         dest   = ylookup[yl] + columnofs[startx + colnum];
+         dest   = R_ADDRESS(startx + colnum, yl);
          count  = commontop - yl;
 
          while(--count >= 0)
@@ -492,7 +492,7 @@ static void R_FlushHTFlexAdd()
       if(yh > commonbot)
       {
          source = tempbuf + colnum + ((commonbot + 1) << 2);
-         dest   = ylookup[(commonbot + 1)] + columnofs[startx + colnum];
+         dest   = R_ADDRESS(startx + colnum, commonbot + 1);
          count  = yh - commonbot;
 
          while(--count >= 0)
@@ -518,14 +518,14 @@ static void R_FlushHTFlexAdd()
    }
 }
 
-static void (*R_FlushWholeColumns)(void) = R_FlushWholeNil;
-static void (*R_FlushHTColumns)(void)    = R_FlushHTNil;
+static void (*R_FlushWholeColumns)() = R_FlushWholeNil;
+static void (*R_FlushHTColumns)()    = R_FlushHTNil;
 
 // Begin: Quad column flushing functions.
 static void R_FlushQuadOpaque()
 {
    int *source = (int *)(tempbuf + (commontop << 2));
-   int *dest = (int *)(ylookup[commontop] + columnofs[startx]);
+   int *dest   = (int *)(R_ADDRESS(startx, commontop));
    int count;
    int deststep = linesize / 4;
 
@@ -541,7 +541,7 @@ static void R_FlushQuadOpaque()
 static void R_FlushQuadTL()
 {
    byte *source = tempbuf + (commontop << 2);
-   byte *dest = ylookup[commontop] + columnofs[startx];
+   byte *dest   = R_ADDRESS(startx, commontop);
    int count;
 
    count = commonbot - commontop + 1;
@@ -603,7 +603,7 @@ static void R_FlushQuadFuzz()
 static void R_FlushQuadFlex()
 {
    byte *source = tempbuf + (commontop << 2);
-   byte *dest = ylookup[commontop] + columnofs[startx];
+   byte *dest   = R_ADDRESS(startx, commontop);
    int count;
    unsigned int fg, bg;
 
@@ -640,7 +640,7 @@ static void R_FlushQuadFlex()
 static void R_FlushQuadFlexAdd()
 {
    byte *source = tempbuf + (commontop << 2);
-   byte *dest = ylookup[commontop] + columnofs[startx];
+   byte *dest   = R_ADDRESS(startx, commontop);
    int count;
    unsigned int a, b;
 
@@ -926,9 +926,6 @@ static void R_QDrawColumn()
 #endif 
 
    // Framebuffer destination address.
-   // Use ylookup LUT to avoid multiply with ScreenWidth.
-   // Use columnofs LUT for subwindows? 
-
    // SoM: MAGIC
    dest = R_GetBufferOpaque();
 

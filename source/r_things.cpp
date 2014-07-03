@@ -2052,7 +2052,7 @@ static void R_DrawParticle(vissprite_t *vis)
       ++ycount;
 
       spacing = video.pitch - xcount;
-      dest = ylookup[yl] + columnofs[x1];
+      dest    = R_ADDRESS(x1, yl);
 
       // haleyjd 02/08/05: rewritten to remove inner loop invariants
       if(general_translucency && particle_trans)
