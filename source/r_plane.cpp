@@ -731,7 +731,7 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
       blendflags = 0;
       
    // killough 10/98: PL_SKYFLAT
-   if(picnum == skyflatnum || picnum == sky2flatnum || picnum & PL_SKYFLAT)
+   if(R_IsSkyFlat(picnum) || picnum & PL_SKYFLAT)
    {
       lightlevel = 0;   // killough 7/19/98: most skies map together
 
@@ -923,113 +923,77 @@ static void R_MakeSpans(int x, int t1, int b1, int t2, int b2)
       spanstart[b2--] = x;
 }
 
-extern void R_DrawNewSkyColumn(void);
+extern void R_DrawNewSkyColumn();
 
 // haleyjd: moved here from r_newsky.c
 void do_draw_newsky(visplane_t *pl)
 {
    int x, offset, skyTexture, offset2, skyTexture2;
-   angle_t an;
    skytexture_t *sky1, *sky2;
    
-   an = viewangle;
+   angle_t an = viewangle;
    
-   if(LevelInfo.doubleSky) // render two layers
+   // render two layers
+
+   // get scrolling offsets and textures
+   skyflat_t *skyflat1 = R_SkyFlatForIndex(0);
+   skyflat_t *skyflat2 = R_SkyFlatForIndex(1);
+
+   if(!(skyflat1 && skyflat2))
+      return; // feh!
+
+   offset      = skyflat1->columnoffset >> 16;
+   skyTexture  = texturetranslation[skyflat1->texture];
+   offset2     = skyflat2->columnoffset >> 16;
+   skyTexture2 = texturetranslation[skyflat2->texture];
+
+   sky1 = R_GetSkyTexture(skyTexture);
+   sky2 = R_GetSkyTexture(skyTexture2);
+      
+   if(comp[comp_skymap] || !(column.colormap = fixedcolormap))
+      column.colormap = fullcolormap;
+      
+   // first draw sky 2 with R_DrawColumn (unmasked)
+   column.texmid    = sky2->texturemid;      
+   column.texheight = sky2->height;
+
+   // haleyjd: don't stretch textures over 200 tall
+   if(demo_version >= 300 && column.texheight < 200 && stretchsky)
+      column.step = M_FloatToFixed(view.pspriteystep * 0.5f);
+   else
+      column.step = M_FloatToFixed(view.pspriteystep);
+      
+   for(x = pl->minx; (column.x = x) <= pl->maxx; x++)
    {
-      // get scrolling offsets and textures
-      offset = Sky1ColumnOffset>>16;
-      skyTexture = texturetranslation[skytexture];
-      offset2 = Sky2ColumnOffset>>16;
-      skyTexture2 = texturetranslation[sky2texture];
-
-      sky1 = R_GetSkyTexture(skyTexture);
-      sky2 = R_GetSkyTexture(skyTexture2);
-      
-      if(comp[comp_skymap] || !(column.colormap = fixedcolormap))
-         column.colormap = fullcolormap;
-      
-      // first draw sky 2 with R_DrawColumn (unmasked)
-      column.texmid = sky2->texturemid;      
-      column.texheight = sky2->height;
-
-      // haleyjd: don't stretch textures over 200 tall
-      if(demo_version >= 300 && column.texheight < 200 && stretchsky)
-         column.step = M_FloatToFixed(view.pspriteystep * 0.5f);
-      else
-         column.step = M_FloatToFixed(view.pspriteystep);
-      
-      for(x = pl->minx; (column.x = x) <= pl->maxx; x++)
+      if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
       {
-         if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
-         {
-            column.source =
-               R_GetRawColumn(skyTexture2,
+         column.source = 
+            R_GetRawColumn(skyTexture2,
                (((an + xtoviewangle[x])) >> (ANGLETOSKYSHIFT))+offset2);
             
-            colfunc();
-         }
-      }
-      
-      // now draw sky 1 with R_DrawNewSkyColumn (masked)
-      column.texmid = sky1->texturemid;
-      column.texheight = sky1->height;
-
-      // haleyjd: don't stretch textures over 200 tall
-      if(demo_version >= 300 && column.texheight < 200 && stretchsky)
-         column.step = M_FloatToFixed(view.pspriteystep * 0.5f);
-      else
-         column.step = M_FloatToFixed(view.pspriteystep);
-      
-      for(x = pl->minx; (column.x = x) <= pl->maxx; x++)
-      {
-         if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
-         {
-            column.source =
-               R_GetRawColumn(skyTexture,
-               (((an + xtoviewangle[x])) >> (ANGLETOSKYSHIFT))+offset);
-            
-            colfunc();
-         }
+         colfunc();
       }
    }
-   else // one layer only -- use pl->picnum
+      
+   // now draw sky 1 with R_DrawNewSkyColumn (masked)
+   column.texmid = sky1->texturemid;
+   column.texheight = sky1->height;
+
+   // haleyjd: don't stretch textures over 200 tall
+   if(demo_version >= 300 && column.texheight < 200 && stretchsky)
+      column.step = M_FloatToFixed(view.pspriteystep * 0.5f);
+   else
+      column.step = M_FloatToFixed(view.pspriteystep);
+      
+   for(x = pl->minx; (column.x = x) <= pl->maxx; x++)
    {
-      if(pl->picnum == skyflatnum)
+      if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
       {
-         offset = Sky1ColumnOffset>>16;
-         skyTexture = texturetranslation[skytexture];
-      }
-      else
-      {
-         offset = Sky2ColumnOffset>>16;
-         skyTexture = texturetranslation[sky2texture];
-      }
-
-      sky1 = R_GetSkyTexture(skyTexture);
-      
-      column.texmid = sky1->texturemid;    // Default y-offset
-      
-      if(comp[comp_skymap] || !(column.colormap = fixedcolormap))
-         column.colormap = fullcolormap;
-      
-      column.texheight = sky1->height;
-
-      // haleyjd: don't stretch textures over 200 tall
-      if(demo_version >= 300 && column.texheight < 200 && stretchsky)
-         column.step = M_FloatToFixed(view.pspriteystep * 0.5f);
-      else
-         column.step = M_FloatToFixed(view.pspriteystep);
-      
-      for(x = pl->minx; (column.x = x) <= pl->maxx; x++)
-      {
-         if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
-         {
-            column.source =
-               R_GetRawColumn(skyTexture,
+         column.source =
+            R_GetRawColumn(skyTexture,
                (((an + xtoviewangle[x])) >> (ANGLETOSKYSHIFT))+offset);
-
-            colfunc();
-         }
+            
+         colfunc();
       }
    }
 }
@@ -1054,20 +1018,19 @@ static void do_draw_plane(visplane_t *pl)
    if(!(pl->minx <= pl->maxx))
       return;
 
-   // haleyjd: hexen-style skies:
-   // * Always for sky2
-   // * Use for sky1 IF double skies or sky delta set
-   if(pl->picnum == sky2flatnum ||
-      (pl->picnum == skyflatnum && 
-       (LevelInfo.doubleSky || LevelInfo.skyDelta)))
+   // haleyjd: hexen-style skies
+   if(LevelInfo.doubleSky)
    {
       do_draw_newsky(pl);
       return;
    }
-
-   if(pl->picnum == skyflatnum || pl->picnum & PL_SKYFLAT)  // sky flat
+   
+   skyflat_t *skyflat = R_SkyFlatForPicnum(pl->picnum);
+   
+   if(skyflat || pl->picnum & PL_SKYFLAT)  // sky flat
    {
       int texture;
+      int offset = 0;
       angle_t an, flip;
       skytexture_t *sky;
       
@@ -1113,10 +1076,11 @@ static void do_draw_plane(visplane_t *pl)
       }
       else 	 // Normal Doom sky, only one allowed per level
       {
-         texture = skytexture;             // Default texture
-         sky = R_GetSkyTexture(texture);   // haleyjd 08/30/02         
-         column.texmid = sky->texturemid;  // Default y-offset
-         flip = 0;                         // Doom flips it
+         texture       = skyflat->texture;            // Default texture
+         sky           = R_GetSkyTexture(texture);    // haleyjd 08/30/02
+         column.texmid = sky->texturemid;             // Default y-offset
+         flip          = 0;                           // Doom flips it
+         offset        = skyflat->columnoffset >> 16; // Hexen-style scrolling
       }
 
       // Sky is always drawn full bright, i.e. colormaps[0] is used.
@@ -1125,7 +1089,7 @@ static void do_draw_plane(visplane_t *pl)
       // killough 7/19/98: fix hack to be more realistic:
       // haleyjd 10/31/10: use plane colormaps, not global vars!
       if(comp[comp_skymap] || !(column.colormap = pl->fixedcolormap))
-        column.colormap = pl->fullcolormap;
+         column.colormap = pl->fullcolormap;
 
       //dc_texheight = (textureheight[texture])>>FRACBITS; // killough
       // haleyjd: use height determined from patches in texture
@@ -1139,7 +1103,7 @@ static void do_draw_plane(visplane_t *pl)
          column.step = M_FloatToFixed(view.pspriteystep);
 
       // killough 10/98: Use sky scrolling offset, and possibly flip picture
-      for(x = pl->minx; x <= pl->maxx; ++x)
+      for(x = pl->minx; x <= pl->maxx; x++)
       {
          column.x = x;
 
@@ -1149,13 +1113,13 @@ static void do_draw_plane(visplane_t *pl)
          if(column.y1 <= column.y2)
          {
             column.source = R_GetRawColumn(texture,
-               ((an + xtoviewangle[x])^flip) >> ANGLETOSKYSHIFT);
+               (((an + xtoviewangle[x])^flip) >> ANGLETOSKYSHIFT) + offset);
             
             colfunc();
          }
       }
    }
-   else      // regular flat
+   else // regular flat
    {  
       texture_t *tex;
       int        stop, light;
@@ -1214,7 +1178,7 @@ static void do_draw_plane(visplane_t *pl)
          int rw, rh;
          
          rh = MultiplyDeBruijnBitPosition2[(uint32_t)(tex->height * 0x077CB531U) >> 27];
-         rw = MultiplyDeBruijnBitPosition2[(uint32_t)(tex->width * 0x077CB531U) >> 27];
+         rw = MultiplyDeBruijnBitPosition2[(uint32_t)(tex->width  * 0x077CB531U) >> 27];
 
          if(plane.slope)
          {
@@ -1246,8 +1210,6 @@ static void do_draw_plane(visplane_t *pl)
       plane.pviewcos = pl->viewcos;
       plane.height   = pl->heightf - pl->viewzf;
       
-      //light = (pl->lightlevel >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
-
       // SoM 10/19/02: deep water colormap fix
       if(fixedcolormap)
          light = (255  >> LIGHTSEGSHIFT);

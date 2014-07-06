@@ -1430,19 +1430,24 @@ CONSOLE_COMMAND(r_changesky, 0)
 {
    if(Console.argc < 1)
    {
-      C_Puts("Usage: r_changesky texturename");
+      C_Puts("Usage: r_changesky texturename [index]");
       return;
    }
 
    qstring name = *Console.argv[0];
    name.toUpper();
 
-   int texnum = R_CheckForWall(name.constPtr());
+   int index = 0;
+   if(Console.argc >= 2)
+      index = Console.argv[1]->toInt();
 
-   if(texnum != -1)
-      skytexture = texnum;
+   int texnum = R_CheckForWall(name.constPtr());
+   skyflat_t *sky1 = R_SkyFlatForIndex(index);
+
+   if(sky1 && texnum != -1)
+      sky1->texture = texnum;
    else
-      C_Printf(FC_ERROR "No such texture %s", name.constPtr());
+      C_Printf(FC_ERROR "Cannot set sky %d to %s", index, name.constPtr());
 }
 
 //----------------------------------------------------------------------------

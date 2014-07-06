@@ -38,6 +38,7 @@
 #include "p_spec.h"
 #include "r_defs.h"
 #include "r_main.h"
+#include "r_sky.h"
 #include "r_state.h"
 #include "r_pcheck.h"
 #include "s_sound.h"
@@ -469,8 +470,7 @@ static bool PTR_ShootTraverse(intercept_t *in)
                                      trace.aimslope);
             
             // SoM: don't check for portals here anymore
-            if(sidesector->floorpic == skyflatnum ||
-               sidesector->floorpic == sky2flatnum) 
+            if(R_IsSkyFlat(sidesector->floorpic))
                return false;
             
             if(demo_version < 333)

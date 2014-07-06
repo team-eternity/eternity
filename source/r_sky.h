@@ -26,11 +26,10 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __R_SKY__
-#define __R_SKY__
+#ifndef R_SKY_H__
+#define R_SKY_H__
 
 #include "m_fixed.h"
-#include "doomtype.h"
 
 // SKY, store the number for name.
 #define SKYFLATNAME  "F_SKY1"
@@ -40,23 +39,34 @@
 // The sky map is 256*128*4 maps.
 #define ANGLETOSKYSHIFT         22
 
+// haleyjd: information on sky flats
+struct skyflat_t
+{
+   // static information (specified via GameModeInfo)
+   const char *flatname;   // flat name
+   const char *deftexture; // default texture, if any (may be null)
+
+   // runtime information
+   int flatnum;      // corresponding flat number
+   int texture;      // looked-up wall texture number from directory
+   int columnoffset; // scrolling info
+};
+
 // haleyjd: hashed sky texture information
 
 #define NUMSKYCHAINS 13
 
-typedef struct skytexture_s
+struct skytexture_t
 {
-   int     texturenum;        // hash key
-   int     height;            // true height of texture
-   fixed_t texturemid;        // vertical offset
-   struct skytexture_s *next; // next skytexture in hash chain
-} skytexture_t;
+   int     texturenum; // hash key
+   int     height;     // true height of texture
+   fixed_t texturemid; // vertical offset
+   skytexture_t *next; // next skytexture in hash chain
+};
 
 // the sky texture hashtable
 extern skytexture_t *skytextures[NUMSKYCHAINS];
 
-extern int skytexture;
-extern int sky2texture; // haleyjd
 extern int stretchsky;
 
 // init sky at start of level
@@ -64,7 +74,11 @@ void R_StartSky();
 
 // sky texture info hashing functions
 skytexture_t *R_GetSkyTexture(int);
-void R_ClearSkyTextures(void);
+void R_ClearSkyTextures();
+
+bool R_IsSkyFlat(int picnum);
+skyflat_t *R_SkyFlatForIndex(int skynum);
+skyflat_t *R_SkyFlatForPicnum(int picnum);
 
 #endif
 

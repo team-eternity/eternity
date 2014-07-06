@@ -28,6 +28,7 @@
 
 #include "autopalette.h"
 #include "c_io.h"
+#include "d_gi.h"
 #include "d_io.h"     // SoM 3/14/2002: strncasecmp
 #include "d_main.h"
 #include "doomstat.h"
@@ -543,8 +544,12 @@ void R_PrecacheLevel(void)
    //  a wall texture, with an episode dependend
    //  name.
    
-   hitlist[skytexture] = 1;
-   hitlist[sky2texture] = 1; // haleyjd
+   skyflat_t *sky = GameModeInfo->skyFlats;
+   while(sky->flatname)
+   {
+      hitlist[sky->texture] = 1;
+      ++sky;
+   }
 
    // Precache textures.
    for(i = texturecount; --i >= 0; )

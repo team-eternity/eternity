@@ -32,6 +32,7 @@
 #include "p_spec.h"
 #include "p_tick.h"
 #include "r_data.h"
+#include "r_sky.h"
 #include "r_state.h"
 #include "s_sound.h"
 #include "s_sndseq.h"
@@ -83,7 +84,7 @@ void P_SetSectorCeilingPic(sector_t *sector, int pic)
    sector->ceilingpic = pic;
 
    // reset the sky flag
-   if(pic == skyflatnum || pic == sky2flatnum)
+   if(R_IsSkyFlat(sector->ceilingpic))
       sector->intflags |= SIF_SKY;
 }
 

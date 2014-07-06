@@ -49,6 +49,7 @@
 #include "mn_menus.h"
 #include "p_info.h"
 #include "p_skin.h"
+#include "r_sky.h"
 #include "r_textur.h"
 #include "s_sound.h"
 #include "st_stuff.h"
@@ -66,7 +67,7 @@
 // menu background flats
 #define DOOMMENUBACK "FLOOR4_6"
 #define HACXMENUBACK "CONS1_5"
-#define PSXMENUBACK  "BRN07"
+#define PSXMENUBACK  "MARB01"
 #define HTICMENUBACK "FLOOR16"
 
 // credit background flats
@@ -561,6 +562,13 @@ static skydata_t DoomSkyData =
    DoomSkyRules
 };
 
+static skyflat_t DoomSkyFlats[] =
+{
+   { "F_SKY1", nullptr, 0, 0, 0 },
+   { "F_SKY2", nullptr, 0, 0, 0 },
+   { nullptr,  nullptr, 0, 0, 0 }
+};
+
 // Doom II Gamemodes
 
 static skyrule_t Doom2SkyRules[] =
@@ -575,6 +583,33 @@ static skydata_t Doom2SkyData =
 {
    GI_SKY_IFMAPLESSTHAN,
    Doom2SkyRules
+};
+
+// PSX Mission 
+
+static skyrule_t PSXSkyRules[] =
+{
+   { -1, "SKY01" },
+   { -2 }
+};
+
+static skydata_t PSXSkyData =
+{
+   GI_SKY_IFMAPLESSTHAN,
+   PSXSkyRules
+};
+
+static skyflat_t PSXSkyFlats[] =
+{
+   { "F_SKY01", "SKY01", 0, 0, 0 },
+   { "F_SKY02", "SKY02", 0, 0, 0 },
+   { "F_SKY03", "SKY03", 0, 0, 0 },
+   { "F_SKY04", "SKY04", 0, 0, 0 },
+   { "F_SKY05", "SKY05", 0, 0, 0 },
+   { "F_SKY06", "SKY06", 0, 0, 0 },
+   { "F_SKY07", "SKY07", 0, 0, 0 },
+   { "F_SKY09", "SKY09", 0, 0, 0 },
+   { nullptr,   nullptr, 0, 0, 0 }
 };
 
 // Heretic Gamemodes
@@ -874,24 +909,26 @@ static missioninfo_t gmPSX =
    pack_psx,          // id
    MI_ALLOWSECRETTAG, // flags
    "doom2",           // gamePathName - FIXME/TODO
-   NULL,              // sameLevels
+   nullptr,           // sameLevels
 
    GIF_MNBIGFONT, // addGMIFlags
    0,             // remGMIFlags
    VNAME_PSX,     // versionNameOR
    BANNER_PSX,    // startupBannerOR
    0,             // numEpisodesOR
-   NULL,          // iwadPathOR
-   NULL,          // finaleDataOR
+   nullptr,       // iwadPathOR
+   nullptr,       // finaleDataOR
    PSXMENUBACK,   // menuBackgroundOR
    PSXCREDITBK,   // creditBackgroundOR
-   NULL,          // consoleBackOR
-   NULL,          // demoStatesOR
-   NULL,          // interPicOR
+   nullptr,       // consoleBackOR
+   nullptr,       // demoStatesOR
+   nullptr,       // interPicOR
    NullExitRules, // exitRulesOR
-   NULL,          // levelNamesOR
+   nullptr,       // levelNamesOR
    0,             // randMusMaxOR
-   PSXBRDRFLAT    // borderFlatOR
+   PSXBRDRFLAT,   // borderFlatOR
+   &PSXSkyData,   // skyDataOR
+   PSXSkyFlats,   // skyFlatsOR
 };
 
 //
@@ -1104,6 +1141,7 @@ static gamemodeinfo_t giDoomSW =
    1,                  // switchEpisode
    &DoomSkyData,       // skyData
    R_DoomTextureHacks, // TextureHacks
+   DoomSkyFlats,       // skyFlats
 
    NULL,             // defaultORs
 
@@ -1213,6 +1251,7 @@ static gamemodeinfo_t giDoomReg =
    2,                  // switchEpisode
    &DoomSkyData,       // skyData
    R_DoomTextureHacks, // TextureHacks
+   DoomSkyFlats,       // skyFlats
 
    NULL,             // defaultORs
 
@@ -1322,6 +1361,7 @@ static gamemodeinfo_t giDoomRetail =
    2,                  // switchEpisode
    &DoomSkyData,       // skyData
    R_DoomTextureHacks, // TextureHacks
+   DoomSkyFlats,       // skyFlats
 
    NULL,             // defaultORs
 
@@ -1428,9 +1468,10 @@ static gamemodeinfo_t giDoomCommercial =
    doom_skindefs,      // skinSounds
    doom_soundnums,     // playerSounds
 
-   3,                // switchEpisode
-   &Doom2SkyData,    // skyData
-   NULL,             // TextureHakcs
+   3,                  // switchEpisode
+   &Doom2SkyData,      // skyData
+   NULL,               // TextureHacks
+   DoomSkyFlats,       // skyFlats
 
    NULL,             // defaultORs
 
@@ -1540,6 +1581,7 @@ static gamemodeinfo_t giHereticSW =
    1,                  // switchEpisode
    &HereticSkyData,    // skyData
    R_HticTextureHacks, // TextureHacks
+   DoomSkyFlats,       // skyFlats
 
    HereticDefaultORs, // defaultORs
 
@@ -1653,6 +1695,7 @@ static gamemodeinfo_t giHereticReg =
    2,                  // switchEpisode
    &HereticSkyData,    // skyData
    R_HticTextureHacks, // TextureHacks
+   DoomSkyFlats,       // skyFlats
    
    HereticDefaultORs, // defaultORs
 
@@ -1716,19 +1759,21 @@ void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
    gi->flags &= ~mi->remGMIFlags;
 
    // apply overrides
-   OVERRIDE(versionName,      NULL);
-   OVERRIDE(startupBanner,    NULL);
-   OVERRIDE(numEpisodes,         0);
-   OVERRIDE(iwadPath,         NULL);
-   OVERRIDE(finaleData,       NULL);
-   OVERRIDE(menuBackground,   NULL);
-   OVERRIDE(creditBackground, NULL);
-   OVERRIDE(consoleBack,      NULL);
-   OVERRIDE(interPic,         NULL);
-   OVERRIDE(exitRules,        NULL);
-   OVERRIDE(levelNames,       NULL);
-   OVERRIDE(randMusMax,          0);
-   OVERRIDE(borderFlat,       NULL);
+   OVERRIDE(versionName,      nullptr);
+   OVERRIDE(startupBanner,    nullptr);
+   OVERRIDE(numEpisodes,            0);
+   OVERRIDE(iwadPath,         nullptr);
+   OVERRIDE(finaleData,       nullptr);
+   OVERRIDE(menuBackground,   nullptr);
+   OVERRIDE(creditBackground, nullptr);
+   OVERRIDE(consoleBack,      nullptr);
+   OVERRIDE(interPic,         nullptr);
+   OVERRIDE(exitRules,        nullptr);
+   OVERRIDE(levelNames,       nullptr);
+   OVERRIDE(randMusMax,             0);
+   OVERRIDE(borderFlat,       nullptr);
+   OVERRIDE(skyData,          nullptr);
+   OVERRIDE(skyFlats,         nullptr);
    
    // Note: demostates are not overridden here, see below.
 }
@@ -1753,7 +1798,9 @@ void D_InitGMIPostWads()
    // * if MI_DEMOIFDEMO4 is not set, then always override.
    // * if MI_DEMOIFDEMO4 IS set, then only if DEMO4 actually exists.
    if(!(mi->flags & MI_DEMOIFDEMO4) || W_CheckNumForName("DEMO4") >= 0)
-      OVERRIDE(demoStates, NULL);
+   {
+      OVERRIDE(demoStates, nullptr);
+   }
 
    GameModeInfo->blackIndex = V_FindBestColor(pal.get(), 0,   0,   0);
    GameModeInfo->whiteIndex = V_FindBestColor(pal.get(), 255, 255, 255);

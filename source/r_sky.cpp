@@ -42,41 +42,52 @@
 // sky mapping
 //
 
-int skyflatnum;
-int sky2flatnum;  // haleyjd: number of F_SKY2 flat for Hexen-style skies
-int skytexture;
-int sky2texture;
 int stretchsky;
 
-fixed_t Sky1ColumnOffset, Sky2ColumnOffset;
+static int numskyflats;
 
 //
 // R_StartSky
 //
 // Called when the level starts to load the appropriate sky.
 //
-void R_StartSky(void)
+void R_StartSky()
 {
-   Sky1ColumnOffset = Sky2ColumnOffset = 0;
-
    // haleyjd 07/18/04: init moved to MapInfo
   
+   numskyflats = 0;
+
    // Set the sky map.
    // First thing, we have a dummy sky texture name,
    //  a flat. The data is in the WAD only because
    //  we look for an actual index, instead of simply
    //  setting one.
+   skyflat_t *skies = GameModeInfo->skyFlats;
+   skyflat_t *sky   = skies;
+   while(sky->flatname)
+   {
+      // reset scroll indices
+      sky->columnoffset = 0;
 
-   skyflatnum  = R_FindFlat(SKYFLATNAME);   
-   sky2flatnum = R_FindFlat(SKY2FLATNAME); // haleyjd
+      // look up flat
+      sky->flatnum = R_FindFlat(sky->flatname);
 
-   // haleyjd 01/22/04: added error checking
-   
-   if((skytexture = R_FindWall(LevelInfo.skyName)) == -1)
-      I_Error("R_StartSky: bad sky texture '%s'\n", LevelInfo.skyName);
+      // look up default texture, if specified
+      if(sky->deftexture)
+         sky->texture = R_FindWall(sky->deftexture);
+
+      ++sky;
+      ++numskyflats;
+   }
       
-   if((sky2texture = R_FindWall(LevelInfo.sky2Name)) == -1)
-      I_Error("R_StartSky: bad sky2 texture '%s'\n", LevelInfo.sky2Name);
+   // allow LevelInfo to override sky textures 1 and 2
+   skyflat_t *sky1 = R_SkyFlatForIndex(0);
+   skyflat_t *sky2 = R_SkyFlatForIndex(1);
+
+   if(sky1)
+      sky1->texture = R_FindWall(LevelInfo.skyName);
+   if(sky2)
+      sky2->texture = R_FindWall(LevelInfo.sky2Name);
 }
 
 //
@@ -162,11 +173,9 @@ skytexture_t *R_GetSkyTexture(int texturenum)
 // Must be called from R_InitData to clear out old texture numbers.
 // Otherwise the data will be corrupt and meaningless.
 //
-void R_ClearSkyTextures(void)
+void R_ClearSkyTextures()
 {
-   int i;
-
-   for(i = 0; i < NUMSKYCHAINS; ++i)
+   for(int i = 0; i < NUMSKYCHAINS; i++)
    {
       if(skytextures[i])
       {
@@ -185,6 +194,59 @@ void R_ClearSkyTextures(void)
 
       skytextures[i] = NULL;
    }
+}
+
+//
+// R_IsSkyFlat
+//
+// haleyjd 07/04/14: Scan GameModeInfo's skyFlats array to determine if a flat
+// is sky or not.
+//
+bool R_IsSkyFlat(int picnum)
+{
+   skyflat_t *sky = GameModeInfo->skyFlats;
+
+   while(sky->flatname)
+   {
+      if(picnum == sky->flatnum)
+         return true;
+      ++sky;
+   }
+
+   return false;
+}
+
+//
+// R_SkyFlatForIndex
+//
+// Return a skyflat_t structure for a sky number.
+// Returns null if the gamemode does not define that many skies.
+//
+skyflat_t *R_SkyFlatForIndex(int skynum)
+{
+   if(skynum >= 0 && skynum < numskyflats)
+      return &(GameModeInfo->skyFlats[skynum]);
+   else
+      return nullptr;
+}
+
+//
+// R_SkyFlatForPicnum
+//
+// Return a skyflat_t structure for a flat texture directory index.
+// Returns null if the picnum is not a sky.
+//
+skyflat_t *R_SkyFlatForPicnum(int picnum)
+{
+   skyflat_t *sky = GameModeInfo->skyFlats;
+   while(sky->flatname)
+   {
+      if(sky->flatnum == picnum)
+         return sky;
+      ++sky;
+   }
+
+   return nullptr;
 }
 
 //----------------------------------------------------------------------------
