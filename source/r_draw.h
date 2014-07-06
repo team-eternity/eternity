@@ -65,26 +65,27 @@ enum
 //
 struct columndrawer_t
 {
-   void (*DrawColumn)(void);       // normal
-   void (*DrawTLColumn)(void);     // translucent
-   void (*DrawTRColumn)(void);     // translated
-   void (*DrawTLTRColumn)(void);   // translucent/translated
-   void (*DrawFuzzColumn)(void);   // spectre fuzz
-   void (*DrawFlexColumn)(void);   // flex translucent
-   void (*DrawFlexTRColumn)(void); // flex translucent/translated
-   void (*DrawAddColumn)(void);    // additive flextran
-   void (*DrawAddTRColumn)(void);  // additive flextran/translated
+   void (*DrawColumn)();       // normal
+   void (*DrawTLColumn)();     // translucent
+   void (*DrawTRColumn)();     // translated
+   void (*DrawTLTRColumn)();   // translucent/translated
+   void (*DrawFuzzColumn)();   // spectre fuzz
+   void (*DrawFlexColumn)();   // flex translucent
+   void (*DrawFlexTRColumn)(); // flex translucent/translated
+   void (*DrawAddColumn)();    // additive flextran
+   void (*DrawAddTRColumn)();  // additive flextran/translated
 
-   void (*ResetBuffer)(void);      // reset function (may be null)
+   void (*ResetBuffer)();      // reset function (may be null)
    
-   void (*ByVisSpriteStyle[VS_NUMSTYLES][2])(void);
+   void (*ByVisSpriteStyle[VS_NUMSTYLES][2])();
 };
 
 extern columndrawer_t r_normal_drawer;
 
 #define TRANSLATIONCOLOURS 14
 
-extern int      linesize;        // killough 11/98
+extern int   linesize;     // killough 11/98
+extern byte *renderscreen; // haleyjd 07/02/14
 
 void R_VideoErase(unsigned int x, unsigned int y, unsigned int w, unsigned int h);
 void R_VideoEraseScaled(unsigned int x, unsigned int y, unsigned int w, unsigned int h);
@@ -121,8 +122,8 @@ enum
 //
 struct spandrawer_t
 {
-   void (*DrawSpan [SPAN_NUMSTYLES][FLAT_NUMSIZES])(void);
-   void (*DrawSlope[SPAN_NUMSTYLES][FLAT_NUMSIZES])(void);
+   void (*DrawSpan [SPAN_NUMSTYLES][FLAT_NUMSIZES])();
+   void (*DrawSlope[SPAN_NUMSTYLES][FLAT_NUMSIZES])();
 };
 
 extern spandrawer_t r_lpspandrawer;  // low-precision
@@ -131,7 +132,7 @@ extern spandrawer_t r_spandrawer;    // normal
 void R_InitBuffer(int width, int height);
 
 // Initialize color translation tables, for player rendering etc.
-void R_InitTranslationTables(void);
+void R_InitTranslationTables();
 
 // haleyjd 09/13/09: translation num-for-name lookup function
 int R_TranslationNumForName(const char *name);
@@ -148,7 +149,9 @@ void R_DrawViewBorder();
 extern byte  *tranmap;       // translucency filter maps 256x256  // phares 
 extern byte  *main_tranmap;  // killough 4/11/98
 extern byte  *main_submap;   // haleyjd 11/30/13
-extern byte **ylookup;       // killough 11/98
+
+#define R_ADDRESS(px, py) \
+   (renderscreen + (viewwindow.y + (py)) * linesize + (viewwindow.x + (px)))
 
 #define FUZZTABLE 50 
 #define FUZZOFF (SCREENWIDTH)

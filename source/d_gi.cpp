@@ -105,7 +105,7 @@
 #define VNAME_PLUT      "Final DOOM: The Plutonia Experiment version"
 #define VNAME_HACX      "HACX - Twitch 'n Kill version"
 #define VNAME_DISK      "DOOM II disk version"
-#define VNAME_PSX       "DOOM version"
+#define VNAME_PSX       "DOOM: Custom PlayStation Edition version"
 #define VNAME_HTIC_SW   "Heretic Shareware version"
 #define VNAME_HTIC_REG  "Heretic Registered version"
 #define VNAME_HTIC_BETA "Heretic Beta version"
@@ -129,7 +129,7 @@
 #define BANNER_TNT       "DOOM 2: TNT - Evilution"
 #define BANNER_PLUT      "DOOM 2: Plutonia Experiment"
 #define BANNER_HACX      "HACX - Twitch 'n Kill"
-#define BANNER_PSX       "PSX DOOM Startup"
+#define BANNER_PSX       "DOOM: Custom PlayStation Edition Startup"
 #define BANNER_HTIC_SW   "Heretic Shareware Startup"
 #define BANNER_HTIC_REG  "Heretic Registered Startup"
 #define BANNER_HTIC_SOSR "Heretic: Shadow of the Serpent Riders"
@@ -368,6 +368,12 @@ static int quitsounds2[8] =
 //
 // haleyjd 07/03/09: replaces hard-coded functions in g_game.c
 //
+
+// Empty exit rules set for gamemodes with no special default behaviors
+static exitrule_t NullExitRules[] =
+{
+   { -2 }
+};
 
 static exitrule_t DoomExitRules[] =
 {
@@ -882,7 +888,7 @@ static missioninfo_t gmPSX =
    NULL,          // consoleBackOR
    NULL,          // demoStatesOR
    NULL,          // interPicOR
-   NULL,          // exitRulesOR
+   NullExitRules, // exitRulesOR
    NULL,          // levelNamesOR
    0,             // randMusMaxOR
    PSXBRDRFLAT    // borderFlatOR

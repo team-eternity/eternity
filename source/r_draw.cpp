@@ -62,19 +62,8 @@ byte *viewimage;
 rrect_t viewwindow;   // haleyjd 05/02/13
 rrect_t scaledwindow; // haleyjd 05/02/13
 
-byte **ylookup; 
-int   *columnofs; 
-int    linesize = SCREENWIDTH;  // killough 11/98
-
-VALLOCATION(ylookup)
-{
-   ylookup = ecalloctag(byte **, h, sizeof(byte *), PU_VALLOC, NULL);
-}
-
-VALLOCATION(columnofs)
-{
-   columnofs = ecalloctag(int *, w, sizeof(int), PU_VALLOC, NULL);
-}
+int   linesize = SCREENWIDTH;  // killough 11/98
+byte *renderscreen;            // haleyjd
 
 // Color tables for different players,
 //  translate a limited part to another
@@ -113,7 +102,7 @@ int fuzzpos = 0;
 //  be used. It has also been used with Wolfenstein 3D.
 // 
 
-void CB_DrawColumn_8(void)
+void CB_DrawColumn_8()
 {
    int count;
    byte *dest;
@@ -129,7 +118,7 @@ void CB_DrawColumn_8(void)
       I_Error("CB_DrawColumn_8: %i to %i at %i\n", column.y1, column.y2, column.x);
 #endif 
 
-   dest = ylookup[column.y1] + columnofs[column.x];
+   dest = R_ADDRESS(column.x, column.y1);
    fracstep = column.step;
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
@@ -206,7 +195,7 @@ void CB_DrawTLColumn_8(void)
       I_Error("CB_DrawTLColumn_8: %i to %i at %i\n", column.y1, column.y2, column.x);
 #endif 
 
-   dest = ylookup[column.y1] + columnofs[column.x];
+   dest = R_ADDRESS(column.x, column.y1);
    fracstep = column.step;
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
@@ -281,7 +270,7 @@ void CB_DrawTLTRColumn_8(void)
       I_Error("CB_DrawTLTRColumn_8: %i to %i at %i\n", column.y1, column.y2, column.x);    
 #endif 
 
-   dest = ylookup[column.y1] + columnofs[column.x];
+   dest = R_ADDRESS(column.x, column.y1);
    fracstep = column.step;
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
@@ -376,7 +365,7 @@ void CB_DrawFuzzColumn_8(void)
       I_Error("CB_DrawFuzzColumn_8: %i to %i at %i\n", column.y1, column.y2, column.x);    
 #endif 
 
-   dest = ylookup[column.y1] + columnofs[column.x];
+   dest = R_ADDRESS(column.x, column.y1);
 
    {
       lighttable_t *colormap = column.colormap;
@@ -437,7 +426,7 @@ void CB_DrawTRColumn_8(void)
       I_Error("CB_DrawTRColumn_8: %i to %i at %i\n", column.y1, column.y2, column.x);    
 #endif 
 
-   dest = ylookup[column.y1] + columnofs[column.x];
+   dest = R_ADDRESS(column.x, column.y1);
    fracstep = column.step;
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
@@ -517,7 +506,7 @@ void CB_DrawFlexColumn_8(void)
       bg2rgb  = Col2RGB8[bglevel >> 10];
    }
 
-   dest = ylookup[column.y1] + columnofs[column.x];
+   dest = R_ADDRESS(column.x, column.y1);
    fracstep = column.step;
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
@@ -627,7 +616,7 @@ void CB_DrawFlexTRColumn_8(void)
       bg2rgb  = Col2RGB8[bglevel >> 10];
    }
 
-   dest = ylookup[column.y1] + columnofs[column.x];
+   dest = R_ADDRESS(column.x, column.y1);
    fracstep = column.step;
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
@@ -738,7 +727,7 @@ void CB_DrawAddColumn_8(void)
       bg2rgb  = Col2RGB8_LessPrecision[bglevel >> 10];
    }
 
-   dest = ylookup[column.y1] + columnofs[column.x];
+   dest = R_ADDRESS(column.x, column.y1);
    fracstep = column.step;
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
@@ -866,7 +855,7 @@ void CB_DrawAddTRColumn_8(void)
       bg2rgb  = Col2RGB8_LessPrecision[bglevel >> 10];
    }
 
-   dest = ylookup[column.y1] + columnofs[column.x];
+   dest = R_ADDRESS(column.x, column.y1);
    fracstep = column.step;
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
@@ -1178,22 +1167,9 @@ void rrect_t::viewFromScaled(int blocks, int vwidth, int vheight,
 //
 void R_InitBuffer(int width, int height)
 { 
-   int i; 
-   
    // SoM: use pitch damn you!
-   linesize = video.pitch;    // killough 11/98
-   
-   // Handle resize,
-   //  e.g. smaller view windows
-   //  with border and/or status bar.
-
-   // Column offset. For windows.
-   for(i = viewwindow.width ; i--; )   // killough 11/98
-      columnofs[i] = viewwindow.x + i;
-   
-   // Precalculate all row offsets.
-   for(i = viewwindow.height; i--; )
-      ylookup[i] = video.screens[0] + (i + viewwindow.y) * linesize; // killough 11/98
+   linesize     = video.pitch;      // killough 11/98
+   renderscreen = video.screens[0]; // haleyjd 07/02/14
 } 
 
 //
@@ -1350,10 +1326,7 @@ void R_DrawNewSkyColumn()
 #endif 
 
   // Framebuffer destination address.
-  // Use ylookup LUT to avoid multiply with ScreenWidth.
-  // Use columnofs LUT for subwindows? 
-
-  dest = ylookup[column.y1] + columnofs[column.x];  
+  dest = R_ADDRESS(column.x, column.y1);
 
   // Determine scaling, which is the only mapping to be done.
 
