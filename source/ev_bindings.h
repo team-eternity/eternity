@@ -55,10 +55,12 @@ extern ev_action_t  BoomGenAction;
 extern ev_binding_t DOOMBindings[];
 extern ev_binding_t HereticBindings[];
 extern ev_binding_t HexenBindings[];
+extern ev_binding_t PSXBindings[];
 
 extern const size_t DOOMBindingsLen;
 extern const size_t HereticBindingsLen;
 extern const size_t HexenBindingsLen;
+extern const size_t PSXBindingsLen;
 
 extern ev_lockdef_t DOOMLockDefs[];
 extern ev_lockdef_t HereticLockDefs[];

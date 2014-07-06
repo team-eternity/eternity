@@ -981,6 +981,38 @@ ev_action_t *EV_StrifeActionForSpecial(int special)
 }
 
 //
+// EV_PSXBindingForSpecial
+//
+// Returns a special binding from the PSX mission's bindings array,
+// regardless of the current gamemode or map format. Returns NULL if
+// the special is not bound to an action.
+//
+ev_binding_t *EV_PSXBindingForSpecial(int special)
+{
+   // small set, so simple linear search.
+   for(size_t i = 0; i < PSXBindingsLen; i++)
+   {
+      if(PSXBindings[i].actionNumber == special)
+         return &PSXBindings[i];
+   }
+
+   // otherwise, defer to DOOM lookup
+   return EV_DOOMBindingForSpecial(special);
+}
+
+//
+// EV_PSXActionForSpecial
+//
+// Likewise as above but returning the action pointer if the binding exists.
+//
+ev_action_t *EV_PSXActionForSpecial(int special)
+{
+   ev_binding_t *bind = EV_PSXBindingForSpecial(special);
+
+   return bind ? bind->action : nullptr;
+}
+
+//
 // EV_BindingForName
 //
 // Look up a binding by name depending on the current map format and gamemode.
@@ -1047,10 +1079,13 @@ static int EV_GenActivationType(int special)
 //
 ev_action_t *EV_ActionForSpecial(int special)
 {
-   if(LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN)
-      return EV_HexenActionForSpecial(special);
-   else
+   switch(LevelInfo.mapFormat)
    {
+   case LEVEL_FORMAT_HEXEN:
+      return EV_HexenActionForSpecial(special);
+   case LEVEL_FORMAT_PSX:
+      return EV_PSXActionForSpecial(special);
+   default:
       switch(LevelInfo.levelType)
       {
       case LI_TYPE_DOOM:
