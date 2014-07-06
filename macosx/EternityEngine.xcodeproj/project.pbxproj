@@ -404,7 +404,6 @@
 		4F5F3865182D97860027813A /* mn_items.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mn_items.h; path = ../source/mn_items.h; sourceTree = "<group>"; };
 		4F5F386B182D97A10027813A /* eternity */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = eternity; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F5F386C182D97A20027813A /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
-		4F5F3872182D97A20027813A /* EternityLaunch_Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EternityLaunch_Prefix.pch; sourceTree = "<group>"; };
 		4F5F3872182D97A20027813A /* eternity-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "eternity-Prefix.pch"; sourceTree = "<group>"; };
 		4F68CE8B1963D88100E7B8BE /* ev_sectors.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ev_sectors.cpp; path = ../source/ev_sectors.cpp; sourceTree = "<group>"; };
 		4F68CE8C1963D88100E7B8BE /* ev_sectors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ev_sectors.h; path = ../source/ev_sectors.h; sourceTree = "<group>"; };
@@ -1082,7 +1081,7 @@
 		4F5F3871182D97A20027813A /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				4F5F3872182D97A20027813A /* EternityLaunch_Prefix.pch */,
+				4F5F3872182D97A20027813A /* eternity-Prefix.pch */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -2024,7 +2023,7 @@
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0500;
+				LastUpgradeCheck = 0510;
 			};
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "EternityEngine" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -2368,7 +2367,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
@@ -2417,7 +2415,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;

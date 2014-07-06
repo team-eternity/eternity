@@ -1403,7 +1403,7 @@ CONSOLE_COMMAND(ev_mapspecials, cf_level)
       auto action = EV_ActionForSpecial(lines[i].special);
       if(action)
       {
-         auto type = action->type;
+//         auto type = action->type;
          C_Printf("%5d: %3d %3d %s%s\n", i, lines[i].special, lines[i].tag,
             action->name, action->minversion > 0 ? "*" : "");
       }

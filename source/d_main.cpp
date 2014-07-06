@@ -356,11 +356,11 @@ const demostate_t demostates_hreg[] =
    { NULL }
 };
 
-const demostate_t demostates_unknown[] =
-{
-   { D_SetPageName, NULL }, // indetermined - haleyjd 04/01/08
-   { NULL }
-};
+//const demostate_t demostates_unknown[] =
+//{
+//   { D_SetPageName, NULL }, // indetermined - haleyjd 04/01/08
+//   { NULL }
+//};
 
 //
 // D_DoAdvanceDemo

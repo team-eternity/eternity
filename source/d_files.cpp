@@ -783,7 +783,7 @@ static int D_CheckMiscellaneousPath(const qstring &qpath)
 		if (S_ISDIR(sbuf.st_mode)) // check that it's a directory
 		{
 			DIR *dir;
-			int score = 0;
+//			int score = 0;
 
 			if ((dir = opendir(path)))
 			{
@@ -1006,7 +1006,8 @@ void D_SetUserPath()
 //
 void D_SetAutoDoomPath()
 {
-	int res = BASE_NOTEXIST, source = BASE_NUMBASE;
+	int res = BASE_NOTEXIST;
+//   int source = BASE_NUMBASE;
 	qstring autodoomdir;
 
 	autodoomdir = M_SafeFilePath(userpath, "autodoom");

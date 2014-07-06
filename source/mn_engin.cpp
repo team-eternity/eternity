@@ -100,7 +100,7 @@ static void MN_PageMenu(menu_t *newpage);
 
 menu_t *drawing_menu; // menu currently being drawn
 
-static int skulls[2]; // skull pointer
+//static int skulls[2]; // skull pointer
 
 // haleyjd 02/04/06: small menu pointer
 #define NUMSMALLPTRS 8

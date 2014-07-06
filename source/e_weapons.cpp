@@ -60,25 +60,25 @@ weaponslot_t *weaponslots[NUMWEAPONSLOTS];
 // Weapon Flags
 //
 
-static dehflags_t e_weaponFlags[] =
-{
-   { "NOTHRUST",     WPF_NOTHRUST     },
-   { "NOHITGHOSTS",  WPF_NOHITGHOSTS  },
-   { "NOTSHAREWARE", WPF_NOTSHAREWARE },
-   { "SILENCER",     WPF_SILENCER     },
-   { "SILENT",       WPF_SILENT       },
-   { "NOAUTOFIRE",   WPF_NOAUTOFIRE   },
-   { "FLEEMELEE",    WPF_FLEEMELEE    },
-   { "ALWAYSRECOIL", WPF_ALWAYSRECOIL },
-   { "HAPTICRECOIL", WPF_HAPTICRECOIL },
-   { NULL,           0                }
-};
+//static dehflags_t e_weaponFlags[] =
+//{
+//   { "NOTHRUST",     WPF_NOTHRUST     },
+//   { "NOHITGHOSTS",  WPF_NOHITGHOSTS  },
+//   { "NOTSHAREWARE", WPF_NOTSHAREWARE },
+//   { "SILENCER",     WPF_SILENCER     },
+//   { "SILENT",       WPF_SILENT       },
+//   { "NOAUTOFIRE",   WPF_NOAUTOFIRE   },
+//   { "FLEEMELEE",    WPF_FLEEMELEE    },
+//   { "ALWAYSRECOIL", WPF_ALWAYSRECOIL },
+//   { "HAPTICRECOIL", WPF_HAPTICRECOIL },
+//   { NULL,           0                }
+//};
 
-static dehflagset_t e_weaponFlagSet =
-{
-   e_weaponFlags, // flags
-   0              // mode
-};
+//static dehflagset_t e_weaponFlagSet =
+//{
+//   e_weaponFlags, // flags
+//   0              // mode
+//};
 
 //=============================================================================
 //

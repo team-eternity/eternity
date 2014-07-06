@@ -526,7 +526,7 @@ void B_BuildBotMap()
    
 
    B_Log("Looking for level cache %s...\n", hashFileName.constPtr());
-   const char* fpath = D_CheckAutoDoomPathFile(hashFileName.constPtr(), false);
+   D_CheckAutoDoomPathFile(hashFileName.constPtr(), false);
    
 //   if (!fpath)
    {
