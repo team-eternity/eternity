@@ -1013,7 +1013,7 @@ static void M_setDefaultValueString(default_t *dp, void *value, bool wad)
 // Read a string option and set it
 static bool M_readDefaultString(default_t *dp, char *src, bool wad)
 {
-   int len = strlen(src) - 1;
+   int len = static_cast<int>(strlen(src) - 1);
 
    while(ectype::isSpace(src[len]))
       len--;
@@ -1778,7 +1778,7 @@ int M_ReadFile(char const *name, byte **buffer)
       if(fread(*buffer, 1, length, fp) == length)
       {
          fclose(fp);
-         return length;
+         return static_cast<int>(length);
       }
       fclose(fp);
    }
@@ -2140,7 +2140,7 @@ int M_StringAlloca(char **str, int numstrs, size_t extra, const char *str1, ...)
 
    *str = (char *)(Z_Alloca(len));
 
-   return len;
+   return static_cast<int>(len);
 }
 
 //

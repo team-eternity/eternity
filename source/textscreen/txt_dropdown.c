@@ -169,7 +169,7 @@ static int DropdownListWidth(txt_dropdown_list_t *list)
 
     for (i=0; i<list->num_values; ++i)
     {
-        int w = strlen(list->values[i]);
+        int w = (int)strlen(list->values[i]);
         if (w > result) 
         {
             result = w;
@@ -222,7 +222,7 @@ static void TXT_DropdownListDrawer(TXT_UNCAST_ARG(list), int selected)
 
     TXT_DrawString(str);
 
-    for (i=strlen(str); i<list->widget.w; ++i) 
+    for (i=(int)strlen(str); i<list->widget.w; ++i)
     {
         TXT_DrawString(" ");
     }

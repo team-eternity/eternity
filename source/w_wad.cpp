@@ -1406,7 +1406,7 @@ int WadDirectory::lumpLength(int lump)
 {
    if(lump < 0 || lump >= numlumps)
       I_Error("WadDirectory::LumpLength: %i >= numlumps\n", lump);
-   return lumpinfo[lump]->size;
+   return static_cast<int>(lumpinfo[lump]->size);
 }
 
 int W_LumpLength(int lump)
@@ -1482,7 +1482,7 @@ int WadDirectory::readLumpHeader(int lump, void *dest, size_t size)
 
    memcpy(dest, data, size);
    
-   return size;
+   return static_cast<int>(size);
 }
 
 int W_ReadLumpHeader(int lump, void *dest, size_t size)

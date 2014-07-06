@@ -678,7 +678,7 @@ int MidiToMIDI(UBYTE *mid,MIDI *mididata)
          mid += ReadLength(&mid);
       }
       mid += 4;
-      mididata->track[i].len = ReadLength(&mid);  // get length, move mid past it
+      mididata->track[i].len = static_cast<int>(ReadLength(&mid));  // get length, move mid past it
       
       // read a track
       mididata->track[i].data = 
@@ -805,7 +805,7 @@ int MIDIToMidi(MIDI *mididata, UBYTE **mid, int *midlen)
 
    // return length information
    
-   *midlen = midiptr - *mid;
+   *midlen = static_cast<int>(midiptr - *mid);
    
    return 0;
 }

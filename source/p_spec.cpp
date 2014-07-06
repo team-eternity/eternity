@@ -1244,14 +1244,14 @@ void P_SpawnSpecials()
          // killough 3/7/98:
          // support for drawn heights coming from different sector
       case EV_STATIC_TRANSFER_HEIGHTS:
-         sec = sides[*lines[i].sidenum].sector-sectors;
+         sec = static_cast<int>(sides[*lines[i].sidenum].sector-sectors);
          P_SetupHeightTransfer(i, sec); // haleyjd 03/04/07
          break;
 
          // killough 3/16/98: Add support for setting
          // floor lighting independently (e.g. lava)
       case EV_STATIC_LIGHT_TRANSFER_FLOOR:
-         sec = sides[*lines[i].sidenum].sector-sectors;
+         sec = static_cast<int>(sides[*lines[i].sidenum].sector-sectors);
          for(s = -1; (s = P_FindSectorFromLineTag(lines+i,s)) >= 0;)
             sectors[s].floorlightsec = sec;
          break;
@@ -1259,7 +1259,7 @@ void P_SpawnSpecials()
          // killough 4/11/98: Add support for setting
          // ceiling lighting independently
       case EV_STATIC_LIGHT_TRANSFER_CEILING:
-         sec = sides[*lines[i].sidenum].sector-sectors;
+         sec = static_cast<int>(sides[*lines[i].sidenum].sector-sectors);
          for(s = -1; (s = P_FindSectorFromLineTag(lines+i,s)) >= 0;)
             sectors[s].ceilinglightsec = sec;
          break;
@@ -1694,7 +1694,7 @@ void P_SetLineID(line_t *line, int id)
       int chain = (unsigned int)line->tag % (unsigned int)numlines; // Hash func
    
       line->nexttag = lines[chain].firsttag;   // Prepend linedef to chain
-      lines[chain].firsttag = line - lines;
+      lines[chain].firsttag = static_cast<int>(line - lines);
    }
 }
 
@@ -1959,7 +1959,7 @@ void P_AttachLines(line_t *cline, bool ceiling)
               attached = erealloc(int *, attached, sizeof(int) * maxattach);
             }
 
-            attached[numattach++] = line - lines;
+            attached[numattach++] = static_cast<int>(line - lines);
          }
          
          // SoM 12/8/02: Don't attach the backsector.
@@ -1995,8 +1995,8 @@ void P_AttachLines(line_t *cline, bool ceiling)
    numattach = 0;
    for(start = 0; start < alistsize; ++start)
    {
-      int front = lines[alist[start]].frontsector - sectors;
-      int back  = lines[alist[start]].backsector - sectors;
+      int front = static_cast<int>(lines[alist[start]].frontsector - sectors);
+      int back  = static_cast<int>(lines[alist[start]].backsector - sectors);
 
       // Check the frontsector for uniqueness in the list.
       for(i = 0; i < numattach; ++i)
@@ -2494,7 +2494,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          return;
       }
 
-      portal = R_GetAnchoredPortal(line - lines, s);
+      portal = R_GetAnchoredPortal(static_cast<int>(line - lines), s);
       break;
 
    case portal_twoway:
@@ -2522,7 +2522,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          return;
       }
 
-      portal = R_GetTwoWayPortal(line - lines, s);
+      portal = R_GetTwoWayPortal(static_cast<int>(line - lines), s);
       break;
 
    case portal_linked:
@@ -2579,14 +2579,14 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       toid = sector->groupid;
       fromid = lines[s].frontsector->groupid;
             
-      portal = R_GetLinkedPortal(line - lines, s, planez, fromid, toid);
+      portal = R_GetLinkedPortal(static_cast<int>(line - lines), s, planez, fromid, toid);
 
       // Special case where the portal was created with the line-to-line portal type
       if(staticFn == EV_STATIC_PORTAL_LINKED_LINE2LINE)
       {
          P_SetPortal(lines[s].frontsector, lines + s, portal, portal_lineonly);
          
-         portal = R_GetLinkedPortal(s, line - lines, planez, toid, fromid);
+         portal = R_GetLinkedPortal(s, static_cast<int>(line - lines), planez, toid, fromid);
          P_SetPortal(sector, line, portal, portal_lineonly);
          return;
       }

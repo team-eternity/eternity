@@ -608,7 +608,7 @@ static void SpechitOverrun(line_t *ld)
    // the offset of the line in the array times the original structure size to
    // reconstruct the approximate line addresses actually written. In most cases
    // this doesn't matter because of the nature of tmbbox, however.
-   addr = baseaddr + (ld - lines) * 0x3E;
+   addr = static_cast<unsigned>(baseaddr + (ld - lines) * 0x3E);
 
    // Note: only the variables affected up to 20 are known, and it is of no
    // consequence to alter any of the variables between 15 and 20 because they

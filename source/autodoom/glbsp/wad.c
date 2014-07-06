@@ -1173,10 +1173,10 @@ void AddGLTextLine(const char *keyword, const char *value)
   PrintDebug("[%s] Adding: %s=%s\n", gl_level->name, keyword, value);
 # endif
 
-  AppendLevelLump(gl_level, keyword, strlen(keyword));
+  AppendLevelLump(gl_level, keyword, (int)strlen(keyword));
   AppendLevelLump(gl_level, "=", 1);
 
-  AppendLevelLump(gl_level, value, strlen(value));
+  AppendLevelLump(gl_level, value, (int)strlen(value));
   AppendLevelLump(gl_level, "\n", 1);
 }
 

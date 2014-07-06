@@ -71,7 +71,7 @@ int EV_DoParamFloor(line_t *line, int tag, floordata_t *fd)
    {
       if(!line || !(sec = line->backsector))
          return rtn;
-      secnum = sec - sectors;
+      secnum = static_cast<int>(sec - sectors);
       manual = true;
       goto manual_floor;
    }
@@ -326,7 +326,7 @@ int EV_DoParamCeiling(line_t *line, int tag, ceilingdata_t *cd)
    {
       if(!line || !(sec = line->backsector))
          return rtn;
-      secnum = sec - sectors;
+      secnum = static_cast<int>(sec - sectors);
       manual = true;
       goto manual_ceiling;
    }
@@ -594,7 +594,7 @@ int EV_DoGenLift(line_t *line)
    {
       if (!(sec = line->backsector))
          return rtn;
-      secnum = sec - sectors;
+      secnum = static_cast<int>(sec - sectors);
       manual = true;
       goto manual_lift;
    }
@@ -739,7 +739,7 @@ int EV_DoParamStairs(line_t *line, int tag, stairdata_t *sd)
    {
       if(!line || !(sec = line->backsector))
          return rtn;
-      secnum = sec - sectors;
+      secnum = static_cast<int>(sec - sectors);
       manual = true;
       goto manual_stair;
    }
@@ -852,13 +852,13 @@ manual_stair:
                continue;
             
             tsec = (sec->lines[i])->frontsector;
-            newsecnum = tsec-sectors;
+            newsecnum = static_cast<int>(tsec-sectors);
             
             if(secnum != newsecnum)
                continue;
             
             tsec = (sec->lines[i])->backsector;
-            newsecnum = tsec - sectors;
+            newsecnum = static_cast<int>(tsec - sectors);
             
             if(!(sd->flags & SDF_IGNORETEXTURES) && tsec->floorpic != texture)
                continue;
@@ -1002,7 +1002,7 @@ int EV_DoGenCrusher(line_t *line)
    {
       if(!(sec = line->backsector))
          return rtn;
-      secnum = sec-sectors;
+      secnum = static_cast<int>(sec-sectors);
       manual = true;
       goto manual_crusher;
    }
@@ -1141,7 +1141,7 @@ int EV_DoParamDoor(line_t *line, int tag, doordata_t *dd)
    {
       if(!line || !(sec = line->backsector))
          return rtn;
-      secnum = sec - sectors;
+      secnum = static_cast<int>(sec - sectors);
       manual = true;
       goto manual_door;
    }

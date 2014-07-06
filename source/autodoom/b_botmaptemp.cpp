@@ -1242,7 +1242,7 @@ void TempBotMap::obtainMetaSectors(OutBuffer& cacheStream)
 					   // create new metasector
 					   CompoundMSector *cms = new CompoundMSector;
 					   cms->msectors = emalloc(const MetaSector **,
-						   (cms->numElem = cmsSet.size())
+						   (cms->numElem = static_cast<int>(cmsSet.size()))
 						   * sizeof(const MetaSector *));
 
 					   cmsSetMap[cmsSet] = cms;
@@ -1392,7 +1392,7 @@ void TempBotMap::generateForRadius(fixed_t inradius, OutBuffer& cacheStream)
    pimpl->getThingMSectors();
    B_MEASURE_CLOCK(getThingMSectors)
 
-   IntOSet::s_maxSize = pimpl->rawMSectors.getLength();
+   IntOSet::s_maxSize = static_cast<int>(pimpl->rawMSectors.getLength());
 
    B_NEW_CLOCK
    createBlockMap();	// the tempbotmap part, derived from BotMap

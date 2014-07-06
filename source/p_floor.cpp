@@ -602,7 +602,7 @@ int EV_DoFloor(line_t *line, floor_e floortype )
 
          //jff 5/23/98 use model subroutine to unify fixes and handling
          sec = P_FindModelFloorSector(floor->floordestheight,
-                                      sec-sectors);
+                                      static_cast<int>(sec-sectors));
          if(sec)
          {
             floor->texture = sec->floorpic;
@@ -795,14 +795,14 @@ int EV_BuildStairs(line_t *line, stair_e type)
                if(!((sec->lines[i])->flags & ML_TWOSIDED))
                   continue;
 
-               newsecnum = tsec-sectors;
+               newsecnum = static_cast<int>(tsec-sectors);
                
                if(secnum != newsecnum)
                   continue;
                
                tsec = (sec->lines[i])->backsector;
                if(!tsec) continue;     //jff 5/7/98 if no backside, continue
-               newsecnum = tsec - sectors;
+               newsecnum = static_cast<int>(tsec - sectors);
 
                // if sector's floor is different texture, look for another
                if(tsec->floorpic != texture)
@@ -1134,7 +1134,7 @@ int EV_PillarBuild(line_t *line, pillardata_t *pd)
    {
       if(!line || !(sector = line->backsector))
          return returnval;
-      sectornum = sector - sectors;
+      sectornum = static_cast<int>(sector - sectors);
       manual = true;
       goto manual_pillar;
    }
@@ -1223,7 +1223,7 @@ int EV_PillarOpen(line_t *line, pillardata_t *pd)
    {
       if(!line || !(sector = line->backsector))
          return returnval;
-      sectornum = sector - sectors;
+      sectornum = static_cast<int>(sector - sectors);
       manual = true;
       goto manual_pillar;
    }
@@ -1397,7 +1397,7 @@ int EV_StartFloorWaggle(line_t *line, int tag, int height, int speed,
    {
       if(!line || !(sector = line->backsector))
          return retCode;
-      sectorIndex = sector - sectors;
+      sectorIndex = static_cast<int>(sector - sectors);
       manual = true;
       goto manual_waggle;
    }

@@ -80,7 +80,7 @@ static void TXT_InputBoxDrawer(TXT_UNCAST_ARG(inputbox), int selected)
     
     TXT_DrawString(inputbox->buffer);
 
-    chars = strlen(inputbox->buffer);
+    chars = (int)strlen(inputbox->buffer);
 
     if (chars < w && inputbox->editing && selected)
     {

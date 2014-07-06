@@ -34,7 +34,7 @@ static void TXT_SeparatorSizeCalc(TXT_UNCAST_ARG(separator))
     {
         // Minimum width is the string length + two spaces for padding
 
-        separator->widget.w = strlen(separator->label) + 2;
+        separator->widget.w = (unsigned)strlen(separator->label) + 2;
     }
     else
     {

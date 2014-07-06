@@ -1399,7 +1399,7 @@ void qstring::archive(SaveArchive &arc)
    arc.ArchiveLString(buffer, size);
 
    if(arc.isSaving())
-      indexTemp = index;
+      indexTemp = static_cast<uint32_t>(index);
 
    arc << indexTemp;
 

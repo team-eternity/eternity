@@ -60,10 +60,10 @@ static void TXT_LabelDrawer(TXT_UNCAST_ARG(label), int selected)
                 align_indent = 0;
                 break;
             case TXT_HORIZ_CENTER:
-                align_indent = (label->w - strlen(label->lines[y])) / 2;
+                align_indent = (unsigned)((label->w - strlen(label->lines[y])) / 2);
                 break;
             case TXT_HORIZ_RIGHT:
-                align_indent = label->w - strlen(label->lines[y]);
+                align_indent = (unsigned)(label->w - strlen(label->lines[y]));
                 break;
         }
         
@@ -157,7 +157,7 @@ void TXT_SetLabel(txt_label_t *label, char *value)
     for (y=0; y<label->h; ++y)
     {
         if (strlen(label->lines[y]) > label->w)
-            label->w = strlen(label->lines[y]);
+            label->w = (unsigned)strlen(label->lines[y]);
     }
 }
 

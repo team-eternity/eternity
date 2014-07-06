@@ -278,7 +278,7 @@ SaveArchive &SaveArchive::operator << (sector_t *&s)
 
    if(savefile)
    {
-      sectornum = s - sectors;
+      sectornum = static_cast<int32_t>(s - sectors);
       savefile->WriteSint32(sectornum);
    }
    else
@@ -303,7 +303,7 @@ SaveArchive &SaveArchive::operator << (line_t *&ln)
    if(savefile)
    {
       if(ln)
-         linenum = ln - lines;
+         linenum = static_cast<int32_t>(ln - lines);
       savefile->WriteSint32(linenum);
    }
    else
@@ -1031,7 +1031,7 @@ static void P_ArchiveSndSeq(SaveArchive &arc, SndSeq_t *seq)
    arc.ArchiveCString(seq->sequence->name, 33);
 
    // twizzle command pointer
-   twizzle = seq->cmdPtr - seq->sequence->commands;
+   twizzle = static_cast<unsigned>(seq->cmdPtr - seq->sequence->commands);
    arc << twizzle;
 
    // save origin type

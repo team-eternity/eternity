@@ -471,7 +471,7 @@ static void D_DiskMetaData()
    if(!(slash = strrchr(wad.name, '\\')))
       return;
 
-   slen = slash - wad.name;
+   slen = static_cast<int>(slash - wad.name);
    ++slen;
    strncpy(name, wad.name, slen);
    strcpy(name + slen, "metadata.txt");

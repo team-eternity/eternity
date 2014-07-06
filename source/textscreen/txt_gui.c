@@ -170,7 +170,7 @@ void TXT_DrawWindowFrame(char *title, int x, int y, int w, int h)
             TXT_DrawString(" ");
         }
     
-        TXT_GotoXY(x + (w - strlen(title)) / 2, y + 1);
+        TXT_GotoXY((int)(x + (w - strlen(title)) / 2), y + 1);
         TXT_DrawString(title);
     }
 
@@ -246,7 +246,7 @@ void TXT_DrawString(char *s)
         }
     }
 
-    TXT_GotoXY(x + strlen(s), y);
+    TXT_GotoXY((int)(x + strlen(s)), y);
 }
 
 void TXT_DrawHorizScrollbar(int x, int y, int w, int cursor, int range)

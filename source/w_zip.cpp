@@ -621,7 +621,7 @@ protected:
          atEOF = true;
 
       zlStream.next_in  = deflateBuffer;
-      zlStream.avail_in = bytesRead;
+      zlStream.avail_in = static_cast<uInt>(bytesRead);
    }
 
 public:
@@ -676,7 +676,7 @@ static void ZIP_ReadDeflated(InBuffer &fin, void *buffer, size_t len)
 {
    ZIPDeflateReader reader(fin);
 
-   reader.read(buffer, len);
+   reader.read(buffer, static_cast<uint32_t>(len));
 }
 
 //

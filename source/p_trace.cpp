@@ -869,7 +869,7 @@ bool PIT_AddThingIntercepts(Mobj *thing)
 bool P_TraverseIntercepts(traverser_t func, fixed_t maxfrac)
 {
    intercept_t *in = NULL;
-   int count = intercept_p - intercepts;
+   int count = static_cast<int>(intercept_p - intercepts);
    while(count--)
    {
       fixed_t dist = D_MAXINT;

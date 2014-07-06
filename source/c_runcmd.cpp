@@ -869,7 +869,7 @@ static void C_SetVariable(command_t *command)
       
    case vt_string:
    case vt_chararray:
-      size = Console.argv[0]->length();
+      size = static_cast<int>(Console.argv[0]->length());
       break;
 
    case vt_float:

@@ -1279,7 +1279,7 @@ patch_t *patch_left, *patch_mid, *patch_right;
 void MN_SaveGame()
 {
    int save_slot = 
-      (char **)(Console.command->variable->variable) - savegamenames;
+      static_cast<int>((char **)(Console.command->variable->variable) - savegamenames);
    
    if(gamestate != GS_LEVEL) 
       return; // only save in level

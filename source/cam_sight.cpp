@@ -376,7 +376,7 @@ static bool CAM_SightBlockLinesIterator(CamSight &cam, int x, int y)
    while(plink)
    {
       polyobj_t *po = (*plink)->po;
-      int polynum = po - PolyObjects;
+      int polynum = static_cast<int>(po - PolyObjects);
 
        // if polyobj hasn't been checked
       if(!(cam.validpolys[polynum >> 3] & (1 << (polynum & 7))))
@@ -385,12 +385,12 @@ static bool CAM_SightBlockLinesIterator(CamSight &cam, int x, int y)
          
          for(int i = 0; i < po->numLines; ++i)
          {
-            int linenum = po->lines[i] - lines;
+            int linenum = static_cast<int>(po->lines[i] - lines);
 
             if(cam.validlines[linenum >> 3] & (1 << (linenum & 7)))
                continue; // line has already been checked
 
-            if(!CAM_SightCheckLine(cam, po->lines[i] - lines))
+            if(!CAM_SightCheckLine(cam, static_cast<int>(po->lines[i] - lines)))
                return false;
          }
       }
@@ -689,8 +689,8 @@ bool CAM_CheckSight(const camsightparams_t &params)
    //
    // check for trivial rejection
    //
-   s1   = (csec = R_PointInSubsector(params.cx, params.cy)->sector) - sectors;
-   s2   = (tsec = R_PointInSubsector(params.tx, params.ty)->sector) - sectors;
+   s1   = static_cast<int>((csec = R_PointInSubsector(params.cx, params.cy)->sector) - sectors);
+   s2   = static_cast<int>((tsec = R_PointInSubsector(params.tx, params.ty)->sector) - sectors);
    pnum = s1 * numsectors + s2;
 	
    if(link || !(rejectmatrix[pnum >> 3] & (1 << (pnum & 7))))

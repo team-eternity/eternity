@@ -994,7 +994,7 @@ static bool midtex_moving;
 //
 static int P_PushUp(Mobj *thing)
 {
-   unsigned int firstintersect = intersectors.getLength();
+   unsigned int firstintersect = static_cast<unsigned>(intersectors.getLength());
    unsigned int lastintersect;
    int mymass = thing->info->mass;
 
@@ -1002,7 +1002,7 @@ static int P_PushUp(Mobj *thing)
       return 1;
 
    P_FindAboveIntersectors(thing);
-   lastintersect = intersectors.getLength();
+   lastintersect = static_cast<unsigned>(intersectors.getLength());
    for(; firstintersect < lastintersect; ++firstintersect)
    {
       Mobj *intersect = intersectors[firstintersect];
@@ -1038,7 +1038,7 @@ static int P_PushUp(Mobj *thing)
 //
 static int P_PushDown(Mobj *thing)
 {
-   unsigned int firstintersect = intersectors.getLength();
+   unsigned int firstintersect = static_cast<unsigned>(intersectors.getLength());
    unsigned int lastintersect;
    int mymass = thing->info->mass;
 
@@ -1046,7 +1046,7 @@ static int P_PushDown(Mobj *thing)
       return 1;
 
    P_FindBelowIntersectors(thing);
-   lastintersect = intersectors.getLength();
+   lastintersect = static_cast<unsigned>(intersectors.getLength());
    for(; firstintersect < lastintersect; ++firstintersect)
    {
       Mobj *intersect = intersectors[firstintersect];

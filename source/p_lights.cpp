@@ -776,7 +776,7 @@ int EV_SetLight(line_t *line, int tag, setlight_e type, int lvl)
    {
       if(!line->backsector)
          return rtn;
-      i = line->backsector - sectors;
+      i = static_cast<int>(line->backsector - sectors);
       backside = true;
       goto dobackside;
    }
@@ -835,7 +835,7 @@ int EV_FadeLight(line_t *line, int tag, int destvalue, int speed)
    {
       if(!line->backsector)
          return rtn;
-      i = line->backsector - sectors;
+      i = static_cast<int>(line->backsector - sectors);
       backside = true;
       goto dobackside;
    }
@@ -895,7 +895,7 @@ int EV_GlowLight(line_t *line, int tag, int maxval, int minval, int speed)
    {
       if(!line->backsector)
          return rtn;
-      i = line->backsector - sectors;
+      i = static_cast<int>(line->backsector - sectors);
       backside = true;
       goto dobackside;
    }
@@ -948,7 +948,7 @@ int EV_StrobeLight(line_t *line, int tag,
    {
       if(!line->backsector)
          return rtn;
-      i = line->backsector - sectors;
+      i = static_cast<int>(line->backsector - sectors);
       backside = true;
       goto dobackside;
    }
@@ -994,7 +994,7 @@ int EV_FlickerLight(line_t *line, int tag, int maxval, int minval)
    {
       if(!line->backsector)
          return rtn;
-      i = line->backsector - sectors;
+      i = static_cast<int>(line->backsector - sectors);
       backside = true;
       goto dobackside;
    }

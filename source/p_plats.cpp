@@ -421,7 +421,7 @@ bool EV_DoParamPlat(line_t *line, int *args, paramplattype_e type)
       if(!line || !line->backsector)
          return false;
       sec    = line->backsector;
-      secnum = sec - sectors;
+      secnum = static_cast<int>(sec - sectors);
       manual = true;
       goto manual_plat;
    }

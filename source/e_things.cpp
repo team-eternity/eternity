@@ -1608,7 +1608,7 @@ static int E_ColorCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
    int num;
    char *endptr;
 
-   num = strtol(value, &endptr, 0);
+   num = static_cast<int>(strtol(value, &endptr, 0));
 
    // try lump name
    if(*endptr != '\0')
@@ -2376,7 +2376,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       char *endpos = NULL;
       tempstr = cfg_getstr(thingsec, ITEM_TNG_MOD);
 
-      tempint = strtol(tempstr, &endpos, 0);
+      tempint = static_cast<int>(strtol(tempstr, &endpos, 0));
       
       if(endpos && *endpos == '\0')
          mod = E_DamageTypeForNum(tempint);  // it is a number

@@ -322,7 +322,7 @@ void P_AddMusInfoMusic(const char *mapname, int number, const char *lump)
    // Does it exist already?
    if((music = musInfoMusHash.objectForKey(mapname)))
    {
-      int nummaps = music->maps.getLength();
+      int nummaps = static_cast<int>(music->maps.getLength());
       bool foundnum = false;
 
       // Does it have an entry for this number already?

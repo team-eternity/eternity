@@ -582,8 +582,8 @@ void R_PushPost(bool pushmasked, planehash_t *overlay)
       else
          post->masked->firstds = post->masked->firstsprite = 0;
          
-      post->masked->lastds     = ds_p - drawsegs;
-      post->masked->lastsprite = num_vissprite;
+      post->masked->lastds     = static_cast<int>(ds_p - drawsegs);
+      post->masked->lastsprite = static_cast<int>(num_vissprite);
       
       memcpy(post->masked->ceilingclip, portaltop,    sizeof(*portaltop)    * video.width);
       memcpy(post->masked->floorclip,   portalbottom, sizeof(*portalbottom) * video.width);
@@ -992,7 +992,7 @@ static void R_ProjectSprite(Mobj *thing)
 
    vis->ytop = y1;
    vis->ybottom = y2;
-   vis->sector = sec - sectors; // haleyjd: use interpolated sector
+   vis->sector = static_cast<int>(sec - sectors); // haleyjd: use interpolated sector
 
    //if(x1 < vis->x1)
       vis->startx += vis->xstep * (vis->x1 - x1);
@@ -1191,7 +1191,7 @@ static void R_DrawPSprite(pspdef_t *psp)
    vis->scale        = view.pspriteyscale;
    vis->ytop         = (view.height * 0.5f) - (M_FixedToFloat(vis->texturemid) * vis->scale);
    vis->ybottom      = vis->ytop + (spriteheight[lump] * vis->scale);
-   vis->sector       = view.sector - sectors;
+   vis->sector       = static_cast<int>(view.sector - sectors);
    
    // haleyjd 07/01/07: use actual pixel range to scale graphic
    if(flip)
@@ -1805,7 +1805,7 @@ particle_t *newParticle()
       result = Particles + inactiveParticles;
       inactiveParticles = result->next;
       result->next = activeParticles;
-      activeParticles = result - Particles;
+      activeParticles = static_cast<int>(result - Particles);
    }
 
    return result;
@@ -1960,7 +1960,7 @@ static void R_ProjectParticle(particle_t *particle)
    vis->ytop = y1;
    vis->ybottom = y2;
    vis->scale = yscale;
-   vis->sector = sector - sectors;  
+   vis->sector = static_cast<int>(sector - sectors);
    
    if(fixedcolormap ==
       fullcolormap + INVERSECOLORMAP*256*sizeof(lighttable_t))
