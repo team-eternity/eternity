@@ -76,7 +76,7 @@ struct side_t;
 // p_lights
 
 #define GLOWSPEED       8
-#define GLOWSPEEDSLOW   2
+#define GLOWSPEEDSLOW   1
 #define STROBEBRIGHT    5
 #define FASTDARK        15
 #define SLOWDARK        35
@@ -569,6 +569,7 @@ typedef enum
 // haleyjd 06/29/14: second argument to P_SpawnPSXGlowingLight
 typedef enum
 {
+   psxglow_low, // glow down to lowest neighboring lightlevel
    psxglow_10,  // glow down to 10 from sector->lightlevel
    psxglow_255  // glow up to 255 from sector->lightlevel
 } psxglow_e;
@@ -1425,6 +1426,8 @@ void P_SpawnFireFlicker(sector_t *sector);
 void P_SpawnLightFlash(sector_t *sector);
 
 void P_SpawnStrobeFlash(sector_t *sector, int fastOrSlow, int inSync);
+
+void P_SpawnPSXStrobeFlash(sector_t *sector, int speed);
 
 void P_SpawnGlowingLight(sector_t *sector);
 

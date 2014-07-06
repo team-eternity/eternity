@@ -470,6 +470,18 @@ static void EV_SectorHexenLightSeqAlt(sector_t *sector)
 //
 
 //
+// EV_SectorLightPSXGlowLow
+//
+// Glows from sector->lightlevel to lowest neighboring light level in
+// a cycle (same behavior as DOOM type 8), but at GLOWSPEEDSLOW.
+// * PSX: 8
+//
+static void EV_SectorLightPSXGlowLow(sector_t *sector)
+{
+   P_SpawnPSXGlowingLight(sector, psxglow_low);
+}
+
+//
 // EV_SectorLightPSXGlow10
 //
 // Glows from sector->lightlevel down to 10, and then back up in a cycle.
@@ -489,6 +501,17 @@ static void EV_SectorLightPSXGlow10(sector_t *sector)
 static void EV_SectorLightPSXGlow255(sector_t *sector)
 {
    P_SpawnPSXGlowingLight(sector, psxglow_255);
+}
+
+//
+// EV_SectorLightPSXStrobeHyper
+//
+// Super-fast strobing light.
+// * PSX: 202 (NB: similar to DOOM 64 202)
+//
+static void EV_SectorLightPSXStrobeHyper(sector_t *sector)
+{
+   P_SpawnPSXStrobeFlash(sector, 3);
 }
 
 //=============================================================================
@@ -600,8 +623,10 @@ static ev_sectorbinding_t HexenSectorBindings[] =
 // PSX sector types
 static ev_sectorbinding_t PSXSectorBindings[] =
 {
-   { 200, EV_SectorLightPSXGlow10  },
-   { 201, EV_SectorLightPSXGlow255 }
+   {   8, EV_SectorLightPSXGlowLow     },
+   { 200, EV_SectorLightPSXGlow10      },
+   { 201, EV_SectorLightPSXGlow255     },
+   { 202, EV_SectorLightPSXStrobeHyper },
 };
 
 // Sector specials allowed as the low 5 bits of generalized specials

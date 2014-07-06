@@ -545,6 +545,28 @@ void P_SpawnStrobeFlash(sector_t *sector, int fastOrSlow, int inSync)
 }
 
 //
+// P_SpawnPSXStrobeFlash
+//
+// Spawn a PSX strobe effect.
+//
+void P_SpawnPSXStrobeFlash(sector_t *sector, int speed)
+{
+   auto flash = new StrobeThinker;
+   flash->addThinker();
+
+   flash->sector     = sector;
+   flash->darktime   = speed;
+   flash->brighttime = speed;
+   flash->maxlight   = sector->lightlevel;
+   flash->minlight   = P_FindMinSurroundingLight(sector, sector->lightlevel);
+
+   if(flash->minlight == flash->maxlight)
+      flash->minlight = 0;
+
+   flash->count = 1;
+}
+
+//
 // P_SpawnGlowingLight()
 //
 // Spawns a glowing light (smooth oscillation from min to max) thinker
@@ -569,7 +591,7 @@ void P_SpawnGlowingLight(sector_t *sector)
 //
 // P_SpawnPSXGlowingLight
 //
-// Spawn a GlowThinker setup for PSX sector type 200 or 201.
+// Spawn a GlowThinker setup for PSX sector types 8, 200, and 201.
 //
 void P_SpawnPSXGlowingLight(sector_t *sector, psxglow_e glowtype)
 {
@@ -581,6 +603,11 @@ void P_SpawnPSXGlowingLight(sector_t *sector, psxglow_e glowtype)
 
    switch(glowtype)
    {
+   case psxglow_low:
+      g->minlight  = P_FindMinSurroundingLight(sector, sector->lightlevel);
+      g->maxlight  = sector->lightlevel;
+      g->direction = -1;
+      break;
    case psxglow_10:
       g->minlight  = 10;
       g->maxlight  = sector->lightlevel;
