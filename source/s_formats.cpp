@@ -321,15 +321,15 @@ static unsigned int S_alenForSample(const sounddata_t &sd)
 static void S_convertPCMU8(sfxinfo_t *sfx, const sounddata_t &sd)
 {
    sfx->alen = S_alenForSample(sd);
-   sfx->data = Z_Malloc(sfx->alen*sizeof(double), PU_STATIC, &sfx->data);
+   sfx->data = Z_Malloc(sfx->alen*sizeof(float), PU_STATIC, &sfx->data);
 
    // haleyjd 12/18/13: Convert sound to target samplerate and into floating
    // point samples.
    if(sfx->alen != sd.samplecount)
    {
       unsigned int i;
-      double *dest = static_cast<double *>(sfx->data);
-      byte   *src  = sd.samplestart;
+      float *dest = static_cast<float *>(sfx->data);
+      byte  *src  = sd.samplestart;
 
       unsigned int step = (sd.samplerate << 16) / TARGETSAMPLERATE;
       unsigned int stepremainder = 0, j = 0;
@@ -340,7 +340,7 @@ static void S_convertPCMU8(sfxinfo_t *sfx, const sounddata_t &sd)
          double d = (((unsigned int)src[j  ] * (0x10000 - stepremainder)) +
                      ((unsigned int)src[j+1] * stepremainder));
          d /= 65536.0;
-         dest[i] = eclamp(d * 2.0 / 255.0 - 1.0, -1.0, 1.0);
+         dest[i] = static_cast<float>(eclamp(d * 2.0 / 255.0 - 1.0, -1.0, 1.0));
 
          stepremainder += step;
          j += (stepremainder >> 16);
@@ -349,16 +349,16 @@ static void S_convertPCMU8(sfxinfo_t *sfx, const sounddata_t &sd)
       }
       // fill remainder (if any) with final sample byte
       for(; i < sfx->alen; i++)
-         dest[i] = eclamp(src[j] * 2.0 / 255.0 - 1.0, -1.0, 1.0);
+         dest[i] = static_cast<float>(eclamp(src[j] * 2.0 / 255.0 - 1.0, -1.0, 1.0));
    }
    else
    {
       // sound is already at target samplerate, just convert to doubles
-      double *dest = static_cast<double *>(sfx->data);
-      byte   *src  = sd.samplestart;
+      float *dest = static_cast<float *>(sfx->data);
+      byte  *src  = sd.samplestart;
 
       for(unsigned int i = 0; i < sfx->alen; i++)
-         dest[i] = eclamp(src[i] * 2.0 / 255.0 - 1.0, -1.0, 1.0);
+         dest[i] = static_cast<float>(eclamp(src[i] * 2.0 / 255.0 - 1.0, -1.0, 1.0));
    }
 }
 
@@ -370,14 +370,14 @@ static void S_convertPCMU8(sfxinfo_t *sfx, const sounddata_t &sd)
 static void S_convertPCM16(sfxinfo_t *sfx, const sounddata_t &sd)
 {
    sfx->alen = S_alenForSample(sd);
-   sfx->data = Z_Malloc(sfx->alen*sizeof(double), PU_STATIC, &sfx->data);
+   sfx->data = Z_Malloc(sfx->alen*sizeof(float), PU_STATIC, &sfx->data);
 
    // haleyjd 12/18/13: Convert sound to target samplerate and into floating
    // point samples.
    if(sfx->alen != sd.samplecount)
    {
       unsigned int i;
-      double  *dest = static_cast<double *>(sfx->data);
+      float   *dest = static_cast<float *>(sfx->data);
       int16_t *src  = reinterpret_cast<int16_t *>(sd.samplestart);
 
       unsigned int step = (sd.samplerate << 16) / TARGETSAMPLERATE;
@@ -390,7 +390,7 @@ static void S_convertPCM16(sfxinfo_t *sfx, const sounddata_t &sd)
          double s2 = SwapShort(src[j+1]);
          double d  = (s1 * (0x10000 - stepremainder)) + (s2 * stepremainder);
          d /= 65536.0;
-         dest[i] = eclamp((d + 32768.0) * 2.0 / 65535.0 - 1.0, -1.0, 1.0);
+         dest[i] = static_cast<float>(eclamp((d + 32768.0) * 2.0 / 65535.0 - 1.0, -1.0, 1.0));
 
          stepremainder += step;
          j += (stepremainder >> 16);
@@ -401,19 +401,19 @@ static void S_convertPCM16(sfxinfo_t *sfx, const sounddata_t &sd)
       for(; i < sfx->alen; i++)
       {
          double s = SwapShort(src[j]);
-         dest[i] = eclamp((s + 32768.0) * 2.0 / 65535.0 - 1.0, -1.0, 1.0);
+         dest[i] = static_cast<float>(eclamp((s + 32768.0) * 2.0 / 65535.0 - 1.0, -1.0, 1.0));
       }
    }
    else
    {
       // sound is already at target samplerate, just convert to doubles
-      double  *dest = static_cast<double *>(sfx->data);
+      float   *dest = static_cast<float *>(sfx->data);
       int16_t *src  = reinterpret_cast<int16_t *>(sd.samplestart);
 
       for(unsigned int i = 0; i < sfx->alen; i++)
       {
          double s = SwapShort(src[i]);
-         dest[i] = eclamp((s + 32768.0) * 2.0 / 65535.0 - 1.0, -1.0, 1.0);
+         dest[i] = static_cast<float>(eclamp((s + 32768.0) * 2.0 / 65535.0 - 1.0, -1.0, 1.0));
       }
    }
 }
