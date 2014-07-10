@@ -503,7 +503,7 @@ static void B_buildTempBotMapFromScratch(fixed_t radius, const char *digest, con
 //
 // The main call to build bot map
 //
-void B_BuildBotMap()
+void BotMap::Build()
 {
    
    // Create the BotMap

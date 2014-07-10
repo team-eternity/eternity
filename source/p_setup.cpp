@@ -2777,7 +2777,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    g_levelHash.wrapUp();
    
    // IOANCH: create the bot map
-   B_BuildBotMap();
+   BotMap::Build();
    for (int i = 0; i < MAXPLAYERS; ++i)
       if(playeringame[i])
          bots[i].mapInit();
