@@ -161,7 +161,7 @@ static void CountGroups(void)
 //
 // CreateReject
 //
-static void CreateReject(uint8_g *matrix)
+static void CreateReject(uint8_t *matrix)
 {
   int view, target;
 
@@ -196,7 +196,7 @@ static void CreateReject(uint8_g *matrix)
 void PutReject(void)
 {
   int reject_size;
-  uint8_g *matrix;
+  uint8_t *matrix;
   lump_t *lump;
 
   DisplayTicker();

@@ -24,6 +24,7 @@
 #ifndef __GLBSP_SYSTEM_H__
 #define __GLBSP_SYSTEM_H__
 
+#include <stdint.h>
 #include "glbsp.h"
 
 
@@ -57,8 +58,8 @@ void SetErrorMsg(const char *str, ...) GCCATTR((format (printf, 1, 2)));
 
 // endian handling
 void InitEndian(void);
-uint16_g Endian_U16(uint16_g);
-uint32_g Endian_U32(uint32_g);
+uint16_t Endian_U16(uint16_t);
+uint32_t Endian_U32(uint32_t);
 
 // these are only used for debugging
 void InitDebug(void);

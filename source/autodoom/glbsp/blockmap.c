@@ -51,10 +51,10 @@ static int block_count;
 static int block_mid_x = 0;
 static int block_mid_y = 0;
 
-static uint16_g ** block_lines;
+static uint16_t ** block_lines;
 
-static uint16_g *block_ptrs;
-static uint16_g *block_dups;
+static uint16_t *block_ptrs;
+static uint16_t *block_dups;
 
 static int block_compression;
 static int block_overflowed;
@@ -156,7 +156,7 @@ int CheckLinedefInsideBox(int xmin, int ymin, int xmax, int ymax,
 
 static void BlockAdd(int blk_num, int line_index)
 {
-  uint16_g *cur = block_lines[blk_num];
+  uint16_t *cur = block_lines[blk_num];
 
 # if DEBUG_BLOCKMAP
   PrintDebug("Block %d has line %d\n", blk_num, line_index);
@@ -169,7 +169,7 @@ static void BlockAdd(int blk_num, int line_index)
   {
     // create empty block
     block_lines[blk_num] = cur = UtilCalloc(BK_QUANTUM * 
-        sizeof(uint16_g));
+        sizeof(uint16_t));
     cur[BK_NUM] = 0;
     cur[BK_MAX] = BK_QUANTUM;
     cur[BK_XOR] = 0x1234;
@@ -181,7 +181,7 @@ static void BlockAdd(int blk_num, int line_index)
     cur[BK_MAX] += BK_QUANTUM;
 
     block_lines[blk_num] = cur = UtilRealloc(cur, cur[BK_MAX] * 
-        sizeof(uint16_g));
+        sizeof(uint16_t));
   }
 
   // compute new checksum
@@ -265,7 +265,7 @@ static void CreateBlockmap(void)
 {
   int i;
 
-  block_lines = UtilCalloc(block_count * sizeof(uint16_g *));
+  block_lines = UtilCalloc(block_count * sizeof(uint16_t *));
 
   DisplayTicker();
 
@@ -284,11 +284,11 @@ static void CreateBlockmap(void)
 
 static int BlockCompare(const void *p1, const void *p2)
 {
-  int blk_num1 = ((const uint16_g *) p1)[0];
-  int blk_num2 = ((const uint16_g *) p2)[0];
+  int blk_num1 = ((const uint16_t *) p1)[0];
+  int blk_num2 = ((const uint16_t *) p2)[0];
 
-  const uint16_g *A = block_lines[blk_num1];
-  const uint16_g *B = block_lines[blk_num2];
+  const uint16_t *A = block_lines[blk_num1];
+  const uint16_t *B = block_lines[blk_num2];
 
   if (A == B)
     return 0;
@@ -306,7 +306,7 @@ static int BlockCompare(const void *p1, const void *p2)
     return A[BK_XOR] - B[BK_XOR];
   }
  
-  return memcmp(A+BK_FIRST, B+BK_FIRST, A[BK_NUM] * sizeof(uint16_g));
+  return memcmp(A+BK_FIRST, B+BK_FIRST, A[BK_NUM] * sizeof(uint16_t));
 }
 
 static void CompressBlockmap(void)
@@ -317,8 +317,8 @@ static void CompressBlockmap(void)
 
   int orig_size, new_size;
 
-  block_ptrs = UtilCalloc(block_count * sizeof(uint16_g));
-  block_dups = UtilCalloc(block_count * sizeof(uint16_g));
+  block_ptrs = UtilCalloc(block_count * sizeof(uint16_t));
+  block_dups = UtilCalloc(block_count * sizeof(uint16_t));
 
   DisplayTicker();
 
@@ -329,7 +329,7 @@ static void CompressBlockmap(void)
   for (i=0; i < block_count; i++)
     block_dups[i] = i;
 
-  qsort(block_dups, block_count, sizeof(uint16_g), BlockCompare);
+  qsort(block_dups, block_count, sizeof(uint16_t), BlockCompare);
 
   // scan duplicate array and build up offset array
 
@@ -415,9 +415,9 @@ static void WriteBlockmap(void)
 
   lump_t *lump = CreateLevelLump("BLOCKMAP");
 
-  uint16_g null_block[2] = { 0x0000, 0xFFFF };
-  uint16_g m_zero = 0x0000;
-  uint16_g m_neg1 = 0xFFFF;
+  uint16_t null_block[2] = { 0x0000, 0xFFFF };
+  uint16_t m_zero = 0x0000;
+  uint16_t m_neg1 = 0xFFFF;
   
   // leave empty if the blockmap overflowed
   if (block_overflowed)
@@ -434,12 +434,12 @@ static void WriteBlockmap(void)
   // handle pointers
   for (i=0; i < block_count; i++)
   {
-    uint16_g ptr = UINT16(block_ptrs[i]);
+    uint16_t ptr = UINT16(block_ptrs[i]);
 
     if (ptr == 0)
       InternalError("WriteBlockmap: offset %d not set.", i);
 
-    AppendLevelLump(lump, &ptr, sizeof(uint16_g));
+    AppendLevelLump(lump, &ptr, sizeof(uint16_t));
   }
 
   // add the null block which _all_ empty blocks will use
@@ -449,7 +449,7 @@ static void WriteBlockmap(void)
   for (i=0; i < block_count; i++)
   {
     int blk_num = block_dups[i];
-    uint16_g *blk;
+    uint16_t *blk;
 
     // ignore duplicate or empty blocks
     if (blk_num == DUMMY_DUP)
@@ -460,9 +460,9 @@ static void WriteBlockmap(void)
     if (blk == NULL)
       InternalError("WriteBlockmap: block %d is NULL !", i);
 
-    AppendLevelLump(lump, &m_zero, sizeof(uint16_g));
-    AppendLevelLump(lump, blk + BK_FIRST, blk[BK_NUM] * sizeof(uint16_g));
-    AppendLevelLump(lump, &m_neg1, sizeof(uint16_g));
+    AppendLevelLump(lump, &m_zero, sizeof(uint16_t));
+    AppendLevelLump(lump, blk + BK_FIRST, blk[BK_NUM] * sizeof(uint16_t));
+    AppendLevelLump(lump, &m_neg1, sizeof(uint16_t));
   }
 }
 

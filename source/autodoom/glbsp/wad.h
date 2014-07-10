@@ -241,14 +241,13 @@ void ReportFailedLevels(void);
 /* ----- conversion macros ----------------------- */
 
 
-#define UINT8(x)   ((uint8_g) (x))
-#define SINT8(x)   ((sint8_g) (x))
+#define UINT8(x)   ((uint8_t) (x))
 
 #define UINT16(x)  Endian_U16(x)
 #define UINT32(x)  Endian_U32(x)
 
-#define SINT16(x)  ((sint16_g) Endian_U16((uint16_g) (x)))
-#define SINT32(x)  ((sint32_g) Endian_U32((uint32_g) (x)))
+#define SINT16(x)  ((int16_t) Endian_U16((uint16_t) (x)))
+#define SINT32(x)  ((int32_t) Endian_U32((uint32_t) (x)))
 
 
 #endif /* __GLBSP_WAD_H__ */

@@ -378,12 +378,12 @@ void GetSidedefs(void)
    }
 }
 
-static INLINE_G sidedef_t *SafeLookupSidedef(uint16_g num)
+static INLINE_G sidedef_t *SafeLookupSidedef(uint16_t num)
 {
   if (num == 0xFFFF)
     return NULL;
 
-  if ((int)num >= num_sidedefs && (sint16_g)(num) < 0)
+  if ((int)num >= num_sidedefs && (int16_t)(num) < 0)
     return NULL;
 
   return LookupSidedef(num);
@@ -561,9 +561,9 @@ static int SegCompare(const void *p1, const void *p2)
 
 /* ----- writing routines ------------------------------ */
 
-static const uint8_g *lev_v2_magic = (uint8_g *) "gNd2";
-static const uint8_g *lev_v3_magic = (uint8_g *) "gNd3";
-static const uint8_g *lev_v5_magic = (uint8_g *) "gNd5";
+static const uint8_t *lev_v2_magic = (uint8_t *) "gNd2";
+static const uint8_t *lev_v3_magic = (uint8_t *) "gNd3";
+static const uint8_t *lev_v5_magic = (uint8_t *) "gNd5";
 
 // IOANCH: added AutoDoom routines
 
@@ -806,20 +806,20 @@ void PutLinedefsHexen(void)
     MarkSoftFailure(LIMIT_LINEDEFS);
 }
 
-static INLINE_G uint16_g VertexIndex16Bit(const vertex_t *v)
+static INLINE_G uint16_t VertexIndex16Bit(const vertex_t *v)
 {
   if (v->index & IS_GL_VERTEX)
-    return (uint16_g) ((v->index & ~IS_GL_VERTEX) | 0x8000U);
+    return (uint16_t) ((v->index & ~IS_GL_VERTEX) | 0x8000U);
 
-  return (uint16_g) v->index;
+  return (uint16_t) v->index;
 }
 
-static INLINE_G uint32_g VertexIndex32BitV5(const vertex_t *v)
+static INLINE_G uint32_t VertexIndex32BitV5(const vertex_t *v)
 {
   if (v->index & IS_GL_VERTEX)
-    return (uint32_g) ((v->index & ~IS_GL_VERTEX) | 0x80000000U);
+    return (uint32_t) ((v->index & ~IS_GL_VERTEX) | 0x80000000U);
 
-  return (uint32_g) v->index;
+  return (uint32_t) v->index;
 }
 
 void PutSegs(void)
@@ -1243,14 +1243,14 @@ void PutNodes(char *name, int do_gl, int do_v5, node_t *root)
 
 /* ----- ZDBSP format writing --------------------------- */
 
-static const uint8_g *lev_ZD_magic = (uint8_g *) "ZNOD";
+static const uint8_t *lev_ZD_magic = (uint8_t *) "ZNOD";
 
 void PutZVertices(void)
 {
   int count, i;
 
-  uint32_g orgverts = UINT32(num_normal_vert);
-  uint32_g newverts = UINT32(num_gl_vert);
+  uint32_t orgverts = UINT32(num_normal_vert);
+  uint32_t newverts = UINT32(num_gl_vert);
 
   ZLibAppendLump(&orgverts, 4);
   ZLibAppendLump(&newverts, 4);
@@ -1282,7 +1282,7 @@ void PutZSubsecs(void)
 {
   int i;
   int count;
-  uint32_g raw_num = UINT32(num_subsecs);
+  uint32_t raw_num = UINT32(num_subsecs);
 
   int cur_seg_index = 0;
 
@@ -1326,7 +1326,7 @@ void PutZSubsecs(void)
 void PutZSegs(void)
 {
   int i, count;
-  uint32_g raw_num = UINT32(num_complete_seg);
+  uint32_t raw_num = UINT32(num_complete_seg);
 
   ZLibAppendLump(&raw_num, 4);
   DisplayTicker();
@@ -1344,11 +1344,11 @@ void PutZSegs(void)
           count, seg->index);
 
     {
-      uint32_g v1 = UINT32(VertexIndex32BitV5(seg->start));
-      uint32_g v2 = UINT32(VertexIndex32BitV5(seg->end));
+      uint32_t v1 = UINT32(VertexIndex32BitV5(seg->start));
+      uint32_t v2 = UINT32(VertexIndex32BitV5(seg->end));
 
-      uint16_g line = UINT16(seg->linedef->index);
-      uint8_g  side = seg->side;
+      uint16_t line = UINT16(seg->linedef->index);
+      uint8_t  side = seg->side;
 
       ZLibAppendLump(&v1,   4);
       ZLibAppendLump(&v2,   4);
@@ -1426,7 +1426,7 @@ static void PutOneZNode(node_t *node)
 
 void PutZNodes(node_t *root)
 {
-  uint32_g raw_num = UINT32(num_nodes);
+  uint32_t raw_num = UINT32(num_nodes);
 
   ZLibAppendLump(&raw_num, 4);
   DisplayTicker();
@@ -1601,7 +1601,7 @@ void PutGLOptions(void)
 //
 void PutGLChecksum(void)
 {
-  uint32_g crc;
+  uint32_t crc;
   lump_t *lump;
   char num_buf[64];
 

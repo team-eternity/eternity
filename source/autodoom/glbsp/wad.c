@@ -1253,7 +1253,7 @@ int CheckLevelLumpZero(lump_t *lump)
 
   for (i=0; i < lump->length; i++)
   {
-    if (((uint8_g *)lump->data)[i])
+    if (((uint8_t *)lump->data)[i])
       return FALSE;
   }
 

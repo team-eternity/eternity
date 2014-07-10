@@ -240,28 +240,28 @@ void InitEndian(void)
 {
   volatile union
   {
-    uint8_g mem[32];
-    uint32_g val;
+    uint8_t mem[32];
+    uint32_t val;
   }
   u;
  
   /* sanity-check type sizes */
 
-  if (sizeof(uint8_g) != 1)
-    FatalError("Sanity check failed: sizeof(uint8_g) = %d", 
-        (int)sizeof(uint8_g));
+  if (sizeof(uint8_t) != 1)
+    FatalError("Sanity check failed: sizeof(uint8_t) = %d",
+        (int)sizeof(uint8_t));
 
-  if (sizeof(uint16_g) != 2)
-    FatalError("Sanity check failed: sizeof(uint16_g) = %d", 
-        (int)sizeof(uint16_g));
+  if (sizeof(uint16_t) != 2)
+    FatalError("Sanity check failed: sizeof(uint16_t) = %d",
+        (int)sizeof(uint16_t));
 
-  if (sizeof(uint32_g) != 4)
-    FatalError("Sanity check failed: sizeof(uint32_g) = %d", 
-        (int)sizeof(uint32_g));
+  if (sizeof(uint32_t) != 4)
+    FatalError("Sanity check failed: sizeof(uint32_t) = %d",
+        (int)sizeof(uint32_t));
 
   /* check endianness */
 
-  memset((uint32_g *) u.mem, 0, sizeof(u.mem));
+  memset((uint32_t *) u.mem, 0, sizeof(u.mem));
 
   u.mem[0] = 0x70;  u.mem[1] = 0x71;
   u.mem[2] = 0x72;  u.mem[3] = 0x73;
@@ -291,7 +291,7 @@ void InitEndian(void)
 //
 // Endian_U16
 //
-uint16_g Endian_U16(uint16_g x)
+uint16_t Endian_U16(uint16_t x)
 {
   if (cpu_big_endian)
     return (x >> 8) | (x << 8);
@@ -302,7 +302,7 @@ uint16_g Endian_U16(uint16_g x)
 //
 // Endian_U32
 //
-uint32_g Endian_U32(uint32_g x)
+uint32_t Endian_U32(uint32_t x)
 {
   if (cpu_big_endian)
     return (x >> 24) | ((x >> 8) & 0xff00) |

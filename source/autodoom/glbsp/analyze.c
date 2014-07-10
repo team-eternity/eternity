@@ -304,8 +304,8 @@ void DetectPolyobjSectors(void)
 
 static int VertexCompare(const void *p1, const void *p2)
 {
-  int vert1 = ((const uint16_g *) p1)[0];
-  int vert2 = ((const uint16_g *) p2)[0];
+  int vert1 = ((const uint16_t *) p1)[0];
+  int vert2 = ((const uint16_t *) p2)[0];
 
   vertex_t *A = lev_vertices[vert1];
   vertex_t *B = lev_vertices[vert2];
@@ -323,8 +323,8 @@ static int SidedefCompare(const void *p1, const void *p2)
 {
   int comp;
 
-  int side1 = ((const uint16_g *) p1)[0];
-  int side2 = ((const uint16_g *) p2)[0];
+  int side1 = ((const uint16_t *) p1)[0];
+  int side2 = ((const uint16_t *) p2)[0];
 
   sidedef_t *A = lev_sidedefs[side1];
   sidedef_t *B = lev_sidedefs[side2];
@@ -368,7 +368,7 @@ static int SidedefCompare(const void *p1, const void *p2)
 void DetectDuplicateVertices(void)
 {
   int i;
-  uint16_g *array = UtilCalloc(num_vertices * sizeof(uint16_g));
+  uint16_t *array = UtilCalloc(num_vertices * sizeof(uint16_t));
 
   DisplayTicker();
 
@@ -376,7 +376,7 @@ void DetectDuplicateVertices(void)
   for (i=0; i < num_vertices; i++)
     array[i] = i;
   
-  qsort(array, num_vertices, sizeof(uint16_g), VertexCompare);
+  qsort(array, num_vertices, sizeof(uint16_t), VertexCompare);
 
   // now mark them off
   for (i=0; i < num_vertices - 1; i++)
@@ -398,7 +398,7 @@ void DetectDuplicateVertices(void)
 void DetectDuplicateSidedefs(void)
 {
   int i;
-  uint16_g *array = UtilCalloc(num_sidedefs * sizeof(uint16_g));
+  uint16_t *array = UtilCalloc(num_sidedefs * sizeof(uint16_t));
 
   DisplayTicker();
 
@@ -406,7 +406,7 @@ void DetectDuplicateSidedefs(void)
   for (i=0; i < num_sidedefs; i++)
     array[i] = i;
   
-  qsort(array, num_sidedefs, sizeof(uint16_g), SidedefCompare);
+  qsort(array, num_sidedefs, sizeof(uint16_t), SidedefCompare);
 
   // now mark them off
   for (i=0; i < num_sidedefs - 1; i++)
