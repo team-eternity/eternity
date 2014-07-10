@@ -497,8 +497,8 @@ public:
       clear_3band(eqr);
    }
 
-   void processReplace(double *inputL, double *inputR, 
-                       double *outputL, double *outputR,
+   void processReplace(float *inputL, float *inputR, 
+                       float *outputL, float *outputR,
                        int numsamples, int skip)
    {
       double outL, outR, input;
@@ -537,8 +537,8 @@ public:
          }
 
          // calculate output replacing anything already there
-         *outputL = outL * wet1 + outR * wet2 + *inputL * dry;
-         *outputR = outR * wet1 + outL * wet2 + *inputR * dry;
+         *outputL = (float)(outL * wet1 + outR * wet2 + *inputL * dry);
+         *outputR = (float)(outR * wet1 + outL * wet2 + *inputR * dry);
 
          // increment sample pointers
          inputL  += skip;
@@ -548,8 +548,8 @@ public:
       }
    }
 
-   void processMix(double *inputL, double *inputR, 
-                   double *outputL, double *outputR,
+   void processMix(float *inputL, float *inputR, 
+                   float *outputL, float *outputR,
                    int numsamples, int skip)
    {
       double outL, outR, input;
@@ -588,8 +588,8 @@ public:
          }
 
          // calculate output mixing with anything already there
-         *outputL += outL * wet1 + outR * wet2 + *inputL * dry;
-         *outputR += outR * wet1 + outL * wet2 + *inputR * dry;
+         *outputL += (float)(outL * wet1 + outR * wet2 + *inputL * dry);
+         *outputR += (float)(outR * wet1 + outL * wet2 + *inputR * dry);
 
          // increment sample pointers
          inputL  += skip;
@@ -733,7 +733,7 @@ void S_ReverbSetState(ereverb_t *ereverb)
 //
 // Mix the reverb engine's output into the input sound stream.
 //
-void S_ProcessReverb(double *stream, int samples)
+void S_ProcessReverb(float *stream, int samples)
 {
    reverb.processMix(stream, stream+1, stream, stream+1, samples, 2);
 }
@@ -743,7 +743,7 @@ void S_ProcessReverb(double *stream, int samples)
 //
 // Replace the input sound stream with the reverb engine's output.
 //
-void S_ProcessReverbReplace(double *stream, int samples)
+void S_ProcessReverbReplace(float *stream, int samples)
 {
    reverb.processReplace(stream, stream+1, stream, stream+1, samples, 2);
 }

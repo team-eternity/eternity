@@ -36,8 +36,8 @@ struct ereverb_t;
 void S_SuspendReverb();
 void S_ResumeReverb();
 void S_ReverbSetState(ereverb_t *ereverb);
-void S_ProcessReverb(double *stream, int samples);
-void S_ProcessReverbReplace(double *stream, int samples);
+void S_ProcessReverb(float *stream, int samples);
+void S_ProcessReverbReplace(float *stream, int samples);
 
 #endif
 

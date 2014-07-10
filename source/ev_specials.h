@@ -277,6 +277,9 @@ enum
    EV_STATIC_SCROLL_RIGHT_PARAM,            // 407
    EV_STATIC_SCROLL_UP_PARAM,               // 408
    EV_STATIC_SCROLL_DOWN_PARAM,             // 409
+   EV_STATIC_SCROLL_LINE_UP,                // 417
+   EV_STATIC_SCROLL_LINE_DOWN,              // 418
+   EV_STATIC_SCROLL_LINE_DOWN_FAST,         // 419
 
    EV_STATIC_MAX
 };

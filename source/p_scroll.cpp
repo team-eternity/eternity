@@ -445,10 +445,19 @@ void P_SpawnScrollers()
          break;
    
       case EV_STATIC_SCROLL_LINE_LEFT:
-         P_spawnStaticWallScroller(line, FRACUNIT, 0);  // scroll first side
+         P_spawnStaticWallScroller(line, FRACUNIT, 0);    // scroll first side
          break;
       case EV_STATIC_SCROLL_LINE_RIGHT:
-         P_spawnStaticWallScroller(line, -FRACUNIT, 0); // jff 1/30/98 2-way scroll
+         P_spawnStaticWallScroller(line, -FRACUNIT, 0);   // jff 1/30/98 2-way scroll
+         break;
+      case EV_STATIC_SCROLL_LINE_UP:
+         P_spawnStaticWallScroller(line, 0, FRACUNIT);    // haleyjd: Strife and PSX type
+         break;
+      case EV_STATIC_SCROLL_LINE_DOWN:
+         P_spawnStaticWallScroller(line, 0, -FRACUNIT);   // haleyjd: Strife and PSX type
+         break;
+      case EV_STATIC_SCROLL_LINE_DOWN_FAST:
+         P_spawnStaticWallScroller(line, 0, -3*FRACUNIT); // haleyjd: Strife type
          break;
       case EV_STATIC_SCROLL_BY_OFFSETS:
          // killough 3/2/98: scroll according to sidedef offsets

@@ -59,7 +59,7 @@ int audio_buffers;
 static Uint32 mixbuffer_size;
 
 // haleyjd 12/18/13: primary floating point mixing buffers
-static double *mixbuffer[2];
+static float *mixbuffer[2];
 
 // MWM 2000-01-08: Sample rate in samples/second
 // haleyjd 10/28/05: updated for Julian's music code, need full quality now
@@ -76,11 +76,11 @@ typedef struct channel_info_s
   unsigned int stepremainder;
   unsigned int samplerate;
   // The channel data pointers, start and end.
-  double *data;
-  double *startdata; // haleyjd
-  double *enddata;
+  float *data;
+  float *startdata; // haleyjd
+  float *enddata;
   // Hardware left and right channel volume lookup.
-  double  leftvol, rightvol;
+  float  leftvol, rightvol;
   // haleyjd 06/03/06: looping
   int loop;
   // unique instance id
@@ -132,10 +132,10 @@ static bool addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id, bool 
    // haleyjd 10/02/08: critical section
    if(SDL_SemWait(channelinfo[channel].semaphore) == 0)
    {
-      channelinfo[channel].data = (double *)sfx->data;
+      channelinfo[channel].data = (float *)sfx->data;
       
       // Set pointer to end of raw data.
-      channelinfo[channel].enddata = (double *)sfx->data + sfx->alen - 1;
+      channelinfo[channel].enddata = (float *)sfx->data + sfx->alen - 1;
       
       // haleyjd 06/03/06: keep track of start of sound
       channelinfo[channel].startdata = channelinfo[channel].data;
@@ -203,8 +203,8 @@ static void updateSoundParams(int handle, int volume, int separation, int pitch)
    rightvol   = volume - ((volume*separation*separation) >> 16);  
 
    // volume levels are softened slightly by dividing by 191 rather than ideal 127
-   channelinfo[slot].leftvol  = eclamp((double)leftvol  / 191.0, 0.0, 1.0);
-   channelinfo[slot].rightvol = eclamp((double)rightvol / 191.0, 0.0, 1.0);
+   channelinfo[slot].leftvol  = (float)(eclamp((double)leftvol  / 191.0, 0.0, 1.0));
+   channelinfo[slot].rightvol = (float)(eclamp((double)rightvol / 191.0, 0.0, 1.0));
 
    // haleyjd 06/07/09: critical section is not needed here because this data
    // can be out of sync without affecting the sound update loop. This may cause
@@ -306,7 +306,7 @@ static double rational_tanh(double x)
 // haleyjd 12/19/13: rewritten to loop over the sample buffer and do output
 // directly back to the SDL audio stream.
 //
-static void do_3band(double *stream, double *end, Sint16 *dest)
+static void do_3band(float *stream, float *end, Sint16 *dest)
 {
    int esnum = 0;
 
@@ -392,13 +392,13 @@ static void inline I_SDLConvertSoundBuffer(Uint8 *stream, int len)
    leftend = (Sint16 *)(stream + len);
 
    // convert input to mixbuffer
-   double *bptr0 = mixbuffer[0];
-   double *bptr1 = mixbuffer[1];
+   float *bptr0 = mixbuffer[0];
+   float *bptr1 = mixbuffer[1];
    while(leftout != leftend)
    {
-      *(bptr0 + 0) = (double)(*(leftout + 0)) * (1.0/32768.0); // L
-      *(bptr0 + 1) = (double)(*(leftout + 1)) * (1.0/32768.0); // R
-      *bptr1 = *(bptr1 + 1) = 0.0; // clear secondary reverb buffer
+      *(bptr0 + 0) = (float)(*(leftout + 0)) * (1.0f/32768.0f); // L
+      *(bptr0 + 1) = (float)(*(leftout + 1)) * (1.0f/32768.0f); // R
+      *bptr1 = *(bptr1 + 1) = 0.0f; // clear secondary reverb buffer
       leftout += STEP;
       bptr0   += STEP;
       bptr1   += STEP;
@@ -413,8 +413,8 @@ static void inline I_SDLConvertSoundBuffer(Uint8 *stream, int len)
 //
 static inline void I_SDLMixBuffers()
 {
-   double *bptr = mixbuffer[0];
-   double *end  = bptr + mixbuffer_size;
+   float *bptr = mixbuffer[0];
+   float *end  = bptr + mixbuffer_size;
    while(bptr != end)
    {
       *bptr = *bptr + *(bptr + mixbuffer_size);
@@ -433,11 +433,11 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
    // convert input samples to floating point
    I_SDLConvertSoundBuffer(stream, len);
 
-   double *leftout;
+   float *leftout;
    // Pointer to end of mixbuffer
-   double *leftend0 = mixbuffer[0] + (len/SAMPLESIZE);
-   double *leftend1 = mixbuffer[1] + (len/SAMPLESIZE);
-   double *leftend;
+   float *leftend0 = mixbuffer[0] + (len/SAMPLESIZE);
+   float *leftend1 = mixbuffer[1] + (len/SAMPLESIZE);
+   float *leftend;
 
    // Mix audio channels
    for(channel_info_t *chan = channelinfo; chan != &channelinfo[numChannels]; chan++)
@@ -474,7 +474,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
 
       while(leftout != leftend)
       {
-         double sample  = *(chan->data);         
+         float sample  = *(chan->data);         
          *(leftout + 0) = *(leftout + 0) + sample * chan->leftvol;
          *(leftout + 1) = *(leftout + 1) + sample * chan->rightvol;
          
@@ -553,7 +553,7 @@ static void I_SetChannels()
       steptablemid[i] = (int)(pow(1.2, ((double)i/(64.0)))*FPFRACUNIT);
    
    // allocate mixing buffers
-   auto buf = ecalloc(double *, 2*mixbuffer_size, sizeof(double));
+   auto buf = ecalloc(float *, 2*mixbuffer_size, sizeof(float));
    mixbuffer[0] = buf;
    mixbuffer[1] = buf + mixbuffer_size;
 

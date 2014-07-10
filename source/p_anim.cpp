@@ -46,21 +46,25 @@ int LightningFlash;
 int LevelSky;
 int LevelTempSky;
 
-static void P_LightningFlash(void);
+static void P_LightningFlash();
 
 //
 // P_AnimateSurfaces
 //
 // Called every tic in P_Ticker
 //
-void P_AnimateSurfaces(void)
+void P_AnimateSurfaces()
 {
    // update sky scroll offsets
    //   haleyjd: stored as regular ints in the mapinfo so we need 
    //   to transform these to fixed point values :)
+   skyflat_t *sky1 = R_SkyFlatForIndex(0);
+   skyflat_t *sky2 = R_SkyFlatForIndex(1);
 
-   Sky1ColumnOffset += ((fixed_t)LevelInfo.skyDelta ) << 8;
-   Sky2ColumnOffset += ((fixed_t)LevelInfo.sky2Delta) << 8;
+   if(sky1)
+      sky1->columnoffset += LevelInfo.skyDelta  << 8;
+   if(sky2)
+      sky2->columnoffset += LevelInfo.sky2Delta << 8;
    
    if(LevelInfo.hasLightning)
    {
@@ -71,13 +75,17 @@ void P_AnimateSurfaces(void)
    }
 }
 
-static void P_LightningFlash(void)
+static void P_LightningFlash()
 {
    int i;
    sector_t *tempSec;
    bool foundSec;
    int flashLight;
    static PointThinker thunderSndOrigin;
+   skyflat_t *sky1 = R_SkyFlatForIndex(0);
+
+   if(!sky1)
+      return;
 
    if(LightningFlash)
    {
@@ -107,7 +115,7 @@ static void P_LightningFlash(void)
          }
 
          if(LevelSky != -1 && LevelTempSky != -1)
-            skytexture = LevelSky;
+            sky1->texture = LevelSky;
       }
    }
    else
@@ -136,7 +144,7 @@ static void P_LightningFlash(void)
       if(foundSec)
       {
          if(LevelSky != -1 && LevelTempSky != -1)
-            skytexture = LevelTempSky;
+            sky1->texture = LevelTempSky;
 
          S_StartSoundAtVolume(&thunderSndOrigin, sfx_thundr,
                               127, ATTN_NONE, CHAN_AUTO);
@@ -157,7 +165,7 @@ static void P_LightningFlash(void)
    }
 }
 
-void P_ForceLightning(void)
+void P_ForceLightning()
 {
    NextLightningFlash = 0;
 }
@@ -167,13 +175,18 @@ void P_ForceLightning(void)
 //
 // Called from P_SetupLevel
 //
-void P_InitLightning(void)
+void P_InitLightning()
 {  
    if(!LevelInfo.hasLightning)
       LightningFlash = 0;
    else
    {
-      LevelSky = skytexture;
+      skyflat_t *sky1 = R_SkyFlatForIndex(0);
+
+      if(!sky1)
+         return;
+
+      LevelSky = sky1->texture;
       
       if(LevelInfo.altSkyName)
          LevelTempSky = R_FindWall(LevelInfo.altSkyName);

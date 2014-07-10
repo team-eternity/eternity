@@ -322,11 +322,6 @@ extern  bool            singletics;
 
 extern  size_t          bodyqueslot;
 
-// Needed to store the number of the dummy sky flat.
-// Used for rendering, as well as tracking projectiles etc.
-
-extern int    skyflatnum;
-
 // Netgame stuff (buffers and pointers, i.e. indices).
 extern  doomcom_t  *doomcom;
 extern  doomdata_t *netbuffer;  // This points inside doomcom.
@@ -395,10 +390,6 @@ extern int doom_weapon_toggles;   // killough 10/98
 //=======================================================
 
 extern int HelperThing;          // type of thing to use for helper
-
-extern int sky2flatnum;          // flat num of F_SKY2
-
-extern fixed_t Sky1ColumnOffset, Sky2ColumnOffset;
 
 extern bool cinema_pause;
 extern int drawparticles;

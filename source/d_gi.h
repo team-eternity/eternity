@@ -40,6 +40,7 @@ struct interfns_t;
 struct levelnamedata_t;
 struct menu_t;
 struct musicinfo_t;
+struct skyflat_t;
 struct stbarfns_t;
 struct texture_t;
 
@@ -310,6 +311,8 @@ struct missioninfo_t
    const char  **levelNamesOR;       // if not NULL, overrides levelNames
    int           randMusMaxOR;       // if not    0, overrides randMusMax
    const char   *borderFlatOR;       // if not NULL, overrides borderFlat
+   skydata_t    *skyDataOR;          // if not NULL, overrides skyData
+   skyflat_t    *skyFlatsOR;         // if not NULL, overrides skyFlats
 };
 
 // function pointer types
@@ -439,6 +442,7 @@ struct gamemodeinfo_t
    int switchEpisode;             // "episode" number for switch texture defs
    skydata_t *skyData;            // default sky data for MapInfo
    gitexhackfn_t TextureHacks;    // texture hacks function
+   skyflat_t *skyFlats;           // list of supported sky flats
 
    // Configuration
    default_or_t *defaultORs;      // default overrides for configuration file

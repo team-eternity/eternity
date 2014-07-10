@@ -74,6 +74,7 @@
 #include "p_info.h"
 #include "p_mobj.h"
 #include "p_setup.h"
+#include "r_sky.h"
 #include "s_sound.h"
 #include "sounds.h"
 #include "w_levels.h"
@@ -1116,7 +1117,7 @@ static void P_InfoDefaultSky()
 {
    skydata_t *sd      = GameModeInfo->skyData;
    skyrule_t *rule    = sd->rules;
-   skyrule_t *theRule = NULL;
+   skyrule_t *theRule = nullptr;
 
    // DOOM determines the sky texture to be used
    // depending on the current episode, and the game version.
@@ -1149,7 +1150,7 @@ static void P_InfoDefaultSky()
       I_Error("P_InfoDefaultSky: no default rule in skyrule set\n");
 
    // set sky2Name to NULL now, we'll test it later
-   LevelInfo.sky2Name = NULL;
+   LevelInfo.sky2Name  = nullptr;
    LevelInfo.doubleSky = false; // double skies off by default
 
    // sky deltas for Hexen-style double skies - default to 0
@@ -1223,7 +1224,13 @@ static void P_InfoDefaultMusic(metainfo_t *curmetainfo)
 static void P_SetSky2Texture()
 {
    if(!LevelInfo.sky2Name)
-      LevelInfo.sky2Name = LevelInfo.skyName;
+   {
+      skyflat_t *sky2 = R_SkyFlatForIndex(1);
+      if(sky2 && sky2->deftexture)
+         LevelInfo.sky2Name = sky2->deftexture;
+      else
+         LevelInfo.sky2Name = LevelInfo.skyName;
+   }
 }
 
 // DOOM Par Times

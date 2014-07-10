@@ -131,6 +131,9 @@ static ev_static_t DOOMStaticBindings[] =
    STATICSPEC(407, EV_STATIC_SCROLL_RIGHT_PARAM)
    STATICSPEC(408, EV_STATIC_SCROLL_UP_PARAM)
    STATICSPEC(409, EV_STATIC_SCROLL_DOWN_PARAM)
+   STATICSPEC(417, EV_STATIC_SCROLL_LINE_UP)
+   STATICSPEC(418, EV_STATIC_SCROLL_LINE_DOWN)
+   STATICSPEC(419, EV_STATIC_SCROLL_LINE_DOWN_FAST)
 };
 
 // Hexen Static Init Bindings
@@ -143,6 +146,15 @@ static ev_static_t HexenStaticBindings[] =
    STATICSPEC(102, EV_STATIC_SCROLL_UP_PARAM)
    STATICSPEC(103, EV_STATIC_SCROLL_DOWN_PARAM)
    STATICSPEC(121, EV_STATIC_LINE_SET_IDENTIFICATION)
+};
+
+// PSX Static Init Bindings
+static ev_static_t PSXStaticBindings[] =
+{
+   STATICSPEC(200, EV_STATIC_SCROLL_LINE_LEFT)
+   STATICSPEC(201, EV_STATIC_SCROLL_LINE_RIGHT)
+   STATICSPEC(202, EV_STATIC_SCROLL_LINE_UP)
+   STATICSPEC(203, EV_STATIC_SCROLL_LINE_DOWN)
 };
 
 //
@@ -354,6 +366,44 @@ int EV_StrifeStaticInitForSpecial(int special)
 }
 
 //
+// EV_PSXSpecialForStaticInit
+//
+// Always looks up a special in the PSX mission's static init list, regardless
+// of the map format or gamemode in use. Returns 0 if no such special exists.
+//
+int EV_PSXSpecialForStaticInit(int staticFn)
+{
+   // small set, so, linear search
+   for(size_t i = 0; i < earrlen(PSXStaticBindings); i++)
+   {
+      if(PSXStaticBindings[i].staticFn == staticFn)
+         return PSXStaticBindings[i].actionNumber;
+   }
+
+   // otherwise, check the DOOM lookup
+   return EV_DOOMSpecialForStaticInit(staticFn);
+}
+
+//
+// EV_PSXStaticInitForSpecial
+//
+// Always looks up a static init function in the PSX mission's static init list,
+// regardless of the map format or gamemode in use. Returns 0 if no such special
+// exists.
+//
+int EV_PSXStaticInitForSpecial(int special)
+{
+   for(size_t i = 0; i < earrlen(PSXStaticBindings); i++)
+   {
+      if(PSXStaticBindings[i].actionNumber == special)
+         return PSXStaticBindings[i].staticFn;
+   }
+
+   // otherwise, check the DOOM lookup
+   return EV_DOOMStaticInitForSpecial(special);
+}
+
+//
 // EV_SpecialForStaticInit
 //
 // Pass in the symbolic static function name you want the line special for; it
@@ -363,10 +413,13 @@ int EV_StrifeStaticInitForSpecial(int special)
 //
 int EV_SpecialForStaticInit(int staticFn)
 {
-   if(LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN)
-      return EV_HexenSpecialForStaticInit(staticFn);
-   else
+   switch(LevelInfo.mapFormat)
    {
+   case LEVEL_FORMAT_HEXEN:
+      return EV_HexenSpecialForStaticInit(staticFn);
+   case LEVEL_FORMAT_PSX:
+      return EV_PSXSpecialForStaticInit(staticFn);
+   default:
       switch(LevelInfo.levelType)
       {
       case LI_TYPE_DOOM: 
@@ -394,10 +447,13 @@ int EV_StaticInitForSpecial(int special)
    if(!special)
       return EV_STATIC_NULL;
 
-   if(LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN)
-      return EV_HexenStaticInitForSpecial(special);
-   else
+   switch(LevelInfo.mapFormat)
    {
+   case LEVEL_FORMAT_HEXEN:
+      return EV_HexenStaticInitForSpecial(special);
+   case LEVEL_FORMAT_PSX:
+      return EV_PSXStaticInitForSpecial(special);
+   default:
       switch(LevelInfo.levelType)
       {
       case LI_TYPE_DOOM:

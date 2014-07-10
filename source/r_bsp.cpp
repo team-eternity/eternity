@@ -41,6 +41,7 @@
 #include "r_dynabsp.h"
 #include "r_portal.h"
 #include "r_segs.h"
+#include "r_sky.h"
 #include "r_state.h"
 #include "r_things.h"
 #include "v_alloc.h"
@@ -575,7 +576,7 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
          tempsec->floorbaseangle = tempsec->ceilingbaseangle = s->ceilingbaseangle;
          tempsec->floorangle     = tempsec->ceilingangle     = s->ceilingangle; // haleyjd: angles
 
-         if(s->floorpic != skyflatnum && s->floorpic != sky2flatnum)
+         if(!R_IsSkyFlat(s->floorpic))
          {
             tempsec->ceilingheight  = sec->ceilingheight;
             tempsec->floorpic       = s->floorpic;
@@ -2109,8 +2110,7 @@ static void R_Subsector(int num)
          (seg.frontsec->heightsec != -1 &&
           sectors[seg.frontsec->heightsec].intflags & SIF_SKY)) ?
         R_FindPlane(seg.frontsec->floorheight, 
-                    (seg.frontsec->floorpic == skyflatnum ||
-                     seg.frontsec->floorpic == sky2flatnum) &&  // kilough 10/98
+                    R_IsSkyFlat(seg.frontsec->floorpic) &&  // kilough 10/98
                     seg.frontsec->sky & PL_SKYFLAT ? seg.frontsec->sky :
                     seg.frontsec->floorpic,
                     floorlightlevel,                // killough 3/16/98
@@ -2154,8 +2154,7 @@ static void R_Subsector(int num)
       seg.ceilingplane = (visible ||
          (seg.frontsec->intflags & SIF_SKY) ||
         (seg.frontsec->heightsec != -1 &&
-         (sectors[seg.frontsec->heightsec].floorpic == skyflatnum ||
-          sectors[seg.frontsec->heightsec].floorpic == sky2flatnum))) ?
+         R_IsSkyFlat(sectors[seg.frontsec->heightsec].floorpic))) ?
         R_FindPlane(seg.frontsec->ceilingheight,     // killough 3/8/98
                     (seg.frontsec->intflags & SIF_SKY) &&  // kilough 10/98
                     seg.frontsec->sky & PL_SKYFLAT ? seg.frontsec->sky :

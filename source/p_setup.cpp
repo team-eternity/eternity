@@ -528,7 +528,8 @@ void P_LoadPSXSectors(int lumpnum)
       data += 2;             // skip padding/unknown field for now
 
       // scale up light levels (experimental)
-      ss->lightlevel = (ss->lightlevel * 5 / 9) + 114;
+      //ss->lightlevel = (ss->lightlevel * 5 / 9) + 114;
+      ss->lightlevel = (ss->lightlevel * 11 / 18) + 85;
 
       P_InitSector(ss);
    }
