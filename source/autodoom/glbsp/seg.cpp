@@ -182,7 +182,7 @@ static seg_t *SplitSeg(seg_t *old_seg, float_g x, float_g y)
   if (old_seg->block)
     SplitSegInSuper(old_seg->block, old_seg);
 
-  new_vert = NewVertexFromSplitSeg(old_seg, x, y);
+  new_vert = glbsp::analyze::NewVertexFromSplitSeg(*old_seg, x, y);
   new_seg  = NewSeg();
 
   // copy seg info
@@ -301,8 +301,8 @@ static void AddIntersection(intersection_t ** cut_list,
   cut->along_dist = UtilParallelDist(part, vert->x, vert->y);
   cut->self_ref = self_ref;
  
-  cut->before = VertexCheckOpen(vert, -part->pdx, -part->pdy);
-  cut->after  = VertexCheckOpen(vert,  part->pdx,  part->pdy);
+  cut->before = glbsp::analyze::VertexCheckOpen(*vert, -part->pdx, -part->pdy);
+  cut->after  = glbsp::analyze::VertexCheckOpen(*vert,  part->pdx,  part->pdy);
  
   /* enqueue the new intersection into the list */
 

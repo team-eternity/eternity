@@ -91,7 +91,7 @@ static void MarkPolyobjPoint(float_g x, float_g y)
   int inside_count = 0;
  
   float_g best_dist = 999999;
-  linedef_t *best_match = NULL;
+  const linedef_t *best_match = NULL;
   sector_t *sector = NULL;
 
   float_g x1, y1;
@@ -101,18 +101,18 @@ static void MarkPolyobjPoint(float_g x, float_g y)
   //       directly on a linedef or even a vertex.  We check all lines
   //       that intersect a small box around the spawn point.
 
-  int bminx = (int) (x - POLY_BOX_SZ);
-  int bminy = (int) (y - POLY_BOX_SZ);
-  int bmaxx = (int) (x + POLY_BOX_SZ);
-  int bmaxy = (int) (y + POLY_BOX_SZ);
+  int bminx = static_cast<int> (x - POLY_BOX_SZ);
+  int bminy = static_cast<int> (y - POLY_BOX_SZ);
+  int bmaxx = static_cast<int> (x + POLY_BOX_SZ);
+  int bmaxy = static_cast<int> (y + POLY_BOX_SZ);
 
   for (i = 0; i < num_linedefs; i++)
   {
-    linedef_t *L = lev_linedefs[i];
+    const linedef_t *L = lev_linedefs[i];
 
     if (CheckLinedefInsideBox(bminx, bminy, bmaxx, bmaxy,
-          (int) L->start->x, (int) L->start->y,
-          (int) L->end->x, (int) L->end->y))
+          static_cast<int> (L->start->x), static_cast<int> (L->start->y),
+          static_cast<int> (L->end->x), static_cast<int> (L->end->y)))
     {
 #     if DEBUG_POLYOBJ
       PrintDebug("  Touching line was %d\n", L->index);
@@ -139,7 +139,7 @@ static void MarkPolyobjPoint(float_g x, float_g y)
 
   for (i = 0; i < num_linedefs; i++)
   {
-    linedef_t *L = lev_linedefs[i];
+    const linedef_t *L = lev_linedefs[i];
 
     float_g x_cut;
 
@@ -215,7 +215,7 @@ static void MarkPolyobjPoint(float_g x, float_g y)
 //
 // Based on code courtesy of Janis Legzdinsh.
 //
-void DetectPolyobjSectors(void)
+void glbsp::analyze::DetectPolyobjSectors()
 {
   int i;
   int hexen_style;
@@ -232,7 +232,7 @@ void DetectPolyobjSectors(void)
   // -JL- First go through all lines to see if level contains any polyobjs
   for (i = 0; i < num_linedefs; i++)
   {
-    linedef_t *L = lev_linedefs[i];
+    const linedef_t *L = lev_linedefs[i];
 
     if (L->type == HEXTYPE_POLY_START || L->type == HEXTYPE_POLY_EXPLICIT)
       break;
@@ -249,7 +249,7 @@ void DetectPolyobjSectors(void)
   
   for (i = 0; i < num_things; i++)
   {
-    thing_t *T = LookupThing(i);
+    const thing_t *T = LookupThing(i);
 
     if (T->type == ZDOOM_PO_SPAWN_TYPE || T->type == ZDOOM_PO_SPAWNCRUSH_TYPE)
     {
@@ -266,7 +266,7 @@ void DetectPolyobjSectors(void)
    
   for (i = 0; i < num_things; i++)
   {
-    thing_t *T = LookupThing(i);
+    const thing_t *T = LookupThing(i);
 
     float_g x = (float_g) T->x;
     float_g y = (float_g) T->y;
@@ -301,8 +301,8 @@ static bool VertexCompare(uint16_t vert1, uint16_t vert2)
   if (vert1 == vert2)
     return 0;
 
-  vertex_t *A = lev_vertices[vert1];
-  vertex_t *B = lev_vertices[vert2];
+  const vertex_t *A = lev_vertices[vert1];
+  const vertex_t *B = lev_vertices[vert2];
 
   if ((int)A->x != (int)B->x)
     return (int)A->x < (int)B->x;
@@ -310,53 +310,49 @@ static bool VertexCompare(uint16_t vert1, uint16_t vert2)
   return (int)A->y < (int)B->y;
 }
 
-static int SidedefCompare(const void *p1, const void *p2)
+static bool SidedefCompare(uint16_t side1, uint16_t side2)
 {
   int comp;
 
-  int side1 = ((const uint16_t *) p1)[0];
-  int side2 = ((const uint16_t *) p2)[0];
-
-  sidedef_t *A = lev_sidedefs[side1];
-  sidedef_t *B = lev_sidedefs[side2];
-
   if (side1 == side2)
     return 0;
-
+  const sidedef_t *A = lev_sidedefs[side1];
+  const sidedef_t *B = lev_sidedefs[side2];
+  
   // don't merge sidedefs on special lines
   if (A->on_special || B->on_special)
-    return side1 - side2;
+    return side1 < side2;
 
   if (A->sector != B->sector)
   {
-    if (A->sector == NULL) return -1;
-    if (B->sector == NULL) return +1;
+    if (A->sector == NULL) return true;
+    if (B->sector == NULL) return false;
 
-    return (A->sector->index - B->sector->index);
+    return A->sector->index < B->sector->index;
   }
 
-  if ((int)A->x_offset != (int)B->x_offset)
-    return A->x_offset - (int)B->x_offset;
+  if (A->x_offset != B->x_offset)
+    return A->x_offset < B->x_offset;
 
-  if ((int)A->y_offset != B->y_offset)
-    return (int)A->y_offset - (int)B->y_offset;
+  if (A->y_offset != B->y_offset)
+    return A->y_offset < B->y_offset;
 
   // compare textures
 
   comp = memcmp(A->upper_tex, B->upper_tex, sizeof(A->upper_tex));
-  if (comp) return comp;
+  if (comp) return comp < 0;
   
   comp = memcmp(A->lower_tex, B->lower_tex, sizeof(A->lower_tex));
-  if (comp) return comp;
+  if (comp) return comp < 0;
   
   comp = memcmp(A->mid_tex, B->mid_tex, sizeof(A->mid_tex));
-  if (comp) return comp;
+  if (comp) return comp < 0;
 
   // sidedefs must be the same
-  return 0;
+  return false;
 }
 
-void DetectDuplicateVertices()
+void glbsp::analyze::DetectDuplicateVertices()
 {
   int i;
   uint16_t* array = ecalloc(uint16_t*, num_vertices, sizeof(uint16_t));
@@ -386,10 +382,10 @@ void DetectDuplicateVertices()
   efree(array);
 }
 
-void DetectDuplicateSidedefs(void)
+void glbsp::analyze::DetectDuplicateSidedefs()
 {
   int i;
-  uint16_t *array = static_cast<uint16_t*>(UtilCalloc(num_sidedefs * sizeof(uint16_t)));
+  auto array = ecalloc(uint16_t*, num_sidedefs, sizeof(uint16_t));
 
   DisplayTicker();
 
@@ -397,13 +393,13 @@ void DetectDuplicateSidedefs(void)
   for (i=0; i < num_sidedefs; i++)
     array[i] = i;
   
-  qsort(array, num_sidedefs, sizeof(uint16_t), SidedefCompare);
-
+  std::sort(array, array + num_sidedefs, SidedefCompare);
+  
   // now mark them off
   for (i=0; i < num_sidedefs - 1; i++)
   {
     // duplicate ?
-    if (SidedefCompare(array + i, array + i+1) == 0)
+    if (!SidedefCompare(array[i], array[i + 1]) && !SidedefCompare(array[i + 1], array[i]))
     {
       sidedef_t *A = lev_sidedefs[array[i]];
       sidedef_t *B = lev_sidedefs[array[i+1]];
@@ -413,10 +409,10 @@ void DetectDuplicateSidedefs(void)
     }
   }
 
-  UtilFree(array);
+  efree(array);
 }
 
-void PruneLinedefs(void)
+void glbsp::analyze::PruneLinedefs()
 {
   int i;
   int new_num;
@@ -482,7 +478,7 @@ void PruneLinedefs(void)
     FatalError("Couldn't find any Linedefs");
 }
 
-void PruneVertices(void)
+void glbsp::analyze::PruneVertices()
 {
   int i;
   int new_num;
@@ -531,7 +527,7 @@ void PruneVertices(void)
   num_normal_vert = num_vertices;
 }
 
-void PruneSidedefs(void)
+void glbsp::analyze::PruneSidedefs()
 {
   int i;
   int new_num;
@@ -580,7 +576,7 @@ void PruneSidedefs(void)
     FatalError("Couldn't find any Sidedefs");
 }
 
-void PruneSectors(void)
+void glbsp::analyze::PruneSectors()
 {
   int i;
   int new_num;
@@ -615,65 +611,59 @@ void PruneSectors(void)
     FatalError("Couldn't find any Sectors");
 }
 
-static INLINE_G int LineVertexLowest(const linedef_t *L)
+static inline int LineVertexLowest(const linedef_t &L)
 {
   // returns the "lowest" vertex (normally the left-most, but if the
   // line is vertical, then the bottom-most) => 0 for start, 1 for end.
 
-  return ((int)L->start->x < (int)L->end->x ||
-          ((int)L->start->x == (int)L->end->x && 
-           (int)L->start->y <  (int)L->end->y)) ? 0 : 1;
+  return ((int)L.start->x < (int)L.end->x ||
+          ((int)L.start->x == (int)L.end->x &&
+           (int)L.start->y <  (int)L.end->y)) ? 0 : 1;
 }
 
-static int LineStartCompare(const void *p1, const void *p2)
+static bool LineStartCompare(int line1, int line2)
 {
-  int line1 = ((const int *) p1)[0];
-  int line2 = ((const int *) p2)[0];
+  const linedef_t *A = lev_linedefs[line1];
+  const linedef_t *B = lev_linedefs[line2];
 
-  linedef_t *A = lev_linedefs[line1];
-  linedef_t *B = lev_linedefs[line2];
-
-  vertex_t *C;
-  vertex_t *D;
+  const vertex_t *C;
+  const vertex_t *D;
 
   if (line1 == line2)
-    return 0;
+    return false;
 
   // determine left-most vertex of each line
-  C = LineVertexLowest(A) ? A->end : A->start;
-  D = LineVertexLowest(B) ? B->end : B->start;
+  C = LineVertexLowest(*A) ? A->end : A->start;
+  D = LineVertexLowest(*B) ? B->end : B->start;
 
-  if ((int)C->x != (int)D->x)
-    return (int)C->x - (int)D->x; 
+  if (static_cast<int>(C->x) != static_cast<int>(D->x))
+    return static_cast<int>(C->x) < static_cast<int>(D->x);
 
-  return (int)C->y - (int)D->y;
+  return static_cast<int>(C->y) < static_cast<int>(D->y);
 }
 
-static int LineEndCompare(const void *p1, const void *p2)
+static bool LineEndCompare(int line1, int line2)
 {
-  int line1 = ((const int *) p1)[0];
-  int line2 = ((const int *) p2)[0];
+  const linedef_t *A = lev_linedefs[line1];
+  const linedef_t *B = lev_linedefs[line2];
 
-  linedef_t *A = lev_linedefs[line1];
-  linedef_t *B = lev_linedefs[line2];
-
-  vertex_t *C;
-  vertex_t *D;
+  const vertex_t *C;
+  const vertex_t *D;
 
   if (line1 == line2)
-    return 0;
+    return false;
 
   // determine right-most vertex of each line
-  C = LineVertexLowest(A) ? A->start : A->end;
-  D = LineVertexLowest(B) ? B->start : B->end;
+  C = LineVertexLowest(*A) ? A->start : A->end;
+  D = LineVertexLowest(*B) ? B->start : B->end;
 
-  if ((int)C->x != (int)D->x)
-    return (int)C->x - (int)D->x; 
+  if (static_cast<int>(C->x) != static_cast<int>(D->x))
+    return static_cast<int>(C->x) < static_cast<int>(D->x);
 
-  return (int)C->y - (int)D->y;
+  return static_cast<int>(C->y) < static_cast<int>(D->y);
 }
 
-void DetectOverlappingLines(void)
+void glbsp::analyze::DetectOverlappingLines()
 {
   // Algorithm:
   //   Sort all lines by left-most vertex.
@@ -681,7 +671,7 @@ void DetectOverlappingLines(void)
   //   Note: does not detect partially overlapping lines.
 
   int i;
-  int *array = static_cast<int*>(UtilCalloc(num_linedefs * sizeof(int)));
+  auto array = ecalloc(int*, num_linedefs, sizeof(int));
   int count = 0;
 
   DisplayTicker();
@@ -690,18 +680,18 @@ void DetectOverlappingLines(void)
   for (i=0; i < num_linedefs; i++)
     array[i] = i;
   
-  qsort(array, num_linedefs, sizeof(int), LineStartCompare);
-
+  std::sort(array, array + num_linedefs, LineStartCompare);
+  
   for (i=0; i < num_linedefs - 1; i++)
   {
     int j;
 
     for (j = i+1; j < num_linedefs; j++)
     {
-      if (LineStartCompare(array + i, array + j) != 0)
+      if (LineStartCompare(array[i], array[j]) || LineStartCompare(array[j], array [i]))
         break;
 
-      if (LineEndCompare(array + i, array + j) == 0)
+      if (!LineEndCompare(array[i], array[j]) && !LineEndCompare(array[j], array[i]))
       {
         linedef_t *A = lev_linedefs[array[i]];
         linedef_t *B = lev_linedefs[array[j]];
@@ -719,37 +709,37 @@ void DetectOverlappingLines(void)
       PrintVerbose("Detected %d overlapped linedefs\n", count);
   }
 
-  UtilFree(array);
+  efree(array);
 }
 
-static void CountWallTips(vertex_t *vert, int *one_sided, int *two_sided)
+static void CountWallTips(const vertex_t &vert, int &one_sided, int &two_sided)
 {
-    wall_tip_t *tip;
+    const wall_tip_t *tip;
 
-    *one_sided = 0;
-    *two_sided = 0;
+    one_sided = 0;
+    two_sided = 0;
 
-    for (tip=vert->tip_set; tip; tip=tip->next)
+    for (tip=vert.tip_set; tip; tip=tip->next)
     {
       if (!tip->left || !tip->right)
-        (*one_sided) += 1;
+        one_sided += 1;
       else
-        (*two_sided) += 1;
+        two_sided += 1;
     }
 }
 
-void TestForWindowEffect(linedef_t *L)
+static void TestForWindowEffect(linedef_t &L)
 {
   // cast a line horizontally or vertically and see what we hit.
   // OUCH, we have to iterate over all linedefs.
 
   int i;
 
-  float_g mx = (L->start->x + L->end->x) / 2.0;
-  float_g my = (L->start->y + L->end->y) / 2.0;
+  float_g mx = (L.start->x + L.end->x) / 2.0;
+  float_g my = (L.start->y + L.end->y) / 2.0;
 
-  float_g dx = L->end->x - L->start->x;
-  float_g dy = L->end->y - L->start->y;
+  float_g dx = L.end->x - L.start->x;
+  float_g dy = L.end->y - L.start->y;
 
   int cast_horiz = fabs(dx) < fabs(dy) ? 1 : 0;
 
@@ -758,7 +748,7 @@ void TestForWindowEffect(linedef_t *L)
   int back_line = -1;
 
   float_g front_dist = 999999.0;
-  sector_t * front_open = NULL;
+  const sector_t * front_open = NULL;
   int front_line = -1;
 
   for (i=0; i < num_linedefs; i++)
@@ -767,11 +757,11 @@ void TestForWindowEffect(linedef_t *L)
 
     float_g dist;
     boolean_g is_front;
-    sidedef_t *hit_side;
+    const sidedef_t *hit_side;
 
     float_g dx2, dy2;
 
-    if (N == L || N->zero_len || N->overlap)
+    if (N == &L || N->zero_len || N->overlap)
       continue;
 
     if (cast_horiz)
@@ -847,14 +837,14 @@ void TestForWindowEffect(linedef_t *L)
       front_line, front_dist, front_open ? "OPEN" : "CLOSED");
 #endif
 
-  if (back_open && front_open && L->right->sector == front_open)
+  if (back_open && front_open && L.right->sector == front_open)
   {
-    L->window_effect = back_open;
-    PrintMiniWarn("Linedef #%d seems to be a One-Sided Window (back faces sector #%d).\n", L->index, back_open->index);
+    L.window_effect = back_open;
+    PrintMiniWarn("Linedef #%d seems to be a One-Sided Window (back faces sector #%d).\n", L.index, back_open->index);
   }
 }
 
-void DetectWindowEffects(void)
+void glbsp::analyze::DetectWindowEffects()
 {
   // Algorithm:
   //   Scan the linedef list looking for possible candidates,
@@ -872,7 +862,7 @@ void DetectWindowEffects(void)
     if (L->two_sided || L->zero_len || L->overlap || !L->right)
       continue;
 
-    CountWallTips(L->start, &one_siders, &two_siders);
+    CountWallTips(*L->start, one_siders, two_siders);
 
     if ((one_siders % 2) == 1 && (one_siders + two_siders) > 1)
     {
@@ -880,11 +870,11 @@ void DetectWindowEffects(void)
       PrintDebug("FUNNY LINE %d : start vertex %d has odd number of one-siders\n",
           i, L->start->index);
 #endif
-      TestForWindowEffect(L);
+      TestForWindowEffect(*L);
       continue;
     }
 
-    CountWallTips(L->end, &one_siders, &two_siders);
+    CountWallTips(*L->end, one_siders, two_siders);
 
     if ((one_siders % 2) == 1 && (one_siders + two_siders) > 1)
     {
@@ -892,7 +882,7 @@ void DetectWindowEffects(void)
       PrintDebug("FUNNY LINE %d : end vertex %d has odd number of one-siders\n",
           i, L->end->index);
 #endif
-      TestForWindowEffect(L);
+      TestForWindowEffect(*L);
     }
   }
 }
@@ -900,8 +890,7 @@ void DetectWindowEffects(void)
 
 /* ----- vertex routines ------------------------------- */
 
-static void VertexAddWallTip(vertex_t *vert, float_g dx, float_g dy,
-  sector_t *left, sector_t *right)
+static void VertexAddWallTip(vertex_t &vert, float_g dx, float_g dy, sector_t *left, sector_t *right)
 {
   wall_tip_t *tip = NewWallTip();
   wall_tip_t *after;
@@ -911,14 +900,14 @@ static void VertexAddWallTip(vertex_t *vert, float_g dx, float_g dy,
   tip->right = right;
 
   // find the correct place (order is increasing angle)
-  for (after=vert->tip_set; after && after->next; after=after->next)
+  for (after=vert.tip_set; after && after->next; after=after->next)
   { }
 
   while (after && tip->angle + ANG_EPSILON < after->angle) 
     after = after->prev;
   
   // link it in
-  tip->next = after ? after->next : vert->tip_set;
+  tip->next = after ? after->next : vert.tip_set;
   tip->prev = after;
 
   if (after)
@@ -930,14 +919,14 @@ static void VertexAddWallTip(vertex_t *vert, float_g dx, float_g dy,
   }
   else
   {
-    if (vert->tip_set)
-      vert->tip_set->prev = tip;
+    if (vert.tip_set)
+      vert.tip_set->prev = tip;
     
-    vert->tip_set = tip;
+    vert.tip_set = tip;
   }
 }
 
-void CalculateWallTips(void)
+void glbsp::analyze::CalculateWallTips(void)
 {
   int i;
 
@@ -960,8 +949,8 @@ void CalculateWallTips(void)
     left  = (line->left)  ? line->left->sector  : NULL;
     right = (line->right) ? line->right->sector : NULL;
     
-    VertexAddWallTip(line->start, x2-x1, y2-y1, left, right);
-    VertexAddWallTip(line->end,   x1-x2, y1-y2, right, left);
+    VertexAddWallTip(*line->start, x2-x1, y2-y1, left, right);
+    VertexAddWallTip(*line->end,   x1-x2, y1-y2, right, left);
   }
  
 # if DEBUG_WALLTIPS
@@ -985,14 +974,14 @@ void CalculateWallTips(void)
 //
 // NewVertexFromSplitSeg
 //
-vertex_t *NewVertexFromSplitSeg(seg_t *seg, float_g x, float_g y)
+vertex_t *glbsp::analyze::NewVertexFromSplitSeg(const seg_t &seg, float_g x, float_g y)
 {
   vertex_t *vert = NewVertex();
 
   vert->x = x;
   vert->y = y;
 
-  vert->ref_count = seg->partner ? 4 : 2;
+  vert->ref_count = seg.partner ? 4 : 2;
 
   if (lev_doing_normal && cur_info->spec_version == 1)
   {
@@ -1007,11 +996,11 @@ vertex_t *NewVertexFromSplitSeg(seg_t *seg, float_g x, float_g y)
 
   // compute wall_tip info
 
-  VertexAddWallTip(vert, -seg->pdx, -seg->pdy, seg->sector, 
-      seg->partner ? seg->partner->sector : NULL);
+  VertexAddWallTip(*vert, -seg.pdx, -seg.pdy, seg.sector,
+      seg.partner ? seg.partner->sector : NULL);
 
-  VertexAddWallTip(vert, seg->pdx, seg->pdy,
-      seg->partner ? seg->partner->sector : NULL, seg->sector);
+  VertexAddWallTip(*vert, seg.pdx, seg.pdy,
+      seg.partner ? seg.partner->sector : NULL, seg.sector);
 
   // create a duplex vertex if needed
 
@@ -1033,16 +1022,16 @@ vertex_t *NewVertexFromSplitSeg(seg_t *seg, float_g x, float_g y)
 //
 // NewVertexDegenerate
 //
-vertex_t *NewVertexDegenerate(vertex_t *start, vertex_t *end)
+vertex_t *glbsp::analyze::NewVertexDegenerate(const vertex_t &start, const vertex_t &end)
 {
-  float_g dx = end->x - start->x;
-  float_g dy = end->y - start->y;
+  float_g dx = end.x - start.x;
+  float_g dy = end.y - start.y;
 
   float_g dlen = UtilComputeDist(dx, dy);
 
   vertex_t *vert = NewVertex();
 
-  vert->ref_count = start->ref_count;
+  vert->ref_count = start.ref_count;
 
   if (lev_doing_normal)
   {
@@ -1057,8 +1046,8 @@ vertex_t *NewVertexDegenerate(vertex_t *start, vertex_t *end)
 
   // compute new coordinates
 
-  vert->x = start->x;
-  vert->y = start->x;
+  vert->x = start.x;
+  vert->y = start.x;
 
   if (dlen == 0)
     InternalError("NewVertexDegenerate: bad delta !");
@@ -1066,8 +1055,8 @@ vertex_t *NewVertexDegenerate(vertex_t *start, vertex_t *end)
   dx /= dlen;
   dy /= dlen;
 
-  while (I_ROUND(vert->x) == I_ROUND(start->x) && 
-         I_ROUND(vert->y) == I_ROUND(start->y))
+  while (I_ROUND(vert->x) == I_ROUND(start.x) &&
+         I_ROUND(vert->y) == I_ROUND(start.y))
   {
     vert->x += dx;
     vert->y += dy;
@@ -1079,9 +1068,9 @@ vertex_t *NewVertexDegenerate(vertex_t *start, vertex_t *end)
 //
 // VertexCheckOpen
 //
-sector_t * VertexCheckOpen(vertex_t *vert, float_g dx, float_g dy)
+sector_t * glbsp::analyze::VertexCheckOpen(const vertex_t &vert, float_g dx, float_g dy)
 {
-  wall_tip_t *tip;
+  const wall_tip_t *tip;
 
   angle_g angle = UtilComputeAngle(dx, dy);
 
@@ -1089,7 +1078,7 @@ sector_t * VertexCheckOpen(vertex_t *vert, float_g dx, float_g dy)
   // direction of the given direction (which is relative to the
   // vertex).
 
-  for (tip=vert->tip_set; tip; tip=tip->next)
+  for (tip=vert.tip_set; tip; tip=tip->next)
   {
     if (fabs(tip->angle - angle) < ANG_EPSILON ||
         fabs(tip->angle - angle) > (360.0 - ANG_EPSILON))
@@ -1103,7 +1092,7 @@ sector_t * VertexCheckOpen(vertex_t *vert, float_g dx, float_g dy)
   // the angle we're interested in.  Therefore we'll be on the RIGHT
   // side of that wall_tip.
 
-  for (tip=vert->tip_set; tip; tip=tip->next)
+  for (tip=vert.tip_set; tip; tip=tip->next)
   {
     if (angle + ANG_EPSILON < tip->angle)
     {
@@ -1120,7 +1109,7 @@ sector_t * VertexCheckOpen(vertex_t *vert, float_g dx, float_g dy)
     }
   }
  
-  InternalError("Vertex %d has no tips !", vert->index);
+  InternalError("Vertex %d has no tips !", vert.index);
   return FALSE;
 }
 

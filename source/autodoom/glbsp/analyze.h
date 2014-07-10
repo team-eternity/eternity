@@ -29,39 +29,49 @@
 #include "structs.h"
 #include "level.h"
 
-// detection routines
-void DetectDuplicateVertices(void);
-void DetectDuplicateSidedefs(void);
-void DetectPolyobjSectors(void);
-void DetectOverlappingLines(void);
-void DetectWindowEffects(void);
+namespace glbsp
+{
+  namespace analyze
+  {
+    // detection routines
+    void DetectDuplicateVertices();
+    void DetectDuplicateSidedefs();
+    void DetectPolyobjSectors();
+    void DetectOverlappingLines();
+    void DetectWindowEffects();
 
-// pruning routines
-void PruneLinedefs(void);
-void PruneVertices(void);
-void PruneSidedefs(void);
-void PruneSectors(void);
+    // pruning routines
+    void PruneLinedefs();
+    void PruneVertices();
+    void PruneSidedefs();
+    void PruneSectors();
 
-// computes the wall tips for all of the vertices
-void CalculateWallTips(void);
+    // computes the wall tips for all of the vertices
+    void CalculateWallTips();
 
-// return a new vertex (with correct wall_tip info) for the split that
-// happens along the given seg at the given location.
-//
-vertex_t *NewVertexFromSplitSeg(seg_t *seg, float_g x, float_g y);
+    // return a new vertex (with correct wall_tip info) for the split that
+    // happens along the given seg at the given location.
+    //
+    vertex_t *NewVertexFromSplitSeg(const seg_t &seg, float_g x, float_g y);
 
-// return a new end vertex to compensate for a seg that would end up
-// being zero-length (after integer rounding).  Doesn't compute the
-// wall_tip info (thus this routine should only be used _after_ node
-// building).
-//
-vertex_t *NewVertexDegenerate(vertex_t *start, vertex_t *end);
+    // return a new end vertex to compensate for a seg that would end up
+    // being zero-length (after integer rounding).  Doesn't compute the
+    // wall_tip info (thus this routine should only be used _after_ node
+    // building).
+    //
+    vertex_t *NewVertexDegenerate(const vertex_t &start, const vertex_t &end);
 
-// check whether a line with the given delta coordinates and beginning
-// at this vertex is open.  Returns a sector reference if it's open,
-// or NULL if closed (void space or directly along a linedef).
-//
-sector_t * VertexCheckOpen(vertex_t *vert, float_g dx, float_g dy);
-   
+    // check whether a line with the given delta coordinates and beginning
+    // at this vertex is open.  Returns a sector reference if it's open,
+    // or NULL if closed (void space or directly along a linedef).
+    //
+    sector_t * VertexCheckOpen(const vertex_t &vert, float_g dx, float_g dy);
+  }
+}
+
+
+
+
+
 
 #endif /* __GLBSP_ANALYZE_H__ */

@@ -1523,37 +1523,37 @@ void LoadLevel(void)
     // NOTE: order here is critical
 
     if (cur_info->pack_sides)
-      DetectDuplicateSidedefs();
+      glbsp::analyze::DetectDuplicateSidedefs();
 
     if (cur_info->merge_vert)
-      DetectDuplicateVertices();
+      glbsp::analyze::DetectDuplicateVertices();
 
     if (!cur_info->no_prune)
-      PruneLinedefs();
+      glbsp::analyze::PruneLinedefs();
 
     // always prune vertices (ignore -noprune), otherwise all the
     // unused vertices from seg splits would keep accumulating.
-    PruneVertices();
+    glbsp::analyze::PruneVertices();
 
     if (!cur_info->no_prune)
-      PruneSidedefs();
+      glbsp::analyze::PruneSidedefs();
 
     if (cur_info->prune_sect)
-      PruneSectors();
+      glbsp::analyze::PruneSectors();
   }
  
-  CalculateWallTips();
+  glbsp::analyze::CalculateWallTips();
 
   if (lev_doing_hexen)
   {
     // -JL- Find sectors containing polyobjs
-    DetectPolyobjSectors();
+    glbsp::analyze::DetectPolyobjSectors();
   }
 
-  DetectOverlappingLines();
+  glbsp::analyze::DetectOverlappingLines();
 
   if (cur_info->window_fx)
-    DetectWindowEffects();
+    glbsp::analyze::DetectWindowEffects();
 }
 
 //
