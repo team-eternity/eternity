@@ -392,7 +392,7 @@ superblock_t *CreateSegs(void)
 
   block = NewSuperBlock();
  
-  GetBlockmapBounds(&block->x1, &block->y1, &bw, &bh);
+  glbsp::blockmap::GetBlockmapBounds(&block->x1, &block->y1, &bw, &bh);
 
   block->x2 = block->x1 + 128 * UtilRoundPOW2(bw);
   block->y2 = block->y1 + 128 * UtilRoundPOW2(bh);

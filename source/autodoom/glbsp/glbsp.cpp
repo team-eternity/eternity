@@ -78,7 +78,7 @@ const nodebuildinfo_t default_buildinfo =
   FALSE,   // skip_self_ref
   FALSE,   // window_fx
 
-  DEFAULT_BLOCK_LIMIT,   // block_limit
+  glbsp::blockmap::g_defaultBlockLimit,   // block_limit
 
   FALSE,   // missing_output
   FALSE    // same_filenames
@@ -401,7 +401,7 @@ glbsp_ret_e GlbspCheckInfo(nodebuildinfo_t *info,
 
   if (info->block_limit < 1000 || info->block_limit > 64000)
   {
-    info->block_limit = DEFAULT_BLOCK_LIMIT;
+    info->block_limit = glbsp::blockmap::g_defaultBlockLimit;
     SetErrorMsg("Bad blocklimit value !");
     return GLBSP_E_BadInfoFixed;
   }
@@ -451,7 +451,7 @@ static glbsp_ret_e HandleLevel(void)
 
   LoadLevel();
 
-  InitBlockmap();
+  glbsp::blockmap::InitBlockmap();
 
   // create initial segs
   seg_list = CreateSegs();

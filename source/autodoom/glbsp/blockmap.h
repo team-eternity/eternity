@@ -29,20 +29,24 @@
 #include "structs.h"
 #include "level.h"
 
-#define DEFAULT_BLOCK_LIMIT  16000
+namespace glbsp
+{
+  namespace blockmap
+  {
+    static const int g_defaultBlockLimit = 16000;
 
-// compute blockmap origin & size (the block_x/y/w/h variables)
-// based on the set of loaded linedefs.
-//
-void InitBlockmap(void);
+    // compute blockmap origin & size (the block_x/y/w/h variables)
+    // based on the set of loaded linedefs.
+    //
+    void InitBlockmap();
 
-// build the blockmap and write the data into the BLOCKMAP lump
-void PutBlockmap(void);
+    // utility routines...
+    void GetBlockmapBounds(int *x, int *y, int *w, int *h);
+    
+    int CheckLinedefInsideBox(int xmin, int ymin, int xmax, int ymax,
+                              int x1, int y1, int x2, int y2);
+  }
+}
 
-// utility routines...
-void GetBlockmapBounds(int *x, int *y, int *w, int *h);
-
-int CheckLinedefInsideBox(int xmin, int ymin, int xmax, int ymax,
-    int x1, int y1, int x2, int y2);
 
 #endif /* __GLBSP_BLOCKMAP_H__ */
