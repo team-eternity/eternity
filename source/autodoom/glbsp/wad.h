@@ -249,5 +249,4 @@ void ReportFailedLevels(void);
 #define SINT16(x)  ((int16_t) Endian_U16((uint16_t) (x)))
 #define SINT32(x)  ((int32_t) Endian_U32((uint32_t) (x)))
 
-
 #endif /* __GLBSP_WAD_H__ */

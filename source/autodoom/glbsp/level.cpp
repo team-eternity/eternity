@@ -95,8 +95,8 @@ int num_complete_seg = 0;
 {  \
   if ((NUMVAR % ALLOC_BLKNUM) == 0)  \
   {  \
-    BASEVAR = UtilRealloc(BASEVAR, (NUMVAR + ALLOC_BLKNUM) *   \
-        sizeof(TYPE *));  \
+    BASEVAR = static_cast<TYPE**>(UtilRealloc(BASEVAR, (NUMVAR + ALLOC_BLKNUM) *   \
+        sizeof(TYPE *)));  \
   }  \
   BASEVAR[NUMVAR] = (TYPE *) UtilCalloc(sizeof(TYPE));  \
   NUMVAR += 1;  \
@@ -1610,12 +1610,12 @@ void PutGLChecksum(void)
   lump = FindLevelLump("VERTEXES");
 
   if (lump && lump->length > 0)
-    Adler32_AddBlock(&crc, lump->data, lump->length);
+    Adler32_AddBlock(&crc, static_cast<uint8_t*>(lump->data), lump->length);
 
   lump = FindLevelLump("LINEDEFS");
 
   if (lump && lump->length > 0)
-    Adler32_AddBlock(&crc, lump->data, lump->length);
+    Adler32_AddBlock(&crc, static_cast<uint8_t*>(lump->data), lump->length);
 
   Adler32_Finish(&crc);
 

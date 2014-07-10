@@ -415,5 +415,6 @@ void FreeLevel(void);
 
 // save the newly computed NODE info etc..
 void SaveLevel(node_t *root_node);
+   
 
 #endif /* __GLBSP_LEVEL_H__ */

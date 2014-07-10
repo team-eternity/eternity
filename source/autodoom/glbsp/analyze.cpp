@@ -23,14 +23,7 @@
 
 #include "system.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <ctype.h>
-#include <math.h>
-#include <limits.h>
-#include <assert.h>
+#include "z_zone.h"
 
 #include "analyze.h"
 #include "blockmap.h"
@@ -302,21 +295,19 @@ void DetectPolyobjSectors(void)
 
 /* ----- analysis routines ----------------------------- */
 
-static int VertexCompare(const void *p1, const void *p2)
+static bool VertexCompare(uint16_t vert1, uint16_t vert2)
 {
-  int vert1 = ((const uint16_t *) p1)[0];
-  int vert2 = ((const uint16_t *) p2)[0];
-
-  vertex_t *A = lev_vertices[vert1];
-  vertex_t *B = lev_vertices[vert2];
 
   if (vert1 == vert2)
     return 0;
 
+  vertex_t *A = lev_vertices[vert1];
+  vertex_t *B = lev_vertices[vert2];
+
   if ((int)A->x != (int)B->x)
-    return (int)A->x - (int)B->x; 
+    return (int)A->x < (int)B->x;
   
-  return (int)A->y - (int)B->y;
+  return (int)A->y < (int)B->y;
 }
 
 static int SidedefCompare(const void *p1, const void *p2)
@@ -365,10 +356,10 @@ static int SidedefCompare(const void *p1, const void *p2)
   return 0;
 }
 
-void DetectDuplicateVertices(void)
+void DetectDuplicateVertices()
 {
   int i;
-  uint16_t *array = UtilCalloc(num_vertices * sizeof(uint16_t));
+  uint16_t* array = ecalloc(uint16_t*, num_vertices, sizeof(uint16_t));
 
   DisplayTicker();
 
@@ -376,13 +367,13 @@ void DetectDuplicateVertices(void)
   for (i=0; i < num_vertices; i++)
     array[i] = i;
   
-  qsort(array, num_vertices, sizeof(uint16_t), VertexCompare);
+  std::sort(array, array + num_vertices, VertexCompare);
 
   // now mark them off
   for (i=0; i < num_vertices - 1; i++)
   {
     // duplicate ?
-    if (VertexCompare(array + i, array + i+1) == 0)
+    if (!VertexCompare(array[i], array[i+1]) && !VertexCompare(array[i + 1], array[i]))
     {
       vertex_t *A = lev_vertices[array[i]];
       vertex_t *B = lev_vertices[array[i+1]];
@@ -392,13 +383,13 @@ void DetectDuplicateVertices(void)
     }
   }
 
-  UtilFree(array);
+  efree(array);
 }
 
 void DetectDuplicateSidedefs(void)
 {
   int i;
-  uint16_t *array = UtilCalloc(num_sidedefs * sizeof(uint16_t));
+  uint16_t *array = static_cast<uint16_t*>(UtilCalloc(num_sidedefs * sizeof(uint16_t)));
 
   DisplayTicker();
 
@@ -690,7 +681,7 @@ void DetectOverlappingLines(void)
   //   Note: does not detect partially overlapping lines.
 
   int i;
-  int *array = UtilCalloc(num_linedefs * sizeof(int));
+  int *array = static_cast<int*>(UtilCalloc(num_linedefs * sizeof(int)));
   int count = 0;
 
   DisplayTicker();

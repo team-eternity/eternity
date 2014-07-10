@@ -205,7 +205,7 @@ void PutReject(void)
   GroupSectors();
   
   reject_size = (num_sectors * num_sectors + 7) / 8;
-  matrix = UtilCalloc(reject_size);
+  matrix = static_cast<uint8_t*>(UtilCalloc(reject_size));
 
   CreateReject(matrix);
 

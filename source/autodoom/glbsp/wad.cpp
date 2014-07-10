@@ -188,7 +188,7 @@ static level_t *NewLevel(int flags)
 {
   level_t *cur;
 
-  cur = UtilCalloc(sizeof(level_t));
+  cur = static_cast<level_t*>(UtilCalloc(sizeof(level_t)));
 
   cur->flags = flags;
 
@@ -205,7 +205,7 @@ static lump_t *NewLump(char *name)
 {
   lump_t *cur;
 
-  cur = UtilCalloc(sizeof(lump_t));
+  cur = static_cast<lump_t*>(UtilCalloc(sizeof(lump_t)));
 
   cur->name = name;
   cur->start = cur->new_start = -1;
@@ -287,7 +287,7 @@ static int ReadHeader(const char *filename)
     return FALSE;
   }
 
-  wad.kind = (header.type[0] == 'I') ? IWAD : PWAD;
+  wad.kind = (header.type[0] == 'I') ? wad_s::IWAD : wad_s::PWAD;
   
   wad.num_entries = UINT32(header.num_entries);
   wad.dir_start   = UINT32(header.dir_start);
@@ -661,11 +661,11 @@ static void WriteHeader(void)
 
   switch (wad.kind)
   {
-    case IWAD:
+    case wad_s::IWAD:
       strncpy(header.type, "IWAD", 4);
       break;
 
-    case PWAD:
+    case wad_s::PWAD:
       strncpy(header.type, "PWAD", 4);
       break;
   }
@@ -1288,7 +1288,7 @@ glbsp_ret_e ReadWadFile(const char *filename)
     return GLBSP_E_ReadError;
   }
 
-  PrintMsg("Opened %cWAD file : %s\n", (wad.kind == IWAD) ? 'I' : 'P', 
+  PrintMsg("Opened %cWAD file : %s\n", (wad.kind == wad_s::IWAD) ? 'I' : 'P',
       filename); 
   PrintVerbose("Reading %d dir entries at 0x%X\n", wad.num_entries, 
       wad.dir_start);
@@ -1336,7 +1336,7 @@ glbsp_ret_e WriteWadFile(const char *filename)
   PrintMsg("Saving WAD as %s\n", filename);
 
   if (cur_info->gwa_mode)
-    wad.kind = PWAD;
+    wad.kind = wad_s::PWAD;
 
   RecomputeDirectory();
 

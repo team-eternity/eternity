@@ -101,7 +101,7 @@ static intersection_t *NewIntersection(void)
   }
   else
   {
-    cut = UtilCalloc(sizeof(intersection_t));
+    cut = static_cast<intersection_t*>(UtilCalloc(sizeof(intersection_t)));
   }
 
   return cut;
