@@ -1470,7 +1470,6 @@
     <ClInclude Include="..\source\gl\gl_projection.h" />
     <ClInclude Include="..\source\gl\gl_texture.h" />
     <ClInclude Include="..\source\gl\gl_vars.h" />
-    <ClInclude Include="..\source\metaadapter.h" />
     <ClInclude Include="..\source\metaapi.h" />
     <ClInclude Include="..\source\metaqstring.h" />
     <ClInclude Include="..\source\cam_sight.h" />

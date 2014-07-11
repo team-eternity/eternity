@@ -905,7 +905,6 @@
 		FACACB751652FC980091AF2E /* tables.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tables.h; path = ../source/tables.h; sourceTree = "<group>"; };
 		FACACB761652FC980091AF2E /* version.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = version.h; path = ../source/version.h; sourceTree = "<group>"; };
 		FACACB7E165300FA0091AF2E /* xl_scripts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = xl_scripts.h; path = ../source/xl_scripts.h; sourceTree = "<group>"; };
-		FACACB87165301C70091AF2E /* metaadapter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = metaadapter.h; path = ../source/metaadapter.h; sourceTree = "<group>"; };
 		FADFF98D16555F6200C8537B /* d_findiwads.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = d_findiwads.cpp; path = ../source/d_findiwads.cpp; sourceTree = "<group>"; };
 		FADFF98E16555F6200C8537B /* d_findiwads.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = d_findiwads.h; path = ../source/d_findiwads.h; sourceTree = "<group>"; };
 		FAE0EB371696BA10007E84F2 /* Eternity.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = Eternity.icns; sourceTree = "<group>"; };
@@ -1963,7 +1962,6 @@
 			isa = PBXGroup;
 			children = (
 				4F579A4317BE860B0088B797 /* metaspawn.h */,
-				FACACB87165301C70091AF2E /* metaadapter.h */,
 				FABF5D04158BF42800C49E93 /* metaapi.cpp */,
 				FA16D41C15E01E96002318D1 /* metaapi.h */,
 				FABF5D05158BF42800C49E93 /* metaqstring.cpp */,

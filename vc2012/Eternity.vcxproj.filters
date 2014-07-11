@@ -1595,9 +1595,6 @@
     <ClInclude Include="..\source\gl\gl_vars.h">
       <Filter>Source Files\GL\GL Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\metaadapter.h">
-      <Filter>Source Files\MetaAPI</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\metaapi.h">
       <Filter>Source Files\MetaAPI</Filter>
     </ClInclude>
