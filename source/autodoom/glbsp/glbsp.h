@@ -38,6 +38,11 @@
 #endif
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+
+
 /* ----- basic types --------------------------- */
    
 typedef double float_g;
@@ -272,5 +277,9 @@ glbsp_ret_e GlbspBuildNodes(const nodebuildinfo_t *info,
 const char *GlbspStrDup(const char *str);
 void GlbspFree(const char *str);
 
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
 
 #endif /* __GLBSP_GLBSP_H__ */

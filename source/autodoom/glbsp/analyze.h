@@ -24,8 +24,6 @@
 #ifndef __GLBSP_ANALYZE_H__
 #define __GLBSP_ANALYZE_H__
 
-
-
 #include "structs.h"
 #include "level.h"
 
@@ -62,6 +60,5 @@ vertex_t *NewVertexDegenerate(vertex_t *start, vertex_t *end);
 // or NULL if closed (void space or directly along a linedef).
 //
 sector_t * VertexCheckOpen(vertex_t *vert, float_g dx, float_g dy);
-   
 
 #endif /* __GLBSP_ANALYZE_H__ */

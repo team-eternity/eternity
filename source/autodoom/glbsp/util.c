@@ -94,7 +94,7 @@ char *UtilStrDup(const char *str)
   char *result;
   int len = (int)strlen(str);
 
-  result = static_cast<char*>(UtilCalloc(len+1));
+  result = UtilCalloc(len+1);
 
   if (len > 0)
     memcpy(result, str, len);
@@ -117,7 +117,7 @@ char *UtilStrNDup(const char *str, int size)
   for (len=0; len < size && str[len]; len++)
   { }
 
-  result = static_cast<char*>(UtilCalloc(len+1));
+  result = UtilCalloc(len+1);
 
   if (len > 0)
     memcpy(result, str, len);
@@ -142,7 +142,7 @@ char *UtilFormat(const char *str, ...)
 
     buf_size *= 2;
 
-    buf = static_cast<char*>(realloc(buf, buf_size));
+    buf = realloc(buf, buf_size);
     if (!buf)
       FatalError("Out of memory (formatting string)");
 

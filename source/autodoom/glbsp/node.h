@@ -24,7 +24,6 @@
 #ifndef __GLBSP_NODE_H__
 #define __GLBSP_NODE_H__
 
-
 #include "structs.h"
 
 // check the relationship between the given box and the partition

@@ -168,7 +168,8 @@ static void BlockAdd(int blk_num, int line_index)
   if (! cur)
   {
     // create empty block
-    block_lines[blk_num] = cur = static_cast<uint16_t*>(UtilCalloc(BK_QUANTUM * sizeof(uint16_t)));
+    block_lines[blk_num] = cur = UtilCalloc(BK_QUANTUM * 
+        sizeof(uint16_t));
     cur[BK_NUM] = 0;
     cur[BK_MAX] = BK_QUANTUM;
     cur[BK_XOR] = 0x1234;
@@ -179,7 +180,8 @@ static void BlockAdd(int blk_num, int line_index)
     // no more room, so allocate some more...
     cur[BK_MAX] += BK_QUANTUM;
 
-    block_lines[blk_num] = cur = static_cast<uint16_t*>(UtilRealloc(cur, cur[BK_MAX] * sizeof(uint16_t)));
+    block_lines[blk_num] = cur = UtilRealloc(cur, cur[BK_MAX] * 
+        sizeof(uint16_t));
   }
 
   // compute new checksum
@@ -263,7 +265,7 @@ static void CreateBlockmap(void)
 {
   int i;
 
-  block_lines = static_cast<uint16_t**>(UtilCalloc(block_count * sizeof(uint16_t *)));
+  block_lines = UtilCalloc(block_count * sizeof(uint16_t *));
 
   DisplayTicker();
 
@@ -315,8 +317,8 @@ static void CompressBlockmap(void)
 
   int orig_size, new_size;
 
-  block_ptrs = static_cast<uint16_t*>(UtilCalloc(block_count * sizeof(uint16_t)));
-  block_dups = static_cast<uint16_t*>(UtilCalloc(block_count * sizeof(uint16_t)));
+  block_ptrs = UtilCalloc(block_count * sizeof(uint16_t));
+  block_dups = UtilCalloc(block_count * sizeof(uint16_t));
 
   DisplayTicker();
 

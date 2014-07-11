@@ -144,7 +144,7 @@ static superblock_t *NewSuperBlock(void)
   superblock_t *block;
 
   if (quick_alloc_supers == NULL)
-    return static_cast<superblock_t*>(UtilCalloc(sizeof(superblock_t)));
+    return UtilCalloc(sizeof(superblock_t));
 
   block = quick_alloc_supers;
   quick_alloc_supers = block->subs[0];
@@ -544,7 +544,7 @@ static void ClockwiseOrder(subsec_t *sub)
   if (total <= 32)
     array = seg_buffer;
   else
-    array = static_cast<seg_t**>(UtilCalloc(total * sizeof(seg_t *)));
+    array = UtilCalloc(total * sizeof(seg_t *));
 
   for (cur=sub->seg_list, i=0; cur; cur=cur->next, i++)
     array[i] = cur;
