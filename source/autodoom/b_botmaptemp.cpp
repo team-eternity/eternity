@@ -769,13 +769,17 @@ TempBotMap::Line &TempBotMap::placeLine(Vertex &v1, Vertex &v2,
                {
                   // intersecting me home.
                   // other line already split. So continue by adding normally
-                  goto justadd;
+//                  goto justadd;
+//                  return placeLine(v1, v2, bspIdx, msecGen, bsecGen);
+                  continue;
                }
                if(&midv == &v2)
                {
                   // intersecting me on end.
                   // other line already split. So continue by adding normally
-                  goto justadd;
+//                  goto justadd;
+//                  return placeLine(v1, v2, bspIdx, msecGen, bsecGen);
+                  continue;
                }
                placeLine(v1, midv, bspIdx, msecGen, bsecGen);
                return placeLine(midv, v2, bspIdx, msecGen, bsecGen);

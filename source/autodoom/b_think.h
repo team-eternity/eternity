@@ -33,7 +33,7 @@ struct player_t;
 struct ticcmd_t;
 
 #include "b_botmap.h"
-#include "b_classifier.h"
+#include "b_itemlearn.h"
 #include "b_path.h"
 #include "../e_inventory.h"
 #include "../metaapi.h"
