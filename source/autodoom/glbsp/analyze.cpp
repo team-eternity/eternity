@@ -110,7 +110,7 @@ static void MarkPolyobjPoint(float_g x, float_g y)
   {
     const linedef_t *L = lev_linedefs[i];
 
-    if (glbsp::blockmap::CheckLinedefInsideBox(bminx, bminy, bmaxx, bmaxy,
+    if (CheckLinedefInsideBox(bminx, bminy, bmaxx, bmaxy,
           static_cast<int> (L->start->x), static_cast<int> (L->start->y),
           static_cast<int> (L->end->x), static_cast<int> (L->end->y)))
     {
