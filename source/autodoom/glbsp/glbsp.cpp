@@ -433,11 +433,11 @@ void GlbspFree(const char *str)
 
 static glbsp_ret_e HandleLevel(void)
 {
-  superblock_t *seg_list;
-  bbox_t seg_bbox;
+  glbsp::level::SuperBlock *seg_list;
+  glbsp::level::BBox seg_bbox;
 
-  node_t *root_node;
-  subsec_t *root_sub;
+  glbsp::level::Node *root_node;
+  glbsp::level::Subsec *root_sub;
 
   glbsp_ret_e ret;
 
@@ -449,7 +449,7 @@ static glbsp_ret_e HandleLevel(void)
 
   cur_comms->build_pos = 0;
 
-  LoadLevel();
+  glbsp::level::LoadLevel();
 
   glbsp::blockmap::InitBlockmap();
 
@@ -467,17 +467,17 @@ static glbsp_ret_e HandleLevel(void)
     ClockwiseBspTree(root_node);
 
     PrintVerbose("Built %d NODES, %d SSECTORS, %d SEGS, %d VERTEXES\n",
-        num_nodes, num_subsecs, num_segs, num_normal_vert + num_gl_vert);
+                 glbsp::level::num_nodes, glbsp::level::num_subsecs, glbsp::level::num_segs, glbsp::level::num_normal_vert + glbsp::level::num_gl_vert);
 
     if (root_node)
       PrintVerbose("Heights of left and right subtrees = (%d,%d)\n",
           ComputeBspHeight(root_node->r.node),
           ComputeBspHeight(root_node->l.node));
 
-    SaveLevel(root_node);
+    glbsp::level::SaveLevel(root_node);
   }
 
-  FreeLevel();
+  glbsp::level::FreeLevel();
   FreeQuickAllocCuts();
   FreeQuickAllocSupers();
 

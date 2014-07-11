@@ -62,7 +62,7 @@
 #define DEBUG_SUBSEC   0
 
 
-static superblock_t *quick_alloc_supers = NULL;
+static glbsp::level::SuperBlock *quick_alloc_supers = NULL;
 
 
 //
@@ -70,7 +70,7 @@ static superblock_t *quick_alloc_supers = NULL;
 //
 // Returns -1 for left, +1 for right, or 0 for intersect.
 //
-static int PointOnLineSide(seg_t *part, float_g x, float_g y)
+static int PointOnLineSide(glbsp::level::Seg *part, float_g x, float_g y)
 {
   float_g perp = UtilPerpDist(part, x, y);
   
@@ -83,7 +83,7 @@ static int PointOnLineSide(seg_t *part, float_g x, float_g y)
 //
 // BoxOnLineSide
 //
-int BoxOnLineSide(superblock_t *box, seg_t *part)
+int BoxOnLineSide(glbsp::level::SuperBlock *box, glbsp::level::Seg *part)
 {
   float_g x1 = (float_g)box->x1 - IFFY_LEN * 1.5;
   float_g y1 = (float_g)box->y1 - IFFY_LEN * 1.5;
@@ -139,18 +139,18 @@ int BoxOnLineSide(superblock_t *box, seg_t *part)
 //
 // NewSuperBlock
 //
-static superblock_t *NewSuperBlock(void)
+static glbsp::level::SuperBlock *NewSuperBlock(void)
 {
-  superblock_t *block;
+  glbsp::level::SuperBlock *block;
 
   if (quick_alloc_supers == NULL)
-    return static_cast<superblock_t*>(UtilCalloc(sizeof(superblock_t)));
+    return static_cast<glbsp::level::SuperBlock*>(UtilCalloc(sizeof(glbsp::level::SuperBlock)));
 
   block = quick_alloc_supers;
   quick_alloc_supers = block->subs[0];
 
   // clear out any old rubbish
-  memset(block, 0, sizeof(superblock_t));
+  memset(block, 0, sizeof(glbsp::level::SuperBlock));
 
   return block;
 }
@@ -162,7 +162,7 @@ void FreeQuickAllocSupers(void)
 {
   while (quick_alloc_supers)
   {
-    superblock_t *block = quick_alloc_supers;
+    glbsp::level::SuperBlock *block = quick_alloc_supers;
     quick_alloc_supers = block->subs[0];
 
     UtilFree(block);
@@ -172,7 +172,7 @@ void FreeQuickAllocSupers(void)
 //
 // FreeSuper
 //
-void FreeSuper(superblock_t *block)
+void FreeSuper(glbsp::level::SuperBlock *block)
 {
   int num;
 
@@ -199,9 +199,9 @@ void FreeSuper(superblock_t *block)
 }
 
 #if 0 // DEBUGGING CODE
-static void TestSuperWorker(superblock_t *block, int *real, int *mini)
+static void TestSuperWorker(glbsp::level::SuperBlock *block, int *real, int *mini)
 {
-  seg_t *cur;
+  glbsp::level::Seg *cur;
   int num;
 
   for (cur=block->segs; cur; cur=cur->next)
@@ -222,7 +222,7 @@ static void TestSuperWorker(superblock_t *block, int *real, int *mini)
 //
 // TestSuper
 //
-void TestSuper(superblock_t *block)
+void TestSuper(glbsp::level::SuperBlock *block)
 {
   int real_num = 0;
   int mini_num = 0;
@@ -238,7 +238,7 @@ void TestSuper(superblock_t *block)
 //
 // AddSegToSuper
 //
-void AddSegToSuper(superblock_t *block, seg_t *seg)
+void AddSegToSuper(glbsp::level::SuperBlock *block, glbsp::level::Seg *seg)
 {
   for (;;)
   {
@@ -248,7 +248,7 @@ void AddSegToSuper(superblock_t *block, seg_t *seg)
     int x_mid = (block->x1 + block->x2) / 2;
     int y_mid = (block->y1 + block->y2) / 2;
 
-    superblock_t *sub;
+    glbsp::level::SuperBlock *sub;
 
     // update seg counts
     if (seg->linedef)
@@ -330,7 +330,7 @@ void AddSegToSuper(superblock_t *block, seg_t *seg)
 //
 // SplitSegInSuper
 //
-void SplitSegInSuper(superblock_t *block, seg_t *seg)
+void SplitSegInSuper(glbsp::level::SuperBlock *block, glbsp::level::Seg *seg)
 {
   do
   {
@@ -345,10 +345,10 @@ void SplitSegInSuper(superblock_t *block, seg_t *seg)
   while (block != NULL);
 }
 
-static seg_t *CreateOneSeg(linedef_t *line, vertex_t *start, vertex_t *end,
-    sidedef_t *side, int side_num)
+static glbsp::level::Seg *CreateOneSeg(glbsp::level::Linedef *line, glbsp::level::Vertex *start, glbsp::level::Vertex *end,
+    glbsp::level::Sidedef *side, int side_num)
 {
-  seg_t *seg = NewSeg();
+  glbsp::level::Seg *seg = glbsp::level::NewSeg();
 
   // check for bad sidedef
   if (! side->sector)
@@ -380,13 +380,13 @@ static seg_t *CreateOneSeg(linedef_t *line, vertex_t *start, vertex_t *end,
 // Initially create all segs, one for each linedef.  Must be called
 // _after_ InitBlockmap().
 //
-superblock_t *CreateSegs(void)
+glbsp::level::SuperBlock *CreateSegs(void)
 {
   int i;
   int bw, bh;
 
-  seg_t *left, *right;
-  superblock_t *block;
+  glbsp::level::Seg *left, *right;
+  glbsp::level::SuperBlock *block;
 
   PrintVerbose("Creating Segs...\n");
 
@@ -401,9 +401,9 @@ superblock_t *CreateSegs(void)
 
   DisplayTicker();
 
-  for (i=0; i < num_linedefs; i++)
+  for (i=0; i < glbsp::level::num_linedefs; i++)
   {
-    linedef_t *line = LookupLinedef(i);
+    glbsp::level::Linedef *line = glbsp::level::LookupLinedef(i);
 
     right = NULL;
 
@@ -467,7 +467,7 @@ superblock_t *CreateSegs(void)
       // handle the 'One-Sided Window' trick
       if (line->window_effect)
       {
-        seg_t *left = NewSeg();
+        glbsp::level::Seg *left = glbsp::level::NewSeg();
 
         left->start   = line->end;
         left->end     = line->start;
@@ -494,9 +494,9 @@ superblock_t *CreateSegs(void)
 //
 // DetermineMiddle
 //
-static void DetermineMiddle(subsec_t *sub)
+static void DetermineMiddle(glbsp::level::Subsec *sub)
 {
-  seg_t *cur;
+  glbsp::level::Seg *cur;
 
   float_g mid_x=0, mid_y=0;
   int total=0;
@@ -520,11 +520,11 @@ static void DetermineMiddle(subsec_t *sub)
 // -AJA- Put the list of segs into clockwise order.
 //       Uses the now famous "double bubble" sorter :).
 //
-static void ClockwiseOrder(subsec_t *sub)
+static void ClockwiseOrder(glbsp::level::Subsec *sub)
 {
-  seg_t *cur;
-  seg_t ** array;
-  seg_t *seg_buffer[32];
+  glbsp::level::Seg *cur;
+  glbsp::level::Seg ** array;
+  glbsp::level::Seg *seg_buffer[32];
 
   int i;
   int total = 0;
@@ -544,7 +544,7 @@ static void ClockwiseOrder(subsec_t *sub)
   if (total <= 32)
     array = seg_buffer;
   else
-    array = static_cast<seg_t**>(UtilCalloc(total * sizeof(seg_t *)));
+    array = static_cast<glbsp::level::Seg**>(UtilCalloc(total * sizeof(glbsp::level::Seg *)));
 
   for (cur=sub->seg_list, i=0; cur; cur=cur->next, i++)
     array[i] = cur;
@@ -559,8 +559,8 @@ static void ClockwiseOrder(subsec_t *sub)
 
   while (i+1 < total)
   {
-    seg_t *A = array[i];
-    seg_t *B = array[i+1];
+    glbsp::level::Seg *A = array[i];
+    glbsp::level::Seg *B = array[i+1];
 
     angle_g angle1, angle2;
 
@@ -636,9 +636,9 @@ static void ClockwiseOrder(subsec_t *sub)
 //
 // SanityCheckClosed
 //
-static void SanityCheckClosed(subsec_t *sub)
+static void SanityCheckClosed(glbsp::level::Subsec *sub)
 {
-  seg_t *cur, *next;
+  glbsp::level::Seg *cur, *next;
   int total=0, gaps=0;
 
   for (cur=sub->seg_list; cur; cur=cur->next)
@@ -670,10 +670,10 @@ static void SanityCheckClosed(subsec_t *sub)
 //
 // SanityCheckSameSector
 //
-static void SanityCheckSameSector(subsec_t *sub)
+static void SanityCheckSameSector(glbsp::level::Subsec *sub)
 {
-  seg_t *cur;
-  seg_t *compare;
+  glbsp::level::Seg *cur;
+  glbsp::level::Seg *compare;
 
   // find a suitable seg for comparison
   for (compare=sub->seg_list; compare; compare=compare->next)
@@ -724,9 +724,9 @@ static void SanityCheckSameSector(subsec_t *sub)
 //
 // SanityCheckHasRealSeg
 //
-static void SanityCheckHasRealSeg(subsec_t *sub)
+static void SanityCheckHasRealSeg(glbsp::level::Subsec *sub)
 {
-  seg_t *cur;
+  glbsp::level::Seg *cur;
 
   for (cur=sub->seg_list; cur; cur=cur->next)
   {
@@ -741,9 +741,9 @@ static void SanityCheckHasRealSeg(subsec_t *sub)
 //
 // RenumberSubsecSegs
 //
-static void RenumberSubsecSegs(subsec_t *sub)
+static void RenumberSubsecSegs(glbsp::level::Subsec *sub)
 {
-  seg_t *cur;
+  glbsp::level::Seg *cur;
 
 # if DEBUG_SUBSEC
   PrintDebug("Subsec: Renumbering %d\n", sub->index);
@@ -753,8 +753,8 @@ static void RenumberSubsecSegs(subsec_t *sub)
 
   for (cur=sub->seg_list; cur; cur=cur->next)
   {
-    cur->index = num_complete_seg;
-    num_complete_seg++;
+    cur->index = glbsp::level::num_complete_seg;
+    glbsp::level::num_complete_seg++;
 
     sub->seg_count++;
 
@@ -766,14 +766,14 @@ static void RenumberSubsecSegs(subsec_t *sub)
 }
 
 
-static void CreateSubsecWorker(subsec_t *sub, superblock_t *block)
+static void CreateSubsecWorker(glbsp::level::Subsec *sub, glbsp::level::SuperBlock *block)
 {
   int num;
 
   while (block->segs)
   {
     // unlink first seg from block
-    seg_t *cur = block->segs;
+    glbsp::level::Seg *cur = block->segs;
     block->segs = cur->next;
     
     // link it into head of the subsector's list
@@ -787,7 +787,7 @@ static void CreateSubsecWorker(subsec_t *sub, superblock_t *block)
 
   for (num=0; num < 2; num++)
   {
-    superblock_t *A = block->subs[num];
+    glbsp::level::SuperBlock *A = block->subs[num];
 
     if (A)
     {
@@ -809,12 +809,12 @@ static void CreateSubsecWorker(subsec_t *sub, superblock_t *block)
 //
 // Create a subsector from a list of segs.
 //
-static subsec_t *CreateSubsec(superblock_t *seg_list)
+static glbsp::level::Subsec *CreateSubsec(glbsp::level::SuperBlock *seg_list)
 {
-  subsec_t *sub = NewSubsec();
+  glbsp::level::Subsec *sub = glbsp::level::NewSubsec();
 
   // compute subsector's index
-  sub->index = num_subsecs - 1;
+  sub->index = glbsp::level::num_subsecs - 1;
 
   // copy segs into subsector
   CreateSubsecWorker(sub, seg_list);
@@ -831,7 +831,7 @@ static subsec_t *CreateSubsec(superblock_t *seg_list)
 //
 // ComputeBspHeight
 //
-int ComputeBspHeight(node_t *node)
+int ComputeBspHeight(glbsp::level::Node *node)
 {
   if (node)
   {
@@ -849,9 +849,9 @@ int ComputeBspHeight(node_t *node)
 
 #if DEBUG_BUILDER
 
-static void DebugShowSegs(superblock_t *seg_list)
+static void DebugShowSegs(glbsp::level::SuperBlock *seg_list)
 {
-  seg_t *cur;
+  glbsp::level::Seg *cur;
   int num;
 
   for (cur=seg_list->segs; cur; cur=cur->next)
@@ -872,14 +872,14 @@ static void DebugShowSegs(superblock_t *seg_list)
 //
 // BuildNodes
 //
-glbsp_ret_e BuildNodes(superblock_t *seg_list, 
-    node_t ** N, subsec_t ** S, int depth, const bbox_t *bbox)
+glbsp_ret_e BuildNodes(glbsp::level::SuperBlock *seg_list,
+    glbsp::level::Node ** N, glbsp::level::Subsec ** S, int depth, const glbsp::level::BBox *bbox)
 {
-  node_t *node;
-  seg_t *best;
+  glbsp::level::Node *node;
+  glbsp::level::Seg *best;
 
-  superblock_t *rights;
-  superblock_t *lefts;
+  glbsp::level::SuperBlock *rights;
+  glbsp::level::SuperBlock *lefts;
 
   intersection_t *cut_list;
 
@@ -918,8 +918,8 @@ glbsp_ret_e BuildNodes(superblock_t *seg_list,
 # endif
 
   /* create left and right super blocks */
-  lefts  = (superblock_t *) NewSuperBlock();
-  rights = (superblock_t *) NewSuperBlock();
+  lefts  = (glbsp::level::SuperBlock *) NewSuperBlock();
+  rights = (glbsp::level::SuperBlock *) NewSuperBlock();
 
   lefts->x1 = rights->x1 = seg_list->x1;
   lefts->y1 = rights->y1 = seg_list->y1;
@@ -942,7 +942,7 @@ glbsp_ret_e BuildNodes(superblock_t *seg_list,
 
   AddMinisegs(best, lefts, rights, cut_list);
 
-  *N = node = NewNode();
+  *N = node = glbsp::level::NewNode();
 
   assert(best->linedef);
 
@@ -1010,7 +1010,7 @@ glbsp_ret_e BuildNodes(superblock_t *seg_list,
 //
 // ClockwiseBspTree
 //
-void ClockwiseBspTree(node_t *root)
+void ClockwiseBspTree(glbsp::level::Node *root)
 {
   int i;
 
@@ -1018,9 +1018,9 @@ void ClockwiseBspTree(node_t *root)
 
   DisplayTicker();
 
-  for (i=0; i < num_subsecs; i++)
+  for (i=0; i < glbsp::level::num_subsecs; i++)
   {
-    subsec_t *sub = LookupSubsec(i);
+    glbsp::level::Subsec *sub = glbsp::level::LookupSubsec(i);
 
     ClockwiseOrder(sub);
     RenumberSubsecSegs(sub);
@@ -1032,10 +1032,10 @@ void ClockwiseBspTree(node_t *root)
   }
 }
 
-static void NormaliseSubsector(subsec_t *sub)
+static void NormaliseSubsector(glbsp::level::Subsec *sub)
 {
-  seg_t *new_head = NULL;
-  seg_t *new_tail = NULL;
+  glbsp::level::Seg *new_head = NULL;
+  glbsp::level::Seg *new_tail = NULL;
 
 # if DEBUG_SUBSEC
   PrintDebug("Subsec: Normalising %d\n", sub->index);
@@ -1044,7 +1044,7 @@ static void NormaliseSubsector(subsec_t *sub)
   while (sub->seg_list)
   {
     // remove head
-    seg_t *cur = sub->seg_list;
+    glbsp::level::Seg *cur = sub->seg_list;
     sub->seg_list = cur->next;
 
     // only add non-minisegs to new list
@@ -1083,7 +1083,7 @@ static void NormaliseSubsector(subsec_t *sub)
 //
 // NormaliseBspTree
 //
-void NormaliseBspTree(node_t *root)
+void NormaliseBspTree(glbsp::level::Node *root)
 {
   int i;
 
@@ -1093,24 +1093,24 @@ void NormaliseBspTree(node_t *root)
 
   // unlink all minisegs from each subsector:
 
-  num_complete_seg = 0;
+  glbsp::level::num_complete_seg = 0;
 
-  for (i=0; i < num_subsecs; i++)
+  for (i=0; i < glbsp::level::num_subsecs; i++)
   {
-    subsec_t *sub = LookupSubsec(i);
+    glbsp::level::Subsec *sub = glbsp::level::LookupSubsec(i);
 
     NormaliseSubsector(sub);
     RenumberSubsecSegs(sub);
   }
 }
 
-static void RoundOffSubsector(subsec_t *sub)
+static void RoundOffSubsector(glbsp::level::Subsec *sub)
 {
-  seg_t *new_head = NULL;
-  seg_t *new_tail = NULL;
+  glbsp::level::Seg *new_head = NULL;
+  glbsp::level::Seg *new_tail = NULL;
 
-  seg_t *cur;
-  seg_t *last_real_degen = NULL;
+  glbsp::level::Seg *cur;
+  glbsp::level::Seg *last_real_degen = NULL;
 
   int real_total  = 0;
   int degen_total = 0;
@@ -1220,19 +1220,19 @@ static void RoundOffSubsector(subsec_t *sub)
 //
 // RoundOffBspTree
 //
-void RoundOffBspTree(node_t *root)
+void RoundOffBspTree(glbsp::level::Node *root)
 {
   int i;
 
   (void) root;
 
-  num_complete_seg = 0;
+  glbsp::level::num_complete_seg = 0;
 
   DisplayTicker();
 
-  for (i=0; i < num_subsecs; i++)
+  for (i=0; i < glbsp::level::num_subsecs; i++)
   {
-    subsec_t *sub = LookupSubsec(i);
+    glbsp::level::Subsec *sub = glbsp::level::LookupSubsec(i);
 
     RoundOffSubsector(sub);
     RenumberSubsecSegs(sub);

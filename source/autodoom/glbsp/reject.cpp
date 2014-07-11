@@ -53,9 +53,9 @@ static void InitReject(void)
 {
   int i;
 
-  for (i=0; i < num_sectors; i++)
+  for (i=0; i < glbsp::level::num_sectors; i++)
   {
-    sector_t *sec = LookupSector(i);
+    glbsp::level::Sector *sec = glbsp::level::LookupSector(i);
 
     sec->rej_group = i;
     sec->rej_next = sec->rej_prev = sec;
@@ -73,10 +73,10 @@ static void GroupSectors(void)
 {
   int i;
 
-  for (i=0; i < num_linedefs; i++)
+  for (i=0; i < glbsp::level::num_linedefs; i++)
   {
-    linedef_t *line = LookupLinedef(i);
-    sector_t *sec1, *sec2, *tmp;
+    glbsp::level::Linedef *line = glbsp::level::LookupLinedef(i);
+    glbsp::level::Sector *sec1, *sec2, *tmp;
 
     if (! line->right || ! line->left)
       continue;
@@ -133,10 +133,10 @@ static void CountGroups(void)
   
   int i;
 
-  for (i=0; i < num_sectors; i++)
+  for (i=0; i < glbsp::level::num_sectors; i++)
   {
-    sector_t *sec = LookupSector(i);
-    sector_t *tmp;
+    glbsp::level::Sector *sec = glbsp::level::LookupSector(i);
+    glbsp::level::Sector *tmp;
 
     int group = sec->rej_group;
     int num = 0;
@@ -165,11 +165,11 @@ static void CreateReject(uint8_t *matrix)
 {
   int view, target;
 
-  for (view=0; view < num_sectors; view++)
+  for (view=0; view < glbsp::level::num_sectors; view++)
   for (target=0; target < view; target++)
   {
-    sector_t *view_sec = LookupSector(view);
-    sector_t *targ_sec = LookupSector(target);
+    glbsp::level::Sector *view_sec = glbsp::level::LookupSector(view);
+    glbsp::level::Sector *targ_sec = glbsp::level::LookupSector(target);
 
     int p1, p2;
 
@@ -178,8 +178,8 @@ static void CreateReject(uint8_t *matrix)
 
     // for symmetry, do two bits at a time
 
-    p1 = view * num_sectors + target;
-    p2 = target * num_sectors + view;
+    p1 = view * glbsp::level::num_sectors + target;
+    p2 = target * glbsp::level::num_sectors + view;
     
     matrix[p1 >> 3] |= (1 << (p1 & 7));
     matrix[p2 >> 3] |= (1 << (p2 & 7));
@@ -204,7 +204,7 @@ void PutReject(void)
   InitReject();
   GroupSectors();
   
-  reject_size = (num_sectors * num_sectors + 7) / 8;
+  reject_size = (glbsp::level::num_sectors * glbsp::level::num_sectors + 7) / 8;
   matrix = static_cast<uint8_t*>(UtilCalloc(reject_size));
 
   CreateReject(matrix);

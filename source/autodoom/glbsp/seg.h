@@ -50,7 +50,7 @@ typedef struct intersection_s
   struct intersection_s *prev;
 
   // vertex in question
-  vertex_t *vertex;
+  glbsp::level::Vertex *vertex;
 
   // how far along the partition line the vertex is.  Zero is at the
   // partition seg's start point, positive values move in the same
@@ -63,8 +63,8 @@ typedef struct intersection_s
 
   // sector on each side of the vertex (along the partition),
   // or NULL when that direction isn't OPEN.
-  sector_t *before;
-  sector_t *after;
+  glbsp::level::Sector *before;
+  glbsp::level::Sector *after;
 }
 intersection_t;
 
@@ -76,13 +76,13 @@ intersection_t;
 // The 'depth' parameter is the current depth in the tree, used for
 // computing  the current progress.
 //
-seg_t *PickNode(superblock_t *seg_list, int depth, const bbox_t *bbox); 
+glbsp::level::Seg *PickNode(glbsp::level::SuperBlock *seg_list, int depth, const glbsp::level::BBox *bbox);
 
 // compute the boundary of the list of segs
-void FindLimits(superblock_t *seg_list, bbox_t *bbox);
+void FindLimits(glbsp::level::SuperBlock *seg_list, glbsp::level::BBox *bbox);
 
 // compute the seg private info (psx/y, pex/y, pdx/y, etc).
-void RecomputeSeg(seg_t *seg);
+void RecomputeSeg(glbsp::level::Seg *seg);
 
 // take the given seg 'cur', compare it with the partition line, and
 // determine it's fate: moving it into either the left or right lists
@@ -90,24 +90,24 @@ void RecomputeSeg(seg_t *seg);
 // well.  Updates the intersection list if the seg lies on or crosses
 // the partition line.
 //
-void DivideOneSeg(seg_t *cur, seg_t *part, 
-    superblock_t *left_list, superblock_t *right_list,
+void DivideOneSeg(glbsp::level::Seg *cur, glbsp::level::Seg *part,
+    glbsp::level::SuperBlock *left_list, glbsp::level::SuperBlock *right_list,
     intersection_t ** cut_list);
 
 // remove all the segs from the list, partitioning them into the left
 // or right lists based on the given partition line.  Adds any
 // intersections onto the intersection list as it goes.
 //
-void SeparateSegs(superblock_t *seg_list, seg_t *part,
-    superblock_t *left_list, superblock_t *right_list,
+void SeparateSegs(glbsp::level::SuperBlock *seg_list, glbsp::level::Seg *part,
+    glbsp::level::SuperBlock *left_list, glbsp::level::SuperBlock *right_list,
     intersection_t ** cut_list);
 
 // analyse the intersection list, and add any needed minisegs to the
 // given seg lists (one miniseg on each side).  All the intersection
 // structures will be freed back into a quick-alloc list.
 //
-void AddMinisegs(seg_t *part, 
-    superblock_t *left_list, superblock_t *right_list, 
+void AddMinisegs(glbsp::level::Seg *part,
+    glbsp::level::SuperBlock *left_list, glbsp::level::SuperBlock *right_list,
     intersection_t *cut_list);
 
 // free the quick allocation cut list

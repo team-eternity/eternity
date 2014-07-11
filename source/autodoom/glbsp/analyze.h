@@ -52,20 +52,20 @@ namespace glbsp
     // return a new vertex (with correct wall_tip info) for the split that
     // happens along the given seg at the given location.
     //
-    vertex_t *NewVertexFromSplitSeg(const seg_t &seg, float_g x, float_g y);
+    level::Vertex *NewVertexFromSplitSeg(const level::Seg &seg, float_g x, float_g y);
 
     // return a new end vertex to compensate for a seg that would end up
     // being zero-length (after integer rounding).  Doesn't compute the
     // wall_tip info (thus this routine should only be used _after_ node
     // building).
     //
-    vertex_t *NewVertexDegenerate(const vertex_t &start, const vertex_t &end);
+    level::Vertex *NewVertexDegenerate(const level::Vertex &start, const level::Vertex &end);
 
     // check whether a line with the given delta coordinates and beginning
     // at this vertex is open.  Returns a sector reference if it's open,
     // or NULL if closed (void space or directly along a linedef).
     //
-    sector_t * VertexCheckOpen(const vertex_t &vert, float_g dx, float_g dy);
+    level::Sector * VertexCheckOpen(const level::Vertex &vert, float_g dx, float_g dy);
   }
 }
 

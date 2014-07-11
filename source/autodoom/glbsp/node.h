@@ -31,23 +31,23 @@
 // line.  Returns -1 if box is on left side, +1 if box is on right
 // size, or 0 if the line intersects the box.
 //
-int BoxOnLineSide(superblock_t *box, seg_t *part);
+int BoxOnLineSide(glbsp::level::SuperBlock *box, glbsp::level::Seg *part);
 
 // add the seg to the given list
-void AddSegToSuper(superblock_t *block, seg_t *seg);
+void AddSegToSuper(glbsp::level::SuperBlock *block, glbsp::level::Seg *seg);
 
 // increase the counts within the superblock, to account for the given
 // seg being split.
 //
-void SplitSegInSuper(superblock_t *block, seg_t *seg);
+void SplitSegInSuper(glbsp::level::SuperBlock *block, glbsp::level::Seg *seg);
 
 // scan all the linedef of the level and convert each sidedef into a
 // seg (or seg pair).  Returns the list of segs.
 //
-superblock_t *CreateSegs(void);
+glbsp::level::SuperBlock *CreateSegs(void);
 
 // free a super block.
-void FreeSuper(superblock_t *block);
+void FreeSuper(glbsp::level::SuperBlock *block);
 
 // takes the seg list and determines if it is convex.  When it is, the
 // segs are converted to a subsector, and '*S' is the new subsector
@@ -56,11 +56,11 @@ void FreeSuper(superblock_t *block);
 // and '*N' is the new node (and '*S' is set to NULL).  Normally
 // returns GLBSP_E_OK, or GLBSP_E_Cancelled if user stopped it.
 //
-glbsp_ret_e BuildNodes(superblock_t *seg_list,
-    node_t ** N, subsec_t ** S, int depth, const bbox_t *bbox);
+glbsp_ret_e BuildNodes(glbsp::level::SuperBlock *seg_list,
+    glbsp::level::Node ** N, glbsp::level::Subsec ** S, int depth, const glbsp::level::BBox *bbox);
 
 // compute the height of the bsp tree, starting at 'node'.
-int ComputeBspHeight(node_t *node);
+int ComputeBspHeight(glbsp::level::Node *node);
 
 // traverse the BSP tree and put all the segs in each subsector into
 // clockwise order, and renumber the seg indices.  This cannot be done
@@ -68,19 +68,19 @@ int ComputeBspHeight(node_t *node);
 // another seg into that partner's list -- usually in the wrong place
 // order-wise.
 //
-void ClockwiseBspTree(node_t *root);
+void ClockwiseBspTree(glbsp::level::Node *root);
 
 // traverse the BSP tree and do whatever is necessary to convert the
 // node information from GL standard to normal standard (for example,
 // removing minisegs).
 //
-void NormaliseBspTree(node_t *root);
+void NormaliseBspTree(glbsp::level::Node *root);
 
 // traverse the BSP tree, doing whatever is necessary to round
 // vertices to integer coordinates (for example, removing segs whose
 // rounded coordinates degenerate to the same point).
 //
-void RoundOffBspTree(node_t *root);
+void RoundOffBspTree(glbsp::level::Node *root);
 
 // free all the superblocks on the quick-alloc list
 void FreeQuickAllocSupers(void);
