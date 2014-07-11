@@ -36,7 +36,7 @@ struct ticcmd_t;
 #include "b_classifier.h"
 #include "b_path.h"
 #include "../e_inventory.h"
-#include "../metaadapter.h"
+#include "../metaapi.h"
 
 // goal metatable keys
 #define BOT_PICKUP "pickupEvent"
