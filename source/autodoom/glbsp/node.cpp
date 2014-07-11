@@ -1165,7 +1165,8 @@ static void RoundOffSubsector(subsec_t *sub)
 #   endif
 
     // create a new vertex for this baby
-    last_real_degen->end = glbsp::analyze::NewVertexDegenerate(*last_real_degen->start, *last_real_degen->end);
+    last_real_degen->end = NewVertexDegenerate(last_real_degen->start,
+        last_real_degen->end);
 
 #   if DEBUG_SUBSEC
     PrintDebug("Degenerate after:  (%d,%d) -> (%d,%d)\n", 
