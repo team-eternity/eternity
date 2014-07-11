@@ -914,7 +914,7 @@ static int WriteAllLumps(void)
 //
 // WriteDirEntry
 //
-static void WriteDirEntry(lump_t *lump)
+static void WriteDirEntry(const lump_t *lump)
 {
   size_t len;
   raw_wad_entry_t entry;
@@ -1242,7 +1242,7 @@ lump_t *FindLevelLump(const char *name)
 //
 // CheckLevelLumpZero
 //
-int CheckLevelLumpZero(lump_t *lump)
+int CheckLevelLumpZero(const lump_t *lump)
 {
   int i;
   

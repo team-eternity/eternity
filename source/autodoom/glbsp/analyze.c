@@ -731,7 +731,7 @@ void DetectOverlappingLines(void)
   UtilFree(array);
 }
 
-static void CountWallTips(vertex_t *vert, int *one_sided, int *two_sided)
+static void CountWallTips(const vertex_t *vert, int *one_sided, int *two_sided)
 {
     wall_tip_t *tip;
 
@@ -994,7 +994,7 @@ void CalculateWallTips(void)
 //
 // NewVertexFromSplitSeg
 //
-vertex_t *NewVertexFromSplitSeg(seg_t *seg, float_g x, float_g y)
+vertex_t *NewVertexFromSplitSeg(const seg_t *seg, float_g x, float_g y)
 {
   vertex_t *vert = NewVertex();
 
@@ -1042,7 +1042,7 @@ vertex_t *NewVertexFromSplitSeg(seg_t *seg, float_g x, float_g y)
 //
 // NewVertexDegenerate
 //
-vertex_t *NewVertexDegenerate(vertex_t *start, vertex_t *end)
+vertex_t *NewVertexDegenerate(const vertex_t *start, const vertex_t *end)
 {
   float_g dx = end->x - start->x;
   float_g dy = end->y - start->y;
@@ -1088,7 +1088,7 @@ vertex_t *NewVertexDegenerate(vertex_t *start, vertex_t *end)
 //
 // VertexCheckOpen
 //
-sector_t * VertexCheckOpen(vertex_t *vert, float_g dx, float_g dy)
+sector_t * VertexCheckOpen(const vertex_t *vert, float_g dx, float_g dy)
 {
   wall_tip_t *tip;
 

@@ -30,7 +30,7 @@
 // line.  Returns -1 if box is on left side, +1 if box is on right
 // size, or 0 if the line intersects the box.
 //
-int BoxOnLineSide(superblock_t *box, seg_t *part);
+int BoxOnLineSide(const superblock_t *box, const seg_t *part);
 
 // add the seg to the given list
 void AddSegToSuper(superblock_t *block, seg_t *seg);
@@ -38,7 +38,7 @@ void AddSegToSuper(superblock_t *block, seg_t *seg);
 // increase the counts within the superblock, to account for the given
 // seg being split.
 //
-void SplitSegInSuper(superblock_t *block, seg_t *seg);
+void SplitSegInSuper(superblock_t *block, const seg_t *seg);
 
 // scan all the linedef of the level and convert each sidedef into a
 // seg (or seg pair).  Returns the list of segs.
@@ -59,7 +59,7 @@ glbsp_ret_e BuildNodes(superblock_t *seg_list,
     node_t ** N, subsec_t ** S, int depth, const bbox_t *bbox);
 
 // compute the height of the bsp tree, starting at 'node'.
-int ComputeBspHeight(node_t *node);
+int ComputeBspHeight(const node_t *node);
 
 // traverse the BSP tree and put all the segs in each subsector into
 // clockwise order, and renumber the seg indices.  This cannot be done
@@ -67,19 +67,19 @@ int ComputeBspHeight(node_t *node);
 // another seg into that partner's list -- usually in the wrong place
 // order-wise.
 //
-void ClockwiseBspTree(node_t *root);
+void ClockwiseBspTree(const node_t *root);
 
 // traverse the BSP tree and do whatever is necessary to convert the
 // node information from GL standard to normal standard (for example,
 // removing minisegs).
 //
-void NormaliseBspTree(node_t *root);
+void NormaliseBspTree(const node_t *root);
 
 // traverse the BSP tree, doing whatever is necessary to round
 // vertices to integer coordinates (for example, removing segs whose
 // rounded coordinates degenerate to the same point).
 //
-void RoundOffBspTree(node_t *root);
+void RoundOffBspTree(const node_t *root);
 
 // free all the superblocks on the quick-alloc list
 void FreeQuickAllocSupers(void);

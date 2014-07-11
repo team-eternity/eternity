@@ -242,7 +242,7 @@ static seg_t *SplitSeg(seg_t *old_seg, float_g x, float_g y)
 //       and the partitioning seg, and takes advantage of some common
 //       situations like horizontal/vertical lines.
 //
-static INLINE_G void ComputeIntersection(seg_t *cur, seg_t *part,
+static INLINE_G void ComputeIntersection(const seg_t *cur, const seg_t *part,
   float_g perp_c, float_g perp_d, float_g *x, float_g *y)
 {
   double ds;
@@ -282,7 +282,7 @@ static INLINE_G void ComputeIntersection(seg_t *cur, seg_t *part,
 // AddIntersection
 //
 static void AddIntersection(intersection_t ** cut_list,
-    vertex_t *vert, seg_t *part, boolean_g self_ref)
+    vertex_t *vert, const seg_t *part, boolean_g self_ref)
 {
   intersection_t *cut;
   intersection_t *after;
@@ -338,7 +338,7 @@ static void AddIntersection(intersection_t ** cut_list,
 //
 // Returns TRUE if a "bad seg" was found early.
 //
-static int EvalPartitionWorker(superblock_t *seg_list, seg_t *part, 
+static int EvalPartitionWorker(const superblock_t *seg_list, const seg_t *part,
     int best_cost, eval_info_t *info)
 {
   seg_t *check;
@@ -551,7 +551,7 @@ static int EvalPartitionWorker(superblock_t *seg_list, seg_t *part,
 // Returns the computed cost, or a negative value if the seg should be
 // skipped altogether.
 //
-static int EvalPartition(superblock_t *seg_list, seg_t *part, 
+static int EvalPartition(const superblock_t *seg_list, const seg_t *part,
     int best_cost)
 {
   eval_info_t info;
@@ -608,7 +608,7 @@ static int EvalPartition(superblock_t *seg_list, seg_t *part,
 }
 
 
-static void EvaluateFastWorker(superblock_t *seg_list,
+static void EvaluateFastWorker(const superblock_t *seg_list,
     seg_t **best_H, seg_t **best_V, int mid_x, int mid_y)
 {
   seg_t *part;
@@ -662,7 +662,7 @@ static void EvaluateFastWorker(superblock_t *seg_list,
 }
 
 
-static seg_t *FindFastSeg(superblock_t *seg_list, const bbox_t *bbox)
+static seg_t *FindFastSeg(const superblock_t *seg_list, const bbox_t *bbox)
 {
    int H_cost, V_cost;
   seg_t *best_H = NULL;
@@ -698,8 +698,8 @@ static seg_t *FindFastSeg(superblock_t *seg_list, const bbox_t *bbox)
 
 
 /* returns FALSE if cancelled */
-static int PickNodeWorker(superblock_t *part_list, 
-    superblock_t *seg_list, seg_t ** best, int *best_cost,
+static int PickNodeWorker(const superblock_t *part_list,
+    const superblock_t *seg_list, seg_t ** best, int *best_cost,
     int *progress, int prog_step)
 {
   seg_t *part;
@@ -766,7 +766,7 @@ static int PickNodeWorker(superblock_t *part_list,
 //
 // Find the best seg in the seg_list to use as a partition line.
 //
-seg_t *PickNode(superblock_t *seg_list, int depth, const bbox_t *bbox)
+seg_t *PickNode(const superblock_t *seg_list, int depth, const bbox_t *bbox)
 {
   seg_t *best=NULL;
 
@@ -869,7 +869,7 @@ seg_t *PickNode(superblock_t *seg_list, int depth, const bbox_t *bbox)
 //       same logic when determining which segs should go left, right
 //       or be split.
 //
-void DivideOneSeg(seg_t *cur, seg_t *part, 
+void DivideOneSeg(seg_t *cur, const seg_t *part,
     superblock_t *left_list, superblock_t *right_list,
     intersection_t ** cut_list)
 {
@@ -955,7 +955,7 @@ void DivideOneSeg(seg_t *cur, seg_t *part,
 //
 // SeparateSegs
 //
-void SeparateSegs(superblock_t *seg_list, seg_t *part,
+void SeparateSegs(superblock_t *seg_list, const seg_t *part,
     superblock_t *lefts, superblock_t *rights,
     intersection_t ** cut_list)
 {
@@ -992,7 +992,7 @@ void SeparateSegs(superblock_t *seg_list, seg_t *part,
 }
 
 
-static void FindLimitWorker(superblock_t *block, bbox_t *bbox)
+static void FindLimitWorker(const superblock_t *block, bbox_t *bbox)
 {
   seg_t *cur;
   int num;
@@ -1030,7 +1030,7 @@ static void FindLimitWorker(superblock_t *block, bbox_t *bbox)
 // Find the limits from a list of segs, by stepping through the segs
 // and comparing the vertices at both ends.
 //
-void FindLimits(superblock_t *seg_list, bbox_t *bbox)
+void FindLimits(const superblock_t *seg_list, bbox_t *bbox)
 {
   bbox->minx = bbox->miny = SHRT_MAX;
   bbox->maxx = bbox->maxy = SHRT_MIN;
@@ -1042,8 +1042,8 @@ void FindLimits(superblock_t *seg_list, bbox_t *bbox)
 //
 // AddMinisegs
 //
-void AddMinisegs(seg_t *part, 
-    superblock_t *left_list, superblock_t *right_list, 
+void AddMinisegs(const seg_t *part,
+    superblock_t *left_list, superblock_t *right_list,
     intersection_t *cut_list)
 {
   intersection_t *cur, *next;

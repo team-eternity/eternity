@@ -191,7 +191,7 @@ static void BlockAdd(int blk_num, int line_index)
   cur[BK_NUM]++;
 }
 
-static void BlockAddLine(linedef_t *L)
+static void BlockAddLine(const linedef_t *L)
 {
   int x1 = (int) L->start->x;
   int y1 = (int) L->start->y;

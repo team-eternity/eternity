@@ -29,8 +29,9 @@
 
 
 // use this for inlining.  Usually defined in the makefile.
+// IOANCH: just use inline; Visual C 2013 should support C99.
 #ifndef INLINE_G
-#define INLINE_G  /* nothing */
+#define INLINE_G  inline
 #endif
 
 

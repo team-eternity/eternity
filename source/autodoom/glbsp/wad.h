@@ -206,7 +206,7 @@ const char *GetLevelName(void);
 lump_t *FindLevelLump(const char *name);
 
 // tests if the level lump contains nothing but zeros.
-int CheckLevelLumpZero(lump_t *lump);
+int CheckLevelLumpZero(const lump_t *lump);
 
 // create a new lump in the current level with the given name.  If
 // such a lump already exists, it is truncated to zero length.

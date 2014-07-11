@@ -141,7 +141,7 @@ static void AddExtraFile(nodebuildinfo_t *info, const char *str)
     HANDLE_BOOLEAN(abbrev, field)  \
     HANDLE_BOOLEAN(name, field)
 
-glbsp_ret_e GlbspParseArgs(nodebuildinfo_t *info, 
+glbsp_ret_e GlbspParseArgs(nodebuildinfo_t *info,
     volatile nodebuildcomms_t *comms,
     const char ** argv, int argc)
 {

@@ -587,7 +587,7 @@ static void PutAutoDoomVertices(void)
    }
 }
 
-void PutVertices(char *name, int do_gl)
+void PutVertices(const char *name, int do_gl)
 {
   int count, i;
   lump_t *lump;
@@ -1020,7 +1020,7 @@ static void PutAutoDoomSubsecs()
    }
 }
 
-void PutSubsecs(char *name, int do_gl)
+void PutSubsecs(const char *name, int do_gl)
 {
   int i;
   lump_t *lump;
@@ -1211,7 +1211,7 @@ static void PutAutoDoomNodes(node_t *root)
    PutOneAutoDoomNode(root);
 }
 
-void PutNodes(char *name, int do_gl, int do_v5, node_t *root)
+void PutNodes(const char *name, int do_gl, int do_v5, node_t *root)
 {
   lump_t *lump;
 

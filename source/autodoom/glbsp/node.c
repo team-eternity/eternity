@@ -70,7 +70,7 @@ static superblock_t *quick_alloc_supers = NULL;
 //
 // Returns -1 for left, +1 for right, or 0 for intersect.
 //
-static int PointOnLineSide(seg_t *part, float_g x, float_g y)
+static int PointOnLineSide(const seg_t *part, float_g x, float_g y)
 {
   float_g perp = UtilPerpDist(part, x, y);
   
@@ -83,7 +83,7 @@ static int PointOnLineSide(seg_t *part, float_g x, float_g y)
 //
 // BoxOnLineSide
 //
-int BoxOnLineSide(superblock_t *box, seg_t *part)
+int BoxOnLineSide(const superblock_t *box, const seg_t *part)
 {
   float_g x1 = (float_g)box->x1 - IFFY_LEN * 1.5;
   float_g y1 = (float_g)box->y1 - IFFY_LEN * 1.5;
@@ -330,7 +330,7 @@ void AddSegToSuper(superblock_t *block, seg_t *seg)
 //
 // SplitSegInSuper
 //
-void SplitSegInSuper(superblock_t *block, seg_t *seg)
+void SplitSegInSuper(superblock_t *block, const seg_t *seg)
 {
   do
   {
@@ -346,7 +346,7 @@ void SplitSegInSuper(superblock_t *block, seg_t *seg)
 }
 
 static seg_t *CreateOneSeg(linedef_t *line, vertex_t *start, vertex_t *end,
-    sidedef_t *side, int side_num)
+    const sidedef_t *side, int side_num)
 {
   seg_t *seg = NewSeg();
 
@@ -636,7 +636,7 @@ static void ClockwiseOrder(subsec_t *sub)
 //
 // SanityCheckClosed
 //
-static void SanityCheckClosed(subsec_t *sub)
+static void SanityCheckClosed(const subsec_t *sub)
 {
   seg_t *cur, *next;
   int total=0, gaps=0;
@@ -670,7 +670,7 @@ static void SanityCheckClosed(subsec_t *sub)
 //
 // SanityCheckSameSector
 //
-static void SanityCheckSameSector(subsec_t *sub)
+static void SanityCheckSameSector(const subsec_t *sub)
 {
   seg_t *cur;
   seg_t *compare;
@@ -724,7 +724,7 @@ static void SanityCheckSameSector(subsec_t *sub)
 //
 // SanityCheckHasRealSeg
 //
-static void SanityCheckHasRealSeg(subsec_t *sub)
+static void SanityCheckHasRealSeg(const subsec_t *sub)
 {
   seg_t *cur;
 
@@ -831,7 +831,7 @@ static subsec_t *CreateSubsec(superblock_t *seg_list)
 //
 // ComputeBspHeight
 //
-int ComputeBspHeight(node_t *node)
+int ComputeBspHeight(const node_t *node)
 {
   if (node)
   {
@@ -872,7 +872,7 @@ static void DebugShowSegs(superblock_t *seg_list)
 //
 // BuildNodes
 //
-glbsp_ret_e BuildNodes(superblock_t *seg_list, 
+glbsp_ret_e BuildNodes(superblock_t *seg_list,
     node_t ** N, subsec_t ** S, int depth, const bbox_t *bbox)
 {
   node_t *node;
@@ -1010,7 +1010,7 @@ glbsp_ret_e BuildNodes(superblock_t *seg_list,
 //
 // ClockwiseBspTree
 //
-void ClockwiseBspTree(node_t *root)
+void ClockwiseBspTree(const node_t *root)
 {
   int i;
 
@@ -1083,7 +1083,7 @@ static void NormaliseSubsector(subsec_t *sub)
 //
 // NormaliseBspTree
 //
-void NormaliseBspTree(node_t *root)
+void NormaliseBspTree(const node_t *root)
 {
   int i;
 
@@ -1221,7 +1221,7 @@ static void RoundOffSubsector(subsec_t *sub)
 //
 // RoundOffBspTree
 //
-void RoundOffBspTree(node_t *root)
+void RoundOffBspTree(const node_t *root)
 {
   int i;
 
