@@ -127,7 +127,7 @@ void FreeQuickAllocCuts(void)
 //
 // Fill in the fields 'angle', 'len', 'pdx', 'pdy', etc...
 //
-void RecomputeSeg(glbsp::level::Seg *seg)
+void RecomputeSeg(seg_t *seg)
 {
   seg->psx = seg->start->x;
   seg->psy = seg->start->y;
@@ -165,10 +165,10 @@ void RecomputeSeg(glbsp::level::Seg *seg)
 //       contains the seg (and/or partner), so that future processing
 //       is not fucked up by incorrect counts.
 //
-static glbsp::level::Seg *SplitSeg(glbsp::level::Seg *old_seg, float_g x, float_g y)
+static seg_t *SplitSeg(seg_t *old_seg, float_g x, float_g y)
 {
-  glbsp::level::Seg *new_seg;
-  glbsp::level::Vertex *new_vert;
+  seg_t *new_seg;
+  vertex_t *new_vert;
 
 # if DEBUG_SPLIT
   if (old_seg->linedef)
@@ -183,7 +183,7 @@ static glbsp::level::Seg *SplitSeg(glbsp::level::Seg *old_seg, float_g x, float_
     SplitSegInSuper(old_seg->block, old_seg);
 
   new_vert = glbsp::analyze::NewVertexFromSplitSeg(*old_seg, x, y);
-  new_seg  = glbsp::level::NewSeg();
+  new_seg  = NewSeg();
 
   // copy seg info
   new_seg[0] = old_seg[0];
@@ -212,7 +212,7 @@ static glbsp::level::Seg *SplitSeg(glbsp::level::Seg *old_seg, float_g x, float_
     if (old_seg->partner->block)
       SplitSegInSuper(old_seg->partner->block, old_seg->partner);
 
-    new_seg->partner = glbsp::level::NewSeg();
+    new_seg->partner = NewSeg();
 
     // copy seg info
     new_seg->partner[0] = old_seg->partner[0];
@@ -242,7 +242,7 @@ static glbsp::level::Seg *SplitSeg(glbsp::level::Seg *old_seg, float_g x, float_
 //       and the partitioning seg, and takes advantage of some common
 //       situations like horizontal/vertical lines.
 //
-static INLINE_G void ComputeIntersection(glbsp::level::Seg *cur, glbsp::level::Seg *part,
+static INLINE_G void ComputeIntersection(seg_t *cur, seg_t *part,
   float_g perp_c, float_g perp_d, float_g *x, float_g *y)
 {
   double ds;
@@ -282,7 +282,7 @@ static INLINE_G void ComputeIntersection(glbsp::level::Seg *cur, glbsp::level::S
 // AddIntersection
 //
 static void AddIntersection(intersection_t ** cut_list,
-    glbsp::level::Vertex *vert, glbsp::level::Seg *part, boolean_g self_ref)
+    vertex_t *vert, seg_t *part, boolean_g self_ref)
 {
   intersection_t *cut;
   intersection_t *after;
@@ -338,10 +338,10 @@ static void AddIntersection(intersection_t ** cut_list,
 //
 // Returns TRUE if a "bad seg" was found early.
 //
-static int EvalPartitionWorker(glbsp::level::SuperBlock *seg_list, glbsp::level::Seg *part,
+static int EvalPartitionWorker(superblock_t *seg_list, seg_t *part, 
     int best_cost, eval_info_t *info)
 {
-  glbsp::level::Seg *check;
+  seg_t *check;
 
   float_g qnty;
   float_g a, b, fa, fb;
@@ -551,7 +551,7 @@ static int EvalPartitionWorker(glbsp::level::SuperBlock *seg_list, glbsp::level:
 // Returns the computed cost, or a negative value if the seg should be
 // skipped altogether.
 //
-static int EvalPartition(glbsp::level::SuperBlock *seg_list, glbsp::level::Seg *part,
+static int EvalPartition(superblock_t *seg_list, seg_t *part, 
     int best_cost)
 {
   eval_info_t info;
@@ -608,10 +608,10 @@ static int EvalPartition(glbsp::level::SuperBlock *seg_list, glbsp::level::Seg *
 }
 
 
-static void EvaluateFastWorker(glbsp::level::SuperBlock *seg_list,
-    glbsp::level::Seg **best_H, glbsp::level::Seg **best_V, int mid_x, int mid_y)
+static void EvaluateFastWorker(superblock_t *seg_list,
+    seg_t **best_H, seg_t **best_V, int mid_x, int mid_y)
 {
-  glbsp::level::Seg *part;
+  seg_t *part;
   int num;
 
   for (part=seg_list->segs; part; part = part->next)
@@ -662,11 +662,11 @@ static void EvaluateFastWorker(glbsp::level::SuperBlock *seg_list,
 }
 
 
-static glbsp::level::Seg *FindFastSeg(glbsp::level::SuperBlock *seg_list, const glbsp::level::BBox *bbox)
+static seg_t *FindFastSeg(superblock_t *seg_list, const bbox_t *bbox)
 {
    int H_cost, V_cost;
-  glbsp::level::Seg *best_H = NULL;
-  glbsp::level::Seg *best_V = NULL;
+  seg_t *best_H = NULL;
+  seg_t *best_V = NULL;
 
   int mid_x = (bbox->minx + bbox->maxx) / 2;
   int mid_y = (bbox->miny + bbox->maxy) / 2;
@@ -698,11 +698,11 @@ static glbsp::level::Seg *FindFastSeg(glbsp::level::SuperBlock *seg_list, const 
 
 
 /* returns FALSE if cancelled */
-static int PickNodeWorker(glbsp::level::SuperBlock *part_list,
-    glbsp::level::SuperBlock *seg_list, glbsp::level::Seg ** best, int *best_cost,
+static int PickNodeWorker(superblock_t *part_list, 
+    superblock_t *seg_list, seg_t ** best, int *best_cost,
     int *progress, int prog_step)
 {
-  glbsp::level::Seg *part;
+  seg_t *part;
 
   int num;
   int cost;
@@ -766,9 +766,9 @@ static int PickNodeWorker(glbsp::level::SuperBlock *part_list,
 //
 // Find the best seg in the seg_list to use as a partition line.
 //
-glbsp::level::Seg *PickNode(glbsp::level::SuperBlock *seg_list, int depth, const glbsp::level::BBox *bbox)
+seg_t *PickNode(superblock_t *seg_list, int depth, const bbox_t *bbox)
 {
-  glbsp::level::Seg *best=NULL;
+  seg_t *best=NULL;
 
   int best_cost=INT_MAX;
 
@@ -869,11 +869,11 @@ glbsp::level::Seg *PickNode(glbsp::level::SuperBlock *seg_list, int depth, const
 //       same logic when determining which segs should go left, right
 //       or be split.
 //
-void DivideOneSeg(glbsp::level::Seg *cur, glbsp::level::Seg *part,
-    glbsp::level::SuperBlock *left_list, glbsp::level::SuperBlock *right_list,
+void DivideOneSeg(seg_t *cur, seg_t *part, 
+    superblock_t *left_list, superblock_t *right_list,
     intersection_t ** cut_list)
 {
-  glbsp::level::Seg *new_seg;
+  seg_t *new_seg;
 
   float_g x, y;
 
@@ -955,15 +955,15 @@ void DivideOneSeg(glbsp::level::Seg *cur, glbsp::level::Seg *part,
 //
 // SeparateSegs
 //
-void SeparateSegs(glbsp::level::SuperBlock *seg_list, glbsp::level::Seg *part,
-    glbsp::level::SuperBlock *lefts, glbsp::level::SuperBlock *rights,
+void SeparateSegs(superblock_t *seg_list, seg_t *part,
+    superblock_t *lefts, superblock_t *rights,
     intersection_t ** cut_list)
 {
   int num;
 
   while (seg_list->segs)
   {
-    glbsp::level::Seg *cur = seg_list->segs;
+    seg_t *cur = seg_list->segs;
     seg_list->segs = cur->next;
 
     cur->block = NULL;
@@ -974,7 +974,7 @@ void SeparateSegs(glbsp::level::SuperBlock *seg_list, glbsp::level::Seg *part,
   // recursively handle sub-blocks
   for (num=0; num < 2; num++)
   {
-    glbsp::level::SuperBlock *A = seg_list->subs[num];
+    superblock_t *A = seg_list->subs[num];
 
     if (A)
     {
@@ -992,9 +992,9 @@ void SeparateSegs(glbsp::level::SuperBlock *seg_list, glbsp::level::Seg *part,
 }
 
 
-static void FindLimitWorker(glbsp::level::SuperBlock *block, glbsp::level::BBox *bbox)
+static void FindLimitWorker(superblock_t *block, bbox_t *bbox)
 {
-  glbsp::level::Seg *cur;
+  seg_t *cur;
   int num;
 
   for (cur=block->segs; cur; cur=cur->next)
@@ -1030,7 +1030,7 @@ static void FindLimitWorker(glbsp::level::SuperBlock *block, glbsp::level::BBox 
 // Find the limits from a list of segs, by stepping through the segs
 // and comparing the vertices at both ends.
 //
-void FindLimits(glbsp::level::SuperBlock *seg_list, glbsp::level::BBox *bbox)
+void FindLimits(superblock_t *seg_list, bbox_t *bbox)
 {
   bbox->minx = bbox->miny = SHRT_MAX;
   bbox->maxx = bbox->maxy = SHRT_MIN;
@@ -1042,12 +1042,12 @@ void FindLimits(glbsp::level::SuperBlock *seg_list, glbsp::level::BBox *bbox)
 //
 // AddMinisegs
 //
-void AddMinisegs(glbsp::level::Seg *part,
-    glbsp::level::SuperBlock *left_list, glbsp::level::SuperBlock *right_list, 
+void AddMinisegs(seg_t *part, 
+    superblock_t *left_list, superblock_t *right_list, 
     intersection_t *cut_list)
 {
   intersection_t *cur, *next;
-  glbsp::level::Seg *seg, *buddy;
+  seg_t *seg, *buddy;
 
   if (! cut_list)
     return;
@@ -1195,8 +1195,8 @@ void AddMinisegs(glbsp::level::Seg *part,
     }
 
     // create the miniseg pair
-    seg = glbsp::level::NewSeg();
-    buddy = glbsp::level::NewSeg();
+    seg = NewSeg();
+    buddy = NewSeg();
 
     seg->partner = buddy;
     buddy->partner = seg;

@@ -135,7 +135,7 @@ int glbsp::blockmap::CheckLinedefInsideBox(int xmin, int ymin, int xmax, int yma
 
 /* ----- top level funcs ------------------------------------ */
 
-static void FindBlockmapLimits(glbsp::level::BBox &bbox)
+static void FindBlockmapLimits(bbox_t &bbox)
 {
   int i;
 
@@ -145,9 +145,9 @@ static void FindBlockmapLimits(glbsp::level::BBox &bbox)
   bbox.minx = bbox.miny = SHRT_MAX;
   bbox.maxx = bbox.maxy = SHRT_MIN;
 
-  for (i=0; i < glbsp::level::num_linedefs; i++)
+  for (i=0; i < num_linedefs; i++)
   {
-    glbsp::level::Linedef *L = glbsp::level::LookupLinedef(i);
+    linedef_t *L = LookupLinedef(i);
 
     if (! L->zero_len)
     {
@@ -172,10 +172,10 @@ static void FindBlockmapLimits(glbsp::level::BBox &bbox)
     }
   }
 
-  if (glbsp::level::num_linedefs > 0)
+  if (num_linedefs > 0)
   {
-    block_mid_x = (mid_x / glbsp::level::num_linedefs) * 16;
-    block_mid_y = (mid_y / glbsp::level::num_linedefs) * 16;
+    block_mid_x = (mid_x / num_linedefs) * 16;
+    block_mid_y = (mid_y / num_linedefs) * 16;
   }
 
 # if DEBUG_BLOCKMAP
@@ -188,7 +188,7 @@ static void FindBlockmapLimits(glbsp::level::BBox &bbox)
 //
 void glbsp::blockmap::InitBlockmap()
 {
-  level::BBox map_bbox;
+  bbox_t map_bbox;
 
   /* find limits of linedefs, and store as map limits */
   FindBlockmapLimits(map_bbox);
