@@ -364,6 +364,18 @@ public:
 	   if (size > this->numalloc)
 		   this->baseResize(size - this->numalloc);
    }
+   
+   //
+   // back
+   //
+   // IOANCH: return reference to last component
+   //
+   const T& back() const
+   {
+      if(!this->ptrArray || !this->length)
+         I_Error("PODCollection::back: array underflow\n");
+      return this->ptrArray[this->length - 1];
+   }
 };
 
 //
@@ -512,6 +524,20 @@ public:
    {
       add();
       return this->ptrArray[this->length - 1];
+   }
+   
+   //
+   // pop
+   //
+   const T &pop()
+   {
+      if(!this->ptrArray || !this->length)
+         I_Error("Collection::pop: array underflow\n");
+      
+      const T &ret = this->ptrArray[--this->length];
+      this->checkWrapIterator();
+      
+      return ret;
    }
 };
 
