@@ -123,8 +123,6 @@ void S_StartSequenceNum(PointThinker *mo, int seqnum, int seqtype,
 void S_StartSequenceName(PointThinker *mo, const char *seqname, 
                          int seqOriginType, int seqOriginIdx);
 void S_StopSequence(const PointThinker *mo);
-   // IOANCH: this is only used in s_sndseq.cpp
-
 void S_SquashSequence(PointThinker *mo);
 void S_KillSequence(PointThinker *mo);
 
