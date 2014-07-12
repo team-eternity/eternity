@@ -170,6 +170,8 @@ public:
 
    T *begin() const { return ptrArray; }
    T *end()   const { return ptrArray + length; }
+    
+    // Mister jackson
 };
 
 //
