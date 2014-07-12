@@ -309,7 +309,7 @@ int twoSided(int sector, int line)
 //
 // killough 11/98: reformatted
 //
-sector_t *getNextSector(line_t *line, sector_t *sec)
+sector_t *getNextSector(const line_t *line, const sector_t *sec)
 {
    //jff 1/26/98 check unneeded since line->backsector already
    //returns NULL if the line is not two sided, and does so from
@@ -897,7 +897,7 @@ int P_FindMinSurroundingLight(sector_t *sector, int min)
 //
 // killough 11/98: reformatted
 
-int P_SectorActive(special_e t,sector_t *sec)
+int P_SectorActive(special_e t, const sector_t *sec)
 {
    return demo_compatibility ?  // return whether any thinker is active
      sec->floordata || sec->ceilingdata || sec->lightingdata :

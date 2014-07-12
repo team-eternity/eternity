@@ -678,7 +678,7 @@ int EV_DoChange(line_t *line, change_e changetype)
 // BTW, I'm pretty sure this is the longest function name in the
 // source code! ^_^
 //
-static int P_FindSectorFromLineTagWithLowerBound(line_t *l, int start,
+static int P_FindSectorFromLineTagWithLowerBound(const line_t *l, int start,
                                                  int min)
 {
    // Emulate original Doom's linear lower-bounded 
@@ -720,7 +720,7 @@ static int P_FindSectorFromLineTagWithLowerBound(line_t *l, int start,
 //
 // * Boom fixed the bug, and MBF/PrBoom without comp_stairs work right
 //
-int EV_BuildStairs(line_t *line, stair_e type)
+int EV_BuildStairs(const line_t *line, stair_e type)
 {
    // cph 2001/09/22 - cleaned up this function to save my sanity. 
    // A separate outer loop index makes the logic much cleared, and 

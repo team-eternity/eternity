@@ -1250,9 +1250,9 @@ int P_FindSectorFromTag(const int tag, int start);        // sf
 
 int P_FindMinSurroundingLight(sector_t *sector, int max);
 
-sector_t *getNextSector(line_t *line, sector_t *sec);
+sector_t *getNextSector(const line_t *line, const sector_t *sec);
 
-int P_SectorActive(special_e t, sector_t *s);
+int P_SectorActive(special_e t, const sector_t *s);
 
 bool P_IsSecret(sector_t *sec);
 
@@ -1281,7 +1281,7 @@ int EV_SilentLineTeleport(line_t *line, int side,
 
 int EV_DoElevator(line_t *line, elevator_e type);
 
-int EV_BuildStairs(line_t *line, stair_e type);
+int EV_BuildStairs(const line_t *line, stair_e type);
 
 int EV_DoFloor(line_t *line, floor_e floortype);
 

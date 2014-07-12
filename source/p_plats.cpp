@@ -262,7 +262,7 @@ bool PlatThinker::reTriggerVerticalDoor(bool player)
 // and for some plat types, an amount to raise
 // Returns true if a thinker is started, or restarted from stasis
 //
-bool EV_DoPlat(line_t *line, plattype_e type, int amount )
+bool EV_DoPlat(const line_t *line, plattype_e type, int amount )
 {
    PlatThinker *plat;
    int          secnum;
