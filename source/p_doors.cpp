@@ -328,7 +328,7 @@ bool VerticalDoorThinker::reTriggerVerticalDoor(bool player)
 // and the thing that activated the line
 // Returns true if a thinker created
 //
-int EV_DoLockedDoor(line_t *line, vldoor_e type, int lockID, Mobj *thing)
+int EV_DoLockedDoor(const line_t *line, vldoor_e type, int lockID, const Mobj *thing)
 {
    player_t *p = thing->player;
    
@@ -351,7 +351,7 @@ int EV_DoLockedDoor(line_t *line, vldoor_e type, int lockID, Mobj *thing)
 // Passed the line activating the door and the type of door
 // Returns true if a thinker created
 //
-int EV_DoDoor(line_t *line, vldoor_e type)
+int EV_DoDoor(const line_t *line, vldoor_e type)
 {
    int secnum = -1, rtn = 0;
    sector_t *sec;
@@ -443,7 +443,7 @@ int EV_DoDoor(line_t *line, vldoor_e type)
 //
 // jff 2/12/98 added int return value, fixed all returns
 //
-int EV_VerticalDoor(line_t *line, Mobj *thing, int lockID)
+int EV_VerticalDoor(line_t *line, const Mobj *thing, int lockID)
 {
    player_t *player = thing->player;
    sector_t *sec;

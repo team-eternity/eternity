@@ -637,7 +637,7 @@ void P_SpawnPSXGlowingLight(sector_t *sector, psxglow_e glowtype)
 //
 // jff 2/12/98 added int return value, fixed return
 //
-int EV_StartLightStrobing(line_t *line)
+int EV_StartLightStrobing(const line_t *line)
 {
    int   secnum;
    sector_t* sec;
@@ -666,7 +666,7 @@ int EV_StartLightStrobing(line_t *line)
 //
 // jff 2/12/98 added int return value, fixed return
 //
-int EV_TurnTagLightsOff(line_t* line)
+int EV_TurnTagLightsOff(const line_t* line)
 {
    // search sectors for those with same tag as activating line
    
@@ -701,7 +701,7 @@ int EV_TurnTagLightsOff(line_t* line)
 //
 // jff 2/12/98 added int return value, fixed return
 //
-int EV_LightTurnOn(line_t *line, int bright)
+int EV_LightTurnOn(const line_t *line, int bright)
 {
    int i;
    
@@ -793,7 +793,7 @@ int EV_LightTurnOnPartway(int tag, fixed_t level)
 // haleyjd 01/09/07: Depending on the value of "type", this function
 // sets, adds to, or subtracts from all tagged sectors' light levels.
 //
-int EV_SetLight(line_t *line, int tag, setlight_e type, int lvl)
+int EV_SetLight(const line_t *line, int tag, setlight_e type, int lvl)
 {
    int i, rtn = 0;
    sector_t *s;
@@ -848,7 +848,7 @@ dobackside:
 //
 // haleyjd 01/10/07: changes for param specs
 //
-int EV_FadeLight(line_t *line, int tag, int destvalue, int speed)
+int EV_FadeLight(const line_t *line, int tag, int destvalue, int speed)
 {
    int i, rtn = 0;
    LightFadeThinker *lf;
@@ -900,7 +900,7 @@ dobackside:
 // by fading the sector toward the lower light level, whether that requires
 // fading up or down.
 //
-int EV_GlowLight(line_t *line, int tag, int maxval, int minval, int speed)
+int EV_GlowLight(const line_t *line, int tag, int maxval, int minval, int speed)
 {
    int i, rtn = 0;
    LightFadeThinker *lf;
@@ -964,7 +964,7 @@ dobackside:
 // independent durations for both levels. Uses the same thinker as the normal
 // strobe light effect.
 //
-int EV_StrobeLight(line_t *line, int tag, 
+int EV_StrobeLight(const line_t *line, int tag,
                    int maxval, int minval, int maxtime, int mintime)
 {
    StrobeThinker *flash;
@@ -1011,7 +1011,7 @@ dobackside:
 // at a randomized time period between 0.2 and 1.8 seconds (7 to 64 tics).
 // Uses the normal lightflash thinker.
 //
-int EV_FlickerLight(line_t *line, int tag, int maxval, int minval)
+int EV_FlickerLight(const line_t *line, int tag, int maxval, int minval)
 {
    LightFlashThinker *flash;
    int i, rtn = 0;

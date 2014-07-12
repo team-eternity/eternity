@@ -337,7 +337,7 @@ sector_t *getNextSector(const line_t *line, const sector_t *sec)
 //
 // killough 11/98: reformatted
 //
-fixed_t P_FindLowestFloorSurrounding(sector_t* sec)
+fixed_t P_FindLowestFloorSurrounding(const sector_t* sec)
 {
    fixed_t floor = sec->floorheight;
    const sector_t *other;
@@ -364,7 +364,7 @@ fixed_t P_FindLowestFloorSurrounding(sector_t* sec)
 //
 // killough 11/98: reformatted
 //
-fixed_t P_FindHighestFloorSurrounding(sector_t *sec)
+fixed_t P_FindHighestFloorSurrounding(const sector_t *sec)
 {
    fixed_t floor = -500*FRACUNIT;
    const sector_t *other;
@@ -396,7 +396,7 @@ fixed_t P_FindHighestFloorSurrounding(sector_t *sec)
 //
 // Rewritten by Lee Killough to avoid fixed array and to be faster
 //
-fixed_t P_FindNextHighestFloor(sector_t *sec, int currentheight)
+fixed_t P_FindNextHighestFloor(const sector_t *sec, int currentheight)
 {
    sector_t *other;
    int i;
@@ -430,7 +430,7 @@ fixed_t P_FindNextHighestFloor(sector_t *sec, int currentheight)
 //
 // jff 02/03/98 Twiddled Lee's P_FindNextHighestFloor to make this
 //
-fixed_t P_FindNextLowestFloor(sector_t *sec, int currentheight)
+fixed_t P_FindNextLowestFloor(const sector_t *sec, int currentheight)
 {
    sector_t *other;
    int i;
@@ -464,7 +464,7 @@ fixed_t P_FindNextLowestFloor(sector_t *sec, int currentheight)
 //
 // jff 02/03/98 Twiddled Lee's P_FindNextHighestFloor to make this
 //
-fixed_t P_FindNextLowestCeiling(sector_t *sec, int currentheight)
+fixed_t P_FindNextLowestCeiling(const sector_t *sec, int currentheight)
 {
    sector_t *other;
    int i;
@@ -498,7 +498,7 @@ fixed_t P_FindNextLowestCeiling(sector_t *sec, int currentheight)
 //
 // jff 02/03/98 Twiddled Lee's P_FindNextHighestFloor to make this
 //
-fixed_t P_FindNextHighestCeiling(sector_t *sec, int currentheight)
+fixed_t P_FindNextHighestCeiling(const sector_t *sec, int currentheight)
 {
    sector_t *other;
    int i;
@@ -533,7 +533,7 @@ fixed_t P_FindNextHighestCeiling(sector_t *sec, int currentheight)
 //
 // killough 11/98: reformatted
 //
-fixed_t P_FindLowestCeilingSurrounding(sector_t* sec)
+fixed_t P_FindLowestCeilingSurrounding(const sector_t* sec)
 {
    const sector_t *other;
    fixed_t height = D_MAXINT;
@@ -584,7 +584,7 @@ fixed_t P_FindLowestCeilingSurrounding(sector_t* sec)
 //
 // killough 11/98: reformatted
 //
-fixed_t P_FindHighestCeilingSurrounding(sector_t* sec)
+fixed_t P_FindHighestCeilingSurrounding(const sector_t* sec)
 {
    const sector_t *other;
    fixed_t height = 0;
@@ -870,7 +870,7 @@ static void P_InitTagLists()
 //
 // killough 11/98: reformatted
 //
-int P_FindMinSurroundingLight(sector_t *sector, int min)
+int P_FindMinSurroundingLight(const sector_t *sector, int min)
 {
    const sector_t *check;
 
@@ -916,7 +916,7 @@ int P_SectorActive(special_e t, const sector_t *sec)
 // jff 3/14/98 added to simplify checks for whether sector is secret
 //  in automap and other places
 //
-bool P_IsSecret(sector_t *sec)
+bool P_IsSecret(const sector_t *sec)
 {
    return (sec->flags & SECF_SECRET);
 }
@@ -930,7 +930,7 @@ bool P_IsSecret(sector_t *sec)
 // jff 3/14/98 added to simplify checks for whether sector is secret
 //  in automap and other places
 //
-bool P_WasSecret(sector_t *sec)
+bool P_WasSecret(const sector_t *sec)
 {
    return (sec->intflags & SIF_WASSECRET) == SIF_WASSECRET;
 }
@@ -1071,7 +1071,7 @@ void P_PlayerInSpecialSector(player_t *player)
 // haleyjd 08/23/05: Inflicts terrain-based environmental damage
 // on players.
 //
-void P_PlayerOnSpecialFlat(player_t *player)
+void P_PlayerOnSpecialFlat(const player_t *player)
 {
    //sector_t *sector = player->mo->subsector->sector;
    ETerrain *terrain;
@@ -1722,7 +1722,7 @@ void P_SetLineID(line_t *line, int id)
 // haleyjd 09/06/07: This function is called to populate a spectransfer_t
 // structure with data from a sector.
 //
-void P_SetupSpecialTransfer(sector_t *sector, spectransfer_t *spec)
+void P_SetupSpecialTransfer(const sector_t *sector, spectransfer_t *spec)
 {
    spec->newspecial  = sector->special;
    spec->flags       = sector->flags & SPECIALFLAGSMASK;
@@ -1753,7 +1753,7 @@ void P_ZeroSpecialTransfer(spectransfer_t *spec)
 // features like customizable sector damage can work in the same manner and be
 // switched on or off by floor/ceiling transfer line types.
 //
-void P_TransferSectorSpecial(sector_t *sector, spectransfer_t *spec)
+void P_TransferSectorSpecial(sector_t *sector, const spectransfer_t *spec)
 {
    sector->special     = spec->newspecial;
    sector->flags       = (sector->flags & ~SPECIALFLAGSMASK) | spec->flags;
@@ -1769,7 +1769,7 @@ void P_TransferSectorSpecial(sector_t *sector, spectransfer_t *spec)
 // haleyjd 09/09/07: function to directly transfer a special and accompanying
 // data from one sector to another.
 //
-void P_DirectTransferSectorSpecial(sector_t *src, sector_t *dest)
+void P_DirectTransferSectorSpecial(const sector_t *src, sector_t *dest)
 {
    dest->special     = src->special;
    dest->flags      &= ~SPECIALFLAGSMASK;
@@ -1812,7 +1812,8 @@ void P_ZeroSectorSpecial(sector_t *sec)
 // Runs through the given attached sector list and scrolls both
 // sides of any linedef it finds with same tag.
 //
-bool P_Scroll3DSides(sector_t *sector, bool ceiling, fixed_t delta, int crush)
+bool P_Scroll3DSides(const sector_t *sector, bool ceiling, fixed_t delta,
+                     int crush)
 {
    bool     ok = true;
    int      i;
@@ -1876,7 +1877,7 @@ bool P_Scroll3DSides(sector_t *sector, bool ceiling, fixed_t delta, int crush)
 //
 // SoM 11/9/04: Now attaches lines and records another list of sectors
 //
-void P_AttachLines(line_t *cline, bool ceiling)
+void P_AttachLines(const line_t *cline, bool ceiling)
 {
    // FIXME / TODO: replace with a collection
    static int maxattach = 0;
@@ -2053,7 +2054,8 @@ void P_AttachLines(line_t *cline, bool ceiling)
 //
 // Moves all attached surfaces.
 //
-bool P_MoveAttached(sector_t *sector, bool ceiling, fixed_t delta, int crush)
+bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
+                    int crush)
 {
    int i;
 
@@ -2111,7 +2113,7 @@ bool P_MoveAttached(sector_t *sector, bool ceiling, fixed_t delta, int crush)
 //
 // Attaches all sectors with like-tagged attachment lines to line->frontsector
 //
-void P_AttachSectors(line_t *line, int staticFn)
+void P_AttachSectors(const line_t *line, int staticFn)
 {
    // FIXME / TODO: replace with a collection
    static int numattached = 0;

@@ -409,7 +409,7 @@ bool EV_DoPlat(const line_t *line, plattype_e type, int amount )
 // haleyjd 02/18/13: Implements parameterized plat types for Hexen
 // support.
 //
-bool EV_DoParamPlat(line_t *line, int *args, paramplattype_e type)
+bool EV_DoParamPlat(const line_t *line, const int *args, paramplattype_e type)
 {
    sector_t *sec    = NULL;
    int       secnum = -1;
@@ -574,7 +574,7 @@ bool EV_StopPlatByTag(int tag)
 //
 // haleyjd 02/18/13: Refactored to call common implementation above.
 //
-bool EV_StopPlat(line_t *line)
+bool EV_StopPlat(const line_t *line)
 {
    return EV_StopPlatByTag(line->tag);
 }

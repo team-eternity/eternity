@@ -54,7 +54,7 @@
 // Generalized Linedef Type handlers
 //
 
-int EV_DoParamFloor(line_t *line, int tag, floordata_t *fd)
+int EV_DoParamFloor(const line_t *line, int tag, const floordata_t *fd)
 {
    int       secnum;
    int       rtn = 0;
@@ -285,7 +285,7 @@ manual_floor:
 //
 // haleyjd 05/07/04: rewritten to use EV_DoParamFloor
 //
-int EV_DoGenFloor(line_t *line)
+int EV_DoGenFloor(const line_t *line)
 {
    floordata_t fd;
    memset(&fd, 0, sizeof(fd));
@@ -309,7 +309,7 @@ int EV_DoGenFloor(line_t *line)
 //
 // EV_DoParamCeiling
 //
-int EV_DoParamCeiling(line_t *line, int tag, ceilingdata_t *cd)
+int EV_DoParamCeiling(const line_t *line, int tag, const ceilingdata_t *cd)
 {
    int       secnum;
    int       rtn = 0;
@@ -533,7 +533,7 @@ manual_ceiling:
 // jff 02/04/98 Added this routine (and file) to handle generalized
 // floor movers using bit fields in the line special type.
 //
-int EV_DoGenCeiling(line_t *line)
+int EV_DoGenCeiling(const line_t *line)
 {
    ceilingdata_t cd;
    int value = line->special - GenCeilingBase;
@@ -564,7 +564,7 @@ int EV_DoGenCeiling(line_t *line)
 // Passed the linedef activating the lift
 // Returns true if a thinker is created
 //
-int EV_DoGenLift(line_t *line)
+int EV_DoGenLift(const line_t *line)
 {
    PlatThinker *plat;
    sector_t    *sec;
@@ -709,7 +709,7 @@ manual_lift:
 //
 // Returns true if a thinker is created
 //
-int EV_DoParamStairs(line_t *line, int tag, stairdata_t *sd)
+int EV_DoParamStairs(const line_t *line, int tag, const stairdata_t *sd)
 {
    int  secnum;
    int  osecnum; //jff 3/4/98 preserve loop index
@@ -977,7 +977,7 @@ int EV_DoGenStairs(line_t *line)
 // Passed the linedef activating the crusher
 // Returns true if a thinker created
 //
-int EV_DoGenCrusher(line_t *line)
+int EV_DoGenCrusher(const line_t *line)
 {
    int       secnum;
    int       rtn;
@@ -1079,7 +1079,7 @@ manual_crusher:
 // 2. The door type must be raise, not open or close
 // 3. The activation trigger must be PushMany
 //
-static int GenDoorRetrigger(Thinker *th, doordata_t *dd, int tag)
+static int GenDoorRetrigger(Thinker *th, const doordata_t *dd, int tag)
 {
    VerticalDoorThinker *door;
 
@@ -1125,7 +1125,7 @@ static int GenDoorRetrigger(Thinker *th, doordata_t *dd, int tag)
 // tag  -- tag of sectors to affect (may come from line or elsewhere)
 // dd   -- pointer to full parameter info for door
 //
-int EV_DoParamDoor(line_t *line, int tag, doordata_t *dd)
+int EV_DoParamDoor(const line_t *line, int tag, const doordata_t *dd)
 {
    int secnum, rtn = 0;
    sector_t *sec;
@@ -1271,7 +1271,7 @@ manual_door:
 //
 // haleyjd 05/04/04: rewritten to use EV_DoParamDoor
 //
-int EV_DoGenLockedDoor(line_t *line, Mobj *thing)
+int EV_DoGenLockedDoor(const line_t *line, Mobj *thing)
 {
    doordata_t dd;
    int value = line->special - GenLockedBase;
@@ -1319,7 +1319,7 @@ int EV_DoGenLockedDoor(line_t *line, Mobj *thing)
 //
 // haleyjd 05/04/04: rewritten to use EV_DoParamDoor
 //
-int EV_DoGenDoor(line_t *line, Mobj *thing)
+int EV_DoGenDoor(const line_t *line, Mobj *thing)
 {
    doordata_t dd;
    int value = line->special - GenDoorBase;
