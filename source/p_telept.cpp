@@ -45,7 +45,7 @@
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-int EV_Teleport(line_t *line, int side, Mobj *thing)
+int EV_Teleport(const line_t *line, int side, Mobj *thing)
 {
    Thinker *thinker;
    Mobj    *m;
@@ -145,7 +145,7 @@ int EV_Teleport(line_t *line, int side, Mobj *thing)
 // Primarily for rooms-over-rooms etc.
 //
 
-int EV_SilentTeleport(line_t *line, int side, Mobj *thing)
+int EV_SilentTeleport(const line_t *line, int side, Mobj *thing)
 {
    int       i;
    Mobj    *m;
@@ -245,7 +245,7 @@ int EV_SilentTeleport(line_t *line, int side, Mobj *thing)
 // maximum fixed_t units to move object to avoid hiccups
 #define FUDGEFACTOR 10
 
-int EV_SilentLineTeleport(line_t *line, int side, Mobj *thing,
+int EV_SilentLineTeleport(const line_t *line, int side, Mobj *thing,
                           bool reverse)
 {
    int i;

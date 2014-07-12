@@ -301,7 +301,7 @@ bool CeilingThinker::reTriggerVerticalDoor(bool player)
 // Passed the linedef activating the function and the type of function desired
 // returns true if a thinker started
 //
-int EV_DoCeiling(line_t *line, ceiling_e type)
+int EV_DoCeiling(const line_t *line, ceiling_e type)
 {
    int       secnum = -1;
    int       rtn = 0;
@@ -423,7 +423,7 @@ int EV_DoCeiling(line_t *line, ceiling_e type)
 //
 //jff 4/5/98 return if activated
 //
-int P_ActivateInStasisCeiling(line_t *line)
+int P_ActivateInStasisCeiling(const line_t *line)
 {
    ceilinglist_t *cl;
    int rtn = 0, noise;
@@ -466,7 +466,7 @@ int P_ActivateInStasisCeiling(line_t *line)
 // Passed the linedef stopping the ceilings
 // Returns true if a ceiling put in stasis
 //
-int EV_CeilingCrushStop(line_t* line)
+int EV_CeilingCrushStop(const line_t* line)
 {
    int rtn = 0;
    
@@ -531,7 +531,7 @@ void P_RemoveActiveCeiling(CeilingThinker* ceiling)
 //
 // Passed nothing, returns nothing
 //
-void P_RemoveAllActiveCeilings(void)
+void P_RemoveAllActiveCeilings()
 {
    while(activeceilings)
    {  

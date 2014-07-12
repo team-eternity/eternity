@@ -45,7 +45,7 @@
 //
 // Implements Thing_Projectile(tid, type, angle, speed, vspeed)
 //
-int EV_ThingProjectile(int *args, bool gravity)
+int EV_ThingProjectile(const int *args, bool gravity)
 {
    int tid;
    angle_t angle;
@@ -104,7 +104,7 @@ int EV_ThingProjectile(int *args, bool gravity)
 //
 // Implements Thing_Spawn(tid, type, angle, newtid)
 //
-int EV_ThingSpawn(int *args, bool fog)
+int EV_ThingSpawn(const int *args, bool fog)
 {
    int tid;
    angle_t angle;
