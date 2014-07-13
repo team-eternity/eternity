@@ -229,6 +229,9 @@ public:
    bool canPass(const Subsec &s1, const Subsec &s2, fixed_t height) const;
    
    static void Build(); // The entry point from P_SetupLevel
+   
+   static bool demoPlayingFlag;
+   // if playing, this flag will be true during P_SetupLevel
 	
 private:
 	

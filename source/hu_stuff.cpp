@@ -1454,7 +1454,7 @@ void HUDAutomapCoordWidget::ticker()
       sprintf(coordzstr, "%cZ: %-5d", hu_coordscolor + 128, z >> FRACBITS);
       message = coordzstr;
    }
-   else
+   else if(botMap)
    {
 	   BSubsec& bss = botMap->pointInSubsector(x, y);
       sprintf(coordsstr, "%cS: %-5d", hu_coordscolor + 128, (int)(&bss - &botMap->ssectors[0]));

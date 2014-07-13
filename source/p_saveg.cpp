@@ -29,6 +29,7 @@
 #include "a_small.h"
 #include "acs_intr.h"
 #include "am_map.h"
+#include "autodoom/b_botmap.h"
 #include "c_io.h"
 #include "d_dehtbl.h"
 #include "d_event.h"
@@ -1532,7 +1533,14 @@ void P_LoadGame(const char *filename)
       if(hub_changelevel)
          G_DoLoadLevel();
       else
+      {
+         // IOANCH 20140713: guard against creating bot map if demo is playing
+         if(singledemo)
+            BotMap::demoPlayingFlag = true;
          G_InitNew(gameskill, gamemapname);
+         if(singledemo)
+            BotMap::demoPlayingFlag = false;
+      }
 
       // killough 3/1/98: Read game options
       // killough 11/98: move down to here

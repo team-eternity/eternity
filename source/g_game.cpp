@@ -1205,11 +1205,18 @@ void G_DoPlayDemo(void)
       // Do it anyway for timing demos, to reduce timing noise
       precache = timingdemo;
       
+      // IOANCH 20130713: guard against creating bot map when demo plays
+      // Note that if gameaction is ga_loadgame, P_SetupLevel occurs in
+      // P_LoadGame
+      BotMap::demoPlayingFlag = true;
+      
       // haleyjd: choose appropriate G_InitNew based on version
       if(full_demo_version >= make_full_version(329, 5))
          G_InitNew(skill, gamemapname);
       else
          G_InitNewNum(skill, episode, map);
+      
+      BotMap::demoPlayingFlag = false;
 
       // killough 11/98: If OPTIONS were loaded from the wad in G_InitNew(),
       // reload any demo sync-critical ones from the demo itself, to be exactly

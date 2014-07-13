@@ -54,6 +54,8 @@
 
 BotMap *botMap;
 
+bool BotMap::demoPlayingFlag;
+
 const char* const KEY_JSON_VERTICES = "vertices";
 const char* const KEY_JSON_SEGS =		"segs";
 const char* const KEY_JSON_LINES =	"lines";

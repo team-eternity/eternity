@@ -1846,6 +1846,8 @@ static void AM_drawWalls()
 static void AM_drawNodeLines()
 {
    mline_t l;
+   if(!botMap)
+      return;
    for (int i = 0; i < botMap->numsegs; ++i)
    {
       const BotMap::Seg &sg = botMap->segs[i];
