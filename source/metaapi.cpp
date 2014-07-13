@@ -694,7 +694,7 @@ MetaObject *MetaTable::getObjectType(const MetaObject::Type &type)
 // As above, but satisfying both conditions at once.
 //
 MetaObject *MetaTable::getObjectKeyAndType(const char *key, 
-                                           const MetaObject::Type *type)
+                                           const MetaObject::Type *type) const
 {
    MetaObject *obj = NULL;
 
@@ -727,7 +727,7 @@ MetaObject *MetaTable::getObjectKeyAndType(const char *key, const char *type)
 // instance.
 //
 MetaObject *MetaTable::getObjectKeyAndType(size_t keyIndex, 
-                                           const MetaObject::Type *type)
+                                           const MetaObject::Type *type) const
 {
    metakey_t  &keyObj = MetaKeyForIndex(keyIndex);
    MetaObject *obj    = NULL;
@@ -984,7 +984,7 @@ void MetaTable::addInt(const char *key, int value)
 // Use of this routine only returns the first such value in the table.
 // This routine is meant for singleton fields.
 //
-int  MetaTable::getInt(size_t keyIndex, int defValue)
+int  MetaTable::getInt(size_t keyIndex, int defValue) const
 {
    int retval;
    MetaObject *obj;

@@ -85,7 +85,7 @@ void R_InitPortals();
 void doom_printf(const char *, ...) __attribute__((format(printf,1,2)));
 
         // sf: player_printf
-void player_printf(player_t *player, const char *s, ...);
+void player_printf(const player_t *player, const char *s, ...);
 
 // killough 5/2/98: moved from m_misc.c:
 

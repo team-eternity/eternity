@@ -168,7 +168,7 @@ int E_GiveAllKeys(player_t *player);
 int E_TakeAllKeys(player_t *player);
 
 // Check if a player is able to unlock a lock, by its lock ID.
-bool E_PlayerCanUnlock(player_t *player, int lockID, bool remote);
+bool E_PlayerCanUnlock(const player_t *player, int lockID, bool remote);
 
 // Get the automap color for a lockdef
 int E_GetLockDefColor(int lockID);
@@ -181,11 +181,11 @@ itemeffect_t *E_EffectForInventoryIndex(player_t *player, inventoryindex_t idx);
 
 // Get the slot being used for a particular inventory item, by ID, if one
 // exists. Returns NULL if the item isn't in the player's inventory.
-inventoryslot_t *E_InventorySlotForItemID(player_t *player, inventoryitemid_t id);
+inventoryslot_t *E_InventorySlotForItemID(const player_t *player, inventoryitemid_t id);
 
 // Get the slot being used for a particular inventory item, by item pointer, if
 // one exists. Returns NULL if the item isn't in the player's inventory.
-inventoryslot_t *E_InventorySlotForItem(player_t *player, itemeffect_t *effect);
+inventoryslot_t *E_InventorySlotForItem(const player_t *player, const itemeffect_t *effect);
 
 // Get the slot being used for a particular inventory item, by name, if one 
 // exists. Returns NULL if the item isn't in the player's inventory.
@@ -204,7 +204,7 @@ bool E_RemoveBackpack(player_t *player);
 int E_GetMaxAmountForArtifact(player_t *player, itemeffect_t *artifact);
 
 // Get amount of an item owned for a specific artifact type
-int E_GetItemOwnedAmount(player_t *player, itemeffect_t *artifact);
+int E_GetItemOwnedAmount(const player_t *player, const itemeffect_t *artifact);
 
 // Get amount of an item owned by name
 int E_GetItemOwnedAmountName(player_t *player, const char *name);

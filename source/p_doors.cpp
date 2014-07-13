@@ -445,7 +445,7 @@ int EV_DoDoor(const line_t *line, vldoor_e type)
 //
 int EV_VerticalDoor(line_t *line, const Mobj *thing, int lockID)
 {
-   player_t *player = thing->player;
+   const player_t *player = thing->player;
    sector_t *sec;
    VerticalDoorThinker *door;
    SectorThinker       *secThinker;

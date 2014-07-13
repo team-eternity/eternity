@@ -3515,7 +3515,7 @@ void doom_printf(const char *s, ...)
 // sf: printf to a particular player only
 // to make up for the loss of player->msg = ...
 //
-void player_printf(player_t *player, const char *s, ...)
+void player_printf(const player_t *player, const char *s, ...)
 {
    static char msg[MAX_MESSAGE_SIZE];
    va_list v;

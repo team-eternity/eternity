@@ -798,7 +798,7 @@ static void E_processLockDefs(cfg_t *cfg)
 //
 // Routine to call when unlocking a lock has failed.
 //
-static void E_failPlayerUnlock(player_t *player, lockdef_t *lock, bool remote)
+static void E_failPlayerUnlock(const player_t *player, const lockdef_t *lock, bool remote)
 {
    const char *msg = NULL;
 
@@ -832,9 +832,9 @@ static void E_failPlayerUnlock(player_t *player, lockdef_t *lock, bool remote)
 // Check if a player has the keys necessary to unlock an object that is
 // protected by a lock with the given ID.
 //
-bool E_PlayerCanUnlock(player_t *player, int lockID, bool remote)
+bool E_PlayerCanUnlock(const player_t *player, int lockID, bool remote)
 {
-   lockdef_t *lock;
+   const lockdef_t *lock;
 
    if(!(lock = E_LockDefForID(lockID)))
       return true; // there's no such lock, so you can open it.
@@ -1267,7 +1267,7 @@ itemeffect_t *E_EffectForInventoryIndex(player_t *player, inventoryindex_t idx)
 // Find the slot being used by an item in the player's inventory, if one exists.
 // NULL is returned if the item is not in the player's inventory.
 //
-inventoryslot_t *E_InventorySlotForItemID(player_t *player, inventoryitemid_t id)
+inventoryslot_t *E_InventorySlotForItemID(const player_t *player, inventoryitemid_t id)
 {
    inventory_t inventory = player->inventory;
 
@@ -1287,7 +1287,7 @@ inventoryslot_t *E_InventorySlotForItemID(player_t *player, inventoryitemid_t id
 // if one exists. NULL is returned if the item is not in the player's 
 // inventory.
 //
-inventoryslot_t *E_InventorySlotForItem(player_t *player, itemeffect_t *effect)
+inventoryslot_t *E_InventorySlotForItem(const player_t *player, const itemeffect_t *effect)
 {
    inventoryitemid_t id;
 
@@ -1450,7 +1450,7 @@ int E_GetMaxAmountForArtifact(player_t *player, itemeffect_t *artifact)
 // If you do not need the inventory slot for any other purpose, you can lookup
 // the amount of an item owned in one step by using this function.
 //
-int E_GetItemOwnedAmount(player_t *player, itemeffect_t *artifact)
+int E_GetItemOwnedAmount(const player_t *player, const itemeffect_t *artifact)
 {
    auto slot = E_InventorySlotForItem(player, artifact);
 

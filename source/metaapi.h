@@ -361,9 +361,9 @@ public:
    MetaObject *getObjectType(const char *type);
    MetaObject *getObjectType(const MetaObject::Type &type);
    // * By Key AND Type
-   MetaObject *getObjectKeyAndType(const char *key, const MetaObject::Type *type);
+   MetaObject *getObjectKeyAndType(const char *key, const MetaObject::Type *type) const;
    MetaObject *getObjectKeyAndType(const char *key, const char *type);
-   MetaObject *getObjectKeyAndType(size_t keyIndex, const MetaObject::Type *type);
+   MetaObject *getObjectKeyAndType(size_t keyIndex, const MetaObject::Type *type) const;
    MetaObject *getObjectKeyAndType(size_t keyIndex, const char *type);
 
    // Template finders
@@ -419,7 +419,7 @@ public:
    // Signed integer
    void addInt(size_t keyIndex, int value);
    void addInt(const char *key, int value);
-   int  getInt(size_t keyIndex, int defValue);
+   int  getInt(size_t keyIndex, int defValue) const;
    int  getInt(const char *key, int defValue);
    void setInt(size_t keyIndex, int newValue);
    void setInt(const char *key, int newValue);
