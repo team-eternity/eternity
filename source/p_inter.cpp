@@ -583,9 +583,14 @@ bool P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    // INVENTORY_FIXME: apply pickupfx[].effect instead!
    
    // IOANCH 20131007: bot learn item
-   Bot *plbot = botDict[player];
-   PlayerStats &effectStats = plbot->getEffectStats(special->sprite);
-   effectStats.setPriorState(*player);
+   Bot *plbot = nullptr;
+   PlayerStats* effectStats = nullptr;
+   if(botMap)
+   {
+      plbot = botDict[player];
+      effectStats = &plbot->getEffectStats(special->sprite);
+      effectStats->setPriorState(*player);
+   }
    //plbot->getNopickStats(special->sprite).reduceByCurrentState(*player);
    switch(pickupfx[special->sprite].tempeffect)
    {
@@ -1044,14 +1049,17 @@ bool P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       player->itemcount++;
    
    // IOANCH 20130815: add item to bot's stack
-   effectStats.maximizeByStateDelta(*player);
-   PlayerStats *nopickStats = plbot->findNopickStats(special->sprite);
-   if(nopickStats && effectStats.overlaps(*player, *nopickStats))
+   if(botMap)
    {
-      nopickStats->reset(true);
+      effectStats->maximizeByStateDelta(*player);
+      PlayerStats *nopickStats = plbot->findNopickStats(special->sprite);
+      if(nopickStats && effectStats->overlaps(*player, *nopickStats))
+      {
+         nopickStats->reset(true);
+      }
+      
+      plbot->addXYEvent(BOT_PICKUP, B_CoordXY(*special));
    }
-   
-   plbot->addXYEvent(BOT_PICKUP, B_CoordXY(*special));
 
    if(removeobj)
    {

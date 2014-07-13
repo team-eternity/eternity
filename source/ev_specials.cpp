@@ -1282,7 +1282,7 @@ static bool EV_ActivateSpecial(ev_action_t *action, ev_instance_t *instance)
       return false;
    
    // IOANCH 20130817: set bot's goal
-   if(botDict.count(instance->actor->player))
+   if(botMap && botDict.count(instance->actor->player))
    {
 //      botMap->unsetLinePositions(*instance->line);
       botDict.at(instance->actor->player)->addXYEvent(BOT_WALKTRIG,

@@ -803,7 +803,7 @@ bool P_CheckPickUp(Mobj *thing)
       spritenum_t spnum = thing->sprite;
       bool nopick = P_TouchSpecialThing(thing, clip.thing); // can remove thing
       player_t *player = clip.thing->player;
-      if(nopick && player)
+      if(botMap && nopick && player)
       {
          Bot *plbot = botDict[player];
          plbot->getNopickStats(spnum).
