@@ -529,7 +529,6 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
 
    // haleyjd: from zdoom:
    Mobj  *thingblocker;
-   //Mobj  *fakedblocker;
    fixed_t realheight = thing->height;
 
 #ifdef RANGECHECK
@@ -603,7 +602,6 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
 
    clip.BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
    thingblocker = NULL;
-   //fakedblocker = NULL;
    stepthing    = NULL;
 
    // [RH] Fake taller height to catch stepping up into things.
@@ -654,7 +652,6 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
                   }
                   // Nothing is blocking us, but this actor potentially could
                   // if there is something else to step on.
-                  //fakedblocker = clip.BlockingMobj;
                   robin = clip.BlockingMobj;
                   clip.BlockingMobj = NULL;
                }
