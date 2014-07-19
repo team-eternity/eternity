@@ -398,7 +398,7 @@ static const char *val_strs[NUMCATS] =
    "Joe Kennedy\nJulian Aubourg\nJoel Murdoch\nAnders Astrand\nSargeBaldy\n",
 };
 
-void MN_DrawCredits(void)
+void MN_DrawCredits()
 {
    static int cat_width = -1, val_width = -1, line_x;
    int i, y;
@@ -463,7 +463,7 @@ void MN_DrawCredits(void)
 
 extern menuwidget_t helpscreen_widget; // actually just below...
 
-void MN_HelpDrawer(void)
+void MN_HelpDrawer()
 {
    if(helpscreens[viewing_helpscreen].Drawer)
    {
@@ -579,7 +579,7 @@ int selected_colour;
 
 #define HIGHLIGHT_COLOUR (GameModeInfo->whiteIndex)
 
-void MN_MapColourDrawer(void)
+void MN_MapColourDrawer()
 {
    patch_t *patch;
    int x, y;
