@@ -28,6 +28,8 @@
 
 #include "z_zone.h"
 
+#include "c_io.h"
+#include "c_runcmd.h"
 #include "d_gi.h"
 #include "d_mod.h"
 #include "doomstat.h"
@@ -511,7 +513,18 @@ static void EV_SectorLightPSXGlow255(sector_t *sector)
 //
 static void EV_SectorLightPSXStrobeHyper(sector_t *sector)
 {
-   P_SpawnPSXStrobeFlash(sector, 3);
+   P_SpawnPSXStrobeFlash(sector, 3, true);
+}
+
+//
+// EV_SectorLightPSXStrobeFast
+//
+// Fast strobing light.
+// * PSX: 204 (NB: similar to DOOM 64 204)
+//
+static void EV_SectorLightPSXStrobeFast(sector_t *sector)
+{
+   P_SpawnPSXStrobeFlash(sector, 8, false);
 }
 
 //=============================================================================
@@ -627,6 +640,7 @@ static ev_sectorbinding_t PSXSectorBindings[] =
    { 200, EV_SectorLightPSXGlow10      },
    { 201, EV_SectorLightPSXGlow255     },
    { 202, EV_SectorLightPSXStrobeHyper },
+   { 204, EV_SectorLightPSXStrobeFast  }
 };
 
 // Sector specials allowed as the low 5 bits of generalized specials
@@ -785,6 +799,10 @@ bool EV_IsGenSectorSpecial(int special)
 // 
 static void EV_setGeneralizedSectorFlags(sector_t *sector)
 {
+   // generalized sectors don't exist in old demos
+   if(demo_version < 200)
+      return;
+
    // haleyjd 12/28/08: convert BOOM generalized sector types into sector flags
    //         12/31/08: convert BOOM generalized damage
 
@@ -800,6 +818,14 @@ static void EV_setGeneralizedSectorFlags(sector_t *sector)
 //
 static void EV_initGeneralizedSector(sector_t *sector)
 {
+   // generalized sectors don't exist in old demos (they would have caused the
+   // game to bomb out anyway).
+   if(demo_version < 200)
+   {
+      sector->special = 0;
+      return;
+   }
+
    // convert damage
    int damagetype = (sector->special & DAMAGE_MASK) >> DAMAGE_SHIFT;
 
@@ -858,6 +884,33 @@ void EV_SpawnSectorSpecials()
          if(binding)
             binding->apply(sector);         
       }
+   }
+}
+
+//=============================================================================
+//
+// Development Commands
+//
+
+//
+// ev_mapsectorspecs
+//
+// List out all the sector specials in use on the current map
+//
+CONSOLE_COMMAND(ev_mapsectorspecs, cf_level)
+{
+   for(int i = 0; i < numsectors; i++)
+   {
+      sector_t *sec = &sectors[i];
+
+      if(!sec->special)
+         continue;
+
+      bool isgen = EV_IsGenSectorSpecial(sec->special);
+      auto bind  = EV_BindingForSectorSpecial(sec->special);
+
+      C_Printf("%5d: %5d %3d (%s type)\n", i, sec->special, sec->tag, 
+               (isgen || bind) ? "known" : "unknown");
    }
 }
 

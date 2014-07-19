@@ -76,7 +76,7 @@ struct side_t;
 // p_lights
 
 #define GLOWSPEED       8
-#define GLOWSPEEDSLOW   1
+#define GLOWSPEEDSLOW   3*FRACUNIT/2
 #define STROBEBRIGHT    5
 #define FASTDARK        15
 #define SLOWDARK        35
@@ -731,10 +731,28 @@ public:
    virtual void serialize(SaveArchive &arc);
    
    // Data Members
-   int minlight;
-   int maxlight;
-   int direction;
-   int speed;     // haleyjd 06/29/14
+   int     minlight;
+   int     maxlight;
+   int     direction;
+};
+
+// haleyjd: For PSX lighting
+class SlowGlowThinker : public SectorThinker
+{
+   DECLARE_THINKER_TYPE(SlowGlowThinker, SectorThinker)
+
+protected:
+   void Think();
+
+public:
+   // Methods
+   virtual void serialize(SaveArchive &arc);
+   
+   // Data Members
+   int     minlight;
+   int     maxlight;
+   int     direction;
+   fixed_t accum;
 };
 
 // sf 13/10/99
@@ -1427,7 +1445,7 @@ void P_SpawnLightFlash(sector_t *sector);
 
 void P_SpawnStrobeFlash(sector_t *sector, int fastOrSlow, int inSync);
 
-void P_SpawnPSXStrobeFlash(sector_t *sector, int speed);
+void P_SpawnPSXStrobeFlash(sector_t *sector, int speed, bool inSync);
 
 void P_SpawnGlowingLight(sector_t *sector);
 
