@@ -35,6 +35,7 @@
 #include "d_gi.h"
 #include "r_plane.h"
 
+/*
 // Template structure for inlining constant values for orthogonal spans
 template<int xshift, int yshift, int xmask>
 struct spanconsts
@@ -68,6 +69,7 @@ struct slopevalues
    static inline int XMask()  { return span.xmask;  }
    static inline int YMask()  { return span.ymask;  }
 };
+*/
 
 //==============================================================================
 //
@@ -96,7 +98,7 @@ struct slopevalues
 // Ok, because I was able to eliminate the variable spot below, this function
 // is now FASTER than doom's original span renderer. Whodathunkit?
 
-template<typename SV>
+template<int xshift, int yshift, int xmask>
 static void R_DrawSpanSolid_8()
 {
    unsigned int xf = span.xfrac, xs = span.xstep; 
@@ -109,16 +111,16 @@ static void R_DrawSpanSolid_8()
    
    while(count >= 4) 
    {
-      dest[0] = colormap[source[((xf >> SV::XShift()) & SV::XMask()) | (yf >> SV::YShift())]];
+      dest[0] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
       xf += xs;
       yf += ys;
-      dest[1] = colormap[source[((xf >> SV::XShift()) & SV::XMask()) | (yf >> SV::YShift())]];
+      dest[1] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
       xf += xs;
       yf += ys;
-      dest[2] = colormap[source[((xf >> SV::XShift()) & SV::XMask()) | (yf >> SV::YShift())]];
+      dest[2] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
       xf += xs;
       yf += ys;
-      dest[3] = colormap[source[((xf >> SV::XShift()) & SV::XMask()) | (yf >> SV::YShift())]];
+      dest[3] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
       xf += xs;
       yf += ys;
       dest  += 4;
@@ -126,11 +128,51 @@ static void R_DrawSpanSolid_8()
    }
    while(count-- > 0)
    {
-      *dest++ = colormap[source[((xf >> SV::XShift()) & SV::XMask()) | (yf >> SV::YShift())]];
+      *dest++ = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
       xf += xs;
       yf += ys;
    }
 }
+
+static void R_DrawSpanSolid_8_GEN()
+{
+   unsigned int xf = span.xfrac, xs = span.xstep; 
+   unsigned int yf = span.yfrac, ys = span.ystep; 
+   lighttable_t *colormap = span.colormap; 
+   int count = span.x2 - span.x1 + 1;
+
+   byte *source = (byte *)span.source;
+   byte *dest   = R_ADDRESS(span.x1, span.y);
+
+   unsigned int xshift = span.xshift;
+   unsigned int xmask  = span.xmask;
+   unsigned int yshift = span.yshift;
+   
+   while(count >= 4) 
+   {
+      dest[0] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
+      xf += xs;
+      yf += ys;
+      dest[1] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
+      xf += xs;
+      yf += ys;
+      dest[2] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
+      xf += xs;
+      yf += ys;
+      dest[3] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
+      xf += xs;
+      yf += ys;
+      dest  += 4;
+      count -= 4;
+   }
+   while(count-- > 0)
+   {
+      *dest++ = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
+      xf += xs;
+      yf += ys;
+   }
+}
+
 
 #if 0
 // SoM: Archive
@@ -197,7 +239,7 @@ static void R_DrawSpan_OLD()
 // visplane layering.
 //
 
-template<typename SV>
+template<int xshift, int yshift, int xmask>
 static void R_DrawSpanTL_8()
 {
    unsigned int t;
@@ -212,7 +254,33 @@ static void R_DrawSpanTL_8()
    while(count-- > 0)
    {
       t = span.bg2rgb[*dest] +
-          span.fg2rgb[colormap[source[((xf >> SV::XShift()) & SV::XMask()) | (yf >> SV::YShift())]]];
+          span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]];
+      t |= 0x01f07c1f;
+      *dest++ = RGB32k[0][0][t & (t >> 15)];
+      xf += xs;
+      yf += ys;
+   }
+}
+
+static void R_DrawSpanTL_8_GEN()
+{
+   unsigned int t;
+   unsigned int xf = span.xfrac, xs = span.xstep;
+   unsigned int yf = span.yfrac, ys = span.ystep;
+   lighttable_t *colormap = span.colormap;
+   int count = span.x2 - span.x1 + 1;
+
+   byte *source = (byte *)span.source;
+   byte *dest   = R_ADDRESS(span.x1, span.y);
+
+   unsigned int xshift = span.xshift;
+   unsigned int xmask  = span.xmask;
+   unsigned int yshift = span.yshift;
+
+   while(count-- > 0)
+   {
+      t = span.bg2rgb[*dest] +
+          span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]];
       t |= 0x01f07c1f;
       *dest++ = RGB32k[0][0][t & (t >> 15)];
       xf += xs;
@@ -222,7 +290,7 @@ static void R_DrawSpanTL_8()
 
 // Additive blending
 
-template<typename SV>
+template<int xshift, int yshift, int xmask>
 static void R_DrawSpanAdd_8()
 {
    unsigned int a, b;
@@ -237,7 +305,7 @@ static void R_DrawSpanAdd_8()
    while(count-- > 0)
    {
       a = span.bg2rgb[*dest] +
-          span.fg2rgb[colormap[source[((xf >> SV::XShift()) & SV::XMask()) | (yf >> SV::YShift())]]];
+          span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]];
       b = a;
       a |= 0x01f07c1f;
       b &= 0x40100400;
@@ -249,6 +317,38 @@ static void R_DrawSpanAdd_8()
       yf += ys;
    }
 }
+
+static void R_DrawSpanAdd_8_GEN()
+{
+   unsigned int a, b;
+   unsigned int xf = span.xfrac, xs = span.xstep;
+   unsigned int yf = span.yfrac, ys = span.ystep;
+   lighttable_t *colormap = span.colormap;
+   int count = span.x2 - span.x1 + 1;
+
+   byte *source = (byte *)span.source;
+   byte *dest   = R_ADDRESS(span.x1, span.y);
+
+   unsigned int xshift = span.xshift;
+   unsigned int xmask  = span.xmask;
+   unsigned int yshift = span.yshift;
+
+   while(count-- > 0)
+   {
+      a = span.bg2rgb[*dest] +
+          span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]];
+      b = a;
+      a |= 0x01f07c1f;
+      b &= 0x40100400;
+      a &= 0x3fffffff;
+      b  = b - (b >> 5);
+      a |= b;
+      *dest++ = RGB32k[0][0][a & (a >> 15)];
+      xf += xs;
+      yf += ys;
+   }
+}
+
 
 //==============================================================================
 //
@@ -277,7 +377,7 @@ static void R_DrawSpanAdd_8()
 #define SPANJUMP 16
 #define INTERPSTEP (0.0625f)
 
-template<typename SV>
+template<int xshift, int xmask, int ymask>
 static void R_DrawSlope_8()
 {
    double iu  = slopespan.iufrac, iv  = slopespan.ivfrac;
@@ -320,7 +420,7 @@ static void R_DrawSlope_8()
       while(incount--)
       {
          colormap = slopespan.colormap[mapindex++];
-         *dest++ = colormap[src[((vfrac >> SV::XShift()) & SV::XMask()) | ((ufrac >> 16) & SV::YMask())]];
+         *dest++ = colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]];
          ufrac += ustep;
          vfrac += vstep;
       }
@@ -353,7 +453,93 @@ static void R_DrawSlope_8()
       while(incount--)
       {
          colormap = slopespan.colormap[mapindex++];
-         *dest++ = colormap[src[((vfrac >> SV::XShift()) & SV::XMask()) | ((ufrac >> 16) & SV::YMask())]];
+         *dest++ = colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]];
+         ufrac += ustep;
+         vfrac += vstep;
+      }
+   }
+}
+
+static void R_DrawSlope_8_GEN()
+{
+   double iu  = slopespan.iufrac, iv  = slopespan.ivfrac;
+   double ius = slopespan.iustep, ivs = slopespan.ivstep;
+   double id  = slopespan.idfrac, ids = slopespan.idstep;
+   
+   byte *colormap;
+   int count;
+   fixed_t mapindex = 0;
+
+   if((count = slopespan.x2 - slopespan.x1 + 1) < 0)
+      return;
+
+   byte *src  = (byte *)slopespan.source;
+   byte *dest = R_ADDRESS(slopespan.x1, slopespan.y);
+
+   unsigned int xshift = span.xshift;
+   unsigned int xmask  = span.xmask;
+   unsigned int ymask  = span.ymask;
+
+   while(count >= SPANJUMP)
+   {
+      double ustart, uend;
+      double vstart, vend;
+      double mulstart, mulend;
+      unsigned int ustep, vstep, ufrac, vfrac;
+      int incount;
+
+      mulstart = 65536.0f / id;
+      id += ids * SPANJUMP;
+      mulend = 65536.0f / id;
+
+      ufrac = (int)(ustart = iu * mulstart);
+      vfrac = (int)(vstart = iv * mulstart);
+      iu += ius * SPANJUMP;
+      iv += ivs * SPANJUMP;
+      uend = iu * mulend;
+      vend = iv * mulend;
+
+      ustep = (int)((uend - ustart) * INTERPSTEP);
+      vstep = (int)((vend - vstart) * INTERPSTEP);
+
+      incount = SPANJUMP;
+      while(incount--)
+      {
+         colormap = slopespan.colormap[mapindex++];
+         *dest++ = colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]];
+         ufrac += ustep;
+         vfrac += vstep;
+      }
+
+      count -= SPANJUMP;
+   }
+   if(count > 0)
+   {
+      double ustart, uend;
+      double vstart, vend;
+      double mulstart, mulend;
+      unsigned int ustep, vstep, ufrac, vfrac;
+      int incount;
+
+      mulstart = 65536.0f / id;
+      id += ids * count;
+      mulend = 65536.0f / id;
+
+      ufrac = (int)(ustart = iu * mulstart);
+      vfrac = (int)(vstart = iv * mulstart);
+      iu += ius * count;
+      iv += ivs * count;
+      uend = iu * mulend;
+      vend = iv * mulend;
+
+      ustep = (int)((uend - ustart) / count);
+      vstep = (int)((vend - vstart) / count);
+
+      incount = count;
+      while(incount--)
+      {
+         colormap = slopespan.colormap[mapindex++];
+         *dest++ = colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]];
          ufrac += ustep;
          vfrac += vstep;
       }
@@ -375,54 +561,54 @@ spandrawer_t r_spandrawer =
    {
       // Solid
       {
-         R_DrawSpanSolid_8<spanconsts<20, 26, 0x00FC0>>, // 64x64
-         R_DrawSpanSolid_8<spanconsts<18, 25, 0x03F80>>, // 128x128
-         R_DrawSpanSolid_8<spanconsts<16, 24, 0x0FF00>>, // 256x256
-         R_DrawSpanSolid_8<spanconsts<14, 23, 0x3FE00>>, // 512x512
-         R_DrawSpanSolid_8<spanvalues>,                  // General
+         R_DrawSpanSolid_8<20, 26, 0x00FC0>, // 64x64
+         R_DrawSpanSolid_8<18, 25, 0x03F80>, // 128x128
+         R_DrawSpanSolid_8<16, 24, 0x0FF00>, // 256x256
+         R_DrawSpanSolid_8<14, 23, 0x3FE00>, // 512x512
+         R_DrawSpanSolid_8_GEN               // General
       },
       // Translucent
       { 
-         R_DrawSpanTL_8<spanconsts<20, 26, 0x00FC0>>,    // 64x64
-         R_DrawSpanTL_8<spanconsts<18, 25, 0x03F80>>,    // 128x128
-         R_DrawSpanTL_8<spanconsts<16, 24, 0x0FF00>>,    // 256x256
-         R_DrawSpanTL_8<spanconsts<14, 23, 0x3FE00>>,    // 512x512
-         R_DrawSpanTL_8<spanvalues>                      // General
+         R_DrawSpanTL_8<20, 26, 0x00FC0>,    // 64x64
+         R_DrawSpanTL_8<18, 25, 0x03F80>,    // 128x128
+         R_DrawSpanTL_8<16, 24, 0x0FF00>,    // 256x256
+         R_DrawSpanTL_8<14, 23, 0x3FE00>,    // 512x512
+         R_DrawSpanTL_8_GEN                  // General
       },
       // Additive
       { 
-         R_DrawSpanAdd_8<spanconsts<20, 26, 0x00FC0>>,   // 64x64
-         R_DrawSpanAdd_8<spanconsts<18, 25, 0x03F80>>,   // 128x128
-         R_DrawSpanAdd_8<spanconsts<16, 24, 0x0FF00>>,   // 256x256
-         R_DrawSpanAdd_8<spanconsts<14, 23, 0x3FE00>>,   // 512x512
-         R_DrawSpanAdd_8<spanvalues>                     // General
+         R_DrawSpanAdd_8<20, 26, 0x00FC0>,   // 64x64
+         R_DrawSpanAdd_8<18, 25, 0x03F80>,   // 128x128
+         R_DrawSpanAdd_8<16, 24, 0x0FF00>,   // 256x256
+         R_DrawSpanAdd_8<14, 23, 0x3FE00>,   // 512x512
+         R_DrawSpanAdd_8_GEN                 // General
       }
    },
 
    // SoM: Sloped span drawers
    {
       { 
-         R_DrawSlope_8<slopeconsts<10, 0x00FC0, 0x03F>>,  // 64x64 
-         R_DrawSlope_8<slopeconsts< 9, 0x03F80, 0x07F>>,  // 128x128
-         R_DrawSlope_8<slopeconsts< 8, 0x0FF00, 0x0FF>>,  // 256x256
-         R_DrawSlope_8<slopeconsts< 7, 0x3FE00, 0x1FF>>,  // 512x512
-         R_DrawSlope_8<slopevalues>                       // General
+         R_DrawSlope_8<10, 0x00FC0, 0x03F>,  // 64x64 
+         R_DrawSlope_8< 9, 0x03F80, 0x07F>,  // 128x128
+         R_DrawSlope_8< 8, 0x0FF00, 0x0FF>,  // 256x256
+         R_DrawSlope_8< 7, 0x3FE00, 0x1FF>,  // 512x512
+         R_DrawSlope_8_GEN                   // General
       },
       // Translucent - TODO
       { 
-         R_DrawSlope_8<slopeconsts<10, 0x00FC0, 0x03F>>,  // 64x64 
-         R_DrawSlope_8<slopeconsts< 9, 0x03F80, 0x07F>>,  // 128x128
-         R_DrawSlope_8<slopeconsts< 8, 0x0FF00, 0x0FF>>,  // 256x256
-         R_DrawSlope_8<slopeconsts< 7, 0x3FE00, 0x1FF>>,  // 512x512
-         R_DrawSlope_8<slopevalues>                       // General
+         R_DrawSlope_8<10, 0x00FC0, 0x03F>,  // 64x64 
+         R_DrawSlope_8< 9, 0x03F80, 0x07F>,  // 128x128
+         R_DrawSlope_8< 8, 0x0FF00, 0x0FF>,  // 256x256
+         R_DrawSlope_8< 7, 0x3FE00, 0x1FF>,  // 512x512
+         R_DrawSlope_8_GEN                   // General
       },
       // Additive - TODO
       {
-         R_DrawSlope_8<slopeconsts<10, 0x00FC0, 0x03F>>,  // 64x64 
-         R_DrawSlope_8<slopeconsts< 9, 0x03F80, 0x07F>>,  // 128x128
-         R_DrawSlope_8<slopeconsts< 8, 0x0FF00, 0x0FF>>,  // 256x256
-         R_DrawSlope_8<slopeconsts< 7, 0x3FE00, 0x1FF>>,  // 512x512
-         R_DrawSlope_8<slopevalues>                       // General
+         R_DrawSlope_8<10, 0x00FC0, 0x03F>,  // 64x64 
+         R_DrawSlope_8< 9, 0x03F80, 0x07F>,  // 128x128
+         R_DrawSlope_8< 8, 0x0FF00, 0x0FF>,  // 256x256
+         R_DrawSlope_8< 7, 0x3FE00, 0x1FF>,  // 512x512
+         R_DrawSlope_8_GEN                   // General
       }
    }
 };
