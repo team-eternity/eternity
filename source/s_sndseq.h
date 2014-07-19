@@ -122,7 +122,7 @@ void S_StartSequenceNum(PointThinker *mo, int seqnum, int seqtype,
                         int seqOriginType, int seqOriginIdx);
 void S_StartSequenceName(PointThinker *mo, const char *seqname, 
                          int seqOriginType, int seqOriginIdx);
-void S_StopSequence(PointThinker *mo);
+void S_StopSequence(const PointThinker *mo);
 void S_SquashSequence(PointThinker *mo);
 void S_KillSequence(PointThinker *mo);
 
@@ -131,7 +131,7 @@ void S_StartSectorSequenceName(sector_t *s, const char *seqname, int originType)
 void S_ReplaceSectorSequence(sector_t *s, int seqtype);
 void S_ReplaceSectorSequenceName(sector_t *s, const char *seqname, int originType);
 void S_StopSectorSequence(sector_t *s, int originType);
-void S_SquashSectorSequence(sector_t *s, int originType);
+void S_SquashSectorSequence(const sector_t *s, int originType);
 
 void S_StartPolySequence(polyobj_t *po);
 void S_StopPolySequence(polyobj_t *po);

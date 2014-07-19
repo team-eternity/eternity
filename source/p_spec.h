@@ -1236,21 +1236,23 @@ sector_t *getSector(int currentSector, int line, int side);
 
 side_t *getSide(int currentSector, int line, int side);
 
-fixed_t P_FindLowestFloorSurrounding(sector_t *sec);
+fixed_t P_FindLowestFloorSurrounding(const sector_t *sec);
 
-fixed_t P_FindHighestFloorSurrounding(sector_t *sec);
+fixed_t P_FindHighestFloorSurrounding(const sector_t *sec);
 
-fixed_t P_FindNextHighestFloor(sector_t *sec, int currentheight);
+fixed_t P_FindNextHighestFloor(const sector_t *sec, int currentheight);
 
-fixed_t P_FindNextLowestFloor(sector_t *sec, int currentheight);
+fixed_t P_FindNextLowestFloor(const sector_t *sec, int currentheight);
 
-fixed_t P_FindLowestCeilingSurrounding(sector_t *sec); // jff 2/04/98
+fixed_t P_FindLowestCeilingSurrounding(const sector_t *sec); // jff 2/04/98
 
-fixed_t P_FindHighestCeilingSurrounding(sector_t *sec); // jff 2/04/98
+fixed_t P_FindHighestCeilingSurrounding(const sector_t *sec); // jff 2/04/98
 
-fixed_t P_FindNextLowestCeiling(sector_t *sec, int currentheight); // jff 2/04/98
+fixed_t P_FindNextLowestCeiling(const sector_t *sec, int currentheight);
+   // jff 2/04/98
 
-fixed_t P_FindNextHighestCeiling(sector_t *sec, int currentheight); // jff 2/04/98
+fixed_t P_FindNextHighestCeiling(const sector_t *sec, int currentheight);
+   // jff 2/04/98
 
 fixed_t P_FindShortestTextureAround(int secnum); // jff 2/04/98
 
@@ -1266,15 +1268,15 @@ int P_FindLineFromLineTag(const line_t *line, int start);   // killough 4/17/98
 
 int P_FindSectorFromTag(const int tag, int start);        // sf
 
-int P_FindMinSurroundingLight(sector_t *sector, int max);
+int P_FindMinSurroundingLight(const sector_t *sector, int max);
 
-sector_t *getNextSector(line_t *line, sector_t *sec);
+sector_t *getNextSector(const line_t *line, const sector_t *sec);
 
-int P_SectorActive(special_e t, sector_t *s);
+int P_SectorActive(special_e t, const sector_t *s);
 
-bool P_IsSecret(sector_t *sec);
+bool P_IsSecret(const sector_t *sec);
 
-bool P_WasSecret(sector_t *sec);
+bool P_WasSecret(const sector_t *sec);
 
 void P_ChangeSwitchTexture(line_t *line, int useAgain, int side);
 
@@ -1286,38 +1288,39 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side);
 
 // p_telept
 
-int EV_Teleport(line_t *line, int side, Mobj *thing);
+int EV_Teleport(const line_t *line, int side, Mobj *thing);
 
 // killough 2/14/98: Add silent teleporter
-int EV_SilentTeleport(line_t *line, int side, Mobj *thing);
+int EV_SilentTeleport(const line_t *line, int side, Mobj *thing);
 
 // killough 1/31/98: Add silent line teleporter
-int EV_SilentLineTeleport(line_t *line, int side, 
+int EV_SilentLineTeleport(const line_t *line, int side,
 			              Mobj *thing, bool reverse);
 
 // p_floor
 
-int EV_DoElevator(line_t *line, elevator_e type);
+int EV_DoElevator(const line_t *line, elevator_e type);
 
-int EV_BuildStairs(line_t *line, stair_e type);
+int EV_BuildStairs(const line_t *line, stair_e type);
 
-int EV_DoFloor(line_t *line, floor_e floortype);
+int EV_DoFloor(const line_t *line, floor_e floortype);
 
 // p_ceilng
 
-int EV_DoCeiling(line_t *line, ceiling_e type);
+int EV_DoCeiling(const line_t *line, ceiling_e type);
 
-int EV_CeilingCrushStop(line_t *line);
+int EV_CeilingCrushStop(const line_t *line);
 
 void P_ChangeCeilingTex(const char *name, int tag);
 
 // p_doors
 
-int EV_VerticalDoor(line_t *line, Mobj *thing, int lockID);
+int EV_VerticalDoor(line_t *line, const Mobj *thing, int lockID);
 
-int EV_DoDoor(line_t *line, vldoor_e type);
+int EV_DoDoor(const line_t *line, vldoor_e type);
 
-int EV_DoLockedDoor(line_t *line, vldoor_e type, int lockID, Mobj *thing);
+int EV_DoLockedDoor(const line_t *line, vldoor_e type, int lockID,
+                    const Mobj *thing);
 
 void EV_OpenDoor(int sectag, int speed, int wait_time);
 
@@ -1325,74 +1328,78 @@ void EV_CloseDoor(int sectag, int speed);
 
 // p_lights
 
-int EV_StartLightStrobing(line_t *line);
+int EV_StartLightStrobing(const line_t *line);
 
-int EV_TurnTagLightsOff(line_t *line);
+int EV_TurnTagLightsOff(const line_t *line);
 
-int EV_LightTurnOn(line_t *line, int bright);
+int EV_LightTurnOn(const line_t *line, int bright);
 
 int EV_LightTurnOnPartway(int tag, fixed_t level);  // killough 10/10/98
 
-int EV_SetLight(line_t *, int tag, setlight_e type, int lvl); // haleyjd 01/09/07
+int EV_SetLight(const line_t *, int tag, setlight_e type, int lvl);
+   // haleyjd 01/09/07
 
-int EV_FadeLight(line_t *, int tag, int destvalue, int speed); // haleyjd 01/10/07
+int EV_FadeLight(const line_t *, int tag, int destvalue, int speed);
+   // haleyjd 01/10/07
 
 // haleyjd 01/10/07:
-int EV_GlowLight(line_t *, int tag, int maxval, int minval, int speed); 
+int EV_GlowLight(const line_t *, int tag, int maxval, int minval, int speed);
 
 // haleyjd 01/16/07:
-int EV_StrobeLight(line_t *, int tag, int maxval, int minval, int maxtime, int mintime);
+int EV_StrobeLight(const line_t *, int tag, int maxval, int minval,
+                   int maxtime, int mintime);
 
-int EV_FlickerLight(line_t *, int tag, int maxval, int minval);
+int EV_FlickerLight(const line_t *, int tag, int maxval, int minval);
 
 // p_floor
 
-int EV_DoChange(line_t *line, change_e changetype);
+int EV_DoChange(const line_t *line, change_e changetype);
 
-int EV_DoDonut(line_t *line);
+int EV_DoDonut(const line_t *line);
 
-int EV_PillarBuild(line_t *line, pillardata_t *pd);	// joek: pillars
+int EV_PillarBuild(const line_t *line, const pillardata_t *pd);
+   // joek: pillars
 
-int EV_PillarOpen(line_t *line, pillardata_t *pd);
+int EV_PillarOpen(const line_t *line, const pillardata_t *pd);
 
-int EV_StartFloorWaggle(line_t *line, int tag, int height, int speed, 
+int EV_StartFloorWaggle(const line_t *line, int tag, int height, int speed,
                         int offset, int timer);
 
 void P_ChangeFloorTex(const char *name, int tag);
 
 // p_plats
 
-bool EV_DoPlat(line_t *line, plattype_e type, int amount);
-bool EV_DoParamPlat(line_t *line, int *args, paramplattype_e type);
+bool EV_DoPlat(const line_t *line, plattype_e type, int amount);
+bool EV_DoParamPlat(const line_t *line, const int *args, paramplattype_e type);
 bool EV_StopPlatByTag(int tag);
-bool EV_StopPlat(line_t *line);
+bool EV_StopPlat(const line_t *line);
 
 // p_genlin
 
-int EV_DoParamFloor(line_t *line, int tag, floordata_t *fd);
-int EV_DoGenFloor(line_t *line);
+int EV_DoParamFloor(const line_t *line, int tag, const floordata_t *fd);
+int EV_DoGenFloor(const line_t *line);
 
-int EV_DoParamCeiling(line_t *line, int tag, ceilingdata_t *cd);
-int EV_DoGenCeiling(line_t *line);
+int EV_DoParamCeiling(const line_t *line, int tag, const ceilingdata_t *cd);
+int EV_DoGenCeiling(const line_t *line);
 
-int EV_DoGenLift(line_t *line);
+int EV_DoGenLift(const line_t *line);
 
-int EV_DoParamStairs(line_t *line, int tag, stairdata_t *sd);
+int EV_DoParamStairs(const line_t *line, int tag, const stairdata_t *sd);
 int EV_DoGenStairs(line_t *line);
 
-int EV_DoGenCrusher(line_t *line);
+int EV_DoGenCrusher(const line_t *line);
 
-int EV_DoParamDoor(line_t *line, int tag, doordata_t *dd);
-int EV_DoGenDoor(line_t *line, Mobj *thing);
+int EV_DoParamDoor(const line_t *line, int tag, const doordata_t *dd);
+int EV_DoGenDoor(const line_t *line, Mobj *thing);
 
-int EV_DoGenLockedDoor(line_t *line, Mobj *thing);
+int EV_DoGenLockedDoor(const line_t *line, Mobj *thing);
 
 void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool usetag);
 
 // p_things
 
-int EV_ThingProjectile(int *args, bool gravity);
-int EV_ThingSpawn(int *args, bool fog);
+int EV_ThingProjectile(const int *args, bool gravity);
+int EV_ThingSpawn(const int *args, bool fog);
 int EV_ThingActivate(int tid);
 int EV_ThingDeactivate(int tid);
 
@@ -1429,7 +1436,7 @@ void P_ShootSpecialLine(Mobj *thing, line_t *line, int side);
 void P_CrossSpecialLine(line_t *, int side, Mobj *thing); // killough 11/98
 
 void P_PlayerInSpecialSector(player_t *player);
-void P_PlayerOnSpecialFlat(player_t *player);
+void P_PlayerOnSpecialFlat(const player_t *player);
 
 // p_switch
 
@@ -1472,33 +1479,35 @@ void P_SetSectorCeilingPic(sector_t *sector, int pic); // haleyjd 08/30/09
 
 void P_RemoveActiveCeiling(CeilingThinker *ceiling);  //jff 2/22/98
 
-void P_RemoveAllActiveCeilings(void);                //jff 2/22/98
+void P_RemoveAllActiveCeilings();                //jff 2/22/98
 
 void P_AddActiveCeiling(CeilingThinker *c);
 
 void P_RemoveActiveCeiling(CeilingThinker *c);
 
-int P_ActivateInStasisCeiling(line_t *line); 
+int P_ActivateInStasisCeiling(const line_t *line);
 
 void P_CeilingSequence(sector_t *s, int noiseLevel);
 
 // SoM 9/19/02: 3dside movement. :)
-void P_AttachLines(line_t *cline, bool ceiling);
-bool P_MoveAttached(sector_t *sector, bool ceiling, fixed_t delta, int crush);
-void P_AttachSectors(line_t *line, int staticFn);
+void P_AttachLines(const line_t *cline, bool ceiling);
+bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
+                    int crush);
+void P_AttachSectors(const line_t *line, int staticFn);
 
-bool P_Scroll3DSides(sector_t *sector, bool ceiling, fixed_t delta, int crush);
+bool P_Scroll3DSides(const sector_t *sector, bool ceiling, fixed_t delta,
+                     int crush);
 
 line_t *P_FindLine(int tag, int *searchPosition);
 
 // haleyjd: sector special transfers
-void P_SetupSpecialTransfer(sector_t *, spectransfer_t *);
+void P_SetupSpecialTransfer(const sector_t *, spectransfer_t *);
 
 void P_ZeroSpecialTransfer(spectransfer_t *);
 
-void P_TransferSectorSpecial(sector_t *, spectransfer_t *);
+void P_TransferSectorSpecial(sector_t *, const spectransfer_t *);
 
-void P_DirectTransferSectorSpecial(sector_t *, sector_t *);
+void P_DirectTransferSectorSpecial(const sector_t *, sector_t *);
 
 void P_ZeroSectorSpecial(sector_t *);
 

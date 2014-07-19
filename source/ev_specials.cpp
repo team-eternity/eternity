@@ -1270,7 +1270,7 @@ static bool EV_checkSpac(ev_action_t *action, ev_instance_t *instance)
 //
 // Shared logic for all types of line activation
 //
-bool EV_ActivateSpecial(ev_action_t *action, ev_instance_t *instance)
+static bool EV_ActivateSpecial(ev_action_t *action, ev_instance_t *instance)
 {
    // demo version check
    if(action->minversion > demo_version)

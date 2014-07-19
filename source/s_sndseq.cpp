@@ -89,7 +89,7 @@ bool S_CheckSectorSequenceLoop(sector_t *s, int originType)
 //
 // Stops any sound sequence being played by the given object.
 //
-void S_StopSequence(PointThinker *mo)
+void S_StopSequence(const PointThinker *mo)
 {
    DLListItem<SndSeq_t> *link = SoundSequences, *next;
    SndSeq_t *curSeq;
@@ -135,7 +135,7 @@ void S_StopSequence(PointThinker *mo)
 // cutting off the currently playing sound. This is needed by doors when
 // they bounce, or weird stuff happens.
 //
-void S_SquashSequence(PointThinker *mo)
+void S_SquashSequence(const PointThinker *mo)
 {
    DLListItem<SndSeq_t> *link = SoundSequences, *next;
 
@@ -198,7 +198,7 @@ void S_StopSectorSequence(sector_t *s, int originType)
 //
 // Convenience routine.
 //
-void S_SquashSectorSequence(sector_t *s, int originType)
+void S_SquashSectorSequence(const sector_t *s, int originType)
 {
    S_SquashSequence(SECTOR_ORIGIN(s, originType));
 }

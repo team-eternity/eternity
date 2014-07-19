@@ -385,7 +385,7 @@ void PillarThinker::serialize(SaveArchive &arc)
 // Passed the line that activated the floor and the type of floor motion
 // Returns true if a thinker was created.
 //
-int EV_DoFloor(line_t *line, floor_e floortype )
+int EV_DoFloor(const line_t *line, floor_e floortype )
 {
    int           secnum;
    int           rtn;
@@ -630,7 +630,7 @@ int EV_DoFloor(line_t *line, floor_e floortype )
 //
 // jff 3/15/98 added to better support generalized sector types
 //
-int EV_DoChange(line_t *line, change_e changetype)
+int EV_DoChange(const line_t *line, change_e changetype)
 {
    int                   secnum;
    int                   rtn;
@@ -678,7 +678,7 @@ int EV_DoChange(line_t *line, change_e changetype)
 // BTW, I'm pretty sure this is the longest function name in the
 // source code! ^_^
 //
-static int P_FindSectorFromLineTagWithLowerBound(line_t *l, int start,
+static int P_FindSectorFromLineTagWithLowerBound(const line_t *l, int start,
                                                  int min)
 {
    // Emulate original Doom's linear lower-bounded 
@@ -720,7 +720,7 @@ static int P_FindSectorFromLineTagWithLowerBound(line_t *l, int start,
 //
 // * Boom fixed the bug, and MBF/PrBoom without comp_stairs work right
 //
-int EV_BuildStairs(line_t *line, stair_e type)
+int EV_BuildStairs(const line_t *line, stair_e type)
 {
    // cph 2001/09/22 - cleaned up this function to save my sanity. 
    // A separate outer loop index makes the logic much cleared, and 
@@ -934,7 +934,7 @@ static bool DonutOverflow(fixed_t *pfloorheight, int16_t *pfloorpic)
 // Passed the linedef that triggered the donut
 // Returns whether a thinker was created
 //
-int EV_DoDonut(line_t *line)
+int EV_DoDonut(const line_t *line)
 {
    sector_t    *s1, *s2, *s3;
    int          secnum;
@@ -1043,7 +1043,7 @@ int EV_DoDonut(line_t *line)
 // jff 2/22/98 new type to move floor and ceiling in parallel
 //
 int EV_DoElevator
-( line_t*       line,
+( const line_t* line,
   elevator_e    elevtype )
 {
    int                   secnum;
@@ -1120,7 +1120,7 @@ int EV_DoElevator
 // Pillar build init function
 // joek 4/9/06
 //
-int EV_PillarBuild(line_t *line, pillardata_t *pd)
+int EV_PillarBuild(const line_t *line, const pillardata_t *pd)
 {
    PillarThinker *pillar;
    sector_t *sector;
@@ -1210,7 +1210,7 @@ manual_pillar:
 // Pillar open init function
 // joek 4/9/06
 //
-int EV_PillarOpen(line_t *line, pillardata_t *pd)
+int EV_PillarOpen(const line_t *line, const pillardata_t *pd)
 {
    PillarThinker *pillar;
    sector_t *sector;
@@ -1384,7 +1384,7 @@ void FloorWaggleThinker::serialize(SaveArchive &arc)
 //
 // EV_StartFloorWaggle
 //
-int EV_StartFloorWaggle(line_t *line, int tag, int height, int speed, 
+int EV_StartFloorWaggle(const line_t *line, int tag, int height, int speed,
                         int offset, int timer)
 {
    int       sectorIndex = -1;
