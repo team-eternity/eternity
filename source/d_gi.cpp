@@ -67,20 +67,17 @@
 // menu background flats
 #define DOOMMENUBACK "FLOOR4_6"
 #define HACXMENUBACK "CONS1_5"
-#define PSXMENUBACK  "MARB01"
 #define HTICMENUBACK "FLOOR16"
 
 // credit background flats
 #define DOOMCREDITBK "NUKAGE1"
 #define DM2CREDITBK  "SLIME05"
 #define HACXCREDITBK "SLIME01"
-#define PSXCREDITBK  "WATER01"
 #define HTICCREDITBK "FLTWAWA1"
 
 // border flats
 #define DOOMBRDRFLAT "FLOOR7_2"
 #define DM2BRDRFLAT  "GRNROCK"
-#define PSXBRDRFLAT  "METX02"
 #define HREGBRDRFLAT "FLAT513"
 #define HSWBRDRFLAT  "FLOOR04"
 
@@ -177,6 +174,7 @@ gamemodeinfo_t *GameModeInfo;
 //
 
 // doom menu skull cursor
+
 static const char *skullCursorPatches[] =
 {
    "M_SKULL1",
@@ -235,6 +233,13 @@ static giborder_t giHticBorder =
 
 static giftextpos_t giDoomFText = { 10, 10 };
 static giftextpos_t giHticFText = { 20, 5  };
+
+//
+// PSprite global scales
+//
+
+static giscale_t giPsprNoScale  = { 1.0f, 1.0f      };
+static giscale_t giPsprPSXScale = { 1.0f, 5.0f/6.0f };
 
 //
 // Menu Sounds
@@ -906,29 +911,29 @@ static missioninfo_t gmHacx =
 //
 static missioninfo_t gmPSX =
 {
-   pack_psx,          // id
-   MI_ALLOWSECRETTAG, // flags
-   "doom2",           // gamePathName - FIXME/TODO
-   nullptr,           // sameLevels
+   pack_psx,        // id
+   0,               // flags
+   "doom2",         // gamePathName - FIXME/TODO
+   nullptr,         // sameLevels
 
-   GIF_MNBIGFONT, // addGMIFlags
-   0,             // remGMIFlags
-   VNAME_PSX,     // versionNameOR
-   BANNER_PSX,    // startupBannerOR
-   0,             // numEpisodesOR
-   nullptr,       // iwadPathOR
-   nullptr,       // finaleDataOR
-   PSXMENUBACK,   // menuBackgroundOR
-   PSXCREDITBK,   // creditBackgroundOR
-   nullptr,       // consoleBackOR
-   nullptr,       // demoStatesOR
-   nullptr,       // interPicOR
-   NullExitRules, // exitRulesOR
-   nullptr,       // levelNamesOR
-   0,             // randMusMaxOR
-   PSXBRDRFLAT,   // borderFlatOR
-   &PSXSkyData,   // skyDataOR
-   PSXSkyFlats,   // skyFlatsOR
+   0,               // addGMIFlags
+   0,               // remGMIFlags
+   VNAME_PSX,       // versionNameOR
+   BANNER_PSX,      // startupBannerOR
+   0,               // numEpisodesOR
+   nullptr,         // iwadPathOR
+   nullptr,         // finaleDataOR
+   nullptr,         // menuBackgroundOR
+   nullptr,         // creditBackgroundOR
+   nullptr,         // consoleBackOR
+   nullptr,         // demoStatesOR
+   nullptr,         // interPicOR
+   NullExitRules,   // exitRulesOR
+   nullptr,         // levelNamesOR
+   0,               // randMusMaxOR
+   &PSXSkyData,     // skyDataOR
+   PSXSkyFlats,     // skyFlatsOR
+   &giPsprPSXScale, // pspriteGlobalScaleOR
 };
 
 //
@@ -1142,6 +1147,7 @@ static gamemodeinfo_t giDoomSW =
    &DoomSkyData,       // skyData
    R_DoomTextureHacks, // TextureHacks
    DoomSkyFlats,       // skyFlats
+   &giPsprNoScale,     // pspriteGlobalScale
 
    NULL,             // defaultORs
 
@@ -1252,6 +1258,7 @@ static gamemodeinfo_t giDoomReg =
    &DoomSkyData,       // skyData
    R_DoomTextureHacks, // TextureHacks
    DoomSkyFlats,       // skyFlats
+   &giPsprNoScale,     // pspriteGlobalScale
 
    NULL,             // defaultORs
 
@@ -1362,6 +1369,7 @@ static gamemodeinfo_t giDoomRetail =
    &DoomSkyData,       // skyData
    R_DoomTextureHacks, // TextureHacks
    DoomSkyFlats,       // skyFlats
+   &giPsprNoScale,     // pspriteGlobalScale
 
    NULL,             // defaultORs
 
@@ -1468,10 +1476,11 @@ static gamemodeinfo_t giDoomCommercial =
    doom_skindefs,      // skinSounds
    doom_soundnums,     // playerSounds
 
-   3,                  // switchEpisode
-   &Doom2SkyData,      // skyData
-   NULL,               // TextureHacks
-   DoomSkyFlats,       // skyFlats
+   3,              // switchEpisode
+   &Doom2SkyData,  // skyData
+   NULL,           // TextureHacks
+   DoomSkyFlats,   // skyFlats
+   &giPsprNoScale, // pspriteGlobalScale
 
    NULL,             // defaultORs
 
@@ -1582,6 +1591,7 @@ static gamemodeinfo_t giHereticSW =
    &HereticSkyData,    // skyData
    R_HticTextureHacks, // TextureHacks
    DoomSkyFlats,       // skyFlats
+   &giPsprNoScale,     // pspriteGlobalScale
 
    HereticDefaultORs, // defaultORs
 
@@ -1696,6 +1706,7 @@ static gamemodeinfo_t giHereticReg =
    &HereticSkyData,    // skyData
    R_HticTextureHacks, // TextureHacks
    DoomSkyFlats,       // skyFlats
+   &giPsprNoScale,     // pspriteGlobalScale
    
    HereticDefaultORs, // defaultORs
 
@@ -1759,21 +1770,21 @@ void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
    gi->flags &= ~mi->remGMIFlags;
 
    // apply overrides
-   OVERRIDE(versionName,      nullptr);
-   OVERRIDE(startupBanner,    nullptr);
-   OVERRIDE(numEpisodes,            0);
-   OVERRIDE(iwadPath,         nullptr);
-   OVERRIDE(finaleData,       nullptr);
-   OVERRIDE(menuBackground,   nullptr);
-   OVERRIDE(creditBackground, nullptr);
-   OVERRIDE(consoleBack,      nullptr);
-   OVERRIDE(interPic,         nullptr);
-   OVERRIDE(exitRules,        nullptr);
-   OVERRIDE(levelNames,       nullptr);
-   OVERRIDE(randMusMax,             0);
-   OVERRIDE(borderFlat,       nullptr);
-   OVERRIDE(skyData,          nullptr);
-   OVERRIDE(skyFlats,         nullptr);
+   OVERRIDE(versionName,        nullptr);
+   OVERRIDE(startupBanner,      nullptr);
+   OVERRIDE(numEpisodes,              0);
+   OVERRIDE(iwadPath,           nullptr);
+   OVERRIDE(finaleData,         nullptr);
+   OVERRIDE(menuBackground,     nullptr);
+   OVERRIDE(creditBackground,   nullptr);
+   OVERRIDE(consoleBack,        nullptr);
+   OVERRIDE(interPic,           nullptr);
+   OVERRIDE(exitRules,          nullptr);
+   OVERRIDE(levelNames,         nullptr);
+   OVERRIDE(randMusMax,               0);
+   OVERRIDE(skyData,            nullptr);
+   OVERRIDE(skyFlats,           nullptr);
+   OVERRIDE(pspriteGlobalScale, nullptr);
    
    // Note: demostates are not overridden here, see below.
 }
