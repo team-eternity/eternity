@@ -164,7 +164,7 @@ void A_Jump(actionargs_t *actionargs)
    choice = (P_Random(pr_decjump2) % (al->numargs - 1)) + 1;
 
    // if the state is found, jump to it.
-   if((state = E_ArgAsStateLabel(actor, choice)))
+   if((state = E_ArgAsStateLabel(actor, al, choice)))
       P_SetMobjState(actor, state->index);
 }
 
