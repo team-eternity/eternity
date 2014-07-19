@@ -37,6 +37,7 @@
 #include "m_bbox.h"
 #include "r_draw.h"
 #include "r_main.h"
+#include "v_block.h"
 #include "v_patch.h" // haleyjd
 #include "v_misc.h"
 #include "v_patchfmt.h"
@@ -691,17 +692,27 @@ void V_DrawFSBackground(VBuffer *dest, int lumpnum)
 {
    void    *source = NULL;
    patch_t *patch  = NULL;
+
+   if(lumpnum < 0)
+      return;
+
    int len = wGlobalDir.lumpLength(lumpnum);
 
    switch(len)
    {
    case 4096:  // 64x64 flat
+   case 4160:
+   case 8192:
       source = wGlobalDir.cacheLumpNum(lumpnum, PU_CACHE);
       V_DrawBackgroundCached((byte *)source, dest);
       break;
    case 64000: // 320x200 linear
       source = wGlobalDir.cacheLumpNum(lumpnum, PU_CACHE);
       V_DrawBlockFS(dest, (byte *)source);
+      break;
+   case 76800: // 320x240 linear
+      source = wGlobalDir.cacheLumpNum(lumpnum, PU_CACHE);
+      V_FillBuffer(dest, (byte *)source, 320, 240);
       break;
    default:    // anything else is treated like a patch (let god sort it out)
       patch = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_CACHE);

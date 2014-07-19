@@ -1864,15 +1864,16 @@ static void WI_OverlayBackground()
 static void WI_DrawBackground()
 {
    char  name[9];  // limited to 8 characters
-   
+  
    if(GameModeInfo->id == commercial || (GameModeInfo->id == retail && wbs->epsd == 3))
       strcpy(name, LevelInfo.interPic);
    else 
       sprintf(name, "WIMAP%d", wbs->epsd);
 
    // background
-   bg = PatchLoader::CacheName(wGlobalDir, name, PU_CACHE);
-   V_DrawPatch(0, 0, &subscreen43, bg);
+   //bg = PatchLoader::CacheName(wGlobalDir, name, PU_CACHE);
+   //V_DrawPatch(0, 0, &subscreen43, bg);
+   V_DrawFSBackground(&subscreen43, wGlobalDir.checkNumForName(name));
 
    // re-fade if we were called due to video mode reset
    if(fade_applied && wi_fade_color != -1)

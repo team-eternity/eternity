@@ -24,7 +24,9 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
 #include "i_system.h"
+#include "m_compare.h"
 #include "v_video.h"
 
 //==============================================================================
@@ -564,6 +566,47 @@ static void V_TileBlock64S(VBuffer *buffer, byte *src)
    }
 }
 
+//=============================================================================
+//
+// Buffer fill
+//
+// Fill a VBuffer with a texture.
+//
+
+void V_FillBuffer(VBuffer *buffer, byte *src, int texw, int texh)
+{
+   byte    *dest = buffer->data, *row;
+   int      w = buffer->width;
+   int      h = buffer->height;
+   fixed_t  xstep = (texw << FRACBITS) / w;
+   fixed_t  ystep = (texh << FRACBITS) / h;
+   fixed_t  xfrac, yfrac = 0;
+   int      xtex, ytex;
+
+   while(h--)
+   {
+      int x = w;
+      row   = dest;
+      xfrac = 0;
+      ytex  = eclamp(yfrac >> FRACBITS, 0, texh - 1);
+
+      while(x--)
+      {
+         xtex = eclamp(xfrac >> FRACBITS, 0, texw - 1);
+         *row++ = src[ytex * texw + xtex];
+         xfrac += xstep;
+      }
+
+      yfrac += ystep;
+      dest  += buffer->pitch;
+   }
+}
+
+//=============================================================================
+//
+// Function pointer assignment
+//
+
 //
 // V_SetBlockFuncs
 //
@@ -579,7 +622,6 @@ void V_SetBlockFuncs(VBuffer *buffer, int drawtype)
       buffer->MaskedBlockDrawer = V_MaskedBlockDrawer;
       buffer->TileBlock64       = V_TileBlock64;
       break;
-   case DRAWTYPE_2XSCALED:
    case DRAWTYPE_GENSCALED:
       buffer->BlockDrawer       = V_BlockDrawerS;
       buffer->MaskedBlockDrawer = V_MaskedBlockDrawerS;
