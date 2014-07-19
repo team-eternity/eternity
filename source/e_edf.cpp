@@ -1243,7 +1243,7 @@ static void E_ProcessPlayerData(cfg_t *cfg)
 static void E_ProcessCast(cfg_t *cfg)
 {
    static bool firsttime = true;
-   int i, numcastorder = 0, numcastsections = 0;
+   int numcastorder = 0, numcastsections = 0;
    cfg_t **ci_order;
 
    E_EDFLogPuts("\t* Processing cast call\n");
@@ -1261,10 +1261,8 @@ static void E_ProcessCast(cfg_t *cfg)
    // haleyjd 11/21/11: allow multiple runs
    if(castorder)
    {
-      int i;
-
       // free names
-      for(i = 0; i < max_castorder; i++)
+      for(int i = 0; i < max_castorder; i++)
       {
          if(castorder[i].name)
             efree(castorder[i].name);
@@ -1290,7 +1288,7 @@ static void E_ProcessCast(cfg_t *cfg)
 
    if(numcastorder > 0)
    {
-      for(i = 0; i < numcastorder; ++i)
+      for(int i = 0; i < numcastorder; i++)
       {
          const char *title = cfg_getnstr(cfg, SEC_CASTORDER, i);         
          cfg_t *section    = cfg_gettsec(cfg, SEC_CAST, title);
@@ -1309,17 +1307,18 @@ static void E_ProcessCast(cfg_t *cfg)
    {
       // no castorder array is defined, so use the cast members
       // in the order they are encountered (for backward compatibility)
-      for(i = 0; i < numcastsections; ++i)
+      for(int i = 0; i < numcastsections; i++)
          ci_order[i] = cfg_getnsec(cfg, SEC_CAST, i);
    }
 
 
-   for(i = 0; i < max_castorder; ++i)
+   for(int i = 0; i < max_castorder; i++)
    {
       int j;
       const char *tempstr;
       int tempint = 0;
       cfg_t *castsec = ci_order[i];
+      mobjinfo_t *mi = nullptr;
 
       // resolve thing type
       tempstr = cfg_getstr(castsec, ITEM_CAST_TYPE);
@@ -1332,6 +1331,7 @@ static void E_ProcessCast(cfg_t *cfg)
          tempint = UnknownThingType;
       }
       castorder[i].type = tempint;
+      mi = mobjinfo[castorder[i].type];
 
       // get cast name, if any -- the first seventeen entries can
       // default to using the internal string editable via BEX strings
@@ -1346,14 +1346,13 @@ static void E_ProcessCast(cfg_t *cfg)
 
       // process sound blocks (up to four will be processed)
       tempint = cfg_size(castsec, ITEM_CAST_SOUND);
-      for(j = 0; j < 4; ++j)
+      for(j = 0; j < 4; j++)
       {
          castorder[i].sounds[j].frame = 0;
          castorder[i].sounds[j].sound = 0;
       }
-      for(j = 0; j < tempint && j < 4; ++j)
+      for(j = 0; j < tempint && j < 4; j++)
       {
-         int num;
          sfxinfo_t *sfx;
          const char *name;
          cfg_t *soundsec = cfg_getnsec(castsec, ITEM_CAST_SOUND, j);
@@ -1385,9 +1384,7 @@ static void E_ProcessCast(cfg_t *cfg)
 
          // name of frame that triggers sound event
          name = cfg_getstr(soundsec, ITEM_CAST_SOUNDFRAME);
-         if((num = E_StateNumForName(name)) < 0)
-            num = 0;
-         castorder[i].sounds[j].frame = num;
+         castorder[i].sounds[j].frame = E_SafeStateNameOrLabel(mi, name);
       }
    }
 
