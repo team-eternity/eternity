@@ -38,6 +38,7 @@
 #include "d_dehtbl.h"
 #include "d_gi.h"
 #include "d_io.h"
+#include "e_hash.h"
 #include "f_finale.h"
 #include "hu_over.h"
 #include "hu_stuff.h"
@@ -196,8 +197,14 @@ static const char *fontfmts[NUM_FONT_FMTS] =
 
 #define NUMFONTCHAINS 31
 
-static vfont_t             *e_font_namechains[NUMFONTCHAINS];
-static DLListItem<vfont_t> *e_font_numchains[NUMFONTCHAINS];
+//static vfont_t             *e_font_namechains[NUMFONTCHAINS];
+//static DLListItem<vfont_t> *e_font_numchains[NUMFONTCHAINS];
+
+typedef EHashTable<vfont_t, EIntHashKey, &vfont_t::num, &vfont_t::numlinks> EFontNumHash;
+typedef EHashTable<vfont_t, ENCStringHashKey, &vfont_t::name, &vfont_t::namelinks> EFontNameHash;
+
+static EFontNumHash  e_font_numhash;
+static EFontNameHash e_font_namehash;
 
 //=============================================================================
 //
@@ -211,10 +218,7 @@ static DLListItem<vfont_t> *e_font_numchains[NUMFONTCHAINS];
 //
 static void E_AddFontToNameHash(vfont_t *font)
 {
-   unsigned int key = D_HashTableKey(font->name) % NUMFONTCHAINS;
-
-   font->namenext = e_font_namechains[key];
-   e_font_namechains[key] = font;
+   e_font_namehash.addObject(font);
 }
 
 // need forward declaration for E_AutoAllocFontNum
@@ -267,18 +271,15 @@ static bool E_AutoAllocFontNum(vfont_t *font)
 //
 static void E_AddFontToNumHash(vfont_t *font)
 {
-   unsigned int key = font->num % NUMFONTCHAINS;
-
    // Auto-assign a numeric key to all fonts which don't have
    // a valid one explicitly specified.
-
    if(font->num < 0)
    {
       E_AutoAllocFontNum(font);
       return;
    }
 
-   font->numlinks.insert(font, &e_font_numchains[key]);
+   e_font_numhash.addObject(font);
 }
 
 //
@@ -289,7 +290,7 @@ static void E_AddFontToNumHash(vfont_t *font)
 //
 static void E_DelFontFromNumHash(vfont_t *font)
 {
-   font->numlinks.remove();
+   e_font_numhash.removeObject(font);
 }
 
 //=============================================================================
@@ -306,21 +307,14 @@ static void E_DelFontFromNumHash(vfont_t *font)
 //
 static bool E_IsLinearLumpUsed(vfont_t *font, byte *data)
 {
-   int i;
+   vfont_t *rover = nullptr;
 
    // run down all hash chains
-   for(i = 0; i < NUMFONTCHAINS; ++i)
+   while((rover = e_font_namehash.tableIterator(rover)))
    {
-      vfont_t *rover = e_font_namechains[i];
-
-      // run down the chain
-      while(rover)
-      {
-         if(rover != font && rover->linear && rover->data &&
-            rover->data == data)
-            return true; // is used
-         rover = rover->namenext;
-      }
+      if(rover != font && rover->linear && rover->data &&
+         rover->data == data)
+         return true; // is used
    }
 
    // didn't find one, doc
@@ -335,26 +329,17 @@ static bool E_IsLinearLumpUsed(vfont_t *font, byte *data)
 //
 static bool E_IsPatchUsed(vfont_t *font, patch_t *p)
 {
-   int i;
+   vfont_t *rover = nullptr;
 
    // run down all hash chains
-   for(i = 0; i < NUMFONTCHAINS; ++i)
+   while((rover = e_font_namehash.tableIterator(rover)))
    {
-      vfont_t *rover = e_font_namechains[i];
-
-      // run down the chain
-      while(rover)
+      if(rover != font && rover->fontgfx)
       {
-         if(rover != font && rover->fontgfx)
-         {
-            unsigned int j;
-            
-            // run down the font graphics
-            for(j = 0; j < font->size; ++j)
-               if(font->fontgfx[j] == p)
-                  return true; // got a match
-         }
-         rover = rover->namenext;
+         // run down the font graphics
+         for(unsigned int j = 0; j < font->size; j++)
+            if(font->fontgfx[j] == p)
+               return true; // got a match
       }
    }
 
@@ -369,12 +354,10 @@ static bool E_IsPatchUsed(vfont_t *font, patch_t *p)
 //
 static void E_DisposePatches(vfont_t *font)
 {
-   unsigned int i;
-
    if(!font->fontgfx)
       return;
 
-   for(i = 0; i < font->size; ++i)
+   for(unsigned int i = 0; i < font->size; i++)
    {
       if(font->fontgfx[i] && !E_IsPatchUsed(font, font->fontgfx[i]))
          Z_ChangeTag(font->fontgfx[i], PU_CACHE); // make purgable
@@ -451,7 +434,7 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt,
       font->data = (byte *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));
 
    // check for proper dimensions
-   for(i = 5; i <= 32; ++i)
+   for(i = 5; i <= 32; i++)
    {
       if(i * i * 128 == size)
       {
@@ -573,12 +556,10 @@ static void E_FreeFilterData(vfontfilter_t *f)
 //
 static void E_FreeFontFilters(vfont_t *font)
 {
-   unsigned int i;
-
    if(!font->filters)
       return;
 
-   for(i = 0; i < font->numfilters; ++i)
+   for(unsigned int i = 0; i < font->numfilters; ++i)
       E_FreeFilterData(&(font->filters[i]));
 
    efree(font->filters);
@@ -600,7 +581,6 @@ static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
    const char *tempstr;
    char *pos = NULL;
    int tempnum = 0;
-   unsigned int i;
 
    // the filter works in one of two ways:
    // 1. specifies a list of characters to which it applies
@@ -612,7 +592,7 @@ static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
       f->chars    = ecalloc(unsigned int *, numchars, sizeof(unsigned int));
       f->numchars = numchars;
 
-      for(i = 0; i < numchars; ++i)
+      for(unsigned int i = 0; i < numchars; i++)
       {
          pos = NULL;
          tempstr = cfg_getnstr(sec, ITEM_FILTER_CHARS, i);
@@ -695,12 +675,12 @@ void E_LoadPatchFont(vfont_t *font)
       vfontfilter_t *filter, *filtertouse = NULL;
 
       // run down filters until a match is found
-      for(k = 0; k < font->numfilters; ++k)
+      for(k = 0; k < font->numfilters; k++)
       {
          filter = &(font->filters[k]);
          if(filter->numchars)
          {
-            for(m = 0; m < filter->numchars; ++m)
+            for(m = 0; m < filter->numchars; m++)
                if(j == filter->chars[m])
                   filtertouse = filter;
          }
@@ -801,18 +781,14 @@ static void E_ProcessFont(cfg_t *sec)
    // if one exists by this name already, modify it
    if((font = E_FontForName(title)))
    {
-      // check numeric key
-      if(font->num != num)
-      {
-         // remove from numeric hash
-         E_DelFontFromNumHash(font);
+      // remove from numeric hash
+      E_DelFontFromNumHash(font);
 
-         // change the key
-         font->num = num;
+      // change the key
+      font->num = num;
 
-         // rehash
-         E_AddFontToNumHash(font);
-      }
+      // rehash
+      E_AddFontToNumHash(font);
 
       // not a definition
       def = false;
@@ -821,10 +797,7 @@ static void E_ProcessFont(cfg_t *sec)
    {
       font = estructalloc(vfont_t, 1);
 
-      if(strlen(title) >= sizeof(font->name))
-         E_EDFLoggedErr(2, "E_ProcessFont: mnemonic '%s' is too long\n", title);
-
-      strncpy(font->name, title, sizeof(font->name));
+      font->name = estrdup(title);
       font->num = num;
 
       // add to hash tables
@@ -967,30 +940,34 @@ static void E_ProcessFont(cfg_t *sec)
    }
    else
    {
-      unsigned int i;
-      unsigned int numfilters;
+      unsigned int curnumfilters = font->numfilters;
+      unsigned int numfilters    = cfg_size(sec, ITEM_FONT_FILTER);
 
-      // handle disposal of pre-existing filters
-      E_FreeFontFilters(font);
-
-      // process font filter objects now
-      if((numfilters = cfg_size(sec, ITEM_FONT_FILTER)) <= 0)
+      // at least one filter is required; if this font is being modified, it 
+      // may already possess filters.
+      if(!curnumfilters && !numfilters)
          E_EDFLoggedErr(2, "E_ProcessFont: at least one filter is required\n");
 
-      // allocate the font filters
-      font->filters    = ecalloc(vfontfilter_t *, numfilters, sizeof(vfontfilter_t));
-      font->numfilters = numfilters;
-      
-      for(i = 0; i < numfilters; ++i)
+      if(numfilters)
       {
-         E_ProcessFontFilter(cfg_getnsec(sec, ITEM_FONT_FILTER, i), 
-                             &(font->filters[i]));
+         // handle disposal of pre-existing filters
+         E_FreeFontFilters(font);
+
+         // allocate the font filters
+         font->filters    = ecalloc(vfontfilter_t *, numfilters, sizeof(vfontfilter_t));
+         font->numfilters = numfilters;
+      
+         for(unsigned int i = 0; i < numfilters; i++)
+         {
+            E_ProcessFontFilter(cfg_getnsec(sec, ITEM_FONT_FILTER, i), 
+                                &(font->filters[i]));
+         }
+
+         font->patchnumoffset = cfg_getint(sec, ITEM_FONT_POFFS);
+
+         // load the font
+         E_LoadPatchFont(font);
       }
-
-      font->patchnumoffset = cfg_getint(sec, ITEM_FONT_POFFS);
-
-      // load the font
-      E_LoadPatchFont(font);
    }
 
    E_EDFLogPrintf("\t\t%s font %s\n", 
@@ -1029,13 +1006,12 @@ static void E_ProcessFontVars(cfg_t *cfg)
 //
 void E_ProcessFonts(cfg_t *cfg)
 {
-   unsigned int i;
    unsigned int numfonts = cfg_size(cfg, EDF_SEC_FONT);
 
    E_EDFLogPrintf("\t* Processing fonts\n"
                   "\t\t%d fonts(s) defined\n", numfonts);
 
-   for(i = 0; i < numfonts; ++i)
+   for(unsigned int i = 0; i < numfonts; i++)
       E_ProcessFont(cfg_getnsec(cfg, EDF_SEC_FONT, i));
 
    E_ProcessFontVars(cfg);
@@ -1049,13 +1025,7 @@ void E_ProcessFonts(cfg_t *cfg)
 //
 vfont_t *E_FontForName(const char *name)
 {
-   unsigned int key = D_HashTableKey(name) % NUMFONTCHAINS;
-   vfont_t *font = e_font_namechains[key];
-
-   while(font && strcasecmp(font->name, name))
-      font = font->namenext;
-
-   return font;
+   return e_font_namehash.objectForKey(name);
 }
 
 //
@@ -1066,13 +1036,7 @@ vfont_t *E_FontForName(const char *name)
 //
 vfont_t *E_FontForNum(int num)
 {
-   unsigned int key = num % NUMFONTCHAINS;
-   DLListItem<vfont_t> *link = e_font_numchains[key];
-
-   while(link && (*link)->num != num)
-      link = link->dllNext;
-
-   return link ? link->dllObject : NULL;
+   return e_font_numhash.objectForKey(num);
 }
 
 //

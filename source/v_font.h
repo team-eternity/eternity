@@ -61,7 +61,8 @@ typedef struct vfontfilter_s
 //
 struct vfont_t
 {
-   DLListItem<vfont_t> numlinks; // for EDF hashing
+   DLListItem<vfont_t> numlinks;  // for EDF hashing by number
+   DLListItem<vfont_t> namelinks; // for EDF hashing by name
 
    unsigned int start; // first character in font
    unsigned int end;   // last character in font
@@ -91,8 +92,8 @@ struct vfont_t
    byte *colrngs[CR_LIMIT];  // color translation tables
 
    int  num;                 // numeric id
-   char name[129];           // EDF mnemonic
-   vfont_t *namenext;        // next by name
+   char *name;               // EDF mnemonic
+   //vfont_t *namenext;        // next by name
    vfontfilter_t *filters;   // graphic loading filters
    unsigned int numfilters;  // number of filters
    int patchnumoffset;       // used during font loading only
