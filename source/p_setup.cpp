@@ -505,11 +505,10 @@ void P_LoadPSXSectors(int lumpnum)
       ++data;                // skip color ID for now
       ss->special            = GetBinaryWord(&data);
       ss->tag                = GetBinaryWord(&data);
-      data += 2;             // skip padding/unknown field for now
+      data += 2;             // skip flags field for now
 
       // scale up light levels (experimental)
-      //ss->lightlevel = (ss->lightlevel * 5 / 9) + 114;
-      ss->lightlevel = (ss->lightlevel * 11 / 18) + 96;//85;
+      ss->lightlevel = (ss->lightlevel * 11 / 18) + 96;
 
       P_InitSector(ss);
    }
