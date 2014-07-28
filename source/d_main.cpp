@@ -1624,11 +1624,16 @@ static void D_DoomInit()
 
    if(textmode_startup)
    {
-      if(*startup1) puts(startup1);
-      if(*startup2) puts(startup2);
-      if(*startup3) puts(startup3);
-      if(*startup4) puts(startup4);
-      if(*startup5) puts(startup5);
+      if(DEH_StringChanged("STARTUP1"))
+         puts(DEH_String("STARTUP1"));
+      if(DEH_StringChanged("STARTUP2"))
+         puts(DEH_String("STARTUP2"));
+      if(DEH_StringChanged("STARTUP3"))
+         puts(DEH_String("STARTUP3"));
+      if(DEH_StringChanged("STARTUP4"))
+         puts(DEH_String("STARTUP4"));
+      if(DEH_StringChanged("STARTUP5"))
+         puts(DEH_String("STARTUP5"));
    }
    // End new startup strings
 
@@ -1765,11 +1770,16 @@ static void D_DoomInit()
    // haleyjd: altered to prevent printf attacks
    if(!textmode_startup)
    {
-      if(*startup1) C_Printf("%s", startup1);
-      if(*startup2) C_Printf("%s", startup2);
-      if(*startup3) C_Printf("%s", startup3);
-      if(*startup4) C_Printf("%s", startup4);
-      if(*startup5) C_Printf("%s", startup5);
+      if(DEH_StringChanged("STARTUP1"))
+         C_Printf("%s", DEH_String("STARTUP1"));
+      if(DEH_StringChanged("STARTUP2"))
+         C_Printf("%s", DEH_String("STARTUP2"));
+      if(DEH_StringChanged("STARTUP3"))
+         C_Printf("%s", DEH_String("STARTUP3"));
+      if(DEH_StringChanged("STARTUP4"))
+         C_Printf("%s", DEH_String("STARTUP4"));
+      if(DEH_StringChanged("STARTUP5"))
+         C_Printf("%s", DEH_String("STARTUP5"));
    }
 
    if(!textmode_startup && !devparm)

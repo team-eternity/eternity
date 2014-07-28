@@ -587,7 +587,7 @@ void F_CastDrawer()
    
    // erase the entire screen to a background
    // Ty 03/30/98 bg texture extern
-   V_DrawFSBackground(&subscreen43, wGlobalDir.checkNumForName(bgcastcall));
+   V_DrawFSBackground(&subscreen43, wGlobalDir.checkNumForName(DEH_String("BGCASTCALL")));
    
    if(cast->name)
       F_CastPrint(cast->name);
