@@ -195,13 +195,10 @@ static const char *fontfmts[NUM_FONT_FMTS] =
    "png"      // a PNG graphic
 };
 
-#define NUMFONTCHAINS 31
-
-//static vfont_t             *e_font_namechains[NUMFONTCHAINS];
-//static DLListItem<vfont_t> *e_font_numchains[NUMFONTCHAINS];
-
-typedef EHashTable<vfont_t, EIntHashKey, &vfont_t::num, &vfont_t::numlinks> EFontNumHash;
-typedef EHashTable<vfont_t, ENCStringHashKey, &vfont_t::name, &vfont_t::namelinks> EFontNameHash;
+typedef EHashTable<vfont_t, EIntHashKey, 
+                   &vfont_t::num, &vfont_t::numlinks> EFontNumHash;
+typedef EHashTable<vfont_t, ENCStringHashKey, 
+                   &vfont_t::name, &vfont_t::namelinks> EFontNameHash;
 
 static EFontNumHash  e_font_numhash;
 static EFontNameHash e_font_namehash;
@@ -771,39 +768,20 @@ static void E_loadTranslation(vfont_t *font, int index, const char *lumpname)
 static void E_ProcessFont(cfg_t *sec)
 {
    vfont_t *font;
-   const char *title, *tempstr;
-   bool def = true;
-   int num, tempnum = 0;
+   const char *tempstr;
+   int tempnum = 0;
 
-   title = cfg_title(sec);
-   num   = cfg_getint(sec, ITEM_FONT_ID);
+   const char *title = cfg_title(sec);
 
-   // if one exists by this name already, modify it
-   if((font = E_FontForName(title)))
-   {
-      // remove from numeric hash
-      E_DelFontFromNumHash(font);
+   // The fonts were already pre-created; retrieve the vfont_t structure for
+   // this definition.
+   font = E_FontForName(title);
 
-      // change the key
-      font->num = num;
-
-      // rehash
-      E_AddFontToNumHash(font);
-
-      // not a definition
-      def = false;
-   }
-   else
-   {
-      font = estructalloc(vfont_t, 1);
-
-      font->name = estrdup(title);
-      font->num = num;
-
-      // add to hash tables
-      E_AddFontToNameHash(font);
-      E_AddFontToNumHash(font);
-   }
+   // If the font is neither linear nor has any filters, it hasn't been 
+   // processed before, or in other words, this is a new font by name.
+   // Otherwise, this definition's fields are treated additively over the
+   // existing font's data.
+   bool def = !(font->linear || font->numfilters);
 
    // process start
    if(IS_SET(sec, ITEM_FONT_START))
@@ -994,6 +972,49 @@ static void E_ProcessFontVars(cfg_t *cfg)
    E_ReplaceString(c_fontname,        cfg_getstrdup(cfg, ITEM_FONT_CONS));
 }
 
+//
+// E_hashFonts
+//
+// Create and all fonts to the name and numeric hashes before processing begins, 
+// so that fonts can reference one another by name.
+//
+static void E_hashFonts(cfg_t *cfg, unsigned int numfonts)
+{
+   for(unsigned int i = 0; i < numfonts; i++)
+   {
+      cfg_t      *sec   = cfg_getnsec(cfg, EDF_SEC_FONT, i);
+      const char *title = cfg_title(sec);
+      int         num   = cfg_getint(sec, ITEM_FONT_ID);
+      vfont_t    *font;
+
+      // if one exists by this name already, modify it
+      if((font = E_FontForName(title)))
+      {
+         // remove from numeric hash
+         E_DelFontFromNumHash(font);
+
+         // change the numeric key if a new one is specified
+         if(num >= 0)
+            font->num = num;
+
+         // rehash (even if the key didn't change, this moves it to the front
+         // of its hash chain)
+         E_AddFontToNumHash(font);
+      }
+      else
+      {
+         font = estructalloc(vfont_t, 1);
+
+         font->name = estrdup(title);
+         font->num  = num;
+
+         // add to hash tables
+         E_AddFontToNameHash(font);
+         E_AddFontToNumHash(font);
+      }
+   }
+}
+
 //=============================================================================
 //
 // Global Routines
@@ -1008,12 +1029,18 @@ void E_ProcessFonts(cfg_t *cfg)
 {
    unsigned int numfonts = cfg_size(cfg, EDF_SEC_FONT);
 
-   E_EDFLogPrintf("\t* Processing fonts\n"
-                  "\t\t%d fonts(s) defined\n", numfonts);
+   // create and hash fonts
+   E_EDFLogPrintf("\t* Hashing fonts\n"
+                  "\t\t%u font(s) defined\n", numfonts);
+   E_hashFonts(cfg, numfonts);
+   
+   // process fonts
+   E_EDFLogPrintf("\t* Processing fonts\n");
 
    for(unsigned int i = 0; i < numfonts; i++)
       E_ProcessFont(cfg_getnsec(cfg, EDF_SEC_FONT, i));
 
+   // process global font variables
    E_ProcessFontVars(cfg);
 }
 

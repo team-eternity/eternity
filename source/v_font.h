@@ -91,9 +91,8 @@ struct vfont_t
    int   colorError;         // error font color
    byte *colrngs[CR_LIMIT];  // color translation tables
 
-   int  num;                 // numeric id
+   int   num;                // numeric id
    char *name;               // EDF mnemonic
-   //vfont_t *namenext;        // next by name
    vfontfilter_t *filters;   // graphic loading filters
    unsigned int numfilters;  // number of filters
    int patchnumoffset;       // used during font loading only
