@@ -327,9 +327,6 @@ static int    cnt_pause;
 //  GRAPHICS
 //
 
-// background (map of levels).
-static patch_t*   bg;
-
 // You Are Here graphic
 static patch_t*   yah[2]; 
 
@@ -1871,8 +1868,6 @@ static void WI_DrawBackground()
       sprintf(name, "WIMAP%d", wbs->epsd);
 
    // background
-   //bg = PatchLoader::CacheName(wGlobalDir, name, PU_CACHE);
-   //V_DrawPatch(0, 0, &subscreen43, bg);
    V_DrawFSBackground(&subscreen43, wGlobalDir.checkNumForName(name));
 
    // re-fade if we were called due to video mode reset
