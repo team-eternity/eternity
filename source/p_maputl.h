@@ -42,13 +42,13 @@ class  Mobj;
 #define PT_ADDTHINGS    2
 #define PT_EARLYOUT     4
 
-typedef struct divline_s
+struct divline_t
 {
    fixed_t     x;
    fixed_t     y;
    fixed_t     dx;
    fixed_t     dy;
-} divline_t;
+};
 
 
 // SoM: linetracer_t contains a divline_t for the appropriate functions but 
@@ -67,23 +67,8 @@ struct linetracer_t
    fixed_t    bottomslope;
    Mobj      *thing;
    uint32_t   aimflagsmask; // killough 8/2/98: for more intelligent autoaiming
-
-   /*
-   // SoM: used by aiming TPT
-   fixed_t     originx;
-   fixed_t     originy;
-   fixed_t     originz;
-   */
-   fixed_t     sin;
-   fixed_t     cos;
-
-   /*
-   // Accumulated travel along the line. Should be the XY distance between (x,y) 
-   // and (originx, originy) 
-   fixed_t movefrac;
-
-   bool finished;
-   */
+   fixed_t    sin;
+   fixed_t    cos;
 };
 
 struct intercept_t
@@ -115,7 +100,7 @@ bool P_BlockLinesIterator (int x, int y, bool func(line_t *));
 bool P_BlockThingsIterator(int x, int y, bool func(Mobj *));
 bool ThingIsOnLine(Mobj *t, line_t *l);  // killough 3/15/98
 bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
-                    int flags, bool trav(intercept_t *));
+                    int flags, traverser_t trav);
 
 angle_t P_PointToAngle(fixed_t xo, fixed_t yo, fixed_t x, fixed_t y);
 
