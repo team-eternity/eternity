@@ -390,7 +390,6 @@ void XL_ParseEMapInfo()
 //
 MetaTable *XL_ParseLevelInfo(WadDirectory *dir, int lumpnum)
 {
-//   MetaTable *ret = NULL;
    XLEMapInfoParser parser;
 
    parser.setGlobalMode(false); // put into [level info] parsing mode

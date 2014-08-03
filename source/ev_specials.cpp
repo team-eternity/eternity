@@ -29,7 +29,6 @@
 #include "z_zone.h"
 
 #include "acs_intr.h"
-#include "autodoom/b_think.h" // IOANCH
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_dehtbl.h"
@@ -1280,15 +1279,7 @@ static bool EV_ActivateSpecial(ev_action_t *action, ev_instance_t *instance)
    // execute pre-amble routine
    if(!action->type->pre(action, instance))
       return false;
-   
-   // IOANCH 20130817: set bot's goal
-   if(botMap && botDict.count(instance->actor->player))
-   {
-//      botMap->unsetLinePositions(*instance->line);
-      botDict.at(instance->actor->player)->addXYEvent(BOT_WALKTRIG,
-                                                B_CoordXY(*instance->line->v1));
-   }
-   
+
    // execute the action
    bool result = action->action(action, instance);
 
@@ -1438,7 +1429,6 @@ CONSOLE_COMMAND(ev_mapspecials, cf_level)
       auto action = EV_ActionForSpecial(lines[i].special);
       if(action)
       {
-//         auto type = action->type;
          C_Printf("%5d: %3d %3d %s%s\n", i, lines[i].special, lines[i].tag,
             action->name, action->minversion > 0 ? "*" : "");
       }
