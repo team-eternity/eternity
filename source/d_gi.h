@@ -430,6 +430,9 @@ struct gamemodeinfo_t
    interfns_t *interfuncs;        // intermission function pointers
    int teleEndGameFinaleType;     // Teleport_EndGame causes this finale by default
    finaledata_t *finaleData;      // Default finale data for MapInfo
+   int castTitleY;                // Y coord of cast call title
+   int castNameY;                 // Y coord of cast call names
+
 
    // Sound
    musicinfo_t *s_music;          // pointer to musicinfo_t (sounds.h)

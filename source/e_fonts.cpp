@@ -362,7 +362,7 @@ static void E_DisposePatches(vfont_t *font)
 
    // get rid of the patch array
    efree(font->fontgfx);
-   font->fontgfx = NULL;
+   font->fontgfx = nullptr;
 }
 
 //=============================================================================
@@ -446,7 +446,7 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt,
       E_EDFLoggedWarning(2, "Invalid lump dimensions for linear font %s\n", name);
       if(!E_IsLinearLumpUsed(font, font->data))
          efree(font->data);
-      font->data = NULL; // This font won't be able to draw, too bad.
+      font->data = nullptr; // This font won't be able to draw, too bad.
    }
 
    font->start = 0;
@@ -467,7 +467,7 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt,
    font->upper    = false; // not all-caps
 
    // patch array is unused
-   font->fontgfx = NULL;
+   font->fontgfx = nullptr;
 }
 
 //
@@ -536,13 +536,13 @@ static void E_FreeFilterData(vfontfilter_t *f)
    if(f->chars)
    {
       efree(f->chars);
-      f->chars = NULL;
+      f->chars = nullptr;
    }
 
    if(f->mask)
    {
       efree((void *)f->mask);
-      f->mask = NULL;
+      f->mask = nullptr;
    }
 }
 
@@ -560,7 +560,7 @@ static void E_FreeFontFilters(vfont_t *font)
       E_FreeFilterData(&(font->filters[i]));
 
    efree(font->filters);
-   font->filters = NULL;
+   font->filters = nullptr;
 }
 
 //
@@ -576,7 +576,7 @@ static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
 {
    unsigned int numchars;
    const char *tempstr;
-   char *pos = NULL;
+   char *pos = nullptr;
    int tempnum = 0;
 
    // the filter works in one of two ways:
@@ -591,7 +591,7 @@ static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
 
       for(unsigned int i = 0; i < numchars; i++)
       {
-         pos = NULL;
+         pos = nullptr;
          tempstr = cfg_getnstr(sec, ITEM_FILTER_CHARS, i);
 
          if(strlen(tempstr) > 1)
@@ -606,7 +606,7 @@ static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
    else
    {
       // get fields
-      pos = NULL;
+      pos = nullptr;
       tempstr = cfg_getstr(sec, ITEM_FILTER_START);
       
       if(strlen(tempstr) > 1)
@@ -617,7 +617,7 @@ static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
       else
          f->start = *tempstr; // interpret as character
 
-      pos = NULL;
+      pos = nullptr;
       tempstr = cfg_getstr(sec, ITEM_FILTER_END);
       
       if(strlen(tempstr) > 1)
@@ -654,7 +654,7 @@ void E_LoadPatchFont(vfont_t *font)
    if(font->data && !E_IsLinearLumpUsed(font, font->data))
    {
       efree(font->data);
-      font->data = NULL;
+      font->data = nullptr;
       font->linear = false;
    }
 
@@ -966,6 +966,7 @@ static void E_ProcessFontVars(cfg_t *cfg)
    E_ReplaceString(mn_bigfontname,    cfg_getstrdup(cfg, ITEM_FONT_BMENU));
    E_ReplaceString(mn_normalfontname, cfg_getstrdup(cfg, ITEM_FONT_NMENU));
    E_ReplaceString(f_fontname,        cfg_getstrdup(cfg, ITEM_FONT_FINAL));
+   E_ReplaceString(f_titlefontname,   cfg_getstrdup(cfg, ITEM_FONT_FTITLE));
    E_ReplaceString(in_fontname,       cfg_getstrdup(cfg, ITEM_FONT_INTR));
    E_ReplaceString(in_bigfontname,    cfg_getstrdup(cfg, ITEM_FONT_INTRB));
    E_ReplaceString(in_bignumfontname, cfg_getstrdup(cfg, ITEM_FONT_INTRBN));
@@ -975,8 +976,8 @@ static void E_ProcessFontVars(cfg_t *cfg)
 //
 // E_hashFonts
 //
-// Create and all fonts to the name and numeric hashes before processing begins, 
-// so that fonts can reference one another by name.
+// Create and add all fonts to the name and numeric hashes before processing
+// begins, so that fonts can reference one another by name.
 //
 static void E_hashFonts(cfg_t *cfg, unsigned int numfonts)
 {
@@ -1048,7 +1049,7 @@ void E_ProcessFonts(cfg_t *cfg)
 // E_FontForName
 //
 // Finds a font for the given name. If the name does not exist,
-// NULL is returned.
+// nullptr is returned.
 //
 vfont_t *E_FontForName(const char *name)
 {
@@ -1059,7 +1060,7 @@ vfont_t *E_FontForName(const char *name)
 // E_FontForNum
 //
 // Finds a font for the given number. If the number is not found,
-// NULL is returned.
+// nullptr is returned.
 //
 vfont_t *E_FontForNum(int num)
 {

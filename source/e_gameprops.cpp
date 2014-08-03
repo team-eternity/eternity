@@ -86,6 +86,8 @@
 #define ITEM_GPROP_FINTYPE     "game.endgamefinaletype"
 #define ITEM_GPROP_FINALEX     "finale.text.x"
 #define ITEM_GPROP_FINALEY     "finale.text.y"
+#define ITEM_GPROP_CASTTITLEY  "castcall.title.y"
+#define ITEM_GPROP_CASTNAMEY   "castcall.name.y"
 #define ITEM_GPROP_INTERPIC    "intermission.pic"
 #define ITEM_GPROP_DEFMUSNAME  "sound.defaultmusname"
 #define ITEM_GPROP_DEFSNDNAME  "sound.defaultsndname"
@@ -225,6 +227,8 @@ cfg_opt_t edf_game_opts[] =
    CFG_STR(ITEM_GPROP_FINTYPE,     "",   CFGF_NONE),
    CFG_INT(ITEM_GPROP_FINALEX,     0,    CFGF_NONE),
    CFG_INT(ITEM_GPROP_FINALEY,     0,    CFGF_NONE),
+   CFG_INT(ITEM_GPROP_CASTTITLEY,  0,    CFGF_NONE),
+   CFG_INT(ITEM_GPROP_CASTNAMEY,   0,    CFGF_NONE),
    CFG_STR(ITEM_GPROP_INTERPIC,    "",   CFGF_NONE),
    CFG_STR(ITEM_GPROP_DEFMUSNAME,  "",   CFGF_NONE),
    CFG_STR(ITEM_GPROP_DEFSNDNAME,  "",   CFGF_NONE),
@@ -493,6 +497,11 @@ static void E_processGamePropsBlock(cfg_t *props)
    if(IS_SET(ITEM_GPROP_FINALEY))
       GameModeInfo->fTextPos->y = cfg_getint(props, ITEM_GPROP_FINALEY);
 
+   if(IS_SET(ITEM_GPROP_CASTTITLEY))
+      GameModeInfo->castTitleY = cfg_getint(props, ITEM_GPROP_CASTTITLEY);
+
+   if(IS_SET(ITEM_GPROP_CASTNAMEY))
+      GameModeInfo->castNameY = cfg_getint(props, ITEM_GPROP_CASTNAMEY);
 
    // Intermission Properties
 

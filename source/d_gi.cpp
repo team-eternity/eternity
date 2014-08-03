@@ -144,6 +144,10 @@
 // Graphic is assumed to be in the DOOM palette.
 #define DEFTL_HERETIC  "TR_DINH"
 
+// Default cast call text string coordinates
+#define CAST_DEFTITLEY 20
+#define CAST_DEFNAMEY  180
+
 //
 // Common Flags
 //
@@ -1129,6 +1133,8 @@ static gamemodeinfo_t giDoomSW =
    &DoomIntermission, // interfuncs
    DEF_DOOM_FINALE,   // teleEndGameFinaleType
    &DoomFinale,       // finaleData
+   CAST_DEFTITLEY,    // castTitleY
+   CAST_DEFNAMEY,     // castNameY
 
    S_music,           // s_music
    S_MusicForMapDoom, // MusicForMap
@@ -1240,6 +1246,8 @@ static gamemodeinfo_t giDoomReg =
    &DoomIntermission, // interfuncs
    DEF_DOOM_FINALE,   // teleEndGameFinaleType
    &DoomFinale,       // finaleData
+   CAST_DEFTITLEY,    // castTitleY
+   CAST_DEFNAMEY,     // castNameY
 
    S_music,           // s_music
    S_MusicForMapDoom, // MusicForMap
@@ -1351,6 +1359,8 @@ static gamemodeinfo_t giDoomRetail =
    &DoomIntermission, // interfuncs
    DEF_DOOM_FINALE,   // teleEndGameFinaleType
    &DoomFinale,       // finaleData
+   CAST_DEFTITLEY,    // castTitleY
+   CAST_DEFNAMEY,     // castNameY
 
    S_music,           // s_music
    S_MusicForMapDoom, // MusicForMap
@@ -1462,6 +1472,8 @@ static gamemodeinfo_t giDoomCommercial =
    &DoomIntermission, // interfuncs
    FINALE_TEXT,       // teleEndGameFinaleType
    &Doom2Finale,      // finaleData
+   CAST_DEFTITLEY,    // castTitleY
+   CAST_DEFNAMEY,     // castNameY
 
    S_music,            // s_music
    S_MusicForMapDoom2, // MusicForMap
@@ -1573,6 +1585,8 @@ static gamemodeinfo_t giHereticSW =
    &HticIntermission, // interfuncs
    DEF_HTIC_FINALE,   // teleEndGameFinaleType
    &HereticFinale,    // finaleData
+   CAST_DEFTITLEY,    // castTitleY
+   CAST_DEFNAMEY,     // castNameY
 
    H_music,             // s_music
    S_MusicForMapHtic,   // MusicForMap
@@ -1688,6 +1702,8 @@ static gamemodeinfo_t giHereticReg =
    &HticIntermission, // interfuncs
    DEF_HTIC_FINALE,   // teleEndGameFinaleType
    &HereticFinale,    // finaleData
+   CAST_DEFTITLEY,    // castTitleY
+   CAST_DEFNAMEY,     // castNameY
 
    H_music,             // s_music
    S_MusicForMapHtic,   // MusicForMap

@@ -41,6 +41,7 @@ struct vfont_t;
 #define ITEM_FONT_BMENU   "mn_font_big"
 #define ITEM_FONT_NMENU   "mn_font_normal"
 #define ITEM_FONT_FINAL   "f_font"
+#define ITEM_FONT_FTITLE  "f_titlefont"
 #define ITEM_FONT_INTR    "in_font"
 #define ITEM_FONT_INTRB   "in_font_big"
 #define ITEM_FONT_INTRBN  "in_font_bignum"

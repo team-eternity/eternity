@@ -82,7 +82,9 @@ static void F_InitDemonScroller();
 static byte *DemonBuffer; // haleyjd 08/23/02
 
 vfont_t *f_font;
+vfont_t *f_titlefont;
 char *f_fontname;
+char *f_titlefontname;
 
 static const char *finaletext;
 static int         finaletype;
@@ -122,6 +124,9 @@ void F_Init()
 {
    if(!(f_font = E_FontForName(f_fontname)))
       I_Error("F_Init: bad EDF font name %s\n", f_fontname);
+
+   // title font is optional
+   f_titlefont = E_FontForName(f_titlefontname);
 }
 
 //
@@ -555,6 +560,26 @@ bool F_CastResponder(event_t* ev)
 }
 
 //
+// F_CastTitle
+//
+// haleyjd 07/28/14: If the CC_TITLE BEX string is non-empty and a title
+// font is defined by EDF, we'll draw a title at the top of the cast call.
+// Useful for PSX and DOOM 64 style behavior.
+//
+static void F_CastTitle()
+{
+   const char *str = DEH_String("CC_TITLE");
+
+   if(!f_titlefont || estrempty(str))
+      return;
+
+   V_FontWriteText(f_titlefont, str,
+                   160 - V_FontStringWidth(f_titlefont, str) / 2,
+                   GameModeInfo->castTitleY,
+                   &subscreen43);
+}
+
+//
 // F_CastPrint
 //
 // haleyjd 03/17/05: Writes the cast member name centered at the
@@ -565,7 +590,8 @@ bool F_CastResponder(event_t* ev)
 void F_CastPrint(const char *text)
 {
    V_FontWriteText(f_font, text, 
-                   160 - V_FontStringWidth(f_font, text) / 2, 180,
+                   160 - V_FontStringWidth(f_font, text) / 2, 
+                   GameModeInfo->castNameY,
                    &subscreen43);
 }
 
@@ -589,6 +615,8 @@ void F_CastDrawer()
    // Ty 03/30/98 bg texture extern
    V_DrawFSBackground(&subscreen43, wGlobalDir.checkNumForName(DEH_String("BGCASTCALL")));
    
+   F_CastTitle();
+
    if(cast->name)
       F_CastPrint(cast->name);
    

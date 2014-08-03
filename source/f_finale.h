@@ -43,6 +43,7 @@ extern int max_castorder;
 extern castinfo_t *castorder;
 
 extern char *f_fontname;
+extern char *f_titlefontname;
 
 //
 // FINALE
@@ -60,7 +61,7 @@ enum
    FINALE_HTIC_WATER,   // text, then underwater pic
    FINALE_HTIC_DEMON,   // text, then demon scroller
    FINALE_PSX_UDOOM,    // text, then return to title
-   FINALE_PSX_DOOM2,    // text, then PSX cast call
+   FINALE_PSX_DOOM2,    // text, scrolling, then cast call
    FINALE_NUMFINALES,
 
    FINALE_UNSPECIFIED   // not specified explicitly
