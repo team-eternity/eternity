@@ -54,9 +54,6 @@ typedef struct los_s
 // P_DivlineSide
 // Returns side 0 (front), 1 (back), or 2 (on).
 //
-// killough 4/19/98: made static, cleaned up
-// killough 12/98: made external
-//
 // haleyjd 11/11/02: applied cph's bug fix:
 // !node->dy ? x == node->y ? 2 ...
 //             ^          ^
@@ -65,16 +62,37 @@ typedef struct los_s
 // P_CrossSubsector optimization demo sync problem was caused by
 // masking this bug.
 //
-int P_DivlineSide(fixed_t x, fixed_t y, const divline_t *node)
+template<typename T>
+static int P_DivlineSide(fixed_t x, fixed_t y, const T &node)
 {
-   fixed_t left, right;
-   return
-     !node->dx ? x == node->x ? 2 : x <= node->x ? node->dy > 0 : node->dy < 0 :
-     !node->dy ? (demo_version < 331 ? x : y) == node->y ?
-                  2 : y <= node->y ? node->dx < 0 : node->dx > 0 :
-     (right = ((y - node->y) >> FRACBITS) * (node->dx >> FRACBITS)) <
-     (left  = ((x - node->x) >> FRACBITS) * (node->dy >> FRACBITS)) ? 0 :
-     right == left ? 2 : 1;
+   if(!node.dx)
+   {
+      if(x == node.x)
+         return 2;
+      if(x <= node.x)
+         return node.dy > 0;
+      return node.dy < 0;
+   }
+
+   if(!node.dy)
+   {
+      if((demo_version < 331 ? x : y) == node.y) // here's the bug...
+         return 2;
+      if(y <= node.y)
+         return node.dx < 0;
+      return node.dx > 0;
+   }
+
+   fixed_t left  = ((x - node.x) >> FRACBITS) * (node.dy >> FRACBITS);
+   fixed_t right = ((y - node.y) >> FRACBITS) * (node.dx >> FRACBITS);
+
+   if(right < left)
+      return 0; // front side
+
+   if(left == right)
+      return 2; // on
+
+   return 1;    // back side
 }
 
 //
@@ -133,16 +151,16 @@ static bool P_CrossSubsecPolyObj(polyobj_t *po, los_t *los)
       v2 = line->v2;
       
       // line isn't crossed?
-      if(P_DivlineSide(v1->x, v1->y, &los->strace) ==
-         P_DivlineSide(v2->x, v2->y, &los->strace))
+      if(P_DivlineSide(v1->x, v1->y, los->strace) ==
+         P_DivlineSide(v2->x, v2->y, los->strace))
          continue;
 
       divl.dx = v2->x - (divl.x = v1->x);
       divl.dy = v2->y - (divl.y = v1->y);
       
       // line isn't crossed?
-      if(P_DivlineSide(los->strace.x, los->strace.y, &divl) ==
-         P_DivlineSide(los->t2x, los->t2y, &divl))
+      if(P_DivlineSide(los->strace.x, los->strace.y, divl) ==
+         P_DivlineSide(los->t2x, los->t2y, divl))
          continue;
 
       // stop because it is not two sided
@@ -222,16 +240,16 @@ static bool P_CrossSubsector(int num, los_t *los)
       v2 = line->v2;
       
       // line isn't crossed?
-      if(P_DivlineSide(v1->x, v1->y, &los->strace) ==
-         P_DivlineSide(v2->x, v2->y, &los->strace))
+      if(P_DivlineSide(v1->x, v1->y, los->strace) ==
+         P_DivlineSide(v2->x, v2->y, los->strace))
          continue;
 
       divl.dx = v2->x - (divl.x = v1->x);
       divl.dy = v2->y - (divl.y = v1->y);
       
       // line isn't crossed?
-      if(P_DivlineSide(los->strace.x, los->strace.y, &divl) ==
-         P_DivlineSide(los->t2x, los->t2y, &divl))
+      if(P_DivlineSide(los->strace.x, los->strace.y, divl) ==
+         P_DivlineSide(los->t2x, los->t2y, divl))
          continue;
 
       // stop because it is not two sided anyway
@@ -296,16 +314,16 @@ static bool P_CrossBSPNode(int bspnum, los_t *los)
 {
    while(!(bspnum & NF_SUBSECTOR))
    {
-      const node_t *bsp = nodes + bspnum;
-      int side = P_DivlineSide(los->strace.x,los->strace.y,(divline_t *)bsp)&1;
-      if(side == P_DivlineSide(los->t2x, los->t2y, (divline_t *) bsp))
-         bspnum = bsp->children[side]; // doesn't touch the other side
+      const node_t &bsp = nodes[bspnum];
+      int side = P_DivlineSide(los->strace.x, los->strace.y, bsp)&1;
+      if(side == P_DivlineSide(los->t2x,      los->t2y,      bsp))
+         bspnum = bsp.children[side]; // doesn't touch the other side
       else         // the partition plane is crossed here
       {
-         if (!P_CrossBSPNode(bsp->children[side], los))
+         if(!P_CrossBSPNode(bsp.children[side], los))
             return 0;  // cross the starting side
          else
-            bspnum = bsp->children[side^1];  // cross the ending side
+            bspnum = bsp.children[side^1];  // cross the ending side
       }
    }
    return 
@@ -319,13 +337,13 @@ static bool P_CrossBSPNode(int bspnum, los_t *los)
 // Uses REJECT.
 //
 // killough 4/20/98: cleaned up, made to use new LOS struct
-
+//
 bool P_CheckSight(Mobj *t1, Mobj *t2)
 {
    if(full_demo_version >= make_full_version(340, 24))
    {
       camsightparams_t camparams;
-      camparams.prev = NULL;
+      camparams.prev = nullptr;
       camparams.setLookerMobj(t1);
       camparams.setTargetMobj(t2);
       return CAM_CheckSight(camparams);

@@ -114,8 +114,8 @@ static bool PTR_chaseTraverse(intercept_t *in)
       // hit line
       // position a bit closer
       
-      x = trace.x + FixedMul(trace.dx, frac);
-      y = trace.y + FixedMul(trace.dy, frac);
+      x = trace.dl.x + FixedMul(trace.dl.dx, frac);
+      y = trace.dl.y + FixedMul(trace.dl.dy, frac);
 
       if(li->flags & ML_TWOSIDED)
       {  // crosses a two sided line
@@ -134,7 +134,7 @@ static bool PTR_chaseTraverse(intercept_t *in)
          z = zi(dist, trace.attackrange, targetz, playermobj->z+28*FRACUNIT);
          
          // found which side, check for intersections
-         if( (li->flags & ML_BLOCKING) || 
+         if((li->flags & ML_BLOCKING) || 
             (othersector->floorheight>z) || (othersector->ceilingheight<z)
             || (othersector->ceilingheight-othersector->floorheight
                 < 40*FRACUNIT));          // hit
