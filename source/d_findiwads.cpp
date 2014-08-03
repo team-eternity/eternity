@@ -419,9 +419,6 @@ static void D_addSubDirectories(Collection<qstring> &paths, DIR *dir,
 static void D_addDefaultDirectories(Collection<qstring> &paths)
 {
    DIR *dir;
-   
-   paths.addNew() = ".";            // current directory
-   paths.addNew() = D_DoomExeDir(); // executable directory
 
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX
    // Default Linux locations
@@ -444,6 +441,9 @@ static void D_addDefaultDirectories(Collection<qstring> &paths)
       D_addSubDirectories(paths, dir, userpath);
       closedir(dir);
    }
+
+   paths.addNew() = D_DoomExeDir(); // executable directory
+   paths.addNew() = ".";            // current directory
 }
 
 //
@@ -453,9 +453,6 @@ static void D_addDefaultDirectories(Collection<qstring> &paths)
 //
 static void D_collectIWADPaths(Collection<qstring> &paths)
 {
-   // Add default locations
-   D_addDefaultDirectories(paths);
-
    // Add DOOMWADDIR and DOOMWADPATH
    D_addDoomWadDir(paths);
    D_addDoomWadPath(paths);
@@ -475,6 +472,9 @@ static void D_collectIWADPaths(Collection<qstring> &paths)
    // CD version installers
    D_addUninstallPaths(paths);
 #endif
+
+   // Add default locations
+   D_addDefaultDirectories(paths);
 }
 
 //
@@ -717,7 +717,6 @@ void D_FindIWADs()
 {
    qstring proto;
    Collection<qstring> paths;
-   typedef Collection<qstring>::iterator PathIterator;
 
    paths.setPrototype(&proto);
 
@@ -725,7 +724,7 @@ void D_FindIWADs()
    D_collectIWADPaths(paths);
 
    // Check all paths that were found for IWADs
-   for(PathIterator i = paths.begin(); i != paths.end(); i++)
+   for(auto i = paths.begin(); i != paths.end(); i++)
       D_checkPathForIWADs(*i);
 
    // Check for special WADs
