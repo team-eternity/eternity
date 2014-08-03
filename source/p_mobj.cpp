@@ -1586,12 +1586,12 @@ void Mobj::updateThinker()
 {
    int tclass = th_misc;
 
-   if(this->removed)
+   if(removed)
       tclass = th_delete;
-   else if(this->health > 0 && 
-           (this->flags & MF_COUNTKILL || this->flags3 & MF3_KILLABLE))
+   else if(health > 0 && 
+           (flags & MF_COUNTKILL || flags3 & MF3_KILLABLE))
    {
-      if(this->flags & MF_FRIEND)
+      if(flags & MF_FRIEND)
          tclass = th_friends;
       else
          tclass = th_enemies;
@@ -1933,7 +1933,7 @@ void P_RespawnSpecials()
    // spawn it
    z = mobjinfo[i]->flags & MF_SPAWNCEILING ? ONCEILINGZ : ONFLOORZ;
 
-   mo = P_SpawnMobj(x,y,z, i);
+   mo = P_SpawnMobj(x, y, z, i);
    mo->spawnpoint = *mthing;
    // sf
    mo->angle = R_WadToAngle(mthing->angle);

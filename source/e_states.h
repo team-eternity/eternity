@@ -31,6 +31,7 @@
 #define E_STATES_H__
 
 // IOANCH 20130808: forward declare
+struct mobjinfo_t;
 struct state_t;
 
 int E_StateNumForDEHNum(int dehnum);        // dehnum lookup
@@ -39,6 +40,8 @@ int E_SafeState(int dehnum);                //    fallback version
 int E_SafeStateName(const char *name);      //    fallback by name
 int E_StateNumForName(const char *name);    // mnemonic lookup
 int E_GetStateNumForName(const char *name); //    fatal error version
+
+int E_SafeStateNameOrLabel(mobjinfo_t *mi, const char *name);
 
 extern int NullStateNum;
 

@@ -74,6 +74,13 @@ struct giftextpos_t
    int x, y;   // initial coordinates (for finale)
 };
 
+// scaling data
+struct giscale_t
+{
+   float x;
+   float y;
+};
+
 //
 // enum for menu sounds
 //
@@ -295,24 +302,24 @@ struct missioninfo_t
    // override data - information here overrides that contained in the
    // gamemodeinfo_t that uses this missioninfo object.
 
-   unsigned int  addGMIFlags;        // flags to add to the base GameModeInfo->flags
-   unsigned int  remGMIFlags;        // flags to remove from base GameModeInfo->flags
-   const char   *versionNameOR;      // if not NULL, overrides name of the gamemode
-   const char   *startupBannerOR;    // if not NULL, overrides the startup banner 
-   int           numEpisodesOR;      // if not    0, overrides number of episodes
-   char        **iwadPathOR;         // if not NULL, overrides iwadPath
-   finaledata_t *finaleDataOR;       // if not NULL, overrides finaleData
-   const char   *menuBackgroundOR;   // if not NULL, overrides menuBackground
-   const char   *creditBackgroundOR; // if not NULL, overrides creditBackground
-   const char   *consoleBackOR;      // if not NULL, overrides consoleBack
-   const demostate_t *demoStatesOR;  // if not NULL, overrides demostates
-   const char   *interPicOR;         // if not NULL, overrides interPic
-   exitrule_t   *exitRulesOR;        // if not NULL, overrides exitRules
-   const char  **levelNamesOR;       // if not NULL, overrides levelNames
-   int           randMusMaxOR;       // if not    0, overrides randMusMax
-   const char   *borderFlatOR;       // if not NULL, overrides borderFlat
-   skydata_t    *skyDataOR;          // if not NULL, overrides skyData
-   skyflat_t    *skyFlatsOR;         // if not NULL, overrides skyFlats
+   unsigned int addGMIFlags;        // flags to add to the base GameModeInfo->flags
+   unsigned int remGMIFlags;        // flags to remove from base GameModeInfo->flags
+   const char *versionNameOR;       // if not NULL, overrides name of the gamemode
+   const char *startupBannerOR;     // if not NULL, overrides the startup banner 
+   int numEpisodesOR;               // if not    0, overrides number of episodes
+   char **iwadPathOR;               // if not NULL, overrides iwadPath
+   finaledata_t *finaleDataOR;      // if not NULL, overrides finaleData
+   const char *menuBackgroundOR;    // if not NULL, overrides menuBackground
+   const char *creditBackgroundOR;  // if not NULL, overrides creditBackground
+   const char *consoleBackOR;       // if not NULL, overrides consoleBack
+   const demostate_t *demoStatesOR; // if not NULL, overrides demostates
+   const char *interPicOR;          // if not NULL, overrides interPic
+   exitrule_t *exitRulesOR;         // if not NULL, overrides exitRules
+   const char **levelNamesOR;       // if not NULL, overrides levelNames
+   int randMusMaxOR;                // if not    0, overrides randMusMax
+   skydata_t *skyDataOR;            // if not NULL, overrides skyData
+   skyflat_t *skyFlatsOR;           // if not NULL, overrides skyFlats
+   giscale_t *pspriteGlobalScaleOR; // if not NULL, overrides pspriteGlobalScale
 };
 
 // function pointer types
@@ -423,6 +430,9 @@ struct gamemodeinfo_t
    interfns_t *interfuncs;        // intermission function pointers
    int teleEndGameFinaleType;     // Teleport_EndGame causes this finale by default
    finaledata_t *finaleData;      // Default finale data for MapInfo
+   int castTitleY;                // Y coord of cast call title
+   int castNameY;                 // Y coord of cast call names
+
 
    // Sound
    musicinfo_t *s_music;          // pointer to musicinfo_t (sounds.h)
@@ -443,6 +453,7 @@ struct gamemodeinfo_t
    skydata_t *skyData;            // default sky data for MapInfo
    gitexhackfn_t TextureHacks;    // texture hacks function
    skyflat_t *skyFlats;           // list of supported sky flats
+   giscale_t *pspriteGlobalScale; // psprite global scaling info
 
    // Configuration
    default_or_t *defaultORs;      // default overrides for configuration file

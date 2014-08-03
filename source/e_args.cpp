@@ -433,12 +433,11 @@ state_t *E_GetJumpInfo(mobjinfo_t *mi, const char *arg)
 // make reference to global states. Because evaluation of this type of argument
 // is relative to the mobjinfo, this evaluation is never cached.
 //
-state_t *E_ArgAsStateLabel(Mobj *mo, int index)
+state_t *E_ArgAsStateLabel(Mobj *mo, arglist_t *al, int index)
 {
    const char *arg;
    char       *end   = NULL;
    state_t    *state = mo->state;
-   arglist_t  *al    = state->args;
    long        num;
 
    if(!al || index >= al->numargs)
@@ -505,7 +504,7 @@ int E_ArgAsStateNum(arglist_t *al, int index, Mobj *mo)
             // if it is valid, it is NOT cached, because DECORATE label
             // resolution is "virtual" (ie relative to the calling thingtype).
             state_t *state;
-            if(mo && (state = E_ArgAsStateLabel(mo, index)))
+            if(mo && (state = E_ArgAsStateLabel(mo, al, index)))
                return state->index;
             else
             {
@@ -574,7 +573,7 @@ int E_ArgAsStateNumNI(arglist_t *al, int index, Mobj *mo)
             // if it is valid, it is NOT cached, because DECORATE label
             // resolution is "virtual" (ie relative to the calling thingtype).
             state_t *state;
-            if(mo && (state = E_ArgAsStateLabel(mo, index)))
+            if(mo && (state = E_ArgAsStateLabel(mo, al, index)))
                return state->index;
             else
             {
@@ -641,7 +640,7 @@ int E_ArgAsStateNumG0(arglist_t *al, int index, Mobj *mo)
             // if it is valid, it is NOT cached, because DECORATE label
             // resolution is "virtual" (ie relative to the calling thingtype).
             state_t *state;
-            if(mo && (state = E_ArgAsStateLabel(mo, index)))
+            if(mo && (state = E_ArgAsStateLabel(mo, al, index)))
                return state->index;
             else
             {

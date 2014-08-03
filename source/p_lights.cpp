@@ -223,25 +223,25 @@ IMPLEMENT_THINKER_TYPE(GlowThinker)
 //
 void GlowThinker::Think()
 {
-   switch(this->direction)
+   switch(direction)
    {
    case -1:
       // light dims
-      this->sector->lightlevel -= this->speed;
-      if(this->sector->lightlevel <= this->minlight)
+      sector->lightlevel -= GLOWSPEED;
+      if(sector->lightlevel <= minlight)
       {
-         this->sector->lightlevel += this->speed;
-         this->direction = 1;
+         sector->lightlevel += GLOWSPEED;
+         direction = 1;
       }
       break;
       
    case 1:
       // light brightens
-      this->sector->lightlevel += this->speed;
-      if(this->sector->lightlevel >= this->maxlight)
+      sector->lightlevel += GLOWSPEED;
+      if(sector->lightlevel >= maxlight)
       {
-         this->sector->lightlevel -= this->speed;
-         this->direction = -1;
+         sector->lightlevel -= GLOWSPEED;
+         direction = -1;
       }
       break;
    }
@@ -256,7 +256,57 @@ void GlowThinker::serialize(SaveArchive &arc)
 {
    Super::serialize(arc);
 
-   arc << minlight << maxlight << direction << speed;
+   arc << minlight << maxlight << direction;
+}
+
+
+IMPLEMENT_THINKER_TYPE(SlowGlowThinker)
+
+//
+// SlowGlowThinker::Think
+//
+// haleyjd: Thinker for PSX glow effects, which need to move at non-integral speeds.
+//
+void SlowGlowThinker::Think()
+{
+   switch(direction)
+   {
+   case -1:
+      // light dims
+      accum -= GLOWSPEEDSLOW;
+      sector->lightlevel = accum / FRACUNIT;
+      if(sector->lightlevel <= minlight)
+      {
+         accum += GLOWSPEEDSLOW;
+         sector->lightlevel = accum / FRACUNIT;
+         direction = 1;
+      }
+      break;
+      
+   case 1:
+      // light brightens
+      accum += GLOWSPEEDSLOW;
+      sector->lightlevel = accum / FRACUNIT;
+      if(sector->lightlevel >= maxlight)
+      {
+         accum -= GLOWSPEEDSLOW;
+         sector->lightlevel = accum / FRACUNIT;
+         direction = -1;
+      }
+      break;
+   }
+}
+
+//
+// SlowGlowThinker::serialize
+//
+// Saves/loads a SlowGlowThinker.
+//
+void SlowGlowThinker::serialize(SaveArchive &arc)
+{
+   Super::serialize(arc);
+
+   arc << minlight << maxlight << direction << accum;
 }
 
 
@@ -549,7 +599,7 @@ void P_SpawnStrobeFlash(sector_t *sector, int fastOrSlow, int inSync)
 //
 // Spawn a PSX strobe effect.
 //
-void P_SpawnPSXStrobeFlash(sector_t *sector, int speed)
+void P_SpawnPSXStrobeFlash(sector_t *sector, int speed, bool inSync)
 {
    auto flash = new StrobeThinker;
    flash->addThinker();
@@ -563,7 +613,10 @@ void P_SpawnPSXStrobeFlash(sector_t *sector, int speed)
    if(flash->minlight == flash->maxlight)
       flash->minlight = 0;
 
-   flash->count = 1;
+   if(!inSync)
+      flash->count = (P_Random(pr_lights) & 7) + 1;
+   else
+      flash->count = 1;
 }
 
 //
@@ -583,7 +636,6 @@ void P_SpawnGlowingLight(sector_t *sector)
    g->minlight  = P_FindMinSurroundingLight(sector, sector->lightlevel);
    g->maxlight  = sector->lightlevel;
    g->direction = -1;
-   g->speed     = GLOWSPEED;
    
    sector->special &= ~LIGHT_MASK; //jff 3/14/98 clear non-generalized sector type
 }
@@ -591,15 +643,15 @@ void P_SpawnGlowingLight(sector_t *sector)
 //
 // P_SpawnPSXGlowingLight
 //
-// Spawn a GlowThinker setup for PSX sector types 8, 200, and 201.
+// Spawn a SlowGlowThinker setup for PSX sector types 8, 200, and 201.
 //
 void P_SpawnPSXGlowingLight(sector_t *sector, psxglow_e glowtype)
 {
-   auto g = new GlowThinker;
+   auto g = new SlowGlowThinker;
    g->addThinker();
 
    g->sector = sector;
-   g->speed  = GLOWSPEEDSLOW;
+   g->accum  = sector->lightlevel * FRACUNIT;
 
    switch(glowtype)
    {

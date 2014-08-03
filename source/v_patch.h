@@ -63,8 +63,7 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer);
 enum
 {
    DRAWTYPE_UNSCALED,
-   DRAWTYPE_2XSCALED,
-   DRAWTYPE_GENSCALED,
+   DRAWTYPE_GENSCALED
 };
 
 void V_SetupBufferFuncs(VBuffer *buffer, int drawtype);

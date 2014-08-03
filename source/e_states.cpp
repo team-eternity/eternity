@@ -229,6 +229,38 @@ int E_SafeStateName(const char *name)
    return statenum;
 }
 
+//
+// E_SafeStateNameOrLabel
+//
+// haleyjd 07/19/14: Allows lookup of what may either be an EDF global state
+// name, DECORATE state label relative to a particular mobjinfo, or a state
+// DeHackEd number.
+//
+int E_SafeStateNameOrLabel(mobjinfo_t *mi, const char *name)
+{
+   char *pos = nullptr;
+   long  num = strtol(name, &pos, 0);
+
+   // Not a number? It is a state name.
+   if(estrnonempty(pos))
+   {
+      int      statenum = NullStateNum;
+      state_t *state    = nullptr;
+      
+      // Try global resolution first.
+      if((statenum = E_StateNumForName(name)) < 0)
+      {
+         // Try DECORATE state label resolution.
+         if((state = E_GetJumpInfo(mi, name)))
+            statenum = state->index;
+      }
+
+      return statenum;
+   }
+   else
+      return E_SafeState((int)num); // DeHackEd number
+}
+
 // haleyjd 03/22/06: automatic dehnum allocation
 //
 // Automatic allocation of dehacked numbers allows states to be used with

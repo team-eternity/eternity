@@ -1522,7 +1522,7 @@ CONSOLE_COMMAND(quickload, 0)
       return;
    }
    
-   psnprintf(tempstring, sizeof(tempstring), s_QLPROMPT, 
+   psnprintf(tempstring, sizeof(tempstring), s_QLPROMPT,
              savegamenames[quickSaveSlot]);
    MN_Question(tempstring, "qload");
 }
@@ -1621,7 +1621,7 @@ CONSOLE_COMMAND(quicksave, 0)
       return;
    }
    
-   psnprintf(tempstring, sizeof(tempstring), s_QSPROMPT, 
+   psnprintf(tempstring, sizeof(tempstring), s_QSPROMPT,
              savegamenames[quickSaveSlot]);
    MN_Question(tempstring, "qsave");
 }

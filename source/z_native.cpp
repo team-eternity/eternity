@@ -475,13 +475,13 @@ void (Z_ChangeTag)(void *ptr, int tag, const char *file, int line)
    Z_IDCheck(IDBOOL(block->id != ZONEID),
              "Z_ChangeTag: Changed a tag without ZONEID", block, file, line);
 
-   Z_IDCheck(IDBOOL(tag >= PU_PURGELEVEL && !block->user),
-             "Z_ChangeTag: an owner is required for purgable blocks",
-             block, file, line);
-
    // haleyjd: permanent blocks are not re-tagged even if the code tries.
    if(block->tag == PU_PERMANENT)
       return;
+
+   Z_IDCheck(IDBOOL(tag >= PU_PURGELEVEL && !block->user),
+             "Z_ChangeTag: an owner is required for purgable blocks",
+             block, file, line);
 
    if((*block->prev = block->next))
       block->next->prev = block->prev;

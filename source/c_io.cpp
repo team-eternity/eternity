@@ -107,14 +107,15 @@ char *c_fontname;
 static void C_initBackdrop()
 {
    const char *lumpname;
-   int lumpnum, cmapnum = 16;
+   int lumpnum;
    bool darken = true;
+   fixed_t alpha = FRACUNIT/2;
 
    lumpname = GameModeInfo->consoleBack;
 
    // 07/02/08: don't make INTERPIC quite as dark
    if(!strcasecmp(lumpname, "INTERPIC"))
-      cmapnum = 10;
+      alpha = FRACUNIT/4;
    
    // allow for custom console background graphic
    if(W_CheckNumForName("CONSOLE") >= 0)
@@ -137,45 +138,11 @@ static void C_initBackdrop()
       return;
    
    // haleyjd 03/30/08: support linear fullscreen graphics
-   if(W_LumpLength(lumpnum) == 64000)
+   V_DrawFSBackground(&cback, lumpnum);
+   if(darken)
    {
-      byte *block = static_cast<byte *>(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));
-
-      V_DrawBlockFS(&cback, block);
-
-      if(darken)
-      {
-         V_ColorBlockTL(&cback, GameModeInfo->blackIndex,
-                        0, 0, video.width, video.height, FRACUNIT/2);
-      }
-      
-      Z_ChangeTag(block, PU_CACHE);
-   }
-   else
-   {
-      patch_t *patch = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_STATIC);
-      if(darken)
-      {
-         byte *colormap;
-         int clumpnum, csize;
-
-         // 07/02/08: for safety we need to use a temporary copy of the colormap
-         // here, and not alter the cache level of the lump. This could cause 
-         // the renderer to lose its hold on the colormap if this routine is 
-         // called during gameplay due to a resolution change.
-         clumpnum = W_GetNumForName("COLORMAP");
-         csize    = W_LumpLength(clumpnum);
-
-         colormap = emalloc(byte *, csize);
-         wGlobalDir.readLump(clumpnum, colormap);
-         
-         V_DrawPatchTranslated(0, 0, &cback, patch, colormap + cmapnum * 256, false);
-         efree(colormap);
-      }
-      else
-         V_DrawPatchFS(&cback, patch);
-      
-      Z_ChangeTag(patch, PU_CACHE);
+      V_ColorBlockTL(&cback, GameModeInfo->blackIndex,
+                     0, 0, video.width, video.height, alpha);
    }
 }
 

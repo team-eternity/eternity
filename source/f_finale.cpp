@@ -33,6 +33,7 @@
 #include "d_dehtbl.h"
 #include "d_event.h"
 #include "d_gi.h"
+#include "d_main.h"
 #include "doomstat.h"
 #include "dstrings.h"
 #include "e_fonts.h"
@@ -81,7 +82,9 @@ static void F_InitDemonScroller();
 static byte *DemonBuffer; // haleyjd 08/23/02
 
 vfont_t *f_font;
+vfont_t *f_titlefont;
 char *f_fontname;
+char *f_titlefontname;
 
 static const char *finaletext;
 static int         finaletype;
@@ -121,6 +124,9 @@ void F_Init()
 {
    if(!(f_font = E_FontForName(f_fontname)))
       I_Error("F_Init: bad EDF font name %s\n", f_fontname);
+
+   // title font is optional
+   f_titlefont = E_FontForName(f_titlefontname);
 }
 
 //
@@ -265,6 +271,8 @@ void F_Ticker()
             // haleyjd: allow cast calls after arbitrary maps
             if(LevelInfo.endOfGame)
                F_StartCast(); // cast of Doom 2 characters
+            else if(finaletype == FINALE_PSX_UDOOM)
+               D_StartTitle(); // TODO: really should go back to "menu" state
             else
                gameaction = ga_worlddone;  // next level, e.g. MAP07
          }
@@ -285,78 +293,33 @@ void F_Ticker()
 //
 void F_TextWrite()
 {
-   int         w, h;         // killough 8/9/98: move variables below
-   int         count;
-   const char  *ch;
-   unsigned int c;
-   int         cx;
-   int         cy;
-   int         lumpnum;
-   
-   // haleyjd: get finale font metrics
-   giftextpos_t *textpos = GameModeInfo->fTextPos;
-
-   if(f_font->linear) // FIXME/TODO: linear font support here
-      return;
+   int     count;
+   size_t  len;
+   int     cx;
+   int     cy;
+   int     lumpnum;
+   qstring text;
 
    // erase the entire screen to a tiled background
-   
    // killough 11/98: the background-filling code was already in m_menu.c
-
-   lumpnum = W_CheckNumForName(LevelInfo.backDrop);
-   
-   if(lumpnum == -1) // flat
-      V_DrawBackground(LevelInfo.backDrop, &vbscreen);
-   else
-   {                     // normal picture
-      patch_t *pic;
-      
-      pic = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_CACHE);
-      V_DrawPatch(0, 0, &subscreen43, pic);
-   }
+   lumpnum = wGlobalDir.checkNumForNameNSG(LevelInfo.backDrop, lumpinfo_t::ns_flats);
+   if(lumpnum > 0)
+      V_DrawFSBackground(&subscreen43, lumpnum);
 
    // draw some of the text onto the screen
-   cx = textpos->x;
-   cy = textpos->y;
-   ch = finaletext;
-      
-   count = (int)((finalecount - 10)/Get_TextSpeed()); // phares
+   cx = GameModeInfo->fTextPos->x;
+   cy = GameModeInfo->fTextPos->y;
+
+   text  = finaletext;
+   count = (int)((finalecount - 10) / Get_TextSpeed()); // phares
    if(count < 0)
       count = 0;
+   len = (size_t)count;
 
-   for(; count; count--)
-   {
-      if(!(c = *ch++))
-         break;
-      
-      if(c == '\n')
-      {
-         cx = textpos->x;
-         cy += f_font->cy;
-         continue;
-      }
-      
-      // haleyjd: added null pointer check
-      c = ectype::toUpper(c) - f_font->start;
+   if(len < text.length())
+      text.truncate(len);
 
-      if(c >= f_font->size || !f_font->fontgfx[c])
-      {
-         cx += f_font->space;
-         continue;
-      }
-      
-      w = f_font->fontgfx[c]->width;
-      if(cx + w > SCREENWIDTH)
-         continue; // haleyjd: continue if text off right side
-
-      h = f_font->fontgfx[c]->height;
-      if(cy + h > SCREENHEIGHT)
-         break; // haleyjd: break if text off bottom
-
-      V_DrawPatch(cx, cy, &subscreen43, f_font->fontgfx[c]);
-      
-      cx += w;
-   }
+   V_FontWriteText(f_font, text.constPtr(), cx, cy, &subscreen43);
 }
 
 //
@@ -597,6 +560,26 @@ bool F_CastResponder(event_t* ev)
 }
 
 //
+// F_CastTitle
+//
+// haleyjd 07/28/14: If the CC_TITLE BEX string is non-empty and a title
+// font is defined by EDF, we'll draw a title at the top of the cast call.
+// Useful for PSX and DOOM 64 style behavior.
+//
+static void F_CastTitle()
+{
+   const char *str = DEH_String("CC_TITLE");
+
+   if(!f_titlefont || estrempty(str))
+      return;
+
+   V_FontWriteText(f_titlefont, str,
+                   160 - V_FontStringWidth(f_titlefont, str) / 2,
+                   GameModeInfo->castTitleY,
+                   &subscreen43);
+}
+
+//
 // F_CastPrint
 //
 // haleyjd 03/17/05: Writes the cast member name centered at the
@@ -607,7 +590,8 @@ bool F_CastResponder(event_t* ev)
 void F_CastPrint(const char *text)
 {
    V_FontWriteText(f_font, text, 
-                   160 - V_FontStringWidth(f_font, text) / 2, 180,
+                   160 - V_FontStringWidth(f_font, text) / 2, 
+                   GameModeInfo->castNameY,
                    &subscreen43);
 }
 
@@ -629,9 +613,10 @@ void F_CastDrawer()
    
    // erase the entire screen to a background
    // Ty 03/30/98 bg texture extern
-   V_DrawPatch(0, 0, &subscreen43, 
-               PatchLoader::CacheName(wGlobalDir, bgcastcall, PU_CACHE));
+   V_DrawFSBackground(&subscreen43, wGlobalDir.checkNumForName(DEH_String("BGCASTCALL")));
    
+   F_CastTitle();
+
    if(cast->name)
       F_CastPrint(cast->name);
    

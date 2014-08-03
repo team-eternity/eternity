@@ -140,7 +140,7 @@ struct textvals_t
    int defaultval;
 };
 
-static const char *finaleTypeStrs[] =
+static const char *finaleTypeStrs[FINALE_NUMFINALES] =
 {
    "text",
    "doom_credits",
@@ -150,6 +150,8 @@ static const char *finaleTypeStrs[] =
    "htic_credits",
    "htic_water",
    "htic_demon",
+   "psx_udoom",
+   "psx_doom2"
 };
 
 static textvals_t finaleTypeVals =

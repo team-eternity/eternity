@@ -2553,7 +2553,7 @@ void E_ProcessThings(cfg_t *cfg)
    // 01/17/07: first time, initialize ACS thingtypes array
    if(firsttime)
    {
-     for(i = 0; i < ACS_NUM_THINGTYPES; ++i)
+     for(i = 0; i < ACS_NUM_THINGTYPES; i++)
         ACS_thingtypes[i] = UnknownThingType;
    }
 

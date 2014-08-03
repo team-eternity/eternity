@@ -620,7 +620,8 @@ void R_SetupViewScaling()
 //
 static void R_calculateVisSpriteScales()
 {
-   float realxscale = video.xscalef;
+   float realxscale = video.xscalef * GameModeInfo->pspriteGlobalScale->x;
+   float realyscale = video.yscalef * GameModeInfo->pspriteGlobalScale->y;
 
    // correct aspect ratio, if necessary
    if(!((video.width == 320 && video.height == 200) ||
@@ -638,7 +639,7 @@ static void R_calculateVisSpriteScales()
    }
    
    view.pspritexscale = realxscale * swxscale;
-   view.pspriteyscale = video.yscalef * swyscale;
+   view.pspriteyscale = realyscale * swyscale;
    view.pspriteystep  = 1.0f / view.pspriteyscale;
 }
 
