@@ -360,10 +360,10 @@ static bool P_Shoot2SLine(line_t *li, int side, fixed_t dist)
    if((floorsame   || FixedDiv(clip.openbottom - trace.z , dist) <= trace.aimslope) &&
       (ceilingsame || FixedDiv(clip.opentop - trace.z , dist) >= trace.aimslope))
    {
-      if(li->special && demo_version >= 329 && !comp[comp_planeshoot])
+      if(li->special && !comp[comp_planeshoot])
          P_ShootSpecialLine(trace.thing, li, side);
       
-      return true;      // shot continues
+      return true; // shot continues
    }
 
    return false;
@@ -536,7 +536,7 @@ void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance,
                   fixed_t slope, int damage)
 {
    fixed_t x2, y2;
-   bool (*trav)(intercept_t *);
+   traverser_t trav;
    
    angle >>= ANGLETOFINESHIFT;
    trace.thing = t1;
@@ -825,7 +825,7 @@ static bool P_TraverseIntercepts(traverser_t func, fixed_t maxfrac)
 // killough 5/3/98: reformatted, cleaned up
 //
 bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
-                    int flags, bool trav(intercept_t *))
+                    int flags, traverser_t trav)
 {
    fixed_t xt1, yt1;
    fixed_t xt2, yt2;
