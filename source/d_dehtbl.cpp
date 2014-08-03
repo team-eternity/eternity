@@ -1344,6 +1344,7 @@ void A_UnHideThing(actionargs_t *);
 void A_RestoreArtifact(actionargs_t *);
 void A_RestoreSpecialThing1(actionargs_t *);
 void A_RestoreSpecialThing2(actionargs_t *);
+void A_SargAttack12(actionargs_t *actionargs);
 
 // haleyjd 10/12/02: Heretic pointers
 void A_SpawnTeleGlitter(actionargs_t *actionargs);
@@ -1661,6 +1662,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(RestoreArtifact),
    POINTER(RestoreSpecialThing1),
    POINTER(RestoreSpecialThing2),
+   POINTER(SargAttack12),
 
    // haleyjd 07/13/03: nuke specials
    POINTER(PainNukeSpec),

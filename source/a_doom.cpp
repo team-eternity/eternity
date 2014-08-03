@@ -231,6 +231,28 @@ void A_SargAttack(actionargs_t *actionargs)
 }
 
 //
+// A_SargAttack12
+//
+// DOOM 1.2 Demon attack
+// haleyjd 07/29/14
+//
+void A_SargAttack12(actionargs_t *actionargs)
+{
+   Mobj *actor = actionargs->actor;
+   int damage, mod, mul;
+
+   if(!actor->target)
+      return;
+
+   mod = E_ArgAsInt(actionargs->args, 0, 10);
+   mul = E_ArgAsInt(actionargs->args, 1,  4);
+
+   A_FaceTarget(actionargs);
+   damage = ((P_Random(pr_sargattack) % mod) + 1) * mul;
+   P_LineAttack(actor, actor->angle, MELEERANGE, 0, damage);
+}
+
+//
 // A_HeadAttack
 //
 // Cacodemon attack.
