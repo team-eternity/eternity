@@ -245,7 +245,7 @@ static void B_getBranchingStateSeq(statenum_t sn,
          state_t *state;
          for(int i = 0; i < st.args->numargs; ++i)
          {
-            state = E_ArgAsStateLabel(&mo, i);
+            state = E_ArgAsStateLabel(&mo, mo.state->args, i);
             dests.add(state->index);
          }
       }

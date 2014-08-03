@@ -433,11 +433,11 @@ state_t *E_GetJumpInfo(mobjinfo_t *mi, const char *arg)
 // make reference to global states. Because evaluation of this type of argument
 // is relative to the mobjinfo, this evaluation is never cached.
 //
-state_t *E_ArgAsStateLabel(Mobj *mo, arglist_t *al, int index)
+state_t *E_ArgAsStateLabel(const Mobj *mo, const arglist_t *al, int index)
 {
    const char *arg;
    char       *end   = NULL;
-   state_t    *state = mo->state;
+   const state_t    *state = mo->state;
    long        num;
 
    if(!al || index >= al->numargs)
