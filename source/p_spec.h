@@ -1495,6 +1495,9 @@ void P_ZeroSectorSpecial(sector_t *);
 
 void P_SetLineID(line_t *line, int id);
 
+// IOANCH: added DonutOverflow globally
+bool DonutOverflow(fixed_t *pfloorheight, int16_t *pfloorpic);
+
 // haleyjd: parameterized lines
 
 // param special activation types

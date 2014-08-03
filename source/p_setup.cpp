@@ -29,6 +29,7 @@
 #include "a_small.h"
 #include "acs_intr.h"
 #include "autodoom/b_botmap.h"   // IOANCH
+#include "autodoom/b_lineeffect.h"
 #include "autodoom/b_think.h"
 #include "am_map.h"
 #include "c_io.h"
@@ -2656,6 +2657,10 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       P_LoadSectors (lumpnum + ML_SECTORS);
       break;
    }
+   
+   // IOANCH: create the line effect stacks for the bot.
+   // FIXME: only do it if bot is active
+//   LevelStateStack::InitLevel();
    
    // possible error: missing flats
    CHECK_ERROR();

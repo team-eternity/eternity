@@ -866,7 +866,7 @@ bool PIT_AddThingIntercepts(Mobj *thing)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-bool P_TraverseIntercepts(traverser_t func, fixed_t maxfrac)
+static bool P_TraverseIntercepts(traverser_t func, fixed_t maxfrac)
 {
    intercept_t *in = NULL;
    int count = static_cast<int>(intercept_p - intercepts);

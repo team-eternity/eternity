@@ -883,7 +883,7 @@ bool donut_emulation;
 //
 // Thanks to entryway for discovering and coding a fix to this.
 //
-static bool DonutOverflow(fixed_t *pfloorheight, int16_t *pfloorpic)
+bool DonutOverflow(fixed_t *pfloorheight, int16_t *pfloorpic)
 {
    static bool firsttime  = true;
    static bool donutparm  = false;

@@ -61,7 +61,7 @@ fixed_t P_AproxDistance(fixed_t dx, fixed_t dy)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-int P_PointOnLineSide(fixed_t x, fixed_t y, line_t *line)
+int P_PointOnLineSide(fixed_t x, fixed_t y, const line_t *line)
 {
    return
       !line->dx ? x <= line->v1->x ? line->dy > 0 : line->dy < 0 :
@@ -109,7 +109,7 @@ int P_BoxOnLineSide(fixed_t *tmbox, line_t *ld)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-int P_PointOnDivlineSide(fixed_t x, fixed_t y, divline_t *line)
+int P_PointOnDivlineSide(fixed_t x, fixed_t y, const divline_t *line)
 {
    return
       !line->dx ? x <= line->x ? line->dy > 0 : line->dy < 0 :
@@ -121,7 +121,7 @@ int P_PointOnDivlineSide(fixed_t x, fixed_t y, divline_t *line)
 //
 // P_MakeDivline
 //
-void P_MakeDivline(line_t *li, divline_t *dl)
+void P_MakeDivline(const line_t *li, divline_t *dl)
 {
    dl->x  = li->v1->x;
    dl->y  = li->v1->y;
@@ -138,7 +138,7 @@ void P_MakeDivline(line_t *li, divline_t *dl)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-fixed_t P_InterceptVector(divline_t *v2, divline_t *v1)
+fixed_t P_InterceptVector(const divline_t *v2, const divline_t *v1)
 {
    fixed_t den = FixedMul(v1->dy>>8, v2->dx) - FixedMul(v1->dx>>8, v2->dy);
    return den ? FixedDiv((FixedMul((v1->x-v2->x)>>8, v1->dy) +
@@ -534,7 +534,7 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*))
 {
    int        offset;
    const int  *list;     // killough 3/1/98: for removal of blockmap limit
-   DLListItem<polymaplink_t> *plink; // haleyjd 02/22/06
+   const DLListItem<polymaplink_t> *plink; // haleyjd 02/22/06
    
    if(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight)
       return true;
