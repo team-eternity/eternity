@@ -879,7 +879,7 @@ void D_SetUserPath()
          I_CreateDirectory(userdir.pathConcatenate("/eternity"));
          if(I_CreateDirectory(userdir.pathConcatenate("/user")))
          {
-            for(size_t i = 0; i != earrlen(userdirs); ++i)
+            for(size_t i = 0; i != earrlen(userdirs); i++)
                I_CreateDirectory((tmp = userdir).pathConcatenate(userdirs[i]));
          }
 

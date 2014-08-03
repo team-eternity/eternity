@@ -1192,7 +1192,7 @@ void A_FireShotgun2(actionargs_t *actionargs)
    
    P_BulletSlope(mo);
    
-   for(i = 0; i < 20; ++i)
+   for(i = 0; i < 20; i++)
    {
       int damage = 5 * (P_Random(pr_shotgun) % 3 + 1);
       angle_t angle = mo->angle;
