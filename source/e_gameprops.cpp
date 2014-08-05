@@ -78,6 +78,7 @@
 #define ITEM_GPROP_CCHATSOUND  "console.chatsound"
 #define ITEM_GPROP_CBACKDROP   "console.backdrop"
 #define ITEM_GPROP_PAUSEPATCH  "hud.pausepatch"
+#define ITEM_GPROP_PUFFTYPE    "game.pufftype"
 #define ITEM_GPROP_TELEFOGTYPE "game.telefogtype"
 #define ITEM_GPROP_TELEFOGHT   "game.telefogheight"
 #define ITEM_GPROP_TELESOUND   "game.telesound"
@@ -114,6 +115,7 @@ enum
    GI_STR_CBACKDROP,
    GI_STR_PAUSEPATCH,
    GI_STR_DEFPCLASS,
+   GI_STR_PUFFTYPE,
    GI_STR_TELEFOGTYPE,
    GI_STR_INTERPIC,
    GI_STR_DEFMUSNAME,
@@ -219,6 +221,7 @@ cfg_opt_t edf_game_opts[] =
    CFG_STR(ITEM_GPROP_CCHATSOUND,  "",   CFGF_NONE),
    CFG_STR(ITEM_GPROP_CBACKDROP,   "",   CFGF_NONE),
    CFG_STR(ITEM_GPROP_PAUSEPATCH,  "",   CFGF_NONE),
+   CFG_STR(ITEM_GPROP_PUFFTYPE,    "",   CFGF_NONE),
    CFG_STR(ITEM_GPROP_TELEFOGTYPE, "",   CFGF_NONE),
    CFG_INT(ITEM_GPROP_TELEFOGHT,   0,    CFGF_NONE),
    CFG_STR(ITEM_GPROP_TELESOUND,   "",   CFGF_NONE),
@@ -445,6 +448,14 @@ static void E_processGamePropsBlock(cfg_t *props)
    }
 
    // Gamesim Properties
+
+   if(IS_SET(ITEM_GPROP_PUFFTYPE))
+   {
+      const char *name = cfg_getstr(props, ITEM_GPROP_PUFFTYPE);
+
+      if(E_ThingNumForName(name) >= 0)
+         E_setDynamicString(GameModeInfo->puffType, GI_STR_PUFFTYPE, name);
+   }
 
    if(IS_SET(ITEM_GPROP_TELEFOGTYPE))
    {

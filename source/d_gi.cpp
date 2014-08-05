@@ -91,7 +91,6 @@
 // Most gamemodes use the titlepic, which is darkened by code in c_io.c.
 // Ultimate DOOM and DOOM II have a suitable graphic in the INTERPIC.
 #define CONBACK_DEFAULT "TITLEPIC"
-#define CONBACK_COMRET  "INTERPIC"
 #define CONBACK_HERETIC "TITLE" 
 
 // Version names
@@ -822,7 +821,6 @@ static missioninfo_t gmFinalTNT =
    &TNTFinale,         // finaleDataOR
    NULL,               // menuBackgroundOR
    NULL,               // creditBackgroundOR
-   NULL,               // consoleBackOR
    demostates_udoom,   // demoStatesOR -- haleyjd 11/12/09: to play DEMO4
    NULL,               // interPicOR
    NULL,               // exitRulesOR
@@ -848,7 +846,6 @@ static missioninfo_t gmFinalPlutonia =
    &PlutFinale,        // finaleDataOR
    NULL,               // menuBackgroundOR
    NULL,               // creditBackgroundOR
-   NULL,               // consoleBackOR
    demostates_udoom,   // demoStatesOR -- haleyjd 11/12/09: to play DEMO4
    NULL,               // interPicOR
    NULL,               // exitRulesOR
@@ -882,7 +879,6 @@ static missioninfo_t gmDisk =
    NULL,               // finaleDataOR
    NULL,               // menuBackgroundOR
    NULL,               // creditBackgroundOR
-   CONBACK_DEFAULT,    // consoleBackOR
    NULL,               // demoStatesOR
    NULL,               // interPicOR
    DiskExitRules,      // exitRulesOR
@@ -907,7 +903,6 @@ static missioninfo_t gmHacx =
    NULL,            // finaleDataOR
    HACXMENUBACK,    // menuBackgroundOR
    HACXCREDITBK,    // creditBackgroundOR
-   CONBACK_DEFAULT, // consoleBackOR
 };
 
 //
@@ -929,7 +924,6 @@ static missioninfo_t gmPSX =
    nullptr,         // finaleDataOR
    nullptr,         // menuBackgroundOR
    nullptr,         // creditBackgroundOR
-   nullptr,         // consoleBackOR
    nullptr,         // demoStatesOR
    nullptr,         // interPicOR
    NullExitRules,   // exitRulesOR
@@ -980,7 +974,6 @@ static missioninfo_t gmHereticBeta =
    NULL,                // finaleDataOR
    NULL,                // menuBackgroundOR
    NULL,                // creditBackgroundOR
-   NULL,                // consoleBackOR
    NULL,                // demoStatesOR
    NULL,                // interPicOR
    NULL,                // exitRulesOR
@@ -1116,6 +1109,7 @@ static gamemodeinfo_t giDoomSW =
 
    1,                // numEpisodes
    DoomExitRules,    // exitRules
+   "BulletPuff",     // puffType
    "DoomTeleFog",    // teleFogType
    0,                // teleFogHeight
    sfx_telept,       // teleSound
@@ -1229,6 +1223,7 @@ static gamemodeinfo_t giDoomReg =
 
    3,                // numEpisodes
    DoomExitRules,    // exitRules
+   "BulletPuff",     // puffType
    "DoomTeleFog",    // teleFogType
    0,                // teleFogHeight
    sfx_telept,       // teleSound
@@ -1326,7 +1321,7 @@ static gamemodeinfo_t giDoomRetail =
    40,               // c_numCharsPerLine
    sfx_tink,         // c_BellSound
    sfx_tink,         // c_ChatSound
-   CONBACK_COMRET,   // consoleBack
+   CONBACK_DEFAULT,  // consoleBack
    0,                // blackIndex
    4,                // whiteIndex
    NUMCARDS,         // numHUDKeys
@@ -1342,6 +1337,7 @@ static gamemodeinfo_t giDoomRetail =
 
    4,                // numEpisodes
    DoomExitRules,    // exitRules
+   "BulletPuff",     // puffType
    "DoomTeleFog",    // teleFogType
    0,                // teleFogHeight
    sfx_telept,       // teleSound
@@ -1439,7 +1435,7 @@ static gamemodeinfo_t giDoomCommercial =
    40,               // c_numCharsPerLine
    sfx_tink,         // c_BellSound
    sfx_radio,        // c_ChatSound
-   CONBACK_COMRET,   // consoleBack
+   CONBACK_DEFAULT,  // consoleBack
    0,                // blackIndex
    4,                // whiteIndex
    NUMCARDS,         // numHUDKeys
@@ -1455,6 +1451,7 @@ static gamemodeinfo_t giDoomCommercial =
 
    1,                // numEpisodes
    Doom2ExitRules,   // exitRules
+   "BulletPuff",     // puffType
    "DoomTeleFog",    // teleFogType
    0,                // teleFogHeight
    sfx_telept,       // teleSound
@@ -1566,17 +1563,18 @@ static gamemodeinfo_t giHereticSW =
 
    "PAUSED",         // pausePatch
 
-   1,                // numEpisodes
-   HereticExitRules, // exitRules
-   "HereticTeleFog", // teleFogType
-   32*FRACUNIT,      // teleFogHeight
-   sfx_htelept,      // teleSound
-   150,              // thrustFactor
-   GI_GIBHALFHEALTH, // defaultGibHealth
-   "Corvus",         // defPClassName
-   DEFTL_HERETIC,    // defTranslate
-   HereticBossSpecs, // bossRules
-   LI_TYPE_HERETIC,  // levelType
+   1,                  // numEpisodes
+   HereticExitRules,   // exitRules
+   "HereticStaffPuff", // puffType
+   "HereticTeleFog",   // teleFogType
+   32*FRACUNIT,        // teleFogHeight
+   sfx_htelept,        // teleSound
+   150,                // thrustFactor
+   GI_GIBHALFHEALTH,   // defaultGibHealth
+   "Corvus",           // defPClassName
+   DEFTL_HERETIC,      // defTranslate
+   HereticBossSpecs,   // bossRules
+   LI_TYPE_HERETIC,    // levelType
 
    INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum
@@ -1683,17 +1681,18 @@ static gamemodeinfo_t giHereticReg =
 
    "PAUSED",         // pausePatch
 
-   4,                // numEpisodes -- note 6 for SoSR gamemission
-   HereticExitRules, // exitRules
-   "HereticTeleFog", // teleFogType
-   32*FRACUNIT,      // teleFogHeight
-   sfx_htelept,      // teleSound
-   150,              // thrustFactor
-   GI_GIBHALFHEALTH, // defaultGibHealth
-   "Corvus",         // defPClassName
-   DEFTL_HERETIC,    // defTranslate
-   HereticBossSpecs, // bossRules
-   LI_TYPE_HERETIC,  // levelType
+   4,                  // numEpisodes -- note 6 for SoSR gamemission
+   HereticExitRules,   // exitRules
+   "HereticStaffPuff", // puffType
+   "HereticTeleFog",   // teleFogType
+   32*FRACUNIT,        // teleFogHeight
+   sfx_htelept,        // teleSound
+   150,                // thrustFactor
+   GI_GIBHALFHEALTH,   // defaultGibHealth
+   "Corvus",           // defPClassName
+   DEFTL_HERETIC,      // defTranslate
+   HereticBossSpecs,   // bossRules
+   LI_TYPE_HERETIC,    // levelType
 
    INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum
@@ -1724,7 +1723,7 @@ static gamemodeinfo_t giHereticReg =
    DoomSkyFlats,       // skyFlats
    &giPsprNoScale,     // pspriteGlobalScale
    
-   HereticDefaultORs, // defaultORs
+   HereticDefaultORs,  // defaultORs
 
    "ENDTEXT",          // endTextName
    NULL,               // exitSounds
@@ -1793,7 +1792,6 @@ void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
    OVERRIDE(finaleData,         nullptr);
    OVERRIDE(menuBackground,     nullptr);
    OVERRIDE(creditBackground,   nullptr);
-   OVERRIDE(consoleBack,        nullptr);
    OVERRIDE(interPic,           nullptr);
    OVERRIDE(exitRules,          nullptr);
    OVERRIDE(levelNames,         nullptr);
