@@ -30,6 +30,7 @@
 
 struct line_t;
 class  Mobj;
+struct mobjinfo_t;
 
 // mapblocks are used to check movement against lines and things
 #define MAPBLOCKUNITS   128
@@ -56,19 +57,20 @@ struct divline_t
 // through portals
 struct linetracer_t
 {
-   divline_t  dl;
+   divline_t   dl;
 
    // Moved crappy globals here
-   fixed_t    z;            // replaces shootz
-   int        la_damage;
-   fixed_t    attackrange;
-   fixed_t    aimslope;
-   fixed_t    topslope;
-   fixed_t    bottomslope;
-   Mobj      *thing;
-   uint32_t   aimflagsmask; // killough 8/2/98: for more intelligent autoaiming
-   fixed_t    sin;
-   fixed_t    cos;
+   fixed_t     z;            // replaces shootz
+   int         la_damage;
+   fixed_t     attackrange;
+   fixed_t     aimslope;
+   fixed_t     topslope;
+   fixed_t     bottomslope;
+   Mobj       *thing;
+   uint32_t    aimflagsmask; // killough 8/2/98: for more intelligent autoaiming
+   fixed_t     sin;
+   fixed_t     cos;
+   mobjinfo_t *puff;
 };
 
 struct intercept_t
