@@ -533,7 +533,7 @@ static bool PTR_ShootTraverse(intercept_t *in)
 // If damage == 0, it is just a test trace that will leave linetarget set.
 //
 void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance,
-                  fixed_t slope, int damage)
+                  fixed_t slope, int damage, mobjinfo_t *puff)
 {
    fixed_t x2, y2;
    traverser_t trav;
@@ -547,6 +547,7 @@ void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance,
    trace.z = t1->z - t1->floorclip + (t1->height>>1) + 8*FRACUNIT;
    trace.attackrange = distance;
    trace.aimslope = slope;
+   trace.puff = puff;
 
    if(demo_version < 329)
       trav = PTR_ShootTraverseVanilla;

@@ -311,7 +311,6 @@ struct missioninfo_t
    finaledata_t *finaleDataOR;      // if not NULL, overrides finaleData
    const char *menuBackgroundOR;    // if not NULL, overrides menuBackground
    const char *creditBackgroundOR;  // if not NULL, overrides creditBackground
-   const char *consoleBackOR;       // if not NULL, overrides consoleBack
    const demostate_t *demoStatesOR; // if not NULL, overrides demostates
    const char *interPicOR;          // if not NULL, overrides interPic
    exitrule_t *exitRulesOR;         // if not NULL, overrides exitRules
@@ -412,6 +411,7 @@ struct gamemodeinfo_t
    // Game interaction stuff
    int numEpisodes;               // number of game episodes
    exitrule_t *exitRules;         // exit rule set
+   const char *puffType;          // Name of default puff object
    const char *teleFogType;       // Name of telefog object
    fixed_t teleFogHeight;         // amount to add to telefog z coord
    int teleSound;                 // sound id for teleportation
