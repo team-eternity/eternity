@@ -507,6 +507,8 @@ static void B_pushSectorHeights(int action, int secnum, const line_t& line,
       case VLS_SRRaiseDoor:
       case VLS_WRDoorBlazeRaise:
       case VLS_W1RaiseDoor:
+      case VLS_WRRaiseDoor:
+      case VLS_W1DoorBlazeRaise:
          if(ceilingBlocked)
             return;
          sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4
@@ -727,6 +729,8 @@ static void B_pushSectorHeights(int action, int secnum, const line_t& line,
       case VLS_SRLightTurnOn255:
       case VLS_SRPlatStop:
       case VLS_SRSilentTeleport:
+      case VLS_SRStartLightStrobing:
+      case VLS_SRStartLineScript:
       case VLS_SRTeleport:
       case VLS_SRTurnTagLightsOff:
       case VLS_W1CeilingCrushStop:
