@@ -1248,7 +1248,7 @@ fixed_t P_FindHighestFloorSurrounding(const sector_t *sec,
 fixed_t P_FindNextHighestFloor(const sector_t *sec, int currentheight,
                                bool useStates = false);
 
-fixed_t P_FindNextLowestFloor(const sector_t *sec, int currentheight);
+fixed_t P_FindNextLowestFloor(const sector_t *sec, int currentheight, bool useStates = false);
 
 fixed_t P_FindLowestCeilingSurrounding(const sector_t *sec,
                                        bool useStates = false); // jff 2/04/98

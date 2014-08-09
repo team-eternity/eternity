@@ -323,6 +323,7 @@ struct SectorStateEntry
 {
    int      actionNumber;  // the action that did the trigger
    fixed_t  floorHeight;   // the resulting heights
+   fixed_t  altFloorHeight; // alternate floor height (used for lifts)
    fixed_t  ceilingHeight;
    bool     floorTerminal; // true if momentary and nothing can be added on it
    bool     ceilingTerminal;
@@ -342,6 +343,10 @@ public:
    fixed_t getFloorHeight() const
    {
       return stack.getLength() ? stack.back().floorHeight : sector->floorheight;
+   }
+   fixed_t getAltFloorHeight() const
+   {
+       return stack.getLength() ? stack.back().altFloorHeight : sector->floorheight;
    }
    fixed_t getCeilingHeight() const
    {
@@ -391,8 +396,8 @@ void LevelStateStack::InitLevel()
 //
 // Adds a new action to the stack, modifying the intended sectors
 //
-static void B_pushSectorHeights(int, int, PODCollection<int>&);
-bool LevelStateStack::Push(int action, int tag)
+static void B_pushSectorHeights(int, int, const line_t& line, PODCollection<int>&);
+bool LevelStateStack::Push(const line_t& line, int action, int tag)
 {
    int secnum = -1;
    
@@ -402,7 +407,7 @@ bool LevelStateStack::Push(int action, int tag)
    while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
       // For each successful state push, add an index to the collection
-      B_pushSectorHeights(action, secnum, coll);
+      B_pushSectorHeights(action, secnum, line, coll);
    }
    
    if(coll.getLength() == 0)
@@ -442,7 +447,7 @@ static bool fillInDonut(const sector_t& sector, SectorStateEntry& sae,
                         VanillaLineSpecial vls, PODCollection<int>& coll);
 static fixed_t getMinTextureSize(const sector_t& sector);
 
-static void B_pushSectorHeights(int action, int secnum,
+static void B_pushSectorHeights(int action, int secnum, const line_t& line,
                                 PODCollection<int>& indexList)
 {
    SectorHeightStack& affSector = g_affectedSectors[secnum];
@@ -511,28 +516,75 @@ static void B_pushSectorHeights(int action, int secnum,
          
       case VLS_S1CeilingLowerToFloor:
       case VLS_SRCeilingLowerToFloor:
+      case VLS_W1CeilingLowerToFloor:
+      case VLS_WRCeilingLowerToFloor:
+      case VLS_S1CloseDoor:
       case VLS_SRCloseDoor:
       case VLS_W1CloseDoor:
+      case VLS_WRCloseDoor:
+      case VLS_W1DoorBlazeClose:
+      case VLS_WRDoorBlazeClose:
+      case VLS_S1DoorBlazeClose:
+      case VLS_SRDoorBlazeClose:
          if(ceilingBlocked)
             return;
          sae.ceilingHeight = sae.floorHeight;
          break;
          
       case VLS_W1CeilingLowerAndCrush:
+      case VLS_WRCeilingLowerAndCrush:
+      case VLS_S1CeilingLowerAndCrush:
+      case VLS_SRCeilingLowerAndCrush:
          if(ceilingBlocked)
             return;
          sae.ceilingHeight = sae.floorHeight + 8 * FRACUNIT;
          break;
          
       case VLS_W1CloseDoor30:
+      case VLS_WRCloseDoor30:
+      case VLS_S1CloseDoor30:
+      case VLS_SRCloseDoor30:
          if(ceilingBlocked)
             return;
          sae.ceilingHeight = sae.floorHeight;
          sae.ceilingTerminal = true;
          break;
          
+      case VLS_W1CeilingLowerToLowest:
+      case VLS_WRCeilingLowerToLowest:
+      case VLS_S1CeilingLowerToLowest:
+      case VLS_SRCeilingLowerToLowest:
+          if (ceilingBlocked)
+              return;
+          sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true);
+          break;
+
+      case VLS_W1CeilingLowerToMaxFloor:
+      case VLS_WRCeilingLowerToMaxFloor:
+      case VLS_S1CeilingLowerToMaxFloor:
+      case VLS_SRCeilingLowerToMaxFloor:
+          if (ceilingBlocked)
+              return;
+          sae.ceilingHeight = P_FindHighestFloorSurrounding(&sector, true);
+          break;
+
+      case VLS_W1FloorLowerToNearest:
+      case VLS_WRFloorLowerToNearest:
+      case VLS_S1FloorLowerToNearest:
+      case VLS_SRFloorLowerToNearest:
+          if (floorBlocked)
+              return;
+          sae.floorHeight = P_FindNextLowestFloor(&sector, lastFloorHeight, true);
+          break;
+
       case VLS_S1PlatDownWaitUpStay:
+      case VLS_SRPlatDownWaitUpStay:
       case VLS_W1PlatDownWaitUpStay:
+      case VLS_WRPlatDownWaitUpStay:
+      case VLS_WRPlatBlazeDWUS:
+      case VLS_W1PlatBlazeDWUS:
+      case VLS_S1PlatBlazeDWUS:
+      case VLS_SRPlatBlazeDWUS:
       {
          if(floorBlocked)
             return;
@@ -540,16 +592,23 @@ static void B_pushSectorHeights(int action, int secnum,
          if(newheight < sae.floorHeight)
             sae.floorHeight = newheight;
          sae.floorTerminal = true;
+         sae.altFloorHeight = lastFloorHeight;
          break;
       }
          
       case VLS_W1LowerFloor:
+      case VLS_WRLowerFloor:
+      case VLS_S1LowerFloor:
+	  case VLS_SRLowerFloor:
          if(floorBlocked)
             return;
          sae.floorHeight = P_FindHighestFloorSurrounding(&sector, true);
          break;
          
+      case VLS_S1LowerFloorTurbo:
+      case VLS_SRLowerFloorTurbo:
       case VLS_W1LowerFloorTurbo:
+      case VLS_WRLowerFloorTurbo:
          if(floorBlocked)
             return;
          sae.floorHeight = P_FindHighestFloorSurrounding(&sector, true);
@@ -558,30 +617,53 @@ static void B_pushSectorHeights(int action, int secnum,
          break;
          
       case VLS_S1FloorLowerToLowest:
+      case VLS_SRFloorLowerToLowest:
       case VLS_W1FloorLowerToLowest:
+      case VLS_WRFloorLowerToLowest:
       case VLS_W1FloorLowerAndChange:
+      case VLS_WRFloorLowerAndChange:
+      case VLS_S1FloorLowerAndChange:
+      case VLS_SRFloorLowerAndChange:
          if(floorBlocked)
             return;
          sae.floorHeight = P_FindLowestFloorSurrounding(&sector, true);
          break;
          
       case VLS_S1PlatRaise24Change:
+      case VLS_SRPlatRaise24Change:
+      case VLS_W1PlatRaise24Change:
+      case VLS_WRPlatRaise24Change:
+      case VLS_W1RaiseFloor24:
+      case VLS_WRRaiseFloor24:
+      case VLS_S1RaiseFloor24:
+      case VLS_SRRaiseFloor24:
+      case VLS_W1RaiseFloor24Change:
+      case VLS_WRRaiseFloor24Change:
+      case VLS_S1RaiseFloor24Change:
+      case VLS_SRRaiseFloor24Change:
          amount = 24;
+         goto platraise;
       case VLS_S1PlatRaise32Change:
+      case VLS_SRPlatRaise32Change:
+      case VLS_W1PlatRaise32Change:
+      case VLS_WRPlatRaise32Change:
          amount = 32;
+         goto platraise;
+      case VLS_S1RaiseFloor512:
+      case VLS_SRRaiseFloor512:
+      case VLS_W1RaiseFloor512:
+      case VLS_WRRaiseFloor512:
+          amount = 512;
+      platraise:
          if(floorBlocked)
             return;
          sae.floorHeight += amount * FRACUNIT;
          break;
          
-      case VLS_S1FloorRaiseToNearest:
-         if(floorBlocked)
-            return;
-         sae.floorHeight = P_FindNextHighestFloor(&sector, sae.floorHeight,
-                                                  true);
-         break;
-         
       case VLS_W1FloorRaiseToTexture:
+      case VLS_WRFloorRaiseToTexture:
+      case VLS_S1FloorRaiseToTexture:
+      case VLS_SRFloorRaiseToTexture:
       {
          if(floorBlocked)
             return;
@@ -598,6 +680,26 @@ static void B_pushSectorHeights(int action, int secnum,
          }
          break;
       }
+
+      case VLS_W1PlatPerpetualRaise:
+      case VLS_WRPlatPerpetualRaise:
+      case VLS_S1PlatPerpetualRaise:
+      case VLS_SRPlatPerpetualRaise:
+      case VLS_SRPlatToggleUpDown:
+      case VLS_WRPlatToggleUpDown:
+          if (floorBlocked)
+              return;
+          sae.floorHeight = P_FindLowestFloorSurrounding(&sector, true);
+          if (sae.floorHeight > lastFloorHeight)
+              sae.floorHeight = lastFloorHeight;
+
+          sae.altFloorHeight = P_FindHighestFloorSurrounding(&sector, true);
+          if (sae.altFloorHeight < lastFloorHeight)
+              sae.altFloorHeight = lastFloorHeight;
+
+          sae.floorTerminal = true;
+
+          break;
          
       case VLS_G1ExitLevel:
       case VLS_G1SecretExit:
@@ -670,8 +772,18 @@ static void B_pushSectorHeights(int action, int secnum,
          return;  // nope
          
          // CRUSHERS: just say "floor + 8" so the bot can avoid them
+      case VLS_S1CeilingCrushAndRaise:
+      case VLS_SRCeilingCrushAndRaise:
       case VLS_W1CeilingCrushAndRaise:
+      case VLS_WRCeilingCrushAndRaise:
       case VLS_W1FastCeilCrushRaise:
+      case VLS_WRFastCeilCrushRaise:
+      case VLS_S1FastCeilCrushRaise:
+      case VLS_SRFastCeilCrushRaise:
+      case VLS_W1SilentCrushAndRaise:
+      case VLS_WRSilentCrushAndRaise:
+      case VLS_S1SilentCrushAndRaise:
+      case VLS_SRSilentCrushAndRaise:
          if(ceilingBlocked)
             return;
          sae.ceilingHeight = sae.floorHeight + 8 * FRACUNIT;
@@ -680,7 +792,17 @@ static void B_pushSectorHeights(int action, int secnum,
          
       case VLS_G1PlatRaiseNearestChange:
       case VLS_S1PlatRaiseNearestChange:
+      case VLS_SRPlatRaiseNearestChange:
       case VLS_W1PlatRaiseNearestChange:
+      case VLS_WRPlatRaiseNearestChange:
+      case VLS_S1FloorRaiseToNearest:
+      case VLS_SRFloorRaiseToNearest:
+      case VLS_W1FloorRaiseToNearest:
+      case VLS_WRFloorRaiseToNearest:
+      case VLS_WRRaiseFloorTurbo:
+      case VLS_W1RaiseFloorTurbo:
+      case VLS_S1RaiseFloorTurbo:
+      case VLS_SRRaiseFloorTurbo:
          if(floorBlocked)
             return;
          sae.floorHeight = P_FindNextHighestFloor(&sector, sae.floorHeight,
@@ -689,20 +811,37 @@ static void B_pushSectorHeights(int action, int secnum,
          
       case VLS_G1RaiseFloor:
       case VLS_W1RaiseFloor:
+      case VLS_WRRaiseFloor:
+      case VLS_S1RaiseFloor:
+      case VLS_SRRaiseFloor:
          if(floorBlocked)
             return;
          sae.floorHeight = P_FindLowestCeilingSurrounding(&sector, true);
          if(sae.floorHeight > sae.ceilingHeight)
             sae.floorHeight = sae.ceilingHeight;
          break;
+
+      case VLS_S1FloorRaiseCrush:
+      case VLS_SRFloorRaiseCrush:
+      case VLS_W1FloorRaiseCrush:
+      case VLS_WRFloorRaiseCrush:
+          if (floorBlocked)
+              return;
+          sae.floorHeight = P_FindLowestCeilingSurrounding(&sector, true);
+          if (sae.floorHeight > sae.ceilingHeight)
+              sae.floorHeight = sae.ceilingHeight;
+          sae.floorHeight -= 8 * FRACUNIT;
+          break;
          
       case VLS_W1RaiseCeilingLowerFloor:  // just ceiling
+      case VLS_WRRaiseCeilingLowerFloor:
          if(ceilingBlocked)
             return;
          sae.ceilingHeight = P_FindHighestCeilingSurrounding(&sector, true);
          break;
          
       case VLS_S1BOOMRaiseCeilingOrLowerFloor:
+      case VLS_SRBOOMRaiseCeilingOrLowerFloor:
          if(!ceilingBlocked)
             sae.ceilingHeight = P_FindHighestCeilingSurrounding(&sector, true);
          else if(!floorBlocked)
@@ -712,7 +851,9 @@ static void B_pushSectorHeights(int action, int secnum,
          break;
          
       case VLS_S1BuildStairsUp8:
+      case VLS_SRBuildStairsUp8:
       case VLS_W1BuildStairsUp8:
+      case VLS_WRBuildStairsUp8:
       case VLS_S1BuildStairsTurbo16:
       case VLS_WRBuildStairsTurbo16:
       case VLS_W1BuildStairsTurbo16:
@@ -722,17 +863,54 @@ static void B_pushSectorHeights(int action, int secnum,
          othersAffected = fillInStairs(&sector, sae, vls, indexList);
          break;
       case VLS_S1DoDonut:
+      case VLS_SRDoDonut:
+      case VLS_W1DoDonut:
+      case VLS_WRDoDonut:
          if(floorBlocked)
             return;
          othersAffected = fillInDonut(sector, sae, vls, indexList);
          break;
+
+      case VLS_W1ElevatorUp:
+      case VLS_WRElevatorUp:
+      case VLS_S1ElevatorUp:
+      case VLS_SRElevatorUp:
+          if (floorBlocked || ceilingBlocked)
+              return;
+          sae.floorHeight = P_FindNextHighestFloor(&sector, lastFloorHeight, true);
+          sae.ceilingHeight = sae.floorHeight + lastCeilingHeight - lastFloorHeight;
+          break;
+
+      case VLS_W1ElevatorDown:
+      case VLS_WRElevatorDown:
+      case VLS_S1ElevatorDown:
+      case VLS_SRElevatorDown:
+          if (floorBlocked || ceilingBlocked)
+              return;
+          sae.floorHeight = P_FindNextLowestFloor(&sector, lastFloorHeight, true);
+          sae.ceilingHeight = sae.floorHeight + lastCeilingHeight - lastFloorHeight;
+          break;
+
+      case VLS_W1ElevatorCurrent:
+      case VLS_WRElevatorCurrent:
+      case VLS_S1ElevatorCurrent:
+      case VLS_SRElevatorCurrent:
+      {
+          if (floorBlocked || ceilingBlocked)
+              return;
+          const SectorHeightStack& front = g_affectedSectors[line.frontsector - sectors];
+
+          sae.floorHeight = front.getFloorHeight();
+          sae.ceilingHeight = sae.floorHeight + lastCeilingHeight - lastFloorHeight;
+          break;
+      }
       default:
          return;
          
    }
    
    if(!othersAffected && sae.floorHeight == lastFloorHeight
-      && sae.ceilingHeight == lastCeilingHeight)
+      && sae.ceilingHeight == lastCeilingHeight && (!sae.floorTerminal || sae.altFloorHeight == lastFloorHeight))
    {
       return;  // nothing changed; do not register.
    }

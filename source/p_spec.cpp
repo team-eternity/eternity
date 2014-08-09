@@ -408,7 +408,7 @@ fixed_t P_FindHighestFloorSurrounding(const sector_t *sec, bool useStates)
 fixed_t P_FindNextHighestFloor(const sector_t *sec, int currentheight,
                                bool useStates)
 {
-   sector_t *other;
+   const sector_t *other;
    int i;
    
    for(i=0; i < sec->linecount; i++)
@@ -447,26 +447,32 @@ fixed_t P_FindNextHighestFloor(const sector_t *sec, int currentheight,
 //
 // jff 02/03/98 Twiddled Lee's P_FindNextHighestFloor to make this
 //
-fixed_t P_FindNextLowestFloor(const sector_t *sec, int currentheight)
+fixed_t P_FindNextLowestFloor(const sector_t *sec, int currentheight, bool useStates)
 {
-   sector_t *other;
+   const sector_t *other;
    int i;
    
+   fixed_t newHeight;
    for(i=0; i < sec->linecount; i++)
    {
-      if((other = getNextSector(sec->lines[i],sec)) &&
-         other->floorheight < currentheight)
-      {
-         int height = other->floorheight;
-         while (++i < sec->linecount)
-         {
-            if((other = getNextSector(sec->lines[i],sec)) &&
-               other->floorheight > height &&
-               other->floorheight < currentheight)
-               height = other->floorheight;
-         }
-         return height;
-      }
+       if ((other = getNextSector(sec->lines[i], sec)))
+       {
+           newHeight = useStates ? LevelStateStack::Floor(*other) : other->floorheight;
+           if (newHeight < currentheight)
+           {
+               int height = newHeight;
+               while (++i < sec->linecount)
+               {
+                   if ((other = getNextSector(sec->lines[i], sec)))
+                   {
+                       newHeight = useStates ? LevelStateStack::Floor(*other) : other->floorheight;
+                       if (newHeight > height && newHeight < currentheight)
+                           height = newHeight;
+                   }
+               }
+               return height;
+           }
+       }
    }
    return currentheight;
 }
