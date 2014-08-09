@@ -376,7 +376,7 @@ void PathArray::updateNode(int ichange, int index, BSeg *seg, BSubsec *ss,
 // Returns all the good subsectors into the collection
 // Uses a function for criteria.
 //
-void PathFinder::FindGoals(const BSubsec& source, PODCollection<const BSubsec*>& dests, bool(*isGoal)(const BSubsec&, void*), void* parm)
+void PathFinder::AvailableGoals(const BSubsec& source, fixed_t plheight, PODCollection<const BSubsec*>& dests, bool(*isGoal)(const BSubsec&, void*), void* parm)
 {
     IncrementValidcount();
 
@@ -394,7 +394,7 @@ void PathFinder::FindGoals(const BSubsec& source, PODCollection<const BSubsec*>&
             dests.add(t);
         for (const BSubsec* neigh : t->neighs)
         {
-            if (m_ssvisit[neigh - first] != m_validcount)
+            if (m_ssvisit[neigh - first] != m_validcount && m_map->canPass(*t, *neigh, plheight))
             {
                 m_ssvisit[neigh - first] = m_validcount;
                 *back++ = neigh;
@@ -403,6 +403,11 @@ void PathFinder::FindGoals(const BSubsec& source, PODCollection<const BSubsec*>&
     }
 }
 
+//
+// PathFinder::IncrementValidcount
+//
+// Must be called to update validcount and ensure correct data sets
+//
 void PathFinder::IncrementValidcount()
 {   
     if (m_sscount != m_map->ssectors.getLength())

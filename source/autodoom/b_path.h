@@ -187,7 +187,8 @@ public:
         efree(m_ssqueue);
     }
 
-    void FindGoals(const BSubsec& source, PODCollection<const BSubsec*>& dests, bool (*isGoal)(const BSubsec&, void*), void* parm = nullptr);
+    void FindNextGoal(fixed_t x, fixed_t y, bool(*isGoal)(const BSubsec&, void*), void* parm = nullptr);
+    void AvailableGoals(const BSubsec& source, fixed_t plheight, PODCollection<const BSubsec*>& dests, bool (*isGoal)(const BSubsec&, void*), void* parm = nullptr);
 
 private:
     void IncrementValidcount();

@@ -310,6 +310,9 @@ void BotMap::operator delete (void *p, int a, BotMap ** b)
 bool BotMap::canPass(const BSubsec &s1, const BSubsec &s2, fixed_t height) const
 {
    const MetaSector &ms1 = *s1.msector, &ms2 = *s2.msector;
+
+   if (&ms1 == &ms2)
+       return true;
    
    fixed_t flh1 = ms1.getFloorHeight(), clh1 = ms1.getCeilingHeight(),
    flh2 = ms2.getFloorHeight(), clh2 = ms2.getCeilingHeight();

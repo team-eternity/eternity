@@ -79,7 +79,6 @@ private:
    bool objectOfInterest(const BSeg *targsg, const BSubsec *targss,
                          v2fixed_t &destcoord);
    
-   bool canPass(const BSubsec &s1, const BSubsec &s2) const;
    bool routePath();
    
    bool goalAchieved();
