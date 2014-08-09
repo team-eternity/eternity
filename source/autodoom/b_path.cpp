@@ -369,6 +369,55 @@ void PathArray::updateNode(int ichange, int index, BSeg *seg, BSubsec *ss,
 	}
 }
 
+//
+// PathFinder::FindGoals
+//
+// Looks for any goals from point X. Uses simple breadth first search.
+// Returns all the good subsectors into the collection
+// Uses a function for criteria.
+//
+void PathFinder::FindGoals(const BSubsec& source, PODCollection<const BSubsec*>& dests, bool(*isGoal)(const BSubsec&, void*), void* parm)
+{
+    IncrementValidcount();
+
+    const BSubsec** front = m_ssqueue;
+    const BSubsec** back = m_ssqueue;
+
+    const BSubsec* first = &m_map->ssectors[0];
+    m_ssvisit[&source - first] = m_validcount;
+    *back++ = &source;
+    const BSubsec* t;
+    while (front < back)
+    {
+        t = *front++;
+        if (isGoal(*t, parm))
+            dests.add(t);
+        for (const BSubsec* neigh : t->neighs)
+        {
+            if (m_ssvisit[neigh - first] != m_validcount)
+            {
+                m_ssvisit[neigh - first] = m_validcount;
+                *back++ = neigh;
+            }
+        }
+    }
+}
+
+void PathFinder::IncrementValidcount()
+{   
+    if (m_sscount != m_map->ssectors.getLength())
+    {
+        size_t s = (m_sscount = m_map->ssectors.getLength()) * sizeof(*m_ssvisit);
+        m_ssvisit = erealloc(decltype(m_ssvisit), m_ssvisit, s);
+        memset(m_ssvisit, 0, s);
+        m_validcount = 0;
+
+        m_ssqueue = erealloc(decltype(m_ssqueue), m_ssqueue, m_sscount * sizeof(*m_ssqueue));
+    }
+    ++m_validcount;
+    if (!m_validcount)  // wrap around: reset former validcounts!
+        memset(m_ssvisit, 0xff, m_sscount * sizeof(*m_ssvisit));
+}
 
 // EOF
 

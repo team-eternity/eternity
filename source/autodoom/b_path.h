@@ -32,6 +32,7 @@
 
 #include "b_botmap.h"
 #include "b_util.h"
+#include "../m_collection.h"
 
 //
 // PathArray
@@ -166,6 +167,39 @@ public:
 	}
    // pathexists disabling accessor
 	void reset() {pathexists = false; }
+};
+
+//
+// PathFinder
+//
+// Is linked with the botmap
+//
+class PathFinder
+{
+public:
+    PathFinder(const BotMap* map) : m_map(map), m_validcount(0), m_ssvisit(nullptr), m_sscount(0), m_ssqueue(nullptr)
+    {
+    }
+
+    ~PathFinder()
+    {
+        efree(m_ssvisit);
+        efree(m_ssqueue);
+    }
+
+    void FindGoals(const BSubsec& source, PODCollection<const BSubsec*>& dests, bool (*isGoal)(const BSubsec&, void*), void* parm = nullptr);
+
+private:
+    void IncrementValidcount();
+
+    const BotMap*   m_map;
+
+    // OPTIM NOTE: please measure whether short or int is better
+    unsigned short  m_validcount;
+    unsigned short* m_ssvisit;  // subsector visit
+    unsigned        m_sscount;
+
+    const BSubsec** m_ssqueue;
 };
 
 #endif /* defined(__EternityEngine__b_path__) */
