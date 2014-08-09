@@ -235,6 +235,15 @@
     <Filter Include="JSONCpp">
       <UniqueIdentifier>{56b756f3-2a6d-4bb3-8172-d4d935c12a7b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\WP_">
+      <UniqueIdentifier>{9acc9100-9b97-4f0e-813b-2a8aa8c79248}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\WP_\WP_ Headers">
+      <UniqueIdentifier>{bca86a69-87ea-4937-b2bb-48120a90b6e9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\WP_\WP_ Source">
+      <UniqueIdentifier>{3b23d1d1-229f-4bf0-a4b4-2dbf8e94ad59}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\acs_acs0.cpp">
@@ -1014,6 +1023,21 @@
     <ClCompile Include="..\source\sdl\i_sdltimer.cpp">
       <Filter>Source Files\SDL\SDL Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\autodoom\b_itemlearn.cpp">
+      <Filter>Source Files\autodoom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\b_lineeffect.cpp">
+      <Filter>Source Files\autodoom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\b_trace.cpp">
+      <Filter>Source Files\autodoom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\ev_sectors.cpp">
+      <Filter>Source Files\EV_\EV_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\wp_weapons.cpp">
+      <Filter>Source Files\WP_\WP_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1661,9 +1685,6 @@
     <ClInclude Include="..\source\gl\gl_vars.h">
       <Filter>Source Files\GL\GL Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\metaadapter.h">
-      <Filter>Source Files\MetaAPI</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\metaapi.h">
       <Filter>Source Files\MetaAPI</Filter>
     </ClInclude>
@@ -1804,6 +1825,24 @@
     </ClInclude>
     <ClInclude Include="..\source\sdl\i_sdltimer.h">
       <Filter>Source Files\SDL\SDL Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\b_itemlearn.h">
+      <Filter>Source Files\autodoom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\b_lineeffect.h">
+      <Filter>Source Files\autodoom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\b_trace.h">
+      <Filter>Source Files\autodoom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\ev_sectors.h">
+      <Filter>Source Files\EV_\EV_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\p_things.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\wp_weapons.h">
+      <Filter>Source Files\WP_\WP_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

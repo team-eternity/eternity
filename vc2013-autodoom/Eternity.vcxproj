@@ -319,9 +319,12 @@
     <ClCompile Include="..\source\autodoom\b_classifier.cpp" />
     <ClCompile Include="..\source\autodoom\b_glbsp.cpp" />
     <ClCompile Include="..\source\autodoom\b_intset.cpp" />
+    <ClCompile Include="..\source\autodoom\b_itemlearn.cpp" />
+    <ClCompile Include="..\source\autodoom\b_lineeffect.cpp" />
     <ClCompile Include="..\source\autodoom\b_msector.cpp" />
     <ClCompile Include="..\source\autodoom\b_path.cpp" />
     <ClCompile Include="..\source\autodoom\b_think.cpp" />
+    <ClCompile Include="..\source\autodoom\b_trace.cpp" />
     <ClCompile Include="..\source\autodoom\b_util.cpp" />
     <ClCompile Include="..\source\autodoom\glbsp\analyze.c" />
     <ClCompile Include="..\source\autodoom\glbsp\blockmap.c" />
@@ -527,6 +530,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\source\ev_sectors.cpp" />
     <ClCompile Include="..\source\e_args.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1748,6 +1752,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\source\wp_weapons.cpp" />
     <ClCompile Include="..\source\w_formats.cpp" />
     <ClCompile Include="..\source\w_hacks.cpp" />
     <ClCompile Include="..\source\w_levels.cpp" />
@@ -2040,9 +2045,12 @@
     <ClInclude Include="..\source\autodoom\b_classifier.h" />
     <ClInclude Include="..\source\autodoom\b_glbsp.h" />
     <ClInclude Include="..\source\autodoom\b_intset.h" />
+    <ClInclude Include="..\source\autodoom\b_itemlearn.h" />
+    <ClInclude Include="..\source\autodoom\b_lineeffect.h" />
     <ClInclude Include="..\source\autodoom\b_msector.h" />
     <ClInclude Include="..\source\autodoom\b_path.h" />
     <ClInclude Include="..\source\autodoom\b_think.h" />
+    <ClInclude Include="..\source\autodoom\b_trace.h" />
     <ClInclude Include="..\source\autodoom\b_util.h" />
     <ClInclude Include="..\source\autodoom\glbsp\analyze.h" />
     <ClInclude Include="..\source\autodoom\glbsp\blockmap.h" />
@@ -2090,6 +2098,7 @@
     <ClInclude Include="..\Source\doomstat.h" />
     <ClInclude Include="..\Source\doomtype.h" />
     <ClInclude Include="..\Source\dstrings.h" />
+    <ClInclude Include="..\source\ev_sectors.h" />
     <ClInclude Include="..\source\e_args.h" />
     <ClInclude Include="..\source\e_dstate.h" />
     <ClInclude Include="..\Source\e_edf.h" />
@@ -2129,6 +2138,7 @@
     <ClInclude Include="..\source\m_binary.h" />
     <ClInclude Include="..\source\m_compare.h" />
     <ClInclude Include="..\source\m_ctype.h" />
+    <ClInclude Include="..\source\p_things.h" />
     <ClInclude Include="..\source\sdl\i_sdltimer.h" />
     <ClInclude Include="..\source\s_formats.h" />
     <ClInclude Include="..\source\s_reverb.h" />
@@ -2231,6 +2241,7 @@
     <ClInclude Include="..\source\v_patchfmt.h" />
     <ClInclude Include="..\source\v_png.h" />
     <ClInclude Include="..\Source\v_video.h" />
+    <ClInclude Include="..\source\wp_weapons.h" />
     <ClInclude Include="..\source\w_formats.h" />
     <ClInclude Include="..\source\w_hacks.h" />
     <ClInclude Include="..\source\w_iterator.h" />
@@ -2285,7 +2296,6 @@
     <ClInclude Include="..\source\gl\gl_projection.h" />
     <ClInclude Include="..\source\gl\gl_texture.h" />
     <ClInclude Include="..\source\gl\gl_vars.h" />
-    <ClInclude Include="..\source\metaadapter.h" />
     <ClInclude Include="..\source\metaapi.h" />
     <ClInclude Include="..\source\metaqstring.h" />
     <ClInclude Include="..\source\cam_sight.h" />

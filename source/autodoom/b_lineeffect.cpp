@@ -27,7 +27,7 @@
 //
 //-----------------------------------------------------------------------------
 
-#include "z_zone.h"
+#include "../z_zone.h"
 
 #include "../doomstat.h"
 #include "../m_collection.h"
