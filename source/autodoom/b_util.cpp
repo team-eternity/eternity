@@ -242,7 +242,7 @@ void B_Log(const char *output, ...)
    va_list args;
    
    va_start(args, output);
-   pvsnprintf(tempstr, sizeof(tempstr), output, args);
+   vsnprintf(tempstr, sizeof(tempstr), output, args);
    va_end(args);
    
 #ifdef _WIN32

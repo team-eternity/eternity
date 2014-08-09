@@ -690,10 +690,9 @@ TempBotMap::Line &TempBotMap::placeLine(Vertex &v1, Vertex &v2,
    
    // -- a vertex exist in this line's way, create two instead
    PODCollection<int> coll;
-   botMap->getTouchedBlocks(v1.x, v1.y, v2.x, v2.y, [&coll](int b)
-                    {
-                       coll.add(b);
-                    });
+   botMap->getTouchedBlocks(v1.x, v1.y, v2.x, v2.y, [&coll](int b){
+      coll.add(b);
+   });
 
    // prepared these for bounds checking a bit later
    fixed_t maxx = botMap->bMapOrgX + botMap->bMapWidth * BOTMAPBLOCKSIZE;
@@ -787,7 +786,7 @@ TempBotMap::Line &TempBotMap::placeLine(Vertex &v1, Vertex &v2,
          }
       }
    }
-justadd:
+
    Line *ln = new Line;
    
 //   Line *ln = estructalloc(Line, 1);
