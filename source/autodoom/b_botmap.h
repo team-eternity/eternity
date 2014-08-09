@@ -131,6 +131,8 @@ public:
       std::unordered_set<const Mobj *> mobjlist;
       std::unordered_set<const line_t *> linelist;
       v2fixed_t mid;
+      // Fast neighbour lookup
+      PODCollection<const Subsec*> neighs;
    };
    Collection<Subsec> ssectors;
    int numssectors;

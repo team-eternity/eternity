@@ -299,6 +299,7 @@ void B_GLBSP_PutSegment(int v1idx, int v2idx, int back, int lnidx, int part,
 	s_cacheStream->WriteUint32((uint32_t)part);
 
    BotMap::Seg &sg = botMap->segs[sgidx];
+   sg.owner = nullptr;
 
    sg.v[0] = botMap->vertices + v1idx;
    sg.v[1] = botMap->vertices + v2idx;
@@ -427,7 +428,13 @@ void B_GLBSP_PutSubsector(int first, int num, int ssidx)
       
       // set the owner reference from this seg to this subsector
       sg.owner = &ss;
-      
+
+      // Set the neighbours
+      if (sg.partner && sg.partner->owner && (ss.neighs.getLength() == 0 || (ss.neighs.back() != sg.partner->owner && ss.neighs[0] != sg.partner->owner)))
+      {
+            ss.neighs.add(sg.partner->owner);
+            sg.partner->owner->neighs.add(&ss);
+      }
       // set the metasector if not set already
       if (!ss.msector && sg.ln)
          ss.msector = sg.ln->msec[sg.isback];
