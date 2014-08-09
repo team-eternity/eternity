@@ -1230,23 +1230,31 @@ extern ceilinglist_t *activeceilings;  // jff 2/22/98
 //
 ////////////////////////////////////////////////////////////////
 
+// IOANCH: added "useStates" optional argument which enables looking up the
+// sector height possibility (level state) stacks
+
 int twoSided(int sector, int line);
 
 sector_t *getSector(int currentSector, int line, int side);
 
 side_t *getSide(int currentSector, int line, int side);
 
-fixed_t P_FindLowestFloorSurrounding(const sector_t *sec);
+fixed_t P_FindLowestFloorSurrounding(const sector_t *sec,
+                                     bool useStates = false);
 
-fixed_t P_FindHighestFloorSurrounding(const sector_t *sec);
+fixed_t P_FindHighestFloorSurrounding(const sector_t *sec,
+                                      bool useStates = false);
 
-fixed_t P_FindNextHighestFloor(const sector_t *sec, int currentheight);
+fixed_t P_FindNextHighestFloor(const sector_t *sec, int currentheight,
+                               bool useStates = false);
 
 fixed_t P_FindNextLowestFloor(const sector_t *sec, int currentheight);
 
-fixed_t P_FindLowestCeilingSurrounding(const sector_t *sec); // jff 2/04/98
+fixed_t P_FindLowestCeilingSurrounding(const sector_t *sec,
+                                       bool useStates = false); // jff 2/04/98
 
-fixed_t P_FindHighestCeilingSurrounding(const sector_t *sec); // jff 2/04/98
+fixed_t P_FindHighestCeilingSurrounding(const sector_t *sec,
+                                        bool useStates = false); // jff 2/04/98
 
 fixed_t P_FindNextLowestCeiling(const sector_t *sec, int currentheight);
    // jff 2/04/98
@@ -1258,9 +1266,11 @@ fixed_t P_FindShortestTextureAround(int secnum); // jff 2/04/98
 
 fixed_t P_FindShortestUpperAround(int secnum); // jff 2/04/98
 
-sector_t *P_FindModelFloorSector(fixed_t floordestheight, int secnum); //jff 02/04/98
+sector_t *P_FindModelFloorSector(fixed_t floordestheight, int secnum);
+//jff 02/04/98
 
-sector_t *P_FindModelCeilingSector(fixed_t ceildestheight, int secnum); //jff 02/04/98 
+sector_t *P_FindModelCeilingSector(fixed_t ceildestheight, int secnum);
+//jff 02/04/98
 
 int P_FindSectorFromLineTag(const line_t *line, int start); // killough 4/17/98
 

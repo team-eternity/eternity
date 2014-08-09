@@ -315,6 +315,7 @@
 		4F68CE8D1963D88100E7B8BE /* ev_sectors.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F68CE8B1963D88100E7B8BE /* ev_sectors.cpp */; };
 		4F873EC9193467DB0003BEFF /* wp_weapons.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F873EC7193467DB0003BEFF /* wp_weapons.cpp */; };
 		4FE91CD6196FDFC600FB6336 /* b_itemlearn.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FE91CD4196FDFC600FB6336 /* b_itemlearn.cpp */; };
+		4FE91CD91970399A00FB6336 /* b_lineeffect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FE91CD71970399900FB6336 /* b_lineeffect.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -433,6 +434,8 @@
 		4FCB9B9F184B5D8900F56599 /* m_ctype.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = m_ctype.h; path = ../source/m_ctype.h; sourceTree = "<group>"; };
 		4FE91CD4196FDFC600FB6336 /* b_itemlearn.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = b_itemlearn.cpp; sourceTree = "<group>"; };
 		4FE91CD5196FDFC600FB6336 /* b_itemlearn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = b_itemlearn.h; sourceTree = "<group>"; };
+		4FE91CD71970399900FB6336 /* b_lineeffect.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = b_lineeffect.cpp; sourceTree = "<group>"; };
+		4FE91CD81970399A00FB6336 /* b_lineeffect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = b_lineeffect.h; sourceTree = "<group>"; };
 		4FF640B81735256700793714 /* v_alloc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = v_alloc.cpp; path = ../source/v_alloc.cpp; sourceTree = "<group>"; };
 		4FF640B91735256700793714 /* v_alloc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = v_alloc.h; path = ../source/v_alloc.h; sourceTree = "<group>"; };
 		4FFD27341796990400E4E5B1 /* a_args.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = a_args.h; path = ../source/a_args.h; sourceTree = "<group>"; };
@@ -1033,6 +1036,8 @@
 				4F43B451182D9F7A00730C02 /* b_glbsp.h */,
 				4FE91CD4196FDFC600FB6336 /* b_itemlearn.cpp */,
 				4FE91CD5196FDFC600FB6336 /* b_itemlearn.h */,
+				4FE91CD71970399900FB6336 /* b_lineeffect.cpp */,
+				4FE91CD81970399A00FB6336 /* b_lineeffect.h */,
 				4F43B452182D9F7A00730C02 /* b_msector.cpp */,
 				4F43B453182D9F7A00730C02 /* b_msector.h */,
 				4F43B454182D9F7A00730C02 /* b_path.cpp */,
@@ -2098,6 +2103,7 @@
 				4F5F3962182D9B820027813A /* v_png.cpp in Sources */,
 				4F5F3963182D9B820027813A /* v_video.cpp in Sources */,
 				4F5F3964182D9B820027813A /* w_formats.cpp in Sources */,
+				4FE91CD91970399A00FB6336 /* b_lineeffect.cpp in Sources */,
 				4F36248118A567CD00B94FA1 /* xl_sndinfo.cpp in Sources */,
 				4F5F3965182D9B820027813A /* w_hacks.cpp in Sources */,
 				4F5F3966182D9B820027813A /* w_levels.cpp in Sources */,

@@ -36,6 +36,7 @@
 
 #include "a_small.h"
 #include "acs_intr.h"
+#include "autodoom/b_lineeffect.h"
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_deh.h"
@@ -337,7 +338,7 @@ sector_t *getNextSector(const line_t *line, const sector_t *sec)
 //
 // killough 11/98: reformatted
 //
-fixed_t P_FindLowestFloorSurrounding(const sector_t* sec)
+fixed_t P_FindLowestFloorSurrounding(const sector_t* sec, bool useStates)
 {
    fixed_t floor = sec->floorheight;
    const sector_t *other;
@@ -345,9 +346,12 @@ fixed_t P_FindLowestFloorSurrounding(const sector_t* sec)
    
    for(i = 0; i < sec->linecount; i++)
    {
-      if((other = getNextSector(sec->lines[i], sec)) &&
-         other->floorheight < floor)
-         floor = other->floorheight;
+      if((other = getNextSector(sec->lines[i], sec)))
+      {
+         fixed_t newHeight = useStates ? LevelStateStack::Floor(*other) : other->floorheight;
+         if(newHeight < floor)
+            floor = newHeight;
+      }
    }
    
    return floor;
@@ -364,7 +368,7 @@ fixed_t P_FindLowestFloorSurrounding(const sector_t* sec)
 //
 // killough 11/98: reformatted
 //
-fixed_t P_FindHighestFloorSurrounding(const sector_t *sec)
+fixed_t P_FindHighestFloorSurrounding(const sector_t *sec, bool useStates)
 {
    fixed_t floor = -500*FRACUNIT;
    const sector_t *other;
@@ -376,11 +380,16 @@ fixed_t P_FindHighestFloorSurrounding(const sector_t *sec)
    if(!comp[comp_model])          //jff 3/12/98 avoid ovf
       floor = -32000*FRACUNIT;      // in height calculations
 
+   fixed_t newHeight;
    for(i = 0; i < sec->linecount; i++)
    {
-      if((other = getNextSector(sec->lines[i],sec)) &&
-         other->floorheight > floor)
-         floor = other->floorheight;
+      if((other = getNextSector(sec->lines[i],sec)))
+      {
+         newHeight = useStates ? LevelStateStack::Floor(*other)
+         : other->floorheight;
+         if (newHeight > floor)
+            floor = newHeight;
+      }
    }
    
    return floor;
@@ -396,25 +405,33 @@ fixed_t P_FindHighestFloorSurrounding(const sector_t *sec)
 //
 // Rewritten by Lee Killough to avoid fixed array and to be faster
 //
-fixed_t P_FindNextHighestFloor(const sector_t *sec, int currentheight)
+fixed_t P_FindNextHighestFloor(const sector_t *sec, int currentheight,
+                               bool useStates)
 {
    sector_t *other;
    int i;
    
    for(i=0; i < sec->linecount; i++)
    {
-      if((other = getNextSector(sec->lines[i],sec)) &&
-         other->floorheight > currentheight)
+      if((other = getNextSector(sec->lines[i],sec)))
       {
-         int height = other->floorheight;
-         while (++i < sec->linecount)
+         fixed_t newHeight = useStates ? LevelStateStack::Floor(*other)
+         : other->floorheight;
+         if(newHeight > currentheight)
          {
-            if((other = getNextSector(sec->lines[i],sec)) &&
-               other->floorheight < height &&
-               other->floorheight > currentheight)
-               height = other->floorheight;
+            int height = newHeight;
+            while (++i < sec->linecount)
+            {
+               if((other = getNextSector(sec->lines[i],sec)))
+               {
+                  newHeight = useStates ? LevelStateStack::Floor(*other)
+                  : other->floorheight;
+                  if(newHeight < height && newHeight > currentheight)
+                     height = newHeight;
+               }
+            }
+            return height;
          }
-         return height;
       }
    }
    return currentheight;
@@ -533,7 +550,7 @@ fixed_t P_FindNextHighestCeiling(const sector_t *sec, int currentheight)
 //
 // killough 11/98: reformatted
 //
-fixed_t P_FindLowestCeilingSurrounding(const sector_t* sec)
+fixed_t P_FindLowestCeilingSurrounding(const sector_t* sec, bool useAdvance)
 {
    const sector_t *other;
    fixed_t height = D_MAXINT;
@@ -547,17 +564,20 @@ fixed_t P_FindLowestCeilingSurrounding(const sector_t* sec)
       // SoM: ignore attached sectors.
       for(i = 0; i < sec->linecount; i++)
       {
-         if((other = getNextSector(sec->lines[i],sec)) &&
-            other->ceilingheight < height)
+         if((other = getNextSector(sec->lines[i],sec)))
          {
-            int j;
+            fixed_t newHeight = useAdvance ? LevelStateStack::Ceiling(*other) : other->ceilingheight;
+            if(newHeight < height)
+            {
+               int j;
 
-            for(j = 0; j < sec->c_asurfacecount; j++)
-               if(sec->c_asurfaces[j].sector == other)
-                  break;
-            
-            if(j == sec->c_asurfacecount)
-               height = other->ceilingheight;
+               for(j = 0; j < sec->c_asurfacecount; j++)
+                  if(sec->c_asurfaces[j].sector == other)
+                     break;
+               
+               if(j == sec->c_asurfacecount)
+                  height = newHeight;
+            }
          }
       }
    }
@@ -565,8 +585,12 @@ fixed_t P_FindLowestCeilingSurrounding(const sector_t* sec)
    {      
       for(i = 0; i < sec->linecount; i++)
       {
-         if((other = getNextSector(sec->lines[i],sec)) && other->ceilingheight < height)
-            height = other->ceilingheight;
+         if((other = getNextSector(sec->lines[i],sec)))
+         {
+            fixed_t newHeight = useAdvance ? LevelStateStack::Ceiling(*other) : other->ceilingheight;
+            if (newHeight < height)
+               height = newHeight;
+         }
       }
    }
 
@@ -584,7 +608,7 @@ fixed_t P_FindLowestCeilingSurrounding(const sector_t* sec)
 //
 // killough 11/98: reformatted
 //
-fixed_t P_FindHighestCeilingSurrounding(const sector_t* sec)
+fixed_t P_FindHighestCeilingSurrounding(const sector_t* sec, bool useStates)
 {
    const sector_t *other;
    fixed_t height = 0;
@@ -598,10 +622,13 @@ fixed_t P_FindHighestCeilingSurrounding(const sector_t* sec)
    
    // height calculations
    for(i=0; i < sec->linecount; i++)
-      if((other = getNextSector(sec->lines[i],sec)) &&
-         other->ceilingheight > height)
-         height = other->ceilingheight;
-      
+      if((other = getNextSector(sec->lines[i],sec)))
+      {
+         fixed_t newHeight = useStates ? LevelStateStack::Ceiling(*other) : other->ceilingheight;
+         if(newHeight > height)
+            height = newHeight;
+      }
+   
    return height;
 }
 
