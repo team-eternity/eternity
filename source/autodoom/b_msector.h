@@ -29,6 +29,7 @@
 #ifndef B_MSECTOR_H_
 #define B_MSECTOR_H_
 
+#include "b_lineeffect.h"
 #include "../e_rtti.h"
 #include "../m_dllist.h"
 #include "../m_fixed.h"
@@ -71,11 +72,11 @@ public:
 	
    fixed_t getFloorHeight() const
    {
-      return sector->floorheight;
+      return LevelStateStack::Floor(*sector);
    }
    fixed_t getCeilingHeight() const
    {
-      return sector->ceilingheight;
+       return LevelStateStack::Ceiling(*sector);
    }
    const sector_t *getFloorSector() const
    {
@@ -104,14 +105,14 @@ public:
    fixed_t getFloorHeight() const
    {
       return
-      mobj->flags & MF_SPAWNCEILING ? sector->floorheight :
-      (P_Use3DClipping() ? sector->floorheight + mobj->height : D_MAXINT);
+          mobj->flags & MF_SPAWNCEILING ? LevelStateStack::Floor(*sector) :
+          (P_Use3DClipping() ? LevelStateStack::Floor(*sector) + mobj->height : D_MAXINT);
    }
    fixed_t getCeilingHeight() const
    {
       return
-      !(mobj->flags & MF_SPAWNCEILING) ? sector->ceilingheight :
-      (P_Use3DClipping() ? sector->ceilingheight - mobj->height : D_MININT);
+          !(mobj->flags & MF_SPAWNCEILING) ? LevelStateStack::Ceiling(*sector) :
+          (P_Use3DClipping() ? LevelStateStack::Ceiling(*sector) - mobj->height : D_MININT);
    }
    const sector_t *getFloorSector() const
    {
@@ -140,21 +141,21 @@ public:
    fixed_t getFloorHeight() const
    {
       return line->flags & ML_BLOCKING || !line->backsector ? D_MAXINT :
-      getFloorSector()->floorheight;
+      LevelStateStack::Floor(*getFloorSector());
    }
    fixed_t getCeilingHeight() const
    {
       return line->flags & ML_BLOCKING || !line->backsector ? D_MININT :
-      getCeilingSector()->ceilingheight;
+      LevelStateStack::Ceiling(*getCeilingSector());
    }
    const sector_t *getFloorSector() const
    {
-      return sector[1] ? (sector[0]->floorheight > sector[1]->floorheight ? sector[0] :
+       return sector[1] ? (LevelStateStack::Floor(*sector[0]) > LevelStateStack::Floor(*sector[1]) ? sector[0] :
                           sector[1]) : sector[0];
    }
    const sector_t *getCeilingSector() const
    {
-      return sector[1] ? (sector[0]->ceilingheight < sector[1]->ceilingheight ? sector[0] :
+      return sector[1] ? (LevelStateStack::Ceiling(*sector[0]) < LevelStateStack::Ceiling(*sector[1]) ? sector[0] :
                           sector[1]) : sector[0];
    }
 };

@@ -392,10 +392,10 @@ static INLINE_G sidedef_t *SafeLookupSidedef(uint16_t num)
 //
 // GetLinedefs
 //
-void GetLinedefs(void)
+static void GetLinedefs(void)
 {
   int i;
-  int startIdx, endIdx, rightIdx, leftIdx;
+  int startIdx, endIdx, rightIdx, leftIdx, tag;
 
   DisplayTicker();
 
@@ -405,7 +405,7 @@ void GetLinedefs(void)
 
    i = 0;
 
-   while (B_GLBSP_GetNextLinedef(&startIdx, &endIdx, &rightIdx, &leftIdx))
+   while (B_GLBSP_GetNextLinedef(&startIdx, &endIdx, &rightIdx, &leftIdx, &tag))
    {
       linedef_t *line;
       vertex_t *start = LookupVertex(startIdx);
@@ -421,7 +421,7 @@ void GetLinedefs(void)
       line->flags = leftIdx >= 0 && rightIdx >= 0 ?
       LINEFLAG_TWO_SIDED : 0;  // IOANCH: two sided
       line->type = 0;
-      line->tag = 0;
+      line->tag = tag;
       line->two_sided = (line->flags & LINEFLAG_TWO_SIDED) ? TRUE : FALSE;
       line->is_precious = (line->tag >= 900 && line->tag < 1000) ?
       TRUE : FALSE;
@@ -737,7 +737,7 @@ static void PutAutoDoomLinedefs(void)
       linedef_t *line = lev_linedefs[i];
       B_GLBSP_PutLine(line->start->index, line->end->index,
                       line->right ? line->right->index : -1,
-                      line->left ? line->left->index : -1, i);
+                      line->left ? line->left->index : -1, i, line->tag);
    }
 }
 

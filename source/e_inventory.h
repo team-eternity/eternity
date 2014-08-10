@@ -168,7 +168,7 @@ int E_GiveAllKeys(player_t *player);
 int E_TakeAllKeys(player_t *player);
 
 // Check if a player is able to unlock a lock, by its lock ID.
-bool E_PlayerCanUnlock(const player_t *player, int lockID, bool remote);
+bool E_PlayerCanUnlock(const player_t *player, int lockID, bool remote, bool mute = false);
 
 // Get the automap color for a lockdef
 int E_GetLockDefColor(int lockID);

@@ -30,6 +30,7 @@
 #ifndef __EternityEngine__b_path__
 #define __EternityEngine__b_path__
 
+#include <map>
 #include "b_botmap.h"
 #include "b_util.h"
 #include "../m_collection.h"
@@ -174,24 +175,80 @@ public:
 //
 // Is linked with the botmap
 //
+class BotPath
+{
+public:
+    PODCollection<const BNeigh*>    inv;    // path from end to start
+    const BSubsec*                  last;
+    v2fixed_t                       start;
+    v2fixed_t                       end;
+
+    BotPath() :last(nullptr)
+    {
+    }
+};
+
+enum PathResult
+{
+    PathNo,
+    PathAdd,
+    PathDone
+};
+
 class PathFinder
 {
 public:
-    PathFinder(const BotMap* map) : m_map(map), m_validcount(0), m_ssvisit(nullptr), m_sscount(0), m_ssqueue(nullptr)
+    PathFinder(const BotMap* map = nullptr) : 
+        m_map(map),
+        m_validcount(0), 
+        m_ssvisit(nullptr), 
+        m_sscount(0), 
+        m_ssprev(nullptr),
+        m_ssqueue(nullptr),
+        m_plheight(0)
     {
     }
 
     ~PathFinder()
     {
-        efree(m_ssvisit);
-        efree(m_ssqueue);
+        Clear();
     }
 
-    void FindNextGoal(fixed_t x, fixed_t y, bool(*isGoal)(const BSubsec&, void*), void* parm = nullptr);
-    void AvailableGoals(const BSubsec& source, fixed_t plheight, PODCollection<const BSubsec*>& dests, bool (*isGoal)(const BSubsec&, void*), void* parm = nullptr);
+    bool FindNextGoal(fixed_t x, fixed_t y, BotPath& path, bool(*isGoal)(const BSubsec&, v2fixed_t&, void*), void* parm = nullptr);
+    bool AvailableGoals(const BSubsec& source, std::unordered_set<const BSubsec*>* dests, PathResult(*isGoal)(const BSubsec&, void*), void* parm = nullptr);
+
+    void SetPlayerHeight(fixed_t value)
+    {
+        m_plheight = value;
+    }
+
+    void SetMap(const BotMap* map)
+    {
+        m_map = map;
+        Clear();
+    }
+
+    void Clear()
+    {
+        efree(m_ssvisit);
+        m_ssvisit = nullptr;
+        efree(m_ssprev);
+        m_ssprev = nullptr;
+        efree(m_ssqueue);
+        m_ssqueue = nullptr;
+        m_sscount = 0;
+        m_teleCache.clear();
+    }
 
 private:
+    struct TeleItem
+    {
+        const BSubsec*  ss;
+        v2fixed_t       v;
+    };
+
     void IncrementValidcount();
+    const TeleItem* checkTeleportation(const BNeigh& neigh);
 
     const BotMap*   m_map;
 
@@ -200,7 +257,11 @@ private:
     unsigned short* m_ssvisit;  // subsector visit
     unsigned        m_sscount;
 
+    const BNeigh**  m_ssprev;
     const BSubsec** m_ssqueue;
+    fixed_t         m_plheight;
+
+    std::map<const line_t*, TeleItem> m_teleCache; // teleporter cache
 };
 
 #endif /* defined(__EternityEngine__b_path__) */

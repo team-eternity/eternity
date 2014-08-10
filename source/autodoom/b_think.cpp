@@ -38,6 +38,7 @@
 #include "../doomstat.h"
 #include "../e_edf.h"
 #include "../e_player.h"
+#include "../e_things.h"
 #include "../ev_specials.h"
 #include "../g_dmflag.h"
 #include "../metaapi.h"
@@ -63,7 +64,15 @@ void Bot::mapInit()
    B_EmptyTableAndDelete(goalEvents);  // remove all previously listed events
    memset(prevPathIdx, 0xff, sizeof(prevPathIdx));
    prevCtr = 0;
-   searchstage = 0;
+   m_searchstage = 0;
+
+   m_finder.SetMap(botMap);
+   m_finder.SetPlayerHeight(pl->mo->height);
+   m_hasPath = false;
+
+   m_deepTriedLines.clear();
+   m_deepSearchMode = DeepNormal;
+   m_deepAvailSsectors.clear();
 }
 
 //
@@ -174,9 +183,9 @@ bool Bot::objectOfInterest(const BSeg *targsg, const BSubsec *targss,
       if(action)
       {
          if(action->type == &W1ActionType || action->type == &S1ActionType ||
-            (action->type == &WRActionType && searchstage > 0) ||
-            (action->type == &SRActionType && searchstage > 0) ||
-            (action->type == &DRActionType && searchstage > 0))
+            (action->type == &WRActionType && m_searchstage > 0) ||
+            (action->type == &SRActionType && m_searchstage > 0) ||
+            (action->type == &DRActionType && m_searchstage > 0))
          {
             bool found = true;
             if(line.tag)
@@ -301,7 +310,7 @@ bool Bot::routePath()
    
    // Found nothing with this search, so try to search for more on next attempt
    // ObjectOfInterest will look for more
-   ++searchstage;
+   ++m_searchstage;
    
 	return false;
 }
@@ -338,6 +347,267 @@ bool Bot::goalAchieved()
    return false;
 }
 
+PathResult Bot::reachableItem(const BSubsec& ss, void* v)
+{
+    Bot& self = *(Bot*)v;
+    v2fixed_t dummy;
+
+    bool result = objOfInterest(ss, dummy, &self);
+
+    return result ? (self.m_deepSearchMode == DeepBeyond ? PathDone : PathAdd) : PathNo;
+}
+
+
+bool Bot::shouldUseSpecial(const line_t& line)
+{
+    VanillaLineSpecial vls = static_cast<VanillaLineSpecial>(line.special);
+    switch (vls)
+    {
+        // sure goals
+    case VLS_S1ExitLevel:
+    case VLS_S1SecretExit:
+    case VLS_WRExitLevel:
+    case VLS_WRSecretExit:
+        return true;
+
+        // would only block or cause harm
+    case VLS_W1CloseDoor:
+    case VLS_W1FastCeilCrushRaise:
+    case VLS_W1CloseDoor30:
+    case VLS_W1CeilingCrushAndRaise:
+    case VLS_SRCloseDoor:
+    case VLS_SRCeilingLowerToFloor:
+    case VLS_W1CeilingLowerAndCrush:
+    case VLS_S1CeilingCrushAndRaise:
+    case VLS_S1CloseDoor:
+    case VLS_WRCeilingLowerAndCrush:
+    case VLS_WRCeilingCrushAndRaise:
+    case VLS_WRCloseDoor:
+    case VLS_WRCloseDoor30:
+    case VLS_WRFastCeilCrushRaise:
+    case VLS_WRDoorBlazeClose:
+    case VLS_W1DoorBlazeClose:
+    case VLS_S1DoorBlazeClose:
+    case VLS_SRDoorBlazeClose:
+    case VLS_W1SilentCrushAndRaise:
+    case VLS_W1CeilingLowerToFloor:
+    case VLS_WRSilentCrushAndRaise:
+    case VLS_WRCeilingLowerToFloor:
+    case VLS_S1FastCeilCrushRaise:
+    case VLS_S1SilentCrushAndRaise:
+    case VLS_S1CeilingLowerAndCrush:
+    case VLS_S1CloseDoor30:
+    case VLS_SRFastCeilCrushRaise:
+    case VLS_SRCeilingCrushAndRaise:
+    case VLS_SRSilentCrushAndRaise:
+    case VLS_SRCeilingLowerAndCrush:
+    case VLS_SRCloseDoor30:
+        return false;
+
+        // more complex, so for now they aren't targetted
+    case VLS_W1PlatStop:
+    case VLS_W1CeilingCrushStop:
+    case VLS_WRCeilingCrushStop:
+    case VLS_SRChangeOnlyNumeric:
+    case VLS_WRPlatStop:
+    case VLS_W1ChangeOnly:
+    case VLS_WRChangeOnly:
+    case VLS_S1PlatStop:
+    case VLS_S1CeilingCrushStop:
+    case VLS_SRCeilingCrushStop:
+    case VLS_S1ChangeOnly:
+    case VLS_SRChangeOnly:
+    case VLS_W1ChangeOnlyNumeric:
+    case VLS_WRChangeOnlyNumeric:
+    case VLS_S1ChangeOnlyNumeric:
+    case VLS_WRStartLineScript1S:
+    case VLS_W1StartLineScript:
+    case VLS_W1StartLineScript1S:
+    case VLS_SRStartLineScript:
+    case VLS_S1StartLineScript:
+    case VLS_GRStartLineScript:
+    case VLS_G1StartLineScript:
+    case VLS_WRStartLineScript:
+        return false;
+
+        // useless
+    case VLS_W1LightTurnOn: 
+    case VLS_W1LightTurnOn255:
+    case VLS_W1StartLightStrobing:
+    case VLS_W1LightsVeryDark:
+    case VLS_WRLightsVeryDark:
+    case VLS_WRLightTurnOn:
+    case VLS_WRLightTurnOn255:
+    case VLS_W1TurnTagLightsOff:
+    case VLS_SRLightTurnOn255:
+    case VLS_SRLightsVeryDark:
+    case VLS_WRStartLightStrobing:
+    case VLS_WRTurnTagLightsOff:
+    case VLS_S1LightTurnOn:
+    case VLS_S1LightsVeryDark:
+    case VLS_S1LightTurnOn255:
+    case VLS_S1StartLightStrobing:
+    case VLS_S1TurnTagLightsOff:
+    case VLS_SRLightTurnOn:
+    case VLS_SRStartLightStrobing:
+    case VLS_SRTurnTagLightsOff:
+    case VLS_W1TeleportMonsters:
+    case VLS_WRTeleportMonsters:
+    case VLS_W1SilentLineTRMonsters:
+    case VLS_WRSilentLineTRMonsters:
+    case VLS_W1SilentLineTeleMonsters:
+    case VLS_WRSilentLineTeleMonsters:
+    case VLS_W1SilentTeleportMonsters:
+    case VLS_WRSilentTeleportMonsters:
+        return false;
+
+        // personnel teleportation: already handled in the path finder
+    case VLS_W1Teleport:
+    case VLS_WRTeleport:
+    case VLS_S1Teleport:
+    case VLS_SRTeleport:
+    case VLS_W1SilentTeleport:
+    case VLS_WRSilentTeleport:
+    case VLS_S1SilentTeleport:
+    case VLS_SRSilentTeleport:
+        return false;
+
+    case VLS_W1SilentLineTeleport:
+    case VLS_WRSilentLineTeleport:
+    case VLS_W1SilentLineTeleportReverse:
+    case VLS_WRSilentLineTeleportReverse:
+        return false;
+
+    default:
+        break;
+    }
+
+    if (m_deepSearchMode == DeepNormal)
+    {
+        LevelStateStack::Clear();
+        m_deepTriedLines.clear();
+        m_deepAvailSsectors.clear();
+
+        m_deepTriedLines.insert(&line);
+
+        m_deepSearchMode = DeepAvail;
+        m_finder.AvailableGoals(*ss, &m_deepAvailSsectors, reachableItem, this);
+        m_deepSearchMode = DeepNormal;
+
+        // Now apply the change
+        if (!LevelStateStack::Push(line, *pl))
+            return false;
+
+        m_deepSearchMode = DeepBeyond;
+        bool result = m_finder.AvailableGoals(*ss, nullptr, reachableItem, this);
+        m_deepSearchMode = DeepNormal;
+
+        LevelStateStack::Clear();
+        return result;
+    }
+
+    return false;
+}
+
+bool Bot::objOfInterest(const BSubsec& ss, v2fixed_t& coord, void* v)
+{
+
+    Bot& self = *(Bot*)v;
+
+    if (self.m_deepSearchMode == DeepBeyond && self.m_deepAvailSsectors.count(&ss))
+        return false;
+
+    const Mobj* item;
+    fixed_t fh;
+    const Mobj& plmo = *self.pl->mo;
+    std::unordered_map<spritenum_t, PlayerStats>::const_iterator effect, nopick;
+    for (auto it = ss.mobjlist.begin(); it != ss.mobjlist.end(); ++it)
+    {
+        item = *it;
+        if (item == &plmo)
+            continue;
+        fh = ss.msector->getFloorHeight();
+        if (fh + plmo.height < item->z || fh > item->z + item->height)
+            continue;
+        if (item->flags & MF_SPECIAL)
+        {
+            if (item->sprite < 0 || item->sprite >= NUMSPRITES)
+                continue;
+
+            effect = self.effectStats.find(item->sprite);
+            nopick = self.nopickStats.find(item->sprite);
+
+            if (effect == self.effectStats.cend())
+            {
+                // unknown (new) item
+                // Does it have nopick stats?
+                if (nopick == self.nopickStats.cend())
+                {
+                    // no. Totally unknown
+                    if (self.m_deepSearchMode == DeepNormal)
+                        self.goalTable.setV2Fixed(BOT_PICKUP, coord = B_CoordXY (*item));
+                    return true;
+                }
+                else
+                {
+                    // yes. Is it greater than current status?
+                    if (nopick->second.greaterThan(*self.pl))
+                    {
+                        // Yes. It might be pickable now
+                        if (self.m_deepSearchMode == DeepNormal)
+                            self.goalTable.setV2Fixed(BOT_PICKUP, coord = B_CoordXY(*item));
+                        return true;
+                    }
+                }
+            }
+            else
+            {
+                // known item.
+                // currently just try to pick it up
+                if (nopick == self.nopickStats.cend() ||
+                    effect->second.fillsGap(*self.pl, nopick->second))
+                {
+                    if (self.m_deepSearchMode == DeepNormal)
+                        self.goalTable.setV2Fixed(BOT_PICKUP, coord = B_CoordXY(*item));
+                    return true;
+                }
+            }
+        }
+    }
+
+    const line_t* line;
+    const ev_action_t* action;
+    for (auto it = ss.linelist.begin(); it != ss.linelist.end(); ++it)
+    {
+        line = *it;
+        action = EV_ActionForSpecial(line->special);
+        if (action && (action->type == &W1ActionType || action->type == &WRActionType || action->type == &S1ActionType || action->type == &SRActionType || action->type == &DRActionType))
+        {
+            // OK, this might be viable. But check.
+            if (self.m_deepSearchMode == DeepAvail)
+            {
+                self.m_deepTriedLines.insert(line);
+                return true;
+            }
+            else if (self.m_deepSearchMode == DeepBeyond)
+            {
+                if (!self.m_deepTriedLines.count(line))
+                {
+                    if (self.shouldUseSpecial(*line))
+                        return true;
+                    self.m_deepTriedLines.insert(line);
+                    LevelStateStack::Push(*line, *self.pl);
+                }
+                return false;
+            }
+            else if (self.shouldUseSpecial(*line))
+                return true;
+        }
+    }
+
+    return false;
+}
+
 //
 // Bot::doNonCombatAI
 //
@@ -345,43 +615,89 @@ bool Bot::goalAchieved()
 //
 void Bot::doNonCombatAI()
 {
-   if(!path.exists())
-   {
-      if(!routePath())
-      {
-         cmd->sidemove += random.range(-pl->pclass->sidemove[0],
-                                       pl->pclass->sidemove[0]);
-         cmd->forwardmove += random.range(-pl->pclass->forwardmove[0],
-                                       pl->pclass->forwardmove[0]);
-         return;
-      }
-   }
+    if (!m_hasPath)
+    {
+        // TODO: object of interest
+        
+        if(!m_finder.FindNextGoal(pl->mo->x, pl->mo->y, m_path, objOfInterest, this))
+        {
+            ++m_searchstage;
+            cmd->sidemove += random.range(-pl->pclass->sidemove[0],
+                pl->pclass->sidemove[0]);
+            cmd->forwardmove += random.range(-pl->pclass->forwardmove[0],
+                pl->pclass->forwardmove[0]);
+            return;
+        }
+        m_hasPath = true;
+    }
+   //if(!path.exists())
+   //{
+   //   if(!routePath())
+   //   {
+   //      cmd->sidemove += random.range(-pl->pclass->sidemove[0],
+   //                                    pl->pclass->sidemove[0]);
+   //      cmd->forwardmove += random.range(-pl->pclass->forwardmove[0],
+   //                                    pl->pclass->forwardmove[0]);
+   //      return;
+   //   }
+   //}
+
    // found path to exit
-	int nowon = path.straightPathCoordsIndex(pl->mo->x, pl->mo->y);
-	
-	if(nowon < 0 || prevCtr % 100 == 0)
-	{
-		// Reset if out of the path, or if a pushwall stopped moving
-      searchstage = 0;
-		path.reset();
-		return;
-	}
+    fixed_t mx, my, nx, ny;
+    if (ss == m_path.last)
+    {
+        nx = m_path.end.x;
+        ny = m_path.end.y;
+    }
+    else
+    {
+        const BNeigh** nit = m_path.inv.end();
+        while (nit-- > m_path.inv.begin())
+        {
+            if ((*nit)->seg->owner == ss)
+            {
+                nx = (*nit)->seg->mid.x;
+                ny = (*nit)->seg->mid.y;
+                goto moveon;
+            }
+        }
+        // not on path, so reset
+        m_searchstage = 0;
+        m_hasPath = false;
+        return;
+    }
+moveon:
+	//int nowon = path.straightPathCoordsIndex(pl->mo->x, pl->mo->y);
+	//
+	//if(nowon < 0 || prevCtr % 100 == 0)
+	//{
+	//	// Reset if out of the path, or if a pushwall stopped moving
+ //     searchstage = 0;
+	//	path.reset();
+	//	return;
+	//}
+ //  
+ //  if(goalTable.hasKey(BOT_WALKTRIG) && prevCtr % 14 == 0)
+ //     cmd->buttons |= BT_USE;
+ //  
+ //  int nexton = path.getNextStraightIndex(nowon);
    
-   if(goalTable.hasKey(BOT_WALKTRIG) && prevCtr % 14 == 0)
-      cmd->buttons |= BT_USE;
+
+   //if(nexton == -1)
+   //   path.getFinalCoord(nx, ny);
+   //else
+   //   path.getStraightCoords(nexton, nx, ny);
    
-   int nexton = path.getNextStraightIndex(nowon);
-   fixed_t mx, my, nx, ny;
+   if (goalAchieved())
+   {
+       m_searchstage = 0;
+       m_hasPath = false;
+       return;
+       //path.reset();  // only reset if reached destination
+   }
    mx = pl->mo->x;
    my = pl->mo->y;
-   if(nexton == -1)
-      path.getFinalCoord(nx, ny);
-   else
-      path.getStraightCoords(nexton, nx, ny);
-   
-   if(goalAchieved())
-      path.reset();  // only reset if reached destination
-   
+
    angle_t tangle = P_PointToAngle(mx, my, nx, ny);
    angle_t dangle = tangle - pl->mo->angle;
 

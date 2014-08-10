@@ -79,7 +79,7 @@ const sector_t *CompoundMSector::getFloorSector() const
    const sector_t *smax, *sval;
    for (int i = 0; i < numElem; ++i)
    {
-      if((val = (sval = msectors[i]->getFloorSector())->floorheight) > max)
+      if((val = LevelStateStack::Floor(*(sval = msectors[i]->getFloorSector()))) > max)
       {
          max = val;
          smax = sval;
@@ -99,7 +99,7 @@ const sector_t *CompoundMSector::getCeilingSector() const
    const sector_t *smin, *sval;
    for (int i = 0; i < numElem; ++i)
    {
-      if((val = (sval = msectors[i]->getCeilingSector())->ceilingheight) <
+      if((val = LevelStateStack::Ceiling(*(sval = msectors[i]->getCeilingSector()))) <
          min)
       {
          min = val;

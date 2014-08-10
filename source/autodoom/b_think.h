@@ -60,13 +60,26 @@ class Bot : public ZoneObject
    MetaTable goalTable;  // objectives to get (typically one object)
    MetaTable goalEvents;   // any potential goal events, which may be the same
    // as the one in goalTable
+
+   enum DeepSearch
+   {
+       DeepNormal,  // normal pathfinding search
+       DeepAvail,   // find already available items
+       DeepBeyond,  // look deeply for whatever is available beyond
+   };
    
-   RandomGenerator random;       // random generator for bot
+   RandomGenerator          random;       // random generator for bot
+   PathFinder               m_finder;
+   BotPath                  m_path;
+   bool                     m_hasPath;
+   DeepSearch               m_deepSearchMode;
+   std::set<const line_t*>  m_deepTriedLines;
+   std::unordered_set<const BSubsec*> m_deepAvailSsectors;
    
    // internal states
    int prevPathIdx[2];
    unsigned prevCtr;
-   unsigned searchstage;
+   unsigned m_searchstage;
 public:
    PathArray path;   // pathfinding
 private:
@@ -88,14 +101,18 @@ private:
    
    // Want item conditions
    bool wantArmour(itemeffect_t *ie) const;
+
+   bool shouldUseSpecial(const line_t& line);
+   static bool objOfInterest(const BSubsec& ss, v2fixed_t& coord, void* v);
+   static PathResult reachableItem(const BSubsec& ss, void* v);
    
 public:
    
    //
    // Constructor
    //
-   Bot() : ZoneObject(), pl(nullptr), active(true), cmd(nullptr), ss(nullptr),
-   prevCtr(0), searchstage(0)
+    Bot() : ZoneObject(), pl(nullptr), active(true), cmd(nullptr), ss(nullptr),
+        prevCtr(0), m_searchstage(0), m_finder(nullptr), m_hasPath(false), m_deepSearchMode(DeepNormal)
    {
       memset(prevPathIdx, 0xff, sizeof(prevPathIdx));
       random.initialize((unsigned)time(nullptr));

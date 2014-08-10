@@ -36,6 +36,7 @@
 #include "../m_bbox.h"
 #include "../m_buffer.h"
 #include "../p_info.h"
+#include "../r_state.h"
 #include "glbsp/glbsp.h"
 #include "../v_misc.h"
 
@@ -220,7 +221,7 @@ int B_GLBSP_GetNextSidedef(int *index)
 // Returns the line from the given botmap line.
 //
 int B_GLBSP_GetNextLinedef(int *startIdx, int *endIdx, int *rightIdx,
-                           int *leftIdx)
+                           int *leftIdx, int* tag)
 {
    if(!lineListHead)
       return 0;
@@ -239,6 +240,8 @@ int B_GLBSP_GetNextLinedef(int *startIdx, int *endIdx, int *rightIdx,
       *leftIdx = -1;
    else
       *leftIdx = msec->listLink.dllData;
+
+   *tag = lineListHead->dllObject->assocLine ? lineListHead->dllObject->assocLine - ::lines : -1;
    
    lineListHead = lineListHead->dllNext;
    return 1;
@@ -372,7 +375,7 @@ void B_GLBSP_CreateLineArray(int numlines)
 //
 // create new line array
 //
-void B_GLBSP_PutLine(int v1idx, int v2idx, int s1idx, int s2idx, int lnidx)
+void B_GLBSP_PutLine(int v1idx, int v2idx, int s1idx, int s2idx, int lnidx, int tag)
 {
 	s_cacheStream->WriteUint32((uint32_t)v1idx);
 	s_cacheStream->WriteUint32((uint32_t)v2idx);
@@ -385,6 +388,7 @@ void B_GLBSP_PutLine(int v1idx, int v2idx, int s1idx, int s2idx, int lnidx)
    botMap->nullMSec;
    botMap->lines[lnidx].msec[1] = s2idx >= 0 ? msecRefColl[s2idx] :
    botMap->nullMSec;
+   botMap->lines[lnidx].specline = tag >= 0 ? ::lines + tag : nullptr;
 }
 
 //
@@ -430,10 +434,15 @@ void B_GLBSP_PutSubsector(int first, int num, int ssidx)
       sg.owner = &ss;
 
       // Set the neighbours
-      if (sg.partner && sg.partner->owner && (ss.neighs.getLength() == 0 || (ss.neighs.back() != sg.partner->owner && ss.neighs[0] != sg.partner->owner)))
+      if (sg.partner && sg.partner->owner && (ss.neighs.getLength() == 0 || (ss.neighs.back().ss != sg.partner->owner && ss.neighs[0].ss != sg.partner->owner)))
       {
-            ss.neighs.add(sg.partner->owner);
-            sg.partner->owner->neighs.add(&ss);
+          BNeigh n;
+          n.ss = sg.partner->owner;
+          n.seg = &sg;
+          ss.neighs.add(n);
+          n.ss = &ss;
+          n.seg = sg.partner;
+          sg.partner->owner->neighs.add(n);
       }
       // set the metasector if not set already
       if (!ss.msector && sg.ln)

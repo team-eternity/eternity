@@ -43,13 +43,13 @@ extern "C"
    int B_GLBSP_GetNextSidedef(int *index);
    
    int B_GLBSP_GetNextLinedef(int *startIdx, int *endIdx, int *rightIdx,
-                              int *leftIdx);
+                              int *leftIdx, int* tag);
    
    void B_GLBSP_CreateVertexArray(int numverts);
    void B_GLBSP_PutVertex(double coordx, double coordy, int index);
    
    void B_GLBSP_CreateLineArray(int numlines);
-   void B_GLBSP_PutLine(int v1idx, int v2idx, int s1idx, int s2idx, int lnidx);
+   void B_GLBSP_PutLine(int v1idx, int v2idx, int s1idx, int s2idx, int lnidx, int tag);
    
    void B_GLBSP_CreateSegArray(int numsegs);
    void B_GLBSP_PutSegment(int v1idx, int v2idx, int back, int lnidx, int part,

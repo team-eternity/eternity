@@ -89,6 +89,7 @@ public:
    {
       const Vertex *v[2];  // stard, end
       const MetaSector *msec[2]; // right left
+      const line_t* specline;
    } *lines;
    int numlines;
    
@@ -122,6 +123,12 @@ public:
    //
    // Subsector defined by segments
    //
+   class Subsec;
+   struct Neigh
+   {
+       const Subsec*    ss;
+       const Seg*       seg;
+   };
    class Subsec
    {
    public:
@@ -132,7 +139,7 @@ public:
       std::unordered_set<const line_t *> linelist;
       v2fixed_t mid;
       // Fast neighbour lookup
-      PODCollection<const Subsec*> neighs;
+      PODCollection<Neigh> neighs;
    };
    Collection<Subsec> ssectors;
    int numssectors;
@@ -249,8 +256,9 @@ private:
 };
 extern BotMap *botMap;
 
-typedef BotMap::Subsec BSubsec;
-typedef BotMap::Seg BSeg;
+typedef BotMap::Subsec  BSubsec;
+typedef BotMap::Seg     BSeg;
+typedef BotMap::Neigh   BNeigh;
 
 #endif /* defined(__EternityEngine__b_botmap__) */
 

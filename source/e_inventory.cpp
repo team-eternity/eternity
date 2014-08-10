@@ -832,7 +832,7 @@ static void E_failPlayerUnlock(const player_t *player, const lockdef_t *lock, bo
 // Check if a player has the keys necessary to unlock an object that is
 // protected by a lock with the given ID.
 //
-bool E_PlayerCanUnlock(const player_t *player, int lockID, bool remote)
+bool E_PlayerCanUnlock(const player_t *player, int lockID, bool remote, bool mute)
 {
    const lockdef_t *lock;
 
@@ -854,7 +854,8 @@ bool E_PlayerCanUnlock(const player_t *player, int lockID, bool remote)
       // check that the full number of required keys is present
       if(numRequiredHave < lock->numRequiredKeys)
       {
-         E_failPlayerUnlock(player, lock, remote);
+          if (!mute)
+            E_failPlayerUnlock(player, lock, remote);
          return false;
       }
    }
@@ -886,7 +887,8 @@ bool E_PlayerCanUnlock(const player_t *player, int lockID, bool remote)
       // missing one or more categories of "any" list keys?
       if(numAnyHave < lock->numAnyKeys)
       {
-         E_failPlayerUnlock(player, lock, remote);
+          if (!mute)
+            E_failPlayerUnlock(player, lock, remote);
          return false;
       }
    }

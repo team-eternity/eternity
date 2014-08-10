@@ -2659,7 +2659,8 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    
    // IOANCH: create the line effect stacks for the bot.
    // FIXME: only do it if bot is active
-//   LevelStateStack::InitLevel();
+   if (!demoplayback && !BotMap::demoPlayingFlag)
+    LevelStateStack::InitLevel();
    
    // possible error: missing flats
    CHECK_ERROR();

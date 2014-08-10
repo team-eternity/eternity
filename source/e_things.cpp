@@ -580,7 +580,7 @@ static EHashTable<mobjinfo_t, EIntHashKey,
 //
 int E_ThingNumForDEHNum(int dehnum)
 {
-   mobjinfo_t *info = NULL;
+   const mobjinfo_t *info = NULL;
    int ret = -1;
 
    if((info = thing_dehhash.objectForKey(dehnum)))

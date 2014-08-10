@@ -104,6 +104,7 @@ public:
    {
       const sector_t *sector[2];    // sector references
       v2fixed_t v[2];               // end point coordinates
+      const line_t*     line;
    };
    
    //
@@ -345,6 +346,7 @@ void TempBotMapPImpl::BSPLineGen::putLinesInColl(PODCollection<RawLine> &coll)
          newLine->v[1] = v[1];
          newLine->sector[0] = sector[0];
          newLine->sector[1] = sector[1];
+         newLine->line = nullptr;
 //         printf("%g %g %g %g\n", M_FixedToDouble(newLine.v[0].x),
 //                M_FixedToDouble(newLine.v[0].y),
 //                M_FixedToDouble(newLine.v[1].x),
@@ -379,7 +381,19 @@ void TempBotMapPImpl::getLineMSectors()
       const line_t &line = ::lines[u];
       const fixed_t x[2] = {line.v1->x, line.v2->x},
       y[2] = {line.v1->y, line.v2->y};
-      
+
+      if (B_IsWalkTeleportation(line.special))
+      {
+          RawLine& rl = rawBSPLines.addNew();
+          rl.v[0].x = line.v1->x;
+          rl.v[0].y = line.v1->y;
+          rl.v[1].x = line.v2->x;
+          rl.v[1].y = line.v2->y;
+          rl.sector[0] = line.frontsector;
+          rl.sector[1] = line.backsector;
+          rl.line = &line;
+      }
+            
       if (line.frontsector == line.backsector &&
           !(line.flags & (ML_3DMIDTEX | ML_BLOCKING)) &&
             line.flags & ML_TWOSIDED)
@@ -474,7 +488,7 @@ void TempBotMapPImpl::placeBSPLines()
       RawLine &rl = rawBSPLines[i];
       TempBotMap::Vertex &v1 = o->placeVertex(rl.v[0].x, rl.v[0].y);
       TempBotMap::Vertex &v2 = o->placeVertex(rl.v[1].x, rl.v[1].y);
-      o->placeLine(v1, v2);
+      o->placeLine(v1, v2, rl.line);
    }
 }
 
@@ -502,9 +516,9 @@ void TempBotMapPImpl::placeMSecLines()
          if(!firstv)
             firstv = v;
          if(oldv)
-            o->placeLine(*oldv, *v, &simpleSet);
+            o->placeLine(*oldv, *v, nullptr, &simpleSet);
       }
-      o->placeLine(*v, *firstv, &simpleSet);
+      o->placeLine(*v, *firstv, nullptr, &simpleSet);
    }
 }
 
@@ -570,7 +584,7 @@ void TempBotMapPImpl::fillMSecRefs()
                }
                if(isInside)
                {
-                  if (!ln.msecIndices[0].size() && !ln.msecIndices[1].size())
+                  if (!ln.assocLine && !ln.msecIndices[0].size() && !ln.msecIndices[1].size())
                   {
                      deletedColl.add(&ln);
                   }
@@ -629,7 +643,7 @@ void TempBotMap::deleteLine(Line *ln, IntOSet *targfront, IntOSet *targback)
 //
 // Places a line, making sure it fits with what's already there
 //
-TempBotMap::Line &TempBotMap::placeLine(Vertex &v1, Vertex &v2,
+TempBotMap::Line &TempBotMap::placeLine(Vertex &v1, Vertex &v2, const line_t* assocLine,
                                 const IntOSet *msecGen, const IntOSet *bsecGen)
 {
    // What can happen?
@@ -660,6 +674,8 @@ TempBotMap::Line &TempBotMap::placeLine(Vertex &v1, Vertex &v2,
                pimpl->rawMSectors[*it].linerefs.insert(lpf);
             }
          }
+         if (assocLine)
+             ln.assocLine = assocLine;  // move it
          return ln;  // just return that
       }
       if(ln.v2 == &v1 && ln.v1 == &v2)
@@ -683,6 +699,8 @@ TempBotMap::Line &TempBotMap::placeLine(Vertex &v1, Vertex &v2,
                pimpl->rawMSectors[*it].linerefs.insert(lpf);
             }
          }
+         if (assocLine)
+             ln.assocLine = assocLine;  // move it
          return ln;
       }
    }
@@ -721,8 +739,8 @@ TempBotMap::Line &TempBotMap::placeLine(Vertex &v1, Vertex &v2,
                // inside. Now recursively create inside until managed
                // let's hope it doesn't crash
                
-               placeLine(v1, v, msecGen, bsecGen);
-               return placeLine(v, v2, msecGen, bsecGen);
+               placeLine(v1, v, assocLine, msecGen, bsecGen);
+               return placeLine(v, v2, assocLine, msecGen, bsecGen);
             }
          }
       }
@@ -779,8 +797,8 @@ TempBotMap::Line &TempBotMap::placeLine(Vertex &v1, Vertex &v2,
 //                  return placeLine(v1, v2, bspIdx, msecGen, bsecGen);
                   continue;
                }
-               placeLine(v1, midv, msecGen, bsecGen);
-               return placeLine(midv, v2, msecGen, bsecGen);
+               placeLine(v1, midv, assocLine, msecGen, bsecGen);
+               return placeLine(midv, v2, assocLine, msecGen, bsecGen);
             }
          }
       }
@@ -826,6 +844,8 @@ TempBotMap::Line &TempBotMap::placeLine(Vertex &v1, Vertex &v2,
          pimpl->rawMSectors[*it].linerefs.insert(lpf);
       }
    }
+   ln->assocLine = assocLine;
+
    lpf.flipped = false;
 
    lineList.insert(ln);
@@ -903,11 +923,13 @@ TempBotMap::Vertex &TempBotMap::placeVertex(fixed_t x, fixed_t y)
             Vertex &ov1 = *ln.v1, &ov2 = *ln.v2;
             
             IntOSet front, back;
+            const line_t* assocLine = ln.assocLine;
             deleteLine(&ln, &front, &back);
             vertexList.insert(vert);
             vertexBMap[vert->blockIndex].insert(vert);
-            placeLine(ov1, *vert, &front, &back);
-            placeLine(*vert, ov2, &front, &back);
+            
+            placeLine(ov1, *vert, assocLine, &front, &back);
+            placeLine(*vert, ov2, assocLine, &front, &back);
             return *vert;
          }
       }
@@ -1289,7 +1311,7 @@ void TempBotMap::clearRedundantLines()
    {
       next = item->dllNext;
       Line &ln = *item->dllObject;
-      if(ln.metasec[0] == ln.metasec[1])
+      if(!ln.assocLine && ln.metasec[0] == ln.metasec[1])
          deleteLine(&ln, NULL, NULL);
    }
 }

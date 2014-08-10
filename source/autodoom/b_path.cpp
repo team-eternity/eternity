@@ -30,7 +30,10 @@
 #include "../z_zone.h"
 
 #include "b_path.h"
+#include "../e_things.h"
 #include "../p_maputl.h"
+#include "../p_spec.h"
+#include "../r_state.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -370,13 +373,81 @@ void PathArray::updateNode(int ichange, int index, BSeg *seg, BSubsec *ss,
 }
 
 //
-// PathFinder::FindGoals
+// PathFinder::FindNextGoal
+//
+// Uses a search for the nearest goal (not knowing where to go)
+// Currently just BFS is enough
+//
+bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path, bool(*isGoal)(const BSubsec&, v2fixed_t&, void*), void* parm)
+{
+    IncrementValidcount();
+
+    const BSubsec& source = m_map->pointInSubsector(x, y);
+
+    path.start.x = x;
+    path.start.y = y;
+
+    const BSubsec** front = m_ssqueue;
+    const BSubsec** back = m_ssqueue;
+    v2fixed_t coord;
+
+    const BSubsec* first = &m_map->ssectors[0];
+    m_ssvisit[&source - first] = m_validcount;
+    m_ssprev[&source - first] = nullptr;
+
+    *back++ = &source;
+    const BSubsec* t;
+    const BNeigh* n;
+    path.inv.makeEmpty<true>();
+    const TeleItem* bytele;
+    while (front < back)
+    {
+        t = *front++;
+        if (isGoal(*t, coord, parm))
+        {
+            path.last = t;
+            path.end = coord;
+            for (;;)
+            {
+                n = m_ssprev[t - first];
+                if (!n)
+                    break;
+                path.inv.add(n);
+                t = n->seg->owner;
+            }
+            return true;
+        }
+        for (const BNeigh& neigh : t->neighs)
+        {
+            bytele = checkTeleportation(neigh);
+            if (bytele)
+            {
+                if (m_ssvisit[bytele->ss - first] != m_validcount)
+                {
+                    m_ssvisit[bytele->ss - first] = m_validcount;
+                    m_ssprev[bytele->ss - first] = &neigh;
+                    *back++ = bytele->ss;
+                }
+            }
+            else if (m_ssvisit[neigh.ss - first] != m_validcount && m_map->canPass(*t, *neigh.ss, m_plheight))
+            {
+                m_ssvisit[neigh.ss - first] = m_validcount;
+                m_ssprev[neigh.ss - first] = &neigh;
+                *back++ = neigh.ss;
+            }
+        }
+    }
+    return false;
+}
+
+//
+// PathFinder::AvailableGoals
 //
 // Looks for any goals from point X. Uses simple breadth first search.
 // Returns all the good subsectors into the collection
 // Uses a function for criteria.
 //
-void PathFinder::AvailableGoals(const BSubsec& source, fixed_t plheight, PODCollection<const BSubsec*>& dests, bool(*isGoal)(const BSubsec&, void*), void* parm)
+bool PathFinder::AvailableGoals(const BSubsec& source, std::unordered_set<const BSubsec*>* dests, PathResult(*isGoal)(const BSubsec&, void*), void* parm)
 {
     IncrementValidcount();
 
@@ -387,20 +458,80 @@ void PathFinder::AvailableGoals(const BSubsec& source, fixed_t plheight, PODColl
     m_ssvisit[&source - first] = m_validcount;
     *back++ = &source;
     const BSubsec* t;
+    PathResult res;
+    const TeleItem* bytele;
     while (front < back)
     {
         t = *front++;
-        if (isGoal(*t, parm))
-            dests.add(t);
-        for (const BSubsec* neigh : t->neighs)
+        res = isGoal(*t, parm);
+        if (res == PathAdd && dests)
+            dests->insert(t);
+        else if (res == PathDone)
+            return true;
+        for (const BNeigh& neigh : t->neighs)
         {
-            if (m_ssvisit[neigh - first] != m_validcount && m_map->canPass(*t, *neigh, plheight))
+            bytele = checkTeleportation(neigh);
+            if (bytele)
             {
-                m_ssvisit[neigh - first] = m_validcount;
-                *back++ = neigh;
+                if (m_ssvisit[bytele->ss - first] != m_validcount)
+                {
+                    m_ssvisit[bytele->ss - first] = m_validcount;
+                    *back++ = bytele->ss;
+                }
+            }
+            else if (m_ssvisit[neigh.ss - first] != m_validcount && m_map->canPass(*t, *neigh.ss, m_plheight))
+            {
+                m_ssvisit[neigh.ss - first] = m_validcount;
+                *back++ = neigh.ss;
             }
         }
     }
+
+    return false;
+}
+
+const PathFinder::TeleItem* PathFinder::checkTeleportation(const BNeigh& neigh)
+{
+    const BotMap::Line* bline = neigh.seg->ln;
+    if (!bline || !bline->specline || !B_IsWalkTeleportation(bline->specline->special) || FixedMul64(neigh.seg->dx, bline->specline->dx) + FixedMul64(neigh.seg->dy, bline->specline->dy) < 0)
+    {
+        return nullptr;
+    }
+
+    // Now we have our ways
+    const line_t* line = bline->specline;
+    int spec = line->special;
+    int i;
+    Thinker* thinker;
+    const Mobj* m;
+    if (!m_teleCache.count(line))
+    {
+        // CODE LARGELY COPIED FROM EV_Teleport
+        for (i = -1; (i = P_FindSectorFromLineTag(line, i)) >= 0;)
+        {
+            for (thinker = thinkercap.next; thinker != &thinkercap; thinker = thinker->next)
+            {
+                if (!(m = thinker_cast<Mobj *>(thinker)))
+                    continue;
+                if (m->type == E_ThingNumForDEHNum(MT_TELEPORTMAN) &&
+                    m->subsector->sector - ::sectors == i)
+                {
+                    TeleItem ti;
+                    ti.v.x = m->x;
+                    ti.v.y = m->y;
+                    ti.ss = &botMap->pointInSubsector(ti.v.x, ti.v.y);
+                    m_teleCache[line] = ti;
+                    return &m_teleCache[line];
+                }
+            }
+        }
+    }
+    else
+    {
+        return &m_teleCache[line];
+    }
+
+    return nullptr;
 }
 
 //
@@ -418,10 +549,15 @@ void PathFinder::IncrementValidcount()
         m_validcount = 0;
 
         m_ssqueue = erealloc(decltype(m_ssqueue), m_ssqueue, m_sscount * sizeof(*m_ssqueue));
+
+        m_ssprev = erealloc(decltype(m_ssprev), m_ssprev, m_sscount * sizeof(*m_ssprev));
     }
     ++m_validcount;
     if (!m_validcount)  // wrap around: reset former validcounts!
         memset(m_ssvisit, 0xff, m_sscount * sizeof(*m_ssvisit));
+
+    if (m_plheight <= 0)
+        B_Log("%s WARNING: m_plheight (%d) <= 0\n", __FUNCTION__, m_plheight >> FRACBITS);
 }
 
 // EOF
