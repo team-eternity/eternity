@@ -380,20 +380,20 @@ void PathArray::updateNode(int ichange, int index, BSeg *seg, BSubsec *ss,
 //
 bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path, bool(*isGoal)(const BSubsec&, v2fixed_t&, void*), void* parm)
 {
-    IncrementValidcount();
+    db[1].IncrementValidcount();
 
     const BSubsec& source = m_map->pointInSubsector(x, y);
 
     path.start.x = x;
     path.start.y = y;
 
-    const BSubsec** front = m_ssqueue;
-    const BSubsec** back = m_ssqueue;
+    const BSubsec** front = db[1].ssqueue;
+    const BSubsec** back = db[1].ssqueue;
     v2fixed_t coord;
 
     const BSubsec* first = &m_map->ssectors[0];
-    m_ssvisit[&source - first] = m_validcount;
-    m_ssprev[&source - first] = nullptr;
+    db[1].ssvisit[&source - first] = db[1].validcount;
+    db[1].ssprev[&source - first] = nullptr;
 
     *back++ = &source;
     const BSubsec* t;
@@ -409,7 +409,7 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path, bool(*isGoal)
             path.end = coord;
             for (;;)
             {
-                n = m_ssprev[t - first];
+                n = db[1].ssprev[t - first];
                 if (!n)
                     break;
                 path.inv.add(n);
@@ -422,17 +422,17 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path, bool(*isGoal)
             bytele = checkTeleportation(neigh);
             if (bytele)
             {
-                if (m_ssvisit[bytele->ss - first] != m_validcount)
+                if (db[1].ssvisit[bytele->ss - first] != db[1].validcount)
                 {
-                    m_ssvisit[bytele->ss - first] = m_validcount;
-                    m_ssprev[bytele->ss - first] = &neigh;
+                    db[1].ssvisit[bytele->ss - first] = db[1].validcount;
+                    db[1].ssprev[bytele->ss - first] = &neigh;
                     *back++ = bytele->ss;
                 }
             }
-            else if (m_ssvisit[neigh.ss - first] != m_validcount && m_map->canPass(*t, *neigh.ss, m_plheight))
+            else if (db[1].ssvisit[neigh.ss - first] != db[1].validcount && m_map->canPass(*t, *neigh.ss, m_plheight))
             {
-                m_ssvisit[neigh.ss - first] = m_validcount;
-                m_ssprev[neigh.ss - first] = &neigh;
+                db[1].ssvisit[neigh.ss - first] = db[1].validcount;
+                db[1].ssprev[neigh.ss - first] = &neigh;
                 *back++ = neigh.ss;
             }
         }
@@ -449,13 +449,13 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path, bool(*isGoal)
 //
 bool PathFinder::AvailableGoals(const BSubsec& source, std::unordered_set<const BSubsec*>* dests, PathResult(*isGoal)(const BSubsec&, void*), void* parm)
 {
-    IncrementValidcount();
+    db[0].IncrementValidcount();
 
-    const BSubsec** front = m_ssqueue;
-    const BSubsec** back = m_ssqueue;
+    const BSubsec** front = db[0].ssqueue;
+    const BSubsec** back = db[0].ssqueue;
 
     const BSubsec* first = &m_map->ssectors[0];
-    m_ssvisit[&source - first] = m_validcount;
+    db[0].ssvisit[&source - first] = db[0].validcount;
     *back++ = &source;
     const BSubsec* t;
     PathResult res;
@@ -473,15 +473,15 @@ bool PathFinder::AvailableGoals(const BSubsec& source, std::unordered_set<const 
             bytele = checkTeleportation(neigh);
             if (bytele)
             {
-                if (m_ssvisit[bytele->ss - first] != m_validcount)
+                if (db[0].ssvisit[bytele->ss - first] != db[0].validcount)
                 {
-                    m_ssvisit[bytele->ss - first] = m_validcount;
+                    db[0].ssvisit[bytele->ss - first] = db[0].validcount;
                     *back++ = bytele->ss;
                 }
             }
-            else if (m_ssvisit[neigh.ss - first] != m_validcount && m_map->canPass(*t, *neigh.ss, m_plheight))
+            else if (db[0].ssvisit[neigh.ss - first] != db[0].validcount && m_map->canPass(*t, *neigh.ss, m_plheight))
             {
-                m_ssvisit[neigh.ss - first] = m_validcount;
+                db[0].ssvisit[neigh.ss - first] = db[0].validcount;
                 *back++ = neigh.ss;
             }
         }
@@ -493,7 +493,12 @@ bool PathFinder::AvailableGoals(const BSubsec& source, std::unordered_set<const 
 const PathFinder::TeleItem* PathFinder::checkTeleportation(const BNeigh& neigh)
 {
     const BotMap::Line* bline = neigh.seg->ln;
-    if (!bline || !bline->specline || !B_IsWalkTeleportation(bline->specline->special) || FixedMul64(neigh.seg->dx, bline->specline->dx) + FixedMul64(neigh.seg->dy, bline->specline->dy) < 0)
+    if (!bline 
+        || !bline->specline 
+        || !B_IsWalkTeleportation(bline->specline->special) 
+        || (neigh.seg->dx ^ bline->specline->dx) < 0 
+        || (neigh.seg->dy ^ bline->specline->dy) < 0
+        || !m_map->canPass(*neigh.seg->owner, *neigh.ss, m_plheight))
     {
         return nullptr;
     }
@@ -535,29 +540,27 @@ const PathFinder::TeleItem* PathFinder::checkTeleportation(const BNeigh& neigh)
 }
 
 //
-// PathFinder::IncrementValidcount
+// PathFinder::DataBox::IncrementValidcount
 //
 // Must be called to update validcount and ensure correct data sets
 //
-void PathFinder::IncrementValidcount()
+void PathFinder::DataBox::IncrementValidcount()
 {   
-    if (m_sscount != m_map->ssectors.getLength())
+    if (sscount != o->m_map->ssectors.getLength())
     {
-        size_t s = (m_sscount = m_map->ssectors.getLength()) * sizeof(*m_ssvisit);
-        m_ssvisit = erealloc(decltype(m_ssvisit), m_ssvisit, s);
-        memset(m_ssvisit, 0, s);
-        m_validcount = 0;
+        size_t s = (sscount = o->m_map->ssectors.getLength()) * sizeof(*ssvisit);
+        ssvisit = erealloc(decltype(ssvisit), ssvisit, s);
+        memset(ssvisit, 0, s);
+        validcount = 0;
 
-        m_ssqueue = erealloc(decltype(m_ssqueue), m_ssqueue, m_sscount * sizeof(*m_ssqueue));
+        ssqueue = erealloc(decltype(ssqueue), ssqueue, sscount * sizeof(*ssqueue));
 
-        m_ssprev = erealloc(decltype(m_ssprev), m_ssprev, m_sscount * sizeof(*m_ssprev));
+        ssprev = erealloc(decltype(ssprev), ssprev, sscount * sizeof(*ssprev));
     }
-    ++m_validcount;
-    if (!m_validcount)  // wrap around: reset former validcounts!
-        memset(m_ssvisit, 0xff, m_sscount * sizeof(*m_ssvisit));
+    ++validcount;
+    if (!validcount)  // wrap around: reset former validcounts!
+        memset(ssvisit, 0xff, sscount * sizeof(*ssvisit));
 
-    if (m_plheight <= 0)
-        B_Log("%s WARNING: m_plheight (%d) <= 0\n", __FUNCTION__, m_plheight >> FRACBITS);
 }
 
 // EOF

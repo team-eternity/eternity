@@ -77,6 +77,14 @@ struct SectorStateEntry
 // The sector stack entry. Contains the actual referenced sector and the stack
 // of height pairs
 //
+static fixed_t applyDoorCorrection(const sector_t& sector)
+{
+    const VerticalDoorThinker* vdt = thinker_cast<const VerticalDoorThinker*>(sector.ceilingdata);
+    if (vdt && vdt->direction == 1)
+        return vdt->topheight;
+    return sector.ceilingheight;
+}
+
 class SectorHeightStack
 {
 public:
@@ -93,7 +101,8 @@ public:
    fixed_t getCeilingHeight() const
    {
       return stack.getLength() ? stack.back().ceilingHeight
-      : sector->ceilingheight;
+      : applyDoorCorrection(*sector);
+
    }
    bool isFloorTerminal() const
    {
@@ -223,6 +232,22 @@ static bool fillInDonut(const sector_t& sector, SectorStateEntry& sae,
                         VanillaLineSpecial vls, PODCollection<int>& coll);
 static fixed_t getMinTextureSize(const sector_t& sector);
 
+static bool doorBusy(const sector_t& sector)
+{
+    auto secThinker = thinker_cast<SectorThinker *>(sector.ceilingdata);
+
+    // exactly only one at most of these pointers is valid during demo_compatibility
+    if (demo_compatibility)
+    {
+        if (!secThinker)
+            secThinker = thinker_cast<SectorThinker *>(sector.floordata);
+        if (!secThinker)
+            secThinker = thinker_cast<SectorThinker *>(sector.lightingdata);
+    }
+
+    return secThinker != nullptr;
+}
+
 static void B_pushSectorHeights(int secnum, const line_t& line,
                                 PODCollection<int>& indexList, const player_t& player)
 {
@@ -255,6 +280,12 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
    {
       case VLS_D1DoorBlazeOpen:
       case VLS_D1OpenDoor:
+          if (ceilingBlocked || doorBusy(sector))
+              return;
+          sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4
+              * FRACUNIT;
+          break;
+
       case VLS_GROpenDoor:
       case VLS_S1DoorBlazeOpen:
       case VLS_S1OpenDoor:
@@ -272,6 +303,17 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
       case VLS_D1OpenDoorBlue:
       case VLS_D1OpenDoorRed:
       case VLS_D1OpenDoorYellow:
+      {
+          if (ceilingBlocked || doorBusy(sector))
+              return;
+          lockID = EV_LockDefIDForSpecial(line.special);
+          if (!E_PlayerCanUnlock(&player, lockID, false, true))
+              return;
+          sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4
+              * FRACUNIT;
+          break;
+      }
+
       case VLS_S1DoorBlazeOpenBlue:
       case VLS_S1DoorBlazeOpenRed:
       case VLS_S1DoorBlazeOpenYellow:
@@ -291,6 +333,13 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
 
       case VLS_DRDoorBlazeRaise:
       case VLS_DRRaiseDoor:
+          if (ceilingBlocked || doorBusy(sector))
+              return;
+          sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4
+              * FRACUNIT;
+          sae.ceilingTerminal = true;
+          break;
+
       case VLS_S1DoorBlazeRaise:
       case VLS_S1RaiseDoor:
       case VLS_SRDoorBlazeRaise:
@@ -310,7 +359,7 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
       case VLS_DRRaiseDoorRed:
       case VLS_DRRaiseDoorYellow:
       {
-          if (ceilingBlocked)
+          if (ceilingBlocked || doorBusy(sector))
               return;
           lockID = EV_LockDefIDForSpecial(line.special);
           if (!E_PlayerCanUnlock(&player, lockID, false, true))

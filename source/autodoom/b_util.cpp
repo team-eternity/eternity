@@ -79,6 +79,42 @@ v2fixed_t B_ProjectionOnLine(fixed_t x, fixed_t y, fixed_t x1, fixed_t y1,
    return ret;
 }
 
+v2fixed_t B_ProjectionOnSegment(fixed_t x, fixed_t y, fixed_t x1, fixed_t y1,
+    fixed_t dx, fixed_t dy)
+{
+    v2fixed_t proj = B_ProjectionOnLine(x, y, x1, y1,
+        dx, dy);
+    fixed_t dpx = proj.x - x, dpy = proj.y - y;
+    if (dx)
+    {
+        if ((proj.x - x1 ^ dx) < 0)
+        {
+            proj.x = x1;
+            proj.y = y1;
+        }
+        else if ((proj.x - x1 - dx ^ -dx) < 0)
+        {
+            proj.x = x1 + dx;
+            proj.y = y1 + dy;
+        }
+    }
+    else
+    {
+        if ((proj.y - y1 ^ dy) < 0)
+        {
+            proj.x = x1;
+            proj.y = y1;
+        }
+        else if ((proj.y - y1 - dy ^ -dy) < 0)
+        {
+            proj.x = x1 + dx;
+            proj.y = y1 + dy;
+        }
+    }
+
+    return proj;
+}
+
 v2float_t B_ProjectionOnLine_f(float x, float y, float x1, float y1, float dx, float dy)
 {
    v2float_t ret = { x1, y1 };  // in case it's just a dot

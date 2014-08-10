@@ -357,11 +357,11 @@ static void B_setMobjPositions()
 //
 static void B_setSpecLinePositions()
 {
-   fixed_t addx, addy, len;
-   int n, j;
-   fixed_t lenx, leny;
+//   fixed_t addx, addy, len;
+//   int n, j;
+//   fixed_t lenx, leny;
    
-   fixed_t botsize = 2 * botMap->radius;
+   fixed_t botsize = 3 * botMap->radius / 2;
    
    BSubsec *ss;
    
@@ -369,57 +369,59 @@ static void B_setSpecLinePositions()
    {
       const line_t &line = lines[i];
       const ev_action_t *action = EV_ActionForSpecial(line.special);
-      if(action &&
-         (action->type == &W1ActionType || action->type == &WRActionType ||
-          action->type == &S1ActionType || action->type == &SRActionType ||
-          action->type == &DRActionType))
-         // just add these
+      if (action &&
+          (action->type == &W1ActionType || action->type == &WRActionType))
+          // just add these
       {
-//         printf("Added at %d %d\n", B_Frac2Int(line.v1->x), B_Frac2Int(line.v1->y));
-         ss = &botMap->pointInSubsector(line.v1->x,line.v1->y);
-         ss->linelist.insert(&line);
-         botMap->lineSecMap[&line].add(ss);
-         
-         ss = &botMap->pointInSubsector(line.v2->x,line.v2->y);
-         ss->linelist.insert(&line);
-         botMap->lineSecMap[&line].add(ss);
-         
+          //         printf("Added at %d %d\n", B_Frac2Int(line.v1->x), B_Frac2Int(line.v1->y));
+          ss = &botMap->pointInSubsector((line.v1->x + line.v2->x) / 2, (line.v1->y + line.v2->y) / 2);
+          ss->linelist.insert(&line);
+          botMap->lineSecMap[&line].add(ss);
 
-         lenx = D_abs(line.dx);
-         leny = D_abs(line.dy);
-         if(!lenx && !leny)
-            continue;
-         len = lenx > leny ? lenx : leny;
-         if(len > botsize)
-         {
-            // size bigger than a player could fit
-            if(lenx > leny)
-            {
-               addx = botsize;
-               addy = FixedMul(FixedDiv(leny, lenx), addx);
-               n = (lenx - FRACUNIT) / addx;
-            }
-            else
-            {
-               addy = botsize;
-               addx = FixedMul(FixedDiv(lenx, leny), addy);
-               n = (leny - FRACUNIT) / addy;
-            }
-            if(line.dx < 0)
-               addx = -addx;
-            if(line.dy < 0)
-               addy = -addy;
-            for (j = 1; j <= n; ++j)
-            {
-               ss = &botMap->pointInSubsector(line.v1->x + j * addx,
-                                              line.v1->y + j * addy);
-               ss->linelist.insert(&line);
-               botMap->lineSecMap[&line].add(ss);
-            }
-         }
-         
-         if(action->type == &S1ActionType || action->type == &SRActionType
-             || action->type == &DRActionType)
+          //ss = &botMap->pointInSubsector(line.v1->x,line.v1->y);
+          //ss->linelist.insert(&line);
+          //botMap->lineSecMap[&line].add(ss);
+          //
+          //ss = &botMap->pointInSubsector(line.v2->x,line.v2->y);
+          //ss->linelist.insert(&line);
+          //botMap->lineSecMap[&line].add(ss);
+          //
+
+          //lenx = D_abs(line.dx);
+          //leny = D_abs(line.dy);
+          //if(!lenx && !leny)
+          //   continue;
+          //len = lenx > leny ? lenx : leny;
+          //if(len > botsize)
+          //{
+          //   // size bigger than a player could fit
+          //   if(lenx > leny)
+          //   {
+          //      addx = botsize;
+          //      addy = FixedMul(FixedDiv(leny, lenx), addx);
+          //      n = (lenx - FRACUNIT) / addx;
+          //   }
+          //   else
+          //   {
+          //      addy = botsize;
+          //      addx = FixedMul(FixedDiv(lenx, leny), addy);
+          //      n = (leny - FRACUNIT) / addy;
+          //   }
+          //   if(line.dx < 0)
+          //      addx = -addx;
+          //   if(line.dy < 0)
+          //      addy = -addy;
+          //   for (j = 1; j <= n; ++j)
+          //   {
+          //      ss = &botMap->pointInSubsector(line.v1->x + j * addx,
+          //                                     line.v1->y + j * addy);
+          //      ss->linelist.insert(&line);
+          //      botMap->lineSecMap[&line].add(ss);
+          //   }
+          //}
+      }
+         else if(action && (action->type == &S1ActionType || action->type == &SRActionType
+             || action->type == &DRActionType))
          {
             v2fixed_t mid = {(line.v1->x + line.v2->x) / 2,
                (line.v1->y + line.v2->y) / 2};
@@ -432,7 +434,7 @@ static void B_setSpecLinePositions()
             ss->linelist.insert(&line);
             botMap->lineSecMap[&line].add(ss);
          }
-      }
+      
    }
 }
 
@@ -548,7 +550,7 @@ void BotMap::Build()
    B_setMobjPositions();
    
    // Place all special lines on it
-   //B_setSpecLinePositions();
+   B_setSpecLinePositions();
 }
 
 // EOF

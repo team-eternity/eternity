@@ -434,7 +434,7 @@ void B_GLBSP_PutSubsector(int first, int num, int ssidx)
       sg.owner = &ss;
 
       // Set the neighbours
-      if (sg.partner && sg.partner->owner && (ss.neighs.getLength() == 0 || (ss.neighs.back().ss != sg.partner->owner && ss.neighs[0].ss != sg.partner->owner)))
+      if (sg.partner && sg.partner->owner)
       {
           BNeigh n;
           n.ss = sg.partner->owner;

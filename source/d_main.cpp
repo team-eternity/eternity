@@ -1855,6 +1855,9 @@ static void D_DoomInit()
       singledemo = true;
    }
 
+   // IOANCH 20130814: init static bot stuff
+   Bot::InitBots();
+
    startlevel = estrdup(G_GetNameForMap(startepisode, startmap));
 
    if(slot && ++slot < myargc)
@@ -1894,8 +1897,7 @@ static void D_DoomInit()
       */
    }
    
-   // IOANCH 20130814: init static bot stuff
-   Bot::InitBots();
+   
 
    // a lot of alloca calls are made during startup; kill them all now.
    Z_FreeAlloca();

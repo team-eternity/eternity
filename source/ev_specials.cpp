@@ -28,6 +28,8 @@
 
 #include "z_zone.h"
 
+#include "autodoom/b_botmap.h"
+#include "autodoom/b_think.h"
 #include "acs_intr.h"
 #include "c_io.h"
 #include "c_runcmd.h"
@@ -1318,6 +1320,13 @@ bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing, int spa
    // check for special instance
    if(!EV_checkSpac(action, &instance))
       return false;
+
+   // IOANCH 20140810: bot awareness
+   if (botMap && thing->player)
+   {
+       Bot *plbot = botDict[thing->player];
+       plbot->addXYEvent(BOT_WALKTRIG, B_CoordXY(*line->v1));
+   }
 
    return EV_ActivateSpecial(action, &instance);
 }

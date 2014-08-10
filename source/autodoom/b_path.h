@@ -200,13 +200,11 @@ class PathFinder
 public:
     PathFinder(const BotMap* map = nullptr) : 
         m_map(map),
-        m_validcount(0), 
-        m_ssvisit(nullptr), 
-        m_sscount(0), 
-        m_ssprev(nullptr),
-        m_ssqueue(nullptr),
         m_plheight(0)
     {
+        memset(db, 0, sizeof(db));
+        db[0].o = this;
+        db[1].o = this;
     }
 
     ~PathFinder()
@@ -230,13 +228,8 @@ public:
 
     void Clear()
     {
-        efree(m_ssvisit);
-        m_ssvisit = nullptr;
-        efree(m_ssprev);
-        m_ssprev = nullptr;
-        efree(m_ssqueue);
-        m_ssqueue = nullptr;
-        m_sscount = 0;
+        db[0].Clear();
+        db[1].Clear();
         m_teleCache.clear();
     }
 
@@ -247,18 +240,37 @@ private:
         v2fixed_t       v;
     };
 
-    void IncrementValidcount();
+    struct DataBox
+    {
+        unsigned short  validcount;
+        unsigned short* ssvisit;
+        unsigned        sscount;
+        const BNeigh**  ssprev;
+        const BSubsec** ssqueue;
+
+        const PathFinder* o;
+
+        void Clear()
+        {
+            efree(ssvisit);
+            ssvisit = nullptr;
+            efree(ssprev);
+            ssprev = nullptr;
+            efree(ssqueue);
+            ssqueue = nullptr;
+            sscount = 0;
+            validcount = 0;
+        }
+
+        void IncrementValidcount();
+    };
+    
     const TeleItem* checkTeleportation(const BNeigh& neigh);
 
     const BotMap*   m_map;
+    DataBox         db[2];
 
     // OPTIM NOTE: please measure whether short or int is better
-    unsigned short  m_validcount;
-    unsigned short* m_ssvisit;  // subsector visit
-    unsigned        m_sscount;
-
-    const BNeigh**  m_ssprev;
-    const BSubsec** m_ssqueue;
     fixed_t         m_plheight;
 
     std::map<const line_t*, TeleItem> m_teleCache; // teleporter cache

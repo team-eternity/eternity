@@ -1594,9 +1594,12 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          if(clip.spechit[clip.numspechit]->special)  // see if the line was crossed
          {
             int oldside;
-            if((oldside = P_PointOnLineSide(oldx, oldy, clip.spechit[clip.numspechit])) !=
-               P_PointOnLineSide(thing->x, thing->y, clip.spechit[clip.numspechit]))
-               P_CrossSpecialLine(clip.spechit[clip.numspechit], oldside, thing);
+            if ((oldside = P_PointOnLineSide(oldx, oldy, clip.spechit[clip.numspechit])) !=
+                P_PointOnLineSide(thing->x, thing->y, clip.spechit[clip.numspechit]))
+            {
+                
+                P_CrossSpecialLine(clip.spechit[clip.numspechit], oldside, thing);
+            }
          }
       }
 

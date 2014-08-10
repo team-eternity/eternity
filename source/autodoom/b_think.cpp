@@ -73,6 +73,7 @@ void Bot::mapInit()
    m_deepTriedLines.clear();
    m_deepSearchMode = DeepNormal;
    m_deepAvailSsectors.clear();
+   m_deepRepeat = nullptr;
 }
 
 //
@@ -499,7 +500,16 @@ bool Bot::shouldUseSpecial(const line_t& line)
             return false;
 
         m_deepSearchMode = DeepBeyond;
-        bool result = m_finder.AvailableGoals(*ss, nullptr, reachableItem, this);
+        bool result;
+        const BSubsec* repsave = nullptr;
+        do
+        {
+            m_deepRepeat = nullptr;
+            result = m_finder.AvailableGoals(repsave ? *repsave : *ss, nullptr, reachableItem, this);
+            repsave = m_deepRepeat;
+        } while (result && m_deepRepeat);
+        m_deepRepeat = nullptr;
+        
         m_deepSearchMode = DeepNormal;
 
         LevelStateStack::Clear();
@@ -527,7 +537,7 @@ bool Bot::objOfInterest(const BSubsec& ss, v2fixed_t& coord, void* v)
         if (item == &plmo)
             continue;
         fh = ss.msector->getFloorHeight();
-        if (fh + plmo.height < item->z || fh > item->z + item->height)
+        if (self.m_deepSearchMode == DeepNormal && (fh + plmo.height < item->z || fh > item->z + item->height))
             continue;
         if (item->flags & MF_SPECIAL)
         {
@@ -597,11 +607,18 @@ bool Bot::objOfInterest(const BSubsec& ss, v2fixed_t& coord, void* v)
                         return true;
                     self.m_deepTriedLines.insert(line);
                     LevelStateStack::Push(*line, *self.pl);
+                    self.m_deepRepeat = &ss;
+                    return true;
                 }
                 return false;
             }
             else if (self.shouldUseSpecial(*line))
+            {
+                coord.x = (line->v1->x + line->v2->x) / 2;
+                coord.y = (line->v1->y + line->v2->y) / 2;
+                self.goalTable.setV2Fixed(BOT_WALKTRIG, B_CoordXY(*line->v1));
                 return true;
+            }
         }
     }
 
@@ -651,14 +668,20 @@ void Bot::doNonCombatAI()
     }
     else
     {
+        
         const BNeigh** nit = m_path.inv.end();
         while (nit-- > m_path.inv.begin())
         {
             if ((*nit)->seg->owner == ss)
             {
-                nx = (*nit)->seg->mid.x;
-                ny = (*nit)->seg->mid.y;
-                goto moveon;
+                const BSeg& seg = *(*nit)->seg;
+                v2fixed_t nn = B_ProjectionOnSegment(pl->mo->x, pl->mo->y, seg.v[0]->x, seg.v[0]-> y, seg.dx, seg.dy);
+                nx = nn.x;
+                ny = nn.y;
+                if (botMap->canPass(*ss, *(*nit)->ss, pl->mo->height))
+                    goto moveon;
+                else
+                    break;  // reset if just got blocked
             }
         }
         // not on path, so reset
@@ -677,8 +700,8 @@ moveon:
 	//	return;
 	//}
  //  
- //  if(goalTable.hasKey(BOT_WALKTRIG) && prevCtr % 14 == 0)
- //     cmd->buttons |= BT_USE;
+   if(goalTable.hasKey(BOT_WALKTRIG) && prevCtr % 2 == 0 && ss == m_path.last)
+      cmd->buttons |= BT_USE;
  //  
  //  int nexton = path.getNextStraightIndex(nowon);
    

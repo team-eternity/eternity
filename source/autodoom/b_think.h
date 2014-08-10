@@ -75,6 +75,7 @@ class Bot : public ZoneObject
    DeepSearch               m_deepSearchMode;
    std::set<const line_t*>  m_deepTriedLines;
    std::unordered_set<const BSubsec*> m_deepAvailSsectors;
+   const BSubsec*           m_deepRepeat;
    
    // internal states
    int prevPathIdx[2];
@@ -112,7 +113,7 @@ public:
    // Constructor
    //
     Bot() : ZoneObject(), pl(nullptr), active(true), cmd(nullptr), ss(nullptr),
-        prevCtr(0), m_searchstage(0), m_finder(nullptr), m_hasPath(false), m_deepSearchMode(DeepNormal)
+        prevCtr(0), m_searchstage(0), m_finder(nullptr), m_hasPath(false), m_deepSearchMode(DeepNormal), m_deepRepeat(nullptr)
    {
       memset(prevPathIdx, 0xff, sizeof(prevPathIdx));
       random.initialize((unsigned)time(nullptr));
