@@ -152,7 +152,7 @@ void BotMap::getBoxTouchedBlocks(fixed_t top, fixed_t bottom,
 
 
 
-BotMap::Subsec &BotMap::pointInSubsector(fixed_t x, fixed_t y)
+BotMap::Subsec &BotMap::pointInSubsector(fixed_t x, fixed_t y) const
 {
    int nodenum = this->numnodes - 1;
    while(!(nodenum & NF_SUBSECTOR))
@@ -247,7 +247,7 @@ void BotMap::setThingPosition(const Mobj *thing)
    if(!foundlines)
    {
       // not found any intersections, now it's time to set the pointInSubsector
-      Subsec &thingSec = botMap->pointInSubsector(thing->x, thing->y);
+      Subsec &thingSec = pointInSubsector(thing->x, thing->y);
       thingSec.mobjlist.insert(thing);
       mobjSecMap[thing].add(&thingSec);
    }

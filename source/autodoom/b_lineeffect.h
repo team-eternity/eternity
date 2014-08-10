@@ -30,6 +30,8 @@
 #ifndef __EternityEngine__b_lineeffect__
 #define __EternityEngine__b_lineeffect__
 
+#include "../m_fixed.h"
+
 struct line_t;
 struct sector_t;
 

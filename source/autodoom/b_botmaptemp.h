@@ -82,7 +82,6 @@ public:
       PODCollection<int> blockIndices; // blockmap links
       IntOSet msecIndices[2];  // metasector links
       MetaSector *metasec[2];
-      int bspIndex;
    };
    typedef std::unordered_set<Line *> LinePtrSet;
 private:
@@ -108,9 +107,9 @@ private:
    
    void deleteVertex(Vertex *vert);
    void deleteLine(Line *ln, IntOSet *targfront, IntOSet *targback);
-   Line &placeLine(Vertex &v1, Vertex &v2, int bspIdx = -1,
-                   const IntOSet *msecGen = NULL,
-                   const IntOSet *bsecGen = NULL);
+   Line &placeLine(Vertex &v1, Vertex &v2, 
+                   const IntOSet *msecGen = nullptr,
+                   const IntOSet *bsecGen = nullptr);
    
    void obtainMetaSectors(OutBuffer& cacheStream);
    

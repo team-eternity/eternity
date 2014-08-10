@@ -273,10 +273,11 @@ public:
    //
    // Marks the collection as empty but doesn't free the storage.
    //
+   template<bool KEEP = false>
    void makeEmpty()
    {
       this->length = this->wrapiterator = 0;
-      if(this->ptrArray)
+      if(!KEEP && this->ptrArray)
          memset(this->ptrArray, 0, this->numalloc * sizeof(T));
    }
 
