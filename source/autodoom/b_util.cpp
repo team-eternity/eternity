@@ -84,7 +84,6 @@ v2fixed_t B_ProjectionOnSegment(fixed_t x, fixed_t y, fixed_t x1, fixed_t y1,
 {
     v2fixed_t proj = B_ProjectionOnLine(x, y, x1, y1,
         dx, dy);
-    fixed_t dpx = proj.x - x, dpy = proj.y - y;
     if (dx)
     {
         if ((proj.x - x1 ^ dx) < 0)

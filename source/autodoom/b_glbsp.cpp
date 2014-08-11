@@ -241,7 +241,7 @@ int B_GLBSP_GetNextLinedef(int *startIdx, int *endIdx, int *rightIdx,
    else
       *leftIdx = msec->listLink.dllData;
 
-   *tag = lineListHead->dllObject->assocLine ? lineListHead->dllObject->assocLine - ::lines : -1;
+   *tag = lineListHead->dllObject->assocLine ? (int)(lineListHead->dllObject->assocLine - ::lines) : -1;
    
    lineListHead = lineListHead->dllNext;
    return 1;

@@ -123,7 +123,6 @@ public:
    //
    // Subsector defined by segments
    //
-   class Subsec;
    struct Neigh
    {
        const Subsec*    ss;

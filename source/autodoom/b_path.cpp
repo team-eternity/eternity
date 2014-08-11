@@ -505,7 +505,6 @@ const PathFinder::TeleItem* PathFinder::checkTeleportation(const BNeigh& neigh)
 
     // Now we have our ways
     const line_t* line = bline->specline;
-    int spec = line->special;
     int i;
     Thinker* thinker;
     const Mobj* m;
@@ -548,7 +547,7 @@ void PathFinder::DataBox::IncrementValidcount()
 {   
     if (sscount != o->m_map->ssectors.getLength())
     {
-        size_t s = (sscount = o->m_map->ssectors.getLength()) * sizeof(*ssvisit);
+        size_t s = (sscount = (unsigned)o->m_map->ssectors.getLength()) * sizeof(*ssvisit);
         ssvisit = erealloc(decltype(ssvisit), ssvisit, s);
         memset(ssvisit, 0, s);
         validcount = 0;

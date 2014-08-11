@@ -1061,7 +1061,7 @@ static bool P_HereticMadMelee(Mobj *actor)
 //
 bool P_LookForPlayers(Mobj *actor, int allaround)
 {
-   player_t *player;
+   const player_t *player;
    int stop, stopc, c;
    
    if(actor->flags & MF_FRIEND)
