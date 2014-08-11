@@ -742,6 +742,24 @@ moveon:
 }
 
 //
+// Bot::enemyVisible()
+//
+// Returns true if an enemy is visible now
+// Code inspired from P_LookForMonsters
+//
+const Mobj* Bot::enemyVisible()
+{
+    const Thinker& cap = thinkerclasscap[th_enemies];
+    if(cap.cnext == &cap)
+        return nullptr;
+    
+    // P_BlockThingsIterator is safe to use outside of demo correctness
+    
+    
+    return nullptr;
+}
+
+//
 // Bot::doCommand
 //
 // Called from G_Ticker right before ticcmd is passed into the player. Gets the

@@ -95,6 +95,7 @@ private:
    
    bool routePath();
    
+   const Mobj* enemyVisible();
    bool goalAchieved();
    void doNonCombatAI();
    
