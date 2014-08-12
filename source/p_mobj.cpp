@@ -28,6 +28,7 @@
 
 #include "a_args.h"
 #include "a_small.h"
+#include "autodoom/b_botmap.h"
 #include "d_dehtbl.h"
 #include "d_gi.h"
 #include "d_mod.h"
@@ -1783,6 +1784,12 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
       }
       else
          mobj->colour = (info->flags & MF_TRANSLATION) >> MF_TRANSSHIFT;
+   }
+
+   // IOANCH 20140812: add to bot list
+   if (botMap && mobj->flags & MF_SHOOTABLE && mobj->health > 0)
+   {
+       botMap->livingMonsters.insert(mobj);
    }
 
    return mobj;
