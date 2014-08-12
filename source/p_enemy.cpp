@@ -914,7 +914,7 @@ void P_NewChaseDir(Mobj *actor)
 //
 // killough 9/9/98: whether a target is visible to a monster
 //
-static bool P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
+static bool P_IsVisible(const Mobj *actor, const Mobj *mo, int allaround)
 {
    if(mo->flags4 & MF4_TOTALINVISIBLE)
       return 0;  // haleyjd: total invisibility!

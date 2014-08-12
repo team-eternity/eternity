@@ -31,6 +31,7 @@
 
 #include <unordered_map>
 #include "b_lineeffect.h"
+#include "../m_collection.h"
 #include "../m_dllist.h"
 #include "../m_vector.h"
 #include "../tables.h"
@@ -325,6 +326,97 @@ void B_Log(const char *output, ...);
 #else
 #define B_Log(...)
 #endif
+
+template<typename T> class List
+{
+    struct Link
+    {
+        T       obj;
+        int     next;
+        int     prev;
+    };
+
+    
+    PODCollection<Link> pool;
+    int base;
+    int count;
+    int iter;
+
+public:
+    List() : base(-1), count(0), iter(0)
+    {
+    }
+
+    void Add(T item) // adds to front
+    {
+        Link& L = pool.addNew();
+        L.obj = item;
+        L.next = base;
+        L.prev = -1;
+        base = pool.getLength() - 1;
+        if (L.next >= 0)
+            pool[L.next].prev = base;
+        
+        ++count;
+    }
+
+    T GetFirst()
+    {
+        return pool[iter = base].obj;
+    }
+
+    bool HasNext() const
+    {
+        return iter >= 0 ? pool[iter].next >= 0 : base >= 0;
+    }
+
+    T GetNext()
+    {
+        return pool[iter = iter >= 0 ? pool[iter].next : base].obj;
+    }
+
+    int Count() const
+    {
+        return count;
+    }
+
+    bool Empty() const
+    {
+        return count == 0;
+    }
+
+    void RemoveCurrent()
+    {
+        if (base == iter)
+            base = pool[iter].next;
+
+        Link& L = pool[iter];
+        int bup = L.prev;
+        if (L.prev >= 0)
+            pool[L.prev].next = L.next;
+        if (L.next >= 0)
+            pool[L.next].prev = L.prev;
+
+        Link& F = pool.back();
+        if (F.prev >= 0)
+            pool[F.prev].next = iter;
+        if (F.next >= 0)
+            pool[F.next].prev = iter;
+        pool[iter] = F;
+        pool.justPop();
+        --count;
+
+        iter = bup; // go back so we can advance again
+    }
+
+    void Clear()
+    {
+        base = -1;
+        count = 0;
+        iter = 0;
+        pool.makeEmpty<true>();
+    }
+};
 
 #endif
 // EOF

@@ -78,7 +78,6 @@ class Bot : public ZoneObject
    const BSubsec*           m_deepRepeat;
    
    // internal states
-   int prevPathIdx[2];
    unsigned prevCtr;
    unsigned m_searchstage;
 public:
@@ -90,20 +89,15 @@ private:
    // effectStats: the maximum benefit from picking up an item.
    std::unordered_map<spritenum_t, PlayerStats> nopickStats, effectStats;
    
-   bool objectOfInterest(const BSeg *targsg, const BSubsec *targss,
-                         v2fixed_t &destcoord);
-   
-   bool routePath();
-   
-   const Mobj* enemyVisible();
+   static bool ITfindTarget(Mobj* who, void* v);
+   const Mobj* enemyVisible() ;
+
    bool goalAchieved();
+   void doCombatAI(const Mobj* enemy);
    void doNonCombatAI();
    
    void capCommands();
    
-   // Want item conditions
-   bool wantArmour(itemeffect_t *ie) const;
-
    bool shouldUseSpecial(const line_t& line);
    static bool objOfInterest(const BSubsec& ss, v2fixed_t& coord, void* v);
    static PathResult reachableItem(const BSubsec& ss, void* v);
@@ -116,7 +110,6 @@ public:
     Bot() : ZoneObject(), pl(nullptr), active(true), cmd(nullptr), ss(nullptr),
         prevCtr(0), m_searchstage(0), m_finder(nullptr), m_hasPath(false), m_deepSearchMode(DeepNormal), m_deepRepeat(nullptr)
    {
-      memset(prevPathIdx, 0xff, sizeof(prevPathIdx));
       random.initialize((unsigned)time(nullptr));
    }
    
@@ -147,7 +140,6 @@ public:
 };
 
 extern Bot bots[];
-extern std::unordered_map<player_t *, Bot *> botDict;
 
 #endif /* defined(__EternityEngine__b_think__) */
 

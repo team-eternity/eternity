@@ -805,7 +805,7 @@ bool P_CheckPickUp(Mobj *thing)
       player_t *player = clip.thing->player;
       if(botMap && nopick && player)
       {
-         Bot *plbot = botDict[player];
+         Bot *plbot = &bots[player - players];
          plbot->getNopickStats(spnum).
             reduceByCurrentState(*player);
          plbot->addXYEvent(BOT_PICKUP, coord);

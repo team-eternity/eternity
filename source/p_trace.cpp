@@ -57,7 +57,7 @@ static bool PTR_AimTraverse(intercept_t *in)
 
    if(in->isaline)
    {
-      line_t *li = in->d.line;
+      const line_t *li = in->d.line;
 
       // haleyjd 04/30/11: added 'block everything' lines
       if(!(li->flags & ML_TWOSIDED) || (li->extflags & EX_ML_BLOCKALL))

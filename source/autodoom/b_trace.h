@@ -32,6 +32,7 @@
 
 #include <unordered_map>
 #include "../m_fixed.h"
+#include "../p_map.h"
 #include "../p_maputl.h"
 
 struct intercept_t;
@@ -49,8 +50,9 @@ public:
    int            m_validcount;
    intercept_t*   m_intercepts;
    intercept_t*   m_intercept_p;
+   doom_mapinter_t m_clip;
    
-   bool Execute(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2, int flags, bool (*trav)(intercept_t*));
+   bool Execute(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2, int flags, bool (*trav)(intercept_t*, void*), void* parm);
    
    RTraversal();
    
@@ -58,7 +60,14 @@ public:
    {
       efree(m_lineValidcount);
    }
+
+   static bool TRaimTraverse(intercept_t*, void*);
+
+   fixed_t SafeAimLineAttack(Mobj* t1, angle_t angle, fixed_t distance, int mask);
+
 private:
+    void LineOpening(const line_t* linedef, const Mobj* mo);
+
    std::unordered_map<const polyobj_t*, int> m_polyValidcount;
    int*                                      m_lineValidcount;
    size_t         m_num_intercepts;
@@ -69,9 +78,11 @@ private:
    bool addLineIntercepts(line_t* ld);
    bool addThingIntercepts(Mobj* thing);
    
-   bool traverseIntercepts(traverser_t func, fixed_t maxfrac);
+   bool traverseIntercepts(bool(*func)(intercept_t*, void*), fixed_t maxfrac, void* parm);
    
    void checkIntercept();
 };
+
+
 
 #endif /* defined(__EternityEngine__b_trace__) */

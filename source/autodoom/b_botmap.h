@@ -38,6 +38,7 @@
 
 #include "b_intset.h"
 #include "b_msector.h"
+#include "b_util.h"
 #include "../e_rtti.h"
 #include "../m_collection.h"
 #include "../m_dllist.h"
@@ -240,8 +241,12 @@ public:
    
    static bool demoPlayingFlag;
    // if playing, this flag will be true during P_SetupLevel
+
+   // Common affairs
+   std::set<const Mobj*> livingMonsters;    // list of shootable objects
 	
 private:
+    void getAllLivingMonsters();
 	
 	void clearMsecList()
 	{

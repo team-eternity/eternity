@@ -26,11 +26,15 @@
 #ifndef P_MAP_H__
 #define P_MAP_H__
 
+#include "tables.h"
+
 struct line_t;
 struct mobjinfo_t;
 struct msecnode_t;
 struct player_t;
 struct sector_t;
+
+class Mobj;
 
 //=============================================================================
 //
@@ -87,7 +91,7 @@ bool P_PortalTeleportMove(Mobj *thing, fixed_t x, fixed_t y);
 // Sight Checks, Tracers, Path Traversal
 //
 
-bool P_CheckSight(Mobj *t1, Mobj *t2);
+bool P_CheckSight(const Mobj *t1, const Mobj *t2);
 void P_UseLines(player_t *player);
 
 // killough 8/2/98: add 'mask' argument to prevent friends autoaiming at others

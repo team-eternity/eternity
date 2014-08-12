@@ -338,7 +338,7 @@ static bool P_CrossBSPNode(int bspnum, los_t *los)
 //
 // killough 4/20/98: cleaned up, made to use new LOS struct
 //
-bool P_CheckSight(Mobj *t1, Mobj *t2)
+bool P_CheckSight(const Mobj *t1, const Mobj *t2)
 {
    if(full_demo_version >= make_full_version(340, 24))
    {

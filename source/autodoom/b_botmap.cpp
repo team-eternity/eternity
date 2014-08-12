@@ -361,7 +361,7 @@ static void B_setSpecLinePositions()
 //   int n, j;
 //   fixed_t lenx, leny;
    
-   fixed_t botsize = 3 * botMap->radius / 2;
+   fixed_t botsize = 4 * botMap->radius / 2;
    
    BSubsec *ss;
    
@@ -505,6 +505,21 @@ static void B_buildTempBotMapFromScratch(fixed_t radius, const char *digest, con
 
 }
 
+void BotMap::getAllLivingMonsters()
+{
+    Thinker* th;
+    const Mobj* mo;
+    livingMonsters.clear();
+    for (th = thinkercap.next; th != &thinkercap; th = th->next)
+    {
+        mo = thinker_cast<const Mobj*>(th);
+        if (mo && !mo->player && mo->flags & MF_SHOOTABLE && !(mo->flags & MF_NOBLOCKMAP) && mo->health > 0)
+        {
+            livingMonsters.insert(mo);
+        }
+    }
+}
+
 //
 // B_BuildBotMap
 //
@@ -551,6 +566,9 @@ void BotMap::Build()
    
    // Place all special lines on it
    B_setSpecLinePositions();
+
+   // Find all living monsters
+   botMap->getAllLivingMonsters();
 }
 
 // EOF

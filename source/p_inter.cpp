@@ -587,7 +587,7 @@ bool P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    PlayerStats* effectStats = nullptr;
    if(botMap)
    {
-      plbot = botDict[player];
+      plbot = &bots[player - players];
       effectStats = &plbot->getEffectStats(special->sprite);
       effectStats->setPriorState(*player);
    }

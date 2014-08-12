@@ -335,6 +335,13 @@ public:
 
       return ret;
    }
+   void justPop()
+   {
+       if (!this->ptrArray || !this->length)
+           I_Error("PODCollection::pop: array underflow\n");
+       this->ptrArray[--this->length];
+       this->wrapiterator = 0;
+   }
    
    //
    // resize
@@ -378,6 +385,12 @@ public:
       if(!this->ptrArray || !this->length)
          I_Error("PODCollection::back: array underflow\n");
       return this->ptrArray[this->length - 1];
+   }
+   T& back() 
+   {
+       if (!this->ptrArray || !this->length)
+           I_Error("PODCollection::back: array underflow\n");
+       return this->ptrArray[this->length - 1];
    }
 };
 

@@ -30,9 +30,13 @@
 #include "../z_zone.h"
 #include "b_trace.h"
 #include "../doomstat.h"
+#include "../e_exdata.h"
+#include "../p_mobj.h"
 #include "../p_setup.h"
 #include "../m_dllist.h"
 #include "../polyobj.h"
+#include "../r_data.h"
+#include "../r_portal.h"
 #include "../r_state.h"
 
 //
@@ -40,7 +44,7 @@
 //
 // Code copied from p_trace/P_PathTraverse, adapted for class-local state
 //
-bool RTraversal::Execute(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2, int flags, bool (*trav)(intercept_t*))
+bool RTraversal::Execute(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2, int flags, bool (*trav)(intercept_t*, void*), void* parm)
 {
    fixed_t xt1, yt1;
    fixed_t xt2, yt2;
@@ -160,10 +164,10 @@ bool RTraversal::Execute(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2, int fla
    // go through the sorted list
    // SoM: just store this for a sec
    
-   return traverseIntercepts(trav, FRACUNIT);
+   return traverseIntercepts(trav, FRACUNIT, parm);
 }
 
-bool RTraversal::traverseIntercepts(traverser_t func, fixed_t maxfrac)
+bool RTraversal::traverseIntercepts(bool(*func)(intercept_t*, void*), fixed_t maxfrac, void* parm)
 {
    intercept_t *in = nullptr;
    int count = static_cast<int>(m_intercept_p - m_intercepts);
@@ -179,7 +183,7 @@ bool RTraversal::traverseIntercepts(traverser_t func, fixed_t maxfrac)
       
       if(in) // haleyjd: for safety
       {
-         if(!func(in))
+         if(!func(in, parm))
             return false;           // don't bother going farther
          in->frac = D_MAXINT;
       }
@@ -394,7 +398,269 @@ m_trace(),
 m_validcount(0),
 m_intercepts(nullptr),
 m_intercept_p(nullptr),
-m_num_intercepts(0)
+m_num_intercepts(0),
+m_clip()
 {
    m_lineValidcount = ecalloc(int*, numlines, sizeof(int));
+}
+
+void RTraversal::LineOpening(const line_t* linedef, const Mobj* mo)
+{
+    fixed_t frontceilz, frontfloorz, backceilz, backfloorz;
+    // SoM: used for 3dmidtex
+    fixed_t frontcz, frontfz, backcz, backfz, otop, obot;
+
+    if (linedef->sidenum[1] == -1)      // single sided line
+    {
+        m_clip.openrange = 0;
+        return;
+    }
+
+    m_clip.openfrontsector = linedef->frontsector;
+    m_clip.openbacksector = linedef->backsector;
+
+    {
+#ifdef R_LINKEDPORTALS
+        if (mo && demo_version >= 333 &&
+            m_clip.openfrontsector->c_pflags & PS_PASSABLE &&
+            m_clip.openbacksector->c_pflags & PS_PASSABLE &&
+            m_clip.openfrontsector->c_portal == m_clip.openbacksector->c_portal)
+        {
+            frontceilz = backceilz = m_clip.openfrontsector->ceilingheight + (1024 * FRACUNIT);
+        }
+        else
+#endif
+        {
+            frontceilz = m_clip.openfrontsector->ceilingheight;
+            backceilz = m_clip.openbacksector->ceilingheight;
+        }
+
+        frontcz = m_clip.openfrontsector->ceilingheight;
+        backcz = m_clip.openbacksector->ceilingheight;
+    }
+
+    {
+#ifdef R_LINKEDPORTALS
+        if (mo && demo_version >= 333 &&
+            m_clip.openfrontsector->f_pflags & PS_PASSABLE &&
+            m_clip.openbacksector->f_pflags & PS_PASSABLE &&
+            m_clip.openfrontsector->f_portal == m_clip.openbacksector->f_portal)
+        {
+            frontfloorz = backfloorz = m_clip.openfrontsector->floorheight - (1024 * FRACUNIT); //mo->height;
+        }
+        else
+#endif
+        {
+            frontfloorz = m_clip.openfrontsector->floorheight;
+            backfloorz = m_clip.openbacksector->floorheight;
+        }
+
+        frontfz = m_clip.openfrontsector->floorheight;
+        backfz = m_clip.openbacksector->floorheight;
+    }
+
+    if (frontceilz < backceilz)
+        m_clip.opentop = frontceilz;
+    else
+        m_clip.opentop = backceilz;
+
+    if (frontfloorz > backfloorz)
+    {
+        m_clip.openbottom = frontfloorz;
+        m_clip.lowfloor = backfloorz;
+        // haleyjd
+        m_clip.floorpic = m_clip.openfrontsector->floorpic;
+    }
+    else
+    {
+        m_clip.openbottom = backfloorz;
+        m_clip.lowfloor = frontfloorz;
+        // haleyjd
+        m_clip.floorpic = m_clip.openbacksector->floorpic;
+    }
+
+    if (frontcz < backcz)
+        otop = frontcz;
+    else
+        otop = backcz;
+
+    if (frontfz > backfz)
+        obot = frontfz;
+    else
+        obot = backfz;
+
+    m_clip.opensecfloor = m_clip.openbottom;
+    m_clip.opensecceil = m_clip.opentop;
+
+    if (demo_version >= 331 && mo && (linedef->flags & ML_3DMIDTEX) &&
+        sides[linedef->sidenum[0]].midtexture)
+    {
+        fixed_t textop, texbot, texmid;
+        side_t *side = &sides[linedef->sidenum[0]];
+
+        if (linedef->flags & ML_DONTPEGBOTTOM)
+        {
+            texbot = side->rowoffset + obot;
+            textop = texbot + textures[side->midtexture]->heightfrac;
+        }
+        else
+        {
+            textop = otop + side->rowoffset;
+            texbot = textop - textures[side->midtexture]->heightfrac;
+        }
+        texmid = (textop + texbot) / 2;
+
+        // SoM 9/7/02: use monster blocking line to provide better
+        // clipping
+        if ((linedef->flags & ML_BLOCKMONSTERS) &&
+            !(mo->flags & (MF_FLOAT | MF_DROPOFF)) &&
+            D_abs(mo->z - textop) <= 24 * FRACUNIT)
+        {
+            m_clip.opentop = m_clip.openbottom;
+            m_clip.openrange = 0;
+            return;
+        }
+
+        if (mo->z + (P_ThingInfoHeight(mo->info) / 2) < texmid)
+        {
+            if (texbot < m_clip.opentop)
+                m_clip.opentop = texbot;
+        }
+        else
+        {
+            if (textop > m_clip.openbottom)
+                m_clip.openbottom = textop;
+
+            // The mobj is above the 3DMidTex, so check to see if it's ON the 3DMidTex
+            // SoM 01/12/06: let monsters walk over dropoffs
+            if (abs(mo->z - textop) <= 24 * FRACUNIT)
+                m_clip.touch3dside = 1;
+        }
+    }
+
+    m_clip.openrange = m_clip.opentop - m_clip.openbottom;
+}
+
+// CODE FROM PTR_AimTraverse
+bool RTraversal::TRaimTraverse(intercept_t* in, void* v)
+{
+    RTraversal& self = *static_cast<RTraversal*>(v);
+    fixed_t slope, dist;
+
+    if (in->isaline)
+    {
+        const line_t *li = in->d.line;
+        if (!(li->flags & ML_TWOSIDED) || (li->extflags & EX_ML_BLOCKALL))
+            return false; // stop
+
+        self.LineOpening(li, nullptr);
+
+        if (self.m_clip.openbottom >= self.m_clip.opentop)
+            return false;
+
+        dist = FixedMul(self.m_trace.attackrange, in->frac);
+        if (li->frontsector->floorheight != li->backsector->floorheight)
+        {
+            slope = FixedDiv(self.m_clip.openbottom - self.m_trace.z, dist);
+            if (slope > self.m_trace.bottomslope)
+                self.m_trace.bottomslope = slope;
+        }
+
+        if (li->frontsector->ceilingheight != li->backsector->ceilingheight)
+        {
+            slope = FixedDiv(self.m_clip.opentop - self.m_trace.z, dist);
+            if (slope < self.m_trace.topslope)
+                self.m_trace.topslope = slope;
+        }
+
+        if (self.m_trace.topslope <= self.m_trace.bottomslope)
+            return false;
+
+        return true;
+    }
+    else
+    {
+        // shoot a thing
+        Mobj *th = in->d.thing;
+        fixed_t thingtopslope, thingbottomslope;
+
+        if (th == self.m_trace.thing)
+            return true; // can't shoot self
+
+        if (!(th->flags & MF_SHOOTABLE))
+            return true; // corpse or something
+
+        // killough 7/19/98, 8/2/98:
+        // friends don't aim at friends (except players), at least not first
+        if (th->flags & self.m_trace.thing->flags & self.m_trace.aimflagsmask && !th->player)
+            return true;
+
+        // check angles to see if the thing can be aimed at
+        dist = FixedMul(self.m_trace.attackrange, in->frac);
+        thingtopslope = FixedDiv(th->z + th->height - self.m_trace.z, dist);
+
+        if (thingtopslope < self.m_trace.bottomslope)
+            return true; // shot over the thing
+
+        thingbottomslope = FixedDiv(th->z - self.m_trace.z, dist);
+
+        if (thingbottomslope > self.m_trace.topslope)
+            return true; // shot under the thing
+
+        // this thing can be hit!
+        if (thingtopslope > self.m_trace.topslope)
+            thingtopslope = self.m_trace.topslope;
+
+        if (thingbottomslope < self.m_trace.bottomslope)
+            thingbottomslope = self.m_trace.bottomslope;
+
+        self.m_trace.aimslope = (thingtopslope + thingbottomslope) / 2;
+        self.m_clip.linetarget = th;
+
+        return false; // don't go any further
+    }
+}
+
+// LARGELY TAKEN FROM P_AimLineAttack
+fixed_t RTraversal::SafeAimLineAttack(Mobj* t1, angle_t angle, fixed_t distance, int mask)
+{
+    fixed_t x2, y2;
+    fixed_t lookslope = 0;
+    fixed_t pitch = 0;
+
+    angle >>= ANGLETOFINESHIFT;
+    m_trace.thing = t1;
+
+    x2 = t1->x + (distance >> FRACBITS) * (m_trace.cos = finecosine[angle]);
+    y2 = t1->y + (distance >> FRACBITS)*(m_trace.sin = finesine[angle]);
+    m_trace.z = t1->z + (t1->height >> 1) + 8 * FRACUNIT;
+
+    if (t1->player)
+        pitch = t1->player->pitch;
+
+    if (pitch == 0 || demo_version < 333)
+    {
+        m_trace.topslope = 100 * FRACUNIT / 160;
+        m_trace.bottomslope = -100 * FRACUNIT / 160;
+    }
+    else
+    {
+        fixed_t topangle, bottomangle;
+
+        lookslope = finetangent[(ANG90 - pitch) >> ANGLETOFINESHIFT];
+
+        topangle = pitch - ANGLE_1 * 32;
+        bottomangle = pitch + ANGLE_1 * 32;
+
+        m_trace.topslope = finetangent[(ANG90 - topangle) >> ANGLETOFINESHIFT];
+        m_trace.bottomslope = finetangent[(ANG90 - bottomangle) >> ANGLETOFINESHIFT];
+    }
+
+    m_trace.attackrange = distance;
+    m_clip.linetarget = nullptr;
+
+    m_trace.aimflagsmask = mask;
+
+    Execute(t1->x, t1->y, x2, y2, PT_ADDLINES | PT_ADDTHINGS, RTraversal::TRaimTraverse, this);
+    return m_clip.linetarget ? m_trace.aimslope : lookslope;
 }

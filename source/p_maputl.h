@@ -94,12 +94,13 @@ fixed_t P_InterceptVector(const divline_t *v2, const divline_t *v1);
 int     P_BoxOnLineSide(fixed_t *tmbox, line_t *ld);
 
 //SoM 9/2/02: added mo parameter for 3dside clipping
-void    P_LineOpening (line_t *linedef, Mobj *mo);
+void    P_LineOpening(const line_t *linedef, const Mobj *mo);
 
 void P_UnsetThingPosition(Mobj *thing);
 void P_SetThingPosition(Mobj *thing);
 bool P_BlockLinesIterator (int x, int y, bool func(line_t *));
 bool P_BlockThingsIterator(int x, int y, bool func(Mobj *));
+Mobj* P_BlockThingsIterator(int x, int y, bool func(Mobj *, void*), void* parm);    // IOANCH 20140811
 bool ThingIsOnLine(Mobj *t, line_t *l);  // killough 3/15/98
 bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
                     int flags, traverser_t trav);

@@ -1324,7 +1324,7 @@ bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing, int spa
    // IOANCH 20140810: bot awareness
    if (botMap && thing->player)
    {
-       Bot *plbot = botDict[thing->player];
+       Bot *plbot = &bots[thing->player - players];
        plbot->addXYEvent(BOT_WALKTRIG, B_CoordXY(*line->v1));
    }
 

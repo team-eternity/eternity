@@ -152,7 +152,7 @@ fixed_t P_InterceptVector(const divline_t *v2, const divline_t *v1)
 // through a two sided line.
 // OPTIMIZE: keep this precalculated
 //
-void P_LineOpening(line_t *linedef, Mobj *mo)
+void P_LineOpening(const line_t *linedef, const Mobj *mo)
 {
    fixed_t frontceilz, frontfloorz, backceilz, backfloorz;
    // SoM: used for 3dmidtex
@@ -611,6 +611,20 @@ bool P_BlockThingsIterator(int x, int y, bool func(Mobj*))
             return false;
    }
    return true;
+}
+
+// IOANCH 20140811: support a parameter. Also just return nullptr/Mobj instead of true/false
+Mobj* P_BlockThingsIterator(int x, int y, bool func(Mobj *, void*), void* parm)
+{
+    if (!(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
+    {
+        Mobj *mobj = blocklinks[y * bmapwidth + x];
+
+        for (; mobj; mobj = mobj->bnext)
+            if (!func(mobj, parm))
+                return mobj;
+    }
+    return nullptr;
 }
 
 //
