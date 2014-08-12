@@ -30,12 +30,6 @@
 
 #include "b_msector.h"
 
-IMPLEMENT_RTTI_TYPE(MetaSector)
-IMPLEMENT_RTTI_TYPE(SimpleMSector)
-IMPLEMENT_RTTI_TYPE(ThingMSector)
-IMPLEMENT_RTTI_TYPE(LineMSector)
-IMPLEMENT_RTTI_TYPE(CompoundMSector)
-
 //
 // CompoundMSector::getFloorHeight
 //

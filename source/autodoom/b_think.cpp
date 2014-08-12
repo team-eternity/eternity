@@ -139,7 +139,7 @@ PathResult Bot::reachableItem(const BSubsec& ss, void* v)
 }
 
 
-bool Bot::shouldUseSpecial(const line_t& line)
+bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
 {
     VanillaLineSpecial vls = static_cast<VanillaLineSpecial>(line.special);
     switch (vls)
@@ -149,7 +149,7 @@ bool Bot::shouldUseSpecial(const line_t& line)
     case VLS_S1SecretExit:
     case VLS_WRExitLevel:
     case VLS_WRSecretExit:
-        return true;
+        return m_searchstage >= 1;
 
         // would only block or cause harm
     case VLS_W1CloseDoor:
@@ -272,7 +272,7 @@ bool Bot::shouldUseSpecial(const line_t& line)
         m_deepTriedLines.insert(&line);
 
         m_deepSearchMode = DeepAvail;
-        m_finder.AvailableGoals(*ss, &m_deepAvailSsectors, reachableItem, this);
+        m_finder.AvailableGoals(liness, &m_deepAvailSsectors, reachableItem, this);
         m_deepSearchMode = DeepNormal;
 
         // Now apply the change
@@ -285,7 +285,7 @@ bool Bot::shouldUseSpecial(const line_t& line)
         do
         {
             m_deepRepeat = nullptr;
-            result = m_finder.AvailableGoals(repsave ? *repsave : *ss, nullptr, reachableItem, this);
+            result = m_finder.AvailableGoals(repsave ? *repsave : liness, nullptr, reachableItem, this);
             repsave = m_deepRepeat;
         } while (result && m_deepRepeat);
         m_deepRepeat = nullptr;
@@ -383,7 +383,7 @@ bool Bot::objOfInterest(const BSubsec& ss, v2fixed_t& coord, void* v)
             {
                 if (!self.m_deepTriedLines.count(line))
                 {
-                    if (self.shouldUseSpecial(*line))
+                    if (self.shouldUseSpecial(*line, ss))
                         return true;
                     self.m_deepTriedLines.insert(line);
                     LevelStateStack::Push(*line, *self.pl);
@@ -392,7 +392,7 @@ bool Bot::objOfInterest(const BSubsec& ss, v2fixed_t& coord, void* v)
                 }
                 return false;
             }
-            else if (self.shouldUseSpecial(*line))
+            else if (self.shouldUseSpecial(*line, ss))
             {
                 coord.x = (line->v1->x + line->v2->x) / 2;
                 coord.y = (line->v1->y + line->v2->y) / 2;
@@ -485,12 +485,12 @@ void Bot::doNonCombatAI()
         
         if(!m_finder.FindNextGoal(pl->mo->x, pl->mo->y, m_path, objOfInterest, this))
         {
-++m_searchstage;
-cmd->sidemove += random.range(-pl->pclass->sidemove[0],
-    pl->pclass->sidemove[0]);
-cmd->forwardmove += random.range(-pl->pclass->forwardmove[0],
-    pl->pclass->forwardmove[0]);
-return;
+            ++m_searchstage;
+            cmd->sidemove += random.range(-pl->pclass->sidemove[0],
+                pl->pclass->sidemove[0]);
+            cmd->forwardmove += random.range(-pl->pclass->forwardmove[0],
+                pl->pclass->forwardmove[0]);
+            return;
         }
         m_hasPath = true;
     }
@@ -515,20 +515,21 @@ return;
     }
     else
     {
-
-        const BNeigh** nit = m_path.inv.end();
-        while (nit-- > m_path.inv.begin())
+        const BSeg* seg;
+        // from end to path to beginning
+        for (const BNeigh** nit = m_path.inv.begin(); nit != m_path.inv.end(); ++nit)
         {
-            if ((*nit)->seg->owner == ss)
+            seg = (*nit)->seg;
+            if (!botMap->canPass(*seg->owner, *(*nit)->ss, pl->mo->height))
             {
-                const BSeg& seg = *(*nit)->seg;
-                v2fixed_t nn = B_ProjectionOnSegment(pl->mo->x, pl->mo->y, seg.v[0]->x, seg.v[0]->y, seg.dx, seg.dy);
+                break;
+            }
+            if (seg->owner == ss)
+            {
+                v2fixed_t nn = B_ProjectionOnSegment(pl->mo->x, pl->mo->y, seg->v[0]->x, seg->v[0]->y, seg->dx, seg->dy);
                 nx = nn.x;
                 ny = nn.y;
-                if (botMap->canPass(*ss, *(*nit)->ss, pl->mo->height))
-                    goto moveon;
-                else
-                    break;  // reset if just got blocked
+                goto moveon;
             }
         }
         // not on path, so reset

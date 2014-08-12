@@ -98,7 +98,7 @@ private:
    
    void capCommands();
    
-   bool shouldUseSpecial(const line_t& line);
+   bool shouldUseSpecial(const line_t& line, const BSubsec& liness);
    static bool objOfInterest(const BSubsec& ss, v2fixed_t& coord, void* v);
    static PathResult reachableItem(const BSubsec& ss, void* v);
    
