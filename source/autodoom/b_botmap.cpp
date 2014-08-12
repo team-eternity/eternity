@@ -309,23 +309,23 @@ void BotMap::operator delete (void *p, int a, BotMap ** b)
 //
 bool BotMap::canPass(const BSubsec &s1, const BSubsec &s2, fixed_t height) const
 {
-   const MetaSector &ms1 = *s1.msector, &ms2 = *s2.msector;
+   const MetaSector* ms1 = s1.msector, *ms2 = s2.msector;
 
-   if (&ms1 == &ms2)
+   if (ms1 == ms2)
        return true;
+
+   fixed_t flh[2] = { ms1->getFloorHeight(), ms2->getFloorHeight() };
+   fixed_t clh[2] = { ms1->getCeilingHeight(), ms2->getCeilingHeight() };
    
-   fixed_t flh1 = ms1.getFloorHeight(), clh1 = ms1.getCeilingHeight(),
-   flh2 = ms2.getFloorHeight(), clh2 = ms2.getCeilingHeight();
-   
-   if(flh2 == D_MAXINT || clh2 == D_MININT)
+   if(flh[1] == D_MAXINT || clh[1] == D_MININT)
       return false;
-   if(flh2 - flh1 > 24 * FRACUNIT)
+   if(flh[1] - flh[0] > 24 * FRACUNIT)
       return false;
-   if(clh2 - flh1 < height)
+   if(clh[1] - flh[0] < height)
       return false;
-   if(clh2 - flh2 < height)
+   if(clh[1] - flh[1] < height)
       return false;
-   if(clh1 - flh2 < height)
+   if(clh[0] - flh[1] < height)
       return false;
    
    return true;

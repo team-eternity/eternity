@@ -952,7 +952,7 @@ fixed_t LevelStateStack::Floor(const sector_t& sector)
    return g_affectedSectors[&sector - sectors].getFloorHeight();
 }
 
-bool LevelStateStack::WasTriggered(const line_t& line)
+bool LevelStateStack::IsClear()
 {
-    return g_triggerSet.count(&line) != 0;
+    return g_indexListStack.isEmpty();
 }

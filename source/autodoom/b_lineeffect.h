@@ -44,7 +44,7 @@ namespace LevelStateStack
    void     Clear();
    fixed_t  Floor(const sector_t& sector);
    fixed_t  Ceiling(const sector_t& sector);
-   bool     WasTriggered(const line_t& line);
+   bool     IsClear();
 }
 
 //
