@@ -416,7 +416,6 @@ bool Bot::objOfInterest(const BSubsec& ss, v2fixed_t& coord, void* v)
 //
 bool Bot::ITfindTarget(Mobj* mo, void* v)
 {
-    const Bot& self = *static_cast<const Bot*>(v);
     return true;
 }
 

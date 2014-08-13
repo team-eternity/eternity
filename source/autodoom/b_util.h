@@ -414,7 +414,7 @@ public:
         base = -1;
         count = 0;
         iter = 0;
-        pool.makeEmpty<true>();
+        pool.template makeEmpty<true>();
     }
 };
 

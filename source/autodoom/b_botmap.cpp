@@ -525,7 +525,7 @@ void BotMap::SpecialIsDoor(int n, SectorTrait& st)
 {
     VanillaLineSpecial vls = (VanillaLineSpecial)n;
     st.lockID = EV_LockDefIDForSpecial(n);
-    switch (n)
+    switch (vls)
     {
     case VLS_D1DoorBlazeOpen:
     case VLS_D1OpenDoor:
