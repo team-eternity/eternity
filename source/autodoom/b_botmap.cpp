@@ -315,17 +315,18 @@ bool BotMap::canPass(const BSubsec &s1, const BSubsec &s2, fixed_t height) const
        return true;
 
    fixed_t flh[2] = { ms1->getFloorHeight(), ms2->getFloorHeight() };
+   fixed_t alh[2] = { ms1->getAltFloorHeight(), ms2->getAltFloorHeight() };
    fixed_t clh[2] = { ms1->getCeilingHeight(), ms2->getCeilingHeight() };
    
-   if(flh[1] == D_MAXINT || clh[1] == D_MININT)
+   if((flh[1] == D_MAXINT && alh[1] == D_MAXINT) || clh[1] == D_MININT)
       return false;
-   if(flh[1] - flh[0] > 24 * FRACUNIT)
+   if(flh[1] - flh[0] > 24 * FRACUNIT && alh[1] - alh[0] > 24 * FRACUNIT)
       return false;
-   if(clh[1] - flh[0] < height)
+   if(clh[1] - flh[0] < height && clh[1] - alh[0] < height)
       return false;
-   if(clh[1] - flh[1] < height)
+   if(clh[1] - flh[1] < height && clh[1] - alh[1] < height)
       return false;
-   if(clh[0] - flh[1] < height)
+   if(clh[0] - flh[1] < height && clh[0] - alh[1] < height)
       return false;
    
    return true;
