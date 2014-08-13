@@ -45,6 +45,7 @@ class MetaSector
 public:
    // The way to get the resultant sector
    virtual fixed_t getFloorHeight() const = 0;
+   virtual fixed_t getAltFloorHeight() const = 0;
    virtual fixed_t getCeilingHeight() const = 0;
    virtual const sector_t *getFloorSector() const = 0;
    virtual const sector_t *getCeilingSector() const = 0;
@@ -70,6 +71,10 @@ public:
    fixed_t getFloorHeight() const
    {
       return LevelStateStack::Floor(*sector);
+   }
+   fixed_t getAltFloorHeight() const
+   {
+       return LevelStateStack::AltFloor(*sector);
    }
    fixed_t getCeilingHeight() const
    {
@@ -103,6 +108,12 @@ public:
           mobj->flags & MF_SPAWNCEILING ? LevelStateStack::Floor(*sector) :
           (P_Use3DClipping() ? LevelStateStack::Floor(*sector) + mobj->height : D_MAXINT);
    }
+   fixed_t getAltFloorHeight() const
+   {
+        return
+          mobj->flags & MF_SPAWNCEILING ? LevelStateStack::AltFloor(*sector) :
+          (P_Use3DClipping() ? LevelStateStack::AltFloor(*sector) + mobj->height : D_MAXINT);
+   }
    fixed_t getCeilingHeight() const
    {
       return
@@ -135,6 +146,11 @@ public:
    {
       return line->flags & ML_BLOCKING || !line->backsector ? D_MAXINT :
       LevelStateStack::Floor(*getFloorSector());
+   }
+   fixed_t getAltFloorHeight() const
+   {
+      return line->flags & ML_BLOCKING || !line->backsector ? D_MAXINT :
+      LevelStateStack::AltFloor(*getFloorSector());
    }
    fixed_t getCeilingHeight() const
    {
@@ -175,6 +191,7 @@ public:
       efree(msectors);
    }
    fixed_t getFloorHeight() const;
+   fixed_t getAltFloorHeight() const;
    fixed_t getCeilingHeight() const;
    const sector_t *getFloorSector() const;
    const sector_t *getCeilingSector() const;

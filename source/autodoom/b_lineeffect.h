@@ -43,6 +43,7 @@ namespace LevelStateStack
    void     Pop();
    void     Clear();
    fixed_t  Floor(const sector_t& sector);
+   fixed_t  AltFloor(const sector_t& sector);
    fixed_t  Ceiling(const sector_t& sector);
    bool     IsClear();
 }

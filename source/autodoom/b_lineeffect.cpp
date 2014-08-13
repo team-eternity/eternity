@@ -85,6 +85,14 @@ static fixed_t applyDoorCorrection(const sector_t& sector)
     return sector.ceilingheight;
 }
 
+static fixed_t applyFloorCorrection(const sector_t& sector)
+{
+    const PlatThinker* pt = thinker_cast<const PlatThinker*>(sector.floordata);
+    if (pt && pt->wait > 0)
+        return pt->high;
+    return sector.floorheight;
+}
+
 class SectorHeightStack
 {
 public:
@@ -96,7 +104,7 @@ public:
    }
    fixed_t getAltFloorHeight() const
    {
-       return stack.getLength() ? stack.back().altFloorHeight : sector->floorheight;
+       return stack.getLength() && isFloorTerminal() ? stack.back().altFloorHeight : applyFloorCorrection(*sector);
    }
    fixed_t getCeilingHeight() const
    {
@@ -950,6 +958,12 @@ fixed_t LevelStateStack::Ceiling(const sector_t& sector)
 fixed_t LevelStateStack::Floor(const sector_t& sector)
 {
    return g_affectedSectors[&sector - sectors].getFloorHeight();
+}
+
+fixed_t LevelStateStack::AltFloor(const sector_t& sector)
+{
+    const SectorHeightStack& shs = g_affectedSectors[&sector - sectors];
+    return shs.getAltFloorHeight();
 }
 
 bool LevelStateStack::IsClear()

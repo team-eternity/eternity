@@ -45,6 +45,16 @@ fixed_t CompoundMSector::getFloorHeight() const
    }
    return max;
 }
+fixed_t CompoundMSector::getAltFloorHeight() const
+{
+   fixed_t max = D_MININT, val;
+   for (int i = 0; i < numElem; ++i)
+   {
+      if((val = msectors[i]->getAltFloorHeight()) > max)
+         max = val;
+   }
+   return max;
+}
 
 //
 // CompoundMSector::getCeilingHeight
