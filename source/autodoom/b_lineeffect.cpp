@@ -84,7 +84,7 @@ static fixed_t applyDoorCorrection(const sector_t& sector)
         return vdt->topheight;
 
     const CeilingThinker* ct = thinker_cast<const CeilingThinker*>(sector.ceilingdata);
-    if (ct && !ct->inStasis && ct->speed > 0 && ct->direction == 1)
+    if (ct && !ct->inStasis && ct->speed > 0 && (ct->direction == 1 || ct->crush))
         return ct->topheight;
     
     const ElevatorThinker* et = thinker_cast<const ElevatorThinker*>(sector.ceilingdata);

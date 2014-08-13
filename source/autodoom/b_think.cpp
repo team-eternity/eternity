@@ -408,6 +408,58 @@ bool Bot::objOfInterest(const BSubsec& ss, v2fixed_t& coord, void* v)
     return false;
 }
 
+//
+// Bot::enemyVisible()
+//
+// Returns true if an enemy is visible now
+// Code inspired from P_LookForMonsters
+//
+bool Bot::ITfindTarget(Mobj* mo, void* v)
+{
+    const Bot& self = *static_cast<const Bot*>(v);
+    return true;
+}
+
+const Mobj* Bot::enemyVisible()
+{
+    // P_BlockThingsIterator is safe to use outside of demo correctness
+    if (botMap->livingMonsters.empty())
+        return nullptr;
+
+    camsightparams_t cam;
+    cam.setLookerMobj(pl->mo);
+
+restart:
+    fixed_t mindist = D_MAXINT;
+    fixed_t dist;
+    const Mobj* nearest = nullptr;
+    for (auto it = botMap->livingMonsters.begin(); it != botMap->livingMonsters.end(); ++it)
+    {
+        const Mobj* m = *it;
+        if (m->health <= 0 || !(m->flags & MF_SHOOTABLE))
+        {
+            botMap->livingMonsters.erase(m);
+            goto restart;
+        }
+        cam.setTargetMobj(m);
+        if (CAM_CheckSight(cam))
+        {
+            dist = P_AproxDistance(m->x - pl->mo->x, m->y - pl->mo->y);
+            if (dist < mindist)
+            {
+                mindist = dist;
+                nearest = m;
+            }
+        }
+    }
+    if (nearest)
+    {
+        return nearest;
+    }
+
+    return nullptr;
+}
+
 void Bot::doCombatAI(const Mobj* enemy)
 {
     fixed_t mx, my, nx, ny;
@@ -466,9 +518,16 @@ void Bot::doCombatAI(const Mobj* enemy)
     else
     {
         cmd->sidemove += random.range(-pl->pclass->sidemove[0],
-            pl->pclass->sidemove[0]) * 8;
+            pl->pclass->sidemove[0]);
         cmd->forwardmove += random.range(-pl->pclass->forwardmove[0],
-            pl->pclass->forwardmove[0]) * 8;
+            pl->pclass->forwardmove[0]);
+    }
+
+    if (P_AproxDistance(nx - mx, ny - my) < 200 * FRACUNIT)
+    {
+        //cmd->sidemove /= -1;
+        if (cmd->forwardmove > 0)
+            cmd->forwardmove *= -1;
     }
 }
 
@@ -594,57 +653,7 @@ moveon:
 //   printf("%d\n", angleturn);
 }
 
-//
-// Bot::enemyVisible()
-//
-// Returns true if an enemy is visible now
-// Code inspired from P_LookForMonsters
-//
-bool Bot::ITfindTarget(Mobj* mo, void* v)
-{
-    const Bot& self = *static_cast<const Bot*>(v);
-    return true;
-}
 
-const Mobj* Bot::enemyVisible() 
-{
-    // P_BlockThingsIterator is safe to use outside of demo correctness
-    if (botMap->livingMonsters.empty())
-        return nullptr;
-
-    camsightparams_t cam;
-    cam.setLookerMobj(pl->mo);
-    
-restart:
-    fixed_t mindist = D_MAXINT;
-    fixed_t dist;
-    const Mobj* nearest = nullptr;
-    for (auto it = botMap->livingMonsters.begin(); it != botMap->livingMonsters.end(); ++it)
-    {
-        const Mobj* m = *it;
-        if (m->health <= 0 || !(m->flags & MF_SHOOTABLE))
-        {
-            botMap->livingMonsters.erase(m);
-            goto restart;
-        }
-        cam.setTargetMobj(m);
-        if (CAM_CheckSight(cam))
-        {
-            dist = P_AproxDistance(m->x - pl->mo->x, m->y - pl->mo->y);
-            if (dist < mindist)
-            {
-                mindist = dist;
-                nearest = m;
-            }
-        }
-    }
-    if (nearest)
-    {
-        return nearest;
-    }
-
-    return nullptr;
-}
 
 //
 // Bot::doCommand
@@ -666,13 +675,16 @@ void Bot::doCommand()
    cmd = &pl->cmd;
    
    // Do non-combat for now
+
+   {
+       doNonCombatAI();
+   }
    const Mobj* enemy = enemyVisible();
    if (enemy)
    {
+       cmd->angleturn = 0;
        doCombatAI(enemy);
    }
-   else
-       doNonCombatAI();
    
    // Limit commands before exiting
    capCommands();
