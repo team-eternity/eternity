@@ -82,14 +82,45 @@ static fixed_t applyDoorCorrection(const sector_t& sector)
     const VerticalDoorThinker* vdt = thinker_cast<const VerticalDoorThinker*>(sector.ceilingdata);
     if (vdt && vdt->direction == 1)
         return vdt->topheight;
+
+    const CeilingThinker* ct = thinker_cast<const CeilingThinker*>(sector.ceilingdata);
+    if (ct && !ct->inStasis && ct->speed > 0 && ct->direction == 1)
+        return ct->topheight;
+    
+    const ElevatorThinker* et = thinker_cast<const ElevatorThinker*>(sector.ceilingdata);
+    if (et && et->speed > 0)
+        return et->ceilingdestheight;
+
     return sector.ceilingheight;
 }
 
 static fixed_t applyFloorCorrection(const sector_t& sector)
 {
     const PlatThinker* pt = thinker_cast<const PlatThinker*>(sector.floordata);
-    if (pt && pt->wait > 0)
-        return pt->high;
+    if (pt && pt->speed > 0 && pt->status != PlatThinker::in_stasis)
+    {
+        switch (pt->status)
+        {
+        case PlatThinker::up:
+        case PlatThinker::waiting:
+            return pt->high;
+        case PlatThinker::down:
+            return pt->low;
+        default:
+            break;
+        }
+    }
+
+    const ElevatorThinker* et = thinker_cast<const ElevatorThinker*>(sector.floordata);
+    if (et && et->speed > 0)
+        return et->floordestheight;
+
+    const FloorMoveThinker* fmt = thinker_cast<const FloorMoveThinker*>(sector.floordata);
+    if (fmt && fmt->speed > 0)
+        return fmt->floordestheight;
+
+
+
     return sector.floorheight;
 }
 
