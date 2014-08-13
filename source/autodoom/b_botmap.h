@@ -179,7 +179,7 @@ public:
    nodes(NULL),
    numverts(0), numlines(0), numsegs(0), numssectors(0), numnodes(0),
    nullMSec(NULL), nummetas(0),
-   bMapOrgX(0), bMapOrgY(0), bMapWidth(0), bMapHeight(0)
+   bMapOrgX(0), bMapOrgY(0), bMapWidth(0), bMapHeight(0), sectorFlags(nullptr)
    {
       msecList.head = nullptr;
       // set collection prototype
@@ -212,6 +212,8 @@ public:
       efree(vertices);
       efree(lines);
       efree(nodes);
+
+      efree(sectorFlags);
     
       clearMsecList();
       
@@ -244,9 +246,18 @@ public:
 
    // Common affairs
    std::set<const Mobj*> livingMonsters;    // list of shootable objects
-	
+
+   struct SectorTrait
+   {
+       int lockID;
+       bool isDoor;
+   };
+   SectorTrait* sectorFlags;
+
 private:
     void getAllLivingMonsters();
+    void getDoorSectors();
+    static void SpecialIsDoor(int n, SectorTrait& st);
 	
 	void clearMsecList()
 	{

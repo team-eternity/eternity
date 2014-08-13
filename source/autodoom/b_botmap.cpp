@@ -520,6 +520,87 @@ void BotMap::getAllLivingMonsters()
     }
 }
 
+void BotMap::SpecialIsDoor(int n, SectorTrait& st)
+{
+    VanillaLineSpecial vls = (VanillaLineSpecial)n;
+    st.lockID = EV_LockDefIDForSpecial(n);
+    switch (n)
+    {
+    case VLS_D1DoorBlazeOpen:
+    case VLS_D1OpenDoor:
+    case VLS_DRDoorBlazeRaise:
+    case VLS_DRRaiseDoor:
+    case VLS_D1OpenDoorBlue:
+    case VLS_D1OpenDoorRed:
+    case VLS_D1OpenDoorYellow:
+    case VLS_DRRaiseDoorBlue:
+    case VLS_DRRaiseDoorRed:
+    case VLS_DRRaiseDoorYellow:
+        st.isDoor = true;
+        break;
+    default:
+        st.isDoor = false;
+        break;
+    }
+}
+
+void BotMap::getDoorSectors()
+{
+    efree(sectorFlags);
+    sectorFlags = ecalloc(SectorTrait*, ::numsectors, sizeof(*sectorFlags));
+
+    const sector_t* sec;
+    const line_t* line;
+    int i, j;
+    SectorTrait st, defst;
+    bool typeset;
+
+    // A sector is a door if:
+    // - it has at least two two-sided lines
+    // - they all face outside
+    // - they all are DR type
+    // - they all have the same lockID
+
+    int numtwosided;
+
+    for (i = 0; i < ::numsectors; ++i)
+    {
+        sec = ::sectors + i;
+        numtwosided = 0;
+        memset(&st, 0, sizeof(st));
+        typeset = false;
+        for (j = 0; j < sec->linecount; ++j)
+        {
+            line = sec->lines[j];
+            if (!line->backsector)
+                continue;
+            ++numtwosided;
+            
+            if (line->backsector != sec)
+            {
+                // fail
+                goto nextsector;
+            }
+            SpecialIsDoor(line->special, st);
+            if (!typeset)
+            {
+                if (!st.isDoor)
+                    goto nextsector;
+                typeset = true;
+                defst = st;
+            }
+            else if (memcmp(&defst, &st, sizeof(st)))
+            {
+                goto nextsector;
+            }
+        }
+        // okay
+        sectorFlags[i] = st;
+    nextsector:
+        ;
+    }
+}
+
 //
 // B_BuildBotMap
 //
@@ -569,6 +650,9 @@ void BotMap::Build()
 
    // Find all living monsters
    botMap->getAllLivingMonsters();
+
+   // Find all doors
+   botMap->getDoorSectors();
 }
 
 // EOF
