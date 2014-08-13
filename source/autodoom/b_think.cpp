@@ -445,7 +445,7 @@ restart:
         if (CAM_CheckSight(cam))
         {
             dist = P_AproxDistance(m->x - pl->mo->x, m->y - pl->mo->y);
-            if (dist < mindist)
+            if (dist < mindist && dist < MISSILERANGE / 2)
             {
                 mindist = dist;
                 nearest = m;
@@ -487,7 +487,7 @@ void Bot::doCombatAI(const Mobj* enemy)
     cmd->angleturn += angleturn;
 
     RTraversal rt;
-    rt.SafeAimLineAttack(pl->mo, pl->mo->angle, 16 * 64 * FRACUNIT, 0);
+    rt.SafeAimLineAttack(pl->mo, pl->mo->angle, MISSILERANGE / 2, 0);
     if (rt.m_clip.linetarget)
     {
         cmd->buttons |= BT_ATTACK;
@@ -498,7 +498,7 @@ void Bot::doCombatAI(const Mobj* enemy)
         cmd->buttons |= BT_CHANGE;
         cmd->buttons |= random.range(wp_pistol, wp_supershotgun) << BT_WEAPONSHIFT;
     }
-    else if (random.range(1, 1000) == 1)
+    else if (random.range(1, 100) == 1)
     {
         cmd->buttons |= BT_CHANGE;
         cmd->buttons |= random.range(wp_shotgun, wp_supershotgun) << BT_WEAPONSHIFT;
@@ -511,9 +511,9 @@ void Bot::doCombatAI(const Mobj* enemy)
             cmd->buttons |= BT_CHANGE;
             cmd->buttons |= random.range(wp_pistol, wp_supershotgun) << BT_WEAPONSHIFT;
         }
-        cmd->forwardmove += FixedMul(2 * pl->pclass->forwardmove[1],
+        cmd->forwardmove = FixedMul(2 * pl->pclass->forwardmove[1],
             B_AngleCosine(dangle));
-        cmd->sidemove -= FixedMul(2 * pl->pclass->sidemove[1], B_AngleSine(dangle));
+        cmd->sidemove = -FixedMul(2 * pl->pclass->sidemove[1], B_AngleSine(dangle));
     }
     else
     {
@@ -521,14 +521,16 @@ void Bot::doCombatAI(const Mobj* enemy)
             pl->pclass->sidemove[0]);
         cmd->forwardmove += random.range(-pl->pclass->forwardmove[0],
             pl->pclass->forwardmove[0]);
+
+        if (P_AproxDistance(nx - mx, ny - my) < 384 * FRACUNIT)
+        {
+            //cmd->sidemove /= -1;
+            if (cmd->forwardmove > 0)
+                cmd->forwardmove /= -2;
+        }
     }
 
-    if (P_AproxDistance(nx - mx, ny - my) < 200 * FRACUNIT)
-    {
-        //cmd->sidemove /= -1;
-        if (cmd->forwardmove > 0)
-            cmd->forwardmove *= -1;
-    }
+    
 }
 
 //
@@ -633,6 +635,11 @@ moveon:
 
     //   if(dangle < ANG45 || dangle > ANG270 + ANG45)
 
+
+    if (random() % 128 == 0)
+        m_straferunstate = random.range(-1, 1);
+    //tangle += ANG45 * m_straferunstate;
+
     int16_t angleturn = (int16_t)(tangle >> 16) - (int16_t)(pl->mo->angle >> 16);
     angleturn >>= 3;
 
@@ -682,8 +689,11 @@ void Bot::doCommand()
    const Mobj* enemy = enemyVisible();
    if (enemy)
    {
-       cmd->angleturn = 0;
-       doCombatAI(enemy);
+       //if (!m_hasPath || ss != m_path.last)
+       {
+           cmd->angleturn = 0;
+           doCombatAI(enemy);
+       }
    }
    
    // Limit commands before exiting

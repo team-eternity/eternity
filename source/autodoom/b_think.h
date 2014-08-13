@@ -69,6 +69,7 @@ class Bot : public ZoneObject
    };
    
    RandomGenerator          random;       // random generator for bot
+   int                      m_straferunstate;
    PathFinder               m_finder;
    BotPath                  m_path;
    bool                     m_hasPath;
@@ -108,7 +109,7 @@ public:
    // Constructor
    //
     Bot() : ZoneObject(), pl(nullptr), active(true), cmd(nullptr), ss(nullptr),
-        prevCtr(0), m_searchstage(0), m_finder(nullptr), m_hasPath(false), m_deepSearchMode(DeepNormal), m_deepRepeat(nullptr)
+        prevCtr(0), m_searchstage(0), m_finder(nullptr), m_hasPath(false), m_deepSearchMode(DeepNormal), m_deepRepeat(nullptr), m_straferunstate(0)
    {
       random.initialize((unsigned)time(nullptr));
    }

@@ -681,10 +681,21 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
       case VLS_WRSilentCrushAndRaise:
       case VLS_S1SilentCrushAndRaise:
       case VLS_SRSilentCrushAndRaise:
-         if(ceilingBlocked)
-            return;
-         sae.ceilingHeight = sae.floorHeight + 8 * FRACUNIT;
-         sae.ceilingTerminal = true;
+      {
+          const CeilingThinker* ct = thinker_cast<const CeilingThinker*>(sector.ceilingdata);
+          if (ct && ct->inStasis)
+          {
+              sae.ceilingHeight = ct->topheight;
+              sae.ceilingTerminal = true;
+          }
+          else
+          {
+              if (ceilingBlocked)
+                  return;
+              sae.ceilingHeight = sae.floorHeight + 8 * FRACUNIT;
+              sae.ceilingTerminal = true;
+          }
+      }
          break;
          
       case VLS_G1PlatRaiseNearestChange:
