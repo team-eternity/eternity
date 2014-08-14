@@ -60,9 +60,6 @@ Bot bots[MAXPLAYERS];
 //
 void Bot::mapInit()
 {
-//   if(!active || gamestate != GS_LEVEL)
-//      return;  // do nothing if out of game
-   path.clear(); // reset path
    B_EmptyTableAndDelete(goalTable);   // remove all objectives
    B_EmptyTableAndDelete(goalEvents);  // remove all previously listed events
    prevCtr = 0;

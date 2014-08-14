@@ -1866,32 +1866,6 @@ static void AM_drawNodeLines()
 	  // l.b.y = M_FixedToDouble(ln.v[1]->y);
 	  // AM_drawMline(&l, mapcolor_prtl);
    //}
-   if (bots[0].path.exists())
-   {
-      int i;
-      fixed_t x, y;
-      for (i = 0; i != -1; i = bots[0].path.getNextStraightIndex(i))
-      {
-         if(i != 0)
-         {
-            l.a.x = M_FixedToDouble(x);
-            l.a.y = M_FixedToDouble(y);
-         }
-         bots[0].path.getStraightCoords(i, x, y);
-         l.b.x = M_FixedToDouble(x);
-         l.b.y = M_FixedToDouble(y);
-         if(i != 0)
-         {
-            AM_drawMline(&l, mapcolor_unsn);
-         }
-      }
-      l.a.x = M_FixedToDouble(x);
-      l.a.y = M_FixedToDouble(y);
-      bots[0].path.getFinalCoord(x, y);
-      l.b.x = M_FixedToDouble(x);
-      l.b.y = M_FixedToDouble(y);
-      AM_drawMline(&l, mapcolor_unsn);
-   }
 //   for (int i = 0; i < numlines; ++i)
 //   {
 //      if (lines[i].special)

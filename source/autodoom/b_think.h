@@ -81,9 +81,6 @@ class Bot : public ZoneObject
    // internal states
    unsigned prevCtr;
    unsigned m_searchstage;
-public:
-   PathArray path;   // pathfinding
-private:
 
    // Item knowledge builder
    // nopickStats: the minimum stats by which an item won't be picked
