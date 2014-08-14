@@ -266,7 +266,7 @@ void R_DynaSegOffset(seg_t *lseg, line_t *line, int side)
 //
 // Gets a new dynaseg and initializes it with all needed information.
 //
-dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, vertex_t *v1, vertex_t *v2)
+dynaseg_t *R_CreateDynaSeg(const dynaseg_t *proto, vertex_t *v1, vertex_t *v2)
 {
    dynaseg_t *ret = R_GetFreeDynaSeg();
 
@@ -531,7 +531,7 @@ void R_DetachPolyObject(polyobj_t *poly)
    // iterate over stored subsector pointers
    for(i = 0; i < poly->numDSS; ++i)
    {
-      subsector_t *ss = poly->dynaSubsecs[i];
+      const subsector_t *ss = poly->dynaSubsecs[i];
       DLListItem<rpolyobj_t> *link = ss->polyList;
       DLListItem<rpolyobj_t> *next;
 

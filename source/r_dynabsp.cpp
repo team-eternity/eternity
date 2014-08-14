@@ -364,7 +364,7 @@ static int R_classifyDynaSeg(dynaseg_t *part, dynaseg_t *seg, double pdx, double
 // Split the input list of segs into left and right lists using one of the segs
 // selected as a partition line for the current node.
 //
-static void R_divideSegs(rpolynode_t *rpn, dseglist_t *ts, 
+static void R_divideSegs(rpolynode_t *rpn, const dseglist_t *ts, 
                          dseglist_t *rs, dseglist_t *ls)
 {
    dynaseg_t *best = NULL, *add_to_rs = NULL, *add_to_ls = NULL;
@@ -515,7 +515,7 @@ static rpolynode_t *R_createNode(dseglist_t *ts)
 // dynasegs linked by their bsplinks. The dynasegs' BSP-related fields will also
 // be initialized. The result is suitable for input to R_BuildDynaBSP.
 //
-static bool R_collapseFragmentsToDSList(subsector_t *subsec, dseglist_t *list)
+static bool R_collapseFragmentsToDSList(const subsector_t *subsec, dseglist_t *list)
 {
    DLListItem<rpolyobj_t> *fragment = subsec->polyList;
 
@@ -556,13 +556,13 @@ static bool R_collapseFragmentsToDSList(subsector_t *subsec, dseglist_t *list)
 // created during the splitting process and are not referenced by rpolyobj_t
 // instances.
 //
-static void R_returnOwnedList(rpolynode_t *node)
+static void R_returnOwnedList(const rpolynode_t *node)
 {
-   dseglink_t *dsl = node->owned;
+   const dseglink_t *dsl = node->owned;
 
    while(dsl)
    {
-      dseglink_t *next =  dsl->dllNext;
+      const dseglink_t *next =  dsl->dllNext;
       dynaseg_t  *ds   = *dsl;
 
       // free dynamic vertices
@@ -606,7 +606,7 @@ static void R_freeTreeRecursive(rpolynode_t *root)
 //
 // Call to build a dynamic BSP sub-tree for sorting of dynasegs.
 //
-rpolybsp_t *R_BuildDynaBSP(subsector_t *subsec)
+rpolybsp_t *R_BuildDynaBSP(const subsector_t *subsec)
 {
    rpolybsp_t *bsp = NULL;
    dseglist_t segs = NULL;
