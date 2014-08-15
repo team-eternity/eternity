@@ -675,16 +675,20 @@ void Bot::doNonCombatAI()
         // not on path, so reset
         if(m_lastPathSS)
         {
-            B_Log("Inserted goner %d\n",
-                  (int)(m_lastPathSS - &botMap->ssectors[0]));
-            m_dropSS.insert(m_lastPathSS);
-            for(const BNeigh& n : m_lastPathSS->neighs)
+            if(!botMap->canPassNow(*ss, *m_lastPathSS,
+                                   pl->mo->height))
             {
-                if(P_AproxDistance(n.ss->mid.x - m_lastPathSS->mid.x,
-                                   n.ss->mid.y - m_lastPathSS->mid.y)
-                   < 128 * FRACUNIT)
+                B_Log("Inserted goner %d\n",
+                      (int)(m_lastPathSS - &botMap->ssectors[0]));
+                m_dropSS.insert(m_lastPathSS);
+                for(const BNeigh& n : m_lastPathSS->neighs)
                 {
-                    m_dropSS.insert(n.ss);
+                    if(P_AproxDistance(n.ss->mid.x - m_lastPathSS->mid.x,
+                                       n.ss->mid.y - m_lastPathSS->mid.y)
+                       < 128 * FRACUNIT)
+                    {
+                        m_dropSS.insert(n.ss);
+                    }
                 }
             }
             m_lastPathSS = nullptr;
@@ -765,7 +769,8 @@ moveon:
 
     if (random() % 128 == 0)
         m_straferunstate = random.range(-1, 1);
-    //tangle += ANG45 * m_straferunstate;
+    if(!intoSwitch)
+        tangle += ANG45 * m_straferunstate;
 
     int16_t angleturn = (int16_t)(tangle >> 16) - (int16_t)(pl->mo->angle >> 16);
     angleturn >>= 3;
