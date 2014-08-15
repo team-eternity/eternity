@@ -94,6 +94,18 @@ static fixed_t applyDoorCorrection(const sector_t& sector)
     return sector.ceilingheight;
 }
 
+// Very special treatment needed for plats
+static fixed_t applyLiftCorrection(const sector_t& sector)
+{
+   const PlatThinker* pt = thinker_cast<const PlatThinker*>(sector.floordata);
+   if(pt && pt->speed > 0 && pt->status == PlatThinker::down)
+   {
+      return pt->high;  // will alternate with the pt->low on applyFloorCorr
+   }
+   
+   return sector.floorheight;
+}
+
 static fixed_t applyFloorCorrection(const sector_t& sector)
 {
     const PlatThinker* pt = thinker_cast<const PlatThinker*>(sector.floordata);
@@ -131,11 +143,13 @@ public:
    PODCollection<SectorStateEntry> stack;   // stack of actions
    fixed_t getFloorHeight() const
    {
-      return stack.getLength() ? stack.back().floorHeight : sector->floorheight;
+      return stack.getLength() ? stack.back().floorHeight
+      : applyLiftCorrection(*sector);
    }
    fixed_t getAltFloorHeight() const
    {
-       return stack.getLength() && isFloorTerminal() ? stack.back().altFloorHeight : applyFloorCorrection(*sector);
+       return stack.getLength() && isFloorTerminal()
+      ? stack.back().altFloorHeight : applyFloorCorrection(*sector);
    }
    fixed_t getCeilingHeight() const
    {
@@ -145,11 +159,13 @@ public:
    }
    bool isFloorTerminal() const
    {
-      return stack.getLength() ? stack.back().floorTerminal : false;
+      return stack.getLength() ? stack.back().floorTerminal
+      : P_SectorActive(floor_special, sector);
    }
    bool isCeilingTerminal() const
    {
-      return stack.getLength() ? stack.back().ceilingTerminal : false;
+      return stack.getLength() ? stack.back().ceilingTerminal
+      : P_SectorActive(ceiling_special, sector);
    }
 };
 

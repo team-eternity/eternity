@@ -1857,6 +1857,19 @@ static void AM_drawNodeLines()
       l.b.y = M_FixedToDouble(sg.v[1]->y);
       AM_drawMline(&l, mapcolor_prtl);
    }
+   
+   if(bots[0].m_hasPath)
+   {
+      for (const BNeigh* neigh : bots[0].m_path.inv)
+      {
+         l.a.x = M_FixedToDouble(neigh->seg->v[0]->x);
+         l.a.y = M_FixedToDouble(neigh->seg->v[0]->y);
+         l.b.x = M_FixedToDouble(neigh->seg->v[1]->x);
+         l.b.y = M_FixedToDouble(neigh->seg->v[1]->y);
+         AM_drawMline(&l, mapcolor_frnd);
+      }
+   }
+   
    //for (int i = 0; i < botMap->numlines; ++i)
    //{
 	  // const BotMap::Line &ln = botMap->lines[i];
@@ -1901,14 +1914,14 @@ static void AM_drawNodeLines()
 //         AM_drawMline(&l, mapcolor_unsn);
 //   }
 //
-   for (int i = 0; i < botMap->numverts; ++i)
-   {
-      l.a.x = M_FixedToDouble(botMap->vertices[i].x) - 0.25;
-      l.a.y = M_FixedToDouble(botMap->vertices[i].y) - 0.25;
-      l.b.x = M_FixedToDouble(botMap->vertices[i].x) + 0.25;
-      l.b.y = M_FixedToDouble(botMap->vertices[i].y) + 0.25;
-      AM_drawMline(&l, mapcolor_sprt);
-   }
+//   for (int i = 0; i < botMap->numverts; ++i)
+//   {
+//      l.a.x = M_FixedToDouble(botMap->vertices[i].x) - 0.25;
+//      l.a.y = M_FixedToDouble(botMap->vertices[i].y) - 0.25;
+//      l.b.x = M_FixedToDouble(botMap->vertices[i].x) + 0.25;
+//      l.b.y = M_FixedToDouble(botMap->vertices[i].y) + 0.25;
+//      AM_drawMline(&l, mapcolor_sprt);
+//   }
    
 //   for(int i = 0; i < numnodes; i++)
 //   {

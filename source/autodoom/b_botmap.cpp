@@ -331,6 +331,29 @@ bool BotMap::canPass(const BSubsec &s1, const BSubsec &s2, fixed_t height) const
    
    return true;
 }
+bool BotMap::canPassNow(const BSubsec &s1, const BSubsec &s2, fixed_t height) const
+{
+   const MetaSector* ms1 = s1.msector, *ms2 = s2.msector;
+   
+   if (ms1 == ms2)
+      return true;
+   
+   fixed_t flh[2] = { ms1->getFloorHeight(), ms2->getFloorHeight() };
+   fixed_t clh[2] = { ms1->getCeilingHeight(), ms2->getCeilingHeight() };
+   
+   if(flh[1] == D_MAXINT || clh[1] == D_MININT)
+      return false;
+   if(flh[1] - flh[0] > 24 * FRACUNIT)
+      return false;
+   if(clh[1] - flh[0] < height)
+      return false;
+   if(clh[1] - flh[1] < height)
+      return false;
+   if(clh[0] - flh[1] < height)
+      return false;
+   
+   return true;
+}
 
 //
 // B_setMobjPositions

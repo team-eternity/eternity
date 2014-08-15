@@ -71,8 +71,10 @@ class Bot : public ZoneObject
    RandomGenerator          random;       // random generator for bot
    int                      m_straferunstate;
    PathFinder               m_finder;
+public:
    BotPath                  m_path;
    bool                     m_hasPath;
+private:
    DeepSearch               m_deepSearchMode;
    std::set<const line_t*>  m_deepTriedLines;
    std::unordered_set<const BSubsec*> m_deepAvailSsectors;

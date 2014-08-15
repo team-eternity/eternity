@@ -152,34 +152,34 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
 
         // would only block or cause harm
     case VLS_W1CloseDoor:
-    case VLS_W1FastCeilCrushRaise:
+//    case VLS_W1FastCeilCrushRaise:
     case VLS_W1CloseDoor30:
-    case VLS_W1CeilingCrushAndRaise:
+//    case VLS_W1CeilingCrushAndRaise:
     case VLS_SRCloseDoor:
     case VLS_SRCeilingLowerToFloor:
     case VLS_W1CeilingLowerAndCrush:
-    case VLS_S1CeilingCrushAndRaise:
+//    case VLS_S1CeilingCrushAndRaise:
     case VLS_S1CloseDoor:
     case VLS_WRCeilingLowerAndCrush:
-    case VLS_WRCeilingCrushAndRaise:
+//    case VLS_WRCeilingCrushAndRaise:
     case VLS_WRCloseDoor:
     case VLS_WRCloseDoor30:
-    case VLS_WRFastCeilCrushRaise:
+//    case VLS_WRFastCeilCrushRaise:
     case VLS_WRDoorBlazeClose:
     case VLS_W1DoorBlazeClose:
     case VLS_S1DoorBlazeClose:
     case VLS_SRDoorBlazeClose:
-    case VLS_W1SilentCrushAndRaise:
+//    case VLS_W1SilentCrushAndRaise:
     case VLS_W1CeilingLowerToFloor:
-    case VLS_WRSilentCrushAndRaise:
+//    case VLS_WRSilentCrushAndRaise:
     case VLS_WRCeilingLowerToFloor:
-    case VLS_S1FastCeilCrushRaise:
-    case VLS_S1SilentCrushAndRaise:
+//    case VLS_S1FastCeilCrushRaise:
+//    case VLS_S1SilentCrushAndRaise:
     case VLS_S1CeilingLowerAndCrush:
     case VLS_S1CloseDoor30:
-    case VLS_SRFastCeilCrushRaise:
-    case VLS_SRCeilingCrushAndRaise:
-    case VLS_SRSilentCrushAndRaise:
+//    case VLS_SRFastCeilCrushRaise:
+//    case VLS_SRCeilingCrushAndRaise:
+//    case VLS_SRSilentCrushAndRaise:
     case VLS_SRCeilingLowerAndCrush:
     case VLS_SRCloseDoor30:
         return false;
@@ -318,8 +318,11 @@ bool Bot::objOfInterest(const BSubsec& ss, v2fixed_t& coord, void* v)
 
     Bot& self = *(Bot*)v;
 
-    if (self.m_deepSearchMode == DeepBeyond && self.m_deepAvailSsectors.count(&ss))
+    if (self.m_deepSearchMode == DeepBeyond
+        && self.m_deepAvailSsectors.count(&ss))
+    {
         return false;
+    }
 
     const Mobj* item;
     fixed_t fh;
@@ -331,8 +334,12 @@ bool Bot::objOfInterest(const BSubsec& ss, v2fixed_t& coord, void* v)
         if (item == &plmo)
             continue;
         fh = ss.msector->getFloorHeight();
-        if (self.m_deepSearchMode == DeepNormal && (fh + plmo.height < item->z || fh > item->z + item->height))
+        if (self.m_deepSearchMode == DeepNormal && (fh + plmo.height < item->z
+                                                    || fh > item->z
+                                                    + item->height))
+        {
             continue;
+        }
         if (item->flags & MF_SPECIAL)
         {
             if (item->sprite < 0 || item->sprite >= NUMSPRITES)
@@ -349,7 +356,10 @@ bool Bot::objOfInterest(const BSubsec& ss, v2fixed_t& coord, void* v)
                 {
                     // no. Totally unknown
                     if (self.m_deepSearchMode == DeepNormal)
-                        self.goalTable.setV2Fixed(BOT_PICKUP, coord = B_CoordXY (*item));
+                    {
+                        self.goalTable.setV2Fixed(BOT_PICKUP,
+                                                  coord = B_CoordXY (*item));
+                    }
                     return true;
                 }
                 else
@@ -359,7 +369,10 @@ bool Bot::objOfInterest(const BSubsec& ss, v2fixed_t& coord, void* v)
                     {
                         // Yes. It might be pickable now
                         if (self.m_deepSearchMode == DeepNormal)
-                            self.goalTable.setV2Fixed(BOT_PICKUP, coord = B_CoordXY(*item));
+                        {
+                            self.goalTable.setV2Fixed(BOT_PICKUP,
+                                                      coord = B_CoordXY(*item));
+                        }
                         return true;
                     }
                 }
@@ -372,7 +385,10 @@ bool Bot::objOfInterest(const BSubsec& ss, v2fixed_t& coord, void* v)
                     effect->second.fillsGap(*self.pl, nopick->second))
                 {
                     if (self.m_deepSearchMode == DeepNormal)
-                        self.goalTable.setV2Fixed(BOT_PICKUP, coord = B_CoordXY(*item));
+                    {
+                        self.goalTable.setV2Fixed(BOT_PICKUP,
+                                                  coord = B_CoordXY(*item));
+                    }
                     return true;
                 }
             }
@@ -385,7 +401,11 @@ bool Bot::objOfInterest(const BSubsec& ss, v2fixed_t& coord, void* v)
     {
         line = *it;
         action = EV_ActionForSpecial(line->special);
-        if (action && (action->type == &W1ActionType || action->type == &WRActionType || action->type == &S1ActionType || action->type == &SRActionType || action->type == &DRActionType))
+        if (action && (action->type == &W1ActionType
+                       || action->type == &WRActionType
+                       || action->type == &S1ActionType
+                       || action->type == &SRActionType
+                       || action->type == &DRActionType))
         {
             // OK, this might be viable. But check.
             if (self.m_deepSearchMode == DeepAvail)
@@ -588,6 +608,7 @@ void Bot::doNonCombatAI()
 
     // found path to exit
     fixed_t mx, my, nx, ny;
+    bool dontMove = false;
     if (ss == m_path.last)
     {
         nx = m_path.end.x;
@@ -611,6 +632,10 @@ void Bot::doNonCombatAI()
                 v2fixed_t nn = B_ProjectionOnSegment(pl->mo->x, pl->mo->y, seg->v[0]->x, seg->v[0]->y, seg->dx, seg->dy);
                 nx = nn.x;
                 ny = nn.y;
+                if(!botMap->canPassNow(*seg->owner, *(*nit)->ss, pl->mo->height))
+                {
+                    dontMove = true;
+                }
                 goto moveon;
             }
         }
@@ -684,16 +709,23 @@ moveon:
     if (angleturn < -1500)
         angleturn = -1500;
 
-    if (!(P_AproxDistance(m_path.end.x - mx, m_path.end.y - my) < 16 * FRACUNIT && D_abs(angleturn) > 300))
+    if (!dontMove && !(P_AproxDistance(m_path.end.x - mx, m_path.end.y - my)
+                       < 16 * FRACUNIT
+          && D_abs(angleturn) > 300))
     {
-        cmd->forwardmove += FixedMul((moveslow ? 1 : 2) * pl->pclass->forwardmove[moveslow ? 0 : 1],
-            B_AngleCosine(dangle));
+        cmd->forwardmove += FixedMul((moveslow ? 1 : 2)
+                                     * pl->pclass->forwardmove[moveslow ? 0 : 1],
+                                     B_AngleCosine(dangle));
         if(intoSwitch && ss == m_path.last && cmd->forwardmove < 0)
         {
             cmd->forwardmove = 0;
         }
         else
-            cmd->sidemove -= FixedMul((moveslow ? 1 : 2) * pl->pclass->sidemove[moveslow ? 0 : 1], B_AngleSine(dangle));
+        {
+            cmd->sidemove -= FixedMul((moveslow ? 1 : 2)
+                                      * pl->pclass->sidemove[moveslow ? 0 : 1],
+                                      B_AngleSine(dangle));
+        }
     }
 
    
