@@ -34,6 +34,7 @@
 #include "../e_inventory.h"
 #include "../ev_specials.h"
 #include "../m_collection.h"
+#include "b_botmap.h"
 #include "b_lineeffect.h"
 #include "../p_spec.h"
 #include "../r_data.h"
@@ -77,8 +78,23 @@ struct SectorStateEntry
 // The sector stack entry. Contains the actual referenced sector and the stack
 // of height pairs
 //
+static const player_t* g_keyPlayer;
+
 static fixed_t applyDoorCorrection(const sector_t& sector)
 {
+   size_t secnum = &sector - ::sectors;
+   if(botMap && botMap->sectorFlags && botMap->sectorFlags[secnum].isDoor)
+   {
+      int lockID = botMap->sectorFlags[secnum].lockID;
+      if(lockID && g_keyPlayer)
+      {
+         if(E_PlayerCanUnlock(g_keyPlayer, lockID, false, true))
+            return P_FindLowestCeilingSurrounding(&sector) - 4 * FRACUNIT;
+      }
+      else if(!lockID)
+         return P_FindLowestCeilingSurrounding(&sector) - 4 * FRACUNIT;
+   }
+   
     const VerticalDoorThinker* vdt = thinker_cast<const VerticalDoorThinker*>(sector.ceilingdata);
     if (vdt && vdt->direction == 1)
         return vdt->topheight;
@@ -1029,4 +1045,9 @@ fixed_t LevelStateStack::AltFloor(const sector_t& sector)
 bool LevelStateStack::IsClear()
 {
     return g_indexListStack.isEmpty();
+}
+
+void LevelStateStack::SetKeyPlayer(const player_t* player)
+{
+   g_keyPlayer = player;
 }

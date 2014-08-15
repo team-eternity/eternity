@@ -46,6 +46,9 @@ namespace LevelStateStack
    fixed_t  AltFloor(const sector_t& sector);
    fixed_t  Ceiling(const sector_t& sector);
    bool     IsClear();
+   
+   void SetKeyPlayer(const player_t* player);
+   void UnsetKeyPlayer();
 }
 
 //

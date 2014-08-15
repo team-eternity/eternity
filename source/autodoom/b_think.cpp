@@ -553,17 +553,24 @@ void Bot::doCombatAI(const Mobj* enemy)
     }
     else
     {
+        if (P_AproxDistance(nx - mx, ny - my) < 384 * FRACUNIT)
+        {
+            //cmd->sidemove /= -1;
+            if (cmd->forwardmove > 0)
+            {
+                cmd->forwardmove = 0;
+
+                cmd->sidemove += random.range(-pl->pclass->sidemove[0],
+                                              pl->pclass->sidemove[0]) * 8;
+                cmd->forwardmove += random.range(-pl->pclass->forwardmove[0],
+                                                 pl->pclass->forwardmove[0]) * 8;
+            }
+        }
         cmd->sidemove += random.range(-pl->pclass->sidemove[0],
             pl->pclass->sidemove[0]);
         cmd->forwardmove += random.range(-pl->pclass->forwardmove[0],
             pl->pclass->forwardmove[0]);
 
-        if (P_AproxDistance(nx - mx, ny - my) < 384 * FRACUNIT)
-        {
-            //cmd->sidemove /= -1;
-            if (cmd->forwardmove > 0)
-                cmd->forwardmove /= -2;
-        }
     }
 
     
@@ -579,7 +586,7 @@ void Bot::doNonCombatAI()
     if (!m_hasPath/* || m_goalTimer > 105*/)
     {
         // TODO: object of interest
-        
+        LevelStateStack::SetKeyPlayer(pl);
         if(/*m_goalTimer > 105 || */!m_finder.FindNextGoal(pl->mo->x, pl->mo->y, m_path, objOfInterest, this))
         {
             ++m_searchstage;
@@ -612,6 +619,7 @@ void Bot::doNonCombatAI()
     // found path to exit
     fixed_t mx, my, nx, ny;
     bool dontMove = false;
+    const BSubsec* nextss = nullptr;
     if (ss == m_path.last)
     {
         nx = m_path.end.x;
@@ -660,6 +668,7 @@ void Bot::doNonCombatAI()
                           (int)(ss - &botMap->ssectors[0]));
                     m_dropSS.erase(ss);
                 }
+                nextss = (*nit)->ss;
                 goto moveon;
             }
         }
@@ -700,12 +709,24 @@ moveon:
     mx = pl->mo->x;
     my = pl->mo->y;
     bool intoSwitch = false;
-    if (goalTable.hasKey(BOT_WALKTRIG) && prevCtr % 2 == 0
+    if (goalTable.hasKey(BOT_WALKTRIG)
         && P_AproxDistance(mx - m_path.end.x, my - m_path.end.y)
         < 2 * pl->mo->radius)
     {
         intoSwitch = true;
-        cmd->buttons |= BT_USE;
+        if(prevCtr % 2 == 0)
+            cmd->buttons |= BT_USE;
+    }
+    else if(nextss)
+    {
+        const sector_t* nextsec = nextss->msector->getCeilingSector();
+        if(!nextsec->ceilingdata
+           && botMap->sectorFlags[nextsec - ::sectors].isDoor)
+        {
+            intoSwitch = true;
+            if(prevCtr % 2 == 0)
+                cmd->buttons |= BT_USE;
+        }
     }
     //
     //  int nexton = path.getNextStraightIndex(nowon);
