@@ -77,6 +77,8 @@ class Bot : public ZoneObject
    std::set<const line_t*>  m_deepTriedLines;
    std::unordered_set<const BSubsec*> m_deepAvailSsectors;
    const BSubsec*           m_deepRepeat;
+   bool                    m_justGotLost;
+   int                     m_goalTimer;
    
    // internal states
    unsigned prevCtr;
@@ -105,8 +107,20 @@ public:
    //
    // Constructor
    //
-    Bot() : ZoneObject(), pl(nullptr), active(true), cmd(nullptr), ss(nullptr),
-        prevCtr(0), m_searchstage(0), m_finder(nullptr), m_hasPath(false), m_deepSearchMode(DeepNormal), m_deepRepeat(nullptr), m_straferunstate(0)
+    Bot() : ZoneObject(),
+   pl(nullptr),
+   active(true),
+   cmd(nullptr),
+   ss(nullptr),
+   prevCtr(0),
+   m_searchstage(0),
+   m_finder(nullptr),
+   m_hasPath(false),
+   m_deepSearchMode(DeepNormal),
+   m_deepRepeat(nullptr),
+   m_straferunstate(0),
+   m_justGotLost(false),
+   m_goalTimer(0)
    {
       random.initialize((unsigned)time(nullptr));
    }

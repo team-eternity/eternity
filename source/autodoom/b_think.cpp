@@ -73,6 +73,8 @@ void Bot::mapInit()
    m_deepSearchMode = DeepNormal;
    m_deepAvailSsectors.clear();
    m_deepRepeat = nullptr;
+    m_justGotLost = false;
+    m_goalTimer = 0;
 }
 
 //
@@ -259,6 +261,19 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
     default:
         break;
     }
+    
+    // now that we got some lines out of the way, decide quickly to use once-
+    // only types
+    const ev_action_t* action = EV_ActionForSpecial(line.special);
+    if(action && (action->type == &S1ActionType
+                  || action->type == &W1ActionType))
+    {
+        bool result = LevelStateStack::Push(line, *pl);
+        LevelStateStack::Clear();
+        return result;
+        // just push them, as long as they're not the blocking type and have any
+        // effect
+    }
 
     if (m_deepSearchMode == DeepNormal)
     {
@@ -269,7 +284,8 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
         m_deepTriedLines.insert(&line);
 
         m_deepSearchMode = DeepAvail;
-        m_finder.AvailableGoals(liness, &m_deepAvailSsectors, reachableItem, this);
+        m_finder.AvailableGoals(liness, &m_deepAvailSsectors, reachableItem,
+                                this);
         m_deepSearchMode = DeepNormal;
 
         // Now apply the change
@@ -282,7 +298,8 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
         do
         {
             m_deepRepeat = nullptr;
-            result = m_finder.AvailableGoals(repsave ? *repsave : liness, nullptr, reachableItem, this);
+            result = m_finder.AvailableGoals(repsave ? *repsave : liness,
+                                             nullptr, reachableItem, this);
             repsave = m_deepRepeat;
         } while (result && m_deepRepeat);
         m_deepRepeat = nullptr;
@@ -536,17 +553,23 @@ void Bot::doCombatAI(const Mobj* enemy)
 //
 void Bot::doNonCombatAI()
 {
-    if (!m_hasPath)
+    if (!m_hasPath/* || m_goalTimer > 105*/)
     {
         // TODO: object of interest
         
-        if(!m_finder.FindNextGoal(pl->mo->x, pl->mo->y, m_path, objOfInterest, this))
+        if(/*m_goalTimer > 105 || */!m_finder.FindNextGoal(pl->mo->x, pl->mo->y, m_path, objOfInterest, this))
         {
             ++m_searchstage;
             cmd->sidemove += random.range(-pl->pclass->sidemove[0],
                 pl->pclass->sidemove[0]);
             cmd->forwardmove += random.range(-pl->pclass->forwardmove[0],
                 pl->pclass->forwardmove[0]);
+//            if(m_goalTimer > 105)
+//            {
+//                ++m_goalTimer;
+//                if(m_goalTimer > 140)
+//                    m_goalTimer = 0;
+//            }
             return;
         }
         m_hasPath = true;
@@ -569,9 +592,11 @@ void Bot::doNonCombatAI()
     {
         nx = m_path.end.x;
         ny = m_path.end.y;
+//        ++m_goalTimer;
     }
     else
     {
+//        m_goalTimer = 0;
         const BSeg* seg;
         // from end to path to beginning
         for (const BNeigh** nit = m_path.inv.begin(); nit != m_path.inv.end(); ++nit)
@@ -592,6 +617,8 @@ void Bot::doNonCombatAI()
         // not on path, so reset
         m_searchstage = 0;
         m_hasPath = false;
+        if(random() % 3 == 0)
+            m_justGotLost = true;
         return;
     }
 moveon:
@@ -604,10 +631,18 @@ moveon:
     //	path.reset();
     //	return;
     //}
-    //  
-    if (goalTable.hasKey(BOT_WALKTRIG) && prevCtr % 2 == 0 && ss == m_path.last)
+    //
+    mx = pl->mo->x;
+    my = pl->mo->y;
+    bool intoSwitch = false;
+    if (goalTable.hasKey(BOT_WALKTRIG) && prevCtr % 2 == 0
+        && P_AproxDistance(mx - m_path.end.x, my - m_path.end.y)
+        < 2 * pl->mo->radius)
+    {
+        intoSwitch = true;
         cmd->buttons |= BT_USE;
-    //  
+    }
+    //
     //  int nexton = path.getNextStraightIndex(nowon);
 
 
@@ -623,9 +658,14 @@ moveon:
         return;
         //path.reset();  // only reset if reached destination
     }
-    mx = pl->mo->x;
-    my = pl->mo->y;
 
+    bool moveslow = m_justGotLost && P_AproxDistance(mx - m_path.start.x,
+                                                     my - m_path.start.y)
+    < pl->mo->radius * 2;
+    
+    if(!moveslow)
+        m_justGotLost = false;
+    
     angle_t tangle = P_PointToAngle(mx, my, nx, ny);
     angle_t dangle = tangle - pl->mo->angle;
 
@@ -646,9 +686,14 @@ moveon:
 
     if (!(P_AproxDistance(m_path.end.x - mx, m_path.end.y - my) < 16 * FRACUNIT && D_abs(angleturn) > 300))
     {
-        cmd->forwardmove += FixedMul(2 * pl->pclass->forwardmove[1],
+        cmd->forwardmove += FixedMul((moveslow ? 1 : 2) * pl->pclass->forwardmove[moveslow ? 0 : 1],
             B_AngleCosine(dangle));
-        cmd->sidemove -= FixedMul(2 * pl->pclass->sidemove[1], B_AngleSine(dangle));
+        if(intoSwitch && ss == m_path.last && cmd->forwardmove < 0)
+        {
+            cmd->forwardmove = 0;
+        }
+        else
+            cmd->sidemove -= FixedMul((moveslow ? 1 : 2) * pl->pclass->sidemove[moveslow ? 0 : 1], B_AngleSine(dangle));
     }
 
    
