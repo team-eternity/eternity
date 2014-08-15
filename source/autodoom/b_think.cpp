@@ -68,6 +68,8 @@ void Bot::mapInit()
    m_finder.SetMap(botMap);
    m_finder.SetPlayerHeight(pl->mo->height);
    m_hasPath = false;
+    
+    m_lastPathSS = nullptr;
 
    m_deepTriedLines.clear();
    m_deepSearchMode = DeepNormal;
@@ -75,6 +77,7 @@ void Bot::mapInit()
    m_deepRepeat = nullptr;
     m_justGotLost = false;
     m_goalTimer = 0;
+    m_dropSS.clear();
 }
 
 //
@@ -284,7 +287,7 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
         m_deepTriedLines.insert(&line);
 
         m_deepSearchMode = DeepAvail;
-        m_finder.AvailableGoals(liness, &m_deepAvailSsectors, reachableItem,
+        m_finder.AvailableGoals(*ss, &m_deepAvailSsectors, reachableItem,
                                 this);
         m_deepSearchMode = DeepNormal;
 
@@ -613,6 +616,7 @@ void Bot::doNonCombatAI()
     {
         nx = m_path.end.x;
         ny = m_path.end.y;
+        m_lastPathSS = ss;
 //        ++m_goalTimer;
     }
     else
@@ -620,7 +624,8 @@ void Bot::doNonCombatAI()
 //        m_goalTimer = 0;
         const BSeg* seg;
         // from end to path to beginning
-        for (const BNeigh** nit = m_path.inv.begin(); nit != m_path.inv.end(); ++nit)
+        for (const BNeigh** nit = m_path.inv.begin(); nit != m_path.inv.end();
+             ++nit)
         {
             seg = (*nit)->seg;
             if (!botMap->canPass(*seg->owner, *(*nit)->ss, pl->mo->height))
@@ -629,17 +634,52 @@ void Bot::doNonCombatAI()
             }
             if (seg->owner == ss)
             {
-                v2fixed_t nn = B_ProjectionOnSegment(pl->mo->x, pl->mo->y, seg->v[0]->x, seg->v[0]->y, seg->dx, seg->dy);
+                v2fixed_t nn = B_ProjectionOnSegment(pl->mo->x, pl->mo->y,
+                                                     seg->v[0]->x, seg->v[0]->y,
+                                                     seg->dx, seg->dy);
                 nx = nn.x;
                 ny = nn.y;
                 if(!botMap->canPassNow(*seg->owner, *(*nit)->ss, pl->mo->height))
                 {
                     dontMove = true;
                 }
+                {
+                    const CeilingThinker* ct = thinker_cast
+                    <const CeilingThinker*>
+                    ((*nit)->ss->msector->getCeilingSector()->ceilingdata);
+                    
+                    if(ct && ct->crush > 0 && ct->direction == plat_down)
+                    {
+                        dontMove = true;
+                    }
+                }
+                m_lastPathSS = ss;
+                if(random() % 64 == 0 && m_dropSS.count(ss))
+                {
+                    B_Log("Removed goner %d\n",
+                          (int)(ss - &botMap->ssectors[0]));
+                    m_dropSS.erase(ss);
+                }
                 goto moveon;
             }
         }
         // not on path, so reset
+        if(m_lastPathSS)
+        {
+            B_Log("Inserted goner %d\n",
+                  (int)(m_lastPathSS - &botMap->ssectors[0]));
+            m_dropSS.insert(m_lastPathSS);
+            for(const BNeigh& n : m_lastPathSS->neighs)
+            {
+                if(P_AproxDistance(n.ss->mid.x - m_lastPathSS->mid.x,
+                                   n.ss->mid.y - m_lastPathSS->mid.y)
+                   < 128 * FRACUNIT)
+                {
+                    m_dropSS.insert(n.ss);
+                }
+            }
+            m_lastPathSS = nullptr;
+        }
         m_searchstage = 0;
         m_hasPath = false;
         if(random() % 3 == 0)
@@ -684,12 +724,17 @@ moveon:
         //path.reset();  // only reset if reached destination
     }
 
-    bool moveslow = m_justGotLost && P_AproxDistance(mx - m_path.start.x,
-                                                     my - m_path.start.y)
-    < pl->mo->radius * 2;
-    
-    if(!moveslow)
-        m_justGotLost = false;
+    bool moveslow = false;
+    if(m_justGotLost)
+    {
+        moveslow = (m_justGotLost && P_AproxDistance(mx - m_path.start.x,
+                                                         my - m_path.start.y)
+                                        < pl->mo->radius * 2);
+        
+        if(!moveslow)
+            m_justGotLost = false;
+    }
+    moveslow |= m_dropSS.count(ss) ? true : false;
     
     angle_t tangle = P_PointToAngle(mx, my, nx, ny);
     angle_t dangle = tangle - pl->mo->angle;

@@ -685,6 +685,8 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
          return;  // nope
          
          // CRUSHERS: just say "floor + 8" so the bot can avoid them
+         // EDIT: bad idea, unless i also put altCeilheight = original height,
+         // which is pointless. So just have no effect.
       case VLS_S1CeilingCrushAndRaise:
       case VLS_SRCeilingCrushAndRaise:
       case VLS_W1CeilingCrushAndRaise:
@@ -706,10 +708,10 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
           }
           else
           {
-              if (ceilingBlocked)
+//              if (ceilingBlocked)
                   return;
-              sae.ceilingHeight = sae.floorHeight + 8 * FRACUNIT;
-              sae.ceilingTerminal = true;
+//              sae.ceilingHeight = sae.floorHeight + 8 * FRACUNIT;
+//              sae.ceilingTerminal = true;
           }
       }
          break;

@@ -55,7 +55,9 @@ class Bot : public ZoneObject
                      // commands
    bool active;      // whether active (Can be turned off)
    ticcmd_t *cmd;    // my commands to output
-   BSubsec *ss;  // subsector reference
+   const BSubsec *ss;  // subsector reference
+   const BSubsec* m_lastPathSS;  // last subsector when on path
+   std::unordered_set<const BSubsec*> m_dropSS;
 
    MetaTable goalTable;  // objectives to get (typically one object)
    MetaTable goalEvents;   // any potential goal events, which may be the same
@@ -114,6 +116,7 @@ public:
    active(true),
    cmd(nullptr),
    ss(nullptr),
+   m_lastPathSS(nullptr),
    prevCtr(0),
    m_searchstage(0),
    m_finder(nullptr),
