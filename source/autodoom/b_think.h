@@ -93,11 +93,21 @@ private:
    // effectStats: the maximum benefit from picking up an item.
    std::unordered_map<spritenum_t, PlayerStats> nopickStats, effectStats;
    
-   static bool ITfindTarget(Mobj* who, void* v);
-   const Mobj* enemyVisible() ;
+   struct Target
+   {
+      union
+      {
+         const Mobj*    mobj;
+         const line_t*  gline;
+         const void*    exists;
+      };
+      v2fixed_t coord;
+      bool isLine;
+   };
+   void enemyVisible(Target& target);
 
    bool goalAchieved();
-   void doCombatAI(const Mobj* enemy);
+   void doCombatAI(const Target& target);
    void doNonCombatAI();
    
    void capCommands();

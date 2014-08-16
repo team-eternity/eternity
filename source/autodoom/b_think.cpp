@@ -450,59 +450,92 @@ bool Bot::objOfInterest(const BSubsec& ss, v2fixed_t& coord, void* v)
 // Returns true if an enemy is visible now
 // Code inspired from P_LookForMonsters
 //
-bool Bot::ITfindTarget(Mobj* mo, void* v)
-{
-    return true;
-}
-
-const Mobj* Bot::enemyVisible()
+void Bot::enemyVisible(Target& nearest)
 {
     // P_BlockThingsIterator is safe to use outside of demo correctness
-    if (botMap->livingMonsters.empty())
-        return nullptr;
-
     camsightparams_t cam;
     cam.setLookerMobj(pl->mo);
 
-restart:
-    fixed_t mindist = D_MAXINT;
+    memset(&nearest, 0, sizeof(nearest));
+    
+    fixed_t mindist;
     fixed_t dist;
-    const Mobj* nearest = nullptr;
-    for (auto it = botMap->livingMonsters.begin();
-         it != botMap->livingMonsters.end(); ++it)
+    if (!botMap->livingMonsters.empty())
     {
-        const Mobj* m = *it;
-        if (m->health <= 0 || !(m->flags & MF_SHOOTABLE))
+
+restart:
+        mindist = D_MAXINT;
+        for (auto it = botMap->livingMonsters.begin();
+             it != botMap->livingMonsters.end(); ++it)
         {
-            botMap->livingMonsters.erase(m);
-            goto restart;
-        }
-        cam.setTargetMobj(m);
-        if (CAM_CheckSight(cam))
-        {
-            dist = P_AproxDistance(m->x - pl->mo->x, m->y - pl->mo->y);
-            if (dist < mindist && dist < MISSILERANGE / 2)
+            const Mobj* m = *it;
+            if (m->health <= 0 || !(m->flags & MF_SHOOTABLE))
             {
-                mindist = dist;
-                nearest = m;
+                botMap->livingMonsters.erase(m);
+                goto restart;
+            }
+            cam.setTargetMobj(m);
+            if (CAM_CheckSight(cam))
+            {
+                dist = P_AproxDistance(m->x - pl->mo->x, m->y - pl->mo->y);
+                if (dist < mindist && dist < MISSILERANGE / 2)
+                {
+                    mindist = dist;
+                    nearest.mobj = m;
+                    nearest.coord = B_CoordXY(*m);
+                }
             }
         }
     }
-    if (nearest)
+    
+    v2fixed_t lvec;
+    angle_t lang;
+    const sector_t* sector;
+    fixed_t bulletheight = pl->mo->z + 32 * FRACUNIT;
+    for(const line_t* line : botMap->gunLines)
     {
-        return nearest;
+        sector = line->frontsector;
+        if(!sector || sector->floorheight > bulletheight
+           || sector->ceilingheight < bulletheight)
+        {
+            continue;
+        }
+        lvec.x = (line->v1->x + line->v2->x) / 2;
+        lvec.y = (line->v1->y + line->v2->y) / 2;
+        lang = P_PointToAngle(line->v1->x, line->v1->y,
+                              line->v2->x, line->v2->y);
+        lang -= ANG90;
+        lang >>= ANGLETOFINESHIFT;
+        lvec.x += FixedMul(FRACUNIT, finecosine[lang]);
+        lvec.y += FixedMul(FRACUNIT, finesine[lang]);
+        cam.tgroupid = line->frontsector->groupid;
+        cam.tx = lvec.x;
+        cam.ty = lvec.y;
+        cam.tz = sector->floorheight;
+        cam.theight = sector->ceilingheight - sector->floorheight;
+        
+        if(CAM_CheckSight(cam) && LevelStateStack::Push(*line, *pl))
+        {
+            LevelStateStack::Pop();
+            dist = P_AproxDistance(lvec.x - pl->mo->x, lvec.y - pl->mo->y);
+            if(dist < mindist)
+            {
+                mindist = dist;
+                nearest.gline = line;
+                nearest.isLine = true;
+                nearest.coord = lvec;
+            }
+        }
     }
-
-    return nullptr;
 }
 
-void Bot::doCombatAI(const Mobj* enemy)
+void Bot::doCombatAI(const Target& target)
 {
     fixed_t mx, my, nx, ny;
     mx = pl->mo->x;
     my = pl->mo->y;
-    nx = enemy->x;
-    ny = enemy->y;
+    nx = target.coord.x;
+    ny = target.coord.y;
     angle_t dangle, tangle;
     tangle = P_PointToAngle(mx, my, nx, ny);
     dangle = tangle - pl->mo->angle;
@@ -529,27 +562,60 @@ void Bot::doCombatAI(const Mobj* enemy)
         cmd->buttons |= BT_ATTACK;
     }
 
-    if (pl->readyweapon == wp_missile && emax(D_abs(mx - nx), D_abs(my - ny)) <= 128 * FRACUNIT)
+    if(target.isLine)
+    {
+        angle_t vang[2];
+        vang[0] = P_PointToAngle(mx, my, target.gline->v1->x,
+                                 target.gline->v1->y);
+        vang[1] = P_PointToAngle(mx, my, target.gline->v2->x,
+                                 target.gline->v2->y);
+        if(vang[1] - vang[0] > pl->mo->angle - vang[0])
+        {
+            cmd->buttons |= BT_ATTACK;
+            static const int hitscans[] = {wp_pistol, wp_shotgun, wp_chaingun,
+                wp_supershotgun};
+            switch (pl->readyweapon)
+            {
+                case wp_fist:
+                case wp_missile:
+                case wp_plasma:
+                case wp_bfg:
+                case wp_chainsaw:
+                    cmd->buttons |= BT_CHANGE;
+                    cmd->buttons |= hitscans[random() % earrlen(hitscans)];
+                    break;
+                    
+                default:
+                    break;
+            }
+        }
+    }
+    else if (pl->readyweapon == wp_missile && emax(D_abs(mx - nx),
+                                              D_abs(my - ny)) <= 128 * FRACUNIT)
     {
         cmd->buttons |= BT_CHANGE;
-        cmd->buttons |= random.range(wp_pistol, wp_supershotgun) << BT_WEAPONSHIFT;
+        cmd->buttons |= random.range(wp_pistol, wp_supershotgun)
+        << BT_WEAPONSHIFT;
     }
     else if (random.range(1, 100) == 1)
     {
         cmd->buttons |= BT_CHANGE;
-        cmd->buttons |= random.range(wp_shotgun, wp_supershotgun) << BT_WEAPONSHIFT;
+        cmd->buttons |= random.range(wp_shotgun, wp_supershotgun)
+        << BT_WEAPONSHIFT;
     }
 
     if (pl->readyweapon == wp_fist || pl->readyweapon == wp_chainsaw)
     {
-        if (enemy->info->dehnum == MT_BARREL)
+        if (!target.isLine && target.mobj->info->dehnum == MT_BARREL)
         {
             cmd->buttons |= BT_CHANGE;
-            cmd->buttons |= random.range(wp_pistol, wp_supershotgun) << BT_WEAPONSHIFT;
+            cmd->buttons |= random.range(wp_pistol, wp_supershotgun)
+            << BT_WEAPONSHIFT;
         }
         cmd->forwardmove = FixedMul(2 * pl->pclass->forwardmove[1],
             B_AngleCosine(dangle));
-        cmd->sidemove = -FixedMul(2 * pl->pclass->sidemove[1], B_AngleSine(dangle));
+        cmd->sidemove = -FixedMul(2 * pl->pclass->sidemove[1],
+                                  B_AngleSine(dangle));
     }
     else
     {
@@ -836,13 +902,14 @@ void Bot::doCommand()
    {
        doNonCombatAI();
    }
-   const Mobj* enemy = enemyVisible();
-   if (enemy)
+    Target target;
+    enemyVisible(target);
+    if (target.exists)
    {
        //if (!m_hasPath || ss != m_path.last)
        {
            cmd->angleturn = 0;
-           doCombatAI(enemy);
+           doCombatAI(target);
        }
    }
    

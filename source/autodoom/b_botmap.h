@@ -254,6 +254,8 @@ public:
        bool isDoor;
    };
    SectorTrait* sectorFlags;
+   
+   PODCollection<const line_t*> gunLines;
 
 private:
     void getAllLivingMonsters();
