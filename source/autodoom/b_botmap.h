@@ -260,7 +260,7 @@ public:
 private:
     void getAllLivingMonsters();
     void getDoorSectors();
-    static void SpecialIsDoor(int n, SectorTrait& st);
+    static void SpecialIsDoor(int n, SectorTrait& st, const line_t* line);
 	
 	void clearMsecList()
 	{

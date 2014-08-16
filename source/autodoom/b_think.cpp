@@ -148,8 +148,9 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
     {
         // sure goals
     case VLS_S1ExitLevel:
-    case VLS_S1SecretExit:
     case VLS_WRExitLevel:
+        return m_searchstage >= 2;
+    case VLS_S1SecretExit:
     case VLS_WRSecretExit:
         return m_searchstage >= 1;
 

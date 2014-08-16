@@ -510,27 +510,38 @@ void BotMap::getAllLivingMonsters()
     }
 }
 
-void BotMap::SpecialIsDoor(int n, SectorTrait& st)
+void BotMap::SpecialIsDoor(int n, SectorTrait& st, const line_t* line)
 {
     VanillaLineSpecial vls = (VanillaLineSpecial)n;
     st.lockID = EV_LockDefIDForSpecial(n);
+   st.isDoor = false;
     switch (vls)
     {
-    case VLS_D1DoorBlazeOpen:
-    case VLS_D1OpenDoor:
-    case VLS_DRDoorBlazeRaise:
-    case VLS_DRRaiseDoor:
-    case VLS_D1OpenDoorBlue:
-    case VLS_D1OpenDoorRed:
-    case VLS_D1OpenDoorYellow:
-    case VLS_DRRaiseDoorBlue:
-    case VLS_DRRaiseDoorRed:
-    case VLS_DRRaiseDoorYellow:
-        st.isDoor = true;
-        break;
-    default:
-        st.isDoor = false;
-        break;
+       case VLS_D1DoorBlazeOpen:
+       case VLS_D1OpenDoor:
+       case VLS_DRDoorBlazeRaise:
+       case VLS_DRRaiseDoor:
+       case VLS_D1OpenDoorBlue:
+       case VLS_D1OpenDoorRed:
+       case VLS_D1OpenDoorYellow:
+       case VLS_DRRaiseDoorBlue:
+       case VLS_DRRaiseDoorRed:
+       case VLS_DRRaiseDoorYellow:
+           st.isDoor = true;
+           break;
+       case VLS_SRDoorBlazeOpen:
+       case VLS_SROpenDoor:
+       case VLS_SRDoorBlazeRaise:
+       case VLS_SRRaiseDoor:
+       case VLS_SRDoorBlazeOpenBlue:
+       case VLS_SRDoorBlazeOpenRed:
+       case VLS_SRDoorBlazeOpenYellow:
+          if(line->backsector && line->tag == line->backsector->tag)
+             st.isDoor = true;
+          break;
+       default:
+           st.isDoor = false;
+           break;
     }
 }
 
@@ -571,7 +582,7 @@ void BotMap::getDoorSectors()
                 // fail
                 goto nextsector;
             }
-            SpecialIsDoor(line->special, st);
+            SpecialIsDoor(line->special, st, line);
             if (!typeset)
             {
                 if (!st.isDoor)
