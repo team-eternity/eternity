@@ -287,8 +287,7 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
         m_deepTriedLines.insert(&line);
 
         m_deepSearchMode = DeepAvail;
-        m_finder.AvailableGoals(*ss, &m_deepAvailSsectors, reachableItem,
-                                this);
+        m_finder.AvailableGoals(*ss, &m_deepAvailSsectors, reachableItem, this);
         m_deepSearchMode = DeepNormal;
 
         // Now apply the change
@@ -427,7 +426,7 @@ bool Bot::objOfInterest(const BSubsec& ss, v2fixed_t& coord, void* v)
                     self.m_deepRepeat = &ss;
                     return true;
                 }
-                return false;
+                //return false;
             }
             else if (self.shouldUseSpecial(*line, ss))
             {

@@ -116,7 +116,10 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path, bool(*isGoal)
 // Returns all the good subsectors into the collection
 // Uses a function for criteria.
 //
-bool PathFinder::AvailableGoals(const BSubsec& source, std::unordered_set<const BSubsec*>* dests, PathResult(*isGoal)(const BSubsec&, void*), void* parm)
+bool PathFinder::AvailableGoals(const BSubsec& source,
+                                std::unordered_set<const BSubsec*>* dests,
+                                PathResult(*isGoal)(const BSubsec&, void*),
+                                void* parm)
 {
     db[0].IncrementValidcount();
 
