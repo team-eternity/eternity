@@ -469,7 +469,8 @@ restart:
     fixed_t mindist = D_MAXINT;
     fixed_t dist;
     const Mobj* nearest = nullptr;
-    for (auto it = botMap->livingMonsters.begin(); it != botMap->livingMonsters.end(); ++it)
+    for (auto it = botMap->livingMonsters.begin();
+         it != botMap->livingMonsters.end(); ++it)
     {
         const Mobj* m = *it;
         if (m->health <= 0 || !(m->flags & MF_SHOOTABLE))
@@ -652,13 +653,19 @@ void Bot::doNonCombatAI()
                     dontMove = true;
                 }
                 {
-                    const CeilingThinker* ct = thinker_cast
-                    <const CeilingThinker*>
-                    ((*nit)->ss->msector->getCeilingSector()->ceilingdata);
+                    const sector_t* nsector = (*nit)->ss->msector->getCeilingSector();
+                    const sector_t* msector = ss->msector->getCeilingSector();
                     
-                    if(ct && ct->crush > 0 && ct->direction == plat_down)
+                    if(nsector != msector)
                     {
-                        dontMove = true;
+                        const CeilingThinker* ct = thinker_cast
+                        <const CeilingThinker*>
+                        (nsector->ceilingdata);
+                        
+                        if(ct && ct->crush > 0 && ct->direction == plat_down)
+                        {
+                            dontMove = true;
+                        }
                     }
                 }
                 m_lastPathSS = ss;

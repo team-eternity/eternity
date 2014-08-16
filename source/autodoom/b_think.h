@@ -81,8 +81,8 @@ private:
    std::set<const line_t*>  m_deepTriedLines;
    std::unordered_set<const BSubsec*> m_deepAvailSsectors;
    const BSubsec*           m_deepRepeat;
-   bool                    m_justGotLost;
-   int                     m_goalTimer;
+   bool                     m_justGotLost;
+   int                      m_goalTimer;
    
    // internal states
    unsigned prevCtr;
