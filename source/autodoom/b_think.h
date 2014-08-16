@@ -106,10 +106,12 @@ private:
    };
    void enemyVisible(Target& target);
 
+   
    bool goalAchieved();
    void doCombatAI(const Target& target);
    void doNonCombatAI();
    
+   void cruiseControl(fixed_t nx, fixed_t ny, bool moveslow);
    void capCommands();
    
    bool shouldUseSpecial(const line_t& line, const BSubsec& liness);

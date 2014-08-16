@@ -866,6 +866,7 @@ moveon:
         }
         else
         {
+//            cruiseControl(nx, ny, moveslow);
             cmd->sidemove -= FixedMul((moveslow ? 1 : 2)
                                       * pl->pclass->sidemove[moveslow ? 0 : 1],
                                       B_AngleSine(dangle));
@@ -877,7 +878,66 @@ moveon:
 //   printf("%d\n", angleturn);
 }
 
-
+void Bot::cruiseControl(fixed_t nx, fixed_t ny, bool moveslow)
+{
+    // Suggested speed: 15.5
+    const fixed_t runSpeed = moveslow ? 8 * FRACUNIT : 16 * FRACUNIT;
+    
+    fixed_t mx = pl->mo->x;
+    fixed_t my = pl->mo->y;
+    
+    angle_t tangle = P_PointToAngle(mx, my, nx, ny);
+    angle_t dangle = tangle - pl->mo->angle;
+    
+    // Intended speed: forwardly, V*cos(dangle)
+    //                 sidedly,  -V*sin(dangle)
+    
+    // Forward move shall increase momx by a*cos(pangle) and momy by
+    // a*sin(pangle)
+    
+    // Side move momx by a*cos(pangle-90)=a*sin(pangle) and momy by
+    // -a*cos(pangle)
+    
+    const fixed_t fineangle = pl->mo->angle >> ANGLETOFINESHIFT;
+    const fixed_t ctg_fine = (dangle + ANG90) >> ANGLETOFINESHIFT;
+    
+    fixed_t momf = FixedMul(pl->momx, finecosine[fineangle])
+    + FixedMul(pl->momy, finesine[fineangle]);
+    
+    fixed_t moms = FixedMul(pl->momx, finesine[fineangle])
+    - FixedMul(pl->momy, finecosine[fineangle]);
+    
+    fixed_t tmomf, tmoms;
+    if(dangle < ANG45 || dangle >= ANG270 + ANG45)
+    {
+        tmomf = runSpeed;
+        tmoms = -FixedMul(finetangent[ctg_fine], tmomf);
+    }
+    else if(dangle >= ANG45 && dangle < ANG90 + ANG45)
+    {
+        tmoms = -runSpeed;
+        tmomf = FixedMul(tmoms, finetangent[(ctg_fine + 2048) % 4096]);
+    }
+    else if(dangle < ANG180 + ANG45 && dangle >= ANG90 + ANG45)
+    {
+        tmomf = -runSpeed;
+        tmoms = -FixedMul(finetangent[ctg_fine], tmomf);
+    }
+    else
+    {
+        tmoms = runSpeed;
+        tmomf = FixedMul(tmoms, finetangent[(ctg_fine + 2048) % 4096]);
+    }
+    
+    if(momf < tmomf)
+        cmd->forwardmove += pl->pclass->forwardmove[1];
+    else
+        cmd->forwardmove += -pl->pclass->forwardmove[1];
+    if(moms < tmoms)
+        cmd->sidemove += pl->pclass->sidemove[1];
+    else
+        cmd->sidemove += -pl->pclass->sidemove[1];
+}
 
 //
 // Bot::doCommand
