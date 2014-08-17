@@ -111,7 +111,7 @@ private:
    void doCombatAI(const Target& target);
    void doNonCombatAI();
    
-   void cruiseControl(fixed_t nx, fixed_t ny, bool moveslow);
+   void cruiseControl(fixed_t nx, fixed_t ny, bool moveslow, bool runfast);
    void capCommands();
    
    bool shouldUseSpecial(const line_t& line, const BSubsec& liness);

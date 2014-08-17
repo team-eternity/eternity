@@ -909,7 +909,8 @@ bool E_PlayerCanUnlock(const player_t *player, int lockID, bool remote, bool mut
       // if no keys are possessed, fail the lock
       if(!numKeys)
       {
-         E_failPlayerUnlock(player, lock, remote);
+         if(!mute)
+            E_failPlayerUnlock(player, lock, remote);
          return false;
       }
    }

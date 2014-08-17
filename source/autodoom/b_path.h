@@ -47,8 +47,9 @@ public:
     const BSubsec*                  last;
     v2fixed_t                       start;
     v2fixed_t                       end;
+    bool                            runfast;
 
-    BotPath() :last(nullptr)
+    BotPath() :last(nullptr), runfast(false)
     {
     }
 };
@@ -124,8 +125,8 @@ private:
             ssprev = nullptr;
             efree(ssqueue);
             ssqueue = nullptr;
-           efree(ssdist);
-           ssdist = nullptr;
+            efree(ssdist);
+            ssdist = nullptr;
             sscount = 0;
             validcount = 0;
         }

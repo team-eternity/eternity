@@ -670,6 +670,7 @@ void Bot::doNonCombatAI()
             return;
         }
         m_hasPath = true;
+        m_path.runfast = false;
     }
     //if(!path.exists())
     //{
@@ -706,6 +707,17 @@ void Bot::doNonCombatAI()
             if (!botMap->canPass(*seg->owner, *(*nit)->ss, pl->mo->height))
             {
                 break;
+            }
+            if(!m_path.runfast)
+            {
+                const PlatThinker* pt = thinker_cast<const PlatThinker*>
+                ((*nit)->ss->msector->getFloorSector()->floordata);
+                
+                if(pt && pt->wait > 0)
+                {
+                    B_Log("Run fast\n");
+                    m_path.runfast = true;
+                }
             }
             if (seg->owner == ss)
             {
@@ -857,31 +869,34 @@ moveon:
                        < 16 * FRACUNIT
           && D_abs(angleturn) > 300))
     {
-        cmd->forwardmove += FixedMul((moveslow ? 1 : 2)
-                                     * pl->pclass->forwardmove[moveslow ? 0 : 1],
-                                     B_AngleCosine(dangle));
+        if(m_path.runfast)
+            cmd->forwardmove += FixedMul((moveslow ? 1 : 2)
+                                         * pl->pclass->forwardmove[moveslow ? 0 : 1],
+                                         B_AngleCosine(dangle));
         if(intoSwitch && ss == m_path.last && cmd->forwardmove < 0)
         {
             cmd->forwardmove = 0;
         }
         else
         {
-//            cruiseControl(nx, ny, moveslow);
-            cmd->sidemove -= FixedMul((moveslow ? 1 : 2)
-                                      * pl->pclass->sidemove[moveslow ? 0 : 1],
-                                      B_AngleSine(dangle));
+            if(!m_path.runfast)
+                cruiseControl(nx, ny, moveslow, m_path.runfast);
+            else
+                cmd->sidemove -= FixedMul((moveslow ? 1 : 2)
+                                          * pl->pclass->sidemove[moveslow ? 0 : 1],
+                                          B_AngleSine(dangle));
         }
     }
 
-   
-   cmd->angleturn += angleturn;
+   if(!m_path.runfast)
+       cmd->angleturn += angleturn;
 //   printf("%d\n", angleturn);
 }
 
-void Bot::cruiseControl(fixed_t nx, fixed_t ny, bool moveslow)
+void Bot::cruiseControl(fixed_t nx, fixed_t ny, bool moveslow, bool runfast)
 {
     // Suggested speed: 15.5
-    const fixed_t runSpeed = moveslow ? 8 * FRACUNIT : 16 * FRACUNIT;
+    const fixed_t runSpeed = moveslow && !runfast ? 8 * FRACUNIT : 16 * FRACUNIT;
     
     fixed_t mx = pl->mo->x;
     fixed_t my = pl->mo->y;
@@ -929,14 +944,43 @@ void Bot::cruiseControl(fixed_t nx, fixed_t ny, bool moveslow)
         tmomf = FixedMul(tmoms, finetangent[(ctg_fine + 2048) % 4096]);
     }
     
-    if(momf < tmomf)
-        cmd->forwardmove += pl->pclass->forwardmove[1];
-    else
-        cmd->forwardmove += -pl->pclass->forwardmove[1];
-    if(moms < tmoms)
-        cmd->sidemove += pl->pclass->sidemove[1];
-    else
-        cmd->sidemove += -pl->pclass->sidemove[1];
+    if(tmomf > 0)
+    {
+        if(!runfast && momf > 0 && momf < runSpeed / 4)
+            cmd->forwardmove += pl->pclass->forwardmove[0];
+        else if(momf < tmomf)
+            cmd->forwardmove += pl->pclass->forwardmove[1];
+        else
+            cmd->forwardmove -= pl->pclass->forwardmove[1];
+    }
+    else if(tmomf < 0)
+    {
+        if(!runfast && momf < 0 && momf > runSpeed / 4)
+            cmd->forwardmove -= pl->pclass->forwardmove[0];
+        else if(momf > tmomf)
+            cmd->forwardmove -= pl->pclass->forwardmove[1];
+        else
+            cmd->forwardmove += pl->pclass->forwardmove[1];
+    }
+    
+    if(tmoms > 0)
+    {
+        if(!runfast && moms > 0 && moms < runSpeed / 4)
+            cmd->sidemove += pl->pclass->sidemove[0];
+        else if(moms < tmoms)
+            cmd->sidemove += pl->pclass->sidemove[1];
+        else
+            cmd->sidemove -= pl->pclass->sidemove[1];
+    }
+    else if(tmoms < 0)
+    {
+        if(!runfast && moms < 0 && moms > runSpeed / 4)
+            cmd->sidemove -= pl->pclass->sidemove[0];
+        else if(moms > tmoms)
+            cmd->sidemove -= pl->pclass->sidemove[1];
+        else
+            cmd->sidemove += pl->pclass->sidemove[1];
+    }
 }
 
 //
