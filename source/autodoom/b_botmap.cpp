@@ -396,7 +396,7 @@ static void B_setSpecLinePositions()
       const ev_action_t *action = EV_ActionForSpecial(line.special);
       if(action)
       {
-         if (action->type == &W1ActionType || action->type == &WRActionType)
+         if ((action->type == &W1ActionType || action->type == &WRActionType) && !(line.flags & ML_BLOCKING) && line.backsector)
             // just add these
          {
             //         printf("Added at %d %d\n", B_Frac2Int(line.v1->x), B_Frac2Int(line.v1->y));

@@ -46,6 +46,7 @@
 #include "../metaapi.h"
 #include "../m_compare.h"
 #include "../p_maputl.h"
+#include "../p_pspr.h"
 #include "../p_setup.h"
 #include "../p_spec.h"
 #include "../r_state.h"
@@ -78,6 +79,8 @@ void Bot::mapInit()
     m_justGotLost = false;
     m_goalTimer = 0;
     m_dropSS.clear();
+    
+    justPunched = 0;
 }
 
 //
@@ -492,7 +495,7 @@ restart:
     v2fixed_t lvec;
     angle_t lang;
     const sector_t* sector;
-    fixed_t bulletheight = pl->mo->z + 32 * FRACUNIT;
+    fixed_t bulletheight = pl->mo->z + 33 * FRACUNIT;
     for(const line_t* line : botMap->gunLines)
     {
         sector = line->frontsector;
@@ -528,6 +531,56 @@ restart:
             }
         }
     }
+}
+
+void Bot::pickRandomWeapon(const Target& target)
+{
+    weapontype_t guns[NUMWEAPONS];
+    int num = 0;
+    
+    if(pl->powers[pw_strength])
+        guns[num++] = wp_fist;
+    if(!pl->weaponowned[wp_supershotgun] && pl->weaponowned[wp_shotgun]
+       && P_WeaponHasAmmo(pl, &weaponinfo[wp_shotgun]))
+    {
+        guns[num++] = wp_shotgun;
+    }
+    if(pl->weaponowned[wp_chaingun]
+       && P_WeaponHasAmmo(pl, &weaponinfo[wp_chaingun]))
+    {
+        guns[num++] = wp_chaingun;
+    }
+    if(pl->weaponowned[wp_missile]
+       && P_WeaponHasAmmo(pl, &weaponinfo[wp_missile])
+       && P_AproxDistance(pl->mo->x - target.coord.x,
+                          pl->mo->y - target.coord.y) > 200 * FRACUNIT)
+    {
+        guns[num++] = wp_missile;
+    }
+    if(pl->weaponowned[wp_plasma]
+       && P_WeaponHasAmmo(pl, &weaponinfo[wp_plasma]))
+    {
+        guns[num++] = wp_plasma;
+    }
+    if(pl->weaponowned[wp_bfg]
+       && P_WeaponHasAmmo(pl, &weaponinfo[wp_bfg]))
+    {
+        guns[num++] = wp_bfg;
+    }
+    if(pl->weaponowned[wp_supershotgun]
+       && P_WeaponHasAmmo(pl, &weaponinfo[wp_supershotgun]))
+    {
+        guns[num++] = wp_supershotgun;
+    }
+    
+    if(num == 0 && P_WeaponHasAmmo(pl, &weaponinfo[wp_pistol]))
+        guns[num++] = wp_pistol;
+    
+    if(num == 0)
+        guns[num++] = wp_fist;
+    
+    cmd->buttons |= BT_CHANGE;
+    cmd->buttons |= guns[random() % num] << BT_WEAPONSHIFT;
 }
 
 void Bot::doCombatAI(const Target& target)
@@ -594,53 +647,51 @@ void Bot::doCombatAI(const Target& target)
     else if (pl->readyweapon == wp_missile && emax(D_abs(mx - nx),
                                               D_abs(my - ny)) <= 128 * FRACUNIT)
     {
-        cmd->buttons |= BT_CHANGE;
-        cmd->buttons |= random.range(wp_pistol, wp_supershotgun)
-        << BT_WEAPONSHIFT;
+        pickRandomWeapon(target);
     }
-    else if (random.range(1, 100) == 1)
+    else if (random.range(1, 300) == 1)
     {
-        cmd->buttons |= BT_CHANGE;
-        cmd->buttons |= random.range(wp_shotgun, wp_supershotgun)
-        << BT_WEAPONSHIFT;
+        pickRandomWeapon(target);
     }
 
-    if (pl->readyweapon == wp_fist || pl->readyweapon == wp_chainsaw)
+    if(!target.isLine)
     {
-        if (!target.isLine && target.mobj->info->dehnum == MT_BARREL)
+        if (pl->readyweapon == wp_fist || pl->readyweapon == wp_chainsaw)
         {
-            cmd->buttons |= BT_CHANGE;
-            cmd->buttons |= random.range(wp_pistol, wp_supershotgun)
-            << BT_WEAPONSHIFT;
-        }
-        cmd->forwardmove = FixedMul(2 * pl->pclass->forwardmove[1],
-            B_AngleCosine(dangle));
-        cmd->sidemove = -FixedMul(2 * pl->pclass->sidemove[1],
-                                  B_AngleSine(dangle));
-    }
-    else
-    {
-        if (P_AproxDistance(nx - mx, ny - my) < 384 * FRACUNIT)
-        {
-            //cmd->sidemove /= -1;
-            if (cmd->forwardmove > 0)
+            if (!target.isLine && target.mobj->info->dehnum == MT_BARREL)
             {
-                cmd->forwardmove = 0;
-
-                cmd->sidemove += random.range(-pl->pclass->sidemove[0],
-                                              pl->pclass->sidemove[0]) * 8;
-                cmd->forwardmove += random.range(-pl->pclass->forwardmove[0],
-                                                 pl->pclass->forwardmove[0]) * 8;
+                pickRandomWeapon(target);
             }
+            cmd->forwardmove = FixedMul(2 * pl->pclass->forwardmove[1],
+                B_AngleCosine(dangle));
+            cmd->sidemove = -FixedMul(2 * pl->pclass->sidemove[1],
+                                      B_AngleSine(dangle));
+            if(justPunched--)
+                cmd->forwardmove -= pl->pclass->forwardmove[1];
         }
-        cmd->sidemove += random.range(-pl->pclass->sidemove[0],
-            pl->pclass->sidemove[0]);
-        cmd->forwardmove += random.range(-pl->pclass->forwardmove[0],
-            pl->pclass->forwardmove[0]);
+        else
+        {
+            if (P_AproxDistance(nx - mx, ny - my) < 384 * FRACUNIT)
+            {
+                //cmd->sidemove /= -1;
+                if (cmd->forwardmove > 0)
+                {
+                    cmd->forwardmove = 0;
+
+                    cmd->sidemove += random.range(-pl->pclass->sidemove[0],
+                                                  pl->pclass->sidemove[0]) * 8;
+                    cmd->forwardmove += random.range(-pl->pclass->forwardmove[0],
+                                                     pl->pclass->forwardmove[0]) * 8;
+                }
+            }
+            cmd->sidemove += random.range(-pl->pclass->sidemove[0],
+                pl->pclass->sidemove[0]);
+            cmd->forwardmove += random.range(-pl->pclass->forwardmove[0],
+                pl->pclass->forwardmove[0]);
+
+        }
 
     }
-
-    
 }
 
 //
@@ -892,7 +943,7 @@ moveon:
         }
     }
 
-   if(!m_path.runfast)
+   if(!m_path.runfast || intoSwitch)
        cmd->angleturn += angleturn;
 //   printf("%d\n", angleturn);
 }
@@ -1021,6 +1072,9 @@ void Bot::doCommand()
            doCombatAI(target);
        }
    }
+    else
+        justPunched = 0;
+    
    
    // Limit commands before exiting
    capCommands();

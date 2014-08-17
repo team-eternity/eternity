@@ -37,6 +37,7 @@
 #include "hal/i_gamepads.h"
 
 #include "a_args.h"
+#include "autodoom/b_think.h"
 #include "doomstat.h"
 #include "d_event.h"
 #include "d_mod.h"
@@ -183,7 +184,7 @@ static void P_BringUpWeapon(player_t *player)
 //
 // haleyjd 08/05/13: Test if a player has ammo for a weapon
 //
-bool P_WeaponHasAmmo(player_t *player, weaponinfo_t *weapon)
+bool P_WeaponHasAmmo(const player_t *player, const weaponinfo_t *weapon)
 {
    itemeffect_t *ammoType = weapon->ammo;
 
@@ -864,9 +865,14 @@ void A_Punch(actionargs_t *actionargs)
       return;
 
    P_WeaponSound(mo, GameModeInfo->playerSounds[sk_punch]);
+   if(botMap)
+   {
+      bots[player - players].justPunched = 5;
+   }
 
    // turn to face target
-   mo->angle = P_PointToAngle(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
+   mo->angle = P_PointToAngle(mo->x, mo->y, clip.linetarget->x,
+                              clip.linetarget->y);
 }
 
 //

@@ -98,6 +98,9 @@ weaponinfo_t *P_GetPlayerWeapon(player_t *player, int index);
 
 void P_WeaponRecoil(player_t *player);
 
+// IOANCH 20140817
+bool P_WeaponHasAmmo(const player_t *player, const weaponinfo_t *weapon);
+
 #endif
 
 //----------------------------------------------------------------------------

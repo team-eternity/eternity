@@ -108,6 +108,8 @@ private:
 
    
    bool goalAchieved();
+   
+   void pickRandomWeapon(const Target& target);
    void doCombatAI(const Target& target);
    void doNonCombatAI();
    
@@ -119,6 +121,8 @@ private:
    static PathResult reachableItem(const BSubsec& ss, void* v);
    
 public:
+   
+   int justPunched;
    
    //
    // Constructor
@@ -137,7 +141,8 @@ public:
    m_deepRepeat(nullptr),
    m_straferunstate(0),
    m_justGotLost(false),
-   m_goalTimer(0)
+   m_goalTimer(0),
+   justPunched(0)
    {
       random.initialize((unsigned)time(nullptr));
    }
