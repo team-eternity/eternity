@@ -112,6 +112,7 @@ private:
         unsigned        sscount;
         const BNeigh**  ssprev;
         const BSubsec** ssqueue;
+        fixed_t*        ssdist;  // used by dijkstra
 
         const PathFinder* o;
 
@@ -123,6 +124,8 @@ private:
             ssprev = nullptr;
             efree(ssqueue);
             ssqueue = nullptr;
+           efree(ssdist);
+           ssdist = nullptr;
             sscount = 0;
             validcount = 0;
         }

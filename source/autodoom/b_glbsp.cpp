@@ -36,6 +36,7 @@
 #include "../m_bbox.h"
 #include "../m_buffer.h"
 #include "../p_info.h"
+#include "../p_maputl.h"
 #include "../r_state.h"
 #include "glbsp/glbsp.h"
 #include "../v_misc.h"
@@ -420,6 +421,10 @@ void B_GLBSP_PutSubsector(int first, int num, int ssidx)
 //   if (ssidx == 468) {
 //      test=true;
 //   }
+   ss.neighs.reserve(num); // THIS MUST BE CALLED TO AVOID REALLOCATIONS
+   PODCollection<BNeigh*> neighRefs;
+   neighRefs.reserve(num);
+
    for (int i = 0; i < num; ++i)
    {
       BotMap::Seg &sg = botMap->segs[i + first];
@@ -437,12 +442,14 @@ void B_GLBSP_PutSubsector(int first, int num, int ssidx)
       if (sg.partner && sg.partner->owner)
       {
           BNeigh n;
+         n.dist = 0; // to be updated later
           n.ss = sg.partner->owner;
           n.seg = &sg;
           ss.neighs.add(n);
           n.ss = &ss;
           n.seg = sg.partner;
           sg.partner->owner->neighs.add(n);
+         neighRefs.add(&sg.partner->owner->neighs.back());
       }
       // set the metasector if not set already
       if (!ss.msector && sg.ln)
@@ -461,6 +468,16 @@ void B_GLBSP_PutSubsector(int first, int num, int ssidx)
    
    ss.mid.x = M_DoubleToFixed(Cx);
    ss.mid.y = M_DoubleToFixed(Cy);
+
+   // Update these because you can
+   fixed_t dist;
+   int i = 0;
+   for(BNeigh& n : ss.neighs)
+   {
+      dist = P_AproxDistance(ss.mid.x - n.ss->mid.x, ss.mid.y - n.ss->mid.y);
+      n.dist = dist;
+      neighRefs[i++]->dist = dist;
+   }
 }
 
 void B_GLBSP_CreateNodeArray(int numnodes)

@@ -128,6 +128,7 @@ public:
    {
        const Subsec*    ss;
        const Seg*       seg;
+      fixed_t           dist;
    };
    class Subsec
    {

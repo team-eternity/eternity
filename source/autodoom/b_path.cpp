@@ -47,8 +47,25 @@
 // Uses a search for the nearest goal (not knowing where to go)
 // Currently just BFS is enough
 //
-bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path, bool(*isGoal)(const BSubsec&, v2fixed_t&, void*), void* parm)
+bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
+                              bool(*isGoal)(const BSubsec&, v2fixed_t&, void*),
+                              void* parm)
 {
+    struct
+    {
+        const PathFinder* o;
+        const BSubsec* first;
+        bool operator()(const BSubsec* ss1, const BSubsec* ss2) const
+        {
+            return o->db[1].ssdist[ss1 - first] > o->db[1].ssdist[ss2 - first];
+        }
+    } compare;
+
+    const BSubsec* first = &m_map->ssectors[0];
+    
+    compare.o = this;
+    compare.first = first;
+    
     db[1].IncrementValidcount();
 
     const BSubsec& source = m_map->pointInSubsector(x, y);
@@ -60,18 +77,24 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path, bool(*isGoal)
     const BSubsec** back = db[1].ssqueue;
     v2fixed_t coord;
 
-    const BSubsec* first = &m_map->ssectors[0];
-    db[1].ssvisit[&source - first] = db[1].validcount;
-    db[1].ssprev[&source - first] = nullptr;
+    int index = (int)(&source - first);
+   
+    db[1].ssvisit[index] = db[1].validcount;
+    db[1].ssprev[index] = nullptr;
+    db[1].ssdist[index] = 0;
 
     *back++ = &source;
+//    std::push_heap(front, back, compare);
     const BSubsec* t;
     const BNeigh* n;
     path.inv.makeEmpty<true>();
     const TeleItem* bytele;
+    fixed_t tentative;
     while (front < back)
     {
-        t = *front++;
+        std::pop_heap(front, back, compare);
+        t = *--back;    // get the extracted one
+        
         if (isGoal(*t, coord, parm))
         {
             path.last = t;
@@ -86,23 +109,47 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path, bool(*isGoal)
             }
             return true;
         }
+        
         for (const BNeigh& neigh : t->neighs)
         {
+            // Distance shall be from centre of source to middle of seg
+            
             bytele = checkTeleportation(neigh);
+            index = (int)(neigh.ss - first);
             if (bytele)
             {
-                if (db[1].ssvisit[bytele->ss - first] != db[1].validcount)
+                index = (int)(bytele->ss - first);
+                
+                tentative = db[1].ssdist[t - first]
+                + P_AproxDistance(t->mid.x - neigh.seg->mid.x,
+                                  t->mid.y - neigh.seg->mid.y);
+                
+                if (db[1].ssvisit[index] != db[1].validcount
+                    || tentative < db[1].ssdist[index])
                 {
-                    db[1].ssvisit[bytele->ss - first] = db[1].validcount;
-                    db[1].ssprev[bytele->ss - first] = &neigh;
+                    db[1].ssvisit[index] = db[1].validcount;
+                    db[1].ssprev[index] = &neigh;
+                    db[1].ssdist[index] = tentative;
+                    
                     *back++ = bytele->ss;
+                    std::push_heap(front, back, compare);
                 }
             }
-            else if (db[1].ssvisit[neigh.ss - first] != db[1].validcount && m_map->canPass(*t, *neigh.ss, m_plheight))
+            else
             {
-                db[1].ssvisit[neigh.ss - first] = db[1].validcount;
-                db[1].ssprev[neigh.ss - first] = &neigh;
-                *back++ = neigh.ss;
+                tentative = db[1].ssdist[t - first] + neigh.dist;
+                
+                if ((db[1].ssvisit[index] != db[1].validcount
+                     || tentative < db[1].ssdist[index])
+                     && m_map->canPass(*t, *neigh.ss, m_plheight))
+                {
+                    db[1].ssvisit[index] = db[1].validcount;
+                    db[1].ssprev[index] = &neigh;
+                    db[1].ssdist[index] = tentative;
+                    
+                    *back++ = neigh.ss;
+                    std::push_heap(front, back, compare);
+                }
             }
         }
     }
@@ -151,7 +198,8 @@ bool PathFinder::AvailableGoals(const BSubsec& source,
                     *back++ = bytele->ss;
                 }
             }
-            else if (db[0].ssvisit[neigh.ss - first] != db[0].validcount && m_map->canPass(*t, *neigh.ss, m_plheight))
+            else if (db[0].ssvisit[neigh.ss - first] != db[0].validcount
+                     && m_map->canPass(*t, *neigh.ss, m_plheight))
             {
                 db[0].ssvisit[neigh.ss - first] = db[0].validcount;
                 *back++ = neigh.ss;
@@ -162,6 +210,12 @@ bool PathFinder::AvailableGoals(const BSubsec& source,
     return false;
 }
 
+//
+// PathFinder::checkTeleportation
+//
+// Checks whether neigh is a teleportation separator. Returns a corresponding
+// TeleItem if so, nullptr otherwise.
+//
 const PathFinder::TeleItem* PathFinder::checkTeleportation(const BNeigh& neigh)
 {
     const BotMap::Line* bline = neigh.seg->ln;
@@ -185,7 +239,8 @@ const PathFinder::TeleItem* PathFinder::checkTeleportation(const BNeigh& neigh)
         // CODE LARGELY COPIED FROM EV_Teleport
         for (i = -1; (i = P_FindSectorFromLineTag(line, i)) >= 0;)
         {
-            for (thinker = thinkercap.next; thinker != &thinkercap; thinker = thinker->next)
+            for (thinker = thinkercap.next; thinker != &thinkercap;
+                 thinker = thinker->next)
             {
                 if (!(m = thinker_cast<Mobj *>(thinker)))
                     continue;
@@ -219,14 +274,19 @@ void PathFinder::DataBox::IncrementValidcount()
 {   
     if (sscount != o->m_map->ssectors.getLength())
     {
-        size_t s = (sscount = (unsigned)o->m_map->ssectors.getLength()) * sizeof(*ssvisit);
+        size_t s = (sscount = (unsigned)o->m_map->ssectors.getLength())
+        * sizeof(*ssvisit);
+        
         ssvisit = erealloc(decltype(ssvisit), ssvisit, s);
         memset(ssvisit, 0, s);
         validcount = 0;
 
-        ssqueue = erealloc(decltype(ssqueue), ssqueue, sscount * sizeof(*ssqueue));
+        ssqueue = erealloc(decltype(ssqueue), ssqueue,
+                           sscount * sizeof(*ssqueue));
 
         ssprev = erealloc(decltype(ssprev), ssprev, sscount * sizeof(*ssprev));
+        
+        ssdist = erealloc(decltype(ssdist), ssdist, sscount * sizeof(*ssdist));
     }
     ++validcount;
     if (!validcount)  // wrap around: reset former validcounts!
