@@ -48,7 +48,7 @@ namespace LevelStateStack
    bool     IsClear();
    
    void SetKeyPlayer(const player_t* player);
-   void UnsetKeyPlayer();
+   void UseRealHeights(bool value);
 }
 
 //

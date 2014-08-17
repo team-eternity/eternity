@@ -80,8 +80,14 @@ struct SectorStateEntry
 //
 static const player_t* g_keyPlayer;
 
+static bool g_useRealHeights;
+
 static fixed_t applyDoorCorrection(const sector_t& sector)
 {
+   if(g_useRealHeights)
+      return sector.ceilingheight;
+   
+   
    size_t secnum = &sector - ::sectors;
    if(botMap && botMap->sectorFlags && botMap->sectorFlags[secnum].isDoor)
    {
@@ -1050,4 +1056,9 @@ bool LevelStateStack::IsClear()
 void LevelStateStack::SetKeyPlayer(const player_t* player)
 {
    g_keyPlayer = player;
+}
+
+void LevelStateStack::UseRealHeights(bool value)
+{
+   g_useRealHeights = value;
 }

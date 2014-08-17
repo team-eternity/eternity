@@ -808,10 +808,14 @@ moveon:
     }
     else if(nextss)
     {
+        LevelStateStack::UseRealHeights(true);
         const sector_t* nextsec = nextss->msector->getCeilingSector();
+        LevelStateStack::UseRealHeights(false);
+        
         if(!nextsec->ceilingdata
            && botMap->sectorFlags[nextsec - ::sectors].isDoor)
         {
+//            B_Log("Opening door\n");
             intoSwitch = true;
             if(prevCtr % 2 == 0)
                 cmd->buttons |= BT_USE;
