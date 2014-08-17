@@ -30,6 +30,7 @@
 #define B_MSECTOR_H_
 
 #include "b_lineeffect.h"
+#include "../e_rtti.h"
 #include "../m_dllist.h"
 #include "../m_fixed.h"
 #include "../p_map3d.h"
@@ -40,8 +41,9 @@
 //
 // Class which maps to a dominant sector, depending on floor or ceiling
 //
-class MetaSector
+class MetaSector : public RTTIObject
 {
+   DECLARE_ABSTRACT_TYPE(MetaSector, RTTIObject)
 public:
    // The way to get the resultant sector
    virtual fixed_t getFloorHeight() const = 0;
@@ -62,6 +64,7 @@ public:
 //
 class SimpleMSector : public MetaSector
 {
+   DECLARE_RTTI_TYPE(SimpleMSector, MetaSector)
    
    friend class TempBotMap;
 	friend class BotMap;
@@ -97,6 +100,8 @@ public:
 //
 class ThingMSector : public MetaSector
 {
+   DECLARE_RTTI_TYPE(ThingMSector, MetaSector)
+   
    friend class TempBotMap;
    friend class BotMap;
    const sector_t *sector;
@@ -137,6 +142,8 @@ public:
 //
 class LineMSector : public MetaSector
 {
+   DECLARE_RTTI_TYPE(LineMSector, MetaSector)
+   
    friend class TempBotMap;
 	friend class BotMap;
    const sector_t *sector[2];
@@ -159,7 +166,8 @@ public:
    }
    const sector_t *getFloorSector() const
    {
-       return sector[1] ? (LevelStateStack::Floor(*sector[0]) > LevelStateStack::Floor(*sector[1]) ? sector[0] :
+       return sector[1] ? (LevelStateStack::Floor(*sector[0])
+                           > LevelStateStack::Floor(*sector[1]) ? sector[0] :
                           sector[1]) : sector[0];
    }
    const sector_t *getCeilingSector() const
@@ -178,6 +186,8 @@ public:
 //
 class CompoundMSector : public MetaSector
 {
+   DECLARE_RTTI_TYPE(CompoundMSector, MetaSector)
+   
    friend class TempBotMap;
 	friend class BotMap;
    const MetaSector **msectors;

@@ -90,6 +90,7 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
     path.inv.makeEmpty<true>();
     const TeleItem* bytele;
     fixed_t tentative;
+    const MetaSector* msec;
     while (front < back)
     {
         std::pop_heap(front, back, compare);
@@ -137,7 +138,16 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
             }
             else
             {
-                tentative = db[1].ssdist[t - first] + neigh.dist;
+                msec = neigh.ss->msector;
+                
+                if(!msec->isInstanceOf(RTTI(SimpleMSector)))
+                {
+                    tentative = db[1].ssdist[t - first] + 2 * neigh.dist;
+                }
+                else
+                {
+                    tentative = db[1].ssdist[t - first] + neigh.dist;
+                }
                 
                 if ((db[1].ssvisit[index] != db[1].validcount
                      || tentative < db[1].ssdist[index])
