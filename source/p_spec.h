@@ -1282,7 +1282,7 @@ int P_FindMinSurroundingLight(const sector_t *sector, int max);
 
 sector_t *getNextSector(const line_t *line, const sector_t *sec);
 
-int P_SectorActive(special_e t, const sector_t *s);
+bool P_SectorActive(special_e t, const sector_t *s);
 
 bool P_IsSecret(const sector_t *sec);
 

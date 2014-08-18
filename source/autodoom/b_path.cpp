@@ -51,20 +51,13 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
                               bool(*isGoal)(const BSubsec&, v2fixed_t&, void*),
                               void* parm)
 {
-    struct
-    {
-        const PathFinder* o;
-        const BSubsec* first;
-        bool operator()(const BSubsec* ss1, const BSubsec* ss2) const
-        {
-            return o->db[1].ssdist[ss1 - first] > o->db[1].ssdist[ss2 - first];
-        }
-    } compare;
+    HeapEntry nhe;
+    m_dijkHeap.makeEmpty<true>();
 
     const BSubsec* first = &m_map->ssectors[0];
     
-    compare.o = this;
-    compare.first = first;
+    //compare.o = this;
+    //compare.first = first;
     
     db[1].IncrementValidcount();
 
@@ -73,8 +66,8 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
     path.start.x = x;
     path.start.y = y;
 
-    const BSubsec** front = db[1].ssqueue;
-    const BSubsec** back = db[1].ssqueue;
+    //const BSubsec** front = db[1].ssqueue;
+    //const BSubsec** back = db[1].ssqueue;
     v2fixed_t coord;
 
     int index = (int)(&source - first);
@@ -83,7 +76,10 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
     db[1].ssprev[index] = nullptr;
     db[1].ssdist[index] = 0;
 
-    *back++ = &source;
+    nhe.ss = &source;
+    nhe.dist = 0;
+    m_dijkHeap.add(nhe);
+
 //    std::push_heap(front, back, compare);
     const BSubsec* t;
     const BNeigh* n;
@@ -91,10 +87,16 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
     const TeleItem* bytele;
     fixed_t tentative;
     const MetaSector* msec;
-    while (front < back)
+
+//    std::make_heap(front, back, compare);
+    fixed_t founddist;
+    while (!m_dijkHeap.isEmpty())
     {
-        std::pop_heap(front, back, compare);
-        t = *--back;    // get the extracted one
+        std::pop_heap(m_dijkHeap.begin(), m_dijkHeap.end());
+        t = m_dijkHeap.back().ss;    // get the extracted one
+        founddist = m_dijkHeap.pop().dist;
+        if (founddist != db[1].ssdist[t - first])
+            continue;
         
         if (isGoal(*t, coord, parm))
         {
@@ -131,9 +133,11 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
                     db[1].ssvisit[index] = db[1].validcount;
                     db[1].ssprev[index] = &neigh;
                     db[1].ssdist[index] = tentative;
-                    
-                    *back++ = bytele->ss;
-                    std::push_heap(front, back, compare);
+
+                    nhe.dist = tentative;
+                    nhe.ss = bytele->ss;
+                    m_dijkHeap.add(nhe);
+                    std::push_heap(m_dijkHeap.begin(), m_dijkHeap.end());
                 }
             }
             else
@@ -156,9 +160,11 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
                     db[1].ssvisit[index] = db[1].validcount;
                     db[1].ssprev[index] = &neigh;
                     db[1].ssdist[index] = tentative;
-                    
-                    *back++ = neigh.ss;
-                    std::push_heap(front, back, compare);
+
+                    nhe.dist = tentative;
+                    nhe.ss = neigh.ss;
+                    m_dijkHeap.add(nhe);
+                    std::push_heap(m_dijkHeap.begin(), m_dijkHeap.end());
                 }
             }
         }

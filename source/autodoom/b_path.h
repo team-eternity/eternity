@@ -97,6 +97,7 @@ public:
         db[0].Clear();
         db[1].Clear();
         m_teleCache.clear();
+        m_dijkHeap.clear();
     }
 
 private:
@@ -133,6 +134,18 @@ private:
 
         void IncrementValidcount();
     };
+
+    struct HeapEntry
+    {
+        const BSubsec* ss;
+        fixed_t dist;
+        bool operator < (const HeapEntry& o) const
+        {
+            return dist > o.dist;
+        }
+    };
+
+    PODCollection<HeapEntry>    m_dijkHeap;
     
     const TeleItem* checkTeleportation(const BNeigh& neigh);
 

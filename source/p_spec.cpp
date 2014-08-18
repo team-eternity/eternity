@@ -930,7 +930,7 @@ int P_FindMinSurroundingLight(const sector_t *sector, int min)
 //
 // killough 11/98: reformatted
 
-int P_SectorActive(special_e t, const sector_t *sec)
+bool P_SectorActive(special_e t, const sector_t *sec)
 {
    return demo_compatibility ?  // return whether any thinker is active
      sec->floordata || sec->ceilingdata || sec->lightingdata :
