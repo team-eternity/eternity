@@ -505,7 +505,7 @@ void BotMap::getAllLivingMonsters()
         mo = thinker_cast<const Mobj*>(th);
         if (mo && !mo->player && mo->flags & MF_SHOOTABLE && !(mo->flags & MF_NOBLOCKMAP) && mo->health > 0)
         {
-            livingMonsters.insert(mo);
+            livingMonsters.push_front(mo);
         }
     }
 }

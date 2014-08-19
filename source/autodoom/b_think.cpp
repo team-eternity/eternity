@@ -467,16 +467,17 @@ void Bot::enemyVisible(Target& nearest)
     if (!botMap->livingMonsters.empty())
     {
 
-restart:
         mindist = D_MAXINT;
-        for (auto it = botMap->livingMonsters.begin();
-             it != botMap->livingMonsters.end(); ++it)
+        auto it = botMap->livingMonsters.begin();
+        auto bit = botMap->livingMonsters.before_begin();
+        while(it != botMap->livingMonsters.end())
         {
             const Mobj* m = *it;
             if (m->health <= 0 || !(m->flags & MF_SHOOTABLE))
             {
-                botMap->livingMonsters.erase(m);
-                goto restart;
+                ++it;
+                botMap->livingMonsters.erase_after(bit);
+                continue;
             }
             cam.setTargetMobj(m);
             if (CAM_CheckSight(cam))
@@ -489,6 +490,9 @@ restart:
                     nearest.coord = B_CoordXY(*m);
                 }
             }
+            
+            bit = it;
+            ++it;
         }
     }
     

@@ -247,7 +247,7 @@ public:
    // if playing, this flag will be true during P_SetupLevel
 
    // Common affairs
-   std::set<const Mobj*> livingMonsters;    // list of shootable objects
+   std::forward_list<const Mobj*> livingMonsters;    // list of shootable objects
 
    struct SectorTrait
    {
