@@ -87,6 +87,11 @@ struct intercept_t
 typedef bool (*traverser_t)(intercept_t *in);
 
 fixed_t P_AproxDistance(fixed_t dx, fixed_t dy);
+template<typename T, typename U> inline static fixed_t P_AproxDistance(const T& m, const U& n)
+{
+    return P_AproxDistance(n.x - m.x, n.y - m.y);
+}
+
 int     P_PointOnLineSide(fixed_t x, fixed_t y, const line_t *line);
 int     P_PointOnDivlineSide(fixed_t x, fixed_t y, const divline_t *line);
 void    P_MakeDivline(const line_t *li, divline_t *dl);
@@ -106,6 +111,10 @@ bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
                     int flags, traverser_t trav);
 
 angle_t P_PointToAngle(fixed_t xo, fixed_t yo, fixed_t x, fixed_t y);
+template<typename T, typename U> inline static angle_t P_PointToAngle(const T& vo, const U& v)
+{
+    return P_PointToAngle(vo.x, vo.y, v.x, v.y);
+}
 
 extern linetracer_t trace;
 

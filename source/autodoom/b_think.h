@@ -102,15 +102,24 @@ private:
          const void*    exists;
       };
       v2fixed_t coord;
+      fixed_t dist;
+      angle_t dangle;
       bool isLine;
+
+      // for heaping
+      bool operator < (const Target& o) const
+      {
+          return dist > o.dist; // min heap
+      }
    };
-   void enemyVisible(Target& target);
+
+   void enemyVisible(PODCollection<Target>& targets);
 
    
    bool goalAchieved();
    
    void pickRandomWeapon(const Target& target);
-   void doCombatAI(const Target& target);
+   void doCombatAI(const PODCollection<Target>& targets);
    void doNonCombatAI();
    
    void cruiseControl(fixed_t nx, fixed_t ny, bool moveslow, bool runfast);
