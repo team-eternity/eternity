@@ -32,7 +32,7 @@
 
 class Mobj;
 
-bool B_IsMobjSolidDecor(Mobj &mo);
+bool B_IsMobjSolidDecor(const Mobj &mo);
 
 #endif 
 

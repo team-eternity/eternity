@@ -106,7 +106,7 @@ void A_SnakeAttack2(actionargs_t *);
 static void B_getBranchingStateSeq(statenum_t sn,
                             StateQue &alterQueue,
                             const StateSet &stateSet,
-                            Mobj &mo)
+                            const Mobj &mo)
 {
    const state_t &st = *states[sn];
    PODCollection<statenum_t> dests(17);
@@ -363,7 +363,7 @@ static bool B_stateCantBeSolidDecor(statenum_t sn, const mobjinfo_t &mi)
 // True if state leads into a disappearance
 //
 static bool B_stateEncounters(statenum_t firstState,
-                               Mobj &mo,
+                              const Mobj &mo,
                               const std::function<bool(statenum_t,
                                                  const mobjinfo_t &)> &statecase)
 {
@@ -417,7 +417,7 @@ static bool B_stateEncounters(statenum_t firstState,
 //
 // Checks if mobj is a permanent solid decoration (needed by the bot map)
 //
-bool B_IsMobjSolidDecor( Mobj &mo)
+bool B_IsMobjSolidDecor(const Mobj &mo)
 {
    if (!(mo.flags & MF_SOLID))
       return false;

@@ -465,7 +465,7 @@ state_t *E_ArgAsStateLabel(const Mobj *mo, const arglist_t *al, int index)
 // The evaluated value will be cached so that it can be returned on subsequent
 // calls. If the arg does not exist, the null state is returned instead.
 //
-int E_ArgAsStateNum(arglist_t *al, int index, Mobj *mo)
+int E_ArgAsStateNum(arglist_t *al, int index, const Mobj *mo)
 {
    evalcache_t *eval;
 
@@ -534,7 +534,7 @@ int E_ArgAsStateNum(arglist_t *al, int index, Mobj *mo)
 //
 // NI == No Invalid, because invalid states are not converted to the null state.
 //
-int E_ArgAsStateNumNI(arglist_t *al, int index, Mobj *mo)
+int E_ArgAsStateNumNI(arglist_t *al, int index, const Mobj *mo)
 {
    evalcache_t *eval;
 
@@ -601,7 +601,7 @@ int E_ArgAsStateNumNI(arglist_t *al, int index, Mobj *mo)
 // equal to zero.
 // G0 == "greater than or equal to zero"
 //
-int E_ArgAsStateNumG0(arglist_t *al, int index, Mobj *mo)
+int E_ArgAsStateNumG0(arglist_t *al, int index, const Mobj *mo)
 {
    evalcache_t *eval;
 
