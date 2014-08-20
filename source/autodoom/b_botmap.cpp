@@ -499,13 +499,13 @@ void BotMap::getAllLivingMonsters()
 {
     Thinker* th;
     const Mobj* mo;
-    livingMonsters.clear();
+    livingMonsters.makeEmpty();
     for (th = thinkercap.next; th != &thinkercap; th = th->next)
     {
         mo = thinker_cast<const Mobj*>(th);
         if (mo && !mo->player && mo->flags & MF_SHOOTABLE && !(mo->flags & MF_NOBLOCKMAP) && mo->health > 0)
         {
-            livingMonsters.push_front(mo);
+            livingMonsters.add(mo);
         }
     }
 }

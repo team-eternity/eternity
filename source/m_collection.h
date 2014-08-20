@@ -392,6 +392,22 @@ public:
            I_Error("PODCollection::back: array underflow\n");
        return this->ptrArray[this->length - 1];
    }
+   
+   //
+   // erase
+   //
+   // IOANCH: a method that moves the end object into destination and pops
+   //
+   void erase(size_t index)
+   {
+      this->ptrArray[index] = this->ptrArray[--this->length];
+      this->wrapiterator = 0;
+   }
+   void erase(T* iter)
+   {
+      *iter = this->ptrArray[--this->length];
+      this->wrapiterator = 0;
+   }
 };
 
 //

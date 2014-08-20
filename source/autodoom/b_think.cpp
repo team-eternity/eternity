@@ -464,19 +464,19 @@ void Bot::enemyVisible(Target& nearest)
     
     fixed_t mindist;
     fixed_t dist;
-    if (!botMap->livingMonsters.empty())
+    if (!botMap->livingMonsters.isEmpty())
     {
 
         mindist = D_MAXINT;
         auto it = botMap->livingMonsters.begin();
-        auto bit = botMap->livingMonsters.before_begin();
+//        auto bit = botMap->livingMonsters.before_begin();
         while(it != botMap->livingMonsters.end())
         {
             const Mobj* m = *it;
             if (m->health <= 0 || !(m->flags & MF_SHOOTABLE))
             {
-                ++it;
-                botMap->livingMonsters.erase_after(bit);
+//                ++it;
+                botMap->livingMonsters.erase(it);
                 continue;
             }
             cam.setTargetMobj(m);
@@ -491,7 +491,6 @@ void Bot::enemyVisible(Target& nearest)
                 }
             }
             
-            bit = it;
             ++it;
         }
     }
