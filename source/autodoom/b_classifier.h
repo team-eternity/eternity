@@ -33,6 +33,7 @@
 class Mobj;
 
 bool B_IsMobjSolidDecor(const Mobj &mo);
+bool B_IsMobjHostile(const Mobj& mo);
 
 #endif 
 

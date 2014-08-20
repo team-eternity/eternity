@@ -46,13 +46,40 @@
 typedef std::unordered_set<statenum_t> StateSet;
 typedef std::queue<statenum_t> StateQue;
 
+void A_PosAttack(actionargs_t *);
+void A_SPosAttack(actionargs_t *);
 void A_VileChase(actionargs_t *);
+void A_VileAttack(actionargs_t *);
+void A_SkelFist(actionargs_t *);
+void A_SkelMissile(actionargs_t *);
+void A_FatAttack1(actionargs_t *);
+void A_FatAttack2(actionargs_t *);
+void A_FatAttack3(actionargs_t *);
+void A_CPosAttack(actionargs_t *);
 void A_CPosRefire(actionargs_t *actionargs);
+void A_TroopAttack(actionargs_t *);
+void A_SargAttack(actionargs_t *);
+void A_HeadAttack(actionargs_t *);
+void A_BruisAttack(actionargs_t *);
 void A_SkullAttack(actionargs_t *actionargs);
 void A_SpidRefire(actionargs_t *);
+void A_BspiAttack(actionargs_t *);
+void A_CyberAttack(actionargs_t *);
+void A_PainAttack(actionargs_t *);
 void A_PainDie(actionargs_t *);
 void A_KeenDie(actionargs_t *);
+void A_BrainSpit(actionargs_t *);
+void A_SpawnFly(actionargs_t *);
+void A_BrainExplode(actionargs_t *);
+void A_Detonate(actionargs_t *);        // killough 8/9/98
+void A_Mushroom(actionargs_t *);        // killough 10/98
+void A_Spawn(actionargs_t *);           // killough 11/98
+void A_Scratch(actionargs_t *);         // killough 11/98
 void A_RandomJump(actionargs_t *);      // killough 11/98
+void A_Nailbomb(actionargs_t *);
+
+void A_SpawnAbove(actionargs_t *);
+void A_BetaSkullAttack(actionargs_t *);
 
 void A_SetFlags(actionargs_t *);
 void A_UnSetFlags(actionargs_t *);
@@ -94,9 +121,37 @@ void A_Jump(actionargs_t *);
 
 void A_MissileAttack(actionargs_t *);
 void A_MissileSpread(actionargs_t *);
+void A_BulletAttack(actionargs_t *);
+void A_ThingSummon(actionargs_t *);
 
 void A_SnakeAttack(actionargs_t *);
 void A_SnakeAttack2(actionargs_t *);
+
+void A_SargAttack12(actionargs_t *actionargs);
+void A_MummyAttack(actionargs_t *);
+void A_MummyAttack2(actionargs_t *);
+void A_ClinkAttack(actionargs_t *);
+void A_WizardAtk3(actionargs_t *);
+void A_Srcr2Attack(actionargs_t *);
+void A_GenWizard(actionargs_t *);
+void A_HticExplode(actionargs_t *);
+void A_KnightAttack(actionargs_t *);
+void A_BeastAttack(actionargs_t *);
+void A_SnakeAttack(actionargs_t *);
+void A_SnakeAttack2(actionargs_t *);
+void A_Srcr1Attack(actionargs_t *);
+void A_VolcanoBlast(actionargs_t *);
+void A_MinotaurAtk1(actionargs_t *);
+void A_MinotaurAtk2(actionargs_t *);
+void A_MinotaurAtk3(actionargs_t *);
+void A_MinotaurCharge(actionargs_t *);
+void A_LichFire(actionargs_t *);
+void A_LichWhirlwind(actionargs_t *);
+void A_LichAttack(actionargs_t *);
+void A_ImpChargeAtk(actionargs_t *);
+void A_ImpMeleeAtk(actionargs_t *);
+void A_ImpMissileAtk(actionargs_t *);
+void A_AlertMonsters(actionargs_t *);
 
 //
 // B_getBranchingStateSeq
@@ -364,8 +419,8 @@ static bool B_stateCantBeSolidDecor(statenum_t sn, const mobjinfo_t &mi)
 //
 static bool B_stateEncounters(statenum_t firstState,
                               const Mobj &mo,
-                              const std::function<bool(statenum_t,
-                                                 const mobjinfo_t &)> &statecase)
+                              bool(*statecase)(statenum_t, const mobjinfo_t&),
+                              bool avoidPainStates = false)
 {
    StateSet stateSet;  // set of visited states
    StateQue alterQueue;        // set of alternate chains
@@ -374,7 +429,7 @@ static bool B_stateEncounters(statenum_t firstState,
 
    statenum_t sn;
    alterQueue.push(firstState);
-   if(mo.flags & MF_SHOOTABLE)
+   if(mo.flags & MF_SHOOTABLE && !avoidPainStates)
    {
       if(mo.info->painchance > 0)
          alterQueue.push(mo.info->painstate);
@@ -436,6 +491,97 @@ bool B_IsMobjSolidDecor(const Mobj &mo)
       return false;  // state goes to null or disables solidity or moves
    
    return true;
+}
+
+//
+// B_stateAttacks
+//
+// True if this state is used for attacking
+//
+static bool B_stateAttacks(statenum_t sn, const mobjinfo_t &mi)
+{
+    const state_t &st = *states[sn];
+
+    static const std::unordered_set<void(*)(actionargs_t*)> attacks = 
+    {
+        A_Explode, 
+        A_PosAttack,
+        A_SPosAttack,
+        A_VileAttack,
+        A_SkelFist,
+        A_SkelMissile,
+        A_FatAttack1,
+        A_FatAttack2,
+        A_FatAttack3,
+        A_CPosAttack,
+        A_TroopAttack,
+        A_SargAttack,
+        A_HeadAttack,
+        A_BruisAttack,
+        A_SkullAttack,
+        A_BspiAttack,
+        A_CyberAttack,
+        A_PainAttack,
+        A_PainDie,
+        A_BrainSpit,
+        A_SpawnFly,
+        A_BrainExplode,
+        A_Detonate,
+        A_Mushroom,
+        A_Spawn,
+        A_Scratch,
+        A_Nailbomb,
+        A_SpawnAbove,
+        A_BetaSkullAttack,
+        A_MissileAttack,
+        A_MissileSpread,
+        A_BulletAttack,
+        A_ThingSummon,
+        A_SargAttack12,
+        A_MummyAttack,
+        A_MummyAttack2,
+        A_ClinkAttack,
+        A_WizardAtk3,
+        A_Srcr2Attack,
+        A_GenWizard,
+        A_HticExplode,
+        A_KnightAttack,
+        A_BeastAttack,
+        A_SnakeAttack,
+        A_Srcr1Attack,
+        A_VolcanoBlast,
+        A_MinotaurAtk1,
+        A_MinotaurAtk2,
+        A_MinotaurAtk3,
+        A_MinotaurCharge,
+        A_LichFire,
+        A_ImpChargeAtk,
+        A_ImpMeleeAtk,
+        A_ImpMissileAtk,
+        A_AlertMonsters,
+    };
+
+    if (attacks.count(st.action))
+        return true;
+
+    return false;
+}
+
+//
+// B_IsMobjHostile
+//
+// Checks if mobj is going to attack player
+//
+bool B_IsMobjHostile(const Mobj& mo)
+{
+    const mobjinfo_t& mi = *mo.info;
+
+    if (mi.spawnstate == NullStateNum)
+        return false;
+    if (B_stateEncounters(mi.spawnstate, mo, B_stateAttacks, true))
+        return true;
+
+    return false;
 }
 
 // EOF

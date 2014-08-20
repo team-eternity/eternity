@@ -503,7 +503,7 @@ void BotMap::getAllLivingMonsters()
     for (th = thinkercap.next; th != &thinkercap; th = th->next)
     {
         mo = thinker_cast<const Mobj*>(th);
-        if (mo && !mo->player && mo->flags & MF_SHOOTABLE && !(mo->flags & MF_NOBLOCKMAP) && mo->health > 0)
+        if (mo && !mo->player && mo->flags & MF_SHOOTABLE && !(mo->flags & MF_NOBLOCKMAP) && mo->health > 0 && B_IsMobjHostile(*mo))
         {
             livingMonsters.add(mo);
         }
