@@ -475,7 +475,10 @@ static void B_buildTempBotMapFromScratch(fixed_t radius, const char *digest, con
 	B_MEASURE_CLOCK(generateForRadius)
 	
 	// Move the metasector list to the final bot map
-	botMap->msecList.head = tempBotMap->getMsecList().head;
+   for (DLListItem<MetaSector> *item = tempBotMap->getMsecList().head; item; item = item->dllNext)
+   {
+      botMap->metasectors.add(item->dllObject);
+   }
 	
 	// Feed it into GLBSP. botMap will get in turn all needed data
 	B_NEW_CLOCK

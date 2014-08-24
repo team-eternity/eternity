@@ -157,7 +157,7 @@ public:
    } *nodes;
    int numnodes;
    
-   DLList<MetaSector, &MetaSector::listLink> msecList;
+   PODCollection<MetaSector*> metasectors;
    MetaSector *nullMSec;   // the metasector for walls (exclude from BSP)
    int nummetas;
    
@@ -182,7 +182,6 @@ public:
    nullMSec(NULL), nummetas(0),
    bMapOrgX(0), bMapOrgY(0), bMapWidth(0), bMapHeight(0), sectorFlags(nullptr)
    {
-      msecList.head = nullptr;
       // set collection prototype
       static Seg protoSeg;
       memset(protoSeg.v, 0, sizeof(protoSeg.v));
@@ -265,11 +264,9 @@ private:
 	
 	void clearMsecList()
 	{
-		DLListItem<MetaSector> *item, *next;
-		for (item = msecList.head; item != nullptr; item = next)
+		for (MetaSector* ms : metasectors)
 		{
-			next = item->dllNext;
-			delete item->dllObject;
+         delete ms;
 		}
 	}
 };
