@@ -13,7 +13,7 @@
 	<key>CFBundleDisplayName</key>
 	<string>Eternity Engine</string>
 	<key>CFBundleIdentifier</key>
-	<string>net.mancubus.${PRODUCT_NAME:rfc1034identifier}</string>
+	<string>org.i-chera.${PRODUCT_NAME:rfc1034identifier}</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
