@@ -1062,7 +1062,10 @@ void Bot::doCommand()
    // Get current values
    ss = &botMap->pointInSubsector(pl->mo->x, pl->mo->y);
    cmd = &pl->cmd;
-   
+
+    if(pl->health <= 0 && prevCtr % 4 == 0)
+        cmd->buttons |= BT_USE; // respawn asap
+
    // Do non-combat for now
 
    {
