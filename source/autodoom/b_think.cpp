@@ -915,8 +915,8 @@ moveon:
 
     if (random() % 128 == 0)
         m_straferunstate = random.range(-1, 1);
-    if(!intoSwitch)
-        tangle += ANG45 * m_straferunstate;
+//    if(!intoSwitch)
+//        tangle += ANG45 * m_straferunstate;
 
     int16_t angleturn = (int16_t)(tangle >> 16) - (int16_t)(pl->mo->angle >> 16);
     angleturn >>= 3;
