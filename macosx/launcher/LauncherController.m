@@ -31,6 +31,7 @@
 // gArgc and gArgv
 //
 extern NSArray *gArgArray;
+extern BOOL g_hasParms;
 
 // TODO:
 //
@@ -50,16 +51,9 @@ extern NSArray *gArgArray;
                               [[undom prepareWithInvocationTarget:self] b]; \
                               [undom setActionName:c];
 
-NSInteger prevState = 0; // heh
+static NSInteger prevState = 0; // heh
 
 static BOOL calledAppMainline = FALSE;
-
-@interface LauncherController ()
--(void)loadDefaults;
--(void)saveDefaults;
--(void)doAddPwadFromURL:(NSURL *)wURL;
--(void)executeGame:(BOOL)x64flag withArgs:(NSArray *)deploy;
-@end
 
 //
 // LauncherController
@@ -211,7 +205,9 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
       fullname = [[[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"docs"] stringByAppendingPathComponent:fname];
       NSMenuItem *item;
       
-      item = [[NSMenuItem alloc] initWithTitle:[fname stringByDeletingPathExtension] action:@selector(gotoDoc:) keyEquivalent:@""];
+      item = [[[NSMenuItem alloc] initWithTitle:[fname stringByDeletingPathExtension]
+                                         action:@selector(gotoDoc:)
+                                  keyEquivalent:@""] autorelease];
       [item setRepresentedObject:fullname];
       
       [[docMenu submenu] addItem:item];
@@ -245,6 +241,17 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
    
    
    [self setupWorkingDirectory];
+   
+   if(g_hasParms)
+   {
+      // Launch directly if parameters provided
+      [self executeGame:YES withArgs:gArgArray];
+      // Do not reset state. Instead when the task ends, the app self-terminates.
+      
+//      g_hasParms = NO;
+//      [gArgArray release];
+//      gArgArray = nil;
+   }
 }
 
 //
@@ -260,18 +267,17 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
 }
 
 //
-// -applicationDataDirectory
+// -applicationSupportDirectory
 //
 // The "library/application support" directory
 //
 // Copied from help HTML: https://developer.apple.com/library/mac/#documentation/FileManagement/Conceptual/FileSystemProgrammingGUide/AccessingFilesandDirectories/AccessingFilesandDirectories.html#//apple_ref/doc/uid/TP40010672-CH3-SW3
 //
-#if 0 // NOT USED: requires OS X 10.6 or later
-- (NSURL*)applicationDataDirectory
+- (NSString*)applicationSupportDirectory
 {
-	NSArray* possibleURLs = [[NSFileManager defaultManager] URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask];
-	NSURL* appSupportDir = nil;
-	NSURL* appDirectory = nil;
+   NSArray* possibleURLs = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
+	NSString* appSupportDir = nil;
+	NSString* appDirectory = nil;
 	
 	if ([possibleURLs count] >= 1)
 	{
@@ -281,15 +287,36 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
 	
 	// If a valid app support directory exists, add the
 	// app's bundle ID to it to specify the final directory.
-	if (appSupportDir)
+	if ([appSupportDir length] > 0)
 	{
 		NSString* appBundleID = [[NSBundle mainBundle] bundleIdentifier];
-		appDirectory = [appSupportDir URLByAppendingPathComponent:appBundleID];
+		appDirectory = [appSupportDir stringByAppendingPathComponent:appBundleID];
 	}
 	
 	return appDirectory;
 }
-#endif // 0
+
+//
+// tryCreateDir
+//
+// Helper function
+//
+BOOL tryCreateDir(NSString* basePath, NSString* name, NSWindow* window)
+{
+   NSError* err = nil;
+   if(![[NSFileManager defaultManager] createDirectoryAtPath:[basePath stringByAppendingPathComponent:name] withIntermediateDirectories:YES attributes:nil error:&err])
+   {
+      NSAlert* alert = [NSAlert alertWithMessageText:@"Couldn't setup Eternity storage."
+                                       defaultButton:@"Continue anyway"
+                                     alternateButton:nil
+                                         otherButton:nil
+                           informativeTextWithFormat:@"Eternity failed to finish setting up its local folder in 'Library' where screenshots, configs and saves are stored. Eternity may not run correctly.\n\nMore exactly: failed to create '%@'. Description of error: %@", name, [err localizedDescription]];
+      [alert setAlertStyle:NSCriticalAlertStyle];
+      [alert beginSheetModalForWindow:window completionHandler:^(NSModalResponse returnCode) {}];
+      return NO;
+   }
+   return YES;
+}
 
 //
 // setupWorkingDirectory:
@@ -301,19 +328,36 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
 //
 - (void) setupWorkingDirectory
 {
-   NSString *appDataPath = [[@"~/Library/Application Support" stringByExpandingTildeInPath] stringByAppendingPathComponent:[[NSBundle mainBundle] bundleIdentifier]];
+   NSString *appDataPath = [self applicationSupportDirectory];
+   if([appDataPath length] == 0)
+   {
+      NSAlert* alert = [NSAlert alertWithMessageText:@"Couldn't find Application Support folder."
+                                       defaultButton:@"Continue anyway"
+                                     alternateButton:nil
+                                         otherButton:nil
+                           informativeTextWithFormat:@"The folder where Eternity would save its saves/screenshots/etc. (i.e. 'Library/Application Support', usually hidden in Finder) could not be found or created. Eternity may not run correctly."];
+      [alert setAlertStyle:NSCriticalAlertStyle];
+      [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {}];
+      return;
+   }
+   
   	NSString *usrPath = [appDataPath stringByAppendingPathComponent:@"user"];
    
-   NSFileManager* fileMan = [NSFileManager defaultManager];
+   if(!tryCreateDir(usrPath, @"doom", self.window))
+      return;
+   if(!tryCreateDir(usrPath, @"doom2", self.window))
+      return;
+   if(!tryCreateDir(usrPath, @"hacx", self.window))
+      return;
+   if(!tryCreateDir(usrPath, @"heretic", self.window))
+      return;
+   if(!tryCreateDir(usrPath, @"plutonia", self.window))
+      return;
+   if(!tryCreateDir(usrPath, @"shots", self.window))
+      return;
+   if(!tryCreateDir(usrPath, @"tnt", self.window))
+      return;
    
-	[fileMan createDirectoryAtPath:[usrPath stringByAppendingPathComponent:@"doom"] withIntermediateDirectories:YES attributes:nil error:nil];
-   [fileMan createDirectoryAtPath:[usrPath stringByAppendingPathComponent:@"doom2"] withIntermediateDirectories:YES attributes:nil error:nil];
-   [fileMan createDirectoryAtPath:[usrPath stringByAppendingPathComponent:@"hacx"] withIntermediateDirectories:YES attributes:nil error:nil];
-   [fileMan createDirectoryAtPath:[usrPath stringByAppendingPathComponent:@"heretic"] withIntermediateDirectories:YES attributes:nil error:nil];
-   [fileMan createDirectoryAtPath:[usrPath stringByAppendingPathComponent:@"plutonia"] withIntermediateDirectories:YES attributes:nil error:nil];
-   [fileMan createDirectoryAtPath:[usrPath stringByAppendingPathComponent:@"shots"] withIntermediateDirectories:YES attributes:nil error:nil];
-   [fileMan createDirectoryAtPath:[usrPath stringByAppendingPathComponent:@"tnt"] withIntermediateDirectories:YES attributes:nil error:nil];
-
 	NSString *basPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"base"];
 		
 	[userPath release];
@@ -338,7 +382,7 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
 //
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename
 {
-	 if (calledAppMainline)
+	 if (g_hasParms || calledAppMainline)
 		return NO;	// ignore this document, it's too late within the game
 
 	 [self doAddPwadFromURL:[NSURL fileURLWithPath:filename]];
@@ -439,6 +483,9 @@ if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
    // Clear the demo record field
    [recordDemoField setStringValue:@""];
    [self updateParameters:self];
+   
+   if(g_hasParms)
+      [NSApp terminate:self];
 }
 
 //
