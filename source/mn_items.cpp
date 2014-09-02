@@ -453,7 +453,7 @@ public:
       // display input buffer if inputting new var value
       if(input_command && item->var == input_command->variable)
       {
-         varvalue = (char *)input_buffer;
+         varvalue = MN_GetInputBuffer();
          varvalue += '_';
          MN_truncateInput(varvalue, x);
       }
@@ -496,23 +496,22 @@ public:
 
    virtual void onConfirm(menuitem_t *item)
    {
+      qstring &input_buffer = MN_GetInputBuffer();
+
       // get input for new value
       input_command = C_GetCmdForName(item->data);
+      input_buffer.clear();
 
       // haleyjd 07/23/04: restore starting input_buffer with the current value
-      // of string variables
+      // of string variables      
       if(input_command->variable->type == vt_string)
       {
          char *str = *(char **)(input_command->variable->variable);
 
-         if(current_menu != GameModeInfo->saveMenu || 
+         if(current_menu != GameModeInfo->saveMenu ||
             strcmp(str, DEH_String("EMPTYSTRING")))
-            strcpy((char *)input_buffer, str);
-         else
-            input_buffer[0] = '\0';
+            input_buffer = str;
       }
-      else
-         input_buffer[0] = '\0'; // clear input buffer
 
       input_cmdtype = c_typed;
    }

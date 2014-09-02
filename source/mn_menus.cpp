@@ -1347,7 +1347,7 @@ void MN_ReadSaveStrings()
    {
       char *name = NULL;    // killough 3/22/98
       size_t len;
-      char description[SAVESTRINGSIZE]; // sf
+      char description[SAVESTRINGSIZE+1]; // sf
       FILE *fp;  // killough 11/98: change to use stdio
 
       len = M_StringAlloca(&name, 2, 26, basesavegame, savegamename);
@@ -1370,6 +1370,7 @@ void MN_ReadSaveStrings()
          continue;
       }
 
+      memset(description, 0, sizeof(description));
       if(fread(description, SAVESTRINGSIZE, 1, fp) < 1)
          doom_printf("%s", FC_ERROR "Warning: savestring read failed");
       if(savegamenames[i])

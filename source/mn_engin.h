@@ -31,6 +31,7 @@
 
 struct command_t;
 struct event_t;
+class  qstring;
 struct variable_t;
 struct vfont_t;
 
@@ -269,7 +270,7 @@ extern vfont_t *menu_font_normal;
 
 extern command_t *input_command;
 extern int input_cmdtype;
-extern unsigned char input_buffer[1024];
+qstring &MN_GetInputBuffer();
 
 #endif
                             
