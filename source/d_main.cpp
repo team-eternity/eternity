@@ -1467,18 +1467,18 @@ static void D_DoomInit()
       autostart = true;
    }
 
+   if((p = M_CheckParm("-timer")) && p < myargc-1)
+   {
+      int time = atoi(myargv[p+1]);
+
+      usermsg("Levels will end after %d minute%s.\n",
+         time, time > 1 ? "s" : "");
+      levelTimeLimit = time;
+   }
+
    // haleyjd: deatchmatch-only options
    if(GameType == gt_dm)
    {
-      if((p = M_CheckParm("-timer")) && p < myargc-1)
-      {
-         int time = atoi(myargv[p+1]);
-
-         usermsg("Levels will end after %d minute%s.\n",
-            time, time > 1 ? "s" : "");
-         levelTimeLimit = time;
-      }
-
       // sf: moved from p_spec.c
       // See if -frags has been used
       if((p = M_CheckParm("-frags")) && p < myargc-1)
