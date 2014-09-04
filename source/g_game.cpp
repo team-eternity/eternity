@@ -1982,7 +1982,7 @@ void G_Ticker()
             memcpy(cmd, &netcmds[i][buf], sizeof *cmd);
             
             // IOANCH: add bot commands if game is running
-            if(botMap && !demoplayback && gamestate == GS_LEVEL && !paused)
+            if(botMap && !demoplayback && gamestate == GS_LEVEL && !paused && i == consoleplayer)
                bots[i].doCommand();
             
             if(demoplayback)
