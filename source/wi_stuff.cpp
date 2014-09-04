@@ -405,6 +405,9 @@ int wi_pause_time = 0;
 int     wi_fade_color = -1;
 fixed_t wi_tl_level   =  0;
 
+static bool autoquit = true;
+static int autoquit_tics = 0;
+
 // forward declaration
 static void WI_OverlayBackground();
 
@@ -1814,6 +1817,16 @@ static void WI_drawStats()
 //
 static void WI_Ticker()
 {
+   if (autoquit)
+   {
+      ++autoquit_tics;
+      if (autoquit_tics >= 5 * 35)
+      {
+          G_CheckDemoStatus();
+          I_Quit();
+      }
+   }
+
    switch(state)
    {
    case StatCount:
