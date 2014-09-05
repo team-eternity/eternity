@@ -1889,6 +1889,29 @@ void G_Ticker()
 {
    int i;
 
+   // If theplayer (bot) dies, wait a few seconds and then quit.
+   if (M_CheckParm("-autoquit") && gamestate == GS_LEVEL)
+   {
+      static bool died = false;
+      static int dead_tics = 0;
+
+      if (players[consoleplayer].playerstate == PST_DEAD)
+      {
+         died = true;
+      }
+
+      if (died)
+      {
+         ++dead_tics;
+         if (dead_tics >= 5 * 35)
+         {
+            C_Printf("Quitting after player died.\n");
+            G_StopDemo();
+            I_Quit();
+         }
+      }
+   }
+
    // Command line parameter to allow a limit on the maximum time that
    // the game can run for before quitting.
    i = M_CheckParm("-maxgametic");
