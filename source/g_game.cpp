@@ -1889,6 +1889,19 @@ void G_Ticker()
 {
    int i;
 
+   // Command line parameter to allow a limit on the maximum time that
+   // the game can run for before quitting.
+   i = M_CheckParm("-maxgametic");
+
+   if (i > 0)
+   {
+      int maxgametic = atoi(myargv[i + 1]);
+      if (gametic >= maxgametic)
+      {
+         I_Quit();
+      }
+   }
+
    // do player reborns if needed
    for(i = 0; i < MAXPLAYERS; i++)
    {
