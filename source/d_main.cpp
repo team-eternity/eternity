@@ -1829,6 +1829,11 @@ static void D_DoomInit()
       }
    }
 
+   if (M_CheckParm("-singletics"))
+   {
+      singletics = true;
+   }
+
    if((p = M_CheckParm("-fastdemo")) && ++p < myargc)
    {                                 // killough
       fastdemo = true;                // run at fastest speed possible

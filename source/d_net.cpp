@@ -684,7 +684,7 @@ static bool RunGameTics()
       counts = availabletics;
   
    // haleyjd 09/07/10: enhanced d_fastrefresh w/early return when no tics to run
-   if(counts <= 0 && d_fastrefresh && !timingdemo) // 10/03/10: not in timedemos!
+   if(counts <= 0 && d_fastrefresh && !singletics && !timingdemo) // 10/03/10: not in timedemos!
       return false;
 
    if(counts < 1)
