@@ -1898,7 +1898,44 @@ void G_Ticker()
       int maxgametic = atoi(myargv[i + 1]);
       if (gametic >= maxgametic)
       {
+         C_Printf("Maximum game time reached.\n");
+         G_StopDemo();
          I_Quit();
+      }
+   }
+
+#define STUCK_DISTANCE 128 * FRACUNIT
+
+   // Command line parameter to detect when the player is "stuck" (ie.
+   // has not moved very far in a long time), and quit.
+   i = M_CheckParm("-maxstucktime");
+
+   if (i > 0 && gamestate == GS_LEVEL)
+   {
+      static int stuckx, stucky, stuckz;
+      static int stucktime = 0;
+      int maxstucktime = atoi(myargv[i + 1]) * 35;
+      Mobj *plmobj;
+      
+      plmobj = players[consoleplayer].mo;
+      if (abs(stuckx - plmobj->x) >= STUCK_DISTANCE
+       || abs(stucky - plmobj->y) >= STUCK_DISTANCE
+       || abs(stuckz - plmobj->z) >= STUCK_DISTANCE)
+      {
+         stuckx = plmobj->x;
+         stucky = plmobj->y;
+         stuckz = plmobj->z;
+         stucktime = 0;
+      }
+      else
+      {
+         ++stucktime;
+         if (stucktime >= maxstucktime)
+         {
+            C_Printf("Quitting after stuck player detected.\n");
+            G_StopDemo();
+            I_Quit();
+         }
       }
    }
 
