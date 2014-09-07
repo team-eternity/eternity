@@ -342,7 +342,7 @@ static void C_DoRunCommand(command_t *command, const char *options)
    
    C_GetTokens(options);
    
-   for(i = 0; i < numtokensalloc; ++i)
+   for(i = 0; i < numtokensalloc; i++)
       *(Console.argv[i]) = *cmdtokens[i];
 
    Console.argc = numtokens;

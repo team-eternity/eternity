@@ -44,6 +44,7 @@
 #include "hu_over.h"
 #include "i_video.h"
 #include "m_collection.h"
+#include "m_qstr.h"
 #include "m_swap.h"
 #include "mn_engin.h"
 #include "mn_emenu.h"
@@ -80,9 +81,6 @@ bool menu_toggleisback;
 command_t *input_command = NULL;       // NULL if not typing in
 int input_cmdtype = c_typed;           // haleyjd 07/15/09
 
-// haleyjd 04/29/02: needs to be unsigned
-unsigned char input_buffer[1024] = "";
-
 vfont_t *menu_font;
 vfont_t *menu_font_big;
 vfont_t *menu_font_normal;
@@ -95,6 +93,8 @@ const char *mn_background_flat;
 //
 // Static Declarations and Data
 //
+
+static qstring input_buffer;
 
 static void MN_PageMenu(menu_t *newpage);
 
@@ -764,6 +764,16 @@ static void MN_ShowContents(void);
 extern const char *shiftxform;
 
 //
+// MN_GetInputBuffer
+//
+// haleyjd 09/01/14: Get a reference to the menu engine's input buffer.
+//
+qstring &MN_GetInputBuffer()
+{
+   return input_buffer;
+}
+
+//
 // MN_Responder
 //
 // haleyjd 07/03/04: rewritten to use enhanced key binding system
@@ -817,56 +827,54 @@ bool MN_Responder(event_t *ev)
          input_command = NULL;      
       else if(action == ka_menu_confirm)
       {
-         if(input_buffer[0] || (input_command->flags & cf_allowblank))
+         if(input_buffer.length() || (input_command->flags & cf_allowblank))
          {
-            if(input_buffer[0])
+            if(input_buffer.length())
             {
-               // place " marks round the new value
-               // FIXME/TODO: use qstring for input_buffer
-               char *temp = Z_Strdupa((const char *)input_buffer);
-               psnprintf((char *)input_buffer, sizeof(input_buffer), "\"%s\"", temp);
+               // place quotation marks around the new value
+               input_buffer.makeQuoted();
             }
             else
-            {
-               input_buffer[0] = '*';
-               input_buffer[1] = '\0';
-            }
+               input_buffer = "*"; // flag to clear the variable
 
             // set the command
             Console.cmdtype = input_cmdtype;
-            C_RunCommand(input_command, (const char *)input_buffer);
-            input_command = NULL;
+            C_RunCommand(input_command, input_buffer.constPtr());
+            input_command = nullptr;
             input_cmdtype = c_typed;
             return true; // eat key
          }
       }
-      // check for backspace
-      else if(ev->data1 == KEYD_BACKSPACE && input_buffer[0])
+      else if(ev->data1 == KEYD_BACKSPACE) // check for backspace
       {
-         input_buffer[strlen((char *)input_buffer)-1] = '\0';
-         return true; // eatkey
+         input_buffer.Delc();
+         return true; // eat key
       }
-      
+
       // probably just a normal character
       
       // only care about valid characters
       // dont allow too many characters on one command line
-
       if(ev->character)
          ich = (unsigned char)(ev->character);
-      else if(ev->data1 > 31 && ev->data1 < 127)
+      else if(ectype::isPrint(ev->data1))
          ich = shiftdown ? shiftxform[ev->data1] : ev->data1; // shifted?
 
-      if(ich > 31 && ich < 127)
+      size_t maxlen = 20u;
+      switch(var->type)
       {
-         if(strlen((char *)input_buffer) <=
-            ((var->type == vt_string) ? (unsigned int)var->max :
-             (var->type == vt_int || var->type == vt_toggle) ? 33 : 20))
-         {
-            input_buffer[strlen((char *)input_buffer) + 1] = 0;
-            input_buffer[strlen((char *)input_buffer)] = ich;
-         }
+      case vt_string:
+         maxlen = static_cast<size_t>(var->max);
+         break;
+      case vt_int:
+      case vt_toggle:
+         maxlen = 33u;
+         break;
+      default:
+         break;
       }
+      if(ectype::isPrint(ich) && input_buffer.length() < maxlen)
+         input_buffer += static_cast<char>(ich);
       
       return true;
    } 
