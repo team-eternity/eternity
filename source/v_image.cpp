@@ -261,7 +261,7 @@ bool VImageManager::resourceIsPNG(void *data, size_t size)
       return false;
 
    // libpng can sort out the rest
-   return !png_sig_cmp((png_bytep)data, 0, 8);
+   return !png_sig_cmp((png_const_bytep)data, 0, 8);
 }
 
 //

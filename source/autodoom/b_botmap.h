@@ -176,7 +176,7 @@ public:
    //
    // Constructor
    //
-   BotMap() : vertices(NULL), lines(NULL), ssectors(0),
+   BotMap() : vertices(NULL), lines(NULL), ssectors(NULL),
    nodes(NULL),
    numverts(0), numlines(0), numsegs(0), numssectors(0), numnodes(0),
    nullMSec(NULL), nummetas(0),

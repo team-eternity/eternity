@@ -745,10 +745,6 @@ void C_Printf(const char *s, ...)
    pvsnprintf(tempstr, sizeof(tempstr), s, args);
    va_end(args);
 
-   // Write message to console so we can see what's happening,
-   // headless.
-   printf("%s", tempstr);
-
    // haleyjd: write this message to the log if one is open
    C_AppendToLog(tempstr); 
    

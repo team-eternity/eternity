@@ -733,7 +733,7 @@ patch_t *VPNGImage::getAsPatch(int tag, void **user, size_t *size) const
 //
 bool VPNGImage::CheckPNGFormat(const void *data)
 {
-   return !png_sig_cmp((png_bytep)data, 0, 8);
+   return !png_sig_cmp((png_const_bytep)data, 0, 8);
 }
 
 //
