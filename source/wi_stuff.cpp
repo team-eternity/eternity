@@ -37,6 +37,7 @@
 #include "hu_stuff.h"
 #include "in_lude.h"
 #include "m_qstr.h"
+#include "m_argv.h"
 #include "m_random.h"
 #include "m_swap.h"
 #include "p_info.h"
@@ -404,6 +405,8 @@ int wi_pause_time = 0;
 // This was inspired by Contra III and is used by CQIII. See EDF.
 int     wi_fade_color = -1;
 fixed_t wi_tl_level   =  0;
+
+static int autoquit_tics = 0;
 
 // forward declaration
 static void WI_OverlayBackground();
@@ -1814,6 +1817,18 @@ static void WI_drawStats()
 //
 static void WI_Ticker()
 {
+   if (M_CheckParm("-autoquit")
+    && (sp_state >= 9 || ng_state >= 9 || dm_state >= 4))
+   {
+      ++autoquit_tics;
+      if (autoquit_tics >= 5 * 35)
+      {
+          C_Printf("Quitting after level completed successfully.\n");
+          G_CheckDemoStatus();
+          I_Quit();
+      }
+   }
+
    switch(state)
    {
    case StatCount:

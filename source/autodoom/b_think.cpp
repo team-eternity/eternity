@@ -1113,7 +1113,8 @@ PlayerStats &Bot::getNopickStats(spritenum_t spnum)
    auto nopick = nopickStats.find(spnum);
    if(nopick == nopickStats.cend())
    {
-      nopickStats.emplace(spnum, PlayerStats(true));
+      //nopickStats.emplace(spnum, PlayerStats(true));
+      nopickStats.insert(std::pair<spritenum_t, PlayerStats>(spnum, PlayerStats(true)));
       return nopickStats.find(spnum)->second;
    }
 
@@ -1130,7 +1131,8 @@ PlayerStats &Bot::getEffectStats(spritenum_t spnum)
    auto effect = effectStats.find(spnum);
    if(effect == effectStats.cend())
    {
-      effectStats.emplace(spnum, PlayerStats(false));
+      //effectStats.emplace(spnum, PlayerStats(false));
+      effectStats.insert(std::pair<spritenum_t, PlayerStats>(spnum, PlayerStats(false)));
       return effectStats.find(spnum)->second;
    }
 

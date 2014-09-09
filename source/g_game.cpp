@@ -1889,6 +1889,79 @@ void G_Ticker()
 {
    int i;
 
+   // If theplayer (bot) dies, wait a few seconds and then quit.
+   if (M_CheckParm("-autoquit") && gamestate == GS_LEVEL)
+   {
+      static bool died = false;
+      static int dead_tics = 0;
+
+      if (players[consoleplayer].playerstate == PST_DEAD)
+      {
+         died = true;
+      }
+
+      if (died)
+      {
+         ++dead_tics;
+         if (dead_tics >= 5 * 35)
+         {
+            C_Printf("Quitting after player died.\n");
+            G_StopDemo();
+            I_Quit();
+         }
+      }
+   }
+
+   // Command line parameter to allow a limit on the maximum time that
+   // the game can run for before quitting.
+   i = M_CheckParm("-maxgametic");
+
+   if (i > 0)
+   {
+      int maxgametic = atoi(myargv[i + 1]);
+      if (gametic >= maxgametic)
+      {
+         C_Printf("Maximum game time reached.\n");
+         G_StopDemo();
+         I_Quit();
+      }
+   }
+
+#define STUCK_DISTANCE 128 * FRACUNIT
+
+   // Command line parameter to detect when the player is "stuck" (ie.
+   // has not moved very far in a long time), and quit.
+   i = M_CheckParm("-maxstucktime");
+
+   if (i > 0 && gamestate == GS_LEVEL)
+   {
+      static int stuckx, stucky, stuckz;
+      static int stucktime = 0;
+      int maxstucktime = atoi(myargv[i + 1]) * 35;
+      Mobj *plmobj;
+      
+      plmobj = players[consoleplayer].mo;
+      if (abs(stuckx - plmobj->x) >= STUCK_DISTANCE
+       || abs(stucky - plmobj->y) >= STUCK_DISTANCE
+       || abs(stuckz - plmobj->z) >= STUCK_DISTANCE)
+      {
+         stuckx = plmobj->x;
+         stucky = plmobj->y;
+         stuckz = plmobj->z;
+         stucktime = 0;
+      }
+      else
+      {
+         ++stucktime;
+         if (stucktime >= maxstucktime)
+         {
+            C_Printf("Quitting after stuck player detected.\n");
+            G_StopDemo();
+            I_Quit();
+         }
+      }
+   }
+
    // do player reborns if needed
    for(i = 0; i < MAXPLAYERS; i++)
    {
