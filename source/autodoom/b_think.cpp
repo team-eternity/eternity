@@ -684,12 +684,12 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
                 //cmd->sidemove /= -1;
                 if (cmd->forwardmove > 0)
                 {
-                    cmd->forwardmove = 0;
+//                    cmd->forwardmove += random.range(<#int min#>, <#int max#>);
 
                     cmd->sidemove += random.range(-pl->pclass->sidemove[0],
                                                   pl->pclass->sidemove[0]) * 8;
                     cmd->forwardmove += random.range(-pl->pclass->forwardmove[0],
-                                                     pl->pclass->forwardmove[0]) * 8;
+                                                     0) * 8;
                 }
             }
             cmd->sidemove += random.range(-pl->pclass->sidemove[0],
