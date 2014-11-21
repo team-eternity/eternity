@@ -629,7 +629,9 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
                                  targets[0].gline->v1->y);
         vang[1] = P_PointToAngle(mx, my, targets[0].gline->v2->x,
                                  targets[0].gline->v2->y);
-        if(vang[1] - vang[0] > pl->mo->angle - vang[0])
+        
+        if(vang[1] - vang[0] > pl->mo->angle - vang[0] ||
+           vang[0] - vang[1] > pl->mo->angle - vang[1])
         {
             cmd->buttons |= BT_ATTACK;
             static const int hitscans[] = {wp_pistol, wp_shotgun, wp_chaingun,
