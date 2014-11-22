@@ -307,13 +307,11 @@ void BotMap::operator delete (void *p, int a, BotMap ** b)
 //
 // Returns true if one can pass from s1's metasec to s2's
 //
-bool BotMap::canPass(const BSubsec &s1, const BSubsec &s2, fixed_t height) const
+bool BotMap::canPass(const MetaSector *ms1, const MetaSector *ms2, fixed_t height) const
 {
-   const MetaSector* ms1 = s1.msector, *ms2 = s2.msector;
-
    if (ms1 == ms2)
-       return true;
-
+      return true;
+   
    fixed_t flh[2] = { ms1->getFloorHeight(), ms2->getFloorHeight() };
    fixed_t alh[2] = { ms1->getAltFloorHeight(), ms2->getAltFloorHeight() };
    fixed_t clh[2] = { ms1->getCeilingHeight(), ms2->getCeilingHeight() };
@@ -330,6 +328,13 @@ bool BotMap::canPass(const BSubsec &s1, const BSubsec &s2, fixed_t height) const
       return false;
    
    return true;
+   
+}
+bool BotMap::canPass(const BSubsec &s1, const BSubsec &s2, fixed_t height) const
+{
+   const MetaSector* ms1 = s1.msector, *ms2 = s2.msector;
+
+   return canPass(ms1, ms2, height);
 }
 bool BotMap::canPassNow(const BSubsec &s1, const BSubsec &s2, fixed_t height) const
 {

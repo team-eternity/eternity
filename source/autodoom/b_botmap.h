@@ -237,6 +237,7 @@ public:
    
    void unsetLinePositions(const line_t &line);
    
+   bool canPass(const MetaSector *s1, const MetaSector *s2, fixed_t height) const;
    bool canPass(const Subsec &s1, const Subsec &s2, fixed_t height) const;
    bool canPassNow(const Subsec &s1, const Subsec &s2, fixed_t height) const;
    
