@@ -30,6 +30,7 @@
 #include "acs_intr.h"
 #include "autodoom/b_botmap.h"   // IOANCH
 #include "autodoom/b_lineeffect.h"
+#include "autodoom/b_statistics.h"
 #include "autodoom/b_think.h"
 #include "am_map.h"
 #include "c_io.h"
@@ -2630,6 +2631,9 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    
    // free the old level
    Z_FreeTags(PU_LEVEL, PU_LEVEL);
+   
+   // IOANCH: statistics
+   B_DumpStatistics();
 
    // perform post-Z_FreeTags actions
    P_InitNewLevel(lumpnum, dir);

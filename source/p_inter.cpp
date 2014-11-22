@@ -30,6 +30,7 @@
 #include "a_small.h"
 #include "am_map.h"
 #include "autodoom/b_classifier.h"
+#include "autodoom/b_statistics.h"
 #include "autodoom/b_think.h"
 #include "autodoom/b_util.h"
 #include "c_io.h"
@@ -50,6 +51,7 @@
 #include "g_game.h"
 #include "hu_frags.h"
 #include "hu_stuff.h"
+#include "m_compare.h"
 #include "m_random.h"
 #include "metaapi.h"
 #include "p_inter.h"
@@ -1672,6 +1674,16 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       // haleyjd 06/08/13: reimplement support for tactile damage feedback :)
       if(player == &players[consoleplayer])
          I_StartHaptic(HALHapticInterface::EFFECT_DAMAGE, player->damagecount, 300);      
+   }
+
+   // IOANCH: add to statistics, BEFORE recalculating player armour
+   if(target && source && target->player && !source->player)
+   {
+      B_AddToPlayerDamage(source->info, emin(damage, target->health));
+   }
+   else if(!target->player && damage >= target->health)
+   {
+      B_AddMonsterDeath(target->info);
    }
 
    // do the damage

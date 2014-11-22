@@ -36,6 +36,7 @@
 
 #include "acs_intr.h"
 #include "am_map.h"
+#include "autodoom/b_statistics.h"
 #include "autodoom/b_think.h" // IOANCH
 #include "c_io.h"
 #include "c_net.h"
@@ -1593,6 +1594,9 @@ static void D_DoomInit()
 
    // Identify root EDF file and process EDF
    D_LoadEDF(gfs);
+   
+   // IOANCH: load statistics file
+   B_LoadStatistics();
 
    // haleyjd 03/27/11: process Hexen scripts
    XL_ParseHexenScripts();

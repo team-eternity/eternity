@@ -1843,11 +1843,10 @@ static void AM_drawWalls()
 // haleyjd 05/17/08: Draws node partition lines on the automap as a debugging
 // aid or for the interest of the curious.
 //
-static void AM_drawNodeLines()
+
+static void AM_drawBotMapSegs()
 {
    mline_t l;
-   if(!botMap)
-      return;
    for (int i = 0; i < botMap->numsegs; ++i)
    {
       const BotMap::Seg &sg = botMap->segs[i];
@@ -1857,7 +1856,10 @@ static void AM_drawNodeLines()
       l.b.y = M_FixedToDouble(sg.v[1]->y);
       AM_drawMline(&l, mapcolor_prtl);
    }
-   
+}
+static void AM_drawBotPath()
+{
+   mline_t l;
    if(bots[0].m_hasPath)
    {
       for (const BNeigh* neigh : bots[0].m_path.inv)
@@ -1869,6 +1871,36 @@ static void AM_drawNodeLines()
          AM_drawMline(&l, mapcolor_frnd);
       }
    }
+}
+static void AM_drawSteepLines()
+{
+   mline_t l;
+   const BotMap::Line* line;
+   static const fixed_t height = 56 * FRACUNIT;
+   
+   for(int i = 0; i < botMap->numlines; ++i)
+   {
+      line = botMap->lines + i;
+      if(!line->msec[0] || !line->msec[1])
+         continue;
+      if(botMap->canPass(line->msec[0], line->msec[1], height) &&
+         !botMap->canPass(line->msec[1], line->msec[0], height))
+      {
+         l.a.x = M_FixedToDouble(line->v[0]->x);
+         l.a.y = M_FixedToDouble(line->v[0]->y);
+         l.b.x = M_FixedToDouble(line->v[1]->x);
+         l.b.y = M_FixedToDouble(line->v[1]->y);
+         AM_drawMline(&l, mapcolor_frnd);
+      }
+   }
+}
+static void AM_drawNodeLines()
+{
+   if(!botMap)
+      return;
+   AM_drawBotMapSegs();
+//   AM_drawBotPath();
+   AM_drawSteepLines();
    
    //for (int i = 0; i < botMap->numlines; ++i)
    //{
