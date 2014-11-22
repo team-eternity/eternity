@@ -283,7 +283,7 @@ void B_Log(const char *output, ...)
 #ifdef _WIN32
    OutputDebugString(tempstr);
 #else
-   printf("%d: %s", frameid, tempstr);
+   printf("%d: %s\n", frameid, tempstr);
 #endif
 }
 #endif

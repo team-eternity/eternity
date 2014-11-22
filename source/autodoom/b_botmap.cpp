@@ -632,12 +632,12 @@ void BotMap::Build()
    hashFileName << digest << ".cache";
    
 
-   B_Log("Looking for level cache %s...\n", hashFileName.constPtr());
+   B_Log("Looking for level cache %s...", hashFileName.constPtr());
    D_CheckAutoDoomPathFile(hashFileName.constPtr(), false);
    
 //   if (!fpath)
    {
-	   B_Log("Level cache not found\n");
+	   B_Log("Level cache not found");
 	   B_buildTempBotMapFromScratch(radius, digest, M_SafeFilePath(g_autoDoomPath, hashFileName.constPtr()));
    }
 //   else

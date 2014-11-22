@@ -774,7 +774,7 @@ void Bot::doNonCombatAI()
                 
                 if(pt && pt->wait > 0)
                 {
-                    B_Log("Run fast\n");
+                    B_Log("Run fast");
                     m_path.runfast = true;
                 }
             }
@@ -808,7 +808,7 @@ void Bot::doNonCombatAI()
                 m_lastPathSS = ss;
                 if(random() % 64 == 0 && m_dropSS.count(ss))
                 {
-                    B_Log("Removed goner %d\n",
+                    B_Log("Removed goner %d",
                           (int)(ss - &botMap->ssectors[0]));
                     m_dropSS.erase(ss);
                 }
@@ -822,7 +822,7 @@ void Bot::doNonCombatAI()
             if(!botMap->canPassNow(*ss, *m_lastPathSS,
                                    pl->mo->height))
             {
-                B_Log("Inserted goner %d\n",
+                B_Log("Inserted goner %d",
                       (int)(m_lastPathSS - &botMap->ssectors[0]));
                 m_dropSS.insert(m_lastPathSS);
                 for(const BNeigh& n : m_lastPathSS->neighs)

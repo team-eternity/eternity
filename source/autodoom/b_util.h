@@ -43,7 +43,7 @@
 
 #define B_MEASURE_CLOCK(func) \
 B_CLK_MEASURE = clock() - B_CLK_MEASURE; \
-B_Log("%s/" #func ": %lu ticks\n", __FUNCTION__, B_CLK_MEASURE);
+B_Log("%s/" #func ": %lu ticks", __FUNCTION__, B_CLK_MEASURE);
 
 #define B_NEW_CLOCK B_CLK_MEASURE = clock();
 

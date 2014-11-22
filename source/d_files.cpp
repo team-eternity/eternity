@@ -1016,7 +1016,7 @@ void D_SetAutoDoomPath()
 		g_autoDoomPath = autodoomdir.duplicate();
 	else
 		g_autoDoomPath = userpath;	// just return userpath if failing
-	B_Log("AutoDoom path: %s\n", g_autoDoomPath);
+	B_Log("AutoDoom path: %s", g_autoDoomPath);
 }
 
 // haleyjd 8/18/07: if true, the game path has been set
