@@ -88,6 +88,7 @@ public:
    virtual void Close();
 
    void SwapLong  (int32_t  &x);
+   void SwapLongLong(int64_t &x);
    void SwapShort (int16_t  &x);
    void SwapULong (uint32_t &x);
    void SwapUShort(uint16_t &x);
@@ -145,6 +146,7 @@ public:
    int    skip(size_t skipAmt);
    bool   readSint32(int32_t  &num);
    bool   readUint32(uint32_t &num);
+   bool   readSint64(int64_t  &num);
    bool   readSint16(int16_t  &num);
    bool   readUint16(uint16_t &num);
    bool   readSint8 (int8_t   &num);

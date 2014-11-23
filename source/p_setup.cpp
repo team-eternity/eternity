@@ -2633,7 +2633,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    Z_FreeTags(PU_LEVEL, PU_LEVEL);
    
    // IOANCH: statistics
-   B_DumpStatistics();
+   B_StoreMonsterStats();
 
    // perform post-Z_FreeTags actions
    P_InitNewLevel(lumpnum, dir);

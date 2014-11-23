@@ -1596,7 +1596,7 @@ static void D_DoomInit()
    D_LoadEDF(gfs);
    
    // IOANCH: load statistics file
-   B_LoadStatistics();
+   B_LoadMonsterStats();
 
    // haleyjd 03/27/11: process Hexen scripts
    XL_ParseHexenScripts();

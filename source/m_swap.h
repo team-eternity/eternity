@@ -105,6 +105,34 @@ inline static uint32_t SwapBigULong(uint32_t x)
            ((uint8_t *) &x)[3];
 }
 
+// IOANCH: also added int64_t and uint64_t
+
+inline static int64_t SwapLongLong(int64_t x)
+{
+   return
+   ((int64_t)((uint8_t *) &x)[7] << 56) |
+   ((int64_t)((uint8_t *) &x)[6] << 48) |
+   ((int64_t)((uint8_t *) &x)[5] << 40) |
+   ((int64_t)((uint8_t *) &x)[4] << 32) |
+   ((int64_t)((uint8_t *) &x)[3] << 24) |
+   ((int64_t)((uint8_t *) &x)[2] << 16) |
+   ((int64_t)((uint8_t *) &x)[1] <<  8) |
+    (int64_t)((uint8_t *) &x)[0];
+}
+
+inline static uint64_t SwapULongLong(uint64_t x)
+{
+   return
+   ((uint64_t)((uint8_t *) &x)[7] << 56) |
+   ((uint64_t)((uint8_t *) &x)[6] << 48) |
+   ((uint64_t)((uint8_t *) &x)[5] << 40) |
+   ((uint64_t)((uint8_t *) &x)[4] << 32) |
+   ((uint64_t)((uint8_t *) &x)[3] << 24) |
+   ((uint64_t)((uint8_t *) &x)[2] << 16) |
+   ((uint64_t)((uint8_t *) &x)[1] <<  8) |
+    (uint64_t)((uint8_t *) &x)[0];
+}
+
 #endif
 
 //----------------------------------------------------------------------------

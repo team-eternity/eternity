@@ -125,6 +125,23 @@ void BufferedFileBase::SwapLong(int32_t &x)
    }
 }
 
+// IOANCH: more shit
+void BufferedFileBase::SwapLongLong(int64_t &x)
+{
+   switch(endian)
+   {
+      case LENDIAN:
+         x = ::SwapLongLong(x);
+         break;
+      case BENDIAN:
+         I_Error("Big endian BufferedFileBase int64_t not implemented");
+         break;
+      default:
+         break;
+   }
+}
+
+
 //
 // BufferedFileBase::SwapUShort
 //
@@ -444,6 +461,19 @@ bool InBuffer::readSint32(int32_t &num)
       return false;
 
    SwapLong(lNum);
+   num = lNum;
+   return true;
+}
+
+// IOANCH: add 64-bit
+bool InBuffer::readSint64(int64_t &num)
+{
+   int64_t lNum;
+   
+   if(read(&lNum, sizeof(lNum)) != sizeof(lNum))
+      return false;
+   
+   SwapLongLong(lNum);
    num = lNum;
    return true;
 }

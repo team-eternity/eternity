@@ -50,7 +50,7 @@ void B_AddToPlayerDamage(const mobjinfo_t* mi, int amount)
    g_stats[mi].toPlayer += amount;
 }
 
-void B_LoadStatistics()
+void B_LoadMonsterStats()
 {
    FILE* f = fopen("damagestats.txt", "rt");
    if(!f)
@@ -74,7 +74,7 @@ void B_LoadStatistics()
    fclose(f);
 }
 
-void B_DumpStatistics()
+void B_StoreMonsterStats()
 {
    FILE* f = fopen("damagestats.txt", "wt");
    for (auto it = g_stats.begin(); it != g_stats.end(); ++it)

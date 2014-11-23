@@ -740,6 +740,12 @@ bool qstring::compare(const qstring &other) const
    return !strcmp(buffer, other.buffer);
 }
 
+// IOANCH: compare with int result
+int qstring::compareInt(const qstring& other) const
+{
+   return strcmp(buffer, other.buffer);
+}
+
 //
 // qstring::operator ==
 //

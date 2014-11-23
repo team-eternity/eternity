@@ -22,7 +22,7 @@
 //-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//      Various statistics, used for logging
+//      Various statistics, used for learning
 //
 //-----------------------------------------------------------------------------
 
@@ -35,7 +35,7 @@ struct mobjinfo_t;
 void B_AddMonsterDeath(const mobjinfo_t* mi);
 void B_AddToPlayerDamage(const mobjinfo_t* mi, int amount);
 
-void B_LoadStatistics();
-void B_DumpStatistics();
+void B_LoadMonsterStats();
+void B_StoreMonsterStats();
 
 #endif /* defined(__EternityEngine__b_statistics__) */

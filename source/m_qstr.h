@@ -159,6 +159,7 @@ public:
    int  strNCaseCmp(const char *str, size_t maxcount) const;
    bool compare(const char *str) const;
    bool compare(const qstring &other) const;
+   int compareInt(const qstring& other) const;
 
    // Hashing
    static unsigned int HashCodeStatic(const char *str);
@@ -234,6 +235,12 @@ public:
    qstring &operator << (char   ch);
    qstring &operator << (int    i);
    qstring &operator << (double d);
+   
+   // IOANCH: work with set
+   bool operator < (const qstring& other) const
+   {
+      return compareInt(other);
+   }
    
    char       &operator [] (size_t idx);
    const char &operator [] (size_t idx) const;
