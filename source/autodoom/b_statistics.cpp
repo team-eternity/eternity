@@ -30,7 +30,11 @@
 #include "../z_zone.h"
 #include "b_statistics.h"
 #include "b_util.h"
+#include "../doomstat.h"
 #include "../info.h"
+#include "../m_misc.h"
+
+#define MONSTER_STATS_NAME "damagestats.data"
 
 struct DamageStat
 {
@@ -52,10 +56,12 @@ void B_AddToPlayerDamage(const mobjinfo_t* mi, int amount)
 
 void B_LoadMonsterStats()
 {
-   FILE* f = fopen("damagestats.txt", "rt");
+   const char* fpath = M_SafeFilePath(g_autoDoomPath, MONSTER_STATS_NAME);
+   
+   FILE* f = fopen(fpath, "rt");
    if(!f)
    {
-      B_Log("damagestats.txt not written yet.");
+      B_Log(MONSTER_STATS_NAME " not written yet.");
       return;
    }
    
@@ -76,7 +82,14 @@ void B_LoadMonsterStats()
 
 void B_StoreMonsterStats()
 {
-   FILE* f = fopen("damagestats.txt", "wt");
+   const char* fpath = M_SafeFilePath(g_autoDoomPath, MONSTER_STATS_NAME);
+   
+   FILE* f = fopen(fpath, "wt");
+   if(!f)
+   {
+      B_Log("Couldn't write " MONSTER_STATS_NAME);
+      return;
+   }
    for (auto it = g_stats.begin(); it != g_stats.end(); ++it)
    {
       fprintf(f, "%zd\t%d\t%d\t%g\n", it->first - mobjinfo[0], it->second.toPlayer, it->second.monsterDeaths,
