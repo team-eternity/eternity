@@ -248,6 +248,7 @@ public:
 
    // Common affairs
    PODCollection<const Mobj*> livingMonsters;    // list of shootable objects
+   PODCollection<const Mobj*> thrownProjectiles;
 
    struct SectorTrait
    {

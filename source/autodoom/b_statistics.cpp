@@ -38,7 +38,7 @@
 
 struct DamageStat
 {
-   int toPlayer;
+   int totalDamageToPlayer;
    int monsterDeaths;
 };
 
@@ -51,7 +51,13 @@ void B_AddMonsterDeath(const mobjinfo_t* mi)
 
 void B_AddToPlayerDamage(const mobjinfo_t* mi, int amount)
 {
-   g_stats[mi].toPlayer += amount;
+   g_stats[mi].totalDamageToPlayer += amount;
+}
+
+double B_GetMonsterThreatLevel(const mobjinfo_t* mi)
+{
+   DamageStat& stat = g_stats[mi];
+   return stat.monsterDeaths > 0 ? (double)stat.totalDamageToPlayer / stat.monsterDeaths : DBL_MAX;
 }
 
 void B_LoadMonsterStats()
@@ -73,7 +79,7 @@ void B_LoadMonsterStats()
       if(fscanf(f, "%d%d%d%lf", &minum, &toPlayer, &monsterDeaths, &toDiv) < 4)
          break;
       
-      g_stats[mobjinfo[0] + minum].toPlayer = toPlayer;
+      g_stats[mobjinfo[0] + minum].totalDamageToPlayer = toPlayer;
       g_stats[mobjinfo[0] + minum].monsterDeaths = monsterDeaths;
    }
    
@@ -92,8 +98,7 @@ void B_StoreMonsterStats()
    }
    for (auto it = g_stats.begin(); it != g_stats.end(); ++it)
    {
-      fprintf(f, "%zd\t%d\t%d\t%g\n", it->first - mobjinfo[0], it->second.toPlayer, it->second.monsterDeaths,
-              it->second.monsterDeaths > 0 ? (double)it->second.toPlayer / it->second.monsterDeaths : DBL_MAX);
+      fprintf(f, "%zd\t%d\t%d\t%g\n", it->first - mobjinfo[0], it->second.totalDamageToPlayer, it->second.monsterDeaths, B_GetMonsterThreatLevel(it->first));
    }
    fclose(f);
 }

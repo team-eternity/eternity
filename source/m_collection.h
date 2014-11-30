@@ -408,6 +408,15 @@ public:
       *iter = this->ptrArray[--this->length];
       this->wrapiterator = 0;
    }
+   void eraseItem(const T& item)
+   {
+      for(size_t i = 0; i < this->length; ++i)
+         if(this->at(i) == item)
+         {
+            this->erase(i);
+            return;
+         }
+   }
 };
 
 //

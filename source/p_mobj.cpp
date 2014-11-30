@@ -389,6 +389,11 @@ void P_ExplodeMissile(Mobj *mo)
       if(++mo->counters[1] < mo->counters[2])
          return;
    }
+   
+   if(botMap && (!mo->target || !mo->target->player))
+   {
+      botMap->thrownProjectiles.eraseItem(mo);
+   }
 
    mo->momx = mo->momy = mo->momz = 0;
 
@@ -2557,6 +2562,12 @@ Mobj *P_SpawnMissileEx(const missileinfo_t &missileinfo)
 
    P_CheckMissileSpawn(mo);
 
+   // IOANCH: register missile as thrown, if by monster
+   if(botMap && (!mo->target || !mo->target->player))
+   {
+      botMap->thrownProjectiles.add(mo);
+   }
+   
    return mo;
 }
 

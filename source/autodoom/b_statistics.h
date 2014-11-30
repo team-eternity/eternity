@@ -35,6 +35,8 @@ struct mobjinfo_t;
 void B_AddMonsterDeath(const mobjinfo_t* mi);
 void B_AddToPlayerDamage(const mobjinfo_t* mi, int amount);
 
+double B_GetMonsterThreatLevel(const mobjinfo_t* mi);
+
 void B_LoadMonsterStats();
 void B_StoreMonsterStats();
 
