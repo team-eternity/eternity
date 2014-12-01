@@ -311,4 +311,33 @@ enum VanillaLineSpecial
     VLS_WRStartLineScript = 280,
 };
 
+//
+// VanillaSectorSpecial
+//
+enum VanillaSectorSpecial
+{
+   VSS_LightRandomOff = 1,
+   VSS_LightStrobeFast = 2,
+   VSS_LightStrobeSlow = 3,
+   VSS_LightStrobeHurt = 4,
+   VSS_DamageHellSlime = 5,
+   VSS_DamageNukage = 7,
+   VSS_LightGlow = 8,
+   VSS_Secret = 9,
+   VSS_DoorCloseIn30 = 10,
+   VSS_ExitSuperDamage = 11,
+   VSS_LightStrobeSlowSync = 12,
+   VSS_LightStrobeFastSync = 13,
+   VSS_DoorRaiseIn5Mins = 14,
+   VSS_DamageSuperHellSlime = 16,
+   VSS_LightFireFlicker = 17,
+};
+
+bool B_VlsTypeIsD(VanillaLineSpecial vls);
+inline static bool B_VlsTypeIsDonut(VanillaLineSpecial vls)
+{
+   return vls == VLS_S1DoDonut || vls == VLS_SRDoDonut || vls == VLS_W1DoDonut || vls == VLS_WRDoDonut;
+}
+bool B_VlsTypeIsStair(VanillaLineSpecial vls);
+
 #endif /* defined(__EternityEngine__b_lineeffect__) */

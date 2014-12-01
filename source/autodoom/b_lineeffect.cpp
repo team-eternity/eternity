@@ -240,10 +240,13 @@ bool LevelStateStack::Push(const line_t& line, const player_t& player)
        if (line.sidenum[1] >= 0)
            B_pushSectorHeights((int)(sides[line.sidenum[1]].sector - sectors), line, coll, player);
    }
-   else while((secnum = P_FindSectorFromTag(line.tag, secnum)) >= 0)
+   else
    {
-      // For each successful state push, add an index to the collection
-      B_pushSectorHeights(secnum, line, coll, player);
+      while((secnum = P_FindSectorFromTag(line.tag, secnum)) >= 0)
+      {
+         // For each successful state push, add an index to the collection
+         B_pushSectorHeights(secnum, line, coll, player);
+      }
    }
    
    if (coll.getLength() == 0)
@@ -519,7 +522,7 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
       case VLS_W1LowerFloor:
       case VLS_WRLowerFloor:
       case VLS_S1LowerFloor:
-	  case VLS_SRLowerFloor:
+	   case VLS_SRLowerFloor:
          if(floorBlocked)
             return;
          sae.floorHeight = P_FindHighestFloorSurrounding(&sector, true);
@@ -1048,4 +1051,47 @@ void LevelStateStack::SetKeyPlayer(const player_t* player)
 void LevelStateStack::UseRealHeights(bool value)
 {
    g_useRealHeights = value;
+}
+
+bool B_VlsTypeIsD(VanillaLineSpecial vls)
+{
+   switch (vls)
+   {
+      case VLS_D1DoorBlazeOpen:
+      case VLS_D1OpenDoor:
+      case VLS_D1OpenDoorBlue:
+      case VLS_D1OpenDoorRed:
+      case VLS_D1OpenDoorYellow:
+      case VLS_DRDoorBlazeRaise:
+      case VLS_DRRaiseDoor:
+      case VLS_DRRaiseDoorBlue:
+      case VLS_DRRaiseDoorRed:
+      case VLS_DRRaiseDoorYellow:
+         
+         return true;
+         
+      default:
+         break;
+   }
+   
+   return false;
+}
+
+bool B_VlsTypeIsStair(VanillaLineSpecial vls)
+{
+   switch(vls)
+   {
+      case VLS_S1BuildStairsUp8:
+      case VLS_SRBuildStairsUp8:
+      case VLS_W1BuildStairsUp8:
+      case VLS_WRBuildStairsUp8:
+      case VLS_S1BuildStairsTurbo16:
+      case VLS_WRBuildStairsTurbo16:
+      case VLS_W1BuildStairsTurbo16:
+      case VLS_SRBuildStairsTurbo16:
+         return true;
+      default:
+         break;
+   }
+   return false;
 }

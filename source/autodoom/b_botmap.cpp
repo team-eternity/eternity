@@ -572,6 +572,7 @@ void BotMap::getDoorSectors()
 
     int numtwosided;
 
+   // Check for doors
     for (i = 0; i < ::numsectors; ++i)
     {
         sec = ::sectors + i;
@@ -588,24 +589,24 @@ void BotMap::getDoorSectors()
             if (line->backsector != sec)
             {
                 // fail
-                goto nextsector;
+                goto notDoor;
             }
             SpecialIsDoor(line->special, st, line);
             if (!typeset)
             {
                 if (!st.isDoor)
-                    goto nextsector;
+                    goto notDoor;
                 typeset = true;
                 defst = st;
             }
             else if (memcmp(&defst, &st, sizeof(st)))
             {
-                goto nextsector;
+                goto notDoor;
             }
         }
         // okay
         sectorFlags[i] = st;
-    nextsector:
+    notDoor:
         ;
     }
 }

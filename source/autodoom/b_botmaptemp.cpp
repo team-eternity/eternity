@@ -34,6 +34,7 @@
 #include "../m_buffer.h"
 #include "../p_maputl.h"
 #include "../p_setup.h"
+#include "../p_spec.h"
 #include "../r_main.h"
 #include "../r_state.h"
 
@@ -963,6 +964,96 @@ void TempBotMap::createBlockMap()
    }
 }
 
+static void FindDynamicSectors(bool* dynamicSectors)
+{
+   // 1. Find all lines with effects
+   const line_t* line;
+   VanillaLineSpecial vls;
+   VanillaSectorSpecial vss;
+   
+   // tagged sectors
+   int secnum;
+   const sector_t* sector, *sector2;
+   bool continueStair;
+   
+   int i, j;
+   
+   for(i = 0; i < ::numlines; ++i)
+   {
+      line = ::lines + i;
+      
+      if(!line->special)
+         continue;
+      
+      // Has a special
+      
+      vls = (VanillaLineSpecial)line->special;
+      
+      if(B_VlsTypeIsD(vls))
+      {
+         // door type
+         if(!line->backsector)
+            continue;
+         
+         // Register back sector
+         dynamicSectors[line->backsector - ::sectors] = true;
+         continue;
+      }
+      
+      // Must point to a tag, now
+      if(!line->tag)
+         continue;
+      
+      // Not a door  type
+      while((secnum = P_FindSectorFromTag(line->tag, secnum)) >= 0)
+      {
+         dynamicSectors[secnum] = true;
+         // Also do it for secondary sectors: from stairs or donuts
+         if(B_VlsTypeIsDonut(vls))
+         {
+            sector = ::sectors + secnum;
+            sector2 = getNextSector(sector->lines[0], sector);
+            if(sector2)
+               dynamicSectors[sector2 - ::sectors] = true;
+         }
+         else if(B_VlsTypeIsStair(vls))
+         {
+            sector = ::sectors + secnum;
+            do
+            {
+               continueStair = false;
+               for(j = 0; j < sector->linecount; ++j)
+               {
+                  sector2 = sector->lines[j]->frontsector;
+                  if(sector2 != sector || !(sector->lines[j]->flags & ML_TWOSIDED))
+                     continue;
+                  sector2 = sector->lines[j]->backsector;
+                  if(!sector2 || sector2->floorpic != sector->floorpic)
+                     continue;
+                  
+                  dynamicSectors[sector2 - ::sectors] = true;
+                  sector = sector2;
+                  continueStair = true;
+               }
+            }while(continueStair);
+         }
+      }
+   }
+   
+   // 2. Find all sectors with timed effects
+   for(i = 0; i < ::numsectors; ++i)
+   {
+      sector = ::sectors + i;
+      if(!sector->special)
+         continue;
+      
+      vss = (VanillaSectorSpecial)sector->special;
+      
+      if(vss == VSS_DoorCloseIn30 || vss == VSS_DoorRaiseIn5Mins)
+         dynamicSectors[i] = true;
+   }
+}
+
 
 //
 // TempBotMap::obtainMetaSectors
@@ -971,6 +1062,12 @@ void TempBotMap::createBlockMap()
 //
 void TempBotMap::obtainMetaSectors(OutBuffer& cacheStream)
 {
+   // remember to free this stuff
+   bool* dynamicSectors = ecalloc(bool*, ::numsectors, sizeof(bool));
+   
+   FindDynamicSectors(dynamicSectors);
+   
+   
    //
    // MSecSetHash, MSecSetPred, mSecMap
    //
@@ -1053,7 +1150,7 @@ void TempBotMap::obtainMetaSectors(OutBuffer& cacheStream)
          o1.sec[0] == o2.sec[0] && o1.sec[1] == o2.sec[1];
       }
    };
-   std::unordered_map<SecRefTuple, LineMSector *, SecRefHash, SecRefPred>
+   std::unordered_map<SecRefTuple, MetaSector *, SecRefHash, SecRefPred>
    secRefs;
    
    int thing_index = 0; // for use by JSON writer
@@ -1094,7 +1191,22 @@ void TempBotMap::obtainMetaSectors(OutBuffer& cacheStream)
    // metasectors
    PODCollection<MetaSector *> coll, scoll;
    
-   // First, get all thing or line metasectors
+   // Get all sector metasectors
+   scoll.reserve(numsectors);
+   for (int i = 0; i < numsectors; ++i)
+   {
+      SimpleMSector *sms = new SimpleMSector;
+      sms->sector = sectors + i;
+      sms->listLink.dllData = msec_index++;
+      msecList.insert(sms);
+      
+      cacheStream.WriteUint8(MSEC_SIMPLE);
+      cacheStream.WriteUint32((uint32_t)(sms->sector - ::sectors));
+      
+      scoll.add(sms);
+   }
+   
+   // Get all thing or line metasectors
    
    // WARNING: each iteration must add an item to 'coll'.
    coll.reserve(pimpl->rawMSectors.getLength());
@@ -1110,8 +1222,8 @@ void TempBotMap::obtainMetaSectors(OutBuffer& cacheStream)
          tms->listLink.dllData = msec_index++;
          msecList.insert(tms);
 		 
-		 cacheStream.WriteUint8(MSEC_THING);
-		 cacheStream.WriteUint32((uint32_t)(thing_index++));
+		   cacheStream.WriteUint8(MSEC_THING);
+		   cacheStream.WriteUint32((uint32_t)(thing_index++));
 
          coll.add(tms);
       }
@@ -1126,11 +1238,11 @@ void TempBotMap::obtainMetaSectors(OutBuffer& cacheStream)
                wallms->line = rms.lineGen;
                wallms->sector[0] = rms.lineGen->frontsector;
                wallms->sector[1] = nullptr;
-			   wallms->listLink.dllData = msec_index++;
-			   msecList.insert(wallms);
+			      wallms->listLink.dllData = msec_index++;
+			      msecList.insert(wallms);
 
-			   cacheStream.WriteUint8(MSEC_LINE);
-			   cacheStream.WriteUint32((uint32_t)(wallms->line - ::lines));
+			      cacheStream.WriteUint8(MSEC_LINE);
+			      cacheStream.WriteUint32((uint32_t)(wallms->line - ::lines));
 
                botMap->nullMSec = wallms;
             }
@@ -1147,15 +1259,48 @@ void TempBotMap::obtainMetaSectors(OutBuffer& cacheStream)
             // Currently solid line metasectors are considered the same
             if (!secRefs.count(srt))
             {
+               const sector_t* front = rms.lineGen->frontsector;
+               const sector_t* back = rms.lineGen->backsector;
+               if(!dynamicSectors[front - ::sectors]
+                  && !dynamicSectors[back - ::sectors])
+               {
+                  fixed_t deltaFloor, deltaCeiling;
+                  deltaFloor = front->floorheight - back->floorheight;
+                  deltaCeiling = front->ceilingheight - back->ceilingheight;
+
+                  // B inside A: DC <= 0, DF >= 0
+                  // A inside B: DC >= 0, DF <= 0
+                  
+                  MetaSector* ms = nullptr;
+                  if(deltaCeiling <= 0 && deltaFloor >= 0)
+                  {
+                     // front inside back. Front wins
+                     // Just use the simple metasector instead of a new line
+                     // sector
+                     ms = scoll[front - ::sectors];
+                  }
+                  else if(deltaCeiling >= 0 && deltaFloor <= 0)
+                  {
+                     ms = scoll[back - ::sectors];
+                  }
+                  
+                  if(ms)
+                  {
+                     coll.add(ms);
+                     secRefs[srt] = ms;
+                     continue;
+                  }
+               }
+               
                LineMSector *lms = new LineMSector;
-               lms->sector[0] = rms.lineGen->frontsector;
-               lms->sector[1] = rms.lineGen->backsector;
+               lms->sector[0] = front;
+               lms->sector[1] = back;
                lms->line = rms.lineGen;
                lms->listLink.dllData = msec_index++;
                msecList.insert(lms);
 
-			   cacheStream.WriteUint8(MSEC_LINE);
-			   cacheStream.WriteUint32((uint32_t)(lms->line - ::lines));
+               cacheStream.WriteUint8(MSEC_LINE);
+               cacheStream.WriteUint32((uint32_t)(lms->line - ::lines));
 
                coll.add(lms);
                
@@ -1165,21 +1310,6 @@ void TempBotMap::obtainMetaSectors(OutBuffer& cacheStream)
                coll.add(secRefs[srt]);
          }
       }
-   }
-   
-   // Second, get all sector metasectors
-   scoll.reserve(numsectors);
-   for (int i = 0; i < numsectors; ++i)
-   {
-      SimpleMSector *sms = new SimpleMSector;
-      sms->sector = sectors + i;
-      sms->listLink.dllData = msec_index++;
-      msecList.insert(sms);
-
-	  cacheStream.WriteUint8(MSEC_SIMPLE);
-	  cacheStream.WriteUint32((uint32_t)(sms->sector - ::sectors));
-
-      scoll.add(sms);
    }
    
    DLListItem<Line> *item; // iteration item
@@ -1295,6 +1425,7 @@ void TempBotMap::obtainMetaSectors(OutBuffer& cacheStream)
       //ln.blockIndices.clear();
    }
 
+   efree(dynamicSectors);
    cacheStream.WriteUint8(0xff);
 }
 
