@@ -1095,3 +1095,20 @@ bool B_VlsTypeIsStair(VanillaLineSpecial vls)
    }
    return false;
 }
+
+bool B_VssTypeIsHarmless(VanillaSectorSpecial vss)
+{
+   switch (vss)
+   {
+      case VSS_DamageHellSlime:
+      case VSS_DamageNukage:
+      case VSS_DoorCloseIn30:
+      case VSS_ExitSuperDamage:
+      case VSS_DoorRaiseIn5Mins:
+      case VSS_DamageSuperHellSlime:
+         return false;
+      default:
+         break;
+   }
+   return true;
+}

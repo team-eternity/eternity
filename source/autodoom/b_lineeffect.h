@@ -340,4 +340,6 @@ inline static bool B_VlsTypeIsDonut(VanillaLineSpecial vls)
 }
 bool B_VlsTypeIsStair(VanillaLineSpecial vls);
 
+bool B_VssTypeIsHarmless(VanillaSectorSpecial vss);
+
 #endif /* defined(__EternityEngine__b_lineeffect__) */

@@ -1191,20 +1191,40 @@ void TempBotMap::obtainMetaSectors(OutBuffer& cacheStream)
    // metasectors
    PODCollection<MetaSector *> coll, scoll;
    
+   std::unordered_map<uint64_t, SimpleMSector*> simpleRepeatSet;
+#define FLOORCEILING_HEIGHT(f, c) ((uint64_t)(f) + ((uint64_t)(c) << 32))
+   
    // Get all sector metasectors
    scoll.reserve(numsectors);
    for (int i = 0; i < numsectors; ++i)
    {
+      uint64_t comboHeight = FLOORCEILING_HEIGHT(::sectors[i].floorheight,
+                                                 ::sectors[i].ceilingheight);
+      bool isStatic = !dynamicSectors[i]
+      && B_VssTypeIsHarmless((VanillaSectorSpecial)::sectors[i].special);
+      
+      if(isStatic && simpleRepeatSet.count(comboHeight))
+      {
+         scoll.add(simpleRepeatSet[comboHeight]);
+         continue;
+      }
+      
       SimpleMSector *sms = new SimpleMSector;
-      sms->sector = sectors + i;
+      sms->sector = ::sectors + i;
       sms->listLink.dllData = msec_index++;
       msecList.insert(sms);
       
       cacheStream.WriteUint8(MSEC_SIMPLE);
       cacheStream.WriteUint32((uint32_t)(sms->sector - ::sectors));
       
+      if(isStatic)
+      {
+         simpleRepeatSet[comboHeight] = sms;
+      }
       scoll.add(sms);
    }
+   
+#undef FLOORCEILING_HEIGHT
    
    // Get all thing or line metasectors
    
