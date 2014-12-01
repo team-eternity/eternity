@@ -1262,7 +1262,8 @@ void TempBotMap::obtainMetaSectors(OutBuffer& cacheStream)
                const sector_t* front = rms.lineGen->frontsector;
                const sector_t* back = rms.lineGen->backsector;
                if(!dynamicSectors[front - ::sectors]
-                  && !dynamicSectors[back - ::sectors])
+                  && !dynamicSectors[back - ::sectors]
+                  && !(rms.lineGen->flags & ML_BLOCKING))
                {
                   fixed_t deltaFloor, deltaCeiling;
                   deltaFloor = front->floorheight - back->floorheight;
