@@ -197,10 +197,6 @@ static Collection<SectorHeightStack> g_affectedSectors;
 // The actual action stack. Keeps track of g_affectedSectors indices
 static Collection<PODCollection<int>> g_indexListStack;
 
-// Stack of triggering lines
-static PODCollection<const line_t*> g_triggerStack;
-static std::set<const line_t*> g_triggerSet;
-
 //
 // LevelStateStack::InitLevel
 //
@@ -221,9 +217,6 @@ void LevelStateStack::InitLevel()
       g_affectedSectors.addNew().sector = sectors + i;
    }
    g_indexListStack.makeEmpty();
-
-   g_triggerStack.makeEmpty();
-   g_triggerSet.clear();
 }
 
 //
@@ -261,8 +254,6 @@ bool LevelStateStack::Push(const line_t& line, const player_t& player)
    }
    
    // okay
-   g_triggerStack.add(&line);
-   g_triggerSet.insert(&line);
    return true;
 }
 
@@ -277,8 +268,6 @@ void LevelStateStack::Pop()
         g_affectedSectors[n].stack.pop();
     }
     g_indexListStack.pop();
-    g_triggerSet.erase(g_triggerStack.back());
-    g_triggerStack.pop();
 }
 
 //
@@ -293,8 +282,6 @@ void LevelStateStack::Clear()
       affectedSector.stack.makeEmpty();
    }
    g_indexListStack.makeEmpty();
-   g_triggerSet.clear();
-   g_triggerStack.makeEmpty();
 }
 
 //
