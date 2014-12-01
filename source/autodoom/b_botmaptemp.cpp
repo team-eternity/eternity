@@ -1319,7 +1319,7 @@ void TempBotMap::obtainMetaSectors(OutBuffer& cacheStream)
    
    std::set<MetaSector *> cmsSet;   // set of metasectors to add to compound
    //std::unordered_map<std::set<MetaSector *> *, CompoundMSector *, SecPtrHash, SecPtrPred> cmsSetMap;
-   std::unordered_map<std::set<MetaSector *>, CompoundMSector *, SecPtrHash> cmsSetMap;
+   std::unordered_map<std::set<MetaSector *>, MetaSector *, SecPtrHash> cmsSetMap;
    
    // Now visit each line and setup its metasector reference
 
@@ -1355,7 +1355,7 @@ void TempBotMap::obtainMetaSectors(OutBuffer& cacheStream)
             if (mSecMap.count(&ln.msecIndices[i])) // index set already mapped
             {
                // has value there
-				MetaSector* ms = mSecMap.at(&ln.msecIndices[i]);
+               MetaSector* ms = mSecMap.at(&ln.msecIndices[i]);
                ln.metasec[i] = ms;
             }
             else
@@ -1383,39 +1383,80 @@ void TempBotMap::obtainMetaSectors(OutBuffer& cacheStream)
                }
                else
                {
-				   if (cmsSetMap.count(cmsSet))
-				   {
-					   CompoundMSector *cms = cmsSetMap.at(cmsSet);
-					   ln.metasec[i] = cms;
-					   mSecMap[&ln.msecIndices[i]] = cms;
-				   }
-				   else
-				   {
+                  if (cmsSetMap.count(cmsSet))
+                  {
+                     MetaSector *cms = cmsSetMap.at(cmsSet);
+                     ln.metasec[i] = cms;
+                     mSecMap[&ln.msecIndices[i]] = cms;
+                  }
+                  else
+                  {
+                     // First, check if all are simple metasectors and are static
+                     bool allStatic = true;
+                     fixed_t maxFloor = D_MININT, minCeiling = D_MAXINT;
+                     SimpleMSector* floorSms = nullptr, *ceilingSms = nullptr;
+                     
+                     for(auto it = cmsSet.begin(); it != cmsSet.end(); ++it)
+                     {
+                        if(!(*it)->isInstanceOf(RTTI(SimpleMSector)))
+                        {
+                           allStatic = false;
+                           break;
+                        }
+                        SimpleMSector* sms = runtime_cast<SimpleMSector*>(*it);
+                        
+                        if(dynamicSectors[sms->sector - ::sectors])
+                        {
+                           allStatic = false;
+                           break;
+                        }
+                        
+                        if(sms->sector->floorheight > maxFloor)
+                        {
+                           maxFloor = sms->sector->floorheight;
+                           floorSms = sms;
+                        }
+                        if(sms->sector->ceilingheight < minCeiling)
+                        {
+                           minCeiling = sms->sector->ceilingheight;
+                           ceilingSms = sms;
+                        }
+                     }
+                     
+                     if(allStatic && floorSms && floorSms == ceilingSms)
+                     {
+                        cmsSetMap[cmsSet] = floorSms;
+                        
+                        ln.metasec[i] = floorSms;
+                        mSecMap[&ln.msecIndices[i]] = floorSms;
+                     }
+                     else
+                     {
+                        // create new metasector
+                        CompoundMSector *cms = new CompoundMSector;
+                        cms->msectors = emalloc(const MetaSector **,
+                           (cms->numElem = static_cast<int>(cmsSet.size()))
+                           * sizeof(const MetaSector *));
 
-					   // create new metasector
-					   CompoundMSector *cms = new CompoundMSector;
-					   cms->msectors = emalloc(const MetaSector **,
-						   (cms->numElem = static_cast<int>(cmsSet.size()))
-						   * sizeof(const MetaSector *));
+                        cmsSetMap[cmsSet] = cms;
 
-					   cmsSetMap[cmsSet] = cms;
+                        cacheStream.WriteUint8(MSEC_COMPOUND);
+                        cacheStream.WriteUint32((uint32_t)cms->numElem);
+                        
+                        j = 0;
+                        for (auto it = cmsSet.begin(); it != cmsSet.end(); ++it, ++j)
+                        {
+                           cacheStream.WriteUint32((uint32_t)(*it)->listLink.dllData);
+                           cms->msectors[j] = *it;
+                        }
 
-					   cacheStream.WriteUint8(MSEC_COMPOUND);
-					   cacheStream.WriteUint32((uint32_t)cms->numElem);
-					   
-					   j = 0;
-					   for (auto it = cmsSet.begin(); it != cmsSet.end(); ++it, ++j)
-					   {
-						   cacheStream.WriteUint32((uint32_t)(*it)->listLink.dllData);
-						   cms->msectors[j] = *it;
-					   }
+                        cms->listLink.dllData = msec_index++;
+                        msecList.insert(cms);
 
-					   cms->listLink.dllData = msec_index++;
-					   msecList.insert(cms);
-
-					   ln.metasec[i] = cms;
-					   mSecMap[&ln.msecIndices[i]] = cms;
-				   }
+                        ln.metasec[i] = cms;
+                        mSecMap[&ln.msecIndices[i]] = cms;
+                     }
+                  }
                }  // cmsSet.size()
             }  // mSecMap.count()
          }  // msecIndices[i].size()
