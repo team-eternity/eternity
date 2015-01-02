@@ -1632,6 +1632,26 @@ static int E_ColorCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
    return 0;
 }
 
+//
+// Gibhealth Processing
+//
+// Separated out for global use 01/02/15
+//
+void E_ThingDefaultGibHealth(mobjinfo_t *mi)
+{
+   switch(GameModeInfo->defaultGibHealth)
+   {
+   case GI_GIBFULLHEALTH: // Doom and Strife
+      mi->gibhealth = -mi->spawnhealth;
+      break;
+   case GI_GIBHALFHEALTH: // Heretic and Hexen
+      mi->gibhealth = -mi->spawnhealth/2;
+      break;
+   default:
+      break;
+   }
+}
+
 // Thing type inheritance code -- 01/27/04
 
 // thing_hitlist: keeps track of what thingtypes are initialized
@@ -2097,17 +2117,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       // get the EDF default for gibhealth, use the default behavior instead.
       if(setspawnhealth && !cfg_size(thingsec, ITEM_TNG_GIBHEALTH))
       {
-         switch(GameModeInfo->defaultGibHealth)
-         {
-         case GI_GIBFULLHEALTH: // Doom and Strife
-            mobjinfo[i]->gibhealth = -mobjinfo[i]->spawnhealth;
-            break;
-         case GI_GIBHALFHEALTH: // Heretic and Hexen
-            mobjinfo[i]->gibhealth = -mobjinfo[i]->spawnhealth/2;
-            break;
-         default:
-            break;
-         }
+         E_ThingDefaultGibHealth(mobjinfo[i]);
       }
       else
          mobjinfo[i]->gibhealth = cfg_getint(thingsec, ITEM_TNG_GIBHEALTH);

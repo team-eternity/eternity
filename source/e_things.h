@@ -70,6 +70,9 @@ int E_ThingNumForName(const char *name);    // mnemonic lookup
 int E_GetThingNumForName(const char *name); //   fatal error version
 int E_SafeThingName(const char *name);      //   fallback version
 
+// setup default gibhealth
+void E_ThingDefaultGibHealth(mobjinfo_t *mi);
+
 // thingtype custom-damagetype pain/death states
 state_t *E_StateForMod(mobjinfo_t *mi, const char *base, emod_t *mod);
 state_t *E_StateForModNum(mobjinfo_t *mi, const char *base, int num);
