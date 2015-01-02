@@ -140,7 +140,7 @@ static fixed_t I_SDLGetTimeFrac()
 //
 // I_SDLStartDisplay
 //
-// Calculate the starting display time and return the interpolation multiplier.
+// Calculate the starting display time.
 //
 static void I_SDLStartDisplay()
 {
