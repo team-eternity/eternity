@@ -2063,8 +2063,11 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
    if(mthing->type == 11)
    {
       // 1/11/98 killough -- new code removes limit on deathmatch starts:
-
       size_t offset = deathmatch_p - deathmatchstarts;
+
+      // haleyjd 01/03/15: must not spawn more than 10 DM starts during old demos
+      if(demo_compatibility && offset >= 10u)
+         return NULL;
 
       if(offset >= num_deathmatchstarts)
       {
