@@ -1753,7 +1753,6 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\source\wp_weapons.cpp" />
     <ClCompile Include="..\source\w_formats.cpp" />
     <ClCompile Include="..\source\w_hacks.cpp" />
     <ClCompile Include="..\source\w_levels.cpp" />
@@ -2243,7 +2242,6 @@
     <ClInclude Include="..\source\v_patchfmt.h" />
     <ClInclude Include="..\source\v_png.h" />
     <ClInclude Include="..\Source\v_video.h" />
-    <ClInclude Include="..\source\wp_weapons.h" />
     <ClInclude Include="..\source\w_formats.h" />
     <ClInclude Include="..\source\w_hacks.h" />
     <ClInclude Include="..\source\w_iterator.h" />
