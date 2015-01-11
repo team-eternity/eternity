@@ -314,7 +314,6 @@
 		4F5F399E182D9C1A0027813A /* libmikmod.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF6A1753482C00E70FEC /* libmikmod.a */; };
 		4F5F399F182D9C1C0027813A /* libsmpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF6B1753482C00E70FEC /* libsmpeg.a */; };
 		4F68CE8D1963D88100E7B8BE /* ev_sectors.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F68CE8B1963D88100E7B8BE /* ev_sectors.cpp */; };
-		4F873EC9193467DB0003BEFF /* wp_weapons.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F873EC7193467DB0003BEFF /* wp_weapons.cpp */; };
 		4FE91CD6196FDFC600FB6336 /* b_itemlearn.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FE91CD4196FDFC600FB6336 /* b_itemlearn.cpp */; };
 		4FE91CD91970399A00FB6336 /* b_lineeffect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FE91CD71970399900FB6336 /* b_lineeffect.cpp */; };
 /* End PBXBuildFile section */
@@ -423,8 +422,6 @@
 		4F69650916C3B1EB00FF2028 /* ev_static.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ev_static.cpp; path = ../source/ev_static.cpp; sourceTree = "<group>"; };
 		4F7BB78C175797640079E263 /* i_directory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = i_directory.cpp; path = ../source/hal/i_directory.cpp; sourceTree = "<group>"; };
 		4F7BB78D175797640079E263 /* i_directory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = i_directory.h; path = ../source/hal/i_directory.h; sourceTree = "<group>"; };
-		4F873EC7193467DB0003BEFF /* wp_weapons.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = wp_weapons.cpp; path = ../source/wp_weapons.cpp; sourceTree = "<group>"; };
-		4F873EC8193467DB0003BEFF /* wp_weapons.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wp_weapons.h; path = ../source/wp_weapons.h; sourceTree = "<group>"; };
 		4F8B42E816C1101000765638 /* zutil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = zutil.c; path = ../zlib/zutil.c; sourceTree = "<group>"; };
 		4F98954F16C10FB1005D78C0 /* trees.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = trees.c; path = ../zlib/trees.c; sourceTree = "<group>"; };
 		4F9A249216D95878002BE852 /* t_plane.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = t_plane.cpp; path = ../source/t_plane.cpp; sourceTree = "<group>"; };
@@ -1105,15 +1102,6 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
-		4F873EC6193467C30003BEFF /* WP_ */ = {
-			isa = PBXGroup;
-			children = (
-				4F873EC7193467DB0003BEFF /* wp_weapons.cpp */,
-				4F873EC8193467DB0003BEFF /* wp_weapons.h */,
-			);
-			name = WP_;
-			sourceTree = "<group>";
-		};
 		4F9A249116D9585E002BE852 /* T_ */ = {
 			isa = PBXGroup;
 			children = (
@@ -1320,7 +1308,6 @@
 				FACACB771652FCA80091AF2E /* TXT_ */,
 				FACACB681652F5B20091AF2E /* V_ */,
 				FACACB6C1652F8E00091AF2E /* W_ */,
-				4F873EC6193467C30003BEFF /* WP_ */,
 				FACACB7D165300D20091AF2E /* XL_ */,
 				FACACB701652FB9A0091AF2E /* Z_ */,
 			);
@@ -2281,7 +2268,6 @@
 				4F5F3911182D9AC00027813A /* p_scroll.cpp in Sources */,
 				4F5F3912182D9AC00027813A /* p_sector.cpp in Sources */,
 				4F5F3913182D9AC00027813A /* p_setup.cpp in Sources */,
-				4F873EC9193467DB0003BEFF /* wp_weapons.cpp in Sources */,
 				4F5F3914182D9AC00027813A /* p_sight.cpp in Sources */,
 				4F5F3915182D9AC00027813A /* p_skin.cpp in Sources */,
 				4F5F3916182D9AC00027813A /* p_slopes.cpp in Sources */,

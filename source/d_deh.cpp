@@ -871,7 +871,8 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value)
       mi->spawnstate = E_GetStateNumForDEHNum(value); 
       break;
    case 2: 
-      mi->spawnhealth = value; 
+      mi->spawnhealth = value;
+      E_ThingDefaultGibHealth(mi); // haleyjd 01/02/15: reset gibhealth
       break;
    case 3: 
       mi->seestate = E_GetStateNumForDEHNum(value); 
