@@ -972,7 +972,7 @@ static void FindDynamicSectors(bool* dynamicSectors)
    VanillaSectorSpecial vss;
    
    // tagged sectors
-   int secnum;
+   int secnum = -1;
    const sector_t* sector, *sector2;
    bool continueStair;
    

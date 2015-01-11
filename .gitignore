@@ -18,3 +18,4 @@ vc2013-autodoom/Eternity.opensdf
 vc2013-autodoom/Eternity.sdf
 \#*\#
 build/
+*.lmp

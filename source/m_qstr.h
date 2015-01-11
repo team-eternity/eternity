@@ -239,7 +239,7 @@ public:
    // IOANCH: work with set
    bool operator < (const qstring& other) const
    {
-      return compareInt(other);
+      return compareInt(other) < 0;
    }
    
    char       &operator [] (size_t idx);

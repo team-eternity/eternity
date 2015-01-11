@@ -323,6 +323,7 @@
     <ClCompile Include="..\source\autodoom\b_lineeffect.cpp" />
     <ClCompile Include="..\source\autodoom\b_msector.cpp" />
     <ClCompile Include="..\source\autodoom\b_path.cpp" />
+    <ClCompile Include="..\source\autodoom\b_statistics.cpp" />
     <ClCompile Include="..\source\autodoom\b_think.cpp" />
     <ClCompile Include="..\source\autodoom\b_trace.cpp" />
     <ClCompile Include="..\source\autodoom\b_util.cpp" />
@@ -2049,6 +2050,7 @@
     <ClInclude Include="..\source\autodoom\b_lineeffect.h" />
     <ClInclude Include="..\source\autodoom\b_msector.h" />
     <ClInclude Include="..\source\autodoom\b_path.h" />
+    <ClInclude Include="..\source\autodoom\b_statistics.h" />
     <ClInclude Include="..\source\autodoom\b_think.h" />
     <ClInclude Include="..\source\autodoom\b_trace.h" />
     <ClInclude Include="..\source\autodoom\b_util.h" />

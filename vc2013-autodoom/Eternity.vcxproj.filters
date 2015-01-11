@@ -1038,6 +1038,9 @@
     <ClCompile Include="..\source\wp_weapons.cpp">
       <Filter>Source Files\WP_\WP_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\autodoom\b_statistics.cpp">
+      <Filter>Source Files\autodoom</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1843,6 +1846,9 @@
     </ClInclude>
     <ClInclude Include="..\source\wp_weapons.h">
       <Filter>Source Files\WP_\WP_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\b_statistics.h">
+      <Filter>Source Files\autodoom</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
