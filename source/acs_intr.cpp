@@ -585,8 +585,10 @@ void ACSThinker::Think()
       NEXTOP();
 
    OPCODE(KILL):
-      doom_printf(FC_ERROR "ACS Error: KILL at %d from VM %u\a",
-                  (int)(ip - vm->code - 1), (unsigned)vm->id);
+      opcode = IPNEXT();
+      temp = IPNEXT();
+      doom_printf(FC_ERROR "ACS Error: KILL %u-%d at %d from VM %u\a",
+                  opcode, temp, (int)(ip - vm->code - 1), (unsigned)vm->id);
       goto action_endscript;
 
       // Special Commands

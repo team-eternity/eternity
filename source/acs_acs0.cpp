@@ -412,8 +412,8 @@ static void ACS_translateFuncACS0(int32_t *&codePtr, uint32_t func, uint32_t arg
    {
    default:
       *codePtr++ = ACS_OP_KILL;
-      *codePtr++ = 0;
-      *codePtr++ = 0;
+      *codePtr++ = func;
+      *codePtr++ = 2;
       return;
 
    case   0: funcnum = ACS_FUNC_NOP;                     break;
@@ -488,6 +488,8 @@ static void ACS_translateFuncACS0(int32_t *&codePtr, const acs0_opdata_t *opdata
 
    switch(opdata->op)
    {
+   CASE(NOP, NOP, 0);
+
    CASE(ACTIVATORSOUND,         ActivatorSound,         2);
    CASE(AMBIENTSOUND,           AmbientSound,           2);
    CASE(AMBIENTSOUNDLOCAL,      AmbientSoundLocal,      2);
@@ -529,7 +531,12 @@ static void ACS_translateFuncACS0(int32_t *&codePtr, const acs0_opdata_t *opdata
    CASE_IMM(SPAWNSPOT,     SpawnSpot,     4);
    CASE_IMM(THINGCOUNT,    ThingCount,    2);
 
-   default: opdata = &ACS0opdata[ACS_OP_KILL]; CASE(NOP, NOP, 0);
+   default:
+      // This probably should not happen.
+      *codePtr++ = ACS_OP_KILL;
+      *codePtr++ = opdata->op;
+      *codePtr++ = 3;
+      return;
    }
 
    #undef CASE_IMM
@@ -595,6 +602,8 @@ static void ACS_translateScriptACS0(acs0_tracer_t *tracer, int32_t *codeIndexMap
 
    // Set the first instruction to a KILL.
    *codePtr++ = ACS_OP_KILL;
+   *codePtr++ = 0;
+   *codePtr++ = 0;
 
    for(index = 0; index < tracer->lumpLength;)
    {
@@ -614,6 +623,8 @@ static void ACS_translateScriptACS0(acs0_tracer_t *tracer, int32_t *codeIndexMap
       if(op >= ACS0_OPMAX || op < 0)
       {
          *codePtr++ = ACS_OP_KILL;
+         *codePtr++ = op;
+         *codePtr++ = 1;
          index += opSize;
          continue;
       }
@@ -852,6 +863,8 @@ static void ACS_translateScriptACS0(acs0_tracer_t *tracer, int32_t *codeIndexMap
 
    // Set the last instruction to a KILL.
    *codePtr++ = ACS_OP_KILL;
+   *codePtr++ = 1;
+   *codePtr++ = 0;
 
 #ifdef RANGECHECK
    // If this isn't true, something very wrong has happened internally.
@@ -1003,7 +1016,8 @@ void ACS_LoadScriptCodeACS0(ACSVM *vm, byte *data, uint32_t lumpLength, bool com
 
    int32_t *codeIndexMap;
 
-   vm->numCode = 1; // Start at 1 so that 0 is an invalid index.
+   // Place a KILL at start to catch branches to zero.
+   vm->numCode = ACSopdata[ACS_OP_KILL].args + 1;
 
    // Find where there is code by tracing potential execution paths...
    tracer.codeTouched = ecalloc(bool *, lumpLength, sizeof(bool));
@@ -1029,7 +1043,8 @@ void ACS_LoadScriptCodeACS0(ACSVM *vm, byte *data, uint32_t lumpLength, bool com
       ACS_traceScriptACS0(&tracer, itr->codeIndex);
    }
 
-   ++vm->numCode; // Add a KILL to the end as well, to avoid running off the end.
+   // Add a KILL to the end as well, to avoid running off the end.
+   vm->numCode += ACSopdata[ACS_OP_KILL].args + 1;
 
    // Translate all the instructions found.
    vm->code = (int32_t *)Z_Malloc(vm->numCode * sizeof(int32_t), PU_LEVEL, NULL);

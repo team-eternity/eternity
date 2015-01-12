@@ -28,7 +28,7 @@
 // Internal instructions.
 #ifdef ACS_OP
    ACS_OP(NOP, 0)
-   ACS_OP(KILL, 0)
+   ACS_OP(KILL, 2)
 
    // Special Commands
    ACS_OP(CALLFUNC,      2)
