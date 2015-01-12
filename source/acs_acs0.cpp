@@ -849,6 +849,14 @@ static void ACS_translateScriptACS0(acs0_tracer_t *tracer, int32_t *codeIndexMap
 
       default: case_direct:
          // Direct translation.
+         if(opdata->opdata->op == ACS_OP_KILL)
+         {
+            *codePtr++ = opdata->opdata->op;
+            *codePtr++ = op;
+            *codePtr++ = 1;
+            break;
+         }
+
          if(opdata->opdata->op == ACS_OP_CALLFUNC ||
             opdata->opdata->op == ACS_OP_CALLFUNC_IMM)
          {
