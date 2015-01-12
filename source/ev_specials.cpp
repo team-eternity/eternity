@@ -132,8 +132,8 @@ static bool EV_NullPreCrossLine(ev_action_t *action, ev_instance_t *instance)
    return false;
 }
 
-static bool EV_NullPostCrossLine(ev_action_t *action, bool result, 
-                                 ev_instance_t *instance)
+static int EV_NullPostCrossLine(ev_action_t *action, int result,
+                                ev_instance_t *instance)
 {
    return false;
 }
@@ -192,8 +192,8 @@ static bool EV_DOOMPreCrossLine(ev_action_t *action, ev_instance_t *instance)
 // This function is used as the post-action for all DOOM cross-type line
 // specials.
 //
-static bool EV_DOOMPostCrossLine(ev_action_t *action, bool result,
-                                 ev_instance_t *instance)
+static int EV_DOOMPostCrossLine(ev_action_t *action, int result,
+                                ev_instance_t *instance)
 {
    unsigned int flags = EV_CompositeActionFlags(action);
 
@@ -255,8 +255,8 @@ static bool EV_DOOMPreUseLine(ev_action_t *action, ev_instance_t *instance)
 //
 // Post-activation semantics for DOOM-style use line actions.
 //
-static bool EV_DOOMPostUseLine(ev_action_t *action, bool result, 
-                               ev_instance_t *instance)
+static int EV_DOOMPostUseLine(ev_action_t *action, int result,
+                              ev_instance_t *instance)
 {
    unsigned int flags = EV_CompositeActionFlags(action);
 
@@ -314,8 +314,8 @@ static bool EV_DOOMPreShootLine(ev_action_t *action, ev_instance_t *instance)
 //
 // Post-activation semantics for DOOM-style use line actions.
 //
-static bool EV_DOOMPostShootLine(ev_action_t *action, bool result, 
-                                 ev_instance_t *instance)
+static int EV_DOOMPostShootLine(ev_action_t *action, int result,
+                                ev_instance_t *instance)
 {
    unsigned int flags = EV_CompositeActionFlags(action);
 
@@ -559,8 +559,8 @@ static bool EV_BOOMGenPreActivate(ev_action_t *action, ev_instance_t *instance)
 //
 // Post-activation logic for BOOM generalized line types
 //
-static bool EV_BOOMGenPostActivate(ev_action_t *action, bool result,
-                                   ev_instance_t *instance)
+static int EV_BOOMGenPostActivate(ev_action_t *action, int result,
+                                  ev_instance_t *instance)
 {
    if(result)
    {
@@ -620,8 +620,8 @@ static bool EV_ParamPreActivate(ev_action_t *action, ev_instance_t *instance)
 // If the action was successful, and has a source linedef, check for
 // reusability and for switch texture changes, depending on the spac.
 //
-static bool EV_ParamPostActivate(ev_action_t *action, bool result, 
-                                 ev_instance_t *instance)
+static int EV_ParamPostActivate(ev_action_t *action, int result,
+                                ev_instance_t *instance)
 {
    // check for switch texture change and special clear
    if(result && instance->line)
@@ -1270,7 +1270,7 @@ static bool EV_checkSpac(ev_action_t *action, ev_instance_t *instance)
 //
 // Shared logic for all types of line activation
 //
-static bool EV_ActivateSpecial(ev_action_t *action, ev_instance_t *instance)
+static int EV_ActivateSpecial(ev_action_t *action, ev_instance_t *instance)
 {
    // demo version check
    if(action->minversion > demo_version)
@@ -1281,7 +1281,7 @@ static bool EV_ActivateSpecial(ev_action_t *action, ev_instance_t *instance)
       return false;
 
    // execute the action
-   bool result = action->action(action, instance);
+   int result = action->action(action, instance);
 
    // execute the post-action routine
    return action->type->post(action, result, instance);
@@ -1319,7 +1319,7 @@ bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing, int spa
    if(!EV_checkSpac(action, &instance))
       return false;
 
-   return EV_ActivateSpecial(action, &instance);
+   return !!EV_ActivateSpecial(action, &instance);
 }
 
 //
@@ -1345,7 +1345,7 @@ bool EV_ActivateSpecialNum(int special, int *args, Mobj *thing)
    if(!(action = EV_ActionForInstance(instance)))
       return false;
 
-   return EV_ActivateSpecial(action, &instance);
+   return !!EV_ActivateSpecial(action, &instance);
 }
 
 //
@@ -1353,7 +1353,7 @@ bool EV_ActivateSpecialNum(int special, int *args, Mobj *thing)
 //
 // Activate a special for ACS.
 //
-bool EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *thing)
+int EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *thing)
 {
    ev_action_t *action;
    INIT_STRUCT(ev_instance_t, instance);
@@ -1393,7 +1393,7 @@ bool EV_ActivateAction(ev_action_t *action, int *args, Mobj *thing)
    instance.spac  = SPAC_CROSS;
    instance.tag   = args[0];
 
-   return EV_ActivateSpecial(action, &instance);
+   return !!EV_ActivateSpecial(action, &instance);
 }
 
 //

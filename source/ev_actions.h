@@ -32,7 +32,7 @@
 struct ev_action_t;
 struct ev_instance_t;
 
-#define DECLARE_ACTION(name) bool name (ev_action_t *, ev_instance_t *)
+#define DECLARE_ACTION(name) int name (ev_action_t *, ev_instance_t *)
 
 // Null Action
 DECLARE_ACTION(EV_ActionNull);
@@ -181,6 +181,7 @@ DECLARE_ACTION(EV_ActionPillarOpen);
 DECLARE_ACTION(EV_ActionACSExecute);
 DECLARE_ACTION(EV_ActionACSSuspend);
 DECLARE_ACTION(EV_ActionACSTerminate);
+DECLARE_ACTION(EV_ActionACSExecuteWithResult);
 DECLARE_ACTION(EV_ActionParamLightRaiseByValue);
 DECLARE_ACTION(EV_ActionParamLightLowerByValue);
 DECLARE_ACTION(EV_ActionParamLightChangeToValue);

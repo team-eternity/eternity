@@ -1030,6 +1030,7 @@ PARAMLINE(PillarOpen);
 PARAMLINE(ACSExecute);
 PARAMLINE(ACSSuspend);
 PARAMLINE(ACSTerminate);
+PARAMLINE(ACSExecuteWithResult);
 PARAMLINE(ParamLightRaiseByValue);
 PARAMLINE(ParamLightLowerByValue);
 PARAMLINE(ParamLightChangeToValue);
@@ -1401,6 +1402,7 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(414, ParamPlatUWDS,                   "Plat_UpWaitDownStay")
    LINESPECNAMED(415, ParamPlatUpByValue,              "Plat_UpByValue")
    LINESPECNAMED(416, ParamFloorLowerToHighest,        "Floor_LowerToHighest")
+   LINESPECNAMED(420, ACSExecuteWithResult,            "ACS_ExecuteWithResult")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1499,6 +1501,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(80,  ACSExecute,                      "ACS_Execute")
    LINESPECNAMED(81,  ACSSuspend,                      "ACS_Suspend")
    LINESPECNAMED(82,  ACSTerminate,                    "ACS_Terminate")
+   LINESPECNAMED(84,  ACSExecuteWithResult,            "ACS_ExecuteWithResult")
    LINESPECNAMED(90,  PolyobjORRotateLeft,             "Polyobj_OR_RotateLeft")
    LINESPECNAMED(91,  PolyobjORRotateRight,            "Polyobj_OR_RotateRight")
    LINESPECNAMED(92,  PolyobjORMove,                   "Polyobj_OR_Move")
