@@ -361,31 +361,6 @@ static int ACS_countPlayers(void)
 }
 
 //
-// ACS_getCVar
-//
-static int32_t ACS_getCVar(const char *name)
-{
-   command_t *command;
-   variable_t *var;
-
-   command = C_GetCmdForName(name);
-
-   if(!command || !(var = command->variable))
-      return 0;
-
-   switch(var->type)
-   {
-   case vt_int: return *(int *)var->variable;
-   case vt_float: return M_DoubleToFixed(*(double *)var->variable);
-   case vt_string: return 0; // TODO: DynaStrings
-   case vt_chararray: return 0; // TODO: DynaStrings
-   case vt_toggle: return *(bool *)var->variable;
-   }
-
-   return 0;
-}
-
-//
 // ACS_getLevelVar
 //
 static int32_t ACS_getLevelVar(uint32_t var)
@@ -724,10 +699,6 @@ void ACSThinker::Think()
 
    OPCODE(GET_LEVELARR):
       STACK_AT(1) = ACS_getLevelVar(STACK_AT(1));
-      NEXTOP();
-
-   OPCODE(GET_CVAR):
-      STACK_AT(1) = ACS_getCVar(ACSVM::GetString(STACK_AT(1)));
       NEXTOP();
 
       // GETARR

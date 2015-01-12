@@ -36,6 +36,7 @@
 
 #include "a_small.h"
 #include "acs_intr.h"
+#include "c_runcmd.h"
 #include "d_event.h"
 #include "d_gi.h"
 #include "e_args.h"
@@ -375,6 +376,55 @@ enum
    BUTTON_USER3      = 0x00800000,
    BUTTON_USER4      = 0x01000000,
 };
+
+//
+// ACS_funcGetCVar
+//
+static void ACS_funcGetCVar(ACS_FUNCARG)
+{
+   char const *name = ACSVM::GetString(args[0]);
+
+   command_t *command;
+   variable_t *var;
+
+   if(!(command = C_GetCmdForName(name)) || !(var = command->variable))
+   {
+      *retn++ = 0;
+      return;
+   }
+
+   switch(var->type)
+   {
+   case vt_int: *retn++ = *(int *)var->variable; break;
+   case vt_float: *retn++ = M_DoubleToFixed(*(double *)var->variable); break;
+   case vt_string: *retn++ = 0; break;
+   case vt_chararray: *retn++ = 0; break;
+   case vt_toggle: *retn++ = *(bool *)var->variable; break;
+   default:
+      *retn++ = 0;
+      break;
+   }
+}
+
+//
+// ACS_funcGetCVarString
+//
+static void ACS_funcGetCVarString(ACS_FUNCARG)
+{
+   const char *name = ACSVM::GetString(args[0]);
+
+   command_t *command;
+   variable_t *var;
+
+   if(!(command = C_GetCmdForName(name)) || !(var = command->variable))
+   {
+      *retn++ = 0;
+      return;
+   }
+
+   const char *val = C_VariableValue(var);
+   *retn++ = ACSVM::AddString(val, strlen(val));
+}
 
 //
 // ACS_funcGetPlayerInput
@@ -1334,6 +1384,22 @@ static void ACS_funcSpawnSpotAngleForced(ACS_FUNCARG)
 }
 
 //
+// ACS_funcSqrt
+//
+static void ACS_funcSqrt(ACS_FUNCARG)
+{
+   *retn++ = (int32_t)sqrt(args[0]);
+}
+
+//
+// ACS_funcSqrtFixed
+//
+static void ACS_funcSqrtFixed(ACS_FUNCARG)
+{
+   *retn++ = M_DoubleToFixed(sqrt(M_FixedToDouble(args[0])));
+}
+
+//
 // ACS_funcSuspendScriptName
 //
 static void ACS_funcSuspendScriptName(ACS_FUNCARG)
@@ -1536,6 +1602,16 @@ static void ACS_funcThingSound(ACS_FUNCARG)
 }
 
 //
+// ACS_funcTrigHypot
+//
+static void ACS_funcTrigHypot(ACS_FUNCARG)
+{
+   double x = M_FixedToDouble(args[0]);
+   double y = M_FixedToDouble(args[1]);
+   *retn++ = M_DoubleToFixed(sqrt(x * x + y * y));
+}
+
+//
 // ACS_funcUniqueTID
 //
 static void ACS_funcUniqueTID(ACS_FUNCARG)
@@ -1582,6 +1658,8 @@ acs_func_t ACSfunc[ACS_FUNCMAX] =
    ACS_funcExecuteScriptName,
    ACS_funcExecuteScriptAlwaysName,
    ACS_funcExecuteScriptResultName,
+   ACS_funcGetCVar,
+   ACS_funcGetCVarString,
    ACS_funcGetPlayerInput,
    ACS_funcGetPolyobjX,
    ACS_funcGetPolyobjY,
@@ -1618,6 +1696,8 @@ acs_func_t ACSfunc[ACS_FUNCMAX] =
    ACS_funcSpawnSpotForced,
    ACS_funcSpawnSpotAngle,
    ACS_funcSpawnSpotAngleForced,
+   ACS_funcSqrt,
+   ACS_funcSqrtFixed,
    ACS_funcSuspendScriptName,
    ACS_funcTerminateScriptName,
    ACS_funcThingCount,
@@ -1627,6 +1707,7 @@ acs_func_t ACSfunc[ACS_FUNCMAX] =
    ACS_funcThingDamage,
    ACS_funcThingProjectile,
    ACS_funcThingSound,
+   ACS_funcTrigHypot,
    ACS_funcUniqueTID,
 };
 

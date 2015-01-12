@@ -464,6 +464,18 @@ static void ACS_translateFuncACS0(int32_t *&codePtr, uint32_t func, uint32_t arg
    case  45: funcnum = ACS_FUNC_ExecuteScriptAlwaysName; break;
    case  46: funcnum = ACS_FUNC_UniqueTID;               break;
    case  47: funcnum = ACS_FUNC_IsTIDUsed;               break;
+   case  48: funcnum = ACS_FUNC_Sqrt;                    break;
+   case  49: funcnum = ACS_FUNC_SqrtFixed;               break;
+   case  50: funcnum = ACS_FUNC_TrigHypot;               break;
+ //case  51: funcnum = ACS_FUNC_SetHudClipRect;          break;
+ //case  52: funcnum = ACS_FUNC_SetHudWrapWidth;         break;
+ //case  53: funcnum = ACS_FUNC_SetCVar;                 break;
+ //case  54: funcnum = ACS_FUNC_GetUserCVar;             break;
+ //case  55: funcnum = ACS_FUNC_SetUserCVar;             break;
+   case  56: funcnum = ACS_FUNC_GetCVarString;           break;
+ //case  57: funcnum = ACS_FUNC_SetCVarString;           break;
+ //case  58: funcnum = ACS_FUNC_GetUserCVarString;       break;
+ //case  59: funcnum = ACS_FUNC_SetUserCVarString;       break;
    }
 
    *codePtr++ = ACS_OP_CALLFUNC_ZD;

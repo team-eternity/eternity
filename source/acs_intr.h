@@ -117,6 +117,8 @@ enum acs_funcnum_t
    ACS_FUNC_ExecuteScriptName,
    ACS_FUNC_ExecuteScriptAlwaysName,
    ACS_FUNC_ExecuteScriptResultName,
+   ACS_FUNC_GetCVar,
+   ACS_FUNC_GetCVarString,
    ACS_FUNC_GetPlayerInput,
    ACS_FUNC_GetPolyobjX,
    ACS_FUNC_GetPolyobjY,
@@ -153,6 +155,8 @@ enum acs_funcnum_t
    ACS_FUNC_SpawnSpotForced,
    ACS_FUNC_SpawnSpotAngle,
    ACS_FUNC_SpawnSpotAngleForced,
+   ACS_FUNC_Sqrt,
+   ACS_FUNC_SqrtFixed,
    ACS_FUNC_SuspendScriptName,
    ACS_FUNC_TerminateScriptName,
    ACS_FUNC_ThingCount,
@@ -162,6 +166,7 @@ enum acs_funcnum_t
    ACS_FUNC_ThingDamage,
    ACS_FUNC_ThingProjectile,
    ACS_FUNC_ThingSound,
+   ACS_FUNC_TrigHypot,
    ACS_FUNC_UniqueTID,
 
    ACS_FUNCMAX
