@@ -642,6 +642,94 @@ static void ACS_funcIsTIDUsed(ACS_FUNCARG)
 }
 
 //
+// ACS_playSound
+//
+static void ACS_playSound(Mobj *mo, sfxinfo_t *sfx, uint32_t argc, const int32_t *args)
+{
+   int     chan = argc > 2 ? args[2] & 7 : CHAN_BODY;
+   int     vol  = argc > 3 ? args[3] >> 9 : 127;
+   int     loop = argc > 4 ? args[4] & 1 : 0;
+   fixed_t attn = argc > 5 ? args[5] : 1 << FRACBITS;
+
+   // We don't have arbitrary attentuation, so try to map to a supported enum.
+   int attnEnum;
+   if(attn <= 0)
+      attnEnum = ATTN_NONE;
+   else if(attn <= (1 << FRACBITS))
+      attnEnum = ATTN_NORMAL;
+   else if(attn <= (2 << FRACBITS))
+      attnEnum = ATTN_IDLE;
+   else
+      attnEnum = ATTN_STATIC;
+
+   soundparams_t param;
+   param.setNormalDefaults(mo);
+   param.sfx         = sfx;
+   param.volumeScale = vol;
+   param.attenuation = attnEnum;
+   param.loop        = loop;
+   param.subchannel  = chan;
+
+   S_StartSfxInfo(param);
+}
+
+//
+// ACS_funcPlaySound
+//
+static void ACS_funcPlaySound(ACS_FUNCARG)
+{
+   Mobj      *mo  = P_FindMobjFromTID(args[0], NULL, thread->trigger);
+   sfxinfo_t *sfx = S_SfxInfoForName(ACSVM::GetString(args[1]));
+
+   if(!mo || !sfx) return;
+
+   ACS_playSound(mo, sfx, argc, args);
+}
+
+// PlayThingSound sound indexes.
+enum
+{
+   SOUND_See        = 0,
+   SOUND_Attack     = 1,
+   SOUND_Pain       = 2,
+   SOUND_Death      = 3,
+   SOUND_Active     = 4,
+   SOUND_Use        = 5,
+   SOUND_Bounce     = 6,
+   SOUND_WallBounce = 7,
+   SOUND_CrushPain  = 8,
+   SOUND_Howl       = 9,
+};
+
+//
+// ACS_funcPlayThingSound
+//
+static void ACS_funcPlayThingSound(ACS_FUNCARG)
+{
+   Mobj      *mo  = P_FindMobjFromTID(args[0], NULL, thread->trigger);
+   int        snd = args[1];
+   sfxinfo_t *sfx;
+
+   if(!mo) return;
+
+   switch(snd)
+   {
+   case SOUND_See:    snd = mo->info->seesound;    break;
+   case SOUND_Attack: snd = mo->info->attacksound; break;
+   case SOUND_Pain:   snd = mo->info->painsound;   break;
+   case SOUND_Death:  snd = mo->info->deathsound;  break;
+   case SOUND_Active: snd = mo->info->activesound; break;
+
+   default:
+      return;
+   }
+
+   if(!snd || !(sfx = E_SoundForDEHNum(snd))) return;
+
+   ACS_playSound(mo, sfx, argc, args);
+}
+
+//
 // ACS_funcRadiusQuake
 //
 static void ACS_funcRadiusQuake(ACS_FUNCARG)
@@ -1400,6 +1488,19 @@ static void ACS_funcSqrtFixed(ACS_FUNCARG)
 }
 
 //
+// ACS_funcStopSound
+//
+static void ACS_funcStopSound(ACS_FUNCARG)
+{
+   Mobj *mo   = P_FindMobjFromTID(args[0], NULL, thread->trigger);
+   int   chan = argc > 1 ? args[1] & 7 : CHAN_BODY;
+
+   if(!mo) return;
+
+   S_StopSound(mo, chan);
+}
+
+//
 // ACS_funcSuspendScriptName
 //
 static void ACS_funcSuspendScriptName(ACS_FUNCARG)
@@ -1668,6 +1769,8 @@ acs_func_t ACSfunc[ACS_FUNCMAX] =
    ACS_funcGetSectorLightLevel,
    ACS_funcGetThingVar,
    ACS_funcIsTIDUsed,
+   ACS_funcPlaySound,
+   ACS_funcPlayThingSound,
    ACS_funcRandom,
    ACS_funcRadiusQuake,
    ACS_funcReplaceTextures,
@@ -1698,6 +1801,7 @@ acs_func_t ACSfunc[ACS_FUNCMAX] =
    ACS_funcSpawnSpotAngleForced,
    ACS_funcSqrt,
    ACS_funcSqrtFixed,
+   ACS_funcStopSound,
    ACS_funcSuspendScriptName,
    ACS_funcTerminateScriptName,
    ACS_funcThingCount,

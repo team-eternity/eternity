@@ -476,6 +476,10 @@ static void ACS_translateFuncACS0(int32_t *&codePtr, uint32_t func, uint32_t arg
  //case  57: funcnum = ACS_FUNC_SetCVarString;           break;
  //case  58: funcnum = ACS_FUNC_GetUserCVarString;       break;
  //case  59: funcnum = ACS_FUNC_SetUserCVarString;       break;
+ //case  60: funcnum = ACS_FUNC_LineAttack;              break;
+   case  61: funcnum = ACS_FUNC_PlaySound;               break;
+   case  62: funcnum = ACS_FUNC_StopSound;               break;
+   case  71: funcnum = ACS_FUNC_PlayThingSound;          break;
    }
 
    *codePtr++ = ACS_OP_CALLFUNC_ZD;
