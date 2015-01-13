@@ -1388,7 +1388,7 @@ static void ACS_funcSpawnSpotAngleForced(ACS_FUNCARG)
 //
 static void ACS_funcSqrt(ACS_FUNCARG)
 {
-   *retn++ = (int32_t)sqrt(args[0]);
+   *retn++ = (int32_t)sqrt((double)args[0]);
 }
 
 //
