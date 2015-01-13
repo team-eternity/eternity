@@ -1501,6 +1501,101 @@ static void ACS_funcStopSound(ACS_FUNCARG)
 }
 
 //
+// ACS_funcStrCaseCmp
+//
+static void ACS_funcStrCaseCmp(ACS_FUNCARG)
+{
+   const char *l = ACSVM::GetString(args[0]);
+   const char *r = ACSVM::GetString(args[1]);
+
+   if(argc > 2)
+      *retn++ = strncasecmp(l, r, args[2]);
+   else
+      *retn++ = strcasecmp(l, r);
+}
+
+//
+// ACS_funcStrCmp
+//
+static void ACS_funcStrCmp(ACS_FUNCARG)
+{
+   const char *l = ACSVM::GetString(args[0]);
+   const char *r = ACSVM::GetString(args[1]);
+
+   if(argc > 2)
+      *retn++ = strncmp(l, r, args[2]);
+   else
+      *retn++ = strcmp(l, r);
+}
+
+//
+// ACS_funcStrLeft
+//
+static void ACS_funcStrLeft(ACS_FUNCARG)
+{
+   ACSString *str = ACSVM::GetStringData(args[0]);
+   uint32_t   len = args[1];
+
+   if(!str)
+   {
+      *retn++ = ACSVM::AddString("", 0);
+   }
+   else if(len < str->data.l)
+   {
+      *retn++ = ACSVM::AddString(str->data.s, len);
+   }
+   else
+   {
+      *retn++ = args[0];
+   }
+}
+
+//
+// ACS_funcStrMid
+//
+static void ACS_funcStrMid(ACS_FUNCARG)
+{
+   ACSString *str   = ACSVM::GetStringData(args[0]);
+   uint32_t   start = args[1];
+   uint32_t   len   = args[2];
+
+   if(!str || start >= str->data.l)
+   {
+      *retn++ = ACSVM::AddString("", 0);
+   }
+   else if(start + len < str->data.l)
+   {
+      *retn++ = ACSVM::AddString(str->data.s + start, len);
+   }
+   else
+   {
+      *retn++ = ACSVM::AddString(str->data.s + start, str->data.l - start);
+   }
+}
+
+//
+// ACS_funcStrRight
+//
+static void ACS_funcStrRight(ACS_FUNCARG)
+{
+   ACSString *str = ACSVM::GetStringData(args[0]);
+   uint32_t   len = args[1];
+
+   if(!str)
+   {
+      *retn++ = ACSVM::AddString("", 0);
+   }
+   else if(len < str->data.l)
+   {
+      *retn++ = ACSVM::AddString(str->data.s + str->data.l - len, len);
+   }
+   else
+   {
+      *retn++ = args[0];
+   }
+}
+
+//
 // ACS_funcSuspendScriptName
 //
 static void ACS_funcSuspendScriptName(ACS_FUNCARG)
@@ -1802,6 +1897,11 @@ acs_func_t ACSfunc[ACS_FUNCMAX] =
    ACS_funcSqrt,
    ACS_funcSqrtFixed,
    ACS_funcStopSound,
+   ACS_funcStrCaseCmp,
+   ACS_funcStrCmp,
+   ACS_funcStrLeft,
+   ACS_funcStrMid,
+   ACS_funcStrRight,
    ACS_funcSuspendScriptName,
    ACS_funcTerminateScriptName,
    ACS_funcThingCount,

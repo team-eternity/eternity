@@ -160,6 +160,11 @@ enum acs_funcnum_t
    ACS_FUNC_Sqrt,
    ACS_FUNC_SqrtFixed,
    ACS_FUNC_StopSound,
+   ACS_FUNC_StrCaseCmp,
+   ACS_FUNC_StrCmp,
+   ACS_FUNC_StrLeft,
+   ACS_FUNC_StrMid,
+   ACS_FUNC_StrRight,
    ACS_FUNC_SuspendScriptName,
    ACS_FUNC_TerminateScriptName,
    ACS_FUNC_ThingCount,
@@ -636,6 +641,10 @@ public:
    static uint32_t GetStringLength(uint32_t strnum)
    {
       return strnum < GlobalNumStrings ? GlobalStrings[strnum]->length : 0;
+   }
+   static ACSString *GetStringData(uint32_t strnum)
+   {
+      return strnum < GlobalNumStrings ? GlobalStrings[strnum] : NULL;
    }
 
    static uint32_t AddString(const char *s, uint32_t l);

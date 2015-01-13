@@ -479,6 +479,11 @@ static void ACS_translateFuncACS0(int32_t *&codePtr, uint32_t func, uint32_t arg
  //case  60: funcnum = ACS_FUNC_LineAttack;              break;
    case  61: funcnum = ACS_FUNC_PlaySound;               break;
    case  62: funcnum = ACS_FUNC_StopSound;               break;
+   case  63: funcnum = ACS_FUNC_StrCmp;                  break;
+   case  64: funcnum = ACS_FUNC_StrCaseCmp;              break;
+   case  65: funcnum = ACS_FUNC_StrLeft;                 break;
+   case  66: funcnum = ACS_FUNC_StrRight;                break;
+   case  67: funcnum = ACS_FUNC_StrMid;                  break;
    case  71: funcnum = ACS_FUNC_PlayThingSound;          break;
    }
 
