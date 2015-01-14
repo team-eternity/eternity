@@ -28,7 +28,7 @@
 // Internal instructions.
 #ifdef ACS_OP
    ACS_OP(NOP, 0)
-   ACS_OP(KILL, 0)
+   ACS_OP(KILL, 2)
 
    // Special Commands
    ACS_OP(CALLFUNC,      2)
@@ -62,7 +62,6 @@
    ACS_OP(GET_STRINGARR, 0)
    ACS_OP(GET_THINGVAR,  1)
    ACS_OP(GET_LEVELARR,  0)
-   ACS_OP(GET_CVAR,      0)
 
    // GETARR
    ACS_OP(GETARR_IMM, 1)
@@ -519,7 +518,7 @@
    /* 252 */ ACSE_OP(CALLFUNC, THINGPROJECTILE, 0, false)
    /* 253 */ ACSE_OP(STRLEN, STRLEN, 0, false)
    /* 254 */ ACSE_OP(KILL, SETHUDSIZE, 0, false)
-   /* 255 */ ACSE_OP(GET_CVAR, GET_CVAR, 0, false)
+   /* 255 */ ACSE_OP(CALLFUNC, GET_CVAR, 0, false)
    /* 256 */ ACSE_OP(BRANCH_CASETABLE, BRANCH_CASETABLE, -1, false)
    /* 257 */ ACSE_OP(SET_RESULT, SET_RESULT, 0, false)
    /* 258 */ ACSE_OP(LINEOFFSETY, LINEOFFSETY, 0, false)

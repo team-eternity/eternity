@@ -117,6 +117,8 @@ enum acs_funcnum_t
    ACS_FUNC_ExecuteScriptName,
    ACS_FUNC_ExecuteScriptAlwaysName,
    ACS_FUNC_ExecuteScriptResultName,
+   ACS_FUNC_GetCVar,
+   ACS_FUNC_GetCVarString,
    ACS_FUNC_GetPlayerInput,
    ACS_FUNC_GetPolyobjX,
    ACS_FUNC_GetPolyobjY,
@@ -125,6 +127,8 @@ enum acs_funcnum_t
    ACS_FUNC_GetSectorFloorZ,
    ACS_FUNC_GetSectorLightLevel,
    ACS_FUNC_IsTIDUsed,
+   ACS_FUNC_PlaySound,
+   ACS_FUNC_PlayThingSound,
    ACS_FUNC_Random,
    ACS_FUNC_RadiusQuake,
    ACS_FUNC_ReplaceTextures,
@@ -153,6 +157,14 @@ enum acs_funcnum_t
    ACS_FUNC_SpawnSpotForced,
    ACS_FUNC_SpawnSpotAngle,
    ACS_FUNC_SpawnSpotAngleForced,
+   ACS_FUNC_Sqrt,
+   ACS_FUNC_SqrtFixed,
+   ACS_FUNC_StopSound,
+   ACS_FUNC_StrCaseCmp,
+   ACS_FUNC_StrCmp,
+   ACS_FUNC_StrLeft,
+   ACS_FUNC_StrMid,
+   ACS_FUNC_StrRight,
    ACS_FUNC_SuspendScriptName,
    ACS_FUNC_TerminateScriptName,
    ACS_FUNC_ThingCount,
@@ -162,6 +174,7 @@ enum acs_funcnum_t
    ACS_FUNC_ThingDamage,
    ACS_FUNC_ThingProjectile,
    ACS_FUNC_ThingSound,
+   ACS_FUNC_TrigHypot,
    ACS_FUNC_UniqueTID,
 
    ACS_FUNCMAX
@@ -231,6 +244,15 @@ enum
    ACS_THINGVAR_Mass         = 32,
    ACS_THINGVAR_Accuracy     = 33,
    ACS_THINGVAR_Stamina      = 34,
+   ACS_THINGVAR_Height       = 35,
+   ACS_THINGVAR_Radius       = 36,
+   ACS_THINGVAR_ReactionTime = 37,
+   ACS_THINGVAR_MeleeRange   = 38,
+   ACS_THINGVAR_ViewHeight   = 39,
+   ACS_THINGVAR_AttackZOff   = 40,
+   ACS_THINGVAR_StencilColor = 41,
+   ACS_THINGVAR_Friction     = 42,
+   ACS_THINGVAR_DamageMult   = 43,
 
    // Unexposed variables.
    ACS_THINGVAR_Angle,
@@ -248,6 +270,7 @@ enum
    ACS_THINGVAR_PlayerNumber,
    ACS_THINGVAR_SigilPieces,
    ACS_THINGVAR_TID,
+   ACS_THINGVAR_Type,
    ACS_THINGVAR_X,
    ACS_THINGVAR_Y,
    ACS_THINGVAR_Z,
@@ -629,7 +652,12 @@ public:
    {
       return strnum < GlobalNumStrings ? GlobalStrings[strnum]->length : 0;
    }
+   static ACSString *GetStringData(uint32_t strnum)
+   {
+      return strnum < GlobalNumStrings ? GlobalStrings[strnum] : NULL;
+   }
 
+   static uint32_t AddString(const char *s) {return AddString(s, strlen(s));}
    static uint32_t AddString(const char *s, uint32_t l);
 
    static void ArchiveStrings(SaveArchive &arc);

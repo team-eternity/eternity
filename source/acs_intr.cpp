@@ -361,31 +361,6 @@ static int ACS_countPlayers(void)
 }
 
 //
-// ACS_getCVar
-//
-static int32_t ACS_getCVar(const char *name)
-{
-   command_t *command;
-   variable_t *var;
-
-   command = C_GetCmdForName(name);
-
-   if(!command || !(var = command->variable))
-      return 0;
-
-   switch(var->type)
-   {
-   case vt_int: return *(int *)var->variable;
-   case vt_float: return M_DoubleToFixed(*(double *)var->variable);
-   case vt_string: return 0; // TODO: DynaStrings
-   case vt_chararray: return 0; // TODO: DynaStrings
-   case vt_toggle: return *(bool *)var->variable;
-   }
-
-   return 0;
-}
-
-//
 // ACS_getLevelVar
 //
 static int32_t ACS_getLevelVar(uint32_t var)
@@ -585,8 +560,10 @@ void ACSThinker::Think()
       NEXTOP();
 
    OPCODE(KILL):
-      doom_printf(FC_ERROR "ACS Error: KILL at %d from VM %u\a",
-                  (int)(ip - vm->code - 1), (unsigned)vm->id);
+      opcode = IPNEXT();
+      temp = IPNEXT();
+      doom_printf(FC_ERROR "ACS Error: KILL %u-%d at %d from VM %u\a",
+                  opcode, temp, (int)(ip - vm->code - 1), (unsigned)vm->id);
       goto action_endscript;
 
       // Special Commands
@@ -722,10 +699,6 @@ void ACSThinker::Think()
 
    OPCODE(GET_LEVELARR):
       STACK_AT(1) = ACS_getLevelVar(STACK_AT(1));
-      NEXTOP();
-
-   OPCODE(GET_CVAR):
-      STACK_AT(1) = ACS_getCVar(ACSVM::GetString(STACK_AT(1)));
       NEXTOP();
 
       // GETARR
@@ -1146,10 +1119,10 @@ void ACSThinker::Think()
       NEXTOP();
    OPCODE(PRINTFIXED):
       {
-         // %E worst case: -1.52587e-05 == 12 + NUL
-         // %F worst case: -0.000106811 == 12 + NUL
-         // %F worst case: -32768.9     ==  8 + NUL
-         // %G is probably maximally P+6+1. (Actually, plus longer exponent.)
+         // %E worst case: -3.276800e+04 == 13 + NUL
+         // %F worst case: -32767.999985 == 13 + NUL
+         // %G worst case: -1.52588e-05  == 12 + NUL
+         // %G should be maximally P+6 + extra exponent digits + NUL.
          char buffer[13];
          sprintf(buffer, "%G", M_FixedToDouble(POP()));
          printBuffer->concat(buffer);
@@ -1164,16 +1137,17 @@ void ACSThinker::Think()
       NEXTOP();
    OPCODE(PRINTINT_BIN):
       {
-         // %B worst case: -10000000000000000000000000000000 == 33 + NUL
-         char buffer[34];
+         // %B worst case: 10000000000000000000000000000000 == 32 + NUL
+         char buffer[33];
          printBuffer->concat(M_Itoa(POP(), buffer, 2));
       }
       NEXTOP();
    OPCODE(PRINTINT_HEX):
       {
-         // %x worst case: -80000000 == 9 + NUL
-         char buffer[10];
-         printBuffer->concat(M_Itoa(POP(), buffer, 16));
+         // %X worst case: 80000000 == 8 + NUL
+         char buffer[9];
+         sprintf(buffer, "%X", (unsigned int)POP());
+         printBuffer->concat(buffer);
       }
       NEXTOP();
    OPCODE(PRINTNAME):

@@ -36,6 +36,7 @@
 
 #include "a_small.h"
 #include "acs_intr.h"
+#include "c_runcmd.h"
 #include "d_event.h"
 #include "d_gi.h"
 #include "e_args.h"
@@ -197,6 +198,15 @@ bool ACS_ChkThingVar(Mobj *thing, uint32_t var, int32_t val)
    case ACS_THINGVAR_Mass:         return thing->info->mass == val;
    case ACS_THINGVAR_Accuracy:     return false;
    case ACS_THINGVAR_Stamina:      return false;
+   case ACS_THINGVAR_Height:       return thing->height == val;
+   case ACS_THINGVAR_Radius:       return thing->radius == val;
+   case ACS_THINGVAR_ReactionTime: return thing->reactiontime == val;
+   case ACS_THINGVAR_MeleeRange:   return MELEERANGE == val;
+   case ACS_THINGVAR_ViewHeight:   return false;
+   case ACS_THINGVAR_AttackZOff:   return false;
+   case ACS_THINGVAR_StencilColor: return false;
+   case ACS_THINGVAR_Friction:     return false;
+   case ACS_THINGVAR_DamageMult:   return false;
 
    case ACS_THINGVAR_Angle:          return thing->angle >> 16 == (uint32_t)val;
    case ACS_THINGVAR_Armor:          return thing->player ? thing->player->armorpoints == val : false;
@@ -213,6 +223,7 @@ bool ACS_ChkThingVar(Mobj *thing, uint32_t var, int32_t val)
    case ACS_THINGVAR_PlayerNumber:   return thing->player ? thing->player - players == val : false;
    case ACS_THINGVAR_SigilPieces:    return false;
    case ACS_THINGVAR_TID:            return thing->tid == val;
+   case ACS_THINGVAR_Type:           return thing->type == E_ThingNumForName(ACSVM::GetString(val));
    case ACS_THINGVAR_X:              return thing->x == val;
    case ACS_THINGVAR_Y:              return thing->y == val;
    case ACS_THINGVAR_Z:              return thing->z == val;
@@ -375,6 +386,55 @@ enum
    BUTTON_USER3      = 0x00800000,
    BUTTON_USER4      = 0x01000000,
 };
+
+//
+// ACS_funcGetCVar
+//
+static void ACS_funcGetCVar(ACS_FUNCARG)
+{
+   char const *name = ACSVM::GetString(args[0]);
+
+   command_t *command;
+   variable_t *var;
+
+   if(!(command = C_GetCmdForName(name)) || !(var = command->variable))
+   {
+      *retn++ = 0;
+      return;
+   }
+
+   switch(var->type)
+   {
+   case vt_int: *retn++ = *(int *)var->variable; break;
+   case vt_float: *retn++ = M_DoubleToFixed(*(double *)var->variable); break;
+   case vt_string: *retn++ = 0; break;
+   case vt_chararray: *retn++ = 0; break;
+   case vt_toggle: *retn++ = *(bool *)var->variable; break;
+   default:
+      *retn++ = 0;
+      break;
+   }
+}
+
+//
+// ACS_funcGetCVarString
+//
+static void ACS_funcGetCVarString(ACS_FUNCARG)
+{
+   const char *name = ACSVM::GetString(args[0]);
+
+   command_t *command;
+   variable_t *var;
+
+   if(!(command = C_GetCmdForName(name)) || !(var = command->variable))
+   {
+      *retn++ = 0;
+      return;
+   }
+
+   const char *val = C_VariableValue(var);
+   *retn++ = ACSVM::AddString(val, strlen(val));
+}
 
 //
 // ACS_funcGetPlayerInput
@@ -551,6 +611,15 @@ int32_t ACS_GetThingVar(Mobj *thing, uint32_t var)
    case ACS_THINGVAR_Mass:         return thing->info->mass;
    case ACS_THINGVAR_Accuracy:     return 0;
    case ACS_THINGVAR_Stamina:      return 0;
+   case ACS_THINGVAR_Height:       return thing->height;
+   case ACS_THINGVAR_Radius:       return thing->radius;
+   case ACS_THINGVAR_ReactionTime: return thing->reactiontime;
+   case ACS_THINGVAR_MeleeRange:   return MELEERANGE;
+   case ACS_THINGVAR_ViewHeight:   return 0;
+   case ACS_THINGVAR_AttackZOff:   return 0;
+   case ACS_THINGVAR_StencilColor: return 0;
+   case ACS_THINGVAR_Friction:     return 0;
+   case ACS_THINGVAR_DamageMult:   return 0;
 
    case ACS_THINGVAR_Angle:          return thing->angle >> 16;
    case ACS_THINGVAR_Armor:          return thing->player ? thing->player->armorpoints : 0;
@@ -567,6 +636,7 @@ int32_t ACS_GetThingVar(Mobj *thing, uint32_t var)
    case ACS_THINGVAR_PlayerNumber:   return static_cast<int32_t>(thing->player ? thing->player - players : -1);
    case ACS_THINGVAR_SigilPieces:    return 0;
    case ACS_THINGVAR_TID:            return thing->tid;
+   case ACS_THINGVAR_Type:           return ACSVM::AddString(thing->info->name);
    case ACS_THINGVAR_X:              return thing->x;
    case ACS_THINGVAR_Y:              return thing->y;
    case ACS_THINGVAR_Z:              return thing->z;
@@ -589,6 +659,94 @@ static void ACS_funcGetThingVar(ACS_FUNCARG)
 static void ACS_funcIsTIDUsed(ACS_FUNCARG)
 {
    *retn++ = !!P_FindMobjFromTID(args[0], NULL, NULL);
+}
+
+//
+// ACS_playSound
+//
+static void ACS_playSound(Mobj *mo, sfxinfo_t *sfx, uint32_t argc, const int32_t *args)
+{
+   int     chan = argc > 2 ? args[2] & 7 : CHAN_BODY;
+   int     vol  = argc > 3 ? args[3] >> 9 : 127;
+   int     loop = argc > 4 ? args[4] & 1 : 0;
+   fixed_t attn = argc > 5 ? args[5] : 1 << FRACBITS;
+
+   // We don't have arbitrary attentuation, so try to map to a supported enum.
+   int attnEnum;
+   if(attn <= 0)
+      attnEnum = ATTN_NONE;
+   else if(attn <= (1 << FRACBITS))
+      attnEnum = ATTN_NORMAL;
+   else if(attn <= (2 << FRACBITS))
+      attnEnum = ATTN_IDLE;
+   else
+      attnEnum = ATTN_STATIC;
+
+   soundparams_t param;
+   param.setNormalDefaults(mo);
+   param.sfx         = sfx;
+   param.volumeScale = vol;
+   param.attenuation = attnEnum;
+   param.loop        = loop;
+   param.subchannel  = chan;
+
+   S_StartSfxInfo(param);
+}
+
+//
+// ACS_funcPlaySound
+//
+static void ACS_funcPlaySound(ACS_FUNCARG)
+{
+   Mobj      *mo  = P_FindMobjFromTID(args[0], NULL, thread->trigger);
+   sfxinfo_t *sfx = S_SfxInfoForName(ACSVM::GetString(args[1]));
+
+   if(!mo || !sfx) return;
+
+   ACS_playSound(mo, sfx, argc, args);
+}
+
+// PlayThingSound sound indexes.
+enum
+{
+   SOUND_See        = 0,
+   SOUND_Attack     = 1,
+   SOUND_Pain       = 2,
+   SOUND_Death      = 3,
+   SOUND_Active     = 4,
+   SOUND_Use        = 5,
+   SOUND_Bounce     = 6,
+   SOUND_WallBounce = 7,
+   SOUND_CrushPain  = 8,
+   SOUND_Howl       = 9,
+};
+
+//
+// ACS_funcPlayThingSound
+//
+static void ACS_funcPlayThingSound(ACS_FUNCARG)
+{
+   Mobj      *mo  = P_FindMobjFromTID(args[0], NULL, thread->trigger);
+   int        snd = args[1];
+   sfxinfo_t *sfx;
+
+   if(!mo) return;
+
+   switch(snd)
+   {
+   case SOUND_See:    snd = mo->info->seesound;    break;
+   case SOUND_Attack: snd = mo->info->attacksound; break;
+   case SOUND_Pain:   snd = mo->info->painsound;   break;
+   case SOUND_Death:  snd = mo->info->deathsound;  break;
+   case SOUND_Active: snd = mo->info->activesound; break;
+
+   default:
+      return;
+   }
+
+   if(!snd || !(sfx = E_SoundForDEHNum(snd))) return;
+
+   ACS_playSound(mo, sfx, argc, args);
 }
 
 //
@@ -1094,6 +1252,15 @@ void ACS_SetThingVar(Mobj *thing, uint32_t var, int32_t val)
    case ACS_THINGVAR_Mass:         break;
    case ACS_THINGVAR_Accuracy:     break;
    case ACS_THINGVAR_Stamina:      break;
+   case ACS_THINGVAR_Height:       break;
+   case ACS_THINGVAR_Radius:       break;
+   case ACS_THINGVAR_ReactionTime: break;
+   case ACS_THINGVAR_MeleeRange:   break;
+   case ACS_THINGVAR_ViewHeight:   break;
+   case ACS_THINGVAR_AttackZOff:   break;
+   case ACS_THINGVAR_StencilColor: break;
+   case ACS_THINGVAR_Friction:     break;
+   case ACS_THINGVAR_DamageMult:   break;
 
    case ACS_THINGVAR_Angle:          thing->angle = val << 16; break;
    case ACS_THINGVAR_Armor:          break;
@@ -1110,6 +1277,7 @@ void ACS_SetThingVar(Mobj *thing, uint32_t var, int32_t val)
    case ACS_THINGVAR_PlayerNumber:   break;
    case ACS_THINGVAR_SigilPieces:    break;
    case ACS_THINGVAR_TID:            P_RemoveThingTID(thing); P_AddThingTID(thing, val); break;
+   case ACS_THINGVAR_Type:           break;
    case ACS_THINGVAR_X:              thing->x = val; break;
    case ACS_THINGVAR_Y:              thing->y = val; break;
    case ACS_THINGVAR_Z:              thing->z = val; break;
@@ -1334,6 +1502,130 @@ static void ACS_funcSpawnSpotAngleForced(ACS_FUNCARG)
 }
 
 //
+// ACS_funcSqrt
+//
+static void ACS_funcSqrt(ACS_FUNCARG)
+{
+   *retn++ = (int32_t)sqrt((double)args[0]);
+}
+
+//
+// ACS_funcSqrtFixed
+//
+static void ACS_funcSqrtFixed(ACS_FUNCARG)
+{
+   *retn++ = M_DoubleToFixed(sqrt(M_FixedToDouble(args[0])));
+}
+
+//
+// ACS_funcStopSound
+//
+static void ACS_funcStopSound(ACS_FUNCARG)
+{
+   Mobj *mo   = P_FindMobjFromTID(args[0], NULL, thread->trigger);
+   int   chan = argc > 1 ? args[1] & 7 : CHAN_BODY;
+
+   if(!mo) return;
+
+   S_StopSound(mo, chan);
+}
+
+//
+// ACS_funcStrCaseCmp
+//
+static void ACS_funcStrCaseCmp(ACS_FUNCARG)
+{
+   const char *l = ACSVM::GetString(args[0]);
+   const char *r = ACSVM::GetString(args[1]);
+
+   if(argc > 2)
+      *retn++ = strncasecmp(l, r, args[2]);
+   else
+      *retn++ = strcasecmp(l, r);
+}
+
+//
+// ACS_funcStrCmp
+//
+static void ACS_funcStrCmp(ACS_FUNCARG)
+{
+   const char *l = ACSVM::GetString(args[0]);
+   const char *r = ACSVM::GetString(args[1]);
+
+   if(argc > 2)
+      *retn++ = strncmp(l, r, args[2]);
+   else
+      *retn++ = strcmp(l, r);
+}
+
+//
+// ACS_funcStrLeft
+//
+static void ACS_funcStrLeft(ACS_FUNCARG)
+{
+   ACSString *str = ACSVM::GetStringData(args[0]);
+   uint32_t   len = args[1];
+
+   if(!str)
+   {
+      *retn++ = ACSVM::AddString("", 0);
+   }
+   else if(len < str->data.l)
+   {
+      *retn++ = ACSVM::AddString(str->data.s, len);
+   }
+   else
+   {
+      *retn++ = args[0];
+   }
+}
+
+//
+// ACS_funcStrMid
+//
+static void ACS_funcStrMid(ACS_FUNCARG)
+{
+   ACSString *str   = ACSVM::GetStringData(args[0]);
+   uint32_t   start = args[1];
+   uint32_t   len   = args[2];
+
+   if(!str || start >= str->data.l)
+   {
+      *retn++ = ACSVM::AddString("", 0);
+   }
+   else if(start + len < str->data.l)
+   {
+      *retn++ = ACSVM::AddString(str->data.s + start, len);
+   }
+   else
+   {
+      *retn++ = ACSVM::AddString(str->data.s + start, str->data.l - start);
+   }
+}
+
+//
+// ACS_funcStrRight
+//
+static void ACS_funcStrRight(ACS_FUNCARG)
+{
+   ACSString *str = ACSVM::GetStringData(args[0]);
+   uint32_t   len = args[1];
+
+   if(!str)
+   {
+      *retn++ = ACSVM::AddString("", 0);
+   }
+   else if(len < str->data.l)
+   {
+      *retn++ = ACSVM::AddString(str->data.s + str->data.l - len, len);
+   }
+   else
+   {
+      *retn++ = args[0];
+   }
+}
+
+//
 // ACS_funcSuspendScriptName
 //
 static void ACS_funcSuspendScriptName(ACS_FUNCARG)
@@ -1536,6 +1828,16 @@ static void ACS_funcThingSound(ACS_FUNCARG)
 }
 
 //
+// ACS_funcTrigHypot
+//
+static void ACS_funcTrigHypot(ACS_FUNCARG)
+{
+   double x = M_FixedToDouble(args[0]);
+   double y = M_FixedToDouble(args[1]);
+   *retn++ = M_DoubleToFixed(sqrt(x * x + y * y));
+}
+
+//
 // ACS_funcUniqueTID
 //
 static void ACS_funcUniqueTID(ACS_FUNCARG)
@@ -1582,6 +1884,8 @@ acs_func_t ACSfunc[ACS_FUNCMAX] =
    ACS_funcExecuteScriptName,
    ACS_funcExecuteScriptAlwaysName,
    ACS_funcExecuteScriptResultName,
+   ACS_funcGetCVar,
+   ACS_funcGetCVarString,
    ACS_funcGetPlayerInput,
    ACS_funcGetPolyobjX,
    ACS_funcGetPolyobjY,
@@ -1590,6 +1894,8 @@ acs_func_t ACSfunc[ACS_FUNCMAX] =
    ACS_funcGetSectorLightLevel,
    ACS_funcGetThingVar,
    ACS_funcIsTIDUsed,
+   ACS_funcPlaySound,
+   ACS_funcPlayThingSound,
    ACS_funcRandom,
    ACS_funcRadiusQuake,
    ACS_funcReplaceTextures,
@@ -1618,6 +1924,14 @@ acs_func_t ACSfunc[ACS_FUNCMAX] =
    ACS_funcSpawnSpotForced,
    ACS_funcSpawnSpotAngle,
    ACS_funcSpawnSpotAngleForced,
+   ACS_funcSqrt,
+   ACS_funcSqrtFixed,
+   ACS_funcStopSound,
+   ACS_funcStrCaseCmp,
+   ACS_funcStrCmp,
+   ACS_funcStrLeft,
+   ACS_funcStrMid,
+   ACS_funcStrRight,
    ACS_funcSuspendScriptName,
    ACS_funcTerminateScriptName,
    ACS_funcThingCount,
@@ -1627,6 +1941,7 @@ acs_func_t ACSfunc[ACS_FUNCMAX] =
    ACS_funcThingDamage,
    ACS_funcThingProjectile,
    ACS_funcThingSound,
+   ACS_funcTrigHypot,
    ACS_funcUniqueTID,
 };
 

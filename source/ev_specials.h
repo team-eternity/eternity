@@ -84,7 +84,7 @@ typedef bool (*EVPreFunc)(ev_action_t *, ev_instance_t *);
 // parameter. Most other parameters are optional and must be checked for
 // validity.
 //
-typedef bool (*EVPostFunc)(ev_action_t *, bool, ev_instance_t *);
+typedef int (*EVPostFunc)(ev_action_t *, int, ev_instance_t *);
 
 //
 // EVActionFunc
@@ -92,7 +92,7 @@ typedef bool (*EVPostFunc)(ev_action_t *, bool, ev_instance_t *);
 // All actions must adhere to this call signature. Most members of the 
 // specialactivation structure are optional and must be checked for validity.
 //
-typedef bool (*EVActionFunc)(ev_action_t *, ev_instance_t *);
+typedef int (*EVActionFunc)(ev_action_t *, ev_instance_t *);
 
 //
 // ev_actiontype_t
@@ -182,7 +182,7 @@ bool EV_IsParamLineSpec(int special);
 // Activation
 bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing, int spac);
 bool EV_ActivateSpecialNum(int special, int *args, Mobj *thing);
-bool EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *thing);
+int  EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *thing);
 bool EV_ActivateAction(ev_action_t *action, int *args, Mobj *thing);
 
 //
