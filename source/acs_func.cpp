@@ -198,6 +198,15 @@ bool ACS_ChkThingVar(Mobj *thing, uint32_t var, int32_t val)
    case ACS_THINGVAR_Mass:         return thing->info->mass == val;
    case ACS_THINGVAR_Accuracy:     return false;
    case ACS_THINGVAR_Stamina:      return false;
+   case ACS_THINGVAR_Height:       return thing->height == val;
+   case ACS_THINGVAR_Radius:       return thing->radius == val;
+   case ACS_THINGVAR_ReactionTime: return thing->reactiontime == val;
+   case ACS_THINGVAR_MeleeRange:   return MELEERANGE == val;
+   case ACS_THINGVAR_ViewHeight:   return false;
+   case ACS_THINGVAR_AttackZOff:   return false;
+   case ACS_THINGVAR_StencilColor: return false;
+   case ACS_THINGVAR_Friction:     return false;
+   case ACS_THINGVAR_DamageMult:   return false;
 
    case ACS_THINGVAR_Angle:          return thing->angle >> 16 == (uint32_t)val;
    case ACS_THINGVAR_Armor:          return thing->player ? thing->player->armorpoints == val : false;
@@ -214,6 +223,7 @@ bool ACS_ChkThingVar(Mobj *thing, uint32_t var, int32_t val)
    case ACS_THINGVAR_PlayerNumber:   return thing->player ? thing->player - players == val : false;
    case ACS_THINGVAR_SigilPieces:    return false;
    case ACS_THINGVAR_TID:            return thing->tid == val;
+   case ACS_THINGVAR_Type:           return thing->type == E_ThingNumForName(ACSVM::GetString(val));
    case ACS_THINGVAR_X:              return thing->x == val;
    case ACS_THINGVAR_Y:              return thing->y == val;
    case ACS_THINGVAR_Z:              return thing->z == val;
@@ -601,6 +611,15 @@ int32_t ACS_GetThingVar(Mobj *thing, uint32_t var)
    case ACS_THINGVAR_Mass:         return thing->info->mass;
    case ACS_THINGVAR_Accuracy:     return 0;
    case ACS_THINGVAR_Stamina:      return 0;
+   case ACS_THINGVAR_Height:       return thing->height;
+   case ACS_THINGVAR_Radius:       return thing->radius;
+   case ACS_THINGVAR_ReactionTime: return thing->reactiontime;
+   case ACS_THINGVAR_MeleeRange:   return MELEERANGE;
+   case ACS_THINGVAR_ViewHeight:   return 0;
+   case ACS_THINGVAR_AttackZOff:   return 0;
+   case ACS_THINGVAR_StencilColor: return 0;
+   case ACS_THINGVAR_Friction:     return 0;
+   case ACS_THINGVAR_DamageMult:   return 0;
 
    case ACS_THINGVAR_Angle:          return thing->angle >> 16;
    case ACS_THINGVAR_Armor:          return thing->player ? thing->player->armorpoints : 0;
@@ -617,6 +636,7 @@ int32_t ACS_GetThingVar(Mobj *thing, uint32_t var)
    case ACS_THINGVAR_PlayerNumber:   return thing->player ? thing->player - players : -1;
    case ACS_THINGVAR_SigilPieces:    return 0;
    case ACS_THINGVAR_TID:            return thing->tid;
+   case ACS_THINGVAR_Type:           return ACSVM::AddString(thing->info->name);
    case ACS_THINGVAR_X:              return thing->x;
    case ACS_THINGVAR_Y:              return thing->y;
    case ACS_THINGVAR_Z:              return thing->z;
@@ -1232,6 +1252,15 @@ void ACS_SetThingVar(Mobj *thing, uint32_t var, int32_t val)
    case ACS_THINGVAR_Mass:         break;
    case ACS_THINGVAR_Accuracy:     break;
    case ACS_THINGVAR_Stamina:      break;
+   case ACS_THINGVAR_Height:       break;
+   case ACS_THINGVAR_Radius:       break;
+   case ACS_THINGVAR_ReactionTime: break;
+   case ACS_THINGVAR_MeleeRange:   break;
+   case ACS_THINGVAR_ViewHeight:   break;
+   case ACS_THINGVAR_AttackZOff:   break;
+   case ACS_THINGVAR_StencilColor: break;
+   case ACS_THINGVAR_Friction:     break;
+   case ACS_THINGVAR_DamageMult:   break;
 
    case ACS_THINGVAR_Angle:          thing->angle = val << 16; break;
    case ACS_THINGVAR_Armor:          break;
@@ -1248,6 +1277,7 @@ void ACS_SetThingVar(Mobj *thing, uint32_t var, int32_t val)
    case ACS_THINGVAR_PlayerNumber:   break;
    case ACS_THINGVAR_SigilPieces:    break;
    case ACS_THINGVAR_TID:            P_RemoveThingTID(thing); P_AddThingTID(thing, val); break;
+   case ACS_THINGVAR_Type:           break;
    case ACS_THINGVAR_X:              thing->x = val; break;
    case ACS_THINGVAR_Y:              thing->y = val; break;
    case ACS_THINGVAR_Z:              thing->z = val; break;

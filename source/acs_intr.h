@@ -244,6 +244,15 @@ enum
    ACS_THINGVAR_Mass         = 32,
    ACS_THINGVAR_Accuracy     = 33,
    ACS_THINGVAR_Stamina      = 34,
+   ACS_THINGVAR_Height       = 35,
+   ACS_THINGVAR_Radius       = 36,
+   ACS_THINGVAR_ReactionTime = 37,
+   ACS_THINGVAR_MeleeRange   = 38,
+   ACS_THINGVAR_ViewHeight   = 39,
+   ACS_THINGVAR_AttackZOff   = 40,
+   ACS_THINGVAR_StencilColor = 41,
+   ACS_THINGVAR_Friction     = 42,
+   ACS_THINGVAR_DamageMult   = 43,
 
    // Unexposed variables.
    ACS_THINGVAR_Angle,
@@ -261,6 +270,7 @@ enum
    ACS_THINGVAR_PlayerNumber,
    ACS_THINGVAR_SigilPieces,
    ACS_THINGVAR_TID,
+   ACS_THINGVAR_Type,
    ACS_THINGVAR_X,
    ACS_THINGVAR_Y,
    ACS_THINGVAR_Z,
@@ -647,6 +657,7 @@ public:
       return strnum < GlobalNumStrings ? GlobalStrings[strnum] : NULL;
    }
 
+   static uint32_t AddString(const char *s) {return AddString(s, strlen(s));}
    static uint32_t AddString(const char *s, uint32_t l);
 
    static void ArchiveStrings(SaveArchive &arc);

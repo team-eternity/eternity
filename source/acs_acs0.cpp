@@ -195,6 +195,7 @@ static uint32_t ACS_traceFuncACS0(uint32_t func, uint32_t argc)
    case   9: // ACS_FUNC_GetThingMomX
    case  10: // ACS_FUNC_GetThingMomY
    case  11: // ACS_FUNC_GetThingMomZ
+   case  68: // ACS_FUNC_GetThingType
       if(argc == 1)
          return 2;
       break;
@@ -202,6 +203,7 @@ static uint32_t ACS_traceFuncACS0(uint32_t func, uint32_t argc)
    case  15: // ACS_FUNC_GetChar
       if(argc == 2)
          return 1;
+      break;
    }
 
    return 3;
@@ -406,6 +408,15 @@ static void ACS_translateFuncACS0(int32_t *&codePtr, uint32_t func, uint32_t arg
          return;
       }
       break;
+
+   case  68: // ACS_FUNC_GetThingType
+      if(argc == 1)
+      {
+         *codePtr++ = ACS_OP_GET_THINGVAR;
+         *codePtr++ = ACS_THINGVAR_Type;
+         return;
+      }
+      break;
    }
 
    switch(func)
@@ -484,6 +495,7 @@ static void ACS_translateFuncACS0(int32_t *&codePtr, uint32_t func, uint32_t arg
    case  65: funcnum = ACS_FUNC_StrLeft;                 break;
    case  66: funcnum = ACS_FUNC_StrRight;                break;
    case  67: funcnum = ACS_FUNC_StrMid;                  break;
+ //case  68: funcnum = ACS_FUNC_GetThingType;            break;
    case  71: funcnum = ACS_FUNC_PlayThingSound;          break;
    }
 
