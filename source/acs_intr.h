@@ -111,6 +111,7 @@ enum acs_funcnum_t
    ACS_FUNC_ChangeCeiling,
    ACS_FUNC_ChangeFloor,
    ACS_FUNC_CheckSight,
+   ACS_FUNC_CheckThingFlag,
    ACS_FUNC_CheckThingType,
    ACS_FUNC_ChkThingVar,
    ACS_FUNC_ClassifyThing,

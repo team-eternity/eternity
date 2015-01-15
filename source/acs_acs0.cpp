@@ -496,7 +496,13 @@ static void ACS_translateFuncACS0(int32_t *&codePtr, uint32_t func, uint32_t arg
    case  66: funcnum = ACS_FUNC_StrRight;                break;
    case  67: funcnum = ACS_FUNC_StrMid;                  break;
  //case  68: funcnum = ACS_FUNC_GetThingType;            break;
+ //case  69: funcnum = ACS_FUNC_GetWeapon;               break;
+ //case  70: funcnum = ACS_FUNC_SoundVolume;             break;
    case  71: funcnum = ACS_FUNC_PlayThingSound;          break;
+ //case  72: funcnum = ACS_FUNC_SpawnDecal;              break;
+ //case  73: funcnum = ACS_FUNC_CheckFont;               break;
+ //case  74: funcnum = ACS_FUNC_DropItem;                break;
+   case  75: funcnum = ACS_FUNC_CheckThingFlag;          break;
    }
 
    *codePtr++ = ACS_OP_CALLFUNC_ZD;

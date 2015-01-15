@@ -41,6 +41,7 @@
 #include "d_gi.h"
 #include "e_args.h"
 #include "e_exdata.h"
+#include "e_hash.h"
 #include "e_mod.h"
 #include "e_states.h"
 #include "e_things.h"
@@ -140,6 +141,26 @@ static void ACS_funcCheckSight(ACS_FUNCARG)
    }
 
    *retn++ = 0;
+}
+
+//
+// ACS_funcCheckThingFlag
+//
+static void ACS_funcCheckThingFlag(ACS_FUNCARG)
+{
+   Mobj       *mo   = P_FindMobjFromTID(args[0], NULL, thread->trigger);
+   dehflags_t *flag = deh_ParseFlagCombined(ACSVM::GetString(args[1]));
+
+   if(!mo || !flag) {*retn++ = 0; return;}
+
+   switch(flag->index)
+   {
+   case 0: *retn++ = !!(mo->flags  & flag->value); break;
+   case 1: *retn++ = !!(mo->flags2 & flag->value); break;
+   case 2: *retn++ = !!(mo->flags3 & flag->value); break;
+   case 3: *retn++ = !!(mo->flags4 & flag->value); break;
+   default: *retn++ = 0; break;
+   }
 }
 
 //
@@ -1878,6 +1899,7 @@ acs_func_t ACSfunc[ACS_FUNCMAX] =
    ACS_funcChangeCeiling,
    ACS_funcChangeFloor,
    ACS_funcCheckSight,
+   ACS_funcCheckThingFlag,
    ACS_funcCheckThingType,
    ACS_funcChkThingVar,
    ACS_funcClassifyThing,

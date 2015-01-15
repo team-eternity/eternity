@@ -758,6 +758,34 @@ void deh_procBexCodePointers(DWFILE *fpin, char *line)
    return;
 }
 
+//
+// deh_ParseFlag
+//
+// davidph 01/14/14: split from deh_ParseFlags
+//
+dehflags_t *deh_ParseFlag(dehflagset_t *flagset, const char *name)
+{
+   int mode = flagset->mode;
+
+   for(dehflags_t *flag = flagset->flaglist; flag->name; ++flag)
+   {
+      if(!strcasecmp(name, flag->name) &&
+         (flag->index == mode || mode == DEHFLAGS_MODE_ALL))
+      {
+         return flag;
+      }
+   }
+
+   return NULL;
+}
+
+dehflags_t *deh_ParseFlagCombined(const char *name)
+{
+   dehacked_flags.mode = DEHFLAGS_MODE_ALL;
+
+   return deh_ParseFlag(&dehacked_flags, name);
+}
+
 // ============================================================
 // deh_ParseFlags
 // Purpose: Handle thing flag fields in a general manner
@@ -774,9 +802,7 @@ void deh_procBexCodePointers(DWFILE *fpin, char *line)
 //
 void deh_ParseFlags(dehflagset_t *flagset, char **strval)
 {
-   dehflags_t   *flaglist = flagset->flaglist; // get flag list
    unsigned int *results  = flagset->results;  // pointer to results array
-   int           mode     = flagset->mode;     // get mode
 
    // haleyjd: init all results to zero
    memset(results, 0, MAXFLAGFIELDS * sizeof(*results));
@@ -788,24 +814,17 @@ void deh_ParseFlags(dehflagset_t *flagset, char **strval)
 
    for(;(*strval = strtok(*strval, ",+| \t\f\r")); *strval = NULL)
    {
-      int iy = 0;
+      dehflags_t *flag = deh_ParseFlag(flagset, *strval);
 
-      while(flaglist[iy].name != NULL)
+      if(flag)
       {
-         int index = flaglist[iy].index;
-
-         if(!strcasecmp(*strval, flaglist[iy].name) &&
-            (index == mode || mode == DEHFLAGS_MODE_ALL))
-         {
-            deh_LogPrintf("ORed value 0x%08lx %s\n", 
-                          flaglist[iy].value, *strval);
-            results[index] |= flaglist[iy].value;
-            break;
-         }
-         ++iy;
+         deh_LogPrintf("ORed value 0x%08lx %s\n", flag->value, *strval);
+         results[flag->index] |= flag->value;
       }
-      if(flaglist[iy].name == NULL)
+      else
+      {
          deh_LogPrintf("Could not find bit mnemonic %s\n", *strval);
+      }
    }
 }
 
