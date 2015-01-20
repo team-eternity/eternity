@@ -503,6 +503,21 @@ static void ACS_translateFuncACS0(int32_t *&codePtr, uint32_t func, uint32_t arg
  //case  73: funcnum = ACS_FUNC_CheckFont;               break;
  //case  74: funcnum = ACS_FUNC_DropItem;                break;
    case  75: funcnum = ACS_FUNC_CheckThingFlag;          break;
+ //case  76: funcnum = ACS_FUNC_SetLineActivation;       break;
+ //case  77: funcnum = ACS_FUNC_GetLineActivation;       break;
+ //case  78: funcnum = ACS_FUNC_GetThingPowerupTics;     break;
+   case  79: funcnum = ACS_FUNC_SetThingAngle;           break;
+   case  80: funcnum = ACS_FUNC_SetThingPitch;           break;
+ //case  81: funcnum = ACS_FUNC_GetArmorInfo;            break;
+ //case  82: funcnum = ACS_FUNC_DropInventory;           break;
+ //case  83: funcnum = ACS_FUNC_PickThing;               break;
+ //case  84: funcnum = ACS_FUNC_IsPointerEqual;          break;
+ //case  85: funcnum = ACS_FUNC_CanRaiseThing;           break;
+ //case  86: funcnum = ACS_FUNC_SetThingTeleFog;         break;
+ //case  87: funcnum = ACS_FUNC_SwapThingTeleFog;        break;
+ //case  88: funcnum = ACS_FUNC_SetThingRoll;            break;
+ //case  89: funcnum = ACS_FUNC_ChangeThingRoll;         break;
+ //case  90: funcnum = ACS_FUNC_GetActorRoll;            break;
    }
 
    *codePtr++ = ACS_OP_CALLFUNC_ZD;

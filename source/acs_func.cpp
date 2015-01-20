@@ -1079,6 +1079,20 @@ static void ACS_funcSetSkyDelta(ACS_FUNCARG)
 }
 
 //
+// ACS_funcSetThingAngle
+//
+static void ACS_funcSetThingAngle(ACS_FUNCARG)
+{
+   int32_t tid   = args[0];
+   angle_t angle = (angle_t)args[1] << 16;
+
+   for(Mobj *mo = NULL; (mo = P_FindMobjFromTID(tid, mo, thread->trigger));)
+   {
+      mo->angle = angle;
+   }
+}
+
+//
 // ACS_funcSetThingMomentum
 //
 static void ACS_funcSetThingMomentum(ACS_FUNCARG)
@@ -1104,6 +1118,21 @@ static void ACS_funcSetThingMomentum(ACS_FUNCARG)
          mo->momy = momy;
          mo->momz = momz;
       }
+   }
+}
+
+//
+// ACS_funcSetThingPitch
+//
+static void ACS_funcSetThingPitch(ACS_FUNCARG)
+{
+   int32_t tid   = args[0];
+   angle_t pitch = (angle_t)args[1] << 16;
+
+   for(Mobj *mo = NULL; (mo = P_FindMobjFromTID(tid, mo, thread->trigger));)
+   {
+      if(mo->player)
+         mo->player->pitch = pitch;
    }
 }
 
