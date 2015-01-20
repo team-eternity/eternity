@@ -41,6 +41,7 @@
 #include "d_gi.h"
 #include "e_args.h"
 #include "e_exdata.h"
+#include "e_hash.h"
 #include "e_mod.h"
 #include "e_states.h"
 #include "e_things.h"
@@ -140,6 +141,26 @@ static void ACS_funcCheckSight(ACS_FUNCARG)
    }
 
    *retn++ = 0;
+}
+
+//
+// ACS_funcCheckThingFlag
+//
+static void ACS_funcCheckThingFlag(ACS_FUNCARG)
+{
+   Mobj       *mo   = P_FindMobjFromTID(args[0], NULL, thread->trigger);
+   dehflags_t *flag = deh_ParseFlagCombined(ACSVM::GetString(args[1]));
+
+   if(!mo || !flag) {*retn++ = 0; return;}
+
+   switch(flag->index)
+   {
+   case 0: *retn++ = !!(mo->flags  & flag->value); break;
+   case 1: *retn++ = !!(mo->flags2 & flag->value); break;
+   case 2: *retn++ = !!(mo->flags3 & flag->value); break;
+   case 3: *retn++ = !!(mo->flags4 & flag->value); break;
+   default: *retn++ = 0; break;
+   }
 }
 
 //
@@ -1058,6 +1079,20 @@ static void ACS_funcSetSkyDelta(ACS_FUNCARG)
 }
 
 //
+// ACS_funcSetThingAngle
+//
+static void ACS_funcSetThingAngle(ACS_FUNCARG)
+{
+   int32_t tid   = args[0];
+   angle_t angle = (angle_t)args[1] << 16;
+
+   for(Mobj *mo = NULL; (mo = P_FindMobjFromTID(tid, mo, thread->trigger));)
+   {
+      mo->angle = angle;
+   }
+}
+
+//
 // ACS_funcSetThingMomentum
 //
 static void ACS_funcSetThingMomentum(ACS_FUNCARG)
@@ -1083,6 +1118,21 @@ static void ACS_funcSetThingMomentum(ACS_FUNCARG)
          mo->momy = momy;
          mo->momz = momz;
       }
+   }
+}
+
+//
+// ACS_funcSetThingPitch
+//
+static void ACS_funcSetThingPitch(ACS_FUNCARG)
+{
+   int32_t tid   = args[0];
+   angle_t pitch = (angle_t)args[1] << 16;
+
+   for(Mobj *mo = NULL; (mo = P_FindMobjFromTID(tid, mo, thread->trigger));)
+   {
+      if(mo->player)
+         mo->player->pitch = pitch;
    }
 }
 
@@ -1871,78 +1921,9 @@ static void ACS_funcUniqueTID(ACS_FUNCARG)
 
 acs_func_t ACSfunc[ACS_FUNCMAX] =
 {
-   ACS_funcNOP,
-   ACS_funcActivatorSound,
-   ACS_funcAmbientSound,
-   ACS_funcAmbientSoundLocal,
-   ACS_funcChangeCeiling,
-   ACS_funcChangeFloor,
-   ACS_funcCheckSight,
-   ACS_funcCheckThingType,
-   ACS_funcChkThingVar,
-   ACS_funcClassifyThing,
-   ACS_funcExecuteScriptName,
-   ACS_funcExecuteScriptAlwaysName,
-   ACS_funcExecuteScriptResultName,
-   ACS_funcGetCVar,
-   ACS_funcGetCVarString,
-   ACS_funcGetPlayerInput,
-   ACS_funcGetPolyobjX,
-   ACS_funcGetPolyobjY,
-   ACS_funcGetSectorCeilingZ,
-   ACS_funcGetSectorFloorZ,
-   ACS_funcGetSectorLightLevel,
-   ACS_funcGetThingVar,
-   ACS_funcIsTIDUsed,
-   ACS_funcPlaySound,
-   ACS_funcPlayThingSound,
-   ACS_funcRandom,
-   ACS_funcRadiusQuake,
-   ACS_funcReplaceTextures,
-   ACS_funcSectorDamage,
-   ACS_funcSectorSound,
-   ACS_funcSetActivator,
-   ACS_funcSetActivatorToTarget,
-   ACS_funcSetLineBlocking,
-   ACS_funcSetLineMonsterBlocking,
-   ACS_funcSetLineSpecial,
-   ACS_funcSetLineTexture,
-   ACS_funcSetMusic,
-   ACS_funcSetMusicLocal,
-   ACS_funcSetSkyDelta,
-   ACS_funcSetThingMomentum,
-   ACS_funcSetThingPosition,
-   ACS_funcSetThingSpecial,
-   ACS_funcSetThingState,
-   ACS_funcSetThingVar,
-   ACS_funcSoundSequence,
-   ACS_funcSoundSequenceThing,
-   ACS_funcSpawnPoint,
-   ACS_funcSpawnPointForced,
-   ACS_funcSpawnProjectile,
-   ACS_funcSpawnSpot,
-   ACS_funcSpawnSpotForced,
-   ACS_funcSpawnSpotAngle,
-   ACS_funcSpawnSpotAngleForced,
-   ACS_funcSqrt,
-   ACS_funcSqrtFixed,
-   ACS_funcStopSound,
-   ACS_funcStrCaseCmp,
-   ACS_funcStrCmp,
-   ACS_funcStrLeft,
-   ACS_funcStrMid,
-   ACS_funcStrRight,
-   ACS_funcSuspendScriptName,
-   ACS_funcTerminateScriptName,
-   ACS_funcThingCount,
-   ACS_funcThingCountName,
-   ACS_funcThingCountNameSector,
-   ACS_funcThingCountSector,
-   ACS_funcThingDamage,
-   ACS_funcThingProjectile,
-   ACS_funcThingSound,
-   ACS_funcTrigHypot,
-   ACS_funcUniqueTID,
+   #define ACS_FUNC(FUNC) ACS_func##FUNC,
+   #include "acs_op.h"
+   #undef ACS_FUNC
 };
 
 // EOF
