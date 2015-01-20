@@ -689,7 +689,7 @@ static void ACS_playSound(Mobj *mo, sfxinfo_t *sfx, uint32_t argc, const int32_t
 {
    int     chan = argc > 2 ? args[2] & 7 : CHAN_BODY;
    int     vol  = argc > 3 ? args[3] >> 9 : 127;
-   int     loop = argc > 4 ? args[4] & 1 : 0;
+   bool    loop = argc > 4 ? !!(args[4] & 1) : false;
    fixed_t attn = argc > 5 ? args[5] : 1 << FRACBITS;
 
    // We don't have arbitrary attentuation, so try to map to a supported enum.
