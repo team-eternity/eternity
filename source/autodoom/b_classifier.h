@@ -31,9 +31,11 @@
 
 
 class Mobj;
+struct mobjinfo_t;
 
 bool B_IsMobjSolidDecor(const Mobj &mo);
 bool B_IsMobjHostile(const Mobj& mo);
+bool B_IsMobjHitscanner(const Mobj& mo);
 
 #endif 
 

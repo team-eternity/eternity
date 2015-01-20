@@ -566,6 +566,22 @@ static bool B_stateAttacks(statenum_t sn, const mobjinfo_t &mi)
 
     return false;
 }
+static bool B_stateHitscans(statenum_t sn, const mobjinfo_t& mi)
+{
+    const state_t &st = *states[sn];
+    static const std::unordered_set<void(*)(actionargs_t*)> attacks =
+    {
+        A_PosAttack,
+        A_SPosAttack,
+        A_VileAttack,
+        A_CPosAttack,
+        A_Nailbomb,
+        A_BulletAttack,
+    };
+    if (attacks.count(st.action))
+        return true;
+    return false;
+}
 
 //
 // B_IsMobjHostile
@@ -579,6 +595,22 @@ bool B_IsMobjHostile(const Mobj& mo)
     if (mi.spawnstate == NullStateNum)
         return false;
     if (B_stateEncounters(mi.spawnstate, mo, B_stateAttacks, true))
+        return true;
+
+    return false;
+}
+
+//
+// B_IsMobjHostile
+//
+// Checks if mobjinfo belongs to a hitscanner. Done simple enough because srsly
+//
+bool B_IsMobjHitscanner(const Mobj& mo)
+{
+    const mobjinfo_t& mi = *mo.info;
+    if (mi.spawnstate == NullStateNum)
+        return false;
+    if (B_stateEncounters(mi.missilestate, mo, B_stateHitscans, true))
         return true;
 
     return false;
