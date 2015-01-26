@@ -39,8 +39,16 @@
 #include "../m_collection.h"
 #include "../p_mobj.h"
 
+static uint32_t* g_infoSet;
+
+void B_UpdateMobjInfoSet(int numthingsalloc)
+{
+   g_infoSet = erealloc(decltype(g_infoSet), g_infoSet, numthingsalloc * sizeof(*g_infoSet));
+   memset(g_infoSet, 0, numthingsalloc * sizeof(*g_infoSet));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
-// Solid decoration detection
+// State walking
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef std::unordered_set<statenum_t> StateSet;
@@ -613,16 +621,18 @@ bool B_IsMobjHostile(const Mobj& mo)
 //
 bool B_IsMobjHitscanner(const Mobj& mo)
 {
-   static std::unordered_set<const mobjinfo_t*> infoset;
-   if(infoset.count(mo.info))
+   long d = mo.info - mobjinfo[0];
+   if(g_infoSet[d])
+   {
       return true;
+   }
 
     const mobjinfo_t& mi = *mo.info;
     if (mi.spawnstate == NullStateNum || mi.missilestate == NullStateNum)
         return false;
     if (B_stateEncounters(mi.missilestate, mo, B_stateHitscans, true))
     {
-       infoset.insert(mo.info);
+       g_infoSet[d] = 1;
         return true;
     }
 

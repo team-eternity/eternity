@@ -36,6 +36,7 @@
 
 #include "acs_intr.h"
 
+#include "autodoom/b_classifier.h"  // IOANCH
 #include "d_dehtbl.h"
 #include "d_gi.h"
 #include "d_io.h"
@@ -744,6 +745,8 @@ static void E_ReallocThings(int numnewthings)
 
       // reallocate mobjinfo[]
       mobjinfo = erealloc(mobjinfo_t **, mobjinfo, numthingsalloc * sizeof(mobjinfo_t *));
+      // IOANCH: reallocate associated bot learn info
+      B_UpdateMobjInfoSet(numthingsalloc);
 
       // set the new mobjinfo pointers to NULL
       for(i = NUMMOBJTYPES; i < numthingsalloc; i++)

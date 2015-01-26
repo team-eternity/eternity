@@ -33,6 +33,8 @@
 class Mobj;
 struct mobjinfo_t;
 
+void B_UpdateMobjInfoSet(int numthingsalloc);
+
 bool B_IsMobjSolidDecor(const Mobj &mo);
 bool B_IsMobjHostile(const Mobj& mo);
 bool B_IsMobjHitscanner(const Mobj& mo);
