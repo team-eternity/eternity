@@ -613,13 +613,34 @@ bool B_IsMobjHostile(const Mobj& mo)
 //
 bool B_IsMobjHitscanner(const Mobj& mo)
 {
+   static std::unordered_set<const mobjinfo_t*> infoset;
+   if(infoset.count(mo.info))
+      return true;
+
     const mobjinfo_t& mi = *mo.info;
-    if (mi.spawnstate == NullStateNum)
+    if (mi.spawnstate == NullStateNum || mi.missilestate == NullStateNum)
         return false;
     if (B_stateEncounters(mi.missilestate, mo, B_stateHitscans, true))
+    {
+       infoset.insert(mo.info);
         return true;
+    }
 
     return false;
+}
+
+//
+// B_IsMobjExplosiveDeath
+//
+// True if mobj's death contains explosions
+//
+bool B_IsMobjExplosiveDeath(const Mobj& mo)
+{
+    const mobjinfo_t& mi = *mo.info;
+   if (mi.spawnstate == NullStateNum || mi.deathstate == NullStateNum)
+      return false;
+   // TODO: return true if pain or death leads into explosion
+   return false;
 }
 
 // EOF

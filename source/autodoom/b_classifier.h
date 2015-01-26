@@ -36,6 +36,7 @@ struct mobjinfo_t;
 bool B_IsMobjSolidDecor(const Mobj &mo);
 bool B_IsMobjHostile(const Mobj& mo);
 bool B_IsMobjHitscanner(const Mobj& mo);
+bool B_IsMobjExplosiveDeath(const Mobj& mo);
 
 #endif 
 
