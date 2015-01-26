@@ -566,6 +566,12 @@ static bool B_stateAttacks(statenum_t sn, const mobjinfo_t &mi)
 
     return false;
 }
+
+//
+// B_stateHitscans
+//
+// True if this state has an instant-hit avoidable attack
+//
 static bool B_stateHitscans(statenum_t sn, const mobjinfo_t& mi)
 {
     const state_t &st = *states[sn];
@@ -601,7 +607,7 @@ bool B_IsMobjHostile(const Mobj& mo)
 }
 
 //
-// B_IsMobjHostile
+// B_IsMobjHitscanner
 //
 // Checks if mobjinfo belongs to a hitscanner. Done simple enough because srsly
 //
