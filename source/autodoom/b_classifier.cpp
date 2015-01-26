@@ -39,12 +39,19 @@
 #include "../m_collection.h"
 #include "../p_mobj.h"
 
-static uint32_t* g_infoSet;
+enum Trait
+{
+   Trait_hostile = 1,
+   Trait_hitscan = 2,
+   Trait_explosiveDeath = 4,
+};
+
+static uint32_t* g_traitSet;
 
 void B_UpdateMobjInfoSet(int numthingsalloc)
 {
-   g_infoSet = erealloc(decltype(g_infoSet), g_infoSet, numthingsalloc * sizeof(*g_infoSet));
-   memset(g_infoSet, 0, numthingsalloc * sizeof(*g_infoSet));
+   g_traitSet = erealloc(decltype(g_traitSet), g_traitSet, numthingsalloc * sizeof(*g_traitSet));
+   memset(g_traitSet, 0, numthingsalloc * sizeof(*g_traitSet));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -604,12 +611,20 @@ static bool B_stateHitscans(statenum_t sn, const mobjinfo_t& mi)
 //
 bool B_IsMobjHostile(const Mobj& mo)
 {
+   auto d = (long)(mo.info - mobjinfo[0]);
+   if(g_traitSet[d] & Trait_hostile)
+   {
+      return true;
+   }
     const mobjinfo_t& mi = *mo.info;
 
-    if (mi.spawnstate == NullStateNum)
+    if (mi.spawnstate == NullStateNum || mi.missilestate == NullStateNum)
         return false;
-    if (B_stateEncounters(mi.spawnstate, mo, B_stateAttacks, true))
+    if (B_stateEncounters(mi.missilestate, mo, B_stateAttacks, true))
+    {
+       g_traitSet[d] |= Trait_hostile;
         return true;
+    }
 
     return false;
 }
@@ -621,8 +636,8 @@ bool B_IsMobjHostile(const Mobj& mo)
 //
 bool B_IsMobjHitscanner(const Mobj& mo)
 {
-   long d = mo.info - mobjinfo[0];
-   if(g_infoSet[d])
+   long d = (long)(mo.info - mobjinfo[0]);
+   if(g_traitSet[d] & Trait_hitscan)
    {
       return true;
    }
@@ -632,7 +647,7 @@ bool B_IsMobjHitscanner(const Mobj& mo)
         return false;
     if (B_stateEncounters(mi.missilestate, mo, B_stateHitscans, true))
     {
-       g_infoSet[d] = 1;
+       g_traitSet[d] |= Trait_hitscan;
         return true;
     }
 
@@ -646,10 +661,16 @@ bool B_IsMobjHitscanner(const Mobj& mo)
 //
 bool B_IsMobjExplosiveDeath(const Mobj& mo)
 {
+   auto d = (long)(mo.info - mobjinfo[0]);
+   if(g_traitSet[d] & Trait_explosiveDeath)
+   {
+      return true;
+   }
+
     const mobjinfo_t& mi = *mo.info;
    if (mi.spawnstate == NullStateNum || mi.deathstate == NullStateNum)
       return false;
-   // TODO: return true if pain or death leads into explosion
+   // TODO
    return false;
 }
 
