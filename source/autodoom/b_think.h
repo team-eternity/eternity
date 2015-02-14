@@ -72,6 +72,7 @@ class Bot : public ZoneObject
    
    RandomGenerator          random;       // random generator for bot
    int                      m_straferunstate;
+   int m_combatStrafeState; // -1 or 1
    PathFinder               m_finder;
 public:
    BotPath                  m_path;
@@ -150,6 +151,7 @@ public:
    m_deepSearchMode(DeepNormal),
    m_deepRepeat(nullptr),
    m_straferunstate(0),
+   m_combatStrafeState(-1),
    m_justGotLost(false),
    m_intoSwitch(false),
    m_goalTimer(0),

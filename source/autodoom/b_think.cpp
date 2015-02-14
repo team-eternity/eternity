@@ -615,7 +615,7 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
         angleturn = -1500;
 
     if (!m_intoSwitch)
-        cmd->angleturn = angleturn;
+        cmd->angleturn = angleturn * random.range(1, 2);
 
     RTraversal rt;
     rt.SafeAimLineAttack(pl->mo, pl->mo->angle, MISSILERANGE / 2, 0);
@@ -681,18 +681,33 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
         }
         else
         {
-            if (P_AproxDistance(nx - mx, ny - my) < 384 * FRACUNIT)
+            angle_t momentumAngleDelta = P_PointToAngle(0, 0, pl->momx, pl->momy) - tangle;
+            if (random() % 128 == 0 || (!pl->momx && !pl->momy) || momentumAngleDelta > 315 * ANGLE_1 || momentumAngleDelta < 45 * ANGLE_1 || (momentumAngleDelta > 135 * ANGLE_1 && momentumAngleDelta < 225 * ANGLE_1))
+                m_combatStrafeState = random.range(0, 1) * 2 - 1;
+            if (random() % 8 != 0)
             {
-                //cmd->sidemove /= -1;
-                if (cmd->forwardmove > 0)
-                {
-//                    cmd->forwardmove += random.range(<#int min#>, <#int max#>);
+                cmd->forwardmove = FixedMul(2 * pl->pclass->forwardmove[1],
+                    B_AngleSine(dangle)) * m_combatStrafeState;
+                cmd->sidemove = FixedMul(2 * pl->pclass->sidemove[1],
+                    B_AngleCosine(dangle)) * m_combatStrafeState;
 
-                    //cmd->sidemove += random.range(-pl->pclass->sidemove[0],
-                    //                              pl->pclass->sidemove[0]) * 8;
-                    //cmd->forwardmove += random.range(-pl->pclass->forwardmove[0],
-                    //                                 0) * 8;
+                if (P_AproxDistance(nx - mx, ny - my) < 384 * FRACUNIT)
+                {
+                    cmd->forwardmove -= FixedMul(2 * pl->pclass->forwardmove[1],
+                        B_AngleCosine(dangle));
+                    cmd->sidemove += FixedMul(2 * pl->pclass->sidemove[1],
+                        B_AngleSine(dangle));
                 }
+                else
+                {
+                    cmd->forwardmove += FixedMul(2 * pl->pclass->forwardmove[1],
+                        B_AngleCosine(dangle));
+                    cmd->sidemove -= FixedMul(2 * pl->pclass->sidemove[1],
+                        B_AngleSine(dangle));
+                }
+
+                cmd->forwardmove += random.range(-pl->pclass->forwardmove[0], pl->pclass->forwardmove[0]) / 8;
+                cmd->sidemove += random.range(-pl->pclass->sidemove[0], pl->pclass->sidemove[0]) / 8;
             }
             //cmd->sidemove += random.range(-pl->pclass->sidemove[0],
             //    pl->pclass->sidemove[0]);
@@ -1045,7 +1060,6 @@ void Bot::doCommand()
    {
        //if (!m_hasPath || ss != m_path.last)
        {
-           cmd->angleturn = 0;
            doCombatAI(targets);
        }
    }
