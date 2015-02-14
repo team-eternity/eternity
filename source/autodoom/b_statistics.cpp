@@ -98,7 +98,7 @@ void B_StoreMonsterStats()
    }
    for (auto it = g_stats.begin(); it != g_stats.end(); ++it)
    {
-      fprintf(f, "%zd\t%d\t%d\t%g\n", it->first - mobjinfo[0], it->second.totalDamageToPlayer, it->second.monsterDeaths, B_GetMonsterThreatLevel(it->first));
+      fprintf(f, "%d\t%d\t%d\t%g\n", (int)(it->first - mobjinfo[0]), it->second.totalDamageToPlayer, it->second.monsterDeaths, B_GetMonsterThreatLevel(it->first));
    }
    fclose(f);
 }
