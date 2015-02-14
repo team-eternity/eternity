@@ -77,6 +77,7 @@ void Bot::mapInit()
    m_deepAvailSsectors.clear();
    m_deepRepeat = nullptr;
     m_justGotLost = false;
+    m_intoSwitch = false;
     m_goalTimer = 0;
     m_dropSS.clear();
     
@@ -613,7 +614,8 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
     if (angleturn < -1500)
         angleturn = -1500;
 
-    cmd->angleturn += angleturn;
+    if (!m_intoSwitch)
+        cmd->angleturn = angleturn;
 
     RTraversal rt;
     rt.SafeAimLineAttack(pl->mo, pl->mo->angle, MISSILERANGE / 2, 0);
@@ -709,39 +711,22 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
 //
 void Bot::doNonCombatAI()
 {
-    if (!m_hasPath/* || m_goalTimer > 105*/)
+    if (!m_hasPath)
     {
         // TODO: object of interest
         LevelStateStack::SetKeyPlayer(pl);
-        if(/*m_goalTimer > 105 || */!m_finder.FindNextGoal(pl->mo->x, pl->mo->y, m_path, objOfInterest, this))
+        if(!m_finder.FindNextGoal(pl->mo->x, pl->mo->y, m_path, objOfInterest, this))
         {
             ++m_searchstage;
             cmd->sidemove += random.range(-pl->pclass->sidemove[0],
                 pl->pclass->sidemove[0]);
             cmd->forwardmove += random.range(-pl->pclass->forwardmove[0],
                 pl->pclass->forwardmove[0]);
-//            if(m_goalTimer > 105)
-//            {
-//                ++m_goalTimer;
-//                if(m_goalTimer > 140)
-//                    m_goalTimer = 0;
-//            }
             return;
         }
         m_hasPath = true;
         m_path.runfast = false;
     }
-    //if(!path.exists())
-    //{
-    //   if(!routePath())
-    //   {
-    //      cmd->sidemove += random.range(-pl->pclass->sidemove[0],
-    //                                    pl->pclass->sidemove[0]);
-    //      cmd->forwardmove += random.range(-pl->pclass->forwardmove[0],
-    //                                    pl->pclass->forwardmove[0]);
-    //      return;
-    //   }
-    //}
 
     // found path to exit
     fixed_t mx, my, nx, ny;
@@ -752,13 +737,12 @@ void Bot::doNonCombatAI()
         nx = m_path.end.x;
         ny = m_path.end.y;
         m_lastPathSS = ss;
-//        ++m_goalTimer;
     }
     else
     {
-//        m_goalTimer = 0;
         const BSeg* seg;
         // from end to path to beginning
+        bool onPath = false;
         for (const BNeigh** nit = m_path.inv.begin(); nit != m_path.inv.end();
              ++nit)
         {
@@ -813,55 +797,50 @@ void Bot::doNonCombatAI()
                     m_dropSS.erase(ss);
                 }
                 nextss = (*nit)->ss;
-                goto moveon;
+                onPath = true;
+                break;
             }
         }
-        // not on path, so reset
-        if(m_lastPathSS)
+        
+        if (!onPath)
         {
-            if(!botMap->canPassNow(*ss, *m_lastPathSS,
-                                   pl->mo->height))
+            // not on path, so reset
+            if (m_lastPathSS)
             {
-                B_Log("Inserted goner %d",
-                      (int)(m_lastPathSS - &botMap->ssectors[0]));
-                m_dropSS.insert(m_lastPathSS);
-                for(const BNeigh& n : m_lastPathSS->neighs)
+                if (!botMap->canPassNow(*ss, *m_lastPathSS,
+                    pl->mo->height))
                 {
-                    if(P_AproxDistance(n.ss->mid.x - m_lastPathSS->mid.x,
-                                       n.ss->mid.y - m_lastPathSS->mid.y)
-                       < 128 * FRACUNIT)
+                    B_Log("Inserted goner %d",
+                        (int)(m_lastPathSS - &botMap->ssectors[0]));
+                    m_dropSS.insert(m_lastPathSS);
+                    for (const BNeigh& n : m_lastPathSS->neighs)
                     {
-                        m_dropSS.insert(n.ss);
+                        if (P_AproxDistance(n.ss->mid.x - m_lastPathSS->mid.x,
+                            n.ss->mid.y - m_lastPathSS->mid.y)
+                            < 128 * FRACUNIT)
+                        {
+                            m_dropSS.insert(n.ss);
+                        }
                     }
                 }
+                m_lastPathSS = nullptr;
             }
-            m_lastPathSS = nullptr;
+            m_searchstage = 0;
+            m_hasPath = false;
+            if (random() % 3 == 0)
+                m_justGotLost = true;
+            return;
         }
-        m_searchstage = 0;
-        m_hasPath = false;
-        if(random() % 3 == 0)
-            m_justGotLost = true;
-        return;
     }
-moveon:
-    //int nowon = path.straightPathCoordsIndex(pl->mo->x, pl->mo->y);
-    //
-    //if(nowon < 0 || prevCtr % 100 == 0)
-    //{
-    //	// Reset if out of the path, or if a pushwall stopped moving
-    //     searchstage = 0;
-    //	path.reset();
-    //	return;
-    //}
-    //
+
     mx = pl->mo->x;
     my = pl->mo->y;
-    bool intoSwitch = false;
+    m_intoSwitch = false;
     if (goalTable.hasKey(BOT_WALKTRIG)
         && P_AproxDistance(mx - m_path.end.x, my - m_path.end.y)
         < 2 * pl->mo->radius)
     {
-        intoSwitch = true;
+        m_intoSwitch = true;
         if(prevCtr % 2 == 0)
             cmd->buttons |= BT_USE;
     }
@@ -874,27 +853,17 @@ moveon:
         if(!nextsec->ceilingdata
            && botMap->sectorFlags[nextsec - ::sectors].isDoor)
         {
-//            B_Log("Opening door\n");
-            intoSwitch = true;
+            m_intoSwitch = true;
             if(prevCtr % 2 == 0)
                 cmd->buttons |= BT_USE;
         }
     }
-    //
-    //  int nexton = path.getNextStraightIndex(nowon);
-
-
-    //if(nexton == -1)
-    //   path.getFinalCoord(nx, ny);
-    //else
-    //   path.getStraightCoords(nexton, nx, ny);
 
     if (goalAchieved())
     {
         m_searchstage = 0;
         m_hasPath = false;
         return;
-        //path.reset();  // only reset if reached destination
     }
 
     bool moveslow = false;
@@ -912,12 +881,9 @@ moveon:
     angle_t tangle = P_PointToAngle(mx, my, nx, ny);
     angle_t dangle = tangle - pl->mo->angle;
 
-    //   if(dangle < ANG45 || dangle > ANG270 + ANG45)
-
-
     if (random() % 128 == 0)
         m_straferunstate = random.range(-1, 1);
-    if(!intoSwitch)
+    if (!m_intoSwitch)
         tangle += ANG45 * m_straferunstate;
 
     int16_t angleturn = (int16_t)(tangle >> 16) - (int16_t)(pl->mo->angle >> 16);
@@ -936,7 +902,7 @@ moveon:
             cmd->forwardmove += FixedMul((moveslow ? 1 : 2)
                                          * pl->pclass->forwardmove[moveslow ? 0 : 1],
                                          B_AngleCosine(dangle));
-        if(intoSwitch && ss == m_path.last && cmd->forwardmove < 0)
+        if (m_intoSwitch && ss == m_path.last && cmd->forwardmove < 0)
         {
             cmd->forwardmove = 0;
         }
@@ -951,7 +917,7 @@ moveon:
         }
     }
 
-   if(!m_path.runfast || intoSwitch)
+    if (!m_path.runfast || m_intoSwitch)
        cmd->angleturn += angleturn;
 //   printf("%d\n", angleturn);
 }

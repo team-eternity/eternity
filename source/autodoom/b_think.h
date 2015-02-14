@@ -78,10 +78,11 @@ public:
    bool                     m_hasPath;
 private:
    DeepSearch               m_deepSearchMode;
-   std::set<const line_t*>  m_deepTriedLines;
+   std::unordered_set<const line_t*>  m_deepTriedLines;
    std::unordered_set<const BSubsec*> m_deepAvailSsectors;
    const BSubsec*           m_deepRepeat;
    bool                     m_justGotLost;
+   bool                     m_intoSwitch;
    int                      m_goalTimer;
    
    // internal states
@@ -150,6 +151,7 @@ public:
    m_deepRepeat(nullptr),
    m_straferunstate(0),
    m_justGotLost(false),
+   m_intoSwitch(false),
    m_goalTimer(0),
    justPunched(0)
    {

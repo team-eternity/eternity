@@ -240,6 +240,7 @@ public:
    {
       return (int)(state = state * 48271 % 0x7fffffff);
    }
+   // From min to max inclusive
    int range(int min, int max)
    {
       return (this->operator()() % (max - min + 1)) + min;
