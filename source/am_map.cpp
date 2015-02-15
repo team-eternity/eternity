@@ -27,6 +27,7 @@
 #include "i_system.h"
 
 #include "am_map.h"
+#include "am_svg.h"  // IOANCH 20150215
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_deh.h"    // Ty 03/27/98 - externalizations
@@ -99,6 +100,9 @@ int map_secret_after;
 // haleyjd 05/17/08: ability to draw node lines on map
 bool am_drawnodelines;
 bool am_dynasegs_bysubsec;
+
+// IOANCH 20150215: SVG snapshot
+bool am_takeSvgSnapshot;
 
 // haleyjd 07/07/04: removed key_map* variables
 
@@ -1447,6 +1451,10 @@ static void AM_drawMline(mline_t *ml, int color)
    // TEST:
    if(AM_clipMline(ml, &fl))
       AM_drawFlineWu(&fl, color);
+
+   // IOANCH 20150215: svg snapshot
+   if(am_takeSvgSnapshot)
+      am_svgWriter.addLine(ml->a.x, ml->a.y, ml->b.x, ml->b.y, color);
 }
 
 //
@@ -2290,6 +2298,10 @@ void AM_Drawer()
       return;
 
    AM_clearFB(mapcolor_back);       //jff 1/5/98 background default color
+
+   // IOANCH 20150215: svg snapshot
+   if(am_takeSvgSnapshot)
+      am_svgWriter.reset();
    
    if(automap_grid)                 // killough 2/28/98: change var name
       AM_drawGrid(mapcolor_grid);   //jff 1/7/98 grid default color
@@ -2310,6 +2322,13 @@ void AM_Drawer()
 
    AM_drawCrosshair(mapcolor_hair); //jff 1/7/98 default crosshair color   
    AM_drawMarks();
+
+   // IOANCH
+   if(am_takeSvgSnapshot)
+   {
+      am_svgWriter.write();
+      am_takeSvgSnapshot = false;
+   }
 }
 
 //=============================================================================
@@ -2322,6 +2341,18 @@ CONSOLE_VARIABLE(am_drawnodelines, am_drawnodelines, 0) {}
 
 VARIABLE_TOGGLE(am_dynasegs_bysubsec, NULL, yesno);
 CONSOLE_VARIABLE(am_dynasegs_bysubsec, am_dynasegs_bysubsec, 0) {}
+
+// IOANCH 20150215: automap SVG snapshot
+CONSOLE_COMMAND(am_take_svg, 0)
+{
+   if(automapactive)
+   {
+      am_takeSvgSnapshot = true;
+   }
+}
+
+
+
 
 //----------------------------------------------------------------------------
 //
