@@ -743,7 +743,7 @@ void Bot::doNonCombatAI()
             return;
         }
         m_hasPath = true;
-        m_path.runfast = false;
+        m_runfast = false;
     }
 
     // found path to exit
@@ -769,7 +769,7 @@ void Bot::doNonCombatAI()
             {
                 break;
             }
-            if(!m_path.runfast)
+            if(!m_runfast)
             {
                 const PlatThinker* pt = thinker_cast<const PlatThinker*>
                 ((*nit)->ss->msector->getFloorSector()->floordata);
@@ -777,7 +777,7 @@ void Bot::doNonCombatAI()
                 if(pt && pt->wait > 0)
                 {
                     B_Log("Run fast");
-                    m_path.runfast = true;
+                    m_runfast = true;
                 }
             }
             if (seg->owner == ss)
@@ -916,7 +916,7 @@ void Bot::doNonCombatAI()
                        < 16 * FRACUNIT
           && D_abs(angleturn) > 300))
     {
-        if(m_path.runfast)
+        if(m_runfast)
             cmd->forwardmove += FixedMul((moveslow ? 1 : 2)
                                          * pl->pclass->forwardmove[moveslow ? 0 : 1],
                                          B_AngleCosine(dangle));
@@ -926,8 +926,8 @@ void Bot::doNonCombatAI()
         }
         else
         {
-            if(!m_path.runfast)
-                cruiseControl(nx, ny, moveslow, m_path.runfast);
+            if(!m_runfast)
+                cruiseControl(nx, ny, moveslow);
             else
                 cmd->sidemove -= FixedMul((moveslow ? 1 : 2)
                                           * pl->pclass->sidemove[moveslow ? 0 : 1],
@@ -935,15 +935,15 @@ void Bot::doNonCombatAI()
         }
     }
 
-    if (!m_path.runfast || m_intoSwitch)
+    if (!m_runfast || m_intoSwitch)
        cmd->angleturn += angleturn;
 //   printf("%d\n", angleturn);
 }
 
-void Bot::cruiseControl(fixed_t nx, fixed_t ny, bool moveslow, bool runfast)
+void Bot::cruiseControl(fixed_t nx, fixed_t ny, bool moveslow)
 {
     // Suggested speed: 15.5
-    const fixed_t runSpeed = moveslow && !runfast ? 8 * FRACUNIT : 16 * FRACUNIT;
+    const fixed_t runSpeed = moveslow && !m_runfast ? 8 * FRACUNIT : 16 * FRACUNIT;
     
     fixed_t mx = pl->mo->x;
     fixed_t my = pl->mo->y;
@@ -993,7 +993,7 @@ void Bot::cruiseControl(fixed_t nx, fixed_t ny, bool moveslow, bool runfast)
     
     if(tmomf > 0)
     {
-        if(!runfast && momf > 0 && momf < runSpeed / 4)
+        if(!m_runfast && momf > 0 && momf < runSpeed / 4)
             cmd->forwardmove += pl->pclass->forwardmove[0];
         else if(momf < tmomf)
             cmd->forwardmove += pl->pclass->forwardmove[1];
@@ -1002,7 +1002,7 @@ void Bot::cruiseControl(fixed_t nx, fixed_t ny, bool moveslow, bool runfast)
     }
     else if(tmomf < 0)
     {
-        if(!runfast && momf < 0 && momf > runSpeed / 4)
+        if(!m_runfast && momf < 0 && momf > runSpeed / 4)
             cmd->forwardmove -= pl->pclass->forwardmove[0];
         else if(momf > tmomf)
             cmd->forwardmove -= pl->pclass->forwardmove[1];
@@ -1012,7 +1012,7 @@ void Bot::cruiseControl(fixed_t nx, fixed_t ny, bool moveslow, bool runfast)
     
     if(tmoms > 0)
     {
-        if(!runfast && moms > 0 && moms < runSpeed / 4)
+        if(!m_runfast && moms > 0 && moms < runSpeed / 4)
             cmd->sidemove += pl->pclass->sidemove[0];
         else if(moms < tmoms)
             cmd->sidemove += pl->pclass->sidemove[1];
@@ -1021,7 +1021,7 @@ void Bot::cruiseControl(fixed_t nx, fixed_t ny, bool moveslow, bool runfast)
     }
     else if(tmoms < 0)
     {
-        if(!runfast && moms < 0 && moms > runSpeed / 4)
+        if(!m_runfast && moms < 0 && moms > runSpeed / 4)
             cmd->sidemove -= pl->pclass->sidemove[0];
         else if(moms > tmoms)
             cmd->sidemove -= pl->pclass->sidemove[1];

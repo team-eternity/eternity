@@ -785,6 +785,7 @@ static const StateSet *B_getPreAttackStates(const Mobj& mo)
 bool B_MonsterIsInPreAttack(const Mobj& mo)
 {
     // TODO
+    return false;
 }
 
 // EOF

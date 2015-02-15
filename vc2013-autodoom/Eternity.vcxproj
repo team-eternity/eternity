@@ -314,6 +314,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\source\am_svg.cpp" />
     <ClCompile Include="..\source\autodoom\b_botmap.cpp" />
     <ClCompile Include="..\source\autodoom\b_botmaptemp.cpp" />
     <ClCompile Include="..\source\autodoom\b_classifier.cpp" />
@@ -2040,6 +2041,7 @@
     <ClInclude Include="..\source\acs_intr.h" />
     <ClInclude Include="..\source\acs_op.h" />
     <ClInclude Include="..\Source\am_map.h" />
+    <ClInclude Include="..\source\am_svg.h" />
     <ClInclude Include="..\source\autodoom\b_botmap.h" />
     <ClInclude Include="..\source\autodoom\b_botmaptemp.h" />
     <ClInclude Include="..\source\autodoom\b_classifier.h" />

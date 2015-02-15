@@ -74,10 +74,12 @@ class Bot : public ZoneObject
    int                      m_straferunstate;
    int m_combatStrafeState; // -1 or 1
    PathFinder               m_finder;
-public:
+
+   friend void AM_drawBotPath();    // let the automap have access to the path here
    BotPath                  m_path;
+   bool                     m_runfast;
    bool                     m_hasPath;
-private:
+
    DeepSearch               m_deepSearchMode;
    std::unordered_set<const line_t*>  m_deepTriedLines;
    std::unordered_set<const BSubsec*> m_deepAvailSsectors;
@@ -124,7 +126,7 @@ private:
    void doCombatAI(const PODCollection<Target>& targets);
    void doNonCombatAI();
    
-   void cruiseControl(fixed_t nx, fixed_t ny, bool moveslow, bool runfast);
+   void cruiseControl(fixed_t nx, fixed_t ny, bool moveslow);
    void capCommands();
    
    bool shouldUseSpecial(const line_t& line, const BSubsec& liness);
@@ -147,6 +149,7 @@ public:
    prevCtr(0),
    m_searchstage(0),
    m_finder(nullptr),
+   m_runfast(false),
    m_hasPath(false),
    m_deepSearchMode(DeepNormal),
    m_deepRepeat(nullptr),

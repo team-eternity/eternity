@@ -47,9 +47,8 @@ public:
     const BSubsec*                  last;
     v2fixed_t                       start;
     v2fixed_t                       end;
-    bool                            runfast;
 
-    BotPath() :last(nullptr), runfast(false)
+    BotPath() :last(nullptr)
     {
     }
 };
