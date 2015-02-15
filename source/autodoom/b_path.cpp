@@ -45,7 +45,7 @@
 // PathFinder::FindNextGoal
 //
 // Uses a search for the nearest goal (not knowing where to go)
-// Currently just BFS is enough
+// It uses Dijkstra graph search, needed because of varying subsector sizes.
 //
 bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
                               bool(*isGoal)(const BSubsec&, v2fixed_t&, void*),
@@ -130,20 +130,17 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
                 if (db[1].ssvisit[index] != db[1].validcount
                     || tentative < db[1].ssdist[index])
                 {
-                    db[1].ssvisit[index] = db[1].validcount;
-                    db[1].ssprev[index] = &neigh;
-                    db[1].ssdist[index] = tentative;
-
-                    nhe.dist = tentative;
-                    nhe.ss = bytele->ss;
-                    m_dijkHeap.add(nhe);
-                    std::push_heap(m_dijkHeap.begin(), m_dijkHeap.end());
+                    pushSubsectorToHeap(neigh, index, *bytele->ss, tentative);
                 }
             }
             else
             {
                 msec = neigh.ss->msector;
                 
+                // Hack to make the edge subsectors (which are never 'simple') less attractive to the pathfinder.
+                // Needed because the bot tends to easily fall off ledges because it chooses the subsector
+                // closest to the edge.
+                // FIXME: Still needs improvement.
                 if(!msec->isInstanceOf(RTTI(SimpleMSector)))
                 {
                     tentative = db[1].ssdist[t - first] + 2 * neigh.dist;
@@ -157,19 +154,24 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
                      || tentative < db[1].ssdist[index])
                      && m_map->canPass(*t, *neigh.ss, m_plheight))
                 {
-                    db[1].ssvisit[index] = db[1].validcount;
-                    db[1].ssprev[index] = &neigh;
-                    db[1].ssdist[index] = tentative;
-
-                    nhe.dist = tentative;
-                    nhe.ss = neigh.ss;
-                    m_dijkHeap.add(nhe);
-                    std::push_heap(m_dijkHeap.begin(), m_dijkHeap.end());
+                    pushSubsectorToHeap(neigh, index, *neigh.ss, tentative);
                 }
             }
         }
     }
     return false;
+}
+
+void PathFinder::pushSubsectorToHeap(const BNeigh& neigh, int index, const BSubsec& ss, fixed_t tentative)
+{
+    db[1].ssvisit[index] = db[1].validcount;
+    db[1].ssprev[index] = &neigh;
+    db[1].ssdist[index] = tentative;
+
+    HeapEntry &nhe = m_dijkHeap.addNew();
+    nhe.dist = tentative;
+    nhe.ss = &ss;
+    std::push_heap(m_dijkHeap.begin(), m_dijkHeap.end());
 }
 
 //

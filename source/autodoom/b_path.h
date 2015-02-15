@@ -134,6 +134,11 @@ private:
         void IncrementValidcount();
     };
 
+    //
+    // HeapEntry
+    //
+    // Subsector reference with a distance value associated, suitable for sorting in heaps
+    //
     struct HeapEntry
     {
         const BSubsec* ss;
@@ -146,6 +151,8 @@ private:
 
     PODCollection<HeapEntry>    m_dijkHeap;
     
+    void            pushSubsectorToHeap(const BNeigh& neigh, int index, 
+                                        const BSubsec& ss, fixed_t tentative);
     const TeleItem* checkTeleportation(const BNeigh& neigh);
 
     const BotMap*   m_map;
