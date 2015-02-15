@@ -64,7 +64,7 @@ const char* const KEY_JSON_NODES =	"nodes";
 const char* const KEY_JSON_METASECTORS = "metasectors";
 
 const int CACHE_BUFFER_SIZE = 512 * 1024;
-
+enum { SUBSEC_GRID_STEP = 64 * FRACUNIT };
 
 //
 // BotMap::getTouchedBlocks
@@ -503,6 +503,51 @@ static void B_buildTempBotMapFromScratch(fixed_t radius, const char *digest, con
 
 }
 
+void BotMap::putGridPointsOnSubsectors()
+{
+
+    // Setup grid points here. We now have the bounding box. Start from the centerpoint and 
+    // walk each direction by 64 map units.
+
+    // Quantize extreme coordinates to the same grid as the center
+    fixed_t boundingBox[4];
+    int i;
+    fixed_t x, y;
+
+    for (Subsec& ss : ssectors)
+    {
+        M_ClearBox(boundingBox);
+        for (i = 0; i < ss.nsegs; ++i)
+        {
+            M_AddToBox(boundingBox, ss.segs[i].v[0]->x, ss.segs[i].v[0]->y);
+            M_AddToBox(boundingBox, ss.segs[i].v[1]->x, ss.segs[i].v[1]->y);
+        }
+
+        v2fixed_t midModulus = { (ss.mid.x - boundingBox[BOXLEFT]) % SUBSEC_GRID_STEP,
+            (ss.mid.y - boundingBox[BOXBOTTOM]) % SUBSEC_GRID_STEP };
+        v2fixed_t bottomLeft = { boundingBox[BOXLEFT] + midModulus.x, boundingBox[BOXBOTTOM] + midModulus.y };
+
+        for (x = bottomLeft.x; x <= boundingBox[BOXRIGHT]; x += SUBSEC_GRID_STEP)
+        {
+            for (y = bottomLeft.y; y <= boundingBox[BOXTOP]; y += SUBSEC_GRID_STEP)
+            {
+                for (i = 0; i < ss.nsegs; ++i)
+                {
+                    if (P_PointToAngle(0, 0, ss.segs[i].dx, ss.segs[i].dy) - P_PointToAngle(ss.segs[i].v[0]->x, ss.segs[i].v[0]->y, x, y) >= ANG180)
+                    {
+                        goto skipThis;
+                    }
+                }
+                ss.gridPoints.add({ x, y });
+            skipThis:
+                ;
+            }
+        }
+
+    }
+
+}
+
 void BotMap::getAllLivingMonsters()
 {
     Thinker* th;
@@ -651,6 +696,9 @@ void BotMap::Build()
 //		// TODO
 //   }
    efree(digest);
+
+   // Put grid lines on subsectors
+   botMap->putGridPointsOnSubsectors();
    
    // Place all mobjs on it
    B_setMobjPositions();

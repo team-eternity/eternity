@@ -417,10 +417,6 @@ void B_GLBSP_PutSubsector(int first, int num, int ssidx)
    ss.nsegs = num;
    ss.msector = nullptr;   // shouldn't stay
    double A = 0, x0, y0, x1, y1, tmp, Cx = 0, Cy = 0;
-//   bool test=false;
-//   if (ssidx == 468) {
-//      test=true;
-//   }
    ss.neighs.reserve(num); // THIS MUST BE CALLED TO AVOID REALLOCATIONS
    PODCollection<BNeigh*> neighRefs;
    neighRefs.reserve(num);
@@ -428,13 +424,6 @@ void B_GLBSP_PutSubsector(int first, int num, int ssidx)
    for (int i = 0; i < num; ++i)
    {
       BotMap::Seg &sg = botMap->segs[i + first];
-      
-//      if (test) {
-//         printf("%d %d-%d %d\n", B_Frac2Int(sg->v[0]->x),
-//                B_Frac2Int(sg->v[0]->y), B_Frac2Int(sg->v[1]->x),
-//                B_Frac2Int(sg->v[1]->y));
-//      }
-      
       // set the owner reference from this seg to this subsector
       sg.owner = &ss;
 

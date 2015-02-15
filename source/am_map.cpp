@@ -1902,6 +1902,44 @@ static void AM_drawSteepLines()
       }
    }
 }
+static void AM_drawGridPoints()
+{
+    mline_t l;
+    int colors[] =
+    {
+        mapcolor_grid,
+        mapcolor_wall,
+        mapcolor_fchg,
+        mapcolor_cchg,
+        mapcolor_rdor,
+        mapcolor_bdor,
+        mapcolor_ydor,
+        mapcolor_tele,
+        mapcolor_unsn,
+        mapcolor_sprt,
+        mapcolor_hair,
+        mapcolor_sngl,
+        mapcolor_plyr[0],
+        mapcolor_plyr[1],
+        mapcolor_plyr[2],
+        mapcolor_plyr[3],
+        mapcolor_frnd,
+        mapcolor_prtl,
+    };
+    int index = 0;
+    for (const BSubsec& ss : botMap->ssectors)
+    {
+        for (const v2fixed_t& gp : ss.gridPoints)
+        {
+            l.a.x = M_FixedToDouble(gp.x) - 1;
+            l.a.y = M_FixedToDouble(gp.y) - 1;
+            l.b.x = M_FixedToDouble(gp.x) + 1;
+            l.b.y = M_FixedToDouble(gp.y) + 1;
+            AM_drawMline(&l, colors[index % earrlen(colors)]);
+        }
+        ++index;
+    }
+}
 static void AM_drawNodeLines()
 {
    if(!botMap)
@@ -1909,6 +1947,7 @@ static void AM_drawNodeLines()
    AM_drawBotMapSegs();
 //   AM_drawBotPath();
    AM_drawSteepLines();
+//   AM_drawGridPoints();
 }
 
 //

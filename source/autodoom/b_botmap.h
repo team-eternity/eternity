@@ -141,6 +141,7 @@ public:
       v2fixed_t mid;
       // Fast neighbour lookup
       PODCollection<Neigh> neighs;
+      PODCollection<v2fixed_t> gridPoints;  // grid points on this subsector
    };
    Collection<Subsec> ssectors;
    int numssectors;
@@ -260,6 +261,8 @@ public:
    PODCollection<const line_t*> gunLines;
 
 private:
+    // Post-processing
+    void putGridPointsOnSubsectors();
     void getAllLivingMonsters();
     void getDoorSectors();
     static void SpecialIsDoor(int n, SectorTrait& st, const line_t* line);
