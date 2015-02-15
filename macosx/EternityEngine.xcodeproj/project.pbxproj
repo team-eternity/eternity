@@ -316,6 +316,7 @@
 		4F68CE8D1963D88100E7B8BE /* ev_sectors.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F68CE8B1963D88100E7B8BE /* ev_sectors.cpp */; };
 		4FE91CD6196FDFC600FB6336 /* b_itemlearn.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FE91CD4196FDFC600FB6336 /* b_itemlearn.cpp */; };
 		4FE91CD91970399A00FB6336 /* b_lineeffect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FE91CD71970399900FB6336 /* b_lineeffect.cpp */; };
+		4F96871E1A90CF4D00C4D342 /* am_svg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F96871C1A90CF4D00C4D342 /* am_svg.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -423,6 +424,8 @@
 		4F7BB78C175797640079E263 /* i_directory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = i_directory.cpp; path = ../source/hal/i_directory.cpp; sourceTree = "<group>"; };
 		4F7BB78D175797640079E263 /* i_directory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = i_directory.h; path = ../source/hal/i_directory.h; sourceTree = "<group>"; };
 		4F8B42E816C1101000765638 /* zutil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = zutil.c; path = ../zlib/zutil.c; sourceTree = "<group>"; };
+		4F96871C1A90CF4D00C4D342 /* am_svg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = am_svg.cpp; path = ../source/am_svg.cpp; sourceTree = "<group>"; };
+		4F96871D1A90CF4D00C4D342 /* am_svg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = am_svg.h; path = ../source/am_svg.h; sourceTree = "<group>"; };
 		4F98954F16C10FB1005D78C0 /* trees.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = trees.c; path = ../zlib/trees.c; sourceTree = "<group>"; };
 		4F9A249216D95878002BE852 /* t_plane.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = t_plane.cpp; path = ../source/t_plane.cpp; sourceTree = "<group>"; };
 		4F9A249316D95878002BE852 /* t_plane.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = t_plane.h; path = ../source/t_plane.h; sourceTree = "<group>"; };
@@ -1333,6 +1336,8 @@
 				FABF5CC0158BF42800C49E93 /* am_color.cpp */,
 				FABF5CC1158BF42800C49E93 /* am_map.cpp */,
 				FA16D3C015E01E96002318D1 /* am_map.h */,
+				4F96871C1A90CF4D00C4D342 /* am_svg.cpp */,
+				4F96871D1A90CF4D00C4D342 /* am_svg.h */,
 			);
 			name = AM_;
 			sourceTree = "<group>";
@@ -2107,6 +2112,7 @@
 				4F5F396C182D9B820027813A /* SNES_SPC_misc.cpp in Sources */,
 				4F5F396D182D9B820027813A /* SNES_SPC_state.cpp in Sources */,
 				4F5F396E182D9B820027813A /* SNES_SPC.cpp in Sources */,
+				4F96871E1A90CF4D00C4D342 /* am_svg.cpp in Sources */,
 				4F5F396F182D9B820027813A /* SPC_DSP.cpp in Sources */,
 				4F43B48B182D9F7A00730C02 /* reject.c in Sources */,
 				4F5F3970182D9B820027813A /* SPC_Filter.cpp in Sources */,
