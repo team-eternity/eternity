@@ -39,6 +39,7 @@ bool B_IsMobjSolidDecor(const Mobj &mo);
 bool B_IsMobjHostile(const Mobj& mo);
 bool B_IsMobjHitscanner(const Mobj& mo);
 bool B_IsMobjExplosiveDeath(const Mobj& mo);
+bool B_MonsterIsInPreAttack(const Mobj& mo);
 
 #endif 
 

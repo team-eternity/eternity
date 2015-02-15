@@ -27,11 +27,13 @@
 //-----------------------------------------------------------------------------
 
 #include <queue>
+#include <unordered_map>
 #include <unordered_set>
 #include "../z_zone.h"
 
 #include "../a_common.h"
 #include "b_classifier.h"
+#include "b_util.h"
 #include "../e_args.h"
 //#include "../e_hash.h"
 #include "../e_inventory.h"
@@ -46,6 +48,7 @@ enum Trait
    Trait_explosiveDeath = 4,
 };
 
+// Set of traits for each mobjinfo index. Limited to 32 per entry.
 static uint32_t* g_traitSet;
 
 void B_UpdateMobjInfoSet(int numthingsalloc)
@@ -60,6 +63,7 @@ void B_UpdateMobjInfoSet(int numthingsalloc)
 
 typedef std::unordered_set<statenum_t> StateSet;
 typedef std::queue<statenum_t> StateQue;
+typedef void(*ActionFunction)(actionargs_t*);
 
 void A_PosAttack(actionargs_t *);
 void A_SPosAttack(actionargs_t *);
@@ -87,6 +91,7 @@ void A_BrainSpit(actionargs_t *);
 void A_SpawnFly(actionargs_t *);
 void A_BrainExplode(actionargs_t *);
 void A_Detonate(actionargs_t *);        // killough 8/9/98
+void A_DetonateEx(actionargs_t *);
 void A_Mushroom(actionargs_t *);        // killough 10/98
 void A_Spawn(actionargs_t *);           // killough 11/98
 void A_Scratch(actionargs_t *);         // killough 11/98
@@ -344,7 +349,7 @@ static void B_getBranchingStateSeq(statenum_t sn,
 //
 // Utility test if an action removes the solid flag
 //
-static bool B_actionRemovesSolid(void (*action)(actionargs_t *), statenum_t sn)
+static bool B_actionRemovesSolid(ActionFunction action, statenum_t sn)
 {
    if(action == A_Fall)
       return true;
@@ -399,7 +404,7 @@ static bool B_actionRemovesSolid(void (*action)(actionargs_t *), statenum_t sn)
 //
 // Used as a callback function by mobj-solid-decor tester
 //
-static bool B_stateCantBeSolidDecor(statenum_t sn, const mobjinfo_t &mi)
+static bool B_stateCantBeSolidDecor(statenum_t sn, const mobjinfo_t &mi, void* miscData)
 {
    if (sn == NullStateNum) // null state: it dissipates
       return true;
@@ -430,12 +435,13 @@ static bool B_stateCantBeSolidDecor(statenum_t sn, const mobjinfo_t &mi)
 //
 // B_stateEncounters
 //
-// True if state leads into a disappearance
+// True if state leads into a goal
 //
 static bool B_stateEncounters(statenum_t firstState,
                               const Mobj &mo,
-                              bool(*statecase)(statenum_t, const mobjinfo_t&),
-                              bool avoidPainStates = false)
+                              bool(*statecase)(statenum_t, const mobjinfo_t&, void* miscData),
+                              bool avoidPainStates = false,
+                              void* miscData = nullptr)
 {
    StateSet stateSet;  // set of visited states
    StateQue alterQueue;        // set of alternate chains
@@ -465,9 +471,9 @@ static bool B_stateEncounters(statenum_t firstState,
             break;
          }
          
-         if (statecase(sn, *mo.info))
+         if (statecase(sn, *mo.info, miscData))
          {
-            // got to state 0. This means it dissipates
+             // If statecase returns true, it means we reached a goal.
             return true;
          }
          stateSet.insert(sn);
@@ -513,11 +519,11 @@ bool B_IsMobjSolidDecor(const Mobj &mo)
 //
 // True if this state is used for attacking
 //
-static bool B_stateAttacks(statenum_t sn, const mobjinfo_t &mi)
+static bool B_stateAttacks(statenum_t sn, const mobjinfo_t &mi, void* miscData)
 {
     const state_t &st = *states[sn];
 
-    static const std::unordered_set<void(*)(actionargs_t*)> attacks = 
+    static const std::unordered_set<ActionFunction> attacks = 
     {
         A_Explode, 
         A_PosAttack,
@@ -587,10 +593,10 @@ static bool B_stateAttacks(statenum_t sn, const mobjinfo_t &mi)
 //
 // True if this state has an instant-hit avoidable attack
 //
-static bool B_stateHitscans(statenum_t sn, const mobjinfo_t& mi)
+static bool B_stateHitscans(statenum_t sn, const mobjinfo_t& mi, void* miscData)
 {
     const state_t &st = *states[sn];
-    static const std::unordered_set<void(*)(actionargs_t*)> attacks =
+    static const std::unordered_set<ActionFunction> attacks =
     {
         A_PosAttack,
         A_SPosAttack,
@@ -672,6 +678,113 @@ bool B_IsMobjExplosiveDeath(const Mobj& mo)
       return false;
    // TODO
    return false;
+}
+
+//
+// B_getPreAttackStates
+//
+// Returns the states happening right before first attack of monster.
+// Useful for the bot to retreat before the monster starts attacking.
+//
+// May return nullptr if monster has no missile state.
+//
+static const StateSet *B_getPreAttackStates(const Mobj& mo)
+{
+    // Cache the results here
+    static std::unordered_map<statenum_t, StateSet > preAttackStates;
+
+    auto index = (long)(mo.info - mobjinfo[0]);
+    auto found = preAttackStates.find(index);
+    if (found != preAttackStates.end())
+        return &found->second;   // found in cache
+
+    const mobjinfo_t& mi = *mo.info;
+    if (mi.spawnstate == NullStateNum || mi.missilestate == NullStateNum)
+        return nullptr;
+
+    B_stateEncounters(mi.missilestate, mo, [](statenum_t sn, const mobjinfo_t& mi, void* miscData) -> bool {
+
+        auto& preAttackStates = *(StateSet*)miscData;
+        static const std::unordered_set<ActionFunction> attacks =
+        {
+            A_Explode,
+            A_PosAttack,
+            A_SPosAttack,
+            A_VileAttack,
+            A_SkelFist,
+            A_SkelMissile,
+            A_FatAttack1,
+            A_FatAttack2,
+            A_FatAttack3,
+            A_CPosAttack,
+            A_TroopAttack,
+            A_SargAttack,
+            A_HeadAttack,
+            A_BruisAttack,
+            A_SkullAttack,
+            A_BspiAttack,
+            A_CyberAttack,
+            A_PainAttack,
+            A_PainDie,
+            A_Detonate,
+            A_Mushroom,
+            A_Scratch,
+            A_Nailbomb,
+            // A_BetaSkullAttack is unavoidable
+            A_MissileAttack,
+            A_MissileSpread,
+            A_BulletAttack,
+            // A_ThingSummon might not be used for evil
+            A_DetonateEx,
+            A_SargAttack12,
+            A_MummyAttack,
+            A_MummyAttack2,
+            A_ClinkAttack,
+            A_WizardAtk3,
+            A_Srcr2Attack,
+            A_HticExplode,
+            A_KnightAttack,
+            A_BeastAttack,
+            A_SnakeAttack,
+            A_SnakeAttack2,
+            A_VolcanoBlast, // maybe not useful
+            A_MinotaurAtk1,
+            A_MinotaurAtk2,
+            A_MinotaurAtk3,
+            A_MinotaurCharge,
+            A_LichFire,
+            A_LichWhirlwind,
+            A_LichAttack,
+            A_ImpChargeAtk, // hardly harmful
+            A_ImpMeleeAtk,
+            A_ImpMissileAtk,
+        };
+
+        const state_t &state = *::states[sn];
+        if (attacks.count(state.action))
+            return true;    // exit if encountered an attack state
+
+        // Not encountered a state yet? Put it in the set.
+        // Hopefully I won't place the walking state.
+        preAttackStates.insert(sn);
+        B_Log("For %d added state %d", (int)(&mi - mobjinfo[0]), (int)sn);
+
+        return false;
+
+    }, true, &preAttackStates[index]);
+
+    return &preAttackStates[index];
+}
+
+//
+// B_MonsterIsInPreAttack
+//
+// Returns true if monster is in a state just before the attack state, i.e.
+// a state between the missilestate and the first firing state.
+//
+bool B_MonsterIsInPreAttack(const Mobj& mo)
+{
+    // TODO
 }
 
 // EOF
