@@ -63,3 +63,6 @@ private:
 extern AutomapSvgWriter am_svgWriter;
 
 #endif /* defined(__EternityEngine__am_svg__) */
+
+// EOF
+

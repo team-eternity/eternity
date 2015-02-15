@@ -180,6 +180,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\source\am_svg.cpp" />
     <ClCompile Include="..\Source\a_fixed.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1232,6 +1233,7 @@
     <ClInclude Include="..\source\acs_intr.h" />
     <ClInclude Include="..\source\acs_op.h" />
     <ClInclude Include="..\Source\am_map.h" />
+    <ClInclude Include="..\source\am_svg.h" />
     <ClInclude Include="..\source\a_args.h" />
     <ClInclude Include="..\Source\a_small.h" />
     <ClInclude Include="..\source\c_batch.h" />

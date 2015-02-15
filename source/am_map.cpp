@@ -102,7 +102,7 @@ bool am_drawnodelines;
 bool am_dynasegs_bysubsec;
 
 // IOANCH 20150215: SVG snapshot
-bool am_takeSvgSnapshot;
+static bool am_takeSvgSnapshot;
 
 // haleyjd 07/07/04: removed key_map* variables
 

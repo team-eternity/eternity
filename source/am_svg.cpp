@@ -143,3 +143,5 @@ void AutomapSvgWriter::write()
    else
       S_StartInterfaceSound(GameModeInfo->c_BellSound);
 }
+
+// EOF
