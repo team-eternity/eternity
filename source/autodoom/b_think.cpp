@@ -685,13 +685,17 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
                 m_combatStrafeState = random.range(0, 1) * 2 - 1;
             if (random() % 8 != 0)
             {
-
-                if (P_AproxDistance(nx - mx, ny - my) < 384 * FRACUNIT)
+                fixed_t dist = P_AproxDistance(nx - mx, ny - my);
+                if (dist < 384 * FRACUNIT)
                 {
                     cmd->forwardmove = FixedMul(2 * pl->pclass->forwardmove[1],
-                                                B_AngleSine(dangle)) * m_combatStrafeState;
+                        B_AngleSine(dangle)) * m_combatStrafeState;
                     cmd->sidemove = FixedMul(2 * pl->pclass->sidemove[1],
-                                             B_AngleCosine(dangle)) * m_combatStrafeState;
+                        B_AngleCosine(dangle)) * m_combatStrafeState;
+                }
+                if (dist < 256 * FRACUNIT)
+                {
+                    
                     cmd->forwardmove -= FixedMul(2 * pl->pclass->forwardmove[1],
                         B_AngleCosine(dangle));
                     cmd->sidemove += FixedMul(2 * pl->pclass->sidemove[1],
