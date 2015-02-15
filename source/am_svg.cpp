@@ -111,7 +111,7 @@ void AutomapSvgWriter::write()
             {
                // Make sure to revert y coordinates
                // FIXME: Eternity's hungry consumption of 1078 bytes per float annoys me
-               lineString.Printf(0, "<line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" style=\"stroke:#%02x%02x%02x\"/>",
+               lineString.Printf(0, "<line x1=\"%.2f\" y1=\"%.2f\" x2=\"%.2f\" y2=\"%.2f\" style=\"stroke:#%02x%02x%02x\"/>",
                                  (line.x0 - mMinX) / SVG_DOWN_SCALE,
                                  (mMaxY - line.y0) / SVG_DOWN_SCALE,
                                  (line.x1 - mMinX) / SVG_DOWN_SCALE,
@@ -128,7 +128,7 @@ void AutomapSvgWriter::write()
             
             success = true;
          }
-         catch(const BufferedIOException& e)
+         catch(const BufferedIOException& )
          {
             success = false;  // just to make sure
          }
