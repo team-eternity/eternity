@@ -691,7 +691,7 @@ bool B_IsMobjExplosiveDeath(const Mobj& mo)
 static const StateSet *B_getPreAttackStates(const Mobj& mo)
 {
     // Cache the results here
-    static std::unordered_map<statenum_t, StateSet > preAttackStates;
+    static std::unordered_map<long, StateSet> preAttackStates;
 
     auto index = (long)(mo.info - mobjinfo[0]);
     auto found = preAttackStates.find(index);
@@ -784,8 +784,12 @@ static const StateSet *B_getPreAttackStates(const Mobj& mo)
 //
 bool B_MonsterIsInPreAttack(const Mobj& mo)
 {
-    // TODO
-    return false;
+   const StateSet* set = B_getPreAttackStates(mo);
+   if(!set)
+   {
+      return false;
+   }
+   return set->count(mo.state->index) != 0;
 }
 
 // EOF

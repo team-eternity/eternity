@@ -32,7 +32,6 @@
 #include "d_io.h"
 #include "doomstat.h"
 #include "m_buffer.h"
-#include "m_compare.h"
 #include "m_misc.h"
 #include "m_qstr.h"
 #include "p_skin.h"
@@ -58,16 +57,10 @@ void AutomapSvgWriter::addLine(double x0, double y0, double x1, double y1, int c
    line.y1 = y1;
    line.color = color;
 
-   double smallerX = emin(x0, x1);
-   double biggerX = emax(x0, x1);
-   double smallerY = emin(y0, y1);
-   double biggerY = emax(y0, y1);
+   double smallerX = x0 < x1 ? x0 : x1;
+   double biggerY = y0 < y1 ? y1 : y0;
    if(smallerX < mMinX)
       mMinX = smallerX;
-   if(biggerX > mMaxX)
-      mMaxX = biggerX;
-   if(smallerY < mMinY)
-      mMinY = smallerY;
    if(biggerY > mMaxY)
       mMaxY = biggerY;
 }

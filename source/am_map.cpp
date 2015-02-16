@@ -1865,7 +1865,7 @@ static void AM_drawBotMapSegs()
       AM_drawMline(&l, mapcolor_prtl);
    }
 }
-static void AM_drawBotPath()
+void AM_drawBotPath()   // not static (friend to Bot)
 {
    mline_t l;
    if(bots[0].m_hasPath)

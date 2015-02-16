@@ -40,8 +40,6 @@ public:
    {
       mLines.makeEmpty();
       mMinX = DBL_MAX;
-      mMinY = DBL_MAX;
-      mMaxX = -DBL_MAX;
       mMaxY = -DBL_MAX;
    }
    
@@ -57,7 +55,7 @@ private:
    };
 
    PODCollection<Line> mLines;
-   double mMinX, mMaxX, mMinY, mMaxY;
+   double mMinX, mMaxY;
 };
 
 extern AutomapSvgWriter am_svgWriter;
