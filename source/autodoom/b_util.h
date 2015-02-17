@@ -260,52 +260,6 @@ public:
    }
 };
 
-//
-// Bipartite
-//
-// Template class that connects two classes together
-//
-template <typename A, typename B> class Bipartite : public ZoneObject
-{
-public:
-   struct Link
-   {
-      A* ref1;
-      B* ref2;
-      DLListItem<A> link1;
-      DLListItem<B> link2;
-   };
-   
-private:
-   std::unordered_map<A *, DLList<Link, &Link::link1> > map1;
-   std::unordered_map<B *, DLList<Link, &Link::link1> > map2;
-   
-public:
-   Link *getList1(A *obj)
-   {
-      if (map1.count(obj))
-         return map1.at(obj);
-   }
-   Link *getList2(B *obj)
-   {
-      if (map2.count(obj))
-         return map2.at(obj);
-   }
-   Link *addLink(A *obj1, B *obj2)
-   {
-      if(map1.count(obj1))
-      {
-         Link *l1 = map1.at(obj1);
-         while(l1)
-         {
-            if(l1->ref2 == obj2)
-               return l1;
-            l1 = l1->link1.dllNext->dllObject;
-         }
-      }
-   }
-};
-
 inline static bool B_IsWalkTeleportation(int special)
 {
     VanillaLineSpecial vls = (VanillaLineSpecial)special;
@@ -328,95 +282,28 @@ void B_Log(const char *output, ...);
 #define B_Log(...)
 #endif
 
-template<typename T> class List
+//
+// TIME MEASUREMENT
+//
+
+class TimeMeasurement
 {
-    struct Link
-    {
-        T       obj;
-        int     next;
-        int     prev;
-    };
-
-    
-    PODCollection<Link> pool;
-    int base;
-    int count;
-    int iter;
-
 public:
-    List() : base(-1), count(0), iter(0)
+    TimeMeasurement();
+    void start();
+    void end();
+    double getAverage() const
     {
+        return m_invalid ? NAN : m_totalRun / m_numRuns;
     }
+private:
+    long long m_frequency;
+    long long m_startTime;
 
-    void Add(T item) // adds to front
-    {
-        Link& L = pool.addNew();
-        L.obj = item;
-        L.next = base;
-        L.prev = -1;
-        base = pool.getLength() - 1;
-        if (L.next >= 0)
-            pool[L.next].prev = base;
-        
-        ++count;
-    }
+    double m_totalRun;
+    long long m_numRuns;
 
-    T GetFirst()
-    {
-        return pool[iter = base].obj;
-    }
-
-    bool HasNext() const
-    {
-        return iter >= 0 ? pool[iter].next >= 0 : base >= 0;
-    }
-
-    T GetNext()
-    {
-        return pool[iter = iter >= 0 ? pool[iter].next : base].obj;
-    }
-
-    int Count() const
-    {
-        return count;
-    }
-
-    bool Empty() const
-    {
-        return count == 0;
-    }
-
-    void RemoveCurrent()
-    {
-        if (base == iter)
-            base = pool[iter].next;
-
-        Link& L = pool[iter];
-        int bup = L.prev;
-        if (L.prev >= 0)
-            pool[L.prev].next = L.next;
-        if (L.next >= 0)
-            pool[L.next].prev = L.prev;
-
-        Link& F = pool.back();
-        if (F.prev >= 0)
-            pool[F.prev].next = iter;
-        if (F.next >= 0)
-            pool[F.next].prev = iter;
-        pool[iter] = F;
-        pool.justPop();
-        --count;
-
-        iter = bup; // go back so we can advance again
-    }
-
-    void Clear()
-    {
-        base = -1;
-        count = 0;
-        iter = 0;
-        pool.template makeEmpty<true>();
-    }
+    bool m_invalid;
 };
 
 #endif

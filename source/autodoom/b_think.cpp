@@ -1049,22 +1049,17 @@ void Bot::doCommand()
    ss = &botMap->pointInSubsector(pl->mo->x, pl->mo->y);
    cmd = &pl->cmd;
 
-    if(pl->health <= 0 && prevCtr % 4 == 0)
-        cmd->buttons |= BT_USE; // respawn asap
+    if(pl->health <= 0 && prevCtr % 128 == 0)
+        cmd->buttons |= BT_USE; // respawn 
 
    // Do non-combat for now
 
-   {
-       doNonCombatAI();
-   }
+   doNonCombatAI();
    PODCollection<Target> targets;
     enemyVisible(targets);
     if (!targets.isEmpty())
    {
-       //if (!m_hasPath || ss != m_path.last)
-       {
-           doCombatAI(targets);
-       }
+       doCombatAI(targets);
    }
     else
         justPunched = 0;

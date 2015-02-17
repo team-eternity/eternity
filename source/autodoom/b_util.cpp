@@ -289,5 +289,50 @@ void B_Log(const char *output, ...)
 }
 #endif
 
+//
+// TIME MEASUREMENT
+//
+// For comparing before optimizing
+// Kinda platform dependent, but hey...
+//
+TimeMeasurement::TimeMeasurement() : m_totalRun(0), m_numRuns(0), m_invalid(false)
+{
+    // http://stackoverflow.com/a/1825740
+
+    LARGE_INTEGER frequency;
+    if (!::QueryPerformanceFrequency(&frequency))
+    {
+        m_invalid = true;
+        return;
+    }
+    
+    m_frequency = frequency.QuadPart;
+}
+
+void TimeMeasurement::start()
+{
+    LARGE_INTEGER start;
+    if (!::QueryPerformanceCounter(&start))
+    {
+        m_invalid = true;
+        return;
+    }
+    m_startTime = start.QuadPart;
+}
+
+void TimeMeasurement::end()
+{
+    if (m_invalid)
+        return;
+    LARGE_INTEGER end;
+    if (!::QueryPerformanceCounter(&end))
+    {
+        m_invalid = true;
+        return;
+    }
+    m_totalRun += static_cast<double>(end.QuadPart - m_startTime) / m_frequency;
+    ++m_numRuns;
+}
+
 // EOF
 
