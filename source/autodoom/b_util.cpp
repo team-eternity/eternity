@@ -32,6 +32,7 @@
 #include "../z_zone.h"
 
 #include "b_util.h"
+#include "../hal/i_platform.h"
 #include "../metaapi.h"
 #include "../p_maputl.h"
 #include "../r_defs.h"
@@ -298,7 +299,7 @@ void B_Log(const char *output, ...)
 TimeMeasurement::TimeMeasurement() : m_totalRun(0), m_numRuns(0), m_invalid(false)
 {
     // http://stackoverflow.com/a/1825740
-
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
     LARGE_INTEGER frequency;
     if (!::QueryPerformanceFrequency(&frequency))
     {
@@ -307,10 +308,14 @@ TimeMeasurement::TimeMeasurement() : m_totalRun(0), m_numRuns(0), m_invalid(fals
     }
     
     m_frequency = frequency.QuadPart;
+#else
+   m_invalid = true;
+#endif
 }
 
 void TimeMeasurement::start()
 {
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
     LARGE_INTEGER start;
     if (!::QueryPerformanceCounter(&start))
     {
@@ -318,12 +323,14 @@ void TimeMeasurement::start()
         return;
     }
     m_startTime = start.QuadPart;
+#endif
 }
 
 void TimeMeasurement::end()
 {
     if (m_invalid)
         return;
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
     LARGE_INTEGER end;
     if (!::QueryPerformanceCounter(&end))
     {
@@ -332,6 +339,7 @@ void TimeMeasurement::end()
     }
     m_totalRun += static_cast<double>(end.QuadPart - m_startTime) / m_frequency;
     ++m_numRuns;
+#endif
 }
 
 // EOF
