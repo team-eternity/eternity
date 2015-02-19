@@ -28,7 +28,13 @@
 
 #ifdef _WIN32
 #include <Windows.h>
+#elif defined __APPLE__
+#define Collection CSCollection  // redefined to avoid namespace collision
+#include <CoreServices/CoreServices.h>
+#undef Collection
+#include <mach/mach_time.h>
 #endif
+
 #include "../z_zone.h"
 
 #include "b_util.h"
@@ -308,6 +314,8 @@ TimeMeasurement::TimeMeasurement() : m_totalRun(0), m_numRuns(0), m_invalid(fals
     }
     
     m_frequency = frequency.QuadPart;
+#elif EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
+
 #else
    m_invalid = true;
 #endif
@@ -323,6 +331,8 @@ void TimeMeasurement::start()
         return;
     }
     m_startTime = start.QuadPart;
+#elif EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
+   m_startTime = mach_absolute_time();
 #endif
 }
 
@@ -338,8 +348,13 @@ void TimeMeasurement::end()
         return;
     }
     m_totalRun += static_cast<double>(end.QuadPart - m_startTime) / m_frequency;
-    ++m_numRuns;
+#elif EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
+   long long diff = mach_absolute_time() - m_startTime;
+   AbsoluteTime time = *(AbsoluteTime*)&diff;
+   Nanoseconds elapsedNano = AbsoluteToNanoseconds(time);
+   m_totalRun += static_cast<double>(*(long long*)&elapsedNano) / 1000000000.;
 #endif
+   ++m_numRuns;
 }
 
 // EOF
