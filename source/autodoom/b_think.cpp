@@ -139,7 +139,7 @@ bool Bot::goalAchieved()
 PathResult Bot::reachableItem(const BSubsec& ss, void* v)
 {
     Bot& self = *(Bot*)v;
-    v2fixed_t dummy;
+    BotPathEnd dummy;
 
     bool result = objOfInterest(ss, dummy, &self);
 
@@ -322,7 +322,7 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
     return false;
 }
 
-bool Bot::objOfInterest(const BSubsec& ss, v2fixed_t& coord, void* v)
+bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
 {
 
     Bot& self = *(Bot*)v;
@@ -366,8 +366,9 @@ bool Bot::objOfInterest(const BSubsec& ss, v2fixed_t& coord, void* v)
                     // no. Totally unknown
                     if (self.m_deepSearchMode == DeepNormal)
                     {
-                        self.goalTable.setV2Fixed(BOT_PICKUP,
-                                                  coord = B_CoordXY (*item));
+                        coord.kind = BotPathEnd::KindCoord;
+                        coord.coord = B_CoordXY(*item);
+                        self.goalTable.setV2Fixed(BOT_PICKUP, coord.coord);
                     }
                     return true;
                 }
@@ -379,8 +380,9 @@ bool Bot::objOfInterest(const BSubsec& ss, v2fixed_t& coord, void* v)
                         // Yes. It might be pickable now
                         if (self.m_deepSearchMode == DeepNormal)
                         {
-                            self.goalTable.setV2Fixed(BOT_PICKUP,
-                                                      coord = B_CoordXY(*item));
+                            coord.kind = BotPathEnd::KindCoord;
+                            coord.coord = B_CoordXY(*item);
+                            self.goalTable.setV2Fixed(BOT_PICKUP, coord.coord);
                         }
                         return true;
                     }
@@ -395,8 +397,9 @@ bool Bot::objOfInterest(const BSubsec& ss, v2fixed_t& coord, void* v)
                 {
                     if (self.m_deepSearchMode == DeepNormal)
                     {
-                        self.goalTable.setV2Fixed(BOT_PICKUP,
-                                                  coord = B_CoordXY(*item));
+                        coord.kind = BotPathEnd::KindCoord;
+                        coord.coord = B_CoordXY(*item);
+                        self.goalTable.setV2Fixed(BOT_PICKUP, coord.coord);
                     }
                     return true;
                 }
@@ -437,8 +440,8 @@ bool Bot::objOfInterest(const BSubsec& ss, v2fixed_t& coord, void* v)
             }
             else if (self.shouldUseSpecial(*line, ss))
             {
-                coord.x = (line->v1->x + line->v2->x) / 2;
-                coord.y = (line->v1->y + line->v2->y) / 2;
+                coord.kind = BotPathEnd::KindWalkLine;
+                coord.walkLine = line;
                 v2fixed_t crd = B_CoordXY(*line->v1);
                 //crd.x += self.random.range(-16, 16) * FRACUNIT;
                 //crd.y += self.random.range(-16, 16) * FRACUNIT;
@@ -752,10 +755,25 @@ void Bot::doNonCombatAI()
     fixed_t mx, my, nx, ny;
     bool dontMove = false;
     const BSubsec* nextss = nullptr;
+
+    v2fixed_t endCoord;
+    if (m_path.end.kind == BotPathEnd::KindCoord)
+    {
+        endCoord = m_path.end.coord;
+    }
+    else if (m_path.end.kind == BotPathEnd::KindWalkLine)
+    {
+        const line_t& line = *m_path.end.walkLine;
+        endCoord = B_ProjectionOnSegment(pl->mo->x, pl->mo->y,
+            line.v1->x, line.v1->y, line.dx, line.dy);
+    }
+    else
+        endCoord = { 0, 0 };
+
     if (ss == m_path.last)
     {
-        nx = m_path.end.x;
-        ny = m_path.end.y;
+        nx = endCoord.x;
+        ny = endCoord.y;
         m_lastPathSS = ss;
     }
     else
@@ -857,7 +875,7 @@ void Bot::doNonCombatAI()
     my = pl->mo->y;
     m_intoSwitch = false;
     if (goalTable.hasKey(BOT_WALKTRIG)
-        && P_AproxDistance(mx - m_path.end.x, my - m_path.end.y)
+        && P_AproxDistance(mx - endCoord.x, my - endCoord.y)
         < 2 * pl->mo->radius)
     {
         m_intoSwitch = true;
@@ -914,7 +932,7 @@ void Bot::doNonCombatAI()
     if (angleturn < -1500)
         angleturn = -1500;
 
-    if (!dontMove && !(P_AproxDistance(m_path.end.x - mx, m_path.end.y - my)
+    if (!dontMove && !(P_AproxDistance(endCoord.x - mx, endCoord.y - my)
                        < 16 * FRACUNIT
           && D_abs(angleturn) > 300))
     {

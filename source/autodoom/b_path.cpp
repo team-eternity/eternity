@@ -48,7 +48,7 @@
 // It uses Dijkstra graph search, needed because of varying subsector sizes.
 //
 bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
-                              bool(*isGoal)(const BSubsec&, v2fixed_t&, void*),
+                              bool(*isGoal)(const BSubsec&, BotPathEnd&, void*),
                               void* parm)
 {
     HeapEntry nhe;
@@ -68,7 +68,7 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
 
     //const BSubsec** front = db[1].ssqueue;
     //const BSubsec** back = db[1].ssqueue;
-    v2fixed_t coord;
+    BotPathEnd coord;
 
     int index = (int)(&source - first);
    

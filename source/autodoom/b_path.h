@@ -40,13 +40,27 @@
 //
 // Is linked with the botmap
 //
+struct BotPathEnd
+{
+    union
+    {
+        v2fixed_t coord;
+        const line_t* walkLine;
+    };
+    enum
+    {
+        KindCoord,
+        KindWalkLine
+    } kind;
+};
+
 class BotPath
 {
 public:
     PODCollection<const BNeigh*>    inv;    // path from end to start
     const BSubsec*                  last;
     v2fixed_t                       start;
-    v2fixed_t                       end;
+    BotPathEnd                      end;
 
     BotPath() :last(nullptr)
     {
@@ -77,7 +91,7 @@ public:
         Clear();
     }
 
-    bool FindNextGoal(fixed_t x, fixed_t y, BotPath& path, bool(*isGoal)(const BSubsec&, v2fixed_t&, void*), void* parm = nullptr);
+    bool FindNextGoal(fixed_t x, fixed_t y, BotPath& path, bool(*isGoal)(const BSubsec&, BotPathEnd&, void*), void* parm = nullptr);
     bool AvailableGoals(const BSubsec& source, std::unordered_set<const BSubsec*>* dests, PathResult(*isGoal)(const BSubsec&, void*), void* parm = nullptr);
 
     void SetPlayerHeight(fixed_t value)
