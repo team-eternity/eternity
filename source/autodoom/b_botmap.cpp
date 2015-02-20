@@ -256,7 +256,8 @@ void BotMap::setThingPosition(const Mobj *thing)
 //
 // BotMap::unsetLinePositions
 //
-// Removes all line-subsec references. Used by bot goal manager
+// Removes all line-subsec references.
+// FIXME: currently unused
 //
 void BotMap::unsetLinePositions(const line_t &line)
 {
@@ -382,7 +383,7 @@ static void B_setMobjPositions()
 //
 // B_setSpecLinePositions
 //
-// Records all special lines on the bot map
+// Records all special lines on the bot map, so they can be detected by the pathfinder
 //
 static void B_setSpecLinePositions()
 {

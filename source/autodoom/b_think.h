@@ -79,6 +79,8 @@ class Bot : public ZoneObject
    BotPath                  m_path;
    bool                     m_runfast;
    bool                     m_hasPath;
+   v2fixed_t                m_realVelocity; // real momentum, i.e. difference from last tic
+   v2fixed_t                m_lastPosition;
 
    DeepSearch               m_deepSearchMode;
    std::unordered_set<const line_t*>  m_deepTriedLines;

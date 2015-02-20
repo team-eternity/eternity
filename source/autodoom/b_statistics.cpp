@@ -56,7 +56,7 @@ void B_AddToPlayerDamage(const mobjinfo_t* mi, int amount)
 
 double B_GetMonsterThreatLevel(const mobjinfo_t* mi)
 {
-   DamageStat& stat = g_stats[mi];
+   const DamageStat& stat = g_stats[mi];
    return stat.monsterDeaths > 0 ? (double)stat.totalDamageToPlayer / stat.monsterDeaths : DBL_MAX;
 }
 

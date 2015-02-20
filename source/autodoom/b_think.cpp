@@ -82,6 +82,8 @@ void Bot::mapInit()
     m_dropSS.clear();
     
     justPunched = 0;
+    m_lastPosition.x = pl->mo->x;
+    m_lastPosition.y = pl->mo->y;
 }
 
 //
@@ -937,6 +939,15 @@ void Bot::doNonCombatAI()
 
     if (!m_runfast || m_intoSwitch)
        cmd->angleturn += angleturn;
+
+    // If not moving while trying to, budge a bit to avoid stuck moments
+    if ((cmd->sidemove || cmd->forwardmove) && D_abs(m_realVelocity.x) < FRACUNIT && D_abs(m_realVelocity.y) < FRACUNIT)
+    {
+        cmd->sidemove += random.range(-pl->pclass->sidemove[1],
+            pl->pclass->sidemove[1]);
+        cmd->forwardmove += random.range(-pl->pclass->forwardmove[1],
+            pl->pclass->forwardmove[1]);
+    }
 //   printf("%d\n", angleturn);
 }
 
@@ -1044,6 +1055,12 @@ void Bot::doCommand()
       return;  // do nothing if out of game
    
    ++prevCtr;
+
+   // Update the velocity
+   m_realVelocity.x = pl->mo->x - m_lastPosition.x;
+   m_realVelocity.y = pl->mo->y - m_lastPosition.y;
+   m_lastPosition.x = pl->mo->x;
+   m_lastPosition.y = pl->mo->y;
    
    // Get current values
    ss = &botMap->pointInSubsector(pl->mo->x, pl->mo->y);
