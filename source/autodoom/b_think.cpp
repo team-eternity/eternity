@@ -592,7 +592,12 @@ void Bot::pickRandomWeapon(const Target& target)
         guns[num++] = wp_fist;
     
     cmd->buttons |= BT_CHANGE;
-    cmd->buttons |= guns[random() % num] << BT_WEAPONSHIFT;
+    weapontype_t result = guns[random() % num];
+
+    // Make sure to release the fire key when changing to guns with safety
+    if (result == wp_missile || result == wp_bfg)
+        cmd->buttons &= ~BT_ATTACK;
+    cmd->buttons |= result << BT_WEAPONSHIFT;
 }
 
 void Bot::doCombatAI(const PODCollection<Target>& targets)
