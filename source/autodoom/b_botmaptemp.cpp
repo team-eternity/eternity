@@ -31,6 +31,7 @@
 #include "b_botmaptemp.h"
 #include "b_classifier.h"
 #include "b_util.h"
+#include "../ev_specials.h"
 #include "../m_buffer.h"
 #include "../p_maputl.h"
 #include "../p_setup.h"
@@ -377,19 +378,61 @@ void TempBotMapPImpl::getBSPLines()
 //
 void TempBotMapPImpl::getLineMSectors()
 {
+   const ev_action_t* action;
    for (int u = 0; u < numlines; ++u)
    {
       const line_t &line = ::lines[u];
       const fixed_t x[2] = {line.v1->x, line.v2->x},
       y[2] = {line.v1->y, line.v2->y};
 
-      if (B_IsWalkTeleportation(line.special))
+      action = EV_ActionForSpecial(line.special);
+      if (action && (action->type == &W1ActionType || action->type == &WRActionType))
       {
           RawLine& rl = rawBSPLines.addNew();
-          rl.v[0].x = line.v1->x;
-          rl.v[0].y = line.v1->y;
-          rl.v[1].x = line.v2->x;
-          rl.v[1].y = line.v2->y;
+         angle_t fineAngle = P_PointToAngle(line.v1->x, line.v1->y, line.v2->x, line.v2->y) >> ANGLETOFINESHIFT;
+
+         // No risk of dividing by zero, given the fine arrays
+
+         // -pi/4 ... pi/4: x in (-16, 16), y in (-tan(a), +tan(a))
+         // pi/4 ... 3pi/4: x in (-tan(a-pi/2), +tan(a-pi/2)), y in (-16, 16)
+         // 3pi/4 ... 5pi/4: x in (16, -16), y in (tan(a-pi), -tan(a-pi))
+         // 5pi/4 ... 7pi/4: x in (tan(a-3pi/2), -tan(a-3pi/2)), y in (16, -16)
+
+         if(fineAngle >= FINEANGLES - SLOPERANGE / 2 || fineAngle < SLOPERANGE / 2)
+         {
+            // 7168-8192, 0-1023
+            // Must be between 1024 and 3071
+            // 9216-10240, 2048-3071
+            rl.v[0].x = line.v1->x - o->radius;
+            rl.v[0].y = line.v1->y - FixedMul(o->radius, finetangent[(fineAngle + SLOPERANGE) % FINEANGLES]);
+            rl.v[1].x = line.v2->x + o->radius;
+            rl.v[1].y = line.v2->y + FixedMul(o->radius, finetangent[(fineAngle + SLOPERANGE) % FINEANGLES]);
+         }
+         else if(fineAngle >= SLOPERANGE / 2 && fineAngle < 3 * SLOPERANGE / 2)
+         {
+            // 1024-3071
+            // must be between 0 and 4095
+            rl.v[0].x = line.v1->x + FixedMul(o->radius, finetangent[fineAngle]);
+            rl.v[0].y = line.v1->y - o->radius;
+            rl.v[1].x = line.v2->x - FixedMul(o->radius, finetangent[fineAngle]);
+            rl.v[1].y = line.v2->y + o->radius;
+         }
+         else if(fineAngle >= 3 * SLOPERANGE / 2 && fineAngle < 5 * SLOPERANGE / 2)
+         {
+            // 3072-5119
+            rl.v[0].x = line.v1->x + o->radius;
+            rl.v[0].y = line.v1->y + FixedMul(o->radius, finetangent[fineAngle - SLOPERANGE]);
+            rl.v[1].x = line.v2->x - o->radius;
+            rl.v[1].y = line.v2->y - FixedMul(o->radius, finetangent[fineAngle - SLOPERANGE]);
+         }
+         else
+         {
+            // 5120-7167
+            rl.v[0].x = line.v1->x - FixedMul(o->radius, finetangent[fineAngle - 2 * SLOPERANGE]);
+            rl.v[0].y = line.v1->y + o->radius;
+            rl.v[1].x = line.v2->x + FixedMul(o->radius, finetangent[fineAngle - 2 * SLOPERANGE]);
+            rl.v[1].y = line.v2->y - o->radius;
+         }
           rl.sector[0] = line.frontsector;
           rl.sector[1] = line.backsector;
           rl.line = &line;
@@ -486,7 +529,7 @@ void TempBotMapPImpl::placeBSPLines()
 {
    for (int i = 0; i < (int)rawBSPLines.getLength(); ++i)
    {
-      RawLine &rl = rawBSPLines[i];
+      const RawLine &rl = rawBSPLines[i];
       TempBotMap::Vertex &v1 = o->placeVertex(rl.v[0].x, rl.v[0].y);
       TempBotMap::Vertex &v2 = o->placeVertex(rl.v[1].x, rl.v[1].y);
       o->placeLine(v1, v2, rl.line);

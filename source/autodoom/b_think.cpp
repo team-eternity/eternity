@@ -407,50 +407,79 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
         }
     }
 
-    const line_t* line;
-    const ev_action_t* action;
-    for (auto it = ss.linelist.begin(); it != ss.linelist.end(); ++it)
+    // look for walkover triggers.
+    const BotMap::Line* bline;
+    for (const BNeigh& neigh : ss.neighs)
     {
-        line = *it;
-        action = EV_ActionForSpecial(line->special);
-        if (action && (action->type == &W1ActionType
-                       || action->type == &WRActionType
-                       || action->type == &S1ActionType
-                       || action->type == &SRActionType
-                       || action->type == &DRActionType))
+        bline = neigh.seg->ln;
+
+        // Don't handle teleporters here as goals. They're handled in b_path.
+        // And unlike teleporters, we don't care about the way we enter them.
+        if(bline && bline->specline
+           && !B_IsWalkTeleportation(bline->specline->special)
+           && botMap->canPass(*neigh.seg->owner, *neigh.ss, self.pl->mo->height)
+           && self.handleLineGoal(ss, coord, *bline->specline))
         {
-            // OK, this might be viable. But check.
-            if (self.m_deepSearchMode == DeepAvail)
-            {
-                self.m_deepTriedLines.insert(line);
-                return true;
-            }
-            else if (self.m_deepSearchMode == DeepBeyond)
-            {
-                if (!self.m_deepTriedLines.count(line))
-                {
-                    if (self.shouldUseSpecial(*line, ss))
-                        return true;
-                    self.m_deepTriedLines.insert(line);
-                    LevelStateStack::Push(*line, *self.pl);
-                    self.m_deepRepeat = &ss;
-                    return true;
-                }
-                //return false;
-            }
-            else if (self.shouldUseSpecial(*line, ss))
-            {
-                coord.kind = BotPathEnd::KindWalkLine;
-                coord.walkLine = line;
-                v2fixed_t crd = B_CoordXY(*line->v1);
-                //crd.x += self.random.range(-16, 16) * FRACUNIT;
-                //crd.y += self.random.range(-16, 16) * FRACUNIT;
-                self.goalTable.setV2Fixed(BOT_WALKTRIG,crd);
-                return true;
-            }
+            return true;
         }
     }
 
+    // look for other triggers.
+    const line_t* line;
+    for (auto it = ss.linelist.begin(); it != ss.linelist.end(); ++it)
+    {
+        line = *it;
+        if(self.handleLineGoal(ss, coord, *line))
+            return true;
+    }
+
+    return false;
+}
+
+//
+// Bot::handleLineGoal
+//
+// Called by objOfInterest when it has to decide on a line
+//
+bool Bot::handleLineGoal(const BSubsec &ss, BotPathEnd &coord, const line_t& line)
+{
+    const ev_action_t* action = EV_ActionForSpecial(line.special);
+    if (action && (action->type == &S1ActionType
+                   || action->type == &SRActionType
+                   || action->type == &W1ActionType
+                   || action->type == &WRActionType
+                   || action->type == &DRActionType))
+    {
+        // OK, this might be viable. But check.
+        if (m_deepSearchMode == DeepAvail)
+        {
+            m_deepTriedLines.insert(&line);
+            return true;
+        }
+        else if (m_deepSearchMode == DeepBeyond)
+        {
+            if (!m_deepTriedLines.count(&line))
+            {
+                if (shouldUseSpecial(line, ss))
+                    return true;
+                m_deepTriedLines.insert(&line);
+                LevelStateStack::Push(line, *pl);
+                m_deepRepeat = &ss;
+                return true;
+            }
+            //return false;
+        }
+        else if (shouldUseSpecial(line, ss))
+        {
+            coord.kind = BotPathEnd::KindWalkLine;
+            coord.walkLine = &line;
+            v2fixed_t crd = B_CoordXY(*line.v1);
+            //crd.x += self.random.range(-16, 16) * FRACUNIT;
+            //crd.y += self.random.range(-16, 16) * FRACUNIT;
+            goalTable.setV2Fixed(BOT_WALKTRIG,crd);
+            return true;
+        }
+    }
     return false;
 }
 

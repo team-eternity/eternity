@@ -402,16 +402,7 @@ static void B_setSpecLinePositions()
       const ev_action_t *action = EV_ActionForSpecial(line.special);
       if(action)
       {
-         if ((action->type == &W1ActionType || action->type == &WRActionType) && !(line.flags & ML_BLOCKING) && line.backsector)
-            // just add these
-         {
-            //         printf("Added at %d %d\n", B_Frac2Int(line.v1->x), B_Frac2Int(line.v1->y));
-            ss = &botMap->pointInSubsector((line.v1->x + line.v2->x) / 2, (line.v1->y + line.v2->y) / 2);
-            ss->linelist.insert(&line);
-            botMap->lineSecMap[&line].add(ss);
-            
-         }
-         else if(action->type == &S1ActionType || action->type == &SRActionType
+         if(action->type == &S1ActionType || action->type == &SRActionType
                  || action->type == &DRActionType)
          {
             v2fixed_t mid = {(line.v1->x + line.v2->x) / 2,
