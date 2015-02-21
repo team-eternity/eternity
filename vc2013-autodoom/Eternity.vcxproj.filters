@@ -232,9 +232,6 @@
     <Filter Include="Source Files\autodoom\glbsp">
       <UniqueIdentifier>{955c511a-56df-43db-b484-bcb92039ad6d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="JSONCpp">
-      <UniqueIdentifier>{56b756f3-2a6d-4bb3-8172-d4d935c12a7b}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\acs_acs0.cpp">
@@ -986,15 +983,6 @@
     </ClCompile>
     <ClCompile Include="..\source\s_formats.cpp">
       <Filter>Source Files\S_</Filter>
-    </ClCompile>
-    <ClCompile Include="..\jsoncpp-src-0.5.0\src\lib_json\json_reader.cpp">
-      <Filter>JSONCpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\jsoncpp-src-0.5.0\src\lib_json\json_value.cpp">
-      <Filter>JSONCpp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\jsoncpp-src-0.5.0\src\lib_json\json_writer.cpp">
-      <Filter>JSONCpp</Filter>
     </ClCompile>
     <ClCompile Include="..\source\xl_emapinfo.cpp">
       <Filter>Source Files\XL_</Filter>
