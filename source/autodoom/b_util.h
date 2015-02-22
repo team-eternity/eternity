@@ -30,6 +30,7 @@
 #define B_UTIL_H_
 
 #include <unordered_map>
+#include "../../rapidjson/document.h"
 #include "b_lineeffect.h"
 #include "../m_collection.h"
 #include "../m_dllist.h"
@@ -275,6 +276,8 @@ inline static bool B_IsWalkTeleportation(int special)
     }
     return false;
 }
+
+const rapidjson::Value& B_OptJsonObject(const rapidjson::Value& json, const char* name);
 
 #ifdef _DEBUG
 void B_Log(const char *output, ...);

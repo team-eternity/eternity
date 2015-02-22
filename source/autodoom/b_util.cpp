@@ -273,6 +273,21 @@ bool B_SegmentsIntersect(fixed_t x11, fixed_t y11, fixed_t x12, fixed_t y12,
 }
 
 //
+// B_OptJsonObject
+//
+// Returns JSON object of name, or nullptr if not found or invalid
+//
+const rapidjson::Value& B_OptJsonObject(const rapidjson::Value& json, const char* name)
+{
+    static const rapidjson::Value emptyJson(rapidjson::kObjectType);
+
+    auto it = json.FindMember(name);
+    if (it == json.MemberEnd() || !it->value.IsObject())
+        return emptyJson;
+    return it->value;
+}
+
+//
 // B_Log
 //
 // Only in debug mode, it writes an output message for debugging

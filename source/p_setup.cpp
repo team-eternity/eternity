@@ -2634,6 +2634,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    
    // IOANCH: statistics
    B_StoreMonsterStats();
+   Bot::storePlayerStats();
 
    // perform post-Z_FreeTags actions
    P_InitNewLevel(lumpnum, dir);

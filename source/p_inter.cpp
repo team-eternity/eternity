@@ -590,7 +590,7 @@ bool P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    if(botMap)
    {
       plbot = &bots[player - players];
-      effectStats = &plbot->getEffectStats(special->sprite);
+      effectStats = &Bot::getEffectStats(special->sprite);
       effectStats->setPriorState(*player);
    }
    //plbot->getNopickStats(special->sprite).reduceByCurrentState(*player);
@@ -1054,7 +1054,7 @@ bool P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    if(botMap)
    {
       effectStats->maximizeByStateDelta(*player);
-      PlayerStats *nopickStats = plbot->findNopickStats(special->sprite);
+      PlayerStats *nopickStats = Bot::findNopickStats(special->sprite);
       if(nopickStats && effectStats->overlaps(*player, *nopickStats))
       {
          nopickStats->reset(true);

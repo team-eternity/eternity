@@ -29,6 +29,7 @@
 #ifndef __EternityEngine__b_itemlearn__
 #define __EternityEngine__b_itemlearn__
 
+#include "../../rapidjson/document.h"
 #include "../d_player.h"
 
 //
@@ -55,12 +56,13 @@ class PlayerStats : public ZoneObject
       inventory_t inventory;
       int inv_size;
       
-      Values(bool maxOut)
+      Values(bool maxOut) : inventory(nullptr)
       {
          reset(maxOut);
       }
       Values(const Values &other);
       Values(Values &&other);
+      Values(const rapidjson::Value& json, bool maxOutFallback);
       //
       // Destructor
       //
@@ -70,6 +72,8 @@ class PlayerStats : public ZoneObject
       }
       
       void reset(bool maxOut);
+
+      rapidjson::Value makeJson(rapidjson::Document::AllocatorType& allocator) const;
    };
    
    Values data;
@@ -82,6 +86,7 @@ public:
    PlayerStats(bool maxOut) : data(maxOut), prior(false)
    {
    }
+   PlayerStats(const rapidjson::Value& json, bool maxOutFallback);
    
    void reduceByCurrentState(const player_t &pl);
    void setPriorState(const player_t &pl);
@@ -90,6 +95,8 @@ public:
    bool greaterThan(player_t &pl) const;
    bool fillsGap(player_t &pl, const PlayerStats &cap) const;
    bool overlaps(player_t &pl, const PlayerStats &cap) const;
+
+   rapidjson::Value makeJson(rapidjson::Document::AllocatorType& allocator) const;
    
    //
    // reset

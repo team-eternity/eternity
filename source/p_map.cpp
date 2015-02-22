@@ -806,8 +806,7 @@ bool P_CheckPickUp(Mobj *thing)
       if(botMap && nopick && player)
       {
          Bot *plbot = &bots[player - players];
-         plbot->getNopickStats(spnum).
-            reduceByCurrentState(*player);
+         Bot::getNopickStats(spnum).reduceByCurrentState(*player);
          plbot->addXYEvent(BOT_PICKUP, coord);
       }
    }

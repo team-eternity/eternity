@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2014 Ioan Chera
+// Copyright(C) 2015 Ioan Chera
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -27,20 +27,43 @@
 //-----------------------------------------------------------------------------
 
 #include "../z_zone.h"
+#include "../../rapidjson/document.h"
 
 #include "../e_inventory.h"
 #include "b_itemlearn.h"
+#include "b_util.h"
 
+#define JSON_HEALTH "health"
+#define JSON_ARMORPOINTS "armorpoints"
+#define JSON_ARMORTYPE "armortype"
+#define JSON_POWERS "powers"
+#define JSON_WEAPONOWNED "weaponowned"
+#define JSON_ITEMCOUNT "itemcount"
+#define JSON_INVENTORY_ITEM "item"
+#define JSON_INVENTORY_AMOUNT "amount"
+#define JSON_INVENTORY "inventory"
+
+#define JSON_VALUES_DATA "data"
+#define JSON_VALUES_PRIOR "prior"
+
+#define JSON_FIND_ITEM(key, valueType) \
+    it = json.FindMember(key); \
+    if(it == json.MemberEnd() || !it->value.valueType()) \
+        goto fallback
 
 //
 // Copy constructor
 //
-PlayerStats::Values::Values(const Values &other) : health(other.health),
-armorpoints(other.armorpoints), armortype(other.armortype),
-itemcount(other.itemcount), inv_size(other.inv_size)
+PlayerStats::Values::Values(const Values &other) : 
+health(other.health),
+armorpoints(other.armorpoints), 
+armortype(other.armortype),
+itemcount(other.itemcount), 
+inv_size(other.inv_size)
 {
    memcpy(powers, other.powers, sizeof(powers));
    memcpy(weaponowned, other.weaponowned, sizeof(weaponowned));
+
    inventory = estructalloc(inventoryslot_t, inv_size);
    memcpy(inventory, other.inventory, inv_size * sizeof(*inventory));
 }
@@ -48,9 +71,12 @@ itemcount(other.itemcount), inv_size(other.inv_size)
 //
 // Move constructor
 //
-PlayerStats::Values::Values(Values &&other) : health(other.health),
-armorpoints(other.armorpoints), armortype(other.armortype),
-itemcount(other.itemcount), inventory(other.inventory),
+PlayerStats::Values::Values(Values &&other) : 
+health(other.health),
+armorpoints(other.armorpoints), 
+armortype(other.armortype),
+itemcount(other.itemcount), 
+inventory(other.inventory),
 inv_size(other.inv_size)
 {
    memcpy(powers, other.powers, sizeof(powers));
@@ -59,6 +85,78 @@ inv_size(other.inv_size)
    // move happens here
    other.inventory = nullptr;
    other.inv_size = 0;
+}
+
+//
+// JSON constructor
+//
+// Make sure we start with a zero inventory before any fallback/reset
+//
+PlayerStats::Values::Values(const rapidjson::Value& json, bool maxOutFallback) : inventory(nullptr)
+{
+    {
+        if (!json.IsObject())
+            goto fallback;
+
+        auto JSON_FIND_ITEM(JSON_HEALTH, IsInt);
+        this->health = it->value.GetInt();
+
+        JSON_FIND_ITEM(JSON_ARMORPOINTS, IsInt);
+        this->armorpoints = it->value.GetInt();
+
+        JSON_FIND_ITEM(JSON_ARMORTYPE, IsInt);
+        this->armortype = it->value.GetInt();
+
+        JSON_FIND_ITEM(JSON_POWERS, IsArray);
+        if (it->value.Capacity() != earrlen(this->powers))
+            goto fallback;
+        int *pointer = this->powers;
+        for (auto ait = it->value.Begin(); ait != it->value.End(); ++ait)
+        {
+            if (!ait->IsInt())
+                goto fallback;
+            *pointer++ = ait->GetInt();
+        }
+
+        JSON_FIND_ITEM(JSON_WEAPONOWNED, IsArray);
+        if (it->value.Capacity() != earrlen(this->weaponowned))
+            goto fallback;
+        pointer = this->weaponowned;
+        for (auto ait = it->value.Begin(); ait != it->value.End(); ++ait)
+        {
+            if (!ait->IsInt())
+                goto fallback;
+            *pointer++ = ait->GetInt();
+        }
+
+        JSON_FIND_ITEM(JSON_ITEMCOUNT, IsInt);
+        this->itemcount = it->value.GetInt();
+
+        JSON_FIND_ITEM(JSON_INVENTORY, IsArray);
+        this->inv_size = static_cast<int>(it->value.Capacity());
+        this->inventory = estructalloc(inventoryslot_t, this->inv_size);
+        inventoryslot_t* sptr = this->inventory;
+        for (auto ait = it->value.Begin(); ait != it->value.End(); ++ait)
+        {
+            if (!ait->IsObject())
+                goto fallback;
+            auto bit = ait->FindMember(JSON_INVENTORY_ITEM);
+            if (bit == ait->MemberEnd() || !bit->value.IsInt())
+                goto fallback;
+            sptr->item = bit->value.GetInt();
+            bit = ait->FindMember(JSON_INVENTORY_AMOUNT);
+            if (bit == ait->MemberEnd() || !bit->value.IsInt())
+                goto fallback;
+            sptr->amount = bit->value.GetInt();
+            ++sptr;
+        }
+    }
+
+
+    return;
+fallback:
+    B_Log("Failed reading PlayerStats::Values from JSON!");
+    reset(maxOutFallback);
 }
 
 //
@@ -80,12 +178,74 @@ void PlayerStats::Values::reset(bool maxOut)
       powers[i] = sup;
    for(i = 0; i < NUMWEAPONS; ++i)
       weaponowned[i] = sup;
+   efree(inventory);
    inventory = estructalloc(inventoryslot_t, inv_size = e_maxitemid);
    for(i = 0; i < e_maxitemid; ++i)
    {
       inventory[i].item = i;
       inventory[i].amount = sup;
    }
+}
+
+//
+// PlayerStats::Values::makeJson
+//
+// Returns a JSON object from this set of values
+//
+rapidjson::Value PlayerStats::Values::makeJson(rapidjson::Document::AllocatorType& allocator) const
+{
+    rapidjson::Value json(rapidjson::kObjectType);
+
+    json.AddMember(JSON_HEALTH, this->health, allocator);
+    json.AddMember(JSON_ARMORPOINTS, this->armorpoints, allocator);
+    json.AddMember(JSON_ARMORTYPE, this->armortype, allocator);
+
+    rapidjson::Value powersJson(rapidjson::kArrayType);
+    for (int power : this->powers)
+    {
+        powersJson.PushBack(power, allocator);
+    }
+
+    json.AddMember(JSON_POWERS, powersJson, allocator);
+
+    rapidjson::Value weaponsJson(rapidjson::kArrayType);
+    for (int weapon : weaponowned)
+    {
+        weaponsJson.PushBack(weapon, allocator);
+    }
+
+    json.AddMember(JSON_WEAPONOWNED, weaponsJson, allocator);
+    json.AddMember(JSON_ITEMCOUNT, this->itemcount, allocator);
+
+    rapidjson::Value inventoryJson(rapidjson::kArrayType);
+    for (int i = 0; i < this->inv_size; ++i)
+    {
+        rapidjson::Value inventoryItem(rapidjson::kObjectType);
+
+        // Statically cast the fields to int because they might change at any
+        // moment into different types from the main code, and the best we can
+        // do here is prevent accidental drastic casts from pointers and whatnot.
+        inventoryItem.AddMember(JSON_INVENTORY_ITEM, static_cast<int>(this->inventory[i].item), allocator);
+        inventoryItem.AddMember(JSON_INVENTORY_AMOUNT, static_cast<int>(this->inventory[i].amount), allocator);
+
+        inventoryJson.PushBack(inventoryItem, allocator);
+    }
+
+    json.AddMember(JSON_INVENTORY, inventoryJson, allocator);
+
+    return json;
+}
+
+//
+// JSON constructor
+//
+// For each object, if any of the JSONs is invalid, or empty, it will make it
+// as new
+//
+PlayerStats::PlayerStats(const rapidjson::Value& json, bool maxOutFallback) : 
+data(B_OptJsonObject(json, JSON_VALUES_DATA), maxOutFallback), 
+prior(B_OptJsonObject(json, JSON_VALUES_PRIOR), false)
+{
 }
 
 //
@@ -316,6 +476,20 @@ bool PlayerStats::overlaps(player_t &pl, const PlayerStats &cap) const
    }
    
    return false;
+}
+
+//
+// PlayerStats::makeJson
+//
+rapidjson::Value PlayerStats::makeJson(rapidjson::Document::AllocatorType& allocator) const
+{
+    auto dataJson = data.makeJson(allocator);
+    auto priorJson = prior.makeJson(allocator);
+
+    rapidjson::Value json(rapidjson::kObjectType);
+    json.AddMember(JSON_VALUES_DATA, dataJson, allocator);
+    json.AddMember(JSON_VALUES_PRIOR, priorJson, allocator);
+    return json;
 }
 
 // EOF

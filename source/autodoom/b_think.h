@@ -97,7 +97,7 @@ class Bot : public ZoneObject
    // Item knowledge builder
    // nopickStats: the minimum stats by which an item won't be picked
    // effectStats: the maximum benefit from picking up an item.
-   std::unordered_map<spritenum_t, PlayerStats> nopickStats, effectStats;
+   static std::unordered_map<spritenum_t, PlayerStats> nopickStats, effectStats;
    
    struct Target
    {
@@ -180,8 +180,8 @@ public:
    
    static void InitBots();
 
-   PlayerStats &getNopickStats(spritenum_t spnum);
-   PlayerStats *findNopickStats(spritenum_t spnum)
+   static PlayerStats &getNopickStats(spritenum_t spnum);
+   static PlayerStats *findNopickStats(spritenum_t spnum)
    {
       auto fnd = nopickStats.find(spnum);
       if(fnd != nopickStats.cend())
@@ -189,7 +189,10 @@ public:
       return nullptr;
    }
 
-   PlayerStats &getEffectStats(spritenum_t spnum);
+   static PlayerStats &getEffectStats(spritenum_t spnum);
+
+   static void storePlayerStats();
+   static void loadPlayerStats();
 };
 
 extern Bot bots[];

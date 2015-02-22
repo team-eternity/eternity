@@ -1595,8 +1595,10 @@ static void D_DoomInit()
    // Identify root EDF file and process EDF
    D_LoadEDF(gfs);
    
-   // IOANCH: load statistics file
+   // IOANCH: load statistics files
    B_LoadMonsterStats();
+   // load item pickup effect stats
+   Bot::loadPlayerStats();
 
    // haleyjd 03/27/11: process Hexen scripts
    XL_ParseHexenScripts();

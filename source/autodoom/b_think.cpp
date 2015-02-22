@@ -28,6 +28,10 @@
 
 #include <queue>
 #include "../z_zone.h"
+#include "../../rapidjson/document.h"
+#include "../../rapidjson/filereadstream.h"
+#include "../../rapidjson/filewritestream.h"
+#include "../../rapidjson/writer.h"
 
 #include "b_think.h"
 #include "b_trace.h"
@@ -45,14 +49,22 @@
 #include "../g_dmflag.h"
 #include "../metaapi.h"
 #include "../m_compare.h"
+#include "../m_misc.h"
 #include "../p_maputl.h"
 #include "../p_pspr.h"
 #include "../p_setup.h"
 #include "../p_spec.h"
 #include "../r_state.h"
 
+#define ITEM_NOPICK_STATS_JSON "itemNopickStats.json"
+#define ITEM_EFFECT_STATS_JSON "itemEffectStats.json"
+#define JSON_SPRITENUM "spritenum"
+#define JSON_STATS "stats"
+
 // The commands that the bots will send to the players to be added in G_Ticker
 Bot bots[MAXPLAYERS];
+
+std::unordered_map<spritenum_t, PlayerStats> Bot::nopickStats, Bot::effectStats;
 
 //
 // Bot::mapInit
@@ -354,14 +366,14 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
             if (item->sprite < 0 || item->sprite >= NUMSPRITES)
                 continue;
 
-            effect = self.effectStats.find(item->sprite);
-            nopick = self.nopickStats.find(item->sprite);
+            effect = effectStats.find(item->sprite);
+            nopick = nopickStats.find(item->sprite);
 
-            if (effect == self.effectStats.cend())
+            if (effect == effectStats.cend())
             {
                 // unknown (new) item
                 // Does it have nopick stats?
-                if (nopick == self.nopickStats.cend())
+                if (nopick == nopickStats.cend())
                 {
                     // no. Totally unknown
                     if (self.m_deepSearchMode == DeepNormal)
@@ -392,7 +404,7 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
             {
                 // known item.
                 // currently just try to pick it up
-                if (nopick == self.nopickStats.cend() ||
+                if (nopick == nopickStats.cend() ||
                     effect->second.fillsGap(*self.pl, nopick->second))
                 {
                     if (self.m_deepSearchMode == DeepNormal)
@@ -1184,6 +1196,94 @@ PlayerStats &Bot::getEffectStats(spritenum_t spnum)
    }
 
    return effect->second;
+}
+
+//
+// Bot::loadPlayerStats
+//
+// Get item pickup data from JSON
+//
+static void loadStatsForMap(std::unordered_map<spritenum_t, PlayerStats> &map, const char* filename, bool fallbackFlag)
+{
+    FILE* f = fopen(filename, "rt");
+    if (!f)
+    {
+        B_Log("%s not written yet.", filename);
+        return;
+    }
+    char readBuffer[BUFSIZ];
+    rapidjson::FileReadStream stream(f, readBuffer, sizeof(readBuffer));
+    rapidjson::Document json;
+    json.ParseStream(stream);
+    if (json.HasParseError() || !json.IsArray())
+        goto fail;
+
+    spritenum_t sn;
+    for (auto it = json.Begin(); it != json.End(); ++it)
+    {
+        if (!it->IsObject())
+            goto fail;
+        auto oit = it->FindMember(JSON_SPRITENUM);
+        if (oit == it->MemberEnd() || !oit->value.IsInt())
+            goto fail;
+        sn = oit->value.GetInt();
+        oit = it->FindMember(JSON_STATS);
+        if (oit == it->MemberEnd() || !oit->value.IsObject())
+            goto fail;
+        map.emplace(sn, PlayerStats(oit->value, fallbackFlag));
+    }
+
+    fclose(f);
+    return;
+fail:
+    // Failure case: reset the maps.
+    map.clear();
+    fclose(f);
+}
+
+void Bot::loadPlayerStats()
+{
+    loadStatsForMap(nopickStats, M_SafeFilePath(g_autoDoomPath, ITEM_NOPICK_STATS_JSON), true);
+    loadStatsForMap(effectStats, M_SafeFilePath(g_autoDoomPath, ITEM_EFFECT_STATS_JSON), false);
+}
+
+//
+// Bot::storePlayerStats
+//
+// Saves the two item stat maps to JSON files
+//
+static void storeStatsForMap(const std::unordered_map<spritenum_t, PlayerStats> &map, const char* filename)
+{
+    rapidjson::Document document;
+    auto& allocator = document.GetAllocator();
+    document.SetArray();
+
+    for (auto it = map.begin(); it != map.end(); ++it)
+    {
+        rapidjson::Value item(rapidjson::kObjectType);
+        item.AddMember(JSON_SPRITENUM, it->first, allocator);
+        item.AddMember(JSON_STATS, it->second.makeJson(allocator), allocator);
+        document.PushBack(item, allocator);
+    }
+
+    FILE* f = fopen(filename, "wt");
+    if (!f)
+    {
+        B_Log("Failed creating %s!!", filename);
+        return;
+    }
+    char writeBuffer[BUFSIZ];
+    rapidjson::FileWriteStream stream(f, writeBuffer, sizeof(writeBuffer));
+    rapidjson::Writer<rapidjson::FileWriteStream> writer(stream);
+    document.Accept(writer);
+    
+    fclose(f);
+}
+
+void Bot::storePlayerStats()
+{
+    storeStatsForMap(nopickStats, M_SafeFilePath(g_autoDoomPath, ITEM_NOPICK_STATS_JSON));
+    storeStatsForMap(effectStats, M_SafeFilePath(g_autoDoomPath, ITEM_EFFECT_STATS_JSON));
 }
 
 // EOF
