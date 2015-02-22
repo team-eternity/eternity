@@ -215,34 +215,36 @@ void BotMap::setThingPosition(const Mobj *thing)
    
    bool foundlines = false;
    getBoxTouchedBlocks(top, bottom, left, right, [&](int b)->void
-                       {
-                          // Iterate through all segs in the caught block
-                          for(auto it = segBlocks[b].begin();
-                              it != segBlocks[b].end(); ++it)
-                          {
-                             Seg *sg = *it;
-                             if(!sg->owner)
-                                continue;
-                             if (right <= sg->bbox[BOXLEFT] ||
-                                 left >= sg->bbox[BOXRIGHT] ||
-                                 top <= sg->bbox[BOXBOTTOM] ||
-                                 bottom >= sg->bbox[BOXTOP])
-                             {
-                                continue;
-                             }
-                             if (B_BoxOnLineSide(top, bottom, left, right,
-                                                 sg->v[0]->x, sg->v[0]->y,
-                                                 sg->dx,
-                                                 sg->dy) == -1)
-                             {
+   {
+       if (b < 0 || b >= segBlocks.getLength())
+           return;
+       // Iterate through all segs in the caught block
+       for (auto it = segBlocks[b].begin();
+           it != segBlocks[b].end(); ++it)
+       {
+           Seg *sg = *it;
+           if (!sg->owner)
+               continue;
+           if (right <= sg->bbox[BOXLEFT] ||
+               left >= sg->bbox[BOXRIGHT] ||
+               top <= sg->bbox[BOXBOTTOM] ||
+               bottom >= sg->bbox[BOXTOP])
+           {
+               continue;
+           }
+           if (B_BoxOnLineSide(top, bottom, left, right,
+               sg->v[0]->x, sg->v[0]->y,
+               sg->dx,
+               sg->dy) == -1)
+           {
 
-                                // if seg crosses thing bbox, add it
-                                mobjSecMap[thing].add(sg->owner);
-                                sg->owner->mobjlist.insert(thing);
-                                foundlines = true;
-                             }
-                          }
-                       });
+               // if seg crosses thing bbox, add it
+               mobjSecMap[thing].add(sg->owner);
+               sg->owner->mobjlist.insert(thing);
+               foundlines = true;
+           }
+       }
+   });
    
    if(!foundlines)
    {

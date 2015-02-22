@@ -89,6 +89,7 @@ class Bot : public ZoneObject
    bool                     m_justGotLost;
    bool                     m_intoSwitch;
    int                      m_goalTimer;
+   const Mobj*              m_currentTargetMobj;
    
    // internal states
    unsigned prevCtr;
@@ -161,6 +162,7 @@ public:
    m_justGotLost(false),
    m_intoSwitch(false),
    m_goalTimer(0),
+   m_currentTargetMobj(nullptr),
    justPunched(0)
    {
       random.initialize((unsigned)time(nullptr));

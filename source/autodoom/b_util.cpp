@@ -281,6 +281,9 @@ const rapidjson::Value& B_OptJsonObject(const rapidjson::Value& json, const char
 {
     static const rapidjson::Value emptyJson(rapidjson::kObjectType);
 
+    if (!json.IsObject())
+        return emptyJson;
+
     auto it = json.FindMember(name);
     if (it == json.MemberEnd() || !it->value.IsObject())
         return emptyJson;
