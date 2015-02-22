@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2013 Ioan Chera
+// Copyright(C) 2015 Ioan Chera
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -104,7 +104,7 @@ public:
    //
    struct RawLine
    {
-      const sector_t *sector[2];    // sector references
+      //const sector_t *sector[2];    // sector references
       v2fixed_t v[2];               // end point coordinates
       const line_t*     line;
    };
@@ -346,8 +346,8 @@ void TempBotMapPImpl::BSPLineGen::putLinesInColl(PODCollection<RawLine> &coll)
          newLine = &coll.addNew();
          newLine->v[0] = v[0];
          newLine->v[1] = v[1];
-         newLine->sector[0] = sector[0];
-         newLine->sector[1] = sector[1];
+//         newLine->sector[0] = sector[0];
+//         newLine->sector[1] = sector[1];
          newLine->line = nullptr;
 //         printf("%g %g %g %g\n", M_FixedToDouble(newLine.v[0].x),
 //                M_FixedToDouble(newLine.v[0].y),
@@ -390,7 +390,9 @@ void TempBotMapPImpl::getLineMSectors()
       {
           RawLine& rl = rawBSPLines.addNew();
          angle_t fineAngle = P_PointToAngle(line.v1->x, line.v1->y, line.v2->x, line.v2->y) >> ANGLETOFINESHIFT;
-
+         LineEq le, axle[2];
+         le = LineEq::MakeFixed(*line.v1, *line.v2);
+         
          // No risk of dividing by zero, given the fine arrays
 
          // -pi/4 ... pi/4: x in (-16, 16), y in (-tan(a), +tan(a))
@@ -398,43 +400,46 @@ void TempBotMapPImpl::getLineMSectors()
          // 3pi/4 ... 5pi/4: x in (16, -16), y in (tan(a-pi), -tan(a-pi))
          // 5pi/4 ... 7pi/4: x in (tan(a-3pi/2), -tan(a-3pi/2)), y in (16, -16)
 
+         // ax + by + c = 0
+
+         double dradius = M_FixedToDouble(o->radius);
          if(fineAngle >= FINEANGLES - SLOPERANGE / 2 || fineAngle < SLOPERANGE / 2)
          {
-            // 7168-8192, 0-1023
-            // Must be between 1024 and 3071
-            // 9216-10240, 2048-3071
-            rl.v[0].x = line.v1->x - o->radius;
-            rl.v[0].y = line.v1->y - FixedMul(o->radius, finetangent[(fineAngle + SLOPERANGE) % FINEANGLES]);
-            rl.v[1].x = line.v2->x + o->radius;
-            rl.v[1].y = line.v2->y + FixedMul(o->radius, finetangent[(fineAngle + SLOPERANGE) % FINEANGLES]);
+            // left->right             
+             axle[0] = LineEq::MakeDouble(1, 0, -(line.v1->fx - dradius));
+             axle[1] = LineEq::MakeDouble(1, 0, -(line.v2->fx + dradius));
          }
          else if(fineAngle >= SLOPERANGE / 2 && fineAngle < 3 * SLOPERANGE / 2)
          {
-            // 1024-3071
-            // must be between 0 and 4095
-            rl.v[0].x = line.v1->x + FixedMul(o->radius, finetangent[fineAngle]);
-            rl.v[0].y = line.v1->y - o->radius;
-            rl.v[1].x = line.v2->x - FixedMul(o->radius, finetangent[fineAngle]);
-            rl.v[1].y = line.v2->y + o->radius;
+             // bottom->up
+             axle[0] = LineEq::MakeDouble(0, 1, -(line.v1->fy - dradius));
+             axle[1] = LineEq::MakeDouble(0, 1, -(line.v2->fy + dradius));
          }
          else if(fineAngle >= 3 * SLOPERANGE / 2 && fineAngle < 5 * SLOPERANGE / 2)
          {
-            // 3072-5119
-            rl.v[0].x = line.v1->x + o->radius;
-            rl.v[0].y = line.v1->y + FixedMul(o->radius, finetangent[fineAngle - SLOPERANGE]);
-            rl.v[1].x = line.v2->x - o->radius;
-            rl.v[1].y = line.v2->y - FixedMul(o->radius, finetangent[fineAngle - SLOPERANGE]);
+             // right->left
+             axle[0] = LineEq::MakeDouble(1, 0, -(line.v1->fx + dradius));
+             axle[1] = LineEq::MakeDouble(1, 0, -(line.v2->fx - dradius));
          }
          else
          {
-            // 5120-7167
-            rl.v[0].x = line.v1->x - FixedMul(o->radius, finetangent[fineAngle - 2 * SLOPERANGE]);
-            rl.v[0].y = line.v1->y + o->radius;
-            rl.v[1].x = line.v2->x + FixedMul(o->radius, finetangent[fineAngle - 2 * SLOPERANGE]);
-            rl.v[1].y = line.v2->y - o->radius;
+             // top->down
+             axle[0] = LineEq::MakeDouble(0, 1, -(line.v1->fy + dradius));
+             axle[1] = LineEq::MakeDouble(0, 1, -(line.v2->fy - dradius));
          }
-          rl.sector[0] = line.frontsector;
-          rl.sector[1] = line.backsector;
+         double ix[2], iy[2];
+         if (!B_IntersectionPoint(le, axle[0], ix[0], iy[0]))
+             I_Error("Invalid trigger walkover line extension detected!");
+         if (!B_IntersectionPoint(le, axle[1], ix[1], iy[1]))
+             I_Error("Invalid trigger walkover line extension detected!");
+
+         rl.v[0].x = M_DoubleToFixed(ix[0]);
+         rl.v[0].y = M_DoubleToFixed(iy[0]);
+         rl.v[1].x = M_DoubleToFixed(ix[1]);
+         rl.v[1].y = M_DoubleToFixed(iy[1]);
+
+//          rl.sector[0] = line.frontsector;
+//          rl.sector[1] = line.backsector;
           rl.line = &line;
       }
             

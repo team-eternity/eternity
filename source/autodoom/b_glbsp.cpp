@@ -430,6 +430,9 @@ void B_GLBSP_PutSubsector(int first, int num, int ssidx)
       // Set the neighbours
       if (sg.partner && sg.partner->owner)
       {
+          if (ssidx == (int)(sg.partner->owner - &botMap->ssectors[0]))
+              B_Log("%g %g %g %g", M_FixedToDouble(sg.v[0]->x), M_FixedToDouble(sg.v[0]->y),
+                    M_FixedToDouble(sg.v[1]->x), M_FixedToDouble(sg.v[1]->y));
           BNeigh n;
          n.dist = 0; // to be updated later
           n.ss = sg.partner->owner;
