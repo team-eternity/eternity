@@ -33,6 +33,7 @@
 #include "../../rapidjson/filewritestream.h"
 #include "../../rapidjson/writer.h"
 
+#include "b_statistics.h"
 #include "b_think.h"
 #include "b_trace.h"
 #include "b_util.h"
@@ -652,7 +653,27 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
     tangle = P_PointToAngle(mx, my, nx, ny);
     dangle = tangle - pl->mo->angle;
 
-    int16_t angleturn = (int16_t)(tangle >> 16) - (int16_t)(pl->mo->angle >> 16);
+    // Find the most threatening monster enemy, if the first target is not a line
+    const Target* highestThreat = &targets[0];
+    if (!targets[0].isLine)
+    {
+        double maxThreat = -DBL_MAX, threat;
+        for (const Target& target : targets)
+        {
+            if (target.isLine)
+                continue;
+            threat = B_GetMonsterThreatLevel(target.mobj->info);
+            if (threat > maxThreat)
+            {
+                highestThreat = &target;
+                maxThreat = threat;
+            }
+        }
+    }
+
+    angle_t highestTangle = P_PointToAngle(mx, my, highestThreat->coord.x, highestThreat->coord.y);
+
+    int16_t angleturn = (int16_t)(highestTangle >> 16) - (int16_t)(pl->mo->angle >> 16);
     angleturn >>= 2;
     //if (!angleturn)
     {
