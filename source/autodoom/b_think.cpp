@@ -55,6 +55,7 @@
 #include "../p_pspr.h"
 #include "../p_setup.h"
 #include "../p_spec.h"
+#include "../r_defs.h"
 #include "../r_state.h"
 
 #define ITEM_NOPICK_STATS_JSON "itemNopickStats.json"
@@ -345,6 +346,11 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
         && self.m_deepAvailSsectors.count(&ss))
     {
         return false;
+    }
+
+    if(self.m_searchstage >= 2 && ss.msector->getFloorSector()->damageflags & SDMG_EXITLEVEL)
+    {
+        return true;
     }
 
     const Mobj* item;
