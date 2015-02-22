@@ -97,6 +97,7 @@ void Bot::mapInit()
     justPunched = 0;
     m_lastPosition.x = pl->mo->x;
     m_lastPosition.y = pl->mo->y;
+    m_currentTargetMobj = nullptr;
 }
 
 //
@@ -662,6 +663,12 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
         {
             if (target.isLine)
                 continue;
+            if (target.mobj == m_currentTargetMobj)
+            {
+                // Keep shooting current target!
+                highestThreat = &target;
+                break;
+            }
             threat = B_GetMonsterThreatLevel(target.mobj->info);
             if (threat > maxThreat)
             {
@@ -670,6 +677,9 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
             }
         }
     }
+
+    // Save the threat
+    m_currentTargetMobj = highestThreat->isLine ? nullptr : highestThreat->mobj;
 
     angle_t highestTangle = P_PointToAngle(mx, my, highestThreat->coord.x, highestThreat->coord.y);
 
@@ -740,7 +750,7 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
     {
         if (pl->readyweapon == wp_fist || pl->readyweapon == wp_chainsaw)
         {
-            if (targets[0].mobj->info->dehnum == MT_BARREL)
+            if (highestThreat != &targets[0] || targets[0].mobj->info->dehnum == MT_BARREL)
             {
                 pickRandomWeapon(targets[0]);
             }
