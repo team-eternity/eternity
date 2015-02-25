@@ -2467,6 +2467,7 @@
 					"/Library/Frameworks/SDL_net.framework/**",
 					../libpng,
 					"../jsoncpp-src-0.5.0/include",
+					/opt/local/include/SDL,
 				);
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				LLVM_LTO = NO;
@@ -2494,6 +2495,7 @@
 					"/Library/Frameworks/SDL_net.framework/**",
 					../libpng,
 					"../jsoncpp-src-0.5.0/include",
+					/opt/local/include/SDL,
 				);
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				LLVM_LTO = YES;
