@@ -333,6 +333,7 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
    sae.ceilingHeight = lastCeilingHeight;
    sae.floorTerminal = floorBlocked;
    sae.ceilingTerminal = ceilingBlocked;
+   sae.altFloorHeight = 0;  // this needs to be initialized in order to avoid Visual Studio debug errors.
    
    VanillaLineSpecial vls = static_cast<VanillaLineSpecial>(line.special);
    bool othersAffected = false;
