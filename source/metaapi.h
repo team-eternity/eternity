@@ -50,6 +50,7 @@ enum
 extern int metaerrno;
 
 class MetaTablePimpl;
+class OutBuffer;    // IOANCH
 
 //
 // MetaObject
@@ -107,7 +108,10 @@ public:
    // as that is not what any of the implementations should do.
    //
    virtual MetaObject *clone()    const { return new MetaObject(*this); }
-   virtual const char *toString() const;   
+   virtual const char *toString() const;
+
+   // IOANCH 20150514: serialization.
+   virtual bool writeToFile(OutBuffer& outbuf) const;
 };
 
 // MetaObject specializations for basic types
@@ -148,6 +152,8 @@ public:
    void setValue(int i) { value = i;    }
 
    friend class MetaTable;
+
+   virtual bool writeToFile(OutBuffer& outbuf) const;
 };
 
 //
@@ -190,6 +196,8 @@ public:
    void setValue(v2fixed_t i) { value = i;    }
    
    friend class MetaTable;
+
+   virtual bool writeToFile(OutBuffer& outbuf) const;
 };
 
 //
@@ -224,6 +232,8 @@ public:
    void setValue(double d) { value = d;    }
 
    friend class MetaTable;
+
+   virtual bool writeToFile(OutBuffer& outbuf) const;
 };
 
 //
@@ -265,6 +275,8 @@ public:
    void setValue(const char *s, char **ret = NULL);
 
    friend class MetaTable;
+
+   virtual bool writeToFile(OutBuffer& outbuf) const;
 };
 
 //
@@ -305,6 +317,8 @@ public:
    void setValue(const char *s) { value = s;    }
 
    friend class MetaTable;
+
+   virtual bool writeToFile(OutBuffer& outbuf) const;
 };
 
 //
@@ -461,6 +475,8 @@ public:
 
    // Statics
    static size_t IndexForKey(const char *key);
+
+   virtual bool writeToFile(OutBuffer& outbuf) const;
 };
 
 //

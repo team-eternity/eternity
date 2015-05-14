@@ -31,6 +31,7 @@
 #include "z_zone.h"
 #include "i_system.h"
 #include "doomtype.h"
+#include "m_buffer.h"   // IOANCH
 #include "m_collection.h"
 #include "m_dllist.h"
 #include "e_hash.h"
@@ -59,6 +60,14 @@ static const unsigned int metaPrimes[] =
 // metaerrno represents the last error to occur. All routines that can cause
 // an error will reset this to 0 if no error occurs.
 int metaerrno = 0;
+
+static bool commonWriteString(const char* value, OutBuffer& outbuf)
+{
+    size_t s = strlen(value);
+    if (!outbuf.WriteUint32((uint32_t)s))
+        return false;
+    return outbuf.Write(value, s);
+}
 
 //=============================================================================
 //
@@ -253,6 +262,11 @@ const char *MetaObject::toString() const
    return qstr.constPtr();
 }
 
+bool MetaObject::writeToFile(OutBuffer& outbuf) const
+{
+    return commonWriteString(key, outbuf) && commonWriteString(type ? type : "", outbuf);
+}
+
 //=============================================================================
 //
 // Metaobject Specializations
@@ -285,6 +299,12 @@ const char *MetaInteger::toString() const
    return str;
 }
 
+// IOANCH: writeToFile
+bool MetaInteger::writeToFile(OutBuffer& outbuf) const
+{
+    return Super::writeToFile(outbuf) && outbuf.WriteSint32(value);
+}
+
 //
 // IOANCH: v2fixed_t
 //
@@ -307,6 +327,11 @@ const char *MetaV2Fixed::toString() const
    return str;
 }
 
+bool MetaV2Fixed::writeToFile(OutBuffer& outbuf) const
+{
+    return Super::writeToFile(outbuf) && outbuf.WriteSint32(value.x) && outbuf.WriteSint32(value.y);
+}
+
 //
 // Double
 //
@@ -327,6 +352,11 @@ const char *MetaDouble::toString() const
    psnprintf(str, sizeof(str), "%+.5f", this->value);
 
    return str;
+}
+
+bool MetaDouble::writeToFile(OutBuffer& outbuf) const
+{
+    return Super::writeToFile(outbuf) && outbuf.Write(&value, sizeof(value));
 }
 
 //
@@ -358,6 +388,11 @@ void MetaString::setValue(const char *s, char **ret)
    value = estrdup(s);
 }
 
+bool MetaString::writeToFile(OutBuffer& outbuf) const
+{
+    return Super::writeToFile(outbuf) && commonWriteString(value, outbuf);
+}
+
 //
 // Const Strings
 //
@@ -367,6 +402,11 @@ void MetaString::setValue(const char *s, char **ret)
 
 // All we need here is the RTTIObject proxy type instance
 IMPLEMENT_RTTI_TYPE(MetaConstString)
+
+bool MetaConstString::writeToFile(OutBuffer& outbuf) const
+{
+    return Super::writeToFile(outbuf) && commonWriteString(value, outbuf);
+}
 
 //
 // End MetaObject Specializations
@@ -1522,6 +1562,19 @@ void MetaTable::clearTable()
 size_t MetaTable::IndexForKey(const char *key)
 {
    return MetaKey(key).index;
+}
+
+// IOANCH: serialization
+bool MetaTable::writeToFile(OutBuffer& outbuf) const
+{
+    if (!Super::writeToFile(outbuf) || !outbuf.WriteUint32(getNumItems()))
+        return false;
+    for (const MetaObject* mo = tableIterator((const MetaObject*)nullptr); mo; mo = tableIterator(mo))
+    {
+        if (!mo->writeToFile(outbuf))
+            return false;
+    }
+    return true;
 }
 
 // EOF
