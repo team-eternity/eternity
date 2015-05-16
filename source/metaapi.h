@@ -50,7 +50,8 @@ enum
 extern int metaerrno;
 
 class MetaTablePimpl;
-class OutBuffer;    // IOANCH
+class InBuffer;      // IOANCH
+class OutBuffer;     // IOANCH
 
 //
 // MetaObject
@@ -70,6 +71,10 @@ protected:
    // object for MetaTable. It needs direct access to the links and
    // typelinks for use with EHashTable.
    friend class MetaTablePimpl;
+   
+   //! Virtual for reading from file. NOTE: type is considered as known already.
+   //! Start reading from key!
+   virtual bool readFromFile(InBuffer& inbuf);
 
 public:
    // Constructors/Destructor
@@ -112,6 +117,11 @@ public:
 
    // IOANCH 20150514: serialization.
    virtual bool writeToFile(OutBuffer& outbuf) const;
+   
+   //! Factory for reading InBuffer file (deserialization). This is the one
+   //! supposed to be used.
+   static MetaObject* createFromFile(InBuffer& inbuf);
+   
 };
 
 // MetaObject specializations for basic types
@@ -127,6 +137,7 @@ class MetaInteger : public MetaObject
 
 protected:
    int value;
+   virtual bool readFromFile(InBuffer& inbuf);
 
 public:
    MetaInteger() : Super(), value(0) {}
@@ -168,6 +179,7 @@ class MetaV2Fixed : public MetaObject
    
 protected:
    v2fixed_t value;
+   virtual bool readFromFile(InBuffer& inbuf);
    
 public:
    MetaV2Fixed() : Super()
@@ -211,6 +223,7 @@ class MetaDouble : public MetaObject
 
 protected:
    double value;
+   virtual bool readFromFile(InBuffer& inbuf);
 
 public:
    MetaDouble() : Super(), value(0.0) {}
@@ -248,6 +261,7 @@ class MetaString : public MetaObject
 
 protected:
    char *value;
+   virtual bool readFromFile(InBuffer& inbuf);
 
 public:
    MetaString() : Super(), value(estrdup("")) {}
@@ -291,6 +305,7 @@ class MetaConstString : public MetaObject
 
 protected:
    const char *value;
+   virtual bool readFromFile(InBuffer& inbuf);
 
 public:
    MetaConstString() : Super(), value(NULL) {}
@@ -336,6 +351,7 @@ class MetaTable : public MetaObject
 private:
    // Private implementation details are in metaapi.cpp
    MetaTablePimpl *pImpl;
+   virtual bool readFromFile(InBuffer& inbuf);
 
 public:
    MetaTable();

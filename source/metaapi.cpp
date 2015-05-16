@@ -61,12 +61,36 @@ static const unsigned int metaPrimes[] =
 // an error will reset this to 0 if no error occurs.
 int metaerrno = 0;
 
+//! Common function for writing string to file. Writes size, then content.
 static bool commonWriteString(const char* value, OutBuffer& outbuf)
 {
     size_t s = strlen(value);
     if (!outbuf.WriteUint32((uint32_t)s))
         return false;
     return outbuf.Write(value, s);
+}
+
+//! Common function for reading string from file. Reads size, then content.
+//! The read string will be appended to the input parameter string, so be sure
+//! to empty it first if you don't want appending.
+static bool commonReadString(qstring& string, InBuffer& inbuf)
+{
+   uint32_t size;
+   if(!inbuf.readUint32(size))
+      return false;
+   char buffer[64];
+   buffer[0] = 0;
+   size_t readnum;
+   while(size)
+   {
+      readnum = earrlen(buffer) < size ? earrlen(buffer) : size;
+      size -= readnum;
+      buffer[readnum] = 0;
+      if(inbuf.read(buffer, readnum) < readnum)
+         return false;
+      string << buffer;
+   }
+   return true;
 }
 
 //=============================================================================
@@ -264,7 +288,49 @@ const char *MetaObject::toString() const
 
 bool MetaObject::writeToFile(OutBuffer& outbuf) const
 {
-    return commonWriteString(key, outbuf) && commonWriteString(type ? type : "", outbuf);
+    return commonWriteString(type ? type : "", outbuf) && commonWriteString(key, outbuf);
+}
+
+bool MetaObject::readFromFile(InBuffer &inbuf)
+{
+   qstring keystr;
+   if(!commonReadString(keystr, inbuf))
+      return false;
+
+   // Do the reading procedure
+   metakey_t &keyObj = MetaKey(keystr.constPtr());
+   key    = keyObj.key;
+   keyIdx = keyObj.index;
+
+   return true;
+}
+
+MetaObject* MetaObject::createFromFile(InBuffer &inbuf)
+{
+   qstring typestr;
+   if(!commonReadString(typestr, inbuf))
+      return nullptr;
+   // Now find the type
+   MetaObject::Type *metaType;
+   MetaObject* newMo;
+   
+   metaType = RTTIObject::FindTypeCls<MetaObject>(typestr.constPtr());
+   if(!metaType)
+      return nullptr;
+
+   // Convert MetaConstString to MetaString
+   if(!strcmp(metaType->getName(), RTTI(MetaConstString)->getName()))
+      newMo = new MetaString;
+   else
+      newMo = metaType->newObject();   // Use "delete" to free this.
+   
+   if(!newMo->readFromFile(inbuf))
+   {
+      delete newMo;
+      return nullptr;
+   }
+   
+   return newMo;
 }
 
 //=============================================================================
@@ -305,6 +371,11 @@ bool MetaInteger::writeToFile(OutBuffer& outbuf) const
     return Super::writeToFile(outbuf) && outbuf.WriteSint32(value);
 }
 
+bool MetaInteger::readFromFile(InBuffer &inbuf)
+{
+   return Super::readFromFile(inbuf) && inbuf.readSint32(value);
+}
+
 //
 // IOANCH: v2fixed_t
 //
@@ -332,6 +403,11 @@ bool MetaV2Fixed::writeToFile(OutBuffer& outbuf) const
     return Super::writeToFile(outbuf) && outbuf.WriteSint32(value.x) && outbuf.WriteSint32(value.y);
 }
 
+bool MetaV2Fixed::readFromFile(InBuffer &inbuf)
+{
+   return Super::readFromFile(inbuf) && inbuf.readSint32(value.x) && inbuf.readSint32(value.y);
+}
+
 //
 // Double
 //
@@ -357,6 +433,11 @@ const char *MetaDouble::toString() const
 bool MetaDouble::writeToFile(OutBuffer& outbuf) const
 {
     return Super::writeToFile(outbuf) && outbuf.Write(&value, sizeof(value));
+}
+
+bool MetaDouble::readFromFile(InBuffer &inbuf)
+{
+   return Super::readFromFile(inbuf) && inbuf.read(&value, sizeof(value));
 }
 
 //
@@ -393,6 +474,17 @@ bool MetaString::writeToFile(OutBuffer& outbuf) const
     return Super::writeToFile(outbuf) && commonWriteString(value, outbuf);
 }
 
+bool MetaString::readFromFile(InBuffer &inbuf)
+{
+   if(!Super::readFromFile(inbuf))
+      return false;
+   qstring string;
+   if(!commonReadString(string, inbuf))
+      return false;
+   setValue(string.constPtr(), nullptr);
+   return true;
+}
+
 //
 // Const Strings
 //
@@ -406,6 +498,12 @@ IMPLEMENT_RTTI_TYPE(MetaConstString)
 bool MetaConstString::writeToFile(OutBuffer& outbuf) const
 {
     return Super::writeToFile(outbuf) && commonWriteString(value, outbuf);
+}
+
+bool MetaConstString::readFromFile(InBuffer &inbuf)
+{
+   // meta const strings can't be deserialized: get metastrings instead.
+   return false;
 }
 
 //
@@ -1575,6 +1673,24 @@ bool MetaTable::writeToFile(OutBuffer& outbuf) const
             return false;
     }
     return true;
+}
+
+bool MetaTable::readFromFile(InBuffer &inbuf)
+{
+   if(!Super::readFromFile(inbuf))
+      return false;
+   uint32_t num;
+   if(!inbuf.readUint32(num))
+      return false;
+   MetaObject* mo;
+   for(uint32_t i = 0; i < num; ++i)
+   {
+      mo = MetaObject::createFromFile(inbuf);
+      if(!mo)
+         return false;
+      addObject(mo);
+   }
+   return true;
 }
 
 // EOF
