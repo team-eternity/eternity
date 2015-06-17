@@ -409,8 +409,6 @@ struct gamemodeinfo_t
 
    // Miscellaneous graphics
    const char *pausePatch;        // name of patch to show when paused
-   char *bloodDefaultNormal;      // thingtype of the blood shown when thing is hit by hitscan
-   char *bloodDefaultRip;         // thingtype of blood shown when thing is impcated by inflictor with "RIP" flag
 
    // Game interaction stuff
    int numEpisodes;               // number of game episodes
@@ -425,6 +423,9 @@ struct gamemodeinfo_t
    const char *defTranslate;      // default translation for AUTOTRANSLATE
    bspecrule_t *bossRules;        // default boss specials
    int levelType;                 // level translation type
+   const char *bloodDefaultNormal;      // thingtype of the blood shown when thing is hit by hitscan
+   const char *bloodDefaultRip;         // thingtype of blood shown when thing is impcated by inflictor with "RIP" flag
+
 
    // Intermission and Finale stuff
    const char *interPic;          // default intermission backdrop

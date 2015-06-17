@@ -564,12 +564,12 @@ static void E_processGamePropsBlock(cfg_t *props)
    }
 
    // Blood Properties
-   if (IS_SET(ITEM_GPROP_BLOODNORM))
+   if(IS_SET(ITEM_GPROP_BLOODNORM))
    {
 	   // TODO: PUT STUFF HERE
    }
 
-   if (IS_SET(ITEM_GPROP_BLOODRIP))
+   if(IS_SET(ITEM_GPROP_BLOODRIP))
    {
 	   // TODO: PUT STUFF HERE
    }

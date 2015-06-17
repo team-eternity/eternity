@@ -1106,8 +1106,6 @@ static gamemodeinfo_t giDoomSW =
    DOOMMARKS,        // markNumFmt
 
    "M_PAUSE",        // pausePatch
-   "DoomBlood",      // bloodDefaultNormal
-   "DoomBlood",      // bloodDefaultRIP
 
    1,                // numEpisodes
    DoomExitRules,    // exitRules
@@ -1121,6 +1119,8 @@ static gamemodeinfo_t giDoomSW =
    NULL,             // defTranslate
    DoomBossSpecs,    // bossRules
    LI_TYPE_DOOM,     // levelType
+   "DoomBlood",      // bloodDefaultNormal
+   "DoomBlood",      // bloodDefaultRIP
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1222,8 +1222,6 @@ static gamemodeinfo_t giDoomReg =
    DOOMMARKS,        // markNumFmt
 
    "M_PAUSE",        // pausePatch
-   "DoomBlood",      // bloodDefaultNormal
-   "DoomBlood",      // bloodDefaultRIP
 
    3,                // numEpisodes
    DoomExitRules,    // exitRules
@@ -1237,6 +1235,8 @@ static gamemodeinfo_t giDoomReg =
    NULL,             // defTranslate
    DoomBossSpecs,    // bossRules
    LI_TYPE_DOOM,     // levelType
+   "DoomBlood",      // bloodDefaultNormal
+   "DoomBlood",      // bloodDefaultRIP
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1338,8 +1338,6 @@ static gamemodeinfo_t giDoomRetail =
    DOOMMARKS,        // markNumFmt
 
    "M_PAUSE",        // pausePatch
-   "DoomBlood",      // bloodDefaultNormal
-   "DoomBlood",      // bloodDefaultRIP
 
    4,                // numEpisodes
    DoomExitRules,    // exitRules
@@ -1353,6 +1351,8 @@ static gamemodeinfo_t giDoomRetail =
    NULL,             // defTranslate
    DoomBossSpecs,    // bossRules
    LI_TYPE_DOOM,     // levelType
+   "DoomBlood",      // bloodDefaultNormal
+   "DoomBlood",      // bloodDefaultRIP
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1454,8 +1454,6 @@ static gamemodeinfo_t giDoomCommercial =
    DOOMMARKS,        // markNumFmt
 
    "M_PAUSE",        // pausePatch
-   "DoomBlood",      // bloodDefaultNormal
-   "DoomBlood",      // bloodDefaultRIP
 
    1,                // numEpisodes
    Doom2ExitRules,   // exitRules
@@ -1469,6 +1467,8 @@ static gamemodeinfo_t giDoomCommercial =
    NULL,             // defTranslate
    Doom2BossSpecs,   // bossRules
    LI_TYPE_DOOM,     // levelType
+   "DoomBlood",      // bloodDefaultNormal
+   "DoomBlood",      // bloodDefaultRIP
 
    INTERPIC_DOOM,     // interPic
    mus_dm2int,        // interMusNum
@@ -1570,8 +1570,6 @@ static gamemodeinfo_t giHereticSW =
    HTICMARKS,        // markNumFmt
 
    "PAUSED",         // pausePatch
-   "HereticBlood",      // bloodDefaultNormal
-   "HereticBlood",      // bloodDefaultRIP
 
    1,                  // numEpisodes
    HereticExitRules,   // exitRules
@@ -1585,6 +1583,9 @@ static gamemodeinfo_t giHereticSW =
    DEFTL_HERETIC,      // defTranslate
    HereticBossSpecs,   // bossRules
    LI_TYPE_HERETIC,    // levelType
+   "HereticBlood",      // bloodDefaultNormal
+   // FIXME: Put in Heretic RIP blood
+   "HereticBlood",      // bloodDefaultRIP
 
    INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum
@@ -1690,8 +1691,6 @@ static gamemodeinfo_t giHereticReg =
    HTICMARKS,        // markNumFmt
 
    "PAUSED",         // pausePatch
-   "HereticBlood",      // bloodDefaultNormal
-   "HereticBlood",      // bloodDefaultRIP
 
    4,                  // numEpisodes -- note 6 for SoSR gamemission
    HereticExitRules,   // exitRules
@@ -1705,6 +1704,9 @@ static gamemodeinfo_t giHereticReg =
    DEFTL_HERETIC,      // defTranslate
    HereticBossSpecs,   // bossRules
    LI_TYPE_HERETIC,    // levelType
+   "HereticBlood",      // bloodDefaultNormal
+   // FIXME: Put in Heretic RIP blood
+   "HereticBlood",      // bloodDefaultRIP
 
    INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum
