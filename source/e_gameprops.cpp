@@ -96,11 +96,8 @@
 #define ITEM_GPROP_CREDITY     "credit.y"
 #define ITEM_GPROP_CREDITTSTEP "credit.titlestep"
 #define ITEM_GPROP_ENDTEXTNAME "exit.endtextname"
-/*
-// OH NO, MAX CODE
 #define ITEM_GPROP_BLOODNORM   "blood.defaultnormal"
 #define ITEM_GPROP_BLOODRIP    "blood.defaultrip"
-*/
 
 // Dynamic string numbers
 enum
@@ -245,11 +242,8 @@ cfg_opt_t edf_game_opts[] =
    CFG_INT(ITEM_GPROP_CREDITY,     0,    CFGF_NONE),
    CFG_INT(ITEM_GPROP_CREDITTSTEP, 0,    CFGF_NONE),
    CFG_STR(ITEM_GPROP_ENDTEXTNAME, "",   CFGF_NONE),
-   /*
-   // OH NO, MAX CODE
-   CFG_STR(ITEM_GPROP_BLOODNORM, "", CFGF_NONE),
-   CFG_STR(ITEM_GPROP_BLOODRIP, "", CFGF_NONE),
-   */
+   CFG_STR(ITEM_GPROP_BLOODNORM,   "",   CFGF_NONE),
+   CFG_STR(ITEM_GPROP_BLOODRIP,    "",   CFGF_NONE),
    CFG_END()
 };
 
@@ -567,6 +561,17 @@ static void E_processGamePropsBlock(cfg_t *props)
    {
       E_setDynamicString(GameModeInfo->endTextName, GI_STR_ENDTEXTNAME,
                          cfg_getstr(props, ITEM_GPROP_ENDTEXTNAME));
+   }
+
+   // Blood Properties
+   if (IS_SET(ITEM_GPROP_BLOODNORM))
+   {
+	   // TODO: PUT STUFF HERE
+   }
+
+   if (IS_SET(ITEM_GPROP_BLOODRIP))
+   {
+	   // TODO: PUT STUFF HERE
    }
 }
 

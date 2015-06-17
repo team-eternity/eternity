@@ -409,6 +409,8 @@ struct gamemodeinfo_t
 
    // Miscellaneous graphics
    const char *pausePatch;        // name of patch to show when paused
+   char *bloodDefaultNormal;      // thingtype of the blood shown when thing is hit by hitscan
+   char *bloodDefaultRip;         // thingtype of blood shown when thing is impcated by inflictor with "RIP" flag
 
    // Game interaction stuff
    int numEpisodes;               // number of game episodes

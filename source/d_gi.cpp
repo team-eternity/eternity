@@ -1106,6 +1106,8 @@ static gamemodeinfo_t giDoomSW =
    DOOMMARKS,        // markNumFmt
 
    "M_PAUSE",        // pausePatch
+   "DoomBlood",      // bloodDefaultNormal
+   "DoomBlood",      // bloodDefaultRIP
 
    1,                // numEpisodes
    DoomExitRules,    // exitRules
@@ -1220,6 +1222,8 @@ static gamemodeinfo_t giDoomReg =
    DOOMMARKS,        // markNumFmt
 
    "M_PAUSE",        // pausePatch
+   "DoomBlood",      // bloodDefaultNormal
+   "DoomBlood",      // bloodDefaultRIP
 
    3,                // numEpisodes
    DoomExitRules,    // exitRules
@@ -1334,6 +1338,8 @@ static gamemodeinfo_t giDoomRetail =
    DOOMMARKS,        // markNumFmt
 
    "M_PAUSE",        // pausePatch
+   "DoomBlood",      // bloodDefaultNormal
+   "DoomBlood",      // bloodDefaultRIP
 
    4,                // numEpisodes
    DoomExitRules,    // exitRules
@@ -1448,6 +1454,8 @@ static gamemodeinfo_t giDoomCommercial =
    DOOMMARKS,        // markNumFmt
 
    "M_PAUSE",        // pausePatch
+   "DoomBlood",      // bloodDefaultNormal
+   "DoomBlood",      // bloodDefaultRIP
 
    1,                // numEpisodes
    Doom2ExitRules,   // exitRules
@@ -1562,6 +1570,8 @@ static gamemodeinfo_t giHereticSW =
    HTICMARKS,        // markNumFmt
 
    "PAUSED",         // pausePatch
+   "HereticBlood",      // bloodDefaultNormal
+   "HereticBlood",      // bloodDefaultRIP
 
    1,                  // numEpisodes
    HereticExitRules,   // exitRules
@@ -1680,6 +1690,8 @@ static gamemodeinfo_t giHereticReg =
    HTICMARKS,        // markNumFmt
 
    "PAUSED",         // pausePatch
+   "HereticBlood",      // bloodDefaultNormal
+   "HereticBlood",      // bloodDefaultRIP
 
    4,                  // numEpisodes -- note 6 for SoSR gamemission
    HereticExitRules,   // exitRules
