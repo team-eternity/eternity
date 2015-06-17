@@ -1121,6 +1121,7 @@ static gamemodeinfo_t giDoomSW =
    LI_TYPE_DOOM,     // levelType
    "DoomBlood",      // bloodDefaultNormal
    "DoomBlood",      // bloodDefaultRIP
+   "DoomBlood",      // bloodDefaultCrush
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1237,6 +1238,7 @@ static gamemodeinfo_t giDoomReg =
    LI_TYPE_DOOM,     // levelType
    "DoomBlood",      // bloodDefaultNormal
    "DoomBlood",      // bloodDefaultRIP
+   "DoomBlood",      // bloodDefaultCrush
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1353,6 +1355,7 @@ static gamemodeinfo_t giDoomRetail =
    LI_TYPE_DOOM,     // levelType
    "DoomBlood",      // bloodDefaultNormal
    "DoomBlood",      // bloodDefaultRIP
+   "DoomBlood",      // bloodDefaultCrush
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1469,6 +1472,7 @@ static gamemodeinfo_t giDoomCommercial =
    LI_TYPE_DOOM,     // levelType
    "DoomBlood",      // bloodDefaultNormal
    "DoomBlood",      // bloodDefaultRIP
+   "DoomBlood",      // bloodDefaultCrush
 
    INTERPIC_DOOM,     // interPic
    mus_dm2int,        // interMusNum
@@ -1583,9 +1587,10 @@ static gamemodeinfo_t giHereticSW =
    DEFTL_HERETIC,      // defTranslate
    HereticBossSpecs,   // bossRules
    LI_TYPE_HERETIC,    // levelType
-   "HereticBlood",      // bloodDefaultNormal
-   // FIXME: Put in Heretic RIP blood
-   "HereticBlood",      // bloodDefaultRIP
+   "HereticBlood",     // bloodDefaultNormal
+   // FIXME: Put in Heretic RIP & crush blood
+   "HereticBlood",     // bloodDefaultRIP
+   "HereticBlood",     // bloodDefaultCrush
 
    INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum
@@ -1704,9 +1709,10 @@ static gamemodeinfo_t giHereticReg =
    DEFTL_HERETIC,      // defTranslate
    HereticBossSpecs,   // bossRules
    LI_TYPE_HERETIC,    // levelType
-   "HereticBlood",      // bloodDefaultNormal
-   // FIXME: Put in Heretic RIP blood
-   "HereticBlood",      // bloodDefaultRIP
+   "HereticBlood",     // bloodDefaultNormal
+   // FIXME: Put in Heretic RIP & crush blood
+   "HereticBlood",     // bloodDefaultRIP
+   "HereticBlood",     // bloodDefaultCrush
 
    INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum

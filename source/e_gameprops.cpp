@@ -98,6 +98,7 @@
 #define ITEM_GPROP_ENDTEXTNAME "exit.endtextname"
 #define ITEM_GPROP_BLOODNORM   "blood.defaultnormal"
 #define ITEM_GPROP_BLOODRIP    "blood.defaultrip"
+#define ITEM_GPROP_BLOODCRUSH  "blood.defaultcrush"
 
 // Dynamic string numbers
 enum
@@ -244,6 +245,7 @@ cfg_opt_t edf_game_opts[] =
    CFG_STR(ITEM_GPROP_ENDTEXTNAME, "",   CFGF_NONE),
    CFG_STR(ITEM_GPROP_BLOODNORM,   "",   CFGF_NONE),
    CFG_STR(ITEM_GPROP_BLOODRIP,    "",   CFGF_NONE),
+   CFG_STR(ITEM_GPROP_BLOODCRUSH,  "",   CFGF_NONE),
    CFG_END()
 };
 

@@ -411,21 +411,21 @@ struct gamemodeinfo_t
    const char *pausePatch;        // name of patch to show when paused
 
    // Game interaction stuff
-   int numEpisodes;               // number of game episodes
-   exitrule_t *exitRules;         // exit rule set
-   const char *puffType;          // Name of default puff object
-   const char *teleFogType;       // Name of telefog object
-   fixed_t teleFogHeight;         // amount to add to telefog z coord
-   int teleSound;                 // sound id for teleportation
-   int16_t thrustFactor;          // damage thrust factor
-   int defaultGibHealth;          // default gibhealth behavior
-   const char *defPClassName;     // default playerclass name
-   const char *defTranslate;      // default translation for AUTOTRANSLATE
-   bspecrule_t *bossRules;        // default boss specials
-   int levelType;                 // level translation type
-   const char *bloodDefaultNormal;      // thingtype of the blood shown when thing is hit by hitscan
-   const char *bloodDefaultRip;         // thingtype of blood shown when thing is impcated by inflictor with "RIP" flag
-
+   int numEpisodes;                // number of game episodes
+   exitrule_t *exitRules;          // exit rule set
+   const char *puffType;           // Name of default puff object
+   const char *teleFogType;        // Name of telefog object
+   fixed_t teleFogHeight;          // amount to add to telefog z coord
+   int teleSound;                  // sound id for teleportation
+   int16_t thrustFactor;           // damage thrust factor
+   int defaultGibHealth;           // default gibhealth behavior
+   const char *defPClassName;      // default playerclass name
+   const char *defTranslate;       // default translation for AUTOTRANSLATE
+   bspecrule_t *bossRules;         // default boss specials
+   int levelType;                  // level translation type
+   const char *bloodDefaultNormal; // thingtype of the blood shown when thing is hit by hitscan
+   const char *bloodDefaultRip;    // thingtype of blood shown when thing is impcated by inflictor with "RIP" flag
+   const char *bloodDefaultCrush;  // thingtype of blood shown when thing is crushed
 
    // Intermission and Finale stuff
    const char *interPic;          // default intermission backdrop
