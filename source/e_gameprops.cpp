@@ -96,6 +96,11 @@
 #define ITEM_GPROP_CREDITY     "credit.y"
 #define ITEM_GPROP_CREDITTSTEP "credit.titlestep"
 #define ITEM_GPROP_ENDTEXTNAME "exit.endtextname"
+/*
+// OH NO, MAX CODE
+#define ITEM_GPROP_BLOODNORM   "blood.defaultnormal"
+#define ITEM_GPROP_BLOODRIP    "blood.defaultrip"
+*/
 
 // Dynamic string numbers
 enum
@@ -161,6 +166,7 @@ static dehflags_t gmi_flags[] =
    { "CENTERHUDMSG",   GIF_CENTERHUDMSG   },
    { "NODIEHI",        GIF_NODIEHI        },
    { "LOSTSOULBOUNCE", GIF_LOSTSOULBOUNCE },
+   { "IMPACTBLOOD",    GIF_IMPACTBLOOD    },
    { NULL,             0                  }
 };
 
@@ -239,6 +245,11 @@ cfg_opt_t edf_game_opts[] =
    CFG_INT(ITEM_GPROP_CREDITY,     0,    CFGF_NONE),
    CFG_INT(ITEM_GPROP_CREDITTSTEP, 0,    CFGF_NONE),
    CFG_STR(ITEM_GPROP_ENDTEXTNAME, "",   CFGF_NONE),
+   /*
+   // OH NO, MAX CODE
+   CFG_STR(ITEM_GPROP_BLOODNORM, "", CFGF_NONE),
+   CFG_STR(ITEM_GPROP_BLOODRIP, "", CFGF_NONE),
+   */
    CFG_END()
 };
 
