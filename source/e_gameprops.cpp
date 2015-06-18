@@ -125,6 +125,9 @@ enum
    GI_STR_DEFSNDNAME,
    GI_STR_CREDITBKGND,
    GI_STR_ENDTEXTNAME,
+   GI_STR_BLOODNORM,
+   GI_STR_BLOODRIP,
+   GI_STR_BLOODCRUSH,
 
    GI_STR_NUMSTRS
 };
@@ -568,12 +571,20 @@ static void E_processGamePropsBlock(cfg_t *props)
    // Blood Properties
    if(IS_SET(ITEM_GPROP_BLOODNORM))
    {
-	   // TODO: PUT STUFF HERE
+	   E_setDynamicString(GameModeInfo->bloodDefaultNormal, GI_STR_BLOODNORM,
+		                  cfg_getstr(props, ITEM_GPROP_BLOODNORM));
    }
 
    if(IS_SET(ITEM_GPROP_BLOODRIP))
    {
-	   // TODO: PUT STUFF HERE
+	   E_setDynamicString(GameModeInfo->bloodDefaultRIP, GI_STR_BLOODRIP,
+		                  cfg_getstr(props, ITEM_GPROP_BLOODRIP));
+   }
+
+   if (IS_SET(ITEM_GPROP_BLOODCRUSH))
+   {
+	   E_setDynamicString(GameModeInfo->bloodDefaultCrush, GI_STR_BLOODCRUSH,
+		                  cfg_getstr(props, ITEM_GPROP_BLOODCRUSH));
    }
 }
 

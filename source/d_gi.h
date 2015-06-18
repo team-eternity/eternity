@@ -424,7 +424,7 @@ struct gamemodeinfo_t
    bspecrule_t *bossRules;         // default boss specials
    int levelType;                  // level translation type
    const char *bloodDefaultNormal; // thingtype of the blood shown when thing is hit by hitscan
-   const char *bloodDefaultRip;    // thingtype of blood shown when thing is impcated by inflictor with "RIP" flag
+   const char *bloodDefaultRIP;    // thingtype of blood shown when thing is impcated by inflictor with "RIP" flag
    const char *bloodDefaultCrush;  // thingtype of blood shown when thing is crushed
 
    // Intermission and Finale stuff
