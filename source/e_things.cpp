@@ -542,10 +542,10 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_MVPROP(ITEM_TNG_DAMAGEFACTOR, dmgf_opts,     CFGF_MULTI|CFGF_NOCASE   ), \
    CFG_MVPROP(ITEM_TNG_DROPITEM,     dropitem_opts, CFGF_MULTI|CFGF_NOCASE   ), \
    CFG_MVPROP(ITEM_TNG_COLSPAWN,     colspawn_opts, CFGF_NOCASE              ), \
-   CFG_STR(ITEM_TNG_BLOODNORM,        ""           , CFGF_NONE               ), \
-   CFG_STR(ITEM_TNG_BLOODRIP,         ""           , CFGF_NONE               ), \
-   CFG_STR(ITEM_TNG_BLOODCRUSH,       ""           , CFGF_NONE               ), \
-   CFG_STR(ITEM_TNG_BLOODBEHAV,       ""           , CFGF_NONE               ), \
+   CFG_STR(ITEM_TNG_BLOODNORM,       ""           , CFGF_NONE                ), \
+   CFG_STR(ITEM_TNG_BLOODRIP,        ""           , CFGF_NONE                ), \
+   CFG_STR(ITEM_TNG_BLOODCRUSH,      ""           , CFGF_NONE                ), \
+   CFG_STR(ITEM_TNG_BLOODBEHAV,      ""           , CFGF_NONE                ), \
    CFG_END()
 
 cfg_opt_t edf_thing_opts[] =

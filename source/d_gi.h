@@ -214,7 +214,6 @@ enum
    GIF_CENTERHUDMSG   = 0x00008000, // HUD messages are centered by default
    GIF_NODIEHI        = 0x00010000, // never plays PDIEHI sound
    GIF_LOSTSOULBOUNCE = 0x00020000, // gamemode or mission normally fixes Lost Soul bouncing
-   // OH NO, IT'S MAX CODE
    GIF_IMPACTBLOOD    = 0x00040000, // blood is spawned when actors are impacted by projectiles
 };
 

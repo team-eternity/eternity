@@ -578,7 +578,7 @@ static void E_processGamePropsBlock(cfg_t *props)
    if(IS_SET(ITEM_GPROP_BLOODRIP))
    {
       E_setDynamicString(GameModeInfo->bloodDefaultRIP, GI_STR_BLOODRIP,
-		                 cfg_getstr(props, ITEM_GPROP_BLOODRIP));
+                         cfg_getstr(props, ITEM_GPROP_BLOODRIP));
 }
 
    if(IS_SET(ITEM_GPROP_BLOODCRUSH))
