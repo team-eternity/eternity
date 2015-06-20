@@ -2561,12 +2561,13 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    }
    if(IS_SET(ITEM_TNG_BLOODBEHAV))
    {
-      mobjinfo[i]->meta->addString(ITEM_TNG_BLOODBEHAV, 
-                                   cfg_getstr(thingsec, ITEM_TNG_BLOODBEHAV));
+      const char *behaviors[] = {"DOOM", "RAVEN", "RAVENRIP", "STRIFE", "CUSTOM"};
+      mobjinfo[i]->meta->addInt(ITEM_TNG_BLOODBEHAV,
+         E_StrToNumLinear(behaviors, 5, cfg_getstr(thingsec, ITEM_TNG_BLOODBEHAV)));
    }
    else
    {
-      mobjinfo[i]->meta->addString(ITEM_TNG_BLOODBEHAV, "DOOM");
+      mobjinfo[i]->meta->addInt(ITEM_TNG_BLOODBEHAV, 0);
    }
 
    // 01/17/07: process acs_spawndata
