@@ -542,6 +542,10 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_MVPROP(ITEM_TNG_DAMAGEFACTOR, dmgf_opts,     CFGF_MULTI|CFGF_NOCASE   ), \
    CFG_MVPROP(ITEM_TNG_DROPITEM,     dropitem_opts, CFGF_MULTI|CFGF_NOCASE   ), \
    CFG_MVPROP(ITEM_TNG_COLSPAWN,     colspawn_opts, CFGF_NOCASE              ), \
+   CFG_STR(ITEM_TNG_BLOODNORM,        ""           , CFGF_NONE               ), \
+   CFG_STR(ITEM_TNG_BLOODRIP,         ""           , CFGF_NONE               ), \
+   CFG_STR(ITEM_TNG_BLOODCRUSH,       ""           , CFGF_NONE               ), \
+   CFG_STR(ITEM_TNG_BLOODBEHAV,       ""           , CFGF_NONE               ), \
    CFG_END()
 
 cfg_opt_t edf_thing_opts[] =
@@ -2533,7 +2537,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    // MaxW: 20150620: process blood types and behavior
    if(IS_SET(ITEM_TNG_BLOODNORM))
    {
-      E_ProcessBlood(i, pcfg, ITEM_TNG_BLOODNORM);
+      E_ProcessBlood(i, thingsec, ITEM_TNG_BLOODNORM);
    }
    else
    {
@@ -2541,7 +2545,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    }
    if(IS_SET(ITEM_TNG_BLOODRIP))
    {
-      E_ProcessBlood(i, pcfg, ITEM_TNG_BLOODRIP);
+      E_ProcessBlood(i, thingsec, ITEM_TNG_BLOODRIP);
    }
    else
    {
@@ -2549,7 +2553,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    }
    if(IS_SET(ITEM_TNG_BLOODCRUSH))
    {
-      E_ProcessBlood(i, pcfg, ITEM_TNG_BLOODCRUSH);
+      E_ProcessBlood(i, thingsec, ITEM_TNG_BLOODCRUSH);
    }
    else
    {
@@ -2558,7 +2562,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    if(IS_SET(ITEM_TNG_BLOODBEHAV))
    {
       mobjinfo[i]->meta->addString(ITEM_TNG_BLOODBEHAV, 
-                                   cfg_getstr(pcfg, ITEM_TNG_BLOODBEHAV));
+                                   cfg_getstr(thingsec, ITEM_TNG_BLOODBEHAV));
    }
    else
    {
