@@ -197,6 +197,11 @@ int UnknownThingType;
 // Thing Delta Keywords
 #define ITEM_DELTA_NAME "name"
 
+#define ITEM_TNG_BLOODNORM  "bloodtype.normal"
+#define ITEM_TNG_BLOODRIP   "bloodtype.rip"
+#define ITEM_TNG_BLOODCRUSH "bloodtype.crush"
+#define ITEM_TNG_BLOODBEHAV "bloodbehaviour"
+
 //
 // Field-Specific Data
 //
@@ -1594,6 +1599,27 @@ static void E_processItemRespawnAt(mobjinfo_t *mi, const char *name)
 }
 
 //
+// E_ProcessBlood
+//
+// Proceses a given blood property.
+//
+void E_ProcessBlood(int i, cfg_t *cfg, const char *searchedprop)
+{
+   const char *bloodVal = cfg_getstr(cfg, searchedprop);
+   if(*bloodVal)
+   {
+      if(E_SafeThingName(bloodVal) < 0)
+      {
+         E_EDFLoggedWarning(2, "Invalid %s '%s' for thingtype '%s'",
+            searchedprop, bloodVal, mobjinfo[i]->name);
+      }
+      mobjinfo[i]->meta->addString(searchedprop, bloodVal);
+   }
+   else
+      mobjinfo[i]->meta->removeStringNR(searchedprop);
+}
+
+//
 // E_ColorCB
 //
 // libConfuse value-parsing callback for the thingtype translation
@@ -2502,6 +2528,41 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
 
    // 10/11/09: process damagefactors
    E_ProcessDamageFactors(mobjinfo[i], thingsec);
+
+   // MaxW: 20150620: process blood types and behavior
+   if(IS_SET(ITEM_TNG_BLOODNORM))
+   {
+      E_ProcessBlood(i, pcfg, ITEM_TNG_BLOODNORM);
+   }
+   else
+   {
+      mobjinfo[i]->meta->addString(ITEM_TNG_BLOODCRUSH, GameModeInfo->bloodDefaultNormal);
+   }
+   if(IS_SET(ITEM_TNG_BLOODRIP))
+   {
+      E_ProcessBlood(i, pcfg, ITEM_TNG_BLOODRIP);
+   }
+   else
+   {
+      mobjinfo[i]->meta->addString(ITEM_TNG_BLOODCRUSH, GameModeInfo->bloodDefaultRIP);
+   }
+   if(IS_SET(ITEM_TNG_BLOODCRUSH))
+   {
+      E_ProcessBlood(i, pcfg, ITEM_TNG_BLOODCRUSH);
+   }
+   else
+   {
+      mobjinfo[i]->meta->addString(ITEM_TNG_BLOODCRUSH, GameModeInfo->bloodDefaultCrush);
+   }
+   if(IS_SET(ITEM_TNG_BLOODBEHAV))
+   {
+      mobjinfo[i]->meta->addString(ITEM_TNG_BLOODBEHAV, 
+                                   cfg_getstr(pcfg, ITEM_TNG_BLOODBEHAV));
+   }
+   else
+   {
+      mobjinfo[i]->meta->addString(ITEM_TNG_BLOODBEHAV, "DOOM");
+   }
 
    // 01/17/07: process acs_spawndata
    if(cfg_size(thingsec, ITEM_TNG_ACS_SPAWN) > 0)

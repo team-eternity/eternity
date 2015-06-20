@@ -571,20 +571,20 @@ static void E_processGamePropsBlock(cfg_t *props)
    // Blood Properties
    if(IS_SET(ITEM_GPROP_BLOODNORM))
    {
-	   E_setDynamicString(GameModeInfo->bloodDefaultNormal, GI_STR_BLOODNORM,
-		                  cfg_getstr(props, ITEM_GPROP_BLOODNORM));
+      E_setDynamicString(GameModeInfo->bloodDefaultNormal, GI_STR_BLOODNORM,
+                         cfg_getstr(props, ITEM_GPROP_BLOODNORM));
    }
 
    if(IS_SET(ITEM_GPROP_BLOODRIP))
    {
-	   E_setDynamicString(GameModeInfo->bloodDefaultRIP, GI_STR_BLOODRIP,
-		                  cfg_getstr(props, ITEM_GPROP_BLOODRIP));
-   }
+      E_setDynamicString(GameModeInfo->bloodDefaultRIP, GI_STR_BLOODRIP,
+		                 cfg_getstr(props, ITEM_GPROP_BLOODRIP));
+}
 
-   if (IS_SET(ITEM_GPROP_BLOODCRUSH))
+   if(IS_SET(ITEM_GPROP_BLOODCRUSH))
    {
-	   E_setDynamicString(GameModeInfo->bloodDefaultCrush, GI_STR_BLOODCRUSH,
-		                  cfg_getstr(props, ITEM_GPROP_BLOODCRUSH));
+      E_setDynamicString(GameModeInfo->bloodDefaultCrush, GI_STR_BLOODCRUSH,
+                         cfg_getstr(props, ITEM_GPROP_BLOODCRUSH));
    }
 }
 
