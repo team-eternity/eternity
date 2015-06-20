@@ -197,6 +197,7 @@ int UnknownThingType;
 // Thing Delta Keywords
 #define ITEM_DELTA_NAME "name"
 
+// Blood Properties
 #define ITEM_TNG_BLOODNORM  "bloodtype.normal"
 #define ITEM_TNG_BLOODRIP   "bloodtype.rip"
 #define ITEM_TNG_BLOODCRUSH "bloodtype.crush"
