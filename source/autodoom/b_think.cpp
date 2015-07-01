@@ -312,7 +312,7 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
 				
 			// Now search again: see if anything is lost.
 			m_deepSearchMode = DeepCheckLosses;
-			m_finder.AvailableGoals(*ss, nullptr, reachableItem, this);
+			m_finder.AvailableGoals(liness, nullptr, reachableItem, this);
 			m_deepSearchMode = DeepNormal;
 			
 			LevelStateStack::Clear();
@@ -381,7 +381,9 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
 			return false;
 		}
 	}
-
+	if(self.m_deepSearchMode == DeepCheckLosses)
+		return false;
+	
     if(self.m_searchstage >= 2 && ss.msector->getFloorSector()->damageflags & SDMG_EXITLEVEL)
     {
         return true;
