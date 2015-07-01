@@ -68,6 +68,7 @@ class Bot : public ZoneObject
        DeepNormal,  // normal pathfinding search
        DeepAvail,   // find already available items
        DeepBeyond,  // look deeply for whatever is available beyond
+       DeepCheckLosses,	// used by one-time items to prevent death traps. TODO: use it for ALL destinations!
    };
    
    RandomGenerator          random;       // random generator for bot

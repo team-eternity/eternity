@@ -93,12 +93,12 @@ v2fixed_t B_ProjectionOnSegment(fixed_t x, fixed_t y, fixed_t x1, fixed_t y1,
         dx, dy);
     if (dx)
     {
-        if ((proj.x - x1 ^ dx) < 0)
+        if (((proj.x - x1) ^ dx) < 0)
         {
             proj.x = x1;
             proj.y = y1;
         }
-        else if ((proj.x - x1 - dx ^ -dx) < 0)
+        else if (((proj.x - x1 - dx) ^ -dx) < 0)
         {
             proj.x = x1 + dx;
             proj.y = y1 + dy;
@@ -106,12 +106,12 @@ v2fixed_t B_ProjectionOnSegment(fixed_t x, fixed_t y, fixed_t x1, fixed_t y1,
     }
     else
     {
-        if ((proj.y - y1 ^ dy) < 0)
+        if (((proj.y - y1) ^ dy) < 0)
         {
             proj.x = x1;
             proj.y = y1;
         }
-        else if ((proj.y - y1 - dy ^ -dy) < 0)
+        else if (((proj.y - y1 - dy) ^ -dy) < 0)
         {
             proj.x = x1 + dx;
             proj.y = y1 + dy;

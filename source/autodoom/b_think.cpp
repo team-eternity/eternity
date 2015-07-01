@@ -158,6 +158,7 @@ PathResult Bot::reachableItem(const BSubsec& ss, void* v)
 
     bool result = objOfInterest(ss, dummy, &self);
 
+	// for DeepCheckLosses objOfInterest will always return false
     return result ? (self.m_deepSearchMode == DeepBeyond ? PathDone : PathAdd) : PathNo;
 }
 
@@ -293,8 +294,35 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
     if(action && (action->type == &S1ActionType
                   || action->type == &W1ActionType))
     {
-        bool result = LevelStateStack::Push(line, *pl);
-        LevelStateStack::Clear();
+        if(m_deepSearchMode == DeepNormal)
+        {
+			LevelStateStack::Clear();
+			m_deepTriedLines.clear();
+			m_deepAvailSsectors.clear();
+			
+			m_deepTriedLines.insert(&line);
+
+			m_deepSearchMode = DeepAvail;
+			m_finder.AvailableGoals(*ss, &m_deepAvailSsectors, reachableItem, this);
+			m_deepSearchMode = DeepNormal;
+					
+			// Now apply the change
+			if (!LevelStateStack::Push(line, *pl))
+				return false;
+				
+			// Now search again: see if anything is lost.
+			m_deepSearchMode = DeepCheckLosses;
+			m_finder.AvailableGoals(*ss, nullptr, reachableItem, this);
+			m_deepSearchMode = DeepNormal;
+			
+			LevelStateStack::Clear();
+			
+			// Return true if all available ssectors have been checked
+			return m_deepAvailSsectors.empty();
+		}
+		
+		bool result = LevelStateStack::Push(line, *pl);
+        LevelStateStack::Clear();       
         return result;
         // just push them, as long as they're not the blocking type and have any
         // effect
@@ -342,11 +370,17 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
 
     Bot& self = *(Bot*)v;
 
-    if (self.m_deepSearchMode == DeepBeyond
-        && self.m_deepAvailSsectors.count(&ss))
-    {
-        return false;
-    }
+	auto ssit = self.m_deepAvailSsectors.find(&ss);
+	if(ssit != self.m_deepAvailSsectors.end())
+	{
+		if(self.m_deepSearchMode == DeepBeyond)
+			return false;
+		if(self.m_deepSearchMode == DeepCheckLosses)
+		{
+			self.m_deepAvailSsectors.erase(ssit);
+			return false;
+		}
+	}
 
     if(self.m_searchstage >= 2 && ss.msector->getFloorSector()->damageflags & SDMG_EXITLEVEL)
     {
@@ -471,6 +505,7 @@ bool Bot::handleLineGoal(const BSubsec &ss, BotPathEnd &coord, const line_t& lin
                    || action->type == &DRActionType))
     {
         // OK, this might be viable. But check.
+        // DeepCheckLosses not reached here
         if (m_deepSearchMode == DeepAvail)
         {
             m_deepTriedLines.insert(&line);
