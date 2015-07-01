@@ -43,18 +43,18 @@ class IntOSet : public ZoneObject
 public:
    static int s_maxSize;
 
-   IntOSet() : m_bitCount(s_maxSize),m_maxIndex(0)
+   IntOSet() : m_bitCount(s_maxSize), m_maxIndex(0)
    {
       m_bufferSize = (s_maxSize + 8 * sizeof(*m_buffer) - 1) / (8 * sizeof(*m_buffer));
       m_minIndex = m_bufferSize;
       m_buffer = ecalloc(uint32_t*, m_bufferSize, sizeof(*m_buffer));
    }
-   IntOSet(const IntOSet &other) : m_bitCount(other.m_bitCount), m_bufferSize(other.m_bufferSize), m_coll(other.m_coll), m_minIndex(other.m_minIndex), m_maxIndex(other.m_maxIndex)
+   IntOSet(const IntOSet &other) : m_bufferSize(other.m_bufferSize), m_bitCount(other.m_bitCount), m_minIndex(other.m_minIndex), m_maxIndex(other.m_maxIndex), m_coll(other.m_coll)
    {
       m_buffer = emalloc(uint32_t*, m_bufferSize * sizeof(*m_buffer));
       memcpy(m_buffer, other.m_buffer, m_bufferSize * sizeof(*m_buffer));
    }
-   IntOSet(IntOSet &&other) : m_buffer(other.m_buffer), m_bufferSize(other.m_bufferSize), m_bitCount(other.m_bitCount), m_coll(other.m_coll), m_minIndex(other.m_minIndex), m_maxIndex(other.m_maxIndex)
+   IntOSet(IntOSet &&other) : m_buffer(other.m_buffer), m_bufferSize(other.m_bufferSize), m_bitCount(other.m_bitCount), m_minIndex(other.m_minIndex), m_maxIndex(other.m_maxIndex), m_coll(other.m_coll)
    {
       other.m_buffer = nullptr;
    }

@@ -150,19 +150,22 @@ public:
    cmd(nullptr),
    ss(nullptr),
    m_lastPathSS(nullptr),
-   prevCtr(0),
-   m_searchstage(0),
+   m_straferunstate(0),
+   m_combatStrafeState(-1),
    m_finder(nullptr),
    m_runfast(false),
    m_hasPath(false),
+   
+   
+   
    m_deepSearchMode(DeepNormal),
    m_deepRepeat(nullptr),
-   m_straferunstate(0),
-   m_combatStrafeState(-1),
    m_justGotLost(false),
    m_intoSwitch(false),
    m_goalTimer(0),
    m_currentTargetMobj(nullptr),
+   prevCtr(0),
+   m_searchstage(0),
    justPunched(0)
    {
       random.initialize((unsigned)time(nullptr));
