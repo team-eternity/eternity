@@ -2784,7 +2784,14 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    ACS_LoadLevelScript(dir, acslumpnum);
 
-   // IOANCH: finish the digest
+   // IOANCH: add skill level and finish the digest
+   int32_t gameskillval = SwapLong((int32_t)gameskill * 2 / 3);
+   uint8_t gameskill32[4];
+   gameskill32[0] = gameskillval;
+   gameskill32[1] = gameskillval >> 8;
+   gameskill32[2] = gameskillval >> 16;
+   gameskill32[3] = gameskillval >> 24;
+   g_levelHash.addData(gameskill32, 4);
    g_levelHash.wrapUp();
    
    // IOANCH: create the bot map
