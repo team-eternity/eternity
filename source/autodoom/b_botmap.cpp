@@ -216,7 +216,7 @@ void BotMap::setThingPosition(const Mobj *thing)
    bool foundlines = false;
    getBoxTouchedBlocks(top, bottom, left, right, [&](int b)->void
    {
-       if (b < 0 || b >= segBlocks.getLength())
+       if (b < 0 || b >= (int)segBlocks.getLength())
            return;
        // Iterate through all segs in the caught block
        for (auto it = segBlocks[b].begin();
