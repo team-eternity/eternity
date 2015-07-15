@@ -1108,7 +1108,7 @@ static void FindDynamicSectors(bool* dynamicSectors)
 //
 // This obtains meta sectors from
 //
-void TempBotMap::obtainMetaSectors(OutBuffer& cacheStream)
+void TempBotMap::obtainMetaSectors()
 {
    // remember to free this stuff
    bool* dynamicSectors = ecalloc(bool*, ::numsectors, sizeof(bool));
@@ -1262,9 +1262,6 @@ void TempBotMap::obtainMetaSectors(OutBuffer& cacheStream)
       sms->listLink.dllData = msec_index++;
       msecList.insert(sms);
       
-      cacheStream.WriteUint8(MSEC_SIMPLE);
-      cacheStream.WriteUint32((uint32_t)(sms->sector - ::sectors));
-      
       if(isStatic)
       {
          simpleRepeatSet[comboHeight] = sms;
@@ -1290,9 +1287,6 @@ void TempBotMap::obtainMetaSectors(OutBuffer& cacheStream)
          tms->listLink.dllData = msec_index++;
          msecList.insert(tms);
 		 
-		   cacheStream.WriteUint8(MSEC_THING);
-		   cacheStream.WriteUint32((uint32_t)(thing_index++));
-
          coll.add(tms);
       }
       else
@@ -1308,9 +1302,6 @@ void TempBotMap::obtainMetaSectors(OutBuffer& cacheStream)
                wallms->sector[1] = nullptr;
 			      wallms->listLink.dllData = msec_index++;
 			      msecList.insert(wallms);
-
-			      cacheStream.WriteUint8(MSEC_LINE);
-			      cacheStream.WriteUint32((uint32_t)(wallms->line - ::lines));
 
                botMap->nullMSec = wallms;
             }
@@ -1367,9 +1358,6 @@ void TempBotMap::obtainMetaSectors(OutBuffer& cacheStream)
                lms->line = rms.lineGen;
                lms->listLink.dllData = msec_index++;
                msecList.insert(lms);
-
-               cacheStream.WriteUint8(MSEC_LINE);
-               cacheStream.WriteUint32((uint32_t)(lms->line - ::lines));
 
                coll.add(lms);
                
@@ -1508,13 +1496,9 @@ void TempBotMap::obtainMetaSectors(OutBuffer& cacheStream)
 
                         cmsSetMap[cmsSet] = cms;
 
-                        cacheStream.WriteUint8(MSEC_COMPOUND);
-                        cacheStream.WriteUint32((uint32_t)cms->numElem);
-                        
                         j = 0;
                         for (auto it = cmsSet.begin(); it != cmsSet.end(); ++it, ++j)
                         {
-                           cacheStream.WriteUint32((uint32_t)(*it)->listLink.dllData);
                            cms->msectors[j] = *it;
                         }
 
@@ -1536,7 +1520,6 @@ void TempBotMap::obtainMetaSectors(OutBuffer& cacheStream)
    }
 
    efree(dynamicSectors);
-   cacheStream.WriteUint8(0xff);
 }
 
 
@@ -1635,7 +1618,7 @@ TempBotMap::~TempBotMap()
 //
 // Generates the bot map, based on a given radius (commonly player's)
 //
-void TempBotMap::generateForRadius(fixed_t inradius, OutBuffer& cacheStream)
+void TempBotMap::generateForRadius(fixed_t inradius)
 {
 //   clock_t CLK_STARTED = clock();
    if(generated)
@@ -1675,12 +1658,8 @@ void TempBotMap::generateForRadius(fixed_t inradius, OutBuffer& cacheStream)
    pimpl->fillMSecRefs();
    B_MEASURE_CLOCK(fillMSecRefs)
 
-	// begin writing to cache
-	cacheStream.Write("BotMap00", 8);
-   // Format to use:
-
    B_NEW_CLOCK
-   obtainMetaSectors(cacheStream);
+   obtainMetaSectors();
    B_MEASURE_CLOCK(obtainMetaSectors)
    
    B_NEW_CLOCK

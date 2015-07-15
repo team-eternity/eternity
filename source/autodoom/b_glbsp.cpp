@@ -50,8 +50,6 @@ static int msecIndex;
 static PODCollection<TempBotMap::Vertex *> vertRefColl;
 static PODCollection<MetaSector *> msecRefColl;
 
-OutBuffer *s_cacheStream;
-
 //
 // B_GLBSP_setupReferences
 //
@@ -98,12 +96,9 @@ inline static void gbSetBar(int barnum, int count)
 //
 // Starts the GLBSP worker on current tempBotMap data
 //
-void B_GLBSP_Start(void *cacheStreamPtr)
+void B_GLBSP_Start()
 {
 	// get json value pointer. Normally won't be null because calling function is guaranteed not to. But let's accept nullptr possibility and push an error
-	s_cacheStream = static_cast<OutBuffer*>(cacheStreamPtr);
-	if (!s_cacheStream)
-		I_Error("B_GLBSP_Start: null cacheStreamPtr!");
 
    B_GLBSP_setupReferences();
    
@@ -258,7 +253,6 @@ void B_GLBSP_CreateVertexArray(int numverts)
    botMap->vertices = emalloc(BotMap::Vertex *,
                               (botMap->numverts = numverts) *
                               sizeof(BotMap::Vertex));
-   s_cacheStream->WriteUint32((uint32_t)botMap->numverts);
 }
 
 //
@@ -270,9 +264,6 @@ void B_GLBSP_PutVertex(double coordx, double coordy, int index)
 {
 	botMap->vertices[index].x = M_DoubleToFixed(coordx);
 	botMap->vertices[index].y = M_DoubleToFixed(coordy);
-
-	s_cacheStream->WriteSint32((int32_t)botMap->vertices[index].x);
-	s_cacheStream->WriteSint32((int32_t)botMap->vertices[index].y);
 }
 
 //
@@ -285,7 +276,6 @@ void B_GLBSP_CreateSegArray(int numsegs)
    botMap->numsegs = numsegs;
    for (int i = 0; i < numsegs; ++i)
       botMap->segs.add();
-   s_cacheStream->WriteUint32((uint32_t)botMap->numsegs);
 }
 
 //
@@ -296,12 +286,6 @@ void B_GLBSP_CreateSegArray(int numsegs)
 void B_GLBSP_PutSegment(int v1idx, int v2idx, int back, int lnidx, int part,
                         int sgidx)
 {
-	s_cacheStream->WriteUint32((uint32_t)v1idx);
-	s_cacheStream->WriteUint32((uint32_t)v2idx);
-	s_cacheStream->WriteUint8((uint8_t)back);
-	s_cacheStream->WriteUint32((uint32_t)lnidx);
-	s_cacheStream->WriteUint32((uint32_t)part);
-
    BotMap::Seg &sg = botMap->segs[sgidx];
    sg.owner = nullptr;
 
@@ -368,7 +352,6 @@ void B_GLBSP_CreateLineArray(int numlines)
    botMap->lines = emalloc(BotMap::Line *,
                            (botMap->numlines = numlines) *
                            sizeof(BotMap::Line));
-   s_cacheStream->WriteUint32((uint32_t)botMap->numlines);
 }
 
 //
@@ -378,11 +361,6 @@ void B_GLBSP_CreateLineArray(int numlines)
 //
 void B_GLBSP_PutLine(int v1idx, int v2idx, int s1idx, int s2idx, int lnidx, int tag)
 {
-	s_cacheStream->WriteUint32((uint32_t)v1idx);
-	s_cacheStream->WriteUint32((uint32_t)v2idx);
-	s_cacheStream->WriteUint32((uint32_t)s1idx);
-	s_cacheStream->WriteUint32((uint32_t)s2idx);
-
    botMap->lines[lnidx].v[0] = botMap->vertices + v1idx;
    botMap->lines[lnidx].v[1] = botMap->vertices + v2idx;
    botMap->lines[lnidx].msec[0] = s1idx >= 0 ? msecRefColl[s1idx] :
@@ -404,14 +382,9 @@ void B_GLBSP_CreateSubsectorArray(int numssecs)
    {
       botMap->ssectors.add();
    }
-
-   s_cacheStream->WriteUint32((uint32_t)botMap->numssectors);
 }
 void B_GLBSP_PutSubsector(int first, int num, int ssidx)
 {
-	s_cacheStream->WriteUint32((uint32_t)first);
-	s_cacheStream->WriteUint32((uint32_t)num);
-
    BotMap::Subsec &ss = botMap->ssectors[ssidx];
    ss.segs = &botMap->segs[first];
    ss.nsegs = num;
@@ -477,7 +450,6 @@ void B_GLBSP_CreateNodeArray(int numnodes)
    botMap->nodes = emalloc(BotMap::Node *,
                            (botMap->numnodes = numnodes) *
                            sizeof(BotMap::Node));
-   s_cacheStream->WriteUint32((uint32_t)botMap->numnodes);
 }
 void B_GLBSP_PutNode(double x, double y, double dx, double dy, int rnode,
                      int lnode, int riss, int liss, int ndidx)
@@ -487,14 +459,6 @@ void B_GLBSP_PutNode(double x, double y, double dx, double dy, int rnode,
    botMap->nodes[ndidx].dx = M_DoubleToFixed(dx);
    botMap->nodes[ndidx].dy = M_DoubleToFixed(dy);
 
-   s_cacheStream->WriteSint32((int32_t)botMap->nodes[ndidx].x);
-   s_cacheStream->WriteSint32((int32_t)botMap->nodes[ndidx].y);
-   s_cacheStream->WriteSint32((int32_t)botMap->nodes[ndidx].dx);
-   s_cacheStream->WriteSint32((int32_t)botMap->nodes[ndidx].dy);
-   s_cacheStream->WriteUint32((uint32_t)rnode);
-   s_cacheStream->WriteUint32((uint32_t)lnode);
-   s_cacheStream->WriteUint8((uint8_t)riss);
-   s_cacheStream->WriteUint8((uint8_t)liss);
    //int adx = D_abs(dx), ady = D_abs(dy);
    //if(ady > adx ? ady < 10 : adx < 10)
    //{

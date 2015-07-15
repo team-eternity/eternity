@@ -112,7 +112,7 @@ private:
                    const IntOSet *msecGen = nullptr,
                    const IntOSet *bsecGen = nullptr);
    
-   void obtainMetaSectors(OutBuffer& cacheStream);
+   void obtainMetaSectors();
    
    void clearRedundantLines();
    void clearUnusedVertices();
@@ -127,7 +127,7 @@ public:
    
    TempBotMap();
    ~TempBotMap();
-   void generateForRadius(fixed_t inradius, OutBuffer& cacheStream);
+   void generateForRadius(fixed_t inradius);
    const DLListItem<Line> *lineGet() const {return lineList.head;}
    const DLListItem<Vertex> *vertGet() const {return vertexList.head;}
    const DLListItem<MetaSector> *msecGet() const {return msecList.head;}

@@ -459,18 +459,14 @@ void BotMap::createBlockMap()
 //
 // Builds bot map from scratch and saves result to JSON
 //
-static void B_buildTempBotMapFromScratch(fixed_t radius, const char *digest, const char* cachePath)
+static void B_buildTempBotMapFromScratch(fixed_t radius, const char *digest)
 {
 	// First create the transient bot map
 	tempBotMap = new TempBotMap;
 
-	// Make the cache file
-	OutBuffer cacheStream;
-	cacheStream.CreateFile(cachePath, CACHE_BUFFER_SIZE, OutBuffer::LENDIAN);
-
 	// Generate it
 	B_BEGIN_CLOCK
-	tempBotMap->generateForRadius(radius, cacheStream);
+	tempBotMap->generateForRadius(radius);
 	B_MEASURE_CLOCK(generateForRadius)
 	
 	// Move the metasector list to the final bot map
@@ -481,12 +477,9 @@ static void B_buildTempBotMapFromScratch(fixed_t radius, const char *digest, con
 	
 	// Feed it into GLBSP. botMap will get in turn all needed data
 	B_NEW_CLOCK
-	B_GLBSP_Start(&cacheStream);
+	B_GLBSP_Start();
 	B_MEASURE_CLOCK(B_GLBSP_Start)
 
-	// Write the cache file
-	cacheStream.Close();
-		
 	// Prevent tempBotMap from crashing
 	tempBotMap->getMsecList().head = nullptr;
 	
@@ -638,7 +631,7 @@ void BotMap::Build()
 //   if (!fpath)
    {
 	   B_Log("Level cache not found");
-	   B_buildTempBotMapFromScratch(radius, digest, M_SafeFilePath(g_autoDoomPath, hashFileName.constPtr()));
+	   B_buildTempBotMapFromScratch(radius, digest);
    }
 //   else
 //   {
