@@ -38,6 +38,7 @@
 #include "b_glbsp.h"
 #include "b_msector.h"
 #include "b_util.h"
+#include "../c_io.h"
 #include "../d_files.h"
 #include "../doomstat.h"
 #include "../ev_specials.h"
@@ -51,20 +52,16 @@
 #include "../r_defs.h"
 #include "../r_main.h"
 #include "../r_state.h"
+#include "../v_misc.h"
 
 BotMap *botMap;
 
 bool BotMap::demoPlayingFlag;
 
-const char* const KEY_JSON_VERTICES = "vertices";
-const char* const KEY_JSON_SEGS =		"segs";
-const char* const KEY_JSON_LINES =	"lines";
-const char* const KEY_JSON_SSECTORS = "subsectors";
-const char* const KEY_JSON_NODES =	"nodes";
-const char* const KEY_JSON_METASECTORS = "metasectors";
-
 const int CACHE_BUFFER_SIZE = 512 * 1024;
 enum { SUBSEC_GRID_STEP = 64 * FRACUNIT };
+
+static const char* const BOTMAP_CACHE_MAGIC = "BOTMAP01";
 
 //
 // BotMap::getTouchedBlocks
@@ -599,25 +596,233 @@ void BotMap::getDoorSectors()
 }
 
 //
+// BotMap::cacheToFile
+//
+// Stores the contents to file, for caching, for later loading
+//
+void BotMap::cacheToFile(const char* path) const
+{
+    // Sanity check
+
+    OutBuffer file;
+    file.setThrowing(true);
+    if (!file.CreateFile(path, CACHE_BUFFER_SIZE, BufferedFileBase::LENDIAN))
+    {
+        C_Printf(FC_ERROR "WARNING: can't create bot map cache file at %s\n", path);
+        return;
+    }
+
+    // now we write it
+    
+    try
+    {
+        // First, write the version magic
+        file.Write(BOTMAP_CACHE_MAGIC, strlen(BOTMAP_CACHE_MAGIC));
+
+        // vertices
+        file.WriteSint32(numverts);
+        int i;
+        for (i = 0; i < numverts; ++i)
+        {
+            file.WriteSint32(vertices[i].x);
+            file.WriteSint32(vertices[i].y);
+        }
+
+        // Build a metasector->index map
+        msecIndexMap.clear();
+        i = 0;
+        for (const auto item : metasectors)
+        {
+            msecIndexMap[item] = i++;
+        }
+        msecIndexMap[nullMSec] = i;
+
+        // metasectors
+        file.WriteUint32(metasectors.getLength());
+        for (const auto msec : metasectors)
+        {
+            msec->writeToFile(file);
+        }
+        nullMSec->writeToFile(file);
+
+        // lines
+        file.WriteSint32(numlines);
+        for (i = 0; i < numlines; ++i)
+        {
+            file.WriteSint32(lines[i].v[0] ? lines[i].v[0] - vertices : -1);
+            file.WriteSint32(lines[i].v[1] ? lines[i].v[1] - vertices : -1);
+            file.WriteSint32(lines[i].msec[0] ? msecIndexMap[lines[i].msec[0]] : -1);
+            file.WriteSint32(lines[i].msec[1] ? msecIndexMap[lines[i].msec[1]] : -1);
+            file.WriteSint32(lines[i].specline ? lines[i].specline - ::lines : -1);
+        }
+
+        // segs
+        file.WriteUint32(segs.getLength());
+        for (const auto& seg : segs)
+        {
+            file.WriteSint32(seg.v[0] ? seg.v[0] - vertices : -1);
+            file.WriteSint32(seg.v[1] ? seg.v[1] - vertices : -1);
+            file.WriteSint32(seg.dx);
+            file.WriteSint32(seg.dy);
+            file.WriteSint32(seg.ln ? seg.ln - lines : -1);
+            file.WriteUint8(seg.isback);
+            file.WriteSint32(seg.partner ? seg.partner - &segs[0] : -1);
+            file.WriteSint32(seg.bbox[0]);
+            file.WriteSint32(seg.bbox[1]);
+            file.WriteSint32(seg.bbox[2]);
+            file.WriteSint32(seg.bbox[3]);
+            file.WriteSint32(seg.mid.x);
+            file.WriteSint32(seg.mid.y);
+            file.WriteSint32(seg.owner ? seg.owner - &ssectors[0] : -1);
+            file.WriteUint32(seg.blocklist.getLength());
+            for (auto j : seg.blocklist)
+            {
+                file.WriteSint32(j);
+            }
+        }
+
+        // ssectors
+        file.WriteUint32(ssectors.getLength());
+        for (const auto& ssector : ssectors)
+        {
+            file.WriteSint32(ssector.segs ? ssector.segs - &segs[0] : -1);
+            file.WriteSint32(ssector.msector ? msecIndexMap[ssector.msector] : -1);
+            file.WriteSint32(ssector.nsegs);
+            // mobjlist dynamic
+            // linelist dynamic
+            file.WriteSint32(ssector.mid.x);
+            file.WriteSint32(ssector.mid.y);
+            file.WriteUint32(ssector.neighs.getLength());
+            for (const auto& neigh : ssector.neighs)
+            {
+                file.WriteSint32(neigh.ss ? neigh.ss - &ssectors[0] : -1);
+                file.WriteSint32(neigh.seg ? neigh.seg - &segs[0] : -1);
+                file.WriteSint32(neigh.dist);
+            }
+        }
+
+        // nodes
+        file.WriteSint32(numnodes);
+        for (i = 0; i < numnodes; ++i)
+        {
+            file.WriteSint32(nodes[i].x);
+            file.WriteSint32(nodes[i].y);
+            file.WriteSint32(nodes[i].dx);
+            file.WriteSint32(nodes[i].dy);
+            file.WriteSint32(nodes[i].child[0]);
+            file.WriteSint32(nodes[i].child[1]);
+        }
+
+        file.WriteSint32(bMapOrgX);
+        file.WriteSint32(bMapOrgY);
+        file.WriteSint32(bMapWidth);
+        file.WriteSint32(bMapHeight);
+
+        file.WriteUint32(segBlocks.getLength());
+        for (const auto& coll : segBlocks)
+        {
+            file.WriteUint32(coll.getLength());
+            for (const auto pseg : coll)
+            {
+                file.WriteSint32(pseg ? pseg - &segs[0] : -1);
+            }
+        }
+
+        file.WriteSint32(radius);
+
+        // mobjSecMap dynamic
+        // lineSecMap dynamic
+        // livingMonsters dynamic
+        // thrownProjectiles dynamic
+        // sectorFlags dynamic
+        // gunLines dynamic
+    }
+    catch (const BufferedIOException&)
+    {
+        C_Printf(FC_ERROR "WARNING: can't write bot map cache file at %s\n", path);
+        file.Close();
+
+        // try to delete it if it fails in the middle of the write.
+        if (remove(path) != 0)
+        {
+            C_Printf(FC_ERROR "WARNING: can't delete cache file at %s\n", path);
+        }
+    }
+}
+
+//
+// BotMap::loadFromCache
+//
+// Tries to load bot map from a cache file
+//
+void BotMap::loadFromCache(const char* path)
+{
+#define FAIL() do { delete botMap; botMap = nullptr; return; } while(0)
+
+    InBuffer file;
+    if (!file.openFile(path, BufferedFileBase::LENDIAN))
+        return ;
+
+    char magic[9];
+    magic[8] = 0;
+    if (file.read(magic, 8) != 8 || strcmp(magic, BOTMAP_CACHE_MAGIC))
+        return ;
+
+    botMap = new (PU_STATIC, &botMap) BotMap;
+
+    int i;
+    int32_t i32;
+    if (!file.readSint32(i32))
+        FAIL();
+    botMap->numverts = i32;
+
+    if (i32 < 0)
+        FAIL();
+
+    botMap->vertices = estructalloc(Vertex, i32);
+    for (i = 0; i < botMap->numverts; ++i)
+    {
+        if (!file.readSint32(i32))
+            FAIL();
+        botMap->vertices[i].x = i32;
+        if (!file.readSint32(i32))
+            FAIL();
+        botMap->vertices[i].y = i32;
+    }
+
+    unsigned u;
+    uint32_t u32;
+    if (!file.readUint32(u32))
+        FAIL();
+    MetaSector* msec;
+    for (u = 0; u < u32; ++u)
+    {
+        msec = MetaSector::readFromFile(file);
+    }
+
+    if (!file.readSint32(i32))
+        FAIL();
+    botMap->numlines = i32;
+
+    if (i32 < 0)
+        FAIL();
+
+    botMap->lines = estructalloc(Line, i32);
+    for (i = 0; i < botMap->numlines; ++i)
+    {
+
+    }
+
+#undef FAIL
+}
+
+//
 // B_BuildBotMap
 //
 // The main call to build bot map
 //
 void BotMap::Build()
 {
-   
-   // Create the BotMap
-   B_BEGIN_CLOCK
-   botMap = new (PU_LEVEL, &botMap) BotMap;
-   B_MEASURE_CLOCK(newBotMap)
-
-   fixed_t radius = 16 * FRACUNIT;
-   botMap->radius = radius;
-
-   // Create blockmap
-   B_NEW_CLOCK
-	botMap->createBlockMap();
-   B_MEASURE_CLOCK(createBlockMap)
 
 	// Check for hash existence
 	char* digest = g_levelHash.digestToString();
@@ -626,17 +831,37 @@ void BotMap::Build()
    
 
    B_Log("Looking for level cache %s...", hashFileName.constPtr());
-   D_CheckAutoDoomPathFile(hashFileName.constPtr(), false);
-   
-//   if (!fpath)
+   const char* fpath = D_CheckAutoDoomPathFile(hashFileName.constPtr(), false);
+
+#if 0
+   if (fpath)
    {
-	   B_Log("Level cache not found");
-	   B_buildTempBotMapFromScratch(radius, digest);
+       // Try building from it
+       BotMap::loadFromCache(fpath);
+       if (botMap)
+           botMap->changeTag(PU_LEVEL);
    }
-//   else
-//   {
-//		// TODO
-//   }
+#endif
+   
+   if (!fpath || !botMap)
+   {
+       // Create the BotMap
+       B_BEGIN_CLOCK
+           botMap = new (PU_LEVEL, &botMap) BotMap;
+       B_MEASURE_CLOCK(newBotMap)
+
+       fixed_t radius = 16 * FRACUNIT;
+       botMap->radius = radius;
+
+       // Create blockmap
+       B_NEW_CLOCK
+       botMap->createBlockMap();
+       B_MEASURE_CLOCK(createBlockMap)
+
+	   B_Log("Level cache not found or invalid");
+	   B_buildTempBotMapFromScratch(radius, digest);
+       botMap->cacheToFile(M_SafeFilePath(g_autoDoomPath, hashFileName.constPtr()));
+   }
    efree(digest);
 
    // Place all mobjs on it

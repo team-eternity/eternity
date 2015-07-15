@@ -52,13 +52,6 @@
 #define BOTMAPBLOCKSHIFT   (FRACBITS+BOTMAPBTOFRAC)
 #define BOTMAPBMASK        (BOTMAPBLOCKSIZE-1)
 
-extern const char* const KEY_JSON_VERTICES;
-extern const char* const KEY_JSON_SEGS;
-extern const char* const KEY_JSON_LINES;
-extern const char* const KEY_JSON_SSECTORS;
-extern const char* const KEY_JSON_NODES;
-extern const char* const KEY_JSON_METASECTORS;
-
 //typedef std::unordered_set<int> IntSet;
 //typedef std::set<int> IntOSet;
 
@@ -264,6 +257,9 @@ private:
     void getAllLivingMonsters();
     void getDoorSectors();
     static void SpecialIsDoor(int n, SectorTrait& st, const line_t* line);
+
+    void cacheToFile(const char* path) const;
+    static void loadFromCache(const char* path);
 	
 	void clearMsecList()
 	{
@@ -272,6 +268,11 @@ private:
          delete ms;
 		}
 	}
+
+    friend class CompoundMSector;
+
+    // Used only during serialization
+    mutable std::unordered_map<const MetaSector*, int> msecIndexMap;
 };
 extern BotMap *botMap;
 

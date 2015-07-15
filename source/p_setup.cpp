@@ -172,6 +172,9 @@ static WadDirectory *setupwad;
 
 // IOANCH 20131229: level hash
 HashData g_levelHash;
+// IOANCH: thing/index mapping
+std::unordered_map<const Mobj*, int> p_mobjIndexMap;
+const Mobj** p_indexMobjMap;
 
 //
 // ShortToLong
@@ -1059,6 +1062,11 @@ void P_LoadThings(int lump)
 
    // haleyjd 03/03/07: allocate full mapthings
    mapthings = ecalloc(mapthing_t *, numthings, sizeof(mapthing_t));
+
+   // IOANCH: set index-mobj map
+   p_indexMobjMap = ecalloctag(decltype(p_indexMobjMap), numthings, sizeof(*p_indexMobjMap), PU_LEVEL, nullptr);
+   p_mobjIndexMap.clear();
+   const Mobj* mobj;
    
    for(i = 0; i < numthings; i++)
    {
@@ -1106,7 +1114,13 @@ void P_LoadThings(int lump)
       // haleyjd 12/27/13: convert Doom extended thing numbers
       P_ConvertDoomExtendedSpawnNum(ft);
       
-      P_SpawnMapThing(ft);
+      // IOANCH: add it to map and index-map
+      mobj = P_SpawnMapThing(ft);
+      if (mobj)
+      {
+          p_indexMobjMap[i] = mobj;
+          p_mobjIndexMap[mobj] = i;
+      }
    }
    
    // haleyjd: all player things for players in this game should now be valid
@@ -1141,6 +1155,11 @@ void P_LoadHexenThings(int lump)
 
    // haleyjd 03/03/07: allocate full mapthings
    mapthings = ecalloc(mapthing_t *, numthings, sizeof(mapthing_t));
+
+   // IOANCH: set index-mobj map
+   p_indexMobjMap = ecalloctag(decltype(p_indexMobjMap), numthings, sizeof(*p_indexMobjMap), PU_LEVEL, nullptr);
+   p_mobjIndexMap.clear();
+   const Mobj* mobj;
    
    for(i = 0; i < numthings; i++)
    {
@@ -1164,7 +1183,13 @@ void P_LoadHexenThings(int lump)
       // haleyjd 12/27/13: convert Doom extended thing numbers
       P_ConvertDoomExtendedSpawnNum(ft);
       
-      P_SpawnMapThing(ft);
+      // IOANCH: add it to map and index-map
+      mobj = P_SpawnMapThing(ft);
+      p_indexMobjMap[i] = mobj;
+      if (mobj)
+      {
+          p_mobjIndexMap[mobj] = i;
+      }
    }
    
    // haleyjd: all player things for players in this game

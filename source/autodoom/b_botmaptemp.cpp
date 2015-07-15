@@ -1204,24 +1204,6 @@ void TempBotMap::obtainMetaSectors()
    int thing_index = 0; // for use by JSON writer
    int msec_index = 0;
 
-   // How to write to cache:
-   // Byte 1: expected type
-   // 0: SIMPLE
-   // 1: LINE
-   // 2: THING
-   // 3: COMPOUND
-   // 255: end (no more msectors)
-   // For 0-2: UInt32: index of sector/line/solid-decor
-   // For 3: UInt32 size + array of UInt32.
-   enum
-   {
-	   MSEC_SIMPLE = 0,
-	   MSEC_LINE = 1,
-	   MSEC_THING = 2,
-	   MSEC_COMPOUND = 3,
-   };
-
-
    // Create wall metasector
    LineMSector *wallms = new LineMSector;
    

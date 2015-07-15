@@ -26,6 +26,7 @@
 #ifndef P_SETUP_H__
 #define P_SETUP_H__
 
+#include <unordered_map>
 #include "doomdef.h"  // for skill_t
 #include "doomtype.h" // for byte
 #include "m_fixed.h"  // for fixed_t
@@ -67,6 +68,9 @@ extern byte    *portalmap;       // haleyjd: for fast linked portal checks
 
 // IOANCH 20131229: level hash
 extern HashData g_levelHash;
+// IOANCH: thing/index mapping
+extern std::unordered_map<const Mobj*, int> p_mobjIndexMap;
+extern const Mobj** p_indexMobjMap;
 
 // haleyjd 05/17/13: portalmap flags
 enum

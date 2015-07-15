@@ -36,6 +36,9 @@
 #include "../p_map3d.h"
 #include "../r_defs.h"
 
+class InBuffer;
+class OutBuffer;
+
 //
 // MetaSector
 //
@@ -55,6 +58,10 @@ public:
    virtual ~MetaSector() {}
    
    DLListItem<MetaSector> listLink;
+
+   virtual void writeToFile(OutBuffer& file) const = 0;
+
+   static MetaSector* readFromFile(InBuffer& file);
 };
 
 //
@@ -91,6 +98,9 @@ public:
    {
       return sector;
    }
+
+   virtual void writeToFile(OutBuffer& file) const;
+   static SimpleMSector* readFromFile(InBuffer& file);
 };
 
 //
@@ -133,6 +143,9 @@ public:
    {
       return sector;
    }
+
+   virtual void writeToFile(OutBuffer& file) const;
+   static ThingMSector* readFromFile(InBuffer& file);
 };
 
 //
@@ -175,6 +188,9 @@ public:
       return sector[1] ? (LevelStateStack::Ceiling(*sector[0]) < LevelStateStack::Ceiling(*sector[1]) ? sector[0] :
                           sector[1]) : sector[0];
    }
+
+   virtual void writeToFile(OutBuffer& file) const;
+   static LineMSector* readFromFile(InBuffer& file);
 };
 
 //
@@ -205,6 +221,9 @@ public:
    fixed_t getCeilingHeight() const;
    const sector_t *getFloorSector() const;
    const sector_t *getCeilingSector() const;
+
+   virtual void writeToFile(OutBuffer& file) const;
+   static CompoundMSector* readFromFile(InBuffer& file);
 };
 
 #endif
