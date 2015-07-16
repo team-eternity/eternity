@@ -400,6 +400,8 @@ bool InBuffer::openExisting(FILE *pf, int pEndian)
    return true;
 }
 
+// IOANCH: added support for "throwing" flag
+
 //
 // InBuffer::seek
 //
@@ -407,7 +409,10 @@ bool InBuffer::openExisting(FILE *pf, int pEndian)
 //
 int InBuffer::seek(long offset, int origin)
 {
-   return fseek(f, offset, origin);
+   int r = fseek(f, offset, origin);
+   if(throwing && r)
+      throw BufferedIOException(strerror(errno));
+   return r;
 }
 
 //
@@ -418,7 +423,10 @@ int InBuffer::seek(long offset, int origin)
 //
 size_t InBuffer::read(void *dest, size_t size)
 {
-   return fread(dest, 1, size, f);
+   size_t r = fread(dest, 1, size, f);
+   if(throwing && r != size)
+      throw BufferedIOException("Error reading");
+   return r;
 }
 
 //
@@ -428,7 +436,10 @@ size_t InBuffer::read(void *dest, size_t size)
 //
 int InBuffer::skip(size_t skipAmt)
 {
-   return fseek(f, skipAmt, SEEK_CUR);
+   int r = fseek(f, skipAmt, SEEK_CUR);
+   if(throwing && r)
+      throw BufferedIOException(strerror(errno));
+   return r;
 }
 
 //

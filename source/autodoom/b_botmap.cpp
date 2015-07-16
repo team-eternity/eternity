@@ -54,6 +54,13 @@
 #include "../r_state.h"
 #include "../v_misc.h"
 
+enum
+{
+   // Maximum allowed alloc size: hopefully malloc won't crash with anything
+   // less than this. Used when deserializing BotMap caches
+   ARBITRARY_LARGE_VALUE = 1048576,
+};
+
 BotMap *botMap;
 
 bool BotMap::demoPlayingFlag;
@@ -760,78 +767,86 @@ void BotMap::loadFromCache(const char* path)
 #define FAIL() do { delete botMap; botMap = nullptr; return; } while(0)
 
     InBuffer file;
+   file.setThrowing(true);
     if (!file.openFile(path, BufferedFileBase::LENDIAN))
         return ;
 
-    char magic[9];
-    magic[8] = 0;
-    if (file.read(magic, 8) != 8 || strcmp(magic, BOTMAP_CACHE_MAGIC))
-        return ;
-
-    botMap = new (PU_STATIC, &botMap) BotMap;
-
-    int i;
-    int32_t i32;
-    if (!file.readSint32(i32))
-        FAIL();
-    botMap->numverts = i32;
-
-    if (i32 < 0)
-        FAIL();
-
-    botMap->vertices = estructalloc(Vertex, i32);
-    for (i = 0; i < botMap->numverts; ++i)
-    {
-        if (!file.readSint32(i32))
-            FAIL();
-        botMap->vertices[i].x = i32;
-        if (!file.readSint32(i32))
-            FAIL();
-        botMap->vertices[i].y = i32;
-    }
-
-    unsigned u;
-    uint32_t u32;
-    if (!file.readUint32(u32))
-        FAIL();
-    MetaSector* msec;
-    for (u = 0; u < u32; ++u)
-    {
-        msec = MetaSector::readFromFile(file);
-       if(!msec)
-          FAIL();
-       botMap->metasectors.add(msec);
-    }
-
-   // Handle cms
-   CompoundMSector* cms;
-   intptr_t ptrnum;
-   for (auto msec : botMap->metasectors)
+   try
    {
-      cms = runtime_cast<CompoundMSector*>(msec);
-      if(!cms)
-         continue;
-      for(i = 0; i < cms->numElem; ++i)
+      char magic[9];
+      magic[8] = 0;
+      file.read(magic, 8);
+      if (strcmp(magic, BOTMAP_CACHE_MAGIC))
+         return;
+
+      botMap = new (PU_STATIC, &botMap) BotMap;
+
+      int i;
+      unsigned u;
+      int32_t i32;
+      uint32_t u32;
+
+      file.readSint32(i32);
+      botMap->numverts = i32;
+
+      if(i32 < 0 || i32 > ARBITRARY_LARGE_VALUE)
+         FAIL();
+
+      botMap->vertices = estructalloc(Vertex, i32);
+      for (i = 0; i < botMap->numverts; ++i)
       {
-         ptrnum = reinterpret_cast<intptr_t>(cms->msectors[i]);
-         if(ptrnum >= botMap->metasectors.getLength())
+         file.readSint32(i32);
+         botMap->vertices[i].x = i32;
+         file.readSint32(i32);
+         botMap->vertices[i].y = i32;
+      }
+
+      file.readUint32(u32);
+      MetaSector* msec;
+      for (u = 0; u < u32; ++u)
+      {
+         msec = MetaSector::readFromFile(file);
+         if(!msec)
             FAIL();
-         cms->msectors[i] = ptrnum >= 0 ? botMap->metasectors[ptrnum] : nullptr;
+         botMap->metasectors.add(msec);
+      }
+
+      // Handle cms
+      CompoundMSector* cms;
+      intptr_t ptrnum;
+      for (auto msec : botMap->metasectors)
+      {
+         cms = runtime_cast<CompoundMSector*>(msec);
+         if(!cms)
+            continue;
+         for(i = 0; i < cms->numElem; ++i)
+         {
+            ptrnum = reinterpret_cast<intptr_t>(cms->msectors[i]);
+            if(ptrnum >= botMap->metasectors.getLength())
+               FAIL();
+            cms->msectors[i] = ptrnum >= 0 ? botMap->metasectors[ptrnum] : nullptr;
+         }
+      }
+
+      file.readSint32(i32);
+      botMap->numlines = i32;
+
+      if(i32 < 0 || i32 > ARBITRARY_LARGE_VALUE)
+         FAIL();
+
+      botMap->lines = estructalloc(Line, i32);
+      for (i = 0; i < botMap->numlines; ++i)
+      {
+         // TODO:
       }
    }
+   catch(const BufferedIOException&)
+   {
+      if(botMap)
+         FAIL();
+   }
 
-    if (!file.readSint32(i32))
-        FAIL();
-    botMap->numlines = i32;
 
-    if (i32 < 0)
-        FAIL();
-
-    botMap->lines = estructalloc(Line, i32);
-    for (i = 0; i < botMap->numlines; ++i)
-    {
-
-    }
 
 #undef FAIL
 }
