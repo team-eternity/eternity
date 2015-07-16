@@ -1201,7 +1201,6 @@ void TempBotMap::obtainMetaSectors()
    std::unordered_map<SecRefTuple, MetaSector *, SecRefHash, SecRefPred>
    secRefs;
    
-   int thing_index = 0; // for use by JSON writer
    int msec_index = 0;
 
    // Create wall metasector

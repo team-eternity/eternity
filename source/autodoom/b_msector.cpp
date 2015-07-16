@@ -89,7 +89,7 @@ MetaSector* MetaSector::readFromFile(InBuffer& file)
 void SimpleMSector::writeToFile(OutBuffer& file) const
 {
     file.WriteUint8(MSEC_SIMPLE);
-    file.WriteSint32(sector ? sector - ::sectors : -1);
+    file.WriteSint32(sector ? (int32_t)(sector - ::sectors) : -1);
 }
 SimpleMSector* SimpleMSector::readFromFile(InBuffer& file)
 {
@@ -108,9 +108,9 @@ SimpleMSector* SimpleMSector::readFromFile(InBuffer& file)
 void LineMSector::writeToFile(OutBuffer& file) const
 {
     file.WriteUint8(MSEC_LINE);
-    file.WriteSint32(sector[0] ? sector[0] - ::sectors : -1);
-    file.WriteSint32(sector[1] ? sector[1] - ::sectors : -1);
-    file.WriteSint32(line ? line - ::lines : -1);
+    file.WriteSint32(sector[0] ? (int32_t)(sector[0] - ::sectors) : -1);
+    file.WriteSint32(sector[1] ? (int32_t)(sector[1] - ::sectors) : -1);
+    file.WriteSint32(line ? (int32_t)(line - ::lines) : -1);
 }
 LineMSector* LineMSector::readFromFile(InBuffer& file) 
 {
@@ -132,7 +132,7 @@ LineMSector* LineMSector::readFromFile(InBuffer& file)
 void ThingMSector::writeToFile(OutBuffer& file) const
 {
     file.WriteUint8(MSEC_THING);
-    file.WriteSint32(sector ? sector - ::sectors : -1);
+    file.WriteSint32(sector ? (int32_t)(sector - ::sectors) : -1);
     file.WriteSint32(mobj ? p_mobjIndexMap[mobj] : -1);
 }
 ThingMSector* ThingMSector::readFromFile(InBuffer& file)
@@ -165,6 +165,7 @@ CompoundMSector* CompoundMSector::readFromFile(InBuffer& file)
     if (!file.readSint32(i32) || i32 < 0)
         return nullptr;
     // TODO: get metasector reference
+   return nullptr;
 }
 
 //

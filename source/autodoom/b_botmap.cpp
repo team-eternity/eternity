@@ -638,7 +638,7 @@ void BotMap::cacheToFile(const char* path) const
         msecIndexMap[nullMSec] = i;
 
         // metasectors
-        file.WriteUint32(metasectors.getLength());
+        file.WriteUint32((uint32_t)metasectors.getLength());
         for (const auto msec : metasectors)
         {
             msec->writeToFile(file);
@@ -649,32 +649,32 @@ void BotMap::cacheToFile(const char* path) const
         file.WriteSint32(numlines);
         for (i = 0; i < numlines; ++i)
         {
-            file.WriteSint32(lines[i].v[0] ? lines[i].v[0] - vertices : -1);
-            file.WriteSint32(lines[i].v[1] ? lines[i].v[1] - vertices : -1);
+            file.WriteSint32(lines[i].v[0] ? (int32_t)(lines[i].v[0] - vertices) : -1);
+            file.WriteSint32(lines[i].v[1] ? (int32_t)(lines[i].v[1] - vertices) : -1);
             file.WriteSint32(lines[i].msec[0] ? msecIndexMap[lines[i].msec[0]] : -1);
             file.WriteSint32(lines[i].msec[1] ? msecIndexMap[lines[i].msec[1]] : -1);
-            file.WriteSint32(lines[i].specline ? lines[i].specline - ::lines : -1);
+            file.WriteSint32(lines[i].specline ? (int32_t)(lines[i].specline - ::lines) : -1);
         }
 
         // segs
-        file.WriteUint32(segs.getLength());
+        file.WriteUint32((uint32_t)segs.getLength());
         for (const auto& seg : segs)
         {
-            file.WriteSint32(seg.v[0] ? seg.v[0] - vertices : -1);
-            file.WriteSint32(seg.v[1] ? seg.v[1] - vertices : -1);
+            file.WriteSint32(seg.v[0] ? (int32_t)(seg.v[0] - vertices) : -1);
+            file.WriteSint32(seg.v[1] ? (int32_t)(seg.v[1] - vertices) : -1);
             file.WriteSint32(seg.dx);
             file.WriteSint32(seg.dy);
-            file.WriteSint32(seg.ln ? seg.ln - lines : -1);
+            file.WriteSint32(seg.ln ? (int32_t)(seg.ln - lines) : -1);
             file.WriteUint8(seg.isback);
-            file.WriteSint32(seg.partner ? seg.partner - &segs[0] : -1);
+            file.WriteSint32(seg.partner ? (int32_t)(seg.partner - &segs[0]) : -1);
             file.WriteSint32(seg.bbox[0]);
             file.WriteSint32(seg.bbox[1]);
             file.WriteSint32(seg.bbox[2]);
             file.WriteSint32(seg.bbox[3]);
             file.WriteSint32(seg.mid.x);
             file.WriteSint32(seg.mid.y);
-            file.WriteSint32(seg.owner ? seg.owner - &ssectors[0] : -1);
-            file.WriteUint32(seg.blocklist.getLength());
+            file.WriteSint32(seg.owner ? (int32_t)(seg.owner - &ssectors[0]) : -1);
+            file.WriteUint32((uint32_t)seg.blocklist.getLength());
             for (auto j : seg.blocklist)
             {
                 file.WriteSint32(j);
@@ -682,21 +682,21 @@ void BotMap::cacheToFile(const char* path) const
         }
 
         // ssectors
-        file.WriteUint32(ssectors.getLength());
+        file.WriteUint32((uint32_t)ssectors.getLength());
         for (const auto& ssector : ssectors)
         {
-            file.WriteSint32(ssector.segs ? ssector.segs - &segs[0] : -1);
+            file.WriteSint32(ssector.segs ? (int32_t)(ssector.segs - &segs[0]) : -1);
             file.WriteSint32(ssector.msector ? msecIndexMap[ssector.msector] : -1);
             file.WriteSint32(ssector.nsegs);
             // mobjlist dynamic
             // linelist dynamic
             file.WriteSint32(ssector.mid.x);
             file.WriteSint32(ssector.mid.y);
-            file.WriteUint32(ssector.neighs.getLength());
+            file.WriteUint32((uint32_t)ssector.neighs.getLength());
             for (const auto& neigh : ssector.neighs)
             {
-                file.WriteSint32(neigh.ss ? neigh.ss - &ssectors[0] : -1);
-                file.WriteSint32(neigh.seg ? neigh.seg - &segs[0] : -1);
+                file.WriteSint32(neigh.ss ? (int32_t)(neigh.ss - &ssectors[0]) : -1);
+                file.WriteSint32(neigh.seg ? (int32_t)(neigh.seg - &segs[0]) : -1);
                 file.WriteSint32(neigh.dist);
             }
         }
@@ -718,13 +718,13 @@ void BotMap::cacheToFile(const char* path) const
         file.WriteSint32(bMapWidth);
         file.WriteSint32(bMapHeight);
 
-        file.WriteUint32(segBlocks.getLength());
+        file.WriteUint32((uint32_t)segBlocks.getLength());
         for (const auto& coll : segBlocks)
         {
-            file.WriteUint32(coll.getLength());
+            file.WriteUint32((uint32_t)coll.getLength());
             for (const auto pseg : coll)
             {
-                file.WriteSint32(pseg ? pseg - &segs[0] : -1);
+                file.WriteSint32(pseg ? (int32_t)(pseg - &segs[0]) : -1);
             }
         }
 
