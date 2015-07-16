@@ -164,8 +164,27 @@ CompoundMSector* CompoundMSector::readFromFile(InBuffer& file)
     int32_t i32;
     if (!file.readSint32(i32) || i32 < 0)
         return nullptr;
-    // TODO: get metasector reference
-   return nullptr;
+   // NOTE: since we don't have all metasectors yet, set temporary invalid
+   // values instead
+
+   auto cms = new CompoundMSector;
+
+   cms->numElem = i32;
+
+   cms->msectors = emalloc(decltype(cms->msectors), cms->numElem *
+                           sizeof(*cms->msectors));
+
+   for (int i = 0; i < cms->numElem; ++i)
+   {
+      if(!file.readSint32(i32) || i32 < -1)
+      {
+         delete cms;
+         return nullptr;
+      }
+      cms->msectors[i] = reinterpret_cast<const MetaSector*>(i32);
+   }
+
+   return cms;
 }
 
 //
