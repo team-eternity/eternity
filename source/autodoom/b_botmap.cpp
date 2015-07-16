@@ -798,7 +798,27 @@ void BotMap::loadFromCache(const char* path)
     for (u = 0; u < u32; ++u)
     {
         msec = MetaSector::readFromFile(file);
+       if(!msec)
+          FAIL();
+       botMap->metasectors.add(msec);
     }
+
+   // Handle cms
+   CompoundMSector* cms;
+   intptr_t ptrnum;
+   for (auto msec : botMap->metasectors)
+   {
+      cms = runtime_cast<CompoundMSector*>(msec);
+      if(!cms)
+         continue;
+      for(i = 0; i < cms->numElem; ++i)
+      {
+         ptrnum = reinterpret_cast<intptr_t>(cms->msectors[i]);
+         if(ptrnum >= botMap->metasectors.getLength())
+            FAIL();
+         cms->msectors[i] = ptrnum >= 0 ? botMap->metasectors[ptrnum] : nullptr;
+      }
+   }
 
     if (!file.readSint32(i32))
         FAIL();
