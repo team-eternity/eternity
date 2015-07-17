@@ -159,7 +159,17 @@ public:
       int32_t i32;
       if(!readSint32(i32))
          return false;
-      num = i32;
+      num = reinterpret_cast<T>(i32);  // force conversion
+      return true;
+   }
+
+   template<typename T>
+   bool   readUint8T(T& num)
+   {
+      uint8_t u8;
+      if(!readUint8(u8))
+         return false;
+      num = u8;
       return true;
    }
 };

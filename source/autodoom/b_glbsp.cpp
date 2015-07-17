@@ -272,7 +272,6 @@ void B_GLBSP_PutVertex(double coordx, double coordy, int index)
 //
 void B_GLBSP_CreateSegArray(int numsegs)
 {
-   botMap->numsegs = numsegs;
    for (int i = 0; i < numsegs; ++i)
       botMap->segs.add();
 }
@@ -376,7 +375,6 @@ void B_GLBSP_PutLine(int v1idx, int v2idx, int s1idx, int s2idx, int lnidx, int 
 //
 void B_GLBSP_CreateSubsectorArray(int numssecs)
 {
-   botMap->numssectors = numssecs;
    for (int i = 0; i < numssecs; ++i)
    {
       botMap->ssectors.add();

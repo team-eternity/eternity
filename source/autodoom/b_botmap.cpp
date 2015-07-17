@@ -663,6 +663,11 @@ void BotMap::cacheToFile(const char* path) const
             file.WriteSint32(lines[i].specline ? (int32_t)(lines[i].specline - ::lines) : -1);
         }
 
+       file.WriteSint32(bMapOrgX);
+       file.WriteSint32(bMapOrgY);
+       file.WriteSint32(bMapWidth);
+       file.WriteSint32(bMapHeight);
+
         // segs
         file.WriteUint32((uint32_t)segs.getLength());
         for (const auto& seg : segs)
@@ -719,11 +724,6 @@ void BotMap::cacheToFile(const char* path) const
             file.WriteSint32(nodes[i].child[0]);
             file.WriteSint32(nodes[i].child[1]);
         }
-
-        file.WriteSint32(bMapOrgX);
-        file.WriteSint32(bMapOrgY);
-        file.WriteSint32(bMapWidth);
-        file.WriteSint32(bMapHeight);
 
         file.WriteUint32((uint32_t)segBlocks.getLength());
         for (const auto& coll : segBlocks)
@@ -867,6 +867,101 @@ void BotMap::loadFromCache(const char* path)
          if(i32 < -1 || i32 >= ::numlines)
             FAIL();
          botMap->lines[i].specline = i32 == -1 ? nullptr : ::lines + i32;
+      }
+
+      file.readSint32T(botMap->bMapOrgX);
+      file.readSint32T(botMap->bMapOrgY);
+      file.readSint32T(botMap->bMapWidth);
+      file.readSint32T(botMap->bMapHeight);
+      if(botMap->bMapWidth < 0 || botMap->bMapHeight < 0)
+         FAIL();
+
+      file.readUint32(u32);
+      if(u32 > ARBITRARY_LARGE_VALUE)
+         FAIL();
+
+      for(u = 0; u < u32; ++u)
+      {
+         BSeg& sg = botMap->segs.addNew();
+
+         file.readSint32(i32);
+         if(i32 < -1 || i32 >= botMap->numverts)
+            FAIL();
+         sg.v[0] = i32 == -1 ? nullptr : botMap->vertices + i32;
+
+         file.readSint32(i32);
+         if(i32 < -1 || i32 >= botMap->numverts)
+            FAIL();
+         sg.v[1] = i32 == -1 ? nullptr : botMap->vertices + i32;
+
+         file.readSint32T(sg.dx);
+         file.readSint32T(sg.dy);
+
+         file.readSint32(i32);
+         if(i32 < -1 || i32 >= botMap->numlines)
+            FAIL();
+         sg.ln = i32 == -1 ? nullptr : botMap->lines + i32;
+
+         file.readUint8T(sg.isback);
+         file.readSint32(i32);
+         if(i32 < -1 || i32 > ARBITRARY_LARGE_VALUE)
+            FAIL();
+         sg.partner = reinterpret_cast<Seg*>(i32); // MUST BE FINALIZED
+
+         file.readSint32T(sg.bbox[0]);
+         file.readSint32T(sg.bbox[1]);
+         file.readSint32T(sg.bbox[2]);
+         file.readSint32T(sg.bbox[3]);
+
+         file.readSint32T(sg.mid.x);
+         file.readSint32T(sg.mid.y);
+
+         file.readSint32T(sg.owner);
+
+         uint32_t su32;
+         file.readUint32(su32);
+         for (uint32_t v = 0; v < su32; ++v)
+         {
+            file.readSint32(i32);
+            if(i32 >= botMap->bMapHeight * botMap->bMapWidth)
+               FAIL();
+            sg.blocklist.add(i32);
+         }
+      }
+
+      // FINALIZE
+      for (auto& sg : botMap->segs)
+      {
+         ptrnum = reinterpret_cast<intptr_t>(sg.partner);
+         if(ptrnum >= botMap->segs.getLength())
+            FAIL();
+         sg.partner = ptrnum == -1 ? nullptr : &botMap->segs[ptrnum];
+      }
+
+      // ssectors
+
+      file.readUint32(u32);
+      if(u32 > ARBITRARY_LARGE_VALUE)
+         FAIL();
+
+      for(u = 0; u < u32; ++u)
+      {
+         BSubsec& ss = botMap->ssectors.addNew();
+
+         file.readSint32(i32);
+         if(i32 < -1 || i32 >= botMap->segs.getLength())
+            FAIL();
+         ss.segs = i32 == -1 ? nullptr : &botMap->segs[i32];
+
+         file.readSint32(i32);
+         if(i32 < -1 || i32 >= botMap->metasectors.getLength())
+            FAIL();
+         ss.msector = i32 == -1 ? nullptr : botMap->metasectors[i32];
+
+         file.readSint32T(ss.nsegs);
+         file.readSint32T(ss.mid.x);
+         file.readSint32T(ss.mid.y);
+         // TODO: neighs
       }
    }
    catch(const BufferedIOException&)

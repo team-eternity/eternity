@@ -1855,7 +1855,8 @@ static void AM_drawWalls()
 static void AM_drawBotMapSegs()
 {
    mline_t l;
-   for (int i = 0; i < botMap->numsegs; ++i)
+   size_t ns = botMap->segs.getLength();
+   for (size_t i = 0; i < ns; ++i)
    {
       const BotMap::Seg &sg = botMap->segs[i];
       l.a.x = M_FixedToDouble(sg.v[0]->x);

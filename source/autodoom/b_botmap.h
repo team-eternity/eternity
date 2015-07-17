@@ -110,8 +110,7 @@ public:
       PODCollection<int> blocklist; // list of touching map blocks
    };
    Collection<Seg> segs;
-   int numsegs;
-   
+
    //
    // Subsec
    //
@@ -136,8 +135,7 @@ public:
       PODCollection<Neigh> neighs;
    };
    Collection<Subsec> ssectors;
-   int numssectors;
-   
+
    //
    // Node
    //
@@ -168,8 +166,7 @@ public:
    //
    // Constructor
    //
-   BotMap() : vertices(NULL), numverts(0), lines(NULL), numlines(0), numsegs(0), 
-   numssectors(0), 
+   BotMap() : vertices(NULL), numverts(0), lines(NULL), numlines(0),
    nodes(NULL), numnodes(0),
    nullMSec(NULL),
    bMapOrgX(0), bMapOrgY(0), bMapWidth(0), bMapHeight(0), sectorFlags(nullptr)
