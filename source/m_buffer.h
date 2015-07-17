@@ -151,6 +151,17 @@ public:
    bool   readUint16(uint16_t &num);
    bool   readSint8 (int8_t   &num);
    bool   readUint8 (uint8_t  &num);
+
+   // IOANCH: convenient templates
+   template<typename T>
+   bool   readSint32T(T& num)
+   {
+      int32_t i32;
+      if(!readSint32(i32))
+         return false;
+      num = i32;
+      return true;
+   }
 };
 
 #endif

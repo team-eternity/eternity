@@ -786,22 +786,22 @@ void BotMap::loadFromCache(const char* path)
       int32_t i32;
       uint32_t u32;
 
-      file.readSint32(i32);
-      botMap->numverts = i32;
+      file.readSint32T(botMap->numverts);
 
-      if(i32 < 0 || i32 > ARBITRARY_LARGE_VALUE)
+      if(botMap->numverts < 0 || botMap->numverts > ARBITRARY_LARGE_VALUE)
          FAIL();
 
-      botMap->vertices = estructalloc(Vertex, i32);
+      botMap->vertices = estructalloc(Vertex, botMap->numverts);
       for (i = 0; i < botMap->numverts; ++i)
       {
-         file.readSint32(i32);
-         botMap->vertices[i].x = i32;
-         file.readSint32(i32);
-         botMap->vertices[i].y = i32;
+         file.readSint32T(botMap->vertices[i].x);
+         file.readSint32T(botMap->vertices[i].y);
       }
 
       file.readUint32(u32);
+      if(u32 > ARBITRARY_LARGE_VALUE)
+         FAIL();
+
       MetaSector* msec;
       for (u = 0; u < u32; ++u)
       {
@@ -810,6 +810,12 @@ void BotMap::loadFromCache(const char* path)
             FAIL();
          botMap->metasectors.add(msec);
       }
+
+      // read null msec
+      msec = MetaSector::readFromFile(file);
+      if(!msec)
+         FAIL();
+      botMap->metasectors.add(msec);
 
       // Handle cms
       CompoundMSector* cms;
@@ -828,16 +834,39 @@ void BotMap::loadFromCache(const char* path)
          }
       }
 
-      file.readSint32(i32);
-      botMap->numlines = i32;
-
-      if(i32 < 0 || i32 > ARBITRARY_LARGE_VALUE)
+      file.readSint32T(botMap->numlines);
+      if(botMap->numlines < 0 || botMap->numlines > ARBITRARY_LARGE_VALUE)
          FAIL();
 
-      botMap->lines = estructalloc(Line, i32);
+      botMap->lines = estructalloc(Line, botMap->numlines);
       for (i = 0; i < botMap->numlines; ++i)
       {
-         // TODO:
+         file.readSint32(i32);
+         if(i32 < -1 || i32 >= botMap->numverts)
+            FAIL();
+         botMap->lines[i].v[0] = i32 == -1 ? nullptr : botMap->vertices + i32;
+
+         file.readSint32(i32);
+         if(i32 < -1 || i32 >= botMap->numverts)
+            FAIL();
+         botMap->lines[i].v[1] = i32 == -1 ? nullptr : botMap->vertices + i32;
+
+         file.readSint32(i32);
+         if(i32 < -1 || i32 >= botMap->metasectors.getLength())
+            FAIL();
+         botMap->lines[i].msec[0] = i32 == -1 ? nullptr
+         : botMap->metasectors[i32];
+
+         file.readSint32(i32);
+         if(i32 < -1 || i32 >= botMap->metasectors.getLength())
+            FAIL();
+         botMap->lines[i].msec[1] = i32 == -1 ? nullptr
+         : botMap->metasectors[i32];
+
+         file.readSint32(i32);
+         if(i32 < -1 || i32 >= ::numlines)
+            FAIL();
+         botMap->lines[i].specline = i32 == -1 ? nullptr : ::lines + i32;
       }
    }
    catch(const BufferedIOException&)

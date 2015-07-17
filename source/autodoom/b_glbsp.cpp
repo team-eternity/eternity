@@ -175,7 +175,6 @@ int B_GLBSP_GetNextSector(int *floor_h, int *ceil_h)
 {
    if(!msecListHead)
    {
-      botMap->nummetas = (int)msecRefColl.getLength();
       return 0;
    }
    
