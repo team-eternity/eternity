@@ -159,7 +159,8 @@ public:
       int32_t i32;
       if(!readSint32(i32))
          return false;
-      num = reinterpret_cast<T>(i32);  // force conversion
+      // FIXME: can't use reinterpret_cast
+      num = (T)(i32);  // force conversion
       return true;
    }
 
@@ -169,7 +170,7 @@ public:
       uint8_t u8;
       if(!readUint8(u8))
          return false;
-      num = u8;
+      num = (T)u8;
       return true;
    }
 };

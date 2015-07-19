@@ -227,6 +227,17 @@ template <typename T, typename U, typename V, typename W> bool B_SegmentsInterse
    return B_SegmentsIntersect(v11.x, v11.y, v12.x, v12.y, v21.x, v21.y, v22.x, v22.y);
 }
 
+inline static bool B_CheckAllocSize(int n)
+{
+    enum
+    {
+        // Maximum allowed alloc size: hopefully malloc won't crash with anything
+        // less than this. Used when deserializing BotMap caches
+        ARBITRARY_LARGE_VALUE = 1048576,
+    };
+    return n >= 0 && n <= ARBITRARY_LARGE_VALUE; 
+}
+
 //
 // RandomGenerator
 //

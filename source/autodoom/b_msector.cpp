@@ -93,11 +93,8 @@ void SimpleMSector::writeToFile(OutBuffer& file) const
 }
 SimpleMSector* SimpleMSector::readFromFile(InBuffer& file)
 {
-    int32_t i32;
-    if (!file.readSint32(i32) || i32 < -1 || i32 >= ::numsectors)
-        return nullptr;
     auto sms = new SimpleMSector;
-    sms->sector = i32 == -1 ? nullptr : ::sectors + i32;
+    file.readSint32T(sms->sector);
     return sms;
 }
 
@@ -114,15 +111,10 @@ void LineMSector::writeToFile(OutBuffer& file) const
 }
 LineMSector* LineMSector::readFromFile(InBuffer& file) 
 {
-    int32_t i32[3];
-    if (!file.readSint32(i32[0]) || i32[0] < -1 || i32[0] >= ::numsectors
-        || !file.readSint32(i32[1]) || i32[1] < -1 || i32[1] >= ::numsectors
-        || !file.readSint32(i32[2]) || i32[2] < -1 || i32[2] >= ::numlines)
-        return nullptr;
     auto lms = new LineMSector;
-    lms->sector[0] = i32[0] == -1 ? nullptr : ::sectors + i32[0];
-    lms->sector[1] = i32[1] == -1 ? nullptr : ::sectors + i32[1];
-    lms->line = i32[2] == -1 ? nullptr : ::lines + i32[2];
+    file.readSint32T(lms->sector[0]);
+    file.readSint32T(lms->sector[1]);
+    file.readSint32T(lms->line);
     return lms;
 }
 
@@ -137,13 +129,9 @@ void ThingMSector::writeToFile(OutBuffer& file) const
 }
 ThingMSector* ThingMSector::readFromFile(InBuffer& file)
 {
-    int32_t i[2];
-    if (!file.readSint32(i[0]) || i[0] < -1 || i[0] >= ::numsectors
-        || !file.readSint32(i[1]) || i[1] < -1 || i[1] >= ::numthings)
-        return nullptr;
     auto tms = new ThingMSector;
-    tms->sector = i[0] == -1 ? nullptr : ::sectors + i[0];
-    tms->mobj = i[1] == -1 ? nullptr : p_indexMobjMap[i[1]];
+    file.readSint32T(tms->sector);
+    file.readSint32T(tms->mobj);
     return tms;
 }
 
@@ -168,20 +156,19 @@ CompoundMSector* CompoundMSector::readFromFile(InBuffer& file)
    // values instead
 
    auto cms = new CompoundMSector;
-
-   cms->numElem = i32;
+   file.readSint32T(cms->numElem);
+   if (!B_CheckAllocSize(cms->numElem))
+   {
+       delete cms;
+       return nullptr;
+   }
 
    cms->msectors = emalloc(decltype(cms->msectors), cms->numElem *
                            sizeof(*cms->msectors));
 
    for (int i = 0; i < cms->numElem; ++i)
    {
-      if(!file.readSint32(i32) || i32 < -1)
-      {
-         delete cms;
-         return nullptr;
-      }
-      cms->msectors[i] = reinterpret_cast<const MetaSector*>(i32);
+       file.readSint32T(cms->msectors[i]);
    }
 
    return cms;
