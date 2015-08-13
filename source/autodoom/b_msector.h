@@ -60,6 +60,7 @@ public:
    DLListItem<MetaSector> listLink;
 
    virtual void writeToFile(OutBuffer& file) const = 0;
+   virtual bool convertIndicesToPointers() = 0;
 
    static MetaSector* readFromFile(InBuffer& file);
 };
@@ -100,6 +101,8 @@ public:
    }
 
    virtual void writeToFile(OutBuffer& file) const;
+   virtual bool convertIndicesToPointers();
+
    static SimpleMSector* readFromFile(InBuffer& file);
 };
 
@@ -145,6 +148,8 @@ public:
    }
 
    virtual void writeToFile(OutBuffer& file) const;
+   virtual bool convertIndicesToPointers();
+
    static ThingMSector* readFromFile(InBuffer& file);
 };
 
@@ -190,6 +195,8 @@ public:
    }
 
    virtual void writeToFile(OutBuffer& file) const;
+   virtual bool convertIndicesToPointers();
+
    static LineMSector* readFromFile(InBuffer& file);
 };
 
@@ -223,6 +230,8 @@ public:
    const sector_t *getCeilingSector() const;
 
    virtual void writeToFile(OutBuffer& file) const;
+   virtual bool convertIndicesToPointers();
+
    static CompoundMSector* readFromFile(InBuffer& file);
 };
 

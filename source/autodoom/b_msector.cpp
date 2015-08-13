@@ -97,6 +97,10 @@ SimpleMSector* SimpleMSector::readFromFile(InBuffer& file)
     file.readSint32T((uintptr_t&)sms->sector);
     return sms;
 }
+bool SimpleMSector::convertIndicesToPointers()
+{
+   return B_ConvertPtrToArrayItem(sector, ::sectors, ::numsectors);
+}
 
 
 //
@@ -117,6 +121,12 @@ LineMSector* LineMSector::readFromFile(InBuffer& file)
     file.readSint32T((uintptr_t&)lms->line);
     return lms;
 }
+bool LineMSector::convertIndicesToPointers()
+{
+   return B_ConvertPtrToArrayItem(sector[0], ::sectors, ::numsectors)
+   && B_ConvertPtrToArrayItem(sector[1], ::sectors, ::numsectors)
+   && B_ConvertPtrToArrayItem(line, ::lines, ::numlines);
+}
 
 //
 // ThingMSector::writeToFile
@@ -134,6 +144,11 @@ ThingMSector* ThingMSector::readFromFile(InBuffer& file)
     file.readSint32T((uintptr_t&)tms->mobj);
     return tms;
 }
+bool ThingMSector::convertIndicesToPointers()
+{
+   return B_ConvertPtrToArrayItem(sector, ::sectors, ::numsectors)
+   && B_ConvertPtrToCollItem(mobj, p_indexMobjMap, ::numthings);
+}
 
 //
 // CompoundMSector::writeToFile
@@ -149,9 +164,6 @@ void CompoundMSector::writeToFile(OutBuffer& file) const
 }
 CompoundMSector* CompoundMSector::readFromFile(InBuffer& file)
 {
-    int32_t i32;
-    if (!file.readSint32(i32) || i32 < 0)
-        return nullptr;
    // NOTE: since we don't have all metasectors yet, set temporary invalid
    // values instead
 
@@ -172,6 +184,18 @@ CompoundMSector* CompoundMSector::readFromFile(InBuffer& file)
    }
 
    return cms;
+}
+bool CompoundMSector::convertIndicesToPointers()
+{
+   for(int i = 0; i < numElem; ++i)
+   {
+      if(!B_ConvertPtrToCollItem(msectors[i], ::botMap->metasectors,
+                                 ::botMap->metasectors.getLength()))
+      {
+         return false;
+      }
+   }
+   return true;
 }
 
 //

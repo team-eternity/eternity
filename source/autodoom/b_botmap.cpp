@@ -603,6 +603,7 @@ void BotMap::getDoorSectors()
 void BotMap::cacheToFile(const char* path) const
 {
     // Sanity check
+   B_Log("BotMap: saving to cache %s", path);
 
     OutBuffer file;
     file.setThrowing(true);
@@ -635,15 +636,19 @@ void BotMap::cacheToFile(const char* path) const
         {
             msecIndexMap[item] = i++;
         }
-        msecIndexMap[nullMSec] = i;
 
         // metasectors
         file.WriteUint32((uint32_t)metasectors.getLength());
+       int nullMSecIndex = -1;
+       i = 0;
         for (const auto msec : metasectors)
         {
             msec->writeToFile(file);
+           if(msec == nullMSec)
+              nullMSecIndex = i;
+           ++i;
         }
-        nullMSec->writeToFile(file);
+       file.WriteSint32(nullMSecIndex);
 
         // lines
         file.WriteSint32(numlines);
@@ -736,6 +741,7 @@ void BotMap::cacheToFile(const char* path) const
         // thrownProjectiles dynamic
         // sectorFlags dynamic
         // gunLines dynamic
+       file.Close();
     }
     catch (const BufferedIOException&)
     {
@@ -764,29 +770,38 @@ void BotMap::loadFromCache(const char* path)
 {
 #define FAIL() do { delete botMap; botMap = nullptr; return; } while(0)
 
+   B_Log("BotMap: loading from cache %s", path);
+
     InBuffer file;
    file.setThrowing(true);
     if (!file.openFile(path, BufferedFileBase::LENDIAN))
+    {
+       B_Log("Couldn't open file");
         return ;
+    }
 
+   int i;
    try
    {
       char magic[9];
       magic[8] = 0;
       file.read(magic, 8);
       if (strcmp(magic, BOTMAP_CACHE_MAGIC))
+      {
          return;
+      }
 
-      botMap = new (PU_STATIC, &botMap) BotMap;
+      botMap = new (PU_STATIC, nullptr) BotMap;
 
-      int i;
       unsigned u;
       int32_t i32;
       uint32_t u32;
 
       file.readSint32T(botMap->numverts);
       if (!B_CheckAllocSize(botMap->numverts))
+      {
           FAIL();
+      }
 
       botMap->vertices = estructalloc(Vertex, botMap->numverts);
       for (i = 0; i < botMap->numverts; ++i)
@@ -808,13 +823,8 @@ void BotMap::loadFromCache(const char* path)
          botMap->metasectors.add(msec);
       }
 
-      // read null msec
-      msec = MetaSector::readFromFile(file);
-      if(!msec)
-         FAIL();
-      botMap->nullMSec = msec;
-      botMap->metasectors.add(msec);
-      
+      file.readSint32T((uintptr_t&)botMap->nullMSec);
+
       file.readSint32T(botMap->numlines);
       if (!B_CheckAllocSize(botMap->numlines))
           FAIL();
@@ -939,11 +949,81 @@ void BotMap::loadFromCache(const char* path)
    }
    catch(const BufferedIOException&)
    {
-      if(botMap)
+      FAIL();
+   }
+
+   file.Close();
+
+   // now it's time to validate all the data
+   // metasectors
+   for (MetaSector *msec : botMap->metasectors)
+   {
+      if(!msec->convertIndicesToPointers())
          FAIL();
    }
 
+   if(!B_ConvertPtrToCollItem(botMap->nullMSec, botMap->metasectors,
+                              botMap->metasectors.getLength()))
+   {
+      FAIL();
+   }
 
+   // lines
+   for (i = 0; i < botMap->numlines; ++i)
+   {
+      Line& ln = botMap->lines[i];
+      if(!B_ConvertPtrToArrayItem(ln.v[0], botMap->vertices, botMap->numverts)
+         || !B_ConvertPtrToArrayItem(ln.v[1], botMap->vertices, botMap->numverts)
+         || !B_ConvertPtrToCollItem(ln.msec[0], botMap->metasectors, botMap->metasectors.getLength())
+         || !B_ConvertPtrToCollItem(ln.msec[1], botMap->metasectors, botMap->metasectors.getLength())
+         || !B_ConvertPtrToArrayItem(ln.specline, ::lines, ::numlines))
+      {
+         FAIL();
+      }
+   }
+
+   // segs
+   for(Seg& sg : botMap->segs)
+   {
+      if(!B_ConvertPtrToArrayItem(sg.v[0], botMap->vertices, botMap->numverts)
+         || !B_ConvertPtrToArrayItem(sg.v[1], botMap->vertices, botMap->numverts)
+         || !B_ConvertPtrToArrayItem(sg.ln, botMap->lines, botMap->numlines)
+         || !B_ConvertPtrToArrayItem(sg.partner, &botMap->segs[0], botMap->segs.getLength())
+         || !B_ConvertPtrToArrayItem(sg.owner, &botMap->ssectors[0], botMap->ssectors.getLength()))
+      {
+         FAIL();
+      }
+   }
+
+   // subsecs
+   for(Subsec& ss : botMap->ssectors)
+   {
+      if(!B_ConvertPtrToArrayItem(ss.segs, &botMap->segs[0], botMap->segs.getLength())
+         || !B_ConvertPtrToCollItem(ss.msector, botMap->metasectors, botMap->metasectors.getLength()))
+      {
+         FAIL();
+      }
+      for (Neigh &n : ss.neighs)
+      {
+         if(!B_ConvertPtrToArrayItem(n.ss, &botMap->ssectors[0], botMap->ssectors.getLength())
+            || !B_ConvertPtrToArrayItem(n.seg, &botMap->segs[0], botMap->segs.getLength()))
+         {
+            FAIL();
+         }
+      }
+   }
+
+   // segblocks
+   for(auto& coll : botMap->segBlocks)
+   {
+      for(Seg*& sg : coll)
+      {
+         if(!B_ConvertPtrToArrayItem(sg, &botMap->segs[0], botMap->segs.getLength()))
+            FAIL();
+      }
+   }
+
+   // is this it?
 
 #undef FAIL
 }
@@ -965,7 +1045,6 @@ void BotMap::Build()
    B_Log("Looking for level cache %s...", hashFileName.constPtr());
    const char* fpath = D_CheckAutoDoomPathFile(hashFileName.constPtr(), false);
 
-#if 0
    if (fpath)
    {
        // Try building from it
@@ -973,13 +1052,12 @@ void BotMap::Build()
        if (botMap)
            botMap->changeTag(PU_LEVEL);
    }
-#endif
-   
+
    if (!fpath || !botMap)
    {
        // Create the BotMap
        B_BEGIN_CLOCK
-           botMap = new (PU_LEVEL, &botMap) BotMap;
+           botMap = new (PU_LEVEL, nullptr) BotMap;
        B_MEASURE_CLOCK(newBotMap)
 
        fixed_t radius = 16 * FRACUNIT;

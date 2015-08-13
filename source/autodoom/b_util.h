@@ -238,6 +238,51 @@ inline static bool B_CheckAllocSize(int n)
     return n >= 0 && n <= ARBITRARY_LARGE_VALUE; 
 }
 
+inline static bool B_CheckNullablePtrRange(const void *p, size_t max)
+{
+   return (intptr_t)p == -1 || (uintptr_t)p < max;
+}
+
+template <typename T>
+inline static bool B_ConvertPtrToArrayItem(const T *&p, const T *base,
+                                           size_t max)
+{
+   if(!B_CheckNullablePtrRange(p, max))
+      return false;
+   if((intptr_t)p == -1)
+      p = nullptr;
+   else
+      p = (T*)base + (intptr_t)p;
+   return true;
+}
+
+// Just a copy without "const"
+template <typename T>
+inline static bool B_ConvertPtrToArrayItem(T *&p, const T *base,
+                                           size_t max)
+{
+   if(!B_CheckNullablePtrRange(p, max))
+      return false;
+   if((intptr_t)p == -1)
+      p = nullptr;
+   else
+      p = (T*)base + (intptr_t)p;
+   return true;
+}
+
+
+template <typename T, typename U>
+inline static bool B_ConvertPtrToCollItem(T *&p, const U &base, size_t max)
+{
+   if(!B_CheckNullablePtrRange(p, max))
+      return false;
+   if((intptr_t)p == -1)
+      p = nullptr;
+   else
+      p = base[(intptr_t)p];
+   return true;
+}
+
 //
 // RandomGenerator
 //

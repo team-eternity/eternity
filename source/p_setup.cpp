@@ -29,6 +29,7 @@
 #include "a_small.h"
 #include "acs_intr.h"
 #include "autodoom/b_botmap.h"   // IOANCH
+#include "autodoom/b_classifier.h"
 #include "autodoom/b_lineeffect.h"
 #include "autodoom/b_statistics.h"
 #include "autodoom/b_think.h"
@@ -1120,6 +1121,15 @@ void P_LoadThings(int lump)
       {
           p_indexMobjMap[i] = mobj;
           p_mobjIndexMap[mobj] = i;
+         if(B_IsMobjSolidDecor(*mobj))
+         {
+            uint8_t ind[4];
+            ind[0] = i & 0xff;
+            ind[1] = i >> 8 & 0xff;
+            ind[2] = i >> 16 & 0xff;
+            ind[3] = i >> 24 & 0xff;
+            g_levelHash.addData(ind, 4);
+         }
       }
    }
    
@@ -2656,6 +2666,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    
    // free the old level
    Z_FreeTags(PU_LEVEL, PU_LEVEL);
+   botMap = nullptr; // IOANCH: clear this too
    
    // IOANCH: statistics
    B_StoreMonsterStats();
@@ -2809,14 +2820,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    ACS_LoadLevelScript(dir, acslumpnum);
 
-   // IOANCH: add skill level and finish the digest
-   int32_t gameskillval = SwapLong((int32_t)gameskill * 2 / 3);
-   uint8_t gameskill32[4];
-   gameskill32[0] = gameskillval;
-   gameskill32[1] = gameskillval >> 8;
-   gameskill32[2] = gameskillval >> 16;
-   gameskill32[3] = gameskillval >> 24;
-   g_levelHash.addData(gameskill32, 4);
+   // IOANCH: finish the digest
    g_levelHash.wrapUp();
    
    // IOANCH: create the bot map
