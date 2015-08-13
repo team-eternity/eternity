@@ -94,7 +94,7 @@ void SimpleMSector::writeToFile(OutBuffer& file) const
 SimpleMSector* SimpleMSector::readFromFile(InBuffer& file)
 {
     auto sms = new SimpleMSector;
-    file.readSint32T(sms->sector);
+    file.readSint32T((uintptr_t&)sms->sector);
     return sms;
 }
 
@@ -112,9 +112,9 @@ void LineMSector::writeToFile(OutBuffer& file) const
 LineMSector* LineMSector::readFromFile(InBuffer& file) 
 {
     auto lms = new LineMSector;
-    file.readSint32T(lms->sector[0]);
-    file.readSint32T(lms->sector[1]);
-    file.readSint32T(lms->line);
+    file.readSint32T((uintptr_t&)lms->sector[0]);
+    file.readSint32T((uintptr_t&)lms->sector[1]);
+    file.readSint32T((uintptr_t&)lms->line);
     return lms;
 }
 
@@ -130,8 +130,8 @@ void ThingMSector::writeToFile(OutBuffer& file) const
 ThingMSector* ThingMSector::readFromFile(InBuffer& file)
 {
     auto tms = new ThingMSector;
-    file.readSint32T(tms->sector);
-    file.readSint32T(tms->mobj);
+    file.readSint32T((uintptr_t&)tms->sector);
+    file.readSint32T((uintptr_t&)tms->mobj);
     return tms;
 }
 
@@ -168,7 +168,7 @@ CompoundMSector* CompoundMSector::readFromFile(InBuffer& file)
 
    for (int i = 0; i < cms->numElem; ++i)
    {
-       file.readSint32T(cms->msectors[i]);
+       file.readSint32T((uintptr_t&)cms->msectors[i]);
    }
 
    return cms;

@@ -823,11 +823,11 @@ void BotMap::loadFromCache(const char* path)
       for (i = 0; i < botMap->numlines; ++i)
       {
           Line& ln = botMap->lines[i];
-          file.readSint32T(ln.v[0]);
-          file.readSint32T(ln.v[1]);
-          file.readSint32T(ln.msec[0]);
-          file.readSint32T(ln.msec[1]);
-          file.readSint32T(ln.specline);
+          file.readSint32T((uintptr_t&)ln.v[0]);
+          file.readSint32T((uintptr_t&)ln.v[1]);
+          file.readSint32T((uintptr_t&)ln.msec[0]);
+          file.readSint32T((uintptr_t&)ln.msec[1]);
+          file.readSint32T((uintptr_t&)ln.specline);
       }
 
       file.readSint32T(botMap->bMapOrgX);
@@ -843,13 +843,13 @@ void BotMap::loadFromCache(const char* path)
       {
          Seg& sg = botMap->segs.addNew();
 
-         file.readSint32T(sg.v[0]);
-         file.readSint32T(sg.v[1]);
+         file.readSint32T((uintptr_t&)sg.v[0]);
+         file.readSint32T((uintptr_t&)sg.v[1]);
          file.readSint32T(sg.dx);
          file.readSint32T(sg.dy);
-         file.readSint32T(sg.ln);
+         file.readSint32T((uintptr_t&)sg.ln);
          file.readUint8T(sg.isback);
-         file.readSint32T(sg.partner);
+         file.readSint32T((uintptr_t&)sg.partner);
 
          file.readSint32T(sg.bbox[0]);
          file.readSint32T(sg.bbox[1]);
@@ -859,7 +859,7 @@ void BotMap::loadFromCache(const char* path)
          file.readSint32T(sg.mid.x);
          file.readSint32T(sg.mid.y);
 
-         file.readSint32T(sg.owner);
+         file.readSint32T((uintptr_t&)sg.owner);
 
          uint32_t su32;
          file.readUint32(su32);
@@ -882,9 +882,9 @@ void BotMap::loadFromCache(const char* path)
       {
          Subsec& ss = botMap->ssectors.addNew();
 
-         file.readSint32T(ss.segs);
+         file.readSint32T((uintptr_t&)ss.segs);
 
-         file.readSint32T(ss.msector);
+         file.readSint32T((uintptr_t&)ss.msector);
          file.readSint32T(ss.nsegs);
          file.readSint32T(ss.mid.x);
          file.readSint32T(ss.mid.y);
@@ -896,8 +896,8 @@ void BotMap::loadFromCache(const char* path)
          for (uint32_t v = 0; v < su32; ++v)
          {
              Neigh& n = ss.neighs.addNew();
-             file.readSint32T(n.ss);
-             file.readSint32T(n.seg);
+             file.readSint32T((uintptr_t&)n.ss);
+             file.readSint32T((uintptr_t&)n.seg);
              file.readSint32T(n.dist);
          }
       }
@@ -931,7 +931,7 @@ void BotMap::loadFromCache(const char* path)
           for (v = 0; v < su32; ++v)
           {
               auto& sg = coll.addNew();
-              file.readSint32T(sg);
+              file.readSint32T((uintptr_t&)sg);
           }
       }
 
