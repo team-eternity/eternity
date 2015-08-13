@@ -61,7 +61,7 @@ bool BotMap::demoPlayingFlag;
 const int CACHE_BUFFER_SIZE = 512 * 1024;
 enum { SUBSEC_GRID_STEP = 64 * FRACUNIT };
 
-static const char* const BOTMAP_CACHE_MAGIC = "BOTMAP01";
+static const char* const BOTMAP_CACHE_MAGIC = "BOTMAP02";
 
 //
 // BotMap::getTouchedBlocks
