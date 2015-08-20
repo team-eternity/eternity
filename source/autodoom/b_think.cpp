@@ -797,12 +797,13 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
             {
                 pickRandomWeapon(targets[0]);
             }
-            cmd->forwardmove = FixedMul(2 * pl->pclass->forwardmove[1],
-                B_AngleCosine(dangle));
-            cmd->sidemove = -FixedMul(2 * pl->pclass->sidemove[1],
-                                      B_AngleSine(dangle));
+//            cmd->forwardmove = FixedMul(2 * pl->pclass->forwardmove[1],
+//                B_AngleCosine(dangle));
+//            cmd->sidemove = -FixedMul(2 * pl->pclass->sidemove[1],
+//                                      B_AngleSine(dangle));
             if(justPunched--)
-                cmd->forwardmove -= pl->pclass->forwardmove[1];
+//                cmd->forwardmove -= pl->pclass->forwardmove[1]
+                ;
         }
         else
         {
@@ -813,34 +814,20 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
                 fixed_t dist = P_AproxDistance(nx - mx, ny - my);
                 if (dist < 384 * FRACUNIT)
                 {
-                    cmd->forwardmove = FixedMul(2 * pl->pclass->forwardmove[1],
-                        B_AngleSine(dangle)) * m_combatStrafeState;
-                    cmd->sidemove = FixedMul(2 * pl->pclass->sidemove[1],
-                        B_AngleCosine(dangle)) * m_combatStrafeState;
+//                    cmd->forwardmove = FixedMul(2 * pl->pclass->forwardmove[1],
+//                        B_AngleSine(dangle)) * m_combatStrafeState;
+//                    cmd->sidemove = FixedMul(2 * pl->pclass->sidemove[1],
+//                        B_AngleCosine(dangle)) * m_combatStrafeState;
                 }
                 if (dist < 256 * FRACUNIT)
                 {
                     
-                    cmd->forwardmove -= FixedMul(2 * pl->pclass->forwardmove[1],
-                        B_AngleCosine(dangle));
-                    cmd->sidemove += FixedMul(2 * pl->pclass->sidemove[1],
-                        B_AngleSine(dangle));
-                }
-                else
-                {
-//                    cmd->forwardmove += FixedMul(2 * pl->pclass->forwardmove[1],
+//                    cmd->forwardmove -= FixedMul(2 * pl->pclass->forwardmove[1],
 //                        B_AngleCosine(dangle));
-//                    cmd->sidemove -= FixedMul(2 * pl->pclass->sidemove[1],
+//                    cmd->sidemove += FixedMul(2 * pl->pclass->sidemove[1],
 //                        B_AngleSine(dangle));
                 }
-
-//                cmd->forwardmove += random.range(-pl->pclass->forwardmove[0], pl->pclass->forwardmove[0]) / 8;
-//                cmd->sidemove += random.range(-pl->pclass->sidemove[0], pl->pclass->sidemove[0]) / 8;
             }
-            //cmd->sidemove += random.range(-pl->pclass->sidemove[0],
-            //    pl->pclass->sidemove[0]);
-            //cmd->forwardmove += random.range(-pl->pclass->forwardmove[0],
-            //    pl->pclass->forwardmove[0]);
 
         }
 
@@ -861,10 +848,10 @@ void Bot::doNonCombatAI()
         if(!m_finder.FindNextGoal(pl->mo->x, pl->mo->y, m_path, objOfInterest, this))
         {
             ++m_searchstage;
-            cmd->sidemove += random.range(-pl->pclass->sidemove[0],
-                pl->pclass->sidemove[0]);
-            cmd->forwardmove += random.range(-pl->pclass->forwardmove[0],
-                pl->pclass->forwardmove[0]);
+//            cmd->sidemove += random.range(-pl->pclass->sidemove[0],
+//                pl->pclass->sidemove[0]);
+//            cmd->forwardmove += random.range(-pl->pclass->forwardmove[0],
+//                pl->pclass->forwardmove[0]);
             return;
         }
         m_hasPath = true;
@@ -1081,10 +1068,10 @@ void Bot::doNonCombatAI()
     // If not moving while trying to, budge a bit to avoid stuck moments
     if ((cmd->sidemove || cmd->forwardmove) && D_abs(m_realVelocity.x) < FRACUNIT && D_abs(m_realVelocity.y) < FRACUNIT)
     {
-        cmd->sidemove += random.range(-pl->pclass->sidemove[1],
-            pl->pclass->sidemove[1]);
-        cmd->forwardmove += random.range(-pl->pclass->forwardmove[1],
-            pl->pclass->forwardmove[1]);
+//        cmd->sidemove += random.range(-pl->pclass->sidemove[1],
+//            pl->pclass->sidemove[1]);
+//        cmd->forwardmove += random.range(-pl->pclass->forwardmove[1],
+//            pl->pclass->forwardmove[1]);
     }
 //   printf("%d\n", angleturn);
 }
