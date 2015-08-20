@@ -63,6 +63,14 @@
 #define JSON_SPRITENUM "spritenum"
 #define JSON_STATS "stats"
 
+enum
+{
+    // 1 / (1 - f) where f is ORIG_FRICTION. Multiply this with velocity to
+    // obtain the distance the object will move before stopping while on ground
+    DRIFT_TIME = (fixed_t)(0xffffffffll / (FRACUNIT - ORIG_FRICTION)),
+    DRIFT_TIME_INV = FRACUNIT - ORIG_FRICTION,
+};
+
 // The commands that the bots will send to the players to be added in G_Ticker
 Bot bots[MAXPLAYERS];
 
@@ -872,7 +880,7 @@ void Bot::doNonCombatAI()
     {
         const line_t& line = *m_path.end.walkLine;
         endCoord = B_ProjectionOnSegment(pl->mo->x, pl->mo->y,
-            line.v1->x, line.v1->y, line.dx, line.dy);
+            line.v1->x, line.v1->y, line.dx, line.dy, pl->mo->radius);
     }
     else
         endCoord = { 0, 0 };
@@ -911,7 +919,7 @@ void Bot::doNonCombatAI()
             {
                 v2fixed_t nn = B_ProjectionOnSegment(pl->mo->x, pl->mo->y,
                                                      seg->v[0]->x, seg->v[0]->y,
-                                                     seg->dx, seg->dy);
+                                                     seg->dx, seg->dy, pl->mo->radius);
                 nx = nn.x;
                 ny = nn.y;
                 if(!botMap->canPassNow(*seg->owner, *(*nit)->ss, pl->mo->height))
@@ -1078,15 +1086,69 @@ void Bot::doNonCombatAI()
 
 void Bot::cruiseControl(fixed_t nx, fixed_t ny, bool moveslow)
 {
-    // Suggested speed: 15.5
-    const fixed_t runSpeed = moveslow && !m_runfast ? 8 * FRACUNIT : 16 * FRACUNIT;
-    
+//    B_Log("%g %g", M_FixedToDouble(nx), M_FixedToDouble(ny));
+
     fixed_t mx = pl->mo->x;
     fixed_t my = pl->mo->y;
-    
+    // Suggested speed: 15.5
+
+    v2fixed_t landing;
+    landing.x = mx + FixedMul(m_realVelocity.x, DRIFT_TIME);
+    landing.y = my + FixedMul(m_realVelocity.y, DRIFT_TIME);
+    if(!botMap->canPassNow(botMap->pointInSubsector(landing.x, landing.y), *ss,
+                           pl->mo->height))
+    {
+        v2fixed_t targvel;
+        targvel.x = FixedMul(nx - mx, DRIFT_TIME_INV) - m_realVelocity.x;
+        targvel.y = FixedMul(ny - my, DRIFT_TIME_INV) - m_realVelocity.y;
+
+        if(D_abs(targvel.x) <= FRACUNIT && D_abs(targvel.y) <= FRACUNIT)
+        {
+            cmd->forwardmove += pl->pclass->forwardmove[0]; // hack
+            return;
+        }
+
+        angle_t tangle = P_PointToAngle(0, 0, targvel.x, targvel.y);
+        angle_t dangle = tangle - pl->mo->angle;
+        fixed_t finedangle = dangle >> ANGLETOFINESHIFT;
+
+        cmd->forwardmove += FixedMul(pl->pclass->forwardmove[1],
+                                     finecosine[finedangle]);
+        cmd->sidemove -= FixedMul(pl->pclass->sidemove[1], finesine[finedangle]);
+        return;
+    }
+
+//    const fixed_t runSpeed = moveslow && !m_runfast ? 8 * FRACUNIT
+//    : 16 * FRACUNIT;
+#if 0
+
+    // Objective: make sure landing is on top of nx/ny.
+    // To do it, I need to set velocity to something appropriate.
+    v2fixed_t targvel;
+    targvel.x = FixedMul(nx - mx, DRIFT_TIME_INV) - m_realVelocity.x;
+    targvel.y = FixedMul(ny - my, DRIFT_TIME_INV) - m_realVelocity.y;
+
+    if(D_abs(targvel.x) <= FRACUNIT && D_abs(targvel.y) <= FRACUNIT)
+    {
+        cmd->forwardmove += pl->pclass->forwardmove[0]; // hack
+        return;
+    }
+
+    angle_t tangle = P_PointToAngle(0, 0, targvel.x, targvel.y);
+    angle_t dangle = tangle - pl->mo->angle;
+    fixed_t finedangle = dangle >> ANGLETOFINESHIFT;
+
+    cmd->forwardmove += FixedMul(pl->pclass->forwardmove[1],
+                                 finecosine[finedangle]);
+    cmd->sidemove -= FixedMul(pl->pclass->sidemove[1], finesine[finedangle]);
+#endif
+//#if 0
+
+    // Suggested speed: 15.5
+    const fixed_t runSpeed = moveslow && !m_runfast ? 8 * FRACUNIT : 16 * FRACUNIT;
     angle_t tangle = P_PointToAngle(mx, my, nx, ny);
     angle_t dangle = tangle - pl->mo->angle;
-    
+
     // Intended speed: forwardly, V*cos(dangle)
     //                 sidedly,  -V*sin(dangle)
     
@@ -1097,50 +1159,65 @@ void Bot::cruiseControl(fixed_t nx, fixed_t ny, bool moveslow)
     // -a*cos(pangle)
     
     const fixed_t fineangle = pl->mo->angle >> ANGLETOFINESHIFT;
-    const fixed_t ctg_fine = (dangle + ANG90) >> ANGLETOFINESHIFT;
+//    const fixed_t ctg_fine = (dangle + ANG90) >> ANGLETOFINESHIFT;
+    const fixed_t finedangle = dangle >> ANGLETOFINESHIFT;
     
-    fixed_t momf = FixedMul(pl->momx, finecosine[fineangle])
-    + FixedMul(pl->momy, finesine[fineangle]);
+    fixed_t momf = FixedMul(m_realVelocity.x, finecosine[fineangle])
+    + FixedMul(m_realVelocity.y, finesine[fineangle]);
     
-    fixed_t moms = FixedMul(pl->momx, finesine[fineangle])
-    - FixedMul(pl->momy, finecosine[fineangle]);
-    
+    fixed_t moms = FixedMul(m_realVelocity.x, finesine[fineangle])
+    - FixedMul(m_realVelocity.y, finecosine[fineangle]);
+
+
+
     fixed_t tmomf, tmoms;
-    if(dangle < ANG45 || dangle >= ANG270 + ANG45)
-    {
-        tmomf = runSpeed;
-        tmoms = -FixedMul(finetangent[ctg_fine], tmomf);
-    }
-    else if(dangle >= ANG45 && dangle < ANG90 + ANG45)
-    {
-        tmoms = -runSpeed;
-        tmomf = FixedMul(tmoms, finetangent[(ctg_fine + 2048) % 4096]);
-    }
-    else if(dangle < ANG180 + ANG45 && dangle >= ANG90 + ANG45)
-    {
-        tmomf = -runSpeed;
-        tmoms = -FixedMul(finetangent[ctg_fine], tmomf);
-    }
-    else
-    {
-        tmoms = runSpeed;
-        tmomf = FixedMul(tmoms, finetangent[(ctg_fine + 2048) % 4096]);
-    }
-    
+    // dangle   tmomf   tmoms
+    // 0        1       0
+    // 30       v3/2    -1/2
+    // 60       1/2     -v3/2
+    // 90       0       -1
+    // alpha    cos     sin
+
+    tmomf = FixedMul(runSpeed, finecosine[finedangle]);
+    tmoms = -FixedMul(runSpeed, finesine[finedangle]);
+
+//    if(dangle < ANG45 || dangle >= ANG270 + ANG45)
+//    {
+//        tmomf = runSpeed;
+//        tmoms = -FixedMul(finetangent[ctg_fine], tmomf);
+//    }
+//    else if(dangle >= ANG45 && dangle < ANG90 + ANG45)
+//    {
+//        tmoms = -runSpeed;
+//        tmomf = FixedMul(tmoms, finetangent[(ctg_fine + 2048) % 4096]);
+//    }
+//    else if(dangle < ANG180 + ANG45 && dangle >= ANG90 + ANG45)
+//    {
+//        tmomf = -runSpeed;
+//        tmoms = -FixedMul(finetangent[ctg_fine], tmomf);
+//    }
+//    else
+//    {
+//        tmoms = runSpeed;
+//        tmomf = FixedMul(tmoms, finetangent[(ctg_fine + 2048) % 4096]);
+//    }
+
     if(tmomf > 0)
     {
-        if(!m_runfast && momf > 0 && momf < runSpeed / 4)
-            cmd->forwardmove += pl->pclass->forwardmove[0];
-        else if(momf < tmomf)
+//        if(!m_runfast && momf > 0 && momf < runSpeed / 4)
+//            cmd->forwardmove += pl->pclass->forwardmove[0];
+//        else
+            if(momf < tmomf)
             cmd->forwardmove += pl->pclass->forwardmove[1];
         else
             cmd->forwardmove -= pl->pclass->forwardmove[1];
     }
     else if(tmomf < 0)
     {
-        if(!m_runfast && momf < 0 && momf > runSpeed / 4)
-            cmd->forwardmove -= pl->pclass->forwardmove[0];
-        else if(momf > tmomf)
+//        if(!m_runfast && momf < 0 && momf > runSpeed / 4)
+//            cmd->forwardmove -= pl->pclass->forwardmove[0];
+//        else
+            if(momf > tmomf)
             cmd->forwardmove -= pl->pclass->forwardmove[1];
         else
             cmd->forwardmove += pl->pclass->forwardmove[1];
@@ -1148,22 +1225,34 @@ void Bot::cruiseControl(fixed_t nx, fixed_t ny, bool moveslow)
     
     if(tmoms > 0)
     {
-        if(!m_runfast && moms > 0 && moms < runSpeed / 4)
-            cmd->sidemove += pl->pclass->sidemove[0];
-        else if(moms < tmoms)
+//        if(!m_runfast && moms > 0 && moms < runSpeed / 4)
+//            cmd->sidemove += pl->pclass->sidemove[0];
+//        else
+            if(moms < tmoms)
             cmd->sidemove += pl->pclass->sidemove[1];
         else
             cmd->sidemove -= pl->pclass->sidemove[1];
     }
     else if(tmoms < 0)
     {
-        if(!m_runfast && moms < 0 && moms > runSpeed / 4)
-            cmd->sidemove -= pl->pclass->sidemove[0];
-        else if(moms > tmoms)
+//        if(!m_runfast && moms < 0 && moms > runSpeed / 4)
+//            cmd->sidemove -= pl->pclass->sidemove[0];
+//        else
+            if(moms > tmoms)
             cmd->sidemove -= pl->pclass->sidemove[1];
         else
             cmd->sidemove += pl->pclass->sidemove[1];
     }
+
+//    B_Log("v(%g %g) f(%d) s(%d) momf(%g) moms(%g) tmomf(%g) tmoms(%g) angle(%g) dangle(%g)",
+//          M_FixedToDouble(m_realVelocity.x), M_FixedToDouble(m_realVelocity.y),
+//          cmd->forwardmove, cmd->sidemove, M_FixedToDouble(momf),
+//          M_FixedToDouble(moms), M_FixedToDouble(tmomf), M_FixedToDouble(tmoms),
+//          pl->mo->angle / 4294967296. * 360, dangle / 4294967296. * 360);
+//    B_Log("%g\t%g\t%g\t%g\t%d\t%d", M_FixedToDouble(momf), M_FixedToDouble(moms),
+//          M_FixedToDouble(tmomf), M_FixedToDouble(tmoms), cmd->forwardmove / 5,
+//          cmd->sidemove / 5);
+//#endif
 }
 
 //

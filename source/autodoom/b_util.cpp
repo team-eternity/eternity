@@ -87,10 +87,31 @@ v2fixed_t B_ProjectionOnLine(fixed_t x, fixed_t y, fixed_t x1, fixed_t y1,
 }
 
 v2fixed_t B_ProjectionOnSegment(fixed_t x, fixed_t y, fixed_t x1, fixed_t y1,
-    fixed_t dx, fixed_t dy)
+    fixed_t dx, fixed_t dy, fixed_t padding)
 {
-    v2fixed_t proj = B_ProjectionOnLine(x, y, x1, y1,
-        dx, dy);
+   angle_t angle = P_PointToAngle(x1, y1, x1 + dx, y1 + dy) >> ANGLETOFINESHIFT;
+
+   if(padding)
+   {
+      x1 += FixedMul(padding, padding * finecosine[angle]);
+      y1 += FixedMul(padding, finesine[angle]);
+      v2fixed_t nd;
+      nd.x = dx - FixedMul(2 * padding, finecosine[angle]);
+      nd.y = dy - FixedMul(2 * padding, finesine[angle]);
+      if(nd.x || nd.y)
+      {
+         dx = nd.x;
+         dy = nd.y;
+      }
+      else
+      {
+         // some hack here
+         dx -= FixedMul(2 * padding - FRACUNIT, finecosine[angle]);
+         dy -= FixedMul(2 * padding - FRACUNIT, finesine[angle]);
+      }
+   }
+
+    v2fixed_t proj = B_ProjectionOnLine(x, y, x1, y1, dx, dy);
     if (dx)
     {
         if (((proj.x - x1) ^ dx) < 0)
