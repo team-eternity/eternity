@@ -93,21 +93,16 @@ v2fixed_t B_ProjectionOnSegment(fixed_t x, fixed_t y, fixed_t x1, fixed_t y1,
 
    if(padding)
    {
-      x1 += FixedMul(padding, padding * finecosine[angle]);
+      v2fixed_t olddiff = { dx, dy };
+      x1 += FixedMul(padding, finecosine[angle]);
       y1 += FixedMul(padding, finesine[angle]);
-      v2fixed_t nd;
-      nd.x = dx - FixedMul(2 * padding, finecosine[angle]);
-      nd.y = dy - FixedMul(2 * padding, finesine[angle]);
-      if(nd.x || nd.y)
+      dx -= FixedMul(2 * padding, finecosine[angle]);
+      dy -= FixedMul(2 * padding, finesine[angle]);
+
+      if((olddiff.x ^ dx) <= 0 && (olddiff.y ^ dy) <= 0)
       {
-         dx = nd.x;
-         dy = nd.y;
-      }
-      else
-      {
-         // some hack here
-         dx -= FixedMul(2 * padding - FRACUNIT, finecosine[angle]);
-         dy -= FixedMul(2 * padding - FRACUNIT, finesine[angle]);
+         v2fixed_t proj = { x1 + dx / 2, y1 + dy / 2 };
+         return proj;
       }
    }
 

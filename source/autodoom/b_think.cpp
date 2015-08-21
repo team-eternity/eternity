@@ -353,15 +353,20 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
             return false;
 
         m_deepSearchMode = DeepBeyond;
-        bool result;
+
+        // FIXME: this seems to trigger other problems, such as not using
+        // some elevator triggers
+        bool result = false, tempresult;
         const BSubsec* repsave = nullptr;
         do
         {
             m_deepRepeat = nullptr;
-            result = m_finder.AvailableGoals(repsave ? *repsave : liness,
+            tempresult = m_finder.AvailableGoals(repsave ? *repsave : liness,
                                              nullptr, reachableItem, this);
             repsave = m_deepRepeat;
-        } while (result && m_deepRepeat);
+            if(!m_deepRepeat)
+                result |= tempresult;
+        } while (m_deepRepeat);
         m_deepRepeat = nullptr;
         
         m_deepSearchMode = DeepNormal;
@@ -528,9 +533,13 @@ bool Bot::handleLineGoal(const BSubsec &ss, BotPathEnd &coord, const line_t& lin
                 if (shouldUseSpecial(line, ss))
                     return true;
                 m_deepTriedLines.insert(&line);
-                LevelStateStack::Push(line, *pl);
-                m_deepRepeat = &ss;
-                return true;
+
+                // ONLY return true if pushing was useful.
+                if(LevelStateStack::Push(line, *pl))
+                {
+                    m_deepRepeat = &ss;
+                    return true;
+                }
             }
             //return false;
         }
@@ -1076,10 +1085,10 @@ void Bot::doNonCombatAI()
     // If not moving while trying to, budge a bit to avoid stuck moments
     if ((cmd->sidemove || cmd->forwardmove) && D_abs(m_realVelocity.x) < FRACUNIT && D_abs(m_realVelocity.y) < FRACUNIT)
     {
-//        cmd->sidemove += random.range(-pl->pclass->sidemove[1],
-//            pl->pclass->sidemove[1]);
-//        cmd->forwardmove += random.range(-pl->pclass->forwardmove[1],
-//            pl->pclass->forwardmove[1]);
+        cmd->sidemove += random.range(-pl->pclass->sidemove[1],
+            pl->pclass->sidemove[1]);
+        cmd->forwardmove += random.range(-pl->pclass->forwardmove[1],
+            pl->pclass->forwardmove[1]);
     }
 //   printf("%d\n", angleturn);
 }
