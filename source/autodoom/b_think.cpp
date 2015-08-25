@@ -71,6 +71,14 @@ enum
     DRIFT_TIME_INV = FRACUNIT - ORIG_FRICTION,
 };
 
+enum
+{
+    SearchStage_Normal,
+    SearchStage_ExitSecret,
+    SearchStage_ExitNormal,
+    SearchStage_PitItems,
+};
+
 // The commands that the bots will send to the players to be added in G_Ticker
 Bot bots[MAXPLAYERS];
 
@@ -86,7 +94,7 @@ void Bot::mapInit()
    B_EmptyTableAndDelete(goalTable);   // remove all objectives
    B_EmptyTableAndDelete(goalEvents);  // remove all previously listed events
    prevCtr = 0;
-   m_searchstage = 0;
+   m_searchstage = SearchStage_Normal;
 
    m_finder.SetMap(botMap);
    m_finder.SetPlayerHeight(pl->mo->height);
@@ -170,6 +178,27 @@ PathResult Bot::reachableItem(const BSubsec& ss, void* v)
     return result ? (self.m_deepSearchMode == DeepBeyond ? PathDone : PathAdd) : PathNo;
 }
 
+bool Bot::checkDeadEndTrap(const BSubsec& targss)
+{
+    if(m_searchstage >= SearchStage_PitItems || m_deepSearchMode != DeepNormal
+       || ss == &targss)
+    {
+        return true;
+    }
+
+    LevelStateStack::Clear();
+    m_deepAvailSsectors.clear();
+
+    m_deepSearchMode = DeepAvail;
+    m_finder.AvailableGoals(*ss, &m_deepAvailSsectors, reachableItem, this);
+    m_deepSearchMode = DeepCheckLosses;
+    m_finder.AvailableGoals(targss, nullptr, reachableItem, this);
+    m_deepSearchMode = DeepNormal;
+
+    LevelStateStack::Clear();
+
+    return m_deepAvailSsectors.empty();
+}
 
 bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
 {
@@ -179,10 +208,10 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
         // sure goals
     case VLS_S1ExitLevel:
     case VLS_WRExitLevel:
-        return m_searchstage >= 2;
+        return m_searchstage >= SearchStage_ExitNormal;
     case VLS_S1SecretExit:
     case VLS_WRSecretExit:
-        return m_searchstage >= 1;
+        return m_searchstage >= SearchStage_ExitSecret;
 
         // would only block or cause harm
     case VLS_W1CloseDoor:
@@ -302,7 +331,8 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
     if(action && (action->type == &S1ActionType
                   || action->type == &W1ActionType))
     {
-        if(m_deepSearchMode == DeepNormal)
+        if(m_deepSearchMode == DeepNormal
+           && m_searchstage < SearchStage_PitItems)
         {
 			LevelStateStack::Clear();
 			m_deepTriedLines.clear();
@@ -397,7 +427,8 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
 	if(self.m_deepSearchMode == DeepCheckLosses)
 		return false;
 	
-    if(self.m_searchstage >= 2 && ss.msector->getFloorSector()->damageflags & SDMG_EXITLEVEL)
+    if(self.m_searchstage >= SearchStage_ExitNormal
+       && ss.msector->getFloorSector()->damageflags & SDMG_EXITLEVEL)
     {
         return true;
     }
@@ -439,7 +470,7 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
                         coord.coord = B_CoordXY(*item);
                         self.goalTable.setV2Fixed(BOT_PICKUP, coord.coord);
                     }
-                    return true;
+                    return self.checkDeadEndTrap(ss);
                 }
                 else
                 {
@@ -453,7 +484,7 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
                             coord.coord = B_CoordXY(*item);
                             self.goalTable.setV2Fixed(BOT_PICKUP, coord.coord);
                         }
-                        return true;
+                        return self.checkDeadEndTrap(ss);
                     }
                 }
             }
@@ -470,7 +501,7 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
                         coord.coord = B_CoordXY(*item);
                         self.goalTable.setV2Fixed(BOT_PICKUP, coord.coord);
                     }
-                    return true;
+                    return self.checkDeadEndTrap(ss);
                 }
             }
         }
@@ -865,10 +896,10 @@ void Bot::doNonCombatAI()
         if(!m_finder.FindNextGoal(pl->mo->x, pl->mo->y, m_path, objOfInterest, this))
         {
             ++m_searchstage;
-//            cmd->sidemove += random.range(-pl->pclass->sidemove[0],
-//                pl->pclass->sidemove[0]);
-//            cmd->forwardmove += random.range(-pl->pclass->forwardmove[0],
-//                pl->pclass->forwardmove[0]);
+            cmd->sidemove += random.range(-pl->pclass->sidemove[0],
+                pl->pclass->sidemove[0]);
+            cmd->forwardmove += random.range(-pl->pclass->forwardmove[0],
+                pl->pclass->forwardmove[0]);
             return;
         }
         m_hasPath = true;
@@ -987,7 +1018,7 @@ void Bot::doNonCombatAI()
                 }
                 m_lastPathSS = nullptr;
             }
-            m_searchstage = 0;
+            m_searchstage = SearchStage_Normal;
             m_hasPath = false;
             if (random() % 3 == 0)
                 m_justGotLost = true;
@@ -1023,7 +1054,7 @@ void Bot::doNonCombatAI()
 
     if (goalAchieved())
     {
-        m_searchstage = 0;
+        m_searchstage = SearchStage_Normal;
         m_hasPath = false;
         return;
     }

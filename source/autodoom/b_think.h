@@ -132,7 +132,8 @@ class Bot : public ZoneObject
    
    void cruiseControl(fixed_t nx, fixed_t ny, bool moveslow);
    void capCommands();
-   
+
+   bool checkDeadEndTrap(const BSubsec& targss);
    bool shouldUseSpecial(const line_t& line, const BSubsec& liness);
    static bool objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v);
    bool handleLineGoal(const BSubsec& ss, BotPathEnd& coord, const line_t& line);
