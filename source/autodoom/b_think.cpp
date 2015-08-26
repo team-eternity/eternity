@@ -566,7 +566,9 @@ bool Bot::handleLineGoal(const BSubsec &ss, BotPathEnd &coord, const line_t& lin
                 m_deepTriedLines.insert(&line);
 
                 // ONLY return true if pushing was useful.
-                if(LevelStateStack::Push(line, *pl))
+
+                if(LevelStateStack::Push(line, *pl,
+                                         ss.msector->getFloorSector()))
                 {
                     m_deepRepeat = &ss;
                     return true;

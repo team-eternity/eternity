@@ -226,7 +226,8 @@ void LevelStateStack::InitLevel()
 //
 static void B_pushSectorHeights(int, const line_t& line, PODCollection<int>&, const player_t& player);
 
-bool LevelStateStack::Push(const line_t& line, const player_t& player)
+bool LevelStateStack::Push(const line_t& line, const player_t& player,
+                           const sector_t *excludeSector)
 {
    int secnum = -1;
    
@@ -245,6 +246,13 @@ bool LevelStateStack::Push(const line_t& line, const player_t& player)
       while((secnum = P_FindSectorFromTag(line.tag, secnum)) >= 0)
       {
          // For each successful state push, add an index to the collection
+
+         if(::sectors + secnum == excludeSector
+            && g_affectedSectors[secnum].stack.getLength())
+         {
+            B_Log("Exclude %d", secnum);
+            continue;
+         }
          B_pushSectorHeights(secnum, line, coll, player);
       }
    }
