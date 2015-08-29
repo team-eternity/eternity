@@ -1097,9 +1097,10 @@ void Bot::doNonCombatAI()
             cmd->forwardmove += FixedMul((moveslow ? 1 : 2)
                                          * pl->pclass->forwardmove[moveslow ? 0 : 1],
                                          B_AngleCosine(dangle));
-        if (m_intoSwitch && ss == m_path.last && cmd->forwardmove < 0)
+        if (m_intoSwitch && ss == m_path.last/* && cmd->forwardmove < 0*/)
         {
-            cmd->forwardmove = 0;
+            cmd->forwardmove += FixedMul(pl->pclass->forwardmove[0] / 4,
+                                        B_AngleCosine(dangle));
         }
         else
         {
@@ -1187,7 +1188,9 @@ void Bot::cruiseControl(fixed_t nx, fixed_t ny, bool moveslow)
 //#if 0
 
     // Suggested speed: 15.5
-    const fixed_t runSpeed = moveslow && !m_runfast ? 8 * FRACUNIT : 16 * FRACUNIT;
+    fixed_t runSpeed = moveslow && !m_runfast ? 8 * FRACUNIT : 16 * FRACUNIT;
+    if(m_straferunstate)
+        runSpeed = runSpeed * 64 / 50;
     angle_t tangle = P_PointToAngle(mx, my, nx, ny);
     angle_t dangle = tangle - pl->mo->angle;
 
