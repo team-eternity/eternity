@@ -621,7 +621,7 @@ void Bot::enemyVisible(PODCollection<Target>& targets)
             cam.setTargetMobj(m);
             if (CAM_CheckSight(cam))
             {
-                dist = P_AproxDistance(*pl->mo, *m);
+                dist = B_ExactDistance(*pl->mo, *m);
                 if (dist < MISSILERANGE / 2)
                 {
                     newt = &targets.addNew();
@@ -666,7 +666,7 @@ void Bot::enemyVisible(PODCollection<Target>& targets)
         if(CAM_CheckSight(cam) && LevelStateStack::Push(*line, *pl))
         {
             LevelStateStack::Pop();
-            dist = P_AproxDistance(*pl->mo, lvec);
+            dist = B_ExactDistance(*pl->mo, lvec);
             if (dist < MISSILERANGE / 2)
             {
                 newt = &targets.addNew();
@@ -861,7 +861,7 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
                 m_combatStrafeState = random.range(0, 1) * 2 - 1;
             if (random() % 8 != 0)
             {
-                fixed_t dist = P_AproxDistance(nx - mx, ny - my);
+                fixed_t dist = B_ExactDistance(nx - mx, ny - my);
                 if (dist < 384 * FRACUNIT)
                 {
 //                    cmd->forwardmove = FixedMul(2 * pl->pclass->forwardmove[1],
@@ -1010,7 +1010,7 @@ void Bot::doNonCombatAI()
                     m_dropSS.insert(m_lastPathSS);
                     for (const BNeigh& n : m_lastPathSS->neighs)
                     {
-                        if (P_AproxDistance(n.ss->mid.x - m_lastPathSS->mid.x,
+                        if (B_ExactDistance(n.ss->mid.x - m_lastPathSS->mid.x,
                             n.ss->mid.y - m_lastPathSS->mid.y)
                             < 128 * FRACUNIT)
                         {
@@ -1032,7 +1032,7 @@ void Bot::doNonCombatAI()
     my = pl->mo->y;
     m_intoSwitch = false;
     if (goalTable.hasKey(BOT_WALKTRIG)
-        && P_AproxDistance(mx - endCoord.x, my - endCoord.y)
+        && B_ExactDistance(mx - endCoord.x, my - endCoord.y)
         < 2 * pl->mo->radius)
     {
         m_intoSwitch = true;
@@ -1064,7 +1064,7 @@ void Bot::doNonCombatAI()
     bool moveslow = false;
     if(m_justGotLost)
     {
-        moveslow = (m_justGotLost && P_AproxDistance(mx - m_path.start.x,
+        moveslow = (m_justGotLost && B_ExactDistance(mx - m_path.start.x,
                                                          my - m_path.start.y)
                                         < pl->mo->radius * 2);
         
@@ -1089,7 +1089,7 @@ void Bot::doNonCombatAI()
     if (angleturn < -1500)
         angleturn = -1500;
 
-    if (!dontMove && !(P_AproxDistance(endCoord.x - mx, endCoord.y - my)
+    if (!dontMove && !(B_ExactDistance(endCoord.x - mx, endCoord.y - my)
                        < 16 * FRACUNIT
           && D_abs(angleturn) > 300))
     {

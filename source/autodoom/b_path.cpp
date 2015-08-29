@@ -124,7 +124,7 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
                 index = (int)(bytele->ss - first);
                 
                 tentative = db[1].ssdist[t - first]
-                + P_AproxDistance(t->mid.x - neigh.seg->mid.x,
+                + B_ExactDistance(t->mid.x - neigh.seg->mid.x,
                                   t->mid.y - neigh.seg->mid.y);
                 
                 if (db[1].ssvisit[index] != db[1].validcount
@@ -141,11 +141,11 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
                 // Needed because the bot tends to easily fall off ledges because it chooses the subsector
                 // closest to the edge.
                 // FIXME: Still needs improvement.
-                if(!msec->isInstanceOf(RTTI(SimpleMSector)))
-                {
-                    tentative = db[1].ssdist[t - first] + 2 * neigh.dist;
-                }
-                else
+//                if(!msec->isInstanceOf(RTTI(SimpleMSector)))
+//                {
+//                    tentative = db[1].ssdist[t - first] + 2 * neigh.dist;
+//                }
+//                else
                 {
                     tentative = db[1].ssdist[t - first] + neigh.dist;
                 }

@@ -436,7 +436,7 @@ void B_GLBSP_PutSubsector(int first, int num, int ssidx)
    int i = 0;
    for(BNeigh& n : ss.neighs)
    {
-      dist = P_AproxDistance(ss.mid.x - n.ss->mid.x, ss.mid.y - n.ss->mid.y);
+      dist = B_ExactDistance(ss.mid.x - n.ss->mid.x, ss.mid.y - n.ss->mid.y);
       n.dist = dist;
       neighRefs[i++]->dist = dist;
    }
