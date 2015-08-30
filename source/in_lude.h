@@ -38,6 +38,8 @@ struct interfns_t
    void (*DrawBackground)(void); // called various places
    void (*Drawer)(void);         // called by IN_Drawer
    void (*Start)(wbstartstruct_t *wbstartstruct); // called by IN_Start
+   // IOANCH: added for the bot to know
+   bool (*TallyDone)();
 };
 
 // intercam

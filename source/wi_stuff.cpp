@@ -1807,6 +1807,11 @@ static void WI_drawStats()
    }
 }
 
+// IOANCH: when done
+inline static bool WI_TallyDone()
+{
+   return sp_state >= 9 || ng_state >= 9 || dm_state >= 4;
+}
 
 // ====================================================================
 // WI_Ticker
@@ -1817,8 +1822,7 @@ static void WI_drawStats()
 //
 static void WI_Ticker()
 {
-   if (M_CheckParm("-autoquit")
-    && (sp_state >= 9 || ng_state >= 9 || dm_state >= 4))
+   if (M_CheckParm("-autoquit") && WI_TallyDone())
    {
       ++autoquit_tics;
       if (autoquit_tics >= 5 * 35)
@@ -1852,6 +1856,8 @@ static void WI_Ticker()
       break;
    }
 }
+
+// IOANCH: check if done
 
 extern void V_ColorBlockTL(VBuffer *, byte, int, int, int, int, int);
 
@@ -2223,6 +2229,7 @@ interfns_t DoomIntermission =
    WI_DrawBackground,
    WI_Drawer,
    WI_Start,
+   WI_TallyDone,
 };
 
 //----------------------------------------------------------------------------

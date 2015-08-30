@@ -91,6 +91,7 @@ class Bot : public ZoneObject
    bool                     m_intoSwitch;
    int                      m_goalTimer;
    const Mobj*              m_currentTargetMobj;
+   int                     m_exitDelay;
    
    // internal states
    unsigned prevCtr;
@@ -166,6 +167,7 @@ public:
    m_intoSwitch(false),
    m_goalTimer(0),
    m_currentTargetMobj(nullptr),
+   m_exitDelay(0),
    prevCtr(0),
    m_searchstage(0),
    justPunched(0)

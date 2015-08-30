@@ -975,6 +975,12 @@ static void HI_Start(wbstartstruct_t *wbstartstruct)
    HI_initStats();
 }
 
+// IOANCH TODO: know when Heretic tally is done
+static bool HI_TallyDone()
+{
+   return false;
+}
+
 // Heretic Intermission object
 
 interfns_t HticIntermission =
@@ -983,6 +989,7 @@ interfns_t HticIntermission =
    HI_DrawBackground,
    HI_Drawer,
    HI_Start,
+   HI_TallyDone,
 };
 
 // EOF

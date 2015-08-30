@@ -48,6 +48,7 @@
 #include "../e_things.h"
 #include "../ev_specials.h"
 #include "../g_dmflag.h"
+#include "../in_lude.h"
 #include "../metaapi.h"
 #include "../m_compare.h"
 #include "../m_misc.h"
@@ -115,6 +116,8 @@ void Bot::mapInit()
     m_lastPosition.x = pl->mo->x;
     m_lastPosition.y = pl->mo->y;
     m_currentTargetMobj = nullptr;
+
+   m_exitDelay = 0;
 }
 
 //
@@ -1312,7 +1315,20 @@ void Bot::doCommand()
 {
    if(!active)
       return;  // do nothing if out of game
-   
+   if(gamestate == GS_INTERMISSION)
+   {
+      if(GameModeInfo->interfuncs->TallyDone())
+      {
+         if(m_exitDelay < 100)
+            m_exitDelay++;
+         else
+            pl->cmd.buttons ^= BT_USE; // mash it
+      }
+      return;
+   }
+   if(gamestate != GS_LEVEL)
+      return;
+
    ++prevCtr;
 
    // Update the velocity
