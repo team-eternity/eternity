@@ -209,6 +209,46 @@ static const char *collectorsEditionSubDirs[] =
    "Ultimate Doom",
 };
 
+// GOG.com installation keys
+static registry_value_t gogInstallValues[] =
+{
+   // Ultimate Doom install
+   {
+      HKEY_LOCAL_MACHINE,
+      "Software\\GOG.com\\Games\\1435827232",
+      "PATH"
+   },
+
+   // Doom II install
+   {
+      HKEY_LOCAL_MACHINE,
+      "Software\\GOG.com\\Games\\1435848814",
+      "PATH"
+   },
+
+   // Final Doom install
+   {
+      HKEY_LOCAL_MACHINE,
+      "Software\\GOG.com\\Games\\1435848742",
+      "PATH"
+   },
+
+   // terminating entry
+   { NULL, NULL, NULL }
+};
+
+// The paths loaded from the GOG.com keys have several subdirectories.
+// Ultimate Doom is stored straight in its top directory.
+static const char *gogInstallSubDirs[] =
+{
+   "doom2",
+   "TNT",
+   "Plutonia",
+};
+
+// Master Levels from GOG.com. These are installed with Doom II
+static const char *gogMasterLevelsPath = "master\\wads";
+
 // Steam Install Path Registry Key
 static registry_value_t steamInstallValue =
 {
@@ -294,6 +334,38 @@ static void D_addCollectorsEdition(Collection<qstring> &paths)
          newPath = str;
          newPath.pathConcatenate(collectorsEditionSubDirs[i]);
       }
+   }
+}
+
+//
+// D_addGogPaths
+//
+// Looks for registry keys created by the GOG.com installers
+// (including Galaxy), and adds them as IWAD paths if found.
+//
+static void D_addGogPaths(Collection<qstring> &paths)
+{
+   registry_value_t *regval = gogInstallValues;
+
+   while(regval->root)
+   {
+      qstring str;
+
+      if(D_getRegistryString(*regval, str))
+      {
+         // Ultimate Doom is in the root installation path
+         paths.add(str);
+
+         for(size_t i = 0; i < earrlen(gogInstallSubDirs); i++)
+         {
+            qstring &newPath = paths.addNew();
+
+            newPath = str;
+            newPath.pathConcatenate(gogInstallSubDirs[i]);
+         }
+      }
+
+      ++regval;
    }
 }
 
@@ -471,6 +543,9 @@ static void D_collectIWADPaths(Collection<qstring> &paths)
 
    // CD version installers
    D_addUninstallPaths(paths);
+
+   // GOG.com installers
+   D_addGogPaths(paths);
 #endif
 
    // Add default locations
@@ -666,9 +741,10 @@ static void D_checkForNoRest()
 //
 // D_findMasterLevels
 //
-// There are two different places we can find the Master Levels; the default
+// There are three different places we can find the Master Levels; the default
 // DOS install path, and, if we have registry scanning enabled, the Steam
-// install directory. The latter is preferred when it is available.
+// install directory and the GOG.com Doom II installation. The order of
+// preference is Steam > GOG.com > DOS install.
 //
 static void D_findMasterLevels()
 {
@@ -691,6 +767,18 @@ static void D_findMasterLevels()
          w_masterlevelsdirname = str.duplicate(PU_STATIC);
 
          // Got it.
+         return;
+      }
+   }
+
+   // Check for GOG.com Doom II install path
+   if(D_getRegistryString(gogInstallValues[1], str))
+   {
+      str.pathConcatenate(gogMasterLevelsPath);
+
+      if(!stat(str.constPtr(), &sbuf) && S_ISDIR(sbuf.st_mode))
+      {
+         w_masterlevelsdirname = str.duplicate(PU_STATIC);
          return;
       }
    }
