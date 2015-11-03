@@ -72,7 +72,7 @@ static void ACS_funcNOP(ACS_FUNCARG)
 //
 static void ACS_funcActivatorSound(ACS_FUNCARG)
 {
-   const char *snd = ACSVM::GetString(args[0]);
+   const char *snd = ACSModule::GetString(args[0]);
    int         vol = args[1];
 
    // If trigger is null, turn into ambient sound as in ZDoom.
@@ -84,7 +84,7 @@ static void ACS_funcActivatorSound(ACS_FUNCARG)
 //
 static void ACS_funcAmbientSound(ACS_FUNCARG)
 {
-   const char *snd = ACSVM::GetString(args[0]);
+   const char *snd = ACSModule::GetString(args[0]);
    int         vol = args[1];
 
    S_StartSoundNameAtVolume(NULL, snd, vol, ATTN_NORMAL, CHAN_AUTO);
@@ -95,7 +95,7 @@ static void ACS_funcAmbientSound(ACS_FUNCARG)
 //
 static void ACS_funcAmbientSoundLocal(ACS_FUNCARG)
 {
-   const char *snd = ACSVM::GetString(args[0]);
+   const char *snd = ACSModule::GetString(args[0]);
    int         vol = args[1];
 
    if(thread->trigger == players[displayplayer].mo)
@@ -107,7 +107,7 @@ static void ACS_funcAmbientSoundLocal(ACS_FUNCARG)
 //
 static void ACS_funcChangeCeiling(ACS_FUNCARG)
 {
-   P_ChangeCeilingTex(ACSVM::GetString(args[1]), args[0]);
+   P_ChangeCeilingTex(ACSModule::GetString(args[1]), args[0]);
 }
 
 //
@@ -115,7 +115,7 @@ static void ACS_funcChangeCeiling(ACS_FUNCARG)
 //
 static void ACS_funcChangeFloor(ACS_FUNCARG)
 {
-   P_ChangeFloorTex(ACSVM::GetString(args[1]), args[0]);
+   P_ChangeFloorTex(ACSModule::GetString(args[1]), args[0]);
 }
 
 //
@@ -149,7 +149,7 @@ static void ACS_funcCheckSight(ACS_FUNCARG)
 static void ACS_funcCheckThingFlag(ACS_FUNCARG)
 {
    Mobj       *mo   = P_FindMobjFromTID(args[0], NULL, thread->trigger);
-   dehflags_t *flag = deh_ParseFlagCombined(ACSVM::GetString(args[1]));
+   dehflags_t *flag = deh_ParseFlagCombined(ACSModule::GetString(args[1]));
 
    if(!mo || !flag) {*retn++ = 0; return;}
 
@@ -171,7 +171,7 @@ static void ACS_funcCheckThingType(ACS_FUNCARG)
    Mobj *mo = P_FindMobjFromTID(args[0], NULL, thread->trigger);
 
    if(mo)
-      *retn++ = E_ThingNumForName(ACSVM::GetString(args[1])) == mo->type;
+      *retn++ = E_ThingNumForName(ACSModule::GetString(args[1])) == mo->type;
    else
       *retn++ = 0;
 }
@@ -231,9 +231,9 @@ bool ACS_ChkThingVar(Mobj *thing, uint32_t var, int32_t val)
 
    case ACS_THINGVAR_Angle:          return thing->angle >> 16 == (uint32_t)val;
    case ACS_THINGVAR_Armor:          return thing->player ? thing->player->armorpoints == val : false;
-   case ACS_THINGVAR_CeilingTexture: return thing->subsector->sector->ceilingpic == R_FindWall(ACSVM::GetString(val));
+   case ACS_THINGVAR_CeilingTexture: return thing->subsector->sector->ceilingpic == R_FindWall(ACSModule::GetString(val));
    case ACS_THINGVAR_CeilingZ:       return thing->ceilingz == val;
-   case ACS_THINGVAR_FloorTexture:   return thing->subsector->sector->floorpic == R_FindWall(ACSVM::GetString(val));
+   case ACS_THINGVAR_FloorTexture:   return thing->subsector->sector->floorpic == R_FindWall(ACSModule::GetString(val));
    case ACS_THINGVAR_FloorZ:         return thing->floorz == val;
    case ACS_THINGVAR_Frags:          return thing->player ? thing->player->totalfrags == val : false;
    case ACS_THINGVAR_LightLevel:     return thing->subsector->sector->lightlevel == val;
@@ -244,7 +244,7 @@ bool ACS_ChkThingVar(Mobj *thing, uint32_t var, int32_t val)
    case ACS_THINGVAR_PlayerNumber:   return thing->player ? thing->player - players == val : false;
    case ACS_THINGVAR_SigilPieces:    return false;
    case ACS_THINGVAR_TID:            return thing->tid == val;
-   case ACS_THINGVAR_Type:           return thing->type == E_ThingNumForName(ACSVM::GetString(val));
+   case ACS_THINGVAR_Type:           return thing->type == E_ThingNumForName(ACSModule::GetString(val));
    case ACS_THINGVAR_X:              return thing->x == val;
    case ACS_THINGVAR_Y:              return thing->y == val;
    case ACS_THINGVAR_Z:              return thing->z == val;
@@ -413,7 +413,7 @@ enum
 //
 static void ACS_funcGetCVar(ACS_FUNCARG)
 {
-   char const *name = ACSVM::GetString(args[0]);
+   char const *name = ACSModule::GetString(args[0]);
 
    command_t *command;
    variable_t *var;
@@ -442,7 +442,7 @@ static void ACS_funcGetCVar(ACS_FUNCARG)
 //
 static void ACS_funcGetCVarString(ACS_FUNCARG)
 {
-   const char *name = ACSVM::GetString(args[0]);
+   const char *name = ACSModule::GetString(args[0]);
 
    command_t *command;
    variable_t *var;
@@ -454,7 +454,7 @@ static void ACS_funcGetCVarString(ACS_FUNCARG)
    }
 
    const char *val = C_VariableValue(var);
-   *retn++ = ACSVM::AddString(val, strlen(val));
+   *retn++ = ACSModule::AddString(val, strlen(val));
 }
 
 //
@@ -657,7 +657,7 @@ int32_t ACS_GetThingVar(Mobj *thing, uint32_t var)
    case ACS_THINGVAR_PlayerNumber:   return thing->player ? thing->player - players : -1;
    case ACS_THINGVAR_SigilPieces:    return 0;
    case ACS_THINGVAR_TID:            return thing->tid;
-   case ACS_THINGVAR_Type:           return ACSVM::AddString(thing->info->name);
+   case ACS_THINGVAR_Type:           return ACSModule::AddString(thing->info->name);
    case ACS_THINGVAR_X:              return thing->x;
    case ACS_THINGVAR_Y:              return thing->y;
    case ACS_THINGVAR_Z:              return thing->z;
@@ -720,7 +720,7 @@ static void ACS_playSound(Mobj *mo, sfxinfo_t *sfx, uint32_t argc, const int32_t
 static void ACS_funcPlaySound(ACS_FUNCARG)
 {
    Mobj      *mo  = P_FindMobjFromTID(args[0], NULL, thread->trigger);
-   sfxinfo_t *sfx = S_SfxInfoForName(ACSVM::GetString(args[1]));
+   sfxinfo_t *sfx = S_SfxInfoForName(ACSModule::GetString(args[1]));
 
    if(!mo || !sfx) return;
 
@@ -780,7 +780,7 @@ static void ACS_funcRadiusQuake(ACS_FUNCARG)
    int32_t     duration     = args[2];
    int32_t     damageRadius = args[3];
    int32_t     quakeRadius  = args[4];
-   const char *snd          = ACSVM::GetString(args[5]);
+   const char *snd          = ACSModule::GetString(args[5]);
    Mobj       *mo           = NULL;
 
    while((mo = P_FindMobjFromTID(tid, mo, thread->trigger)))
@@ -830,8 +830,8 @@ enum
 //
 static void ACS_funcReplaceTextures(ACS_FUNCARG)
 {
-   int      oldtex = R_FindWall(ACSVM::GetString(args[0]));
-   int      newtex = R_FindWall(ACSVM::GetString(args[1]));
+   int      oldtex = R_FindWall(ACSModule::GetString(args[0]));
+   int      newtex = R_FindWall(ACSModule::GetString(args[1]));
    uint32_t flags  = args[2];
 
    // If doing anything to lines.
@@ -880,7 +880,7 @@ static void ACS_funcSectorDamage(ACS_FUNCARG)
 {
    int32_t   tag    = args[0];
    int32_t   damage = args[1];
-   int       mod    = E_DamageTypeNumForName(ACSVM::GetString(args[2]));
+   int       mod    = E_DamageTypeNumForName(ACSModule::GetString(args[2]));
    uint32_t  flags  = args[4];
    int       secnum = -1;
    sector_t *sector;
@@ -910,7 +910,7 @@ static void ACS_funcSectorDamage(ACS_FUNCARG)
 //
 static void ACS_funcSectorSound(ACS_FUNCARG)
 {
-   const char   *snd = ACSVM::GetString(args[0]);
+   const char   *snd = ACSModule::GetString(args[0]);
    int           vol = args[1];
    PointThinker *src;
 
@@ -1046,7 +1046,7 @@ static void ACS_funcSetLineSpecial(ACS_FUNCARG)
 static void ACS_funcSetLineTexture(ACS_FUNCARG)
 {
    //                               texture   pos      side     tag
-   P_ChangeLineTex(ACSVM::GetString(args[3]), args[2], args[1], args[0], false);
+   P_ChangeLineTex(ACSModule::GetString(args[3]), args[2], args[1], args[0], false);
 }
 
 //
@@ -1054,7 +1054,7 @@ static void ACS_funcSetLineTexture(ACS_FUNCARG)
 //
 static void ACS_funcSetMusic(ACS_FUNCARG)
 {
-   S_ChangeMusicName(ACSVM::GetString(args[0]), 1);
+   S_ChangeMusicName(ACSModule::GetString(args[0]), 1);
 }
 
 //
@@ -1063,7 +1063,7 @@ static void ACS_funcSetMusic(ACS_FUNCARG)
 static void ACS_funcSetMusicLocal(ACS_FUNCARG)
 {
    if(thread->trigger == players[consoleplayer].mo)
-      S_ChangeMusicName(ACSVM::GetString(args[0]), 1);
+      S_ChangeMusicName(ACSModule::GetString(args[0]), 1);
 }
 
 //
@@ -1229,7 +1229,7 @@ static void ACS_funcSetThingSpecial(ACS_FUNCARG)
 static void ACS_funcSetThingState(ACS_FUNCARG)
 {
    int32_t     tid       = args[0];
-   const char *statename = ACSVM::GetString(args[1]);
+   const char *statename = ACSModule::GetString(args[1]);
    statenum_t  statenum  = E_StateNumForName(statename);
    state_t    *state;
    int32_t     count     = 0;
@@ -1353,7 +1353,7 @@ static void ACS_funcSetThingVar(ACS_FUNCARG)
 //
 static void ACS_funcSoundSequence(ACS_FUNCARG)
 {
-   const char *snd = ACSVM::GetString(args[0]);
+   const char *snd = ACSModule::GetString(args[0]);
    sector_t   *sec;
 
    if(thread->line && (sec = thread->line->frontsector))
@@ -1368,7 +1368,7 @@ static void ACS_funcSoundSequence(ACS_FUNCARG)
 static void ACS_funcSoundSequenceThing(ACS_FUNCARG)
 {
    Mobj *mo = P_FindMobjFromTID(args[0], NULL, NULL);
-   S_StartSequenceName(mo, ACSVM::GetString(args[1]), SEQ_ORIGIN_OTHER, -1);
+   S_StartSequenceName(mo, ACSModule::GetString(args[1]), SEQ_ORIGIN_OTHER, -1);
 }
 
 //
@@ -1434,7 +1434,7 @@ static Mobj *ACS_spawnProjectile(mobjtype_t type, fixed_t x, fixed_t y, fixed_t 
 //
 static void ACS_spawnPoint(ACS_FUNCARG, bool forced)
 {
-   mobjtype_t type  = E_ThingNumForName(ACSVM::GetString(args[0]));
+   mobjtype_t type  = E_ThingNumForName(ACSModule::GetString(args[0]));
    fixed_t    x     = args[1];
    fixed_t    y     = args[2];
    fixed_t    z     = args[3];
@@ -1466,7 +1466,7 @@ static void ACS_funcSpawnPointForced(ACS_FUNCARG)
 static void ACS_funcSpawnProjectile(ACS_FUNCARG)
 {
    int32_t    spotid  = args[0];
-   mobjtype_t type    = E_ThingNumForName(ACSVM::GetString(args[1]));
+   mobjtype_t type    = E_ThingNumForName(ACSModule::GetString(args[1]));
    angle_t    angle   = args[2] << 24;
    int32_t    speed   = args[3] * 8;
    int32_t    vspeed  = args[4] * 8;
@@ -1487,7 +1487,7 @@ static void ACS_funcSpawnProjectile(ACS_FUNCARG)
 //
 static void ACS_spawnSpot(ACS_FUNCARG, bool forced)
 {
-   mobjtype_t type   = E_ThingNumForName(ACSVM::GetString(args[0]));
+   mobjtype_t type   = E_ThingNumForName(ACSModule::GetString(args[0]));
    int        spotid = args[1];
    int        tid    = args[2];
    angle_t    angle  = args[3] << 24;
@@ -1522,7 +1522,7 @@ static void ACS_funcSpawnSpotForced(ACS_FUNCARG)
 //
 static void ACS_spawnSpotAngle(ACS_FUNCARG, bool forced)
 {
-   mobjtype_t type   = E_ThingNumForName(ACSVM::GetString(args[0]));
+   mobjtype_t type   = E_ThingNumForName(ACSModule::GetString(args[0]));
    int        spotid = args[1];
    int        tid    = args[2];
    Mobj      *spot   = NULL;
@@ -1585,8 +1585,8 @@ static void ACS_funcStopSound(ACS_FUNCARG)
 //
 static void ACS_funcStrCaseCmp(ACS_FUNCARG)
 {
-   const char *l = ACSVM::GetString(args[0]);
-   const char *r = ACSVM::GetString(args[1]);
+   const char *l = ACSModule::GetString(args[0]);
+   const char *r = ACSModule::GetString(args[1]);
 
    if(argc > 2)
       *retn++ = strncasecmp(l, r, args[2]);
@@ -1599,8 +1599,8 @@ static void ACS_funcStrCaseCmp(ACS_FUNCARG)
 //
 static void ACS_funcStrCmp(ACS_FUNCARG)
 {
-   const char *l = ACSVM::GetString(args[0]);
-   const char *r = ACSVM::GetString(args[1]);
+   const char *l = ACSModule::GetString(args[0]);
+   const char *r = ACSModule::GetString(args[1]);
 
    if(argc > 2)
       *retn++ = strncmp(l, r, args[2]);
@@ -1613,16 +1613,16 @@ static void ACS_funcStrCmp(ACS_FUNCARG)
 //
 static void ACS_funcStrLeft(ACS_FUNCARG)
 {
-   ACSString *str = ACSVM::GetStringData(args[0]);
+   ACSString *str = ACSModule::GetStringData(args[0]);
    uint32_t   len = args[1];
 
    if(!str)
    {
-      *retn++ = ACSVM::AddString("", 0);
+      *retn++ = ACSModule::AddString("", 0);
    }
    else if(len < str->data.l)
    {
-      *retn++ = ACSVM::AddString(str->data.s, len);
+      *retn++ = ACSModule::AddString(str->data.s, len);
    }
    else
    {
@@ -1635,21 +1635,21 @@ static void ACS_funcStrLeft(ACS_FUNCARG)
 //
 static void ACS_funcStrMid(ACS_FUNCARG)
 {
-   ACSString *str   = ACSVM::GetStringData(args[0]);
+   ACSString *str   = ACSModule::GetStringData(args[0]);
    uint32_t   start = args[1];
    uint32_t   len   = args[2];
 
    if(!str || start >= str->data.l)
    {
-      *retn++ = ACSVM::AddString("", 0);
+      *retn++ = ACSModule::AddString("", 0);
    }
    else if(start + len < str->data.l)
    {
-      *retn++ = ACSVM::AddString(str->data.s + start, len);
+      *retn++ = ACSModule::AddString(str->data.s + start, len);
    }
    else
    {
-      *retn++ = ACSVM::AddString(str->data.s + start, str->data.l - start);
+      *retn++ = ACSModule::AddString(str->data.s + start, str->data.l - start);
    }
 }
 
@@ -1658,16 +1658,16 @@ static void ACS_funcStrMid(ACS_FUNCARG)
 //
 static void ACS_funcStrRight(ACS_FUNCARG)
 {
-   ACSString *str = ACSVM::GetStringData(args[0]);
+   ACSString *str = ACSModule::GetStringData(args[0]);
    uint32_t   len = args[1];
 
    if(!str)
    {
-      *retn++ = ACSVM::AddString("", 0);
+      *retn++ = ACSModule::AddString("", 0);
    }
    else if(len < str->data.l)
    {
-      *retn++ = ACSVM::AddString(str->data.s + str->data.l - len, len);
+      *retn++ = ACSModule::AddString(str->data.s + str->data.l - len, len);
    }
    else
    {
@@ -1752,7 +1752,7 @@ static void ACS_funcThingCount(ACS_FUNCARG)
 //
 static void ACS_funcThingCountName(ACS_FUNCARG)
 {
-   mobjtype_t type = E_ThingNumForName(ACSVM::GetString(args[0]));
+   mobjtype_t type = E_ThingNumForName(ACSModule::GetString(args[0]));
    int32_t    tid  = args[1];
 
    *retn++ = ACS_thingCount(type, tid);
@@ -1793,7 +1793,7 @@ static int32_t ACS_thingCountSector(int32_t tag, mobjtype_t type, int32_t tid)
 static void ACS_funcThingCountNameSector(ACS_FUNCARG)
 {
    int32_t    tag  = args[0];
-   mobjtype_t type = E_ThingNumForName(ACSVM::GetString(args[1]));
+   mobjtype_t type = E_ThingNumForName(ACSModule::GetString(args[1]));
    int32_t    tid  = args[2];
 
    *retn++ = ACS_thingCountSector(tag, type, tid);
@@ -1823,7 +1823,7 @@ static void ACS_funcThingDamage(ACS_FUNCARG)
 {
    int32_t tid    = args[0];
    int32_t damage = args[1];
-   int     mod    = E_DamageTypeNumForName(ACSVM::GetString(args[2]));
+   int     mod    = E_DamageTypeNumForName(ACSModule::GetString(args[2]));
    Mobj   *mo     = NULL;
    int32_t count  = 0;
 
@@ -1869,7 +1869,7 @@ static void ACS_funcThingProjectile(ACS_FUNCARG)
 static void ACS_funcThingSound(ACS_FUNCARG)
 {
    int         tid = args[0];
-   const char *snd = ACSVM::GetString(args[1]);
+   const char *snd = ACSModule::GetString(args[1]);
    int         vol = args[2];
    Mobj       *mo  = NULL;
 

@@ -215,7 +215,7 @@ enum
 
 class ACSScript;
 class ACSThinker;
-class ACSVM;
+class ACSModule;
 
 typedef void (*acs_func_t)(ACS_FUNCARG);
 
@@ -310,7 +310,7 @@ public:
    uint8_t  numArgs; // argument count
    uint8_t  numVars; // variable count
    uint8_t  numRetn; // return count
-   ACSVM   *vm;      // VM the function is from
+   ACSModule *vm;      // VM the function is from
 
    union
    {
@@ -343,7 +343,7 @@ public:
    uint16_t    numVars; // local variable count
    uint16_t    flags;   // script flags
    acs_stype_t type;    // script type
-   ACSVM      *vm;      // VM the script is from
+   ACSModule  *vm;      // VM the script is from
    ACSThinker *threads;
 
    union
@@ -365,7 +365,7 @@ struct acs_call_t
 {
    int32_t *ip;
    uint32_t numLocals;
-   ACSVM   *vm;
+   ACSModule *vm;
 };
 
 //
@@ -427,7 +427,7 @@ public:
 
    // info copied from acscript and acsvm
    ACSScript *script;       // the script being executed
-   ACSVM     *vm;           // the current execution environment
+   ACSModule *vm;           // the current execution environment
 
    // misc
    int32_t delay;           // counter for script delays
@@ -505,16 +505,16 @@ public:
 };
 
 //
-// ACSVM
+// ACSModule
 //
 // haleyjd 06/24/08: I am rewriting the interpreter to be modular in hopes of
 // eventual support for ZDoomish features such as ACS libraries.
 //
-class ACSVM : public ZoneObject
+class ACSModule : public ZoneObject
 {
 public:
-   ACSVM();
-   ~ACSVM();
+   ACSModule();
+   ~ACSModule();
 
    // Used by the loader to sync the global strings to the VM's strings.
    void addStrings();
@@ -561,7 +561,7 @@ public:
    uint32_t    *exports;                  // exported variables
    unsigned int numExports;               // number of exports
    const char **imports;                  // imported lump names
-   ACSVM      **importVMs;                // imported VMs
+   ACSModule  **importVMs;                // imported VMs
    unsigned int numImports;               // number of imports
    uint32_t    *funcNames;                // function names
    unsigned int numFuncNames;             // number of function names
@@ -614,14 +614,14 @@ public:
 void ACS_Init(void);
 void ACS_NewGame(void);
 void ACS_InitLevel(void);
-ACSVM *ACS_LoadScript(WadDirectory *dir, int lump);
-void ACS_LoadScript(ACSVM *vm, WadDirectory *dir, int lump);
-void ACS_LoadScriptACS0(ACSVM *vm, WadDirectory *dir, int lump, byte *data);
-void ACS_LoadScriptACSE(ACSVM *vm, WadDirectory *dir, int lump, byte *data,
+ACSModule *ACS_LoadScript(WadDirectory *dir, int lump);
+void ACS_LoadScript(ACSModule *vm, WadDirectory *dir, int lump);
+void ACS_LoadScriptACS0(ACSModule *vm, WadDirectory *dir, int lump, byte *data);
+void ACS_LoadScriptACSE(ACSModule *vm, WadDirectory *dir, int lump, byte *data,
                         uint32_t tableOffset = 4);
-void ACS_LoadScriptACSe(ACSVM *vm, WadDirectory *dir, int lump, byte *data,
+void ACS_LoadScriptACSe(ACSModule *vm, WadDirectory *dir, int lump, byte *data,
                         uint32_t tableOffset = 4);
-void ACS_LoadScriptCodeACS0(ACSVM *vm, byte *data, uint32_t lumpLength, bool compressed);
+void ACS_LoadScriptCodeACS0(ACSModule *vm, byte *data, uint32_t lumpLength, bool compressed);
 uint32_t ACS_LoadStringACS0(const byte *begin, const byte *end);
 void ACS_LoadLevelScript(WadDirectory *dir, int lump);
 void ACS_RunDeferredScripts();

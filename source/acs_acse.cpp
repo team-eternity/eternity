@@ -34,7 +34,7 @@
 #include "w_wad.h"
 
 
-void ACS_LoadScriptChunksACSE(ACSVM *vm, WadDirectory *dir, byte *tableData,
+void ACS_LoadScriptChunksACSE(ACSModule *vm, WadDirectory *dir, byte *tableData,
                               uint32_t tableLength, bool fakeACS0);
 
 //----------------------------------------------------------------------------|
@@ -64,7 +64,7 @@ enum
    ACS_CHUNKID_SVCT = ACS_CHUNKID('S', 'V', 'C', 'T'),
 };
 
-typedef void (*acs_chunker_t)(ACSVM *vm, uint32_t chunkID, byte *chunkData,
+typedef void (*acs_chunker_t)(ACSModule *vm, uint32_t chunkID, byte *chunkData,
                               uint32_t chunkLength);
 
 
@@ -88,7 +88,7 @@ static acs_stype_t ACS_getScriptTypeACSE(uint16_t type)
 //
 // ACS_chunkScriptACSE
 //
-static void ACS_chunkScriptACSE(ACSVM *vm, byte *tableData, uint32_t tableLength,
+static void ACS_chunkScriptACSE(ACSModule *vm, byte *tableData, uint32_t tableLength,
                                 acs_chunker_t chunker)
 {
    uint32_t chunkID, chunkLength;
@@ -179,7 +179,7 @@ static void ACS_chunkerString(uint32_t *&outStrings, unsigned int &outNumStrings
 //
 // Imports map arrays.
 //
-static void ACS_chunkerAIMP(ACSVM *vm, uint32_t chunkID, byte *chunkData,
+static void ACS_chunkerAIMP(ACSModule *vm, uint32_t chunkID, byte *chunkData,
                             uint32_t chunkLength)
 {
    if(chunkID != ACS_CHUNKID_AIMP) return;
@@ -218,7 +218,7 @@ static void ACS_chunkerAIMP(ACSVM *vm, uint32_t chunkID, byte *chunkData,
       if(index >= ACS_NUM_MAPARRS) continue;
 
       // Search through all of the imported VMs for that named array.
-      for(ACSVM **itrVM = vm->importVMs,
+      for(ACSModule **itrVM = vm->importVMs,
           **endVM = itrVM + vm->numImports; itrVM != endVM; ++itrVM)
       {
          if(*itrVM && (var = (*itrVM)->findMapArr(name)))
@@ -235,7 +235,7 @@ static void ACS_chunkerAIMP(ACSVM *vm, uint32_t chunkID, byte *chunkData,
 //
 // Initializes map arrays.
 //
-static void ACS_chunkerAINI(ACSVM *vm, uint32_t chunkID, byte *chunkData,
+static void ACS_chunkerAINI(ACSModule *vm, uint32_t chunkID, byte *chunkData,
                             uint32_t chunkLength)
 {
    if(chunkID != ACS_CHUNKID_AINI) return;
@@ -264,7 +264,7 @@ static void ACS_chunkerAINI(ACSVM *vm, uint32_t chunkID, byte *chunkData,
 //
 // Defines map arrays.
 //
-static void ACS_chunkerARAY(ACSVM *vm, uint32_t chunkID, byte *chunkData,
+static void ACS_chunkerARAY(ACSModule *vm, uint32_t chunkID, byte *chunkData,
                             uint32_t chunkLength)
 {
    if(chunkID != ACS_CHUNKID_ARAY) return;
@@ -286,7 +286,7 @@ static void ACS_chunkerARAY(ACSVM *vm, uint32_t chunkID, byte *chunkData,
 //
 // Tags map arrays as strings.
 //
-static void ACS_chunkerASTR(ACSVM *vm, uint32_t chunkID, byte *chunkData,
+static void ACS_chunkerASTR(ACSModule *vm, uint32_t chunkID, byte *chunkData,
                             uint32_t chunkLength)
 {
    if(chunkID != ACS_CHUNKID_ASTR) return;
@@ -309,7 +309,7 @@ static void ACS_chunkerASTR(ACSVM *vm, uint32_t chunkID, byte *chunkData,
 //
 // Tags map arrays.
 //
-static void ACS_chunkerATAG(ACSVM *vm, uint32_t chunkID, byte *chunkData,
+static void ACS_chunkerATAG(ACSModule *vm, uint32_t chunkID, byte *chunkData,
                             uint32_t chunkLength)
 {
    if(chunkID != ACS_CHUNKID_ATAG) return;
@@ -348,7 +348,7 @@ static void ACS_chunkerATAG(ACSVM *vm, uint32_t chunkID, byte *chunkData,
 //
 // Function names.
 //
-static void ACS_chunkerFNAM(ACSVM *vm, uint32_t chunkID, byte *chunkData,
+static void ACS_chunkerFNAM(ACSModule *vm, uint32_t chunkID, byte *chunkData,
                             uint32_t chunkLength)
 {
    if(chunkID != ACS_CHUNKID_FNAM) return;
@@ -361,7 +361,7 @@ static void ACS_chunkerFNAM(ACSVM *vm, uint32_t chunkID, byte *chunkData,
 //
 // Function pointers.
 //
-static void ACS_chunkerFUNC(ACSVM *vm, uint32_t chunkID, byte *chunkData,
+static void ACS_chunkerFUNC(ACSModule *vm, uint32_t chunkID, byte *chunkData,
                             uint32_t chunkLength)
 {
    if(chunkID != ACS_CHUNKID_FUNC) return;
@@ -394,7 +394,7 @@ static void ACS_chunkerFUNC(ACSVM *vm, uint32_t chunkID, byte *chunkData,
 //
 // Dynamic jump targets.
 //
-static void ACS_chunkerJUMP(ACSVM *vm, uint32_t chunkID, byte *chunkData,
+static void ACS_chunkerJUMP(ACSModule *vm, uint32_t chunkID, byte *chunkData,
                             uint32_t chunkLength)
 {
    if(chunkID != ACS_CHUNKID_JUMP) return;
@@ -421,7 +421,7 @@ static void ACS_chunkerJUMP(ACSVM *vm, uint32_t chunkID, byte *chunkData,
 //
 // ACS_chunkerLOAD
 //
-static void ACS_chunkerLOAD(ACSVM *vm, uint32_t chunkID, byte *chunkData,
+static void ACS_chunkerLOAD(ACSModule *vm, uint32_t chunkID, byte *chunkData,
                             uint32_t chunkLength)
 {
    if(chunkID != ACS_CHUNKID_LOAD) return;
@@ -451,7 +451,7 @@ static void ACS_chunkerLOAD(ACSVM *vm, uint32_t chunkID, byte *chunkData,
 //
 // Names/exports map variables/arrays.
 //
-static void ACS_chunkerMEXP(ACSVM *vm, uint32_t chunkID, byte *chunkData,
+static void ACS_chunkerMEXP(ACSModule *vm, uint32_t chunkID, byte *chunkData,
                             uint32_t chunkLength)
 {
    if(chunkID != ACS_CHUNKID_MEXP) return;
@@ -464,7 +464,7 @@ static void ACS_chunkerMEXP(ACSVM *vm, uint32_t chunkID, byte *chunkData,
 //
 // Imports map variables.
 //
-static void ACS_chunkerMIMP(ACSVM *vm, uint32_t chunkID, byte *chunkData,
+static void ACS_chunkerMIMP(ACSModule *vm, uint32_t chunkID, byte *chunkData,
                             uint32_t chunkLength)
 {
    if(chunkID != ACS_CHUNKID_MIMP) return;
@@ -497,7 +497,7 @@ static void ACS_chunkerMIMP(ACSVM *vm, uint32_t chunkID, byte *chunkData,
       if(index >= ACS_NUM_MAPVARS) continue;
 
       // Search through all of the imported VMs for that named variable.
-      for(ACSVM **itrVM = vm->importVMs,
+      for(ACSModule **itrVM = vm->importVMs,
           **endVM = itrVM + vm->numImports; itrVM != endVM; ++itrVM)
       {
          if(*itrVM && (var = (*itrVM)->findMapVar(name)))
@@ -514,7 +514,7 @@ static void ACS_chunkerMIMP(ACSVM *vm, uint32_t chunkID, byte *chunkData,
 //
 // Initializes map variables.
 //
-static void ACS_chunkerMINI(ACSVM *vm, uint32_t chunkID, byte *chunkData,
+static void ACS_chunkerMINI(ACSModule *vm, uint32_t chunkID, byte *chunkData,
                             uint32_t chunkLength)
 {
    if(chunkID != ACS_CHUNKID_MINI) return;
@@ -545,7 +545,7 @@ static void ACS_chunkerMINI(ACSVM *vm, uint32_t chunkID, byte *chunkData,
 //
 // Tags map variables as strings.
 //
-static void ACS_chunkerMSTR(ACSVM *vm, uint32_t chunkID, byte *chunkData,
+static void ACS_chunkerMSTR(ACSModule *vm, uint32_t chunkID, byte *chunkData,
                             uint32_t chunkLength)
 {
    if(chunkID != ACS_CHUNKID_MSTR) return;
@@ -564,7 +564,7 @@ static void ACS_chunkerMSTR(ACSVM *vm, uint32_t chunkID, byte *chunkData,
 //
 // Reads script flags.
 //
-static void ACS_chunkerSFLG(ACSVM *vm, uint32_t chunkID, byte *chunkData,
+static void ACS_chunkerSFLG(ACSModule *vm, uint32_t chunkID, byte *chunkData,
                             uint32_t chunkLength)
 {
    if(chunkID != ACS_CHUNKID_SFLG) return;
@@ -595,7 +595,7 @@ static void ACS_chunkerSFLG(ACSVM *vm, uint32_t chunkID, byte *chunkData,
 //
 // Script names.
 //
-static void ACS_chunkerSNAM(ACSVM *vm, uint32_t chunkID, byte *chunkData,
+static void ACS_chunkerSNAM(ACSModule *vm, uint32_t chunkID, byte *chunkData,
                             uint32_t chunkLength)
 {
    if(chunkID != ACS_CHUNKID_SNAM) return;
@@ -608,7 +608,7 @@ static void ACS_chunkerSNAM(ACSVM *vm, uint32_t chunkID, byte *chunkData,
 //
 // Reads 8-byte script-pointers.
 //
-static void ACS_chunkerSPTR8(ACSVM *vm, uint32_t chunkID, byte *chunkData,
+static void ACS_chunkerSPTR8(ACSModule *vm, uint32_t chunkID, byte *chunkData,
                              uint32_t chunkLength)
 {
    if(chunkID != ACS_CHUNKID_SPTR) return;
@@ -642,7 +642,7 @@ static void ACS_chunkerSPTR8(ACSVM *vm, uint32_t chunkID, byte *chunkData,
 //
 // Reads 12-byte script-pointers.
 //
-static void ACS_chunkerSPTR12(ACSVM *vm, uint32_t chunkID, byte *chunkData,
+static void ACS_chunkerSPTR12(ACSModule *vm, uint32_t chunkID, byte *chunkData,
                               uint32_t chunkLength)
 {
    if(chunkID != ACS_CHUNKID_SPTR) return;
@@ -676,7 +676,7 @@ static void ACS_chunkerSPTR12(ACSVM *vm, uint32_t chunkID, byte *chunkData,
 //
 // Read string literal tables.
 //
-static void ACS_chunkerSTRL(ACSVM *vm, uint32_t chunkID, byte *chunkData,
+static void ACS_chunkerSTRL(ACSModule *vm, uint32_t chunkID, byte *chunkData,
                             uint32_t chunkLength)
 {
    if(chunkID != ACS_CHUNKID_STRL) return;
@@ -689,7 +689,7 @@ static void ACS_chunkerSTRL(ACSVM *vm, uint32_t chunkID, byte *chunkData,
 //
 // Reads script variable counts.
 //
-static void ACS_chunkerSVCT(ACSVM *vm, uint32_t chunkID, byte *chunkData,
+static void ACS_chunkerSVCT(ACSModule *vm, uint32_t chunkID, byte *chunkData,
                             uint32_t chunkLength)
 {
    if(chunkID != ACS_CHUNKID_SVCT) return;
@@ -724,7 +724,7 @@ static void ACS_chunkerSVCT(ACSVM *vm, uint32_t chunkID, byte *chunkData,
 //
 // ACS_loadScriptDataACSE
 //
-void ACS_loadScriptDataACSE(ACSVM *vm, WadDirectory *dir, int lump, byte *data,
+void ACS_loadScriptDataACSE(ACSModule *vm, WadDirectory *dir, int lump, byte *data,
                             uint32_t tableOffset, bool compressed)
 {
    uint32_t lumpLength = dir->lumpLength(lump);
@@ -771,7 +771,7 @@ void ACS_loadScriptDataACSE(ACSVM *vm, WadDirectory *dir, int lump, byte *data,
 //
 // ACS_LoadScriptACSE
 //
-void ACS_LoadScriptACSE(ACSVM *vm, WadDirectory *dir, int lump, byte *data,
+void ACS_LoadScriptACSE(ACSModule *vm, WadDirectory *dir, int lump, byte *data,
                         uint32_t tableOffset)
 {
    ACS_loadScriptDataACSE(vm, dir, lump, data, tableOffset, false);
@@ -780,7 +780,7 @@ void ACS_LoadScriptACSE(ACSVM *vm, WadDirectory *dir, int lump, byte *data,
 //
 // ACS_LoadScriptACSe
 //
-void ACS_LoadScriptACSe(ACSVM *vm, WadDirectory *dir, int lump, byte *data,
+void ACS_LoadScriptACSe(ACSModule *vm, WadDirectory *dir, int lump, byte *data,
                         uint32_t tableOffset)
 {
    ACS_loadScriptDataACSE(vm, dir, lump, data, tableOffset, true);
@@ -791,7 +791,7 @@ void ACS_LoadScriptACSe(ACSVM *vm, WadDirectory *dir, int lump, byte *data,
 //
 // Reads ACSE chunks.
 //
-void ACS_LoadScriptChunksACSE(ACSVM *vm, WadDirectory *dir, byte *tableData,
+void ACS_LoadScriptChunksACSE(ACSModule *vm, WadDirectory *dir, byte *tableData,
                               uint32_t tableLength, bool fakeACS0)
 {
    ACSFunc *func;
@@ -805,7 +805,7 @@ void ACS_LoadScriptChunksACSE(ACSVM *vm, WadDirectory *dir, byte *tableData,
    ACS_chunkScriptACSE(vm, tableData, tableLength, ACS_chunkerSTRL);
 
    // The first part of the global string table must match VM-0 for compatibility.
-   if(vm->id == 0 && ACSVM::GlobalNumStrings < vm->numStrings)
+   if(vm->id == 0 && ACSModule::GlobalNumStrings < vm->numStrings)
       vm->addStrings();
 
    // AINI - Map Array Init
@@ -856,7 +856,7 @@ void ACS_LoadScriptChunksACSE(ACSVM *vm, WadDirectory *dir, byte *tableData,
    // the indexes of map-variables.
    for(unsigned int i = vm->numExports; i--;)
    {
-      ACSString *name = ACSVM::GlobalStrings[vm->exports[i]];
+      ACSString *name = ACSModule::GlobalStrings[vm->exports[i]];
 
       if(!name->data.s || !name->data.s[0]) continue;
 
@@ -870,7 +870,7 @@ void ACS_LoadScriptChunksACSE(ACSVM *vm, WadDirectory *dir, byte *tableData,
    ACS_chunkScriptACSE(vm, tableData, tableLength, ACS_chunkerLOAD);
 
    // Process imports.
-   vm->importVMs = (ACSVM **)Z_Malloc(vm->numImports * sizeof(ACSVM *), PU_LEVEL, NULL);
+   vm->importVMs = (ACSModule **)Z_Malloc(vm->numImports * sizeof(ACSModule *), PU_LEVEL, NULL);
    for(unsigned int i = vm->numImports; i--;)
    {
       int importLump = dir->checkNumForName(vm->imports[i], lumpinfo_t::ns_acs);
@@ -901,10 +901,10 @@ void ACS_LoadScriptChunksACSE(ACSVM *vm, WadDirectory *dir, byte *tableData,
       if(vm->funcptrs[i]->codeIndex || i >= vm->numFuncNames)
          continue;
 
-      ACSString *funcname = ACSVM::GlobalStrings[vm->funcNames[i]];
+      ACSString *funcname = ACSModule::GlobalStrings[vm->funcNames[i]];
 
       // Search through all of the imported VMs for the function.
-      for(ACSVM **itrVM = vm->importVMs,
+      for(ACSModule **itrVM = vm->importVMs,
           **endVM = itrVM + vm->numImports; itrVM != endVM; ++itrVM)
       {
          if(*itrVM && (func = (*itrVM)->findFunction(funcname->data.s)))

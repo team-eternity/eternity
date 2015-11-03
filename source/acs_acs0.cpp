@@ -61,7 +61,7 @@ typedef struct acs0_opdata_s
 
 struct acs0_tracer_t
 {
-   ACSVM *vm;
+   ACSModule *vm;
    const byte *data;
    bool *codeTouched;
    uint32_t jumpCount;
@@ -983,7 +983,7 @@ static void ACS_translateScriptACS0(acs0_tracer_t *tracer, int32_t *codeIndexMap
 //
 // ACS_LoadScriptACS0
 //
-void ACS_LoadScriptACS0(ACSVM *vm, WadDirectory *dir, int lump, byte *data)
+void ACS_LoadScriptACS0(ACSModule *vm, WadDirectory *dir, int lump, byte *data)
 {
    uint32_t lumpAvail; // Used in bounds checking.
    uint32_t lumpLength = dir->lumpLength(lump);
@@ -1079,7 +1079,7 @@ void ACS_LoadScriptACS0(ACSVM *vm, WadDirectory *dir, int lump, byte *data)
    }
 
    // The first part of the global string table must match VM-0 for compatibility.
-   if(vm->id == 0 && ACSVM::GlobalNumStrings < vm->numStrings)
+   if(vm->id == 0 && ACSModule::GlobalNumStrings < vm->numStrings)
       vm->addStrings();
 
    // Read code.
@@ -1091,7 +1091,7 @@ void ACS_LoadScriptACS0(ACSVM *vm, WadDirectory *dir, int lump, byte *data)
 //
 // ACS_LoadScriptCodeACS0
 //
-void ACS_LoadScriptCodeACS0(ACSVM *vm, byte *data, uint32_t lumpLength, bool compressed)
+void ACS_LoadScriptCodeACS0(ACSModule *vm, byte *data, uint32_t lumpLength, bool compressed)
 {
    acs0_tracer_t tracer = {vm, data, NULL, 0, lumpLength, compressed};
 
@@ -1144,7 +1144,7 @@ void ACS_LoadScriptCodeACS0(ACSVM *vm, byte *data, uint32_t lumpLength, bool com
 
       // And names, too!
       if(itr->number < 0 && (uint32_t)(-itr->number - 1) < vm->numScriptNames)
-         itr->name = ACSVM::GlobalStrings[vm->scriptNames[-itr->number - 1]]->data.s;
+         itr->name = ACSModule::GlobalStrings[vm->scriptNames[-itr->number - 1]]->data.s;
       else
          itr->name = "";
    }
@@ -1250,7 +1250,7 @@ uint32_t ACS_LoadStringACS0(const byte *begin, const byte *end)
          buf += *itr++;
    }
 
-   return ACSVM::AddString(buf.constPtr(), buf.length());
+   return ACSModule::AddString(buf.constPtr(), buf.length());
 }
 
 // EOF
