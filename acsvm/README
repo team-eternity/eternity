@@ -1,0 +1,7 @@
+ACS VM library and standalone interpreter. Intended to be suitable for use in
+Doom-based video game engines to implement Hexen ACS or ZDoom ACS bytecode
+execution. It is focused on being usable for implementing existing extensions
+and new functions (whether through new instructions or CallFunc indexes) while
+having performance suitable to the complex ACS-based mods that have come into
+existence.
+
