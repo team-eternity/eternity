@@ -1,7 +1,7 @@
 // Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
-// Copyright(C) 2013 David Hill, James Haley, et al.
+// Copyright(C) 2015 David Hill, James Haley, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -33,6 +33,9 @@
 #include "m_dllist.h"
 #include "p_tick.h"
 #include "r_defs.h"
+
+#include "acsvm/Environ.hpp"
+#include "acsvm/Thread.hpp"
 
 class  qstring;
 class  Mobj;
@@ -66,6 +69,8 @@ class  WadDirectory;
 #define ACS_STRING_SIZE_PADDED ((sizeof(ACSString) + 7) & ~7)
 
 #define ACS_FUNCARG ACSThinker *thread, uint32_t argc, const int32_t *args, int32_t *&retn
+
+#define ACS_CF_ARGS ACSVM::Thread *thread, const ACSVM::Word *argV, ACSVM::Word argC
 
 #define ACS_CHUNKID(A,B,C,D) (((A) << 0) | ((B) << 8) | ((C) << 16) | ((D) << 24))
 
@@ -118,6 +123,12 @@ enum acs_stype_t
    ACS_STYPE_OPEN,
 
    ACS_STYPEMAX
+};
+
+// Tag types.
+enum acs_tagtype_t
+{
+   ACS_TAGTYPE_SECTOR,
 };
 
 // Level variables.
@@ -218,6 +229,69 @@ class ACSThinker;
 class ACSModule;
 
 typedef void (*acs_func_t)(ACS_FUNCARG);
+
+//
+// ACSEnvironment
+//
+class ACSEnvironment : public ACSVM::Environment
+{
+protected:
+   virtual ACSVM::Thread *allocThread();
+
+   virtual ACSVM::Word callSpecImpl(ACSVM::Thread *thread, ACSVM::Word spec,
+                                    const ACSVM::Word *argV, ACSVM::Word argC);
+
+public:
+   using ACSVM::Environment::getModuleName;
+
+   ACSEnvironment();
+
+   virtual bool checkTag(ACSVM::Word type, ACSVM::Word tag);
+
+   virtual ACSVM::ModuleName getModuleName(char const *str, size_t len);
+
+   virtual void loadModule(ACSVM::Module *module);
+
+   virtual void refStrings();
+
+   WadDirectory       *dir;
+   ACSVM::GlobalScope *global;
+   ACSVM::MapScope    *map;
+   ACSVM::String      *strBEHAVIOR;
+
+   size_t errors;
+};
+
+//
+// ACSThreadInfo
+//
+class ACSThreadInfo : public ACSVM::ThreadInfo
+{
+public:
+   ACSThreadInfo() : mo{nullptr}, line{nullptr}, side{0} {}
+   ACSThreadInfo(Mobj *mo_, line_t *line_, int side_) :
+      mo{mo_}, line{line_}, side{side_} {}
+
+   Mobj   *mo;   // Mobj that activated.
+   line_t *line; // Line that activated.
+   int     side; // Side of actived line.
+};
+
+//
+// ACSThread
+//
+class ACSThread : public ACSVM::Thread
+{
+public:
+   ACSThread(ACSVM::Environment *env_) : ACSVM::Thread{env_} {}
+
+   virtual ACSVM::ThreadInfo const *getInfo() const {return &info;}
+
+   virtual void start(ACSVM::Script *script, ACSVM::MapScope *map,
+      const ACSVM::ThreadInfo *info, const ACSVM::Word *argV, ACSVM::Word argC);
+
+   ACSThreadInfo info;
+};
 
 //
 // ACSArray
@@ -611,9 +685,36 @@ public:
 
 // Global function prototypes
 
-void ACS_Init(void);
-void ACS_NewGame(void);
-void ACS_InitLevel(void);
+// Environment control.
+void ACS_Init();
+void ACS_NewGame();
+void ACS_InitLevel();
+void ACS_LoadLevelScript(WadDirectory *dir, int lump);
+void ACS_Exec();
+
+// Script control.
+bool ACS_ExecuteScriptI(uint32_t name, uint32_t mapnum, const uint32_t *argv,
+                        uint32_t argc, Mobj *mo, line_t *line, int side);
+bool ACS_ExecuteScriptIAlways(uint32_t name, uint32_t mapnum, const uint32_t *argv,
+                              uint32_t argc, Mobj *mo, line_t *line, int side);
+uint32_t ACS_ExecuteScriptIResult(uint32_t name, const uint32_t *argv,
+                                 uint32_t argc, Mobj *mo, line_t *line, int side);
+bool ACS_ExecuteScriptS(const char *name, uint32_t mapnum, const uint32_t *argv,
+                        uint32_t argc, Mobj *mo, line_t *line, int side);
+bool ACS_ExecuteScriptSAlways(const char *name, uint32_t mapnum, const uint32_t *argv,
+                              uint32_t argc, Mobj *mo, line_t *line, int side);
+uint32_t ACS_ExecuteScriptSResult(const char *name, const uint32_t *argv,
+                                 uint32_t argc, Mobj *mo, line_t *line, int side);
+bool ACS_SuspendScriptI(uint32_t name, uint32_t mapnum);
+bool ACS_SuspendScriptS(const char *name, uint32_t mapnum);
+bool ACS_TerminateScriptI(uint32_t name, uint32_t mapnum);
+bool ACS_TerminateScriptS(const char *name, uint32_t mapnum);
+
+// CallFuncs.
+bool ACS_CF_EndLog(ACS_CF_ARGS);
+bool ACS_CF_EndPrint(ACS_CF_ARGS);
+bool ACS_CF_EndPrintBold(ACS_CF_ARGS);
+
 ACSModule *ACS_LoadScript(WadDirectory *dir, int lump);
 void ACS_LoadScript(ACSModule *vm, WadDirectory *dir, int lump);
 void ACS_LoadScriptACS0(ACSModule *vm, WadDirectory *dir, int lump, byte *data);
@@ -623,7 +724,6 @@ void ACS_LoadScriptACSe(ACSModule *vm, WadDirectory *dir, int lump, byte *data,
                         uint32_t tableOffset = 4);
 void ACS_LoadScriptCodeACS0(ACSModule *vm, byte *data, uint32_t lumpLength, bool compressed);
 uint32_t ACS_LoadStringACS0(const byte *begin, const byte *end);
-void ACS_LoadLevelScript(WadDirectory *dir, int lump);
 void ACS_RunDeferredScripts();
 bool ACS_ExecuteScript(ACSScript *script, int flags, const int32_t *argv,
                        uint32_t argc, Mobj *trigger, line_t *line, int lineSide,
@@ -652,6 +752,8 @@ int32_t ACS_GetThingVar(Mobj *thing, uint32_t var);
 void    ACS_SetThingVar(Mobj *thing, uint32_t var, int32_t val);
 
 // extern vars.
+
+extern ACSEnvironment ACSenv;
 
 extern acs_func_t ACSfunc[ACS_FUNCMAX];
 extern acs_opdata_t ACSopdata[ACS_OPMAX];

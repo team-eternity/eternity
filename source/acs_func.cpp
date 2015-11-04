@@ -1,7 +1,7 @@
 // Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
-// Copyright(C) 2013 James Haley, David Hill, et al.
+// Copyright(C) 2015 James Haley, David Hill, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -45,6 +45,8 @@
 #include "e_mod.h"
 #include "e_states.h"
 #include "e_things.h"
+#include "g_game.h"
+#include "hu_stuff.h"
 #include "m_random.h"
 #include "p_info.h"
 #include "p_inter.h"
@@ -57,7 +59,10 @@
 #include "r_main.h"
 #include "r_state.h"
 #include "s_sndseq.h"
+#include "v_misc.h"
 #include "doomstat.h"
+
+#include "acsvm/Thread.hpp"
 
 
 //
@@ -320,6 +325,51 @@ static void ACS_funcClassifyThing(ACS_FUNCARG)
    }
 
    *retn++ = result;
+}
+
+//
+// ACS_CF_EndLog
+//
+// void EndLog(void);
+//
+bool ACS_CF_EndLog(ACS_CF_ARGS)
+{
+   printf("%s\n", thread->printBuf.data());
+   doom_printf("%s\n", thread->printBuf.data());
+   thread->printBuf.drop();
+
+   return false;
+}
+
+//
+// ACS_CF_EndPrint
+//
+// void EndPrint(void);
+//
+bool ACS_CF_EndPrint(ACS_CF_ARGS)
+{
+   auto info = &static_cast<ACSThread *>(thread)->info;
+
+   if(info->mo && info->mo->player)
+      player_printf(info->mo->player, "%s", thread->printBuf.data());
+   else
+      player_printf(&players[consoleplayer], "%s", thread->printBuf.data());
+   thread->printBuf.drop();
+
+   return false;
+}
+
+//
+// ACS_CF_EndPrintBold
+//
+// void EndPrintBold(void);
+//
+bool ACS_CF_EndPrintBold(ACS_CF_ARGS)
+{
+   HU_CenterMsgTimedColor(thread->printBuf.data(), FC_GOLD, 20*35);
+   thread->printBuf.drop();
+
+   return false;
 }
 
 //

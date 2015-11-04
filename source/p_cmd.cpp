@@ -349,12 +349,12 @@ CONSOLE_COMMAND(puke, cf_notnet)
    if(Console.argc < 1)
       return;
 
-   int32_t args[5] = { 0, 0, 0, 0, 0 };
+   uint32_t args[5] = { 0, 0, 0, 0, 0 };
 
-   for(int i = 1; i < Console.argc; i++)
+   for(int i = 1; i < Console.argc && i <= 5; i++)
       args[i - 1] = Console.argv[i]->toInt();
 
-   ACS_ExecuteScriptNumber(Console.argv[0]->toInt(), gamemap, ACS_EXECUTE_ALWAYS,
+   ACS_ExecuteScriptIAlways(Console.argv[0]->toInt(), gamemap,
                            args, 5, NULL, NULL, 0);
 }
 

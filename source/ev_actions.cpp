@@ -2697,18 +2697,18 @@ DEFINE_ACTION(EV_ActionPillarOpen)
 //
 DEFINE_ACTION(EV_ActionACSExecute)
 {
-   Mobj   *thing = instance->actor;
-   line_t *line  = instance->line;
-   int     side  = instance->side;
-   int     num   = instance->args[0];
-   int     map   = instance->args[1];
-   int     argc  = NUMLINEARGS - 2;
-   int32_t argv[NUMLINEARGS - 2];
+   Mobj    *thing = instance->actor;
+   line_t  *line  = instance->line;
+   int      side  = instance->side;
+   int      num   = instance->args[0];
+   int      map   = instance->args[1];
+   int      argc  = NUMLINEARGS - 2;
+   uint32_t argv[NUMLINEARGS - 2];
 
    for(int i = 0; i != argc; ++i)
       argv[i] = instance->args[i + 2];
 
-   return ACS_ExecuteScriptNumber(num, map, 0, argv, argc, thing, line, side);
+   return ACS_ExecuteScriptI(num, map, argv, argc, thing, line, side);
 }
 
 
@@ -2721,7 +2721,7 @@ DEFINE_ACTION(EV_ActionACSExecute)
 //
 DEFINE_ACTION(EV_ActionACSSuspend)
 {
-   return ACS_SuspendScriptNumber(instance->args[0], instance->args[1]);
+   return ACS_SuspendScriptI(instance->args[0], instance->args[1]);
 }
 
 //
@@ -2733,7 +2733,7 @@ DEFINE_ACTION(EV_ActionACSSuspend)
 //
 DEFINE_ACTION(EV_ActionACSTerminate)
 {
-   return ACS_TerminateScriptNumber(instance->args[0], instance->args[1]);
+   return ACS_TerminateScriptI(instance->args[0], instance->args[1]);
 }
 
 //
@@ -2745,21 +2745,17 @@ DEFINE_ACTION(EV_ActionACSTerminate)
 //
 DEFINE_ACTION(EV_ActionACSExecuteWithResult)
 {
-   Mobj   *thing = instance->actor;
-   line_t *line  = instance->line;
-   int     side  = instance->side;
-   int     flags = ACS_EXECUTE_ALWAYS | ACS_EXECUTE_IMMEDIATE;
-   int     num   = instance->args[0];
-   int     argc  = NUMLINEARGS - 1;
-   int32_t argv[NUMLINEARGS - 1];
+   Mobj    *thing = instance->actor;
+   line_t  *line  = instance->line;
+   int      side  = instance->side;
+   int      num   = instance->args[0];
+   int      argc  = NUMLINEARGS - 1;
+   uint32_t argv[NUMLINEARGS - 1];
 
    for(int i = 0; i != argc; ++i)
       argv[i] = instance->args[i + 1];
 
-   ACSThinker *thread = NULL;
-   ACS_ExecuteScriptNumber(num, 0, flags, argv, argc, thing, line, side, &thread);
-
-   return thread ? thread->result : 0;
+   return ACS_ExecuteScriptIResult(num, argv, argc, thing, line, side);
 }
 
 //

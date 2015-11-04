@@ -1,7 +1,7 @@
 // Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
-// Copyright(C) 2013 David Hill, James Haley, et al.
+// Copyright(C) 2015 David Hill, James Haley, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -54,6 +54,14 @@
 
 // need wad iterators
 #include "w_iterator.h"
+
+#include "acsvm/Action.hpp"
+#include "acsvm/Code.hpp"
+#include "acsvm/CodeData.hpp"
+#include "acsvm/Error.hpp"
+#include "acsvm/Module.hpp"
+#include "acsvm/Scope.hpp"
+#include "acsvm/Script.hpp"
 
 //
 // Local Enumerations
@@ -121,6 +129,8 @@ acsStrings;
 //
 // Global Variables
 //
+
+ACSEnvironment ACSenv;
 
 acs_opdata_t ACSopdata[ACS_OPMAX] =
 {
@@ -386,6 +396,144 @@ static int32_t ACS_getLevelVar(uint32_t var)
 //
 // Global Functions
 //
+
+
+//
+// ACSEnvironment constructor
+//
+ACSEnvironment::ACSEnvironment() :
+   dir   {nullptr},
+   global{getGlobalScope(0)},
+   map   {nullptr},
+
+   strBEHAVIOR{getString("BEHAVIOR", 8)}
+{
+   global->active = true;
+
+   // Register CallFuncs.
+   ACSVM::Word funcEndLog       = addCallFunc(ACS_CF_EndLog);
+   ACSVM::Word funcEndPrint     = addCallFunc(ACS_CF_EndPrint);
+   ACSVM::Word funcEndPrintBold = addCallFunc(ACS_CF_EndPrintBold);
+
+   // Add code translations.
+   addCodeDataACS0( 86, {"", ACSVM::Code::CallFunc, 0, funcEndPrint});
+   addCodeDataACS0(101, {"", ACSVM::Code::CallFunc, 0, funcEndPrintBold});
+   addCodeDataACS0(270, {"", ACSVM::Code::CallFunc, 0, funcEndLog});
+
+   // Add func translations.
+}
+
+//
+// ACSEnvironment::allocThread
+//
+ACSVM::Thread *ACSEnvironment::allocThread()
+{
+   return new ACSThread(this);
+}
+
+//
+// ACSEnvironment::callSpecImpl
+//
+ACSVM::Word ACSEnvironment::callSpecImpl(ACSVM::Thread *thread, ACSVM::Word spec,
+                                         const ACSVM::Word *argV, ACSVM::Word argC)
+{
+   auto info = &static_cast<ACSThread *>(thread)->info;
+   int args[NUMLINEARGS] = {};
+
+   for(ACSVM::Word i = argC < NUMLINEARGS ? argC : NUMLINEARGS; i--;)
+      args[i] = argV[i];
+
+   return EV_ActivateACSSpecial(info->line, spec, args, info->side, info->mo);
+}
+
+//
+// ACSEnvironment::checkTag
+//
+bool ACSEnvironment::checkTag(ACSVM::Word type, ACSVM::Word tag)
+{
+   switch(type)
+   {
+   case ACS_TAGTYPE_SECTOR:
+      for(int secnum = -1; (secnum = P_FindSectorFromTag(tag, secnum)) >= 0;)
+      {
+         sector_t *sec = &sectors[secnum];
+         if(sec->floordata || sec->ceilingdata)
+            return false;
+      }
+      return true;
+   }
+
+   return false;
+}
+
+//
+// ACSEnvironment::getModuleName
+//
+ACSVM::ModuleName ACSEnvironment::getModuleName(char const *str, size_t len)
+{
+   ACSVM::String *name = getString(str, len);
+
+   if(!dir)
+      return {name, dir, SIZE_MAX};
+
+   int lump =  dir->checkNumForName(str, lumpinfo_t::ns_acs);
+
+   return {name, dir, static_cast<size_t>(lump)};
+}
+
+//
+// ACSEnvironment::loadModule
+//
+void ACSEnvironment::loadModule(ACSVM::Module *module)
+{
+   byte  *data;
+   size_t size;
+
+   if(module->name.i == SIZE_MAX)
+      throw ACSVM::ReadError("ACSEnvironment::loadModule: bad lump");
+
+   WadDirectory *moduleDir = static_cast<WadDirectory *>(module->name.p);
+
+   // Fetch lump data. Use PU_LEVEL so the lump data does not get unexpectedly
+   // purged as a result of further allocations.
+   data = (byte *)moduleDir->cacheLumpNum(module->name.i, PU_LEVEL);
+   size = moduleDir->lumpLength(module->name.i);
+
+   try
+   {
+      module->readBytecode(data, size);
+   }
+   catch(const ACSVM::ReadError &e)
+   {
+      ++errors;
+      doom_printf(FC_ERROR "failed to load ACS module: '%s': %s\a", module->name.s->str, e.what());
+      throw ACSVM::ReadError("failed import");
+   }
+}
+
+//
+// ACSEnvironment::refStrings
+//
+void ACSEnvironment::refStrings()
+{
+   ACSVM::Environment::refStrings();
+
+   strBEHAVIOR->ref = true;
+}
+
+//
+// ACSThread::start
+//
+void ACSThread::start(ACSVM::Script *script, ACSVM::MapScope *map,
+   const ACSVM::ThreadInfo *infoPtr, const ACSVM::Word *argV, ACSVM::Word argC)
+{
+   ACSVM::Thread::start(script, map, infoPtr, argV, argC);
+
+   if(infoPtr)
+      info = *static_cast<const ACSThreadInfo *>(infoPtr);
+   else
+      info = {};
+}
 
 
 // Interpreter Macros
@@ -1828,14 +1976,7 @@ void ACS_Init(void)
 //
 void ACS_NewGame(void)
 {
-   // clear out the world variables
-   memset(ACSworldvars, 0, sizeof(ACSworldvars));
-
-   // clear out the global variables
-   memset(ACSglobalvars, 0, sizeof(ACSglobalvars));
-
-   // clear out deferred scripts
-   ACSDeferred::ClearAll();
+   ACSenv.global->reset();
 }
 
 //
@@ -1845,11 +1986,8 @@ void ACS_NewGame(void)
 //
 void ACS_InitLevel(void)
 {
-   acsLevelScriptVM.reset();
-
-   ACSModule::GlobalStrings = NULL;
-   ACSModule::GlobalAllocStrings = 0;
-   ACSModule::GlobalNumStrings = 0;
+   if(ACSenv.map)
+      ACSenv.map->reset();
 }
 
 //
@@ -1919,36 +2057,54 @@ void ACS_LoadScript(ACSModule *vm, WadDirectory *dir, int lump)
 }
 
 //
-// ACS_loadScripts
+// ACS_loadModule
 //
-// Reads lump names out of the lump and loads them as scripts.
-//
-static void ACS_loadScripts(WadDirectory *dir, int lump)
+static void ACS_loadModule(ACSVM::ModuleName &&name)
 {
-   const char *itr, *end;
+   ACSVM::Module *module;
+
+   try
+   {
+      module = ACSenv.getModule(std::move(name));
+   }
+   catch(const ACSVM::ReadError &)
+   {
+      return;
+   }
+
+   ACSenv.map->addModule(module);
+}
+
+//
+// ACS_loadModules
+//
+// Reads lump names out of the lump and loads them as modules.
+//
+static void ACS_loadModules(WadDirectory *dir, int lump)
+{
+   const char *lumpItr, *lumpEnd;
    char lumpname[9], *nameItr, *const nameEnd = lumpname+8;
 
-   itr = (const char *)(dir->cacheLumpNum(lump, PU_CACHE));
-   end = itr + dir->lumpLength(lump);
+   lumpItr = (const char *)dir->cacheLumpNum(lump, PU_STATIC);
+   lumpEnd = lumpItr + dir->lumpLength(lump);
 
    for(;;)
    {
       // Discard any whitespace.
-      while(itr != end && ectype::isSpace(*itr)) ++itr;
+      while(lumpItr != lumpEnd && ectype::isSpace(*lumpItr)) ++lumpItr;
 
-      if(itr == end) break;
+      if(lumpItr == lumpEnd) break;
 
       // Read a name.
       nameItr = lumpname;
-      while(itr != end && nameItr != nameEnd && !ectype::isSpace(*itr))
-         *nameItr++ = *itr++;
+      while(lumpItr != lumpEnd && nameItr != nameEnd && !ectype::isSpace(*lumpItr))
+         *nameItr++ = *lumpItr++;
       *nameItr = '\0';
 
       // Discard excess letters.
-      while(itr != end && !ectype::isSpace(*itr)) ++itr;
+      while(lumpItr != lumpEnd && !ectype::isSpace(*lumpItr)) ++lumpItr;
 
-      if((lump = dir->checkNumForName(lumpname, lumpinfo_t::ns_acs)) != -1)
-         ACS_LoadScript(dir, lump);
+      ACS_loadModule(ACSenv.getModuleName(lumpname));
    }
 }
 
@@ -1960,131 +2116,212 @@ static void ACS_loadScripts(WadDirectory *dir, int lump)
 //
 void ACS_LoadLevelScript(WadDirectory *dir, int lump)
 {
-   ACSFunc   *func, *funcEnd;
-   ACSScript *s,    *sEnd;
-   ACSModule **vm, **vmEnd;
+   // Set environment's WadDirectory.
+   ACSenv.dir = dir;
 
-   // Start at 1 so that number of chains is never 0.
-   unsigned int numScriptsByNumber = 1, numScriptsByName = 1;
+   // Fetch MapScope for current map.
+   // TODO: Fetch correct hub scope.
+   // TODO: Free old hub scope, if changed.
+   ACSenv.map = ACSenv.global->getHubScope(0)->getMapScope(gamemap);
+   ACSenv.map->active = ACSenv.map->hub->active = true;
 
-   acsScriptsByNumber.destroy();
-   acsScriptsByName.destroy();
-   acsStrings.destroy();
-   acsVMs.makeEmpty();
+   ACSenv.errors = 0;
 
-   acsStrings.initialize(32);
-
-   // load the level script, if any
+   // Load the level script, if any.
    if(lump != -1)
-      ACS_LoadScript(&acsLevelScriptVM, dir, lump);
+      ACS_loadModule({ACSenv.strBEHAVIOR, dir, (size_t)lump});
 
-   // The rest of the function is LOADACS handling.
+   // Load LOADACS modules.
    WadChainIterator wci(*dir, "LOADACS");
 
    for(wci.begin(); wci.current(); wci.next())
    {
       if(wci.testLump(lumpinfo_t::ns_global))
-         ACS_loadScripts(dir, (*wci)->selfindex);
+         ACS_loadModules(dir, (*wci)->selfindex);
    }
 
-   // Haha, not really! Now we have to process script names.
+   // If any errors, give up loading level script.
+   if(ACSenv.errors)
+      return;
 
-   // For this round, just tally the number of scripts.
-   for(vm = acsVMs.begin(), vmEnd = acsVMs.end(); vm != vmEnd; ++vm)
+   // Finish adding modules to map scope.
+   ACSenv.map->addModuleFinish();
+
+   // Start open scripts.
+   ACSenv.map->scriptStartType(ACSVM::ScriptType::Open, nullptr, nullptr, 0);
+
+   // Set all started threads to delay for one second, as in Hexen.
+   for(auto &thread : ACSenv.map->threadActive)
+      thread.delay = TICRATE;
+}
+
+//
+// ACS_Exec
+//
+void ACS_Exec()
+{
+   ACSenv.exec();
+}
+
+//
+// ACS_executeScript
+//
+template<typename NameT, typename StartT>
+static bool ACS_executeScript(NameT name, uint32_t mapnum, const uint32_t *argv,
+                              uint32_t argc, Mobj *mo, line_t *line, int side,
+                              ACSVM::ScriptAction::Action action, StartT start)
+{
+   if(!mapnum || mapnum == gamemap)
    {
-      for(s = (*vm)->scripts, sEnd = s + (*vm)->numScripts; s != sEnd; ++s)
-      {
-         if(s->number < 0)
-            ++numScriptsByName;
-         else
-            ++numScriptsByNumber;
-      }
+      auto script = ACSenv.map->findScript(name);
+      if(!script) return false;
+      ACSThreadInfo info{mo, line, side};
+      (ACSenv.map->*start)(script, &info, argv, argc);
    }
-
-   acsScriptsByNumber.initialize(numScriptsByNumber);
-   acsScriptsByName.initialize(numScriptsByName);
-
-   // Now actually add them to the tables.
-   for(vm = acsVMs.begin(), vmEnd = acsVMs.end(); vm != vmEnd; ++vm)
+   else
    {
-      for(s = (*vm)->scripts, sEnd = s + (*vm)->numScripts; s != sEnd; ++s)
-      {
-         if(s->number < 0)
-            acsScriptsByName.addObject(s);
-         else
-         {
-            ACSScript *olds = acsScriptsByNumber.objectForKey(s->number);
-
-            // If there already exists a script by that number...
-            if(olds)
-            {
-               // ... and it's from the same VM, keep the first one.
-               // Otherwise, only keep the newest.
-               if(olds->vm != s->vm)
-               {
-                  acsScriptsByNumber.removeObject(olds);
-                  acsScriptsByNumber.addObject(s);
-               }
-            }
-            else
-               acsScriptsByNumber.addObject(s);
-         }
-      }
+      ACSenv.deferAction({{ACSenv.global->id, ACSenv.map->hub->id, mapnum},
+                         name, action, {argv, argc}});
    }
 
-   // Process strings.
+   return true;
+}
 
-   // During loading, alloc is the same as num.
-   ACSModule::GlobalAllocStrings = ACSModule::GlobalNumStrings;
+//
+// ACS_executeScriptResult
+//
+template<typename NameT>
+static uint32_t ACS_executeScriptResult(NameT name, const uint32_t *argv,
+                                        uint32_t argc, Mobj *mo, line_t *line, int side)
+{
+   auto script = ACSenv.map->findScript(name);
+   if(!script) return 0;
+      ACSThreadInfo info{mo, line, side};
+   return ACSenv.map->scriptStartResult(script, &info, argv, argc);
+}
 
-   // Save this number for saving.
-   ACSModule::GlobalNumStringsBase = ACSModule::GlobalNumStrings;
+//
+// ACS_ExecuteScriptI
+//
+bool ACS_ExecuteScriptI(uint32_t name, uint32_t mapnum, const uint32_t *argv,
+                        uint32_t argc, Mobj *mo, line_t *line, int side)
+{
+   return ACS_executeScript(name, mapnum, argv, argc, mo, line, side,
+                            ACSVM::ScriptAction::Start,
+                            &ACSVM::MapScope::scriptStart);
+}
 
-   // Rebuild the hash so it has good performance at runtime.
-   if(acsStrings.getNumItems() > acsStrings.getNumChains())
-      acsStrings.rebuild(acsStrings.getNumItems());
+//
+// ACS_ExecuteScriptIAlways
+//
+bool ACS_ExecuteScriptIAlways(uint32_t name, uint32_t mapnum, const uint32_t *argv,
+                              uint32_t argc, Mobj *mo, line_t *line, int side)
+{
+   return ACS_executeScript(name, mapnum, argv, argc, mo, line, side,
+                            ACSVM::ScriptAction::StartForced,
+                            &ACSVM::MapScope::scriptStartForced);
+}
 
-   // Pre-search scripts for strings. This makes named scripts faster than numbered!
-   for(ACSString **itr = ACSModule::GlobalStrings,
-       **end = itr + ACSModule::GlobalNumStrings; itr != end; ++itr)
+//
+// ACS_ExecuteScriptIResult
+//
+uint32_t ACS_ExecuteScriptIResult(uint32_t name, const uint32_t *argv,
+                                 uint32_t argc, Mobj *mo, line_t *line, int side)
+{
+   return ACS_executeScriptResult(name, argv, argc, mo, line, side);
+}
+
+//
+// ACS_ExecuteScriptS
+//
+bool ACS_ExecuteScriptS(const char *name, uint32_t mapnum, const uint32_t *argv,
+                        uint32_t argc, Mobj *mo, line_t *line, int side)
+{
+   ACSVM::String *nameStr = ACSenv.getString(name, strlen(name));
+   return ACS_executeScript(nameStr, mapnum, argv, argc, mo, line, side,
+                            ACSVM::ScriptAction::Start,
+                            &ACSVM::MapScope::scriptStart);
+}
+
+//
+// ACS_ExecuteScriptSAlways
+//
+bool ACS_ExecuteScriptSAlways(const char *name, uint32_t mapnum, const uint32_t *argv,
+                              uint32_t argc, Mobj *mo, line_t *line, int side)
+{
+   ACSVM::String *nameStr = ACSenv.getString(name, strlen(name));
+   return ACS_executeScript(nameStr, mapnum, argv, argc, mo, line, side,
+                            ACSVM::ScriptAction::StartForced,
+                            &ACSVM::MapScope::scriptStartForced);
+}
+
+//
+// ACS_ExecuteScriptSResult
+//
+uint32_t ACS_ExecuteScriptSResult(const char *name, const uint32_t *argv,
+                                 uint32_t argc, Mobj *mo, line_t *line, int side)
+{
+   ACSVM::String *nameStr = ACSenv.getString(name, strlen(name));
+   return ACS_executeScriptResult(nameStr, argv, argc, mo, line, side);
+}
+
+//
+// ACS_suspendScript
+//
+template<typename NameT, typename PauseT>
+static bool ACS_suspendScript(NameT name, uint32_t mapnum,
+                              ACSVM::ScriptAction::Action action, PauseT pause)
+{
+   if(!mapnum || mapnum == gamemap)
    {
-      (*itr)->script = ACSModule::FindScriptByName((*itr)->data.s);
+      auto script = ACSenv.map->findScript(name);
+      if(!script) return false;
+      (ACSenv.map->*pause)(script);
    }
-
-   // Process GlobalFuncs.
-   // Unlike strings, this array is not a direct combining of all the VMs.
-
-   // Count the number of defined functions, leaving 0 to mean no function.
-   ACSModule::GlobalNumFuncs = 1;
-   for(vm = acsVMs.begin(), vmEnd = acsVMs.end(); vm != vmEnd; ++vm)
+   else
    {
-      for(func = (*vm)->funcs, funcEnd = func + (*vm)->numFuncs; func != funcEnd; ++func)
-      {
-         if(func->codePtr != (*vm)->code)
-            ++ACSModule::GlobalNumFuncs;
-      }
+      ACSenv.deferAction({{ACSenv.global->id, ACSenv.map->hub->id, mapnum}, name, action, {}});
    }
 
-   // Allocate the array.
-   ACSModule::GlobalFuncs = (ACSFunc **)Z_Malloc(ACSModule::GlobalNumFuncs * sizeof(ACSFunc *),
-                                             PU_LEVEL, NULL);
+   return true;
+}
 
-   // Build the array, the first element being no function.
-   ACSModule::GlobalNumFuncs = 0;
-   ACSModule::GlobalFuncs[ACSModule::GlobalNumFuncs++] = NULL;
-   for(vm = acsVMs.begin(), vmEnd = acsVMs.end(); vm != vmEnd; ++vm)
-   {
-      for(func = (*vm)->funcs, funcEnd = func + (*vm)->numFuncs; func != funcEnd; ++func)
-      {
-         if(func->codePtr != (*vm)->code)
-         {
-            func->number = ACSModule::GlobalNumFuncs;
-            ACSModule::GlobalFuncs[ACSModule::GlobalNumFuncs++] = func;
-         }
-         else
-            func->number = 0;
-      }
-   }
+//
+// ACS_SuspendScriptI
+//
+bool ACS_SuspendScriptI(uint32_t name, uint32_t mapnum)
+{
+   return ACS_suspendScript(name, mapnum, ACSVM::ScriptAction::Pause,
+                            &ACSVM::MapScope::scriptPause);
+}
+
+//
+// ACS_SuspendScriptS
+//
+bool ACS_SuspendScriptS(const char *name, uint32_t mapnum)
+{
+   ACSVM::String *nameStr = ACSenv.getString(name, strlen(name));
+   return ACS_suspendScript(nameStr, mapnum, ACSVM::ScriptAction::Pause,
+                            &ACSVM::MapScope::scriptPause);
+}
+
+//
+// ACS_TerminateScriptI
+//
+bool ACS_TerminateScriptI(uint32_t name, uint32_t mapnum)
+{
+   return ACS_suspendScript(name, mapnum, ACSVM::ScriptAction::Stop,
+                            &ACSVM::MapScope::scriptStop);
+}
+
+//
+// ACS_TerminateScriptS
+//
+bool ACS_TerminateScriptS(const char *name, uint32_t mapnum)
+{
+   ACSVM::String *nameStr = ACSenv.getString(name, strlen(name));
+   return ACS_suspendScript(nameStr, mapnum, ACSVM::ScriptAction::Stop,
+                            &ACSVM::MapScope::scriptStop);
 }
 
 //
