@@ -1794,22 +1794,32 @@ void ACSVM::reset()
       mapahas[i] = false;
    }
 
-   code       = NULL;
-   numCode    = 0;
-   jumps      = NULL;
-   numJumps   = 0;
-   strings    = NULL;
-   numStrings = 0;
-   scripts    = NULL;
-   numScripts = 0;
-   loaded     = false;
-   lump       = -1;
+   code           = NULL;
+   numCode        = 0;
+   jumps          = NULL;
+   numJumps       = 0;
+   strings        = NULL;
+   numStrings     = 0;
+   scripts        = NULL;
+   numScripts     = 0;
+   scriptNames    = NULL;
+   numScriptNames = 0;
+   loaded         = false;
+   lump           = -1;
 
-   exports    = NULL;
-   numExports = 0;
-   imports    = NULL;
-   importVMs  = NULL;
-   numImports = 0;
+   funcptrs = NULL;
+   funcs    = NULL;
+   numFuncs = 0;
+   jumps    = NULL;
+   numJumps = 0;
+
+   exports      = NULL;
+   numExports   = 0;
+   imports      = NULL;
+   importVMs    = NULL;
+   numImports   = 0;
+   funcNames    = NULL;
+   numFuncNames = 0;
 }
 
 //
