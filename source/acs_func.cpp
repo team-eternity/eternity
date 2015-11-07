@@ -62,6 +62,7 @@
 #include "v_misc.h"
 #include "doomstat.h"
 
+#include "acsvm/Scope.hpp"
 #include "acsvm/Thread.hpp"
 
 
@@ -85,14 +86,18 @@ static void ACS_funcActivatorSound(ACS_FUNCARG)
 }
 
 //
-// ACS_funcAmbientSound
+// ACS_CF_AmbientSound
 //
-static void ACS_funcAmbientSound(ACS_FUNCARG)
+// void AmbientSound(str sound, int volume);
+//
+bool ACS_CF_AmbientSound(ACS_CF_ARGS)
 {
-   const char *snd = ACSModule::GetString(args[0]);
-   int         vol = args[1];
+   const char *snd = thread->scopeMap->getString(argV[0])->str;
+   int         vol = argV[1];
 
    S_StartSoundNameAtVolume(NULL, snd, vol, ATTN_NORMAL, CHAN_AUTO);
+
+   return false;
 }
 
 //
@@ -108,19 +113,25 @@ static void ACS_funcAmbientSoundLocal(ACS_FUNCARG)
 }
 
 //
-// ACS_funcChangeCeiling
+// ACS_CF_ChangeCeil
 //
-static void ACS_funcChangeCeiling(ACS_FUNCARG)
+// void ChangeCeiling(int tag, str tex);
+//
+bool ACS_CF_ChangeCeil(ACS_CF_ARGS)
 {
-   P_ChangeCeilingTex(ACSModule::GetString(args[1]), args[0]);
+   P_ChangeCeilingTex(thread->scopeMap->getString(argV[1])->str, argV[0]);
+   return false;
 }
 
 //
-// ACS_funcChangeFloor
+// ACS_CF_ChangeFloor
 //
-static void ACS_funcChangeFloor(ACS_FUNCARG)
+// void ChangeFloor(int tag, str tex);
+//
+bool ACS_CF_ChangeFloor(ACS_CF_ARGS)
 {
-   P_ChangeFloorTex(ACSModule::GetString(args[1]), args[0]);
+   P_ChangeFloorTex(thread->scopeMap->getString(argV[1])->str, argV[0]);
+   return false;
 }
 
 //
@@ -328,6 +339,21 @@ static void ACS_funcClassifyThing(ACS_FUNCARG)
 }
 
 //
+// ACS_CF_ClrLineSpec
+//
+// void ClearLineSpecial(void);
+//
+bool ACS_CF_ClrLineSpec(ACS_CF_ARGS)
+{
+   auto info = &static_cast<ACSThread *>(thread)->info;
+
+   if(info->line)
+      info->line->special = 0;
+
+   return false;
+}
+
+//
 // ACS_CF_EndLog
 //
 // void EndLog(void);
@@ -373,38 +399,25 @@ bool ACS_CF_EndPrintBold(ACS_CF_ARGS)
 }
 
 //
-// ACS_funcExecuteScriptAlwaysName
+// ACS_CF_GameSkill
 //
-static void ACS_funcExecuteScriptAlwaysName(ACS_FUNCARG)
+// int GameSkill(void);
+//
+bool ACS_CF_GameSkill(ACS_CF_ARGS)
 {
-   *retn++ = ACS_ExecuteScriptString(args[0], args[1], ACS_EXECUTE_ALWAYS, args+2, argc-2,
-                                     thread->trigger, thread->line, thread->lineSide);
+   thread->dataStk.push(gameskill);
+   return false;
 }
 
 //
-// ACS_funcExecuteScriptName
+// ACS_CF_GameType
 //
-static void ACS_funcExecuteScriptName(ACS_FUNCARG)
+// int GameType(void);
+//
+bool ACS_CF_GameType(ACS_CF_ARGS)
 {
-   *retn++ = ACS_ExecuteScriptString(args[0], args[1], 0, args+2, argc-2,
-                                     thread->trigger, thread->line, thread->lineSide);
-}
-
-//
-// ACS_funcExecuteScriptResultName
-//
-static void ACS_funcExecuteScriptResultName(ACS_FUNCARG)
-{
-   ACSThinker *newThread;
-
-   ACS_ExecuteScriptString(args[0], gamemap, ACS_EXECUTE_ALWAYS|ACS_EXECUTE_IMMEDIATE,
-                           args+1, argc-1, thread->trigger, thread->line,
-                           thread->lineSide, &newThread);
-
-   if(newThread)
-      *retn++ = newThread->result;
-   else
-      *retn++ = 0;
+   thread->dataStk.push(GameType);
+   return false;
 }
 
 // GetPlayerInput inputs.
@@ -733,6 +746,17 @@ static void ACS_funcIsTIDUsed(ACS_FUNCARG)
 }
 
 //
+// ACS_CF_LineSide
+//
+// int LineSide(void);
+//
+bool ACS_CF_LineSide(ACS_CF_ARGS)
+{
+   thread->dataStk.push(static_cast<ACSThread *>(thread)->info.side);
+   return false;
+}
+
+//
 // ACS_playSound
 //
 static void ACS_playSound(Mobj *mo, sfxinfo_t *sfx, uint32_t argc, const int32_t *args)
@@ -821,6 +845,24 @@ static void ACS_funcPlayThingSound(ACS_FUNCARG)
 }
 
 //
+// ACS_CF_PlayerCount
+//
+// int PlayerCount(void);
+//
+bool ACS_CF_PlayerCount(ACS_CF_ARGS)
+{
+   int count = 0;
+
+   for(int i = 0; i < MAXPLAYERS; ++i)
+      if(playeringame[i])
+         ++count;
+
+   thread->dataStk.push(count);
+
+   return false;
+}
+
+//
 // ACS_funcRadiusQuake
 //
 static void ACS_funcRadiusQuake(ACS_FUNCARG)
@@ -855,11 +897,14 @@ static void ACS_funcRadiusQuake(ACS_FUNCARG)
 }
 
 //
-// ACS_funcRandom
+// ACS_CF_Random
 //
-static void ACS_funcRandom(ACS_FUNCARG)
+// int Random(int min, int max);
+//
+bool ACS_CF_Random(ACS_CF_ARGS)
 {
-   *retn++ = P_RangeRandom(pr_script, args[0], args[1]);
+   thread->dataStk.push(P_RangeRandomEx(pr_script, argV[0], argV[1]));
+   return false;
 }
 
 // ReplaceTextures flags
@@ -956,21 +1001,26 @@ static void ACS_funcSectorDamage(ACS_FUNCARG)
 }
 
 //
-// ACS_funcSectorSound
+// ACS_CF_SectorSound
 //
-static void ACS_funcSectorSound(ACS_FUNCARG)
+// void SectorSound(str sound, int volume);
+//
+bool ACS_CF_SectorSound(ACS_CF_ARGS)
 {
-   const char   *snd = ACSModule::GetString(args[0]);
-   int           vol = args[1];
+   auto         *info = &static_cast<ACSThread *>(thread)->info;
+   const char   *snd = thread->scopeMap->getString(argV[0])->str;
+   int           vol = argV[1];
    PointThinker *src;
 
    // if script started from a line, use the frontsector's sound origin
-   if(thread->line)
-      src = &(thread->line->frontsector->soundorg);
+   if(info->line)
+      src = &(info->line->frontsector->soundorg);
    else
       src = NULL;
 
    S_StartSoundNameAtVolume(src, snd, vol, ATTN_NORMAL, CHAN_AUTO);
+
+   return false;
 }
 
 //
@@ -1055,11 +1105,14 @@ static void ACS_setLineBlocking(int tag, int block)
 }
 
 //
-// ACS_funcSetLineBlocking
+// ACS_CF_SetLineBlock
 //
-static void ACS_funcSetLineBlocking(ACS_FUNCARG)
+// void SetLineBlocking(int tag, int block);
+//
+bool ACS_CF_SetLineBlock(ACS_CF_ARGS)
 {
-   ACS_setLineBlocking(args[0], args[1]);
+   ACS_setLineBlocking(argV[0], argV[1]);
+   return false;
 }
 
 //
@@ -1071,32 +1124,36 @@ static void ACS_funcSetLineMonsterBlocking(ACS_FUNCARG)
 }
 
 //
-// ACS_funcSetLineSpecial
+// ACS_CF_SetLineSpec
 //
-static void ACS_funcSetLineSpecial(ACS_FUNCARG)
+// void SetLineSpecial(int tag, int spec, int arg0, int arg1, int arg2, int arg3, int arg4);
+//
+bool ACS_CF_SetLineSpec(ACS_CF_ARGS)
 {
-   int     tag  = args[0];
-   int     spec = args[1];
-   int     larg[NUMLINEARGS];
+   int     tag  = argV[0];
+   int     spec = argV[1];
    line_t *l;
    int     linenum = -1;
-
-   memcpy(larg, args+2, sizeof(larg));
 
    while((l = P_FindLine(tag, &linenum)) != NULL)
    {
       l->special = spec;
-      memcpy(l->args, larg, sizeof(larg));
+      for(int i = NUMLINEARGS; i--;)
+         l->args[i] = argV[i + 2];
    }
+
+   return false;
 }
 
 //
-// ACS_funcSetLineTexture
+// ACS_CF_SetLineTex
 //
-static void ACS_funcSetLineTexture(ACS_FUNCARG)
+// void SetLineTexture(int tag, int side, int pos, str texture);
+//
+bool ACS_CF_SetLineTex(ACS_CF_ARGS)
 {
-   //                               texture   pos      side     tag
-   P_ChangeLineTex(ACSModule::GetString(args[3]), args[2], args[1], args[0], false);
+   P_ChangeLineTex(thread->scopeMap->getString(argV[3])->str, argV[2], argV[1], argV[0], true);
+   return false;
 }
 
 //
@@ -1399,17 +1456,22 @@ static void ACS_funcSetThingVar(ACS_FUNCARG)
 }
 
 //
-// ACS_funcSoundSequence
+// ACS_CF_SoundSeq
 //
-static void ACS_funcSoundSequence(ACS_FUNCARG)
+// void SoundSequence(str sndseq);
+//
+bool ACS_CF_SoundSeq(ACS_CF_ARGS)
 {
-   const char *snd = ACSModule::GetString(args[0]);
+   auto        info = &static_cast<ACSThread *>(thread)->info;
+   const char *snd  = thread->scopeMap->getString(argV[0])->str;
    sector_t   *sec;
 
-   if(thread->line && (sec = thread->line->frontsector))
+   if(info->line && (sec = info->line->frontsector))
       S_StartSectorSequenceName(sec, snd, SEQ_ORIGIN_SECTOR_F);
    else
       S_StartSequenceName(NULL, snd, SEQ_ORIGIN_OTHER, -1);
+
+   return false;
 }
 
 //
@@ -1782,19 +1844,23 @@ static int32_t ACS_thingCount(mobjtype_t type, int32_t tid)
 }
 
 //
-// ACS_funcThingCount
+// ACS_CF_ThingCount
 //
-static void ACS_funcThingCount(ACS_FUNCARG)
+// int ThingCount(int type, int tid);
+//
+bool ACS_CF_ThingCount(ACS_CF_ARGS)
 {
-   int32_t type = args[0];
-   int32_t tid  = args[1];
+   int32_t type = argV[0];
+   int32_t tid  = argV[1];
 
    if(type == 0)
-      *retn++ = ACS_thingCount(0, tid);
+      thread->dataStk.push(ACS_thingCount(0, tid));
    else if(type > 0 && type < ACS_NUM_THINGTYPES)
-      *retn++ = ACS_thingCount(ACS_thingtypes[type], tid);
+      thread->dataStk.push(ACS_thingCount(ACS_thingtypes[type], tid));
    else
-      *retn++ = 0;
+      thread->dataStk.push(0);
+
+   return false;
 }
 
 //
@@ -1914,17 +1980,33 @@ static void ACS_funcThingProjectile(ACS_FUNCARG)
 }
 
 //
-// ACS_funcThingSound
+// ACS_CF_ThingSound
 //
-static void ACS_funcThingSound(ACS_FUNCARG)
+// void ThingSound(int tid, str sound, int volume);
+//
+bool ACS_CF_ThingSound(ACS_CF_ARGS)
 {
-   int         tid = args[0];
-   const char *snd = ACSModule::GetString(args[1]);
-   int         vol = args[2];
-   Mobj       *mo  = NULL;
+   auto        info = &static_cast<ACSThread *>(thread)->info;
+   int         tid  = argV[0];
+   const char *snd  = thread->scopeMap->getString(argV[1])->str;
+   int         vol  = argV[2];
+   Mobj       *mo   = NULL;
 
-   while((mo = P_FindMobjFromTID(tid, mo, thread->trigger)))
+   while((mo = P_FindMobjFromTID(tid, mo, info->mo)))
       S_StartSoundNameAtVolume(mo, snd, vol, ATTN_NORMAL, CHAN_AUTO);
+
+   return false;
+}
+
+//
+// ACS_CF_Timer
+//
+// int Timer(void);
+//
+bool ACS_CF_Timer(ACS_CF_ARGS)
+{
+   thread->dataStk.push(leveltime);
+   return false;
 }
 
 //
@@ -1969,9 +2051,31 @@ static void ACS_funcUniqueTID(ACS_FUNCARG)
    *retn++ = tid;
 }
 
+//
+// ACS_CF_WaitPolyObj
+//
+// void PolyWait(int polyid);
+//
+bool ACS_CF_WaitPolyObj(ACS_CF_ARGS)
+{
+   thread->state = {ACSVM::ThreadState::WaitTag, argV[0], ACS_TAGTYPE_POLYOBJ};
+   return true;
+}
+
+//
+// ACS_CF_WaitSector
+//
+// void TagWait(int tag);
+//
+bool ACS_CF_WaitSector(ACS_CF_ARGS)
+{
+   thread->state = {ACSVM::ThreadState::WaitTag, argV[0], ACS_TAGTYPE_SECTOR};
+   return true;
+}
+
 acs_func_t ACSfunc[ACS_FUNCMAX] =
 {
-   #define ACS_FUNC(FUNC) ACS_func##FUNC,
+   #define ACS_FUNC(FUNC) ACS_funcNOP,
    #include "acs_op.h"
    #undef ACS_FUNC
 };

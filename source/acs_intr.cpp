@@ -404,6 +404,7 @@ static int32_t ACS_getLevelVar(uint32_t var)
 ACSEnvironment::ACSEnvironment() :
    dir   {nullptr},
    global{getGlobalScope(0)},
+   hub   {nullptr},
    map   {nullptr},
 
    strBEHAVIOR{getString("BEHAVIOR", 8)}
@@ -411,14 +412,64 @@ ACSEnvironment::ACSEnvironment() :
    global->active = true;
 
    // Register CallFuncs.
+   ACSVM::Word funcAmbientSound = addCallFunc(ACS_CF_AmbientSound);
+   ACSVM::Word funcChangeCeil   = addCallFunc(ACS_CF_ChangeCeil);
+   ACSVM::Word funcChangeFloor  = addCallFunc(ACS_CF_ChangeFloor);
+   ACSVM::Word funcClrLineSpec  = addCallFunc(ACS_CF_ClrLineSpec);
    ACSVM::Word funcEndLog       = addCallFunc(ACS_CF_EndLog);
    ACSVM::Word funcEndPrint     = addCallFunc(ACS_CF_EndPrint);
    ACSVM::Word funcEndPrintBold = addCallFunc(ACS_CF_EndPrintBold);
+   ACSVM::Word funcGameSkill    = addCallFunc(ACS_CF_GameSkill);
+   ACSVM::Word funcGameType     = addCallFunc(ACS_CF_GameType);
+   ACSVM::Word funcLineSide     = addCallFunc(ACS_CF_LineSide);
+   ACSVM::Word funcPlayerCount  = addCallFunc(ACS_CF_PlayerCount);
+   ACSVM::Word funcRandom       = addCallFunc(ACS_CF_Random);
+   ACSVM::Word funcSectorSound  = addCallFunc(ACS_CF_SectorSound);
+   ACSVM::Word funcSetLineBlock = addCallFunc(ACS_CF_SetLineBlock);
+   ACSVM::Word funcSetLineSpec  = addCallFunc(ACS_CF_SetLineSpec);
+   ACSVM::Word funcSetLineTex   = addCallFunc(ACS_CF_SetLineTex);
+   ACSVM::Word funcSoundSeq     = addCallFunc(ACS_CF_SoundSeq);
+   ACSVM::Word funcThingCount   = addCallFunc(ACS_CF_ThingCount);
+   ACSVM::Word funcThingSound   = addCallFunc(ACS_CF_ThingSound);
+   ACSVM::Word funcTimer        = addCallFunc(ACS_CF_Timer);
+   ACSVM::Word funcWaitPolyObj  = addCallFunc(ACS_CF_WaitPolyObj);
+   ACSVM::Word funcWaitSector   = addCallFunc(ACS_CF_WaitSector);
 
    // Add code translations.
-   addCodeDataACS0( 86, {"", ACSVM::Code::CallFunc, 0, funcEndPrint});
-   addCodeDataACS0(101, {"", ACSVM::Code::CallFunc, 0, funcEndPrintBold});
-   addCodeDataACS0(270, {"", ACSVM::Code::CallFunc, 0, funcEndLog});
+
+   addCodeDataACS0( 57, {"",    ACSVM::Code::CallFunc,     2, funcRandom});
+   addCodeDataACS0( 58, {"WW",  ACSVM::Code::CallFunc_Lit, 0, funcRandom});
+   addCodeDataACS0( 59, {"",    ACSVM::Code::CallFunc,     1, funcThingCount});
+   addCodeDataACS0( 60, {"W",   ACSVM::Code::CallFunc_Lit, 0, funcThingCount});
+   addCodeDataACS0( 61, {"",    ACSVM::Code::CallFunc,     1, funcWaitSector});
+   addCodeDataACS0( 62, {"W",   ACSVM::Code::CallFunc_Lit, 0, funcWaitSector});
+   addCodeDataACS0( 63, {"",    ACSVM::Code::CallFunc,     1, funcWaitPolyObj});
+   addCodeDataACS0( 64, {"W",   ACSVM::Code::CallFunc_Lit, 0, funcWaitPolyObj});
+   addCodeDataACS0( 65, {"",    ACSVM::Code::CallFunc,     2, funcChangeCeil});
+   addCodeDataACS0( 66, {"WWS", ACSVM::Code::CallFunc_Lit, 0, funcChangeCeil});
+   addCodeDataACS0( 67, {"",    ACSVM::Code::CallFunc,     2, funcChangeFloor});
+   addCodeDataACS0( 68, {"WWS", ACSVM::Code::CallFunc_Lit, 0, funcChangeFloor});
+
+   addCodeDataACS0( 80, {"",    ACSVM::Code::CallFunc,     0, funcLineSide});
+
+   addCodeDataACS0( 83, {"",    ACSVM::Code::CallFunc,     0, funcClrLineSpec});
+
+   addCodeDataACS0( 86, {"",    ACSVM::Code::CallFunc,     0, funcEndPrint});
+
+   addCodeDataACS0( 90, {"",    ACSVM::Code::CallFunc,     0, funcPlayerCount});
+   addCodeDataACS0( 91, {"",    ACSVM::Code::CallFunc,     0, funcGameType});
+   addCodeDataACS0( 92, {"",    ACSVM::Code::CallFunc,     0, funcGameSkill});
+   addCodeDataACS0( 93, {"",    ACSVM::Code::CallFunc,     0, funcTimer});
+   addCodeDataACS0( 94, {"",    ACSVM::Code::CallFunc,     2, funcSectorSound});
+   addCodeDataACS0( 95, {"",    ACSVM::Code::CallFunc,     2, funcAmbientSound});
+   addCodeDataACS0( 96, {"",    ACSVM::Code::CallFunc,     1, funcSoundSeq});
+   addCodeDataACS0( 97, {"",    ACSVM::Code::CallFunc,     4, funcSetLineTex});
+   addCodeDataACS0( 98, {"",    ACSVM::Code::CallFunc,     2, funcSetLineBlock});
+   addCodeDataACS0( 99, {"",    ACSVM::Code::CallFunc,     7, funcSetLineSpec});
+   addCodeDataACS0(100, {"",    ACSVM::Code::CallFunc,     3, funcThingSound});
+   addCodeDataACS0(101, {"",    ACSVM::Code::CallFunc,     0, funcEndPrintBold});
+
+   addCodeDataACS0(270, {"",    ACSVM::Code::CallFunc,     0, funcEndLog});
 
    // Add func translations.
 }
@@ -1977,6 +2028,9 @@ void ACS_Init(void)
 void ACS_NewGame(void)
 {
    ACSenv.global->reset();
+   ACSenv.global->active = true;
+   ACSenv.hub = ACSenv.global->getHubScope(0);
+   ACSenv.hub->active = true;
 }
 
 //
@@ -2119,11 +2173,17 @@ void ACS_LoadLevelScript(WadDirectory *dir, int lump)
    // Set environment's WadDirectory.
    ACSenv.dir = dir;
 
+   // Reset HubScope if entering a new hub, or if in no hub.
+   // TODO: Hubs.
+   ACSenv.hub->reset();
+   ACSenv.hub->active = true;
+
    // Fetch MapScope for current map.
-   // TODO: Fetch correct hub scope.
-   // TODO: Free old hub scope, if changed.
-   ACSenv.map = ACSenv.global->getHubScope(0)->getMapScope(gamemap);
-   ACSenv.map->active = ACSenv.map->hub->active = true;
+   ACSenv.map = ACSenv.hub->getMapScope(gamemap);
+   ACSenv.map->active = true;
+
+   // Load modules for map.
+   // TODO: Only do this if not revisiting the map.
 
    ACSenv.errors = 0;
 

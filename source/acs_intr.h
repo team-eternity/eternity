@@ -128,6 +128,7 @@ enum acs_stype_t
 // Tag types.
 enum acs_tagtype_t
 {
+   ACS_TAGTYPE_POLYOBJ,
    ACS_TAGTYPE_SECTOR,
 };
 
@@ -256,6 +257,7 @@ public:
 
    WadDirectory       *dir;
    ACSVM::GlobalScope *global;
+   ACSVM::HubScope    *hub;
    ACSVM::MapScope    *map;
    ACSVM::String      *strBEHAVIOR;
 
@@ -711,9 +713,28 @@ bool ACS_TerminateScriptI(uint32_t name, uint32_t mapnum);
 bool ACS_TerminateScriptS(const char *name, uint32_t mapnum);
 
 // CallFuncs.
+bool ACS_CF_AmbientSound(ACS_CF_ARGS);
+bool ACS_CF_ChangeCeil(ACS_CF_ARGS);
+bool ACS_CF_ChangeFloor(ACS_CF_ARGS);
+bool ACS_CF_ClrLineSpec(ACS_CF_ARGS);
 bool ACS_CF_EndLog(ACS_CF_ARGS);
 bool ACS_CF_EndPrint(ACS_CF_ARGS);
 bool ACS_CF_EndPrintBold(ACS_CF_ARGS);
+bool ACS_CF_GameSkill(ACS_CF_ARGS);
+bool ACS_CF_GameType(ACS_CF_ARGS);
+bool ACS_CF_LineSide(ACS_CF_ARGS);
+bool ACS_CF_PlayerCount(ACS_CF_ARGS);
+bool ACS_CF_Random(ACS_CF_ARGS);
+bool ACS_CF_SectorSound(ACS_CF_ARGS);
+bool ACS_CF_SetLineBlock(ACS_CF_ARGS);
+bool ACS_CF_SetLineSpec(ACS_CF_ARGS);
+bool ACS_CF_SetLineTex(ACS_CF_ARGS);
+bool ACS_CF_SoundSeq(ACS_CF_ARGS);
+bool ACS_CF_ThingCount(ACS_CF_ARGS);
+bool ACS_CF_ThingSound(ACS_CF_ARGS);
+bool ACS_CF_Timer(ACS_CF_ARGS);
+bool ACS_CF_WaitPolyObj(ACS_CF_ARGS);
+bool ACS_CF_WaitSector(ACS_CF_ARGS);
 
 ACSModule *ACS_LoadScript(WadDirectory *dir, int lump);
 void ACS_LoadScript(ACSModule *vm, WadDirectory *dir, int lump);
