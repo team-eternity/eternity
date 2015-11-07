@@ -809,7 +809,7 @@ static void ACS_funcRadiusQuake(ACS_FUNCARG)
 //
 static void ACS_funcRandom(ACS_FUNCARG)
 {
-   *retn++ = P_RangeRandom(pr_script, args[0], args[1]);
+   *retn++ = P_RangeRandomEx(pr_script, args[0], args[1]);
 }
 
 // ReplaceTextures flags
