@@ -14,6 +14,7 @@ cmake_minimum_required(VERSION 2.6)
 
 project(acsvm)
 
+include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
 
 
@@ -55,6 +56,19 @@ function(ACSVM_INSTALL_LIB name)
 endfunction()
 
 ##
+## ACSVM_TRY_C_FLAG
+##
+if(NOT ACSVM_NOFLAGS)
+   function(ACSVM_TRY_C_FLAG flag name)
+      CHECK_C_COMPILER_FLAG(${flag} ${name})
+
+      if(${name})
+         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${flag}" PARENT_SCOPE)
+      endif()
+   endfunction()
+endif()
+
+##
 ## ACSVM_TRY_CXX_FLAG
 ##
 if(NOT ACSVM_NOFLAGS)
@@ -73,6 +87,15 @@ endif()
 ##
 
 if(NOT ACSVM_NOFLAGS)
+   if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
+      ACSVM_TRY_C_FLAG(-Wall      ACSVM_C_FLAG_Wall   )
+      ACSVM_TRY_C_FLAG(-Wextra    ACSVM_C_FLAG_Wextra )
+      ACSVM_TRY_C_FLAG(-Wpedantic ACSVM_C_FLAG_Wpedantic)
+      ACSVM_TRY_C_FLAG(-Wshadow   ACSVM_C_FLAG_Wshadow)
+
+      ACSVM_TRY_C_FLAG(-std=c11 ACSVM_C_FLAG_C11)
+   endif()
+
    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       ACSVM_TRY_CXX_FLAG(-Wall      ACSVM_CXX_FLAG_Wall   )
       ACSVM_TRY_CXX_FLAG(-Wextra    ACSVM_CXX_FLAG_Wextra )
@@ -152,6 +175,10 @@ include_directories(.)
 ##
 
 add_subdirectory(acsvm)
+
+if(EXISTS "${CMAKE_SOURCE_DIR}/capi")
+   add_subdirectory(capi)
+endif()
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/exec")
    add_subdirectory(exec)

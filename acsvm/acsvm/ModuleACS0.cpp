@@ -13,7 +13,7 @@
 #include "Module.hpp"
 
 #include "BinaryIO.hpp"
-#include "Environ.hpp"
+#include "Environment.hpp"
 #include "Error.hpp"
 #include "Jump.hpp"
 #include "Script.hpp"

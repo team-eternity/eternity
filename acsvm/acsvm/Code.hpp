@@ -73,6 +73,18 @@ namespace ACSVM
 
       None
    };
+
+   //
+   // KillType
+   //
+   enum class KillType
+   {
+      None,
+      OutOfBounds,
+      UnknownCode,
+      UnknownFunc,
+      BranchLimit,
+   };
 }
 
 #endif//ACSVM__Code_H__

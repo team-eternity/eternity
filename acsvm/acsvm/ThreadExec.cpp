@@ -14,7 +14,7 @@
 
 #include "Array.hpp"
 #include "Code.hpp"
-#include "Environ.hpp"
+#include "Environment.hpp"
 #include "Function.hpp"
 #include "Jump.hpp"
 #include "Module.hpp"
@@ -56,7 +56,14 @@
 //
 // Used to limit the number of branches to prevent infinite no-delay loops.
 //
-#define CountBranch() ((void)0)
+#define CountBranch() \
+   if(branches && !--branches) \
+   { \
+      env->printKill(this, static_cast<Word>(KillType::BranchLimit), 0); \
+      goto thread_stop; \
+   } \
+   else \
+      ((void)0)
 
 //
 // DeclCase
@@ -290,6 +297,8 @@ namespace ACSVM
          return;
       }
 
+      auto branches = env->branchLimit;
+
       #if ACSVM_DynamicGoto
       static void const *const cases[] =
       {
@@ -308,8 +317,7 @@ namespace ACSVM
          NextCase();
 
       DeclCase(Kill):
-         codePtr += 2;
-         module->env->printKill(this, *(codePtr - 2), *(codePtr - 1));
+         module->env->printKill(this, codePtr[0], codePtr[1]);
          goto thread_stop;
 
          //================================================
@@ -627,7 +635,7 @@ namespace ACSVM
 
    exec_intr:
       // Execution interrupted, check for termination condition.
-      if(state.state == ThreadState::Running && !delay)
+      if(state == ThreadState::Running && !delay)
          NextCase();
 
    exec_stop:;

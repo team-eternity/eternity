@@ -14,7 +14,7 @@
 
 #include "Array.hpp"
 #include "BinaryIO.hpp"
-#include "Environ.hpp"
+#include "Environment.hpp"
 #include "Error.hpp"
 #include "Function.hpp"
 #include "Init.hpp"
@@ -822,8 +822,20 @@ namespace ACSVM
       switch(type)
       {
       default:
-      case  0: scr->type = ScriptType::Closed; break;
-      case  1: scr->type = ScriptType::Open;   break;
+      case  0: scr->type = ScriptType::Closed;       break;
+      case  1: scr->type = ScriptType::Open;         break;
+      case  2: scr->type = ScriptType::Respawn;      break;
+      case  3: scr->type = ScriptType::Death;        break;
+      case  4: scr->type = ScriptType::Enter;        break;
+      case  5: scr->type = ScriptType::Pickup;       break;
+      case  6: scr->type = ScriptType::BlueReturn;   break;
+      case  7: scr->type = ScriptType::RedReturn;    break;
+      case  8: scr->type = ScriptType::WhiteReturn;  break;
+      case 12: scr->type = ScriptType::Lightning;    break;
+      case 13: scr->type = ScriptType::Unloading;    break;
+      case 14: scr->type = ScriptType::Disconnect;   break;
+      case 15: scr->type = ScriptType::Return;       break;
+      case 16: scr->type = ScriptType::Event;        break;
       }
    }
 

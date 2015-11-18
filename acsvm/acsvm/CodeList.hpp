@@ -365,6 +365,7 @@ ACSVM_CodeListACS0(StrCpyLocArr, 380, "",       CallFunc,     6, StrCpyLocArr)
 #ifdef ACSVM_FuncList
 
 ACSVM_FuncList(Nop)
+ACSVM_FuncList(Kill)
 
 // Printing functions.
 ACSVM_FuncList(PrintChar)

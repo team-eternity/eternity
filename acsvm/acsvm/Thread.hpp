@@ -36,7 +36,7 @@ namespace ACSVM
    class CallFrame
    {
    public:
-      Word        *codePtr;
+      Word  const *codePtr;
       Module      *module;
       ModuleScope *scopeMod;
       std::size_t  locArrC;
@@ -68,6 +68,9 @@ namespace ACSVM
          state{state_}, data{data_}, type{0} {}
       ThreadState(State state_, Word data_, Word type_) :
          state{state_}, data{data_}, type{type_} {}
+
+      bool operator == (State s) const {return state == s;}
+      bool operator != (State s) const {return state != s;}
 
       State state;
 
@@ -117,7 +120,7 @@ namespace ACSVM
       virtual void start(Script *script, MapScope *map, ThreadInfo const *info,
          Word const *argV, Word argC);
 
-      void stop();
+      virtual void stop();
 
       virtual void unlockStrings() const;
 
@@ -132,7 +135,7 @@ namespace ACSVM
       PrintBuf         printBuf;
       ThreadState      state;
 
-      Word        *codePtr; // Instruction pointer.
+      Word  const *codePtr; // Instruction pointer.
       Module      *module;  // Current execution Module.
       GlobalScope *scopeGbl;
       HubScope    *scopeHub;

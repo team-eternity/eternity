@@ -16,6 +16,7 @@
 #include "Types.hpp"
 
 #include <initializer_list>
+#include <memory>
 #include <utility>
 
 
@@ -48,6 +49,7 @@ namespace ACSVM
    public:
       CodeDataACS0(char const *args, Code transCode, Word stackArgC,
          Word transFunc = 0);
+      CodeDataACS0(char const *args, Word stackArgC, Word transFunc);
       CodeDataACS0(CodeACS0 code, char const *args, Code transCode,
          Word stackArgC, Func transFunc);
 
@@ -96,12 +98,16 @@ namespace ACSVM
    class FuncDataACS0
    {
    public:
+      using TransCode = std::pair<Word, Code>;
+
       FuncDataACS0(FuncDataACS0 const &);
       FuncDataACS0(FuncDataACS0 &&data);
       FuncDataACS0(FuncACS0 func, Func transFunc,
-         std::initializer_list<std::pair<Word, Code>> transCodes);
+         std::initializer_list<TransCode> transCodes);
       FuncDataACS0(Word transFunc);
-      FuncDataACS0(Word transFunc, std::initializer_list<std::pair<Word, Code>> transCodes);
+      FuncDataACS0(Word transFunc, std::initializer_list<TransCode> transCodes);
+      FuncDataACS0(Word transFunc, std::unique_ptr<TransCode[]> &&transCodeV,
+         std::size_t transCodeC);
       ~FuncDataACS0();
 
       FuncDataACS0 &operator = (FuncDataACS0 const &) = delete;
@@ -117,8 +123,8 @@ namespace ACSVM
       Word transFunc;
 
    private:
-      std::pair<Word, Code> *transCodeV;
-      std::size_t            transCodeC;
+      TransCode  *transCodeV;
+      std::size_t transCodeC;
    };
 }
 

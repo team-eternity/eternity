@@ -34,6 +34,11 @@ namespace ACSVM
       ScopeID(Word global_, Word hub_, Word map_) :
          global{global_}, hub{hub_}, map{map_} {}
 
+      bool operator == (ScopeID const &id) const
+         {return global == id.global && hub == id.hub && map == id.map;}
+      bool operator != (ScopeID const &id) const
+         {return global != id.global || hub != id.hub || map != id.map;}
+
       Word global;
       Word hub;
       Word map;
@@ -56,7 +61,7 @@ namespace ACSVM
       };
 
 
-      ScriptAction(ScriptAction &&action) = default;
+      ScriptAction(ScriptAction &&action);
       ScriptAction(ScopeID id, ScriptName name, Action action, Vector<Word> &&argV);
       ~ScriptAction();
 

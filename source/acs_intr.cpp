@@ -2113,7 +2113,7 @@ void ACS_LoadScript(ACSModule *vm, WadDirectory *dir, int lump)
 //
 // ACS_loadModule
 //
-static void ACS_loadModule(ACSVM::ModuleName &&name)
+static void ACS_loadModule(PODCollection<ACSVM::Module *> &modules, ACSVM::ModuleName &&name)
 {
    ACSVM::Module *module;
 
@@ -2126,7 +2126,7 @@ static void ACS_loadModule(ACSVM::ModuleName &&name)
       return;
    }
 
-   ACSenv.map->addModule(module);
+   modules.add(module);
 }
 
 //
@@ -2134,7 +2134,7 @@ static void ACS_loadModule(ACSVM::ModuleName &&name)
 //
 // Reads lump names out of the lump and loads them as modules.
 //
-static void ACS_loadModules(WadDirectory *dir, int lump)
+static void ACS_loadModules(PODCollection<ACSVM::Module *> &modules, WadDirectory *dir, int lump)
 {
    const char *lumpItr, *lumpEnd;
    char lumpname[9], *nameItr, *const nameEnd = lumpname+8;
@@ -2158,7 +2158,7 @@ static void ACS_loadModules(WadDirectory *dir, int lump)
       // Discard excess letters.
       while(lumpItr != lumpEnd && !ectype::isSpace(*lumpItr)) ++lumpItr;
 
-      ACS_loadModule(ACSenv.getModuleName(lumpname));
+      ACS_loadModule(modules, ACSenv.getModuleName(lumpname));
    }
 }
 
@@ -2170,6 +2170,8 @@ static void ACS_loadModules(WadDirectory *dir, int lump)
 //
 void ACS_LoadLevelScript(WadDirectory *dir, int lump)
 {
+   PODCollection<ACSVM::Module *> modules;
+
    // Set environment's WadDirectory.
    ACSenv.dir = dir;
 
@@ -2189,7 +2191,7 @@ void ACS_LoadLevelScript(WadDirectory *dir, int lump)
 
    // Load the level script, if any.
    if(lump != -1)
-      ACS_loadModule({ACSenv.strBEHAVIOR, dir, (size_t)lump});
+      ACS_loadModule(modules, {ACSenv.strBEHAVIOR, dir, (size_t)lump});
 
    // Load LOADACS modules.
    WadChainIterator wci(*dir, "LOADACS");
@@ -2197,7 +2199,7 @@ void ACS_LoadLevelScript(WadDirectory *dir, int lump)
    for(wci.begin(); wci.current(); wci.next())
    {
       if(wci.testLump(lumpinfo_t::ns_global))
-         ACS_loadModules(dir, (*wci)->selfindex);
+         ACS_loadModules(modules, dir, (*wci)->selfindex);
    }
 
    // If any errors, give up loading level script.
@@ -2205,10 +2207,10 @@ void ACS_LoadLevelScript(WadDirectory *dir, int lump)
       return;
 
    // Finish adding modules to map scope.
-   ACSenv.map->addModuleFinish();
+   ACSenv.map->addModules(&modules[0], modules.getLength());
 
    // Start open scripts.
-   ACSenv.map->scriptStartType(ACSVM::ScriptType::Open, nullptr, nullptr, 0);
+   ACSenv.map->scriptStartType(ACSVM::ScriptType::Open, {});
 
    // Set all started threads to delay for one second, as in Hexen.
    for(auto &thread : ACSenv.map->threadActive)
@@ -2224,51 +2226,14 @@ void ACS_Exec()
 }
 
 //
-// ACS_executeScript
-//
-template<typename NameT, typename StartT>
-static bool ACS_executeScript(NameT name, uint32_t mapnum, const uint32_t *argv,
-                              uint32_t argc, Mobj *mo, line_t *line, int side,
-                              ACSVM::ScriptAction::Action action, StartT start)
-{
-   if(!mapnum || mapnum == gamemap)
-   {
-      auto script = ACSenv.map->findScript(name);
-      if(!script) return false;
-      ACSThreadInfo info{mo, line, side};
-      (ACSenv.map->*start)(script, &info, argv, argc);
-   }
-   else
-   {
-      ACSenv.deferAction({{ACSenv.global->id, ACSenv.map->hub->id, mapnum},
-                         name, action, {argv, argc}});
-   }
-
-   return true;
-}
-
-//
-// ACS_executeScriptResult
-//
-template<typename NameT>
-static uint32_t ACS_executeScriptResult(NameT name, const uint32_t *argv,
-                                        uint32_t argc, Mobj *mo, line_t *line, int side)
-{
-   auto script = ACSenv.map->findScript(name);
-   if(!script) return 0;
-      ACSThreadInfo info{mo, line, side};
-   return ACSenv.map->scriptStartResult(script, &info, argv, argc);
-}
-
-//
 // ACS_ExecuteScriptI
 //
 bool ACS_ExecuteScriptI(uint32_t name, uint32_t mapnum, const uint32_t *argv,
                         uint32_t argc, Mobj *mo, line_t *line, int side)
 {
-   return ACS_executeScript(name, mapnum, argv, argc, mo, line, side,
-                            ACSVM::ScriptAction::Start,
-                            &ACSVM::MapScope::scriptStart);
+   ACSVM::ScopeID scope{ACSenv.global->id, ACSenv.hub->id, mapnum ? mapnum : gamemap};
+   ACSThreadInfo  info{mo, line, side};
+   return ACSenv.map->scriptStart(name, scope, {argv, argc, &info});
 }
 
 //
@@ -2277,73 +2242,54 @@ bool ACS_ExecuteScriptI(uint32_t name, uint32_t mapnum, const uint32_t *argv,
 bool ACS_ExecuteScriptIAlways(uint32_t name, uint32_t mapnum, const uint32_t *argv,
                               uint32_t argc, Mobj *mo, line_t *line, int side)
 {
-   return ACS_executeScript(name, mapnum, argv, argc, mo, line, side,
-                            ACSVM::ScriptAction::StartForced,
-                            &ACSVM::MapScope::scriptStartForced);
+   ACSVM::ScopeID scope{ACSenv.global->id, ACSenv.hub->id, mapnum ? mapnum : gamemap};
+   ACSThreadInfo  info{mo, line, side};
+   return ACSenv.map->scriptStartForced(name, scope, {argv, argc, &info});
 }
 
 //
 // ACS_ExecuteScriptIResult
 //
 uint32_t ACS_ExecuteScriptIResult(uint32_t name, const uint32_t *argv,
-                                 uint32_t argc, Mobj *mo, line_t *line, int side)
+                                  uint32_t argc, Mobj *mo, line_t *line, int side)
 {
-   return ACS_executeScriptResult(name, argv, argc, mo, line, side);
+   ACSThreadInfo info{mo, line, side};
+   return ACSenv.map->scriptStartResult(name, {argv, argc, &info});
 }
 
 //
 // ACS_ExecuteScriptS
 //
-bool ACS_ExecuteScriptS(const char *name, uint32_t mapnum, const uint32_t *argv,
+bool ACS_ExecuteScriptS(const char *str, uint32_t mapnum, const uint32_t *argv,
                         uint32_t argc, Mobj *mo, line_t *line, int side)
 {
-   ACSVM::String *nameStr = ACSenv.getString(name, strlen(name));
-   return ACS_executeScript(nameStr, mapnum, argv, argc, mo, line, side,
-                            ACSVM::ScriptAction::Start,
-                            &ACSVM::MapScope::scriptStart);
+   ACSVM::String *name = ACSenv.getString(str, strlen(str));
+   ACSVM::ScopeID scope{ACSenv.global->id, ACSenv.hub->id, mapnum ? mapnum : gamemap};
+   ACSThreadInfo  info{mo, line, side};
+   return ACSenv.map->scriptStart(name, scope, {argv, argc, &info});
 }
 
 //
 // ACS_ExecuteScriptSAlways
 //
-bool ACS_ExecuteScriptSAlways(const char *name, uint32_t mapnum, const uint32_t *argv,
+bool ACS_ExecuteScriptSAlways(const char *str, uint32_t mapnum, const uint32_t *argv,
                               uint32_t argc, Mobj *mo, line_t *line, int side)
 {
-   ACSVM::String *nameStr = ACSenv.getString(name, strlen(name));
-   return ACS_executeScript(nameStr, mapnum, argv, argc, mo, line, side,
-                            ACSVM::ScriptAction::StartForced,
-                            &ACSVM::MapScope::scriptStartForced);
+   ACSVM::String *name = ACSenv.getString(str, strlen(str));
+   ACSVM::ScopeID scope{ACSenv.global->id, ACSenv.hub->id, mapnum ? mapnum : gamemap};
+   ACSThreadInfo  info{mo, line, side};
+   return ACSenv.map->scriptStartForced(name, scope, {argv, argc, &info});
 }
 
 //
 // ACS_ExecuteScriptSResult
 //
-uint32_t ACS_ExecuteScriptSResult(const char *name, const uint32_t *argv,
+uint32_t ACS_ExecuteScriptSResult(const char *str, const uint32_t *argv,
                                  uint32_t argc, Mobj *mo, line_t *line, int side)
 {
-   ACSVM::String *nameStr = ACSenv.getString(name, strlen(name));
-   return ACS_executeScriptResult(nameStr, argv, argc, mo, line, side);
-}
-
-//
-// ACS_suspendScript
-//
-template<typename NameT, typename PauseT>
-static bool ACS_suspendScript(NameT name, uint32_t mapnum,
-                              ACSVM::ScriptAction::Action action, PauseT pause)
-{
-   if(!mapnum || mapnum == gamemap)
-   {
-      auto script = ACSenv.map->findScript(name);
-      if(!script) return false;
-      (ACSenv.map->*pause)(script);
-   }
-   else
-   {
-      ACSenv.deferAction({{ACSenv.global->id, ACSenv.map->hub->id, mapnum}, name, action, {}});
-   }
-
-   return true;
+   ACSVM::String *name = ACSenv.getString(str, strlen(str));
+   ACSThreadInfo  info{mo, line, side};
+   return ACSenv.map->scriptStartResult(name, {argv, argc, &info});
 }
 
 //
@@ -2351,18 +2297,18 @@ static bool ACS_suspendScript(NameT name, uint32_t mapnum,
 //
 bool ACS_SuspendScriptI(uint32_t name, uint32_t mapnum)
 {
-   return ACS_suspendScript(name, mapnum, ACSVM::ScriptAction::Pause,
-                            &ACSVM::MapScope::scriptPause);
+   ACSVM::ScopeID scope{ACSenv.global->id, ACSenv.hub->id, mapnum ? mapnum : gamemap};
+   return ACSenv.map->scriptPause(name, scope);
 }
 
 //
 // ACS_SuspendScriptS
 //
-bool ACS_SuspendScriptS(const char *name, uint32_t mapnum)
+bool ACS_SuspendScriptS(const char *str, uint32_t mapnum)
 {
-   ACSVM::String *nameStr = ACSenv.getString(name, strlen(name));
-   return ACS_suspendScript(nameStr, mapnum, ACSVM::ScriptAction::Pause,
-                            &ACSVM::MapScope::scriptPause);
+   ACSVM::String *name = ACSenv.getString(str, strlen(str));
+   ACSVM::ScopeID scope{ACSenv.global->id, ACSenv.hub->id, mapnum ? mapnum : gamemap};
+   return ACSenv.map->scriptPause(name, scope);
 }
 
 //
@@ -2370,18 +2316,18 @@ bool ACS_SuspendScriptS(const char *name, uint32_t mapnum)
 //
 bool ACS_TerminateScriptI(uint32_t name, uint32_t mapnum)
 {
-   return ACS_suspendScript(name, mapnum, ACSVM::ScriptAction::Stop,
-                            &ACSVM::MapScope::scriptStop);
+   ACSVM::ScopeID scope{ACSenv.global->id, ACSenv.hub->id, mapnum ? mapnum : gamemap};
+   return ACSenv.map->scriptStop(name, scope);
 }
 
 //
 // ACS_TerminateScriptS
 //
-bool ACS_TerminateScriptS(const char *name, uint32_t mapnum)
+bool ACS_TerminateScriptS(const char *str, uint32_t mapnum)
 {
-   ACSVM::String *nameStr = ACSenv.getString(name, strlen(name));
-   return ACS_suspendScript(nameStr, mapnum, ACSVM::ScriptAction::Stop,
-                            &ACSVM::MapScope::scriptStop);
+   ACSVM::String *name = ACSenv.getString(str, strlen(str));
+   ACSVM::ScopeID scope{ACSenv.global->id, ACSenv.hub->id, mapnum ? mapnum : gamemap};
+   return ACSenv.map->scriptStop(name, scope);
 }
 
 //

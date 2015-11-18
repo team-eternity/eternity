@@ -13,7 +13,7 @@
 #include "Array.hpp"
 
 #include "BinaryIO.hpp"
-#include "Environ.hpp"
+#include "Environment.hpp"
 
 
 //----------------------------------------------------------------------------|

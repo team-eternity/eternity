@@ -23,6 +23,8 @@
 
 namespace ACSVM
 {
+   extern "C" using MapScope_ScriptStartFuncC = void (*)(void *);
+
    //
    // GlobalScope
    //
@@ -39,9 +41,11 @@ namespace ACSVM
 
       void exec();
 
+      void freeHubScope(HubScope *scope);
+
       HubScope *getHubScope(Word id);
 
-      bool hasActiveThread();
+      bool hasActiveThread() const;
 
       void lockStrings() const;
 
@@ -88,9 +92,11 @@ namespace ACSVM
 
       void exec();
 
+      void freeMapScope(MapScope *scope);
+
       MapScope *getMapScope(Word id);
 
-      bool hasActiveThread();
+      bool hasActiveThread() const;
 
       void lockStrings() const;
 
@@ -128,14 +134,37 @@ namespace ACSVM
    class MapScope
    {
    public:
+      using ScriptStartFunc = void (*)(Thread *);
+      using ScriptStartFuncC = MapScope_ScriptStartFuncC;
+
+      //
+      // ScriptStartInfo
+      //
+      class ScriptStartInfo
+      {
+      public:
+         ScriptStartInfo() :
+            argV{nullptr}, func{nullptr}, funcc{nullptr}, info{nullptr}, argC{0} {}
+         ScriptStartInfo(Word const *argV_, std::size_t argC_,
+            ThreadInfo const *info_ = nullptr, ScriptStartFunc func_ = nullptr) :
+            argV{argV_}, func{func_}, funcc{nullptr}, info{info_}, argC{argC_} {}
+         ScriptStartInfo(Word const *argV_, std::size_t argC_,
+            ThreadInfo const *info_, ScriptStartFuncC func_) :
+            argV{argV_}, func{nullptr}, funcc{func_}, info{info_}, argC{argC_} {}
+
+         Word       const *argV;
+         ScriptStartFunc   func;
+         ScriptStartFuncC  funcc;
+         ThreadInfo const *info;
+         std::size_t       argC;
+      };
+
+
       MapScope(MapScope const &) = delete;
       MapScope(HubScope *hub, Word id);
       ~MapScope();
 
-      void addModule(Module *module);
-
-      //This must be called after all modules have been added.
-      void addModuleFinish();
+      void addModules(Module *const *moduleV, std::size_t moduleC);
 
       void exec();
 
@@ -147,7 +176,9 @@ namespace ACSVM
 
       String *getString(Word idx) const;
 
-      bool hasActiveThread();
+      bool hasActiveThread() const;
+
+      bool hasModules() const;
 
       bool isScriptActive(Script *script);
 
@@ -161,12 +192,17 @@ namespace ACSVM
 
       void saveState(std::ostream &out) const;
 
-      void scriptPause(Script *script);
-      void scriptStart(Script *script, ThreadInfo const *info, Word const *argV, Word argC);
-      void scriptStartForced(Script *script, ThreadInfo const *info, Word const *argV, Word argC);
-      Word scriptStartResult(Script *script, ThreadInfo const *info, Word const *argV, Word argC);
-      void scriptStartType(ScriptType type, ThreadInfo const *info, Word const *argV, Word argC);
-      void scriptStop(Script *script);
+      bool scriptPause(Script *script);
+      bool scriptPause(ScriptName name, ScopeID scope);
+      bool scriptStart(Script *script, ScriptStartInfo const &info);
+      bool scriptStart(ScriptName name, ScopeID scope, ScriptStartInfo const &info);
+      bool scriptStartForced(Script *script, ScriptStartInfo const &info);
+      bool scriptStartForced(ScriptName name, ScopeID scope, ScriptStartInfo const &info);
+      Word scriptStartResult(Script *script, ScriptStartInfo const &info);
+      Word scriptStartResult(ScriptName name, ScriptStartInfo const &info);
+      Word scriptStartType(ScriptType type, ScriptStartInfo const &info);
+      bool scriptStop(Script *script);
+      bool scriptStop(ScriptName name, ScopeID scope);
 
       void unlockStrings() const;
 

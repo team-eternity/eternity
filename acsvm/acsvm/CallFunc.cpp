@@ -13,7 +13,8 @@
 #include "CallFunc.hpp"
 
 #include "Action.hpp"
-#include "Environ.hpp"
+#include "Code.hpp"
+#include "Environment.hpp"
 #include "Module.hpp"
 #include "Scope.hpp"
 #include "Thread.hpp"
@@ -97,6 +98,16 @@ namespace ACSVM
    bool CallFunc_Func_Nop(Thread *, Word const *, Word)
    {
       return false;
+   }
+
+   //
+   // [[noreturn]] void Kill()
+   //
+   bool CallFunc_Func_Kill(Thread *thread, Word const *, Word)
+   {
+      thread->env->printKill(thread, static_cast<Word>(KillType::UnknownFunc), 0);
+      thread->state = ThreadState::Stopped;
+      return true;
    }
 
    //======================================================
@@ -238,147 +249,91 @@ namespace ACSVM
    //
    // int ScrPauseS(str name, int map)
    //
-   bool CallFunc_Func_ScrPauseS(Thread *thread, Word const *argv, Word)
+   bool CallFunc_Func_ScrPauseS(Thread *thread, Word const *argV, Word)
    {
-      String *name = thread->scopeMap->getString(argv[0]);
-      Word    map  = argv[1];
+      String *name = thread->scopeMap->getString(argV[0]);
+      ScopeID scope{thread->scopeGbl->id, thread->scopeHub->id, argV[1]};
+      if(!scope.map) scope.map = thread->scopeMap->id;
 
-      if(map && map != thread->scopeMap->id)
-      {
-         thread->env->deferAction({
-            {thread->scopeGbl->id, thread->scopeHub->id, map},
-            name, ScriptAction::Pause, {}});
-      }
-      else if(Script *script = thread->scopeMap->findScript(name))
-      {
-         thread->scopeMap->scriptPause(script);
-      }
-
-      thread->dataStk.push(1);
+      thread->dataStk.push(thread->scopeMap->scriptPause(name, scope));
       return false;
    }
 
    //
    // int ScrStartS(str name, int map, ...)
    //
-   bool CallFunc_Func_ScrStartS(Thread *thread, Word const *argv, Word argc)
+   bool CallFunc_Func_ScrStartS(Thread *thread, Word const *argV, Word argC)
    {
-      String *name = thread->scopeMap->getString(argv[0]);
-      Word    map  = argv[1];
-      bool    res;
+      String *name = thread->scopeMap->getString(argV[0]);
+      ScopeID scope{thread->scopeGbl->id, thread->scopeHub->id, argV[1]};
+      if(!scope.map) scope.map = thread->scopeMap->id;
 
-      if(map && map != thread->scopeMap->id)
-      {
-         res = true;
-         thread->env->deferAction({
-            {thread->scopeGbl->id, thread->scopeHub->id, map},
-            name, ScriptAction::Start, {argv+2, argc-2}});
-      }
-      else if(Script *script = thread->scopeMap->findScript(name))
-      {
-         res = true;
-         thread->scopeMap->scriptStart(script, thread->getInfo(), argv+2, argc-2);
-      }
-      else
-         res = false;
-
-      thread->dataStk.push(res);
+      thread->dataStk.push(thread->scopeMap->scriptStart(name, scope, {argV+2, argC-2}));
       return false;
    }
 
    //
    // int ScrStartSD(str name, int map, int arg0, int arg1, int lock)
    //
-   bool CallFunc_Func_ScrStartSD(Thread *thread, Word const *argv, Word)
+   bool CallFunc_Func_ScrStartSD(Thread *thread, Word const *argV, Word)
    {
-      if(!thread->env->checkLock(thread, argv[4], true))
+      if(!thread->env->checkLock(thread, argV[4], true))
       {
          thread->dataStk.push(0);
          return false;
       }
 
-      return CallFunc_Func_ScrStartS(thread, argv, 4);
+      return CallFunc_Func_ScrStartS(thread, argV, 4);
    }
 
    //
    // int ScrStartSF(str name, int map, ...)
    //
-   bool CallFunc_Func_ScrStartSF(Thread *thread, Word const *argv, Word argc)
+   bool CallFunc_Func_ScrStartSF(Thread *thread, Word const *argV, Word argC)
    {
-      String *name = thread->scopeMap->getString(argv[0]);
-      Word    map  = argv[1];
-      bool    res;
+      String *name = thread->scopeMap->getString(argV[0]);
+      ScopeID scope{thread->scopeGbl->id, thread->scopeHub->id, argV[1]};
+      if(!scope.map) scope.map = thread->scopeMap->id;
 
-      if(map && map != thread->scopeMap->id)
-      {
-         res = true;
-         thread->env->deferAction({
-            {thread->scopeGbl->id, thread->scopeHub->id, map},
-            name, ScriptAction::StartForced, {argv+2, argc-2}});
-      }
-      else if(Script *script = thread->scopeMap->findScript(name))
-      {
-         res = true;
-         thread->scopeMap->scriptStartForced(script, thread->getInfo(), argv+2, argc-2);
-      }
-      else
-         res = false;
-
-      thread->dataStk.push(res);
+      thread->dataStk.push(thread->scopeMap->scriptStartForced(name, scope, {argV+2, argC-2}));
       return false;
    }
 
    //
    // int ScrStartSL(str name, int map, int arg0, int arg1, int lock)
    //
-   bool CallFunc_Func_ScrStartSL(Thread *thread, Word const *argv, Word)
+   bool CallFunc_Func_ScrStartSL(Thread *thread, Word const *argV, Word)
    {
-      if(!thread->env->checkLock(thread, argv[4], false))
+      if(!thread->env->checkLock(thread, argV[4], false))
       {
          thread->dataStk.push(0);
          return false;
       }
 
-      return CallFunc_Func_ScrStartS(thread, argv, 4);
+      return CallFunc_Func_ScrStartS(thread, argV, 4);
    }
 
    //
    // int ScrStartSR(str name, ...)
    //
-   bool CallFunc_Func_ScrStartSR(Thread *thread, Word const *argv, Word argc)
+   bool CallFunc_Func_ScrStartSR(Thread *thread, Word const *argV, Word argC)
    {
-      String *name = thread->scopeMap->getString(argv[0]);
-      Word    res;
+      String *name = thread->scopeMap->getString(argV[0]);
 
-      if(Script *script = thread->scopeMap->findScript(name))
-         res = thread->scopeMap->scriptStartResult(script, thread->getInfo(), argv+1, argc-1);
-      else
-         res = 0;
-
-      thread->dataStk.push(res);
+      thread->dataStk.push(thread->scopeMap->scriptStartResult(name, {argV+2, argC-2}));
       return false;
    }
 
    //
    // int ScrStopS(str name, int map)
    //
-   bool CallFunc_Func_ScrStopS(Thread *thread, Word const *argv, Word)
+   bool CallFunc_Func_ScrStopS(Thread *thread, Word const *argV, Word)
    {
-      String *name = thread->scopeMap->getString(argv[0]);
-      Word    map  = argv[1];
+      String *name = thread->scopeMap->getString(argV[0]);
+      ScopeID scope{thread->scopeGbl->id, thread->scopeHub->id, argV[1]};
+      if(!scope.map) scope.map = thread->scopeMap->id;
 
-      if(map && map != thread->scopeMap->id)
-      {
-         thread->env->deferAction({
-            {thread->scopeGbl->id, thread->scopeHub->id, map},
-            name, ScriptAction::Stop, {}});
-      }
-      else if(Script *script = thread->scopeMap->findScript(name))
-      {
-         thread->scopeMap->scriptStop(script);
-      }
-
-      thread->dataStk.push(1);
+      thread->dataStk.push(thread->scopeMap->scriptStop(name, scope));
       return false;
    }
 

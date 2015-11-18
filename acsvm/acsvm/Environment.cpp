@@ -10,7 +10,7 @@
 //
 //-----------------------------------------------------------------------------
 
-#include "Environ.hpp"
+#include "Environment.hpp"
 
 #include "Action.hpp"
 #include "BinaryIO.hpp"
@@ -109,6 +109,7 @@ namespace ACSVM
    // Environment constructor
    //
    Environment::Environment() :
+      branchLimit  {0},
       scriptLocRegC{ScriptLocRegCDefault},
 
       funcV{nullptr},
@@ -314,6 +315,24 @@ namespace ACSVM
    }
 
    //
+   // Environment::freeGlobalScope
+   //
+   void Environment::freeGlobalScope(GlobalScope *scope)
+   {
+      pd->scopes.unlink(scope);
+      delete scope;
+   }
+
+   //
+   // Environment::freeModule
+   //
+   void Environment::freeModule(Module *module)
+   {
+      pd->modules.unlink(module);
+      delete module;
+   }
+
+   //
    // Environment::freeThread
    //
    void Environment::freeThread(Thread *thread)
@@ -444,7 +463,7 @@ namespace ACSVM
    //
    // Environment::hasActiveThread
    //
-   bool Environment::hasActiveThread()
+   bool Environment::hasActiveThread() const
    {
       for(auto &scope : pd->scopes)
       {
@@ -546,7 +565,7 @@ namespace ACSVM
    void Environment::printKill(Thread *thread, Word type, Word data)
    {
       std::cerr << "ACSVM ERROR: Kill " << type << ':' << data
-         << " at " << (thread->codePtr - thread->module->codeV.data() - 3) << '\n';
+         << " at " << (thread->codePtr - thread->module->codeV.data() - 1) << '\n';
    }
 
    //

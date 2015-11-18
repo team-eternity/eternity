@@ -34,7 +34,7 @@
 #include "p_tick.h"
 #include "r_defs.h"
 
-#include "acsvm/Environ.hpp"
+#include "acsvm/Environment.hpp"
 #include "acsvm/Thread.hpp"
 
 class  qstring;

@@ -14,7 +14,7 @@
 
 #include "Action.hpp"
 #include "BinaryIO.hpp"
-#include "Environ.hpp"
+#include "Environment.hpp"
 #include "HashMap.hpp"
 #include "HashMapFixed.hpp"
 #include "Init.hpp"
@@ -22,7 +22,6 @@
 #include "Script.hpp"
 #include "Thread.hpp"
 
-#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -55,8 +54,6 @@ namespace ACSVM
    struct MapScope::PrivData
    {
       HashMapFixed<Module *, ModuleScope> scopes;
-
-      std::unordered_set<Module *> modules;
 
       HashMapFixed<Word,     Script *> scriptInt;
       HashMapFixed<String *, Script *> scriptStr;
@@ -133,6 +130,15 @@ namespace ACSVM
    }
 
    //
+   // GlobalScope::freeHubScope
+   //
+   void GlobalScope::freeHubScope(HubScope *scope)
+   {
+      pd->scopes.unlink(scope);
+      delete scope;
+   }
+
+   //
    // GlobalScope::getHubScope
    //
    HubScope *GlobalScope::getHubScope(Word scopeID)
@@ -148,7 +154,7 @@ namespace ACSVM
    //
    // GlobalScope::hasActiveThread
    //
-   bool GlobalScope::hasActiveThread()
+   bool GlobalScope::hasActiveThread() const
    {
       for(auto &scope : pd->scopes)
       {
@@ -310,6 +316,15 @@ namespace ACSVM
    }
 
    //
+   // HubScope::freeMapScope
+   //
+   void HubScope::freeMapScope(MapScope *scope)
+   {
+      pd->scopes.unlink(scope);
+      delete scope;
+   }
+
+   //
    // HubScope::getMapScope
    //
    MapScope *HubScope::getMapScope(Word scopeID)
@@ -325,7 +340,7 @@ namespace ACSVM
    //
    // HubScope::hasActiveThread
    //
-   bool HubScope::hasActiveThread()
+   bool HubScope::hasActiveThread() const
    {
       for(auto &scope : pd->scopes)
       {
@@ -465,31 +480,36 @@ namespace ACSVM
    }
 
    //
-   // MapScope::addModule
+   // MapScope::addModules
    //
-   void MapScope::addModule(Module *module)
+   void MapScope::addModules(Module *const *moduleV, std::size_t moduleC)
    {
-      if(!module0) module0 = module;
+      module0 = moduleC ? moduleV[0] : nullptr;
 
-      if(pd->modules.count(module)) return;
+      // Find all associated modules.
 
-      pd->modules.insert(module);
+      struct
+      {
+         std::unordered_set<Module *> set;
 
-      for(auto &import : module->importV)
-         addModule(import);
-   }
+         void add(Module *module)
+         {
+            if(set.insert(module).second)
+               for(auto &import : module->importV)
+                  add(import);
+         }
+      } modules;
 
-   //
-   // MapScope::addModuleFinish
-   //
-   void MapScope::addModuleFinish()
-   {
+      for(auto itr = moduleV, end = itr + moduleC; itr != end; ++itr)
+         modules.add(*itr);
+
+      // Count scripts.
+
       std::size_t scriptThrC = 0;
       std::size_t scriptIntC = 0;
       std::size_t scriptStrC = 0;
 
-      // Count scripts.
-      for(auto &module : pd->modules)
+      for(auto &module : modules.set)
       {
          for(auto &script : module->scriptV)
          {
@@ -503,7 +523,7 @@ namespace ACSVM
 
       // Create lookup tables.
 
-      pd->scopes.alloc(pd->modules.size());
+      pd->scopes.alloc(modules.set.size());
       pd->scriptInt.alloc(scriptIntC);
       pd->scriptStr.alloc(scriptStrC);
       pd->scriptThread.alloc(scriptThrC);
@@ -513,7 +533,7 @@ namespace ACSVM
       auto scriptStrItr = pd->scriptStr.begin();
       auto scriptThrItr = pd->scriptThread.begin();
 
-      for(auto &module : pd->modules)
+      for(auto &module : modules.set)
       {
          using ElemScope = HashMapFixed<Module *, ModuleScope>::Elem;
 
@@ -557,11 +577,11 @@ namespace ACSVM
          if(script) switch(action->action)
          {
          case ScriptAction::Start:
-            scriptStart(script, nullptr, action->argV.data(), action->argV.size());
+            scriptStart(script, {action->argV.data(), action->argV.size()});
             break;
 
          case ScriptAction::StartForced:
-            scriptStartForced(script, nullptr, action->argV.data(), action->argV.size());
+            scriptStartForced(script, {action->argV.data(), action->argV.size()});
             break;
 
          case ScriptAction::Stop:
@@ -580,7 +600,7 @@ namespace ACSVM
       for(auto itr = threadActive.begin(), end = threadActive.end(); itr != end;)
       {
          itr->exec();
-         if(itr->state.state == ThreadState::Inactive)
+         if(itr->state == ThreadState::Inactive)
             freeThread(&*itr++);
          else
             ++itr;
@@ -654,15 +674,23 @@ namespace ACSVM
    //
    // MapScope::hasActiveThread
    //
-   bool MapScope::hasActiveThread()
+   bool MapScope::hasActiveThread() const
    {
       for(auto &thread : threadActive)
       {
-         if(thread.state.state != ThreadState::Inactive)
+         if(thread.state != ThreadState::Inactive)
             return true;
       }
 
       return false;
+   }
+
+   //
+   // MapScope::hasModules
+   //
+   bool MapScope::hasModules() const
+   {
+      return !pd->scopes.empty();
    }
 
    //
@@ -671,7 +699,7 @@ namespace ACSVM
    bool MapScope::isScriptActive(Script *script)
    {
       auto itr = pd->scriptThread.find(script);
-      return itr && *itr && (*itr)->state.state != ThreadState::Inactive;
+      return itr && *itr && (*itr)->state != ThreadState::Inactive;
    }
 
    //
@@ -686,9 +714,7 @@ namespace ACSVM
       for(auto n = count; n--;)
          modules.emplace_back(env->getModule(env->readModuleName(in)));
 
-      for(auto &module : modules)
-         addModule(module);
-      addModuleFinish();
+      addModules(modules.data(), modules.size());
 
       for(auto &module : modules)
          pd->scopes.find(module)->loadState(in);
@@ -776,8 +802,6 @@ namespace ACSVM
 
       pd->scopes.free();
 
-      pd->modules.clear();
-
       pd->scriptInt.free();
       pd->scriptStr.free();
       pd->scriptThread.free();
@@ -826,85 +850,202 @@ namespace ACSVM
    //
    // MapScope::scriptPause
    //
-   void MapScope::scriptPause(Script *script)
+   bool MapScope::scriptPause(Script *script)
    {
       auto itr = pd->scriptThread.find(script);
-      if(itr && *itr)
+      if(!itr || !*itr)
+         return false;
+
+      switch((*itr)->state.state)
+      {
+      case ThreadState::Inactive:
+      case ThreadState::Paused:
+      case ThreadState::Stopped:
+         return false;
+
+      default:
          (*itr)->state = ThreadState::Paused;
+         return true;
+      }
+   }
+
+   //
+   // MapScope::scriptPause
+   //
+   bool MapScope::scriptPause(ScriptName name, ScopeID scope)
+   {
+      if(scope != ScopeID{hub->global->id, hub->id, id})
+      {
+         env->deferAction({scope, name, ScriptAction::Pause, {}});
+         return true;
+      }
+
+      if(Script *script = findScript(name))
+         return scriptPause(script);
+      else
+         return false;
    }
 
    //
    // MapScope::scriptStart
    //
-   void MapScope::scriptStart(Script *script, ThreadInfo const *info,
-      Word const *argV, Word argC)
+   bool MapScope::scriptStart(Script *script, ScriptStartInfo const &info)
    {
       auto itr = pd->scriptThread.find(script);
-      if(!itr) return;
+      if(!itr)
+         return false;
 
       if(Thread *&thread = *itr)
       {
-         thread->state = ThreadState::Running;
+         switch(thread->state.state)
+         {
+         case ThreadState::Paused:
+            thread->state = ThreadState::Running;
+            return true;
+
+         default:
+            return false;
+         }
       }
       else
       {
          thread = env->getFreeThread();
-         thread->start(script, this, info, argV, argC);
+         thread->start(script, this, info.info, info.argV, info.argC);
+         if(info.func) info.func(thread);
+         if(info.funcc) info.funcc(thread);
+         return true;
       }
+   }
+
+   //
+   // MapScope::scriptStart
+   //
+   bool MapScope::scriptStart(ScriptName name, ScopeID scope, ScriptStartInfo const &info)
+   {
+      if(scope != ScopeID{hub->global->id, hub->id, id})
+      {
+         env->deferAction({scope, name, ScriptAction::Start, {info.argV, info.argC}});
+         return true;
+      }
+
+      if(Script *script = findScript(name))
+         return scriptStart(script, info);
+      else
+         return false;
    }
 
    //
    // MapScope::scriptStartForced
    //
-   void MapScope::scriptStartForced(Script *script, ThreadInfo const *info,
-      Word const *argV, Word argC)
+   bool MapScope::scriptStartForced(Script *script, ScriptStartInfo const &info)
    {
       Thread *thread = env->getFreeThread();
 
-      thread->start(script, this, info, argV, argC);
+      thread->start(script, this, info.info, info.argV, info.argC);
+      if(info.func) info.func(thread);
+      if(info.funcc) info.funcc(thread);
+      return true;
+   }
+
+   //
+   // MapScope::scriptStartForced
+   //
+   bool MapScope::scriptStartForced(ScriptName name, ScopeID scope, ScriptStartInfo const &info)
+   {
+      if(scope != ScopeID{hub->global->id, hub->id, id})
+      {
+         env->deferAction({scope, name, ScriptAction::StartForced, {info.argV, info.argC}});
+         return true;
+      }
+
+      if(Script *script = findScript(name))
+         return scriptStartForced(script, info);
+      else
+         return false;
    }
 
    //
    // MapScope::scriptStartResult
    //
-   Word MapScope::scriptStartResult(Script *script, ThreadInfo const *info,
-      Word const *argV, Word argC)
+   Word MapScope::scriptStartResult(Script *script, ScriptStartInfo const &info)
    {
       Thread *thread = env->getFreeThread();
 
-      thread->start(script, this, info, argV, argC);
+      thread->start(script, this, info.info, info.argV, info.argC);
+      if(info.func) info.func(thread);
+      if(info.funcc) info.funcc(thread);
       thread->exec();
 
       Word result = thread->result;
-      if(thread->state.state == ThreadState::Inactive)
+      if(thread->state == ThreadState::Inactive)
          freeThread(thread);
       return result;
    }
 
    //
+   // MapScope::scriptStartResult
+   //
+   Word MapScope::scriptStartResult(ScriptName name, ScriptStartInfo const &info)
+   {
+      if(Script *script = findScript(name))
+         return scriptStartResult(script, info);
+      else
+         return 0;
+   }
+
+   //
    // MapScope::scriptStartType
    //
-   void MapScope::scriptStartType(ScriptType type, ThreadInfo const *info,
-      Word const *argV, Word argC)
+   Word MapScope::scriptStartType(ScriptType type, ScriptStartInfo const &info)
    {
+      Word result = 0;
+
       for(auto &script : pd->scriptThread)
       {
          if(script.key->type == type)
-            scriptStartForced(script.key, info, argV, argC);
+            result += scriptStartForced(script.key, info);
+      }
+
+      return result;
+   }
+
+   //
+   // MapScope::scriptStop
+   //
+   bool MapScope::scriptStop(Script *script)
+   {
+      auto itr = pd->scriptThread.find(script);
+      if(!itr || !*itr)
+         return false;
+
+      switch((*itr)->state.state)
+      {
+      case ThreadState::Inactive:
+      case ThreadState::Stopped:
+         return false;
+
+      default:
+         (*itr)->state = ThreadState::Stopped;
+         (*itr)        = nullptr;
+         return true;
       }
    }
 
    //
    // MapScope::scriptStop
    //
-   void MapScope::scriptStop(Script *script)
+   bool MapScope::scriptStop(ScriptName name, ScopeID scope)
    {
-      auto itr = pd->scriptThread.find(script);
-      if(itr && *itr)
+      if(scope != ScopeID{hub->global->id, hub->id, id})
       {
-         (*itr)->state = ThreadState::Stopped;
-         (*itr)        = nullptr;
+         env->deferAction({scope, name, ScriptAction::Stop, {}});
+         return true;
       }
+
+      if(Script *script = findScript(name))
+         return scriptStop(script);
+      else
+         return false;
    }
 
    //

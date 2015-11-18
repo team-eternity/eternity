@@ -58,7 +58,11 @@ namespace ACSVM
 
    public:
       ListLink() : obj{nullptr}, prev{this}, next{this} {}
+      ListLink(ListLink<T> const &) = delete;
       ListLink(T *obj_) : obj{obj_}, prev{this}, next{this} {}
+      ListLink(T *obj_, ListLink<T> &&link) :
+         obj{obj_}, prev{link.prev}, next{link.next}
+         {prev->next = next->prev = this; link.prev = link.next = &link;}
       ~ListLink() {unlink();}
 
       // begin

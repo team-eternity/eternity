@@ -87,6 +87,9 @@ namespace ACSVM
          }
       }
 
+      // empty
+      bool empty() const {return !elemC;}
+
       // end
       iterator end() {return elemV + elemC;}
 

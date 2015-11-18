@@ -41,6 +41,19 @@ namespace ACSVM
    //
    // CodeDataACS0 constructor
    //
+   CodeDataACS0::CodeDataACS0(char const *args_, Word stackArgC_, Word transFunc_) :
+      code     {CodeACS0::None},
+      args     {args_},
+      argc     {CountArgs(args_)},
+      stackArgC{stackArgC_},
+      transCode{argc ? Code::CallFunc_Lit : Code::CallFunc},
+      transFunc{transFunc_}
+   {
+   }
+
+   //
+   // CodeDataACS0 constructor
+   //
    CodeDataACS0::CodeDataACS0(CodeACS0 code_, char const *args_,
       Code transCode_, Word stackArgC_, Func transFunc_) :
       code     {code_},
@@ -79,7 +92,7 @@ namespace ACSVM
    FuncDataACS0::FuncDataACS0(FuncDataACS0 const &data) :
       transFunc{data.transFunc},
 
-      transCodeV{new std::pair<Word, Code>[data.transCodeC]},
+      transCodeV{new TransCode[data.transCodeC]},
       transCodeC{data.transCodeC}
    {
       std::copy(data.transCodeV, data.transCodeV + transCodeC, transCodeV);
@@ -102,12 +115,12 @@ namespace ACSVM
    // FuncDataACS0 constructor
    //
    FuncDataACS0::FuncDataACS0(FuncACS0 func_, Func transFunc_,
-      std::initializer_list<std::pair<Word, Code>> transCodes) :
+      std::initializer_list<TransCode> transCodes) :
       func{func_},
 
       transFunc{transFunc_ != Func::None ? static_cast<Word>(transFunc_) : 0},
 
-      transCodeV{new std::pair<Word, Code>[transCodes.size()]},
+      transCodeV{new TransCode[transCodes.size()]},
       transCodeC{transCodes.size()}
    {
       std::copy(transCodes.begin(), transCodes.end(), transCodeV);
@@ -130,15 +143,29 @@ namespace ACSVM
    // FuncDataACS0 constructor
    //
    FuncDataACS0::FuncDataACS0(Word transFunc_,
-      std::initializer_list<std::pair<Word, Code>> transCodes) :
+      std::initializer_list<TransCode> transCodes) :
       func{FuncACS0::None},
 
       transFunc{transFunc_},
 
-      transCodeV{new std::pair<Word, Code>[transCodes.size()]},
+      transCodeV{new TransCode[transCodes.size()]},
       transCodeC{transCodes.size()}
    {
       std::copy(transCodes.begin(), transCodes.end(), transCodeV);
+   }
+
+   //
+   // FuncDataACS0 constructor
+   //
+   FuncDataACS0::FuncDataACS0(Word transFunc_,
+      std::unique_ptr<TransCode[]> &&transCodeV_, std::size_t transCodeC_) :
+      func{FuncACS0::None},
+
+      transFunc{transFunc_},
+
+      transCodeV{transCodeV_.release()},
+      transCodeC{transCodeC_}
+   {
    }
 
    //

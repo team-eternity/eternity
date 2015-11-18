@@ -28,7 +28,19 @@ namespace ACSVM
    enum class ScriptType
    {
       Closed,
+      BlueReturn,
+      Death,
+      Disconnect,
+      Enter,
+      Event,
+      Lightning,
       Open,
+      Pickup,
+      RedReturn,
+      Respawn,
+      Return,
+      Unloading,
+      WhiteReturn,
    };
 
    //

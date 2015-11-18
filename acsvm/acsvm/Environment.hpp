@@ -10,8 +10,8 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef ACSVM__Environ_H__
-#define ACSVM__Environ_H__
+#ifndef ACSVM__Environment_H__
+#define ACSVM__Environment_H__
 
 #include "List.hpp"
 #include "String.hpp"
@@ -23,8 +23,6 @@
 
 namespace ACSVM
 {
-   using CallFunc = bool (*)(Thread *thread, Word const *argv, Word argc);
-
    //
    // Environment
    //
@@ -41,7 +39,7 @@ namespace ACSVM
       void addCodeDataACS0(Word code, CodeDataACS0 &&data);
       void addFuncDataACS0(Word func, FuncDataACS0 &&data);
 
-      bool callFunc(Thread *thread, Word func, Word const *argV, Word argC);
+      virtual bool callFunc(Thread *thread, Word func, Word const *argV, Word argC);
       Word callSpec(Thread *thread, Word spec, Word const *argV, Word argC);
 
       // Function to check if a lock can be opened. Default behavior is to
@@ -65,6 +63,10 @@ namespace ACSVM
 
       // Used by Module when unloading.
       void freeFunction(Function *func);
+
+      void freeGlobalScope(GlobalScope *scope);
+
+      void freeModule(Module *module);
 
       void freeThread(Thread *thread);
 
@@ -90,6 +92,9 @@ namespace ACSVM
       String *getString(char const *first, char const *last)
          {return &stringTable[{first, last}];}
 
+      String *getString(char const *str)
+         {return getString(str, std::strlen(str));}
+
       String *getString(char const *str, std::size_t len)
          {return &stringTable[{str, len}];}
 
@@ -97,7 +102,7 @@ namespace ACSVM
          {return data ? &stringTable[*data] : nullptr;}
 
       // Returns true if any contained scope is active and has an active thread.
-      bool hasActiveThread();
+      bool hasActiveThread() const;
 
       virtual void loadState(std::istream &in);
 
@@ -119,7 +124,7 @@ namespace ACSVM
 
       virtual void refStrings();
 
-      void resetStrings();
+      virtual void resetStrings();
 
       virtual void saveState(std::ostream &out) const;
 
@@ -133,6 +138,10 @@ namespace ACSVM
       void writeString(std::ostream &out, String const *in) const;
 
       StringTable stringTable;
+
+      // Number of branches allowed per call to Thread::exec. Default of 0
+      // means no limit.
+      Word branchLimit;
 
       // Default number of script variables. Default is 20.
       Word scriptLocRegC;
@@ -180,5 +189,5 @@ namespace ACSVM
    };
 }
 
-#endif//ACSVM__Environ_H__
+#endif//ACSVM__Environment_H__
 

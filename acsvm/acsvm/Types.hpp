@@ -62,6 +62,7 @@ namespace ACSVM
    class ModuleName;
    class ModuleScope;
    class PrintBuf;
+   class ScopeID;
    class Script;
    class ScriptAction;
    class ScriptName;
@@ -70,6 +71,8 @@ namespace ACSVM
    class ThreadInfo;
    class ThreadState;
    class WordInit;
+
+   using CallFunc = bool (*)(Thread *thread, Word const *argv, Word argc);
 }
 
 #endif//ACSVM__Types_H__

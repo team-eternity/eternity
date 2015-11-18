@@ -12,7 +12,7 @@
 
 #include "Action.hpp"
 
-#include "Environ.hpp"
+#include "Environment.hpp"
 
 
 //----------------------------------------------------------------------------|
@@ -21,6 +21,18 @@
 
 namespace ACSVM
 {
+   //
+   // ScriptAction move constructor
+   //
+   ScriptAction::ScriptAction(ScriptAction &&a) :
+      action{std::move(a.action)},
+      argV  {std::move(a.argV)},
+      id    {std::move(a.id)},
+      link  {this, std::move(a.link)},
+      name  {std::move(a.name)}
+   {
+   }
+
    //
    // ScriptAction constructor
    //

@@ -13,7 +13,7 @@
 #include "Module.hpp"
 
 #include "Array.hpp"
-#include "Environ.hpp"
+#include "Environment.hpp"
 #include "Function.hpp"
 #include "Init.hpp"
 #include "Jump.hpp"
