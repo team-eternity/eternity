@@ -315,6 +315,7 @@
     <ClCompile Include="..\source\autodoom\b_botmap.cpp" />
     <ClCompile Include="..\source\autodoom\b_botmaptemp.cpp" />
     <ClCompile Include="..\source\autodoom\b_classifier.cpp" />
+    <ClCompile Include="..\source\autodoom\b_compression.cpp" />
     <ClCompile Include="..\source\autodoom\b_glbsp.cpp" />
     <ClCompile Include="..\source\autodoom\b_intset.cpp" />
     <ClCompile Include="..\source\autodoom\b_itemlearn.cpp" />
@@ -2042,6 +2043,7 @@
     <ClInclude Include="..\source\autodoom\b_botmap.h" />
     <ClInclude Include="..\source\autodoom\b_botmaptemp.h" />
     <ClInclude Include="..\source\autodoom\b_classifier.h" />
+    <ClInclude Include="..\source\autodoom\b_compression.h" />
     <ClInclude Include="..\source\autodoom\b_glbsp.h" />
     <ClInclude Include="..\source\autodoom\b_intset.h" />
     <ClInclude Include="..\source\autodoom\b_itemlearn.h" />

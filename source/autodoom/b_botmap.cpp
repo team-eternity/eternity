@@ -58,7 +58,7 @@ BotMap *botMap;
 
 bool BotMap::demoPlayingFlag;
 
-const int CACHE_BUFFER_SIZE = 512 * 1024;
+const int CACHE_BUFFER_SIZE = 16384;//512 * 1024;
 enum { SUBSEC_GRID_STEP = 64 * FRACUNIT };
 
 static const char* const BOTMAP_CACHE_MAGIC = "BOTMAP02";
@@ -858,7 +858,9 @@ void BotMap::loadFromCache(const char* path)
          file.readSint32T(sg.dx);
          file.readSint32T(sg.dy);
          file.readSint32T((uintptr_t&)sg.ln);
-         file.readUint8T(sg.isback);
+         uint8_t tmp;
+         file.readUint8T(tmp);
+         sg.isback = tmp ? true : false;
          file.readSint32T((uintptr_t&)sg.partner);
 
          file.readSint32T(sg.bbox[0]);

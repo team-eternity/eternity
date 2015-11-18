@@ -850,12 +850,12 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
             {
                 pickRandomWeapon(targets[0]);
             }
-//            cmd->forwardmove = FixedMul(2 * pl->pclass->forwardmove[1],
-//                B_AngleCosine(dangle));
-//            cmd->sidemove = -FixedMul(2 * pl->pclass->sidemove[1],
-//                                      B_AngleSine(dangle));
+            cmd->forwardmove = FixedMul(2 * pl->pclass->forwardmove[1],
+                B_AngleCosine(dangle));
+            cmd->sidemove = -FixedMul(2 * pl->pclass->sidemove[1],
+                                      B_AngleSine(dangle));
             if(justPunched--)
-//                cmd->forwardmove -= pl->pclass->forwardmove[1]
+                cmd->forwardmove -= pl->pclass->forwardmove[1]
                 ;
         }
         else
@@ -867,18 +867,18 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
                 fixed_t dist = B_ExactDistance(nx - mx, ny - my);
                 if (dist < 384 * FRACUNIT)
                 {
-//                    cmd->forwardmove = FixedMul(2 * pl->pclass->forwardmove[1],
-//                        B_AngleSine(dangle)) * m_combatStrafeState;
-//                    cmd->sidemove = FixedMul(2 * pl->pclass->sidemove[1],
-//                        B_AngleCosine(dangle)) * m_combatStrafeState;
+                    cmd->forwardmove = FixedMul(2 * pl->pclass->forwardmove[1],
+                        B_AngleSine(dangle)) * m_combatStrafeState;
+                    cmd->sidemove = FixedMul(2 * pl->pclass->sidemove[1],
+                        B_AngleCosine(dangle)) * m_combatStrafeState;
                 }
                 if (dist < 256 * FRACUNIT)
                 {
                     
-//                    cmd->forwardmove -= FixedMul(2 * pl->pclass->forwardmove[1],
-//                        B_AngleCosine(dangle));
-//                    cmd->sidemove += FixedMul(2 * pl->pclass->sidemove[1],
-//                        B_AngleSine(dangle));
+                    cmd->forwardmove -= FixedMul(2 * pl->pclass->forwardmove[1],
+                        B_AngleCosine(dangle));
+                    cmd->sidemove += FixedMul(2 * pl->pclass->sidemove[1],
+                        B_AngleSine(dangle));
                 }
             }
 

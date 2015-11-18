@@ -109,13 +109,14 @@ public:
 // OutBuffer
 //
 // Buffered binary file output.
+// IOANCH 20151118: made virtual
 //
 class OutBuffer : public BufferedFileBase
 {
 public:
-   bool CreateFile(const char *filename, size_t pLen, int pEndian);
-   bool Flush();
-   void Close();
+   virtual bool CreateFile(const char *filename, size_t pLen, int pEndian);
+   virtual bool Flush();
+   virtual void Close();
 
    bool Write(const void *data, size_t size);
    bool WriteSint32(int32_t  num);
