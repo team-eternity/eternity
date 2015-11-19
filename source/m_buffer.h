@@ -131,6 +131,7 @@ public:
 // InBuffer
 //
 // Buffered binary file input.
+// IOANCH 20151118: made virtual
 //
 class InBuffer : public BufferedFileBase
 {
@@ -139,8 +140,8 @@ public:
    {
    }
 
-   bool openFile(const char *filename, int pEndian);
-   bool openExisting(FILE *f, int pEndian);
+   virtual bool openFile(const char *filename, int pEndian);
+   virtual bool openExisting(FILE *f, int pEndian);
 
    int    seek(long offset, int origin);
    size_t read(void *dest, size_t size);

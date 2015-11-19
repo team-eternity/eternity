@@ -34,6 +34,11 @@
 
 static const size_t CHUNK = 16384;
 
+//
+// zlibLevelForCompressLevel
+//
+// Utility for converting abstract level to concrete one
+//
 static int zlibLevelForCompressLevel(CompressLevel clevel)
 {
     switch (clevel)
@@ -49,8 +54,16 @@ static int zlibLevelForCompressLevel(CompressLevel clevel)
     }
 }
 
+//
+// GZCompression::CreateFile
+//
+// Initializes the compressed file
+//
 bool GZCompression::CreateFile(const char *filename, size_t pLen, int pEndian, CompressLevel clevel)
 {
+
+   // FIXME: do something in case it's open already
+
     if (!OutBuffer::CreateFile(filename, pLen, pEndian))
         return false;
 
@@ -72,11 +85,16 @@ bool GZCompression::CreateFile(const char *filename, size_t pLen, int pEndian, C
     return true;
 }
 
+//
+// GZCompression::Flush
+//
+// Flush from buffer, doing the actual writing
+//
 bool GZCompression::Flush()
 {
     if (idx)
     {
-        m_strm.avail_in = idx;
+        m_strm.avail_in = static_cast<uInt>(idx);
         m_strm.next_in = buffer;
 
         unsigned char out[CHUNK];
@@ -110,6 +128,11 @@ bool GZCompression::Flush()
     return true;
 }
 
+//
+// GZCompression::Close
+//
+// Flush everything, finalize compression and close file
+//
 void GZCompression::Close()
 {
     try
@@ -156,9 +179,63 @@ void GZCompression::Close()
     BufferedFileBase::Close();
 }
 
+//
+// GZCompression::~GZCompression
+//
+// Destructor that closes the stream safely
+//
 GZCompression::~GZCompression()
 {
     Close();
+}
+
+//
+// GZExpansion::initZStream
+//
+// Common routine for initializing the zlib stream, from the two "open" methods
+//
+bool GZExpansion::initZStream()
+{
+   m_strm.zalloc = Z_NULL;
+   m_strm.zfree = Z_NULL;
+   m_strm.opaque = Z_NULL;
+   m_strm.avail_in = 0;
+   m_strm.next_in = Z_NULL;
+   int ret = inflateInit(&m_strm);
+   if(ret != Z_OK)
+   {
+      memset(&m_strm, 0, sizeof(m_strm));
+      Close();
+      return false;
+   }
+
+   m_init = true;
+   return true;
+}
+
+//
+// GZExpansion::openFile
+//
+// Open file and init z_strm
+//
+bool GZExpansion::openFile(const char *filename, int pEndian)
+{
+
+   // FIXME: do something in case it's open already
+
+   if(!InBuffer::openFile(filename, pEndian))
+      return false;
+   return initZStream();
+}
+
+//
+// GZExpansion::openExisting
+//
+bool GZExpansion::openExisting(FILE *f, int pEndian)
+{
+   if(!InBuffer::openExisting(f, pEndian))
+      return false;
+   return initZStream();
 }
 
 // EOF
