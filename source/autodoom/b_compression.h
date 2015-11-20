@@ -65,7 +65,8 @@ class GZExpansion : public InBuffer
    z_stream m_strm;
    bool m_init;
 
-   bool initZStream();
+   bool initZStream(int pEndian, size_t pLen);
+   bool inflateToBuffer();
 
 
 public:
@@ -73,12 +74,13 @@ public:
    {
    }
 
-   bool openFile(const char *filename, int pEndian);
-   bool openExisting(FILE *f, int pEndian);
+   bool openFile(const char *filename, int pEndian, size_t pLen = 16384);
+   bool openExisting(FILE *f, int pEndian, size_t pLen = 16384);
 
    // Not seekable (at least not for now). You can still call parent class's
    // seek method, but it won't do anything about expansion.
    int seek(long offset, int origin) = delete;
+   size_t read(void *dest, size_t size);
 
    // TODO: reading and buffering routines
 };

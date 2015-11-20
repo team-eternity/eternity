@@ -194,8 +194,11 @@ GZCompression::~GZCompression()
 //
 // Common routine for initializing the zlib stream, from the two "open" methods
 //
-bool GZExpansion::initZStream()
+bool GZExpansion::initZStream(int pEndian, size_t pLen)
 {
+   InitBuffer(pLen, pEndian);
+   idx = len;  // start with idx at the end
+
    m_strm.zalloc = Z_NULL;
    m_strm.zfree = Z_NULL;
    m_strm.opaque = Z_NULL;
@@ -218,24 +221,90 @@ bool GZExpansion::initZStream()
 //
 // Open file and init z_strm
 //
-bool GZExpansion::openFile(const char *filename, int pEndian)
+bool GZExpansion::openFile(const char *filename, int pEndian, size_t pLen)
 {
 
    // FIXME: do something in case it's open already
 
    if(!InBuffer::openFile(filename, pEndian))
       return false;
-   return initZStream();
+   return initZStream(pEndian, pLen);
 }
 
 //
 // GZExpansion::openExisting
 //
-bool GZExpansion::openExisting(FILE *f, int pEndian)
+bool GZExpansion::openExisting(FILE *f, int pEndian, size_t pLen)
 {
    if(!InBuffer::openExisting(f, pEndian))
       return false;
-   return initZStream();
+   return initZStream(pEndian, pLen);
+}
+
+//
+// GZExpansion::inflateToBuffer
+//
+// Updates the buffer now
+//
+bool GZExpansion::inflateToBuffer()
+{
+   unsigned char in[CHUNK], out[CHUNK];
+   m_strm.avail_in = static_cast<uInt>(fread(in, 1, CHUNK, f));
+   if(ferror(f))
+   {
+      if(throwing)
+         throw BufferedIOException("Error inflating");
+      return false;
+   }
+   if(m_strm.avail_in == 0)
+   {
+      // TODO: finalize
+      return true;
+   }
+   int ret;
+   do
+   {
+      m_strm.avail_out = CHUNK;
+      m_strm.next_out = out;
+      ret = inflate(&m_strm, Z_NO_FLUSH);
+      // TODO: finish this.
+   } while (false);  // TODO
+   // TODO
+   return false;
+}
+
+//
+// GZExpansion::read
+//
+// Uncompresses some data into the buffer and outputs the "size" bytes.
+// As of again, it returns the valid data.
+//
+size_t GZExpansion::read(void *vdest, size_t size)
+{
+   auto dest = static_cast<unsigned char*>(vdest);
+   size_t curleft = len - idx;
+   if(size > curleft)
+   {
+      if(curleft)
+      {
+         memcpy(vdest, buffer + idx, curleft);
+         idx = len;
+      }
+
+      // Still some to read
+
+      // TODO: load into buffer. Now idx should be updated accordingly.
+
+
+      // Call recursively
+      return curleft + (idx < len ? read(dest + curleft, size - curleft) : 0);
+   }
+   else
+   {
+      memcpy(vdest, buffer + idx, size);
+      idx += size;
+      return size;
+   }
 }
 
 // EOF

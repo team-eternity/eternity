@@ -312,6 +312,7 @@
 		4F5F399F182D9C1C0027813A /* libsmpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF6B1753482C00E70FEC /* libsmpeg.a */; };
 		4F68CE8D1963D88100E7B8BE /* ev_sectors.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F68CE8B1963D88100E7B8BE /* ev_sectors.cpp */; };
 		4F96871E1A90CF4D00C4D342 /* am_svg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F96871C1A90CF4D00C4D342 /* am_svg.cpp */; };
+		4FAC15D41BFDA06B003FA3A4 /* b_compression.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FAC15D21BFDA06B003FA3A4 /* b_compression.cpp */; settings = {ASSET_TAGS = (); }; };
 		4FE91CD6196FDFC600FB6336 /* b_itemlearn.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FE91CD4196FDFC600FB6336 /* b_itemlearn.cpp */; };
 		4FE91CD91970399A00FB6336 /* b_lineeffect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FE91CD71970399900FB6336 /* b_lineeffect.cpp */; };
 /* End PBXBuildFile section */
@@ -427,6 +428,8 @@
 		4F9F72D016BFB70A00C405AE /* p_scroll.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = p_scroll.h; path = ../source/p_scroll.h; sourceTree = "<group>"; };
 		4F9F72D116BFB73200C405AE /* p_pushers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_pushers.cpp; path = ../source/p_pushers.cpp; sourceTree = "<group>"; };
 		4F9F72D216BFB73200C405AE /* p_scroll.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_scroll.cpp; path = ../source/p_scroll.cpp; sourceTree = "<group>"; };
+		4FAC15D21BFDA06B003FA3A4 /* b_compression.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = b_compression.cpp; sourceTree = "<group>"; };
+		4FAC15D31BFDA06B003FA3A4 /* b_compression.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = b_compression.h; sourceTree = "<group>"; };
 		4FCB9B9E184B5D8900F56599 /* m_compare.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = m_compare.h; path = ../source/m_compare.h; sourceTree = "<group>"; };
 		4FCB9B9F184B5D8900F56599 /* m_ctype.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = m_ctype.h; path = ../source/m_ctype.h; sourceTree = "<group>"; };
 		4FE91CD4196FDFC600FB6336 /* b_itemlearn.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = b_itemlearn.cpp; sourceTree = "<group>"; };
@@ -1018,6 +1021,8 @@
 				4F43B44D182D9F7A00730C02 /* b_botmaptemp.h */,
 				4F43B44E182D9F7A00730C02 /* b_classifier.cpp */,
 				4F43B44F182D9F7A00730C02 /* b_classifier.h */,
+				4FAC15D21BFDA06B003FA3A4 /* b_compression.cpp */,
+				4FAC15D31BFDA06B003FA3A4 /* b_compression.h */,
 				4F43B450182D9F7A00730C02 /* b_glbsp.cpp */,
 				4F43B451182D9F7A00730C02 /* b_glbsp.h */,
 				4FE91CD4196FDFC600FB6336 /* b_itemlearn.cpp */,
@@ -2064,6 +2069,7 @@
 				4F5F3981182D9B9A0027813A /* png.c in Sources */,
 				4F5F3982182D9B9A0027813A /* pngerror.c in Sources */,
 				4F5F3983182D9B9A0027813A /* pngget.c in Sources */,
+				4FAC15D41BFDA06B003FA3A4 /* b_compression.cpp in Sources */,
 				4F5F3984182D9B9A0027813A /* pngmem.c in Sources */,
 				4F5F3985182D9B9A0027813A /* pngwio.c in Sources */,
 				4F5F3986182D9B9A0027813A /* pngwrite.c in Sources */,

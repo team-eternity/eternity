@@ -144,7 +144,7 @@ public:
    virtual bool openExisting(FILE *f, int pEndian);
 
    int    seek(long offset, int origin);
-   size_t read(void *dest, size_t size);
+   virtual size_t read(void *dest, size_t size);
    int    skip(size_t skipAmt);
    bool   readSint32(int32_t  &num);
    bool   readUint32(uint32_t &num);
