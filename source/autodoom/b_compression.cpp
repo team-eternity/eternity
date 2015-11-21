@@ -358,6 +358,7 @@ void GZExpansion::Close()
         inflateEnd(&m_strm);
         m_init = false;
     }
+    m_ongoing = false;
     BufferedFileBase::Close();
 }
 
