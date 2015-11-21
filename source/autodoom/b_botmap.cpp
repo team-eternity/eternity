@@ -35,6 +35,7 @@
 #include "b_botmap.h"
 #include "b_botmaptemp.h"
 #include "b_classifier.h"
+#include "b_compression.h"
 #include "b_glbsp.h"
 #include "b_msector.h"
 #include "b_util.h"
@@ -605,7 +606,7 @@ void BotMap::cacheToFile(const char* path) const
     // Sanity check
    B_Log("BotMap: saving to cache %s", path);
 
-    OutBuffer file;
+    GZCompression file;
     file.setThrowing(true);
     if (!file.CreateFile(path, CACHE_BUFFER_SIZE, BufferedFileBase::LENDIAN))
     {
@@ -772,7 +773,7 @@ void BotMap::loadFromCache(const char* path)
 
    B_Log("BotMap: loading from cache %s", path);
 
-    InBuffer file;
+    GZExpansion file;
    file.setThrowing(true);
     if (!file.openFile(path, BufferedFileBase::LENDIAN))
     {
@@ -1042,7 +1043,18 @@ void BotMap::Build()
 	char* digest = g_levelHash.digestToString();
    qstring hashFileName("botmap-");
    hashFileName << digest << ".cache";
-   
+   qstring oldHashFileName(hashFileName);   // the old, uncompressed file needs to be deleted.
+   hashFileName << ".gz";   // add the gz extension
+
+   const char *oldfile = D_CheckAutoDoomPathFile(oldHashFileName.constPtr(), false);
+   if (oldfile)
+   {
+       B_Log("Deleting old uncompressed cache file %s...", oldHashFileName.constPtr());
+       if (remove(oldfile) < 0)
+       {
+           B_Log("WARNING: couldn't remove it (error %d: %s)", errno, strerror(errno));
+       }
+   }
 
    B_Log("Looking for level cache %s...", hashFileName.constPtr());
    const char* fpath = D_CheckAutoDoomPathFile(hashFileName.constPtr(), false);

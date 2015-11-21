@@ -20,3 +20,4 @@ vc2013-autodoom/Eternity.sdf
 build/
 *.lmp
 *.kdev4
+*.cache.gz

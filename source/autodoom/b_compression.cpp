@@ -30,9 +30,8 @@
 
 #include "../z_zone.h"
 
+#include "../m_compare.h"
 #include "b_compression.h"
-
-static const size_t CHUNK = 16384;
 
 //
 // zlibLevelForCompressLevel
@@ -69,6 +68,11 @@ bool GZCompression::CreateFile(const char *filename, size_t pLen, int pEndian, C
 
     int level = zlibLevelForCompressLevel(clevel);
 
+    if (m_init)
+    {
+        deflateEnd(&m_strm);
+        m_init = false;
+    }
     m_strm.zalloc = Z_NULL;
     m_strm.zfree = Z_NULL;
     m_strm.opaque = Z_NULL;
@@ -106,18 +110,17 @@ bool GZCompression::Flush()
             m_strm.avail_out = CHUNK;
             m_strm.next_out = out;
             ret = deflate(&m_strm, Z_NO_FLUSH);
+            if (ret < 0)
+            {
+                if (throwing)
+                    throw BufferedIOException("gzip deflate failed");
+                return false;
+            }
             have = CHUNK - m_strm.avail_out;
             if (fwrite(out, 1, have, f) != have || ferror(f))
             {
-                deflateEnd(&m_strm);
-                memset(&m_strm, 0, sizeof(m_strm));
-                m_init = false;
-
-                Close();
-
                 if (throwing)
-                    throw BufferedIOException("gzip fwrite did not write the requested amount");
-                
+                    throw BufferedIOException("gzip fwrite did not write the requested amount");                
                 return false;
             }
         } while (m_strm.avail_out == 0);
@@ -189,6 +192,12 @@ GZCompression::~GZCompression()
     Close();
 }
 
+///////////////////////////////////////////////////////////////////////////////
+//
+// GZExpansion
+//
+///////////////////////////////////////////////////////////////////////////////
+
 //
 // GZExpansion::initZStream
 //
@@ -198,6 +207,12 @@ bool GZExpansion::initZStream(int pEndian, size_t pLen)
 {
    InitBuffer(pLen, pEndian);
    idx = len;  // start with idx at the end
+
+   if (m_init)
+   {
+       inflateEnd(&m_strm);
+       m_init = false;
+   }
 
    m_strm.zalloc = Z_NULL;
    m_strm.zfree = Z_NULL;
@@ -248,29 +263,54 @@ bool GZExpansion::openExisting(FILE *f, int pEndian, size_t pLen)
 //
 bool GZExpansion::inflateToBuffer()
 {
-   unsigned char in[CHUNK], out[CHUNK];
-   m_strm.avail_in = static_cast<uInt>(fread(in, 1, CHUNK, f));
-   if(ferror(f))
+   unsigned char out[CHUNK];
+
+   if (!m_ongoing)
    {
-      if(throwing)
-         throw BufferedIOException("Error inflating");
-      return false;
+       m_strm.avail_in = static_cast<uInt>(fread(m_ongoingBuffer, 1, CHUNK, f));
+       if (ferror(f))
+       {
+           if (throwing)
+               throw BufferedIOException("Error inflating");
+           return false;
+       }
+       if (m_strm.avail_in == 0)
+       {
+           return true;
+       }
+       m_strm.next_in = m_ongoingBuffer;
    }
-   if(m_strm.avail_in == 0)
-   {
-      // TODO: finalize
-      return true;
-   }
+   
    int ret;
+   unsigned have;
+   uInt minOut;
    do
    {
-      m_strm.avail_out = CHUNK;
+      minOut = emin(CHUNK, idx);
+
+      m_strm.avail_out = minOut;
       m_strm.next_out = out;
       ret = inflate(&m_strm, Z_NO_FLUSH);
-      // TODO: finish this.
-   } while (false);  // TODO
-   // TODO
-   return false;
+      switch (ret)
+      {
+      case Z_NEED_DICT:
+          ret = Z_DATA_ERROR;
+      case Z_DATA_ERROR:
+      case Z_MEM_ERROR:
+      case Z_STREAM_ERROR:  // IOANCH: added because it can enter this bad state
+          // TODO: finalize
+          return false;
+      }
+      have = minOut - m_strm.avail_out;
+
+      idx -= have;
+      memcpy(buffer + idx, out, have);
+
+   } while (m_strm.avail_out == 0 && idx);
+
+   m_ongoing = m_strm.avail_out == 0;
+
+   return true;
 }
 
 //
@@ -293,11 +333,15 @@ size_t GZExpansion::read(void *vdest, size_t size)
 
       // Still some to read
 
-      // TODO: load into buffer. Now idx should be updated accordingly.
+      bool success = inflateToBuffer();
 
+      size_t retval = curleft + (success && idx < len ? read(dest + curleft, size - curleft) : 0);
+
+      if (throwing && retval != size)
+          throw BufferedIOException("Error reading gzip");
 
       // Call recursively
-      return curleft + (idx < len ? read(dest + curleft, size - curleft) : 0);
+      return retval;
    }
    else
    {
@@ -305,6 +349,21 @@ size_t GZExpansion::read(void *vdest, size_t size)
       idx += size;
       return size;
    }
+}
+
+void GZExpansion::Close()
+{
+    if (m_init)
+    {
+        inflateEnd(&m_strm);
+        m_init = false;
+    }
+    BufferedFileBase::Close();
+}
+
+GZExpansion::~GZExpansion()
+{
+    Close();
 }
 
 // EOF

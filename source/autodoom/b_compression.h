@@ -43,6 +43,8 @@ enum CompressLevel
 
 class GZCompression : public OutBuffer
 {
+    static const size_t CHUNK = 16384;
+
     z_stream m_strm;
     bool m_init;
 
@@ -62,17 +64,22 @@ public:
 
 class GZExpansion : public InBuffer
 {
+    static const size_t CHUNK = 16384;
+
    z_stream m_strm;
    bool m_init;
+
+   unsigned char m_ongoingBuffer[CHUNK];
+   bool m_ongoing;
 
    bool initZStream(int pEndian, size_t pLen);
    bool inflateToBuffer();
 
-
 public:
-   GZExpansion() : m_strm(), m_init(false), InBuffer()
+   GZExpansion() : m_strm(), m_init(false), m_ongoing(false), InBuffer()
    {
    }
+   ~GZExpansion();
 
    bool openFile(const char *filename, int pEndian, size_t pLen = 16384);
    bool openExisting(FILE *f, int pEndian, size_t pLen = 16384);
@@ -81,8 +88,9 @@ public:
    // seek method, but it won't do anything about expansion.
    int seek(long offset, int origin) = delete;
    size_t read(void *dest, size_t size);
+   int skip(size_t skipAmt) = delete;
 
-   // TODO: reading and buffering routines
+   void Close();
 };
 
 #endif
