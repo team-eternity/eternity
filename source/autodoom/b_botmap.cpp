@@ -608,7 +608,7 @@ void BotMap::cacheToFile(const char* path) const
 
     GZCompression file;
     file.setThrowing(true);
-    if (!file.CreateFile(path, CACHE_BUFFER_SIZE, BufferedFileBase::LENDIAN))
+    if (!file.CreateFile(path, CACHE_BUFFER_SIZE, BufferedFileBase::LENDIAN, CompressLevel_Space))
     {
         C_Printf(FC_ERROR "WARNING: can't create bot map cache file at %s\n", path);
         return;
