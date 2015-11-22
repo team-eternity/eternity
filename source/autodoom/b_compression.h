@@ -64,7 +64,7 @@ public:
 
 class GZExpansion : public InBuffer
 {
-    static const size_t CHUNK = 16384;
+    static const size_t CHUNK = 32768;  // increased because otherwise inflate() may fail. I might need a more robust way, though.
 
    z_stream m_strm;
    bool m_init;
@@ -81,8 +81,8 @@ public:
    }
    ~GZExpansion();
 
-   bool openFile(const char *filename, int pEndian, size_t pLen = 16384);
-   bool openExisting(FILE *f, int pEndian, size_t pLen = 16384);
+   bool openFile(const char *filename, int pEndian, size_t pLen = CHUNK);
+   bool openExisting(FILE *f, int pEndian, size_t pLen = CHUNK);
 
    // Not seekable (at least not for now). You can still call parent class's
    // seek method, but it won't do anything about expansion.
