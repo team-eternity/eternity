@@ -107,13 +107,6 @@ static bool ACS_SetThingProp(ACSThread *thread, int32_t tid, uint32_t prop, uint
 //
 
 //
-// ACS_funcNOP
-//
-static void ACS_funcNOP(ACS_FUNCARG)
-{
-}
-
-//
 // ACS_CF_ActivatorArmor
 //
 // int ActivatorArmor(void);
@@ -385,7 +378,7 @@ bool ACS_ChkThingProp(Mobj *mo, uint32_t var, uint32_t val)
    case ACS_TP_PlayerNumber: return mo->player ? mo->player - players == val : false;
    case ACS_TP_SigilPieces:  return false;
    case ACS_TP_TID:          return mo->tid == val;
-   case ACS_TP_Type:         return mo->type == E_ThingNumForName(ACSModule::GetString(val));
+   case ACS_TP_Type:         return mo->type == E_ThingNumForName(ACSenv.getString(val)->str);
    case ACS_TP_X:            return mo->x == val;
    case ACS_TP_Y:            return mo->y == val;
    case ACS_TP_Z:            return mo->z == val;
@@ -2534,13 +2527,6 @@ bool ACS_CF_WaitSector(ACS_CF_ARGS)
    thread->state = {ACSVM::ThreadState::WaitTag, argV[0], ACS_TAGTYPE_SECTOR};
    return true;
 }
-
-acs_func_t ACSfunc[ACS_FUNCMAX] =
-{
-   #define ACS_FUNC(FUNC) ACS_funcNOP,
-   #include "acs_op.h"
-   #undef ACS_FUNC
-};
 
 // EOF
 

@@ -1607,9 +1607,6 @@ void P_LoadGame(const char *filename)
    //  for 'seamless' travel between levels
    if(hub_changelevel) 
       P_RestorePlayerPosition();
-
-   // haleyjd 01/07/07: run deferred ACS scripts
-   ACS_RunDeferredScripts();
 }
 
 //----------------------------------------------------------------------------
