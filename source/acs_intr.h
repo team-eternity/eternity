@@ -132,93 +132,93 @@ enum acs_tagtype_t
    ACS_TAGTYPE_SECTOR,
 };
 
-// Level variables.
+// Level Properties.
 enum
 {
-   ACS_LEVELVAR_ParTime        = 0,
-   ACS_LEVELVAR_ClusterNumber  = 1,
-   ACS_LEVELVAR_LevelNumber    = 2,
-   ACS_LEVELVAR_TotalSecrets   = 3,
-   ACS_LEVELVAR_FoundSecrets   = 4,
-   ACS_LEVELVAR_TotalItems     = 5,
-   ACS_LEVELVAR_FoundItems     = 6,
-   ACS_LEVELVAR_TotalMonsters  = 7,
-   ACS_LEVELVAR_KilledMonsters = 8,
-   ACS_LEVELVAR_SuckTime       = 9,
+   ACS_LP_ParTime        = 0,
+   ACS_LP_ClusterNumber  = 1,
+   ACS_LP_LevelNumber    = 2,
+   ACS_LP_TotalSecrets   = 3,
+   ACS_LP_FoundSecrets   = 4,
+   ACS_LP_TotalItems     = 5,
+   ACS_LP_FoundItems     = 6,
+   ACS_LP_TotalMonsters  = 7,
+   ACS_LP_KilledMonsters = 8,
+   ACS_LP_SuckTime       = 9,
 
-   ACS_LEVELVARMAX
+   ACS_LPMAX
 };
 
-// Thing variables.
+// Thing properties.
 enum
 {
-   ACS_THINGVAR_Health       =  0,
-   ACS_THINGVAR_Speed        =  1,
-   ACS_THINGVAR_Damage       =  2,
-   ACS_THINGVAR_Alpha        =  3,
-   ACS_THINGVAR_RenderStyle  =  4,
-   ACS_THINGVAR_SeeSound     =  5,
-   ACS_THINGVAR_AttackSound  =  6,
-   ACS_THINGVAR_PainSound    =  7,
-   ACS_THINGVAR_DeathSound   =  8,
-   ACS_THINGVAR_ActiveSound  =  9,
-   ACS_THINGVAR_Ambush       = 10,
-   ACS_THINGVAR_Invulnerable = 11,
-   ACS_THINGVAR_JumpZ        = 12,
-   ACS_THINGVAR_ChaseGoal    = 13,
-   ACS_THINGVAR_Frightened   = 14,
-   ACS_THINGVAR_Gravity      = 15,
-   ACS_THINGVAR_Friendly     = 16,
-   ACS_THINGVAR_SpawnHealth  = 17,
-   ACS_THINGVAR_Dropped      = 18,
-   ACS_THINGVAR_NoTarget     = 19,
-   ACS_THINGVAR_Species      = 20,
-   ACS_THINGVAR_NameTag      = 21,
-   ACS_THINGVAR_Score        = 22,
-   ACS_THINGVAR_NoTrigger    = 23,
-   ACS_THINGVAR_DamageFactor = 24,
-   ACS_THINGVAR_MasterTID    = 25,
-   ACS_THINGVAR_TargetTID    = 26,
-   ACS_THINGVAR_TracerTID    = 27,
-   ACS_THINGVAR_WaterLevel   = 28,
-   ACS_THINGVAR_ScaleX       = 29,
-   ACS_THINGVAR_ScaleY       = 30,
-   ACS_THINGVAR_Dormant      = 31,
-   ACS_THINGVAR_Mass         = 32,
-   ACS_THINGVAR_Accuracy     = 33,
-   ACS_THINGVAR_Stamina      = 34,
-   ACS_THINGVAR_Height       = 35,
-   ACS_THINGVAR_Radius       = 36,
-   ACS_THINGVAR_ReactionTime = 37,
-   ACS_THINGVAR_MeleeRange   = 38,
-   ACS_THINGVAR_ViewHeight   = 39,
-   ACS_THINGVAR_AttackZOff   = 40,
-   ACS_THINGVAR_StencilColor = 41,
-   ACS_THINGVAR_Friction     = 42,
-   ACS_THINGVAR_DamageMult   = 43,
+   ACS_TP_Health       =  0,
+   ACS_TP_Speed        =  1,
+   ACS_TP_Damage       =  2,
+   ACS_TP_Alpha        =  3,
+   ACS_TP_RenderStyle  =  4,
+   ACS_TP_SeeSound     =  5,
+   ACS_TP_AttackSound  =  6,
+   ACS_TP_PainSound    =  7,
+   ACS_TP_DeathSound   =  8,
+   ACS_TP_ActiveSound  =  9,
+   ACS_TP_Ambush       = 10,
+   ACS_TP_Invulnerable = 11,
+   ACS_TP_JumpZ        = 12,
+   ACS_TP_ChaseGoal    = 13,
+   ACS_TP_Frightened   = 14,
+   ACS_TP_Gravity      = 15,
+   ACS_TP_Friendly     = 16,
+   ACS_TP_SpawnHealth  = 17,
+   ACS_TP_Dropped      = 18,
+   ACS_TP_NoTarget     = 19,
+   ACS_TP_Species      = 20,
+   ACS_TP_NameTag      = 21,
+   ACS_TP_Score        = 22,
+   ACS_TP_NoTrigger    = 23,
+   ACS_TP_DamageFactor = 24,
+   ACS_TP_MasterTID    = 25,
+   ACS_TP_TargetTID    = 26,
+   ACS_TP_TracerTID    = 27,
+   ACS_TP_WaterLevel   = 28,
+   ACS_TP_ScaleX       = 29,
+   ACS_TP_ScaleY       = 30,
+   ACS_TP_Dormant      = 31,
+   ACS_TP_Mass         = 32,
+   ACS_TP_Accuracy     = 33,
+   ACS_TP_Stamina      = 34,
+   ACS_TP_Height       = 35,
+   ACS_TP_Radius       = 36,
+   ACS_TP_ReactionTime = 37,
+   ACS_TP_MeleeRange   = 38,
+   ACS_TP_ViewHeight   = 39,
+   ACS_TP_AttackZOff   = 40,
+   ACS_TP_StencilColor = 41,
+   ACS_TP_Friction     = 42,
+   ACS_TP_DamageMult   = 43,
 
-   // Unexposed variables.
-   ACS_THINGVAR_Angle,
-   ACS_THINGVAR_Armor,
-   ACS_THINGVAR_CeilingTexture,
-   ACS_THINGVAR_CeilingZ,
-   ACS_THINGVAR_FloorTexture,
-   ACS_THINGVAR_FloorZ,
-   ACS_THINGVAR_Frags,
-   ACS_THINGVAR_LightLevel,
-   ACS_THINGVAR_MomX,
-   ACS_THINGVAR_MomY,
-   ACS_THINGVAR_MomZ,
-   ACS_THINGVAR_Pitch,
-   ACS_THINGVAR_PlayerNumber,
-   ACS_THINGVAR_SigilPieces,
-   ACS_THINGVAR_TID,
-   ACS_THINGVAR_Type,
-   ACS_THINGVAR_X,
-   ACS_THINGVAR_Y,
-   ACS_THINGVAR_Z,
+   // Internal properties, not meant for external use.
+   ACS_TP_Angle,
+   ACS_TP_Armor,
+   ACS_TP_CeilTex,
+   ACS_TP_CeilZ,
+   ACS_TP_FloorTex,
+   ACS_TP_FloorZ,
+   ACS_TP_Frags,
+   ACS_TP_LightLevel,
+   ACS_TP_MomX,
+   ACS_TP_MomY,
+   ACS_TP_MomZ,
+   ACS_TP_Pitch,
+   ACS_TP_PlayerNumber,
+   ACS_TP_SigilPieces,
+   ACS_TP_TID,
+   ACS_TP_Type,
+   ACS_TP_X,
+   ACS_TP_Y,
+   ACS_TP_Z,
 
-   ACS_THINGVARMAX
+   ACS_TPMAX
 };
 
 //
@@ -712,27 +712,117 @@ bool ACS_SuspendScriptS(const char *name, uint32_t mapnum);
 bool ACS_TerminateScriptI(uint32_t name, uint32_t mapnum);
 bool ACS_TerminateScriptS(const char *name, uint32_t mapnum);
 
+// Utilities.
+uint32_t ACS_GetLevelProp(uint32_t prop);
+bool     ACS_ChkThingProp(Mobj *mo, uint32_t prop, uint32_t val);
+uint32_t ACS_GetThingProp(Mobj *mo, uint32_t prop);
+void     ACS_SetThingProp(Mobj *mo, uint32_t prop, uint32_t val);
+
 // CallFuncs.
+bool ACS_CF_ActivatorArmor(ACS_CF_ARGS);
+bool ACS_CF_ActivatorFrags(ACS_CF_ARGS);
+bool ACS_CF_ActivatorHealth(ACS_CF_ARGS);
+bool ACS_CF_ActivatorSigil(ACS_CF_ARGS);
+bool ACS_CF_ActivatorSound(ACS_CF_ARGS);
+bool ACS_CF_ActivatorTID(ACS_CF_ARGS);
 bool ACS_CF_AmbientSound(ACS_CF_ARGS);
+bool ACS_CF_AmbientSoundLoc(ACS_CF_ARGS);
+bool ACS_CF_ATan2(ACS_CF_ARGS);
 bool ACS_CF_ChangeCeil(ACS_CF_ARGS);
 bool ACS_CF_ChangeFloor(ACS_CF_ARGS);
+bool ACS_CF_CheckSight(ACS_CF_ARGS);
+bool ACS_CF_ChkThingCeilTex(ACS_CF_ARGS);
+bool ACS_CF_ChkThingFlag(ACS_CF_ARGS);
+bool ACS_CF_ChkThingFloorTex(ACS_CF_ARGS);
+bool ACS_CF_ChkThingProp(ACS_CF_ARGS);
+bool ACS_CF_ChkThingType(ACS_CF_ARGS);
+bool ACS_CF_ClassifyThing(ACS_CF_ARGS);
 bool ACS_CF_ClrLineSpec(ACS_CF_ARGS);
+bool ACS_CF_Cos(ACS_CF_ARGS);
 bool ACS_CF_EndLog(ACS_CF_ARGS);
 bool ACS_CF_EndPrint(ACS_CF_ARGS);
 bool ACS_CF_EndPrintBold(ACS_CF_ARGS);
 bool ACS_CF_GameSkill(ACS_CF_ARGS);
 bool ACS_CF_GameType(ACS_CF_ARGS);
+bool ACS_CF_GetCVar(ACS_CF_ARGS);
+bool ACS_CF_GetCVarStr(ACS_CF_ARGS);
+bool ACS_CF_GetLevelProp(ACS_CF_ARGS);
+bool ACS_CF_GetPlayerInput(ACS_CF_ARGS);
+bool ACS_CF_GetPolyobjX(ACS_CF_ARGS);
+bool ACS_CF_GetPolyobjY(ACS_CF_ARGS);
+bool ACS_CF_GetScreenH(ACS_CF_ARGS);
+bool ACS_CF_GetScreenW(ACS_CF_ARGS);
+bool ACS_CF_GetSectorCeilZ(ACS_CF_ARGS);
+bool ACS_CF_GetSectorFloorZ(ACS_CF_ARGS);
+bool ACS_CF_GetSectorLight(ACS_CF_ARGS);
+bool ACS_CF_GetThingAngle(ACS_CF_ARGS);
+bool ACS_CF_GetThingCeilZ(ACS_CF_ARGS);
+bool ACS_CF_GetThingFloorZ(ACS_CF_ARGS);
+bool ACS_CF_GetThingLight(ACS_CF_ARGS);
+bool ACS_CF_GetThingMomX(ACS_CF_ARGS);
+bool ACS_CF_GetThingMomY(ACS_CF_ARGS);
+bool ACS_CF_GetThingMomZ(ACS_CF_ARGS);
+bool ACS_CF_GetThingPitch(ACS_CF_ARGS);
+bool ACS_CF_GetThingProp(ACS_CF_ARGS);
+bool ACS_CF_GetThingX(ACS_CF_ARGS);
+bool ACS_CF_GetThingY(ACS_CF_ARGS);
+bool ACS_CF_GetThingZ(ACS_CF_ARGS);
+bool ACS_CF_Hypot(ACS_CF_ARGS);
+bool ACS_CF_IsTIDUsed(ACS_CF_ARGS);
+bool ACS_CF_LineOffsetY(ACS_CF_ARGS);
 bool ACS_CF_LineSide(ACS_CF_ARGS);
+bool ACS_CF_PlaySound(ACS_CF_ARGS);
+bool ACS_CF_PlayThingSound(ACS_CF_ARGS);
 bool ACS_CF_PlayerCount(ACS_CF_ARGS);
+bool ACS_CF_PlayerNumber(ACS_CF_ARGS);
+bool ACS_CF_PrintName(ACS_CF_ARGS);
+bool ACS_CF_RadiusQuake(ACS_CF_ARGS);
 bool ACS_CF_Random(ACS_CF_ARGS);
+bool ACS_CF_ReplaceTex(ACS_CF_ARGS);
+bool ACS_CF_SectorDamage(ACS_CF_ARGS);
 bool ACS_CF_SectorSound(ACS_CF_ARGS);
+bool ACS_CF_SetActivator(ACS_CF_ARGS);
+bool ACS_CF_SetActivatorToTarget(ACS_CF_ARGS);
+bool ACS_CF_SetGravity(ACS_CF_ARGS);
 bool ACS_CF_SetLineBlock(ACS_CF_ARGS);
+bool ACS_CF_SetLineBlockMon(ACS_CF_ARGS);
 bool ACS_CF_SetLineSpec(ACS_CF_ARGS);
 bool ACS_CF_SetLineTex(ACS_CF_ARGS);
+bool ACS_CF_SetMusic(ACS_CF_ARGS);
+bool ACS_CF_SetMusicLoc(ACS_CF_ARGS);
+bool ACS_CF_SetSkyDelta(ACS_CF_ARGS);
+bool ACS_CF_SetThingAngle(ACS_CF_ARGS);
+bool ACS_CF_SetThingAngleRet(ACS_CF_ARGS);
+bool ACS_CF_SetThingMom(ACS_CF_ARGS);
+bool ACS_CF_SetThingPitch(ACS_CF_ARGS);
+bool ACS_CF_SetThingPitchRet(ACS_CF_ARGS);
+bool ACS_CF_SetThingPos(ACS_CF_ARGS);
+bool ACS_CF_SetThingProp(ACS_CF_ARGS);
+bool ACS_CF_SetThingSpec(ACS_CF_ARGS);
+bool ACS_CF_SetThingState(ACS_CF_ARGS);
+bool ACS_CF_Sin(ACS_CF_ARGS);
+bool ACS_CF_SinglePlayer(ACS_CF_ARGS);
 bool ACS_CF_SoundSeq(ACS_CF_ARGS);
+bool ACS_CF_SpawnMissile(ACS_CF_ARGS);
+bool ACS_CF_SpawnPoint(ACS_CF_ARGS);
+bool ACS_CF_SpawnPointF(ACS_CF_ARGS);
+bool ACS_CF_SpawnSpot(ACS_CF_ARGS);
+bool ACS_CF_SpawnSpotF(ACS_CF_ARGS);
+bool ACS_CF_SpawnSpotAng(ACS_CF_ARGS);
+bool ACS_CF_SpawnSpotAngF(ACS_CF_ARGS);
+bool ACS_CF_Sqrt(ACS_CF_ARGS);
+bool ACS_CF_SqrtFixed(ACS_CF_ARGS);
+bool ACS_CF_StopSound(ACS_CF_ARGS);
 bool ACS_CF_ThingCount(ACS_CF_ARGS);
+bool ACS_CF_ThingCountStr(ACS_CF_ARGS);
+bool ACS_CF_ThingCountSec(ACS_CF_ARGS);
+bool ACS_CF_ThingCountSecStr(ACS_CF_ARGS);
+bool ACS_CF_ThingDamage(ACS_CF_ARGS);
+bool ACS_CF_ThingMissile(ACS_CF_ARGS);
 bool ACS_CF_ThingSound(ACS_CF_ARGS);
+bool ACS_CF_ThingSoundSeq(ACS_CF_ARGS);
 bool ACS_CF_Timer(ACS_CF_ARGS);
+bool ACS_CF_UniqueTID(ACS_CF_ARGS);
 bool ACS_CF_WaitPolyObj(ACS_CF_ARGS);
 bool ACS_CF_WaitSector(ACS_CF_ARGS);
 
@@ -767,10 +857,6 @@ bool ACS_SuspendScriptNumber(int32_t number, int mapnum);
 bool ACS_SuspendScriptName(const char *name, int mapnum);
 bool ACS_SuspendScriptString(uint32_t strnum, int mapnum);
 void ACS_Archive(SaveArchive &arc);
-
-bool    ACS_ChkThingVar(Mobj *thing, uint32_t var, int32_t val);
-int32_t ACS_GetThingVar(Mobj *thing, uint32_t var);
-void    ACS_SetThingVar(Mobj *thing, uint32_t var, int32_t val);
 
 // extern vars.
 

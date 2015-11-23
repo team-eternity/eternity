@@ -406,7 +406,7 @@ static void ACS_translateFuncACS0(int32_t *&codePtr, uint32_t func, uint32_t arg
       if(argc == 1)
       {
          *codePtr++ = ACS_OP_GET_THINGVAR;
-         *codePtr++ = ACS_THINGVAR_MomX + (func - 9);
+         *codePtr++ = ACS_TP_MomX + (func - 9);
          return;
       }
       break;
@@ -423,7 +423,7 @@ static void ACS_translateFuncACS0(int32_t *&codePtr, uint32_t func, uint32_t arg
       if(argc == 1)
       {
          *codePtr++ = ACS_OP_GET_THINGVAR;
-         *codePtr++ = ACS_THINGVAR_Type;
+         *codePtr++ = ACS_TP_Type;
          return;
       }
       break;
@@ -618,7 +618,7 @@ static void ACS_translateFuncACS0(int32_t *&codePtr, const acs0_opdata_t *opdata
 //
 static int32_t ACS_translateThingVarACS0(const acs0_opdata_t *opdata)
 {
-   #define CASE(OP,VAR) case ACS0_OP_##OP: return ACS_THINGVAR_##VAR
+   #define CASE(OP,VAR) case ACS0_OP_##OP: return ACS_TP_##VAR
 
    switch(opdata->op)
    {
@@ -626,10 +626,10 @@ static int32_t ACS_translateThingVarACS0(const acs0_opdata_t *opdata)
    CASE(ACTIVATORFRAGS,          Frags);
    CASE(ACTIVATORHEALTH,         Health);
    CASE(ACTIVATORTID,            TID);
-   CASE(CHK_THINGCEILINGTEXTURE, CeilingTexture);
-   CASE(CHK_THINGFLOORTEXTURE,   FloorTexture);
+   CASE(CHK_THINGCEILINGTEXTURE, CeilTex);
+   CASE(CHK_THINGFLOORTEXTURE,   FloorTex);
    CASE(GET_THINGANGLE,          Angle);
-   CASE(GET_THINGCEILINGZ,       CeilingZ);
+   CASE(GET_THINGCEILINGZ,       CeilZ);
    CASE(GET_THINGFLOORZ,         FloorZ);
    CASE(GET_THINGLIGHTLEVEL,     LightLevel);
    CASE(GET_THINGPITCH,          Pitch);
@@ -641,7 +641,7 @@ static int32_t ACS_translateThingVarACS0(const acs0_opdata_t *opdata)
    CASE(SET_THINGPITCH,          Pitch);
    CASE(SIGILPIECES,             SigilPieces);
 
-   default: return ACS_THINGVARMAX;
+   default: return ACS_TPMAX;
    }
 
    #undef CASE
