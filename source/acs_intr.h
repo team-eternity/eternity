@@ -185,6 +185,10 @@ public:
 
    virtual void loadModule(ACSVM::Module *module);
 
+   virtual void loadState(std::istream &in);
+
+   virtual ACSVM::ModuleName readModuleName(std::istream &in) const;
+
    virtual void refStrings();
 
    WadDirectory       *dir;
@@ -244,6 +248,10 @@ public:
    ACSThread(ACSVM::Environment *env_) : ACSVM::Thread{env_} {}
 
    virtual ACSVM::ThreadInfo const *getInfo() const {return &info;}
+
+   virtual void loadState(std::istream &in);
+
+   virtual void saveState(std::ostream &out) const;
 
    virtual void start(ACSVM::Script *script, ACSVM::MapScope *map,
       const ACSVM::ThreadInfo *info, const ACSVM::Word *argV, ACSVM::Word argC);

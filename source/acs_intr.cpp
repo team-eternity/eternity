@@ -56,6 +56,7 @@
 #include "w_iterator.h"
 
 #include "acsvm/Action.hpp"
+#include "acsvm/BinaryIO.hpp"
 #include "acsvm/Code.hpp"
 #include "acsvm/CodeData.hpp"
 #include "acsvm/Error.hpp"
@@ -451,6 +452,28 @@ void ACSEnvironment::loadModule(ACSVM::Module *module)
 }
 
 //
+// ACSEnvironment::loadState
+//
+void ACSEnvironment::loadState(std::istream &in)
+{
+   ACSVM::Environment::loadState(in);
+
+   global = getGlobalScope(0);
+   hub    = global->getHubScope(0);
+   map    = hub->getMapScope(gamemap);
+}
+
+//
+// ACSEnvironment::readModuleName
+//
+ACSVM::ModuleName ACSEnvironment::readModuleName(std::istream &in) const
+{
+   auto name = ACSVM::Environment::readModuleName(in);
+   name.p = dir;
+   return name;
+}
+
+//
 // ACSEnvironment::refStrings
 //
 void ACSEnvironment::refStrings()
@@ -458,6 +481,33 @@ void ACSEnvironment::refStrings()
    ACSVM::Environment::refStrings();
 
    strBEHAVIOR->ref = true;
+}
+
+//
+// ACSThread::loadState
+//
+void ACSThread::loadState(std::istream &in)
+{
+   ACSVM::Thread::loadState(in);
+
+   info.mo = static_cast<Mobj *>(P_ThinkerForNum(ACSVM::ReadVLN<size_t>(in)));
+
+   size_t linenum = ACSVM::ReadVLN<size_t>(in);
+   info.line = linenum ? &lines[linenum - 1] : nullptr;
+
+   info.side = ACSVM::ReadVLN<size_t>(in);
+}
+
+//
+// ACSThread::saveState
+//
+void ACSThread::saveState(std::ostream &out) const
+{
+   ACSVM::Thread::saveState(out);
+
+   ACSVM::WriteVLN<size_t>(out, P_NumForThinker(info.mo));
+   ACSVM::WriteVLN<size_t>(out, info.line ? info.line - lines + 1 : 0);
+   ACSVM::WriteVLN<size_t>(out, info.side);
 }
 
 //
@@ -504,6 +554,7 @@ void ACS_NewGame(void)
    ACSenv.global->active = true;
    ACSenv.hub = ACSenv.global->getHubScope(0);
    ACSenv.hub->active = true;
+   ACSenv.map = nullptr;
 }
 
 //
@@ -743,11 +794,55 @@ bool ACS_TerminateScriptS(const char *str, uint32_t mapnum)
 //
 
 //
+// ACSBuffer
+//
+// Wraps an InBuffer or OutBuffer in a std::streambuf for ACSVM serialization.
+//
+class ACSBuffer : public std::streambuf
+{
+public:
+   ACSBuffer(InBuffer *in_) : in{in_}, out{nullptr} {}
+   ACSBuffer(OutBuffer *out_) : in{nullptr}, out{out_} {}
+
+   InBuffer  *in;
+   OutBuffer *out;
+
+protected:
+   virtual int overflow(int c)
+   {
+      // Write single byte to destination.
+      if(!out || !out->WriteUint8(c)) return EOF;
+      return c;
+   }
+
+   virtual int uflow()
+   {
+      // Read single byte from source.
+      uint8_t c;
+      if(!in || !in->readUint8(c)) return EOF;
+      return c;
+   }
+};
+
+//
 // ACS_Archive
 //
 void ACS_Archive(SaveArchive &arc)
 {
-   // TODO
+   if(arc.isLoading())
+   {
+      ACSBuffer    buf{arc.getLoadFile()};
+      std::istream in {&buf};
+
+      ACSenv.loadState(in);
+   }
+   else if(arc.isSaving())
+   {
+      ACSBuffer    buf{arc.getSaveFile()};
+      std::ostream out{&buf};
+
+      ACSenv.saveState(out);
+   }
 }
 
 // EOF
