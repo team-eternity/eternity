@@ -504,7 +504,7 @@ bool ACS_CF_Cos(ACS_CF_ARGS)
 bool ACS_CF_EndLog(ACS_CF_ARGS)
 {
    printf("%s\n", thread->printBuf.data());
-   doom_printf("%s\n", thread->printBuf.data());
+   doom_printf("%s", thread->printBuf.data());
    thread->printBuf.drop();
 
    return false;
