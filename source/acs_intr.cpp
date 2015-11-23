@@ -475,6 +475,16 @@ void ACSThread::start(ACSVM::Script *script, ACSVM::MapScope *map,
 }
 
 //
+// ACSThread::stop
+//
+void ACSThread::stop()
+{
+   ACSVM::Thread::stop();
+
+   info = {};
+}
+
+//
 // ACS_Init
 //
 // Called at startup.

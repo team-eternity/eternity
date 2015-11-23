@@ -203,8 +203,32 @@ class ACSThreadInfo : public ACSVM::ThreadInfo
 {
 public:
    ACSThreadInfo() : mo{nullptr}, line{nullptr}, side{0} {}
+
+   ACSThreadInfo(const ACSThreadInfo &info) :
+      mo{nullptr}, line{info.line}, side{info.side}
+   {
+      P_SetTarget(&mo, info.mo);
+   }
+
    ACSThreadInfo(Mobj *mo_, line_t *line_, int side_) :
-      mo{mo_}, line{line_}, side{side_} {}
+      mo{nullptr}, line{line_}, side{side_}
+   {
+      P_SetTarget(&mo, mo_);
+   }
+
+   ~ACSThreadInfo()
+   {
+      P_SetTarget<Mobj>(&mo, nullptr);
+   }
+
+   ACSThreadInfo &operator = (const ACSThreadInfo &info)
+   {
+      P_SetTarget(&mo, info.mo);
+      line = info.line;
+      side = info.side;
+
+      return *this;
+   }
 
    Mobj   *mo;   // Mobj that activated.
    line_t *line; // Line that activated.
@@ -223,6 +247,8 @@ public:
 
    virtual void start(ACSVM::Script *script, ACSVM::MapScope *map,
       const ACSVM::ThreadInfo *info, const ACSVM::Word *argV, ACSVM::Word argC);
+
+   virtual void stop();
 
    ACSThreadInfo info;
 };
