@@ -25,6 +25,7 @@
 
 #include "z_zone.h"
 
+#include "a_small.h"
 #include "acs_intr.h"
 #include "d_gi.h"
 #include "doomstat.h"
@@ -3026,6 +3027,36 @@ DEFINE_ACTION(EV_ActionParamPlatUWDS)
 DEFINE_ACTION(EV_ActionParamPlatUpByValue)
 {
    return EV_DoParamPlat(instance->line, instance->args, paramUpByValueWaitDownStay);
+}
+
+//
+// EV_ActionThingChangeTID
+//
+// Implements Thing_ChangeTID(oldtid, newtid)
+// * ExtraData: 421
+// * Hexen:     176
+//
+DEFINE_ACTION(EV_ActionThingChangeTID)
+{
+   Mobj   *mo     = nullptr;
+   Mobj   *next   = nullptr;
+   int32_t oldtid = instance->args[0];
+   int32_t newtid = instance->args[1];
+   bool    found  = false;
+
+   mo    = P_FindMobjFromTID(oldtid, nullptr, instance->actor);
+   found = mo != nullptr;
+   while(mo)
+   {
+      // Find next Mobj before changing TID.
+      next = P_FindMobjFromTID(oldtid, mo, instance->actor);
+
+      P_RemoveThingTID(mo);
+      P_AddThingTID(mo, newtid);
+      mo = next;
+   }
+
+   return found;
 }
 
 // EOF

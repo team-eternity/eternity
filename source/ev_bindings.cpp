@@ -1043,6 +1043,7 @@ PARAMLINE(FloorWaggle);
 PARAMLINE(ThingSpawn);
 PARAMLINE(ThingSpawnNoFog);
 PARAMLINE(TeleportEndGame);
+PARAMLINE(ThingChangeTID);
 PARAMLINE(ThingProjectile);
 PARAMLINE(ThingProjectileGravity);
 PARAMLINE(ThingActivate);
@@ -1403,6 +1404,7 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(415, ParamPlatUpByValue,              "Plat_UpByValue")
    LINESPECNAMED(416, ParamFloorLowerToHighest,        "Floor_LowerToHighest")
    LINESPECNAMED(420, ACSExecuteWithResult,            "ACS_ExecuteWithResult")
+   LINESPECNAMED(421, ThingChangeTID,                  "Thing_ChangeTID")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1522,6 +1524,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(136, ThingProjectileGravity,          "Thing_ProjectileGravity")
    LINESPECNAMED(137, ThingSpawnNoFog,                 "Thing_SpawnNoFog")
    LINESPECNAMED(138, FloorWaggle,                     "Floor_Waggle")
+   LINESPECNAMED(176, ThingChangeTID,                  "Thing_ChangeTID")
    LINESPECNAMED(192, ParamCeilingLowerToHighestFloor, "Ceiling_LowerToHighestFloor")
    LINESPECNAMED(193, ParamCeilingLowerInstant,        "Ceiling_LowerInstant")
    LINESPECNAMED(194, ParamCeilingRaiseInstant,        "Ceiling_RaiseInstant")
