@@ -518,6 +518,8 @@ void ACSThread::start(ACSVM::Script *script, ACSVM::MapScope *map,
 {
    ACSVM::Thread::start(script, map, infoPtr, argV, argC);
 
+   result = 1;
+
    if(infoPtr)
       info = *static_cast<const ACSThreadInfo *>(infoPtr);
    else
