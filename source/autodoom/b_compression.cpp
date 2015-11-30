@@ -286,7 +286,7 @@ bool GZExpansion::inflateToBuffer()
    uInt minOut;
    do
    {
-      minOut = emin(CHUNK, idx);
+      minOut = emin(static_cast<uInt>(CHUNK), static_cast<uInt>(idx));
 
       m_strm.avail_out = minOut;
       m_strm.next_out = out;

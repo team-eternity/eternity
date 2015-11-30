@@ -64,7 +64,10 @@ public:
 
 class GZExpansion : public InBuffer
 {
-    static const size_t CHUNK = 32768;  // increased because otherwise inflate() may fail. I might need a more robust way, though.
+   // increased from default 16384 (from zpipe.c common
+   // example) because otherwise inflate() may fail. I might need a more robust
+   // way, though.
+   enum { CHUNK = 32768, };
 
    z_stream m_strm;
    bool m_init;
