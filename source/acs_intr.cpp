@@ -2153,6 +2153,7 @@ bool ACS_ExecuteScript(ACSScript *script, int flags, const int32_t *argv,
    newThread->localvar    = estructalloctag(int32_t, newThread->numLocalvar, PU_LEVEL);
    newThread->numLocals   = newThread->numLocalvar;
    newThread->locals      = newThread->localvar;
+   newThread->result      = 1; // Default result is 1, as per ZDoom.
    newThread->line        = line;
    newThread->lineSide    = lineSide;
    P_SetTarget<Mobj>(&newThread->trigger, trigger);
