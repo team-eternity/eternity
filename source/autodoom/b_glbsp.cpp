@@ -404,14 +404,26 @@ void B_GLBSP_PutSubsector(int first, int num, int ssidx)
               B_Log("%g %g %g %g", M_FixedToDouble(sg.v[0]->x), M_FixedToDouble(sg.v[0]->y),
                     M_FixedToDouble(sg.v[1]->x), M_FixedToDouble(sg.v[1]->y));
           BNeigh n;
-         n.dist = 0; // to be updated later
-         n.otherss = sg.partner->owner;
-          n.seg = &sg;
+          n.dist = 0; // to be updated later
+          n.otherss = sg.partner->owner;
+          n.myss = sg.owner;
+          n.v.x = sg.v[0]->x;
+          n.v.y = sg.v[0]->y;
+          n.d.x = sg.dx;
+          n.d.y = sg.dy;
+          n.line = sg.ln;
           ss.neighs.add(n);
+
           n.otherss = &ss;
-          n.seg = sg.partner;
+          n.myss = sg.partner->owner;
+          n.v.x = sg.partner->v[0]->x;
+          n.v.y = sg.partner->v[0]->y;
+          n.d.x = sg.partner->dx;
+          n.d.y = sg.partner->dy;
+          n.line = sg.partner->ln;
           sg.partner->owner->neighs.add(n);
-         neighRefs.add(&sg.partner->owner->neighs.back());
+
+          neighRefs.add(&sg.partner->owner->neighs.back());
       }
       // set the metasector if not set already
       if (!ss.msector && sg.ln)

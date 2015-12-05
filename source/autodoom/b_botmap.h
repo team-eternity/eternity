@@ -124,8 +124,11 @@ public:
    struct Neigh
    {
        const Subsec*    otherss;    // subsector behind this neigh.
-       const Seg*       seg;
-       fixed_t          dist;
+       const Subsec*    myss;       // subsector that owns this neigh.
+       const Line*      line;       // botmap line reference, if needed
+       v2fixed_t        v;          // starting point
+       v2fixed_t        d;          // delta to ending point
+       fixed_t          dist;       // distance between the two subsectors
    };
 
    //

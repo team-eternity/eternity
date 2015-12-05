@@ -1873,10 +1873,10 @@ void AM_drawBotPath()   // not static (friend to Bot)
    {
       for (const BNeigh* neigh : bots[0].m_path.inv)
       {
-         l.a.x = M_FixedToDouble(neigh->seg->v[0]->x);
-         l.a.y = M_FixedToDouble(neigh->seg->v[0]->y);
-         l.b.x = M_FixedToDouble(neigh->seg->v[1]->x);
-         l.b.y = M_FixedToDouble(neigh->seg->v[1]->y);
+         l.a.x = M_FixedToDouble(neigh->v.x);
+         l.a.y = M_FixedToDouble(neigh->v.y);
+         l.b.x = M_FixedToDouble(neigh->v.x + neigh->d.x);
+         l.b.y = M_FixedToDouble(neigh->v.y + neigh->d.y);
          AM_drawMline(&l, mapcolor_frnd);
       }
    }

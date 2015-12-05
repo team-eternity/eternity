@@ -108,7 +108,7 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
                 if (!n)
                     break;
                 path.inv.add(n);
-                t = n->seg->owner;
+                t = n->myss;
             }
             return true;
         }
@@ -124,8 +124,8 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
                 index = (int)(bytele->ss - first);
                 
                 tentative = db[1].ssdist[t - first]
-                + B_ExactDistance(t->mid.x - neigh.seg->mid.x,
-                                  t->mid.y - neigh.seg->mid.y);
+                + B_ExactDistance(t->mid.x - neigh.v.x - neigh.d.x / 2,
+                                  t->mid.y - neigh.v.y - neigh.d.y / 2);
                 
                 if (db[1].ssvisit[index] != db[1].validcount
                     || tentative < db[1].ssdist[index])
@@ -236,13 +236,13 @@ bool PathFinder::AvailableGoals(const BSubsec& source,
 //
 const PathFinder::TeleItem* PathFinder::checkTeleportation(const BNeigh& neigh)
 {
-    const BotMap::Line* bline = neigh.seg->ln;
+    const BotMap::Line* bline = neigh.line;
     if (!bline 
         || !bline->specline 
         || !B_IsWalkTeleportation(bline->specline->special) 
-        || (neigh.seg->dx ^ bline->specline->dx) < 0 
-        || (neigh.seg->dy ^ bline->specline->dy) < 0
-        || !m_map->canPass(*neigh.seg->owner, *neigh.otherss, m_plheight))
+        || (neigh.d.x ^ bline->specline->dx) < 0 
+        || (neigh.d.y ^ bline->specline->dy) < 0
+        || !m_map->canPass(*neigh.myss, *neigh.otherss, m_plheight))
     {
         return nullptr;
     }

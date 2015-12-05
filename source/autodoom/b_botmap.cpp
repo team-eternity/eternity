@@ -62,7 +62,7 @@ bool BotMap::demoPlayingFlag;
 const int CACHE_BUFFER_SIZE = 16384;//512 * 1024;
 enum { SUBSEC_GRID_STEP = 64 * FRACUNIT };
 
-static const char* const BOTMAP_CACHE_MAGIC = "BOTMAP02";
+static const char* const BOTMAP_CACHE_MAGIC = "BOTMAPxx";
 
 //
 // BotMap::getTouchedBlocks
@@ -707,7 +707,12 @@ void BotMap::cacheToFile(const char* path) const
             for (const auto& neigh : ssector.neighs)
             {
                 file.WriteSint32(neigh.otherss ? (int32_t)(neigh.otherss - &ssectors[0]) : -1);
-                file.WriteSint32(neigh.seg ? (int32_t)(neigh.seg - &segs[0]) : -1);
+                file.WriteSint32(neigh.myss ? (int32_t)(neigh.myss - &ssectors[0]) : -1);
+                file.WriteSint32(neigh.v.x);
+                file.WriteSint32(neigh.v.y);
+                file.WriteSint32(neigh.d.x);
+                file.WriteSint32(neigh.d.y);
+                file.WriteSint32(neigh.line ? (int32_t)(neigh.line - lines) : -1);
                 file.WriteSint32(neigh.dist);
             }
         }
@@ -910,7 +915,12 @@ void BotMap::loadFromCache(const char* path)
          {
              Neigh& n = ss.neighs.addNew();
              file.readSint32T((uintptr_t&)n.otherss);
-             file.readSint32T((uintptr_t&)n.seg);
+             file.readSint32T((uintptr_t&)n.myss);
+             file.readSint32T(n.v.x);
+             file.readSint32T(n.v.y);
+             file.readSint32T(n.d.x);
+             file.readSint32T(n.d.y);
+             file.readSint32T((uintptr_t&)n.line);
              file.readSint32T(n.dist);
          }
       }
@@ -1009,7 +1019,8 @@ void BotMap::loadFromCache(const char* path)
       for (Neigh &n : ss.neighs)
       {
           if (!B_ConvertPtrToArrayItem(n.otherss, &botMap->ssectors[0], botMap->ssectors.getLength())
-            || !B_ConvertPtrToArrayItem(n.seg, &botMap->segs[0], botMap->segs.getLength()))
+            || !B_ConvertPtrToArrayItem(n.myss, &botMap->ssectors[0], botMap->ssectors.getLength())
+            || !B_ConvertPtrToArrayItem(n.line, botMap->lines, botMap->numlines))
          {
             FAIL();
          }
@@ -1059,7 +1070,7 @@ void BotMap::Build()
    B_Log("Looking for level cache %s...", hashFileName.constPtr());
    const char* fpath = D_CheckAutoDoomPathFile(hashFileName.constPtr(), false);
 
-   if (fpath)
+   if (false && fpath)
    {
        // Try building from it
        BotMap::loadFromCache(fpath);

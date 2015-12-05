@@ -514,13 +514,13 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
     const BotMap::Line* bline;
     for (const BNeigh& neigh : ss.neighs)
     {
-        bline = neigh.seg->ln;
+        bline = neigh.line;
 
         // Don't handle teleporters here as goals. They're handled in b_path.
         // And unlike teleporters, we don't care about the way we enter them.
         if(bline && bline->specline
            && !B_IsWalkTeleportation(bline->specline->special)
-           && botMap->canPass(*neigh.seg->owner, *neigh.otherss, self.pl->mo->height)
+           && botMap->canPass(*neigh.myss, *neigh.otherss, self.pl->mo->height)
            && self.handleLineGoal(ss, coord, *bline->specline))
         {
             return true;
@@ -938,21 +938,18 @@ void Bot::doNonCombatAI()
     }
     else
     {
-        const BSeg* seg;
         // from end to path to beginning
         bool onPath = false;
-        for (const BNeigh** nit = m_path.inv.begin(); nit != m_path.inv.end();
-             ++nit)
+        for (const BNeigh* neigh : m_path.inv)
         {
-            seg = (*nit)->seg;
-            if (!botMap->canPass(*seg->owner, *(*nit)->otherss, pl->mo->height))
+            if (!botMap->canPass(*neigh->myss, *neigh->otherss, pl->mo->height))
             {
                 break;
             }
             if(!m_runfast)
             {
                 const PlatThinker* pt = thinker_cast<const PlatThinker*>
-                    ((*nit)->otherss->msector->getFloorSector()->floordata);
+                    (neigh->otherss->msector->getFloorSector()->floordata);
                 
                 if(pt && pt->wait > 0)
                 {
@@ -960,19 +957,19 @@ void Bot::doNonCombatAI()
                     m_runfast = true;
                 }
             }
-            if (seg->owner == ss)
+            if (neigh->myss == ss)
             {
                 v2fixed_t nn = B_ProjectionOnSegment(pl->mo->x, pl->mo->y,
-                                                     seg->v[0]->x, seg->v[0]->y,
-                                                     seg->dx, seg->dy, pl->mo->radius);
+                                                     neigh->v.x, neigh->v.y,
+                                                     neigh->d.x, neigh->d.y, pl->mo->radius);
                 nx = nn.x;
                 ny = nn.y;
-                if (!botMap->canPassNow(*seg->owner, *(*nit)->otherss, pl->mo->height))
+                if (!botMap->canPassNow(*neigh->myss, *neigh->otherss, pl->mo->height))
                 {
                     dontMove = true;
                 }
                 {
-                    const sector_t* nsector = (*nit)->otherss->msector->getCeilingSector();
+                    const sector_t* nsector = neigh->otherss->msector->getCeilingSector();
                     const sector_t* msector = ss->msector->getCeilingSector();
                     
                     if(nsector != msector)
@@ -994,7 +991,7 @@ void Bot::doNonCombatAI()
                           (int)(ss - &botMap->ssectors[0]));
                     m_dropSS.erase(ss);
                 }
-                nextss = (*nit)->otherss;
+                nextss = neigh->otherss;
                 onPath = true;
                 break;
             }
