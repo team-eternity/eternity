@@ -268,6 +268,8 @@ private:
     void getDoorSectors();
     static void SpecialIsDoor(int n, SectorTrait& st, const line_t* line);
 
+    void addCornerNeighs();
+
     void cacheToFile(const char* path) const;
     static void loadFromCache(const char* path);
 	

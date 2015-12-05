@@ -62,7 +62,7 @@ bool BotMap::demoPlayingFlag;
 const int CACHE_BUFFER_SIZE = 16384;//512 * 1024;
 enum { SUBSEC_GRID_STEP = 64 * FRACUNIT };
 
-static const char* const BOTMAP_CACHE_MAGIC = "BOTMAPxx";
+static const char* const BOTMAP_CACHE_MAGIC = "BOTMAP03";
 
 //
 // BotMap::getTouchedBlocks
@@ -1043,6 +1043,88 @@ void BotMap::loadFromCache(const char* path)
 }
 
 //
+// BotMap::addCornerNeighs
+//
+// Takes care to add corner neighs where two subsectors only join by that
+//
+void BotMap::addCornerNeighs()
+{
+    // Lists of neighbours for each subsector
+    std::unordered_map<const Subsec *, std::unordered_set<const Subsec *>> ssJoinMap;
+    // List of subsectors which have received punctual neighs
+    std::unordered_map<const Subsec *, std::unordered_set<const Subsec *>> ssVisitedMap;
+    // List of subsectors going into this vertex
+    std::unordered_map<const Vertex *, std::unordered_set<Subsec *>> vertSsList;
+
+    for (const Seg& seg : segs)
+    {
+        // Null is a valid value
+        if (seg.partner)
+        {
+            ssJoinMap[seg.owner].insert(seg.partner->owner);
+            ssJoinMap[seg.partner->owner].insert(seg.owner);
+
+            vertSsList[seg.v[0]].insert(seg.partner->owner);
+            vertSsList[seg.v[1]].insert(seg.partner->owner);
+        }
+        vertSsList[seg.v[0]].insert(seg.owner);
+        vertSsList[seg.v[1]].insert(seg.owner);
+    }
+
+    int i;
+    const Vertex *v;
+    const std::unordered_set<Subsec *> *ssset;
+
+    Neigh n;
+    n.line = nullptr;
+    n.d.x = n.d.y = 0;
+
+    for (i = 0; i < numverts; ++i)
+    {
+        v = vertices + i;
+        auto kt = vertSsList.find(v);
+        if (kt == vertSsList.end())
+            continue;
+
+        ssset = &kt->second;
+        for (auto it = ssset->begin(); it != ssset->end(); ++it)
+        {
+            for (auto jt = it; jt != ssset->cend(); ++jt)
+            {
+                if (jt == it)   // hack to be able to start one step ahead
+                    continue;
+                // Skip them if neighbours
+                if (ssJoinMap[*it].count(*jt) || ssJoinMap[*jt].count(*it))
+                    continue;
+                // Add neighs, if not already
+                if (!ssVisitedMap[*it].count(*jt))
+                {
+                    ssVisitedMap[*it].insert(*jt);
+
+                    n.otherss = *jt;
+                    n.myss = *it;
+                    n.v.x = v->x;
+                    n.v.y = v->y;
+                    n.dist = B_ExactDistance((*it)->mid, (*jt)->mid);
+                    (*it)->neighs.add(n);
+                }
+                if (!ssVisitedMap[*jt].count(*it))
+                {
+                    ssVisitedMap[*jt].insert(*it);
+
+                    n.otherss = *it;
+                    n.myss = *jt;
+                    n.v.x = v->x;
+                    n.v.y = v->y;
+                    n.dist = B_ExactDistance((*it)->mid, (*jt)->mid);
+                    (*jt)->neighs.add(n);
+                }
+            }
+        }
+    }
+}
+
+//
 // B_BuildBotMap
 //
 // The main call to build bot map
@@ -1070,7 +1152,7 @@ void BotMap::Build()
    B_Log("Looking for level cache %s...", hashFileName.constPtr());
    const char* fpath = D_CheckAutoDoomPathFile(hashFileName.constPtr(), false);
 
-   if (false && fpath)
+   if (fpath)
    {
        // Try building from it
        BotMap::loadFromCache(fpath);
@@ -1095,6 +1177,9 @@ void BotMap::Build()
 
 	   B_Log("Level cache not found or invalid");
 	   B_buildTempBotMapFromScratch(radius, digest);
+       B_NEW_CLOCK
+       botMap->addCornerNeighs();
+       B_MEASURE_CLOCK(addCornerNeighs)
        botMap->cacheToFile(M_SafeFilePath(g_autoDoomPath, hashFileName.constPtr()));
    }
    efree(digest);
