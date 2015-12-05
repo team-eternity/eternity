@@ -112,16 +112,27 @@ public:
    Collection<Seg> segs;
 
    //
+   // Neigh
+   //
+   // Connects two subsectors. Used for pathfinding. Contains coordinate and 
+   // neighbouring object info. Unlike segs, it only appears where there really
+   // are adjoined subsectors, and just like them, they come in pairs: one for
+   // each adjoined subsector. They're not limited to segs, however. They can
+   // also represent vertices, when two subsectors are only connected through
+   // corners.
+   //
+   struct Neigh
+   {
+       const Subsec*    otherss;    // subsector behind this neigh.
+       const Seg*       seg;
+       fixed_t          dist;
+   };
+
+   //
    // Subsec
    //
    // Subsector defined by segments
    //
-   struct Neigh
-   {
-       const Subsec*    ss;
-       const Seg*       seg;
-      fixed_t           dist;
-   };
    class Subsec
    {
    public:

@@ -405,10 +405,10 @@ void B_GLBSP_PutSubsector(int first, int num, int ssidx)
                     M_FixedToDouble(sg.v[1]->x), M_FixedToDouble(sg.v[1]->y));
           BNeigh n;
          n.dist = 0; // to be updated later
-          n.ss = sg.partner->owner;
+         n.otherss = sg.partner->owner;
           n.seg = &sg;
           ss.neighs.add(n);
-          n.ss = &ss;
+          n.otherss = &ss;
           n.seg = sg.partner;
           sg.partner->owner->neighs.add(n);
          neighRefs.add(&sg.partner->owner->neighs.back());
@@ -436,7 +436,7 @@ void B_GLBSP_PutSubsector(int first, int num, int ssidx)
    int i = 0;
    for(BNeigh& n : ss.neighs)
    {
-      dist = B_ExactDistance(ss.mid.x - n.ss->mid.x, ss.mid.y - n.ss->mid.y);
+       dist = B_ExactDistance(ss.mid.x - n.otherss->mid.x, ss.mid.y - n.otherss->mid.y);
       n.dist = dist;
       neighRefs[i++]->dist = dist;
    }

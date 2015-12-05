@@ -520,7 +520,7 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
         // And unlike teleporters, we don't care about the way we enter them.
         if(bline && bline->specline
            && !B_IsWalkTeleportation(bline->specline->special)
-           && botMap->canPass(*neigh.seg->owner, *neigh.ss, self.pl->mo->height)
+           && botMap->canPass(*neigh.seg->owner, *neigh.otherss, self.pl->mo->height)
            && self.handleLineGoal(ss, coord, *bline->specline))
         {
             return true;
@@ -945,14 +945,14 @@ void Bot::doNonCombatAI()
              ++nit)
         {
             seg = (*nit)->seg;
-            if (!botMap->canPass(*seg->owner, *(*nit)->ss, pl->mo->height))
+            if (!botMap->canPass(*seg->owner, *(*nit)->otherss, pl->mo->height))
             {
                 break;
             }
             if(!m_runfast)
             {
                 const PlatThinker* pt = thinker_cast<const PlatThinker*>
-                ((*nit)->ss->msector->getFloorSector()->floordata);
+                    ((*nit)->otherss->msector->getFloorSector()->floordata);
                 
                 if(pt && pt->wait > 0)
                 {
@@ -967,12 +967,12 @@ void Bot::doNonCombatAI()
                                                      seg->dx, seg->dy, pl->mo->radius);
                 nx = nn.x;
                 ny = nn.y;
-                if(!botMap->canPassNow(*seg->owner, *(*nit)->ss, pl->mo->height))
+                if (!botMap->canPassNow(*seg->owner, *(*nit)->otherss, pl->mo->height))
                 {
                     dontMove = true;
                 }
                 {
-                    const sector_t* nsector = (*nit)->ss->msector->getCeilingSector();
+                    const sector_t* nsector = (*nit)->otherss->msector->getCeilingSector();
                     const sector_t* msector = ss->msector->getCeilingSector();
                     
                     if(nsector != msector)
@@ -994,7 +994,7 @@ void Bot::doNonCombatAI()
                           (int)(ss - &botMap->ssectors[0]));
                     m_dropSS.erase(ss);
                 }
-                nextss = (*nit)->ss;
+                nextss = (*nit)->otherss;
                 onPath = true;
                 break;
             }
@@ -1013,11 +1013,11 @@ void Bot::doNonCombatAI()
                     m_dropSS.insert(m_lastPathSS);
                     for (const BNeigh& n : m_lastPathSS->neighs)
                     {
-                        if (B_ExactDistance(n.ss->mid.x - m_lastPathSS->mid.x,
-                            n.ss->mid.y - m_lastPathSS->mid.y)
+                        if (B_ExactDistance(n.otherss->mid.x - m_lastPathSS->mid.x,
+                            n.otherss->mid.y - m_lastPathSS->mid.y)
                             < 128 * FRACUNIT)
                         {
-                            m_dropSS.insert(n.ss);
+                            m_dropSS.insert(n.otherss);
                         }
                     }
                 }

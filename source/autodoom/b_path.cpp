@@ -118,7 +118,7 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
             // Distance shall be from centre of source to middle of seg
             
             bytele = checkTeleportation(neigh);
-            index = (int)(neigh.ss - first);
+            index = (int)(neigh.otherss - first);
             if (bytele)
             {
                 index = (int)(bytele->ss - first);
@@ -135,7 +135,7 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
             }
             else
             {
-                msec = neigh.ss->msector;
+                msec = neigh.otherss->msector;
                 
                 // Hack to make the edge subsectors (which are never 'simple') less attractive to the pathfinder.
                 // Needed because the bot tends to easily fall off ledges because it chooses the subsector
@@ -152,9 +152,9 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
                 
                 if ((db[1].ssvisit[index] != db[1].validcount
                      || tentative < db[1].ssdist[index])
-                     && m_map->canPass(*t, *neigh.ss, m_plheight))
+                     && m_map->canPass(*t, *neigh.otherss, m_plheight))
                 {
-                    pushSubsectorToHeap(neigh, index, *neigh.ss, tentative);
+                    pushSubsectorToHeap(neigh, index, *neigh.otherss, tentative);
                 }
             }
         }
@@ -216,11 +216,11 @@ bool PathFinder::AvailableGoals(const BSubsec& source,
                     *back++ = bytele->ss;
                 }
             }
-            else if (db[0].ssvisit[neigh.ss - first] != db[0].validcount
-                     && m_map->canPass(*t, *neigh.ss, m_plheight))
+            else if (db[0].ssvisit[neigh.otherss - first] != db[0].validcount
+                && m_map->canPass(*t, *neigh.otherss, m_plheight))
             {
-                db[0].ssvisit[neigh.ss - first] = db[0].validcount;
-                *back++ = neigh.ss;
+                db[0].ssvisit[neigh.otherss - first] = db[0].validcount;
+                *back++ = neigh.otherss;
             }
         }
     }
@@ -242,7 +242,7 @@ const PathFinder::TeleItem* PathFinder::checkTeleportation(const BNeigh& neigh)
         || !B_IsWalkTeleportation(bline->specline->special) 
         || (neigh.seg->dx ^ bline->specline->dx) < 0 
         || (neigh.seg->dy ^ bline->specline->dy) < 0
-        || !m_map->canPass(*neigh.seg->owner, *neigh.ss, m_plheight))
+        || !m_map->canPass(*neigh.seg->owner, *neigh.otherss, m_plheight))
     {
         return nullptr;
     }

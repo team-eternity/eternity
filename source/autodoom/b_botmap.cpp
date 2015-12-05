@@ -706,7 +706,7 @@ void BotMap::cacheToFile(const char* path) const
             file.WriteUint32((uint32_t)ssector.neighs.getLength());
             for (const auto& neigh : ssector.neighs)
             {
-                file.WriteSint32(neigh.ss ? (int32_t)(neigh.ss - &ssectors[0]) : -1);
+                file.WriteSint32(neigh.otherss ? (int32_t)(neigh.otherss - &ssectors[0]) : -1);
                 file.WriteSint32(neigh.seg ? (int32_t)(neigh.seg - &segs[0]) : -1);
                 file.WriteSint32(neigh.dist);
             }
@@ -909,7 +909,7 @@ void BotMap::loadFromCache(const char* path)
          for (uint32_t v = 0; v < su32; ++v)
          {
              Neigh& n = ss.neighs.addNew();
-             file.readSint32T((uintptr_t&)n.ss);
+             file.readSint32T((uintptr_t&)n.otherss);
              file.readSint32T((uintptr_t&)n.seg);
              file.readSint32T(n.dist);
          }
@@ -1008,7 +1008,7 @@ void BotMap::loadFromCache(const char* path)
       }
       for (Neigh &n : ss.neighs)
       {
-         if(!B_ConvertPtrToArrayItem(n.ss, &botMap->ssectors[0], botMap->ssectors.getLength())
+          if (!B_ConvertPtrToArrayItem(n.otherss, &botMap->ssectors[0], botMap->ssectors.getLength())
             || !B_ConvertPtrToArrayItem(n.seg, &botMap->segs[0], botMap->segs.getLength()))
          {
             FAIL();
