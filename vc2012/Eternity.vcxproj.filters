@@ -954,6 +954,9 @@
     <ClCompile Include="..\source\ev_sectors.cpp">
       <Filter>Source Files\EV_\EV_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\e_udmf.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1699,6 +1702,9 @@
     </ClInclude>
     <ClInclude Include="..\source\ev_sectors.h">
       <Filter>Source Files\EV_\EV_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\e_udmf.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
