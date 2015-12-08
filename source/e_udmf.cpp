@@ -53,6 +53,23 @@
 // keyword := [^{}();"'\n\t ]+
 //
 
+class ParsedUDMF
+{
+public:
+   ~ParsedUDMF()
+   {
+      for(const MetaObject *object : textMap)
+         delete object;
+   }
+
+   bool parse(char *data, int size);
+   bool findGlobalString(const char *key, qstring &result) const;
+   const MetaTable *nextBlock(const MetaTable *curBlock) const;
+
+private:
+   PODCollection<const MetaObject *> textMap;
+};
+
 //
 // As we see, TEXTMAP consists of global_expr entries. Each global_expr is
 // a metatable. 
@@ -168,7 +185,7 @@ static bool E_checkValue(char **pc, const char *end, qstring &result)
 }
 
 //
-// E_parseUDMF
+// ParsedUDMF::parse
 //
 // Parses UDMF text into a collection of metatables.
 // For simplicity, it will preprocess stuff by removing comments first.
@@ -179,7 +196,7 @@ static bool E_checkValue(char **pc, const char *end, qstring &result)
 // - size: size of string
 // Returns true on success, false on error
 //
-static bool E_parseUDMFText(PODCollection<MetaTable *> &textMap, char *data, int size)
+bool ParsedUDMF::parse(char *data, int size)
 {
    char *pc, c;
    const char *const end = data + size;
@@ -245,6 +262,8 @@ static bool E_parseUDMFText(PODCollection<MetaTable *> &textMap, char *data, int
    qstring subIdentifier;
    qstring text;  // string value
 
+   MetaTable *table;
+
    //
    // Now do the actual parsing
    //
@@ -267,7 +286,9 @@ static bool E_parseUDMFText(PODCollection<MetaTable *> &textMap, char *data, int
             return false;
          if(*pc != ';')
             return false;
-         // TODO: add assignment expression to list
+
+         // add assignment expression to list
+         textMap.add(new MetaString(identifier.constPtr(), text.constPtr()));
       }
       else if(*pc == '{')
       {
@@ -275,6 +296,9 @@ static bool E_parseUDMFText(PODCollection<MetaTable *> &textMap, char *data, int
          if(++pc == end)
             return false;
 
+         table = new MetaTable(identifier.constPtr());
+         textMap.add(table);
+         
          do
          {
             if(!E_checkIdentifier(&pc, end, subIdentifier))
@@ -295,20 +319,68 @@ static bool E_parseUDMFText(PODCollection<MetaTable *> &textMap, char *data, int
                return false;
             if(!E_advanceNextSymbol(&pc, end))
                return false;
-            // TODO: add kv pair to current block
+            // add kv pair to current block
+            table->setString(subIdentifier.constPtr(), text.constPtr());
          } while(*pc != '}');
          
          if(++pc == end)
             return false;
-         // TODO: add block
       }
       else
          return false;
    }
 
-   // TODO: whatever finalization is needed
-
+   // We now have the list
    return true;
+}
+
+//
+// ParsedUDMF::findGlobalString
+//
+// Finds the string (but not identifier) of a top value kv pair
+//
+bool ParsedUDMF::findGlobalString(const char *key, qstring &result) const
+{
+   const MetaObject *ob;
+   const MetaString *str;
+   size_t i;
+   const char *pc;
+   bool escape = false;
+   for(i = textMap.getLength() - 1; i != (size_t)-1; --i)
+   {
+      ob = textMap[i];
+      if(!ob->isInstanceOf(RTTI(MetaString)))
+         continue;
+
+      str = static_cast<const MetaString *>(ob);
+      if(strcasecmp(str->getKey(), key))
+         continue;
+
+      // found one
+      if(str->getValue()[0] != '"')
+         return false;   // Found but it's not a string, so avoid
+      
+      result.clear();
+      for(pc = str->getValue() + 1; *pc; ++pc)
+      {
+         if(!escape)
+         {
+            if(*pc == '"')
+               return true;
+            if(*pc == '\\')
+               escape = true;
+            else
+               result << *pc;
+         }
+         else
+         {
+            result << *pc;
+            escape = false;
+         }
+      }
+   }
+
+   return false;
 }
 
 //
@@ -327,10 +399,38 @@ void E_LoadUDMF(WadDirectory &setupwad, int lump)
    auto data = buf.getAs<char *>();
 
    // Use a collection because order is important, not key uniqueness
-   PODCollection<MetaTable *> textMap;
-   E_parseUDMFText(textMap, data, setupwad.lumpLength(lump));
+   ParsedUDMF udmf;
+   if(!udmf.parse(data, setupwad.lumpLength(lump)))
+   {
+      // TODO: setuplevelerror
+      return;
+   }
+  
+   qstring ns;
+   if(!udmf.findGlobalString("namespace", ns))
+   {
+      // TODO: no namespace
+      return;
+   }
+   ns.toLower();
+   if(ns == "doom")
+   {
+      // TODO: set Doom bindings and stuff
+   }
+   else if(ns == "heretic")
+   {
+   }
+   else if(ns == "hexen")
+   {
+   }
+   else if(ns == "strife")
+   {
+   }
+   else if(ns == "eternity")  // tentative
+   {
+   }
 
-   // TODO: process the data
+   // TODO: explore blocks
 }
 
 // EOF
