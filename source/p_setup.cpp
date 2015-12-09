@@ -2317,8 +2317,9 @@ void P_InitThingLists(); // haleyjd
 // P_SetupLevelError
 // 
 // haleyjd 02/18/10: Error handling routine for P_SetupLevel
+// IOANCH 20151210: Made global
 //
-static void P_SetupLevelError(const char *msg, const char *levelname)
+void P_SetupLevelError(const char *msg, const char *levelname)
 {
    C_Printf(FC_ERROR "%s: '%s'\n", msg, levelname);
    C_SetConsole();

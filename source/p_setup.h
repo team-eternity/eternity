@@ -52,6 +52,9 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask, skill_
 void P_Init();                   // Called by startup code.
 void P_InitThingLists();
 
+// IOANCH 20151210: made global so it can be accessed from e_udmf
+void P_SetupLevelError(const char *msg, const char *levelname);
+
 extern byte     *rejectmatrix;   // for fast sight rejection
 
 // killough 3/1/98: change blockmap from "short" to "long" offsets:

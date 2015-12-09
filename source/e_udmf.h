@@ -30,7 +30,7 @@
 
 class WadDirectory;
 
-void E_LoadUDMF(WadDirectory &setupwad, int lump);
+void E_LoadUDMF(WadDirectory &setupwad, int lump, const char *mapname);
 
 #endif
 
