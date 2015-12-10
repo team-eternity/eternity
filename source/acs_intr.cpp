@@ -1794,22 +1794,32 @@ void ACSVM::reset()
       mapahas[i] = false;
    }
 
-   code       = NULL;
-   numCode    = 0;
-   jumps      = NULL;
-   numJumps   = 0;
-   strings    = NULL;
-   numStrings = 0;
-   scripts    = NULL;
-   numScripts = 0;
-   loaded     = false;
-   lump       = -1;
+   code           = NULL;
+   numCode        = 0;
+   jumps          = NULL;
+   numJumps       = 0;
+   strings        = NULL;
+   numStrings     = 0;
+   scripts        = NULL;
+   numScripts     = 0;
+   scriptNames    = NULL;
+   numScriptNames = 0;
+   loaded         = false;
+   lump           = -1;
 
-   exports    = NULL;
-   numExports = 0;
-   imports    = NULL;
-   importVMs  = NULL;
-   numImports = 0;
+   funcptrs = NULL;
+   funcs    = NULL;
+   numFuncs = 0;
+   jumps    = NULL;
+   numJumps = 0;
+
+   exports      = NULL;
+   numExports   = 0;
+   imports      = NULL;
+   importVMs    = NULL;
+   numImports   = 0;
+   funcNames    = NULL;
+   numFuncNames = 0;
 }
 
 //
@@ -2143,6 +2153,7 @@ bool ACS_ExecuteScript(ACSScript *script, int flags, const int32_t *argv,
    newThread->localvar    = estructalloctag(int32_t, newThread->numLocalvar, PU_LEVEL);
    newThread->numLocals   = newThread->numLocalvar;
    newThread->locals      = newThread->localvar;
+   newThread->result      = 1; // Default result is 1, as per ZDoom.
    newThread->line        = line;
    newThread->lineSide    = lineSide;
    P_SetTarget<Mobj>(&newThread->trigger, trigger);

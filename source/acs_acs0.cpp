@@ -96,6 +96,16 @@ static uint32_t ACS_countOpSizeACS0(acs0_tracer_t *tracer, uint32_t index,
 {
    switch(opdata->op)
    {
+   case ACS0_OP_LINESPEC1_IMM:
+   case ACS0_OP_LINESPEC2_IMM:
+   case ACS0_OP_LINESPEC3_IMM:
+   case ACS0_OP_LINESPEC4_IMM:
+   case ACS0_OP_LINESPEC5_IMM:
+      if(tracer->compressed)
+         return opSize + 1 + (opdata->args - 1) * 4;
+      else
+         return opSize + opdata->args * 4;
+
    case ACS0_OP_LINESPEC1_IMM_BYTE:
    case ACS0_OP_LINESPEC2_IMM_BYTE:
    case ACS0_OP_LINESPEC3_IMM_BYTE:
@@ -700,7 +710,10 @@ static void ACS_translateScriptACS0(acs0_tracer_t *tracer, int32_t *codeIndexMap
       case ACS0_OP_LINESPEC5:
          temp = op - ACS0_OP_LINESPEC1 + 1;
          *codePtr++ = opdata->opdata->op;
-         *codePtr++ = SwapLong(*rover++);
+         if(tracer->compressed)
+            *codePtr++ = *(byte *)rover;
+         else
+            *codePtr++ = SwapLong(*rover++);
          *codePtr++ = temp;
          break;
 
@@ -711,7 +724,13 @@ static void ACS_translateScriptACS0(acs0_tracer_t *tracer, int32_t *codeIndexMap
       case ACS0_OP_LINESPEC5_IMM:
          temp = opdata->args - 1;
          *codePtr++ = opdata->opdata->op;
-         *codePtr++ = SwapLong(*rover++);
+         if(tracer->compressed)
+         {
+            *codePtr++ = *(byte *)rover;
+            rover = (int32_t *)((byte *)rover + 1);
+         }
+         else
+            *codePtr++ = SwapLong(*rover++);
          *codePtr++ = temp;
          while(temp--)
             *codePtr++ = SwapLong(*rover++);

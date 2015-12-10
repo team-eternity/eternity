@@ -809,7 +809,7 @@ static void ACS_funcRadiusQuake(ACS_FUNCARG)
 //
 static void ACS_funcRandom(ACS_FUNCARG)
 {
-   *retn++ = P_RangeRandom(pr_script, args[0], args[1]);
+   *retn++ = P_RangeRandomEx(pr_script, args[0], args[1]);
 }
 
 // ReplaceTextures flags
@@ -1898,12 +1898,12 @@ static void ACS_funcUniqueTID(ACS_FUNCARG)
    // Start point of 0 means random. How about outside the int16_t range?
    // We also don't trust no negative TIDs 'round these here parts.
    if(!tid || tid < 0)
-      tid = P_RangeRandomEx(pr_script, 0x8000, 0x7FFFFFFF);
+      tid = P_RangeRandomEx(pr_script, 0x8000, 0xFFFF);
 
    while(P_FindMobjFromTID(tid, NULL, NULL))
    {
       // Don't overflow the tid. Again, we don't take kindly to negative TIDs.
-      if(tid == 0x7FFFFFFF)
+      if(tid == 0xFFFF)
          tid = 1;
       else
          ++tid;
