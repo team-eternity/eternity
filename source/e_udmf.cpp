@@ -33,6 +33,9 @@
 #include "m_qstr.h"
 #include "metaapi.h"
 #include "p_setup.h"
+#include "p_spec.h"
+#include "r_data.h"
+#include "r_defs.h"
 #include "w_wad.h"
 #include "z_auto.h"
 
@@ -307,33 +310,6 @@ struct Token
 //
 
 //
-// Error
-//
-// Parse error
-//
-class Error
-{
-public:
-   const char *message;
-   int line;
-
-   Error(const char *inMessage, int inLine) 
-      : message(inMessage), line(inLine)
-   {
-   }
-};
-
-//
-// OK
-//
-// Return a non-error
-//
-inline static Error OK()
-{
-   return Error(nullptr, 0);
-}
-
-//
 // ParsedUDMF
 //
 // All that has to be done for UDMF parsing
@@ -349,8 +325,9 @@ public:
       mBlocks.setPrototype(&proto);
    }
 
-   Error tokenize();
-   Error readTokenizedData();
+   void tokenize();
+   void readTokenizedData();
+   void scanMapItems();
 
 private:
    // Raw data (not owned)
@@ -365,6 +342,30 @@ private:
 
    // Ordered list of map objects
    Collection<MetaTable> mBlocks;
+
+   // Collections of map items (to be copied into global arrays)
+   PODCollection<vertex_t> mVertices;
+   PODCollection<sector_t> mSectors;
+};
+
+//
+// UDMFException
+//
+// Used to funnel all parse errors into a single place. Uses a message and a
+// line number, which can then be accessed directly
+//
+class UDMFException
+{
+public:
+   const char *message;
+   int line;
+   const char *locationName;
+
+   UDMFException(const char *inMessage, int inLine, 
+      const char *inLocationName = "line") 
+      : message(inMessage), line(inLine), locationName(inLocationName)
+   {
+   }
 };
 
 //
@@ -384,7 +385,7 @@ private:
 // - size: size of string
 // Returns true on success, false on error
 //
-Error ParsedUDMF::tokenize()
+void ParsedUDMF::tokenize()
 {
    const char *pc, *oldpc;
    const char *end = mRawData + mRawDataSize;
@@ -422,7 +423,7 @@ Error ParsedUDMF::tokenize()
             if(mTokens.getLength() 
                && !E_allowNext((mTokens.end() - 1)->type, def.type))
             {
-               return Error("Syntax error", line);
+               throw UDMFException("Syntax error", line);
             }
             token.type = def.type;
             token.data = prepos;
@@ -434,23 +435,22 @@ Error ParsedUDMF::tokenize()
          }
       }
       if(!found)
-         return Error("Syntax error", line);  // syntax error 
+         throw UDMFException("Syntax error", line);  // syntax error 
       if(pc == oldpc)
       {
-         return Error("Internal parsing error, please report it to developers,", 
-               line);
+         throw UDMFException("Internal parsing error, please report it to "
+            "developers,", line);
       }
    }
 
    if(mTokens.getLength()) 
    {
       if (!E_allowEnd((mTokens.end() - 1)->type))
-         return Error("Invalid end of TEXTMAP", line);
+         throw UDMFException("Invalid end of TEXTMAP", line);
       if(mTokens[0].type != TokenType_Identifier)
-         return Error("TEXTMAP must start with an identifier", mTokens[0].line);
+         throw UDMFException("TEXTMAP must start with an identifier", mTokens[0].line);
    }
    // We now have the list
-   return OK();
 }
 
 //
@@ -489,7 +489,7 @@ static void E_decodeString(const char *str, size_t len, qstring &dest)
 // Reads the tokenized data (already syntax-validated) into usable metaobjects
 // Clears the token list afterwards.
 //
-Error ParsedUDMF::readTokenizedData()
+void ParsedUDMF::readTokenizedData()
 {
 
    bool haveIdentifier = false;
@@ -519,14 +519,14 @@ Error ParsedUDMF::readTokenizedData()
             else
             {
                // error if not true or false
-               return Error("Invalid keyword; expected 'true' or 'false'", 
+               throw UDMFException("Invalid keyword; expected 'true' or 'false'", 
                   token.line);
             }
          }
          break;
       case TokenType_Equal:
          if(inField)
-            return Error("Unexpected '='", token.line);
+            throw UDMFException("Unexpected '='", token.line);
          inField = true;
          break;
       case TokenType_Semicolon:
@@ -553,12 +553,12 @@ Error ParsedUDMF::readTokenizedData()
          else
          {
             // don't allow sub-blocks
-            return Error("Blocks cannot be nested", token.line);
+            throw UDMFException("Blocks cannot be nested", token.line);
          }
          break;
       case TokenType_ClosingBrace:
          if(block == &mGlobalTable) // error if it wasn't started by {
-            return Error("No matching '{' found for '}'", token.line);
+            throw UDMFException("No matching '{' found for '}'", token.line);
          block = &mGlobalTable;
          break;
       }
@@ -567,12 +567,121 @@ Error ParsedUDMF::readTokenizedData()
    // Check validity near the end.
    if(block != &mGlobalTable)
    {
-      return Error("Missing closing brace in TEXTMAP", (mTokens.end() - 1)->line);
+      throw UDMFException("Missing closing brace in TEXTMAP", (mTokens.end() - 1)->line);
    }
 
-   mTokens.makeEmpty();
+   mTokens.makeEmpty(); // clear it after use. It's consumed.
+}
 
-   return OK();
+//
+// E_requireDouble
+//
+// Returns a double value that accepts no default
+//
+static double E_requireDouble(MetaTable &block, const char *key)
+{
+   MetaObject *object = block.getObject(key);
+
+   // dummy num, will be rethrown
+   if(!object)
+      throw UDMFException("Missing required number field", 0);  
+   auto numObject = runtime_cast<MetaDouble *>(object);
+   if(!numObject)
+      throw UDMFException("Field is not a number", 0);
+
+   return numObject->getValue();
+}
+
+//
+// E_requireOptInt
+//
+// Returns an int value where an integer (no point) is required, but accepting
+// a default if not included.
+//
+static int E_requireOptInt(MetaTable &block, const char *key, int def = 0)
+{
+   MetaObject *object = block.getObject(key);
+
+   if(!object)
+      return def;
+
+   auto numObject = runtime_cast<MetaDouble *>(object);
+   if(!numObject)
+      throw UDMFException("Field is not an integer", 0);
+
+   double dbl = numObject->getValue();
+   if(dbl != floor(dbl) || dbl < -2147483648. || dbl > 2147483647.)
+      throw UDMFException("Field is not an integer or is overflowing", 0);
+
+   return static_cast<int>(numObject->getValue());
+}
+
+//
+// E_requireString
+//
+// Requires a field to be string and exist, returning its value
+//
+static const char *E_requireString(MetaTable &block, const char *key)
+{
+   MetaObject *object = block.getObject(key);
+
+   if(!object)
+      throw UDMFException("Missing required string field", 0);
+
+   auto strObject = runtime_cast<MetaString *>(object);
+   if(!strObject)
+      throw UDMFException("Field is not a string", 0);
+
+   return strObject->getValue();
+}
+
+//
+// ParsedUDMF::scanMapItems
+//
+// Scans all relevant map items and adds them to the collection
+//
+void ParsedUDMF::scanMapItems()
+{
+   const char *key;
+   double dx, dy;
+   size_t excNumber = 0;
+   for(MetaTable &block : mBlocks)
+   {
+      key = block.getKey();
+      try
+      {
+         if(!strcasecmp(key, "vertex"))
+         {
+            excNumber = mVertices.getLength();
+            vertex_t &v = mVertices.addNew();
+            dx = E_requireDouble(block, "x");
+            dy = E_requireDouble(block, "y");
+            v.x = M_DoubleToFixed(dx);
+            v.y = M_DoubleToFixed(dy);
+            v.fx = static_cast<float>(dx);
+            v.fy = static_cast<float>(dy);
+         }
+         else if(!strcasecmp(key, "sector"))
+         {
+            excNumber = mSectors.getLength();
+            sector_t &s = mSectors.addNew();
+            s.floorheight = E_requireOptInt(block, "heightfloor") << FRACBITS;
+            s.ceilingheight = E_requireOptInt(block, "heightfloor") << FRACBITS;
+            s.floorpic = R_FindFlat(E_requireString(block, "texturefloor"));
+            P_SetSectorCeilingPic(&s, R_FindFlat(E_requireString(block, 
+               "textureceiling")));
+            s.lightlevel = E_requireOptInt(block, "lightlevel", 160);
+            s.special = E_requireOptInt(block, "special");
+            s.tag = E_requireOptInt(block, "id");
+         }
+      }
+      catch(UDMFException &e)
+      {
+         e.line = excNumber;
+         e.locationName = key;
+         throw;
+      }
+   }
 }
 
 //
@@ -592,24 +701,22 @@ void E_LoadUDMF(WadDirectory &setupwad, int lump, const char *mapname)
 
    // Use a collection because order is important, not key uniqueness
    ParsedUDMF udmf(data, setupwad.lumpLength(lump));
-   Error error = udmf.tokenize();
-   if(error.message)
+   try
+   {
+      udmf.tokenize();
+      udmf.readTokenizedData();
+      udmf.scanMapItems();
+   }
+   catch(const UDMFException& error)
    {
       qstring complete_message;
-      complete_message.copy(error.message) << " at line " << error.line;
-      P_SetupLevelError(complete_message.constPtr(), mapname); 
+      complete_message.copy(error.message) << " at " << error.locationName 
+         << " " << error.line;
+      P_SetupLevelError(complete_message.constPtr(), mapname);
+      // TODO: tell P_SetupLevel to calm down and stop processing the current map
       return;
    }
-   error = udmf.readTokenizedData();
-   if(error.message)
-   {
-      qstring complete_message;
-      complete_message.copy(error.message) << " at line " << error.line;
-      P_SetupLevelError(complete_message.constPtr(), mapname); 
-      return;
-   }  
-
-   // TODO: explore blocks
+   
 }
 
 // EOF
