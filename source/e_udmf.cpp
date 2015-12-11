@@ -90,12 +90,13 @@ static bool E_allowNext(TokenType first, TokenType second)
          || second == TokenType_String;
    case TokenType_Semicolon:
    case TokenType_OpeningBrace:
-      return second == TokenType_Identifier || second == TokenType_ClosingBrace;
+      return second == TokenType_Identifier || second == TokenType_ClosingBrace
+         || second == TokenType_Semicolon;
    case TokenType_Number:
    case TokenType_String:
       return second == TokenType_Semicolon;
    case TokenType_ClosingBrace:
-      return second == TokenType_Identifier;
+      return second == TokenType_Identifier || second == TokenType_Semicolon;
    }
    return false;
 }
@@ -385,7 +386,7 @@ private:
 //
 Error ParsedUDMF::tokenize()
 {
-   const char *pc;
+   const char *pc, *oldpc;
    const char *end = mRawData + mRawDataSize;
 
    Token token;
@@ -394,8 +395,11 @@ Error ParsedUDMF::tokenize()
    bool found;
    int line = 1;
    
-   for(pc = mRawData; pc < end; ++pc)
+   // it should really advance from E_advanceWhitespace and token detection. If
+   // not, then it will throw an error for safety.
+   for(pc = mRawData; pc < end; )
    {
+      oldpc = pc;
       if(!E_advanceWhitespace(&pc, end, &line))
          break;
 
@@ -431,6 +435,11 @@ Error ParsedUDMF::tokenize()
       }
       if(!found)
          return Error("Syntax error", line);  // syntax error 
+      if(pc == oldpc)
+      {
+         return Error("Internal parsing error, please report it to developers,", 
+               line);
+      }
    }
 
    if(mTokens.getLength()) 
@@ -510,20 +519,19 @@ Error ParsedUDMF::readTokenizedData()
             else
             {
                // error if not true or false
-               return Error("Invalid keyword; expected 'true' or 'false'", token.line);
+               return Error("Invalid keyword; expected 'true' or 'false'", 
+                  token.line);
             }
          }
          break;
       case TokenType_Equal:
          if(inField)
-         {
             return Error("Unexpected '='", token.line);
-         }
          inField = true;
          break;
       case TokenType_Semicolon:
-         if(!inField)
-            return Error("Unexpected ';'", token.line);
+         // Excessive semicolons are never harmful, so don't return error
+         // They already have been filtered by the tokenizer
          inField = false;
          break;
       case TokenType_Number:
