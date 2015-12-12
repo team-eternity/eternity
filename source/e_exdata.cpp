@@ -323,7 +323,7 @@ static cfg_opt_t ed_opts[] =
 static void E_ParseArg(const char *str, int *dest)
 {
    // currently only integers are supported
-   *dest = strtol(str, NULL, 0);
+   *dest = static_cast<int>(strtol(str, NULL, 0));
 }
 
 //=============================================================================
@@ -1038,7 +1038,7 @@ static int E_LineSpecCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
    int  num;
    char *endptr;
 
-   num = strtol(value, &endptr, 0);
+   num = static_cast<int>(strtol(value, &endptr, 0));
 
    // check if value is a number or not
    if(*endptr != '\0')

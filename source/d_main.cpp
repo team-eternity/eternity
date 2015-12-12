@@ -486,13 +486,13 @@ static void D_showMemStats()
          psnprintf(buffer, sizeof(buffer), "%s%9lu %7.02f%%", 
                    cachelevels[i].name,
                    memorybytag[tag], memorybytag[tag] * s);
-         V_FontWriteText(font, buffer, 1, 1 + i*font->cy);
+         V_FontWriteText(font, buffer, 1, static_cast<int>(1 + i*font->cy));
       }
       else
       {
          psnprintf(buffer, sizeof(buffer), "%s%9lu %7.02f%%",
                    cachelevels[i].name, total_memory, 100.0f);
-         V_FontWriteText(font, buffer, 1, 1 + i*font->cy);
+         V_FontWriteText(font, buffer, 1, static_cast<int>(1 + i*font->cy));
       }
    }
 }
@@ -779,7 +779,7 @@ void D_SetGameName(const char *iwad)
       // joel 10/16/98 Final DOOM fix
       if(GameModeInfo->missionInfo->id == doom2)
       {
-         int i = strlen(iwad);
+         int i = static_cast<int>(strlen(iwad));
          if(i >= 10 && !strncasecmp(iwad+i-10, "doom2f.wad", 10))
          {
             language = french;

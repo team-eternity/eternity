@@ -400,13 +400,13 @@ static void CustomApplicationMain (int argc, char **argv)
 - (NSString *)stringByReplacingRange:(NSRange)aRange with:(NSString *)aString
 {
     unsigned int bufferSize;
-    unsigned int selfLen = [self length];
-    unsigned int aStringLen = [aString length];
+    unsigned int selfLen = (unsigned)[self length];
+    unsigned int aStringLen = (unsigned)[aString length];
     unichar *buffer;
     NSRange localRange;
     NSString *result;
 
-    bufferSize = selfLen + aStringLen - aRange.length;
+    bufferSize = (unsigned)(selfLen + aStringLen - aRange.length);
     buffer = (unichar *)NSAllocateMemoryPages(bufferSize*sizeof(unichar));
     
     // Get first part into buffer

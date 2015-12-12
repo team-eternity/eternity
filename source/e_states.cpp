@@ -658,7 +658,7 @@ static void E_AssignMiscBexptr(int *target, deh_bexptr *dp, const char *name)
    
    // get the index of this deh_bexptr in the master
    // deh_bexptrs array, and store it in the arg field
-   *target = dp - deh_bexptrs;
+   *target = static_cast<int>(dp - deh_bexptrs);
 }
 
 //
@@ -776,7 +776,7 @@ static void E_ParseMiscField(const char *value, int *target)
       else
       {
          // 11/11/03: use strtol to support hex and oct input
-         val = strtol(value, &endptr, 0);
+         val = static_cast<int>(strtol(value, &endptr, 0));
       }
 
       // haleyjd 04/02/08:
@@ -1110,7 +1110,7 @@ static void E_ProcessCmpState(const char *value, int i)
    if(DEFAULTS(curtoken))
       states[i]->tics = 1;
    else
-      states[i]->tics = strtol(curtoken, NULL, 0);
+      states[i]->tics = static_cast<int>(strtol(curtoken, NULL, 0));
 
    // process action
    in_action = true;

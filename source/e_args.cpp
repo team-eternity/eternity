@@ -767,7 +767,7 @@ int E_ArgAsBexptr(arglist_t *al, int index)
       deh_bexptr *ptr = D_GetBexPtr(al->args[index]);
 
       eval->type    = EVALTYPE_BEXPTR;
-      eval->value.i = ptr ? ptr - deh_bexptrs : -1;
+      eval->value.i = static_cast<int>(ptr ? ptr - deh_bexptrs : -1);
    }
 
    return eval->value.i;

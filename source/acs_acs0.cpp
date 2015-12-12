@@ -696,7 +696,7 @@ static void ACS_translateScriptACS0(acs0_tracer_t *tracer, int32_t *codeIndexMap
       opdata = &ACS0opdata[op];
 
       // Record jump target.
-      codeIndexMap[index] = codePtr - tracer->vm->code;
+      codeIndexMap[index] = static_cast<int32_t>(codePtr - tracer->vm->code);
 
       // Calculate next index.
       index += ACS_countOpSizeACS0(tracer, index, opSize, opdata);
@@ -1250,7 +1250,7 @@ uint32_t ACS_LoadStringACS0(const byte *begin, const byte *end)
          buf += *itr++;
    }
 
-   return ACSVM::AddString(buf.constPtr(), buf.length());
+   return ACSVM::AddString(buf.constPtr(), static_cast<uint32_t>(buf.length()));
 }
 
 // EOF

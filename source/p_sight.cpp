@@ -351,7 +351,7 @@ bool P_CheckSight(Mobj *t1, Mobj *t2)
 
    const sector_t *s1 = t1->subsector->sector;
    const sector_t *s2 = t2->subsector->sector;
-   int pnum = (s1-sectors)*numsectors + (s2-sectors);
+   int pnum = static_cast<int>((s1-sectors)*numsectors + (s2-sectors));
    los_t los;
 
    // First check for trivial rejection.

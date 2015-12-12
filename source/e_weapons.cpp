@@ -74,6 +74,7 @@ static dehflags_t e_weaponFlags[] =
    { NULL,           0                }
 };
 
+// FIXME: (IOANCH 20151212) unused
 static dehflagset_t e_weaponFlagSet =
 {
    e_weaponFlags, // flags

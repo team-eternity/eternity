@@ -134,7 +134,7 @@ CONSOLE_COMMAND(cmdlist, 0)
    // letter
    if(Console.argc == 1)
    {
-      unsigned int len = Console.argv[0]->length();
+      unsigned int len = static_cast<unsigned>(Console.argv[0]->length());
 
       if(len == 1)
          charnum = maxchar = Console.argv[0]->charAt(0);

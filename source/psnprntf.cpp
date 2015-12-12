@@ -384,9 +384,9 @@ int pvsnfmt_str(pvsnfmt_vars *info, const char *s)
 
     /* Truncate due to precision */
     if (info->precision < 0)
-        len = strlen(str);
+        len = static_cast<int>(strlen(str));
     else
-        len = pstrnlen(str, info->precision);
+        len = static_cast<int>(pstrnlen(str, info->precision));
 
     /* Determine padding length */
     if (width > len)
@@ -406,7 +406,7 @@ int pvsnfmt_str(pvsnfmt_vars *info, const char *s)
             padchar = ' ';
 
         if ((int) info->nmax - 1 < pad)
-            nprinted = info->nmax - 1;
+            nprinted = static_cast<int>(info->nmax - 1);
         else
             nprinted = pad;
 
@@ -419,7 +419,7 @@ int pvsnfmt_str(pvsnfmt_vars *info, const char *s)
     if (info->nmax <= 1)
         nprinted = 0;
     else if ((int) info->nmax - 1 < len)
-        nprinted = info->nmax - 1;
+        nprinted = static_cast<int>(info->nmax - 1);
     else
         nprinted = len;
 
@@ -433,7 +433,7 @@ int pvsnfmt_str(pvsnfmt_vars *info, const char *s)
         if (info->nmax <= 1)
             nprinted = 0;
         else if ((int)info->nmax - 1 < pad)
-            nprinted = info->nmax - 1;
+            nprinted = static_cast<int>(info->nmax - 1);
         else
             nprinted = pad;
 
@@ -692,7 +692,7 @@ int pvsnfmt_int(pvsnfmt_vars *info, pvsnfmt_intparm_t *ip)
         if (info->nmax <= 1)
             widthpad = 0;
         else if ((int) info->nmax - 1 < widthpad)
-            widthpad = info->nmax - 1;
+            widthpad = static_cast<int>(info->nmax - 1);
 
         if (flags & FLAG_ZERO_PAD)
             memset(info->pinsertion, '0', widthpad);
@@ -737,7 +737,7 @@ int pvsnfmt_int(pvsnfmt_vars *info, pvsnfmt_intparm_t *ip)
     if (info->nmax <= 1)
         len = 0;
     else if ((int) info->nmax - 1 < len)
-        len = info->nmax - 1;
+        len = static_cast<int>(info->nmax - 1);
 
     /* haleyjd 07/19/03: bug fix: Do NOT use len as the counter
      * variable for this loop. This messes up the length calculations
@@ -767,7 +767,7 @@ int pvsnfmt_int(pvsnfmt_vars *info, pvsnfmt_intparm_t *ip)
         if (info->nmax <= 1)
             widthpad = 0;
         else if ((int) info->nmax - 1 < widthpad)
-            widthpad = info->nmax - 1;
+            widthpad = static_cast<int>(info->nmax - 1);
 
         if(widthpad)
            memset(info->pinsertion, ' ', widthpad);
@@ -862,7 +862,7 @@ int pvsnfmt_double(pvsnfmt_vars *info, double d)
 
     if (special)
     {
-        totallen = len = strlen(special);
+        totallen = len = static_cast<int>(strlen(special));
 
         /* Sign (this is silly for NaN but conforming to printf */
         if (flags & (FLAG_SIGNED | FLAG_SIGN_PAD) || sign)
@@ -906,7 +906,7 @@ int pvsnfmt_double(pvsnfmt_vars *info, double d)
             if (info->nmax <= 1)
                 pad  = 0;
             else if ((int) info->nmax - 1 < pad )
-                pad  = info->nmax - 1;
+                pad  = static_cast<int>(info->nmax - 1);
 
             if(pad)
             {
@@ -933,7 +933,7 @@ int pvsnfmt_double(pvsnfmt_vars *info, double d)
         if (info->nmax <= 0)
             len = 0;
         else if ((int) info->nmax - 1 < len)
-            len = info->nmax - 1;
+            len = static_cast<int>(info->nmax - 1);
         if(len)
            memcpy(info->pinsertion, special, len);
         info->pinsertion += len;
@@ -945,7 +945,7 @@ int pvsnfmt_double(pvsnfmt_vars *info, double d)
             if (info->nmax <= 1)
                 pad  = 0;
             else if ((int) info->nmax - 1 < pad )
-                pad  = info->nmax - 1;
+                pad  = static_cast<int>(info->nmax - 1);
 
             if(pad)
                memset(info->pinsertion, ' ', pad );
@@ -962,7 +962,7 @@ int pvsnfmt_double(pvsnfmt_vars *info, double d)
             precision = 6;
 
         digits = FCVT(value, precision, &dec, &sign);
-        len = strlen(digits);
+        len = static_cast<int>(strlen(digits));
 
         if (dec > 0)
             totallen = dec;
@@ -1030,7 +1030,7 @@ int pvsnfmt_double(pvsnfmt_vars *info, double d)
             if (info->nmax <= 1)
                 pad = 0;
             else if ((int) info->nmax - 1 < pad)
-                pad = info->nmax - 1;
+                pad = static_cast<int>(info->nmax - 1);
 
             if(pad)
             {
@@ -1090,7 +1090,7 @@ int pvsnfmt_double(pvsnfmt_vars *info, double d)
             if (info->nmax <= 1)
                 leadingzeros = 0;
             else if ((int) info->nmax /* - 1 */ < leadingzeros /* -1 */)
-                leadingzeros = info->nmax; /* -1 */
+                leadingzeros = static_cast<int>(info->nmax); /* -1 */
 
             leadingzeros--;
             if(leadingzeros > 0)
@@ -1105,7 +1105,7 @@ int pvsnfmt_double(pvsnfmt_vars *info, double d)
             if (info->nmax <= 1)
                 printdigits = 0;
             else if ((int) info->nmax - 1 < dec)
-                printdigits = info->nmax - 1;
+                printdigits = static_cast<int>(info->nmax - 1);
             else
                 printdigits = dec;
 
@@ -1145,7 +1145,7 @@ int pvsnfmt_double(pvsnfmt_vars *info, double d)
         if (info->nmax <= 1)
             printdigits = 0;
         else if ((int) info->nmax - 1 < len)
-            printdigits = info->nmax - 1;
+            printdigits = static_cast<int>(info->nmax - 1);
         else
             printdigits = len;
 
@@ -1160,7 +1160,7 @@ int pvsnfmt_double(pvsnfmt_vars *info, double d)
             if (info->nmax <= 1)
                 pad = 0;
             else if ((int) info->nmax - 1 < pad)
-                pad = info->nmax - 1;
+                pad = static_cast<int>(info->nmax - 1);
 
             if(pad)
                memset(info->pinsertion, ' ', pad);

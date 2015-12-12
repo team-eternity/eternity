@@ -1172,7 +1172,7 @@ inline static sfxinfo_t *E_SeqGetSound(const char *soundname)
 //
 inline static int E_SeqGetNumber(const char *numstr)
 {
-   return numstr ? strtol(numstr, NULL, 0) : 0;
+   return static_cast<int>(numstr ? strtol(numstr, NULL, 0) : 0);
 }
 
 //
