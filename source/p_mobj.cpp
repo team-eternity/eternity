@@ -2026,8 +2026,9 @@ void P_SpawnPlayer(mapthing_t* mthing)
 // sf: made to return Mobj* spawned
 //
 // haleyjd 03/03/07: rewritten again to use a unified mapthing_t type.
+// IOANCH 20151214: UDMF skill hack
 //
-Mobj *P_SpawnMapThing(mapthing_t *mthing)
+Mobj *P_SpawnMapThing(mapthing_t *mthing, int young, int nightmare)
 {
    int    i;
    Mobj *mobj;
@@ -2142,11 +2143,20 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
       return NULL;  // sf
 
    // killough 11/98: simplify
-   if(gameskill == sk_baby || gameskill == sk_easy ?
+   // IOANCH 20151214: UDMF skill hack
+   if((gameskill == sk_baby && young == 0) 
+      || (gameskill == sk_nightmare && nightmare == 0))
+      return nullptr;
+   if((gameskill == sk_baby && young == -1) || gameskill == sk_easy ?
       !(mthing->options & MTF_EASY) :
-      gameskill == sk_hard || gameskill == sk_nightmare ?
+      gameskill == sk_hard || (gameskill == sk_nightmare && nightmare == -1) ?
       !(mthing->options & MTF_HARD) : !(mthing->options & MTF_NORMAL))
-      return NULL;  // sf
+   {
+      // IOANCH: keep this hack
+      if((young != 1 || gameskill != sk_baby) 
+         && (nightmare != 1 || gameskill != sk_nightmare))
+         return NULL;  // sf
+   }
 
    // find which type to spawn
 

@@ -405,7 +405,8 @@ bool  P_SetMobjState(Mobj *mobj, statenum_t state);
 void  P_MobjThinker(Mobj *mobj);
 void  P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown, bool ptcl);
 void  P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, Mobj *target);
-Mobj *P_SpawnMapThing(mapthing_t *);
+// IOANCH 20151214: added UDMF extras
+Mobj *P_SpawnMapThing(mapthing_t *mt, int young = -1, int nightmare = -1);
 bool  P_CheckMissileSpawn(Mobj *);  // killough 8/2/98
 void  P_ExplodeMissile(Mobj *);     // killough
 

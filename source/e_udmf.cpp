@@ -27,61 +27,135 @@
 
 #include "z_zone.h"
 
+#include "doomstat.h"
 #include "doomtype.h"
-#include "m_collection.h"
+#include "e_exdata.h"
+#include "e_udmf.h"
+#include "ev_specials.h"
 #include "m_ctype.h"
 #include "m_qstr.h"
-#include "metaapi.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "r_data.h"
 #include "r_defs.h"
+#include "r_state.h"
 #include "w_wad.h"
 #include "z_auto.h"
 
-//
-// TokenType
-//
-// Type of UDMF token.
-//
-enum TokenType
-{
-   TokenType_Identifier,
-   TokenType_Equal,
-   TokenType_Semicolon,
-   TokenType_Number,
-   TokenType_String,
-#if 0 // currently disabled because it's too strange
-   TokenType_Keyword,
-#endif
-   TokenType_OpeningBrace,
-   TokenType_ClosingBrace,
-   TokenType_SingleComment,
-   TokenType_MultiComment,
-};
+// FIXME: why is this not in a header?
+extern const char *level_error;
+
+// UDMF namespace, one of a few choices
+UDMFNamespace gUDMFNamespace;
+
+// A convenient buffer to point level_error to
+static char gLevelErrorBuffer[256];
+
+// Special metatable keys not used by UDMF. Identified by special characters
+// not allowed in TEXTMAP. Since it's internal, it may change with further
+// versions so no risk of forward incompatibility
+
+// line number in file associated with the current metatable
+static const char kLineNumberKey[] = "#ln";
+
+// Supported namespace strings
+static const char kDoomNamespace[] = "doom";
+static const char kHereticNamespace[] = "heretic";
+static const char kHexenNamespace[] = "hexen";
+static const char kStrifeNamespace[] = "doom";
+static const char kEternityNamespace[] = "eternity";  // TENTATIVE
 
 //
-// TokenDef
+// MetaBool
 //
-// Token definition. Used for the constants below
+// Based on MetaObject, needed by UDMF because it has boolean entries
 //
-struct TokenDef
+class MetaBool : public MetaObject
 {
-   TokenType type;
-   
-   // Returns true if this token type is detected, and pc is advanced right
-   // after the token. End is the buffer length, and pc is input as the current
-   // position
-   bool (*detect)(const char **pc, const char *end, int *line);
+   DECLARE_RTTI_TYPE(MetaBool, MetaObject)
+
+protected:
+   bool value;
+
+public:
+   MetaBool() : Super(), value(0) {}
+   MetaBool(size_t keyIndex, bool b) : Super(keyIndex), value(b) {}
+   MetaBool(const char *key, bool b) : Super(key), value(b) {}
+   MetaBool(const MetaBool &other) : Super(other), value(other.value) {}
+
+   virtual MetaObject *clone() const { return new MetaBool(*this); }
+   virtual const char *toString() const
+   {
+      return value ? "true" : "false";
+   }
+
+   bool getValue() const { return value; }
+   void setValue(bool b) { value = b; }
+
+   static void setMetaTable(MetaTable &table, const char *key, bool newValue);
 };
 
+IMPLEMENT_RTTI_TYPE(MetaBool)
+
 //
-// E_allowNext
+// MetaBool::setMetaTable
+//
+// Static way to set MetaTable entry
+//
+void MetaBool::setMetaTable(MetaTable &table, const char *key, bool newValue)
+{
+   size_t keyIndex = MetaTable::IndexForKey(key);
+   MetaObject * obj;
+
+   if(!(obj = table.getObjectKeyAndType(keyIndex, RTTI(MetaBool))))
+      table.addObject(new MetaBool(keyIndex, newValue));
+   else
+      static_cast<MetaBool *>(obj)->value = newValue;
+}
+
+//
+// E_assignNamespace
+//
+// Sets the global namespace variable to a value based on text.
+// Returns true if namespace is one of the assigned constants
+//
+static bool E_assignNamespace(const char *value)
+{
+   if(!strcasecmp(value, kEternityNamespace))
+   {
+      gUDMFNamespace = unsEternity;
+      return true;
+   }
+   if(!strcasecmp(value, kDoomNamespace))
+   {
+      gUDMFNamespace = unsDoom;
+      return true;
+   }
+   if(!strcasecmp(value, kHereticNamespace))
+   {
+      gUDMFNamespace = unsHeretic;
+      return true;
+   }
+   if(!strcasecmp(value, kHexenNamespace))
+   {
+      gUDMFNamespace = unsHexen;
+      return true;
+   }
+   if(!strcasecmp(value, kStrifeNamespace))
+   {
+      gUDMFNamespace = unsStrife;
+      return true;
+   }
+   return false;
+}
+
+//
+// ParsedUDMF::allowNext
 //
 // Helper function to tell if a token is allowed after another. Comment 
 // "tokens" are treated differently in the code.
 //
-static bool E_allowNext(TokenType first, TokenType second)
+bool ParsedUDMF::allowNext(TokenType first, TokenType second)
 {
    switch(first)
    {
@@ -102,16 +176,6 @@ static bool E_allowNext(TokenType first, TokenType second)
       return second == TokenType_Identifier || second == TokenType_Semicolon;
    }
    return false;
-}
-
-//
-// E_allowEnd
-//
-// True if element is allowed to be the last in the file
-//
-inline static bool E_allowEnd(TokenType token)
-{
-   return token == TokenType_Semicolon || token == TokenType_ClosingBrace;
 }
 
 //
@@ -168,12 +232,32 @@ static bool E_advanceString(const char **pc, const char *end, int *line)
 }
 
 //
-// kTokenDefs
+// E_strtodOrOctal
+//
+// Helper that interprets either strtod (C++11 variety!) or octal integers
+// Octal double not supported
+// WARNING: unlike strtod, it does NOT skip whitespaces always
+// FIXME: also support negative values
+//
+static double E_strtodOrOctalOrHex(const char *str, char **endptr)
+{
+   if(str[0] == '0')
+   {
+      if(str[1] >= '0' && str[1] <= '9')
+         return static_cast<double>(strtol(str, endptr, 8));
+      if(str[1] >= 'x' || str[1] == 'X')
+         return static_cast<double>(strtol(str, endptr, 16));
+   }
+   return strtod(str, endptr);
+}
+
+//
+// ParsedUDMF::sTokenDefs
 //
 // The token definitions, with corresponding type (to aid iteration), reading
 // function and list of allowed nexts (thanks to C++ it's padded with 0)
 //
-static const TokenDef kTokenDefs[] =
+const ParsedUDMF::TokenDef ParsedUDMF::sTokenDefs[] =
 {
    { 
       TokenType_Identifier, [](const char **pc, const char *end, int *line) {
@@ -234,7 +318,7 @@ static const TokenDef kTokenDefs[] =
    {
       TokenType_Number, [](const char **pc, const char *end, int *line) {
          char *endResult;
-         strtod(*pc, &endResult);
+         E_strtodOrOctalOrHex(*pc, &endResult);
          if(*pc == endResult)
             return false;
          *pc = endResult;
@@ -279,19 +363,6 @@ static const TokenDef kTokenDefs[] =
 };
 
 //
-// Token
-//
-// UDMF parsed token instance. To be stored in a list
-//
-struct Token
-{
-   TokenType type;
-   const char *data;    // address in TEXTMAP buffer
-   size_t size;         // length of data
-   int line;            // line in TEXTMAP where it appears (for debugging)
-};
-
-//
 // Excerpt from the UDMF specifications 1.1 Grammar / Syntax
 // http://www.doomworld.com/eternity/engine/stuff/udmf11.txt
 //
@@ -308,45 +379,6 @@ struct Token
 // quoted_string := "([^"\\]*(\\.[^"\\]*)*)"
 // keyword := [^{}();"'\n\t ]+
 //
-
-//
-// ParsedUDMF
-//
-// All that has to be done for UDMF parsing
-//
-class ParsedUDMF : public ZoneObject
-{
-public:
-   // Doesn't own the data, in this current implementation
-   ParsedUDMF(const char *rawData, size_t rawDataSize) : mRawData(rawData), 
-      mRawDataSize(rawDataSize)
-   {
-      static MetaTable proto;
-      mBlocks.setPrototype(&proto);
-   }
-
-   void tokenize();
-   void readTokenizedData();
-   void scanMapItems();
-
-private:
-   // Raw data (not owned)
-   const char *mRawData;
-   size_t mRawDataSize;
-
-   // Semi-raw list of tokens (syntactically checked on the fly, though)
-   PODCollection<Token> mTokens;
-
-   // Contains top-level assignments which probably won't be ordered
-   MetaTable mGlobalTable;
-
-   // Ordered list of map objects
-   Collection<MetaTable> mBlocks;
-
-   // Collections of map items (to be copied into global arrays)
-   PODCollection<vertex_t> mVertices;
-   PODCollection<sector_t> mSectors;
-};
 
 //
 // UDMFException
@@ -366,7 +398,24 @@ public:
       : message(inMessage), line(inLine), locationName(inLocationName)
    {
    }
+
+   void setLevelError() const;
 };
+
+//
+// UDMFException::setLevelError
+//
+// Converts the exception to a P_SetupLevel level_error, so the loading will 
+// stop.
+//
+void UDMFException::setLevelError() const
+{
+   psnprintf(gLevelErrorBuffer, earrlen(gLevelErrorBuffer), "%s at %s %d", 
+         message, locationName, line);
+
+   // Activate the error by setting this pointer
+   level_error = gLevelErrorBuffer;
+}
 
 //
 // As we see, TEXTMAP consists of global_expr entries. Each global_expr is
@@ -405,7 +454,7 @@ void ParsedUDMF::tokenize()
          break;
 
       found = false;
-      for(const TokenDef &def : kTokenDefs)
+      for(const TokenDef &def : sTokenDefs)
       {
          prepos = pc;
          if(def.detect(&pc, end, &line))
@@ -421,7 +470,7 @@ void ParsedUDMF::tokenize()
             // If this is not going to be the first token, check if it's
             // syntactically correct
             if(mTokens.getLength() 
-               && !E_allowNext((mTokens.end() - 1)->type, def.type))
+               && !allowNext((mTokens.end() - 1)->type, def.type))
             {
                throw UDMFException("Syntax error", line);
             }
@@ -445,7 +494,7 @@ void ParsedUDMF::tokenize()
 
    if(mTokens.getLength()) 
    {
-      if (!E_allowEnd((mTokens.end() - 1)->type))
+      if (!allowEnd((mTokens.end() - 1)->type))
          throw UDMFException("Invalid end of TEXTMAP", line);
       if(mTokens[0].type != TokenType_Identifier)
          throw UDMFException("TEXTMAP must start with an identifier", mTokens[0].line);
@@ -510,11 +559,11 @@ void ParsedUDMF::readTokenizedData()
             if(token.size == 4 && !strncasecmp(token.data, "true", 4))
             {
                // FIXME: currently just use int to represent booleans
-               block->setInt(identifier.constPtr(), 1);
+               MetaBool::setMetaTable(*block, identifier.constPtr(), true);
             }
             else if(token.size == 5 && !strncasecmp(token.data, "false", 5))
             {
-               block->setInt(identifier.constPtr(), 0);
+               MetaBool::setMetaTable(*block, identifier.constPtr(), false);
             }
             else
             {
@@ -536,7 +585,7 @@ void ParsedUDMF::readTokenizedData()
          break;
       case TokenType_Number:
          aux.copy(token.data, token.size);   // strtod needs C string
-         block->setDouble(identifier.constPtr(), strtod(aux.constPtr(), 
+         block->setDouble(identifier.constPtr(), E_strtodOrOctalOrHex(aux.constPtr(), 
             nullptr));
          break;
       case TokenType_String:
@@ -547,8 +596,19 @@ void ParsedUDMF::readTokenizedData()
          if(block == &mGlobalTable)
          {
             MetaTable table(identifier.constPtr());
-            mBlocks.add(table);
-            block = mBlocks.end() - 1;
+            GroupedList *list = mBlocks.objectForKey(identifier.constPtr());
+            if(!list)
+            {
+               list = new GroupedList(identifier.constPtr());
+               mBlocks.addObject(list);
+            }
+            list->items.add(table);
+
+            block = list->items.end() - 1;
+
+            // Tag the line number to this block so we can get the error
+            // message later
+            block->setInt(kLineNumberKey, token.line);
          }
          else
          {
@@ -584,10 +644,40 @@ static double E_requireDouble(MetaTable &block, const char *key)
 
    // dummy num, will be rethrown
    if(!object)
-      throw UDMFException("Missing required number field", 0);  
+   {
+      throw UDMFException("Missing required number field", 
+            block.getInt(kLineNumberKey, 0));  
+   }
    auto numObject = runtime_cast<MetaDouble *>(object);
    if(!numObject)
-      throw UDMFException("Field is not a number", 0);
+   {
+      throw UDMFException("Field is not a number", 
+            block.getInt(kLineNumberKey, 0));
+   }
+
+   return numObject->getValue();
+}
+
+//
+// E_requireOptDouble
+//
+// Returns a double value that accepts a default
+//
+static double E_requireOptDouble(MetaTable &block, const char *key, double def = 0)
+{
+   MetaObject *object = block.getObject(key);
+
+   // dummy num, will be rethrown
+   if(!object)
+   {
+      return def;
+   }
+   auto numObject = runtime_cast<MetaDouble *>(object);
+   if(!numObject)
+   {
+      throw UDMFException("Field is not a number", 
+            block.getInt(kLineNumberKey, 0));
+   }
 
    return numObject->getValue();
 }
@@ -607,13 +697,73 @@ static int E_requireOptInt(MetaTable &block, const char *key, int def = 0)
 
    auto numObject = runtime_cast<MetaDouble *>(object);
    if(!numObject)
-      throw UDMFException("Field is not an integer", 0);
+   {
+      throw UDMFException("Field is not an integer", 
+            block.getInt(kLineNumberKey, 0));
+   }
 
    double dbl = numObject->getValue();
    if(dbl != floor(dbl) || dbl < -2147483648. || dbl > 2147483647.)
-      throw UDMFException("Field is not an integer or is overflowing", 0);
+   {
+      throw UDMFException("Field is not an integer or is overflowing", 
+            block.getInt(kLineNumberKey, 0));
+   }
 
    return static_cast<int>(numObject->getValue());
+}
+
+//
+// E_requireInt
+//
+// Returns an int value that accepts no default
+//
+static int E_requireInt(MetaTable &block, const char *key)
+{
+   MetaObject *object = block.getObject(key);
+
+   if(!object)
+   {
+      throw UDMFException("Missing required integer field", 
+            block.getInt(kLineNumberKey, 0));  
+   }
+
+   auto numObject = runtime_cast<MetaDouble *>(object);
+   if(!numObject)
+   {
+      throw UDMFException("Field is not an integer", 
+            block.getInt(kLineNumberKey, 0));
+   }
+
+   double dbl = numObject->getValue();
+   if(dbl != floor(dbl) || dbl < -2147483648. || dbl > 2147483647.)
+   {
+      throw UDMFException("Field is not an integer or is overflowing", 
+            block.getInt(kLineNumberKey, 0));
+   }
+
+   return static_cast<int>(numObject->getValue());
+}
+
+//
+// E_requireOptBool
+//
+// Returns a bool value that accepts a default
+//
+static bool E_requireOptBool(MetaTable &block, const char *key, bool def = false)
+{
+   MetaObject *object = block.getObject(key);
+
+   if(!object)
+      return false;
+   
+   auto boolObject = runtime_cast<MetaBool *>(object);
+   if(!boolObject)
+   {
+      throw UDMFException("Field is not boolean", 
+         block.getInt(kLineNumberKey, 0));
+   }
+
+   return boolObject->getValue();
 }
 
 //
@@ -626,72 +776,53 @@ static const char *E_requireString(MetaTable &block, const char *key)
    MetaObject *object = block.getObject(key);
 
    if(!object)
-      throw UDMFException("Missing required string field", 0);
+   {
+      throw UDMFException("Missing required string field", 
+            block.getInt(kLineNumberKey, 0));
+   }
 
    auto strObject = runtime_cast<MetaString *>(object);
    if(!strObject)
-      throw UDMFException("Field is not a string", 0);
+   {
+      throw UDMFException("Field is not a string", 
+            block.getInt(kLineNumberKey, 0));
+   }
 
    return strObject->getValue();
 }
 
 //
-// ParsedUDMF::scanMapItems
+// E_requireOptString
 //
-// Scans all relevant map items and adds them to the collection
+// Requires a field to be string, returning its value or a default
 //
-void ParsedUDMF::scanMapItems()
+static const char *E_requireOptString(MetaTable &block, const char *key, 
+                                      const char *def = "-")
 {
-   const char *key;
-   double dx, dy;
-   size_t excNumber = 0;
-   for(MetaTable &block : mBlocks)
+   MetaObject *object = block.getObject(key);
+
+   if(!object)
    {
-      key = block.getKey();
-      try
-      {
-         if(!strcasecmp(key, "vertex"))
-         {
-            excNumber = mVertices.getLength();
-            vertex_t &v = mVertices.addNew();
-            dx = E_requireDouble(block, "x");
-            dy = E_requireDouble(block, "y");
-            v.x = M_DoubleToFixed(dx);
-            v.y = M_DoubleToFixed(dy);
-            v.fx = static_cast<float>(dx);
-            v.fy = static_cast<float>(dy);
-         }
-         else if(!strcasecmp(key, "sector"))
-         {
-            excNumber = mSectors.getLength();
-            sector_t &s = mSectors.addNew();
-            s.floorheight = E_requireOptInt(block, "heightfloor") << FRACBITS;
-            s.ceilingheight = E_requireOptInt(block, "heightfloor") << FRACBITS;
-            s.floorpic = R_FindFlat(E_requireString(block, "texturefloor"));
-            P_SetSectorCeilingPic(&s, R_FindFlat(E_requireString(block, 
-               "textureceiling")));
-            s.lightlevel = E_requireOptInt(block, "lightlevel", 160);
-            s.special = E_requireOptInt(block, "special");
-            s.tag = E_requireOptInt(block, "id");
-         }
-      }
-      catch(UDMFException &e)
-      {
-         e.line = excNumber;
-         e.locationName = key;
-         throw;
-      }
+      return def;
    }
+
+   auto strObject = runtime_cast<MetaString *>(object);
+   if(!strObject)
+   {
+      throw UDMFException("Field is not a string", 
+            block.getInt(kLineNumberKey, 0));
+   }
+
+   return strObject->getValue();
 }
 
 //
-// E_LoadUDMF
+// ParsedUDMF::loadFromText
 //
-// Load UDMF TEXTMAP lump.
-// - setupwad: current WadDirectory. Probably a global variable in p_setup.cpp
-// - lump: index of TEXTMAP lump.
+// Parses UDMF from a given text map, filling the blocks hash table.
+// Can throw UDMFException
 //
-void E_LoadUDMF(WadDirectory &setupwad, int lump, const char *mapname)
+void ParsedUDMF::loadFromText(WadDirectory &setupwad, int lump)
 {
    ZAutoBuffer buf;
 
@@ -699,24 +830,403 @@ void E_LoadUDMF(WadDirectory &setupwad, int lump, const char *mapname)
    setupwad.cacheLumpAuto(lump, buf);
    auto data = buf.getAs<char *>();
 
-   // Use a collection because order is important, not key uniqueness
-   ParsedUDMF udmf(data, setupwad.lumpLength(lump));
+   mRawData = data;
+   mRawDataSize = setupwad.lumpLength(lump);
+
+   // These can throw
    try
    {
-      udmf.tokenize();
-      udmf.readTokenizedData();
-      udmf.scanMapItems();
+      tokenize();
+      readTokenizedData();
+      if(!E_assignNamespace(mGlobalTable.getString("namespace", "")))
+         throw UDMFException("Invalid or missing namespace", 0); // FIXME: line no.
    }
-   catch(const UDMFException& error)
+   catch(const UDMFException &e)
    {
-      qstring complete_message;
-      complete_message.copy(error.message) << " at " << error.locationName 
-         << " " << error.line;
-      P_SetupLevelError(complete_message.constPtr(), mapname);
-      // TODO: tell P_SetupLevel to calm down and stop processing the current map
-      return;
+      e.setLevelError();
    }
+}
+
+//
+// ParsedUDMF::loadVertices
+//
+// Loads vertices from "vertex" metatable list
+//
+void ParsedUDMF::loadVertices() const
+{
+   try
+   {
+      GroupedList *coll = mBlocks.objectForKey("vertex");
+      ::numvertexes = coll ? static_cast<int>(coll->items.getLength()) : 0;
+      ::vertexes = estructalloctag(vertex_t, ::numvertexes, PU_LEVEL);
+
+      double dx, dy;
+      vertex_t *v;
+      for(int i = 0; i < ::numvertexes; ++i)
+      {
+         MetaTable &table = coll->items[i];
+
+         dx = E_requireDouble(table, "x");
+         dy = E_requireDouble(table, "y");
+
+         v = ::vertexes + i;
+         v->x = M_DoubleToFixed(dx);
+         v->y = M_DoubleToFixed(dy);
+         v->fx = static_cast<float>(dx);
+         v->fy = static_cast<float>(dy);
+      }
+   }
+   catch(const UDMFException &e)
+   {
+      e.setLevelError();
+   }
+}
+
+//
+// ParsedUDMF::loadSectors
+//
+// Loads sectors from "sector" metatable list
+//
+void ParsedUDMF::loadSectors() const
+{
+   try
+   {
+      GroupedList *coll = mBlocks.objectForKey("sector");
+      ::numsectors = coll ? static_cast<int>(coll->items.getLength()) : 0;
+      ::sectors = estructalloctag(sector_t, ::numsectors, PU_LEVEL);
+
+      sector_t *s;
+      for(int i = 0; i < ::numsectors; ++i)
+      {
+         MetaTable &table = coll->items[i];
+         s = ::sectors + i;
+
+         s->floorheight = E_requireOptInt(table, "heightfloor");
+         s->ceilingheight = E_requireOptInt(table, "heightceiling");
+         s->floorpic = R_FindFlat(E_requireString(table, "texturefloor"));
+         P_SetSectorCeilingPic(s, R_FindFlat(E_requireString(table, "textureceiling")));
+         s->lightlevel = E_requireOptInt(table, "lightlevel");
+         s->special = E_requireOptInt(table, "special");
+         s->tag = E_requireOptInt(table, "id");
+
+         P_InitSector(s);
+      }
+   }
+   catch(const UDMFException &e)
+   {
+      e.setLevelError();
+   }
+}
+
+//
+// ParsedUDMF::loadSideDefs
+//
+// Equivalent of first P_LoadSideDefs call
+//
+void ParsedUDMF::loadSideDefs() const
+{
+   GroupedList *coll = mBlocks.objectForKey("sidedef");
+   ::numsides = coll ? static_cast<int>(coll->items.getLength()) : 0;
+   ::sides = estructalloctag(side_t, ::numsides, PU_LEVEL);
+}
+
+//
+// ParsedUDMF::loadLineDefs
+//
+// Equivalent of P_LoadLineDefs
+//
+void ParsedUDMF::loadLineDefs() 
+{
+   try
+   {
+      GroupedList *coll = mBlocks.objectForKey("linedef");
+      ::numlines = coll ? static_cast<int>(coll->items.getLength()) : 0;
+      ::lines = estructalloctag(line_t, ::numlines, PU_LEVEL);
+
+      line_t *ld;
+      int v[2];
+      int s[2];
+      for(int i = 0; i < ::numlines; ++i)
+      {
+         MetaTable &table = coll->items[i];
+         ld = ::lines + i;
+
+         if(E_requireOptBool(table, "blocking"))
+            ld->flags |= ML_BLOCKING;
+         if(E_requireOptBool(table, "blockmonsters"))
+            ld->flags |= ML_BLOCKMONSTERS;
+         if(E_requireOptBool(table, "twosided"))
+            ld->flags |= ML_TWOSIDED;
+         if(E_requireOptBool(table, "dontpegtop"))
+            ld->flags |= ML_DONTPEGTOP;
+         if(E_requireOptBool(table, "dontpegbottom"))
+            ld->flags |= ML_DONTPEGBOTTOM;
+         if(E_requireOptBool(table, "secret"))
+            ld->flags |= ML_SECRET;
+         if(E_requireOptBool(table, "blocksound"))
+            ld->flags |= ML_SOUNDBLOCK;
+         if(E_requireOptBool(table, "dontdraw"))
+            ld->flags |= ML_DONTDRAW;
+         if(E_requireOptBool(table, "mapped"))
+            ld->flags |= ML_MAPPED;
+         if(E_requireOptBool(table, "passuse"))
+            ld->flags |= ML_PASSUSE;
+
+         // STRIFE. NAMESPACE REQUIRED
+         if(gUDMFNamespace == unsStrife)
+         {
+            // TODO: support "translucent", "jumpover" and "blockfloaters".
+            // Currently the flags don't seem to exist in Eternity
+         }
+         if(gUDMFNamespace == unsEternity || gUDMFNamespace == unsHexen)
+         {
+            // FIXME: not sure if Eternity will use the same fields as Hexen.
+            // ExtraData has them set up differently
+
+            // Based on spac_flags_tlate
+            if(E_requireOptBool(table, "playercross"))
+               ld->extflags |= EX_ML_CROSS | EX_ML_PLAYER;
+            if(E_requireOptBool(table, "playeruse"))
+               ld->extflags |= EX_ML_USE | EX_ML_PLAYER;
+            if(E_requireOptBool(table, "monstercross"))
+               ld->extflags |= EX_ML_CROSS | EX_ML_MONSTER;
+            if(E_requireOptBool(table, "monsteruse"))
+               ld->extflags |= EX_ML_USE | EX_ML_MONSTER;
+            if(E_requireOptBool(table, "impact"))
+               ld->extflags |= EX_ML_IMPACT | EX_ML_MISSILE;
+            if(E_requireOptBool(table, "playerpush"))
+               ld->extflags |= EX_ML_PUSH | EX_ML_PLAYER;
+            if(E_requireOptBool(table, "monsterpush"))
+               ld->extflags |= EX_ML_PUSH | EX_ML_MONSTER;
+            if(E_requireOptBool(table, "missilecross"))
+               ld->extflags |= EX_ML_CROSS | EX_ML_MISSILE;
+            if(E_requireOptBool(table, "repeatspecial"))
+               ld->extflags |= EX_ML_REPEAT;
+         }
+         ld->special = E_requireOptInt(table, "special");
+         // Special handling for tag
+         if(gUDMFNamespace == unsDoom || gUDMFNamespace == unsHeretic
+            || gUDMFNamespace == unsStrife)
+         {
+            int tag[2];
+            tag[0] = E_requireOptInt(table, "id");
+            tag[1] = E_requireOptInt(table, "arg0");
+            ld->tag = tag[1] ? tag[1] : tag[0]; // support at least one of them
+         }
+         else if(gUDMFNamespace == unsEternity)
+         {
+            // Eternity
+            // TENTATIVE BEHAVIOUR
+            ld->tag = E_requireOptInt(table, "id", -1);
+
+            // TENTATIVE TODO: Eternity namespace special "alpha"
+            ld->alpha = static_cast<float>(E_requireOptDouble(table, "alpha", 1.0));
+
+            // TODO: equivalent of ExtraData 1SONLY, ADDITIVE, ZONEBOUNDARY, CLIPMIDTEX
+         }
+         else if(gUDMFNamespace == unsHexen)
+         {
+            ld->tag = -1;  // Hexen will always use args
+         }
+         v[0] = E_requireInt(table, "v1");
+         v[1] = E_requireInt(table, "v2");
+         if(v[0] < 0 || v[0] >= ::numvertexes 
+            || v[1] < 0 || v[1] >= ::numvertexes)
+         {
+            throw UDMFException("Linedef vertex out of bounds", 
+               table.getInt(kLineNumberKey, 0));
+         }
+         ld->v1 = ::vertexes + v[0];
+         ld->v2 = ::vertexes + v[1];
+         s[0] = E_requireInt(table, "sidefront");
+         s[1] = E_requireOptInt(table, "sideback", -1);
+         if(s[0] < 0 || s[0] >= ::numsides || s[1] < -1 || s[1] >= ::numsides)
+         {
+            throw UDMFException("Linedef sidedef out of bounds", 
+               table.getInt(kLineNumberKey, 0));
+         }
+
+         ld->sidenum[0] = s[0];
+         ld->sidenum[1] = s[1];
+         P_InitLineDef(ld);
+
+         // FIXME: should ExtraData records still be able to override UDMF?
+         // Currently they aren't
+
+         // Load args if Hexen or EE
+         if(gUDMFNamespace == unsEternity || gUDMFNamespace == unsHexen)
+         {
+            ld->args[0] = E_requireOptInt(table, "args0");
+            ld->args[1] = E_requireOptInt(table, "args1");
+            ld->args[2] = E_requireOptInt(table, "args2");
+            ld->args[3] = E_requireOptInt(table, "args3");
+            ld->args[4] = E_requireOptInt(table, "args4");
+         }
+         
+         P_PostProcessLineFlags(ld);
+      }
+   }
+   catch(const UDMFException &e)
+   {
+      e.setLevelError();
+   }
+}
+
+//
+// ParsedUDMF::loadSideDefs2
+//
+// Equivalent of P_LoadSideDefs2
+//
+void ParsedUDMF::loadSideDefs2() const
+{
+   try
+   {
+      GroupedList *coll = mBlocks.objectForKey("sidedef");
+
+      int i;
+      side_t *sd;
+
+      const char *topTexture, *bottomTexture, *midTexture;
+      int secnum;
+
+      for(i = 0; i < ::numsides; ++i)
+      {
+         sd = sides + i;
+         MetaTable &table = coll->items[i];
+         sd->textureoffset = E_requireOptInt(table, "offsetx");
+         sd->rowoffset = E_requireOptInt(table, "offsety");
+
+         topTexture = E_requireOptString(table, "texturetop", "-");
+         bottomTexture = E_requireOptString(table, "texturebottom", "-");
+         midTexture = E_requireOptString(table, "texturemiddle", "-");
+
+         secnum = E_requireInt(table, "sector");
+
+         if(secnum < 0 || secnum >= ::numsectors)
+         {
+            throw UDMFException("Sidedef sector out of bounds", 
+                  table.getInt(kLineNumberKey, 0));
+         }
+
+         sd->sector = ::sectors + secnum;
+
+         P_SetupSidedefTextures(*sd, bottomTexture, midTexture, topTexture);
+      }
+   }
+   catch(const UDMFException &e)
+   {
+      e.setLevelError();
+   }
+}
+
+//
+// ParsedUDMF::loadThings
+//
+// Load things, like P_LoadThings
+//
+void ParsedUDMF::loadThings() const
+{
+   mapthing_t *mapthings = nullptr;
+   try
+   {
+      GroupedList *coll = mBlocks.objectForKey("thing");
+      ::numthings = coll ? static_cast<int>(coll->items.getLength()) : 0;
+
+      mapthings = ecalloc(mapthing_t *, numthings, sizeof(mapthing_t));
+      mapthing_t *ft;
+
+      bool young, nightmare;
+
+      for(int i = 0; i < ::numthings; ++i)
+      {
+         MetaTable &table = coll->items[i];
+         ft = mapthings + i;
+
+         ft->type = E_requireInt(table, "type");
+         if(P_CheckThingDoomBan(ft->type))
+            continue;
+
+         // FIXME: due to current layout, FRACTIONARY PARTS ARE LOST. Probably
+         // not recommended anyway, because of platform strtod inaccuracies.
+         ft->x = static_cast<int16_t>(floor(E_requireDouble(table, "x") + 0.5));
+         ft->y = static_cast<int16_t>(floor(E_requireDouble(table, "y") + 0.5));
+         ft->angle = static_cast<int16_t>(E_requireOptInt(table, "angle"));
+
+         // FIXME: handle young and nightmare skills in separate booleans.
+         // Thankfully the skill levels are only checked in P_SpawnMapThing, not
+         // elsewhere in mapthing_t. BUT THIS IS A BIG ***HACK***
+         young = E_requireOptBool(table, "skill1");
+         if(E_requireOptBool(table, "skill2"))
+            ft->options |= MTF_EASY;
+         if(E_requireOptBool(table, "skill3"))
+            ft->options |= MTF_NORMAL;
+         if(E_requireOptBool(table, "skill4"))
+            ft->options |= MTF_HARD;
+         nightmare = E_requireOptBool(table, "skill5");
+
+         if(E_requireOptBool(table, "ambush"))
+            ft->options |= MTF_AMBUSH;
+         
+         // negative
+         if(!E_requireOptBool(table, "single"))
+            ft->options |= MTF_NOTSINGLE;
+         if(!E_requireOptBool(table, "dm"))
+            ft->options |= MTF_NOTDM;
+         if(!E_requireOptBool(table, "coop"))
+            ft->options |= MTF_NOTCOOP;
+
+         if(gUDMFNamespace == unsDoom || gUDMFNamespace == unsEternity)
+         {
+            if(E_requireOptBool(table, "friend"))
+               ft->options |= MTF_FRIEND;
+         }
+
+         if(gUDMFNamespace == unsHexen || gUDMFNamespace == unsEternity)
+         {
+            if(E_requireOptBool(table, "dormant"))
+               ft->options |= MTF_DORMANT;
+            ft->tid = static_cast<int16_t>(E_requireOptInt(table, "id"));
+            ft->height = static_cast<int16_t>(E_requireOptInt(table, "height"));
+            ft->args[0] = E_requireOptInt(table, "arg0");
+            ft->args[1] = E_requireOptInt(table, "arg1");
+            ft->args[2] = E_requireOptInt(table, "arg2");
+            ft->args[3] = E_requireOptInt(table, "arg3");
+            ft->args[4] = E_requireOptInt(table, "arg4");
+         }
+
+         // TODO: Hexen classes!
+
+         // TODO: Strife standing
+         // TODO: Strife ally
+         // TODO: Strife shadow
+         // TODO: Strife invisible
+
+         if(gUDMFNamespace == unsHeretic)
+            P_ConvertHereticThing(ft);
+         
+         P_ConvertDoomExtendedSpawnNum(ft);
+
+         // use the extra parameters here
+         P_SpawnMapThing(ft, young ? 1 : 0, nightmare ? 1 : 0);
+      }
+
+      // do the player start check like in P_LoadThings
+      if(GameType != gt_dm)
+      {
+         for(int i = 0; i < MAXPLAYERS; i++)
+         {
+            if(playeringame[i] && !players[i].mo)
+               level_error = "Missing required player start";
+         }
+      } 
    
+      efree(mapthings);
+   }
+   catch(const UDMFException &e)
+   {
+      e.setLevelError();
+      efree(mapthings);
+   }
 }
 
 // EOF

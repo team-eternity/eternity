@@ -30,6 +30,7 @@
 
 #include "d_gi.h"
 #include "e_hash.h"
+#include "e_udmf.h"  // IOANCH 20151214
 #include "ev_specials.h"
 #include "p_info.h"
 #include "p_setup.h"
@@ -419,6 +420,19 @@ int EV_SpecialForStaticInit(int staticFn)
       return EV_HexenSpecialForStaticInit(staticFn);
    case LEVEL_FORMAT_PSX:
       return EV_PSXSpecialForStaticInit(staticFn);
+   case LEVEL_FORMAT_UDMF:
+      // IOANCH 20151214
+      switch(gUDMFNamespace)
+      {
+      default:
+         return EV_DOOMSpecialForStaticInit(staticFn);
+      case unsHeretic:
+         return EV_HereticSpecialForStaticInit(staticFn);
+      case unsHexen:
+         return EV_HexenSpecialForStaticInit(staticFn);
+      case unsStrife:
+         return EV_StrifeSpecialForStaticInit(staticFn);
+      }
    default:
       switch(LevelInfo.levelType)
       {
@@ -453,6 +467,19 @@ int EV_StaticInitForSpecial(int special)
       return EV_HexenStaticInitForSpecial(special);
    case LEVEL_FORMAT_PSX:
       return EV_PSXStaticInitForSpecial(special);
+   case LEVEL_FORMAT_UDMF:
+      // IOANCH 20151214
+      switch(gUDMFNamespace)
+      {
+      default:
+         return EV_DOOMStaticInitForSpecial(special);
+      case unsHeretic:
+         return EV_HereticStaticInitForSpecial(special);
+      case unsHexen:
+         return EV_HexenStaticInitForSpecial(special);
+      case unsStrife:
+         return EV_StrifeStaticInitForSpecial(special);
+      }
    default:
       switch(LevelInfo.levelType)
       {

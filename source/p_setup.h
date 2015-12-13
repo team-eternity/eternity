@@ -40,11 +40,16 @@ enum
    LEVEL_FORMAT_DOOM,
    LEVEL_FORMAT_HEXEN,
    LEVEL_FORMAT_PSX,
-   LEVEL_FORMAT_DOOM64
+   LEVEL_FORMAT_DOOM64,
+   // IOANCH 20151206: work on UDMF
+   LEVEL_FORMAT_UDMF,
 };
 
 class WadDirectory;
-int P_CheckLevel(WadDirectory *dir, int lumpnum); // haleyjd: now used in d_main.c
+// IOANCH 20151213: modify P_CheckLevel to support one extra parameter
+struct MapGenLumpAddresses;
+int P_CheckLevel(WadDirectory *dir, int lumpnum, 
+                 MapGenLumpAddresses *mgla = nullptr); // haleyjd: now used in d_main.c
 int P_CheckLevelName(WadDirectory *dir, const char *mapname);
 int P_CheckLevelMapNum(WadDirectory *dir, int mapnum);
 
@@ -52,8 +57,21 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask, skill_
 void P_Init();                   // Called by startup code.
 void P_InitThingLists();
 
-// IOANCH 20151210: made global so it can be accessed from e_udmf
+// IOANCH 20151210: made these global so they can be accessed from e_udmf
+struct line_t;
+struct mapthing_t;
+struct sector_t;
+struct side_t;
 void P_SetupLevelError(const char *msg, const char *levelname);
+void P_InitSector(sector_t *ss);
+void P_InitLineDef(line_t *ld);
+void P_PostProcessLineFlags(line_t *ld);
+void P_SetupSidedefTextures(side_t &sd, const char *bottomTexture, 
+                            const char *midTexture, const char *topTexture);
+bool P_CheckThingDoomBan(int16_t type);
+void P_ConvertHereticThing(mapthing_t *mthing);
+void P_ConvertDoomExtendedSpawnNum(mapthing_t *mthing);
+
 
 extern byte     *rejectmatrix;   // for fast sight rejection
 

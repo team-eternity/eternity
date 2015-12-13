@@ -33,6 +33,7 @@
 #include "d_gi.h"
 #include "d_mod.h"
 #include "doomstat.h"
+#include "e_udmf.h"  // IOANCH 20151214
 #include "ev_sectors.h"
 #include "p_info.h"
 #include "p_scroll.h"
@@ -755,6 +756,22 @@ ev_sectorbinding_t *EV_BindingForSectorSpecial(int special)
    case LEVEL_FORMAT_PSX:
       binding = EV_PSXBindingForSectorSpecial(special);
       break;
+   // IOANCH 20151214: UDMF
+   case LEVEL_FORMAT_UDMF:
+      switch(gUDMFNamespace)
+      {
+      default:
+         // TODO: Strife
+         binding = EV_DOOMBindingForSectorSpecial(special);
+         break;
+      case unsHeretic:
+         binding = EV_HereticBindingForSectorSpecial(special);
+         break;
+      case unsHexen:
+         binding = EV_HexenBindingForSectorSpecial(special);
+         break;
+      }
+      break;
    default:
       switch(LevelInfo.levelType)
       {
@@ -785,7 +802,10 @@ ev_sectorbinding_t *EV_BindingForSectorSpecial(int special)
 //
 bool EV_IsGenSectorSpecial(int special)
 {
-   if(LevelInfo.mapFormat == LEVEL_FORMAT_DOOM && LevelInfo.levelType == LI_TYPE_DOOM)
+   // IOANCH 20151206: added UDMF map format support
+   if((LevelInfo.mapFormat == LEVEL_FORMAT_DOOM
+      || LevelInfo.mapFormat == LEVEL_FORMAT_UDMF) 
+      && gUDMFNamespace == unsDoom)
       return (special > LIGHT_MASK);
 
    return false;
