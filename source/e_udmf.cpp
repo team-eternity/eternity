@@ -901,11 +901,11 @@ void ParsedUDMF::loadSectors() const
          MetaTable &table = coll->items[i];
          s = ::sectors + i;
 
-         s->floorheight = E_requireOptInt(table, "heightfloor");
-         s->ceilingheight = E_requireOptInt(table, "heightceiling");
+         s->floorheight = E_requireOptInt(table, "heightfloor") << FRACBITS;
+         s->ceilingheight = E_requireOptInt(table, "heightceiling") << FRACBITS;
          s->floorpic = R_FindFlat(E_requireString(table, "texturefloor"));
          P_SetSectorCeilingPic(s, R_FindFlat(E_requireString(table, "textureceiling")));
-         s->lightlevel = E_requireOptInt(table, "lightlevel");
+         s->lightlevel = E_requireOptInt(table, "lightlevel", 160);
          s->special = E_requireOptInt(table, "special");
          s->tag = E_requireOptInt(table, "id");
 
@@ -1093,8 +1093,8 @@ void ParsedUDMF::loadSideDefs2() const
       {
          sd = sides + i;
          MetaTable &table = coll->items[i];
-         sd->textureoffset = E_requireOptInt(table, "offsetx");
-         sd->rowoffset = E_requireOptInt(table, "offsety");
+         sd->textureoffset = E_requireOptInt(table, "offsetx") << FRACBITS;
+         sd->rowoffset = E_requireOptInt(table, "offsety") << FRACBITS;
 
          topTexture = E_requireOptString(table, "texturetop", "-");
          bottomTexture = E_requireOptString(table, "texturebottom", "-");

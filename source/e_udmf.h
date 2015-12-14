@@ -173,10 +173,17 @@ private:
    public:
       Collection<MetaTable> items;     // The list of blocks
       DLListItem<GroupedList> link;
-      const char *key;                 // the common name of the blocks
+      char *key;                 // the common name of the blocks
 
-      GroupedList(const char *inKey) : link(), key(inKey)
+      GroupedList(const char *inKey) : link()
       {
+         key = emalloc(char *, strlen(inKey) + 1);
+         strcpy(key, inKey);
+      }
+
+      ~GroupedList()
+      {
+         efree(key);
       }
    };
 
