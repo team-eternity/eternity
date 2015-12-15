@@ -1891,7 +1891,8 @@ static bool P_VerifyBlockMap(int count)
 //
 void P_LoadBlockMap(int lump)
 {
-   int len   = setupwad->lumpLength(lump);
+   // IOANCH 20151215: no lump means no data. So that Eternity will generate.
+   int len   = lump >= 0 ? setupwad->lumpLength(lump) : 0;
    int count = len / 2;
    
    // sf: -blockmap checkparm made into variable
@@ -2176,7 +2177,8 @@ static void P_LoadReject(int lump)
    int size;
    int expectedsize;
 
-   size = setupwad->lumpLength(lump);
+   // IOANCH 20151215: support missing lump
+   size = lump >= 0 ? setupwad->lumpLength(lump) : 0;
 
    // haleyjd: round numsectors^2 to next higher multiple of 8, then divide by
    // 8 to get the expected reject size for this level
@@ -2291,11 +2293,7 @@ int P_CheckLevel(WadDirectory *dir, int lumpnum, MapGenLumpAddresses *mgla)
          lname = lumpinfo[i]->name;
          if(mgla)
          {
-            if(!strncmp(lname, levellumps[ML_SEGS], 8))
-               mgla->segs = i;
-            else if(!strncmp(lname, levellumps[ML_SSECTORS], 8))
-               mgla->ssectors = i;
-            else if(!strncmp(lname, levellumps[ML_NODES], 8))
+            if(!strncmp(lname, "ZNODES", 8))
                mgla->nodes = i;
             else if(!strncmp(lname, levellumps[ML_REJECT], 8))
                mgla->reject = i;
@@ -2311,7 +2309,7 @@ int P_CheckLevel(WadDirectory *dir, int lumpnum, MapGenLumpAddresses *mgla)
             break;
          }
       }
-      if(!foundEndMap || (mgla && !mgla->completeForDoom()))
+      if(!foundEndMap || (mgla && mgla->nodes < 0))
          return LEVEL_FORMAT_INVALID;  // must have ENDMAP
       // Found ENDMAP. This may be a valid UDMF lump. Return it
       return LEVEL_FORMAT_UDMF;
@@ -2766,6 +2764,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    
    P_LoadBlockMap (mgla.blockmap); // killough 3/1/98
    
+   // IOANCH: at this point, mgla.nodes is valid
    if(P_CheckForZDoomUncompressedNodes(mgla.nodes))
    {
       P_LoadZNodes(mgla.nodes);
@@ -2774,6 +2773,15 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    }
    else
    {
+      // IOANCH 20151215: make sure everything is valid. Can happen if UDMF has
+      // invalid ZNODES entry
+      if(mgla.ssectors < 0 || mgla.segs < 0)
+      {
+         P_SetupLevelError("UDMF levels don't support vanilla BSP", mapname);
+         return;
+      }
+
+      // IOANCH: at this point, it's not a UDMF map so mgla will be valid
       P_LoadSubsectors(mgla.ssectors);
       P_LoadNodes     (mgla.nodes);
 
