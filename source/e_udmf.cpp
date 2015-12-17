@@ -174,6 +174,8 @@ bool ParsedUDMF::allowNext(TokenType first, TokenType second)
       return second == TokenType_Semicolon;
    case TokenType_ClosingBrace:
       return second == TokenType_Identifier || second == TokenType_Semicolon;
+   default:
+      break;
    }
    return false;
 }
@@ -541,7 +543,6 @@ static void E_decodeString(const char *str, size_t len, qstring &dest)
 void ParsedUDMF::readTokenizedData()
 {
 
-   bool haveIdentifier = false;
    qstring identifier;
    bool inField = false;
    MetaTable *block = &mGlobalTable;
@@ -620,6 +621,8 @@ void ParsedUDMF::readTokenizedData()
          if(block == &mGlobalTable) // error if it wasn't started by {
             throw UDMFException("No matching '{' found for '}'", token.line);
          block = &mGlobalTable;
+         break;
+      default:
          break;
       }
    }
