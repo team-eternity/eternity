@@ -761,39 +761,61 @@ void P_LoadNodes(int lump)
 //
 // http://zdoom.org/wiki/ZDBSP#Compressed_Nodes
 // IOANCH 20151213: modified to use the NODES lump num and return the signature
+// Also added actual node lump, if it's SSECTORS in a classic map
 //
-static ZNodeType P_CheckForZDoomUncompressedNodes(int nodelumpnum)
+static ZNodeType P_CheckForZDoomUncompressedNodes(int nodelumpnum, 
+                                                  int *actualNodeLump)
 {
    const void *data;
+   
+   int testlumpnum = nodelumpnum;
+   bool glNodesFallback = false;
 
    // haleyjd: be sure something is actually there
    if(!setupwad->lumpLength(nodelumpnum))
-      return ZNodeType_Invalid;
+   {
+      if(LevelInfo.mapFormat != LEVEL_FORMAT_UDMF)
+      {
+         testlumpnum = nodelumpnum - ML_NODES + ML_SSECTORS;
+         glNodesFallback = true;
+         if(!setupwad->lumpLength(testlumpnum))
+            return ZNodeType_Invalid;
+      }
+      else
+         return ZNodeType_Invalid;
+   }
 
    // haleyjd: load at PU_CACHE and it may stick around for later.
-   data = setupwad->cacheLumpNum(nodelumpnum, PU_CACHE);
+   data = setupwad->cacheLumpNum(testlumpnum, PU_CACHE);
 
-   if(!memcmp(data, "XNOD", 4))
+   if(LevelInfo.mapFormat != LEVEL_FORMAT_UDMF && !glNodesFallback 
+      && !memcmp(data, "XNOD", 4))
    {
+      // only classic maps with NODES having XNOD
       C_Printf("ZDoom uncompressed normal nodes detected\n");
       return ZNodeType_Normal;
    }
-   if(!memcmp(data, "XGLN", 4))
+
+
+   if(glNodesFallback || LevelInfo.mapFormat == LEVEL_FORMAT_UDMF)
    {
-      C_Printf("ZDoom uncompressed GL nodes version 1 detected\n");
-      return ZNodeType_GL;
+      if(!memcmp(data, "XGLN", 4))
+      {
+         C_Printf("ZDoom uncompressed GL nodes version 1 detected\n");
+         return ZNodeType_GL;
+      }
+      if(!memcmp(data, "XGL2", 4))
+      {
+         C_Printf("ZDoom uncompressed GL nodes version 2 detected\n");
+         return ZNodeType_GL2;
+      }
+      if(!memcmp(data, "XGL3", 4))
+      {
+         C_Printf("ZDoom uncompressed GL nodes version 3 detected\n");
+         return ZNodeType_GL3;
+      }
    }
-   if(!memcmp(data, "XGL2", 4))
-   {
-      C_Printf("ZDoom uncompressed GL nodes version 2 detected\n");
-      return ZNodeType_GL2;
-   }
-   if(!memcmp(data, "XGL3", 4))
-   {
-      C_Printf("ZDoom uncompressed GL nodes version 3 detected\n");
-      return ZNodeType_GL3;
-   }
-   
+
 
    return ZNodeType_Invalid;
 }
@@ -2929,10 +2951,11 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    
    // IOANCH: at this point, mgla.nodes is valid. Check ZDoom node signature too
    ZNodeType znodeSignature;
-   if((znodeSignature = P_CheckForZDoomUncompressedNodes(mgla.nodes)) 
-      != ZNodeType_Invalid)
+   int actualNodeLump = -1;
+   if((znodeSignature = P_CheckForZDoomUncompressedNodes(mgla.nodes, &actualNodeLump)) 
+      != ZNodeType_Invalid && actualNodeLump >= 0)
    {
-      P_LoadZNodes(mgla.nodes, znodeSignature);
+      P_LoadZNodes(actualNodeLump, znodeSignature);
 
       CHECK_ERROR();
    }
