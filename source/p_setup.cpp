@@ -768,7 +768,7 @@ static ZNodeType P_CheckForZDoomUncompressedNodes(int nodelumpnum,
 {
    const void *data;
    
-   int testlumpnum = nodelumpnum;
+   *actualNodeLump = nodelumpnum;
    bool glNodesFallback = false;
 
    // haleyjd: be sure something is actually there
@@ -776,9 +776,9 @@ static ZNodeType P_CheckForZDoomUncompressedNodes(int nodelumpnum,
    {
       if(LevelInfo.mapFormat != LEVEL_FORMAT_UDMF)
       {
-         testlumpnum = nodelumpnum - ML_NODES + ML_SSECTORS;
+         *actualNodeLump = nodelumpnum - ML_NODES + ML_SSECTORS;
          glNodesFallback = true;
-         if(!setupwad->lumpLength(testlumpnum))
+         if(!setupwad->lumpLength(*actualNodeLump))
             return ZNodeType_Invalid;
       }
       else
@@ -786,7 +786,7 @@ static ZNodeType P_CheckForZDoomUncompressedNodes(int nodelumpnum,
    }
 
    // haleyjd: load at PU_CACHE and it may stick around for later.
-   data = setupwad->cacheLumpNum(testlumpnum, PU_CACHE);
+   data = setupwad->cacheLumpNum(*actualNodeLump, PU_CACHE);
 
    if(LevelInfo.mapFormat != LEVEL_FORMAT_UDMF && !glNodesFallback 
       && !memcmp(data, "XNOD", 4))
@@ -885,8 +885,8 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
    
    subsector_t *ss = ::subsectors; // IOANCH: for GL znodes
    int actualSegIndex = 0;
-   vertex_t **v2toSet = nullptr;  // IOANCH: second vertex to set, remember it
-   vertex_t *firstV1;            // IOANCH: first vertex of first seg
+   seg_t *prevSegToSet = nullptr;
+   vertex_t *firstV1 = nullptr;   // IOANCH: first vertex of first seg
 
    for(i = 0; i < numsegs; i++, ++actualSegIndex)
    {
@@ -894,11 +894,11 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
       uint32_t v1, v2;
       uint32_t linedef;
       byte side;
-      seg_t *li = segs+i;
+      seg_t *li = segs+actualSegIndex;
       mapseg_znod_t ml;
       
       // IOANCH: shift the seg back
-      ::segs[actualSegIndex] = ::segs[i];
+      //::segs[actualSegIndex] = ::segs[i];
       
       // IOANCH: increment current subsector if applicable
       if(signature != ZNodeType_Normal)
@@ -907,6 +907,7 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
          {
             ++ss;
             ss->firstline = actualSegIndex;
+            firstV1 = nullptr;
          }
       }
 
@@ -916,12 +917,14 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
          v2 = ml.v2 = GetBinaryUDWord(&data);
       else
       {
-         if(actualSegIndex == ss->firstline)
+         if(actualSegIndex == ss->firstline && !firstV1) // only set it once
             firstV1 = ::vertexes + v1;
-         else if(v2toSet)
+         else if(prevSegToSet)
          {
-            *v2toSet = ::vertexes + v1;   // set the second vertex of previous
-            v2toSet = nullptr;   // consume it
+            // set the second vertex of previous
+            prevSegToSet->v2 = ::vertexes + v1;   
+            P_CalcSegLength(prevSegToSet);
+            prevSegToSet = nullptr;   // consume it
          }
          
          ml.partner = GetBinaryUDWord(&data);   // IOANCH: not used in EE
@@ -971,15 +974,17 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
          if(actualSegIndex + 1 == ss->firstline + ss->numlines)
          {
             li->v2 = firstV1;
+            P_CalcSegLength(li);
             firstV1 = nullptr;
          }
          else
          {
-            v2toSet = &li->v2;
+            prevSegToSet = li;
          }
       }
 
-      P_CalcSegLength(li);
+      if(li->v2)  // IOANCH: only count if v2 is available.
+         P_CalcSegLength(li);
       R_DynaSegOffset(li, ldef, side);
    }
    
