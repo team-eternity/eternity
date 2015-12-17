@@ -675,6 +675,25 @@ static void P_CalcNodeCoefficients(node_t *node, fnode_t *fnode)
 }
 
 //
+// P_CalcNodeCoefficients2
+//
+// IOANCH 20151217: high-resolution nodes (from XGL3 ZDBSP nodes)
+//
+static void P_CalcNodeCoefficients2(const node_t &node, fnode_t &fnode)
+{
+   fnode.fx = M_FixedToDouble(node.x);
+   fnode.fy = M_FixedToDouble(node.y);
+   fnode.fdx = M_FixedToDouble(node.dx);
+   fnode.fdy = M_FixedToDouble(node.dy);
+   
+   // IOANCH: same as code above
+   fnode.a   = -fnode.fdy;
+   fnode.b   =  fnode.fdx;
+   fnode.c   =  fnode.fdy * fnode.fx - fnode.fdx * fnode.fy;
+   fnode.len = sqrt(fnode.fdx * fnode.fdx + fnode.fdy * fnode.fdy);
+}
+
+//
 // P_LoadNodes
 //
 // killough 5/3/98: reformatted, cleaned up
@@ -805,12 +824,26 @@ typedef struct mapseg_znod_s
    byte     side;
 } mapseg_znod_t;
 
+// IOANCH: modified to support XGL3 nodes
 typedef struct mapnode_znod_s
 {
-  int16_t x;  // Partition line from (x,y) to x+dx,y+dy)
-  int16_t y;
-  int16_t dx;
-  int16_t dy;
+  union
+  {
+     struct
+     {
+        int16_t x;  // Partition line from (x,y) to x+dx,y+dy)
+        int16_t y;
+        int16_t dx;
+        int16_t dy;             
+     };
+     struct
+     {
+        int32_t x32;  // Partition line from (x,y) to x+dx,y+dy)
+        int32_t y32;
+        int32_t dx32;
+        int32_t dy32;             
+     };
+  };
   // Bounding box for each child, clip against view frustum.
   int16_t bbox[2][4];
   // If NF_SUBSECTOR its a subsector, else it's a node of another subtree.
@@ -839,8 +872,11 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
       uint32_t v1, v2;
       uint32_t linedef;
       byte side;
-      seg_t *li = segs+actualSegIndex; // IOANCH: use actual seg index
+      seg_t *li = segs+i;
       mapseg_znod_t ml;
+      
+      // IOANCH: shift the seg back
+      ::segs[actualSegIndex] = ::segs[i];
       
       // IOANCH: increment current subsector if applicable
       if(signature != ZNodeType_Normal)
@@ -924,6 +960,9 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
       P_CalcSegLength(li);
       R_DynaSegOffset(li, ldef, side);
    }
+   
+   // IOANCH: update the seg count
+   ::numsegs = actualSegIndex;
 }
 
 #define CheckZNodesOverflow(size, count) \
@@ -1039,15 +1078,18 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
    numsegs = (int)numSegs;
    segs = ecalloc(seg_t *, numsegs, sizeof(seg_t));
 
-   CheckZNodesOverflow(len, numsegs * 11);
+   // IOANCH 20151217: set reading size
+   int totalSegSize;
+   if(signature == ZNodeType_Normal || signature == ZNodeType_GL)
+      totalSegSize = numsegs * 11; // haleyjd: hardcoded original structure size
+   else if(signature == ZNodeType_GL2 || signature == ZNodeType_GL3)
+      totalSegSize = numsegs * 13; // IOANCH: DWORD linedef
+   
+   CheckZNodesOverflow(len, totalSegSize);
    P_LoadZSegs(data, signature);
    
-   // IOANCH 20151217: different seg size depending on nodes version
-   if(signature == ZNodeType_Normal || signature == ZNodeType_GL)
-      data += numsegs * 11; // haleyjd: hardcoded original structure size
-   else if(signature == ZNodeType_GL2 || signature == ZNodeType_GL3)
-      data += numsegs * 13; // IOANCH: DWORD linedef
-
+   data += totalSegSize;
+   
    // Read nodes
    CheckZNodesOverflow(len, sizeof(numNodes));
    numNodes = GetBinaryUDWord(&data);
@@ -1063,10 +1105,20 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
       node_t *no = nodes + i;
       mapnode_znod_t mn;
 
-      mn.x  = GetBinaryWord(&data);
-      mn.y  = GetBinaryWord(&data);
-      mn.dx = GetBinaryWord(&data);
-      mn.dy = GetBinaryWord(&data);
+      if(signature == ZNodeType_GL3)
+      {
+         mn.x32  = GetBinaryDWord(&data);
+         mn.y32  = GetBinaryDWord(&data);
+         mn.dx32 = GetBinaryDWord(&data);
+         mn.dy32 = GetBinaryDWord(&data);
+      }
+      else
+      {
+         mn.x  = GetBinaryWord(&data);
+         mn.y  = GetBinaryWord(&data);
+         mn.dx = GetBinaryWord(&data);
+         mn.dy = GetBinaryWord(&data);
+      }
 
       for(j = 0; j < 2; j++)
          for(k = 0; k < 4; k++)
@@ -1075,17 +1127,29 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
       for(j = 0; j < 2; j++)
          mn.children[j] = GetBinaryDWord(&data);
 
-      no->x  = mn.x; 
-      no->y  = mn.y; 
-      no->dx = mn.dx;
-      no->dy = mn.dy;
+      if(signature == ZNodeType_GL3)
+      {
+         no->x = mn.x32;
+         no->y = mn.y32;
+         no->dx = mn.dx32;
+         no->dy = mn.dy32;
+         
+         P_CalcNodeCoefficients2(*no, fnodes[i]);
+      }
+      else
+      {
+         no->x  = mn.x; 
+         no->y  = mn.y; 
+         no->dx = mn.dx;
+         no->dy = mn.dy;
 
-      P_CalcNodeCoefficients(no, &fnodes[i]);
+         P_CalcNodeCoefficients(no, &fnodes[i]);
 
-      no->x  <<= FRACBITS;
-      no->y  <<= FRACBITS;
-      no->dx <<= FRACBITS;
-      no->dy <<= FRACBITS;
+         no->x  <<= FRACBITS;
+         no->y  <<= FRACBITS;
+         no->dx <<= FRACBITS;
+         no->dy <<= FRACBITS;
+      }
 
       for(j = 0; j < 2; j++)
       {
