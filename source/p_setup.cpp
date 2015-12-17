@@ -82,6 +82,20 @@ extern const char *level_error;
 extern void R_DynaSegOffset(seg_t *lseg, line_t *line, int side);
 
 //
+// ZNodeType
+//
+// IOANCH: ZDoom node type enum
+//
+enum ZNodeType
+{
+   ZNodeType_Invalid,
+   ZNodeType_Normal,
+   ZNodeType_GL,
+   ZNodeType_GL2,
+   ZNodeType_GL3,
+};
+
+//
 // MAP related Lookup tables.
 // Store VERTEXES, LINEDEFS, SIDEDEFS, etc.
 //
@@ -727,16 +741,15 @@ void P_LoadNodes(int lump)
 // P_CheckForZDoomUncompressedNodes
 //
 // http://zdoom.org/wiki/ZDBSP#Compressed_Nodes
-// IOANCH 20151213: modified to use the NODES lump num
+// IOANCH 20151213: modified to use the NODES lump num and return the signature
 //
-static bool P_CheckForZDoomUncompressedNodes(int nodelumpnum)
+static ZNodeType P_CheckForZDoomUncompressedNodes(int nodelumpnum)
 {
    const void *data;
-   bool result = false;
 
    // haleyjd: be sure something is actually there
    if(!setupwad->lumpLength(nodelumpnum))
-      return result;
+      return ZNodeType_Invalid;
 
    // haleyjd: load at PU_CACHE and it may stick around for later.
    data = setupwad->cacheLumpNum(nodelumpnum, PU_CACHE);
@@ -744,10 +757,26 @@ static bool P_CheckForZDoomUncompressedNodes(int nodelumpnum)
    if(!memcmp(data, "XNOD", 4))
    {
       C_Printf("ZDoom uncompressed normal nodes detected\n");
-      result = true;
+      return ZNodeType_Normal;
    }
+   if(!memcmp(data, "XGLN", 4))
+   {
+      C_Printf("ZDoom uncompressed GL nodes version 1 detected\n");
+      return ZNodeType_GL;
+   }
+   if(!memcmp(data, "XGL2", 4))
+   {
+      C_Printf("ZDoom uncompressed GL nodes version 2 detected\n");
+      return ZNodeType_GL2;
+   }
+   if(!memcmp(data, "XGL3", 4))
+   {
+      C_Printf("ZDoom uncompressed GL nodes version 3 detected\n");
+      return ZNodeType_GL3;
+   }
+   
 
-   return result;
+   return ZNodeType_Invalid;
 }
 
 //
@@ -786,9 +815,11 @@ typedef struct mapnode_znod_s
 // P_LoadZSegs
 //
 // Loads segs from ZDoom uncompressed nodes
+// IOANCH 20151217: use signature
 //
-static void P_LoadZSegs(byte *data)
+static void P_LoadZSegs(byte *data, ZNodeType signature)
 {
+   // IOANCH TODO: read the segs according to signature
    int i;
 
    for(i = 0; i < numsegs; i++)
@@ -845,8 +876,9 @@ static void P_LoadZSegs(byte *data)
 // P_LoadZNodes
 //
 // Loads ZDoom uncompressed nodes.
+// IOANCH 20151217: check signature and use different gl nodes if needed
 //
-static void P_LoadZNodes(int lump)
+static void P_LoadZNodes(int lump, ZNodeType signature)
 {
    byte *data, *lumpptr;
    unsigned int i;
@@ -946,8 +978,13 @@ static void P_LoadZNodes(int lump)
    segs = ecalloc(seg_t *, numsegs, sizeof(seg_t));
 
    CheckZNodesOverflow(len, numsegs * 11);
-   P_LoadZSegs(data);
-   data += numsegs * 11; // haleyjd: hardcoded original structure size
+   P_LoadZSegs(data, signature);
+   
+   // IOANCH 20151217: different seg size depending on nodes version
+   if(signature == ZNodeType_Normal || signature == ZNodeType_GL)
+      data += numsegs * 11; // haleyjd: hardcoded original structure size
+   else if(signature == ZNodeType_GL2 || signature == ZNodeType_GL3)
+      data += numsegs * 13; // IOANCH: DWORD linedef
 
    // Read nodes
    CheckZNodesOverflow(len, sizeof(numNodes));
@@ -2764,10 +2801,12 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    
    P_LoadBlockMap (mgla.blockmap); // killough 3/1/98
    
-   // IOANCH: at this point, mgla.nodes is valid
-   if(P_CheckForZDoomUncompressedNodes(mgla.nodes))
+   // IOANCH: at this point, mgla.nodes is valid. Check ZDoom node signature too
+   ZNodeType znodeSignature;
+   if((znodeSignature = P_CheckForZDoomUncompressedNodes(mgla.nodes)) 
+      != ZNodeType_Invalid)
    {
-      P_LoadZNodes(mgla.nodes);
+      P_LoadZNodes(mgla.nodes, znodeSignature);
 
       CHECK_ERROR();
    }
