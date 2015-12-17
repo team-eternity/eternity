@@ -792,10 +792,16 @@ static void CheckZNodesOverflowFN(int *size, int count)
       level_error = "Overflow in ZDoom XNOD lump";
 }
 
+// IOANCH 20151217: updated for XGLN and XGL2
 typedef struct mapseg_znod_s
 {
-   uint32_t v1, v2;
-   uint16_t linedef;
+   uint32_t v1;
+   union // IOANCH
+   {
+      uint32_t v2;
+      uint32_t partner; // XGLN, XGL2
+   };
+   uint32_t linedef; // IOANCH: use 32-bit instead of 16-bit   
    byte     side;
 } mapseg_znod_t;
 
@@ -821,23 +827,66 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
 {
    // IOANCH TODO: read the segs according to signature
    int i;
+   
+   subsector_t *ss = ::subsectors; // IOANCH: for GL znodes
+   int actualSegIndex = 0;
+   vertex_t **v2toSet = nullptr;  // IOANCH: second vertex to set, remember it
+   vertex_t *firstV1;            // IOANCH: first vertex of first seg
 
-   for(i = 0; i < numsegs; i++)
+   for(i = 0; i < numsegs; i++, ++actualSegIndex)
    {
       line_t *ldef;
       uint32_t v1, v2;
       uint32_t linedef;
       byte side;
-      seg_t *li = segs+i;
+      seg_t *li = segs+actualSegIndex; // IOANCH: use actual seg index
       mapseg_znod_t ml;
+      
+      // IOANCH: increment current subsector if applicable
+      if(signature != ZNodeType_Normal)
+      {
+         if(actualSegIndex >= ss->firstline + ss->numlines)
+         {
+            ++ss;
+            ss->firstline = actualSegIndex;
+         }
+      }
 
       // haleyjd: FIXME - see no verification of vertex indices
       v1 = ml.v1 = GetBinaryUDWord(&data);
-      v2 = ml.v2 = GetBinaryUDWord(&data);
-      ml.linedef = GetBinaryUWord(&data);
+      if(signature == ZNodeType_Normal)   // IOANCH: only set directly for nonGL
+         v2 = ml.v2 = GetBinaryUDWord(&data);
+      else
+      {
+         if(actualSegIndex == ss->firstline)
+            firstV1 = ::vertexes + v1;
+         else if(v2toSet)
+         {
+            *v2toSet = ::vertexes + v1;   // set the second vertex of previous
+            v2toSet = nullptr;   // consume it
+         }
+         
+         ml.partner = GetBinaryUDWord(&data);   // IOANCH: not used in EE
+      }
+      
+      // IOANCH
+      if(signature == ZNodeType_Normal || signature == ZNodeType_GL)
+         ml.linedef = GetBinaryUWord(&data);
+      else
+         ml.linedef = GetBinaryUDWord(&data);
       ml.side    = *data++;
+      
+      if((signature == ZNodeType_GL && ml.linedef == 0xffff)
+         || ((signature == ZNodeType_GL2 || signature == ZNodeType_GL3) 
+             && ml.linedef == 0xffffffff))
+      {
+         --actualSegIndex;
+         --ss->numlines;
+         continue;   // skip strictly GL nodes
+      }
 
-      linedef = SafeRealUintIndex(ml.linedef, numlines, "seg", i, "line");
+      linedef = SafeRealUintIndex(ml.linedef, numlines, "seg", actualSegIndex, 
+                                  "line");
 
       ldef = &lines[linedef];
       li->linedef = ldef;
@@ -857,7 +906,20 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
          li->backsector = NULL;
 
       li->v1 = &vertexes[v1];
-      li->v2 = &vertexes[v2];
+      if(signature == ZNodeType_Normal)
+         li->v2 = &vertexes[v2];
+      else
+      {
+         if(actualSegIndex + 1 == ss->firstline + ss->numlines)
+         {
+            li->v2 = firstV1;
+            firstV1 = nullptr;
+         }
+         else
+         {
+            v2toSet = &li->v2;
+         }
+      }
 
       P_CalcSegLength(li);
       R_DynaSegOffset(li, ldef, side);
