@@ -132,20 +132,21 @@ https://dl.dropboxusercontent.com/u/5103936/permanent/eternity/eternity-osx-clan
 * Now it should build. You can choose the base project or the user-friendly
 front-end ("launcher").
 
-Building with Homebrew
-~~~~~~~~~~~~~~~~~~~~~~
+Building with Homebrew (OS X Mavericks and up)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The benefit of Homebrew compilation is that you don't need to "install"
 Eternity like a standard Mac application. However, this will require some
 extra work. You will also need to run Eternity as you would in Unix.
 
 These instructions are written with the assumption that the user has
-already set up Homebrew and the required dependencies.
+already set up Homebrew and the required dependencies. Please note that as
+of the latest Mavericks updates, GCC is no longer required. If you are
+using an older cmake release folder, you will need to create a new one.
 
 * You will need the following libraries:
 +
  cmake
- gcc49
  sdl
  sdl_mixer
  sdl_net
@@ -155,6 +156,6 @@ already set up Homebrew and the required dependencies.
  libmpeg2
  libmikmod
 
-* Follow the cmake instructions, with the exception of one command:
+* Follow the cmake instructions.
 +
- CC=gcc-4.9 CXX=g++-4.9 cmake ..
+ cmake .. -DCMAKE_BUILD_TYPE=Release
