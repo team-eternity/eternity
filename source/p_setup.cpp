@@ -728,23 +728,56 @@ void P_LoadNodes(int lump)
 //
 static bool P_CheckForZDoomUncompressedNodes(int lumpnum)
 {
-   const void *data;
-   bool result = false;
+   void *data; // ioanch: removed const so ReadBinaryDWord works
+   // ioanch: removed redundant result variable
 
    // haleyjd: be sure something is actually there
-   if(!setupwad->lumpLength(lumpnum + ML_NODES))
-      return result;
+
+   // ioanch 20151218: do bounds checking here. Needed so the game can fallback
+   // to BSP nodes, especially in case of accidental "XNOD" header in the lump
+   // ALL "MAGIC" NUMBERS are according to the documentation here:
+   // http://zdoom.org/wiki/node
+
+   int lumpLength = setupwad->lumpLength(lumpnum + ML_NODES);
+   if(lumpLength < 12)
+      return false;
 
    // haleyjd: load at PU_CACHE and it may stick around for later.
    data = setupwad->cacheLumpNum(lumpnum + ML_NODES, PU_CACHE);
 
    if(!memcmp(data, "XNOD", 4))
    {
+      // ioanch: check sizes here
+      byte *bdata = static_cast<byte *>(data);
+      const byte *end = bdata + lumpLength;
+      bdata += 4;
+
+      uint32_t num = GetBinaryUDWord(&bdata);
+      if(num > ::numvertexes)  // original vertices
+         return false;
+
+      num = GetBinaryUDWord(&bdata);       // internal vertices
+      if((bdata += 8 * num) >= end)                // advance
+         return false;
+
+      num = GetBinaryUDWord(&bdata);               // subsectors
+      if((bdata += 4 * num) >= end)
+         return false;
+
+      num = GetBinaryUDWord(&bdata);               // segs
+      if((bdata += 11 * num) >= end)
+         return false;
+
+      num = GetBinaryUDWord(&bdata);               // nodes
+      if((bdata += 32 * num) > end)
+         return false;
+
+      // finally found
       C_Printf("ZDoom uncompressed normal nodes detected\n");
-      result = true;
+      return true;
    }
 
-   return result;
+   return false;
 }
 
 //
