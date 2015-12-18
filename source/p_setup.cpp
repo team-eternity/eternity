@@ -753,19 +753,19 @@ static bool P_CheckForZDoomUncompressedNodes(int lumpnum)
       bdata += 4;
 
       uint32_t num = GetBinaryUDWord(&bdata);
-      if(num > ::numvertexes)  // original vertices
+      if(num > ::numvertexes)                      // original vertices
          return false;
 
-      num = GetBinaryUDWord(&bdata);       // internal vertices
-      if((bdata += 8 * num) >= end)                // advance
+      num = GetBinaryUDWord(&bdata);               // internal vertices
+      if((bdata += 8 * num) + 4 > end)             // advance
          return false;
 
       num = GetBinaryUDWord(&bdata);               // subsectors
-      if((bdata += 4 * num) >= end)
+      if((bdata += 4 * num) + 4 > end)
          return false;
 
       num = GetBinaryUDWord(&bdata);               // segs
-      if((bdata += 11 * num) >= end)
+      if((bdata += 11 * num) + 4 > end)
          return false;
 
       num = GetBinaryUDWord(&bdata);               // nodes
