@@ -171,7 +171,7 @@ static void R_AddSolidSeg(int x1, int x2)
          I_Error("R_AddSolidSeg: created a seg that overlaps next seg:\n"
                  "   (%i)->last = %i, (%i)->first = %i\n", 
                  static_cast<int>(rover - solidsegs),
-                 rover->last, 
+                 rover->last,
                  static_cast<int>((rover + 1) - solidsegs),
                  (rover + 1)->last);
       }

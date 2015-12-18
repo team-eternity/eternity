@@ -1489,7 +1489,7 @@ void Mobj::serialize(SaveArchive &arc)
 
       // Basic serializable pointers (state, player)
       arc << state->index;
-      temp = player ? player - players + 1 : 0;
+      temp = static_cast<unsigned>(player ? player - players + 1 : 0);
       arc << temp;
 
       // Pointers to other mobjs

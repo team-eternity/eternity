@@ -454,7 +454,7 @@ static void ACS_funcGetCVarString(ACS_FUNCARG)
    }
 
    const char *val = C_VariableValue(var);
-   *retn++ = ACSVM::AddString(val, strlen(val));
+   *retn++ = ACSVM::AddString(val, static_cast<uint32_t>(strlen(val)));
 }
 
 //
@@ -654,7 +654,7 @@ int32_t ACS_GetThingVar(Mobj *thing, uint32_t var)
    case ACS_THINGVAR_MomY:           return thing->momy;
    case ACS_THINGVAR_MomZ:           return thing->momz;
    case ACS_THINGVAR_Pitch:          return thing->player ? thing->player->pitch >> 16 : 0;
-   case ACS_THINGVAR_PlayerNumber:   return thing->player ? thing->player - players : -1;
+   case ACS_THINGVAR_PlayerNumber:   return static_cast<int32_t>(thing->player ? thing->player - players : -1);
    case ACS_THINGVAR_SigilPieces:    return 0;
    case ACS_THINGVAR_TID:            return thing->tid;
    case ACS_THINGVAR_Type:           return ACSVM::AddString(thing->info->name);

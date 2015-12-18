@@ -165,7 +165,7 @@ ACSArray ACSglobalarrs[ACS_NUM_GLOBALARRS];
 //
 static void ACS_addVirtualMachine(ACSVM *vm)
 {
-   vm->id = acsVMs.getLength();
+   vm->id = static_cast<uint32_t>(acsVMs.getLength());
    acsVMs.add(vm);
 }
 
@@ -875,7 +875,7 @@ void ACSThinker::Think()
          }
 
          // Ensure there's enough stack space.
-         if(numStack - (stackPtr = stp - stack) < ACS_NUM_STACK)
+         if(numStack - (stackPtr = static_cast<uint32_t>(stp - stack)) < ACS_NUM_STACK)
          {
             numStack = stackPtr + ACS_NUM_STACK * 2;
             stack = (int32_t *)Z_Realloc(stack, numStack * sizeof(int32_t), PU_LEVEL, NULL);
@@ -937,7 +937,7 @@ void ACSThinker::Think()
          // Search for matching case using binary search.
          if(temp) for(;;)
          {
-            temp = caseEnd - caseBegin;
+            temp = static_cast<int32_t>(caseEnd - caseBegin);
             caseItr = caseBegin + (temp / 2);
 
             if((*caseItr)[0] == PEEK())
@@ -1087,7 +1087,7 @@ void ACSThinker::Think()
       popPrint();
       NEXTOP();
    OPCODE(ENDPRINTSTRING):
-      PUSH(ACSVM::AddString(printBuffer->constPtr(), printBuffer->length()));
+      PUSH(ACSVM::AddString(printBuffer->constPtr(), static_cast<uint32_t>(printBuffer->length())));
       popPrint();
       NEXTOP();
    OPCODE(PRINTMAPARRAY):
@@ -1250,7 +1250,7 @@ action_endscript:
 action_stop:
    // copy fields back into script
    this->ip  = ip;
-   this->stackPtr = stp - this->stack;
+   this->stackPtr = static_cast<uint32_t>(stp - this->stack);
    goto function_end;
 
 function_end:;
@@ -1278,7 +1278,7 @@ void ACSThinker::popPrint()
 //
 void ACSThinker::pushPrint()
 {
-   uint32_t printIndex = printPtr - printStack;
+   uint32_t printIndex = static_cast<uint32_t>(printPtr - printStack);
 
    // Make room for the new buffer.
    if(printIndex == numPrints)
@@ -1736,7 +1736,7 @@ uint32_t ACSVM::AddString(const char *s, uint32_t l)
       else
          string->script = NULL;
 
-      string->length = strlen(string->data.s);
+      string->length = static_cast<uint32_t>(strlen(string->data.s));
       string->number = GlobalNumStrings;
 
       // Make room in global array.
@@ -2414,7 +2414,7 @@ static SaveArchive &operator << (SaveArchive &arc, acs_call_t &call)
    uint32_t ipTemp;
 
    if(arc.isSaving())
-      ipTemp = call.ip - call.vm->code;
+      ipTemp = static_cast<uint32_t>(call.ip - call.vm->code);
 
    arc << ipTemp << call.numLocals << call.vm;
 
@@ -2556,17 +2556,17 @@ void ACSThinker::serialize(SaveArchive &arc)
    // Pointer-to-Index
    if(arc.isSaving())
    {
-      scriptIndex = script - vm->scripts;
+      scriptIndex = static_cast<uint32_t>(script - vm->scripts);
 
-      localsIndex = locals - localvar;
+      localsIndex = static_cast<uint32_t>(locals - localvar);
 
-      callPtrIndex = callPtr - calls;
+      callPtrIndex = static_cast<uint32_t>(callPtr - calls);
 
-      printIndex = printPtr - printStack;
+      printIndex = static_cast<uint32_t>(printPtr - printStack);
 
-      ipIndex = ip - vm->code;
+      ipIndex = static_cast<uint32_t>(ip - vm->code);
 
-      lineIndex = line ? line - lines + 1 : 0;
+      lineIndex = static_cast<uint32_t>(line ? line - lines + 1 : 0);
 
       triggerSwizzle = P_NumForThinker(trigger);
    }
@@ -2725,7 +2725,7 @@ void ACSVM::ArchiveStrings(SaveArchive &arc)
 
          // Set metadata.
          string->script = acsScriptsByName.objectForKey(string->data.s);
-         string->length = strlen(string->data.s);
+         string->length = static_cast<uint32_t>(strlen(string->data.s));
          string->number = GlobalNumStrings;
 
          // Add to global array.

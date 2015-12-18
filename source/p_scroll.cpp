@@ -249,7 +249,7 @@ static void P_spawnCeilingScroller(int staticFn, line_t *l)
       accel = 1;
    if(staticFn == EV_STATIC_SCROLL_ACCEL_CEILING ||
       staticFn == EV_STATIC_SCROLL_DISPLACE_CEILING)
-      control = sides[*l->sidenum].sector - sectors;
+      control = static_cast<int>(sides[*l->sidenum].sector - sectors);
 
    for(int s = -1; (s = P_FindSectorFromLineTag(l, s)) >= 0;)
       Add_Scroller(ScrollThinker::sc_ceiling, -dx, dy, control, s, accel);
@@ -275,7 +275,7 @@ static void P_spawnFloorScroller(int staticFn, line_t *l)
       accel = 1;
    if(staticFn == EV_STATIC_SCROLL_ACCEL_FLOOR ||
       staticFn == EV_STATIC_SCROLL_DISPLACE_FLOOR)
-      control = sides[*l->sidenum].sector - sectors;
+      control = static_cast<int>(sides[*l->sidenum].sector - sectors);
 
    for(int s = -1; (s = P_FindSectorFromLineTag(l, s)) >= 0;)
       Add_Scroller(ScrollThinker::sc_floor, -dx, dy, control, s, accel);
@@ -301,7 +301,7 @@ static void P_spawnFloorCarrier(int staticFn, line_t *l)
       accel = 1;
    if(staticFn == EV_STATIC_CARRY_ACCEL_FLOOR ||
       staticFn == EV_STATIC_CARRY_DISPLACE_FLOOR)
-      control = sides[*l->sidenum].sector - sectors;
+      control = static_cast<int>(sides[*l->sidenum].sector - sectors);
 
    for(int s = -1; (s = P_FindSectorFromLineTag(l, s)) >= 0;)
       Add_Scroller(ScrollThinker::sc_carry, dx, dy, control, s, accel);
@@ -328,7 +328,7 @@ static void P_spawnFloorScrollAndCarry(int staticFn, line_t *l)
       accel = 1;
    if(staticFn == EV_STATIC_SCROLL_CARRY_ACCEL_FLOOR ||
       staticFn == EV_STATIC_SCROLL_CARRY_DISPLACE_FLOOR)
-      control = sides[*l->sidenum].sector - sectors;
+      control = static_cast<int>(sides[*l->sidenum].sector - sectors);
 
    for(s = -1; (s = P_FindSectorFromLineTag(l, s)) >= 0; )
       Add_Scroller(ScrollThinker::sc_floor, -dx, dy, control, s, accel);
@@ -363,7 +363,7 @@ static void P_spawnDynamicWallScroller(int staticFn, line_t *l, int linenum)
       accel = 1;
    if(staticFn == EV_STATIC_SCROLL_ACCEL_WALL ||
       staticFn == EV_STATIC_SCROLL_DISPLACE_WALL)
-      control = sides[*l->sidenum].sector - sectors;
+      control = static_cast<int>(sides[*l->sidenum].sector - sectors);
 
    // killough 3/1/98: scroll wall according to linedef
    // (same direction and speed as scrolling floors)
