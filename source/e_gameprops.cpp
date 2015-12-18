@@ -96,6 +96,9 @@
 #define ITEM_GPROP_CREDITY     "credit.y"
 #define ITEM_GPROP_CREDITTSTEP "credit.titlestep"
 #define ITEM_GPROP_ENDTEXTNAME "exit.endtextname"
+#define ITEM_GPROP_BLOODNORM   "blood.defaultnormal"
+#define ITEM_GPROP_BLOODRIP    "blood.defaultrip"
+#define ITEM_GPROP_BLOODCRUSH  "blood.defaultcrush"
 
 // Dynamic string numbers
 enum
@@ -122,6 +125,9 @@ enum
    GI_STR_DEFSNDNAME,
    GI_STR_CREDITBKGND,
    GI_STR_ENDTEXTNAME,
+   GI_STR_BLOODNORM,
+   GI_STR_BLOODRIP,
+   GI_STR_BLOODCRUSH,
 
    GI_STR_NUMSTRS
 };
@@ -161,6 +167,7 @@ static dehflags_t gmi_flags[] =
    { "CENTERHUDMSG",   GIF_CENTERHUDMSG   },
    { "NODIEHI",        GIF_NODIEHI        },
    { "LOSTSOULBOUNCE", GIF_LOSTSOULBOUNCE },
+   { "IMPACTBLOOD",    GIF_IMPACTBLOOD    },
    { NULL,             0                  }
 };
 
@@ -239,6 +246,9 @@ cfg_opt_t edf_game_opts[] =
    CFG_INT(ITEM_GPROP_CREDITY,     0,    CFGF_NONE),
    CFG_INT(ITEM_GPROP_CREDITTSTEP, 0,    CFGF_NONE),
    CFG_STR(ITEM_GPROP_ENDTEXTNAME, "",   CFGF_NONE),
+   CFG_STR(ITEM_GPROP_BLOODNORM,   "",   CFGF_NONE),
+   CFG_STR(ITEM_GPROP_BLOODRIP,    "",   CFGF_NONE),
+   CFG_STR(ITEM_GPROP_BLOODCRUSH,  "",   CFGF_NONE),
    CFG_END()
 };
 
@@ -556,6 +566,25 @@ static void E_processGamePropsBlock(cfg_t *props)
    {
       E_setDynamicString(GameModeInfo->endTextName, GI_STR_ENDTEXTNAME,
                          cfg_getstr(props, ITEM_GPROP_ENDTEXTNAME));
+   }
+
+   // Blood Properties
+   if(IS_SET(ITEM_GPROP_BLOODNORM))
+   {
+      E_setDynamicString(GameModeInfo->bloodDefaultNormal, GI_STR_BLOODNORM,
+                         cfg_getstr(props, ITEM_GPROP_BLOODNORM));
+   }
+
+   if(IS_SET(ITEM_GPROP_BLOODRIP))
+   {
+      E_setDynamicString(GameModeInfo->bloodDefaultRIP, GI_STR_BLOODRIP,
+                         cfg_getstr(props, ITEM_GPROP_BLOODRIP));
+}
+
+   if(IS_SET(ITEM_GPROP_BLOODCRUSH))
+   {
+      E_setDynamicString(GameModeInfo->bloodDefaultCrush, GI_STR_BLOODCRUSH,
+                         cfg_getstr(props, ITEM_GPROP_BLOODCRUSH));
    }
 }
 
