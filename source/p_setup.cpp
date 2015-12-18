@@ -1262,8 +1262,9 @@ void P_LoadThings(int lump)
          continue;
       
       // Do spawn all other stuff.
-      ft->x       = SwapShort(mt->x);
-      ft->y       = SwapShort(mt->y);
+      // ioanch 20151218: fixed point coordinates
+      ft->x       = SwapShort(mt->x) << FRACBITS;
+      ft->y       = SwapShort(mt->y) << FRACBITS;
       ft->angle   = SwapShort(mt->angle);      
       ft->options = SwapShort(mt->options);
 
@@ -1317,9 +1318,10 @@ void P_LoadHexenThings(int lump)
       mapthing_t      *ft = &mapthings[i];
       
       ft->tid     = SwapShort(mt->tid);
-      ft->x       = SwapShort(mt->x);
-      ft->y       = SwapShort(mt->y);
-      ft->height  = SwapShort(mt->height);
+      // ioanch 20151218: fixed point coordinates
+      ft->x       = SwapShort(mt->x) << FRACBITS;
+      ft->y       = SwapShort(mt->y) << FRACBITS;
+      ft->height  = SwapShort(mt->height) << FRACBITS;
       ft->angle   = SwapShort(mt->angle);
       ft->type    = SwapShort(mt->type);
       ft->options = SwapShort(mt->options);

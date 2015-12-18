@@ -1149,10 +1149,10 @@ void ParsedUDMF::loadThings() const
          if(P_CheckThingDoomBan(ft->type))
             continue;
 
-         // FIXME: due to current layout, FRACTIONARY PARTS ARE LOST. Probably
-         // not recommended anyway, because of platform strtod inaccuracies.
-         ft->x = static_cast<int16_t>(floor(E_requireDouble(table, "x") + 0.5));
-         ft->y = static_cast<int16_t>(floor(E_requireDouble(table, "y") + 0.5));
+         ft->x = M_DoubleToFixed(E_requireDouble(table, "x"));
+         ft->y = M_DoubleToFixed(E_requireDouble(table, "y"));
+         ft->height = M_DoubleToFixed(E_requireDouble(table, "height"));
+         
          ft->angle = static_cast<int16_t>(E_requireOptInt(table, "angle"));
 
          // FIXME: handle young and nightmare skills in separate booleans.
@@ -1189,7 +1189,7 @@ void ParsedUDMF::loadThings() const
             if(E_requireOptBool(table, "dormant"))
                ft->options |= MTF_DORMANT;
             ft->tid = static_cast<int16_t>(E_requireOptInt(table, "id"));
-            ft->height = static_cast<int16_t>(E_requireOptInt(table, "height"));
+            
             ft->args[0] = E_requireOptInt(table, "arg0");
             ft->args[1] = E_requireOptInt(table, "arg1");
             ft->args[2] = E_requireOptInt(table, "arg2");

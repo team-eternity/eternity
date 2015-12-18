@@ -1040,8 +1040,9 @@ void P_NightmareRespawn(Mobj* mobj)
    mapthing_t*  mthing;
    bool         check; // haleyjd 11/11/04
 
-   x = mobj->spawnpoint.x << FRACBITS;
-   y = mobj->spawnpoint.y << FRACBITS;
+   // ioanch 20151218: fixed point coordinates
+   x = mobj->spawnpoint.x;
+   y = mobj->spawnpoint.y;
 
    // haleyjd: stupid nightmare respawning bug fix
    //
@@ -1917,8 +1918,9 @@ void P_RespawnSpecials()
 
    mthing = &itemrespawnque[iquetail];
 
-   x = mthing->x << FRACBITS;
-   y = mthing->y << FRACBITS;
+   // ioanch 20151218: 32-bit coordinates
+   x = mthing->x;
+   y = mthing->y;
 
    // spawn a teleport fog at the new spot
    ss = R_PointInSubsector(x,y);
@@ -1964,8 +1966,9 @@ void P_SpawnPlayer(mapthing_t* mthing)
    if(p->playerstate == PST_REBORN)
       G_PlayerReborn(mthing->type - 1);
 
-   x    = mthing->x << FRACBITS;
-   y    = mthing->y << FRACBITS;
+   // ioanch 20151218: fixed point coordinates
+   x    = mthing->x;
+   y    = mthing->y;
    z    = ONFLOORZ;
    mobj = P_SpawnMobj(x, y, z, p->pclass->type);
 
@@ -2026,7 +2029,7 @@ void P_SpawnPlayer(mapthing_t* mthing)
 // sf: made to return Mobj* spawned
 //
 // haleyjd 03/03/07: rewritten again to use a unified mapthing_t type.
-// IOANCH 20151214: UDMF skill hack
+// IOANCH 20151214: UDMF skill hack and fixed_t mapthing_t coordinates
 //
 Mobj *P_SpawnMapThing(mapthing_t *mthing, int young, int nightmare)
 {
@@ -2194,8 +2197,10 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing, int young, int nightmare)
       }
       else
       {
-         doom_printf(FC_ERROR "Unknown thing type %i at (%i, %i)",
-                     mthing->type, mthing->x, mthing->y);
+         // ioanch 20151218: fixed point coordinates
+         doom_printf(FC_ERROR "Unknown thing type %i at (%f, %f)",
+                     mthing->type, M_FixedToDouble(mthing->x), 
+                     M_FixedToDouble(mthing->y));
 
          // haleyjd 01/24/07: allow spawning unknowns to mark missing objects
          // at user's discretion, but not when recording/playing demos or in
@@ -2229,8 +2234,9 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing, int young, int nightmare)
    // spawn it
 spawnit:
 
-   x = mthing->x << FRACBITS;
-   y = mthing->y << FRACBITS;
+   // ioanch 20151218: fixed point coordinates
+   x = mthing->x;
+   y = mthing->y;
 
    z = mobjinfo[i]->flags & MF_SPAWNCEILING ? ONCEILINGZ : ONFLOORZ;
 
@@ -2245,7 +2251,8 @@ spawnit:
    // haleyjd 10/03/05: Hexen-style z positioning
    if(mthing->height && (z == ONFLOORZ || z == ONCEILINGZ))
    {
-      fixed_t rheight = mthing->height << FRACBITS;
+      // ioanch 20151218: fixed point coordinates
+      fixed_t rheight = mthing->height;
 
       if(z == ONCEILINGZ)
          rheight = -rheight;

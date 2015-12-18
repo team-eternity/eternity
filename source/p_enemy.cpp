@@ -1934,8 +1934,12 @@ static void P_ResurrectPlayer()
       edefstructvar(mapthing_t, mthing);
       Mobj *oldmo = p->mo;
 
-      mthing.x     = (int16_t)(p->mo->x >> FRACBITS);
-      mthing.y     = (int16_t)(p->mo->y >> FRACBITS);
+      // IOANCH 20151218: 32-bit mapthing_t coordinates
+      // To avoid any change, keep truncating the subunit values
+      // This is to preserve the old behaviour, when mapthing_t had short-int
+      // coordinates.
+      mthing.x     = p->mo->x & ~(FRACUNIT - 1);
+      mthing.y     = p->mo->y & ~(FRACUNIT - 1);
       mthing.angle = (int16_t)(p->mo->angle / ANGLE_1);
       mthing.type  = (p - players) + 1;
 

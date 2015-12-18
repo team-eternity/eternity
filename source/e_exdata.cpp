@@ -490,7 +490,8 @@ static void E_ProcessEDThings(cfg_t *cfg)
       E_ParseThingArgs(&EDThings[i], thingsec);
 
       // get height
-      EDThings[i].height = (int16_t)cfg_getint(thingsec, FIELD_HEIGHT);
+      // ioanch 20151218: fixed point coordinate
+      EDThings[i].height = (int16_t)cfg_getint(thingsec, FIELD_HEIGHT) << FRACBITS;
 
       // TODO: any other new fields
    }
@@ -1458,8 +1459,8 @@ Mobj *E_SpawnMapThingExt(mapthing_t *mt)
       (edThingIdx = E_EDThingForRecordNum((uint16_t)(mt->options))) == numEDMapThings)
    {
       // spawn an Unknown thing
-      return P_SpawnMobj(mt->x << FRACBITS, mt->y << FRACBITS, ONFLOORZ, 
-                         UnknownThingType);
+      // ioanch 20151218: fixed point coordinates
+      return P_SpawnMobj(mt->x, mt->y, ONFLOORZ, UnknownThingType);
    }
 
    // get a pointer to the proper ExtraData mapthing record
