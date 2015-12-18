@@ -478,6 +478,7 @@ static void E_ProcessEDThings(cfg_t *cfg)
          EDThings[i].options = 0;
       else
          EDThings[i].options = (int16_t)(E_ParseFlags(tempstr, &mt_flagset));
+      EDThings[i].extOptions = 0;   // ioanch: not set by ExtraData
 
       // extended fields
 

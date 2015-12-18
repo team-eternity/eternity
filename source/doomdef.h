@@ -120,6 +120,20 @@ typedef enum {
 #define MTF_PSX_NIGHTMARE (32|128)
 #define MTF_PSX_SPECTRE   (32|64|128)
 
+//
+// ioanch 20151218: mapthing_t::extOptions (extended) flags: needed by UDMF
+//
+enum
+{
+   // will appear on skill 1 if MTF_EASY is not set
+   // will not appear on skill 1 if MTF_EASY is set
+   MTF_EX_BABY_TOGGLE = 1,
+
+   // will appear on skill 5 if MTF_HARD is not set
+   // will not appear on skill 5 if MTF_HARD is set
+   MTF_EX_NIGHTMARE_TOGGLE = 2,
+};
+
 // sf: sector flags, not me =)
                 // kill all sound in sector
 #define SF_KILLSOUND          1024

@@ -1138,7 +1138,7 @@ void ParsedUDMF::loadThings() const
       mapthings = ecalloc(mapthing_t *, numthings, sizeof(mapthing_t));
       mapthing_t *ft;
 
-      bool young, nightmare;
+      bool skill[5] = { false };
 
       for(int i = 0; i < ::numthings; ++i)
       {
@@ -1151,21 +1151,26 @@ void ParsedUDMF::loadThings() const
 
          ft->x = M_DoubleToFixed(E_requireDouble(table, "x"));
          ft->y = M_DoubleToFixed(E_requireDouble(table, "y"));
-         ft->height = M_DoubleToFixed(E_requireDouble(table, "height"));
+         ft->height = M_DoubleToFixed(E_requireOptDouble(table, "height"));
          
          ft->angle = static_cast<int16_t>(E_requireOptInt(table, "angle"));
 
-         // FIXME: handle young and nightmare skills in separate booleans.
-         // Thankfully the skill levels are only checked in P_SpawnMapThing, not
-         // elsewhere in mapthing_t. BUT THIS IS A BIG ***HACK***
-         young = E_requireOptBool(table, "skill1");
-         if(E_requireOptBool(table, "skill2"))
+         skill[0] = E_requireOptBool(table, "skill1");
+         skill[1] = E_requireOptBool(table, "skill2");
+         skill[2] = E_requireOptBool(table, "skill3");
+         skill[3] = E_requireOptBool(table, "skill4");
+         skill[4] = E_requireOptBool(table, "skill5");
+
+         if(skill[1])
             ft->options |= MTF_EASY;
-         if(E_requireOptBool(table, "skill3"))
+         if(skill[0] != skill[1])
+            ft->extOptions |= MTF_EX_BABY_TOGGLE;
+         if(skill[2])
             ft->options |= MTF_NORMAL;
-         if(E_requireOptBool(table, "skill4"))
+         if(skill[3])
             ft->options |= MTF_HARD;
-         nightmare = E_requireOptBool(table, "skill5");
+         if(skill[4] != skill[3])
+            ft->extOptions |= MTF_EX_NIGHTMARE_TOGGLE;
 
          if(E_requireOptBool(table, "ambush"))
             ft->options |= MTF_AMBUSH;
@@ -1210,7 +1215,7 @@ void ParsedUDMF::loadThings() const
          P_ConvertDoomExtendedSpawnNum(ft);
 
          // use the extra parameters here
-         P_SpawnMapThing(ft, young ? 1 : 0, nightmare ? 1 : 0);
+         P_SpawnMapThing(ft);
       }
 
       // do the player start check like in P_LoadThings

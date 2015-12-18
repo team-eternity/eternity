@@ -282,6 +282,7 @@ struct mapthing_t
    int16_t angle;     // angle in wad format
    int16_t type;      // doomednum
    int16_t options;   // bitflags
+   uint32_t extOptions; // ioanch 20151218: extended options (needed by UDMF)
    int     special;   // scripting special
 
    int     args[NUMMTARGS]; // arguments for special

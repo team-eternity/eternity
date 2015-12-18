@@ -334,7 +334,8 @@ SaveArchive &SaveArchive::operator << (spectransfer_t &st)
 // Serialize a mapthing_t structure
 SaveArchive &SaveArchive::operator << (mapthing_t &mt)
 {
-   *this << mt.angle << mt.height << mt.next << mt.options
+   // ioanch 20151218: add extended options
+   *this << mt.angle << mt.height << mt.next << mt.options << mt.extOptions
          << mt.recordnum << mt.special << mt.tid << mt.type
          << mt.x << mt.y;
 

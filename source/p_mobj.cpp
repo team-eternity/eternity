@@ -2029,9 +2029,9 @@ void P_SpawnPlayer(mapthing_t* mthing)
 // sf: made to return Mobj* spawned
 //
 // haleyjd 03/03/07: rewritten again to use a unified mapthing_t type.
-// IOANCH 20151214: UDMF skill hack and fixed_t mapthing_t coordinates
+// ioanch 20151218: UDMF skill support (extended options)
 //
-Mobj *P_SpawnMapThing(mapthing_t *mthing, int young, int nightmare)
+Mobj *P_SpawnMapThing(mapthing_t *mthing)
 {
    int    i;
    Mobj *mobj;
@@ -2146,19 +2146,34 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing, int young, int nightmare)
       return NULL;  // sf
 
    // killough 11/98: simplify
-   // IOANCH 20151214: UDMF skill hack
-   if((gameskill == sk_baby && young == 0) 
-      || (gameskill == sk_nightmare && nightmare == 0))
-      return nullptr;
-   if((gameskill == sk_baby && young == -1) || gameskill == sk_easy ?
-      !(mthing->options & MTF_EASY) :
-      gameskill == sk_hard || (gameskill == sk_nightmare && nightmare == -1) ?
-      !(mthing->options & MTF_HARD) : !(mthing->options & MTF_NORMAL))
+   // IOANCH 20151214: UDMF skill update
+   switch(gameskill)
    {
-      // IOANCH: keep this hack
-      if((young != 1 || gameskill != sk_baby) 
-         && (nightmare != 1 || gameskill != sk_nightmare))
-         return NULL;  // sf
+   case sk_baby:
+      // If both flags are 0 or both are 1, then exit.
+      if(!!(mthing->extOptions & MTF_EX_BABY_TOGGLE) ==
+         !!(mthing->options & MTF_EASY))
+         return nullptr;
+      break;
+   case sk_easy:
+      if(!(mthing->options & MTF_EASY))
+         return nullptr;
+      break;
+   case sk_medium:
+      if(!(mthing->options & MTF_NORMAL))
+         return nullptr;
+      break;
+   case sk_hard:
+      if(!(mthing->options & MTF_HARD))
+         return nullptr;
+      break;
+   case sk_nightmare:
+      if(!!(mthing->extOptions & MTF_EX_NIGHTMARE_TOGGLE) == 
+         !!(mthing->options & MTF_HARD))
+         return nullptr;
+      break;
+   default:
+      break;
    }
 
    // find which type to spawn
