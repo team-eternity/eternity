@@ -2893,10 +2893,10 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    level_error = NULL; // reset
 
    // IOANCH 20151206: load UDMF
-   ParsedUDMF udmf;  // prepare UDMF processor
+   UDMFParser udmf;  // prepare UDMF processor
    if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF)
    {
-      udmf.loadFromText(*setupwad, lumpnum + 1);
+      udmf.start(*setupwad, lumpnum + 1);
       // TODO: also check namespace
       CHECK_ERROR();
    }
@@ -2908,8 +2908,8 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       P_LoadPSXSectors(lumpnum + ML_SECTORS);
       break;
    case LEVEL_FORMAT_UDMF: // IOANCH 20151212: UDMF
-      udmf.loadVertices();
-      udmf.loadSectors();
+      E_LoadUDMFVertices();
+      E_LoadUDMFSectors();
       break;
    default:
       P_LoadVertexes(lumpnum + ML_VERTEXES);
@@ -2925,7 +2925,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    // IOANCH 20151212: UDMF
    if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF)
-      udmf.loadSideDefs();
+      E_LoadUDMFSideDefs();
    else
       P_LoadSideDefs(lumpnum + ML_SIDEDEFS); // killough 4/4/98
 
@@ -2940,13 +2940,13 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       P_LoadHexenLineDefs(lumpnum + ML_LINEDEFS);
       break;
    case LEVEL_FORMAT_UDMF: // IOANCH 20151212: UDMF
-      udmf.loadLineDefs();
+      E_LoadUDMFLineDefs();
       break;
    }
 
    // IOANCH 20151213: udmf
    if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF)
-      udmf.loadSideDefs2();
+      E_LoadUDMFSideDefs2();
    else
       P_LoadSideDefs2(lumpnum + ML_SIDEDEFS);
    
@@ -3014,7 +3014,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       break;
    case LEVEL_FORMAT_UDMF:
       // IOANCH 20151214: UDMF things
-      udmf.loadThings();
+      E_LoadUDMFThings();
       break;
    }
 

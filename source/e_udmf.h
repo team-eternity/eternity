@@ -28,10 +28,6 @@
 #ifndef E_ARGS_H_
 #define E_ARGS_H_
 
-#include "e_hash.h"
-#include "metaapi.h"
-#include "m_collection.h"
-
 class WadDirectory;
 
 //
@@ -76,145 +72,111 @@ struct MapGenLumpAddresses
    }
 };
 
+extern UDMFNamespace gUDMFNamespace;
+
+///////////////////////////////////////////////////////////////////////////////
+
 //
-// ParsedUDMF
+// UDMFTokenType
 //
-// All that has to be done for UDMF parsing
+// For parsing. Used by entities here and in the cpp
 //
-class ParsedUDMF : public ZoneObject
+enum UDMFTokenType
+{
+   UDMFTokenType_Identifier,
+   UDMFTokenType_Operator,
+   UDMFTokenType_String,
+   UDMFTokenType_Number,
+};
+
+//
+// UDMFParser
+//
+// The class that reads from the TEXTMAP lump and populates the collections
+// accordingly. Has a destructor that makes empty these collections.
+//
+class UDMFParser : public ZoneObject
 {
 public:
-   // Doesn't own the data, in this current implementation
-   ParsedUDMF() : mRawData(nullptr), mRawDataSize(0)
-   {
-      mBlocks.initialize(13);
-   }
-
-   ~ParsedUDMF()
-   {
-      // clear the hash table
-      GroupedList *gl;
-      while((gl = mBlocks.tableIterator(static_cast<GroupedList *>(nullptr))))
-      {
-         mBlocks.removeObject(gl);
-         delete gl;
-      }
-   }
-
-   // these can set level_error and return quickly
-   void loadFromText(WadDirectory &setupwad, int lump);
-   void loadVertices() const;
-   void loadSectors() const;
-   void loadSideDefs() const;
-   void loadLineDefs();
-   void loadSideDefs2() const;
-   void loadThings() const;
+   void start(WadDirectory &setupwad, int lump);
+   ~UDMFParser();
 
 private:
 
    //
-   // TokenType
-   //
-   // Type of UDMF token.
-   //
-   enum TokenType
-   {
-      TokenType_Identifier,
-      TokenType_Equal,
-      TokenType_Semicolon,
-      TokenType_Number,
-      TokenType_String,
-   #if 0 // currently disabled because it's too strange
-      TokenType_Keyword,
-   #endif
-      TokenType_OpeningBrace,
-      TokenType_ClosingBrace,
-      TokenType_SingleComment,
-      TokenType_MultiComment,
-   };
-
-   //
-   // TokenDef
-   //
-   // Token definition. Used for the constants below
-   //
-   struct TokenDef
-   {
-      TokenType type;
-   
-      // Returns true if this token type is detected, and pc is advanced right
-      // after the token. End is the buffer length, and pc is input as the 
-      // current position
-      bool (*detect)(const char **pc, const char *end, int *line);
-   };
-
-   //
    // Token
    //
-   // UDMF parsed token instance. To be stored in a list
+   // For parsing
    //
    struct Token
    {
-      TokenType type;
-      const char *data;    // address in TEXTMAP buffer
-      size_t size;         // length of data
-      int line;            // line in TEXTMAP where it appears (for debugging)
+      char *data;
+      size_t size;
+      UDMFTokenType type;
+      double number;
    };
 
    //
-   // GroupedList
+   // Tokenizer
    //
-   // Holds a Collection and hash table handles. Useful to have separate
-   // collections (referenced from an EHashTable) of same-named blocks, to be
-   // used later from P_SetupLevel.
+   // Does the actual extraction
    //
-   class GroupedList : public ZoneObject
+   class Tokenizer : public ZoneObject
    {
    public:
-      Collection<MetaTable> items;     // The list of blocks
-      DLListItem<GroupedList> link;
-      char *key;                 // the common name of the blocks
-
-      GroupedList(const char *inKey) : link()
+      Tokenizer() : mData(nullptr), mEnd(nullptr), mLine(1)
       {
-         key = emalloc(char *, strlen(inKey) + 1);
-         strcpy(key, inKey);
       }
 
-      ~GroupedList()
+      Tokenizer(char *data, size_t size) : mData(data), mEnd(data + size), 
+         mLine(1)
       {
-         efree(key);
       }
+
+      //
+      // setData
+      //
+      // Sets the data (doesn't own it)
+      //
+      void setData(char *data, size_t size)
+      {
+         mData = data;
+         mEnd = data + size;
+         mLine = 1;
+      }
+
+      bool readToken(Token &token);
+      
+      void raise(const char *message) const;
+
+   private:
+      char *mData;
+      const char *mEnd;
+      int mLine;
    };
 
-   static const TokenDef sTokenDefs[];
+   void handleGlobalAssignment() const;
+   void handleNewBlock();
+   void handleLocalAssignment() const;
 
-   // Raw data (not owned and subject to deletion once parsing is over)
-   const char *mRawData;
-   size_t mRawDataSize;
+   Tokenizer mTokenizer;
 
-   // Semi-raw list of tokens (syntactically checked on the fly, though)
-   PODCollection<Token> mTokens;
+   const char *mGlobalKey;
+   Token mGlobalValue;
 
-   // Contains top-level assignments which probably won't be ordered
-   MetaTable mGlobalTable;
+   const char *mLocalKey;
+   Token mLocalValue;
 
-   // Collections of map items (to be copied into global arrays)
-   EHashTable<GroupedList, ENCStringHashKey, 
-      &GroupedList::key, &GroupedList::link> mBlocks;
-
-   static bool allowNext(TokenType first, TokenType second);
-   inline static bool allowEnd(TokenType token)
-   {
-      return token == TokenType_Semicolon || token == TokenType_ClosingBrace;
-   }
-
-   void tokenize();
-   void readTokenizedData();
-   
+   byte *mCurrentNewItem;
+   const void *mCurrentBinding;
 };
 
-extern UDMFNamespace gUDMFNamespace;
+void E_LoadUDMFLineDefs();
+void E_LoadUDMFSideDefs();
+void E_LoadUDMFSideDefs2();
+void E_LoadUDMFVertices();
+void E_LoadUDMFSectors();
+void E_LoadUDMFThings();
 
 #endif
 
