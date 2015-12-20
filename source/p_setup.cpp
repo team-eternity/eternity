@@ -1109,7 +1109,7 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
    int totalSegSize;
    if(signature == ZNodeType_Normal || signature == ZNodeType_GL)
       totalSegSize = numsegs * 11; // haleyjd: hardcoded original structure size
-   else if(signature == ZNodeType_GL2 || signature == ZNodeType_GL3)
+   else
       totalSegSize = numsegs * 13; // IOANCH: DWORD linedef
    
    CheckZNodesOverflow(len, totalSegSize);

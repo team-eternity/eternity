@@ -1051,7 +1051,9 @@ void UDMFParser::handleLocalAssignment() const
          strncpy(reinterpret_cast<char *>(mCurrentNewItem + binding->offset), 
             mLocalValue.data, binding->extra);
          break;
-      } 
+      default:
+         break;
+      }
    }
 
    
