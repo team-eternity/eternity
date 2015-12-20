@@ -63,12 +63,18 @@ static const char kEternityNamespace[] = "eternity";  // TENTATIVE
 
 struct UDMFBinding
 {
-   const char *name;
-   DLListItem<UDMFBinding> link;
+   const char *name;    // name
 
-   UDMFTokenType type;
-   size_t offset;
+   UDMFTokenType type;  // type: number, string or identifier (true/false)
+   size_t offset;       // offsetof struct
+
+   // Extra paramter. For numbers, 1=double, 0=int
+   // For strings, it's max string length
+   // For identifiers (true/false), it's flag bit#
    int extra;
+
+   // hash list link: keep it last so it doesn't have to be mentioned
+   DLListItem<UDMFBinding> link;
 };
 
 struct UDMFLinedef
@@ -131,63 +137,63 @@ enum UDMFLinedefFlag
    UDMFLinedefFlag_Repeatspecial,
 };
 
-static UDMFBinding kLinedefBindings[] = 
+static UDMFBinding kLinedefBindings[] =
 {
-   { "id", { 0 }, UDMFTokenType_Number, offsetof(UDMFLinedef, id), 0 },
-   { "v1", { 0 }, UDMFTokenType_Number, offsetof(UDMFLinedef, v1), 0 },
-   { "v2", { 0 }, UDMFTokenType_Number, offsetof(UDMFLinedef, v2), 0 },
-   { "blocking", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
+   { "id", UDMFTokenType_Number, offsetof(UDMFLinedef, id), 0 },
+   { "v1", UDMFTokenType_Number, offsetof(UDMFLinedef, v1), 0 },
+   { "v2", UDMFTokenType_Number, offsetof(UDMFLinedef, v2), 0 },
+   { "blocking", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
       UDMFLinedefFlag_Blocking },
-   { "blockmonsters", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
+   { "blockmonsters", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
       UDMFLinedefFlag_Blockmonsters },
-   { "twosided", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
+   { "twosided", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
       UDMFLinedefFlag_Twosided },
-   { "dontpegtop", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
+   { "dontpegtop", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
       UDMFLinedefFlag_Dontpegtop },
-   { "dontpegbottom", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
+   { "dontpegbottom", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
       UDMFLinedefFlag_Dontpegbottom },
-   { "secret", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
+   { "secret", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
       UDMFLinedefFlag_Secret },
-   { "blocksound", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
+   { "blocksound", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
       UDMFLinedefFlag_Blocksound },
-   { "dontdraw", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
+   { "dontdraw", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
       UDMFLinedefFlag_Dontdraw },
-   { "mapped", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
+   { "mapped", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
       UDMFLinedefFlag_Mapped },
-   { "passuse", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
+   { "passuse", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
       UDMFLinedefFlag_Passuse },
-   { "translucent", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
+   { "translucent", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
       UDMFLinedefFlag_Translucent },
-   { "jumpover", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
+   { "jumpover", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
       UDMFLinedefFlag_Jumpover },
-   { "blockfloaters", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
+   { "blockfloaters", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
       UDMFLinedefFlag_Blockfloaters },
-   { "playercross", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
+   { "playercross", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
       UDMFLinedefFlag_Playercross },
-   { "playeruse", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
+   { "playeruse", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
       UDMFLinedefFlag_Playeruse },
-   { "monstercross", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
+   { "monstercross", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
       UDMFLinedefFlag_Monstercross },
-   { "monsteruse", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
+   { "monsteruse", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
       UDMFLinedefFlag_Monsteruse },
-   { "impact", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
+   { "impact", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
       UDMFLinedefFlag_Impact },
-   { "playerpush", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
+   { "playerpush", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
       UDMFLinedefFlag_Playerpush },
-   { "monsterpush", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
+   { "monsterpush", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
       UDMFLinedefFlag_Monsterpush },
-   { "missilecross", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
+   { "missilecross", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
       UDMFLinedefFlag_Missilecross },
-   { "repeatspecial", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
+   { "repeatspecial", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
       UDMFLinedefFlag_Repeatspecial },
-   { "special", { 0 }, UDMFTokenType_Number, offsetof(UDMFLinedef, special), 0 },
-   { "arg0", { 0 }, UDMFTokenType_Number, offsetof(UDMFLinedef, arg0), 0 },
-   { "arg1", { 0 }, UDMFTokenType_Number, offsetof(UDMFLinedef, arg1), 0 },
-   { "arg2", { 0 }, UDMFTokenType_Number, offsetof(UDMFLinedef, arg2), 0 },
-   { "arg3", { 0 }, UDMFTokenType_Number, offsetof(UDMFLinedef, arg3), 0 },
-   { "arg4", { 0 }, UDMFTokenType_Number, offsetof(UDMFLinedef, arg4), 0 },
-   { "sidefront", { 0 }, UDMFTokenType_Number, offsetof(UDMFLinedef, sidefront), 0 },
-   { "sideback", { 0 }, UDMFTokenType_Number, offsetof(UDMFLinedef, sideback), 0 },
+   { "special", UDMFTokenType_Number, offsetof(UDMFLinedef, special), 0 },
+   { "arg0", UDMFTokenType_Number, offsetof(UDMFLinedef, arg0), 0 },
+   { "arg1", UDMFTokenType_Number, offsetof(UDMFLinedef, arg1), 0 },
+   { "arg2", UDMFTokenType_Number, offsetof(UDMFLinedef, arg2), 0 },
+   { "arg3", UDMFTokenType_Number, offsetof(UDMFLinedef, arg3), 0 },
+   { "arg4", UDMFTokenType_Number, offsetof(UDMFLinedef, arg4), 0 },
+   { "sidefront", UDMFTokenType_Number, offsetof(UDMFLinedef, sidefront), 0 },
+   { "sideback", UDMFTokenType_Number, offsetof(UDMFLinedef, sideback), 0 },
 };
 
 static EHashTable<UDMFBinding, ENCStringHashKey,
@@ -219,22 +225,22 @@ struct UDMFSidedef
 
 static UDMFBinding kSidedefBindings[] =
 {
-   { "texturetop", { 0 }, UDMFTokenType_String,
+   { "texturetop", UDMFTokenType_String,
       offsetof(UDMFSidedef, texturetop[0]), 8 },
 
-   { "texturebottom", { 0 }, UDMFTokenType_String,
+   { "texturebottom", UDMFTokenType_String,
       offsetof(UDMFSidedef, texturebottom[0]), 8 },
 
-   { "texturemiddle", { 0 }, UDMFTokenType_String,
+   { "texturemiddle", UDMFTokenType_String,
       offsetof(UDMFSidedef, texturemiddle[0]), 8 },
 
-   { "offsetx", { 0 }, UDMFTokenType_Number,
+   { "offsetx", UDMFTokenType_Number,
       offsetof(UDMFSidedef, offsetx), 0 },
 
-   { "offsety", { 0 }, UDMFTokenType_Number,
+   { "offsety", UDMFTokenType_Number,
       offsetof(UDMFSidedef, offsety), 0 },
 
-   { "sector", { 0 }, UDMFTokenType_Number,
+   { "sector", UDMFTokenType_Number,
       offsetof(UDMFSidedef, sector), 0 },
 };
 
@@ -254,8 +260,8 @@ struct UDMFVertex
 
 static UDMFBinding kVertexBindings[] =
 {
-   { "x", { 0 }, UDMFTokenType_Number, offsetof(UDMFVertex, x), 1 },
-   { "y", { 0 }, UDMFTokenType_Number, offsetof(UDMFVertex, y), 1 },
+   { "x", UDMFTokenType_Number, offsetof(UDMFVertex, x), 1 },
+   { "y", UDMFTokenType_Number, offsetof(UDMFVertex, y), 1 },
 };
 
 static EHashTable<UDMFBinding, ENCStringHashKey,
@@ -283,25 +289,25 @@ struct UDMFSector
 
 static UDMFBinding kSectorBindings[] =
 {
-   { "texturefloor", { 0 }, UDMFTokenType_String,
+   { "texturefloor", UDMFTokenType_String,
       offsetof(UDMFSector, texturefloor[0]), 8 },
 
-   { "textureceiling", { 0 }, UDMFTokenType_String,
+   { "textureceiling", UDMFTokenType_String,
       offsetof(UDMFSector, textureceiling[0]), 8 },
 
-   { "heightfloor", { 0 }, UDMFTokenType_Number,
+   { "heightfloor", UDMFTokenType_Number,
       offsetof(UDMFSector, heightfloor), 0 },
 
-   { "heightceiling", { 0 }, UDMFTokenType_Number,
+   { "heightceiling", UDMFTokenType_Number,
       offsetof(UDMFSector, heightceiling), 0 },
 
-   { "lightlevel", { 0 }, UDMFTokenType_Number,
+   { "lightlevel", UDMFTokenType_Number,
       offsetof(UDMFSector, lightlevel), 0 },
 
-   { "special", { 0 }, UDMFTokenType_Number,
+   { "special", UDMFTokenType_Number,
       offsetof(UDMFSector, special), 0 },
 
-   { "id", { 0 }, UDMFTokenType_Number,
+   { "id", UDMFTokenType_Number,
       offsetof(UDMFSector, id), 0 },
 };
 
@@ -351,54 +357,54 @@ enum UDMFThingFlag
 
 static UDMFBinding kThingBindings[] =
 {
-   { "id", { 0 }, UDMFTokenType_Number, offsetof(UDMFThing, id), 0 },
-   { "x", { 0 }, UDMFTokenType_Number, offsetof(UDMFThing, x), 1 },
-   { "y", { 0 }, UDMFTokenType_Number, offsetof(UDMFThing, y), 1 },
-   { "height", { 0 }, UDMFTokenType_Number, offsetof(UDMFThing, height), 1 },
-   { "angle", { 0 }, UDMFTokenType_Number, offsetof(UDMFThing, angle), 0 },
-   { "type", { 0 }, UDMFTokenType_Number, offsetof(UDMFThing, type), 0 },
-   { "skill1", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
+   { "id", UDMFTokenType_Number, offsetof(UDMFThing, id), 0 },
+   { "x", UDMFTokenType_Number, offsetof(UDMFThing, x), 1 },
+   { "y", UDMFTokenType_Number, offsetof(UDMFThing, y), 1 },
+   { "height", UDMFTokenType_Number, offsetof(UDMFThing, height), 1 },
+   { "angle", UDMFTokenType_Number, offsetof(UDMFThing, angle), 0 },
+   { "type", UDMFTokenType_Number, offsetof(UDMFThing, type), 0 },
+   { "skill1", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
       UDMFThingFlag_Skill1 },
-   { "skill2", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
+   { "skill2", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
       UDMFThingFlag_Skill2 },
-   { "skill3", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
+   { "skill3", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
       UDMFThingFlag_Skill3 },
-   { "skill4", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
+   { "skill4", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
       UDMFThingFlag_Skill4 },
-   { "skill5", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
+   { "skill5", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
       UDMFThingFlag_Skill5 },
-   { "ambush", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
+   { "ambush", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
       UDMFThingFlag_Ambush },
-   { "single", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
+   { "single", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
       UDMFThingFlag_Single },
-   { "dm", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
+   { "dm", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
       UDMFThingFlag_DM },
-   { "coop", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
+   { "coop", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
       UDMFThingFlag_Coop },
-   { "friend", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
+   { "friend", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
       UDMFThingFlag_Friend },
-   { "dormant", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
+   { "dormant", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
       UDMFThingFlag_Dormant },
-   { "class1", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
+   { "class1", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
       UDMFThingFlag_Class1 },
-   { "class2", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
+   { "class2", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
       UDMFThingFlag_Class2 },
-   { "class3", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
+   { "class3", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
       UDMFThingFlag_Class3 },
-   { "standing", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
+   { "standing", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
       UDMFThingFlag_Standing },
-   { "strifeally", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
+   { "strifeally", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
       UDMFThingFlag_Strifeally },
-   { "translucent", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
+   { "translucent", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
       UDMFThingFlag_Translucent },
-   { "invisible", { 0 }, UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
+   { "invisible", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
       UDMFThingFlag_Invisible },
-   { "special", { 0 }, UDMFTokenType_Number, offsetof(UDMFThing, special), 0 },
-   { "arg0", { 0 }, UDMFTokenType_Number, offsetof(UDMFThing, arg0), 0 },
-   { "arg1", { 0 }, UDMFTokenType_Number, offsetof(UDMFThing, arg1), 0 },
-   { "arg2", { 0 }, UDMFTokenType_Number, offsetof(UDMFThing, arg2), 0 },
-   { "arg3", { 0 }, UDMFTokenType_Number, offsetof(UDMFThing, arg3), 0 },
-   { "arg4", { 0 }, UDMFTokenType_Number, offsetof(UDMFThing, arg4), 0 },
+   { "special", UDMFTokenType_Number, offsetof(UDMFThing, special), 0 },
+   { "arg0", UDMFTokenType_Number, offsetof(UDMFThing, arg0), 0 },
+   { "arg1", UDMFTokenType_Number, offsetof(UDMFThing, arg1), 0 },
+   { "arg2", UDMFTokenType_Number, offsetof(UDMFThing, arg2), 0 },
+   { "arg3", UDMFTokenType_Number, offsetof(UDMFThing, arg3), 0 },
+   { "arg4", UDMFTokenType_Number, offsetof(UDMFThing, arg4), 0 },
 };
 
 static EHashTable<UDMFBinding, ENCStringHashKey,
@@ -857,28 +863,29 @@ void E_LoadUDMFThings()
 struct UDMFBlockBinding
 {
    const char *name;
-   DLListItem<UDMFBlockBinding> link;
 
    EHashTable<UDMFBinding, ENCStringHashKey,
    &UDMFBinding::name, &UDMFBinding::link> *fieldBindings;
    byte *(*createItem)();
+
+   DLListItem<UDMFBlockBinding> link;
 };
 
 static UDMFBlockBinding kBlockBindings[] =
 {
-   { "linedef", { 0 }, &gLinedefBindings, []() {
+   { "linedef", &gLinedefBindings, []() {
       return reinterpret_cast<byte *>(&gLinedefs.addNew().makeDefault());
    } },
-   { "sidedef", { 0 }, &gSidedefBindings, []() {
+   { "sidedef", &gSidedefBindings, []() {
       return reinterpret_cast<byte *>(&gSidedefs.addNew().makeDefault());
    } },
-   { "vertex", { 0 }, &gVertexBindings, []() {
+   { "vertex", &gVertexBindings, []() {
       return reinterpret_cast<byte *>(&gVertices.addNew().makeDefault());
    } },
-   { "sector", { 0 }, &gSectorBindings, []() {
+   { "sector", &gSectorBindings, []() {
       return reinterpret_cast<byte *>(&gSectors.addNew().makeDefault());
    } },
-   { "thing", { 0 }, &gThingBindings, []() {
+   { "thing", &gThingBindings, []() {
       return reinterpret_cast<byte *>(&gThings.addNew().makeDefault());
    } },
 };
