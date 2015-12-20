@@ -643,10 +643,10 @@ void E_LoadUDMFLineDefs()
       if(gUDMFNamespace == unsDoom || gUDMFNamespace == unsHeretic
          || gUDMFNamespace == unsStrife)
       {
-         int tag[2];
-         tag[0] = uld.id;
-         tag[1] = uld.arg0;
-         ld->tag = tag[1] ? tag[1] : tag[0]; // support at least one of them
+         // FIXME: this is obviously not complete. The classic specials need to
+         // be updated to use either args[0] or tag.
+         ld->tag = uld.id;
+         ld->args[0] = uld.arg0;
       }
       else if(gUDMFNamespace == unsEternity)
       {
