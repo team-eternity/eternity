@@ -213,7 +213,8 @@ enum
    GIF_HUDSTATBARNAME = 0x00004000, // HUD positions level name above status bar
    GIF_CENTERHUDMSG   = 0x00008000, // HUD messages are centered by default
    GIF_NODIEHI        = 0x00010000, // never plays PDIEHI sound
-   GIF_LOSTSOULBOUNCE = 0x00020000, // gamemode or mission normally fixes Lost Soul bouncing 
+   GIF_LOSTSOULBOUNCE = 0x00020000, // gamemode or mission normally fixes Lost Soul bouncing
+   GIF_IMPACTBLOOD    = 0x00040000, // blood is spawned when actors are impacted by projectiles
 };
 
 // Game mode handling - identify IWAD version
@@ -409,18 +410,21 @@ struct gamemodeinfo_t
    const char *pausePatch;        // name of patch to show when paused
 
    // Game interaction stuff
-   int numEpisodes;               // number of game episodes
-   exitrule_t *exitRules;         // exit rule set
-   const char *puffType;          // Name of default puff object
-   const char *teleFogType;       // Name of telefog object
-   fixed_t teleFogHeight;         // amount to add to telefog z coord
-   int teleSound;                 // sound id for teleportation
-   int16_t thrustFactor;          // damage thrust factor
-   int defaultGibHealth;          // default gibhealth behavior
-   const char *defPClassName;     // default playerclass name
-   const char *defTranslate;      // default translation for AUTOTRANSLATE
-   bspecrule_t *bossRules;        // default boss specials
-   int levelType;                 // level translation type
+   int numEpisodes;                // number of game episodes
+   exitrule_t *exitRules;          // exit rule set
+   const char *puffType;           // Name of default puff object
+   const char *teleFogType;        // Name of telefog object
+   fixed_t teleFogHeight;          // amount to add to telefog z coord
+   int teleSound;                  // sound id for teleportation
+   int16_t thrustFactor;           // damage thrust factor
+   int defaultGibHealth;           // default gibhealth behavior
+   const char *defPClassName;      // default playerclass name
+   const char *defTranslate;       // default translation for AUTOTRANSLATE
+   bspecrule_t *bossRules;         // default boss specials
+   int levelType;                  // level translation type
+   const char *bloodDefaultNormal; // thingtype of the blood shown when thing is hit by hitscan
+   const char *bloodDefaultRIP;    // thingtype of blood shown when thing is impcated by inflictor with "RIP" flag
+   const char *bloodDefaultCrush;  // thingtype of blood shown when thing is crushed
 
    // Intermission and Finale stuff
    const char *interPic;          // default intermission backdrop
