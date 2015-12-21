@@ -732,7 +732,8 @@ static bool P_CheckForZDoomUncompressedNodes(int lumpnum)
    bool result = false;
 
    // haleyjd: be sure something is actually there
-   if(!setupwad->lumpLength(lumpnum + ML_NODES))
+   // ioanch: actually check for 4 bytes so we can memcmp for "XNOD"
+   if(setupwad->lumpLength(lumpnum + ML_NODES) < 4)
       return result;
 
    // haleyjd: load at PU_CACHE and it may stick around for later.
