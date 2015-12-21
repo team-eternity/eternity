@@ -73,12 +73,25 @@ struct UDMFBinding
    // For identifiers (true/false), it's flag bit#
    int extra;
 
+   int checkIndex;   // index to mark in the checklist. 1-based!
+
    // hash list link: keep it last so it doesn't have to be mentioned
    DLListItem<UDMFBinding> link;
 };
 
+//
+// NOTE: each UDMF object STARTS with a checklist byte array of n elements,
+// where n is the number of required fields
+//
+
 struct UDMFLinedef
 {
+   enum
+   {
+      BASE, V1, V2, Sidefront, NUM
+   };
+
+   byte checklist[NUM - 1];
    int id;
    int v1;
    int v2;
@@ -94,6 +107,7 @@ struct UDMFLinedef
 
    UDMFLinedef &makeDefault()
    {
+      memset(checklist, 0, sizeof(checklist));
       id = gUDMFNamespace == unsDoom || gUDMFNamespace == unsHeretic
          || gUDMFNamespace == unsStrife ? 0 : -1;
       v1 = -1;
@@ -140,8 +154,8 @@ enum UDMFLinedefFlag
 static UDMFBinding kLinedefBindings[] =
 {
    { "id", UDMFTokenType_Number, offsetof(UDMFLinedef, id), 0 },
-   { "v1", UDMFTokenType_Number, offsetof(UDMFLinedef, v1), 0 },
-   { "v2", UDMFTokenType_Number, offsetof(UDMFLinedef, v2), 0 },
+   { "v1", UDMFTokenType_Number, offsetof(UDMFLinedef, v1), 0, UDMFLinedef::V1 },
+   { "v2", UDMFTokenType_Number, offsetof(UDMFLinedef, v2), 0, UDMFLinedef::V2 },
    { "blocking", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
       UDMFLinedefFlag_Blocking },
    { "blockmonsters", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
@@ -192,7 +206,7 @@ static UDMFBinding kLinedefBindings[] =
    { "arg2", UDMFTokenType_Number, offsetof(UDMFLinedef, arg2), 0 },
    { "arg3", UDMFTokenType_Number, offsetof(UDMFLinedef, arg3), 0 },
    { "arg4", UDMFTokenType_Number, offsetof(UDMFLinedef, arg4), 0 },
-   { "sidefront", UDMFTokenType_Number, offsetof(UDMFLinedef, sidefront), 0 },
+   { "sidefront", UDMFTokenType_Number, offsetof(UDMFLinedef, sidefront), 0, UDMFLinedef::Sidefront },
    { "sideback", UDMFTokenType_Number, offsetof(UDMFLinedef, sideback), 0 },
 };
 
@@ -201,6 +215,11 @@ static EHashTable<UDMFBinding, ENCStringHashKey,
 
 struct UDMFSidedef
 {
+   enum
+   {
+      BASE, Sector, NUM
+   };
+   byte checklist[NUM - 1];
    char texturetop[9];
    char texturebottom[9];
    char texturemiddle[9];
@@ -210,6 +229,7 @@ struct UDMFSidedef
 
    UDMFSidedef &makeDefault()
    {
+      memset(checklist, 0, sizeof(checklist));
       texturetop[0] = '-';
       texturetop[1] = texturetop[8] = 0;
       texturebottom[0] = '-';
@@ -241,7 +261,7 @@ static UDMFBinding kSidedefBindings[] =
       offsetof(UDMFSidedef, offsety), 0 },
 
    { "sector", UDMFTokenType_Number,
-      offsetof(UDMFSidedef, sector), 0 },
+      offsetof(UDMFSidedef, sector), 0, UDMFSidedef::Sector },
 };
 
 static EHashTable<UDMFBinding, ENCStringHashKey,
@@ -249,10 +269,17 @@ static EHashTable<UDMFBinding, ENCStringHashKey,
 
 struct UDMFVertex
 {
+   enum
+   {
+      BASE, X, Y, NUM
+   };
+
+   byte checklist[NUM - 1];
    double x, y;
 
    UDMFVertex &makeDefault()
    {
+      memset(checklist, 0, sizeof(checklist));
       x = y = 0;
       return *this;
    }
@@ -260,8 +287,8 @@ struct UDMFVertex
 
 static UDMFBinding kVertexBindings[] =
 {
-   { "x", UDMFTokenType_Number, offsetof(UDMFVertex, x), 1 },
-   { "y", UDMFTokenType_Number, offsetof(UDMFVertex, y), 1 },
+   { "x", UDMFTokenType_Number, offsetof(UDMFVertex, x), 1, UDMFVertex::X },
+   { "y", UDMFTokenType_Number, offsetof(UDMFVertex, y), 1, UDMFVertex::Y },
 };
 
 static EHashTable<UDMFBinding, ENCStringHashKey,
@@ -269,6 +296,12 @@ static EHashTable<UDMFBinding, ENCStringHashKey,
 
 struct UDMFSector
 {
+   enum
+   {
+      BASE, Texturefloor, Textureceiling, NUM,
+   };
+
+   byte checklist[NUM - 1];
    char texturefloor[9], textureceiling[9];
    int heightfloor, heightceiling;
    int lightlevel;
@@ -276,8 +309,8 @@ struct UDMFSector
 
    UDMFSector &makeDefault()
    {
-      texturefloor[0] = textureceiling[0] = '-';
-      texturefloor[1] = textureceiling[1] = 0;
+      memset(checklist, 0, sizeof(checklist));
+      texturefloor[0] = textureceiling[0] = 0;
       texturefloor[8] = textureceiling[8] = 0;
       heightfloor = heightceiling = 0;
       lightlevel = 160;
@@ -290,10 +323,10 @@ struct UDMFSector
 static UDMFBinding kSectorBindings[] =
 {
    { "texturefloor", UDMFTokenType_String,
-      offsetof(UDMFSector, texturefloor[0]), 8 },
+      offsetof(UDMFSector, texturefloor[0]), 8, UDMFSector::Texturefloor },
 
    { "textureceiling", UDMFTokenType_String,
-      offsetof(UDMFSector, textureceiling[0]), 8 },
+      offsetof(UDMFSector, textureceiling[0]), 8, UDMFSector::Textureceiling },
 
    { "heightfloor", UDMFTokenType_Number,
       offsetof(UDMFSector, heightfloor), 0 },
@@ -316,6 +349,12 @@ static EHashTable<UDMFBinding, ENCStringHashKey,
 
 struct UDMFThing
 {
+   enum
+   {
+      BASE, X, Y, Type, NUM
+   };
+
+   byte checklist[NUM - 1];
    double x, y, height;
    uint32_t flags;
    int id;
@@ -326,6 +365,7 @@ struct UDMFThing
 
    UDMFThing &makeDefault()
    {
+      memset(checklist, 0, sizeof(checklist));
       x = y = height = 0;
       flags = 0;
       id = angle = type = special = arg0 = arg1 = arg2 = arg3 = arg4 = 0;
@@ -358,11 +398,11 @@ enum UDMFThingFlag
 static UDMFBinding kThingBindings[] =
 {
    { "id", UDMFTokenType_Number, offsetof(UDMFThing, id), 0 },
-   { "x", UDMFTokenType_Number, offsetof(UDMFThing, x), 1 },
-   { "y", UDMFTokenType_Number, offsetof(UDMFThing, y), 1 },
+   { "x", UDMFTokenType_Number, offsetof(UDMFThing, x), 1, UDMFThing::X },
+   { "y", UDMFTokenType_Number, offsetof(UDMFThing, y), 1, UDMFThing::Y },
    { "height", UDMFTokenType_Number, offsetof(UDMFThing, height), 1 },
    { "angle", UDMFTokenType_Number, offsetof(UDMFThing, angle), 0 },
-   { "type", UDMFTokenType_Number, offsetof(UDMFThing, type), 0 },
+   { "type", UDMFTokenType_Number, offsetof(UDMFThing, type), 0, UDMFThing::Type },
    { "skill1", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
       UDMFThingFlag_Skill1 },
    { "skill2", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
@@ -869,6 +909,9 @@ struct UDMFBlockBinding
 
    EHashTable<UDMFBinding, ENCStringHashKey,
    &UDMFBinding::name, &UDMFBinding::link> *fieldBindings;
+   size_t checklistSize;
+   
+   // returns the size of the struct and passes the size of the checklist
    byte *(*createItem)();
 
    DLListItem<UDMFBlockBinding> link;
@@ -876,19 +919,19 @@ struct UDMFBlockBinding
 
 static UDMFBlockBinding kBlockBindings[] =
 {
-   { "linedef", &gLinedefBindings, []() {
+   { "linedef", &gLinedefBindings, sizeof(((UDMFLinedef*)0)->checklist), []() {
       return reinterpret_cast<byte *>(&gLinedefs.addNew().makeDefault());
    } },
-   { "sidedef", &gSidedefBindings, []() {
+   { "sidedef", &gSidedefBindings, sizeof(((UDMFSidedef*)0)->checklist), []() {
       return reinterpret_cast<byte *>(&gSidedefs.addNew().makeDefault());
    } },
-   { "vertex", &gVertexBindings, []() {
+   { "vertex", &gVertexBindings, sizeof(((UDMFVertex*)0)->checklist), []() {
       return reinterpret_cast<byte *>(&gVertices.addNew().makeDefault());
    } },
-   { "sector", &gSectorBindings, []() {
+   { "sector", &gSectorBindings, sizeof(((UDMFSector*)0)->checklist), []() {
       return reinterpret_cast<byte *>(&gSectors.addNew().makeDefault());
    } },
-   { "thing", &gThingBindings, []() {
+   { "thing", &gThingBindings, sizeof(((UDMFThing*)0)->checklist), []() {
       return reinterpret_cast<byte *>(&gThings.addNew().makeDefault());
    } },
 };
@@ -1097,6 +1140,7 @@ void UDMFParser::handleNewBlock()
    const UDMFBlockBinding *binding = gBlockBindings.objectForKey(mGlobalKey);
    if(binding)
    {
+      mCurrentChecklistSize = binding->checklistSize;
       mCurrentNewItem = binding->createItem();
       mCurrentBinding = binding->fieldBindings;
    }
@@ -1119,6 +1163,10 @@ void UDMFParser::handleLocalAssignment() const
    const UDMFBinding *binding = bindings->objectForKey(mLocalKey);
    if(binding && binding->type == mLocalValue.type)
    {
+      // For required field: checklist must be at the start of the structure
+      if(binding->checkIndex)
+         *(mCurrentNewItem + binding->checkIndex - 1) = 1;  // check it
+
       switch(mLocalValue.type)
       {
       case UDMFTokenType_Identifier: // true or false
@@ -1151,6 +1199,45 @@ void UDMFParser::handleLocalAssignment() const
    }
 
    
+}
+
+//
+// UDMFParser::checkLastBlock
+//
+// Checks the last block if the checklist was complete
+//
+void UDMFParser::checkLastBlock() const
+{
+   if(!mCurrentNewItem || !mCurrentChecklistSize)
+      return;
+
+   // FIXME: I have to const_cast this because tableIterator has no const 
+   // variant
+   auto bindings = static_cast<EHashTable<UDMFBinding, ENCStringHashKey, 
+      &UDMFBinding::name, &UDMFBinding::link> *>(const_cast<void *>(
+      mCurrentBinding));
+
+   const char *fieldName = "(unknown)";   // shouldn't reach with this value!
+   static char msgBuffer[81];
+   for(size_t i = 0; i < mCurrentChecklistSize; ++i)
+   {
+      if(!*(mCurrentNewItem + i))
+      {
+         // Found a missing check
+         for(const UDMFBinding *binding = bindings->tableIterator(
+            static_cast<const UDMFBinding *>(nullptr)); binding; 
+            binding = bindings->tableIterator(binding))
+         {
+            if(i + 1 == binding->checkIndex)
+            {
+               fieldName = binding->name;
+               break;
+            }
+         }
+         psnprintf(msgBuffer, sizeof(msgBuffer), "Missing required field '%s'", fieldName);
+         mTokenizer.raise(msgBuffer);
+      }
+   }
 }
 
 //
@@ -1292,7 +1379,11 @@ void UDMFParser::start(WadDirectory &setupwad, int lump)
                expect = Expect_LocalEqual;
             }
             else if(token.type == UDMFTokenType_Operator && *token.data == '}')
+            {
+               // Check if all required fields have been assigned
+               checkLastBlock();
                expect = Expect_GlobalIdentifier;
+            }
             else
                mTokenizer.raise("Expected identifier or '}'");
             break;

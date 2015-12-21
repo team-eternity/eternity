@@ -174,6 +174,7 @@ private:
    void handleGlobalAssignment() const;
    void handleNewBlock();
    void handleLocalAssignment() const;
+   void checkLastBlock() const;
 
    Tokenizer mTokenizer;
 
@@ -184,6 +185,7 @@ private:
    Token mLocalValue;
 
    byte *mCurrentNewItem;
+   size_t mCurrentChecklistSize;
    const void *mCurrentBinding;
 };
 
