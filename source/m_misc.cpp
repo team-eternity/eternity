@@ -973,6 +973,16 @@ static void M_ApplyGameModeDefaults(defaultfile_t *df)
 // Strings
 //
 
+/* strnlen not available on all platforms.. maybe autoconf it? */
+size_t M_Strnlen(const char *s, size_t count)
+{
+   const char *p = s;
+   while (*p && count-- > 0)
+      p++;
+
+   return p - s;
+}
+
 // Write help for a string option
 static bool M_writeDefaultHelpString(default_t *dp, FILE *f)
 {

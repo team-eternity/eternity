@@ -49,7 +49,9 @@ int   M_CountNumLines(const char *str);
 
 // Misc file routines
 // haleyjd: moved a number of these here from w_wad module.
+// MaxW: 20151221: M_Strnlen moved from psnprntf.cpp, originally called pstrnlen.
 
+size_t M_Strnlen(const char *s, size_t count); 
 void  M_GetFilePath(const char *fn, char *base, size_t len); // haleyjd
 long  M_FileLength(FILE *f);
 void  M_ExtractFileBase(const char *, char *);               // killough
