@@ -473,12 +473,15 @@ static bool E_assignNamespace(const char *value)
 //
 class UDMFException
 {
-public:
+private:
    const char *message;
    int line;
+   int column;
 
-   UDMFException(const char *inMessage, int inLine) 
-      : message(inMessage), line(inLine)
+public:
+
+   UDMFException(const char *inMessage, int inLine, int inColumn) 
+      : message(inMessage), line(inLine), column(inColumn)
    {
    }
 
@@ -493,8 +496,8 @@ public:
 //
 void UDMFException::setLevelError() const
 {
-   psnprintf(gLevelErrorBuffer, earrlen(gLevelErrorBuffer), "%s at line %d", 
-         message, line);
+   psnprintf(gLevelErrorBuffer, earrlen(gLevelErrorBuffer), "%s at line %d:%d",
+         message, line, column);
 
    // Activate the error by setting this pointer
    level_error = gLevelErrorBuffer;
@@ -933,7 +936,7 @@ bool UDMFParser::Tokenizer::readToken(Token &token)
       while(mData < mEnd && ectype::isSpace(*mData))
       {
          if(*mData == '\n')
-            ++mLine;
+            nextLine();
          ++mData;
       }
       if(mData + 1 < mEnd && *mData == '/' && *(mData + 1) == '/')
@@ -943,7 +946,7 @@ bool UDMFParser::Tokenizer::readToken(Token &token)
             ++mData;
          if(mData < mEnd && *mData == '\n')
          {
-            ++mLine;
+            nextLine();
             ++mData;
          }
       }
@@ -954,7 +957,7 @@ bool UDMFParser::Tokenizer::readToken(Token &token)
             || *(mData + 1) != '/'))
          {
             if(*mData == '\n')
-               ++mLine;
+               nextLine();
             ++mData;
          }
          if(mData + 1 < mEnd && *mData == '*' && *(mData + 1) == '/')
@@ -986,7 +989,7 @@ bool UDMFParser::Tokenizer::readToken(Token &token)
             while(mData < mEnd && (*mData != '"' || *(mData - 1) == '\\'))
             {
                if(*mData == '\n')
-                  ++mLine;
+                  nextLine();
                if(displace)
                   *(mData - displace) = *mData;
                if(*mData == '\\' && *(mData - 1) != '\\')
@@ -1062,7 +1065,9 @@ bool UDMFParser::Tokenizer::readToken(Token &token)
 //
 void UDMFParser::Tokenizer::raise(const char *message) const
 {
-   throw UDMFException(message, mLine);
+   // FIXME: integer coordinates in file, a sub 2 GB TEXTMAP is assumed
+   throw UDMFException(message, mLine, 
+      static_cast<int>(mData - mLineStart + 1));
 }
 
 //

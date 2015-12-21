@@ -124,13 +124,14 @@ private:
    class Tokenizer : public ZoneObject
    {
    public:
-      Tokenizer() : mData(nullptr), mEnd(nullptr), mLine(1)
+      Tokenizer() : mData(nullptr), mEnd(nullptr), mLineStart(nullptr), 
+         mLine(1)
       {
       }
 
-      Tokenizer(char *data, size_t size) : mData(data), mEnd(data + size), 
-         mLine(1)
+      Tokenizer(char *data, size_t size)
       {
+         setData(data, size);
       }
 
       //
@@ -142,7 +143,21 @@ private:
       {
          mData = data;
          mEnd = data + size;
+         mLineStart = data;
          mLine = 1;
+      }
+
+      //
+      // nextLine
+      //
+      // Call this whenever the cursor encounters a newline. It will increment
+      // the line number and set the line start to the character after the
+      // newline.
+      //
+      void nextLine()
+      {
+         ++mLine;
+         mLineStart = mData + 1;
       }
 
       bool readToken(Token &token);
@@ -150,9 +165,10 @@ private:
       void raise(const char *message) const;
 
    private:
-      char *mData;
-      const char *mEnd;
-      int mLine;
+      char *mData;            // pointer to cursor in document
+      const char *mEnd;       // end of document
+      const char *mLineStart; // pointer to start of current line
+      int mLine;              // line number (1-based)
    };
 
    void handleGlobalAssignment() const;
