@@ -842,7 +842,8 @@ static void P_LoadZSegs(byte *data)
 // P_LoadZNodes
 //
 // Loads ZDoom uncompressed nodes.
-// ioanch: 20151221: fixed some memory leaks
+// ioanch: 20151221: fixed some memory leaks. Also moved the bounds checks 
+// before attempting to allocate memory, so the app won't terminate.
 //
 static void P_LoadZNodes(int lump)
 {
@@ -870,17 +871,19 @@ static void P_LoadZNodes(int lump)
    CheckZNodesOverflow(len, sizeof(newVerts));
    newVerts = GetBinaryUDWord(&data);
 
+   // ioanch: moved before the potential allocation
+   CheckZNodesOverflow(len, newVerts * 2 * sizeof(int32_t));
    if(orgVerts + newVerts == (unsigned int)numvertexes)
    {
       newvertarray = vertexes;
    }
    else
    {
+      // ioanch: use tag (here and elsewhere)
       newvertarray = estructalloctag(vertex_t, orgVerts + newVerts, PU_LEVEL);
       memcpy(newvertarray, vertexes, orgVerts * sizeof(vertex_t));
    }
-
-   CheckZNodesOverflow(len, newVerts * 2 * sizeof(int32_t));
+   
    for(i = 0; i < newVerts; i++)
    {
       int vindex = i + orgVerts;
@@ -917,9 +920,10 @@ static void P_LoadZNodes(int lump)
       Z_Free(lumpptr);
       return;
    }
-   subsectors = estructalloctag(subsector_t, numsubsectors, PU_LEVEL);
 
    CheckZNodesOverflow(len, numSubs * sizeof(uint32_t));
+   subsectors = estructalloctag(subsector_t, numsubsectors, PU_LEVEL);
+
    for(i = currSeg = 0; i < numSubs; i++)
    {
       subsectors[i].firstline = (int)currSeg;
@@ -941,9 +945,10 @@ static void P_LoadZNodes(int lump)
    }
 
    numsegs = (int)numSegs;
-   segs = estructalloctag(seg_t, numsegs, PU_LEVEL);
 
    CheckZNodesOverflow(len, numsegs * 11);
+   segs = estructalloctag(seg_t, numsegs, PU_LEVEL);
+
    P_LoadZSegs(data);
    data += numsegs * 11; // haleyjd: hardcoded original structure size
 
@@ -952,10 +957,10 @@ static void P_LoadZNodes(int lump)
    numNodes = GetBinaryUDWord(&data);
 
    numnodes = numNodes;
+   CheckZNodesOverflow(len, numNodes * 32);
    nodes  = estructalloctag(node_t,  numNodes, PU_LEVEL);
    fnodes = estructalloctag(fnode_t, numNodes, PU_LEVEL);
 
-   CheckZNodesOverflow(len, numNodes * 32);
    for (i = 0; i < numNodes; i++)
    {
       int j, k;
