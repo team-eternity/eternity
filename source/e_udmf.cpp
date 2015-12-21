@@ -1123,6 +1123,9 @@ void UDMFParser::handleGlobalAssignment() const
 {
    if(!strcasecmp(mGlobalKey, "namespace"))
    {
+      if(gUDMFNamespace != unsINVALID)
+         return;  // ignore any repeated namespace attempts
+
       if(mGlobalValue.type != UDMFTokenType_String)
          mTokenizer.raise("Namespace value must be a string");
       E_assignNamespace(mGlobalValue.data);
@@ -1140,6 +1143,17 @@ void UDMFParser::handleNewBlock()
    const UDMFBlockBinding *binding = gBlockBindings.objectForKey(mGlobalKey);
    if(binding)
    {
+      // Found a valid binding: require namespace!
+
+      // TODO: instead of assuming the namespace is required, try to
+      // limit bindings per namespace!!
+
+      if(gUDMFNamespace == unsINVALID)
+      {
+         mTokenizer.raise(
+            "Cannot read map; namespace was not defined or is unknown");
+      }
+
       mCurrentChecklistSize = binding->checklistSize;
       mCurrentNewItem = binding->createItem();
       mCurrentBinding = binding->fieldBindings;
@@ -1234,7 +1248,8 @@ void UDMFParser::checkLastBlock() const
                break;
             }
          }
-         psnprintf(msgBuffer, sizeof(msgBuffer), "Missing required field '%s'", fieldName);
+         psnprintf(msgBuffer, sizeof(msgBuffer), "Missing required field '%s'", 
+            fieldName);
          mTokenizer.raise(msgBuffer);
       }
    }
@@ -1276,6 +1291,7 @@ void UDMFParser::start(WadDirectory &setupwad, int lump)
    gVertices.makeEmpty();
    gSectors.makeEmpty();
    gThings.makeEmpty();
+   gUDMFNamespace = unsINVALID;  // also reset namespace
 
    Token token, globalField, localField;
    int sign = 1;

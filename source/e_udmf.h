@@ -37,6 +37,7 @@ class WadDirectory;
 //
 enum UDMFNamespace
 {
+   unsINVALID,
    unsDoom,
    unsHeretic,
    unsHexen,
