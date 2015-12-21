@@ -1005,6 +1005,8 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
 //
 // Loads ZDoom uncompressed nodes.
 // IOANCH 20151217: check signature and use different gl nodes if needed
+// ioanch: 20151221: fixed some memory leaks. Also moved the bounds checks 
+// before attempting to allocate memory, so the app won't terminate.
 //
 static void P_LoadZNodes(int lump, ZNodeType signature)
 {
@@ -1032,17 +1034,19 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
    CheckZNodesOverflow(len, sizeof(newVerts));
    newVerts = GetBinaryUDWord(&data);
 
+   // ioanch: moved before the potential allocation
+   CheckZNodesOverflow(len, newVerts * 2 * sizeof(int32_t));
    if(orgVerts + newVerts == (unsigned int)numvertexes)
    {
       newvertarray = vertexes;
    }
    else
    {
-      newvertarray = ecalloc(vertex_t *, orgVerts + newVerts, sizeof(vertex_t));
+      // ioanch: use tag (here and elsewhere)
+      newvertarray = estructalloctag(vertex_t, orgVerts + newVerts, PU_LEVEL);
       memcpy(newvertarray, vertexes, orgVerts * sizeof(vertex_t));
    }
-
-   CheckZNodesOverflow(len, newVerts * 2 * sizeof(int32_t));
+   
    for(i = 0; i < newVerts; i++)
    {
       int vindex = i + orgVerts;
@@ -1079,9 +1083,10 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
       Z_Free(lumpptr);
       return;
    }
-   subsectors = ecalloc(subsector_t *, numsubsectors, sizeof(subsector_t));
 
    CheckZNodesOverflow(len, numSubs * sizeof(uint32_t));
+   subsectors = estructalloctag(subsector_t, numsubsectors, PU_LEVEL);
+
    for(i = currSeg = 0; i < numSubs; i++)
    {
       subsectors[i].firstline = (int)currSeg;
@@ -1103,7 +1108,6 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
    }
 
    numsegs = (int)numSegs;
-   segs = ecalloc(seg_t *, numsegs, sizeof(seg_t));
 
    // IOANCH 20151217: set reading size
    int totalSegSize;
@@ -1113,6 +1117,7 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
       totalSegSize = numsegs * 13; // IOANCH: DWORD linedef
    
    CheckZNodesOverflow(len, totalSegSize);
+   segs = estructalloctag(seg_t, numsegs, PU_LEVEL);
    P_LoadZSegs(data, signature);
    
    data += totalSegSize;
@@ -1122,10 +1127,10 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
    numNodes = GetBinaryUDWord(&data);
 
    numnodes = numNodes;
+   CheckZNodesOverflow(len, numNodes * 32);
    nodes  = estructalloctag(node_t,  numNodes, PU_LEVEL);
    fnodes = estructalloctag(fnode_t, numNodes, PU_LEVEL);
 
-   CheckZNodesOverflow(len, numNodes * 32);
    for (i = 0; i < numNodes; i++)
    {
       int j, k;
