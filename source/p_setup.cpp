@@ -842,6 +842,7 @@ static void P_LoadZSegs(byte *data)
 // P_LoadZNodes
 //
 // Loads ZDoom uncompressed nodes.
+// ioanch: 20151221: fixed some memory leaks
 //
 static void P_LoadZNodes(int lump)
 {
@@ -875,7 +876,7 @@ static void P_LoadZNodes(int lump)
    }
    else
    {
-      newvertarray = ecalloc(vertex_t *, orgVerts + newVerts, sizeof(vertex_t));
+      newvertarray = estructalloctag(vertex_t, orgVerts + newVerts, PU_LEVEL);
       memcpy(newvertarray, vertexes, orgVerts * sizeof(vertex_t));
    }
 
@@ -916,7 +917,7 @@ static void P_LoadZNodes(int lump)
       Z_Free(lumpptr);
       return;
    }
-   subsectors = ecalloc(subsector_t *, numsubsectors, sizeof(subsector_t));
+   subsectors = estructalloctag(subsector_t, numsubsectors, PU_LEVEL);
 
    CheckZNodesOverflow(len, numSubs * sizeof(uint32_t));
    for(i = currSeg = 0; i < numSubs; i++)
@@ -940,7 +941,7 @@ static void P_LoadZNodes(int lump)
    }
 
    numsegs = (int)numSegs;
-   segs = ecalloc(seg_t *, numsegs, sizeof(seg_t));
+   segs = estructalloctag(seg_t, numsegs, PU_LEVEL);
 
    CheckZNodesOverflow(len, numsegs * 11);
    P_LoadZSegs(data);
