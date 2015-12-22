@@ -28,6 +28,7 @@
 #include "z_zone.h"
 #include "m_ctype.h"
 #include "i_system.h"
+#include "m_misc.h"
 
 
 //
@@ -172,7 +173,7 @@ const char *M_StrCaseStr(const char *haystack, const char *needle)
             // See if needle + comparison_count now reaches the end of the needle
             if(needle_last_ccount)
             {
-               needle_last_ccount += pstrnlen(needle_last_ccount, 
+               needle_last_ccount += M_Strnlen(needle_last_ccount,
                                               comparison_count - last_ccount);
                if(!*needle_last_ccount)
                   needle_last_ccount = NULL;
