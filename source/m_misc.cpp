@@ -973,6 +973,7 @@ static void M_ApplyGameModeDefaults(defaultfile_t *df)
 // Strings
 //
 
+// TODO: Put this function in a more appropriate place.
 /* strnlen not available on all platforms.. maybe autoconf it? */
 size_t M_Strnlen(const char *s, size_t count)
 {
