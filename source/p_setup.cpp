@@ -772,13 +772,14 @@ static ZNodeType P_CheckForZDoomUncompressedNodes(int nodelumpnum,
    bool glNodesFallback = false;
 
    // haleyjd: be sure something is actually there
-   if(!setupwad->lumpLength(nodelumpnum))
+   // ioanch: actually check for 4 bytes so we can memcmp for "XNOD"
+   if(setupwad->lumpLength(nodelumpnum) < 4)
    {
       if(LevelInfo.mapFormat != LEVEL_FORMAT_UDMF)
       {
          *actualNodeLump = nodelumpnum - ML_NODES + ML_SSECTORS;
          glNodesFallback = true;
-         if(!setupwad->lumpLength(*actualNodeLump))
+         if(setupwad->lumpLength(*actualNodeLump) < 4)
             return ZNodeType_Invalid;
       }
       else
