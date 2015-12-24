@@ -1566,7 +1566,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
          }
          else
          {
-            auto link = P_GetLinkOffset(inflictor->groupid, target->groupid);
+            auto link = P_GetLinkOffset(target->groupid, inflictor->groupid);
             ang = P_PointToAngle(inflictor->x, inflictor->y, 
                                   target->x + link->x, target->y + link->y);
          }
