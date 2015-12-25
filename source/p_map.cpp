@@ -2171,8 +2171,9 @@ static bool PIT_RadiusAttack(Mobj *thing)
       return true;
    }
 
-   dx   = D_abs(thing->x - bombspot->x);
-   dy   = D_abs(thing->y - bombspot->y);
+   // ioanch 20151225: portal-aware behaviour
+   dx   = D_abs(getThingX(bombspot, thing) - bombspot->x);
+   dy   = D_abs(getThingY(bombspot, thing) - bombspot->y);
    dist = dx > dy ? dx : dy;
    dist = (dist - thing->radius) >> FRACBITS;
 
@@ -2185,7 +2186,7 @@ static bool PIT_RadiusAttack(Mobj *thing)
    // haleyjd: optional z check for Hexen-style explosions
    if(theBomb->bombflags & RAF_CLIPHEIGHT)
    {
-      if((D_abs(thing->z - bombspot->z) / FRACUNIT) > 2 * bombdistance)
+      if((D_abs(getThingZ(bombspot, thing) - bombspot->z) / FRACUNIT) > 2 * bombdistance)
          return true;
    }
 
