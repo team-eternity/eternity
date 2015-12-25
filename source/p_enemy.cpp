@@ -202,9 +202,19 @@ bool P_CheckMeleeRange(Mobj *actor)
          return false;
    }
 
+   // ioanch 20151225: make it linked-portal aware
+   fixed_t tx, ty;
+#ifdef R_LINKEDPORTALS
+   tx = getThingX(actor, pl);
+   ty = getThingY(actor, pl);
+#else
+   tx = pl->x;
+   ty = pl->y;
+#endif
+
    return  // killough 7/18/98: friendly monsters don't attack other friends
       pl && !(actor->flags & pl->flags & MF_FRIEND) &&
-      (P_AproxDistance(pl->x-actor->x, pl->y-actor->y) <
+      (P_AproxDistance(tx - actor->x, ty - actor->y) <
        MELEERANGE - 20*FRACUNIT + pl->info->radius) &&
       P_CheckSight(actor, actor->target);
 }
