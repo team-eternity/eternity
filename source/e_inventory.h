@@ -142,7 +142,6 @@ size_t E_GetNumAmmoTypes();
 // enum for E_GiveAllAmmo behavior
 enum giveallammo_e
 {
-   GAA_BACKPACKAMOUNT, // give backpack amount
    GAA_MAXAMOUNT,      // give max amount
    GAA_CUSTOM          // use amount argument
 };
