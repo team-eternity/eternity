@@ -2118,6 +2118,7 @@ typedef struct bombdata_s
    int   bombmod;      // haleyjd 07/13/03
    
    unsigned int bombflags; // haleyjd 12/22/12
+   int   groupid;      // ioanch 20151226: the group this bomb should affect
 } bombdata_t;
 
 #define MAXBOMBS 128               // a static limit to prevent stack faults.
@@ -2132,6 +2133,13 @@ static bombdata_t *theBomb;        // it's the bomb, man. (the current explosion
 //
 static bool PIT_RadiusAttack(Mobj *thing)
 {
+   // ioanch 20151226: reject if it's not the right group, unless R_NOGROUP.
+   if(theBomb->groupid != R_NOGROUP && thing->groupid != R_NOGROUP 
+      && theBomb->groupid != thing->groupid)
+   {
+      return true;
+   }
+
    fixed_t dx, dy, dist;
    Mobj *bombspot     = theBomb->bombspot;
    Mobj *bombsource   = theBomb->bombsource;
@@ -2207,20 +2215,26 @@ static bool PIT_RadiusAttack(Mobj *thing)
 }
 
 //
-// P_RadiusAttack
+// P_radiusAttackForGroupID
 //
-// Source is the creature that caused the explosion at spot.
-//   haleyjd 07/13/03: added method of death flag
-//   haleyjd 09/23/09: adjustments for reentrancy and recursion limit
+// ioanch 20151226: Radius attack is now distributed to each portal group in
+// the map, picking up the map block clusters from each group at the same
+// translated coordinates. This function handles one of the groups.
 //
-void P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int distance, 
-                    int mod, unsigned int flags)
+static void P_radiusAttackForGroupID(Mobj *spot, Mobj *source, int damage,
+                                     int distance, int mod, unsigned flags,
+                                     int groupid)
 {
    fixed_t dist = (distance + MAXRADIUS) << FRACBITS;
-   int yh = (spot->y + dist - bmaporgy) >> MAPBLOCKSHIFT;
-   int yl = (spot->y - dist - bmaporgy) >> MAPBLOCKSHIFT;
-   int xh = (spot->x + dist - bmaporgx) >> MAPBLOCKSHIFT;
-   int xl = (spot->x - dist - bmaporgx) >> MAPBLOCKSHIFT;
+
+   // ioanch: Get the link offset (or zerolink if no portals are used)
+   const linkoffset_t *link = groupid != R_NOGROUP ? 
+      P_GetLinkOffset(spot->groupid, groupid) : &zerolink;
+
+   int yh = (spot->y + link->y + dist - bmaporgy) >> MAPBLOCKSHIFT;
+   int yl = (spot->y + link->y - dist - bmaporgy) >> MAPBLOCKSHIFT;
+   int xh = (spot->x + link->x + dist - bmaporgx) >> MAPBLOCKSHIFT;
+   int xl = (spot->x + link->x - dist - bmaporgx) >> MAPBLOCKSHIFT;
    int x, y;
 
    if(demo_version >= 335)
@@ -2245,6 +2259,11 @@ void P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int distance,
    theBomb->bombdistance = distance;
    theBomb->bombmod      = mod;
    theBomb->bombflags    = flags;
+
+   // ioanch: portal aware, avoid blockmap duplication by distributing blocks
+   // only for each group ID. Only victims with the same groupid (if >= 0) will
+   // be hit.
+   theBomb->groupid      = groupid;
    
    for(y = yl; y <= yh; ++y)
       for(x = xl; x <= xh; ++x)
@@ -2252,6 +2271,36 @@ void P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int distance,
 
    if(demo_version >= 335 && bombindex > 0)
       theBomb = &bombs[--bombindex];
+}
+
+//
+// P_RadiusAttack
+//
+// Source is the creature that caused the explosion at spot.
+//   haleyjd 07/13/03: added method of death flag
+//   haleyjd 09/23/09: adjustments for reentrancy and recursion limit
+//
+void P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int distance, 
+                    int mod, unsigned int flags)
+{
+   // ioanch 20151226: portal-aware. Iterate through all groups and scan
+   // blockmaps, only picking objects belonging to those groups
+
+   // OPTIMIZE: do not go through all groups if there is no portal close to the
+   // current position
+   int numPortalGroups = P_PortalGroupCount();
+   if(numPortalGroups <= 0)
+   {
+      // map has no portals
+      P_radiusAttackForGroupID(spot, source, damage, distance, mod, flags, 
+         R_NOGROUP);
+      return;
+   }
+
+   for(int i = 0; i < numPortalGroups; ++i)
+   {
+      P_radiusAttackForGroupID(spot, source, damage, distance, mod, flags, i);
+   }
 }
 
 //
