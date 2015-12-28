@@ -113,14 +113,17 @@ public:
    // pointer to invocation parameters
    const camsightparams_t *params;
 
-   CamSight(const camsightparams_t &sp)
+   // ioanch 20151229: line portal sight fix
+   fixed_t originfrac;
+
+   CamSight(const camsightparams_t &sp, fixed_t inbasefrac = 0)
       : cx(sp.cx), cy(sp.cy), tx(sp.tx), ty(sp.ty), 
         opentop(0), openbottom(0), openrange(0),
         intercepts(),
         fromid(sp.cgroupid), toid(sp.tgroupid), 
         hitpblock(false), addedportal(false), 
         portalresult(false), portalexit(false),
-        params(&sp)
+        params(&sp), originfrac(inbasefrac)
    {
       memset(&trace, 0, sizeof(trace));
     
@@ -232,6 +235,7 @@ void CAM_LineOpening(CamSight &cam, line_t *linedef)
 //
 // CAM_SightTraverse
 //
+static bool CAM_CheckSight(const camsightparams_t &params, fixed_t originfrac);
 static bool CAM_SightTraverse(CamSight &cam, intercept_t *in)
 {
    line_t  *li;
@@ -247,16 +251,23 @@ static bool CAM_SightTraverse(CamSight &cam, intercept_t *in)
    if(cam.openrange <= 0) // quick test for totally closed doors
       return false; // stop
 
+   // ioanch 20151229: line portal fix
+   // total initial length = 1
+   // we have (originfrac + infrac * (1 - originfrac))
+   // this is fixedfrac, and is the fraction from the master cam origin
+   fixed_t fixedfrac = cam.originfrac ? cam.originfrac 
+      + FixedMul(in->frac, FRACUNIT - cam.originfrac) : in->frac;
+
    if(li->frontsector->floorheight != li->backsector->floorheight)
    {
-      slope = FixedDiv(cam.openbottom - cam.sightzstart, in->frac);
+      slope = FixedDiv(cam.openbottom - cam.sightzstart, fixedfrac);
       if(slope > cam.bottomslope)
          cam.bottomslope = slope;
    }
 	
    if(li->frontsector->ceilingheight != li->backsector->ceilingheight)
    {
-      slope = FixedDiv(cam.opentop - cam.sightzstart, in->frac);
+      slope = FixedDiv(cam.opentop - cam.sightzstart, fixedfrac);
       if(slope < cam.topslope)
          cam.topslope = slope;
    }
@@ -282,7 +293,7 @@ static bool CAM_SightTraverse(CamSight &cam, intercept_t *in)
          prev = prev->prev;
       }
 
-      linkoffset_t *link = P_GetLinkIfExists(cam.fromid, cam.toid);
+      linkoffset_t *link = P_GetLinkIfExists(cam.fromid, newfromid);
 
       params.cx           = cam.params->cx + FixedMul(cam.trace.dx, in->frac);
       params.cy           = cam.params->cy + FixedMul(cam.trace.dy, in->frac);
@@ -302,7 +313,7 @@ static bool CAM_SightTraverse(CamSight &cam, intercept_t *in)
          params.cy += link->y;
       }
 
-      cam.portalresult = CAM_CheckSight(params);
+      cam.portalresult = CAM_CheckSight(params, fixedfrac);
       cam.portalexit   = true;
       return false;    // break out      
    }
@@ -671,7 +682,9 @@ static bool CAM_SightPathTraverse(CamSight &cam)
 // Returns true if a straight line between the camera location and a
 // thing's coordinates is unobstructed.
 //
-bool CAM_CheckSight(const camsightparams_t &params)
+// ioanch 20151229: line portal sight fix
+//
+static bool CAM_CheckSight(const camsightparams_t &params, fixed_t originfrac)
 {
    sector_t *csec, *tsec;
    int s1, s2, pnum;
@@ -712,7 +725,7 @@ bool CAM_CheckSight(const camsightparams_t &params)
       //
       // check precisely
       //
-      CamSight newCam(params);
+      CamSight newCam(params, originfrac);
 
       // if there is a valid portal link, adjust the target's coordinates now
       // so that we trace in the proper direction given the current link
@@ -736,6 +749,10 @@ bool CAM_CheckSight(const camsightparams_t &params)
    }
 
    return result;
+}
+bool CAM_CheckSight(const camsightparams_t &params)
+{
+   return CAM_CheckSight(params, 0);
 }
 
 // EOF
