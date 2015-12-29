@@ -87,7 +87,7 @@ struct intercept_t
 typedef bool (*traverser_t)(intercept_t *in);
 
 fixed_t P_AproxDistance(fixed_t dx, fixed_t dy);
-int     P_PointOnLineSide(fixed_t x, fixed_t y, line_t *line);
+int     P_PointOnLineSide(fixed_t x, fixed_t y, const line_t *line);
 int     P_PointOnDivlineSide(fixed_t x, fixed_t y, divline_t *line);
 void    P_MakeDivline(line_t *li, divline_t *dl);
 fixed_t P_InterceptVector(divline_t *v2, divline_t *v1);

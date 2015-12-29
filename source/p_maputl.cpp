@@ -59,8 +59,9 @@ fixed_t P_AproxDistance(fixed_t dx, fixed_t dy)
 // Returns 0 or 1
 //
 // killough 5/3/98: reformatted, cleaned up
+// ioanch 20151228: made line const
 //
-int P_PointOnLineSide(fixed_t x, fixed_t y, line_t *line)
+int P_PointOnLineSide(fixed_t x, fixed_t y, const line_t *line)
 {
    return
       !line->dx ? x <= line->v1->x ? line->dy > 0 : line->dy < 0 :

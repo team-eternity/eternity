@@ -116,7 +116,10 @@ public:
    // ioanch 20151229: line portal sight fix
    fixed_t originfrac;
 
-   CamSight(const camsightparams_t &sp, fixed_t inbasefrac = 0)
+   // ioanch 20151229: added optional bottom and top slope preset
+   // in case of portal continuation
+   CamSight(const camsightparams_t &sp, fixed_t inbasefrac = 0,
+      fixed_t inbottomslope = D_MAXINT, fixed_t intopslope = D_MAXINT)
       : cx(sp.cx), cy(sp.cy), tx(sp.tx), ty(sp.ty), 
         opentop(0), openbottom(0), openrange(0),
         intercepts(),
@@ -128,8 +131,14 @@ public:
       memset(&trace, 0, sizeof(trace));
     
       sightzstart = params->cz + params->cheight - (params->cheight >> 2);
-      bottomslope = params->tz - sightzstart;
-      topslope    = bottomslope + params->theight;
+      if(inbottomslope == D_MAXINT)
+         bottomslope = params->tz - sightzstart;
+      else
+         bottomslope = inbottomslope;
+      if(intopslope == D_MAXINT)
+         topslope    = bottomslope + params->theight;
+      else
+         topslope = intopslope;
 
       validlines = ecalloc(byte *, 1, ((numlines + 7) & ~7) / 8);
       validpolys = ecalloc(byte *, 1, ((numPolyObjects + 7) & ~7) / 8);
@@ -200,7 +209,7 @@ void camsightparams_t::setTargetMobj(const Mobj *mo)
 // Sets opentop and openbottom to the window
 // through a two sided line.
 //
-void CAM_LineOpening(CamSight &cam, line_t *linedef)
+void CAM_LineOpening(CamSight &cam, const line_t *linedef)
 {
    sector_t *front, *back;
    fixed_t frontceilz, frontfloorz, backceilz, backfloorz;
@@ -235,10 +244,11 @@ void CAM_LineOpening(CamSight &cam, line_t *linedef)
 //
 // CAM_SightTraverse
 //
-static bool CAM_CheckSight(const camsightparams_t &params, fixed_t originfrac);
+static bool CAM_CheckSight(const camsightparams_t &params, fixed_t originfrac,
+                           fixed_t bottomslope, fixed_t topslope);
 static bool CAM_SightTraverse(CamSight &cam, intercept_t *in)
 {
-   line_t  *li;
+   const line_t *li; // ioanch 20151229: made const
    fixed_t slope;
 	
    li = in->d.line;
@@ -313,7 +323,7 @@ static bool CAM_SightTraverse(CamSight &cam, intercept_t *in)
          params.cy += link->y;
       }
 
-      cam.portalresult = CAM_CheckSight(params, fixedfrac);
+      cam.portalresult = CAM_CheckSight(params, fixedfrac, cam.bottomslope, cam.topslope);
       cam.portalexit   = true;
       return false;    // break out      
    }
@@ -683,8 +693,10 @@ static bool CAM_SightPathTraverse(CamSight &cam)
 // thing's coordinates is unobstructed.
 //
 // ioanch 20151229: line portal sight fix
+// Also added bottomslope and topslope pre-setting
 //
-static bool CAM_CheckSight(const camsightparams_t &params, fixed_t originfrac)
+static bool CAM_CheckSight(const camsightparams_t &params, fixed_t originfrac,
+                           fixed_t bottomslope, fixed_t topslope)
 {
    sector_t *csec, *tsec;
    int s1, s2, pnum;
@@ -725,7 +737,7 @@ static bool CAM_CheckSight(const camsightparams_t &params, fixed_t originfrac)
       //
       // check precisely
       //
-      CamSight newCam(params, originfrac);
+      CamSight newCam(params, originfrac, bottomslope, topslope);
 
       // if there is a valid portal link, adjust the target's coordinates now
       // so that we trace in the proper direction given the current link
@@ -752,7 +764,7 @@ static bool CAM_CheckSight(const camsightparams_t &params, fixed_t originfrac)
 }
 bool CAM_CheckSight(const camsightparams_t &params)
 {
-   return CAM_CheckSight(params, 0);
+   return CAM_CheckSight(params, 0, D_MAXINT, D_MAXINT);
 }
 
 // EOF
