@@ -209,7 +209,7 @@ void camsightparams_t::setTargetMobj(const Mobj *mo)
 // Sets opentop and openbottom to the window
 // through a two sided line.
 //
-void CAM_LineOpening(CamSight &cam, const line_t *linedef)
+static void CAM_LineOpening(CamSight &cam, const line_t *linedef)
 {
    sector_t *front, *back;
    fixed_t frontceilz, frontfloorz, backceilz, backfloorz;

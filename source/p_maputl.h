@@ -90,7 +90,7 @@ fixed_t P_AproxDistance(fixed_t dx, fixed_t dy);
 int     P_PointOnLineSide(fixed_t x, fixed_t y, const line_t *line);
 int     P_PointOnDivlineSide(fixed_t x, fixed_t y, divline_t *line);
 void    P_MakeDivline(line_t *li, divline_t *dl);
-fixed_t P_InterceptVector(divline_t *v2, divline_t *v1);
+fixed_t P_InterceptVector(const divline_t *v2, const divline_t *v1);
 int     P_BoxOnLineSide(fixed_t *tmbox, line_t *ld);
 
 //SoM 9/2/02: added mo parameter for 3dside clipping

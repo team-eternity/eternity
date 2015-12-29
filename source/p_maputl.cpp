@@ -137,8 +137,9 @@ void P_MakeDivline(line_t *li, divline_t *dl)
 // and addlines traversers.
 //
 // killough 5/3/98: reformatted, cleaned up
+// ioanch 20151229: added const
 //
-fixed_t P_InterceptVector(divline_t *v2, divline_t *v1)
+fixed_t P_InterceptVector(const divline_t *v2, const divline_t *v1)
 {
    fixed_t den = FixedMul(v1->dy>>8, v2->dx) - FixedMul(v1->dx>>8, v2->dy);
    return den ? FixedDiv((FixedMul((v1->x-v2->x)>>8, v1->dy) +
