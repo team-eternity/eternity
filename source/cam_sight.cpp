@@ -61,6 +61,7 @@
 #include "z_zone.h"
 
 #include "cam_sight.h"
+#include "d_player.h"   // ioanch 20151230: for autoaim
 #include "e_exdata.h"
 #include "m_collection.h"
 #include "m_fixed.h"
@@ -73,6 +74,12 @@
 #include "r_portal.h"
 #include "r_state.h"
 
+// ioanch 20151230: defined macros for the validcount sets here
+#define VALID_ALLOC(set, n) ((set) = ecalloc(byte *, 1, (((n) + 7) & ~7) / 8))
+#define VALID_FREE(set) efree(set)
+#define VALID_ISSET(set, i) ((set)[(i) >> 3] & (1 << ((i) & 7)))
+#define VALID_SET(set, i) ((set)[(i) >> 3] |= 1 << ((i) & 7))
+
 //=============================================================================
 //
 // Structures
@@ -81,6 +88,8 @@
 class CamSight
 {
 public:
+   bool isAim; // ioanch: whether it's an aim cam (true) or checksight (false)
+   
    fixed_t cx;          // camera coordinates
    fixed_t cy;
    fixed_t tx;          // target coordinates
@@ -88,6 +97,12 @@ public:
    fixed_t sightzstart; // eye z of looker
    fixed_t topslope;    // slope to top of target
    fixed_t bottomslope; // slope to bottom of target
+
+   fixed_t attackrange; // ioanch 20151230: only used for aim
+   fixed_t aimslope; // ioanch 20151230: resulting aiming slope
+   Mobj *linetarget;    // ioanch 20151230: found mobj
+   const Mobj *source;  // ioanch 20151230: needed because of thing iterator
+   uint32_t aimflagsmask;  // ioanch 20151230: to prevent friends
 
    divline_t trace;     // for line crossing tests
 
@@ -111,7 +126,11 @@ public:
    bool portalexit;    // if true, returned from portal
 
    // pointer to invocation parameters
-   const camsightparams_t *params;
+   union
+   {
+      const camsightparams_t *params;
+      const camaimparams_t *aimparams; // ioanch 20151230;
+   };
 
    // ioanch 20151229: line portal sight fix
    fixed_t originfrac;
@@ -120,7 +139,10 @@ public:
    // in case of portal continuation
    CamSight(const camsightparams_t &sp, fixed_t inbasefrac = 0,
       fixed_t inbottomslope = D_MAXINT, fixed_t intopslope = D_MAXINT)
-      : cx(sp.cx), cy(sp.cy), tx(sp.tx), ty(sp.ty), 
+      : isAim(false),
+        cx(sp.cx), cy(sp.cy), tx(sp.tx), ty(sp.ty), 
+        attackrange(0), aimslope(0), linetarget(nullptr), source(nullptr),
+        aimflagsmask(0),
         opentop(0), openbottom(0), openrange(0),
         intercepts(),
         fromid(sp.cgroupid), toid(sp.tgroupid), 
@@ -140,14 +162,54 @@ public:
       else
          topslope = intopslope;
 
-      validlines = ecalloc(byte *, 1, ((numlines + 7) & ~7) / 8);
-      validpolys = ecalloc(byte *, 1, ((numPolyObjects + 7) & ~7) / 8);
+      // ioanch 20151230: use the macros
+      VALID_ALLOC(validlines, ::numlines);
+      VALID_ALLOC(validpolys, ::numPolyObjects);
+   }
+
+   // ioanch 20151230: autoaim support
+   CamSight(const camaimparams_t &sp) : isAim(true), cx(sp.cx), cy(sp.cy),
+      attackrange(sp.distance), aimslope(0), linetarget(nullptr), 
+      source(sp.source), aimflagsmask(sp.mask),
+      opentop(0), openbottom(0), openrange(0),
+      intercepts(), fromid(sp.cgroupid), toid(R_NOGROUP),
+      hitpblock(false), addedportal(false), 
+      portalresult(false), portalexit(false),
+      aimparams(&sp), originfrac(0)
+   {
+      memset(&trace, 0, sizeof(trace));
+
+      tx = cx + (sp.distance >> FRACBITS) 
+         * finecosine[sp.angle >> ANGLETOFINESHIFT];
+      ty = cy + (sp.distance >> FRACBITS)
+         * finesine[sp.angle >> ANGLETOFINESHIFT];
+      sightzstart = sp.cz + (sp.cheight >> 1) + 8 * FRACUNIT;
+
+      if(!sp.pitch)
+      {
+         topslope = 100*FRACUNIT/160;
+         bottomslope = -100*FRACUNIT/160;
+      }
+      else
+      {
+         fixed_t topangle, bottomangle, lookslope;
+         lookslope   = finetangent[(ANG90 - sp.pitch) >> ANGLETOFINESHIFT];
+
+         topangle    = sp.pitch - ANGLE_1*32;
+         bottomangle = sp.pitch + ANGLE_1*32;
+
+         topslope    = finetangent[(ANG90 -    topangle) >> ANGLETOFINESHIFT];
+         bottomslope = finetangent[(ANG90 - bottomangle) >> ANGLETOFINESHIFT];
+      }
+
+      VALID_ALLOC(validlines, ::numlines);
+      VALID_ALLOC(validpolys, ::numPolyObjects);
    }
 
    ~CamSight()
    {
-      efree(validlines);
-      efree(validpolys);
+      VALID_FREE(validlines);
+      VALID_FREE(validpolys);
    }
 };
 
@@ -196,6 +258,24 @@ void camsightparams_t::setTargetMobj(const Mobj *mo)
    tz       = mo->z;
    theight  = mo->height;
    tgroupid = mo->groupid;
+}
+
+//
+// camaimparams_t::set
+//
+// ioanch 20151230: Sets the data for the autoaim part
+//
+void camaimparams_t::set(const Mobj *mo, angle_t inAngle, fixed_t inDistance,
+                         uint32_t inMask)
+{
+   source = mo;
+   cx = mo->x; cy = mo->y; cz = mo->z;
+   cheight = mo->height;
+   cgroupid = mo->groupid;
+   angle = inAngle;
+   pitch = mo->player ? mo->player->pitch : 0;
+   distance = inDistance;
+   mask = inMask;
 }
 
 //=============================================================================
@@ -489,6 +569,74 @@ static bool CAM_SightTraverse(CamSight &cam, intercept_t *in)
    return true; // keep going
 }
 
+//
+// CAM_aimTraverse
+//
+// ioanch 20151230: autoaim support
+//
+static bool CAM_aimTraverse(CamSight &cam, intercept_t *in)
+{
+   fixed_t dist, slope;
+   if(in->isaline)
+   {
+      const line_t *li = in->d.line;
+
+      if(!(li->flags & ML_TWOSIDED) || li->extflags & EX_ML_BLOCKALL)
+         return false;
+
+      CAM_LineOpening(cam, li);
+      if(cam.openbottom >= cam.opentop)
+         return false;
+
+      dist = FixedMul(cam.attackrange, in->frac);
+      if(li->frontsector->floorheight != li->backsector->floorheight)
+      {
+         slope = FixedDiv(cam.openbottom - cam.sightzstart, dist);
+         if(slope > cam.bottomslope)
+            cam.bottomslope = slope;
+      }
+
+      if(li->frontsector->ceilingheight != li->backsector->ceilingheight)
+      {
+         slope = FixedDiv(cam.opentop - cam.sightzstart, dist);
+         if(slope < cam.topslope)
+            cam.topslope = slope;
+      }
+
+      if(cam.topslope <= cam.bottomslope)
+         return false;
+
+      return true;
+   }
+   else
+   {
+      Mobj *th = in->d.thing;
+      fixed_t thingtopslope, thingbottomslope;
+      // tests already passed when populating the intercepts array
+      dist = FixedMul(cam.attackrange, in->frac);
+      thingtopslope = FixedDiv(th->z + th->height - cam.sightzstart, dist);
+
+      if(thingtopslope < cam.bottomslope)
+         return true; // shot over the thing
+
+      thingbottomslope = FixedDiv(th->z - cam.sightzstart, dist);
+      if(thingbottomslope > cam.topslope)
+         return true; // shot under the thing
+
+      // this thing can be hit!
+      if(thingtopslope > cam.topslope)
+         thingtopslope = cam.topslope;
+
+      if(thingbottomslope < cam.bottomslope)
+         thingbottomslope = cam.bottomslope;
+
+      cam.aimslope = (thingtopslope + thingbottomslope) / 2;
+      cam.linetarget = th;
+
+      return false;
+   }
+}
+
 static bool CAM_SightCheckLine(CamSight &cam, int linenum)
 {
    line_t *ld = &lines[linenum];
@@ -510,7 +658,8 @@ static bool CAM_SightCheckLine(CamSight &cam, int linenum)
       return true; // line isn't crossed
 
    // Early outs are only possible if we haven't crossed a portal block
-   if(!cam.hitpblock) 
+   // ioanch 20151230: aim cams never quit
+   if(!cam.isAim && !cam.hitpblock) 
    {
       // try to early out the check
       if(!ld->backsector)
@@ -522,7 +671,9 @@ static bool CAM_SightCheckLine(CamSight &cam, int linenum)
    }
 
    // store the line for later intersection testing
-   cam.intercepts.addNew().d.line = ld;
+   intercept_t &inter = cam.intercepts.addNew();
+   inter.isaline = true;
+   inter.d.line = ld;
 
    // if this is a passable portal line, remember we just added it
    // ioanch 20151229: also check sectors
@@ -534,6 +685,69 @@ static bool CAM_SightCheckLine(CamSight &cam, int linenum)
       cam.addedportal = true;
    }
 
+   return true;
+}
+
+//
+// CAM_SightBlockThingsIterator
+//
+// ioanch 20151230: for things
+//
+static bool CAM_SightBlockThingsIterator(CamSight &cam, int x, int y)
+{
+   Mobj *thing = blocklinks[y * bmapwidth + x];
+   for(; thing; thing = thing->bnext)
+   {
+      // reject them here
+      if(!(thing->flags & MF_SHOOTABLE) || thing == cam.source)
+         continue;
+      // reject friends (except players) also here
+      if(thing->flags & cam.source->flags & cam.aimflagsmask && !thing->player)
+         continue;
+
+      fixed_t   x1, y1;
+      fixed_t   x2, y2;
+      int       s1, s2;
+      divline_t dl;
+      fixed_t   frac;
+
+      // check a corner to corner crossection for hit
+      if((trace.dl.dx ^ trace.dl.dy) > 0)
+      {
+         x1 = thing->x - thing->radius;
+         y1 = thing->y + thing->radius;
+         x2 = thing->x + thing->radius;
+         y2 = thing->y - thing->radius;
+      }
+      else
+      {
+         x1 = thing->x - thing->radius;
+         y1 = thing->y - thing->radius;
+         x2 = thing->x + thing->radius;
+         y2 = thing->y + thing->radius;
+      }
+
+      s1 = P_PointOnDivlineSide(x1, y1, &cam.trace);
+      s2 = P_PointOnDivlineSide(x2, y2, &cam.trace);
+
+      if(s1 == s2)
+         continue;
+
+      dl.x  = x1;
+      dl.y  = y1;
+      dl.dx = x2 - x1;
+      dl.dy = y2 - y1;
+
+      frac = P_InterceptVector(&cam.trace, &dl);
+
+      if(frac < 0)
+         continue;                // behind source
+
+      intercept_t &inter = cam.intercepts.addNew();
+      inter.frac = frac;
+      inter.isaline = false;
+      inter.d.thing = thing;
+   }
    return true;
 }
 
@@ -634,6 +848,8 @@ static bool CAM_SightTraverseIntercepts(CamSight &cam)
    //
    for(scan = cam.intercepts.begin(); scan < end; scan++)
    {
+      if(!scan->isaline)
+         continue;   // ioanch 20151230: only lines need this treatment
       P_MakeDivline(scan->d.line, &dl);
       scan->frac = P_InterceptVector(&cam.trace, &dl);
    }
@@ -642,6 +858,9 @@ static bool CAM_SightTraverseIntercepts(CamSight &cam)
    // go through in order
    //	
    in = NULL; // shut up compiler warning
+
+   // ioanch 20151230: support autoaim variant
+   auto func = cam.isAim ? CAM_aimTraverse : CAM_SightTraverse;
 	
    while(count--)
    {
@@ -658,7 +877,7 @@ static bool CAM_SightTraverseIntercepts(CamSight &cam)
 
       if(in)
       {
-         if(!CAM_SightTraverse(cam, in))
+         if(!func(cam, in))
             return false; // don't bother going farther
 
          in->frac = D_MAXINT;
@@ -777,7 +996,10 @@ static bool CAM_SightPathTraverse(CamSight &cam)
    for(int count = 0; count < 100; count++)
    {
       if(!CAM_SightBlockLinesIterator(cam, mapx, mapy))
-         return false;	// early out
+         return false;	// early out (ioanch: not for aim)
+      if(cam.isAim && !CAM_SightBlockThingsIterator(cam, mapx, mapy))
+         return false;  // ioanch 20151230: aim also looks for a thing
+
 		
       if((mapxstep | mapystep) == 0)
          break;
@@ -818,6 +1040,13 @@ static bool CAM_SightPathTraverse(CamSight &cam)
          // also need to be checked.
          if(!CAM_SightBlockLinesIterator(cam, mapx + mapxstep, mapy) ||
             !CAM_SightBlockLinesIterator(cam, mapx, mapy + mapystep))
+         {
+            return false;
+         }
+         // ioanch 20151230: autoaim support
+         if(cam.isAim 
+            && (!CAM_SightBlockThingsIterator(cam, mapx + mapxstep, mapy)
+            || !CAM_SightBlockThingsIterator(cam, mapx, mapy + mapystep)))
          {
             return false;
          }
@@ -952,6 +1181,32 @@ static bool CAM_CheckSight(const camsightparams_t &params, fixed_t originfrac,
 bool CAM_CheckSight(const camsightparams_t &params)
 {
    return CAM_CheckSight(params, 0, D_MAXINT, D_MAXINT);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ioanch 20151230: reentrant aim attack
+
+//
+// CAM_AimLineAttack
+//
+// Reentrant version of P_AimLineAttack. For now the behaviour is as close as
+// possible.
+// killough 8/2/98: add mask parameter, which, if set to MF_FRIEND,
+// makes autoaiming skip past friends.
+//
+fixed_t CAM_AimLineAttack(const camaimparams_t &params, Mobj **outTarget)
+{
+   fixed_t lookslope = params.pitch == 0 ? 
+      0 : finetangent[(ANG90 - params.pitch) >> ANGLETOFINESHIFT];
+
+   CamSight newCam(params);
+
+   CAM_SightPathTraverse(newCam);
+
+   if(outTarget)
+      *outTarget = newCam.linetarget;
+
+   return newCam.linetarget ? newCam.aimslope : lookslope;
 }
 
 // EOF

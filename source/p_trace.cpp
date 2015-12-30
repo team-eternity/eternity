@@ -26,6 +26,7 @@
 
 #include "z_zone.h"
 
+#include "cam_sight.h"
 #include "d_gi.h"
 #include "doomstat.h"
 #include "e_exdata.h"
@@ -142,6 +143,15 @@ static bool PTR_AimTraverse(intercept_t *in)
 //
 fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, int mask)
 {
+   // ioanch 20151231: use new portal code
+   if(full_demo_version >= make_full_version(340, 46))
+   {
+      camaimparams_t aimparams;
+      aimparams.prev = nullptr;
+      aimparams.set(t1, angle, distance, mask);
+      return CAM_AimLineAttack(aimparams, &clip.linetarget);
+   }
+
    fixed_t x2, y2;
    fixed_t lookslope = 0;
    fixed_t pitch = 0;
