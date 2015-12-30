@@ -1393,22 +1393,26 @@ void A_BouncingBFG(actionargs_t *actionargs)
       newmo = P_SpawnMobj(mo->x, mo->y, mo->z, E_SafeThingType(MT_BFG));
       S_StartSound(newmo, newmo->info->seesound);
       P_SetTarget<Mobj>(&newmo->target, mo->target); // pass on the player
-      an2 = P_PointToAngle(newmo->x, newmo->y, clip.linetarget->x, clip.linetarget->y);
+
+      // ioanch 20151230: make portal aware
+      fixed_t ltx = getThingX(newmo, clip.linetarget);
+      fixed_t lty = getThingY(newmo, clip.linetarget);
+      fixed_t ltz = getThingZ(newmo, clip.linetarget);
+
+      an2 = P_PointToAngle(newmo->x, newmo->y, ltx, lty);
       newmo->angle = an2;
       
       an2 >>= ANGLETOFINESHIFT;
       newmo->momx = FixedMul(newmo->info->speed, finecosine[an2]);
       newmo->momy = FixedMul(newmo->info->speed, finesine[an2]);
 
-      dist = P_AproxDistance(clip.linetarget->x - newmo->x, 
-                             clip.linetarget->y - newmo->y);
+      dist = P_AproxDistance(ltx - newmo->x, lty - newmo->y);
       dist = dist / newmo->info->speed;
       
       if(dist < 1)
          dist = 1;
       
-      newmo->momz = 
-         (clip.linetarget->z + (clip.linetarget->height>>1) - newmo->z) / dist;
+      newmo->momz = (ltz + (clip.linetarget->height>>1) - newmo->z) / dist;
 
       newmo->extradata.bfgcount = mo->extradata.bfgcount - 1; // count down
       P_SetTarget<Mobj>(&newmo->tracer, clip.linetarget); // haleyjd: track target

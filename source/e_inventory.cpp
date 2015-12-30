@@ -429,9 +429,8 @@ void E_GiveAllAmmo(player_t *player, giveallammo_e op, int amount)
 
       switch(op)
       {
-      case GAA_BACKPACKAMOUNT:
-         giveamount = ammoType->getInt(keyBackpackAmount, 0);
-         break;
+         // ioanch 20151225: removed GAA_BACKPACKAMOUNT because backpack really 
+         // does more than populate the inventory.
       case GAA_MAXAMOUNT:
          giveamount = E_GetMaxAmountForArtifact(player, ammoType);
          break;

@@ -113,20 +113,32 @@ public:
    // pointer to invocation parameters
    const camsightparams_t *params;
 
-   CamSight(const camsightparams_t &sp)
+   // ioanch 20151229: line portal sight fix
+   fixed_t originfrac;
+
+   // ioanch 20151229: added optional bottom and top slope preset
+   // in case of portal continuation
+   CamSight(const camsightparams_t &sp, fixed_t inbasefrac = 0,
+      fixed_t inbottomslope = D_MAXINT, fixed_t intopslope = D_MAXINT)
       : cx(sp.cx), cy(sp.cy), tx(sp.tx), ty(sp.ty), 
         opentop(0), openbottom(0), openrange(0),
         intercepts(),
         fromid(sp.cgroupid), toid(sp.tgroupid), 
         hitpblock(false), addedportal(false), 
         portalresult(false), portalexit(false),
-        params(&sp)
+        params(&sp), originfrac(inbasefrac)
    {
       memset(&trace, 0, sizeof(trace));
     
       sightzstart = params->cz + params->cheight - (params->cheight >> 2);
-      bottomslope = params->tz - sightzstart;
-      topslope    = bottomslope + params->theight;
+      if(inbottomslope == D_MAXINT)
+         bottomslope = params->tz - sightzstart;
+      else
+         bottomslope = inbottomslope;
+      if(intopslope == D_MAXINT)
+         topslope    = bottomslope + params->theight;
+      else
+         topslope = intopslope;
 
       validlines = ecalloc(byte *, 1, ((numlines + 7) & ~7) / 8);
       validpolys = ecalloc(byte *, 1, ((numPolyObjects + 7) & ~7) / 8);
@@ -197,7 +209,7 @@ void camsightparams_t::setTargetMobj(const Mobj *mo)
 // Sets opentop and openbottom to the window
 // through a two sided line.
 //
-void CAM_LineOpening(CamSight &cam, line_t *linedef)
+static void CAM_LineOpening(CamSight &cam, const line_t *linedef)
 {
    sector_t *front, *back;
    fixed_t frontceilz, frontfloorz, backceilz, backfloorz;
@@ -230,11 +242,153 @@ void CAM_LineOpening(CamSight &cam, line_t *linedef)
 }
 
 //
+// CAM_doPortalSight
+//
+// ioanch 20151229: common function to spawn a new camera beyond portal
+//
+static bool CAM_CheckSight(const camsightparams_t &params, fixed_t originfrac,
+                           fixed_t bottomslope, fixed_t topslope);
+static bool CAM_doPortalSight(const CamSight &cam, int newfromid, 
+                               fixed_t x, fixed_t y, fixed_t bottomslope, 
+                               fixed_t topslope, fixed_t fixedfrac)
+{
+   camsightparams_t params;
+
+   const camsightparams_t *prev = cam.params->prev;
+   while(prev)
+   {
+      // we are trying to walk backward?
+      if(prev->cgroupid == newfromid)
+         return false; // ignore this plane
+      prev = prev->prev;
+   }
+
+   const linkoffset_t *link = P_GetLinkIfExists(cam.fromid, newfromid);
+   // Copy all except x and y
+   params.cx           = x;
+   params.cy           = y;
+   params.cz           = cam.params->cz;
+   params.cheight      = cam.params->cheight;
+   params.tx           = cam.params->tx;
+   params.ty           = cam.params->ty;
+   params.tz           = cam.params->tz;
+   params.theight      = cam.params->theight;
+   params.cgroupid     = newfromid;
+   params.tgroupid     = cam.toid;
+   params.prev         = cam.params;
+
+   if(link)
+   {
+      params.cx += link->x;
+      params.cy += link->y;
+   }
+
+   return CAM_CheckSight(params, fixedfrac, bottomslope, topslope);
+}
+
+//
+// CAM_checkPortalSector
+//
+// ioanch 20151229: check sector if it has portals and create cameras for them
+// Returns true if any branching sight check beyond a portal returned true
+//
+static bool CAM_checkPortalSector(const CamSight &cam, const sector_t *sector, 
+                                  fixed_t fixedfrac, fixed_t partialfrac)
+{
+   fixed_t linehitz, fixedratio;
+   int newfromid;
+
+   fixed_t x, y, newslope;
+
+   if(cam.topslope > 0 && sector->c_portal && sector->c_pflags & PS_PASSABLE
+      && (newfromid = sector->c_portal->data.link.toid) != cam.fromid)
+   {
+      // ceiling portal (slope must be up)
+      linehitz = cam.sightzstart + FixedMul(cam.topslope, fixedfrac);
+      if(linehitz > sector->ceilingheight)
+      {
+         // update cam.bottomslope to be the top of the sector wall
+         newslope = FixedDiv(sector->ceilingheight - cam.sightzstart, 
+            fixedfrac);
+         // if fixedfrac == 0, then it will just be a very big slope
+         if(newslope < cam.bottomslope)
+            newslope = cam.bottomslope;
+
+         // get x and y of position
+         if(linehitz == cam.sightzstart)
+         {
+            // handle this edge case: put point right on line
+            fixedratio = 1;
+            x = cam.params->cx + FixedMul(cam.trace.dx, partialfrac);
+            y = cam.params->cy + FixedMul(cam.trace.dy, partialfrac);
+         }
+         else
+         {
+            // add a unit just to ensure that it enters the sector
+            fixedratio = FixedDiv(sector->ceilingheight - cam.sightzstart, 
+               linehitz - cam.sightzstart) + 1;
+            // update z frac
+            fixedfrac = FixedMul(fixedratio, fixedfrac);
+            // retrieve the xy frac using the origin frac
+            partialfrac = FixedDiv(fixedfrac - cam.originfrac, 
+               FRACUNIT - cam.originfrac);
+
+            x = cam.params->cx + FixedMul(partialfrac, cam.trace.dx);
+            y = cam.params->cy + FixedMul(partialfrac, cam.trace.dy);
+               
+         }
+         
+         if(CAM_doPortalSight(cam, newfromid, x, y, newslope, cam.topslope, 
+            fixedfrac))
+         {
+            return true;
+         }
+      }
+   }
+   if(cam.bottomslope < 0 && sector->f_portal && sector->f_pflags & PS_PASSABLE 
+      && (newfromid = sector->f_portal->data.link.toid) != cam.fromid)
+   {
+      linehitz = cam.sightzstart + FixedMul(cam.bottomslope, fixedfrac);
+      if(linehitz < sector->floorheight)
+      {
+         newslope = FixedDiv(sector->floorheight - cam.sightzstart,
+            fixedfrac);
+         if(newslope > cam.topslope)
+            newslope = cam.topslope;
+
+         if(linehitz == cam.sightzstart)
+         {
+            x = cam.params->cx + FixedMul(cam.trace.dx, partialfrac);
+            y = cam.params->cy + FixedMul(cam.trace.dy, partialfrac);
+         }
+         else
+         {
+            fixedratio = FixedDiv(sector->floorheight - cam.sightzstart, 
+               linehitz - cam.sightzstart) + 1;
+            fixedfrac = FixedMul(fixedratio, fixedfrac);
+            partialfrac = FixedDiv(fixedfrac - cam.originfrac, 
+               FRACUNIT - cam.originfrac);
+
+            x = cam.params->cx + FixedMul(partialfrac, cam.trace.dx);
+            y = cam.params->cy + FixedMul(partialfrac, cam.trace.dy);
+         }
+
+         if(CAM_doPortalSight(cam, newfromid, x, y, cam.bottomslope, newslope,
+            fixedfrac))
+         {
+            return true;
+         }
+      }
+   }
+   return false;
+}
+
+//
 // CAM_SightTraverse
 //
 static bool CAM_SightTraverse(CamSight &cam, intercept_t *in)
 {
-   line_t  *li;
+   const line_t *li; // ioanch 20151229: made const
    fixed_t slope;
 	
    li = in->d.line;
@@ -244,19 +398,44 @@ static bool CAM_SightTraverse(CamSight &cam, intercept_t *in)
    //
    CAM_LineOpening(cam, li);
 
+   // ioanch 20151229: line portal fix
+   // total initial length = 1
+   // we have (originfrac + infrac * (1 - originfrac))
+   // this is fixedfrac, and is the fraction from the master cam origin
+   fixed_t fixedfrac = cam.originfrac ? cam.originfrac 
+      + FixedMul(in->frac, FRACUNIT - cam.originfrac) : in->frac;
+
+   // ioanch 20151229: look for floor and ceiling portals too
+   const sector_t *sector = P_PointOnLineSide(cam.cx, cam.cy, li) == 0 ?
+      li->frontsector : li->backsector;
+   const sector_t *osector = sector == li->frontsector ? 
+      li->backsector : li->frontsector;
+   if(sector && fixedfrac > 0)
+   {
+      if(CAM_checkPortalSector(cam, sector, fixedfrac, in->frac))
+      {
+         cam.portalresult = true;
+         cam.portalexit = true;
+         return false;
+      }
+   }
+
    if(cam.openrange <= 0) // quick test for totally closed doors
       return false; // stop
 
-   if(li->frontsector->floorheight != li->backsector->floorheight)
+   // ioanch 20151229: also check for plane portals, updating the slopes
+   if(sector->floorheight != osector->floorheight 
+      || sector->f_pflags & PS_PASSABLE || osector->f_pflags & PS_PASSABLE)
    {
-      slope = FixedDiv(cam.openbottom - cam.sightzstart, in->frac);
+      slope = FixedDiv(cam.openbottom - cam.sightzstart, fixedfrac);
       if(slope > cam.bottomslope)
          cam.bottomslope = slope;
    }
 	
-   if(li->frontsector->ceilingheight != li->backsector->ceilingheight)
+   if(sector->ceilingheight != osector->ceilingheight
+      || sector->c_pflags & PS_PASSABLE || osector->c_pflags & PS_PASSABLE)
    {
-      slope = FixedDiv(cam.opentop - cam.sightzstart, in->frac);
+      slope = FixedDiv(cam.opentop - cam.sightzstart, fixedfrac);
       if(slope < cam.topslope)
          cam.topslope = slope;
    }
@@ -282,7 +461,7 @@ static bool CAM_SightTraverse(CamSight &cam, intercept_t *in)
          prev = prev->prev;
       }
 
-      linkoffset_t *link = P_GetLinkIfExists(cam.fromid, cam.toid);
+      linkoffset_t *link = P_GetLinkIfExists(cam.fromid, newfromid);
 
       params.cx           = cam.params->cx + FixedMul(cam.trace.dx, in->frac);
       params.cy           = cam.params->cy + FixedMul(cam.trace.dy, in->frac);
@@ -302,7 +481,7 @@ static bool CAM_SightTraverse(CamSight &cam, intercept_t *in)
          params.cy += link->y;
       }
 
-      cam.portalresult = CAM_CheckSight(params);
+      cam.portalresult = CAM_CheckSight(params, fixedfrac, cam.bottomslope, cam.topslope);
       cam.portalexit   = true;
       return false;    // break out      
    }
@@ -346,8 +525,14 @@ static bool CAM_SightCheckLine(CamSight &cam, int linenum)
    cam.intercepts.addNew().d.line = ld;
 
    // if this is a passable portal line, remember we just added it
-   if(ld->pflags & PS_PASSABLE)
+   // ioanch 20151229: also check sectors
+   const sector_t *fsec = ld->frontsector, *bsec = ld->backsector;
+   if(ld->pflags & PS_PASSABLE 
+      || (fsec && (fsec->c_pflags & PS_PASSABLE || fsec->f_pflags & PS_PASSABLE))
+      || (bsec && (bsec->c_pflags & PS_PASSABLE || bsec->f_pflags & PS_PASSABLE)))
+   {
       cam.addedportal = true;
+   }
 
    return true;
 }
@@ -366,7 +551,9 @@ static bool CAM_SightBlockLinesIterator(CamSight &cam, int x, int y)
    // haleyjd 05/17/13: check portalmap; once we enter a cell with
    // a line portal in it, we can't short-circuit any further and must
    // build a full intercepts list.
-   if(portalmap[offset] & PMF_LINE)
+   // ioanch 20151229: don't just check for line portals, also consider 
+   // floor/ceiling
+   if(portalmap[offset])
       cam.hitpblock = true;
 
    // Check polyobjects first
@@ -671,7 +858,11 @@ static bool CAM_SightPathTraverse(CamSight &cam)
 // Returns true if a straight line between the camera location and a
 // thing's coordinates is unobstructed.
 //
-bool CAM_CheckSight(const camsightparams_t &params)
+// ioanch 20151229: line portal sight fix
+// Also added bottomslope and topslope pre-setting
+//
+static bool CAM_CheckSight(const camsightparams_t &params, fixed_t originfrac,
+                           fixed_t bottomslope, fixed_t topslope)
 {
    sector_t *csec, *tsec;
    int s1, s2, pnum;
@@ -712,15 +903,21 @@ bool CAM_CheckSight(const camsightparams_t &params)
       //
       // check precisely
       //
-      CamSight newCam(params);
+      CamSight newCam(params, originfrac, bottomslope, topslope);
 
       // if there is a valid portal link, adjust the target's coordinates now
       // so that we trace in the proper direction given the current link
+
+      // ioanch 20151229: store displaced target coordinates because newCam.tx
+      // and .ty will be modified internally
+      fixed_t stx, sty;
       if(link)
       {
          newCam.tx -= link->x;
          newCam.ty -= link->y;
       }
+      stx = newCam.tx;
+      sty = newCam.ty;
 
       result = CAM_SightPathTraverse(newCam);
 
@@ -728,14 +925,33 @@ bool CAM_CheckSight(const camsightparams_t &params)
       // result with the result of the portal operation
       if(newCam.portalexit)
          result = newCam.portalresult;
-      else if(newCam.fromid != newCam.toid)
+
+      // ioanch 20151229: modified condition: if found but
+      // and discovered to belong to different group IDs, scan the floor or
+      // ceiling portals
+      else if(result && newCam.fromid != newCam.toid)
       {
+         result = false;   // reset it
          // didn't hit a portal but in different groups; not visible.
-         result = false;
+         // ioanch 20151229: this can happen if the final sector is a portal floor or ceiling
+         if(link)
+         {
+            // reload this variable
+            tsec = R_PointInSubsector(stx, sty)->sector;
+            // test this final thing
+            if(CAM_checkPortalSector(newCam, tsec, FRACUNIT, FRACUNIT))
+            {
+               result = true;
+            }
+         }
       }
    }
 
    return result;
+}
+bool CAM_CheckSight(const camsightparams_t &params)
+{
+   return CAM_CheckSight(params, 0, D_MAXINT, D_MAXINT);
 }
 
 // EOF
