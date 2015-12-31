@@ -149,6 +149,7 @@ fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, int mask)
       camaimparams_t aimparams;
       aimparams.prev = nullptr;
       aimparams.set(t1, angle, distance, mask);
+      clip.linetarget = nullptr;
       return CAM_AimLineAttack(aimparams, &clip.linetarget);
    }
 
