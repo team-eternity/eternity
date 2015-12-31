@@ -500,7 +500,9 @@ static bool CAM_SightTraverse(CamSight &cam, intercept_t *in)
       }
    }
 
-   if(cam.openrange <= 0) // quick test for totally closed doors
+   // quick test for totally closed doors
+   // ioanch 20151231: also check BLOCKALL lines
+   if(cam.openrange <= 0 || li->extflags & EX_ML_BLOCKALL) 
       return false; // stop
 
    // ioanch 20151229: also check for plane portals, updating the slopes
