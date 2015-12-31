@@ -133,7 +133,12 @@ public:
    };
 
    // ioanch 20151229: line portal sight fix
-   fixed_t originfrac;
+   // different names for different semantics
+   union
+   {
+      fixed_t originfrac;  // for checking sight
+      fixed_t origindist;  // for finding aim targets
+   };
 
    // ioanch 20151229: added optional bottom and top slope preset
    // in case of portal continuation
@@ -168,14 +173,16 @@ public:
    }
 
    // ioanch 20151230: autoaim support
-   CamSight(const camaimparams_t &sp) : isAim(true), cx(sp.cx), cy(sp.cy),
+   CamSight(const camaimparams_t &sp, fixed_t inbasedist = 0,
+      fixed_t inbottomslope = D_MAXINT, fixed_t intopslope = D_MAXINT) : 
+      isAim(true), cx(sp.cx), cy(sp.cy),
       attackrange(sp.distance), aimslope(0), linetarget(nullptr), 
       source(sp.source), aimflagsmask(sp.mask),
       opentop(0), openbottom(0), openrange(0),
       intercepts(), fromid(sp.cgroupid), toid(R_NOGROUP),
       hitpblock(false), addedportal(false), 
       portalresult(false), portalexit(false),
-      aimparams(&sp), originfrac(0)
+      aimparams(&sp), origindist(inbasedist)
    {
       memset(&trace, 0, sizeof(trace));
 
@@ -187,19 +194,35 @@ public:
 
       if(!sp.pitch)
       {
-         topslope = 100*FRACUNIT/160;
-         bottomslope = -100*FRACUNIT/160;
+         if(intopslope == D_MAXINT)
+            topslope = 100*FRACUNIT/160;
+         else
+            topslope = intopslope;
+
+         if(inbottomslope == D_MAXINT)
+            bottomslope = -100*FRACUNIT/160;
+         else
+            bottomslope = inbottomslope;
       }
       else
       {
-         fixed_t topangle, bottomangle, lookslope;
-         lookslope   = finetangent[(ANG90 - sp.pitch) >> ANGLETOFINESHIFT];
+         fixed_t topangle, bottomangle;
 
-         topangle    = sp.pitch - ANGLE_1*32;
-         bottomangle = sp.pitch + ANGLE_1*32;
+         if(intopslope == D_MAXINT)
+         {
+            topangle = sp.pitch - ANGLE_1 * 32;
+            topslope = finetangent[(ANG90 - topangle) >> ANGLETOFINESHIFT];
+         }
+         else
+            topslope = intopslope;
 
-         topslope    = finetangent[(ANG90 -    topangle) >> ANGLETOFINESHIFT];
-         bottomslope = finetangent[(ANG90 - bottomangle) >> ANGLETOFINESHIFT];
+         if(inbottomslope == D_MAXINT)
+         {
+            bottomangle = sp.pitch + ANGLE_1*32;
+            bottomslope = finetangent[(ANG90 - bottomangle) >> ANGLETOFINESHIFT];
+         }
+         else
+            bottomslope = inbottomslope;
       }
 
       VALID_ALLOC(validlines, ::numlines);
@@ -330,7 +353,7 @@ static bool CAM_CheckSight(const camsightparams_t &params, fixed_t originfrac,
                            fixed_t bottomslope, fixed_t topslope);
 static bool CAM_doPortalSight(const CamSight &cam, int newfromid, 
                                fixed_t x, fixed_t y, fixed_t bottomslope, 
-                               fixed_t topslope, fixed_t fixedfrac)
+                               fixed_t topslope, fixed_t totalfrac)
 {
    camsightparams_t params;
 
@@ -363,7 +386,7 @@ static bool CAM_doPortalSight(const CamSight &cam, int newfromid,
       params.cy += link->y;
    }
 
-   return CAM_CheckSight(params, fixedfrac, bottomslope, topslope);
+   return CAM_CheckSight(params, totalfrac, bottomslope, topslope);
 }
 
 //
@@ -373,7 +396,7 @@ static bool CAM_doPortalSight(const CamSight &cam, int newfromid,
 // Returns true if any branching sight check beyond a portal returned true
 //
 static bool CAM_checkPortalSector(const CamSight &cam, const sector_t *sector, 
-                                  fixed_t fixedfrac, fixed_t partialfrac)
+                                  fixed_t totalfrac, fixed_t partialfrac)
 {
    fixed_t linehitz, fixedratio;
    int newfromid;
@@ -384,13 +407,13 @@ static bool CAM_checkPortalSector(const CamSight &cam, const sector_t *sector,
       && (newfromid = sector->c_portal->data.link.toid) != cam.fromid)
    {
       // ceiling portal (slope must be up)
-      linehitz = cam.sightzstart + FixedMul(cam.topslope, fixedfrac);
+      linehitz = cam.sightzstart + FixedMul(cam.topslope, totalfrac);
       if(linehitz > sector->ceilingheight)
       {
          // update cam.bottomslope to be the top of the sector wall
          newslope = FixedDiv(sector->ceilingheight - cam.sightzstart, 
-            fixedfrac);
-         // if fixedfrac == 0, then it will just be a very big slope
+            totalfrac);
+         // if totalfrac == 0, then it will just be a very big slope
          if(newslope < cam.bottomslope)
             newslope = cam.bottomslope;
 
@@ -408,9 +431,9 @@ static bool CAM_checkPortalSector(const CamSight &cam, const sector_t *sector,
             fixedratio = FixedDiv(sector->ceilingheight - cam.sightzstart, 
                linehitz - cam.sightzstart) + 1;
             // update z frac
-            fixedfrac = FixedMul(fixedratio, fixedfrac);
+            totalfrac = FixedMul(fixedratio, totalfrac);
             // retrieve the xy frac using the origin frac
-            partialfrac = FixedDiv(fixedfrac - cam.originfrac, 
+            partialfrac = FixedDiv(totalfrac - cam.originfrac, 
                FRACUNIT - cam.originfrac);
 
             x = cam.params->cx + FixedMul(partialfrac, cam.trace.dx);
@@ -419,7 +442,7 @@ static bool CAM_checkPortalSector(const CamSight &cam, const sector_t *sector,
          }
          
          if(CAM_doPortalSight(cam, newfromid, x, y, newslope, cam.topslope, 
-            fixedfrac))
+            totalfrac))
          {
             return true;
          }
@@ -428,11 +451,11 @@ static bool CAM_checkPortalSector(const CamSight &cam, const sector_t *sector,
    if(cam.bottomslope < 0 && sector->f_portal && sector->f_pflags & PS_PASSABLE 
       && (newfromid = sector->f_portal->data.link.toid) != cam.fromid)
    {
-      linehitz = cam.sightzstart + FixedMul(cam.bottomslope, fixedfrac);
+      linehitz = cam.sightzstart + FixedMul(cam.bottomslope, totalfrac);
       if(linehitz < sector->floorheight)
       {
          newslope = FixedDiv(sector->floorheight - cam.sightzstart,
-            fixedfrac);
+            totalfrac);
          if(newslope > cam.topslope)
             newslope = cam.topslope;
 
@@ -445,8 +468,8 @@ static bool CAM_checkPortalSector(const CamSight &cam, const sector_t *sector,
          {
             fixedratio = FixedDiv(sector->floorheight - cam.sightzstart, 
                linehitz - cam.sightzstart) + 1;
-            fixedfrac = FixedMul(fixedratio, fixedfrac);
-            partialfrac = FixedDiv(fixedfrac - cam.originfrac, 
+            totalfrac = FixedMul(fixedratio, totalfrac);
+            partialfrac = FixedDiv(totalfrac - cam.originfrac, 
                FRACUNIT - cam.originfrac);
 
             x = cam.params->cx + FixedMul(partialfrac, cam.trace.dx);
@@ -454,7 +477,7 @@ static bool CAM_checkPortalSector(const CamSight &cam, const sector_t *sector,
          }
 
          if(CAM_doPortalSight(cam, newfromid, x, y, cam.bottomslope, newslope,
-            fixedfrac))
+            totalfrac))
          {
             return true;
          }
@@ -481,8 +504,8 @@ static bool CAM_SightTraverse(CamSight &cam, intercept_t *in)
    // ioanch 20151229: line portal fix
    // total initial length = 1
    // we have (originfrac + infrac * (1 - originfrac))
-   // this is fixedfrac, and is the fraction from the master cam origin
-   fixed_t fixedfrac = cam.originfrac ? cam.originfrac 
+   // this is totalfrac, and is the fraction from the master cam origin
+   fixed_t totalfrac = cam.originfrac ? cam.originfrac 
       + FixedMul(in->frac, FRACUNIT - cam.originfrac) : in->frac;
 
    // ioanch 20151229: look for floor and ceiling portals too
@@ -490,9 +513,9 @@ static bool CAM_SightTraverse(CamSight &cam, intercept_t *in)
       li->frontsector : li->backsector;
    const sector_t *osector = sector == li->frontsector ? 
       li->backsector : li->frontsector;
-   if(sector && fixedfrac > 0)
+   if(sector && totalfrac > 0)
    {
-      if(CAM_checkPortalSector(cam, sector, fixedfrac, in->frac))
+      if(CAM_checkPortalSector(cam, sector, totalfrac, in->frac))
       {
          cam.portalresult = true;
          cam.portalexit = true;
@@ -509,7 +532,7 @@ static bool CAM_SightTraverse(CamSight &cam, intercept_t *in)
    if(sector->floorheight != osector->floorheight 
       || sector->f_pflags & PS_PASSABLE || osector->f_pflags & PS_PASSABLE)
    {
-      slope = FixedDiv(cam.openbottom - cam.sightzstart, fixedfrac);
+      slope = FixedDiv(cam.openbottom - cam.sightzstart, totalfrac);
       if(slope > cam.bottomslope)
          cam.bottomslope = slope;
    }
@@ -517,7 +540,7 @@ static bool CAM_SightTraverse(CamSight &cam, intercept_t *in)
    if(sector->ceilingheight != osector->ceilingheight
       || sector->c_pflags & PS_PASSABLE || osector->c_pflags & PS_PASSABLE)
    {
-      slope = FixedDiv(cam.opentop - cam.sightzstart, fixedfrac);
+      slope = FixedDiv(cam.opentop - cam.sightzstart, totalfrac);
       if(slope < cam.topslope)
          cam.topslope = slope;
    }
@@ -563,7 +586,8 @@ static bool CAM_SightTraverse(CamSight &cam, intercept_t *in)
          params.cy += link->y;
       }
 
-      cam.portalresult = CAM_CheckSight(params, fixedfrac, cam.bottomslope, cam.topslope);
+      cam.portalresult = CAM_CheckSight(params, totalfrac, 
+         cam.bottomslope, cam.topslope);
       cam.portalexit   = true;
       return false;    // break out      
    }
@@ -576,9 +600,12 @@ static bool CAM_SightTraverse(CamSight &cam, intercept_t *in)
 //
 // ioanch 20151230: autoaim support
 //
+static fixed_t CAM_AimLineAttack(const camaimparams_t &params, 
+                                 Mobj **outTarget, fixed_t originfrac, 
+                                 fixed_t bottomslope, fixed_t topslope);
 static bool CAM_aimTraverse(CamSight &cam, intercept_t *in)
 {
-   fixed_t dist, slope;
+   fixed_t totaldist, slope;
    if(in->isaline)
    {
       const line_t *li = in->d.line;
@@ -587,26 +614,71 @@ static bool CAM_aimTraverse(CamSight &cam, intercept_t *in)
          return false;
 
       CAM_LineOpening(cam, li);
-      if(cam.openbottom >= cam.opentop)
+
+      totaldist = cam.origindist + FixedMul(cam.attackrange, in->frac);
+
+      if(cam.openrange <= 0)
          return false;
 
-      dist = FixedMul(cam.attackrange, in->frac);
       if(li->frontsector->floorheight != li->backsector->floorheight)
       {
-         slope = FixedDiv(cam.openbottom - cam.sightzstart, dist);
+         slope = FixedDiv(cam.openbottom - cam.sightzstart, totaldist);
          if(slope > cam.bottomslope)
             cam.bottomslope = slope;
       }
 
       if(li->frontsector->ceilingheight != li->backsector->ceilingheight)
       {
-         slope = FixedDiv(cam.opentop - cam.sightzstart, dist);
+         slope = FixedDiv(cam.opentop - cam.sightzstart, totaldist);
          if(slope < cam.topslope)
             cam.topslope = slope;
       }
 
       if(cam.topslope <= cam.bottomslope)
          return false;
+
+      if(li->pflags & PS_PASSABLE)
+      {
+         camaimparams_t params;
+         int newfromid = li->portal->data.link.toid;
+         if(newfromid == cam.fromid)   // not going anywhere
+            return true;
+
+         const camaimparams_t *prev = cam.aimparams->prev;
+         while(prev)
+         {
+            if(prev->cgroupid == newfromid)
+               return true;
+            prev = prev->prev;
+         }
+
+         const linkoffset_t *link = P_GetLinkIfExists(cam.fromid, newfromid);
+
+         params.angle = cam.aimparams->angle;
+         params.cgroupid = newfromid;
+         params.cheight = cam.aimparams->cheight;
+         params.cx = cam.aimparams->cx + FixedMul(cam.trace.dx, in->frac);
+         params.cy = cam.aimparams->cy + FixedMul(cam.trace.dy, in->frac);
+         params.cz = cam.aimparams->cz;
+         // this is the distance from the next point, not total.
+         params.distance = cam.aimparams->distance 
+            - FixedMul(cam.aimparams->distance, in->frac);
+         params.mask = cam.aimparams->mask;
+         params.pitch = cam.aimparams->pitch;
+         params.prev = cam.aimparams;
+         params.source = cam.aimparams->source;
+
+         if(link)
+         {
+            params.cx += link->x;
+            params.cy += link->y;
+         }
+
+         // For autoaim, we'll use the distance so far, not the fraction so far
+         cam.aimslope = CAM_AimLineAttack(params, &cam.linetarget, totaldist, 
+            cam.bottomslope, cam.topslope);
+         return false;
+      }
 
       return true;
    }
@@ -615,13 +687,13 @@ static bool CAM_aimTraverse(CamSight &cam, intercept_t *in)
       Mobj *th = in->d.thing;
       fixed_t thingtopslope, thingbottomslope;
       // tests already passed when populating the intercepts array
-      dist = FixedMul(cam.attackrange, in->frac);
-      thingtopslope = FixedDiv(th->z + th->height - cam.sightzstart, dist);
+      totaldist = cam.origindist + FixedMul(cam.attackrange, in->frac);
+      thingtopslope = FixedDiv(th->z + th->height - cam.sightzstart, totaldist);
 
       if(thingtopslope < cam.bottomslope)
          return true; // shot over the thing
 
-      thingbottomslope = FixedDiv(th->z - cam.sightzstart, dist);
+      thingbottomslope = FixedDiv(th->z - cam.sightzstart, totaldist);
       if(thingbottomslope > cam.topslope)
          return true; // shot under the thing
 
@@ -697,6 +769,9 @@ static bool CAM_SightCheckLine(CamSight &cam, int linenum)
 //
 static bool CAM_SightBlockThingsIterator(CamSight &cam, int x, int y)
 {
+   if(cam.isAim && (x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
+      return true;
+
    Mobj *thing = blocklinks[y * bmapwidth + x];
    for(; thing; thing = thing->bnext)
    {
@@ -758,6 +833,10 @@ static bool CAM_SightBlockThingsIterator(CamSight &cam, int x, int y)
 //
 static bool CAM_SightBlockLinesIterator(CamSight &cam, int x, int y)
 {
+   // ioanch 20151231: make sure to block here for aim sighting
+   if(cam.isAim && (x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
+      return true;
+
    int  offset;
    int *list;
    DLListItem<polymaplink_t> *plink;
@@ -926,8 +1005,10 @@ static bool CAM_SightPathTraverse(CamSight &cam)
 
    // points should never be out of bounds, but check once instead of
    // each block
-   if(xt1 < 0 || yt1 < 0 || xt1 >= bmapwidth || yt1 >= bmapheight ||
-      xt2 < 0 || yt2 < 0 || xt2 >= bmapwidth || yt2 >= bmapheight)
+   // ioanch 20151231: only for sight
+   if(!cam.isAim &&
+      (xt1 < 0 || yt1 < 0 || xt1 >= bmapwidth || yt1 >= bmapheight ||
+      xt2 < 0 || yt2 < 0 || xt2 >= bmapwidth || yt2 >= bmapheight))
       return false;
 
    if(xt2 > xt1)
@@ -1191,17 +1272,17 @@ bool CAM_CheckSight(const camsightparams_t &params)
 //
 // CAM_AimLineAttack
 //
-// Reentrant version of P_AimLineAttack. For now the behaviour is as close as
-// possible.
-// killough 8/2/98: add mask parameter, which, if set to MF_FRIEND,
-// makes autoaiming skip past friends.
+// Reentrant version of P_AimLineAttack. Uses the same path traverser as
+// CAM_CheckSight
 //
-fixed_t CAM_AimLineAttack(const camaimparams_t &params, Mobj **outTarget)
+static fixed_t CAM_AimLineAttack(const camaimparams_t &params, Mobj **outTarget, 
+                          fixed_t origindist, fixed_t bottomslope, 
+                          fixed_t topslope)
 {
    fixed_t lookslope = params.pitch == 0 ? 
       0 : finetangent[(ANG90 - params.pitch) >> ANGLETOFINESHIFT];
 
-   CamSight newCam(params);
+   CamSight newCam(params, origindist, bottomslope, topslope);
 
    CAM_SightPathTraverse(newCam);
 
@@ -1209,6 +1290,10 @@ fixed_t CAM_AimLineAttack(const camaimparams_t &params, Mobj **outTarget)
       *outTarget = newCam.linetarget;
 
    return newCam.linetarget ? newCam.aimslope : lookslope;
+}
+fixed_t CAM_AimLineAttack(const camaimparams_t &params, Mobj **outTarget)
+{
+   return CAM_AimLineAttack(params, outTarget, 0, D_MAXINT, D_MAXINT);
 }
 
 // EOF
