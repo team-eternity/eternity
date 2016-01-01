@@ -85,10 +85,24 @@
 // Structures
 //
 
+//
+// CamType
+//
+// ioanch 20160101: added enum to classify objects
+//
+enum class CamType : byte
+{
+   sight,
+   aim,
+   bullet,
+   NUM
+};
+
 class CamSight
 {
 public:
-   bool isAim; // ioanch: whether it's an aim cam (true) or checksight (false)
+   // ioanch 20160101: camsight type
+   const CamType type;
    
    fixed_t cx;          // camera coordinates
    fixed_t cy;
@@ -145,7 +159,7 @@ public:
    // in case of portal continuation
    CamSight(const camsightparams_t &sp, fixed_t inbasefrac = 0,
       fixed_t inbottomslope = D_MAXINT, fixed_t intopslope = D_MAXINT)
-      : isAim(false),
+      : type(CamType::sight),
         cx(sp.cx), cy(sp.cy), tx(sp.tx), ty(sp.ty), 
         attackrange(0), aimslope(0), linetarget(nullptr), targetdist(D_MAXINT),
         source(nullptr), aimflagsmask(0),
@@ -176,7 +190,7 @@ public:
    // ioanch 20151230: autoaim support
    CamSight(const camaimparams_t &sp, fixed_t inbasedist = 0,
       fixed_t inbottomslope = D_MAXINT, fixed_t intopslope = D_MAXINT) : 
-      isAim(true), cx(sp.cx), cy(sp.cy),
+      type(CamType::aim), cx(sp.cx), cy(sp.cy),
       attackrange(sp.distance), aimslope(0), linetarget(nullptr), 
       targetdist(D_MAXINT), source(sp.source), aimflagsmask(sp.mask),
       opentop(0), openbottom(0), openrange(0),
@@ -235,6 +249,47 @@ public:
       VALID_FREE(validlines);
       VALID_FREE(validpolys);
    }
+};
+
+//
+// CamInfo
+//
+// ioanch 20160101: detailed CamSight type definitions
+//
+struct CamInfo
+{
+   bool (*flatPortalRecursor)(CamSight &cam, int newfromid, 
+      fixed_t x, fixed_t y, fixed_t bottomslope, fixed_t topslope, 
+      fixed_t totalfrac, fixed_t partialfrac);
+   bool absoluteCumulDist;
+   bool wallEarlyOut;
+   bool blockBoundsEarlyOut;
+   bool (*interceptFunc)(CamSight &cam, intercept_t *in);
+   bool interceptThings;
+};
+
+static bool CAM_recurseFlatPortalSight(CamSight &cam, int newfromid, 
+                                       fixed_t x, fixed_t y, fixed_t bottomslope, 
+                                       fixed_t topslope, fixed_t totalfrac, 
+                                       fixed_t partialfrac);
+static bool CAM_recurseFlatPortalAim(CamSight &cam, int newfromid, 
+                                     fixed_t x, fixed_t y, fixed_t bottomslope, 
+                                     fixed_t topslope, fixed_t totalfrac, 
+                                     fixed_t partialfrac);
+static bool CAM_SightTraverse(CamSight &cam, intercept_t *in);
+static bool CAM_aimTraverse(CamSight &cam, intercept_t *in);
+
+//
+// gCamInfo
+//
+// MUST be in order
+//
+static CamInfo gCamInfo[CamType::NUM] =
+{
+   // sight
+   { CAM_recurseFlatPortalSight, false, true, true, CAM_SightTraverse, false },
+   // aim
+   { CAM_recurseFlatPortalAim, true, false, false, CAM_aimTraverse, true },
 };
 
 //=============================================================================
@@ -345,111 +400,111 @@ static void CAM_LineOpening(CamSight &cam, const line_t *linedef)
    cam.openrange = cam.opentop - cam.openbottom;
 }
 
-//
-// CAM_doPortalSight
-//
-// ioanch 20151229: common function to spawn a new camera beyond portal
-// WARNING: when isAim is false (CheckSight), totalfrac is 0-1 and means how
-// much of known path to target has been passed. When isAim is true 
-// (AimLineAttack), totalfrac is actually totaldist and means the absolute 
-// distance so far.
-// Meanwhile, partialfrac retains the meaning of intercept_t fraction from
-// start of this individual portal group's trace to the intercept point.
-//
 static bool CAM_CheckSight(const camsightparams_t &params, fixed_t originfrac,
                            fixed_t bottomslope, fixed_t topslope);
 static fixed_t CAM_AimLineAttack(const camaimparams_t &params, 
                                  Mobj **outTarget, fixed_t originfrac, 
                                  fixed_t bottomslope, fixed_t topslope,
                                  fixed_t *outDistance);
-static bool CAM_doPortalSight(CamSight &cam, int newfromid, 
-                               fixed_t x, fixed_t y, fixed_t bottomslope, 
-                               fixed_t topslope, fixed_t totalfrac, 
-                               fixed_t partialfrac)
+//
+// CAM_recurseFlatPortalSight
+//
+// ioanch 20160101: recursive call for sight portal stuff
+//
+static bool CAM_recurseFlatPortalSight(CamSight &cam, int newfromid, 
+                                       fixed_t x, fixed_t y, fixed_t bottomslope, 
+                                       fixed_t topslope, fixed_t totalfrac, 
+                                       fixed_t partialfrac)
 {
-   if(!cam.isAim)
+   camsightparams_t params;
+
+   const camsightparams_t *prev = cam.params->prev;
+   while(prev)
    {
-      camsightparams_t params;
-
-      const camsightparams_t *prev = cam.params->prev;
-      while(prev)
-      {
-         // we are trying to walk backward?
-         if(prev->cgroupid == newfromid)
-            return false; // ignore this plane
-         prev = prev->prev;
-      }
-
-      const linkoffset_t *link = P_GetLinkIfExists(cam.fromid, newfromid);
-      // Copy all except x and y
-      params.cx           = x;
-      params.cy           = y;
-      params.cz           = cam.params->cz;
-      params.cheight      = cam.params->cheight;
-      params.tx           = cam.params->tx;
-      params.ty           = cam.params->ty;
-      params.tz           = cam.params->tz;
-      params.theight      = cam.params->theight;
-      params.cgroupid     = newfromid;
-      params.tgroupid     = cam.toid;
-      params.prev         = cam.params;
-
-      if(link)
-      {
-         params.cx += link->x;
-         params.cy += link->y;
-      }
-
-      return CAM_CheckSight(params, totalfrac, bottomslope, topslope);
+      // we are trying to walk backward?
+      if(prev->cgroupid == newfromid)
+         return false; // ignore this plane
+      prev = prev->prev;
    }
-   else
+
+   const linkoffset_t *link = P_GetLinkIfExists(cam.fromid, newfromid);
+   // Copy all except x and y
+   params.cx           = x;
+   params.cy           = y;
+   params.cz           = cam.params->cz;
+   params.cheight      = cam.params->cheight;
+   params.tx           = cam.params->tx;
+   params.ty           = cam.params->ty;
+   params.tz           = cam.params->tz;
+   params.theight      = cam.params->theight;
+   params.cgroupid     = newfromid;
+   params.tgroupid     = cam.toid;
+   params.prev         = cam.params;
+
+   if(link)
    {
-      camaimparams_t params;
+      params.cx += link->x;
+      params.cy += link->y;
+   }
 
-      const camaimparams_t *prev = cam.aimparams->prev;
-      while(prev)
-      {
-         if(prev->cgroupid == newfromid)
-            return true;
-         prev = prev->prev;
-      }
+   return CAM_CheckSight(params, totalfrac, bottomslope, topslope);
+}
 
-      const linkoffset_t *link = P_GetLinkIfExists(cam.fromid, newfromid);
+//
+// CAM_recurseFlatPortalAim
+//
+// Recurse autoaim lookup
+//
+static bool CAM_recurseFlatPortalAim(CamSight &cam, int newfromid, 
+                                     fixed_t x, fixed_t y, fixed_t bottomslope, 
+                                     fixed_t topslope, fixed_t totalfrac, 
+                                     fixed_t partialfrac)
+{
+   camaimparams_t params;
 
-      params.angle = cam.aimparams->angle;
-      params.cgroupid = newfromid;
-      params.cheight = cam.aimparams->cheight;
-      params.cx = x;
-      params.cy = y;
-      params.cz = cam.aimparams->cz;
-      params.distance = cam.aimparams->distance
-         - FixedMul(cam.aimparams->distance, partialfrac);
-      params.mask = cam.aimparams->mask;
-      params.pitch = cam.aimparams->pitch;
-      params.prev = cam.aimparams;
-      params.source = cam.aimparams->source;
+   const camaimparams_t *prev = cam.aimparams->prev;
+   while(prev)
+   {
+      if(prev->cgroupid == newfromid)
+         return true;
+      prev = prev->prev;
+   }
 
-      if(link)
-      {
-         params.cx += link->x;
-         params.cy += link->y;
-      }
+   const linkoffset_t *link = P_GetLinkIfExists(cam.fromid, newfromid);
 
-      Mobj *foundtarget = nullptr;
-      fixed_t founddist = 0;
-      fixed_t foundslope = CAM_AimLineAttack(params, &foundtarget, totalfrac, 
-            bottomslope, topslope, &founddist);
+   params.angle = cam.aimparams->angle;
+   params.cgroupid = newfromid;
+   params.cheight = cam.aimparams->cheight;
+   params.cx = x;
+   params.cy = y;
+   params.cz = cam.aimparams->cz;
+   params.distance = cam.aimparams->distance
+      - FixedMul(cam.aimparams->distance, partialfrac);
+   params.mask = cam.aimparams->mask;
+   params.pitch = cam.aimparams->pitch;
+   params.prev = cam.aimparams;
+   params.source = cam.aimparams->source;
+
+   if(link)
+   {
+      params.cx += link->x;
+      params.cy += link->y;
+   }
+
+   Mobj *foundtarget = nullptr;
+   fixed_t founddist = 0;
+   fixed_t foundslope = CAM_AimLineAttack(params, &foundtarget, totalfrac, 
+         bottomslope, topslope, &founddist);
       
-      // prefer closer (by XY) targets
-      if(foundtarget &&
-         (!cam.linetarget || founddist < cam.targetdist))
-      {
-         cam.linetarget = foundtarget;
-         cam.targetdist = founddist;
-         cam.aimslope = foundslope;
-      }
-      return false;  // return false
+   // prefer closer (by XY) targets
+   if(foundtarget &&
+      (!cam.linetarget || founddist < cam.targetdist))
+   {
+      cam.linetarget = foundtarget;
+      cam.targetdist = founddist;
+      cam.aimslope = foundslope;
    }
+   return false;  // return false
 }
 
 //
@@ -465,6 +520,8 @@ static bool CAM_checkPortalSector(CamSight &cam, const sector_t *sector,
    int newfromid;
 
    fixed_t x, y, newslope;
+
+   const CamInfo &info = gCamInfo[(int)cam.type];
 
    if(cam.topslope > 0 && sector->c_portal && sector->c_pflags & PS_PASSABLE
       && (newfromid = sector->c_portal->data.link.toid) != cam.fromid)
@@ -497,15 +554,16 @@ static bool CAM_checkPortalSector(CamSight &cam, const sector_t *sector,
             totalfrac = FixedMul(fixedratio, totalfrac);
             // retrieve the xy frac using the origin frac
             partialfrac = FixedDiv(totalfrac - cam.originfrac, 
-               cam.isAim ? cam.attackrange : FRACUNIT - cam.originfrac);
+               info.absoluteCumulDist ? cam.attackrange 
+               : FRACUNIT - cam.originfrac);
 
             x = cam.trace.x + FixedMul(partialfrac + 1, cam.trace.dx);
             y = cam.trace.y + FixedMul(partialfrac + 1, cam.trace.dy);
                
          }
          
-         if(CAM_doPortalSight(cam, newfromid, x, y, newslope, cam.topslope, 
-            totalfrac, partialfrac))
+         if(info.flatPortalRecursor(cam, newfromid, x, y, newslope, 
+            cam.topslope, totalfrac, partialfrac))
          {
             return true;
          }
@@ -533,14 +591,15 @@ static bool CAM_checkPortalSector(CamSight &cam, const sector_t *sector,
                linehitz - cam.sightzstart) + 1;
             totalfrac = FixedMul(fixedratio, totalfrac);
             partialfrac = FixedDiv(totalfrac - cam.originfrac, 
-               cam.isAim ? cam.attackrange : FRACUNIT - cam.originfrac);
+               info.absoluteCumulDist ? cam.attackrange 
+               : FRACUNIT - cam.originfrac);
 
             x = cam.trace.x + FixedMul(partialfrac + 1, cam.trace.dx);
             y = cam.trace.y + FixedMul(partialfrac + 1, cam.trace.dy);
          }
 
-         if(CAM_doPortalSight(cam, newfromid, x, y, cam.bottomslope, newslope,
-            totalfrac, partialfrac))
+         if(info.flatPortalRecursor(cam, newfromid, x, y, cam.bottomslope, 
+            newslope, totalfrac, partialfrac))
          {
             return true;
          }
@@ -827,7 +886,7 @@ static bool CAM_SightCheckLine(CamSight &cam, int linenum)
 
    // Early outs are only possible if we haven't crossed a portal block
    // ioanch 20151230: aim cams never quit
-   if(!cam.isAim && !cam.hitpblock) 
+   if(gCamInfo[(int)cam.type].wallEarlyOut && !cam.hitpblock) 
    {
       // try to early out the check
       if(!ld->backsector)
@@ -863,8 +922,11 @@ static bool CAM_SightCheckLine(CamSight &cam, int linenum)
 //
 static bool CAM_SightBlockThingsIterator(CamSight &cam, int x, int y)
 {
-   if(cam.isAim && (x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
+   if(!gCamInfo[(int)cam.type].blockBoundsEarlyOut 
+      && (x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
+   {
       return true;
+   }
 
    Mobj *thing = blocklinks[y * bmapwidth + x];
    for(; thing; thing = thing->bnext)
@@ -928,8 +990,11 @@ static bool CAM_SightBlockThingsIterator(CamSight &cam, int x, int y)
 static bool CAM_SightBlockLinesIterator(CamSight &cam, int x, int y)
 {
    // ioanch 20151231: make sure to block here for aim sighting
-   if(cam.isAim && (x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
+   if(!gCamInfo[(int)cam.type].blockBoundsEarlyOut 
+      && (x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
+   {
       return true;
+   }
 
    int  offset;
    int *list;
@@ -1035,7 +1100,7 @@ static bool CAM_SightTraverseIntercepts(CamSight &cam)
    in = NULL; // shut up compiler warning
 
    // ioanch 20151230: support autoaim variant
-   auto func = cam.isAim ? CAM_aimTraverse : CAM_SightTraverse;
+   auto func = gCamInfo[(int)cam.type].interceptFunc;
 	
    while(count--)
    {
@@ -1100,7 +1165,7 @@ static bool CAM_SightPathTraverse(CamSight &cam)
    // points should never be out of bounds, but check once instead of
    // each block
    // ioanch 20151231: only for sight
-   if(!cam.isAim &&
+   if(gCamInfo[(int)cam.type].blockBoundsEarlyOut &&
       (xt1 < 0 || yt1 < 0 || xt1 >= bmapwidth || yt1 >= bmapheight ||
       xt2 < 0 || yt2 < 0 || xt2 >= bmapwidth || yt2 >= bmapheight))
       return false;
@@ -1169,12 +1234,14 @@ static bool CAM_SightPathTraverse(CamSight &cam)
    // Count is present to prevent a round off error from skipping the break
    mapx = xt1;
    mapy = yt1;
+
+   bool doThings = gCamInfo[(int)cam.type].interceptThings;
 	
    for(int count = 0; count < 100; count++)
    {
       if(!CAM_SightBlockLinesIterator(cam, mapx, mapy))
          return false;	// early out (ioanch: not for aim)
-      if(cam.isAim && !CAM_SightBlockThingsIterator(cam, mapx, mapy))
+      if(doThings && !CAM_SightBlockThingsIterator(cam, mapx, mapy))
          return false;  // ioanch 20151230: aim also looks for a thing
 
 		
@@ -1221,7 +1288,7 @@ static bool CAM_SightPathTraverse(CamSight &cam)
             return false;
          }
          // ioanch 20151230: autoaim support
-         if(cam.isAim 
+         if(doThings 
             && (!CAM_SightBlockThingsIterator(cam, mapx + mapxstep, mapy)
             || !CAM_SightBlockThingsIterator(cam, mapx, mapy + mapystep)))
          {
