@@ -60,7 +60,7 @@ bool CAM_CheckSight(const camsightparams_t &params);
 // ioanch 20151230: autoaim
 struct camaimparams_t
 {
-   const Mobj *source;
+   Mobj *source;
    fixed_t cx, cy, cz, cheight;
    int cgroupid;
    angle_t angle;
@@ -70,11 +70,16 @@ struct camaimparams_t
 
    const camaimparams_t *prev;
 
-   void set(const Mobj *mo, angle_t inAngle, fixed_t inDistance, 
+   void set(Mobj *mo, angle_t inAngle, fixed_t inDistance, 
       uint32_t inMask);
 };
 
 fixed_t CAM_AimLineAttack(const camaimparams_t &params, Mobj **outTarget);
+
+// ioanch 20160101: bullet attack
+struct mobjinfo_t;
+void CAM_LineAttack(Mobj *source, angle_t angle, fixed_t distance, 
+                    fixed_t slope, int damage, const mobjinfo_t *puff);
 
 #endif
 

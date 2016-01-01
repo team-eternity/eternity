@@ -61,17 +61,21 @@
 #include "z_zone.h"
 
 #include "cam_sight.h"
+#include "doomstat.h"   // ioanch 20160101: for bullet attacks
 #include "d_player.h"   // ioanch 20151230: for autoaim
 #include "e_exdata.h"
 #include "m_collection.h"
 #include "m_fixed.h"
 #include "p_chase.h"
+#include "p_inter.h"    // ioanch 20160101: for damage
 #include "p_maputl.h"
 #include "p_setup.h"
+#include "p_spec.h"     // ioanch 20160101: for bullet effects
 #include "polyobj.h"
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_portal.h"
+#include "r_sky.h"      // ioanch 20160101: for bullets hitting sky
 #include "r_state.h"
 
 // ioanch 20151230: defined macros for the validcount sets here
@@ -112,12 +116,16 @@ public:
    fixed_t topslope;    // slope to top of target
    fixed_t bottomslope; // slope to bottom of target
 
-   fixed_t attackrange; // ioanch 20151230: only used for aim
-   fixed_t aimslope; // ioanch 20151230: resulting aiming slope
-   Mobj *linetarget;    // ioanch 20151230: found mobj
-   fixed_t targetdist;  // ioanch 20151231: will be set when target is discovered
-   const Mobj *source;  // ioanch 20151230: needed because of thing iterator
-   uint32_t aimflagsmask;  // ioanch 20151230: to prevent friends
+   // ioanch 20160101: grouped these for leaner constructors
+   struct
+   {
+      fixed_t attackrange; // ioanch 20151230: only used for aim
+      fixed_t aimslope;    // ioanch 20151230: resulting aiming slope
+      Mobj *linetarget;    // ioanch 20151230: found mobj
+      fixed_t targetdist;  // ioanch 20151231: will be set when target is discovered
+      Mobj *source;        // ioanch 20151230: needed because of thing iterator
+      uint32_t aimflagsmask;  // ioanch 20151230: to prevent friends
+   } aim;
 
    divline_t trace;     // for line crossing tests
 
@@ -140,6 +148,15 @@ public:
    bool portalresult;  // result from portal recursion
    bool portalexit;    // if true, returned from portal
 
+   // ioanch 20160101: bullet specific
+   struct
+   {
+      const mobjinfo_t *puff;
+      const CamSight *prev;
+      fixed_t cos, sin;
+      int damage;
+   } bullet;
+
    // pointer to invocation parameters
    union
    {
@@ -160,14 +177,12 @@ public:
    CamSight(const camsightparams_t &sp, fixed_t inbasefrac = 0,
       fixed_t inbottomslope = D_MAXINT, fixed_t intopslope = D_MAXINT)
       : type(CamType::sight),
-        cx(sp.cx), cy(sp.cy), tx(sp.tx), ty(sp.ty), 
-        attackrange(0), aimslope(0), linetarget(nullptr), targetdist(D_MAXINT),
-        source(nullptr), aimflagsmask(0),
+        cx(sp.cx), cy(sp.cy), tx(sp.tx), ty(sp.ty), aim(),
         opentop(0), openbottom(0), openrange(0),
         intercepts(),
         fromid(sp.cgroupid), toid(sp.tgroupid), 
         hitpblock(false), addedportal(false), 
-        portalresult(false), portalexit(false),
+        portalresult(false), portalexit(false), bullet(),
         params(&sp), originfrac(inbasefrac)
    {
       memset(&trace, 0, sizeof(trace));
@@ -191,14 +206,19 @@ public:
    CamSight(const camaimparams_t &sp, fixed_t inbasedist = 0,
       fixed_t inbottomslope = D_MAXINT, fixed_t intopslope = D_MAXINT) : 
       type(CamType::aim), cx(sp.cx), cy(sp.cy),
-      attackrange(sp.distance), aimslope(0), linetarget(nullptr), 
-      targetdist(D_MAXINT), source(sp.source), aimflagsmask(sp.mask),
       opentop(0), openbottom(0), openrange(0),
       intercepts(), fromid(sp.cgroupid), toid(R_NOGROUP),
       hitpblock(false), addedportal(false), 
-      portalresult(false), portalexit(false),
+      portalresult(false), portalexit(false), bullet(),
       aimparams(&sp), origindist(inbasedist)
    {
+      aim.attackrange = sp.distance;
+      aim.aimslope = 0;
+      aim.linetarget = nullptr;
+      aim.targetdist = D_MAXINT;
+      aim.source = sp.source;
+      aim.aimflagsmask = sp.mask;
+
       memset(&trace, 0, sizeof(trace));
 
       tx = cx + (sp.distance >> FRACBITS) 
@@ -244,6 +264,34 @@ public:
       VALID_ALLOC(validpolys, ::numPolyObjects);
    }
 
+   // ioanch 20160101: bullet attack
+   CamSight(Mobj *insource, angle_t angle, fixed_t distance, fixed_t slope,
+      int damage, const mobjinfo_t *puff, const CamSight *prev) : 
+      type(CamType::bullet), 
+      cx(insource->x), cy(insource->y), topslope(0), bottomslope(0), aim(),
+      trace(), opentop(0), openbottom(0), openrange(0), toid(R_NOGROUP),
+      hitpblock(false), addedportal(false), portalresult(false), 
+      portalexit(false), params(nullptr), origindist(0)
+   {
+      aim.attackrange = distance;
+      aim.aimslope = slope;
+      aim.source = insource;
+
+      angle >>= ANGLETOFINESHIFT;
+      bullet.damage = damage;
+      tx = cx + (distance >> FRACBITS) * (bullet.cos = finecosine[angle]);
+      ty = cy + (distance >> FRACBITS) * (bullet.sin = finesine[angle]);
+      sightzstart = aim.source->z - aim.source->floorclip 
+         + (aim.source->height >> 1) + 8 * FRACUNIT;
+      bullet.puff = puff;
+
+      fromid = aim.source->groupid;
+      bullet.prev = prev;
+
+      VALID_ALLOC(validlines, ::numlines);
+      VALID_ALLOC(validpolys, ::numPolyObjects);
+   }
+
    ~CamSight()
    {
       VALID_FREE(validlines);
@@ -264,7 +312,7 @@ struct CamInfo
    bool absoluteCumulDist;
    bool wallEarlyOut;
    bool blockBoundsEarlyOut;
-   bool (*interceptFunc)(CamSight &cam, intercept_t *in);
+   bool (*interceptFunc)(CamSight &cam, const intercept_t *in);
    bool interceptThings;
 };
 
@@ -276,8 +324,9 @@ static bool CAM_recurseFlatPortalAim(CamSight &cam, int newfromid,
                                      fixed_t x, fixed_t y, fixed_t bottomslope, 
                                      fixed_t topslope, fixed_t totalfrac, 
                                      fixed_t partialfrac);
-static bool CAM_SightTraverse(CamSight &cam, intercept_t *in);
-static bool CAM_aimTraverse(CamSight &cam, intercept_t *in);
+static bool CAM_SightTraverse(CamSight &cam, const intercept_t *in);
+static bool CAM_aimTraverse(CamSight &cam, const intercept_t *in);
+static bool CAM_shootTraverse(CamSight &cam, const intercept_t *in);
 
 //
 // gCamInfo
@@ -290,6 +339,8 @@ static CamInfo gCamInfo[CamType::NUM] =
    { CAM_recurseFlatPortalSight, false, true, true, CAM_SightTraverse, false },
    // aim
    { CAM_recurseFlatPortalAim, true, false, false, CAM_aimTraverse, true },
+   // bullet
+   { nullptr, true, false, false, CAM_shootTraverse, true },
 };
 
 //=============================================================================
@@ -344,7 +395,7 @@ void camsightparams_t::setTargetMobj(const Mobj *mo)
 //
 // ioanch 20151230: Sets the data for the autoaim part
 //
-void camaimparams_t::set(const Mobj *mo, angle_t inAngle, fixed_t inDistance,
+void camaimparams_t::set(Mobj *mo, angle_t inAngle, fixed_t inDistance,
                          uint32_t inMask)
 {
    source = mo;
@@ -498,11 +549,11 @@ static bool CAM_recurseFlatPortalAim(CamSight &cam, int newfromid,
       
    // prefer closer (by XY) targets
    if(foundtarget &&
-      (!cam.linetarget || founddist < cam.targetdist))
+      (!cam.aim.linetarget || founddist < cam.aim.targetdist))
    {
-      cam.linetarget = foundtarget;
-      cam.targetdist = founddist;
-      cam.aimslope = foundslope;
+      cam.aim.linetarget = foundtarget;
+      cam.aim.targetdist = founddist;
+      cam.aim.aimslope = foundslope;
    }
    return false;  // return false
 }
@@ -554,7 +605,7 @@ static bool CAM_checkPortalSector(CamSight &cam, const sector_t *sector,
             totalfrac = FixedMul(fixedratio, totalfrac);
             // retrieve the xy frac using the origin frac
             partialfrac = FixedDiv(totalfrac - cam.originfrac, 
-               info.absoluteCumulDist ? cam.attackrange 
+               info.absoluteCumulDist ? cam.aim.attackrange 
                : FRACUNIT - cam.originfrac);
 
             x = cam.trace.x + FixedMul(partialfrac + 1, cam.trace.dx);
@@ -591,7 +642,7 @@ static bool CAM_checkPortalSector(CamSight &cam, const sector_t *sector,
                linehitz - cam.sightzstart) + 1;
             totalfrac = FixedMul(fixedratio, totalfrac);
             partialfrac = FixedDiv(totalfrac - cam.originfrac, 
-               info.absoluteCumulDist ? cam.attackrange 
+               info.absoluteCumulDist ? cam.aim.attackrange 
                : FRACUNIT - cam.originfrac);
 
             x = cam.trace.x + FixedMul(partialfrac + 1, cam.trace.dx);
@@ -611,7 +662,7 @@ static bool CAM_checkPortalSector(CamSight &cam, const sector_t *sector,
 //
 // CAM_SightTraverse
 //
-static bool CAM_SightTraverse(CamSight &cam, intercept_t *in)
+static bool CAM_SightTraverse(CamSight &cam, const intercept_t *in)
 {
    const line_t *li; // ioanch 20151229: made const
    fixed_t slope;
@@ -722,16 +773,17 @@ static bool CAM_SightTraverse(CamSight &cam, intercept_t *in)
 //
 // ioanch 20151230: autoaim support
 //
-static bool CAM_aimTraverse(CamSight &cam, intercept_t *in)
+static bool CAM_aimTraverse(CamSight &cam, const intercept_t *in)
 {
    fixed_t totaldist, slope;
    if(in->isaline)
    {
       const line_t *li = in->d.line;
 
-      totaldist = cam.origindist + FixedMul(cam.attackrange, in->frac);
-      const sector_t *sector = P_PointOnLineSide(cam.trace.x, cam.trace.y, li) == 0 ?
-         li->frontsector : li->backsector;
+      totaldist = cam.origindist + FixedMul(cam.aim.attackrange, in->frac);
+      const sector_t *sector = 
+         P_PointOnLineSide(cam.trace.x, cam.trace.y, li) == 0 ? li->frontsector
+         : li->backsector;
       const sector_t *osector = sector == li->frontsector ? 
          li->backsector : li->frontsector;
 
@@ -742,7 +794,7 @@ static bool CAM_aimTraverse(CamSight &cam, intercept_t *in)
          CAM_checkPortalSector(cam, sector, totaldist, in->frac);
 
          // if a closer target than how we already are has been found, then exit
-         if(cam.linetarget && cam.targetdist <= totaldist)
+         if(cam.aim.linetarget && cam.aim.targetdist <= totaldist)
             return false;
       }
 
@@ -811,8 +863,8 @@ static bool CAM_aimTraverse(CamSight &cam, intercept_t *in)
          }
 
          // For autoaim, we'll use the distance so far, not the fraction so far
-         cam.aimslope = CAM_AimLineAttack(params, &cam.linetarget, totaldist, 
-            cam.bottomslope, cam.topslope, nullptr);
+         cam.aim.aimslope = CAM_AimLineAttack(params, &cam.aim.linetarget, 
+            totaldist, cam.bottomslope, cam.topslope, nullptr);
          return false;
       }
 
@@ -823,7 +875,7 @@ static bool CAM_aimTraverse(CamSight &cam, intercept_t *in)
       Mobj *th = in->d.thing;
       fixed_t thingtopslope, thingbottomslope;
       // tests already passed when populating the intercepts array
-      totaldist = cam.origindist + FixedMul(cam.attackrange, in->frac);
+      totaldist = cam.origindist + FixedMul(cam.aim.attackrange, in->frac);
 
       // check ceiling and floor
       const sector_t *sector = th->subsector->sector;
@@ -831,7 +883,7 @@ static bool CAM_aimTraverse(CamSight &cam, intercept_t *in)
       {
          CAM_checkPortalSector(cam, sector, totaldist, in->frac);
          // if a closer target than how we already are has been found, then exit
-         if(cam.linetarget && cam.targetdist <= totaldist)
+         if(cam.aim.linetarget && cam.aim.targetdist <= totaldist)
             return false;
       }
 
@@ -853,11 +905,11 @@ static bool CAM_aimTraverse(CamSight &cam, intercept_t *in)
 
       // check if this thing is closer than potentially others found beyond
       // flat portals
-      if(!cam.linetarget || totaldist < cam.targetdist)
+      if(!cam.aim.linetarget || totaldist < cam.aim.targetdist)
       {
-         cam.aimslope = (thingtopslope + thingbottomslope) / 2;
-         cam.targetdist = totaldist;
-         cam.linetarget = th;
+         cam.aim.aimslope = (thingtopslope + thingbottomslope) / 2;
+         cam.aim.targetdist = totaldist;
+         cam.aim.linetarget = th;
       }
 
       return false;
@@ -932,11 +984,14 @@ static bool CAM_SightBlockThingsIterator(CamSight &cam, int x, int y)
    for(; thing; thing = thing->bnext)
    {
       // reject them here
-      if(!(thing->flags & MF_SHOOTABLE) || thing == cam.source)
+      if(!(thing->flags & MF_SHOOTABLE) || thing == cam.aim.source)
          continue;
       // reject friends (except players) also here
-      if(thing->flags & cam.source->flags & cam.aimflagsmask && !thing->player)
+      if(thing->flags & cam.aim.source->flags & cam.aim.aimflagsmask 
+         && !thing->player)
+      {
          continue;
+      }
 
       fixed_t   x1, y1;
       fixed_t   x2, y2;
@@ -945,7 +1000,7 @@ static bool CAM_SightBlockThingsIterator(CamSight &cam, int x, int y)
       fixed_t   frac;
 
       // check a corner to corner crossection for hit
-      if((trace.dl.dx ^ trace.dl.dy) > 0)
+      if((cam.trace.dx ^ cam.trace.dy) > 0)
       {
          x1 = thing->x - thing->radius;
          y1 = thing->y + thing->radius;
@@ -1448,15 +1503,219 @@ static fixed_t CAM_AimLineAttack(const camaimparams_t &params, Mobj **outTarget,
    CAM_SightPathTraverse(newCam);
 
    if(outTarget)
-      *outTarget = newCam.linetarget;
+      *outTarget = newCam.aim.linetarget;
    if(outDist)
-      *outDist = newCam.targetdist;
+      *outDist = newCam.aim.targetdist;
 
-   return newCam.linetarget ? newCam.aimslope : lookslope;
+   return newCam.aim.linetarget ? newCam.aim.aimslope : lookslope;
 }
 fixed_t CAM_AimLineAttack(const camaimparams_t &params, Mobj **outTarget)
 {
    return CAM_AimLineAttack(params, outTarget, 0, D_MAXINT, D_MAXINT, nullptr);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ioanch 20160101: portal aware bullet attack
+
+//
+// CAM_shoot2SLine
+//
+// Equivalent of P_Shoot2SLine
+//
+static bool CAM_shoot2SLine(const CamSight &cam, line_t *li, int side, 
+                            fixed_t dist)
+{
+   const sector_t *fs = li->frontsector;
+   const sector_t *bs = li->backsector;
+
+   // ioanch: no more need for demo version < 333 check
+   bool becomp = !!comp[comp_planeshoot];
+   bool floorsame = fs->floorheight == bs->floorheight && becomp;
+   bool ceilingsame = fs->ceilingheight == bs->ceilingheight && becomp;
+
+   if((floorsame || FixedDiv(cam.openbottom - cam.sightzstart, dist) <=
+      cam.aim.aimslope) &&
+      (ceilingsame || FixedDiv(cam.opentop - cam.sightzstart, dist) >=
+      cam.aim.aimslope))
+   {
+      if(li->special && !comp[comp_planeshoot])
+         P_ShootSpecialLine(cam.aim.source, li, side);
+      return true;
+   }
+   return false;
+}
+
+//
+// CAM_shotCheck2SLine
+//
+// Equivalent of P_ShotCheck2SLine
+//
+static bool CAM_shotCheck2SLine(CamSight &cam, const intercept_t *in, 
+                                line_t *li, int lineside)
+{
+   bool ret = false;
+   if(li->extflags & EX_ML_BLOCKALL)
+      return false;
+
+   if(li->flags & ML_TWOSIDED)
+   {
+      CAM_LineOpening(cam, li);
+      fixed_t dist = FixedMul(cam.aim.attackrange, in->frac);
+      if(CAM_shoot2SLine(cam, li, lineside, dist))
+         ret = true;
+   }
+   return ret;
+}
+
+//
+// CAM_shootTraverse
+//
+// Bullet hit. Based on PTR_ShootTraverse. See that function for the original
+// comments.
+//
+static bool CAM_shootTraverse(CamSight &cam, const intercept_t *in)
+{
+   if(in->isaline)
+   {
+      line_t *li = in->d.line;
+
+      // ioanch 20160101: use the trace origin instead of assuming it being the
+      // same as the source thing origin, as it happens in PTR_ShootTraverse
+      int lineside = P_PointOnLineSide(cam.trace.x, cam.trace.y, li);
+
+      if(CAM_shotCheck2SLine(cam, in, li, lineside))
+         return true;
+
+      fixed_t frac = in->frac - FixedDiv(4 * FRACUNIT, cam.aim.attackrange);
+      fixed_t x = cam.trace.x + FixedMul(cam.trace.dx, frac);
+      fixed_t y = cam.trace.y + FixedMul(cam.trace.dy, frac);
+      fixed_t z = cam.sightzstart + FixedMul(cam.aim.aimslope, 
+         FixedMul(frac, cam.aim.attackrange));
+
+      const sector_t *sidesector = lineside ? li->backsector : li->frontsector;
+      bool hitplane = false;
+      int updown = 2;
+
+      if(sidesector && !comp[comp_planeshoot])
+      {
+         if(z < sidesector->floorheight)
+         {
+            fixed_t pfrac = FixedDiv(sidesector->floorheight - cam.sightzstart,
+               cam.aim.aimslope);
+
+            if(R_IsSkyFlat(sidesector->floorpic))
+               return false;
+
+            x = cam.trace.x + FixedMul(cam.bullet.cos, pfrac);
+            y = cam.trace.y + FixedMul(cam.bullet.sin, pfrac);
+            z = sidesector->floorheight;
+
+            hitplane = true;
+            updown = 0;
+         }
+         else if(z > sidesector->ceilingheight)
+         {
+            fixed_t pfrac = FixedDiv(sidesector->ceilingheight 
+               - cam.sightzstart, cam.aim.aimslope);
+            if(sidesector->intflags & SIF_SKY)
+               return false;
+            x = cam.trace.x + FixedMul(cam.bullet.cos, pfrac);
+            y = cam.trace.y + FixedMul(cam.bullet.sin, pfrac);
+            z = sidesector->ceilingheight;
+
+            hitplane = true;
+            updown = 1;
+         }
+      }
+
+      if(!hitplane && li->special)
+         P_ShootSpecialLine(cam.aim.source, li, lineside);
+
+      if(R_IsSkyFlat(li->frontsector->ceilingpic) || li->frontsector->c_portal)
+      {
+         if(z > li->frontsector->ceilingheight)
+            return false;
+         if(li->backsector && R_IsSkyFlat(li->backsector->ceilingpic))
+         {
+            if(li->backsector->ceilingheight < z)
+               return false;
+         }
+      }
+
+      if(!hitplane && li->portal)
+         return false;
+
+      P_SpawnPuff(x, y, z, P_PointToAngle(0, 0, li->dx, li->dy) - ANG90, 
+         updown, true);
+
+      return false;
+   }
+   else
+   {
+      Mobj *th = in->d.thing;
+      // self and shootable checks already handled. Friendliness check not
+      // enabled anyway
+      if(th->flags3 & MF3_GHOST && cam.aim.source->player 
+         && P_GetReadyWeapon(cam.aim.source->player)->flags & WPF_NOHITGHOSTS)
+      {
+         return true;
+      }
+
+      fixed_t dist = FixedMul(cam.aim.attackrange, in->frac);
+      fixed_t thingtopslope = FixedDiv(th->z + th->height - cam.sightzstart, 
+         dist);
+      fixed_t thingbottomslope = FixedDiv(th->z - cam.sightzstart, dist);
+
+      if(thingtopslope < cam.aim.aimslope)
+         return true;
+
+      if(thingbottomslope > cam.aim.aimslope)
+         return true;
+
+      fixed_t frac = in->frac - FixedDiv(10 * FRACUNIT, cam.aim.attackrange);
+      fixed_t x = cam.trace.x + FixedMul(cam.trace.dx, frac);
+      fixed_t y = cam.trace.y + FixedMul(cam.trace.dy, frac);
+      fixed_t z = cam.sightzstart + FixedMul(cam.aim.aimslope, FixedMul(frac,
+         cam.aim.attackrange));
+
+      if(th->flags & MF_NOBLOOD || 
+         th->flags2 & (MF2_INVULNERABLE | MF2_DORMANT))
+      {
+         P_SpawnPuff(x, y, z, P_PointToAngle(0, 0, cam.trace.dx, cam.trace.dy)
+            - ANG180, 2, true);
+      }
+      else
+      {
+         P_SpawnBlood(x, y, z, P_PointToAngle(0, 0, cam.trace.dx, cam.trace.dy)
+            - ANG180, cam.bullet.damage, th);
+      }
+      if(cam.bullet.damage)
+      {
+         P_DamageMobj(th, cam.aim.source, cam.aim.source, cam.bullet.damage,
+            cam.aim.source->info->mod);
+      }
+
+      return false;
+   }
+}
+
+//
+// CAM_LineAttack
+//
+// bullet attack (so-called hit scan)
+//
+void CAM_LineAttack(Mobj *source, angle_t angle, fixed_t distance, 
+                    fixed_t slope, int damage, const mobjinfo_t *puff)
+{
+   CamSight newCam(source, angle, distance, slope, damage, puff, nullptr);
+   CAM_SightPathTraverse(newCam);
+}
+
+void CAM_LineAttack(Mobj *source, angle_t angle, fixed_t distance, 
+                    fixed_t slope, int damage, const mobjinfo_t *puff, const CamSight *parent)
+{
+   CamSight newCam(source, angle, distance, slope, damage, puff, parent);
+   CAM_SightPathTraverse(newCam);
 }
 
 // EOF
