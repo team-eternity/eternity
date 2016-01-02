@@ -1658,7 +1658,7 @@ static bool CAM_checkShootFlatPortal(CamSight &cam, const sector_t *sidesector,
       const linkoffset_t *link = P_GetLinkIfExists(cam.fromid, newfromid);
 
       // NOTE: for line attacks, sightzstart also moves!
-      fixed_t dist =  FixedMul(cam.aim.attackrange, absratio);
+      fixed_t dist =  FixedMul(FixedMul(cam.aim.attackrange, infrac), absratio);
       fixed_t remdist = cam.aim.attackrange - dist;
 
       if(link)
