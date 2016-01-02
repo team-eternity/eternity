@@ -144,7 +144,7 @@ static bool PTR_AimTraverse(intercept_t *in)
 fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, int mask)
 {
    // ioanch 20151231: use new portal code
-   if(full_demo_version >= make_full_version(340, 46))
+   if(full_demo_version >= make_full_version(340, 47))
    {
       camaimparams_t aimparams;
       aimparams.prev = nullptr;
@@ -549,7 +549,7 @@ void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance,
                   fixed_t slope, int damage, mobjinfo_t *puff)
 {
    // ioanch 20151231: use new portal code
-   if(full_demo_version >= make_full_version(340, 46))
+   if(full_demo_version >= make_full_version(340, 47))
    {
       trace.attackrange = distance; // this needs to be set because P_SpawnPuff
                                     // depends on it

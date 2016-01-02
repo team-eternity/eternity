@@ -2228,8 +2228,9 @@ static void P_radiusAttackForGroupID(Mobj *spot, Mobj *source, int damage,
    fixed_t dist = (distance + MAXRADIUS) << FRACBITS;
 
    // ioanch: Get the link offset (or zerolink if no portals are used)
-   const linkoffset_t *link = groupid != R_NOGROUP ? 
-      P_GetLinkOffset(spot->groupid, groupid) : &zerolink;
+   const linkoffset_t *link = groupid != R_NOGROUP && 
+      spot->groupid != R_NOGROUP ? P_GetLinkOffset(spot->groupid, groupid) : 
+      &zerolink;
 
    int yh = (spot->y + link->y + dist - bmaporgy) >> MAPBLOCKSHIFT;
    int yl = (spot->y + link->y - dist - bmaporgy) >> MAPBLOCKSHIFT;
@@ -2288,10 +2289,11 @@ void P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int distance,
 
    // OPTIMIZE: do not go through all groups if there is no portal close to the
    // current position
-   int numPortalGroups = P_PortalGroupCount();
-   if(numPortalGroups <= 0)
+   int numPortalGroups = 0;
+   if(full_demo_version < make_full_version(340, 47) || 
+      (numPortalGroups = P_PortalGroupCount()) <= 1)
    {
-      // map has no portals
+      // map has no portals OR is an older version
       P_radiusAttackForGroupID(spot, source, damage, distance, mod, flags, 
          R_NOGROUP);
       return;
