@@ -77,7 +77,7 @@ int P_PointOnLineSide(fixed_t x, fixed_t y, const line_t *line)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-int P_BoxOnLineSide(fixed_t *tmbox, line_t *ld)
+int P_BoxOnLineSide(const fixed_t *tmbox, const line_t *ld)
 {
    int p;
 
@@ -109,7 +109,7 @@ int P_BoxOnLineSide(fixed_t *tmbox, line_t *ld)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-int P_PointOnDivlineSide(fixed_t x, fixed_t y, divline_t *line)
+int P_PointOnDivlineSide(fixed_t x, fixed_t y, const divline_t *line)
 {
    return
       !line->dx ? x <= line->x ? line->dy > 0 : line->dy < 0 :
@@ -155,7 +155,7 @@ fixed_t P_InterceptVector(const divline_t *v2, const divline_t *v1)
 // through a two sided line.
 // OPTIMIZE: keep this precalculated
 //
-void P_LineOpening(line_t *linedef, Mobj *mo)
+void P_LineOpening(const line_t *linedef, const Mobj *mo)
 {
    fixed_t frontceilz, frontfloorz, backceilz, backfloorz;
    // SoM: used for 3dmidtex
@@ -475,7 +475,7 @@ void P_SetThingPosition(Mobj *thing)
 // SoM, VERY inaccurate. I don't really know what its for or why
 // its here, but I'm leaving it be.
 //
-bool ThingIsOnLine(Mobj *t, line_t *l)
+bool ThingIsOnLine(const Mobj *t, const line_t *l)
 {
    int dx = l->dx >> FRACBITS;                           // Linedef vector
    int dy = l->dy >> FRACBITS;
