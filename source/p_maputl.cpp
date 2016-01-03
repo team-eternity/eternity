@@ -271,7 +271,7 @@ void P_LineOpening(line_t *linedef, Mobj *mo)
       // clipping
       if((linedef->flags & ML_BLOCKMONSTERS) && 
          !(mo->flags & (MF_FLOAT | MF_DROPOFF)) &&
-         D_abs(mo->z - textop) <= 24*FRACUNIT)
+         D_abs(mo->z - textop) <= STEPSIZE)
       {
          clip.opentop = clip.openbottom;
          clip.openrange = 0;
@@ -290,7 +290,7 @@ void P_LineOpening(line_t *linedef, Mobj *mo)
 
          // The mobj is above the 3DMidTex, so check to see if it's ON the 3DMidTex
          // SoM 01/12/06: let monsters walk over dropoffs
-         if(abs(mo->z - textop) <= 24*FRACUNIT)
+         if(abs(mo->z - textop) <= STEPSIZE)
             clip.touch3dside = 1;
       }
    }

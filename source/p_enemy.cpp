@@ -442,7 +442,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
       if(!(actor->flags & MF_FLOAT) && actor->z > actor->floorz && 
          !(actor->intflags & MIF_ONMOBJ))
       {
-         if (actor->z > actor->floorz + 24*FRACUNIT)
+         if (actor->z > actor->floorz + STEPSIZE)
             return false;
          else
             actor->z = actor->floorz;
@@ -781,7 +781,7 @@ static bool PIT_AvoidDropoff(line_t *line)
       // The monster must contact one of the two floors,
       // and the other must be a tall dropoff (more than 24).
 
-      if(back == floorz && front < floorz - FRACUNIT*24)
+      if(back == floorz && front < floorz - STEPSIZE)
       {
          // front side dropoff
          angle = P_PointToAngle(0,0,line->dx,line->dy);
@@ -789,7 +789,7 @@ static bool PIT_AvoidDropoff(line_t *line)
       else
       {
          // back side dropoff
-         if(front == floorz && back < floorz - FRACUNIT*24)
+         if(front == floorz && back < floorz - STEPSIZE)
             angle = P_PointToAngle(line->dx,line->dy,0,0);
          else
             return true;
@@ -860,7 +860,7 @@ void P_NewChaseDir(Mobj *actor)
 
    if(demo_version >= 203)
    {
-      if(actor->floorz - actor->dropoffz > FRACUNIT*24 &&
+      if(actor->floorz - actor->dropoffz > STEPSIZE &&
          actor->z <= actor->floorz &&
          !(actor->flags & (MF_DROPOFF|MF_FLOAT)) &&
          (!P_Use3DClipping() || 

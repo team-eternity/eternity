@@ -641,7 +641,7 @@ static bool PTR_NoWayTraverse(intercept_t *in)
 
    return 
       !(clip.openrange  <= 0 ||                                  // No opening
-        clip.openbottom > trace.thing->z + 24 * FRACUNIT ||      // Too high, it blocks
+        clip.openbottom > trace.thing->z + STEPSIZE ||      // Too high, it blocks
         clip.opentop    < trace.thing->z + trace.thing->height); // Too low, it blocks
 }
 
