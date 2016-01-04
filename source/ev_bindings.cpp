@@ -1049,6 +1049,7 @@ PARAMLINE(ThingProjectileGravity);
 PARAMLINE(ThingActivate);
 PARAMLINE(ThingDeactivate);
 PARAMLINE(ThrustThing); // ioanch 20160104
+PARAMLINE(ThrustThingZ);
 PARAMLINE(ParamPlatPerpetualRaise);
 PARAMLINE(ParamPlatStop);
 PARAMLINE(ParamPlatDWUS);
@@ -1407,6 +1408,7 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(420, ACSExecuteWithResult,            "ACS_ExecuteWithResult")
    LINESPECNAMED(421, ThingChangeTID,                  "Thing_ChangeTID")
    LINESPECNAMED(422, ThrustThing,                     "ThrustThing")   // ioanch 20160104
+   LINESPECNAMED(423, ThrustThingZ,                    "ThrustThingZ")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1520,6 +1522,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(115, ParamLightFlicker,               "Light_Flicker")
    LINESPECNAMED(116, ParamLightStrobe,                "Light_Strobe")
    LINESPECNAMED(120, RadiusQuake,                     "Radius_Quake")
+   LINESPECNAMED(128, ThrustThingZ,                    "ThrustThingZ")
    LINESPECNAMED(130, ThingActivate,                   "Thing_Activate")
    LINESPECNAMED(131, ThingDeactivate,                 "Thing_Deactivate")
    LINESPECNAMED(134, ThingProjectile,                 "Thing_Projectile")

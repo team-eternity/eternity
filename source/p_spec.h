@@ -1403,6 +1403,7 @@ int EV_ThingSpawn(const int *args, bool fog);
 int EV_ThingActivate(int tid);
 int EV_ThingDeactivate(int tid);
 int EV_ThrustThing(Mobj *activator, const int *args, int side);
+int EV_ThrustThingZ(Mobj *activator, const int *args);
 
 
 ////////////////////////////////////////////////////////////////

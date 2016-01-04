@@ -2974,6 +2974,19 @@ DEFINE_ACTION(EV_ActionThrustThing)
 }
 
 //
+// EV_ActionThrustThingZ
+//
+// Implements ThrustThingZ(tid, speed, updown, setadd)
+// From ZDoom wiki documentation.
+// * ExtraData: 423
+// * Hexen:     128
+//
+DEFINE_ACTION(EV_ActionThrustThingZ)
+{
+   return EV_ThrustThingZ(instance->actor, instance->args);
+}
+
+//
 // EV_ActionParamPlatPerpetualRaise
 //
 // Implements Plat_PerpetualRaise(tag, speed, delay)

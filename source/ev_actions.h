@@ -200,6 +200,7 @@ DECLARE_ACTION(EV_ActionThingProjectileGravity);
 DECLARE_ACTION(EV_ActionThingActivate);
 DECLARE_ACTION(EV_ActionThingDeactivate);
 DECLARE_ACTION(EV_ActionThrustThing);  // ioanch 20160104
+DECLARE_ACTION(EV_ActionThrustThingZ);
 DECLARE_ACTION(EV_ActionParamPlatPerpetualRaise);
 DECLARE_ACTION(EV_ActionParamPlatStop);
 DECLARE_ACTION(EV_ActionParamPlatDWUS);

@@ -270,6 +270,29 @@ int EV_ThrustThing(Mobj *activator, const int *args, int side)
    return success;
 }
 
+//
+// EV_ThrustThingZ
+//
+// Implements ThrustThingZ(tid, speed, updown, setadd)
+//
+int EV_ThrustThingZ(Mobj *activator, const int *args)
+{
+   int tid = args[0];
+   int speed = args[1] << (FRACBITS - 2);
+   int sign = args[2] != 0 ? -1 : 1;
+   bool add = args[3] != 0;
+
+   int success = 0;
+
+   Mobj *mobj = nullptr;
+   while((mobj = P_FindMobjFromTID(tid, mobj, activator)))
+   {
+      mobj->momz = (add ? mobj->momz : 0) + speed * sign;
+      success = 1;
+   }
+   return success;
+}
+
 //=============================================================================
 //
 // LevelActionThinker
