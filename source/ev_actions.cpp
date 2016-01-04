@@ -3084,5 +3084,19 @@ DEFINE_ACTION(EV_ActionThrustThing)
                          instance->args[1], instance->args[3]);
 }
 
+//
+// EV_ActionThrustThingZ
+//
+// Implements ThrustThingZ(tid, speed, updown, setadd)
+// From ZDoom wiki documentation.
+// * ExtraData: 425
+// * Hexen:     128
+//
+DEFINE_ACTION(EV_ActionThrustThingZ)
+{
+   return EV_ThrustThingZ(instance->actor, instance->args[0], instance->args[1],
+                          instance->args[2] != 0, instance->args[3] != 0);
+}
+
 // EOF
 

@@ -1406,6 +1406,7 @@ int EV_ThingChangeTID(Mobj *actor, int oldtid, int newtid);
 int EV_ThingRaise(Mobj *actor, int tid);
 int EV_ThingStop(Mobj *actor, int tid);
 int EV_ThrustThing(Mobj *actor, int side, int byteangle, int speed, int tid);
+int EV_ThrustThingZ(Mobj *actor, int tid, int speed, bool upDown, bool setAdd);
 
 
 ////////////////////////////////////////////////////////////////

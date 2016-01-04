@@ -202,6 +202,7 @@ DECLARE_ACTION(EV_ActionThingDeactivate);
 DECLARE_ACTION(EV_ActionThingRaise);
 DECLARE_ACTION(EV_ActionThingStop);
 DECLARE_ACTION(EV_ActionThrustThing);
+DECLARE_ACTION(EV_ActionThrustThingZ);
 DECLARE_ACTION(EV_ActionParamPlatPerpetualRaise);
 DECLARE_ACTION(EV_ActionParamPlatStop);
 DECLARE_ACTION(EV_ActionParamPlatDWUS);

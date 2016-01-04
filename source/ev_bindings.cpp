@@ -1051,6 +1051,7 @@ PARAMLINE(ThingDeactivate);
 PARAMLINE(ThingRaise);
 PARAMLINE(ThingStop);
 PARAMLINE(ThrustThing);
+PARAMLINE(ThrustThingZ);
 PARAMLINE(ParamPlatPerpetualRaise);
 PARAMLINE(ParamPlatStop);
 PARAMLINE(ParamPlatDWUS);
@@ -1411,6 +1412,7 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(422, ThingRaise,                      "Thing_Raise")
    LINESPECNAMED(423, ThingStop,                       "Thing_Stop")
    LINESPECNAMED(424, ThrustThing,                     "ThrustThing")
+   LINESPECNAMED(425, ThrustThingZ,                    "ThrustThingZ")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1526,6 +1528,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(115, ParamLightFlicker,               "Light_Flicker")
    LINESPECNAMED(116, ParamLightStrobe,                "Light_Strobe")
    LINESPECNAMED(120, RadiusQuake,                     "Radius_Quake")
+   LINESPECNAMED(128, ThrustThingZ,                    "ThrustThingZ")
    LINESPECNAMED(130, ThingActivate,                   "Thing_Activate")
    LINESPECNAMED(131, ThingDeactivate,                 "Thing_Deactivate")
    LINESPECNAMED(134, ThingProjectile,                 "Thing_Projectile")
