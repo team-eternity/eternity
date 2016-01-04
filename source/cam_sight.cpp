@@ -336,7 +336,7 @@ static bool CAM_shootTraverse(CamSight &cam, const intercept_t *in);
 //
 // MUST be in order
 //
-static CamInfo gCamInfo[CamType::NUM] =
+static CamInfo gCamInfo[(int)CamType::NUM] =
 {
    // sight
    { CAM_recurseFlatPortalSight, false, true, true, CAM_SightTraverse, false },
