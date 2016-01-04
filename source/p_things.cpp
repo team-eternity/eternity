@@ -29,6 +29,7 @@
 #include "doomstat.h"
 #include "d_gi.h"
 #include "ev_specials.h"
+#include "p_inter.h" // ioanch 20160105: for damage
 #include "p_mobj.h"
 #include "p_map3d.h"
 #include "p_saveg.h"
@@ -291,6 +292,20 @@ int EV_ThrustThingZ(Mobj *activator, const int *args)
       success = 1;
    }
    return success;
+}
+
+//
+// EV_DamageThing
+//
+// Implements DamageThing(damage, mod)
+//
+int EV_DamageThing(Mobj *activator, const int *args)
+{
+   if(args[0])
+      P_DamageMobj(activator, nullptr, nullptr, args[0], args[1]);
+   else
+      P_DamageMobj(activator, nullptr, nullptr, 10000, args[1]);
+   return 1;
 }
 
 //=============================================================================

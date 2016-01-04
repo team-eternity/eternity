@@ -1404,6 +1404,7 @@ int EV_ThingActivate(int tid);
 int EV_ThingDeactivate(int tid);
 int EV_ThrustThing(Mobj *activator, const int *args, int side);
 int EV_ThrustThingZ(Mobj *activator, const int *args);
+int EV_DamageThing(Mobj *activator, const int *args);
 
 
 ////////////////////////////////////////////////////////////////

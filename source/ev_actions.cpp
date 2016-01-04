@@ -2987,6 +2987,18 @@ DEFINE_ACTION(EV_ActionThrustThingZ)
 }
 
 //
+// EV_ActionDamageThing
+//
+// Implements DamageThing(damage, mod)
+// * ExtraData: 424
+// * Hexen:     73
+//
+DEFINE_ACTION(EV_ActionDamageThing)
+{
+   return EV_DamageThing(instance->actor, instance->args);
+}
+
+//
 // EV_ActionParamPlatPerpetualRaise
 //
 // Implements Plat_PerpetualRaise(tag, speed, delay)
