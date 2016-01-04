@@ -2962,6 +2962,23 @@ DEFINE_ACTION(EV_ActionThingDeactivate)
 }
 
 //
+// EV_ActionThrustThing
+//
+// Implements ThrustThing(angle, speed)
+// * ExtraData: 422
+// * Hexen:     72
+//
+DEFINE_ACTION(EV_ActionThrustThing)
+{
+   if(!instance->side)  // only thrust on side 0
+   {
+      P_ThrustMobj(instance->actor, instance->args[0] * (ANG90 / 64),
+                   instance->args[1] << FRACBITS);
+   }
+   return 1;
+}
+
+//
 // EV_ActionParamPlatPerpetualRaise
 //
 // Implements Plat_PerpetualRaise(tag, speed, delay)
