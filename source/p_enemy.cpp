@@ -56,6 +56,7 @@
 #include "p_map.h"
 #include "p_map3d.h"
 #include "p_maputl.h"
+#include "p_mobj.h"
 #include "p_mobjcol.h"
 #include "p_partcl.h"
 #include "p_setup.h"
@@ -202,9 +203,19 @@ bool P_CheckMeleeRange(Mobj *actor)
          return false;
    }
 
+   // ioanch 20151225: make it linked-portal aware
+   fixed_t tx, ty;
+#ifdef R_LINKEDPORTALS
+   tx = getThingX(actor, pl);
+   ty = getThingY(actor, pl);
+#else
+   tx = pl->x;
+   ty = pl->y;
+#endif
+
    return  // killough 7/18/98: friendly monsters don't attack other friends
       pl && !(actor->flags & pl->flags & MF_FRIEND) &&
-      (P_AproxDistance(pl->x-actor->x, pl->y-actor->y) <
+      (P_AproxDistance(tx - actor->x, ty - actor->y) <
        MELEERANGE - 20*FRACUNIT + pl->info->radius) &&
       P_CheckSight(actor, actor->target);
 }
@@ -432,7 +443,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
       if(!(actor->flags & MF_FLOAT) && actor->z > actor->floorz && 
          !(actor->intflags & MIF_ONMOBJ))
       {
-         if (actor->z > actor->floorz + 24*FRACUNIT)
+         if (actor->z > actor->floorz + STEPSIZE)
             return false;
          else
             actor->z = actor->floorz;
@@ -771,7 +782,7 @@ static bool PIT_AvoidDropoff(line_t *line)
       // The monster must contact one of the two floors,
       // and the other must be a tall dropoff (more than 24).
 
-      if(back == floorz && front < floorz - FRACUNIT*24)
+      if(back == floorz && front < floorz - STEPSIZE)
       {
          // front side dropoff
          angle = P_PointToAngle(0,0,line->dx,line->dy);
@@ -779,7 +790,7 @@ static bool PIT_AvoidDropoff(line_t *line)
       else
       {
          // back side dropoff
-         if(front == floorz && back < floorz - FRACUNIT*24)
+         if(front == floorz && back < floorz - STEPSIZE)
             angle = P_PointToAngle(line->dx,line->dy,0,0);
          else
             return true;
@@ -850,7 +861,7 @@ void P_NewChaseDir(Mobj *actor)
 
    if(demo_version >= 203)
    {
-      if(actor->floorz - actor->dropoffz > FRACUNIT*24 &&
+      if(actor->floorz - actor->dropoffz > STEPSIZE &&
          actor->z <= actor->floorz &&
          !(actor->flags & (MF_DROPOFF|MF_FLOAT)) &&
          (!P_Use3DClipping() || 
@@ -913,16 +924,20 @@ void P_NewChaseDir(Mobj *actor)
 // P_IsVisible
 //
 // killough 9/9/98: whether a target is visible to a monster
+// ioanch 20151229: made portal aware
 //
 static bool P_IsVisible(const Mobj *actor, const Mobj *mo, int allaround)
 {
    if(mo->flags4 & MF4_TOTALINVISIBLE)
       return 0;  // haleyjd: total invisibility!
 
+   // ioanch
+   fixed_t mox = getThingX(actor, mo), moy = getThingY(actor, mo);
+
    // haleyjd 11/14/02: Heretic ghost effects
    if(mo->flags3 & MF3_GHOST)
    {
-      if(P_AproxDistance(mo->x - actor->x, mo->y - actor->y) > 2*MELEERANGE 
+      if(P_AproxDistance(mox - actor->x, moy - actor->y) > 2*MELEERANGE 
          && P_AproxDistance(mo->momx, mo->momy) < 5*FRACUNIT)
       {
          // when distant and moving slow, target is considered
@@ -936,9 +951,9 @@ static bool P_IsVisible(const Mobj *actor, const Mobj *mo, int allaround)
    if(!allaround)
    {
       angle_t an = P_PointToAngle(actor->x, actor->y, 
-                                   mo->x, mo->y) - actor->angle;
+                                   mox, moy) - actor->angle;
       if(an > ANG90 && an < ANG270 &&
-         P_AproxDistance(mo->x-actor->x, mo->y-actor->y) > MELEERANGE)
+         P_AproxDistance(mox-actor->x, moy-actor->y) > MELEERANGE)
          return false;
    }
 
@@ -1387,8 +1402,9 @@ void P_BossTeleport(bossteleport_t *bt)
       while(1)
       {
          targ = (*bt->mc)[(unsigned int)i];
-         x = targ->x;
-         y = targ->y;
+         // ioanch 20151230: portal aware
+         x = getThingX(boss, targ);
+         y = getThingY(boss, targ);
          if(P_AproxDistance(boss->x - x, boss->y - y) > bt->minDistance)
          {
             foundSpot = true;

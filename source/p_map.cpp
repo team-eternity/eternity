@@ -1235,7 +1235,7 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y)
 static bool P_CheckDropOffVanilla(Mobj *thing, int dropoff)
 {
    if(!(thing->flags & (MF_DROPOFF|MF_FLOAT)) &&
-      clip.floorz - clip.dropoffz > 24 * FRACUNIT)
+      clip.floorz - clip.dropoffz > STEPSIZE)
       return false; // don't stand over a dropoff
 
    return true;
@@ -1252,7 +1252,7 @@ static bool P_CheckDropOffBOOM(Mobj *thing, int dropoff)
    if(compatibility || !dropoff)
    {
       if(!(thing->flags & (MF_DROPOFF|MF_FLOAT)) &&
-         clip.floorz - clip.dropoffz > 24 * FRACUNIT)
+         clip.floorz - clip.dropoffz > STEPSIZE)
          return false; // don't stand over a dropoff
    }
 
@@ -1280,7 +1280,7 @@ static bool P_CheckDropOffMBF(Mobj *thing, int dropoff)
       if(comp[comp_dropoff])
       {
          // haleyjd: note missing 202 compatibility... WOOPS!
-         if(clip.floorz - clip.dropoffz > 24 * FRACUNIT)
+         if(clip.floorz - clip.dropoffz > STEPSIZE)
             return false;
       }
       else if(!dropoff || (dropoff == 2 &&
@@ -1290,15 +1290,15 @@ static bool P_CheckDropOffMBF(Mobj *thing, int dropoff)
          // haleyjd: I can't even mentally parse this statement with 
          // any certainty.
          if(!monkeys || demo_version < 203 ?
-            clip.floorz - clip.dropoffz > 24 * FRACUNIT :
-            thing->floorz - clip.floorz > 24 * FRACUNIT ||
-            thing->dropoffz - clip.dropoffz > 24 * FRACUNIT)
+            clip.floorz - clip.dropoffz > STEPSIZE :
+            thing->floorz - clip.floorz > STEPSIZE ||
+            thing->dropoffz - clip.dropoffz > STEPSIZE)
             return false;
       }
       else
       {
          clip.felldown = !(thing->flags & MF_NOGRAVITY) && 
-                         thing->z - clip.floorz > 24 * FRACUNIT;
+                         thing->z - clip.floorz > STEPSIZE;
       }
    }
 
@@ -1339,13 +1339,13 @@ static bool P_CheckDropOffEE(Mobj *thing, int dropoff)
                           !thing->target || thing->target->z > clip.floorz)))
          {
             // deny any move resulting in a difference > 24
-            if(thing->z - clip.floorz > 24*FRACUNIT)
+            if(thing->z - clip.floorz > STEPSIZE)
                return false;
          }
          else  // dropoff allowed
          {
             clip.felldown = !(thing->flags & MF_NOGRAVITY) &&
-                           thing->z - clip.floorz > 24*FRACUNIT;
+                           thing->z - clip.floorz > STEPSIZE;
          }
          
          return true;
@@ -1353,7 +1353,7 @@ static bool P_CheckDropOffEE(Mobj *thing, int dropoff)
 
       if(comp[comp_dropoff])
       {
-         if(clip.floorz - clip.dropoffz > 24*FRACUNIT)
+         if(clip.floorz - clip.dropoffz > STEPSIZE)
             return false; // don't stand over a dropoff
       }
       else if(!dropoff || 
@@ -1366,15 +1366,15 @@ static bool P_CheckDropOffEE(Mobj *thing, int dropoff)
          // my interpretations of it are correct relative to C grammar.
 
          if(!monkeys || demo_version < 203 ?
-            floorz - clip.dropoffz > 24*FRACUNIT :
-            thing->floorz  - floorz > 24*FRACUNIT ||
-            thing->dropoffz - clip.dropoffz > 24*FRACUNIT)
+            floorz - clip.dropoffz > STEPSIZE :
+            thing->floorz  - floorz > STEPSIZE ||
+            thing->dropoffz - clip.dropoffz > STEPSIZE)
             return false;
       }
       else  // dropoff allowed -- check for whether it fell more than 24
       {
          clip.felldown = !(thing->flags & MF_NOGRAVITY) &&
-                        thing->z - floorz > 24*FRACUNIT;
+                        thing->z - floorz > STEPSIZE;
       }
    }
 
@@ -1422,7 +1422,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          else
          {
             // haleyjd: yikes...
-            if(clip.BlockingMobj->z + clip.BlockingMobj->height-thing->z > 24*FRACUNIT || 
+            if(clip.BlockingMobj->z + clip.BlockingMobj->height-thing->z > STEPSIZE || 
                (clip.BlockingMobj->subsector->sector->ceilingheight
                  - (clip.BlockingMobj->z + clip.BlockingMobj->height) < thing->height) ||
                (clip.ceilingz - (clip.BlockingMobj->z + clip.BlockingMobj->height) 
@@ -1480,7 +1480,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             return false;
          }
          else if(thing->z < clip.floorz && 
-                 clip.floorz - clip.dropoffz > 24*FRACUNIT) // TODO: dropoff max
+                 clip.floorz - clip.dropoffz > STEPSIZE) // TODO: dropoff max
          {
             thing->momz = 8*FRACUNIT;
             thing->intflags |= MIF_CLEARMOMZ;
@@ -1491,7 +1491,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       if(!(thing->flags & MF_TELEPORT) && !(thing->flags3 & MF3_FLOORMISSILE))
       {
          // too big a step up
-         if(clip.floorz - thing->z > 24*FRACUNIT)
+         if(clip.floorz - thing->z > STEPSIZE)
             return ret;
          else if(P_Use3DClipping() && thing->z < clip.floorz)
          { 
@@ -1966,7 +1966,7 @@ static bool PTR_SlideTraverse(intercept_t *in)
    if(clip.opentop - slidemo->z < slidemo->height)
       goto isblocking;  // mobj is too high
    
-   if(clip.openbottom - slidemo->z > 24*FRACUNIT )
+   if(clip.openbottom - slidemo->z > STEPSIZE )
       goto isblocking;  // too big a step up
    else if(P_Use3DClipping() &&
            slidemo->z < clip.openbottom) // haleyjd: OVER_UNDER
@@ -2135,6 +2135,7 @@ typedef struct bombdata_s
    int   bombmod;      // haleyjd 07/13/03
    
    unsigned int bombflags; // haleyjd 12/22/12
+   int   groupid;      // ioanch 20151226: the group this bomb should affect
 } bombdata_t;
 
 #define MAXBOMBS 128               // a static limit to prevent stack faults.
@@ -2149,6 +2150,13 @@ static bombdata_t *theBomb;        // it's the bomb, man. (the current explosion
 //
 static bool PIT_RadiusAttack(Mobj *thing)
 {
+   // ioanch 20151226: reject if it's not the right group, unless R_NOGROUP.
+   if(theBomb->groupid != R_NOGROUP && thing->groupid != R_NOGROUP 
+      && theBomb->groupid != thing->groupid)
+   {
+      return true;
+   }
+
    fixed_t dx, dy, dist;
    Mobj *bombspot     = theBomb->bombspot;
    Mobj *bombsource   = theBomb->bombsource;
@@ -2188,8 +2196,9 @@ static bool PIT_RadiusAttack(Mobj *thing)
       return true;
    }
 
-   dx   = D_abs(thing->x - bombspot->x);
-   dy   = D_abs(thing->y - bombspot->y);
+   // ioanch 20151225: portal-aware behaviour
+   dx   = D_abs(getThingX(bombspot, thing) - bombspot->x);
+   dy   = D_abs(getThingY(bombspot, thing) - bombspot->y);
    dist = dx > dy ? dx : dy;
    dist = (dist - thing->radius) >> FRACBITS;
 
@@ -2202,7 +2211,7 @@ static bool PIT_RadiusAttack(Mobj *thing)
    // haleyjd: optional z check for Hexen-style explosions
    if(theBomb->bombflags & RAF_CLIPHEIGHT)
    {
-      if((D_abs(thing->z - bombspot->z) / FRACUNIT) > 2 * bombdistance)
+      if((D_abs(getThingZ(bombspot, thing) - bombspot->z) / FRACUNIT) > 2 * bombdistance)
          return true;
    }
 
@@ -2223,20 +2232,27 @@ static bool PIT_RadiusAttack(Mobj *thing)
 }
 
 //
-// P_RadiusAttack
+// P_radiusAttackForGroupID
 //
-// Source is the creature that caused the explosion at spot.
-//   haleyjd 07/13/03: added method of death flag
-//   haleyjd 09/23/09: adjustments for reentrancy and recursion limit
+// ioanch 20151226: Radius attack is now distributed to each portal group in
+// the map, picking up the map block clusters from each group at the same
+// translated coordinates. This function handles one of the groups.
 //
-void P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int distance, 
-                    int mod, unsigned int flags)
+static void P_radiusAttackForGroupID(Mobj *spot, Mobj *source, int damage,
+                                     int distance, int mod, unsigned flags,
+                                     int groupid)
 {
    fixed_t dist = (distance + MAXRADIUS) << FRACBITS;
-   int yh = (spot->y + dist - bmaporgy) >> MAPBLOCKSHIFT;
-   int yl = (spot->y - dist - bmaporgy) >> MAPBLOCKSHIFT;
-   int xh = (spot->x + dist - bmaporgx) >> MAPBLOCKSHIFT;
-   int xl = (spot->x - dist - bmaporgx) >> MAPBLOCKSHIFT;
+
+   // ioanch: Get the link offset (or zerolink if no portals are used)
+   const linkoffset_t *link = groupid != R_NOGROUP && 
+      spot->groupid != R_NOGROUP ? P_GetLinkOffset(spot->groupid, groupid) : 
+      &zerolink;
+
+   int yh = (spot->y + link->y + dist - bmaporgy) >> MAPBLOCKSHIFT;
+   int yl = (spot->y + link->y - dist - bmaporgy) >> MAPBLOCKSHIFT;
+   int xh = (spot->x + link->x + dist - bmaporgx) >> MAPBLOCKSHIFT;
+   int xl = (spot->x + link->x - dist - bmaporgx) >> MAPBLOCKSHIFT;
    int x, y;
 
    if(demo_version >= 335)
@@ -2261,6 +2277,11 @@ void P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int distance,
    theBomb->bombdistance = distance;
    theBomb->bombmod      = mod;
    theBomb->bombflags    = flags;
+
+   // ioanch: portal aware, avoid blockmap duplication by distributing blocks
+   // only for each group ID. Only victims with the same groupid (if >= 0) will
+   // be hit.
+   theBomb->groupid      = groupid;
    
    for(y = yl; y <= yh; ++y)
       for(x = xl; x <= xh; ++x)
@@ -2268,6 +2289,37 @@ void P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int distance,
 
    if(demo_version >= 335 && bombindex > 0)
       theBomb = &bombs[--bombindex];
+}
+
+//
+// P_RadiusAttack
+//
+// Source is the creature that caused the explosion at spot.
+//   haleyjd 07/13/03: added method of death flag
+//   haleyjd 09/23/09: adjustments for reentrancy and recursion limit
+//
+void P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int distance, 
+                    int mod, unsigned int flags)
+{
+   // ioanch 20151226: portal-aware. Iterate through all groups and scan
+   // blockmaps, only picking objects belonging to those groups
+
+   // OPTIMIZE: do not go through all groups if there is no portal close to the
+   // current position
+   int numPortalGroups = 0;
+   if(full_demo_version < make_full_version(340, 47) || 
+      (numPortalGroups = P_PortalGroupCount()) <= 1)
+   {
+      // map has no portals OR is an older version
+      P_radiusAttackForGroupID(spot, source, damage, distance, mod, flags, 
+         R_NOGROUP);
+      return;
+   }
+
+   for(int i = 0; i < numPortalGroups; ++i)
+   {
+      P_radiusAttackForGroupID(spot, source, damage, distance, mod, flags, i);
+   }
 }
 
 //

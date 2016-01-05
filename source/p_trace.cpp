@@ -26,6 +26,7 @@
 
 #include "z_zone.h"
 
+#include "cam_sight.h"
 #include "d_gi.h"
 #include "doomstat.h"
 #include "e_exdata.h"
@@ -142,6 +143,18 @@ static bool PTR_AimTraverse(intercept_t *in)
 //
 fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, int mask)
 {
+   // ioanch 20151231: use new portal code
+   if(full_demo_version >= make_full_version(340, 47))
+   {
+      camaimparams_t aimparams;
+      aimparams.prev = nullptr;
+      aimparams.set(t1, angle, distance, mask);
+      clip.linetarget = nullptr;
+      trace.attackrange = distance; // this needs to be set because P_SpawnPuff
+                                    // depends on it
+      return CAM_AimLineAttack(aimparams, &clip.linetarget);
+   }
+
    fixed_t x2, y2;
    fixed_t lookslope = 0;
    fixed_t pitch = 0;
@@ -535,6 +548,15 @@ static bool PTR_ShootTraverse(intercept_t *in)
 void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance,
                   fixed_t slope, int damage, mobjinfo_t *puff)
 {
+   // ioanch 20151231: use new portal code
+   if(full_demo_version >= make_full_version(340, 47))
+   {
+      trace.attackrange = distance; // this needs to be set because P_SpawnPuff
+                                    // depends on it
+      CAM_LineAttack(t1, angle, distance, slope, damage, puff);
+      return;
+   }
+
    fixed_t x2, y2;
    traverser_t trav;
    
@@ -619,7 +641,7 @@ static bool PTR_NoWayTraverse(intercept_t *in)
 
    return 
       !(clip.openrange  <= 0 ||                                  // No opening
-        clip.openbottom > trace.thing->z + 24 * FRACUNIT ||      // Too high, it blocks
+        clip.openbottom > trace.thing->z + STEPSIZE ||      // Too high, it blocks
         clip.opentop    < trace.thing->z + trace.thing->height); // Too low, it blocks
 }
 

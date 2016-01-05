@@ -479,21 +479,21 @@ extern fixed_t FloatBobOffsets[64];
 // haleyjd 05/21/08: Functions like the above, but when we have a specific
 // Mobj pointer we want to use, and not mo->target.
 
-inline static fixed_t getThingX(Mobj *mo1, Mobj *mo2)
+inline static fixed_t getThingX(const Mobj *mo1, const Mobj *mo2)
 {
    if(!mo2) return 0;
    if(!mo1) return mo2->x;
    return mo2->x + P_GetLinkOffset(mo2->groupid, mo1->groupid)->x;
 }
 
-inline static fixed_t getThingY(Mobj *mo1, Mobj *mo2)
+inline static fixed_t getThingY(const Mobj *mo1, const Mobj *mo2)
 {
    if(!mo2) return 0;
    if(!mo1) return mo2->y;
    return mo2->y + P_GetLinkOffset(mo2->groupid, mo1->groupid)->y;
 }
 
-inline static fixed_t getThingZ(Mobj *mo1, Mobj *mo2)
+inline static fixed_t getThingZ(const Mobj *mo1, const Mobj *mo2)
 {
    if(!mo2) return 0;
    if(!mo1) return mo2->z;

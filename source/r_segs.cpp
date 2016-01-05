@@ -239,7 +239,8 @@ static void R_RenderSegLoop(void)
    {
       I_Error("R_RenderSegLoop: invalid seg x values!\n"
               "   x1 = %d, x2 = %d, linenum = %d\n", 
-              segclip.x1, segclip.x2, static_cast<int>(segclip.line->linedef - lines));
+              segclip.x1, segclip.x2,
+              static_cast<int>(segclip.line->linedef - lines));
    }
 #endif
 

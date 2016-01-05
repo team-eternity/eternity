@@ -175,6 +175,26 @@ bool P_GiveAmmoPickup(player_t *player, itemeffect_t *pickup, bool dropped, int 
 }
 
 //
+// P_giveBackpackAmmo
+//
+// ioanch 20151225: this calls P_GiveAmmo for each ammo type, using the backpack
+// amount metatable value. It needs to work this way to have all side effects
+// of the called function (double baby/nightmare ammo, weapon switching).
+//
+static void P_giveBackpackAmmo(player_t *player)
+{
+   static MetaKeyIndex keyBackpackAmount("ammo.backpackamount");
+
+   size_t numAmmo = E_GetNumAmmoTypes();
+   for(size_t i = 0; i < numAmmo; ++i)
+   {
+      auto ammoType = E_AmmoTypeForIndex(i);
+      int giveamount = ammoType->getInt(keyBackpackAmount, 0);
+      P_GiveAmmo(player, ammoType, giveamount);
+   }
+}
+
+//
 // P_GiveWeapon
 //
 // The weapon name may have a MF_DROPPED flag ored in.
@@ -826,7 +846,8 @@ bool P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       // INVENTORY_TODO: hardcoded for now
       if(!E_PlayerHasBackpack(player))
          E_GiveBackpack(player);
-      E_GiveAllAmmo(player, GAA_BACKPACKAMOUNT);
+      // ioanch 20151225: call from here to handle backpack ammo
+      P_giveBackpackAmmo(player);
       message = DEH_String("GOTBACKPACK"); // Ty 03/22/98 - externalized
       break;
 
@@ -1598,7 +1619,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
          }
          else
          {
-            auto link = P_GetLinkOffset(inflictor->groupid, target->groupid);
+            auto link = P_GetLinkOffset(target->groupid, inflictor->groupid);
             ang = P_PointToAngle(inflictor->x, inflictor->y, 
                                   target->x + link->x, target->y + link->y);
          }

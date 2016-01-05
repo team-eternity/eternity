@@ -60,6 +60,7 @@ fixed_t P_AproxDistance(fixed_t dx, fixed_t dy)
 // Returns 0 or 1
 //
 // killough 5/3/98: reformatted, cleaned up
+// ioanch 20151228: made line const
 //
 int P_PointOnLineSide(fixed_t x, fixed_t y, const line_t *line)
 {
@@ -77,7 +78,7 @@ int P_PointOnLineSide(fixed_t x, fixed_t y, const line_t *line)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-int P_BoxOnLineSide(fixed_t *tmbox, line_t *ld)
+int P_BoxOnLineSide(const fixed_t *tmbox, const line_t *ld)
 {
    int p;
 
@@ -121,6 +122,8 @@ int P_PointOnDivlineSide(fixed_t x, fixed_t y, const divline_t *line)
 //
 // P_MakeDivline
 //
+// ioanch 20151230: made const
+//
 void P_MakeDivline(const line_t *li, divline_t *dl)
 {
    dl->x  = li->v1->x;
@@ -137,6 +140,7 @@ void P_MakeDivline(const line_t *li, divline_t *dl)
 // and addlines traversers.
 //
 // killough 5/3/98: reformatted, cleaned up
+// ioanch 20151229: added const
 //
 fixed_t P_InterceptVector(const divline_t *v2, const divline_t *v1)
 {
@@ -268,7 +272,7 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo)
       // clipping
       if((linedef->flags & ML_BLOCKMONSTERS) && 
          !(mo->flags & (MF_FLOAT | MF_DROPOFF)) &&
-         D_abs(mo->z - textop) <= 24*FRACUNIT)
+         D_abs(mo->z - textop) <= STEPSIZE)
       {
          clip.opentop = clip.openbottom;
          clip.openrange = 0;
@@ -287,7 +291,7 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo)
 
          // The mobj is above the 3DMidTex, so check to see if it's ON the 3DMidTex
          // SoM 01/12/06: let monsters walk over dropoffs
-         if(abs(mo->z - textop) <= 24*FRACUNIT)
+         if(abs(mo->z - textop) <= STEPSIZE)
             clip.touch3dside = 1;
       }
    }
@@ -480,7 +484,7 @@ void P_SetThingPosition(Mobj *thing)
 // SoM, VERY inaccurate. I don't really know what its for or why
 // its here, but I'm leaving it be.
 //
-bool ThingIsOnLine(Mobj *t, line_t *l)
+bool ThingIsOnLine(const Mobj *t, const line_t *l)
 {
    int dx = l->dx >> FRACBITS;                           // Linedef vector
    int dy = l->dy >> FRACBITS;
