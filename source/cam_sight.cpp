@@ -914,7 +914,6 @@ bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
          if(linehitz == sightzstart)
          {
             // handle this edge case: put point right on line
-            sectorfrac = 1;
             x = trace.x + FixedMul(trace.dx, partialfrac);
             y = trace.y + FixedMul(trace.dy, partialfrac);
          }
@@ -960,7 +959,7 @@ bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
          else
          {
             sectorfrac = FixedDiv(sector->floorheight - sightzstart, 
-               linehitz - sightzstart) + 1;
+               linehitz - sightzstart);
             totalfrac = FixedMul(sectorfrac, totalfrac);
             partialfrac = FixedDiv(totalfrac - state.originfrac, 
                FRACUNIT - state.originfrac);
@@ -1417,7 +1416,6 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
          if(linehitz == sightzstart)
          {
             // handle this edge case: put point right on line
-            fixedratio = 1;
             x = trace.x + FixedMul(trace.dx, partialfrac);
             y = trace.y + FixedMul(trace.dy, partialfrac);
          }
@@ -1478,7 +1476,7 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
          else
          {
             fixedratio = FixedDiv(sector->floorheight - sightzstart, 
-               linehitz - sightzstart) + 1;
+               linehitz - sightzstart);
             totalfrac = FixedMul(fixedratio, totalfrac);
             partialfrac = FixedDiv(totalfrac - state.origindist, attackrange);
 
