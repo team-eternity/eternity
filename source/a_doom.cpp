@@ -1118,8 +1118,13 @@ void A_PainShootSkull(Mobj *actor, angle_t angle)
    
    prestep = 4*FRACUNIT + 3*(actor->info->radius + mobjinfo[skullType]->radius)/2;
 
-   x = actor->x + FixedMul(prestep, finecosine[an]);
-   y = actor->y + FixedMul(prestep, finesine[an]);
+   // ioanch 20160107: spawn at the correct position if there's a line portal
+   // between monster and intended position.
+   v2fixed_t pos = P_LinePortalCrossing(*actor,
+                                        FixedMul(prestep, finecosine[an]),
+                                        FixedMul(prestep, finesine[an]));
+   x = pos.x;
+   y = pos.y;
    z = actor->z + 8*FRACUNIT;
    
    if(comp[comp_skull])   // killough 10/98: compatibility-optioned
@@ -1131,7 +1136,11 @@ void A_PainShootSkull(Mobj *actor, angle_t angle)
       // If it is, then we don't allow the spawn. This is a bug fix, 
       // but it should be considered an enhancement, since it may 
       // disturb existing demos, so don't do it in compatibility mode.
-      
+
+      //
+      // PORTAL TODO: (ioanch) this doesn't appear to work well with line
+      //                       portals
+      //
       if (Check_Sides(actor,x,y))
          return;
       
@@ -1139,7 +1148,10 @@ void A_PainShootSkull(Mobj *actor, angle_t angle)
       
       // Check to see if the new Lost Soul's z value is above the
       // ceiling of its new sector, or below the floor. If so, kill it.
-      
+
+      //
+      // PORTAL TODO: (ioanch) check for sector linked portals!
+      //
       if((newmobj->z >
          (newmobj->subsector->sector->ceilingheight - newmobj->height)) ||
          (newmobj->z < newmobj->subsector->sector->floorheight))
