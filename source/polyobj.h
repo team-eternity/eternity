@@ -137,7 +137,7 @@ public:
    int polyObjNum;    // numeric id of polyobject (avoid C pointers here)
    int speed;         // speed of movement per frame
    int distance;      // distance to move
-   bool hasBeenPositive;  // flag to differentiate angles of >=180 from < 0
+   bool hasBeenPositive;  // MaxW: 20160106: flag to differentiate angles of >=180 from < 0
 };
 
 class PolyMoveThinker : public Thinker

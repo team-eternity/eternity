@@ -1201,8 +1201,8 @@ void PolyRotateThinker::Think()
       // decrement distance by the amount it moved
       this->distance -= avel;
 
-      // set the flag to differentiate angles >= 180 from angles < 0
-      hasBeenPositive |= (distance > 0);
+      // MaxW: 20160106: set the flag which differentiates angles >= 180 from angles < 0
+      hasBeenPositive = hasBeenPositive || (distance > 0);
 
       // are we at or past the destination?
       if(this->distance <= 0 && this->hasBeenPositive)
@@ -1236,7 +1236,7 @@ void PolyRotateThinker::serialize(SaveArchive &arc)
 {
    Super::serialize(arc);
 
-   arc << polyObjNum << speed << distance;
+   arc << polyObjNum << speed << distance << hasBeenPositive;
 }
 
 //
@@ -1571,6 +1571,7 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
    else
       th->distance = prdata->distance * BYTEANGLEMUL;
 
+   // MaxW: 20160106: Initialise flag which differentiates angles >= 180 from angles < 0
    th->hasBeenPositive = th->distance < 0 ? false : true;
    // set polyobject's thrust
    po->thrust = D_abs(th->speed) >> 8;
@@ -1612,6 +1613,8 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
       else
          th->distance = prdata->distance * BYTEANGLEMUL;
 
+      // MaxW: 20160106: Initialise flag which differentiates angles >= 180 from angles < 0
+      th->hasBeenPositive = th->distance < 0 ? false : true;
       // set polyobject's thrust
       po->thrust = D_abs(th->speed) >> 8;
       if(po->thrust < FRACUNIT)
