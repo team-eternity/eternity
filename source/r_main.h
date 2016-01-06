@@ -92,6 +92,13 @@ angle_t R_PointToAngle2(fixed_t pviewx, fixed_t pviewy, fixed_t x, fixed_t y);
 subsector_t *R_PointInSubsector(fixed_t x, fixed_t y);
 void R_SectorColormap(sector_t *s);
 
+// ioanch 20160106: template variants
+template<typename T> 
+inline static subsector_t *R_PointInSubsector(T &&v)
+{
+   return R_PointInSubsector(v.x, v.y);
+}
+
 //
 // REFRESH - the actual rendering functions.
 //
