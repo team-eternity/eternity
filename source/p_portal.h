@@ -27,6 +27,8 @@
 #ifndef P_PORTAL_H__
 #define P_PORTAL_H__
 
+#include "m_vector.h"
+
 extern bool useportalgroups;
 
 #ifndef R_NOGROUP
@@ -149,6 +151,27 @@ void P_SetCPortalBehavior(sector_t *sec, int newbehavior);
 // and updates the state flags for the surface.
 //
 void P_SetLPortalBehavior(line_t *line, int newbehavior);
+
+//
+// P_LinePortalCrossing
+//
+// ioanch 20160106: function to trace one or more paths through potential line
+// portals. Needed because some objects are spawned at given offsets from
+// others, and there's no other way to detect line portal change.
+//
+v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy);
+
+template <typename T> 
+inline static v2fixed_t P_LinePortalCrossing(T &&u, fixed_t dx, fixed_t dy)
+{
+   return P_LinePortalCrossing(u.x, u.y, dx, dy);
+}
+
+template <typename T, typename U> 
+inline static v2fixed_t P_LinePortalCrossing(T &&u, U &&dv)
+{
+   return P_LinePortalCrossing(u.x, u.y, dv.x, dv.y);
+}
 
 #endif
 

@@ -27,8 +27,10 @@
 #include "z_zone.h"
 #include "i_system.h"
 
+#include "cam_sight.h"
 #include "c_io.h"
 #include "doomstat.h"
+#include "m_collection.h"  // ioanch 20160106
 #include "p_chase.h"
 #include "p_map.h"
 #include "p_maputl.h"   // ioanch
@@ -923,6 +925,90 @@ void P_SetLPortalBehavior(line_t *line, int newbehavior)
       
    line->pflags = newbehavior;
    P_CheckLPortalState(line);
+}
+
+//
+// P_LinePortalCrossing
+//
+// ioanch 20160106
+// Checks if any line portals are crossed between (x, y) and (x+dx, y+dy),
+// updating the target position correctly
+//
+v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy)
+{
+   v2fixed_t cur = { x, y };
+   v2fixed_t fin = { x + dx, y + dy };
+
+   if((!dx && !dy) || full_demo_version < make_full_version(340, 47) || 
+      P_PortalGroupCount() <= 1)
+   {
+      return fin; // quick return in trivial case
+   }
+
+   bool res;
+
+   // number should be as large as possible to prevent accidental exits on valid
+   // hyperdetailed maps, but low enough to release the game on time.
+   int recprotection = 100000;
+   
+   // keep track of source coordinates. If any of them is repeated, then we have 
+   // an infinite loop
+   PODCollection<v2fixed_t> prevcoords;
+   
+   do
+   {
+      for(v2fixed_t prev : prevcoords)
+         if(prev == cur)  // exit if any previous one is found
+            break;
+      prevcoords.add(cur);
+      
+      res = CAM_PathTraverse(cur, fin, CAM_ADDLINES | CAM_REQUIRELINEPORTALS, 
+                             [&cur, &fin](const intercept_t *in, 
+                                          const divline_t &trace)
+      {
+
+         const line_t *line = in->d.line;
+
+         // must be a portal line
+         if(!(line->pflags & PS_PASSABLE))
+            return true;
+
+         // rule out invalid cases
+         if(in->frac <= 0 || in->frac > FRACUNIT)
+            return true;
+
+         // must be a valid portal line
+         int fromid = line->portal->data.link.fromid;
+         int toid = line->portal->data.link.toid;
+         if(fromid == toid)
+            return true;
+
+         // must face the user
+         if(P_PointOnLineSide(trace.x, trace.y, line) == 1)
+            return true;
+
+         // link must be valid
+         const linkoffset_t *link = P_GetLinkIfExists(fromid, toid);
+         if(!link)
+            return true;
+
+         // update the fields
+         cur.x += FixedMul(trace.dx, in->frac) + link->x;
+         cur.y += FixedMul(trace.dy, in->frac) + link->y;
+         fin += *link;
+
+         return false;
+      });
+      --recprotection;
+      
+      // Continue looking for portals after passing through one, from the new
+      // coordinates
+   } while (!res && recprotection);
+
+   if(!recprotection)
+      C_Printf("Warning: P_PortalCrossing loop");
+
+   return fin;
 }
 
 // EOF
