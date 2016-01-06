@@ -939,7 +939,7 @@ v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy)
    v2fixed_t cur = { x, y };
    v2fixed_t fin = { x + dx, y + dy };
 
-   if((!dx && !dy) || full_demo_version < make_full_version(340, 47) || 
+   if((!dx && !dy) || full_demo_version < make_full_version(340, 48) || 
       P_PortalGroupCount() <= 1)
    {
       return fin; // quick return in trivial case

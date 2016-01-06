@@ -47,12 +47,14 @@
 #include "p_maputl.h"
 #include "p_mobjcol.h"
 #include "p_mobj.h"
+#include "p_portal.h"   // ioanch 20160106: portal correct access
 #include "p_pspr.h"
 #include "p_setup.h"
 #include "p_skin.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "r_defs.h"
+#include "r_main.h"  // ioanch 20160106: portal correct access
 #include "r_state.h"
 #include "s_sound.h"
 #include "sounds.h"
@@ -787,8 +789,12 @@ void A_Fire(actionargs_t *actionargs)
    an = dest->angle >> ANGLETOFINESHIFT;
    
    P_UnsetThingPosition(actor);
-   actor->x = dest->x + FixedMul(24*FRACUNIT, finecosine[an]);
-   actor->y = dest->y + FixedMul(24*FRACUNIT, finesine[an]);
+   // IOANCH 20160106: correct line portal behaviour
+   v2fixed_t pos = P_LinePortalCrossing(*dest,
+                                        FixedMul(24*FRACUNIT, finecosine[an]),
+                                        FixedMul(24*FRACUNIT, finesine[an]));
+   actor->x = pos.x;
+   actor->y = pos.y;
    actor->z = dest->z;
    actor->backupPosition();
    P_SetThingPosition(actor);
@@ -884,8 +890,17 @@ void A_VileAttack(actionargs_t *actionargs)
       return;
 
    // move the fire between the vile and the player
-   fire->x = actor->target->x - FixedMul (24*FRACUNIT, finecosine[an]);
-   fire->y = actor->target->y - FixedMul (24*FRACUNIT, finesine[an]);
+   // ioanch 20160106: correct fire position based on portals
+   v2fixed_t pos = P_LinePortalCrossing(*actor->target, 
+                                        -FixedMul(24 * FRACUNIT, finecosine[an]),
+                                        -FixedMul(24 * FRACUNIT, finesine[an]));
+   fire->x = pos.x;
+   fire->y = pos.y;
+   
+   // ioanch: set the correct group ID now
+   if(full_demo_version >= make_full_version(340, 48))
+      fire->groupid = R_PointInSubsector(pos)->sector->groupid;
+   
    P_RadiusAttack(fire, actor, 70, 70, actor->info->mod, 0);
 }
 
