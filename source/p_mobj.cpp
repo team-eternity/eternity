@@ -1308,7 +1308,7 @@ void Mobj::Think()
             {
                P_PlayerHitFloor(this, true);
             }
-            if(onmo->z + onmo->height - z <= 24*FRACUNIT)
+            if(onmo->z + onmo->height - z <= STEPSIZE)
             {
                if(player && player->mo == this)
                {

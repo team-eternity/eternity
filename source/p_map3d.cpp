@@ -333,7 +333,7 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
    {
       // [RH] Let monsters walk on actors as well as floors
       if(((clip.thing->flags & MF_COUNTKILL) || (clip.thing->flags3 & MF3_KILLABLE)) &&
-         topz >= clip.floorz && topz <= clip.thing->z + 24*FRACUNIT)
+         topz >= clip.floorz && topz <= clip.thing->z + STEPSIZE)
       {
          stepthing = thing;
          clip.floorz = topz;
@@ -504,7 +504,7 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
       // [RH] The next condition is to compensate for the extra height
       // that gets added by P_CheckPosition() so that you cannot pick
       // up things that are above your true height.
-      && thing->z < clip.thing->z + clip.thing->height - 24*FRACUNIT)
+      && thing->z < clip.thing->z + clip.thing->height - STEPSIZE)
       return P_CheckPickUp(thing);
 
    // killough 3/16/98: Allow non-solid moving objects to move through solid

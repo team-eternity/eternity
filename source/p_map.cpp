@@ -1221,7 +1221,7 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y)
 static bool P_CheckDropOffVanilla(Mobj *thing, int dropoff)
 {
    if(!(thing->flags & (MF_DROPOFF|MF_FLOAT)) &&
-      clip.floorz - clip.dropoffz > 24 * FRACUNIT)
+      clip.floorz - clip.dropoffz > STEPSIZE)
       return false; // don't stand over a dropoff
 
    return true;
@@ -1238,7 +1238,7 @@ static bool P_CheckDropOffBOOM(Mobj *thing, int dropoff)
    if(compatibility || !dropoff)
    {
       if(!(thing->flags & (MF_DROPOFF|MF_FLOAT)) &&
-         clip.floorz - clip.dropoffz > 24 * FRACUNIT)
+         clip.floorz - clip.dropoffz > STEPSIZE)
          return false; // don't stand over a dropoff
    }
 
@@ -1266,7 +1266,7 @@ static bool P_CheckDropOffMBF(Mobj *thing, int dropoff)
       if(comp[comp_dropoff])
       {
          // haleyjd: note missing 202 compatibility... WOOPS!
-         if(clip.floorz - clip.dropoffz > 24 * FRACUNIT)
+         if(clip.floorz - clip.dropoffz > STEPSIZE)
             return false;
       }
       else if(!dropoff || (dropoff == 2 &&
@@ -1276,15 +1276,15 @@ static bool P_CheckDropOffMBF(Mobj *thing, int dropoff)
          // haleyjd: I can't even mentally parse this statement with 
          // any certainty.
          if(!monkeys || demo_version < 203 ?
-            clip.floorz - clip.dropoffz > 24 * FRACUNIT :
-            thing->floorz - clip.floorz > 24 * FRACUNIT ||
-            thing->dropoffz - clip.dropoffz > 24 * FRACUNIT)
+            clip.floorz - clip.dropoffz > STEPSIZE :
+            thing->floorz - clip.floorz > STEPSIZE ||
+            thing->dropoffz - clip.dropoffz > STEPSIZE)
             return false;
       }
       else
       {
          clip.felldown = !(thing->flags & MF_NOGRAVITY) && 
-                         thing->z - clip.floorz > 24 * FRACUNIT;
+                         thing->z - clip.floorz > STEPSIZE;
       }
    }
 
@@ -1325,13 +1325,13 @@ static bool P_CheckDropOffEE(Mobj *thing, int dropoff)
                           !thing->target || thing->target->z > clip.floorz)))
          {
             // deny any move resulting in a difference > 24
-            if(thing->z - clip.floorz > 24*FRACUNIT)
+            if(thing->z - clip.floorz > STEPSIZE)
                return false;
          }
          else  // dropoff allowed
          {
             clip.felldown = !(thing->flags & MF_NOGRAVITY) &&
-                           thing->z - clip.floorz > 24*FRACUNIT;
+                           thing->z - clip.floorz > STEPSIZE;
          }
          
          return true;
@@ -1339,7 +1339,7 @@ static bool P_CheckDropOffEE(Mobj *thing, int dropoff)
 
       if(comp[comp_dropoff])
       {
-         if(clip.floorz - clip.dropoffz > 24*FRACUNIT)
+         if(clip.floorz - clip.dropoffz > STEPSIZE)
             return false; // don't stand over a dropoff
       }
       else if(!dropoff || 
@@ -1352,15 +1352,15 @@ static bool P_CheckDropOffEE(Mobj *thing, int dropoff)
          // my interpretations of it are correct relative to C grammar.
 
          if(!monkeys || demo_version < 203 ?
-            floorz - clip.dropoffz > 24*FRACUNIT :
-            thing->floorz  - floorz > 24*FRACUNIT ||
-            thing->dropoffz - clip.dropoffz > 24*FRACUNIT)
+            floorz - clip.dropoffz > STEPSIZE :
+            thing->floorz  - floorz > STEPSIZE ||
+            thing->dropoffz - clip.dropoffz > STEPSIZE)
             return false;
       }
       else  // dropoff allowed -- check for whether it fell more than 24
       {
          clip.felldown = !(thing->flags & MF_NOGRAVITY) &&
-                        thing->z - floorz > 24*FRACUNIT;
+                        thing->z - floorz > STEPSIZE;
       }
    }
 
@@ -1408,7 +1408,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          else
          {
             // haleyjd: yikes...
-            if(clip.BlockingMobj->z + clip.BlockingMobj->height-thing->z > 24*FRACUNIT || 
+            if(clip.BlockingMobj->z + clip.BlockingMobj->height-thing->z > STEPSIZE || 
                (clip.BlockingMobj->subsector->sector->ceilingheight
                  - (clip.BlockingMobj->z + clip.BlockingMobj->height) < thing->height) ||
                (clip.ceilingz - (clip.BlockingMobj->z + clip.BlockingMobj->height) 
@@ -1466,7 +1466,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             return false;
          }
          else if(thing->z < clip.floorz && 
-                 clip.floorz - clip.dropoffz > 24*FRACUNIT) // TODO: dropoff max
+                 clip.floorz - clip.dropoffz > STEPSIZE) // TODO: dropoff max
          {
             thing->momz = 8*FRACUNIT;
             thing->intflags |= MIF_CLEARMOMZ;
@@ -1477,7 +1477,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       if(!(thing->flags & MF_TELEPORT) && !(thing->flags3 & MF3_FLOORMISSILE))
       {
          // too big a step up
-         if(clip.floorz - thing->z > 24*FRACUNIT)
+         if(clip.floorz - thing->z > STEPSIZE)
             return ret;
          else if(P_Use3DClipping() && thing->z < clip.floorz)
          { 
@@ -1949,7 +1949,7 @@ static bool PTR_SlideTraverse(intercept_t *in)
    if(clip.opentop - slidemo->z < slidemo->height)
       goto isblocking;  // mobj is too high
    
-   if(clip.openbottom - slidemo->z > 24*FRACUNIT )
+   if(clip.openbottom - slidemo->z > STEPSIZE )
       goto isblocking;  // too big a step up
    else if(P_Use3DClipping() &&
            slidemo->z < clip.openbottom) // haleyjd: OVER_UNDER
@@ -2228,8 +2228,9 @@ static void P_radiusAttackForGroupID(Mobj *spot, Mobj *source, int damage,
    fixed_t dist = (distance + MAXRADIUS) << FRACBITS;
 
    // ioanch: Get the link offset (or zerolink if no portals are used)
-   const linkoffset_t *link = groupid != R_NOGROUP ? 
-      P_GetLinkOffset(spot->groupid, groupid) : &zerolink;
+   const linkoffset_t *link = groupid != R_NOGROUP && 
+      spot->groupid != R_NOGROUP ? P_GetLinkOffset(spot->groupid, groupid) : 
+      &zerolink;
 
    int yh = (spot->y + link->y + dist - bmaporgy) >> MAPBLOCKSHIFT;
    int yl = (spot->y + link->y - dist - bmaporgy) >> MAPBLOCKSHIFT;
@@ -2288,10 +2289,11 @@ void P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int distance,
 
    // OPTIMIZE: do not go through all groups if there is no portal close to the
    // current position
-   int numPortalGroups = P_PortalGroupCount();
-   if(numPortalGroups <= 0)
+   int numPortalGroups = 0;
+   if(full_demo_version < make_full_version(340, 47) || 
+      (numPortalGroups = P_PortalGroupCount()) <= 1)
    {
-      // map has no portals
+      // map has no portals OR is an older version
       P_radiusAttackForGroupID(spot, source, damage, distance, mod, flags, 
          R_NOGROUP);
       return;
