@@ -1201,8 +1201,11 @@ void PolyRotateThinker::Think()
       // decrement distance by the amount it moved
       this->distance -= avel;
 
+      // set the flag to differentiate angles >= 180 from angles < 0
+      hasBeenPositive |= (distance > 0);
+
       // are we at or past the destination?
-      if(this->distance <= 0)
+      if(this->distance <= 0 && this->hasBeenPositive)
       {
          // remove thinker
          if(po->thinker == this)
@@ -1215,7 +1218,7 @@ void PolyRotateThinker::Think()
          // TODO: notify scripts
          S_StopPolySequence(po);
       }
-      else if(this->distance < avel)
+      else if(this->distance < avel && this->distance > 0)
       {
          // we have less than one multiple of 'speed' left to go,
          // so change the speed so that it doesn't pass the destination
@@ -1568,6 +1571,7 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
    else
       th->distance = prdata->distance * BYTEANGLEMUL;
 
+   th->hasBeenPositive = th->distance < 0 ? false : true;
    // set polyobject's thrust
    po->thrust = D_abs(th->speed) >> 8;
    if(po->thrust < FRACUNIT)
