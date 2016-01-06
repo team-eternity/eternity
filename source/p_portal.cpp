@@ -614,13 +614,16 @@ static void P_buildPortalMap()
          if(gBlockGroups[writeOfs])
             I_Error("P_buildPortalMap: non-null gBlockGroups entry!");
          
+         size_t curSize = curGroups.getLength();
          gBlockGroups[writeOfs] = emalloctag(int *, 
-               (curGroups.getLength() + 1) * sizeof(int), PU_LEVEL, nullptr);
-         gBlockGroups[writeOfs][0] = static_cast<int>(curGroups.getLength());
+            (curSize + 1) * sizeof(int), PU_LEVEL, nullptr);
+         gBlockGroups[writeOfs][0] = static_cast<int>(curSize);
          // just copy...
-         memcpy(gBlockGroups[writeOfs] + 1, &curGroups[0], 
-                curGroups.getLength() * sizeof(int));
-         
+         if(curSize)
+         {
+            memcpy(gBlockGroups[writeOfs] + 1, &curGroups[0], 
+               curSize * sizeof(int));
+         }
       }
    }
    
