@@ -213,7 +213,7 @@ struct PTDef
 {
    bool (*trav)(const intercept_t *in, void *context, const divline_t &trace);
    bool earlyOut;
-   bool doLines, doThings;
+   uint32_t flags;
 };
 
 //
@@ -319,11 +319,6 @@ bool PathTraverser::traverseIntercepts() const
 //
 bool PathTraverser::blockThingsIterator(int x, int y)
 {
-   if(!def.earlyOut  && (x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
-   {
-      return true;
-   }
-
    Mobj *thing = blocklinks[y * bmapwidth + x];
    for(; thing; thing = thing->bnext)
    {
@@ -437,12 +432,6 @@ bool PathTraverser::checkLine(size_t linenum)
 //
 bool PathTraverser::blockLinesIterator(int x, int y)
 {
-   // ioanch 20151231: make sure to block here for aim sighting
-   if(!def.earlyOut && (x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
-   {
-      return true;
-   }
-
    int  offset;
    int *list;
    DLListItem<polymaplink_t> *plink;
@@ -624,12 +613,19 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
 
    for(int count = 0; count < 100; count++)
    {
-      if(def.doLines && !blockLinesIterator(mapx, mapy))
-         return false;	// early out (ioanch: not for aim)
-      if(def.doThings && !blockThingsIterator(mapx, mapy))
-         return false;  // ioanch 20151230: aim also looks for a thing
-
-		
+      if(def.earlyOut || (mapx >= 0 && mapy >= 0 && 
+                          mapx < bmapwidth && mapy < bmapheight))
+      {
+         if(!(def.flags & CAM_REQUIRELINEPORTALS) || 
+            ::portalmap[mapy * ::bmapwidth + mapx] & PMF_LINE)
+         {
+            if(def.flags & CAM_ADDLINES && !blockLinesIterator(mapx, mapy))
+               return false;	// early out (ioanch: not for aim)
+            if(def.flags & CAM_ADDTHINGS && !blockThingsIterator(mapx, mapy))
+               return false;  // ioanch 20151230: aim also looks for a thing
+         }
+      }
+      
       if((mapxstep | mapystep) == 0)
          break;
 
@@ -667,18 +663,26 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
          // block being entered need to be checked (which will happen when this
          // loop continues), but the other two blocks adjacent to the corner
          // also need to be checked.
-         if(def.doLines 
-            && (!blockLinesIterator(mapx + mapxstep, mapy) 
-            || !blockLinesIterator(mapx, mapy + mapystep)))
+         if(def.earlyOut || (mapx >= 0 && mapy >= 0 && 
+                             mapx < bmapwidth && mapy < bmapheight))
          {
-            return false;
-         }
-         // ioanch 20151230: autoaim support
-         if(def.doThings 
-            && (!blockThingsIterator(mapx + mapxstep, mapy)
-            || !blockThingsIterator(mapx, mapy + mapystep)))
-         {
-            return false;
+            if(!(def.flags & CAM_REQUIRELINEPORTALS) || 
+               ::portalmap[mapy * ::bmapwidth + mapx] & PMF_LINE)
+            {
+               if(def.flags & CAM_ADDLINES 
+                  && (!blockLinesIterator(mapx + mapxstep, mapy) 
+                  || !blockLinesIterator(mapx, mapy + mapystep)))
+               {
+                  return false;
+               }
+               // ioanch 20151230: autoaim support
+               if(def.flags & CAM_ADDTHINGS
+                  && (!blockThingsIterator(mapx + mapxstep, mapy)
+                  || !blockThingsIterator(mapx, mapy + mapystep)))
+               {
+                  return false;
+               }
+            }
          }
          xintercept += xstep;
          yintercept += ystep;
@@ -1088,8 +1092,7 @@ bool CamContext::checkSight(const camsightparams_t &params,
          ty -= link->y;
       }
       PTDef def;
-      def.doLines = true;
-      def.doThings = false;
+      def.flags = CAM_ADDLINES;
       def.earlyOut = true;
       def.trav = CamContext::sightTraverse;
       PathTraverser traverser(def, &context);
@@ -1176,7 +1179,7 @@ fixed_t AimContext::aimLineAttack(const Mobj *t1, angle_t angle,
    AimContext context(t1, angle, distance, mask, state);
 
    PTDef def;
-   def.doLines = def.doThings = true;
+   def.flags = CAM_ADDLINES | CAM_ADDTHINGS;
    def.earlyOut = false;
    def.trav = aimTraverse;
    PathTraverser traverser(def, &context);
@@ -1607,8 +1610,7 @@ void ShootContext::lineAttack(Mobj *source, angle_t angle, fixed_t distance,
    fixed_t y2 = context.state.y + (distance >> FRACBITS) * context.sin;
 
    PTDef def;
-   def.doLines = true;
-   def.doThings = true;
+   def.flags = CAM_ADDLINES | CAM_ADDTHINGS;
    def.earlyOut = false;
    def.trav = shootTraverse;
    PathTraverser traverser(def, &context);
@@ -1977,5 +1979,23 @@ void CAM_LineAttack(Mobj *source, angle_t angle, fixed_t distance,
 {
    ShootContext::lineAttack(source, angle, distance, slope, damage, nullptr);
 }
+
+//
+// CAM_PathTraverse
+//
+// Public wrapper for PathTraverser
+//
+bool CAM_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
+                      uint32_t flags, void *data,
+                      bool (*trav)(const intercept_t *in, void *data,
+                                   const divline_t &trace))
+{
+   PTDef def;
+   def.flags = flags;
+   def.earlyOut = false;
+   def.trav = trav;
+   return PathTraverser(def, data).traverse(x1, y1, x2, y2);
+}
+
 // EOF
 
