@@ -529,14 +529,32 @@ static void P_GlobalPortalStateCheck()
 //
 static void P_buildPortalMap()
 {
+   PODCollection<int> curGroups; // ioanch 20160106: keep list of current groups
+   size_t pcount = P_PortalGroupCount();
+   bool *visited = ecalloc(bool*, sizeof(bool), pcount);
+   pcount *= sizeof(bool);
+   
+   auto addPortal = [visited, &curGroups](int groupid)
+   {
+      if(!visited[groupid])
+      {
+         visited[groupid] = true;
+         curGroups.add(groupid);
+      }
+   };
+   
+   int writeOfs;
    for(int y = 0; y < bmapheight; y++)
    {
       for(int x = 0; x < bmapwidth; x++)
       {
          int offset;
          int *list;
+         
+         curGroups.makeEmpty();
+         memset(visited, 0, pcount);
 
-         offset = y * bmapwidth + x;
+         writeOfs = offset = y * bmapwidth + x;
          offset = *(blockmap + offset);
          list = blockmaplump + offset;
 
@@ -554,28 +572,59 @@ static void P_buildPortalMap()
                ::bmaporgy + (y << MAPBLOCKSHIFT) + (MAPBLOCKSHIFT / 2))->sector;
 
             if(sector->c_pflags & PS_PASSABLE)
-               portalmap[y * bmapwidth + x] |= PMF_CEILING;
+            {
+               portalmap[writeOfs] |= PMF_CEILING;
+               curGroups.add(sector->c_portal->data.link.toid);
+            }
             if(sector->f_pflags & PS_PASSABLE)
-               portalmap[y * bmapwidth + x] |= PMF_FLOOR;
+            {
+               portalmap[writeOfs] |= PMF_FLOOR;
+               curGroups.add(sector->f_portal->data.link.toid);
+            }
          }
          else for(; *tmplist != -1; tmplist++)
          {
             const line_t &li = lines[*tmplist];
             if(li.pflags & PS_PASSABLE)
-               portalmap[y * bmapwidth + x] |= PMF_LINE;
-            if(li.frontsector->c_pflags & PS_PASSABLE 
-               || (li.backsector && li.backsector->c_pflags & PS_PASSABLE))
             {
-               portalmap[y * bmapwidth + x] |= PMF_CEILING;
+               portalmap[writeOfs] |= PMF_LINE;
+               addPortal(li.portal->data.link.toid);
             }
-            if(li.frontsector->f_pflags & PS_PASSABLE
-               || (li.backsector && li.backsector->f_pflags & PS_PASSABLE))
+            if(li.frontsector->c_pflags & PS_PASSABLE)
             {
-               portalmap[y * bmapwidth + x] |= PMF_FLOOR;
+               portalmap[writeOfs] |= PMF_CEILING;
+               addPortal(li.frontsector->c_portal->data.link.toid);
+            }
+            if(li.backsector && li.backsector->c_pflags & PS_PASSABLE)
+            {
+               portalmap[writeOfs] |= PMF_CEILING;
+               addPortal(li.backsector->c_portal->data.link.toid);
+            }
+            if(li.frontsector->f_pflags & PS_PASSABLE)
+            {
+               portalmap[writeOfs] |= PMF_FLOOR;
+               addPortal(li.frontsector->f_portal->data.link.toid);
+            }
+            if(li.backsector && li.backsector->f_pflags & PS_PASSABLE)
+            {
+               portalmap[writeOfs] |= PMF_FLOOR;
+               addPortal(li.backsector->f_portal->data.link.toid);
             }
          }
+         if(gBlockGroups[writeOfs])
+            I_Error("P_buildPortalMap: non-null gBlockGroups entry!");
+         
+         gBlockGroups[writeOfs] = emalloctag(int *, 
+               (curGroups.getLength() + 1) * sizeof(int), PU_LEVEL, nullptr);
+         gBlockGroups[writeOfs][0] = static_cast<int>(curGroups.getLength());
+         // just copy...
+         memcpy(gBlockGroups[writeOfs] + 1, &curGroups[0], 
+                curGroups.getLength() * sizeof(int));
+         
       }
    }
+   
+   efree(visited);
 }
 
 //
@@ -1009,6 +1058,26 @@ v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy)
       C_Printf("Warning: P_PortalCrossing loop");
 
    return fin;
+}
+
+//
+// P_TransPortalBlockWalker
+//
+void P_TransPortalBlockWalker(const fixed_t bbox[4])
+{
+#if 0
+   int xl = (bbox[BOXLEFT] - bmaporgx) >> MAPBLOCKSHIFT;
+   int xh = (bbox[BOXRIGHT] - bmaporgx) >> MAPBLOCKSHIFT;
+   int yl = (bbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
+   int yh = (bbox[BOXTOP] - bmaporgy) >> MAPBLOCKSHIFT;
+   
+   // OPTIMIZE: if needed, use some global store instead of malloc
+   bool *groupids = ecalloc(bool *, P_PortalGroupCount(), sizeof(*groupids));
+   
+   
+   
+   efree(groupids);
+#endif
 }
 
 // EOF

@@ -63,6 +63,7 @@ extern fixed_t  bmaporgx;
 extern fixed_t  bmaporgy;        // origin of block map
 extern Mobj   **blocklinks;      // for thing chains
 extern byte    *portalmap;       // haleyjd: for fast linked portal checks
+extern int    **gBlockGroups;    // ioanch 20160106: for each block, prt. groups
 
 // haleyjd 05/17/13: portalmap flags
 enum
