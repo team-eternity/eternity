@@ -30,6 +30,7 @@
 #include "cam_sight.h"
 #include "c_io.h"
 #include "doomstat.h"
+#include "m_bbox.h"        // ioanch 20160107
 #include "m_collection.h"  // ioanch 20160106
 #include "p_chase.h"
 #include "p_map.h"
@@ -1064,28 +1065,176 @@ v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy)
 }
 
 //
-// P_TransPortalBlockWalker
+// P_simpleBlockWalker
 //
-void P_TransPortalBlockWalker(const fixed_t bbox[4])
+// ioanch 20160108: simple variant of the function below, for maps without
+// portals
+//
+inline static bool P_simpleBlockWalker(const fixed_t bbox[4], bool xfirst, void *data, 
+                                       bool (*func)(int x, int y, int groupid, void *data))
 {
-#if 0
    int xl = (bbox[BOXLEFT] - bmaporgx) >> MAPBLOCKSHIFT;
    int xh = (bbox[BOXRIGHT] - bmaporgx) >> MAPBLOCKSHIFT;
    int yl = (bbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
    int yh = (bbox[BOXTOP] - bmaporgy) >> MAPBLOCKSHIFT;
-   
+
+   if(xl < 0)
+      xl = 0;
+   if(yl < 0)
+      yl = 0;
+   if(xh >= bmapwidth)
+      xh = bmapwidth - 1;
+   if(yh >= bmapheight)
+      yh = bmapheight - 1;
+
+   int x, y;
+   if(xfirst)
+   {
+      for(x = xl; x <= xh; ++x)
+         for(y = yl; y <= yh; ++y)
+            if(!func(x, y, R_NOGROUP, data))
+               return false;
+   }
+   else
+      for(y = yl; y <= yh; ++y)
+         for(x = xl; x <= xh; ++x)
+            if(!func(x, y, R_NOGROUP, data))
+               return false;
+
+   return true;
+}
+
+//
+// P_TransPortalBlockWalker
+//
+// ioanch 20160107
+// Having a bounding box in a group id, visit all blocks it touches as well as
+// whatever is behind portals
+//
+bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
+                              void *data, 
+                              bool (*func)(int x, int y, int groupid, void *data))
+{
+   int gcount = P_PortalGroupCount();
+   if(gcount <= 1 || groupid == R_NOGROUP || 
+      full_demo_version < make_full_version(340, 48))
+   {
+      return P_simpleBlockWalker(bbox, xfirst, data, func);
+   }
+
    // OPTIMIZE: if needed, use some global store instead of malloc
-   bool *groupids = ecalloc(bool *, P_PortalGroupCount(), sizeof(*groupids));
+   bool *accessedgroupids = ecalloc(bool *, gcount, sizeof(*accessedgroupids));
+   accessedgroupids[groupid] = true;
+   int *groupqueue = ecalloc(int *, gcount, sizeof(*groupqueue));
+   int queuehead = 0;
+   int queueback = 0;
+
+   // initialize link with zero link because we're visiting the current area.
+   // groupid has already been set in the parameter
+   const linkoffset_t *link = &zerolink;
    
+   do
+   {
+      // set the blocks to be visited
+      int xl = (bbox[BOXLEFT] + link->x - bmaporgx) >> MAPBLOCKSHIFT;
+      int xh = (bbox[BOXRIGHT] + link->x - bmaporgx) >> MAPBLOCKSHIFT;
+      int yl = (bbox[BOXBOTTOM] + link->y - bmaporgy) >> MAPBLOCKSHIFT;
+      int yh = (bbox[BOXTOP] + link->y - bmaporgy) >> MAPBLOCKSHIFT;
    
+      if(xl < 0)
+         xl = 0;
+      if(yl < 0)
+         yl = 0;
+      if(xh >= bmapwidth)
+         xh = bmapwidth - 1;
+      if(yh >= bmapheight)
+         yh = bmapheight - 1;
    
-   efree(groupids);
+      // CAUTION: order is x, y, like in P_CheckPosition3D
+
+      // Define a function to use in the 'for' blocks
+      auto operate = [accessedgroupids, groupqueue, &queueback, func, 
+         &groupid, data, gcount] (int x, int y) -> bool
+      {
+         // Check for portals
+         const int *block = gBlockGroups[y * bmapwidth + x];
+         for(int i = 1; i <= block[0]; ++i)
+         {
+#ifdef RANGECHECK
+            if(block[i] < 0 || block[i] >= gcount)
+               I_Error("P_TransPortalBlockWalker: i (%d) out of range (count %d)", block[i], gcount);
 #endif
+            // Add to queue and visitlist
+            if(!accessedgroupids[block[i]])
+            {
+               accessedgroupids[block[i]] = true;
+               groupqueue[queueback++] = block[i];
+            }
+         }
+
+         // now call the function
+         if(!func(x, y, groupid, data))
+         {
+            // make it possible to escape by func returning false
+            return false;
+         }
+         return true;
+      };
+
+      int x, y;
+      if(xfirst)
+      {
+         for(x = xl; x <= xh; ++x)
+            for(y = yl; y <= yh; ++y)
+               if(!operate(x, y))
+               {
+                  efree(groupqueue);
+                  efree(accessedgroupids);
+                  return false;
+               }
+      }
+      else
+         for(y = yl; y <= yh; ++y)
+            for(x = xl; x <= xh; ++x)
+               if(!operate(x, y))
+               {
+                  efree(groupqueue);
+                  efree(accessedgroupids);
+                  return false;
+               }
+
+
+      // look at queue
+      link = &zerolink;
+      if(queuehead < queueback)
+      {
+         do
+         {
+            link = P_GetLinkOffset(groupid, groupqueue[queuehead]);
+            ++queuehead;
+
+            // make sure to reject trivial (zero) links
+         } while(!link->x && !link->y && queuehead < queueback);
+
+         // if a valid link has been found, also update current groupid
+         if(link->x || link->y)
+            groupid = groupqueue[queuehead - 1];
+      }
+
+      // if a valid link has been found (and groupid updated) continue
+   } while(link->x || link->y);
+
+   // we now have the list of accessedgroupids
+   
+   efree(groupqueue);
+   efree(accessedgroupids);
+   return true;
 }
 
 //
 // P_ExtremeSectorAtPoint
 //
+// ioanch 20160107
 // If point x/y resides in a sector with portal, pass through it
 //
 sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling, 

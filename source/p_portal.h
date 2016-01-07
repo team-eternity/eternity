@@ -186,6 +186,14 @@ inline static sector_t *P_ExtremeSectorAtPoint(const Mobj *mo, bool ceiling)
    return P_ExtremeSectorAtPoint(mo->x, mo->y, ceiling, mo->subsector->sector);
 }
 
+//
+// P_TransPortalBlockWalker
+// ioanch 20160107
+//
+bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
+                              void *data, 
+                              bool (*func)(int x, int y, int groupid, void *data));
+
 #endif
 
 // EOF

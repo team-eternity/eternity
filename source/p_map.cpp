@@ -2284,25 +2284,50 @@ static void P_radiusAttackForGroupID(Mobj *spot, Mobj *source, int damage,
 void P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int distance, 
                     int mod, unsigned int flags)
 {
-   // ioanch 20151226: portal-aware. Iterate through all groups and scan
-   // blockmaps, only picking objects belonging to those groups
+   fixed_t dist = (distance + MAXRADIUS) << FRACBITS;
+  
 
-   // OPTIMIZE: do not go through all groups if there is no portal close to the
-   // current position
-   int numPortalGroups = 0;
-   if(full_demo_version < make_full_version(340, 47) || 
-      (numPortalGroups = P_PortalGroupCount()) <= 1)
+   if(demo_version >= 335)
    {
-      // map has no portals OR is an older version
-      P_radiusAttackForGroupID(spot, source, damage, distance, mod, flags, 
-         R_NOGROUP);
-      return;
-   }
+      // woops! let's not stack-fault.
+      if(bombindex >= MAXBOMBS)
+      {
+         doom_printf(FC_ERROR "P_RadiusAttack: too many bombs!");
+         return;
+      }
 
-   for(int i = 0; i < numPortalGroups; ++i)
-   {
-      P_radiusAttackForGroupID(spot, source, damage, distance, mod, flags, i);
+      // set bomb pointer and increment index
+      theBomb = &bombs[bombindex++];
    }
+   else
+      theBomb = &bombs[0]; // otherwise, we use bomb 0 for everything :(
+
+   // set up us the bomb!
+   theBomb->bombspot     = spot;
+   theBomb->bombsource   = source;
+   theBomb->bombdamage   = damage;
+   theBomb->bombdistance = distance;
+   theBomb->bombmod      = mod;
+   theBomb->bombflags    = flags;
+
+   fixed_t bbox[4];
+   bbox[BOXLEFT] = spot->x - dist;
+   bbox[BOXTOP] = spot->y + dist;
+   bbox[BOXRIGHT] = spot->x + dist;
+   bbox[BOXBOTTOM] = spot->y - dist;
+
+   // ioanch 20160107: walk through all portals
+   P_TransPortalBlockWalker(bbox, spot->groupid, false, theBomb, 
+      [](int x, int y, int groupid, void *data) -> bool
+   {
+      auto theBomb = static_cast<bombdata_t *>(data);
+      theBomb->groupid = groupid;
+      P_BlockThingsIterator(x, y, PIT_RadiusAttack);
+      return true;
+   });
+
+   if(demo_version >= 335 && bombindex > 0)
+      theBomb = &bombs[--bombindex];
 }
 
 //
