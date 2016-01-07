@@ -353,8 +353,13 @@ void A_SpawnGlitter(actionargs_t *actionargs)
       initMomentum = FRACUNIT >> 2;
 
    // randomize spawning coordinates within a 32-unit square
-   x = actor->x + ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
-   y = actor->y + ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
+   // ioanch 20160107: correctly spawn behind line portal
+   fixed_t dx = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
+   fixed_t dy = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
+   v2fixed_t pos = P_LinePortalCrossing(*actor, dx, dy);
+   
+   x = pos.x;
+   y = pos.y;
 
    z = actor->floorz;
 
