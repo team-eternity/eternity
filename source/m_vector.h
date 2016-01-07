@@ -46,6 +46,9 @@ struct v2fixed_t
    template<typename T>
    v2fixed_t &operator += (T &&other) { x += other.x; 
                                         y += other.y; return *this; }
+                                        
+   template<typename T>
+   v2fixed_t operator - (T &&other) const { return { x - other.x, y - other.y }; }
 };
 
 struct v3float_t

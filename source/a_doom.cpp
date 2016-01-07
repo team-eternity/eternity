@@ -1120,9 +1120,11 @@ void A_PainShootSkull(Mobj *actor, angle_t angle)
 
    // ioanch 20160107: spawn at the correct position if there's a line portal
    // between monster and intended position.
-   v2fixed_t pos = P_LinePortalCrossing(*actor,
-                                        FixedMul(prestep, finecosine[an]),
-                                        FixedMul(prestep, finesine[an]));
+   // Also keep track of the "relative" position: the one without portal trans-
+   // lation. Needed for Check_Sides
+   v2fixed_t relpos = { actor->x + FixedMul(prestep, finecosine[an]),
+                        actor->y + FixedMul(prestep, finesine[an]) };
+   v2fixed_t pos = P_LinePortalCrossing(*actor, relpos - *actor);
    x = pos.x;
    y = pos.y;
    z = actor->z + 8*FRACUNIT;
@@ -1137,11 +1139,10 @@ void A_PainShootSkull(Mobj *actor, angle_t angle)
       // but it should be considered an enhancement, since it may 
       // disturb existing demos, so don't do it in compatibility mode.
 
-      //
-      // PORTAL TODO: (ioanch) this doesn't appear to work well with line
-      //                       portals
-      //
-      if (Check_Sides(actor,x,y))
+      // ioanch 20160107: check sides against the non-translated position. This 
+      // way the two coordinates will be in valid range and it will only check
+      // sides against the passable portal line
+      if (Check_Sides(actor, relpos.x, relpos.y))
          return;
       
       newmobj = P_SpawnMobj(x, y, z, skullType);
