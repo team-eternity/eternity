@@ -1083,5 +1083,45 @@ void P_TransPortalBlockWalker(const fixed_t bbox[4])
 #endif
 }
 
+//
+// P_ExtremeSectorAtPoint
+//
+// If point x/y resides in a sector with portal, pass through it
+//
+sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling, 
+                                 sector_t *sector)
+{
+   sector_t *prevsector;
+   if(!sector)
+      sector = R_PointInSubsector(x, y)->sector;
+   if(full_demo_version < make_full_version(340, 48))
+      return sector; // just return the current sector in this case
+   
+   auto pflags = ceiling ? &sector_t::c_pflags : &sector_t::f_pflags;
+   auto portal = ceiling ? &sector_t::c_portal : &sector_t::f_portal;
+   
+   int loopprotection = 100000;
+      
+   while(sector->*pflags & PS_PASSABLE && loopprotection--)
+   {
+      const linkoffset_t *link =
+         P_GetLinkOffset(sector->groupid, (sector->*portal)->data.link.toid);
+
+      if(!link->x && !link->y)   // if link happens to be 0
+         return sector;
+      
+      // move into the new sector
+      prevsector = sector;
+      sector = R_PointInSubsector(x + link->x, y + link->y)->sector;
+      if(sector == prevsector)
+         break;   // erroneous case, so quit
+   }
+   
+   if(loopprotection < 0)
+      C_Printf("Warning: P_ExtremeSectorAtPoint loop");
+   
+   return sector;
+}
+
 // EOF
 

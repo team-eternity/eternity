@@ -28,6 +28,7 @@
 #define P_PORTAL_H__
 
 #include "m_vector.h"
+#include "r_defs.h"
 
 extern bool useportalgroups;
 
@@ -171,6 +172,18 @@ template <typename T, typename U>
 inline static v2fixed_t P_LinePortalCrossing(T &&u, U &&dv)
 {
    return P_LinePortalCrossing(u.x, u.y, dv.x, dv.y);
+}
+
+//
+// P_ExtremeSectorAtPoint
+// ioanch 20160107
+//
+sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling, 
+                                 sector_t *preCalcSector = nullptr);
+
+inline static sector_t *P_ExtremeSectorAtPoint(const Mobj *mo, bool ceiling)
+{
+   return P_ExtremeSectorAtPoint(mo->x, mo->y, ceiling, mo->subsector->sector);
 }
 
 #endif

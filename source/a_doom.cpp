@@ -1150,12 +1150,14 @@ void A_PainShootSkull(Mobj *actor, angle_t angle)
       // Check to see if the new Lost Soul's z value is above the
       // ceiling of its new sector, or below the floor. If so, kill it.
 
-      //
-      // PORTAL TODO: (ioanch) check for sector linked portals!
-      //
-      if((newmobj->z >
-         (newmobj->subsector->sector->ceilingheight - newmobj->height)) ||
-         (newmobj->z < newmobj->subsector->sector->floorheight))
+      // ioanch 20160107: check against the floor or ceiling sector behind any
+      // portals
+      const sector_t *ceilingsector = P_ExtremeSectorAtPoint(newmobj, true);
+      const sector_t *floorsector = P_ExtremeSectorAtPoint(newmobj, false);
+      // ioanch: removed redundant parentheses (of which the compiler doesn't 
+      // cry)
+      if(newmobj->z > ceilingsector->ceilingheight - newmobj->height ||
+         newmobj->z < floorsector->floorheight)
       {
          // kill it immediately
          P_DamageMobj(newmobj,actor,actor,10000,MOD_UNKNOWN);
