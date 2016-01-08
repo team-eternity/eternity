@@ -2215,66 +2215,6 @@ static bool PIT_RadiusAttack(Mobj *thing)
 }
 
 //
-// P_radiusAttackForGroupID
-//
-// ioanch 20151226: Radius attack is now distributed to each portal group in
-// the map, picking up the map block clusters from each group at the same
-// translated coordinates. This function handles one of the groups.
-//
-static void P_radiusAttackForGroupID(Mobj *spot, Mobj *source, int damage,
-                                     int distance, int mod, unsigned flags,
-                                     int groupid)
-{
-   fixed_t dist = (distance + MAXRADIUS) << FRACBITS;
-
-   // ioanch: Get the link offset (or zerolink if no portals are used)
-   const linkoffset_t *link = groupid != R_NOGROUP && 
-      spot->groupid != R_NOGROUP ? P_GetLinkOffset(spot->groupid, groupid) : 
-      &zerolink;
-
-   int yh = (spot->y + link->y + dist - bmaporgy) >> MAPBLOCKSHIFT;
-   int yl = (spot->y + link->y - dist - bmaporgy) >> MAPBLOCKSHIFT;
-   int xh = (spot->x + link->x + dist - bmaporgx) >> MAPBLOCKSHIFT;
-   int xl = (spot->x + link->x - dist - bmaporgx) >> MAPBLOCKSHIFT;
-   int x, y;
-
-   if(demo_version >= 335)
-   {
-      // woops! let's not stack-fault.
-      if(bombindex >= MAXBOMBS)
-      {
-         doom_printf(FC_ERROR "P_RadiusAttack: too many bombs!");
-         return;
-      }
-
-      // set bomb pointer and increment index
-      theBomb = &bombs[bombindex++];
-   }
-   else
-      theBomb = &bombs[0]; // otherwise, we use bomb 0 for everything :(
-
-   // set up us the bomb!
-   theBomb->bombspot     = spot;
-   theBomb->bombsource   = source;
-   theBomb->bombdamage   = damage;
-   theBomb->bombdistance = distance;
-   theBomb->bombmod      = mod;
-   theBomb->bombflags    = flags;
-
-   // ioanch: portal aware, avoid blockmap duplication by distributing blocks
-   // only for each group ID. Only victims with the same groupid (if >= 0) will
-   // be hit.
-   theBomb->groupid      = groupid;
-   
-   for(y = yl; y <= yh; ++y)
-      for(x = xl; x <= xh; ++x)
-         P_BlockThingsIterator(x, y, PIT_RadiusAttack);
-
-   if(demo_version >= 335 && bombindex > 0)
-      theBomb = &bombs[--bombindex];
-}
-
-//
 // P_RadiusAttack
 //
 // Source is the creature that caused the explosion at spot.
