@@ -40,6 +40,7 @@
 #include "e_things.h"
 #include "e_ttypes.h"
 #include "g_game.h"
+#include "m_bbox.h"  // ioanch 20160108: portal aware block iterator
 #include "p_enemy.h"
 #include "p_info.h"
 #include "p_inter.h"
@@ -616,9 +617,18 @@ bool PIT_VileCheck(Mobj *thing)
    
    maxdist = thing->info->radius + mobjinfo[vileType]->radius;
    
-   if(D_abs(thing->x-viletryx) > maxdist ||
-      D_abs(thing->y-viletryy) > maxdist)
+   if(D_abs(getThingX(vileobj, thing) - viletryx) > maxdist ||
+      D_abs(getThingY(vileobj, thing) - viletryy) > maxdist)
       return true;                // not actually touching
+
+   // ioanch 20160108: since now it's portal aware, make sure that corpses
+   // from different group ids are seen. This restriction doesn't apply for
+   // single layer areas.
+   if(vileobj->groupid != R_NOGROUP && thing->groupid != R_NOGROUP &&
+      vileobj->groupid != thing->groupid && !P_CheckSight(vileobj, thing))
+   {
+      return true;
+   }
 
    // Check to see if the radius and height are zero. If they are      // phares
    // then this is a crushed monster that has been turned into a       //   |
@@ -678,9 +688,6 @@ bool PIT_VileCheck(Mobj *thing)
 void A_VileChase(actionargs_t *actionargs)
 {
    Mobj *actor = actionargs->actor;
-   int xl, xh;
-   int yl, yh;
-   int bx, by;
 
    if(actor->movedir != DI_NODIR)
    {
@@ -689,71 +696,73 @@ void A_VileChase(actionargs_t *actionargs)
          actor->x + actor->info->speed*xspeed[actor->movedir];
       viletryy =
          actor->y + actor->info->speed*yspeed[actor->movedir];
-      
-      xl = (viletryx - bmaporgx - MAXRADIUS*2)>>MAPBLOCKSHIFT;
-      xh = (viletryx - bmaporgx + MAXRADIUS*2)>>MAPBLOCKSHIFT;
-      yl = (viletryy - bmaporgy - MAXRADIUS*2)>>MAPBLOCKSHIFT;
-      yh = (viletryy - bmaporgy + MAXRADIUS*2)>>MAPBLOCKSHIFT;
 
+      // ioanch 20160108: make resurrection portal aware
+      fixed_t bbox[4];
+      bbox[BOXLEFT] = viletryx - MAXRADIUS*2;
+      bbox[BOXBOTTOM] = viletryy - MAXRADIUS*2;
+      bbox[BOXRIGHT] = viletryx + MAXRADIUS*2;
+      bbox[BOXTOP] = viletryy + MAXRADIUS*2;
       vileobj = actor;
-      for(bx = xl; bx <= xh; ++bx)
+
+      if(!P_TransPortalBlockWalker(bbox, actor->groupid, true, actionargs, 
+         [](int x, int y, int groupid, void *data) -> bool
       {
-         for(by = yl; by <= yh; ++by)
+         // get the variables back
+         auto actionargs = static_cast<actionargs_t *>(data);
+         Mobj *actor = actionargs->actor;
+
+         if(!P_BlockThingsIterator(x, y, groupid, PIT_VileCheck))
          {
-            // Call PIT_VileCheck to check
-            // whether object is a corpse
-            // that can be raised.
-            if(!P_BlockThingsIterator(bx, by, PIT_VileCheck))
+            mobjinfo_t *info;
+               
+            // got one!
+            Mobj *temp = actor->target;
+            actor->target = corpsehit;
+            A_FaceTarget(actionargs);
+            actor->target = temp;
+
+            P_SetMobjState(actor, E_SafeState(S_VILE_HEAL1));
+            S_StartSound(corpsehit, sfx_slop);
+            info = corpsehit->info;
+
+            // haleyjd 09/26/04: need to restore monster skins here
+            // in case they were cleared by the thing being crushed
+            if(info->altsprite != -1)
+               corpsehit->skin = P_GetMonsterSkin(info->altsprite);
+               
+            P_SetMobjState(corpsehit, info->raisestate);
+               
+            if(comp[comp_vile])
+               corpsehit->height <<= 2;                        // phares
+            else                                               //   V
             {
-               mobjinfo_t *info;
+               // fix Ghost bug
+               corpsehit->height = P_ThingInfoHeight(info);
+               corpsehit->radius = info->radius;
+            }                                                  // phares
                
-               // got one!
-               Mobj *temp = actor->target;
-               actor->target = corpsehit;
-               A_FaceTarget(actionargs);
-               actor->target = temp;
+            // killough 7/18/98: 
+            // friendliness is transferred from AV to raised corpse
+            corpsehit->flags = 
+               (info->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
+               
+            corpsehit->health = info->spawnhealth;
+            P_SetTarget<Mobj>(&corpsehit->target, NULL);  // killough 11/98
 
-               P_SetMobjState(actor, E_SafeState(S_VILE_HEAL1));
-               S_StartSound(corpsehit, sfx_slop);
-               info = corpsehit->info;
-
-               // haleyjd 09/26/04: need to restore monster skins here
-               // in case they were cleared by the thing being crushed
-               if(info->altsprite != -1)
-                  corpsehit->skin = P_GetMonsterSkin(info->altsprite);
-               
-               P_SetMobjState(corpsehit, info->raisestate);
-               
-               if(comp[comp_vile])
-                  corpsehit->height <<= 2;                        // phares
-               else                                               //   V
-               {
-                  // fix Ghost bug
-                  corpsehit->height = P_ThingInfoHeight(info);
-                  corpsehit->radius = info->radius;
-               }                                                  // phares
-               
-               // killough 7/18/98: 
-               // friendliness is transferred from AV to raised corpse
-               corpsehit->flags = 
-                  (info->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
-               
-               corpsehit->health = info->spawnhealth;
-               P_SetTarget<Mobj>(&corpsehit->target, NULL);  // killough 11/98
-
-               if(demo_version >= 203)
-               {         // kilough 9/9/98
-                  P_SetTarget<Mobj>(&corpsehit->lastenemy, NULL);
-                  corpsehit->flags &= ~MF_JUSTHIT;
-               }
-               
-               // killough 8/29/98: add to appropriate thread
-               corpsehit->updateThinker();
-               
-               return;
+            if(demo_version >= 203)
+            {         // kilough 9/9/98
+               P_SetTarget<Mobj>(&corpsehit->lastenemy, NULL);
+               corpsehit->flags &= ~MF_JUSTHIT;
             }
+               
+            // killough 8/29/98: add to appropriate thread
+            corpsehit->updateThinker();
+            return false;
          }
-      }
+         return true;
+      }))
+         return;  // if the block returned false, exit
    }
    A_Chase(actionargs);  // Return to normal attack.
 }

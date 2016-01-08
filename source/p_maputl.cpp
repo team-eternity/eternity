@@ -594,16 +594,25 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*))
 // P_BlockThingsIterator
 //
 // killough 5/3/98: reformatted, cleaned up
+// ioanch 20160108: variant with groupid
 //
-bool P_BlockThingsIterator(int x, int y, bool func(Mobj*))
+bool P_BlockThingsIterator(int x, int y, int groupid, bool (*func)(Mobj *))
 {
    if(!(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
    {
       Mobj *mobj = blocklinks[y * bmapwidth + x];
 
       for(; mobj; mobj = mobj->bnext)
+      {
+         // ioanch: if mismatching group id (in case it's declared), skip
+         if(groupid != R_NOGROUP && mobj->groupid != R_NOGROUP && 
+            groupid != mobj->groupid)
+         {
+            continue;   // ignore objects from wrong groupid
+         }
          if(!func(mobj))
             return false;
+      }
    }
    return true;
 }

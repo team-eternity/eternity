@@ -26,6 +26,7 @@
 #ifndef P_MAPUTL_H__
 #define P_MAPUTL_H__
 
+#include "linkoffs.h"   // ioanch 20160108: for R_NOGROUP
 #include "tables.h" // for angle_t
 
 struct line_t;
@@ -99,7 +100,12 @@ void    P_LineOpening (const line_t *linedef, const Mobj *mo);
 void P_UnsetThingPosition(Mobj *thing);
 void P_SetThingPosition(Mobj *thing);
 bool P_BlockLinesIterator (int x, int y, bool func(line_t *));
-bool P_BlockThingsIterator(int x, int y, bool func(Mobj *));
+bool P_BlockThingsIterator(int x, int y, int groupid, bool (*func)(Mobj *));
+inline static bool P_BlockThingsIterator(int x, int y, bool func(Mobj *))
+{
+   // ioanch 20160108: avoid code duplication
+   return P_BlockThingsIterator(x, y, R_NOGROUP, func);
+}
 bool ThingIsOnLine(const Mobj *t, const line_t *l);  // killough 3/15/98
 bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
                     int flags, traverser_t trav);
