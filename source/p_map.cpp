@@ -2257,10 +2257,9 @@ void P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int distance,
    bbox[BOXBOTTOM] = spot->y - dist;
 
    // ioanch 20160107: walk through all portals
-   P_TransPortalBlockWalker(bbox, spot->groupid, false, theBomb, 
+   P_TransPortalBlockWalker(bbox, spot->groupid, false, nullptr, 
       [](int x, int y, int groupid, void *data) -> bool
    {
-      auto theBomb = static_cast<bombdata_t *>(data);
       theBomb->groupid = groupid;
       P_BlockThingsIterator(x, y, PIT_RadiusAttack);
       return true;
