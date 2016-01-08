@@ -300,7 +300,7 @@ result_e T_MoveCeilingDown(sector_t *sector, fixed_t speed, fixed_t dest, int cr
       // SoM 9/19/02: If we are go, move 3d sides first.
       if(move3dsides)
       {
-         flag = P_Scroll3DSides(sector, true, lastpos-destheight, crush);
+         flag = P_Scroll3DSides(sector, true, destheight-lastpos, crush);
          if(!flag)
          {
             P_Scroll3DSides(sector, true, destheight-lastpos, crush);
