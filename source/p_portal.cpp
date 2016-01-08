@@ -1132,14 +1132,20 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
    // initialize link with zero link because we're visiting the current area.
    // groupid has already been set in the parameter
    const linkoffset_t *link = &zerolink;
-   
+
+   fixed_t movedBBox[4] = { bbox[0], bbox[1], bbox[2], bbox[3] };
+
    do
    {
+      movedBBox[BOXLEFT] += link->x;
+      movedBBox[BOXRIGHT] += link->x;
+      movedBBox[BOXBOTTOM] += link->y;
+      movedBBox[BOXTOP] += link->y;
       // set the blocks to be visited
-      int xl = (bbox[BOXLEFT] + link->x - bmaporgx) >> MAPBLOCKSHIFT;
-      int xh = (bbox[BOXRIGHT] + link->x - bmaporgx) >> MAPBLOCKSHIFT;
-      int yl = (bbox[BOXBOTTOM] + link->y - bmaporgy) >> MAPBLOCKSHIFT;
-      int yh = (bbox[BOXTOP] + link->y - bmaporgy) >> MAPBLOCKSHIFT;
+      int xl = (movedBBox[BOXLEFT] - bmaporgx) >> MAPBLOCKSHIFT;
+      int xh = (movedBBox[BOXRIGHT] - bmaporgx) >> MAPBLOCKSHIFT;
+      int yl = (movedBBox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
+      int yh = (movedBBox[BOXTOP] - bmaporgy) >> MAPBLOCKSHIFT;
    
       if(xl < 0)
          xl = 0;
@@ -1150,8 +1156,6 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
       if(yh >= bmapheight)
          yh = bmapheight - 1;
    
-      // CAUTION: order is x, y, like in P_CheckPosition3D
-
       // Define a function to use in the 'for' blocks
       auto operate = [accessedgroupids, groupqueue, &queueback, func, 
          &groupid, data, gcount] (int x, int y) -> bool
