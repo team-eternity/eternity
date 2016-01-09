@@ -137,6 +137,7 @@ public:
    int polyObjNum;    // numeric id of polyobject (avoid C pointers here)
    int speed;         // speed of movement per frame
    int distance;      // distance to move
+   bool hasBeenPositive;  // MaxW: 20160106: flag to differentiate angles of >=180 from < 0
 };
 
 class PolyMoveThinker : public Thinker
@@ -198,14 +199,15 @@ public:
    virtual void serialize(SaveArchive &arc);
    
    // Data Members
-   int polyObjNum;    // numeric id of affected polyobject
-   int delay;         // delay time
-   int delayCount;    // delay counter
-   int initSpeed;     // initial speed
-   int speed;         // speed of rotation
-   int initDistance;  // initial distance to travel
-   int distance;      // current distance to travel
-   bool closing;      // if true, is closing
+   int polyObjNum;        // numeric id of affected polyobject
+   int delay;             // delay time
+   int delayCount;        // delay counter
+   int initSpeed;         // initial speed
+   int speed;             // speed of rotation
+   int initDistance;      // initial distance to travel
+   int distance;          // current distance to travel
+   bool closing;          // if true, is closing
+   bool hasBeenPositive;  // MaxW: 20160109: flag to differentiate angles of >=180 from < 0
 };
 
 //
