@@ -73,6 +73,7 @@
 #include "p_setup.h"
 #include "p_spec.h"     // ioanch 20160101: for bullet effects
 #include "polyobj.h"
+#include "r_pcheck.h"   // ioanch 20160109: for correct portal plane z
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_portal.h"
@@ -905,10 +906,11 @@ bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
    {
       // ceiling portal (slope must be up)
       linehitz = sightzstart + FixedMul(state.topslope, totalfrac);
-      if(linehitz > sector->ceilingheight)
+      fixed_t planez = R_CPLink(sector)->planez;
+      if(linehitz > planez)
       {
          // update cam.bottomslope to be the top of the sector wall
-         newslope = FixedDiv(sector->ceilingheight - sightzstart, totalfrac);
+         newslope = FixedDiv(planez - sightzstart, totalfrac);
 
          // if totalfrac == 0, then it will just be a very big slope
          if(newslope < state.bottomslope)
@@ -923,8 +925,7 @@ bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
          }
          else
          {
-            sectorfrac = FixedDiv(sector->ceilingheight - sightzstart,
-               linehitz - sightzstart);
+            sectorfrac = FixedDiv(planez - sightzstart, linehitz - sightzstart);
             // update z frac
             totalfrac = FixedMul(sectorfrac, totalfrac);
             // retrieve the xy frac using the origin frac
@@ -949,9 +950,10 @@ bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
       (newfromid = sector->f_portal->data.link.toid) != params->cgroupid)
    {
       linehitz = sightzstart + FixedMul(state.bottomslope, totalfrac);
-      if(linehitz < sector->floorheight)
+      fixed_t planez = R_FPLink(sector)->planez;
+      if(linehitz < planez)
       {
-         newslope = FixedDiv(sector->floorheight - sightzstart, totalfrac);
+         newslope = FixedDiv(planez - sightzstart, totalfrac);
          if(newslope > state.topslope)
             newslope = state.topslope;
 
@@ -962,8 +964,7 @@ bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
          }
          else
          {
-            sectorfrac = FixedDiv(sector->floorheight - sightzstart, 
-               linehitz - sightzstart);
+            sectorfrac = FixedDiv(planez - sightzstart, linehitz - sightzstart);
             totalfrac = FixedMul(sectorfrac, totalfrac);
             partialfrac = FixedDiv(totalfrac - state.originfrac, 
                FRACUNIT - state.originfrac);
@@ -1401,16 +1402,16 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
 
    fixed_t x, y, newslope;
    
-   if(state.topslope > 0 && sector->c_portal && sector->c_pflags & PS_PASSABLE
-      && (newfromid = sector->c_portal->data.link.toid) != state.groupid)
+   if(state.topslope > 0 && sector->c_pflags & PS_PASSABLE && 
+      (newfromid = sector->c_portal->data.link.toid) != state.groupid)
    {
       // ceiling portal (slope must be up)
       linehitz = sightzstart + FixedMul(state.topslope, totalfrac);
-      if(linehitz > sector->ceilingheight)
+      fixed_t planez = R_CPLink(sector)->planez;
+      if(linehitz > planez)
       {
          // update cam.bottomslope to be the top of the sector wall
-         newslope = FixedDiv(sector->ceilingheight - sightzstart, 
-            totalfrac);
+         newslope = FixedDiv(planez - sightzstart, totalfrac);
          // if totalfrac == 0, then it will just be a very big slope
          if(newslope < state.bottomslope)
             newslope = state.bottomslope;
@@ -1425,8 +1426,7 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
          else
          {
             // add a unit just to ensure that it enters the sector
-            fixedratio = FixedDiv(sector->ceilingheight - sightzstart, 
-               linehitz - sightzstart);
+            fixedratio = FixedDiv(planez - sightzstart, linehitz - sightzstart);
             // update z frac
             totalfrac = FixedMul(fixedratio, totalfrac);
             // retrieve the xy frac using the origin frac
@@ -1459,15 +1459,14 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
          }
       }
    }
-   if(state.bottomslope < 0 && sector->f_portal && 
-      sector->f_pflags & PS_PASSABLE && 
+   if(state.bottomslope < 0 && sector->f_pflags & PS_PASSABLE && 
       (newfromid = sector->f_portal->data.link.toid) != state.groupid)
    {
       linehitz = sightzstart + FixedMul(state.bottomslope, totalfrac);
-      if(linehitz < sector->floorheight)
+      fixed_t planez = R_FPLink(sector)->planez;
+      if(linehitz < planez)
       {
-         newslope = FixedDiv(sector->floorheight - sightzstart,
-            totalfrac);
+         newslope = FixedDiv(planez - sightzstart, totalfrac);
          if(newslope > state.topslope)
             newslope = state.topslope;
 
@@ -1478,8 +1477,7 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
          }
          else
          {
-            fixedratio = FixedDiv(sector->floorheight - sightzstart, 
-               linehitz - sightzstart);
+            fixedratio = FixedDiv(planez - sightzstart, linehitz - sightzstart);
             totalfrac = FixedMul(fixedratio, totalfrac);
             partialfrac = FixedDiv(totalfrac - state.origindist, attackrange);
 
@@ -1635,26 +1633,28 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
    int newfromid = R_NOGROUP;
    fixed_t z = state.z + FixedMul(aimslope, FixedMul(infrac, attackrange));
 
-   if(sidesector->c_portal && sidesector->c_pflags & PS_PASSABLE)
+   if(sidesector->c_pflags & PS_PASSABLE)
    {
       // ceiling portal
-      if(z > sidesector->ceilingheight)
+      fixed_t planez = R_CPLink(sidesector)->planez;
+      if(z > planez)
       {
-         pfrac = FixedDiv(sidesector->ceilingheight - state.z, aimslope);
-         absratio = FixedDiv(sidesector->ceilingheight - state.z, z - state.z);
-         z = sidesector->ceilingheight;
+         pfrac = FixedDiv(planez - state.z, aimslope);
+         absratio = FixedDiv(planez - state.z, z - state.z);
+         z = planez;
          haveportal = true;
          newfromid = sidesector->c_portal->data.link.toid;
       }
    }
-   if(!haveportal && sidesector->f_portal && sidesector->f_pflags & PS_PASSABLE)
+   if(!haveportal && sidesector->f_pflags & PS_PASSABLE)
    {
       // floor portal
-      if(z < sidesector->floorheight)
+      fixed_t planez = R_FPLink(sidesector)->planez;
+      if(z < planez)
       {
-         pfrac = FixedDiv(sidesector->floorheight - state.z, aimslope);
-         absratio = FixedDiv(sidesector->floorheight - state.z, z - state.z);
-         z = sidesector->floorheight;
+         pfrac = FixedDiv(planez - state.z, aimslope);
+         absratio = FixedDiv(planez - state.z, z - state.z);
+         z = planez;
          haveportal = true;
          newfromid = sidesector->f_portal->data.link.toid;
       }
