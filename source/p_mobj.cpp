@@ -1138,10 +1138,13 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
 {
    bool ret = false;
 
-   if(mobj->subsector->sector->f_pflags & PS_PASSABLE)
+   // ioanch 20160109: reference sector
+   const sector_t *sector = mobj->subsector->sector;
+
+   if(sector->f_pflags & PS_PASSABLE)
    {
       fixed_t passheight;
-      linkdata_t *ldata = R_FPLink(mobj->subsector->sector);
+      linkdata_t *ldata = R_FPLink(sector);
 
       if(mobj->player)
       {
@@ -1151,24 +1154,41 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
       else
          passheight = mobj->z + (mobj->height >> 1);
 
-
+      // ioanch 20160109: link offset outside
+      const linkoffset_t *link = nullptr;
       if(passheight < ldata->planez)
       {
-         linkoffset_t *link = P_GetLinkOffset(mobj->subsector->sector->groupid,
-                                              ldata->toid);
+         link = P_GetLinkOffset(sector->groupid, ldata->toid);
          if(link)
          {
             EV_PortalTeleport(mobj, link);
             ret = true;
          }
+      }
+
+      // ioanch 20160109: put into link below
+      if(!(mobj->flags & MF_NOSECTOR))
+      {
+         if(mobj->z < ldata->planez)
+         {
+            if(!mobj->sprev_bottom)
+            {
+               if(!link)
+                  link = P_GetLinkOffset(sector->groupid, ldata->toid);
+               mobj->linkBottom(R_PointInSubsector(mobj->x + link->x, 
+                  mobj->y + link->y)->sector);
+            }
+         }
+         else if(mobj->sprev_bottom)
+            mobj->unlinkBottom();
       }
    }
    
-   if(!ret && mobj->subsector->sector->c_pflags & PS_PASSABLE)
+   if(!ret && sector->c_pflags & PS_PASSABLE)
    {
       // Calculate the height at which the mobj should pass through the portal
       fixed_t passheight;
-      linkdata_t *ldata = R_CPLink(mobj->subsector->sector);
+      linkdata_t *ldata = R_CPLink(sector);
 
       if(mobj->player)
       {
@@ -1178,15 +1198,33 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
       else
          passheight = mobj->z + (mobj->height >> 1);
 
+      // ioanch 20160109: link offset outside
+      const linkoffset_t *link = nullptr;
       if(passheight >= ldata->planez)
       {
-         linkoffset_t *link = P_GetLinkOffset(mobj->subsector->sector->groupid,
-                                              ldata->toid);
+         link = P_GetLinkOffset(sector->groupid, ldata->toid);
          if(link)
          {
             EV_PortalTeleport(mobj, link);
             ret = true;
          }
+      }
+
+      // ioanch 20160109: put into link above
+      if(!(mobj->flags & MF_NOSECTOR))
+      {
+         if(mobj->z + mobj->height > ldata->planez)
+         {
+            if(!mobj->sprev_top)
+            {
+               if(!link)
+                  link = P_GetLinkOffset(sector->groupid, ldata->toid);
+               mobj->linkTop(R_PointInSubsector(mobj->x + link->x, 
+                  mobj->y + link->y)->sector);
+            }
+         }
+         else if(mobj->sprev_top)
+            mobj->unlinkTop();
       }
    }
 
@@ -1725,8 +1763,13 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
       mobj->sprite = st->sprite;
    mobj->frame  = st->frame;
 
-   // set subsector and/or block links
+   // ioanch 20160109: init links. The won't be set in P_SetThingPosition but
+   // P_CheckPortalTeleport
+   mobj->snext_bottom = mobj->snext_top = nullptr;
+   mobj->sprev_bottom = mobj->sprev_top = nullptr;
 
+   // set subsector and/or block links
+  
    P_SetThingPosition(mobj);
 
    mobj->dropoffz =           // killough 11/98: for tracking dropoffs
@@ -1837,6 +1880,10 @@ void Mobj::removeThinker()
 
    // unlink from sector and block lists
    P_UnsetThingPosition(this);
+
+   // ioanch 20160109: delete bottom and top links too
+   unlinkBottom();
+   unlinkTop();
 
    // Delete all nodes on the current sector_list -- phares 3/16/98
    if(this->old_sectorlist)
@@ -3109,6 +3156,65 @@ void P_StartMobjFade(Mobj *mo, int alphavelocity)
    // otherwise, the existing thinker will pick up this change.
    mo->alphavelocity = alphavelocity;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// ioanch 20160109: top and bottom sector linking/unlinking routines
+//
+
+//
+// Mobj::linkBottom
+//
+void Mobj::linkBottom(sector_t *sector)
+{
+   Mobj **link = &sector->c_thinglist;
+   Mobj *lsnext = *link;
+   if((snext_bottom = lsnext))
+      lsnext->sprev_bottom = &snext_bottom;
+   sprev_bottom = link;
+   *link = this;
+}
+
+//
+// Mobj::unlinkBottom
+//
+void Mobj::unlinkBottom()
+{
+   Mobj **lsprev = sprev_bottom;
+   Mobj *lsnext = snext_bottom;
+   if(lsprev && (*lsprev = lsnext))
+      lsnext->sprev_bottom = lsprev;
+   sprev_bottom = nullptr;
+   snext_bottom = nullptr;
+}
+
+//
+// Mobj::linkTop
+//
+void Mobj::linkTop(sector_t *sector)
+{
+   Mobj **link = &sector->f_thinglist;
+   Mobj *lsnext = *link;
+   if((snext_top = lsnext))
+      lsnext->sprev_top = &snext_top;
+   sprev_top = link;
+   *link = this;
+}
+
+//
+// Mobj::unlinkTop
+//
+void Mobj::unlinkTop()
+{
+   Mobj **lsprev = sprev_top;
+   Mobj *lsnext = snext_top;
+   if(lsprev && (*lsprev = lsnext))
+      lsnext->sprev_top = lsprev;
+   sprev_top = nullptr;
+   snext_top = nullptr;
+}
+
+///////////////////////////////////////////////////////////////////////////////
 
 #if 0
 //

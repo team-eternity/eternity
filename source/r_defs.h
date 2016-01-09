@@ -226,6 +226,9 @@ struct sector_t
    PointThinker csoundorg;  // haleyjd 10/16/06: separate sound origin for ceiling
    int validcount;          // if == validcount, already checked
    Mobj *thinglist;         // list of mobjs in sector
+   // ioanch 20160109: keep references to portal interfacing things
+   Mobj *c_thinglist;      // objects coming down from ceiling portal
+   Mobj *f_thinglist;      // objects coming up from floor portal
 
    // killough 8/28/98: friction is a sector property, not an mobj property.
    // these fields used to be in Mobj, but presented performance problems

@@ -786,18 +786,20 @@ struct spritepos_t
    fixed_t x, y, z;
 };
 
-static void R_interpolateThingPosition(const Mobj *thing, spritepos_t &pos)
+// ioanch 20160109: added offset arguments
+static void R_interpolateThingPosition(const Mobj *thing, spritepos_t &pos,
+                                       fixed_t offx, fixed_t offy)
 {
    if(view.lerp == FRACUNIT)
    {
-      pos.x = thing->x;
-      pos.y = thing->y;
+      pos.x = thing->x + offx;
+      pos.y = thing->y + offy;
       pos.z = thing->z;
    }
    else
    {
-      pos.x = lerpCoord(view.lerp, thing->prevpos.x, thing->x);
-      pos.y = lerpCoord(view.lerp, thing->prevpos.y, thing->y);
+      pos.x = lerpCoord(view.lerp, thing->prevpos.x, thing->x) + offx;
+      pos.y = lerpCoord(view.lerp, thing->prevpos.y, thing->y) + offy;
       pos.z = lerpCoord(view.lerp, thing->prevpos.z, thing->z);
    }
 }
@@ -806,8 +808,9 @@ static void R_interpolateThingPosition(const Mobj *thing, spritepos_t &pos)
 // R_ProjectSprite
 //
 // Generates a vissprite for a thing if it might be visible.
+// ioanch 20160109: added optional arguments for offsetting the sprite
 //
-static void R_ProjectSprite(Mobj *thing)
+static void R_ProjectSprite(Mobj *thing, fixed_t offx = 0, fixed_t offy = 0)
 {
    spritepos_t    spritepos;
    fixed_t        gzt;            // killough 3/27/98
@@ -835,7 +838,8 @@ static void R_ProjectSprite(Mobj *thing)
       return; // don't generate vissprite
 
    // haleyjd 01/05/14: interpolate thing positions
-   R_interpolateThingPosition(thing, spritepos);
+   // ioanch 20160109: portal rendering
+   R_interpolateThingPosition(thing, spritepos, offx, offy);
 
    // SoM: Cardboard translate the mobj coords and just project the sprite.
    tempx = M_FixedToFloat(spritepos.x) - view.x;
@@ -950,7 +954,8 @@ static void R_ProjectSprite(Mobj *thing)
    // from the viewer, by either water or fake ceilings
    // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
 
-   sec = (view.lerp == FRACUNIT ? thing->subsector->sector :
+   // ioanch 20160109: offset sprites always use the R_PointInSubsector
+   sec = (view.lerp == FRACUNIT && !offx && !offy ? thing->subsector->sector :
           R_PointInSubsector(spritepos.x, spritepos.y)->sector);
    heightsec = sec->heightsec;
    
@@ -1083,6 +1088,20 @@ void R_AddSprites(sector_t* sec, int lightlevel)
    
    for(thing = sec->thinglist; thing; thing = thing->snext)
       R_ProjectSprite(thing);
+
+   // ioanch 20160109: handle partial sprite projections
+   const linkoffset_t *link;
+   for(thing = sec->f_thinglist; thing; thing = thing->snext_top)
+   {
+      link = P_GetLinkOffset(sec->groupid, thing->groupid);
+      R_ProjectSprite(thing, -link->x, -link->y);
+   }
+   for(thing = sec->c_thinglist; thing; thing = thing->snext_bottom)
+   {
+      link = P_GetLinkOffset(sec->groupid, thing->groupid);
+      R_ProjectSprite(thing, -link->x, -link->y);
+   }
+
 
    // haleyjd 02/20/04: Handle all particles in sector.
 
