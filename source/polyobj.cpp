@@ -1457,7 +1457,6 @@ void PolySwingDoorThinker::Think()
    if(this->delayCount)
    {
       if(--this->delayCount == 0)
-         hasBeenPositive = false;
          S_StartPolySequence(po);
       return;
    }
