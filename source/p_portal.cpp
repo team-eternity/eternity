@@ -773,7 +773,7 @@ void P_LinkRejectTable()
 //
 // EV_PortalTeleport
 //
-bool EV_PortalTeleport(Mobj *mo, linkoffset_t *link)
+bool EV_PortalTeleport(Mobj *mo, const linkoffset_t *link)
 {
    fixed_t moz = mo->z;
    fixed_t momx = mo->momx;

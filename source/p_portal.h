@@ -78,7 +78,7 @@ void P_LinkRejectTable();
 
 void P_InitPortals();
 
-bool EV_PortalTeleport(Mobj *mo, linkoffset_t *link);
+bool EV_PortalTeleport(Mobj *mo, const linkoffset_t *link);
 
 void R_SetSectorGroupID(sector_t *sector, int groupid);
 
