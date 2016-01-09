@@ -2118,7 +2118,6 @@ typedef struct bombdata_s
    int   bombmod;      // haleyjd 07/13/03
    
    unsigned int bombflags; // haleyjd 12/22/12
-   int   groupid;      // ioanch 20151226: the group this bomb should affect
 } bombdata_t;
 
 #define MAXBOMBS 128               // a static limit to prevent stack faults.
@@ -2133,13 +2132,6 @@ static bombdata_t *theBomb;        // it's the bomb, man. (the current explosion
 //
 static bool PIT_RadiusAttack(Mobj *thing)
 {
-   // ioanch 20151226: reject if it's not the right group, unless R_NOGROUP.
-   if(theBomb->groupid != R_NOGROUP && thing->groupid != R_NOGROUP 
-      && theBomb->groupid != thing->groupid)
-   {
-      return true;
-   }
-
    fixed_t dx, dy, dist;
    Mobj *bombspot     = theBomb->bombspot;
    Mobj *bombsource   = theBomb->bombsource;
@@ -2260,8 +2252,7 @@ void P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int distance,
    P_TransPortalBlockWalker(bbox, spot->groupid, false, nullptr, 
       [](int x, int y, int groupid, void *data) -> bool
    {
-      theBomb->groupid = groupid;
-      P_BlockThingsIterator(x, y, PIT_RadiusAttack);
+      P_BlockThingsIterator(x, y, groupid, PIT_RadiusAttack);
       return true;
    });
 
