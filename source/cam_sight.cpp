@@ -319,6 +319,9 @@ bool PathTraverser::traverseIntercepts() const
 //
 bool PathTraverser::blockThingsIterator(int x, int y)
 {
+   if(!def.earlyOut && (x < 0 || y < 0 || x >= ::bmapwidth || y >= ::bmapheight))
+      return true;
+
    Mobj *thing = blocklinks[y * bmapwidth + x];
    for(; thing; thing = thing->bnext)
    {
@@ -432,6 +435,9 @@ bool PathTraverser::checkLine(size_t linenum)
 //
 bool PathTraverser::blockLinesIterator(int x, int y)
 {
+   if(!def.earlyOut && (x < 0 || y < 0 || x >= ::bmapwidth || y >= ::bmapheight))
+      return true;
+
    int  offset;
    int *list;
    DLListItem<polymaplink_t> *plink;
@@ -613,17 +619,15 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
 
    for(int count = 0; count < 100; count++)
    {
-      if(def.earlyOut || (mapx >= 0 && mapy >= 0 && 
-                          mapx < bmapwidth && mapy < bmapheight))
+      // if a flag is set, only accept blocks with line portals (needed for
+      // some function in the code)
+      if(!(def.flags & CAM_REQUIRELINEPORTALS) || 
+         ::portalmap[mapy * ::bmapwidth + mapx] & PMF_LINE)
       {
-         if(!(def.flags & CAM_REQUIRELINEPORTALS) || 
-            ::portalmap[mapy * ::bmapwidth + mapx] & PMF_LINE)
-         {
-            if(def.flags & CAM_ADDLINES && !blockLinesIterator(mapx, mapy))
-               return false;	// early out (ioanch: not for aim)
-            if(def.flags & CAM_ADDTHINGS && !blockThingsIterator(mapx, mapy))
-               return false;  // ioanch 20151230: aim also looks for a thing
-         }
+         if(def.flags & CAM_ADDLINES && !blockLinesIterator(mapx, mapy))
+            return false;	// early out (ioanch: not for aim)
+         if(def.flags & CAM_ADDTHINGS && !blockThingsIterator(mapx, mapy))
+            return false;  // ioanch 20151230: aim also looks for a thing
       }
       
       if((mapxstep | mapystep) == 0)
@@ -663,25 +667,21 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
          // block being entered need to be checked (which will happen when this
          // loop continues), but the other two blocks adjacent to the corner
          // also need to be checked.
-         if(def.earlyOut || (mapx >= 0 && mapy >= 0 && 
-                             mapx < bmapwidth && mapy < bmapheight))
+         if(!(def.flags & CAM_REQUIRELINEPORTALS) || 
+            ::portalmap[mapy * ::bmapwidth + mapx] & PMF_LINE)
          {
-            if(!(def.flags & CAM_REQUIRELINEPORTALS) || 
-               ::portalmap[mapy * ::bmapwidth + mapx] & PMF_LINE)
+            if(def.flags & CAM_ADDLINES 
+               && (!blockLinesIterator(mapx + mapxstep, mapy) 
+               || !blockLinesIterator(mapx, mapy + mapystep)))
             {
-               if(def.flags & CAM_ADDLINES 
-                  && (!blockLinesIterator(mapx + mapxstep, mapy) 
-                  || !blockLinesIterator(mapx, mapy + mapystep)))
-               {
-                  return false;
-               }
-               // ioanch 20151230: autoaim support
-               if(def.flags & CAM_ADDTHINGS
-                  && (!blockThingsIterator(mapx + mapxstep, mapy)
-                  || !blockThingsIterator(mapx, mapy + mapystep)))
-               {
-                  return false;
-               }
+               return false;
+            }
+            // ioanch 20151230: autoaim support
+            if(def.flags & CAM_ADDTHINGS
+               && (!blockThingsIterator(mapx + mapxstep, mapy)
+               || !blockThingsIterator(mapx, mapy + mapystep)))
+            {
+               return false;
             }
          }
          xintercept += xstep;
