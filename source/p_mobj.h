@@ -38,11 +38,11 @@
 #include "info.h"
 #include "m_fixed.h"
 #include "r_interpolate.h"
+#include "r_things.h"   // ioanch 20160109: for portal rendering
 #include "tables.h"
 
 struct msecnode_t;
 struct player_t;
-struct sector_t;  // ioanch 20160109: for portal drawing
 struct skin_t;
 
 // Defines
@@ -218,15 +218,10 @@ public:
    Mobj  *snext;
    Mobj **sprev; // killough 8/10/98: change to ptr-to-ptr
 
-   // ioanch 20160109: links in portal-straddling sectors
-   Mobj *snext_bottom;  // bottom of thing links: from sector_t::c_thinglist
-   Mobj **sprev_bottom;
-   Mobj *snext_top;     // top of thing links: from sector_t::f_thinglist
-   Mobj **sprev_top;
-   void linkBottom(sector_t *sector);
-   void unlinkBottom();
-   void linkTop(sector_t *sector);
-   void unlinkTop();
+   // ioanch 20160109: sprite projection chains
+   DLListItem<spriteprojnode_t> *spriteproj;
+   // will become true on first spriteproj test. Do not serialize.
+   bool spriteprojChecked;
 
    //More drawing info: to determine current sprite.
    angle_t     angle;  // orientation

@@ -80,6 +80,9 @@ static int      grouplimit = 0;
 // set true by P_BuildLinkTable.
 bool useportalgroups = false;
 
+// ioanch 20160109: needed for sprite projecting
+bool gMapHasSectorPortals;
+
 //
 // P_PortalGroupCount
 //
@@ -534,6 +537,8 @@ static void P_buildPortalMap()
    size_t pcount = P_PortalGroupCount();
    bool *visited = ecalloc(bool*, sizeof(bool), pcount);
    pcount *= sizeof(bool);
+
+   gMapHasSectorPortals = false; // init with false
    
    auto addPortal = [visited, &curGroups](int groupid)
    {
@@ -576,11 +581,13 @@ static void P_buildPortalMap()
             {
                portalmap[writeOfs] |= PMF_CEILING;
                curGroups.add(sector->c_portal->data.link.toid);
+               gMapHasSectorPortals = true;
             }
             if(sector->f_pflags & PS_PASSABLE)
             {
                portalmap[writeOfs] |= PMF_FLOOR;
                curGroups.add(sector->f_portal->data.link.toid);
+               gMapHasSectorPortals = true;
             }
          }
          else for(; *tmplist != -1; tmplist++)
@@ -595,21 +602,25 @@ static void P_buildPortalMap()
             {
                portalmap[writeOfs] |= PMF_CEILING;
                addPortal(li.frontsector->c_portal->data.link.toid);
+               gMapHasSectorPortals = true;
             }
             if(li.backsector && li.backsector->c_pflags & PS_PASSABLE)
             {
                portalmap[writeOfs] |= PMF_CEILING;
                addPortal(li.backsector->c_portal->data.link.toid);
+               gMapHasSectorPortals = true;
             }
             if(li.frontsector->f_pflags & PS_PASSABLE)
             {
                portalmap[writeOfs] |= PMF_FLOOR;
                addPortal(li.frontsector->f_portal->data.link.toid);
+               gMapHasSectorPortals = true;
             }
             if(li.backsector && li.backsector->f_pflags & PS_PASSABLE)
             {
                portalmap[writeOfs] |= PMF_FLOOR;
                addPortal(li.backsector->f_portal->data.link.toid);
+               gMapHasSectorPortals = true;
             }
          }
          if(gBlockGroups[writeOfs])

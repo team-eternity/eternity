@@ -32,6 +32,9 @@
 
 extern bool useportalgroups;
 
+// ioanch 20160109: true if sector portals are in map
+extern bool gMapHasSectorPortals;
+
 #ifndef R_NOGROUP
 // No link group. I know this means there is a signed limit on portal groups but
 // do you think anyone is going to make a level with 2147483647 groups that 

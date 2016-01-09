@@ -50,6 +50,7 @@
 #include "r_patch.h"
 #include "r_plane.h"
 #include "r_portal.h"
+#include "r_pcheck.h"   // ioanch 20160109: for sprite rendering through portals
 #include "r_segs.h"
 #include "r_state.h"
 #include "r_things.h"
@@ -1091,17 +1092,11 @@ void R_AddSprites(sector_t* sec, int lightlevel)
 
    // ioanch 20160109: handle partial sprite projections
    const linkoffset_t *link;
-   for(thing = sec->f_thinglist; thing; thing = thing->snext_top)
+   for(auto item = sec->spriteproj; item; item = item->dllNext)
    {
-      link = P_GetLinkOffset(sec->groupid, thing->groupid);
-      R_ProjectSprite(thing, -link->x, -link->y);
+      link = (*item)->link;
+      R_ProjectSprite((*item)->mobj, link->x, link->y);
    }
-   for(thing = sec->c_thinglist; thing; thing = thing->snext_bottom)
-   {
-      link = P_GetLinkOffset(sec->groupid, thing->groupid);
-      R_ProjectSprite(thing, -link->x, -link->y);
-   }
-
 
    // haleyjd 02/20/04: Handle all particles in sector.
 
@@ -1770,6 +1765,157 @@ void R_DrawPostBSP()
    //  but does not draw on side views
    if(!viewangleoffset)
       R_DrawPlayerSprites();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// ioanch 20160109: sprite projection through sector portals
+//
+
+// recycle bin of spriteproj objects
+static DLList<spriteprojnode_t, &spriteprojnode_t::freelink> spriteprojfree;
+static int spfcount;
+
+//
+// R_freeProjNode
+//
+// Clears all data and unlinks from important lists, putting it in the free bin
+//
+inline static void R_freeProjNode(spriteprojnode_t *node)
+{
+   node->mobj = nullptr;
+   node->sector = nullptr;
+   node->link = nullptr;
+   node->mobjlink.remove();
+   node->sectlink.remove();
+   spriteprojfree.insert(node);
+   ++spfcount;
+   printf("free %d\n", spfcount);
+}
+
+//
+// R_RemoveMobjProjections
+//
+// Removes the chain from a mobj
+//
+void R_RemoveMobjProjections(Mobj *mobj)
+{
+   DLListItem<spriteprojnode_t> *proj, *next;
+   for(proj = mobj->spriteproj; proj; proj = next)
+   {
+      next = proj->dllNext;
+      R_freeProjNode(proj->dllObject);
+   }
+   mobj->spriteproj = nullptr;
+}
+
+//
+// R_newProjNode
+//
+// Allocates a new node or picks a free one
+//
+static spriteprojnode_t *R_newProjNode()
+{
+   if(spriteprojfree.head)
+   {
+      auto ret = spriteprojfree.head;
+      ret->remove();
+      --spfcount;
+      printf("new %d\n", spfcount);
+      return ret->dllObject;
+   }
+   return estructalloc(spriteprojnode_t, 1);
+}
+
+//
+// R_addProjNode
+//
+// Helper function for below. Returns the next sector
+//
+inline static sector_t *R_addProjNode(Mobj *mobj, const linkdata_t *data, 
+                                      DLListItem<spriteprojnode_t> *&item,
+                                      DLListItem<spriteprojnode_t> **&tail)
+{
+   sector_t *sector;
+
+   const linkoffset_t *link = P_GetLinkOffset(mobj->groupid, data->toid);
+   if(!link->x && !link->y)
+      return nullptr;   // invalid 
+   sector = R_PointInSubsector(mobj->x + link->x, mobj->y + link->y)->sector;
+   if(!item)
+   {
+      // no more items in the list: then simply add them, without
+      spriteprojnode_t *newnode = R_newProjNode();
+      newnode->link = link;
+      newnode->mobj = mobj;
+      newnode->sector = sector;
+      newnode->mobjlink.insert(newnode, tail);
+      newnode->sectlink.insert(newnode, &sector->spriteproj);
+      tail = &newnode->mobjlink.dllNext;
+   }
+   else
+   {
+      if((*item)->sector != sector)
+      {
+         (*item)->sectlink.remove();
+         (*item)->sector = sector;
+         (*item)->link = link;
+         (*item)->sectlink.insert((*item), &sector->spriteproj);
+      }
+      tail = &item->dllNext;
+      item = item->dllNext;
+      
+   }
+   
+   return sector;
+}
+
+//
+// R_CheckMobjProjections
+//
+// Looks above and below for portals and prepares projection nodes
+//
+void R_CheckMobjProjections(Mobj *mobj)
+{
+   sector_t *sector = mobj->subsector->sector;
+   if(!mobj->spriteproj && !(sector->f_pflags & PS_PASSABLE) &&
+      !(sector->c_pflags & PS_PASSABLE))
+   {
+      return;  // exit quickly if nothing to do
+   }
+
+   // MAJOR FIXME: don't use an "arbitrary margin". Instead use accurate sprite size
+   enum
+   {
+      ARBITRARY_MARGIN = 64 << FRACBITS,
+   };
+
+   const linkdata_t *data;
+
+   DLListItem<spriteprojnode_t> *item = mobj->spriteproj;
+   DLListItem<spriteprojnode_t> **tail = &mobj->spriteproj;
+
+   while(sector && sector->f_pflags & PS_PASSABLE && 
+      (data = R_FPLink(sector))->planez > mobj->z - ARBITRARY_MARGIN)
+   {
+      sector = R_addProjNode(mobj, data, item, tail);
+   }
+
+   // restart from mobj's group
+   sector = mobj->subsector->sector;
+   while(sector && sector->c_pflags & PS_PASSABLE &&
+      (data = R_CPLink(sector))->planez < mobj->z + mobj->height + ARBITRARY_MARGIN)
+   {
+      sector = R_addProjNode(mobj, data, item, tail);
+   }
+
+   // remove trailing items
+   DLListItem<spriteprojnode_t> *next;
+   for(; item; item = next)
+   {
+      next = item->dllNext;
+      R_freeProjNode(item->dllObject);
+   }
 }
 
 //=============================================================================
