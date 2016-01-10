@@ -1255,7 +1255,6 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
 sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling, 
                                  sector_t *sector)
 {
-   sector_t *prevsector;
    if(!sector) // if not preset
       sector = R_PointInSubsector(x, y)->sector;
 

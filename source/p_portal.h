@@ -197,6 +197,20 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
                               void *data, 
                               bool (*func)(int x, int y, int groupid, void *data));
 
+// variant with generic callable
+template <typename C> inline static
+bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
+                              C &&callable)
+{
+   return P_TransPortalBlockWalker(bbox, groupid, xfirst, &callable, 
+      [](int x, int y, int groupid, void *data)
+   {
+      auto c = static_cast<C *>(data);
+      return (*c)(x, y, groupid);
+   });
+}
+
+
 #endif
 
 // EOF

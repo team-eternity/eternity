@@ -98,7 +98,7 @@ inline static bool CAM_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2,
                            [](const intercept_t *in, void *data,
                               const divline_t &trace)
    {
-      auto c = static_cast<const C *>(data);
+      auto c = static_cast<C *>(data);
       return (*c)(in, trace);
    });
 }

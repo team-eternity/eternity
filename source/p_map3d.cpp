@@ -263,8 +263,10 @@ Mobj *P_GetThingUnder(Mobj *mo)
 // a search, which is an extension borrowed from zdoom and is needed for 3D 
 // object clipping.
 //
-bool P_SBlockThingsIterator(int x, int y, bool (*func)(Mobj *), 
-                            Mobj *actor)
+// ioanch 20160110: added optional groupid
+//
+static bool P_SBlockThingsIterator(int x, int y, bool (*func)(Mobj *), 
+                                   Mobj *actor, int groupid = R_NOGROUP)
 {
    Mobj *mobj;
 
@@ -277,8 +279,15 @@ bool P_SBlockThingsIterator(int x, int y, bool (*func)(Mobj *),
       mobj = actor->bnext;
 
    for(; mobj; mobj = mobj->bnext)
+   {
+      if(groupid != R_NOGROUP && mobj->groupid != R_NOGROUP && 
+         groupid != mobj->groupid)
+      {
+         continue;
+      }
       if(!func(mobj))
          return false;
+   }
    
    return true;
 }
@@ -311,8 +320,12 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
 
    blockdist = thing->radius + clip.thing->radius;
 
-   if(D_abs(thing->x - clip.x) >= blockdist ||
-      D_abs(thing->y - clip.y) >= blockdist)
+   // ioanch 20160110: portal aware
+   const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid, 
+      thing->groupid);
+
+   if(D_abs(thing->x - link->x - clip.x) >= blockdist ||
+      D_abs(thing->y - link->y - clip.y) >= blockdist)
       return true; // didn't hit it
 
    // killough 11/98:
@@ -561,10 +574,14 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
    // Any contacted lines the step closer together
    // will adjust them.
 
+   // ioanch 20160110: portal aware floor and ceiling z detection
 #ifdef R_LINKEDPORTALS
    if(demo_version >= 333 && newsubsec->sector->f_pflags & PS_PASSABLE && 
       !(clip.thing->flags & MF_NOCLIP))
-      clip.floorz = clip.dropoffz = newsubsec->sector->floorheight - (1024 * FRACUNIT);
+   {
+      clip.floorz = clip.dropoffz = P_ExtremeSectorAtPoint(x, y, false, 
+         newsubsec->sector)->floorheight;
+   }
    else
 #endif
       clip.floorz = clip.dropoffz = newsubsec->sector->floorheight;
@@ -572,7 +589,10 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
 #ifdef R_LINKEDPORTALS
    if(demo_version >= 333 && newsubsec->sector->c_pflags & PS_PASSABLE &&
       !(clip.thing->flags & MF_NOCLIP))
-      clip.ceilingz = newsubsec->sector->ceilingheight + (1024 * FRACUNIT);
+   {
+      clip.ceilingz = P_ExtremeSectorAtPoint(x, y, true, 
+         newsubsec->sector)->ceilingheight;
+   }
    else
 #endif
       clip.ceilingz = newsubsec->sector->ceilingheight;
@@ -598,6 +618,13 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
    // based on their origin point, and can overlap
    // into adjacent blocks by up to MAXRADIUS units.
 
+   // ioanch 20160110: portal aware iterator
+   fixed_t bbox[4];
+   bbox[BOXLEFT] = clip.bbox[BOXLEFT] - MAXRADIUS;
+   bbox[BOXRIGHT] = clip.bbox[BOXRIGHT] + MAXRADIUS;
+   bbox[BOXBOTTOM] = clip.bbox[BOXBOTTOM] - MAXRADIUS;
+   bbox[BOXTOP] = clip.bbox[BOXTOP] + MAXRADIUS;
+   
    xl = (clip.bbox[BOXLEFT]   - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
    xh = (clip.bbox[BOXRIGHT]  - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
    yl = (clip.bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
@@ -609,18 +636,19 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
 
    // [RH] Fake taller height to catch stepping up into things.
    if(thing->player)   
-      thing->height = realheight + 24*FRACUNIT;
-   
-   for(bx = xl; bx <= xh; ++bx)
+      thing->height = realheight + STEPSIZE;
+
+   // ioanch: portal aware
+   // keep the lines indented to minimize git diff
+   if(!P_TransPortalBlockWalker(bbox, thing->groupid, true,
+      [thing, realheight, &thingblocker](int x, int y, int groupid) -> bool
    {
-      for(by = yl; by <= yh; ++by)
-      {
          // haleyjd: from zdoom:
          Mobj *robin = NULL;
 
          do
          {
-            if(!P_SBlockThingsIterator(bx, by, PIT_CheckThing3D, robin))
+            if(!P_SBlockThingsIterator(x, y, PIT_CheckThing3D, robin, groupid))
             { 
                // [RH] If a thing can be stepped up on, we need to continue checking
                // other things in the blocks and see if we hit something that is
@@ -635,7 +663,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
                }
                else if(!clip.BlockingMobj->player && 
                        !(thing->flags & (MF_FLOAT|MF_MISSILE|MF_SKULLFLY)) &&
-                       clip.BlockingMobj->z + clip.BlockingMobj->height-thing->z <= 24*FRACUNIT)
+                       clip.BlockingMobj->z + clip.BlockingMobj->height - thing->z <= STEPSIZE)
                {
                   if(thingblocker == NULL || clip.BlockingMobj->z > thingblocker->z)
                      thingblocker = clip.BlockingMobj;
@@ -643,7 +671,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
                   clip.BlockingMobj = NULL;
                }
                else if(thing->player &&
-                       thing->z + thing->height - clip.BlockingMobj->z <= 24*FRACUNIT)
+                       thing->z + thing->height - clip.BlockingMobj->z <= STEPSIZE)
                {
                   if(thingblocker)
                   { 
@@ -669,9 +697,10 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
                robin = NULL;
          } 
          while(robin);
-      }
-   }
-
+         return true;
+   }))
+      return false;
+   
    // check lines
    
    clip.BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
