@@ -1772,9 +1772,24 @@ void R_DrawPostBSP()
 // ioanch 20160109: sprite projection through sector portals
 //
 
+// separate validcount for avoiding sector infinite loop
+static int sprojvalidcount;
+static int *sprojvalidsectors;
+
 // recycle bin of spriteproj objects
 static DLList<spriteprojnode_t, &spriteprojnode_t::freelink> spriteprojfree;
-//static int spfcount;
+
+//
+// R_MapInitSpriteProj
+//
+// Initializes values for this level
+//
+void R_MapInitSpriteProj()
+{
+   sprojvalidcount = 0;
+   sprojvalidsectors = ecalloctag(int *, numsectors, sizeof(int), PU_LEVEL,
+                                  nullptr);
+}
 
 //
 // R_freeProjNode
@@ -1789,8 +1804,6 @@ inline static void R_freeProjNode(spriteprojnode_t *node)
    node->mobjlink.remove();
    node->sectlink.remove();
    spriteprojfree.insert(node);
-//   ++spfcount;
-//   printf("free %d\n", spfcount);
 }
 
 //
@@ -1820,8 +1833,6 @@ static spriteprojnode_t *R_newProjNode()
    {
       auto ret = spriteprojfree.head;
       ret->remove();
-//      --spfcount;
-//      printf("new %d\n", spfcount);
       return ret->dllObject;
    }
    return estructalloc(spriteprojnode_t, 1);
@@ -1884,7 +1895,8 @@ void R_CheckMobjProjections(Mobj *mobj)
       return;  // exit quickly if nothing to do
    }
 
-   // MAJOR FIXME: don't use an "arbitrary margin". Instead use accurate sprite size
+   // MAJOR FIXME: don't use an "arbitrary margin". Instead use accurate sprite
+   // size
    enum
    {
       ARBITRARY_MARGIN = 64 << FRACBITS,
@@ -1895,10 +1907,16 @@ void R_CheckMobjProjections(Mobj *mobj)
    DLListItem<spriteprojnode_t> *item = mobj->spriteproj;
    DLListItem<spriteprojnode_t> **tail = &mobj->spriteproj;
 
+   ++sprojvalidcount;
+
    while(sector && sector->f_pflags & PS_PASSABLE && 
       (data = R_FPLink(sector))->planez > mobj->z - ARBITRARY_MARGIN)
    {
+      // always accept first sector
+      sprojvalidsectors[sector - sectors] = sprojvalidcount;
       sector = R_addProjNode(mobj, data, item, tail);
+      if(sprojvalidsectors[sector - sectors] == sprojvalidcount)
+         break;
    }
 
    // restart from mobj's group
@@ -1906,7 +1924,11 @@ void R_CheckMobjProjections(Mobj *mobj)
    while(sector && sector->c_pflags & PS_PASSABLE &&
       (data = R_CPLink(sector))->planez < mobj->z + mobj->height + ARBITRARY_MARGIN)
    {
+      // always accept first sector
+      sprojvalidsectors[sector - sectors] = sprojvalidcount;
       sector = R_addProjNode(mobj, data, item, tail);
+      if(sprojvalidsectors[sector - sectors] == sprojvalidcount)
+         break;
    }
 
    // remove trailing items

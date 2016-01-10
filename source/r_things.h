@@ -108,6 +108,7 @@ struct spriteprojnode_t
    DLListItem<spriteprojnode_t> freelink; // free list link (for recycling)
 };
 
+void R_MapInitSpriteProj();
 void R_RemoveMobjProjections(Mobj *mobj);
 void R_CheckMobjProjections(Mobj *mobj);
 
