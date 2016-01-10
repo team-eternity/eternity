@@ -112,10 +112,6 @@ public:
    // Intercepts vector
    PODCollection<intercept_t> intercepts;
 
-   // linedef validcount substitute
-   byte *validlines;
-   byte *validpolys;
-
    // portal traversal information
    int  fromid;        // current source group id
    int  toid;          // group id of the target
@@ -144,15 +140,6 @@ public:
       bottomslope = params->tz - sightzstart;
       topslope    = bottomslope + params->theight;
 
-      // ioanch 20151230: use the macros
-      VALID_ALLOC(validlines, ::numlines);
-      VALID_ALLOC(validpolys, ::numPolyObjects);
-   }
-
-   ~CamSight()
-   {
-      VALID_FREE(validlines);
-      VALID_FREE(validpolys);
    }
 };
 
