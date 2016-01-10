@@ -1774,7 +1774,7 @@ void R_DrawPostBSP()
 
 // recycle bin of spriteproj objects
 static DLList<spriteprojnode_t, &spriteprojnode_t::freelink> spriteprojfree;
-static int spfcount;
+//static int spfcount;
 
 //
 // R_freeProjNode
@@ -1789,8 +1789,8 @@ inline static void R_freeProjNode(spriteprojnode_t *node)
    node->mobjlink.remove();
    node->sectlink.remove();
    spriteprojfree.insert(node);
-   ++spfcount;
-   printf("free %d\n", spfcount);
+//   ++spfcount;
+//   printf("free %d\n", spfcount);
 }
 
 //
@@ -1820,8 +1820,8 @@ static spriteprojnode_t *R_newProjNode()
    {
       auto ret = spriteprojfree.head;
       ret->remove();
-      --spfcount;
-      printf("new %d\n", spfcount);
+//      --spfcount;
+//      printf("new %d\n", spfcount);
       return ret->dllObject;
    }
    return estructalloc(spriteprojnode_t, 1);

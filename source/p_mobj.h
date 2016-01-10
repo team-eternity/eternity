@@ -37,6 +37,7 @@
 // Needs precompiled tables/data structures.
 #include "info.h"
 #include "m_fixed.h"
+#include "m_vector.h"   // ioanch 20160109: for portal rendering
 #include "r_interpolate.h"
 #include "r_things.h"   // ioanch 20160109: for portal rendering
 #include "tables.h"
@@ -220,8 +221,7 @@ public:
 
    // ioanch 20160109: sprite projection chains
    DLListItem<spriteprojnode_t> *spriteproj;
-   // will become true on first spriteproj test. Do not serialize.
-   bool spriteprojChecked;
+   v3fixed_t sprojlast; // coordinates after last check. Initially "invalid"
 
    //More drawing info: to determine current sprite.
    angle_t     angle;  // orientation

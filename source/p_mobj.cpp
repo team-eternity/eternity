@@ -1229,9 +1229,6 @@ void Mobj::Think()
    int oldwaterstate, waterstate = 0;
    fixed_t lz;
 
-   // ioanch 20160109: keep track of old z
-   fixed_t oldx = x, oldy = y, oldz = z;
-
    // haleyjd 01/04/14: backup current position at start of frame;
    // note players do this for themselves in P_PlayerThink.
    if(!player || player->mo != this)
@@ -1362,10 +1359,13 @@ void Mobj::Think()
 
 #ifdef R_LINKEDPORTALS
    P_CheckPortalTeleport(this);
-   if(gMapHasSectorPortals && (!spriteprojChecked || z != oldz || x != oldx || y != oldy))
+   if(gMapHasSectorPortals && (z != sprojlast.z || x != sprojlast.x ||
+                               y != sprojlast.y))
    {
       R_CheckMobjProjections(this);
-      spriteprojChecked = true;
+      sprojlast.x = x;
+      sprojlast.y = y;
+      sprojlast.z = z;
    }
 #endif
 
@@ -1740,7 +1740,8 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    // ioanch 20160109: init spriteproj. They won't be set in P_SetThingPosition 
    // but P_CheckPortalTeleport
    mobj->spriteproj = nullptr;
-   mobj->spriteprojChecked = false;
+   // init with an "invalid" value
+   mobj->sprojlast.x = mobj->sprojlast.y = mobj->sprojlast.z = D_MAXINT;
 
    // set subsector and/or block links
   
