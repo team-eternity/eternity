@@ -145,8 +145,9 @@ floater:
       mo->target)     // killough 11/98: simplify
    {
       fixed_t delta;
-      if(P_AproxDistance(mo->x - mo->target->x, mo->y - mo->target->y) <
-         D_abs(delta = mo->target->z + (mo->height >> 1) - mo->z) * 3)
+      // ioanch 20160110: portal aware
+      if(P_AproxDistance(mo->x - getTargetX(mo), mo->y - getTargetY(mo)) <
+         D_abs(delta = getTargetZ(mo) + (mo->height >> 1) - mo->z) * 3)
          mo->z += delta < 0 ? -FLOATSPEED : FLOATSPEED;
    }
 

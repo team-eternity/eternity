@@ -478,9 +478,9 @@ extern fixed_t FloatBobOffsets[64];
 #include "linkoffs.h"
 
 // Made these use getThing* to eliminate the code duplication
-#define getTargetX(mo) getThingX(mo, mo->target)
-#define getTargetY(mo) getThingY(mo, mo->target)
-#define getTargetZ(mo) getThingZ(mo, mo->target)
+#define getTargetX(mo) getThingX((mo), (mo)->target)
+#define getTargetY(mo) getThingY((mo), (mo)->target)
+#define getTargetZ(mo) getThingZ((mo), (mo)->target)
 
 // haleyjd 05/21/08: Functions like the above, but when we have a specific
 // Mobj pointer we want to use, and not mo->target.
