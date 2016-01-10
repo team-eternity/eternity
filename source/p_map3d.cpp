@@ -186,8 +186,9 @@ static bool PIT_TestMobjZ(Mobj *thing)
    }
 
    // test against collision - from PIT_CheckThing:
-   if(D_abs(thing->x - clip.x) >= blockdist || 
-      D_abs(thing->y - clip.y) >= blockdist)
+   // ioanch 20160110: portal aware
+   if(D_abs(getThingX(clip.thing, thing) - clip.x) >= blockdist || 
+      D_abs(getThingY(clip.thing, thing) - clip.y) >= blockdist)
       return true;
 
    // the thing may be blocking; save a pointer to it
@@ -202,8 +203,6 @@ static bool PIT_TestMobjZ(Mobj *thing)
 //
 bool P_TestMobjZ(Mobj *mo)
 {
-   int xl, xh, yl, yh, x, y;
-   
    // a no-clipping thing is always good
    if(mo->flags & MF_NOCLIP)
       return true;
@@ -217,17 +216,20 @@ bool P_TestMobjZ(Mobj *mo)
    clip.bbox[BOXRIGHT]  = clip.x + mo->radius;
    clip.bbox[BOXBOTTOM] = clip.y - mo->radius;
    clip.bbox[BOXTOP]    = clip.y + mo->radius;
-   
-   xl = (clip.bbox[BOXLEFT]   - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
-   xh = (clip.bbox[BOXRIGHT]  - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
-   yl = (clip.bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
-   yh = (clip.bbox[BOXTOP]    - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
 
-   // standard P_BlockThingsIterator loop
-   for(x = xl; x <= xh; ++x)
-      for(y = yl; y <= yh; ++y)
-         if(!P_BlockThingsIterator(x, y, PIT_TestMobjZ))
-            return false;
+   // ioanch 20160110: portal aware
+   fixed_t bbox[4];
+   bbox[BOXLEFT] = clip.bbox[BOXLEFT] - MAXRADIUS;
+   bbox[BOXRIGHT] = clip.bbox[BOXRIGHT] + MAXRADIUS;
+   bbox[BOXBOTTOM] = clip.bbox[BOXBOTTOM] - MAXRADIUS;
+   bbox[BOXTOP] = clip.bbox[BOXTOP] + MAXRADIUS;
+
+   if(!P_TransPortalBlockWalker(bbox, mo->groupid, true, nullptr, 
+      [](int x, int y, int groupid, void *data) -> bool
+   {
+      return P_BlockThingsIterator(x, y, groupid, PIT_TestMobjZ);
+   }))
+      return false;
 
    return true;
 }
