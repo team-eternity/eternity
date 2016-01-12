@@ -1408,8 +1408,9 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          else
          {
             // haleyjd: yikes...
+            // ioanch 20160111: updated for portals
             if(clip.BlockingMobj->z + clip.BlockingMobj->height-thing->z > STEPSIZE || 
-               (clip.BlockingMobj->subsector->sector->ceilingheight
+               (P_ExtremeSectorAtPoint(clip.BlockingMobj, true)->ceilingheight
                  - (clip.BlockingMobj->z + clip.BlockingMobj->height) < thing->height) ||
                (clip.ceilingz - (clip.BlockingMobj->z + clip.BlockingMobj->height) 
                  < thing->height))
