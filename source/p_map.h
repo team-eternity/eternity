@@ -227,6 +227,8 @@ struct doom_mapinter_t
    msecnode_t *sector_list;     // phares 3/16/98
    
    Mobj       *BlockingMobj;    // haleyjd 1/17/00: global hit reference
+
+   int         curGroupId; // ioanch 20160112: used by PIT_CheckLine3D
 };
 
 // Pushes the tm stack, clearing the new element

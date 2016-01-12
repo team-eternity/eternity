@@ -524,8 +524,9 @@ bool ThingIsOnLine(const Mobj *t, const line_t *l)
 // to it.
 //
 // killough 5/3/98: reformatted, cleaned up
+// ioanch 20160111: added groupid
 //
-bool P_BlockLinesIterator(int x, int y, bool func(line_t*))
+bool P_BlockLinesIterator(int x, int y, bool func(line_t*), int groupid)
 {
    int        offset;
    const int  *list;     // killough 3/1/98: for removal of blockmap limit
@@ -581,6 +582,9 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*))
          continue;
 
       ld = &lines[*list];
+      // ioanch 20160111: check groupid
+      if(groupid != R_NOGROUP && groupid != ld->frontsector->groupid)
+         continue;
       if(ld->validcount == validcount)
          continue;       // line has already been checked
       ld->validcount = validcount;

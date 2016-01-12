@@ -47,6 +47,7 @@
 #include "d_mod.h"
 #include "doomdef.h"
 #include "doomstat.h"
+#include "e_exdata.h"   // ioanch 20160112
 #include "e_states.h"
 #include "e_things.h"
 #include "m_bbox.h"
@@ -533,13 +534,237 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
 }
 
 //
+// P_getLineHeights
+//
+// ioanch 20160112: helper function to get line extremities
+//
+static void P_getLineHeights(const line_t *ld, fixed_t &linebottom, 
+                             fixed_t &linetop)
+{
+   if(ld->frontsector->f_pflags & PS_PASSABLE && 
+      ld->frontsector->f_portal->data.link.planez > ld->frontsector->floorheight)
+   {
+      linebottom = ld->frontsector->f_portal->data.link.planez;
+   }
+   else
+      linebottom = ld->frontsector->floorheight;
+   
+   if(ld->frontsector->c_pflags & PS_PASSABLE &&
+      ld->frontsector->c_portal->data.link.planez < 
+      ld->frontsector->ceilingheight)
+   {
+      linetop = ld->frontsector->c_portal->data.link.planez;
+   }
+   else
+      linetop = ld->frontsector->ceilingheight;
+
+   if(ld->backsector)
+   {
+      fixed_t bottomback;
+      if(ld->backsector->f_pflags & PS_PASSABLE &&
+         ld->backsector->f_portal->data.link.planez > 
+         ld->backsector->floorheight)
+      {
+         bottomback = ld->backsector->f_portal->data.link.planez;
+      }
+      else
+         bottomback = ld->backsector->floorheight;
+      if(bottomback < linebottom)
+         linebottom = bottomback;
+
+      fixed_t topback;
+      if(ld->backsector->c_pflags & PS_PASSABLE &&
+         ld->backsector->c_portal->data.link.planez < 
+         ld->backsector->ceilingheight)
+      {
+         topback = ld->backsector->c_portal->data.link.planez;
+      }
+      else
+         topback = ld->backsector->ceilingheight;
+      if(topback < linetop)
+         linetop = topback;
+   }
+}
+
+//
+// untouchedViaPortals
+//
+// ioanch 20160112: linked portal aware version of untouched from p_map.cpp
+//
+static int untouchedViaOffset(line_t *ld, const linkoffset_t *link)
+{
+   fixed_t x, y, tmbbox[4];
+   return 
+     (tmbbox[BOXRIGHT] = (x = clip.thing->x + link->x) + clip.thing->radius) <= 
+     ld->bbox[BOXLEFT] ||
+     (tmbbox[BOXLEFT] = x - clip.thing->radius) >= ld->bbox[BOXRIGHT] ||
+     (tmbbox[BOXTOP] = (y = clip.thing->y + link->y) + clip.thing->radius) <= 
+     ld->bbox[BOXBOTTOM] ||
+     (tmbbox[BOXBOTTOM] = y - clip.thing->radius) >= ld->bbox[BOXTOP] ||
+     P_BoxOnLineSide(tmbbox, ld) != -1;
+}
+
+//
+// P_blockingLineDifferentLevel
+//
+// ioanch 20160112: Call this if there's a blocking line at a different level
+//
+static void P_blockingLineDifferentLevel(line_t *ld, fixed_t thingmid, 
+                                              fixed_t linebottom, 
+                                              fixed_t linetop)
+{
+   fixed_t linemid = linetop / 2 + linebottom / 2;
+   bool moveup = thingmid >= linemid;
+
+   if(!moveup && linebottom < clip.ceilingz)
+   {
+      clip.ceilingz = linebottom;
+      clip.ceilingline = ld;
+      clip.blockline = ld;
+   }
+   if(moveup && linetop > clip.floorz)
+   {
+      clip.floorz = linetop;
+      clip.floorline = ld;
+      clip.blockline = ld;
+   }
+   if(linebottom < clip.dropoffz)
+      clip.dropoffz = linebottom;
+
+   if(moveup && linetop > clip.secfloorz)
+      clip.secfloorz = linetop;
+   if(!moveup && linebottom < clip.secceilz)
+      clip.secceilz = linebottom;
+         
+   if(moveup && clip.floorz > clip.passfloorz)
+      clip.passfloorz = clip.floorz;
+   if(!moveup && clip.ceilingz < clip.passceilz)
+      clip.passceilz = clip.ceilingz;
+}
+
+//
+// PIT_CheckLine3D
+//
+// ioanch 20160112: 3D (portal) version of PIT_CheckLine. If map has no portals,
+// fall back to PIT_CheckLine
+//
+static bool PIT_CheckLine3D(line_t *ld)
+{
+   if(!useportalgroups || full_demo_version < make_full_version(340, 48))
+      return PIT_CheckLine(ld);
+
+   const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid, 
+      clip.curGroupId);
+   fixed_t bbox[4];
+   bbox[BOXLEFT] = clip.bbox[BOXLEFT] + link->x;
+   bbox[BOXBOTTOM] = clip.bbox[BOXBOTTOM] + link->y;
+   bbox[BOXRIGHT] = clip.bbox[BOXRIGHT] + link->x;
+   bbox[BOXTOP] = clip.bbox[BOXTOP] + link->y;
+
+   if(bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   || 
+      bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  || 
+      bbox[BOXTOP]    <= ld->bbox[BOXBOTTOM] || 
+      bbox[BOXBOTTOM] >= ld->bbox[BOXTOP])
+      return true; // didn't hit it
+
+   if(P_BoxOnLineSide(clip.bbox, ld) != -1)
+      return true; // didn't hit it
+
+   fixed_t linetop, linebottom;
+   P_getLineHeights(ld, linebottom, linetop);
+
+   // values to set on exit:
+   // clip.ceilingz
+   // clip.ceilingline
+   // clip.blockline
+   // clip.floorz
+   // clip.floorline
+   // clip.dropoffz
+   // clip.secfloorz
+   // clip.secceilz
+   // clip.passfloorz
+   // clip.passceilz
+   // (spechit)
+
+   // values obtained from P_LineOpening
+   // clip.openfrontsector -> not used
+   // clip.openbacksector  -> not used
+   // clip.openrange
+   // clip.opentop
+   // clip.openbottom
+   // clip.lowfloor
+   // clip.floorpic
+   // clip.opensecfloor
+   // clip.opensecceil
+   // clip.touch3dside
+
+   fixed_t thingtopz = clip.thing->z + clip.thing->height;
+   fixed_t thingz = clip.thing->z;
+   
+   if(linebottom <= thingz && linetop >= thingtopz)
+   {
+      // classic Doom behaviour
+      if(!ld->backsector || (ld->extflags & EX_ML_BLOCKALL)) // one sided line
+      {
+         clip.blockline = ld;
+         return clip.unstuck && !untouchedViaOffset(ld, link) &&
+            FixedMul(clip.x-clip.thing->x,ld->dy) > 
+            FixedMul(clip.y-clip.thing->y,ld->dx);
+      }
+
+      // killough 8/10/98: allow bouncing objects to pass through as missiles
+      if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
+      {
+         if(ld->flags & ML_BLOCKING)           // explicitly blocking everything
+            return clip.unstuck && !untouchedViaOffset(ld, link);  
+         // killough 8/1/98: allow escape
+
+         // killough 8/9/98: monster-blockers don't affect friends
+         // SoM 9/7/02: block monsters standing on 3dmidtex only
+         if(!(clip.thing->flags & MF_FRIEND || clip.thing->player) && 
+            ld->flags & ML_BLOCKMONSTERS && 
+            !(ld->flags & ML_3DMIDTEX))
+            return false; // block monsters only
+      }
+   }
+   else
+   {
+      // treat impassable lines as lower/upper
+      // same conditions as above
+      fixed_t thingmid = thingz / 2 + thingtopz / 2;
+      if(!ld->backsector || (ld->extflags & EX_ML_BLOCKALL))
+      {
+         P_blockingLineDifferentLevel(ld, thingmid, linebottom, linetop);
+         return true;
+      }
+      if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
+      {
+         if(ld->flags & ML_BLOCKING)           // explicitly blocking everything
+         {
+            P_blockingLineDifferentLevel(ld, thingmid, linebottom, linetop);
+            return true;
+         }
+         if(!(clip.thing->flags & MF_FRIEND || clip.thing->player) && 
+            ld->flags & ML_BLOCKMONSTERS && 
+            !(ld->flags & ML_3DMIDTEX))
+         {
+            P_blockingLineDifferentLevel(ld, thingmid, linebottom, linetop);
+            return true;
+         }
+      }
+   }
+
+   // TODO: check other lines
+   return false;
+}
+
+//
 // P_CheckPosition3D
 //
 // A 3D version of P_CheckPosition.
 //
 bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y) 
 {
-   int xl, xh, yl, yh, bx, by;
    subsector_t *newsubsec;
    fixed_t thingdropoffz;
 
@@ -625,11 +850,6 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
    bbox[BOXBOTTOM] = clip.bbox[BOXBOTTOM] - MAXRADIUS;
    bbox[BOXTOP] = clip.bbox[BOXTOP] + MAXRADIUS;
    
-   xl = (clip.bbox[BOXLEFT]   - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
-   xh = (clip.bbox[BOXRIGHT]  - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
-   yl = (clip.bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
-   yh = (clip.bbox[BOXTOP]    - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
-
    clip.BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
    thingblocker = NULL;
    stepthing    = NULL;
@@ -707,19 +927,23 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
    thing->height = realheight;
    if(clip.thing->flags & MF_NOCLIP)
       return (clip.BlockingMobj = thingblocker) == NULL;
-   
-   xl = (clip.bbox[BOXLEFT]   - bmaporgx) >> MAPBLOCKSHIFT;
-   xh = (clip.bbox[BOXRIGHT]  - bmaporgx) >> MAPBLOCKSHIFT;
-   yl = (clip.bbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
-   yh = (clip.bbox[BOXTOP]    - bmaporgy) >> MAPBLOCKSHIFT;
 
+   memcpy(bbox, clip.bbox, sizeof(bbox));
+   
    thingdropoffz = clip.floorz;
    clip.floorz = clip.dropoffz;
 
-   for(bx = xl; bx <= xh; ++bx)
-      for(by = yl; by <= yh; ++by)
-         if(!P_BlockLinesIterator(bx, by, PIT_CheckLine))
-            return false; // doesn't fit
+   // ioanch 20160112: portal-aware
+   if(!P_TransPortalBlockWalker(bbox, thing->groupid, true, nullptr, 
+      [](int x, int y, int groupid, void *data) -> bool
+   {
+      // ioanch 20160112: try 3D portal check-line
+      clip.curGroupId = groupid;
+      if(!P_BlockLinesIterator(x, y, PIT_CheckLine3D, groupid))
+         return false; // doesn't fit
+      return true;
+   }))
+      return false;
 
    if(clip.ceilingz - clip.floorz < thing->height)
       return false;
