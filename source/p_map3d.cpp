@@ -581,7 +581,7 @@ static void P_getLineHeights(const line_t *ld, fixed_t &linebottom,
       }
       else
          topback = ld->backsector->ceilingheight;
-      if(topback < linetop)
+      if(topback > linetop)
          linetop = topback;
    }
 }
