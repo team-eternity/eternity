@@ -1285,7 +1285,9 @@ sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling,
       }
       
       // move into the new sector
-      sector = R_PointInSubsector(x + link->x, y + link->y)->sector;
+      x += link->x;
+      y += link->y;
+      sector = R_PointInSubsector(x, y)->sector;
       if(groupvisit[sector->groupid])
       {
          break;   // erroneous case, so quit
