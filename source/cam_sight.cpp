@@ -1697,15 +1697,11 @@ bool ShootContext::shoot2SLine(line_t *li, int lineside, fixed_t dist,
    const sector_t *fs = li->frontsector;
    const sector_t *bs = li->backsector;
 
-   // ioanch: no more need for demo version < 333 check
-   bool becomp = !!comp[comp_planeshoot];
-   bool floorsame = fs->floorheight == bs->floorheight && becomp;
-   bool ceilingsame = fs->ceilingheight == bs->ceilingheight && becomp;
-
-   if((floorsame || FixedDiv(lo.openbottom - state.z, dist) <= aimslope) &&
-      (ceilingsame || FixedDiv(lo.opentop - state.z, dist) >= aimslope))
+   // ioanch: no more need for demo version < 333 check. Also don't allow comp.
+   if(FixedDiv(lo.openbottom - state.z, dist) <= aimslope &&
+      FixedDiv(lo.opentop - state.z, dist) >= aimslope)
    {
-      if(li->special && !comp[comp_planeshoot])
+      if(li->special)
          P_ShootSpecialLine(thing, li, lineside);
       return true;
    }
@@ -1818,36 +1814,33 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          if(context.checkShootFlatPortal(sidesector, in->frac))
             return false;  // done here
 
-         if(!comp[comp_planeshoot])
+         if(z < sidesector->floorheight)
          {
-            if(z < sidesector->floorheight)
-            {
-               fixed_t pfrac = FixedDiv(sidesector->floorheight 
-                  - context.state.z, context.aimslope);
+            fixed_t pfrac = FixedDiv(sidesector->floorheight 
+               - context.state.z, context.aimslope);
 
-               if(R_IsSkyFlat(sidesector->floorpic))
-                  return false;
+            if(R_IsSkyFlat(sidesector->floorpic))
+               return false;
 
-               x = trace.x + FixedMul(context.cos, pfrac);
-               y = trace.y + FixedMul(context.sin, pfrac);
-               z = sidesector->floorheight;
+            x = trace.x + FixedMul(context.cos, pfrac);
+            y = trace.y + FixedMul(context.sin, pfrac);
+            z = sidesector->floorheight;
 
-               hitplane = true;
-               updown = 0;
-            }
-            else if(z > sidesector->ceilingheight)
-            {
-               fixed_t pfrac = FixedDiv(sidesector->ceilingheight 
-                  - context.state.z, context.aimslope);
-               if(sidesector->intflags & SIF_SKY)
-                  return false;
-               x = trace.x + FixedMul(context.cos, pfrac);
-               y = trace.y + FixedMul(context.sin, pfrac);
-               z = sidesector->ceilingheight;
+            hitplane = true;
+            updown = 0;
+         }
+         else if(z > sidesector->ceilingheight)
+         {
+            fixed_t pfrac = FixedDiv(sidesector->ceilingheight 
+               - context.state.z, context.aimslope);
+            if(sidesector->intflags & SIF_SKY)
+               return false;
+            x = trace.x + FixedMul(context.cos, pfrac);
+            y = trace.y + FixedMul(context.sin, pfrac);
+            z = sidesector->ceilingheight;
 
-               hitplane = true;
-               updown = 1;
-            }
+            hitplane = true;
+            updown = 1;
          }
       }
 
