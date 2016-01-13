@@ -760,20 +760,18 @@ static bool PIT_CheckLine3D(line_t *ld)
    extern line_t *lines;
 
    // now apply correction to openings in case thing is positioned differently
-   if(!fportal && thingz < linebottom &&
+   if(clip.thing->groupid != clip.curGroupId && !fportal && thingz < linebottom &&
       thingmid < (linebottom + clip.openbottom) / 2)
    {
-//      printf("below %d\n", (int)(ld - lines));
       clip.opentop = linebottom;
       clip.openbottom = D_MININT;
       clip.opensecceil = linebottom;
       clip.opensecfloor = D_MININT;
       cportal = false;
    }
-   if(!cportal && thingtopz > linetop &&
+   if(clip.thing->groupid != clip.curGroupId && !cportal && thingtopz > linetop &&
            thingmid >= (linetop + clip.opentop) / 2)
    {
-//      printf("above %d\n", (int)(ld - lines));
       clip.openbottom = linetop;
       clip.opentop = D_MAXINT;
       clip.opensecfloor = linetop;
