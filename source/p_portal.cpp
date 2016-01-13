@@ -797,8 +797,8 @@ bool EV_PortalTeleport(Mobj *mo, const linkoffset_t *link)
 
    // ioanch 20160113: don't teleport. Just change x and y
    P_UnsetThingPosition(mo);
-   mo->x = mo->x + link->x;
-   mo->y = mo->y + link->y;
+   mo->x += link->x;
+   mo->y += link->y;
    mo->backupPosition();
    P_SetThingPosition(mo);
 

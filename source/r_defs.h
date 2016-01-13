@@ -298,6 +298,8 @@ struct sector_t
    // Portals
    portal_t *c_portal;
    portal_t *f_portal;
+   // ioanch 20160113: added line portal reference
+   const line_t *portalLine;
    
    int groupid;
 

@@ -650,11 +650,8 @@ static void SpechitOverrun(line_t *ld)
 void P_CollectSpechits(line_t *ld)
 {
    // if contacted a special line, add it to the list
-#ifdef R_LINKEDPORTALS
-   if(ld->special || ld->portal)
-#else
-   if(ld->special)
-#endif
+   // ioanch 20160113: no longer collect portals
+   if(ld->special || (ld->portal && full_demo_version < make_full_version(340, 48)))
    {
       // 1/11/98 killough: remove limit on lines hit, by array doubling
       if(clip.numspechit >= clip.spechit_max)
@@ -1574,6 +1571,18 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    // haleyjd 08/07/04: new footclip system
    P_AdjustFloorClip(thing);
 
+   // ioanch 20160114: portal teleport
+   if(full_demo_version >= make_full_version(340, 48))
+   {
+      const line_t *pline = thing->subsector->sector->portalLine;
+      if(pline && pline->pflags & PS_PASSABLE)
+      {
+         const linkoffset_t *link = P_GetLinkOffset(pline->frontsector->groupid, 
+            pline->portal->data.link.toid);
+         EV_PortalTeleport(thing, link);
+      }
+   }
+
    // if any special lines were hit, do the effect
    // killough 11/98: simplified
    if(!(thing->flags & (MF_TELEPORT | MF_NOCLIP)))
@@ -1581,8 +1590,10 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       while(clip.numspechit--)
       {
 // PTODO
+         // ioanch 20160113: no longer use portals unless demo version is low
 #ifdef R_LINKEDPORTALS
-         if(clip.spechit[clip.numspechit]->pflags & PS_PASSABLE)
+         if(full_demo_version < make_full_version(340, 48) && 
+            clip.spechit[clip.numspechit]->pflags & PS_PASSABLE)
          {
             // SoM: if the mobj is touching a portal line, and the line is behind
             // the mobj no matter what the previous lineside was, we missed the 

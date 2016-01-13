@@ -2349,6 +2349,9 @@ static void P_SetPortal(sector_t *sec, line_t *line, portal_t *portal, portal_ef
       break;
    case portal_lineonly:
       line->portal = portal;
+      // ioanch 20160113: better line portal teleportation
+      if(line->backsector)
+         line->backsector->portalLine = line;
       P_CheckLPortalState(line);
       break;
    default:

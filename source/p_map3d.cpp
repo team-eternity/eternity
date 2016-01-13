@@ -670,6 +670,10 @@ static bool PIT_CheckLine3D(line_t *ld)
    if(P_BoxOnLineSide(bbox, ld) != -1)
       return true; // didn't hit it
 
+   // ioanch 20160113: hidden sectors never block
+   if(ld->frontsector->portalLine)
+      return true;
+
    fixed_t linetop, linebottom;
    P_getLineHeights(ld, linebottom, linetop);
 
