@@ -396,10 +396,15 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    // Any contacted lines the step closer together
    // will adjust them.
    
+   // ioanch 20160113: use correct floor and ceiling heights
+
 #ifdef R_LINKEDPORTALS
     //newsubsec->sector->floorheight - clip.thing->height;
    if(demo_version >= 333 && newsubsec->sector->f_pflags & PS_PASSABLE)
-      clip.floorz = clip.dropoffz = newsubsec->sector->floorheight - (1024 << FRACBITS);
+   {
+      clip.floorz = clip.dropoffz = P_ExtremeSectorAtPoint(x, y, false, 
+            newsubsec->sector)->floorheight;
+   }
    else
 #endif
       clip.floorz = clip.dropoffz = newsubsec->sector->floorheight;
@@ -407,7 +412,10 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
 #ifdef R_LINKEDPORTALS
     //newsubsec->sector->ceilingheight + clip.thing->height;
    if(demo_version >= 333 && newsubsec->sector->c_pflags & PS_PASSABLE)
-      clip.ceilingz = newsubsec->sector->ceilingheight + (1024 << FRACBITS);
+   {
+      clip.ceilingz = P_ExtremeSectorAtPoint(x, y, true, 
+            newsubsec->sector)->ceilingheight;
+   }
    else
 #endif
       clip.ceilingz = newsubsec->sector->ceilingheight;
