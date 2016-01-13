@@ -635,6 +635,34 @@ static void SpechitOverrun(line_t *ld)
 }
 
 //
+// P_CollectSpechits
+//
+// ioanch: moved this here so it may be called from elsewhere too
+//
+void P_CollectSpechits(line_t *ld)
+{
+   // if contacted a special line, add it to the list
+#ifdef R_LINKEDPORTALS
+   if(ld->special || ld->portal)
+#else
+   if(ld->special)
+#endif
+   {
+      // 1/11/98 killough: remove limit on lines hit, by array doubling
+      if(clip.numspechit >= clip.spechit_max)
+      {
+         clip.spechit_max = clip.spechit_max ? clip.spechit_max * 2 : 8;
+         clip.spechit = erealloc(line_t **, clip.spechit, sizeof(*clip.spechit) * clip.spechit_max);
+      }
+      clip.spechit[clip.numspechit++] = ld;
+
+      // haleyjd 09/20/06: spechit overflow emulation
+      if(clip.numspechit > MAXSPECHIT_OLD)
+         SpechitOverrun(ld);
+   }
+}
+
+//
 // PIT_CheckLine
 //
 // Adjusts tmfloorz and tmceilingz as lines are contacted
@@ -724,25 +752,8 @@ bool PIT_CheckLine(line_t *ld)
    if(clip.ceilingz < clip.passceilz)
       clip.passceilz = clip.ceilingz;
 
-   // if contacted a special line, add it to the list
-#ifdef R_LINKEDPORTALS   
-   if(ld->special || ld->portal)
-#else
-   if(ld->special)
-#endif
-   {
-      // 1/11/98 killough: remove limit on lines hit, by array doubling
-      if(clip.numspechit >= clip.spechit_max)
-      {
-         clip.spechit_max = clip.spechit_max ? clip.spechit_max * 2 : 8;
-         clip.spechit = erealloc(line_t **, clip.spechit, sizeof(*clip.spechit) * clip.spechit_max);
-      }
-      clip.spechit[clip.numspechit++] = ld;
-
-      // haleyjd 09/20/06: spechit overflow emulation
-      if(clip.numspechit > MAXSPECHIT_OLD)
-         SpechitOverrun(ld);
-   }
+   // ioanch 20160113: moved to a special function
+   P_CollectSpechits(ld);
    
    return true;
 }

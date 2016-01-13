@@ -667,7 +667,7 @@ static bool PIT_CheckLine3D(line_t *ld)
       bbox[BOXBOTTOM] >= ld->bbox[BOXTOP])
       return true; // didn't hit it
 
-   if(P_BoxOnLineSide(clip.bbox, ld) != -1)
+   if(P_BoxOnLineSide(bbox, ld) != -1)
       return true; // didn't hit it
 
    fixed_t linetop, linebottom;
@@ -700,7 +700,8 @@ static bool PIT_CheckLine3D(line_t *ld)
 
    fixed_t thingtopz = clip.thing->z + clip.thing->height;
    fixed_t thingz = clip.thing->z;
-   
+   fixed_t thingmid = thingz / 2 + thingtopz / 2;
+
    if(linebottom <= thingz && linetop >= thingtopz)
    {
       // classic Doom behaviour
@@ -731,7 +732,6 @@ static bool PIT_CheckLine3D(line_t *ld)
    {
       // treat impassable lines as lower/upper
       // same conditions as above
-      fixed_t thingmid = thingz / 2 + thingtopz / 2;
       if(!ld->backsector || (ld->extflags & EX_ML_BLOCKALL))
       {
          P_blockingLineDifferentLevel(ld, thingmid, linebottom, linetop);
@@ -754,8 +754,76 @@ static bool PIT_CheckLine3D(line_t *ld)
       }
    }
 
-   // TODO: check other lines
-   return false;
+   // better detection of in-portal lines
+   bool fportal, cportal;
+   P_LineOpening(ld, clip.thing, true, &fportal, &cportal);
+   extern line_t *lines;
+
+   // now apply correction to openings in case thing is positioned differently
+   if(!fportal && thingz < linebottom &&
+      thingmid < (linebottom + clip.openbottom) / 2)
+   {
+//      printf("below %d\n", (int)(ld - lines));
+      clip.opentop = linebottom;
+      clip.openbottom = D_MININT;
+      clip.opensecceil = linebottom;
+      clip.opensecfloor = D_MININT;
+      cportal = false;
+   }
+   if(!cportal && thingtopz > linetop &&
+           thingmid >= (linetop + clip.opentop) / 2)
+   {
+//      printf("above %d\n", (int)(ld - lines));
+      clip.openbottom = linetop;
+      clip.opentop = D_MAXINT;
+      clip.opensecfloor = linetop;
+      clip.opensecceil = D_MAXINT;
+      fportal = false;
+   }
+
+   // update stuff
+   if(!cportal && clip.opentop < clip.ceilingz)
+   {
+      clip.ceilingz = clip.opentop;
+      clip.ceilingline = ld;
+      clip.blockline = ld;
+   }
+   if(!fportal && clip.openbottom > clip.floorz)
+   {
+      clip.floorz = clip.openbottom;
+
+      clip.floorline = ld;          // killough 8/1/98: remember floor linedef
+      clip.blockline = ld;
+   }
+
+   if(clip.lowfloor < clip.dropoffz)
+      clip.dropoffz = clip.lowfloor;
+
+   // haleyjd 11/10/04: 3DMidTex fix: never consider dropoffs when
+   // touching 3DMidTex lines.
+   if(demo_version >= 331 && clip.touch3dside)
+      clip.dropoffz = clip.floorz;
+
+   if(!fportal && clip.opensecfloor > clip.secfloorz)
+      clip.secfloorz = clip.opensecfloor;
+   if(!cportal && clip.opensecceil < clip.secceilz)
+      clip.secceilz = clip.opensecceil;
+
+   // SoM 11/6/02: AGHAH
+   if(clip.floorz > clip.passfloorz)
+      clip.passfloorz = clip.floorz;
+   if(clip.ceilingz < clip.passceilz)
+      clip.passceilz = clip.ceilingz;
+
+   // ioanch: only allow spechits if on contact or simply same group
+   // if contacted a special line, add it to the list
+
+   if(clip.thing->groupid == clip.curGroupId ||
+      (linetop > thingz && linebottom < thingtopz))
+   {
+      P_CollectSpechits(ld);
+   }
+   return true;
 }
 
 //

@@ -68,6 +68,9 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y);
 
 void P_SlideMove(Mobj *mo);
 
+// ioanch
+void P_CollectSpechits(line_t *ld);
+
 //=============================================================================
 //
 // Teleportation

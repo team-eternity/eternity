@@ -95,7 +95,10 @@ fixed_t P_InterceptVector(const divline_t *v2, const divline_t *v1);
 int     P_BoxOnLineSide(const fixed_t *tmbox, const line_t *ld);
 
 //SoM 9/2/02: added mo parameter for 3dside clipping
-void    P_LineOpening (const line_t *linedef, const Mobj *mo);
+// ioanch 20150113: added optional portal detection
+void    P_LineOpening (const line_t *linedef, const Mobj *mo,
+                       bool portaldetect = false, bool *fportal = nullptr,
+                       bool *cportal = nullptr);
 
 void P_UnsetThingPosition(Mobj *thing);
 void P_SetThingPosition(Mobj *thing);

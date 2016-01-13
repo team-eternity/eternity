@@ -154,8 +154,10 @@ fixed_t P_InterceptVector(const divline_t *v2, const divline_t *v1)
 // Sets opentop and openbottom to the window
 // through a two sided line.
 // OPTIMIZE: keep this precalculated
+// ioanch 20160113: added portal detection (optional)
 //
-void P_LineOpening(const line_t *linedef, const Mobj *mo)
+void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
+                   bool *fportal, bool *cportal)
 {
    fixed_t frontceilz, frontfloorz, backceilz, backfloorz;
    // SoM: used for 3dmidtex
@@ -166,7 +168,12 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo)
       clip.openrange = 0;
       return;
    }
-   
+
+   if(portaldetect)  // ioanch
+   {
+      *fportal = false;
+      *cportal = false;
+   }
    clip.openfrontsector = linedef->frontsector;
    clip.openbacksector  = linedef->backsector;
 
@@ -179,7 +186,17 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo)
          clip.openbacksector->c_pflags & PS_PASSABLE && 
          clip.openfrontsector->c_portal == clip.openbacksector->c_portal)
       {
-         frontceilz = backceilz = clip.openfrontsector->ceilingheight + (1024 * FRACUNIT);
+         if(!portaldetect) // ioanch
+         {
+            frontceilz = backceilz = clip.openfrontsector->ceilingheight
+            + (1024 * FRACUNIT);
+         }
+         else
+         {
+            *cportal = true;
+            frontceilz = clip.openfrontsector->ceilingheight;
+            backceilz  = clip.openbacksector->ceilingheight;
+         }
       }
       else
 #endif
@@ -200,7 +217,16 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo)
          clip.openbacksector->f_pflags & PS_PASSABLE && 
          clip.openfrontsector->f_portal == clip.openbacksector->f_portal)
       {
-         frontfloorz = backfloorz = clip.openfrontsector->floorheight - (1024 * FRACUNIT); //mo->height;
+         if(!portaldetect)  // ioanch
+         {
+            frontfloorz = backfloorz = clip.openfrontsector->floorheight - (1024 * FRACUNIT); //mo->height;
+         }
+         else
+         {
+            *fportal = true;
+            frontfloorz = clip.openfrontsector->floorheight;
+            backfloorz  = clip.openbacksector->floorheight;
+         }
       }
       else 
 #endif
