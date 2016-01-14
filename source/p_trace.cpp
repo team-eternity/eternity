@@ -710,7 +710,7 @@ static void check_intercept()
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-bool PIT_AddLineIntercepts(line_t *ld)
+bool PIT_AddLineIntercepts(line_t *ld, polyobj_s *po)
 {
    int       s1;
    int       s2;

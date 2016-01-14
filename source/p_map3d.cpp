@@ -57,6 +57,7 @@
 #include "p_mobj.h"
 #include "p_mobjcol.h"
 #include "p_inter.h"
+#include "polyobj.h" // ioanch 20160114
 #include "p_partcl.h"
 #include "p_portal.h"
 #include "p_setup.h"
@@ -295,7 +296,7 @@ static bool P_SBlockThingsIterator(int x, int y, bool (*func)(Mobj *),
 
 static Mobj *stepthing;
 
-extern bool PIT_CheckLine(line_t *ld);
+extern bool PIT_CheckLine(line_t *ld, polyobj_s *po);
 
 extern bool P_Touched(Mobj *thing);
 extern int  P_MissileBlockHeight(Mobj *mo);
@@ -648,10 +649,10 @@ static void P_blockingLineDifferentLevel(line_t *ld, fixed_t thingmid,
 // ioanch 20160112: 3D (portal) version of PIT_CheckLine. If map has no portals,
 // fall back to PIT_CheckLine
 //
-static bool PIT_CheckLine3D(line_t *ld)
+static bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
 {
    if(!useportalgroups || full_demo_version < make_full_version(340, 48))
-      return PIT_CheckLine(ld);
+      return PIT_CheckLine(ld, po);
 
    const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid, 
       clip.curGroupId);
@@ -675,7 +676,15 @@ static bool PIT_CheckLine3D(line_t *ld)
       return true;
 
    fixed_t linetop, linebottom;
-   P_getLineHeights(ld, linebottom, linetop);
+   if(po)
+   {
+      const sector_t *midsector = R_PointInSubsector(po->centerPt.x,
+                                                     po->centerPt.y)->sector;
+      linebottom = midsector->floorheight;
+      linetop = midsector->ceilingheight;
+   }
+   else
+      P_getLineHeights(ld, linebottom, linetop);
 
    // values to set on exit:
    // clip.ceilingz
