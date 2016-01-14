@@ -879,12 +879,14 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
    // will adjust them.
 
    // ioanch 20160110: portal aware floor and ceiling z detection
+   const sector_t *bottomsector = newsubsec->sector;
 #ifdef R_LINKEDPORTALS
    if(demo_version >= 333 && newsubsec->sector->f_pflags & PS_PASSABLE && 
       !(clip.thing->flags & MF_NOCLIP))
    {
-      clip.floorz = clip.dropoffz = P_ExtremeSectorAtPoint(x, y, false, 
-         newsubsec->sector)->floorheight;
+      bottomsector = P_ExtremeSectorAtPoint(x, y, false, 
+         newsubsec->sector);
+      clip.floorz = clip.dropoffz = bottomsector->floorheight;
    }
    else
 #endif
@@ -905,7 +907,8 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
    clip.secceilz = clip.passceilz = clip.ceilingz;
 
    // haleyjd
-   clip.floorpic = newsubsec->sector->floorpic;
+   // ioanch 20160114: use bottom sector
+   clip.floorpic = bottomsector->floorpic;
    // SoM: 09/07/02: 3dsides monster fix
    clip.touch3dside = 0;
    validcount++;

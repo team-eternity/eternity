@@ -397,13 +397,14 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    // will adjust them.
    
    // ioanch 20160113: use correct floor and ceiling heights
-
+   const sector_t *bottomfloorsector = newsubsec->sector;
 #ifdef R_LINKEDPORTALS
     //newsubsec->sector->floorheight - clip.thing->height;
    if(demo_version >= 333 && newsubsec->sector->f_pflags & PS_PASSABLE)
    {
-      clip.floorz = clip.dropoffz = P_ExtremeSectorAtPoint(x, y, false, 
-            newsubsec->sector)->floorheight;
+      bottomfloorsector = P_ExtremeSectorAtPoint(x, y, false, 
+            newsubsec->sector);
+      clip.floorz = clip.dropoffz = bottomfloorsector->floorheight;
    }
    else
 #endif
@@ -424,7 +425,8 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    clip.secceilz = clip.passceilz = clip.ceilingz;
 
    // haleyjd
-   clip.floorpic = newsubsec->sector->floorpic;
+   // ioanch 20160114: use the final sector below
+   clip.floorpic = bottomfloorsector->floorpic;
    
    // SoM 09/07/02: 3dsides monster fix
    clip.touch3dside = 0;
@@ -1539,8 +1541,9 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       }
 
       // haleyjd: CANTLEAVEFLOORPIC flag
+      // ioanch 20160114: use bottom sector floorpic
       if((thing->flags2 & MF2_CANTLEAVEFLOORPIC) &&
-         (clip.floorpic != thing->subsector->sector->floorpic ||
+         (clip.floorpic != P_ExtremeSectorAtPoint(thing, false)->floorpic ||
           clip.floorz - thing->z != 0))
       {
          // thing must stay within its current floor type
