@@ -1306,5 +1306,28 @@ sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling,
    return sector;
 }
 
+//
+// P_SectorTouchesThingVertically
+//
+// ioanch 20160115: true if a thing touches a sector vertically
+//
+bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj)
+{
+   fixed_t topz = mobj->z + mobj->height;
+   if(topz < sector->floorheight || mobj->z > sector->ceilingheight)
+      return false;
+   if(sector->f_pflags & PS_PASSABLE && 
+      topz < sector->f_portal->data.link.planez)
+   {
+      return false;
+   }
+   if(sector->c_pflags & PS_PASSABLE &&
+      mobj->z > sector->c_portal->data.link.planez)
+   {
+      return false;
+   }
+   return true;
+}
+
 // EOF
 

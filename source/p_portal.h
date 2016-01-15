@@ -210,6 +210,11 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
    });
 }
 
+//
+//P_SectorTouchesThing
+// ioanch 20160115
+//
+bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj);
 
 #endif
 

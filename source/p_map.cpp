@@ -2448,6 +2448,12 @@ bool P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil)
    {
       for(n = sector->touching_thinglist; n; n = n->m_snext) // go through list
       {
+         // ioanch 20160115: portal aware
+         if(useportalgroups && full_demo_version >= make_full_version(340, 48) &&
+            !P_SectorTouchesThingVertically(sector, n->m_thing))
+         {
+            continue;
+         }
          if(!n->visited)                     // unprocessed thing found
          {
             n->visited  = true;              // mark thing as processed
@@ -2644,13 +2650,22 @@ void P_DelSeclist(msecnode_t *node)
 //
 static bool PIT_GetSectors(line_t *ld, polyobj_s *po)
 {
-   if(pClip->bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   ||
-      pClip->bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  ||
-      pClip->bbox[BOXTOP]    <= ld->bbox[BOXBOTTOM] ||
-      pClip->bbox[BOXBOTTOM] >= ld->bbox[BOXTOP])
+   // ioanch 20160115: portal aware
+   fixed_t bbox[4];
+   const linkoffset_t *link = P_GetLinkOffset(pClip->thing->groupid, 
+      pClip->curGroupId);
+   bbox[BOXRIGHT] = pClip->bbox[BOXRIGHT] + link->x;
+   bbox[BOXLEFT] = pClip->bbox[BOXLEFT] + link->x;
+   bbox[BOXTOP] = pClip->bbox[BOXTOP] + link->y;
+   bbox[BOXBOTTOM] = pClip->bbox[BOXBOTTOM] + link->y;
+   
+   if(bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   ||
+      bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  ||
+      bbox[BOXTOP]    <= ld->bbox[BOXBOTTOM] ||
+      bbox[BOXBOTTOM] >= ld->bbox[BOXTOP])
       return true;
 
-   if(P_BoxOnLineSide(pClip->bbox, ld) != -1)
+   if(P_BoxOnLineSide(bbox, ld) != -1)
       return true;
 
    // This line crosses through the object.
@@ -2714,22 +2729,72 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
    pClip->bbox[BOXLEFT]   = x - thing->radius;
 
    validcount++; // used to make sure we only process a line once
-   
-   xl = (pClip->bbox[BOXLEFT  ] - bmaporgx) >> MAPBLOCKSHIFT;
-   xh = (pClip->bbox[BOXRIGHT ] - bmaporgx) >> MAPBLOCKSHIFT;
-   yl = (pClip->bbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
-   yh = (pClip->bbox[BOXTOP   ] - bmaporgy) >> MAPBLOCKSHIFT;
 
    pClip->sector_list = thing->old_sectorlist;
 
-   for(bx = xl; bx <= xh; bx++)
+   // ioanch 20160115: use portal-aware gathering if there are portals. Sectors
+   // may be touched both horizontally (like in Doom) or vertically (thing
+   // touching portals
+   if(useportalgroups && full_demo_version >= make_full_version(340, 48))
    {
-      for(by = yl; by <= yh; by++)
-         P_BlockLinesIterator(bx, by, PIT_GetSectors);
-   }
+      // FIXME: unfortunately all sectors need to be added, because this function
+      // is only called on XY coordinate change.
 
-   // Add the sector of the (x,y) point to sector_list.
-   list = P_AddSecnode(thing->subsector->sector, thing, pClip->sector_list);
+      // use this to preserve data between iterators
+      int visitgroupid = INT_MIN;   // some invalid value
+
+      pClip->curGroupId = R_NOGROUP;
+      P_TransPortalBlockWalker(pClip->bbox, thing->groupid, true, nullptr,
+         [](int x, int y, int groupid, void *data) -> bool
+      {
+         if(groupid != pClip->curGroupId)
+         {
+            pClip->curGroupId = groupid;;
+            // We're at a new groupid. Start by adding the midsector.
+
+            // Get the offset from thing's position to the PREVIOUS groupid
+            if(groupid == pClip->thing->groupid)
+            {
+               pClip->sector_list = P_AddSecnode(pClip->thing->subsector->sector,
+                  pClip->thing, pClip->sector_list);
+            }
+            else
+            {
+               const linkoffset_t *link = P_GetLinkOffset(
+                  pClip->thing->groupid, groupid);
+
+               // Get the sector from PREVIOUS groupid
+               sector_t *sector = R_PointInSubsector(pClip->x + link->x,
+                  pClip->y + link->y)->sector;
+
+               // Add it
+               pClip->sector_list = P_AddSecnode(sector, pClip->thing,
+                  pClip->sector_list);
+            }
+         }
+         P_BlockLinesIterator(x, y, PIT_GetSectors, groupid);
+         return true;
+      });
+      pClip->curGroupId = R_NOGROUP;
+      list = pClip->sector_list;
+   }
+   else
+   {
+      // ioanch: classic mode
+      xl = (pClip->bbox[BOXLEFT  ] - bmaporgx) >> MAPBLOCKSHIFT;
+      xh = (pClip->bbox[BOXRIGHT ] - bmaporgx) >> MAPBLOCKSHIFT;
+      yl = (pClip->bbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
+      yh = (pClip->bbox[BOXTOP   ] - bmaporgy) >> MAPBLOCKSHIFT;
+
+      for(bx = xl; bx <= xh; bx++)
+      {
+         for(by = yl; by <= yh; by++)
+            P_BlockLinesIterator(bx, by, PIT_GetSectors);
+      }
+
+      // Add the sector of the (x,y) point to sector_list.
+      list = P_AddSecnode(thing->subsector->sector, thing, pClip->sector_list);
+   }
 
    // Now delete any nodes that won't be used. These are the ones where
    // m_thing is still NULL.
