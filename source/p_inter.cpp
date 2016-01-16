@@ -52,6 +52,7 @@
 #include "p_inter.h"
 #include "p_map.h"
 #include "p_maputl.h"
+#include "p_portal.h"   // ioanch 20160116
 #include "p_tick.h"
 #include "p_user.h"
 #include "r_defs.h"
@@ -1621,8 +1622,12 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
          damage = 10000;
 
       // end of game hell hack
-      if(target->subsector->sector->damageflags & SDMG_EXITLEVEL && damage >= target->health)
+      // ioanch 20160116: portal aware
+      if(P_ExtremeSectorAtPoint(target, false)->damageflags & SDMG_EXITLEVEL &&
+         damage >= target->health)
+      {
          damage = target->health - 1;
+      }
 
       // Below certain threshold,
       // ignore damage in GOD mode, or with INVUL power.
