@@ -629,8 +629,19 @@ static void P_blockingLineDifferentLevel(line_t *ld, fixed_t thingmid,
       clip.floorline = ld;
       clip.blockline = ld;
    }
-   if(linebottom < clip.dropoffz)
-      clip.dropoffz = linebottom;
+
+   fixed_t lowfloor;
+   if(!ld->backsector || !moveup)   // if line is 1-sided or above thing
+      lowfloor = linebottom;
+   else if(linebottom == ld->backsector->floorheight) 
+      lowfloor = ld->frontsector->floorheight;
+   else
+      lowfloor = ld->backsector->floorheight;
+   // 2-sided and below the thing: pick the higher floor ^^^
+
+   // SAME TRICK AS BELOW!
+   if(lowfloor < clip.dropoffz && linetop >= clip.dropoffz)
+      clip.dropoffz = lowfloor;
 
    if(moveup && linetop > clip.secfloorz)
       clip.secfloorz = linetop;
@@ -785,6 +796,17 @@ static bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
    if(clip.thing->groupid != clip.curGroupId && !cportal && thingtopz > linetop &&
            thingmid >= (linetop + clip.opentop) / 2)
    {
+      // adjust the lowfloor to the real observed value, to prevent
+      // wrong dropoffz
+      if(ld->backsector && 
+         (clip.opensecceil == ld->backsector->ceilingheight &&
+         clip.opensecfloor == ld->frontsector->floorheight) || 
+         (clip.opensecceil == ld->frontsector->ceilingheight && 
+         clip.opensecfloor == ld->backsector->floorheight))
+      {
+         clip.lowfloor = clip.opensecfloor;
+      }
+
       clip.openbottom = linetop;
       clip.opentop = D_MAXINT;
       clip.opensecfloor = linetop;
@@ -807,8 +829,18 @@ static bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
       clip.blockline = ld;
    }
 
-   if(clip.lowfloor < clip.dropoffz)
+   // ioanch 20160116: this is crazy. If the lines belong in separate groups,
+   // make sure to only decrease dropoffz if the line top really reaches the
+   // current value of dropoffz. Since layers get explored progressively from
+   // top to bottom (when going down), dropoffz will then gradually fall down
+   // as each layer is explored, if there really is a gap, and accidental
+   // detail downstairs will not count, considering the linetop would always
+   // be below any dropfloorz upstairs.
+   if(clip.lowfloor < clip.dropoffz && 
+      (clip.curGroupId == clip.thing->groupid || linetop >= clip.dropoffz))
+   {
       clip.dropoffz = clip.lowfloor;
+   }
 
    // haleyjd 11/10/04: 3DMidTex fix: never consider dropoffs when
    // touching 3DMidTex lines.
