@@ -46,6 +46,7 @@
 #include "p_maputl.h"
 #include "p_mobjcol.h"
 #include "p_mobj.h"
+#include "p_portal.h"   // ioanch 20160116
 #include "p_pspr.h"
 #include "p_setup.h"
 #include "p_spec.h"
@@ -756,8 +757,9 @@ void A_HticExplode(actionargs_t *actionargs)
 
    P_RadiusAttack(actor, actor->target, damage, damage, actor->info->mod, 0);
 
+   // ioanch 20160116: portal aware Z
    if(actor->z <= actor->secfloorz + damage * FRACUNIT)
-      E_HitWater(actor, actor->subsector->sector);
+      E_HitWater(actor, P_ExtremeSectorAtPoint(actor, false));
 }
 
 typedef struct boss_spec_htic_s

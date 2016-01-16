@@ -1514,8 +1514,9 @@ void A_DetonateEx(actionargs_t *actionargs)
       P_NoiseAlert(source, actor);
 
    // cause a terrain hit
+   // ioanch 20160116: portal aware Z
    if(actor->z <= actor->secfloorz + radius * FRACUNIT)
-      E_HitWater(actor, actor->subsector->sector);
+      E_HitWater(actor, P_ExtremeSectorAtPoint(actor, false));
 }
 
 // EOF
