@@ -658,10 +658,11 @@ void A_GenWizard(actionargs_t *actionargs)
                     actor->z-mobjinfo[wizType]->height/2, 
                     wizType);
 
+   // ioanch 20160116: portal aware
    if(!P_CheckPosition(mo, mo->x, mo->y) ||
       (mo->z >
-      (mo->subsector->sector->ceilingheight - mo->height)) ||
-      (mo->z < mo->subsector->sector->floorheight))
+      (P_ExtremeSectorAtPoint(mo, true)->ceilingheight - mo->height)) ||
+      (mo->z < P_ExtremeSectorAtPoint(mo, false)->floorheight))
    {
       // doesn't fit, so remove it immediately
       mo->removeThinker();
