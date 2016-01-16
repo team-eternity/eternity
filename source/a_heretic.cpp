@@ -63,10 +63,13 @@
 //
 static void P_spawnGlitter(Mobj *actor, int type)
 {
-   fixed_t x = actor->x + ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
-   fixed_t y = actor->y + ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
+   // ioanch 20160116: make it portal-aware BOTH beyond line and sector gates
+   fixed_t dx = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
+   fixed_t dy = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
+   v2fixed_t pos = P_LinePortalCrossing(*actor, dx, dy);
 
-   Mobj *mo = P_SpawnMobj(x, y, actor->subsector->sector->floorheight, type);
+   Mobj *mo = P_SpawnMobj(pos.x, pos.y, 
+      P_ExtremeSectorAtPoint(actor, false)->floorheight, type);
    mo->momz = FRACUNIT / 4;
 }
 
