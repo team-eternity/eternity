@@ -1002,10 +1002,12 @@ int enable_nuke = 1;  // killough 12/98: nukage disabling cheat
 // Called every tic that the player origin is in a special sector
 //
 // Changed to ignore sector types the engine does not recognize
+// ioanch 20160116: added sector so we get the precalculated value
 //
-void P_PlayerInSpecialSector(player_t *player)
+void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
 {
-   sector_t *sector = player->mo->subsector->sector;
+   if(!sector)
+      sector = player->mo->subsector->sector;
 
    // TODO: waterzones should damage whenever you're in them
    // Falling, not all the way down yet?
