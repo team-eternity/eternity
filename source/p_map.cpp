@@ -1575,7 +1575,8 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    P_AdjustFloorClip(thing);
 
    // ioanch 20160114: portal teleport
-   if(full_demo_version >= make_full_version(340, 48))
+   if(full_demo_version >= make_full_version(340, 48) && 
+      !(thing->flags & MF_NOCLIP))
    {
       const line_t *pline = thing->subsector->sector->portalLine;
       if(pline && pline->pflags & PS_PASSABLE)
