@@ -1006,8 +1006,9 @@ int enable_nuke = 1;  // killough 12/98: nukage disabling cheat
 //
 void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
 {
+   // ioanch 20160116: portal aware
    if(!sector)
-      sector = player->mo->subsector->sector;
+      sector = P_ExtremeSectorAtPoint(player->mo, false);
 
    // TODO: waterzones should damage whenever you're in them
    // Falling, not all the way down yet?
