@@ -1088,9 +1088,9 @@ void P_NightmareRespawn(Mobj* mobj)
 
    // spawn a teleport fog at old spot
    // because of removal of the body?
-
+   // ioanch 20160116: portal aware
    mo = P_SpawnMobj(mobj->x, mobj->y,
-                    mobj->subsector->sector->floorheight +
+                    P_ExtremeSectorAtPoint(mobj, false)->floorheight +
                        GameModeInfo->teleFogHeight,
                     E_SafeThingName(GameModeInfo->teleFogType));
 
