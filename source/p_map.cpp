@@ -1642,26 +1642,59 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 //
 static bool PIT_ApplyTorque(line_t *ld, polyobj_s *po)
 {
+   // ioanch 20160116: portal aware
+   const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid, 
+      clip.curGroupId);
+   fixed_t bbox[4];
+   bbox[BOXRIGHT] = clip.bbox[BOXRIGHT] + link->x;
+   bbox[BOXLEFT] = clip.bbox[BOXLEFT] + link->x;
+   bbox[BOXTOP] = clip.bbox[BOXTOP] + link->y;
+   bbox[BOXBOTTOM] = clip.bbox[BOXBOTTOM] + link->y;
+
    if(ld->backsector &&       // If thing touches two-sided pivot linedef
-      clip.bbox[BOXRIGHT]  > ld->bbox[BOXLEFT]  &&
-      clip.bbox[BOXLEFT]   < ld->bbox[BOXRIGHT] &&
-      clip.bbox[BOXTOP]    > ld->bbox[BOXBOTTOM] &&
-      clip.bbox[BOXBOTTOM] < ld->bbox[BOXTOP] &&
-      P_BoxOnLineSide(clip.bbox, ld) == -1)
+      bbox[BOXRIGHT]  > ld->bbox[BOXLEFT]  &&
+      bbox[BOXLEFT]   < ld->bbox[BOXRIGHT] &&
+      bbox[BOXTOP]    > ld->bbox[BOXBOTTOM] &&
+      bbox[BOXBOTTOM] < ld->bbox[BOXTOP] &&
+      P_BoxOnLineSide(bbox, ld) == -1)
    {
       Mobj *mo = clip.thing;
 
+      fixed_t mox = mo->x + link->x;
+      fixed_t moy = mo->y + link->y;
+
       fixed_t dist =                               // lever arm
-         + (ld->dx >> FRACBITS) * (mo->y >> FRACBITS)
-         - (ld->dy >> FRACBITS) * (mo->x >> FRACBITS) 
+         + (ld->dx >> FRACBITS) * (moy >> FRACBITS)
+         - (ld->dy >> FRACBITS) * (mox >> FRACBITS) 
          - (ld->dx >> FRACBITS) * (ld->v1->y >> FRACBITS)
          + (ld->dy >> FRACBITS) * (ld->v1->x >> FRACBITS);
 
-      if(dist < 0 ?                               // dropoff direction
+      // ioanch: portal aware. Use two different behaviours depending on map
+      bool cond;
+      if(!useportalgroups || full_demo_version < make_full_version(340, 48))
+      {
+         cond = dist < 0 ?                               // dropoff direction
          ld->frontsector->floorheight < mo->z &&
          ld->backsector->floorheight >= mo->z :
          ld->backsector->floorheight < mo->z &&
-         ld->frontsector->floorheight >= mo->z)
+         ld->frontsector->floorheight >= mo->z;
+      }
+      else
+      {
+         // with portals and advanced version, also allow equal floor heights
+         // if one side has portals. Require equal floor height though
+         cond = dist < 0 ?                               // dropoff direction
+         (ld->frontsector->floorheight < mo->z ||
+         (ld->frontsector->floorheight == mo->z && 
+         ld->frontsector->f_pflags & PS_PASSABLE)) &&
+         ld->backsector->floorheight == mo->z :
+         (ld->backsector->floorheight < mo->z ||
+         (ld->backsector->floorheight == mo->z &&
+         ld->backsector->f_pflags & PS_PASSABLE)) &&
+         ld->frontsector->floorheight == mo->z;
+      }
+
+      if(cond)
       {
          // At this point, we know that the object straddles a two-sided
          // linedef, and that the object's center of mass is above-ground.
@@ -1717,22 +1750,25 @@ static bool PIT_ApplyTorque(line_t *ld, polyobj_s *po)
 //
 void P_ApplyTorque(Mobj *mo)
 {
-   int xl = ((clip.bbox[BOXLEFT] = 
-              mo->x - mo->radius) - bmaporgx) >> MAPBLOCKSHIFT;
-   int xh = ((clip.bbox[BOXRIGHT] = 
-              mo->x + mo->radius) - bmaporgx) >> MAPBLOCKSHIFT;
-   int yl = ((clip.bbox[BOXBOTTOM] =
-              mo->y - mo->radius) - bmaporgy) >> MAPBLOCKSHIFT;
-   int yh = ((clip.bbox[BOXTOP] = 
-      mo->y + mo->radius) - bmaporgy) >> MAPBLOCKSHIFT;
-   int bx,by,flags = mo->intflags; //Remember the current state, for gear-change
+   // ioanch 20160116: portal aware
+   clip.bbox[BOXLEFT] = mo->x - mo->radius;
+   clip.bbox[BOXRIGHT] = mo->x + mo->radius;
+   clip.bbox[BOXBOTTOM] = mo->y - mo->radius;
+   clip.bbox[BOXTOP] = mo->y + mo->radius;
+
+   int flags = mo->intflags; //Remember the current state, for gear-change
 
    clip.thing = mo;
    validcount++; // prevents checking same line twice
-      
-   for(bx = xl ; bx <= xh ; bx++)
-      for(by = yl ; by <= yh ; by++)
-         P_BlockLinesIterator(bx, by, PIT_ApplyTorque);
+
+   P_TransPortalBlockWalker(clip.bbox, mo->groupid, true, nullptr, 
+      [](int x, int y, int groupid, void *data) -> bool
+   {
+      clip.curGroupId = groupid;
+      P_BlockLinesIterator(x, y, PIT_ApplyTorque, groupid);
+      return true;
+   });
+   clip.curGroupId = R_NOGROUP;
       
    // If any momentum, mark object as 'falling' using engine-internal flags
    if (mo->momx | mo->momy)

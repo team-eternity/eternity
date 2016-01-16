@@ -638,11 +638,12 @@ void P_XYMovement(Mobj* mo)
    // killough 8/11/98: add bouncers
    // killough 9/15/98: add objects falling off ledges
    // killough 11/98: only include bouncers hanging off ledges
+   // ioanch 20160116: portal aware
    if(((mo->flags & MF_BOUNCES && mo->z > mo->dropoffz) ||
        mo->flags & MF_CORPSE || mo->intflags & MIF_FALLING) &&
       (mo->momx > FRACUNIT/4 || mo->momx < -FRACUNIT/4 ||
        mo->momy > FRACUNIT/4 || mo->momy < -FRACUNIT/4) &&
-      mo->floorz != mo->subsector->sector->floorheight)
+      mo->floorz != P_ExtremeSectorAtPoint(mo, false)->floorheight)
       return;  // do not stop sliding if halfway off a step with some momentum
 
    // killough 11/98:
