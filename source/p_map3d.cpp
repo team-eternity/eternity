@@ -858,11 +858,13 @@ static bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
    if(clip.ceilingz < clip.passceilz)
       clip.passceilz = clip.ceilingz;
 
-   // ioanch: only allow spechits if on contact or simply same group
+   // ioanch: only allow spechits if on contact or simply same group.
+   // Line portals however are ONLY collected if on the same group
+
    // if contacted a special line, add it to the list
 
    if(clip.thing->groupid == clip.curGroupId ||
-      (linetop > thingz && linebottom < thingtopz))
+      (linetop > thingz && linebottom < thingtopz && !(ld->flags & PS_PASSABLE)))
    {
       P_CollectSpechits(ld);
    }

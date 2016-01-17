@@ -77,6 +77,7 @@ struct skin_t;
 #define NUMMOBJCOUNTERS 8
 
 // Mobjs are attached to subsectors by pointer.
+struct line_t;
 struct subsector_t;
 
 //
@@ -222,6 +223,10 @@ public:
    // ioanch 20160109: sprite projection chains
    DLListItem<spriteprojnode_t> *spriteproj;
    v3fixed_t sprojlast; // coordinates after last check. Initially "invalid"
+
+   // ioanch 20160117: work around portal teleport spechits to make monster
+   // projectiles detect them surely.
+   const line_t *touchedportalline;
 
    //More drawing info: to determine current sprite.
    angle_t     angle;  // orientation

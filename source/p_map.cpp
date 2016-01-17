@@ -652,8 +652,7 @@ static void SpechitOverrun(line_t *ld)
 void P_CollectSpechits(line_t *ld)
 {
    // if contacted a special line, add it to the list
-   // ioanch 20160113: no longer collect portals
-   if(ld->special || (ld->portal && full_demo_version < make_full_version(340, 48)))
+   if(ld->special || ld->portal)
    {
       // 1/11/98 killough: remove limit on lines hit, by array doubling
       if(clip.numspechit >= clip.spechit_max)
@@ -1575,17 +1574,20 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    P_AdjustFloorClip(thing);
 
    // ioanch 20160114: portal teleport
-   if(full_demo_version >= make_full_version(340, 48) && 
-      !(thing->flags & MF_NOCLIP))
-   {
-      const line_t *pline = thing->subsector->sector->portalLine;
-      if(pline && pline->pflags & PS_PASSABLE)
-      {
-         const linkoffset_t *link = P_GetLinkOffset(pline->frontsector->groupid, 
-            pline->portal->data.link.toid);
-         EV_PortalTeleport(thing, link);
-      }
-   }
+   //if(full_demo_version >= make_full_version(340, 48) && 
+   //   !(thing->flags & MF_NOCLIP))
+   //{
+   //   const line_t *pline = thing->subsector->sector->portalLine;
+   //   if(pline && pline->pflags & PS_PASSABLE)
+   //   {
+   //      const linkoffset_t *link = P_GetLinkOffset(pline->frontsector->groupid, 
+   //         pline->portal->data.link.toid);
+   //      EV_PortalTeleport(thing, link);
+   //   }
+   //}
+
+   // ioanch 20160117: use this to keep track if a portal line HAS been touched
+   bool hitportallinefront = false;
 
    // if any special lines were hit, do the effect
    // killough 11/98: simplified
@@ -1596,32 +1598,55 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 // PTODO
          // ioanch 20160113: no longer use portals unless demo version is low
 #ifdef R_LINKEDPORTALS
-         if(full_demo_version < make_full_version(340, 48) && 
-            clip.spechit[clip.numspechit]->pflags & PS_PASSABLE)
+         line_t *line = clip.spechit[clip.numspechit];
+         if(line->pflags & PS_PASSABLE)
          {
             // SoM: if the mobj is touching a portal line, and the line is behind
             // the mobj no matter what the previous lineside was, we missed the 
             // teleport and NEED to do so now.
-            if(P_PointOnLineSide(thing->x, thing->y, clip.spechit[clip.numspechit]))
+            int side = P_PointOnLineSide(thing->x, thing->y, line);
+            if(side)
             {
+               if(thing->touchedportalline == line)   // ioanch:
+                  thing->touchedportalline = nullptr; // clear it, we got it
                linkoffset_t *link = 
-                  P_GetLinkOffset(clip.spechit[clip.numspechit]->frontsector->groupid, 
-                                  clip.spechit[clip.numspechit]->portal->data.link.toid);
+                  P_GetLinkOffset(line->frontsector->groupid, 
+                        line->portal->data.link.toid);
                EV_PortalTeleport(thing, link);
+            }
+            else
+            {
+               // we're in front: remember the last touched line
+               hitportallinefront = true;
+               thing->touchedportalline = line;
             }
          }
 #endif
-         if(clip.spechit[clip.numspechit]->special)  // see if the line was crossed
+         if(line->special)  // see if the line was crossed
          {
             int oldside;
-            if((oldside = P_PointOnLineSide(oldx, oldy, clip.spechit[clip.numspechit])) !=
-               P_PointOnLineSide(thing->x, thing->y, clip.spechit[clip.numspechit]))
-               P_CrossSpecialLine(clip.spechit[clip.numspechit], oldside, thing);
+            if((oldside = P_PointOnLineSide(oldx, oldy, line)) !=
+               P_PointOnLineSide(thing->x, thing->y, line))
+               P_CrossSpecialLine(line, oldside, thing);
          }
       }
 
       // haleyjd 01/09/07: do not leave numspechit == -1
       clip.numspechit = 0;
+   }
+
+   // ioanch 20160117: we didn't hit now a portal line but previously we did,
+   // except on the wrong side, so now it is time to teleport
+   if(!hitportallinefront && thing->touchedportalline) 
+   {
+      if( thing->touchedportalline->backsector == thing->subsector->sector)
+      {
+         const linkoffset_t *link = 
+                     P_GetLinkOffset(thing->touchedportalline->frontsector->groupid, 
+                           thing->touchedportalline->portal->data.link.toid);
+         EV_PortalTeleport(thing, link);
+      }
+      thing->touchedportalline = nullptr; // reset it
    }
    
    return true;
