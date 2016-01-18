@@ -2080,9 +2080,11 @@ static void R_Subsector(int num)
            &&  P_DistFromPlanef(&cam, &seg.frontsec->f_slope->of, 
                                 &seg.frontsec->f_slope->normalf) > 0.0f);
 
+   // ioanch 20160118: ADDED A f_portal existence check!
    seg.f_portal = seg.frontsec->f_pflags & PS_VISIBLE 
                && (!portalrender.active || portalrender.w->type != pw_ceiling)
-               && (visible || seg.frontsec->f_portal->type < R_TWOWAY)
+               && (visible || 
+               (seg.frontsec->f_portal && seg.frontsec->f_portal->type < R_TWOWAY))
                ? seg.frontsec->f_portal : NULL;
 
    // This gets a little convoluted if you try to do it on one inequality
@@ -2126,9 +2128,11 @@ static void R_Subsector(int num)
            &&  P_DistFromPlanef(&cam, &seg.frontsec->c_slope->of, 
                                 &seg.frontsec->c_slope->normalf) > 0.0f);
 
+   // ioanch 20160118: ADDED A c_portal existence check!
    seg.c_portal = seg.frontsec->c_pflags & PS_VISIBLE 
                && (!portalrender.active || portalrender.w->type != pw_floor)
-               && (visible || seg.frontsec->c_portal->type < R_TWOWAY) 
+               && (visible || 
+               (seg.frontsec->c_portal && seg.frontsec->c_portal->type < R_TWOWAY)) 
                ? seg.frontsec->c_portal : NULL;
 
    // This gets a little convoluted if you try to do it on one inequality
