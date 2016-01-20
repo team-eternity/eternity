@@ -1525,12 +1525,16 @@ static void R_AddLine(seg_t *line, bool dynasegs)
    // This fixes a very specific type of slime trail.
    // Unless we are viewing down into a portal...??
 
+   //
+   // IOANCH 20160120: ADD C_PORTAL AND F_PORTAL CHECK BECAUSE IT MIGHT HAVE
+   // BEEN REMOVED BY R_FAKEFLAT WITHOUT ALSO CANCELLING PS_PASSABLE!
+   //
    if(!seg.frontsec->f_slope && !seg.frontsec->c_slope &&
       seg.frontsec->ceilingheight <= seg.frontsec->floorheight &&
       !(seg.frontsec->intflags & SIF_SKY) &&
-      !((seg.frontsec->c_pflags & PS_PASSABLE && 
+      !((seg.frontsec->c_pflags & PS_PASSABLE && seg.frontsec->c_portal &&
         viewz > R_CPLink(seg.frontsec)->planez) || 
-        (seg.frontsec->f_pflags & PS_PASSABLE && 
+        (seg.frontsec->f_pflags & PS_PASSABLE && seg.frontsec->f_portal &&
         viewz < R_FPLink(seg.frontsec)->planez)))
       return;
 
