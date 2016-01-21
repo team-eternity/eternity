@@ -666,7 +666,7 @@ static void P_blockingLineDifferentLevel(line_t *ld, polyobj_t *po, fixed_t thin
    // 2-sided and below the thing: pick the higher floor ^^^
 
    // SAME TRICK AS BELOW!
-   if(lowfloor < clip.dropoffz && linetop >= clip.dropoffz)
+   if(lowfloor < clip.dropoffz && linetop >= clip.dropoffz && !postpone)
       clip.dropoffz = lowfloor;
 
    // ioanch: only change if postpone is false by now
@@ -764,33 +764,30 @@ static bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
          postpone = true;
    }
 
-   if(linebottom <= thingz && linetop >= thingtopz)
+   if(!postpone && linebottom <= thingz && linetop >= thingtopz)
    {
-      if(!postpone)  // ioanch: fall through if set to postpone
+      // classic Doom behaviour
+      if(!ld->backsector || (ld->extflags & EX_ML_BLOCKALL)) // one sided line
       {
-         // classic Doom behaviour
-         if(!ld->backsector || (ld->extflags & EX_ML_BLOCKALL)) // one sided line
-         {
-            clip.blockline = ld;
-            return clip.unstuck && !untouchedViaOffset(ld, link) &&
-               FixedMul(clip.x-clip.thing->x,ld->dy) > 
-               FixedMul(clip.y-clip.thing->y,ld->dx);
-         }
+         clip.blockline = ld;
+         return clip.unstuck && !untouchedViaOffset(ld, link) &&
+            FixedMul(clip.x-clip.thing->x,ld->dy) > 
+            FixedMul(clip.y-clip.thing->y,ld->dx);
+      }
 
-         // killough 8/10/98: allow bouncing objects to pass through as missiles
-         if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
-         {
-            if(ld->flags & ML_BLOCKING)           // explicitly blocking everything
-               return clip.unstuck && !untouchedViaOffset(ld, link);  
-            // killough 8/1/98: allow escape
+      // killough 8/10/98: allow bouncing objects to pass through as missiles
+      if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
+      {
+         if(ld->flags & ML_BLOCKING)           // explicitly blocking everything
+            return clip.unstuck && !untouchedViaOffset(ld, link);  
+         // killough 8/1/98: allow escape
 
-            // killough 8/9/98: monster-blockers don't affect friends
-            // SoM 9/7/02: block monsters standing on 3dmidtex only
-            if(!(clip.thing->flags & MF_FRIEND || clip.thing->player) && 
-               ld->flags & ML_BLOCKMONSTERS && 
-               !(ld->flags & ML_3DMIDTEX))
-               return false; // block monsters only
-         }
+         // killough 8/9/98: monster-blockers don't affect friends
+         // SoM 9/7/02: block monsters standing on 3dmidtex only
+         if(!(clip.thing->flags & MF_FRIEND || clip.thing->player) && 
+            ld->flags & ML_BLOCKMONSTERS && 
+            !(ld->flags & ML_3DMIDTEX))
+            return false; // block monsters only
       }
    }
    else
@@ -840,10 +837,10 @@ static bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
       // adjust the lowfloor to the real observed value, to prevent
       // wrong dropoffz
       if(ld->backsector && 
-         (clip.opensecceil == ld->backsector->ceilingheight &&
-         clip.opensecfloor == ld->frontsector->floorheight) || 
+         ((clip.opensecceil == ld->backsector->ceilingheight &&
+         clip.opensecfloor == ld->frontsector->floorheight) ||
          (clip.opensecceil == ld->frontsector->ceilingheight && 
-         clip.opensecfloor == ld->backsector->floorheight))
+         clip.opensecfloor == ld->backsector->floorheight)))
       {
          clip.lowfloor = clip.opensecfloor;
       }
@@ -885,7 +882,7 @@ static bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
    // detail downstairs will not count, considering the linetop would always
    // be below any dropfloorz upstairs.
    if(clip.lowfloor < clip.dropoffz && 
-      (linegroupid == clip.thing->groupid || linetop >= clip.dropoffz))
+      (linegroupid == clip.thing->groupid || (linetop >= clip.dropoffz && !postpone)))
    {
       clip.dropoffz = clip.lowfloor;
    }
