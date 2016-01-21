@@ -665,8 +665,9 @@ static bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
    if(!useportalgroups || full_demo_version < make_full_version(340, 48))
       return PIT_CheckLine(ld, po);
 
-   const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid, 
-      clip.curGroupId);
+   int linegroupid = ld->frontsector->groupid;
+
+   const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid, linegroupid);
    fixed_t bbox[4];
    bbox[BOXLEFT] = clip.bbox[BOXLEFT] + link->x;
    bbox[BOXBOTTOM] = clip.bbox[BOXBOTTOM] + link->y;
@@ -784,7 +785,7 @@ static bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
    extern line_t *lines;
 
    // now apply correction to openings in case thing is positioned differently
-   if(clip.thing->groupid != clip.curGroupId && !fportal && thingz < linebottom &&
+   if(clip.thing->groupid != linegroupid && !fportal && thingz < linebottom &&
       thingmid < (linebottom + clip.openbottom) / 2)
    {
       clip.opentop = linebottom;
@@ -793,7 +794,7 @@ static bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
       clip.opensecfloor = D_MININT;
       cportal = false;
    }
-   if(clip.thing->groupid != clip.curGroupId && !cportal && thingtopz > linetop &&
+   if(clip.thing->groupid != linegroupid && !cportal && thingtopz > linetop &&
            thingmid >= (linetop + clip.opentop) / 2)
    {
       // adjust the lowfloor to the real observed value, to prevent
@@ -837,7 +838,7 @@ static bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
    // detail downstairs will not count, considering the linetop would always
    // be below any dropfloorz upstairs.
    if(clip.lowfloor < clip.dropoffz && 
-      (clip.curGroupId == clip.thing->groupid || linetop >= clip.dropoffz))
+      (linegroupid == clip.thing->groupid || linetop >= clip.dropoffz))
    {
       clip.dropoffz = clip.lowfloor;
    }
@@ -863,7 +864,7 @@ static bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
 
    // if contacted a special line, add it to the list
 
-   if(clip.thing->groupid == clip.curGroupId ||
+   if(clip.thing->groupid == linegroupid ||
       (linetop > thingz && linebottom < thingtopz && !(ld->flags & PS_PASSABLE)))
    {
       P_CollectSpechits(ld);
@@ -1054,7 +1055,6 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
       [](int x, int y, int groupid, void *data) -> bool
    {
       // ioanch 20160112: try 3D portal check-line
-      clip.curGroupId = groupid;
       if(!P_BlockLinesIterator(x, y, PIT_CheckLine3D, groupid))
          return false; // doesn't fit
       return true;

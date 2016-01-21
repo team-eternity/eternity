@@ -1669,8 +1669,8 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 static bool PIT_ApplyTorque(line_t *ld, polyobj_s *po)
 {
    // ioanch 20160116: portal aware
-   const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid, 
-      clip.curGroupId);
+   const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid,
+      ld->frontsector->groupid);
    fixed_t bbox[4];
    bbox[BOXRIGHT] = clip.bbox[BOXRIGHT] + link->x;
    bbox[BOXLEFT] = clip.bbox[BOXLEFT] + link->x;
@@ -1790,11 +1790,9 @@ void P_ApplyTorque(Mobj *mo)
    P_TransPortalBlockWalker(clip.bbox, mo->groupid, true, nullptr, 
       [](int x, int y, int groupid, void *data) -> bool
    {
-      clip.curGroupId = groupid;
       P_BlockLinesIterator(x, y, PIT_ApplyTorque, groupid);
       return true;
    });
-   clip.curGroupId = R_NOGROUP;
       
    // If any momentum, mark object as 'falling' using engine-internal flags
    if (mo->momx | mo->momy)
@@ -2715,7 +2713,7 @@ static bool PIT_GetSectors(line_t *ld, polyobj_s *po)
    // ioanch 20160115: portal aware
    fixed_t bbox[4];
    const linkoffset_t *link = P_GetLinkOffset(pClip->thing->groupid, 
-      pClip->curGroupId);
+      ld->frontsector->groupid);
    bbox[BOXRIGHT] = pClip->bbox[BOXRIGHT] + link->x;
    bbox[BOXLEFT] = pClip->bbox[BOXLEFT] + link->x;
    bbox[BOXTOP] = pClip->bbox[BOXTOP] + link->y;
@@ -2805,13 +2803,14 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
       // use this to preserve data between iterators
       int visitgroupid = INT_MIN;   // some invalid value
 
-      pClip->curGroupId = R_NOGROUP;
-      P_TransPortalBlockWalker(pClip->bbox, thing->groupid, true, nullptr,
+      int curgroupid = R_NOGROUP;
+      P_TransPortalBlockWalker(pClip->bbox, thing->groupid, true, &curgroupid,
          [](int x, int y, int groupid, void *data) -> bool
       {
-         if(groupid != pClip->curGroupId)
+         int &curgroupid = *static_cast<int *>(data);
+         if(groupid != curgroupid)
          {
-            pClip->curGroupId = groupid;;
+            curgroupid = groupid;
             // We're at a new groupid. Start by adding the midsector.
 
             // Get the offset from thing's position to the PREVIOUS groupid
@@ -2837,7 +2836,6 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
          P_BlockLinesIterator(x, y, PIT_GetSectors, groupid);
          return true;
       });
-      pClip->curGroupId = R_NOGROUP;
       list = pClip->sector_list;
    }
    else
