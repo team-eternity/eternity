@@ -41,6 +41,7 @@
 #include "r_bsp.h"
 #include "r_draw.h"
 #include "r_main.h"
+#include "r_pcheck.h"
 #include "r_plane.h"
 #include "r_portal.h"
 #include "r_state.h"
@@ -82,6 +83,7 @@ bool useportalgroups = false;
 
 // ioanch 20160109: needed for sprite projecting
 bool gMapHasSectorPortals;
+bool *gGroupVisit;
 
 //
 // P_PortalGroupCount
@@ -535,16 +537,16 @@ static void P_buildPortalMap()
 {
    PODCollection<int> curGroups; // ioanch 20160106: keep list of current groups
    size_t pcount = P_PortalGroupCount();
-   bool *visited = ecalloc(bool*, sizeof(bool), pcount);
+   gGroupVisit = ecalloctag(bool *, sizeof(bool), pcount, PU_LEVEL, nullptr);
    pcount *= sizeof(bool);
 
    gMapHasSectorPortals = false; // init with false
    
-   auto addPortal = [visited, &curGroups](int groupid)
+   auto addPortal = [&curGroups](int groupid)
    {
-      if(!visited[groupid])
+      if(!gGroupVisit[groupid])
       {
-         visited[groupid] = true;
+         gGroupVisit[groupid] = true;
          curGroups.add(groupid);
       }
    };
@@ -558,7 +560,7 @@ static void P_buildPortalMap()
          int *list;
          
          curGroups.makeEmpty();
-         memset(visited, 0, pcount);
+         memset(gGroupVisit, 0, pcount);
 
          writeOfs = offset = y * bmapwidth + x;
          offset = *(blockmap + offset);
@@ -638,8 +640,6 @@ static void P_buildPortalMap()
          }
       }
    }
-   
-   efree(visited);
 }
 
 //
@@ -1328,6 +1328,52 @@ bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj)
       return false;
    }
    return true;
+}
+
+//
+// P_CheckTouchedSectorPortals
+//
+// ioanch 20160122: check touched (like straddled) portals by the thing hitbox
+// and ticks them in gGroupVisit (which has to be empty before this).
+//
+void P_CheckTouchedSectorPortals(fixed_t x, fixed_t y, fixed_t z, fixed_t height, 
+                                 int groupid, const sector_t *sector)
+{
+   if(!useportalgroups)
+      return;
+   if(!sector)
+      sector = R_PointInSubsector(x, y)->sector;
+   gGroupVisit[groupid] = true;
+   const sector_t *osector = sector;
+   int ogroupid = groupid;
+   fixed_t ox = x, oy = y;
+   const linkoffset_t *link;
+   while(sector->f_pflags & PS_PASSABLE && R_FPLink(sector)->planez > z)
+   {
+      link = P_GetLinkOffset(groupid, R_FPLink(sector)->toid);
+      x += link->x;
+      y += link->y;
+      sector = R_PointInSubsector(x, y)->sector;
+      groupid = sector->groupid;
+      if(gGroupVisit[groupid])
+         break;
+      gGroupVisit[groupid] = true;
+   }
+   sector = osector;
+   x = ox;
+   y = oy;
+   groupid = ogroupid;
+   while(sector->c_pflags & PS_PASSABLE && R_CPLink(sector)->planez < z + height)
+   {
+      link = P_GetLinkOffset(groupid, R_CPLink(sector)->toid);
+      x += link->x;
+      y += link->y;
+      sector = R_PointInSubsector(x, y)->sector;
+      groupid = sector->groupid;
+      if(gGroupVisit[groupid])
+         break;
+      gGroupVisit[groupid] = true;
+   }
 }
 
 // EOF

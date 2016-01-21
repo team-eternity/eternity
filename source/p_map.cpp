@@ -652,8 +652,11 @@ static void SpechitOverrun(line_t *ld)
 void P_CollectSpechits(line_t *ld)
 {
    // if contacted a special line, add it to the list
-   if(ld->special || ld->portal)
+   // ioanch 20160121: check for PS_PASSABLE, to restrict just for linked portals
+   if(ld->special || ld->pflags & PS_PASSABLE)  
    {
+      if(ld->pflags & PS_PASSABLE)
+         gGroupVisit[ld->portal->data.link.toid] = true;
       // 1/11/98 killough: remove limit on lines hit, by array doubling
       if(clip.numspechit >= clip.spechit_max)
       {

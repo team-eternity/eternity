@@ -30,6 +30,7 @@ struct line_t;
 struct mobjinfo_t;
 struct msecnode_t;
 struct player_t;
+struct polyobj_s; // ioanch 20160122
 struct sector_t;
 
 //=============================================================================
@@ -230,6 +231,15 @@ struct doom_mapinter_t
    msecnode_t *sector_list;     // phares 3/16/98
    
    Mobj       *BlockingMobj;    // haleyjd 1/17/00: global hit reference
+
+   // ioanch 20160121: list of lines postponed to be visited thru portals
+   struct linepoly_t
+   {
+      line_t *ld;
+      polyobj_s *po;
+   } *portalhit;
+   int         portalhit_max;
+   int         numportalhit;
 };
 
 // Pushes the tm stack, clearing the new element

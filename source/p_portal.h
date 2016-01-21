@@ -34,6 +34,7 @@ extern bool useportalgroups;
 
 // ioanch 20160109: true if sector portals are in map
 extern bool gMapHasSectorPortals;
+extern bool *gGroupVisit;  // ioanch 20160121: a global helper array
 
 #ifndef R_NOGROUP
 // No link group. I know this means there is a signed limit on portal groups but
@@ -215,6 +216,10 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
 // ioanch 20160115
 //
 bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj);
+
+// ioanch 20160121
+void P_CheckTouchedSectorPortals(fixed_t x, fixed_t y, fixed_t z, fixed_t height,
+                                 int groupid, const sector_t *precalcsector);
 
 #endif
 
