@@ -573,6 +573,8 @@ static void R_RenderPlanePortal(pwindow_t *window)
    float angle;
    portal_t *portal = window->portal;
 
+   portalrender.curwindow = window;
+
    if(portal->type != R_PLANE)
       return;
 
@@ -617,6 +619,8 @@ static void R_RenderHorizonPortal(pwindow_t *window)
    visplane_t *topplane, *bottomplane;
    int x;
    portal_t *portal = window->portal;
+
+   portalrender.curwindow = window;
 
    if(portal->type != R_HORIZON)
       return;
@@ -716,6 +720,8 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
    fixed_t lastx, lasty, lastz, lastangle;
    float   lastxf, lastyf, lastzf, lastanglef;
    portal_t *portal = window->portal;
+
+   portalrender.curwindow = window;
 
    if(portal->type != R_SKYBOX)
       return;
@@ -852,6 +858,9 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    float   lastxf, lastyf, lastzf;
    portal_t *portal = window->portal;
 
+   // ioanch 20160123: don't forget
+   portalrender.curwindow = window;
+
    if(portal->type != R_ANCHORED && portal->type != R_TWOWAY)
       return;
 
@@ -945,6 +954,9 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    fixed_t lastx, lasty, lastz;
    float   lastxf, lastyf, lastzf;
    portal_t *portal = window->portal;
+
+   // ioanch 20160123: keep track of window
+   portalrender.curwindow = window;
 
    if(portal->type != R_LINKED || window->maxx < window->minx)
       return;
@@ -1173,6 +1185,7 @@ void R_RenderPortals()
       portalrender.w = windowhead;
       portalrender.segClipFunc = windowhead->clipfunc;
       portalrender.overlay = windowhead->portal->poverlay;
+      portalrender.curwindow = windowhead;   // ioanch 20160123: for safety
 
       if(windowhead->maxx >= windowhead->minx)
          windowhead->func(windowhead);
@@ -1181,6 +1194,7 @@ void R_RenderPortals()
       portalrender.w = NULL;
       portalrender.segClipFunc = NULL;
       portalrender.overlay = NULL;
+      portalrender.curwindow = nullptr;   // ioanch 20160123: reset it
 
       // free the window structs
       w = windowhead->child;

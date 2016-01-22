@@ -348,6 +348,11 @@ struct sector_t
 
    // haleyjd 01/12/14: sound environment
    int soundzone;
+
+   // ioanch 20160123: true if this is a simple portal box: all its lines are
+   // either 1-sided walls or portal walls. Not needed to be saved because it's
+   // set dynamically at map start
+   bool portalbox;
 };
 
 //

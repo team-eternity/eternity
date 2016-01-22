@@ -1403,6 +1403,23 @@ void P_SpawnDeferredSpecials()
       // spawn phased light sequences
       if(sec->flags & SECF_PHASEDLIGHT)
          PhasedLightThinker::SpawnSequence(sec, 1);
+
+      // ioanch 20160123: mark line portal box sectors
+      bool isbox = true;
+      bool foundportal = false;
+      for(int j = 0; j < sec->linecount; ++j)
+      {
+         const line_t *line = sec->lines[j];
+         if(line->pflags & PS_PASSABLE)
+            foundportal = true;
+         if(line->backsector && 
+            (!(line->pflags & PS_PASSABLE) || line->frontsector == sec))
+         {
+            isbox = false;
+            break;
+         }
+      }
+      sec->portalbox = isbox && foundportal;
    }
 }
 

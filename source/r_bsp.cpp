@@ -2056,6 +2056,16 @@ static void R_Subsector(int num)
 
    sub = &subsectors[num];
    seg.frontsec = sub->sector;
+
+   // ioanch 20160120: don't draw from other group ids than the intended one
+   // Also ignore sectors behind portal lines
+   if(seg.frontsec->portalbox || 
+      (portalrender.active && portalrender.w->portal->type == R_LINKED &&
+      portalrender.curwindow->portal->data.link.toid != seg.frontsec->groupid))
+   {
+      return;
+   }
+
    count = sub->numlines;
    line = &segs[sub->firstline];
 
