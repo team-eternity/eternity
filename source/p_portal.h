@@ -164,18 +164,20 @@ void P_SetLPortalBehavior(line_t *line, int newbehavior);
 // portals. Needed because some objects are spawned at given offsets from
 // others, and there's no other way to detect line portal change.
 //
-v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy);
+v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
+                               int *group = nullptr);
 
 template <typename T> 
-inline static v2fixed_t P_LinePortalCrossing(T &&u, fixed_t dx, fixed_t dy)
+inline static v2fixed_t P_LinePortalCrossing(T &&u, fixed_t dx, fixed_t dy, 
+                                             int *group = nullptr)
 {
-   return P_LinePortalCrossing(u.x, u.y, dx, dy);
+   return P_LinePortalCrossing(u.x, u.y, dx, dy, group);
 }
 
 template <typename T, typename U> 
-inline static v2fixed_t P_LinePortalCrossing(T &&u, U &&dv)
+inline static v2fixed_t P_LinePortalCrossing(T &&u, U &&dv, int *group = nullptr)
 {
-   return P_LinePortalCrossing(u.x, u.y, dv.x, dv.y);
+   return P_LinePortalCrossing(u.x, u.y, dv.x, dv.y, group);
 }
 
 //
@@ -220,6 +222,10 @@ bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj);
 // ioanch 20160121
 void P_CheckTouchedSectorPortals(fixed_t x, fixed_t y, fixed_t z, fixed_t height,
                                  int groupid, const sector_t *precalcsector);
+
+// ioanch 20160222
+bool P_ThingReachesGroupVertically(const Mobj *mo, int groupid, fixed_t midzhint);
+
 
 #endif
 

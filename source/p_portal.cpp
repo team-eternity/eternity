@@ -1004,7 +1004,7 @@ void P_SetLPortalBehavior(line_t *line, int newbehavior)
 // Checks if any line portals are crossed between (x, y) and (x+dx, y+dy),
 // updating the target position correctly
 //
-v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy)
+v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy, int *group)
 {
    v2fixed_t cur = { x, y };
    v2fixed_t fin = { x + dx, y + dy };
@@ -1033,8 +1033,8 @@ v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy)
       prevcoords.add(cur);
       
       res = CAM_PathTraverse(cur, fin, CAM_ADDLINES | CAM_REQUIRELINEPORTALS, 
-                             [&cur, &fin](const intercept_t *in, 
-                                          const divline_t &trace)
+                             [&cur, &fin, group](const intercept_t *in, 
+                                                 const divline_t &trace)
       {
 
          const line_t *line = in->d.line;
@@ -1066,6 +1066,8 @@ v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy)
          cur.x += FixedMul(trace.dx, in->frac) + link->x;
          cur.y += FixedMul(trace.dy, in->frac) + link->y;
          fin += *link;
+         if(group)
+            *group = toid;
 
          return false;
       });
@@ -1374,6 +1376,67 @@ void P_CheckTouchedSectorPortals(fixed_t x, fixed_t y, fixed_t z, fixed_t height
          break;
       gGroupVisit[groupid] = true;
    }
+}
+
+//
+// P_ThingReachesGroupVertically
+//
+// Simple function that just checks if mobj is in a position that vertically
+// points to groupid
+//
+bool P_ThingReachesGroupVertically(const Mobj *mo, int tgroupid, fixed_t midzhint)
+{
+   if(mo->groupid == tgroupid)
+      return true;
+   fixed_t momidz = mo->z + mo->height / 2;  // this is not exact if mo->player
+   memset(gGroupVisit, 0, sizeof(*gGroupVisit) * P_PortalGroupCount());
+   gGroupVisit[mo->groupid] = true;
+
+   unsigned sector_t::*pflags[2];
+   portal_t *sector_t::*portal[2];
+
+   if(midzhint < momidz)
+   {
+      pflags[0] = &sector_t::f_pflags;
+      pflags[1] = &sector_t::c_pflags;
+      portal[0] = &sector_t::f_portal;
+      portal[1] = &sector_t::c_portal;
+   }
+   else
+   {
+      pflags[0] = &sector_t::c_pflags;
+      pflags[1] = &sector_t::f_pflags;
+      portal[0] = &sector_t::c_portal;
+      portal[1] = &sector_t::f_portal;
+   }
+
+   const sector_t *sector;
+   int cgroupid;
+   fixed_t x, y;
+   
+   const linkoffset_t *link;
+
+   for(int i = 0; i < 2; ++i)
+   {
+      sector = mo->subsector->sector;
+      cgroupid = mo->groupid;
+      x = mo->x, y = mo->y;
+      
+      while(sector->*pflags[i] & PS_PASSABLE)
+      {
+         link = P_GetLinkOffset(cgroupid, (sector->*portal[i])->data.link.toid);
+         x += link->x;
+         y += link->y;
+         sector = R_PointInSubsector(x, y)->sector;
+         cgroupid = sector->groupid;
+         if(cgroupid == tgroupid)
+            return true;
+         if(gGroupVisit[cgroupid])
+            break;
+         gGroupVisit[cgroupid] = true;
+      }
+   }
+   return false;
 }
 
 // EOF

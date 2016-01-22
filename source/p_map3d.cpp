@@ -330,6 +330,26 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
       D_abs(thing->y - link->y - clip.y) >= blockdist)
       return true; // didn't hit it
 
+   // ioanch 20160122: reject if the things don't belong to the same group and
+   // there's no visible connection between them
+   if(clip.thing->groupid != thing->groupid)
+   {
+      // Important: find line portals between three coordinates
+      // first get between 
+      int finalgroup = clip.thing->groupid;   // default placeholder
+      v2fixed_t pos = P_LinePortalCrossing(*clip.thing, clip.x - clip.thing->x, 
+                                          clip.y - clip.thing->y, &finalgroup);
+      P_LinePortalCrossing(pos, thing->x - link->x - pos.x, 
+         thing->y - link->y - pos.y, &finalgroup);
+
+      if(finalgroup != thing->groupid && 
+         !P_ThingReachesGroupVertically(thing, finalgroup, 
+                                        clip.thing->z + clip.thing->height / 2))
+      {
+         return true;
+      }
+   }
+
    // killough 11/98:
    //
    // This test has less information content (it's almost always false), so it
