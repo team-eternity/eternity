@@ -800,7 +800,19 @@ bool EV_PortalTeleport(Mobj *mo, const linkoffset_t *link)
    mo->x += link->x;
    mo->y += link->y;
    mo->z = moz + link->z;
-   mo->backupPosition();
+   // ioanch 20160123: only use interpolation for non-player objects
+   // players are exposed to bugs if they interpolate here
+   if(mo->player && mo->player->mo == mo)
+   {
+      mo->backupPosition();
+   }
+   else
+   {
+      // translate the interpolated coordinates
+      mo->prevpos.x += link->x;
+      mo->prevpos.y += link->y;
+      mo->prevpos.z += link->z;
+   }
    P_SetThingPosition(mo);
 
    
@@ -831,7 +843,7 @@ bool EV_PortalTeleport(Mobj *mo, const linkoffset_t *link)
           P_ResetChasecam();
    }
 
-   mo->backupPosition();
+   //mo->backupPosition();
    P_AdjustFloorClip(mo);
    
    return 1;
