@@ -819,7 +819,6 @@ static bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
    // better detection of in-portal lines
    bool fportal, cportal;
    P_LineOpening(ld, clip.thing, true, &fportal, &cportal);
-   extern line_t *lines;
 
    // now apply correction to openings in case thing is positioned differently
    if(clip.thing->groupid != linegroupid && !fportal && thingz < linebottom &&

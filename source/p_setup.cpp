@@ -454,7 +454,6 @@ static void P_InitSector(sector_t *ss)
    // SoM: init portals
    ss->c_pflags = ss->f_pflags = 0;
    ss->c_portal = ss->f_portal = nullptr;
-   ss->portalLine = nullptr;  // ioanch 20160113: better line portal teleportation
    ss->groupid = R_NOGROUP;
 
    // SoM: These are kept current with floorheight and ceilingheight now

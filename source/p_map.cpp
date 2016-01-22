@@ -2803,9 +2803,6 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
       // FIXME: unfortunately all sectors need to be added, because this function
       // is only called on XY coordinate change.
 
-      // use this to preserve data between iterators
-      int visitgroupid = INT_MIN;   // some invalid value
-
       int curgroupid = R_NOGROUP;
       P_TransPortalBlockWalker(pClip->bbox, thing->groupid, true, &curgroupid,
          [](int x, int y, int groupid, void *data) -> bool

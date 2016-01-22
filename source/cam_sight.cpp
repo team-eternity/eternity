@@ -1696,9 +1696,6 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
 bool ShootContext::shoot2SLine(line_t *li, int lineside, fixed_t dist,
                                const LineOpening &lo) const
 {
-   const sector_t *fs = li->frontsector;
-   const sector_t *bs = li->backsector;
-
    // ioanch: no more need for demo version < 333 check. Also don't allow comp.
    if(FixedDiv(lo.openbottom - state.z, dist) <= aimslope &&
       FixedDiv(lo.opentop - state.z, dist) >= aimslope)
