@@ -104,6 +104,54 @@ int P_BoxOnLineSide(const fixed_t *tmbox, const line_t *ld)
 }
 
 //
+// P_BoxLinePoint
+//
+// ioanch 20160116: returns a good point of intersection between the bounding
+// box diagonals and linedef. This assumes P_BoxOnLineSide returned -1.
+//
+v2fixed_t P_BoxLinePoint(const fixed_t bbox[4], const line_t *ld)
+{
+   v2fixed_t ret;
+   switch(ld->slopetype)
+   {
+   default:
+      ret.x = ret.y = 0;   // just so no warnings ari
+      break;
+   case ST_HORIZONTAL:
+      ret.x = bbox[BOXLEFT] / 2 + bbox[BOXRIGHT] / 2;
+      ret.y = ld->v1->y;
+      break;
+   case ST_VERTICAL:
+      ret.x = ld->v1->x;
+      ret.y = bbox[BOXBOTTOM] / 2 + bbox[BOXTOP] / 2;
+      break;
+   case ST_POSITIVE:
+      {
+         divline_t d1 = { bbox[BOXLEFT], bbox[BOXTOP], 
+            bbox[BOXRIGHT] - bbox[BOXLEFT],
+            bbox[BOXBOTTOM] - bbox[BOXTOP] };
+         divline_t d2 = { ld->v1->x, ld->v1->y, ld->dx, ld->dy };
+         fixed_t frac = P_InterceptVector(&d1, &d2);
+         ret.x = d1.x + FixedMul(d1.dx, frac);
+         ret.y = d1.y + FixedMul(d1.dy, frac);
+      }
+      break;
+   case ST_NEGATIVE:
+      {
+         divline_t d1 = { bbox[BOXLEFT], bbox[BOXBOTTOM], 
+            bbox[BOXRIGHT] - bbox[BOXLEFT],
+            bbox[BOXTOP] - bbox[BOXBOTTOM] };
+         divline_t d2 = { ld->v1->x, ld->v1->y, ld->dx, ld->dy };
+         fixed_t frac = P_InterceptVector(&d1, &d2);
+         ret.x = d1.x + FixedMul(d1.dx, frac);
+         ret.y = d1.y + FixedMul(d1.dy, frac);
+      }
+      break;
+   }
+   return ret;
+}
+
+//
 // P_PointOnDivlineSide
 // Returns 0 or 1.
 //

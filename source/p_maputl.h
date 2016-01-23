@@ -27,6 +27,7 @@
 #define P_MAPUTL_H__
 
 #include "linkoffs.h"   // ioanch 20160108: for R_NOGROUP
+#include "m_vector.h"
 #include "tables.h" // for angle_t
 
 struct line_t;
@@ -94,6 +95,8 @@ int     P_PointOnDivlineSide(fixed_t x, fixed_t y, const divline_t *line);
 void    P_MakeDivline(const line_t *li, divline_t *dl);
 fixed_t P_InterceptVector(const divline_t *v2, const divline_t *v1);
 int     P_BoxOnLineSide(const fixed_t *tmbox, const line_t *ld);
+// ioanch 20160123: for linedef portal clipping.
+v2fixed_t P_BoxLinePoint(const fixed_t bbox[4], const line_t *ld);
 
 //SoM 9/2/02: added mo parameter for 3dside clipping
 // ioanch 20150113: added optional portal detection

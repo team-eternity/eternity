@@ -1345,69 +1345,32 @@ bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj)
 }
 
 //
-// P_CheckTouchedSectorPortals
-//
-// ioanch 20160122: check touched (like straddled) portals by the thing hitbox
-// and ticks them in gGroupVisit (which has to be empty before this).
-//
-void P_CheckTouchedSectorPortals(fixed_t x, fixed_t y, fixed_t z, fixed_t height, 
-                                 int groupid, const sector_t *sector)
-{
-   if(!useportalgroups)
-      return;
-   if(!sector)
-      sector = R_PointInSubsector(x, y)->sector;
-   gGroupVisit[groupid] = true;
-   const sector_t *osector = sector;
-   int ogroupid = groupid;
-   fixed_t ox = x, oy = y;
-   const linkoffset_t *link;
-   while(sector->f_pflags & PS_PASSABLE && R_FPLink(sector)->planez > z)
-   {
-      link = P_GetLinkOffset(groupid, R_FPLink(sector)->toid);
-      x += link->x;
-      y += link->y;
-      sector = R_PointInSubsector(x, y)->sector;
-      groupid = sector->groupid;
-      if(gGroupVisit[groupid])
-         break;
-      gGroupVisit[groupid] = true;
-   }
-   sector = osector;
-   x = ox;
-   y = oy;
-   groupid = ogroupid;
-   while(sector->c_pflags & PS_PASSABLE && R_CPLink(sector)->planez < z + height)
-   {
-      link = P_GetLinkOffset(groupid, R_CPLink(sector)->toid);
-      x += link->x;
-      y += link->y;
-      sector = R_PointInSubsector(x, y)->sector;
-      groupid = sector->groupid;
-      if(gGroupVisit[groupid])
-         break;
-      gGroupVisit[groupid] = true;
-   }
-}
-
-//
 // P_ThingReachesGroupVertically
 //
 // Simple function that just checks if mobj is in a position that vertically
-// points to groupid
+// points to groupid. THis does NOT change gGroupVisit.
 //
-bool P_ThingReachesGroupVertically(const Mobj *mo, int tgroupid, fixed_t midzhint)
+bool P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
+                                   int cgroupid, int tgroupid, const sector_t *csector,
+                                   fixed_t midzhint)
 {
-   if(mo->groupid == tgroupid)
+   if(cgroupid == tgroupid)
       return true;
-   fixed_t momidz = mo->z + mo->height / 2;  // this is not exact if mo->player
-   memset(gGroupVisit, 0, sizeof(*gGroupVisit) * P_PortalGroupCount());
-   gGroupVisit[mo->groupid] = true;
+
+   static bool *groupVisit;
+   if(!groupVisit)
+   {
+      groupVisit = ecalloctag(bool *, P_PortalGroupCount(), 
+                        sizeof(*groupVisit), PU_LEVEL, (void**)&groupVisit);
+   }
+   else 
+      memset(groupVisit, 0, sizeof(*groupVisit) * P_PortalGroupCount());
+   groupVisit[cgroupid] = true;
 
    unsigned sector_t::*pflags[2];
    portal_t *sector_t::*portal[2];
 
-   if(midzhint < momidz)
+   if(midzhint < cmidz)
    {
       pflags[0] = &sector_t::f_pflags;
       pflags[1] = &sector_t::c_pflags;
@@ -1423,29 +1386,29 @@ bool P_ThingReachesGroupVertically(const Mobj *mo, int tgroupid, fixed_t midzhin
    }
 
    const sector_t *sector;
-   int cgroupid;
+   int groupid;
    fixed_t x, y;
    
    const linkoffset_t *link;
 
    for(int i = 0; i < 2; ++i)
    {
-      sector = mo->subsector->sector;
-      cgroupid = mo->groupid;
-      x = mo->x, y = mo->y;
+      sector = csector;
+      groupid = cgroupid;
+      x = cx, y = cy;
       
       while(sector->*pflags[i] & PS_PASSABLE)
       {
-         link = P_GetLinkOffset(cgroupid, (sector->*portal[i])->data.link.toid);
+         link = P_GetLinkOffset(groupid, (sector->*portal[i])->data.link.toid);
          x += link->x;
          y += link->y;
          sector = R_PointInSubsector(x, y)->sector;
-         cgroupid = sector->groupid;
-         if(cgroupid == tgroupid)
+         groupid = sector->groupid;
+         if(groupid == tgroupid)
             return true;
-         if(gGroupVisit[cgroupid])
+         if(groupVisit[groupid])
             break;
-         gGroupVisit[cgroupid] = true;
+         groupVisit[groupid] = true;
       }
    }
    return false;
