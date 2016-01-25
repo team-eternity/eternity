@@ -39,6 +39,7 @@
 #include "m_swap.h"
 #include "p_chase.h"
 #include "p_info.h"
+#include "p_maputl.h"   // ioanch 20160125
 #include "p_partcl.h"
 #include "p_portal.h"
 #include "p_skin.h"
@@ -850,6 +851,22 @@ static void R_ProjectSprite(Mobj *thing, fixed_t offx = 0, fixed_t offy = 0)
    // lies in front of the front view plane
    if(roty < 1.0f)
       return;
+
+   // ioanch 20160125: reject sprites in front of portal line when rendering
+   // line portal
+   if(portalrender.curwindow && portalrender.curwindow->line) 
+   {
+      const line_t &l = *portalrender.curwindow->line;
+
+      // sprite position, shifted by offset
+      v2fixed_t pv = {spritepos.x - viewx + portalrender.curwindow->vx,
+                      spritepos.y - viewy + portalrender.curwindow->vy};
+
+      if(P_PointOnLineSide(pv.x, pv.y, &l) == 0)
+      {
+         return;
+      }
+   }
 
    rotx = (tempx * view.cos) - (tempy * view.sin);
 

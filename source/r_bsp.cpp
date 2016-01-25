@@ -30,6 +30,7 @@
 #include "e_exdata.h"
 #include "m_bbox.h"
 #include "p_chase.h"
+#include "p_maputl.h"   // ioanch 20160125
 #include "p_portal.h"
 #include "p_slopes.h"
 #include "r_data.h"
@@ -1500,6 +1501,21 @@ static void R_AddLine(seg_t *line, bool dynasegs)
    float floorx1, floorx2;
    vertex_t  *v1, *v2;
 
+   // ioanch 20160125: reject segs in front of line when rendering line portal
+   if(portalrender.curwindow && portalrender.curwindow->line) 
+   {
+      const line_t &l = *portalrender.curwindow->line;
+
+      // centre of portal line, shifted by offset
+      v2fixed_t pv = {l.v1->x + l.dx / 2 + viewx - portalrender.curwindow->vx,
+                      l.v1->y + l.dy / 2 + viewy - portalrender.curwindow->vy};
+
+      if(P_PointOnLineSide(viewx, viewy, line->linedef) !=
+         P_PointOnLineSide(pv.x, pv.y, line->linedef))
+      {
+         return;
+      }
+   }
    // SoM: one of the byproducts of the portal height enforcement: The top 
    // silhouette should be drawn at ceilingheight but the actual texture 
    // coords should start at ceilingz. Yeah Quasar, it did get a LITTLE 
