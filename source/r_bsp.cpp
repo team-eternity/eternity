@@ -1511,11 +1511,15 @@ static void R_AddLine(seg_t *line, bool dynasegs)
       const line_t &l = *portalrender.curwindow->line;
 
       // centre of portal line, shifted by offset
-      v2fixed_t pv = {l.v1->x + l.dx / 2 + viewx - portalrender.curwindow->vx,
-                      l.v1->y + l.dy / 2 + viewy - portalrender.curwindow->vy};
+      v2fixed_t pv1 = {l.v1->x + viewx - portalrender.curwindow->vx,
+                       l.v1->y + viewy - portalrender.curwindow->vy};
+      v2fixed_t pv2 = {l.v2->x + viewx - portalrender.curwindow->vx,
+                       l.v2->y + viewy - portalrender.curwindow->vy};
 
-      if(P_PointOnLineSide(viewx, viewy, line->linedef) !=
-         P_PointOnLineSide(pv.x, pv.y, line->linedef))
+      int viewside = P_PointOnLineSide(viewx, viewy, line->linedef);
+
+      if(viewside != P_PointOnLineSide(pv1.x, pv2.y, line->linedef) &&
+         viewside != P_PointOnLineSide(pv2.x, pv2.y, line->linedef))
       {
          return;
       }
