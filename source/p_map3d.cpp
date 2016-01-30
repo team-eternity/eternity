@@ -1128,9 +1128,11 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
 
    // ioanch 20160121: reset portalhits and thing-visited groups
    clip.numportalhit = 0;
-   // TODO: reset this before iterating through things!
-   memset(gGroupVisit, 0, sizeof(bool) * P_PortalGroupCount());
-   gGroupVisit[clip.thing->groupid] = true;
+   if(gGroupVisit)
+   {
+      memset(gGroupVisit, 0, sizeof(bool) * P_PortalGroupCount());
+      gGroupVisit[clip.thing->groupid] = true;
+   }
 
    // ioanch 20160112: portal-aware
    if(!P_TransPortalBlockWalker(bbox, thing->groupid, true, nullptr, 
