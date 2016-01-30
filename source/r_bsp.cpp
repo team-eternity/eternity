@@ -1065,7 +1065,9 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    // true/false value without a branch). Also added tweak for sector
    // colormaps.
 
+   // ioanch 20160130: be sure to check for portal line too!
    mark = (seg.frontsec->lightlevel != seg.backsec->lightlevel ||
+           seg.line->linedef->portal ||
            seg.frontsec->heightsec != -1 ||
            seg.frontsec->heightsec != seg.backsec->heightsec ||
            seg.frontsec->midmap != seg.backsec->midmap ||
@@ -1302,7 +1304,9 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    // true/false value without a branch). Also added tweak for sector
    // colormaps.
 
+   // ioanch 20160130: be sure to check for portal line too!
    mark = (seg.frontsec->lightlevel != seg.backsec->lightlevel ||
+           seg.line->linedef->portal ||
            seg.frontsec->heightsec != -1 ||
            seg.frontsec->heightsec != seg.backsec->heightsec ||
            seg.frontsec->midmap != seg.backsec->midmap ||
