@@ -1486,6 +1486,90 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
 }
 
 //
+// R_allowBehindLinePortal
+//
+// ioanch 20160131: Returns false if the line is touching the (view/portal-line)
+// triangle. Returns true otherwise.
+//
+static bool R_allowBehindLinePortal(const line_t *portalLine, const line_t *renderLine)
+{
+   // for saving space
+   v2fixed_t rv1 = {renderLine->v1->x, renderLine->v1->y};
+   v2fixed_t rv2 = {renderLine->v2->x, renderLine->v2->y};
+
+   // resolve pathological case where the line starts on viewx/y
+   if((rv1.x == viewx && rv1.y == viewy) || (rv2.x == viewx || rv2.y == viewy))
+      return false;  // easily rejected here
+
+   // portal line vertices, shifted by offset
+   v2fixed_t pv1 = {portalLine->v1->x + viewx - portalrender.curwindow->vx,
+                    portalLine->v1->y + viewy - portalrender.curwindow->vy};
+   v2fixed_t pv2 = {portalLine->v2->x + viewx - portalrender.curwindow->vx,
+                    portalLine->v2->y + viewy - portalrender.curwindow->vy};
+
+   // get portal line divline
+   divline_t dl;
+   dl.x = pv1.x;
+   dl.y = pv1.y;
+   dl.dx = pv2.x - dl.x;
+   dl.dy = pv2.y - dl.y;
+
+   // resolve pathological cases where the line is on a line portal vertex
+   if((rv1.x == pv1.x && rv1.y == pv1.y) || (rv1.x == pv2.x && rv1.y == pv2.y))
+   {
+      // if renderline starts from a portal line, make sure it moves behind
+      return P_PointOnDivlineSide(rv2.x, rv2.y, &dl) == 1;
+   }
+   if((rv2.x == pv1.x && rv2.y == pv1.y) || (rv2.x == pv2.x && rv2.y == pv2.y))
+   {
+      // if renderline starts from a portal line, make sure it moves behind
+      return P_PointOnDivlineSide(rv1.x, rv1.y, &dl) == 1;
+   }
+
+   int rv1ps = P_PointOnDivlineSide(rv1.x, rv1.y, &dl);
+   int rv2ps = P_PointOnDivlineSide(rv2.x, rv2.y, &dl);
+   if(rv1ps == rv2ps)      // both are same side relative to portal
+      return rv1ps == 1;   // easily determined to be rejected or accepted
+
+   // here, it necessarily intersects the line portal extended line
+   // will ONLY be visible if one of its vertices is inside the view angle
+   if(rv1ps == 1) // rv1 is behind the portal
+   {
+      // check that it's also in the angle
+      dl.x = viewx;
+      dl.y = viewy;
+      dl.dx = pv1.x - dl.x;
+      dl.dy = pv1.y - dl.y;
+      if(P_PointOnDivlineSide(rv1.x, rv1.y, &dl) == 0)
+      {
+         dl.x = pv2.x;
+         dl.y = pv2.y;
+         dl.dx = viewx - dl.x;
+         dl.dy = viewy - dl.y;
+         if(P_PointOnDivlineSide(rv1.x, rv1.y, &dl) == 0)
+            return true;
+      }
+      return false;
+   }
+   // rv2ps == 1
+   // check that it's also in the angle
+   dl.x = viewx;
+   dl.y = viewy;
+   dl.dx = pv1.x - dl.x;
+   dl.dy = pv1.y - dl.y;
+   if(P_PointOnDivlineSide(rv2.x, rv2.y, &dl) == 0)
+   {
+      dl.x = pv2.x;
+      dl.y = pv2.y;
+      dl.dx = viewx - dl.x;
+      dl.dy = viewy - dl.y;
+      if(P_PointOnDivlineSide(rv2.x, rv2.y, &dl) == 0)
+         return true;
+   }
+   return false;
+}
+
+//
 // R_AddLine
 //
 // Clips the given segment
@@ -1508,21 +1592,8 @@ static void R_AddLine(seg_t *line, bool dynasegs)
    // ioanch 20160125: reject segs in front of line when rendering line portal
    if(portalrender.curwindow && portalrender.curwindow->line) 
    {
-      const line_t &l = *portalrender.curwindow->line;
-
-      // centre of portal line, shifted by offset
-      v2fixed_t pv1 = {l.v1->x + viewx - portalrender.curwindow->vx,
-                       l.v1->y + viewy - portalrender.curwindow->vy};
-      v2fixed_t pv2 = {l.v2->x + viewx - portalrender.curwindow->vx,
-                       l.v2->y + viewy - portalrender.curwindow->vy};
-
-      int viewside = P_PointOnLineSide(viewx, viewy, line->linedef);
-
-      if(viewside != P_PointOnLineSide(pv1.x, pv2.y, line->linedef) &&
-         viewside != P_PointOnLineSide(pv2.x, pv2.y, line->linedef))
-      {
+      if(!R_allowBehindLinePortal(portalrender.curwindow->line, line->linedef))
          return;
-      }
    }
    // SoM: one of the byproducts of the portal height enforcement: The top 
    // silhouette should be drawn at ceilingheight but the actual texture 
