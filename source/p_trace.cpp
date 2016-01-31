@@ -652,6 +652,14 @@ static bool PTR_NoWayTraverse(intercept_t *in)
 //
 void P_UseLines(player_t *player)
 {
+   // ioanch 20160131: portal aware codepath
+   if(gMapHasLinePortals && full_demo_version >= make_full_version(340, 48))
+   {
+      trace.attackrange = USERANGE; // for compatibility with revenant mishaps
+      CAM_UseLines(player);
+      return;
+   }
+
    fixed_t x1, y1, x2, y2;
    int angle;
    

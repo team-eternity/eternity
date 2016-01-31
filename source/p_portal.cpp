@@ -83,6 +83,7 @@ bool useportalgroups = false;
 
 // ioanch 20160109: needed for sprite projecting
 bool gMapHasSectorPortals;
+bool gMapHasLinePortals;   // ioanch 20160131: needed for P_UseLines
 bool *gGroupVisit;
 
 //
@@ -541,6 +542,7 @@ static void P_buildPortalMap()
    pcount *= sizeof(bool);
 
    gMapHasSectorPortals = false; // init with false
+   gMapHasLinePortals = false;
    
    auto addPortal = [&curGroups](int groupid)
    {
@@ -599,6 +601,7 @@ static void P_buildPortalMap()
             {
                portalmap[writeOfs] |= PMF_LINE;
                addPortal(li.portal->data.link.toid);
+               gMapHasLinePortals = true;
             }
             if(li.frontsector->c_pflags & PS_PASSABLE)
             {

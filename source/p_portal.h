@@ -34,6 +34,7 @@ extern bool useportalgroups;
 
 // ioanch 20160109: true if sector portals are in map
 extern bool gMapHasSectorPortals;
+extern bool gMapHasLinePortals;  // ioanch 20160131: also check line portals
 extern bool *gGroupVisit;  // ioanch 20160121: a global helper array
 
 #ifndef R_NOGROUP

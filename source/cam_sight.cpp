@@ -62,6 +62,7 @@
 
 #include "cam_sight.h"
 #include "doomstat.h"   // ioanch 20160101: for bullet attacks
+#include "d_gi.h"       // ioanch 20160131: for use
 #include "d_player.h"   // ioanch 20151230: for autoaim
 #include "m_compare.h"  // ioanch 20160103: refactor
 #include "e_exdata.h"
@@ -69,8 +70,10 @@
 #include "m_fixed.h"
 #include "p_chase.h"
 #include "p_inter.h"    // ioanch 20160101: for damage
+#include "p_map.h"      // ioanch 20160131: for use
 #include "p_maputl.h"
 #include "p_setup.h"
+#include "p_skin.h"     // ioanch 20160131: for use
 #include "p_spec.h"     // ioanch 20160101: for bullet effects
 #include "polyobj.h"
 #include "r_pcheck.h"   // ioanch 20160109: for correct portal plane z
@@ -79,6 +82,7 @@
 #include "r_portal.h"
 #include "r_sky.h"      // ioanch 20160101: for bullets hitting sky
 #include "r_state.h"
+#include "s_sound.h"    // ioanch 20160131: for use
 
 // ioanch 20151230: defined macros for the validcount sets here
 #define VALID_ALLOC(set, n) ((set) = ecalloc(byte *, 1, (((n) + 7) & ~7) / 8))
@@ -1972,6 +1976,206 @@ bool CAM_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
    def.earlyOut = false;
    def.trav = trav;
    return PathTraverser(def, data).traverse(x1, y1, x2, y2);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// UseContext
+//
+// Context for use actions
+//
+class UseContext
+{
+public:
+   struct State
+   {
+      const UseContext *prev;
+      fixed_t attackrange;
+      int groupid;
+   };
+
+   static void useLines(const player_t *player, fixed_t x, fixed_t y,
+      const State *instate);
+
+private:
+   UseContext(const player_t *player, const State *state);
+   static bool useTraverse(const intercept_t *in, void *context, 
+      const divline_t &trace);
+   static bool noWayTraverse(const intercept_t *in, void *context, 
+      const divline_t &trace);
+
+   State state;
+   const player_t *player;
+   Mobj *thing;
+   bool portalhit;
+};
+
+//
+// UseContext::useLines
+//
+// Actions. Returns true if a switch has been hit
+//
+void UseContext::useLines(const player_t *player, fixed_t x, fixed_t y, 
+                          const State *state)
+{
+   UseContext context(player, state);
+
+   int angle = player->mo->angle >> ANGLETOFINESHIFT;
+
+   fixed_t x2 = x + (context.state.attackrange >> FRACBITS) * finecosine[angle];
+   fixed_t y2 = y + (context.state.attackrange >> FRACBITS) * finesine[angle];
+
+   PTDef def;
+   def.earlyOut = false;
+   def.flags = CAM_ADDLINES;
+   def.trav = useTraverse;
+   PathTraverser traverser(def, &context);
+   bool ret = false;
+   if(traverser.traverse(x, y, x2, y2))
+   {
+      if(!context.portalhit)
+      {
+         PTDef def;
+         def.earlyOut = false;
+         def.flags = CAM_ADDLINES;
+         def.trav = noWayTraverse;
+         PathTraverser traverser(def, &context);
+         if(!traverser.traverse(x, y, x2, y2))
+            S_StartSound(context.thing, GameModeInfo->playerSounds[sk_noway]);
+      }
+   }
+}
+
+//
+// UseContext::UseContext
+//
+// Constructor
+//
+UseContext::UseContext(const player_t *inplayer, const State *instate) 
+   : player(inplayer), thing(inplayer->mo), portalhit(false)
+{
+   if(instate)
+      state = *instate;
+   else
+   {
+      state.attackrange = USERANGE;
+      state.prev = nullptr;
+      state.groupid = inplayer->mo->groupid;
+   }
+}
+
+//
+// UseContext::useTraverse
+//
+// Use traverse. Based on PTR_UseTraverse.
+//
+bool UseContext::useTraverse(const intercept_t *in, void *vcontext, 
+                             const divline_t &trace)
+{
+   auto context = static_cast<UseContext *>(vcontext);
+   line_t *li = in->d.line;
+
+   // ioanch 20160131: don't treat passable lines as portals; another code path
+   // will use them.
+   if(li->special && !(li->pflags & PS_PASSABLE))
+   {
+      // ioanch 20160131: portal aware
+      const linkoffset_t *link = P_GetLinkOffset(context->thing->groupid,
+         li->frontsector->groupid);
+      P_UseSpecialLine(context->thing, li,
+         P_PointOnLineSide(context->thing->x + link->x, 
+                           context->thing->y + link->y, li) == 1);
+
+      //WAS can't use for than one special line in a row
+      //jff 3/21/98 NOW multiple use allowed with enabling line flag
+      return !!(li->flags & ML_PASSUSE);
+   }
+
+   // no special
+   LineOpening lo;
+   if(li->extflags & EX_ML_BLOCKALL) // haleyjd 04/30/11
+      lo.openrange = 0;
+   else
+      CAM_lineOpening(lo, li);
+
+   if(clip.openrange <= 0)
+   {
+      // can't use through a wall
+      S_StartSound(context->thing, GameModeInfo->playerSounds[sk_noway]);
+      return false;
+   }
+
+   // ioanch 20160131: opportunity to pass through portals
+   if(li->pflags & PS_PASSABLE)
+   {
+      int newfromid = li->portal->data.link.toid;
+      if(newfromid == context->state.groupid)
+         return true;
+
+      const UseContext *prev = context->state.prev;
+      while(prev)
+      {
+         if(prev->state.groupid == newfromid)
+            return true;
+         prev = prev->state.prev;
+      }
+
+      const linkoffset_t *link = P_GetLinkIfExists(context->state.groupid,
+         newfromid);
+
+      State newState(context->state);
+      newState.prev = context;
+      newState.attackrange -= FixedMul(newState.attackrange, in->frac);
+      newState.groupid = newfromid;
+      fixed_t x = trace.x + FixedMul(trace.dx, in->frac);
+      fixed_t y = trace.y + FixedMul(trace.dy, in->frac);
+      if(link)
+      {
+         x += link->x;
+         y += link->y;
+      }
+      useLines(context->player, x, y, &newState);
+      context->portalhit = true;
+      return false;
+   }
+
+   // not a special line, but keep checking
+   return true;
+}
+
+//
+// UseContext::noWayTraverse
+//
+// Same as PTR_NoWayTraverse. Will NEVER be called if portals had been hit.
+//
+bool UseContext::noWayTraverse(const intercept_t *in, void *vcontext, 
+                               const divline_t &trace)
+{
+   const line_t *ld = in->d.line; // This linedef
+   if(ld->special) // Ignore specials
+      return true;
+   if(ld->flags & ML_BLOCKING) // Always blocking
+      return false;
+   LineOpening lo;
+   CAM_lineOpening(lo, ld);
+
+   const UseContext *context = static_cast<const UseContext *>(vcontext);
+
+   return 
+      !(clip.openrange  <= 0 ||                                  // No opening
+        clip.openbottom > context->thing->z + STEPSIZE ||// Too high, it blocks
+        clip.opentop    < context->thing->z + context->thing->height);
+   // Too low, it blocks
+}
+
+//
+// CAM_UseLines
+//
+// ioanch 20160131: portal-aware variant of P_UseLines
+//
+void CAM_UseLines(const player_t *player)
+{
+   UseContext::useLines(player, player->mo->x, player->mo->y, nullptr);
 }
 
 // EOF
