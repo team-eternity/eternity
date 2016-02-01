@@ -1498,7 +1498,7 @@ static bool R_allowBehindLinePortal(const line_t *portalLine, const line_t *rend
    v2fixed_t rv2 = {renderLine->v2->x, renderLine->v2->y};
 
    // resolve pathological case where the line starts on viewx/y
-   if((rv1.x == viewx && rv1.y == viewy) || (rv2.x == viewx || rv2.y == viewy))
+   if((rv1.x == viewx && rv1.y == viewy) || (rv2.x == viewx && rv2.y == viewy))
       return false;  // easily rejected here
 
    // portal line vertices, shifted by offset
