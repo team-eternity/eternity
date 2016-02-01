@@ -1772,9 +1772,10 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
   
    P_SetThingPosition(mobj);
 
+   // ioanch 20160201: fix floorz and ceilingz to be portal-aware
    mobj->dropoffz =           // killough 11/98: for tracking dropoffs
-      mobj->floorz = mobj->subsector->sector->floorheight;
-   mobj->ceilingz = mobj->subsector->sector->ceilingheight;
+      mobj->floorz = P_ExtremeSectorAtPoint(mobj, false)->floorheight;
+   mobj->ceilingz = P_ExtremeSectorAtPoint(mobj, true)->ceilingheight;
 
    mobj->z = z == ONFLOORZ ? mobj->floorz : z == ONCEILINGZ ?
       mobj->ceilingz - mobj->height : z;
