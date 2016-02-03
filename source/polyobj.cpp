@@ -1201,8 +1201,11 @@ void PolyRotateThinker::Think()
       // decrement distance by the amount it moved
       this->distance -= avel;
 
+      // MaxW: 20160106: set the flag which differentiates angles >= 180 from angles < 0
+      hasBeenPositive = hasBeenPositive || (distance > 0);
+
       // are we at or past the destination?
-      if(this->distance <= 0)
+      if(this->distance <= 0 && this->hasBeenPositive)
       {
          // remove thinker
          if(po->thinker == this)
@@ -1215,7 +1218,7 @@ void PolyRotateThinker::Think()
          // TODO: notify scripts
          S_StopPolySequence(po);
       }
-      else if(this->distance < avel)
+      else if(this->distance < avel && this->distance > 0)
       {
          // we have less than one multiple of 'speed' left to go,
          // so change the speed so that it doesn't pass the destination
@@ -1233,7 +1236,7 @@ void PolyRotateThinker::serialize(SaveArchive &arc)
 {
    Super::serialize(arc);
 
-   arc << polyObjNum << speed << distance;
+   arc << polyObjNum << speed << distance << hasBeenPositive;
 }
 
 //
@@ -1467,8 +1470,11 @@ void PolySwingDoorThinker::Think()
       // decrement distance by the amount it moved
       this->distance -= avel;
 
+      // MaxW: 20160109: set the flag which differentiates angles >= 180 from angles < 0
+      hasBeenPositive = hasBeenPositive || (distance > 0);
+
       // are we at or past the destination?
-      if(this->distance <= 0)
+      if(this->distance <= 0 && this->hasBeenPositive)
       {
          // does it need to close?
          if(!this->closing)
@@ -1480,7 +1486,9 @@ void PolySwingDoorThinker::Think()
             this->speed    = -this->initSpeed; // reverse speed on close
             
             // start delay
-            this->delayCount = this->delay;            
+            this->delayCount = this->delay;    
+
+            this->hasBeenPositive = this->distance < 0 ? false : true;
          } 
          else
          {
@@ -1495,7 +1503,7 @@ void PolySwingDoorThinker::Think()
          }
          S_StopPolySequence(po);
       }
-      else if(this->distance < avel)
+      else if (this->distance < avel && this->distance > 0)
       {
          // we have less than one multiple of 'speed' left to go,
          // so change the speed so that it doesn't pass the destination
@@ -1524,7 +1532,7 @@ void PolySwingDoorThinker::serialize(SaveArchive &arc)
    Super::serialize(arc);
 
    arc << polyObjNum << delay << delayCount << initSpeed << speed
-       << initDistance << distance << closing;
+       << initDistance << distance << closing << hasBeenPositive;
 }
 
 // Linedef Handlers
@@ -1568,6 +1576,8 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
    else
       th->distance = prdata->distance * BYTEANGLEMUL;
 
+   // MaxW: 20160106: Initialise flag which differentiates angles >= 180 from angles < 0
+   th->hasBeenPositive = th->distance < 0 ? false : true;
    // set polyobject's thrust
    po->thrust = D_abs(th->speed) >> 8;
    if(po->thrust < FRACUNIT)
@@ -1608,6 +1618,8 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
       else
          th->distance = prdata->distance * BYTEANGLEMUL;
 
+      // MaxW: 20160106: Initialise flag which differentiates angles >= 180 from angles < 0
+      th->hasBeenPositive = th->distance < 0 ? false : true;
       // set polyobject's thrust
       po->thrust = D_abs(th->speed) >> 8;
       if(po->thrust < FRACUNIT)
@@ -1806,6 +1818,8 @@ static void Polyobj_doSwingDoor(polyobj_t *po, polydoordata_t *doordata)
    th->distance     = th->initDistance = doordata->distance * BYTEANGLEMUL;
    th->speed        = (doordata->speed * BYTEANGLEMUL) >> 3;
    th->initSpeed    = th->speed;
+   // MaxW: 20160109: Initialise flag which differentiates angles >= 180 from angles < 0
+   th->hasBeenPositive = th->distance < 0 ? false : true;
 
    // set polyobject's thrust
    po->thrust = D_abs(th->speed) >> 3;
@@ -1836,6 +1850,8 @@ static void Polyobj_doSwingDoor(polyobj_t *po, polydoordata_t *doordata)
       th->delay        = doordata->delay;
       th->delayCount   = 0;
       th->distance     = th->initDistance = doordata->distance * BYTEANGLEMUL;
+      // MaxW: 20160109: Initialise flag which differentiates angles >= 180 from angles < 0
+      th->hasBeenPositive = th->distance < 0 ? false : true;
 
       // alternate direction with each mirror
       th->speed = (doordata->speed * BYTEANGLEMUL * diracc) >> 3;
