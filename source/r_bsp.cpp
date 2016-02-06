@@ -1552,6 +1552,24 @@ static bool R_allowBehindLinePortal(const line_t *portalLine, const line_t *rend
          dl.dy = viewy - dl.y;
          if(P_PointOnDivlineSide(rv1.x, rv1.y, &dl) == 0)
             return true;
+         else
+         {
+            // beyond point is to the right of FOV. Check that the right branch
+            // doesn't cross the linedef. Don't care if the linedef is off to
+            // the right
+            rv1ps = P_PointOnLineSide(viewx, viewy, renderLine);
+            rv2ps = P_PointOnLineSide(pv2.x, pv2.y, renderLine);
+            return rv1ps == rv2ps;
+         }
+      }
+      else
+      {
+         // beyond point is to the left of FOV. Check that the left branch
+         // doesn't cross the linedef. Don't care if the linedef is off to the
+         // left
+         rv1ps = P_PointOnLineSide(viewx, viewy, renderLine);
+         rv2ps = P_PointOnLineSide(pv1.x, pv1.y, renderLine);
+         return rv1ps == rv2ps;
       }
       return false;
    }
@@ -1569,6 +1587,24 @@ static bool R_allowBehindLinePortal(const line_t *portalLine, const line_t *rend
       dl.dy = viewy - dl.y;
       if(P_PointOnDivlineSide(rv2.x, rv2.y, &dl) == 0)
          return true;
+      else
+      {
+         // beyond point is to the right of FOV. Check that the right branch
+         // doesn't cross the linedef. Don't care if the linedef is off to
+         // the right
+         rv1ps = P_PointOnLineSide(viewx, viewy, renderLine);
+         rv2ps = P_PointOnLineSide(pv2.x, pv2.y, renderLine);
+         return rv1ps == rv2ps;
+      }
+   }
+   else
+   {
+      // beyond point is to the left of FOV. Check that the left branch
+      // doesn't cross the linedef. Don't care if the linedef is off to the
+      // left
+      rv1ps = P_PointOnLineSide(viewx, viewy, renderLine);
+      rv2ps = P_PointOnLineSide(pv1.x, pv1.y, renderLine);
+      return rv1ps == rv2ps;
    }
    return false;
 }
@@ -1594,10 +1630,16 @@ static void R_AddLine(seg_t *line, bool dynasegs)
    vertex_t  *v1, *v2;
 
    // ioanch 20160125: reject segs in front of line when rendering line portal
-   if(portalrender.curwindow && portalrender.curwindow->line) 
+   if(portalrender.curwindow && portalrender.curwindow->line)
    {
-      if(!R_allowBehindLinePortal(portalrender.curwindow->line, line->linedef))
+      // only reject if they're anchored portals (including linked)
+      rportaltype_e type = portalrender.curwindow->portal->type;
+
+      if((type == R_LINKED || type == R_ANCHORED) &&
+         !R_allowBehindLinePortal(portalrender.curwindow->line, line->linedef))
+      {
          return;
+      }
    }
    // SoM: one of the byproducts of the portal height enforcement: The top 
    // silhouette should be drawn at ceilingheight but the actual texture 
@@ -2159,8 +2201,9 @@ static void R_Subsector(int num)
    // ioanch 20160120: don't draw from other group ids than the intended one
    // Also ignore sectors behind portal lines
    if(seg.frontsec->portalbox || 
-      (portalrender.active && portalrender.w->portal->type == R_LINKED &&
-      portalrender.curwindow->portal->data.link.toid != seg.frontsec->groupid))
+      (portalrender.active &&
+       portalrender.curwindow->portal->type == R_LINKED &&
+       portalrender.curwindow->portal->data.link.toid != seg.frontsec->groupid))
    {
       return;
    }
