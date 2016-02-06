@@ -543,7 +543,9 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
          }
 
          // haleyjd 03/20/10: must clear SIF_SKY flag from tempsec!
-         tempsec->intflags &= ~SIF_SKY;
+         // ioanch 20160205: not always
+         if(!R_IsSkyFlat(tempsec->ceilingpic))
+            tempsec->intflags &= ~SIF_SKY;
 
          tempsec->lightlevel  = s->lightlevel;
          
@@ -587,7 +589,9 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
          }
 
          // haleyjd 03/20/10: must clear SIF_SKY flag from tempsec
-         tempsec->intflags &= ~SIF_SKY;
+         // ioanch 20160205: not always
+         if(!R_IsSkyFlat(tempsec->ceilingpic))
+            tempsec->intflags &= ~SIF_SKY;
          
          tempsec->lightlevel  = s->lightlevel;
          
