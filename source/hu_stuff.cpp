@@ -55,6 +55,7 @@
 #include "p_chase.h"
 #include "p_info.h"
 #include "p_map.h"
+#include "p_maputl.h"   // ioanch 20160101: for fixing the autoaim bug
 #include "p_setup.h"
 #include "p_spec.h"
 #include "r_draw.h"
@@ -941,9 +942,12 @@ void HUDCrossHairWidget::ticker()
 
    // search for targets
    
+   // ioanch 20160101: don't let P_AimLineAttack change global trace.attackrange
+   fixed_t oldAttackRange = trace.attackrange;
    P_AimLineAttack(players[displayplayer].mo,
                    players[displayplayer].mo->angle, 
                    16*64*FRACUNIT, 0);
+   trace.attackrange = oldAttackRange;
 
    if(clip.linetarget)
    {

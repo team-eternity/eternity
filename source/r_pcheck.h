@@ -37,7 +37,7 @@ extern int demo_version;
 //
 // haleyjd 3/17/08: Convenience routine to clean some shit up.
 //
-inline static linkdata_t *R_FPLink(sector_t *s)
+inline static linkdata_t *R_FPLink(const sector_t *s)
 {
    return &(s->f_portal->data.link);
 }
@@ -47,7 +47,7 @@ inline static linkdata_t *R_FPLink(sector_t *s)
 //
 // ditto
 //
-inline static linkdata_t *R_CPLink(sector_t *s)
+inline static linkdata_t *R_CPLink(const sector_t *s)
 {
    return &(s->c_portal->data.link);
 }

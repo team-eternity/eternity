@@ -45,6 +45,9 @@ struct sector_t;
 // is larger, but we do not have any moving sectors nearby
 #define MAXRADIUS    (32 * FRACUNIT)
 
+// ioanch 20160103: use a macro for step size
+#define STEPSIZE     (24 * FRACUNIT)
+
 //=============================================================================
 //
 // Global Variables
