@@ -37,7 +37,6 @@
 #include "e_exdata.h"
 #include "e_hash.h"
 #include "e_inventory.h"
-#include "e_udmf.h"  // IOANCH 20151214
 #include "ev_actions.h"
 #include "ev_macros.h"
 #include "ev_specials.h"
@@ -1086,19 +1085,6 @@ ev_action_t *EV_ActionForSpecial(int special)
       return EV_HexenActionForSpecial(special);
    case LEVEL_FORMAT_PSX:
       return EV_PSXActionForSpecial(special);
-   case LEVEL_FORMAT_UDMF:
-      // IOANCH: UDMF
-      switch(gUDMFNamespace)
-      {
-      default: // FIXME: Eternity what?
-         return EV_DOOMActionForSpecial(special);
-      case unsHeretic:
-         return EV_HereticActionForSpecial(special);
-      case unsHexen:
-         return EV_HexenActionForSpecial(special);
-      case unsStrife:
-         return EV_StrifeActionForSpecial(special);
-      }
    default:
       switch(LevelInfo.levelType)
       {
@@ -1178,26 +1164,9 @@ int EV_LockDefIDForSpecial(int special)
    {
       return EV_lockdefIDForGenSpec(special); // generalized lock
    }
-   else if(LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN
-      || (LevelInfo.mapFormat == LEVEL_FORMAT_UDMF 
-      && gUDMFNamespace == unsHexen))
+   else if(LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN)
    {
-      // IOANCH 20151206: also handle Hexen on UDMF.
       return 0; // Hexen doesn't work this way.
-   }
-   else if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF)
-   {
-      // IOANCH: UDMF
-      switch(gUDMFNamespace)
-      {
-      default: // Eternity what game?
-         return EV_DOOMLockDefIDForSpecial(special);
-      case unsHeretic:
-      case unsHexen:
-         return EV_HereticLockDefIDForSpecial(special);
-      case unsStrife:
-         return 0;   // STRIFE_TODO
-      }
    }
    else
    {
