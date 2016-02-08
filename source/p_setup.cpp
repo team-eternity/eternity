@@ -953,7 +953,8 @@ static bool P_CheckForDeePBSPv4Nodes(int lumpnum)
 // Also added actual node lump, if it's SSECTORS in a classic map
 //
 static ZNodeType P_CheckForZDoomUncompressedNodes(int nodelumpnum, 
-                                                  int *actualNodeLump)
+                                                  int *actualNodeLump, 
+                                                  bool udmf)
 {
    const void *data;
    
@@ -964,7 +965,7 @@ static ZNodeType P_CheckForZDoomUncompressedNodes(int nodelumpnum,
    // ioanch: actually check for 4 bytes so we can memcmp for "XNOD"
    if(setupwad->lumpLength(nodelumpnum) < 4)
    {
-      if(LevelInfo.mapFormat != LEVEL_FORMAT_UDMF)
+      if(!udmf)
       {
          *actualNodeLump = nodelumpnum - ML_NODES + ML_SSECTORS;
          glNodesFallback = true;
@@ -978,8 +979,7 @@ static ZNodeType P_CheckForZDoomUncompressedNodes(int nodelumpnum,
    // haleyjd: load at PU_CACHE and it may stick around for later.
    data = setupwad->cacheLumpNum(*actualNodeLump, PU_CACHE);
 
-   if(LevelInfo.mapFormat != LEVEL_FORMAT_UDMF && !glNodesFallback 
-      && !memcmp(data, "XNOD", 4))
+   if(!udmf && !glNodesFallback && !memcmp(data, "XNOD", 4))
    {
       // only classic maps with NODES having XNOD
       C_Printf("ZDoom uncompressed normal nodes detected\n");
@@ -987,7 +987,7 @@ static ZNodeType P_CheckForZDoomUncompressedNodes(int nodelumpnum,
    }
 
 
-   if(glNodesFallback || LevelInfo.mapFormat == LEVEL_FORMAT_UDMF)
+   if(glNodesFallback || udmf)
    {
       if(!memcmp(data, "XGLN", 4))
       {
@@ -2659,13 +2659,16 @@ static int P_checkConsoleFormat(WadDirectory *dir, int lumpnum)
 // the MAPxy or ExMy standard previously imposed.
 // IOANCH 20151213: added MGLA, optional parameter to assign values to.
 //
-int P_CheckLevel(WadDirectory *dir, int lumpnum, MapGenLumpAddresses *mgla)
+int P_CheckLevel(WadDirectory *dir, int lumpnum, MapGenLumpAddresses *mgla,
+                 bool *udmf)
 {
    int          numlumps = dir->getNumLumps();
    lumpinfo_t **lumpinfo = dir->getLumpInfo();
 
    if(mgla) // reset it to negative (missing) values
       memset(mgla, -1, sizeof(*mgla));
+   if(udmf)
+      *udmf = false;
 
    // IOANCH 20151206: check for UDMF lumps structure
    if(lumpnum + 1 < numlumps 
@@ -2699,7 +2702,9 @@ int P_CheckLevel(WadDirectory *dir, int lumpnum, MapGenLumpAddresses *mgla)
       if(!foundEndMap || (mgla && mgla->nodes < 0))
          return LEVEL_FORMAT_INVALID;  // must have ENDMAP
       // Found ENDMAP. This may be a valid UDMF lump. Return it
-      return LEVEL_FORMAT_UDMF;
+      if(udmf)
+         *udmf = true;
+      return LEVEL_FORMAT_DOOM;  // consider "Doom" format even for UDMF.
    }
    
    for(int i = ML_THINGS; i <= ML_BEHAVIOR; i++)
@@ -3054,9 +3059,10 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    // IOANCH 20151213: udmf
    MapGenLumpAddresses mgla;  // will be set by P_CheckLevel
+   bool isUdmf = false;
 
    // determine map format; if invalid, abort
-   if((LevelInfo.mapFormat = P_CheckLevel(setupwad, lumpnum, &mgla)) 
+   if((LevelInfo.mapFormat = P_CheckLevel(setupwad, lumpnum, &mgla, &isUdmf)) 
       == LEVEL_FORMAT_INVALID)
    {
       P_SetupLevelError("Not a valid level", mapname);
@@ -3089,22 +3095,24 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    // IOANCH 20151206: load UDMF
    UDMFParser udmf;  // prepare UDMF processor
-   if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF)
+   if(isUdmf)
    {
       udmf.start(*setupwad, lumpnum + 1);
       // TODO: also check namespace
       CHECK_ERROR();
    }
    
-   switch(LevelInfo.mapFormat)
+   if(isUdmf)
+   {
+      // IOANCH 20151212: UDMF
+      E_LoadUDMFVertices();
+      E_LoadUDMFSectors();
+   }
+   else switch(LevelInfo.mapFormat)
    {
    case LEVEL_FORMAT_PSX:
       P_LoadConsoleVertexes(lumpnum + ML_VERTEXES);
       P_LoadPSXSectors(lumpnum + ML_SECTORS);
-      break;
-   case LEVEL_FORMAT_UDMF: // IOANCH 20151212: UDMF
-      E_LoadUDMFVertices();
-      E_LoadUDMFSectors();
       break;
    default:
       P_LoadVertexes(lumpnum + ML_VERTEXES);
@@ -3119,13 +3127,16 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    P_CreateSectorInterps();
 
    // IOANCH 20151212: UDMF
-   if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF)
+   if(isUdmf)
       E_LoadUDMFSideDefs();
    else
       P_LoadSideDefs(lumpnum + ML_SIDEDEFS); // killough 4/4/98
 
    // haleyjd 10/03/05: handle multiple map formats
-   switch(LevelInfo.mapFormat)
+   // IOANCH 20151212: UDMF
+   if(isUdmf)
+      E_LoadUDMFLineDefs();
+   else switch(LevelInfo.mapFormat)
    {
    case LEVEL_FORMAT_DOOM:
    case LEVEL_FORMAT_PSX:
@@ -3134,13 +3145,10 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    case LEVEL_FORMAT_HEXEN:
       P_LoadHexenLineDefs(lumpnum + ML_LINEDEFS);
       break;
-   case LEVEL_FORMAT_UDMF: // IOANCH 20151212: UDMF
-      E_LoadUDMFLineDefs();
-      break;
    }
 
    // IOANCH 20151213: udmf
-   if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF)
+   if(isUdmf)
       E_LoadUDMFSideDefs2();
    else
       P_LoadSideDefs2(lumpnum + ML_SIDEDEFS);
@@ -3154,8 +3162,8 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    // IOANCH: at this point, mgla.nodes is valid. Check ZDoom node signature too
    ZNodeType znodeSignature;
    int actualNodeLump = -1;
-   if((znodeSignature = P_CheckForZDoomUncompressedNodes(mgla.nodes, &actualNodeLump)) 
-      != ZNodeType_Invalid && actualNodeLump >= 0)
+   if((znodeSignature = P_CheckForZDoomUncompressedNodes(mgla.nodes, 
+      &actualNodeLump, isUdmf)) != ZNodeType_Invalid && actualNodeLump >= 0)
    {
       P_LoadZNodes(actualNodeLump, znodeSignature);
 
@@ -3207,6 +3215,9 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    deathmatch_p = deathmatchstarts;
 
    // haleyjd 10/03/05: handle multiple map formats
+   // IOANCH 20151214: UDMF things
+   if(isUdmf)
+      E_LoadUDMFThings();
    switch(LevelInfo.mapFormat)
    {
    case LEVEL_FORMAT_DOOM:
@@ -3215,10 +3226,6 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       break;
    case LEVEL_FORMAT_HEXEN:
       P_LoadHexenThings(lumpnum + ML_THINGS);
-      break;
-   case LEVEL_FORMAT_UDMF:
-      // IOANCH 20151214: UDMF things
-      E_LoadUDMFThings();
       break;
    }
 

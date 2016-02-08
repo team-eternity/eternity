@@ -41,15 +41,14 @@ enum
    LEVEL_FORMAT_HEXEN,
    LEVEL_FORMAT_PSX,
    LEVEL_FORMAT_DOOM64,
-   // IOANCH 20151206: work on UDMF
-   LEVEL_FORMAT_UDMF,
 };
 
 class WadDirectory;
 // IOANCH 20151213: modify P_CheckLevel to support one extra parameter
 struct MapGenLumpAddresses;
+ // haleyjd: now used in d_main.c
 int P_CheckLevel(WadDirectory *dir, int lumpnum, 
-                 MapGenLumpAddresses *mgla = nullptr); // haleyjd: now used in d_main.c
+                 MapGenLumpAddresses *mgla = nullptr, bool *udmf = nullptr);
 int P_CheckLevelName(WadDirectory *dir, const char *mapname);
 int P_CheckLevelMapNum(WadDirectory *dir, int mapnum);
 
