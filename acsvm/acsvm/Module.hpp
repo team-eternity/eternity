@@ -123,9 +123,9 @@ namespace ACSVM
          Byte const *last, std::size_t len);
 
       static std::tuple<
-         Byte const */*begin*/,
-         Byte const */*end*/,
-         std::size_t /*len*/>
+         Byte const * /*begin*/,
+         Byte const * /*end*/,
+         std::size_t  /*len*/>
       ScanStringACS0(Byte const *data, std::size_t size, std::size_t iter);
 
    private:

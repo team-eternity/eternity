@@ -115,9 +115,9 @@ namespace ACSVM
    // TracerACS0::readOpACS0
    //
    std::tuple<
-      Word                /*opCode*/,
-      CodeDataACS0 const */*opData*/,
-      std::size_t         /*opSize*/>
+      Word                 /*opCode*/,
+      CodeDataACS0 const * /*opData*/,
+      std::size_t          /*opSize*/>
    TracerACS0::readOpACS0(std::size_t iter)
    {
       if(compressed)

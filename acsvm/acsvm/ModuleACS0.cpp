@@ -268,9 +268,9 @@ namespace ACSVM
    // Module::ScanStringACS0
    //
    std::tuple<
-      Byte const */*begin*/,
-      Byte const */*end*/,
-      std::size_t /*len*/>
+      Byte const * /*begin*/,
+      Byte const * /*end*/,
+      std::size_t  /*len*/>
    Module::ScanStringACS0(Byte const *data, std::size_t size, std::size_t iter)
    {
       if(iter > size) throw ReadError();

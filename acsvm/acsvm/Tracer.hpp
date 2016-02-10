@@ -56,9 +56,9 @@ namespace ACSVM
       std::pair<Word /*argc*/, Word /*func*/> readCallFunc(std::size_t iter);
 
       std::tuple<
-         Word                /*opCode*/,
-         CodeDataACS0 const */*opData*/,
-         std::size_t         /*opSize*/>
+         Word                 /*opCode*/,
+         CodeDataACS0 const * /*opData*/,
+         std::size_t          /*opSize*/>
       readOpACS0(std::size_t iter);
 
       bool setFound(std::size_t first, std::size_t last);
