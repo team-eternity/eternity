@@ -32,6 +32,7 @@
 #include "e_hash.h"
 #include "e_udmf.h"
 #include "m_collection.h"
+#include "m_compare.h"
 #include "m_ctype.h"
 #include "p_setup.h"
 #include "p_spec.h"
@@ -105,6 +106,10 @@ struct UDMFLinedef
    int sidefront;
    int sideback;
 
+   // new to Eternity
+   double alpha;
+   char renderstyle[sizeof("translucent")];
+
    UDMFLinedef &makeDefault()
    {
       memset(checklist, 0, sizeof(checklist));
@@ -121,6 +126,8 @@ struct UDMFLinedef
       arg4 = 0;
       sidefront = -1;
       sideback = -1;
+      alpha = 1;
+      strcpy(renderstyle, "translucent");
       return *this;
    }
 };
@@ -149,6 +156,13 @@ enum UDMFLinedefFlag
    UDMFLinedefFlag_Monsterpush,
    UDMFLinedefFlag_Missilecross,
    UDMFLinedefFlag_Repeatspecial,
+
+   // new to Eternity
+   UDMFLinedefFlag_MidTex3D,
+   UDMFLinedefFlag_FirstSideOnly,
+   UDMFLinedefFlag_BlockEverything,
+   UDMFLinedefFlag_ZoneBoundary,
+   UDMFLinedefFlag_ClipMidTex,
 };
 
 static UDMFBinding kLinedefBindings[] =
@@ -206,8 +220,24 @@ static UDMFBinding kLinedefBindings[] =
    { "arg2", UDMFTokenType_Number, offsetof(UDMFLinedef, arg2), 0 },
    { "arg3", UDMFTokenType_Number, offsetof(UDMFLinedef, arg3), 0 },
    { "arg4", UDMFTokenType_Number, offsetof(UDMFLinedef, arg4), 0 },
-   { "sidefront", UDMFTokenType_Number, offsetof(UDMFLinedef, sidefront), 0, UDMFLinedef::Sidefront },
+   { "sidefront", UDMFTokenType_Number, offsetof(UDMFLinedef, sidefront), 0, 
+      UDMFLinedef::Sidefront },
    { "sideback", UDMFTokenType_Number, offsetof(UDMFLinedef, sideback), 0 },
+
+   // new to Eternity
+   { "midtex3d", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags), 
+      UDMFLinedefFlag_MidTex3D },
+   { "firstsideonly", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
+      UDMFLinedefFlag_FirstSideOnly },
+   { "alpha", UDMFTokenType_Number, offsetof(UDMFLinedef, alpha), 1 },
+   { "renderstyle", UDMFTokenType_String, offsetof(UDMFLinedef, renderstyle[0]), 
+      sizeof(((UDMFLinedef*)nullptr)->renderstyle) - 1 },
+   { "blockeverything", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
+      UDMFLinedefFlag_BlockEverything },
+   { "zoneboundary", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
+      UDMFLinedefFlag_ZoneBoundary },
+   { "clipmidtex", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
+      UDMFLinedefFlag_ClipMidTex },
 };
 
 static EHashTable<UDMFBinding, ENCStringHashKey,
@@ -650,6 +680,29 @@ void E_LoadUDMFLineDefs()
       if(uld.flags & 1 << UDMFLinedefFlag_Passuse)
          ld->flags |= ML_PASSUSE;
 
+      if(gUDMFNamespace == unsEternity)
+      {
+         if(uld.flags & 1 << UDMFLinedefFlag_MidTex3D)
+            ld->flags |= ML_3DMIDTEX;
+         if(uld.flags & 1 << UDMFLinedefFlag_FirstSideOnly)
+            ld->extflags |= EX_ML_1SONLY;
+         ld->alpha = eclamp(static_cast<float>(uld.alpha), 0.f, 1.f);
+         if(!strcasecmp(uld.renderstyle, "add"))
+            ld->extflags |= EX_ML_ADDITIVE;
+         else if(strcasecmp(uld.renderstyle, "translucent"))
+         {
+            psnprintf(gLevelErrorBuffer, sizeof(gLevelErrorBuffer), 
+               "Linedef %d unknown renderstyle '%s'", (int)(ld - ::lines), 
+               uld.renderstyle);
+            level_error = gLevelErrorBuffer;
+            return;
+         }
+         if(uld.flags & 1 << UDMFLinedefFlag_ZoneBoundary)
+            ld->extflags |= EX_ML_ZONEBOUNDARY;
+         if(uld.flags & 1 << UDMFLinedefFlag_ClipMidTex)
+            ld->extflags |= EX_ML_CLIPMIDTEX;
+      }
+
       // STRIFE. NAMESPACE REQUIRED
       if(gUDMFNamespace == unsStrife)
       {
@@ -682,30 +735,9 @@ void E_LoadUDMFLineDefs()
             ld->extflags |= EX_ML_REPEAT;
       }
       ld->special = uld.special;
-      // Special handling for tag
-      if(gUDMFNamespace == unsDoom || gUDMFNamespace == unsHeretic
-         || gUDMFNamespace == unsStrife)
-      {
-         // FIXME: this is obviously not complete. The classic specials need to
-         // be updated to use either args[0] or tag.
-         ld->tag = uld.id;
-         ld->args[0] = uld.arg0;
-      }
-      else if(gUDMFNamespace == unsEternity)
-      {
-         // Eternity
-         // TENTATIVE BEHAVIOUR
-         ld->tag = uld.id; 
 
-         // TENTATIVE TODO: Eternity namespace special "alpha"
-         //ld->alpha = static_cast<float>(E_requireOptDouble(table, "alpha", 1.0));
+      ld->tag = uld.id;
 
-         // TODO: equivalent of ExtraData 1SONLY, ADDITIVE, ZONEBOUNDARY, CLIPMIDTEX
-      }
-      else if(gUDMFNamespace == unsHexen)
-      {
-         ld->tag = -1;  // Hexen will always use args
-      }
       v[0] = uld.v1;
       v[1] = uld.v2;
       if(v[0] < 0 || v[0] >= ::numvertexes 
