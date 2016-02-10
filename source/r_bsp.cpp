@@ -170,9 +170,9 @@ static void R_AddSolidSeg(int x1, int x2)
       {
          I_Error("R_AddSolidSeg: created a seg that overlaps next seg:\n"
                  "   (%i)->last = %i, (%i)->first = %i\n", 
-                 rover - solidsegs, 
+                 static_cast<int>(rover - solidsegs),
                  rover->last, 
-                 (rover + 1) - solidsegs, 
+                 static_cast<int>((rover + 1) - solidsegs),
                  (rover + 1)->last);
       }
    }
@@ -280,9 +280,9 @@ crunch:
       {
          I_Error("R_ClipSolidWallSegment: created a seg that overlaps next seg:\n"
                  "   (%i)->last = %i, (%i)->first = %i\n", 
-                 start - solidsegs, 
+                 static_cast<int>(start - solidsegs),
                  start->last, 
-                 (start + 1) - solidsegs, 
+                 static_cast<int>((start + 1) - solidsegs),
                  (start + 1)->last);
       }
    }
@@ -1525,12 +1525,16 @@ static void R_AddLine(seg_t *line, bool dynasegs)
    // This fixes a very specific type of slime trail.
    // Unless we are viewing down into a portal...??
 
+   //
+   // IOANCH 20160120: ADD C_PORTAL AND F_PORTAL CHECK BECAUSE IT MIGHT HAVE
+   // BEEN REMOVED BY R_FAKEFLAT WITHOUT ALSO CANCELLING PS_PASSABLE!
+   //
    if(!seg.frontsec->f_slope && !seg.frontsec->c_slope &&
       seg.frontsec->ceilingheight <= seg.frontsec->floorheight &&
       !(seg.frontsec->intflags & SIF_SKY) &&
-      !((seg.frontsec->c_pflags & PS_PASSABLE && 
+      !((seg.frontsec->c_pflags & PS_PASSABLE && seg.frontsec->c_portal &&
         viewz > R_CPLink(seg.frontsec)->planez) || 
-        (seg.frontsec->f_pflags & PS_PASSABLE && 
+        (seg.frontsec->f_pflags & PS_PASSABLE && seg.frontsec->f_portal &&
         viewz < R_FPLink(seg.frontsec)->planez)))
       return;
 
@@ -2080,9 +2084,11 @@ static void R_Subsector(int num)
            &&  P_DistFromPlanef(&cam, &seg.frontsec->f_slope->of, 
                                 &seg.frontsec->f_slope->normalf) > 0.0f);
 
+   // ioanch 20160118: ADDED A f_portal existence check!
    seg.f_portal = seg.frontsec->f_pflags & PS_VISIBLE 
                && (!portalrender.active || portalrender.w->type != pw_ceiling)
-               && (visible || seg.frontsec->f_portal->type < R_TWOWAY)
+               && (visible || 
+               (seg.frontsec->f_portal && seg.frontsec->f_portal->type < R_TWOWAY))
                ? seg.frontsec->f_portal : NULL;
 
    // This gets a little convoluted if you try to do it on one inequality
@@ -2126,9 +2132,11 @@ static void R_Subsector(int num)
            &&  P_DistFromPlanef(&cam, &seg.frontsec->c_slope->of, 
                                 &seg.frontsec->c_slope->normalf) > 0.0f);
 
+   // ioanch 20160118: ADDED A c_portal existence check!
    seg.c_portal = seg.frontsec->c_pflags & PS_VISIBLE 
                && (!portalrender.active || portalrender.w->type != pw_floor)
-               && (visible || seg.frontsec->c_portal->type < R_TWOWAY) 
+               && (visible || 
+               (seg.frontsec->c_portal && seg.frontsec->c_portal->type < R_TWOWAY)) 
                ? seg.frontsec->c_portal : NULL;
 
    // This gets a little convoluted if you try to do it on one inequality

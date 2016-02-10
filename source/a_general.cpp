@@ -615,8 +615,13 @@ void A_GenTracer(actionargs_t *actionargs)
    if(!dest || dest->health <= 0)
       return;
 
+   // ioanch 20151230: portal-aware
+   fixed_t dx = getThingX(actor, dest);
+   fixed_t dy = getThingY(actor, dest);
+   fixed_t dz = getThingZ(actor, dest);
+
    // change angle
-   exact = P_PointToAngle(actor->x, actor->y, dest->x, dest->y);
+   exact = P_PointToAngle(actor->x, actor->y, dx, dy);
 
    if(exact != actor->angle)
    {
@@ -639,14 +644,14 @@ void A_GenTracer(actionargs_t *actionargs)
    actor->momy = FixedMul(actor->info->speed, finesine[exact]);
 
    // change slope
-   dist = P_AproxDistance(dest->x - actor->x, dest->y - actor->y);
+   dist = P_AproxDistance(dx - actor->x, dy - actor->y);
    
    dist = dist / actor->info->speed;
 
    if(dist < 1)
       dist = 1;
 
-   slope = (dest->z + 40*FRACUNIT - actor->z) / dist;
+   slope = (dz + 40*FRACUNIT - actor->z) / dist;
    
    if(slope < actor->momz)
       actor->momz -= FRACUNIT/8;

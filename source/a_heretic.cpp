@@ -212,7 +212,12 @@ void P_HticTracer(Mobj *actor, angle_t threshold, angle_t maxturn)
    if(!dest || dest->health <= 0)
       return;
 
-   exact = P_PointToAngle(actor->x, actor->y, dest->x, dest->y);
+   // ioanch 20151230: portal aware
+   fixed_t dx = getThingX(actor, dest);
+   fixed_t dy = getThingY(actor, dest);
+   fixed_t dz = getThingZ(actor, dest);
+
+   exact = P_PointToAngle(actor->x, actor->y, dx, dy);
 
    if(exact > actor->angle)
    {
@@ -252,11 +257,11 @@ void P_HticTracer(Mobj *actor, angle_t threshold, angle_t maxturn)
    actor->momy = FixedMul(actor->info->speed, finesine[diff]);
 
    // adjust z only when significant height difference exists
-   if(actor->z + actor->height < dest->z ||
-      dest->z  + dest->height  < actor->z)
+   if(actor->z + actor->height < dz ||
+      dz  + dest->height  < actor->z)
    {
       // directly from above
-      dist = P_AproxDistance(dest->x - actor->x, dest->y - actor->y);
+      dist = P_AproxDistance(dx - actor->x, dy - actor->y);
       
       dist = dist / actor->info->speed;
       
@@ -265,7 +270,7 @@ void P_HticTracer(Mobj *actor, angle_t threshold, angle_t maxturn)
 
       // momentum is set to equal slope rather than having some
       // added to it
-      actor->momz = (dest->z - actor->z) / dist;
+      actor->momz = (dz - actor->z) / dist;
    }
 }
 

@@ -87,20 +87,20 @@ struct intercept_t
 typedef bool (*traverser_t)(intercept_t *in);
 
 fixed_t P_AproxDistance(fixed_t dx, fixed_t dy);
-int     P_PointOnLineSide(fixed_t x, fixed_t y, line_t *line);
-int     P_PointOnDivlineSide(fixed_t x, fixed_t y, divline_t *line);
-void    P_MakeDivline(line_t *li, divline_t *dl);
-fixed_t P_InterceptVector(divline_t *v2, divline_t *v1);
-int     P_BoxOnLineSide(fixed_t *tmbox, line_t *ld);
+int     P_PointOnLineSide(fixed_t x, fixed_t y, const line_t *line);
+int     P_PointOnDivlineSide(fixed_t x, fixed_t y, const divline_t *line);
+void    P_MakeDivline(const line_t *li, divline_t *dl);
+fixed_t P_InterceptVector(const divline_t *v2, const divline_t *v1);
+int     P_BoxOnLineSide(const fixed_t *tmbox, const line_t *ld);
 
 //SoM 9/2/02: added mo parameter for 3dside clipping
-void    P_LineOpening (line_t *linedef, Mobj *mo);
+void    P_LineOpening (const line_t *linedef, const Mobj *mo);
 
 void P_UnsetThingPosition(Mobj *thing);
 void P_SetThingPosition(Mobj *thing);
 bool P_BlockLinesIterator (int x, int y, bool func(line_t *));
 bool P_BlockThingsIterator(int x, int y, bool func(Mobj *));
-bool ThingIsOnLine(Mobj *t, line_t *l);  // killough 3/15/98
+bool ThingIsOnLine(const Mobj *t, const line_t *l);  // killough 3/15/98
 bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
                     int flags, traverser_t trav);
 

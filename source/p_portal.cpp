@@ -31,6 +31,7 @@
 #include "doomstat.h"
 #include "p_chase.h"
 #include "p_map.h"
+#include "p_maputl.h"   // ioanch
 #include "p_portal.h"
 #include "p_setup.h"
 #include "p_user.h"
@@ -522,6 +523,8 @@ static void P_GlobalPortalStateCheck()
 // types and may therefore need to be subject to differing clipping behaviors,
 // such as disabling certain short circuit checks.
 //
+// ioanch 20151228: also flag for floor and ceiling portals
+//
 static void P_buildPortalMap()
 {
    for(int y = 0; y < bmapheight; y++)
@@ -538,10 +541,36 @@ static void P_buildPortalMap()
          // skip 0 delimiter
          ++list;
 
-         for(int *tmplist = list; *tmplist != -1; tmplist++)
+         // ioanch: also check sector blockmaps
+         int *tmplist = list;
+         if(*tmplist == -1)   // empty blockmap
          {
-            if(lines[*tmplist].pflags & PS_PASSABLE)
+            // ioanch: in case of no lines in blockmap, determine the sector
+            // by looking in the centre
+            const sector_t *sector = R_PointInSubsector(
+               ::bmaporgx + (x << MAPBLOCKSHIFT) + (MAPBLOCKSHIFT / 2),
+               ::bmaporgy + (y << MAPBLOCKSHIFT) + (MAPBLOCKSHIFT / 2))->sector;
+
+            if(sector->c_pflags & PS_PASSABLE)
+               portalmap[y * bmapwidth + x] |= PMF_CEILING;
+            if(sector->f_pflags & PS_PASSABLE)
+               portalmap[y * bmapwidth + x] |= PMF_FLOOR;
+         }
+         else for(; *tmplist != -1; tmplist++)
+         {
+            const line_t &li = lines[*tmplist];
+            if(li.pflags & PS_PASSABLE)
                portalmap[y * bmapwidth + x] |= PMF_LINE;
+            if(li.frontsector->c_pflags & PS_PASSABLE 
+               || (li.backsector && li.backsector->c_pflags & PS_PASSABLE))
+            {
+               portalmap[y * bmapwidth + x] |= PMF_CEILING;
+            }
+            if(li.frontsector->f_pflags & PS_PASSABLE
+               || (li.backsector && li.backsector->f_pflags & PS_PASSABLE))
+            {
+               portalmap[y * bmapwidth + x] |= PMF_FLOOR;
+            }
          }
       }
    }
@@ -689,7 +718,7 @@ void P_LinkRejectTable()
 //
 // EV_PortalTeleport
 //
-bool EV_PortalTeleport(Mobj *mo, linkoffset_t *link)
+bool EV_PortalTeleport(Mobj *mo, const linkoffset_t *link)
 {
    fixed_t moz = mo->z;
    fixed_t momx = mo->momx;
