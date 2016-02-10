@@ -184,5 +184,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/exec")
    add_subdirectory(exec)
 endif()
 
+if(EXISTS "${CMAKE_SOURCE_DIR}/util")
+   add_subdirectory(util)
+endif()
+
 ## EOF
 

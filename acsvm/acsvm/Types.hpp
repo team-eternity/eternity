@@ -13,6 +13,7 @@
 #ifndef ACSVM__Types_H__
 #define ACSVM__Types_H__
 
+#include <cstddef>
 #include <cstdint>
 
 

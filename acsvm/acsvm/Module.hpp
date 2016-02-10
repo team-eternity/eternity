@@ -65,7 +65,7 @@ namespace ACSVM
    class Module
    {
    public:
-      Module(Environment *env, ModuleName &&name);
+      Module(Environment *env, ModuleName const &name);
       ~Module();
 
       void readBytecode(Byte const *data, std::size_t size);

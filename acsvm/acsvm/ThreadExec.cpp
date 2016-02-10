@@ -621,7 +621,7 @@ namespace ACSVM
          NextCase();
 
       DeclCase(NegI):
-         dataStk[1] = -dataStk[1];
+         dataStk[1] = ~dataStk[1] + 1;
          NextCase();
 
       DeclCase(NotU):

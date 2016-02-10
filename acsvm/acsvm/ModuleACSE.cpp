@@ -21,6 +21,8 @@
 #include "Jump.hpp"
 #include "Script.hpp"
 
+#include <algorithm>
+
 
 //----------------------------------------------------------------------------|
 // Extern Functions                                                           |
@@ -507,8 +509,8 @@ namespace ACSVM
          Word nameInt = ReadLE2(data + iter); iter += 2;
          Word flags   = ReadLE2(data + iter); iter += 2;
 
-         bool flagNet    = flags & 0x0001;
-         bool flagClient = flags & 0x0002;
+         bool flagNet    = !!(flags & 0x0001);
+         bool flagClient = !!(flags & 0x0002);
 
          if(nameInt & 0x8000) nameInt |= 0xFFFF0000;
 
@@ -855,7 +857,7 @@ namespace ACSVM
       {
          if(i == size) throw ReadError();
 
-         Byte c = data[i] ^ (n / 2 + key);
+         Byte c = static_cast<Byte>(data[i] ^ (n / 2 + key));
          if(!c) break;
       }
 
@@ -863,7 +865,7 @@ namespace ACSVM
       std::unique_ptr<Byte[]> buf{new Byte[len]};
       for(std::size_t i = iter, n = 0;; ++i, ++n)
       {
-         Byte c = data[i] ^ (n / 2 + key);
+         Byte c = static_cast<Byte>(data[i] ^ (n / 2 + key));
          if(!(buf[n] = c)) break;
       }
 

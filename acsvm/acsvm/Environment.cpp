@@ -67,11 +67,11 @@ namespace ACSVM
       // Reserve index 0 as no function.
       std::vector<Function *> functionByIdx{nullptr};
 
-      HashMapBasic<FuncName, Word, FuncNameHash> functionByName{16, 16};
+      HashMapKeyExt<FuncName, Word, FuncNameHash> functionByName{16, 16};
 
-      HashMap<ModuleName, Module, &Module::hashLink, &Module::name> modules;
+      HashMapKeyMem<ModuleName, Module, &Module::name, &Module::hashLink> modules;
 
-      HashMap<Word, GlobalScope, &GlobalScope::hashLink, &GlobalScope::id> scopes;
+      HashMapKeyMem<Word, GlobalScope, &GlobalScope::id, &GlobalScope::hashLink> scopes;
 
       std::vector<CallFunc> tableCallFunc
       {
@@ -425,13 +425,13 @@ namespace ACSVM
    //
    // Environment::getModule
    //
-   Module *Environment::getModule(ModuleName &&name)
+   Module *Environment::getModule(ModuleName const &name)
    {
       auto module = pd->modules.find(name);
 
       if(!module)
       {
-         module = new Module{this, std::move(name)};
+         module = new Module{this, name};
          pd->modules.insert(module);
          loadModule(module);
       }

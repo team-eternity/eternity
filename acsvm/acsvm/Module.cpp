@@ -37,9 +37,9 @@ namespace ACSVM
    //
    // Module constructor
    //
-   Module::Module(Environment *env_, ModuleName &&name_) :
+   Module::Module(Environment *env_, ModuleName const &name_) :
       env{env_},
-      name{std::move(name_)},
+      name{name_},
 
       hashLink{this},
 

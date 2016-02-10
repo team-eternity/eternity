@@ -22,6 +22,7 @@
 #include "Script.hpp"
 #include "Thread.hpp"
 
+#include <algorithm>
 #include <unordered_set>
 #include <vector>
 
@@ -37,7 +38,7 @@ namespace ACSVM
    //
    struct GlobalScope::PrivData
    {
-      HashMap<Word, HubScope, &HubScope::hashLink, &HubScope::id> scopes;
+      HashMapKeyMem<Word, HubScope, &HubScope::id, &HubScope::hashLink> scopes;
    };
 
    //
@@ -45,7 +46,7 @@ namespace ACSVM
    //
    struct HubScope::PrivData
    {
-      HashMap<Word, MapScope, &MapScope::hashLink, &MapScope::id> scopes;
+      HashMapKeyMem<Word, MapScope, &MapScope::id, &MapScope::hashLink> scopes;
    };
 
    //
@@ -180,7 +181,7 @@ namespace ACSVM
 
       env->readScriptActions(in, scriptAction);
 
-      active = in.get();
+      active = in.get() != '\0';
 
       for(auto n = ReadVLN<std::size_t>(in); n--;)
          getHubScope(ReadVLN<Word>(in))->loadState(in);
@@ -366,7 +367,7 @@ namespace ACSVM
 
       env->readScriptActions(in, scriptAction);
 
-      active = in.get();
+      active = in.get() != '\0';
 
       for(auto n = ReadVLN<std::size_t>(in); n--;)
          getMapScope(ReadVLN<Word>(in))->loadState(in);
@@ -728,7 +729,7 @@ namespace ACSVM
       reset();
 
       env->readScriptActions(in, scriptAction);
-      active = in.get();
+      active = in.get() != '\0';
       loadModules(in);
       loadThreads(in);
    }

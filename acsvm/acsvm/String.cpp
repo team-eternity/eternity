@@ -32,8 +32,8 @@ namespace ACSVM
    {
       std::vector<Word> freeIdx;
 
-      HashMap<StringData, String, &String::link> stringByData{64, 64};
-      std::vector<String *>                      stringByIdx;
+      HashMapKeyObj<StringData, String, &String::link> stringByData{64, 64};
+      std::vector<String *>                            stringByIdx;
    };
 }
 

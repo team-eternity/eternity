@@ -27,42 +27,41 @@
 namespace ACSVM
 {
    //
-   // HashMapGetKey
+   // HashMapGetKeyMem
    //
-   // Helper class for HashMap.
+   // Used for HashMaps for which the Key is a member of T.
    //
-   template<typename Key, typename T, bool UseKeyMem>
-   struct HashMapGetKey
+   template<typename Key, typename T, Key const T::*KeyMem>
+   struct HashMapGetKeyMem
    {
-      template<Key const T::*KeyMem>
       static Key const &Get(T *obj) {return obj->*KeyMem;}
    };
 
    //
-   // HashMapGetKey<false>
+   // HashMapGetKeyObj
+   //
+   // Used for HashMaps for which the Key is a base class or the same as T.
    //
    template<typename Key, typename T>
-   struct HashMapGetKey<Key, T, false>
+   struct HashMapGetKeyObj
    {
-      template<Key const T::*KeyMem>
       static Key const &Get(T *obj) {return *obj;}
    };
 
    //
    // HashMap
    //
-   // Stores objects of type T that can be found by keys of type Key. If KeyMem
-   // is non-null, it designates a member of T that stores its key. Otherwise,
-   // T must be derived from Key.
+   // Stores objects of type T that can be found by keys of type Key.
+   //
+   // GetKeyMem must be HashMapGetKeyMem or HashMapGetKeyObj.
    //
    // This class does not manage the lifetimes of the contained objects, and
    // objects must be unlinked by the unlink function before being destructed.
    // Although an exception is made to the latter if the clear function is
    // called before any other.
    //
-   template<typename Key, typename T, ListLink<T> T::*LinkMem,
-      Key const T::*KeyMem = nullptr, typename Hash = std::hash<Key>,
-      typename KeyEqual = std::equal_to<Key>>
+   template<typename Key, typename T, typename GetKey, ListLink<T> T::*LinkMem,
+      typename Hash = std::hash<Key>, typename KeyEqual = std::equal_to<Key>>
    class HashMap
    {
    private:
@@ -152,7 +151,7 @@ namespace ACSVM
       {
          for(auto itr = chainV[hasher(key) % chainV.size()].next; itr->obj; itr = itr->next)
          {
-            if(equal(key, GetKey(itr->obj)))
+            if(equal(key, GetKey::Get(itr->obj)))
                return itr->obj;
          }
 
@@ -184,7 +183,7 @@ namespace ACSVM
             resize(chainV.size() + chainV.size() / 2 + growC);
 
          ++objC;
-         (obj->*LinkMem).insert(&chainV[hasher(GetKey(obj)) % chainV.size()]);
+         (obj->*LinkMem).insert(&chainV[hasher(GetKey::Get(obj)) % chainV.size()]);
       }
 
       //
@@ -200,7 +199,7 @@ namespace ACSVM
          for(auto &chain : oldChainV)
          {
             while(auto obj = chain.next->obj)
-               (obj->*LinkMem).relink(&chainV[hasher(GetKey(obj)) % chainV.size()]);
+               (obj->*LinkMem).relink(&chainV[hasher(GetKey::Get(obj)) % chainV.size()]);
          }
       }
 
@@ -223,16 +222,28 @@ namespace ACSVM
 
       size_type objC;
       size_type growC;
-
-
-      //
-      // GetKey
-      //
-      static Key const &GetKey(T *obj)
-      {
-         return HashMapGetKey<Key, T, !!KeyMem>::template Get<KeyMem>(obj);
-      }
    };
+
+   //
+   // HashMapKeyMem
+   //
+   // Convenience typedef for HashMapGetKeyMem-based HashMaps.
+   //
+   template<typename Key, typename T, Key const T::*KeyMem,
+      ListLink<T> T::*LinkMem, typename Hash = std::hash<Key>,
+      typename KeyEqual = std::equal_to<Key>>
+   using HashMapKeyMem = HashMap<Key, T, HashMapGetKeyMem<Key, T, KeyMem>,
+      LinkMem, Hash, KeyEqual>;
+
+   //
+   // HashMapKeyObj
+   //
+   // Convenience typedef for HashMapGetKeyObj-based HashMaps.
+   //
+   template<typename Key, typename T, ListLink<T> T::*LinkMem,
+      typename Hash = std::hash<Key>, typename KeyEqual = std::equal_to<Key>>
+   using HashMapKeyObj = HashMap<Key, T, HashMapGetKeyObj<Key, T>, LinkMem,
+      Hash, KeyEqual>;
 
    //
    // HashMapElem
@@ -253,14 +264,14 @@ namespace ACSVM
    };
 
    //
-   // HashMapBasic
+   // HashMapKeyExt
    //
    // Convenience typedef for HashMapElem-based HashMaps.
    //
    template<typename Key, typename T, typename Hash = std::hash<Key>,
       typename KeyEqual = std::equal_to<Key>>
-   using HashMapBasic = HashMap<Key, HashMapElem<Key, T>,
-      &HashMapElem<Key, T>::link, &HashMapElem<Key, T>::key, Hash, KeyEqual>;
+   using HashMapKeyExt = HashMapKeyMem<Key, HashMapElem<Key, T>,
+      &HashMapElem<Key, T>::key, &HashMapElem<Key, T>::link, Hash, KeyEqual>;
 }
 
 #endif//ACSVM__HashMap_H__

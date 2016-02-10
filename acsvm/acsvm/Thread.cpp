@@ -19,6 +19,8 @@
 #include "Scope.hpp"
 #include "Script.hpp"
 
+#include <algorithm>
+
 
 //----------------------------------------------------------------------------|
 // Extern Functions                                                           |

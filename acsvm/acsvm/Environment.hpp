@@ -82,7 +82,6 @@ namespace ACSVM
 
       // Gets the named module, loading it if needed.
       Module *getModule(ModuleName const &name);
-      Module *getModule(ModuleName &&name);
 
       ModuleName getModuleName(char const *str);
       virtual ModuleName getModuleName(char const *str, std::size_t len);
