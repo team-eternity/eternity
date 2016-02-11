@@ -333,6 +333,21 @@ struct UDMFSector
    int lightlevel;
    int special, id;
 
+   // new to Eternity
+   int damageamount;
+   int damageinterval;
+
+   // TODO: damage leaky suit
+
+   uint32_t flags;
+   const char *floorterrain;
+   const char *ceilingterrain;
+   double rotationfloor, rotationceiling;
+   double xpanningfloor, ypanningfloor, xpanningceiling, ypanningceiling;
+   const char *colormaptop, *colormapmid, *colormapbottom;
+   double alphafloor, alphaceiling;
+   const char *renderstylefloor, *renderstyleceiling;
+
    UDMFSector &makeDefault()
    {
       memset(checklist, 0, sizeof(checklist));
@@ -342,8 +357,39 @@ struct UDMFSector
       lightlevel = 160;
       special = id = 0;
 
+      // new to Eternity
+      damageamount = 0;
+      damageinterval = 0;
+
+      flags = 0;
+      floorterrain = "@flat";
+      ceilingterrain = "@flat";
+
+      rotationfloor = rotationceiling = 0;
+      xpanningfloor = ypanningfloor = xpanningceiling = ypanningceiling = 0;
+
+      colormapbottom = colormapmid = colormaptop = "@default";
+
+      alphafloor = alphaceiling = 1;
+      renderstylefloor = renderstyleceiling = "translucent";
+
       return *this;
    }
+};
+
+enum UDMFSectorFlag
+{
+   UDMFSectorFlag_Damage_EndGodMode,
+   UDMFSectorFlag_Damage_ExitLevel,
+   UDMFSectorFlag_DamageTerrainEffect,
+   UDMFSectorFlag_PFloor_Disabled,
+   UDMFSectorFlag_PCeiling_Disabled,
+   UDMFSectorFlag_PFloor_NoRender,
+   UDMFSectorFlag_PCeiling_NoRender,
+   UDMFSectorFlag_PFloor_NoPass,
+   UDMFSectorFlag_PCeiling_NoPass,
+   UDMFSectorFlag_PFloor_BlockSound,
+   UDMFSectorFlag_PCeiling_BlockSound,
 };
 
 static UDMFBinding kSectorBindings[] =
@@ -368,6 +414,64 @@ static UDMFBinding kSectorBindings[] =
 
    { "id", UDMFTokenType_Number,
       offsetof(UDMFSector, id), 0 },
+
+   // new to Eternity
+   { "damageamount", UDMFTokenType_Number, 
+      offsetof(UDMFSector, damageamount), 0 },
+   { "damageinterval", UDMFTokenType_Number,
+      offsetof(UDMFSector, damageinterval), 0 },
+   { "damage_endgodmode", UDMFTokenType_Identifier, 
+      offsetof(UDMFSector, flags), UDMFSectorFlag_Damage_EndGodMode },
+   { "damage_exitlevel", UDMFTokenType_Identifier,
+      offsetof(UDMFSector, flags), UDMFSectorFlag_Damage_ExitLevel },
+   { "damageterraineffect", UDMFTokenType_Identifier,
+      offsetof(UDMFSector, flags), UDMFSectorFlag_DamageTerrainEffect },
+   { "floorterrain", UDMFTokenType_String,
+      offsetof(UDMFSector, floorterrain) },
+   { "ceilingterrain", UDMFTokenType_String,
+      offsetof(UDMFSector, ceilingterrain) },
+   { "rotationfloor", UDMFTokenType_Number,
+      offsetof(UDMFSector, rotationfloor), 1 },
+   { "rotationceiling", UDMFTokenType_Number,
+      offsetof(UDMFSector, rotationceiling), 1 },
+   { "xpanningfloor", UDMFTokenType_Number,
+      offsetof(UDMFSector, xpanningfloor), 1 },
+   { "ypanningfloor", UDMFTokenType_Number,
+      offsetof(UDMFSector, ypanningfloor), 1 },
+   { "xpanningceiling", UDMFTokenType_Number,
+      offsetof(UDMFSector, xpanningceiling), 1 },
+   { "ypanningceiling", UDMFTokenType_Number,
+      offsetof(UDMFSector, ypanningceiling), 1 },
+   { "colormaptop", UDMFTokenType_String,
+      offsetof(UDMFSector, colormaptop) },
+   { "colormapmid", UDMFTokenType_String,
+      offsetof(UDMFSector, colormapmid) },
+   { "colormapbottom", UDMFTokenType_String,
+      offsetof(UDMFSector, colormapbottom) },
+   { "portalfloor_disabled", UDMFTokenType_Identifier,
+      offsetof(UDMFSector, flags), UDMFSectorFlag_PFloor_Disabled },
+   { "portalceiling_disabled", UDMFTokenType_Identifier,
+      offsetof(UDMFSector, flags), UDMFSectorFlag_PCeiling_Disabled },
+   { "portalfloor_norender", UDMFTokenType_Identifier,
+      offsetof(UDMFSector, flags), UDMFSectorFlag_PFloor_NoRender },
+   { "portalceiling_norender", UDMFTokenType_Identifier,
+      offsetof(UDMFSector, flags), UDMFSectorFlag_PCeiling_NoRender },
+   { "portalfloor_nopass", UDMFTokenType_Identifier,
+      offsetof(UDMFSector, flags), UDMFSectorFlag_PFloor_NoPass },
+   { "portalceiling_nopass", UDMFTokenType_Identifier,
+      offsetof(UDMFSector, flags), UDMFSectorFlag_PCeiling_NoPass },
+   { "portalfloor_blocksound", UDMFTokenType_Identifier,
+      offsetof(UDMFSector, flags), UDMFSectorFlag_PFloor_BlockSound },
+   { "portalceiling_blocksound", UDMFTokenType_Identifier,
+      offsetof(UDMFSector, flags), UDMFSectorFlag_PCeiling_BlockSound },
+   { "alphafloor", UDMFTokenType_Number,
+      offsetof(UDMFSector, alphafloor), 1 },
+   { "alphaceiling", UDMFTokenType_Number,
+      offsetof(UDMFSector, alphaceiling), 1 },
+   { "renderstylefloor", UDMFTokenType_String,
+      offsetof(UDMFSector, renderstylefloor) },
+   { "renderstyleceiling", UDMFTokenType_String,
+      offsetof(UDMFSector, renderstyleceiling) },
 };
 
 static EHashTable<UDMFBinding, ENCStringHashKey,
