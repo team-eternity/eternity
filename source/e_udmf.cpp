@@ -108,7 +108,7 @@ struct UDMFLinedef
 
    // new to Eternity
    double alpha;
-   char renderstyle[sizeof("translucent")];
+   const char *renderstyle;
 
    UDMFLinedef &makeDefault()
    {
@@ -127,7 +127,7 @@ struct UDMFLinedef
       sidefront = -1;
       sideback = -1;
       alpha = 1;
-      strcpy(renderstyle, "translucent");
+      renderstyle = "translucent";
       return *this;
    }
 };
@@ -230,8 +230,7 @@ static UDMFBinding kLinedefBindings[] =
    { "firstsideonly", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
       UDMFLinedefFlag_FirstSideOnly },
    { "alpha", UDMFTokenType_Number, offsetof(UDMFLinedef, alpha), 1 },
-   { "renderstyle", UDMFTokenType_String, offsetof(UDMFLinedef, renderstyle[0]), 
-      sizeof(((UDMFLinedef*)nullptr)->renderstyle) - 1 },
+   { "renderstyle", UDMFTokenType_String, offsetof(UDMFLinedef, renderstyle) },
    { "blockeverything", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
       UDMFLinedefFlag_BlockEverything },
    { "zoneboundary", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
@@ -250,9 +249,9 @@ struct UDMFSidedef
       BASE, Sector, NUM
    };
    byte checklist[NUM - 1];
-   char texturetop[9];
-   char texturebottom[9];
-   char texturemiddle[9];
+   const char *texturetop;
+   const char *texturebottom;
+   const char *texturemiddle;
    int offsetx;
    int offsety;
    int sector;
@@ -260,12 +259,9 @@ struct UDMFSidedef
    UDMFSidedef &makeDefault()
    {
       memset(checklist, 0, sizeof(checklist));
-      texturetop[0] = '-';
-      texturetop[1] = texturetop[8] = 0;
-      texturebottom[0] = '-';
-      texturebottom[1] = texturebottom[8] = 0;
-      texturemiddle[0] = '-';
-      texturemiddle[1] = texturemiddle[8] = 0;
+      texturetop = "-";
+      texturebottom = "-";
+      texturemiddle = "-";
       offsetx = offsety = 0;
       sector = -1;
 
@@ -275,14 +271,14 @@ struct UDMFSidedef
 
 static UDMFBinding kSidedefBindings[] =
 {
-   { "texturetop", UDMFTokenType_String,
-      offsetof(UDMFSidedef, texturetop[0]), 8 },
+   { "texturetop", UDMFTokenType_String, 
+      offsetof(UDMFSidedef, texturetop) },
 
    { "texturebottom", UDMFTokenType_String,
-      offsetof(UDMFSidedef, texturebottom[0]), 8 },
+      offsetof(UDMFSidedef, texturebottom) },
 
    { "texturemiddle", UDMFTokenType_String,
-      offsetof(UDMFSidedef, texturemiddle[0]), 8 },
+      offsetof(UDMFSidedef, texturemiddle) },
 
    { "offsetx", UDMFTokenType_Number,
       offsetof(UDMFSidedef, offsetx), 0 },
@@ -332,7 +328,7 @@ struct UDMFSector
    };
 
    byte checklist[NUM - 1];
-   char texturefloor[9], textureceiling[9];
+   const char *texturefloor, *textureceiling;
    int heightfloor, heightceiling;
    int lightlevel;
    int special, id;
@@ -340,8 +336,8 @@ struct UDMFSector
    UDMFSector &makeDefault()
    {
       memset(checklist, 0, sizeof(checklist));
-      texturefloor[0] = textureceiling[0] = 0;
-      texturefloor[8] = textureceiling[8] = 0;
+      texturefloor = "";
+      textureceiling = "";
       heightfloor = heightceiling = 0;
       lightlevel = 160;
       special = id = 0;
@@ -353,10 +349,10 @@ struct UDMFSector
 static UDMFBinding kSectorBindings[] =
 {
    { "texturefloor", UDMFTokenType_String,
-      offsetof(UDMFSector, texturefloor[0]), 8, UDMFSector::Texturefloor },
+      offsetof(UDMFSector, texturefloor), 0, UDMFSector::Texturefloor },
 
    { "textureceiling", UDMFTokenType_String,
-      offsetof(UDMFSector, textureceiling[0]), 8, UDMFSector::Textureceiling },
+      offsetof(UDMFSector, textureceiling), 0, UDMFSector::Textureceiling },
 
    { "heightfloor", UDMFTokenType_Number,
       offsetof(UDMFSector, heightfloor), 0 },
@@ -1236,8 +1232,8 @@ void UDMFParser::handleLocalAssignment() const
          }
          break;
       case UDMFTokenType_String:
-         strncpy(reinterpret_cast<char *>(mCurrentNewItem + binding->offset), 
-            mLocalValue.data, binding->extra);
+         *reinterpret_cast<const char **>(mCurrentNewItem + binding->offset) =
+            mLocalValue.data;
          break;
       default:
          break;
