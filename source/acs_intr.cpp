@@ -369,7 +369,7 @@ static int32_t ACS_getLevelVar(uint32_t var)
    {
    case ACS_LEVELVAR_ParTime:        return LevelInfo.partime;
    case ACS_LEVELVAR_ClusterNumber:  return 0;
-   case ACS_LEVELVAR_LevelNumber:    return 0;
+   case ACS_LEVELVAR_LevelNumber:    return gamemap;
    case ACS_LEVELVAR_TotalSecrets:   return wminfo.maxsecret;
    case ACS_LEVELVAR_FoundSecrets:   return players[consoleplayer].secretcount;
    case ACS_LEVELVAR_TotalItems:     return wminfo.maxitems;
