@@ -303,6 +303,10 @@ static void ACS_runOpenScript(ACSVM *vm, ACSScript *acs, Mobj *trigger)
    // open scripts wait one second before running
    if(!trigger && LevelInfo.acsOpenDelay)
       newScript->delay = TICRATE;
+   else
+      // wait a tic, otherwise the script runs during screen wipe
+      // FIXME: Doesn't work if wipes happening while wiping (like idclevving before a wipe finishes)
+      newScript->delay = 1;
 
    newScript->trigger = trigger;
 
