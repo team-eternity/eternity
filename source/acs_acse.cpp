@@ -82,6 +82,7 @@ static acs_stype_t ACS_getScriptTypeACSE(uint16_t type)
    default:
    case  0: return ACS_STYPE_CLOSED;
    case  1: return ACS_STYPE_OPEN;
+   case  4: return ACS_STYPE_ENTER;
    }
 }
 

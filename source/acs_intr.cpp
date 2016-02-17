@@ -296,12 +296,15 @@ static void ACS_stopScript(ACSThinker *thread)
 // Starts an open script (a script indicated to start at the beginning of
 // the level).
 //
-static void ACS_runOpenScript(ACSVM *vm, ACSScript *acs)
+static void ACS_runOpenScript(ACSVM *vm, ACSScript *acs, Mobj *trigger)
 {
    ACSThinker *newScript = new ACSThinker;
 
    // open scripts wait one second before running
-   newScript->delay = TICRATE;
+   if(!trigger && LevelInfo.acsOpenDelay)
+      newScript->delay = TICRATE;
+
+   newScript->trigger = trigger;
 
    // set ip to entry point
    newScript->ip          = acs->codePtr;
@@ -369,7 +372,7 @@ static int32_t ACS_getLevelVar(uint32_t var)
    {
    case ACS_LEVELVAR_ParTime:        return LevelInfo.partime;
    case ACS_LEVELVAR_ClusterNumber:  return 0;
-   case ACS_LEVELVAR_LevelNumber:    return 0;
+   case ACS_LEVELVAR_LevelNumber:    return gamemap;
    case ACS_LEVELVAR_TotalSecrets:   return wminfo.maxsecret;
    case ACS_LEVELVAR_FoundSecrets:   return players[consoleplayer].secretcount;
    case ACS_LEVELVAR_TotalItems:     return wminfo.maxitems;
@@ -1924,7 +1927,16 @@ void ACS_LoadScript(ACSVM *vm, WadDirectory *dir, int lump)
    for(ACSScript *itr = vm->scripts, *end = itr + vm->numScripts; itr != end; ++itr)
    {
       if(itr->type == ACS_STYPE_OPEN)
-         ACS_runOpenScript(vm, itr);
+         ACS_runOpenScript(vm, itr, NULL);
+
+      else if(itr->type == ACS_STYPE_ENTER)
+      {
+         for(int pnum = 0; pnum != MAXPLAYERS; ++pnum)
+         {
+            if(playeringame[pnum])
+               ACS_runOpenScript(vm, itr, players[pnum].mo);
+         }
+      }
    }
 }
 
