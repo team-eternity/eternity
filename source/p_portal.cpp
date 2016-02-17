@@ -1034,18 +1034,10 @@ v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy, int
 
    // number should be as large as possible to prevent accidental exits on valid
    // hyperdetailed maps, but low enough to release the game on time.
-   int recprotection = 100000;
-   
-   // keep track of source coordinates. If any of them is repeated, then we have 
-   // an infinite loop
-   PODCollection<v2fixed_t> prevcoords;
+   int recprotection = 32768;
    
    do
    {
-      for(v2fixed_t prev : prevcoords)
-         if(prev == cur)  // exit if any previous one is found
-            break;
-      prevcoords.add(cur);
       
       res = CAM_PathTraverse(cur, fin, CAM_ADDLINES | CAM_REQUIRELINEPORTALS, 
                              [&cur, &fin, group](const intercept_t *in, 
@@ -1063,26 +1055,23 @@ v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy, int
             return true;
 
          // must be a valid portal line
-         int fromid = line->portal->data.link.fromid;
-         int toid = line->portal->data.link.toid;
-         if(fromid == toid)
+         const linkdata_t &link = line->portal->data.link;
+         // FIXME: does this really happen?
+         if(link.fromid == link.toid || (!link.deltax && !link.deltay))
             return true;
 
          // must face the user
          if(P_PointOnLineSide(trace.x, trace.y, line) == 1)
             return true;
 
-         // link must be valid
-         const linkoffset_t *link = P_GetLinkIfExists(fromid, toid);
-         if(!link)
-            return true;
-
          // update the fields
-         cur.x += FixedMul(trace.dx, in->frac) + link->x;
-         cur.y += FixedMul(trace.dy, in->frac) + link->y;
-         fin += *link;
+         cur.x += FixedMul(trace.dx, in->frac) + link.deltax;
+         cur.y += FixedMul(trace.dy, in->frac) + link.deltay;
+         // deltaz doesn't matter because we're not using Z here
+         fin.x += link.deltax;
+         fin.y += link.deltay;
          if(group)
-            *group = toid;
+            *group = link.toid;
 
          return false;
       });
