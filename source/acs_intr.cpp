@@ -301,7 +301,9 @@ static void ACS_runOpenScript(ACSVM *vm, ACSScript *acs, Mobj *trigger)
    ACSThinker *newScript = new ACSThinker;
 
    // open scripts wait one second before running
-   newScript->delay   = TICRATE;
+   if(!trigger && LevelInfo.acsOpenDelay)
+      newScript->delay = TICRATE;
+
    newScript->trigger = trigger;
 
    // set ip to entry point
