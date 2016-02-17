@@ -1288,39 +1288,37 @@ sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling,
       return sector; // just return the current sector in this case
    }
 
-   bool *groupvisit = ecalloc(bool *, numgroups, sizeof(bool));
-   
    auto pflags = ceiling ? &sector_t::c_pflags : &sector_t::f_pflags;
    auto portal = ceiling ? &sector_t::c_portal : &sector_t::f_portal;
    
-   int loopprotection = 100000;
+   int loopprotection = 32768;
       
    while(sector->*pflags & PS_PASSABLE && loopprotection--)
    {
-      groupvisit[sector->groupid] = true;
-      const linkoffset_t *link =
-         P_GetLinkOffset(sector->groupid, (sector->*portal)->data.link.toid);
+      const linkdata_t &link = (sector->*portal)->data.link;
 
-      if(!link->x && !link->y)   // if link happens to be 0
+      // Also quit early if the planez is obscured by a dynamic horizontal plane
+      // or if deltax and deltay are somehow zero
+      if((ceiling ? sector->ceilingheight < link.planez
+                  :   sector->floorheight > link.planez) ||
+                          (!link.deltax && !link.deltay))
       {
-         efree(groupvisit);
          return sector;
       }
+
+      // adding deltaz doesn't matter because a sector portal MUST be in a
+      // different location
       
       // move into the new sector
-      x += link->x;
-      y += link->y;
+      x += link.deltax;
+      y += link.deltay;
       sector = R_PointInSubsector(x, y)->sector;
-      if(groupvisit[sector->groupid])
-      {
-         break;   // erroneous case, so quit
-      }
+
    }
    
    if(loopprotection < 0)
       C_Printf("Warning: P_ExtremeSectorAtPoint loop");
    
-   efree(groupvisit);
    return sector;
 }
 
