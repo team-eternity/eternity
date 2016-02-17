@@ -239,6 +239,22 @@ namespace ACSVM
    }
 
    //
+   // Environment::countActiveThread
+   //
+   std::size_t Environment::countActiveThread() const
+   {
+      std::size_t n = 0;
+
+      for(auto &scope : pd->scopes)
+      {
+         if(scope.active)
+            n += scope.countActiveThread();
+      }
+
+      return n;
+   }
+
+   //
    // Environment::deferAction
    //
    void Environment::deferAction(ScriptAction &&action)

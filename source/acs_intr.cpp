@@ -1,7 +1,7 @@
 // Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
-// Copyright(C) 2015 David Hill, James Haley, et al.
+// Copyright(C) 2016 David Hill, James Haley, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -55,14 +55,14 @@
 // need wad iterators
 #include "w_iterator.h"
 
-#include "acsvm/Action.hpp"
-#include "acsvm/BinaryIO.hpp"
-#include "acsvm/Code.hpp"
-#include "acsvm/CodeData.hpp"
-#include "acsvm/Error.hpp"
-#include "acsvm/Module.hpp"
-#include "acsvm/Scope.hpp"
-#include "acsvm/Script.hpp"
+#include "ACSVM/Action.hpp"
+#include "ACSVM/BinaryIO.hpp"
+#include "ACSVM/Code.hpp"
+#include "ACSVM/CodeData.hpp"
+#include "ACSVM/Error.hpp"
+#include "ACSVM/Module.hpp"
+#include "ACSVM/Scope.hpp"
+#include "ACSVM/Script.hpp"
 
 
 //

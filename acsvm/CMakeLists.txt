@@ -174,18 +174,18 @@ include_directories(.)
 ## Targets                                                                    |
 ##
 
-add_subdirectory(acsvm)
+add_subdirectory(ACSVM)
 
-if(EXISTS "${CMAKE_SOURCE_DIR}/capi")
-   add_subdirectory(capi)
+if(EXISTS "${CMAKE_SOURCE_DIR}/CAPI")
+   add_subdirectory(CAPI)
 endif()
 
-if(EXISTS "${CMAKE_SOURCE_DIR}/exec")
-   add_subdirectory(exec)
+if(EXISTS "${CMAKE_SOURCE_DIR}/Exec")
+   add_subdirectory(Exec)
 endif()
 
-if(EXISTS "${CMAKE_SOURCE_DIR}/util")
-   add_subdirectory(util)
+if(EXISTS "${CMAKE_SOURCE_DIR}/Util")
+   add_subdirectory(Util)
 endif()
 
 ## EOF

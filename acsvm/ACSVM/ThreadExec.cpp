@@ -634,9 +634,20 @@ namespace ACSVM
       goto exec_stop;
 
    exec_intr:
-      // Execution interrupted, check for termination condition.
-      if(state == ThreadState::Running && !delay)
-         NextCase();
+      // Execution interrupted, check execution state.
+      switch(state.state)
+      {
+      case ThreadState::Running:
+         if(!delay)
+            NextCase();
+         break;
+
+      case ThreadState::Stopped:
+         goto thread_stop;
+
+      default:
+         break;
+      }
 
    exec_stop:;
    }

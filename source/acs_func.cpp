@@ -1,7 +1,7 @@
 // Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
-// Copyright(C) 2015 James Haley, David Hill, et al.
+// Copyright(C) 2016 James Haley, David Hill, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -62,8 +62,8 @@
 #include "v_misc.h"
 #include "doomstat.h"
 
-#include "acsvm/Scope.hpp"
-#include "acsvm/Thread.hpp"
+#include "ACSVM/Scope.hpp"
+#include "ACSVM/Thread.hpp"
 
 
 //=============================================================================

@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2016 David Hill
 //
 // See COPYING for license information.
 //
@@ -38,6 +38,8 @@ namespace ACSVM
       GlobalScope(GlobalScope const &) = delete;
       GlobalScope(Environment *env, Word id);
       ~GlobalScope();
+
+      std::size_t countActiveThread() const;
 
       void exec();
 
@@ -89,6 +91,8 @@ namespace ACSVM
       HubScope(HubScope const &) = delete;
       HubScope(GlobalScope *global, Word id);
       ~HubScope();
+
+      std::size_t countActiveThread() const;
 
       void exec();
 
@@ -166,6 +170,8 @@ namespace ACSVM
 
       void addModules(Module *const *moduleV, std::size_t moduleC);
 
+      std::size_t countActiveThread() const;
+
       void exec();
 
       Script *findScript(ScriptName name);
@@ -201,6 +207,7 @@ namespace ACSVM
       Word scriptStartResult(Script *script, ScriptStartInfo const &info);
       Word scriptStartResult(ScriptName name, ScriptStartInfo const &info);
       Word scriptStartType(ScriptType type, ScriptStartInfo const &info);
+      Word scriptStartTypeForced(ScriptType type, ScriptStartInfo const &info);
       bool scriptStop(Script *script);
       bool scriptStop(ScriptName name, ScopeID scope);
 

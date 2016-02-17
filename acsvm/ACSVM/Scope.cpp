@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2016 David Hill
 //
 // See COPYING for license information.
 //
@@ -106,6 +106,22 @@ namespace ACSVM
    {
       reset();
       delete pd;
+   }
+
+   //
+   // GlobalScope::countActiveThread
+   //
+   std::size_t GlobalScope::countActiveThread() const
+   {
+      std::size_t n = 0;
+
+      for(auto &scope : pd->scopes)
+      {
+         if(scope.active)
+            n += scope.countActiveThread();
+      }
+
+      return n;
    }
 
    //
@@ -292,6 +308,22 @@ namespace ACSVM
    {
       reset();
       delete pd;
+   }
+
+   //
+   // HubScope::countActiveThread
+   //
+   std::size_t HubScope::countActiveThread() const
+   {
+      std::size_t n = 0;
+
+      for(auto &scope : pd->scopes)
+      {
+         if(scope.active)
+            n += scope.countActiveThread();
+      }
+
+      return n;
    }
 
    //
@@ -562,6 +594,14 @@ namespace ACSVM
 
       for(auto &scope : pd->scopes)
          scope.val.import();
+   }
+
+   //
+   // MapScope::countActiveThread
+   //
+   std::size_t MapScope::countActiveThread() const
+   {
+      return threadActive.size();
    }
 
    //
@@ -998,6 +1038,22 @@ namespace ACSVM
    // MapScope::scriptStartType
    //
    Word MapScope::scriptStartType(ScriptType type, ScriptStartInfo const &info)
+   {
+      Word result = 0;
+
+      for(auto &script : pd->scriptThread)
+      {
+         if(script.key->type == type)
+            result += scriptStart(script.key, info);
+      }
+
+      return result;
+   }
+
+   //
+   // MapScope::scriptStartTypeForced
+   //
+   Word MapScope::scriptStartTypeForced(ScriptType type, ScriptStartInfo const &info)
    {
       Word result = 0;
 

@@ -52,6 +52,8 @@ namespace ACSVM
 
       void collectStrings();
 
+      std::size_t countActiveThread() const;
+
       void deferAction(ScriptAction &&action);
 
       virtual void exec();

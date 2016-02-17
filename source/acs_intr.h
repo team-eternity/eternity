@@ -1,7 +1,7 @@
 // Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
-// Copyright(C) 2015 David Hill, James Haley, et al.
+// Copyright(C) 2016 David Hill, James Haley, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -34,8 +34,8 @@
 #include "p_tick.h"
 #include "r_defs.h"
 
-#include "acsvm/Environment.hpp"
-#include "acsvm/Thread.hpp"
+#include "ACSVM/Environment.hpp"
+#include "ACSVM/Thread.hpp"
 
 class  qstring;
 class  Mobj;
