@@ -1370,6 +1370,9 @@ static void P_ClearLevelVars()
    LevelInfo.gravity         = DEFAULTGRAVITY;
    LevelInfo.acsScriptLump   = NULL;
    LevelInfo.extraData       = NULL;
+
+   // Hexen TODO: will be true for Hexen maps by default
+   LevelInfo.acsOpenDelay    = false;
    
    // Hexen TODO: will be true for Hexen maps by default
    LevelInfo.noAutoSequences = false;
@@ -1528,6 +1531,7 @@ struct levelvar_t
 
 static levelvar_t levelvars[]=
 {
+   LI_BOOLNF("acsopendelay",       acsOpenDelay),
    LI_STRING("acsscript",          acsScriptLump),
    LI_BOOLNF("allowexittags",      allowExitTags),
    LI_BOOLNF("allowsecrettags",    allowSecretTags),
