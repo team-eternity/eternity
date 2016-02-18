@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib", "zlib.vcxproj", "{EA
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libpng", "libpng.vcxproj", "{D431963B-F2D5-4BA6-9D01-4A942FC63E96}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "acsvm", "acsvm.vcxproj", "{EA0188E0-1F4E-490D-BD2C-C85D12B0F1E3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -31,6 +33,10 @@ Global
 		{D431963B-F2D5-4BA6-9D01-4A942FC63E96}.Debug|Win32.Build.0 = Debug|Win32
 		{D431963B-F2D5-4BA6-9D01-4A942FC63E96}.Release|Win32.ActiveCfg = Release|Win32
 		{D431963B-F2D5-4BA6-9D01-4A942FC63E96}.Release|Win32.Build.0 = Release|Win32
+        {EA0188E0-1F4E-490D-BD2C-C85D12B0F1E3}.Debug|Win32.ActiveCfg = Debug|Win32
+        {EA0188E0-1F4E-490D-BD2C-C85D12B0F1E3}.Debug|Win32.Build.0 = Debug|Win32
+        {EA0188E0-1F4E-490D-BD2C-C85D12B0F1E3}.Release|Win32.ActiveCfg = Release|Win32
+        {EA0188E0-1F4E-490D-BD2C-C85D12B0F1E3}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
