@@ -175,7 +175,9 @@ typedef struct maplinedefhexen_s maplinedefhexen_t;
 // haleyjd 01/22/11: internal line flags
 enum
 {
-   MLI_DYNASEGLINE = 0x01 // Consider only via dynasegs for rendering, etc.
+   MLI_DYNASEGLINE = 0x01, // Consider only via dynasegs for rendering, etc.
+   MLI_FLOORPORTALCOPIED = 0x02, // ioanch 20160219: for type 385
+   MLI_CEILINGPORTALCOPIED = 0x04, // ioanch 20160219: for type 385
 };
 
 // Sector definition, from editing.

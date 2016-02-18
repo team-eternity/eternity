@@ -2639,11 +2639,42 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          continue;
 
       int xferfunc = EV_StaticInitForSpecial(lines[s].special);
+
+      // ioanch 20161219: workaround to enable 385 to copy both floor and
+      // ceiling portals. It will NOT be needed or triggered if portal_both
+      // is used, just if portal_floor and portal_ceiling are successively
+      // encountered.
+      if(xferfunc == EV_STATIC_NULL)
+      {
+         if((lines[s].intflags & MLI_FLOORPORTALCOPIED &&
+            effects == portal_ceiling) ||
+            (lines[s].intflags & MLI_CEILINGPORTALCOPIED &&
+             effects == portal_floor))
+         {
+            xferfunc = EV_STATIC_PORTAL_APPLY_FRONTSECTOR;
+         }
+      }
       
       if(xferfunc == EV_STATIC_PORTAL_LINE)
+      {
          P_SetPortal(lines[s].frontsector, lines + s, portal, portal_lineonly);
+      }
       else if(xferfunc == EV_STATIC_PORTAL_APPLY_FRONTSECTOR)
+      {
          P_SetPortal(lines[s].frontsector, lines + s, portal, effects);
+
+         if(effects == portal_ceiling)
+            lines[s].intflags |= MLI_CEILINGPORTALCOPIED;
+         else if(effects == portal_floor)
+            lines[s].intflags |= MLI_FLOORPORTALCOPIED;
+
+         if(lines[s].intflags & MLI_CEILINGPORTALCOPIED &&
+            lines[s].intflags & MLI_FLOORPORTALCOPIED)
+         {
+            lines[s].intflags &= ~(MLI_FLOORPORTALCOPIED |
+                                   MLI_CEILINGPORTALCOPIED);
+         }
+      }
       else
          continue;
 
