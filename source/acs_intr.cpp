@@ -669,12 +669,34 @@ void ACS_LoadLevelScript(WadDirectory *dir, int lump)
    // Finish adding modules to map scope.
    ACSenv.map->addModules(&modules[0], modules.getLength());
 
-   // Start open scripts.
-   ACSenv.map->scriptStartType(ACSVM::ScriptType::Open, {});
+   // Start open and enter scripts.
+   {
+      ACSVM::MapScope::ScriptStartInfo scriptInfo;
+      ACSThreadInfo                    threadInfo;
 
-   // Set all started threads to delay for one second, as in Hexen.
-   for(auto &thread : ACSenv.map->threadActive)
-      thread.delay = TICRATE;
+      // Set initial thread delay.
+      scriptInfo.func = [](ACSVM::Thread *thread)
+      {
+         if(thread->script->type == ACSVM::ScriptType::Open && LevelInfo.acsOpenDelay)
+            thread->delay = TICRATE;
+         else
+            thread->delay = 1;
+      };
+
+      // Open scripts.
+      ACSenv.map->scriptStartType(ACSVM::ScriptType::Open, scriptInfo);
+
+      // Enter scripts.
+      for(int pnum = 0; pnum != MAXPLAYERS; ++pnum)
+      {
+         if(playeringame[pnum])
+         {
+            threadInfo.mo   = players[pnum].mo;
+            scriptInfo.info = &threadInfo;
+            ACSenv.map->scriptStartTypeForced(ACSVM::ScriptType::Enter, scriptInfo);
+         }
+      }
+   }
 }
 
 //
