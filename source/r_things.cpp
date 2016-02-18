@@ -1868,7 +1868,7 @@ inline static sector_t *R_addProjNode(Mobj *mobj, const linkdata_t *data,
 
    const linkoffset_t *link = P_GetLinkOffset(mobj->groupid, data->toid);
    if(!link->x && !link->y)
-      return nullptr;   // invalid 
+      return mobj->subsector->sector;   // invalid. Just return the same sector
    sector = R_PointInSubsector(mobj->x + link->x, mobj->y + link->y)->sector;
    if(!item)
    {
