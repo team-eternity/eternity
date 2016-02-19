@@ -1562,6 +1562,7 @@ public:
       fixed_t x, y, z;
       fixed_t origindist;
       int groupid;
+      int reclevel;
    };
 
    static void lineAttack(Mobj *source, angle_t angle, fixed_t distance, 
@@ -1619,7 +1620,7 @@ void ShootContext::lineAttack(Mobj *source, angle_t angle, fixed_t distance,
 bool ShootContext::checkShootFlatPortal(const sector_t *sidesector, 
                                         fixed_t infrac) const
 {
-   bool haveportal = false;
+   const linkdata_t *portaldata = nullptr;
    fixed_t pfrac = 0;
    fixed_t absratio = 0;
    int newfromid = R_NOGROUP;
@@ -1634,11 +1635,11 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
          pfrac = FixedDiv(planez - state.z, aimslope);
          absratio = FixedDiv(planez - state.z, z - state.z);
          z = planez;
-         haveportal = true;
+         portaldata = R_CPLink(sidesector);
          newfromid = sidesector->c_portal->data.link.toid;
       }
    }
-   if(!haveportal && sidesector->f_pflags & PS_PASSABLE)
+   if(!portaldata && sidesector->f_pflags & PS_PASSABLE)
    {
       // floor portal
       fixed_t planez = R_FPLink(sidesector)->planez;
@@ -1647,38 +1648,25 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
          pfrac = FixedDiv(planez - state.z, aimslope);
          absratio = FixedDiv(planez - state.z, z - state.z);
          z = planez;
-         haveportal = true;
+         portaldata = R_FPLink(sidesector);
          newfromid = sidesector->f_portal->data.link.toid;
       }
    }
-   if(haveportal)
+   if(portaldata)
    {
       // update x and y as well
       fixed_t x = state.x + FixedMul(cos, pfrac);
       fixed_t y = state.y + FixedMul(sin, pfrac);
-      if(newfromid == state.groupid)
+      if(newfromid == state.groupid || state.reclevel >= RECURSION_LIMIT)
          return false;
-
-      const ShootContext *prev = state.prev;
-      while(prev)
-      {
-         if(prev->state.groupid == newfromid)
-            return false;
-         prev = prev->state.prev;
-      }
-
-      const linkoffset_t *link = P_GetLinkIfExists(state.groupid, newfromid);
 
       // NOTE: for line attacks, sightzstart also moves!
       fixed_t dist = FixedMul(FixedMul(attackrange, infrac), absratio);
       fixed_t remdist = attackrange - dist;
 
-      if(link)
-      {
-         x += link->x;
-         y += link->y;
-         z += link->z;  // why not
-      }
+      x += portaldata->deltax;
+      y += portaldata->deltay;
+      z += portaldata->deltaz;
 
       State newstate(state);
       newstate.groupid = newfromid;
@@ -1687,6 +1675,7 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
       newstate.x = x;
       newstate.y = y;
       newstate.z = z;
+      newstate.reclevel++;
 
       lineAttack(thing, angle, remdist, aimslope, damage, &newstate);
 
@@ -1750,22 +1739,14 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
       if(context.shotCheck2SLine(li, lineside, in->frac))
       {
          // ioanch 20160101: line portal aware
-         if(li->portal && li->pflags & PS_PASSABLE)
+         if(li->pflags & PS_PASSABLE && lineside == 0)
          {
             int newfromid = li->portal->data.link.toid;
             if(newfromid == context.state.groupid)
                return true;
 
-            const ShootContext *prev = context.state.prev;
-            while(prev)
-            {
-               if(prev->state.groupid == newfromid)
-                  return true;
-               prev = prev->state.prev;
-            }
-
-            const linkoffset_t *link = P_GetLinkIfExists(context.state.groupid, 
-               newfromid);
+            if(context.state.reclevel >= RECURSION_LIMIT)
+               return true;
 
             // NOTE: for line attacks, sightzstart also moves!
             fixed_t x = trace.x + FixedMul(trace.dx, in->frac);
@@ -1775,13 +1756,12 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
             fixed_t dist =  FixedMul(context.attackrange, in->frac);
             fixed_t remdist = context.attackrange - dist;
 
-            if(link)
-            {
-               x += link->x;
-               y += link->y;
-               z += link->z;  // why not
-            }
-
+            const linkdata_t &data = li->portal->data.link;
+            
+            x += data.deltax;
+            y += data.deltay;
+            z += data.deltaz;  // why not
+            
             State newstate(context.state);
             newstate.groupid = newfromid;
             newstate.x = x;
@@ -1789,6 +1769,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
             newstate.z = z;
             newstate.prev = &context;
             newstate.origindist += dist;
+            ++newstate.reclevel;
 
             lineAttack(context.thing, context.angle, remdist, context.aimslope,
                context.damage, &newstate);
@@ -1948,6 +1929,7 @@ ShootContext::ShootContext(Mobj *source, angle_t inangle, fixed_t distance,
       state.groupid = source->groupid;
       state.prev = nullptr;
       state.origindist = 0;
+      state.reclevel = 0;
    }
 }
 
