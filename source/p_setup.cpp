@@ -2819,9 +2819,6 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    // haleyjd 01/05/14: create sector interpolation data
    P_CreateSectorInterps();
 
-   // ioanch 20160110: init sprite projection stuff
-   R_MapInitSpriteProj();
-
    P_LoadSideDefs(lumpnum + ML_SIDEDEFS); // killough 4/4/98
 
    // haleyjd 10/03/05: handle multiple map formats
