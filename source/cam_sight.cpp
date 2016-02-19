@@ -864,7 +864,8 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
       return false;  // stop
 
    // have we hit a portal line
-   if(li->pflags & PS_PASSABLE && P_PointOnLineSide(trace.x, trace.y, li) == 0)
+   if(li->pflags & PS_PASSABLE && P_PointOnLineSide(trace.x, trace.y, li) == 0 &&
+      in->frac > 0)
    {
       State state(context.state);
       state.originfrac = totalfrac;
@@ -1319,7 +1320,8 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata,
       if(context.state.topslope <= context.state.bottomslope)
          return false;
 
-      if(li->pflags & PS_PASSABLE && P_PointOnLineSide(trace.x, trace.y, li) == 0)
+      if(li->pflags & PS_PASSABLE && P_PointOnLineSide(trace.x, trace.y, li) == 0 &&
+         in->frac > 0)
       {
          State newState(context.state);
          newState.cx = trace.x + FixedMul(trace.dx, in->frac);
@@ -1739,7 +1741,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
       if(context.shotCheck2SLine(li, lineside, in->frac))
       {
          // ioanch 20160101: line portal aware
-         if(li->pflags & PS_PASSABLE && lineside == 0)
+         if(li->pflags & PS_PASSABLE && lineside == 0 && in->frac > 0)
          {
             int newfromid = li->portal->data.link.toid;
             if(newfromid == context.state.groupid)
@@ -1975,6 +1977,7 @@ public:
       const UseContext *prev;
       fixed_t attackrange;
       int groupid;
+      int reclevel;
    };
 
    static void useLines(const player_t *player, fixed_t x, fixed_t y,
@@ -2044,6 +2047,7 @@ UseContext::UseContext(const player_t *inplayer, const State *instate)
       state.attackrange = USERANGE;
       state.prev = nullptr;
       state.groupid = inplayer->mo->groupid;
+      state.reclevel = 0;
    }
 }
 
@@ -2089,34 +2093,24 @@ bool UseContext::useTraverse(const intercept_t *in, void *vcontext,
    }
 
    // ioanch 20160131: opportunity to pass through portals
-   if(li->pflags & PS_PASSABLE)
+   if(li->pflags & PS_PASSABLE && P_PointOnLineSide(trace.x, trace.y, li) == 0 && 
+      in->frac > 0)
    {
       int newfromid = li->portal->data.link.toid;
-      if(newfromid == context->state.groupid)
-         return true;
-
-      const UseContext *prev = context->state.prev;
-      while(prev)
+      if(newfromid == context->state.groupid || 
+         context->state.reclevel >= RECURSION_LIMIT)
       {
-         if(prev->state.groupid == newfromid)
-            return true;
-         prev = prev->state.prev;
+         return true;
       }
-
-      const linkoffset_t *link = P_GetLinkIfExists(context->state.groupid,
-         newfromid);
 
       State newState(context->state);
       newState.prev = context;
       newState.attackrange -= FixedMul(newState.attackrange, in->frac);
       newState.groupid = newfromid;
-      fixed_t x = trace.x + FixedMul(trace.dx, in->frac);
-      fixed_t y = trace.y + FixedMul(trace.dy, in->frac);
-      if(link)
-      {
-         x += link->x;
-         y += link->y;
-      }
+      newState.reclevel++;
+      fixed_t x = trace.x + FixedMul(trace.dx, in->frac) + li->portal->data.link.deltax;
+      fixed_t y = trace.y + FixedMul(trace.dy, in->frac) + li->portal->data.link.deltay;
+
       useLines(context->player, x, y, &newState);
       context->portalhit = true;
       return false;
