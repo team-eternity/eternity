@@ -90,6 +90,8 @@
 #define VALID_ISSET(set, i) ((set)[(i) >> 3] & (1 << ((i) & 7)))
 #define VALID_SET(set, i) ((set)[(i) >> 3] |= 1 << ((i) & 7))
 
+#define RECURSION_LIMIT 64
+
 //=============================================================================
 //
 // Structures
@@ -753,6 +755,7 @@ public:
    struct State
    {
       fixed_t originfrac, bottomslope, topslope;
+      int reclevel;
    };
 
    static bool checkSight(const camsightparams_t &inparams, const State *state);
@@ -765,7 +768,7 @@ private:
    bool checkPortalSector(const sector_t *sector, fixed_t totalfrac, 
       fixed_t partialfrac, const divline_t &trace) const;
    bool recurse(int groupid, fixed_t x, fixed_t y, const State &state,
-      bool *result) const;
+      bool *result, const linkdata_t &data) const;
 
    bool portalexit, portalresult;
    State state;
@@ -791,6 +794,7 @@ portalexit(false), portalresult(false), params(&inparams)
       state.originfrac = 0;
       state.bottomslope = params->tz - sightzstart;
       state.topslope = state.bottomslope + params->theight;
+      state.reclevel = 0;
    }
 
 }
@@ -853,7 +857,7 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
       return false;  // stop
 
    // have we hit a portal line
-   if(li->pflags & PS_PASSABLE)
+   if(li->pflags & PS_PASSABLE && P_PointOnLineSide(trace.x, trace.y, li) == 0)
    {
       State state(context.state);
       state.originfrac = totalfrac;
@@ -861,7 +865,7 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
          context.params->cx + FixedMul(trace.dx, in->frac),
          context.params->cy + FixedMul(trace.dy, in->frac),
          state,
-         &context.portalresult))
+         &context.portalresult, li->portal->data.link))
       {
          context.portalexit = true;
          return false;
@@ -931,9 +935,13 @@ bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
          newstate.bottomslope = newslope;
          newstate.topslope = state.topslope;
          newstate.originfrac = totalfrac;
+         newstate.reclevel = state.reclevel + 1;
 
-         if(recurse(newfromid, x, y, newstate, &result) && result)
+         if(recurse(newfromid, x, y, newstate, &result, *R_CPLink(sector)) && 
+            result)
+         {
             return true;
+         }
       }
    }
 
@@ -967,9 +975,13 @@ bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
          newstate.bottomslope = state.bottomslope;
          newstate.topslope = newslope;
          newstate.originfrac = totalfrac;
+         newstate.reclevel = state.reclevel + 1;
 
-         if(recurse(newfromid, x, y, newstate, &result) && result)
+         if(recurse(newfromid, x, y, newstate, &result, *R_FPLink(sector)) &&
+            result)
+         {
             return true;
+         }
       }
    }
    return false;
@@ -981,25 +993,19 @@ bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
 // If valid, starts a new lookup from below
 //
 bool CamContext::recurse(int newfromid, fixed_t x, fixed_t y, 
-                         const State &instate, bool *result) const
+                         const State &instate, bool *result, 
+                         const linkdata_t &data) const
 {
    if(newfromid == params->cgroupid)
       return false;   // not taking us anywhere...
 
-   const camsightparams_t *prev = params->prev;
-   while(prev)
-   {
-      if(prev->cgroupid == newfromid)
-         return false;
-      prev = prev->prev;
-   }
-
-   const linkoffset_t *link = P_GetLinkIfExists(params->cgroupid, newfromid);
+   if(instate.reclevel >= RECURSION_LIMIT)
+      return false;  // protection
 
    camsightparams_t params;
-   params.cx = x;
-   params.cy = y;
-   params.cz = this->params->cz;
+   params.cx = x + data.deltax;
+   params.cy = y + data.deltay;
+   params.cz = this->params->cz + data.deltaz;
    params.cheight = this->params->cheight;
    params.tx = this->params->tx;
    params.ty = this->params->ty;
@@ -1009,11 +1015,6 @@ bool CamContext::recurse(int newfromid, fixed_t x, fixed_t y,
    params.tgroupid = this->params->tgroupid;
    params.prev = this->params;
 
-   if(link)
-   {
-      params.cx += link->x;
-      params.cy += link->y;
-   }
    *result = checkSight(params, &instate);
    return true;
 }
