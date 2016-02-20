@@ -988,7 +988,14 @@ static MetaState *E_GetMetaState(mobjinfo_t *mi, const char *name)
 static void E_SetMetaState(mobjinfo_t *mi, state_t *state, const char *name)
 {
    if(state->index != NullStateNum)
-      E_AddMetaState(mi, state, name);
+   {
+      MetaState *ms;
+      
+      if((ms = mi->meta->getObjectKeyAndTypeEx<MetaState>(name)))
+         ms->state = state;
+      else
+         E_AddMetaState(mi, state, name);
+   }
    else
       E_RemoveMetaState(mi, name);      
 }
