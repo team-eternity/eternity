@@ -2962,6 +2962,43 @@ DEFINE_ACTION(EV_ActionThingDeactivate)
 }
 
 //
+// EV_ActionThrustThing
+//
+// Implements ThrustThing(angle, speed, reserved, tid)
+// * ExtraData: 422
+// * Hexen:     72
+//
+DEFINE_ACTION(EV_ActionThrustThing)
+{
+   return EV_ThrustThing(instance->actor, instance->args, instance->side);
+}
+
+//
+// EV_ActionThrustThingZ
+//
+// Implements ThrustThingZ(tid, speed, updown, setadd)
+// From ZDoom wiki documentation.
+// * ExtraData: 423
+// * Hexen:     128
+//
+DEFINE_ACTION(EV_ActionThrustThingZ)
+{
+   return EV_ThrustThingZ(instance->actor, instance->args);
+}
+
+//
+// EV_ActionDamageThing
+//
+// Implements DamageThing(damage, mod)
+// * ExtraData: 424
+// * Hexen:     73
+//
+DEFINE_ACTION(EV_ActionDamageThing)
+{
+   return EV_DamageThing(instance->actor, instance->args);
+}
+
+//
 // EV_ActionParamPlatPerpetualRaise
 //
 // Implements Plat_PerpetualRaise(tag, speed, delay)

@@ -1048,6 +1048,9 @@ PARAMLINE(ThingProjectile);
 PARAMLINE(ThingProjectileGravity);
 PARAMLINE(ThingActivate);
 PARAMLINE(ThingDeactivate);
+PARAMLINE(ThrustThing); // ioanch 20160104
+PARAMLINE(ThrustThingZ);
+PARAMLINE(DamageThing);
 PARAMLINE(ParamPlatPerpetualRaise);
 PARAMLINE(ParamPlatStop);
 PARAMLINE(ParamPlatDWUS);
@@ -1405,6 +1408,9 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(416, ParamFloorLowerToHighest,        "Floor_LowerToHighest")
    LINESPECNAMED(420, ACSExecuteWithResult,            "ACS_ExecuteWithResult")
    LINESPECNAMED(421, ThingChangeTID,                  "Thing_ChangeTID")
+   LINESPECNAMED(422, ThrustThing,                     "ThrustThing")   // ioanch 20160104
+   LINESPECNAMED(423, ThrustThingZ,                    "ThrustThingZ")
+   LINESPECNAMED(424, DamageThing,                     "DamageThing")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1499,6 +1505,8 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(67,  ParamFloorRaiseInstant,          "Floor_RaiseInstant")
    LINESPECNAMED(68,  ParamFloorMoveToValueTimes8,     "Floor_MoveToValueTimes8")
    LINESPECNAMED(69,  ParamCeilingMoveToValueTimes8,   "Ceiling_MoveToValueTimes8")
+   LINESPECNAMED(72,  ThrustThing,                     "ThrustThing")
+   LINESPECNAMED(73,  DamageThing,                     "DamageThing")
    LINESPECNAMED(75,  TeleportEndGame,                 "Teleport_EndGame")
    LINESPECNAMED(80,  ACSExecute,                      "ACS_Execute")
    LINESPECNAMED(81,  ACSSuspend,                      "ACS_Suspend")
@@ -1517,6 +1525,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(115, ParamLightFlicker,               "Light_Flicker")
    LINESPECNAMED(116, ParamLightStrobe,                "Light_Strobe")
    LINESPECNAMED(120, RadiusQuake,                     "Radius_Quake")
+   LINESPECNAMED(128, ThrustThingZ,                    "ThrustThingZ")
    LINESPECNAMED(130, ThingActivate,                   "Thing_Activate")
    LINESPECNAMED(131, ThingDeactivate,                 "Thing_Deactivate")
    LINESPECNAMED(134, ThingProjectile,                 "Thing_Projectile")

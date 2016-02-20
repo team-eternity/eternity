@@ -29,9 +29,11 @@
 #include "doomstat.h"
 #include "d_gi.h"
 #include "ev_specials.h"
+#include "p_inter.h" // ioanch 20160105: for damage
 #include "p_mobj.h"
 #include "p_map3d.h"
 #include "p_saveg.h"
+#include "p_setup.h" // ioanch 20160104: for level format
 #include "p_things.h"
 #include "a_small.h"
 #include "acs_intr.h"
@@ -228,6 +230,82 @@ int EV_ThingDeactivate(int tid)
    }
 
    return success;
+}
+
+//
+// EV_ThrustThing
+//
+// Implements ThrustThing(angle, speed, reserved, tid)
+//
+int EV_ThrustThing(Mobj *activator, const int *args, int side)
+{
+   // Hexen format maps cannot have ExtraData, and in Hexen activation is only
+   // done from the front side, so keep compatible with that. Otherwise, in
+   // ExtraData-possible maps and eventually UDMF, the author can choose.
+   bool compat = LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN;
+
+   // args[2] is reserved. In the ZDoom equivalent, it has something to do with
+   // setting huge speeds (> 30.0)
+
+   int success = 0;
+
+   // Either thrust if not compatible (i.e. modern) or only if the front
+   // side is touched (in Hexen). Back side will have no effect in plain Hexen
+   // maps.
+   if(!compat || !side)
+   {
+      Mobj *mobj = nullptr;
+
+      angle_t angle = args[0] * (ANG90 / 64);
+      fixed_t speed = args[1] << FRACBITS;
+
+      // tid argument is also in ZDoom
+      int tid = args[3];
+
+      while((mobj = P_FindMobjFromTID(tid, mobj, activator)))
+      {
+         P_ThrustMobj(mobj, angle, speed);
+         success = 1;
+      }
+   }
+   return success;
+}
+
+//
+// EV_ThrustThingZ
+//
+// Implements ThrustThingZ(tid, speed, updown, setadd)
+//
+int EV_ThrustThingZ(Mobj *activator, const int *args)
+{
+   int tid = args[0];
+   int speed = args[1] << (FRACBITS - 2);
+   int sign = args[2] != 0 ? -1 : 1;
+   bool add = args[3] != 0;
+
+   int success = 0;
+
+   Mobj *mobj = nullptr;
+   while((mobj = P_FindMobjFromTID(tid, mobj, activator)))
+   {
+      mobj->momz = (add ? mobj->momz : 0) + speed * sign;
+      success = 1;
+   }
+   return success;
+}
+
+//
+// EV_DamageThing
+//
+// Implements DamageThing(damage, mod)
+//
+int EV_DamageThing(Mobj *activator, const int *args)
+{
+   if(args[0])
+      P_DamageMobj(activator, nullptr, nullptr, args[0], args[1]);
+   else
+      P_DamageMobj(activator, nullptr, nullptr, 10000, args[1]);
+   return 1;
 }
 
 //=============================================================================
