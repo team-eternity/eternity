@@ -34,6 +34,7 @@
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_inter.h"
+#include "p_portal.h"   // ioanch 20160113
 #include "p_setup.h"
 #include "p_skin.h"
 #include "p_spec.h"
@@ -144,15 +145,13 @@ static bool PTR_AimTraverse(intercept_t *in)
 fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, int mask)
 {
    // ioanch 20151231: use new portal code
-   if(full_demo_version >= make_full_version(340, 47))
+   if(full_demo_version >= make_full_version(340, 47) &&
+      useportalgroups)
    {
-      camaimparams_t aimparams;
-      aimparams.prev = nullptr;
-      aimparams.set(t1, angle, distance, mask);
       clip.linetarget = nullptr;
       trace.attackrange = distance; // this needs to be set because P_SpawnPuff
                                     // depends on it
-      return CAM_AimLineAttack(aimparams, &clip.linetarget);
+      return CAM_AimLineAttack(t1, angle, distance, mask, &clip.linetarget);
    }
 
    fixed_t x2, y2;
@@ -549,11 +548,12 @@ void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance,
                   fixed_t slope, int damage, mobjinfo_t *puff)
 {
    // ioanch 20151231: use new portal code
-   if(full_demo_version >= make_full_version(340, 47))
+   if(full_demo_version >= make_full_version(340, 47) &&
+      useportalgroups)
    {
       trace.attackrange = distance; // this needs to be set because P_SpawnPuff
                                     // depends on it
-      CAM_LineAttack(t1, angle, distance, slope, damage, puff);
+      CAM_LineAttack(t1, angle, distance, slope, damage);
       return;
    }
 

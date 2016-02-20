@@ -390,7 +390,7 @@ static const char *cat_strs[NUMCATS] =
 
 static const char *val_strs[NUMCATS] =
 {
-   "James Haley\nStephen McGranahan\nCharles Gunyon\nDavid Hill\n",
+   "James Haley\nStephen McGranahan\nDavid Hill\nIoan Chera\n",
    
    FC_HI "SMMU" FC_NORMAL " by Simon Howard\n",
 
@@ -457,7 +457,7 @@ void MN_DrawCredits()
    }
 
    V_FontWriteText(menu_font_normal, 
-                   FC_ABSCENTER "Copyright 2014 Team Eternity et al.", 
+                   FC_ABSCENTER "Copyright 2016 Team Eternity et al.", 
                    0, y, &subscreen43);
 }
 

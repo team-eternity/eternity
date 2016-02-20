@@ -129,6 +129,7 @@ struct LevelInfo_t
    // attached scripts
    char *acsScriptLump;       // name of ACS script lump, for DOOM-format maps
    char *extraData;           // name of ExtraData lump
+   bool  acsOpenDelay;        // delay open scripts?
 
    // per-level sound replacements
    const char *sound_swtchn;  // switch on

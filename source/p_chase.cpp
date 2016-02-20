@@ -184,11 +184,11 @@ static void P_GetChasecamTarget()
    // ioanch 20160101: don't let P_AimLineAttack change global trace.attackrange
    fixed_t oldAttackRange = trace.attackrange;
    P_AimLineAttack(players[consoleplayer].mo, 0, MELEERANGE, 0);
-   trace.attackrange = oldAttackRange;
-
+   
    // check for intersections
    P_PathTraverse(playermobj->x, playermobj->y, targetx, targety,
                   PT_ADDLINES, PTR_chaseTraverse);
+   trace.attackrange = oldAttackRange;
 
    ss = R_PointInSubsector(targetx, targety);
    
