@@ -978,6 +978,21 @@ static MetaState *E_GetMetaState(mobjinfo_t *mi, const char *name)
    return ret;
 }
 
+//
+// E_SetMetaState
+//
+// If state is not the null state, set it as a metastate under the "name"
+// key. If state IS the null state, remove any such named metastate from the
+// mobjinfo.
+//
+static void E_SetMetaState(mobjinfo_t *mi, state_t *state, const char *name)
+{
+   if(state->index != NullStateNum)
+      E_AddMetaState(mi, state, name);
+   else
+      E_RemoveMetaState(mi, name);      
+}
+
 //=============================================================================
 //
 // MOD States
