@@ -458,7 +458,11 @@ void MetaVariant::setValue(const char *s, char **ret)
 {
    Super::setValue(s, ret);
    
-   switch(cachedType)
+   // force reinterpretation
+   varianttype_e oldType = cachedType;
+   cachedType = VARIANT_NONE;
+
+   switch(oldType)
    {
    case VARIANT_INT:
       getInt();
