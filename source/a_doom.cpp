@@ -711,7 +711,14 @@ void A_VileChase(actionargs_t *actionargs)
                A_FaceTarget(actionargs);
                actor->target = temp;
 
-               P_SetMobjState(actor, E_SafeState(S_VILE_HEAL1));
+               // ioanch 20160220: allow custom state
+               const state_t *healstate = E_GetStateForMobjInfo(actor->info, 
+                                                                METASTATE_HEAL);
+               if(healstate && healstate->index != NullStateNum)
+                  P_SetMobjState(actor, healstate->index);
+               else
+                  P_SetMobjState(actor, S_VILE_HEAL1);   // Doom behaviour
+
                S_StartSound(corpsehit, sfx_slop);
                info = corpsehit->info;
 
