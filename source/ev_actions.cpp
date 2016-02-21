@@ -3047,5 +3047,17 @@ DEFINE_ACTION(EV_ActionThingChangeTID)
                             instance->args[1]);
 }
 
+//
+// EV_ActionThingRaise
+//
+// Implements Thing_Raise(tid)
+// * ExtraData: 422
+// * Hexen:     17
+//
+DEFINE_ACTION(EV_ActionThingRaise)
+{
+   return EV_ThingRaise(instance->actor, instance->args[0]);
+}
+
 // EOF
 

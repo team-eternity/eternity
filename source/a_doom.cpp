@@ -600,17 +600,11 @@ static fixed_t  viletryy;
 bool PIT_VileCheck(Mobj *thing)
 {
    int maxdist;
-   bool check;
    int vileType = E_SafeThingType(MT_VILE);
    
-   if(!(thing->flags & MF_CORPSE))
-      return true;        // not a monster
-   
-   if(thing->tics != -1)
-      return true;        // not lying still yet
-   
-   if(thing->info->raisestate == NullStateNum)
-      return true;        // monster doesn't have a raise state
+   // ioanch 20160221: call functions
+   if(!P_ThingIsCorpse(thing))
+      return true;
    
    maxdist = thing->info->radius + mobjinfo[vileType]->radius;
    
@@ -631,41 +625,9 @@ bool PIT_VileCheck(Mobj *thing)
    //            return true;                                          // phares
 
    corpsehit = thing;
-   corpsehit->momx = corpsehit->momy = 0;
-   if(comp[comp_vile])
-   {                                                              // phares
-      corpsehit->height <<= 2;                                    //   V
-      
-      // haleyjd 11/11/04: this is also broken by Lee's change to
-      // PIT_CheckThing when not in demo_compatibility.
-      if(demo_version >= 331)
-         corpsehit->flags |= MF_SOLID;
 
-      check = P_CheckPosition(corpsehit, corpsehit->x, corpsehit->y);
-
-      if(demo_version >= 331)
-         corpsehit->flags &= ~MF_SOLID;
-      
-      corpsehit->height >>= 2;
-   }
-   else
-   {
-      int height,radius;
-      
-      height = corpsehit->height; // save temporarily
-      radius = corpsehit->radius; // save temporarily
-      corpsehit->height = P_ThingInfoHeight(corpsehit->info);
-      corpsehit->radius = corpsehit->info->radius;
-      corpsehit->flags |= MF_SOLID;
-      check = P_CheckPosition(corpsehit,corpsehit->x,corpsehit->y);
-      corpsehit->height = height; // restore
-      corpsehit->radius = radius; // restore                      //   ^
-      corpsehit->flags &= ~MF_SOLID;
-   }                                                              //   |
-                                                                  // phares
-   if(!check)
-      return true;              // doesn't fit here
-   return false;               // got one, so stop checking
+   // Exit (return false) if the function returns true!
+   return !P_CheckCorpseRaiseSpace(corpsehit);
 }
 
 //
@@ -702,9 +664,7 @@ void A_VileChase(actionargs_t *actionargs)
             // whether object is a corpse
             // that can be raised.
             if(!P_BlockThingsIterator(bx, by, PIT_VileCheck))
-            {
-               mobjinfo_t *info;
-               
+            {  
                // got one!
                Mobj *temp = actor->target;
                actor->target = corpsehit;
@@ -719,41 +679,8 @@ void A_VileChase(actionargs_t *actionargs)
                else
                   P_SetMobjState(actor, S_VILE_HEAL1);   // Doom behaviour
 
-               S_StartSound(corpsehit, sfx_slop);
-               info = corpsehit->info;
-
-               // haleyjd 09/26/04: need to restore monster skins here
-               // in case they were cleared by the thing being crushed
-               if(info->altsprite != -1)
-                  corpsehit->skin = P_GetMonsterSkin(info->altsprite);
-               
-               P_SetMobjState(corpsehit, info->raisestate);
-               
-               if(comp[comp_vile])
-                  corpsehit->height <<= 2;                        // phares
-               else                                               //   V
-               {
-                  // fix Ghost bug
-                  corpsehit->height = P_ThingInfoHeight(info);
-                  corpsehit->radius = info->radius;
-               }                                                  // phares
-               
-               // killough 7/18/98: 
-               // friendliness is transferred from AV to raised corpse
-               corpsehit->flags = 
-                  (info->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
-               
-               corpsehit->health = info->spawnhealth;
-               P_SetTarget<Mobj>(&corpsehit->target, NULL);  // killough 11/98
-
-               if(demo_version >= 203)
-               {         // kilough 9/9/98
-                  P_SetTarget<Mobj>(&corpsehit->lastenemy, NULL);
-                  corpsehit->flags &= ~MF_JUSTHIT;
-               }
-               
-               // killough 8/29/98: add to appropriate thread
-               corpsehit->updateThinker();
+               // ioanch 20160221: call function
+               P_RaiseCorpse(corpsehit, actor);
                
                return;
             }

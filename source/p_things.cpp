@@ -29,7 +29,9 @@
 #include "doomstat.h"
 #include "d_gi.h"
 #include "ev_specials.h"
+#include "p_inter.h"
 #include "p_mobj.h"
+#include "p_map.h"
 #include "p_map3d.h"
 #include "p_saveg.h"
 #include "p_things.h"
@@ -255,6 +257,26 @@ int EV_ThingChangeTID(Mobj *actor, int oldtid, int newtid)
    }
 
    return found;
+}
+
+//
+// EV_ThingRaise
+//
+// Implements Thing_Raise(tid)
+//
+int EV_ThingRaise(Mobj *actor, int tid)
+{
+   Mobj *mobj = nullptr;
+   int success = 0;
+   while((mobj = P_FindMobjFromTID(tid, mobj, actor)))
+   {
+      if(!P_ThingIsCorpse(mobj) || !P_CheckCorpseRaiseSpace(mobj))
+         continue;
+      // no raiser allowed, no friendliness transferred
+      P_RaiseCorpse(mobj, nullptr); 
+      success = 1;
+   }
+   return success;
 }
 
 //=============================================================================

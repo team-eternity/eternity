@@ -460,7 +460,7 @@ void P_RemoveThingTID(Mobj *mo);
 
 void P_AdjustFloorClip(Mobj *thing);
 
-int P_ThingInfoHeight(mobjinfo_t *mi);
+int P_ThingInfoHeight(const mobjinfo_t *mi);
 void P_ChangeThingHeights(void);
 
 // extern data
