@@ -1402,6 +1402,7 @@ int EV_ThingProjectile(const int *args, bool gravity);
 int EV_ThingSpawn(const int *args, bool fog);
 int EV_ThingActivate(int tid);
 int EV_ThingDeactivate(int tid);
+int EV_ThingChangeTID(Mobj *actor, int oldtid, int newtid);
 
 
 ////////////////////////////////////////////////////////////////

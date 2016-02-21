@@ -230,6 +230,33 @@ int EV_ThingDeactivate(int tid)
    return success;
 }
 
+//
+// EV_ThingChangeTID
+//
+// ioanch 20160221 (originally by DavidPH)
+// Implements Thing_ChangeTID(oldtid, newtid)
+//
+int EV_ThingChangeTID(Mobj *actor, int oldtid, int newtid)
+{
+   Mobj   *mo     = nullptr;
+   Mobj   *next   = nullptr;
+   bool    found  = false;
+
+   mo    = P_FindMobjFromTID(oldtid, nullptr, actor);
+   found = mo != nullptr;
+   while(mo)
+   {
+      // Find next Mobj before changing TID.
+      next = P_FindMobjFromTID(oldtid, mo, actor);
+
+      P_RemoveThingTID(mo);
+      P_AddThingTID(mo, newtid);
+      mo = next;
+   }
+
+   return found;
+}
+
 //=============================================================================
 //
 // LevelActionThinker

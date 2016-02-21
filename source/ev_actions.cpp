@@ -3042,25 +3042,9 @@ DEFINE_ACTION(EV_ActionParamPlatUpByValue)
 //
 DEFINE_ACTION(EV_ActionThingChangeTID)
 {
-   Mobj   *mo     = nullptr;
-   Mobj   *next   = nullptr;
-   int32_t oldtid = instance->args[0];
-   int32_t newtid = instance->args[1];
-   bool    found  = false;
-
-   mo    = P_FindMobjFromTID(oldtid, nullptr, instance->actor);
-   found = mo != nullptr;
-   while(mo)
-   {
-      // Find next Mobj before changing TID.
-      next = P_FindMobjFromTID(oldtid, mo, instance->actor);
-
-      P_RemoveThingTID(mo);
-      P_AddThingTID(mo, newtid);
-      mo = next;
-   }
-
-   return found;
+   // ioanch 20160221: call separate function, not here
+   return EV_ThingChangeTID(instance->actor, instance->args[0], 
+                            instance->args[1]);
 }
 
 // EOF
