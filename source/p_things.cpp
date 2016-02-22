@@ -279,6 +279,23 @@ int EV_ThingRaise(Mobj *actor, int tid)
    return success;
 }
 
+//
+// EV_ThingStop
+//
+// Implements Thing_Stop(tid)
+//
+int EV_ThingStop(Mobj *actor, int tid)
+{
+   Mobj *mobj = nullptr;
+   int success = 0;
+   while((mobj = P_FindMobjFromTID(tid, mobj, actor)))
+   {
+      mobj->momx = mobj->momy = mobj->momz = 0; // same as A_Stop
+      success = 1;
+   }
+   return success;
+}
+
 //=============================================================================
 //
 // LevelActionThinker

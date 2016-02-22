@@ -1404,6 +1404,7 @@ int EV_ThingActivate(int tid);
 int EV_ThingDeactivate(int tid);
 int EV_ThingChangeTID(Mobj *actor, int oldtid, int newtid);
 int EV_ThingRaise(Mobj *actor, int tid);
+int EV_ThingStop(Mobj *actor, int tid);
 
 
 ////////////////////////////////////////////////////////////////

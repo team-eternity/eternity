@@ -3059,5 +3059,17 @@ DEFINE_ACTION(EV_ActionThingRaise)
    return EV_ThingRaise(instance->actor, instance->args[0]);
 }
 
+//
+// EV_ActionThingStop
+//
+// Implements Thing_Stop(tid)
+// * ExtraData: 423
+// * Hexen:     19
+//
+DEFINE_ACTION(EV_ActionThingStop)
+{
+   return EV_ThingStop(instance->actor, instance->args[0]);
+}
+
 // EOF
 
