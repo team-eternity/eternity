@@ -365,13 +365,16 @@ int EV_ThrustThingZ(Mobj *actor, int tid, int ispeed, bool upDown, bool setAdd)
 //
 // Implements DamageThing(damage, mod)
 //
-int EV_DamageThing(Mobj *actor, int damage, int mod)
+int EV_DamageThing(Mobj *actor, int damage, int mod, int tid)
 {
-   if(damage)
-      P_DamageMobj(actor, nullptr, nullptr, damage, mod);
-   else
-      P_DamageMobj(actor, nullptr, nullptr, 10000, mod);
-   return 1;
+   Mobj *mobj = nullptr;
+   int success = 0;
+   while((mobj = P_FindMobjFromTID(tid, mobj, actor)))
+   {
+      P_DamageMobj(mobj, nullptr, nullptr, damage, mod);
+      success = 1;
+   }
+   return success;
 }
 
 //=============================================================================

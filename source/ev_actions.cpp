@@ -3107,7 +3107,21 @@ DEFINE_ACTION(EV_ActionThrustThingZ)
 //
 DEFINE_ACTION(EV_ActionDamageThing)
 {
-   return EV_DamageThing(instance->actor, instance->args[0], instance->args[1]);
+   return EV_DamageThing(instance->actor, 
+      instance->args[0] == 0 ? 10000 : instance->args[0], instance->args[1], 0);
+}
+
+//
+// EV_ActionDamageThingEx
+//
+// Implements Thing_Damage(tid, amount, mod)
+// * ExtraData: 427
+// * Hexen:     119
+//
+DEFINE_ACTION(EV_ActionDamageThingEx)
+{
+   return EV_DamageThing(instance->actor, instance->args[1], instance->args[2],
+                         instance->args[0]);
 }
 
 // EOF
