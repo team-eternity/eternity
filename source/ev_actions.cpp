@@ -3098,5 +3098,17 @@ DEFINE_ACTION(EV_ActionThrustThingZ)
                           instance->args[2] != 0, instance->args[3] != 0);
 }
 
+//
+// EV_ActionDamageThing
+//
+// Implements DamageThing(damage, mod)
+// * ExtraData: 426
+// * Hexen:     73
+//
+DEFINE_ACTION(EV_ActionDamageThing)
+{
+   return EV_DamageThing(instance->actor, instance->args[0], instance->args[1]);
+}
+
 // EOF
 

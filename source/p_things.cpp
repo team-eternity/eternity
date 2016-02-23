@@ -360,6 +360,20 @@ int EV_ThrustThingZ(Mobj *actor, int tid, int ispeed, bool upDown, bool setAdd)
    return success;
 }
 
+//
+// EV_DamageThing
+//
+// Implements DamageThing(damage, mod)
+//
+int EV_DamageThing(Mobj *actor, int damage, int mod)
+{
+   if(damage)
+      P_DamageMobj(actor, nullptr, nullptr, damage, mod);
+   else
+      P_DamageMobj(actor, nullptr, nullptr, 10000, mod);
+   return 1;
+}
+
 //=============================================================================
 //
 // LevelActionThinker
