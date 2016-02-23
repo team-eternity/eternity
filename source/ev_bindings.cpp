@@ -1050,6 +1050,7 @@ PARAMLINE(ThingActivate);
 PARAMLINE(ThingDeactivate);
 PARAMLINE(ThingRaise);
 PARAMLINE(ThingStop);
+PARAMLINE(ThrustThing);
 PARAMLINE(ParamPlatPerpetualRaise);
 PARAMLINE(ParamPlatStop);
 PARAMLINE(ParamPlatDWUS);
@@ -1409,6 +1410,7 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(421, ThingChangeTID,                  "Thing_ChangeTID")
    LINESPECNAMED(422, ThingRaise,                      "Thing_Raise")
    LINESPECNAMED(423, ThingStop,                       "Thing_Stop")
+   LINESPECNAMED(424, ThrustThing,                     "ThrustThing")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1505,6 +1507,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(67,  ParamFloorRaiseInstant,          "Floor_RaiseInstant")
    LINESPECNAMED(68,  ParamFloorMoveToValueTimes8,     "Floor_MoveToValueTimes8")
    LINESPECNAMED(69,  ParamCeilingMoveToValueTimes8,   "Ceiling_MoveToValueTimes8")
+   LINESPECNAMED(72,  ThrustThing,                     "ThrustThing")
    LINESPECNAMED(75,  TeleportEndGame,                 "Teleport_EndGame")
    LINESPECNAMED(80,  ACSExecute,                      "ACS_Execute")
    LINESPECNAMED(81,  ACSSuspend,                      "ACS_Suspend")

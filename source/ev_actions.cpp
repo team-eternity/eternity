@@ -3071,5 +3071,18 @@ DEFINE_ACTION(EV_ActionThingStop)
    return EV_ThingStop(instance->actor, instance->args[0]);
 }
 
+//
+// EV_ActionThrustThing
+//
+// Implements ThrustThing(angle, speed, reserved, tid)
+// * ExtraData: 424
+// * Hexen:     72
+//
+DEFINE_ACTION(EV_ActionThrustThing)
+{
+   return EV_ThrustThing(instance->actor, instance->side, instance->args[0],
+                         instance->args[1], instance->args[3]);
+}
+
 // EOF
 

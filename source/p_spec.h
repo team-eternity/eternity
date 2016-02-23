@@ -1405,6 +1405,7 @@ int EV_ThingDeactivate(int tid);
 int EV_ThingChangeTID(Mobj *actor, int oldtid, int newtid);
 int EV_ThingRaise(Mobj *actor, int tid);
 int EV_ThingStop(Mobj *actor, int tid);
+int EV_ThrustThing(Mobj *actor, int side, int byteangle, int speed, int tid);
 
 
 ////////////////////////////////////////////////////////////////

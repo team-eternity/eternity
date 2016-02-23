@@ -34,6 +34,7 @@
 #include "p_map.h"
 #include "p_map3d.h"
 #include "p_saveg.h"
+#include "p_setup.h"
 #include "p_things.h"
 #include "a_small.h"
 #include "acs_intr.h"
@@ -292,6 +293,48 @@ int EV_ThingStop(Mobj *actor, int tid)
    {
       mobj->momx = mobj->momy = mobj->momz = 0; // same as A_Stop
       success = 1;
+   }
+   return success;
+}
+
+//
+// EV_ThrustThing
+//
+// Implements ThrustThing(angle, speed, reserved, tid)
+//
+int EV_ThrustThing(Mobj *actor, int side, int byteangle, int ispeed, int tid)
+{
+   // Hexen format maps cannot have ExtraData, and in Hexen activation is only
+   // done from the front side, so keep compatible with that. Otherwise, in
+   // ExtraData-possible maps and eventually UDMF, the author can choose.
+
+   // Also make sure the level type is Hexen, because if it's Doom, chances are
+   // the wad is for ZDoom originally and doesn't have that override.
+   bool compat = LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN && 
+      LevelInfo.levelType == LI_TYPE_HEXEN;
+
+   // args[2] is reserved. In the ZDoom equivalent, it has something to do with
+   // setting huge speeds (> 30.0)
+
+   int success = 0;
+
+   // Either thrust if not compatible (i.e. modern) or only if the front
+   // side is touched (in Hexen). Back side will have no effect in plain Hexen
+   // maps.
+   if(!compat || side == 0)
+   {
+      Mobj *mobj = nullptr;
+
+      angle_t angle = byteangle * (ANG90 / 64);
+      fixed_t speed = ispeed << FRACBITS;
+
+      // tid argument is also in ZDoom
+
+      while((mobj = P_FindMobjFromTID(tid, mobj, actor)))
+      {
+         P_ThrustMobj(mobj, angle, speed);
+         success = 1;
+      }
    }
    return success;
 }
