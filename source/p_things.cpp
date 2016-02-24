@@ -28,6 +28,7 @@
 
 #include "doomstat.h"
 #include "d_gi.h"
+#include "d_mod.h"
 #include "ev_specials.h"
 #include "p_inter.h"
 #include "p_mobj.h"
@@ -373,6 +374,27 @@ int EV_DamageThing(Mobj *actor, int damage, int mod, int tid)
    {
       P_DamageMobj(mobj, nullptr, nullptr, damage, mod);
       success = 1;
+   }
+   return success;
+}
+
+//
+// EV_ThingDestroy
+//
+// Implements Thing_Destroy(tid, reserved, sectortag)
+//
+int EV_ThingDestroy(int tid, int sectortag)
+{
+   Mobj *mobj = nullptr;
+   int success = 0;
+   while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
+   {
+      if(mobj->flags & MF_SHOOTABLE &&
+         (!sectortag || mobj->subsector->sector->tag == sectortag))
+      {
+         P_DamageMobj(mobj, nullptr, nullptr, 10000, MOD_UNKNOWN);
+         success = 1;
+      }
    }
    return success;
 }

@@ -3124,5 +3124,17 @@ DEFINE_ACTION(EV_ActionDamageThingEx)
                          instance->args[0]);
 }
 
+//
+// EV_ActionThingDestroy
+//
+// Implements Thing_Destroy(tid, reserved, sectortag)
+// * ExtraData: 428
+// * Hexen:     133
+//
+DEFINE_ACTION(EV_ActionThingDestroy)
+{
+   return EV_ThingDestroy(instance->args[0], instance->args[2]);
+}
+
 // EOF
 
