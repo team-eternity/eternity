@@ -1319,9 +1319,6 @@ int EV_VerticalDoor(line_t *line, const Mobj *thing, int lockID);
 
 int EV_DoDoor(const line_t *line, vldoor_e type);
 
-int EV_DoLockedDoor(const line_t *line, vldoor_e type, int lockID,
-                    const Mobj *thing);
-
 void EV_OpenDoor(int sectag, int speed, int wait_time);
 
 void EV_CloseDoor(int sectag, int speed);
@@ -1390,7 +1387,6 @@ int EV_DoGenStairs(line_t *line);
 int EV_DoGenCrusher(const line_t *line);
 
 int EV_DoParamDoor(const line_t *line, int tag, const doordata_t *dd);
-int EV_DoParamLockedDoor(const line_t *line, int tag, const doordata_t *dd, int lockId);
 
 int EV_DoGenDoor(const line_t *line, Mobj *thing);
 

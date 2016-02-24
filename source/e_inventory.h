@@ -32,6 +32,7 @@
 // Basic inventory definitions are now in d_player.h, so that the entire engine
 // doesn't rebuild if you modify this header.
 #include "d_player.h"
+#include "p_mobj.h"
 
 class MetaTable;
 
@@ -229,6 +230,27 @@ void E_ClearInventory(player_t *player);
 
 // Get allocated size of player inventory arrays
 int E_GetInventoryAllocSize();
+
+//
+// E_IfPlayerCanUnlock
+//
+// ioanch 20160225: template for checking doors can be open
+//
+template <typename C, typename... Args>
+int E_IfPlayerCanUnlock(int lockID, const Mobj *actor, bool remote,
+                        C &&callable, Args... args)
+{
+   player_t *p = actor ? actor->player : nullptr;
+   if(!p)   // only players can open locked doors
+      return 0;
+   // check if key is possessed to open it
+   if(!E_PlayerCanUnlock(p, lockID, remote))
+      return 0;
+
+   // got the key, so open the door
+   return callable(args...);
+}
+
 
 //
 // EDF-Only Definitions

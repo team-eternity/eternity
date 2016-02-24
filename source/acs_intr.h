@@ -632,10 +632,6 @@ bool ACS_ExecuteScript(ACSScript *script, int flags, const int32_t *argv,
 bool ACS_ExecuteScriptNumber(int32_t number, int mapnum, int flags,
                              const int32_t *argv, uint32_t argc, Mobj *trigger,
                              line_t *line, int lineSide, ACSThinker **thread = NULL);
-bool ACS_LockedExecuteScriptNumber(int32_t number, int mapnum, int flags,
-                             const int32_t *argv, uint32_t argc, Mobj *trigger,
-                             line_t *line, int lineSide, int lockID, 
-                             ACSThinker **thread = NULL);
 bool ACS_ExecuteScriptName(const char *name, int mapnum, int flags,
                            const int32_t *argv, uint32_t argc, Mobj *trigger,
                            line_t *line, int lineSide, ACSThinker **thread = NULL);

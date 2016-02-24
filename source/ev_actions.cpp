@@ -30,6 +30,7 @@
 #include "d_gi.h"
 #include "doomstat.h"
 #include "e_exdata.h"
+#include "e_inventory.h"
 #include "ev_macros.h"
 #include "ev_specials.h"
 #include "g_game.h"
@@ -1106,7 +1107,8 @@ DEFINE_ACTION(EV_ActionDoLockedDoor)
    // case 137: (S1) BlzOpenDoor YELLOW
 
    int lockID = EV_LockDefIDForSpecial(instance->special);
-   return EV_DoLockedDoor(instance->line, blazeOpen, lockID, instance->actor);
+   return E_IfPlayerCanUnlock(lockID, instance->actor, true,
+                              EV_DoDoor, instance->line, blazeOpen);
 }
 
 //
@@ -3160,8 +3162,9 @@ DEFINE_ACTION(EV_ActionParamDoorLockedRaise)
    if(extflags & EX_ML_REPEAT)
       dd.flags |= DDF_REUSABLE;
 
-   return EV_DoParamLockedDoor(instance->line, instance->tag, &dd,
-                               instance->args[3]);
+   return E_IfPlayerCanUnlock(instance->args[3], dd.thing, instance->tag != 0,
+                              EV_DoParamDoor, instance->line, instance->tag,
+                              &dd);
 }
 
 //
@@ -3184,8 +3187,9 @@ DEFINE_ACTION(EV_ActionACSLockedExecute)
    for(int i = 0; i != argc; ++i)
       argv[i] = instance->args[i + 2];
 
-   return ACS_LockedExecuteScriptNumber(num, map, 0, argv, argc, thing, line, 
-                                        side, instance->args[4]);
+   return E_IfPlayerCanUnlock(instance->args[4], thing, true,
+                              ACS_ExecuteScriptNumber, num, map, 0, argv, argc,
+                              thing, line, side, nullptr);
 }
 
 // EOF
