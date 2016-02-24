@@ -3136,5 +3136,33 @@ DEFINE_ACTION(EV_ActionThingDestroy)
    return EV_ThingDestroy(instance->args[0], instance->args[2]);
 }
 
+//
+// EV_ActionParamDoorLockedRaise
+//
+// Implements Door_LockedRaise(tag, speed, delay, lock, lighttag)
+// * ExtraData: 429
+// * Hexen:     13
+//
+DEFINE_ACTION(EV_ActionParamDoorLockedRaise)
+{
+   INIT_STRUCT(doordata_t, dd);
+   int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
+
+   dd.kind         = OdCDoor;
+   dd.spac         = instance->spac;
+   dd.speed_value  = instance->args[1] * FRACUNIT / 8;
+   dd.topcountdown = 0;
+   dd.delay_value  = instance->args[2];
+   dd.altlighttag  = instance->args[4];
+   dd.thing        = instance->actor;
+   
+   dd.flags = DDF_HAVESPAC | DDF_USEALTLIGHTTAG;
+   if(extflags & EX_ML_REPEAT)
+      dd.flags |= DDF_REUSABLE;
+
+   return EV_DoParamLockedDoor(instance->line, instance->tag, &dd,
+                               instance->args[3]);
+}
+
 // EOF
 
