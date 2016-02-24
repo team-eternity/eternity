@@ -183,6 +183,7 @@ DECLARE_ACTION(EV_ActionACSExecute);
 DECLARE_ACTION(EV_ActionACSSuspend);
 DECLARE_ACTION(EV_ActionACSTerminate);
 DECLARE_ACTION(EV_ActionACSExecuteWithResult);
+DECLARE_ACTION(EV_ActionACSLockedExecute);
 DECLARE_ACTION(EV_ActionParamLightRaiseByValue);
 DECLARE_ACTION(EV_ActionParamLightLowerByValue);
 DECLARE_ACTION(EV_ActionParamLightChangeToValue);

@@ -3164,5 +3164,29 @@ DEFINE_ACTION(EV_ActionParamDoorLockedRaise)
                                instance->args[3]);
 }
 
+//
+// EV_ActionACSLockedExecute
+//
+// Implements ACS_LockedExecute(script, map, arg1, arg2, lock)
+// * ExtraData: 430
+// * Hexen:     83
+//
+DEFINE_ACTION(EV_ActionACSLockedExecute)
+{
+   Mobj   *thing = instance->actor;
+   line_t *line  = instance->line;
+   int     side  = instance->side;
+   int     num   = instance->args[0];
+   int     map   = instance->args[1];
+   int     argc  = NUMLINEARGS - 3;
+   int32_t argv[NUMLINEARGS - 3];
+
+   for(int i = 0; i != argc; ++i)
+      argv[i] = instance->args[i + 2];
+
+   return ACS_LockedExecuteScriptNumber(num, map, 0, argv, argc, thing, line, 
+                                        side, instance->args[4]);
+}
+
 // EOF
 

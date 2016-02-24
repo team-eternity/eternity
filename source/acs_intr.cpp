@@ -36,6 +36,7 @@
 #include "c_runcmd.h"
 #include "doomstat.h"
 #include "e_hash.h"
+#include "e_inventory.h"
 #include "ev_specials.h"
 #include "g_game.h"
 #include "hu_stuff.h"
@@ -2220,6 +2221,27 @@ bool ACS_ExecuteScriptNumber(int32_t number, int mapnum, int flags,
       if(thread) *thread = NULL;
       return ACSDeferred::DeferExecuteNumber(number, mapnum, flags, argv, argc);
    }
+}
+
+//
+// ioanch 20160224: locked variant
+//
+bool ACS_LockedExecuteScriptNumber(int32_t number, int mapnum, int flags,
+                             const int32_t *argv, uint32_t argc, Mobj *trigger,
+                             line_t *line, int lineSide, int lockID, ACSThinker **thread)
+{
+   const player_t *p = trigger ? trigger->player : nullptr;
+   
+   if(!p)          // only players can open locked doors
+      return 0;
+
+   // check if key is possessed to open it
+   if(!E_PlayerCanUnlock(p, lockID, true))
+      return 0;
+   
+   // got the key, so open the door
+   return ACS_ExecuteScriptNumber(number, mapnum, flags, argv, argc, trigger,
+                                  line, lineSide, thread);
 }
 
 //
