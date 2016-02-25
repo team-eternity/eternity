@@ -32,7 +32,6 @@
 // Basic inventory definitions are now in d_player.h, so that the entire engine
 // doesn't rebuild if you modify this header.
 #include "d_player.h"
-#include "p_mobj.h"
 
 class MetaTable;
 
