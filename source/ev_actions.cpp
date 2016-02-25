@@ -103,6 +103,18 @@ static void EV_ceilingChangeForArg(ceilingdata_t &cd, int arg)
    cd.change_type  = cchgdata[arg][1];
 }
 
+//
+// EV_LockCheck
+//
+// ioanch 20160225: checks if the activator is a player and that he has a key.
+// If not, it causes the "no key" message. Otherwise it returns true.
+//
+static bool EV_lockCheck(const Mobj *actor, int lockID, bool remote)
+{
+   player_t *player = actor ? actor->player : nullptr;
+   return player && E_PlayerCanUnlock(player, lockID, remote);
+}
+
 //=============================================================================
 //
 // Action Routines
@@ -1107,8 +1119,10 @@ DEFINE_ACTION(EV_ActionDoLockedDoor)
    // case 137: (S1) BlzOpenDoor YELLOW
 
    int lockID = EV_LockDefIDForSpecial(instance->special);
-   return E_IfPlayerCanUnlock(lockID, instance->actor, true,
-                              EV_DoDoor, instance->line, blazeOpen);
+      printf("open lock %d\n", instance->args[3]);
+   if(EV_lockCheck(instance->actor, lockID, true))
+      return EV_DoDoor(instance->line, blazeOpen);
+   return 0;
 }
 
 //
@@ -3162,9 +3176,9 @@ DEFINE_ACTION(EV_ActionParamDoorLockedRaise)
    if(extflags & EX_ML_REPEAT)
       dd.flags |= DDF_REUSABLE;
 
-   return E_IfPlayerCanUnlock(instance->args[3], dd.thing, instance->tag != 0,
-                              EV_DoParamDoor, instance->line, instance->tag,
-                              &dd);
+   if(EV_lockCheck(dd.thing, instance->args[3], instance->tag != 0))
+      return EV_DoParamDoor(instance->line, instance->tag, &dd);
+   return 0;
 }
 
 //
@@ -3187,9 +3201,9 @@ DEFINE_ACTION(EV_ActionACSLockedExecute)
    for(int i = 0; i != argc; ++i)
       argv[i] = instance->args[i + 2];
 
-   return E_IfPlayerCanUnlock(instance->args[4], thing, true,
-                              ACS_ExecuteScriptNumber, num, map, 0, argv, argc,
-                              thing, line, side, nullptr);
+   if(EV_lockCheck(thing, instance->args[4], true))
+      return ACS_ExecuteScriptNumber(num, map, 0, argv, argc, thing, line, side);
+   return 0;
 }
 
 // EOF
