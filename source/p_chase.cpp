@@ -45,6 +45,7 @@
 #include "p_tick.h"
 #include "r_defs.h"
 #include "r_main.h"
+#include "r_portal.h"
 #include "r_state.h"
 
 //=============================================================================
@@ -117,7 +118,8 @@ static bool PTR_chaseTraverse(intercept_t *in)
       x = trace.dl.x + FixedMul(trace.dl.dx, frac);
       y = trace.dl.y + FixedMul(trace.dl.dy, frac);
 
-      if(li->flags & ML_TWOSIDED)
+      // ioanch 20160225: portal lines are currently not crossed
+      if(li->flags & ML_TWOSIDED && !(li->pflags & PS_PASSABLE))
       {  // crosses a two sided line
 
          // sf: find which side it hit
@@ -183,7 +185,8 @@ static void P_GetChasecamTarget()
    // aiming at something seems to cure it
    // ioanch 20160101: don't let P_AimLineAttack change global trace.attackrange
    fixed_t oldAttackRange = trace.attackrange;
-   P_AimLineAttack(players[consoleplayer].mo, 0, MELEERANGE, 0);
+   // ioanch 20160225: just change trace.attackrange, don't call P_AimLineAttack
+   trace.attackrange = MELEERANGE;
    
    // check for intersections
    P_PathTraverse(playermobj->x, playermobj->y, targetx, targety,
