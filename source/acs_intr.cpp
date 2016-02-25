@@ -36,7 +36,6 @@
 #include "c_runcmd.h"
 #include "doomstat.h"
 #include "e_hash.h"
-#include "e_inventory.h"
 #include "ev_specials.h"
 #include "g_game.h"
 #include "hu_stuff.h"

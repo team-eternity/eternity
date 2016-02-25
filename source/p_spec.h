@@ -1387,7 +1387,6 @@ int EV_DoGenStairs(line_t *line);
 int EV_DoGenCrusher(const line_t *line);
 
 int EV_DoParamDoor(const line_t *line, int tag, const doordata_t *dd);
-
 int EV_DoGenDoor(const line_t *line, Mobj *thing);
 
 int EV_DoGenLockedDoor(const line_t *line, Mobj *thing);

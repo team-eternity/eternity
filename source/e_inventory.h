@@ -238,7 +238,7 @@ int E_GetInventoryAllocSize();
 //
 template <typename C, typename... Args>
 int E_IfPlayerCanUnlock(int lockID, const Mobj *actor, bool remote,
-                        C &&callable, Args... args)
+                        C &&callable, Args&&... args)
 {
    player_t *p = actor ? actor->player : nullptr;
    if(!p)   // only players can open locked doors

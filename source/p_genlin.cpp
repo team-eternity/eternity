@@ -34,7 +34,6 @@
 #include "c_runcmd.h"
 #include "doomstat.h"
 #include "e_exdata.h"
-#include "e_inventory.h"
 #include "ev_specials.h"
 #include "g_game.h"
 #include "m_compare.h"
@@ -1260,27 +1259,6 @@ manual_door:
          return rtn;
    }
    return rtn;
-}
-
-//
-// EV_DoParamLockedDoor
-//
-// ioanch 20160224: added locked variant
-//
-int EV_DoParamLockedDoor(const line_t *line, int tag, const doordata_t *dd,
-                         int lockId)
-{
-   player_t *p = dd->thing ? dd->thing->player : nullptr;
-   
-   if(!p)          // only players can open locked doors
-      return 0;
-
-   // check if key is possessed to open it
-   if(!E_PlayerCanUnlock(p, lockId, tag != 0))
-      return 0;
-   
-   // got the key, so open the door
-   return EV_DoParamDoor(line, tag, dd);
 }
 
 //
