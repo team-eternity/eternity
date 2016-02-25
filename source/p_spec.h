@@ -1319,9 +1319,6 @@ int EV_VerticalDoor(line_t *line, const Mobj *thing, int lockID);
 
 int EV_DoDoor(const line_t *line, vldoor_e type);
 
-int EV_DoLockedDoor(const line_t *line, vldoor_e type, int lockID,
-                    const Mobj *thing);
-
 void EV_OpenDoor(int sectag, int speed, int wait_time);
 
 void EV_CloseDoor(int sectag, int speed);
@@ -1402,6 +1399,13 @@ int EV_ThingProjectile(const int *args, bool gravity);
 int EV_ThingSpawn(const int *args, bool fog);
 int EV_ThingActivate(int tid);
 int EV_ThingDeactivate(int tid);
+int EV_ThingChangeTID(Mobj *actor, int oldtid, int newtid);
+int EV_ThingRaise(Mobj *actor, int tid);
+int EV_ThingStop(Mobj *actor, int tid);
+int EV_ThrustThing(Mobj *actor, int side, int byteangle, int speed, int tid);
+int EV_ThrustThingZ(Mobj *actor, int tid, int speed, bool upDown, bool setAdd);
+int EV_DamageThing(Mobj *actor, int damage, int mod, int tid);
+int EV_ThingDestroy(int tid, int sectortag);
 
 
 ////////////////////////////////////////////////////////////////

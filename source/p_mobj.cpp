@@ -2869,7 +2869,7 @@ void P_AdjustFloorClip(Mobj *thing)
 //
 // Function to retrieve proper thing height information for a thing.
 //
-int P_ThingInfoHeight(mobjinfo_t *mi)
+int P_ThingInfoHeight(const mobjinfo_t *mi)
 {
    return
       ((demo_version >= 333 && !comp[comp_theights] &&
