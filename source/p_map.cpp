@@ -1628,9 +1628,6 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             {
                if(thing->touchedportalline == line)   // ioanch:
                   thing->touchedportalline = nullptr; // clear it, we got it
-               linkoffset_t *link = 
-                  P_GetLinkOffset(line->frontsector->groupid, 
-                        line->portal->data.link.toid);
 
                // ioanch 20160129: clear all portal lines with the same front
                // groupid to avoid moving the thing twice or more
@@ -1643,7 +1640,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
                      clip.spechit[i] = nullptr;
                   }
                }
-               EV_PortalTeleport(thing, link);
+               EV_PortalTeleport(thing, &line->portal->data.link);
             }
             else
             {
@@ -1672,10 +1669,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    {
       if( thing->touchedportalline->backsector == thing->subsector->sector)
       {
-         const linkoffset_t *link = 
-                     P_GetLinkOffset(thing->touchedportalline->frontsector->groupid, 
-                           thing->touchedportalline->portal->data.link.toid);
-         EV_PortalTeleport(thing, link);
+         EV_PortalTeleport(thing, &thing->touchedportalline->portal->data.link);
       }
       thing->touchedportalline = nullptr; // reset it
    }

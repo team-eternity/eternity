@@ -45,6 +45,7 @@ extern bool *gGroupVisit;  // ioanch 20160121: a global helper array
 #endif
 
 struct line_t;
+struct linkdata_t;
 struct linkoffset_t;
 struct portal_t;
 struct sector_t;
@@ -83,7 +84,7 @@ void P_LinkRejectTable();
 
 void P_InitPortals();
 
-bool EV_PortalTeleport(Mobj *mo, const linkoffset_t *link);
+bool EV_PortalTeleport(Mobj *mo, const linkdata_t *link);
 
 void R_SetSectorGroupID(sector_t *sector, int groupid);
 

@@ -1159,13 +1159,8 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
       // ioanch 20160109: link offset outside
       if(passheight < ldata->planez)
       {
-         const linkoffset_t *link = P_GetLinkOffset(sector->groupid, 
-            ldata->toid);
-         if(link)
-         {
-            EV_PortalTeleport(mobj, link);
-            ret = true;
-         }
+         EV_PortalTeleport(mobj, ldata);
+         ret = true;
       }
    }
    
@@ -1186,13 +1181,8 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
       // ioanch 20160109: link offset outside
       if(passheight >= ldata->planez)
       {
-         const linkoffset_t *link = P_GetLinkOffset(sector->groupid, 
-            ldata->toid);
-         if(link)
-         {
-            EV_PortalTeleport(mobj, link);
-            ret = true;
-         }
+         EV_PortalTeleport(mobj, ldata);
+         ret = true;
       }
    }
 
