@@ -1119,7 +1119,6 @@ DEFINE_ACTION(EV_ActionDoLockedDoor)
    // case 137: (S1) BlzOpenDoor YELLOW
 
    int lockID = EV_LockDefIDForSpecial(instance->special);
-      printf("open lock %d\n", instance->args[3]);
    if(EV_lockCheck(instance->actor, lockID, true))
       return EV_DoDoor(instance->line, blazeOpen);
    return 0;
