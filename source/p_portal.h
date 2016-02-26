@@ -232,6 +232,9 @@ inline static bool P_ThingReachesGroupVertically(const Mobj *mo, int groupid,
       mo->groupid, groupid, mo->subsector->sector, midzhint);
 }
 
+void P_MoveLinkedPortal(portal_t *portal, fixed_t dx, fixed_t dy,
+                        bool movebehind);
+
 #endif
 
 // EOF

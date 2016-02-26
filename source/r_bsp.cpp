@@ -1281,7 +1281,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    seg.maskedtex = !!seg.side->midtexture;
    seg.segtextured = (seg.maskedtex || seg.bottomtex || seg.toptex);
 
-   if(line->linedef->portal && line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
+   if(line->linedef->portal && //line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
       line->linedef->sidenum[0] == line->sidedef - sides)
    {
       seg.l_window = R_GetLinePortalWindow(line->linedef->portal, line->linedef);
@@ -1479,7 +1479,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    seg.maskedtex = !!seg.side->midtexture;
    seg.segtextured = (seg.maskedtex || seg.bottomtex || seg.toptex);
 
-   if(line->linedef->portal && line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
+   if(line->linedef->portal && //line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
       line->linedef->sidenum[0] == line->sidedef - sides)
    {
       seg.l_window = R_GetLinePortalWindow(line->linedef->portal, line->linedef);

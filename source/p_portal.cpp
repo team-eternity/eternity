@@ -35,6 +35,7 @@
 #include "p_chase.h"
 #include "p_map.h"
 #include "p_maputl.h"   // ioanch
+#include "polyobj.h"
 #include "p_portal.h"
 #include "p_setup.h"
 #include "p_user.h"
@@ -1199,6 +1200,29 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
             }
          }
 
+         // Also check for polyobjects
+         const DLListItem<polymaplink_t> *plink;
+         plink = polyblocklinks[y * bmapwidth + x];
+         while(plink)
+         {
+            const polyobj_t *po = (*plink)->po;
+            for(int i = 0; i < po->numLines; ++i)
+            {
+               if(po->lines[i]->pflags & PS_PASSABLE)
+               {
+                  // Add to queue and visitlist
+                  int j = po->lines[i]->portal->data.link.toid;
+                  if(!accessedgroupids[j])
+                  {
+                     accessedgroupids[j] = true;
+                     groupqueue[queueback++] = j;
+                  }
+                  break;
+               }
+            }
+            plink = plink->dllNext;
+         }
+
          // now call the function
          if(!func(x, y, groupid, data))
          {
@@ -1402,6 +1426,41 @@ bool P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
       }
    }
    return false;
+}
+
+//
+// P_MoveLinkedPortal
+//
+// ioanch 20160226: moves the offset of a linked portal
+// TODO: do the same for anchored portals
+//
+void P_MoveLinkedPortal(portal_t *portal, fixed_t dx, fixed_t dy, bool movebehind)
+{
+   linkdata_t &data = portal->data.link;
+   data.deltax += dx;
+   data.deltay += dy;
+   linkoffset_t *link;
+   for(int i = 0; i < groupcount; ++i)
+   {
+      if(movebehind)
+      {
+         // the group behind appears to be moving in relation to the others
+         link = P_GetLinkOffset(i, data.toid);
+         if(link == &zerolink)
+            continue;
+         link->x += dx;
+         link->y += dy;
+      }
+      else
+      {
+         // the group in front of the portal appears to be moving
+         link = P_GetLinkOffset(data.fromid, i);
+         if(link == &zerolink)
+            continue;
+         link->x += dx;
+         link->y += dy;
+      }
+   }
 }
 
 // EOF

@@ -41,11 +41,13 @@
 #include "p_inter.h"
 #include "p_map.h"
 #include "p_maputl.h"
+#include "p_portal.h"
 #include "p_saveg.h"
 #include "p_setup.h"
 #include "p_tick.h"
 #include "polyobj.h"
 #include "r_main.h"
+#include "r_portal.h"
 #include "r_state.h"
 #include "r_dynseg.h"
 #include "s_sndseq.h"
@@ -496,6 +498,27 @@ static void Polyobj_spawnPolyObj(int num, Mobj *spawnSpot, int id)
 static void Polyobj_setCenterPt(polyobj_t *po);
 
 //
+// Polyobj_movePortal
+//
+// ioanch 20160226: moves the portal (if any) from the polyobject
+//
+static void Polyobj_movePortal(const polyobj_t *po, fixed_t dx, fixed_t dy)
+{
+   // TODO: update portalmap
+   for(int i = 0; i < po->numLines; ++i)
+   {
+      if(po->lines[i]->pflags & PS_PASSABLE)
+      {
+         P_MoveLinkedPortal(po->lines[i]->portal, -dx, -dy, true);
+         portal_t *partner = po->lines[i]->portal->data.link.partner;
+         if(partner)
+            P_MoveLinkedPortal(partner, dx, dy, false);
+         break;
+      }
+   }
+}
+
+//
 // Polyobj_moveToSpawnSpot
 //
 // Translates the polyobject's vertices with respect to the difference between
@@ -544,6 +567,9 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
       po->lines[i]->frontsector->groupid = mo->subsector->sector->groupid;
       po->lines[i]->soundorg.groupid     = mo->subsector->sector->groupid;
    }
+
+   // ioanch 20160226: update portal position
+   Polyobj_movePortal(po, -dist.x, -dist.y);
 
    // translate vertices and record original coordinates relative to spawn spot
    for(i = 0; i < po->numVertices; ++i)
@@ -794,8 +820,23 @@ static bool Polyobj_clipThings(polyobj_t *po, line_t *line)
                if(((mo->flags & MF_SOLID) || mo->player) && 
                   !Polyobj_untouched(line, mo))
                {
-                  Polyobj_pushThing(po, line, mo);
-                  hitthing = true;
+                  // ioanch 20160226: in case of portal lines, just make sure
+                  // the mobj budges a bit just to detect the specline
+                  if(line->pflags & PS_PASSABLE)
+                  {
+                     if(!P_TryMove(mo, mo->x, mo->y, false))
+                     {
+                        // FIXME: this one needs checking after i figure out
+                        // portalmap
+                        Polyobj_pushThing(po, line, mo);
+                        hitthing = true;
+                     }
+                  }
+                  else
+                  {
+                     Polyobj_pushThing(po, line, mo);
+                     hitthing = true;
+                  }
                }
                mo = next; // demo compatibility is not a factor here
             }
@@ -824,6 +865,9 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y)
    if(po->flags & POF_ISBAD)
       return false;
 
+   // ioanch 20160226: update portal position
+   Polyobj_movePortal(po, x, y);
+
    // translate vertices
    for(i = 0; i < po->numVertices; ++i)
       Polyobj_vecAdd(po->vertices[i], &vec);
@@ -845,6 +889,9 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y)
       // reset lines that have been moved
       for(i = 0; i < po->numLines; ++i)
          Polyobj_bboxSub(po->lines[i]->bbox, &vec);      
+
+      // ioanch 20160226: update portal position
+      Polyobj_movePortal(po, -x, -y);
    }
    else
    {
