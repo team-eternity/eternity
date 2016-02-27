@@ -86,6 +86,8 @@ bool useportalgroups = false;
 bool gMapHasSectorPortals;
 bool gMapHasLinePortals;   // ioanch 20160131: needed for P_UseLines
 bool *gGroupVisit;
+// ioanch 20160227: each group may have a polyobject owner
+const polyobj_t **gGroupPolyobject;
 
 //
 // P_PortalGroupCount
@@ -540,6 +542,9 @@ static void P_buildPortalMap()
    PODCollection<int> curGroups; // ioanch 20160106: keep list of current groups
    size_t pcount = P_PortalGroupCount();
    gGroupVisit = ecalloctag(bool *, sizeof(bool), pcount, PU_LEVEL, nullptr);
+   // ioanch 20160227: prepare other groups too
+   gGroupPolyobject = ecalloctag(decltype(gGroupPolyobject),
+      sizeof(*gGroupPolyobject), pcount, PU_LEVEL, nullptr);
    pcount *= sizeof(bool);
 
    gMapHasSectorPortals = false; // init with false
@@ -791,9 +796,6 @@ void P_LinkRejectTable()
 bool EV_PortalTeleport(Mobj *mo, const linkdata_t *link)
 {
    fixed_t moz = mo->z;
-   fixed_t momx = mo->momx;
-   fixed_t momy = mo->momy;
-   fixed_t momz = mo->momz;
    //fixed_t vh = mo->player ? mo->player->viewheight : 0;
 
    if(!mo || !link)
@@ -819,11 +821,45 @@ bool EV_PortalTeleport(Mobj *mo, const linkdata_t *link)
    }
    P_SetThingPosition(mo);
 
-   
-
-   mo->momx = momx;
-   mo->momy = momy;
-   mo->momz = momz;
+   // Polyobject car enter and exit inertia
+   const polyobj_t *poly[2] = { gGroupPolyobject[link->fromid],
+                                gGroupPolyobject[link->toid] };
+   v2fixed_t pvel[2] = { };
+   bool phave[2];
+   for(int i = 0; i < 2; ++i)
+   {
+      if(poly[i])
+      {
+         const auto th = thinker_cast<PolyMoveThinker *>(poly[i]->thinker);
+         if(th)
+         {
+            pvel[i].x = th->momx;
+            pvel[i].y = th->momy;
+            phave[i] = true;
+         }
+         else
+         {
+            const auto th = thinker_cast<PolySlideDoorThinker *>(poly[i]->thinker);
+            if(th && !th->delayCount)
+            {
+               pvel[i].x = th->momx;
+               pvel[i].y = th->momy;
+               phave[i] = true;
+            }
+            else
+            {
+               pvel[i].x = pvel[i].y = 0;
+               phave[i] = false;
+            }
+         }
+      }
+   }
+   if(phave[0] || phave[1])
+   {
+      // inertia!
+      mo->momx += pvel[0].x - pvel[1].x;
+      mo->momy += pvel[0].y - pvel[1].y;
+   }
 
    // SoM: Boom's code for silent teleports. Fixes view bob jerk.
    // Adjust a player's view, in case there has been a height change

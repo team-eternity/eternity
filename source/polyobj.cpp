@@ -501,18 +501,22 @@ static void Polyobj_setCenterPt(polyobj_t *po);
 // Polyobj_movePortal
 //
 // ioanch 20160226: moves the portal (if any) from the polyobject
+// The 'cancel' argument sets whether to keep or remove the reference
 //
-static void Polyobj_movePortal(const polyobj_t *po, fixed_t dx, fixed_t dy)
+static void Polyobj_movePortal(const polyobj_t *po, fixed_t dx, fixed_t dy,
+                               bool cancel)
 {
-   // TODO: update portalmap
    for(int i = 0; i < po->numLines; ++i)
    {
       if(po->lines[i]->pflags & PS_PASSABLE)
       {
          P_MoveLinkedPortal(po->lines[i]->portal, -dx, -dy, true);
-         portal_t *partner = po->lines[i]->portal->data.link.partner;
+         const linkdata_t &ldata = po->lines[i]->portal->data.link;
+         portal_t *partner = ldata.partner;
          if(partner)
             P_MoveLinkedPortal(partner, dx, dy, false);
+         // set the owner at least now
+         gGroupPolyobject[ldata.toid] = cancel ? nullptr : po;
          break;
       }
    }
@@ -569,7 +573,7 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
    }
 
    // ioanch 20160226: update portal position
-   Polyobj_movePortal(po, -dist.x, -dist.y);
+   Polyobj_movePortal(po, -dist.x, -dist.y, false);
 
    // translate vertices and record original coordinates relative to spawn spot
    for(i = 0; i < po->numVertices; ++i)
@@ -866,7 +870,7 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y)
       return false;
 
    // ioanch 20160226: update portal position
-   Polyobj_movePortal(po, x, y);
+   Polyobj_movePortal(po, x, y, false);
 
    // translate vertices
    for(i = 0; i < po->numVertices; ++i)
@@ -891,7 +895,7 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y)
          Polyobj_bboxSub(po->lines[i]->bbox, &vec);      
 
       // ioanch 20160226: update portal position
-      Polyobj_movePortal(po, -x, -y);
+      Polyobj_movePortal(po, -x, -y, true);
    }
    else
    {

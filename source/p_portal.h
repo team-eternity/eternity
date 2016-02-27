@@ -30,12 +30,15 @@
 #include "m_vector.h"
 #include "r_defs.h"
 
+struct polyobj_s;
+
 extern bool useportalgroups;
 
 // ioanch 20160109: true if sector portals are in map
 extern bool gMapHasSectorPortals;
 extern bool gMapHasLinePortals;  // ioanch 20160131: also check line portals
 extern bool *gGroupVisit;  // ioanch 20160121: a global helper array
+extern const polyobj_s **gGroupPolyobject; // ioanch 20160227
 
 #ifndef R_NOGROUP
 // No link group. I know this means there is a signed limit on portal groups but
