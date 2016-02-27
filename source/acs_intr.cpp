@@ -46,6 +46,7 @@
 #include "m_swap.h"
 #include "p_info.h"
 #include "p_maputl.h"
+#include "polyobj.h"
 #include "p_saveg.h"
 #include "p_spec.h"
 #include "r_state.h"
@@ -264,6 +265,19 @@ static bool ACS_checkTag(ACSThinker *th)
    }
 
    return true;
+}
+
+//
+// ACS_checkPoly
+//
+// ioanch 20160227: returns true if the script should start running again and
+// false if it needs to keep waiting for a polyobject.
+//
+static bool ACS_checkPoly(ACSThinker *th)
+{
+   int polyid = static_cast<int>(th->sdata);
+   const polyobj_t *po = Polyobj_GetForNum(polyid);
+   return !po || po->thinker == nullptr;
 }
 
 //
@@ -541,6 +555,13 @@ void ACSThinker::Think()
 
       sreg = ACS_STATE_RUNNING;
    case ACS_STATE_RUNNING:
+      break;
+
+      // ioanch 20160227: polywait
+   case ACS_STATE_WAITPOLY:
+      if(!ACS_checkPoly(this))
+         return;
+      sreg = ACS_STATE_RUNNING;
       break;
 
    case ACS_STATE_TERMINATE:
