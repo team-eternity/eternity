@@ -1395,11 +1395,11 @@ typedef bool (*dropoff_func_t)(Mobj *, int);
 // ioanch 20160227: true if line is crossed only in its segment range, not
 // outside
 //
-static bool P_lineIsCrossedMiddle(const Mobj *thing, const line_t *line)
+static bool P_lineIsCrossedMiddle(fixed_t tx, fixed_t ty, const line_t *line)
 {
    // use scalar product
-   float mx = M_FixedToFloat(thing->x);
-   float my = M_FixedToFloat(thing->y);
+   float mx = M_FixedToFloat(tx);
+   float my = M_FixedToFloat(ty);
    return (mx - line->v1->fx) * (line->v2->fx - mx) +
           (my - line->v1->fy) * (line->v2->fy - my) >= 0;
 }
@@ -1633,7 +1633,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          // ioanch: do NOT trigger 
          if(line->pflags & PS_PASSABLE && 
             line->frontsector->groupid == thing->groupid &&
-            P_lineIsCrossedMiddle(thing, line))
+            P_lineIsCrossedMiddle(tx, ty, line))
          {
             // SoM: if the mobj is touching a portal line, and the line is behind
             // the mobj no matter what the previous lineside was, we missed the 
