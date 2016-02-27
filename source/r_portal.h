@@ -113,7 +113,7 @@ struct linkdata_t
 
    // ioanch 20160226: access the partner portal (if any) in case of polyobject
    // cars
-   portal_t *partner;
+   portal_t *polyportalpartner;
 };
 
 

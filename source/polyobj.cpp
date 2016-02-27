@@ -512,7 +512,7 @@ static void Polyobj_movePortal(const polyobj_t *po, fixed_t dx, fixed_t dy,
       {
          P_MoveLinkedPortal(po->lines[i]->portal, -dx, -dy, true);
          const linkdata_t &ldata = po->lines[i]->portal->data.link;
-         portal_t *partner = ldata.partner;
+         portal_t *partner = ldata.polyportalpartner;
          if(partner)
             P_MoveLinkedPortal(partner, dx, dy, false);
          // set the owner at least now

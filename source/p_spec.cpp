@@ -2637,8 +2637,8 @@ static void P_SpawnPortal(line_t *line, int staticFn)
                line->flags &= ~ML_BLOCKING;
                line->flags |= ML_TWOSIDED;
             }
-            portal->data.link.partner = portal2;
-            portal2->data.link.partner = portal;
+            portal->data.link.polyportalpartner = portal2;
+            portal2->data.link.polyportalpartner = portal;
          }
 
          return;
