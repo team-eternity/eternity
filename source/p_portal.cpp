@@ -1493,5 +1493,25 @@ void P_MoveLinkedPortal(portal_t *portal, fixed_t dx, fixed_t dy, bool movebehin
    }
 }
 
+//
+// P_BlockHasPortalLines
+//
+// ioanch 20160228: return true if block has portalmap 1 or a polyportal
+// It's coarse
+//
+bool P_BlockHasPortalLines(int index)
+{
+   if(portalmap[index] & PMF_LINE)
+      return true;
+   
+   for(const DLListItem<polymaplink_t> *plink = polyblocklinks[index]; plink;
+      plink = plink->dllNext)
+   {
+      if((*plink)->po->numPortals)
+         return true;
+   }
+   return false;
+}
+
 // EOF
 
