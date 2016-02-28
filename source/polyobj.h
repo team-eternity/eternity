@@ -104,6 +104,9 @@ typedef struct polyobj_s
 
    unsigned int flags;         // 09/11/09: polyobject flags
 
+   size_t numPortals;          // ioanch 20160228: quick cache if it has
+   portal_t **portals;         // portals. NO NEED TO SERIALIZE THIS. 
+                               
 } polyobj_t;
 
 //

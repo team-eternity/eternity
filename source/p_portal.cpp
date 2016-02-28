@@ -1237,26 +1237,20 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
          }
 
          // Also check for polyobjects
-         const DLListItem<polymaplink_t> *plink;
-         plink = polyblocklinks[y * bmapwidth + x];
-         while(plink)
+         for(const DLListItem<polymaplink_t> *plink 
+            = polyblocklinks[y * bmapwidth + x]; plink; plink = plink->dllNext)
          {
             const polyobj_t *po = (*plink)->po;
-            for(int i = 0; i < po->numLines; ++i)
+            for(size_t i = 0; i < po->numPortals; ++i)
             {
-               if(po->lines[i]->pflags & PS_PASSABLE)
+               int groupid = po->portals[i]->data.link.toid;
+               // TODO: use the portal itself, not the group ID
+               if(!accessedgroupids[groupid])
                {
-                  // Add to queue and visitlist
-                  int j = po->lines[i]->portal->data.link.toid;
-                  if(!accessedgroupids[j])
-                  {
-                     accessedgroupids[j] = true;
-                     groupqueue[queueback++] = j;
-                  }
-                  break;
+                  accessedgroupids[groupid] = true;
+                  groupqueue[queueback++] = groupid;
                }
             }
-            plink = plink->dllNext;
          }
 
          // now call the function
