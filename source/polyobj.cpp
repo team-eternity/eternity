@@ -501,23 +501,34 @@ static void Polyobj_setCenterPt(polyobj_t *po);
 //
 // Polyobj_collectPortals
 //
-// ioanch 20160228: Inits the portal collection, if any
+// ioanch 20160228: Inits the portal collection, if any.
+// Adds anchored and linked portals
 //
 static void Polyobj_collectPortals(polyobj_t *po)
 {
    // Collect them in an easy collection
    PODCollection<portal_t *> portals;
+   bool hasLinked = false;
    for(int i = 0; i < po->numLines; ++i)
    {
-      if(po->lines[i]->pflags & PS_PASSABLE)
+      portal_t *portal = po->lines[i]->portal;
+      if(!portal || (portal->type != R_LINKED && portal->type != R_ANCHORED &&
+                     portal->type != R_TWOWAY))
       {
-         for(portal_t *portal : portals)
-         {
-            if(portal == po->lines[i]->portal)
-               goto nextLine;
-         }
-         portals.add(po->lines[i]->portal);
+         continue;
       }
+
+      for(portal_t *prevPortal : portals)
+      {
+         if(prevPortal == portal)
+            goto nextLine;
+      }
+
+      if(po->lines[i]->pflags & PS_PASSABLE)
+         hasLinked = true;
+
+      portals.add(portal);
+
    nextLine:
       ;
    }
@@ -527,6 +538,8 @@ static void Polyobj_collectPortals(polyobj_t *po)
    po->portals = emalloctag(decltype(po->portals), 
       po->numPortals * sizeof(*po->portals), PU_LEVEL, nullptr);
    memcpy(po->portals, &portals[0], po->numPortals * sizeof(*po->portals));
+
+   po->hasLinkedPortals = hasLinked;
 }
 
 //
@@ -541,13 +554,24 @@ static void Polyobj_movePortals(const polyobj_t *po, fixed_t dx, fixed_t dy,
    for(size_t i = 0; i < po->numPortals; ++i)
    {
       portal_t *portal = po->portals[i];
-      P_MoveLinkedPortal(portal, -dx, -dy, true);
-      const linkdata_t &ldata = portal->data.link;
-      portal_t *partner = ldata.polyportalpartner;
-      if(partner)
-         P_MoveLinkedPortal(partner, dx, dy, false);
-      // mark the group as being moved by the portal or not.
-      gGroupPolyobject[ldata.toid] = cancel ? nullptr : po;
+      if(portal->type == R_LINKED)
+      {
+         P_MoveLinkedPortal(portal, -dx, -dy, true);
+         const linkdata_t &ldata = portal->data.link;
+         portal_t *partner = ldata.polyportalpartner;
+         if(partner)
+            P_MoveLinkedPortal(partner, dx, dy, false);
+         // mark the group as being moved by the portal or not.
+         gGroupPolyobject[ldata.toid] = cancel ? nullptr : po;
+      }
+      else if(portal->type == R_ANCHORED || portal->type == R_TWOWAY)
+      {
+         // FIXME: no partnership for R_TWOWAY. Maybe there should be one.
+         // TODO: this partnership. But only when we have a line-only special.
+         portal->data.anchor.deltax -= dx;
+         portal->data.anchor.deltay -= dy;
+         // no physical effects. 
+      }
    }
 }
 

@@ -451,7 +451,7 @@ bool PathTraverser::blockLinesIterator(int x, int y)
    // build a full intercepts list.
    // ioanch 20151229: don't just check for line portals, also consider 
    // floor/ceiling
-   if(P_BlockHasPortalLines(offset))
+   if(P_BlockHasLinkedPortalLines(offset))
       portalguard.hitpblock = true;
 
    // Check polyobjects first
@@ -624,7 +624,7 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
       // if a flag is set, only accept blocks with line portals (needed for
       // some function in the code)
       if(!(def.flags & CAM_REQUIRELINEPORTALS) || 
-         P_BlockHasPortalLines(mapy * ::bmapwidth + mapx))
+         P_BlockHasLinkedPortalLines(mapy * ::bmapwidth + mapx))
       {
          if(def.flags & CAM_ADDLINES && !blockLinesIterator(mapx, mapy))
             return false;	// early out (ioanch: not for aim)
@@ -670,7 +670,7 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
          // loop continues), but the other two blocks adjacent to the corner
          // also need to be checked.
          if(!(def.flags & CAM_REQUIRELINEPORTALS) || 
-            P_BlockHasPortalLines(mapy * ::bmapwidth + mapx))
+            P_BlockHasLinkedPortalLines(mapy * ::bmapwidth + mapx))
          {
             if(def.flags & CAM_ADDLINES 
                && (!blockLinesIterator(mapx + mapxstep, mapy) 

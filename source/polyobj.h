@@ -106,6 +106,7 @@ typedef struct polyobj_s
 
    size_t numPortals;          // ioanch 20160228: quick cache if it has
    portal_t **portals;         // portals. NO NEED TO SERIALIZE THIS. 
+   bool hasLinkedPortals;      // quick check if any portal is linked
                                
 } polyobj_t;
 

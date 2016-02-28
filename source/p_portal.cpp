@@ -1243,6 +1243,8 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
             const polyobj_t *po = (*plink)->po;
             for(size_t i = 0; i < po->numPortals; ++i)
             {
+               if(po->portals[i]->type != R_LINKED)
+                  continue;
                int groupid = po->portals[i]->data.link.toid;
                // TODO: use the portal itself, not the group ID
                if(!accessedgroupids[groupid])
@@ -1494,20 +1496,23 @@ void P_MoveLinkedPortal(portal_t *portal, fixed_t dx, fixed_t dy, bool movebehin
 }
 
 //
-// P_BlockHasPortalLines
+// P_BlockHasLinkedPortalLines
 //
 // ioanch 20160228: return true if block has portalmap 1 or a polyportal
 // It's coarse
 //
-bool P_BlockHasPortalLines(int index)
+bool P_BlockHasLinkedPortalLines(int index)
 {
+   // safe for overflow
+   if(index < 0 || index >= bmapheight * bmapwidth)
+      return false;
    if(portalmap[index] & PMF_LINE)
       return true;
    
    for(const DLListItem<polymaplink_t> *plink = polyblocklinks[index]; plink;
       plink = plink->dllNext)
    {
-      if((*plink)->po->numPortals)
+      if((*plink)->po->hasLinkedPortals)
          return true;
    }
    return false;

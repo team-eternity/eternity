@@ -238,7 +238,7 @@ inline static bool P_ThingReachesGroupVertically(const Mobj *mo, int groupid,
 void P_MoveLinkedPortal(portal_t *portal, fixed_t dx, fixed_t dy,
                         bool movebehind);
 
-bool P_BlockHasPortalLines(int index);
+bool P_BlockHasLinkedPortalLines(int index);
 
 #endif
 
