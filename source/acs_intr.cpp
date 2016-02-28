@@ -36,7 +36,6 @@
 #include "c_runcmd.h"
 #include "doomstat.h"
 #include "e_hash.h"
-#include "e_exdata.h"
 #include "ev_specials.h"
 #include "g_game.h"
 #include "hu_stuff.h"
@@ -363,12 +362,7 @@ static int32_t ACS_execLineSpec(line_t *l, Mobj *mo, int spec, int side,
    for(; i > 0; --i)
       args[argc-i] = *argv++;
 
-   // ioanch 20160228: temporarily add repeat
-   unsigned extflags = l->extflags;
-   l->extflags |= EX_ML_REPEAT;
-   int ret = EV_ActivateACSSpecial(l, spec, args, side, mo);
-   l->extflags = extflags;
-   return ret;
+   return EV_ActivateACSSpecial(l, spec, args, side, mo);
 }
 
 //
