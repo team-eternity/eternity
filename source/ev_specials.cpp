@@ -56,6 +56,8 @@
 
 #define INIT_STRUCT edefstructvar
 
+static ev_action_t *EV_ActionForSpecial(int special);
+
 //=============================================================================
 //
 // Utilities
@@ -626,7 +628,12 @@ static int EV_ParamPostActivate(ev_action_t *action, int result,
    // check for switch texture change and special clear
    if(result && instance->line)
    {
-      int reuse = (instance->line->extflags & EX_ML_REPEAT);
+      // ioanch 20160229: do NOT reset special for non-parameterized "Start line
+      // script" SR/WR/GR lines.
+      const ev_action_t *action = EV_ActionForSpecial(instance->line->special);
+      int reuse = (instance->line->extflags & EX_ML_REPEAT) ||
+         (action && action->action == EV_ActionStartLineScript && 
+                  !(action->type->flags & EV_POSTCLEARSPECIAL));
 
       if(!reuse)
          instance->line->special = 0;
@@ -1077,7 +1084,7 @@ static int EV_GenActivationType(int special)
 //
 // EV_ActionForSpecial
 //
-ev_action_t *EV_ActionForSpecial(int special)
+static ev_action_t *EV_ActionForSpecial(int special)
 {
    switch(LevelInfo.mapFormat)
    {
@@ -1106,7 +1113,7 @@ ev_action_t *EV_ActionForSpecial(int special)
 // Given an instance, obtain the corresponding ev_action_t structure,
 // within the currently defined set of bindings.
 //
-ev_action_t *EV_ActionForInstance(ev_instance_t &instance)
+static ev_action_t *EV_ActionForInstance(ev_instance_t &instance)
 {
    // check if it is a generalized type 
    instance.gentype = EV_GenTypeForSpecial(instance.special);
