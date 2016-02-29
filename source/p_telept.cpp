@@ -31,6 +31,7 @@
 #include "p_chase.h"
 #include "p_maputl.h"
 #include "p_map.h"
+#include "p_portal.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "p_user.h"
@@ -113,8 +114,11 @@ int EV_Teleport(const line_t *line, int side, Mobj *thing)
                          GameModeInfo->teleSound);
 
             // spawn teleport fog and emit sound at destination
-            S_StartSound(P_SpawnMobj(m->x + 20*finecosine[m->angle>>ANGLETOFINESHIFT],
-                                     m->y + 20*finesine[m->angle>>ANGLETOFINESHIFT],
+            // ioanch 20160229: portal aware
+            v2fixed_t pos = P_LinePortalCrossing(m->x, m->y,
+               20 * finecosine[m->angle >> ANGLETOFINESHIFT],
+               20 * finesine[m->angle >> ANGLETOFINESHIFT]);
+            S_StartSound(P_SpawnMobj(pos.x, pos.y,
                                      thing->z + GameModeInfo->teleFogHeight, 
                                      E_SafeThingName(GameModeInfo->teleFogType)),
                          GameModeInfo->teleSound);
