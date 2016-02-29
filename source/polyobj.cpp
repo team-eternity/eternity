@@ -535,11 +535,13 @@ static void Polyobj_collectPortals(polyobj_t *po)
 
    // copy it into the permanent array
    po->numPortals = portals.getLength();
-   po->portals = emalloctag(decltype(po->portals), 
-      po->numPortals * sizeof(*po->portals), PU_LEVEL, nullptr);
-   memcpy(po->portals, &portals[0], po->numPortals * sizeof(*po->portals));
-
    po->hasLinkedPortals = hasLinked;
+   if(po->numPortals)
+   {
+      po->portals = emalloctag(decltype(po->portals), 
+         po->numPortals * sizeof(*po->portals), PU_LEVEL, nullptr);
+      memcpy(po->portals, &portals[0], po->numPortals * sizeof(*po->portals));
+   }
 }
 
 //
