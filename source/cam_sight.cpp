@@ -62,6 +62,7 @@
 
 #include "cam_sight.h"
 #include "doomstat.h"   // ioanch 20160101: for bullet attacks
+#include "d_gi.h"       // ioanch 20160131: for use
 #include "d_player.h"   // ioanch 20151230: for autoaim
 #include "m_compare.h"  // ioanch 20160103: refactor
 #include "e_exdata.h"
@@ -69,8 +70,10 @@
 #include "m_fixed.h"
 #include "p_chase.h"
 #include "p_inter.h"    // ioanch 20160101: for damage
+#include "p_map.h"      // ioanch 20160131: for use
 #include "p_maputl.h"
 #include "p_setup.h"
+#include "p_skin.h"     // ioanch 20160131: for use
 #include "p_spec.h"     // ioanch 20160101: for bullet effects
 #include "polyobj.h"
 #include "r_pcheck.h"   // ioanch 20160109: for correct portal plane z
@@ -79,12 +82,15 @@
 #include "r_portal.h"
 #include "r_sky.h"      // ioanch 20160101: for bullets hitting sky
 #include "r_state.h"
+#include "s_sound.h"    // ioanch 20160131: for use
 
 // ioanch 20151230: defined macros for the validcount sets here
 #define VALID_ALLOC(set, n) ((set) = ecalloc(byte *, 1, (((n) + 7) & ~7) / 8))
 #define VALID_FREE(set) efree(set)
 #define VALID_ISSET(set, i) ((set)[(i) >> 3] & (1 << ((i) & 7)))
 #define VALID_SET(set, i) ((set)[(i) >> 3] |= 1 << ((i) & 7))
+
+#define RECURSION_LIMIT 64
 
 //=============================================================================
 //
@@ -137,7 +143,14 @@ public:
       memset(&trace, 0, sizeof(trace));
     
       sightzstart = params->cz + params->cheight - (params->cheight >> 2);
+
+      const linkoffset_t *link = P_GetLinkIfExists(toid, fromid);
       bottomslope = params->tz - sightzstart;
+      if(link)
+      {
+         bottomslope += link->z; // also adjust for Z offset
+      }
+
       topslope    = bottomslope + params->theight;
 
    }
@@ -201,7 +214,7 @@ struct PTDef
 {
    bool (*trav)(const intercept_t *in, void *context, const divline_t &trace);
    bool earlyOut;
-   bool doLines, doThings;
+   uint32_t flags;
 };
 
 //
@@ -307,10 +320,8 @@ bool PathTraverser::traverseIntercepts() const
 //
 bool PathTraverser::blockThingsIterator(int x, int y)
 {
-   if(!def.earlyOut  && (x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
-   {
+   if(!def.earlyOut && (x < 0 || y < 0 || x >= ::bmapwidth || y >= ::bmapheight))
       return true;
-   }
 
    Mobj *thing = blocklinks[y * bmapwidth + x];
    for(; thing; thing = thing->bnext)
@@ -425,11 +436,8 @@ bool PathTraverser::checkLine(size_t linenum)
 //
 bool PathTraverser::blockLinesIterator(int x, int y)
 {
-   // ioanch 20151231: make sure to block here for aim sighting
-   if(!def.earlyOut && (x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
-   {
+   if(!def.earlyOut && (x < 0 || y < 0 || x >= ::bmapwidth || y >= ::bmapheight))
       return true;
-   }
 
    int  offset;
    int *list;
@@ -612,12 +620,17 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
 
    for(int count = 0; count < 100; count++)
    {
-      if(def.doLines && !blockLinesIterator(mapx, mapy))
-         return false;	// early out (ioanch: not for aim)
-      if(def.doThings && !blockThingsIterator(mapx, mapy))
-         return false;  // ioanch 20151230: aim also looks for a thing
-
-		
+      // if a flag is set, only accept blocks with line portals (needed for
+      // some function in the code)
+      if(!(def.flags & CAM_REQUIRELINEPORTALS) || 
+         ::portalmap[mapy * ::bmapwidth + mapx] & PMF_LINE)
+      {
+         if(def.flags & CAM_ADDLINES && !blockLinesIterator(mapx, mapy))
+            return false;	// early out (ioanch: not for aim)
+         if(def.flags & CAM_ADDTHINGS && !blockThingsIterator(mapx, mapy))
+            return false;  // ioanch 20151230: aim also looks for a thing
+      }
+      
       if((mapxstep | mapystep) == 0)
          break;
 
@@ -655,18 +668,22 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
          // block being entered need to be checked (which will happen when this
          // loop continues), but the other two blocks adjacent to the corner
          // also need to be checked.
-         if(def.doLines 
-            && (!blockLinesIterator(mapx + mapxstep, mapy) 
-            || !blockLinesIterator(mapx, mapy + mapystep)))
+         if(!(def.flags & CAM_REQUIRELINEPORTALS) || 
+            ::portalmap[mapy * ::bmapwidth + mapx] & PMF_LINE)
          {
-            return false;
-         }
-         // ioanch 20151230: autoaim support
-         if(def.doThings 
-            && (!blockThingsIterator(mapx + mapxstep, mapy)
-            || !blockThingsIterator(mapx, mapy + mapystep)))
-         {
-            return false;
+            if(def.flags & CAM_ADDLINES 
+               && (!blockLinesIterator(mapx + mapxstep, mapy) 
+               || !blockLinesIterator(mapx, mapy + mapystep)))
+            {
+               return false;
+            }
+            // ioanch 20151230: autoaim support
+            if(def.flags & CAM_ADDTHINGS
+               && (!blockThingsIterator(mapx + mapxstep, mapy)
+               || !blockThingsIterator(mapx, mapy + mapystep)))
+            {
+               return false;
+            }
          }
          xintercept += xstep;
          yintercept += ystep;
@@ -745,6 +762,7 @@ public:
    struct State
    {
       fixed_t originfrac, bottomslope, topslope;
+      int reclevel;
    };
 
    static bool checkSight(const camsightparams_t &inparams, const State *state);
@@ -757,7 +775,7 @@ private:
    bool checkPortalSector(const sector_t *sector, fixed_t totalfrac, 
       fixed_t partialfrac, const divline_t &trace) const;
    bool recurse(int groupid, fixed_t x, fixed_t y, const State &state,
-      bool *result) const;
+      bool *result, const linkdata_t &data) const;
 
    bool portalexit, portalresult;
    State state;
@@ -783,6 +801,7 @@ portalexit(false), portalresult(false), params(&inparams)
       state.originfrac = 0;
       state.bottomslope = params->tz - sightzstart;
       state.topslope = state.bottomslope + params->theight;
+      state.reclevel = 0;
    }
 
 }
@@ -845,7 +864,8 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
       return false;  // stop
 
    // have we hit a portal line
-   if(li->pflags & PS_PASSABLE)
+   if(li->pflags & PS_PASSABLE && P_PointOnLineSide(trace.x, trace.y, li) == 0 &&
+      in->frac > 0)
    {
       State state(context.state);
       state.originfrac = totalfrac;
@@ -853,7 +873,7 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
          context.params->cx + FixedMul(trace.dx, in->frac),
          context.params->cy + FixedMul(trace.dy, in->frac),
          state,
-         &context.portalresult))
+         &context.portalresult, li->portal->data.link))
       {
          context.portalexit = true;
          return false;
@@ -923,9 +943,13 @@ bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
          newstate.bottomslope = newslope;
          newstate.topslope = state.topslope;
          newstate.originfrac = totalfrac;
+         newstate.reclevel = state.reclevel + 1;
 
-         if(recurse(newfromid, x, y, newstate, &result) && result)
+         if(recurse(newfromid, x, y, newstate, &result, *R_CPLink(sector)) && 
+            result)
+         {
             return true;
+         }
       }
    }
 
@@ -959,9 +983,13 @@ bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
          newstate.bottomslope = state.bottomslope;
          newstate.topslope = newslope;
          newstate.originfrac = totalfrac;
+         newstate.reclevel = state.reclevel + 1;
 
-         if(recurse(newfromid, x, y, newstate, &result) && result)
+         if(recurse(newfromid, x, y, newstate, &result, *R_FPLink(sector)) &&
+            result)
+         {
             return true;
+         }
       }
    }
    return false;
@@ -973,25 +1001,19 @@ bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
 // If valid, starts a new lookup from below
 //
 bool CamContext::recurse(int newfromid, fixed_t x, fixed_t y, 
-                         const State &instate, bool *result) const
+                         const State &instate, bool *result, 
+                         const linkdata_t &data) const
 {
    if(newfromid == params->cgroupid)
       return false;   // not taking us anywhere...
 
-   const camsightparams_t *prev = params->prev;
-   while(prev)
-   {
-      if(prev->cgroupid == newfromid)
-         return false;
-      prev = prev->prev;
-   }
-
-   const linkoffset_t *link = P_GetLinkIfExists(params->cgroupid, newfromid);
+   if(instate.reclevel >= RECURSION_LIMIT)
+      return false;  // protection
 
    camsightparams_t params;
-   params.cx = x;
-   params.cy = y;
-   params.cz = this->params->cz;
+   params.cx = x + data.deltax;
+   params.cy = y + data.deltay;
+   params.cz = this->params->cz + data.deltaz;
    params.cheight = this->params->cheight;
    params.tx = this->params->tx;
    params.ty = this->params->ty;
@@ -1001,11 +1023,6 @@ bool CamContext::recurse(int newfromid, fixed_t x, fixed_t y,
    params.tgroupid = this->params->tgroupid;
    params.prev = this->params;
 
-   if(link)
-   {
-      params.cx += link->x;
-      params.cy += link->y;
-   }
    *result = checkSight(params, &instate);
    return true;
 }
@@ -1076,8 +1093,7 @@ bool CamContext::checkSight(const camsightparams_t &params,
          ty -= link->y;
       }
       PTDef def;
-      def.doLines = true;
-      def.doThings = false;
+      def.flags = CAM_ADDLINES;
       def.earlyOut = true;
       def.trav = CamContext::sightTraverse;
       PathTraverser traverser(def, &context);
@@ -1123,9 +1139,10 @@ class AimContext
 public:
    struct State
    {
-      fixed_t origindist, bottomslope, topslope, cx, cy;
+      fixed_t origindist, bottomslope, topslope, cx, cy, cz;
       int groupid;
       const AimContext *prev;
+      int reclevel;
    };
 
    static fixed_t aimLineAttack(const Mobj *t1, angle_t angle, fixed_t distance, 
@@ -1139,11 +1156,10 @@ private:
    bool checkPortalSector(const sector_t *sector, fixed_t totalfrac, 
       fixed_t partialfrac, const divline_t &trace);
    fixed_t recurse(State &newstate, fixed_t partialfrac, fixed_t *outSlope, 
-      Mobj **outTarget, fixed_t *outDist) const;
+      Mobj **outTarget, fixed_t *outDist, const linkdata_t &data) const;
 
    const Mobj *thing;
    fixed_t attackrange;
-   fixed_t sightzstart;
    uint32_t aimflagsmask;
    State state;
    fixed_t lookslope;
@@ -1164,7 +1180,7 @@ fixed_t AimContext::aimLineAttack(const Mobj *t1, angle_t angle,
    AimContext context(t1, angle, distance, mask, state);
 
    PTDef def;
-   def.doLines = def.doThings = true;
+   def.flags = CAM_ADDLINES | CAM_ADDTHINGS;
    def.earlyOut = false;
    def.trav = aimTraverse;
    PathTraverser traverser(def, &context);
@@ -1205,8 +1221,6 @@ AimContext::AimContext(const Mobj *t1, angle_t inangle, fixed_t distance,
 thing(t1), attackrange(distance), aimflagsmask(mask), aimslope(0),
    linetarget(nullptr), targetdist(D_MAXINT), angle(inangle)
 {
-   sightzstart = t1->z + (t1->height >> 1) + 8 * FRACUNIT;
-
    fixed_t pitch = t1->player ? t1->player->pitch : 0;
    lookslope = pitch ? finetangent[(ANG90 - pitch) >> ANGLETOFINESHIFT] : 0;
    
@@ -1217,8 +1231,10 @@ thing(t1), attackrange(distance), aimflagsmask(mask), aimslope(0),
       state.origindist = 0;
       state.cx = t1->x;
       state.cy = t1->y;
+      state.cz = t1->z + (t1->height >> 1) + 8 * FRACUNIT;
       state.groupid = t1->groupid;
       state.prev = nullptr;
+      state.reclevel = 0;
       
       if(!pitch)
       {
@@ -1287,7 +1303,7 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata,
          (!!(sector->f_pflags & PS_PASSABLE) ^ 
          !!(osector->f_pflags & PS_PASSABLE)))
       {
-         slope = FixedDiv(lo.openbottom - context.sightzstart, totaldist);
+         slope = FixedDiv(lo.openbottom - context.state.cz, totaldist);
          if(slope > context.state.bottomslope)
             context.state.bottomslope = slope;
       }
@@ -1296,7 +1312,7 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata,
          (!!(sector->c_pflags & PS_PASSABLE) ^ 
          !!(osector->c_pflags & PS_PASSABLE)))
       {
-         slope = FixedDiv(lo.opentop - context.sightzstart, totaldist);
+         slope = FixedDiv(lo.opentop - context.state.cz, totaldist);
          if(slope < context.state.topslope)
             context.state.topslope = slope;
       }
@@ -1304,7 +1320,8 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata,
       if(context.state.topslope <= context.state.bottomslope)
          return false;
 
-      if(li->pflags & PS_PASSABLE)
+      if(li->pflags & PS_PASSABLE && P_PointOnLineSide(trace.x, trace.y, li) == 0 &&
+         in->frac > 0)
       {
          State newState(context.state);
          newState.cx = trace.x + FixedMul(trace.dx, in->frac);
@@ -1316,7 +1333,7 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata,
             in->frac,
             &context.aimslope,
             &context.linetarget,
-            nullptr);
+            nullptr, li->portal->data.link);
       }
 
       return true;
@@ -1346,13 +1363,13 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata,
             return false;
       }
 
-      thingtopslope = FixedDiv(th->z + th->height - context.sightzstart, 
+      thingtopslope = FixedDiv(th->z + th->height - context.state.cz, 
          totaldist);
 
       if(thingtopslope < context.state.bottomslope)
          return true; // shot over the thing
 
-      thingbottomslope = FixedDiv(th->z - context.sightzstart, totaldist);
+      thingbottomslope = FixedDiv(th->z - context.state.cz, totaldist);
       if(thingbottomslope > context.state.topslope)
          return true; // shot under the thing
 
@@ -1390,18 +1407,18 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
       (newfromid = sector->c_portal->data.link.toid) != state.groupid)
    {
       // ceiling portal (slope must be up)
-      linehitz = sightzstart + FixedMul(state.topslope, totalfrac);
+      linehitz = state.cz + FixedMul(state.topslope, totalfrac);
       fixed_t planez = R_CPLink(sector)->planez;
       if(linehitz > planez)
       {
          // update cam.bottomslope to be the top of the sector wall
-         newslope = FixedDiv(planez - sightzstart, totalfrac);
+         newslope = FixedDiv(planez - state.cz, totalfrac);
          // if totalfrac == 0, then it will just be a very big slope
          if(newslope < state.bottomslope)
             newslope = state.bottomslope;
 
          // get x and y of position
-         if(linehitz == sightzstart)
+         if(linehitz == state.cz)
          {
             // handle this edge case: put point right on line
             x = trace.x + FixedMul(trace.dx, partialfrac);
@@ -1410,7 +1427,7 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
          else
          {
             // add a unit just to ensure that it enters the sector
-            fixedratio = FixedDiv(planez - sightzstart, linehitz - sightzstart);
+            fixedratio = FixedDiv(planez - state.cz, linehitz - state.cz);
             // update z frac
             totalfrac = FixedMul(fixedratio, totalfrac);
             // retrieve the xy frac using the origin frac
@@ -1431,8 +1448,9 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
          newstate.groupid = newfromid;
          newstate.origindist = totalfrac;
          newstate.bottomslope = newslope;
+         newstate.reclevel = state.reclevel + 1;
 
-         if(recurse(newstate, partialfrac, &outSlope, &outTarget, &outDist))
+         if(recurse(newstate, partialfrac, &outSlope, &outTarget, &outDist, *R_CPLink(sector)))
          {
             if(outTarget && (!linetarget || outDist < targetdist))
             {
@@ -1446,22 +1464,22 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
    if(state.bottomslope < 0 && sector->f_pflags & PS_PASSABLE && 
       (newfromid = sector->f_portal->data.link.toid) != state.groupid)
    {
-      linehitz = sightzstart + FixedMul(state.bottomslope, totalfrac);
+      linehitz = state.cz + FixedMul(state.bottomslope, totalfrac);
       fixed_t planez = R_FPLink(sector)->planez;
       if(linehitz < planez)
       {
-         newslope = FixedDiv(planez - sightzstart, totalfrac);
+         newslope = FixedDiv(planez - state.cz, totalfrac);
          if(newslope > state.topslope)
             newslope = state.topslope;
 
-         if(linehitz == sightzstart)
+         if(linehitz == state.cz)
          {
             x = trace.x + FixedMul(trace.dx, partialfrac);
             y = trace.y + FixedMul(trace.dy, partialfrac);
          }
          else
          {
-            fixedratio = FixedDiv(planez - sightzstart, linehitz - sightzstart);
+            fixedratio = FixedDiv(planez - state.cz, linehitz - state.cz);
             totalfrac = FixedMul(fixedratio, totalfrac);
             partialfrac = FixedDiv(totalfrac - state.origindist, attackrange);
 
@@ -1479,8 +1497,9 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
          newstate.groupid = newfromid;
          newstate.origindist = totalfrac;
          newstate.topslope = newslope;
+         newstate.reclevel = state.reclevel + 1;
 
-         if(recurse(newstate, partialfrac, &outSlope, &outTarget, &outDist))
+         if(recurse(newstate, partialfrac, &outSlope, &outTarget, &outDist, *R_FPLink(sector)))
          {
             if(outTarget && (!linetarget || outDist < targetdist))
             {
@@ -1496,27 +1515,18 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
 
 fixed_t AimContext::recurse(State &newstate, fixed_t partialfrac, 
                             fixed_t *outSlope, Mobj **outTarget, 
-                            fixed_t *outDist) const
+                            fixed_t *outDist, const linkdata_t &data) const
 {
    if(newstate.groupid == state.groupid)
       return false;
 
-   const AimContext *prevC = state.prev;
-   while(prevC)
-   {
-      if(prevC->state.groupid == newstate.groupid)
-         return false;
-      prevC = prevC->state.prev;
-   }
+   if(state.reclevel > RECURSION_LIMIT)
+      return false;
 
-   const linkoffset_t *link = P_GetLinkIfExists(state.groupid, 
-      newstate.groupid);
+   newstate.cx += data.deltax;
+   newstate.cy += data.deltay;
+   newstate.cz += data.deltaz;
 
-   if(link)
-   {
-      newstate.cx += link->x;
-      newstate.cy += link->y;
-   }
    fixed_t lessdist = attackrange - FixedMul(attackrange, partialfrac);
    newstate.prev = this;
          
@@ -1554,6 +1564,7 @@ public:
       fixed_t x, y, z;
       fixed_t origindist;
       int groupid;
+      int reclevel;
    };
 
    static void lineAttack(Mobj *source, angle_t angle, fixed_t distance, 
@@ -1592,8 +1603,7 @@ void ShootContext::lineAttack(Mobj *source, angle_t angle, fixed_t distance,
    fixed_t y2 = context.state.y + (distance >> FRACBITS) * context.sin;
 
    PTDef def;
-   def.doLines = true;
-   def.doThings = true;
+   def.flags = CAM_ADDLINES | CAM_ADDTHINGS;
    def.earlyOut = false;
    def.trav = shootTraverse;
    PathTraverser traverser(def, &context);
@@ -1612,7 +1622,7 @@ void ShootContext::lineAttack(Mobj *source, angle_t angle, fixed_t distance,
 bool ShootContext::checkShootFlatPortal(const sector_t *sidesector, 
                                         fixed_t infrac) const
 {
-   bool haveportal = false;
+   const linkdata_t *portaldata = nullptr;
    fixed_t pfrac = 0;
    fixed_t absratio = 0;
    int newfromid = R_NOGROUP;
@@ -1627,11 +1637,11 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
          pfrac = FixedDiv(planez - state.z, aimslope);
          absratio = FixedDiv(planez - state.z, z - state.z);
          z = planez;
-         haveportal = true;
+         portaldata = R_CPLink(sidesector);
          newfromid = sidesector->c_portal->data.link.toid;
       }
    }
-   if(!haveportal && sidesector->f_pflags & PS_PASSABLE)
+   if(!portaldata && sidesector->f_pflags & PS_PASSABLE)
    {
       // floor portal
       fixed_t planez = R_FPLink(sidesector)->planez;
@@ -1640,38 +1650,25 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
          pfrac = FixedDiv(planez - state.z, aimslope);
          absratio = FixedDiv(planez - state.z, z - state.z);
          z = planez;
-         haveportal = true;
+         portaldata = R_FPLink(sidesector);
          newfromid = sidesector->f_portal->data.link.toid;
       }
    }
-   if(haveportal)
+   if(portaldata)
    {
       // update x and y as well
       fixed_t x = state.x + FixedMul(cos, pfrac);
       fixed_t y = state.y + FixedMul(sin, pfrac);
-      if(newfromid == state.groupid)
+      if(newfromid == state.groupid || state.reclevel >= RECURSION_LIMIT)
          return false;
-
-      const ShootContext *prev = state.prev;
-      while(prev)
-      {
-         if(prev->state.groupid == newfromid)
-            return false;
-         prev = prev->state.prev;
-      }
-
-      const linkoffset_t *link = P_GetLinkIfExists(state.groupid, newfromid);
 
       // NOTE: for line attacks, sightzstart also moves!
       fixed_t dist = FixedMul(FixedMul(attackrange, infrac), absratio);
       fixed_t remdist = attackrange - dist;
 
-      if(link)
-      {
-         x += link->x;
-         y += link->y;
-         z += link->z;  // why not
-      }
+      x += portaldata->deltax;
+      y += portaldata->deltay;
+      z += portaldata->deltaz;
 
       State newstate(state);
       newstate.groupid = newfromid;
@@ -1680,6 +1677,7 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
       newstate.x = x;
       newstate.y = y;
       newstate.z = z;
+      newstate.reclevel++;
 
       lineAttack(thing, angle, remdist, aimslope, damage, &newstate);
 
@@ -1694,9 +1692,6 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
 bool ShootContext::shoot2SLine(line_t *li, int lineside, fixed_t dist,
                                const LineOpening &lo) const
 {
-   const sector_t *fs = li->frontsector;
-   const sector_t *bs = li->backsector;
-
    // ioanch: no more need for demo version < 333 check. Also don't allow comp.
    if(FixedDiv(lo.openbottom - state.z, dist) <= aimslope &&
       FixedDiv(lo.opentop - state.z, dist) >= aimslope)
@@ -1746,22 +1741,14 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
       if(context.shotCheck2SLine(li, lineside, in->frac))
       {
          // ioanch 20160101: line portal aware
-         if(li->portal && li->pflags & PS_PASSABLE)
+         if(li->pflags & PS_PASSABLE && lineside == 0 && in->frac > 0)
          {
             int newfromid = li->portal->data.link.toid;
             if(newfromid == context.state.groupid)
                return true;
 
-            const ShootContext *prev = context.state.prev;
-            while(prev)
-            {
-               if(prev->state.groupid == newfromid)
-                  return true;
-               prev = prev->state.prev;
-            }
-
-            const linkoffset_t *link = P_GetLinkIfExists(context.state.groupid, 
-               newfromid);
+            if(context.state.reclevel >= RECURSION_LIMIT)
+               return true;
 
             // NOTE: for line attacks, sightzstart also moves!
             fixed_t x = trace.x + FixedMul(trace.dx, in->frac);
@@ -1771,13 +1758,12 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
             fixed_t dist =  FixedMul(context.attackrange, in->frac);
             fixed_t remdist = context.attackrange - dist;
 
-            if(link)
-            {
-               x += link->x;
-               y += link->y;
-               z += link->z;  // why not
-            }
-
+            const linkdata_t &data = li->portal->data.link;
+            
+            x += data.deltax;
+            y += data.deltay;
+            z += data.deltaz;  // why not
+            
             State newstate(context.state);
             newstate.groupid = newfromid;
             newstate.x = x;
@@ -1785,6 +1771,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
             newstate.z = z;
             newstate.prev = &context;
             newstate.origindist += dist;
+            ++newstate.reclevel;
 
             lineAttack(context.thing, context.angle, remdist, context.aimslope,
                context.damage, &newstate);
@@ -1944,6 +1931,7 @@ ShootContext::ShootContext(Mobj *source, angle_t inangle, fixed_t distance,
       state.groupid = source->groupid;
       state.prev = nullptr;
       state.origindist = 0;
+      state.reclevel = 0;
    }
 }
 
@@ -1957,5 +1945,215 @@ void CAM_LineAttack(Mobj *source, angle_t angle, fixed_t distance,
 {
    ShootContext::lineAttack(source, angle, distance, slope, damage, nullptr);
 }
+
+//
+// CAM_PathTraverse
+//
+// Public wrapper for PathTraverser
+//
+bool CAM_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
+                      uint32_t flags, void *data,
+                      bool (*trav)(const intercept_t *in, void *data,
+                                   const divline_t &trace))
+{
+   PTDef def;
+   def.flags = flags;
+   def.earlyOut = false;
+   def.trav = trav;
+   return PathTraverser(def, data).traverse(x1, y1, x2, y2);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// UseContext
+//
+// Context for use actions
+//
+class UseContext
+{
+public:
+   struct State
+   {
+      const UseContext *prev;
+      fixed_t attackrange;
+      int groupid;
+      int reclevel;
+   };
+
+   static void useLines(const player_t *player, fixed_t x, fixed_t y,
+      const State *instate);
+
+private:
+   UseContext(const player_t *player, const State *state);
+   static bool useTraverse(const intercept_t *in, void *context, 
+      const divline_t &trace);
+   static bool noWayTraverse(const intercept_t *in, void *context, 
+      const divline_t &trace);
+
+   State state;
+   const player_t *player;
+   Mobj *thing;
+   bool portalhit;
+};
+
+//
+// UseContext::useLines
+//
+// Actions. Returns true if a switch has been hit
+//
+void UseContext::useLines(const player_t *player, fixed_t x, fixed_t y, 
+                          const State *state)
+{
+   UseContext context(player, state);
+
+   int angle = player->mo->angle >> ANGLETOFINESHIFT;
+
+   fixed_t x2 = x + (context.state.attackrange >> FRACBITS) * finecosine[angle];
+   fixed_t y2 = y + (context.state.attackrange >> FRACBITS) * finesine[angle];
+
+   PTDef def;
+   def.earlyOut = false;
+   def.flags = CAM_ADDLINES;
+   def.trav = useTraverse;
+   PathTraverser traverser(def, &context);
+   bool ret = false;
+   if(traverser.traverse(x, y, x2, y2))
+   {
+      if(!context.portalhit)
+      {
+         PTDef def;
+         def.earlyOut = false;
+         def.flags = CAM_ADDLINES;
+         def.trav = noWayTraverse;
+         PathTraverser traverser(def, &context);
+         if(!traverser.traverse(x, y, x2, y2))
+            S_StartSound(context.thing, GameModeInfo->playerSounds[sk_noway]);
+      }
+   }
+}
+
+//
+// UseContext::UseContext
+//
+// Constructor
+//
+UseContext::UseContext(const player_t *inplayer, const State *instate) 
+   : player(inplayer), thing(inplayer->mo), portalhit(false)
+{
+   if(instate)
+      state = *instate;
+   else
+   {
+      state.attackrange = USERANGE;
+      state.prev = nullptr;
+      state.groupid = inplayer->mo->groupid;
+      state.reclevel = 0;
+   }
+}
+
+//
+// UseContext::useTraverse
+//
+// Use traverse. Based on PTR_UseTraverse.
+//
+bool UseContext::useTraverse(const intercept_t *in, void *vcontext, 
+                             const divline_t &trace)
+{
+   auto context = static_cast<UseContext *>(vcontext);
+   line_t *li = in->d.line;
+
+   // ioanch 20160131: don't treat passable lines as portals; another code path
+   // will use them.
+   if(li->special && !(li->pflags & PS_PASSABLE))
+   {
+      // ioanch 20160131: portal aware
+      const linkoffset_t *link = P_GetLinkOffset(context->thing->groupid,
+         li->frontsector->groupid);
+      P_UseSpecialLine(context->thing, li,
+         P_PointOnLineSide(context->thing->x + link->x, 
+                           context->thing->y + link->y, li) == 1);
+
+      //WAS can't use for than one special line in a row
+      //jff 3/21/98 NOW multiple use allowed with enabling line flag
+      return !!(li->flags & ML_PASSUSE);
+   }
+
+   // no special
+   LineOpening lo;
+   if(li->extflags & EX_ML_BLOCKALL) // haleyjd 04/30/11
+      lo.openrange = 0;
+   else
+      CAM_lineOpening(lo, li);
+
+   if(clip.openrange <= 0)
+   {
+      // can't use through a wall
+      S_StartSound(context->thing, GameModeInfo->playerSounds[sk_noway]);
+      return false;
+   }
+
+   // ioanch 20160131: opportunity to pass through portals
+   if(li->pflags & PS_PASSABLE && P_PointOnLineSide(trace.x, trace.y, li) == 0 && 
+      in->frac > 0)
+   {
+      int newfromid = li->portal->data.link.toid;
+      if(newfromid == context->state.groupid || 
+         context->state.reclevel >= RECURSION_LIMIT)
+      {
+         return true;
+      }
+
+      State newState(context->state);
+      newState.prev = context;
+      newState.attackrange -= FixedMul(newState.attackrange, in->frac);
+      newState.groupid = newfromid;
+      newState.reclevel++;
+      fixed_t x = trace.x + FixedMul(trace.dx, in->frac) + li->portal->data.link.deltax;
+      fixed_t y = trace.y + FixedMul(trace.dy, in->frac) + li->portal->data.link.deltay;
+
+      useLines(context->player, x, y, &newState);
+      context->portalhit = true;
+      return false;
+   }
+
+   // not a special line, but keep checking
+   return true;
+}
+
+//
+// UseContext::noWayTraverse
+//
+// Same as PTR_NoWayTraverse. Will NEVER be called if portals had been hit.
+//
+bool UseContext::noWayTraverse(const intercept_t *in, void *vcontext, 
+                               const divline_t &trace)
+{
+   const line_t *ld = in->d.line; // This linedef
+   if(ld->special) // Ignore specials
+      return true;
+   if(ld->flags & ML_BLOCKING) // Always blocking
+      return false;
+   LineOpening lo;
+   CAM_lineOpening(lo, ld);
+
+   const UseContext *context = static_cast<const UseContext *>(vcontext);
+
+   return 
+      !(clip.openrange  <= 0 ||                                  // No opening
+        clip.openbottom > context->thing->z + STEPSIZE ||// Too high, it blocks
+        clip.opentop    < context->thing->z + context->thing->height);
+   // Too low, it blocks
+}
+
+//
+// CAM_UseLines
+//
+// ioanch 20160131: portal-aware variant of P_UseLines
+//
+void CAM_UseLines(const player_t *player)
+{
+   UseContext::useLines(player, player->mo->x, player->mo->y, nullptr);
+}
+
 // EOF
 

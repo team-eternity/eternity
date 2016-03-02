@@ -95,6 +95,7 @@ int UnknownThingType;
 #define ITEM_TNG_DTHSTATESREM  "dmg_deathstates.remove"
 #define ITEM_TNG_XDEATHSTATE   "xdeathstate"
 #define ITEM_TNG_RAISESTATE    "raisestate"
+#define ITEM_TNG_HEALSTATE     "healstate"   // ioanch 20160220
 #define ITEM_TNG_CRASHSTATE    "crashstate"
 #define ITEM_TNG_ACTIVESTATE   "activestate"
 #define ITEM_TNG_INACTIVESTATE "inactivestate"
@@ -485,6 +486,7 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_DTHSTATESREM,    0,             CFGF_LIST), \
    CFG_STR(ITEM_TNG_XDEATHSTATE,     "S_NULL",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_RAISESTATE,      "S_NULL",      CFGF_NONE), \
+   CFG_STR(ITEM_TNG_HEALSTATE,       "S_NULL",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_CRASHSTATE,      "S_NULL",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_ACTIVESTATE,     "S_NULL",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_INACTIVESTATE,   "S_NULL",      CFGF_NONE), \
@@ -976,6 +978,46 @@ static MetaState *E_GetMetaState(mobjinfo_t *mi, const char *name)
       ret = static_cast<MetaState *>(obj);
 
    return ret;
+}
+
+//
+// E_SetMetaState
+//
+// If state is not the null state, set it as a metastate under the "name"
+// key. If state IS the null state, remove any such named metastate from the
+// mobjinfo.
+//
+static void E_SetMetaState(mobjinfo_t *mi, state_t *state, const char *name)
+{
+   if(state->index != NullStateNum)
+   {
+      MetaState *ms;
+      
+      if((ms = mi->meta->getObjectKeyAndTypeEx<MetaState>(name)))
+         ms->state = state;
+      else
+         E_AddMetaState(mi, state, name);
+   }
+   else
+      E_RemoveMetaState(mi, name);      
+}
+
+//
+// ioanch 20160220: variant with metastate
+//
+static void E_ThingFrame(const char *data, const char *fieldname,
+                         int thingnum, const char *metakey)
+{
+   int index;
+   if((index = E_StateNumForName(data)) < 0)
+   {
+      E_EDFLoggedErr(2, "E_ThingFrame: thing '%s': invalid %s '%s'\n",
+                     mobjinfo[thingnum]->name, fieldname, data);
+   }
+   else
+   {
+      E_SetMetaState(mobjinfo[thingnum], states[index], metakey);
+   }
 }
 
 //=============================================================================
@@ -2049,6 +2091,13 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       tempstr = cfg_getstr(thingsec, ITEM_TNG_RAISESTATE);
       E_ThingFrame(tempstr, ITEM_TNG_RAISESTATE, i,
                    &(mobjinfo[i]->raisestate));
+   }
+
+   // ioanch 20160220: process healstate
+   if(cfg_size(thingsec, ITEM_TNG_HEALSTATE) > 0)
+   {
+      tempstr = cfg_getstr(thingsec, ITEM_TNG_HEALSTATE);
+      E_ThingFrame(tempstr, ITEM_TNG_HEALSTATE, i, METASTATE_HEAL);
    }
 
    // 08/07/04: process crashstate

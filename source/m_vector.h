@@ -37,6 +37,22 @@ struct v3fixed_t
 struct v2fixed_t
 {
    fixed_t x, y;
+   
+   // ioanch 20160106: added operators as needed
+   template<typename T>
+   bool operator == (T &&other) const { return x == other.x && 
+                                               y == other.y; }
+   
+   template<typename T>
+   v2fixed_t &operator += (T &&other) { x += other.x; 
+                                        y += other.y; return *this; }
+                                        
+   template<typename T>
+   v2fixed_t operator - (T &&other) const 
+   { 
+      v2fixed_t ret = { x - other.x, y - other.y };
+      return ret;
+   }
 };
 
 struct v3float_t

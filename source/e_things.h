@@ -81,6 +81,10 @@ void     E_SplitTypeAndState(char *src, char **type, char **state);
 int     *E_GetNativeStateLoc(mobjinfo_t *mi, const char *label);
 state_t *E_GetStateForMobjInfo(mobjinfo_t *mi, const char *label);
 
+// ioanch 20160220: metastate key names used throughout the code. They also
+// work as DECORATE state label names.
+#define METASTATE_HEAL "Heal"
+
 #endif
 
 // EOF

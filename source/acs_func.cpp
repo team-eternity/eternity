@@ -51,6 +51,7 @@
 #include "p_map.h"
 #include "p_map3d.h"
 #include "p_maputl.h"
+#include "p_portal.h"   // ioanch 20160116
 #include "p_spec.h"
 #include "p_xenemy.h"
 #include "r_data.h"
@@ -231,9 +232,10 @@ bool ACS_ChkThingVar(Mobj *thing, uint32_t var, int32_t val)
 
    case ACS_THINGVAR_Angle:          return thing->angle >> 16 == (uint32_t)val;
    case ACS_THINGVAR_Armor:          return thing->player ? thing->player->armorpoints == val : false;
-   case ACS_THINGVAR_CeilingTexture: return thing->subsector->sector->ceilingpic == R_FindWall(ACSVM::GetString(val));
+      // ioanch 20160116: extreme sector (portal aware)
+   case ACS_THINGVAR_CeilingTexture: return P_ExtremeSectorAtPoint(thing, true)->ceilingpic == R_FindWall(ACSVM::GetString(val));
    case ACS_THINGVAR_CeilingZ:       return thing->ceilingz == val;
-   case ACS_THINGVAR_FloorTexture:   return thing->subsector->sector->floorpic == R_FindWall(ACSVM::GetString(val));
+   case ACS_THINGVAR_FloorTexture:   return P_ExtremeSectorAtPoint(thing, false)->floorpic == R_FindWall(ACSVM::GetString(val));
    case ACS_THINGVAR_FloorZ:         return thing->floorz == val;
    case ACS_THINGVAR_Frags:          return thing->player ? thing->player->totalfrags == val : false;
    case ACS_THINGVAR_LightLevel:     return thing->subsector->sector->lightlevel == val;

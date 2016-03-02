@@ -823,8 +823,10 @@ void E_PtclTerrainHit(particle_t *p)
 // E_TerrainHit
 //
 // Executes mobj terrain effects.
+// ioanch 20160116: also use "sector" to change the group ID if needed
 //
-static void E_TerrainHit(ETerrain *terrain, Mobj *thing, fixed_t z)
+static void E_TerrainHit(ETerrain *terrain, Mobj *thing, fixed_t z, 
+                         const sector_t *sector)
 {
    ETerrainSplash *splash = terrain->splash;
    Mobj *mo = NULL;
@@ -833,22 +835,27 @@ static void E_TerrainHit(ETerrain *terrain, Mobj *thing, fixed_t z)
    if(!splash)
       return;
 
+   // ioanch 20160116: portal aware
+   const linkoffset_t *link = P_GetLinkOffset(thing->groupid, sector->groupid);
+   fixed_t tx = thing->x + link->x;
+   fixed_t ty = thing->y + link->y;
+
    // low mass splash?
    // note: small splash didn't exist before version 3.33
    if(demo_version >= 333 && 
       lowmass && splash->smallclass != -1)
    {
-      mo = P_SpawnMobj(thing->x, thing->y, z, splash->smallclass);
+      mo = P_SpawnMobj(tx, ty, z, splash->smallclass);
       mo->floorclip += splash->smallclip;
    }
    else
    {
       if(splash->baseclass != -1)
-         mo = P_SpawnMobj(thing->x, thing->y, z, splash->baseclass);
+         mo = P_SpawnMobj(tx, ty, z, splash->baseclass);
 
       if(splash->chunkclass != -1)
       {
-         mo = P_SpawnMobj(thing->x, thing->y, z, splash->chunkclass);
+         mo = P_SpawnMobj(tx, ty, z, splash->chunkclass);
          P_SetTarget<Mobj>(&mo->target, thing);
          
          if(splash->chunkxvelshift != -1)
@@ -898,7 +905,9 @@ bool E_HitWater(Mobj *thing, sector_t *sector)
          sectors[sector->heightsec].floorheight :
          sector->floorheight;
 
-   E_TerrainHit(terrain, thing, z);
+   // ioanch 20160116: also use "sector" as a parameter in case it's in another
+   // group
+   E_TerrainHit(terrain, thing, z, sector);
 
    return terrain->liquid;
 }

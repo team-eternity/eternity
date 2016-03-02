@@ -157,6 +157,8 @@ fixed_t   bmaporgx, bmaporgy;     // origin of block map
 Mobj    **blocklinks;             // for thing chains
 
 byte     *portalmap;              // haleyjd: for portals
+// ioanch 20160106: more detailed info (list of groups for each block)
+int     **gBlockGroups; 
 
 //
 // REJECT
@@ -584,6 +586,9 @@ void P_InitSector(sector_t *ss)
    // CPP_FIXME: temporary placement construction for sound origins
    ::new (&ss->soundorg)  PointThinker;
    ::new (&ss->csoundorg) PointThinker;
+
+   // ioanch: 20160123: init portalbox=false
+   ss->portalbox = false;
 }
 
 #define DOOM_SECTOR_SIZE 26
@@ -2341,6 +2346,9 @@ void P_LoadBlockMap(int lump)
    // haleyjd 05/17/13: setup portalmap
    count = sizeof(*portalmap) * bmapwidth * bmapheight;
    portalmap = ecalloctag(byte *, 1, count, PU_LEVEL, NULL);
+   // ioanch: what portals are in what blocks
+   gBlockGroups = ecalloctag(decltype(gBlockGroups), sizeof(*gBlockGroups), 
+                             bmapwidth * bmapheight, PU_LEVEL, nullptr);
 }
 
 

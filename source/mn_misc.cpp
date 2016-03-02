@@ -390,7 +390,7 @@ static const char *cat_strs[NUMCATS] =
 
 static const char *val_strs[NUMCATS] =
 {
-   "James Haley\nStephen McGranahan\nCharles Gunyon\nDavid Hill\n",
+   "James Haley\nStephen McGranahan\nDavid Hill\nIoan Chera\n",
    
    FC_HI "SMMU" FC_NORMAL " by Simon Howard\n",
 

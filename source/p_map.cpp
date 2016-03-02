@@ -396,10 +396,16 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    // Any contacted lines the step closer together
    // will adjust them.
    
+   // ioanch 20160113: use correct floor and ceiling heights
+   const sector_t *bottomfloorsector = newsubsec->sector;
 #ifdef R_LINKEDPORTALS
     //newsubsec->sector->floorheight - clip.thing->height;
    if(demo_version >= 333 && newsubsec->sector->f_pflags & PS_PASSABLE)
-      clip.floorz = clip.dropoffz = newsubsec->sector->floorheight - (1024 << FRACBITS);
+   {
+      bottomfloorsector = P_ExtremeSectorAtPoint(x, y, false, 
+            newsubsec->sector);
+      clip.floorz = clip.dropoffz = bottomfloorsector->floorheight;
+   }
    else
 #endif
       clip.floorz = clip.dropoffz = newsubsec->sector->floorheight;
@@ -407,7 +413,10 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
 #ifdef R_LINKEDPORTALS
     //newsubsec->sector->ceilingheight + clip.thing->height;
    if(demo_version >= 333 && newsubsec->sector->c_pflags & PS_PASSABLE)
-      clip.ceilingz = newsubsec->sector->ceilingheight + (1024 << FRACBITS);
+   {
+      clip.ceilingz = P_ExtremeSectorAtPoint(x, y, true, 
+            newsubsec->sector)->ceilingheight;
+   }
    else
 #endif
       clip.ceilingz = newsubsec->sector->ceilingheight;
@@ -416,7 +425,8 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    clip.secceilz = clip.passceilz = clip.ceilingz;
 
    // haleyjd
-   clip.floorpic = newsubsec->sector->floorpic;
+   // ioanch 20160114: use the final sector below
+   clip.floorpic = bottomfloorsector->floorpic;
    
    // SoM 09/07/02: 3dsides monster fix
    clip.touch3dside = 0;
@@ -528,7 +538,7 @@ bool P_PortalTeleportMove(Mobj *thing, fixed_t x, fixed_t y)
 //
 // killough 11/98: reformatted
 
-static bool PIT_CrossLine(line_t *ld)
+static bool PIT_CrossLine(line_t *ld, polyobj_s *po)
 {
    // SoM 9/7/02: wow a killoughism... * SoM is scared
    int flags = ML_TWOSIDED | ML_BLOCKING | ML_BLOCKMONSTERS;
@@ -635,11 +645,38 @@ static void SpechitOverrun(line_t *ld)
 }
 
 //
+// P_CollectSpechits
+//
+// ioanch: moved this here so it may be called from elsewhere too
+//
+void P_CollectSpechits(line_t *ld)
+{
+   // if contacted a special line, add it to the list
+   // ioanch 20160121: check for PS_PASSABLE, to restrict just for linked portals
+   if(ld->special || ld->pflags & PS_PASSABLE)  
+   {
+      if(ld->pflags & PS_PASSABLE)
+         gGroupVisit[ld->portal->data.link.toid] = true;
+      // 1/11/98 killough: remove limit on lines hit, by array doubling
+      if(clip.numspechit >= clip.spechit_max)
+      {
+         clip.spechit_max = clip.spechit_max ? clip.spechit_max * 2 : 8;
+         clip.spechit = erealloc(line_t **, clip.spechit, sizeof(*clip.spechit) * clip.spechit_max);
+      }
+      clip.spechit[clip.numspechit++] = ld;
+
+      // haleyjd 09/20/06: spechit overflow emulation
+      if(clip.numspechit > MAXSPECHIT_OLD)
+         SpechitOverrun(ld);
+   }
+}
+
+//
 // PIT_CheckLine
 //
 // Adjusts tmfloorz and tmceilingz as lines are contacted
 //
-bool PIT_CheckLine(line_t *ld)
+bool PIT_CheckLine(line_t *ld, polyobj_s *po)
 {
    if(clip.bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   || 
       clip.bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  || 
@@ -724,25 +761,8 @@ bool PIT_CheckLine(line_t *ld)
    if(clip.ceilingz < clip.passceilz)
       clip.passceilz = clip.ceilingz;
 
-   // if contacted a special line, add it to the list
-#ifdef R_LINKEDPORTALS   
-   if(ld->special || ld->portal)
-#else
-   if(ld->special)
-#endif
-   {
-      // 1/11/98 killough: remove limit on lines hit, by array doubling
-      if(clip.numspechit >= clip.spechit_max)
-      {
-         clip.spechit_max = clip.spechit_max ? clip.spechit_max * 2 : 8;
-         clip.spechit = erealloc(line_t **, clip.spechit, sizeof(*clip.spechit) * clip.spechit_max);
-      }
-      clip.spechit[clip.numspechit++] = ld;
-
-      // haleyjd 09/20/06: spechit overflow emulation
-      if(clip.numspechit > MAXSPECHIT_OLD)
-         SpechitOverrun(ld);
-   }
+   // ioanch 20160113: moved to a special function
+   P_CollectSpechits(ld);
    
    return true;
 }
@@ -1370,6 +1390,21 @@ static bool P_CheckDropOffEE(Mobj *thing, int dropoff)
 typedef bool (*dropoff_func_t)(Mobj *, int);
 
 //
+// P_lineIsCrossedMiddle
+//
+// ioanch 20160227: true if line is crossed only in its segment range, not
+// outside
+//
+static bool P_lineIsCrossedMiddle(fixed_t tx, fixed_t ty, const line_t *line)
+{
+   // use scalar product
+   float mx = M_FixedToFloat(tx);
+   float my = M_FixedToFloat(ty);
+   return (mx - line->v1->fx) * (line->v2->fx - mx) +
+          (my - line->v1->fy) * (line->v2->fy - my) >= 0;
+}
+
+//
 // P_TryMove
 //
 // Attempt to move to a new position,
@@ -1408,8 +1443,9 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          else
          {
             // haleyjd: yikes...
+            // ioanch 20160111: updated for portals
             if(clip.BlockingMobj->z + clip.BlockingMobj->height-thing->z > STEPSIZE || 
-               (clip.BlockingMobj->subsector->sector->ceilingheight
+               (P_ExtremeSectorAtPoint(clip.BlockingMobj, true)->ceilingheight
                  - (clip.BlockingMobj->z + clip.BlockingMobj->height) < thing->height) ||
                (clip.ceilingz - (clip.BlockingMobj->z + clip.BlockingMobj->height) 
                  < thing->height))
@@ -1522,8 +1558,9 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       }
 
       // haleyjd: CANTLEAVEFLOORPIC flag
+      // ioanch 20160114: use bottom sector floorpic
       if((thing->flags2 & MF2_CANTLEAVEFLOORPIC) &&
-         (clip.floorpic != thing->subsector->sector->floorpic ||
+         (clip.floorpic != P_ExtremeSectorAtPoint(thing, false)->floorpic ||
           clip.floorz - thing->z != 0))
       {
          // thing must stay within its current floor type
@@ -1554,39 +1591,103 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    // haleyjd 08/07/04: new footclip system
    P_AdjustFloorClip(thing);
 
+   // ioanch 20160114: portal teleport
+   //if(full_demo_version >= make_full_version(340, 48) && 
+   //   !(thing->flags & MF_NOCLIP))
+   //{
+   //   const line_t *pline = thing->subsector->sector->portalLine;
+   //   if(pline && pline->pflags & PS_PASSABLE)
+   //   {
+   //      const linkoffset_t *link = P_GetLinkOffset(pline->frontsector->groupid, 
+   //         pline->portal->data.link.toid);
+   //      EV_PortalTeleport(thing, link);
+   //   }
+   //}
+
+   // ioanch 20160117: use this to keep track if a portal line HAS been touched
+   bool hitportallinefront = false;
+
    // if any special lines were hit, do the effect
    // killough 11/98: simplified
    if(!(thing->flags & (MF_TELEPORT | MF_NOCLIP)))
    {
+      fixed_t tx, ty, ox, oy;   // portal aware offsetting
+      const linkoffset_t *link;
+
       while(clip.numspechit--)
       {
 // PTODO
+         // ioanch 20160113: no longer use portals unless demo version is low
 #ifdef R_LINKEDPORTALS
-         if(clip.spechit[clip.numspechit]->pflags & PS_PASSABLE)
+         line_t *line = clip.spechit[clip.numspechit];
+         if(!line)   // skip if it's nulled out
+            continue;
+
+         // ioanch 20160129: portal aware
+         link = P_GetLinkOffset(thing->groupid, line->frontsector->groupid);
+         tx = thing->x + link->x;
+         ty = thing->y + link->y;
+         ox = oldx + link->x;
+         oy = oldy + link->y;
+
+         // ioanch: do NOT trigger 
+         if(line->pflags & PS_PASSABLE && 
+            line->frontsector->groupid == thing->groupid &&
+            P_lineIsCrossedMiddle(tx, ty, line))
          {
             // SoM: if the mobj is touching a portal line, and the line is behind
             // the mobj no matter what the previous lineside was, we missed the 
             // teleport and NEED to do so now.
-            if(P_PointOnLineSide(thing->x, thing->y, clip.spechit[clip.numspechit]))
+
+            int side = P_PointOnLineSide(tx, ty, line);
+            if(side)
             {
-               linkoffset_t *link = 
-                  P_GetLinkOffset(clip.spechit[clip.numspechit]->frontsector->groupid, 
-                                  clip.spechit[clip.numspechit]->portal->data.link.toid);
-               EV_PortalTeleport(thing, link);
+               if(thing->touchedportalline == line)   // ioanch:
+                  thing->touchedportalline = nullptr; // clear it, we got it
+
+               // ioanch 20160129: clear all portal lines with the same front
+               // groupid to avoid moving the thing twice or more
+               for(int i = clip.numspechit - 1; i >= 0; --i)
+               {
+                  if(clip.spechit[i] && clip.spechit[i]->pflags & PS_PASSABLE &&
+                     clip.spechit[i]->frontsector->groupid 
+                     == line->frontsector->groupid)
+                  {
+                     clip.spechit[i] = nullptr;
+                  }
+               }
+               EV_PortalTeleport(thing, &line->portal->data.link);
+            }
+            else
+            {
+               // we're in front: remember the last touched line
+               hitportallinefront = true;
+               thing->touchedportalline = line;
             }
          }
 #endif
-         if(clip.spechit[clip.numspechit]->special)  // see if the line was crossed
+         if(line->special)  // see if the line was crossed
          {
             int oldside;
-            if((oldside = P_PointOnLineSide(oldx, oldy, clip.spechit[clip.numspechit])) !=
-               P_PointOnLineSide(thing->x, thing->y, clip.spechit[clip.numspechit]))
-               P_CrossSpecialLine(clip.spechit[clip.numspechit], oldside, thing);
+            if((oldside = P_PointOnLineSide(ox, oy, line)) !=
+               P_PointOnLineSide(tx, ty, line))
+               P_CrossSpecialLine(line, oldside, thing);
          }
       }
 
       // haleyjd 01/09/07: do not leave numspechit == -1
       clip.numspechit = 0;
+   }
+
+   // ioanch 20160117: we didn't hit now a portal line but previously we did,
+   // except on the wrong side, so now it is time to teleport
+   if(!hitportallinefront && thing->touchedportalline) 
+   {
+      if( thing->touchedportalline->backsector == thing->subsector->sector)
+      {
+         EV_PortalTeleport(thing, &thing->touchedportalline->portal->data.link);
+      }
+      thing->touchedportalline = nullptr; // reset it
    }
    
    return true;
@@ -1606,28 +1707,61 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 // If more than one linedef is contacted, the effects are cumulative,
 // so balancing is possible.
 //
-static bool PIT_ApplyTorque(line_t *ld)
+static bool PIT_ApplyTorque(line_t *ld, polyobj_s *po)
 {
+   // ioanch 20160116: portal aware
+   const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid,
+      ld->frontsector->groupid);
+   fixed_t bbox[4];
+   bbox[BOXRIGHT] = clip.bbox[BOXRIGHT] + link->x;
+   bbox[BOXLEFT] = clip.bbox[BOXLEFT] + link->x;
+   bbox[BOXTOP] = clip.bbox[BOXTOP] + link->y;
+   bbox[BOXBOTTOM] = clip.bbox[BOXBOTTOM] + link->y;
+
    if(ld->backsector &&       // If thing touches two-sided pivot linedef
-      clip.bbox[BOXRIGHT]  > ld->bbox[BOXLEFT]  &&
-      clip.bbox[BOXLEFT]   < ld->bbox[BOXRIGHT] &&
-      clip.bbox[BOXTOP]    > ld->bbox[BOXBOTTOM] &&
-      clip.bbox[BOXBOTTOM] < ld->bbox[BOXTOP] &&
-      P_BoxOnLineSide(clip.bbox, ld) == -1)
+      bbox[BOXRIGHT]  > ld->bbox[BOXLEFT]  &&
+      bbox[BOXLEFT]   < ld->bbox[BOXRIGHT] &&
+      bbox[BOXTOP]    > ld->bbox[BOXBOTTOM] &&
+      bbox[BOXBOTTOM] < ld->bbox[BOXTOP] &&
+      P_BoxOnLineSide(bbox, ld) == -1)
    {
       Mobj *mo = clip.thing;
 
+      fixed_t mox = mo->x + link->x;
+      fixed_t moy = mo->y + link->y;
+
       fixed_t dist =                               // lever arm
-         + (ld->dx >> FRACBITS) * (mo->y >> FRACBITS)
-         - (ld->dy >> FRACBITS) * (mo->x >> FRACBITS) 
+         + (ld->dx >> FRACBITS) * (moy >> FRACBITS)
+         - (ld->dy >> FRACBITS) * (mox >> FRACBITS) 
          - (ld->dx >> FRACBITS) * (ld->v1->y >> FRACBITS)
          + (ld->dy >> FRACBITS) * (ld->v1->x >> FRACBITS);
 
-      if(dist < 0 ?                               // dropoff direction
+      // ioanch: portal aware. Use two different behaviours depending on map
+      bool cond;
+      if(!useportalgroups || full_demo_version < make_full_version(340, 48))
+      {
+         cond = dist < 0 ?                               // dropoff direction
          ld->frontsector->floorheight < mo->z &&
          ld->backsector->floorheight >= mo->z :
          ld->backsector->floorheight < mo->z &&
-         ld->frontsector->floorheight >= mo->z)
+         ld->frontsector->floorheight >= mo->z;
+      }
+      else
+      {
+         // with portals and advanced version, also allow equal floor heights
+         // if one side has portals. Require equal floor height though
+         cond = dist < 0 ?                               // dropoff direction
+         (ld->frontsector->floorheight < mo->z ||
+         (ld->frontsector->floorheight == mo->z && 
+         ld->frontsector->f_pflags & PS_PASSABLE)) &&
+         ld->backsector->floorheight == mo->z :
+         (ld->backsector->floorheight < mo->z ||
+         (ld->backsector->floorheight == mo->z &&
+         ld->backsector->f_pflags & PS_PASSABLE)) &&
+         ld->frontsector->floorheight == mo->z;
+      }
+
+      if(cond)
       {
          // At this point, we know that the object straddles a two-sided
          // linedef, and that the object's center of mass is above-ground.
@@ -1683,22 +1817,23 @@ static bool PIT_ApplyTorque(line_t *ld)
 //
 void P_ApplyTorque(Mobj *mo)
 {
-   int xl = ((clip.bbox[BOXLEFT] = 
-              mo->x - mo->radius) - bmaporgx) >> MAPBLOCKSHIFT;
-   int xh = ((clip.bbox[BOXRIGHT] = 
-              mo->x + mo->radius) - bmaporgx) >> MAPBLOCKSHIFT;
-   int yl = ((clip.bbox[BOXBOTTOM] =
-              mo->y - mo->radius) - bmaporgy) >> MAPBLOCKSHIFT;
-   int yh = ((clip.bbox[BOXTOP] = 
-      mo->y + mo->radius) - bmaporgy) >> MAPBLOCKSHIFT;
-   int bx,by,flags = mo->intflags; //Remember the current state, for gear-change
+   // ioanch 20160116: portal aware
+   clip.bbox[BOXLEFT] = mo->x - mo->radius;
+   clip.bbox[BOXRIGHT] = mo->x + mo->radius;
+   clip.bbox[BOXBOTTOM] = mo->y - mo->radius;
+   clip.bbox[BOXTOP] = mo->y + mo->radius;
+
+   int flags = mo->intflags; //Remember the current state, for gear-change
 
    clip.thing = mo;
    validcount++; // prevents checking same line twice
-      
-   for(bx = xl ; bx <= xh ; bx++)
-      for(by = yl ; by <= yh ; by++)
-         P_BlockLinesIterator(bx, by, PIT_ApplyTorque);
+
+   P_TransPortalBlockWalker(clip.bbox, mo->groupid, true, nullptr, 
+      [](int x, int y, int groupid, void *data) -> bool
+   {
+      P_BlockLinesIterator(x, y, PIT_ApplyTorque, groupid);
+      return true;
+   });
       
    // If any momentum, mark object as 'falling' using engine-internal flags
    if (mo->momx | mo->momy)
@@ -2118,7 +2253,6 @@ typedef struct bombdata_s
    int   bombmod;      // haleyjd 07/13/03
    
    unsigned int bombflags; // haleyjd 12/22/12
-   int   groupid;      // ioanch 20151226: the group this bomb should affect
 } bombdata_t;
 
 #define MAXBOMBS 128               // a static limit to prevent stack faults.
@@ -2133,13 +2267,6 @@ static bombdata_t *theBomb;        // it's the bomb, man. (the current explosion
 //
 static bool PIT_RadiusAttack(Mobj *thing)
 {
-   // ioanch 20151226: reject if it's not the right group, unless R_NOGROUP.
-   if(theBomb->groupid != R_NOGROUP && thing->groupid != R_NOGROUP 
-      && theBomb->groupid != thing->groupid)
-   {
-      return true;
-   }
-
    fixed_t dx, dy, dist;
    Mobj *bombspot     = theBomb->bombspot;
    Mobj *bombsource   = theBomb->bombsource;
@@ -2215,28 +2342,17 @@ static bool PIT_RadiusAttack(Mobj *thing)
 }
 
 //
-// P_radiusAttackForGroupID
+// P_RadiusAttack
 //
-// ioanch 20151226: Radius attack is now distributed to each portal group in
-// the map, picking up the map block clusters from each group at the same
-// translated coordinates. This function handles one of the groups.
+// Source is the creature that caused the explosion at spot.
+//   haleyjd 07/13/03: added method of death flag
+//   haleyjd 09/23/09: adjustments for reentrancy and recursion limit
 //
-static void P_radiusAttackForGroupID(Mobj *spot, Mobj *source, int damage,
-                                     int distance, int mod, unsigned flags,
-                                     int groupid)
+void P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int distance, 
+                    int mod, unsigned int flags)
 {
    fixed_t dist = (distance + MAXRADIUS) << FRACBITS;
-
-   // ioanch: Get the link offset (or zerolink if no portals are used)
-   const linkoffset_t *link = groupid != R_NOGROUP && 
-      spot->groupid != R_NOGROUP ? P_GetLinkOffset(spot->groupid, groupid) : 
-      &zerolink;
-
-   int yh = (spot->y + link->y + dist - bmaporgy) >> MAPBLOCKSHIFT;
-   int yl = (spot->y + link->y - dist - bmaporgy) >> MAPBLOCKSHIFT;
-   int xh = (spot->x + link->x + dist - bmaporgx) >> MAPBLOCKSHIFT;
-   int xl = (spot->x + link->x - dist - bmaporgx) >> MAPBLOCKSHIFT;
-   int x, y;
+  
 
    if(demo_version >= 335)
    {
@@ -2261,48 +2377,22 @@ static void P_radiusAttackForGroupID(Mobj *spot, Mobj *source, int damage,
    theBomb->bombmod      = mod;
    theBomb->bombflags    = flags;
 
-   // ioanch: portal aware, avoid blockmap duplication by distributing blocks
-   // only for each group ID. Only victims with the same groupid (if >= 0) will
-   // be hit.
-   theBomb->groupid      = groupid;
-   
-   for(y = yl; y <= yh; ++y)
-      for(x = xl; x <= xh; ++x)
-         P_BlockThingsIterator(x, y, PIT_RadiusAttack);
+   fixed_t bbox[4];
+   bbox[BOXLEFT] = spot->x - dist;
+   bbox[BOXTOP] = spot->y + dist;
+   bbox[BOXRIGHT] = spot->x + dist;
+   bbox[BOXBOTTOM] = spot->y - dist;
+
+   // ioanch 20160107: walk through all portals
+   P_TransPortalBlockWalker(bbox, spot->groupid, false, nullptr, 
+      [](int x, int y, int groupid, void *data) -> bool
+   {
+      P_BlockThingsIterator(x, y, groupid, PIT_RadiusAttack);
+      return true;
+   });
 
    if(demo_version >= 335 && bombindex > 0)
       theBomb = &bombs[--bombindex];
-}
-
-//
-// P_RadiusAttack
-//
-// Source is the creature that caused the explosion at spot.
-//   haleyjd 07/13/03: added method of death flag
-//   haleyjd 09/23/09: adjustments for reentrancy and recursion limit
-//
-void P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int distance, 
-                    int mod, unsigned int flags)
-{
-   // ioanch 20151226: portal-aware. Iterate through all groups and scan
-   // blockmaps, only picking objects belonging to those groups
-
-   // OPTIMIZE: do not go through all groups if there is no portal close to the
-   // current position
-   int numPortalGroups = 0;
-   if(full_demo_version < make_full_version(340, 47) || 
-      (numPortalGroups = P_PortalGroupCount()) <= 1)
-   {
-      // map has no portals OR is an older version
-      P_radiusAttackForGroupID(spot, source, damage, distance, mod, flags, 
-         R_NOGROUP);
-      return;
-   }
-
-   for(int i = 0; i < numPortalGroups; ++i)
-   {
-      P_radiusAttackForGroupID(spot, source, damage, distance, mod, flags, i);
-   }
 }
 
 //
@@ -2459,6 +2549,12 @@ bool P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil)
    {
       for(n = sector->touching_thinglist; n; n = n->m_snext) // go through list
       {
+         // ioanch 20160115: portal aware
+         if(useportalgroups && full_demo_version >= make_full_version(340, 48) &&
+            !P_SectorTouchesThingVertically(sector, n->m_thing))
+         {
+            continue;
+         }
          if(!n->visited)                     // unprocessed thing found
          {
             n->visited  = true;              // mark thing as processed
@@ -2653,15 +2749,24 @@ void P_DelSeclist(msecnode_t *node)
 // at this location, so don't bother with checking impassable or
 // blocking lines.
 //
-static bool PIT_GetSectors(line_t *ld)
+static bool PIT_GetSectors(line_t *ld, polyobj_s *po)
 {
-   if(pClip->bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   ||
-      pClip->bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  ||
-      pClip->bbox[BOXTOP]    <= ld->bbox[BOXBOTTOM] ||
-      pClip->bbox[BOXBOTTOM] >= ld->bbox[BOXTOP])
+   // ioanch 20160115: portal aware
+   fixed_t bbox[4];
+   const linkoffset_t *link = P_GetLinkOffset(pClip->thing->groupid, 
+      ld->frontsector->groupid);
+   bbox[BOXRIGHT] = pClip->bbox[BOXRIGHT] + link->x;
+   bbox[BOXLEFT] = pClip->bbox[BOXLEFT] + link->x;
+   bbox[BOXTOP] = pClip->bbox[BOXTOP] + link->y;
+   bbox[BOXBOTTOM] = pClip->bbox[BOXBOTTOM] + link->y;
+   
+   if(bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   ||
+      bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  ||
+      bbox[BOXTOP]    <= ld->bbox[BOXBOTTOM] ||
+      bbox[BOXBOTTOM] >= ld->bbox[BOXTOP])
       return true;
 
-   if(P_BoxOnLineSide(pClip->bbox, ld) != -1)
+   if(P_BoxOnLineSide(bbox, ld) != -1)
       return true;
 
    // This line crosses through the object.
@@ -2725,22 +2830,69 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
    pClip->bbox[BOXLEFT]   = x - thing->radius;
 
    validcount++; // used to make sure we only process a line once
-   
-   xl = (pClip->bbox[BOXLEFT  ] - bmaporgx) >> MAPBLOCKSHIFT;
-   xh = (pClip->bbox[BOXRIGHT ] - bmaporgx) >> MAPBLOCKSHIFT;
-   yl = (pClip->bbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
-   yh = (pClip->bbox[BOXTOP   ] - bmaporgy) >> MAPBLOCKSHIFT;
 
    pClip->sector_list = thing->old_sectorlist;
 
-   for(bx = xl; bx <= xh; bx++)
+   // ioanch 20160115: use portal-aware gathering if there are portals. Sectors
+   // may be touched both horizontally (like in Doom) or vertically (thing
+   // touching portals
+   if(useportalgroups && full_demo_version >= make_full_version(340, 48))
    {
-      for(by = yl; by <= yh; by++)
-         P_BlockLinesIterator(bx, by, PIT_GetSectors);
-   }
+      // FIXME: unfortunately all sectors need to be added, because this function
+      // is only called on XY coordinate change.
 
-   // Add the sector of the (x,y) point to sector_list.
-   list = P_AddSecnode(thing->subsector->sector, thing, pClip->sector_list);
+      int curgroupid = R_NOGROUP;
+      P_TransPortalBlockWalker(pClip->bbox, thing->groupid, true, &curgroupid,
+         [](int x, int y, int groupid, void *data) -> bool
+      {
+         int &curgroupid = *static_cast<int *>(data);
+         if(groupid != curgroupid)
+         {
+            curgroupid = groupid;
+            // We're at a new groupid. Start by adding the midsector.
+
+            // Get the offset from thing's position to the PREVIOUS groupid
+            if(groupid == pClip->thing->groupid)
+            {
+               pClip->sector_list = P_AddSecnode(pClip->thing->subsector->sector,
+                  pClip->thing, pClip->sector_list);
+            }
+            else
+            {
+               const linkoffset_t *link = P_GetLinkOffset(
+                  pClip->thing->groupid, groupid);
+
+               // Get the sector from PREVIOUS groupid
+               sector_t *sector = R_PointInSubsector(pClip->x + link->x,
+                  pClip->y + link->y)->sector;
+
+               // Add it
+               pClip->sector_list = P_AddSecnode(sector, pClip->thing,
+                  pClip->sector_list);
+            }
+         }
+         P_BlockLinesIterator(x, y, PIT_GetSectors, groupid);
+         return true;
+      });
+      list = pClip->sector_list;
+   }
+   else
+   {
+      // ioanch: classic mode
+      xl = (pClip->bbox[BOXLEFT  ] - bmaporgx) >> MAPBLOCKSHIFT;
+      xh = (pClip->bbox[BOXRIGHT ] - bmaporgx) >> MAPBLOCKSHIFT;
+      yl = (pClip->bbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
+      yh = (pClip->bbox[BOXTOP   ] - bmaporgy) >> MAPBLOCKSHIFT;
+
+      for(bx = xl; bx <= xh; bx++)
+      {
+         for(by = yl; by <= yh; by++)
+            P_BlockLinesIterator(bx, by, PIT_GetSectors);
+      }
+
+      // Add the sector of the (x,y) point to sector_list.
+      list = P_AddSecnode(thing->subsector->sector, thing, pClip->sector_list);
+   }
 
    // Now delete any nodes that won't be used. These are the ones where
    // m_thing is still NULL.

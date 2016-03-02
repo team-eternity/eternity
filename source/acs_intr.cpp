@@ -46,6 +46,7 @@
 #include "m_swap.h"
 #include "p_info.h"
 #include "p_maputl.h"
+#include "polyobj.h"
 #include "p_saveg.h"
 #include "p_spec.h"
 #include "r_state.h"
@@ -267,6 +268,19 @@ static bool ACS_checkTag(ACSThinker *th)
 }
 
 //
+// ACS_checkPoly
+//
+// ioanch 20160227: returns true if the script should start running again and
+// false if it needs to keep waiting for a polyobject.
+//
+static bool ACS_checkPoly(ACSThinker *th)
+{
+   int polyid = static_cast<int>(th->sdata);
+   const polyobj_t *po = Polyobj_GetForNum(polyid);
+   return !po || po->thinker == nullptr;
+}
+
+//
 // ACS_stopScript
 //
 // Ultimately terminates the script and removes its thinker.
@@ -296,12 +310,19 @@ static void ACS_stopScript(ACSThinker *thread)
 // Starts an open script (a script indicated to start at the beginning of
 // the level).
 //
-static void ACS_runOpenScript(ACSVM *vm, ACSScript *acs)
+static void ACS_runOpenScript(ACSVM *vm, ACSScript *acs, Mobj *trigger)
 {
    ACSThinker *newScript = new ACSThinker;
 
    // open scripts wait one second before running
-   newScript->delay = TICRATE;
+   if(!trigger && LevelInfo.acsOpenDelay)
+      newScript->delay = TICRATE;
+   else
+      // wait a tic, otherwise the script runs during screen wipe
+      // FIXME: Doesn't work if wipes happening while wiping (like idclevving before a wipe finishes)
+      newScript->delay = 1;
+
+   newScript->trigger = trigger;
 
    // set ip to entry point
    newScript->ip          = acs->codePtr;
@@ -369,7 +390,7 @@ static int32_t ACS_getLevelVar(uint32_t var)
    {
    case ACS_LEVELVAR_ParTime:        return LevelInfo.partime;
    case ACS_LEVELVAR_ClusterNumber:  return 0;
-   case ACS_LEVELVAR_LevelNumber:    return 0;
+   case ACS_LEVELVAR_LevelNumber:    return gamemap;
    case ACS_LEVELVAR_TotalSecrets:   return wminfo.maxsecret;
    case ACS_LEVELVAR_FoundSecrets:   return players[consoleplayer].secretcount;
    case ACS_LEVELVAR_TotalItems:     return wminfo.maxitems;
@@ -534,6 +555,13 @@ void ACSThinker::Think()
 
       sreg = ACS_STATE_RUNNING;
    case ACS_STATE_RUNNING:
+      break;
+
+      // ioanch 20160227: polywait
+   case ACS_STATE_WAITPOLY:
+      if(!ACS_checkPoly(this))
+         return;
+      sreg = ACS_STATE_RUNNING;
       break;
 
    case ACS_STATE_TERMINATE:
@@ -1924,7 +1952,16 @@ void ACS_LoadScript(ACSVM *vm, WadDirectory *dir, int lump)
    for(ACSScript *itr = vm->scripts, *end = itr + vm->numScripts; itr != end; ++itr)
    {
       if(itr->type == ACS_STYPE_OPEN)
-         ACS_runOpenScript(vm, itr);
+         ACS_runOpenScript(vm, itr, NULL);
+
+      else if(itr->type == ACS_STYPE_ENTER)
+      {
+         for(int pnum = 0; pnum != MAXPLAYERS; ++pnum)
+         {
+            if(playeringame[pnum])
+               ACS_runOpenScript(vm, itr, players[pnum].mo);
+         }
+      }
    }
 }
 

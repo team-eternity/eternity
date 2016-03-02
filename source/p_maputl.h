@@ -26,11 +26,14 @@
 #ifndef P_MAPUTL_H__
 #define P_MAPUTL_H__
 
+#include "linkoffs.h"   // ioanch 20160108: for R_NOGROUP
+#include "m_vector.h"
 #include "tables.h" // for angle_t
 
 struct line_t;
 class  Mobj;
 struct mobjinfo_t;
+struct polyobj_s; // ioanch 20160114
 
 // mapblocks are used to check movement against lines and things
 #define MAPBLOCKUNITS   128
@@ -92,14 +95,25 @@ int     P_PointOnDivlineSide(fixed_t x, fixed_t y, const divline_t *line);
 void    P_MakeDivline(const line_t *li, divline_t *dl);
 fixed_t P_InterceptVector(const divline_t *v2, const divline_t *v1);
 int     P_BoxOnLineSide(const fixed_t *tmbox, const line_t *ld);
+// ioanch 20160123: for linedef portal clipping.
+v2fixed_t P_BoxLinePoint(const fixed_t bbox[4], const line_t *ld);
 
 //SoM 9/2/02: added mo parameter for 3dside clipping
-void    P_LineOpening (const line_t *linedef, const Mobj *mo);
+// ioanch 20150113: added optional portal detection
+void    P_LineOpening (const line_t *linedef, const Mobj *mo,
+                       bool portaldetect = false, bool *fportal = nullptr,
+                       bool *cportal = nullptr);
 
 void P_UnsetThingPosition(Mobj *thing);
 void P_SetThingPosition(Mobj *thing);
-bool P_BlockLinesIterator (int x, int y, bool func(line_t *));
-bool P_BlockThingsIterator(int x, int y, bool func(Mobj *));
+bool P_BlockLinesIterator (int x, int y, bool func(line_t *, polyobj_s *),
+                           int groupid = R_NOGROUP);
+bool P_BlockThingsIterator(int x, int y, int groupid, bool (*func)(Mobj *));
+inline static bool P_BlockThingsIterator(int x, int y, bool func(Mobj *))
+{
+   // ioanch 20160108: avoid code duplication
+   return P_BlockThingsIterator(x, y, R_NOGROUP, func);
+}
 bool ThingIsOnLine(const Mobj *t, const line_t *l);  // killough 3/15/98
 bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
                     int flags, traverser_t trav);

@@ -37,7 +37,9 @@
 // Needs precompiled tables/data structures.
 #include "info.h"
 #include "m_fixed.h"
+#include "m_vector.h"   // ioanch 20160109: for portal rendering
 #include "r_interpolate.h"
+#include "r_things.h"   // ioanch 20160109: for portal rendering
 #include "tables.h"
 
 struct msecnode_t;
@@ -75,6 +77,7 @@ struct skin_t;
 #define NUMMOBJCOUNTERS 8
 
 // Mobjs are attached to subsectors by pointer.
+struct line_t;
 struct subsector_t;
 
 //
@@ -216,6 +219,14 @@ public:
    // More list: links in sector (if needed)
    Mobj  *snext;
    Mobj **sprev; // killough 8/10/98: change to ptr-to-ptr
+
+   // ioanch 20160109: sprite projection chains
+   DLListItem<spriteprojnode_t> *spriteproj;
+   v3fixed_t sprojlast; // coordinates after last check. Initially "invalid"
+
+   // ioanch 20160117: work around portal teleport spechits to make monster
+   // projectiles detect them surely.
+   const line_t *touchedportalline;
 
    //More drawing info: to determine current sprite.
    angle_t     angle;  // orientation
@@ -460,7 +471,7 @@ void P_RemoveThingTID(Mobj *mo);
 
 void P_AdjustFloorClip(Mobj *thing);
 
-int P_ThingInfoHeight(mobjinfo_t *mi);
+int P_ThingInfoHeight(const mobjinfo_t *mi);
 void P_ChangeThingHeights(void);
 
 // extern data
@@ -472,9 +483,9 @@ extern fixed_t FloatBobOffsets[64];
 #include "linkoffs.h"
 
 // Made these use getThing* to eliminate the code duplication
-#define getTargetX(mo) getThingX(mo, mo->target)
-#define getTargetY(mo) getThingY(mo, mo->target)
-#define getTargetZ(mo) getThingZ(mo, mo->target)
+#define getTargetX(mo) getThingX((mo), (mo)->target)
+#define getTargetY(mo) getThingY((mo), (mo)->target)
+#define getTargetZ(mo) getThingZ((mo), (mo)->target)
 
 // haleyjd 05/21/08: Functions like the above, but when we have a specific
 // Mobj pointer we want to use, and not mo->target.

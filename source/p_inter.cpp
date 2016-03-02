@@ -52,6 +52,8 @@
 #include "p_inter.h"
 #include "p_map.h"
 #include "p_maputl.h"
+#include "p_portal.h"   // ioanch 20160116
+#include "p_skin.h"
 #include "p_tick.h"
 #include "p_user.h"
 #include "r_defs.h"
@@ -1621,8 +1623,12 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
          damage = 10000;
 
       // end of game hell hack
-      if(target->subsector->sector->damageflags & SDMG_EXITLEVEL && damage >= target->health)
+      // ioanch 20160116: portal aware
+      if(P_ExtremeSectorAtPoint(target, false)->damageflags & SDMG_EXITLEVEL &&
+         damage >= target->health)
+      {
          damage = target->health - 1;
+      }
 
       // Below certain threshold,
       // ignore damage in GOD mode, or with INVUL power.
@@ -1880,6 +1886,126 @@ void P_Whistle(Mobj *actor, int mobjtype)
          return;
       }
    }
+}
+
+//==============================================================================
+//
+// Archvile resurrection handlers. Also used by Thing_Raise.
+//
+
+//
+// P_ThingIsCorpse
+//
+// ioanch 20160221
+// Check if thing can be raised by an archvile. Doesn't check space.
+//
+bool P_ThingIsCorpse(const Mobj *mobj)
+{
+   return mobj->flags & MF_CORPSE && mobj->tics == -1 && 
+      mobj->info->raisestate != NullStateNum;
+}
+
+//
+// P_CheckCorpseRaiseSpace
+//
+// ioanch 20160221
+// Does all the checks that there's actually room for this corpse to be raised.
+// Assumes P_ThingIsCorpse returned true.
+//
+// It also has side effects, like in Doom: resets speed to 0.
+//
+// Returns true if there is space.
+//
+bool P_CheckCorpseRaiseSpace(Mobj *corpse)
+{
+   corpse->momx = corpse->momy = 0;
+   bool check;
+   if(comp[comp_vile])
+   {
+      corpse->height <<= 2;
+      
+      // haleyjd 11/11/04: this is also broken by Lee's change to
+      // PIT_CheckThing when not in demo_compatibility.
+      if(demo_version >= 331)
+         corpse->flags |= MF_SOLID;
+
+      check = P_CheckPosition(corpse, corpse->x, corpse->y);
+
+      if(demo_version >= 331)
+         corpse->flags &= ~MF_SOLID;
+      
+      corpse->height >>= 2;
+   }
+   else
+   {
+      int height,radius;
+      
+      height = corpse->height; // save temporarily
+      radius = corpse->radius; // save temporarily
+      corpse->height = P_ThingInfoHeight(corpse->info);
+      corpse->radius = corpse->info->radius;
+      corpse->flags |= MF_SOLID;
+      check = P_CheckPosition(corpse,corpse->x,corpse->y);
+      corpse->height = height; // restore
+      corpse->radius = radius; // restore
+      corpse->flags &= ~MF_SOLID;
+   }
+
+   return check;
+}
+
+//
+// P_RaiseCorpse
+//
+// ioanch 20160221
+// Resurrects a dead monster. Assumes the previous two functions returned true
+//
+void P_RaiseCorpse(Mobj *corpse, const Mobj *raiser)
+{
+   S_StartSound(corpse, sfx_slop);
+   const mobjinfo_t *info = corpse->info;
+
+   // haleyjd 09/26/04: need to restore monster skins here
+   // in case they were cleared by the thing being crushed
+   if(info->altsprite != -1)
+      corpse->skin = P_GetMonsterSkin(info->altsprite);
+
+   P_SetMobjState(corpse, info->raisestate);
+
+   if(comp[comp_vile])
+      corpse->height <<= 2;                        // phares
+   else                                               //   V
+   {
+      // fix Ghost bug
+      corpse->height = P_ThingInfoHeight(info);
+      corpse->radius = info->radius;
+   }                                                  // phares
+
+   // killough 7/18/98: 
+   // friendliness is transferred from AV to raised corpse
+   // ioanch 20160221: if there's no raiser, don't change friendliness
+   if(raiser)
+   {
+      corpse->flags = 
+         (info->flags & ~MF_FRIEND) | (raiser->flags & MF_FRIEND);
+   }
+   else
+   {
+      // else reuse the old friend flag.
+      corpse->flags = (info->flags & ~MF_FRIEND) | (corpse->flags & MF_FRIEND);
+   }
+
+   corpse->health = info->spawnhealth;
+   P_SetTarget<Mobj>(&corpse->target, NULL);  // killough 11/98
+
+   if(demo_version >= 203)
+   {         // kilough 9/9/98
+      P_SetTarget<Mobj>(&corpse->lastenemy, NULL);
+      corpse->flags &= ~MF_JUSTHIT;
+   }
+
+   // killough 8/29/98: add to appropriate thread
+   corpse->updateThinker();
 }
 
 #if 0
