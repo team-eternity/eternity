@@ -782,13 +782,15 @@ sector_t *P_FindModelCeilingSector(fixed_t ceildestheight, int secnum)
 // Find the next sector with the same tag as a linedef.
 // Rewritten by Lee Killough to use chained hashing to improve speed
 
-int P_FindSectorFromLineTag(const line_t *line, int start)
+// ioanch 20160303: renamed to use arg0
+
+int P_FindSectorFromLineArg0(const line_t *line, int start)
 {
    start = 
       (start >= 0 ? sectors[start].nexttag :
-       sectors[(unsigned int)line->tag % (unsigned int)numsectors].firsttag);
+       sectors[(unsigned int)line->args[0] % (unsigned int)numsectors].firsttag);
   
-   while(start >= 0 && sectors[start].tag != line->tag)
+   while(start >= 0 && sectors[start].tag != line->args[0])
       start = sectors[start].nexttag;
    
    return start;
@@ -796,13 +798,13 @@ int P_FindSectorFromLineTag(const line_t *line, int start)
 
 // killough 4/16/98: Same thing, only for linedefs
 
-int P_FindLineFromLineTag(const line_t *line, int start)
+int P_FindLineFromLineArg0(const line_t *line, int start)
 {
    start = 
       (start >= 0 ? lines[start].nexttag :
-       lines[(unsigned int)line->tag % (unsigned int)numlines].firsttag);
+       lines[(unsigned int)line->args[0] % (unsigned int)numlines].firsttag);
   
-   while(start >= 0 && lines[start].tag != line->tag)
+   while(start >= 0 && lines[start].tag != line->args[0])
       start = lines[start].nexttag;
    
    return start;
@@ -942,7 +944,7 @@ bool P_WasSecret(const sector_t *sec)
 //
 void P_StartLineScript(line_t *line, Mobj *thing)
 {
-   ACS_ExecuteScriptNumber(line->tag, gamemap, 0, line->args, NUMLINEARGS, 
+   ACS_ExecuteScriptNumber(line->args[0], gamemap, 0, line->args, NUMLINEARGS, 
                            thing, line, 0);
 }
 
@@ -1189,7 +1191,7 @@ static void P_SetupHeightTransfer(int linenum, int secnum)
    int s;
    sector_t *heightsec = &sectors[secnum];
 
-   for(s = -1; (s = P_FindSectorFromLineTag(lines + linenum, s)) >= 0; )
+   for(s = -1; (s = P_FindSectorFromLineArg0(lines + linenum, s)) >= 0; )
    {
       sectors[s].heightsec = secnum;
 
@@ -1255,7 +1257,7 @@ void P_SpawnSpecials()
          // floor lighting independently (e.g. lava)
       case EV_STATIC_LIGHT_TRANSFER_FLOOR:
          sec = sides[*lines[i].sidenum].sector-sectors;
-         for(s = -1; (s = P_FindSectorFromLineTag(lines+i,s)) >= 0;)
+         for(s = -1; (s = P_FindSectorFromLineArg0(lines+i,s)) >= 0;)
             sectors[s].floorlightsec = sec;
          break;
 
@@ -1263,7 +1265,7 @@ void P_SpawnSpecials()
          // ceiling lighting independently
       case EV_STATIC_LIGHT_TRANSFER_CEILING:
          sec = sides[*lines[i].sidenum].sector-sectors;
-         for(s = -1; (s = P_FindSectorFromLineTag(lines+i,s)) >= 0;)
+         for(s = -1; (s = P_FindSectorFromLineArg0(lines+i,s)) >= 0;)
             sectors[s].ceilinglightsec = sec;
          break;
 
@@ -1278,7 +1280,7 @@ void P_SpawnSpecials()
 
       case EV_STATIC_SKY_TRANSFER:         // Regular sky
       case EV_STATIC_SKY_TRANSFER_FLIPPED: // Same, only flipped
-         for(s = -1; (s = P_FindSectorFromLineTag(lines+i,s)) >= 0;)
+         for(s = -1; (s = P_FindSectorFromLineArg0(lines+i,s)) >= 0;)
             sectors[s].sky = i | PL_SKYFLAT;
          break;
 
@@ -1618,7 +1620,7 @@ static void P_SpawnFriction()
                movefactor = 32;
          }
 
-         for(s = -1; (s = P_FindSectorFromLineTag(line, s)) >= 0 ;)
+         for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0 ;)
          {
             // killough 8/28/98:
             //
@@ -1962,7 +1964,7 @@ void P_AttachLines(const line_t *cline, bool ceiling)
 
    // Search the lines list. Check for every tagged line that
    // has the 3dmidtex lineflag, then add the line to the attached list.
-   for(start = -1; (start = P_FindLineFromLineTag(cline,start)) >= 0; )
+   for(start = -1; (start = P_FindLineFromLineArg0(cline,start)) >= 0; )
    {
       if(start != cline-lines)
       {
@@ -2199,7 +2201,7 @@ void P_AttachSectors(const line_t *line, int staticFn)
 
    // Search the lines list. Check for every tagged line that
    // has the appropriate special, then add the line's frontsector to the attached list.
-   for(start = -1; (start = P_FindLineFromLineTag(line,start)) >= 0; )
+   for(start = -1; (start = P_FindLineFromLineArg0(line,start)) >= 0; )
    {
       attachedtype_e type;
 
@@ -2508,7 +2510,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       anchortype = EV_SpecialForStaticInit(anchorfunc);
 
       // find anchor line
-      for(s = -1; (s = P_FindLineFromLineTag(line, s)) >= 0; )
+      for(s = -1; (s = P_FindLineFromLineArg0(line, s)) >= 0; )
       {
          // SoM 3-10-04: Two different anchor linedef codes so I can tag 
          // two anchored portals to the same sector.
@@ -2537,7 +2539,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       anchortype = EV_SpecialForStaticInit(anchorfunc);
 
       // find anchor line
-      for(s = -1; (s = P_FindLineFromLineTag(line, s)) >= 0; )
+      for(s = -1; (s = P_FindLineFromLineArg0(line, s)) >= 0; )
       {
          // SoM 3-10-04: Two different anchor linedef codes so I can tag 
          // two anchored portals to the same sector.
@@ -2580,7 +2582,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       anchortype = EV_SpecialForStaticInit(anchorfunc);
 
       // find anchor line
-      for(s = -1; (s = P_FindLineFromLineTag(line, s)) >= 0; )
+      for(s = -1; (s = P_FindLineFromLineArg0(line, s)) >= 0; )
       {
          // SoM 3-10-04: Two different anchor linedef codes so I can tag 
          // two anchored portals to the same sector.
@@ -2627,13 +2629,13 @@ static void P_SpawnPortal(line_t *line, int staticFn)
 
    // attach portal to tagged sector floors/ceilings
    // SoM: TODO: Why am I not checking groupids?
-   for(s = -1; (s = P_FindSectorFromLineTag(line, s)) >= 0; )
+   for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
    {
       P_SetPortal(sectors + s, NULL, portal, effects);
    }
 
    // attach portal to like-tagged 289 lines
-   for(s = -1; (s = P_FindLineFromLineTag(line, s)) >= 0; )
+   for(s = -1; (s = P_FindLineFromLineArg0(line, s)) >= 0; )
    {
       if(line == &lines[s] || !lines[s].frontsector)
          continue;

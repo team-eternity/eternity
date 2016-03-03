@@ -394,7 +394,7 @@ static void P_spawnHereticWind(line_t *line, int staticFn)
       break;
    }
 
-   for(s = -1; (s = P_FindSectorFromLineTag(line, s)) >= 0; )
+   for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
    {
       sectors[s].hticPushType  = pushType;
       sectors[s].hticPushAngle = lineAngle;
@@ -422,17 +422,17 @@ void P_SpawnPushers()
       switch(staticFn)
       {
       case EV_STATIC_WIND_CONTROL: // wind
-         for(s = -1; (s = P_FindSectorFromLineTag(line, s)) >= 0; )
+         for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
             Add_Pusher(PushThinker::p_wind, line->dx, line->dy, NULL, s);
          break;
 
       case EV_STATIC_CURRENT_CONTROL: // current
-         for(s = -1; (s = P_FindSectorFromLineTag(line, s)) >= 0; )
+         for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
             Add_Pusher(PushThinker::p_current, line->dx, line->dy, NULL, s);
          break;
 
       case EV_STATIC_PUSHPULL_CONTROL: // push/pull
-         for(s = -1; (s = P_FindSectorFromLineTag(line, s)) >= 0; )
+         for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
          {
             Mobj *thing = P_GetPushThing(s);
             if(thing) // No P* means no effect

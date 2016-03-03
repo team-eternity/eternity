@@ -1153,6 +1153,7 @@ static void E_ProcessEDLines(cfg_t *cfg)
       EDLines[i].stdfields.tag = (int16_t)cfg_getint(linesec, FIELD_LINE_TAG);
       if(cfg_size(linesec, FIELD_LINE_TAG) > 0)
          tagset = true;
+      // ioanch TODO: set args[0] depending on the specials
 
       // extflags
       tempstr = cfg_getstr(linesec, FIELD_LINE_EXTFLAGS);
@@ -1492,7 +1493,7 @@ void E_LoadLineDefExt(line_t *line, bool applySpecial)
 
    // ExtraData record number is stored in line tag
    if(!LevelInfo.extraData || numEDLines == 0 ||
-      (edLineIdx = E_EDLineForRecordNum(line->tag)) == numEDLines)
+      (edLineIdx = E_EDLineForRecordNum(line->args[0])) == numEDLines)
    {
       // if no ExtraData or no such record, zero special and clear tag,
       // and we're finished here.
@@ -1508,7 +1509,7 @@ void E_LoadLineDefExt(line_t *line, bool applySpecial)
    {
       // apply standard fields to the line
       line->special = edline->stdfields.special;
-      line->tag     = edline->stdfields.tag;
+      line->args[0] = edline->stdfields.tag;
    }
 
    // apply extended fields to the line
@@ -1520,8 +1521,9 @@ void E_LoadLineDefExt(line_t *line, bool applySpecial)
    memcpy(line->args, edline->args, 5*sizeof(int));
 
    // 03/03/07: id
-   if(edline->id != -1) // haleyjd: only use this field when it is specified
-      line->tag = edline->id;
+   
+   //if(edline->id != -1) // haleyjd: only use this field when it is specified
+      line->tag = edline->id; // ioanch 20160304: actually apply it always
 
    // 11/11/10: alpha
    line->alpha = edline->alpha;
@@ -1539,7 +1541,7 @@ void E_LoadSectorExt(line_t *line)
    // ExtraData must be loaded
    if(!LevelInfo.extraData || numEDSectors == 0)
    {
-      line->tag = 0;
+      line->args[0] = line->tag = 0;
       return;
    }
    
@@ -1547,9 +1549,9 @@ void E_LoadSectorExt(line_t *line)
    
    // The ExtraData record number is the line's tag; the line's frontsector is the 
    // sector to adjust.
-   if((edSectorIdx = E_EDSectorForRecordNum(line->tag)) == numEDSectors)
+   if((edSectorIdx = E_EDSectorForRecordNum(line->args[0])) == numEDSectors)
    {
-      line->tag = 0;
+      line->args[0] = line->tag = 0;
       return;
    }
 
@@ -1611,7 +1613,7 @@ void E_LoadSectorExt(line_t *line)
    // TODO: more?
 
    // clear the line tag
-   line->tag = 0;
+   line->tag = line->args[0] = 0;
 }
 
 void E_GetEDMapThings(mapthing_t **things, int *numthings)

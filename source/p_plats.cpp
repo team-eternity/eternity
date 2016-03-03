@@ -276,11 +276,11 @@ bool EV_DoPlat(const line_t *line, plattype_e type, int amount )
    switch(type)
    {
    case perpetualRaise:
-      PlatThinker::ActivateInStasis(line->tag);
+      PlatThinker::ActivateInStasis(line->args[0]);
       break;
       
    case toggleUpDn:
-      PlatThinker::ActivateInStasis(line->tag);
+      PlatThinker::ActivateInStasis(line->args[0]);
       rtn = true;
       break;
       
@@ -289,7 +289,7 @@ bool EV_DoPlat(const line_t *line, plattype_e type, int amount )
    }
       
    // act on all sectors tagged the same as the activating linedef
-   while((secnum = P_FindSectorFromLineTag(line, secnum)) >= 0)
+   while((secnum = P_FindSectorFromLineArg0(line, secnum)) >= 0)
    {
       sec = &sectors[secnum];
       
@@ -304,7 +304,7 @@ bool EV_DoPlat(const line_t *line, plattype_e type, int amount )
       
       plat->type   = type;
       plat->crush  = -1;
-      plat->tag    = line->tag;
+      plat->tag    = line->args[0];
       plat->sector = sec;
       plat->sector->floordata = plat; //jff 2/23/98 multiple thinkers
 
@@ -576,7 +576,7 @@ bool EV_StopPlatByTag(int tag)
 //
 bool EV_StopPlat(const line_t *line)
 {
-   return EV_StopPlatByTag(line->tag);
+   return EV_StopPlatByTag(line->args[0]);
 }
 
 //

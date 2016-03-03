@@ -323,7 +323,7 @@ int EV_DoCeiling(const line_t *line, ceiling_e type)
    }
   
    // affects all sectors with the same tag as the linedef
-   while((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
+   while((secnum = P_FindSectorFromLineArg0(line,secnum)) >= 0)
    {
       sec = &sectors[secnum];
       
@@ -431,7 +431,7 @@ int P_ActivateInStasisCeiling(const line_t *line)
    for(cl = activeceilings; cl; cl = cl->next)
    {
       CeilingThinker *ceiling = cl->ceiling;
-      if(ceiling->tag == line->tag && ceiling->direction == 0)
+      if(ceiling->tag == line->args[0] && ceiling->direction == 0)
       {
          ceiling->direction = ceiling->olddirection;
          ceiling->inStasis = false;
@@ -474,7 +474,7 @@ int EV_CeilingCrushStop(const line_t* line)
    for(cl = activeceilings; cl; cl = cl->next)
    {
       CeilingThinker *ceiling = cl->ceiling;
-      if(ceiling->direction != plat_stop && ceiling->tag == line->tag)
+      if(ceiling->direction != plat_stop && ceiling->tag == line->args[0])
       {
          ceiling->olddirection = ceiling->direction;
          ceiling->direction = plat_stop;

@@ -59,9 +59,9 @@ int EV_Teleport(const line_t *line, int side, Mobj *thing)
       return 0;
 
    // killough 1/31/98: improve performance by using
-   // P_FindSectorFromLineTag instead of simple linear search.
+   // P_FindSectorFromLineArg0 instead of simple linear search.
 
-   for(i = -1; (i = P_FindSectorFromLineTag(line, i)) >= 0;)
+   for(i = -1; (i = P_FindSectorFromLineArg0(line, i)) >= 0;)
    {
       for(thinker = thinkercap.next; thinker != &thinkercap; thinker = thinker->next)
       {
@@ -162,7 +162,7 @@ int EV_SilentTeleport(const line_t *line, int side, Mobj *thing)
    if(side || thing->flags & MF_MISSILE)
       return 0;
 
-   for(i = -1; (i = P_FindSectorFromLineTag(line, i)) >= 0;)
+   for(i = -1; (i = P_FindSectorFromLineArg0(line, i)) >= 0;)
    {
       for(th = thinkercap.next; th != &thinkercap; th = th->next)
       {
@@ -258,7 +258,7 @@ int EV_SilentLineTeleport(const line_t *line, int side, Mobj *thing,
    if(side || thing->flags & MF_MISSILE)
       return 0;
 
-   for (i = -1; (i = P_FindLineFromLineTag(line, i)) >= 0;)
+   for (i = -1; (i = P_FindLineFromLineArg0(line, i)) >= 0;)
    {
       if ((l=lines+i) != line && l->backsector)
       {

@@ -1262,9 +1262,9 @@ sector_t *P_FindModelFloorSector(fixed_t floordestheight, int secnum); //jff 02/
 
 sector_t *P_FindModelCeilingSector(fixed_t ceildestheight, int secnum); //jff 02/04/98 
 
-int P_FindSectorFromLineTag(const line_t *line, int start); // killough 4/17/98
+int P_FindSectorFromLineArg0(const line_t *line, int start); // killough 4/17/98
 
-int P_FindLineFromLineTag(const line_t *line, int start);   // killough 4/17/98
+int P_FindLineFromLineArg0(const line_t *line, int start);   // killough 4/17/98
 
 int P_FindSectorFromTag(const int tag, int start);        // sf
 

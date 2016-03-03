@@ -577,7 +577,8 @@ static void P_ArchiveWorld(SaveArchive &arc)
    {
       int j;
 
-      arc << li->flags << li->special << li->tag;
+      arc << li->flags << li->special << li->tag
+         << li->args[0] << li->args[1] << li->args[2] << li->args[3] << li->args[4];
 
       for(j = 0; j < 2; j++)
       {

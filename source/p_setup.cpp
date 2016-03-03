@@ -1668,6 +1668,7 @@ void P_LoadLineDefs(int lump)
       ld->flags   = SwapShort(mld->flags);
       ld->special = (int)(SwapShort(mld->special)) & 0xffff;
       ld->tag     = SwapShort(mld->tag);
+      ld->args[0] = ld->tag;
 
       // haleyjd 06/19/06: convert indices to unsigned
       ld->v1 = &vertexes[SafeUintIndex(mld->v1, numvertexes, "line", i, "vertex")];
@@ -1867,13 +1868,13 @@ void P_LoadLineDefs2()
          int lump, j;
       case EV_STATIC_TRANSLUCENT: // killough 4/11/98: translucent 2s textures
          lump = sides[*ld->sidenum].special; // translucency from sidedef
-         if(!ld->tag)                        // if tag == 0,
+         if(!ld->args[0])                    // if tag == 0,
             ld->tranlump = lump;             // affect this linedef only
          else
          {
             for(j = 0; j < numlines; ++j)    // if tag != 0,
             {
-               if(lines[j].tag == ld->tag)   // affect all matching linedefs
+               if(lines[j].tag == ld->args[0])   // affect all matching linedefs
                   lines[j].tranlump = lump;
             }
          }

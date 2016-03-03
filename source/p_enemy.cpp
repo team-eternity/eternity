@@ -366,9 +366,10 @@ static bool P_IsOnLift(const Mobj *actor)
 
    // Check to see if it's in a sector which can be 
    // activated as a lift.
-   if((line.tag = sec->tag))
+   // ioanch 20160303: use args[0]
+   if((line.args[0] = sec->tag))
    {
-      for(l = -1; (l = P_FindLineFromLineTag(&line, l)) >= 0;)
+      for(l = -1; (l = P_FindLineFromLineArg0(&line, l)) >= 0;)
       {
          switch(lines[l].special)
          {

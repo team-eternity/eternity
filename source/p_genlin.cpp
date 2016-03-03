@@ -303,7 +303,7 @@ int EV_DoGenFloor(const line_t *line)
    fd.trigger_type = (value & TriggerType   ) >> TriggerTypeShift;
    fd.flags        = FDF_HAVETRIGGERTYPE;
 
-   return EV_DoParamFloor(line, line->tag, &fd);
+   return EV_DoParamFloor(line, line->args[0], &fd);
 }
 
 //
@@ -553,7 +553,7 @@ int EV_DoGenCeiling(const line_t *line)
    cd.height_value = 0;
    cd.speed_value  = 0;
 
-   return EV_DoParamCeiling(line, line->tag, &cd);
+   return EV_DoParamCeiling(line, line->args[0], &cd);
 }
 
 //
@@ -586,7 +586,7 @@ int EV_DoGenLift(const line_t *line)
    // Activate all <type> plats that are in_stasis
    
    if(Targ == LnF2HnF)
-      PlatThinker::ActivateInStasis(line->tag);
+      PlatThinker::ActivateInStasis(line->args[0]);
         
    // check if a manual trigger, if so do just the sector on the backside
    manual = false;
@@ -600,7 +600,7 @@ int EV_DoGenLift(const line_t *line)
    }
 
    // if not manual do all sectors tagged the same as the line
-   while((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
+   while((secnum = P_FindSectorFromLineArg0(line,secnum)) >= 0)
    {
       sec = &sectors[secnum];
       
@@ -620,7 +620,7 @@ manual_lift:
       plat->addThinker();
       
       plat->crush  = -1;
-      plat->tag    = line->tag;
+      plat->tag    = line->args[0];
       plat->type   = genLift;
       plat->high   = sec->floorheight;
       plat->status = PlatThinker::down;
@@ -960,7 +960,7 @@ int EV_DoGenStairs(line_t *line)
    sd.speed_value    = 0;
    sd.stepsize_value = 0;
 
-   rtn = EV_DoParamStairs(line, line->tag, &sd);
+   rtn = EV_DoParamStairs(line, line->args[0], &sd);
 
    // retriggerable generalized stairs build up or down alternately
    if(rtn)
@@ -1009,7 +1009,7 @@ int EV_DoGenCrusher(const line_t *line)
    
    secnum = -1;
    // if not manual do all sectors tagged the same as the line
-   while((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
+   while((secnum = P_FindSectorFromLineArg0(line,secnum)) >= 0)
    {
       sec = &sectors[secnum];
       
@@ -1188,7 +1188,7 @@ manual_door:
       else
          door->lighttag = !comp[comp_doorlight] && line && 
             (line->special&6) == 6 && 
-            line->special > GenLockedBase ? line->tag : 0;
+            line->special > GenLockedBase ? line->args[0] : 0;
       
       // set kind of door, whether it opens then close, opens, closes etc.
       // assign target heights accordingly
@@ -1306,7 +1306,7 @@ int EV_DoGenLockedDoor(const line_t *line, Mobj *thing)
 
    dd.kind = (value & LockedKind) >> LockedKindShift;
    
-   return EV_DoParamDoor(line, line->tag, &dd);
+   return EV_DoParamDoor(line, line->args[0], &dd);
 }
 
 //
@@ -1372,7 +1372,7 @@ int EV_DoGenDoor(const line_t *line, Mobj *thing)
 
    dd.kind = (value & DoorKind) >> DoorKindShift;
    
-   return EV_DoParamDoor(line, line->tag, &dd);
+   return EV_DoParamDoor(line, line->args[0], &dd);
 }
 
 // ChangeLineTex texture position numbers

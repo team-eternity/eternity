@@ -433,7 +433,7 @@ static bool EV_BOOMGenPreActivate(ev_action_t *action, ev_instance_t *instance)
    REQUIRE_LINE(line);
 
    // check against zero tags
-   if(!line->tag)
+   if(!line->args[0])
    {
       switch(instance->genspac)
       {
@@ -1310,7 +1310,7 @@ bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing, int spa
    instance.special = line->special;
    instance.side    = side;
    instance.spac    = spac;
-   instance.tag     = line->tag;
+   instance.tag     = line->args[0];
 
    // get action
    if(!(action = EV_ActionForInstance(instance)))

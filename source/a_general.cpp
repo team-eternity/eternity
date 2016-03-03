@@ -281,7 +281,7 @@ void A_LineEffect(actionargs_t *actionargs)
          player_t player, *oldplayer = mo->player;   // Remember player status
          mo->player = &player;                       // Fake player
          player.health = 100;                        // Alive player
-         junk.tag = mo->state->misc2;                // Sector tag for linedef
+         junk.args[0] = junk.tag = mo->state->misc2;            // Sector tag for linedef
          if(!P_UseSpecialLine(mo, &junk, 0))         // Try using it
             P_CrossSpecialLine(&junk, 0, mo);        // Try crossing it
          if(!junk.special)                           // If type cleared,
