@@ -33,6 +33,7 @@
 #include "e_inventory.h"
 #include "g_game.h"
 #include "hu_stuff.h"
+#include "i_system.h"
 #include "p_info.h"
 #include "p_saveg.h"
 #include "p_skin.h"
@@ -329,84 +330,50 @@ bool VerticalDoorThinker::reTriggerVerticalDoor(bool player)
 //
 int EV_DoDoor(const line_t *line, vldoor_e type)
 {
-   int secnum = -1, rtn = 0;
-   sector_t *sec;
-   VerticalDoorThinker *door;
-
-   // open all doors with the same tag as the activating line
-   while((secnum = P_FindSectorFromLineArg0(line, secnum)) >= 0)
+   // ioanch 20160304: funnel to EV_DoParamDoor
+   edefstructvar(doordata_t, dd);
+   dd.trigger_type = 0; // don't care as long as it's NOT PushOnce and More
+   dd.delay_value = type == closeThenOpen ? 30 * TICRATE : VDOORWAIT;
+   dd.flags = DDF_USEALTLIGHTTAG;        // disable light tag
+   dd.altlighttag = 0;
+   switch(type)
    {
-      sec = &sectors[secnum];
-      // if the ceiling already moving, don't start the door action
-      if(P_SectorActive(ceiling_special, sec)) //jff 2/22/98
-         continue;
-
-      // new door thinker
-      rtn = 1;
-      door = new VerticalDoorThinker;
-      door->addThinker();
-      sec->ceilingdata = door; //jff 2/22/98
-
-      door->sector    = sec;
-      door->type      = type;
-      door->topwait   = VDOORWAIT;
-      door->speed     = VDOORSPEED;
-      door->lighttag  = 0;     // killough 10/98: no light effects with tagged doors
-
-      // setup door parameters according to type of door
-      switch(type)
-      {
-      case blazeClose:
-         door->topheight = P_FindLowestCeilingSurrounding(sec);
-         door->topheight -= 4*FRACUNIT;
-         door->direction = plat_down;
-         door->speed     = VDOORSPEED * 4;
-         door->turbo     = true;
-         P_DoorSequence(false, true, false, door->sector); // haleyjd
-         break;
-
-      case doorClose:
-         door->topheight = P_FindLowestCeilingSurrounding(sec);
-         door->topheight -= 4*FRACUNIT;
-         door->direction = plat_down;
-         door->turbo     = false;
-         P_DoorSequence(false, false, false, door->sector); // haleyjd
-         break;
-
-      case closeThenOpen:
-         door->topheight = sec->ceilingheight;
-         door->direction = plat_down;
-         door->topwait   = 30 * TICRATE;                    // haleyjd 01/16/12: set here
-         door->turbo     = false;
-         P_DoorSequence(false, false, false, door->sector); // haleyjd
-         break;
-
-      case blazeRaise:
-      case blazeOpen:
-         door->direction = plat_up;
-         door->topheight = P_FindLowestCeilingSurrounding(sec);
-         door->topheight -= 4*FRACUNIT;
-         door->speed     = VDOORSPEED * 4;
-         door->turbo     = true;
-         if(door->topheight != sec->ceilingheight)
-            P_DoorSequence(true, true, false, door->sector); // haleyjd
-         break;
-
-      case doorNormal:
-      case doorOpen:
-         door->direction = plat_up;
-         door->topheight = P_FindLowestCeilingSurrounding(sec);
-         door->topheight -= 4*FRACUNIT;
-         door->turbo     = false;
-         if(door->topheight != sec->ceilingheight)
-            P_DoorSequence(true, false, false, door->sector); // haleyjd
-         break;
-         
-      default:
-         break;
-      }
+   case blazeClose:
+      dd.speed_value = VDOORSPEED * 4;
+      dd.kind = CDoor;
+      break;
+   case doorClose:
+      dd.speed_value = VDOORSPEED;
+      dd.kind = CDoor;
+      break;
+   case closeThenOpen:
+      dd.speed_value = VDOORSPEED;
+      dd.kind = CdODoor;
+      break;
+   case blazeRaise:
+      dd.speed_value = VDOORSPEED * 4;
+      dd.kind = OdCDoor;
+      break;
+   case blazeOpen:
+      dd.speed_value = VDOORSPEED * 4;
+      dd.kind = ODoor;
+      break;
+   case doorNormal:
+      dd.speed_value = VDOORSPEED;
+      dd.kind = OdCDoor;
+      break;
+   case doorOpen:
+      dd.speed_value = VDOORSPEED;
+      dd.kind = ODoor;
+      break;
+   default:
+#ifdef RANGECHECK
+      I_Error("EV_DoDoor: invalid type %d\n", (int)type);
+#endif
+      break;
    }
-   return rtn;
+
+   return EV_DoParamDoor(line, line->args[0], &dd);
 }
 
 //
