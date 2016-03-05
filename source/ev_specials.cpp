@@ -56,8 +56,6 @@
 
 #define INIT_STRUCT edefstructvar
 
-static ev_action_t *EV_ActionForSpecial(int special);
-
 //=============================================================================
 //
 // Utilities
@@ -1084,7 +1082,7 @@ static int EV_GenActivationType(int special)
 //
 // EV_ActionForSpecial
 //
-static ev_action_t *EV_ActionForSpecial(int special)
+ev_action_t *EV_ActionForSpecial(int special)
 {
    switch(LevelInfo.mapFormat)
    {
