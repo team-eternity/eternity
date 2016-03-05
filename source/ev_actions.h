@@ -162,6 +162,7 @@ DECLARE_ACTION(EV_ActionParamCeilingMoveToValue);
 DECLARE_ACTION(EV_ActionParamCeilingMoveToValueTimes8);
 DECLARE_ACTION(EV_ActionParamCeilingRaiseInstant);
 DECLARE_ACTION(EV_ActionParamCeilingLowerInstant);
+DECLARE_ACTION(EV_ActionParamCeilingCrushAndRaise);
 DECLARE_ACTION(EV_ActionParamStairsBuildUpDoom);
 DECLARE_ACTION(EV_ActionParamStairsBuildDownDoom);
 DECLARE_ACTION(EV_ActionParamStairsBuildUpDoomSync);

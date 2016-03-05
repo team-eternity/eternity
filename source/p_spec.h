@@ -470,7 +470,10 @@ typedef enum
 
    //jff 02/05/98 add types for generalized ceiling mover
    genCrusher,
-   genSilentCrusher
+   genSilentCrusher,
+
+   // ioanch 20160305
+   paramHexenCrush,
 } ceiling_e;
 
 // p_floor
@@ -939,6 +942,15 @@ protected:
    virtual attachpoint_e getAttachPoint() const { return ATTACH_CEILING; }
 
 public:
+
+   // ioanch 20160305: crush flags. Mostly derived from Hexen different
+   // behaviour
+   enum
+   {
+      crushRest       = 1, // ceiling will rest while crushing things
+      crushStopRemove = 2, // stopping will remove the thinker instead of pause
+   };
+
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual bool reTriggerVerticalDoor(bool player);
@@ -950,6 +962,7 @@ public:
    fixed_t speed;
    fixed_t oldspeed;
    int crush;
+   uint32_t crushflags;   // ioanch 20160305: flags for crushing
 
    //jff 02/04/98 add these to support ceiling changers
    //jff 3/14/98 add to fix bug in change transfers
@@ -978,7 +991,8 @@ typedef struct ceilinglist
 enum
 {
    CDF_HAVETRIGGERTYPE = 0x00000001, // has BOOM-style gen action trigger
-   CDF_HAVESPAC        = 0x00000002  // has Hexen-style spac
+   CDF_HAVESPAC        = 0x00000002, // has Hexen-style spac
+   CDF_HEXENCRUSHER    = 0x00000004, // ioanch 20160305: Hexen-style
 };
 
 // haleyjd 10/05/05: extended data struct for parameterized ceilings
@@ -1000,6 +1014,22 @@ typedef struct ceilingdata_s
    fixed_t height_value;
    fixed_t speed_value;
 } ceilingdata_t;
+
+// ioanch 20160305
+struct crusherdata_t
+{
+   int flags;        // combination of values above
+   int trigger_type; // valid IFF (flags & CDF_HAVETRIGGERTYPE)
+   int spac;         // valid IFF (flags & CDF_HAVESPAC)
+
+   // generalized values
+   bool silent;
+   int speed_type;
+
+   // parameterized values
+   fixed_t speed_value;
+   int damage;
+};
 
 
 // p_floor
@@ -1386,6 +1416,7 @@ int EV_DoGenLift(const line_t *line);
 int EV_DoParamStairs(const line_t *line, int tag, const stairdata_t *sd);
 int EV_DoGenStairs(line_t *line);
 
+int EV_DoParamCrusher(const line_t *line, int tag, const crusherdata_t *cd);
 int EV_DoGenCrusher(const line_t *line);
 
 int EV_DoParamDoor(const line_t *line, int tag, const doordata_t *dd);
@@ -1491,7 +1522,7 @@ void P_AddActiveCeiling(CeilingThinker *c);
 
 void P_RemoveActiveCeiling(CeilingThinker *c);
 
-int P_ActivateInStasisCeiling(const line_t *line);
+int P_ActivateInStasisCeiling(const line_t *line, bool manual = false);
 
 void P_CeilingSequence(sector_t *s, int noiseLevel);
 

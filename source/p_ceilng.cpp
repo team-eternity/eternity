@@ -159,6 +159,15 @@ void CeilingThinker::Think()
          case crushAndRaise:
             direction = plat_down;
             break;
+
+         // ioanch 20160305
+         case paramHexenCrush:
+            // preserve the weird Hexen behaviour where the crusher becomes mute
+            // after any pastdest.
+            S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_C);
+            direction = plat_down;
+            speed = speed * 2;   // make the speed double
+            break;
             
          default:
             break;
@@ -168,7 +177,9 @@ void CeilingThinker::Think()
   
    case plat_down:
       // Ceiling moving down
-      res = T_MoveCeilingDown(sector, speed, bottomheight, crush);
+      // ioanch 20160305: allow resting
+      res = T_MoveCeilingDown(sector, speed, bottomheight, crush, 
+         !!(crushflags & crushRest));
 
       // if not silent crusher type make moving sound
       // haleyjd: now handled through sound sequences
@@ -217,6 +228,14 @@ void CeilingThinker::Think()
          case lowerToMaxFloor:
          case genCeiling:
             P_RemoveActiveCeiling(this);
+            break;
+         // ioanch 20160305
+         case paramHexenCrush:
+            // preserve the weird Hexen behaviour where the crusher becomes mute
+            // after any pastdest.
+            S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_C);
+            direction = plat_up;
+            speed = speed / 2;
             break;
             
          default:
@@ -338,6 +357,7 @@ int EV_DoCeiling(const line_t *line, ceiling_e type)
       sec->ceilingdata = ceiling;               //jff 2/22/98
       ceiling->sector = sec;
       ceiling->crush = -1;
+      ceiling->crushflags = 0;   // ioanch 20160305
   
       // setup ceiling structure according to type of function
       switch(type)
@@ -422,8 +442,9 @@ int EV_DoCeiling(const line_t *line, ceiling_e type)
 // Returns true if a ceiling reactivated
 //
 //jff 4/5/98 return if activated
+//ioanch 20160305: added manual parameter, for backside access
 //
-int P_ActivateInStasisCeiling(const line_t *line)
+int P_ActivateInStasisCeiling(const line_t *line, bool manual)
 {
    ceilinglist_t *cl;
    int rtn = 0, noise;
@@ -431,7 +452,8 @@ int P_ActivateInStasisCeiling(const line_t *line)
    for(cl = activeceilings; cl; cl = cl->next)
    {
       CeilingThinker *ceiling = cl->ceiling;
-      if(ceiling->tag == line->tag && ceiling->direction == 0)
+      if(((manual && line->backsector == ceiling->sector) ||
+         (!manual && ceiling->tag == line->tag)) && ceiling->direction == 0)
       {
          ceiling->direction = ceiling->olddirection;
          ceiling->inStasis = false;

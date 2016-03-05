@@ -3221,5 +3221,23 @@ DEFINE_ACTION(EV_ActionParamDonut)
    return EV_DoParamDonut(instance->line, instance->tag, true, pspeed, sspeed);
 }
 
+//
+// EV_ActionParamCeilingCrushAndRaise
+//
+// Implements Ceiling_CrushAndRaise(tag, speed, crush)
+// * ExtraData: 432
+// * Hexen:     42
+//
+DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaise)
+{
+   INIT_STRUCT(crusherdata_t, cd);
+   cd.flags = CDF_HAVESPAC | CDF_HEXENCRUSHER;
+   cd.damage = instance->args[2];
+   cd.speed_value = instance->args[1] * (FRACUNIT / 8);
+   cd.speed_type = SpeedParam;
+   cd.spac = instance->spac;
+   return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
 // EOF
 
