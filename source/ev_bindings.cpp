@@ -1063,6 +1063,7 @@ PARAMLINE(ParamPlatDWUS);
 PARAMLINE(ParamPlatDownByValue);
 PARAMLINE(ParamPlatUWDS);
 PARAMLINE(ParamPlatUpByValue);
+PARAMLINE(ParamDonut);
 
 //=============================================================================
 //
@@ -1423,6 +1424,7 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(428, ThingDestroy,                    "Thing_Destroy")
    LINESPECNAMED(429, ParamDoorLockedRaise,            "Door_LockedRaise")
    LINESPECNAMED(430, ACSLockedExecute,                "ACS_LockedExecute")
+   LINESPECNAMED(431, ParamDonut,                      "Floor_Donut")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1562,6 +1564,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(240, ParamFloorRaiseByTexture,        "Floor_RaiseByTexture")
    LINESPECNAMED(242, ParamFloorLowerToHighest,        "Floor_LowerToHighest")
    LINESPECNAMED(249, ParamDoorCloseWaitOpen,          "Door_CloseWaitOpen")
+   LINESPECNAMED(250, ParamDonut,                      "Floor_Donut")
    LINESPECNAMED(252, ParamCeilingRaiseToNearest,      "Ceiling_RaiseToNearest")
    LINESPECNAMED(253, ParamCeilingLowerToLowest,       "Ceiling_LowerToLowest")
    LINESPECNAMED(254, ParamCeilingLowerToFloor,        "Ceiling_LowerToFloor")
