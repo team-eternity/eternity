@@ -1014,6 +1014,7 @@ PARAMLINE(ParamCeilingLowerInstant);
 PARAMLINE(ParamCeilingCrushAndRaise);
 PARAMLINE(ParamCeilingCrushStop);
 PARAMLINE(ParamCeilingCrushRaiseAndStay);
+PARAMLINE(ParamCeilingLowerAndCrush);
 PARAMLINE(ParamStairsBuildUpDoom);
 PARAMLINE(ParamStairsBuildDownDoom);
 PARAMLINE(ParamStairsBuildUpDoomSync);
@@ -1431,6 +1432,7 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(432, ParamCeilingCrushAndRaise,       "Ceiling_CrushAndRaise")
    LINESPECNAMED(433, ParamCeilingCrushStop,           "Ceiling_CrushStop")
    LINESPECNAMED(434, ParamCeilingCrushRaiseAndStay,   "Ceiling_CrushRaiseAndStay")
+   LINESPECNAMED(435, ParamCeilingLowerAndCrush,       "Ceiling_LowerAndCrush")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1518,6 +1520,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(40,  ParamCeilingLowerByValue,        "Ceiling_LowerByValue")
    LINESPECNAMED(41,  ParamCeilingRaiseByValue,        "Ceiling_RaiseByValue")
    LINESPECNAMED(42,  ParamCeilingCrushAndRaise,       "Ceiling_CrushAndRaise")
+   LINESPECNAMED(43,  ParamCeilingLowerAndCrush,       "Ceiling_LowerAndCrush")
    LINESPECNAMED(44,  ParamCeilingCrushStop,           "Ceiling_CrushStop")
    LINESPECNAMED(45,  ParamCeilingCrushRaiseAndStay,   "Ceiling_CrushRaiseAndStay")
    LINESPECNAMED(47,  ParamCeilingMoveToValue,         "Ceiling_MoveToValue")

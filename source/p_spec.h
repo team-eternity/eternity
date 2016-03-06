@@ -475,6 +475,7 @@ typedef enum
    // ioanch 20160305
    paramHexenCrush,
    paramHexenCrushRaiseStay,
+   paramHexenLowerCrush,
 } ceiling_e;
 
 // p_floor

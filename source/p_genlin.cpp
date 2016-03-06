@@ -1040,6 +1040,7 @@ manual_crusher:
       {
       case paramHexenCrush:
       case paramHexenCrushRaiseStay:
+      case paramHexenLowerCrush:
          ceiling->crushflags = CeilingThinker::crushRest;
          break;
       default:

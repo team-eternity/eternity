@@ -3272,5 +3272,24 @@ DEFINE_ACTION(EV_ActionParamCeilingCrushRaiseAndStay)
    return EV_DoParamCrusher(instance->line, instance->tag, &cd);
 }
 
+//
+// EV_ActionParamCeilingLowerAndCrush
+//
+// Implements Ceiling_LowerAndCrush(tag, speed, crush)
+// * ExtraData 435
+// * Hexen:    43
+//
+DEFINE_ACTION(EV_ActionParamCeilingLowerAndCrush)
+{
+   INIT_STRUCT(crusherdata_t, cd);
+   cd.flags = CDF_HAVESPAC;
+   cd.damage = instance->args[2];
+   cd.speed_value = instance->args[1] * (FRACUNIT / 8);
+   cd.speed_type = SpeedParam;
+   cd.spac = instance->spac;
+   cd.type = paramHexenLowerCrush;
+   return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
 // EOF
 

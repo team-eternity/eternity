@@ -140,6 +140,7 @@ void CeilingThinker::Think()
          case raiseToHighest:
          case genCeiling:
          case paramHexenCrushRaiseStay:   // ioanch 20160306
+         case paramHexenLowerCrush:
             P_RemoveActiveCeiling(this);
             break;
 
@@ -233,6 +234,7 @@ void CeilingThinker::Think()
          case lowerToLowest:
          case lowerToMaxFloor:
          case genCeiling:
+         case paramHexenLowerCrush:
             P_RemoveActiveCeiling(this);
             break;
          // ioanch 20160305
