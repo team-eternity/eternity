@@ -926,7 +926,7 @@ static bool DonutOverflow(fixed_t *pfloorheight, int16_t *pfloorpic)
 }
 
 //
-// EV_DoDonut()
+// EV_DoParamDonut()
 //
 // Handle donut function: lower pillar, raise surrounding pool, both to height,
 // texture and type of the sector surrounding the pool.
@@ -934,7 +934,10 @@ static bool DonutOverflow(fixed_t *pfloorheight, int16_t *pfloorpic)
 // Passed the linedef that triggered the donut
 // Returns whether a thinker was created
 //
-int EV_DoDonut(const line_t *line)
+// ioanch 20160305: made parameterized
+//
+int EV_DoParamDonut(const line_t *line, int tag, bool havespac,
+                    fixed_t pspeed, fixed_t sspeed)
 {
    sector_t    *s1, *s2, *s3;
    int          secnum;
@@ -946,14 +949,29 @@ int EV_DoDonut(const line_t *line)
 
    secnum = -1;
    rtn = 0;
+
+   // ioanch: param tag0 support
+   bool manual = false;
+   if(havespac && !tag)
+   {
+      if(!line || !(s1 = line->backsector))
+         return rtn;
+      secnum = s1 - sectors;
+      manual = true;
+      goto manual_donut;
+   }
    // do function on all sectors with same tag as linedef
-   while((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
+   while((secnum = P_FindSectorFromTag(tag,secnum)) >= 0)
    {
       s1 = &sectors[secnum];                // s1 is pillar's sector
-              
+   manual_donut:  // ioanch
       // do not start the donut if the pillar is already moving
       if(P_SectorActive(floor_special, s1)) //jff 2/22/98
+      {
+         if(manual)
+            return rtn;
          continue;
+      }
                       
       s2 = getNextSector(s1->lines[0], s1); // s2 is pool's sector
       if(!s2) continue;           // note lowest numbered line around
@@ -1010,7 +1028,7 @@ int EV_DoDonut(const line_t *line)
          floor->crush     = -1;
          floor->direction = plat_up;
          floor->sector    = s2;
-         floor->speed     = FLOORSPEED / 2;
+         floor->speed     = sspeed;
          floor->texture   = s3_floorpic;
          P_ZeroSpecialTransfer(&(floor->special));
          floor->floordestheight = s3_floorheight;
@@ -1024,7 +1042,7 @@ int EV_DoDonut(const line_t *line)
          floor->crush     = -1;
          floor->direction = plat_down;
          floor->sector    = s1;
-         floor->speed     = FLOORSPEED / 2;
+         floor->speed     = pspeed;
          floor->floordestheight = s3_floorheight;
          P_FloorSequence(floor->sector);
          break;
