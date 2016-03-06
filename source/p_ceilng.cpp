@@ -42,11 +42,9 @@
 // the list of ceilings moving currently, including crushers
 ceilinglist_t *activeceilings;
 
-// ioanch 20160506: Hexen bug emulation: make Ceiling_CrushStop act like in
-// vanilla, JUST FOR HEXEN CRUSHERS (Doom crushers will act normal).
-static const int vhack_MAXCEILINGS = 30;
-static CeilingThinker *hexen_activecrushers[vhack_MAXCEILINGS];
-
+// ioanch 20160306: vanilla demo compatibility stuff
+static const int vanilla_MAXCEILINGS = 30;
+static CeilingThinker *vanilla_activeceilings[vanilla_MAXCEILINGS];
 
 //
 // P_CeilingSequence
@@ -452,8 +450,43 @@ int EV_DoCeiling(const line_t *line, ceiling_e type)
 //
 int P_ActivateInStasisCeiling(const line_t *line, bool manual)
 {
-   ceilinglist_t *cl;
    int rtn = 0, noise;
+   // ioanch 20160306: restore old vanilla bug only for demos
+   if(demo_compatibility)
+   {
+      for(int i = 0; i < vanilla_MAXCEILINGS; ++i)
+      {
+         CeilingThinker *ceiling = vanilla_activeceilings[i];
+         if(ceiling && ceiling->tag == line->tag && 
+            ceiling->direction == plat_stop)
+         {
+            ceiling->direction = ceiling->olddirection;
+            ceiling->inStasis = false;
+
+            // haleyjd: restart sound sequence
+            switch(ceiling->type)
+            {
+            case silentCrushAndRaise:
+               noise = CNOISE_SEMISILENT;
+               break;
+            case genSilentCrusher:
+               noise = CNOISE_SILENT;
+               break;
+            default:
+               noise = CNOISE_NORMAL;
+               break;
+            }
+            P_CeilingSequence(ceiling->sector, noise);
+
+            //jff 4/5/98 return if activated
+            rtn = 1;
+         }
+      }
+      return rtn;
+   }
+
+   // ioanch: normal setup
+   ceilinglist_t *cl;
    
    for(cl = activeceilings; cl; cl = cl->next)
    {
@@ -498,24 +531,31 @@ int EV_CeilingCrushStop(const line_t* line, int tag)
 {
    int rtn = 0;
 
-   // ioanch 20160305: Hexen-compatible behaviour: delete the first thinker
-   // in the compatibility list.
-   for(int i = 0; i < vhack_MAXCEILINGS; ++i)
+   // ioanch 20160306
+   if(demo_compatibility)
    {
-      if(hexen_activecrushers[i] && hexen_activecrushers[i]->tag == tag)
+      for(int i = 0; i < vanilla_MAXCEILINGS; ++i)
       {
-         rtn = 1;
-         P_RemoveActiveCeiling(hexen_activecrushers[i]);
-         break;
+         CeilingThinker *ceiling = vanilla_activeceilings[i];
+         if(ceiling && ceiling->tag == line->tag && 
+            ceiling->direction != plat_stop)
+         {
+            ceiling->olddirection = ceiling->direction;
+            ceiling->direction = plat_stop;
+            ceiling->inStasis = true;
+            S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C); // haleyjd 09/28/06
+            rtn = 1;
+         }
       }
+      return rtn;
    }
-   
+
+   // ioanch: normal setup
    ceilinglist_t *cl;
    for(cl = activeceilings; cl; cl = cl->next)
    {
       CeilingThinker *ceiling = cl->ceiling;
-      if(ceiling->direction != plat_stop && ceiling->tag == tag &&
-         !(ceiling->crushflags & CeilingThinker::crushStopRemove))
+      if(ceiling->direction != plat_stop && ceiling->tag == tag)
       {
          ceiling->olddirection = ceiling->direction;
          ceiling->direction = plat_stop;
@@ -540,6 +580,21 @@ int EV_CeilingCrushStop(const line_t* line, int tag)
 //
 void P_AddActiveCeiling(CeilingThinker *ceiling)
 {
+   // ioanch 20160306
+   if(demo_compatibility)
+   {
+      for(int i = 0; i < vanilla_MAXCEILINGS; ++i)
+      {
+         if(!vanilla_activeceilings[i])
+         {
+            vanilla_activeceilings[i] = ceiling;
+            break;
+         }
+      }
+      return;
+   }
+
+   // ioanch: normal setup
    ceilinglist_t *list = estructalloc(ceilinglist_t, 1);
    list->ceiling = ceiling;
    ceiling->list = list;
@@ -548,18 +603,6 @@ void P_AddActiveCeiling(CeilingThinker *ceiling)
    list->prev = &activeceilings;
    activeceilings = list;
 
-   // ioanch 20160306: also emulate old quirks, ONLY for Hexen crushers
-   if(!(ceiling->crushflags & CeilingThinker::crushStopRemove))
-      return;
-
-   for(int i = 0; i < vhack_MAXCEILINGS; ++i)
-   {
-      if(!hexen_activecrushers[i])
-      {
-         hexen_activecrushers[i] = ceiling;
-         break;
-      }
-   }
 }
 
 //
@@ -572,19 +615,21 @@ void P_AddActiveCeiling(CeilingThinker *ceiling)
 //
 void P_RemoveActiveCeiling(CeilingThinker* ceiling)
 {
-   // ioanch 20160306: also emulate old quirks, ONLY for Hexen crushers
-   if(ceiling->crushflags & CeilingThinker::crushStopRemove)
+   // ioanch 20160306
+   if(demo_compatibility)
    {
-      for(int i = 0; i < vhack_MAXCEILINGS; ++i)
+      for(int i = 0; i < vanilla_MAXCEILINGS; ++i)
       {
-         if(hexen_activecrushers[i] == ceiling)
+         if(vanilla_activeceilings[i] == ceiling)
          {
-            hexen_activecrushers[i] = nullptr;
+            vanilla_activeceilings[i] = nullptr;
             break;
          }
       }
+      return;
    }
 
+   // ioanch: normal setup
    ceilinglist_t *list = ceiling->list;
    ceiling->sector->ceilingdata = NULL;   //jff 2/22/98
    S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C); // haleyjd 09/28/06
@@ -603,15 +648,21 @@ void P_RemoveActiveCeiling(CeilingThinker* ceiling)
 //
 void P_RemoveAllActiveCeilings()
 {
+   // ioanch 20160306
+   if(demo_compatibility)
+   {
+      memset(vanilla_activeceilings, 0, sizeof(vanilla_activeceilings));
+      return;
+   }
+
+   // normal setup
+
    while(activeceilings)
    {  
       ceilinglist_t *next = activeceilings->next;
       efree(activeceilings);
       activeceilings = next;
    }
-
-   // ioanch 20160306: also emulate old quirks
-   memset(hexen_activecrushers, 0, sizeof(hexen_activecrushers));
 }
 
 //
