@@ -42,6 +42,10 @@
 // the list of ceilings moving currently, including crushers
 ceilinglist_t *activeceilings;
 
+// ioanch 20160306: vanilla demo compatibility stuff
+static const int vanilla_MAXCEILINGS = 30;
+static CeilingThinker *vanilla_activeceilings[vanilla_MAXCEILINGS];
+
 //
 // P_CeilingSequence
 //
@@ -425,8 +429,43 @@ int EV_DoCeiling(const line_t *line, ceiling_e type)
 //
 int P_ActivateInStasisCeiling(const line_t *line)
 {
-   ceilinglist_t *cl;
    int rtn = 0, noise;
+   // ioanch 20160306: restore old vanilla bug only for demos
+   if(demo_compatibility)
+   {
+      for(int i = 0; i < vanilla_MAXCEILINGS; ++i)
+      {
+         CeilingThinker *ceiling = vanilla_activeceilings[i];
+         if(ceiling && ceiling->tag == line->tag && 
+            ceiling->direction == plat_stop)
+         {
+            ceiling->direction = ceiling->olddirection;
+            ceiling->inStasis = false;
+
+            // haleyjd: restart sound sequence
+            switch(ceiling->type)
+            {
+            case silentCrushAndRaise:
+               noise = CNOISE_SEMISILENT;
+               break;
+            case genSilentCrusher:
+               noise = CNOISE_SILENT;
+               break;
+            default:
+               noise = CNOISE_NORMAL;
+               break;
+            }
+            P_CeilingSequence(ceiling->sector, noise);
+
+            //jff 4/5/98 return if activated
+            rtn = 1;
+         }
+      }
+      return rtn;
+   }
+
+   // ioanch: normal setup
+   ceilinglist_t *cl;
    
    for(cl = activeceilings; cl; cl = cl->next)
    {
@@ -470,6 +509,26 @@ int EV_CeilingCrushStop(const line_t* line)
 {
    int rtn = 0;
    
+   // ioanch 20160306
+   if(demo_compatibility)
+   {
+      for(int i = 0; i < vanilla_MAXCEILINGS; ++i)
+      {
+         CeilingThinker *ceiling = vanilla_activeceilings[i];
+         if(ceiling && ceiling->tag == line->tag && 
+            ceiling->direction != plat_stop)
+         {
+            ceiling->olddirection = ceiling->direction;
+            ceiling->direction = plat_stop;
+            ceiling->inStasis = true;
+            S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C); // haleyjd 09/28/06
+            rtn = 1;
+         }
+      }
+      return rtn;
+   }
+
+   // ioanch: normal setup
    ceilinglist_t *cl;
    for(cl = activeceilings; cl; cl = cl->next)
    {
@@ -496,6 +555,21 @@ int EV_CeilingCrushStop(const line_t* line)
 //
 void P_AddActiveCeiling(CeilingThinker *ceiling)
 {
+   // ioanch 20160306
+   if(demo_compatibility)
+   {
+      for(int i = 0; i < vanilla_MAXCEILINGS; ++i)
+      {
+         if(!vanilla_activeceilings[i])
+         {
+            vanilla_activeceilings[i] = ceiling;
+            break;
+         }
+      }
+      return;
+   }
+
+   // ioanch: normal setup
    ceilinglist_t *list = estructalloc(ceilinglist_t, 1);
    list->ceiling = ceiling;
    ceiling->list = list;
@@ -515,6 +589,21 @@ void P_AddActiveCeiling(CeilingThinker *ceiling)
 //
 void P_RemoveActiveCeiling(CeilingThinker* ceiling)
 {
+   // ioanch 20160306
+   if(demo_compatibility)
+   {
+      for(int i = 0; i < vanilla_MAXCEILINGS; ++i)
+      {
+         if(vanilla_activeceilings[i] == ceiling)
+         {
+            vanilla_activeceilings[i] = nullptr;
+            break;
+         }
+      }
+      return;
+   }
+
+   // ioanch: normal setup
    ceilinglist_t *list = ceiling->list;
    ceiling->sector->ceilingdata = NULL;   //jff 2/22/98
    S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C); // haleyjd 09/28/06
@@ -533,6 +622,15 @@ void P_RemoveActiveCeiling(CeilingThinker* ceiling)
 //
 void P_RemoveAllActiveCeilings()
 {
+   // ioanch 20160306
+   if(demo_compatibility)
+   {
+      memset(vanilla_activeceilings, 0, sizeof(vanilla_activeceilings));
+      return;
+   }
+
+   // normal setup
+
    while(activeceilings)
    {  
       ceilinglist_t *next = activeceilings->next;
