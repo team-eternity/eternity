@@ -42,6 +42,12 @@
 // the list of ceilings moving currently, including crushers
 ceilinglist_t *activeceilings;
 
+// ioanch 20160506: Hexen bug emulation: make Ceiling_CrushStop act like in
+// vanilla, JUST FOR HEXEN CRUSHERS (Doom crushers will act normal).
+static const int vhack_MAXCEILINGS = 30;
+static CeilingThinker *hexen_activecrushers[vhack_MAXCEILINGS];
+
+
 //
 // P_CeilingSequence
 //
@@ -488,15 +494,28 @@ int P_ActivateInStasisCeiling(const line_t *line, bool manual)
 // Passed the linedef stopping the ceilings
 // Returns true if a ceiling put in stasis
 //
-int EV_CeilingCrushStop(const line_t* line)
+int EV_CeilingCrushStop(const line_t* line, int tag)
 {
    int rtn = 0;
+
+   // ioanch 20160305: Hexen-compatible behaviour: delete the first thinker
+   // in the compatibility list.
+   for(int i = 0; i < vhack_MAXCEILINGS; ++i)
+   {
+      if(hexen_activecrushers[i] && hexen_activecrushers[i]->tag == tag)
+      {
+         rtn = 1;
+         P_RemoveActiveCeiling(hexen_activecrushers[i]);
+         break;
+      }
+   }
    
    ceilinglist_t *cl;
    for(cl = activeceilings; cl; cl = cl->next)
    {
       CeilingThinker *ceiling = cl->ceiling;
-      if(ceiling->direction != plat_stop && ceiling->tag == line->tag)
+      if(ceiling->direction != plat_stop && ceiling->tag == tag &&
+         !(ceiling->crushflags & CeilingThinker::crushStopRemove))
       {
          ceiling->olddirection = ceiling->direction;
          ceiling->direction = plat_stop;
@@ -505,6 +524,9 @@ int EV_CeilingCrushStop(const line_t* line)
          rtn = 1;
       }
    }
+
+   // hack to emulate the Hexen
+
    return rtn;
 }
 
@@ -525,6 +547,19 @@ void P_AddActiveCeiling(CeilingThinker *ceiling)
       list->next->prev = &list->next;
    list->prev = &activeceilings;
    activeceilings = list;
+
+   // ioanch 20160306: also emulate old quirks, ONLY for Hexen crushers
+   if(!(ceiling->crushflags & CeilingThinker::crushStopRemove))
+      return;
+
+   for(int i = 0; i < vhack_MAXCEILINGS; ++i)
+   {
+      if(!hexen_activecrushers[i])
+      {
+         hexen_activecrushers[i] = ceiling;
+         break;
+      }
+   }
 }
 
 //
@@ -537,6 +572,19 @@ void P_AddActiveCeiling(CeilingThinker *ceiling)
 //
 void P_RemoveActiveCeiling(CeilingThinker* ceiling)
 {
+   // ioanch 20160306: also emulate old quirks, ONLY for Hexen crushers
+   if(ceiling->crushflags & CeilingThinker::crushStopRemove)
+   {
+      for(int i = 0; i < vhack_MAXCEILINGS; ++i)
+      {
+         if(hexen_activecrushers[i] == ceiling)
+         {
+            hexen_activecrushers[i] = nullptr;
+            break;
+         }
+      }
+   }
+
    ceilinglist_t *list = ceiling->list;
    ceiling->sector->ceilingdata = NULL;   //jff 2/22/98
    S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C); // haleyjd 09/28/06
@@ -561,6 +609,9 @@ void P_RemoveAllActiveCeilings()
       efree(activeceilings);
       activeceilings = next;
    }
+
+   // ioanch 20160306: also emulate old quirks
+   memset(hexen_activecrushers, 0, sizeof(hexen_activecrushers));
 }
 
 //

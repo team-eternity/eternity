@@ -604,7 +604,7 @@ DEFINE_ACTION(EV_ActionCeilingCrushStop)
    // case 168: (S1 - BOOM Extended)
    // case 188: (SR - BOOM Extended)
    // Ceiling Crush Stop
-   return EV_CeilingCrushStop(instance->line);
+   return EV_CeilingCrushStop(instance->line, instance->tag);
 }
 
 //
@@ -3237,6 +3237,19 @@ DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaise)
    cd.speed_type = SpeedParam;
    cd.spac = instance->spac;
    return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingCrushStop
+//
+// Implements Ceiling_CrushStop(tag)
+// * ExtraData: 433
+// * Hexen:     44
+//
+DEFINE_ACTION(EV_ActionParamCeilingCrushStop)
+{
+   // Really the same as EV_ActionCeilingCrushStop
+   return EV_CeilingCrushStop(instance->line, instance->tag);
 }
 
 // EOF

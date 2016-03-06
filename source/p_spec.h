@@ -1339,7 +1339,7 @@ int EV_DoFloor(const line_t *line, floor_e floortype);
 
 int EV_DoCeiling(const line_t *line, ceiling_e type);
 
-int EV_CeilingCrushStop(const line_t *line);
+int EV_CeilingCrushStop(const line_t *line, int tag);
 
 void P_ChangeCeilingTex(const char *name, int tag);
 
