@@ -1348,7 +1348,9 @@ int EV_FlickerLight(const line_t *, int tag, int maxval, int minval);
 
 int EV_DoChange(const line_t *line, change_e changetype);
 
-int EV_DoDonut(const line_t *line);
+// ioanch: now it's parameterized
+int EV_DoParamDonut(const line_t *line, int tag, bool havespac,
+                    fixed_t pspeed, fixed_t sspeed);
 
 int EV_PillarBuild(const line_t *line, const pillardata_t *pd);
    // joek: pillars

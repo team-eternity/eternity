@@ -891,7 +891,8 @@ DEFINE_ACTION(EV_ActionDoDonut)
    // case 155: (WR - BOOM Extended)
    // case 191: (SR - BOOM Extended)
    // Lower Pillar, Raise Donut
-   return EV_DoDonut(instance->line);
+   return EV_DoParamDonut(instance->line, instance->line->args[0], false, 
+                          FLOORSPEED / 2, FLOORSPEED / 2);
 }
 
 //
@@ -3203,6 +3204,21 @@ DEFINE_ACTION(EV_ActionACSLockedExecute)
    if(EV_lockCheck(thing, instance->args[4], true))
       return ACS_ExecuteScriptNumber(num, map, 0, argv, argc, thing, line, side);
    return 0;
+}
+
+//
+// EV_ActionParamDonut
+//
+// Implements Floor_Donut(ptag, pspeed, sspeed)
+// * ExtraData: 431
+// * Hexen:     250
+//
+DEFINE_ACTION(EV_ActionParamDonut)
+{
+   // TODO: return param stuff.
+   fixed_t pspeed = instance->args[1] * FRACUNIT / 8;
+   fixed_t sspeed = instance->args[2] * FRACUNIT / 8;
+   return EV_DoParamDonut(instance->line, instance->tag, true, pspeed, sspeed);
 }
 
 // EOF
