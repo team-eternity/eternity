@@ -474,6 +474,7 @@ typedef enum
 
    // ioanch 20160305
    paramHexenCrush,
+   paramHexenCrushRaiseStay,
 } ceiling_e;
 
 // p_floor
@@ -1022,7 +1023,7 @@ struct crusherdata_t
    int spac;         // valid IFF (flags & CDF_HAVESPAC)
 
    // generalized values
-   bool silent;
+   ceiling_e type;
    int speed_type;
 
    // parameterized values

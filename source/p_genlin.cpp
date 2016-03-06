@@ -1034,16 +1034,19 @@ manual_crusher:
       P_SetupSpecialTransfer(sec, &(ceiling->special));
       ceiling->tag = sec->tag;
       // ioanch 20160305: set the type here
-      if(cd->flags & CDF_HEXENCRUSHER)
+      ceiling->type = cd->type;
+      
+      switch(cd->type)
       {
-         ceiling->type = paramHexenCrush;
+      case paramHexenCrush:
+      case paramHexenCrushRaiseStay:
          ceiling->crushflags = CeilingThinker::crushRest;
-      }
-      else
-      {
-         ceiling->type = cd->silent ? genSilentCrusher : genCrusher;
+         break;
+      default:
          ceiling->crushflags = 0;
+         break;
       }
+
       ceiling->topheight = sec->ceilingheight;
       ceiling->bottomheight = sec->floorheight + (8*FRACUNIT);
 
@@ -1072,7 +1075,8 @@ manual_crusher:
 
       P_AddActiveCeiling(ceiling); // add to list of active ceilings
       // haleyjd 09/29/06
-      P_CeilingSequence(ceiling->sector, cd->silent ? CNOISE_SILENT : CNOISE_NORMAL);
+      P_CeilingSequence(ceiling->sector, cd->type == genSilentCrusher ? 
+                        CNOISE_SILENT : CNOISE_NORMAL);
 
       if(manual)
          return rtn;
@@ -1093,7 +1097,8 @@ int EV_DoGenCrusher(const line_t *line)
    edefstructvar(crusherdata_t, cd);
    int value = line->special - GenCrusherBase;
 
-   cd.silent = (value & CrusherSilent) >> CrusherSilentShift != 0;
+   cd.type = ((value & CrusherSilent) >> CrusherSilentShift != 0) ? 
+             genSilentCrusher : genCrusher;
    cd.speed_type = (value & CrusherSpeed) >> CrusherSpeedShift;
    cd.trigger_type = (value & TriggerType) >> TriggerTypeShift;
    cd.damage = 10;

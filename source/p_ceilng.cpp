@@ -139,6 +139,7 @@ void CeilingThinker::Think()
             // plain movers are just removed
          case raiseToHighest:
          case genCeiling:
+         case paramHexenCrushRaiseStay:   // ioanch 20160306
             P_RemoveActiveCeiling(this);
             break;
 
@@ -236,6 +237,7 @@ void CeilingThinker::Think()
             break;
          // ioanch 20160305
          case paramHexenCrush:
+         case paramHexenCrushRaiseStay:
             // preserve the weird Hexen behaviour where the crusher becomes mute
             // after any pastdest.
             if(P_LevelIsVanillaHexen())
