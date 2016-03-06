@@ -948,7 +948,6 @@ public:
    enum
    {
       crushRest       = 1, // ceiling will rest while crushing things
-      crushStopRemove = 2, // stopping will remove the thinker instead of pause
    };
 
    // Methods
@@ -1522,7 +1521,7 @@ void P_AddActiveCeiling(CeilingThinker *c);
 
 void P_RemoveActiveCeiling(CeilingThinker *c);
 
-int P_ActivateInStasisCeiling(const line_t *line, bool manual = false);
+int P_ActivateInStasisCeiling(const line_t *line, int tag, bool manual = false);
 
 void P_CeilingSequence(sector_t *s, int noiseLevel);
 

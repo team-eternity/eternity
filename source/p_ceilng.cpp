@@ -168,7 +168,8 @@ void CeilingThinker::Think()
          case paramHexenCrush:
             // preserve the weird Hexen behaviour where the crusher becomes mute
             // after any pastdest.
-            S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_C);
+            if(P_LevelIsVanillaHexen())
+               S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_C);
             direction = plat_down;
             speed = speed * 2;   // make the speed double
             break;
@@ -237,7 +238,8 @@ void CeilingThinker::Think()
          case paramHexenCrush:
             // preserve the weird Hexen behaviour where the crusher becomes mute
             // after any pastdest.
-            S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_C);
+            if(P_LevelIsVanillaHexen())
+               S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_C);
             direction = plat_up;
             speed = speed / 2;
             break;
@@ -340,7 +342,7 @@ int EV_DoCeiling(const line_t *line, ceiling_e type)
    case silentCrushAndRaise:
    case crushAndRaise:
       //jff 4/5/98 return if activated
-      rtn = P_ActivateInStasisCeiling(line);
+      rtn = P_ActivateInStasisCeiling(line, line->tag);
    default:
       break;
    }
@@ -448,16 +450,16 @@ int EV_DoCeiling(const line_t *line, ceiling_e type)
 //jff 4/5/98 return if activated
 //ioanch 20160305: added manual parameter, for backside access
 //
-int P_ActivateInStasisCeiling(const line_t *line, bool manual)
+int P_ActivateInStasisCeiling(const line_t *line, int tag, bool manual)
 {
    int rtn = 0, noise;
    // ioanch 20160306: restore old vanilla bug only for demos
-   if(demo_compatibility)
+   if(demo_compatibility || P_LevelIsVanillaHexen())
    {
       for(int i = 0; i < vanilla_MAXCEILINGS; ++i)
       {
          CeilingThinker *ceiling = vanilla_activeceilings[i];
-         if(ceiling && ceiling->tag == line->tag && 
+         if(ceiling && ceiling->tag == tag && 
             ceiling->direction == plat_stop)
          {
             ceiling->direction = ceiling->olddirection;
@@ -492,7 +494,7 @@ int P_ActivateInStasisCeiling(const line_t *line, bool manual)
    {
       CeilingThinker *ceiling = cl->ceiling;
       if(((manual && line->backsector == ceiling->sector) ||
-         (!manual && ceiling->tag == line->tag)) && ceiling->direction == 0)
+         (!manual && ceiling->tag == tag)) && ceiling->direction == 0)
       {
          ceiling->direction = ceiling->olddirection;
          ceiling->inStasis = false;
@@ -532,14 +534,26 @@ int EV_CeilingCrushStop(const line_t* line, int tag)
    int rtn = 0;
 
    // ioanch 20160306
-   if(demo_compatibility)
+   bool vanillaHexen = P_LevelIsVanillaHexen();
+   if(demo_compatibility || vanillaHexen)
    {
       for(int i = 0; i < vanilla_MAXCEILINGS; ++i)
       {
          CeilingThinker *ceiling = vanilla_activeceilings[i];
-         if(ceiling && ceiling->tag == line->tag && 
+         if(vanillaHexen)
+         {
+            if(ceiling && ceiling->tag == tag)
+            {
+               // in Hexen, just kill the crusher thinker
+               rtn = 1;
+               P_RemoveActiveCeiling(ceiling);
+               break;   // get out after killing a single crusher
+            }
+         }
+         else if(ceiling && ceiling->tag == tag && 
             ceiling->direction != plat_stop)
          {
+            // vanilla Doom demo compatibility
             ceiling->olddirection = ceiling->direction;
             ceiling->direction = plat_stop;
             ceiling->inStasis = true;
@@ -581,7 +595,7 @@ int EV_CeilingCrushStop(const line_t* line, int tag)
 void P_AddActiveCeiling(CeilingThinker *ceiling)
 {
    // ioanch 20160306
-   if(demo_compatibility)
+   if(demo_compatibility || P_LevelIsVanillaHexen())
    {
       for(int i = 0; i < vanilla_MAXCEILINGS; ++i)
       {
@@ -616,7 +630,7 @@ void P_AddActiveCeiling(CeilingThinker *ceiling)
 void P_RemoveActiveCeiling(CeilingThinker* ceiling)
 {
    // ioanch 20160306
-   if(demo_compatibility)
+   if(demo_compatibility || P_LevelIsVanillaHexen())
    {
       for(int i = 0; i < vanilla_MAXCEILINGS; ++i)
       {
@@ -649,7 +663,7 @@ void P_RemoveActiveCeiling(CeilingThinker* ceiling)
 void P_RemoveAllActiveCeilings()
 {
    // ioanch 20160306
-   if(demo_compatibility)
+   if(demo_compatibility || P_LevelIsVanillaHexen())
    {
       memset(vanilla_activeceilings, 0, sizeof(vanilla_activeceilings));
       return;

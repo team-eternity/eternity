@@ -990,7 +990,7 @@ int EV_DoParamCrusher(const line_t *line, int tag, const crusherdata_t *cd)
    // ioanch 20160305: support this for manual parameterized! But generalized
    // ones should still act like in Boom
    bool manualParam = (cd->flags & CDF_HAVESPAC) && !tag;
-   rtn = P_ActivateInStasisCeiling(line, manualParam);
+   rtn = P_ActivateInStasisCeiling(line, tag, manualParam);
 
    // check if a manual trigger, if so do just the sector on the backside
    manual = false;
@@ -1037,8 +1037,7 @@ manual_crusher:
       if(cd->flags & CDF_HEXENCRUSHER)
       {
          ceiling->type = paramHexenCrush;
-         ceiling->crushflags = CeilingThinker::crushRest 
-                             | CeilingThinker::crushStopRemove;
+         ceiling->crushflags = CeilingThinker::crushRest;
       }
       else
       {
