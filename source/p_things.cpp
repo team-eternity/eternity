@@ -308,12 +308,7 @@ int EV_ThrustThing(Mobj *actor, int side, int byteangle, int ispeed, int tid)
    // Hexen format maps cannot have ExtraData, and in Hexen activation is only
    // done from the front side, so keep compatible with that. Otherwise, in
    // ExtraData-possible maps and eventually UDMF, the author can choose.
-
-   // Also make sure the level type is Hexen, because if it's Doom, chances are
-   // the wad is for ZDoom originally and doesn't have that override.
-   bool compat = LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN && 
-      LevelInfo.levelType == LI_TYPE_HEXEN;
-
+   
    // args[2] is reserved. In the ZDoom equivalent, it has something to do with
    // setting huge speeds (> 30.0)
 
@@ -322,7 +317,7 @@ int EV_ThrustThing(Mobj *actor, int side, int byteangle, int ispeed, int tid)
    // Either thrust if not compatible (i.e. modern) or only if the front
    // side is touched (in Hexen). Back side will have no effect in plain Hexen
    // maps.
-   if(!compat || side == 0)
+   if(!P_LevelIsVanillaHexen() || side == 0)
    {
       Mobj *mobj = nullptr;
 

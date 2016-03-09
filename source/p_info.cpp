@@ -1928,5 +1928,16 @@ void P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname)
    P_InitWeapons();
 }
 
+//
+// P_LevelIsVanillaHexen
+//
+// ioanch 20160306: returns true if the level is most likely for vanilla Hexen
+//
+bool P_LevelIsVanillaHexen()
+{
+   return LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN && 
+          LevelInfo.levelType == LI_TYPE_HEXEN;
+}
+
 // EOF
 
