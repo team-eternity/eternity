@@ -1386,6 +1386,7 @@ bool scriptSecret = false;
 
 void G_ExitLevel(int destmap)
 {
+   puts("Exit normal");
    g_destmap  = destmap;
    secretexit = scriptSecret = false;
    gameaction = ga_completed;
@@ -1400,6 +1401,7 @@ void G_ExitLevel(int destmap)
 //
 void G_SecretExitLevel(int destmap)
 {
+   puts("Exit secret");
    secretexit = !(GameModeInfo->flags & GIF_WOLFHACK) || haswolflevels || scriptSecret;
    g_destmap  = destmap;
    gameaction = ga_completed;

@@ -2826,6 +2826,8 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    lumpinfo_t **lumpinfo;
    int lumpnum, acslumpnum = -1;
 
+   printf("setup %s\n", mapname);
+
    // haleyjd 07/28/10: we are no longer in GS_LEVEL during the execution of
    // this routine.
    gamestate = GS_LOADING;
