@@ -1243,6 +1243,9 @@ void PolyRotateThinker::serialize(SaveArchive &arc)
    Super::serialize(arc);
 
    arc << polyObjNum << speed << distance << hasBeenPositive;
+   // ioanch 20160310: fix the thinker reference
+   if(arc.isLoading())
+      Polyobj_GetForNum(polyObjNum)->thinker = this;
 }
 
 //
@@ -1323,6 +1326,10 @@ void PolyMoveThinker::serialize(SaveArchive &arc)
    Super::serialize(arc);
 
    arc << polyObjNum << speed << momx << momy << distance << angle;
+
+   // ioanch 20160310: fix the thinker reference
+   if(arc.isLoading())
+      Polyobj_GetForNum(polyObjNum)->thinker = this;
 }
 
 
@@ -1432,6 +1439,9 @@ void PolySlideDoorThinker::serialize(SaveArchive &arc)
    arc << polyObjNum << delay << delayCount << initSpeed << speed
        << initDistance << distance << initAngle << angle << revAngle
        << momx << momy << closing;
+   // ioanch 20160310: fix the thinker reference
+   if(arc.isLoading())
+      Polyobj_GetForNum(polyObjNum)->thinker = this;
 }
 
 
@@ -1539,6 +1549,9 @@ void PolySwingDoorThinker::serialize(SaveArchive &arc)
 
    arc << polyObjNum << delay << delayCount << initSpeed << speed
        << initDistance << distance << closing << hasBeenPositive;
+   // ioanch 20160310: fix the thinker reference
+   if(arc.isLoading())
+      Polyobj_GetForNum(polyObjNum)->thinker = this;
 }
 
 // Linedef Handlers
