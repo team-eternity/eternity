@@ -1157,7 +1157,10 @@ void Polyobj_MoveOnLoad(polyobj_t *po, angle_t angle, fixed_t x, fixed_t y)
    // ioanch 20160302: do NOT collide and get back if onload = true.
 
    // first, rotate to the saved angle
-   Polyobj_rotate(po, angle, true);
+   // ioanch 20160310: loadgame fix: don't budge polyobjects ever so little
+   // if they haven't rotated anyway. Angle 0 still means some error.
+   if(angle)
+      Polyobj_rotate(po, angle, true);
    
    // determine component distances to translate
    dx = x - po->spawnSpot.x;
