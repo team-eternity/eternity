@@ -2789,6 +2789,13 @@ void ACS_Archive(SaveArchive &arc)
             s->threads = NULL;
          }
       }
+      // ioanch 20160310: restore the current thinker references, however
+      for(Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
+      {
+         ACSThinker *acs;
+         if((acs = thinker_cast<ACSThinker *>(th)) && acs->script)
+            ACS_addThread(acs);
+      }
    }
 
    // Archive map variables.
