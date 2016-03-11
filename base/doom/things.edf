@@ -3343,26 +3343,25 @@ thingtype EEBetaLostSoul : LostSoul, 9037, 161
     EEBS A 10 A_Look
     loop
   See:
-    EEBS BCDA 5 bright A_Chase
+    EEBS BCDA 5 A_Chase
     loop
   Missile:
-    EEBS E 4 bright A_FaceTarget
-    EEBS F 5 bright A_BetaSkullAttack
-    EEBS F 4 bright
+    EEBS E 4 A_FaceTarget
+    EEBS F 5 A_BetaSkullAttack
+    EEBS F 4
     goto See
   Pain:
-    EEBS G 4 bright
-    EEBS H 2 bright A_Pain
-    EEBS I 4 bright
+    EEBS G 4
+    EEBS H 2 A_Pain
+    EEBS I 4
     goto See
   Death:
-    EEBS JKL  5 bright
-    EEBS M    5 bright A_Scream
-    EEBS N    5 bright A_Fall
-    EEBS O    5 bright
-    EEBS P    5 bright 
-    EEBS Q   -1
-    stop
+    EEBS JKLM 5
+    EEBS N    5 A_Scream
+    EEBS O    5
+    EEBS P    5 A_Fall
+    EEBS Q    5 A_Stop
+    wait
   "@
 }
 
