@@ -3353,6 +3353,8 @@ thingtype EEBetaLostSoul : LostSoul, 9037, 161
   Pain:
     EEBS G 4
     EEBS H 2 A_Pain
+	goto See
+  UnusedPain:
     EEBS I 4
     goto See
   Death:
