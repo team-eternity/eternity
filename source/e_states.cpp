@@ -1,6 +1,5 @@
-// Emacs style mode select -*- C++ -*-
-//----------------------------------------------------------------------------
 //
+// The Eternity Engine
 // Copyright (C) 2013 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -19,13 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+// Purpose: EDF States Module
+// Authors: James Haley
 //
-// EDF States Module
-//
-// By James Haley
-//
-//----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "i_system.h"
@@ -126,8 +121,6 @@ static EHashTable<state_t, EIntHashKey,
                   &state_t::dehnum, &state_t::numlinks> state_numhash(NUMSTATECHAINS);
 
 //
-// E_StateNumForDEHNum
-//
 // State DeHackEd numbers *were* simply the actual, internal state
 // number, but we have to actually store and hash them for EDF to
 // remain cross-version compatible. If a state with the requested
@@ -135,7 +128,7 @@ static EHashTable<state_t, EIntHashKey,
 //
 int E_StateNumForDEHNum(int dehnum)
 {
-   state_t *st = NULL;
+   state_t *st = nullptr;
    int ret = -1;
 
    // 08/31/03: return null state for negative numbers, to
@@ -148,8 +141,6 @@ int E_StateNumForDEHNum(int dehnum)
    return ret;
 }
 
-//
-// E_GetStateNumForDEHNum
 //
 // As above, but causes a fatal error if the state isn't found,
 // rather than returning -1. This keeps error checking code
@@ -166,8 +157,6 @@ int E_GetStateNumForDEHNum(int dehnum)
 }
 
 //
-// E_SafeState
-//
 // As above, but returns index of S_NULL state if the requested
 // one was not found.
 //
@@ -182,14 +171,12 @@ int E_SafeState(int dehnum)
 }
 
 //
-// E_StateNumForName
-//
 // Returns the number of a state given its name. Returns -1
 // if the state is not found.
 //
 int E_StateNumForName(const char *name)
 {
-   state_t *st = NULL;
+   state_t *st = nullptr;
    int ret = -1;
 
    if((st = state_namehash.objectForKey(name)))
@@ -198,8 +185,6 @@ int E_StateNumForName(const char *name)
    return ret;
 }
 
-//
-// E_GetStateNumForName
 //
 // As above, but causes a fatal error if the state doesn't exist.
 //
@@ -213,8 +198,6 @@ int E_GetStateNumForName(const char *name)
    return statenum;
 }
 
-//
-// E_SafeStateName
 //
 // As above, but returns index of S_NULL if result of a name lookup
 // is not found.
@@ -230,11 +213,8 @@ int E_SafeStateName(const char *name)
 }
 
 //
-// E_SafeStateNameOrLabel
-//
-// haleyjd 07/19/14: Allows lookup of what may either be an EDF global state
-// name, DECORATE state label relative to a particular mobjinfo, or a state
-// DeHackEd number.
+// Allows lookup of what may either be an EDF global state name, DECORATE state 
+// label relative to a particular mobjinfo, or a state DeHackEd number.
 //
 int E_SafeStateNameOrLabel(mobjinfo_t *mi, const char *name)
 {
@@ -261,16 +241,15 @@ int E_SafeStateNameOrLabel(mobjinfo_t *mi, const char *name)
       return E_SafeState((int)num); // DeHackEd number
 }
 
-// haleyjd 03/22/06: automatic dehnum allocation
+// allocation starts at D_MAXINT and works toward 0
+static int edf_alloc_state_dehnum = D_MAXINT;
+
 //
 // Automatic allocation of dehacked numbers allows states to be used with
 // parameterized codepointers without having had a DeHackEd number explicitly
 // assigned to them by the EDF author. This was requested by several users
 // after v3.33.02.
-
-// allocation starts at D_MAXINT and works toward 0
-static int edf_alloc_state_dehnum = D_MAXINT;
-
+//
 bool E_AutoAllocStateDEHNum(int statenum)
 {
    int dehnum;
@@ -307,9 +286,7 @@ bool E_AutoAllocStateDEHNum(int statenum)
 //
 
 //
-// E_CountUniqueStates
-//
-// haleyjd 03/31/10: counts the number of states in a cfg which do not overwrite
+// Counts the number of states in a cfg which do not overwrite
 // any pre-existing states by virtue of having the same name.
 //
 static unsigned int E_CountUniqueStates(cfg_t *cfg, unsigned int numstates)
@@ -335,9 +312,7 @@ static unsigned int E_CountUniqueStates(cfg_t *cfg, unsigned int numstates)
 }
 
 //
-// E_ReallocStates
-//
-// haleyjd 04/04/10: Function to reallocate the states array safely.
+// Function to reallocate the states array safely.
 //
 void E_ReallocStates(int numnewstates)
 {
@@ -366,15 +341,13 @@ void E_ReallocStates(int numnewstates)
 
       // set the new state pointers to NULL
       for(i = NUMSTATES; i < numstatesalloc; ++i)
-         states[i] = NULL;
+         states[i] = nullptr;
    }
 
    // increment NUMSTATES
    NUMSTATES += numnewstates;
 }
 
-//
-// E_CollectStates
 //
 // Pre-creates and hashes by name the states, for purpose of mutual 
 // and forward references.
@@ -386,7 +359,7 @@ void E_CollectStates(cfg_t *cfg)
    unsigned int numnew;            // number of states that are new
    unsigned int firstnewstate = 0; // index of first new state
    unsigned int curnewstate = 0;   // index of current new state being used
-   state_t *statestructs = NULL;
+   state_t *statestructs = nullptr;
    static bool firsttime = true;
 
    // get number of states defined by the cfg
@@ -487,10 +460,8 @@ void E_CollectStates(cfg_t *cfg)
 }
 
 //
-// E_CreateArgList
-//
-// haleyjd 10/22/09: Creates an arglist object for the state, if it does not
-// already have one. Otherwise, the existing arguments are disposed of.
+// Creates an arglist object for the state, if it does not already have one. 
+// Otherwise, the existing arguments are disposed of.
 //
 void E_CreateArgList(state_t *state)
 {
@@ -502,8 +473,6 @@ void E_CreateArgList(state_t *state)
 
 // frame field parsing routines
 
-//
-// E_StateSprite
 //
 // Isolated code to process the frame sprite field.
 //
@@ -535,15 +504,12 @@ static void E_StateSprite(const char *tempstr, int i)
 }
 
 //
-// E_ActionFuncCB
-//
-// haleyjd 04/03/08: Callback function for the new function-valued string
-// option used to specify state action functions. This is called during 
-// parsing, not processing, and thus we do not look up/resolve anything
-// at this point. We are only interested in populating the cfg's args
-// values with the strings passed to this callback as parameters. The value
-// of the option has already been set to the name of the codepointer by
-// the libConfuse framework.
+// Callback function for the new function-valued string option used to 
+// specify state action functions. This is called during parsing, not 
+// processing, and thus we do not look up/resolve anything at this point.
+// We are only interested in populating the cfg's args values with the 
+// strings passed to this callback as parameters. The value of the option has
+// already been set to the name of the codepointer by the libConfuse framework.
 //
 static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc, 
                           const char **argv)
@@ -554,8 +520,6 @@ static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc,
    return 0; // everything is good
 }
 
-//
-// E_StateAction
 //
 // Isolated code to process the frame action field.
 //
@@ -572,7 +536,7 @@ static void E_StateAction(const char *tempstr, int i)
    states[i]->action = states[i]->oldaction = dp->cptr;
 }
 
-enum
+enum prefixkwd_e
 {
    PREFIX_FRAME,
    PREFIX_THING,
@@ -661,8 +625,6 @@ static void E_AssignMiscBexptr(int *target, deh_bexptr *dp, const char *name)
    *target = dp - deh_bexptrs;
 }
 
-//
-// E_ParseMiscField
 //
 // This function implements the quite powerful prefix:value syntax
 // for misc and args fields in frames. Some of the code within may
@@ -792,11 +754,11 @@ static void E_ParseMiscField(const char *value, int *target)
             E_AssignMiscThing(target, temp);
          else if((temp = E_StateNumForName(value)) >= 0)       // frame?
             E_AssignMiscState(target, temp);
-         else if((sfx = E_EDFSoundForName(value)) != NULL)     // sound?
+         else if((sfx = E_EDFSoundForName(value)) != nullptr)  // sound?
             E_AssignMiscSound(target, sfx);
-         else if((str = E_StringForName(value)) != NULL)       // string?
+         else if((str = E_StringForName(value)) != nullptr)    // string?
             E_AssignMiscString(target, str, value);
-         else if((dp = D_GetBexPtr(value)) != NULL)            // bexptr???
+         else if((dp = D_GetBexPtr(value)) != nullptr)         // bexptr???
             E_AssignMiscBexptr(target, dp, value);
       }
       else
@@ -805,9 +767,7 @@ static void E_ParseMiscField(const char *value, int *target)
 }
 
 //
-// E_GetArgument
-//
-// haleyjd 10/22/09: Skip over any prefix in the argument string.
+// Skip over any prefix in the argument string.
 //
 static const char *E_GetArgument(const char *value)
 {
@@ -822,7 +782,7 @@ static const char *E_GetArgument(const char *value)
    return colonloc ? colonloc + 1 : value;
 }
 
-enum
+enum nspeckwd_e
 {
    NSPEC_NEXT,
    NSPEC_PREV,
@@ -837,9 +797,6 @@ static const char *nspec_keywds[NUM_NSPEC_KEYWDS] =
 };
 
 //
-// E_SpecialNextState
-//
-// 11/07/03:
 // Returns a frame number for a special nextframe value.
 //
 static int E_SpecialNextState(const char *string, int framenum)
@@ -879,8 +836,6 @@ static int E_SpecialNextState(const char *string, int framenum)
 }
 
 //
-// E_StateNextFrame
-//
 // Isolated code to process the frame nextframe field.
 //
 static void E_StateNextFrame(const char *tempstr, int i)
@@ -894,7 +849,7 @@ static void E_StateNextFrame(const char *tempstr, int i)
    }
    else if((tempint = E_StateNumForName(tempstr)) < 0)
    {
-      char *endptr = NULL;
+      char *endptr = nullptr;
       int result;
 
       result = (int)strtol(tempstr, &endptr, 0);
@@ -918,8 +873,6 @@ static void E_StateNextFrame(const char *tempstr, int i)
 }
 
 //
-// E_StatePtclEvt
-//
 // Isolated code to process the frame particle event field.
 //
 static void E_StatePtclEvt(const char *tempstr, int i)
@@ -941,16 +894,12 @@ static void E_StatePtclEvt(const char *tempstr, int i)
    states[i]->particle_evt = tempint;
 }
 
-// haleyjd 04/03/08: hack for function-style arguments to action function
+// Hack for function-style arguments to action function
 static bool in_action;
 static bool early_args_found;
 static bool early_args_end;
 
-
 //
-// E_CmpTokenizer
-//
-// haleyjd 06/24/04:
 // A lexer function for the frame cmp field.
 // Used by E_ProcessCmpState below.
 //
@@ -961,7 +910,7 @@ static char *E_CmpTokenizer(const char *text, int *index, qstring *token)
 
    // if we're already at the end, return NULL
    if(text[*index] == '\0')
-      return NULL;
+      return nullptr;
 
    token->clear();
 
@@ -1021,7 +970,7 @@ static char *E_CmpTokenizer(const char *text, int *index, qstring *token)
       }
    }
 
-   // return final token, next call will return NULL
+   // return final token, next call will return null
    return token->getBuffer();
 }
 
@@ -1031,12 +980,10 @@ static char *E_CmpTokenizer(const char *text, int *index, qstring *token)
 
 #define NEXTTOKEN() curtoken = E_CmpTokenizer(value, &tok_index, &buffer)
 
-// DEFAULTS: tests if the string value is either NULL or equal to "*"
+// DEFAULTS: tests if the string value is either null or equal to "*"
 
 #define DEFAULTS(value)  (!(value) || (value)[0] == '*')
 
-//
-// E_ProcessCmpState
 //
 // Code to process a compressed state definition. Compressed state
 // definitions are just a string with each frame field in a set order,
@@ -1063,7 +1010,7 @@ static char *E_CmpTokenizer(const char *text, int *index, qstring *token)
 static void E_ProcessCmpState(const char *value, int i)
 {
    qstring buffer;
-   char *curtoken = NULL;
+   char *curtoken = nullptr;
    int tok_index = 0, j;
 
    // initialize tokenizer variables
@@ -1085,7 +1032,7 @@ static void E_ProcessCmpState(const char *value, int i)
    else
    {
       // call the value-parsing callback explicitly
-      if(E_SpriteFrameCB(NULL, NULL, curtoken, &(states[i]->frame)) == -1)
+      if(E_SpriteFrameCB(nullptr, nullptr, curtoken, &(states[i]->frame)) == -1)
       {
          E_EDFLoggedErr(2, 
             "E_ProcessCmpState: frame '%s': bad spriteframe '%s'\n",
@@ -1110,13 +1057,13 @@ static void E_ProcessCmpState(const char *value, int i)
    if(DEFAULTS(curtoken))
       states[i]->tics = 1;
    else
-      states[i]->tics = strtol(curtoken, NULL, 0);
+      states[i]->tics = strtol(curtoken, nullptr, 0);
 
    // process action
    in_action = true;
    NEXTTOKEN();
    if(DEFAULTS(curtoken))
-      states[i]->action = NULL;
+      states[i]->action = nullptr;
    else
       E_StateAction(curtoken, i);
 
@@ -1202,8 +1149,6 @@ static void E_ProcessCmpState(const char *value, int i)
 #undef  IS_SET
 #define IS_SET(name) (def || cfg_size(framesec, (name)) > 0)
 
-//
-// E_ProcessState
 //
 // Generalized code to process the data for a single state
 // structure. Doubles as code for frame and framedelta.
@@ -1333,8 +1278,6 @@ hitdecorate:
 }
 
 //
-// E_ProcessStates
-//
 // Resolves and loads all information for the state_t structures.
 //
 void E_ProcessStates(cfg_t *cfg)
@@ -1358,8 +1301,6 @@ void E_ProcessStates(cfg_t *cfg)
    }
 }
 
-//
-// E_ProcessStateDeltas
 //
 // Does processing for framedelta sections, which allow cascading
 // editing of existing frames. The framedelta shares most of its
@@ -1394,7 +1335,6 @@ void E_ProcessStateDeltas(cfg_t *cfg)
                      i, states[stateNum]->name, stateNum);
    }
 }
-
 
 // EOF
 
