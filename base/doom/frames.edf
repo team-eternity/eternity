@@ -1067,25 +1067,25 @@ frame S_DUMMY2  { cmp = "TNT1|*|*|0"; dehackednum = 1055 }
 
 // Dummy Beta Lost Soul frames -- these ones are only for Dehacked compatibility.
 // The real EEBetaLostSoul uses its own separate states.
-frame S_DUMMY3  { cmp "SKUL|A|*|10|Look           |@this";    dehackednum 1056 }
-frame S_DUMMY4  { cmp "SKUL|B|*|5 |Chase          |@next";    dehackednum 1057 }
-frame S_DUMMY5  { cmp "SKUL|C|*|5 |Chase          |@next";    dehackednum 1058 }
-frame S_DUMMY6  { cmp "SKUL|D|*|5 |Chase          |@next";    dehackednum 1059 }
-frame S_DUMMY7  { cmp "SKUL|A|*|5 |Chase          |S_DUMMY4"; dehackednum 1060 }
-frame S_DUMMY8  { cmp "SKUL|E|*|4 |FaceTarget     |@next";    dehackednum 1061 }
-frame S_DUMMY9  { cmp "SKUL|F|*|5 |BetaSkullAttack|@next";    dehackednum 1062 }
-frame S_DUMMY10 { cmp "SKUL|F|*|4 |*              |S_DUMMY4"; dehackednum 1063 }
-frame S_DUMMY11 { cmp "SKUL|G|*|4 |*              |@next";    dehackednum 1064 }
-frame S_DUMMY12 { cmp "SKUL|H|*|2 |Pain           |S_DUMMY4"; dehackednum 1065 }
-frame S_DUMMY13 { cmp "SKUL|I|*|4 |*              |S_DUMMY4"; dehackednum 1066 }
-frame S_DUMMY14 { cmp "SKUL|J|*|5 |*              |@next";    dehackednum 1067 }
-frame S_DUMMY15 { cmp "SKUL|K|*|5 |*              |@next";    dehackednum 1068 }
-frame S_DUMMY16 { cmp "SKUL|L|*|5 |*              |@next";    dehackednum 1069 }
-frame S_DUMMY17 { cmp "SKUL|M|*|5 |*              |@next";    dehackednum 1070 }
-frame S_DUMMY18 { cmp "SKUL|N|*|5 |Scream         |@next";    dehackednum 1071 }
-frame S_DUMMY19 { cmp "SKUL|O|*|5 |*              |@next";    dehackednum 1072 }
-frame S_DUMMY20 { cmp "SKUL|P|*|5 |Fall           |@next";    dehackednum 1073 }
-frame S_DUMMY21 { cmp "SKUL|Q|*|5 |Stop           |@this";    dehackednum 1074 }
+frame S_DUMMY3  { +decorate; dehackednum 1056 }
+frame S_DUMMY4  { +decorate; dehackednum 1057 }
+frame S_DUMMY5  { +decorate; dehackednum 1058 }
+frame S_DUMMY6  { +decorate; dehackednum 1059 }
+frame S_DUMMY7  { +decorate; dehackednum 1060 }
+frame S_DUMMY8  { +decorate; dehackednum 1061 }
+frame S_DUMMY9  { +decorate; dehackednum 1062 }
+frame S_DUMMY10 { +decorate; dehackednum 1063 }
+frame S_DUMMY11 { +decorate; dehackednum 1064 }
+frame S_DUMMY12 { +decorate; dehackednum 1065 }
+frame S_DUMMY13 { +decorate; dehackednum 1066 }
+frame S_DUMMY14 { +decorate; dehackednum 1067 }
+frame S_DUMMY15 { +decorate; dehackednum 1068 }
+frame S_DUMMY16 { +decorate; dehackednum 1069 }
+frame S_DUMMY17 { +decorate; dehackednum 1070 }
+frame S_DUMMY18 { +decorate; dehackednum 1071 }
+frame S_DUMMY19 { +decorate; dehackednum 1072 }
+frame S_DUMMY20 { +decorate; dehackednum 1073 }
+frame S_DUMMY21 { +decorate; dehackednum 1074 }
 
 // S_MUSHROOM: This frame can be used to make a mushroom cloud explosion
 frame S_MUSHROOM   { cmp "MISL|B|T|8|Mushroom|S_EXPLODE2"; dehackednum 1075 }

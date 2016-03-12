@@ -3330,6 +3330,41 @@ thingtype EEPSXBloodyChain : Mobj, 891, 160
 
 // Pre-Beta Lost Soul, restored from MBF
 
+// Global frame definitions for DeHackEd compatibility
+frameblock
+{
+  firststate S_DUMMY3
+  states
+  @"
+  Spawn:     // S_DUMMY3
+    SKUL A 10 A_Look
+    loop
+  See:       // S_DUMMY4 - S_DUMMY7
+    SKUL BCDA 5 A_Chase
+    loop
+  Missile:   // S_DUMMY8 - S_DUMMY10
+    SKUL E 4 A_FaceTarget
+    SKUL F 5 A_BetaSkullAttack
+    SKUL F 4
+    goto See
+  Pain:      // S_DUMMY11 - S_DUMMY12
+    SKUL G 4
+    SKUL H 2 A_Pain
+    goto See
+  ExtraPain: // S_DUMMY13 (NB: this was probably a bug in MBF)
+    SKUL I 4
+    goto See
+  Death:     // S_DUMMY14 - S_DUMMY20
+    SKUL JKLM 5
+    SKUL N    5 A_Scream
+    SKUL O    5
+    SKUL P    5 A_Fall
+  LastDeath: // S_DUMMY21
+    SKUL Q    5 A_Stop
+    loop
+  "@
+}
+
 thingtype EEBetaLostSoul : LostSoul, 9037, 161
 {
   addflags COUNTKILL
