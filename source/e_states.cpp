@@ -36,6 +36,7 @@
 #include "Confuse/confuse.h"
 
 #include "e_lib.h"
+#include "e_dstate.h"
 #include "e_edf.h"
 #include "e_hash.h"
 #include "e_things.h"
@@ -67,6 +68,9 @@ int NullStateNum;
 #define ITEM_FRAME_CMP       "cmp"
 
 #define ITEM_DELTA_NAME      "name"
+
+#define ITEM_FRAMEBLOCK_FDS    "firststate"
+#define ITEM_FRAMEBLOCK_STATES "states"
 
 // forward prototype for action function dispatcher
 static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc,
@@ -101,6 +105,13 @@ cfg_opt_t edf_fdelta_opts[] =
 {
    CFG_STR(ITEM_DELTA_NAME, 0, CFGF_NONE),
    FRAME_FIELDS
+};
+
+cfg_opt_t edf_fblock_opts[] =
+{
+   CFG_STR(ITEM_FRAMEBLOCK_FDS,    nullptr, CFGF_NONE),
+   CFG_STR(ITEM_FRAMEBLOCK_STATES, nullptr, CFGF_NONE),
+   CFG_END()
 };
 
 //
@@ -1335,6 +1346,106 @@ void E_ProcessStateDeltas(cfg_t *cfg)
                      i, states[stateNum]->name, stateNum);
    }
 }
+
+//=============================================================================
+//
+// Frame block processing
+//
+
+//
+// Resolve a single external goto target for a global frameblock. If the goto
+// target is invalid in any way, the goto target is set to NullStateNum.
+//
+static void E_processFrameBlockGoto(const egoto_t &gotoDef)
+{
+   int statenum = NullStateNum;
+   int calcstatenum;
+
+   if((calcstatenum = E_StateNumForName(gotoDef.label)) >= 0)
+   {
+      // get state and compute goto offset
+      state_t *state = states[calcstatenum];
+      calcstatenum = state->index + gotoDef.offset;
+
+      if(calcstatenum >= 0 && calcstatenum < NUMSTATES)
+      {
+         // success, this is a valid state
+         statenum = calcstatenum;
+      }
+      else
+         E_EDFLoggedWarning(2, "Invalid goto offset %d for state '%s'\n", gotoDef.offset, state->name);
+   }
+   else
+      E_EDFLoggedWarning(2, "Invalid goto target '%s' in frameblock\n", gotoDef.label);
+
+   // resolve the goto
+   *(gotoDef.nextstate) = statenum;
+}
+
+//
+// Perform DECORATE state parsing and data population for an EDF global frameblock.
+//
+static void E_processFrameBlock(cfg_t *sec, unsigned int index)
+{
+   const char *firststate = cfg_getstr(sec, ITEM_FRAMEBLOCK_FDS);
+   int firststatenum;
+
+   if(!firststate || (firststatenum = E_StateNumForName(firststate)) < 0)
+   {
+      E_EDFLoggedWarning(2, "E_processFrameBlock: firststate is required, block %u discarded\n", index);
+      return;
+   }
+
+   const char *states = cfg_getstr(sec, ITEM_FRAMEBLOCK_STATES);
+   if(!states)
+   {
+      E_EDFLoggedWarning(2, "E_processFrameBlock: states block required, block %u discarded\n", index);
+      return;
+   }
+
+   edecstateout_t *dso; 
+   if((dso = E_ParseDecorateStates(states, firststate)))
+   {
+      // warn if there are killstates, as these have no meaning
+      if(dso->numkillstates)
+         E_EDFLoggedWarning(2, "E_processFrameBlock: killstates ignored in block %u\n", index);
+
+      // fixup external gotos; in the case of global DECORATE state blocks, these must be
+      // the names of global EDF states
+      if(dso->numgotos)
+      {
+         for(int i = 0; i < dso->numgotos; i++)
+            E_processFrameBlockGoto(dso->gotos[i]);
+      }
+
+      // done with DSO
+      E_FreeDSO(dso);
+   }
+   else
+      E_EDFLoggedWarning(2, "E_processFrameBlock: could not parse DECORATE in frameblock %u\n", index);
+}
+
+//
+// Processing for loose DECORATE-format state blocks which can be used to 
+// populate predefined EDF states.
+//
+void E_ProcessFrameBlocks(cfg_t *cfg)
+{
+   unsigned int i, numblocks;
+
+   E_EDFLogPuts("\t* Processing frameblock data\n");
+
+   numblocks = cfg_size(cfg, EDF_SEC_FRAMEBLOCK);
+
+   E_EDFLogPrintf("\t\t%u frameblock(s) defined\n", numblocks);
+
+   for(i = 0; i < numblocks; i++)
+   {
+      E_processFrameBlock(cfg_getnsec(cfg, EDF_SEC_FRAMEBLOCK, i), i);
+      E_EDFLogPrintf("\t\t* Processed frameblock %u\n", i);
+   }
+}
+
 
 // EOF
 
