@@ -413,8 +413,6 @@ static void R_RenderSegLoop(void)
                   }
 
                   R_WindowAdd(segclip.l_window, i, ceilingclip[i], floorclip[i]);
-                  ceilingclip[i] = view.height - 1.0f;
-                  floorclip[i] = 0.0f;
                }
                else
                {
