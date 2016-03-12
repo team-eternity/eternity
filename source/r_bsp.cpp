@@ -1895,10 +1895,57 @@ static void R_AddLine(seg_t *line, bool dynasegs)
 
    seg.f_portalignore = seg.c_portalignore = false;
 
-   if(!seg.backsec) 
+   // ioanch 20160312: also treat polyobject portal lines as 1-sided
+   const sector_t *beyond = seg.line->linedef->beyondportalsector;
+   if(!seg.backsec || beyond) 
    {
       seg.twosided = false;
-      seg.toptex   = seg.bottomtex = 0;
+      if(!beyond)
+         seg.toptex   = seg.bottomtex = 0;
+      else
+      {
+         // ioanch FIXME: copy-paste from R_2S_Normal
+         if(seg.frontsec->ceilingheight > beyond->ceilingheight &&
+           !(seg.frontsec->intflags & SIF_SKY && beyond->intflags & SIF_SKY) && 
+            side->toptexture)
+         {
+            seg.toptex = texturetranslation[side->toptexture];
+            seg.toptexh = textures[side->toptexture]->height;
+
+            float texhigh = beyond->ceilingheightf - view.z;
+
+            if(seg.line->linedef->flags & ML_DONTPEGTOP)
+               seg.toptexmid = M_FloatToFixed(textop + seg.toffsety);
+            else
+               seg.toptexmid = M_FloatToFixed(texhigh + seg.toptexh + seg.toffsety);
+
+            seg.high  = view.ycenter - ((beyond->ceilingheightf - view.z) * i1) - 1.0f;
+            seg.high2 = view.ycenter - ((beyond->ceilingheightf - view.z) * i2) - 1.0f;
+            seg.highstep = (seg.high2 - seg.high) * pstep;
+         }
+         else
+            seg.toptex = 0;
+
+         if(seg.frontsec->floorheight < beyond->floorheight && side->bottomtexture)
+         {
+            seg.bottomtex  = texturetranslation[side->bottomtexture];
+            seg.bottomtexh = textures[side->bottomtexture]->height;
+
+            float texlow = beyond->floorheightf - view.z;
+
+            if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
+               seg.bottomtexmid = M_FloatToFixed(textop + seg.toffsety);
+            else
+               seg.bottomtexmid = M_FloatToFixed(texlow + seg.toffsety);
+
+            seg.low  = view.ycenter - ((beyond->floorheightf - view.z) * i1);
+            seg.low2 = view.ycenter - ((beyond->floorheightf - view.z) * i2);
+            seg.lowstep = (seg.low2 - seg.low) * pstep;
+         }
+         else
+            seg.bottomtex = 0;
+
+      }
       seg.midtex   = texturetranslation[side->midtexture];
       seg.midtexh  = textures[side->midtexture]->height;
 
@@ -1907,7 +1954,7 @@ static void R_AddLine(seg_t *line, bool dynasegs)
       else
          seg.midtexmid = M_FloatToFixed(textop + seg.toffsety);
 
-      seg.markflags = 0;
+      seg.markflags = beyond ? SEG_MARK1SLPORTAL : 0;
       seg.c_window = seg.f_window = NULL;
 
       // SoM: these should be treated differently! 

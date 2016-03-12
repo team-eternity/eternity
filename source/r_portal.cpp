@@ -1022,17 +1022,17 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    // ioanch 20160227: microscopic adjustment for line portals to make sure
    // the edge textures in the buffer sectors are seen in case of polyobject
    // portals
-   if(window->line && window->line->portal->data.link.polyportalpartner)
-   {
-      if(window->line->dx > 0)
-         --viewy;
-      else if(window->line->dx < 0)
-         ++viewy;
-      if(window->line->dy > 0)
-         ++viewx;
-      else if(window->line->dy < 0)
-         --viewx;
-   }
+   //if(window->line && window->line->portal->data.link.polyportalpartner)
+   //{
+   //   if(window->line->dx > 0)
+   //      --viewy;
+   //   else if(window->line->dx < 0)
+   //      ++viewy;
+   //   if(window->line->dy > 0)
+   //      ++viewx;
+   //   else if(window->line->dy < 0)
+   //      --viewx;
+   //}
 
    view.x = M_FixedToFloat(viewx);
    view.y = M_FixedToFloat(viewy);

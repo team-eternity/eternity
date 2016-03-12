@@ -2621,22 +2621,21 @@ static void P_SpawnPortal(line_t *line, int staticFn)
 
          if(!lines[s].backsector || !line->backsector)
          {
-            if(!lines[s].backsector)
+            // ioanch: make a function to remove duplication
+            auto unblockline = [](line_t *line, line_t *partner)
             {
-               // HACK TO MAKE THEM PASSABLE
-               lines[s].backsector = lines[s].frontsector;
-               lines[s].sidenum[1] = lines[s].sidenum[0];
-               lines[s].flags &= ~ML_BLOCKING;
-               lines[s].flags |= ML_TWOSIDED;
-            }
-            if(!line->backsector)
-            {
-               // HACK TO MAKE THEM PASSABLE
                line->backsector = line->frontsector;
                line->sidenum[1] = line->sidenum[0];
                line->flags &= ~ML_BLOCKING;
                line->flags |= ML_TWOSIDED;
-            }
+               line->beyondportalsector = partner->frontsector;
+            };
+            // HACK TO MAKE THEM PASSABLE
+            if(!lines[s].backsector)
+               unblockline(lines + s, line);
+            if(!line->backsector)
+               unblockline(line, lines + s);
+
             portal->data.link.polyportalpartner = portal2;
             portal2->data.link.polyportalpartner = portal;
          }
