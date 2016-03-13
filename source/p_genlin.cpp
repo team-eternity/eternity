@@ -1069,24 +1069,25 @@ manual_crusher:
       switch (cd->speed_type)
       {
       case SpeedSlow:
-         ceiling->speed = CEILSPEED;
+         ceiling->upspeed = ceiling->speed = CEILSPEED;
          break;
       case SpeedNormal:
-         ceiling->speed = CEILSPEED*2;
+         ceiling->upspeed = ceiling->speed = CEILSPEED*2;
          break;
       case SpeedFast:
-         ceiling->speed = CEILSPEED*4;
+         ceiling->upspeed = ceiling->speed = CEILSPEED*4;
          break;
       case SpeedTurbo:
-         ceiling->speed = CEILSPEED*8;
+         ceiling->upspeed = ceiling->speed = CEILSPEED*8;
          break;
       case SpeedParam:
          ceiling->speed = cd->speed_value;
+         ceiling->upspeed = cd->upspeed;
          break;
       default:
          break;
       }
-      ceiling->oldspeed=ceiling->speed;
+      ceiling->oldspeed = ceiling->speed;
 
       P_AddActiveCeiling(ceiling); // add to list of active ceilings
       // haleyjd 09/29/06

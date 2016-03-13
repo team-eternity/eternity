@@ -970,6 +970,7 @@ public:
    fixed_t bottomheight;
    fixed_t topheight;
    fixed_t speed;
+   fixed_t upspeed;
    fixed_t oldspeed;
    int crush;
    uint32_t crushflags;   // ioanch 20160305: flags for crushing
@@ -1038,6 +1039,7 @@ struct crusherdata_t
 
    // parameterized values
    fixed_t speed_value;
+   fixed_t upspeed;
    fixed_t ground_dist;
    int damage;
    crushmode_e crushmode;

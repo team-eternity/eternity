@@ -173,7 +173,7 @@ void CeilingThinker::Think()
             if(P_LevelIsVanillaHexen())
                S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_C);
             direction = plat_down;
-            speed = speed * 2;   // make the speed double
+            speed = oldspeed;   // restore the speed to the designated DOWN one
             break;
             
          default:
@@ -246,7 +246,7 @@ void CeilingThinker::Think()
                S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_C);
             direction = plat_up;
             // keep old speed in case it was decreased by crushing like Doom.
-            speed = oldspeed / 2;
+            speed = upspeed;  // set to the different up speed
             break;
             
          default:
