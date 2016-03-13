@@ -112,6 +112,49 @@ public:
    virtual const char *toString() const { return item.constPtr(); }
 };
 
+enum bloodaction_e : int;
+enum bloodtype_e : int;
+
+//
+// MetaBloodBehavior
+//
+// Specify the behavior of a blood object when spawned for different actions.
+//
+class MetaBloodBehavior : public MetaObject
+{
+   DECLARE_RTTI_TYPE(MetaBloodBehavior, MetaObject)
+
+public:
+   bloodaction_e action;
+   bloodtype_e   behavior;
+   
+   // Default constructor
+   MetaBloodBehavior() : Super(), action(), behavior()
+   {
+   }
+
+   // Parameterized constructor
+   MetaBloodBehavior(const char *key, bloodaction_e pAction, bloodtype_e pBehavior)
+      : Super(key), action(pAction), behavior(pBehavior)
+   {
+   }
+
+   // Copy constructor
+   MetaBloodBehavior(const MetaBloodBehavior &other) 
+      : Super(other), action(other.action), behavior(other.behavior)
+   {
+   }
+
+   // Clone - virtual copy constructor
+   virtual MetaObject *clone() const { return new MetaBloodBehavior(*this); }
+
+   // toString - virtual method for nice display of metastate properties.
+   virtual const char *toString() const 
+   { 
+      return "MetaBloodBehavior"; // TODO
+   }
+};
+
 #endif
 
 // EOF

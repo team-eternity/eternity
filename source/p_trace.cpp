@@ -258,9 +258,7 @@ static bool P_shootThing(intercept_t *in)
    }
    else
    {
-      P_SpawnBlood(x, y, z,
-                   P_PointToAngle(0, 0, trace.dl.dx, trace.dl.dy) - ANG180,
-                   trace.la_damage, th);
+      BloodSpawner(th, x, y, z, trace.la_damage, trace.dl, trace.thing).spawn(BLOOD_SHOT);
    }
 
    if(trace.la_damage)
