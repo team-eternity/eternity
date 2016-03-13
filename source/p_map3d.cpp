@@ -456,14 +456,14 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
       // haleyjd 10/15/08: rippers
       if(clip.thing->flags3 & MF3_RIP)
       {
-         // TODO: P_RipperBlood
-         /*
-         if(!(thing->flags&MF_NOBLOOD))
-         { 
-            // Ok to spawn some blood
-            P_RipperBlood(clip.thing);
+         damage = ((P_Random(pr_rip) & 3) + 2) * clip.thing->damage;
+
+         if(!(thing->flags & MF_NOBLOOD) &&
+            !(thing->flags2 & MF2_REFLECTIVE) &&
+            !(thing->flags2 & MF2_INVULNERABLE))
+         {
+            BloodSpawner(thing, clip.thing, damage, clip.thing).spawn(BLOOD_RIP);
          }
-         */
          
          // TODO: ripper sound - gamemode dependent? thing dependent?
          //S_StartSound(clip.thing, sfx_ripslop);
@@ -516,7 +516,17 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
       // haleyjd: in Heretic & Hexen, zero-damage missiles don't make this call
       if(damage || !(clip.thing->flags4 & MF4_NOZERODAMAGE))
       {
-         // HTIC_TODO: ability for missiles to draw blood is checked here
+         // 20160312: ability for missiles to draw blood
+         if(clip.thing->flags4 & MF4_DRAWSBLOOD &&
+            !(thing->flags & MF_NOBLOOD) &&
+            !(thing->flags2 & MF2_REFLECTIVE) &&
+            !(thing->flags2 & MF2_INVULNERABLE))
+         {
+            if(P_Random(pr_drawblood) < 192)
+            {
+               BloodSpawner(thing, clip.thing, damage, clip.thing).spawn(BLOOD_IMPACT);
+            }
+         }
 
          P_DamageMobj(thing, clip.thing, clip.thing->target, damage,
                       clip.thing->info->mod);
@@ -1382,8 +1392,6 @@ static void P_FindBelowIntersectors(Mobj *actor)
 //
 static void P_DoCrunch(Mobj *thing)
 {
-   Mobj *mo;
-   
    // crunch bodies to giblets
    // TODO: support DONTGIB flag like zdoom?
    // TODO: support custom gib state for actors?
@@ -1436,13 +1444,7 @@ static void P_DoCrunch(Mobj *thing)
       // FIXME: needs comp flag!
       if(demo_version < 333 || !(thing->flags & MF_NOBLOOD))
       {
-         // spray blood in a random direction
-         mo = P_SpawnMobj(thing->x, thing->y, thing->z + thing->height/2,
-                          E_SafeThingType(MT_BLOOD));
-         
-         // haleyjd 08/05/04: use new function
-         mo->momx = P_SubRandom(pr_crush) << 12;
-         mo->momy = P_SubRandom(pr_crush) << 12;         
+         BloodSpawner(thing, crushchange).spawn(BLOOD_CRUSH);
       }
    } // end if
 }
