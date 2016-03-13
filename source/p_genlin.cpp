@@ -1063,7 +1063,7 @@ manual_crusher:
       }
 
       ceiling->topheight = sec->ceilingheight;
-      ceiling->bottomheight = sec->floorheight + (8*FRACUNIT);
+      ceiling->bottomheight = sec->floorheight + cd->ground_dist;
 
       // setup ceiling motion speed
       switch (cd->speed_type)

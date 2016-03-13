@@ -3238,6 +3238,7 @@ DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaise)
    cd.spac = instance->spac;
    cd.type = paramHexenCrush;
    cd.crushmode = static_cast<crushmode_e>(instance->args[3]);
+   cd.ground_dist = 8 * FRACUNIT;
    return EV_DoParamCrusher(instance->line, instance->tag, &cd);
 }
 
@@ -3271,6 +3272,7 @@ DEFINE_ACTION(EV_ActionParamCeilingCrushRaiseAndStay)
    cd.spac = instance->spac;
    cd.type = paramHexenCrushRaiseStay;
    cd.crushmode = static_cast<crushmode_e>(instance->args[3]);
+   cd.ground_dist = 8 * FRACUNIT;
    return EV_DoParamCrusher(instance->line, instance->tag, &cd);
 }
 
@@ -3291,6 +3293,28 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerAndCrush)
    cd.spac = instance->spac;
    cd.type = paramHexenLowerCrush;
    cd.crushmode = static_cast<crushmode_e>(instance->args[3]);
+   cd.ground_dist = 8 * FRACUNIT;
+   return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingLowerAndCrushDist
+//
+// Implements Ceiling_LowerAndCrushDist(tag, speed, crush, dist, crushmode)
+// * ExtraData 436
+// * Hexen:    97
+//
+DEFINE_ACTION(EV_ActionParamCeilingLowerAndCrushDist)
+{
+   INIT_STRUCT(crusherdata_t, cd);
+   cd.flags = CDF_HAVESPAC;
+   cd.damage = instance->args[2];
+   cd.speed_value = instance->args[1] * (FRACUNIT / 8);
+   cd.speed_type = SpeedParam;
+   cd.spac = instance->spac;
+   cd.type = paramHexenLowerCrush;
+   cd.crushmode = static_cast<crushmode_e>(instance->args[4]);
+   cd.ground_dist = instance->args[3] * FRACUNIT;
    return EV_DoParamCrusher(instance->line, instance->tag, &cd);
 }
 

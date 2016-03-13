@@ -1038,6 +1038,7 @@ struct crusherdata_t
 
    // parameterized values
    fixed_t speed_value;
+   fixed_t ground_dist;
    int damage;
    crushmode_e crushmode;
 };
