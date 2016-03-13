@@ -596,6 +596,9 @@ void P_RemoveActiveCeiling(CeilingThinker* ceiling)
       {
          if(vanilla_activeceilings[i] == ceiling)
          {
+            ceiling->sector->ceilingdata = nullptr;
+            S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C);
+            ceiling->removeThinker();
             vanilla_activeceilings[i] = nullptr;
             break;
          }
