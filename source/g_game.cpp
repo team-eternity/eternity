@@ -1386,7 +1386,7 @@ bool scriptSecret = false;
 
 void G_ExitLevel(int destmap)
 {
-   puts("Exit normal");
+   G_DemoLog("Exit normal\n");
    g_destmap  = destmap;
    secretexit = scriptSecret = false;
    gameaction = ga_completed;
@@ -1401,7 +1401,7 @@ void G_ExitLevel(int destmap)
 //
 void G_SecretExitLevel(int destmap)
 {
-   puts("Exit secret");
+   G_DemoLog("Exit secret\n");
    secretexit = !(GameModeInfo->flags & GIF_WOLFHACK) || haswolflevels || scriptSecret;
    g_destmap  = destmap;
    gameaction = ga_completed;
@@ -3595,6 +3595,79 @@ void G_CoolViewPoint()
    // pick a random number of seconds until changing the viewpoint
    cooldemo_tics = (6 + M_Random() % 4) * TICRATE;
 }
+
+//==============================================================================
+//
+// ioanch 20160313: demo testing facility
+//
+
+FILE *demoLogFile;
+
+//
+// Initialize the demo log file
+//
+void G_DemoLogInit(const char *path)
+{
+   // open it for appending
+   demoLogFile = fopen(path, "at");
+   if(!demoLogFile)
+   {
+      usermsg("G_DemoLogInit: failed opening '%s'\n", path);
+      return;
+   }
+   // write date and time
+   char buffer[81];
+   time_t now = time(nullptr);
+   struct tm *info = localtime(&now);
+   strftime(buffer, 81, "%Y-%m-%d %H:%M:%S %Z", info);
+   fprintf(demoLogFile, "%s\n", buffer);
+   // write arguments into it
+   for(int i = 1; i < myargc; ++i)
+      fprintf(demoLogFile, "%s ", myargv[i]);
+   fprintf(demoLogFile, "\n");
+}
+
+//
+// Write a message to the -demolog file
+//
+void G_DemoLog(const char *format, ...)
+{
+   if(!demoLogFile)
+      return;
+   va_list ap;
+   va_start(ap, format);
+   vfprintf(demoLogFile, format, ap);
+   va_end(ap);
+}
+
+//
+// Logs the current stats (useful to tell if a death was deliberate because
+// the user considered the level finished anyway)
+//
+void G_DemoLogStats()
+{
+   int allKills = 0, allItems = 0, allSecret = 0;
+   for(int i = 0; i < MAXPLAYERS; ++i)
+   {
+      allKills += players[i].killcount;
+      allItems += players[i].itemcount;
+      allSecret += players[i].secretcount;
+   }
+   G_DemoLog("(k: %g%%, i: %g%%, s: %g%%)",
+      totalkills ? floor(100. * allKills / totalkills) : 0,
+      totalitems ? floor(100. * allItems / totalitems) : 0,
+      totalsecret ? floor(100. * allSecret / totalsecret) : 0);
+}
+
+//
+// True if demo logging is enabled.
+//
+bool G_DemoLogEnabled()
+{
+   return demoLogFile != nullptr;
+}
+
+//==============================================================================
 
 #if 0
 

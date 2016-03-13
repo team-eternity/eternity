@@ -175,7 +175,9 @@ void I_Quit(void)
 #ifdef _MSC_VER
    // Under Visual C++, the console window likes to rudely slam
    // shut -- this can stop it, but is now optional except when an error occurs
-   if(error_exitcode >= I_ERRORLEVEL_NORMAL || waitAtExit)
+   // ioanch 20160313: do not pause if demo logging is enabled
+   if(!G_DemoLogEnabled() && 
+      (error_exitcode >= I_ERRORLEVEL_NORMAL || waitAtExit))
    {
       puts("Press any key to continue\n");
       getch();

@@ -1413,6 +1413,10 @@ static void D_DoomInit()
       }
    }
 
+   // ioanch 20160313: demo testing
+   if((p = M_CheckParm("-demolog")) && p < myargc - 1)
+      G_DemoLogInit(myargv[p + 1]);
+
    // haleyjd 01/17/11: allow -play also
    const char *playdemoparms[] = { "-playdemo", "-play", NULL };
 

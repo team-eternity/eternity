@@ -79,6 +79,12 @@ void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed); // haleyjd
 uint64_t G_Signature(WadDirectory *dir);
 void G_DoPlayDemo();
 
+// ioanch 20160313: demo testing
+void G_DemoLogInit(const char *path);
+void G_DemoLog(const char *format, ...);
+void G_DemoLogStats();
+bool G_DemoLogEnabled();
+
 void R_InitPortals();
 
 // killough 1/18/98: Doom-style printf;   killough 4/25/98: add gcc attributes
