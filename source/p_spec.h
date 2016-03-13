@@ -478,6 +478,15 @@ typedef enum
    paramHexenLowerCrush,
 } ceiling_e;
 
+// ioanch 20160313: crushing mode, compatible with ZDoom. Decided from
+// parameterized crusher arg
+enum crushmode_e
+{
+   crushmodeCompat = 0, // choose
+   crushmodeDoom   = 1, // press
+   crushmodeHexen  = 2, // rest
+};
+
 // p_floor
 
 typedef enum
@@ -1030,6 +1039,7 @@ struct crusherdata_t
    // parameterized values
    fixed_t speed_value;
    int damage;
+   crushmode_e crushmode;
 };
 
 

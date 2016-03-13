@@ -3224,7 +3224,7 @@ DEFINE_ACTION(EV_ActionParamDonut)
 //
 // EV_ActionParamCeilingCrushAndRaise
 //
-// Implements Ceiling_CrushAndRaise(tag, speed, crush)
+// Implements Ceiling_CrushAndRaise(tag, speed, crush, crushmode)
 // * ExtraData: 432
 // * Hexen:     42
 //
@@ -3237,6 +3237,7 @@ DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaise)
    cd.speed_type = SpeedParam;
    cd.spac = instance->spac;
    cd.type = paramHexenCrush;
+   cd.crushmode = static_cast<crushmode_e>(instance->args[3]);
    return EV_DoParamCrusher(instance->line, instance->tag, &cd);
 }
 
@@ -3256,7 +3257,7 @@ DEFINE_ACTION(EV_ActionParamCeilingCrushStop)
 //
 // EV_ActionParamCeilingCrushRaiseAndStay
 //
-// Implements Ceiling_CrushRaiseAndStay(tag, speed, crush)
+// Implements Ceiling_CrushRaiseAndStay(tag, speed, crush, crushmode)
 // * ExtraData: 434
 // * Hexen:     45
 //
@@ -3269,13 +3270,14 @@ DEFINE_ACTION(EV_ActionParamCeilingCrushRaiseAndStay)
    cd.speed_type = SpeedParam;
    cd.spac = instance->spac;
    cd.type = paramHexenCrushRaiseStay;
+   cd.crushmode = static_cast<crushmode_e>(instance->args[3]);
    return EV_DoParamCrusher(instance->line, instance->tag, &cd);
 }
 
 //
 // EV_ActionParamCeilingLowerAndCrush
 //
-// Implements Ceiling_LowerAndCrush(tag, speed, crush)
+// Implements Ceiling_LowerAndCrush(tag, speed, crush, crushmode)
 // * ExtraData 435
 // * Hexen:    43
 //
@@ -3288,6 +3290,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerAndCrush)
    cd.speed_type = SpeedParam;
    cd.spac = instance->spac;
    cd.type = paramHexenLowerCrush;
+   cd.crushmode = static_cast<crushmode_e>(instance->args[3]);
    return EV_DoParamCrusher(instance->line, instance->tag, &cd);
 }
 

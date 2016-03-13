@@ -32,6 +32,7 @@
 #include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"
+#include "d_gi.h"
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "ev_specials.h"
@@ -1041,7 +1042,20 @@ manual_crusher:
       case paramHexenCrush:
       case paramHexenCrushRaiseStay:
       case paramHexenLowerCrush:
-         ceiling->crushflags = CeilingThinker::crushRest;
+         switch(cd->crushmode)
+         {
+         case crushmodeDoom:
+            ceiling->crushflags = 0;
+            break;
+         case crushmodeHexen:
+            ceiling->crushflags = CeilingThinker::crushRest;
+            break;
+         default: // compat or anything else
+            // like in ZDoom, decide based on current game
+            ceiling->crushflags = LevelInfo.levelType == LI_TYPE_HEXEN ? 
+               CeilingThinker::crushRest : 0;
+            break;
+         }
          break;
       default:
          ceiling->crushflags = 0;
