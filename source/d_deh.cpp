@@ -332,6 +332,7 @@ dehflags_t deh_mobjflags[] =
   {"NOZERODAMAGE",     0x00008000, 3}, // missile won't inflict damage if damage is 0
   {"TLSTYLESUB",       0x00010000, 3}, // use subtractive blending map
   {"TOTALINVISIBLE",   0x00020000, 3}, // thing is totally invisible to monsters
+  {"DRAWSBLOOD",       0x00040000, 3}, // missile draws blood
 
   { NULL,              0 }             // NULL terminator
 };

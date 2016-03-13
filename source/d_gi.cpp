@@ -1,6 +1,5 @@
-// Emacs style mode select -*- C++ -*-
-//----------------------------------------------------------------------------
 //
+// The Eternity Engine
 // Copyright (C) 2013 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -19,16 +18,12 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+// Purpose: Gamemode information
+//  Stores all gamemode-dependent information in one location and 
+//  lends more structure to other modules.
 //
-// Gamemode information
+// Authors: James Haley
 //
-// Stores all gamemode-dependent information in one location and 
-// lends more structure to other modules.
-//
-// James Haley
-//
-//----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "i_system.h"
@@ -735,6 +730,42 @@ static const char *HticCardNames[] =
 };
 
 //
+// Default blood behavior for action arrays
+//
+
+static bloodtype_e bloodTypeForActionDOOM[NUMBLOODACTIONS] =
+{
+   BLOODTYPE_DOOM,       // shoot
+   BLOODTYPE_HERETIC,    // impact
+   BLOODTYPE_HERETICRIP, // rip
+   BLOODTYPE_CRUSH       // crush
+};
+
+static bloodtype_e bloodTypeForActionHtic[NUMBLOODACTIONS] =
+{
+   BLOODTYPE_HERETIC,    // shoot
+   BLOODTYPE_HERETIC,    // impact
+   BLOODTYPE_HERETICRIP, // rip
+   BLOODTYPE_CRUSH       // crush
+};
+
+static bloodtype_e bloodTypeForActionHexen[NUMBLOODACTIONS] =
+{
+   BLOODTYPE_HEXEN,    // shoot
+   BLOODTYPE_HEXEN,    // impact
+   BLOODTYPE_HEXENRIP, // rip
+   BLOODTYPE_CRUSH     // crush
+};
+
+static bloodtype_e bloodTypeForActionStrife[NUMBLOODACTIONS] =
+{
+   BLOODTYPE_STRIFE,     // shoot
+   BLOODTYPE_HERETIC,    // impact
+   BLOODTYPE_HERETICRIP, // rip
+   BLOODTYPE_CRUSH       // crush
+};
+
+//
 // IWAD paths
 //
 
@@ -1120,8 +1151,10 @@ static gamemodeinfo_t giDoomSW =
    DoomBossSpecs,    // bossRules
    LI_TYPE_DOOM,     // levelType
    "DoomBlood",      // bloodDefaultNormal
+   "DoomBlood",      // bloodDefaultImpact
    "DoomBlood",      // bloodDefaultRIP
    "DoomBlood",      // bloodDefaultCrush
+   bloodTypeForActionDOOM, // default behavior for action array
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1237,8 +1270,10 @@ static gamemodeinfo_t giDoomReg =
    DoomBossSpecs,    // bossRules
    LI_TYPE_DOOM,     // levelType
    "DoomBlood",      // bloodDefaultNormal
+   "DoomBlood",      // bloodDefaultImpact
    "DoomBlood",      // bloodDefaultRIP
    "DoomBlood",      // bloodDefaultCrush
+   bloodTypeForActionDOOM, // default behavior for action array
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1354,8 +1389,10 @@ static gamemodeinfo_t giDoomRetail =
    DoomBossSpecs,    // bossRules
    LI_TYPE_DOOM,     // levelType
    "DoomBlood",      // bloodDefaultNormal
+   "DoomBlood",      // bloodDefaultImpact
    "DoomBlood",      // bloodDefaultRIP
    "DoomBlood",      // bloodDefaultCrush
+   bloodTypeForActionDOOM, // default behavior for action array
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1471,8 +1508,10 @@ static gamemodeinfo_t giDoomCommercial =
    Doom2BossSpecs,   // bossRules
    LI_TYPE_DOOM,     // levelType
    "DoomBlood",      // bloodDefaultNormal
+   "DoomBlood",      // bloodDefaultImpact
    "DoomBlood",      // bloodDefaultRIP
    "DoomBlood",      // bloodDefaultCrush
+   bloodTypeForActionDOOM, // default behavior for action array
 
    INTERPIC_DOOM,     // interPic
    mus_dm2int,        // interMusNum
@@ -1587,10 +1626,11 @@ static gamemodeinfo_t giHereticSW =
    DEFTL_HERETIC,      // defTranslate
    HereticBossSpecs,   // bossRules
    LI_TYPE_HERETIC,    // levelType
-   "HereticBlood",     // bloodDefaultNormal
-   // FIXME: Put in Heretic RIP & crush blood
-   "HereticBlood",     // bloodDefaultRIP
-   "HereticBlood",     // bloodDefaultCrush
+   "HereticBloodSplatter", // bloodDefaultNormal
+   "HereticBloodSplatter", // bloodDefaultImpact
+   "HereticBlood",         // bloodDefaultRIP
+   "HereticBlood",         // bloodDefaultCrush
+   bloodTypeForActionHtic, // default blood behavior for action array
 
    INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum
@@ -1709,10 +1749,11 @@ static gamemodeinfo_t giHereticReg =
    DEFTL_HERETIC,      // defTranslate
    HereticBossSpecs,   // bossRules
    LI_TYPE_HERETIC,    // levelType
-   "HereticBlood",     // bloodDefaultNormal
-   // FIXME: Put in Heretic RIP & crush blood
-   "HereticBlood",     // bloodDefaultRIP
-   "HereticBlood",     // bloodDefaultCrush
+   "HereticBloodSplatter", // bloodDefaultNormal
+   "HereticBloodSplatter", // bloodDefaultImpact
+   "HereticBlood",         // bloodDefaultRIP
+   "HereticBlood",         // bloodDefaultCrush
+   bloodTypeForActionHtic, // default blood behavior for action array
 
    INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum

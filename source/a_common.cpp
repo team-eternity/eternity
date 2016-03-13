@@ -237,11 +237,7 @@ void A_FaceTarget(actionargs_t *actionargs)
 
    actor->flags &= ~MF_AMBUSH;
    actor->angle = P_PointToAngle(actor->x, actor->y,
-#ifdef R_LINKEDPORTALS
-                                  getTargetX(actor), getTargetY(actor));
-#else
-                                  actor->target->x, actor->target->y);
-#endif
+                                 getTargetX(actor), getTargetY(actor));
 
    int shiftamount = P_GetAimShift(actor->target, false);
    if(shiftamount >= 0)
