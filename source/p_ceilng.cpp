@@ -241,11 +241,12 @@ void CeilingThinker::Think()
          case paramHexenCrush:
          case paramHexenCrushRaiseStay:
             // preserve the weird Hexen behaviour where the crusher becomes mute
-            // after any pastdest.
+            // after any pastdest (only in maps for vanilla Hexen).
             if(P_LevelIsVanillaHexen())
                S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_C);
             direction = plat_up;
-            speed = speed / 2;
+            // keep old speed in case it was decreased by crushing like Doom.
+            speed = oldspeed / 2;
             break;
             
          default:
@@ -269,6 +270,17 @@ void CeilingThinker::Think()
             case crushAndRaise:
             case lowerAndCrush:
                speed = CEILSPEED / 8;
+               break;
+            case paramHexenCrush:
+            case paramHexenCrushRaiseStay:
+            case paramHexenLowerCrush:
+               // if crusher doesn't rest on victims:
+               // this is like ZDoom: if a ceiling speed is set exactly to 8,
+               // then apply the Doom crusher slowdown. Otherwise, keep speed
+               // constant. This may not apply to all crushing specials in
+               // ZDoom, but for simplicity it has been applied generally here.
+               if(!(crushflags & crushRest) && oldspeed == CEILSPEED)
+                  speed = CEILSPEED / 8;
                break;
                
             default:
