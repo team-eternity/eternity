@@ -551,7 +551,21 @@ int P_ActivateInStasisCeiling(const line_t *line, int tag, bool manual)
 int EV_CeilingCrushStop(const line_t* line, int tag)
 {
    int rtn = 0;
-
+   // ioanch 20160314: avoid duplicating code
+   auto resumeceiling = [&rtn](CeilingThinker *ceiling)
+   {
+      ceiling->olddirection = ceiling->direction;
+      ceiling->direction = plat_stop;
+      ceiling->inStasis = true;
+      // ioanch 20160314: like in vanilla, do not make click sound when stopping
+      // these types
+      if(ceiling->type == silentCrushAndRaise)
+         S_SquashSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C);
+      else
+         S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C); // haleyjd 09/28/06
+      rtn = 1;
+   };
+   
    // ioanch 20160306
    bool vanillaHexen = P_LevelIsVanillaHexen();
    if(demo_compatibility || vanillaHexen)
@@ -572,12 +586,7 @@ int EV_CeilingCrushStop(const line_t* line, int tag)
          else if(ceiling && ceiling->tag == tag && 
             ceiling->direction != plat_stop)
          {
-            // vanilla Doom demo compatibility
-            ceiling->olddirection = ceiling->direction;
-            ceiling->direction = plat_stop;
-            ceiling->inStasis = true;
-            S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C); // haleyjd 09/28/06
-            rtn = 1;
+            resumeceiling(ceiling);
          }
       }
       return rtn;
@@ -590,11 +599,7 @@ int EV_CeilingCrushStop(const line_t* line, int tag)
       CeilingThinker *ceiling = cl->ceiling;
       if(ceiling->direction != plat_stop && ceiling->tag == tag)
       {
-         ceiling->olddirection = ceiling->direction;
-         ceiling->direction = plat_stop;
-         ceiling->inStasis = true;
-         S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C); // haleyjd 09/28/06
-         rtn = 1;
+         resumeceiling(ceiling);
       }
    }
 
