@@ -482,7 +482,7 @@ int P_ActivateInStasisCeiling(const line_t *line, int tag, bool manual)
    int rtn = 0;
    
    // ioanch 20160314: avoid code duplication
-   auto disableceiling = [&rtn](CeilingThinker *ceiling)
+   auto resumeceiling = [&rtn](CeilingThinker *ceiling)
    {
       int noise;
 
@@ -519,7 +519,7 @@ int P_ActivateInStasisCeiling(const line_t *line, int tag, bool manual)
          if(ceiling && ceiling->tag == tag && 
             ceiling->direction == plat_stop)
          {
-            disableceiling(ceiling);
+            resumeceiling(ceiling);
          }
       }
       return rtn;
@@ -534,7 +534,7 @@ int P_ActivateInStasisCeiling(const line_t *line, int tag, bool manual)
       if(((manual && line->backsector == ceiling->sector) ||
          (!manual && ceiling->tag == tag)) && ceiling->direction == 0)
       {
-         disableceiling(ceiling);
+         resumeceiling(ceiling);
       }
    }
    return rtn;
@@ -552,15 +552,18 @@ int EV_CeilingCrushStop(const line_t* line, int tag)
 {
    int rtn = 0;
    // ioanch 20160314: avoid duplicating code
-   auto resumeceiling = [&rtn](CeilingThinker *ceiling)
+   auto pauseceiling = [&rtn](CeilingThinker *ceiling)
    {
       ceiling->olddirection = ceiling->direction;
       ceiling->direction = plat_stop;
       ceiling->inStasis = true;
       // ioanch 20160314: like in vanilla, do not make click sound when stopping
       // these types
-      if(ceiling->type == silentCrushAndRaise)
+      if(ceiling->type == silentCrushAndRaise || 
+         ceiling->crushflags & CeilingThinker::crushSilent)
+      {
          S_SquashSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C);
+      }
       else
          S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C); // haleyjd 09/28/06
       rtn = 1;
@@ -586,7 +589,7 @@ int EV_CeilingCrushStop(const line_t* line, int tag)
          else if(ceiling && ceiling->tag == tag && 
             ceiling->direction != plat_stop)
          {
-            resumeceiling(ceiling);
+            pauseceiling(ceiling);
          }
       }
       return rtn;
@@ -599,7 +602,7 @@ int EV_CeilingCrushStop(const line_t* line, int tag)
       CeilingThinker *ceiling = cl->ceiling;
       if(ceiling->direction != plat_stop && ceiling->tag == tag)
       {
-         resumeceiling(ceiling);
+         pauseceiling(ceiling);
       }
    }
 
