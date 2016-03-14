@@ -161,6 +161,9 @@ void CeilingThinker::Think()
                P_CeilingSequence(sector, CNOISE_SEMISILENT);
          case genSilentCrusher:
          case genCrusher:
+            // ioanch 20160314: Generic_Crusher support
+            if(type != silentCrushAndRaise)
+               speed = oldspeed;
          case fastCrushAndRaise:
          case crushAndRaise:
             direction = plat_down;
@@ -206,7 +209,7 @@ void CeilingThinker::Think()
          case genSilentCrusher:
          case genCrusher:
             if(oldspeed < CEILSPEED*3)
-               speed = this->oldspeed;
+               speed = this->upspeed;  // ioanch 20160314: use up speed
             direction = plat_up; //jff 2/22/98 make it go back up!
             break;
             

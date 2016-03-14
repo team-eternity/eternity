@@ -173,6 +173,7 @@ DECLARE_ACTION(EV_ActionParamCeilingCrushRaiseAndStayA);
 DECLARE_ACTION(EV_ActionParamCeilingCrushRaiseAndStaySilA);
 DECLARE_ACTION(EV_ActionParamCeilingLowerAndCrush);
 DECLARE_ACTION(EV_ActionParamCeilingLowerAndCrushDist);
+DECLARE_ACTION(EV_ActionParamGenCrusher);
 DECLARE_ACTION(EV_ActionParamStairsBuildUpDoom);
 DECLARE_ACTION(EV_ActionParamStairsBuildDownDoom);
 DECLARE_ACTION(EV_ActionParamStairsBuildUpDoomSync);

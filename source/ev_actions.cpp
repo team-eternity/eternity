@@ -3452,5 +3452,27 @@ DEFINE_ACTION(EV_ActionParamCeilingCrushRaiseAndStaySilA)
    return EV_DoParamCrusher(instance->line, instance->tag, &cd);
 }
 
+//
+// EV_ActionParamGenCrusher
+//
+// Implements Generic_Crusher(tag, dspeed, uspeed, silent, crush)
+// * ExtraData: 443
+// * Hexen:     205
+//
+DEFINE_ACTION(EV_ActionParamGenCrusher)
+{
+   INIT_STRUCT(crusherdata_t, cd);
+   cd.flags = CDF_HAVESPAC;
+   cd.damage = instance->args[4];
+   cd.speed_value = instance->args[1] * (FRACUNIT / 8);
+   cd.upspeed = instance->args[2] * (FRACUNIT / 8);
+   cd.speed_type = SpeedParam;
+   cd.spac = instance->spac;
+   cd.type = instance->args[3] ? genSilentCrusher : genCrusher;
+   cd.crushmode = crushmodeDoom; // FIXME: irrelevant for this cd->type
+   cd.ground_dist = 8 * FRACUNIT;
+   return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
 // EOF
 

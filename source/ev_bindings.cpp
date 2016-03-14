@@ -1022,6 +1022,7 @@ PARAMLINE(ParamCeilingCrushRaiseAndStayA);
 PARAMLINE(ParamCeilingCrushRaiseAndStaySilA);
 PARAMLINE(ParamCeilingLowerAndCrush);
 PARAMLINE(ParamCeilingLowerAndCrushDist);
+PARAMLINE(ParamGenCrusher);
 PARAMLINE(ParamStairsBuildUpDoom);
 PARAMLINE(ParamStairsBuildDownDoom);
 PARAMLINE(ParamStairsBuildUpDoomSync);
@@ -1447,6 +1448,7 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(440, ParamCeilingCrushAndRaiseSilentA, "Ceiling_CrushAndRaiseSilentA")
    LINESPECNAMED(441, ParamCeilingCrushAndRaiseSilentDist, "Ceiling_CrushAndRaiseSilentDist")
    LINESPECNAMED(442, ParamCeilingCrushRaiseAndStaySilA, "Ceiling_CrushRaiseAndStaySilA")
+   LINESPECNAMED(443, ParamGenCrusher,                 "Generic_Crusher")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1591,6 +1593,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(197, ParamCeilingCrushAndRaiseSilentA, "Ceiling_CrushAndRaiseSilentA")
    LINESPECNAMED(198, ParamCeilingRaiseByValueTimes8,  "Ceiling_RaiseByValueTimes8")
    LINESPECNAMED(199, ParamCeilingLowerByValueTimes8,  "Ceiling_LowerByValueTimes8")
+   LINESPECNAMED(205, ParamGenCrusher,                 "Generic_Crusher")
    LINESPECNAMED(217, ParamStairsBuildUpDoom,          "Stairs_BuildUpDoom")
    LINESPECNAMED(238, ParamFloorRaiseToLowestCeiling,  "Floor_RaiseToLowestCeiling")
    LINESPECNAMED(240, ParamFloorRaiseByTexture,        "Floor_RaiseByTexture")
