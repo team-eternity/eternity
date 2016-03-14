@@ -166,6 +166,7 @@ DECLARE_ACTION(EV_ActionParamCeilingCrushAndRaise);
 DECLARE_ACTION(EV_ActionParamCeilingCrushAndRaiseA);
 DECLARE_ACTION(EV_ActionParamCeilingCrushAndRaiseSilentA);
 DECLARE_ACTION(EV_ActionParamCeilingCrushAndRaiseDist);
+DECLARE_ACTION(EV_ActionParamCeilingCrushAndRaiseSilentDist);
 DECLARE_ACTION(EV_ActionParamCeilingCrushStop);
 DECLARE_ACTION(EV_ActionParamCeilingCrushRaiseAndStay);
 DECLARE_ACTION(EV_ActionParamCeilingCrushRaiseAndStayA);

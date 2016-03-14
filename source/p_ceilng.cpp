@@ -479,7 +479,37 @@ int EV_DoCeiling(const line_t *line, ceiling_e type)
 //
 int P_ActivateInStasisCeiling(const line_t *line, int tag, bool manual)
 {
-   int rtn = 0, noise;
+   int rtn = 0;
+   
+   // ioanch 20160314: avoid code duplication
+   auto disableceiling = [&rtn](CeilingThinker *ceiling)
+   {
+      int noise;
+
+      ceiling->direction = ceiling->olddirection;
+      ceiling->inStasis = false;
+
+      // haleyjd: restart sound sequence
+      switch(ceiling->type)
+      {
+      case silentCrushAndRaise:
+         noise = CNOISE_SEMISILENT;
+         break;
+      case genSilentCrusher:
+         noise = CNOISE_SILENT;
+         break;
+      default:
+         // ioanch 20160314: mind the semi-silent variants
+         noise = ceiling->crushflags & CeilingThinker::crushSilent ?
+                     CNOISE_SEMISILENT : CNOISE_NORMAL;
+         break;
+      }
+      P_CeilingSequence(ceiling->sector, noise);
+
+      //jff 4/5/98 return if activated
+      rtn = 1;
+   };
+
    // ioanch 20160306: restore old vanilla bug only for demos
    if(demo_compatibility || P_LevelIsVanillaHexen())
    {
@@ -489,26 +519,7 @@ int P_ActivateInStasisCeiling(const line_t *line, int tag, bool manual)
          if(ceiling && ceiling->tag == tag && 
             ceiling->direction == plat_stop)
          {
-            ceiling->direction = ceiling->olddirection;
-            ceiling->inStasis = false;
-
-            // haleyjd: restart sound sequence
-            switch(ceiling->type)
-            {
-            case silentCrushAndRaise:
-               noise = CNOISE_SEMISILENT;
-               break;
-            case genSilentCrusher:
-               noise = CNOISE_SILENT;
-               break;
-            default:
-               noise = CNOISE_NORMAL;
-               break;
-            }
-            P_CeilingSequence(ceiling->sector, noise);
-
-            //jff 4/5/98 return if activated
-            rtn = 1;
+            disableceiling(ceiling);
          }
       }
       return rtn;
@@ -523,26 +534,7 @@ int P_ActivateInStasisCeiling(const line_t *line, int tag, bool manual)
       if(((manual && line->backsector == ceiling->sector) ||
          (!manual && ceiling->tag == tag)) && ceiling->direction == 0)
       {
-         ceiling->direction = ceiling->olddirection;
-         ceiling->inStasis = false;
-
-         // haleyjd: restart sound sequence
-         switch(ceiling->type)
-         {
-         case silentCrushAndRaise:
-            noise = CNOISE_SEMISILENT;
-            break;
-         case genSilentCrusher:
-            noise = CNOISE_SILENT;
-            break;
-         default:
-            noise = CNOISE_NORMAL;
-            break;
-         }
-         P_CeilingSequence(ceiling->sector, noise);
-
-         //jff 4/5/98 return if activated
-         rtn = 1;
+         disableceiling(ceiling);
       }
    }
    return rtn;
