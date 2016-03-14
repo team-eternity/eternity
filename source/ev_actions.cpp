@@ -3371,7 +3371,7 @@ DEFINE_ACTION(EV_ActionParamCeilingCrushRaiseAndStayA)
 // * ExtraData: 439
 // * Hexen:     196
 //
-DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaise)
+DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaiseA)
 {
    INIT_STRUCT(crusherdata_t, cd);
    cd.flags = CDF_HAVESPAC;
