@@ -1091,8 +1091,13 @@ manual_crusher:
 
       P_AddActiveCeiling(ceiling); // add to list of active ceilings
       // haleyjd 09/29/06
+      // ioanch 20160314: use silent for Boom generalized silent crushers,
+      // semi-silent for parameterized silent specials, and normal otherwise
+      if(cd->flags & CDF_PARAMSILENT)
+         ceiling->crushflags |= CeilingThinker::crushSilent;
       P_CeilingSequence(ceiling->sector, cd->type == genSilentCrusher ? 
-                        CNOISE_SILENT : CNOISE_NORMAL);
+                        CNOISE_SILENT : (cd->flags & CDF_PARAMSILENT) ? 
+                    CNOISE_SEMISILENT : CNOISE_NORMAL);
 
       if(manual)
          return rtn;

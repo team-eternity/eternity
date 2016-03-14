@@ -172,6 +172,11 @@ void CeilingThinker::Think()
             // after any pastdest.
             if(P_LevelIsVanillaHexen())
                S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_C);
+            else if(crushflags & crushSilent &&
+               !S_CheckSectorSequenceLoop(sector, SEQ_ORIGIN_SECTOR_C))
+            {
+               P_CeilingSequence(sector, CNOISE_SEMISILENT);
+            }
             direction = plat_down;
             speed = oldspeed;   // restore the speed to the designated DOWN one
             break;
@@ -244,6 +249,12 @@ void CeilingThinker::Think()
             // after any pastdest (only in maps for vanilla Hexen).
             if(P_LevelIsVanillaHexen())
                S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_C);
+            else if(crushflags & crushSilent &&
+               !S_CheckSectorSequenceLoop(sector, SEQ_ORIGIN_SECTOR_C))
+            {
+               P_CeilingSequence(sector, CNOISE_SEMISILENT);
+            }
+
             direction = plat_up;
             // keep old speed in case it was decreased by crushing like Doom.
             speed = upspeed;  // set to the different up speed

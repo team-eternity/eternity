@@ -959,6 +959,7 @@ public:
    enum
    {
       crushRest       = 1, // ceiling will rest while crushing things
+      crushSilent     = 2, // needed because of special pastdest behavior
    };
 
    // Methods
@@ -1003,7 +1004,7 @@ enum
 {
    CDF_HAVETRIGGERTYPE = 0x00000001, // has BOOM-style gen action trigger
    CDF_HAVESPAC        = 0x00000002, // has Hexen-style spac
-   CDF_HEXENCRUSHER    = 0x00000004, // ioanch 20160305: Hexen-style
+   CDF_PARAMSILENT     = 0x00000004, // ioanch 20160314: parameterized silent
 };
 
 // haleyjd 10/05/05: extended data struct for parameterized ceilings

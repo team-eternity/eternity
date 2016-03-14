@@ -3386,5 +3386,27 @@ DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaiseA)
    return EV_DoParamCrusher(instance->line, instance->tag, &cd);
 }
 
+//
+// EV_ActionParamCeilingCrushAndRaiseSilentA
+//
+// Implements Ceiling_CrushAndRaiseSilentA(tag, dspeed, uspeed, crush, crushmode)
+// * ExtraData: 440
+// * Hexen:     197
+//
+DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaiseSilentA)
+{
+   INIT_STRUCT(crusherdata_t, cd);
+   cd.flags = CDF_HAVESPAC | CDF_PARAMSILENT;
+   cd.damage = instance->args[3];
+   cd.speed_value = instance->args[1] * (FRACUNIT / 8);
+   cd.upspeed = instance->args[2] * (FRACUNIT / 8);
+   cd.speed_type = SpeedParam;
+   cd.spac = instance->spac;
+   cd.type = paramHexenCrush;
+   cd.crushmode = static_cast<crushmode_e>(instance->args[4]);
+   cd.ground_dist = 8 * FRACUNIT;
+   return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
 // EOF
 
