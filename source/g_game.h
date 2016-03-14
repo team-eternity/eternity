@@ -84,6 +84,7 @@ void G_DemoLogInit(const char *path);
 void G_DemoLog(const char *format, ...);
 void G_DemoLogStats();
 bool G_DemoLogEnabled();
+void G_DemoLogSetExited(bool value);
 
 void R_InitPortals();
 

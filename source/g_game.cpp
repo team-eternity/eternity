@@ -1387,6 +1387,7 @@ bool scriptSecret = false;
 void G_ExitLevel(int destmap)
 {
    G_DemoLog("Exit normal\n");
+   G_DemoLogSetExited(true);
    g_destmap  = destmap;
    secretexit = scriptSecret = false;
    gameaction = ga_completed;
@@ -1402,6 +1403,7 @@ void G_ExitLevel(int destmap)
 void G_SecretExitLevel(int destmap)
 {
    G_DemoLog("Exit secret\n");
+   G_DemoLogSetExited(true);
    secretexit = !(GameModeInfo->flags & GIF_WOLFHACK) || haswolflevels || scriptSecret;
    g_destmap  = destmap;
    gameaction = ga_completed;
@@ -3603,6 +3605,14 @@ void G_CoolViewPoint()
 
 FILE *demoLogFile;
 
+static bool demoLogLevelExited;
+
+static void G_demoLogAtExit()
+{
+   if(demoLogFile && !demoLogLevelExited)
+      fprintf(demoLogFile, "Quit without exiting level\n");
+}
+
 //
 // Initialize the demo log file
 //
@@ -3625,6 +3635,7 @@ void G_DemoLogInit(const char *path)
    for(int i = 1; i < myargc; ++i)
       fprintf(demoLogFile, "%s ", myargv[i]);
    fprintf(demoLogFile, "\n");
+   atexit(G_demoLogAtExit);
 }
 
 //
@@ -3657,6 +3668,14 @@ void G_DemoLogStats()
       totalkills ? floor(100. * allKills / totalkills) : 0,
       totalitems ? floor(100. * allItems / totalitems) : 0,
       totalsecret ? floor(100. * allSecret / totalsecret) : 0);
+}
+
+//
+// Sets the flag
+//
+void G_DemoLogSetExited(bool value)
+{
+   demoLogLevelExited = value;
 }
 
 //

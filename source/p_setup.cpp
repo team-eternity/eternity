@@ -2827,6 +2827,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    int lumpnum, acslumpnum = -1;
 
    G_DemoLog("Setup %s\n", mapname);
+   G_DemoLogSetExited(false);
 
    // haleyjd 07/28/10: we are no longer in GS_LEVEL during the execution of
    // this routine.
