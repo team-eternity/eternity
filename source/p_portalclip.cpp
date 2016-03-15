@@ -341,7 +341,9 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
    P_LineOpening(ld, clip.thing, true, &fportal, &cportal);
 
    // now apply correction to openings in case thing is positioned differently
-   if(clip.thing->groupid != linegroupid && !fportal && thingz < linebottom &&
+   bool samegroupid = clip.thing->groupid == linegroupid;
+
+   if(!samegroupid && !fportal && thingz < linebottom &&
       thingmid < (linebottom + clip.openbottom) / 2)
    {
       clip.opentop = linebottom;
@@ -350,8 +352,8 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
       clip.opensecfloor = D_MININT;
       cportal = false;
    }
-   if(clip.thing->groupid != linegroupid && !cportal && thingtopz > linetop &&
-           thingmid >= (linetop + clip.opentop) / 2)
+   if(!samegroupid && !cportal && thingtopz > linetop &&
+      thingmid >= (linetop + clip.opentop) / 2)
    {
       // adjust the lowfloor to the real observed value, to prevent
       // wrong dropoffz
@@ -372,13 +374,17 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
    }
 
    // update stuff
-   if(!cportal && clip.opentop < clip.ceilingz)
+   // ioanch 20160315: don't forget about 3dmidtex on the same group ID if they
+   // decrease the opening
+   if((!cportal || (ld->flags & ML_3DMIDTEX && samegroupid)) 
+      && clip.opentop < clip.ceilingz)
    {
       clip.ceilingz = clip.opentop;
       clip.ceilingline = ld;
       clip.blockline = ld;
    }
-   if(!fportal && clip.openbottom > clip.floorz)
+   if((!fportal || (ld->flags & ML_3DMIDTEX && samegroupid)) 
+      && clip.openbottom > clip.floorz)
    {
       clip.floorz = clip.openbottom;
       clip.floorline = ld;          // killough 8/1/98: remember floor linedef
@@ -392,8 +398,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
    // as each layer is explored, if there really is a gap, and accidental
    // detail downstairs will not count, considering the linetop would always
    // be below any dropfloorz upstairs.
-   if(clip.lowfloor < clip.dropoffz && 
-      (linegroupid == clip.thing->groupid || linetop >= clip.dropoffz))
+   if(clip.lowfloor < clip.dropoffz && (samegroupid || linetop >= clip.dropoffz))
    {
       clip.dropoffz = clip.lowfloor;
    }
@@ -419,8 +424,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
 
    // if contacted a special line, add it to the list
 
-   if(clip.thing->groupid == linegroupid ||
-      (linetop > thingz && linebottom < thingtopz && 
+   if(samegroupid || (linetop > thingz && linebottom < thingtopz && 
       !(ld->pflags & PS_PASSABLE)))
    {
       P_CollectSpechits(ld);
