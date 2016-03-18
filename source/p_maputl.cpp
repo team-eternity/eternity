@@ -33,6 +33,7 @@
 #include "p_map.h"
 #include "p_map3d.h"
 #include "p_maputl.h"
+#include "p_portalclip.h"
 #include "p_setup.h"
 #include "polyobj.h"
 #include "r_data.h"
@@ -205,7 +206,7 @@ fixed_t P_InterceptVector(const divline_t *v2, const divline_t *v1)
 // ioanch 20160113: added portal detection (optional)
 //
 void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
-                   bool *fportal, bool *cportal)
+                   uint32_t *lineclipflags)
 {
    fixed_t frontceilz, frontfloorz, backceilz, backfloorz;
    // SoM: used for 3dmidtex
@@ -219,8 +220,7 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
 
    if(portaldetect)  // ioanch
    {
-      *fportal = false;
-      *cportal = false;
+      *lineclipflags = 0;
    }
    clip.openfrontsector = linedef->frontsector;
    clip.openbacksector  = linedef->backsector;
@@ -241,7 +241,7 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
          }
          else
          {
-            *cportal = true;
+            *lineclipflags |= LINECLIP_UNDERPORTAL;
             frontceilz = clip.openfrontsector->ceilingheight;
             backceilz  = clip.openbacksector->ceilingheight;
          }
@@ -271,7 +271,7 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
          }
          else
          {
-            *fportal = true;
+            *lineclipflags |= LINECLIP_ABOVEPORTAL;
             frontfloorz = clip.openfrontsector->floorheight;
             backfloorz  = clip.openbacksector->floorheight;
          }
@@ -358,11 +358,17 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
       {
          if(texbot < clip.opentop)
             clip.opentop = texbot;
+         // ioanch 20160318: mark if 3dmidtex affects clipping
+         if(portaldetect)
+            *lineclipflags |= LINECLIP_UNDER3DMIDTEX;
       }
       else
       {
          if(textop > clip.openbottom)
             clip.openbottom = textop;
+         // ioanch 20160318: mark if 3dmidtex affects clipping
+         if(portaldetect)
+            *lineclipflags |= LINECLIP_OVER3DMIDTEX;
 
          // The mobj is above the 3DMidTex, so check to see if it's ON the 3DMidTex
          // SoM 01/12/06: let monsters walk over dropoffs
