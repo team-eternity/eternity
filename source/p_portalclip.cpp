@@ -33,6 +33,7 @@
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_portal.h"
+#include "p_portalclip.h"
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_portal.h"
@@ -337,22 +338,25 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
    }
 
    // better detection of in-portal lines
-   bool fportal, cportal;
-   P_LineOpening(ld, clip.thing, true, &fportal, &cportal);
+   uint32_t lineclipflags = 0;
+   P_LineOpening(ld, clip.thing, true, &lineclipflags);
 
    // now apply correction to openings in case thing is positioned differently
    bool samegroupid = clip.thing->groupid == linegroupid;
 
-   if(!samegroupid && !fportal && thingz < linebottom &&
+   bool aboveportal = !!(lineclipflags & LINECLIP_ABOVEPORTAL);
+   bool underportal = !!(lineclipflags & LINECLIP_UNDERPORTAL);
+
+   if(!samegroupid && !aboveportal && thingz < linebottom && 
       thingmid < (linebottom + clip.openbottom) / 2)
    {
       clip.opentop = linebottom;
       clip.openbottom = D_MININT;
       clip.opensecceil = linebottom;
       clip.opensecfloor = D_MININT;
-      cportal = false;
+      lineclipflags &= ~LINECLIP_UNDERPORTAL;
    }
-   if(!samegroupid && !cportal && thingtopz > linetop &&
+   if(!samegroupid && !underportal && thingtopz > linetop &&
       thingmid >= (linetop + clip.opentop) / 2)
    {
       // adjust the lowfloor to the real observed value, to prevent
@@ -370,20 +374,20 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
       clip.opentop = D_MAXINT;
       clip.opensecfloor = linetop;
       clip.opensecceil = D_MAXINT;
-      fportal = false;
+      lineclipflags &= ~LINECLIP_ABOVEPORTAL;
    }
 
    // update stuff
    // ioanch 20160315: don't forget about 3dmidtex on the same group ID if they
    // decrease the opening
-   if((!cportal || (ld->flags & ML_3DMIDTEX && samegroupid)) 
+   if((!underportal || (lineclipflags & LINECLIP_UNDER3DMIDTEX)) 
       && clip.opentop < clip.ceilingz)
    {
       clip.ceilingz = clip.opentop;
       clip.ceilingline = ld;
       clip.blockline = ld;
    }
-   if((!fportal || (ld->flags & ML_3DMIDTEX && samegroupid)) 
+   if((!aboveportal || (lineclipflags & LINECLIP_OVER3DMIDTEX)) 
       && clip.openbottom > clip.floorz)
    {
       clip.floorz = clip.openbottom;
@@ -408,9 +412,9 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
    if(demo_version >= 331 && clip.touch3dside)
       clip.dropoffz = clip.floorz;
 
-   if(!fportal && clip.opensecfloor > clip.secfloorz)
+   if(!aboveportal && clip.opensecfloor > clip.secfloorz)
       clip.secfloorz = clip.opensecfloor;
-   if(!cportal && clip.opensecceil < clip.secceilz)
+   if(!underportal && clip.opensecceil < clip.secceilz)
       clip.secceilz = clip.opensecceil;
 
    // SoM 11/6/02: AGHAH

@@ -1,8 +1,6 @@
-Eternity Engine Programming Style Guide
----------------------------------------
+# Eternity Engine Programming Style Guide
 
-Coding style guidelines
-=======================
+## Coding style guidelines
 
 The coding style guidelines for Eternity are designed to keep the style 
 consistent throughout the program. Some of these guidelines are stricter than
@@ -13,58 +11,55 @@ Remove all tabs. Set Visual C++, if you use it, to "Replace tabs with spaces,"
 and set indentation to three (3). Remove any tabs you might find either
 manually or, in Visual C++, by selecting the offending text and hitting ALT+F8.
 This auto-formats the selection (but be careful, it has some bugs, especially
-with ?: statements, array/struct initializers, and with blocks longer than
+with `?:` statements, array/struct initializers, and with blocks longer than
 1000 lines).
 
-Please write code to an 80 column limit so that it fits within a standard
-80 column terminal. This means that in Visual C++, when you place your cursor at
-the end of the line, it says you are in column 81. This limit may be broken for
-reasons of convenience in some circumstances.
+Please write code to a 95 column limit so that it fits on a 1680x1050 monitor
+when using a reasonable font size.
 
-Global functions should be named like this: 'AB_FunctionName'.  The 'AB' prefix 
-denotes the subsystem (AM_ for automap, G_ for game, etc).  If a function is 
-static, you can omit the prefix and just name it like 'FunctionName', or
+Global functions should be named like this: `AB_FunctionName`.  The `AB` prefix 
+denotes the subsystem (`AM_` for automap, `G_` for game, etc).  If a function is 
+static, you can omit the prefix and just name it like `FunctionName`, or
 preferably, use the prefix and start the proper function name with a lower-case
-letter (ex: AB_functionName).  Functions and global variables should always be 
+letter (ex: `AB_functionName`).  Functions and global variables should always be 
 made static unless they are required in another module. Inline functions must
 be declared as static also, or they will cause linker errors if the compiler
 target does not support inlining.
 
-It is suggested but not required to put '_t' on the end of types created with 
-typedef.  An example of this is 'txt_window_t'.  When creating structures, 
-always typedef them, and make the typedef name the same as the struct tag name,
-but with _t instead of _s.
+It is suggested but not required to put `_t` on the end of structure names and
+types created with `typedef`.  An example of this is `txt_window_t`.
 
 Do not use Hungarian notation, except when dealing with confusing levels of
 indirection. It is sometimes helpful, for instance, to prefix pointers with
 the letter p (or pp with pointers to pointers).
 
-Prefer C++-style comments, ie. '//' comments over '/* ... */' comments. The
+Prefer C++-style comments, ie. `//` comments over `/* ... */` comments. The
 latter are best used only for extremely long comment blocks, especially if
 example code is contained in the comment, or for temporarily removing dead
-or experimental code. #if 0 may be preferable for the latter, however.
+or experimental code. `#if 0` may be preferable for the latter, however.
 
-In pointer variable declarations, place the '*' next to the variable name, not 
+In pointer variable declarations, place the `*` next to the variable name, not 
 the type.
 
 When using an if, do, while, or for statement, always use the { } braces if the
 code block is more than one line long, even if this is only because of a 
 comment:
-
+```C++
    if(condition)
    {
       // hello
       body;
    }
-
+```
 
 Write code like this:
 
-typedef struct my_structure_s
+```C++
+struct my_structure_t
 {
-   int member1;   // comment every structure member
+   int   member1; // comment every structure member
    char *member2; // IDEs use these comments to help you
-} my_structure_t;
+};
 
 static my_structure_t array[] =
 {
@@ -72,15 +67,79 @@ static my_structure_t array[] =
    { 200, "world" },
 };
 
-// enums:
-// Avoid typedefing them most of the time as this creates unnecessary problems.
-// DO put a comma after the last member, as with arrays. If you extend the enum
-// later and it's not there already, you'll forget to add it 9 times out of 10.
+class ClassesAreCapitalized : public ParentClass
+{
+   // This is first if the type has RTTI
+   DECLARE_RTTI_TYPE(ClassesAreCapitalized, ParentClass)
+   
+   // private declarations are first. Use pImpl idioms if the contents would
+   // require inclusion of heavy template components such as EHashTable.
+private:
+   int i;
+   
+   // Protected components come next
+protected:
+   void calculate() { i = i*2; }
+   
+   // Public components come last
+public:
+   // Public constructors and destructors are first:
+   ClassesAreCapitalized()
+      : Super(), i(0)  // initializers in declaration order
+   {
+   }
+   
+   //
+   // Copy constructor
+   //
+   ClassesAreCapitalized(const ClassesAreCapitalized &other)
+      : Super(), i(other.i)
+   {
+   }
+   
+   // Methods that are virtual in the base class should be reiterated 
+   // as such in descendants for clarity even though it is not required.
+   virtual ~ClassesAreCapitalized() {}
+   
+   //
+   // Accessors
+   //
+   // If there would be both get and set with no semantics, consider if the member
+   // should be public. This is not forbidden when it makes sense for efficiency's sake.
+   //
+   
+   int getI() const { return i; }
+};
 
-enum
+// If template declarations are verbose, put them on the line above the declarator:
+template<typename LongTypeNameA, typename LongTypeNameB>
+LongTypeNameA template_function(A a, B b)
+{
+   return a + b;
+}
+
+// Lambdas should use K&R bracket style
+auto foo = [=x] () {
+  return x + 1;
+};
+
+// And here is one reason why:
+// A lambda called in place would look as such (though unlikely to occur):
+([] (int x) {
+   printf("%d\n", x);
+})(100);
+
+// And another, when passing lambdas as callbacks:
+std::sort(arr.begin(), arr.end(), [&foo] (const A &a, const B &b) {
+   return a < b;
+});
+
+// enums:
+
+enum ordinals_e
 {
    FIRST  = 1, // enum symbols should usually be allcaps
-   SECOND = 2, 
+   SECOND = 2  // last item should NOT have a comma because it is not standard compliant
 };
 
 // long strings -- use consecutive string literal concatenation; NEVER use the
@@ -92,18 +151,15 @@ static const char *long_str = "This string is too long to fit on one line so "
                               "I'm going to break it across these two lines.";
 
 //
-// A_FunctionName
-//
 // Functions should have header comments that describe the function's purpose,
 // arguments, and return value. IDEs use these comments to help you, and they
 // also make me really happy when it comes time to edit the code.
 //
-// If a function takes no parameters, it must be declared as (void). This is
-// not C++, and an empty parameter list does not mean void in C. It means
-// "anything goes".
+// Functions which take no arguments should have an empty lozenge (), not
+// (void) as this is unnecessarily verbose.
 //
-void A_FunctionName(int argument, int arg2, int arg3, int arg4, int arg5, 
-                    int arg6, int arg7)
+void A_FunctionName(int argument, int arg2, int arg3, int arg4, int arg5, int arg6, 
+                    int arg7)
 {
    // put comments here...
    if(condition)  // or here...
@@ -113,7 +169,7 @@ void A_FunctionName(int argument, int arg2, int arg3, int arg4, int arg5,
    else if(condition) // NO spaces between keywords and parens. Brrrrr >_<
    {
       // comments inside the block are fine, but they must share the block's
-      // indentation level, and break lines at or before 80 columns.
+      // indentation level
       body;
    }
    else 
@@ -175,8 +231,10 @@ void A_FunctionName(int argument, int arg2, int arg3, int arg4, int arg5,
    }
 
    // space between operators and operands, but not between operands and
-   // semicolons.
-   for(a = 0; a < 10; ++a) // prefer ++a to a++; I will change it if I see it.
+   // semicolons. Prefer a++ to ++a; I will change it if I see it. Exceptions
+   // are made for C++ objects with non-POD iterator types (which does NOT
+   // include PODCollection/Collection)
+   for(a = 0; a < 10; a++)
    {
       loop_body;
    }
@@ -192,24 +250,24 @@ void A_FunctionName(int argument, int arg2, int arg3, int arg4, int arg5,
    }
    while(condition); // put the while down one line; it looks better.
 }
+```
 
-GNU GPL and licensing
-=====================
+## GNU GPL and licensing
 
-All code submitted to the project must be licensed under the GNU GPL or a
+All code submitted to the project must be licensed under the GNU GPLv3 or a
 compatible license.  If you use code that you haven't 100% written 
 yourself, say so. Add a copyright header to the start of every file.  Use
 this template:
 
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
+```C
 //
-// Copyright(C) YEAR Author's name
+// The Eternity Engine
+// Copyright(C) YEAR James Haley, (your name here), et al.
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
-// of the License, or (at your option) any later version.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -217,31 +275,33 @@ this template:
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-// 02111-1307, USA.
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+// Purpose: (basic description of the module here)
+// Authors: (your name here), any other people
 //
-// DESCRIPTION:
-//
-// Put a description of the file contents here
-//
-//-----------------------------------------------------------------------------
+```
 
+If the file contains code that only Team Eternity members have contributed, add
+this additional blurb after the GPLv3 text:
 
-Other Stuff
-===========
+```C++
+//
+// Additional terms and conditions compatible with the GPLv3 apply. See the
+// file COPYING-EE for details.
+//
+```
 
-All filenames must be eight characters or less with a single three-character
-extension. Not following this makes compiling for DOS impossible.
+## Other Stuff
 
 All files (excepting old ones with CVS logs) should end with:
 
+```C
 // EOF\n
 \n
+```
 
-Where the \n's are literal linebreaks (don't type \n, just hit enter). Doing 
+Where the `\n` are literal linebreaks (don't type `\n`, just hit enter). Doing 
 this ensures that all files are terminated with a linebreak. Never put anything
 else after the EOF comment, but move it down when you edit at the bottom of a 
 file.
@@ -249,20 +309,21 @@ file.
 Includes:
 Include as few headers as you can get away with. Use this syntax:
 
-#include "foo.h"
+`#include "foo.h"`
 
-<> are for system includes only.
+`<>` are for system includes only.
 
 Inside include files, the first thing after the header comment should be this:
-
+```C++
 #ifndef A_FILENAME_H__
 #define A_FILENAME_H__
 
 // contents...
 
 #endif
+```
 
-Order within a file:
+### Order within a file
 
 Try to keep related code together. Write functions "bottom-up", ie if a static
 function is called by another, it should be written above the calling function 
@@ -271,4 +332,5 @@ top of the file just after include statements, and comment what is global and
 what is private to the module. If used by the whole file, also make macros,
 enums, etc. sections of their own at the top. Otherwise, keep them directly
 above the function that uses them.
+
 
