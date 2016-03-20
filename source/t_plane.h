@@ -41,7 +41,8 @@ typedef enum
 
 result_e T_MoveFloorDown  (sector_t *sector, fixed_t speed, fixed_t dest, int crush);
 result_e T_MoveFloorUp    (sector_t *sector, fixed_t speed, fixed_t dest, int crush);
-result_e T_MoveCeilingDown(sector_t *sector, fixed_t speed, fixed_t dest, int crush);
+result_e T_MoveCeilingDown(sector_t *sector, fixed_t speed, fixed_t dest,
+                           int crush, bool crushrest = false);
 result_e T_MoveCeilingUp  (sector_t *sector, fixed_t speed, fixed_t dest, int crush);
 
 result_e T_MoveFloorInDirection(sector_t *sector, fixed_t speed, fixed_t dest, 
