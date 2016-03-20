@@ -2351,7 +2351,6 @@ static void P_padRejectArray(byte *array, unsigned int len)
    unsigned int i;
    unsigned int byte_num;
    byte *dest;
-   unsigned int padvalue;
 
    // Values to pad the REJECT array with:
 
@@ -2382,18 +2381,6 @@ static void P_padRejectArray(byte *array, unsigned int len)
    {
       C_Printf("PadRejectArray: REJECT lump too short to pad! (%i > %i)\n",
                len, (int) sizeof(rejectpad));
-
-      // Pad remaining space with 0 (or 0xff, if specified on command line).
-      if (M_CheckParm("-reject_pad_with_ff"))
-      {
-         padvalue = 0xff;
-      }
-      else
-      {
-         padvalue = 0xf00;
-      }
-
-      memset(array + sizeof(rejectpad), padvalue, len - sizeof(rejectpad));
    }
 }
 
@@ -2429,6 +2416,10 @@ static void P_LoadReject(int lump)
    {
       // set to all zeroes so that the reject has no effect
       rejectmatrix = (byte *)(Z_Calloc(1, expectedsize, PU_LEVEL, NULL));
+
+      // Pad remaining space with 0xff if specified on command line)
+      if(M_CheckParm("-reject_pad_with_ff"))
+         memset(rejectmatrix, 0xff, expectedsize);
 
       if(size > 0)
       {
