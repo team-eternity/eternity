@@ -1124,6 +1124,7 @@ int EV_DoGenCrusher(const line_t *line)
    cd.trigger_type = (value & TriggerType) >> TriggerTypeShift;
    cd.damage = 10;
    cd.flags = CDF_HAVETRIGGERTYPE;
+   cd.ground_dist = 8 * FRACUNIT;
 
    return EV_DoParamCrusher(line, line->tag, &cd);
 }
