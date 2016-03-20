@@ -67,6 +67,8 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff);
 
 bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y);
 
+bool PIT_CheckLine(line_t *ld, polyobj_s *po);  // ioanch: used in the code
+
 void P_SlideMove(Mobj *mo);
 
 // ioanch

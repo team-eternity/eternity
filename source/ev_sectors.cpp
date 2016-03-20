@@ -654,7 +654,7 @@ static ev_sectorbinding_t GenBindings[] =
    { 10, EV_SectorDoorCloseIn30        },
    { 12, EV_SectorLightStrobeSlowSync  },
    { 13, EV_SectorLightStrobeFastSync  },
-   { 14, EV_SectorDoorCloseIn30        },
+   { 14, EV_SectorDoorRaiseIn5Mins     },
    { 17, EV_SectorLightFireFlicker     }
 };
 
