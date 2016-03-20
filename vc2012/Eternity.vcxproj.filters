@@ -956,6 +956,9 @@
     </ClCompile>
     <ClCompile Include="..\source\e_udmf.cpp">
       <Filter>Source Files\E_\E_ Source</Filter>
+	</ClCompile>
+    <ClCompile Include="..\source\p_portalclip.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1705,6 +1708,9 @@
     </ClInclude>
     <ClInclude Include="..\source\e_udmf.h">
       <Filter>Source Files\E_\E_ Headers</Filter>
+	</ClInclude>
+    <ClInclude Include="..\source\p_portalclip.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

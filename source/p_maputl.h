@@ -101,8 +101,7 @@ v2fixed_t P_BoxLinePoint(const fixed_t bbox[4], const line_t *ld);
 //SoM 9/2/02: added mo parameter for 3dside clipping
 // ioanch 20150113: added optional portal detection
 void    P_LineOpening (const line_t *linedef, const Mobj *mo,
-                       bool portaldetect = false, bool *fportal = nullptr,
-                       bool *cportal = nullptr);
+                       bool portaldetect = false, uint32_t *lineclipflags = nullptr);
 
 void P_UnsetThingPosition(Mobj *thing);
 void P_SetThingPosition(Mobj *thing);

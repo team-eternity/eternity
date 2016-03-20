@@ -171,6 +171,8 @@ int     **gBlockGroups;
 
 byte *rejectmatrix;
 
+static int gTotalLinesForRejectOverflow;  // ioanch 20160309: for REJECT fix
+
 // Maintain single and multi player starting spots.
 
 // 1/11/98 killough: Remove limit on deathmatch starts
@@ -2401,6 +2403,9 @@ void P_GroupLines()
       M_ClearBox(sectors[i].blockbox);
    }
 
+   // ioanch 20160309: remember this value for REJECT overflow
+   gTotalLinesForRejectOverflow = total;
+
    // build line tables for each sector
    linebuffer = (line_t **)(Z_Malloc(total * sizeof(*linebuffer), PU_LEVEL, 0));
 
@@ -2558,6 +2563,53 @@ void P_RemoveSlimeTrails()             // killough 10/98
 }
 
 //
+// P_padRejectArray
+//
+// ioanch 20160309: directly from Chocolate-Doom (by fraggle)
+// https://github.com/chocolate-doom/chocolate-doom/blob/master/src/doom/p_setup.c
+//
+// Pad the REJECT lump with extra data when the lump is too small,
+// to simulate a REJECT buffer overflow in Vanilla Doom.
+//
+static void P_padRejectArray(byte *array, unsigned int len)
+{
+   unsigned int i;
+   unsigned int byte_num;
+   byte *dest;
+
+   // Values to pad the REJECT array with:
+
+   unsigned int rejectpad[4] =
+   {
+      static_cast<unsigned int>(((gTotalLinesForRejectOverflow * 4 + 3) & ~3)
+                                + 24),      // Size
+      0,                                    // Part of z_zone block header
+      50,                                   // PU_LEVEL
+      0x1d4a11                              // DOOM_CONST_ZONEID
+   };
+
+   // Copy values from rejectpad into the destination array.
+
+   dest = array;
+
+   for(i = 0; i < len && i < sizeof(rejectpad); ++i)
+   {
+      byte_num = i % 4;
+      *dest = (rejectpad[i / 4] >> (byte_num * 8)) & 0xff;
+      ++dest;
+   }
+
+   // We only have a limited pad size.  Print a warning if the
+   // REJECT lump is too small.
+
+   if(len > sizeof(rejectpad))
+   {
+      C_Printf("PadRejectArray: REJECT lump too short to pad! (%i > %i)\n",
+               len, (int) sizeof(rejectpad));
+   }
+}
+
+//
 // P_LoadReject
 //
 // haleyjd 01/26/04: Although DOOM accepted them due to differing
@@ -2591,10 +2643,20 @@ static void P_LoadReject(int lump)
       // set to all zeroes so that the reject has no effect
       rejectmatrix = (byte *)(Z_Calloc(1, expectedsize, PU_LEVEL, NULL));
 
+      // Pad remaining space with 0xff if specified on command line)
+      if(M_CheckParm("-reject_pad_with_ff"))
+         memset(rejectmatrix, 0xff, expectedsize);
+
       if(size > 0)
       {
          byte *temp = (byte *)(setupwad->cacheLumpNum(lump, PU_CACHE));
          memcpy(rejectmatrix, temp, size);
+
+         // ioanch 20160309: REJECT overflow fix. From chocolate-doom (by
+         // fraggle):
+         // Also only do it if MBF or less
+         if(demo_version <= 203)
+            P_padRejectArray(rejectmatrix + size, expectedsize - size);
       }
    }
 
@@ -3210,8 +3272,10 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       CHECK_ERROR();
    }
 
-   P_LoadReject(mgla.reject); // haleyjd 01/26/04
+   // ioanch 20160309: reversed P_GroupLines with P_LoadReject to fix the
+   // overrun
    P_GroupLines();
+   P_LoadReject(mgla.reject); // haleyjd 01/26/04
 
    // haleyjd 01/12/14: build sound environment zones
    P_CreateSoundZones();

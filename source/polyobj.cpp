@@ -1158,7 +1158,10 @@ void Polyobj_MoveOnLoad(polyobj_t *po, angle_t angle, fixed_t x, fixed_t y)
    // ioanch 20160302: do NOT collide and get back if onload = true.
 
    // first, rotate to the saved angle
-   Polyobj_rotate(po, angle, true);
+   // ioanch 20160310: loadgame fix: don't budge polyobjects ever so little
+   // if they haven't rotated anyway. Angle 0 still means some error.
+   if(angle)
+      Polyobj_rotate(po, angle, true);
    
    // determine component distances to translate
    dx = x - po->spawnSpot.x;
@@ -1244,6 +1247,9 @@ void PolyRotateThinker::serialize(SaveArchive &arc)
    Super::serialize(arc);
 
    arc << polyObjNum << speed << distance << hasBeenPositive;
+   // ioanch 20160310: fix the thinker reference
+   if(arc.isLoading())
+      Polyobj_GetForNum(polyObjNum)->thinker = this;
 }
 
 //
@@ -1324,6 +1330,10 @@ void PolyMoveThinker::serialize(SaveArchive &arc)
    Super::serialize(arc);
 
    arc << polyObjNum << speed << momx << momy << distance << angle;
+
+   // ioanch 20160310: fix the thinker reference
+   if(arc.isLoading())
+      Polyobj_GetForNum(polyObjNum)->thinker = this;
 }
 
 
@@ -1433,6 +1443,9 @@ void PolySlideDoorThinker::serialize(SaveArchive &arc)
    arc << polyObjNum << delay << delayCount << initSpeed << speed
        << initDistance << distance << initAngle << angle << revAngle
        << momx << momy << closing;
+   // ioanch 20160310: fix the thinker reference
+   if(arc.isLoading())
+      Polyobj_GetForNum(polyObjNum)->thinker = this;
 }
 
 
@@ -1540,6 +1553,9 @@ void PolySwingDoorThinker::serialize(SaveArchive &arc)
 
    arc << polyObjNum << delay << delayCount << initSpeed << speed
        << initDistance << distance << closing << hasBeenPositive;
+   // ioanch 20160310: fix the thinker reference
+   if(arc.isLoading())
+      Polyobj_GetForNum(polyObjNum)->thinker = this;
 }
 
 // Linedef Handlers

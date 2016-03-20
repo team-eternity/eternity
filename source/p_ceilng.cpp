@@ -508,6 +508,20 @@ int P_ActivateInStasisCeiling(const line_t *line)
 int EV_CeilingCrushStop(const line_t* line)
 {
    int rtn = 0;
+   // ioanch 20160314: avoid duplicating code
+   auto resumeceiling = [&rtn](CeilingThinker *ceiling)
+   {
+      ceiling->olddirection = ceiling->direction;
+      ceiling->direction = plat_stop;
+      ceiling->inStasis = true;
+      // ioanch 20160314: like in vanilla, do not make click sound when stopping
+      // these types
+      if(ceiling->type == silentCrushAndRaise)
+         S_SquashSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C);
+      else
+         S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C); // haleyjd 09/28/06
+      rtn = 1;
+   };
    
    // ioanch 20160306
    if(demo_compatibility)
@@ -518,11 +532,7 @@ int EV_CeilingCrushStop(const line_t* line)
          if(ceiling && ceiling->tag == line->args[0] && 
             ceiling->direction != plat_stop)
          {
-            ceiling->olddirection = ceiling->direction;
-            ceiling->direction = plat_stop;
-            ceiling->inStasis = true;
-            S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C); // haleyjd 09/28/06
-            rtn = 1;
+            resumeceiling(ceiling);
          }
       }
       return rtn;
@@ -535,11 +545,7 @@ int EV_CeilingCrushStop(const line_t* line)
       CeilingThinker *ceiling = cl->ceiling;
       if(ceiling->direction != plat_stop && ceiling->tag == line->args[0])
       {
-         ceiling->olddirection = ceiling->direction;
-         ceiling->direction = plat_stop;
-         ceiling->inStasis = true;
-         S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C); // haleyjd 09/28/06
-         rtn = 1;
+         resumeceiling(ceiling);
       }
    }
    return rtn;
@@ -596,6 +602,9 @@ void P_RemoveActiveCeiling(CeilingThinker* ceiling)
       {
          if(vanilla_activeceilings[i] == ceiling)
          {
+            ceiling->sector->ceilingdata = nullptr;
+            S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C);
+            ceiling->removeThinker();
             vanilla_activeceilings[i] = nullptr;
             break;
          }

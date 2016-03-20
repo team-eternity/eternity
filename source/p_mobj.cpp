@@ -2430,34 +2430,11 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
    }
 }
 
-
 //
-// P_SpawnBlood
+// Spawn particle blood suited for Doom-style blood objects
 //
-void P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, Mobj *target)
+static void P_DoomParticleBlood(Mobj *th, Mobj *target, fixed_t x, fixed_t y, fixed_t z, angle_t dir)
 {
-   // HTIC_TODO: Heretic support
-   Mobj *th;
-
-   // haleyjd 08/05/04: use new function
-   z += P_SubRandom(pr_spawnblood) << 10;
-
-   th = P_SpawnMobj(x,y,z, E_SafeThingType(MT_BLOOD));
-   th->momz = FRACUNIT*2;
-   th->tics -= P_Random(pr_spawnblood)&3;
-
-   if(th->tics < 1)
-      th->tics = 1;
-
-   if(damage <= 12 && damage >= 9)
-   {
-      P_SetMobjState(th, E_SafeState(S_BLOOD2));
-   }
-   else if (damage < 9)
-   {
-      P_SetMobjState(th, E_SafeState(S_BLOOD3));
-   }
-
    // for demo sync, etc, we still need to do the above, so
    // we'll make the sprites above invisible and draw particles
    // instead
@@ -2466,6 +2443,199 @@ void P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, Mobj
       if(bloodsplat_particle != 2)
          th->translucency = 0;
       P_BloodSpray(target, 32, x, y, z, dir);
+   }
+}
+
+//
+// DOOM blood spawning
+//
+static void P_spawnBloodDoom(mobjtype_t type, const BloodSpawner &params)
+{
+   Mobj *th;
+   fixed_t z = params.z;
+
+   // haleyjd 08/05/04: use new function
+   z += P_SubRandom(pr_spawnblood) << 10;
+
+   th = P_SpawnMobj(params.x, params.y, z, type);
+   th->momz = FRACUNIT*2;
+   th->tics -= P_Random(pr_spawnblood)&3;
+
+   if(th->tics < 1)
+      th->tics = 1;
+
+   if(params.damage <= 12 && params.damage >= 9)
+   {
+      state_t *st;
+      if(!(st = E_GetStateForMobj(th, "Blood2")))
+         st = states[E_SafeState(S_BLOOD2)];
+      P_SetMobjState(th, st->index);
+   }
+   else if(params.damage < 9)
+   {
+      state_t *st;
+      if(!(st = E_GetStateForMobj(th, "Blood3")))
+         st = states[E_SafeState(S_BLOOD3)];
+      P_SetMobjState(th, st->index);
+   }
+
+   P_DoomParticleBlood(th, params.target, params.x, params.y, z, params.dir);
+}
+
+//
+// Strife blood spawning
+//
+static void P_spawnBloodStrife(mobjtype_t type, const BloodSpawner &params)
+{
+   Mobj *th;
+   fixed_t z = params.z;
+
+   // haleyjd 08/05/04: use new function
+   z += P_SubRandom(pr_rogueblood) << 10;
+
+   th = P_SpawnMobj(params.x, params.y, z, type);
+   th->momz = FRACUNIT*2;
+
+   state_t *st;
+   if(params.damage >= 10 && params.damage <= 13)
+   {
+      if((st = E_GetStateForMobj(th, "Blood0")))
+         P_SetMobjState(th, st->index);
+   }
+   else if(params.damage >= 7 && params.damage < 10)
+   {
+      if((st = E_GetStateForMobj(th, "Blood1")))
+         P_SetMobjState(th, st->index);
+   }
+   else if(params.damage < 7)
+   {
+      if((st = E_GetStateForMobj(th, "Blood2")))
+         P_SetMobjState(th, st->index);
+   }
+
+   P_DoomParticleBlood(th, params.target, params.x, params.y, z, params.dir);
+}
+
+//
+// Raven blood spawning
+//
+static void P_spawnBloodRaven(mobjtype_t type, const BloodSpawner &params, bool isHexen)
+{
+   Mobj    *mo    = P_SpawnMobj(params.x, params.y, params.z, type);
+   int      shift = isHexen ? 10 : 9;
+   fixed_t  momz  = isHexen ? 3*FRACUNIT : 2*FRACUNIT;
+
+   P_SetTarget(&mo->target, params.target);
+   mo->momx = P_SubRandom(pr_ravenblood) << shift;
+   mo->momy = P_SubRandom(pr_ravenblood) << shift;
+   mo->momz = momz;
+
+   P_DoomParticleBlood(mo, params.target, params.x, params.y, params.z, params.dir);
+}
+
+//
+// Ripper blood spawning
+//
+static void P_spawnBloodRip(mobjtype_t type, const BloodSpawner &params, bool isHexen)
+{
+   Mobj *mo = params.inflictor ? params.inflictor : params.target;
+   fixed_t x = mo->x + (P_SubRandom(pr_ripperblood) << 12);
+   fixed_t y = mo->y + (P_SubRandom(pr_ripperblood) << 12);
+   fixed_t z = mo->z + (P_SubRandom(pr_ripperblood) << 12);
+   
+   Mobj *th = P_SpawnMobj(x, y, z, type);
+   
+   if(!isHexen)
+      th->flags |= MF_NOGRAVITY;
+
+   th->momx  = mo->momx / 2;
+   th->momy  = mo->momy / 2;
+   th->tics += P_Random(pr_ripperblood) & 3;
+   if(th->tics < 1)
+      th->tics = 1;
+}
+
+//
+// Crusher blood spawning
+//
+static void P_spawnCrusherBlood(Mobj *thing, mobjtype_t type)
+{
+   // spray blood in a random direction
+   Mobj *mo = P_SpawnMobj(thing->x, thing->y, thing->z + thing->height/2, type);
+         
+   mo->momx = P_SubRandom(pr_crush) << 12;
+   mo->momy = P_SubRandom(pr_crush) << 12;
+}
+
+//
+// BloodSpawner constructor for divline_t; the angle is calculated properly.
+//
+BloodSpawner::BloodSpawner(Mobj *ptarget, fixed_t px, fixed_t py, fixed_t pz, int pdamage,
+                           const divline_t &dv, Mobj *pinflictor)
+   : target(ptarget), inflictor(pinflictor), x(px), y(py), z(pz), damage(pdamage)
+{
+   dir = P_PointToAngle(0, 0, dv.dx, dv.dy) - ANG180;
+}
+
+//
+// BloodSpawner constructor for damage from a source mobj. x, y, z, and dir are calculated
+// using the source thing.
+//
+BloodSpawner::BloodSpawner(Mobj *ptarget, Mobj *source, int pdamage, Mobj *pinflictor)
+   : target(ptarget), inflictor(pinflictor), damage(pdamage)
+{
+   fixed_t dx = getThingX(target, source);
+   fixed_t dy = getThingY(target, source);
+
+   x   = source->x;
+   y   = source->y;
+   z   = source->z;
+   dir = P_PointToAngle(target->x, target->y, dx, dy);
+}
+
+//
+// Crushing constructor; x, y, z, and dir are taken from the thing being damaged.
+//
+BloodSpawner::BloodSpawner(Mobj *crushtarget, int pdamage)
+   : target(crushtarget), inflictor(nullptr), damage(pdamage)
+{
+   x   = crushtarget->x;
+   y   = crushtarget->y;
+   z   = crushtarget->z + crushtarget->height/2;
+   dir = crushtarget->angle;
+}
+
+//
+// Spawn some blood in response to damage
+//
+void BloodSpawner::spawn(bloodaction_e action) const
+{
+   mobjtype_t type = E_BloodTypeForThing(target, action);
+   if(type < 0)
+      return;
+
+   bloodtype_e behavior = E_GetBloodBehaviorForAction(mobjinfo[type], action);
+   switch(behavior)
+   {
+   case BLOODTYPE_DOOM:
+      P_spawnBloodDoom(type, *this);
+      break;
+   case BLOODTYPE_HERETIC:
+   case BLOODTYPE_HEXEN:
+      P_spawnBloodRaven(type, *this, (behavior == BLOODTYPE_HEXEN));
+      break;
+   case BLOODTYPE_HERETICRIP:
+   case BLOODTYPE_HEXENRIP:
+      P_spawnBloodRip(type, *this, (behavior == BLOODTYPE_HEXENRIP));
+      break;
+   case BLOODTYPE_STRIFE:
+      P_spawnBloodStrife(type, *this);
+      break;
+   case BLOODTYPE_CRUSH:
+      P_spawnCrusherBlood(target, type);
+      break;
+   case BLOODTYPE_CUSTOM: // TODO: define spawning routine via Aeon
+      break;
    }
 }
 
