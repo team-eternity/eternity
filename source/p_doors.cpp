@@ -320,30 +320,6 @@ bool VerticalDoorThinker::reTriggerVerticalDoor(bool player)
 ///////////////////////////////////////////////////////////////
 
 //
-// EV_DoLockedDoor
-//
-// Handle opening a tagged locked door
-//
-// Passed the line activating the door, the type of door,
-// and the thing that activated the line
-// Returns true if a thinker created
-//
-int EV_DoLockedDoor(const line_t *line, vldoor_e type, int lockID, const Mobj *thing)
-{
-   player_t *p = thing->player;
-   
-   if(!p)          // only players can open locked doors
-      return 0;
-
-   // check if key is possessed to open it
-   if(!E_PlayerCanUnlock(p, lockID, true))
-      return 0;
-   
-   // got the key, so open the door
-   return EV_DoDoor(line, type);
-}
-
-//
 // EV_DoDoor
 //
 // Handle opening a tagged door

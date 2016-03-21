@@ -49,6 +49,7 @@
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
+#include "p_portal.h"
 #include "p_pspr.h"
 #include "p_setup.h"
 #include "p_spec.h"
@@ -352,8 +353,13 @@ void A_SpawnGlitter(actionargs_t *actionargs)
       initMomentum = FRACUNIT >> 2;
 
    // randomize spawning coordinates within a 32-unit square
-   x = actor->x + ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
-   y = actor->y + ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
+   // ioanch 20160107: correctly spawn behind line portal
+   fixed_t dx = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
+   fixed_t dy = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
+   v2fixed_t pos = P_LinePortalCrossing(*actor, dx, dy);
+   
+   x = pos.x;
+   y = pos.y;
 
    z = actor->floorz;
 
@@ -1026,15 +1032,21 @@ void A_ThingSummon(actionargs_t *actionargs)
    
    prestep = prestep + 3*(actor->info->radius + mobjinfo[type]->radius)/2;
    
-   x = actor->x + FixedMul(prestep, finecosine[an]);
-   y = actor->y + FixedMul(prestep, finesine[an]);
+   // ioanch 20160107: spawn past portals in front of spawner
+   v2fixed_t relpos = { actor->x + FixedMul(prestep, finecosine[an]),
+                        actor->y + FixedMul(prestep, finesine[an]) };
+   v2fixed_t pos = P_LinePortalCrossing(*actor, relpos - *actor);
+
+   x = pos.x;
+   y = pos.y;
    z = actor->z + deltaz;
 
    // Check whether the thing is being spawned through a 1-sided
    // wall or an impassible line, or a "monsters can't cross" line.
    // If it is, then we don't allow the spawn.
    
-   if(Check_Sides(actor, x, y))
+   // ioanch 20160107: use position directly next to summoner.
+   if(Check_Sides(actor, relpos.x, relpos.y))
       return;
 
    newmobj = P_SpawnMobj(x, y, z, type);
@@ -1042,9 +1054,13 @@ void A_ThingSummon(actionargs_t *actionargs)
    // Check to see if the new thing's z value is above the
    // ceiling of its new sector, or below the floor. If so, kill it.
 
-   if((newmobj->z >
-      (newmobj->subsector->sector->ceilingheight - newmobj->height)) ||
-      (newmobj->z < newmobj->subsector->sector->floorheight))
+   // ioanch 20160107: consider sectors when killing things stuck in floor or
+   // ceiling. Also remove redundant parentheses.
+   const sector_t *csector = P_ExtremeSectorAtPoint(newmobj, true);
+   const sector_t *fsector = P_ExtremeSectorAtPoint(newmobj, false);
+   
+   if(newmobj->z > csector->ceilingheight - newmobj->height ||
+      newmobj->z < fsector->floorheight)
    {
       actionargs_t dieaction;
 
@@ -1498,8 +1514,9 @@ void A_DetonateEx(actionargs_t *actionargs)
       P_NoiseAlert(source, actor);
 
    // cause a terrain hit
+   // ioanch 20160116: portal aware Z
    if(actor->z <= actor->secfloorz + radius * FRACUNIT)
-      E_HitWater(actor, actor->subsector->sector);
+      E_HitWater(actor, P_ExtremeSectorAtPoint(actor, false));
 }
 
 // EOF

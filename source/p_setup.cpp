@@ -147,6 +147,8 @@ fixed_t   bmaporgx, bmaporgy;     // origin of block map
 Mobj    **blocklinks;             // for thing chains
 
 byte     *portalmap;              // haleyjd: for portals
+// ioanch 20160106: more detailed info (list of groups for each block)
+int     **gBlockGroups; 
 
 //
 // REJECT
@@ -158,6 +160,8 @@ byte     *portalmap;              // haleyjd: for portals
 //
 
 byte *rejectmatrix;
+
+static int gTotalLinesForRejectOverflow;  // ioanch 20160309: for REJECT fix
 
 // Maintain single and multi player starting spots.
 
@@ -397,6 +401,76 @@ void P_LoadSegs(int lump)
    Z_Free(data);
 }
 
+//
+// P_LoadSegs_V4
+//
+// ioanch 20160204: DEEPBSP segs
+//
+static void P_LoadSegs_V4(int lump)
+{
+   numsegs = setupwad->lumpLength(lump) / sizeof(mapseg_v4_t);
+   segs = estructalloctag(seg_t, numsegs, PU_LEVEL);
+   auto data = static_cast<byte *>(setupwad->cacheLumpNum(lump, PU_STATIC));
+
+   if(!numsegs || !segs || !data)
+   {
+      Z_Free(data);
+      level_error = "no segs in level";
+      return;
+   }
+
+   for(int i = 0; i < numsegs; ++i)
+   {
+      seg_t *li = segs + i;
+      auto ml = reinterpret_cast<const mapseg_v4_t *>(data) + i;
+      int v1, v2;
+
+      int side, linedef;
+      line_t *ldef;
+
+      v1 = SwapLong(ml->v1);
+      if(v1 >= numvertexes || v1 < 0)
+      {
+         C_Printf(FC_ERROR "Error: seg #%d - bad vertex #%d\a\n", i, v1);
+         v1 = 0;  // reset it without failing
+      }
+      v2 = SwapLong(ml->v2);
+      if(v2 >= numvertexes || v2 < 0)
+      {
+         C_Printf(FC_ERROR "Error: seg #%d - bad vertex #%d\a\n", i, v2);
+         v2 = 0;  // reset it without failing
+      }
+      li->v1 = &vertexes[v1];
+      li->v2 = &vertexes[v2];
+
+      li->offset = static_cast<float>(SwapShort(ml->offset));
+
+      linedef = SafeUintIndex(ml->linedef, numlines, "seg", i, "line");
+      ldef = &lines[linedef];
+
+      li->linedef = ldef;
+      side = SwapShort(ml->side);
+
+      if(side < 0 || side > 1)
+      {
+         level_error = "Seg line side number out of range";
+         Z_Free(data);
+         return;
+      }
+
+      li->sidedef = &sides[ldef->sidenum[side]];
+      li->frontsector = sides[ldef->sidenum[side]].sector;
+
+      // killough 5/3/98: ignore 2s flag if second sidedef missing:
+      if(ldef->flags & ML_TWOSIDED && ldef->sidenum[side^1]!=-1)
+         li->backsector = sides[ldef->sidenum[side^1]].sector;
+      else
+         li->backsector = NULL;
+
+      P_CalcSegLength(li);
+   }
+   Z_Free(data);
+}
 
 // SoM 5/13/09: calculate seg length
 void P_CalcSegLength(seg_t *lseg)
@@ -435,6 +509,37 @@ void P_LoadSubsectors(int lump)
       subsectors[i].firstline = (int)SwapShort(mss->firstseg) & 0xffff;
    }
    
+   Z_Free(data);
+}
+
+//
+// P_LoadSubsectors_V4
+//
+// ioanch 20160204: DeepBSP nodes. Thanks to PrBoom for implementing it.
+//
+static void P_LoadSubsectors_V4(int lump)
+{
+   
+   numsubsectors = setupwad->lumpLength(lump) / sizeof(mapsubsector_v4_t);
+   subsectors = estructalloctag(subsector_t, numsubsectors, PU_LEVEL);
+
+   auto data = static_cast<mapsubsector_v4_t *>(
+      setupwad->cacheLumpNum(lump, PU_STATIC));
+
+   if(!numsubsectors || !data)
+   {
+      level_error = "no subsectors in level";
+      Z_Free(data);
+      return;
+   }
+
+   for(int i = 0; i < numsubsectors; ++i)
+   {
+      subsectors[i].numlines = static_cast<int>(SwapUShort(data[i].numsegs)) 
+         & 0xffff;
+      subsectors[i].firstline = static_cast<int>(SwapLong(data[i].firstseg));
+   }
+
    Z_Free(data);
 }
 
@@ -490,6 +595,9 @@ static void P_InitSector(sector_t *ss)
    // CPP_FIXME: temporary placement construction for sound origins
    ::new (&ss->soundorg)  PointThinker;
    ::new (&ss->csoundorg) PointThinker;
+
+   // ioanch: 20160123: init portalbox=false
+   ss->portalbox = false;
 }
 
 #define DOOM_SECTOR_SIZE 26
@@ -704,6 +812,11 @@ void P_LoadNodes(int lump)
    // subsector 0 if an attempt is made to access nodes[-1]
    if(!numnodes)
    {
+      // ioanch 20160204: also check numsubsectors!
+      if(numsubsectors <= 0)
+         level_error = "no nodes in level";
+      else
+         C_Printf("trivial map (no nodes, one subsector)\n");
       nodes  = NULL;
       fnodes = NULL;
       return;
@@ -746,6 +859,89 @@ void P_LoadNodes(int lump)
    }
    
    Z_Free(data);
+}
+
+//
+// P_LoadNodes_V4
+//
+// ioanch 20160204: load DEEPBSP nodes. Based on PrBoom code
+//
+static void P_LoadNodes_V4(int lump)
+{
+   numnodes = (setupwad->lumpLength(lump) - 8) / sizeof(mapnode_v4_t);
+   auto data = static_cast<byte *>(setupwad->cacheLumpNum(lump, PU_STATIC));
+
+   // haleyjd 12/07/13: Doom engine is supposed to tolerate zero-length
+   // nodes. All vanilla BSP walks are hacked to account for it by returning
+   // subsector 0 if an attempt is made to access nodes[-1]
+   if(!numnodes || !data)
+   {
+      // ioanch 20160204: also check numsubsectors!
+      Z_Free(data);  // free it if not null at this point
+      if(numsubsectors <= 0)
+         level_error = "no nodes in level";
+      else
+         C_Printf("trivial map (no nodes, one subsector)\n");
+      nodes  = nullptr;
+      fnodes = nullptr;
+      return;
+   }
+
+   nodes = estructalloctag(node_t, numnodes, PU_LEVEL);
+   fnodes = estructalloctag(fnode_t, numnodes, PU_LEVEL);
+   
+   // skip header
+   data += 8;
+
+   for(int i = 0; i < numnodes; ++i)
+   {
+      node_t *no = nodes + i;
+      const mapnode_v4_t *mn = reinterpret_cast<const mapnode_v4_t *>(data) + i;
+      int j;
+
+      no->x = SwapShort(mn->x);
+      no->y = SwapShort(mn->y);
+      no->dx = SwapShort(mn->dx);
+      no->dy = SwapShort(mn->dy);
+
+      // haleyjd: calculate floating-point data
+      P_CalcNodeCoefficients(no, &fnodes[i]);
+
+      no->x  <<= FRACBITS;
+      no->y  <<= FRACBITS;
+      no->dx <<= FRACBITS;
+      no->dy <<= FRACBITS;
+
+      for(j = 0; j < 2; ++j)
+      {
+         int k;
+         no->children[j] = SwapLong(mn->children[j]);
+         for(k = 0; k < 4; ++k)
+            no->bbox[j][k] = SwapShort(mn->bbox[j][k]) << FRACBITS;
+      }
+   }
+   Z_Free(data - 8);
+}
+
+//
+// P_CheckForDeePBSPv4Nodes
+//
+// ioanch 20160204: DeepBSP extended nodes support. Based on how it's already
+// implemented in PrBoom
+// Check for valid DEEPBSP nodes
+//
+static bool P_CheckForDeePBSPv4Nodes(int lumpnum)
+{
+   // Check size to avoid crashes
+   if(setupwad->lumpLength(lumpnum + ML_NODES) < 8)
+      return false;
+   const void *data = setupwad->cacheLumpNum(lumpnum + ML_NODES, PU_CACHE);
+   if(!memcmp(data, "xNd4\0\0\0\0", 8))
+   {
+      C_Printf("DeePBSP v4 Extended nodes detected\n");
+      return true;
+   }
+   return false;
 }
 
 //=============================================================================
@@ -2009,6 +2205,9 @@ void P_LoadBlockMap(int lump)
    // haleyjd 05/17/13: setup portalmap
    count = sizeof(*portalmap) * bmapwidth * bmapheight;
    portalmap = ecalloctag(byte *, 1, count, PU_LEVEL, NULL);
+   // ioanch: what portals are in what blocks
+   gBlockGroups = ecalloctag(decltype(gBlockGroups), sizeof(*gBlockGroups), 
+                             bmapwidth * bmapheight, PU_LEVEL, nullptr);
 }
 
 
@@ -2059,6 +2258,9 @@ void P_GroupLines()
       total += sectors[i].linecount;
       M_ClearBox(sectors[i].blockbox);
    }
+
+   // ioanch 20160309: remember this value for REJECT overflow
+   gTotalLinesForRejectOverflow = total;
 
    // build line tables for each sector
    linebuffer = (line_t **)(Z_Malloc(total * sizeof(*linebuffer), PU_LEVEL, 0));
@@ -2217,6 +2419,53 @@ void P_RemoveSlimeTrails()             // killough 10/98
 }
 
 //
+// P_padRejectArray
+//
+// ioanch 20160309: directly from Chocolate-Doom (by fraggle)
+// https://github.com/chocolate-doom/chocolate-doom/blob/master/src/doom/p_setup.c
+//
+// Pad the REJECT lump with extra data when the lump is too small,
+// to simulate a REJECT buffer overflow in Vanilla Doom.
+//
+static void P_padRejectArray(byte *array, unsigned int len)
+{
+   unsigned int i;
+   unsigned int byte_num;
+   byte *dest;
+
+   // Values to pad the REJECT array with:
+
+   unsigned int rejectpad[4] =
+   {
+      static_cast<unsigned int>(((gTotalLinesForRejectOverflow * 4 + 3) & ~3)
+                                + 24),      // Size
+      0,                                    // Part of z_zone block header
+      50,                                   // PU_LEVEL
+      0x1d4a11                              // DOOM_CONST_ZONEID
+   };
+
+   // Copy values from rejectpad into the destination array.
+
+   dest = array;
+
+   for(i = 0; i < len && i < sizeof(rejectpad); ++i)
+   {
+      byte_num = i % 4;
+      *dest = (rejectpad[i / 4] >> (byte_num * 8)) & 0xff;
+      ++dest;
+   }
+
+   // We only have a limited pad size.  Print a warning if the
+   // REJECT lump is too small.
+
+   if(len > sizeof(rejectpad))
+   {
+      C_Printf("PadRejectArray: REJECT lump too short to pad! (%i > %i)\n",
+               len, (int) sizeof(rejectpad));
+   }
+}
+
+//
 // P_LoadReject
 //
 // haleyjd 01/26/04: Although DOOM accepted them due to differing
@@ -2249,10 +2498,20 @@ static void P_LoadReject(int lump)
       // set to all zeroes so that the reject has no effect
       rejectmatrix = (byte *)(Z_Calloc(1, expectedsize, PU_LEVEL, NULL));
 
+      // Pad remaining space with 0xff if specified on command line)
+      if(M_CheckParm("-reject_pad_with_ff"))
+         memset(rejectmatrix, 0xff, expectedsize);
+
       if(size > 0)
       {
          byte *temp = (byte *)(setupwad->cacheLumpNum(lump, PU_CACHE));
          memcpy(rejectmatrix, temp, size);
+
+         // ioanch 20160309: REJECT overflow fix. From chocolate-doom (by
+         // fraggle):
+         // Also only do it if MBF or less
+         if(demo_version <= 203)
+            P_padRejectArray(rejectmatrix + size, expectedsize - size);
       }
    }
 
@@ -2742,6 +3001,15 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
       CHECK_ERROR();
    }
+   else if(P_CheckForDeePBSPv4Nodes(lumpnum))   // ioanch 20160204: also DeePBSP
+   {
+      P_LoadSubsectors_V4(lumpnum + ML_SSECTORS);
+      CHECK_ERROR();
+      P_LoadNodes_V4(lumpnum + ML_NODES);
+      CHECK_ERROR();
+      P_LoadSegs_V4(lumpnum + ML_SEGS);
+      CHECK_ERROR();
+   }
    else
    {
       P_LoadSubsectors(lumpnum + ML_SSECTORS);
@@ -2756,8 +3024,10 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       CHECK_ERROR();
    }
 
-   P_LoadReject(lumpnum + ML_REJECT); // haleyjd 01/26/04
+   // ioanch 20160309: reversed P_GroupLines with P_LoadReject to fix the
+   // overrun
    P_GroupLines();
+   P_LoadReject(lumpnum + ML_REJECT); // haleyjd 01/26/04
 
    // haleyjd 01/12/14: build sound environment zones
    P_CreateSoundZones();

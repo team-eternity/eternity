@@ -1065,7 +1065,8 @@ frame S_PLS2BALLX3 { cmp "PLS2|E|T|6";         dehackednum 1053 }
 frame S_DUMMY1  { cmp = "TNT1|*|*|0"; dehackednum = 1054 }
 frame S_DUMMY2  { cmp = "TNT1|*|*|0"; dehackednum = 1055 }
 
-// Beta Lost Soul Frames
+// Dummy Beta Lost Soul frames -- these ones are only for Dehacked compatibility.
+// The real EEBetaLostSoul uses its own separate states.
 frame S_DUMMY3  { +decorate; dehackednum 1056 }
 frame S_DUMMY4  { +decorate; dehackednum 1057 }
 frame S_DUMMY5  { +decorate; dehackednum 1058 }

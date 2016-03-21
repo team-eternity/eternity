@@ -226,6 +226,8 @@ struct sector_t
    PointThinker csoundorg;  // haleyjd 10/16/06: separate sound origin for ceiling
    int validcount;          // if == validcount, already checked
    Mobj *thinglist;         // list of mobjs in sector
+   // ioanch 20160109: keep references to portal interfacing things
+   DLListItem<spriteprojnode_t> *spriteproj; // bipartite of sector/mobj sprite proj
 
    // killough 8/28/98: friction is a sector property, not an mobj property.
    // these fields used to be in Mobj, but presented performance problems
@@ -346,6 +348,11 @@ struct sector_t
 
    // haleyjd 01/12/14: sound environment
    int soundzone;
+
+   // ioanch 20160123: true if this is a simple portal box: all its lines are
+   // either 1-sided walls or portal walls. Not needed to be saved because it's
+   // set dynamically at map start
+   bool portalbox;
 };
 
 //

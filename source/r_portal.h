@@ -258,6 +258,7 @@ struct portalrender_t
    float miny, maxy;
 
    pwindow_t *w;
+   pwindow_t *curwindow;   // ioanch 20160123: keep track of current window
 
    void (*segClipFunc)();
    

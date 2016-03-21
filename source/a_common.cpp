@@ -46,6 +46,7 @@
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_mobjcol.h"
+#include "p_portal.h"
 #include "p_pspr.h"
 #include "p_setup.h"
 #include "p_skin.h"
@@ -236,11 +237,7 @@ void A_FaceTarget(actionargs_t *actionargs)
 
    actor->flags &= ~MF_AMBUSH;
    actor->angle = P_PointToAngle(actor->x, actor->y,
-#ifdef R_LINKEDPORTALS
-                                  getTargetX(actor), getTargetY(actor));
-#else
-                                  actor->target->x, actor->target->y);
-#endif
+                                 getTargetX(actor), getTargetY(actor));
 
    int shiftamount = P_GetAimShift(actor->target, false);
    if(shiftamount >= 0)
@@ -698,8 +695,9 @@ void A_Explode(actionargs_t *actionargs)
    Mobj *thingy = actionargs->actor;
    P_RadiusAttack(thingy, thingy->target, 128, 128, thingy->info->mod, 0);
 
+   // ioanch 20160116: portal aware Z
    if(thingy->z <= thingy->secfloorz + 128*FRACUNIT)
-      E_HitWater(thingy, thingy->subsector->sector);
+      E_HitWater(thingy, P_ExtremeSectorAtPoint(thingy, false));
 }
 
 void A_Nailbomb(actionargs_t *actionargs)
@@ -710,8 +708,9 @@ void A_Nailbomb(actionargs_t *actionargs)
    P_RadiusAttack(thing, thing->target, 128, 128, thing->info->mod, 0);
 
    // haleyjd: added here as of 3.31b3 -- was overlooked
+   // ioanch 20160116: portal aware Z
    if(demo_version >= 331 && thing->z <= thing->secfloorz + 128*FRACUNIT)
-      E_HitWater(thing, thing->subsector->sector);
+      E_HitWater(thing, P_ExtremeSectorAtPoint(thing, false));
 
    for(i = 0; i < 30; ++i)
       P_LineAttack(thing, i*(ANG180/15), MISSILERANGE, 0, 10);
@@ -730,8 +729,9 @@ void A_Detonate(actionargs_t *actionargs)
    P_RadiusAttack(mo, mo->target, mo->damage, mo->damage, mo->info->mod, 0);
 
    // haleyjd: added here as of 3.31b3 -- was overlooked
+   // ioanch 20160116: portal aware Z
    if(demo_version >= 331 && mo->z <= mo->secfloorz + mo->damage*FRACUNIT)
-      E_HitWater(mo, mo->subsector->sector);
+      E_HitWater(mo, P_ExtremeSectorAtPoint(mo, false));
 }
 
 //=============================================================================

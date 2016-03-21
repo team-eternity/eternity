@@ -811,7 +811,7 @@ static bool Polyobj_clipThings(polyobj_t *po, line_t *line)
 //
 // Moves a polyobject on the x-y plane.
 //
-static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y)
+static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = false)
 {
    int i;
    vertex_t vec;
@@ -833,8 +833,10 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y)
       Polyobj_bboxAdd(po->lines[i]->bbox, &vec);
 
    // check for blocking things (yes, it needs to be done separately)
-   for(i = 0; i < po->numLines; ++i)
-      hitthing |= Polyobj_clipThings(po, po->lines[i]);
+   // ioanch 20160302: do NOT collide and get back if onload = true.
+   if(!onload)
+      for(i = 0; i < po->numLines; ++i)
+         hitthing |= Polyobj_clipThings(po, po->lines[i]);
 
    if(hitthing)
    {
@@ -945,7 +947,7 @@ static void Polyobj_rotateLine(line_t *ld)
 //
 // Rotates a polyobject around its start point.
 //
-static bool Polyobj_rotate(polyobj_t *po, angle_t delta)
+static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
 {
    int i, angle;
    vertex_t origin;
@@ -977,8 +979,10 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta)
       Polyobj_rotateLine(po->lines[i]);
 
    // check for blocking things
-   for(i = 0; i < po->numLines; ++i)
-      hitthing |= Polyobj_clipThings(po, po->lines[i]);
+   // ioanch 20160302: do NOT collide if onload = true.
+   if(!onload)
+      for(i = 0; i < po->numLines; ++i)
+         hitthing |= Polyobj_clipThings(po, po->lines[i]);
 
    if(hitthing)
    {
@@ -1150,15 +1154,20 @@ void Polyobj_MoveOnLoad(polyobj_t *po, angle_t angle, fixed_t x, fixed_t y)
 {
    fixed_t dx, dy;
    
+   // ioanch 20160302: do NOT collide and get back if onload = true.
+
    // first, rotate to the saved angle
-   Polyobj_rotate(po, angle);
+   // ioanch 20160310: loadgame fix: don't budge polyobjects ever so little
+   // if they haven't rotated anyway. Angle 0 still means some error.
+   if(angle)
+      Polyobj_rotate(po, angle, true);
    
    // determine component distances to translate
    dx = x - po->spawnSpot.x;
    dy = y - po->spawnSpot.y;
 
    // translate
-   Polyobj_moveXY(po, dx, dy);
+   Polyobj_moveXY(po, dx, dy, true);
 }
 
 // Thinker Functions
@@ -1237,6 +1246,9 @@ void PolyRotateThinker::serialize(SaveArchive &arc)
    Super::serialize(arc);
 
    arc << polyObjNum << speed << distance << hasBeenPositive;
+   // ioanch 20160310: fix the thinker reference
+   if(arc.isLoading())
+      Polyobj_GetForNum(polyObjNum)->thinker = this;
 }
 
 //
@@ -1317,6 +1329,10 @@ void PolyMoveThinker::serialize(SaveArchive &arc)
    Super::serialize(arc);
 
    arc << polyObjNum << speed << momx << momy << distance << angle;
+
+   // ioanch 20160310: fix the thinker reference
+   if(arc.isLoading())
+      Polyobj_GetForNum(polyObjNum)->thinker = this;
 }
 
 
@@ -1426,6 +1442,9 @@ void PolySlideDoorThinker::serialize(SaveArchive &arc)
    arc << polyObjNum << delay << delayCount << initSpeed << speed
        << initDistance << distance << initAngle << angle << revAngle
        << momx << momy << closing;
+   // ioanch 20160310: fix the thinker reference
+   if(arc.isLoading())
+      Polyobj_GetForNum(polyObjNum)->thinker = this;
 }
 
 
@@ -1533,6 +1552,9 @@ void PolySwingDoorThinker::serialize(SaveArchive &arc)
 
    arc << polyObjNum << delay << delayCount << initSpeed << speed
        << initDistance << distance << closing << hasBeenPositive;
+   // ioanch 20160310: fix the thinker reference
+   if(arc.isLoading())
+      Polyobj_GetForNum(polyObjNum)->thinker = this;
 }
 
 // Linedef Handlers

@@ -116,6 +116,7 @@ enum acs_stype_t
 {
    ACS_STYPE_CLOSED,
    ACS_STYPE_OPEN,
+   ACS_STYPE_ENTER,
 
    ACS_STYPEMAX
 };

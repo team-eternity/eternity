@@ -1,6 +1,5 @@
-// Emacs style mode select -*- C++ -*-
-//----------------------------------------------------------------------------
 //
+// The Eternity Engine
 // Copyright (C) 2013 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -19,16 +18,12 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+// Purpose: Gamemode information
+//  Stores all gamemode-dependent information in one location and 
+//  lends more structure to other modules.
 //
-// Gamemode information
+// Authors: James Haley
 //
-// Stores all gamemode-dependent information in one location and 
-// lends more structure to other modules.
-//
-// James Haley
-//
-//----------------------------------------------------------------------------
 
 #ifndef D_GI_H__
 #define D_GI_H__
@@ -43,6 +38,7 @@ struct musicinfo_t;
 struct skyflat_t;
 struct stbarfns_t;
 struct texture_t;
+enum   bloodtype_e   : int;
 
 // inspired by, but not taken from, zdoom
 
@@ -423,8 +419,10 @@ struct gamemodeinfo_t
    bspecrule_t *bossRules;         // default boss specials
    int levelType;                  // level translation type
    const char *bloodDefaultNormal; // thingtype of the blood shown when thing is hit by hitscan
+   const char *bloodDefaultImpact; // thingtype of the blood shown when thing is hit by projectile
    const char *bloodDefaultRIP;    // thingtype of blood shown when thing is impcated by inflictor with "RIP" flag
    const char *bloodDefaultCrush;  // thingtype of blood shown when thing is crushed
+   bloodtype_e *defBloodBehaviors; // default blood behavior for action array
 
    // Intermission and Finale stuff
    const char *interPic;          // default intermission backdrop

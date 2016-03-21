@@ -286,11 +286,69 @@ public:
 
    // Accessors
    const char *getValue() const { return value; }
-   void setValue(const char *s, char **ret = NULL);
+   virtual void setValue(const char *s, char **ret = NULL);
 
    friend class MetaTable;
 
    virtual bool writeToFile(OutBuffer& outbuf) const;
+};
+
+//
+// MetaVariant
+//
+// Stored as a string value, this MetaObject type supports cached interpretation
+// into various types.
+//
+class MetaVariant : public MetaString
+{
+   DECLARE_RTTI_TYPE(MetaVariant, MetaString)
+
+public:
+   enum varianttype_e
+   {
+      VARIANT_NONE,   // not yet interpreted
+      VARIANT_INT,    // integer
+      VARIANT_BOOL,   // boolean
+      VARIANT_FLOAT,  // float
+      VARIANT_DOUBLE, // double
+
+      VARIANT_MAX
+   };
+
+protected:
+   varianttype_e cachedType;
+
+   union variantcache_u
+   {
+      int    i;
+      bool   b;
+      float  f;
+      double d;
+   } cachedValue;
+
+public:
+   MetaVariant() : Super(), cachedType(VARIANT_NONE) 
+   {
+      cachedValue.i = 0;
+   }
+   MetaVariant(const char *key, const char *s) 
+      : Super(key, s), cachedType(VARIANT_NONE)
+   {
+      cachedValue.i = 0;
+   }
+   MetaVariant(const MetaVariant &other);
+
+   // Virtual Methods
+   virtual MetaObject *clone() const { return new MetaVariant(*this); }
+   virtual void setValue(const char *s, char **ret = NULL);
+
+   // Accessors
+   int    getInt();
+   bool   getBool();
+   float  getFloat();
+   double getDouble();
+
+   varianttype_e getCachedType() const { return cachedType;}
 };
 
 //

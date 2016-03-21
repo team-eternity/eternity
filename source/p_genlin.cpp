@@ -32,6 +32,7 @@
 #include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"
+#include "d_gi.h"
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "ev_specials.h"
@@ -353,6 +354,7 @@ manual_ceiling:
       sec->ceilingdata = ceiling; //jff 2/22/98
 
       ceiling->crush = cd->crush;
+      ceiling->crushflags = 0;
       ceiling->direction = cd->direction ? plat_up : plat_down;
       ceiling->sector = sec;
       ceiling->texture = sec->ceilingpic;
@@ -970,35 +972,32 @@ int EV_DoGenStairs(line_t *line)
 }
 
 //
-// EV_DoGenCrusher()
+// EV_DoParamCrusher
 //
-// Handle generalized crusher types
+// ioanch 20160305: parameterized crusher. Should support both Hexen and Doom
+// kinds.
 //
-// Passed the linedef activating the crusher
-// Returns true if a thinker created
-//
-int EV_DoGenCrusher(const line_t *line)
+int EV_DoParamCrusher(const line_t *line, int tag, const crusherdata_t *cd)
 {
    int       secnum;
    int       rtn;
    bool      manual;
    sector_t *sec;
    CeilingThinker *ceiling;
-   int value = line->special - GenCrusherBase;
-   
-   // parse the bit fields in the line's special type
-   
-   int Slnt = (value & CrusherSilent) >> CrusherSilentShift;
-   int Sped = (value & CrusherSpeed) >> CrusherSpeedShift;
-   int Trig = (value & TriggerType) >> TriggerTypeShift;
 
    //jff 2/22/98  Reactivate in-stasis ceilings...for certain types.
    //jff 4/5/98 return if activated
-   rtn = P_ActivateInStasisCeiling(line);
+
+   // ioanch 20160305: support this for manual parameterized! But generalized
+   // ones should still act like in Boom
+   bool manualParam = (cd->flags & CDF_HAVESPAC) && !tag;
+   rtn = P_ActivateInStasisCeiling(line, tag, manualParam);
 
    // check if a manual trigger, if so do just the sector on the backside
    manual = false;
-   if(Trig==PushOnce || Trig==PushMany)
+   if(((cd->flags & CDF_HAVETRIGGERTYPE) && 
+       (cd->trigger_type == PushOnce || cd->trigger_type == PushMany)) ||
+      manualParam)
    {
       if(!(sec = line->backsector))
          return rtn;
@@ -1009,7 +1008,7 @@ int EV_DoGenCrusher(const line_t *line)
    
    secnum = -1;
    // if not manual do all sectors tagged the same as the line
-   while((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
+   while((secnum = P_FindSectorFromTag(tag,secnum)) >= 0)
    {
       sec = &sectors[secnum];
       
@@ -1028,46 +1027,109 @@ manual_crusher:
       ceiling = new CeilingThinker;
       ceiling->addThinker();
       sec->ceilingdata = ceiling; //jff 2/22/98
-      ceiling->crush = 10;
+      ceiling->crush = cd->damage;
       ceiling->direction = plat_down;
       ceiling->sector = sec;
       ceiling->texture = sec->ceilingpic;
       // haleyjd: note: transfer isn't actually used by crushers...
       P_SetupSpecialTransfer(sec, &(ceiling->special));
       ceiling->tag = sec->tag;
-      ceiling->type = Slnt? genSilentCrusher : genCrusher;
+      // ioanch 20160305: set the type here
+      ceiling->type = cd->type;
+      
+      switch(cd->type)
+      {
+      case paramHexenCrush:
+      case paramHexenCrushRaiseStay:
+      case paramHexenLowerCrush:
+         switch(cd->crushmode)
+         {
+         case crushmodeDoom:
+            ceiling->crushflags = 0;
+            break;
+         case crushmodeHexen:
+            ceiling->crushflags = CeilingThinker::crushRest;
+            break;
+         default: // compat or anything else
+            // like in ZDoom, decide based on current game
+            ceiling->crushflags = LevelInfo.levelType == LI_TYPE_HEXEN ? 
+               CeilingThinker::crushRest : 0;
+            break;
+         }
+         break;
+      default:
+         ceiling->crushflags = 0;
+         break;
+      }
+
       ceiling->topheight = sec->ceilingheight;
-      ceiling->bottomheight = sec->floorheight + (8*FRACUNIT);
+      ceiling->bottomheight = sec->floorheight + cd->ground_dist;
 
       // setup ceiling motion speed
-      switch (Sped)
+      switch (cd->speed_type)
       {
       case SpeedSlow:
-         ceiling->speed = CEILSPEED;
+         ceiling->upspeed = ceiling->speed = CEILSPEED;
          break;
       case SpeedNormal:
-         ceiling->speed = CEILSPEED*2;
+         ceiling->upspeed = ceiling->speed = CEILSPEED*2;
          break;
       case SpeedFast:
-         ceiling->speed = CEILSPEED*4;
+         ceiling->upspeed = ceiling->speed = CEILSPEED*4;
          break;
       case SpeedTurbo:
-         ceiling->speed = CEILSPEED*8;
+         ceiling->upspeed = ceiling->speed = CEILSPEED*8;
+         break;
+      case SpeedParam:
+         ceiling->speed = cd->speed_value;
+         ceiling->upspeed = cd->upspeed;
          break;
       default:
          break;
       }
-      ceiling->oldspeed=ceiling->speed;
+      ceiling->oldspeed = ceiling->speed;
 
       P_AddActiveCeiling(ceiling); // add to list of active ceilings
       // haleyjd 09/29/06
-      P_CeilingSequence(ceiling->sector, Slnt ? CNOISE_SILENT : CNOISE_NORMAL);
+      // ioanch 20160314: use silent for Boom generalized silent crushers,
+      // semi-silent for parameterized silent specials, and normal otherwise
+      if(cd->flags & CDF_PARAMSILENT)
+         ceiling->crushflags |= CeilingThinker::crushSilent;
+      P_CeilingSequence(ceiling->sector, cd->type == genSilentCrusher ? 
+                        CNOISE_SILENT : (cd->flags & CDF_PARAMSILENT) ? 
+                    CNOISE_SEMISILENT : CNOISE_NORMAL);
 
       if(manual)
          return rtn;
    }
    return rtn;
 }
+
+//
+// EV_DoGenCrusher()
+//
+// Handle generalized crusher types
+//
+// Passed the linedef activating the crusher
+// Returns true if a thinker created
+//
+int EV_DoGenCrusher(const line_t *line)
+{
+   edefstructvar(crusherdata_t, cd);
+   int value = line->special - GenCrusherBase;
+
+   cd.type = ((value & CrusherSilent) >> CrusherSilentShift != 0) ? 
+             genSilentCrusher : genCrusher;
+   cd.speed_type = (value & CrusherSpeed) >> CrusherSpeedShift;
+   cd.trigger_type = (value & TriggerType) >> TriggerTypeShift;
+   cd.damage = 10;
+   cd.flags = CDF_HAVETRIGGERTYPE;
+   cd.ground_dist = 8 * FRACUNIT;
+
+   return EV_DoParamCrusher(line, line->tag, &cd);
+}
+
+
 
 //
 // GenDoorRetrigger

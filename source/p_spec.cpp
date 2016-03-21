@@ -1035,10 +1035,13 @@ int enable_nuke = 1;  // killough 12/98: nukage disabling cheat
 // Called every tic that the player origin is in a special sector
 //
 // Changed to ignore sector types the engine does not recognize
+// ioanch 20160116: added sector so we get the precalculated value
 //
-void P_PlayerInSpecialSector(player_t *player)
+void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
 {
-   sector_t *sector = player->mo->subsector->sector;
+   // ioanch 20160116: portal aware
+   if(!sector)
+      sector = P_ExtremeSectorAtPoint(player->mo, false);
 
    // TODO: waterzones should damage whenever you're in them
    // Falling, not all the way down yet?
@@ -1433,6 +1436,23 @@ void P_SpawnDeferredSpecials()
       // spawn phased light sequences
       if(sec->flags & SECF_PHASEDLIGHT)
          PhasedLightThinker::SpawnSequence(sec, 1);
+
+      // ioanch 20160123: mark line portal box sectors
+      bool isbox = true;
+      bool foundportal = false;
+      for(int j = 0; j < sec->linecount; ++j)
+      {
+         const line_t *line = sec->lines[j];
+         if(line->pflags & PS_PASSABLE)
+            foundportal = true;
+         if(line->backsector && 
+            (!(line->pflags & PS_PASSABLE) || line->frontsector == sec))
+         {
+            isbox = false;
+            break;
+         }
+      }
+      sec->portalbox = isbox && foundportal;
    }
 }
 
@@ -1493,6 +1513,13 @@ void FrictionThinker::Think()
    node = sec->touching_thinglist; // things touching this sector
    while(node)
    {
+      // ioanch 20160115: portal aware
+      if(useportalgroups && full_demo_version >= make_full_version(340, 48) &&
+         !P_SectorTouchesThingVertically(sec, node->m_thing))
+      {
+         node = node->m_snext;
+         continue;
+      }
       thing = node->m_thing;
       if(thing->player &&
          !(thing->flags & (MF_NOGRAVITY | MF_NOCLIP)) &&
@@ -2645,11 +2672,42 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          continue;
 
       int xferfunc = EV_StaticInitForSpecial(lines[s].special);
+
+      // ioanch 20161219: workaround to enable 385 to copy both floor and
+      // ceiling portals. It will NOT be needed or triggered if portal_both
+      // is used, just if portal_floor and portal_ceiling are successively
+      // encountered.
+      if(xferfunc == EV_STATIC_NULL)
+      {
+         if((lines[s].intflags & MLI_FLOORPORTALCOPIED &&
+            effects == portal_ceiling) ||
+            (lines[s].intflags & MLI_CEILINGPORTALCOPIED &&
+             effects == portal_floor))
+         {
+            xferfunc = EV_STATIC_PORTAL_APPLY_FRONTSECTOR;
+         }
+      }
       
       if(xferfunc == EV_STATIC_PORTAL_LINE)
+      {
          P_SetPortal(lines[s].frontsector, lines + s, portal, portal_lineonly);
+      }
       else if(xferfunc == EV_STATIC_PORTAL_APPLY_FRONTSECTOR)
+      {
          P_SetPortal(lines[s].frontsector, lines + s, portal, effects);
+
+         if(effects == portal_ceiling)
+            lines[s].intflags |= MLI_CEILINGPORTALCOPIED;
+         else if(effects == portal_floor)
+            lines[s].intflags |= MLI_FLOORPORTALCOPIED;
+
+         if(lines[s].intflags & MLI_CEILINGPORTALCOPIED &&
+            lines[s].intflags & MLI_FLOORPORTALCOPIED)
+         {
+            lines[s].intflags &= ~(MLI_FLOORPORTALCOPIED |
+                                   MLI_CEILINGPORTALCOPIED);
+         }
+      }
       else
          continue;
 

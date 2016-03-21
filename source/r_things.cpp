@@ -39,6 +39,7 @@
 #include "m_swap.h"
 #include "p_chase.h"
 #include "p_info.h"
+#include "p_maputl.h"   // ioanch 20160125
 #include "p_partcl.h"
 #include "p_portal.h"
 #include "p_skin.h"
@@ -50,6 +51,7 @@
 #include "r_patch.h"
 #include "r_plane.h"
 #include "r_portal.h"
+#include "r_pcheck.h"   // ioanch 20160109: for sprite rendering through portals
 #include "r_segs.h"
 #include "r_state.h"
 #include "r_things.h"
@@ -786,6 +788,7 @@ struct spritepos_t
    fixed_t x, y, z;
 };
 
+// ioanch 20160109: added offset arguments
 static void R_interpolateThingPosition(const Mobj *thing, spritepos_t &pos)
 {
    if(view.lerp == FRACUNIT)
@@ -806,8 +809,9 @@ static void R_interpolateThingPosition(const Mobj *thing, spritepos_t &pos)
 // R_ProjectSprite
 //
 // Generates a vissprite for a thing if it might be visible.
+// ioanch 20160109: added optional arguments for offsetting the sprite
 //
-static void R_ProjectSprite(Mobj *thing)
+static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr)
 {
    spritepos_t    spritepos;
    fixed_t        gzt;            // killough 3/27/98
@@ -835,7 +839,14 @@ static void R_ProjectSprite(Mobj *thing)
       return; // don't generate vissprite
 
    // haleyjd 01/05/14: interpolate thing positions
+   // ioanch 20160109: portal rendering
    R_interpolateThingPosition(thing, spritepos);
+   if(delta)
+   {
+      spritepos.x += delta->x;
+      spritepos.y += delta->y;
+      spritepos.z += delta->z;
+   }
 
    // SoM: Cardboard translate the mobj coords and just project the sprite.
    tempx = M_FixedToFloat(spritepos.x) - view.x;
@@ -845,6 +856,22 @@ static void R_ProjectSprite(Mobj *thing)
    // lies in front of the front view plane
    if(roty < 1.0f)
       return;
+
+   // ioanch 20160125: reject sprites in front of portal line when rendering
+   // line portal
+   if(portalrender.curwindow && portalrender.curwindow->line) 
+   {
+      const line_t &l = *portalrender.curwindow->line;
+
+      // sprite position, shifted by offset
+      v2fixed_t pv = {spritepos.x - viewx + portalrender.curwindow->vx,
+                      spritepos.y - viewy + portalrender.curwindow->vy};
+
+      if(P_PointOnLineSide(pv.x, pv.y, &l) == 0)
+      {
+         return;
+      }
+   }
 
    rotx = (tempx * view.cos) - (tempy * view.sin);
 
@@ -950,7 +977,8 @@ static void R_ProjectSprite(Mobj *thing)
    // from the viewer, by either water or fake ceilings
    // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
 
-   sec = (view.lerp == FRACUNIT ? thing->subsector->sector :
+   // ioanch 20160109: offset sprites always use the R_PointInSubsector
+   sec = (view.lerp == FRACUNIT && !delta ? thing->subsector->sector :
           R_PointInSubsector(spritepos.x, spritepos.y)->sector);
    heightsec = sec->heightsec;
    
@@ -1083,6 +1111,12 @@ void R_AddSprites(sector_t* sec, int lightlevel)
    
    for(thing = sec->thinglist; thing; thing = thing->snext)
       R_ProjectSprite(thing);
+
+   // ioanch 20160109: handle partial sprite projections
+   for(auto item = sec->spriteproj; item; item = item->dllNext)
+   {
+      R_ProjectSprite((*item)->mobj, &(*item)->delta);
+   }
 
    // haleyjd 02/20/04: Handle all particles in sector.
 
@@ -1751,6 +1785,159 @@ void R_DrawPostBSP()
    //  but does not draw on side views
    if(!viewangleoffset)
       R_DrawPlayerSprites();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// ioanch 20160109: sprite projection through sector portals
+//
+
+// recycle bin of spriteproj objects
+static DLList<spriteprojnode_t, &spriteprojnode_t::freelink> spriteprojfree;
+
+//
+// R_freeProjNode
+//
+// Clears all data and unlinks from important lists, putting it in the free bin
+//
+inline static void R_freeProjNode(spriteprojnode_t *node)
+{
+   node->mobj = nullptr;
+   node->sector = nullptr;
+   memset(&node->delta, 0, sizeof(node->delta));
+   node->mobjlink.remove();
+   node->sectlink.remove();
+   spriteprojfree.insert(node);
+}
+
+//
+// R_RemoveMobjProjections
+//
+// Removes the chain from a mobj
+//
+void R_RemoveMobjProjections(Mobj *mobj)
+{
+   DLListItem<spriteprojnode_t> *proj, *next;
+   for(proj = mobj->spriteproj; proj; proj = next)
+   {
+      next = proj->dllNext;
+      R_freeProjNode(proj->dllObject);
+   }
+   mobj->spriteproj = nullptr;
+}
+
+//
+// R_newProjNode
+//
+// Allocates a new node or picks a free one
+//
+static spriteprojnode_t *R_newProjNode()
+{
+   if(spriteprojfree.head)
+   {
+      auto ret = spriteprojfree.head;
+      ret->remove();
+      return ret->dllObject;
+   }
+   return estructalloc(spriteprojnode_t, 1);
+}
+
+//
+// R_addProjNode
+//
+// Helper function for below. Returns the next sector
+//
+inline static sector_t *R_addProjNode(Mobj *mobj, const linkdata_t *data,
+                                      v3fixed_t &delta,
+                                      DLListItem<spriteprojnode_t> *&item,
+                                      DLListItem<spriteprojnode_t> **&tail)
+{
+   sector_t *sector;
+
+   delta.x += data->deltax;
+   delta.y += data->deltay;
+   delta.z += data->deltaz;
+   sector = R_PointInSubsector(mobj->x + delta.x, mobj->y + delta.y)->sector;
+   if(!item)
+   {
+      // no more items in the list: then simply add them, without
+      spriteprojnode_t *newnode = R_newProjNode();
+      newnode->delta = delta;
+      newnode->mobj = mobj;
+      newnode->sector = sector;
+      newnode->mobjlink.insert(newnode, tail);
+      newnode->sectlink.insert(newnode, &sector->spriteproj);
+      tail = &newnode->mobjlink.dllNext;
+   }
+   else
+   {
+      if((*item)->sector != sector)
+      {
+         (*item)->sectlink.remove();
+         (*item)->sector = sector;
+         (*item)->sectlink.insert((*item), &sector->spriteproj);
+      }
+      (*item)->delta = delta;
+      tail = &item->dllNext;
+      item = item->dllNext;
+      
+   }
+   
+   return sector;
+}
+
+//
+// R_CheckMobjProjections
+//
+// Looks above and below for portals and prepares projection nodes
+//
+void R_CheckMobjProjections(Mobj *mobj)
+{
+   sector_t *sector = mobj->subsector->sector;
+   if(!mobj->spriteproj && !(sector->f_pflags & PS_PASSABLE) &&
+      !(sector->c_pflags & PS_PASSABLE))
+   {
+      return;  // exit quickly if nothing to do
+   }
+
+   // MAJOR FIXME: don't use an "arbitrary margin". Instead use accurate sprite
+   // size
+   enum
+   {
+      ARBITRARY_MARGIN = 64 << FRACBITS,
+   };
+
+   const linkdata_t *data;
+
+   DLListItem<spriteprojnode_t> *item = mobj->spriteproj;
+   DLListItem<spriteprojnode_t> **tail = &mobj->spriteproj;
+
+   v3fixed_t delta = {0, 0, 0};
+   int loopprot = 0;
+   while(++loopprot < 32768 && sector && sector->f_pflags & PS_PASSABLE && 
+      (data = R_FPLink(sector))->planez > mobj->z - ARBITRARY_MARGIN)
+   {
+      // always accept first sector
+      sector = R_addProjNode(mobj, data, delta, item, tail);
+   }
+
+   // restart from mobj's group
+   sector = mobj->subsector->sector;
+   delta.x = delta.y = delta.z = 0;
+   while(++loopprot < 32768 && sector && sector->c_pflags & PS_PASSABLE &&
+      (data = R_CPLink(sector))->planez < mobj->z + mobj->height + ARBITRARY_MARGIN)
+   {
+      // always accept first sector
+      sector = R_addProjNode(mobj, data, delta, item, tail);
+   }
+
+   // remove trailing items
+   DLListItem<spriteprojnode_t> *next;
+   for(; item; item = next)
+   {
+      next = item->dllNext;
+      R_freeProjNode(item->dllObject);
+   }
 }
 
 //=============================================================================

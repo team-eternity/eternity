@@ -1023,6 +1023,9 @@
     <ClCompile Include="..\source\autodoom\b_compression.cpp">
       <Filter>Source Files\autodoom</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\p_portalclip.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1834,6 +1837,9 @@
     </ClInclude>
     <ClInclude Include="..\source\autodoom\b_compression.h">
       <Filter>Source Files\autodoom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\p_portalclip.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

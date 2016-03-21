@@ -30,6 +30,7 @@
 #include "d_gi.h"
 #include "doomstat.h"
 #include "e_exdata.h"
+#include "e_inventory.h"
 #include "ev_macros.h"
 #include "ev_specials.h"
 #include "g_game.h"
@@ -100,6 +101,18 @@ static void EV_ceilingChangeForArg(ceilingdata_t &cd, int arg)
 
    cd.change_model = cchgdata[arg][0];
    cd.change_type  = cchgdata[arg][1];
+}
+
+//
+// EV_LockCheck
+//
+// ioanch 20160225: checks if the activator is a player and that he has a key.
+// If not, it causes the "no key" message. Otherwise it returns true.
+//
+static bool EV_lockCheck(const Mobj *actor, int lockID, bool remote)
+{
+   player_t *player = actor ? actor->player : nullptr;
+   return player && E_PlayerCanUnlock(player, lockID, remote);
 }
 
 //=============================================================================
@@ -591,7 +604,7 @@ DEFINE_ACTION(EV_ActionCeilingCrushStop)
    // case 168: (S1 - BOOM Extended)
    // case 188: (SR - BOOM Extended)
    // Ceiling Crush Stop
-   return EV_CeilingCrushStop(instance->line);
+   return EV_CeilingCrushStop(instance->line, instance->tag);
 }
 
 //
@@ -878,7 +891,8 @@ DEFINE_ACTION(EV_ActionDoDonut)
    // case 155: (WR - BOOM Extended)
    // case 191: (SR - BOOM Extended)
    // Lower Pillar, Raise Donut
-   return EV_DoDonut(instance->line);
+   return EV_DoParamDonut(instance->line, instance->line->tag, false, 
+                          FLOORSPEED / 2, FLOORSPEED / 2);
 }
 
 //
@@ -1106,7 +1120,9 @@ DEFINE_ACTION(EV_ActionDoLockedDoor)
    // case 137: (S1) BlzOpenDoor YELLOW
 
    int lockID = EV_LockDefIDForSpecial(instance->special);
-   return EV_DoLockedDoor(instance->line, blazeOpen, lockID, instance->actor);
+   if(EV_lockCheck(instance->actor, lockID, true))
+      return EV_DoDoor(instance->line, blazeOpen);
+   return 0;
 }
 
 //
@@ -3042,25 +3058,420 @@ DEFINE_ACTION(EV_ActionParamPlatUpByValue)
 //
 DEFINE_ACTION(EV_ActionThingChangeTID)
 {
-   Mobj   *mo     = nullptr;
-   Mobj   *next   = nullptr;
-   int32_t oldtid = instance->args[0];
-   int32_t newtid = instance->args[1];
-   bool    found  = false;
+   // ioanch 20160221: call separate function, not here
+   return EV_ThingChangeTID(instance->actor, instance->args[0], 
+                            instance->args[1]);
+}
 
-   mo    = P_FindMobjFromTID(oldtid, nullptr, instance->actor);
-   found = mo != nullptr;
-   while(mo)
-   {
-      // Find next Mobj before changing TID.
-      next = P_FindMobjFromTID(oldtid, mo, instance->actor);
+//
+// EV_ActionThingRaise
+//
+// Implements Thing_Raise(tid)
+// * ExtraData: 422
+// * Hexen:     17
+//
+DEFINE_ACTION(EV_ActionThingRaise)
+{
+   return EV_ThingRaise(instance->actor, instance->args[0]);
+}
 
-      P_RemoveThingTID(mo);
-      P_AddThingTID(mo, newtid);
-      mo = next;
-   }
+//
+// EV_ActionThingStop
+//
+// Implements Thing_Stop(tid)
+// * ExtraData: 423
+// * Hexen:     19
+//
+DEFINE_ACTION(EV_ActionThingStop)
+{
+   return EV_ThingStop(instance->actor, instance->args[0]);
+}
 
-   return found;
+//
+// EV_ActionThrustThing
+//
+// Implements ThrustThing(angle, speed, reserved, tid)
+// * ExtraData: 424
+// * Hexen:     72
+//
+DEFINE_ACTION(EV_ActionThrustThing)
+{
+   return EV_ThrustThing(instance->actor, instance->side, instance->args[0],
+                         instance->args[1], instance->args[3]);
+}
+
+//
+// EV_ActionThrustThingZ
+//
+// Implements ThrustThingZ(tid, speed, updown, setadd)
+// From ZDoom wiki documentation.
+// * ExtraData: 425
+// * Hexen:     128
+//
+DEFINE_ACTION(EV_ActionThrustThingZ)
+{
+   return EV_ThrustThingZ(instance->actor, instance->args[0], instance->args[1],
+                          instance->args[2] != 0, instance->args[3] != 0);
+}
+
+//
+// EV_ActionDamageThing
+//
+// Implements DamageThing(damage, mod)
+// * ExtraData: 426
+// * Hexen:     73
+//
+DEFINE_ACTION(EV_ActionDamageThing)
+{
+   return EV_DamageThing(instance->actor, 
+      instance->args[0] == 0 ? 10000 : instance->args[0], instance->args[1], 0);
+}
+
+//
+// EV_ActionDamageThingEx
+//
+// Implements Thing_Damage(tid, amount, mod)
+// * ExtraData: 427
+// * Hexen:     119
+//
+DEFINE_ACTION(EV_ActionDamageThingEx)
+{
+   return EV_DamageThing(instance->actor, instance->args[1], instance->args[2],
+                         instance->args[0]);
+}
+
+//
+// EV_ActionThingDestroy
+//
+// Implements Thing_Destroy(tid, reserved, sectortag)
+// * ExtraData: 428
+// * Hexen:     133
+//
+DEFINE_ACTION(EV_ActionThingDestroy)
+{
+   return EV_ThingDestroy(instance->args[0], instance->args[2]);
+}
+
+//
+// EV_ActionParamDoorLockedRaise
+//
+// Implements Door_LockedRaise(tag, speed, delay, lock, lighttag)
+// * ExtraData: 429
+// * Hexen:     13
+//
+DEFINE_ACTION(EV_ActionParamDoorLockedRaise)
+{
+   INIT_STRUCT(doordata_t, dd);
+   int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
+
+   dd.kind         = OdCDoor;
+   dd.spac         = instance->spac;
+   dd.speed_value  = instance->args[1] * FRACUNIT / 8;
+   dd.topcountdown = 0;
+   dd.delay_value  = instance->args[2];
+   dd.altlighttag  = instance->args[4];
+   dd.thing        = instance->actor;
+   
+   dd.flags = DDF_HAVESPAC | DDF_USEALTLIGHTTAG;
+   if(extflags & EX_ML_REPEAT)
+      dd.flags |= DDF_REUSABLE;
+
+   if(EV_lockCheck(dd.thing, instance->args[3], instance->tag != 0))
+      return EV_DoParamDoor(instance->line, instance->tag, &dd);
+   return 0;
+}
+
+//
+// EV_ActionACSLockedExecute
+//
+// Implements ACS_LockedExecute(script, map, arg1, arg2, lock)
+// * ExtraData: 430
+// * Hexen:     83
+//
+DEFINE_ACTION(EV_ActionACSLockedExecute)
+{
+   Mobj   *thing = instance->actor;
+   line_t *line  = instance->line;
+   int     side  = instance->side;
+   int     num   = instance->args[0];
+   int     map   = instance->args[1];
+   int     argc  = NUMLINEARGS - 3;
+   int32_t argv[NUMLINEARGS - 3];
+
+   for(int i = 0; i != argc; ++i)
+      argv[i] = instance->args[i + 2];
+
+   if(EV_lockCheck(thing, instance->args[4], true))
+      return ACS_ExecuteScriptNumber(num, map, 0, argv, argc, thing, line, side);
+   return 0;
+}
+
+//
+// EV_ActionParamDonut
+//
+// Implements Floor_Donut(ptag, pspeed, sspeed)
+// * ExtraData: 431
+// * Hexen:     250
+//
+DEFINE_ACTION(EV_ActionParamDonut)
+{
+   // TODO: return param stuff.
+   fixed_t pspeed = instance->args[1] * FRACUNIT / 8;
+   fixed_t sspeed = instance->args[2] * FRACUNIT / 8;
+   return EV_DoParamDonut(instance->line, instance->tag, true, pspeed, sspeed);
+}
+
+//
+// EV_ActionParamCeilingCrushAndRaise
+//
+// Implements Ceiling_CrushAndRaise(tag, speed, crush, crushmode)
+// * ExtraData: 432
+// * Hexen:     42
+//
+DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaise)
+{
+   INIT_STRUCT(crusherdata_t, cd);
+   cd.flags = CDF_HAVESPAC;
+   cd.damage = instance->args[2];
+   cd.speed_value = instance->args[1] * (FRACUNIT / 8);
+   cd.upspeed = cd.speed_value / 2; // half speed up, like Hexen
+   cd.speed_type = SpeedParam;
+   cd.spac = instance->spac;
+   cd.type = paramHexenCrush;
+   cd.crushmode = static_cast<crushmode_e>(instance->args[3]);
+   cd.ground_dist = 8 * FRACUNIT;
+   return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingCrushStop
+//
+// Implements Ceiling_CrushStop(tag)
+// * ExtraData: 433
+// * Hexen:     44
+//
+DEFINE_ACTION(EV_ActionParamCeilingCrushStop)
+{
+   // Really the same as EV_ActionCeilingCrushStop
+   return EV_CeilingCrushStop(instance->line, instance->tag);
+}
+
+//
+// EV_ActionParamCeilingCrushRaiseAndStay
+//
+// Implements Ceiling_CrushRaiseAndStay(tag, speed, crush, crushmode)
+// * ExtraData: 434
+// * Hexen:     45
+//
+DEFINE_ACTION(EV_ActionParamCeilingCrushRaiseAndStay)
+{
+   INIT_STRUCT(crusherdata_t, cd);
+   cd.flags = CDF_HAVESPAC;
+   cd.damage = instance->args[2];
+   cd.speed_value = instance->args[1] * (FRACUNIT / 8);
+   cd.upspeed = cd.speed_value / 2; // half speed up, like Hexen
+   cd.speed_type = SpeedParam;
+   cd.spac = instance->spac;
+   cd.type = paramHexenCrushRaiseStay;
+   cd.crushmode = static_cast<crushmode_e>(instance->args[3]);
+   cd.ground_dist = 8 * FRACUNIT;
+   return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingLowerAndCrush
+//
+// Implements Ceiling_LowerAndCrush(tag, speed, crush, crushmode)
+// * ExtraData 435
+// * Hexen:    43
+//
+DEFINE_ACTION(EV_ActionParamCeilingLowerAndCrush)
+{
+   INIT_STRUCT(crusherdata_t, cd);
+   cd.flags = CDF_HAVESPAC;
+   cd.damage = instance->args[2];
+   cd.speed_value = instance->args[1] * (FRACUNIT / 8);
+   cd.speed_type = SpeedParam;
+   cd.spac = instance->spac;
+   cd.type = paramHexenLowerCrush;
+   cd.crushmode = static_cast<crushmode_e>(instance->args[3]);
+   cd.ground_dist = 8 * FRACUNIT;
+   return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingLowerAndCrushDist
+//
+// Implements Ceiling_LowerAndCrushDist(tag, speed, crush, dist, crushmode)
+// * ExtraData 436
+// * Hexen:    97
+//
+DEFINE_ACTION(EV_ActionParamCeilingLowerAndCrushDist)
+{
+   INIT_STRUCT(crusherdata_t, cd);
+   cd.flags = CDF_HAVESPAC;
+   cd.damage = instance->args[2];
+   cd.speed_value = instance->args[1] * (FRACUNIT / 8);
+   cd.speed_type = SpeedParam;
+   cd.spac = instance->spac;
+   cd.type = paramHexenLowerCrush;
+   cd.crushmode = static_cast<crushmode_e>(instance->args[4]);
+   cd.ground_dist = instance->args[3] * FRACUNIT;
+   return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingCrushAndRaiseDist
+//
+// Implements Ceiling_CrushAndRaiseDist(tag, dist, speed, damage, crushmode)
+// * ExtraData: 437
+// * Hexen:     168
+//
+DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaiseDist)
+{
+   INIT_STRUCT(crusherdata_t, cd);
+   cd.flags = CDF_HAVESPAC;
+   cd.damage = instance->args[3];
+   cd.speed_value = instance->args[2] * (FRACUNIT / 8);
+   cd.upspeed = cd.speed_value;  // Same speed as down-speed here.
+   cd.speed_type = SpeedParam;
+   cd.spac = instance->spac;
+   cd.type = paramHexenCrush;
+   cd.crushmode = static_cast<crushmode_e>(instance->args[4]);
+   cd.ground_dist = instance->args[1] * FRACUNIT;
+   return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingCrushRaiseAndStayA
+//
+// Implements Ceiling_CrushRaiseAndStayA(tag, dspeed, uspeed, crush, crushmode)
+// * ExtraData: 438
+// * Hexen:     195
+//
+DEFINE_ACTION(EV_ActionParamCeilingCrushRaiseAndStayA)
+{
+   INIT_STRUCT(crusherdata_t, cd);
+   cd.flags = CDF_HAVESPAC;
+   cd.damage = instance->args[3];
+   cd.speed_value = instance->args[1] * (FRACUNIT / 8);
+   cd.upspeed = instance->args[2] * (FRACUNIT / 8);
+   cd.speed_type = SpeedParam;
+   cd.spac = instance->spac;
+   cd.type = paramHexenCrushRaiseStay;
+   cd.crushmode = static_cast<crushmode_e>(instance->args[4]);
+   cd.ground_dist = 8 * FRACUNIT;
+   return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingCrushAndRaiseA
+//
+// Implements Ceiling_CrushAndRaiseA(tag, dspeed, uspeed, crush, crushmode)
+// * ExtraData: 439
+// * Hexen:     196
+//
+DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaiseA)
+{
+   INIT_STRUCT(crusherdata_t, cd);
+   cd.flags = CDF_HAVESPAC;
+   cd.damage = instance->args[3];
+   cd.speed_value = instance->args[1] * (FRACUNIT / 8);
+   cd.upspeed = instance->args[2] * (FRACUNIT / 8);
+   cd.speed_type = SpeedParam;
+   cd.spac = instance->spac;
+   cd.type = paramHexenCrush;
+   cd.crushmode = static_cast<crushmode_e>(instance->args[4]);
+   cd.ground_dist = 8 * FRACUNIT;
+   return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingCrushAndRaiseSilentA
+//
+// Implements Ceiling_CrushAndRaiseSilentA(tag, dspeed, uspeed, crush, crushmode)
+// * ExtraData: 440
+// * Hexen:     197
+//
+DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaiseSilentA)
+{
+   INIT_STRUCT(crusherdata_t, cd);
+   cd.flags = CDF_HAVESPAC | CDF_PARAMSILENT;
+   cd.damage = instance->args[3];
+   cd.speed_value = instance->args[1] * (FRACUNIT / 8);
+   cd.upspeed = instance->args[2] * (FRACUNIT / 8);
+   cd.speed_type = SpeedParam;
+   cd.spac = instance->spac;
+   cd.type = paramHexenCrush;
+   cd.crushmode = static_cast<crushmode_e>(instance->args[4]);
+   cd.ground_dist = 8 * FRACUNIT;
+   return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingCrushAndRaiseSilentDist
+//
+// Implements Ceiling_CrushAndRaiseSilentDist(tag, dist, speed, damage, crushmode)
+// * ExtraData: 441
+// * Hexen:     104
+//
+DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaiseSilentDist)
+{
+   INIT_STRUCT(crusherdata_t, cd);
+   cd.flags = CDF_HAVESPAC | CDF_PARAMSILENT;
+   cd.damage = instance->args[3];
+   cd.speed_value = instance->args[2] * (FRACUNIT / 8);
+   cd.upspeed = cd.speed_value;  // Same speed as down-speed here.
+   cd.speed_type = SpeedParam;
+   cd.spac = instance->spac;
+   cd.type = paramHexenCrush;
+   cd.crushmode = static_cast<crushmode_e>(instance->args[4]);
+   cd.ground_dist = instance->args[1] * FRACUNIT;
+   return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingCrushRaiseAndStaySilA
+//
+// Implements Ceiling_CrushRaiseAndStaySilA(tag, dspeed, uspeed, crush, crushmode)
+// * ExtraData: 442
+// * Hexen:     255
+//
+DEFINE_ACTION(EV_ActionParamCeilingCrushRaiseAndStaySilA)
+{
+   INIT_STRUCT(crusherdata_t, cd);
+   cd.flags = CDF_HAVESPAC | CDF_PARAMSILENT;
+   cd.damage = instance->args[3];
+   cd.speed_value = instance->args[1] * (FRACUNIT / 8);
+   cd.upspeed = instance->args[2] * (FRACUNIT / 8);
+   cd.speed_type = SpeedParam;
+   cd.spac = instance->spac;
+   cd.type = paramHexenCrushRaiseStay;
+   cd.crushmode = static_cast<crushmode_e>(instance->args[4]);
+   cd.ground_dist = 8 * FRACUNIT;
+   return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamGenCrusher
+//
+// Implements Generic_Crusher(tag, dspeed, uspeed, silent, crush)
+// * ExtraData: 443
+// * Hexen:     205
+//
+DEFINE_ACTION(EV_ActionParamGenCrusher)
+{
+   INIT_STRUCT(crusherdata_t, cd);
+   cd.flags = CDF_HAVESPAC;
+   cd.damage = instance->args[4];
+   cd.speed_value = instance->args[1] * (FRACUNIT / 8);
+   cd.upspeed = instance->args[2] * (FRACUNIT / 8);
+   cd.speed_type = SpeedParam;
+   cd.spac = instance->spac;
+   cd.type = instance->args[3] ? genSilentCrusher : genCrusher;
+   cd.crushmode = crushmodeDoom; // FIXME: irrelevant for this cd->type
+   cd.ground_dist = 8 * FRACUNIT;
+   return EV_DoParamCrusher(instance->line, instance->tag, &cd);
 }
 
 // EOF

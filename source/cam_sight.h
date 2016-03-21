@@ -33,6 +33,9 @@
 #include "tables.h"
 
 struct camera_t;
+struct divline_t;
+struct intercept_t;
+struct player_t;  // ioanch 20160131: for use
 class  Mobj;
 
 struct camsightparams_t
@@ -62,6 +65,57 @@ fixed_t CAM_AimLineAttack(const Mobj *t1, angle_t angle, fixed_t distance,
 // ioanch 20160101: bullet attack
 void CAM_LineAttack(Mobj *source, angle_t angle, fixed_t distance, 
                     fixed_t slope, int damage);
+
+// ioanch 20160131: use lines
+void CAM_UseLines(const player_t *player);
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// ioanch 20160106: CAM_PathTraverse
+//
+
+//
+// Flags for path-traverse
+//
+// Should allow any extension as needed
+//
+enum
+{
+   CAM_ADDLINES = 1,             // look for lines in blocks
+   CAM_ADDTHINGS = 2,            // look for things in blocks
+   CAM_REQUIRELINEPORTALS = 4,   // skip blocks without line portals
+};
+
+bool CAM_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2, 
+                      uint32_t flags, void *data,
+                      bool (*trav)(const intercept_t *in, void *data,
+                                   const divline_t &trace));
+
+//
+// CAM_PathTraverse: template overloads
+//
+template <typename C>
+inline static bool CAM_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, 
+                                    fixed_t y2, uint32_t flags, C &&callable)
+{
+   return CAM_PathTraverse(x1, y1, x2, y2, flags, &callable, 
+                           [](const intercept_t *in, void *data,
+                              const divline_t &trace)
+   {
+      auto c = static_cast<C *>(data);
+      return (*c)(in, trace);
+   });
+}
+
+template <typename V1, typename V2, typename C>
+inline static bool CAM_PathTraverse(V1 &&v1, V2 &&v2, uint32_t flags,
+                                    C &&callable)
+{
+   return CAM_PathTraverse(v1.x, v1.y, v2.x, v2.y, flags, 
+                           static_cast<C&&>(callable));
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 #endif
 

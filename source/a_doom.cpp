@@ -40,6 +40,7 @@
 #include "e_things.h"
 #include "e_ttypes.h"
 #include "g_game.h"
+#include "m_bbox.h"  // ioanch 20160108: portal aware block iterator
 #include "p_enemy.h"
 #include "p_info.h"
 #include "p_inter.h"
@@ -47,12 +48,14 @@
 #include "p_maputl.h"
 #include "p_mobjcol.h"
 #include "p_mobj.h"
+#include "p_portal.h"   // ioanch 20160106: portal correct access
 #include "p_pspr.h"
 #include "p_setup.h"
 #include "p_skin.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "r_defs.h"
+#include "r_main.h"  // ioanch 20160106: portal correct access
 #include "r_state.h"
 #include "s_sound.h"
 #include "sounds.h"
@@ -600,23 +603,26 @@ static fixed_t  viletryy;
 bool PIT_VileCheck(Mobj *thing)
 {
    int maxdist;
-   bool check;
    int vileType = E_SafeThingType(MT_VILE);
    
-   if(!(thing->flags & MF_CORPSE))
-      return true;        // not a monster
-   
-   if(thing->tics != -1)
-      return true;        // not lying still yet
-   
-   if(thing->info->raisestate == NullStateNum)
-      return true;        // monster doesn't have a raise state
+   // ioanch 20160221: call functions
+   if(!P_ThingIsCorpse(thing))
+      return true;
    
    maxdist = thing->info->radius + mobjinfo[vileType]->radius;
    
-   if(D_abs(thing->x-viletryx) > maxdist ||
-      D_abs(thing->y-viletryy) > maxdist)
+   if(D_abs(getThingX(vileobj, thing) - viletryx) > maxdist ||
+      D_abs(getThingY(vileobj, thing) - viletryy) > maxdist)
       return true;                // not actually touching
+
+   // ioanch 20160108: since now it's portal aware, make sure that corpses
+   // from different group ids are seen. This restriction doesn't apply for
+   // single layer areas.
+   if(vileobj->groupid != R_NOGROUP && thing->groupid != R_NOGROUP &&
+      vileobj->groupid != thing->groupid && !P_CheckSight(vileobj, thing))
+   {
+      return true;
+   }
 
    // Check to see if the radius and height are zero. If they are      // phares
    // then this is a crushed monster that has been turned into a       //   |
@@ -631,41 +637,9 @@ bool PIT_VileCheck(Mobj *thing)
    //            return true;                                          // phares
 
    corpsehit = thing;
-   corpsehit->momx = corpsehit->momy = 0;
-   if(comp[comp_vile])
-   {                                                              // phares
-      corpsehit->height <<= 2;                                    //   V
-      
-      // haleyjd 11/11/04: this is also broken by Lee's change to
-      // PIT_CheckThing when not in demo_compatibility.
-      if(demo_version >= 331)
-         corpsehit->flags |= MF_SOLID;
 
-      check = P_CheckPosition(corpsehit, corpsehit->x, corpsehit->y);
-
-      if(demo_version >= 331)
-         corpsehit->flags &= ~MF_SOLID;
-      
-      corpsehit->height >>= 2;
-   }
-   else
-   {
-      int height,radius;
-      
-      height = corpsehit->height; // save temporarily
-      radius = corpsehit->radius; // save temporarily
-      corpsehit->height = P_ThingInfoHeight(corpsehit->info);
-      corpsehit->radius = corpsehit->info->radius;
-      corpsehit->flags |= MF_SOLID;
-      check = P_CheckPosition(corpsehit,corpsehit->x,corpsehit->y);
-      corpsehit->height = height; // restore
-      corpsehit->radius = radius; // restore                      //   ^
-      corpsehit->flags &= ~MF_SOLID;
-   }                                                              //   |
-                                                                  // phares
-   if(!check)
-      return true;              // doesn't fit here
-   return false;               // got one, so stop checking
+   // Exit (return false) if the function returns true!
+   return !P_CheckCorpseRaiseSpace(corpsehit);
 }
 
 //
@@ -676,9 +650,6 @@ bool PIT_VileCheck(Mobj *thing)
 void A_VileChase(actionargs_t *actionargs)
 {
    Mobj *actor = actionargs->actor;
-   int xl, xh;
-   int yl, yh;
-   int bx, by;
 
    if(actor->movedir != DI_NODIR)
    {
@@ -687,71 +658,45 @@ void A_VileChase(actionargs_t *actionargs)
          actor->x + actor->info->speed*xspeed[actor->movedir];
       viletryy =
          actor->y + actor->info->speed*yspeed[actor->movedir];
-      
-      xl = (viletryx - bmaporgx - MAXRADIUS*2)>>MAPBLOCKSHIFT;
-      xh = (viletryx - bmaporgx + MAXRADIUS*2)>>MAPBLOCKSHIFT;
-      yl = (viletryy - bmaporgy - MAXRADIUS*2)>>MAPBLOCKSHIFT;
-      yh = (viletryy - bmaporgy + MAXRADIUS*2)>>MAPBLOCKSHIFT;
 
+      // ioanch 20160108: make resurrection portal aware
+      fixed_t bbox[4];
+      bbox[BOXLEFT] = viletryx - MAXRADIUS*2;
+      bbox[BOXBOTTOM] = viletryy - MAXRADIUS*2;
+      bbox[BOXRIGHT] = viletryx + MAXRADIUS*2;
+      bbox[BOXTOP] = viletryy + MAXRADIUS*2;
       vileobj = actor;
-      for(bx = xl; bx <= xh; ++bx)
+
+      if(!P_TransPortalBlockWalker(bbox, actor->groupid, true, actionargs, 
+         [](int x, int y, int groupid, void *data) -> bool
       {
-         for(by = yl; by <= yh; ++by)
+         // get the variables back
+         auto actionargs = static_cast<actionargs_t *>(data);
+         Mobj *actor = actionargs->actor;
+
+         if(!P_BlockThingsIterator(x, y, groupid, PIT_VileCheck))
          {
-            // Call PIT_VileCheck to check
-            // whether object is a corpse
-            // that can be raised.
-            if(!P_BlockThingsIterator(bx, by, PIT_VileCheck))
-            {
-               mobjinfo_t *info;
-               
-               // got one!
-               Mobj *temp = actor->target;
-               actor->target = corpsehit;
-               A_FaceTarget(actionargs);
-               actor->target = temp;
+            // got one!
+            Mobj *temp = actor->target;
+            actor->target = corpsehit;
+            A_FaceTarget(actionargs);
+            actor->target = temp;
 
-               P_SetMobjState(actor, E_SafeState(S_VILE_HEAL1));
-               S_StartSound(corpsehit, sfx_slop);
-               info = corpsehit->info;
+            // ioanch 20160220: allow custom state
+            const state_t *healstate = E_GetStateForMobjInfo(actor->info, 
+                                                               METASTATE_HEAL);
+            if(healstate && healstate->index != NullStateNum)
+               P_SetMobjState(actor, healstate->index);
+            else
+               P_SetMobjState(actor, S_VILE_HEAL1);   // Doom behaviour
 
-               // haleyjd 09/26/04: need to restore monster skins here
-               // in case they were cleared by the thing being crushed
-               if(info->altsprite != -1)
-                  corpsehit->skin = P_GetMonsterSkin(info->altsprite);
-               
-               P_SetMobjState(corpsehit, info->raisestate);
-               
-               if(comp[comp_vile])
-                  corpsehit->height <<= 2;                        // phares
-               else                                               //   V
-               {
-                  // fix Ghost bug
-                  corpsehit->height = P_ThingInfoHeight(info);
-                  corpsehit->radius = info->radius;
-               }                                                  // phares
-               
-               // killough 7/18/98: 
-               // friendliness is transferred from AV to raised corpse
-               corpsehit->flags = 
-                  (info->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
-               
-               corpsehit->health = info->spawnhealth;
-               P_SetTarget<Mobj>(&corpsehit->target, NULL);  // killough 11/98
-
-               if(demo_version >= 203)
-               {         // kilough 9/9/98
-                  P_SetTarget<Mobj>(&corpsehit->lastenemy, NULL);
-                  corpsehit->flags &= ~MF_JUSTHIT;
-               }
-               
-               // killough 8/29/98: add to appropriate thread
-               corpsehit->updateThinker();
-               
-               return;
-            }
+            // ioanch 20160221: call function
+            P_RaiseCorpse(corpsehit, actor);
+            return false;
          }
-      }
+         return true;
+      }))
+         return;  // if the block returned false, exit
    }
    A_Chase(actionargs);  // Return to normal attack.
 }
@@ -787,8 +732,12 @@ void A_Fire(actionargs_t *actionargs)
    an = dest->angle >> ANGLETOFINESHIFT;
    
    P_UnsetThingPosition(actor);
-   actor->x = dest->x + FixedMul(24*FRACUNIT, finecosine[an]);
-   actor->y = dest->y + FixedMul(24*FRACUNIT, finesine[an]);
+   // IOANCH 20160106: correct line portal behaviour
+   v2fixed_t pos = P_LinePortalCrossing(*dest,
+                                        FixedMul(24*FRACUNIT, finecosine[an]),
+                                        FixedMul(24*FRACUNIT, finesine[an]));
+   actor->x = pos.x;
+   actor->y = pos.y;
    actor->z = dest->z;
    actor->backupPosition();
    P_SetThingPosition(actor);
@@ -884,8 +833,17 @@ void A_VileAttack(actionargs_t *actionargs)
       return;
 
    // move the fire between the vile and the player
-   fire->x = actor->target->x - FixedMul (24*FRACUNIT, finecosine[an]);
-   fire->y = actor->target->y - FixedMul (24*FRACUNIT, finesine[an]);
+   // ioanch 20160106: correct fire position based on portals
+   v2fixed_t pos = P_LinePortalCrossing(*actor->target, 
+                                        -FixedMul(24 * FRACUNIT, finecosine[an]),
+                                        -FixedMul(24 * FRACUNIT, finesine[an]));
+   fire->x = pos.x;
+   fire->y = pos.y;
+   
+   // ioanch: set the correct group ID now
+   if(full_demo_version >= make_full_version(340, 48))
+      fire->groupid = R_PointInSubsector(pos)->sector->groupid;
+   
    P_RadiusAttack(fire, actor, 70, 70, actor->info->mod, 0);
 }
 
@@ -1103,8 +1061,15 @@ void A_PainShootSkull(Mobj *actor, angle_t angle)
    
    prestep = 4*FRACUNIT + 3*(actor->info->radius + mobjinfo[skullType]->radius)/2;
 
-   x = actor->x + FixedMul(prestep, finecosine[an]);
-   y = actor->y + FixedMul(prestep, finesine[an]);
+   // ioanch 20160107: spawn at the correct position if there's a line portal
+   // between monster and intended position.
+   // Also keep track of the "relative" position: the one without portal trans-
+   // lation. Needed for Check_Sides
+   v2fixed_t relpos = { actor->x + FixedMul(prestep, finecosine[an]),
+                        actor->y + FixedMul(prestep, finesine[an]) };
+   v2fixed_t pos = P_LinePortalCrossing(*actor, relpos - *actor);
+   x = pos.x;
+   y = pos.y;
    z = actor->z + 8*FRACUNIT;
    
    if(comp[comp_skull])   // killough 10/98: compatibility-optioned
@@ -1116,18 +1081,26 @@ void A_PainShootSkull(Mobj *actor, angle_t angle)
       // If it is, then we don't allow the spawn. This is a bug fix, 
       // but it should be considered an enhancement, since it may 
       // disturb existing demos, so don't do it in compatibility mode.
-      
-      if (Check_Sides(actor,x,y))
+
+      // ioanch 20160107: check sides against the non-translated position. This 
+      // way the two coordinates will be in valid range and it will only check
+      // sides against the passable portal line
+      if (Check_Sides(actor, relpos.x, relpos.y))
          return;
       
       newmobj = P_SpawnMobj(x, y, z, skullType);
       
       // Check to see if the new Lost Soul's z value is above the
       // ceiling of its new sector, or below the floor. If so, kill it.
-      
-      if((newmobj->z >
-         (newmobj->subsector->sector->ceilingheight - newmobj->height)) ||
-         (newmobj->z < newmobj->subsector->sector->floorheight))
+
+      // ioanch 20160107: check against the floor or ceiling sector behind any
+      // portals
+      const sector_t *ceilingsector = P_ExtremeSectorAtPoint(newmobj, true);
+      const sector_t *floorsector = P_ExtremeSectorAtPoint(newmobj, false);
+      // ioanch: removed redundant parentheses (of which the compiler doesn't 
+      // cry)
+      if(newmobj->z > ceilingsector->ceilingheight - newmobj->height ||
+         newmobj->z < floorsector->floorheight)
       {
          // kill it immediately
          P_DamageMobj(newmobj,actor,actor,10000,MOD_UNKNOWN);

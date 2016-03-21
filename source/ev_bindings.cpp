@@ -969,6 +969,7 @@ PARAMLINE(ParamDoorClose);
 PARAMLINE(ParamDoorCloseWaitOpen);
 PARAMLINE(ParamDoorWaitRaise);
 PARAMLINE(ParamDoorWaitClose);
+PARAMLINE(ParamDoorLockedRaise);
 PARAMLINE(ParamFloorRaiseToHighest);
 PARAMLINE(ParamEEFloorLowerToHighest); 
 PARAMLINE(ParamFloorLowerToHighest);
@@ -1010,6 +1011,18 @@ PARAMLINE(ParamCeilingMoveToValue);
 PARAMLINE(ParamCeilingMoveToValueTimes8);
 PARAMLINE(ParamCeilingRaiseInstant);
 PARAMLINE(ParamCeilingLowerInstant);
+PARAMLINE(ParamCeilingCrushAndRaise);
+PARAMLINE(ParamCeilingCrushAndRaiseA);
+PARAMLINE(ParamCeilingCrushAndRaiseSilentA);
+PARAMLINE(ParamCeilingCrushAndRaiseDist);
+PARAMLINE(ParamCeilingCrushAndRaiseSilentDist);
+PARAMLINE(ParamCeilingCrushStop);
+PARAMLINE(ParamCeilingCrushRaiseAndStay);
+PARAMLINE(ParamCeilingCrushRaiseAndStayA);
+PARAMLINE(ParamCeilingCrushRaiseAndStaySilA);
+PARAMLINE(ParamCeilingLowerAndCrush);
+PARAMLINE(ParamCeilingLowerAndCrushDist);
+PARAMLINE(ParamGenCrusher);
 PARAMLINE(ParamStairsBuildUpDoom);
 PARAMLINE(ParamStairsBuildDownDoom);
 PARAMLINE(ParamStairsBuildUpDoomSync);
@@ -1031,6 +1044,7 @@ PARAMLINE(ACSExecute);
 PARAMLINE(ACSSuspend);
 PARAMLINE(ACSTerminate);
 PARAMLINE(ACSExecuteWithResult);
+PARAMLINE(ACSLockedExecute);
 PARAMLINE(ParamLightRaiseByValue);
 PARAMLINE(ParamLightLowerByValue);
 PARAMLINE(ParamLightChangeToValue);
@@ -1048,12 +1062,20 @@ PARAMLINE(ThingProjectile);
 PARAMLINE(ThingProjectileGravity);
 PARAMLINE(ThingActivate);
 PARAMLINE(ThingDeactivate);
+PARAMLINE(ThingRaise);
+PARAMLINE(ThingStop);
+PARAMLINE(ThrustThing);
+PARAMLINE(ThrustThingZ);
+PARAMLINE(DamageThing);
+PARAMLINE(DamageThingEx);  // Thing_Damage essentially
+PARAMLINE(ThingDestroy);
 PARAMLINE(ParamPlatPerpetualRaise);
 PARAMLINE(ParamPlatStop);
 PARAMLINE(ParamPlatDWUS);
 PARAMLINE(ParamPlatDownByValue);
 PARAMLINE(ParamPlatUWDS);
 PARAMLINE(ParamPlatUpByValue);
+PARAMLINE(ParamDonut);
 
 //=============================================================================
 //
@@ -1405,6 +1427,28 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(416, ParamFloorLowerToHighest,        "Floor_LowerToHighest")
    LINESPECNAMED(420, ACSExecuteWithResult,            "ACS_ExecuteWithResult")
    LINESPECNAMED(421, ThingChangeTID,                  "Thing_ChangeTID")
+   LINESPECNAMED(422, ThingRaise,                      "Thing_Raise")
+   LINESPECNAMED(423, ThingStop,                       "Thing_Stop")
+   LINESPECNAMED(424, ThrustThing,                     "ThrustThing")
+   LINESPECNAMED(425, ThrustThingZ,                    "ThrustThingZ")
+   LINESPECNAMED(426, DamageThing,                     "DamageThing")
+   LINESPECNAMED(427, DamageThingEx,                   "Thing_Damage")
+   LINESPECNAMED(428, ThingDestroy,                    "Thing_Destroy")
+   LINESPECNAMED(429, ParamDoorLockedRaise,            "Door_LockedRaise")
+   LINESPECNAMED(430, ACSLockedExecute,                "ACS_LockedExecute")
+   LINESPECNAMED(431, ParamDonut,                      "Floor_Donut")
+   LINESPECNAMED(432, ParamCeilingCrushAndRaise,       "Ceiling_CrushAndRaise")
+   LINESPECNAMED(433, ParamCeilingCrushStop,           "Ceiling_CrushStop")
+   LINESPECNAMED(434, ParamCeilingCrushRaiseAndStay,   "Ceiling_CrushRaiseAndStay")
+   LINESPECNAMED(435, ParamCeilingLowerAndCrush,       "Ceiling_LowerAndCrush")
+   LINESPECNAMED(436, ParamCeilingLowerAndCrushDist,   "Ceiling_LowerAndCrushDist")
+   LINESPECNAMED(437, ParamCeilingCrushAndRaiseDist,   "Ceiling_CrushAndRaiseDist")
+   LINESPECNAMED(438, ParamCeilingCrushRaiseAndStayA,  "Ceiling_CrushRaiseAndStayA")
+   LINESPECNAMED(439, ParamCeilingCrushAndRaiseA,      "Ceiling_CrushAndRaiseA")
+   LINESPECNAMED(440, ParamCeilingCrushAndRaiseSilentA, "Ceiling_CrushAndRaiseSilentA")
+   LINESPECNAMED(441, ParamCeilingCrushAndRaiseSilentDist, "Ceiling_CrushAndRaiseSilentDist")
+   LINESPECNAMED(442, ParamCeilingCrushRaiseAndStaySilA, "Ceiling_CrushRaiseAndStaySilA")
+   LINESPECNAMED(443, ParamGenCrusher,                 "Generic_Crusher")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1475,6 +1519,9 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(10,  ParamDoorClose,                  "Door_Close")
    LINESPECNAMED(11,  ParamDoorOpen,                   "Door_Open")
    LINESPECNAMED(12,  ParamDoorRaise,                  "Door_Raise")
+   LINESPECNAMED(13,  ParamDoorLockedRaise,            "Door_LockedRaise")
+   LINESPECNAMED(17,  ThingRaise,                      "Thing_Raise")
+   LINESPECNAMED(19,  ThingStop,                       "Thing_Stop")
    LINESPECNAMED(20,  ParamFloorLowerByValue,          "Floor_LowerByValue")
    LINESPECNAMED(21,  ParamFloorLowerToLowest,         "Floor_LowerToLowest")
    LINESPECNAMED(22,  ParamFloorLowerToNearest,        "Floor_LowerToNearest")
@@ -1488,6 +1535,10 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(37,  ParamFloorMoveToValue,           "Floor_MoveToValue")
    LINESPECNAMED(40,  ParamCeilingLowerByValue,        "Ceiling_LowerByValue")
    LINESPECNAMED(41,  ParamCeilingRaiseByValue,        "Ceiling_RaiseByValue")
+   LINESPECNAMED(42,  ParamCeilingCrushAndRaise,       "Ceiling_CrushAndRaise")
+   LINESPECNAMED(43,  ParamCeilingLowerAndCrush,       "Ceiling_LowerAndCrush")
+   LINESPECNAMED(44,  ParamCeilingCrushStop,           "Ceiling_CrushStop")
+   LINESPECNAMED(45,  ParamCeilingCrushRaiseAndStay,   "Ceiling_CrushRaiseAndStay")
    LINESPECNAMED(47,  ParamCeilingMoveToValue,         "Ceiling_MoveToValue")
    LINESPECNAMED(60,  ParamPlatPerpetualRaise,         "Plat_PerpetualRaise")
    LINESPECNAMED(61,  ParamPlatStop,                   "Plat_Stop")
@@ -1499,16 +1550,21 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(67,  ParamFloorRaiseInstant,          "Floor_RaiseInstant")
    LINESPECNAMED(68,  ParamFloorMoveToValueTimes8,     "Floor_MoveToValueTimes8")
    LINESPECNAMED(69,  ParamCeilingMoveToValueTimes8,   "Ceiling_MoveToValueTimes8")
+   LINESPECNAMED(72,  ThrustThing,                     "ThrustThing")
+   LINESPECNAMED(73,  DamageThing,                     "DamageThing")
    LINESPECNAMED(75,  TeleportEndGame,                 "Teleport_EndGame")
    LINESPECNAMED(80,  ACSExecute,                      "ACS_Execute")
    LINESPECNAMED(81,  ACSSuspend,                      "ACS_Suspend")
    LINESPECNAMED(82,  ACSTerminate,                    "ACS_Terminate")
+   LINESPECNAMED(83,  ACSLockedExecute,                "ACS_LockedExecute")
    LINESPECNAMED(84,  ACSExecuteWithResult,            "ACS_ExecuteWithResult")
    LINESPECNAMED(90,  PolyobjORRotateLeft,             "Polyobj_OR_RotateLeft")
    LINESPECNAMED(91,  PolyobjORRotateRight,            "Polyobj_OR_RotateRight")
    LINESPECNAMED(92,  PolyobjORMove,                   "Polyobj_OR_Move")
    LINESPECNAMED(93,  PolyobjORMoveTimes8,             "Polyobj_OR_MoveTimes8")
    LINESPECNAMED(94,  PillarBuildAndCrush,             "Pillar_BuildAndCrush")
+   LINESPECNAMED(97,  ParamCeilingLowerAndCrushDist,   "Ceiling_LowerAndCrushDist")
+   LINESPECNAMED(104, ParamCeilingCrushAndRaiseSilentDist, "Ceiling_CrushAndRaiseSilentDist")
    LINESPECNAMED(110, ParamLightRaiseByValue,          "Light_RaiseByValue")
    LINESPECNAMED(111, ParamLightLowerByValue,          "Light_LowerByValue")
    LINESPECNAMED(112, ParamLightChangeToValue,         "Light_ChangeToValue")
@@ -1516,28 +1572,38 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(114, ParamLightGlow,                  "Light_Glow")
    LINESPECNAMED(115, ParamLightFlicker,               "Light_Flicker")
    LINESPECNAMED(116, ParamLightStrobe,                "Light_Strobe")
+   LINESPECNAMED(119, DamageThingEx,                   "Thing_Damage")
    LINESPECNAMED(120, RadiusQuake,                     "Radius_Quake")
+   LINESPECNAMED(128, ThrustThingZ,                    "ThrustThingZ")
    LINESPECNAMED(130, ThingActivate,                   "Thing_Activate")
    LINESPECNAMED(131, ThingDeactivate,                 "Thing_Deactivate")
+   LINESPECNAMED(133, ThingDestroy,                    "Thing_Destroy")
    LINESPECNAMED(134, ThingProjectile,                 "Thing_Projectile")
    LINESPECNAMED(135, ThingSpawn,                      "Thing_Spawn")
    LINESPECNAMED(136, ThingProjectileGravity,          "Thing_ProjectileGravity")
    LINESPECNAMED(137, ThingSpawnNoFog,                 "Thing_SpawnNoFog")
    LINESPECNAMED(138, FloorWaggle,                     "Floor_Waggle")
+   LINESPECNAMED(168, ParamCeilingCrushAndRaiseDist,   "Ceiling_CrushAndRaiseDist")
    LINESPECNAMED(176, ThingChangeTID,                  "Thing_ChangeTID")
    LINESPECNAMED(192, ParamCeilingLowerToHighestFloor, "Ceiling_LowerToHighestFloor")
    LINESPECNAMED(193, ParamCeilingLowerInstant,        "Ceiling_LowerInstant")
    LINESPECNAMED(194, ParamCeilingRaiseInstant,        "Ceiling_RaiseInstant")
+   LINESPECNAMED(195, ParamCeilingCrushRaiseAndStayA,  "Ceiling_CrushRaiseAndStayA")
+   LINESPECNAMED(196, ParamCeilingCrushAndRaiseA,      "Ceiling_CrushAndRaiseA")
+   LINESPECNAMED(197, ParamCeilingCrushAndRaiseSilentA, "Ceiling_CrushAndRaiseSilentA")
    LINESPECNAMED(198, ParamCeilingRaiseByValueTimes8,  "Ceiling_RaiseByValueTimes8")
    LINESPECNAMED(199, ParamCeilingLowerByValueTimes8,  "Ceiling_LowerByValueTimes8")
+   LINESPECNAMED(205, ParamGenCrusher,                 "Generic_Crusher")
    LINESPECNAMED(217, ParamStairsBuildUpDoom,          "Stairs_BuildUpDoom")
    LINESPECNAMED(238, ParamFloorRaiseToLowestCeiling,  "Floor_RaiseToLowestCeiling")
    LINESPECNAMED(240, ParamFloorRaiseByTexture,        "Floor_RaiseByTexture")
    LINESPECNAMED(242, ParamFloorLowerToHighest,        "Floor_LowerToHighest")
    LINESPECNAMED(249, ParamDoorCloseWaitOpen,          "Door_CloseWaitOpen")
+   LINESPECNAMED(250, ParamDonut,                      "Floor_Donut")
    LINESPECNAMED(252, ParamCeilingRaiseToNearest,      "Ceiling_RaiseToNearest")
    LINESPECNAMED(253, ParamCeilingLowerToLowest,       "Ceiling_LowerToLowest")
    LINESPECNAMED(254, ParamCeilingLowerToFloor,        "Ceiling_LowerToFloor")
+   LINESPECNAMED(255, ParamCeilingCrushRaiseAndStaySilA, "Ceiling_CrushRaiseAndStaySilA")
 };
 
 const size_t HexenBindingsLen = earrlen(HexenBindings);

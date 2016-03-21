@@ -801,6 +801,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\source\mn_items.cpp" />
+    <ClCompile Include="..\source\p_portalclip.cpp" />
     <ClCompile Include="..\source\sdl\i_sdltimer.cpp" />
     <ClCompile Include="..\source\s_formats.cpp" />
     <ClCompile Include="..\source\s_reverb.cpp" />
@@ -2140,6 +2141,7 @@
     <ClInclude Include="..\source\m_binary.h" />
     <ClInclude Include="..\source\m_compare.h" />
     <ClInclude Include="..\source\m_ctype.h" />
+    <ClInclude Include="..\source\p_portalclip.h" />
     <ClInclude Include="..\source\p_things.h" />
     <ClInclude Include="..\source\sdl\i_sdltimer.h" />
     <ClInclude Include="..\source\s_formats.h" />

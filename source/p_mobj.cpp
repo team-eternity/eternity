@@ -29,6 +29,7 @@
 #include "a_args.h"
 #include "a_small.h"
 #include "autodoom/b_botmap.h"
+#include "c_io.h" // ioanch
 #include "d_dehtbl.h"
 #include "d_gi.h"
 #include "d_mod.h"
@@ -644,11 +645,12 @@ void P_XYMovement(Mobj* mo)
    // killough 8/11/98: add bouncers
    // killough 9/15/98: add objects falling off ledges
    // killough 11/98: only include bouncers hanging off ledges
+   // ioanch 20160116: portal aware
    if(((mo->flags & MF_BOUNCES && mo->z > mo->dropoffz) ||
        mo->flags & MF_CORPSE || mo->intflags & MIF_FALLING) &&
       (mo->momx > FRACUNIT/4 || mo->momx < -FRACUNIT/4 ||
        mo->momy > FRACUNIT/4 || mo->momy < -FRACUNIT/4) &&
-      mo->floorz != mo->subsector->sector->floorheight)
+      mo->floorz != P_ExtremeSectorAtPoint(mo, false)->floorheight)
       return;  // do not stop sliding if halfway off a step with some momentum
 
    // killough 11/98:
@@ -1093,9 +1095,9 @@ void P_NightmareRespawn(Mobj* mobj)
 
    // spawn a teleport fog at old spot
    // because of removal of the body?
-
+   // ioanch 20160116: portal aware
    mo = P_SpawnMobj(mobj->x, mobj->y,
-                    mobj->subsector->sector->floorheight +
+                    P_ExtremeSectorAtPoint(mobj, false)->floorheight +
                        GameModeInfo->teleFogHeight,
                     E_SafeThingName(GameModeInfo->teleFogType));
 
@@ -1144,10 +1146,13 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
 {
    bool ret = false;
 
-   if(mobj->subsector->sector->f_pflags & PS_PASSABLE)
+   // ioanch 20160109: reference sector
+   const sector_t *sector = mobj->subsector->sector;
+
+   if(sector->f_pflags & PS_PASSABLE)
    {
       fixed_t passheight;
-      linkdata_t *ldata = R_FPLink(mobj->subsector->sector);
+      const linkdata_t *ldata = R_FPLink(sector);
 
       if(mobj->player)
       {
@@ -1157,24 +1162,19 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
       else
          passheight = mobj->z + (mobj->height >> 1);
 
-
+      // ioanch 20160109: link offset outside
       if(passheight < ldata->planez)
       {
-         linkoffset_t *link = P_GetLinkOffset(mobj->subsector->sector->groupid,
-                                              ldata->toid);
-         if(link)
-         {
-            EV_PortalTeleport(mobj, link);
-            ret = true;
-         }
+         EV_PortalTeleport(mobj, ldata);
+         ret = true;
       }
    }
    
-   if(!ret && mobj->subsector->sector->c_pflags & PS_PASSABLE)
+   if(!ret && sector->c_pflags & PS_PASSABLE)
    {
       // Calculate the height at which the mobj should pass through the portal
       fixed_t passheight;
-      linkdata_t *ldata = R_CPLink(mobj->subsector->sector);
+      linkdata_t *ldata = R_CPLink(sector);
 
       if(mobj->player)
       {
@@ -1184,15 +1184,11 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
       else
          passheight = mobj->z + (mobj->height >> 1);
 
+      // ioanch 20160109: link offset outside
       if(passheight >= ldata->planez)
       {
-         linkoffset_t *link = P_GetLinkOffset(mobj->subsector->sector->groupid,
-                                              ldata->toid);
-         if(link)
-         {
-            EV_PortalTeleport(mobj, link);
-            ret = true;
-         }
+         EV_PortalTeleport(mobj, ldata);
+         ret = true;
       }
    }
 
@@ -1361,6 +1357,14 @@ void Mobj::Think()
 
 #ifdef R_LINKEDPORTALS
    P_CheckPortalTeleport(this);
+   if(gMapHasSectorPortals && (z != sprojlast.z || x != sprojlast.x ||
+                               y != sprojlast.y))
+   {
+      R_CheckMobjProjections(this);
+      sprojlast.x = x;
+      sprojlast.y = y;
+      sprojlast.z = z;
+   }
 #endif
 
    // haleyjd 11/06/05: handle crashstate here
@@ -1504,6 +1508,11 @@ void Mobj::serialize(SaveArchive &arc)
       enemyNum  = P_NumForThinker(lastenemy);
 
       arc << targetNum << tracerNum << enemyNum;
+
+      // ioanch 20160117: also save the touched portal line, if existent
+      int tmp = (touchedportalline ? static_cast<unsigned>(touchedportalline - ::lines) :
+         static_cast<unsigned>(-1));
+      arc << tmp;
    }
    else // Loading
    {
@@ -1551,6 +1560,21 @@ void Mobj::serialize(SaveArchive &arc)
 
       // Get the swizzled pointers
       arc << dsInfo->target << dsInfo->tracer << dsInfo->lastenemy;
+
+      // ioanch 20160117
+      int tmp;
+      arc << tmp;
+      if(tmp == -1)
+         touchedportalline = nullptr;
+      else if(tmp >= 0 && tmp < ::numlines)
+         touchedportalline = ::lines + tmp;
+      else
+      {
+         // warn the user
+         touchedportalline = nullptr;
+         C_Printf(FC_ERROR "Mobj::serialize WARNING: invalid touchedportalline "
+            "index %d", tmp);
+      }
    }
 }
 
@@ -1731,13 +1755,23 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
       mobj->sprite = st->sprite;
    mobj->frame  = st->frame;
 
-   // set subsector and/or block links
+   // ioanch 20160109: init spriteproj. They won't be set in P_SetThingPosition 
+   // but P_CheckPortalTeleport
+   mobj->spriteproj = nullptr;
+   // init with an "invalid" value
+   mobj->sprojlast.x = mobj->sprojlast.y = mobj->sprojlast.z = D_MAXINT;
 
+   // ioanch 20160117: keep track of last touched line if needed
+   mobj->touchedportalline = nullptr;
+
+   // set subsector and/or block links
+  
    P_SetThingPosition(mobj);
 
+   // ioanch 20160201: fix floorz and ceilingz to be portal-aware
    mobj->dropoffz =           // killough 11/98: for tracking dropoffs
-      mobj->floorz = mobj->subsector->sector->floorheight;
-   mobj->ceilingz = mobj->subsector->sector->ceilingheight;
+      mobj->floorz = P_ExtremeSectorAtPoint(mobj, false)->floorheight;
+   mobj->ceilingz = P_ExtremeSectorAtPoint(mobj, true)->ceilingheight;
 
    mobj->z = z == ONFLOORZ ? mobj->floorz : z == ONCEILINGZ ?
       mobj->ceilingz - mobj->height : z;
@@ -1849,6 +1883,9 @@ void Mobj::removeThinker()
 
    // unlink from sector and block lists
    P_UnsetThingPosition(this);
+
+   // ioanch 20160109
+   R_RemoveMobjProjections(this);
 
    // Delete all nodes on the current sector_list -- phares 3/16/98
    if(this->old_sectorlist)
@@ -2373,34 +2410,11 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
    }
 }
 
-
 //
-// P_SpawnBlood
+// Spawn particle blood suited for Doom-style blood objects
 //
-void P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, Mobj *target)
+static void P_DoomParticleBlood(Mobj *th, Mobj *target, fixed_t x, fixed_t y, fixed_t z, angle_t dir)
 {
-   // HTIC_TODO: Heretic support
-   Mobj *th;
-
-   // haleyjd 08/05/04: use new function
-   z += P_SubRandom(pr_spawnblood) << 10;
-
-   th = P_SpawnMobj(x,y,z, E_SafeThingType(MT_BLOOD));
-   th->momz = FRACUNIT*2;
-   th->tics -= P_Random(pr_spawnblood)&3;
-
-   if(th->tics < 1)
-      th->tics = 1;
-
-   if(damage <= 12 && damage >= 9)
-   {
-      P_SetMobjState(th, E_SafeState(S_BLOOD2));
-   }
-   else if (damage < 9)
-   {
-      P_SetMobjState(th, E_SafeState(S_BLOOD3));
-   }
-
    // for demo sync, etc, we still need to do the above, so
    // we'll make the sprites above invisible and draw particles
    // instead
@@ -2409,6 +2423,199 @@ void P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, Mobj
       if(bloodsplat_particle != 2)
          th->translucency = 0;
       P_BloodSpray(target, 32, x, y, z, dir);
+   }
+}
+
+//
+// DOOM blood spawning
+//
+static void P_spawnBloodDoom(mobjtype_t type, const BloodSpawner &params)
+{
+   Mobj *th;
+   fixed_t z = params.z;
+
+   // haleyjd 08/05/04: use new function
+   z += P_SubRandom(pr_spawnblood) << 10;
+
+   th = P_SpawnMobj(params.x, params.y, z, type);
+   th->momz = FRACUNIT*2;
+   th->tics -= P_Random(pr_spawnblood)&3;
+
+   if(th->tics < 1)
+      th->tics = 1;
+
+   if(params.damage <= 12 && params.damage >= 9)
+   {
+      state_t *st;
+      if(!(st = E_GetStateForMobj(th, "Blood2")))
+         st = states[E_SafeState(S_BLOOD2)];
+      P_SetMobjState(th, st->index);
+   }
+   else if(params.damage < 9)
+   {
+      state_t *st;
+      if(!(st = E_GetStateForMobj(th, "Blood3")))
+         st = states[E_SafeState(S_BLOOD3)];
+      P_SetMobjState(th, st->index);
+   }
+
+   P_DoomParticleBlood(th, params.target, params.x, params.y, z, params.dir);
+}
+
+//
+// Strife blood spawning
+//
+static void P_spawnBloodStrife(mobjtype_t type, const BloodSpawner &params)
+{
+   Mobj *th;
+   fixed_t z = params.z;
+
+   // haleyjd 08/05/04: use new function
+   z += P_SubRandom(pr_rogueblood) << 10;
+
+   th = P_SpawnMobj(params.x, params.y, z, type);
+   th->momz = FRACUNIT*2;
+
+   state_t *st;
+   if(params.damage >= 10 && params.damage <= 13)
+   {
+      if((st = E_GetStateForMobj(th, "Blood0")))
+         P_SetMobjState(th, st->index);
+   }
+   else if(params.damage >= 7 && params.damage < 10)
+   {
+      if((st = E_GetStateForMobj(th, "Blood1")))
+         P_SetMobjState(th, st->index);
+   }
+   else if(params.damage < 7)
+   {
+      if((st = E_GetStateForMobj(th, "Blood2")))
+         P_SetMobjState(th, st->index);
+   }
+
+   P_DoomParticleBlood(th, params.target, params.x, params.y, z, params.dir);
+}
+
+//
+// Raven blood spawning
+//
+static void P_spawnBloodRaven(mobjtype_t type, const BloodSpawner &params, bool isHexen)
+{
+   Mobj    *mo    = P_SpawnMobj(params.x, params.y, params.z, type);
+   int      shift = isHexen ? 10 : 9;
+   fixed_t  momz  = isHexen ? 3*FRACUNIT : 2*FRACUNIT;
+
+   P_SetTarget(&mo->target, params.target);
+   mo->momx = P_SubRandom(pr_ravenblood) << shift;
+   mo->momy = P_SubRandom(pr_ravenblood) << shift;
+   mo->momz = momz;
+
+   P_DoomParticleBlood(mo, params.target, params.x, params.y, params.z, params.dir);
+}
+
+//
+// Ripper blood spawning
+//
+static void P_spawnBloodRip(mobjtype_t type, const BloodSpawner &params, bool isHexen)
+{
+   Mobj *mo = params.inflictor ? params.inflictor : params.target;
+   fixed_t x = mo->x + (P_SubRandom(pr_ripperblood) << 12);
+   fixed_t y = mo->y + (P_SubRandom(pr_ripperblood) << 12);
+   fixed_t z = mo->z + (P_SubRandom(pr_ripperblood) << 12);
+   
+   Mobj *th = P_SpawnMobj(x, y, z, type);
+   
+   if(!isHexen)
+      th->flags |= MF_NOGRAVITY;
+
+   th->momx  = mo->momx / 2;
+   th->momy  = mo->momy / 2;
+   th->tics += P_Random(pr_ripperblood) & 3;
+   if(th->tics < 1)
+      th->tics = 1;
+}
+
+//
+// Crusher blood spawning
+//
+static void P_spawnCrusherBlood(Mobj *thing, mobjtype_t type)
+{
+   // spray blood in a random direction
+   Mobj *mo = P_SpawnMobj(thing->x, thing->y, thing->z + thing->height/2, type);
+         
+   mo->momx = P_SubRandom(pr_crush) << 12;
+   mo->momy = P_SubRandom(pr_crush) << 12;
+}
+
+//
+// BloodSpawner constructor for divline_t; the angle is calculated properly.
+//
+BloodSpawner::BloodSpawner(Mobj *ptarget, fixed_t px, fixed_t py, fixed_t pz, int pdamage,
+                           const divline_t &dv, Mobj *pinflictor)
+   : target(ptarget), inflictor(pinflictor), x(px), y(py), z(pz), damage(pdamage)
+{
+   dir = P_PointToAngle(0, 0, dv.dx, dv.dy) - ANG180;
+}
+
+//
+// BloodSpawner constructor for damage from a source mobj. x, y, z, and dir are calculated
+// using the source thing.
+//
+BloodSpawner::BloodSpawner(Mobj *ptarget, Mobj *source, int pdamage, Mobj *pinflictor)
+   : target(ptarget), inflictor(pinflictor), damage(pdamage)
+{
+   fixed_t dx = getThingX(target, source);
+   fixed_t dy = getThingY(target, source);
+
+   x   = source->x;
+   y   = source->y;
+   z   = source->z;
+   dir = P_PointToAngle(target->x, target->y, dx, dy);
+}
+
+//
+// Crushing constructor; x, y, z, and dir are taken from the thing being damaged.
+//
+BloodSpawner::BloodSpawner(Mobj *crushtarget, int pdamage)
+   : target(crushtarget), inflictor(nullptr), damage(pdamage)
+{
+   x   = crushtarget->x;
+   y   = crushtarget->y;
+   z   = crushtarget->z + crushtarget->height/2;
+   dir = crushtarget->angle;
+}
+
+//
+// Spawn some blood in response to damage
+//
+void BloodSpawner::spawn(bloodaction_e action) const
+{
+   mobjtype_t type = E_BloodTypeForThing(target, action);
+   if(type < 0)
+      return;
+
+   bloodtype_e behavior = E_GetBloodBehaviorForAction(mobjinfo[type], action);
+   switch(behavior)
+   {
+   case BLOODTYPE_DOOM:
+      P_spawnBloodDoom(type, *this);
+      break;
+   case BLOODTYPE_HERETIC:
+   case BLOODTYPE_HEXEN:
+      P_spawnBloodRaven(type, *this, (behavior == BLOODTYPE_HEXEN));
+      break;
+   case BLOODTYPE_HERETICRIP:
+   case BLOODTYPE_HEXENRIP:
+      P_spawnBloodRip(type, *this, (behavior == BLOODTYPE_HEXENRIP));
+      break;
+   case BLOODTYPE_STRIFE:
+      P_spawnBloodStrife(type, *this);
+      break;
+   case BLOODTYPE_CRUSH:
+      P_spawnCrusherBlood(target, type);
+      break;
+   case BLOODTYPE_CUSTOM: // TODO: define spawning routine via Aeon
+      break;
    }
 }
 
@@ -2840,7 +3047,7 @@ void P_AdjustFloorClip(Mobj *thing)
 //
 // Function to retrieve proper thing height information for a thing.
 //
-int P_ThingInfoHeight(mobjinfo_t *mi)
+int P_ThingInfoHeight(const mobjinfo_t *mi)
 {
    return
       ((demo_version >= 333 && !comp[comp_theights] &&

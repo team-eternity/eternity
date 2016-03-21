@@ -42,6 +42,7 @@
 #include "p_map.h"
 #include "p_map3d.h"
 #include "p_maputl.h"
+#include "p_portal.h"
 #include "p_skin.h"
 #include "p_spec.h"
 #include "p_user.h"
@@ -565,7 +566,7 @@ static int P_PlayerLightTics(player_t *player)
 //
 // haleyjd 12/28/08: Determines whether or not a sector is special.
 //
-inline static bool P_SectorIsSpecial(sector_t *sector)
+inline static bool P_SectorIsSpecial(const sector_t *sector)
 {
    return (sector->special || sector->flags || sector->damage);
 }
@@ -677,8 +678,10 @@ void P_PlayerThink(player_t *player)
    // Determine if there's anything about the sector you're in that's
    // going to affect you, like painful floors.
 
-   if(P_SectorIsSpecial(player->mo->subsector->sector))
-      P_PlayerInSpecialSector(player);
+   // ioanch 20160116: portal aware
+   sector_t *sector = P_ExtremeSectorAtPoint(player->mo, false);
+   if(P_SectorIsSpecial(sector))
+      P_PlayerInSpecialSector(player, sector);
 
    // haleyjd 08/23/05: terrain-based effects
    P_PlayerOnSpecialFlat(player);

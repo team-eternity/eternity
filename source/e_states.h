@@ -48,16 +48,19 @@ extern int NullStateNum;
 // EDF-Only Definitions/Declarations
 #ifdef NEED_EDF_DEFINITIONS
 
-#define EDF_SEC_FRAME    "frame"
-#define EDF_SEC_FRMDELTA "framedelta"
+#define EDF_SEC_FRAME      "frame"
+#define EDF_SEC_FRMDELTA   "framedelta"
+#define EDF_SEC_FRAMEBLOCK "frameblock"
 
 extern cfg_opt_t edf_frame_opts[];
 extern cfg_opt_t edf_fdelta_opts[];
+extern cfg_opt_t edf_fblock_opts[];
 
 void E_CollectStates(cfg_t *scfg);
 void E_ProcessStates(cfg_t *cfg);
 void E_ProcessStateDeltas(cfg_t *cfg);
 bool E_AutoAllocStateDEHNum(int statenum);
+void E_ProcessFrameBlocks(cfg_t *cfg);
 
 #endif
 

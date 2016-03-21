@@ -507,6 +507,141 @@ bool MetaConstString::readFromFile(InBuffer &inbuf)
 }
 
 //
+// MetaVariant
+//
+
+IMPLEMENT_RTTI_TYPE(MetaVariant)
+
+//
+// Copy Constructor
+//
+MetaVariant::MetaVariant(const MetaVariant &other) 
+   : Super(other), cachedType(other.cachedType)
+{
+   switch(other.cachedType)
+   {
+   case VARIANT_INT:
+      cachedValue.i = other.cachedValue.i;
+      break;
+   case VARIANT_BOOL:
+      cachedValue.b = other.cachedValue.b;
+      break;
+   case VARIANT_FLOAT:
+      cachedValue.f = other.cachedValue.f;
+      break;
+   case VARIANT_DOUBLE:
+      cachedValue.d = other.cachedValue.d;
+      break;
+   default:
+      cachedValue.i = 0;
+      break;
+   }
+}
+
+//
+// Retrieve value as an integer.
+//
+int MetaVariant::getInt()
+{
+   int ret;
+
+   if(cachedType == VARIANT_INT)
+      ret = cachedValue.i;
+   else
+   {
+      cachedType = VARIANT_INT;
+      ret = cachedValue.i = atoi(value);
+   }
+
+   return ret;
+}
+
+//
+// Retrieve value as a boolean.
+//
+bool MetaVariant::getBool()
+{
+   bool ret;
+
+   if(cachedType == VARIANT_BOOL)
+      ret = cachedValue.b;
+   else
+   {
+      cachedType = VARIANT_BOOL;
+      ret = cachedValue.b = !!atoi(value);
+   }
+
+   return ret;
+}
+
+//
+// Retrieve value as a float.
+//
+float MetaVariant::getFloat()
+{
+   float ret;
+
+   if(cachedType == VARIANT_FLOAT)
+      ret = cachedValue.f;
+   else
+   {
+      cachedType = VARIANT_FLOAT;
+      ret = cachedValue.f = static_cast<float>(atof(value));
+   }
+
+   return ret;
+}
+
+//
+// Retrieve value as a double
+//
+double MetaVariant::getDouble()
+{
+   double ret;
+
+   if(cachedType == VARIANT_DOUBLE)
+      ret = cachedValue.d;
+   else
+   {
+      cachedType = VARIANT_DOUBLE;
+      ret = cachedValue.d = atof(value);
+   }
+
+   return ret;
+}
+
+//
+// Overrides MetaString::setValue. Set the new string value and then
+// update the cache based on the last interpreted value of this variant.
+//
+void MetaVariant::setValue(const char *s, char **ret)
+{
+   Super::setValue(s, ret);
+   
+   // force reinterpretation
+   varianttype_e oldType = cachedType;
+   cachedType = VARIANT_NONE;
+
+   switch(oldType)
+   {
+   case VARIANT_INT:
+      getInt();
+      break;
+   case VARIANT_BOOL:
+      getBool();
+      break;
+   case VARIANT_FLOAT:
+      getFloat();
+      break;
+   case VARIANT_DOUBLE:
+      getDouble();
+      break;
+   default:
+      break;
+   }
+}
+
+//
 // End MetaObject Specializations
 //
 //=============================================================================
