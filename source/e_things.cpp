@@ -311,106 +311,106 @@ static basicttype_t BasicThingTypes[] =
 {
    // Monster
    {
-      MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL, // flags
-      MF2_FOOTCLIP,                       // flags2
-      MF3_SPACMONSTER|MF3_PASSMOBJ,       // flags3
+      static_cast<unsigned>(MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL), // flags
+      static_cast<unsigned>(MF2_FOOTCLIP),                       // flags2
+      static_cast<unsigned>(MF3_SPACMONSTER|MF3_PASSMOBJ),       // flags3
    },
    // FlyingMonster
    {
-      MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL|MF_NOGRAVITY|MF_FLOAT, // flags
-      0,                                                        // flags2
-      MF3_SPACMONSTER|MF3_PASSMOBJ,                             // flags3
+      static_cast<unsigned>(MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL|MF_NOGRAVITY|MF_FLOAT), // flags
+      0u,                                                       // flags2
+      static_cast<unsigned>(MF3_SPACMONSTER|MF3_PASSMOBJ),                             // flags3
    },
    // FriendlyHelper
    { 
-      MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL|MF_FRIEND,                // flags
-      MF2_JUMPDOWN|MF2_FOOTCLIP,                                   // flags2
-      MF3_WINDTHRUST|MF3_SUPERFRIEND|MF3_SPACMONSTER|MF3_PASSMOBJ, // flags3
+      static_cast<unsigned>(MF_SOLID|MF_SHOOTABLE|MF_COUNTKILL|MF_FRIEND),                // flags
+      static_cast<unsigned>(MF2_JUMPDOWN|MF2_FOOTCLIP),                                   // flags2
+      static_cast<unsigned>(MF3_WINDTHRUST|MF3_SUPERFRIEND|MF3_SPACMONSTER|MF3_PASSMOBJ), // flags3
    },
    // Projectile
    {
-      MF_NOBLOCKMAP|MF_NOGRAVITY|MF_DROPOFF|MF_MISSILE, // flags
-      MF2_NOCROSS,                                      // flags2
-      0,                                                // flags3
+      static_cast<unsigned>(MF_NOBLOCKMAP|MF_NOGRAVITY|MF_DROPOFF|MF_MISSILE), // flags
+      static_cast<unsigned>(MF2_NOCROSS),                                      // flags2
+      0u,                                               // flags3
    },
    // PlayerProjectile
    {
-      MF_NOBLOCKMAP|MF_NOGRAVITY|MF_DROPOFF|MF_MISSILE, // flags
-      MF2_NOCROSS,                                      // flags2
-      MF3_SPACMISSILE,                                  // flags3
+      static_cast<unsigned>(MF_NOBLOCKMAP|MF_NOGRAVITY|MF_DROPOFF|MF_MISSILE), // flags
+      static_cast<unsigned>(MF2_NOCROSS),                                      // flags2
+      static_cast<unsigned>(MF3_SPACMISSILE),                                  // flags3
    },
    // Seeker
    {
-      MF_NOBLOCKMAP|MF_NOGRAVITY|MF_DROPOFF|MF_MISSILE, // flags
-      MF2_NOCROSS|MF2_SEEKERMISSILE,                    // flags2
-      0,                                                // flags3
+      static_cast<unsigned>(MF_NOBLOCKMAP|MF_NOGRAVITY|MF_DROPOFF|MF_MISSILE), // flags
+      static_cast<unsigned>(MF2_NOCROSS|MF2_SEEKERMISSILE),                    // flags2
+      0u,                                               // flags3
    },
    // SolidDecor
    {
-      MF_SOLID, // flags
-      0,        // flags2
-      0,        // flags3
+      static_cast<unsigned>(MF_SOLID), // flags
+      0u,       // flags2
+      0u,       // flags3
    },
    // HangingDecor
    {
-      MF_SPAWNCEILING|MF_NOGRAVITY, // flags
-      0,                            // flags2
-      0,                            // flags3
+      static_cast<unsigned>(MF_SPAWNCEILING|MF_NOGRAVITY), // flags
+      0u,                           // flags2
+      0u,                           // flags3
    },
    // SolidHangingDecor
    {
-      MF_SOLID|MF_SPAWNCEILING|MF_NOGRAVITY, // flags
-      0,                                     // flags2
-      0,                                     // flags3
+      static_cast<unsigned>(MF_SOLID|MF_SPAWNCEILING|MF_NOGRAVITY), // flags
+      0u,                                    // flags2
+      0u,                                    // flags3
    },
    // ShootableDecor
    {
-      MF_SOLID|MF_SHOOTABLE|MF_NOBLOOD, // flags
-      0,                                // flags2
-      0,                                // flags3
+      static_cast<unsigned>(MF_SOLID|MF_SHOOTABLE|MF_NOBLOOD), // flags
+      0u,                               // flags2
+      0u,                               // flags3
    },
    // Fog
    {
-      MF_NOBLOCKMAP|MF_NOGRAVITY|MF_TRANSLUCENT, // flags
-      MF2_NOSPLASH,                              // flags2
-      0,                                         // flags3
+      static_cast<unsigned>(MF_NOBLOCKMAP|MF_NOGRAVITY|MF_TRANSLUCENT), // flags
+      static_cast<unsigned>(MF2_NOSPLASH),                              // flags2
+      0u,                                        // flags3
    },
    // Item
    {
-      MF_SPECIAL, // flags
-      0,          // flags2
-      0,          // flags3
+      static_cast<unsigned>(MF_SPECIAL), // flags
+      0u,         // flags2
+      0u,         // flags3
    },
    // ItemCount
    {
-      MF_SPECIAL|MF_COUNTITEM, // flags
-      0,                       // flags2
-      0,                       // flags3
+      static_cast<unsigned>(MF_SPECIAL|MF_COUNTITEM), // flags
+      0u,                      // flags2
+      0u,                      // flags3
    },
    // TerrainBase
    {
-      MF_NOBLOCKMAP|MF_NOGRAVITY, // flags
-      MF2_NOSPLASH,               // flags2
-      0,                          // flags3
+      static_cast<unsigned>(MF_NOBLOCKMAP|MF_NOGRAVITY), // flags
+      static_cast<unsigned>(MF2_NOSPLASH),               // flags2
+      0u,                         // flags3
    },
    // TerrainChunk
    {
-      MF_NOBLOCKMAP|MF_DROPOFF|MF_MISSILE, // flags
-      MF2_LOGRAV|MF2_NOSPLASH|MF2_NOCROSS, // flags2
-      MF3_CANNOTPUSH,                      // flags3
+      static_cast<unsigned>(MF_NOBLOCKMAP|MF_DROPOFF|MF_MISSILE), // flags
+      static_cast<unsigned>(MF2_LOGRAV|MF2_NOSPLASH|MF2_NOCROSS), // flags2
+      static_cast<unsigned>(MF3_CANNOTPUSH),                      // flags3
    },
    // ControlPoint
    {
-      MF_NOBLOCKMAP|MF_NOSECTOR|MF_NOGRAVITY, // flags
-      0,                                      // flags2
-      0,                                      // flags3
+      static_cast<unsigned>(MF_NOBLOCKMAP|MF_NOSECTOR|MF_NOGRAVITY), // flags
+      0u,                                     // flags2
+      0u,                                     // flags3
       "S_TNT1",                               // spawnstate
    },
    // ControlPointGrav
    {
-      0,                         // flags
-      MF2_DONTDRAW|MF2_NOSPLASH, // flags2
-      0,                         // flags3
+      0u,                        // flags
+      static_cast<unsigned>(MF2_DONTDRAW|MF2_NOSPLASH), // flags2
+      0u,                        // flags3
       "S_TNT1",                  // spawnstate
    },
 };
