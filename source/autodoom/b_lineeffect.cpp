@@ -31,7 +31,9 @@
 #include "../z_zone.h"
 
 #include "../doomstat.h"
+#include "../e_exdata.h"
 #include "../e_inventory.h"
+#include "../ev_actions.h"
 #include "../ev_specials.h"
 #include "../m_collection.h"
 #include "b_botmap.h"
@@ -321,6 +323,46 @@ static bool doorBusy(const sector_t& sector)
     }
 
     return secThinker != nullptr;
+}
+
+//
+// True if special opens unlocked door behind linedef that won't close
+//
+static bool B_isManualDoorOpen(const line_t *line)
+{
+   int special = line->special;
+
+   // Generalized special
+   if(special >= GenDoorBase && EV_GenActivationType(special))
+   {
+      int genspac = EV_GenActivationType(special);
+      if(genspac == PushOnce || genspac == PushMany)
+      {
+         int kind = ((special - GenDoorBase) & DoorKind) >> DoorKindShift;
+         if(kind == ODoor)
+            return true;
+      }
+   }
+
+   // Classic special
+   const ev_action_t *action = EV_ActionForSpecial(special);
+   if(!action)
+      return false;
+
+   if(action->action == EV_ActionVerticalDoor &&
+      (special == 31 || special == 118))
+   {
+      return true;
+   }
+
+   // Parameterized special ("Door_Open")
+   if(action->action == EV_ActionParamDoorOpen)
+   {
+      static const uint32_t flags = EX_ML_PLAYER | EX_ML_USE;
+      if(!line->args[0] && (line->extflags & flags) == flags)
+         return true;
+   }
+   return false;
 }
 
 static void B_pushSectorHeights(int secnum, const line_t& line,

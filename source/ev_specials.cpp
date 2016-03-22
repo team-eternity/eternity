@@ -1076,7 +1076,7 @@ static int EV_GenTypeForSpecial(int special)
 //
 // Extract the activation type from a generalized line special.
 //
-static int EV_GenActivationType(int special)
+int EV_GenActivationType(int special)
 {
    return (special & TriggerType) >> TriggerTypeShift;
 }
