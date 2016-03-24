@@ -162,9 +162,10 @@ void CeilingThinker::Think()
          case genSilentCrusher:
          case genCrusher:
             // ioanch 20160314: Generic_Crusher support
+            if(type != silentCrushAndRaise)
+               speed = oldspeed;
          case fastCrushAndRaise:
          case crushAndRaise:
-            speed = downspeed;
             direction = plat_down;
             break;
 
@@ -180,7 +181,7 @@ void CeilingThinker::Think()
                P_CeilingSequence(sector, CNOISE_SEMISILENT);
             }
             direction = plat_down;
-            speed = downspeed;   // restore the speed to the designated DOWN one
+            speed = oldspeed;   // restore the speed to the designated DOWN one
             break;
             
          default:
@@ -192,7 +193,8 @@ void CeilingThinker::Think()
    case plat_down:
       // Ceiling moving down
       // ioanch 20160305: allow resting
-      res = T_MoveCeilingDown(sector, speed, bottomheight, crush, !crushspeed);
+      res = T_MoveCeilingDown(sector, speed, bottomheight, crush, 
+         !!(crushflags & crushRest));
 
       // if not silent crusher type make moving sound
       // haleyjd: now handled through sound sequences
@@ -203,7 +205,14 @@ void CeilingThinker::Think()
          switch(this->type)
          {
             // 02/09/98 jff change slow crushers' speed back to normal
-            // start back up           
+            // start back up
+         case genSilentCrusher:
+         case genCrusher:
+            if(oldspeed < CEILSPEED*3)
+               speed = this->upspeed;  // ioanch 20160314: use up speed
+            direction = plat_up; //jff 2/22/98 make it go back up!
+            break;
+            
             // make platform stop at bottom of all crusher strokes
             // except generalized ones, reset speed, start back up
          case silentCrushAndRaise:
@@ -211,10 +220,8 @@ void CeilingThinker::Think()
             if(!S_CheckSectorSequenceLoop(sector, SEQ_ORIGIN_SECTOR_C))
                P_CeilingSequence(sector, CNOISE_SEMISILENT);
          case crushAndRaise: 
+            speed = CEILSPEED;
          case fastCrushAndRaise:
-         case genSilentCrusher:
-         case genCrusher:
-            speed = upspeed;
             direction = plat_up;
             break;
             
@@ -270,15 +277,24 @@ void CeilingThinker::Think()
                //jff 02/08/98 slow down slow crushers on obstacle
             case genCrusher:  
             case genSilentCrusher:
+               if(oldspeed < CEILSPEED*3)
+                  speed = CEILSPEED / 8;
+               break;
             case silentCrushAndRaise:
             case crushAndRaise:
             case lowerAndCrush:
+               speed = CEILSPEED / 8;
+               break;
             case paramHexenCrush:
             case paramHexenCrushRaiseStay:
             case paramHexenLowerCrush:
-               // if crushspeed is 0, use the logic in T_MoveCeilingDown
-               if(crushspeed)
-                  speed = crushspeed;
+               // if crusher doesn't rest on victims:
+               // this is like ZDoom: if a ceiling speed is set exactly to 8,
+               // then apply the Doom crusher slowdown. Otherwise, keep speed
+               // constant. This may not apply to all crushing specials in
+               // ZDoom, but for simplicity it has been applied generally here.
+               if(!(crushflags & crushRest) && oldspeed == CEILSPEED)
+                  speed = CEILSPEED / 8;
                break;
                
             default:
@@ -299,7 +315,7 @@ void CeilingThinker::serialize(SaveArchive &arc)
 {
    Super::serialize(arc);
 
-   arc << type << bottomheight << topheight << speed << downspeed << upspeed << crushspeed
+   arc << type << bottomheight << topheight << speed << oldspeed
        << crush << special << texture << direction << inStasis << tag 
        << olddirection;
 
@@ -388,7 +404,6 @@ int EV_DoCeiling(const line_t *line, ceiling_e type)
          ceiling->bottomheight = sec->floorheight + (8*FRACUNIT);
          ceiling->direction = plat_down;
          ceiling->speed = CEILSPEED * 2;
-         ceiling->upspeed = ceiling->downspeed = ceiling->crushspeed = ceiling->speed;
          break;
 
       case silentCrushAndRaise:
@@ -403,8 +418,6 @@ int EV_DoCeiling(const line_t *line, ceiling_e type)
             ceiling->bottomheight += 8*FRACUNIT;
          ceiling->direction = plat_down;
          ceiling->speed = CEILSPEED;
-         ceiling->upspeed = ceiling->downspeed = ceiling->speed;
-         ceiling->crushspeed = CEILSPEED / 8;
          break;
 
       case raiseToHighest:
