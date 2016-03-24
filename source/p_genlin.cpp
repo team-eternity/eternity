@@ -1037,31 +1037,7 @@ manual_crusher:
       // ioanch 20160305: set the type here
       ceiling->type = cd->type;
       
-      switch(cd->type)
-      {
-      case paramHexenCrush:
-      case paramHexenCrushRaiseStay:
-      case paramHexenLowerCrush:
-         switch(cd->crushmode)
-         {
-         case crushmodeDoom:
-            ceiling->crushflags = 0;
-            break;
-         case crushmodeHexen:
-            ceiling->crushflags = CeilingThinker::crushRest;
-            break;
-         default: // compat or anything else
-            // like in ZDoom, decide based on current game
-            ceiling->crushflags = LevelInfo.levelType == LI_TYPE_HEXEN ? 
-               CeilingThinker::crushRest : 0;
-            break;
-         }
-         break;
-      default:
-         ceiling->crushflags = 0;
-         break;
-      }
-
+      ceiling->crushflags = 0;
       ceiling->topheight = sec->ceilingheight;
       ceiling->bottomheight = sec->floorheight + cd->ground_dist;
 
@@ -1070,24 +1046,27 @@ manual_crusher:
       {
       case SpeedSlow:
          ceiling->upspeed = ceiling->speed = CEILSPEED;
+         ceiling->crushspeed = CEILSPEED / 8;
          break;
       case SpeedNormal:
          ceiling->upspeed = ceiling->speed = CEILSPEED*2;
+         ceiling->crushspeed = CEILSPEED / 8;
          break;
       case SpeedFast:
-         ceiling->upspeed = ceiling->speed = CEILSPEED*4;
+         ceiling->crushspeed = ceiling->upspeed = ceiling->speed = CEILSPEED*4;
          break;
       case SpeedTurbo:
-         ceiling->upspeed = ceiling->speed = CEILSPEED*8;
+         ceiling->crushspeed = ceiling->upspeed = ceiling->speed = CEILSPEED*8;
          break;
       case SpeedParam:
          ceiling->speed = cd->speed_value;
          ceiling->upspeed = cd->upspeed;
+         ceiling->crushspeed = cd->crushspeed;
          break;
       default:
          break;
       }
-      ceiling->oldspeed = ceiling->speed;
+      ceiling->downspeed = ceiling->speed;
 
       P_AddActiveCeiling(ceiling); // add to list of active ceilings
       // haleyjd 09/29/06

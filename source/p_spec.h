@@ -485,6 +485,7 @@ enum crushmode_e
    crushmodeCompat = 0, // choose
    crushmodeDoom   = 1, // press
    crushmodeHexen  = 2, // rest
+   crushmodeDoomSlow = 3,  // press speed/8
 };
 
 // p_floor
@@ -958,8 +959,7 @@ public:
    // behaviour
    enum
    {
-      crushRest       = 1, // ceiling will rest while crushing things
-      crushSilent     = 2, // needed because of special pastdest behavior
+      crushSilent     = 1, // needed because of special pastdest behavior
    };
 
    // Methods
@@ -972,7 +972,8 @@ public:
    fixed_t topheight;
    fixed_t speed;
    fixed_t upspeed;
-   fixed_t oldspeed;
+   fixed_t downspeed;
+   fixed_t crushspeed;
    int crush;
    uint32_t crushflags;   // ioanch 20160305: flags for crushing
 
@@ -1041,9 +1042,9 @@ struct crusherdata_t
    // parameterized values
    fixed_t speed_value;
    fixed_t upspeed;
+   fixed_t crushspeed;
    fixed_t ground_dist;
    int damage;
-   crushmode_e crushmode;
 };
 
 
