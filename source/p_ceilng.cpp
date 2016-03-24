@@ -293,7 +293,7 @@ void CeilingThinker::Think()
                // then apply the Doom crusher slowdown. Otherwise, keep speed
                // constant. This may not apply to all crushing specials in
                // ZDoom, but for simplicity it has been applied generally here.
-               if(!(crushflags & crushRest) && oldspeed == CEILSPEED)
+               if(!(crushflags & crushRest) && (crushflags & crushParamSlow))
                   speed = CEILSPEED / 8;
                break;
                

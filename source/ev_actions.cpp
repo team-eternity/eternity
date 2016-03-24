@@ -3309,7 +3309,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerAndCrush)
 DEFINE_ACTION(EV_ActionParamCeilingLowerAndCrushDist)
 {
    INIT_STRUCT(crusherdata_t, cd);
-   cd.flags = CDF_HAVESPAC;
+   cd.flags = CDF_HAVESPAC | CDF_PARAMCRUSHDIST;
    cd.damage = instance->args[2];
    cd.speed_value = instance->args[1] * (FRACUNIT / 8);
    cd.speed_type = SpeedParam;
@@ -3330,7 +3330,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerAndCrushDist)
 DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaiseDist)
 {
    INIT_STRUCT(crusherdata_t, cd);
-   cd.flags = CDF_HAVESPAC;
+   cd.flags = CDF_HAVESPAC | CDF_PARAMCRUSHDIST;
    cd.damage = instance->args[3];
    cd.speed_value = instance->args[2] * (FRACUNIT / 8);
    cd.upspeed = cd.speed_value;  // Same speed as down-speed here.
@@ -3418,7 +3418,7 @@ DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaiseSilentA)
 DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaiseSilentDist)
 {
    INIT_STRUCT(crusherdata_t, cd);
-   cd.flags = CDF_HAVESPAC | CDF_PARAMSILENT;
+   cd.flags = CDF_HAVESPAC | CDF_PARAMSILENT | CDF_PARAMCRUSHDIST;
    cd.damage = instance->args[3];
    cd.speed_value = instance->args[2] * (FRACUNIT / 8);
    cd.upspeed = cd.speed_value;  // Same speed as down-speed here.

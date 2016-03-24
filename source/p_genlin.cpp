@@ -1050,10 +1050,15 @@ manual_crusher:
          case crushmodeHexen:
             ceiling->crushflags = CeilingThinker::crushRest;
             break;
+         case crushmodeDoomSlow:
+            ceiling->crushflags = CeilingThinker::crushParamSlow;
+            break;
          default: // compat or anything else
             // like in ZDoom, decide based on current game
-            ceiling->crushflags = LevelInfo.levelType == LI_TYPE_HEXEN ? 
-               CeilingThinker::crushRest : 0;
+            ceiling->crushflags =         LevelInfo.levelType == LI_TYPE_HEXEN ? 
+               CeilingThinker::crushRest      : 
+            cd->flags & CDF_PARAMCRUSHDIST && cd->speed_value == CEILSPEED ? 
+               CeilingThinker::crushParamSlow : 0;
             break;
          }
          break;

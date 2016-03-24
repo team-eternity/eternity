@@ -485,6 +485,7 @@ enum crushmode_e
    crushmodeCompat = 0, // choose
    crushmodeDoom   = 1, // press
    crushmodeHexen  = 2, // rest
+   crushmodeDoomSlow=3, // slow
 };
 
 // p_floor
@@ -960,6 +961,7 @@ public:
    {
       crushRest       = 1, // ceiling will rest while crushing things
       crushSilent     = 2, // needed because of special pastdest behavior
+      crushParamSlow  = 4, // needed for slowed-down param. crushers
    };
 
    // Methods
@@ -1005,6 +1007,7 @@ enum
    CDF_HAVETRIGGERTYPE = 0x00000001, // has BOOM-style gen action trigger
    CDF_HAVESPAC        = 0x00000002, // has Hexen-style spac
    CDF_PARAMSILENT     = 0x00000004, // ioanch 20160314: parameterized silent
+   CDF_PARAMCRUSHDIST  = 0x00000008, // compat stuff
 };
 
 // haleyjd 10/05/05: extended data struct for parameterized ceilings
