@@ -366,6 +366,45 @@ static bool B_isManualDoorOpen(const line_t *line)
 }
 
 //
+// True if special opens a locked door behind linedef, that won't close
+//
+static bool B_isManualDoorOpenLocked(const line_t *line, int *lockid)
+{
+   int special = line->special;
+
+   // Generalized
+   if(special >= GenLockedBase && special < GenCeilingBase)
+   {
+      int genspac = EV_GenActivationType(special);
+      if(genspac == PushOnce || genspac == PushMany)
+      {
+         int kind = ((special - GenLockedBase) & LockedKind) >> LockedKindShift;
+         if(kind == ODoor)
+         {
+            *lockid = EV_LockDefIDForSpecial(special);
+            return true;
+         }
+      }
+   }
+
+   // Classic
+   const ev_action_t *action = EV_ActionForSpecial(special);
+   if(!action)
+      return false;
+
+   if(action->action == EV_ActionVerticalDoor &&
+      (special >= 32 && special <= 34))
+   {
+      *lockid = EV_LockDefIDForSpecial(special);
+      return true;
+   }
+
+   // no parameterized special
+
+   return false;
+}
+
+//
 // True if the special means a tagged open-only (no close) door
 //
 static bool B_isRemoteDoorOpen(const line_t *line)

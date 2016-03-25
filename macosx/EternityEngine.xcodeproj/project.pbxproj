@@ -312,9 +312,10 @@
 		4F5F399F182D9C1C0027813A /* libsmpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF6B1753482C00E70FEC /* libsmpeg.a */; };
 		4F68CE8D1963D88100E7B8BE /* ev_sectors.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F68CE8B1963D88100E7B8BE /* ev_sectors.cpp */; };
 		4F96871E1A90CF4D00C4D342 /* am_svg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F96871C1A90CF4D00C4D342 /* am_svg.cpp */; };
-		4FAC15D41BFDA06B003FA3A4 /* b_compression.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FAC15D21BFDA06B003FA3A4 /* b_compression.cpp */; settings = {ASSET_TAGS = (); }; };
+		4FAC15D41BFDA06B003FA3A4 /* b_compression.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FAC15D21BFDA06B003FA3A4 /* b_compression.cpp */; };
 		4FE91CD6196FDFC600FB6336 /* b_itemlearn.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FE91CD4196FDFC600FB6336 /* b_itemlearn.cpp */; };
 		4FE91CD91970399A00FB6336 /* b_lineeffect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FE91CD71970399900FB6336 /* b_lineeffect.cpp */; };
+		4FEB0C891CA52059005737DD /* p_portalclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FEB0C871CA52059005737DD /* p_portalclip.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -436,6 +437,8 @@
 		4FE91CD5196FDFC600FB6336 /* b_itemlearn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = b_itemlearn.h; sourceTree = "<group>"; };
 		4FE91CD71970399900FB6336 /* b_lineeffect.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = b_lineeffect.cpp; sourceTree = "<group>"; };
 		4FE91CD81970399A00FB6336 /* b_lineeffect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = b_lineeffect.h; sourceTree = "<group>"; };
+		4FEB0C871CA52059005737DD /* p_portalclip.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_portalclip.cpp; path = ../source/p_portalclip.cpp; sourceTree = "<group>"; };
+		4FEB0C881CA52059005737DD /* p_portalclip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = p_portalclip.h; path = ../source/p_portalclip.h; sourceTree = "<group>"; };
 		4FF640B81735256700793714 /* v_alloc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = v_alloc.cpp; path = ../source/v_alloc.cpp; sourceTree = "<group>"; };
 		4FF640B91735256700793714 /* v_alloc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = v_alloc.h; path = ../source/v_alloc.h; sourceTree = "<group>"; };
 		4FFD27341796990400E4E5B1 /* a_args.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = a_args.h; path = ../source/a_args.h; sourceTree = "<group>"; };
@@ -1632,6 +1635,8 @@
 				FABF5D20158BF42800C49E93 /* p_plats.cpp */,
 				FABF5D21158BF42800C49E93 /* p_portal.cpp */,
 				FACACB571652F1170091AF2E /* p_portal.h */,
+				4FEB0C871CA52059005737DD /* p_portalclip.cpp */,
+				4FEB0C881CA52059005737DD /* p_portalclip.h */,
 				FABF5D22158BF42800C49E93 /* p_pspr.cpp */,
 				FA16D42E15E01E96002318D1 /* p_pspr.h */,
 				4F9F72D116BFB73200C405AE /* p_pushers.cpp */,
@@ -2267,6 +2272,7 @@
 				4F5F3915182D9AC00027813A /* p_skin.cpp in Sources */,
 				4F5F3916182D9AC00027813A /* p_slopes.cpp in Sources */,
 				4F5F3917182D9AC00027813A /* p_spec.cpp in Sources */,
+				4FEB0C891CA52059005737DD /* p_portalclip.cpp in Sources */,
 				4F43B479182D9F7A00730C02 /* b_msector.cpp in Sources */,
 				4F5F3918182D9AC00027813A /* p_switch.cpp in Sources */,
 				4F5F3919182D9AC00027813A /* p_telept.cpp in Sources */,
