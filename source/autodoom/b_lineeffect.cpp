@@ -340,8 +340,7 @@ static bool B_isManualDoorOpen(const line_t *line)
       if(genspac == PushOnce || genspac == PushMany)
       {
          int kind = ((special - GenDoorBase) & DoorKind) >> DoorKindShift;
-         if(kind == ODoor)
-            return true;
+         return kind == ODoor;
       }
    }
 
@@ -350,18 +349,14 @@ static bool B_isManualDoorOpen(const line_t *line)
    if(!action)
       return false;
 
-   if(action->action == EV_ActionVerticalDoor &&
-      (special == 31 || special == 118))
-   {
-      return true;
-   }
+   if (action->action == EV_ActionVerticalDoor)
+      return special == 31 || special == 118;
 
    // Parameterized special ("Door_Open")
    if(action->action == EV_ActionParamDoorOpen)
    {
       static const uint32_t flags = EX_ML_PLAYER | EX_ML_USE;
-      if(!line->args[0] && (line->extflags & flags) == flags)
-         return true;
+      return !line->args[0] && (line->extflags & flags) == flags;
    }
    return false;
 }
@@ -374,7 +369,7 @@ static bool B_isManualDoorOpenLocked(const line_t *line, int *lockid)
    int special = line->special;
 
    // Generalized
-   if(special >= GenLockedBase && special < GenCeilingBase)
+   if(special >= GenLockedBase && special < GenDoorBase)
    {
       int genspac = EV_GenActivationType(special);
       if(genspac == PushOnce || genspac == PushMany)
@@ -385,6 +380,7 @@ static bool B_isManualDoorOpenLocked(const line_t *line, int *lockid)
             *lockid = EV_LockDefIDForSpecial(special);
             return true;
          }
+         return false;
       }
    }
 
@@ -393,11 +389,14 @@ static bool B_isManualDoorOpenLocked(const line_t *line, int *lockid)
    if(!action)
       return false;
 
-   if(action->action == EV_ActionVerticalDoor &&
-      (special >= 32 && special <= 34))
+   if (action->action == EV_ActionVerticalDoor)
    {
-      *lockid = EV_LockDefIDForSpecial(special);
-      return true;
+      if (special >= 32 && special <= 34)
+      {
+         *lockid = EV_LockDefIDForSpecial(special);
+         return true;
+      }
+      return false;
    }
 
    // no parameterized special
@@ -419,8 +418,7 @@ static bool B_isRemoteDoorOpen(const line_t *line)
       if(genspac != PushOnce && genspac != PushMany)
       {
          int kind = ((special - GenDoorBase) & DoorKind) >> DoorKindShift;
-         if(kind == ODoor)
-            return true;
+         return kind == ODoor;
       }
    }
 
@@ -439,11 +437,199 @@ static bool B_isRemoteDoorOpen(const line_t *line)
    if(action->action == EV_ActionParamDoorOpen)
    {
       static const uint32_t flags = EX_ML_PLAYER | EX_ML_USE;
-      if(line->args[0] && (line->extflags & flags) == flags)
-         return true;
+      return line->args[0] && (line->extflags & flags) == flags;
    }
    return false;
 }
+
+//
+// Check if special is a remote locked door that doesn't close
+//
+static bool B_isRemoteDoorOpenLocked(const line_t *line, int *lockid)
+{
+   int special = line->special;
+
+   // generalized
+   if (special >= GenLockedBase && special < GenDoorBase)
+   {
+      int genspac = EV_GenActivationType(special);
+      if (genspac != PushOnce && genspac != PushMany)
+      {
+         int kind = ((special - GenLockedBase) & LockedKind) >> LockedKindShift;
+         if (kind == ODoor)
+         {
+            *lockid = EV_LockDefIDForSpecial(special);
+            return true;
+         }
+         return false;
+      }
+   }
+
+   // classic special
+   const ev_action_t *action = EV_ActionForSpecial(special);
+   if (!action)
+      return false;
+
+   if (action->action == EV_ActionDoLockedDoor)
+      return true;
+
+   // no param specials
+   return false;
+}
+
+//
+// Check that it's a manual standard lockless door
+//
+static bool B_isManualDoorRaise(const line_t *line)
+{
+   int special = line->special;
+
+   // generalized
+   if (special >= GenDoorBase && special < GenCeilingBase)
+   {
+      int genspac = EV_GenActivationType(special);
+      if (genspac == PushOnce || genspac == PushMany)
+      {
+         int kind = ((special - GenDoorBase) & DoorKind) >> DoorKindShift;
+         return kind == OdCDoor || pDOdCDoor;
+      }
+   }
+
+   // classic special
+   const ev_action_t *action = EV_ActionForSpecial(special);
+   if (!action)
+      return false;
+
+   if (action->action == EV_ActionVerticalDoor)
+      return special == 1 || special == 117;
+   
+   // param special
+   if (action->action == EV_ActionParamDoorRaise ||
+      action->action == EV_ActionParamDoorWaitRaise)
+   {
+      static const uint32_t flags = EX_ML_PLAYER | EX_ML_USE;
+      return !line->args[0] && (line->extflags & flags) == flags;
+   }
+
+   return false;
+}
+
+//
+// Check that it's a manual standard locked door
+//
+static bool B_isManualDoorRaiseLocked(const line_t *line, int *lockid)
+{
+   int special = line->special;
+
+   // Generalized
+   if (special >= GenLockedBase && special < GenDoorBase)
+   {
+      int genspac = EV_GenActivationType(special);
+      if (genspac == PushOnce || genspac == PushMany)
+      {
+         int kind = ((special - GenLockedBase) & LockedKind) >> LockedKindShift;
+         if (kind == ODoor)
+         {
+            *lockid = EV_LockDefIDForSpecial(special);
+            return true;
+         }
+         return false;
+      }
+   }
+
+   // classic special
+   const ev_action_t *action = EV_ActionForSpecial(special);
+   if (!action)
+      return false;
+
+   if (action->action == EV_ActionVerticalDoor)
+   {
+      if (special >= 26 && special <= 28)
+      {
+         *lockid = EV_LockDefIDForSpecial(special);
+         return true;
+      }
+      return false;
+   }
+
+   // param special
+   if (action->action == EV_ActionParamDoorLockedRaise)
+   {
+      static const uint32_t flags = EX_ML_PLAYER | EX_ML_USE;
+      if (!line->args[0] && (line->extflags & flags) == flags)
+      {
+         *lockid = line->args[3];
+         return true;
+      }
+      return false;
+   }
+
+   return false;
+}
+
+//
+// Check that it's a remote standard lockless door
+//
+static bool B_isRemoteDoorRaise(const line_t *line)
+{
+   int special = line->special;
+
+   // generalized
+   if (special >= GenDoorBase && special < GenCeilingBase)
+   {
+      int genspac = EV_GenActivationType(special);
+      if (genspac != PushOnce && genspac != PushMany)
+      {
+         int kind = ((special - GenDoorBase) & DoorKind) >> DoorKindShift;
+         return kind == OdCDoor || pDOdCDoor;
+      }
+   }
+
+   // classic special
+   const ev_action_t *action = EV_ActionForSpecial(special);
+   if (!action)
+      return false;
+
+   if (action->action == EV_ActionRaiseDoor || 
+      action->action == EV_ActionDoorBlazeRaise)
+   {
+      return true;
+   }
+
+   // param special
+   if (action->action == EV_ActionParamDoorRaise ||
+      action->action == EV_ActionParamDoorWaitRaise)
+   {
+      static const uint32_t flags = EX_ML_PLAYER | EX_ML_USE;
+      return line->args[0] && (line->extflags & flags) == flags;
+   }
+
+   return false;
+}
+
+static bool B_isCeilingToFloor(const line_t *line)
+{
+   int special = line->special;
+
+   // generalized
+   if (special >= GenCeilingBase && special < GenFloorBase)
+   {
+      int genspac = EV_GenActivationType(special);
+      if (genspac != PushOnce && genspac != PushMany)
+      {
+         int kind = ((special - GenDoorBase) & DoorKind) >> DoorKindShift;
+         return kind == OdCDoor || pDOdCDoor;
+      }
+   }
+}
+
+// ce poate face actiunea
+// poate schimba pozitii de sectoare. Lista de sectoare.
+
+struct LineEffect
+{
+
+};
 
 static void B_pushSectorHeights(int secnum, const line_t& line,
                                 PODCollection<int>& indexList, const player_t& player)
