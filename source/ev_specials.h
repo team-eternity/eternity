@@ -138,7 +138,7 @@ struct ev_binding_t
 // the type and never by the action. For example, W1ActionType sets 
 // EV_POSTCLEARSPECIAL for all DOOM-style W1 actions.
 //
-inline static unsigned int EV_CompositeActionFlags(ev_action_t *action)
+inline static unsigned int EV_CompositeActionFlags(const ev_action_t *action)
 {
    return (action->type->flags | action->flags);
 }

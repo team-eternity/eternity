@@ -55,6 +55,21 @@
 // Generalized Linedef Type handlers
 //
 
+// ioanch 20160326: helper function to get the minfloortexture size commonly
+fixed_t EV_ShortestTextureHeight(int secnum, fixed_t floorheight, 
+   int direction)
+{
+   fixed_t fdh =
+      (floorheight >> FRACBITS) + direction *
+      (P_FindShortestTextureAround(secnum) >> FRACBITS);
+   if (fdh > 32000)  //jff 3/13/98 prevent overflow
+      fdh = 32000;    // wraparound in floor height
+   if (fdh < -32000)
+      fdh= -32000;
+   fdh <<= FRACBITS;
+   return fdh;
+}
+
 int EV_DoParamFloor(const line_t *line, int tag, const floordata_t *fd)
 {
    int       secnum;

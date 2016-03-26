@@ -1449,37 +1449,276 @@ static bool B_sectorIs5minRisingDoor(int special)
    return binding && binding->apply == EV_SectorDoorRaiseIn5Mins;
 }
 
-//! Active sector as found in the map
-struct ActiveSector
+//! Inserts stairs from source sector into set
+static void B_insertStairs(const sector_t *sector, bool ignoreTextures, 
+   std::unordered_set<const sector_t *> &set)
 {
-   const sector_t *sector; // entry
-   fixed_t minfloor, maxfloor, minceiling, maxceiling;   // min and max plane heights
-};
+   set.insert(sector);
+   int ok;
+   int secnum = static_cast<int>(sector - sectors);
+
+   std::unordered_set<const sector_t *> visited;
+   visited.insert(sector); // equivalent of putting a thinker over it
+
+   do
+   {
+      ok = 0;
+      for (int i = 0; i < sector->linecount; ++i)
+      {
+         if (!(sector->lines[i])->backsector)
+            continue;
+
+         const sector_t *tsec = sector->lines[i]->frontsector;
+         int newsecnum = static_cast<int>(tsec - sectors);
+
+         if (secnum != newsecnum)
+            continue;
+
+         tsec = sector->lines[i]->backsector;
+         newsecnum = static_cast<int>(tsec - sectors);
+
+         if (!ignoreTextures && tsec->floorpic != sector->floorpic)
+            continue;
+
+         if (visited.count(tsec))
+            continue;
+
+         sector = tsec;
+         secnum = newsecnum;
+
+         set.insert(sector);
+         visited.insert(sector);
+
+         ok = 1;
+         break;
+      }
+   } while (ok);
+}
+
+static void B_insertDonut(const sector_t *s1, std::unordered_set<const sector_t *> &set)
+{
+   const sector_t *s2 = getNextSector(s1->lines[0], s1);
+   const sector_t *s3;
+   if (!s2)
+      return;
+
+   fixed_t s3_floorheight;
+   int16_t s3_floorpic;
+
+   for (int i = 0; i < s2->linecount; ++i)
+   {
+      if (comp[comp_model])
+      {
+         if (s2->lines[i]->backsector == s1)
+            continue;
+      }
+      else if (!s2->lines[i]->backsector || s2->lines[i]->backsector == s1)
+         continue;
+
+      s3 = s2->lines[i]->backsector;
+      if (!s3)
+      {
+         if (!DonutOverflow(&s3_floorheight, &s3_floorpic))
+            return;
+      }
+
+      set.insert(s1);
+      set.insert(s2);
+      break;
+   }
+ 
+}
+
+//! Handles generalized types thereof
+static void B_collectGeneralizedTargetSectors(const line_t *line, std::unordered_set<const sector_t *> &set)
+{
+   bool isStair = line->special >= GenStairsBase && line->special < GenLiftBase;
+   bool stairIgnoreTextures = false;
+   if (isStair)   // stairs are more complex
+      stairIgnoreTextures = !!((line->special - GenStairsBase & StairIgnore) >> StairIgnoreShift);
+
+   int trigger_type = (line->special & TriggerType) >> TriggerTypeShift;
+   if (trigger_type == PushOnce || trigger_type == PushMany)
+   {
+      if (!line->backsector)
+         return;  // dubious situation
+      if (isStair)
+         B_insertStairs(line->backsector, stairIgnoreTextures, set);
+      else
+         set.insert(line->backsector);
+      return;
+   }
+
+   int secnum = -1;
+   while ((secnum = P_FindSectorFromLineTag(line, secnum)))
+   {
+      if(isStair)
+         B_insertStairs(&sectors[secnum], stairIgnoreTextures, set);
+      else
+         set.insert(&sectors[secnum]);
+   }
+}
+
+//! True if it targets sectors and not other objects
+static bool B_paramActionTargetsSectors(const ev_action_t *action)
+{
+   static std::unordered_set<EVActionFunc> set;
+   if (set.empty())
+   {
+      set.insert(EV_ActionParamDoorRaise);
+      set.insert(EV_ActionParamDoorOpen);
+      set.insert(EV_ActionParamDoorClose);
+      set.insert(EV_ActionParamDoorCloseWaitOpen);
+      set.insert(EV_ActionParamDoorWaitRaise);
+      set.insert(EV_ActionParamDoorWaitClose);
+      set.insert(EV_ActionParamDoorLockedRaise);
+      set.insert(EV_ActionParamFloorRaiseToHighest);
+      set.insert(EV_ActionParamEEFloorLowerToHighest);
+      set.insert(EV_ActionParamFloorLowerToHighest);
+      set.insert(EV_ActionParamFloorRaiseToLowest);
+      set.insert(EV_ActionParamFloorLowerToLowest);
+      set.insert(EV_ActionParamFloorRaiseToNearest);
+      set.insert(EV_ActionParamFloorLowerToNearest);
+      set.insert(EV_ActionParamFloorRaiseToLowestCeiling);
+      set.insert(EV_ActionParamFloorLowerToLowestCeiling);
+      set.insert(EV_ActionParamFloorRaiseToCeiling);
+      set.insert(EV_ActionParamFloorRaiseByTexture);
+      set.insert(EV_ActionParamFloorLowerByTexture);
+      set.insert(EV_ActionParamFloorRaiseByValue);
+      set.insert(EV_ActionParamFloorRaiseByValueTimes8);
+      set.insert(EV_ActionParamFloorLowerByValue);
+      set.insert(EV_ActionParamFloorLowerByValueTimes8);
+      set.insert(EV_ActionParamFloorMoveToValue);
+      set.insert(EV_ActionParamFloorMoveToValueTimes8);
+      set.insert(EV_ActionParamFloorRaiseInstant);
+      set.insert(EV_ActionParamFloorLowerInstant);
+      set.insert(EV_ActionParamFloorToCeilingInstant);
+      set.insert(EV_ActionParamCeilingRaiseToHighest);
+      set.insert(EV_ActionParamCeilingToHighestInstant);
+      set.insert(EV_ActionParamCeilingRaiseToNearest);
+      set.insert(EV_ActionParamCeilingLowerToNearest);
+      set.insert(EV_ActionParamCeilingRaiseToLowest);
+      set.insert(EV_ActionParamCeilingLowerToLowest);
+      set.insert(EV_ActionParamCeilingRaiseToHighestFloor);
+      set.insert(EV_ActionParamCeilingLowerToHighestFloor);
+      set.insert(EV_ActionParamCeilingToFloorInstant);
+      set.insert(EV_ActionParamCeilingLowerToFloor);
+      set.insert(EV_ActionParamCeilingRaiseByTexture);
+      set.insert(EV_ActionParamCeilingLowerByTexture);
+      set.insert(EV_ActionParamCeilingRaiseByValue);
+      set.insert(EV_ActionParamCeilingLowerByValue);
+      set.insert(EV_ActionParamCeilingRaiseByValueTimes8);
+      set.insert(EV_ActionParamCeilingLowerByValueTimes8);
+      set.insert(EV_ActionParamCeilingMoveToValue);
+      set.insert(EV_ActionParamCeilingMoveToValueTimes8);
+      set.insert(EV_ActionParamCeilingRaiseInstant);
+      set.insert(EV_ActionParamCeilingLowerInstant);
+      set.insert(EV_ActionParamCeilingCrushAndRaise);
+      set.insert(EV_ActionParamCeilingCrushAndRaiseA);
+      set.insert(EV_ActionParamCeilingCrushAndRaiseSilentA);
+      set.insert(EV_ActionParamCeilingCrushAndRaiseDist);
+      set.insert(EV_ActionParamCeilingCrushAndRaiseSilentDist);
+      set.insert(EV_ActionParamCeilingCrushStop);
+      set.insert(EV_ActionParamCeilingCrushRaiseAndStay);
+      set.insert(EV_ActionParamCeilingCrushRaiseAndStayA);
+      set.insert(EV_ActionParamCeilingCrushRaiseAndStaySilA);
+      set.insert(EV_ActionParamCeilingLowerAndCrush);
+      set.insert(EV_ActionParamCeilingLowerAndCrushDist);
+      set.insert(EV_ActionParamGenCrusher);
+      set.insert(EV_ActionParamStairsBuildUpDoom);
+      set.insert(EV_ActionParamStairsBuildDownDoom);
+      set.insert(EV_ActionParamStairsBuildUpDoomSync);
+      set.insert(EV_ActionParamStairsBuildDownDoomSync);
+      set.insert(EV_ActionPillarBuild);
+      set.insert(EV_ActionPillarBuildAndCrush);
+      set.insert(EV_ActionPillarOpen);
+      set.insert(EV_ActionFloorWaggle);
+      set.insert(EV_ActionParamPlatPerpetualRaise);
+      set.insert(EV_ActionParamPlatStop);
+      set.insert(EV_ActionParamPlatDWUS);
+      set.insert(EV_ActionParamPlatDownByValue);
+      set.insert(EV_ActionParamPlatUWDS);
+      set.insert(EV_ActionParamPlatUpByValue);
+      set.insert(EV_ActionParamDonut);
+      // lights are ignored because they have no gameplay effect
+      // exits have no purpose here
+   }
+
+   return !!set.count(action->action);
+}
+
+static void B_collectParameterizedTargetSectors(const line_t *line, const ev_action_t *action, 
+   std::unordered_set<const sector_t *> &set)
+{
+   if (!B_paramActionTargetsSectors(action))
+      return;
+
+   static std::unordered_set<EVActionFunc> stairset;
+   if (stairset.empty())
+   {
+      stairset.insert(EV_ActionParamStairsBuildUpDoom);
+      stairset.insert(EV_ActionParamStairsBuildDownDoom);
+      stairset.insert(EV_ActionParamStairsBuildUpDoomSync);
+      stairset.insert(EV_ActionParamStairsBuildDownDoomSync);
+   }
+
+   auto solve = [line, action, &set](const sector_t *sector) {
+      if (stairset.count(action->action))
+         B_insertStairs(sector, false, set);
+      else if (action->action == EV_ActionParamDonut)
+         B_insertDonut(sector, set);
+      else
+         set.insert(sector);
+   };
+   
+   if (!line->args[0])
+   {
+      if (!line->backsector)
+         return;
+
+      solve(line->backsector);
+      return;
+   }
+
+   int secnum = -1;
+   while ((secnum = P_FindSectorFromTag(line->args[0], secnum)))
+      solve(&sectors[secnum]);
+}
 
 //! Looks in the map for moving sectors
-static void B_collectActiveSectors(PODCollection<ActiveSector> &coll)
+static void B_collectActiveSectors(std::unordered_set<const sector_t *> &set)
 {
    // 1. Find time-based doors
    for(int i = 0; i < numsectors; ++i)
    {
       const sector_t *sector = sectors + i;
-      if(B_sectorIs30sClosingDoor(sector->special))
-      {
-         ActiveSector &item = coll.addNew();
-         item.sector = sector;
-         item.minfloor = item.maxfloor = sector->floorheight;
-         item.minceiling = sector->floorheight;
-         item.maxceiling = sector->ceilingheight;
-      }
-      else if(B_sectorIs5minRisingDoor(sector->special))
-      {
-         ActiveSector &item = coll.addNew();
-         item.sector = sector;
-         item.minfloor = item.maxfloor = sector->floorheight;
-         item.minceiling = sector->floorheight;
-         item.maxceiling = P_FindLowestCeilingSurrounding(sector) - 4 * FRACUNIT;
-      }
+      if(B_sectorIs30sClosingDoor(sector->special) || B_sectorIs5minRisingDoor(sector->special))
+         set.insert(sector);
    }
 
    // TODO: now look for action linedefs.
+   for (int i = 0; i < numlines; ++i)
+   {
+      const line_t *line = lines + i;
+      if (!line->special)
+         continue;
+      if (line->special >= GenCrusherBase)
+      {
+         B_collectGeneralizedTargetSectors(line, set);
+         continue;
+      }
+      
+      const ev_action_t *action = EV_ActionForSpecial(line->special);
+      if (!action)
+         continue;
+
+      if (EV_CompositeActionFlags(action) & EV_PARAMLINESPEC)
+      {
+         B_collectParameterizedTargetSectors(line, action, set);
+         continue;
+      }
+
+      // TODO: classic special
+      
+   }
 }
