@@ -34,6 +34,7 @@
 #include "../e_exdata.h"
 #include "../e_inventory.h"
 #include "../ev_actions.h"
+#include "../ev_sectors.h"
 #include "../ev_specials.h"
 #include "../m_collection.h"
 #include "b_botmap.h"
@@ -1241,4 +1242,58 @@ bool B_VssTypeIsHarmless(VanillaSectorSpecial vss)
          break;
    }
    return true;
+}
+////////////////////////////////////////////////////////////////////////////////
+
+static bool B_sectorIs30sClosingDoor(int special)
+{
+   const ev_sectorbinding_t *binding = EV_IsGenSectorSpecial(special) ?
+   EV_GenBindingForSectorSpecial(special) :
+   EV_BindingForSectorSpecial(special);
+
+   return binding && binding->apply == EV_SectorDoorCloseIn30;
+}
+
+static bool B_sectorIs5minRisingDoor(int special)
+{
+   const ev_sectorbinding_t *binding = EV_IsGenSectorSpecial(special) ?
+   EV_GenBindingForSectorSpecial(special) :
+   EV_BindingForSectorSpecial(special);
+
+   return binding && binding->apply == EV_SectorDoorRaiseIn5Mins;
+}
+
+//! Active sector as found in the map
+struct ActiveSector
+{
+   const sector_t *sector; // entry
+   fixed_t minfloor, maxfloor, minceiling, maxceiling;   // min and max plane heights
+};
+
+//! Looks in the map for moving sectors
+static void B_collectActiveSectors(PODCollection<ActiveSector> &coll)
+{
+   // 1. Find time-based doors
+   for(int i = 0; i < numsectors; ++i)
+   {
+      const sector_t *sector = sectors + i;
+      if(B_sectorIs30sClosingDoor(sector->special))
+      {
+         ActiveSector &item = coll.addNew();
+         item.sector = sector;
+         item.minfloor = item.maxfloor = sector->floorheight;
+         item.minceiling = sector->floorheight;
+         item.maxceiling = sector->ceilingheight;
+      }
+      else if(B_sectorIs5minRisingDoor(sector->special))
+      {
+         ActiveSector &item = coll.addNew();
+         item.sector = sector;
+         item.minfloor = item.maxfloor = sector->floorheight;
+         item.minceiling = sector->floorheight;
+         item.maxceiling = P_FindLowestCeilingSurrounding(sector) - 4 * FRACUNIT;
+      }
+   }
+
+   // TODO: now look for action linedefs.
 }

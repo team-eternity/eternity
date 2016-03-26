@@ -49,6 +49,10 @@ bool EV_IsGenSectorSpecial(int special);
 
 void EV_SpawnSectorSpecials();
 
+// ioanch: external access
+void EV_SectorDoorCloseIn30(sector_t *sector);
+void EV_SectorDoorRaiseIn5Mins(sector_t *sector);
+
 #endif
 
 // EOF

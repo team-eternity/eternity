@@ -180,7 +180,7 @@ static void EV_SectorSecret(sector_t *sector)
 // * Generalized: (sector->special & 31) == 10
 //   NB: obliterates any generalized sector properties.
 //
-static void EV_SectorDoorCloseIn30(sector_t *sector)
+void EV_SectorDoorCloseIn30(sector_t *sector)
 {
    P_SpawnDoorCloseIn30(sector);
 }
@@ -237,7 +237,7 @@ static void EV_SectorLightStrobeFastSync(sector_t *sector)
 // * Generalized: (sector->special & 31) == 14
 //   NB: obliterates any generalized sector properties.
 //
-static void EV_SectorDoorRaiseIn5Mins(sector_t *sector)
+void EV_SectorDoorRaiseIn5Mins(sector_t *sector)
 {
    P_SpawnDoorRaiseIn5Mins(sector);
 }
