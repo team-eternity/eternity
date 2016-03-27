@@ -808,5 +808,32 @@ bool B_MobjUsesCodepointer(const Mobj& mo, void(*action)(actionargs_t *args))
    return B_stateEncounters(mi.spawnstate, mo, B_stateUsesCodepointer, false, action);
 }
 
+//! Sets the SectorAffectingStates struct
+static bool B_stateSetSectorState(statenum_t sn, const mobjinfo_t &mi, void *miscData)
+{
+   auto sas = static_cast<SectorAffectingStates *>(miscData);
+   const state_t *state = states[sn];
+   if (!sas->bossDeath && state->action == A_BossDeath)
+      sas->bossDeath = state;
+   else if (!sas->hticBossDeath && state->action == A_HticBossDeath)
+      sas->hticBossDeath = state;
+   else if (!sas->keenDie && state->action == A_KeenDie)
+      sas->keenDie = state;
+   else if (state->action == A_LineEffect)
+      sas->lineEffects.add(state);
+   return false;
+}
+
+//! Populates a collection with A_BossDeath, A_HticBossDeath, A_KeenDie or A_LineEffect-using
+//! states
+void B_GetMobjSectorTargetActions(const Mobj& mo, SectorAffectingStates &table)
+{
+   const mobjinfo_t &mi = *mo.info;
+
+   if (mi.spawnstate == NullStateNum)
+      return;  // has null start frame, invalid
+   B_stateEncounters(mi.spawnstate, mo, B_stateSetSectorState, false, &table);
+}
+
 // EOF
 

@@ -1533,7 +1533,8 @@ static void B_insertDonut(const sector_t *s1, std::unordered_set<const sector_t 
 }
 
 //! Handles generalized types thereof
-static void B_collectGeneralizedTargetSectors(const line_t *line, std::unordered_set<const sector_t *> &set)
+static void B_collectGeneralizedTargetSectors(const line_t *line, bool noshoot,
+   std::unordered_set<const sector_t *> &set)
 {
    bool isStair = line->special >= GenStairsBase && line->special < GenLiftBase;
    bool stairIgnoreTextures = false;
@@ -1541,6 +1542,8 @@ static void B_collectGeneralizedTargetSectors(const line_t *line, std::unordered
       stairIgnoreTextures = !!((line->special - GenStairsBase & StairIgnore) >> StairIgnoreShift);
 
    int trigger_type = (line->special & TriggerType) >> TriggerTypeShift;
+   if (noshoot && (trigger_type == GunOnce || trigger_type == GunMany))
+      return;
    if (trigger_type == PushOnce || trigger_type == PushMany)
    {
       if (!line->backsector)
@@ -1712,6 +1715,14 @@ static bool B_classicActionTargetsSectors(const ev_action_t *action)
 static void B_collectParameterizedTargetSectors(const line_t *line, const ev_action_t *action, 
    std::unordered_set<const sector_t *> &set)
 {
+   // TODO: also check more combos
+   if (!(line->extflags & (EX_ML_PLAYER | EX_ML_MONSTER | EX_ML_MISSILE)) ||
+      !(line->extflags & (EX_ML_CROSS | EX_ML_IMPACT | EX_ML_PUSH | EX_ML_USE)))
+   {
+      return;  // inaccessible
+   }
+
+
    if (!B_paramActionTargetsSectors(action))
       return;
 
@@ -1784,6 +1795,33 @@ static void B_collectClassicTargetSectors(const line_t *line, const ev_action_t 
    }
 }
 
+//! Subroutine for linedefs targetting sectors
+static void B_collectForLine(const line_t *line, bool fromLineEffect, 
+   std::unordered_set<const sector_t *> &set)
+{
+   if (line->special >= GenCrusherBase)
+   {
+      B_collectGeneralizedTargetSectors(line, fromLineEffect, set);
+      return;
+   }
+
+   const ev_action_t *action = EV_ActionForSpecial(line->special);
+   if (!action)
+      return;
+
+   if (EV_CompositeActionFlags(action) & EV_PARAMLINESPEC)
+   {
+      if (fromLineEffect)   // ignore ALL param specials
+         return;
+      B_collectParameterizedTargetSectors(line, action, set);
+      return;
+   }
+
+   if (fromLineEffect && action->type->activation == SPAC_IMPACT)
+      return;
+   B_collectClassicTargetSectors(line, action, set);
+}
+
 //! Looks in the map for moving sectors
 static void B_collectActiveSectors(std::unordered_set<const sector_t *> &set)
 {
@@ -1797,72 +1835,6 @@ static void B_collectActiveSectors(std::unordered_set<const sector_t *> &set)
          set.insert(sector);
          continue;
       }
-
-      // Find final level sectors (e.g. 666)
-      if (sector->tag == 666)
-      {
-         if (tag666used)
-         {
-            set.insert(sector);
-            goto nextSector;
-         }
-         // look if there are bosses
-         for (Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
-         {
-            const Mobj *mo;
-            if ((mo = thinker_cast<const Mobj *>(th)))
-            {
-               if (B_MobjUsesCodepointer(*mo, A_KeenDie) ||
-                  
-                  (LevelInfo.bossSpecs & BSPEC_E1M8 && mo->flags2 & MF2_E1M8BOSS ||
-                  LevelInfo.bossSpecs & BSPEC_E4M6 && mo->flags2 & MF2_E4M6BOSS ||
-                  LevelInfo.bossSpecs & BSPEC_E4M8 && mo->flags2 & MF2_E4M8BOSS ||
-                  LevelInfo.bossSpecs & BSPEC_MAP07_1 && mo->flags2 & MF2_MAP07BOSS1) &&
-                  B_MobjUsesCodepointer(*mo, A_BossDeath) ||
-                     
-                  (LevelInfo.bossSpecs & BSPEC_E1M8 && mo->flags2 & MF2_E1M8BOSS ||
-                  LevelInfo.bossSpecs & BSPEC_E2M8 && mo->flags2 & MF2_E2M8BOSS ||
-                  LevelInfo.bossSpecs & BSPEC_E3M8 && mo->flags2 & MF2_E3M8BOSS ||
-                  LevelInfo.bossSpecs & BSPEC_E4M8 && mo->flags2 & MF2_E4M8BOSS ||
-                  LevelInfo.bossSpecs & BSPEC_E5M8 && mo->flags3 & MF3_E5M8BOSS) &&
-                  B_MobjUsesCodepointer(*mo, A_HticBossDeath)
-                  )
-               {
-                  // found one
-                  tag666used = true;
-                  set.insert(sector);
-                  goto nextSector;
-               }
-            }
-         }
-         // also look for Commander Keen
-      }
-      if (sector->tag == 667 && LevelInfo.bossSpecs & BSPEC_MAP07_2)
-      {
-         if (tag667used)
-         {
-            set.insert(sector);
-            goto nextSector;
-         }
-         // look if there are bosses
-         for (Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
-         {
-            const Mobj *mo;
-            if (!(mo = thinker_cast<const Mobj *>(th)))
-            {
-               if (LevelInfo.bossSpecs & BSPEC_MAP07_2 && mo->flags2 & MF2_MAP07BOSS2 &&
-                  B_MobjUsesCodepointer(*mo, A_BossDeath))
-               {
-                  // found one
-                  tag667used = true;
-                  set.insert(sector);
-                  goto nextSector;
-               }
-            }
-         }
-      }
-   nextSector:
-      ;
    }
 
    // 2. Find special linedefs
@@ -1871,23 +1843,65 @@ static void B_collectActiveSectors(std::unordered_set<const sector_t *> &set)
       const line_t *line = lines + i;
       if (!line->special)
          continue;
-      if (line->special >= GenCrusherBase)
-      {
-         B_collectGeneralizedTargetSectors(line, set);
-         continue;
-      }
-      
-      const ev_action_t *action = EV_ActionForSpecial(line->special);
-      if (!action)
+      B_collectForLine(line, false, set);
+   }
+
+   // 3. Look for things with sector targets
+   SectorAffectingStates sas;
+   bool tag666added = false, tag667added = false;
+   for (Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
+   {
+      const Mobj *mo;
+      if (!(mo = thinker_cast<const Mobj *>(th)))
          continue;
 
-      if (EV_CompositeActionFlags(action) & EV_PARAMLINESPEC)
-      {
-         B_collectParameterizedTargetSectors(line, action, set);
-         continue;
-      }
+      sas.clear();
+      B_GetMobjSectorTargetActions(*mo, sas);
 
-      B_collectClassicTargetSectors(line, action, set);
+      if (sas.bossDeath)
+      {
+         if (!tag666added &&
+            (LevelInfo.bossSpecs & BSPEC_E1M8 && mo->flags2 & MF2_E1M8BOSS ||
+               LevelInfo.bossSpecs & BSPEC_E4M6 && mo->flags2 & MF2_E4M6BOSS ||
+               LevelInfo.bossSpecs & BSPEC_E4M8 && mo->flags2 & MF2_E4M8BOSS ||
+               LevelInfo.bossSpecs & BSPEC_MAP07_1 && mo->flags2 & MF2_MAP07BOSS1))
+         {
+            tag666added = true;
+            int secnum = -1;
+            while ((secnum = P_FindSectorFromTag(666, secnum)) >= 0)
+               set.insert(sectors + secnum);
+         }
+         if (!tag667added && LevelInfo.bossSpecs & BSPEC_MAP07_2 && mo->flags2 & MF2_MAP07BOSS2)
+         {
+            tag667added = true;
+            int secnum = -1;
+            while ((secnum = P_FindSectorFromTag(667, secnum)) >= 0)
+               set.insert(sectors + secnum);
+         }
+      }
+      if (!tag666added && (sas.keenDie || sas.hticBossDeath &&
+         (LevelInfo.bossSpecs & BSPEC_E1M8 && mo->flags2 & MF2_E1M8BOSS ||
+            LevelInfo.bossSpecs & BSPEC_E2M8 && mo->flags2 & MF2_E2M8BOSS ||
+            LevelInfo.bossSpecs & BSPEC_E3M8 && mo->flags2 & MF2_E3M8BOSS ||
+            LevelInfo.bossSpecs & BSPEC_E4M8 && mo->flags2 & MF2_E4M8BOSS ||
+            LevelInfo.bossSpecs & BSPEC_E5M8 && mo->flags3 & MF3_E5M8BOSS)))
+      {
+         tag666added = true;
+         int secnum = -1;
+         while ((secnum = P_FindSectorFromTag(666, secnum)) >= 0)
+            set.insert(sectors + secnum);
+      }
+      for (const state_t *state : sas.lineEffects)
+      {
+         // same devious semantics as A_LineEffect
+         static line_t s;
+         s = *lines;
+         if ((s.special = state->misc1))
+         {
+            s.tag = state->misc2;
+            B_collectForLine(&s, true, set);
+         }
+      }
    }
 }
 

@@ -29,15 +29,33 @@
 #ifndef B_CLASSIFIER_H_
 #define B_CLASSIFIER_H_
 
+#include "../m_collection.h"
 
 class Mobj;
 struct actionargs_t;
 struct mobjinfo_t;
+struct state_t;
 
 // external dependencies
 extern void A_BossDeath(actionargs_t *actionargs);
 extern void A_HticBossDeath(actionargs_t *actionargs);
 extern void A_KeenDie(actionargs_t *actionargs);
+extern void A_LineEffect(actionargs_t *actionargs);
+
+//! List of pointers to sector-affecting states
+struct SectorAffectingStates
+{
+   const state_t *bossDeath;
+   const state_t *hticBossDeath;
+   const state_t *keenDie;
+   PODCollection<const state_t *> lineEffects;
+
+   void clear()
+   {
+      bossDeath = hticBossDeath = keenDie = nullptr;
+      lineEffects.makeEmpty();
+   }
+};
 
 void B_UpdateMobjInfoSet(int numthingsalloc);
 
@@ -47,6 +65,7 @@ bool B_IsMobjHitscanner(const Mobj& mo);
 bool B_IsMobjExplosiveDeath(const Mobj& mo);
 bool B_MonsterIsInPreAttack(const Mobj& mo);
 bool B_MobjUsesCodepointer(const Mobj& mo, void(*action)(actionargs_t *args));
+void B_GetMobjSectorTargetActions(const Mobj& mo, SectorAffectingStates &table);
 
 #endif 
 
