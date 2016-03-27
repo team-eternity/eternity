@@ -45,6 +45,7 @@
 #include "../doomstat.h"
 #include "../e_edf.h"
 #include "../e_player.h"
+#include "../e_states.h"
 #include "../e_things.h"
 #include "../ev_specials.h"
 #include "../g_dmflag.h"
@@ -739,6 +740,70 @@ void Bot::pickRandomWeapon(const Target& target)
     cmd->buttons |= result << BT_WEAPONSHIFT;
 }
 
+const Bot::Target *Bot::pickBestTarget(const PODCollection<Target>& targets, CombatInfo &cinfo)
+{
+   const Target* highestThreat = &targets[0];
+   if (!targets[0].isLine)
+   {
+      double highestThreatRating = -DBL_MAX, threat;
+      fixed_t shortestDist = D_MAXINT;
+
+      const Target* closestThreat = &targets[0];
+      double closestThreatRating;
+
+      const Target* currentTargetInSight = nullptr;
+      double currentTargetRating;
+
+      for (const Target& target : targets)
+      {
+         if (target.isLine)
+            continue;
+         if (sentient(target.mobj) && !(target.mobj->flags & MF_FRIEND) &&
+            target.mobj->target != pl->mo)
+         {
+            continue;   // ignore monsters not hunting player
+         }
+         if (target.mobj == m_currentTargetMobj)
+         {
+            currentTargetInSight = &target;  // current target sighted
+            currentTargetRating = B_GetMonsterThreatLevel(m_currentTargetMobj->info);
+         }
+
+         threat = B_GetMonsterThreatLevel(target.mobj->info);
+         if (threat > highestThreatRating)
+         {
+            highestThreat = &target;
+            highestThreatRating = threat;
+         }
+         if (target.dist < shortestDist)
+         {
+            closestThreat = &target;
+            shortestDist = target.dist;
+            closestThreatRating = B_GetMonsterThreatLevel(target.mobj->info);
+         }
+
+         // set combat info
+         if (!cinfo.hasShooters && target.mobj->info->missilestate != NullStateNum)
+            cinfo.hasShooters = true;
+      }
+
+      // Keep shooting current monster but choose another one if it's more threatening
+      if (currentTargetInSight && B_GetMonsterThreatLevel(m_currentTargetMobj->info) >= highestThreatRating)
+      {
+         highestThreat = currentTargetInSight;
+         highestThreatRating = currentTargetRating;
+      }
+
+      // but prioritize close targets if not much weaker
+      if (closestThreat->dist < highestThreat->dist / 2 &&
+         (closestThreatRating > highestThreatRating / 4 || closestThreat->dist < 2 * MELEERANGE))
+      {
+         highestThreat = closestThreat;
+      }
+   }
+   return highestThreat;
+}
+
 void Bot::doCombatAI(const PODCollection<Target>& targets)
 {
     fixed_t mx, my, nx, ny;
@@ -751,56 +816,12 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
     dangle = tangle - pl->mo->angle;
 
     // Find the most threatening monster enemy, if the first target is not a line
-    const Target* highestThreat = &targets[0];
-    if (!targets[0].isLine)
-    {
-        double highestThreatRating = -DBL_MAX, threat;
-        fixed_t shortestDist = D_MAXINT;
 
-        const Target* closestThreat = &targets[0];
-        double closestThreatRating;
+    CombatInfo cinfo = {};
+    const Target *highestThreat = pickBestTarget(targets, cinfo);
 
-        const Target* currentTargetInSight = nullptr;
-        double currentTargetRating;
-
-        for (const Target& target : targets)
-        {
-            if (target.isLine)
-                continue;
-            if (target.mobj == m_currentTargetMobj)
-            {
-               currentTargetInSight = &target;  // current target sighted
-               currentTargetRating = B_GetMonsterThreatLevel(m_currentTargetMobj->info);
-            }
-            
-            threat = B_GetMonsterThreatLevel(target.mobj->info);
-            if (threat > highestThreatRating)
-            {
-               highestThreat = &target;
-               highestThreatRating = threat;
-            }
-            if (target.dist < shortestDist)
-            {
-               closestThreat = &target;
-               shortestDist = target.dist;
-               closestThreatRating = B_GetMonsterThreatLevel(target.mobj->info);
-            }
-        }
-
-        // Keep shooting current monster but choose another one if it's more threatening
-        if (currentTargetInSight && B_GetMonsterThreatLevel(m_currentTargetMobj->info) >= highestThreatRating)
-        {
-           highestThreat = currentTargetInSight;
-           highestThreatRating = currentTargetRating;
-        }
-
-        // but prioritize close targets if not much weaker
-        if (closestThreat->dist < highestThreat->dist / 2 &&
-           (closestThreatRating > highestThreatRating / 4 || closestThreat->dist < 2 * MELEERANGE))
-        {
-           highestThreat = closestThreat;
-        }
-    }
+    if (!cinfo.hasShooters && targets[0].dist > 5 * MELEERANGE)
+       return; // if no shooters, don't attack monsters who are too far
 
     // Save the threat
     m_currentTargetMobj = highestThreat->isLine ? nullptr : highestThreat->mobj;
@@ -888,24 +909,27 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
         }
         else
         {
-            if (random() % 128 == 0 || (D_abs(pl->momx) < FRACUNIT && D_abs(pl->momy) < FRACUNIT))
-                m_combatStrafeState = random.range(0, 1) * 2 - 1;
+           if (random() % 128 == 0 ||
+              (D_abs(m_realVelocity.x) < FRACUNIT && D_abs(m_realVelocity.y) < FRACUNIT))
+           {
+              m_combatStrafeState = random.range(0, 1) * 2 - 1;
+           }
             if (random() % 8 != 0)
             {
                 fixed_t dist = B_ExactDistance(nx - mx, ny - my);
-                if (dist < 384 * FRACUNIT)
+                if (cinfo.hasShooters && dist < 384 * FRACUNIT)
                 {
+                   // only circle-strafe if there are blowers
                     cmd->forwardmove = FixedMul(2 * pl->pclass->forwardmove[1],
                         B_AngleSine(dangle)) * m_combatStrafeState;
                     cmd->sidemove = FixedMul(2 * pl->pclass->sidemove[1],
                         B_AngleCosine(dangle)) * m_combatStrafeState;
                 }
-                if (dist < 256 * FRACUNIT)
+                if (dist < /*256 * FRACUNIT*/MELEERANGE + targets[0].mobj->radius)
                 {
-                    
-                    cmd->forwardmove -= FixedMul(2 * pl->pclass->forwardmove[1],
+                    cmd->forwardmove = -FixedMul(2 * pl->pclass->forwardmove[1],
                         B_AngleCosine(dangle));
-                    cmd->sidemove += FixedMul(2 * pl->pclass->sidemove[1],
+                    cmd->sidemove = FixedMul(2 * pl->pclass->sidemove[1],
                         B_AngleSine(dangle));
                 }
             }

@@ -122,12 +122,21 @@ class Bot : public ZoneObject
       }
    };
 
+
+   //! This holds information obtained from the list of targets
+   struct CombatInfo
+   {
+      bool hasShooters;
+      bool hasExploders;
+   };
+
    void enemyVisible(PODCollection<Target>& targets);
 
    
    bool goalAchieved();
    
    void pickRandomWeapon(const Target& target);
+   const Target *pickBestTarget(const PODCollection<Target>& targets, CombatInfo &cinfo);
    void doCombatAI(const PODCollection<Target>& targets);
    void doNonCombatAI();
    
