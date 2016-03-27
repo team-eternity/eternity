@@ -1550,7 +1550,7 @@ static void B_collectGeneralizedTargetSectors(const line_t *line, std::unordered
    }
 
    int secnum = -1;
-   while ((secnum = P_FindSectorFromLineTag(line, secnum)))
+   while ((secnum = P_FindSectorFromLineTag(line, secnum)) >= 0)
    {
       if(isStair)
          B_insertStairs(&sectors[secnum], stairIgnoreTextures, set);
@@ -1647,6 +1647,65 @@ static bool B_paramActionTargetsSectors(const ev_action_t *action)
    return !!set.count(action->action);
 }
 
+static bool B_classicActionTargetsSectors(const ev_action_t *action)
+{
+   static std::unordered_set<EVActionFunc> set;
+   if (set.empty())
+   {
+      set.insert(EV_ActionOpenDoor);
+      set.insert(EV_ActionCloseDoor);
+      set.insert(EV_ActionRaiseDoor);
+      set.insert(EV_ActionRaiseFloor);
+      set.insert(EV_ActionFastCeilCrushRaise);
+      set.insert(EV_ActionBuildStairsUp8);
+      set.insert(EV_ActionPlatDownWaitUpStay);
+      set.insert(EV_ActionCloseDoor30);
+      set.insert(EV_ActionLowerFloor);
+      set.insert(EV_ActionPlatRaiseNearestChange);
+      set.insert(EV_ActionCeilingCrushAndRaise);
+      set.insert(EV_ActionFloorRaiseToTexture);
+      set.insert(EV_ActionLowerFloorTurbo);
+      set.insert(EV_ActionFloorLowerAndChange);
+      set.insert(EV_ActionFloorLowerToLowest);
+      set.insert(EV_ActionRaiseCeilingLowerFloor);
+      set.insert(EV_ActionBOOMRaiseCeilingLowerFloor);
+      set.insert(EV_ActionBOOMRaiseCeilingOrLowerFloor);
+      set.insert(EV_ActionCeilingLowerAndCrush);
+      set.insert(EV_ActionPlatPerpetualRaise);
+      set.insert(EV_ActionFloorRaiseCrush);
+      set.insert(EV_ActionRaiseFloor24);
+      set.insert(EV_ActionRaiseFloor24Change);
+      set.insert(EV_ActionBuildStairsTurbo16);
+      set.insert(EV_ActionDoorBlazeRaise);
+      set.insert(EV_ActionDoorBlazeOpen);
+      set.insert(EV_ActionDoorBlazeClose);
+      set.insert(EV_ActionFloorRaiseToNearest);
+      set.insert(EV_ActionPlatBlazeDWUS);
+      set.insert(EV_ActionRaiseFloorTurbo);
+      set.insert(EV_ActionSilentCrushAndRaise);
+      set.insert(EV_ActionRaiseFloor512);
+      set.insert(EV_ActionPlatRaise24Change);
+      set.insert(EV_ActionPlatRaise32Change);
+      set.insert(EV_ActionCeilingLowerToFloor);
+      set.insert(EV_ActionDoDonut);
+      set.insert(EV_ActionCeilingLowerToLowest);
+      set.insert(EV_ActionCeilingLowerToMaxFloor);
+      set.insert(EV_ActionFloorLowerToNearest);
+      set.insert(EV_ActionElevatorUp);
+      set.insert(EV_ActionElevatorDown);
+      set.insert(EV_ActionElevatorCurrent);
+      set.insert(EV_ActionPlatToggleUpDown);
+      set.insert(EV_ActionVerticalDoor);
+      set.insert(EV_ActionDoLockedDoor);
+      set.insert(EV_ActionLowerFloorTurboA);
+      set.insert(EV_ActionHereticDoorRaise3x);
+      set.insert(EV_ActionHereticStairsBuildUp8FS);
+      set.insert(EV_ActionHereticStairsBuildUp16FS);
+   }
+
+   return !!set.count(action->action);
+}
+
 static void B_collectParameterizedTargetSectors(const line_t *line, const ev_action_t *action, 
    std::unordered_set<const sector_t *> &set)
 {
@@ -1681,8 +1740,45 @@ static void B_collectParameterizedTargetSectors(const line_t *line, const ev_act
    }
 
    int secnum = -1;
-   while ((secnum = P_FindSectorFromTag(line->args[0], secnum)))
+   while ((secnum = P_FindSectorFromTag(line->args[0], secnum)) >= 0)
       solve(&sectors[secnum]);
+}
+
+static void B_collectClassicTargetSectors(const line_t *line, const ev_action_t *action,
+   std::unordered_set<const sector_t *> &set)
+{
+   if (!B_classicActionTargetsSectors(action))
+      return;
+
+   if (action->type == &DRActionType)
+   {
+      // for the record, all DR action types are simple doors
+      if (!line->backsector)
+         return;
+      set.insert(line->backsector);
+      return;
+   }
+
+   static std::unordered_set<EVActionFunc> stairset;
+   if (stairset.empty())
+   {
+      stairset.insert(EV_ActionBuildStairsUp8);
+      stairset.insert(EV_ActionBuildStairsTurbo16);
+      stairset.insert(EV_ActionHereticStairsBuildUp8FS);
+      stairset.insert(EV_ActionHereticStairsBuildUp16FS);
+   }
+
+   int secnum = -1;
+   while ((secnum = P_FindSectorFromLineTag(line, secnum)) >= 0)
+   {
+      const sector_t *sector = sectors + secnum;
+      if (stairset.count(action->action))
+         B_insertStairs(sector, false, set);
+      else if (action->action == EV_ActionDoDonut)
+         B_insertDonut(sector, set);
+      else
+         set.insert(sector);
+   }
 }
 
 //! Looks in the map for moving sectors
@@ -1718,7 +1814,17 @@ static void B_collectActiveSectors(std::unordered_set<const sector_t *> &set)
          continue;
       }
 
-      // TODO: classic special
-      
+      B_collectClassicTargetSectors(line, action, set);
+   }
+}
+
+void B_LogActiveSectors()
+{
+   std::unordered_set<const sector_t *> set;
+   B_collectActiveSectors(set);
+
+   for (const sector_t *sector : set)
+   {
+      B_Log("Active: %d", static_cast<int>(sector - sectors));
    }
 }
