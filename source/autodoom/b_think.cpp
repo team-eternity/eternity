@@ -754,23 +754,51 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
     const Target* highestThreat = &targets[0];
     if (!targets[0].isLine)
     {
-        double maxThreat = -DBL_MAX, threat;
+        double highestThreatRating = -DBL_MAX, threat;
+        fixed_t shortestDist = D_MAXINT;
+
+        const Target* closestThreat = &targets[0];
+        double closestThreatRating;
+
+        const Target* currentTargetInSight = nullptr;
+        double currentTargetRating;
+
         for (const Target& target : targets)
         {
             if (target.isLine)
                 continue;
             if (target.mobj == m_currentTargetMobj)
             {
-                // Keep shooting current target!
-                highestThreat = &target;
-                break;
+               currentTargetInSight = &target;  // current target sighted
+               currentTargetRating = B_GetMonsterThreatLevel(m_currentTargetMobj->info);
             }
+            
             threat = B_GetMonsterThreatLevel(target.mobj->info);
-            if (threat > maxThreat)
+            if (threat > highestThreatRating)
             {
-                highestThreat = &target;
-                maxThreat = threat;
+               highestThreat = &target;
+               highestThreatRating = threat;
             }
+            if (target.dist < shortestDist)
+            {
+               closestThreat = &target;
+               shortestDist = target.dist;
+               closestThreatRating = B_GetMonsterThreatLevel(target.mobj->info);
+            }
+        }
+
+        // Keep shooting current monster but choose another one if it's more threatening
+        if (currentTargetInSight && B_GetMonsterThreatLevel(m_currentTargetMobj->info) >= highestThreatRating)
+        {
+           highestThreat = currentTargetInSight;
+           highestThreatRating = currentTargetRating;
+        }
+
+        // but prioritize close targets if not much weaker
+        if (closestThreat->dist < highestThreat->dist / 2 &&
+           (closestThreatRating > highestThreatRating / 4 || closestThreat->dist < 2 * MELEERANGE))
+        {
+           highestThreat = closestThreat;
         }
     }
 
