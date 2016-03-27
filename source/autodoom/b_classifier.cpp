@@ -792,5 +792,21 @@ bool B_MonsterIsInPreAttack(const Mobj& mo)
    return set->count(mo.state->index) != 0;
 }
 
+//! True if this state's action is set
+inline static bool B_stateUsesCodepointer(statenum_t sn, const mobjinfo_t &mi, void* miscData)
+{
+   return states[sn]->action == miscData;
+}
+
+//! Returns true if any of a monster's frames reaches an action pointer
+bool B_MobjUsesCodepointer(const Mobj& mo, void(*action)(actionargs_t *args))
+{
+   const mobjinfo_t &mi = *mo.info;
+
+   if (mi.spawnstate == NullStateNum)
+      return false;  // has null start frame, invalid
+   return B_stateEncounters(mi.spawnstate, mo, B_stateUsesCodepointer, false, action);
+}
+
 // EOF
 

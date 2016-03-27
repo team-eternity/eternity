@@ -30,6 +30,9 @@
 #include <set>
 #include "../z_zone.h"
 
+#include "b_botmap.h"
+#include "b_classifier.h"
+#include "b_lineeffect.h"
 #include "../doomstat.h"
 #include "../e_exdata.h"
 #include "../e_inventory.h"
@@ -37,8 +40,7 @@
 #include "../ev_sectors.h"
 #include "../ev_specials.h"
 #include "../m_collection.h"
-#include "b_botmap.h"
-#include "b_lineeffect.h"
+#include "../p_info.h"
 #include "../p_spec.h"
 #include "../r_data.h"
 #include "../r_defs.h"
@@ -1413,8 +1415,9 @@ bool B_VlsTypeIsStair(VanillaLineSpecial vls)
    return false;
 }
 
-bool B_VssTypeIsHarmless(VanillaSectorSpecial vss)
+bool B_SectorTypeIsHarmless(int16_t special)
 {
+   auto vss = static_cast<VanillaSectorSpecial>(special);
    switch (vss)
    {
       case VSS_DamageHellSlime:
@@ -1784,15 +1787,85 @@ static void B_collectClassicTargetSectors(const line_t *line, const ev_action_t 
 //! Looks in the map for moving sectors
 static void B_collectActiveSectors(std::unordered_set<const sector_t *> &set)
 {
-   // 1. Find time-based doors
+   // 1. Find time-based doors (or boss-based)
+   bool tag666used = false, tag667used = false;
    for(int i = 0; i < numsectors; ++i)
    {
       const sector_t *sector = sectors + i;
-      if(B_sectorIs30sClosingDoor(sector->special) || B_sectorIs5minRisingDoor(sector->special))
+      if (B_sectorIs30sClosingDoor(sector->special) || B_sectorIs5minRisingDoor(sector->special))
+      {
          set.insert(sector);
+         continue;
+      }
+
+      // Find final level sectors (e.g. 666)
+      if (sector->tag == 666)
+      {
+         if (tag666used)
+         {
+            set.insert(sector);
+            goto nextSector;
+         }
+         // look if there are bosses
+         for (Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
+         {
+            const Mobj *mo;
+            if ((mo = thinker_cast<const Mobj *>(th)))
+            {
+               if (B_MobjUsesCodepointer(*mo, A_KeenDie) ||
+                  
+                  (LevelInfo.bossSpecs & BSPEC_E1M8 && mo->flags2 & MF2_E1M8BOSS ||
+                  LevelInfo.bossSpecs & BSPEC_E4M6 && mo->flags2 & MF2_E4M6BOSS ||
+                  LevelInfo.bossSpecs & BSPEC_E4M8 && mo->flags2 & MF2_E4M8BOSS ||
+                  LevelInfo.bossSpecs & BSPEC_MAP07_1 && mo->flags2 & MF2_MAP07BOSS1) &&
+                  B_MobjUsesCodepointer(*mo, A_BossDeath) ||
+                     
+                  (LevelInfo.bossSpecs & BSPEC_E1M8 && mo->flags2 & MF2_E1M8BOSS ||
+                  LevelInfo.bossSpecs & BSPEC_E2M8 && mo->flags2 & MF2_E2M8BOSS ||
+                  LevelInfo.bossSpecs & BSPEC_E3M8 && mo->flags2 & MF2_E3M8BOSS ||
+                  LevelInfo.bossSpecs & BSPEC_E4M8 && mo->flags2 & MF2_E4M8BOSS ||
+                  LevelInfo.bossSpecs & BSPEC_E5M8 && mo->flags3 & MF3_E5M8BOSS) &&
+                  B_MobjUsesCodepointer(*mo, A_HticBossDeath)
+                  )
+               {
+                  // found one
+                  tag666used = true;
+                  set.insert(sector);
+                  goto nextSector;
+               }
+            }
+         }
+         // also look for Commander Keen
+      }
+      if (sector->tag == 667 && LevelInfo.bossSpecs & BSPEC_MAP07_2)
+      {
+         if (tag667used)
+         {
+            set.insert(sector);
+            goto nextSector;
+         }
+         // look if there are bosses
+         for (Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
+         {
+            const Mobj *mo;
+            if (!(mo = thinker_cast<const Mobj *>(th)))
+            {
+               if (LevelInfo.bossSpecs & BSPEC_MAP07_2 && mo->flags2 & MF2_MAP07BOSS2 &&
+                  B_MobjUsesCodepointer(*mo, A_BossDeath))
+               {
+                  // found one
+                  tag667used = true;
+                  set.insert(sector);
+                  goto nextSector;
+               }
+            }
+         }
+      }
+   nextSector:
+      ;
    }
 
-   // TODO: now look for action linedefs.
+   // 2. Find special linedefs
    for (int i = 0; i < numlines; ++i)
    {
       const line_t *line = lines + i;

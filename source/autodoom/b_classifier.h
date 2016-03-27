@@ -31,7 +31,13 @@
 
 
 class Mobj;
+struct actionargs_t;
 struct mobjinfo_t;
+
+// external dependencies
+extern void A_BossDeath(actionargs_t *actionargs);
+extern void A_HticBossDeath(actionargs_t *actionargs);
+extern void A_KeenDie(actionargs_t *actionargs);
 
 void B_UpdateMobjInfoSet(int numthingsalloc);
 
@@ -40,6 +46,7 @@ bool B_IsMobjHostile(const Mobj& mo);
 bool B_IsMobjHitscanner(const Mobj& mo);
 bool B_IsMobjExplosiveDeath(const Mobj& mo);
 bool B_MonsterIsInPreAttack(const Mobj& mo);
+bool B_MobjUsesCodepointer(const Mobj& mo, void(*action)(actionargs_t *args));
 
 #endif 
 
