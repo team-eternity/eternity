@@ -805,7 +805,7 @@ bool B_MobjUsesCodepointer(const Mobj& mo, void(*action)(actionargs_t *args))
 
    if (mi.spawnstate == NullStateNum)
       return false;  // has null start frame, invalid
-   return B_stateEncounters(mi.spawnstate, mo, B_stateUsesCodepointer, false, action);
+   return B_stateEncounters(mi.spawnstate, mo, B_stateUsesCodepointer, false, reinterpret_cast<void *>(action));
 }
 
 //! Sets the SectorAffectingStates struct

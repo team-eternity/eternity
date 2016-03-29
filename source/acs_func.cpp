@@ -456,7 +456,7 @@ static void ACS_funcGetCVarString(ACS_FUNCARG)
    }
 
    const char *val = C_VariableValue(var);
-   *retn++ = ACSVM::AddString(val, strlen(val));
+   *retn++ = ACSVM::AddString(val, static_cast<uint32_t>(strlen(val)));
 }
 
 //

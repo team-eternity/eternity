@@ -1247,6 +1247,17 @@ static void D_StartupMessage()
         "infringement of US and international copyright laws.\n");
 }
 
+//! ioanch 20160329: check for basic errors
+void D_sanityCheck()
+{
+   // function pointer situation
+   if(sizeof(void(*)()) > sizeof(void *))
+   {
+      I_Error("Program cannot be started because of system incompatibility (code pointer size %d > data pointer size %d).\n",
+              (int)sizeof(void(*)()), (int)sizeof(void *));
+   }
+}
+
 //
 // D_DoomInit
 //
@@ -1267,6 +1278,8 @@ static void D_DoomInit()
    startupmsg("Z_Init", "Init zone memory allocation daemon.");
    Z_Init();
    atexit(I_Quit);
+
+   D_sanityCheck();  // ioanch 20160329
 
    FindResponseFile(); // Append response file arguments to command-line
 
