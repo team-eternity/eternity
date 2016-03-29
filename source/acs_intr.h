@@ -589,7 +589,7 @@ public:
       return strnum < GlobalNumStrings ? GlobalStrings[strnum] : NULL;
    }
 
-   static uint32_t AddString(const char *s) {return AddString(s, strlen(s));}
+   static uint32_t AddString(const char *s) {return AddString(s, static_cast<uint32_t>(strlen(s)));}
    static uint32_t AddString(const char *s, uint32_t l);
 
    static void ArchiveStrings(SaveArchive &arc);

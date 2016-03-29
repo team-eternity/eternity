@@ -956,7 +956,7 @@ int EV_DoParamDonut(const line_t *line, int tag, bool havespac,
    {
       if(!line || !(s1 = line->backsector))
          return rtn;
-      secnum = s1 - sectors;
+      secnum = static_cast<int>(s1 - sectors);
       manual = true;
       goto manual_donut;
    }

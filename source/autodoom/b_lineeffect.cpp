@@ -623,6 +623,7 @@ static bool B_isCeilingToFloor(const line_t *line)
          return kind == OdCDoor || pDOdCDoor;
       }
    }
+   return false;
 }
 
 // ce poate face actiunea
