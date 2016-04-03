@@ -222,6 +222,7 @@ typedef enum {
   pr_ripperblood, // Ripper blood spawning
   pr_rogueblood,  // Strife blood spawning
   pr_drawblood,   // Missile blood-drawing chance
+  pr_hexenteleport,  // ioanch 20160329: used by Hexen teleporters
 
   NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;

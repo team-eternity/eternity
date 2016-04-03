@@ -1336,7 +1336,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side);
 
 // p_telept
 
-int EV_Teleport(const line_t *line, int side, Mobj *thing);
+int EV_Teleport(int tag, int side, Mobj *thing);
 
 // killough 2/14/98: Add silent teleporter
 int EV_SilentTeleport(const line_t *line, int side, Mobj *thing);
@@ -1344,6 +1344,9 @@ int EV_SilentTeleport(const line_t *line, int side, Mobj *thing);
 // killough 1/31/98: Add silent line teleporter
 int EV_SilentLineTeleport(const line_t *line, int side,
 			              Mobj *thing, bool reverse);
+
+// ioanch 20160330: parameterized teleport
+int EV_ParamTeleport(int tid, int tag, int side, Mobj *thing);
 
 // p_floor
 
