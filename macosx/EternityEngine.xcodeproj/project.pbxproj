@@ -20,6 +20,7 @@
 		4F42A5CC188B336600E6CACD /* i_timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F42A5C9188B336600E6CACD /* i_timer.cpp */; };
 		4F42A5D0188B338600E6CACD /* i_sdltimer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F42A5CD188B338600E6CACD /* i_sdltimer.cpp */; };
 		4F43B448182D9D5800730C02 /* SDLMain.m in Sources */ = {isa = PBXBuildFile; fileRef = FA601C6616961D9A00046D2D /* SDLMain.m */; };
+		4F5600E41CB391B200861406 /* p_portalclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F5600E21CB391B200861406 /* p_portalclip.cpp */; };
 		4F5F386D182D97A20027813A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F5F386C182D97A20027813A /* Foundation.framework */; };
 		4F5F3878182D98A30027813A /* a_common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5CB4158BF42800C49E93 /* a_common.cpp */; };
 		4F5F3879182D98A60027813A /* a_counters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5CB5158BF42800C49E93 /* a_counters.cpp */; };
@@ -330,6 +331,8 @@
 		4F42A5D2188B33AA00E6CACD /* r_interpolate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = r_interpolate.h; path = ../source/r_interpolate.h; sourceTree = "<group>"; };
 		4F50E3FE173770EC00878167 /* r_dynabsp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = r_dynabsp.cpp; path = ../source/r_dynabsp.cpp; sourceTree = "<group>"; };
 		4F50E3FF173770EC00878167 /* r_dynabsp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = r_dynabsp.h; path = ../source/r_dynabsp.h; sourceTree = "<group>"; };
+		4F5600E21CB391B200861406 /* p_portalclip.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_portalclip.cpp; path = ../source/p_portalclip.cpp; sourceTree = "<group>"; };
+		4F5600E31CB391B200861406 /* p_portalclip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = p_portalclip.h; path = ../source/p_portalclip.h; sourceTree = "<group>"; };
 		4F579A4317BE860B0088B797 /* metaspawn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = metaspawn.h; path = ../source/metaspawn.h; sourceTree = "<group>"; };
 		4F5F3864182D97860027813A /* mn_items.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mn_items.cpp; path = ../source/mn_items.cpp; sourceTree = "<group>"; };
 		4F5F3865182D97860027813A /* mn_items.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mn_items.h; path = ../source/mn_items.h; sourceTree = "<group>"; };
@@ -1478,6 +1481,8 @@
 				FABF5D20158BF42800C49E93 /* p_plats.cpp */,
 				FABF5D21158BF42800C49E93 /* p_portal.cpp */,
 				FACACB571652F1170091AF2E /* p_portal.h */,
+				4F5600E21CB391B200861406 /* p_portalclip.cpp */,
+				4F5600E31CB391B200861406 /* p_portalclip.h */,
 				FABF5D22158BF42800C49E93 /* p_pspr.cpp */,
 				FA16D42E15E01E96002318D1 /* p_pspr.h */,
 				4F9F72D116BFB73200C405AE /* p_pushers.cpp */,
@@ -2080,6 +2085,7 @@
 				4F5F390C182D9AC00027813A /* p_plats.cpp in Sources */,
 				4F5F390D182D9AC00027813A /* p_portal.cpp in Sources */,
 				4F5F390E182D9AC00027813A /* p_pspr.cpp in Sources */,
+				4F5600E41CB391B200861406 /* p_portalclip.cpp in Sources */,
 				4F015B111870EA5900ADB3F4 /* s_formats.cpp in Sources */,
 				4F5F390F182D9AC00027813A /* p_pushers.cpp in Sources */,
 				4F5F3910182D9AC00027813A /* p_saveg.cpp in Sources */,

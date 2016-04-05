@@ -3487,5 +3487,18 @@ DEFINE_ACTION(EV_ActionParamTeleport)
                            instance->side,    instance->actor);
 }
 
+//
+// EV_ActionParamTeleportNoFog
+//
+// Implements Teleport_NoFog(tid, useangle, tag, keepheight)
+// * ExtraData: 445
+// * Hexen:     71
+//
+DEFINE_ACTION(EV_ActionParamTeleportNoFog)
+{
+   // TODO: implement this.
+   return 0;
+}
+
 // EOF
 
