@@ -36,6 +36,7 @@
 #include "doomstat.h"
 #include "e_things.h"
 #include "g_game.h"
+#include "hal/i_platform.h"
 #include "hal/i_timer.h"
 #include "hu_over.h"
 #include "i_video.h"
@@ -191,7 +192,14 @@ void R_SetSpanEngine(void)
 //
 // killough 5/2/98: reformatted
 //
-int R_PointOnSide(fixed_t x, fixed_t y, node_t *node)
+
+// ioanch 20160423: make variables volatile in OSX, to prevent demo desyncing.
+// FIXME: also check if Linux/GCC are affected by this.
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX && defined(__clang__)
+int R_PointOnSide(volatile fixed_t x, volatile fixed_t y, node_t *node)
+#else
+int R_PointOnSide(fixed_t x, fixed_t y, const node_t *node)
+#endif
 {
    if(!node->dx)
       return x <= node->x ? node->dy > 0 : node->dy < 0;
