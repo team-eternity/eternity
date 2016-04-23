@@ -25,9 +25,12 @@
 
 #include "z_zone.h"
 
+#include "a_small.h"
 #include "d_gi.h"
 #include "doomstat.h"
 #include "e_things.h"
+#include "m_collection.h"
+#include "m_random.h"
 #include "p_chase.h"
 #include "p_maputl.h"
 #include "p_map.h"
@@ -42,11 +45,87 @@
 #include "sounds.h"
 
 //
+// ioanch 20160330
+// General teleportation routine. Needed because it's reused by Hexen's teleport
+//
+static int P_Teleport(Mobj *thing, const Mobj *landing)
+{
+   fixed_t oldx = thing->x, oldy = thing->y, oldz = thing->z;
+   player_t *player = thing->player;
+            
+   // killough 5/12/98: exclude voodoo dolls:
+   if(player && player->mo != thing)
+      player = NULL;
+
+   if(!P_TeleportMove(thing, landing->x, landing->y, false)) // killough 8/9/98
+      return 0;
+
+   // haleyjd 12/15/02: cph found out this was removed
+   // in Final DOOM, so don't do it for Final DOOM demos.
+   if(!(demo_compatibility &&
+      (GameModeInfo->missionInfo->flags & MI_NOTELEPORTZ)))
+   {
+      // SoM: so yeah... Need this for linked portals.
+      if(demo_version >= 333)
+         thing->z = thing->secfloorz;
+      else
+         thing->z = thing->floorz;
+   }
+
+   if(player)
+   {
+      player->viewz = thing->z + player->viewheight;
+      player->prevviewz = player->viewz;
+   }
+
+   thing->angle = landing->angle;
+
+   // sf: reset the chasecam at its new position.
+   //     this needs to be done before startsound so we hear
+   //     the teleport sound when using the chasecam
+   if(thing->player == players + displayplayer)
+      P_ResetChasecam();
+
+   // spawn teleport fog and emit sound at source
+   S_StartSound(P_SpawnMobj(oldx, oldy, 
+                              oldz + GameModeInfo->teleFogHeight, 
+                              E_SafeThingName(GameModeInfo->teleFogType)), 
+                  GameModeInfo->teleSound);
+
+   // spawn teleport fog and emit sound at destination
+   // ioanch 20160229: portal aware
+   v2fixed_t pos = P_LinePortalCrossing(landing->x, landing->y,
+      20 * finecosine[landing->angle >> ANGLETOFINESHIFT],
+      20 * finesine[landing->angle >> ANGLETOFINESHIFT]);
+   S_StartSound(P_SpawnMobj(pos.x, pos.y,
+                              thing->z + GameModeInfo->teleFogHeight, 
+                              E_SafeThingName(GameModeInfo->teleFogType)),
+                  GameModeInfo->teleSound);
+            
+   thing->backupPosition();
+   P_AdjustFloorClip(thing);
+
+   // don't move for a bit // killough 10/98
+   if(thing->player)
+      thing->reactiontime = 18;
+
+   // kill all momentum
+   thing->momx = thing->momy = thing->momz = 0;
+            
+   // killough 10/98: kill all bobbing momentum too
+   if(player)
+      player->momx = player->momy = 0;
+ 
+   return 1;
+}
+
+//
 // TELEPORTATION
 //
 // killough 5/3/98: reformatted, cleaned up
+// ioanch 20160330: modified not to use line parameter
 //
-int EV_Teleport(const line_t *line, int side, Mobj *thing)
+int EV_Teleport(int tag, int side, Mobj *thing)
 {
    Thinker *thinker;
    Mobj    *m;
@@ -61,7 +140,7 @@ int EV_Teleport(const line_t *line, int side, Mobj *thing)
    // killough 1/31/98: improve performance by using
    // P_FindSectorFromLineTag instead of simple linear search.
 
-   for(i = -1; (i = P_FindSectorFromLineTag(line, i)) >= 0;)
+   for(i = -1; (i = P_FindSectorFromTag(tag, i)) >= 0;)
    {
       for(thinker = thinkercap.next; thinker != &thinkercap; thinker = thinker->next)
       {
@@ -71,77 +150,43 @@ int EV_Teleport(const line_t *line, int side, Mobj *thing)
          if(m->type == E_ThingNumForDEHNum(MT_TELEPORTMAN) &&
             m->subsector->sector-sectors == i)
          {
-            fixed_t oldx = thing->x, oldy = thing->y, oldz = thing->z;
-            player_t *player = thing->player;
-            
-            // killough 5/12/98: exclude voodoo dolls:
-            if(player && player->mo != thing)
-               player = NULL;
-
-            if(!P_TeleportMove(thing, m->x, m->y, false)) // killough 8/9/98
-               return 0;
-
-            // haleyjd 12/15/02: cph found out this was removed
-            // in Final DOOM, so don't do it for Final DOOM demos.
-            if(!(demo_compatibility &&
-               (GameModeInfo->missionInfo->flags & MI_NOTELEPORTZ)))
-            {
-               // SoM: so yeah... Need this for linked portals.
-               if(demo_version >= 333)
-                  thing->z = thing->secfloorz;
-               else
-                  thing->z = thing->floorz;
-            }
-
-            if(player)
-            {
-               player->viewz = thing->z + player->viewheight;
-               player->prevviewz = player->viewz;
-            }
-
-            thing->angle = m->angle;
-
-            // sf: reset the chasecam at its new position.
-            //     this needs to be done before startsound so we hear
-            //     the teleport sound when using the chasecam
-            if(thing->player == players + displayplayer)
-               P_ResetChasecam();
-
-            // spawn teleport fog and emit sound at source
-            S_StartSound(P_SpawnMobj(oldx, oldy, 
-                                     oldz + GameModeInfo->teleFogHeight, 
-                                     E_SafeThingName(GameModeInfo->teleFogType)), 
-                         GameModeInfo->teleSound);
-
-            // spawn teleport fog and emit sound at destination
-            // ioanch 20160229: portal aware
-            v2fixed_t pos = P_LinePortalCrossing(m->x, m->y,
-               20 * finecosine[m->angle >> ANGLETOFINESHIFT],
-               20 * finesine[m->angle >> ANGLETOFINESHIFT]);
-            S_StartSound(P_SpawnMobj(pos.x, pos.y,
-                                     thing->z + GameModeInfo->teleFogHeight, 
-                                     E_SafeThingName(GameModeInfo->teleFogType)),
-                         GameModeInfo->teleSound);
-            
-            thing->backupPosition();
-            P_AdjustFloorClip(thing);
-
-            // don't move for a bit // killough 10/98
-            if(thing->player)
-               thing->reactiontime = 18;
-
-            // kill all momentum
-            thing->momx = thing->momy = thing->momz = 0;
-            
-            // killough 10/98: kill all bobbing momentum too
-            if(player)
-               player->momx = player->momy = 0;
- 
-            return 1;
+            return P_Teleport(thing, m);
          }
       }
    }
    return 0;
+}
+
+//
+// ioanch 20160329: param teleport (Teleport special)
+//
+int EV_ParamTeleport(int tid, int tag, int side, Mobj *thing)
+{
+   // don't teleport missiles
+   // Don't teleport if hit back of line,
+   //  so you can get out of teleporter.
+   if(side || thing->flags & MF_MISSILE)
+      return 0;
+
+   if(tid)
+   {
+      Mobj *mobj = nullptr;
+      PODCollection<Mobj *> destColl;
+      while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
+      {
+         if(!tag || mobj->subsector->sector->tag == tag)
+            destColl.add(mobj);
+      }
+      if(destColl.isEmpty())
+         return 0;
+
+      mobj = destColl.getRandom(pr_hexenteleport);
+
+      return P_Teleport(thing, mobj);
+   }
+
+   // no TID: act like classic Doom
+   return EV_Teleport(tag, side, thing);
 }
 
 //

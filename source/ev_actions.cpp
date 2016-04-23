@@ -400,7 +400,7 @@ DEFINE_ACTION(EV_ActionTeleport)
    // case 126: (WR)
    // TELEPORT MonsterONLY.
    // jff 02/09/98 fix using up with wrong side crossing
-   return EV_Teleport(instance->line, instance->side, instance->actor);
+   return EV_Teleport(instance->tag, instance->side, instance->actor);
 }
 
 //
@@ -3472,6 +3472,19 @@ DEFINE_ACTION(EV_ActionParamGenCrusher)
    cd.crushmode = crushmodeDoom; // FIXME: irrelevant for this cd->type
    cd.ground_dist = 8 * FRACUNIT;
    return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamTeleport
+//
+// Implements Teleport(tid, tag, reserved)
+// * ExtraData: 444
+// * Hexen:     70
+//
+DEFINE_ACTION(EV_ActionParamTeleport)
+{
+   return EV_ParamTeleport(instance->args[0], instance->args[1], 
+                           instance->side,    instance->actor);
 }
 
 // EOF
