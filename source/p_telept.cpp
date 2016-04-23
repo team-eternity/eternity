@@ -44,6 +44,28 @@
 #include "s_sound.h"
 #include "sounds.h"
 
+// ioanch 20160423: helper
+inline static void P_dropToFloor(Mobj *thing)
+{
+   // haleyjd 12/15/02: cph found out this was removed
+   // in Final DOOM, so don't do it for Final DOOM demos.
+   if(!(demo_compatibility &&
+      (GameModeInfo->missionInfo->flags & MI_NOTELEPORTZ)))
+   {
+      // SoM: so yeah... Need this for linked portals.
+      if(demo_version >= 333)
+         thing->z = thing->secfloorz;
+      else
+         thing->z = thing->floorz;
+   }
+   player_t *player = thing->player;
+   if(player)
+   {
+      player->viewz = thing->z + player->viewheight;
+      player->prevviewz = player->viewz;
+   }
+}
+
 //
 // ioanch 20160330
 // General teleportation routine. Needed because it's reused by Hexen's teleport
@@ -60,23 +82,7 @@ static int P_Teleport(Mobj *thing, const Mobj *landing)
    if(!P_TeleportMove(thing, landing->x, landing->y, false)) // killough 8/9/98
       return 0;
 
-   // haleyjd 12/15/02: cph found out this was removed
-   // in Final DOOM, so don't do it for Final DOOM demos.
-   if(!(demo_compatibility &&
-      (GameModeInfo->missionInfo->flags & MI_NOTELEPORTZ)))
-   {
-      // SoM: so yeah... Need this for linked portals.
-      if(demo_version >= 333)
-         thing->z = thing->secfloorz;
-      else
-         thing->z = thing->floorz;
-   }
-
-   if(player)
-   {
-      player->viewz = thing->z + player->viewheight;
-      player->prevviewz = player->viewz;
-   }
+   P_dropToFloor(thing);
 
    thing->angle = landing->angle;
 
@@ -116,6 +122,83 @@ static int P_Teleport(Mobj *thing, const Mobj *landing)
    if(player)
       player->momx = player->momy = 0;
  
+   return 1;
+}
+
+//
+// ioanch 20160423: silent teleportation routine
+// Use Hexen restriction parameter in case it's required
+//
+static int P_SilentTeleport(Mobj *thing, const line_t *line,
+                            const Mobj *m, bool hexenRestriction = false)
+{
+   // Height of thing above ground, in case of mid-air teleports:
+   fixed_t z = thing->z - thing->floorz;
+
+   // Get the angle between the exit thing and source linedef.
+   // Rotate 90 degrees, so that walking perpendicularly across
+   // teleporter linedef causes thing to exit in the direction
+   // indicated by the exit thing.
+
+   // ioanch: in case of Hexen, don't change angle
+   angle_t angle = hexenRestriction ? 0 :
+   P_PointToAngle(0, 0, line->dx, line->dy) - m->angle + ANG90;
+
+   // Sine, cosine of angle adjustment
+   fixed_t s = finesine[angle>>ANGLETOFINESHIFT];
+   fixed_t c = finecosine[angle>>ANGLETOFINESHIFT];
+
+   // Momentum of thing crossing teleporter linedef
+   fixed_t momx = thing->momx;
+   fixed_t momy = thing->momy;
+
+   // Whether this is a player, and if so, a pointer to its player_t
+   player_t *player = thing->player;
+
+   // Attempt to teleport, aborting if blocked
+   if(!P_TeleportMove(thing, m->x, m->y, false)) // killough 8/9/98
+      return 0;
+
+   // Rotate thing according to difference in angles
+   thing->angle += angle;
+
+   if(hexenRestriction)
+      P_dropToFloor(thing);
+   else
+   {
+      // Adjust z position to be same height above ground as before
+      thing->z = z + thing->floorz;
+
+      // Rotate thing's momentum to come out of exit just like it entered
+      thing->momx = FixedMul(momx, c) - FixedMul(momy, s);
+      thing->momy = FixedMul(momy, c) + FixedMul(momx, s);
+   }
+
+   // Adjust player's view, in case there has been a height change
+   // Voodoo dolls are excluded by making sure player->mo == thing.
+   if(player && player->mo == thing)
+   {
+      // Save the current deltaviewheight, used in stepping
+      fixed_t deltaviewheight = player->deltaviewheight;
+
+      // Clear deltaviewheight, since we don't want any changes
+      player->deltaviewheight = 0;
+
+      // Set player's view according to the newly set parameters
+      P_CalcHeight(player);
+
+      player->prevviewz = player->viewz;
+
+      // Reset the delta to have the same dynamics as before
+      player->deltaviewheight = deltaviewheight;
+
+      if(player == players+displayplayer)
+         P_ResetChasecam();
+   }
+
+   thing->backupPosition();
+   P_AdjustFloorClip(thing);
+
    return 1;
 }
 
@@ -217,67 +300,7 @@ int EV_SilentTeleport(const line_t *line, int side, Mobj *thing)
          if(m->type == E_ThingNumForDEHNum(MT_TELEPORTMAN) &&
             m->subsector->sector-sectors == i)
          {
-            // Height of thing above ground, in case of mid-air teleports:
-            fixed_t z = thing->z - thing->floorz;
-            
-            // Get the angle between the exit thing and source linedef.
-            // Rotate 90 degrees, so that walking perpendicularly across
-            // teleporter linedef causes thing to exit in the direction
-            // indicated by the exit thing.
-            angle_t angle =
-               P_PointToAngle(0, 0, line->dx, line->dy) - m->angle + ANG90;
-
-            // Sine, cosine of angle adjustment
-            fixed_t s = finesine[angle>>ANGLETOFINESHIFT];
-            fixed_t c = finecosine[angle>>ANGLETOFINESHIFT];
-            
-            // Momentum of thing crossing teleporter linedef
-            fixed_t momx = thing->momx;
-            fixed_t momy = thing->momy;
-
-            // Whether this is a player, and if so, a pointer to its player_t
-            player_t *player = thing->player;
-            
-            // Attempt to teleport, aborting if blocked
-            if(!P_TeleportMove(thing, m->x, m->y, false)) // killough 8/9/98
-               return 0;
-
-            // Rotate thing according to difference in angles
-            thing->angle += angle;
-            
-            // Adjust z position to be same height above ground as before
-            thing->z = z + thing->floorz;
-            
-            // Rotate thing's momentum to come out of exit just like it entered
-            thing->momx = FixedMul(momx, c) - FixedMul(momy, s);
-            thing->momy = FixedMul(momy, c) + FixedMul(momx, s);
-            
-            // Adjust player's view, in case there has been a height change
-            // Voodoo dolls are excluded by making sure player->mo == thing.
-            if(player && player->mo == thing)
-            {
-               // Save the current deltaviewheight, used in stepping
-               fixed_t deltaviewheight = player->deltaviewheight;
-               
-               // Clear deltaviewheight, since we don't want any changes
-               player->deltaviewheight = 0;
-               
-               // Set player's view according to the newly set parameters
-               P_CalcHeight(player);
-
-               player->prevviewz = player->viewz;
-               
-               // Reset the delta to have the same dynamics as before
-               player->deltaviewheight = deltaviewheight;
-               
-               if(player == players+displayplayer)
-                  P_ResetChasecam();
-            }
-
-            thing->backupPosition();
-            P_AdjustFloorClip(thing);
-
-            return 1;
+            return P_SilentTeleport(thing, line, m);
          }
       }
    }
