@@ -198,7 +198,7 @@ void R_SetSpanEngine(void)
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX && defined(__clang__)
 int R_PointOnSide(volatile fixed_t x, volatile fixed_t y, node_t *node)
 #else
-int R_PointOnSide(fixed_t x, fixed_t y, const node_t *node)
+int R_PointOnSide(fixed_t x, fixed_t y, node_t *node)
 #endif
 {
    if(!node->dx)
