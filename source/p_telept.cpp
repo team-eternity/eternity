@@ -130,7 +130,7 @@ static int P_Teleport(Mobj *thing, const Mobj *landing)
 // Use Hexen restriction parameter in case it's required
 //
 static int P_SilentTeleport(Mobj *thing, const line_t *line,
-                            const Mobj *m, bool hexenRestriction = false)
+                            const Mobj *m, struct teleparms_t parms)
 {
    // Height of thing above ground, in case of mid-air teleports:
    fixed_t z = thing->z - thing->floorz;
@@ -141,8 +141,22 @@ static int P_SilentTeleport(Mobj *thing, const line_t *line,
    // indicated by the exit thing.
 
    // ioanch: in case of Hexen, don't change angle
-   angle_t angle = hexenRestriction ? 0 :
-   P_PointToAngle(0, 0, line->dx, line->dy) - m->angle + ANG90;
+   angle_t angle;
+   switch(parms.teleangle)
+   {
+      default:
+      case teleangle_keep:
+         angle = 0;
+         break;
+      case teleangle_absolute:
+         angle = m->angle - thing->angle;
+         break;
+      case teleangle_relative:
+         // Fall back to absolute if line is missing
+         angle = line ? P_PointToAngle(0, 0, line->dx, line->dy) - m->angle
+         + ANG90 : m->angle - thing->angle;
+         break;
+   }
 
    // Sine, cosine of angle adjustment
    fixed_t s = finesine[angle>>ANGLETOFINESHIFT];
@@ -162,13 +176,17 @@ static int P_SilentTeleport(Mobj *thing, const line_t *line,
    // Rotate thing according to difference in angles
    thing->angle += angle;
 
-   if(hexenRestriction)
+   if(!parms.keepheight)
       P_dropToFloor(thing);
    else
    {
       // Adjust z position to be same height above ground as before
       thing->z = z + thing->floorz;
+   }
 
+   // Hexen (teleangle_keep) behavior doesn't even touch the velocity
+   if(parms.teleangle != teleangle_keep)
+   {
       // Rotate thing's momentum to come out of exit just like it entered
       thing->momx = FixedMul(momx, c) - FixedMul(momy, s);
       thing->momy = FixedMul(momy, c) + FixedMul(momx, s);
@@ -241,6 +259,26 @@ int EV_Teleport(int tag, int side, Mobj *thing)
 }
 
 //
+// ioanch 20160423: for parameterized teleport that has both tid and tag
+//
+static const Mobj *P_pickRandomLanding(int tid, int tag)
+{
+   Mobj *mobj = nullptr;
+   PODCollection<Mobj *> destColl;
+   while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
+   {
+      if(!tag || mobj->subsector->sector->tag == tag)
+         destColl.add(mobj);
+   }
+   if(destColl.isEmpty())
+      return nullptr;
+
+   mobj = destColl.getRandom(pr_hexenteleport);
+
+   return mobj;
+}
+
+//
 // ioanch 20160329: param teleport (Teleport special)
 //
 int EV_ParamTeleport(int tid, int tag, int side, Mobj *thing)
@@ -253,19 +291,10 @@ int EV_ParamTeleport(int tid, int tag, int side, Mobj *thing)
 
    if(tid)
    {
-      Mobj *mobj = nullptr;
-      PODCollection<Mobj *> destColl;
-      while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
-      {
-         if(!tag || mobj->subsector->sector->tag == tag)
-            destColl.add(mobj);
-      }
-      if(destColl.isEmpty())
-         return 0;
-
-      mobj = destColl.getRandom(pr_hexenteleport);
-
-      return P_Teleport(thing, mobj);
+      const Mobj *mobj = P_pickRandomLanding(tid, tag);
+      if(mobj)
+         return P_Teleport(thing, mobj);
+      return 0;
    }
 
    // no TID: act like classic Doom
@@ -277,7 +306,8 @@ int EV_ParamTeleport(int tid, int tag, int side, Mobj *thing)
 // Primarily for rooms-over-rooms etc.
 //
 
-int EV_SilentTeleport(const line_t *line, int side, Mobj *thing)
+int EV_SilentTeleport(const line_t *line, int tag, int side, Mobj *thing,
+                      teleparms_t parms)
 {
    int       i;
    Mobj    *m;
@@ -290,7 +320,7 @@ int EV_SilentTeleport(const line_t *line, int side, Mobj *thing)
    if(side || thing->flags & MF_MISSILE)
       return 0;
 
-   for(i = -1; (i = P_FindSectorFromLineTag(line, i)) >= 0;)
+   for(i = -1; (i = P_FindSectorFromTag(tag, i)) >= 0;)
    {
       for(th = thinkercap.next; th != &thinkercap; th = th->next)
       {
@@ -300,11 +330,31 @@ int EV_SilentTeleport(const line_t *line, int side, Mobj *thing)
          if(m->type == E_ThingNumForDEHNum(MT_TELEPORTMAN) &&
             m->subsector->sector-sectors == i)
          {
-            return P_SilentTeleport(thing, line, m);
+            return P_SilentTeleport(thing, line, m, parms);
          }
       }
    }
    return 0;
+}
+
+//
+// ioanch 20160423: param silent teleport (Teleport_NoFog special)
+//
+int EV_ParamSilentTeleport(int tid, int tag, int side, Mobj *thing,
+                           teleparms_t parms)
+{
+   if(side || thing->flags & MF_MISSILE)
+      return 0;
+
+   if(tid)
+   {
+      const Mobj *mobj = P_pickRandomLanding(tid, tag);
+      if(mobj)
+         return P_SilentTeleport(thing, nullptr, mobj, parms);
+      return 0;
+   }
+
+   return EV_SilentTeleport(nullptr, tag, side, thing, parms);
 }
 
 //
