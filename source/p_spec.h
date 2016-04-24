@@ -1368,8 +1368,8 @@ int EV_SilentLineTeleport(const line_t *line, int side,
 
 // ioanch 20160330: parameterized teleport
 int EV_ParamTeleport(int tid, int tag, int side, Mobj *thing);
-int EV_ParamSilentTeleport(int tid, int tag, int side, Mobj *thing,
-                           teleparms_t parms);
+int EV_ParamSilentTeleport(int tid, const line_t *line, int tag, int side,
+                           Mobj *thing, teleparms_t parms);
 
 // p_floor
 

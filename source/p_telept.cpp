@@ -344,8 +344,8 @@ int EV_SilentTeleport(const line_t *line, int tag, int side, Mobj *thing,
 //
 // ioanch 20160423: param silent teleport (Teleport_NoFog special)
 //
-int EV_ParamSilentTeleport(int tid, int tag, int side, Mobj *thing,
-                           teleparms_t parms)
+int EV_ParamSilentTeleport(int tid, const line_t *line, int tag, int side,
+                           Mobj *thing, teleparms_t parms)
 {
    if(side || thing->flags & MF_MISSILE)
       return 0;
@@ -354,11 +354,11 @@ int EV_ParamSilentTeleport(int tid, int tag, int side, Mobj *thing,
    {
       const Mobj *mobj = P_pickRandomLanding(tid, tag);
       if(mobj)
-         return P_SilentTeleport(thing, nullptr, mobj, parms);
+         return P_SilentTeleport(thing, line, mobj, parms);
       return 0;
    }
 
-   return EV_SilentTeleport(nullptr, tag, side, thing, parms);
+   return EV_SilentTeleport(line, tag, side, thing, parms);
 }
 
 //

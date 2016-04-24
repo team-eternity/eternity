@@ -3516,8 +3516,9 @@ DEFINE_ACTION(EV_ActionParamTeleportNoFog)
          break;
    }
    parms.keepheight = instance->args[3] != 0;
-   return EV_ParamSilentTeleport(instance->args[0], instance->args[2],
-                                 instance->side, instance->actor, parms);
+   return EV_ParamSilentTeleport(instance->args[0], instance->line,
+                                 instance->args[2], instance->side,
+                                 instance->actor, parms);
 }
 
 // EOF
