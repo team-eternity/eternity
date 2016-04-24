@@ -44,6 +44,28 @@
 #include "s_sound.h"
 #include "sounds.h"
 
+// ioanch 20160423: helper
+inline static void P_dropToFloor(Mobj *thing)
+{
+   // haleyjd 12/15/02: cph found out this was removed
+   // in Final DOOM, so don't do it for Final DOOM demos.
+   if(!(demo_compatibility &&
+      (GameModeInfo->missionInfo->flags & MI_NOTELEPORTZ)))
+   {
+      // SoM: so yeah... Need this for linked portals.
+      if(demo_version >= 333)
+         thing->z = thing->secfloorz;
+      else
+         thing->z = thing->floorz;
+   }
+   player_t *player = thing->player;
+   if(player)
+   {
+      player->viewz = thing->z + player->viewheight;
+      player->prevviewz = player->viewz;
+   }
+}
+
 //
 // ioanch 20160330
 // General teleportation routine. Needed because it's reused by Hexen's teleport
@@ -60,23 +82,7 @@ static int P_Teleport(Mobj *thing, const Mobj *landing)
    if(!P_TeleportMove(thing, landing->x, landing->y, false)) // killough 8/9/98
       return 0;
 
-   // haleyjd 12/15/02: cph found out this was removed
-   // in Final DOOM, so don't do it for Final DOOM demos.
-   if(!(demo_compatibility &&
-      (GameModeInfo->missionInfo->flags & MI_NOTELEPORTZ)))
-   {
-      // SoM: so yeah... Need this for linked portals.
-      if(demo_version >= 333)
-         thing->z = thing->secfloorz;
-      else
-         thing->z = thing->floorz;
-   }
-
-   if(player)
-   {
-      player->viewz = thing->z + player->viewheight;
-      player->prevviewz = player->viewz;
-   }
+   P_dropToFloor(thing);
 
    thing->angle = landing->angle;
 
@@ -120,6 +126,105 @@ static int P_Teleport(Mobj *thing, const Mobj *landing)
 }
 
 //
+// ioanch 20160423: silent teleportation routine
+// Use Hexen restriction parameter in case it's required
+//
+static int P_SilentTeleport(Mobj *thing, const line_t *line,
+                            const Mobj *m, struct teleparms_t parms)
+{
+   // Height of thing above ground, in case of mid-air teleports:
+   fixed_t z = thing->z - thing->floorz;
+
+   // Get the angle between the exit thing and source linedef.
+   // Rotate 90 degrees, so that walking perpendicularly across
+   // teleporter linedef causes thing to exit in the direction
+   // indicated by the exit thing.
+
+   // ioanch: in case of Hexen, don't change angle
+   angle_t angle;
+   switch(parms.teleangle)
+   {
+      default:
+      case teleangle_keep:
+         angle = 0;
+         break;
+      case teleangle_absolute:
+         angle = m->angle - thing->angle;
+         break;
+      case teleangle_relative_boom:
+         // Fall back to absolute if line is missing
+         angle = line ? P_PointToAngle(0, 0, line->dx, line->dy) - m->angle
+         + ANG90 : m->angle - thing->angle;
+         break;
+      case teleangle_relative_correct:
+         angle = line ? m->angle - (P_PointToAngle(0, 0, line->dx, line->dy)
+         + ANG90) : m->angle - thing->angle;
+         break;
+   }
+
+   // Sine, cosine of angle adjustment
+   fixed_t s = finesine[angle>>ANGLETOFINESHIFT];
+   fixed_t c = finecosine[angle>>ANGLETOFINESHIFT];
+
+   // Momentum of thing crossing teleporter linedef
+   fixed_t momx = thing->momx;
+   fixed_t momy = thing->momy;
+
+   // Whether this is a player, and if so, a pointer to its player_t
+   player_t *player = thing->player;
+
+   // Attempt to teleport, aborting if blocked
+   if(!P_TeleportMove(thing, m->x, m->y, false)) // killough 8/9/98
+      return 0;
+
+   // Rotate thing according to difference in angles
+   thing->angle += angle;
+
+   if(!parms.keepheight)
+      P_dropToFloor(thing);
+   else
+   {
+      // Adjust z position to be same height above ground as before
+      thing->z = z + thing->floorz;
+   }
+
+   // Hexen (teleangle_keep) behavior doesn't even touch the velocity
+   if(parms.teleangle != teleangle_keep)
+   {
+      // Rotate thing's momentum to come out of exit just like it entered
+      thing->momx = FixedMul(momx, c) - FixedMul(momy, s);
+      thing->momy = FixedMul(momy, c) + FixedMul(momx, s);
+   }
+
+   // Adjust player's view, in case there has been a height change
+   // Voodoo dolls are excluded by making sure player->mo == thing.
+   if(player && player->mo == thing)
+   {
+      // Save the current deltaviewheight, used in stepping
+      fixed_t deltaviewheight = player->deltaviewheight;
+
+      // Clear deltaviewheight, since we don't want any changes
+      player->deltaviewheight = 0;
+
+      // Set player's view according to the newly set parameters
+      P_CalcHeight(player);
+
+      player->prevviewz = player->viewz;
+
+      // Reset the delta to have the same dynamics as before
+      player->deltaviewheight = deltaviewheight;
+
+      if(player == players+displayplayer)
+         P_ResetChasecam();
+   }
+
+   thing->backupPosition();
+   P_AdjustFloorClip(thing);
+
+   return 1;
+}
+
+//
 // TELEPORTATION
 //
 // killough 5/3/98: reformatted, cleaned up
@@ -158,6 +263,26 @@ int EV_Teleport(int tag, int side, Mobj *thing)
 }
 
 //
+// ioanch 20160423: for parameterized teleport that has both tid and tag
+//
+static const Mobj *P_pickRandomLanding(int tid, int tag)
+{
+   Mobj *mobj = nullptr;
+   PODCollection<Mobj *> destColl;
+   while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
+   {
+      if(!tag || mobj->subsector->sector->tag == tag)
+         destColl.add(mobj);
+   }
+   if(destColl.isEmpty())
+      return nullptr;
+
+   mobj = destColl.getRandom(pr_hexenteleport);
+
+   return mobj;
+}
+
+//
 // ioanch 20160329: param teleport (Teleport special)
 //
 int EV_ParamTeleport(int tid, int tag, int side, Mobj *thing)
@@ -170,19 +295,10 @@ int EV_ParamTeleport(int tid, int tag, int side, Mobj *thing)
 
    if(tid)
    {
-      Mobj *mobj = nullptr;
-      PODCollection<Mobj *> destColl;
-      while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
-      {
-         if(!tag || mobj->subsector->sector->tag == tag)
-            destColl.add(mobj);
-      }
-      if(destColl.isEmpty())
-         return 0;
-
-      mobj = destColl.getRandom(pr_hexenteleport);
-
-      return P_Teleport(thing, mobj);
+      const Mobj *mobj = P_pickRandomLanding(tid, tag);
+      if(mobj)
+         return P_Teleport(thing, mobj);
+      return 0;
    }
 
    // no TID: act like classic Doom
@@ -194,7 +310,8 @@ int EV_ParamTeleport(int tid, int tag, int side, Mobj *thing)
 // Primarily for rooms-over-rooms etc.
 //
 
-int EV_SilentTeleport(const line_t *line, int side, Mobj *thing)
+int EV_SilentTeleport(const line_t *line, int tag, int side, Mobj *thing,
+                      teleparms_t parms)
 {
    int       i;
    Mobj    *m;
@@ -207,7 +324,7 @@ int EV_SilentTeleport(const line_t *line, int side, Mobj *thing)
    if(side || thing->flags & MF_MISSILE)
       return 0;
 
-   for(i = -1; (i = P_FindSectorFromLineTag(line, i)) >= 0;)
+   for(i = -1; (i = P_FindSectorFromTag(tag, i)) >= 0;)
    {
       for(th = thinkercap.next; th != &thinkercap; th = th->next)
       {
@@ -217,71 +334,31 @@ int EV_SilentTeleport(const line_t *line, int side, Mobj *thing)
          if(m->type == E_ThingNumForDEHNum(MT_TELEPORTMAN) &&
             m->subsector->sector-sectors == i)
          {
-            // Height of thing above ground, in case of mid-air teleports:
-            fixed_t z = thing->z - thing->floorz;
-            
-            // Get the angle between the exit thing and source linedef.
-            // Rotate 90 degrees, so that walking perpendicularly across
-            // teleporter linedef causes thing to exit in the direction
-            // indicated by the exit thing.
-            angle_t angle =
-               P_PointToAngle(0, 0, line->dx, line->dy) - m->angle + ANG90;
-
-            // Sine, cosine of angle adjustment
-            fixed_t s = finesine[angle>>ANGLETOFINESHIFT];
-            fixed_t c = finecosine[angle>>ANGLETOFINESHIFT];
-            
-            // Momentum of thing crossing teleporter linedef
-            fixed_t momx = thing->momx;
-            fixed_t momy = thing->momy;
-
-            // Whether this is a player, and if so, a pointer to its player_t
-            player_t *player = thing->player;
-            
-            // Attempt to teleport, aborting if blocked
-            if(!P_TeleportMove(thing, m->x, m->y, false)) // killough 8/9/98
-               return 0;
-
-            // Rotate thing according to difference in angles
-            thing->angle += angle;
-            
-            // Adjust z position to be same height above ground as before
-            thing->z = z + thing->floorz;
-            
-            // Rotate thing's momentum to come out of exit just like it entered
-            thing->momx = FixedMul(momx, c) - FixedMul(momy, s);
-            thing->momy = FixedMul(momy, c) + FixedMul(momx, s);
-            
-            // Adjust player's view, in case there has been a height change
-            // Voodoo dolls are excluded by making sure player->mo == thing.
-            if(player && player->mo == thing)
-            {
-               // Save the current deltaviewheight, used in stepping
-               fixed_t deltaviewheight = player->deltaviewheight;
-               
-               // Clear deltaviewheight, since we don't want any changes
-               player->deltaviewheight = 0;
-               
-               // Set player's view according to the newly set parameters
-               P_CalcHeight(player);
-
-               player->prevviewz = player->viewz;
-               
-               // Reset the delta to have the same dynamics as before
-               player->deltaviewheight = deltaviewheight;
-               
-               if(player == players+displayplayer)
-                  P_ResetChasecam();
-            }
-
-            thing->backupPosition();
-            P_AdjustFloorClip(thing);
-
-            return 1;
+            return P_SilentTeleport(thing, line, m, parms);
          }
       }
    }
    return 0;
+}
+
+//
+// ioanch 20160423: param silent teleport (Teleport_NoFog special)
+//
+int EV_ParamSilentTeleport(int tid, const line_t *line, int tag, int side,
+                           Mobj *thing, teleparms_t parms)
+{
+   if(side || thing->flags & MF_MISSILE)
+      return 0;
+
+   if(tid)
+   {
+      const Mobj *mobj = P_pickRandomLanding(tid, tag);
+      if(mobj)
+         return P_SilentTeleport(thing, line, mobj, parms);
+      return 0;
+   }
+
+   return EV_SilentTeleport(line, tag, side, thing, parms);
 }
 
 //

@@ -938,7 +938,10 @@ DEFINE_ACTION(EV_ActionSilentTeleport)
    // case 268: (W1 - BOOM Extended)
    // case 269: (WR - BOOM Extended)
    // jff 4/14/98 add monster-only silent
-   return EV_SilentTeleport(line, side, thing);
+   teleparms_t parms;
+   parms.teleangle = teleangle_relative_boom;
+   parms.keepheight = true;
+   return EV_SilentTeleport(line, line->tag, side, thing, parms);
 }
 
 //
@@ -3485,6 +3488,37 @@ DEFINE_ACTION(EV_ActionParamTeleport)
 {
    return EV_ParamTeleport(instance->args[0], instance->args[1], 
                            instance->side,    instance->actor);
+}
+
+//
+// EV_ActionParamTeleportNoFog
+//
+// Implements Teleport_NoFog(tid, useangle, tag, keepheight)
+// * ExtraData: 445
+// * Hexen:     71
+//
+DEFINE_ACTION(EV_ActionParamTeleportNoFog)
+{
+   teleparms_t parms;
+   switch(instance->args[1])
+   {
+      case 0:
+         parms.teleangle = teleangle_keep;      // hexen
+         break;
+      case 1:
+         parms.teleangle = teleangle_absolute;  // zdoom extension
+         break;
+      case 2:
+         parms.teleangle = teleangle_relative_boom;  // boom
+         break;
+      default:
+         parms.teleangle = teleangle_relative_correct;   // boom corrected
+         break;
+   }
+   parms.keepheight = instance->args[3] != 0;
+   return EV_ParamSilentTeleport(instance->args[0], instance->line,
+                                 instance->args[2], instance->side,
+                                 instance->actor, parms);
 }
 
 // EOF

@@ -1077,6 +1077,7 @@ PARAMLINE(ParamPlatUWDS);
 PARAMLINE(ParamPlatUpByValue);
 PARAMLINE(ParamDonut);
 PARAMLINE(ParamTeleport);
+PARAMLINE(ParamTeleportNoFog);
 
 //=============================================================================
 //
@@ -1451,6 +1452,7 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(442, ParamCeilingCrushRaiseAndStaySilA, "Ceiling_CrushRaiseAndStaySilA")
    LINESPECNAMED(443, ParamGenCrusher,                 "Generic_Crusher")
    LINESPECNAMED(444, ParamTeleport,                   "Teleport")
+   LINESPECNAMED(445, ParamTeleportNoFog,              "Teleport_NoFog")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1553,6 +1555,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(68,  ParamFloorMoveToValueTimes8,     "Floor_MoveToValueTimes8")
    LINESPECNAMED(69,  ParamCeilingMoveToValueTimes8,   "Ceiling_MoveToValueTimes8")
    LINESPECNAMED(70,  ParamTeleport,                   "Teleport")
+   LINESPECNAMED(71,  ParamTeleportNoFog,              "Teleport_NoFog")
    LINESPECNAMED(72,  ThrustThing,                     "ThrustThing")
    LINESPECNAMED(73,  DamageThing,                     "DamageThing")
    LINESPECNAMED(75,  TeleportEndGame,                 "Teleport_EndGame")
