@@ -1056,8 +1056,7 @@ manual_crusher:
          default: // compat or anything else
             // like in ZDoom, decide based on current game
             ceiling->crushflags =         LevelInfo.levelType == LI_TYPE_HEXEN ? 
-               CeilingThinker::crushRest      : 
-            cd->flags & CDF_PARAMCRUSHDIST && cd->speed_value == CEILSPEED ? 
+               CeilingThinker::crushRest      : cd->speed_value == CEILSPEED ?
                CeilingThinker::crushParamSlow : 0;
             break;
          }
