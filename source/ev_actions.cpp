@@ -1043,7 +1043,7 @@ DEFINE_ACTION(EV_ActionSilentLineTeleport)
    // case 267: (WR - BOOM Extended)
    // jff 4/14/98 add monster-only silent line-line
 
-   return EV_SilentLineTeleport(line, side, thing, false);
+   return EV_SilentLineTeleport(line, line->tag, side, thing, false);
 }
 
 //
@@ -1061,7 +1061,7 @@ DEFINE_ACTION(EV_ActionSilentLineTeleportReverse)
    // case 264: (W1 - BOOM Extended)
    // case 265: (WR - BOOM Extended)
    // jff 4/14/98 add monster-only silent line-line reversed
-   return EV_SilentLineTeleport(line, side, thing, true);
+   return EV_SilentLineTeleport(line, line->tag, side, thing, true);
 }
 
 //
@@ -3519,6 +3519,22 @@ DEFINE_ACTION(EV_ActionParamTeleportNoFog)
    return EV_ParamSilentTeleport(instance->args[0], instance->line,
                                  instance->args[2], instance->side,
                                  instance->actor, parms);
+}
+
+//
+// EV_ActionParamTeleportLine
+//
+// Implements Teleport_Line(reserved, destid, flip)
+// * ExtraData: 446
+// * Hexen:     215
+//
+DEFINE_ACTION(EV_ActionParamTeleportLine)
+{
+   // FIXME: too lazy to implement first parameter; UDMF and ExtraData already
+   // do it.
+   return EV_SilentLineTeleport(instance->line, instance->args[1],
+                                instance->side, instance->actor,
+                                instance->args[2] != 0);
 }
 
 // EOF

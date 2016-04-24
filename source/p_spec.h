@@ -1311,7 +1311,8 @@ sector_t *P_FindModelCeilingSector(fixed_t ceildestheight, int secnum); //jff 02
 
 int P_FindSectorFromLineTag(const line_t *line, int start); // killough 4/17/98
 
-int P_FindLineFromLineTag(const line_t *line, int start);   // killough 4/17/98
+int P_FindLineFromTag(int tag, int start);
+int P_FindLineFromLineTag(const line_t *line, int start);
 
 int P_FindSectorFromTag(const int tag, int start);        // sf
 
@@ -1363,7 +1364,7 @@ int EV_SilentTeleport(const line_t *line, int tag, int side, Mobj *thing,
                       teleparms_t parms);
 
 // killough 1/31/98: Add silent line teleporter
-int EV_SilentLineTeleport(const line_t *line, int side,
+int EV_SilentLineTeleport(const line_t *line, int lineid, int side,
 			              Mobj *thing, bool reverse);
 
 // ioanch 20160330: parameterized teleport
