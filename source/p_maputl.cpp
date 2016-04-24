@@ -410,7 +410,7 @@ void P_LogThingPosition(Mobj *mo, const char *caller)
    {
       fprintf(thinglog,
               "%010d:%s::%+010d:%+010d:%+010d:%+010d:%+010d\n",
-              gametic, caller, (int)(mo->info - mobjinfo[0]), mo->x, mo->y, mo->z, mo->flags & 0x7fffffff);
+              gametic, caller, (int)(mo->info->dehnum-1), mo->x, mo->y, mo->z, mo->flags & 0x7fffffff);
    }
 }
 #else
