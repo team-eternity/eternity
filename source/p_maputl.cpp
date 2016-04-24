@@ -409,8 +409,8 @@ void P_LogThingPosition(Mobj *mo, const char *caller)
    if(thinglog)
    {
       fprintf(thinglog,
-         "%010d:%s:%p:%20s:%+010d:%+010d:%+010d:%+010d\n",
-         gametic, caller, mo, mo->info->name, mo->x, mo->y, mo->z, mo->flags);
+              "%010d:%s::%+010d:%+010d:%+010d:%+010d:%+010d\n",
+              gametic, caller, (int)(mo->info - mobjinfo), mo->x, mo->y, mo->z, mo->flags & 0x7fffffff);
    }
 }
 #else
