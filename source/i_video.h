@@ -89,6 +89,7 @@ enum
 {
    VDR_SDLSOFT,
    VDR_SDLGL2D,
+   VDR_NONE,
    VDR_MAXDRIVERS
 };
 

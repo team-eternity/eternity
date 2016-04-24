@@ -64,6 +64,28 @@ HALVideoDriver *i_video_driver = NULL;
 
 //=============================================================================
 //
+// ioanch 20160424: "None" video driver: for batch demo testing
+//
+
+class NoneVideoDriver : public HALVideoDriver
+{
+protected:
+   virtual void SetPrimaryBuffer() {}
+   virtual void UnsetPrimaryBuffer() {}
+
+public:
+   virtual void FinishUpdate() {}
+   virtual void ReadScreen(byte *scr) {}
+   virtual void SetPalette(byte *pal) {}
+   virtual void ShutdownGraphics() {}
+   virtual void ShutdownGraphicsPartway() {}
+   virtual bool InitGraphicsMode() {return false;}
+};
+
+static NoneVideoDriver i_nonedriver;
+
+//=============================================================================
+//
 // Video Driver Table
 //
 
@@ -111,6 +133,13 @@ static haldriveritem_t halVideoDriverTable[VDR_MAXDRIVERS] =
 #else
       NULL
 #endif
+   },
+
+   // ioanch 20160424: demo testing
+   {
+      VDR_NONE,
+      "None",
+      &i_nonedriver
    }
 };
 
@@ -123,6 +152,12 @@ static haldriveritem_t halVideoDriverTable[VDR_MAXDRIVERS] =
 static haldriveritem_t *I_DefaultVideoDriver()
 {
    haldriveritem_t *item = NULL;
+
+   // ioanch 20160424: demo test with no drawing allowed
+   if(M_CheckParm("-nodraw") && M_CheckParm("-demolog"))
+   {
+      i_videodriverid = VDR_NONE;
+   }
 
    if(i_videodriverid < 0 || i_videodriverid >= VDR_MAXDRIVERS ||
       halVideoDriverTable[i_videodriverid].driver == NULL)

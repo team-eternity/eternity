@@ -434,7 +434,25 @@ static void CustomApplicationMain (int argc, char **argv)
 
 @end
 
-
+//
+// ioanch 20160424: check if demo testing is enabled. In this case, launch the
+// program directly as a command-line tool. It will know later that it shouldn't
+// load any video driver.
+//
+static BOOL checkDemoTesting()
+{
+   BOOL noDraw = NO, demoLog = NO;
+   for(int i = 1; i < gArgc; ++i)
+   {
+      if(!noDraw && !strcasecmp(gArgv[i], "-nodraw"))
+         noDraw = YES;
+      if(!demoLog && !strcasecmp(gArgv[i], "-demolog"))
+         demoLog = YES;
+      if(noDraw && demoLog)
+         return YES;
+   }
+   return NO;
+}
 
 #ifdef main
 #  undef main
@@ -466,6 +484,12 @@ int main (int argc, char **argv)
             gArgv[i] = argv[i];
         gFinderLaunch = NO;
     }
+
+   if(checkDemoTesting())
+   {
+      // In this case, launch directly
+      return SDL_main(gArgc, gArgv);
+   }
 
 #if SDL_USE_NIB_FILE
     NSApplicationMain (argc, argv);
