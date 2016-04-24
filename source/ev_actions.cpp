@@ -939,7 +939,7 @@ DEFINE_ACTION(EV_ActionSilentTeleport)
    // case 269: (WR - BOOM Extended)
    // jff 4/14/98 add monster-only silent
    teleparms_t parms;
-   parms.teleangle = teleangle_relative;
+   parms.teleangle = teleangle_relative_boom;
    parms.keepheight = true;
    return EV_SilentTeleport(line, line->tag, side, thing, parms);
 }
@@ -3508,8 +3508,11 @@ DEFINE_ACTION(EV_ActionParamTeleportNoFog)
       case 1:
          parms.teleangle = teleangle_absolute;  // zdoom extension
          break;
+      case 2:
+         parms.teleangle = teleangle_relative_boom;  // boom
+         break;
       default:
-         parms.teleangle = teleangle_relative;  // boom
+         parms.teleangle = teleangle_relative_correct;   // boom corrected
          break;
    }
    parms.keepheight = instance->args[3] != 0;

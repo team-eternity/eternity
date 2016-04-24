@@ -151,10 +151,14 @@ static int P_SilentTeleport(Mobj *thing, const line_t *line,
       case teleangle_absolute:
          angle = m->angle - thing->angle;
          break;
-      case teleangle_relative:
+      case teleangle_relative_boom:
          // Fall back to absolute if line is missing
          angle = line ? P_PointToAngle(0, 0, line->dx, line->dy) - m->angle
          + ANG90 : m->angle - thing->angle;
+         break;
+      case teleangle_relative_correct:
+         angle = line ? m->angle - (P_PointToAngle(0, 0, line->dx, line->dy)
+         + ANG90) : m->angle - thing->angle;
          break;
    }
 

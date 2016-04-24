@@ -1340,9 +1340,10 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side);
 //
 enum teleangle_e
 {
-   teleangle_keep = 0,     // keep current thing angle (Hexen silent teleport)
-   teleangle_absolute = 1, // totally change angle (ZDoom extension)
-   teleangle_relative = 2, // Use relative linedef/landing angle (Boom)
+   teleangle_keep,               // keep current thing angle (Hexen silent teleport)
+   teleangle_absolute,           // totally change angle (ZDoom extension)
+   teleangle_relative_boom,      // Use relative linedef/landing angle (Boom)
+   teleangle_relative_correct,   // Same as ZDoom's correction for Boom
 };
 
 //
