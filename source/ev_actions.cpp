@@ -3537,5 +3537,16 @@ DEFINE_ACTION(EV_ActionParamTeleportLine)
                                 instance->args[2] != 0);
 }
 
+//
+// Implements Exit_Normal(reserved)
+// * ExtraData: 447
+// * Hexen:     243
+//
+DEFINE_ACTION(EV_ActionParamExitNormal)
+{
+   // TODO: implement exit as it needs to be
+   return 0;
+}
+
 // EOF
 

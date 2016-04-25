@@ -230,6 +230,7 @@ DECLARE_ACTION(EV_ActionParamDonut);
 DECLARE_ACTION(EV_ActionParamTeleport);
 DECLARE_ACTION(EV_ActionParamTeleportNoFog);
 DECLARE_ACTION(EV_ActionParamTeleportLine);
+DECLARE_ACTION(EV_ActionParamExitNormal);
 
 #endif
 
