@@ -370,17 +370,18 @@ int EV_ParamSilentTeleport(int tid, const line_t *line, int tag, int side,
 
 // maximum fixed_t units to move object to avoid hiccups
 #define FUDGEFACTOR 10
-
-int EV_SilentLineTeleport(const line_t *line, int side, Mobj *thing,
+// ioanch 20160424: added lineid as a separate arg
+int EV_SilentLineTeleport(const line_t *line, int lineid, int side, Mobj *thing,
                           bool reverse)
 {
    int i;
    line_t *l;
-   
-   if(side || thing->flags & MF_MISSILE)
+
+   // ioanch 20160424: protect against null line or thing pointer
+   if(side || !thing || thing->flags & MF_MISSILE || !line)
       return 0;
 
-   for (i = -1; (i = P_FindLineFromLineTag(line, i)) >= 0;)
+   for (i = -1; (i = P_FindLineFromTag(lineid, i)) >= 0;)
    {
       if ((l=lines+i) != line && l->backsector)
       {
