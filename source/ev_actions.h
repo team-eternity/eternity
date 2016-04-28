@@ -207,6 +207,7 @@ DECLARE_ACTION(EV_ActionRadiusQuake);
 DECLARE_ACTION(EV_ActionFloorWaggle);
 DECLARE_ACTION(EV_ActionThingSpawn);
 DECLARE_ACTION(EV_ActionThingSpawnNoFog);
+DECLARE_ACTION(EV_ActionTeleportNewMap);
 DECLARE_ACTION(EV_ActionTeleportEndGame);
 DECLARE_ACTION(EV_ActionThingChangeTID);
 DECLARE_ACTION(EV_ActionThingProjectile);
@@ -231,6 +232,7 @@ DECLARE_ACTION(EV_ActionParamTeleport);
 DECLARE_ACTION(EV_ActionParamTeleportNoFog);
 DECLARE_ACTION(EV_ActionParamTeleportLine);
 DECLARE_ACTION(EV_ActionParamExitNormal);
+DECLARE_ACTION(EV_ActionParamExitSecret);
 
 #endif
 

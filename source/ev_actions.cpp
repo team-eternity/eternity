@@ -476,6 +476,13 @@ DEFINE_ACTION(EV_ActionCeilingLowerAndCrush)
    return EV_DoCeiling(instance->line, lowerAndCrush);
 }
 
+// ioanch 20160427: provide an inline helper for checking zombies
+inline static bool EV_isZombiePlayer(const Mobj *thing)
+{
+   return thing && thing->player && thing->player->health <= 0 &&
+      !comp[comp_zombie];
+}
+
 //
 // EV_ActionExitLevel
 //
@@ -494,7 +501,7 @@ DEFINE_ACTION(EV_ActionExitLevel)
    // case  52: (W1)
    // EXIT!
    // killough 10/98: prevent zombies from exiting levels
-   if(!(thing->player && thing->player->health <= 0 && !comp[comp_zombie]))
+   if(!EV_isZombiePlayer(thing))
       G_ExitLevel(destmap);
 
    return true;
@@ -520,7 +527,7 @@ DEFINE_ACTION(EV_ActionSwitchExitLevel)
    // case 11:
    // Exit level
    // killough 10/98: prevent zombies from exiting levels
-   if(thing->player && thing->player->health <= 0 && !comp[comp_zombie])
+   if(EV_isZombiePlayer(thing))
    {
       S_StartSound(thing, GameModeInfo->playerSounds[sk_oof]);
       return false;
@@ -548,7 +555,7 @@ DEFINE_ACTION(EV_ActionGunExitLevel)
    }
 
    // case 197: (G1 - BOOM Extended)
-   if(thing->player && thing->player->health <= 0 && !comp[comp_zombie])
+   if(EV_isZombiePlayer(thing))
       return false;
 
    G_ExitLevel(destmap);
@@ -742,7 +749,7 @@ DEFINE_ACTION(EV_ActionSecretExit)
    // case 124: (W1)
    // Secret EXIT
    // killough 10/98: prevent zombies from exiting levels
-   if(!(thing->player && thing->player->health <= 0 && !comp[comp_zombie]))
+   if(!EV_isZombiePlayer(thing))
       G_SecretExitLevel(destmap);
 
    return true;
@@ -768,7 +775,7 @@ DEFINE_ACTION(EV_ActionSwitchSecretExit)
    // case 51: (S1)
    // Secret EXIT
    // killough 10/98: prevent zombies from exiting levels
-   if(thing->player && thing->player->health <= 0 && !comp[comp_zombie])
+   if(EV_isZombiePlayer(thing))
    {
       S_StartSound(thing, GameModeInfo->playerSounds[sk_oof]);
       return false;
@@ -796,7 +803,7 @@ DEFINE_ACTION(EV_ActionGunSecretExit)
    }
 
    // case 198: (G1 - BOOM Extended)
-   if(thing->player && thing->player->health <= 0 && !comp[comp_zombie])
+   if(EV_isZombiePlayer(thing))
       return false;
 
    G_SecretExitLevel(destmap);
@@ -2928,8 +2935,12 @@ DEFINE_ACTION(EV_ActionThingSpawnNoFog)
 //
 DEFINE_ACTION(EV_ActionTeleportEndGame)
 {
+   // ioanch 20160428: vanilla Hexen only accepts from the front side
+   if(P_LevelIsVanillaHexen() && instance->side)
+      return 0;
+
    G_ForceFinale();
-   return true;
+   return 1;
 }
 
 //
@@ -3538,14 +3549,77 @@ DEFINE_ACTION(EV_ActionParamTeleportLine)
 }
 
 //
-// Implements Exit_Normal(reserved)
+// Implements Exit_Normal(position)
 // * ExtraData: 447
 // * Hexen:     243
 //
 DEFINE_ACTION(EV_ActionParamExitNormal)
 {
-   // TODO: implement exit as it needs to be
+   Mobj *thing   = instance->actor;
+   int   destmap = 0;
+
+   // NOTE: this special has no exit tag level. Use Teleport_NewMap for that.
+
+   // TODO: exit position.
+
+   // killough 10/98: prevent zombies from exiting levels
+   if(!EV_isZombiePlayer(thing))
+   {
+      G_ExitLevel(destmap);
+      return 1;
+   }
+
    return 0;
+}
+
+//
+// Implements Exit_Secret(position)
+// * ExtraData: 448
+// * Hexen:     244
+//
+DEFINE_ACTION(EV_ActionParamExitSecret)
+{
+   Mobj *thing   = instance->actor;
+   int   destmap = 0;
+
+   // NOTE: this special has no exit tag level. Use Teleport_NewMap for that.
+
+   // TODO: exit position.
+
+   // killough 10/98: prevent zombies from exiting levels
+   if(!EV_isZombiePlayer(thing))
+   {
+      G_SecretExitLevel(destmap);
+      return 1;
+   }
+
+   return 0;
+}
+
+//
+// Implements Teleport_NewMap(map, position, face)
+//
+// * ExtraData: 449
+// * Hexen:     74
+//
+DEFINE_ACTION(EV_ActionTeleportNewMap)
+{
+   // Vanilla Hexen only accepts from the front side
+   if(P_LevelIsVanillaHexen() && instance->side)
+      return 0;
+
+   // TODO: don't allow dead players to trigger this special if either the game
+   // mode info, map info says so. Or probably, if there are hubs.
+
+   // Zombie players can't trigger exits
+   if(EV_isZombiePlayer(instance->actor))
+      return 0;
+
+   G_ExitLevel(instance->args[0]);
+
+   // TODO: the other arguments (position, face)
+
+   return 1;
 }
 
 // EOF
