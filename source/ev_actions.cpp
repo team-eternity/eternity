@@ -148,7 +148,15 @@ DEFINE_ACTION(EV_ActionOpenDoor)
    // case  86: (WR)
    // case 103: (S1)
    // Open Door
-   return EV_DoDoor(instance->line, doorOpen);
+   INIT_STRUCT(doordata_t, dd);
+
+   dd.kind = ODoor;
+   dd.spac = instance->spac;
+   dd.speed_value = VDOORSPEED;
+   dd.flags = DDF_HAVESPAC;
+   dd.thing = instance->actor;
+
+   return EV_DoParamDoor(instance->line, instance->tag, &dd);
 }
 
 //
@@ -161,7 +169,16 @@ DEFINE_ACTION(EV_ActionCloseDoor)
    // case 50: (S1)
    // case 75: (WR)
    // Close Door
-   return EV_DoDoor(instance->line, doorClose);
+
+   INIT_STRUCT(doordata_t, dd);
+
+   dd.kind = CDoor;
+   dd.spac = instance->spac;
+   dd.speed_value = VDOORSPEED;
+   dd.flags = DDF_HAVESPAC;
+   dd.thing = instance->actor;
+
+   return EV_DoParamDoor(instance->line, instance->tag, &dd);
 }
 
 //
@@ -174,7 +191,17 @@ DEFINE_ACTION(EV_ActionRaiseDoor)
    // case 63: (SR)
    // case 90: (WR)
    // Raise Door
-   return EV_DoDoor(instance->line, doorNormal);
+
+   INIT_STRUCT(doordata_t, dd);
+
+   dd.kind = OdCDoor;
+   dd.spac = instance->spac;
+   dd.speed_value = VDOORSPEED;
+   dd.delay_value = VDOORWAIT;
+   dd.flags = DDF_HAVESPAC;
+   dd.thing = instance->actor;
+
+   return EV_DoParamDoor(instance->line, instance->tag, &dd);
 }
 
 //
@@ -265,7 +292,17 @@ DEFINE_ACTION(EV_ActionCloseDoor30)
    // case 175: (S1 - BOOM Extended)
    // case 196: (SR - BOOM Extended)
    // Close Door 30
-   return EV_DoDoor(instance->line, closeThenOpen);
+
+   INIT_STRUCT(doordata_t, dd);
+
+   dd.kind = CdODoor;
+   dd.spac = instance->spac;
+   dd.speed_value = VDOORSPEED;
+   dd.delay_value = 30 * TICRATE;
+   dd.flags = DDF_HAVESPAC;
+   dd.thing = instance->actor;
+
+   return EV_DoParamDoor(instance->line, instance->tag, &dd);
 }
 
 //
@@ -676,7 +713,17 @@ DEFINE_ACTION(EV_ActionDoorBlazeRaise)
    // case 111: (S1)
    // case 114: (SR)
    // Blazing Door Raise (faster than TURBO!)
-   return EV_DoDoor(instance->line, blazeRaise);
+
+   INIT_STRUCT(doordata_t, dd);
+
+   dd.kind = OdCDoor;
+   dd.spac = instance->spac;
+   dd.speed_value = 4 * VDOORSPEED;
+   dd.delay_value = VDOORWAIT;
+   dd.flags = DDF_HAVESPAC;
+   dd.thing = instance->actor;
+
+   return EV_DoParamDoor(instance->line, instance->tag, &dd);
 }
 
 //
@@ -689,7 +736,16 @@ DEFINE_ACTION(EV_ActionDoorBlazeOpen)
    // case 112: (S1)
    // case 115: (SR)
    // Blazing Door Open (faster than TURBO!)
-   return EV_DoDoor(instance->line, blazeOpen);
+
+   INIT_STRUCT(doordata_t, dd);
+
+   dd.kind = ODoor;
+   dd.spac = instance->spac;
+   dd.speed_value = 4 * VDOORSPEED;
+   dd.flags = DDF_HAVESPAC;
+   dd.thing = instance->actor;
+
+   return EV_DoParamDoor(instance->line, instance->tag, &dd);
 }
 
 //
@@ -702,7 +758,16 @@ DEFINE_ACTION(EV_ActionDoorBlazeClose)
    // case 113: (S1)
    // case 116: (SR)
    // Blazing Door Close (faster than TURBO!)
-   return EV_DoDoor(instance->line, blazeClose);
+
+   INIT_STRUCT(doordata_t, dd);
+
+   dd.kind = CDoor;
+   dd.spac = instance->spac;
+   dd.speed_value = 4 * VDOORSPEED;
+   dd.flags = DDF_HAVESPAC;
+   dd.thing = instance->actor;
+
+   return EV_DoParamDoor(instance->line, instance->tag, &dd);
 }
 
 //
@@ -1131,7 +1196,17 @@ DEFINE_ACTION(EV_ActionDoLockedDoor)
 
    int lockID = EV_LockDefIDForSpecial(instance->special);
    if(EV_lockCheck(instance->actor, lockID, true))
-      return EV_DoDoor(instance->line, blazeOpen);
+   {
+      INIT_STRUCT(doordata_t, dd);
+
+      dd.kind = ODoor;
+      dd.speed_value = 4 * VDOORSPEED;
+      dd.flags = DDF_HAVESPAC;
+      dd.thing = instance->actor;
+      dd.spac = instance->spac;
+
+      return EV_DoParamDoor(instance->line, instance->tag, &dd);
+   }
    return 0;
 }
 

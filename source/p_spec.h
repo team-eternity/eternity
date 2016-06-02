@@ -1392,8 +1392,6 @@ void P_ChangeCeilingTex(const char *name, int tag);
 
 int EV_VerticalDoor(line_t *line, const Mobj *thing, int lockID);
 
-int EV_DoDoor(const line_t *line, vldoor_e type);
-
 void EV_OpenDoor(int sectag, int speed, int wait_time);
 
 void EV_CloseDoor(int sectag, int speed);
