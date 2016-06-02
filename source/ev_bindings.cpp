@@ -1056,6 +1056,7 @@ PARAMLINE(RadiusQuake);
 PARAMLINE(FloorWaggle);
 PARAMLINE(ThingSpawn);
 PARAMLINE(ThingSpawnNoFog);
+PARAMLINE(TeleportNewMap);
 PARAMLINE(TeleportEndGame);
 PARAMLINE(ThingChangeTID);
 PARAMLINE(ThingProjectile);
@@ -1079,6 +1080,8 @@ PARAMLINE(ParamDonut);
 PARAMLINE(ParamTeleport);
 PARAMLINE(ParamTeleportNoFog);
 PARAMLINE(ParamTeleportLine);
+PARAMLINE(ParamExitNormal);
+PARAMLINE(ParamExitSecret);
 
 //=============================================================================
 //
@@ -1455,6 +1458,9 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(444, ParamTeleport,                   "Teleport")
    LINESPECNAMED(445, ParamTeleportNoFog,              "Teleport_NoFog")
    LINESPECNAMED(446, ParamTeleportLine,               "Teleport_Line")
+   LINESPECNAMED(447, ParamExitNormal,                 "Exit_Normal")
+   LINESPECNAMED(448, ParamExitSecret,                 "Exit_Secret")
+   LINESPECNAMED(449, TeleportNewMap,                  "Teleport_NewMap")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1560,6 +1566,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(71,  ParamTeleportNoFog,              "Teleport_NoFog")
    LINESPECNAMED(72,  ThrustThing,                     "ThrustThing")
    LINESPECNAMED(73,  DamageThing,                     "DamageThing")
+   LINESPECNAMED(74,  TeleportNewMap,                  "Teleport_NewMap")
    LINESPECNAMED(75,  TeleportEndGame,                 "Teleport_EndGame")
    LINESPECNAMED(80,  ACSExecute,                      "ACS_Execute")
    LINESPECNAMED(81,  ACSSuspend,                      "ACS_Suspend")
@@ -1607,6 +1614,8 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(238, ParamFloorRaiseToLowestCeiling,  "Floor_RaiseToLowestCeiling")
    LINESPECNAMED(240, ParamFloorRaiseByTexture,        "Floor_RaiseByTexture")
    LINESPECNAMED(242, ParamFloorLowerToHighest,        "Floor_LowerToHighest")
+   LINESPECNAMED(243, ParamExitNormal,                 "Exit_Normal")
+   LINESPECNAMED(244, ParamExitSecret,                 "Exit_Secret")
    LINESPECNAMED(249, ParamDoorCloseWaitOpen,          "Door_CloseWaitOpen")
    LINESPECNAMED(250, ParamDonut,                      "Floor_Donut")
    LINESPECNAMED(252, ParamCeilingRaiseToNearest,      "Ceiling_RaiseToNearest")
