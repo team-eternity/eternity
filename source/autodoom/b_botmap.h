@@ -147,6 +147,9 @@ public:
       v2fixed_t mid;
       // Fast neighbour lookup
       PODCollection<Neigh> neighs;
+
+      // Helper functions
+      v2fixed_t farthestCorner(v2fixed_t source) const;
    };
    Collection<Subsec> ssectors;
 

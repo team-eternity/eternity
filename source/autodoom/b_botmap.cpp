@@ -159,6 +159,32 @@ BotMap::Subsec &BotMap::pointInSubsector(fixed_t x, fixed_t y) const
    return ssectors[nodenum & ~NF_SUBSECTOR];
 }
 
+//
+// Returns the corner farthest from a source point
+//
+v2fixed_t BotMap::Subsec::farthestCorner(v2fixed_t fsource) const
+{
+   const v2double_t source = {M_FixedToDouble(fsource.x), M_FixedToDouble(fsource.y)};
+   v2double_t target;
+   double maxdist = 0, dist;
+   int maxi;
+   for(int i = 0; i < nsegs; ++i)
+   {
+      target.x = M_FixedToDouble(segs[i].v[0]->x);
+      target.y = M_FixedToDouble(segs[i].v[0]->y);
+      dist = pow(target.x - source.x, 2) + pow(target.y - source.y, 2);
+      if(dist > maxdist)
+      {
+         maxdist = dist;
+         maxi = i;
+      }
+   }
+   v2fixed_t ret;
+   ret.x = segs[maxi].v[0]->x;
+   ret.y = segs[maxi].v[0]->y;
+   return ret;
+}
+
 int BotMap::pointOnSide(fixed_t x, fixed_t y, const Node &node) const
 {
    if(!node.dx)
