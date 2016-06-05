@@ -400,7 +400,7 @@ DEFINE_ACTION(EV_ActionTeleport)
    // case 126: (WR)
    // TELEPORT MonsterONLY.
    // jff 02/09/98 fix using up with wrong side crossing
-   return EV_Teleport(instance->line, instance->side, instance->actor);
+   return EV_Teleport(instance->tag, instance->side, instance->actor);
 }
 
 //
@@ -476,6 +476,13 @@ DEFINE_ACTION(EV_ActionCeilingLowerAndCrush)
    return EV_DoCeiling(instance->line, lowerAndCrush);
 }
 
+// ioanch 20160427: provide an inline helper for checking zombies
+inline static bool EV_isZombiePlayer(const Mobj *thing)
+{
+   return thing && thing->player && thing->player->health <= 0 &&
+      !comp[comp_zombie];
+}
+
 //
 // EV_ActionExitLevel
 //
@@ -494,7 +501,7 @@ DEFINE_ACTION(EV_ActionExitLevel)
    // case  52: (W1)
    // EXIT!
    // killough 10/98: prevent zombies from exiting levels
-   if(!(thing->player && thing->player->health <= 0 && !comp[comp_zombie]))
+   if(!EV_isZombiePlayer(thing))
       G_ExitLevel(destmap);
 
    return true;
@@ -520,7 +527,7 @@ DEFINE_ACTION(EV_ActionSwitchExitLevel)
    // case 11:
    // Exit level
    // killough 10/98: prevent zombies from exiting levels
-   if(thing->player && thing->player->health <= 0 && !comp[comp_zombie])
+   if(EV_isZombiePlayer(thing))
    {
       S_StartSound(thing, GameModeInfo->playerSounds[sk_oof]);
       return false;
@@ -548,7 +555,7 @@ DEFINE_ACTION(EV_ActionGunExitLevel)
    }
 
    // case 197: (G1 - BOOM Extended)
-   if(thing->player && thing->player->health <= 0 && !comp[comp_zombie])
+   if(EV_isZombiePlayer(thing))
       return false;
 
    G_ExitLevel(destmap);
@@ -742,7 +749,7 @@ DEFINE_ACTION(EV_ActionSecretExit)
    // case 124: (W1)
    // Secret EXIT
    // killough 10/98: prevent zombies from exiting levels
-   if(!(thing->player && thing->player->health <= 0 && !comp[comp_zombie]))
+   if(!EV_isZombiePlayer(thing))
       G_SecretExitLevel(destmap);
 
    return true;
@@ -768,7 +775,7 @@ DEFINE_ACTION(EV_ActionSwitchSecretExit)
    // case 51: (S1)
    // Secret EXIT
    // killough 10/98: prevent zombies from exiting levels
-   if(thing->player && thing->player->health <= 0 && !comp[comp_zombie])
+   if(EV_isZombiePlayer(thing))
    {
       S_StartSound(thing, GameModeInfo->playerSounds[sk_oof]);
       return false;
@@ -796,7 +803,7 @@ DEFINE_ACTION(EV_ActionGunSecretExit)
    }
 
    // case 198: (G1 - BOOM Extended)
-   if(thing->player && thing->player->health <= 0 && !comp[comp_zombie])
+   if(EV_isZombiePlayer(thing))
       return false;
 
    G_SecretExitLevel(destmap);
@@ -938,7 +945,10 @@ DEFINE_ACTION(EV_ActionSilentTeleport)
    // case 268: (W1 - BOOM Extended)
    // case 269: (WR - BOOM Extended)
    // jff 4/14/98 add monster-only silent
-   return EV_SilentTeleport(line, side, thing);
+   teleparms_t parms;
+   parms.teleangle = teleangle_relative_boom;
+   parms.keepheight = true;
+   return EV_SilentTeleport(line, line->tag, side, thing, parms);
 }
 
 //
@@ -1040,7 +1050,7 @@ DEFINE_ACTION(EV_ActionSilentLineTeleport)
    // case 267: (WR - BOOM Extended)
    // jff 4/14/98 add monster-only silent line-line
 
-   return EV_SilentLineTeleport(line, side, thing, false);
+   return EV_SilentLineTeleport(line, line->tag, side, thing, false);
 }
 
 //
@@ -1058,7 +1068,7 @@ DEFINE_ACTION(EV_ActionSilentLineTeleportReverse)
    // case 264: (W1 - BOOM Extended)
    // case 265: (WR - BOOM Extended)
    // jff 4/14/98 add monster-only silent line-line reversed
-   return EV_SilentLineTeleport(line, side, thing, true);
+   return EV_SilentLineTeleport(line, line->tag, side, thing, true);
 }
 
 //
@@ -2925,8 +2935,12 @@ DEFINE_ACTION(EV_ActionThingSpawnNoFog)
 //
 DEFINE_ACTION(EV_ActionTeleportEndGame)
 {
+   // ioanch 20160428: vanilla Hexen only accepts from the front side
+   if(P_LevelIsVanillaHexen() && instance->side)
+      return 0;
+
    G_ForceFinale();
-   return true;
+   return 1;
 }
 
 //
@@ -3309,7 +3323,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerAndCrush)
 DEFINE_ACTION(EV_ActionParamCeilingLowerAndCrushDist)
 {
    INIT_STRUCT(crusherdata_t, cd);
-   cd.flags = CDF_HAVESPAC | CDF_PARAMCRUSHDIST;
+   cd.flags = CDF_HAVESPAC;
    cd.damage = instance->args[2];
    cd.speed_value = instance->args[1] * (FRACUNIT / 8);
    cd.speed_type = SpeedParam;
@@ -3330,7 +3344,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerAndCrushDist)
 DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaiseDist)
 {
    INIT_STRUCT(crusherdata_t, cd);
-   cd.flags = CDF_HAVESPAC | CDF_PARAMCRUSHDIST;
+   cd.flags = CDF_HAVESPAC;
    cd.damage = instance->args[3];
    cd.speed_value = instance->args[2] * (FRACUNIT / 8);
    cd.upspeed = cd.speed_value;  // Same speed as down-speed here.
@@ -3418,7 +3432,7 @@ DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaiseSilentA)
 DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaiseSilentDist)
 {
    INIT_STRUCT(crusherdata_t, cd);
-   cd.flags = CDF_HAVESPAC | CDF_PARAMSILENT | CDF_PARAMCRUSHDIST;
+   cd.flags = CDF_HAVESPAC | CDF_PARAMSILENT;
    cd.damage = instance->args[3];
    cd.speed_value = instance->args[2] * (FRACUNIT / 8);
    cd.upspeed = cd.speed_value;  // Same speed as down-speed here.
@@ -3472,6 +3486,140 @@ DEFINE_ACTION(EV_ActionParamGenCrusher)
    cd.crushmode = crushmodeDoom; // FIXME: irrelevant for this cd->type
    cd.ground_dist = 8 * FRACUNIT;
    return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamTeleport
+//
+// Implements Teleport(tid, tag, reserved)
+// * ExtraData: 444
+// * Hexen:     70
+//
+DEFINE_ACTION(EV_ActionParamTeleport)
+{
+   return EV_ParamTeleport(instance->args[0], instance->args[1], 
+                           instance->side,    instance->actor);
+}
+
+//
+// EV_ActionParamTeleportNoFog
+//
+// Implements Teleport_NoFog(tid, useangle, tag, keepheight)
+// * ExtraData: 445
+// * Hexen:     71
+//
+DEFINE_ACTION(EV_ActionParamTeleportNoFog)
+{
+   teleparms_t parms;
+   switch(instance->args[1])
+   {
+      case 0:
+         parms.teleangle = teleangle_keep;      // hexen
+         break;
+      case 1:
+         parms.teleangle = teleangle_absolute;  // zdoom extension
+         break;
+      case 2:
+         parms.teleangle = teleangle_relative_boom;  // boom
+         break;
+      default:
+         parms.teleangle = teleangle_relative_correct;   // boom corrected
+         break;
+   }
+   parms.keepheight = instance->args[3] != 0;
+   return EV_ParamSilentTeleport(instance->args[0], instance->line,
+                                 instance->args[2], instance->side,
+                                 instance->actor, parms);
+}
+
+//
+// EV_ActionParamTeleportLine
+//
+// Implements Teleport_Line(reserved, destid, flip)
+// * ExtraData: 446
+// * Hexen:     215
+//
+DEFINE_ACTION(EV_ActionParamTeleportLine)
+{
+   // FIXME: too lazy to implement first parameter; UDMF and ExtraData already
+   // do it.
+   return EV_SilentLineTeleport(instance->line, instance->args[1],
+                                instance->side, instance->actor,
+                                instance->args[2] != 0);
+}
+
+//
+// Implements Exit_Normal(position)
+// * ExtraData: 447
+// * Hexen:     243
+//
+DEFINE_ACTION(EV_ActionParamExitNormal)
+{
+   Mobj *thing   = instance->actor;
+   int   destmap = 0;
+
+   // NOTE: this special has no exit tag level. Use Teleport_NewMap for that.
+
+   // TODO: exit position.
+
+   // killough 10/98: prevent zombies from exiting levels
+   if(!EV_isZombiePlayer(thing))
+   {
+      G_ExitLevel(destmap);
+      return 1;
+   }
+
+   return 0;
+}
+
+//
+// Implements Exit_Secret(position)
+// * ExtraData: 448
+// * Hexen:     244
+//
+DEFINE_ACTION(EV_ActionParamExitSecret)
+{
+   Mobj *thing   = instance->actor;
+   int   destmap = 0;
+
+   // NOTE: this special has no exit tag level. Use Teleport_NewMap for that.
+
+   // TODO: exit position.
+
+   // killough 10/98: prevent zombies from exiting levels
+   if(!EV_isZombiePlayer(thing))
+   {
+      G_SecretExitLevel(destmap);
+      return 1;
+   }
+
+   return 0;
+}
+
+//
+// Implements Teleport_NewMap(map, position, face)
+//
+// * ExtraData: 449
+// * Hexen:     74
+//
+DEFINE_ACTION(EV_ActionTeleportNewMap)
+{
+   // Vanilla Hexen only accepts from the front side
+   if(P_LevelIsVanillaHexen() && instance->side)
+      return 0;
+
+   // TODO: don't allow dead players to trigger this special if either the game
+   // mode info, map info says so. Or probably, if there are hubs.
+
+   // Zombie players can't trigger exits
+   if(EV_isZombiePlayer(instance->actor))
+      return 0;
+
+   G_ExitLevel(instance->args[0]);
+
+   // TODO: the other arguments (position, face)
+
+   return 1;
 }
 
 // EOF

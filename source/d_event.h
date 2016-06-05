@@ -84,7 +84,8 @@ typedef enum
   BT_CHANGE       = 4,
 
   // The 4bit weapon mask and shift, convenience.
-//BT_WEAPONMASK   = (8+16+32),
+  // ioanch 20160426: added demo compat weapon mask
+  BT_WEAPONMASK_OLD = (8+16+32),
   BT_WEAPONMASK   = (8+16+32+64), // extended to pick up SSG        // phares
   BT_WEAPONSHIFT  = 3,
 

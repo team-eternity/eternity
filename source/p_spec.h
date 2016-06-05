@@ -1007,7 +1007,6 @@ enum
    CDF_HAVETRIGGERTYPE = 0x00000001, // has BOOM-style gen action trigger
    CDF_HAVESPAC        = 0x00000002, // has Hexen-style spac
    CDF_PARAMSILENT     = 0x00000004, // ioanch 20160314: parameterized silent
-   CDF_PARAMCRUSHDIST  = 0x00000008, // compat stuff
 };
 
 // haleyjd 10/05/05: extended data struct for parameterized ceilings
@@ -1322,7 +1321,8 @@ sector_t *P_FindModelCeilingSector(fixed_t ceildestheight, int secnum);
 
 int P_FindSectorFromLineTag(const line_t *line, int start); // killough 4/17/98
 
-int P_FindLineFromLineTag(const line_t *line, int start);   // killough 4/17/98
+int P_FindLineFromTag(int tag, int start);
+int P_FindLineFromLineTag(const line_t *line, int start);
 
 int P_FindSectorFromTag(const int tag, int start);        // sf
 
@@ -1346,14 +1346,41 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side);
 
 // p_telept
 
-int EV_Teleport(const line_t *line, int side, Mobj *thing);
+//
+// Silent teleport angle change
+//
+enum teleangle_e
+{
+   teleangle_keep,               // keep current thing angle (Hexen silent teleport)
+   teleangle_absolute,           // totally change angle (ZDoom extension)
+   teleangle_relative_boom,      // Use relative linedef/landing angle (Boom)
+   teleangle_relative_correct,   // Same as ZDoom's correction for Boom
+};
+
+//
+// Parameters to pass for teleportation (silent one)
+//
+struct teleparms_t
+{
+   bool keepheight;
+   teleangle_e teleangle;
+};
+
+
+int EV_Teleport(int tag, int side, Mobj *thing);
 
 // killough 2/14/98: Add silent teleporter
-int EV_SilentTeleport(const line_t *line, int side, Mobj *thing);
+int EV_SilentTeleport(const line_t *line, int tag, int side, Mobj *thing,
+                      teleparms_t parms);
 
 // killough 1/31/98: Add silent line teleporter
-int EV_SilentLineTeleport(const line_t *line, int side,
+int EV_SilentLineTeleport(const line_t *line, int lineid, int side,
 			              Mobj *thing, bool reverse);
+
+// ioanch 20160330: parameterized teleport
+int EV_ParamTeleport(int tid, int tag, int side, Mobj *thing);
+int EV_ParamSilentTeleport(int tid, const line_t *line, int tag, int side,
+                           Mobj *thing, teleparms_t parms);
 
 // p_floor
 

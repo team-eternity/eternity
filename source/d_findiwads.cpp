@@ -1,6 +1,5 @@
-// Emacs style mode select -*- C++ -*-
-//----------------------------------------------------------------------------
 //
+// The Eternity Engine
 // Copyright (C) 2013 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -16,18 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-// Additional terms and conditions compatible with the GPLv3 apply. See the
-// file COPYING-EE for details.
+// Purpose: Code for automated location of users' IWAD files and important 
+//  PWADs. Some code is derived from Chocolate Doom, by Simon Howard, used 
+//  under terms of the GPLv2.
 //
-//----------------------------------------------------------------------------
+// Authors: Simon Howard, James Haley, David Hill
 //
-// Code for automated location of users' IWAD files and important PWADs.
-// Some code is derived from Chocolate Doom, by Simon Howard, used under
-// terms of the GPLv2.
-//
-// James Haley
-//
-//----------------------------------------------------------------------------
 
 #ifdef _MSC_VER
 #include "Win32/i_opndir.h"
@@ -72,8 +65,6 @@ struct registry_value_t
 };
 
 //
-// AutoRegKey
-//
 // This class represents an open registry key. The key handle will be closed
 // when an instance of this class falls out of scope.
 //
@@ -91,13 +82,15 @@ public:
          valid = true;
    }
 
+   // TODO: Add deleted copy constructor and operator = when VC2012 is out of the picture
+
    // Destructor. Close the key handle, if it is valid.
    ~AutoRegKey()
    {
       if(valid)
       {
          RegCloseKey(key);
-         key   = NULL;
+         key   = nullptr;
          valid = false;
       }
    }
@@ -113,8 +106,6 @@ public:
    }
 };
 
-//
-// D_getRegistryString
 //
 // Open the registry key described by regval and retrieve its value, assuming
 // it is a REG_SZ (null-terminated string value). If successful, the results
@@ -132,7 +123,7 @@ static bool D_getRegistryString(const registry_value_t &regval, qstring &str)
       return false;
    
    // Find the type and length of the string
-   if(key.queryValueEx(regval.value, NULL, &valtype, NULL, &len))
+   if(key.queryValueEx(regval.value, nullptr, &valtype, nullptr, &len))
       return false;
 
    // Only accept strings
@@ -143,7 +134,7 @@ static bool D_getRegistryString(const registry_value_t &regval, qstring &str)
    ZAutoBuffer buffer(len, true);
    result = buffer.getAs<LPBYTE>();
 
-   if(key.queryValueEx(regval.value, NULL, &valtype, result, &len))
+   if(key.queryValueEx(regval.value, nullptr, &valtype, result, &len))
       return false;
 
    str = reinterpret_cast<char *>(result);
@@ -190,7 +181,7 @@ static registry_value_t cdUninstallValues[] =
    },
 
    // terminating entry
-   { NULL, NULL, NULL }
+   { nullptr, nullptr, nullptr }
 };
 
 // Collector's Edition Registry Key
@@ -209,8 +200,17 @@ static const char *collectorsEditionSubDirs[] =
    "Ultimate Doom",
 };
 
+// Order of GOG installation key values below.
+enum gogkeys_e
+{
+   GOG_KEY_ULTIMATE,
+   GOG_KEY_DOOM2,
+   GOG_KEY_FINAL,
+   GOG_KEY_MAX
+};
+
 // GOG.com installation keys
-static registry_value_t gogInstallValues[] =
+static registry_value_t gogInstallValues[GOG_KEY_MAX+1] =
 {
    // Ultimate Doom install
    {
@@ -234,7 +234,7 @@ static registry_value_t gogInstallValues[] =
    },
 
    // terminating entry
-   { NULL, NULL, NULL }
+   { nullptr, nullptr, nullptr }
 };
 
 // The paths loaded from the GOG.com keys have several subdirectories.
@@ -287,8 +287,6 @@ static registry_value_t hexen95Value =
 };
 
 //
-// D_addUninstallPaths
-//
 // Add any of the CD distribution's paths, as determined from the uninstaller
 // registry keys they create.
 //
@@ -316,8 +314,6 @@ static void D_addUninstallPaths(Collection<qstring> &paths)
 }
 
 //
-// D_addCollectorsEdition
-//
 // Looks for the registry key created by the DOOM Collector's Edition installer
 // and adds it as an IWAD path if it was found.
 //
@@ -337,8 +333,6 @@ static void D_addCollectorsEdition(Collection<qstring> &paths)
    }
 }
 
-//
-// D_addGogPaths
 //
 // Looks for registry keys created by the GOG.com installers
 // (including Galaxy), and adds them as IWAD paths if found.
@@ -369,8 +363,6 @@ static void D_addGogPaths(Collection<qstring> &paths)
    }
 }
 
-//
-// D_addSteamPaths
 //
 // Add all possible Steam paths if the Steam install path is defined in
 // the registry
@@ -415,8 +407,6 @@ static const char *masterLevelsDOSPath = "\\master\\wads";
 //static const char *dkotdcDOSPath       = "\\hexendk"; // TODO: not used yet
 
 //
-// D_addDOSPaths
-//
 // Add default DOS installation paths
 //
 static void D_addDOSPaths(Collection<qstring> &paths)
@@ -425,8 +415,6 @@ static void D_addDOSPaths(Collection<qstring> &paths)
       paths.addNew() = dosInstallPaths[i];
 }
 
-//
-// D_addDoomWadPath
 //
 // Add all components of the DOOMWADPATH environment variable.
 //
@@ -439,8 +427,6 @@ static void D_addDoomWadPath(Collection<qstring> &paths)
 }
 
 //
-// D_addDoomWadDir
-//
 // Add the DOOMWADDIR and HOME paths.
 //
 static void D_addDoomWadDir(Collection<qstring> &paths)
@@ -448,14 +434,12 @@ static void D_addDoomWadDir(Collection<qstring> &paths)
    const char *doomWadDir = getenv("DOOMWADDIR");
    const char *homeDir    = getenv("HOME");
 
-   if(doomWadDir)
+   if(estrnonempty(doomWadDir))
       paths.addNew() = doomWadDir;
-   if(homeDir)
+   if(estrnonempty(homeDir))
       paths.addNew() = homeDir;
 }
 
-//
-// D_addSubDirectories
 //
 // Add all subdirectories of an open directory
 //
@@ -483,8 +467,6 @@ static void D_addSubDirectories(Collection<qstring> &paths, DIR *dir,
    }
 }
 
-//
-// D_addDefaultDirectories
 //
 // Add default paths.
 //
@@ -519,8 +501,6 @@ static void D_addDefaultDirectories(Collection<qstring> &paths)
 }
 
 //
-// D_collectIWADPaths
-//
 // Collects all paths under which IWADs might be found.
 //
 static void D_collectIWADPaths(Collection<qstring> &paths)
@@ -552,8 +532,6 @@ static void D_collectIWADPaths(Collection<qstring> &paths)
    D_addDefaultDirectories(paths);
 }
 
-//
-// D_determineIWADVersion
 //
 // Determine what path to populate with this IWAD location.
 //
@@ -659,8 +637,6 @@ static void D_determineIWADVersion(const qstring &fullpath)
 }
 
 //
-// D_checkPathForIWADs
-//
 // Check a path for any of the standard IWAD file names.
 //
 static void D_checkPathForIWADs(const qstring &path)
@@ -698,8 +674,6 @@ static void D_checkPathForIWADs(const qstring &path)
    closedir(dir);
 }
 
-//
-// D_checkForNoRest
 //
 // If we found a BFG Edition IWAD, check also for nerve.wad and configure its
 // mission pack path.
@@ -739,8 +713,6 @@ static void D_checkForNoRest()
 }
 
 //
-// D_findMasterLevels
-//
 // There are three different places we can find the Master Levels; the default
 // DOS install path, and, if we have registry scanning enabled, the Steam
 // install directory and the GOG.com Doom II installation. The order of
@@ -772,7 +744,7 @@ static void D_findMasterLevels()
    }
 
    // Check for GOG.com Doom II install path
-   if(D_getRegistryString(gogInstallValues[1], str))
+   if(D_getRegistryString(gogInstallValues[GOG_KEY_DOOM2], str))
    {
       str.pathConcatenate(gogMasterLevelsPath);
 
@@ -795,8 +767,6 @@ static void D_findMasterLevels()
 // Global Interface
 //
 
-//
-// D_FindIWADs
 //
 // Tries to find IWADs in all of the common locations, and then uses any files
 // found to preconfigure the system.cfg IWAD paths.
