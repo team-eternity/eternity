@@ -1555,11 +1555,11 @@ DEFINE_ACTION(EV_ActionParamFloorLowerToHighest)
    fd.direction = 0;
    fd.target_type = FtoHnF;
    fd.spac = instance->spac;
-   fd.flags = FDF_HAVESPAC | FDF_HACKFORDESTHNF;
+   fd.flags = FDF_HAVESPAC;
    fd.speed_type = SpeedParam;
    fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
    fd.crush = -1;
-   fd.adjust = instance->args[2];
+   fd.adjust = (instance->args[2] - 128) * FRACUNIT;
    fd.force_adjust = instance->args[3];
 
    return EV_DoParamFloor(instance->line, instance->tag, &fd);
@@ -1658,7 +1658,7 @@ DEFINE_ACTION(EV_ActionParamFloorLowerToNearest)
 //
 // EV_ActionParamFloorRaiseToLowestCeiling
 //
-// Implements Floor_RaiseToLowestCeiling(tag, speed, change, crush)
+// Implements Floor_RaiseToLowestCeiling(tag, speed, change, crush, offset)
 // * ExtraData: 312
 // * Hexen (ZDoom Extension): 238
 //
@@ -1674,6 +1674,10 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToLowestCeiling)
    fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
    EV_floorChangeForArg(fd, instance->args[2]);       // change
    fd.crush       = instance->args[3];                // crush
+   // ioanch 20160606: add offset adjust parameter
+   // no 128 subtraction here
+   fd.adjust      = instance->args[4] * FRACUNIT;
+   fd.force_adjust = 1;
 
    return EV_DoParamFloor(instance->line, instance->tag, &fd);
 }
