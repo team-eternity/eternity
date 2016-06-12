@@ -216,6 +216,13 @@ public:
    // Methods
    void backupPosition();
    void copyPosition(const Mobj *other);
+
+   // ioanch 20160612: true if object is a potential bot target
+   bool isBotTargettable() const
+   {
+      return !player && flags & 0x4 && !(flags & 0x10)   // 4 = shootable, 16 = noblockmap
+      && health > 0;
+   }
    
    // Data members
 

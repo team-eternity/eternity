@@ -1826,7 +1826,7 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    }
 
    // IOANCH 20140812: add to bot list
-   if (botMap && mobj->flags & MF_SHOOTABLE && mobj->health > 0)
+   if (botMap && mobj->isBotTargettable())
    {
        botMap->livingMonsters.add(mobj);
    }
