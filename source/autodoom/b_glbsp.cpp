@@ -359,13 +359,20 @@ void B_GLBSP_CreateLineArray(int numlines)
 //
 void B_GLBSP_PutLine(int v1idx, int v2idx, int s1idx, int s2idx, int lnidx, int tag)
 {
-   botMap->lines[lnidx].v[0] = botMap->vertices + v1idx;
-   botMap->lines[lnidx].v[1] = botMap->vertices + v2idx;
-   botMap->lines[lnidx].msec[0] = s1idx >= 0 ? msecRefColl[s1idx] :
-   botMap->nullMSec;
-   botMap->lines[lnidx].msec[1] = s2idx >= 0 ? msecRefColl[s2idx] :
-   botMap->nullMSec;
-   botMap->lines[lnidx].specline = tag >= 0 ? ::lines + tag : nullptr;
+   BotMap::Line &ln = botMap->lines[lnidx];
+
+   ln.v[0] = botMap->vertices + v1idx;
+   ln.v[1] = botMap->vertices + v2idx;
+   ln.msec[0] = s1idx >= 0 ? msecRefColl[s1idx] : botMap->nullMSec;
+   ln.msec[1] = s2idx >= 0 ? msecRefColl[s2idx] : botMap->nullMSec;
+   ln.specline = tag >= 0 ? ::lines + tag : nullptr;
+
+   // put into blockmap
+   botMap->getTouchedBlocks(ln.v[0]->x, ln.v[0]->y, ln.v[1]->x, ln.v[1]->y,
+                            [&ln](int b)->void
+                            {
+                               botMap->lineBlocks[b].add(&ln);
+                            });
 }
 
 //

@@ -1181,8 +1181,6 @@ void Bot::doNonCombatAI()
 
 void Bot::cruiseControl(fixed_t nx, fixed_t ny, bool moveslow)
 {
-//    B_Log("%g %g", M_FixedToDouble(nx), M_FixedToDouble(ny));
-
     fixed_t mx = pl->mo->x;
     fixed_t my = pl->mo->y;
     // Suggested speed: 15.5
@@ -1190,26 +1188,45 @@ void Bot::cruiseControl(fixed_t nx, fixed_t ny, bool moveslow)
     v2fixed_t landing;
     landing.x = mx + FixedMul(m_realVelocity.x, DRIFT_TIME);
     landing.y = my + FixedMul(m_realVelocity.y, DRIFT_TIME);
-    if(!botMap->canPassNow(botMap->pointInSubsector(landing.x, landing.y), *ss,
-                           pl->mo->height))
-    {
-        v2fixed_t targvel;
-        targvel.x = FixedMul(nx - mx, DRIFT_TIME_INV) - m_realVelocity.x;
-        targvel.y = FixedMul(ny - my, DRIFT_TIME_INV) - m_realVelocity.y;
 
-        if(D_abs(targvel.x) <= FRACUNIT && D_abs(targvel.y) <= FRACUNIT)
+    // Trace a line from pl->mo to landing. Check if it goes through pits.
+    if((landing.x != mx || landing.y != my) &&
+       !botMap->pathTraverse(mx, my, landing.x, landing.y, [this, nx, ny, mx, my](const BotMap::Line &line, const divline_t &dl) {
+
+        divline_t mdl;
+        mdl.x = line.v[0]->x;
+        mdl.y = line.v[0]->y;
+        mdl.dx = line.v[1]->x - mdl.x;
+        mdl.dy = line.v[1]->y - mdl.y;
+        int s = P_PointOnDivlineSide(dl.x, dl.y, &mdl);
+
+        if(botMap->canPassNow(line.msec[s], line.msec[s ^ 1], pl->mo->height) &&
+           !botMap->canPassNow(line.msec[s ^ 1], line.msec[s], pl->mo->height))
         {
-            cmd->forwardmove += pl->pclass->forwardmove[0]; // hack
-            return;
+            v2fixed_t targvel;
+            targvel.x = FixedMul(nx - mx, DRIFT_TIME_INV) - m_realVelocity.x;
+            targvel.y = FixedMul(ny - my, DRIFT_TIME_INV) - m_realVelocity.y;
+
+            if(D_abs(targvel.x) <= FRACUNIT && D_abs(targvel.y) <= FRACUNIT)
+            {
+                cmd->forwardmove += pl->pclass->forwardmove[0]; // hack
+                return false;
+            }
+
+            angle_t tangle = P_PointToAngle(0, 0, targvel.x, targvel.y);
+            angle_t dangle = tangle - pl->mo->angle;
+            fixed_t finedangle = dangle >> ANGLETOFINESHIFT;
+
+            cmd->forwardmove += FixedMul(pl->pclass->forwardmove[1],
+                                         finecosine[finedangle]);
+            cmd->sidemove -= FixedMul(pl->pclass->sidemove[1], finesine[finedangle]);
+
+            return false;
         }
 
-        angle_t tangle = P_PointToAngle(0, 0, targvel.x, targvel.y);
-        angle_t dangle = tangle - pl->mo->angle;
-        fixed_t finedangle = dangle >> ANGLETOFINESHIFT;
-
-        cmd->forwardmove += FixedMul(pl->pclass->forwardmove[1],
-                                     finecosine[finedangle]);
-        cmd->sidemove -= FixedMul(pl->pclass->sidemove[1], finesine[finedangle]);
+        return true;
+    }))
+    {
         return;
     }
 

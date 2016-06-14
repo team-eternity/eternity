@@ -56,6 +56,26 @@ B_Log("%s/" #func ": %lu ticks", __FUNCTION__, B_CLK_MEASURE);
 
 #endif
 
+// ioanch 20151230: defined macros for the validcount sets here
+#ifndef VALID_ALLOC
+#define VALID_ALLOC(set, n) ((set) = ecalloc(byte *, 1, (((n) + 7) & ~7) / 8))
+#endif
+
+#ifndef VALID_FREE
+#define VALID_FREE(set) efree(set)
+#endif
+
+#ifndef VALID_ISSET
+#define VALID_ISSET(set, i) ((set)[(i) >> 3] & (1 << ((i) & 7)))
+#endif
+
+#ifndef VALID_SET
+#define VALID_SET(set, i) ((set)[(i) >> 3] |= 1 << ((i) & 7))
+#endif
+
+#define VALID_CLEAR(set, n) memset((set), 0, (((n) + 7) & ~7) / 8)
+
+
 class MetaTable;
 struct v2double_t;
 

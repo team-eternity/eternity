@@ -49,7 +49,8 @@
 
 #define BOTMAPBLOCKUNITS 128
 #define BOTMAPBLOCKSIZE (BOTMAPBLOCKUNITS << FRACBITS)
-#define BOTMAPBLOCKSHIFT   (FRACBITS+BOTMAPBTOFRAC)
+#define BOTMAPBLOCKSHIFT   (FRACBITS+7)   // must be updated with the other const
+#define BOTMAPBTOFRAC      (BOTMAPBLOCKSHIFT-FRACBITS)
 #define BOTMAPBMASK        (BOTMAPBLOCKSIZE-1)
 
 //typedef std::unordered_set<int> IntSet;
@@ -173,6 +174,7 @@ public:
    fixed_t bMapOrgX, bMapOrgY;
    int bMapWidth, bMapHeight;
    Collection<PODCollection<Seg *> > segBlocks;
+   Collection<PODCollection<Line *> > lineBlocks;
    fixed_t radius;
    
    std::unordered_map<const Mobj *, PODCollection<Subsec *> >
@@ -186,7 +188,8 @@ public:
    BotMap() : vertices(NULL), numverts(0), lines(NULL), numlines(0),
    nodes(NULL), numnodes(0),
    nullMSec(NULL),
-   bMapOrgX(0), bMapOrgY(0), bMapWidth(0), bMapHeight(0), sectorFlags(nullptr)
+   bMapOrgX(0), bMapOrgY(0), bMapWidth(0), bMapHeight(0), sectorFlags(nullptr),
+   validLines(nullptr)
    {
       // set collection prototype
       static Seg protoSeg;
@@ -207,6 +210,8 @@ public:
       
       static PODCollection<Seg *> protoColl;
       segBlocks.setPrototype(&protoColl);
+      static PODCollection<Line *> protoColl2;
+      lineBlocks.setPrototype(&protoColl2);
    }
    
    //
@@ -220,6 +225,8 @@ public:
       efree(nodes);
 
       efree(sectorFlags);
+
+      VALID_FREE(validLines);
     
       clearMsecList();
       
@@ -245,6 +252,7 @@ public:
    
    bool canPass(const MetaSector *s1, const MetaSector *s2, fixed_t height) const;
    bool canPass(const Subsec &s1, const Subsec &s2, fixed_t height) const;
+   bool canPassNow(const MetaSector *s1, const MetaSector *s2, fixed_t height) const;
    bool canPassNow(const Subsec &s1, const Subsec &s2, fixed_t height) const;
    
    static void Build(); // The entry point from P_SetupLevel
@@ -265,6 +273,10 @@ public:
    
    PODCollection<const line_t*> gunLines;
 
+   // Defined in b_trace.cpp
+   bool pathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
+                     std::function<bool(const Line&, const divline_t &)> &&lineHit) const;
+
 private:
     // Post-processing
     void getAllLivingMonsters();
@@ -275,8 +287,14 @@ private:
 
     void cacheToFile(const char* path) const;
     static void loadFromCache(const char* path);
-	
-	void clearMsecList()
+
+   // Defined in b_trace.cpp
+   bool blockLinesIterator(int x, int y,
+                           bool lineHit(const Line &line, void *context),
+                           void *context) const;
+   byte *validLines;
+
+   void clearMsecList()
 	{
 		for (MetaSector* ms : metasectors)
 		{

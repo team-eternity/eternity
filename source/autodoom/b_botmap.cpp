@@ -62,7 +62,7 @@ bool BotMap::demoPlayingFlag;
 const int CACHE_BUFFER_SIZE = 16384;//512 * 1024;
 enum { SUBSEC_GRID_STEP = 64 * FRACUNIT };
 
-static const char* const BOTMAP_CACHE_MAGIC = "BOTMAP03";
+static const char* const BOTMAP_CACHE_MAGIC = "BOTMAP04";
 
 //
 // BotMap::getTouchedBlocks
@@ -363,10 +363,9 @@ bool BotMap::canPass(const BSubsec &s1, const BSubsec &s2, fixed_t height) const
 
    return canPass(ms1, ms2, height);
 }
-bool BotMap::canPassNow(const BSubsec &s1, const BSubsec &s2, fixed_t height) const
+bool BotMap::canPassNow(const MetaSector *ms1, const MetaSector *ms2,
+                        fixed_t height) const
 {
-   const MetaSector* ms1 = s1.msector, *ms2 = s2.msector;
-   
    if (ms1 == ms2)
       return true;
    
@@ -385,6 +384,12 @@ bool BotMap::canPassNow(const BSubsec &s1, const BSubsec &s2, fixed_t height) co
       return false;
    
    return true;
+}
+bool BotMap::canPassNow(const BSubsec &s1, const BSubsec &s2, fixed_t height) const
+{
+   const MetaSector* ms1 = s1.msector, *ms2 = s2.msector;
+
+   return canPassNow(ms1, ms2, height);
 }
 
 //
@@ -475,6 +480,7 @@ void BotMap::createBlockMap()
 	{
 		// Create botmap finals
 		segBlocks.add();
+      lineBlocks.add();
 	}
 }
 
@@ -765,6 +771,18 @@ void BotMap::cacheToFile(const char* path) const
             }
         }
 
+       // From 04 onwards
+       file.WriteUint32((uint32_t)lineBlocks.getLength());
+       for(const auto &coll : lineBlocks)
+       {
+          file.WriteUint32((uint32_t)coll.getLength());
+          for(const auto pline : coll)
+          {
+             file.WriteSint32(pline ? (int32_t)(pline - &lines[0]) : -1);
+          }
+       }
+       // end
+
         file.WriteSint32(radius);
 
         // mobjSecMap dynamic
@@ -984,6 +1002,25 @@ void BotMap::loadFromCache(const char* path)
           }
       }
 
+      // From 04 onwards
+      file.readUint32(u32);
+      if(!B_CheckAllocSize(u32))
+         FAIL();
+      for(u = 0; u < u32; ++u)
+      {
+         auto &coll = botMap->lineBlocks.addNew();
+         uint32_t su32, v;
+         file.readUint32(su32);
+         if(!B_CheckAllocSize(su32))
+            FAIL();
+         for(v = 0; v < su32; ++v)
+         {
+            auto &ln = coll.addNew();
+            file.readSint32T((uintptr_t &)ln);
+         }
+      }
+      // end
+
       file.readSint32T(botMap->radius);
    }
    catch(const BufferedIOException&)
@@ -1062,6 +1099,17 @@ void BotMap::loadFromCache(const char* path)
             FAIL();
       }
    }
+
+   // From 04 onwards
+   for(auto &coll : botMap->lineBlocks)
+   {
+      for(Line *&ln : coll)
+      {
+         if(!B_ConvertPtrToArrayItem(ln, botMap->lines, botMap->numlines))
+            FAIL();
+      }
+   }
+   // end
 
    // is this it?
 
@@ -1209,6 +1257,9 @@ void BotMap::Build()
        botMap->cacheToFile(M_SafeFilePath(g_autoDoomPath, hashFileName.constPtr()));
    }
    efree(digest);
+
+   // init validstuff
+   VALID_ALLOC(botMap->validLines, botMap->numlines);
 
    // Place all mobjs on it
    B_setMobjPositions();
