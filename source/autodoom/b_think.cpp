@@ -893,9 +893,13 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
 
     if(!targets[0].isLine)
     {
+
+       // TODO: use static analysis
+       bool isBarrel = targets[0].mobj->info->dehnum == MT_BARREL;
+
         if (pl->readyweapon == wp_fist || pl->readyweapon == wp_chainsaw)
         {
-            if (highestThreat != &targets[0] || targets[0].mobj->info->dehnum == MT_BARREL)
+            if (highestThreat != &targets[0] || isBarrel)
             {
                 pickRandomWeapon(targets[0]);
             }
@@ -932,7 +936,7 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
                        cmd->sidemove = FixedMul(2 * pl->pclass->sidemove[1],
                            B_AngleCosine(dangle)) * m_combatStrafeState;
                    }
-                   if (dist < /*256 * FRACUNIT*/MELEERANGE + targets[0].mobj->radius)
+                  if (dist < /*256 * FRACUNIT*/(isBarrel ? 256 * FRACUNIT : MELEERANGE) + targets[0].mobj->radius)
                    {
                        cmd->forwardmove = -FixedMul(2 * pl->pclass->forwardmove[1],
                            B_AngleCosine(dangle));
