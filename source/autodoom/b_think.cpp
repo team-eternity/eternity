@@ -899,6 +899,8 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
             {
                 pickRandomWeapon(targets[0]);
             }
+           if(!stepLedges(pl->mo->x, pl->mo->y))
+           {
             cmd->forwardmove = FixedMul(2 * pl->pclass->forwardmove[1],
                 B_AngleCosine(dangle));
             cmd->sidemove = -FixedMul(2 * pl->pclass->sidemove[1],
@@ -906,32 +908,42 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
             if(justPunched--)
                 cmd->forwardmove -= pl->pclass->forwardmove[1]
                 ;
+           }
         }
         else
         {
            if (random() % 128 == 0 ||
               (D_abs(m_realVelocity.x) < FRACUNIT && D_abs(m_realVelocity.y) < FRACUNIT))
            {
-              m_combatStrafeState = random.range(0, 1) * 2 - 1;
+              toggleStrafeState();
            }
+
+           // Check ledges!
             if (random() % 8 != 0)
             {
-                fixed_t dist = B_ExactDistance(nx - mx, ny - my);
-                if (cinfo.hasShooters && dist < 384 * FRACUNIT)
-                {
-                   // only circle-strafe if there are blowers
-                    cmd->forwardmove = FixedMul(2 * pl->pclass->forwardmove[1],
-                        B_AngleSine(dangle)) * m_combatStrafeState;
-                    cmd->sidemove = FixedMul(2 * pl->pclass->sidemove[1],
-                        B_AngleCosine(dangle)) * m_combatStrafeState;
-                }
-                if (dist < /*256 * FRACUNIT*/MELEERANGE + targets[0].mobj->radius)
-                {
-                    cmd->forwardmove = -FixedMul(2 * pl->pclass->forwardmove[1],
-                        B_AngleCosine(dangle));
-                    cmd->sidemove = FixedMul(2 * pl->pclass->sidemove[1],
-                        B_AngleSine(dangle));
-                }
+               if(!stepLedges(pl->mo->x, pl->mo->y))
+               {
+                   fixed_t dist = B_ExactDistance(nx - mx, ny - my);
+                   if (cinfo.hasShooters && dist < 384 * FRACUNIT)
+                   {
+                      // only circle-strafe if there are blowers
+                       cmd->forwardmove = FixedMul(2 * pl->pclass->forwardmove[1],
+                           B_AngleSine(dangle)) * m_combatStrafeState;
+                       cmd->sidemove = FixedMul(2 * pl->pclass->sidemove[1],
+                           B_AngleCosine(dangle)) * m_combatStrafeState;
+                   }
+                   if (dist < /*256 * FRACUNIT*/MELEERANGE + targets[0].mobj->radius)
+                   {
+                       cmd->forwardmove = -FixedMul(2 * pl->pclass->forwardmove[1],
+                           B_AngleCosine(dangle));
+                       cmd->sidemove = FixedMul(2 * pl->pclass->sidemove[1],
+                           B_AngleSine(dangle));
+                   }
+               }
+               else
+               {
+                  toggleStrafeState();
+               }
             }
 
         }
@@ -1179,19 +1191,22 @@ void Bot::doNonCombatAI()
 //   printf("%d\n", angleturn);
 }
 
-void Bot::cruiseControl(fixed_t nx, fixed_t ny, bool moveslow)
+//
+// Checks if the bot is about to fall into a pit, and recovers before falling
+// nx and ny are the intended destination coordinates. Returns true if it hit
+// a ledge.
+//
+bool Bot::stepLedges(fixed_t nx, fixed_t ny)
 {
     fixed_t mx = pl->mo->x;
     fixed_t my = pl->mo->y;
-    // Suggested speed: 15.5
 
     v2fixed_t landing;
     landing.x = mx + FixedMul(m_realVelocity.x, DRIFT_TIME);
     landing.y = my + FixedMul(m_realVelocity.y, DRIFT_TIME);
 
-    // Trace a line from pl->mo to landing. Check if it goes through pits.
-    if((landing.x != mx || landing.y != my) &&
-       !botMap->pathTraverse(mx, my, landing.x, landing.y, [this, nx, ny, mx, my](const BotMap::Line &line, const divline_t &dl) {
+   return (landing.x != mx || landing.y != my) &&
+   !botMap->pathTraverse(mx, my, landing.x, landing.y, [this, mx, my, nx, ny](const BotMap::Line &line, const divline_t &dl) {
 
         divline_t mdl;
         mdl.x = line.v[0]->x;
@@ -1221,14 +1236,19 @@ void Bot::cruiseControl(fixed_t nx, fixed_t ny, bool moveslow)
                                          finecosine[finedangle]);
             cmd->sidemove -= FixedMul(pl->pclass->sidemove[1], finesine[finedangle]);
 
-            return false;
-        }
 
-        return true;
-    }))
-    {
-        return;
-    }
+         return false;
+      }
+
+      return true;
+   });
+}
+
+void Bot::cruiseControl(fixed_t nx, fixed_t ny, bool moveslow)
+{
+
+   if(stepLedges(nx, ny))
+      return;
 
 //    const fixed_t runSpeed = moveslow && !m_runfast ? 8 * FRACUNIT
 //    : 16 * FRACUNIT;
@@ -1260,7 +1280,7 @@ void Bot::cruiseControl(fixed_t nx, fixed_t ny, bool moveslow)
     fixed_t runSpeed = moveslow && !m_runfast ? 8 * FRACUNIT : 16 * FRACUNIT;
     if(m_straferunstate)
         runSpeed = runSpeed * 64 / 50;
-    angle_t tangle = P_PointToAngle(mx, my, nx, ny);
+    angle_t tangle = P_PointToAngle(pl->mo->x, pl->mo->y, nx, ny);
     angle_t dangle = tangle - pl->mo->angle;
 
     // Intended speed: forwardly, V*cos(dangle)

@@ -374,7 +374,7 @@
 		4F43B453182D9F7A00730C02 /* b_msector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = b_msector.h; sourceTree = "<group>"; };
 		4F43B454182D9F7A00730C02 /* b_path.cpp */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.cpp.cpp; path = b_path.cpp; sourceTree = "<group>"; tabWidth = 4; };
 		4F43B455182D9F7A00730C02 /* b_path.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = b_path.h; sourceTree = "<group>"; };
-		4F43B456182D9F7A00730C02 /* b_think.cpp */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.cpp.cpp; path = b_think.cpp; sourceTree = "<group>"; tabWidth = 4; };
+		4F43B456182D9F7A00730C02 /* b_think.cpp */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 3; lastKnownFileType = sourcecode.cpp.cpp; path = b_think.cpp; sourceTree = "<group>"; tabWidth = 3; };
 		4F43B457182D9F7A00730C02 /* b_think.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = b_think.h; sourceTree = "<group>"; };
 		4F43B458182D9F7A00730C02 /* b_util.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = b_util.cpp; sourceTree = "<group>"; };
 		4F43B459182D9F7A00730C02 /* b_util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = b_util.h; sourceTree = "<group>"; };
