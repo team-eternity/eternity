@@ -30,7 +30,21 @@
 #define A_COMMON_H__
 
 // Required for pr_class_t:
+#include "e_args.h"  // ioanch
 #include "m_random.h"
+
+// ioanch 20160616: added constants where previously were none
+enum
+{
+   kExplosionRadius = 128,
+
+   // for A_HticExplode
+   kHticExplodeDsparilBSpark = 1,
+   kHticExplodeFloorFire = 2,
+   kHticExplodeTimeBomb = 3,
+};
+// ioanch: other public stuff
+extern argkeywd_t hticexpkwds;
 
 struct actionargs_t;
 class  Mobj;

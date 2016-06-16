@@ -723,7 +723,7 @@ static const char *kwds_A_HticExplode[] =
    "timebomb",      //    3   
 };
 
-static argkeywd_t hticexpkwds = 
+argkeywd_t hticexpkwds = 
 {
    kwds_A_HticExplode,
    sizeof(kwds_A_HticExplode)/sizeof(const char *)
@@ -739,19 +739,19 @@ void A_HticExplode(actionargs_t *actionargs)
 {
    Mobj      *actor = actionargs->actor;
    arglist_t *args  = actionargs->args;
-   int damage = 128;
+   int damage = kExplosionRadius;
 
    int action = E_ArgAsKwd(args, 0, &hticexpkwds, 0);
 
    switch(action)
    {
-   case 1: // 1 -- D'Sparil FX1 explosion, random damage
+   case kHticExplodeDsparilBSpark: // 1 -- D'Sparil FX1 explosion, random damage
       damage = 80 + (P_Random(pr_sorfx1xpl) & 31);
       break;
-   case 2: // 2 -- Maulotaur floor fire, constant 24 damage
+   case kHticExplodeFloorFire: // 2 -- Maulotaur floor fire, constant 24 damage
       damage = 24;
       break;
-   case 3: // 3 -- Time Bomb of the Ancients, special effects
+   case kHticExplodeTimeBomb: // 3 -- Time Bomb of the Ancients, special effects
       actor->z += 32*FRACUNIT;
       actor->translucency = FRACUNIT;
       break;

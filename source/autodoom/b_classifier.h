@@ -62,7 +62,7 @@ void B_UpdateMobjInfoSet(int numthingsalloc);
 bool B_IsMobjSolidDecor(const Mobj &mo);
 bool B_IsMobjHostile(const Mobj& mo);
 bool B_IsMobjHitscanner(const Mobj& mo);
-bool B_IsMobjExplosiveDeath(const Mobj& mo);
+int B_MobjDeathExplosion(const Mobj& mo);
 bool B_MonsterIsInPreAttack(const Mobj& mo);
 bool B_MobjUsesCodepointer(const Mobj& mo, void(*action)(actionargs_t *args));
 void B_GetMobjSectorTargetActions(const Mobj& mo, SectorAffectingStates &table);

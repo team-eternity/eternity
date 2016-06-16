@@ -29,6 +29,7 @@
 #include "z_zone.h"
 
 #include "a_args.h"
+#include "a_common.h"
 #include "a_small.h"
 #include "d_gi.h"
 #include "d_mod.h"
@@ -693,10 +694,10 @@ void A_Die(actionargs_t *actionargs)
 void A_Explode(actionargs_t *actionargs)
 {
    Mobj *thingy = actionargs->actor;
-   P_RadiusAttack(thingy, thingy->target, 128, 128, thingy->info->mod, 0);
+   P_RadiusAttack(thingy, thingy->target, kExplosionRadius, kExplosionRadius, thingy->info->mod, 0);
 
    // ioanch 20160116: portal aware Z
-   if(thingy->z <= thingy->secfloorz + 128*FRACUNIT)
+   if(thingy->z <= thingy->secfloorz + kExplosionRadius*FRACUNIT)
       E_HitWater(thingy, P_ExtremeSectorAtPoint(thingy, false));
 }
 
@@ -705,11 +706,11 @@ void A_Nailbomb(actionargs_t *actionargs)
    Mobj *thing = actionargs->actor;
    int i;
    
-   P_RadiusAttack(thing, thing->target, 128, 128, thing->info->mod, 0);
+   P_RadiusAttack(thing, thing->target, kExplosionRadius, kExplosionRadius, thing->info->mod, 0);
 
    // haleyjd: added here as of 3.31b3 -- was overlooked
    // ioanch 20160116: portal aware Z
-   if(demo_version >= 331 && thing->z <= thing->secfloorz + 128*FRACUNIT)
+   if(demo_version >= 331 && thing->z <= thing->secfloorz + kExplosionRadius*FRACUNIT)
       E_HitWater(thing, P_ExtremeSectorAtPoint(thing, false));
 
    for(i = 0; i < 30; ++i)

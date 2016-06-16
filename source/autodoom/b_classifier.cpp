@@ -661,11 +661,48 @@ bool B_IsMobjHitscanner(const Mobj& mo)
 }
 
 //
-// B_IsMobjExplosiveDeath
+// Checks if the encountered state causes an explosion. MiscData points to an
+// int that may increase if the current frame explodes.
+//
+static bool B_stateExplodes(statenum_t sn, const mobjinfo_t &mi, void *miscData)
+{
+   int *damage = static_cast<int *>(miscData);
+   const state_t &st = *states[sn];
+
+   static auto increase = [damage](int value) {
+      if(value > *damage)
+         *damage = value;
+   };
+
+   // TODO: potential frames which spawn other explosives may count here!
+   if(st.action == A_Explode || st.action == A_Mushroom || st.action == A_Nailbomb)
+      increase(kExplosionRadius);
+   else if(st.action == A_Detonate)
+      increase(mi.damage);
+   else if(st.action == A_DetonateEx)
+      increase(E_ArgAsInt(st.args, 0, 128));
+   else if(st.action == A_HticExplode)
+   {
+      switch(E_ArgAsKwd(st.args, 0, &hticexpkwds, 0))
+      {
+         case kHticExplodeDsparilBSpark:
+            increase(111);
+            break;
+         case kHticExplodeFloorFire:
+            increase(24);
+            break;
+         default:
+            increase(kExplosionRadius);
+      }
+   }
+
+   return false;
+}
+
 //
 // True if mobj's death contains explosions
 //
-bool B_IsMobjExplosiveDeath(const Mobj& mo)
+int B_MobjDeathExplosion(const Mobj& mo)
 {
    auto d = (long)(mo.info - mobjinfo[0]);
    if(g_traitSet[d] & Trait_explosiveDeath)
@@ -676,8 +713,9 @@ bool B_IsMobjExplosiveDeath(const Mobj& mo)
     const mobjinfo_t& mi = *mo.info;
    if (mi.spawnstate == NullStateNum || mi.deathstate == NullStateNum)
       return false;
-   // TODO
-   return false;
+   int result = 0;
+   B_stateEncounters(mi.deathstate, mo, B_stateExplodes, false, &result);
+   return result;
 }
 
 //
