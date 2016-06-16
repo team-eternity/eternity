@@ -1271,6 +1271,9 @@ extern int             levelFragLimit;
 
 extern ceilinglist_t *activeceilings;  // jff 2/22/98
 
+// ioanch
+extern int enable_nuke;
+
 ////////////////////////////////////////////////////////////////
 //
 // Linedef and sector special utility function prototypes

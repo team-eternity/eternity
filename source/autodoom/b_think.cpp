@@ -100,7 +100,7 @@ void Bot::mapInit()
    m_searchstage = SearchStage_Normal;
 
    m_finder.SetMap(botMap);
-   m_finder.SetPlayerHeight(pl->mo->height);
+   m_finder.SetPlayer(pl);
    m_hasPath = false;
     
     m_lastPathSS = nullptr;

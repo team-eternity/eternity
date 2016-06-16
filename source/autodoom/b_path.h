@@ -79,7 +79,7 @@ class PathFinder
 public:
     PathFinder(const BotMap* map = nullptr) : 
         m_map(map),
-        m_plheight(0)
+        m_player(nullptr)
     {
         memset(db, 0, sizeof(db));
         db[0].o = this;
@@ -94,9 +94,9 @@ public:
     bool FindNextGoal(fixed_t x, fixed_t y, BotPath& path, bool(*isGoal)(const BSubsec&, BotPathEnd&, void*), void* parm = nullptr);
     bool AvailableGoals(const BSubsec& source, std::unordered_set<const BSubsec*>* dests, PathResult(*isGoal)(const BSubsec&, void*), void* parm = nullptr);
 
-    void SetPlayerHeight(fixed_t value)
+    void SetPlayer(const player_t *player)
     {
-        m_plheight = value;
+        m_player = player;
     }
 
     void SetMap(const BotMap* map)
@@ -168,12 +168,13 @@ private:
     void            pushSubsectorToHeap(const BNeigh& neigh, int index, 
                                         const BSubsec& ss, fixed_t tentative);
     const TeleItem* checkTeleportation(const BNeigh& neigh);
+   fixed_t getAdjustedDistance(fixed_t base, fixed_t add, const BSubsec *t) const;
 
     const BotMap*   m_map;
     DataBox         db[2];
 
     // OPTIM NOTE: please measure whether short or int is better
-    fixed_t         m_plheight;
+   const player_t *m_player;
 
     std::map<const line_t*, TeleItem> m_teleCache; // teleporter cache
 };

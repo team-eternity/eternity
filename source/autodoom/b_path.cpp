@@ -30,6 +30,7 @@
 #include "../z_zone.h"
 
 #include "b_path.h"
+#include "../d_player.h"
 #include "../e_things.h"
 #include "../p_maputl.h"
 #include "../p_spec.h"
@@ -86,7 +87,6 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
     path.inv.makeEmpty<true>();
     const TeleItem* bytele;
     fixed_t tentative;
-    const MetaSector* msec;
 
 //    std::make_heap(front, back, compare);
     fixed_t founddist;
@@ -123,9 +123,7 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
             {
                 index = (int)(bytele->ss - first);
                 
-                tentative = db[1].ssdist[t - first]
-                + B_ExactDistance(t->mid.x - neigh.v.x - neigh.d.x / 2,
-                                  t->mid.y - neigh.v.y - neigh.d.y / 2);
+               tentative = getAdjustedDistance(db[1].ssdist[t - first], B_ExactDistance(t->mid.x - neigh.v.x - neigh.d.x / 2,                                                                                    t->mid.y - neigh.v.y - neigh.d.y / 2), t);
                 
                 if (db[1].ssvisit[index] != db[1].validcount
                     || tentative < db[1].ssdist[index])
@@ -135,8 +133,6 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
             }
             else
             {
-                msec = neigh.otherss->msector;
-                
                 // Hack to make the edge subsectors (which are never 'simple') less attractive to the pathfinder.
                 // Needed because the bot tends to easily fall off ledges because it chooses the subsector
                 // closest to the edge.
@@ -146,13 +142,12 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
 //                    tentative = db[1].ssdist[t - first] + 2 * neigh.dist;
 //                }
 //                else
-                {
-                    tentative = db[1].ssdist[t - first] + neigh.dist;
-                }
+
+               tentative = getAdjustedDistance(db[1].ssdist[t - first], neigh.dist, t);
                 
                 if ((db[1].ssvisit[index] != db[1].validcount
                      || tentative < db[1].ssdist[index])
-                     && m_map->canPass(*t, *neigh.otherss, m_plheight))
+                     && m_map->canPass(*t, *neigh.otherss, m_player->mo->height))
                 {
                     pushSubsectorToHeap(neigh, index, *neigh.otherss, tentative);
                 }
@@ -217,7 +212,7 @@ bool PathFinder::AvailableGoals(const BSubsec& source,
                 }
             }
             else if (db[0].ssvisit[neigh.otherss - first] != db[0].validcount
-                && m_map->canPass(*t, *neigh.otherss, m_plheight))
+                && m_map->canPass(*t, *neigh.otherss, m_player->mo->height))
             {
                 db[0].ssvisit[neigh.otherss - first] = db[0].validcount;
                 *back++ = neigh.otherss;
@@ -226,6 +221,32 @@ bool PathFinder::AvailableGoals(const BSubsec& source,
     }
 
     return false;
+}
+
+//
+// Adjusts distance if the sector is painful
+//
+fixed_t PathFinder::getAdjustedDistance(fixed_t base, fixed_t add, const BSubsec *t) const
+{
+   fixed_t tentative = 0;
+   int factor = 1;
+
+   const sector_t *sector = t->msector->getFloorSector();
+   if(enable_nuke && sector->damage > 0 &&
+      (!m_player->powers[pw_ironfeet] ||
+       sector->damageflags & SDMG_IGNORESUIT))
+   {
+      if(sector->damagemask <= 0)
+         factor = sector->damage * 32;
+      else
+         factor = sector->damage * 32 / sector->damagemask;
+      if(factor < 1)
+         factor = 1;
+   }
+   tentative = base + add * factor;
+   if(tentative < 0) // overflow case
+      return D_MAXINT;
+   return tentative;
 }
 
 //
@@ -242,7 +263,7 @@ const PathFinder::TeleItem* PathFinder::checkTeleportation(const BNeigh& neigh)
         || !B_IsWalkTeleportation(bline->specline->special) 
         || (neigh.d.x ^ bline->specline->dx) < 0 
         || (neigh.d.y ^ bline->specline->dy) < 0
-        || !m_map->canPass(*neigh.myss, *neigh.otherss, m_plheight))
+        || !m_map->canPass(*neigh.myss, *neigh.otherss, m_player->mo->height))
     {
         return nullptr;
     }
