@@ -882,15 +882,16 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
             }
         }
     }
-    else if (pl->readyweapon == wp_missile && emax(D_abs(mx - nx),
-                                              D_abs(my - ny)) <= 128 * FRACUNIT)
+    else if (pl->readyweapon == wp_missile/* && emax(D_abs(mx - nx),
+                                              D_abs(my - ny)) <= 128 * FRACUNIT*/)
     {
+       // avoid using the rocket launcher for now...
         pickRandomWeapon(targets[0]);
     }
-    else if (random.range(1, 300) == 1)
-    {
-        pickRandomWeapon(targets[0]);
-    }
+//    else if (random.range(1, 300) == 1)
+//    {
+//        pickRandomWeapon(targets[0]);
+//    }
 
     if(!targets[0].isLine)
     {
