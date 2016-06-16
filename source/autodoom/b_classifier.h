@@ -60,7 +60,7 @@ struct SectorAffectingStates
 void B_UpdateMobjInfoSet(int numthingsalloc);
 
 bool B_IsMobjSolidDecor(const Mobj &mo);
-bool B_IsMobjHostile(const Mobj& mo);
+bool B_MobjHasMissileAttack(const Mobj& mo);
 bool B_IsMobjHitscanner(const Mobj& mo);
 int B_MobjDeathExplosion(const Mobj& mo);
 bool B_MonsterIsInPreAttack(const Mobj& mo);

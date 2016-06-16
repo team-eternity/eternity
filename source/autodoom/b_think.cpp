@@ -784,7 +784,7 @@ const Bot::Target *Bot::pickBestTarget(const PODCollection<Target>& targets, Com
          }
 
          // set combat info
-         if (!cinfo.hasShooters && target.mobj->info->missilestate != NullStateNum)
+         if (!cinfo.hasShooters && B_MobjHasMissileAttack(*target.mobj))
             cinfo.hasShooters = true;
       }
 
@@ -928,6 +928,12 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
                if(!stepLedges(true, 0, 0))
                {
                    fixed_t dist = B_ExactDistance(nx - mx, ny - my);
+
+                  // TODO: portal-aware
+                  int explodist = (emax(D_abs(nx - mx), D_abs(ny - my)) - pl->mo->radius) >> FRACBITS;
+                  if(explodist < 0)
+                     explodist = 0;
+
                    if (cinfo.hasShooters && dist < 384 * FRACUNIT)
                    {
                       // only circle-strafe if there are blowers
@@ -942,6 +948,12 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
                            B_AngleCosine(dangle));
                        cmd->sidemove = FixedMul(2 * pl->pclass->sidemove[1],
                            B_AngleSine(dangle));
+
+                      // if in range and too close to die, STOP SHOOTING
+                      if(explosion - explodist > pl->health / 2)
+                      {
+                         cmd->buttons &= ~BT_ATTACK;
+                      }
                    }
                }
                else

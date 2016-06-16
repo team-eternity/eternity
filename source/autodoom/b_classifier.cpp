@@ -611,11 +611,9 @@ static bool B_stateHitscans(statenum_t sn, const mobjinfo_t& mi, void* miscData)
 }
 
 //
-// B_IsMobjHostile
-//
 // Checks if mobj is going to attack player
 //
-bool B_IsMobjHostile(const Mobj& mo)
+bool B_MobjHasMissileAttack(const Mobj& mo)
 {
    auto d = (long)(mo.info - mobjinfo[0]);
    if(g_traitSet[d] & Trait_hostile)
