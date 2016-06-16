@@ -903,7 +903,7 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
             {
                 pickRandomWeapon(targets[0]);
             }
-           if(!stepLedges(pl->mo->x, pl->mo->y))
+           if(!stepLedges(true, 0, 0))
            {
             cmd->forwardmove = FixedMul(2 * pl->pclass->forwardmove[1],
                 B_AngleCosine(dangle));
@@ -925,7 +925,7 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
            // Check ledges!
             if (random() % 8 != 0)
             {
-               if(!stepLedges(pl->mo->x, pl->mo->y))
+               if(!stepLedges(true, 0, 0))
                {
                    fixed_t dist = B_ExactDistance(nx - mx, ny - my);
                    if (cinfo.hasShooters && dist < 384 * FRACUNIT)
@@ -1200,7 +1200,7 @@ void Bot::doNonCombatAI()
 // nx and ny are the intended destination coordinates. Returns true if it hit
 // a ledge.
 //
-bool Bot::stepLedges(fixed_t nx, fixed_t ny)
+bool Bot::stepLedges(bool avoid, fixed_t nx, fixed_t ny)
 {
     fixed_t mx = pl->mo->x;
     fixed_t my = pl->mo->y;
@@ -1210,7 +1210,7 @@ bool Bot::stepLedges(fixed_t nx, fixed_t ny)
     landing.y = my + FixedMul(m_realVelocity.y, DRIFT_TIME);
 
    return (landing.x != mx || landing.y != my) &&
-   !botMap->pathTraverse(mx, my, landing.x, landing.y, [this, mx, my, nx, ny](const BotMap::Line &line, const divline_t &dl) {
+   !botMap->pathTraverse(mx, my, landing.x, landing.y, [this, mx, my, avoid, nx, ny](const BotMap::Line &line, const divline_t &dl, fixed_t frac) {
 
         divline_t mdl;
         mdl.x = line.v[0]->x;
@@ -1223,8 +1223,28 @@ bool Bot::stepLedges(fixed_t nx, fixed_t ny)
            !botMap->canPassNow(line.msec[s ^ 1], line.msec[s], pl->mo->height))
         {
             v2fixed_t targvel;
-            targvel.x = FixedMul(nx - mx, DRIFT_TIME_INV) - m_realVelocity.x;
-            targvel.y = FixedMul(ny - my, DRIFT_TIME_INV) - m_realVelocity.y;
+           if(!avoid)
+           {
+              targvel.x = FixedMul(nx - mx, DRIFT_TIME_INV) - m_realVelocity.x;
+              targvel.y = FixedMul(ny - my, DRIFT_TIME_INV) - m_realVelocity.y;
+           }
+           else
+           {
+              // try to avoid the ledge instead
+              // select the position in front of the line
+              // we have our direction divline and the crossed line
+              // we must try to get back
+              // get the intersection vector. We have frac
+              v2fixed_t dest;
+              dest.x = dl.x + FixedMul(dl.dx, frac);
+              dest.y = dl.y + FixedMul(dl.dy, frac);
+              angle_t fang = P_PointToAngle(dl.x, dl.y, dl.x + dl.dx, dl.y + dl.dy) >> ANGLETOFINESHIFT;
+              dest.x -= (pl->mo->radius >> FRACBITS) * finecosine[fang];
+              dest.y -= (pl->mo->radius >> FRACBITS) * finesine[fang];
+
+              targvel.x = FixedMul(dest.x - mx, DRIFT_TIME_INV) - m_realVelocity.x;
+              targvel.y = FixedMul(dest.y - my, DRIFT_TIME_INV) - m_realVelocity.y;
+           }
 
             if(D_abs(targvel.x) <= FRACUNIT && D_abs(targvel.y) <= FRACUNIT)
             {
@@ -1251,7 +1271,7 @@ bool Bot::stepLedges(fixed_t nx, fixed_t ny)
 void Bot::cruiseControl(fixed_t nx, fixed_t ny, bool moveslow)
 {
 
-   if(stepLedges(nx, ny))
+   if(stepLedges(false, nx, ny))
       return;
 
 //    const fixed_t runSpeed = moveslow && !m_runfast ? 8 * FRACUNIT

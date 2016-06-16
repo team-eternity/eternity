@@ -710,7 +710,7 @@ bool BotMap::blockLinesIterator(int x, int y,
 //                                                     //
 
 bool BotMap::pathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
-                          std::function<bool(const Line&, const divline_t &)>
+                          std::function<bool(const Line&, const divline_t &, fixed_t)>
                           &&lineHit) const
 {
    // Gotta copy all the code from other traversers
@@ -934,7 +934,7 @@ bool BotMap::pathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
 
       if(in)
       {
-         if(!lineHit(*in->line, dl))
+         if(!lineHit(*in->line, dl, in->frac))
             return false;
          in->frac = D_MAXINT;
       }
