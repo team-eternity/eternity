@@ -22,7 +22,7 @@
 //-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//      Thing classification. State walker.
+//      Thing analysis. State walker.
 //
 //-----------------------------------------------------------------------------
 
@@ -172,6 +172,25 @@ void A_ImpChargeAtk(actionargs_t *);
 void A_ImpMeleeAtk(actionargs_t *);
 void A_ImpMissileAtk(actionargs_t *);
 void A_AlertMonsters(actionargs_t *);
+
+// weapons
+
+void A_FireCGun(actionargs_t *);
+void A_FireCustomBullets(actionargs_t *);
+void A_FirePistol(actionargs_t *);
+void A_FirePlasma(actionargs_t *);
+void A_FireShotgun(actionargs_t *);
+void A_FireShotgun2(actionargs_t *);
+
+void A_CheckReload(actionargs_t *);
+void A_CheckReloadEx(actionargs_t *);
+void A_JumpIfNoAmmo(actionargs_t *);
+
+void A_Raise(actionargs_t *);
+void A_GunFlash(actionargs_t *);
+
+void A_WeaponCtrJump(actionargs_t *);
+void A_WeaponCtrSwitch(actionargs_t *);
 
 //
 // B_getBranchingStateSeq
@@ -869,6 +888,151 @@ void B_GetMobjSectorTargetActions(const Mobj& mo, SectorAffectingStates &table)
    if (mi.spawnstate == NullStateNum)
       return;  // has null start frame, invalid
    B_stateEncounters(mi.spawnstate, mo, B_stateSetSectorState, false, &table);
+}
+
+//==============================================================================
+//
+// Weapon analysis
+//
+
+static void B_weaponGetBranchingStateSeq(statenum_t sn,
+                                         StateQue &alterQueue,
+                                         const StateSet &stateSet,
+                                         const weaponinfo_t &wi)
+{
+   const state_t &st = *states[sn];
+   PODCollection<statenum_t> dests(17);
+
+   statenum_t fireState = wi.flashstate;
+
+   if(sn == NullStateNum)
+      return;  // do nothing
+
+   if(st.action == A_FireCGun)
+   {
+      if(st.index >= E_StateNumForDEHNum(S_CHAIN1) &&
+         st.index < E_StateNumForDEHNum(S_CHAIN3))
+      {
+         dests.add(st.index - states[E_SafeState(S_CHAIN1)]->index);
+      }
+      else
+         dests.add(fireState);
+   }
+   else if(st.action == A_FireCustomBullets)
+   {
+      arglist_t *args = st.args;
+      int flashint = E_ArgAsInt(args, 5, 0);
+      int flashstate = E_ArgAsStateNum(args, 5, nullptr);
+      if(flashint >= 0 && flashstate != NullStateNum)
+         dests.add(flashstate);
+      else
+         dests.add(fireState);
+   }
+   else if(st.action == A_FirePistol || st.action == A_FireShotgun ||
+           st.action == A_FireShotgun2 || st.action == A_GunFlash)
+   {
+      dests.add(fireState);
+   }
+   else if(st.action == A_FirePlasma)
+   {
+      dests.add(fireState);
+      dests.add(fireState + 1);
+   }
+   else if(st.action == A_CheckReload)
+      dests.add(wi.downstate);
+   else if(st.action == A_CheckReloadEx || st.action == A_JumpIfNoAmmo)
+   {
+      int statenum = E_ArgAsStateNumNI(st.args, 0, nullptr);
+      if(statenum >= 0)
+         dests.add(statenum);
+   }
+   else if(st.action == A_Raise)
+      dests.add(wi.readystate);
+
+
+   // TODO: A_PlayerThunk
+   else if(st.action == A_WeaponCtrJump)
+   {
+      // TODO: check if cnum has been touched or will be touched in such a way
+      // to reach comparison with value. Only then accept the jump possibility
+      int statenum  = E_ArgAsStateNumNI(st.args, 0, nullptr);
+      int cnum      = E_ArgAsInt(st.args, 3, 0);
+      if(statenum >= 0 && cnum >= 0 && cnum < 3)
+         dests.add(statenum);
+   }
+   else if(st.action == A_WeaponCtrSwitch)
+   {
+      int cnum       = E_ArgAsInt       (st.args, 0,  0);
+      int startstate = E_ArgAsStateNumNI(st.args, 1,  nullptr);
+      int numstates  = E_ArgAsInt       (st.args, 2,  0) - 1;
+
+      if (startstate >= 0 && startstate + numstates < NUMSTATES && cnum >= 0 &&
+          cnum < 3)
+      {
+         for (int i = 0; i < numstates; ++i)
+            dests.add(startstate + i);
+      }
+   }
+
+   // add the destinations
+   for (auto it = dests.begin(); it != dests.end(); ++it)
+   {
+      if(*it == 0 || *it == 1)
+         continue;
+      if(!stateSet.count(*it))
+         alterQueue.push(*it);
+   }
+}
+
+static bool B_weaponStateEncounters(statenum_t firstState,
+                                    const weaponinfo_t &wi,
+                                    bool(*statecase)(statenum_t sn,
+                                                     void* miscData),
+                                    void* miscData = nullptr)
+{
+   StateSet stateSet;  // set of visited states
+   StateQue alterQueue;        // set of alternate chains
+   // (RandomJump, Jump and so on)
+   stateSet.rehash(47);
+
+   statenum_t sn;
+   alterQueue.push(firstState);
+
+   while (alterQueue.size() > 0)
+   {
+      for(sn = alterQueue.front(), alterQueue.pop();
+          ;
+          sn = states[sn]->nextstate)
+      {
+         if (stateSet.count(sn))
+         {
+            // found a cycle
+            break;
+         }
+
+         if (statecase(sn, miscData))
+         {
+            // If statecase returns true, it means we reached a goal.
+            return true;
+         }
+         stateSet.insert(sn);
+
+         B_weaponGetBranchingStateSeq(sn, alterQueue, stateSet, wi);
+         if(states[sn]->tics < 0 || sn == NullStateNum)
+            break;   // don't go to next state if current has neg. duration
+      }
+   }
+
+   return false;
+}
+
+void B_AnalyzeWeapons()
+{
+   for(int i = 0; i < NUMWEAPONS; ++i)
+   {
+      const weaponinfo_t &wi = weaponinfo[i];
+      // TODO:
+   }
 }
 
 // EOF

@@ -1496,6 +1496,9 @@ void Bot::InitBots()
    {
       bots[i].pl = players + i;
    }
+
+   // Analyze all available weapons, assigning tags to each
+   B_AnalyzeWeapons();
 }
 
 //
