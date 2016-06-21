@@ -353,7 +353,7 @@ angle_t R_PointToAngle2(fixed_t pviewx, fixed_t pviewy, fixed_t x, fixed_t y)
    else
    {
       // Sneakernets: Fix cast issue on ARM
-      return angle_t(int(atan2(double(y), x) * (ANG180/PI)));
+      return angle_t(int(atan2(double(y), x) * (ANG180 / PI)));
    }
 
    return 0;
