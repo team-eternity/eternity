@@ -2014,7 +2014,6 @@ void UseContext::useLines(const player_t *player, fixed_t x, fixed_t y,
    def.flags = CAM_ADDLINES;
    def.trav = useTraverse;
    PathTraverser traverser(def, &context);
-   bool ret = false;
    if(traverser.traverse(x, y, x2, y2))
    {
       if(!context.portalhit)
