@@ -27,9 +27,9 @@
 //-----------------------------------------------------------------------------
 
 #include "../z_zone.h"
+#include "b_analysis.h"
 #include "b_botmap.h"
 #include "b_botmaptemp.h"
-#include "b_classifier.h"
 #include "b_util.h"
 #include "../ev_specials.h"
 #include "../m_buffer.h"

@@ -29,7 +29,7 @@
 
 #include "a_small.h"
 #include "am_map.h"
-#include "autodoom/b_classifier.h"
+#include "autodoom/b_analysis.h"
 #include "autodoom/b_statistics.h"
 #include "autodoom/b_think.h"
 #include "autodoom/b_util.h"

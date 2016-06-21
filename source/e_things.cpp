@@ -30,7 +30,7 @@
 
 #include "acs_intr.h"
 
-#include "autodoom/b_classifier.h"  // IOANCH
+#include "autodoom/b_analysis.h"  // IOANCH
 #include "d_dehtbl.h"
 #include "d_gi.h"
 #include "d_io.h"

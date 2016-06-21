@@ -32,9 +32,9 @@
 #include <unordered_map>
 #include "../z_zone.h"
 
+#include "b_analysis.h"
 #include "b_botmap.h"
 #include "b_botmaptemp.h"
-#include "b_classifier.h"
 #include "b_compression.h"
 #include "b_glbsp.h"
 #include "b_msector.h"

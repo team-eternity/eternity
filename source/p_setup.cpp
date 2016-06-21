@@ -28,8 +28,8 @@
 
 #include "a_small.h"
 #include "acs_intr.h"
+#include "autodoom/b_analysis.h"
 #include "autodoom/b_botmap.h"   // IOANCH
-#include "autodoom/b_classifier.h"
 #include "autodoom/b_lineeffect.h"
 #include "autodoom/b_statistics.h"
 #include "autodoom/b_think.h"

@@ -30,8 +30,8 @@
 #include <set>
 #include "../z_zone.h"
 
+#include "b_analysis.h"
 #include "b_botmap.h"
-#include "b_classifier.h"
 #include "b_lineeffect.h"
 #include "../doomstat.h"
 #include "../e_exdata.h"

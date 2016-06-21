@@ -26,8 +26,8 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef B_CLASSIFIER_H_
-#define B_CLASSIFIER_H_
+#ifndef B_ANALYSIS_H_
+#define B_ANALYSIS_H_
 
 #include "../m_collection.h"
 

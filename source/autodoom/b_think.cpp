@@ -33,7 +33,7 @@
 #include "../../rapidjson/filewritestream.h"
 #include "../../rapidjson/writer.h"
 
-#include "b_classifier.h"
+#include "b_analysis.h"
 #include "b_statistics.h"
 #include "b_think.h"
 #include "b_trace.h"
