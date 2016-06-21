@@ -1597,7 +1597,7 @@ static const char *kwds_A_FireCustomBullets[] =
    "monster",           // 5
 };
 
-static argkeywd_t fcbkwds =
+argkeywd_t fcbkwds =
 {
    kwds_A_FireCustomBullets, 
    sizeof(kwds_A_FireCustomBullets) / sizeof(const char *)

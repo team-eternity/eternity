@@ -27,6 +27,7 @@
 #define P_PSPR_H__
 
 #include "d_items.h"
+#include "e_args.h"  // ioanch
 
 // Needs to include the precompiled sprite animation tables.
 //
@@ -100,6 +101,7 @@ void P_WeaponRecoil(player_t *player);
 
 // IOANCH 20140817
 bool P_WeaponHasAmmo(const player_t *player, const weaponinfo_t *weapon);
+extern argkeywd_t fcbkwds;
 
 #endif
 

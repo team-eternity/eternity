@@ -29,7 +29,9 @@
 #ifndef B_ANALYSIS_H_
 #define B_ANALYSIS_H_
 
+#include "../doomdef.h"
 #include "../m_collection.h"
+#include "../m_fixed.h"
 
 class Mobj;
 struct actionargs_t;
@@ -71,10 +73,35 @@ void B_GetMobjSectorTargetActions(const Mobj& mo, SectorAffectingStates &table);
 // WEAPON ANALYSIS
 //
 
-enum
+enum BotWeaponType
 {
    kWeaponFist,
 };
+
+// There'll be NUMWEAPONS instances of this
+struct BotWeaponInfo
+{
+   BotWeaponType type;
+
+   int timeToFire;
+   int refireRate;
+   int oneShotRate;
+
+   int meleeDamage;
+   int berserkDamage;
+
+   int alwaysDamage;
+   int firstDamage;
+   int neverDamage;
+   int monsterDamage;
+   int ssgDamage;
+
+   int projectileDamage;
+
+   int calcHitscanDamage(fixed_t dist, fixed_t radius, fixed_t height, bool berserk, bool first) const;
+};
+
+extern BotWeaponInfo g_botweapons[NUMWEAPONS];
 
 void B_AnalyzeWeapons();
 

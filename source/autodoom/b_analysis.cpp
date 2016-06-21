@@ -38,7 +38,9 @@
 //#include "../e_hash.h"
 #include "../e_inventory.h"
 #include "../e_states.h"
+#include "../e_things.h"
 #include "../m_collection.h"
+#include "../p_map.h"
 #include "../p_mobj.h"
 
 enum Trait
@@ -179,8 +181,13 @@ void A_FireCGun(actionargs_t *);
 void A_FireCustomBullets(actionargs_t *);
 void A_FirePistol(actionargs_t *);
 void A_FirePlasma(actionargs_t *);
+void A_FireMissile(actionargs_t *);
 void A_FireShotgun(actionargs_t *);
 void A_FireShotgun2(actionargs_t *);
+
+void A_ReFire(actionargs_t *);
+void A_CloseShotgun2(actionargs_t *);
+void A_WeaponReady(actionargs_t *);
 
 void A_CheckReload(actionargs_t *);
 void A_CheckReloadEx(actionargs_t *);
@@ -191,6 +198,10 @@ void A_GunFlash(actionargs_t *);
 
 void A_WeaponCtrJump(actionargs_t *);
 void A_WeaponCtrSwitch(actionargs_t *);
+
+void A_Punch(actionargs_t *);
+void A_Saw(actionargs_t *);
+void A_CustomPlayerMelee(actionargs_t *);
 
 //
 // B_getBranchingStateSeq
@@ -895,6 +906,8 @@ void B_GetMobjSectorTargetActions(const Mobj& mo, SectorAffectingStates &table)
 // Weapon analysis
 //
 
+BotWeaponInfo g_botweapons[NUMWEAPONS];
+
 static void B_weaponGetBranchingStateSeq(statenum_t sn,
                                          StateQue &alterQueue,
                                          const StateSet &stateSet,
@@ -1026,12 +1039,208 @@ static bool B_weaponStateEncounters(statenum_t firstState,
    return false;
 }
 
+// Calculates the hitscan damage one may give to a target
+int BotWeaponInfo::calcHitscanDamage(fixed_t dist, fixed_t radius, fixed_t height, bool berserk, bool first) const
+{
+   int damage = 0;
+   dist -= radius;   // reduce the target radius now
+   if(dist < 0)
+      dist = 0;
+
+   if(dist < MELEERANGE)
+      damage += berserk ? berserkDamage : meleeDamage;
+
+   if(dist < MISSILERANGE)
+   {
+      damage += alwaysDamage;
+      if(first)
+         damage += firstDamage;
+         // aimshift 18. P_SubRandom returns between -255 to 255.
+         // That's -2^8 to 2^8. Shift by 18 and that becomes -2^26 to 2^26.
+         // 2^26/2^32 * 360 is 360/64 which is 5.625 degrees each side.
+
+         // Assume the aim is centred
+      if(neverDamage || firstDamage && !first)
+      {
+         int added = neverDamage + (!first ? firstDamage : 0);
+         fixed_t spread = FixedMul(12909, dist);
+         if(!spread || spread < radius * 2)   // also treat the zero case
+            damage += added;
+         else
+         {
+            // Area is spread * spread / 4
+            // e = spread / 2 - radius is excluded
+            // excluded area on one side is e * e
+            // Result is: spread * spread / 4 - (spread / 2 - radius) ^ 2
+            // spread * spread / 4 - (spread * spread / 4 - spread * radius + radius * radius) =
+            // spread * radius - radius * radius = radius * (spread - radius)
+            // 4 * radius / spread - 4 * (radius / spread) ^ 2 =
+            // 4 * radius / spread * (1 - 4 * radius / spread)
+            // Multiplier formula: 4 * r * (S - r) / S / S
+            damage += FixedMul(4 * FixedMul(FixedDiv(radius, spread), FixedDiv(spread - radius, spread)), added);
+
+         }
+      }
+      if(monsterDamage)
+      {
+         fixed_t spread = FixedMul(54292, dist);
+         if(!spread || spread < radius * 2)
+            damage += monsterDamage;
+         else
+         {
+            damage += FixedMul(4 * FixedMul(FixedDiv(radius, spread), FixedDiv(spread - radius, spread)), monsterDamage);
+         }
+      }
+      if(ssgDamage)
+      {
+         fixed_t xspread = FixedMul(18421, dist);
+         fixed_t zspread = FixedMul(16384, dist);
+         if(xspread && xspread < radius * 2)
+            xspread = radius * 2;
+         if(zspread && zspread < height)
+            zspread = height;
+
+         int interdmg = xspread ? FixedMul(4 * FixedMul(FixedDiv(radius, xspread), FixedDiv(xspread - radius, xspread)), ssgDamage) : ssgDamage;
+         damage += zspread ? FixedMul(4 * FixedMul(FixedDiv(height / 2, zspread), FixedDiv(zspread - height / 2, zspread)), interdmg) : interdmg;
+      }
+   }
+
+   return damage;
+}
+
 void B_AnalyzeWeapons()
 {
+   // Some assumptions are made for now:
+   // - all UP, DOWN and idle states are using standard codepointers
+   // - the flashing states are purely decorative (but may be hit by the state
+   //   walker from the shooting state)
+   // - any damage done after ReFire is ignored
+
+   struct State
+   {
+      int i;   // current weapon index
+      bool reachedFire;
+      bool reachedRefire;
+   } state;
+
    for(int i = 0; i < NUMWEAPONS; ++i)
    {
       const weaponinfo_t &wi = weaponinfo[i];
-      // TODO:
+      memset(g_botweapons + i, 0, sizeof(*g_botweapons));
+      memset(&state, 0, sizeof(state));
+
+      B_weaponStateEncounters(wi.atkstate, wi, [](statenum_t sn, void *ctx) {
+         State &state = *static_cast<State *>(ctx);
+         int i = state.i;
+         const state_t &st = *states[sn];
+
+         g_botweapons[i].oneShotRate += st.tics;
+
+         if(st.action == A_ReFire || st.action == A_CloseShotgun2)
+         {
+            state.reachedRefire = true;
+         }
+
+         if(!state.reachedRefire)
+            g_botweapons[i].refireRate += st.tics;
+         else
+            return true;
+
+         if(st.action == A_WeaponReady)   // we're out
+            return true;
+
+         if(st.action == A_Punch)
+         {
+            state.reachedFire = true;
+
+            g_botweapons[i].meleeDamage += 11;
+            g_botweapons[i].berserkDamage += 110;
+         }
+         else if(st.action == A_Saw)
+         {
+            state.reachedFire = true;
+
+            g_botweapons[i].meleeDamage += 11;
+            g_botweapons[i].berserkDamage += 11;
+         }
+         else if(st.action == A_CustomPlayerMelee)
+         {
+            state.reachedFire = true;
+
+            int dmgfactor = E_ArgAsInt(st.args, 0, 0);
+            int dmgmod = E_ArgAsInt(st.args, 1, 0);
+            if(dmgmod < 1)
+               dmgmod = 1;
+            else if(dmgmod > 256)
+               dmgmod = 256;
+            int berserkmul = E_ArgAsInt(st.args, 2, 0);
+
+            int damage = dmgfactor * (1 + dmgmod) / 2;
+            g_botweapons[i].meleeDamage += damage;
+            g_botweapons[i].berserkDamage += damage * berserkmul;
+         }
+         else if(st.action == A_FirePistol || st.action == A_FireCGun)
+         {
+            state.reachedFire = true;
+
+            g_botweapons[i].firstDamage += 10;
+         }
+         else if(st.action == A_FireShotgun)
+         {
+            state.reachedFire = true;
+            g_botweapons[i].neverDamage += 70;
+         }
+         else if(st.action == A_FireCustomBullets)
+         {
+            state.reachedFire = true;
+
+            int accurate = E_ArgAsKwd(st.args, 1, &fcbkwds, 0);
+            int numbullets = E_ArgAsInt(st.args, 2, 0);
+            int damage = E_ArgAsInt(st.args, 3, 0);
+            int dmgmod = E_ArgAsInt(st.args, 4, 0);
+            if(!accurate)
+               accurate = 1;
+            if(dmgmod < 1)
+               dmgmod = 1;
+            else if(dmgmod > 256)
+               dmgmod = 256;
+
+            int calcDamage = numbullets * damage * (1 + dmgmod) / 2;
+            switch(accurate)
+            {
+               case 1:  // always
+                  g_botweapons[i].alwaysDamage += calcDamage;
+                  break;
+               case 2:  // first
+                  g_botweapons[i].firstDamage += calcDamage;
+                  break;
+               case 3:  // never
+                  g_botweapons[i].neverDamage += calcDamage;
+                  break;
+               case 4:  // ssg
+                  g_botweapons[i].ssgDamage += calcDamage;
+                  break;
+               case 5:  // monster
+                  g_botweapons[i].monsterDamage += calcDamage;
+                  break;
+            }
+         }
+         else if(st.action == A_FireMissile)
+         {
+            state.reachedFire = true;
+
+            mobjtype_t type = E_SafeThingType(MT_ROCKET);
+            const mobjinfo_t *info = mobjinfo[type];
+
+            // TODO
+         }
+
+         if(!state.reachedFire)
+            g_botweapons[i].timeToFire += st.tics;
+
+         return false;
+      }, &state);
+
    }
 }
 
