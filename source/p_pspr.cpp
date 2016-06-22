@@ -1701,7 +1701,7 @@ static const char *kwds_A_FirePlayerMissile[] =
    "homing",           //  1
 };
 
-static argkeywd_t seekkwds =
+argkeywd_t seekkwds =
 {
    kwds_A_FirePlayerMissile,
    sizeof(kwds_A_FirePlayerMissile) / sizeof(const char *)

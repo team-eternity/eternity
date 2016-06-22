@@ -97,6 +97,13 @@ struct BotWeaponInfo
    int ssgDamage;
 
    int projectileDamage;
+   fixed_t projectileSpeed;
+   fixed_t projectileRadius;
+   int explosionDamage;
+   int explosionRadius;
+   bool unsafeExplosion;
+   int bfgCount;
+   bool seeking;
 
    int calcHitscanDamage(fixed_t dist, fixed_t radius, fixed_t height, bool berserk, bool first) const;
 };

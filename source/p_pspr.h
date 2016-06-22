@@ -102,6 +102,7 @@ void P_WeaponRecoil(player_t *player);
 // IOANCH 20140817
 bool P_WeaponHasAmmo(const player_t *player, const weaponinfo_t *weapon);
 extern argkeywd_t fcbkwds;
+extern argkeywd_t seekkwds;
 
 #endif
 

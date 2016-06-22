@@ -175,12 +175,20 @@ void A_ImpMeleeAtk(actionargs_t *);
 void A_ImpMissileAtk(actionargs_t *);
 void A_AlertMonsters(actionargs_t *);
 
+void A_BFG11KHit(actionargs_t *);
+void A_BouncingBFG(actionargs_t *);
+void A_BFGBurst(actionargs_t *);
+void A_BFGSpray(actionargs_t *);
+
 // weapons
 
+void A_FireBFG(actionargs_t *);
 void A_FireCGun(actionargs_t *);
 void A_FireCustomBullets(actionargs_t *);
+void A_FireOldBFG(actionargs_t *);
 void A_FirePistol(actionargs_t *);
 void A_FirePlasma(actionargs_t *);
+void A_FirePlayerMissile(actionargs_t *);
 void A_FireMissile(actionargs_t *);
 void A_FireShotgun(actionargs_t *);
 void A_FireShotgun2(actionargs_t *);
@@ -211,12 +219,13 @@ void A_CustomPlayerMelee(actionargs_t *);
 static void B_getBranchingStateSeq(statenum_t sn,
                             StateQue &alterQueue,
                             const StateSet &stateSet,
-                            const Mobj &mo)
+                            const Mobj *mo, const mobjinfo_t *mi)
 {
    const state_t &st = *states[sn];
    PODCollection<statenum_t> dests(17);
    
-   const mobjinfo_t &mi = *mo.info;
+   if(mo && !mi)
+      mi = mo->info;
    
    if(sn == NullStateNum)
       return;  // do nothing
@@ -224,20 +233,20 @@ static void B_getBranchingStateSeq(statenum_t sn,
    if(st.action == A_Look || st.action == A_CPosRefire
       || st.action == A_SpidRefire)
    {
-      dests.add(mi.seestate);
+      dests.add(mi->seestate);
    }
    else if(st.action == A_Chase || st.action == A_VileChase)
    {
-      dests.add(mi.spawnstate);
-      if(mi.meleestate != NullStateNum)
-         dests.add(mi.meleestate);
-      if(mi.missilestate != NullStateNum)
-         dests.add(mi.missilestate);
+      dests.add(mi->spawnstate);
+      if(mi->meleestate != NullStateNum)
+         dests.add(mi->meleestate);
+      if(mi->missilestate != NullStateNum)
+         dests.add(mi->missilestate);
       if(st.action == A_VileChase)
          dests.add(E_SafeState(S_VILE_HEAL1));
    }
    else if(st.action == A_SkullAttack)
-      dests.add(mi.spawnstate);
+      dests.add(mi->spawnstate);
    else if(st.action == A_RandomJump && st.misc2 > 0)
    {
       int rezstate = E_StateNumForDEHNum(st.misc1);
@@ -246,13 +255,15 @@ static void B_getBranchingStateSeq(statenum_t sn,
    }
    else if(st.action == A_GenRefire)
    {
-      if (E_ArgAsInt(st.args, 1, 0) > 0 || mo.flags & MF_FRIEND)
-         dests.add(E_ArgAsStateNum(st.args, 0, &mo));
+      if (E_ArgAsInt(st.args, 1, 0) > 0 ||
+          (mo && mo->flags & MF_FRIEND || !mo && mi->flags & MF_FRIEND))
+         dests.add(E_ArgAsStateNum(st.args, 0, mo));
    }
-   else if(st.action == A_HealthJump && mo.flags & MF_SHOOTABLE &&
-           !(mo.flags2 & MF2_INVULNERABLE))
+   else if(st.action == A_HealthJump &&
+           (mo && mo->flags & MF_SHOOTABLE || !mo && mi->flags & MF_SHOOTABLE) &&
+           !(mo && mo->flags2 & MF2_INVULNERABLE || !mo && mi->flags2 & MF2_INVULNERABLE))
    {
-      int statenum = E_ArgAsStateNumNI(st.args, 0, &mo);
+      int statenum = E_ArgAsStateNumNI(st.args, 0, mo);
       int checkhealth = E_ArgAsInt(st.args, 2, 0);
       
       if(statenum >= 0 && checkhealth < NUMMOBJCOUNTERS && checkhealth >= 0)
@@ -262,7 +273,7 @@ static void B_getBranchingStateSeq(statenum_t sn,
    {
       // TODO: check if cnum has been touched or will be touched in such a way
       // to reach comparison with value. Only then accept the jump possibility
-      int statenum  = E_ArgAsStateNumNI(st.args, 0, &mo);
+      int statenum  = E_ArgAsStateNumNI(st.args, 0, mo);
       int cnum      = E_ArgAsInt(st.args, 3, 0);
       if(statenum >= 0 && cnum >= 0 && cnum < NUMMOBJCOUNTERS)
          dests.add(statenum);
@@ -270,7 +281,7 @@ static void B_getBranchingStateSeq(statenum_t sn,
    else if(st.action == A_CounterSwitch)
    {
       int cnum       = E_ArgAsInt       (st.args, 0,  0);
-      int startstate = E_ArgAsStateNumNI(st.args, 1, &mo);
+      int startstate = E_ArgAsStateNumNI(st.args, 1, mo);
       int numstates  = E_ArgAsInt       (st.args, 2,  0) - 1;
 
       if (startstate >= 0 && startstate + numstates < NUMSTATES && cnum >= 0 &&
@@ -282,7 +293,7 @@ static void B_getBranchingStateSeq(statenum_t sn,
    }
    else if(st.action == A_TargetJump)
    {
-      int statenum = E_ArgAsStateNumNI(st.args, 0, &mo);
+      int statenum = E_ArgAsStateNumNI(st.args, 0, mo);
       if(statenum >= 0)
          dests.add(statenum);
    }
@@ -313,12 +324,12 @@ static void B_getBranchingStateSeq(statenum_t sn,
    }
    else if(st.action == A_MinotaurCharge)
    {
-      dests.add(mi.seestate);
-      dests.add(mi.spawnstate);
+      dests.add(mi->seestate);
+      dests.add(mi->spawnstate);
    }
    else if(st.action == A_WhirlwindSeek)
    {
-      dests.add(mi.deathstate);
+      dests.add(mi->deathstate);
    }
    else if(st.action == A_LichFireGrow)
    {
@@ -326,11 +337,11 @@ static void B_getBranchingStateSeq(statenum_t sn,
    }
    else if(st.action == A_ImpChargeAtk)
    {
-      dests.add(mi.seestate);
+      dests.add(mi->seestate);
    }
    else if(st.action == A_ImpDeath || st.action == A_ImpXDeath2)
    {
-      dests.add(mi.crashstate);
+      dests.add(mi->crashstate);
    }
    else if(st.action == A_ImpExplode)
    {
@@ -338,32 +349,34 @@ static void B_getBranchingStateSeq(statenum_t sn,
    }
    else if(st.action == A_JumpIfTargetInLOS || st.action == A_CheckPlayerDone)
    {
-      int statenum = E_ArgAsStateNumNI(st.args, 0, &mo);
+      int statenum = E_ArgAsStateNumNI(st.args, 0, mo);
       if(statenum >= 0)
          dests.add(statenum);
    }
    else if(st.action == A_Jump)
    {
       int chance = E_ArgAsInt(st.args, 0, 0);
-      if(chance && st.args && st.args->numargs >= 2)
+
+      // FIXME: mobj is needed here
+      if(mo && chance && st.args && st.args->numargs >= 2)
       {
          state_t *state;
          for(int i = 0; i < st.args->numargs; ++i)
          {
-            state = E_ArgAsStateLabel(&mo, mo.state->args, i);
+            state = E_ArgAsStateLabel(mo, st.args, i);
             dests.add(state->index);
          }
       }
    }
    else if(st.action == A_MissileAttack || st.action == A_MissileSpread)
    {
-      int statenum = E_ArgAsStateNumG0(st.args, 4, &mo);
+      int statenum = E_ArgAsStateNumG0(st.args, 4, mo);
       if(statenum >= 0 && statenum < NUMSTATES)
          dests.add(statenum);
    }
    else if(st.action == A_SnakeAttack || st.action == A_SnakeAttack2)
    {
-      dests.add(mi.spawnstate);
+      dests.add(mi->spawnstate);
    }
    
    // add the destinations
@@ -468,7 +481,7 @@ static bool B_stateCantBeSolidDecor(statenum_t sn, const mobjinfo_t &mi, void* m
 // True if state leads into a goal
 //
 static bool B_stateEncounters(statenum_t firstState,
-                              const Mobj &mo,
+                              const Mobj *mo, const mobjinfo_t *info,
                               bool(*statecase)(statenum_t, const mobjinfo_t&, void* miscData),
                               bool avoidPainStates = false,
                               void* miscData = nullptr)
@@ -478,15 +491,22 @@ static bool B_stateEncounters(statenum_t firstState,
    // (RandomJump, Jump and so on)
    stateSet.rehash(47);
 
+   if(mo && !info)
+      info = mo->info;
+
    statenum_t sn;
    alterQueue.push(firstState);
-   if(mo.flags & MF_SHOOTABLE && !avoidPainStates)
+
+   // in case we're looking at a thing and it doesn't have SHOOTABLE despite
+   // its definition having it, do not add pain and death states
+   if((mo && mo->flags & MF_SHOOTABLE || !mo && info->flags & MF_SHOOTABLE)
+      && !avoidPainStates)
    {
-      if(mo.info->painchance > 0)
-         alterQueue.push(mo.info->painstate);
-      alterQueue.push(mo.info->deathstate);
-      if(mo.info->xdeathstate > 0)
-         alterQueue.push(mo.info->xdeathstate);
+      if(info->painchance > 0)
+         alterQueue.push(info->painstate);
+      alterQueue.push(info->deathstate);
+      if(info->xdeathstate > 0)
+         alterQueue.push(info->xdeathstate);
    }
       
    while (alterQueue.size() > 0)
@@ -501,7 +521,7 @@ static bool B_stateEncounters(statenum_t firstState,
             break;
          }
          
-         if (statecase(sn, *mo.info, miscData))
+         if (statecase(sn, *info, miscData))
          {
              // If statecase returns true, it means we reached a goal.
             return true;
@@ -509,7 +529,7 @@ static bool B_stateEncounters(statenum_t firstState,
          stateSet.insert(sn);
          
          
-         B_getBranchingStateSeq(sn, alterQueue, stateSet, mo);
+         B_getBranchingStateSeq(sn, alterQueue, stateSet, mo, info);
          if(states[sn]->tics < 0 || sn == NullStateNum)
             break;   // don't go to next state if current has neg. duration
       }
@@ -538,7 +558,7 @@ bool B_IsMobjSolidDecor(const Mobj &mo)
    
    if (mi.spawnstate == NullStateNum)
       return false;  // has null start frame, invalid
-   if (B_stateEncounters(mi.spawnstate, mo, B_stateCantBeSolidDecor))
+   if (B_stateEncounters(mi.spawnstate, &mo, nullptr, B_stateCantBeSolidDecor))
       return false;  // state goes to null or disables solidity or moves
    
    return true;
@@ -654,7 +674,7 @@ bool B_MobjHasMissileAttack(const Mobj& mo)
 
     if (mi.spawnstate == NullStateNum || mi.missilestate == NullStateNum)
         return false;
-    if (B_stateEncounters(mi.missilestate, mo, B_stateAttacks, true))
+    if (B_stateEncounters(mi.missilestate, &mo, nullptr, B_stateAttacks, true))
     {
        g_traitSet[d] |= Trait_hostile;
         return true;
@@ -679,7 +699,7 @@ bool B_IsMobjHitscanner(const Mobj& mo)
     const mobjinfo_t& mi = *mo.info;
     if (mi.spawnstate == NullStateNum || mi.missilestate == NullStateNum)
         return false;
-    if (B_stateEncounters(mi.missilestate, mo, B_stateHitscans, true))
+    if (B_stateEncounters(mi.missilestate, &mo, nullptr, B_stateHitscans, true))
     {
        g_traitSet[d] |= Trait_hitscan;
         return true;
@@ -708,7 +728,11 @@ static bool B_stateExplodes(statenum_t sn, const mobjinfo_t &mi, void *miscData)
    else if(st.action == A_Detonate)
       increase(mi.damage);
    else if(st.action == A_DetonateEx)
-      increase(E_ArgAsInt(st.args, 0, 128));
+   {
+      int damage = E_ArgAsInt(st.args, 0, 128);
+      if(damage > 0)
+         increase(damage);
+   }
    else if(st.action == A_HticExplode)
    {
       switch(E_ArgAsKwd(st.args, 0, &hticexpkwds, 0))
@@ -742,7 +766,7 @@ int B_MobjDeathExplosion(const Mobj& mo)
    if (mi.spawnstate == NullStateNum || mi.deathstate == NullStateNum)
       return false;
    int result = 0;
-   B_stateEncounters(mi.deathstate, mo, B_stateExplodes, false, &result);
+   B_stateEncounters(mi.deathstate, &mo, nullptr, B_stateExplodes, false, &result);
    return result;
 }
 
@@ -768,7 +792,7 @@ static const StateSet *B_getPreAttackStates(const Mobj& mo)
     if (mi.spawnstate == NullStateNum || mi.missilestate == NullStateNum)
         return nullptr;
 
-    B_stateEncounters(mi.missilestate, mo, [](statenum_t sn, const mobjinfo_t& mi, void* miscData) -> bool {
+    B_stateEncounters(mi.missilestate, &mo, nullptr, [](statenum_t sn, const mobjinfo_t& mi, void* miscData) -> bool {
 
         auto& preAttackStates = *(StateSet*)miscData;
         static const std::unordered_set<ActionFunction> attacks =
@@ -871,7 +895,7 @@ bool B_MobjUsesCodepointer(const Mobj& mo, void(*action)(actionargs_t *args))
 
    if (mi.spawnstate == NullStateNum)
       return false;  // has null start frame, invalid
-   return B_stateEncounters(mi.spawnstate, mo, B_stateUsesCodepointer, false, reinterpret_cast<void *>(action));
+   return B_stateEncounters(mi.spawnstate, &mo, nullptr, B_stateUsesCodepointer, false, reinterpret_cast<void *>(action));
 }
 
 //! Sets the SectorAffectingStates struct
@@ -898,7 +922,7 @@ void B_GetMobjSectorTargetActions(const Mobj& mo, SectorAffectingStates &table)
 
    if (mi.spawnstate == NullStateNum)
       return;  // has null start frame, invalid
-   B_stateEncounters(mi.spawnstate, mo, B_stateSetSectorState, false, &table);
+   B_stateEncounters(mi.spawnstate, &mo, nullptr, B_stateSetSectorState, false, &table);
 }
 
 //==============================================================================
@@ -1108,6 +1132,67 @@ int BotWeaponInfo::calcHitscanDamage(fixed_t dist, fixed_t radius, fixed_t heigh
    return damage;
 }
 
+static bool B_analyzeProjectile(statenum_t sn, const mobjinfo_t &mi, void *ctx)
+{
+
+   auto bwi = static_cast<BotWeaponInfo *>(ctx);
+   const state_t &st = *states[sn];
+
+   static auto increase = [bwi](int value) {
+      if(value > bwi->explosionRadius)
+         bwi->explosionRadius = value;
+   };
+
+
+   // TODO: potential frames which spawn other explosives may count here!
+   if(st.action == A_Explode || st.action == A_Mushroom || st.action == A_Nailbomb)
+   {
+      increase(kExplosionRadius);
+      bwi->explosionDamage += kExplosionRadius;
+      bwi->unsafeExplosion = true;
+   }
+   else if(st.action == A_Detonate)
+   {
+      increase(mi.damage);
+      bwi->explosionDamage += mi.damage;
+      bwi->unsafeExplosion = true;
+   }
+   else if(st.action == A_DetonateEx)
+   {
+      int damage = E_ArgAsInt(st.args, 0, 128);
+      int radius = E_ArgAsInt(st.args, 1, 128);
+      bool hurtself = E_ArgAsInt(st.args, 2, 1) == 1;
+      increase(radius);
+      bwi->explosionDamage += damage;
+      bwi->unsafeExplosion = bwi->unsafeExplosion || hurtself;
+   }
+   else if(st.action == A_HticExplode)
+   {
+      bwi->unsafeExplosion = true;
+      switch(E_ArgAsKwd(st.args, 0, &hticexpkwds, 0))
+      {
+         case kHticExplodeDsparilBSpark:
+            increase(111);
+            bwi->explosionDamage += 111;
+            break;
+         case kHticExplodeFloorFire:
+            increase(24);
+            bwi->explosionDamage += 24;
+            break;
+         default:
+            increase(kExplosionRadius);
+            bwi->explosionDamage += kExplosionRadius;
+      }
+   }
+   else if(st.action == A_BFG11KHit || st.action == A_BouncingBFG ||
+           st.action == A_BFGBurst || st.action == A_BFGSpray)
+   {
+      ++bwi->bfgCount;
+   }
+
+   return false;
+}
+
 void B_AnalyzeWeapons()
 {
    // Some assumptions are made for now:
@@ -1128,11 +1213,14 @@ void B_AnalyzeWeapons()
       const weaponinfo_t &wi = weaponinfo[i];
       memset(g_botweapons + i, 0, sizeof(*g_botweapons));
       memset(&state, 0, sizeof(state));
+      state.i = i;
 
       B_weaponStateEncounters(wi.atkstate, wi, [](statenum_t sn, void *ctx) {
          State &state = *static_cast<State *>(ctx);
          int i = state.i;
          const state_t &st = *states[sn];
+
+         mobjtype_t projectile = -1, projectile2 = -1;
 
          g_botweapons[i].oneShotRate += st.tics;
 
@@ -1190,6 +1278,11 @@ void B_AnalyzeWeapons()
             state.reachedFire = true;
             g_botweapons[i].neverDamage += 70;
          }
+         else if(st.action == A_FireShotgun2)
+         {
+            state.reachedFire = true;
+            g_botweapons[i].ssgDamage += 200;
+         }
          else if(st.action == A_FireCustomBullets)
          {
             state.reachedFire = true;
@@ -1226,13 +1319,53 @@ void B_AnalyzeWeapons()
             }
          }
          else if(st.action == A_FireMissile)
+            projectile = E_SafeThingType(MT_ROCKET);
+         else if(st.action == A_FirePlasma)
+            projectile = E_SafeThingType(MT_PLASMA);
+         else if(st.action == A_FireBFG)
+            projectile = E_SafeThingType(MT_BFG);
+         else if(st.action == A_FireOldBFG)
+         {
+            projectile = E_SafeThingType(MT_PLASMA1);
+            projectile2 = E_SafeThingType(MT_PLASMA2);
+         }
+         else if(st.action == A_FirePlayerMissile)
+         {
+            projectile = E_ArgAsThingNumG0(st.args, 0);
+            if(projectile < 0 || projectile == -1)
+               projectile = UnknownThingType;
+            else
+            {
+               bool seek = !!E_ArgAsKwd(st.args, 1, &seekkwds, 0);
+               g_botweapons[i].seeking = g_botweapons[i].seeking || seek;
+            }
+         }
+
+         if(projectile >= 0 && projectile != UnknownThingType)
          {
             state.reachedFire = true;
+            const mobjinfo_t *info = mobjinfo[projectile];
+            g_botweapons[i].projectileDamage += info->damage * 9 / 2;
+            if(info->speed > g_botweapons[i].projectileSpeed)
+               g_botweapons[i].projectileSpeed = info->speed;
+            if(info->radius > g_botweapons[i].projectileRadius)
+               g_botweapons[i].projectileRadius = info->radius;
 
-            mobjtype_t type = E_SafeThingType(MT_ROCKET);
-            const mobjinfo_t *info = mobjinfo[type];
+            B_stateEncounters(info->deathstate, nullptr, info,
+                              B_analyzeProjectile, false, &g_botweapons[i]);
+         }
+         if(projectile2 >= 0 && projectile2 != UnknownThingType)
+         {
+            state.reachedFire = true;
+            const mobjinfo_t *info = mobjinfo[projectile2];
+            g_botweapons[i].projectileDamage += info->damage * 9 / 2;
+            if(info->speed > g_botweapons[i].projectileSpeed)
+               g_botweapons[i].projectileSpeed = info->speed;
+            if(info->radius > g_botweapons[i].projectileRadius)
+               g_botweapons[i].projectileRadius = info->radius;
 
-            // TODO
+            B_stateEncounters(info->deathstate, nullptr, info,
+                              B_analyzeProjectile, false, &g_botweapons[i]);
          }
 
          if(!state.reachedFire)
