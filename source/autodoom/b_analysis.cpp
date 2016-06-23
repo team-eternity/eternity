@@ -1206,6 +1206,7 @@ void B_AnalyzeWeapons()
       int i;   // current weapon index
       bool reachedFire;
       bool reachedRefire;
+      int burstTics;
    } state;
 
    for(int i = 0; i < NUMWEAPONS; ++i)
@@ -1220,6 +1221,14 @@ void B_AnalyzeWeapons()
          int i = state.i;
          const state_t &st = *states[sn];
 
+          auto increaseBurst = [&state]() {
+              if(g_botweapons[state.i].burstRate < state.burstTics)
+              {
+                  g_botweapons[state.i].burstRate = state.burstTics;
+                  state.burstTics = 0;
+              }
+          };
+
          mobjtype_t projectile = -1, projectile2 = -1;
 
          g_botweapons[i].oneShotRate += st.tics;
@@ -1227,6 +1236,8 @@ void B_AnalyzeWeapons()
          if(st.action == A_ReFire || st.action == A_CloseShotgun2)
          {
             state.reachedRefire = true;
+            state.burstTics += g_botweapons[i].timeToFire;
+             increaseBurst();
          }
 
          if(!state.reachedRefire)
@@ -1240,6 +1251,7 @@ void B_AnalyzeWeapons()
          if(st.action == A_Punch)
          {
             state.reachedFire = true;
+            increaseBurst();
 
             g_botweapons[i].meleeDamage += 11;
             g_botweapons[i].berserkDamage += 110;
@@ -1247,6 +1259,7 @@ void B_AnalyzeWeapons()
          else if(st.action == A_Saw)
          {
             state.reachedFire = true;
+            increaseBurst();
 
             g_botweapons[i].meleeDamage += 11;
             g_botweapons[i].berserkDamage += 11;
@@ -1254,6 +1267,7 @@ void B_AnalyzeWeapons()
          else if(st.action == A_CustomPlayerMelee)
          {
             state.reachedFire = true;
+            increaseBurst();
 
             int dmgfactor = E_ArgAsInt(st.args, 0, 0);
             int dmgmod = E_ArgAsInt(st.args, 1, 0);
@@ -1270,22 +1284,28 @@ void B_AnalyzeWeapons()
          else if(st.action == A_FirePistol || st.action == A_FireCGun)
          {
             state.reachedFire = true;
+            increaseBurst();
 
             g_botweapons[i].firstDamage += 10;
          }
          else if(st.action == A_FireShotgun)
          {
             state.reachedFire = true;
+            increaseBurst();
+
             g_botweapons[i].neverDamage += 70;
          }
          else if(st.action == A_FireShotgun2)
          {
-            state.reachedFire = true;
+             state.reachedFire = true;
+             increaseBurst();
+
             g_botweapons[i].ssgDamage += 200;
          }
          else if(st.action == A_FireCustomBullets)
          {
             state.reachedFire = true;
+             increaseBurst();
 
             int accurate = E_ArgAsKwd(st.args, 1, &fcbkwds, 0);
             int numbullets = E_ArgAsInt(st.args, 2, 0);
@@ -1319,7 +1339,7 @@ void B_AnalyzeWeapons()
             }
          }
          else if(st.action == A_FireMissile)
-            projectile = E_SafeThingType(MT_ROCKET);
+             projectile = E_SafeThingType(MT_ROCKET);
          else if(st.action == A_FirePlasma)
             projectile = E_SafeThingType(MT_PLASMA);
          else if(st.action == A_FireBFG)
@@ -1344,6 +1364,8 @@ void B_AnalyzeWeapons()
          if(projectile >= 0 && projectile != UnknownThingType)
          {
             state.reachedFire = true;
+             increaseBurst();
+
             const mobjinfo_t *info = mobjinfo[projectile];
             g_botweapons[i].projectileDamage += info->damage * 9 / 2;
             if(info->speed > g_botweapons[i].projectileSpeed)
@@ -1357,6 +1379,8 @@ void B_AnalyzeWeapons()
          if(projectile2 >= 0 && projectile2 != UnknownThingType)
          {
             state.reachedFire = true;
+             increaseBurst();
+
             const mobjinfo_t *info = mobjinfo[projectile2];
             g_botweapons[i].projectileDamage += info->damage * 9 / 2;
             if(info->speed > g_botweapons[i].projectileSpeed)
@@ -1370,6 +1394,7 @@ void B_AnalyzeWeapons()
 
          if(!state.reachedFire)
             g_botweapons[i].timeToFire += st.tics;
+         state.burstTics += st.tics;
 
          return false;
       }, &state);

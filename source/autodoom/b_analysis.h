@@ -83,29 +83,30 @@ struct BotWeaponInfo
 {
    BotWeaponType type;
 
-   int timeToFire;
-   int refireRate;
-   int oneShotRate;
+   int timeToFire;            // time before first fire
+   int refireRate;            // time between two attacks
+   int oneShotRate;           // duration without holding fire
+   int burstRate;             // max time between individual shots
 
-   int meleeDamage;
-   int berserkDamage;
+   int meleeDamage;           // total non-berserk melee damage
+   int berserkDamage;         // total berserk melee damage
 
-   int alwaysDamage;
-   int firstDamage;
-   int neverDamage;
-   int monsterDamage;
-   int ssgDamage;
+   int alwaysDamage;          // total 100% accurate bullet damage
+   int firstDamage;           // total tappable bullet damage
+   int neverDamage;           // total "never" accuracy bullet damage
+   int monsterDamage;         // total "monster" accuracy bullet damage
+   int ssgDamage;             // total "ssg" accuracy bullet damage
 
-   int projectileDamage;
-   fixed_t projectileSpeed;
-   fixed_t projectileRadius;
-   int explosionDamage;
-   int explosionRadius;
-   bool unsafeExplosion;
-   int bfgCount;
-   bool seeking;
+   int projectileDamage;      // total projectile impact damage
+   fixed_t projectileSpeed;   // maximum projectile speed
+   fixed_t projectileRadius;  // maximum projectile radius
+   int explosionDamage;       // total projectile explosion damage
+   int explosionRadius;       // maximum projectile explosion radius
+   bool unsafeExplosion;      // true if explosion hurts shooter
+   int bfgCount;              // number of BFG effects in impact
+   bool seeking;              // true if it seeks the target
 
-   int calcHitscanDamage(fixed_t dist, fixed_t radius, fixed_t height, bool berserk, bool first) const;
+   int calcHitscanDamage(fixed_t dist, fixed_t radius, fixed_t height, bool berserk, bool first) const;  // calculates hitscan damage at given range
 };
 
 extern BotWeaponInfo g_botweapons[NUMWEAPONS];
