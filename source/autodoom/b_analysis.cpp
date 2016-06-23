@@ -1399,6 +1399,30 @@ void B_AnalyzeWeapons()
          return false;
       }, &state);
 
+       // now set flags
+       if(g_botweapons[i].meleeDamage)
+          g_botweapons[i].flags |= BWI_MELEE;
+      if(g_botweapons[i].berserkDamage > g_botweapons[i].meleeDamage)
+         g_botweapons[i].flags |= BWI_BERSERK;
+      if(g_botweapons[i].alwaysDamage || g_botweapons[i].firstDamage ||
+         g_botweapons[i].neverDamage || g_botweapons[i].monsterDamage ||
+         g_botweapons[i].ssgDamage)
+      {
+         g_botweapons[i].flags |= BWI_HITSCAN;
+         if(g_botweapons[i].alwaysDamage)
+            g_botweapons[i].flags |= BWI_SNIPE;
+         if(g_botweapons[i].firstDamage)
+            g_botweapons[i].flags |= BWI_TAP_SNIPE;
+      }
+      if(g_botweapons[i].projectileDamage || g_botweapons[i].explosionDamage ||
+         g_botweapons[i].bfgCount)
+      {
+         g_botweapons[i].flags |= BWI_MISSILE;
+         if(g_botweapons[i].unsafeExplosion)
+            g_botweapons[i].flags |= BWI_DANGEROUS;
+         if(g_botweapons[i].bfgCount)
+            g_botweapons[i].flags |= BWI_ULTIMATE;
+      }
    }
 }
 

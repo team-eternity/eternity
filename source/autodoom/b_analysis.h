@@ -78,11 +78,26 @@ enum BotWeaponType
    kWeaponFist,
 };
 
+// Bot weapon info flags
+enum
+{
+   BWI_MELEE =       0x00000001,
+   BWI_BERSERK =     0x00000002,
+
+   BWI_HITSCAN =     0x00000004,
+   BWI_SNIPE =       0x00000008,
+   BWI_TAP_SNIPE =   0x00000010,
+
+   BWI_MISSILE =     0x00000020,
+   BWI_DANGEROUS =   0x00000040,
+   BWI_ULTIMATE =    0x00000080,
+};
+
 // There'll be NUMWEAPONS instances of this
 struct BotWeaponInfo
 {
-   BotWeaponType type;
-
+   uint32_t flags;
+    
    int timeToFire;            // time before first fire
    int refireRate;            // time between two attacks
    int oneShotRate;           // duration without holding fire

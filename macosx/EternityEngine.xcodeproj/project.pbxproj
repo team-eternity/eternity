@@ -367,7 +367,7 @@
 		4F43B44C182D9F7A00730C02 /* b_botmaptemp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = b_botmaptemp.cpp; sourceTree = "<group>"; };
 		4F43B44D182D9F7A00730C02 /* b_botmaptemp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = b_botmaptemp.h; sourceTree = "<group>"; };
 		4F43B44E182D9F7A00730C02 /* b_analysis.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = b_analysis.cpp; sourceTree = "<group>"; };
-		4F43B44F182D9F7A00730C02 /* b_analysis.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = b_analysis.h; sourceTree = "<group>"; };
+		4F43B44F182D9F7A00730C02 /* b_analysis.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = b_analysis.h; sourceTree = "<group>"; tabWidth = 3; };
 		4F43B450182D9F7A00730C02 /* b_glbsp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = b_glbsp.cpp; sourceTree = "<group>"; };
 		4F43B451182D9F7A00730C02 /* b_glbsp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = b_glbsp.h; sourceTree = "<group>"; };
 		4F43B452182D9F7A00730C02 /* b_msector.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = b_msector.cpp; sourceTree = "<group>"; };
