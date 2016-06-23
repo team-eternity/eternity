@@ -66,6 +66,8 @@
 #define JSON_SPRITENUM "spritenum"
 #define JSON_STATS "stats"
 
+void A_WeaponReady(actionargs_t *);
+
 enum
 {
     // 1 / (1 - f) where f is ORIG_FRICTION. Multiply this with velocity to
@@ -849,7 +851,59 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
     rt.SafeAimLineAttack(pl->mo, pl->mo->angle, MISSILERANGE / 2, 0);
     if (rt.m_clip.linetarget)
     {
-        cmd->buttons |= BT_ATTACK;
+       const BotWeaponInfo &bwi = g_botweapons[pl->readyweapon];
+       const Mobj &t = *rt.m_clip.linetarget;
+       fixed_t dist = B_ExactDistance(t.x - mx, t.y - my);
+
+       double currentDmgRate =
+       bwi.calcHitscanDamage(dist, t.radius, t.height,
+                             !!pl->powers[pw_strength], false) /
+       (double)bwi.refireRate;
+       double maxDmgRate = currentDmgRate;
+       double newDmgRate;
+       int maxI = -1;
+
+       // check weapons
+       for(int i = 0; i < NUMWEAPONS; ++i)
+       {
+          if(!pl->weaponowned[i] || pl->readyweapon == i || !E_GetItemOwnedAmount(pl, weaponinfo[i].ammo) || g_botweapons[i].flags & (BWI_MELEE_ONLY | BWI_DANGEROUS | BWI_ULTIMATE))
+          {
+             continue;
+          }
+          newDmgRate = g_botweapons[i].calcHitscanDamage(dist, t.radius, t.height, !!pl->powers[pw_strength], false) / (double)g_botweapons[i].refireRate;
+          if(newDmgRate > maxDmgRate)
+          {
+             maxDmgRate = newDmgRate;
+             maxI = i;
+          }
+          if(g_botweapons[i].flags & BWI_TAP_SNIPE)
+          {
+             newDmgRate = g_botweapons[i].calcHitscanDamage(dist, t.radius, t.height, !!pl->powers[pw_strength], true) / (double)g_botweapons[i].oneShotRate;
+             if(newDmgRate > maxDmgRate)
+             {
+                maxDmgRate = newDmgRate;
+                maxI = i;
+             }
+          }
+       }
+       if(maxI >= 0)
+       {
+          cmd->buttons |= BT_CHANGE;
+          cmd->buttons |= maxI << BT_WEAPONSHIFT;
+       }
+       cmd->buttons |= BT_ATTACK;
+       if(bwi.flags & BWI_TAP_SNIPE)
+       {
+          if(bwi.calcHitscanDamage(dist, t.radius, t.height, !!pl->powers[pw_strength], true) / (double)bwi.oneShotRate > currentDmgRate)
+          {
+             // start aiming
+             if(pl->psprites[0].state->action != A_WeaponReady)
+             {
+//                B_Log("aim");
+                cmd->buttons &= ~BT_ATTACK;  // don't attack unless weaponready
+             }
+          }
+       }
     }
 
     if(targets[0].isLine)

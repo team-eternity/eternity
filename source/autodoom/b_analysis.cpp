@@ -1066,6 +1066,11 @@ static bool B_weaponStateEncounters(statenum_t firstState,
 // Calculates the hitscan damage one may give to a target
 int BotWeaponInfo::calcHitscanDamage(fixed_t dist, fixed_t radius, fixed_t height, bool berserk, bool first) const
 {
+   if(!dist)   // if dist is 0, just get total damage per attack
+   {
+      // FIXME: bfg not counted
+      return meleeDamage + berserkDamage + alwaysDamage + firstDamage + neverDamage + monsterDamage + ssgDamage + projectileDamage + explosionDamage;
+   }
    int damage = 0;
    dist -= radius;   // reduce the target radius now
    if(dist < 0)
@@ -1129,6 +1134,7 @@ int BotWeaponInfo::calcHitscanDamage(fixed_t dist, fixed_t radius, fixed_t heigh
       }
    }
 
+   damage += projectileDamage + explosionDamage;
    return damage;
 }
 
@@ -1422,6 +1428,10 @@ void B_AnalyzeWeapons()
             g_botweapons[i].flags |= BWI_DANGEROUS;
          if(g_botweapons[i].bfgCount)
             g_botweapons[i].flags |= BWI_ULTIMATE;
+      }
+      if(!(g_botweapons[i].flags & (BWI_HITSCAN | BWI_SNIPE | BWI_TAP_SNIPE | BWI_MISSILE | BWI_DANGEROUS | BWI_ULTIMATE)))
+      {
+         g_botweapons[i].flags |= BWI_MELEE_ONLY;
       }
    }
 }
