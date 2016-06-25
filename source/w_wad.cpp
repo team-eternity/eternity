@@ -31,6 +31,7 @@
 #include <dirent.h>
 #endif
 
+#include <algorithm> // ioanch: for sort
 #include <memory>
 
 #include "z_zone.h"
@@ -199,7 +200,7 @@ void WadDirectory::addInfoPtr(lumpinfo_t *infoptr)
 //
 // Add the source filename and increment the static source counter.
 //
-void WadDirectory::incrementSource(openwad_t &openData)
+void WadDirectory::incrementSource(const openwad_t &openData)
 {
    // haleyjd: push source filename
    WadDirectoryPimpl::AddFileName(openData.filename);
@@ -213,7 +214,8 @@ void WadDirectory::incrementSource(openwad_t &openData)
 //
 // Protected method to handle errors during archive file open.
 //
-void WadDirectory::handleOpenError(openwad_t &openData, wfileadd_t &addInfo,
+void WadDirectory::handleOpenError(openwad_t &openData,
+                                   const wfileadd_t &addInfo,
                                    const char *filename)
 {
    if(addInfo.flags & WFA_OPENFAILFATAL)
@@ -235,7 +237,7 @@ void WadDirectory::handleOpenError(openwad_t &openData, wfileadd_t &addInfo,
 // haleyjd 04/06/11: For normal wad files, the file needs to be found and 
 // opened.
 //
-WadDirectory::openwad_t WadDirectory::openFile(wfileadd_t &addInfo)
+WadDirectory::openwad_t WadDirectory::openFile(const wfileadd_t &addInfo)
 {
    edefstructvar(openwad_t, openData);
    qstring   filename;
@@ -644,9 +646,10 @@ bool WadDirectory::addFile(wfileadd_t &addInfo)
    
    static AddFileCB fileadders[W_FORMAT_MAX] =
    {
-      &WadDirectory::addWadFile,   // W_FORMAT_WAD
-      &WadDirectory::addZipFile,   // W_FORMAT_ZIP
-      &WadDirectory::addSingleFile // W_FORMAT_FILE
+      &WadDirectory::addWadFile,             // W_FORMAT_WAD
+      &WadDirectory::addZipFile,             // W_FORMAT_ZIP
+      &WadDirectory::addSingleFile,          // W_FORMAT_FILE
+      &WadDirectory::addDirectoryAsArchive   // W_FORMAT_DIR
    };
    
    edefstructvar(openwad_t, openData);
@@ -673,6 +676,11 @@ bool WadDirectory::addFile(wfileadd_t &addInfo)
       openData.size     = addInfo.size;
       openData.filename = "memory";
       openData.format   = W_FORMAT_WAD; // wad handler will deal with this.
+   }
+   else if(addInfo.flags & WFA_DIRECTORY_ARCHIVE)
+   {
+      openData.filename = addInfo.filename;
+      openData.format = W_FORMAT_DIR;
    }
    else
    {
@@ -814,6 +822,144 @@ int WadDirectory::addDirectory(const char *dirpath)
       printf(" adding directory %s\n", dirpath);
 
    return totalcount + localcount;
+}
+
+//
+// Used to add archive directory files
+//
+class ArchiveDirFile
+{
+public:
+   qstring path;        // path from current directory (for reading)
+   qstring innerpath;   // path from within the archive dir (for namespace)
+   off_t size = 0;      // file size
+
+   // for sorting
+   bool operator < (const ArchiveDirFile &o) const
+   {
+      return innerpath.strCaseCmp(o.innerpath.constPtr()) < 0;
+   }
+};
+
+//
+// Helper function to add a path to a collection, from a base.
+//
+static void recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
+                         const char *subpath)
+{
+   qstring path(base);
+   path.pathConcatenate(subpath);
+
+   DIR *dir = opendir(path.constPtr());
+   if(!dir)
+      return;
+
+   dirent *ent;
+   while((ent = readdir(dir)))
+   {
+      // Also eliminate macOS junk
+      if(!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..") ||
+         !strcmp(ent->d_name, ".DS_Store") || !strncmp(ent->d_name, "._", 2))
+         continue;
+
+      path = base;
+      path.pathConcatenate(subpath).pathConcatenate(ent->d_name);
+
+      struct stat sbuf;
+      if(!stat(path.constPtr(), &sbuf)) // check for existence
+      {
+         if(S_ISDIR(sbuf.st_mode)) // if it's a directory, recurse in it
+         {
+            path = subpath;
+            path.pathConcatenate(ent->d_name);
+            recurseFiles(paths, base, path.constPtr());
+         }
+         else
+         {
+            // Remove the leading path component
+            ArchiveDirFile &adf = paths.addNew();
+            adf.path = path;
+            path = subpath;
+            path.pathConcatenate(ent->d_name);
+            adf.innerpath = path;
+            adf.size = sbuf.st_size;
+         }
+      }
+   }
+   closedir(dir);
+}
+
+//
+// Used to add directories arranged the same as PKE/PK3 files. Uses the same
+// namespace system. It's different from addDirectory.
+//
+bool WadDirectory::addDirectoryAsArchive(openwad_t &openData,
+                                         wfileadd_t &addInfo, int startlump)
+{
+   // Check if it's a directory
+   struct stat sbuf;
+   if(stat(openData.filename, &sbuf) || !S_ISDIR(sbuf.st_mode))
+   {
+      handleOpenError(openData, addInfo, openData.filename);
+      return false;
+   }
+
+   // read the file
+   Collection<ArchiveDirFile> paths;
+   static ArchiveDirFile proto;
+   paths.setPrototype(&proto);
+
+   Collection<qstring> wadPaths; // only lists the wads
+
+   recurseFiles(paths, openData.filename, "");
+
+   // Sort the list in a case insensitive way, to prevent platform-dependent
+   // ordering
+   std::sort(paths.begin(), paths.end());
+
+   // we now have the files neatly ordered
+   lumpinfo_t *lump_p = reAllocLumpInfo(paths.getLength(), startlump);
+
+   for(int i = startlump; i < numlumps; i++, lump_p++)
+   {
+      const ArchiveDirFile &adf = paths[i - startlump];
+
+      size_t length = adf.innerpath.length();
+      if(length > 4 && adf.size >= 28 &&
+         !strcasecmp(adf.innerpath.constPtr() + length - 4, ".wad"))
+      {
+         // This is a WAD. Put it into the separate list instead of adding its
+         // name as a duplicate lump
+         wadPaths.add(adf.path);
+         continue;
+      }
+
+      lump_p->type = lumpinfo_t::lump_file;
+      lump_p->lfn = estrdup(adf.path.constPtr());
+      lump_p->size = adf.size;
+      lump_p->source = source;
+      int li_namespace;
+      if((li_namespace = W_NamespaceForFilePath(adf.innerpath.constPtr())) != -1)
+      {
+         lump_p->li_namespace = li_namespace;
+         W_LumpNameFromFilePath(adf.innerpath.constPtr(),
+                                lump_p->name, li_namespace);
+      }
+   }
+
+   // check for WAD files
+   for(const qstring &wadPath : wadPaths)
+   {
+      edefstructvar(wfileadd_t, addInfo);
+      addInfo.filename = wadPath.constPtr();
+      addInfo.li_namespace = lumpinfo_t::ns_global;
+      addInfo.requiredFmt = -1;
+      addFile(addInfo);
+   }
+
+   incrementSource(openData);
+
+   return true;
 }
 
 //
@@ -1343,7 +1489,7 @@ void WadDirectory::initMultipleFiles(wfileadd_t *files)
          // other wad files afterward.
          // 04/07/11: Merged AddFile and AddSubFile
          // 12/24/11: Support for physical file system directories
-         if(curfile->flags & WFA_DIRECTORY)
+         if(curfile->flags & WFA_DIRECTORY_RAW)
             addDirectory(curfile->filename);
          else
             addFile(*curfile);
