@@ -42,6 +42,7 @@
 #include "c_io.h"
 #include "d_dehtbl.h"
 #include "d_files.h"
+#include "hal/i_directory.h"
 #include "m_argv.h"
 #include "m_collection.h"
 #include "m_dllist.h"
@@ -844,8 +845,8 @@ public:
 //
 // Helper function to add a path to a collection, from a base.
 //
-static void recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
-                         const char *subpath)
+static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
+                           const char *subpath, Collection<qstring> &prevPaths)
 {
    qstring path(base);
    path.pathConcatenate(subpath);
@@ -853,6 +854,16 @@ static void recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
    DIR *dir = opendir(path.constPtr());
    if(!dir)
       return;
+
+   // Prevent repeated visits to the same paths due to symbolic links and the
+   // like
+   qstring real;
+   I_GetRealPath(path.constPtr(), real);
+   for(const qstring &prevPath : prevPaths)
+      if(prevPath == real)
+         return;  // avoid duplicate paths
+
+   prevPaths.add(real);
 
    dirent *ent;
    while((ent = readdir(dir)))
@@ -872,7 +883,7 @@ static void recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
          {
             path = subpath;
             path.pathConcatenate(ent->d_name);
-            recurseFiles(paths, base, path.constPtr());
+            W_recurseFiles(paths, base, path.constPtr(), prevPaths);
          }
          else
          {
@@ -909,52 +920,56 @@ bool WadDirectory::addDirectoryAsArchive(openwad_t &openData,
    static ArchiveDirFile proto;
    paths.setPrototype(&proto);
 
-   Collection<qstring> wadPaths; // only lists the wads
+   Collection<qstring> prevPaths;
+   W_recurseFiles(paths, openData.filename, "", prevPaths);
 
-   recurseFiles(paths, openData.filename, "");
-
-   // Sort the list in a case insensitive way, to prevent platform-dependent
-   // ordering
-   std::sort(paths.begin(), paths.end());
-
-   // we now have the files neatly ordered
-   lumpinfo_t *lump_p = reAllocLumpInfo(paths.getLength(), startlump);
-
-   for(int i = startlump; i < numlumps; i++, lump_p++)
+   if(!paths.isEmpty())
    {
-      const ArchiveDirFile &adf = paths[i - startlump];
+      Collection<qstring> wadPaths; // only lists the wads
 
-      size_t length = adf.innerpath.length();
-      if(length > 4 && adf.size >= 28 &&
-         !strcasecmp(adf.innerpath.constPtr() + length - 4, ".wad"))
+      // Sort the list in a case insensitive way, to prevent platform-dependent
+      // ordering
+      std::sort(paths.begin(), paths.end());
+
+      // we now have the files neatly ordered
+      lumpinfo_t *lump_p = reAllocLumpInfo(paths.getLength(), startlump);
+
+      for(int i = startlump; i < numlumps; i++, lump_p++)
       {
-         // This is a WAD. Put it into the separate list instead of adding its
-         // name as a duplicate lump
-         wadPaths.add(adf.path);
-         continue;
+         const ArchiveDirFile &adf = paths[i - startlump];
+
+         size_t length = adf.innerpath.length();
+         if(length > 4 && adf.size >= 28 &&
+            !strcasecmp(adf.innerpath.constPtr() + length - 4, ".wad"))
+         {
+            // This is a WAD. Put it into the separate list instead of adding its
+            // name as a duplicate lump
+            wadPaths.add(adf.path);
+            continue;
+         }
+
+         lump_p->type = lumpinfo_t::lump_file;
+         lump_p->lfn = estrdup(adf.path.constPtr());
+         lump_p->size = adf.size;
+         lump_p->source = source;
+         int li_namespace;
+         if((li_namespace = W_NamespaceForFilePath(adf.innerpath.constPtr())) != -1)
+         {
+            lump_p->li_namespace = li_namespace;
+            W_LumpNameFromFilePath(adf.innerpath.constPtr(),
+                                   lump_p->name, li_namespace);
+         }
       }
 
-      lump_p->type = lumpinfo_t::lump_file;
-      lump_p->lfn = estrdup(adf.path.constPtr());
-      lump_p->size = adf.size;
-      lump_p->source = source;
-      int li_namespace;
-      if((li_namespace = W_NamespaceForFilePath(adf.innerpath.constPtr())) != -1)
+      // check for WAD files
+      for(const qstring &wadPath : wadPaths)
       {
-         lump_p->li_namespace = li_namespace;
-         W_LumpNameFromFilePath(adf.innerpath.constPtr(),
-                                lump_p->name, li_namespace);
+         edefstructvar(wfileadd_t, addInfo);
+         addInfo.filename = wadPath.constPtr();
+         addInfo.li_namespace = lumpinfo_t::ns_global;
+         addInfo.requiredFmt = -1;
+         addFile(addInfo);
       }
-   }
-
-   // check for WAD files
-   for(const qstring &wadPath : wadPaths)
-   {
-      edefstructvar(wfileadd_t, addInfo);
-      addInfo.filename = wadPath.constPtr();
-      addInfo.li_namespace = lumpinfo_t::ns_global;
-      addInfo.requiredFmt = -1;
-      addFile(addInfo);
    }
 
    incrementSource(openData);
