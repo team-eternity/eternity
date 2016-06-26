@@ -797,17 +797,21 @@ int P_FindSectorFromLineArg0(const line_t *line, int start)
 }
 
 // killough 4/16/98: Same thing, only for linedefs
-
-int P_FindLineFromLineArg0(const line_t *line, int start)
+// ioanch 20160424: convenience to only use tag
+int P_FindLineFromTag(int tag, int start)
 {
-   start = 
-      (start >= 0 ? lines[start].nexttag :
-       lines[(unsigned int)line->args[0] % (unsigned int)numlines].firsttag);
-  
-   while(start >= 0 && lines[start].tag != line->args[0])
+   start =
+   (start >= 0 ? lines[start].nexttag :
+    lines[(unsigned int)tag % (unsigned int)numlines].firsttag);
+
+   while(start >= 0 && lines[start].tag != tag)
       start = lines[start].nexttag;
    
    return start;
+}
+int P_FindLineFromLineArg0(const line_t *line, int start)
+{
+   return P_FindLineFromTag(line->args[0], start);
 }
 
 // sf: same thing but from just a number

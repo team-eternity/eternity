@@ -400,7 +400,7 @@ DEFINE_ACTION(EV_ActionTeleport)
    // case 126: (WR)
    // TELEPORT MonsterONLY.
    // jff 02/09/98 fix using up with wrong side crossing
-   return EV_Teleport(instance->line, instance->side, instance->actor);
+   return EV_Teleport(instance->tag, instance->side, instance->actor);
 }
 
 //
@@ -476,6 +476,13 @@ DEFINE_ACTION(EV_ActionCeilingLowerAndCrush)
    return EV_DoCeiling(instance->line, lowerAndCrush);
 }
 
+// ioanch 20160427: provide an inline helper for checking zombies
+inline static bool EV_isZombiePlayer(const Mobj *thing)
+{
+   return thing && thing->player && thing->player->health <= 0 &&
+      !comp[comp_zombie];
+}
+
 //
 // EV_ActionExitLevel
 //
@@ -494,7 +501,7 @@ DEFINE_ACTION(EV_ActionExitLevel)
    // case  52: (W1)
    // EXIT!
    // killough 10/98: prevent zombies from exiting levels
-   if(!(thing->player && thing->player->health <= 0 && !comp[comp_zombie]))
+   if(!EV_isZombiePlayer(thing))
       G_ExitLevel(destmap);
 
    return true;
@@ -520,7 +527,7 @@ DEFINE_ACTION(EV_ActionSwitchExitLevel)
    // case 11:
    // Exit level
    // killough 10/98: prevent zombies from exiting levels
-   if(thing->player && thing->player->health <= 0 && !comp[comp_zombie])
+   if(EV_isZombiePlayer(thing))
    {
       S_StartSound(thing, GameModeInfo->playerSounds[sk_oof]);
       return false;
@@ -548,7 +555,7 @@ DEFINE_ACTION(EV_ActionGunExitLevel)
    }
 
    // case 197: (G1 - BOOM Extended)
-   if(thing->player && thing->player->health <= 0 && !comp[comp_zombie])
+   if(EV_isZombiePlayer(thing))
       return false;
 
    G_ExitLevel(destmap);
@@ -604,7 +611,7 @@ DEFINE_ACTION(EV_ActionCeilingCrushStop)
    // case 168: (S1 - BOOM Extended)
    // case 188: (SR - BOOM Extended)
    // Ceiling Crush Stop
-   return EV_CeilingCrushStop(instance->line);
+   return EV_CeilingCrushStop(instance->line, instance->tag);
 }
 
 //
@@ -742,7 +749,7 @@ DEFINE_ACTION(EV_ActionSecretExit)
    // case 124: (W1)
    // Secret EXIT
    // killough 10/98: prevent zombies from exiting levels
-   if(!(thing->player && thing->player->health <= 0 && !comp[comp_zombie]))
+   if(!EV_isZombiePlayer(thing))
       G_SecretExitLevel(destmap);
 
    return true;
@@ -768,7 +775,7 @@ DEFINE_ACTION(EV_ActionSwitchSecretExit)
    // case 51: (S1)
    // Secret EXIT
    // killough 10/98: prevent zombies from exiting levels
-   if(thing->player && thing->player->health <= 0 && !comp[comp_zombie])
+   if(EV_isZombiePlayer(thing))
    {
       S_StartSound(thing, GameModeInfo->playerSounds[sk_oof]);
       return false;
@@ -796,7 +803,7 @@ DEFINE_ACTION(EV_ActionGunSecretExit)
    }
 
    // case 198: (G1 - BOOM Extended)
-   if(thing->player && thing->player->health <= 0 && !comp[comp_zombie])
+   if(EV_isZombiePlayer(thing))
       return false;
 
    G_SecretExitLevel(destmap);
@@ -938,7 +945,10 @@ DEFINE_ACTION(EV_ActionSilentTeleport)
    // case 268: (W1 - BOOM Extended)
    // case 269: (WR - BOOM Extended)
    // jff 4/14/98 add monster-only silent
-   return EV_SilentTeleport(line, side, thing);
+   teleparms_t parms;
+   parms.teleangle = teleangle_relative_boom;
+   parms.keepheight = true;
+   return EV_SilentTeleport(line, instance->tag, side, thing, parms);
 }
 
 //
@@ -1040,7 +1050,7 @@ DEFINE_ACTION(EV_ActionSilentLineTeleport)
    // case 267: (WR - BOOM Extended)
    // jff 4/14/98 add monster-only silent line-line
 
-   return EV_SilentLineTeleport(line, side, thing, false);
+   return EV_SilentLineTeleport(line, instance->tag, side, thing, false);
 }
 
 //
@@ -1058,7 +1068,7 @@ DEFINE_ACTION(EV_ActionSilentLineTeleportReverse)
    // case 264: (W1 - BOOM Extended)
    // case 265: (WR - BOOM Extended)
    // jff 4/14/98 add monster-only silent line-line reversed
-   return EV_SilentLineTeleport(line, side, thing, true);
+   return EV_SilentLineTeleport(line, instance->tag, side, thing, true);
 }
 
 //
@@ -2925,8 +2935,12 @@ DEFINE_ACTION(EV_ActionThingSpawnNoFog)
 //
 DEFINE_ACTION(EV_ActionTeleportEndGame)
 {
+   // ioanch 20160428: vanilla Hexen only accepts from the front side
+   if(P_LevelIsVanillaHexen() && instance->side)
+      return 0;
+
    G_ForceFinale();
-   return true;
+   return 1;
 }
 
 //
@@ -3219,6 +3233,393 @@ DEFINE_ACTION(EV_ActionParamDonut)
    fixed_t pspeed = instance->args[1] * FRACUNIT / 8;
    fixed_t sspeed = instance->args[2] * FRACUNIT / 8;
    return EV_DoParamDonut(instance->line, instance->tag, true, pspeed, sspeed);
+}
+
+//
+// EV_ActionParamCeilingCrushAndRaise
+//
+// Implements Ceiling_CrushAndRaise(tag, speed, crush, crushmode)
+// * ExtraData: 432
+// * Hexen:     42
+//
+DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaise)
+{
+   INIT_STRUCT(crusherdata_t, cd);
+   cd.flags = CDF_HAVESPAC;
+   cd.damage = instance->args[2];
+   cd.speed_value = instance->args[1] * (FRACUNIT / 8);
+   cd.upspeed = cd.speed_value / 2; // half speed up, like Hexen
+   cd.speed_type = SpeedParam;
+   cd.spac = instance->spac;
+   cd.type = paramHexenCrush;
+   cd.crushmode = static_cast<crushmode_e>(instance->args[3]);
+   cd.ground_dist = 8 * FRACUNIT;
+   return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingCrushStop
+//
+// Implements Ceiling_CrushStop(tag)
+// * ExtraData: 433
+// * Hexen:     44
+//
+DEFINE_ACTION(EV_ActionParamCeilingCrushStop)
+{
+   // Really the same as EV_ActionCeilingCrushStop
+   return EV_CeilingCrushStop(instance->line, instance->tag);
+}
+
+//
+// EV_ActionParamCeilingCrushRaiseAndStay
+//
+// Implements Ceiling_CrushRaiseAndStay(tag, speed, crush, crushmode)
+// * ExtraData: 434
+// * Hexen:     45
+//
+DEFINE_ACTION(EV_ActionParamCeilingCrushRaiseAndStay)
+{
+   INIT_STRUCT(crusherdata_t, cd);
+   cd.flags = CDF_HAVESPAC;
+   cd.damage = instance->args[2];
+   cd.speed_value = instance->args[1] * (FRACUNIT / 8);
+   cd.upspeed = cd.speed_value / 2; // half speed up, like Hexen
+   cd.speed_type = SpeedParam;
+   cd.spac = instance->spac;
+   cd.type = paramHexenCrushRaiseStay;
+   cd.crushmode = static_cast<crushmode_e>(instance->args[3]);
+   cd.ground_dist = 8 * FRACUNIT;
+   return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingLowerAndCrush
+//
+// Implements Ceiling_LowerAndCrush(tag, speed, crush, crushmode)
+// * ExtraData 435
+// * Hexen:    43
+//
+DEFINE_ACTION(EV_ActionParamCeilingLowerAndCrush)
+{
+   INIT_STRUCT(crusherdata_t, cd);
+   cd.flags = CDF_HAVESPAC;
+   cd.damage = instance->args[2];
+   cd.speed_value = instance->args[1] * (FRACUNIT / 8);
+   cd.speed_type = SpeedParam;
+   cd.spac = instance->spac;
+   cd.type = paramHexenLowerCrush;
+   cd.crushmode = static_cast<crushmode_e>(instance->args[3]);
+   cd.ground_dist = 8 * FRACUNIT;
+   return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingLowerAndCrushDist
+//
+// Implements Ceiling_LowerAndCrushDist(tag, speed, crush, dist, crushmode)
+// * ExtraData 436
+// * Hexen:    97
+//
+DEFINE_ACTION(EV_ActionParamCeilingLowerAndCrushDist)
+{
+   INIT_STRUCT(crusherdata_t, cd);
+   cd.flags = CDF_HAVESPAC;
+   cd.damage = instance->args[2];
+   cd.speed_value = instance->args[1] * (FRACUNIT / 8);
+   cd.speed_type = SpeedParam;
+   cd.spac = instance->spac;
+   cd.type = paramHexenLowerCrush;
+   cd.crushmode = static_cast<crushmode_e>(instance->args[4]);
+   cd.ground_dist = instance->args[3] * FRACUNIT;
+   return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingCrushAndRaiseDist
+//
+// Implements Ceiling_CrushAndRaiseDist(tag, dist, speed, damage, crushmode)
+// * ExtraData: 437
+// * Hexen:     168
+//
+DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaiseDist)
+{
+   INIT_STRUCT(crusherdata_t, cd);
+   cd.flags = CDF_HAVESPAC;
+   cd.damage = instance->args[3];
+   cd.speed_value = instance->args[2] * (FRACUNIT / 8);
+   cd.upspeed = cd.speed_value;  // Same speed as down-speed here.
+   cd.speed_type = SpeedParam;
+   cd.spac = instance->spac;
+   cd.type = paramHexenCrush;
+   cd.crushmode = static_cast<crushmode_e>(instance->args[4]);
+   cd.ground_dist = instance->args[1] * FRACUNIT;
+   return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingCrushRaiseAndStayA
+//
+// Implements Ceiling_CrushRaiseAndStayA(tag, dspeed, uspeed, crush, crushmode)
+// * ExtraData: 438
+// * Hexen:     195
+//
+DEFINE_ACTION(EV_ActionParamCeilingCrushRaiseAndStayA)
+{
+   INIT_STRUCT(crusherdata_t, cd);
+   cd.flags = CDF_HAVESPAC;
+   cd.damage = instance->args[3];
+   cd.speed_value = instance->args[1] * (FRACUNIT / 8);
+   cd.upspeed = instance->args[2] * (FRACUNIT / 8);
+   cd.speed_type = SpeedParam;
+   cd.spac = instance->spac;
+   cd.type = paramHexenCrushRaiseStay;
+   cd.crushmode = static_cast<crushmode_e>(instance->args[4]);
+   cd.ground_dist = 8 * FRACUNIT;
+   return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingCrushAndRaiseA
+//
+// Implements Ceiling_CrushAndRaiseA(tag, dspeed, uspeed, crush, crushmode)
+// * ExtraData: 439
+// * Hexen:     196
+//
+DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaiseA)
+{
+   INIT_STRUCT(crusherdata_t, cd);
+   cd.flags = CDF_HAVESPAC;
+   cd.damage = instance->args[3];
+   cd.speed_value = instance->args[1] * (FRACUNIT / 8);
+   cd.upspeed = instance->args[2] * (FRACUNIT / 8);
+   cd.speed_type = SpeedParam;
+   cd.spac = instance->spac;
+   cd.type = paramHexenCrush;
+   cd.crushmode = static_cast<crushmode_e>(instance->args[4]);
+   cd.ground_dist = 8 * FRACUNIT;
+   return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingCrushAndRaiseSilentA
+//
+// Implements Ceiling_CrushAndRaiseSilentA(tag, dspeed, uspeed, crush, crushmode)
+// * ExtraData: 440
+// * Hexen:     197
+//
+DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaiseSilentA)
+{
+   INIT_STRUCT(crusherdata_t, cd);
+   cd.flags = CDF_HAVESPAC | CDF_PARAMSILENT;
+   cd.damage = instance->args[3];
+   cd.speed_value = instance->args[1] * (FRACUNIT / 8);
+   cd.upspeed = instance->args[2] * (FRACUNIT / 8);
+   cd.speed_type = SpeedParam;
+   cd.spac = instance->spac;
+   cd.type = paramHexenCrush;
+   cd.crushmode = static_cast<crushmode_e>(instance->args[4]);
+   cd.ground_dist = 8 * FRACUNIT;
+   return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingCrushAndRaiseSilentDist
+//
+// Implements Ceiling_CrushAndRaiseSilentDist(tag, dist, speed, damage, crushmode)
+// * ExtraData: 441
+// * Hexen:     104
+//
+DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaiseSilentDist)
+{
+   INIT_STRUCT(crusherdata_t, cd);
+   cd.flags = CDF_HAVESPAC | CDF_PARAMSILENT;
+   cd.damage = instance->args[3];
+   cd.speed_value = instance->args[2] * (FRACUNIT / 8);
+   cd.upspeed = cd.speed_value;  // Same speed as down-speed here.
+   cd.speed_type = SpeedParam;
+   cd.spac = instance->spac;
+   cd.type = paramHexenCrush;
+   cd.crushmode = static_cast<crushmode_e>(instance->args[4]);
+   cd.ground_dist = instance->args[1] * FRACUNIT;
+   return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamCeilingCrushRaiseAndStaySilA
+//
+// Implements Ceiling_CrushRaiseAndStaySilA(tag, dspeed, uspeed, crush, crushmode)
+// * ExtraData: 442
+// * Hexen:     255
+//
+DEFINE_ACTION(EV_ActionParamCeilingCrushRaiseAndStaySilA)
+{
+   INIT_STRUCT(crusherdata_t, cd);
+   cd.flags = CDF_HAVESPAC | CDF_PARAMSILENT;
+   cd.damage = instance->args[3];
+   cd.speed_value = instance->args[1] * (FRACUNIT / 8);
+   cd.upspeed = instance->args[2] * (FRACUNIT / 8);
+   cd.speed_type = SpeedParam;
+   cd.spac = instance->spac;
+   cd.type = paramHexenCrushRaiseStay;
+   cd.crushmode = static_cast<crushmode_e>(instance->args[4]);
+   cd.ground_dist = 8 * FRACUNIT;
+   return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamGenCrusher
+//
+// Implements Generic_Crusher(tag, dspeed, uspeed, silent, crush)
+// * ExtraData: 443
+// * Hexen:     205
+//
+DEFINE_ACTION(EV_ActionParamGenCrusher)
+{
+   INIT_STRUCT(crusherdata_t, cd);
+   cd.flags = CDF_HAVESPAC;
+   cd.damage = instance->args[4];
+   cd.speed_value = instance->args[1] * (FRACUNIT / 8);
+   cd.upspeed = instance->args[2] * (FRACUNIT / 8);
+   cd.speed_type = SpeedParam;
+   cd.spac = instance->spac;
+   cd.type = instance->args[3] ? genSilentCrusher : genCrusher;
+   cd.crushmode = crushmodeDoom; // FIXME: irrelevant for this cd->type
+   cd.ground_dist = 8 * FRACUNIT;
+   return EV_DoParamCrusher(instance->line, instance->tag, &cd);
+}
+
+//
+// EV_ActionParamTeleport
+//
+// Implements Teleport(tid, tag, reserved)
+// * ExtraData: 444
+// * Hexen:     70
+//
+DEFINE_ACTION(EV_ActionParamTeleport)
+{
+   return EV_ParamTeleport(instance->args[0], instance->args[1], 
+                           instance->side,    instance->actor);
+}
+
+//
+// EV_ActionParamTeleportNoFog
+//
+// Implements Teleport_NoFog(tid, useangle, tag, keepheight)
+// * ExtraData: 445
+// * Hexen:     71
+//
+DEFINE_ACTION(EV_ActionParamTeleportNoFog)
+{
+   teleparms_t parms;
+   switch(instance->args[1])
+   {
+      case 0:
+         parms.teleangle = teleangle_keep;      // hexen
+         break;
+      case 1:
+         parms.teleangle = teleangle_absolute;  // zdoom extension
+         break;
+      case 2:
+         parms.teleangle = teleangle_relative_boom;  // boom
+         break;
+      default:
+         parms.teleangle = teleangle_relative_correct;   // boom corrected
+         break;
+   }
+   parms.keepheight = instance->args[3] != 0;
+   return EV_ParamSilentTeleport(instance->args[0], instance->line,
+                                 instance->args[2], instance->side,
+                                 instance->actor, parms);
+}
+
+//
+// EV_ActionParamTeleportLine
+//
+// Implements Teleport_Line(reserved, destid, flip)
+// * ExtraData: 446
+// * Hexen:     215
+//
+DEFINE_ACTION(EV_ActionParamTeleportLine)
+{
+   // FIXME: too lazy to implement first parameter; UDMF and ExtraData already
+   // do it.
+   return EV_SilentLineTeleport(instance->line, instance->args[1],
+                                instance->side, instance->actor,
+                                instance->args[2] != 0);
+}
+
+//
+// Implements Exit_Normal(position)
+// * ExtraData: 447
+// * Hexen:     243
+//
+DEFINE_ACTION(EV_ActionParamExitNormal)
+{
+   Mobj *thing   = instance->actor;
+   int   destmap = 0;
+
+   // NOTE: this special has no exit tag level. Use Teleport_NewMap for that.
+
+   // TODO: exit position.
+
+   // killough 10/98: prevent zombies from exiting levels
+   if(!EV_isZombiePlayer(thing))
+   {
+      G_ExitLevel(destmap);
+      return 1;
+   }
+
+   return 0;
+}
+
+//
+// Implements Exit_Secret(position)
+// * ExtraData: 448
+// * Hexen:     244
+//
+DEFINE_ACTION(EV_ActionParamExitSecret)
+{
+   Mobj *thing   = instance->actor;
+   int   destmap = 0;
+
+   // NOTE: this special has no exit tag level. Use Teleport_NewMap for that.
+
+   // TODO: exit position.
+
+   // killough 10/98: prevent zombies from exiting levels
+   if(!EV_isZombiePlayer(thing))
+   {
+      G_SecretExitLevel(destmap);
+      return 1;
+   }
+
+   return 0;
+}
+
+//
+// Implements Teleport_NewMap(map, position, face)
+//
+// * ExtraData: 449
+// * Hexen:     74
+//
+DEFINE_ACTION(EV_ActionTeleportNewMap)
+{
+   // Vanilla Hexen only accepts from the front side
+   if(P_LevelIsVanillaHexen() && instance->side)
+      return 0;
+
+   // TODO: don't allow dead players to trigger this special if either the game
+   // mode info, map info says so. Or probably, if there are hubs.
+
+   // Zombie players can't trigger exits
+   if(EV_isZombiePlayer(instance->actor))
+      return 0;
+
+   G_ExitLevel(instance->args[0]);
+
+   // TODO: the other arguments (position, face)
+
+   return 1;
 }
 
 // EOF

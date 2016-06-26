@@ -2636,6 +2636,8 @@ void BloodSpawner::spawn(bloodaction_e action) const
       break;
    case BLOODTYPE_CUSTOM: // TODO: define spawning routine via Aeon
       break;
+   default: // invalid
+      break;
    }
 }
 

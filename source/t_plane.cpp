@@ -271,8 +271,10 @@ result_e T_MoveFloorUp(sector_t *sector, fixed_t speed, fixed_t dest, int crush)
 // T_MoveCeilingDown
 //
 // Handle a ceiling plane moving downward.
+// ioanch 20160305: added crushrest parameter 
 //
-result_e T_MoveCeilingDown(sector_t *sector, fixed_t speed, fixed_t dest, int crush)
+result_e T_MoveCeilingDown(sector_t *sector, fixed_t speed, fixed_t dest,
+                           int crush, bool crushrest)
 {
    fixed_t destheight;
    fixed_t lastpos;
@@ -363,7 +365,8 @@ result_e T_MoveCeilingDown(sector_t *sector, fixed_t speed, fixed_t dest, int cr
          // haleyjd 07/23/05: crush no longer boolean
          // Note: to make crushers that stop at heads, fail to
          // return crush here even when crush is positive.
-         if(crush > 0)
+         // ioanch 20160305: do so if crushrest is true
+         if(!crushrest && crush > 0)
             return crushed;
 
          P_SetCeilingHeight(sector, lastpos);
