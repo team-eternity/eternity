@@ -34,6 +34,7 @@
 #include "m_collection.h"
 #include "m_compare.h"
 #include "m_ctype.h"
+#include "m_qstr.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "r_data.h"
@@ -108,7 +109,7 @@ struct UDMFLinedef
 
    // new to Eternity
    double alpha;
-   const char *renderstyle;
+   qstring renderstyle;
 
    UDMFLinedef &makeDefault()
    {
@@ -249,9 +250,9 @@ struct UDMFSidedef
       BASE, Sector, NUM
    };
    byte checklist[NUM - 1];
-   const char *texturetop;
-   const char *texturebottom;
-   const char *texturemiddle;
+   qstring texturetop;
+   qstring texturebottom;
+   qstring texturemiddle;
    int offsetx;
    int offsety;
    int sector;
@@ -328,7 +329,7 @@ struct UDMFSector
    };
 
    byte checklist[NUM - 1];
-   const char *texturefloor, *textureceiling;
+   qstring texturefloor, textureceiling;
    int heightfloor, heightceiling;
    int lightlevel;
    int special, id;
@@ -340,13 +341,13 @@ struct UDMFSector
    // TODO: damage leaky suit
 
    uint32_t flags;
-   const char *floorterrain;
-   const char *ceilingterrain;
+   qstring floorterrain;
+   qstring ceilingterrain;
    double rotationfloor, rotationceiling;
    double xpanningfloor, ypanningfloor, xpanningceiling, ypanningceiling;
-   const char *colormaptop, *colormapmid, *colormapbottom;
+   qstring colormaptop, colormapmid, colormapbottom;
    double alphafloor, alphaceiling;
-   const char *renderstylefloor, *renderstyleceiling;
+   qstring renderstylefloor, renderstyleceiling;
 
    UDMFSector &makeDefault()
    {
@@ -720,8 +721,8 @@ void E_LoadUDMFSectors()
    {
       s->floorheight = us.heightfloor << FRACBITS;
       s->ceilingheight = us.heightceiling << FRACBITS;
-      s->floorpic = R_FindFlat(us.texturefloor);
-      P_SetSectorCeilingPic(s, R_FindFlat(us.textureceiling));
+      s->floorpic = R_FindFlat(us.texturefloor.constPtr());
+      P_SetSectorCeilingPic(s, R_FindFlat(us.textureceiling.constPtr()));
       s->lightlevel = us.lightlevel;
       s->special = us.special;
       s->tag = us.id;
@@ -787,9 +788,9 @@ void E_LoadUDMFLineDefs()
          if(uld.flags & 1 << UDMFLinedefFlag_FirstSideOnly)
             ld->extflags |= EX_ML_1SONLY;
          ld->alpha = eclamp(static_cast<float>(uld.alpha), 0.f, 1.f);
-         if(!strcasecmp(uld.renderstyle, "add"))
+         if(!uld.renderstyle.strCaseCmp("add"))
             ld->extflags |= EX_ML_ADDITIVE;
-         else if(strcasecmp(uld.renderstyle, "translucent"))
+         else if(uld.renderstyle.strCaseCmp("translucent"))
          {
             psnprintf(gLevelErrorBuffer, sizeof(gLevelErrorBuffer), 
                "Linedef %d unknown renderstyle '%s'", (int)(ld - ::lines), 
@@ -900,9 +901,9 @@ void E_LoadUDMFSideDefs2()
       sd->textureoffset = usd.offsetx << FRACBITS;
       sd->rowoffset = usd.offsety << FRACBITS;
 
-      topTexture = usd.texturetop;
-      bottomTexture = usd.texturebottom;
-      midTexture = usd.texturemiddle;
+      topTexture = usd.texturetop.constPtr();
+      bottomTexture = usd.texturebottom.constPtr();
+      midTexture = usd.texturemiddle.constPtr();
 
       secnum = usd.sector;
 
@@ -1336,7 +1337,7 @@ void UDMFParser::handleLocalAssignment() const
          }
          break;
       case UDMFTokenType_String:
-         *reinterpret_cast<const char **>(mCurrentNewItem + binding->offset) =
+         *reinterpret_cast<qstring *>(mCurrentNewItem + binding->offset) =
             mLocalValue.data;
          break;
       default:
