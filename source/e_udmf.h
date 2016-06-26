@@ -46,12 +46,10 @@ enum UDMFNamespace
 };
 
 //
-// PostEditingLumpNums
-//
 // This contains the post-editing lump addresses, needed because they're not in
 // fixed position in UDMF.
 //
-struct MapGenLumpAddresses
+struct maplumpindex_t
 {
    int segs;
    int ssectors;
@@ -59,18 +57,6 @@ struct MapGenLumpAddresses
    int reject;
    int blockmap;
    int behavior;
-
-   //
-   // completeForDoom
-   //
-   // True if all but the behaviour lump are found. The behaviour lump is not
-   // required for Doom.
-   //
-   bool completeForDoom() const
-   {
-      return segs >= 0 && ssectors >= 0 && nodes >= 0
-         && reject >= 0 && blockmap >= 0;
-   }
 };
 
 extern UDMFNamespace gUDMFNamespace;

@@ -45,10 +45,10 @@ enum
 
 class WadDirectory;
 // IOANCH 20151213: modify P_CheckLevel to support one extra parameter
-struct MapGenLumpAddresses;
+struct maplumpindex_t;
  // haleyjd: now used in d_main.c
 int P_CheckLevel(WadDirectory *dir, int lumpnum, 
-                 MapGenLumpAddresses *mgla = nullptr, bool *udmf = nullptr);
+                 maplumpindex_t *mgla = nullptr, bool *udmf = nullptr);
 int P_CheckLevelName(WadDirectory *dir, const char *mapname);
 int P_CheckLevelMapNum(WadDirectory *dir, int mapnum);
 

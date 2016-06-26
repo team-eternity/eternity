@@ -2730,7 +2730,7 @@ static int P_checkConsoleFormat(WadDirectory *dir, int lumpnum)
 // the MAPxy or ExMy standard previously imposed.
 // IOANCH 20151213: added MGLA, optional parameter to assign values to.
 //
-int P_CheckLevel(WadDirectory *dir, int lumpnum, MapGenLumpAddresses *mgla,
+int P_CheckLevel(WadDirectory *dir, int lumpnum, maplumpindex_t *mgla,
                  bool *udmf)
 {
    int          numlumps = dir->getNumLumps();
@@ -3129,7 +3129,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    }
 
    // IOANCH 20151213: udmf
-   MapGenLumpAddresses mgla;  // will be set by P_CheckLevel
+   maplumpindex_t mgla;  // will be set by P_CheckLevel
    bool isUdmf = false;
 
    // determine map format; if invalid, abort
