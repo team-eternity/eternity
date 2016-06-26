@@ -846,7 +846,8 @@ public:
 // Helper function to add a path to a collection, from a base.
 //
 static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
-                           const char *subpath, Collection<qstring> &prevPaths)
+                           const char *subpath, Collection<qstring> &prevPaths,
+                           int depth)
 {
    qstring path(base);
    path.pathConcatenate(subpath);
@@ -856,7 +857,7 @@ static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
       return;
 
    // Prevent repeated visits to the same paths due to symbolic links and the
-   // like
+   // like, if possible
    qstring real;
    I_GetRealPath(path.constPtr(), real);
    for(const qstring &prevPath : prevPaths)
@@ -881,9 +882,13 @@ static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
       {
          if(S_ISDIR(sbuf.st_mode)) // if it's a directory, recurse in it
          {
-            path = subpath;
-            path.pathConcatenate(ent->d_name);
-            W_recurseFiles(paths, base, path.constPtr(), prevPaths);
+            if(depth == 0)
+            {
+               // do not go deeper than one directory.
+               path = subpath;
+               path.pathConcatenate(ent->d_name);
+               W_recurseFiles(paths, base, path.constPtr(), prevPaths, depth + 1);
+            }
          }
          else
          {
@@ -921,7 +926,7 @@ bool WadDirectory::addDirectoryAsArchive(openwad_t &openData,
    paths.setPrototype(&proto);
 
    Collection<qstring> prevPaths;
-   W_recurseFiles(paths, openData.filename, "", prevPaths);
+   W_recurseFiles(paths, openData.filename, "", prevPaths, 0);
 
    if(!paths.isEmpty())
    {
