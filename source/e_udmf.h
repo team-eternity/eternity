@@ -28,22 +28,11 @@
 #ifndef E_ARGS_H_
 #define E_ARGS_H_
 
-class WadDirectory;
+#include "m_collection.h"
+#include "m_fixed.h"
+#include "m_qstr.h"
 
-//
-// UDMFNamespace
-//
-// UDMF namespace selection
-//
-enum UDMFNamespace
-{
-   unsINVALID,
-   unsDoom,
-   unsHeretic,
-   unsHexen,
-   unsStrife,
-   unsEternity,
-};
+class WadDirectory;
 
 //
 // This contains the post-editing lump addresses, needed because they're not in
@@ -59,129 +48,187 @@ struct maplumpindex_t
    int behavior;
 };
 
-extern UDMFNamespace gUDMFNamespace;
+//==============================================================================
 
-///////////////////////////////////////////////////////////////////////////////
-
-//
-// UDMFTokenType
-//
-// For parsing. Used by entities here and in the cpp
-//
-enum UDMFTokenType
-{
-   UDMFTokenType_Identifier,
-   UDMFTokenType_Operator,
-   UDMFTokenType_String,
-   UDMFTokenType_Number,
-};
-
-//
-// UDMFParser
-//
-// The class that reads from the TEXTMAP lump and populates the collections
-// accordingly. Has a destructor that makes empty these collections.
-//
 class UDMFParser : public ZoneObject
 {
 public:
-   void start(WadDirectory &setupwad, int lump);
-   ~UDMFParser();
+   
+   UDMFParser()
+   {
+      static USector sector;
+      mSectors.setPrototype(&sector);
+      static USidedef sidedef;
+      mSidedefs.setPrototype(&sidedef);
+   }
+
+   void loadVertices() const;
+   void loadSectors() const;
+   void loadSidedefs() const;
+   bool loadLinedefs();
+   bool loadSidedefs2();
+   bool loadThings();
+
+   bool parse(WadDirectory &setupwad, int lump);
+
+   qstring error() const;
+   int line() const { return mLine; }
+   int column() const { return mColumn; }
 
 private:
 
-   //
-   // Token
-   //
-   // For parsing
-   //
-   struct Token
-   {
-      char *data;
-      size_t size;
-      UDMFTokenType type;
-      double number;
-   };
-
-   //
-   // Tokenizer
-   //
-   // Does the actual extraction
-   //
-   class Tokenizer : public ZoneObject
+   class Token
    {
    public:
-      Tokenizer() : mData(nullptr), mEnd(nullptr), mLineStart(nullptr), 
-         mLine(1)
+      enum type_e
       {
+         type_Keyword,
+         type_Number,
+         type_String,
+         type_Symbol
+      };
+
+      type_e type;
+      double number;
+      qstring text;
+      char symbol;
+
+      Token()
+      {
+         clear();
       }
 
-      Tokenizer(char *data, size_t size)
+      void clear()
       {
-         setData(data, size);
+         type = type_Keyword;
+         number = 0;
+         text.clear();
+         symbol = 0;
       }
-
-      //
-      // setData
-      //
-      // Sets the data (doesn't own it)
-      //
-      void setData(char *data, size_t size)
-      {
-         mData = data;
-         mEnd = data + size;
-         mLineStart = data;
-         mLine = 1;
-      }
-
-      //
-      // nextLine
-      //
-      // Call this whenever the cursor encounters a newline. It will increment
-      // the line number and set the line start to the character after the
-      // newline.
-      //
-      void nextLine()
-      {
-         ++mLine;
-         mLineStart = mData + 1;
-      }
-
-      bool readToken(Token &token);
-      
-      void raise(const char *message) const;
-
-   private:
-      char *mData;            // pointer to cursor in document
-      const char *mEnd;       // end of document
-      const char *mLineStart; // pointer to start of current line
-      int mLine;              // line number (1-based)
    };
 
-   void handleGlobalAssignment() const;
-   void handleNewBlock();
-   void handleLocalAssignment() const;
-   void checkLastBlock() const;
+   enum readresult_e
+   {
+      result_Assignment,
+      result_BlockEntry,
+      result_BlockExit,
+      result_Eof,
+      result_Error
+   };
 
-   Tokenizer mTokenizer;
+   // NOTE: some of these are classes because they contain non-POD objects (e.g.
+   // qstring
 
-   const char *mGlobalKey;
-   Token mGlobalValue;
+   struct ulinedef_t
+   {
+      int identifier;
+      int v1, v2;
 
-   const char *mLocalKey;
-   Token mLocalValue;
+      bool blocking, blockmonsters, twosided, dontpegtop, dontpegbottom, secret,
+      blocksound, dontdraw, mapped;
 
-   byte *mCurrentNewItem;
-   size_t mCurrentChecklistSize;
-   const void *mCurrentBinding;
+      bool passuse;
+      bool translucent, jumpover, blockfloaters;
+
+      bool playercross, playeruse, monstercross, monsteruse, impact, playerpush,
+      monsterpush, missilecross, repeatspecial;
+
+      int special, arg[5];
+      int sidefront, sideback;
+
+      bool v1set, v2set, sfrontset;
+      int errorline;
+   };
+
+   class USidedef
+   {
+   public:
+      int offsetx = 0;
+      int offsety = 0;
+
+      qstring texturetop;
+      qstring texturebottom;
+      qstring texturemiddle;
+
+      int sector = 0;
+
+      bool sset = false;
+
+      int errorline = 0;
+   };
+
+   struct uvertex_t
+   {
+      fixed_t x, y;
+      bool xset, yset;
+   };
+
+   class USector
+   {
+   public:
+      int heightfloor = 0;
+      int heightceiling = 0;
+      qstring texturefloor;
+      qstring textureceiling;
+      int lightlevel = 160;
+      int special = 0;
+      int identifier = 0;
+
+      bool tfloorset = false, tceilset = false;
+   };
+
+   struct uthing_t
+   {
+      int identifier;
+      fixed_t x, y;
+      fixed_t height;
+      int angle;
+      int type;
+      bool skill1, skill2, skill3, skill4, skill5, ambush, single, dm, coop;
+      bool friendly;
+      bool dormant, class1, class2, class3;
+      bool standing, strifeally, translucent, invisible;
+      int special, arg[5];
+
+      bool xset, yset, typeset;
+   };
+
+   void setData(const char *data);
+
+   void readFixed(const char *key, fixed_t &target) const;
+   void requireFixed(const char *key, fixed_t &target, bool &flagtarget) const;
+   void readInt(const char *key, int &target) const;
+   void requireInt(const char *key, int &target, bool &flagtarget) const;
+   void readString(const char *key, qstring &target) const;
+   void requireString(const char *key, qstring &target, bool &flagtarget) const;
+   void readBool(const char *key, bool &target) const;
+
+   readresult_e readItem();
+
+   bool next(Token &token);
+   void addPos(int amount);
+
+   bool eof() const { return mPos == mData.length(); }
+
+   qstring mData;
+   size_t mPos = 0;
+   int mLine = 1; // for locating errors. 1-based
+   int mColumn = 1;
+   qstring mError;
+
+   qstring mKey;
+   Token mValue;
+   bool mInBlock = false;
+   qstring mBlockName;
+
+   // Game stuff
+   qstring mNamespace;
+   PODCollection<ulinedef_t> mLinedefs;
+   Collection<USidedef> mSidedefs;
+   PODCollection<uvertex_t> mVertices;
+   Collection<USector> mSectors;
+   PODCollection<uthing_t> mThings;
 };
-
-void E_LoadUDMFLineDefs();
-void E_LoadUDMFSideDefs();
-void E_LoadUDMFSideDefs2();
-void E_LoadUDMFVertices();
-void E_LoadUDMFSectors();
-void E_LoadUDMFThings();
 
 #endif
 

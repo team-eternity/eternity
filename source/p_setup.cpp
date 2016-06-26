@@ -3168,16 +3168,18 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    UDMFParser udmf;  // prepare UDMF processor
    if(isUdmf)
    {
-      udmf.start(*setupwad, lumpnum + 1);
-      // TODO: also check namespace
-      CHECK_ERROR();
+      if(!udmf.parse(*setupwad, lumpnum + 1))
+      {
+         P_SetupLevelError(udmf.error().constPtr(), mapname);
+         return;
+      }
    }
    
    if(isUdmf)
    {
       // IOANCH 20151212: UDMF
-      E_LoadUDMFVertices();
-      E_LoadUDMFSectors();
+      udmf.loadVertices();
+      udmf.loadSectors();
    }
    else switch(LevelInfo.mapFormat)
    {
@@ -3199,14 +3201,20 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    // IOANCH 20151212: UDMF
    if(isUdmf)
-      E_LoadUDMFSideDefs();
+      udmf.loadSidedefs();
    else
       P_LoadSideDefs(lumpnum + ML_SIDEDEFS); // killough 4/4/98
 
    // haleyjd 10/03/05: handle multiple map formats
    // IOANCH 20151212: UDMF
    if(isUdmf)
-      E_LoadUDMFLineDefs();
+   {
+      if(!udmf.loadLinedefs())
+      {
+         P_SetupLevelError(udmf.error().constPtr(), mapname);
+         return;
+      }
+   }
    else switch(LevelInfo.mapFormat)
    {
    case LEVEL_FORMAT_DOOM:
@@ -3220,7 +3228,13 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    // IOANCH 20151213: udmf
    if(isUdmf)
-      E_LoadUDMFSideDefs2();
+   {
+      if(!udmf.loadSidedefs2())
+      {
+         P_SetupLevelError(udmf.error().constPtr(), mapname);
+         return;
+      }
+   }
    else
       P_LoadSideDefs2(lumpnum + ML_SIDEDEFS);
    
@@ -3290,8 +3304,14 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    // haleyjd 10/03/05: handle multiple map formats
    // IOANCH 20151214: UDMF things
    if(isUdmf)
-      E_LoadUDMFThings();
-   switch(LevelInfo.mapFormat)
+   {
+      if(!udmf.loadThings())
+      {
+         P_SetupLevelError(udmf.error().constPtr(), mapname);
+         return;
+      }
+   }
+   else switch(LevelInfo.mapFormat)
    {
    case LEVEL_FORMAT_DOOM:
    case LEVEL_FORMAT_PSX:

@@ -29,11 +29,7 @@
 
 #include "doomstat.h"
 #include "e_exdata.h"
-#include "e_hash.h"
 #include "e_udmf.h"
-#include "m_collection.h"
-#include "m_compare.h"
-#include "m_ctype.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "r_data.h"
@@ -42,1593 +38,802 @@
 #include "w_wad.h"
 #include "z_auto.h"
 
-// FIXME: why is this not in a header?
-extern const char *level_error;
-
-// UDMF namespace, one of a few choices
-UDMFNamespace gUDMFNamespace;
-
-// A convenient buffer to point level_error to
-static char gLevelErrorBuffer[256];
-
-// Supported namespace strings
-static const char kDoomNamespace[] = "doom";
-static const char kHereticNamespace[] = "heretic";
-static const char kHexenNamespace[] = "hexen";
-static const char kStrifeNamespace[] = "doom";
-static const char kEternityNamespace[] = "eternity";  // TENTATIVE
+//==============================================================================
+//
+// Collecting and processing
+//
+//==============================================================================
 
 //
-// Unprocessed UDMF structures
+// Reads the raw vertices and obtains final ones
 //
-
-struct UDMFBinding
+void UDMFParser::loadVertices() const
 {
-   const char *name;    // name
-
-   UDMFTokenType type;  // type: number, string or identifier (true/false)
-   size_t offset;       // offsetof struct
-
-   // Extra paramter. For numbers, 1=double, 0=int
-   // For strings, it's max string length
-   // For identifiers (true/false), it's flag bit#
-   int extra;
-
-   int checkIndex;   // index to mark in the checklist. 1-based!
-
-   // hash list link: keep it last so it doesn't have to be mentioned
-   DLListItem<UDMFBinding> link;
-};
-
-//
-// NOTE: each UDMF object STARTS with a checklist byte array of n elements,
-// where n is the number of required fields
-//
-
-struct UDMFLinedef
-{
-   enum
+   numvertexes = (int)mVertices.getLength();
+   vertexes = estructalloctag(vertex_t, numvertexes, PU_LEVEL);
+   for(int i = 0; i < numvertexes; i++)
    {
-      BASE, V1, V2, Sidefront, NUM
-   };
-
-   byte checklist[NUM - 1];
-   int id;
-   int v1;
-   int v2;
-   uint32_t flags;
-   int special;
-   int arg0;
-   int arg1;
-   int arg2;
-   int arg3;
-   int arg4;
-   int sidefront;
-   int sideback;
-
-   // new to Eternity
-   double alpha;
-   const char *renderstyle;
-
-   UDMFLinedef &makeDefault()
-   {
-      memset(checklist, 0, sizeof(checklist));
-      id = gUDMFNamespace == unsDoom || gUDMFNamespace == unsHeretic
-         || gUDMFNamespace == unsStrife ? 0 : -1;
-      v1 = -1;
-      v2 = -1;
-      flags = 0;
-      special = 0;
-      arg0 = 0;
-      arg1 = 0;
-      arg2 = 0;
-      arg3 = 0;
-      arg4 = 0;
-      sidefront = -1;
-      sideback = -1;
-      alpha = 1;
-      renderstyle = "translucent";
-      return *this;
-   }
-};
-
-enum UDMFLinedefFlag
-{
-   UDMFLinedefFlag_Blocking,
-   UDMFLinedefFlag_Blockmonsters,
-   UDMFLinedefFlag_Twosided,
-   UDMFLinedefFlag_Dontpegtop,
-   UDMFLinedefFlag_Dontpegbottom,
-   UDMFLinedefFlag_Secret,
-   UDMFLinedefFlag_Blocksound,
-   UDMFLinedefFlag_Dontdraw,
-   UDMFLinedefFlag_Mapped,
-   UDMFLinedefFlag_Passuse,
-   UDMFLinedefFlag_Translucent,
-   UDMFLinedefFlag_Jumpover,
-   UDMFLinedefFlag_Blockfloaters,
-   UDMFLinedefFlag_Playercross,
-   UDMFLinedefFlag_Playeruse,
-   UDMFLinedefFlag_Monstercross,
-   UDMFLinedefFlag_Monsteruse,
-   UDMFLinedefFlag_Impact,
-   UDMFLinedefFlag_Playerpush,
-   UDMFLinedefFlag_Monsterpush,
-   UDMFLinedefFlag_Missilecross,
-   UDMFLinedefFlag_Repeatspecial,
-
-   // new to Eternity
-   UDMFLinedefFlag_MidTex3D,
-   UDMFLinedefFlag_FirstSideOnly,
-   UDMFLinedefFlag_BlockEverything,
-   UDMFLinedefFlag_ZoneBoundary,
-   UDMFLinedefFlag_ClipMidTex,
-};
-
-static UDMFBinding kLinedefBindings[] =
-{
-   { "id", UDMFTokenType_Number, offsetof(UDMFLinedef, id), 0 },
-   { "v1", UDMFTokenType_Number, offsetof(UDMFLinedef, v1), 0, UDMFLinedef::V1 },
-   { "v2", UDMFTokenType_Number, offsetof(UDMFLinedef, v2), 0, UDMFLinedef::V2 },
-   { "blocking", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
-      UDMFLinedefFlag_Blocking },
-   { "blockmonsters", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
-      UDMFLinedefFlag_Blockmonsters },
-   { "twosided", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
-      UDMFLinedefFlag_Twosided },
-   { "dontpegtop", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
-      UDMFLinedefFlag_Dontpegtop },
-   { "dontpegbottom", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
-      UDMFLinedefFlag_Dontpegbottom },
-   { "secret", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
-      UDMFLinedefFlag_Secret },
-   { "blocksound", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
-      UDMFLinedefFlag_Blocksound },
-   { "dontdraw", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
-      UDMFLinedefFlag_Dontdraw },
-   { "mapped", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
-      UDMFLinedefFlag_Mapped },
-   { "passuse", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
-      UDMFLinedefFlag_Passuse },
-   { "translucent", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
-      UDMFLinedefFlag_Translucent },
-   { "jumpover", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
-      UDMFLinedefFlag_Jumpover },
-   { "blockfloaters", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
-      UDMFLinedefFlag_Blockfloaters },
-   { "playercross", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
-      UDMFLinedefFlag_Playercross },
-   { "playeruse", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
-      UDMFLinedefFlag_Playeruse },
-   { "monstercross", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
-      UDMFLinedefFlag_Monstercross },
-   { "monsteruse", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
-      UDMFLinedefFlag_Monsteruse },
-   { "impact", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
-      UDMFLinedefFlag_Impact },
-   { "playerpush", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
-      UDMFLinedefFlag_Playerpush },
-   { "monsterpush", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
-      UDMFLinedefFlag_Monsterpush },
-   { "missilecross", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
-      UDMFLinedefFlag_Missilecross },
-   { "repeatspecial", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
-      UDMFLinedefFlag_Repeatspecial },
-   { "special", UDMFTokenType_Number, offsetof(UDMFLinedef, special), 0 },
-   { "arg0", UDMFTokenType_Number, offsetof(UDMFLinedef, arg0), 0 },
-   { "arg1", UDMFTokenType_Number, offsetof(UDMFLinedef, arg1), 0 },
-   { "arg2", UDMFTokenType_Number, offsetof(UDMFLinedef, arg2), 0 },
-   { "arg3", UDMFTokenType_Number, offsetof(UDMFLinedef, arg3), 0 },
-   { "arg4", UDMFTokenType_Number, offsetof(UDMFLinedef, arg4), 0 },
-   { "sidefront", UDMFTokenType_Number, offsetof(UDMFLinedef, sidefront), 0, 
-      UDMFLinedef::Sidefront },
-   { "sideback", UDMFTokenType_Number, offsetof(UDMFLinedef, sideback), 0 },
-
-   // new to Eternity
-   { "midtex3d", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags), 
-      UDMFLinedefFlag_MidTex3D },
-   { "firstsideonly", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
-      UDMFLinedefFlag_FirstSideOnly },
-   { "alpha", UDMFTokenType_Number, offsetof(UDMFLinedef, alpha), 1 },
-   { "renderstyle", UDMFTokenType_String, offsetof(UDMFLinedef, renderstyle) },
-   { "blockeverything", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
-      UDMFLinedefFlag_BlockEverything },
-   { "zoneboundary", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
-      UDMFLinedefFlag_ZoneBoundary },
-   { "clipmidtex", UDMFTokenType_Identifier, offsetof(UDMFLinedef, flags),
-      UDMFLinedefFlag_ClipMidTex },
-};
-
-static EHashTable<UDMFBinding, ENCStringHashKey,
-&UDMFBinding::name, &UDMFBinding::link> gLinedefBindings;
-
-struct UDMFSidedef
-{
-   enum
-   {
-      BASE, Sector, NUM
-   };
-   byte checklist[NUM - 1];
-   const char *texturetop;
-   const char *texturebottom;
-   const char *texturemiddle;
-   int offsetx;
-   int offsety;
-   int sector;
-
-   UDMFSidedef &makeDefault()
-   {
-      memset(checklist, 0, sizeof(checklist));
-      texturetop = "-";
-      texturebottom = "-";
-      texturemiddle = "-";
-      offsetx = offsety = 0;
-      sector = -1;
-
-      return *this;
-   }
-};
-
-static UDMFBinding kSidedefBindings[] =
-{
-   { "texturetop", UDMFTokenType_String, 
-      offsetof(UDMFSidedef, texturetop) },
-
-   { "texturebottom", UDMFTokenType_String,
-      offsetof(UDMFSidedef, texturebottom) },
-
-   { "texturemiddle", UDMFTokenType_String,
-      offsetof(UDMFSidedef, texturemiddle) },
-
-   { "offsetx", UDMFTokenType_Number,
-      offsetof(UDMFSidedef, offsetx), 0 },
-
-   { "offsety", UDMFTokenType_Number,
-      offsetof(UDMFSidedef, offsety), 0 },
-
-   { "sector", UDMFTokenType_Number,
-      offsetof(UDMFSidedef, sector), 0, UDMFSidedef::Sector },
-};
-
-static EHashTable<UDMFBinding, ENCStringHashKey,
-&UDMFBinding::name, &UDMFBinding::link> gSidedefBindings;
-
-struct UDMFVertex
-{
-   enum
-   {
-      BASE, X, Y, NUM
-   };
-
-   byte checklist[NUM - 1];
-   double x, y;
-
-   UDMFVertex &makeDefault()
-   {
-      memset(checklist, 0, sizeof(checklist));
-      x = y = 0;
-      return *this;
-   }
-};
-
-static UDMFBinding kVertexBindings[] =
-{
-   { "x", UDMFTokenType_Number, offsetof(UDMFVertex, x), 1, UDMFVertex::X },
-   { "y", UDMFTokenType_Number, offsetof(UDMFVertex, y), 1, UDMFVertex::Y },
-};
-
-static EHashTable<UDMFBinding, ENCStringHashKey,
-&UDMFBinding::name, &UDMFBinding::link> gVertexBindings;
-
-struct UDMFSector
-{
-   enum
-   {
-      BASE, Texturefloor, Textureceiling, NUM,
-   };
-
-   byte checklist[NUM - 1];
-   const char *texturefloor, *textureceiling;
-   int heightfloor, heightceiling;
-   int lightlevel;
-   int special, id;
-
-   // new to Eternity
-   int damageamount;
-   int damageinterval;
-
-   // TODO: damage leaky suit
-
-   uint32_t flags;
-   const char *floorterrain;
-   const char *ceilingterrain;
-   double rotationfloor, rotationceiling;
-   double xpanningfloor, ypanningfloor, xpanningceiling, ypanningceiling;
-   const char *colormaptop, *colormapmid, *colormapbottom;
-   double alphafloor, alphaceiling;
-   const char *renderstylefloor, *renderstyleceiling;
-
-   UDMFSector &makeDefault()
-   {
-      memset(checklist, 0, sizeof(checklist));
-      texturefloor = "";
-      textureceiling = "";
-      heightfloor = heightceiling = 0;
-      lightlevel = 160;
-      special = id = 0;
-
-      // new to Eternity
-      damageamount = 0;
-      damageinterval = 0;
-
-      flags = 0;
-      floorterrain = "@flat";
-      ceilingterrain = "@flat";
-
-      rotationfloor = rotationceiling = 0;
-      xpanningfloor = ypanningfloor = xpanningceiling = ypanningceiling = 0;
-
-      colormapbottom = colormapmid = colormaptop = "@default";
-
-      alphafloor = alphaceiling = 1;
-      renderstylefloor = renderstyleceiling = "translucent";
-
-      return *this;
-   }
-};
-
-enum UDMFSectorFlag
-{
-   UDMFSectorFlag_Damage_EndGodMode,
-   UDMFSectorFlag_Damage_ExitLevel,
-   UDMFSectorFlag_DamageTerrainEffect,
-   UDMFSectorFlag_PFloor_Disabled,
-   UDMFSectorFlag_PCeiling_Disabled,
-   UDMFSectorFlag_PFloor_NoRender,
-   UDMFSectorFlag_PCeiling_NoRender,
-   UDMFSectorFlag_PFloor_NoPass,
-   UDMFSectorFlag_PCeiling_NoPass,
-   UDMFSectorFlag_PFloor_BlockSound,
-   UDMFSectorFlag_PCeiling_BlockSound,
-};
-
-static UDMFBinding kSectorBindings[] =
-{
-   { "texturefloor", UDMFTokenType_String,
-      offsetof(UDMFSector, texturefloor), 0, UDMFSector::Texturefloor },
-
-   { "textureceiling", UDMFTokenType_String,
-      offsetof(UDMFSector, textureceiling), 0, UDMFSector::Textureceiling },
-
-   { "heightfloor", UDMFTokenType_Number,
-      offsetof(UDMFSector, heightfloor), 0 },
-
-   { "heightceiling", UDMFTokenType_Number,
-      offsetof(UDMFSector, heightceiling), 0 },
-
-   { "lightlevel", UDMFTokenType_Number,
-      offsetof(UDMFSector, lightlevel), 0 },
-
-   { "special", UDMFTokenType_Number,
-      offsetof(UDMFSector, special), 0 },
-
-   { "id", UDMFTokenType_Number,
-      offsetof(UDMFSector, id), 0 },
-
-   // new to Eternity
-   { "damageamount", UDMFTokenType_Number, 
-      offsetof(UDMFSector, damageamount), 0 },
-   { "damageinterval", UDMFTokenType_Number,
-      offsetof(UDMFSector, damageinterval), 0 },
-   { "damage_endgodmode", UDMFTokenType_Identifier, 
-      offsetof(UDMFSector, flags), UDMFSectorFlag_Damage_EndGodMode },
-   { "damage_exitlevel", UDMFTokenType_Identifier,
-      offsetof(UDMFSector, flags), UDMFSectorFlag_Damage_ExitLevel },
-   { "damageterraineffect", UDMFTokenType_Identifier,
-      offsetof(UDMFSector, flags), UDMFSectorFlag_DamageTerrainEffect },
-   { "floorterrain", UDMFTokenType_String,
-      offsetof(UDMFSector, floorterrain) },
-   { "ceilingterrain", UDMFTokenType_String,
-      offsetof(UDMFSector, ceilingterrain) },
-   { "rotationfloor", UDMFTokenType_Number,
-      offsetof(UDMFSector, rotationfloor), 1 },
-   { "rotationceiling", UDMFTokenType_Number,
-      offsetof(UDMFSector, rotationceiling), 1 },
-   { "xpanningfloor", UDMFTokenType_Number,
-      offsetof(UDMFSector, xpanningfloor), 1 },
-   { "ypanningfloor", UDMFTokenType_Number,
-      offsetof(UDMFSector, ypanningfloor), 1 },
-   { "xpanningceiling", UDMFTokenType_Number,
-      offsetof(UDMFSector, xpanningceiling), 1 },
-   { "ypanningceiling", UDMFTokenType_Number,
-      offsetof(UDMFSector, ypanningceiling), 1 },
-   { "colormaptop", UDMFTokenType_String,
-      offsetof(UDMFSector, colormaptop) },
-   { "colormapmid", UDMFTokenType_String,
-      offsetof(UDMFSector, colormapmid) },
-   { "colormapbottom", UDMFTokenType_String,
-      offsetof(UDMFSector, colormapbottom) },
-   { "portalfloor_disabled", UDMFTokenType_Identifier,
-      offsetof(UDMFSector, flags), UDMFSectorFlag_PFloor_Disabled },
-   { "portalceiling_disabled", UDMFTokenType_Identifier,
-      offsetof(UDMFSector, flags), UDMFSectorFlag_PCeiling_Disabled },
-   { "portalfloor_norender", UDMFTokenType_Identifier,
-      offsetof(UDMFSector, flags), UDMFSectorFlag_PFloor_NoRender },
-   { "portalceiling_norender", UDMFTokenType_Identifier,
-      offsetof(UDMFSector, flags), UDMFSectorFlag_PCeiling_NoRender },
-   { "portalfloor_nopass", UDMFTokenType_Identifier,
-      offsetof(UDMFSector, flags), UDMFSectorFlag_PFloor_NoPass },
-   { "portalceiling_nopass", UDMFTokenType_Identifier,
-      offsetof(UDMFSector, flags), UDMFSectorFlag_PCeiling_NoPass },
-   { "portalfloor_blocksound", UDMFTokenType_Identifier,
-      offsetof(UDMFSector, flags), UDMFSectorFlag_PFloor_BlockSound },
-   { "portalceiling_blocksound", UDMFTokenType_Identifier,
-      offsetof(UDMFSector, flags), UDMFSectorFlag_PCeiling_BlockSound },
-   { "alphafloor", UDMFTokenType_Number,
-      offsetof(UDMFSector, alphafloor), 1 },
-   { "alphaceiling", UDMFTokenType_Number,
-      offsetof(UDMFSector, alphaceiling), 1 },
-   { "renderstylefloor", UDMFTokenType_String,
-      offsetof(UDMFSector, renderstylefloor) },
-   { "renderstyleceiling", UDMFTokenType_String,
-      offsetof(UDMFSector, renderstyleceiling) },
-};
-
-static EHashTable<UDMFBinding, ENCStringHashKey,
-&UDMFBinding::name, &UDMFBinding::link> gSectorBindings;
-
-struct UDMFThing
-{
-   enum
-   {
-      BASE, X, Y, Type, NUM
-   };
-
-   byte checklist[NUM - 1];
-   double x, y, height;
-   uint32_t flags;
-   int id;
-   int angle;
-   int type;
-   int special;
-   int arg0, arg1, arg2, arg3, arg4;
-
-   UDMFThing &makeDefault()
-   {
-      memset(checklist, 0, sizeof(checklist));
-      x = y = height = 0;
-      flags = 0;
-      id = angle = type = special = arg0 = arg1 = arg2 = arg3 = arg4 = 0;
-      return *this;
-   }
-};
-
-enum UDMFThingFlag
-{
-   UDMFThingFlag_Skill1,
-   UDMFThingFlag_Skill2,
-   UDMFThingFlag_Skill3,
-   UDMFThingFlag_Skill4,
-   UDMFThingFlag_Skill5,
-   UDMFThingFlag_Ambush,
-   UDMFThingFlag_Single,
-   UDMFThingFlag_DM,
-   UDMFThingFlag_Coop,
-   UDMFThingFlag_Friend,
-   UDMFThingFlag_Dormant,
-   UDMFThingFlag_Class1,
-   UDMFThingFlag_Class2,
-   UDMFThingFlag_Class3,
-   UDMFThingFlag_Standing,
-   UDMFThingFlag_Strifeally,
-   UDMFThingFlag_Translucent,
-   UDMFThingFlag_Invisible,
-};
-
-static UDMFBinding kThingBindings[] =
-{
-   { "id", UDMFTokenType_Number, offsetof(UDMFThing, id), 0 },
-   { "x", UDMFTokenType_Number, offsetof(UDMFThing, x), 1, UDMFThing::X },
-   { "y", UDMFTokenType_Number, offsetof(UDMFThing, y), 1, UDMFThing::Y },
-   { "height", UDMFTokenType_Number, offsetof(UDMFThing, height), 1 },
-   { "angle", UDMFTokenType_Number, offsetof(UDMFThing, angle), 0 },
-   { "type", UDMFTokenType_Number, offsetof(UDMFThing, type), 0, UDMFThing::Type },
-   { "skill1", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
-      UDMFThingFlag_Skill1 },
-   { "skill2", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
-      UDMFThingFlag_Skill2 },
-   { "skill3", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
-      UDMFThingFlag_Skill3 },
-   { "skill4", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
-      UDMFThingFlag_Skill4 },
-   { "skill5", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
-      UDMFThingFlag_Skill5 },
-   { "ambush", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
-      UDMFThingFlag_Ambush },
-   { "single", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
-      UDMFThingFlag_Single },
-   { "dm", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
-      UDMFThingFlag_DM },
-   { "coop", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
-      UDMFThingFlag_Coop },
-   { "friend", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
-      UDMFThingFlag_Friend },
-   { "dormant", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
-      UDMFThingFlag_Dormant },
-   { "class1", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
-      UDMFThingFlag_Class1 },
-   { "class2", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
-      UDMFThingFlag_Class2 },
-   { "class3", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
-      UDMFThingFlag_Class3 },
-   { "standing", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
-      UDMFThingFlag_Standing },
-   { "strifeally", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
-      UDMFThingFlag_Strifeally },
-   { "translucent", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
-      UDMFThingFlag_Translucent },
-   { "invisible", UDMFTokenType_Identifier, offsetof(UDMFThing, flags),
-      UDMFThingFlag_Invisible },
-   { "special", UDMFTokenType_Number, offsetof(UDMFThing, special), 0 },
-   { "arg0", UDMFTokenType_Number, offsetof(UDMFThing, arg0), 0 },
-   { "arg1", UDMFTokenType_Number, offsetof(UDMFThing, arg1), 0 },
-   { "arg2", UDMFTokenType_Number, offsetof(UDMFThing, arg2), 0 },
-   { "arg3", UDMFTokenType_Number, offsetof(UDMFThing, arg3), 0 },
-   { "arg4", UDMFTokenType_Number, offsetof(UDMFThing, arg4), 0 },
-};
-
-static EHashTable<UDMFBinding, ENCStringHashKey,
-&UDMFBinding::name, &UDMFBinding::link> gThingBindings;
-
-//
-// E_assignNamespace
-//
-// Sets the global namespace variable to a value based on text.
-// Returns true if namespace is one of the assigned constants
-//
-static bool E_assignNamespace(const char *value)
-{
-   if(!strcasecmp(value, kEternityNamespace))
-   {
-      gUDMFNamespace = unsEternity;
-      return true;
-   }
-   if(!strcasecmp(value, kDoomNamespace))
-   {
-      gUDMFNamespace = unsDoom;
-      return true;
-   }
-   if(!strcasecmp(value, kHereticNamespace))
-   {
-      gUDMFNamespace = unsHeretic;
-      return true;
-   }
-   if(!strcasecmp(value, kHexenNamespace))
-   {
-      gUDMFNamespace = unsHexen;
-      return true;
-   }
-   if(!strcasecmp(value, kStrifeNamespace))
-   {
-      gUDMFNamespace = unsStrife;
-      return true;
-   }
-   return false;
-}
-
-
-//
-// Excerpt from the UDMF specifications 1.1 Grammar / Syntax
-// http://www.doomworld.com/eternity/engine/stuff/udmf11.txt
-//
-// translation_unit := global_expr_list
-// global_expr_list := global_expr global_expr_list
-// global_expr := block | assignment_expr
-// block := identifier '{' expr_list '}'
-// expr_list := assignment_expr expr_list
-// assignment_expr := identifier '=' value ';' | nil
-// identifier := [A-Za-z_]+[A-Za-z0-9_]*
-// value := integer | float | quoted_string | keyword
-// integer := [+-]?[1-9]+[0-9]* | 0[0-9]+ | 0x[0-9A-Fa-f]+
-// float := [+-]?[0-9]+'.'[0-9]*([eE][+-]?[0-9]+)?
-// quoted_string := "([^"\\]*(\\.[^"\\]*)*)"
-// keyword := [^{}();"'\n\t ]+
-//
-
-//
-// UDMFException
-//
-// Used to funnel all parse errors into a single place. Uses a message and a
-// line number, which can then be accessed directly
-//
-class UDMFException
-{
-private:
-   const char *message;
-   int line;
-   int column;
-
-public:
-
-   UDMFException(const char *inMessage, int inLine, int inColumn) 
-      : message(inMessage), line(inLine), column(inColumn)
-   {
-   }
-
-   void setLevelError() const;
-};
-
-//
-// UDMFException::setLevelError
-//
-// Converts the exception to a P_SetupLevel level_error, so the loading will 
-// stop.
-//
-void UDMFException::setLevelError() const
-{
-   psnprintf(gLevelErrorBuffer, earrlen(gLevelErrorBuffer), "%s at line %d:%d",
-         message, line, column);
-
-   // Activate the error by setting this pointer
-   level_error = gLevelErrorBuffer;
-}
-
-//
-// As we see, TEXTMAP consists of global_expr entries. Each global_expr is
-// a metatable. 
-//
-
-static PODCollection<UDMFLinedef> gLinedefs;
-static PODCollection<UDMFSidedef> gSidedefs;
-static PODCollection<UDMFVertex> gVertices;
-static PODCollection<UDMFSector> gSectors;
-static PODCollection<UDMFThing> gThings;
-
-//
-// E_LoadUDMFVertices
-//
-// Loads vertices from "vertex" metatable list
-//
-void E_LoadUDMFVertices()
-{
-   ::numvertexes = static_cast<int>(gVertices.getLength());
-   ::vertexes = estructalloctag(vertex_t, ::numvertexes, PU_LEVEL);
-
-   vertex_t *v = ::vertexes;
-   for(const auto &uvertex : gVertices)
-   {
-      v->x = M_DoubleToFixed(uvertex.x);
-      v->y = M_DoubleToFixed(uvertex.y);
-      v->fx = static_cast<float>(uvertex.x);
-      v->fy = static_cast<float>(uvertex.y);
-      ++v;
+      vertexes[i].x = mVertices[i].x;
+      vertexes[i].y = mVertices[i].y;
+      // SoM: Cardboard stores float versions of vertices.
+      vertexes[i].fx = M_FixedToFloat(vertexes[i].x);
+      vertexes[i].fy = M_FixedToFloat(vertexes[i].y);
    }
 }
 
 //
-// E_LoadUDMFSectors
+// Loads sectors
 //
-// Loads sectors from "sector" metatable list
-//
-void E_LoadUDMFSectors()
+void UDMFParser::loadSectors() const
 {
-   ::numsectors = static_cast<int>(gSectors.getLength());
-   ::sectors = estructalloctag(sector_t, ::numsectors, PU_LEVEL);
-
-   sector_t *s = ::sectors;
-   for(const auto &us : gSectors)
+   numsectors = (int)mSectors.getLength();
+   sectors = estructalloctag(sector_t, numsectors, PU_LEVEL);
+   for(int i = 0; i < numsectors; ++i)
    {
-      s->floorheight = us.heightfloor << FRACBITS;
-      s->ceilingheight = us.heightceiling << FRACBITS;
-      s->floorpic = R_FindFlat(us.texturefloor);
-      P_SetSectorCeilingPic(s, R_FindFlat(us.textureceiling));
-      s->lightlevel = us.lightlevel;
-      s->special = us.special;
-      s->tag = us.id;
-
-      P_InitSector(s);
-
-      ++s;
+      sector_t *ss = sectors + i;
+      ss->floorheight = mSectors[i].heightfloor << FRACBITS;
+      ss->ceilingheight = mSectors[i].heightceiling << FRACBITS;
+      ss->floorpic = R_FindFlat(mSectors[i].texturefloor.constPtr());
+      P_SetSectorCeilingPic(ss,
+                            R_FindFlat(mSectors[i].textureceiling.constPtr()));
+      ss->lightlevel = mSectors[i].lightlevel;
+      ss->special = mSectors[i].special;
+      ss->tag = mSectors[i].identifier;
+      P_InitSector(ss);
    }
 }
 
 //
-// E_LoadUDMFSideDefs
+// Loads sidedefs
 //
-// Equivalent of first P_LoadSideDefs call
-//
-void E_LoadUDMFSideDefs()
+void UDMFParser::loadSidedefs() const
 {
-   ::numsides = static_cast<int>(gSidedefs.getLength());
-   ::sides = estructalloctag(side_t, ::numsides, PU_LEVEL);
+   numsides = (int)mSidedefs.getLength();
+   sides = estructalloctag(side_t, numsides, PU_LEVEL);
 }
 
 //
-// E_LoadUDMFLineDefs
+// Loads linedefs. Returns false on error.
 //
-// Equivalent of P_LoadLineDefs
-//
-void E_LoadUDMFLineDefs()
+bool UDMFParser::loadLinedefs()
 {
-   ::numlines = static_cast<int>(gLinedefs.getLength());
-   ::lines = estructalloctag(line_t, ::numlines, PU_LEVEL);
-
-   line_t *ld = ::lines;
-   int v[2];
-   int s[2];
-   for(const auto &uld : gLinedefs)
+   numlines = (int)mLinedefs.getLength();
+   lines = estructalloctag(line_t, numlines, PU_LEVEL);
+   for(int i = 0; i < numlines; ++i)
    {
-         
-      if(uld.flags & 1 << UDMFLinedefFlag_Blocking)
+      line_t *ld = lines + i;
+      const ulinedef_t &uld = mLinedefs[i];
+      if(uld.blocking)
          ld->flags |= ML_BLOCKING;
-      if(uld.flags & 1 << UDMFLinedefFlag_Blockmonsters)
+      if(uld.blockmonsters)
          ld->flags |= ML_BLOCKMONSTERS;
-      if(uld.flags & 1 << UDMFLinedefFlag_Twosided)
+      if(uld.twosided)
          ld->flags |= ML_TWOSIDED;
-      if(uld.flags & 1 << UDMFLinedefFlag_Dontpegtop)
+      if(uld.dontpegtop)
          ld->flags |= ML_DONTPEGTOP;
-      if(uld.flags & 1 << UDMFLinedefFlag_Dontpegbottom)
+      if(uld.dontpegbottom)
          ld->flags |= ML_DONTPEGBOTTOM;
-      if(uld.flags & 1 << UDMFLinedefFlag_Secret)
+      if(uld.secret)
          ld->flags |= ML_SECRET;
-      if(uld.flags & 1 << UDMFLinedefFlag_Blocksound)
+      if(uld.blocksound)
          ld->flags |= ML_SOUNDBLOCK;
-      if(uld.flags & 1 << UDMFLinedefFlag_Dontdraw)
+      if(uld.dontdraw)
          ld->flags |= ML_DONTDRAW;
-      if(uld.flags & 1 << UDMFLinedefFlag_Mapped)
+      if(uld.mapped)
          ld->flags |= ML_MAPPED;
-      if(uld.flags & 1 << UDMFLinedefFlag_Passuse)
+      if(uld.passuse)
          ld->flags |= ML_PASSUSE;
 
-      if(gUDMFNamespace == unsEternity)
-      {
-         if(uld.flags & 1 << UDMFLinedefFlag_MidTex3D)
-            ld->flags |= ML_3DMIDTEX;
-         if(uld.flags & 1 << UDMFLinedefFlag_FirstSideOnly)
-            ld->extflags |= EX_ML_1SONLY;
-         ld->alpha = eclamp(static_cast<float>(uld.alpha), 0.f, 1.f);
-         if(!strcasecmp(uld.renderstyle, "add"))
-            ld->extflags |= EX_ML_ADDITIVE;
-         else if(strcasecmp(uld.renderstyle, "translucent"))
-         {
-            psnprintf(gLevelErrorBuffer, sizeof(gLevelErrorBuffer), 
-               "Linedef %d unknown renderstyle '%s'", (int)(ld - ::lines), 
-               uld.renderstyle);
-            level_error = gLevelErrorBuffer;
-            return;
-         }
-         if(uld.flags & 1 << UDMFLinedefFlag_ZoneBoundary)
-            ld->extflags |= EX_ML_ZONEBOUNDARY;
-         if(uld.flags & 1 << UDMFLinedefFlag_ClipMidTex)
-            ld->extflags |= EX_ML_CLIPMIDTEX;
-      }
+      // TODO: Strife
 
-      // STRIFE. NAMESPACE REQUIRED
-      if(gUDMFNamespace == unsStrife)
+      if(!mNamespace.strCaseCmp("hexen") || !mNamespace.strCaseCmp("eternity"))
       {
-         // TODO: support "translucent", "jumpover" and "blockfloaters".
-         // Currently the flags don't seem to exist in Eternity
-      }
-      if(gUDMFNamespace == unsEternity || gUDMFNamespace == unsHexen)
-      {
-         // FIXME: not sure if Eternity will use the same fields as Hexen.
-         // ExtraData has them set up differently
-
-         // Based on spac_flags_tlate
-         if(uld.flags & 1 << UDMFLinedefFlag_Playercross)
-            ld->extflags |= EX_ML_CROSS | EX_ML_PLAYER;
-         if(uld.flags & 1 << UDMFLinedefFlag_Playeruse)
-            ld->extflags |= EX_ML_USE | EX_ML_PLAYER;
-         if(uld.flags & 1 << UDMFLinedefFlag_Monstercross)
-            ld->extflags |= EX_ML_CROSS | EX_ML_MONSTER;
-         if(uld.flags & 1 << UDMFLinedefFlag_Monsteruse)
-            ld->extflags |= EX_ML_USE | EX_ML_MONSTER;
-         if(uld.flags & 1 << UDMFLinedefFlag_Impact)
-            ld->extflags |= EX_ML_IMPACT | EX_ML_MISSILE;
-         if(uld.flags & 1 << UDMFLinedefFlag_Playerpush)
-            ld->extflags |= EX_ML_PUSH | EX_ML_PLAYER;
-         if(uld.flags & 1 << UDMFLinedefFlag_Monsterpush)
-            ld->extflags |= EX_ML_PUSH | EX_ML_MONSTER;
-         if(uld.flags & 1 << UDMFLinedefFlag_Missilecross)
-            ld->extflags |= EX_ML_CROSS | EX_ML_MISSILE;
-         if(uld.flags & 1 << UDMFLinedefFlag_Repeatspecial)
+         if(uld.playercross)
+            ld->extflags |= EX_ML_PLAYER | EX_ML_CROSS;
+         if(uld.playeruse)
+            ld->extflags |= EX_ML_PLAYER | EX_ML_USE;
+         if(uld.monstercross)
+            ld->extflags |= EX_ML_MONSTER | EX_ML_CROSS;
+         if(uld.monsteruse)
+            ld->extflags |= EX_ML_MONSTER | EX_ML_USE;
+         if(uld.impact)
+            ld->extflags |= EX_ML_MISSILE | EX_ML_IMPACT;
+         if(uld.playerpush)
+            ld->extflags |= EX_ML_PLAYER | EX_ML_PUSH;
+         if(uld.monsterpush)
+            ld->extflags |= EX_ML_MONSTER | EX_ML_PUSH;
+         if(uld.missilecross)
+            ld->extflags |= EX_ML_MISSILE | EX_ML_CROSS;
+         if(uld.repeatspecial)
             ld->extflags |= EX_ML_REPEAT;
       }
+
       ld->special = uld.special;
-
-      ld->tag = uld.id;
-
-      v[0] = uld.v1;
-      v[1] = uld.v2;
-      if(v[0] < 0 || v[0] >= ::numvertexes 
-         || v[1] < 0 || v[1] >= ::numvertexes)
+      ld->tag = uld.identifier;
+      ld->args[0] = uld.arg[0];
+      ld->args[1] = uld.arg[1];
+      ld->args[2] = uld.arg[2];
+      ld->args[3] = uld.arg[3];
+      ld->args[4] = uld.arg[4];
+      if(uld.v1 < 0 || uld.v1 >= numvertexes ||
+         uld.v2 < 0 || uld.v2 >= numvertexes ||
+         uld.sidefront < 0 || uld.sidefront >= numsides ||
+         uld.sideback < -1 || uld.sideback >= numsides)
       {
-         psnprintf(gLevelErrorBuffer, sizeof(gLevelErrorBuffer), 
-            "Linedef %d vertex out of bounds", (int)(ld - ::lines));
-         level_error = gLevelErrorBuffer;
-         return;
+         mLine = uld.errorline;
+         mColumn = 1;
+         mError = "Vertex or sidedef overflow";
+         return false;
       }
-      ld->v1 = ::vertexes + v[0];
-      ld->v2 = ::vertexes + v[1];
-      s[0] = uld.sidefront;
-      s[1] = uld.sideback;
-      if(s[0] < 0 || s[0] >= ::numsides || s[1] < -1 || s[1] >= ::numsides)
-      {
-         psnprintf(gLevelErrorBuffer, sizeof(gLevelErrorBuffer), 
-            "Linedef %d sidedef out of bounds", (int)(ld - ::lines));
-         level_error = gLevelErrorBuffer;
-         return;
-      }
-
-      ld->sidenum[0] = s[0];
-      ld->sidenum[1] = s[1];
+      ld->v1 = &vertexes[uld.v1];
+      ld->v2 = &vertexes[uld.v2];
+      ld->sidenum[0] = uld.sidefront;
+      ld->sidenum[1] = uld.sideback;
       P_InitLineDef(ld);
-
-      // FIXME: should ExtraData records still be able to override UDMF?
-      // Currently they aren't
-
-      // Load args if Hexen or EE
-      if(gUDMFNamespace == unsEternity || gUDMFNamespace == unsHexen)
-      {
-         ld->args[0] = uld.arg0;
-         ld->args[1] = uld.arg1;
-         ld->args[2] = uld.arg2;
-         ld->args[3] = uld.arg3;
-         ld->args[4] = uld.arg4;
-      }
-         
       P_PostProcessLineFlags(ld);
-      ++ld;
    }
+   return true;
 }
 
 //
-// E_LoadUDMFSideDefs2
+// Loads sidedefs (2)
 //
-// Equivalent of P_LoadSideDefs2
-//
-void E_LoadUDMFSideDefs2()
+bool UDMFParser::loadSidedefs2()
 {
-   side_t *sd;
-
-   const char *topTexture, *bottomTexture, *midTexture;
-   int secnum;
-
-   sd = ::sides;
-   for(const auto &usd : gSidedefs)
+   for(int i = 0; i < numsides; ++i)
    {
+      side_t *sd = sides + i;
+      const USidedef &usd = mSidedefs[i];
+
       sd->textureoffset = usd.offsetx << FRACBITS;
       sd->rowoffset = usd.offsety << FRACBITS;
-
-      topTexture = usd.texturetop;
-      bottomTexture = usd.texturebottom;
-      midTexture = usd.texturemiddle;
-
-      secnum = usd.sector;
-
-      if(secnum < 0 || secnum >= ::numsectors)
+      if(usd.sector < 0 || usd.sector >= numsectors)
       {
-         psnprintf(gLevelErrorBuffer, sizeof(gLevelErrorBuffer), 
-            "Sidedef %d sector out of bounds", (int)(sd - ::sides));
-         level_error = gLevelErrorBuffer;
-         return;
+         mLine = usd.errorline;
+         mColumn = 1;
+         mError = "Sector overflow";
+         return false;
       }
-
-      sd->sector = ::sectors + secnum;
-
-      P_SetupSidedefTextures(*sd, bottomTexture, midTexture, topTexture);
-
-      ++sd;
+      sd->sector = &sectors[usd.sector];
+      P_SetupSidedefTextures(*sd, usd.texturebottom.constPtr(),
+                             usd.texturemiddle.constPtr(),
+                             usd.texturetop.constPtr());
    }
+   return true;
 }
 
 //
-// E_LoadUDMFThings
+// Loads things
 //
-// Load things, like P_LoadThings
-//
-void E_LoadUDMFThings()
+bool UDMFParser::loadThings()
 {
-   mapthing_t *mapthings = nullptr;
-   ::numthings = static_cast<int>(gThings.getLength());
-
+   mapthing_t *mapthings;
+   numthings = (int)mThings.getLength();
    mapthings = ecalloc(mapthing_t *, numthings, sizeof(mapthing_t));
-   mapthing_t *ft = mapthings;
-
-   bool skill[5] = { false };
-
-   for(const auto &ut : gThings)
+   for(int i = 0; i < numthings; ++i)
    {
+      mapthing_t *ft = &mapthings[i];
+      const uthing_t &ut = mThings[i];
       ft->type = ut.type;
-      if(P_CheckThingDoomBan(ft->type))
-      {
-         ++ft;
-         continue;
-      }
-
-      ft->x = M_DoubleToFixed(ut.x);
-      ft->y = M_DoubleToFixed(ut.y);
-      ft->height = M_DoubleToFixed(ut.height);
-         
-      ft->angle = static_cast<int16_t>(ut.angle);
-
-      skill[0] = !!(ut.flags & 1 << UDMFThingFlag_Skill1);
-      skill[1] = !!(ut.flags & 1 << UDMFThingFlag_Skill2);
-      skill[2] = !!(ut.flags & 1 << UDMFThingFlag_Skill3);
-      skill[3] = !!(ut.flags & 1 << UDMFThingFlag_Skill4);
-      skill[4] = !!(ut.flags & 1 << UDMFThingFlag_Skill5);
-
-      if(skill[1])
-         ft->options |= MTF_EASY;
-      if(skill[0] != skill[1])
+      // no Doom thing ban in UDMF
+      ft->x = ut.x;
+      ft->y = ut.y;
+      ft->height = ut.height;
+      ft->angle = ut.angle;
+      if(ut.skill1 ^ ut.skill2)
          ft->extOptions |= MTF_EX_BABY_TOGGLE;
-      if(skill[2])
+      if(ut.skill2)
+         ft->options |= MTF_EASY;
+      if(ut.skill3)
          ft->options |= MTF_NORMAL;
-      if(skill[3])
+      if(ut.skill4)
          ft->options |= MTF_HARD;
-      if(skill[4] != skill[3])
+      if(ut.skill4 ^ ut.skill5)
          ft->extOptions |= MTF_EX_NIGHTMARE_TOGGLE;
-
-      if(ut.flags & 1 << UDMFThingFlag_Ambush)
+      if(ut.ambush)
          ft->options |= MTF_AMBUSH;
-         
-      // negative
-      if(!(ut.flags & 1 << UDMFThingFlag_Single))
+      if(!ut.single)
          ft->options |= MTF_NOTSINGLE;
-      if(!(ut.flags & 1 << UDMFThingFlag_DM))
+      if(!ut.dm)
          ft->options |= MTF_NOTDM;
-      if(!(ut.flags & 1 << UDMFThingFlag_Coop))
+      if(!ut.coop)
          ft->options |= MTF_NOTCOOP;
+      if(ut.friendly)
+         ft->options |= MTF_FRIEND;
+      if(ut.dormant)
+         ft->options |= MTF_DORMANT;
+      // TODO: class1, 2, 3
+      // TODO: STRIFE
+      ft->special = ut.special;
+      ft->args[0] = ut.arg[0];
+      ft->args[1] = ut.arg[1];
+      ft->args[2] = ut.arg[2];
+      ft->args[3] = ut.arg[3];
+      ft->args[4] = ut.arg[4];
 
-      if(gUDMFNamespace == unsDoom || gUDMFNamespace == unsEternity)
-      {
-         if(ut.flags & 1 << UDMFThingFlag_Friend)
-            ft->options |= MTF_FRIEND;
-      }
-
-      if(gUDMFNamespace == unsHexen || gUDMFNamespace == unsEternity)
-      {
-         if(ut.flags & 1 << UDMFThingFlag_Dormant)
-            ft->options |= MTF_DORMANT;
-         ft->tid = static_cast<int16_t>(ut.id);
-            
-         ft->args[0] = ut.arg0;;
-         ft->args[1] = ut.arg1;
-         ft->args[2] = ut.arg2;
-         ft->args[3] = ut.arg3;
-         ft->args[4] = ut.arg4;
-      }
-
-      // TODO: Hexen classes!
-
-      // TODO: Strife standing
-      // TODO: Strife ally
-      // TODO: Strife shadow
-      // TODO: Strife invisible
-
-      if(gUDMFNamespace == unsHeretic)
-         P_ConvertHereticThing(ft);
-         
       P_ConvertDoomExtendedSpawnNum(ft);
-
-      // use the extra parameters here
       P_SpawnMapThing(ft);
-      ++ft;
    }
 
-   // do the player start check like in P_LoadThings
+   // haleyjd: all player things for players in this game should now be valid
    if(GameType != gt_dm)
    {
       for(int i = 0; i < MAXPLAYERS; i++)
       {
          if(playeringame[i] && !players[i].mo)
-            level_error = "Missing required player start";
+         {
+            mError = "Missing required player start";
+            efree(mapthings);
+            return false;
+         }
       }
-   } 
-   
+   }
+
    efree(mapthings);
-   
+   return true;
 }
 
+//==============================================================================
 //
-// UDMFBlockBinding
+// TEXTMAP parsing
 //
-// Binding for block definition
+//==============================================================================
+
 //
-struct UDMFBlockBinding
+// Tries to parse a UDMF TEXTMAP document. If it fails, it returns false and
+// you can check the error message with error()
+//
+bool UDMFParser::parse(WadDirectory &setupwad, int lump)
 {
-   const char *name;
-
-   EHashTable<UDMFBinding, ENCStringHashKey,
-   &UDMFBinding::name, &UDMFBinding::link> *fieldBindings;
-   size_t checklistSize;
-   
-   // returns the size of the struct and passes the size of the checklist
-   byte *(*createItem)();
-
-   DLListItem<UDMFBlockBinding> link;
-};
-
-static UDMFBlockBinding kBlockBindings[] =
-{
-   { "linedef", &gLinedefBindings, sizeof(((UDMFLinedef*)0)->checklist), []() {
-      return reinterpret_cast<byte *>(&gLinedefs.addNew().makeDefault());
-   } },
-   { "sidedef", &gSidedefBindings, sizeof(((UDMFSidedef*)0)->checklist), []() {
-      return reinterpret_cast<byte *>(&gSidedefs.addNew().makeDefault());
-   } },
-   { "vertex", &gVertexBindings, sizeof(((UDMFVertex*)0)->checklist), []() {
-      return reinterpret_cast<byte *>(&gVertices.addNew().makeDefault());
-   } },
-   { "sector", &gSectorBindings, sizeof(((UDMFSector*)0)->checklist), []() {
-      return reinterpret_cast<byte *>(&gSectors.addNew().makeDefault());
-   } },
-   { "thing", &gThingBindings, sizeof(((UDMFThing*)0)->checklist), []() {
-      return reinterpret_cast<byte *>(&gThings.addNew().makeDefault());
-   } },
-};
-
-static EHashTable<UDMFBlockBinding, ENCStringHashKey,
-&UDMFBlockBinding::name, &UDMFBlockBinding::link> gBlockBindings;
-
-//
-// E_initHashTables
-//
-// Initializes hash tables from this file, if not already
-//
-static void E_initHashTables()
-{
-   static bool initialized;
-   if(initialized)
-      return;
-   initialized = true;
-
-   for(auto &item : kThingBindings)
-      gThingBindings.addObject(&item);
-   for(auto &item : kLinedefBindings)
-      gLinedefBindings.addObject(&item);
-   for(auto &item : kSidedefBindings)
-      gSidedefBindings.addObject(&item);
-   for(auto &item : kVertexBindings)
-      gVertexBindings.addObject(&item);
-   for(auto &item : kSectorBindings)
-      gSectorBindings.addObject(&item);
-   for(auto &item : kBlockBindings)
-      gBlockBindings.addObject(&item);
-}
-
-//
-// UDMFParser::Tokenizer::readToken
-//
-// Returns next token (or false if end of TEXTMAP)
-//
-bool UDMFParser::Tokenizer::readToken(Token &token)
-{
-   char *numberParseOut = nullptr;
-
-   while(mData < mEnd)
    {
-      while(mData < mEnd && ectype::isSpace(*mData))
-      {
-         if(*mData == '\n')
-            nextLine();
-         ++mData;
-      }
-      if(mData + 1 < mEnd && *mData == '/' && *(mData + 1) == '/')
-      {
-         mData += 2;
-         while(mData < mEnd && *mData != '\n')
-            ++mData;
-         if(mData < mEnd && *mData == '\n')
-         {
-            nextLine();
-            ++mData;
-         }
-      }
-      if(mData + 1 < mEnd && *mData == '/' && *(mData + 1) == '*')
-      {
-         mData += 2;
-         while(mData < mEnd && (*mData != '*' || mData + 1 >= mEnd 
-            || *(mData + 1) != '/'))
-         {
-            if(*mData == '\n')
-               nextLine();
-            ++mData;
-         }
-         if(mData + 1 < mEnd && *mData == '*' && *(mData + 1) == '/')
-            mData += 2;
-      }
-      if(mData < mEnd)
-      {
-         if(ectype::isAlpha(*mData) || *mData == '_')
-         {
-            // Found an identifier token
-            token.data = mData;
-            token.number = 0;
-            
-            ++mData;
-            while(mData < mEnd && (ectype::isAlnum(*mData) || *mData == '_'))
-               ++mData;
+      ZAutoBuffer buf;
 
-            token.type = UDMFTokenType_Identifier;
-            token.size = mData - token.data;
-            return true;
-         }
-         if(*mData == '"')
+      setupwad.cacheLumpAuto(lump, buf);
+      auto data = buf.getAs<const char *>();
+
+      // store it conveniently
+      setData(data);
+   }
+
+   readresult_e result = readItem();
+   if(result != result_Assignment || mKey.strCaseCmp("namespace") ||
+      mValue.type != Token::type_String)
+   {
+      mError = "TEXTMAP must begin with a namespace assignment";
+      return false;
+   }
+
+   // Set namespace (we'll think later about checking it
+   mNamespace = mValue.text;
+
+   // Gamestuff. Must be null when out of block and only one be set when in
+   // block
+   ulinedef_t *linedef = nullptr;
+   USidedef *sidedef = nullptr;
+   uvertex_t *vertex = nullptr;
+   USector *sector = nullptr;
+   uthing_t *thing = nullptr;
+
+   while((result = readItem()) != result_Eof)
+   {
+      if(result == result_Error)
+         return false;
+      if(result == result_BlockEntry)
+      {
+         // we're now in some block. Alloc stuff
+         if(mBlockName.strCaseCmp("linedef"))
          {
-            // Also modify it in-place to be easily stored internally
-            int displace = 0;
-            ++mData;
-            token.data = mData;
-            token.number = 0;
-            while(mData < mEnd && (*mData != '"' || *(mData - 1) == '\\'))
+            linedef = &mLinedefs.addNew();
+            linedef->identifier = -1;
+            linedef->sideback = -1;
+            linedef->errorline = mLine;
+         }
+         else if(mBlockName.strCaseCmp("sidedef"))
+         {
+            sidedef = &mSidedefs.addNew();
+            sidedef->texturetop = "-";
+            sidedef->texturebottom = "-";
+            sidedef->texturemiddle = "-";
+            sidedef->errorline = mLine;
+         }
+         else if(!mBlockName.strCaseCmp("vertex"))
+            vertex = &mVertices.addNew();
+         else if(!mBlockName.strCaseCmp("sector"))
+            sector = &mSectors.addNew();
+         else if(!mBlockName.strCaseCmp("thing"))
+            thing = &mThings.addNew();
+         continue;
+      }
+      if(result == result_Assignment && mInBlock)
+      {
+         if(linedef)
+         {
+            readInt("id", linedef->identifier);
+            requireInt("v1", linedef->v1, linedef->v1set);
+            requireInt("v2", linedef->v2, linedef->v2set);
+            readBool("blocking", linedef->blocking);
+            readBool("blockmonsters", linedef->blockmonsters);
+            readBool("twosided", linedef->twosided);
+            readBool("dontpegtop", linedef->dontpegtop);
+            readBool("dontpegbottom", linedef->dontpegbottom);
+            readBool("secret", linedef->secret);
+            readBool("blocksound", linedef->blocksound);
+            readBool("dontdraw", linedef->dontdraw);
+            readBool("mapped", linedef->mapped);
+            readBool("passuse", linedef->passuse);
+            readBool("translucent", linedef->translucent);
+            readBool("jumpover", linedef->jumpover);
+            readBool("blockfloaters", linedef->blockfloaters);
+            readBool("playercross", linedef->playercross);
+            readBool("playeruse", linedef->playeruse);
+            readBool("monstercross", linedef->monstercross);
+            readBool("monsteruse", linedef->monsteruse);
+            readBool("impact", linedef->impact);
+            readBool("playerpush", linedef->playerpush);
+            readBool("monsterpush", linedef->monsterpush);
+            readBool("missilecross", linedef->missilecross);
+            readBool("repeatspecial", linedef->repeatspecial);
+            readInt("special", linedef->special);
+            readInt("arg0", linedef->arg[0]);
+            readInt("arg1", linedef->arg[1]);
+            readInt("arg2", linedef->arg[2]);
+            readInt("arg3", linedef->arg[3]);
+            readInt("arg4", linedef->arg[4]);
+            requireInt("sidefront", linedef->sidefront, linedef->sfrontset);
+            readInt("sideback", linedef->sideback);
+         }
+         else if(sidedef)
+         {
+            readInt("offsetx", sidedef->offsetx);
+            readInt("offsety", sidedef->offsety);
+            readString("texturetop", sidedef->texturetop);
+            readString("texturebottom", sidedef->texturebottom);
+            readString("texturemiddle", sidedef->texturemiddle);
+            requireInt("sector", sidedef->sector, sidedef->sset);
+         }
+         else if(vertex)
+         {
+            requireFixed("x", vertex->x, vertex->xset);
+            requireFixed("y", vertex->y, vertex->yset);
+         }
+         else if(sector)
+         {
+            readInt("heightfloor", sector->heightfloor);
+            readInt("heightceiling", sector->heightceiling);
+            requireString("texturefloor", sector->texturefloor,
+                          sector->tfloorset);
+            requireString("textureceiling", sector->textureceiling,
+                          sector->tceilset);
+            readInt("lightlevel", sector->lightlevel);
+            readInt("special", sector->special);
+            readInt("id", sector->identifier);
+         }
+         else if(thing)
+         {
+            readInt("id", thing->identifier);
+            requireFixed("x", thing->x, thing->xset);
+            requireFixed("y", thing->y, thing->yset);
+            readFixed("height", thing->height);
+            readInt("angle", thing->angle);
+            requireInt("type", thing->type, thing->typeset);
+            readBool("skill1", thing->skill1);
+            readBool("skill2", thing->skill2);
+            readBool("skill3", thing->skill3);
+            readBool("skill4", thing->skill4);
+            readBool("skill5", thing->skill5);
+            readBool("ambush", thing->ambush);
+            readBool("single", thing->single);
+            readBool("dm", thing->dm);
+            readBool("coop", thing->coop);
+            readBool("friend", thing->friendly);
+            readBool("dormant", thing->dormant);
+            readBool("class1", thing->class1);
+            readBool("class2", thing->class2);
+            readBool("class3", thing->class3);
+            readBool("standing", thing->standing);
+            readBool("strifeally", thing->strifeally);
+            readBool("translucent", thing->translucent);
+            readBool("invisible", thing->invisible);
+            readInt("special", thing->special);
+            readInt("arg0", thing->arg[0]);
+            readInt("arg1", thing->arg[1]);
+            readInt("arg2", thing->arg[2]);
+            readInt("arg3", thing->arg[3]);
+            readInt("arg4", thing->arg[4]);
+         }
+         continue;
+      }
+      if(result == result_BlockExit)
+      {
+         if(linedef)
+         {
+            if(!linedef->v1set || !linedef->v2set || !linedef->sfrontset)
             {
-               if(*mData == '\n')
-                  nextLine();
-               if(displace)
-                  *(mData - displace) = *mData;
-               if(*mData == '\\' && *(mData - 1) != '\\')
-                  ++displace;
-               ++mData;
+               mError = "Incompletely defined linedef";
+               return false;
             }
-            if(mData >= mEnd)
-               return false;   // invalid string won't be treated
-            *(mData - displace) = 0;
-            token.size = mData - token.data;
-            ++mData;
-            token.type = UDMFTokenType_String;
-            return true;
+            linedef = nullptr;
          }
-         if(*mData == '.' && mData + 1 < mEnd && ectype::isDigit(*(mData + 1)))
+         else if(sidedef)
          {
-            token.data = mData;
-            token.number = strtod(mData, &numberParseOut);
-            mData = numberParseOut;
-            token.type = UDMFTokenType_Number;
-            token.size = mData - token.data;
-            return true;
+            if(!sidedef->sset)
+            {
+               mError = "Incompletely defined sidedef";
+               return false;
+            }
+            sidedef = nullptr;
          }
-         if(*mData == '0' && mData + 1 < mEnd && ectype::isDigit(*(mData + 1)))
+         else if(vertex)
          {
-            token.data = mData;
-            token.number = static_cast<double>(
-               strtol(mData, &numberParseOut, 8));
-            mData = numberParseOut;
-            token.type = UDMFTokenType_Number;
-            token.size = mData - token.data;
-            return true;
+            if(!vertex->xset || !vertex->yset)
+            {
+               mError = "Incompletely defined vertex";
+               return false;
+            }
+            vertex = nullptr;
          }
-         if(*mData == '0' && mData + 1 < mEnd 
-            && (*(mData + 1) == 'x' || *(mData + 1) == 'X'))
+         else if(sector)
          {
-            token.data = mData;
-            token.number = static_cast<double>(
-               strtol(mData, &numberParseOut, 16));
-            mData = numberParseOut;
-            token.type = UDMFTokenType_Number;
-            token.size = mData - token.data;
-            return true;
+            if(!sector->tfloorset || !sector->tceilset)
+            {
+               mError = "Incompletely defined sector";
+               return false;
+            }
+            sector = nullptr;
          }
-         if(ectype::isDigit(*mData))
+         else if(thing)
          {
-            token.data = mData;
-            token.number = strtod(mData, &numberParseOut);
-            mData = numberParseOut;
-            token.type = UDMFTokenType_Number;
-            token.size = mData - token.data;
-            return true;
-         }
-         if(!ectype::isSpace(*mData))
-         {
-            token.data = mData;
-            token.number = 0;
-            ++mData;
-            token.type = UDMFTokenType_Operator;
-            token.size = 1;
-            return true;
+            if(!thing->xset || !thing->yset || !thing->typeset)
+            {
+               mError = "Incompletely defined thing";
+               return false;
+            }
+            thing = nullptr;
          }
       }
    }
 
-   return false;
+   return true;
 }
 
 //
-// UDMFParser::Tokenizer::raise
+// Quick error message
 //
-// Convenient exception thrower that uses an internal variable
-//
-void UDMFParser::Tokenizer::raise(const char *message) const
+qstring UDMFParser::error() const
 {
-   // FIXME: integer coordinates in file, a sub 2 GB TEXTMAP is assumed
-   throw UDMFException(message, mLine, 
-      static_cast<int>(mData - mLineStart + 1));
+   qstring message("TEXTMAP error at ");
+   message << (int)mLine << ':' << (int)mColumn << " - " << mError;
+   return message;
 }
 
 //
-// UDMFParser::handleGlobalAssignment
+// Loads a new TEXTMAP and clears all variables
 //
-// Called when a global assignment is detected. Only namespace is known now
-// so don't use complex data structures
-//
-void UDMFParser::handleGlobalAssignment() const
+void UDMFParser::setData(const char *data)
 {
-   if(!strcasecmp(mGlobalKey, "namespace"))
+   mData = data;
+   mPos = 0;
+   mLine = 1;
+   mColumn = 1;
+   mError.clear();
+
+   mKey.clear();
+   mValue.clear();
+   mInBlock = false;
+   mBlockName.clear();
+
+   // Game stuff
+   mNamespace.clear();
+   mLinedefs.makeEmpty();
+   mSidedefs.makeEmpty();
+   mVertices.makeEmpty();
+   mSectors.makeEmpty();
+   mThings.makeEmpty();
+}
+
+//
+// Passes a float
+//
+void UDMFParser::readFixed(const char *key, fixed_t &target) const
+{
+   if(!mKey.strCaseCmp(key) && mValue.type == Token::type_Number)
+      target = M_DoubleToFixed(mValue.number);
+}
+
+//
+// Passes a float to an object and flags a required element
+//
+void UDMFParser::requireFixed(const char *key, fixed_t &target,
+                              bool &flagtarget) const
+{
+   if(!mKey.strCaseCmp(key) && mValue.type == Token::type_Number)
    {
-      if(gUDMFNamespace != unsINVALID)
-         return;  // ignore any repeated namespace attempts
-
-      if(mGlobalValue.type != UDMFTokenType_String)
-         mTokenizer.raise("Namespace value must be a string");
-      E_assignNamespace(mGlobalValue.data);
+      target = M_DoubleToFixed(mValue.number);
+      flagtarget = true;
    }
 }
 
 //
-// UDMFParser::handleNewBlock
+// Passes an int
 //
-// Called when a block is detected
-//
-void UDMFParser::handleNewBlock() 
+void UDMFParser::readInt(const char *key, int &target) const
 {
-   mCurrentNewItem = nullptr;
-   const UDMFBlockBinding *binding = gBlockBindings.objectForKey(mGlobalKey);
-   if(binding)
+   if(!mKey.strCaseCmp(key) && mValue.type == Token::type_Number)
+      target = static_cast<int>(mValue.number);
+}
+
+//
+// Requires an int
+//
+void UDMFParser::requireInt(const char *key, int &target,
+                              bool &flagtarget) const
+{
+   if(!mKey.strCaseCmp(key) && mValue.type == Token::type_Number)
    {
-      // Found a valid binding: require namespace!
+      target = static_cast<int>(mValue.number);
+      flagtarget = true;
+   }
+}
 
-      // TODO: instead of assuming the namespace is required, try to
-      // limit bindings per namespace!!
+//
+// Reads a string
+//
+void UDMFParser::readString(const char *key, qstring &target) const
+{
+   if(!mKey.strCaseCmp(key) && mValue.type == Token::type_String)
+      target = mValue.text;
+}
 
-      if(gUDMFNamespace == unsINVALID)
+//
+// Passes a string
+//
+void UDMFParser::requireString(const char *key, qstring &target,
+                               bool &flagtarget) const
+{
+   if(!mKey.strCaseCmp(key) && mValue.type == Token::type_String)
+   {
+      target = mValue.text;
+      flagtarget = true;
+   }
+}
+
+//
+// Passes a boolean
+//
+void UDMFParser::readBool(const char *key, bool &target) const
+{
+   if(!mKey.strCaseCmp(key) && mValue.type == Token::type_String)
+   {
+      target = ectype::toUpper(mValue.text[0]) == 'T';
+   }
+}
+
+//
+// Reads a line or block item. Returns false on error
+//
+UDMFParser::readresult_e UDMFParser::readItem()
+{
+   Token token;
+   if(!next(token))
+      return result_Eof;
+
+   if(token.type == Token::type_Symbol && token.symbol == '}')
+   {
+      if(mInBlock)
       {
-         mTokenizer.raise(
-            "Cannot read map; namespace was not defined or is unknown");
+         mInBlock = false;
+         mKey = mBlockName; // preserve the name into "key"
+         mBlockName.clear();
+         return result_BlockExit;
+      }
+      // not in block: error
+      mError = "Unexpected '}'";
+      return result_Error;
+   }
+
+   if(token.type != Token::type_Keyword)
+   {
+      mError = "Expected a keyword";
+      return result_Error;
+   }
+   mKey = token.text;
+
+   if(!next(token) || token.type != Token::type_Symbol || token.symbol != '=' ||
+      token.symbol != '{')
+   {
+      mError = "Expected '=' or '{'";
+      return result_Error;
+   }
+
+   if(token.symbol == '=')
+   {
+      // assignment
+      if(!next(token) || token.type != Token::type_Keyword ||
+         token.type != Token::type_String || token.type != Token::type_Number)
+      {
+         mError = "Expected a number, string or true/false";
+         return result_Error;
       }
 
-      mCurrentChecklistSize = binding->checklistSize;
-      mCurrentNewItem = binding->createItem();
-      mCurrentBinding = binding->fieldBindings;
+      if(token.type == Token::type_Keyword && (token.text.strCaseCmp("true") ||
+                                               token.text.strCaseCmp("false")))
+      {
+         mError = "Identifier can only be true or false";
+         return result_Error;
+      }
+
+      if(!next(token) || token.type != Token::type_Symbol ||
+         token.symbol != ';')
+      {
+         mError = "Expected ; after assignment";
+         return result_Error;
+      }
+
+      mValue = token;
+      return result_Assignment;
    }
-   
+   else  // {
+   {
+      // block
+      if(!mInBlock)
+      {
+         mInBlock = true;
+         mBlockName = mKey;
+         return result_BlockEntry;
+      }
+      else
+      {
+         mError = "Blocks cannot be nested";
+         return result_Error;
+      }
+   }
 }
 
 //
-// UDMFParser::handleLocalAssignment
+// Gets the next token from mData. Returns false if EOF. It will not return
+// false if there's something to return
 //
-// Called when a local (in-block) assignment is encountered
-//
-void UDMFParser::handleLocalAssignment() const
+bool UDMFParser::next(Token &token)
 {
-   if(!mCurrentNewItem)
-      return;
+   // Skip all leading whitespace
+   bool checkWhite = true;
+   size_t size = mData.length();
 
-   auto bindings = static_cast<const EHashTable<UDMFBinding, ENCStringHashKey, 
-      &UDMFBinding::name, &UDMFBinding::link> *>(mCurrentBinding);
-
-   const UDMFBinding *binding = bindings->objectForKey(mLocalKey);
-   if(binding && binding->type == mLocalValue.type)
+   while(checkWhite)
    {
-      // For required field: checklist must be at the start of the structure
-      if(binding->checkIndex)
-         *(mCurrentNewItem + binding->checkIndex - 1) = 1;  // check it
+      checkWhite = false;  // reset it unless someone else restores it
 
-      switch(mLocalValue.type)
+      while(mPos != size && ectype::isSpace(mData[mPos]))
+         addPos(1);
+      if(mPos == size)
+         return false;
+
+      // Skip comments
+      if(mData[mPos] == '/' && mPos + 1 < size && mData[mPos + 1] == '/')
       {
-      case UDMFTokenType_Identifier: // true or false
-         if(*mLocalValue.data == 't' || *mLocalValue.data == 'T')
+         addPos(2);
+         // one line comment
+         while(mPos != size && mData[mPos] != '\n')
+            addPos(1);
+         if(mPos == size)
+            return false;
+
+         // If here, we hit an "enter"
+         addPos(1);
+         if(mPos == size)
+            return false;
+
+         checkWhite = true;   // look again for whitespaces if reached here
+      }
+
+      if(mData[mPos] == '/' && mPos + 1 < size && mData[mPos + 1] == '*')
+      {
+         addPos(2);
+         while(mPos + 1 < size && mData[mPos] != '*' && mData[mPos + 1] != '/')
+            addPos(1);
+         if(mPos + 1 >= size)
          {
-            *reinterpret_cast<uint32_t *>(mCurrentNewItem + binding->offset) 
-               |= 1 << binding->extra;
+            addPos(1);
+            return false;
          }
-         break;
-      case UDMFTokenType_Number:
-         if(binding->extra)   // double
+         if(mData[mPos] == '*' && mData[mPos] == '/')
+            addPos(2);
+         if(mPos == size)
+            return false;
+         checkWhite = true;
+      }
+   }
+
+   // now we're clear from whitespaces and comments
+
+   // Check for number
+   char *result = nullptr;
+   double number = strtod(&mData[mPos], &result);
+   if(result > &mData[mPos])  // we have something
+   {
+      // copy it
+      token.type = Token::type_Number;
+      token.number = number;
+      addPos(result - mData.constPtr() - mPos);
+      return true;
+   }
+
+   // Check for string
+   if(mData[mPos] == '"')
+   {
+      addPos(1);
+
+      // we entered a string
+      // find the next string
+      token.type = Token::type_String;
+
+      // we must escape things here
+      token.text.clear();
+      bool escape = false;
+      while(mPos != size)
+      {
+         if(!escape)
          {
-            *reinterpret_cast<double *>(mCurrentNewItem + binding->offset) 
-               = mLocalValue.number;
+            if(mData[mPos] == '\\')
+               escape = true;
+            else if(mData[mPos] == '"')
+            {
+               addPos(1);     // skip the quote
+               return true;   // we're done
+            }
+            else
+               token.text.Putc(mData[mPos]);
          }
          else
          {
-            // int
-            *reinterpret_cast<int *>(mCurrentNewItem + binding->offset) 
-               = static_cast<int>(mLocalValue.number);
+            token.text.Putc(mData[mPos]);
+            escape = false;
          }
-         break;
-      case UDMFTokenType_String:
-         *reinterpret_cast<const char **>(mCurrentNewItem + binding->offset) =
-            mLocalValue.data;
-         break;
-      default:
-         break;
+         addPos(1);
       }
+      return true;
    }
 
-   
-}
-
-//
-// UDMFParser::checkLastBlock
-//
-// Checks the last block if the checklist was complete
-//
-void UDMFParser::checkLastBlock() const
-{
-   if(!mCurrentNewItem || !mCurrentChecklistSize)
-      return;
-
-   // FIXME: I have to const_cast this because tableIterator has no const 
-   // variant
-   auto bindings = static_cast<EHashTable<UDMFBinding, ENCStringHashKey, 
-      &UDMFBinding::name, &UDMFBinding::link> *>(const_cast<void *>(
-      mCurrentBinding));
-
-   const char *fieldName = "(unknown)";   // shouldn't reach with this value!
-   static char msgBuffer[81];
-   for(size_t i = 0; i < mCurrentChecklistSize; ++i)
+   // keyword: start with a letter or _
+   if(ectype::isAlpha(mData[mPos]) || mData[mPos] == '_')
    {
-      if(!*(mCurrentNewItem + i))
+      token.type = Token::type_Keyword;
+      token.text.clear();
+      while(mPos != size &&
+            (ectype::isAlnum(mData[mPos]) || mData[mPos] == '_'))
       {
-         // Found a missing check
-         for(const UDMFBinding *binding = bindings->tableIterator(
-            static_cast<const UDMFBinding *>(nullptr)); binding; 
-            binding = bindings->tableIterator(binding))
-         {
-            if(i + 1 == binding->checkIndex)
-            {
-               fieldName = binding->name;
-               break;
-            }
-         }
-         psnprintf(msgBuffer, sizeof(msgBuffer), "Missing required field '%s'", 
-            fieldName);
-         mTokenizer.raise(msgBuffer);
+         token.text.Putc(mData[mPos]);
+         addPos(1);
       }
+      return true;
    }
+
+   // symbol. Just put one character
+   token.type = Token::type_Symbol;
+   token.symbol = mData[mPos];
+   addPos(1);
+
+   return true;
 }
 
 //
-// UDMFParser::start
+// Increases position by given amount. Updates line and column accordingly.
 //
-// Called when UDMF parsing is decided.
-//
-void UDMFParser::start(WadDirectory &setupwad, int lump)
+void UDMFParser::addPos(int amount)
 {
-   enum Expect
+   for(int i = 0; i < amount; ++i)
    {
-      Expect_GlobalIdentifier,
-      Expect_GlobalEqualBrace,
-      Expect_GlobalValue,
-      Expect_GlobalNumber,
-      Expect_GlobalSemicolon,
-      Expect_LocalIdentifierBrace,
-      Expect_LocalEqual,
-      Expect_LocalValue,
-      Expect_LocalNumber,
-      Expect_LocalSemicolon,
-   } expect = Expect_GlobalIdentifier;
-
-   ZAutoBuffer buf;
-
-   setupwad.cacheLumpAuto(lump, buf);
-   auto data = buf.getAs<char *>();
-
-   mTokenizer.setData(data, setupwad.lumpLength(lump));
-
-   // These are global because I don't really want them to be destroyed on 
-   // each level.
-   E_initHashTables();
-   gLinedefs.makeEmpty();
-   gSidedefs.makeEmpty();
-   gVertices.makeEmpty();
-   gSectors.makeEmpty();
-   gThings.makeEmpty();
-   gUDMFNamespace = unsINVALID;  // also reset namespace
-
-   Token token, globalField, localField;
-   int sign = 1;
-
-   try
-   {
-      while(mTokenizer.readToken(token))
+      if(mPos == mData.length())
+         return;
+      if(mData[mPos] == '\n')
       {
-         switch(expect)
-         {
-         case Expect_GlobalIdentifier:
-            if(token.type != UDMFTokenType_Identifier)
-               mTokenizer.raise("Expected global field");
-
-            globalField = token;
-            expect = Expect_GlobalEqualBrace;
-            break;
-         case Expect_GlobalEqualBrace:
-            if(token.type != UDMFTokenType_Operator
-               || (*token.data != '{' && *token.data != '='))
-            {
-               mTokenizer.raise("Expected '=' or '{' after identifier");
-            }
-            // make C string from global field
-            *(globalField.data + globalField.size) = 0;
-            mGlobalKey = globalField.data;
-
-            if(*token.data == '=')
-            {
-               expect = Expect_GlobalValue;
-               sign = 1;
-            }
-            else
-            {
-               handleNewBlock();
-               expect = Expect_LocalIdentifierBrace;
-            }
-            break;
-         case Expect_GlobalValue:
-            mGlobalValue = token;
-            if(token.type == UDMFTokenType_Identifier)
-            {
-               if((token.size == 4 && strncasecmp(token.data, "true", 4))
-                  || (token.size == 5 && strncasecmp(token.data, "false", 5))
-                  || (token.size != 4 && token.size != 5))
-               {
-                  mTokenizer.raise("Found keyword but expected 'true' or "
-                     "'false' after '='");
-               }
-               
-               handleGlobalAssignment();
-               expect = Expect_GlobalSemicolon;
-            }
-            else if(token.type == UDMFTokenType_Operator)
-            {
-               if(*token.data == '-')
-                  sign = -sign;
-               else if(*token.data != '+')
-                  mTokenizer.raise("Invalid character after '='");
-
-               expect = Expect_GlobalNumber;
-            }
-            else if(token.type == UDMFTokenType_Number)
-            {
-               mGlobalValue.number *= sign;
-
-               handleGlobalAssignment();
-               expect = Expect_GlobalSemicolon;
-            }
-            else
-            {
-               // string
-               handleGlobalAssignment();
-               expect = Expect_GlobalSemicolon;
-            }
-            break;
-         case Expect_GlobalNumber:
-            mGlobalValue = token;
-
-            if(token.type != UDMFTokenType_Number)
-            {
-               mTokenizer.raise("Expected number after sign operator");
-            }
-            mGlobalValue.number *= sign;
-            handleGlobalAssignment();
-
-            expect = Expect_GlobalSemicolon;
-            break;
-         case Expect_GlobalSemicolon:
-            if(token.type != UDMFTokenType_Operator || *token.data != ';')
-            {
-               mTokenizer.raise("Expected ';' after value");
-            }
-            expect = Expect_GlobalIdentifier;
-            break;
-
-         case Expect_LocalIdentifierBrace:
-            if(token.type == UDMFTokenType_Identifier)
-            {
-               localField = token;
-               expect = Expect_LocalEqual;
-            }
-            else if(token.type == UDMFTokenType_Operator && *token.data == '}')
-            {
-               // Check if all required fields have been assigned
-               checkLastBlock();
-               expect = Expect_GlobalIdentifier;
-            }
-            else
-               mTokenizer.raise("Expected identifier or '}'");
-            break;
-         case Expect_LocalEqual:
-            if(token.type != UDMFTokenType_Operator || *token.data != '=')
-               mTokenizer.raise("Expected '=' after local field");
-            *(localField.data + localField.size) = 0;
-            mLocalKey = localField.data;
-            sign = 1;
-            expect = Expect_LocalValue;
-            break;
-         case Expect_LocalValue:
-            mLocalValue = token;
-            if(token.type == UDMFTokenType_Identifier)
-            {
-               if((token.size == 4 && strncasecmp(token.data, "true", 4))
-                  || (token.size == 5 && strncasecmp(token.data, "false", 5))
-                  || (token.size != 4 && token.size != 5))
-               {
-                  mTokenizer.raise("Found keyword but expected 'true' or "
-                     "'false' after '='");
-               }
-               handleLocalAssignment();
-               expect = Expect_LocalSemicolon;
-            }
-            else if(token.type == UDMFTokenType_Operator)
-            {
-               if(*token.data == '-')
-                  sign = -sign;
-               else if(*token.data != '+')
-                  mTokenizer.raise("Invalid character after '='");
-               expect = Expect_LocalNumber;
-            }
-            else if(token.type == UDMFTokenType_Number)
-            {
-               mLocalValue.number *= sign;
-               handleLocalAssignment();
-               expect = Expect_LocalSemicolon;
-            }
-            else
-            {
-               handleLocalAssignment();
-               expect = Expect_LocalSemicolon;
-            }
-            break;
-         case Expect_LocalNumber:
-            mLocalValue = token;
-            if(token.type != UDMFTokenType_Number)
-            {
-               mTokenizer.raise("Expected number after sign operator");
-            }
-            mLocalValue.number *= sign;
-            handleLocalAssignment();
-            expect = Expect_LocalSemicolon;
-            break;
-         case Expect_LocalSemicolon:
-            if(token.type != UDMFTokenType_Operator || *token.data != ';')
-               break;
-            expect = Expect_LocalIdentifierBrace;
-            break;
-         }
+         mColumn = 1;
+         mLine++;
       }
+      else
+         mColumn++;
+      mPos++;
    }
-   catch(const UDMFException &e)
-   {
-      e.setLevelError();
-   }
-
-}
-
-//
-// Clear all lists now (called from the same function that does the parsing
-// and the loading of map objects)
-//
-UDMFParser::~UDMFParser()
-{
-   // Some primitive anti-leak protection
-   if(gLinedefs.getLength() > 10000)
-      gLinedefs.clear();
-   else
-      gLinedefs.makeEmpty();
-   if(gSidedefs.getLength() > 10000)
-      gSidedefs.clear();
-   else 
-      gSidedefs.makeEmpty();
-   if(gVertices.getLength() > 10000)
-      gVertices.clear();
-   else
-      gVertices.makeEmpty();
-   if(gSectors.getLength() > 10000)
-      gSectors.clear();
-   else
-      gSectors.makeEmpty();
-   if(gThings.getLength() > 10000)
-      gThings.clear();
-   else 
-      gThings.makeEmpty();
 }
 
 // EOF
