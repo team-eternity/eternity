@@ -33,6 +33,14 @@
 #include "i_platform.h"
 #include "../m_qstr.h"
 
+//
+// All this for PATH_MAX
+//
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX \
+ || EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX \
+ || EE_CURRENT_PLATFORM == EE_PLATFORM_FREEBSD
+#include <limits.h>
+#endif
 
 //=============================================================================
 //
@@ -68,6 +76,32 @@ const char *I_PlatformInstallDirectory()
 #endif
 
    return nullptr;
+}
+
+//
+// Clears all symbolic links from a path (which may be relative) and returns the
+// real path in "real"
+//
+void I_GetRealPath(const char *path, qstring &real)
+{
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
+   // TODO
+   real = path;
+
+#elif EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX \
+   || EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX \
+   || EE_CURRENT_PLATFORM == EE_PLATFORM_FREEBSD
+
+   char result[PATH_MAX + 1];
+   if(realpath(path, result))
+      real = result;
+   else
+      real = path;   // failure
+
+#else
+#warning Unknown platform; this will merely copy "path" to "real"
+   real = path;
+#endif
 }
 
 // EOF
