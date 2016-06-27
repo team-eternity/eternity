@@ -71,8 +71,16 @@ void UDMFParser::loadSectors() const
    for(int i = 0; i < numsectors; ++i)
    {
       sector_t *ss = sectors + i;
-      ss->floorheight = mSectors[i].heightfloor << FRACBITS;
-      ss->ceilingheight = mSectors[i].heightceiling << FRACBITS;
+      if(mNamespace == namespace_Eternity)
+      {
+         ss->floorheight = mSectors[i].heightfloor;
+         ss->ceilingheight = mSectors[i].heightceiling;
+      }
+      else
+      {
+         ss->floorheight = mSectors[i].heightfloor << FRACBITS;
+         ss->ceilingheight = mSectors[i].heightceiling << FRACBITS;
+      }
       ss->floorpic = R_FindFlat(mSectors[i].texturefloor.constPtr());
       P_SetSectorCeilingPic(ss,
                             R_FindFlat(mSectors[i].textureceiling.constPtr()));
@@ -186,8 +194,16 @@ bool UDMFParser::loadSidedefs2()
       side_t *sd = sides + i;
       const USidedef &usd = mSidedefs[i];
 
-      sd->textureoffset = usd.offsetx << FRACBITS;
-      sd->rowoffset = usd.offsety << FRACBITS;
+      if(mNamespace == namespace_Eternity)
+      {
+         sd->textureoffset = usd.offsetx;
+         sd->rowoffset = usd.offsety;
+      }
+      else
+      {
+         sd->textureoffset = usd.offsetx << FRACBITS;
+         sd->rowoffset = usd.offsety << FRACBITS;
+      }
       if(usd.sector < 0 || usd.sector >= numsectors)
       {
          mLine = usd.errorline;
@@ -398,8 +414,16 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
          }
          else if(sidedef)
          {
-            readInt("offsetx", sidedef->offsetx);
-            readInt("offsety", sidedef->offsety);
+            if(mNamespace == namespace_Eternity)
+            {
+               readFixed("offsetx", sidedef->offsetx);
+               readFixed("offsety", sidedef->offsety);
+            }
+            else
+            {
+               readInt("offsetx", sidedef->offsetx);
+               readInt("offsety", sidedef->offsety);
+            }
             readString("texturetop", sidedef->texturetop);
             readString("texturebottom", sidedef->texturebottom);
             readString("texturemiddle", sidedef->texturemiddle);
@@ -412,8 +436,16 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
          }
          else if(sector)
          {
-            readInt("heightfloor", sector->heightfloor);
-            readInt("heightceiling", sector->heightceiling);
+            if(mNamespace == namespace_Eternity)
+            {
+               readFixed("heightfloor", sector->heightfloor);
+               readFixed("heightceiling", sector->heightceiling);
+            }
+            else
+            {
+               readInt("heightfloor", sector->heightfloor);
+               readInt("heightceiling", sector->heightceiling);
+            }
             requireString("texturefloor", sector->texturefloor,
                           sector->tfloorset);
             requireString("textureceiling", sector->textureceiling,
