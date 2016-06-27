@@ -152,6 +152,7 @@ private:
       bool midtex3d, firstsideonly, blockeverything, zoneboundary, clipmidtex;
       float alpha = 1;
       qstring renderstyle;
+      qstring tranmap;
    };
 
    class USidedef

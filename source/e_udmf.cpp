@@ -193,6 +193,19 @@ bool UDMFParser::loadLinedefs()
       ld->alpha = uld.alpha;
       if(!uld.renderstyle.strCaseCmp("add"))
          ld->extflags |= EX_ML_ADDITIVE;
+      if(!uld.tranmap.empty())
+      {
+         if(uld.tranmap != "TRANMAP")
+         {
+            int special = W_CheckNumForName(uld.tranmap.constPtr());
+            if(special < 0 || W_LumpLength(special) != 65536)
+               ld->tranlump = 0;
+            else
+               ld->tranlump = special + 1;
+         }
+         else
+            ld->tranlump = 0;
+      }
    }
    return true;
 }
@@ -417,6 +430,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                readBool("clipmidtex", linedef->clipmidtex);
                readFloat("alpha", linedef->alpha);
                readString("renderstyle", linedef->renderstyle);
+               readString("tranmap", linedef->tranmap);
             }
             readInt("special", linedef->special);
             readInt("arg0", linedef->arg[0]);
