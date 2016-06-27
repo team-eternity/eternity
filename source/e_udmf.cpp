@@ -110,7 +110,7 @@ bool UDMFParser::loadLinedefs()
    for(int i = 0; i < numlines; ++i)
    {
       line_t *ld = lines + i;
-      const ulinedef_t &uld = mLinedefs[i];
+      const ULinedef &uld = mLinedefs[i];
       if(uld.blocking)
          ld->flags |= ML_BLOCKING;
       if(uld.blockmonsters)
@@ -183,6 +183,8 @@ bool UDMFParser::loadLinedefs()
 
       // more Eternity
       ld->alpha = uld.alpha;
+      if(!uld.renderstyle.strCaseCmp("add"))
+         ld->extflags |= EX_ML_ADDITIVE;
    }
    return true;
 }
@@ -331,7 +333,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
 
    // Gamestuff. Must be null when out of block and only one be set when in
    // block
-   ulinedef_t *linedef = nullptr;
+   ULinedef *linedef = nullptr;
    USidedef *sidedef = nullptr;
    uvertex_t *vertex = nullptr;
    USector *sector = nullptr;
@@ -347,10 +349,8 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
          if(!mBlockName.strCaseCmp("linedef"))
          {
             linedef = &mLinedefs.addNew();
-            linedef->identifier = -1;
-            linedef->sideback = -1;
-            linedef->alpha = 1;
             linedef->errorline = mLine;
+            linedef->renderstyle = "translucent";
          }
          else if(!mBlockName.strCaseCmp("sidedef"))
          {
@@ -404,6 +404,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
 
                readBool("midtex3d", linedef->midtex3d);
                readFloat("alpha", linedef->alpha);
+               readString("renderstyle", linedef->renderstyle);
             }
             readInt("special", linedef->special);
             readInt("arg0", linedef->arg[0]);

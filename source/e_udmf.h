@@ -56,6 +56,8 @@ public:
    
    UDMFParser()
    {
+      static ULinedef linedef;
+      mLinedefs.setPrototype(&linedef);
       static USector sector;
       mSectors.setPrototype(&sector);
       static USidedef sidedef;
@@ -125,9 +127,10 @@ private:
    // NOTE: some of these are classes because they contain non-POD objects (e.g.
    // qstring
 
-   struct ulinedef_t
+   class ULinedef : public ZoneObject
    {
-      int identifier;
+   public:
+      int identifier = -1;
       int v1, v2;
 
       bool blocking, blockmonsters, twosided, dontpegtop, dontpegbottom, secret,
@@ -139,15 +142,16 @@ private:
       bool playercross, playeruse, monstercross, monsteruse, impact, playerpush,
       monsterpush, missilecross, repeatspecial;
 
-      // Eternity
-      bool midtex3d;
-      float alpha;
-
       int special, arg[5];
-      int sidefront, sideback;
+      int sidefront, sideback = -1;
 
       bool v1set, v2set, sfrontset;
       int errorline;
+
+      // Eternity
+      bool midtex3d;
+      float alpha = 1;
+      qstring renderstyle;
    };
 
    class USidedef
@@ -234,7 +238,7 @@ private:
 
    // Game stuff
    namespace_e mNamespace;
-   PODCollection<ulinedef_t> mLinedefs;
+   Collection<ULinedef> mLinedefs;
    Collection<USidedef> mSidedefs;
    PODCollection<uvertex_t> mVertices;
    Collection<USector> mSectors;
