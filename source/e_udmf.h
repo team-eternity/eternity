@@ -141,6 +141,7 @@ private:
 
       // Eternity
       bool midtex3d;
+      float alpha;
 
       int special, arg[5];
       int sidefront, sideback;
@@ -211,6 +212,7 @@ private:
    void readString(const char *key, qstring &target) const;
    void requireString(const char *key, qstring &target, bool &flagtarget) const;
    void readBool(const char *key, bool &target) const;
+   void readFloat(const char *key, float &target) const;
 
    readresult_e readItem();
 

@@ -180,6 +180,9 @@ bool UDMFParser::loadLinedefs()
       ld->sidenum[1] = uld.sideback;
       P_InitLineDef(ld);
       P_PostProcessLineFlags(ld);
+
+      // more Eternity
+      ld->alpha = uld.alpha;
    }
    return true;
 }
@@ -346,6 +349,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
             linedef = &mLinedefs.addNew();
             linedef->identifier = -1;
             linedef->sideback = -1;
+            linedef->alpha = 1;
             linedef->errorline = mLine;
          }
          else if(!mBlockName.strCaseCmp("sidedef"))
@@ -399,6 +403,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                readBool("repeatspecial", linedef->repeatspecial);
 
                readBool("midtex3d", linedef->midtex3d);
+               readFloat("alpha", linedef->alpha);
             }
             readInt("special", linedef->special);
             readInt("arg0", linedef->arg[0]);
@@ -651,6 +656,17 @@ void UDMFParser::readBool(const char *key, bool &target) const
    if(!mKey.strCaseCmp(key) && mValue.type == Token::type_Keyword)
    {
       target = ectype::toUpper(mValue.text[0]) == 'T';
+   }
+}
+
+//
+// Passes a float
+//
+void UDMFParser::readFloat(const char *key, float &target) const
+{
+   if(!mKey.strCaseCmp(key) && mValue.type == Token::type_Number)
+   {
+      target = static_cast<float>(mValue.number);
    }
 }
 
