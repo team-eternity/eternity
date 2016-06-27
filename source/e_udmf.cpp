@@ -34,6 +34,7 @@
 #include "p_spec.h"
 #include "r_data.h"
 #include "r_defs.h"
+#include "r_main.h" // Needed for PI
 #include "r_state.h"
 #include "w_wad.h"
 #include "z_auto.h"
@@ -75,6 +76,14 @@ void UDMFParser::loadSectors() const
       {
          ss->floorheight = mSectors[i].heightfloor;
          ss->ceilingheight = mSectors[i].heightceiling;
+         ss->floor_xoffs = M_DoubleToFixed(mSectors[i].xpanningfloor);
+         ss->floor_yoffs = M_DoubleToFixed(mSectors[i].ypanningfloor);
+         ss->ceiling_xoffs = M_DoubleToFixed(mSectors[i].xpanningceiling);
+         ss->ceiling_yoffs = M_DoubleToFixed(mSectors[i].ypanningceiling);
+         ss->floorangle = static_cast<float>
+            (E_NormalizeFlatAngle(mSectors[i].rotationfloor) *  PI / 180.0f);
+         ss->ceilingangle = static_cast<float>
+            (E_NormalizeFlatAngle(mSectors[i].rotationceiling) *  PI / 180.0f);
       }
       else
       {
@@ -393,7 +402,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
       {
          if(linedef)
          {
-            readInt("id", linedef->identifier);
+            readNumber("id", linedef->identifier);
             requireInt("v1", linedef->v1, linedef->v1set);
             requireInt("v2", linedef->v2, linedef->v2set);
             readBool("blocking", linedef->blocking);
@@ -428,18 +437,18 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                readBool("blockeverything", linedef->blockeverything);
                readBool("zoneboundary", linedef->zoneboundary);
                readBool("clipmidtex", linedef->clipmidtex);
-               readFloat("alpha", linedef->alpha);
+               readNumber("alpha", linedef->alpha);
                readString("renderstyle", linedef->renderstyle);
                readString("tranmap", linedef->tranmap);
             }
-            readInt("special", linedef->special);
-            readInt("arg0", linedef->arg[0]);
-            readInt("arg1", linedef->arg[1]);
-            readInt("arg2", linedef->arg[2]);
-            readInt("arg3", linedef->arg[3]);
-            readInt("arg4", linedef->arg[4]);
+            readNumber("special", linedef->special);
+            readNumber("arg0", linedef->arg[0]);
+            readNumber("arg1", linedef->arg[1]);
+            readNumber("arg2", linedef->arg[2]);
+            readNumber("arg3", linedef->arg[3]);
+            readNumber("arg4", linedef->arg[4]);
             requireInt("sidefront", linedef->sidefront, linedef->sfrontset);
-            readInt("sideback", linedef->sideback);
+            readNumber("sideback", linedef->sideback);
 
             // New fields (Eternity)
 
@@ -453,8 +462,8 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
             }
             else
             {
-               readInt("offsetx", sidedef->offsetx);
-               readInt("offsety", sidedef->offsety);
+               readNumber("offsetx", sidedef->offsetx);
+               readNumber("offsety", sidedef->offsety);
             }
             readString("texturetop", sidedef->texturetop);
             readString("texturebottom", sidedef->texturebottom);
@@ -472,27 +481,34 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
             {
                readFixed("heightfloor", sector->heightfloor);
                readFixed("heightceiling", sector->heightceiling);
+
+               readNumber("xpanningfloor", sector->xpanningfloor);
+               readNumber("ypanningfloor", sector->ypanningfloor);
+               readNumber("xpanningceiling", sector->xpanningceiling);
+               readNumber("ypanningceiling", sector->ypanningceiling);
+               readNumber("rotationfloor", sector->rotationfloor);
+               readNumber("rotationceiling", sector->rotationceiling);
             }
             else
             {
-               readInt("heightfloor", sector->heightfloor);
-               readInt("heightceiling", sector->heightceiling);
+               readNumber("heightfloor", sector->heightfloor);
+               readNumber("heightceiling", sector->heightceiling);
             }
             requireString("texturefloor", sector->texturefloor,
                           sector->tfloorset);
             requireString("textureceiling", sector->textureceiling,
                           sector->tceilset);
-            readInt("lightlevel", sector->lightlevel);
-            readInt("special", sector->special);
-            readInt("id", sector->identifier);
+            readNumber("lightlevel", sector->lightlevel);
+            readNumber("special", sector->special);
+            readNumber("id", sector->identifier);
          }
          else if(thing)
          {
-            readInt("id", thing->identifier);
+            readNumber("id", thing->identifier);
             requireFixed("x", thing->x, thing->xset);
             requireFixed("y", thing->y, thing->yset);
             readFixed("height", thing->height);
-            readInt("angle", thing->angle);
+            readNumber("angle", thing->angle);
             requireInt("type", thing->type, thing->typeset);
             readBool("skill1", thing->skill1);
             readBool("skill2", thing->skill2);
@@ -512,12 +528,12 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
             readBool("strifeally", thing->strifeally);
             readBool("translucent", thing->translucent);
             readBool("invisible", thing->invisible);
-            readInt("special", thing->special);
-            readInt("arg0", thing->arg[0]);
-            readInt("arg1", thing->arg[1]);
-            readInt("arg2", thing->arg[2]);
-            readInt("arg3", thing->arg[3]);
-            readInt("arg4", thing->arg[4]);
+            readNumber("special", thing->special);
+            readNumber("arg0", thing->arg[0]);
+            readNumber("arg1", thing->arg[1]);
+            readNumber("arg2", thing->arg[2]);
+            readNumber("arg3", thing->arg[3]);
+            readNumber("arg4", thing->arg[4]);
          }
          continue;
       }
@@ -610,7 +626,7 @@ void UDMFParser::setData(const char *data, size_t size)
 }
 
 //
-// Passes a float
+// Passes a fixed_t
 //
 void UDMFParser::readFixed(const char *key, fixed_t &target) const
 {
@@ -629,15 +645,6 @@ void UDMFParser::requireFixed(const char *key, fixed_t &target,
       target = M_DoubleToFixed(mValue.number);
       flagtarget = true;
    }
-}
-
-//
-// Passes an int
-//
-void UDMFParser::readInt(const char *key, int &target) const
-{
-   if(!mKey.strCaseCmp(key) && mValue.type == Token::type_Number)
-      target = static_cast<int>(mValue.number);
 }
 
 //
@@ -687,14 +694,16 @@ void UDMFParser::readBool(const char *key, bool &target) const
 }
 
 //
-// Passes a float
+// Passes a number (float/double/int)
 //
-void UDMFParser::readFloat(const char *key, float &target) const
+template<typename T>
+void UDMFParser::readNumber(const char *key, T &target) const
 {
    if(!mKey.strCaseCmp(key) && mValue.type == Token::type_Number)
    {
-      target = static_cast<float>(mValue.number);
+      target = static_cast<T>(mValue.number);
    }
+
 }
 
 //

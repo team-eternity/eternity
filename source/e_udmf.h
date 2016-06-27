@@ -183,6 +183,12 @@ private:
    public:
       int heightfloor = 0;
       int heightceiling = 0;
+      double xpanningfloor = 0.0;
+      double ypanningfloor = 0.0;
+      double xpanningceiling = 0.0;
+      double ypanningceiling = 0.0;
+      double rotationfloor = 0.0;
+      double rotationceiling = 0.0;
       qstring texturefloor;
       qstring textureceiling;
       int lightlevel = 160;
@@ -212,12 +218,12 @@ private:
 
    void readFixed(const char *key, fixed_t &target) const;
    void requireFixed(const char *key, fixed_t &target, bool &flagtarget) const;
-   void readInt(const char *key, int &target) const;
    void requireInt(const char *key, int &target, bool &flagtarget) const;
    void readString(const char *key, qstring &target) const;
    void requireString(const char *key, qstring &target, bool &flagtarget) const;
    void readBool(const char *key, bool &target) const;
-   void readFloat(const char *key, float &target) const;
+   template<typename T>
+   void readNumber(const char *key, T &target) const;
 
    readresult_e readItem();
 
