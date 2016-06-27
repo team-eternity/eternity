@@ -185,6 +185,8 @@ bool UDMFParser::loadLinedefs()
       ld->alpha = uld.alpha;
       if(!uld.renderstyle.strCaseCmp("add"))
          ld->extflags |= EX_ML_ADDITIVE;
+      if(uld.firstsideonly)
+         ld->extflags |= EX_ML_1SONLY;
    }
    return true;
 }
@@ -403,6 +405,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                readBool("repeatspecial", linedef->repeatspecial);
 
                readBool("midtex3d", linedef->midtex3d);
+               readBool("firstsideonly", linedef->firstsideonly);
                readFloat("alpha", linedef->alpha);
                readString("renderstyle", linedef->renderstyle);
             }
