@@ -141,6 +141,8 @@ bool UDMFParser::loadLinedefs()
          ld->extflags |= EX_ML_BLOCKALL;
       if(uld.zoneboundary)
          ld->extflags |= EX_ML_ZONEBOUNDARY;
+      if(uld.clipmidtex)
+         ld->extflags |= EX_ML_CLIPMIDTEX;
 
       // TODO: Strife
 
@@ -412,6 +414,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                readBool("firstsideonly", linedef->firstsideonly);
                readBool("blockeverything", linedef->blockeverything);
                readBool("zoneboundary", linedef->zoneboundary);
+               readBool("clipmidtex", linedef->clipmidtex);
                readFloat("alpha", linedef->alpha);
                readString("renderstyle", linedef->renderstyle);
             }
