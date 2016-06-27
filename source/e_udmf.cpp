@@ -124,29 +124,30 @@ bool UDMFParser::loadLinedefs()
       if(uld.passuse)
          ld->flags |= ML_PASSUSE;
 
+      // Eternity
+      if(uld.midtex3d)
+         ld->flags |= ML_3DMIDTEX;
+
       // TODO: Strife
 
-      if(!mNamespace.strCaseCmp("hexen") || !mNamespace.strCaseCmp("eternity"))
-      {
-         if(uld.playercross)
-            ld->extflags |= EX_ML_PLAYER | EX_ML_CROSS;
-         if(uld.playeruse)
-            ld->extflags |= EX_ML_PLAYER | EX_ML_USE;
-         if(uld.monstercross)
-            ld->extflags |= EX_ML_MONSTER | EX_ML_CROSS;
-         if(uld.monsteruse)
-            ld->extflags |= EX_ML_MONSTER | EX_ML_USE;
-         if(uld.impact)
-            ld->extflags |= EX_ML_MISSILE | EX_ML_IMPACT;
-         if(uld.playerpush)
-            ld->extflags |= EX_ML_PLAYER | EX_ML_PUSH;
-         if(uld.monsterpush)
-            ld->extflags |= EX_ML_MONSTER | EX_ML_PUSH;
-         if(uld.missilecross)
-            ld->extflags |= EX_ML_MISSILE | EX_ML_CROSS;
-         if(uld.repeatspecial)
-            ld->extflags |= EX_ML_REPEAT;
-      }
+      if(uld.playercross)
+         ld->extflags |= EX_ML_PLAYER | EX_ML_CROSS;
+      if(uld.playeruse)
+         ld->extflags |= EX_ML_PLAYER | EX_ML_USE;
+      if(uld.monstercross)
+         ld->extflags |= EX_ML_MONSTER | EX_ML_CROSS;
+      if(uld.monsteruse)
+         ld->extflags |= EX_ML_MONSTER | EX_ML_USE;
+      if(uld.impact)
+         ld->extflags |= EX_ML_MISSILE | EX_ML_IMPACT;
+      if(uld.playerpush)
+         ld->extflags |= EX_ML_PLAYER | EX_ML_PUSH;
+      if(uld.monsterpush)
+         ld->extflags |= EX_ML_MONSTER | EX_ML_PUSH;
+      if(uld.missilecross)
+         ld->extflags |= EX_ML_MISSILE | EX_ML_CROSS;
+      if(uld.repeatspecial)
+         ld->extflags |= EX_ML_REPEAT;
 
       ld->special = uld.special;
       ld->tag = uld.identifier;
@@ -292,10 +293,12 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
       auto data = buf.getAs<const char *>();
 
       // store it conveniently
-      setData(data);
+      setData(data, setupwad.lumpLength(lump));
    }
 
    readresult_e result = readItem();
+   if(result == result_Error)
+      return false;
    if(result != result_Assignment || mKey.strCaseCmp("namespace") ||
       mValue.type != Token::type_String)
    {
@@ -304,7 +307,8 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
    }
 
    // Set namespace (we'll think later about checking it
-   mNamespace = mValue.text;
+   if(!mValue.text.strCaseCmp("eternity"))
+      mNamespace = namespace_Eternity;
 
    // Gamestuff. Must be null when out of block and only one be set when in
    // block
@@ -321,14 +325,14 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
       if(result == result_BlockEntry)
       {
          // we're now in some block. Alloc stuff
-         if(mBlockName.strCaseCmp("linedef"))
+         if(!mBlockName.strCaseCmp("linedef"))
          {
             linedef = &mLinedefs.addNew();
             linedef->identifier = -1;
             linedef->sideback = -1;
             linedef->errorline = mLine;
          }
-         else if(mBlockName.strCaseCmp("sidedef"))
+         else if(!mBlockName.strCaseCmp("sidedef"))
          {
             sidedef = &mSidedefs.addNew();
             sidedef->texturetop = "-";
@@ -364,15 +368,22 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
             readBool("translucent", linedef->translucent);
             readBool("jumpover", linedef->jumpover);
             readBool("blockfloaters", linedef->blockfloaters);
-            readBool("playercross", linedef->playercross);
-            readBool("playeruse", linedef->playeruse);
-            readBool("monstercross", linedef->monstercross);
-            readBool("monsteruse", linedef->monsteruse);
-            readBool("impact", linedef->impact);
-            readBool("playerpush", linedef->playerpush);
-            readBool("monsterpush", linedef->monsterpush);
-            readBool("missilecross", linedef->missilecross);
-            readBool("repeatspecial", linedef->repeatspecial);
+
+            if(mNamespace == namespace_Eternity)
+            {
+               // TODO: these also apply to Hexen
+               readBool("playercross", linedef->playercross);
+               readBool("playeruse", linedef->playeruse);
+               readBool("monstercross", linedef->monstercross);
+               readBool("monsteruse", linedef->monsteruse);
+               readBool("impact", linedef->impact);
+               readBool("playerpush", linedef->playerpush);
+               readBool("monsterpush", linedef->monsterpush);
+               readBool("missilecross", linedef->missilecross);
+               readBool("repeatspecial", linedef->repeatspecial);
+
+               readBool("midtex3d", linedef->midtex3d);
+            }
             readInt("special", linedef->special);
             readInt("arg0", linedef->arg[0]);
             readInt("arg1", linedef->arg[1]);
@@ -381,6 +392,9 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
             readInt("arg4", linedef->arg[4]);
             requireInt("sidefront", linedef->sidefront, linedef->sfrontset);
             readInt("sideback", linedef->sideback);
+
+            // New fields (Eternity)
+
          }
          else if(sidedef)
          {
@@ -509,9 +523,9 @@ qstring UDMFParser::error() const
 //
 // Loads a new TEXTMAP and clears all variables
 //
-void UDMFParser::setData(const char *data)
+void UDMFParser::setData(const char *data, size_t size)
 {
-   mData = data;
+   mData.copy(data, size);
    mPos = 0;
    mLine = 1;
    mColumn = 1;
@@ -523,7 +537,7 @@ void UDMFParser::setData(const char *data)
    mBlockName.clear();
 
    // Game stuff
-   mNamespace.clear();
+   mNamespace = namespace_Doom;  // default to Doom
    mLinedefs.makeEmpty();
    mSidedefs.makeEmpty();
    mVertices.makeEmpty();
@@ -602,7 +616,7 @@ void UDMFParser::requireString(const char *key, qstring &target,
 //
 void UDMFParser::readBool(const char *key, bool &target) const
 {
-   if(!mKey.strCaseCmp(key) && mValue.type == Token::type_String)
+   if(!mKey.strCaseCmp(key) && mValue.type == Token::type_Keyword)
    {
       target = ectype::toUpper(mValue.text[0]) == 'T';
    }
@@ -638,8 +652,8 @@ UDMFParser::readresult_e UDMFParser::readItem()
    }
    mKey = token.text;
 
-   if(!next(token) || token.type != Token::type_Symbol || token.symbol != '=' ||
-      token.symbol != '{')
+   if(!next(token) || token.type != Token::type_Symbol ||
+      (token.symbol != '=' && token.symbol != '{'))
    {
       mError = "Expected '=' or '{'";
       return result_Error;
@@ -648,19 +662,20 @@ UDMFParser::readresult_e UDMFParser::readItem()
    if(token.symbol == '=')
    {
       // assignment
-      if(!next(token) || token.type != Token::type_Keyword ||
-         token.type != Token::type_String || token.type != Token::type_Number)
+      if(!next(token) || (token.type != Token::type_Keyword &&
+         token.type != Token::type_String && token.type != Token::type_Number))
       {
          mError = "Expected a number, string or true/false";
          return result_Error;
       }
 
-      if(token.type == Token::type_Keyword && (token.text.strCaseCmp("true") ||
-                                               token.text.strCaseCmp("false")))
+      if(token.type == Token::type_Keyword && token.text.strCaseCmp("true") &&
+         token.text.strCaseCmp("false"))
       {
          mError = "Identifier can only be true or false";
          return result_Error;
       }
+      mValue = token;
 
       if(!next(token) || token.type != Token::type_Symbol ||
          token.symbol != ';')
@@ -669,7 +684,6 @@ UDMFParser::readresult_e UDMFParser::readItem()
          return result_Error;
       }
 
-      mValue = token;
       return result_Assignment;
    }
    else  // {

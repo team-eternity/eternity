@@ -116,6 +116,12 @@ private:
       result_Error
    };
 
+   enum namespace_e
+   {
+      namespace_Doom,
+      namespace_Eternity,
+   };
+
    // NOTE: some of these are classes because they contain non-POD objects (e.g.
    // qstring
 
@@ -132,6 +138,9 @@ private:
 
       bool playercross, playeruse, monstercross, monsteruse, impact, playerpush,
       monsterpush, missilecross, repeatspecial;
+
+      // Eternity
+      bool midtex3d;
 
       int special, arg[5];
       int sidefront, sideback;
@@ -193,7 +202,7 @@ private:
       bool xset, yset, typeset;
    };
 
-   void setData(const char *data);
+   void setData(const char *data, size_t size);
 
    void readFixed(const char *key, fixed_t &target) const;
    void requireFixed(const char *key, fixed_t &target, bool &flagtarget) const;
@@ -222,7 +231,7 @@ private:
    qstring mBlockName;
 
    // Game stuff
-   qstring mNamespace;
+   namespace_e mNamespace;
    PODCollection<ulinedef_t> mLinedefs;
    Collection<USidedef> mSidedefs;
    PODCollection<uvertex_t> mVertices;
