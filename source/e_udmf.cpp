@@ -135,6 +135,10 @@ bool UDMFParser::loadLinedefs()
       // Eternity
       if(uld.midtex3d)
          ld->flags |= ML_3DMIDTEX;
+      if(uld.firstsideonly)
+         ld->extflags |= EX_ML_1SONLY;
+      if(uld.blockeverything)
+         ld->extflags |= EX_ML_BLOCKALL;
 
       // TODO: Strife
 
@@ -185,8 +189,6 @@ bool UDMFParser::loadLinedefs()
       ld->alpha = uld.alpha;
       if(!uld.renderstyle.strCaseCmp("add"))
          ld->extflags |= EX_ML_ADDITIVE;
-      if(uld.firstsideonly)
-         ld->extflags |= EX_ML_1SONLY;
    }
    return true;
 }
@@ -406,6 +408,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
 
                readBool("midtex3d", linedef->midtex3d);
                readBool("firstsideonly", linedef->firstsideonly);
+               readBool("blockeverything", linedef->blockeverything);
                readFloat("alpha", linedef->alpha);
                readString("renderstyle", linedef->renderstyle);
             }

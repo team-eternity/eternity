@@ -149,7 +149,7 @@ private:
       int errorline;
 
       // Eternity
-      bool midtex3d, firstsideonly;
+      bool midtex3d, firstsideonly, blockeverything;
       float alpha = 1;
       qstring renderstyle;
    };
