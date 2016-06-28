@@ -145,6 +145,7 @@ void    E_GetEDMapThings(mapthing_t **things, int *numthings);
 void    E_GetEDLines(maplinedefext_t **lines, int *numlines);
 int     E_LineSpecForName(const char *name);
 void    E_LoadSectorExt(line_t *line);
+double  E_NormalizeFlatAngle(double input); // MaxW: 2016/06/27: Needed for UDMF
 
 #endif
 
