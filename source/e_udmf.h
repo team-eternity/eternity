@@ -189,6 +189,17 @@ private:
       fixed_t ypanningceiling = 0;
       double rotationfloor = 0.0;
       double rotationceiling = 0.0;
+
+      // TODO: Implement functionality for sliding scale of leakiness from 0-256
+      byte leakiness = 0;
+      int damageamount = 0;
+      int damageinterval = 0;
+      bool damage_endgodmode = false;
+      bool damage_exitlevel = false;
+      bool damage_terrainhit = false;
+      qstring floorterrain = qstring("@flat");
+      qstring ceilingterrain = qstring("@flat");
+
       qstring texturefloor;
       qstring textureceiling;
       int lightlevel = 160;
