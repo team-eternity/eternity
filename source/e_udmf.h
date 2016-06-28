@@ -196,7 +196,7 @@ private:
       int damageinterval = 0;
       bool damage_endgodmode = false;
       bool damage_exitlevel = false;
-      bool damage_terrainhit = false;
+      bool damageterraineffect = false;
       qstring floorterrain = qstring("@flat");
       qstring ceilingterrain = qstring("@flat");
 

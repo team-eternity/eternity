@@ -92,7 +92,7 @@ void UDMFParser::loadSectors() const
          // appropriate damageflags to true, otherwise don't set them.
          ss->damageflags |= mSectors[i].damage_endgodmode ? SDMG_ENDGODMODE : 0;
          ss->damageflags |= mSectors[i].damage_exitlevel ? SDMG_EXITLEVEL : 0;
-         ss->damageflags |= mSectors[i].damage_terrainhit ? SDMG_TERRAINHIT : 0;
+         ss->damageflags |= mSectors[i].damageterraineffect ? SDMG_TERRAINHIT : 0;
          if(mSectors[i].floorterrain.strCaseCmp("@flat"))
             ss->floorterrain = E_TerrainForName(mSectors[i].floorterrain.constPtr());
          if (mSectors[i].ceilingterrain.strCaseCmp("@flat"))
@@ -507,7 +507,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                readNumber("damageinterval", sector->damageinterval);
                readBool("damage_endgodmode", sector->damage_endgodmode);
                readBool("damage_exitlevel", sector->damage_exitlevel);
-               readBool("damage_terrainhit", sector->damage_terrainhit);
+               readBool("damageterraineffect", sector->damageterraineffect);
                readString("floorterrain", sector->floorterrain);
                readString("ceilingterrain", sector->ceilingterrain);
             }
