@@ -154,6 +154,7 @@ static FormatFunc formatFuncs[W_FORMAT_MAX] =
    W_isWadFile, // W_FORMAT_WAD
    W_isZipFile, // W_FORMAT_ZIP
    W_isFile,    // W_FORMAT_FILE
+   nullptr,     // W_FORMAT_DIR: not used here, guarded by W_isFile (ioanch)
 };
 
 //
