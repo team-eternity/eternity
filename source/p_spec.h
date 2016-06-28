@@ -940,6 +940,7 @@ struct spectransfer_t
    int damagemask;
    int damagemod;
    unsigned int damageflags;
+   int leakiness;
 };
 
 // p_doors

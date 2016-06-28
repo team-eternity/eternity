@@ -190,8 +190,7 @@ private:
       double rotationfloor = 0.0;
       double rotationceiling = 0.0;
 
-      // TODO: Implement functionality for sliding scale of leakiness from 0-256
-      byte leakiness = 0;
+      int leakiness = 0;
       int damageamount = 0;
       int damageinterval = 0;
       bool damage_endgodmode = false;

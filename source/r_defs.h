@@ -331,6 +331,7 @@ struct sector_t
    int damagemask;  // damage is done when !(leveltime % mask)
    int damagemod;   // damage method to use
    unsigned int damageflags; // special damage behaviors
+   int leakiness; // probability / 256 that the suit will leak
 
    // SoM 5/10/09: Happy birthday to me. Err, Slopes!
    pslope_t *f_slope;

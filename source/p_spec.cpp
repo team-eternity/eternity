@@ -1038,9 +1038,9 @@ void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
    if(enable_nuke && sector->damage > 0) // killough 12/98: nukage disabling cheat
    {
       if(!player->powers[pw_ironfeet]          ||  // no rad suit?
-         sector->damageflags & SDMG_IGNORESUIT ||  // ignores suit?
-         (sector->damageflags & SDMG_LEAKYSUIT &&  // suit leaks?
-          (P_Random(pr_slimehurt) < 5))
+         sector->leakiness >= 256              ||  // ignores suit?
+         (sector->leakiness > 0                &&  // suit leaks?
+          (P_Random(pr_slimehurt) < sector->leakiness))
         )
       {
          // disables god mode?
@@ -1763,6 +1763,7 @@ void P_SetupSpecialTransfer(const sector_t *sector, spectransfer_t *spec)
    spec->damagemask  = sector->damagemask;
    spec->damagemod   = sector->damagemod;
    spec->damageflags = sector->damageflags;
+   spec->leakiness   = sector->leakiness;
 }
 
 //
@@ -1794,6 +1795,7 @@ void P_TransferSectorSpecial(sector_t *sector, const spectransfer_t *spec)
    sector->damagemask  = spec->damagemask;
    sector->damagemod   = spec->damagemod;
    sector->damageflags = spec->damageflags;
+   sector->leakiness   = spec->leakiness;
 }
 
 //
@@ -1811,6 +1813,7 @@ void P_DirectTransferSectorSpecial(const sector_t *src, sector_t *dest)
    dest->damagemask  = src->damagemask;
    dest->damagemod   = src->damagemod;
    dest->damageflags = src->damageflags;
+   dest->leakiness   = src->leakiness;
 }
 
 //
@@ -1827,6 +1830,7 @@ void P_ZeroSectorSpecial(sector_t *sec)
    sec->damagemask  = 0;
    sec->damagemod   = MOD_UNKNOWN;
    sec->damageflags = 0;
+   sec->leakiness   = 0;
 }
 
 //============================================================================

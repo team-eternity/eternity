@@ -325,8 +325,8 @@ SaveArchive &SaveArchive::operator << (line_t *&ln)
 // Serialize a spectransfer_t structure (contained in many thinkers)
 SaveArchive &SaveArchive::operator << (spectransfer_t &st)
 {
-   *this << st.damage << st.damageflags << st.damagemask << st.damagemod
-         << st.flags << st.newspecial;
+   *this << st.damage << st.damageflags << st.leakiness << st.damagemask
+         << st.damagemod << st.flags << st.newspecial;
    
    return *this;
 }
@@ -553,7 +553,8 @@ static void P_ArchiveWorld(SaveArchive &arc)
           << sec->friction << sec->movefactor  
           << sec->topmap << sec->midmap << sec->bottommap
           << sec->flags << sec->intflags 
-          << sec->damage << sec->damageflags << sec->damagemask << sec->damagemod
+          << sec->damage << sec->damageflags << sec->leakiness << sec->damagemask
+          << sec->damagemod
           << sec->floorpic << sec->ceilingpic
           << sec->lightlevel << sec->oldlightlevel 
           << sec->special << sec->tag; // needed?   yes -- transfer types -- killough

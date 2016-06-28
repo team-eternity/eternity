@@ -31,6 +31,7 @@
 #include "e_exdata.h"
 #include "e_ttypes.h"
 #include "e_udmf.h"
+#include "m_compare.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "r_data.h"
@@ -93,6 +94,7 @@ void UDMFParser::loadSectors() const
          ss->damageflags |= mSectors[i].damage_endgodmode ? SDMG_ENDGODMODE : 0;
          ss->damageflags |= mSectors[i].damage_exitlevel ? SDMG_EXITLEVEL : 0;
          ss->damageflags |= mSectors[i].damageterraineffect ? SDMG_TERRAINHIT : 0;
+         ss->leakiness = eclamp(mSectors[i].leakiness, 0, 256);
          if(mSectors[i].floorterrain.strCaseCmp("@flat"))
             ss->floorterrain = E_TerrainForName(mSectors[i].floorterrain.constPtr());
          if (mSectors[i].ceilingterrain.strCaseCmp("@flat"))

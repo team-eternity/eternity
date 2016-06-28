@@ -1579,6 +1579,13 @@ void E_LoadSectorExt(line_t *line)
    sector->damageflags |=   edsector->damageflagsadd;  // add any flags-to-add
    sector->damageflags &= ~(edsector->damageflagsrem); // remove any flags-to-remove
 
+   // ioanch: set leakiness from these flags
+   if(sector->damageflags & SDMG_LEAKYSUIT)
+      sector->leakiness = 5;
+   if(sector->damageflags & SDMG_IGNORESUIT)
+      sector->leakiness = 256;
+   sector->damageflags &= ~(SDMG_LEAKYSUIT | SDMG_IGNORESUIT);
+   // delete the flags
 
    // flat offsets
    sector->floor_xoffs   = M_DoubleToFixed(edsector->floor_xoffs);

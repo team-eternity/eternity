@@ -112,7 +112,7 @@ static void EV_SectorLightStrobeHurt(sector_t *sector)
    sector->damage       = 20;
    sector->damagemask   = 32;
    sector->damagemod    = MOD_SLIME;
-   sector->damageflags |= SDMG_LEAKYSUIT;
+   sector->leakiness    = 5;
 }
 
 //
@@ -197,7 +197,8 @@ static void EV_SectorExitSuperDamage(sector_t *sector)
    sector->damage       = 20;
    sector->damagemask   = 32;
    sector->damagemod    = MOD_SLIME;
-   sector->damageflags |= SDMG_IGNORESUIT|SDMG_ENDGODMODE|SDMG_EXITLEVEL;
+   sector->damageflags |= SDMG_ENDGODMODE|SDMG_EXITLEVEL;
+   sector->leakiness    = 256;
 }
 
 //
@@ -253,7 +254,7 @@ static void EV_SectorDamageSuperHellSlime(sector_t *sector)
    sector->damage       = 20;
    sector->damagemask   = 32;
    sector->damagemod    = MOD_SLIME;
-   sector->damageflags |= SDMG_LEAKYSUIT;
+   sector->leakiness    = 5;
 }
 
 //
