@@ -76,13 +76,13 @@ void UDMFParser::loadSectors() const
       {
          ss->floorheight = mSectors[i].heightfloor;
          ss->ceilingheight = mSectors[i].heightceiling;
-         ss->floor_xoffs = M_DoubleToFixed(mSectors[i].xpanningfloor);
-         ss->floor_yoffs = M_DoubleToFixed(mSectors[i].ypanningfloor);
-         ss->ceiling_xoffs = M_DoubleToFixed(mSectors[i].xpanningceiling);
-         ss->ceiling_yoffs = M_DoubleToFixed(mSectors[i].ypanningceiling);
-         ss->floorangle = static_cast<float>
+         ss->floor_xoffs = mSectors[i].xpanningfloor;
+         ss->floor_yoffs = mSectors[i].ypanningfloor;
+         ss->ceiling_xoffs = mSectors[i].xpanningceiling;
+         ss->ceiling_yoffs = mSectors[i].ypanningceiling;
+         ss->floorbaseangle = static_cast<float>
             (E_NormalizeFlatAngle(mSectors[i].rotationfloor) *  PI / 180.0f);
-         ss->ceilingangle = static_cast<float>
+         ss->ceilingbaseangle = static_cast<float>
             (E_NormalizeFlatAngle(mSectors[i].rotationceiling) *  PI / 180.0f);
       }
       else
@@ -482,10 +482,10 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                readFixed("heightfloor", sector->heightfloor);
                readFixed("heightceiling", sector->heightceiling);
 
-               readNumber("xpanningfloor", sector->xpanningfloor);
-               readNumber("ypanningfloor", sector->ypanningfloor);
-               readNumber("xpanningceiling", sector->xpanningceiling);
-               readNumber("ypanningceiling", sector->ypanningceiling);
+               readFixed("xpanningfloor", sector->xpanningfloor);
+               readFixed("ypanningfloor", sector->ypanningfloor);
+               readFixed("xpanningceiling", sector->xpanningceiling);
+               readFixed("ypanningceiling", sector->ypanningceiling);
                readNumber("rotationfloor", sector->rotationfloor);
                readNumber("rotationceiling", sector->rotationceiling);
             }

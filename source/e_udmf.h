@@ -183,10 +183,10 @@ private:
    public:
       int heightfloor = 0;
       int heightceiling = 0;
-      double xpanningfloor = 0.0;
-      double ypanningfloor = 0.0;
-      double xpanningceiling = 0.0;
-      double ypanningceiling = 0.0;
+      fixed_t xpanningfloor = 0;
+      fixed_t ypanningfloor = 0;
+      fixed_t xpanningceiling = 0;
+      fixed_t ypanningceiling = 0;
       double rotationfloor = 0.0;
       double rotationceiling = 0.0;
       qstring texturefloor;
