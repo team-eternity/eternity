@@ -33,6 +33,8 @@ bool I_CreateDirectory(qstring const &path);
 
 const char *I_PlatformInstallDirectory();
 
+void I_GetRealPath(const char *path, qstring &real);
+
 #endif
 
 // EOF
