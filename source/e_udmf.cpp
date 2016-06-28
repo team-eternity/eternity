@@ -29,6 +29,7 @@
 
 #include "doomstat.h"
 #include "e_exdata.h"
+#include "e_ttypes.h"
 #include "e_udmf.h"
 #include "p_setup.h"
 #include "p_spec.h"
@@ -76,6 +77,7 @@ void UDMFParser::loadSectors() const
       {
          ss->floorheight = mSectors[i].heightfloor;
          ss->ceilingheight = mSectors[i].heightceiling;
+
          ss->floor_xoffs = M_DoubleToFixed(mSectors[i].xpanningfloor);
          ss->floor_yoffs = M_DoubleToFixed(mSectors[i].ypanningfloor);
          ss->ceiling_xoffs = M_DoubleToFixed(mSectors[i].xpanningceiling);
@@ -84,6 +86,18 @@ void UDMFParser::loadSectors() const
             (E_NormalizeFlatAngle(mSectors[i].rotationfloor) *  PI / 180.0f);
          ss->ceilingangle = static_cast<float>
             (E_NormalizeFlatAngle(mSectors[i].rotationceiling) *  PI / 180.0f);
+
+         ss->damage = mSectors[i].damageamount;
+         ss->damagemask = mSectors[i].damageinterval;
+         // If the following flags are true for the current sector, then set the
+         // appropriate damageflags to true, otherwise don't set them.
+         ss->damageflags |= mSectors[i].damage_endgodmode ? SDMG_ENDGODMODE : 0;
+         ss->damageflags |= mSectors[i].damage_exitlevel ? SDMG_EXITLEVEL : 0;
+         ss->damageflags |= mSectors[i].damage_terrainhit ? SDMG_TERRAINHIT : 0;
+         if(mSectors[i].floorterrain.strCaseCmp("@flat"))
+            ss->floorterrain = E_TerrainForName(mSectors[i].floorterrain.constPtr());
+         if (mSectors[i].ceilingterrain.strCaseCmp("@flat"))
+            ss->ceilingterrain = E_TerrainForName(mSectors[i].ceilingterrain.constPtr());
       }
       else
       {
@@ -488,6 +502,15 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                readNumber("ypanningceiling", sector->ypanningceiling);
                readNumber("rotationfloor", sector->rotationfloor);
                readNumber("rotationceiling", sector->rotationceiling);
+
+               readNumber("leakiness", sector->leakiness); // TODO: Give this property functionality
+               readNumber("damageamount", sector->damageamount);
+               readNumber("damageinterval", sector->damageinterval);
+               readBool("damage_endgodmode", sector->damage_endgodmode);
+               readBool("damage_exitlevel", sector->damage_exitlevel);
+               readBool("damage_terrainhit", sector->damage_terrainhit);
+               readString("floorterrain", sector->floorterrain);
+               readString("ceilingterrain", sector->ceilingterrain);
             }
             else
             {
