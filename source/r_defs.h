@@ -96,16 +96,20 @@ typedef struct attachedsurface_s
 enum
 {
    // BOOM generalized sector properties
-   SECF_SECRET        = 0x00000001, // bit 7 of generalized special
-   SECF_FRICTION      = 0x00000002, // bit 8 of generalized special
-   SECF_PUSH          = 0x00000004, // bit 9 of generalized special
-   SECF_KILLSOUND     = 0x00000008, // bit A of generalized special
-   SECF_KILLMOVESOUND = 0x00000010, // bit B of generalized special
+   SECF_SECRET             = 0x00000001,  // bit 7 of generalized special
+   SECF_FRICTION           = 0x00000002,  // bit 8 of generalized special
+   SECF_PUSH               = 0x00000004,  // bit 9 of generalized special
+   SECF_KILLSOUND          = 0x00000008,  // bit A of generalized special
+   SECF_KILLMOVESOUND      = 0x00000010,  // bit B of generalized special
 
    // Hexen phased lighting
-   SECF_PHASEDLIGHT   = 0x00000020, // spawned with sequence start special
-   SECF_LIGHTSEQUENCE = 0x00000040, // spawned with sequence special
-   SECF_LIGHTSEQALT   = 0x00000080  // spawned with sequence alt special
+   SECF_PHASEDLIGHT        = 0x00000020,  // spawned with sequence start special
+   SECF_LIGHTSEQUENCE      = 0x00000040,  // spawned with sequence special
+   SECF_LIGHTSEQALT        = 0x00000080,  // spawned with sequence alt special
+
+   // UDMF given
+   SECF_FLOORLIGHTABSOLUTE = 0x00000100,  // lightfloor is set absolutely
+   SECF_CEILLIGHTABSOLUTE  = 0x00000200,  // lightceiling is set absolutely
 };
 
 // haleyjd 12/31/08: sector damage flags
@@ -253,6 +257,8 @@ struct sector_t
    
    // killough 4/11/98: support for lightlevels coming from another sector
    int floorlightsec, ceilinglightsec;
+   // ioanch: UDMF-given floor and ceiling delta light level
+   int floorlightdelta, ceilinglightdelta;
    
    int bottommap, midmap, topmap; // killough 4/4/98: dynamic colormaps
    

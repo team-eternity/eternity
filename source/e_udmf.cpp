@@ -99,6 +99,12 @@ void UDMFParser::loadSectors() const
             ss->floorterrain = E_TerrainForName(mSectors[i].floorterrain.constPtr());
          if (mSectors[i].ceilingterrain.strCaseCmp("@flat"))
             ss->ceilingterrain = E_TerrainForName(mSectors[i].ceilingterrain.constPtr());
+
+         ss->floorlightdelta = mSectors[i].lightfloor;
+         ss->ceilinglightdelta = mSectors[i].lightceiling;
+         ss->flags |=
+         (mSectors[i].lightfloorabsolute ? SECF_FLOORLIGHTABSOLUTE : 0) |
+         (mSectors[i].lightceilingabsolute ? SECF_CEILLIGHTABSOLUTE : 0);
       }
       else
       {
@@ -504,7 +510,12 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                readNumber("rotationfloor", sector->rotationfloor);
                readNumber("rotationceiling", sector->rotationceiling);
 
-               readNumber("leakiness", sector->leakiness); // TODO: Give this property functionality
+               readNumber("lightfloor", sector->lightfloor);
+               readNumber("lightceiling", sector->lightceiling);
+               readBool("lightfloorabsolute", sector->lightfloorabsolute);
+               readBool("lightceilingabsolute", sector->lightceilingabsolute);
+
+               readNumber("leakiness", sector->leakiness);
                readNumber("damageamount", sector->damageamount);
                readNumber("damageinterval", sector->damageinterval);
                readBool("damage_endgodmode", sector->damage_endgodmode);

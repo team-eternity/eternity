@@ -178,7 +178,7 @@ private:
       bool xset, yset;
    };
 
-   class USector
+   class USector : public ZoneObject
    {
    public:
       int heightfloor = 0;
@@ -198,6 +198,11 @@ private:
       bool damageterraineffect = false;
       qstring floorterrain = qstring("@flat");
       qstring ceilingterrain = qstring("@flat");
+
+      int lightfloor = 0;
+      int lightceiling = 0;
+      bool lightfloorabsolute;
+      bool lightceilingabsolute;
 
       qstring texturefloor;
       qstring textureceiling;
