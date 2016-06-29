@@ -157,6 +157,12 @@ static ev_static_t PSXStaticBindings[] =
    STATICSPEC(203, EV_STATIC_SCROLL_LINE_DOWN)
 };
 
+// UDMF "Eternity" Namespace Static Bindings
+static ev_static_t UDMFEternityStaticBindings[] =
+{
+   STATICSPEC(121, EV_STATIC_NULL) // Line_SetIdentification isn't needed in UDMF
+};
+
 //
 // Hash Tables
 //
@@ -176,6 +182,10 @@ static EV_StaticSpecHash DOOMStaticSpecHash(earrlen(DOOMStaticBindings));
 // Hexen hashes
 static EV_StaticHash     HexenStaticHash(earrlen(HexenStaticBindings));
 static EV_StaticSpecHash HexenStaticSpecHash(earrlen(HexenStaticBindings));
+
+// UDMF hashes
+static EV_StaticHash     UDMFEternityStaticHash(earrlen(UDMFEternityStaticBindings));
+static EV_StaticSpecHash UDMFEternityStaticSpecHash(earrlen(UDMFEternityStaticBindings));
 
 //
 // EV_addStaticSpecialsToHash
@@ -233,6 +243,20 @@ static void EV_initHexenStaticHash()
    }
 }
 
+static void EV_initUDMFEternityStaticHash()
+{
+   static bool firsttime = true;
+
+   if(firsttime)
+   {
+      firsttime = false;
+
+      // add every item in the Hexen static bindings array
+      EV_addStaticSpecialsToHash(UDMFEternityStaticHash, UDMFEternityStaticSpecHash,
+         UDMFEternityStaticBindings,
+         earrlen(UDMFEternityStaticBindings));
+   }
+}
 //
 // EV_DOOMSpecialForStaticInit
 //
@@ -404,6 +428,49 @@ int EV_PSXStaticInitForSpecial(int special)
 }
 
 //
+// EV_UDMFEternitySpecialForStaticInit
+//
+// Always looks up a special in the UDMFEternity gamemode's static init list, 
+// regardless of the map format or gamemode in use. Returns 0 if no such 
+// special exists.
+//
+int EV_UDMFEternitySpecialForStaticInit(int staticFn)
+{
+   ev_static_t *binding;
+
+   // init the hash if it hasn't been done yet
+   EV_initUDMFEternityStaticHash();
+
+   if(binding = UDMFEternityStaticHash.objectForKey(staticFn))
+      return binding->actionNumber;
+   else
+      return EV_HexenSpecialForStaticInit(staticFn);
+}
+
+//
+// EV_UDMFEternityStaticInitForSpecial
+//
+// Always looks up a static init function in the UDMFEternity gamemode's static init
+// list, regardless of the map format or gamemode in use. Returns 0 if the given
+// special isn't bound to a static init function.
+//
+int EV_UDMFEternityStaticInitForSpecial(int special)
+{
+   ev_static_t *binding;
+
+   // Early return for special 0 or 121
+   if(!special || special == 121)
+      return EV_STATIC_NULL;
+
+   // init the hash if it hasn't been done yet
+   EV_initUDMFEternityStaticHash();
+   if(binding = UDMFEternityStaticSpecHash.objectForKey(special))
+      return binding->staticFn;
+   else
+      return EV_HexenStaticInitForSpecial(special);
+}
+
+//
 // EV_SpecialForStaticInit
 //
 // Pass in the symbolic static function name you want the line special for; it
@@ -415,6 +482,8 @@ int EV_SpecialForStaticInit(int staticFn)
 {
    switch(LevelInfo.mapFormat)
    {
+   case LEVEL_FORMAT_UDMF_ETERNITY:
+      return EV_UDMFEternitySpecialForStaticInit(staticFn);
    case LEVEL_FORMAT_HEXEN:
       return EV_HexenSpecialForStaticInit(staticFn);
    case LEVEL_FORMAT_PSX:
@@ -449,6 +518,8 @@ int EV_StaticInitForSpecial(int special)
 
    switch(LevelInfo.mapFormat)
    {
+   case LEVEL_FORMAT_UDMF_ETERNITY:
+      return EV_UDMFEternityStaticInitForSpecial(special);
    case LEVEL_FORMAT_HEXEN:
       return EV_HexenStaticInitForSpecial(special);
    case LEVEL_FORMAT_PSX:
