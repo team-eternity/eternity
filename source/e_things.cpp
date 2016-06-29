@@ -193,10 +193,16 @@ int UnknownThingType;
 #define ITEM_DELTA_NAME "name"
 
 // Blood Properties
-#define ITEM_TNG_BLOODNORM  "bloodtype.normal"
-#define ITEM_TNG_BLOODRIP   "bloodtype.rip"
-#define ITEM_TNG_BLOODCRUSH "bloodtype.crush"
-#define ITEM_TNG_BLOODBEHAV "bloodbehaviour"
+#define ITEM_TNG_BLOODNORM   "bloodtype.normal"
+#define ITEM_TNG_BLOODIMPACT "bloodtype.impact"
+#define ITEM_TNG_BLOODRIP    "bloodtype.rip"
+#define ITEM_TNG_BLOODCRUSH  "bloodtype.crush"
+
+#define ITEM_TNG_BLOODBEHAV  "bloodbehavior"
+#define ITEM_TNG_CLRBLOODBEH "clearbloodbehaviors"
+
+#define ITEM_TNG_BB_ACTION   "action"
+#define ITEM_TNG_BB_BEHAVIOR "behavior"
 
 //
 // Field-Specific Data
@@ -459,6 +465,14 @@ static cfg_opt_t colspawn_opts[] =
    CFG_END()
 };
 
+// bloodbehavior multi-value property options
+static cfg_opt_t bloodbeh_opts[] =
+{
+   CFG_STR(ITEM_TNG_BB_ACTION,   "", CFGF_NONE), // action
+   CFG_STR(ITEM_TNG_BB_BEHAVIOR, "", CFGF_NONE), // behavior
+   CFG_END()
+};
+
 // translation value-parsing callback
 static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
 
@@ -538,10 +552,12 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_MVPROP(ITEM_TNG_DAMAGEFACTOR, dmgf_opts,     CFGF_MULTI|CFGF_NOCASE   ), \
    CFG_MVPROP(ITEM_TNG_DROPITEM,     dropitem_opts, CFGF_MULTI|CFGF_NOCASE   ), \
    CFG_MVPROP(ITEM_TNG_COLSPAWN,     colspawn_opts, CFGF_NOCASE              ), \
-   CFG_STR(ITEM_TNG_BLOODNORM,       ""           , CFGF_NONE                ), \
-   CFG_STR(ITEM_TNG_BLOODRIP,        ""           , CFGF_NONE                ), \
-   CFG_STR(ITEM_TNG_BLOODCRUSH,      ""           , CFGF_NONE                ), \
-   CFG_STR(ITEM_TNG_BLOODBEHAV,      ""           , CFGF_NONE                ), \
+   CFG_MVPROP(ITEM_TNG_BLOODBEHAV,   bloodbeh_opts, CFGF_MULTI|CFGF_NOCASE   ), \
+   CFG_FLAG(ITEM_TNG_CLRBLOODBEH,    0,             CFGF_NONE                ), \
+   CFG_STR(ITEM_TNG_BLOODNORM,       "",            CFGF_NONE                ), \
+   CFG_STR(ITEM_TNG_BLOODIMPACT,     "",            CFGF_NONE                ), \
+   CFG_STR(ITEM_TNG_BLOODRIP,        "",            CFGF_NONE                ), \
+   CFG_STR(ITEM_TNG_BLOODCRUSH,      "",            CFGF_NONE                ), \
    CFG_END()
 
 cfg_opt_t edf_thing_opts[] =
@@ -1553,7 +1569,7 @@ static void E_processItemRespawnAt(mobjinfo_t *mi, const char *name)
       if(E_ThingNumForName(name) < 0)
       {
          E_EDFLoggedWarning(2, 
-            "Warning: Unknown thingtype '%s' specified as itemrespawnat for '%s'",
+            "Warning: Unknown thingtype '%s' specified as itemrespawnat for '%s'\n",
             name, mi->name);
       }
       mi->meta->setString("itemrespawnat", name);
@@ -1567,22 +1583,203 @@ static void E_processItemRespawnAt(mobjinfo_t *mi, const char *name)
 }
 
 //
+// Blood types
+//
+// These are specified on a SHOOTABLE mobj to override the game's default blood
+// types for various types of damaging actions.
+//
+
+//
 // Proceses a given blood property.
 //
 void E_ProcessBlood(int i, cfg_t *cfg, const char *searchedprop)
 {
    const char *bloodVal = cfg_getstr(cfg, searchedprop);
-   if(*bloodVal)
+
+   // if empty or set to @default, this blood type definition will be removed.
+   if(*bloodVal && strcasecmp(bloodVal, "@default"))
    {
-      if(E_SafeThingName(bloodVal) < 0)
+      // "@none" is explicitly reserved in order to disable a specific type of blood
+      if(strcasecmp(bloodVal, "@none") && E_ThingNumForName(bloodVal) < 0)
       {
-         E_EDFLoggedWarning(2, "Invalid %s '%s' for thingtype '%s'",
-            searchedprop, bloodVal, mobjinfo[i]->name);
+         E_EDFLoggedWarning(2, "Invalid %s '%s' for thingtype '%s'\n", 
+                            searchedprop, bloodVal, mobjinfo[i]->name);         
       }
       mobjinfo[i]->meta->addString(searchedprop, bloodVal);
    }
    else
       mobjinfo[i]->meta->removeStringNR(searchedprop);
+}
+
+static const char *const keyForBloodAction[NUMBLOODACTIONS] =
+{
+   ITEM_TNG_BLOODNORM,   // bullet
+   ITEM_TNG_BLOODIMPACT, // projectile impact
+   ITEM_TNG_BLOODRIP,    // ripper projectile
+   ITEM_TNG_BLOODCRUSH,  // crusher blood
+};
+
+static const char * gamemodeinfo_t::* defaultForBloodAction[NUMBLOODACTIONS] =
+{
+   &gamemodeinfo_t::bloodDefaultNormal,
+   &gamemodeinfo_t::bloodDefaultImpact,
+   &gamemodeinfo_t::bloodDefaultRIP,
+   &gamemodeinfo_t::bloodDefaultCrush
+};
+
+//
+// Get the proper blood type to use for an Mobj in response to the given action.
+// Returns -1 if there is not a valid blood type for this action. This may, in the
+// case of an @none indicator, mean that no blood is meant to be spawned.
+//
+int E_BloodTypeForThing(Mobj *mo, bloodaction_e action)
+{
+   const char *actionKey   = keyForBloodAction[action];
+   const char *defaultType = GameModeInfo->*(defaultForBloodAction[action]);
+   const char *typeName    = mo->info->meta->getString(actionKey, defaultType);
+
+   return E_ThingNumForName(typeName);
+}
+
+//
+// Blood behaviors
+//
+// These are specified on a blood object to specify how it behaves when spawned
+// in response to the different types of actions which spawn blood.
+//
+
+IMPLEMENT_RTTI_TYPE(MetaBloodBehavior)
+
+// blood behavior names
+static const char *bloodBehaviors[BLOODTYPE_MAX] = 
+{
+   "DOOM", 
+   "HERETIC", 
+   "HERETICRIP", 
+   "HEXEN",
+   "HEXENRIP",
+   "STRIFE", 
+   "CRUSH",
+   "CUSTOM" // NB: reserved for future Aeon usage
+};
+
+// blood action names
+static const char *bloodActions[NUMBLOODACTIONS] = 
+{
+   "SHOT",   // bullet
+   "IMPACT", // projectile impact
+   "RIP",    // ripper projectile
+   "CRUSH"   // crusher blood
+};
+
+//
+// Clear all blood behaviors from an mobjinfo's MetaTable
+//
+static void E_clearBloodBehaviors(mobjinfo_t *mi)
+{
+   MetaBloodBehavior *mbb = nullptr;
+
+   while((mbb = mi->meta->getNextTypeEx(mbb)))
+   {
+      mi->meta->removeObject(mbb);
+      delete mbb;
+      mbb = nullptr; // must restart search
+   }
+}
+
+//
+// Find a blood behavior for a particular action
+// 
+static MetaBloodBehavior *E_findBloodBehavior(mobjinfo_t *mi, bloodaction_e action)
+{
+   MetaBloodBehavior *mbb = nullptr;
+
+   while((mbb = mi->meta->getNextTypeEx(mbb)))
+   {
+      if(mbb->action == action)
+         return mbb;
+   }
+
+   return nullptr;
+}
+
+//
+// Add a new blood behavior to the mobjinfo's MetaTable
+//
+static void E_addBloodBehavior(mobjinfo_t *mi, bloodaction_e action, bloodtype_e behavior)
+{
+   MetaBloodBehavior *mbb = nullptr;
+
+   while((mbb = mi->meta->getNextTypeEx(mbb)))
+   {
+      if(mbb->action == action)
+      {
+         mbb->behavior = behavior;
+         return;
+      }
+   }
+
+   // none was found, so create a new one
+   mi->meta->addObject(new MetaBloodBehavior(ITEM_TNG_BLOODBEHAV, action, behavior));
+}
+
+//
+// Remove a particular blood behavior from the mobjinfo's MetaTable
+//
+static void E_removeBloodBehavior(mobjinfo_t *mi, bloodaction_e action)
+{
+   MetaBloodBehavior *mbb;
+   while((mbb = E_findBloodBehavior(mi, action)))
+   {
+      mi->meta->removeObject(mbb);
+      delete mbb;
+   }
+}
+
+//
+// Process bloodbehavior multi-valued property definitions inside a thingtype.
+//
+static void E_processBloodBehaviors(mobjinfo_t *mi, cfg_t *thingsec)
+{
+   unsigned int numBloodBehaviors = cfg_size(thingsec, ITEM_TNG_BLOODBEHAV);
+
+   for(unsigned int i = 0; i < numBloodBehaviors; i++)
+   {
+      cfg_t *prop = cfg_getnmvprop(thingsec, ITEM_TNG_BLOODBEHAV, i);
+      const char *action   = cfg_getstr(prop, ITEM_TNG_BB_ACTION);
+      const char *behavior = cfg_getstr(prop, ITEM_TNG_BB_BEHAVIOR);
+
+      int actionnum = E_StrToNumLinear(bloodActions, NUMBLOODACTIONS, action);
+      if(actionnum == NUMBLOODACTIONS)
+      {
+         E_EDFLoggedWarning(2, 
+            "Warning: Unknown blood action '%s' specified in bloodbehavior for '%s'\n",
+            action, mi->name);
+         continue;
+      }
+
+      int behaviornum = E_StrToNumLinear(bloodBehaviors, BLOODTYPE_MAX, behavior);
+      if(behaviornum == BLOODTYPE_MAX)
+      {
+         // a string such as "none" or "default" will remove the specification
+         E_removeBloodBehavior(mi, static_cast<bloodaction_e>(actionnum));
+      }
+      else
+      {
+         // set a new specification for this action
+         E_addBloodBehavior(mi, static_cast<bloodaction_e>(actionnum),
+                                static_cast<bloodtype_e>(behaviornum));
+      }
+   }
+}
+
+//
+// Get the blood behavior type for a particular action for this thing type.
+//
+bloodtype_e E_GetBloodBehaviorForAction(mobjinfo_t *info, bloodaction_e action)
+{
+   MetaBloodBehavior *mbb = E_findBloodBehavior(info, action);   
+   return mbb ? mbb->behavior : GameModeInfo->defBloodBehaviors[action];
 }
 
 //
@@ -1658,9 +1855,7 @@ static int   thing_pindex  = 0;
 //
 static bool E_CheckThingInherit(int pnum)
 {
-   int i;
-
-   for(i = 0; i < NUMMOBJTYPES; ++i)
+   for(int i = 0; i < NUMMOBJTYPES; i++)
    {
       // circular inheritance
       if(thing_pstack[i] == pnum)
@@ -1694,9 +1889,7 @@ static void E_AddThingToPStack(int num)
 //
 static void E_ResetThingPStack()
 {
-   int i;
-
-   for(i = 0; i < NUMMOBJTYPES; ++i)
+   for(int i = 0; i < NUMMOBJTYPES; i++)
       thing_pstack[i] = -1;
 
    thing_pindex = 0;
@@ -2488,39 +2681,23 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
 
    // MaxW: 20150620: process blood types and behavior
    if(IS_SET(ITEM_TNG_BLOODNORM))
-   {
       E_ProcessBlood(i, thingsec, ITEM_TNG_BLOODNORM);
-   }
-   else
-   {
-      mobjinfo[i]->meta->addString(ITEM_TNG_BLOODCRUSH, GameModeInfo->bloodDefaultNormal);
-   }
+
+   if(IS_SET(ITEM_TNG_BLOODIMPACT))
+      E_ProcessBlood(i, thingsec, ITEM_TNG_BLOODIMPACT);
+
    if(IS_SET(ITEM_TNG_BLOODRIP))
-   {
       E_ProcessBlood(i, thingsec, ITEM_TNG_BLOODRIP);
-   }
-   else
-   {
-      mobjinfo[i]->meta->addString(ITEM_TNG_BLOODCRUSH, GameModeInfo->bloodDefaultRIP);
-   }
+
    if(IS_SET(ITEM_TNG_BLOODCRUSH))
-   {
       E_ProcessBlood(i, thingsec, ITEM_TNG_BLOODCRUSH);
-   }
-   else
-   {
-      mobjinfo[i]->meta->addString(ITEM_TNG_BLOODCRUSH, GameModeInfo->bloodDefaultCrush);
-   }
-   if(IS_SET(ITEM_TNG_BLOODBEHAV))
-   {
-      const char *behaviors[] = {"DOOM", "RAVEN", "RAVENRIP", "STRIFE", "CUSTOM"};
-      mobjinfo[i]->meta->addInt(ITEM_TNG_BLOODBEHAV,
-         E_StrToNumLinear(behaviors, 5, cfg_getstr(thingsec, ITEM_TNG_BLOODBEHAV)));
-   }
-   else
-   {
-      mobjinfo[i]->meta->addInt(ITEM_TNG_BLOODBEHAV, 0);
-   }
+
+   // check for clear blood behaviors flag
+   if(cfg_size(thingsec, ITEM_TNG_CLRBLOODBEH) > 0)
+      E_clearBloodBehaviors(mobjinfo[i]);
+
+   // process blood behaviors
+   E_processBloodBehaviors(mobjinfo[i], thingsec);
 
    // 01/17/07: process acs_spawndata
    if(cfg_size(thingsec, ITEM_TNG_ACS_SPAWN) > 0)

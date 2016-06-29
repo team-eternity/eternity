@@ -366,7 +366,7 @@ void V_CopyRect(int srcx, int srcy, VBuffer *src, int width,
 
       // use the smaller of the two clipped rect widths / heights
       usew = (srcrect.cw < dstrect.cw ? srcrect.cw : dstrect.cw);
-      useh = (srcrect.ch < srcrect.ch ? srcrect.ch : dstrect.ch);
+      useh = (srcrect.ch < dstrect.ch ? srcrect.ch : dstrect.ch);
    }
 
    // block copy

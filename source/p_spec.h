@@ -470,8 +470,23 @@ typedef enum
 
    //jff 02/05/98 add types for generalized ceiling mover
    genCrusher,
-   genSilentCrusher
+   genSilentCrusher,
+
+   // ioanch 20160305
+   paramHexenCrush,
+   paramHexenCrushRaiseStay,
+   paramHexenLowerCrush,
 } ceiling_e;
+
+// ioanch 20160313: crushing mode, compatible with ZDoom. Decided from
+// parameterized crusher arg
+enum crushmode_e
+{
+   crushmodeCompat = 0, // choose
+   crushmodeDoom   = 1, // press
+   crushmodeHexen  = 2, // rest
+   crushmodeDoomSlow=3, // slow
+};
 
 // p_floor
 
@@ -939,6 +954,16 @@ protected:
    virtual attachpoint_e getAttachPoint() const { return ATTACH_CEILING; }
 
 public:
+
+   // ioanch 20160305: crush flags. Mostly derived from Hexen different
+   // behaviour
+   enum
+   {
+      crushRest       = 1, // ceiling will rest while crushing things
+      crushSilent     = 2, // needed because of special pastdest behavior
+      crushParamSlow  = 4, // needed for slowed-down param. crushers
+   };
+
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual bool reTriggerVerticalDoor(bool player);
@@ -948,8 +973,10 @@ public:
    fixed_t bottomheight;
    fixed_t topheight;
    fixed_t speed;
+   fixed_t upspeed;
    fixed_t oldspeed;
    int crush;
+   uint32_t crushflags;   // ioanch 20160305: flags for crushing
 
    //jff 02/04/98 add these to support ceiling changers
    //jff 3/14/98 add to fix bug in change transfers
@@ -978,7 +1005,8 @@ typedef struct ceilinglist
 enum
 {
    CDF_HAVETRIGGERTYPE = 0x00000001, // has BOOM-style gen action trigger
-   CDF_HAVESPAC        = 0x00000002  // has Hexen-style spac
+   CDF_HAVESPAC        = 0x00000002, // has Hexen-style spac
+   CDF_PARAMSILENT     = 0x00000004, // ioanch 20160314: parameterized silent
 };
 
 // haleyjd 10/05/05: extended data struct for parameterized ceilings
@@ -1000,6 +1028,25 @@ typedef struct ceilingdata_s
    fixed_t height_value;
    fixed_t speed_value;
 } ceilingdata_t;
+
+// ioanch 20160305
+struct crusherdata_t
+{
+   int flags;        // combination of values above
+   int trigger_type; // valid IFF (flags & CDF_HAVETRIGGERTYPE)
+   int spac;         // valid IFF (flags & CDF_HAVESPAC)
+
+   // generalized values
+   ceiling_e type;
+   int speed_type;
+
+   // parameterized values
+   fixed_t speed_value;
+   fixed_t upspeed;
+   fixed_t ground_dist;
+   int damage;
+   crushmode_e crushmode;
+};
 
 
 // p_floor
@@ -1264,7 +1311,8 @@ sector_t *P_FindModelCeilingSector(fixed_t ceildestheight, int secnum); //jff 02
 
 int P_FindSectorFromLineTag(const line_t *line, int start); // killough 4/17/98
 
-int P_FindLineFromLineTag(const line_t *line, int start);   // killough 4/17/98
+int P_FindLineFromTag(int tag, int start);
+int P_FindLineFromLineTag(const line_t *line, int start);
 
 int P_FindSectorFromTag(const int tag, int start);        // sf
 
@@ -1288,14 +1336,41 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side);
 
 // p_telept
 
-int EV_Teleport(const line_t *line, int side, Mobj *thing);
+//
+// Silent teleport angle change
+//
+enum teleangle_e
+{
+   teleangle_keep,               // keep current thing angle (Hexen silent teleport)
+   teleangle_absolute,           // totally change angle (ZDoom extension)
+   teleangle_relative_boom,      // Use relative linedef/landing angle (Boom)
+   teleangle_relative_correct,   // Same as ZDoom's correction for Boom
+};
+
+//
+// Parameters to pass for teleportation (silent one)
+//
+struct teleparms_t
+{
+   bool keepheight;
+   teleangle_e teleangle;
+};
+
+
+int EV_Teleport(int tag, int side, Mobj *thing);
 
 // killough 2/14/98: Add silent teleporter
-int EV_SilentTeleport(const line_t *line, int side, Mobj *thing);
+int EV_SilentTeleport(const line_t *line, int tag, int side, Mobj *thing,
+                      teleparms_t parms);
 
 // killough 1/31/98: Add silent line teleporter
-int EV_SilentLineTeleport(const line_t *line, int side,
+int EV_SilentLineTeleport(const line_t *line, int lineid, int side,
 			              Mobj *thing, bool reverse);
+
+// ioanch 20160330: parameterized teleport
+int EV_ParamTeleport(int tid, int tag, int side, Mobj *thing);
+int EV_ParamSilentTeleport(int tid, const line_t *line, int tag, int side,
+                           Mobj *thing, teleparms_t parms);
 
 // p_floor
 
@@ -1309,7 +1384,7 @@ int EV_DoFloor(const line_t *line, floor_e floortype);
 
 int EV_DoCeiling(const line_t *line, ceiling_e type);
 
-int EV_CeilingCrushStop(const line_t *line);
+int EV_CeilingCrushStop(const line_t *line, int tag);
 
 void P_ChangeCeilingTex(const char *name, int tag);
 
@@ -1386,6 +1461,7 @@ int EV_DoGenLift(const line_t *line);
 int EV_DoParamStairs(const line_t *line, int tag, const stairdata_t *sd);
 int EV_DoGenStairs(line_t *line);
 
+int EV_DoParamCrusher(const line_t *line, int tag, const crusherdata_t *cd);
 int EV_DoGenCrusher(const line_t *line);
 
 int EV_DoParamDoor(const line_t *line, int tag, const doordata_t *dd);
@@ -1491,7 +1567,7 @@ void P_AddActiveCeiling(CeilingThinker *c);
 
 void P_RemoveActiveCeiling(CeilingThinker *c);
 
-int P_ActivateInStasisCeiling(const line_t *line);
+int P_ActivateInStasisCeiling(const line_t *line, int tag, bool manual = false);
 
 void P_CeilingSequence(sector_t *s, int noiseLevel);
 

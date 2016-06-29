@@ -1888,16 +1888,14 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
       fixed_t z = context.state.z + FixedMul(context.aimslope, FixedMul(frac,
          context.attackrange));
 
-      if(th->flags & MF_NOBLOOD || 
-         th->flags2 & (MF2_INVULNERABLE | MF2_DORMANT))
+      if(th->flags & MF_NOBLOOD || th->flags2 & (MF2_INVULNERABLE | MF2_DORMANT))
       {
          P_SpawnPuff(x, y, z, P_PointToAngle(0, 0, trace.dx, trace.dy)
             - ANG180, 2, true);
       }
       else
       {
-         P_SpawnBlood(x, y, z, P_PointToAngle(0, 0, trace.dx, trace.dy)
-            - ANG180, context.damage, th);
+         BloodSpawner(th, x, y, z, context.damage, trace, context.thing).spawn(BLOOD_SHOT);
       }
       if(context.damage)
       {
@@ -2017,7 +2015,6 @@ void UseContext::useLines(const player_t *player, fixed_t x, fixed_t y,
    def.flags = CAM_ADDLINES;
    def.trav = useTraverse;
    PathTraverser traverser(def, &context);
-   bool ret = false;
    if(traverser.traverse(x, y, x2, y2))
    {
       if(!context.portalhit)

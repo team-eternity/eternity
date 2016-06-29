@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2013 David Hill et al.
+// Copyright(C) 2016 Ioan Chera et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,21 +19,31 @@
 //--------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//    Directory Manipulation
+//      Linked portal clipping. Mostly called from functions like
+//      when map has portals PIT_CheckPosition3D
 //
 //-----------------------------------------------------------------------------
 
-#ifndef I_DIRECTORY_H__
-#define I_DIRECTORY_H__
+#ifndef P_PORTALCLIP_H_
+#define P_PORTALCLIP_H_
 
-class qstring;
+struct line_t;
+struct polyobj_s;
 
+//
+// Data output by P_LineOpening, portal aware
+//
+enum
+{
+   LINECLIP_OVER3DMIDTEX = 1,    // clip thing is over this 3DMidTex
+   LINECLIP_UNDER3DMIDTEX = 2,   // clip thing is under this 3DMidTex
 
-bool I_CreateDirectory(qstring const &path);
+   // basic flags
+   LINECLIP_ABOVEPORTAL = 4,     // floor portal is below line, both sides
+   LINECLIP_UNDERPORTAL = 8,     // ceiling portal is above line, both sides
+};
 
-const char *I_PlatformInstallDirectory();
-
-void I_GetRealPath(const char *path, qstring &real);
+bool PIT_CheckLine3D(line_t *ld, polyobj_s *po);
 
 #endif
 

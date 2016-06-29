@@ -38,6 +38,7 @@ typedef enum
    W_FORMAT_WAD,  // id wadlink file (IWAD or PWAD)
    W_FORMAT_ZIP,  // PKZip archive (aka pk3)
    W_FORMAT_FILE, // An ordinary flat physical file
+   W_FORMAT_DIR,  // PKE-like directory
    
    W_FORMAT_MAX   // Keep this last
 } WResourceFmt;
