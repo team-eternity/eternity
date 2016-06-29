@@ -476,14 +476,19 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
 
    if(floorlightlevel)
    {
-      *floorlightlevel = sec->floorlightsec == -1 ?
-         sec->lightlevel : sectors[sec->floorlightsec].lightlevel;
+      *floorlightlevel =
+      (sec->flags & SECF_FLOORLIGHTABSOLUTE ? 0 : sec->floorlightsec == -1 ?
+       sec->lightlevel : sectors[sec->floorlightsec].lightlevel)
+      + sec->floorlightdelta;
    }
 
    if(ceilinglightlevel)
    {
-      *ceilinglightlevel = sec->ceilinglightsec == -1 ? // killough 4/11/98
-         sec->lightlevel : sectors[sec->ceilinglightsec].lightlevel;
+       // killough 4/11/98
+      *ceilinglightlevel =
+      (sec->flags & SECF_CEILLIGHTABSOLUTE ? 0 : sec->ceilinglightsec == -1 ?
+       sec->lightlevel : sectors[sec->ceilinglightsec].lightlevel)
+      + sec->ceilinglightdelta;
    }
 
    if(sec->heightsec != -1 || sec->f_portal || sec->c_portal)
@@ -552,14 +557,20 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
          
          if(floorlightlevel)
          {
-            *floorlightlevel = s->floorlightsec == -1 ? s->lightlevel :
-               sectors[s->floorlightsec].lightlevel; // killough 3/16/98
+            *floorlightlevel =
+            (s->flags & SECF_FLOORLIGHTABSOLUTE ? 0 : s->floorlightsec == -1 ?
+             s->lightlevel : sectors[s->floorlightsec].lightlevel)
+            + s->floorlightdelta;
+            // killough 3/16/98
          }
 
          if (ceilinglightlevel)
          {
-            *ceilinglightlevel = s->ceilinglightsec == -1 ? s->lightlevel :
-               sectors[s->ceilinglightsec].lightlevel; // killough 4/11/98
+            *ceilinglightlevel =
+            (s->flags & SECF_CEILLIGHTABSOLUTE ? 0 : s->ceilinglightsec == -1 ?
+             s->lightlevel : sectors[s->ceilinglightsec].lightlevel)
+            + s->ceilinglightdelta;
+            // killough 4/11/98
          }
       }
       else if(heightsec != -1 && 
@@ -598,14 +609,20 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
          
          if(floorlightlevel)
          {
-            *floorlightlevel = s->floorlightsec == -1 ? s->lightlevel :
-               sectors[s->floorlightsec].lightlevel; // killough 3/16/98
+            *floorlightlevel =
+            (s->flags & SECF_FLOORLIGHTABSOLUTE ? 0 : s->floorlightsec == -1 ?
+             s->lightlevel : sectors[s->floorlightsec].lightlevel)
+            + s->floorlightdelta;
+            // killough 3/16/98
          }
 
          if(ceilinglightlevel)
          {
-            *ceilinglightlevel = s->ceilinglightsec == -1 ? s->lightlevel :
-               sectors[s->ceilinglightsec].lightlevel; // killough 4/11/98
+            *ceilinglightlevel =
+            (s->flags & SECF_CEILLIGHTABSOLUTE ? 0 : s->ceilinglightsec == -1 ?
+             s->lightlevel : sectors[s->ceilinglightsec].lightlevel)
+            + s->ceilinglightdelta;
+            // killough 4/11/98
          }
       }
       else if(heightsec != -1)
@@ -1189,6 +1206,9 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
          seg.backsec->ceilingbaseangle + seg.backsec->ceilingangle) || // haleyjd: angles
         seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
         seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ||
+        seg.frontsec->ceilinglightdelta != seg.backsec->ceilinglightdelta ||
+        (seg.frontsec->flags & SECF_CEILLIGHTABSOLUTE) !=
+         (seg.backsec->flags & SECF_CEILLIGHTABSOLUTE) ||
         seg.frontsec->topmap != seg.backsec->topmap ||
         seg.frontsec->c_portal != seg.backsec->c_portal ||
         !R_CompareSlopes(seg.frontsec->c_slope, seg.backsec->c_slope) || markblend)) // haleyjd
@@ -1236,6 +1256,9 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
         seg.backsec->floorbaseangle + seg.backsec->floorangle) || // haleyjd: angles
        seg.frontsec->floorpic != seg.backsec->floorpic ||
        seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
+       seg.frontsec->floorlightdelta != seg.backsec->floorlightdelta ||
+       (seg.frontsec->flags & SECF_FLOORLIGHTABSOLUTE) !=
+        (seg.backsec->flags & SECF_FLOORLIGHTABSOLUTE) ||
        seg.frontsec->bottommap != seg.backsec->bottommap ||
        seg.frontsec->f_portal != seg.backsec->f_portal ||
        !R_CompareSlopes(seg.frontsec->f_slope, seg.backsec->f_slope) || markblend)) // haleyjd
@@ -1374,6 +1397,9 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
        seg.backsec->ceilingbaseangle + seg.backsec->ceilingangle) || // haleyjd: angles
       seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
       seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ||
+      seg.frontsec->ceilinglightdelta != seg.backsec->ceilinglightdelta ||
+      (seg.frontsec->flags & SECF_CEILLIGHTABSOLUTE) !=
+       (seg.backsec->flags & SECF_CEILLIGHTABSOLUTE) ||
       seg.frontsec->topmap != seg.backsec->topmap ||
       seg.frontsec->c_portal != seg.backsec->c_portal || markblend) // haleyjd
    {
@@ -1419,6 +1445,9 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
        seg.backsec->floorbaseangle + seg.backsec->floorangle) || // haleyjd
       seg.frontsec->floorpic != seg.backsec->floorpic ||
       seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
+      seg.frontsec->floorlightdelta != seg.backsec->floorlightdelta ||
+      (seg.frontsec->flags & SECF_FLOORLIGHTABSOLUTE) !=
+       (seg.backsec->flags & SECF_FLOORLIGHTABSOLUTE) ||
       seg.frontsec->bottommap != seg.backsec->bottommap ||
       seg.frontsec->f_portal != seg.backsec->f_portal || 
       markblend) // haleyjd
@@ -1700,7 +1729,11 @@ static void R_AddLine(seg_t *line, bool dynasegs)
       
       // killough 4/16/98: consider altered lighting
       && seg.backsec->floorlightsec   == seg.frontsec->floorlightsec
+      && seg.backsec->floorlightdelta == seg.frontsec->floorlightdelta
       && seg.backsec->ceilinglightsec == seg.frontsec->ceilinglightsec
+      && seg.backsec->ceilinglightdelta == seg.frontsec->ceilinglightdelta
+      && (seg.backsec->flags & (SECF_FLOORLIGHTABSOLUTE | SECF_CEILLIGHTABSOLUTE))
+      == (seg.frontsec->flags & (SECF_FLOORLIGHTABSOLUTE | SECF_CEILLIGHTABSOLUTE))
 
       && seg.backsec->floorheight   == seg.frontsec->floorheight
       && seg.backsec->ceilingheight == seg.frontsec->ceilingheight
