@@ -64,6 +64,12 @@ public:
       mSidedefs.setPrototype(&sidedef);
    }
 
+   enum namespace_e
+   {
+      namespace_Doom,
+      namespace_Eternity,
+   };
+
    void loadVertices() const;
    void loadSectors() const;
    void loadSidedefs() const;
@@ -76,6 +82,11 @@ public:
    qstring error() const;
    int line() const { return mLine; }
    int column() const { return mColumn; }
+
+   namespace_e getNamespace()
+   {
+      return mNamespace;
+   }
 
 private:
 
@@ -116,12 +127,6 @@ private:
       result_BlockExit,
       result_Eof,
       result_Error
-   };
-
-   enum namespace_e
-   {
-      namespace_Doom,
-      namespace_Eternity,
    };
 
    // NOTE: some of these are classes because they contain non-POD objects (e.g.

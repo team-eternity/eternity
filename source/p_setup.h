@@ -41,6 +41,8 @@ enum
    LEVEL_FORMAT_HEXEN,
    LEVEL_FORMAT_PSX,
    LEVEL_FORMAT_DOOM64,
+   // LEVEL_FORMAT_UDMF_[NAMESPACE] is the format for UDMF namespaces that need their own definition
+   LEVEL_FORMAT_UDMF_ETERNITY,
 };
 
 class WadDirectory;

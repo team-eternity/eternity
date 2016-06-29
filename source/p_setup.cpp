@@ -3177,6 +3177,20 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    
    if(isUdmf)
    {
+      switch (udmf.getNamespace()) // Set the appropriate map format based on namespace.
+      {
+      case UDMFParser::namespace_Doom:
+         LevelInfo.mapFormat = LEVEL_FORMAT_DOOM; // Just use the normal doom linedefs
+         break;
+      case UDMFParser::namespace_Eternity:
+         LevelInfo.mapFormat = LEVEL_FORMAT_UDMF_ETERNITY;
+         break;
+      default:
+         LevelInfo.mapFormat = LEVEL_FORMAT_INVALID; // Unsupported namespace
+         P_SetupLevelError("Unsupported namespace.", mapname);
+         level_error = "Unsupported namespace.";
+         break;
+      }
       // IOANCH 20151212: UDMF
       udmf.loadVertices();
       udmf.loadSectors();

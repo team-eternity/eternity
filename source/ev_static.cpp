@@ -157,6 +157,12 @@ static ev_static_t PSXStaticBindings[] =
    STATICSPEC(203, EV_STATIC_SCROLL_LINE_DOWN)
 };
 
+// UDMF "Eternity" Namespace Static Bindings
+static ev_static_t UDMFEternityStaticBindings[] =
+{
+   STATICSPEC(121, EV_STATIC_NULL) // Line_SetIdentification isn't needed in UDMF
+};
+
 //
 // Hash Tables
 //
