@@ -1581,6 +1581,8 @@ void P_AttachSectors(const line_t *line, int staticFn);
 bool P_Scroll3DSides(const sector_t *sector, bool ceiling, fixed_t delta,
                      int crush);
 
+void P_CalcFriction(int length, int &friction, int &movefactor); // ioanch
+
 line_t *P_FindLine(int tag, int *searchPosition);
 
 // haleyjd: sector special transfers

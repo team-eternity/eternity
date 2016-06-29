@@ -191,6 +191,7 @@ private:
       double rotationceiling = 0.0;
 
       bool secret;
+      int friction = -1;
 
       int leakiness = 0;
       int damageamount = 0;

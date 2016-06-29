@@ -1570,6 +1570,35 @@ void FrictionThinker::serialize(SaveArchive &arc)
 //=====================================
 
 //
+// ioanch: common function to calculate friction and movefactor, used here and
+// in the UDMF parser
+//
+void P_CalcFriction(int length, int &friction, int &movefactor)
+{
+   friction = (0x1EB8 * length) / 0x80 + 0xD000;
+
+   // The following check might seem odd. At the time of movement,
+   // the move distance is multiplied by 'friction/0x10000', so a
+   // higher friction value actually means 'less friction'.
+
+   if(friction > ORIG_FRICTION)       // ice
+      movefactor = ((0x10092  - friction) * 0x70) / 0x158;
+   else
+      movefactor = ((friction - 0xDB34  ) * 0x0A) / 0x80;
+
+   if(demo_version >= 203)
+   {
+      // killough 8/28/98: prevent odd situations
+      if(friction > FRACUNIT)
+         friction = FRACUNIT;
+      if(friction < 0)
+         friction = 0;
+      if(movefactor < 32)
+         movefactor = 32;
+   }
+}
+
+//
 // P_SpawnFriction
 //
 // Initialize the sectors where friction is increased or decreased
@@ -1601,28 +1630,9 @@ static void P_SpawnFriction()
       if(line->special == fricspec)
       {
          int length   = P_AproxDistance(line->dx, line->dy) >> FRACBITS;
-         int friction = (0x1EB8 * length) / 0x80 + 0xD000;
+         int friction;
          int movefactor, s;
-
-         // The following check might seem odd. At the time of movement,
-         // the move distance is multiplied by 'friction/0x10000', so a
-         // higher friction value actually means 'less friction'.
-
-         if(friction > ORIG_FRICTION)       // ice
-            movefactor = ((0x10092  - friction) * 0x70) / 0x158;
-         else
-            movefactor = ((friction - 0xDB34  ) * 0x0A) / 0x80;
-
-         if(demo_version >= 203)
-         { 
-            // killough 8/28/98: prevent odd situations
-            if(friction > FRACUNIT)
-               friction = FRACUNIT;
-            if(friction < 0)
-               friction = 0;
-            if(movefactor < 32)
-               movefactor = 32;
-         }
+         P_CalcFriction(length, friction, movefactor);
 
          for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0 ;)
          {

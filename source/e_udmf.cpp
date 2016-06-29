@@ -95,6 +95,17 @@ void UDMFParser::loadSectors() const
          // Flags
          ss->flags |= us.secret ? SECF_SECRET : 0;
 
+         // Friction: set the parameter directly from UDMF
+         if(us.friction >= 0)   // default: -1
+         {
+            int friction, movefactor;
+            P_CalcFriction(us.friction, friction, movefactor);
+
+            ss->flags |= SECF_FRICTION;   // add the flag too
+            ss->friction = friction;
+            ss->movefactor = movefactor;
+         }
+
          // Damage
          ss->damage = us.damageamount;
          ss->damagemask = us.damageinterval;
@@ -523,6 +534,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                readNumber("rotationceiling", sector->rotationceiling);
 
                readBool("secret", sector->secret);
+               readNumber("friction", sector->friction);
 
                readNumber("lightfloor", sector->lightfloor);
                readNumber("lightceiling", sector->lightceiling);
