@@ -190,6 +190,8 @@ private:
       double rotationfloor = 0.0;
       double rotationceiling = 0.0;
 
+      bool secret;
+
       int leakiness = 0;
       int damageamount = 0;
       int damageinterval = 0;

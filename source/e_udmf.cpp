@@ -74,49 +74,61 @@ void UDMFParser::loadSectors() const
    for(int i = 0; i < numsectors; ++i)
    {
       sector_t *ss = sectors + i;
+      const USector &us = mSectors[i];
+
       if(mNamespace == namespace_Eternity)
       {
-         ss->floorheight = mSectors[i].heightfloor;
-         ss->ceilingheight = mSectors[i].heightceiling;
-         ss->floor_xoffs = mSectors[i].xpanningfloor;
-         ss->floor_yoffs = mSectors[i].ypanningfloor;
-         ss->ceiling_xoffs = mSectors[i].xpanningceiling;
-         ss->ceiling_yoffs = mSectors[i].ypanningceiling;
-         ss->floorbaseangle = static_cast<float>
-            (E_NormalizeFlatAngle(mSectors[i].rotationfloor) *  PI / 180.0f);
-         ss->ceilingbaseangle = static_cast<float>
-            (E_NormalizeFlatAngle(mSectors[i].rotationceiling) *  PI / 180.0f);
+         // These two pass the fixed_t value now
+         ss->floorheight = us.heightfloor;
+         ss->ceilingheight = us.heightceiling;
 
-         ss->damage = mSectors[i].damageamount;
-         ss->damagemask = mSectors[i].damageinterval;
+         // New to Eternity
+         ss->floor_xoffs = us.xpanningfloor;
+         ss->floor_yoffs = us.ypanningfloor;
+         ss->ceiling_xoffs = us.xpanningceiling;
+         ss->ceiling_yoffs = us.ypanningceiling;
+         ss->floorbaseangle = static_cast<float>
+            (E_NormalizeFlatAngle(us.rotationfloor) *  PI / 180.0f);
+         ss->ceilingbaseangle = static_cast<float>
+            (E_NormalizeFlatAngle(us.rotationceiling) *  PI / 180.0f);
+
+         // Flags
+         ss->flags |= us.secret ? SECF_SECRET : 0;
+
+         // Damage
+         ss->damage = us.damageamount;
+         ss->damagemask = us.damageinterval;
          // If the following flags are true for the current sector, then set the
          // appropriate damageflags to true, otherwise don't set them.
-         ss->damageflags |= mSectors[i].damage_endgodmode ? SDMG_ENDGODMODE : 0;
-         ss->damageflags |= mSectors[i].damage_exitlevel ? SDMG_EXITLEVEL : 0;
-         ss->damageflags |= mSectors[i].damageterraineffect ? SDMG_TERRAINHIT : 0;
-         ss->leakiness = eclamp(mSectors[i].leakiness, 0, 256);
-         if(mSectors[i].floorterrain.strCaseCmp("@flat"))
-            ss->floorterrain = E_TerrainForName(mSectors[i].floorterrain.constPtr());
-         if (mSectors[i].ceilingterrain.strCaseCmp("@flat"))
-            ss->ceilingterrain = E_TerrainForName(mSectors[i].ceilingterrain.constPtr());
+         ss->damageflags |= us.damage_endgodmode ? SDMG_ENDGODMODE : 0;
+         ss->damageflags |= us.damage_exitlevel ? SDMG_EXITLEVEL : 0;
+         ss->damageflags |= us.damageterraineffect ? SDMG_TERRAINHIT : 0;
+         ss->leakiness = eclamp(us.leakiness, 0, 256);
 
-         ss->floorlightdelta = mSectors[i].lightfloor;
-         ss->ceilinglightdelta = mSectors[i].lightceiling;
+         // Terrain types
+         if(us.floorterrain.strCaseCmp("@flat"))
+            ss->floorterrain = E_TerrainForName(us.floorterrain.constPtr());
+         if (us.ceilingterrain.strCaseCmp("@flat"))
+            ss->ceilingterrain = E_TerrainForName(us.ceilingterrain.constPtr());
+
+         // Lights
+         ss->floorlightdelta = us.lightfloor;
+         ss->ceilinglightdelta = us.lightceiling;
          ss->flags |=
-         (mSectors[i].lightfloorabsolute ? SECF_FLOORLIGHTABSOLUTE : 0) |
-         (mSectors[i].lightceilingabsolute ? SECF_CEILLIGHTABSOLUTE : 0);
+         (us.lightfloorabsolute ? SECF_FLOORLIGHTABSOLUTE : 0) |
+         (us.lightceilingabsolute ? SECF_CEILLIGHTABSOLUTE : 0);
       }
       else
       {
-         ss->floorheight = mSectors[i].heightfloor << FRACBITS;
-         ss->ceilingheight = mSectors[i].heightceiling << FRACBITS;
+         ss->floorheight = us.heightfloor << FRACBITS;
+         ss->ceilingheight = us.heightceiling << FRACBITS;
       }
-      ss->floorpic = R_FindFlat(mSectors[i].texturefloor.constPtr());
+      ss->floorpic = R_FindFlat(us.texturefloor.constPtr());
       P_SetSectorCeilingPic(ss,
-                            R_FindFlat(mSectors[i].textureceiling.constPtr()));
-      ss->lightlevel = mSectors[i].lightlevel;
-      ss->special = mSectors[i].special;
-      ss->tag = mSectors[i].identifier;
+                            R_FindFlat(us.textureceiling.constPtr()));
+      ss->lightlevel = us.lightlevel;
+      ss->special = us.special;
+      ss->tag = us.identifier;
       P_InitSector(ss);
    }
 }
@@ -510,6 +522,8 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                readNumber("rotationfloor", sector->rotationfloor);
                readNumber("rotationceiling", sector->rotationceiling);
 
+               readBool("secret", sector->secret);
+
                readNumber("lightfloor", sector->lightfloor);
                readNumber("lightceiling", sector->lightceiling);
                readBool("lightfloorabsolute", sector->lightfloorabsolute);
@@ -521,6 +535,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                readBool("damage_endgodmode", sector->damage_endgodmode);
                readBool("damage_exitlevel", sector->damage_exitlevel);
                readBool("damageterraineffect", sector->damageterraineffect);
+
                readString("floorterrain", sector->floorterrain);
                readString("ceilingterrain", sector->ceilingterrain);
             }
