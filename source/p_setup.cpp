@@ -3189,7 +3189,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
          LevelInfo.mapFormat = LEVEL_FORMAT_INVALID; // Unsupported namespace
          P_SetupLevelError("Unsupported namespace.", mapname);
          level_error = "Unsupported namespace.";
-         break;
+         return;
       }
       // IOANCH 20151212: UDMF
       udmf.loadVertices();
