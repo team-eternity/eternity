@@ -778,9 +778,11 @@ typedef EHashTable<ev_binding_t, ENCStringHashKey, &ev_binding_t::name,
 static EV_SpecHash DOOMSpecHash;
 static EV_SpecHash HereticSpecHash;
 static EV_SpecHash HexenSpecHash;
+static EV_SpecHash UDMFEternitySpecHash;
 
 static EV_SpecNameHash DOOMSpecNameHash;
 static EV_SpecNameHash HexenSpecNameHash;
+static EV_SpecNameHash UDMFEternitySpecNameHash;
 
 //
 // EV_initSpecHash
@@ -856,6 +858,22 @@ static void EV_initHexenSpecHash()
 
    EV_initSpecHash    (HexenSpecHash,     HexenBindings, HexenBindingsLen);
    EV_initSpecNameHash(HexenSpecNameHash, HexenBindings, HexenBindingsLen);
+}
+
+//
+// EV_initUDMFEternitySpecHash
+//
+// Initializes the Hexen special bindings hash table the first time it is
+// called.
+//
+static void EV_initUDMFEternitySpecHash()
+{
+   if (UDMFEternitySpecHash.isInitialized())
+      return;
+
+   EV_initSpecHash(UDMFEternitySpecHash, UDMFEternityBindings, UDMFEternityBindingsLen);
+   EV_initSpecNameHash(UDMFEternitySpecNameHash, UDMFEternityBindings, UDMFEternityBindingsLen);
+   EV_initHexenSpecHash();
 }
 
 //
@@ -1018,13 +1036,71 @@ ev_action_t *EV_PSXActionForSpecial(int special)
 }
 
 //
+// EV_UDMFEternityBindingForSpecial
+//
+// Returns a special binding from the UDMFEternity gamemode's bindings array,
+// regardless of the current gamemode or map format. Returns NULL if
+// the special is not bound to an action.
+//
+ev_binding_t *EV_UDMFEternityBindingForSpecial(int special)
+{
+   ev_binding_t *bind;
+
+   EV_initUDMFEternitySpecHash(); // ensure table is initialized
+
+  // Try UDMFEternity's bindings first. If nothing is found, defer to Hexen's 
+  // bindings.
+   if(!(bind = UDMFEternitySpecHash.objectForKey(special)))
+      bind = HexenSpecHash.objectForKey(special);
+
+   return bind;
+}
+
+//
+// EV_UDMFEternityBindingForName
+//
+// Returns a special binding from the UDMFEternity gamemode's bindings array
+// by name.
+//
+ev_binding_t *EV_UDMFEternityBindingForName(const char *name)
+{
+   ev_binding_t *bind;
+
+   EV_initUDMFEternitySpecHash(); // ensure table is initialized
+
+   // Try UDMFEternity's bindings first. If nothing is found, defer to Hexen's 
+   // bindings.
+   if(!(bind = UDMFEternitySpecNameHash.objectForKey(name)))
+      bind = HexenSpecNameHash.objectForKey(name);
+
+   return bind;
+}
+
+//
+// EV_UDMFEternityActionForSpecial
+//
+// Returns a special binding from the UDMFEternity gamemode's bindings array,
+// regardless of the current gamemode or map format. Returns NULL if
+// the special is not bound to an action.
+//
+ev_action_t *EV_UDMFEternityActionForSpecial(int special)
+{
+   ev_binding_t *bind = EV_UDMFEternityBindingForSpecial(special);
+
+   return bind ? bind->action : NULL;
+
+}
+
+//
 // EV_BindingForName
 //
 // Look up a binding by name depending on the current map format and gamemode.
 //
 ev_binding_t *EV_BindingForName(const char *name)
 {
-   if(LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN)
+   if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY)
+      return EV_UDMFEternityBindingForName(name);
+   else if(LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN)
       return EV_HexenBindingForName(name);
    else
       return EV_DOOMBindingForName(name);
@@ -1086,6 +1162,8 @@ ev_action_t *EV_ActionForSpecial(int special)
 {
    switch(LevelInfo.mapFormat)
    {
+   case LEVEL_FORMAT_UDMF_ETERNITY:
+      return EV_UDMFEternityActionForSpecial(special);
    case LEVEL_FORMAT_HEXEN:
       return EV_HexenActionForSpecial(special);
    case LEVEL_FORMAT_PSX:

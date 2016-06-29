@@ -1638,6 +1638,8 @@ ev_binding_t PSXBindings[] =
    LINESPEC(203, NullAction)
 };
 
+const size_t PSXBindingsLen = earrlen(PSXBindings);
+
 // UDMF "Eternity" Namespace Bindings
 // TODO: Hook these bindings up to funcitonality, so that line actions work
 ev_binding_t UDMFEternityBindings[] =
@@ -1665,8 +1667,6 @@ ev_binding_t UDMFEternityBindings[] =
 };
 
 const size_t UDMFEternityBindingsLen = earrlen(UDMFEternityBindings);
-
-const size_t PSXBindingsLen = earrlen(PSXBindings);
 
 // EOF
 
