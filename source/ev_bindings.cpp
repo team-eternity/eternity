@@ -1641,7 +1641,6 @@ ev_binding_t PSXBindings[] =
 const size_t PSXBindingsLen = earrlen(PSXBindings);
 
 // UDMF "Eternity" Namespace Bindings
-// TODO: Hook these bindings up to funcitonality, so that line actions work
 ev_binding_t UDMFEternityBindings[] =
 {
    // No bindings for ExtraData as it isn't required any more \o/

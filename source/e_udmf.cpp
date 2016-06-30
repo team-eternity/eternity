@@ -312,6 +312,7 @@ bool UDMFParser::loadThings()
       const uthing_t &ut = mThings[i];
       ft->type = ut.type;
       // no Doom thing ban in UDMF
+      ft->tid = ut.identifier;
       ft->x = ut.x;
       ft->y = ut.y;
       ft->height = ut.height;
