@@ -27,11 +27,13 @@
 
 #include "z_zone.h"
 
+#include "d_gi.h"
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "e_ttypes.h"
 #include "e_udmf.h"
 #include "m_compare.h"
+#include "p_info.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "r_data.h"
@@ -347,6 +349,10 @@ bool UDMFParser::loadThings()
       ft->args[2] = ut.arg[2];
       ft->args[3] = ut.arg[3];
       ft->args[4] = ut.arg[4];
+
+      // haleyjd 10/05/05: convert heretic things
+      if(LevelInfo.levelType == LI_TYPE_HERETIC)
+         P_ConvertHereticThing(ft);
 
       P_ConvertDoomExtendedSpawnNum(ft);
       P_SpawnMapThing(ft);
