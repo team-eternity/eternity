@@ -67,7 +67,10 @@ public:
    enum namespace_e
    {
       namespace_Doom,
-      namespace_Eternity,
+      namespace_Heretic,
+      namespace_Hexen,
+      namespace_Strife,
+      namespace_Eternity
    };
 
    void loadVertices() const;
@@ -80,13 +83,11 @@ public:
    bool parse(WadDirectory &setupwad, int lump);
 
    qstring error() const;
+
+   int getMapFormat() const;
+
    int line() const { return mLine; }
    int column() const { return mColumn; }
-
-   namespace_e getNamespace()
-   {
-      return mNamespace;
-   }
 
 private:
 
@@ -239,14 +240,14 @@ private:
 
    void setData(const char *data, size_t size);
 
-   void readFixed(const char *key, fixed_t &target) const;
-   void requireFixed(const char *key, fixed_t &target, bool &flagtarget) const;
-   void requireInt(const char *key, int &target, bool &flagtarget) const;
-   void readString(const char *key, qstring &target) const;
-   void requireString(const char *key, qstring &target, bool &flagtarget) const;
-   void readBool(const char *key, bool &target) const;
+   void readFixed(fixed_t &target) const;
+   void requireFixed(fixed_t &target, bool &flagtarget) const;
+   void requireInt(int &target, bool &flagtarget) const;
+   void readString(qstring &target) const;
+   void requireString(qstring &target, bool &flagtarget) const;
+   void readBool(bool &target) const;
    template<typename T>
-   void readNumber(const char *key, T &target) const;
+   void readNumber(T &target) const;
 
    readresult_e readItem();
 

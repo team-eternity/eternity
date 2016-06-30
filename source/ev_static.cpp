@@ -441,7 +441,7 @@ int EV_UDMFEternitySpecialForStaticInit(int staticFn)
    // init the hash if it hasn't been done yet
    EV_initUDMFEternityStaticHash();
 
-   if(binding = UDMFEternityStaticHash.objectForKey(staticFn))
+   if((binding = UDMFEternityStaticHash.objectForKey(staticFn)))
       return binding->actionNumber;
    else
       return EV_HexenSpecialForStaticInit(staticFn);
@@ -464,7 +464,7 @@ int EV_UDMFEternityStaticInitForSpecial(int special)
 
    // init the hash if it hasn't been done yet
    EV_initUDMFEternityStaticHash();
-   if(binding = UDMFEternityStaticSpecHash.objectForKey(special))
+   if((binding = UDMFEternityStaticSpecHash.objectForKey(special)))
       return binding->staticFn;
    else
       return EV_HexenStaticInitForSpecial(special);

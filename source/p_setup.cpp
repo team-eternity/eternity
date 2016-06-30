@@ -3173,38 +3173,33 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
          P_SetupLevelError(udmf.error().constPtr(), mapname);
          return;
       }
-   }
-   
-   if(isUdmf)
-   {
-      switch (udmf.getNamespace()) // Set the appropriate map format based on namespace.
+
+      //
+      // Update map format
+      //
+      if((LevelInfo.mapFormat = udmf.getMapFormat()) == LEVEL_FORMAT_INVALID)
       {
-      case UDMFParser::namespace_Doom:
-         LevelInfo.mapFormat = LEVEL_FORMAT_DOOM; // Just use the normal doom linedefs
-         break;
-      case UDMFParser::namespace_Eternity:
-         LevelInfo.mapFormat = LEVEL_FORMAT_UDMF_ETERNITY;
-         break;
-      default:
-         LevelInfo.mapFormat = LEVEL_FORMAT_INVALID; // Unsupported namespace
-         P_SetupLevelError("Unsupported namespace.", mapname);
-         level_error = "Unsupported namespace.";
+         P_SetupLevelError("Unsupported UDMF namespace", mapname);
          return;
       }
-      // IOANCH 20151212: UDMF
+
+      // start UDMF loading
       udmf.loadVertices();
       udmf.loadSectors();
    }
-   else switch(LevelInfo.mapFormat)
+   else
    {
-   case LEVEL_FORMAT_PSX:
-      P_LoadConsoleVertexes(lumpnum + ML_VERTEXES);
-      P_LoadPSXSectors(lumpnum + ML_SECTORS);
-      break;
-   default:
-      P_LoadVertexes(lumpnum + ML_VERTEXES);
-      P_LoadSectors (lumpnum + ML_SECTORS);
-      break;
+      switch(LevelInfo.mapFormat)
+      {
+      case LEVEL_FORMAT_PSX:
+         P_LoadConsoleVertexes(lumpnum + ML_VERTEXES);
+         P_LoadPSXSectors(lumpnum + ML_SECTORS);
+         break;
+      default:
+         P_LoadVertexes(lumpnum + ML_VERTEXES);
+         P_LoadSectors (lumpnum + ML_SECTORS);
+         break;
+      }
    }
    
    // possible error: missing flats

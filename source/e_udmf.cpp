@@ -27,13 +27,12 @@
 
 #include "z_zone.h"
 
-#include "d_gi.h"
 #include "doomstat.h"
 #include "e_exdata.h"
+#include "e_hash.h"
 #include "e_ttypes.h"
 #include "e_udmf.h"
 #include "m_compare.h"
-#include "p_info.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "r_data.h"
@@ -184,41 +183,51 @@ bool UDMFParser::loadLinedefs()
          ld->flags |= ML_DONTDRAW;
       if(uld.mapped)
          ld->flags |= ML_MAPPED;
-      if(uld.passuse)
-         ld->flags |= ML_PASSUSE;
+
+      if(mNamespace == namespace_Doom || mNamespace == namespace_Eternity)
+      {
+         if(uld.passuse)
+            ld->flags |= ML_PASSUSE;
+      }
 
       // Eternity
-      if(uld.midtex3d)
-         ld->flags |= ML_3DMIDTEX;
-      if(uld.firstsideonly)
-         ld->extflags |= EX_ML_1SONLY;
-      if(uld.blockeverything)
-         ld->extflags |= EX_ML_BLOCKALL;
-      if(uld.zoneboundary)
-         ld->extflags |= EX_ML_ZONEBOUNDARY;
-      if(uld.clipmidtex)
-         ld->extflags |= EX_ML_CLIPMIDTEX;
+      if(mNamespace == namespace_Eternity)
+      {
+         if(uld.midtex3d)
+            ld->flags |= ML_3DMIDTEX;
+         if(uld.firstsideonly)
+            ld->extflags |= EX_ML_1SONLY;
+         if(uld.blockeverything)
+            ld->extflags |= EX_ML_BLOCKALL;
+         if(uld.zoneboundary)
+            ld->extflags |= EX_ML_ZONEBOUNDARY;
+         if(uld.clipmidtex)
+            ld->extflags |= EX_ML_CLIPMIDTEX;
+      }
 
       // TODO: Strife
 
-      if(uld.playercross)
-         ld->extflags |= EX_ML_PLAYER | EX_ML_CROSS;
-      if(uld.playeruse)
-         ld->extflags |= EX_ML_PLAYER | EX_ML_USE;
-      if(uld.monstercross)
-         ld->extflags |= EX_ML_MONSTER | EX_ML_CROSS;
-      if(uld.monsteruse)
-         ld->extflags |= EX_ML_MONSTER | EX_ML_USE;
-      if(uld.impact)
-         ld->extflags |= EX_ML_MISSILE | EX_ML_IMPACT;
-      if(uld.playerpush)
-         ld->extflags |= EX_ML_PLAYER | EX_ML_PUSH;
-      if(uld.monsterpush)
-         ld->extflags |= EX_ML_MONSTER | EX_ML_PUSH;
-      if(uld.missilecross)
-         ld->extflags |= EX_ML_MISSILE | EX_ML_CROSS;
-      if(uld.repeatspecial)
-         ld->extflags |= EX_ML_REPEAT;
+      if(mNamespace == namespace_Hexen || mNamespace == namespace_Eternity)
+      {
+         if(uld.playercross)
+            ld->extflags |= EX_ML_PLAYER | EX_ML_CROSS;
+         if(uld.playeruse)
+            ld->extflags |= EX_ML_PLAYER | EX_ML_USE;
+         if(uld.monstercross)
+            ld->extflags |= EX_ML_MONSTER | EX_ML_CROSS;
+         if(uld.monsteruse)
+            ld->extflags |= EX_ML_MONSTER | EX_ML_USE;
+         if(uld.impact)
+            ld->extflags |= EX_ML_MISSILE | EX_ML_IMPACT;
+         if(uld.playerpush)
+            ld->extflags |= EX_ML_PLAYER | EX_ML_PUSH;
+         if(uld.monsterpush)
+            ld->extflags |= EX_ML_MONSTER | EX_ML_PUSH;
+         if(uld.missilecross)
+            ld->extflags |= EX_ML_MISSILE | EX_ML_CROSS;
+         if(uld.repeatspecial)
+            ld->extflags |= EX_ML_REPEAT;
+      }
 
       ld->special = uld.special;
       ld->tag = uld.identifier;
@@ -245,21 +254,24 @@ bool UDMFParser::loadLinedefs()
       P_PostProcessLineFlags(ld);
 
       // more Eternity
-      ld->alpha = uld.alpha;
-      if(!uld.renderstyle.strCaseCmp("add"))
-         ld->extflags |= EX_ML_ADDITIVE;
-      if(!uld.tranmap.empty())
+      if(mNamespace == namespace_Eternity)
       {
-         if(uld.tranmap != "TRANMAP")
+         ld->alpha = uld.alpha;
+         if(!uld.renderstyle.strCaseCmp("add"))
+            ld->extflags |= EX_ML_ADDITIVE;
+         if(!uld.tranmap.empty())
          {
-            int special = W_CheckNumForName(uld.tranmap.constPtr());
-            if(special < 0 || W_LumpLength(special) != 65536)
-               ld->tranlump = 0;
+            if(uld.tranmap != "TRANMAP")
+            {
+               int special = W_CheckNumForName(uld.tranmap.constPtr());
+               if(special < 0 || W_LumpLength(special) != 65536)
+                  ld->tranlump = 0;
+               else
+                  ld->tranlump = special + 1;
+            }
             else
-               ld->tranlump = special + 1;
+               ld->tranlump = 0;
          }
-         else
-            ld->tranlump = 0;
       }
    }
    return true;
@@ -337,21 +349,24 @@ bool UDMFParser::loadThings()
          ft->options |= MTF_NOTDM;
       if(!ut.coop)
          ft->options |= MTF_NOTCOOP;
-      if(ut.friendly)
+      if(ut.friendly && (mNamespace == namespace_Doom || mNamespace == namespace_Eternity))
          ft->options |= MTF_FRIEND;
-      if(ut.dormant)
+      if(ut.dormant && (mNamespace == namespace_Hexen || mNamespace == namespace_Eternity))
          ft->options |= MTF_DORMANT;
       // TODO: class1, 2, 3
       // TODO: STRIFE
-      ft->special = ut.special;
-      ft->args[0] = ut.arg[0];
-      ft->args[1] = ut.arg[1];
-      ft->args[2] = ut.arg[2];
-      ft->args[3] = ut.arg[3];
-      ft->args[4] = ut.arg[4];
+      if(mNamespace == namespace_Hexen || mNamespace == namespace_Eternity)
+      {
+         ft->special = ut.special;
+         ft->args[0] = ut.arg[0];
+         ft->args[1] = ut.arg[1];
+         ft->args[2] = ut.arg[2];
+         ft->args[3] = ut.arg[3];
+         ft->args[4] = ut.arg[4];
+      }
 
       // haleyjd 10/05/05: convert heretic things
-      if(LevelInfo.levelType == LI_TYPE_HERETIC)
+      if(mNamespace == namespace_Heretic)
          P_ConvertHereticThing(ft);
 
       P_ConvertDoomExtendedSpawnNum(ft);
@@ -383,6 +398,226 @@ bool UDMFParser::loadThings()
 //==============================================================================
 
 //
+// A means to map a string to a numeric token, so it can be easily passed into
+// switch/case
+//
+
+enum token_e
+{
+   t_alpha,
+   t_ambush,
+   t_angle,
+   t_arg0,
+   t_arg1,
+   t_arg2,
+   t_arg3,
+   t_arg4,
+   t_blockeverything,
+   t_blockfloaters,
+   t_blocking,
+   t_blockmonsters,
+   t_blocksound,
+   t_ceilingterrain,
+   t_class1,
+   t_class2,
+   t_class3,
+   t_clipmidtex,
+   t_coop,
+   t_damage_endgodmode,
+   t_damage_exitlevel,
+   t_damageamount,
+   t_damageinterval,
+   t_damageterraineffect,
+   t_dm,
+   t_dontdraw,
+   t_dontpegbottom,
+   t_dontpegtop,
+   t_dormant,
+   t_firstsideonly,
+   t_floorterrain,
+   t_friction,
+   t_friend,
+   t_height,
+   t_heightceiling,
+   t_heightfloor,
+   t_id,
+   t_impact,
+   t_invisible,
+   t_jumpover,
+   t_leakiness,
+   t_lightceiling,
+   t_lightceilingabsolute,
+   t_lightfloor,
+   t_lightfloorabsolute,
+   t_lightlevel,
+   t_mapped,
+   t_midtex3d,
+   t_missilecross,
+   t_monstercross,
+   t_monsterpush,
+   t_monsteruse,
+   t_offsetx,
+   t_offsety,
+   t_passuse,
+   t_playercross,
+   t_playerpush,
+   t_playeruse,
+   t_renderstyle,
+   t_repeatspecial,
+   t_rotationceiling,
+   t_rotationfloor,
+   t_secret,
+   t_sector,
+   t_sideback,
+   t_sidefront,
+   t_single,
+   t_skill1,
+   t_skill2,
+   t_skill3,
+   t_skill4,
+   t_skill5,
+   t_special,
+   t_standing,
+   t_strifeally,
+   t_texturebottom,
+   t_textureceiling,
+   t_texturefloor,
+   t_texturemiddle,
+   t_texturetop,
+   t_tranmap,
+   t_translucent,
+   t_twosided,
+   t_type,
+   t_v1,
+   t_v2,
+   t_x,
+   t_xpanningceiling,
+   t_xpanningfloor,
+   t_y,
+   t_ypanningceiling,
+   t_ypanningfloor,
+   t_zoneboundary,
+};
+
+struct keytoken_t
+{
+   const char *string;
+   DLListItem<keytoken_t> link;
+   token_e token;
+};
+
+#define TOKEN(a) { #a, DLListItem<keytoken_t>(), t_##a }
+
+static keytoken_t gTokenList[] =
+{
+   TOKEN(alpha),
+   TOKEN(ambush),
+   TOKEN(angle),
+   TOKEN(arg0),
+   TOKEN(arg1),
+   TOKEN(arg2),
+   TOKEN(arg3),
+   TOKEN(arg4),
+   TOKEN(blockeverything),
+   TOKEN(blockfloaters),
+   TOKEN(blocking),
+   TOKEN(blockmonsters),
+   TOKEN(blocksound),
+   TOKEN(ceilingterrain),
+   TOKEN(class1),
+   TOKEN(class2),
+   TOKEN(class3),
+   TOKEN(clipmidtex),
+   TOKEN(coop),
+   TOKEN(damage_endgodmode),
+   TOKEN(damage_exitlevel),
+   TOKEN(damageamount),
+   TOKEN(damageinterval),
+   TOKEN(damageterraineffect),
+   TOKEN(dm),
+   TOKEN(dontdraw),
+   TOKEN(dontpegbottom),
+   TOKEN(dontpegtop),
+   TOKEN(dormant),
+   TOKEN(firstsideonly),
+   TOKEN(floorterrain),
+   TOKEN(friction),
+   TOKEN(friend),
+   TOKEN(height),
+   TOKEN(heightceiling),
+   TOKEN(heightfloor),
+   TOKEN(id),
+   TOKEN(impact),
+   TOKEN(invisible),
+   TOKEN(jumpover),
+   TOKEN(leakiness),
+   TOKEN(lightceiling),
+   TOKEN(lightceilingabsolute),
+   TOKEN(lightfloor),
+   TOKEN(lightfloorabsolute),
+   TOKEN(lightlevel),
+   TOKEN(mapped),
+   TOKEN(midtex3d),
+   TOKEN(missilecross),
+   TOKEN(monstercross),
+   TOKEN(monsterpush),
+   TOKEN(monsteruse),
+   TOKEN(offsetx),
+   TOKEN(offsety),
+   TOKEN(passuse),
+   TOKEN(playercross),
+   TOKEN(playerpush),
+   TOKEN(playeruse),
+   TOKEN(renderstyle),
+   TOKEN(repeatspecial),
+   TOKEN(rotationceiling),
+   TOKEN(rotationfloor),
+   TOKEN(secret),
+   TOKEN(sector),
+   TOKEN(sideback),
+   TOKEN(sidefront),
+   TOKEN(single),
+   TOKEN(skill1),
+   TOKEN(skill2),
+   TOKEN(skill3),
+   TOKEN(skill4),
+   TOKEN(skill5),
+   TOKEN(special),
+   TOKEN(standing),
+   TOKEN(strifeally),
+   TOKEN(texturebottom),
+   TOKEN(textureceiling),
+   TOKEN(texturefloor),
+   TOKEN(texturemiddle),
+   TOKEN(texturetop),
+   TOKEN(tranmap),
+   TOKEN(translucent),
+   TOKEN(twosided),
+   TOKEN(type),
+   TOKEN(v1),
+   TOKEN(v2),
+   TOKEN(x),
+   TOKEN(xpanningceiling),
+   TOKEN(xpanningfloor),
+   TOKEN(y),
+   TOKEN(ypanningceiling),
+   TOKEN(ypanningfloor),
+   TOKEN(zoneboundary),
+};
+
+static EHashTable<keytoken_t, ENCStringHashKey, &keytoken_t::string, &keytoken_t::link> gTokenTable;
+
+static void registerAllKeys()
+{
+   static bool called = false;
+   if(called)
+      return;
+   for(int i = 0; i < earrlen(gTokenList); ++i)
+      gTokenTable.addObject(gTokenList[i]);
+   called = true;
+}
+
+//
 // Tries to parse a UDMF TEXTMAP document. If it fails, it returns false and
 // you can check the error message with error()
 //
@@ -411,6 +646,21 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
    // Set namespace (we'll think later about checking it
    if(!mValue.text.strCaseCmp("eternity"))
       mNamespace = namespace_Eternity;
+   else if(!mValue.text.strCaseCmp("heretic"))
+      mNamespace = namespace_Heretic;
+   else if(!mValue.text.strCaseCmp("hexen"))
+      mNamespace = namespace_Hexen;
+   else if(!mValue.text.strCaseCmp("strife"))
+      mNamespace = namespace_Strife;
+   else if(!mValue.text.strCaseCmp("doom"))
+      mNamespace = namespace_Doom;
+   else
+   {
+      mError = "Unsupported namespace '";
+      mError << mValue.text;
+      mError << "'";
+      return false;
+   }
 
    // Gamestuff. Must be null when out of block and only one be set when in
    // block
@@ -419,6 +669,8 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
    uvertex_t *vertex = nullptr;
    USector *sector = nullptr;
    uthing_t *thing = nullptr;
+
+   registerAllKeys();   // now it's the time
 
    while((result = readItem()) != result_Eof)
    {
@@ -451,158 +703,221 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
       }
       if(result == result_Assignment && mInBlock)
       {
-         if(linedef)
+
+#define REQUIRE_INT(obj, field, flag) case t_##field: requireInt(obj->field, obj->flag); break
+#define READ_NUMBER(obj, field) case t_##field: readNumber(obj->field); break
+#define READ_BOOL(obj, field) case t_##field: readBool(obj->field); break
+#define READ_STRING(obj, field) case t_##field: readString(obj->field); break
+#define READ_FIXED(obj, field) case t_##field: readFixed(obj->field); break
+#define REQUIRE_FIXED(obj, field, flag) case t_##field: requireFixed(obj->field, obj->flag); break
+
+         const keytoken_t *kt = gTokenTable.objectForKey(mKey.constPtr());
+         if(kt)
          {
-            readNumber("id", linedef->identifier);
-            requireInt("v1", linedef->v1, linedef->v1set);
-            requireInt("v2", linedef->v2, linedef->v2set);
-            readBool("blocking", linedef->blocking);
-            readBool("blockmonsters", linedef->blockmonsters);
-            readBool("twosided", linedef->twosided);
-            readBool("dontpegtop", linedef->dontpegtop);
-            readBool("dontpegbottom", linedef->dontpegbottom);
-            readBool("secret", linedef->secret);
-            readBool("blocksound", linedef->blocksound);
-            readBool("dontdraw", linedef->dontdraw);
-            readBool("mapped", linedef->mapped);
-            readBool("passuse", linedef->passuse);
-            readBool("translucent", linedef->translucent);
-            readBool("jumpover", linedef->jumpover);
-            readBool("blockfloaters", linedef->blockfloaters);
-
-            if(mNamespace == namespace_Eternity)
+            if(linedef)
             {
-               // TODO: these also apply to Hexen
-               readBool("playercross", linedef->playercross);
-               readBool("playeruse", linedef->playeruse);
-               readBool("monstercross", linedef->monstercross);
-               readBool("monsteruse", linedef->monsteruse);
-               readBool("impact", linedef->impact);
-               readBool("playerpush", linedef->playerpush);
-               readBool("monsterpush", linedef->monsterpush);
-               readBool("missilecross", linedef->missilecross);
-               readBool("repeatspecial", linedef->repeatspecial);
+               switch(kt->token)
+               {
+                  case t_id: readNumber(linedef->identifier); break;
+                  REQUIRE_INT(linedef, v1, v1set);
+                  REQUIRE_INT(linedef, v2, v2set);
+                  REQUIRE_INT(linedef, sidefront, sfrontset);
+                  READ_NUMBER(linedef, sideback);
+                  READ_BOOL(linedef, blocking);
+                  READ_BOOL(linedef, blockmonsters);
+                  READ_BOOL(linedef, twosided);
+                  READ_BOOL(linedef, dontpegtop);
+                  READ_BOOL(linedef, dontpegbottom);
+                  READ_BOOL(linedef, secret);
+                  READ_BOOL(linedef, blocksound);
+                  READ_BOOL(linedef, dontdraw);
+                  READ_BOOL(linedef, mapped);
+                  case t_passuse:
+                        readBool(linedef->passuse);
+                     break;
+                  case t_translucent:
+                        readBool(linedef->translucent);
+                     break;
+                  case t_jumpover:
+                        readBool(linedef->jumpover);
+                     break;
+                  case t_blockfloaters:
+                        readBool(linedef->blockfloaters);
+                     break;
+                  READ_NUMBER(linedef, special);
+                  case t_arg0: readNumber(linedef->arg[0]); break;
+                  case t_arg1: readNumber(linedef->arg[1]); break;
+                  case t_arg2: readNumber(linedef->arg[2]); break;
+                  case t_arg3: readNumber(linedef->arg[3]); break;
+                  case t_arg4: readNumber(linedef->arg[4]); break;
+                  READ_BOOL(linedef, playercross);
+                  READ_BOOL(linedef, playeruse);
+                  READ_BOOL(linedef, monstercross);
+                  READ_BOOL(linedef, monsteruse);
+                  READ_BOOL(linedef, impact);
+                  READ_BOOL(linedef, playerpush);
+                  READ_BOOL(linedef, monsterpush);
+                  READ_BOOL(linedef, missilecross);
+                  READ_BOOL(linedef, repeatspecial);
 
-               readBool("midtex3d", linedef->midtex3d);
-               readBool("firstsideonly", linedef->firstsideonly);
-               readBool("blockeverything", linedef->blockeverything);
-               readBool("zoneboundary", linedef->zoneboundary);
-               readBool("clipmidtex", linedef->clipmidtex);
-               readNumber("alpha", linedef->alpha);
-               readString("renderstyle", linedef->renderstyle);
-               readString("tranmap", linedef->tranmap);
+                  READ_BOOL(linedef, midtex3d);
+                  READ_BOOL(linedef, firstsideonly);
+                  READ_BOOL(linedef, blockeverything);
+                  READ_BOOL(linedef, zoneboundary);
+                  READ_BOOL(linedef, clipmidtex);
+                  READ_NUMBER(linedef, alpha);
+                  READ_STRING(linedef, renderstyle);
+                  READ_STRING(linedef, tranmap);
+                  default:
+                     break;
+               }
+
             }
-            readNumber("special", linedef->special);
-            readNumber("arg0", linedef->arg[0]);
-            readNumber("arg1", linedef->arg[1]);
-            readNumber("arg2", linedef->arg[2]);
-            readNumber("arg3", linedef->arg[3]);
-            readNumber("arg4", linedef->arg[4]);
-            requireInt("sidefront", linedef->sidefront, linedef->sfrontset);
-            readNumber("sideback", linedef->sideback);
-
-            // New fields (Eternity)
-
-         }
-         else if(sidedef)
-         {
-            if(mNamespace == namespace_Eternity)
+            else if(sidedef)
             {
-               readFixed("offsetx", sidedef->offsetx);
-               readFixed("offsety", sidedef->offsety);
+               switch(kt->token)
+               {
+                  case t_offsetx:
+                     if(mNamespace == namespace_Eternity)
+                        readFixed(sidedef->offsetx);
+                     else
+                        readNumber(sidedef->offsetx);
+                     break;
+                  case t_offsety:
+                     if(mNamespace == namespace_Eternity)
+                        readFixed(sidedef->offsety);
+                     else
+                        readNumber(sidedef->offsety);
+                     break;
+                  READ_STRING(sidedef, texturetop);
+                  READ_STRING(sidedef, texturebottom);
+                  READ_STRING(sidedef, texturemiddle);
+                  REQUIRE_INT(sidedef, sector, sset);
+                  default:
+                     break;
+               }
             }
-            else
+            else if(vertex)
             {
-               readNumber("offsetx", sidedef->offsetx);
-               readNumber("offsety", sidedef->offsety);
+               if(kt->token == t_x)
+                  requireFixed(vertex->x, vertex->xset);
+               else if(kt->token == t_y)
+                  requireFixed(vertex->y, vertex->yset);
             }
-            readString("texturetop", sidedef->texturetop);
-            readString("texturebottom", sidedef->texturebottom);
-            readString("texturemiddle", sidedef->texturemiddle);
-            requireInt("sector", sidedef->sector, sidedef->sset);
-         }
-         else if(vertex)
-         {
-            requireFixed("x", vertex->x, vertex->xset);
-            requireFixed("y", vertex->y, vertex->yset);
-         }
-         else if(sector)
-         {
-            if(mNamespace == namespace_Eternity)
+            else if(sector)
             {
-               readFixed("heightfloor", sector->heightfloor);
-               readFixed("heightceiling", sector->heightceiling);
+               switch(kt->token)
+               {
+                  case t_texturefloor:
+                     requireString(sector->texturefloor, sector->tfloorset);
+                     break;
+                  case t_textureceiling:
+                     requireString(sector->textureceiling, sector->tceilset);
+                     break;
+                  READ_NUMBER(sector, lightlevel);
+                  READ_NUMBER(sector, special);
+                  case t_id:
+                     readNumber(sector->identifier);
+                     break;
+                  case t_heightfloor:
+                     if(mNamespace != namespace_Eternity)
+                        readNumber(sector->heightfloor);
+                     else
+                        readFixed(sector->heightfloor);
+                     break;
+                  case t_heightceiling:
+                     if(mNamespace != namespace_Eternity)
+                        readNumber(sector->heightceiling);
+                     else
+                        readFixed(sector->heightceiling);
+                  default:
+                     break;
+               }
+               if(mNamespace == namespace_Eternity)
+               {
+                  switch(kt->token)
+                  {
+                     READ_FIXED(sector, xpanningfloor);
+                     READ_FIXED(sector, ypanningfloor);
+                     READ_FIXED(sector, xpanningceiling);
+                     READ_FIXED(sector, ypanningceiling);
+                     READ_NUMBER(sector, rotationfloor);
+                     READ_NUMBER(sector, rotationceiling);
 
-               readFixed("xpanningfloor", sector->xpanningfloor);
-               readFixed("ypanningfloor", sector->ypanningfloor);
-               readFixed("xpanningceiling", sector->xpanningceiling);
-               readFixed("ypanningceiling", sector->ypanningceiling);
-               readNumber("rotationfloor", sector->rotationfloor);
-               readNumber("rotationceiling", sector->rotationceiling);
+                     READ_BOOL(sector, secret);
+                     READ_NUMBER(sector, friction);
 
-               readBool("secret", sector->secret);
-               readNumber("friction", sector->friction);
+                     READ_NUMBER(sector, lightfloor);
+                     READ_NUMBER(sector, lightceiling);
+                     READ_BOOL(sector, lightfloorabsolute);
+                     READ_BOOL(sector, lightceilingabsolute);
 
-               readNumber("lightfloor", sector->lightfloor);
-               readNumber("lightceiling", sector->lightceiling);
-               readBool("lightfloorabsolute", sector->lightfloorabsolute);
-               readBool("lightceilingabsolute", sector->lightceilingabsolute);
+                     READ_NUMBER(sector, leakiness);
+                     READ_NUMBER(sector, damageamount);
+                     READ_NUMBER(sector, damageinterval);
+                     READ_BOOL(sector, damage_endgodmode);
+                     READ_BOOL(sector, damage_exitlevel);
+                     READ_BOOL(sector, damageterraineffect);
 
-               readNumber("leakiness", sector->leakiness);
-               readNumber("damageamount", sector->damageamount);
-               readNumber("damageinterval", sector->damageinterval);
-               readBool("damage_endgodmode", sector->damage_endgodmode);
-               readBool("damage_exitlevel", sector->damage_exitlevel);
-               readBool("damageterraineffect", sector->damageterraineffect);
-
-               readString("floorterrain", sector->floorterrain);
-               readString("ceilingterrain", sector->ceilingterrain);
+                     READ_STRING(sector, floorterrain);
+                     READ_STRING(sector, ceilingterrain);
+                     default:
+                        break;
+                  }
+               }
             }
-            else
+            else if(thing)
             {
-               readNumber("heightfloor", sector->heightfloor);
-               readNumber("heightceiling", sector->heightceiling);
+               switch(kt->token)
+               {
+                  case t_id: readNumber(thing->identifier); break;
+                  REQUIRE_FIXED(thing, x, xset);
+                  REQUIRE_FIXED(thing, y, yset);
+                  READ_FIXED(thing, height);
+                  READ_NUMBER(thing, angle);
+                  REQUIRE_INT(thing, type, typeset);
+                  READ_BOOL(thing, skill1);
+                  READ_BOOL(thing, skill2);
+                  READ_BOOL(thing, skill3);
+                  READ_BOOL(thing, skill4);
+                  READ_BOOL(thing, skill5);
+                  READ_BOOL(thing, ambush);
+                  READ_BOOL(thing, single);
+                  READ_BOOL(thing, dm);
+                  READ_BOOL(thing, coop);
+                  case t_friend:
+                        readBool(thing->friendly);
+                     break;
+                  READ_BOOL(thing, dormant);
+                  READ_BOOL(thing, class1);
+                  READ_BOOL(thing, class2);
+                  READ_BOOL(thing, class3);
+                  READ_BOOL(thing, standing);
+                  READ_BOOL(thing, strifeally);
+                  READ_BOOL(thing, translucent);
+                  READ_BOOL(thing, invisible);
+                  case t_special:
+                        readNumber(thing->special);
+                     break;
+                  case t_arg0:
+                        readNumber(thing->arg[0]);
+                     break;
+                  case t_arg1:
+                        readNumber(thing->arg[1]);
+                     break;
+                  case t_arg2:
+                        readNumber(thing->arg[2]);
+                     break;
+                  case t_arg3:
+                        readNumber(thing->arg[3]);
+                     break;
+                  case t_arg4:
+                        readNumber(thing->arg[4]);
+                     break;
+                  default:
+                     break;
+               }
             }
-            requireString("texturefloor", sector->texturefloor,
-                          sector->tfloorset);
-            requireString("textureceiling", sector->textureceiling,
-                          sector->tceilset);
-            readNumber("lightlevel", sector->lightlevel);
-            readNumber("special", sector->special);
-            readNumber("id", sector->identifier);
-         }
-         else if(thing)
-         {
-            readNumber("id", thing->identifier);
-            requireFixed("x", thing->x, thing->xset);
-            requireFixed("y", thing->y, thing->yset);
-            readFixed("height", thing->height);
-            readNumber("angle", thing->angle);
-            requireInt("type", thing->type, thing->typeset);
-            readBool("skill1", thing->skill1);
-            readBool("skill2", thing->skill2);
-            readBool("skill3", thing->skill3);
-            readBool("skill4", thing->skill4);
-            readBool("skill5", thing->skill5);
-            readBool("ambush", thing->ambush);
-            readBool("single", thing->single);
-            readBool("dm", thing->dm);
-            readBool("coop", thing->coop);
-            readBool("friend", thing->friendly);
-            readBool("dormant", thing->dormant);
-            readBool("class1", thing->class1);
-            readBool("class2", thing->class2);
-            readBool("class3", thing->class3);
-            readBool("standing", thing->standing);
-            readBool("strifeally", thing->strifeally);
-            readBool("translucent", thing->translucent);
-            readBool("invisible", thing->invisible);
-            readNumber("special", thing->special);
-            readNumber("arg0", thing->arg[0]);
-            readNumber("arg1", thing->arg[1]);
-            readNumber("arg2", thing->arg[2]);
-            readNumber("arg3", thing->arg[3]);
-            readNumber("arg4", thing->arg[4]);
          }
          continue;
       }
@@ -670,6 +985,28 @@ qstring UDMFParser::error() const
 }
 
 //
+// Returns the level info map format from the namespace, chiefly for linedef
+// specials
+//
+int UDMFParser::getMapFormat() const
+{
+   switch(mNamespace)
+   {
+      case namespace_Doom:
+      case namespace_Heretic:
+      case namespace_Strife:
+         // Just use the normal doom linedefs
+         return LEVEL_FORMAT_DOOM;
+      case namespace_Eternity:
+         return LEVEL_FORMAT_UDMF_ETERNITY;
+      case namespace_Hexen:
+         return LEVEL_FORMAT_HEXEN;
+      default:
+         return LEVEL_FORMAT_INVALID; // Unsupported namespace
+   }
+}
+
+//
 // Loads a new TEXTMAP and clears all variables
 //
 void UDMFParser::setData(const char *data, size_t size)
@@ -697,19 +1034,19 @@ void UDMFParser::setData(const char *data, size_t size)
 //
 // Passes a fixed_t
 //
-void UDMFParser::readFixed(const char *key, fixed_t &target) const
+void UDMFParser::readFixed(fixed_t &target) const
 {
-   if(!mKey.strCaseCmp(key) && mValue.type == Token::type_Number)
+   if(mValue.type == Token::type_Number)
       target = M_DoubleToFixed(mValue.number);
 }
 
 //
 // Passes a float to an object and flags a required element
 //
-void UDMFParser::requireFixed(const char *key, fixed_t &target,
+void UDMFParser::requireFixed(fixed_t &target,
                               bool &flagtarget) const
 {
-   if(!mKey.strCaseCmp(key) && mValue.type == Token::type_Number)
+   if(mValue.type == Token::type_Number)
    {
       target = M_DoubleToFixed(mValue.number);
       flagtarget = true;
@@ -719,10 +1056,9 @@ void UDMFParser::requireFixed(const char *key, fixed_t &target,
 //
 // Requires an int
 //
-void UDMFParser::requireInt(const char *key, int &target,
-                              bool &flagtarget) const
+void UDMFParser::requireInt(int &target, bool &flagtarget) const
 {
-   if(!mKey.strCaseCmp(key) && mValue.type == Token::type_Number)
+   if(mValue.type == Token::type_Number)
    {
       target = static_cast<int>(mValue.number);
       flagtarget = true;
@@ -732,19 +1068,18 @@ void UDMFParser::requireInt(const char *key, int &target,
 //
 // Reads a string
 //
-void UDMFParser::readString(const char *key, qstring &target) const
+void UDMFParser::readString(qstring &target) const
 {
-   if(!mKey.strCaseCmp(key) && mValue.type == Token::type_String)
+   if(mValue.type == Token::type_String)
       target = mValue.text;
 }
 
 //
 // Passes a string
 //
-void UDMFParser::requireString(const char *key, qstring &target,
-                               bool &flagtarget) const
+void UDMFParser::requireString(qstring &target, bool &flagtarget) const
 {
-   if(!mKey.strCaseCmp(key) && mValue.type == Token::type_String)
+   if(mValue.type == Token::type_String)
    {
       target = mValue.text;
       flagtarget = true;
@@ -754,9 +1089,9 @@ void UDMFParser::requireString(const char *key, qstring &target,
 //
 // Passes a boolean
 //
-void UDMFParser::readBool(const char *key, bool &target) const
+void UDMFParser::readBool(bool &target) const
 {
-   if(!mKey.strCaseCmp(key) && mValue.type == Token::type_Keyword)
+   if(mValue.type == Token::type_Keyword)
    {
       target = ectype::toUpper(mValue.text[0]) == 'T';
    }
@@ -766,9 +1101,9 @@ void UDMFParser::readBool(const char *key, bool &target) const
 // Passes a number (float/double/int)
 //
 template<typename T>
-void UDMFParser::readNumber(const char *key, T &target) const
+void UDMFParser::readNumber(T &target) const
 {
-   if(!mKey.strCaseCmp(key) && mValue.type == Token::type_Number)
+   if(mValue.type == Token::type_Number)
    {
       target = static_cast<T>(mValue.number);
    }
