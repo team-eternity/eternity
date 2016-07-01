@@ -45,7 +45,7 @@
 #include "sounds.h"
 
 // ioanch 20160423: helper
-inline static void P_dropToFloor(Mobj *thing)
+static void P_dropToFloor(Mobj *thing, player_t *player)
 {
    // haleyjd 12/15/02: cph found out this was removed
    // in Final DOOM, so don't do it for Final DOOM demos.
@@ -58,7 +58,7 @@ inline static void P_dropToFloor(Mobj *thing)
       else
          thing->z = thing->floorz;
    }
-   player_t *player = thing->player;
+
    if(player)
    {
       player->viewz = thing->z + player->viewheight;
@@ -82,7 +82,7 @@ static int P_Teleport(Mobj *thing, const Mobj *landing)
    if(!P_TeleportMove(thing, landing->x, landing->y, false)) // killough 8/9/98
       return 0;
 
-   P_dropToFloor(thing);
+   P_dropToFloor(thing, player);
 
    thing->angle = landing->angle;
 
@@ -181,7 +181,7 @@ static int P_SilentTeleport(Mobj *thing, const line_t *line,
    thing->angle += angle;
 
    if(!parms.keepheight)
-      P_dropToFloor(thing);
+      P_dropToFloor(thing, player);
    else
    {
       // Adjust z position to be same height above ground as before
