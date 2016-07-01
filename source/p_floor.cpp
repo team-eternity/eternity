@@ -378,6 +378,32 @@ void PillarThinker::serialize(SaveArchive &arc)
 ///////////////////////////////////////////////////////////////////////
 
 //
+// Just for Hexen compatibility
+//
+int EV_FloorCrushStop(const line_t *line, int tag)
+{
+   // This will just stop all crushing floors with given tag
+   int rtn = 0;
+   for(Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
+   {
+      auto fmt = thinker_cast<FloorMoveThinker *>(th);
+      if(!fmt || fmt->crush <= 0)
+      {
+         continue;
+      }
+      // Odd: in Hexen this affects ALL sectors
+      if(P_LevelIsVanillaHexen() || fmt->sector->tag == tag)
+      {
+         rtn = 1;
+         fmt->sector->floordata = nullptr;
+         S_StopSectorSequence(fmt->sector, SEQ_ORIGIN_SECTOR_F);
+         fmt->removeThinker();
+      }
+   }
+   return rtn;
+}
+
+//
 // EV_DoFloor()
 //
 // Handle regular and extended floor types

@@ -1380,6 +1380,8 @@ int EV_BuildStairs(const line_t *line, stair_e type);
 
 int EV_DoFloor(const line_t *line, floor_e floortype);
 
+int EV_FloorCrushStop(const line_t *line, int tag);
+
 // p_ceilng
 
 int EV_DoCeiling(const line_t *line, ceiling_e type);

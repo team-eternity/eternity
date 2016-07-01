@@ -3652,5 +3652,16 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseAndCrush)
    return EV_DoParamFloor(instance->line, instance->tag, &fd);
 }
 
+//
+// Implements Floor_CrushStop(tag)
+//
+// * ExtraData: 452
+// * Hexen:     46
+//
+DEFINE_ACTION(EV_ActionParamFloorCrushStop)
+{
+   return EV_FloorCrushStop(instance->line, instance->tag);
+}
+
 // EOF
 
