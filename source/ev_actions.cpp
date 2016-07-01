@@ -1635,7 +1635,7 @@ DEFINE_ACTION(EV_ActionParamFloorLowerToLowestCeiling)
 //
 // EV_ActionParamFloorRaiseToCeiling
 //
-// Implements Floor_RaiseToCeiling(tag, speed, change, crush)
+// Implements Floor_RaiseToCeiling(tag, speed, change, crush, gap)
 // * ExtraData: 314
 //
 DEFINE_ACTION(EV_ActionParamFloorRaiseToCeiling)
@@ -1650,6 +1650,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToCeiling)
    fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
    EV_floorChangeForArg(fd, instance->args[2]);       // change
    fd.crush       = instance->args[3];                // crush
+   fd.adjust      = -instance->args[4] * FRACUNIT;
 
    return EV_DoParamFloor(instance->line, instance->tag, &fd);
 }
