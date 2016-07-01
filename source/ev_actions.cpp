@@ -1569,7 +1569,10 @@ DEFINE_ACTION(EV_ActionParamFloorLowerToNearest)
    INIT_STRUCT(floordata_t, fd);
 
    fd.direction   = 0;              // down
-   fd.target_type = FtoNnF;         // to nearest neighboring floor
+   if(P_LevelIsVanillaHexen())
+      fd.target_type = FtoHnF;   // ioanch: in Hexen it's actually to "highest"
+   else
+      fd.target_type = FtoNnF;         // to nearest neighboring floor
    fd.spac        = instance->spac; // activated Hexen-style
    fd.flags       = FDF_HAVESPAC;
    fd.speed_type  = SpeedParam;
