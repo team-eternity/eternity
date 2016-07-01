@@ -148,15 +148,7 @@ DEFINE_ACTION(EV_ActionOpenDoor)
    // case  86: (WR)
    // case 103: (S1)
    // Open Door
-   INIT_STRUCT(doordata_t, dd);
-
-   dd.kind = ODoor;
-   dd.spac = instance->spac;
-   dd.speed_value = VDOORSPEED;
-   dd.flags = DDF_HAVESPAC;
-   dd.thing = instance->actor;
-
-   return EV_DoParamDoor(instance->line, instance->tag, &dd);
+   return EV_DoDoor(instance->line, doorOpen);
 }
 
 //
@@ -169,16 +161,7 @@ DEFINE_ACTION(EV_ActionCloseDoor)
    // case 50: (S1)
    // case 75: (WR)
    // Close Door
-
-   INIT_STRUCT(doordata_t, dd);
-
-   dd.kind = CDoor;
-   dd.spac = instance->spac;
-   dd.speed_value = VDOORSPEED;
-   dd.flags = DDF_HAVESPAC;
-   dd.thing = instance->actor;
-
-   return EV_DoParamDoor(instance->line, instance->tag, &dd);
+   return EV_DoDoor(instance->line, doorClose);
 }
 
 //
@@ -191,17 +174,7 @@ DEFINE_ACTION(EV_ActionRaiseDoor)
    // case 63: (SR)
    // case 90: (WR)
    // Raise Door
-
-   INIT_STRUCT(doordata_t, dd);
-
-   dd.kind = OdCDoor;
-   dd.spac = instance->spac;
-   dd.speed_value = VDOORSPEED;
-   dd.delay_value = VDOORWAIT;
-   dd.flags = DDF_HAVESPAC;
-   dd.thing = instance->actor;
-
-   return EV_DoParamDoor(instance->line, instance->tag, &dd);
+   return EV_DoDoor(instance->line, doorNormal);
 }
 
 //
@@ -292,17 +265,7 @@ DEFINE_ACTION(EV_ActionCloseDoor30)
    // case 175: (S1 - BOOM Extended)
    // case 196: (SR - BOOM Extended)
    // Close Door 30
-
-   INIT_STRUCT(doordata_t, dd);
-
-   dd.kind = CdODoor;
-   dd.spac = instance->spac;
-   dd.speed_value = VDOORSPEED;
-   dd.delay_value = 30 * TICRATE;
-   dd.flags = DDF_HAVESPAC;
-   dd.thing = instance->actor;
-
-   return EV_DoParamDoor(instance->line, instance->tag, &dd);
+   return EV_DoDoor(instance->line, closeThenOpen);
 }
 
 //
@@ -713,17 +676,7 @@ DEFINE_ACTION(EV_ActionDoorBlazeRaise)
    // case 111: (S1)
    // case 114: (SR)
    // Blazing Door Raise (faster than TURBO!)
-
-   INIT_STRUCT(doordata_t, dd);
-
-   dd.kind = OdCDoor;
-   dd.spac = instance->spac;
-   dd.speed_value = 4 * VDOORSPEED;
-   dd.delay_value = VDOORWAIT;
-   dd.flags = DDF_HAVESPAC;
-   dd.thing = instance->actor;
-
-   return EV_DoParamDoor(instance->line, instance->tag, &dd);
+   return EV_DoDoor(instance->line, blazeRaise);
 }
 
 //
@@ -736,16 +689,7 @@ DEFINE_ACTION(EV_ActionDoorBlazeOpen)
    // case 112: (S1)
    // case 115: (SR)
    // Blazing Door Open (faster than TURBO!)
-
-   INIT_STRUCT(doordata_t, dd);
-
-   dd.kind = ODoor;
-   dd.spac = instance->spac;
-   dd.speed_value = 4 * VDOORSPEED;
-   dd.flags = DDF_HAVESPAC;
-   dd.thing = instance->actor;
-
-   return EV_DoParamDoor(instance->line, instance->tag, &dd);
+   return EV_DoDoor(instance->line, blazeOpen);
 }
 
 //
@@ -758,16 +702,7 @@ DEFINE_ACTION(EV_ActionDoorBlazeClose)
    // case 113: (S1)
    // case 116: (SR)
    // Blazing Door Close (faster than TURBO!)
-
-   INIT_STRUCT(doordata_t, dd);
-
-   dd.kind = CDoor;
-   dd.spac = instance->spac;
-   dd.speed_value = 4 * VDOORSPEED;
-   dd.flags = DDF_HAVESPAC;
-   dd.thing = instance->actor;
-
-   return EV_DoParamDoor(instance->line, instance->tag, &dd);
+   return EV_DoDoor(instance->line, blazeClose);
 }
 
 //
@@ -1196,17 +1131,7 @@ DEFINE_ACTION(EV_ActionDoLockedDoor)
 
    int lockID = EV_LockDefIDForSpecial(instance->special);
    if(EV_lockCheck(instance->actor, lockID, true))
-   {
-      INIT_STRUCT(doordata_t, dd);
-
-      dd.kind = ODoor;
-      dd.speed_value = 4 * VDOORSPEED;
-      dd.flags = DDF_HAVESPAC;
-      dd.thing = instance->actor;
-      dd.spac = instance->spac;
-
-      return EV_DoParamDoor(instance->line, instance->tag, &dd);
-   }
+      return EV_DoDoor(instance->line, blazeOpen);
    return 0;
 }
 
@@ -1555,11 +1480,11 @@ DEFINE_ACTION(EV_ActionParamFloorLowerToHighest)
    fd.direction = 0;
    fd.target_type = FtoHnF;
    fd.spac = instance->spac;
-   fd.flags = FDF_HAVESPAC;
+   fd.flags = FDF_HAVESPAC | FDF_HACKFORDESTHNF;
    fd.speed_type = SpeedParam;
    fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
    fd.crush = -1;
-   fd.adjust = (instance->args[2] - 128) * FRACUNIT;
+   fd.adjust = instance->args[2];
    fd.force_adjust = instance->args[3];
 
    return EV_DoParamFloor(instance->line, instance->tag, &fd);
@@ -1658,7 +1583,7 @@ DEFINE_ACTION(EV_ActionParamFloorLowerToNearest)
 //
 // EV_ActionParamFloorRaiseToLowestCeiling
 //
-// Implements Floor_RaiseToLowestCeiling(tag, speed, change, crush, offset)
+// Implements Floor_RaiseToLowestCeiling(tag, speed, change, crush)
 // * ExtraData: 312
 // * Hexen (ZDoom Extension): 238
 //
@@ -1674,10 +1599,6 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToLowestCeiling)
    fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
    EV_floorChangeForArg(fd, instance->args[2]);       // change
    fd.crush       = instance->args[3];                // crush
-   // ioanch 20160606: add offset adjust parameter
-   // no 128 subtraction here
-   fd.adjust      = instance->args[4] * FRACUNIT;
-   fd.force_adjust = 1;
 
    return EV_DoParamFloor(instance->line, instance->tag, &fd);
 }

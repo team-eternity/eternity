@@ -1258,15 +1258,7 @@ void A_BossDeath(actionargs_t *actionargs)
          case BSPEC_E4M6:
             // open sectors tagged 666 as blazing doors
             junk.tag = 666;
-
-            {
-               edefstructvar(doordata_t, dd);
-               dd.kind = ODoor;
-               dd.speed_value = 4 * VDOORSPEED;
-               dd.flags = DDF_HAVESPAC;
-               EV_DoParamDoor(&junk, junk.tag, &dd);
-            }
-
+            EV_DoDoor(&junk, blazeOpen);
             break;
          default:
             break;
@@ -1302,11 +1294,7 @@ void A_KeenDie(actionargs_t *actionargs)
    }
 
    junk.tag = 666;
-   edefstructvar(doordata_t, dd);
-   dd.kind = ODoor;
-   dd.flags = DDF_HAVESPAC;
-   dd.speed_value = VDOORSPEED;
-   EV_DoParamDoor(&junk, junk.tag, &dd);
+   EV_DoDoor(&junk, doorOpen);
 }
 
 //=============================================================================

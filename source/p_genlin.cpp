@@ -135,6 +135,14 @@ manual_floor:
       {
       case FtoHnF:
          floor->floordestheight = P_FindHighestFloorSurrounding(sec);
+         if(fd->flags & FDF_HACKFORDESTHNF) // haleyjd 06/20/14: hacks
+         {
+            fixed_t amt = (fd->adjust - 128) * FRACUNIT;
+            if(fd->force_adjust == 1)
+               floor->floordestheight += amt;
+            else if(floor->floordestheight != sec->floorheight)
+               floor->floordestheight += amt;
+         }
          break;
       case FtoLnF:
          floor->floordestheight = P_FindLowestFloorSurrounding(sec);
@@ -194,13 +202,6 @@ manual_floor:
          break;
       default:
          break;
-      }
-
-      // ioanch 20160616: moved adjust here
-      if(fd->adjust &&
-         (fd->force_adjust || floor->floordestheight != sec->floorheight))
-      {
-         floor->floordestheight += fd->adjust;
       }
 
       // set texture/type change properties

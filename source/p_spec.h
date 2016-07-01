@@ -1089,6 +1089,7 @@ enum
 {
    FDF_HAVESPAC        = 0x00000001, // has Hexen-style SPAC activation
    FDF_HAVETRIGGERTYPE = 0x00000002, // has BOOM-style generalized trigger type
+   FDF_HACKFORDESTHNF  = 0x00000004  // adjust and force_adjust are valid
 };
 
 // haleyjd 05/07/04: extended data struct for parameterized floors
@@ -1109,8 +1110,8 @@ typedef struct floordata_s
    // parameterized values
    fixed_t height_value;
    fixed_t speed_value;
-   int     adjust;
-   int     force_adjust;
+   int     adjust;        // valid IFF flags & FDF_HACKFORDESTHNF
+   int     force_adjust;  // valid IFF flags & FDF_HACKFORDESTHNF
 } floordata_t;
 
 // haleyjd 01/21/13: stairdata flags
@@ -1390,6 +1391,8 @@ void P_ChangeCeilingTex(const char *name, int tag);
 // p_doors
 
 int EV_VerticalDoor(line_t *line, const Mobj *thing, int lockID);
+
+int EV_DoDoor(const line_t *line, vldoor_e type);
 
 void EV_OpenDoor(int sectag, int speed, int wait_time);
 
