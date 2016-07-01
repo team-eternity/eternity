@@ -1589,7 +1589,7 @@ DEFINE_ACTION(EV_ActionParamFloorLowerToNearest)
 //
 // EV_ActionParamFloorRaiseToLowestCeiling
 //
-// Implements Floor_RaiseToLowestCeiling(tag, speed, change, crush)
+// Implements Floor_RaiseToLowestCeiling(tag, speed, change, crush, gap)
 // * ExtraData: 312
 // * Hexen (ZDoom Extension): 238
 //
@@ -1605,6 +1605,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToLowestCeiling)
    fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
    EV_floorChangeForArg(fd, instance->args[2]);       // change
    fd.crush       = instance->args[3];                // crush
+   fd.adjust      = -instance->args[4] * FRACUNIT;
 
    return EV_DoParamFloor(instance->line, instance->tag, &fd);
 }

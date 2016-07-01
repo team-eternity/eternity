@@ -153,7 +153,7 @@ manual_floor:
             P_FindNextLowestFloor(sec,sec->floorheight);
          break;
       case FtoLnC:
-         floor->floordestheight = P_FindLowestCeilingSurrounding(sec);
+         floor->floordestheight = P_FindLowestCeilingSurrounding(sec) + fd->adjust;
          break;
       case FtoC:
          floor->floordestheight = sec->ceilingheight + fd->adjust;
