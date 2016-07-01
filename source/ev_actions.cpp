@@ -3628,5 +3628,27 @@ DEFINE_ACTION(EV_ActionTeleportNewMap)
    return 1;
 }
 
+//
+// Implements Floor_RaiseAndCrush(tag, speed, crush)
+//
+// * ExtraData: 451
+// * Hexen:     28
+//
+DEFINE_ACTION(EV_ActionParamFloorRaiseAndCrush)
+{
+   INIT_STRUCT(floordata_t, fd);
+
+   fd.direction   = 1;              // up
+   fd.target_type = FtoC;           // to sector ceiling
+   fd.adjust      = -8 * FRACUNIT;
+   fd.spac        = instance->spac; // activated Hexen-style
+   fd.flags       = FDF_HAVESPAC;
+   fd.speed_type  = SpeedParam;
+   fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   fd.crush       = instance->args[2];                // crush
+
+   return EV_DoParamFloor(instance->line, instance->tag, &fd);
+}
+
 // EOF
 
