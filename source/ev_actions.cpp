@@ -1431,7 +1431,10 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToHighest)
    INIT_STRUCT(floordata_t, fd);
 
    fd.direction   = 1;              // up
-   fd.target_type = FtoHnF;         // to highest neighboring floor
+   if(P_LevelIsVanillaHexen())   // vanilla Hexen compatibility
+      fd.target_type = FtoLnC;
+   else
+      fd.target_type = FtoHnF;         // to highest neighboring floor
    fd.spac        = instance->spac; // activated Hexen-style
    fd.flags       = FDF_HAVESPAC;
    fd.speed_type  = SpeedParam;
