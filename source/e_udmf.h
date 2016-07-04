@@ -155,7 +155,8 @@ private:
       int errorline;
 
       // Eternity
-      bool midtex3d, firstsideonly, blockeverything, zoneboundary, clipmidtex;
+      bool midtex3d, firstsideonly, blockeverything, zoneboundary, clipmidtex,
+      midtex3dimpassible;
       float alpha = 1;
       qstring renderstyle;
       qstring tranmap;

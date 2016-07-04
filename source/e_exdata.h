@@ -73,6 +73,7 @@ enum
    EX_ML_BLOCKALL     = 0x00000400, // line blocks everything
    EX_ML_ZONEBOUNDARY = 0x00000800, // line marks a sound zone boundary
    EX_ML_CLIPMIDTEX   = 0x00001000, // line clips midtextures to floor and ceiling height
+   EX_ML_3DMTPASSPROJ = 0x00002000, // with ML_3DMIDTEX, makes it pass projectiles
 };
 
 // ExtraData line structure

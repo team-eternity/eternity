@@ -203,6 +203,8 @@ bool UDMFParser::loadLinedefs()
             ld->extflags |= EX_ML_ZONEBOUNDARY;
          if(uld.clipmidtex)
             ld->extflags |= EX_ML_CLIPMIDTEX;
+         if(uld.midtex3dimpassible)
+            ld->extflags |= EX_ML_3DMTPASSPROJ;
       }
 
       // TODO: Strife
@@ -452,6 +454,7 @@ enum token_e
    t_lightlevel,
    t_mapped,
    t_midtex3d,
+   t_midtex3dimpassible,
    t_missilecross,
    t_monstercross,
    t_monsterpush,
@@ -558,6 +561,7 @@ static keytoken_t gTokenList[] =
    TOKEN(lightlevel),
    TOKEN(mapped),
    TOKEN(midtex3d),
+   TOKEN(midtex3dimpassible),
    TOKEN(missilecross),
    TOKEN(monstercross),
    TOKEN(monsterpush),
@@ -761,6 +765,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                   READ_BOOL(linedef, repeatspecial);
 
                   READ_BOOL(linedef, midtex3d);
+                  READ_BOOL(linedef, midtex3dimpassible);
                   READ_BOOL(linedef, firstsideonly);
                   READ_BOOL(linedef, blockeverything);
                   READ_BOOL(linedef, zoneboundary);
