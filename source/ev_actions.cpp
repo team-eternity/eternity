@@ -3711,5 +3711,48 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingLowerByValue)
 
 }
 
+//
+// Implements FloorAndCeiling_RaiseByValue(tag, speed, height)
+//
+// * ExtraData: 454
+// * Hexen:     96
+//
+DEFINE_ACTION(EV_ActionParamFloorCeilingRaiseByValue)
+{
+   if(P_LevelIsVanillaHexen())
+   {
+      INIT_STRUCT(floordata_t, fd);
+
+      fd.direction = 1; // up
+      fd.target_type = FbyParam;
+      fd.spac = instance->spac;
+      fd.flags = FDF_HAVESPAC;
+      fd.speed_type = SpeedParam;
+      fd.speed_value = instance->args[1] * FRACUNIT / 8;
+      fd.height_value = instance->args[2] * FRACUNIT;
+      fd.crush = -1;
+
+      INIT_STRUCT(ceilingdata_t, cd);
+
+      cd.direction = 1;
+      cd.target_type = CbyParam;
+      cd.speed_type = instance->spac;
+      cd.flags = CDF_HAVESPAC;
+      cd.speed_type = SpeedParam;
+      cd.speed_value = instance->args[1] * FRACUNIT / 8;
+      cd.height_value = instance->args[2] * FRACUNIT;
+      cd.crush = -1;
+
+      return EV_DoFloorAndCeiling(instance->line, instance->tag, fd, cd);
+   }
+
+   // If it's a contemporary level, try to make it as the user expects it to
+   // work: Boom elevator moved by value
+
+   return EV_DoElevator(instance->line, instance->tag, elevateByValue,
+                        instance->args[1] * FRACUNIT / 8,
+                        instance->args[2] * FRACUNIT);
+}
+
 // EOF
 
