@@ -135,6 +135,7 @@ static ev_static_t DOOMStaticBindings[] =
    STATICSPEC(418, EV_STATIC_SCROLL_LINE_DOWN)
    STATICSPEC(419, EV_STATIC_SCROLL_LINE_DOWN_FAST)
    STATICSPEC(450, EV_STATIC_PORTAL_HORIZON_LINE)
+   STATICSPEC(455, EV_STATIC_SLOPE_PARAM)
 };
 
 // Hexen Static Init Bindings
@@ -148,6 +149,7 @@ static ev_static_t HexenStaticBindings[] =
    STATICSPEC(102, EV_STATIC_SCROLL_UP_PARAM)
    STATICSPEC(103, EV_STATIC_SCROLL_DOWN_PARAM)
    STATICSPEC(121, EV_STATIC_LINE_SET_IDENTIFICATION)
+   STATICSPEC(181, EV_STATIC_SLOPE_PARAM)
 };
 
 // PSX Static Init Bindings
@@ -485,6 +487,7 @@ int EV_SpecialForStaticInitName(const char *name)
    };
    static staticname_t namedStatics[] =
    {
+      { EV_STATIC_SLOPE_PARAM,             "Plane_Align"            },
       { EV_STATIC_POLYOBJ_START_LINE,      "Polyobj_StartLine"      },
       { EV_STATIC_POLYOBJ_EXPLICIT_LINE,   "Polyobj_ExplicitLine"   },
       { EV_STATIC_SCROLL_LEFT_PARAM,       "Scroll_Texture_Left"    },
@@ -516,6 +519,7 @@ bool EV_IsParamStaticInit(int special)
 {
    switch(EV_StaticInitForSpecial(special))
    {
+   case EV_STATIC_SLOPE_PARAM:
    case EV_STATIC_POLYOBJ_START_LINE:
    case EV_STATIC_POLYOBJ_EXPLICIT_LINE:
    case EV_STATIC_SCROLL_LEFT_PARAM:

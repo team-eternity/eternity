@@ -1345,6 +1345,7 @@ void P_SpawnSpecials()
       case EV_STATIC_SLOPE_BSEC_FLOOR_CEILING:
       case EV_STATIC_SLOPE_BACKFLOOR_FRONTCEILING:
       case EV_STATIC_SLOPE_FRONTFLOOR_BACKCEILING:
+      case EV_STATIC_SLOPE_PARAM:
          P_SpawnSlope_Line(i, staticFn);
          break;
 
