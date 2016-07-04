@@ -134,6 +134,7 @@ static ev_static_t DOOMStaticBindings[] =
    STATICSPEC(417, EV_STATIC_SCROLL_LINE_UP)
    STATICSPEC(418, EV_STATIC_SCROLL_LINE_DOWN)
    STATICSPEC(419, EV_STATIC_SCROLL_LINE_DOWN_FAST)
+   STATICSPEC(450, EV_STATIC_PORTAL_HORIZON_LINE)
 };
 
 // Hexen Static Init Bindings
@@ -141,6 +142,7 @@ static ev_static_t HexenStaticBindings[] =
 {
    STATICSPEC(  1, EV_STATIC_POLYOBJ_START_LINE)
    STATICSPEC(  5, EV_STATIC_POLYOBJ_EXPLICIT_LINE)
+   STATICSPEC(  9, EV_STATIC_PORTAL_HORIZON_LINE)
    STATICSPEC(100, EV_STATIC_SCROLL_LEFT_PARAM)
    STATICSPEC(101, EV_STATIC_SCROLL_RIGHT_PARAM)
    STATICSPEC(102, EV_STATIC_SCROLL_UP_PARAM)
@@ -560,6 +562,7 @@ int EV_SpecialForStaticInitName(const char *name)
       { EV_STATIC_SCROLL_RIGHT_PARAM,      "Scroll_Texture_Right"   },
       { EV_STATIC_SCROLL_UP_PARAM,         "Scroll_Texture_Up"      },
       { EV_STATIC_SCROLL_DOWN_PARAM,       "Scroll_Texture_Down"    },
+      { EV_STATIC_PORTAL_HORIZON_LINE,     "Line_Horizon"           },
       { EV_STATIC_LINE_SET_IDENTIFICATION, "Line_SetIdentification" },
    };
 

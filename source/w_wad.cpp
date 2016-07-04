@@ -954,7 +954,7 @@ bool WadDirectory::addDirectoryAsArchive(openwad_t &openData,
          }
 
          lump_p->type = lumpinfo_t::lump_file;
-         lump_p->lfn = estrdup(adf.path.constPtr());
+         lump_p->lfn = adf.path.duplicate();
          lump_p->size = adf.size;
          lump_p->source = source;
          int li_namespace;
