@@ -144,6 +144,7 @@ DECLARE_ACTION(EV_ActionParamFloorLowerInstant);
 DECLARE_ACTION(EV_ActionParamFloorToCeilingInstant);
 DECLARE_ACTION(EV_ActionParamFloorRaiseAndCrush);
 DECLARE_ACTION(EV_ActionParamFloorCrushStop);
+DECLARE_ACTION(EV_ActionParamFloorCeilingLowerByValue);
 DECLARE_ACTION(EV_ActionParamCeilingRaiseToHighest);
 DECLARE_ACTION(EV_ActionParamCeilingToHighestInstant);
 DECLARE_ACTION(EV_ActionParamCeilingRaiseToNearest);

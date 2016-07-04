@@ -563,7 +563,8 @@ typedef enum
 {
    elevateUp,
    elevateDown,
-   elevateCurrent
+   elevateCurrent,
+   elevateByValue // for Hexen additions
 } elevator_e;
 
 // haleyjd 01/09/07: p_lights
@@ -1374,7 +1375,8 @@ int EV_ParamSilentTeleport(int tid, const line_t *line, int tag, int side,
 
 // p_floor
 
-int EV_DoElevator(const line_t *line, elevator_e type);
+int EV_DoElevator(const line_t *line, int tag, elevator_e type, fixed_t speed,
+                  fixed_t amount);
 
 int EV_BuildStairs(const line_t *line, stair_e type);
 
@@ -1457,6 +1459,9 @@ int EV_DoGenFloor(const line_t *line);
 
 int EV_DoParamCeiling(const line_t *line, int tag, const ceilingdata_t *cd);
 int EV_DoGenCeiling(const line_t *line);
+
+int EV_DoFloorAndCeiling(const line_t *line, int tag, const floordata_t &fd,
+                         const ceilingdata_t &cd);
 
 int EV_DoGenLift(const line_t *line);
 

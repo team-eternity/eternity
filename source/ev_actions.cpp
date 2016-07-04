@@ -1003,7 +1003,8 @@ DEFINE_ACTION(EV_ActionElevatorUp)
    // case 229: (S1 - BOOM Extended)
    // case 230: (SR - BOOM Extended)
    // Raise elevator next floor
-   return EV_DoElevator(instance->line, elevateUp);
+   return EV_DoElevator(instance->line, instance->tag, elevateUp,
+                        ELEVATORSPEED, 0);
 }
 
 //
@@ -1016,7 +1017,8 @@ DEFINE_ACTION(EV_ActionElevatorDown)
    // case 233: (S1 - BOOM Extended)
    // case 234: (SR - BOOM Extended)
    // Lower elevator next floor
-   return EV_DoElevator(instance->line, elevateDown);
+   return EV_DoElevator(instance->line, instance->tag, elevateDown,
+                        ELEVATORSPEED, 0);
 
 }
 
@@ -1030,7 +1032,8 @@ DEFINE_ACTION(EV_ActionElevatorCurrent)
    // case 237: (S1 - BOOM Extended)
    // case 238: (SR - BOOM Extended)
    // Elevator to current floor
-   return EV_DoElevator(instance->line, elevateCurrent);
+   return EV_DoElevator(instance->line, instance->tag, elevateCurrent,
+                        ELEVATORSPEED, 0);
 }
 
 //
@@ -3661,6 +3664,51 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseAndCrush)
 DEFINE_ACTION(EV_ActionParamFloorCrushStop)
 {
    return EV_FloorCrushStop(instance->line, instance->tag);
+}
+
+//
+// Implements FloorAndCeiling_LowerByValue(tag, speed, height)
+//
+// * ExtraData: 453
+// * Hexen:     95
+//
+DEFINE_ACTION(EV_ActionParamFloorCeilingLowerByValue)
+{
+   // If level is vanilla Hexen, try to emulate its behavior as much as possible
+   if(P_LevelIsVanillaHexen())
+   {
+      INIT_STRUCT(floordata_t, fd);
+
+      fd.direction = 0; // down
+      fd.target_type = FbyParam;
+      fd.spac = instance->spac;
+      fd.flags = FDF_HAVESPAC;
+      fd.speed_type = SpeedParam;
+      fd.speed_value = instance->args[1] * FRACUNIT / 8;
+      fd.height_value = instance->args[2] * FRACUNIT;
+      fd.crush = -1;
+
+      INIT_STRUCT(ceilingdata_t, cd);
+
+      cd.direction = 0;
+      cd.target_type = CbyParam;
+      cd.speed_type = instance->spac;
+      cd.flags = CDF_HAVESPAC;
+      cd.speed_type = SpeedParam;
+      cd.speed_value = instance->args[1] * FRACUNIT / 8;
+      cd.height_value = instance->args[2] * FRACUNIT;
+      cd.crush = -1;
+
+      return EV_DoFloorAndCeiling(instance->line, instance->tag, fd, cd);
+   }
+
+   // If it's a contemporary level, try to make it as the user expects it to
+   // work: Boom elevator moved by value
+
+   return EV_DoElevator(instance->line, instance->tag, elevateByValue,
+                        instance->args[1] * FRACUNIT / 8,
+                       -instance->args[2] * FRACUNIT);
+
 }
 
 // EOF

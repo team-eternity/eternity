@@ -646,6 +646,26 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
 }
 
 //
+// Floor and ceiling mover. Mainly for Hexen compatibility
+//
+int EV_DoFloorAndCeiling(const line_t *line, int tag, const floordata_t &fd,
+                         const ceilingdata_t &cd)
+{
+   int floor = EV_DoParamFloor(line, tag, &fd);
+   if(P_LevelIsVanillaHexen())
+   {
+      // Clear ceilingdata to emulate Hexen bug
+      int secnum = -1;
+      while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
+      {
+         sectors[secnum].ceilingdata = nullptr;
+      }
+   }
+   int ceiling = EV_DoParamCeiling(line, tag, &cd);
+   return floor || ceiling ? 1 : 0;
+}
+
+//
 // EV_DoChange()
 //
 // Handle pure change types. These change floor texture and sector type
@@ -1087,8 +1107,8 @@ int EV_DoParamDonut(const line_t *line, int tag, bool havespac,
 // jff 2/22/98 new type to move floor and ceiling in parallel
 //
 int EV_DoElevator
-( const line_t* line,
-  elevator_e    elevtype )
+( const line_t* line, int tag,
+  elevator_e    elevtype, fixed_t speed, fixed_t amount )
 {
    int                   secnum;
    int                   rtn;
@@ -1114,14 +1134,15 @@ int EV_DoElevator
       sec->ceilingdata = elevator; //jff 2/22/98
       elevator->type = elevtype;
 
+      elevator->speed = speed;
+      elevator->sector = sec;
+
       // set up the fields according to the type of elevator action
       switch(elevtype)
       {
       // elevator down to next floor
       case elevateDown:
          elevator->direction = plat_down;
-         elevator->sector = sec;
-         elevator->speed = ELEVATORSPEED;
          elevator->floordestheight =
             P_FindNextLowestFloor(sec,sec->floorheight);
          elevator->ceilingdestheight =
@@ -1131,8 +1152,6 @@ int EV_DoElevator
       // elevator up to next floor
       case elevateUp:
          elevator->direction = plat_up;
-         elevator->sector = sec;
-         elevator->speed = ELEVATORSPEED;
          elevator->floordestheight =
             P_FindNextHighestFloor(sec,sec->floorheight);
          elevator->ceilingdestheight =
@@ -1141,15 +1160,18 @@ int EV_DoElevator
 
       // elevator to floor height of activating switch's front sector
       case elevateCurrent:
-         elevator->sector = sec;
-         elevator->speed = ELEVATORSPEED;
          elevator->floordestheight = line->frontsector->floorheight;
          elevator->ceilingdestheight =
             elevator->floordestheight + sec->ceilingheight - sec->floorheight;
          elevator->direction =
             elevator->floordestheight>sec->floorheight ? plat_up : plat_down;
          break;
-
+      case elevateByValue:
+         elevator->floordestheight = sec->floorheight + amount;
+         elevator->ceilingdestheight =
+            elevator->floordestheight + sec->ceilingheight - sec->floorheight;
+         elevator->direction = amount > 0 ? plat_up : plat_down;
+         break;
       default:
          break;
       }

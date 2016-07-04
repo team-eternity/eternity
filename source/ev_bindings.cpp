@@ -993,6 +993,7 @@ PARAMLINE(ParamFloorLowerInstant);
 PARAMLINE(ParamFloorToCeilingInstant);
 PARAMLINE(ParamFloorRaiseAndCrush);
 PARAMLINE(ParamFloorCrushStop);
+PARAMLINE(ParamFloorCeilingLowerByValue);
 PARAMLINE(ParamCeilingRaiseToHighest);
 PARAMLINE(ParamCeilingToHighestInstant);
 PARAMLINE(ParamCeilingRaiseToNearest);
@@ -1465,6 +1466,7 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(449, TeleportNewMap,                  "Teleport_NewMap")
    LINESPECNAMED(451, ParamFloorRaiseAndCrush,         "Floor_RaiseAndCrush")
    LINESPECNAMED(452, ParamFloorCrushStop,             "Floor_CrushStop")
+   LINESPECNAMED(453, ParamFloorCeilingLowerByValue,   "FloorAndCeiling_LowerByValue")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1584,6 +1586,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(92,  PolyobjORMove,                   "Polyobj_OR_Move")
    LINESPECNAMED(93,  PolyobjORMoveTimes8,             "Polyobj_OR_MoveTimes8")
    LINESPECNAMED(94,  PillarBuildAndCrush,             "Pillar_BuildAndCrush")
+   LINESPECNAMED(95,  ParamFloorCeilingLowerByValue,   "FloorAndCeiling_LowerByValue")
    LINESPECNAMED(97,  ParamCeilingLowerAndCrushDist,   "Ceiling_LowerAndCrushDist")
    LINESPECNAMED(104, ParamCeilingCrushAndRaiseSilentDist, "Ceiling_CrushAndRaiseSilentDist")
    LINESPECNAMED(110, ParamLightRaiseByValue,          "Light_RaiseByValue")
