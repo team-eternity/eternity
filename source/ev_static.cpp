@@ -136,6 +136,7 @@ static ev_static_t DOOMStaticBindings[] =
    STATICSPEC(419, EV_STATIC_SCROLL_LINE_DOWN_FAST)
    STATICSPEC(450, EV_STATIC_PORTAL_HORIZON_LINE)
    STATICSPEC(455, EV_STATIC_SLOPE_PARAM)
+   STATICSPEC(456, EV_STATIC_PORTAL_SECTOR_PARAM)
 };
 
 // Hexen Static Init Bindings
@@ -144,6 +145,7 @@ static ev_static_t HexenStaticBindings[] =
    STATICSPEC(  1, EV_STATIC_POLYOBJ_START_LINE)
    STATICSPEC(  5, EV_STATIC_POLYOBJ_EXPLICIT_LINE)
    STATICSPEC(  9, EV_STATIC_PORTAL_HORIZON_LINE)
+   STATICSPEC( 57, EV_STATIC_PORTAL_SECTOR_PARAM)
    STATICSPEC(100, EV_STATIC_SCROLL_LEFT_PARAM)
    STATICSPEC(101, EV_STATIC_SCROLL_RIGHT_PARAM)
    STATICSPEC(102, EV_STATIC_SCROLL_UP_PARAM)
@@ -494,6 +496,7 @@ int EV_SpecialForStaticInitName(const char *name)
       { EV_STATIC_SCROLL_RIGHT_PARAM,      "Scroll_Texture_Right"   },
       { EV_STATIC_SCROLL_UP_PARAM,         "Scroll_Texture_Up"      },
       { EV_STATIC_SCROLL_DOWN_PARAM,       "Scroll_Texture_Down"    },
+      { EV_STATIC_PORTAL_SECTOR_PARAM,     "Sector_SetPortal"       },
       { EV_STATIC_PORTAL_HORIZON_LINE,     "Line_Horizon"           },
       { EV_STATIC_LINE_SET_IDENTIFICATION, "Line_SetIdentification" },
    };
@@ -526,6 +529,7 @@ bool EV_IsParamStaticInit(int special)
    case EV_STATIC_SCROLL_RIGHT_PARAM:
    case EV_STATIC_SCROLL_UP_PARAM:
    case EV_STATIC_SCROLL_DOWN_PARAM:
+   case EV_STATIC_PORTAL_SECTOR_PARAM:
    case EV_STATIC_LINE_SET_IDENTIFICATION:
       return true;
    default:
