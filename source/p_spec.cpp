@@ -1398,8 +1398,11 @@ void P_SpawnDeferredSpecials()
          // SoM: Copy slopes
          P_CopySectorSlope(line, staticFn);
       case EV_STATIC_PORTAL_SECTOR_PARAM:
-         if(line->args[1] == 1 || line->args[1] == 5)
+         if(line->args[paramPortal_argType] == paramPortal_copied ||
+            line->args[paramPortal_argType] == paramPortal_copyline)
+         {
             P_SpawnDeferredParamPortal(line, staticFn);
+         }
          break;
 
       default: // Not a function handled here
@@ -2452,45 +2455,53 @@ static bool P_getParamPortalProps(const int *args, portal_type &type,
                                   portal_effect &effects)
 {
    // Get portal properties
-   switch(args[1])   // type
+   switch(args[paramPortal_argType])   // type
    {
-      case 0:
+      case paramPortal_normal:
       default:
-         if(args[3])
+         if(args[paramPortal_argMisc])
             return false;  // anchor
+
          // Both floor and ceiling portals are anchored, otherwise two-way
-         type = args[2] == 2 ? portal_anchored : portal_twoway;
+         type = args[paramPortal_argPlane] == paramPortal_planeBoth
+                         ? portal_anchored : portal_twoway;
+
          break;
-      case 1:
+      case paramPortal_copied:
          return false;  // copy to front sector
-      case 2:
+      case paramPortal_skybox:
          type = portal_skybox;
          break;
-      case 3:
+      case paramPortal_pplane:
          type = portal_plane;
          break;
-      case 4:
+      case paramPortal_horizon:
          type = portal_horizon;
          break;
-      case 5:
+      case paramPortal_copyline:
          return false;  // copy line
-      case 6:
-         if(args[3] || args[2] == 2)
-            return false;  // anchor or invalid "portal_both"
+      case paramPortal_linked:
+         if(args[paramPortal_argMisc])
+            return false;  // anchor
+         if(args[paramPortal_argPlane] == paramPortal_planeBoth)
+         {
+            C_Printf(FC_ERROR "Linked portal cannot render on both planes\a\n");
+            return false;
+         }
          type = portal_linked;
          break;
          // TODO: portal_anchored
    }
-   switch(args[2])   // plane
+   switch(args[paramPortal_argPlane])   // plane
    {
-      case 0:
+      case paramPortal_planeFloor:
       default:
          effects = portal_floor;
          break;
-      case 1:
+      case paramPortal_planeCeiling:
          effects = portal_ceiling;
          break;
-      case 2:
+      case paramPortal_planeBoth:
          effects = portal_both;
          break;
    }
@@ -2508,8 +2519,9 @@ static int P_findParamPortalAnchor(const line_t *line)
    {
       if(lines[s].special != anchortype || line == &line[s] ||
          lines[s].args[0] != line->args[0] ||
-         lines[s].args[1] != line->args[1] ||
-         lines[s].args[2] != line->args[2] || !lines[s].args[3])
+         lines[s].args[paramPortal_argType] != line->args[paramPortal_argType] ||
+         lines[s].args[paramPortal_argPlane] != line->args[paramPortal_argPlane] ||
+         !lines[s].args[paramPortal_argMisc])
          continue;
       break;   // found an anchor
    }
@@ -2521,7 +2533,7 @@ static int P_findParamPortalAnchor(const line_t *line)
 //
 static void P_copyParamPortalSector(line_t *line)
 {
-   int tag = line->args[3];
+   int tag = line->args[paramPortal_argMisc];
    portal_t *cportal = nullptr;
    portal_t *fportal = nullptr;
    for(int s = -1; (s = P_FindSectorFromTag(tag, s)) >= 0; )
@@ -2564,7 +2576,7 @@ static void P_copyParamPortalSector(line_t *line)
 //
 static void P_copyParamPortalLine(line_t *line)
 {
-   int tag = line->args[3];
+   int tag = line->args[paramPortal_argMisc];
    portal_t *portal = nullptr;
    for(int s = -1; (s = P_FindSectorFromTag(tag, s)) >= 0; )
    {
@@ -2598,9 +2610,9 @@ static void P_copyParamPortalLine(line_t *line)
 
 static void P_SpawnDeferredParamPortal(line_t *line, int staticFn)
 {
-   if(line->args[1] == 1)
+   if(line->args[paramPortal_argType] == paramPortal_copied)
       P_copyParamPortalSector(line);
-   else if(line->args[1] == 5)
+   else if(line->args[paramPortal_argType] == paramPortal_copyline)
       P_copyParamPortalLine(line);
 }
 

@@ -50,6 +50,28 @@ struct linkoffset_t;
 struct portal_t;
 struct sector_t;
 
+//
+// Sector_SetPortal arguments
+//
+enum
+{
+   paramPortal_argType = 1,
+   paramPortal_argPlane = 2,
+   paramPortal_argMisc = 3,
+
+   paramPortal_planeFloor = 0,
+   paramPortal_planeCeiling = 1,
+   paramPortal_planeBoth = 2,
+
+   paramPortal_normal = 0,
+   paramPortal_copied = 1,
+   paramPortal_skybox = 2,
+   paramPortal_pplane = 3,
+   paramPortal_horizon = 4,
+   paramPortal_copyline = 5,
+   paramPortal_linked = 6,
+};
+
 
 //
 // P_PortalGroupCount
