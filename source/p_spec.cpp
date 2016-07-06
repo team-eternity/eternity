@@ -2861,7 +2861,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
    }
 
    // attach portal to like-tagged 289 lines
-   for(s = -1; (s = P_FindLineFromLineTag(line, s)) >= 0; )
+   for(s = -1; (s = P_FindLineFromTag(tag, s)) >= 0; )
    {
       if(line == &lines[s] || !lines[s].frontsector)
          continue;
