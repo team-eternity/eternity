@@ -48,7 +48,6 @@
 #define SWIRLFACTOR2 (8192/32)
 
 static byte *normalflat;
-static byte distortedflat[4096];
 int r_swirl;       // hack
 
 #if 0
@@ -79,15 +78,26 @@ byte *R_DistortedFlat(int texnum)
 {
    static int lasttex = -1;
    static int swirltic = -1;
-   static int offset[4096];
+   static int *offset;
+   static int offsetSize;
+   static byte *distortedflat;
+   static int lastsize;
+
    int i;
    int leveltic = gametic;
    texture_t *tex = R_CacheTexture(texnum);
-   
-   // SoM: different flat sizes?
-   if(tex->flatsize != FLAT_64)
-      return tex->buffer;
-      
+
+   // NOTE: these are transposed because of the swirling formula
+   int16_t h = tex->width;
+   int16_t w = tex->height;
+   int cursize = w*h;
+
+   if(cursize > offsetSize)
+   {
+      offsetSize = cursize * 2;
+      offset = erealloc(int *, offset, offsetSize * sizeof(*offset));
+      distortedflat = erealloc(byte *, distortedflat, offsetSize * sizeof(*distortedflat));
+   }
    // Already swirled this one?
    if(gametic == swirltic && lasttex == texnum)
       return distortedflat;
@@ -95,13 +105,13 @@ byte *R_DistortedFlat(int texnum)
    lasttex = texnum;
 
    // built this tic?
-   if(gametic != swirltic)
+   if(gametic != swirltic || cursize != lastsize)
    {
       int x, y;
       
-      for(x = 0; x < 64; ++x)
+      for(x = 0; x < w; ++x)
       {
-         for(y = 0; y < 64; ++y)
+         for(y = 0; y < h; ++y)
          {
             int x1, y1;
             int sinvalue, sinvalue2;
@@ -118,19 +128,20 @@ byte *R_DistortedFlat(int texnum)
                  + ((finesine[sinvalue]*AMP) >> FRACBITS)
                  + ((finesine[sinvalue2]*AMP2) >> FRACBITS);
 
-            x1 &= 63; 
-            y1 &= 63;
+            x1 %= w;
+            y1 %= h;
             
-            offset[(y<<6) + x] = (y1<<6) + x1;
+            offset[(y*w) + x] = (y1*w) + x1;
          }
       }
       
       swirltic = gametic;
+      lastsize = cursize;
    }
    
    normalflat = tex->buffer;
    
-   for(i = 0; i < 4096; ++i)
+   for(i = 0; i < cursize; ++i)
       distortedflat[i] = normalflat[offset[i]];
    
    return distortedflat;
