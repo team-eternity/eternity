@@ -1426,7 +1426,10 @@ void P_SpawnDeferredSpecials()
             break;
          }
       }
-      sec->portalbox = isbox && foundportal;
+      if(isbox && foundportal)
+         sec->intflags |= SIF_PORTALBOX;
+      else
+         sec->intflags &= ~SIF_PORTALBOX;
    }
 }
 
