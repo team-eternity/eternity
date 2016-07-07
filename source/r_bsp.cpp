@@ -2200,7 +2200,7 @@ static void R_Subsector(int num)
 
    // ioanch 20160120: don't draw from other group ids than the intended one
    // Also ignore sectors behind portal lines
-   if(seg.frontsec->portalbox || 
+   if(seg.frontsec->intflags & SIF_PORTALBOX ||
       (portalrender.active &&
        portalrender.curwindow->portal->type == R_LINKED &&
        portalrender.curwindow->portal->data.link.toid != seg.frontsec->groupid))
