@@ -1087,6 +1087,9 @@ PARAMLINE(ParamTeleportNoFog);
 PARAMLINE(ParamTeleportLine);
 PARAMLINE(ParamExitNormal);
 PARAMLINE(ParamExitSecret);
+PARAMLINE(ParamElevatorUp);
+PARAMLINE(ParamElevatorDown);
+PARAMLINE(ParamElevatorCurrent);
 
 //=============================================================================
 //
@@ -1471,6 +1474,9 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(453, ParamFloorCeilingLowerByValue,   "FloorAndCeiling_LowerByValue")
    LINESPECNAMED(454, ParamFloorCeilingRaiseByValue,   "FloorAndCeiling_RaiseByValue")
    LINESPECNAMED(457, ParamDoorLockedOpen,             "Door_LockedOpen")
+   LINESPECNAMED(458, ParamElevatorUp,                 "Elevator_RaiseToNearest")
+   LINESPECNAMED(459, ParamElevatorDown,               "Elevator_LowerToNearest")
+   LINESPECNAMED(460, ParamElevatorCurrent,            "Elevator_MoveToFloor")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1630,6 +1636,9 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(242, ParamFloorLowerToHighest,        "Floor_LowerToHighest")
    LINESPECNAMED(243, ParamExitNormal,                 "Exit_Normal")
    LINESPECNAMED(244, ParamExitSecret,                 "Exit_Secret")
+   LINESPECNAMED(245, ParamElevatorUp,                 "Elevator_RaiseToNearest")
+   LINESPECNAMED(246, ParamElevatorCurrent,            "Elevator_MoveToFloor")
+   LINESPECNAMED(247, ParamElevatorDown,               "Elevator_LowerToNearest")
    LINESPECNAMED(249, ParamDoorCloseWaitOpen,          "Door_CloseWaitOpen")
    LINESPECNAMED(250, ParamDonut,                      "Floor_Donut")
    LINESPECNAMED(252, ParamCeilingRaiseToNearest,      "Ceiling_RaiseToNearest")

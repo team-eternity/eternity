@@ -3782,5 +3782,41 @@ DEFINE_ACTION(EV_ActionParamDoorLockedOpen)
    return 0;
 }
 
+//
+// Implements Elevator_RaiseToNearest(tag, speed)
+//
+// * ExtraData: 458
+// * Hexen:     245
+//
+DEFINE_ACTION(EV_ActionParamElevatorUp)
+{
+   return EV_DoElevator(instance->line, instance->tag, elevateUp,
+                        instance->args[1] * FRACUNIT / 8, 0);
+}
+
+//
+// Implements Elevator_LowerToNearest(tag, speed)
+//
+// * ExtraData: 459
+// * Hexen:     247
+//
+DEFINE_ACTION(EV_ActionParamElevatorDown)
+{
+   return EV_DoElevator(instance->line, instance->tag, elevateDown,
+                        instance->args[1] * FRACUNIT / 8, 0);
+}
+
+//
+// Implements Elevator_MoveToFloor(tag, speed)
+//
+// * ExtraData: 460
+// * Hexen:     246
+//
+DEFINE_ACTION(EV_ActionParamElevatorCurrent)
+{
+   return EV_DoElevator(instance->line, instance->tag, elevateCurrent,
+                        instance->args[1] * FRACUNIT / 8, 0);
+}
+
 // EOF
 

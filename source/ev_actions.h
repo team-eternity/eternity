@@ -238,6 +238,9 @@ DECLARE_ACTION(EV_ActionParamTeleportNoFog);
 DECLARE_ACTION(EV_ActionParamTeleportLine);
 DECLARE_ACTION(EV_ActionParamExitNormal);
 DECLARE_ACTION(EV_ActionParamExitSecret);
+DECLARE_ACTION(EV_ActionParamElevatorUp);
+DECLARE_ACTION(EV_ActionParamElevatorDown);
+DECLARE_ACTION(EV_ActionParamElevatorCurrent);
 
 #endif
 
