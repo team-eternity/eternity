@@ -232,6 +232,10 @@ DEFINE_ACTION(EV_ActionPlatDownWaitUpStay)
 
 //
 // EV_ActionLightTurnOn
+// Also implements Light_MaxNeighbor(tag)
+//
+// * ExtraData: 461
+// * Hexen:     234
 //
 DEFINE_ACTION(EV_ActionLightTurnOn)
 {
@@ -240,7 +244,7 @@ DEFINE_ACTION(EV_ActionLightTurnOn)
    // case 169: (S1 - BOOM Extended)
    // case 192: (SR - BOOM Extended)
    // Light Turn On - brightest near
-   return EV_LightTurnOn(instance->line, 0);
+   return EV_LightTurnOn(instance->line, instance->tag, 0);
 }
 
 //
@@ -252,7 +256,7 @@ DEFINE_ACTION(EV_ActionLightTurnOn255)
    // case  81: (WR)
    // case 138: (SR)
    // Light Turn On 255
-   return EV_LightTurnOn(instance->line, 255);
+   return EV_LightTurnOn(instance->line, instance->tag, 255);
 }
 
 //
@@ -344,7 +348,7 @@ DEFINE_ACTION(EV_ActionLightsVeryDark)
    // case 139: (SR)
    // case 170: (S1 - BOOM Extended)
    // Lights Very Dark
-   return EV_LightTurnOn(instance->line, 35);
+   return EV_LightTurnOn(instance->line, instance->tag, 35);
 }
 
 //

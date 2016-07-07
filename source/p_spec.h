@@ -1408,7 +1408,7 @@ int EV_StartLightStrobing(const line_t *line);
 
 int EV_TurnTagLightsOff(const line_t *line);
 
-int EV_LightTurnOn(const line_t *line, int bright);
+int EV_LightTurnOn(const line_t *line, int tag, int bright);
 
 int EV_LightTurnOnPartway(int tag, fixed_t level);  // killough 10/10/98
 

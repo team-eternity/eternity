@@ -753,14 +753,14 @@ int EV_TurnTagLightsOff(const line_t* line)
 //
 // jff 2/12/98 added int return value, fixed return
 //
-int EV_LightTurnOn(const line_t *line, int bright)
+int EV_LightTurnOn(const line_t *line, int tag, int bright)
 {
    int i;
    
    // search all sectors for ones with same tag as activating line
    
    // killough 10/98: replace inefficient search with fast search
-   for(i = -1; (i = P_FindSectorFromLineTag(line, i)) >= 0;)
+   for(i = -1; (i = P_FindSectorFromTag(tag, i)) >= 0;)
    {
       sector_t *temp, *sector = sectors+i;
       int j, tbright = bright; //jff 5/17/98 search for maximum PER sector
