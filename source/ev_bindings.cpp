@@ -1091,6 +1091,7 @@ PARAMLINE(ParamElevatorUp);
 PARAMLINE(ParamElevatorDown);
 PARAMLINE(ParamElevatorCurrent);
 PARAMLINE(LightTurnOn);
+PARAMLINE(ChangeSkill);
 
 //=============================================================================
 //
@@ -1479,6 +1480,7 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(459, ParamElevatorDown,               "Elevator_LowerToNearest")
    LINESPECNAMED(460, ParamElevatorCurrent,            "Elevator_MoveToFloor")
    LINESPECNAMED(461, LightTurnOn,                     "Light_MaxNeighbor")
+   LINESPECNAMED(462, ChangeSkill,                     "ChangeSkill")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1622,6 +1624,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(138, FloorWaggle,                     "Floor_Waggle")
    LINESPECNAMED(168, ParamCeilingCrushAndRaiseDist,   "Ceiling_CrushAndRaiseDist")
    LINESPECNAMED(176, ThingChangeTID,                  "Thing_ChangeTID")
+   LINESPECNAMED(179, ChangeSkill,                     "ChangeSkill")
    LINESPECNAMED(192, ParamCeilingLowerToHighestFloor, "Ceiling_LowerToHighestFloor")
    LINESPECNAMED(193, ParamCeilingLowerInstant,        "Ceiling_LowerInstant")
    LINESPECNAMED(194, ParamCeilingRaiseInstant,        "Ceiling_RaiseInstant")
