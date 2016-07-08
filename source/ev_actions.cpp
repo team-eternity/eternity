@@ -3830,11 +3830,11 @@ DEFINE_ACTION(EV_ActionParamElevatorCurrent)
 // * Hexen (ZDoom Extension): 179
 //
 DEFINE_ACTION(EV_ActionChangeSkill)
- {
-    // Sanity check the argument, skills 0 through 4 are valid
-    if(instance->line->args[0] < sk_baby || instance->line->args[0] > sk_nightmare)
-       return 0;
-   
+{
+   // Sanity check the argument, skills 0 through 4 are valid
+   if(instance->line->args[0] < sk_baby || instance->line->args[0] > sk_nightmare)
+      return 0;
+
    gameskill = (skill_t)instance->line->args[0];
    return 1;
 }
