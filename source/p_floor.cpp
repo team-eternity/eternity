@@ -1007,7 +1007,7 @@ int EV_DoParamDonut(const line_t *line, int tag, bool havespac,
       goto manual_donut;
    }
    // do function on all sectors with same tag as linedef
-   while((secnum = P_FindSectorFromTag(tag,secnum)) >= 0)
+   while(!manual && (secnum = P_FindSectorFromTag(tag,secnum)) >= 0)
    {
       s1 = &sectors[secnum];                // s1 is pillar's sector
    manual_donut:  // ioanch
