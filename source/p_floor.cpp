@@ -1093,6 +1093,8 @@ int EV_DoParamDonut(const line_t *line, int tag, bool havespac,
          P_FloorSequence(floor->sector);
          break;
       }
+      if(manual)
+         return rtn;
    }
    return rtn;
 }
