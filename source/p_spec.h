@@ -1404,7 +1404,8 @@ void EV_CloseDoor(int sectag, int speed);
 
 // p_lights
 
-int EV_StartLightStrobing(const line_t *line);
+int EV_StartLightStrobing(const line_t *line, int tag, int darkTime,
+                          int brightTime, bool isParam);
 
 int EV_TurnTagLightsOff(const line_t *line);
 
@@ -1539,7 +1540,8 @@ void P_SpawnFireFlicker(sector_t *sector);
 
 void P_SpawnLightFlash(sector_t *sector);
 
-void P_SpawnStrobeFlash(sector_t *sector, int fastOrSlow, int inSync);
+void P_SpawnStrobeFlash(sector_t *sector, int darkTime, int brightTime,
+                        int inSync);
 
 void P_SpawnPSXStrobeFlash(sector_t *sector, int speed, bool inSync);
 

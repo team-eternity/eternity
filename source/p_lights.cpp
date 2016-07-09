@@ -569,7 +569,8 @@ void P_SpawnLightFlash(sector_t *sector)
 //
 // Returns nothing
 //
-void P_SpawnStrobeFlash(sector_t *sector, int fastOrSlow, int inSync)
+void P_SpawnStrobeFlash(sector_t *sector, int darkTime, int brightTime,
+                        int inSync)
 {
    StrobeThinker *flash;
    
@@ -577,8 +578,8 @@ void P_SpawnStrobeFlash(sector_t *sector, int fastOrSlow, int inSync)
    flash->addThinker();
    
    flash->sector = sector;
-   flash->darktime = fastOrSlow;
-   flash->brighttime = STROBEBRIGHT;
+   flash->darktime = darkTime;
+   flash->brighttime = brightTime;
    flash->maxlight = sector->lightlevel;
    flash->minlight = P_FindMinSurroundingLight(sector, sector->lightlevel);
    
@@ -689,21 +690,32 @@ void P_SpawnPSXGlowingLight(sector_t *sector, psxglow_e glowtype)
 //
 // jff 2/12/98 added int return value, fixed return
 //
-int EV_StartLightStrobing(const line_t *line)
+int EV_StartLightStrobing(const line_t *line, int tag, int darkTime,
+                          int brightTime, bool isParam)
 {
    int   secnum;
    sector_t* sec;
+
+   bool manual = false;
+   if(isParam && !tag)
+   {
+      if(!line || !(sec = line->backsector))
+         return 0;
+      manual = true;
+      goto manualLight;
+   }
    
    secnum = -1;
    // start lights strobing in all sectors tagged same as line
-   while((secnum = P_FindSectorFromLineTag(line, secnum)) >= 0)
+   while(!manual && (secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
       sec = &sectors[secnum];
+   manualLight:
       // if already doing a lighting function, don't start a second
       if(P_SectorActive(lighting_special,sec)) //jff 2/22/98
          continue;
       
-      P_SpawnStrobeFlash(sec, SLOWDARK, 0);
+      P_SpawnStrobeFlash(sec, darkTime, brightTime, 0);
    }
    return 1;
 }
@@ -770,8 +782,6 @@ int EV_LightTurnOn(const line_t *line, int tag, int bright, bool isParam)
       goto manualLight;
    }
 
-   // TODO: same for Light_StrobeDoom
-   
    // killough 10/98: replace inefficient search with fast search
    for(i = -1; (i = P_FindSectorFromTag(tag, i)) >= 0;)
    {

@@ -283,7 +283,8 @@ DEFINE_ACTION(EV_ActionStartLightStrobing)
    // case 172: (S1 - BOOM Extended)
    // case 193: (SR - BOOM Extended)
    // Start Light Strobing
-   return EV_StartLightStrobing(instance->line);
+   return EV_StartLightStrobing(instance->line, instance->tag, SLOWDARK,
+                                STROBEBRIGHT, false);
 }
 
 //
@@ -3838,6 +3839,17 @@ DEFINE_ACTION(EV_ActionChangeSkill)
 
    gameskill = (skill_t)instance->line->args[0];
    return 1;
+}
+
+// Implements Light_StrobeDoom(tag, u-tics, l-tics)
+//
+// * ExtraData: 463
+// * Hexen:     232
+//
+DEFINE_ACTION(EV_ActionParamLightStrobeDoom)
+{
+   return EV_StartLightStrobing(instance->line, instance->tag,
+                                instance->args[2], instance->args[1], true);
 }
 
 // EOF
