@@ -244,7 +244,8 @@ DEFINE_ACTION(EV_ActionLightTurnOn)
    // case 169: (S1 - BOOM Extended)
    // case 192: (SR - BOOM Extended)
    // Light Turn On - brightest near
-   return EV_LightTurnOn(instance->line, instance->tag, 0);
+   bool isParam = EV_IsParamLineSpec(instance->special);
+   return EV_LightTurnOn(instance->line, instance->tag, 0, isParam);
 }
 
 //
@@ -256,7 +257,7 @@ DEFINE_ACTION(EV_ActionLightTurnOn255)
    // case  81: (WR)
    // case 138: (SR)
    // Light Turn On 255
-   return EV_LightTurnOn(instance->line, instance->tag, 255);
+   return EV_LightTurnOn(instance->line, instance->tag, 255, false);
 }
 
 //
@@ -348,7 +349,7 @@ DEFINE_ACTION(EV_ActionLightsVeryDark)
    // case 139: (SR)
    // case 170: (S1 - BOOM Extended)
    // Lights Very Dark
-   return EV_LightTurnOn(instance->line, instance->tag, 35);
+   return EV_LightTurnOn(instance->line, instance->tag, 35, false);
 }
 
 //

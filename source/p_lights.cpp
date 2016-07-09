@@ -753,16 +753,33 @@ int EV_TurnTagLightsOff(const line_t* line)
 //
 // jff 2/12/98 added int return value, fixed return
 //
-int EV_LightTurnOn(const line_t *line, int tag, int bright)
+int EV_LightTurnOn(const line_t *line, int tag, int bright, bool isParam)
 {
    int i;
    
    // search all sectors for ones with same tag as activating line
+
+   // ioanch: param tag0 support
+   bool manual = false;
+   sector_t *sector;
+   if(isParam && !tag)
+   {
+      if(!line || !(sector = line->backsector))
+         return 0;
+      manual = true;
+      goto manualLight;
+   }
+
+   // TODO: same for Light_StrobeDoom
    
    // killough 10/98: replace inefficient search with fast search
    for(i = -1; (i = P_FindSectorFromTag(tag, i)) >= 0;)
    {
-      sector_t *temp, *sector = sectors+i;
+      sector = sectors+i;
+
+   manualLight:
+      ;
+      sector_t *temp;
       int j, tbright = bright; //jff 5/17/98 search for maximum PER sector
       
       // bright = 0 means to search for highest light level surrounding sector
@@ -784,6 +801,9 @@ int EV_LightTurnOn(const line_t *line, int tag, int bright)
       
       if(comp[comp_model])
          bright = tbright;
+
+      if(manual)
+         return 1;
    }
    return 1;
 }
