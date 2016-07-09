@@ -259,7 +259,8 @@ typedef enum
   
    FbyParam, // haleyjd 05/07/04: parameterized extensions
    FtoAbs,
-   FInst
+   FInst,
+   FtoLnCInclusive
 } floortarget_e;
 
 // define names for the Changer Type field of the general floor

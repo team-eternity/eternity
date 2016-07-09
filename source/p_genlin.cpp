@@ -155,6 +155,12 @@ manual_floor:
       case FtoLnC:
          floor->floordestheight = P_FindLowestCeilingSurrounding(sec) + fd->adjust;
          break;
+      case FtoLnCInclusive:
+         floor->floordestheight = P_FindLowestCeilingSurrounding(sec);
+         if(floor->floordestheight > sec->ceilingheight)
+            floor->floordestheight = sec->ceilingheight;
+         floor->floordestheight += fd->adjust;
+         break;
       case FtoC:
          floor->floordestheight = sec->ceilingheight + fd->adjust;
          break;
@@ -213,7 +219,8 @@ manual_floor:
 
             //jff 5/23/98 find model with ceiling at target height
             //if target is a ceiling type
-            msec = (fd->target_type == FtoLnC || fd->target_type == FtoC)?
+            msec = (fd->target_type == FtoLnC || fd->target_type == FtoC ||
+                    fd->target_type == FtoLnCInclusive) ?
                P_FindModelCeilingSector(floor->floordestheight,secnum) :
                P_FindModelFloorSector(floor->floordestheight,secnum);
             

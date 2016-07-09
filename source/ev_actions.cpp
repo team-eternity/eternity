@@ -1441,7 +1441,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToHighest)
 
    fd.direction   = 1;              // up
    if(P_LevelIsVanillaHexen())   // vanilla Hexen compatibility
-      fd.target_type = FtoLnC;
+      fd.target_type = FtoLnCInclusive;
    else
       fd.target_type = FtoHnF;         // to highest neighboring floor
    fd.spac        = instance->spac; // activated Hexen-style
@@ -1607,7 +1607,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToLowestCeiling)
    INIT_STRUCT(floordata_t, fd);
 
    fd.direction   = 1;              // up
-   fd.target_type = FtoLnC;         // to lowest neighboring ceiling
+   fd.target_type = FtoLnCInclusive;// to lowest neighboring ceiling
    fd.spac        = instance->spac; // activated Hexen-style
    fd.flags       = FDF_HAVESPAC;
    fd.speed_type  = SpeedParam;
