@@ -1008,7 +1008,7 @@ DEFINE_ACTION(EV_ActionElevatorUp)
    // case 230: (SR - BOOM Extended)
    // Raise elevator next floor
    return EV_DoElevator(instance->line, instance->tag, elevateUp,
-                        ELEVATORSPEED, 0);
+                        ELEVATORSPEED, 0, false);
 }
 
 //
@@ -1022,7 +1022,7 @@ DEFINE_ACTION(EV_ActionElevatorDown)
    // case 234: (SR - BOOM Extended)
    // Lower elevator next floor
    return EV_DoElevator(instance->line, instance->tag, elevateDown,
-                        ELEVATORSPEED, 0);
+                        ELEVATORSPEED, 0, false);
 
 }
 
@@ -1037,7 +1037,7 @@ DEFINE_ACTION(EV_ActionElevatorCurrent)
    // case 238: (SR - BOOM Extended)
    // Elevator to current floor
    return EV_DoElevator(instance->line, instance->tag, elevateCurrent,
-                        ELEVATORSPEED, 0);
+                        ELEVATORSPEED, 0, false);
 }
 
 //
@@ -3711,7 +3711,7 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingLowerByValue)
 
    return EV_DoElevator(instance->line, instance->tag, elevateByValue,
                         instance->args[1] * FRACUNIT / 8,
-                       -instance->args[2] * FRACUNIT);
+                       -instance->args[2] * FRACUNIT, true);
 
 }
 
@@ -3755,7 +3755,7 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingRaiseByValue)
 
    return EV_DoElevator(instance->line, instance->tag, elevateByValue,
                         instance->args[1] * FRACUNIT / 8,
-                        instance->args[2] * FRACUNIT);
+                        instance->args[2] * FRACUNIT, true);
 }
 
 //
@@ -3795,7 +3795,7 @@ DEFINE_ACTION(EV_ActionParamDoorLockedOpen)
 DEFINE_ACTION(EV_ActionParamElevatorUp)
 {
    return EV_DoElevator(instance->line, instance->tag, elevateUp,
-                        instance->args[1] * FRACUNIT / 8, 0);
+                        instance->args[1] * FRACUNIT / 8, 0, true);
 }
 
 //
@@ -3807,7 +3807,7 @@ DEFINE_ACTION(EV_ActionParamElevatorUp)
 DEFINE_ACTION(EV_ActionParamElevatorDown)
 {
    return EV_DoElevator(instance->line, instance->tag, elevateDown,
-                        instance->args[1] * FRACUNIT / 8, 0);
+                        instance->args[1] * FRACUNIT / 8, 0, true);
 }
 
 //
@@ -3819,7 +3819,7 @@ DEFINE_ACTION(EV_ActionParamElevatorDown)
 DEFINE_ACTION(EV_ActionParamElevatorCurrent)
 {
    return EV_DoElevator(instance->line, instance->tag, elevateCurrent,
-                        instance->args[1] * FRACUNIT / 8, 0);
+                        instance->args[1] * FRACUNIT / 8, 0, true);
 }
 
 //

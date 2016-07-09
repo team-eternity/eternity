@@ -1110,7 +1110,7 @@ int EV_DoParamDonut(const line_t *line, int tag, bool havespac,
 //
 int EV_DoElevator
 ( const line_t* line, int tag,
-  elevator_e    elevtype, fixed_t speed, fixed_t amount )
+  elevator_e    elevtype, fixed_t speed, fixed_t amount, bool isParam )
 {
    int                   secnum;
    int                   rtn;
@@ -1119,14 +1119,27 @@ int EV_DoElevator
 
    secnum = -1;
    rtn = 0;
+   bool manual = false;
+   if(isParam && !tag)
+   {
+      if(!line || !(sec = line->backsector))
+         return rtn;
+      manual = true;
+      goto manualElevator;
+   }
    // act on all sectors with the same tag as the triggering linedef
-   while((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
+   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
       sec = &sectors[secnum];
               
+   manualElevator:
       // If either floor or ceiling is already activated, skip it
       if(sec->floordata || sec->ceilingdata) //jff 2/22/98
+      {
+         if(manual)
+            return rtn; // ioanch: also take care of manual activation
          continue;
+      }
       
       // create and initialize new elevator thinker
       rtn = 1;
@@ -1178,6 +1191,8 @@ int EV_DoElevator
          break;
       }
       P_FloorSequence(elevator->sector);
+      if(manual)
+         return rtn;
    }
    return rtn;
 }
