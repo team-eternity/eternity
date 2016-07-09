@@ -2349,7 +2349,6 @@ void P_AttachSectors(const line_t *line, int staticFn)
          (attachedsurface_t *)(Z_Malloc(sizeof(attachedsurface_t) * numattached, PU_LEVEL, 0));
       memcpy(sector->f_asurfaces, attached, sizeof(attachedsurface_t) * numattached);
    }
-   efree(attached);
 }
 
 //=============================================================================
