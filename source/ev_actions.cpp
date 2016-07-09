@@ -1450,6 +1450,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToHighest)
    fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
    EV_floorChangeForArg(fd, instance->args[2]);       // change
    fd.crush       = instance->args[3];                // crush
+   fd.changeOnStart = true;
    
    return EV_DoParamFloor(instance->line, instance->tag, &fd);
 }
@@ -1519,6 +1520,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToLowest)
    fd.speed_type  = SpeedNormal;    // target is lower, so motion is instant.
    EV_floorChangeForArg(fd, instance->args[1]); // change
    fd.crush       = instance->args[2];          // crush
+   fd.changeOnStart = true;
    
    return EV_DoParamFloor(instance->line, instance->tag, &fd);
 }
@@ -1565,6 +1567,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToNearest)
    fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
    EV_floorChangeForArg(fd, instance->args[2]);       // change
    fd.crush       = instance->args[3];                // crush
+   fd.changeOnStart = true;
 
    return EV_DoParamFloor(instance->line, instance->tag, &fd);
 }
@@ -1615,6 +1618,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToLowestCeiling)
    EV_floorChangeForArg(fd, instance->args[2]);       // change
    fd.crush       = instance->args[3];                // crush
    fd.adjust      = -instance->args[4] * FRACUNIT;
+   fd.changeOnStart = true;
 
    return EV_DoParamFloor(instance->line, instance->tag, &fd);
 }
@@ -1660,6 +1664,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToCeiling)
    EV_floorChangeForArg(fd, instance->args[2]);       // change
    fd.crush       = instance->args[3];                // crush
    fd.adjust      = -instance->args[4] * FRACUNIT;
+   fd.changeOnStart = true;
 
    return EV_DoParamFloor(instance->line, instance->tag, &fd);
 }
@@ -1683,6 +1688,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseByTexture)
    fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
    EV_floorChangeForArg(fd, instance->args[2]);       // change
    fd.crush       = instance->args[3];                // crush
+   fd.changeOnStart = true;
 
    return EV_DoParamFloor(instance->line, instance->tag, &fd);
 }
@@ -1729,6 +1735,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseByValue)
    fd.height_value = instance->args[2] * FRACUNIT;     // height
    EV_floorChangeForArg(fd, instance->args[3]);        // change
    fd.crush        = instance->args[4];                // crush
+   fd.changeOnStart = true;
 
    return EV_DoParamFloor(instance->line, instance->tag, &fd);
 }
@@ -1753,6 +1760,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseByValueTimes8)
    fd.height_value = instance->args[2] * FRACUNIT * 8; // height
    EV_floorChangeForArg(fd, instance->args[3]);        // change
    fd.crush        = instance->args[4];                // crush
+   fd.changeOnStart = true;
 
    return EV_DoParamFloor(instance->line, instance->tag, &fd);
 }

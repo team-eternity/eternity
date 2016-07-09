@@ -1114,6 +1114,7 @@ typedef struct floordata_s
    fixed_t speed_value;
    int     adjust;        // valid IFF flags & FDF_HACKFORDESTHNF
    int     force_adjust;  // valid IFF flags & FDF_HACKFORDESTHNF
+   bool    changeOnStart; // change texture and type immediately, not on landing
 } floordata_t;
 
 // haleyjd 01/21/13: stairdata flags

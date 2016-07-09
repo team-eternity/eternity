@@ -226,24 +226,46 @@ manual_floor:
             
             if(msec)
             {
-               floor->texture = msec->floorpic;
-               switch(fd->change_type)
+               if(fd->changeOnStart)
                {
-               case FChgZero:  // zero type
-                  //jff 3/14/98 change old field too
-                  P_ZeroSpecialTransfer(&(floor->special));
-                  floor->type = genFloorChg0;
-                  break;
-               case FChgTyp:   // copy type
-                  //jff 3/14/98 change old field too
-                  P_SetupSpecialTransfer(msec, &(floor->special));
-                  floor->type = genFloorChgT;
-                  break;
-               case FChgTxt:   // leave type be
-                  floor->type = genFloorChg;
-                  break;
-               default:
-                  break;
+                  sec->floorpic = msec->floorpic;
+                  switch(fd->change_type)
+                  {
+                     case FChgZero:  // zero type
+                        //jff 3/14/98 change old field too
+                        P_ZeroSpecialTransfer(&(floor->special));
+                        P_TransferSectorSpecial(sec, &floor->special);
+                        break;
+                     case FChgTyp:   // copy type
+                        //jff 3/14/98 change old field too
+                        P_SetupSpecialTransfer(msec, &(floor->special));
+                        P_TransferSectorSpecial(sec, &floor->special);
+                        break;
+                     default:
+                        break;
+                  }
+               }
+               else
+               {
+                  floor->texture = msec->floorpic;
+                  switch(fd->change_type)
+                  {
+                     case FChgZero:  // zero type
+                        //jff 3/14/98 change old field too
+                        P_ZeroSpecialTransfer(&(floor->special));
+                        floor->type = genFloorChg0;
+                        break;
+                     case FChgTyp:   // copy type
+                        //jff 3/14/98 change old field too
+                        P_SetupSpecialTransfer(msec, &(floor->special));
+                        floor->type = genFloorChgT;
+                        break;
+                     case FChgTxt:   // leave type be
+                        floor->type = genFloorChg;
+                        break;
+                     default:
+                        break;
+                  }
                }
             }
          }
@@ -251,23 +273,45 @@ manual_floor:
          {
             if(line) // haleyjd 05/07/04: only line actions can use this
             {
-               floor->texture = line->frontsector->floorpic;
-               switch(fd->change_type)
+               if(fd->changeOnStart)
                {
-               case FChgZero:    // zero type
-                  //jff 3/14/98 change old field too
-                  P_ZeroSpecialTransfer(&(floor->special));
-                  floor->type = genFloorChg0;
-                  break;
-               case FChgTyp:     // copy type
-                  //jff 3/14/98 change old field too
-                  P_SetupSpecialTransfer(line->frontsector, &(floor->special));
-                  floor->type = genFloorChgT;
-                  break;
-               case FChgTxt:     // leave type be
-                  floor->type = genFloorChg;
-               default:
-                  break;
+                  sec->floorpic = line->frontsector->floorpic;
+                  switch(fd->change_type)
+                  {
+                     case FChgZero:    // zero type
+                        //jff 3/14/98 change old field too
+                        P_ZeroSpecialTransfer(&(floor->special));
+                        P_TransferSectorSpecial(sec, &floor->special);
+                        break;
+                     case FChgTyp:     // copy type
+                        //jff 3/14/98 change old field too
+                        P_SetupSpecialTransfer(line->frontsector, &(floor->special));
+                        P_TransferSectorSpecial(sec, &floor->special);
+                        break;
+                     default:
+                        break;
+                  }
+               }
+               else
+               {
+                  floor->texture = line->frontsector->floorpic;
+                  switch(fd->change_type)
+                  {
+                     case FChgZero:    // zero type
+                        //jff 3/14/98 change old field too
+                        P_ZeroSpecialTransfer(&(floor->special));
+                        floor->type = genFloorChg0;
+                        break;
+                     case FChgTyp:     // copy type
+                        //jff 3/14/98 change old field too
+                        P_SetupSpecialTransfer(line->frontsector, &(floor->special));
+                        floor->type = genFloorChgT;
+                        break;
+                     case FChgTxt:     // leave type be
+                        floor->type = genFloorChg;
+                     default:
+                        break;
+                  }
                }
             } // end if(line)
          }
