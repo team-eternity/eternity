@@ -2011,7 +2011,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerToNearest)
    cd.direction     = 0;              // down
    cd.target_type   = CtoNnC;         // to nearest neighboring ceiling
    cd.spac          = instance->spac; // activated Hexen-style
-   cd.flags         = CDF_HAVESPAC;
+   cd.flags         = CDF_HAVESPAC | CDF_CHANGEONSTART;
    cd.speed_type    = SpeedParam;
    cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
    EV_ceilingChangeForArg(cd, instance->args[2]);       // change
@@ -2056,7 +2056,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerToLowest)
    cd.direction     = 0;              // down
    cd.target_type   = CtoLnC;         // to lowest neighboring ceiling
    cd.spac          = instance->spac; // activated Hexen-style
-   cd.flags         = CDF_HAVESPAC;
+   cd.flags         = CDF_HAVESPAC | CDF_CHANGEONSTART;
    cd.speed_type    = SpeedParam;
    cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
    EV_ceilingChangeForArg(cd, instance->args[2]);       // change
@@ -2101,7 +2101,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerToHighestFloor)
    cd.direction     = 0;              // down
    cd.target_type   = CtoHnF;         // to highest neighboring floor
    cd.spac          = instance->spac; // activated Hexen-style
-   cd.flags         = CDF_HAVESPAC | CDF_HACKFORDESTF;
+   cd.flags         = CDF_HAVESPAC | CDF_HACKFORDESTF | CDF_CHANGEONSTART;
    cd.speed_type    = SpeedParam;
    cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
    EV_ceilingChangeForArg(cd, instance->args[2]);       // change
@@ -2147,7 +2147,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerToFloor)
    cd.direction     = 0;              // down
    cd.target_type   = CtoF;           // to sector floor
    cd.spac          = instance->spac; // activated Hexen-style
-   cd.flags         = CDF_HAVESPAC | CDF_HACKFORDESTF;
+   cd.flags         = CDF_HAVESPAC | CDF_HACKFORDESTF | CDF_CHANGEONSTART;
    cd.speed_type    = SpeedParam;
    cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
    EV_ceilingChangeForArg(cd, instance->args[2]);       // change
@@ -2192,7 +2192,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerByTexture)
    cd.direction     = 0;              // down
    cd.target_type   = CbyST;          // by shortest upper texture
    cd.spac          = instance->spac; // activated Hexen-style
-   cd.flags         = CDF_HAVESPAC;
+   cd.flags         = CDF_HAVESPAC | CDF_CHANGEONSTART;
    cd.speed_type    = SpeedParam;
    cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
    EV_ceilingChangeForArg(cd, instance->args[2]);       // change
@@ -2239,7 +2239,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerByValue)
    cd.direction     = 0;              // down
    cd.target_type   = CbyParam;       // by value
    cd.spac          = instance->spac; // activated Hexen-style
-   cd.flags         = CDF_HAVESPAC;
+   cd.flags         = CDF_HAVESPAC | CDF_CHANGEONSTART;
    cd.speed_type    = SpeedParam;
    cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
    cd.height_value  = instance->args[2] * FRACUNIT;     // height
@@ -2285,7 +2285,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerByValueTimes8)
    cd.direction     = 0;              // down
    cd.target_type   = CbyParam;       // by value
    cd.spac          = instance->spac; // activated Hexen-style
-   cd.flags         = CDF_HAVESPAC;
+   cd.flags         = CDF_HAVESPAC | CDF_CHANGEONSTART;
    cd.speed_type    = SpeedParam;
    cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
    cd.height_value  = instance->args[2] * FRACUNIT * 8; // height

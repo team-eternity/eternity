@@ -538,24 +538,44 @@ manual_ceiling:
                      P_FindModelCeilingSector(targheight, secnum);
             if(msec)
             {
-               ceiling->texture = msec->ceilingpic;
-               switch(cd->change_type)
+               if(cd->flags & CDF_CHANGEONSTART)
                {
-               case CChgZero:  // type is zeroed
-                  //jff 3/14/98 change old field too
-                  P_ZeroSpecialTransfer(&(ceiling->special));
-                  ceiling->type = genCeilingChg0;
-                  break;
-               case CChgTyp:   // type is copied
-                  //jff 3/14/98 change old field too
-                  P_SetupSpecialTransfer(msec, &(ceiling->special));
-                  ceiling->type = genCeilingChgT;
-                  break;
-               case CChgTxt:   // type is left alone
-                  ceiling->type = genCeilingChg;
-                  break;
-               default:
-                  break;
+                  P_SetSectorCeilingPic(sec, msec->ceilingpic);
+                  switch(cd->change_type)
+                  {
+                     case CChgZero:
+                        P_ZeroSpecialTransfer(&(ceiling->special));
+                        P_TransferSectorSpecial(sec, &ceiling->special);
+                        break;
+                     case CChgTyp:
+                        P_SetupSpecialTransfer(msec, &ceiling->special);
+                        P_TransferSectorSpecial(sec, &ceiling->special);
+                        break;
+                     default:
+                        break;
+                  }
+               }
+               else
+               {
+                  ceiling->texture = msec->ceilingpic;
+                  switch(cd->change_type)
+                  {
+                     case CChgZero:  // type is zeroed
+                        //jff 3/14/98 change old field too
+                        P_ZeroSpecialTransfer(&(ceiling->special));
+                        ceiling->type = genCeilingChg0;
+                        break;
+                     case CChgTyp:   // type is copied
+                        //jff 3/14/98 change old field too
+                        P_SetupSpecialTransfer(msec, &(ceiling->special));
+                        ceiling->type = genCeilingChgT;
+                        break;
+                     case CChgTxt:   // type is left alone
+                        ceiling->type = genCeilingChg;
+                        break;
+                     default:
+                        break;
+                  }
                }
             }
          }
@@ -563,24 +583,45 @@ manual_ceiling:
          {
             if(line) // haleyjd 10/05/05: only line actions can use this
             {
-               ceiling->texture = line->frontsector->ceilingpic;
-               switch(cd->change_type)
+               if(cd->flags & CDF_CHANGEONSTART)
                {
-               case CChgZero:    // type is zeroed
-                  //jff 3/14/98 change old field too
-                  P_ZeroSpecialTransfer(&(ceiling->special));
-                  ceiling->type = genCeilingChg0;
-                  break;
-               case CChgTyp:     // type is copied
-                  //jff 3/14/98 change old field too
-                  P_SetupSpecialTransfer(line->frontsector, &(ceiling->special));
-                  ceiling->type = genCeilingChgT;
-                  break;
-               case CChgTxt:     // type is left alone
-                  ceiling->type = genCeilingChg;
-                  break;
-               default:
-                  break;
+                  P_SetSectorCeilingPic(sec, line->frontsector->ceilingpic);
+                  switch(cd->change_type)
+                  {
+                     case CChgZero:
+                        P_ZeroSpecialTransfer(&ceiling->special);
+                        P_TransferSectorSpecial(sec, &ceiling->special);
+                        break;
+                     case CChgTyp:
+                        P_SetupSpecialTransfer(line->frontsector,
+                                               &ceiling->special);
+                        P_TransferSectorSpecial(sec, &ceiling->special);
+                        break;
+                     default:
+                        break;
+                  }
+               }
+               else
+               {
+                  ceiling->texture = line->frontsector->ceilingpic;
+                  switch(cd->change_type)
+                  {
+                     case CChgZero:    // type is zeroed
+                        //jff 3/14/98 change old field too
+                        P_ZeroSpecialTransfer(&(ceiling->special));
+                        ceiling->type = genCeilingChg0;
+                        break;
+                     case CChgTyp:     // type is copied
+                        //jff 3/14/98 change old field too
+                        P_SetupSpecialTransfer(line->frontsector, &(ceiling->special));
+                        ceiling->type = genCeilingChgT;
+                        break;
+                     case CChgTxt:     // type is left alone
+                        ceiling->type = genCeilingChg;
+                        break;
+                     default:
+                        break;
+                  }
                }
             }
          }
