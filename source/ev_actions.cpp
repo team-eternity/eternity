@@ -34,6 +34,7 @@
 #include "ev_macros.h"
 #include "ev_specials.h"
 #include "g_game.h"
+#include "metaapi.h"
 #include "p_info.h"
 #include "p_skin.h"
 #include "p_spec.h"
@@ -4000,6 +4001,54 @@ DEFINE_ACTION(EV_ActionParamCeilingGeneric)
    cd.spac = instance->spac;
 
    return EV_DoParamCeiling(instance->line, instance->tag, &cd);
+}
+
+//
+// Implements HealThing(amount, maxhealth)
+//
+// * ExtraData:         469
+// * Hexen (ZDoom):     248
+//
+DEFINE_ACTION(EV_ActionHealThing)
+{
+   if(instance->actor)
+   {
+      itemeffect_t *soulsphereeffect = E_ItemEffectForName(ITEMNAME_SOULSPHERE);
+      mobjinfo_t *info = mobjinfo[instance->actor->type];
+      int maxhealth = instance->line->args[1];
+
+      // If second arg is 0, or the activator isn't a player
+      // then set the maxhealth to the activator's spawning health.
+      if(maxhealth == 0 || instance->actor->player == nullptr)
+      {
+         maxhealth = info->spawnhealth;
+      }
+      // Otherwise if second arg is 1, then set maxhealth to
+      // the maximum health provided by a SoulSphere.
+      else if(maxhealth == 1)
+      {
+         maxhealth = soulsphereeffect->getInt("maxamount", 0);
+      }
+
+      // If the activator's health is already greater than or equal to maxamount
+      // then don't bother with healing, and don't activate the line.
+      if(instance->actor->health < maxhealth)
+      {
+         instance->actor->health += instance->line->args[0];
+
+         // cap to maxhealth
+         if(instance->actor->health > maxhealth)
+            instance->actor->health = maxhealth;
+
+
+         // propagate to Mob's player if it exists
+         if(instance->actor->player)
+            instance->actor->player->health = instance->actor->health;
+
+         return 1;
+      }
+   }
+   return 0;
 }
 
 // EOF
