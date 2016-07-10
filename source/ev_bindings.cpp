@@ -997,6 +997,7 @@ PARAMLINE(ParamFloorCrushStop);
 PARAMLINE(ParamFloorCeilingLowerByValue);
 PARAMLINE(ParamFloorCeilingRaiseByValue);
 PARAMLINE(ParamFloorGeneric);
+PARAMLINE(ParamFloorCeilingLowerRaise);
 PARAMLINE(ParamCeilingRaiseToHighest);
 PARAMLINE(ParamCeilingToHighestInstant);
 PARAMLINE(ParamCeilingRaiseToNearest);
@@ -1491,6 +1492,7 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(465, ParamCeilingGeneric,             "Generic_Ceiling")
    LINESPECNAMED(466, ChangeOnly,                      "Floor_TransferTrigger")
    LINESPECNAMED(467, ChangeOnlyNumeric,               "Floor_TransferNumeric")
+   LINESPECNAMED(468, ParamFloorCeilingLowerRaise,     "FloorAndCeiling_LowerRaise")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1662,6 +1664,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(247, ParamElevatorDown,               "Elevator_LowerToNearest")
    LINESPECNAMED(249, ParamDoorCloseWaitOpen,          "Door_CloseWaitOpen")
    LINESPECNAMED(250, ParamDonut,                      "Floor_Donut")
+   LINESPECNAMED(251, ParamFloorCeilingLowerRaise,     "FloorAndCeiling_LowerRaise")
    LINESPECNAMED(252, ParamCeilingRaiseToNearest,      "Ceiling_RaiseToNearest")
    LINESPECNAMED(253, ParamCeilingLowerToLowest,       "Ceiling_LowerToLowest")
    LINESPECNAMED(254, ParamCeilingLowerToFloor,        "Ceiling_LowerToFloor")

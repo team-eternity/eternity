@@ -4002,5 +4002,38 @@ DEFINE_ACTION(EV_ActionParamCeilingGeneric)
    return EV_DoParamCeiling(instance->line, instance->tag, &cd);
 }
 
+//
+// Implements FloorAndCeiling_LowerRaise(tag, fspeed, cspeed, boomemu)
+//
+// * ExtraData: 468
+// * Hexen:     251
+//
+DEFINE_ACTION(EV_ActionParamFloorCeilingLowerRaise)
+{
+   INIT_STRUCT(ceilingdata_t, cd);
+   cd.direction = 1; // up
+   cd.target_type = CtoHnC;
+   cd.spac = instance->spac;
+   cd.flags = CDF_HAVESPAC;
+   cd.speed_type = SpeedParam;
+   cd.speed_value = instance->args[2] * (FRACUNIT / 8);
+   cd.crush = -1;
+
+   int rtn = EV_DoParamCeiling(instance->line, instance->tag, &cd);
+   if(instance->args[3] == 1998 && rtn)   // Boom specials 166/185 emulation
+      return rtn;
+
+   INIT_STRUCT(floordata_t, fd);
+   fd.direction = 0; // down
+   fd.target_type = FtoLnF;
+   fd.spac = instance->spac;
+   fd.flags = FDF_HAVESPAC;
+   fd.speed_type = SpeedParam;
+   fd.speed_value = instance->args[1] * (FRACUNIT / 8);
+   fd.crush = -1;
+
+   return EV_DoParamFloor(instance->line, instance->tag, &fd);
+}
+
 // EOF
 
