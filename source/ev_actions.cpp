@@ -3930,5 +3930,71 @@ DEFINE_ACTION(EV_ActionParamFloorGeneric)
    return EV_DoParamFloor(instance->line, instance->tag, &fd);
 }
 
+//
+// Implements Generic_Ceiling(tag, speed, height, target, flag)
+//
+// * ExtraData: 465
+// * Hexen:     201
+//
+DEFINE_ACTION(EV_ActionParamCeilingGeneric)
+{
+   INIT_STRUCT(ceilingdata_t, cd);
+   int flags = instance->args[4];
+   cd.crush = (flags & 16) ? 10 : -1;
+   cd.change_type = flags & 3;
+   int target = instance->args[3];
+   if(!target)
+   {
+      int height = instance->args[2];
+      switch(height)
+      {
+         case 24:
+            cd.target_type = Cby24;
+            break;
+         case 32:
+            cd.target_type = Cby32;
+            break;
+         default:
+            cd.target_type = CbyParam;
+            cd.height_value = height * FRACUNIT;
+            break;
+      }
+   }
+   else
+   {
+      cd.target_type = target - 1;
+      if(cd.target_type < CtoHnC)
+         cd.target_type = CtoHnC;
+      else if(cd.target_type > CbyST)
+         cd.target_type = CbyST;
+   }
+   cd.direction = (flags & 8) ? 1 : 0;
+   cd.change_model = (flags & 4) ? CNumericModel : CTriggerModel;
+   int speed = instance->args[1];
+   switch(speed)
+   {
+      case 8:
+         cd.speed_type = SpeedSlow;
+         break;
+      case 16:
+         cd.speed_type = SpeedNormal;
+         break;
+      case 32:
+         cd.speed_type = SpeedFast;
+         break;
+      case 64:
+         cd.speed_type = SpeedTurbo;
+         break;
+      default:
+         cd.speed_type = SpeedParam;
+         cd.speed_value = speed * (FRACUNIT / 8);
+         break;
+   }
+   cd.flags = CDF_HAVESPAC;
+   cd.spac = instance->spac;
+
+   return EV_DoParamCeiling(instance->line, instance->tag, &cd);
+}
+
 // EOF
 
