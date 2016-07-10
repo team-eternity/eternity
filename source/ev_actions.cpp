@@ -3852,6 +3852,7 @@ DEFINE_ACTION(EV_ActionChangeSkill)
    return 1;
 }
 
+//
 // Implements Light_StrobeDoom(tag, u-tics, l-tics)
 //
 // * ExtraData: 463
@@ -3861,6 +3862,72 @@ DEFINE_ACTION(EV_ActionParamLightStrobeDoom)
 {
    return EV_StartLightStrobing(instance->line, instance->tag,
                                 instance->args[2], instance->args[1], true);
+}
+
+//
+// Implements Generic_Floor(tag, speed, height, target, flags)
+//
+// * ExtraData: 464
+// * Hexen:     200
+//
+DEFINE_ACTION(EV_ActionParamFloorGeneric)
+{
+   INIT_STRUCT(floordata_t, fd);
+   int flags = instance->args[4];
+   fd.crush = (flags & 16) ? 10 : -1;
+   fd.change_type = flags & 3;
+   int target = instance->args[3];
+   if(!target) // move by parameter
+   {
+      int height = instance->args[2];
+      switch(height)
+      {
+         case 24:
+            fd.target_type = Fby24; // keep using Boom types if available
+            break;
+         case 32:
+            fd.target_type = Fby32;
+            break;
+         default:
+            fd.target_type = FbyParam;
+            fd.height_value = height * FRACUNIT;
+            break;
+      }
+   }
+   else
+   {
+      fd.target_type = target - 1;
+      if(fd.target_type < FtoHnF)
+         fd.target_type = FtoHnF;
+      else if(fd.target_type > FbyST)
+         fd.target_type = FbyST;
+   }
+   fd.direction = (flags & 8) ? 1 : 0;
+   fd.change_model = (flags & 4) ? FNumericModel : FTriggerModel;
+   int speed = instance->args[1];
+   switch(speed)
+   {
+      case 8:
+         fd.speed_type = SpeedSlow;
+         break;
+      case 16:
+         fd.speed_type = SpeedNormal;
+         break;
+      case 32:
+         fd.speed_type = SpeedFast;
+         break;
+      case 64:
+         fd.speed_type = SpeedTurbo;
+         break;
+      default:
+         fd.speed_type = SpeedParam;
+         fd.speed_value = speed * (FRACUNIT / 8);
+         break;
+   }
+   fd.flags = FDF_HAVESPAC;
+   fd.spac = instance->spac;
+
+   return EV_DoParamFloor(instance->line, instance->tag, &fd);
 }
 
 // EOF
