@@ -1097,7 +1097,6 @@ PARAMLINE(LightTurnOn);
 PARAMLINE(ChangeSkill);
 PARAMLINE(ChangeOnly);
 PARAMLINE(ChangeOnlyNumeric);
-PARAMLINE(HealThing);
 
 //=============================================================================
 //
@@ -1492,8 +1491,6 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(465, ParamCeilingGeneric,             "Generic_Ceiling")
    LINESPECNAMED(466, ChangeOnly,                      "Floor_TransferTrigger")
    LINESPECNAMED(467, ChangeOnlyNumeric,               "Floor_TransferNumeric")
-
-   LINESPECNAMED(469, HealThing,                       "HealThing")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1663,7 +1660,6 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(245, ParamElevatorUp,                 "Elevator_RaiseToNearest")
    LINESPECNAMED(246, ParamElevatorCurrent,            "Elevator_MoveToFloor")
    LINESPECNAMED(247, ParamElevatorDown,               "Elevator_LowerToNearest")
-   LINESPECNAMED(248, HealThing,                       "HealThing")
    LINESPECNAMED(249, ParamDoorCloseWaitOpen,          "Door_CloseWaitOpen")
    LINESPECNAMED(250, ParamDonut,                      "Floor_Donut")
    LINESPECNAMED(252, ParamCeilingRaiseToNearest,      "Ceiling_RaiseToNearest")

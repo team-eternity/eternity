@@ -245,7 +245,6 @@ DECLARE_ACTION(EV_ActionParamElevatorUp);
 DECLARE_ACTION(EV_ActionParamElevatorDown);
 DECLARE_ACTION(EV_ActionParamElevatorCurrent);
 DECLARE_ACTION(EV_ActionChangeSkill);
-DECLARE_ACTION(EV_ActionHealThing);
 
 #endif
 
