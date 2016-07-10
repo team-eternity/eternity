@@ -960,6 +960,10 @@ DEFINE_ACTION(EV_ActionSilentTeleport)
 //
 // EV_ActionChangeOnly
 //
+// Also implements Floor_TransferTrigger(tag)
+// * ExtraData: 466
+// * Hexen:     235
+//
 DEFINE_ACTION(EV_ActionChangeOnly)
 {
    // jff 3/16/98 renumber 215->153
@@ -969,7 +973,8 @@ DEFINE_ACTION(EV_ActionChangeOnly)
    // case 189: (S1 - BOOM Extended)
    // case 190: (SR - BOOM Extended)
    // Texture/Type Change Only (Trig)
-   return EV_DoChange(instance->line, trigChangeOnly);
+   bool isParam = EV_IsParamLineSpec(instance->special);
+   return EV_DoChange(instance->line, instance->tag, trigChangeOnly, isParam);
 }
 
 //
@@ -983,7 +988,8 @@ DEFINE_ACTION(EV_ActionChangeOnlyNumeric)
    // case 240: (WR - BOOM Extended)
    // case 241: (S1 - BOOM Extended)
    // Texture/Type Change Only (Numeric)
-   return EV_DoChange(instance->line, numChangeOnly);
+   bool isParam = EV_IsParamLineSpec(instance->special);
+   return EV_DoChange(instance->line, instance->tag, numChangeOnly, isParam);
 }
 
 //

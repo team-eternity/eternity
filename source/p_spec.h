@@ -1435,7 +1435,7 @@ int EV_FlickerLight(const line_t *, int tag, int maxval, int minval);
 
 // p_floor
 
-int EV_DoChange(const line_t *line, change_e changetype);
+int EV_DoChange(const line_t *line, int tag, change_e changetype, bool isParam);
 
 // ioanch: now it's parameterized
 int EV_DoParamDonut(const line_t *line, int tag, bool havespac,

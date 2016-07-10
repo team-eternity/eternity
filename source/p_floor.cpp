@@ -676,19 +676,32 @@ int EV_DoFloorAndCeiling(const line_t *line, int tag, const floordata_t &fd,
 //
 // jff 3/15/98 added to better support generalized sector types
 //
-int EV_DoChange(const line_t *line, change_e changetype)
+int EV_DoChange(const line_t *line, int tag, change_e changetype, bool isParam)
 {
    int                   secnum;
    int                   rtn;
    sector_t*             sec;
    sector_t*             secm;
 
-   secnum = -1;
+   if(changetype == trigChangeOnly && !line)
+      return 0;   // ioanch: sanity check
+
    rtn = 0;
+   bool manual = false;
+   if(isParam && !tag)
+   {
+      if(!line || !(sec = line->backsector))
+         return rtn;
+      manual = true;
+      goto manualChange;
+   }
+
+   secnum = -1;
    // change all sectors with the same tag as the linedef
-   while((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
+   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
       sec = &sectors[secnum];
+   manualChange:
       
       rtn = 1;
 
@@ -710,6 +723,8 @@ int EV_DoChange(const line_t *line, change_e changetype)
       default:
          break;
       }
+      if(manual)
+         return rtn;
    }
    return rtn;
 }
