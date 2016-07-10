@@ -1009,6 +1009,7 @@ enum
    CDF_HAVETRIGGERTYPE = 0x00000001, // has BOOM-style gen action trigger
    CDF_HAVESPAC        = 0x00000002, // has Hexen-style spac
    CDF_PARAMSILENT     = 0x00000004, // ioanch 20160314: parameterized silent
+   CDF_HACKFORDESTF    = 0x00000008, // ioanch: hack to emulate fake-crush Doom
 };
 
 // haleyjd 10/05/05: extended data struct for parameterized ceilings

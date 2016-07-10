@@ -2101,7 +2101,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerToHighestFloor)
    cd.direction     = 0;              // down
    cd.target_type   = CtoHnF;         // to highest neighboring floor
    cd.spac          = instance->spac; // activated Hexen-style
-   cd.flags         = CDF_HAVESPAC;
+   cd.flags         = CDF_HAVESPAC | CDF_HACKFORDESTF;
    cd.speed_type    = SpeedParam;
    cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
    EV_ceilingChangeForArg(cd, instance->args[2]);       // change
@@ -2147,7 +2147,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerToFloor)
    cd.direction     = 0;              // down
    cd.target_type   = CtoF;           // to sector floor
    cd.spac          = instance->spac; // activated Hexen-style
-   cd.flags         = CDF_HAVESPAC;
+   cd.flags         = CDF_HAVESPAC | CDF_HACKFORDESTF;
    cd.speed_type    = SpeedParam;
    cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
    EV_ceilingChangeForArg(cd, instance->args[2]);       // change

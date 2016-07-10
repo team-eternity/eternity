@@ -452,10 +452,28 @@ manual_ceiling:
             P_FindNextLowestCeiling(sec,sec->ceilingheight);
          break;
       case CtoHnF:
-         targheight = P_FindHighestFloorSurrounding(sec) + cd->ceiling_gap;
+         targheight = P_FindHighestFloorSurrounding(sec);
+         if(cd->ceiling_gap)
+         {
+            // target height needs to be adjusted if gap is non-zero, if we want
+            // gap to have any effect. But if gap is 0, just emulate the buggy
+            // (but compat-fixed) Boom behavior. The only classic specials with
+            // this behavior are from Boom anyway.
+            if(targheight < sec->floorheight)
+               targheight = sec->floorheight;
+            targheight += cd->ceiling_gap;
+
+            // Also slow ceiling down if blocked while gap is nonzero
+            if(cd->flags & CDF_HACKFORDESTF)
+               ceiling->crushflags |= CeilingThinker::crushParamSlow;
+         }
          break;
       case CtoF:
          targheight = sec->floorheight + cd->ceiling_gap;
+         // ioanch: if hack flag is available, apply the Doom-like behavior if
+         // gap is nonzero
+         if(cd->ceiling_gap && cd->flags & CDF_HACKFORDESTF)
+            ceiling->crushflags |= CeilingThinker::crushParamSlow;
          break;
       case CbyST:
          targheight = (ceiling->sector->ceilingheight>>FRACBITS) +
