@@ -2090,7 +2090,7 @@ DEFINE_ACTION(EV_ActionParamCeilingRaiseToHighestFloor)
 //
 // EV_ActionParamCeilingLowerToHighestFloor
 //
-// Implements Ceiling_LowerToHighestFloor(tag, speed, change crush)
+// Implements Ceiling_LowerToHighestFloor(tag, speed, change, crush, gap)
 // * ExtraData: 330
 // * Hexen (ZDoom Extension): 192
 //
@@ -2106,6 +2106,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerToHighestFloor)
    cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
    EV_ceilingChangeForArg(cd, instance->args[2]);       // change
    cd.crush         = instance->args[3];                // crush
+   cd.ceiling_gap   = instance->args[4] * FRACUNIT;
 
    return EV_DoParamCeiling(instance->line, instance->tag, &cd);
 }
@@ -2113,7 +2114,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerToHighestFloor)
 //
 // EV_ActionParamCeilingToFloorInstant
 //
-// Implements Ceiling_ToFloorInstant(tag, change, crush)
+// Implements Ceiling_ToFloorInstant(tag, change, crush, gap)
 // * ExtraData: 331
 //
 DEFINE_ACTION(EV_ActionParamCeilingToFloorInstant)
@@ -2127,6 +2128,7 @@ DEFINE_ACTION(EV_ActionParamCeilingToFloorInstant)
    cd.speed_type    = SpeedNormal;    // not used
    EV_ceilingChangeForArg(cd, instance->args[1]); // change
    cd.crush         = instance->args[2];          // crush
+   cd.ceiling_gap   = instance->args[3] * FRACUNIT;
 
    return EV_DoParamCeiling(instance->line, instance->tag, &cd);
 }
@@ -2134,7 +2136,7 @@ DEFINE_ACTION(EV_ActionParamCeilingToFloorInstant)
 //
 // EV_ActionParamCeilingLowerToFloor
 //
-// Implements Ceiling_LowerToFloor(tag, speed, change, crush)
+// Implements Ceiling_LowerToFloor(tag, speed, change, crush, gap)
 // * ExtraData: 332
 // * Hexen (ZDoom Extension): 254
 //
@@ -2150,6 +2152,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerToFloor)
    cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
    EV_ceilingChangeForArg(cd, instance->args[2]);       // change
    cd.crush         = instance->args[3];                // crush
+   cd.ceiling_gap   = instance->args[4] * FRACUNIT;
 
    return EV_DoParamCeiling(instance->line, instance->tag, &cd);
 }

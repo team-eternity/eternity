@@ -1029,6 +1029,7 @@ typedef struct ceilingdata_s
    // parameterized values
    fixed_t height_value;
    fixed_t speed_value;
+   fixed_t ceiling_gap;
 } ceilingdata_t;
 
 // ioanch 20160305

@@ -452,10 +452,10 @@ manual_ceiling:
             P_FindNextLowestCeiling(sec,sec->ceilingheight);
          break;
       case CtoHnF:
-         targheight = P_FindHighestFloorSurrounding(sec);
+         targheight = P_FindHighestFloorSurrounding(sec) + cd->ceiling_gap;
          break;
       case CtoF:
-         targheight = sec->floorheight;
+         targheight = sec->floorheight + cd->ceiling_gap;
          break;
       case CbyST:
          targheight = (ceiling->sector->ceilingheight>>FRACBITS) +
