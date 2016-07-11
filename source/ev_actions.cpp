@@ -4103,7 +4103,7 @@ DEFINE_ACTION(EV_ActionParamSectorSetRotation)
    int secnum = -1;
 
    // TODO: Once UDMF, let this work for line arg0 when in UDMF config.
-   while((secnum = P_FindSectorFromTag(line->tag, secnum)) >= 0)
+   while((secnum = P_FindSectorFromTag(instance->tag, secnum)) >= 0)
    {
       sectors[secnum].floorangle = static_cast<float>
          (E_NormalizeFlatAngle(line->args[1]) * PI / 180.0f);
@@ -4126,7 +4126,7 @@ DEFINE_ACTION(EV_ActionParamSectorSetCeilingPanning)
    int secnum = -1;
 
    // TODO: Once UDMF, let this work for line arg0 when in UDMF config.
-   while((secnum = P_FindSectorFromTag(line->tag, secnum)) >= 0)
+   while((secnum = P_FindSectorFromTag(instance->tag, secnum)) >= 0)
    {
       sectors[secnum].ceiling_xoffs =
          M_DoubleToFixed(line->args[1] + (line->args[2] * 0.01));
@@ -4149,7 +4149,7 @@ DEFINE_ACTION(EV_ActionParamSectorSetFloorPanning)
    int secnum = -1;
 
    // TODO: Once UDMF, let this work for line arg0 when in UDMF config.
-   while((secnum = P_FindSectorFromTag(line->tag, secnum)) >= 0)
+   while((secnum = P_FindSectorFromTag(instance->tag, secnum)) >= 0)
    {
       sectors[secnum].floor_xoffs =
          M_DoubleToFixed(line->args[1] + (line->args[2] * 0.01));
