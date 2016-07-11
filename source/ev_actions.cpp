@@ -41,6 +41,8 @@
 #include "p_xenemy.h"
 #include "polyobj.h"
 #include "r_defs.h"
+#include "r_main.h" // Needed for PI
+#include "r_state.h"
 #include "s_sound.h"
 
 #define INIT_STRUCT edefstructvar
@@ -4025,9 +4027,14 @@ DEFINE_ACTION(EV_ActionHealThing)
       }
       // Otherwise if second arg is 1, then set maxhealth to
       // the maximum health provided by a SoulSphere.
-      else if(maxhealth == 1)
+      else if(maxhealth == 1 && soulsphereeffect != nullptr)
       {
          maxhealth = soulsphereeffect->getInt("maxamount", 0);
+      }
+      else if(maxhealth == 1 && soulsphereeffect == nullptr)
+      {
+         // FIXME: Handle this with a bit more finesse.
+         maxhealth = info->spawnhealth + 100;
       }
 
       // If the activator's health is already greater than or equal to maxamount
@@ -4049,6 +4056,61 @@ DEFINE_ACTION(EV_ActionHealThing)
       }
    }
    return 0;
+}
+
+DEFINE_ACTION(EV_ActionParamSectorSetRotation)
+{
+   const line_t *line = instance->line;
+   int secnum = -1;
+
+   // TODO: Once UDMF, let this work for line arg0 when in UDMF config.
+   while((secnum = P_FindSectorFromTag(line->tag, secnum)) >= 0)
+   {
+      sectors[secnum].floorangle = static_cast<float>
+         (E_NormalizeFlatAngle(line->args[1]) * PI / 180.0f);
+      sectors[secnum].ceilingangle = static_cast<float>
+         (E_NormalizeFlatAngle(line->args[2]) * PI / 180.0f);
+   }
+
+   return 1; // ZDoom always has this line as sucessful
+}
+
+DEFINE_ACTION(EV_ActionParamSectorSetCeilingPanning)
+{
+   const line_t *line = instance->line;
+   int secnum = -1;
+
+   // TODO: Once UDMF, let this work for line arg0 when in UDMF config.
+   while((secnum = P_FindSectorFromTag(line->tag, secnum)) >= 0)
+   {
+      // args[1] is the integer part, args[2] is the fractional part
+      sectors[secnum].ceiling_xoffs =
+         M_DoubleToFixed(line->args[1] + (line->args[2] * 0.01));
+      // args[3] is the integer part, args[4] is the fractional part
+      sectors[secnum].ceiling_xoffs =
+         M_DoubleToFixed(line->args[3] + (line->args[4] * 0.01));
+   }
+
+   return 1; // ZDoom always has this line as sucessful
+}
+
+DEFINE_ACTION(EV_ActionParamSectorSetFloorPanning)
+{
+   const line_t *line = instance->line;
+   int secnum = -1;
+
+   // TODO: Once UDMF, let this work for line arg0 when in UDMF config.
+   while((secnum = P_FindSectorFromTag(line->tag, secnum)) >= 0)
+   {
+      // args[1] is the integer part, args[2] is the fractional part
+      sectors[secnum].floor_xoffs =
+         M_DoubleToFixed(line->args[1] + (line->args[2] * 0.01));
+      // args[3] is the integer part, args[4] is the fractional part
+      sectors[secnum].floor_yoffs =
+         M_DoubleToFixed(line->args[3] + (line->args[4] * 0.01));
+   }
+
+   return 1; // ZDoom always has this line as sucessful
 }
 
 // EOF

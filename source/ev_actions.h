@@ -246,7 +246,9 @@ DECLARE_ACTION(EV_ActionParamElevatorDown);
 DECLARE_ACTION(EV_ActionParamElevatorCurrent);
 DECLARE_ACTION(EV_ActionChangeSkill);
 DECLARE_ACTION(EV_ActionHealThing);
-
+DECLARE_ACTION(EV_ActionParamSectorSetRotation);
+DECLARE_ACTION(EV_ActionParamSectorSetCeilingPanning);
+DECLARE_ACTION(EV_ActionParamSectorSetFloorPanning);
 #endif
 
 // EOF

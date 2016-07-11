@@ -1098,6 +1098,9 @@ PARAMLINE(ChangeSkill);
 PARAMLINE(ChangeOnly);
 PARAMLINE(ChangeOnlyNumeric);
 PARAMLINE(HealThing);
+PARAMLINE(ParamSectorSetRotation);
+PARAMLINE(ParamSectorSetFloorPanning);
+PARAMLINE(ParamSectorSetCeilingPanning);
 
 //=============================================================================
 //
@@ -1494,6 +1497,9 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(467, ChangeOnlyNumeric,               "Floor_TransferNumeric")
 
    LINESPECNAMED(469, HealThing,                       "HealThing")
+   LINESPECNAMED(470, ParamSectorSetRotation,          "Sector_SetRotation")
+   LINESPECNAMED(471, ParamSectorSetFloorPanning,      "Sector_SetRotation")
+   LINESPECNAMED(472, ParamSectorSetCeilingPanning,    "Sector_SetRotation")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1638,6 +1644,9 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(168, ParamCeilingCrushAndRaiseDist,   "Ceiling_CrushAndRaiseDist")
    LINESPECNAMED(176, ThingChangeTID,                  "Thing_ChangeTID")
    LINESPECNAMED(179, ChangeSkill,                     "ChangeSkill")
+   LINESPECNAMED(185, ParamSectorSetRotation,          "Sector_SetRotation")
+   LINESPECNAMED(186, ParamSectorSetFloorPanning,      "Sector_SetRotation")
+   LINESPECNAMED(187, ParamSectorSetCeilingPanning,    "Sector_SetRotation")
    LINESPECNAMED(192, ParamCeilingLowerToHighestFloor, "Ceiling_LowerToHighestFloor")
    LINESPECNAMED(193, ParamCeilingLowerInstant,        "Ceiling_LowerInstant")
    LINESPECNAMED(194, ParamCeilingRaiseInstant,        "Ceiling_RaiseInstant")
