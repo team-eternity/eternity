@@ -4006,6 +4006,39 @@ DEFINE_ACTION(EV_ActionParamCeilingGeneric)
 }
 
 //
+// Implements FloorAndCeiling_LowerRaise(tag, fspeed, cspeed, boomemu)
+//
+// * ExtraData: 468
+// * Hexen:     251
+//
+DEFINE_ACTION(EV_ActionParamFloorCeilingLowerRaise)
+{
+   INIT_STRUCT(ceilingdata_t, cd);
+   cd.direction = 1; // up
+   cd.target_type = CtoHnC;
+   cd.spac = instance->spac;
+   cd.flags = CDF_HAVESPAC;
+   cd.speed_type = SpeedParam;
+   cd.speed_value = instance->args[2] * (FRACUNIT / 8);
+   cd.crush = -1;
+
+   int rtn = EV_DoParamCeiling(instance->line, instance->tag, &cd);
+   if(instance->args[3] == 1998 && rtn)   // Boom specials 166/185 emulation
+      return rtn;
+
+   INIT_STRUCT(floordata_t, fd);
+   fd.direction = 0; // down
+   fd.target_type = FtoLnF;
+   fd.spac = instance->spac;
+   fd.flags = FDF_HAVESPAC;
+   fd.speed_type = SpeedParam;
+   fd.speed_value = instance->args[1] * (FRACUNIT / 8);
+   fd.crush = -1;
+
+   return EV_DoParamFloor(instance->line, instance->tag, &fd);
+}
+
+//
 // Implements HealThing(amount, maxhealth)
 //
 // * ExtraData:         469
@@ -4058,6 +4091,12 @@ DEFINE_ACTION(EV_ActionHealThing)
    return 0;
 }
 
+//
+// Implements Sector_SetRotation(tag, floor-angle, ceiling-angle)
+//
+// * ExtraData:         470
+// * Hexen (ZDoom):     185
+//
 DEFINE_ACTION(EV_ActionParamSectorSetRotation)
 {
    const line_t *line = instance->line;
@@ -4075,6 +4114,12 @@ DEFINE_ACTION(EV_ActionParamSectorSetRotation)
    return 1; // ZDoom always has this line as sucessful
 }
 
+//
+// Implements Sector_SetCeilingPanning(amount, tag, x-int, x-frac, y-int, y-frac)
+//
+// * ExtraData:         471
+// * Hexen (ZDoom):     186
+//
 DEFINE_ACTION(EV_ActionParamSectorSetCeilingPanning)
 {
    const line_t *line = instance->line;
@@ -4083,10 +4128,8 @@ DEFINE_ACTION(EV_ActionParamSectorSetCeilingPanning)
    // TODO: Once UDMF, let this work for line arg0 when in UDMF config.
    while((secnum = P_FindSectorFromTag(line->tag, secnum)) >= 0)
    {
-      // args[1] is the integer part, args[2] is the fractional part
       sectors[secnum].ceiling_xoffs =
          M_DoubleToFixed(line->args[1] + (line->args[2] * 0.01));
-      // args[3] is the integer part, args[4] is the fractional part
       sectors[secnum].ceiling_xoffs =
          M_DoubleToFixed(line->args[3] + (line->args[4] * 0.01));
    }
@@ -4094,6 +4137,12 @@ DEFINE_ACTION(EV_ActionParamSectorSetCeilingPanning)
    return 1; // ZDoom always has this line as sucessful
 }
 
+//
+// Implements Sector_SetFloorPanning(amount, tag, x-int, x-frac, y-int, y-frac)
+//
+// * ExtraData:         472
+// * Hexen (ZDoom):     187
+//
 DEFINE_ACTION(EV_ActionParamSectorSetFloorPanning)
 {
    const line_t *line = instance->line;
@@ -4102,10 +4151,8 @@ DEFINE_ACTION(EV_ActionParamSectorSetFloorPanning)
    // TODO: Once UDMF, let this work for line arg0 when in UDMF config.
    while((secnum = P_FindSectorFromTag(line->tag, secnum)) >= 0)
    {
-      // args[1] is the integer part, args[2] is the fractional part
       sectors[secnum].floor_xoffs =
          M_DoubleToFixed(line->args[1] + (line->args[2] * 0.01));
-      // args[3] is the integer part, args[4] is the fractional part
       sectors[secnum].floor_yoffs =
          M_DoubleToFixed(line->args[3] + (line->args[4] * 0.01));
    }

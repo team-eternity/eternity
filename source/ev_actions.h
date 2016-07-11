@@ -148,6 +148,7 @@ DECLARE_ACTION(EV_ActionParamFloorCrushStop);
 DECLARE_ACTION(EV_ActionParamFloorCeilingLowerByValue);
 DECLARE_ACTION(EV_ActionParamFloorCeilingRaiseByValue);
 DECLARE_ACTION(EV_ActionParamFloorGeneric);
+DECLARE_ACTION(EV_ActionParamFloorCeilingLowerRaise);
 DECLARE_ACTION(EV_ActionParamCeilingRaiseToHighest);
 DECLARE_ACTION(EV_ActionParamCeilingToHighestInstant);
 DECLARE_ACTION(EV_ActionParamCeilingRaiseToNearest);
@@ -249,6 +250,7 @@ DECLARE_ACTION(EV_ActionHealThing);
 DECLARE_ACTION(EV_ActionParamSectorSetRotation);
 DECLARE_ACTION(EV_ActionParamSectorSetCeilingPanning);
 DECLARE_ACTION(EV_ActionParamSectorSetFloorPanning);
+
 #endif
 
 // EOF
