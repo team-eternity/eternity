@@ -36,6 +36,7 @@
 #include "g_game.h"
 #include "metaapi.h"
 #include "p_info.h"
+#include "p_inter.h"
 #include "p_skin.h"
 #include "p_spec.h"
 #include "p_xenemy.h"
@@ -664,7 +665,10 @@ DEFINE_ACTION(EV_ActionBuildStairsTurbo16)
 
 //
 // EV_ActionTurnTagLightsOff
+// Also implements Light_MinNeighbor(tag)
 //
+// * ExtraData: 473
+// * Hexen:     233
 DEFINE_ACTION(EV_ActionTurnTagLightsOff)
 {
    // case 104: (W1)
@@ -672,7 +676,8 @@ DEFINE_ACTION(EV_ActionTurnTagLightsOff)
    // case 173: (S1 - BOOM Extended)
    // case 194: (SR - BOOM Extended)
    // Turn lights off in sector(tag)
-   return EV_TurnTagLightsOff(instance->line);
+   bool isParam = EV_IsParamLineSpec(instance->special);
+   return EV_TurnTagLightsOff(instance->line, instance->tag, isParam);
 }
 
 //
@@ -4058,8 +4063,8 @@ DEFINE_ACTION(EV_ActionHealThing)
       {
          maxhealth = info->spawnhealth;
       }
-      // Otherwise if second arg is 1, then set maxhealth to
-      // the maximum health provided by a SoulSphere.
+      // Otherwise if second arg is 1 and the SoulSphere's effect is present,
+      // then set maxhealth to the maximum health provided by a SoulSphere.
       else if(maxhealth == 1 && soulsphereeffect != nullptr)
       {
          maxhealth = soulsphereeffect->getInt("maxamount", 0);
@@ -4070,23 +4075,9 @@ DEFINE_ACTION(EV_ActionHealThing)
          maxhealth = info->spawnhealth + 100;
       }
 
-      // If the activator's health is already greater than or equal to maxamount
-      // then don't bother with healing, and don't activate the line.
-      if(instance->actor->health < maxhealth)
-      {
-         instance->actor->health += instance->line->args[0];
-
-         // cap to maxhealth
-         if(instance->actor->health > maxhealth)
-            instance->actor->health = maxhealth;
-
-
-         // propagate to Mob's player if it exists
-         if(instance->actor->player)
-            instance->actor->player->health = instance->actor->health;
-
+      // If the the activator can be given health then activate the switch
+      if(EV_HealThing(instance->actor, instance->line->args[0], maxhealth))
          return 1;
-      }
    }
    return 0;
 }

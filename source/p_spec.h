@@ -1412,7 +1412,7 @@ void EV_CloseDoor(int sectag, int speed);
 int EV_StartLightStrobing(const line_t *line, int tag, int darkTime,
                           int brightTime, bool isParam);
 
-int EV_TurnTagLightsOff(const line_t *line);
+int EV_TurnTagLightsOff(const line_t *line, int tag, bool isParam);
 
 int EV_LightTurnOn(const line_t *line, int tag, int bright, bool paramSpecial);
 

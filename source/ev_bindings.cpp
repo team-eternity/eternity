@@ -1102,6 +1102,7 @@ PARAMLINE(HealThing);
 PARAMLINE(ParamSectorSetRotation);
 PARAMLINE(ParamSectorSetFloorPanning);
 PARAMLINE(ParamSectorSetCeilingPanning);
+PARAMLINE(TurnTagLightsOff);
 
 //=============================================================================
 //
@@ -1501,6 +1502,7 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(470, ParamSectorSetRotation,          "Sector_SetRotation")
    LINESPECNAMED(471, ParamSectorSetFloorPanning,      "Sector_SetFloorPanning")
    LINESPECNAMED(472, ParamSectorSetCeilingPanning,    "Sector_SetCeilingPanning")
+   LINESPECNAMED(473, TurnTagLightsOff,                "Light_MinNeighbor")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1662,6 +1664,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(215, ParamTeleportLine,               "Teleport_Line")
    LINESPECNAMED(217, ParamStairsBuildUpDoom,          "Stairs_BuildUpDoom")
    LINESPECNAMED(232, ParamLightStrobeDoom,            "Light_StrobeDoom")
+   LINESPECNAMED(233, TurnTagLightsOff,                "Light_MinNeighbor")
    LINESPECNAMED(234, LightTurnOn,                     "Light_MaxNeighbor")
    LINESPECNAMED(235, ChangeOnly,                      "Floor_TransferTrigger")
    LINESPECNAMED(236, ChangeOnlyNumeric,               "Floor_TransferNumeric")
