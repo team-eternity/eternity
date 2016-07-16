@@ -276,11 +276,11 @@ bool P_GiveBody(player_t *player, itemeffect_t *effect)
 }
 
 //
-// EV_HealThing
+// EV_DoHealThing
 //
 // Returns false if the health isn't needed at all
 //
-bool EV_HealThing(Mobj *actor, int amount, int max)
+bool EV_DoHealThing(Mobj *actor, int amount, int max)
 {
    if(actor->health < max)
    {

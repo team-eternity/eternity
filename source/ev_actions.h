@@ -196,6 +196,7 @@ DECLARE_ACTION(EV_ActionPolyobjRotateRight);
 DECLARE_ACTION(EV_ActionPolyobjORRotateRight);
 DECLARE_ACTION(EV_ActionPolyobjRotateLeft);
 DECLARE_ACTION(EV_ActionPolyobjORRotateLeft);
+DECLARE_ACTION(EV_ActionPolyobjStop);
 DECLARE_ACTION(EV_ActionPillarBuild);
 DECLARE_ACTION(EV_ActionPillarBuildAndCrush );
 DECLARE_ACTION(EV_ActionPillarOpen);
