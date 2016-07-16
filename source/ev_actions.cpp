@@ -2702,7 +2702,7 @@ DEFINE_ACTION(EV_ActionPolyobjORRotateLeft)
 // EV_ActionPolyobjStop
 //
 // Implements EV_ActionPolyobjStop(id)
-// * ExtraData: 357
+// * ExtraData: 474
 // * Hexen:     87
 //
 DEFINE_ACTION(EV_ActionPolyobjStop)

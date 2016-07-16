@@ -1746,7 +1746,7 @@ int EV_DoPolyObjStop(int polyObjNum)
    polyobj_t *po;
    if(!(po = Polyobj_GetForNum(polyObjNum)))
    {
-      doom_printf(FC_ERROR "EV_DoPolyObjRotate: bad polyobj %d", polyObjNum);
+      doom_printf(FC_ERROR "EV_DoPolyObjStop: bad polyobj %d", polyObjNum);
       return 0;
    }
 
