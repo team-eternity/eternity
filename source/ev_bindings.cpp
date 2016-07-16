@@ -1045,6 +1045,7 @@ PARAMLINE(PolyobjRotateRight);
 PARAMLINE(PolyobjORRotateRight);
 PARAMLINE(PolyobjRotateLeft);
 PARAMLINE(PolyobjORRotateLeft);
+PARAMLINE(PolyobjStop);
 PARAMLINE(PillarBuild);
 PARAMLINE(PillarBuildAndCrush);
 PARAMLINE(PillarOpen);
@@ -1503,6 +1504,7 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(471, ParamSectorSetFloorPanning,      "Sector_SetFloorPanning")
    LINESPECNAMED(472, ParamSectorSetCeilingPanning,    "Sector_SetCeilingPanning")
    LINESPECNAMED(473, TurnTagLightsOff,                "Light_MinNeighbor")
+   LINESPECNAMED(474, PolyobjStop,                     "Polyobj_Stop")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1617,6 +1619,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(82,  ACSTerminate,                    "ACS_Terminate")
    LINESPECNAMED(83,  ACSLockedExecute,                "ACS_LockedExecute")
    LINESPECNAMED(84,  ACSExecuteWithResult,            "ACS_ExecuteWithResult")
+   LINESPECNAMED(87,  PolyobjStop,                     "Polyobj_Stop")
    LINESPECNAMED(90,  PolyobjORRotateLeft,             "Polyobj_OR_RotateLeft")
    LINESPECNAMED(91,  PolyobjORRotateRight,            "Polyobj_OR_RotateRight")
    LINESPECNAMED(92,  PolyobjORMove,                   "Polyobj_OR_Move")
