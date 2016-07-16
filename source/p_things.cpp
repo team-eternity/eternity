@@ -29,7 +29,9 @@
 #include "doomstat.h"
 #include "d_gi.h"
 #include "d_mod.h"
+#include "e_inventory.h"
 #include "ev_specials.h"
+#include "metaapi.h"
 #include "p_inter.h"
 #include "p_mobj.h"
 #include "p_map.h"
@@ -392,6 +394,54 @@ int EV_ThingDestroy(int tid, int sectortag)
       }
    }
    return success;
+}
+
+//
+// EV_HealThing
+//
+// Returns 0 if the health isn't needed at all
+//
+int EV_HealThing(Mobj *actor, line_t *line)
+{
+   if(actor)
+   {
+      itemeffect_t *soulsphereeffect = E_ItemEffectForName(ITEMNAME_SOULSPHERE);
+      mobjinfo_t *info = mobjinfo[actor->type];
+      int maxhealth = line->args[1];
+
+      // If second arg is 0, or the activator isn't a player
+      // then set the maxhealth to the activator's spawning health.
+      if(maxhealth == 0 || actor->player == nullptr)
+      {
+         maxhealth = info->spawnhealth;
+      }
+      // Otherwise if second arg is 1 and the SoulSphere's effect is present,
+      // then set maxhealth to the maximum health provided by a SoulSphere.
+      else if(maxhealth == 1 && soulsphereeffect != nullptr)
+      {
+         maxhealth = soulsphereeffect->getInt("maxamount", 0);
+      }
+      else if(maxhealth == 1 && soulsphereeffect == nullptr)
+      {
+         // FIXME: Handle this with a bit more finesse.
+         maxhealth = info->spawnhealth + 100;
+      }
+
+      // If the the activator can be given health then activate the switch
+      if(actor->health < maxhealth)
+      {
+         actor->health += line->args[0];
+         // cap to maxhealth
+         if(actor->health > maxhealth)
+            actor->health = maxhealth;
+         // propagate to Mobj's player if it exists
+         if(actor->player)
+            actor->player->health = actor->health;
+
+         return 1;
+      }
+   }
+   return 0;
 }
 
 //=============================================================================

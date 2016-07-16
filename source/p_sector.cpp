@@ -28,6 +28,7 @@
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "doomstat.h"
+#include "e_exdata.h"
 #include "e_reverbs.h"
 #include "e_things.h"
 #include "m_fixed.h"
@@ -35,6 +36,7 @@
 #include "p_saveg.h"
 #include "p_spec.h"
 #include "r_defs.h"
+#include "r_main.h" // For PI
 #include "r_state.h"
 #include "v_misc.h"
 
@@ -98,6 +100,69 @@ void P_NewSectorActionFromMobj(Mobj *actor)
       // TODO
    }
 #endif
+}
+
+//
+// EV_SectorSetRotation
+//
+// Set's the rotation of the floor or ceiling of tagged sectors
+//
+int EV_SectorSetRotation(const line_t *line, int tag)
+{
+   int secnum = -1;
+
+   // TODO: Once UDMF, let this work for line arg0 when in UDMF config.
+   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
+   {
+      sectors[secnum].floorangle = static_cast<float>
+         (E_NormalizeFlatAngle(line->args[1]) * PI / 180.0f);
+      sectors[secnum].ceilingangle = static_cast<float>
+         (E_NormalizeFlatAngle(line->args[2]) * PI / 180.0f);
+   }
+
+   return 1; // ZDoom always has this line as sucessful
+}
+
+//
+// EV_SectorSetCeilingPanning
+//
+// Set's the panning of the ceiling of tagged sectors
+//
+int EV_SectorSetCeilingPanning(const line_t *line, int tag)
+{
+   int secnum = -1;
+
+   // TODO: Once UDMF, let this work for line arg0 when in UDMF config.
+   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
+   {
+      sectors[secnum].ceiling_xoffs =
+         M_DoubleToFixed(line->args[1] + (line->args[2] * 0.01));
+      sectors[secnum].ceiling_xoffs =
+         M_DoubleToFixed(line->args[3] + (line->args[4] * 0.01));
+   }
+
+   return 1; // ZDoom always has this line as sucessful
+}
+
+//
+// EV_SectorSetFloorPanning
+//
+// Set's the panning of the floor of tagged sectors
+//
+int EV_SectorSetFloorPanning(const line_t *line, int tag)
+{
+   int secnum = -1;
+
+   // TODO: Once UDMF, let this work for line arg0 when in UDMF config.
+   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
+   {
+      sectors[secnum].floor_xoffs =
+         M_DoubleToFixed(line->args[1] + (line->args[2] * 0.01));
+      sectors[secnum].floor_yoffs =
+         M_DoubleToFixed(line->args[3] + (line->args[4] * 0.01));
+   }
+
+   return 1; // ZDoom always has this line as sucessful
 }
 
 //=============================================================================
