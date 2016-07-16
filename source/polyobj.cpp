@@ -1741,6 +1741,29 @@ int EV_DoPolyObjMove(polymovedata_t *pmdata)
    return 1;
 }
 
+int EV_DoPolyObjStop(int polyObjNum)
+{
+   polyobj_t *po;
+   if(!(po = Polyobj_GetForNum(polyObjNum)))
+   {
+      doom_printf(FC_ERROR "EV_DoPolyObjRotate: bad polyobj %d", polyObjNum);
+      return 0;
+   }
+
+   // don't allow line actions to affect bad polyobjects
+   if(po->flags & POF_ISBAD)
+      return 0;
+
+   // don't remove thinker if there is no thinker, but do successfully activate
+   if(po->thinker)
+   {
+      po->thinker->removeThinker();
+      po->thinker = nullptr;
+   }
+
+   return 1;
+}
+
 static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
 {
    PolySlideDoorThinker *th;

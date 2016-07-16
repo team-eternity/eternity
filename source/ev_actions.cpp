@@ -2699,6 +2699,18 @@ DEFINE_ACTION(EV_ActionPolyobjORRotateLeft)
 }
 
 //
+// EV_ActionPolyobjStop
+//
+// Implements EV_ActionPolyobjStop(id)
+// * ExtraData: 357
+// * Hexen:     87
+//
+DEFINE_ACTION(EV_ActionPolyobjStop)
+{  
+   return EV_DoPolyObjStop(instance->args[0]);
+}
+
+//
 // EV_ActionPillarBuild
 //
 // Implements Pillar_Build(tag, speed, height)
@@ -4076,7 +4088,7 @@ DEFINE_ACTION(EV_ActionHealThing)
       }
 
       // If the the activator can be given health then activate the switch
-      if(EV_HealThing(instance->actor, instance->line->args[0], maxhealth))
+      if(EV_DoHealThing(instance->actor, instance->line->args[0], maxhealth))
          return 1;
    }
    return 0;

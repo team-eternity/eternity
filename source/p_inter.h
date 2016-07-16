@@ -48,7 +48,7 @@ void P_RaiseCorpse(Mobj *corpse, const Mobj *raiser);
 
 // MaxW: 2016/07/14:
 // Used by HealThing line actions
-bool EV_HealThing(Mobj *actor, int amount, int max);
+bool EV_DoHealThing(Mobj *actor, int amount, int max);
 
 // killough 5/2/98: moved from d_deh.c, g_game.c, m_misc.c, others:
 
