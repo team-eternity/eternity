@@ -1759,6 +1759,7 @@ int EV_DoPolyObjStop(int polyObjNum)
    {
       po->thinker->removeThinker();
       po->thinker = nullptr;
+      S_StopPolySequence(po);
    }
 
    return 1;
