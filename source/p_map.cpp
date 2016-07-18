@@ -265,6 +265,11 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
    {
       for (m = mo->touching_sectorlist; m; m = m->m_tnext)
       {
+         if(useportalgroups && full_demo_version >= make_full_version(340, 48) &&
+            !P_SectorTouchesThingVertically(m->m_sector, mo))
+         {
+            continue;
+         }
          if((sec = m->m_sector)->flags & SECF_FRICTION &&
             (sec->friction < friction || friction == ORIG_FRICTION) &&
             (mo->z <= sec->floorheight ||
