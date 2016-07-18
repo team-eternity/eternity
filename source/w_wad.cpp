@@ -835,7 +835,7 @@ public:
    qstring innerpath;   // path from within the archive dir (for namespace)
    off_t size;          // file size
 
-   ArchiveDirFile() : size(0)
+   ArchiveDirFile() : path(), innerpath(), size(0)
    {
    }
 
