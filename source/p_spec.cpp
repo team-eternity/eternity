@@ -1320,6 +1320,7 @@ void P_SpawnSpecials()
       case EV_STATIC_PORTAL_LINKED_FLOOR:
       case EV_STATIC_PORTAL_LINKED_LINE2LINE:
       case EV_STATIC_PORTAL_HORIZON_LINE:
+      case EV_STATIC_POLYOBJ_START_LINE:
          P_SpawnPortal(&lines[i], staticFn);
          break;
       
@@ -2460,12 +2461,24 @@ static void P_SpawnPortal(line_t *line, int staticFn)
    int       fromid, toid;
 
    // haleyjd: get type and effects from static init function
-   P_getPortalProps(staticFn, type, effects);
+   if(staticFn == EV_STATIC_POLYOBJ_START_LINE)
+   {
+      if(line->args[4])
+      {
+         type = portal_linked;
+         effects = portal_lineonly;
+      }
+      else
+         return;
+   }
+   else
+      P_getPortalProps(staticFn, type, effects);
 
    if(!(sector = line->frontsector))
       return;
 
    // create the appropriate type of portal
+   int tmp = 0;
    switch(type)
    {
    case portal_plane:
@@ -2584,7 +2597,8 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          anchorfunc = EV_STATIC_PORTAL_LINKED_ANCHOR_FLOOR;
          planez = sector->ceilingheight;
       }
-      else if(staticFn == EV_STATIC_PORTAL_LINKED_LINE2LINE) 
+      else if(staticFn == EV_STATIC_PORTAL_LINKED_LINE2LINE ||
+              staticFn == EV_STATIC_POLYOBJ_START_LINE)
       {
          // Line-Line linked portals
          anchorfunc = EV_STATIC_PORTAL_LINKED_L2L_ANCHOR;
@@ -2595,6 +2609,13 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       anchortype = EV_SpecialForStaticInit(anchorfunc);
 
       // find anchor line
+
+      if(staticFn == EV_STATIC_POLYOBJ_START_LINE)
+      {
+         tmp = line->tag;
+         line->tag = line->args[4];
+      }
+
       for(s = -1; (s = P_FindLineFromLineTag(line, s)) >= 0; )
       {
          // SoM 3-10-04: Two different anchor linedef codes so I can tag 
@@ -2605,6 +2626,10 @@ static void P_SpawnPortal(line_t *line, int staticFn)
 
          break;
       }
+
+      if(staticFn == EV_STATIC_POLYOBJ_START_LINE)
+         line->tag = tmp;
+
       if(s < 0)
       {
          C_Printf(FC_ERROR "No anchor line for portal. (line %i)\a\n", line - lines);
@@ -2626,7 +2651,8 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       portal = R_GetLinkedPortal(line - lines, s, planez, fromid, toid);
 
       // Special case where the portal was created with the line-to-line portal type
-      if(staticFn == EV_STATIC_PORTAL_LINKED_LINE2LINE)
+      if(staticFn == EV_STATIC_PORTAL_LINKED_LINE2LINE ||
+         staticFn == EV_STATIC_POLYOBJ_START_LINE)
       {
          P_SetPortal(lines[s].frontsector, lines + s, portal, portal_lineonly);
          
