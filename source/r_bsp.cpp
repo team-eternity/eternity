@@ -1635,7 +1635,7 @@ static void R_AddLine(seg_t *line, bool dynasegs)
       // only reject if they're anchored portals (including linked)
       rportaltype_e type = portalrender.curwindow->portal->type;
 
-      if((type == R_LINKED || type == R_ANCHORED) &&
+      if((type == R_LINKED || type == R_ANCHORED || type == R_TWOWAY) &&
          !R_allowBehindLinePortal(portalrender.curwindow->line, line->linedef))
       {
          return;
@@ -2247,8 +2247,7 @@ static void R_Subsector(int num)
 
    // ioanch 20160120: don't draw from other group ids than the intended one
    // Also ignore sectors behind portal lines
-   if(//seg.frontsec->portalbox || 
-      (portalrender.active &&
+   if((portalrender.active &&
        portalrender.curwindow->portal->type == R_LINKED &&
        portalrender.curwindow->portal->data.link.toid != seg.frontsec->groupid))
    {

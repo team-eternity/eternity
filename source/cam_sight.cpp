@@ -2083,7 +2083,7 @@ bool UseContext::useTraverse(const intercept_t *in, void *vcontext,
    else
       CAM_lineOpening(lo, li);
 
-   if(clip.openrange <= 0)
+   if(lo.openrange <= 0)
    {
       // can't use through a wall
       S_StartSound(context->thing, GameModeInfo->playerSounds[sk_noway]);
@@ -2137,9 +2137,9 @@ bool UseContext::noWayTraverse(const intercept_t *in, void *vcontext,
    const UseContext *context = static_cast<const UseContext *>(vcontext);
 
    return 
-      !(clip.openrange  <= 0 ||                                  // No opening
-        clip.openbottom > context->thing->z + STEPSIZE ||// Too high, it blocks
-        clip.opentop    < context->thing->z + context->thing->height);
+      !(lo.openrange  <= 0 ||                                  // No opening
+        lo.openbottom > context->thing->z + STEPSIZE ||// Too high, it blocks
+        lo.opentop    < context->thing->z + context->thing->height);
    // Too low, it blocks
 }
 

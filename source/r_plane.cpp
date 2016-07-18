@@ -1128,9 +1128,8 @@ static void do_draw_plane(visplane_t *pl)
       int picnum = texturetranslation[pl->picnum];
 
       // haleyjd 05/19/06: rewritten to avoid crashes
-      if(((r_swirl && textures[pl->picnum]->flags & TF_ANIMATED)
+      if((r_swirl && textures[pl->picnum]->flags & TF_ANIMATED)
          || textures[pl->picnum]->flags & TF_SWIRLY)
-         && textures[pl->picnum]->flatsize == FLAT_64)
       {
          plane.source = R_DistortedFlat(pl->picnum);
          tex = plane.tex = textures[pl->picnum];
