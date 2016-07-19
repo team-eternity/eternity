@@ -175,6 +175,9 @@ enum
    // SoM
    SEG_MARKCOVERLAY = 0x10,
    SEG_MARKFOVERLAY = 0x20,
+
+   // ioanch
+   SEG_MARK1SLPORTAL = 0x40,
 };
 
 struct side_t;
