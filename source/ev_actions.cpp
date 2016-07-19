@@ -3118,14 +3118,25 @@ DEFINE_ACTION(EV_ActionParamPlatUpByValue)
 }
 
 //
+// EV_ActionPlatRaiseNearestChange
+//
+// Implements Plat_RaiseAndStayTx0(tag, speed, lockout)
+// * ExtraData: 475
+// * Hexen:     228
+DEFINE_ACTION(EV_ActionParamPlatRaiseNearestChange)
+{
+   return EV_DoParamPlat(instance->line, instance->args, paramRaiseToNearestAndChange);
+}
+
+//
 // EV_ActionPlatRaiseParamChange
 //
 // Implements Plat_UpByValueStayTx(tag, speed, height)
-// * ExtraData: 475
+// * ExtraData: 476
 // * Hexen:     230
-DEFINE_ACTION(EV_ActionPlatRaiseParamChange)
+DEFINE_ACTION(EV_ActionParamPlatRaiseChange)
 {
-   return EV_DoParamPlat(instance->line, instance->args, paramUpByValueStayChange);
+   return EV_DoParamPlat(instance->line, instance->args, paramUpByValueStayAndChange);
 }
 
 //
