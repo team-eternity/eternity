@@ -413,7 +413,8 @@ typedef enum
    paramDownByValueWaitUpStay,
    paramUpWaitDownStay,
    paramUpByValueWaitDownStay,
-   paramPerpetualRaise
+   paramPerpetualRaise,
+   paramUpByValueStayChange
 } paramplattype_e;
 
 // p_doors

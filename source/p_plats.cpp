@@ -415,6 +415,7 @@ bool EV_DoParamPlat(const line_t *line, const int *args, paramplattype_e type)
    int       secnum = -1;
    bool      manual = false;
    bool      rtn    = false;
+   const char *platTypeStr = "EEPlatNormal";
 
    if(!args[0])
    {
@@ -498,12 +499,26 @@ manual_plat:
             plat->high = sec->floorheight;
          break;
 
+      case paramUpByValueStayChange:
+         plat->type   = raiseAndChange;
+         plat->status = PlatThinker::up;
+         platTypeStr = "EEPlatRaise";
+         sec->floorpic = sides[line->sidenum[0]].sector->floorpic;         
+         plat->high   = sec->floorheight + args[2] * 8 * FRACUNIT;
+         plat->wait = 0; // We need to override the earlier setting of this
+         
+         if(plat->high < sec->floorheight)
+            plat->high = sec->floorheight;
+
+         break;
+
       default:
          break;
       }
 
       plat->addActivePlat();
-      P_PlatSequence(sec, "EEPlatNormal");
+      // MaxW 2016/07/19: No longer always "EEPlatNormal"
+      P_PlatSequence(sec, platTypeStr);
 
       if(manual)
          return rtn;

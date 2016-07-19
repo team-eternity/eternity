@@ -3118,6 +3118,17 @@ DEFINE_ACTION(EV_ActionParamPlatUpByValue)
 }
 
 //
+// EV_ActionPlatRaiseParamChange
+//
+// Implements Plat_UpByValueStayTx(tag, speed, height)
+// * ExtraData: 475
+// * Hexen:     230
+DEFINE_ACTION(EV_ActionPlatRaiseParamChange)
+{
+   return EV_DoParamPlat(instance->line, instance->args, paramUpByValueStayChange);
+}
+
+//
 // EV_ActionThingChangeTID
 //
 // Implements Thing_ChangeTID(oldtid, newtid)
