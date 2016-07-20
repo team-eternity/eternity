@@ -102,6 +102,7 @@ struct linkdata_t
    // SoM: linked portals are similar to anchored portals
    fixed_t   deltax, deltay, deltaz;
    fixed_t   planez;
+   angle_t   rotation;
    
    // fromid is the group where the portal actually is, toid is the group on 
    // the 'other side' of the portal.
@@ -121,6 +122,7 @@ struct linkdata_t
 struct anchordata_t
 {
    fixed_t   deltax, deltay, deltaz;
+   angle_t   rotation;
    
    // These are for debug purposes (so mappers can find the portats 
    // causing problems)

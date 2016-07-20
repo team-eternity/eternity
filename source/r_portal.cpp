@@ -31,6 +31,7 @@
 #include "i_system.h"
 
 #include "c_io.h"
+#include "p_maputl.h"
 #include "r_bsp.h"
 #include "r_draw.h"
 #include "r_main.h"
@@ -348,14 +349,21 @@ static portal_t *R_CreatePortal()
 // Calculates the deltas (offset) between two linedefs.
 //
 static void R_CalculateDeltas(int markerlinenum, int anchorlinenum, 
-                              fixed_t *dx, fixed_t *dy, fixed_t *dz)
+                              fixed_t *dx, fixed_t *dy, fixed_t *dz,
+                              angle_t *rotation)
 {
-   line_t *m = lines + markerlinenum;
-   line_t *a = lines + anchorlinenum;
+   const line_t *m = lines + markerlinenum;
+   const line_t *a = lines + anchorlinenum;
+
+   angle_t angle1 = P_PointToAngle(m->v1->x, m->v1->y, m->v2->x, m->v2->y);
+
+   // anchor points opposite direction
+   angle_t angle2 = P_PointToAngle(a->v2->x, a->v2->y, a->v1->x, a->v1->y);
 
    *dx = ((m->v1->x + m->v2->x) / 2) - ((a->v1->x + a->v2->x) / 2);
    *dy = ((m->v1->y + m->v2->y) / 2) - ((a->v1->y + a->v2->y) / 2);
    *dz = 0; /// ???
+   *rotation = angle2 - angle1;
 }
 
 //
@@ -370,7 +378,8 @@ portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum)
    edefstructvar(anchordata_t, adata);
 
    R_CalculateDeltas(markerlinenum, anchorlinenum, 
-                     &adata.deltax, &adata.deltay, &adata.deltaz);
+                     &adata.deltax, &adata.deltay, &adata.deltaz,
+                     &adata.rotation);
 
    adata.maker = markerlinenum;
    adata.anchor = anchorlinenum;
@@ -380,7 +389,8 @@ portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum)
       if(rover->type != R_ANCHORED || 
          adata.deltax != rover->data.anchor.deltax ||
          adata.deltay != rover->data.anchor.deltay ||
-         adata.deltaz != rover->data.anchor.deltaz)
+         adata.deltaz != rover->data.anchor.deltaz ||
+         adata.rotation != rover->data.anchor.rotation)
          continue;
 
       return rover;
@@ -408,7 +418,8 @@ portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum)
    edefstructvar(anchordata_t, adata);
 
    R_CalculateDeltas(markerlinenum, anchorlinenum, 
-                     &adata.deltax, &adata.deltay, &adata.deltaz);
+                     &adata.deltax, &adata.deltay, &adata.deltaz,
+                     &adata.rotation);
 
    adata.maker = markerlinenum;
    adata.anchor = anchorlinenum;
@@ -418,7 +429,8 @@ portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum)
       if(rover->type  != R_TWOWAY                  || 
          adata.deltax != rover->data.anchor.deltax ||
          adata.deltay != rover->data.anchor.deltay ||
-         adata.deltaz != rover->data.anchor.deltaz)
+         adata.deltaz != rover->data.anchor.deltaz ||
+         adata.rotation != rover->data.anchor.rotation)
          continue;
 
       return rover;
@@ -1289,7 +1301,8 @@ portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,
    ldata.planez = planez;
 
    R_CalculateDeltas(markerlinenum, anchorlinenum, 
-                     &ldata.deltax, &ldata.deltay, &ldata.deltaz);
+                     &ldata.deltax, &ldata.deltay, &ldata.deltaz,
+                     &ldata.rotation);
 
    ldata.maker = markerlinenum;
    ldata.anchor = anchorlinenum;
