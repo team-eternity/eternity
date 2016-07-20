@@ -25,6 +25,7 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "linkoffs.h"
 #include "m_vector.h"
 #include "r_main.h"
 
@@ -172,6 +173,73 @@ void M_CrossProduct3 (v3double_t *dest, const v3double_t *v1, const v3double_t *
    tmp.y = (v1->z * v2->x) - (v1->x * v2->z);
    tmp.z = (v1->x * v2->y) - (v1->y * v2->x);
    memcpy(dest, &tmp, sizeof(v3double_t));
+}
+
+//=============================================================================
+//
+// linkmatrix_t methods
+//
+//=============================================================================
+
+void linkmatrix_t::rotate(angle_t angle)
+{
+    // be careful of straight angles
+    if(angle == 0)
+        return;
+    rotation += angle;
+    if(angle == ANG90)
+    {
+        a[0][0] = -a[1][0];
+        a[0][1] = -a[1][1];
+        a[0][2] = -a[1][2];
+        a[1][0] = a[0][0];
+        a[1][1] = a[0][1];
+        a[1][2] = a[0][2];
+        return;
+    }
+    if(angle == ANG180)
+    {
+        a[0][0] = -a[0][0];
+        a[0][1] = -a[0][1];
+        a[0][2] = -a[0][2];
+        a[1][0] = -a[1][0];
+        a[1][1] = -a[1][1];
+        a[1][2] = -a[1][2];
+        return;
+    }
+    if(angle == ANG270)
+    {
+        a[0][0] = a[1][0];
+        a[0][1] = a[1][1];
+        a[0][2] = a[1][2];
+        a[1][0] = -a[0][0];
+        a[1][1] = -a[0][1];
+        a[1][2] = -a[0][2];
+        return;
+    }
+    unsigned fine = angle >> ANGLETOFINESHIFT;
+    fixed_t cosine = finecosine[fine];
+    fixed_t sine = finesine[fine];
+    a[0][0] = FixedMul(cosine, a[0][0]) - FixedMul(sine, a[1][0]);
+    a[0][1] = FixedMul(cosine, a[0][1]) - FixedMul(sine, a[1][1]);
+    a[0][2] = FixedMul(cosine, a[0][2]) - FixedMul(sine, a[1][2]);
+    a[1][0] = FixedMul(sine, a[0][0]) + FixedMul(cosine, a[1][0]);
+    a[1][1] = FixedMul(sine, a[0][1]) + FixedMul(cosine, a[1][1]);
+    a[1][2] = FixedMul(sine, a[0][2]) + FixedMul(cosine, a[1][2]);
+}
+
+void linkmatrix_t::portal(fixed_t ox, fixed_t oy, fixed_t dx, fixed_t dy, angle_t angle)
+{
+    // Formula: D P A P^-1
+    // identity assumed
+    if(!angle)
+    {
+        translate(dx, dy); // quick out
+        return;
+    }
+    translate(-ox, -oy);
+    rotate(angle);
+    translate(ox + dx, oy + dy);
 }
 
 // EOF
