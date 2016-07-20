@@ -1019,7 +1019,7 @@ static void do_draw_plane(visplane_t *pl)
       return;
 
    // haleyjd: hexen-style skies
-   if(LevelInfo.doubleSky)
+   if(R_IsSkyFlat(pl->picnum) && LevelInfo.doubleSky)
    {
       do_draw_newsky(pl);
       return;
