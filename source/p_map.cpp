@@ -2781,19 +2781,61 @@ static bool PIT_GetSectors(line_t *ld, polyobj_s *po)
    // allowed to move to this position, then the sector_list
    // will be attached to the Thing's Mobj at touching_sectorlist.
 
-   pClip->sector_list = P_AddSecnode(ld->frontsector, pClip->thing, pClip->sector_list);
+   if(pClip->thing->groupid != ld->frontsector->groupid)
+   {
+      // similar behaviour to PIT_CheckLine3D
+      v2fixed_t inters = P_BoxLinePoint(bbox, ld);
+      v2fixed_t i2;
 
-   // Don't assume all lines are 2-sided, since some Things
-   // like teleport fog are allowed regardless of whether their 
-   // radius takes them beyond an impassable linedef.
-   
-   // killough 3/27/98, 4/4/98:
-   // Use sidedefs instead of 2s flag to determine two-sidedness.
-   // killough 8/1/98: avoid duplicate if same sector on both sides
+      angle_t angle = P_PointToAngle(ld->v1->x, ld->v1->y, ld->dx, ld->dy);
+      angle -= ANG90;
+      i2 = inters;
+      i2.x += FixedMul(FRACUNIT >> 12, finecosine[angle >> ANGLETOFINESHIFT]);
+      i2.y += FixedMul(FRACUNIT >> 12, finesine[angle >> ANGLETOFINESHIFT]);
 
-   if(ld->backsector && ld->backsector != ld->frontsector)
-      pClip->sector_list = P_AddSecnode(ld->backsector, pClip->thing, pClip->sector_list);
-   
+      if(P_PointReachesGroupVertically(i2.x, i2.y, ld->frontsector->floorheight,
+                                       ld->frontsector->groupid,
+                                       pClip->thing->groupid, ld->frontsector,
+                                       pClip->thing->z))
+      {
+         pClip->sector_list = P_AddSecnode(ld->frontsector, pClip->thing,
+                                           pClip->sector_list);
+      }
+
+      if(ld->backsector && ld->backsector != ld->frontsector)
+      {
+         angle += ANG180;
+         i2 = inters;
+         i2.x += FixedMul(FRACUNIT >> 12, finecosine[angle >> ANGLETOFINESHIFT]);
+         i2.y += FixedMul(FRACUNIT >> 12, finesine[angle >> ANGLETOFINESHIFT]);
+         if(P_PointReachesGroupVertically(i2.x, i2.y,
+                                          ld->backsector->floorheight,
+                                          ld->backsector->groupid,
+                                          pClip->thing->groupid, ld->backsector,
+                                          pClip->thing->z))
+         {
+            pClip->sector_list = P_AddSecnode(ld->backsector, pClip->thing, pClip->sector_list);
+         }
+      }
+   }
+   else
+   {
+      pClip->sector_list = P_AddSecnode(ld->frontsector, pClip->thing, pClip->sector_list);
+
+      // Don't assume all lines are 2-sided, since some Things
+      // like teleport fog are allowed regardless of whether their
+      // radius takes them beyond an impassable linedef.
+
+      // killough 3/27/98, 4/4/98:
+      // Use sidedefs instead of 2s flag to determine two-sidedness.
+      // killough 8/1/98: avoid duplicate if same sector on both sides
+
+      if(ld->backsector && ld->backsector != ld->frontsector)
+         pClip->sector_list = P_AddSecnode(ld->backsector, pClip->thing,
+                                           pClip->sector_list);
+
+   }
+
    return true;
 }
 
@@ -2864,16 +2906,18 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
             }
             else
             {
-               const linkoffset_t *link = P_GetLinkOffset(
-                  pClip->thing->groupid, groupid);
-
-               // Get the sector from PREVIOUS groupid
-               sector_t *sector = R_PointInSubsector(pClip->x + link->x,
-                  pClip->y + link->y)->sector;
-
-               // Add it
-               pClip->sector_list = P_AddSecnode(sector, pClip->thing,
-                  pClip->sector_list);
+               sector_t *sector
+               = P_PointReachesGroupVertically(pClip->x, pClip->y,
+                                               pClip->thing->z,
+                                               pClip->thing->groupid, groupid,
+                                               pClip->thing->subsector->sector,
+                                               pClip->thing->z);
+               if(sector)
+               {
+                  // Add it
+                  pClip->sector_list = P_AddSecnode(sector, pClip->thing,
+                                                    pClip->sector_list);
+               }
             }
          }
          P_BlockLinesIterator(x, y, PIT_GetSectors, groupid);
