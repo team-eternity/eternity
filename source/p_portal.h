@@ -225,11 +225,12 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
 bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj);
 
 // ioanch 20160222
-bool P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
-                                   int cgroupid, int tgroupid, const sector_t *csector,
-                                   fixed_t midzhint);
-inline static bool P_ThingReachesGroupVertically(const Mobj *mo, int groupid, 
-                                                 fixed_t midzhint)
+sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
+                                        int cgroupid, int tgroupid,
+                                        sector_t *csector, fixed_t midzhint);
+inline static sector_t *P_ThingReachesGroupVertically(const Mobj *mo,
+                                                      int groupid,
+                                                      fixed_t midzhint)
 {
    return P_PointReachesGroupVertically(mo->x, mo->y, mo->z + mo->height / 2,
       mo->groupid, groupid, mo->subsector->sector, midzhint);

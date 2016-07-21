@@ -1399,14 +1399,16 @@ bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj)
 // P_ThingReachesGroupVertically
 //
 // Simple function that just checks if mobj is in a position that vertically
-// points to groupid. THis does NOT change gGroupVisit.
+// points to groupid. This does NOT change gGroupVisit.
 //
-bool P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
-                                   int cgroupid, int tgroupid, const sector_t *csector,
-                                   fixed_t midzhint)
+// Returns the sector that's reached, or nullptr if group is not reached
+//
+sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
+                                        int cgroupid, int tgroupid,
+                                        sector_t *csector, fixed_t midzhint)
 {
    if(cgroupid == tgroupid)
-      return true;
+      return csector;
 
    static bool *groupVisit;
    if(!groupVisit)
@@ -1436,7 +1438,7 @@ bool P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
       portal[1] = &sector_t::f_portal;
    }
 
-   const sector_t *sector;
+   sector_t *sector;
    int groupid;
    fixed_t x, y;
    
@@ -1456,13 +1458,13 @@ bool P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
          sector = R_PointInSubsector(x, y)->sector;
          groupid = sector->groupid;
          if(groupid == tgroupid)
-            return true;
+            return sector;
          if(groupVisit[groupid])
             break;
          groupVisit[groupid] = true;
       }
    }
-   return false;
+   return nullptr;
 }
 
 //
