@@ -263,7 +263,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
       {
          if(ld->backsector)
          {
-            angle += 180;
+            angle += ANG180;
             i2 = inters;
             i2.x += FixedMul(FRACUNIT >> 12, finecosine[angle >> ANGLETOFINESHIFT]);
             i2.y += FixedMul(FRACUNIT >> 12, finesine[angle >> ANGLETOFINESHIFT]);
