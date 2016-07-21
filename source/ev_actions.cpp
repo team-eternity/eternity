@@ -36,7 +36,7 @@
 #include "g_game.h"
 #include "metaapi.h"
 #include "p_info.h"
-#include "p_inter.h"
+#include "p_sector.h"
 #include "p_skin.h"
 #include "p_spec.h"
 #include "p_xenemy.h"
@@ -4085,35 +4085,7 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingLowerRaise)
 //
 DEFINE_ACTION(EV_ActionHealThing)
 {
-   if(instance->actor)
-   {
-      itemeffect_t *soulsphereeffect = E_ItemEffectForName(ITEMNAME_SOULSPHERE);
-      mobjinfo_t *info = mobjinfo[instance->actor->type];
-      int maxhealth = instance->line->args[1];
-
-      // If second arg is 0, or the activator isn't a player
-      // then set the maxhealth to the activator's spawning health.
-      if(maxhealth == 0 || instance->actor->player == nullptr)
-      {
-         maxhealth = info->spawnhealth;
-      }
-      // Otherwise if second arg is 1 and the SoulSphere's effect is present,
-      // then set maxhealth to the maximum health provided by a SoulSphere.
-      else if(maxhealth == 1 && soulsphereeffect != nullptr)
-      {
-         maxhealth = soulsphereeffect->getInt("maxamount", 0);
-      }
-      else if(maxhealth == 1 && soulsphereeffect == nullptr)
-      {
-         // FIXME: Handle this with a bit more finesse.
-         maxhealth = info->spawnhealth + 100;
-      }
-
-      // If the the activator can be given health then activate the switch
-      if(EV_DoHealThing(instance->actor, instance->line->args[0], maxhealth))
-         return 1;
-   }
-   return 0;
+  return EV_HealThing(instance->actor, instance->line);
 }
 
 //
@@ -4124,19 +4096,7 @@ DEFINE_ACTION(EV_ActionHealThing)
 //
 DEFINE_ACTION(EV_ActionParamSectorSetRotation)
 {
-   const line_t *line = instance->line;
-   int secnum = -1;
-
-   // TODO: Once UDMF, let this work for line arg0 when in UDMF config.
-   while((secnum = P_FindSectorFromTag(instance->tag, secnum)) >= 0)
-   {
-      sectors[secnum].floorangle = static_cast<float>
-         (E_NormalizeFlatAngle(line->args[1]) * PI / 180.0f);
-      sectors[secnum].ceilingangle = static_cast<float>
-         (E_NormalizeFlatAngle(line->args[2]) * PI / 180.0f);
-   }
-
-   return 1; // ZDoom always has this line as sucessful
+   return EV_SectorSetRotation(instance->line, instance->tag);
 }
 
 //
@@ -4147,19 +4107,7 @@ DEFINE_ACTION(EV_ActionParamSectorSetRotation)
 //
 DEFINE_ACTION(EV_ActionParamSectorSetCeilingPanning)
 {
-   const line_t *line = instance->line;
-   int secnum = -1;
-
-   // TODO: Once UDMF, let this work for line arg0 when in UDMF config.
-   while((secnum = P_FindSectorFromTag(instance->tag, secnum)) >= 0)
-   {
-      sectors[secnum].ceiling_xoffs =
-         M_DoubleToFixed(line->args[1] + (line->args[2] * 0.01));
-      sectors[secnum].ceiling_xoffs =
-         M_DoubleToFixed(line->args[3] + (line->args[4] * 0.01));
-   }
-
-   return 1; // ZDoom always has this line as sucessful
+   return EV_SectorSetCeilingPanning(instance->line, instance->tag);
 }
 
 //
@@ -4170,19 +4118,7 @@ DEFINE_ACTION(EV_ActionParamSectorSetCeilingPanning)
 //
 DEFINE_ACTION(EV_ActionParamSectorSetFloorPanning)
 {
-   const line_t *line = instance->line;
-   int secnum = -1;
-
-   // TODO: Once UDMF, let this work for line arg0 when in UDMF config.
-   while((secnum = P_FindSectorFromTag(instance->tag, secnum)) >= 0)
-   {
-      sectors[secnum].floor_xoffs =
-         M_DoubleToFixed(line->args[1] + (line->args[2] * 0.01));
-      sectors[secnum].floor_yoffs =
-         M_DoubleToFixed(line->args[3] + (line->args[4] * 0.01));
-   }
-
-   return 1; // ZDoom always has this line as sucessful
+   return EV_SectorSetFloorPanning(instance->line, instance->tag);
 }
 
 // EOF
