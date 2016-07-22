@@ -384,5 +384,49 @@ ammoeffect RocketBox
   amount 5
 }
 
+//=============================================================================
+//
+// Power Givers (All Doom powerups are NOT artefacts)
+//
+
+powereffect InvulnSphere
+{
+  duration 30
+  type     PowerInvulnerable
+}
+
+powereffect BerserkBox
+{
+  duration 1
+  type     PowerStrength
+
+  +permanent
+}
+powereffect InvisiSphere
+{
+  duration 60
+  type     PowerPartialInvisibility
+}
+
+powereffect RadiationSuit
+{
+  duration 60
+  type     PowerIronFeet
+}
+
+powereffect ComputerMap
+{
+  duration 1
+  type     PowerAllmap
+
+  +permanent
+}
+
+powereffect LightAmpVisor
+{
+  duration 120
+  type     PowerLightAmp
+}
+
 
 

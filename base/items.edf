@@ -55,3 +55,83 @@ lockdef 228
    remotemessage: "Any key will activate this object";
 }
 
+//
+// Common powers, and cheat powers
+//
+powereffect TotalInvisiSphere
+{
+  duration 60
+  type     PowerTotalInvisibility
+}
+
+powereffect CheatInvulnerable
+{
+  duration 30
+  type     PowerInvulnerable
+}
+
+powereffect CheatStrength
+{
+  duration 1
+  type     PowerStrength
+
+  +permanent
+}
+powereffect CheatInvisibility
+{
+  duration 60
+  type     PowerPartialInvisibility
+}
+
+powereffect CheatIronFeet
+{
+  duration 60
+  type     PowerIronFeet
+}
+
+powereffect CheatAllmap
+{
+  duration 1
+  type     PowerAllmap
+
+  +permanent
+}
+
+powereffect CheatInfrared
+{
+  duration 120
+  type     PowerLightAmp
+}
+
+powereffect CheatTotalInvisibility
+{
+  duration 60
+  type     PowerTotalInvisibility
+}
+
+powereffect CheatGhost
+{
+  duration 60
+  type     PowerGhost
+}
+
+powereffect CheatSilent
+{
+  duration 1
+  type     PowerSilent
+
+    +permanent
+}
+
+powereffect CheatFlight
+{
+  duration 60
+  type     PowerFlight
+}
+
+powereffect CheatTorch
+{
+   duration 120
+   type     PowerTorch
+}
+

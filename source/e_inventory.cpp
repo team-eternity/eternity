@@ -168,6 +168,7 @@ MetaTable *E_GetItemEffects()
 #define KEY_LOWMESSAGE     "lowmessage"
 #define KEY_MAXAMOUNT      "maxamount"
 #define KEY_MAXSAVEAMOUNT  "maxsaveamount"
+#define KEY_PERMANENT      "permanent"
 #define KEY_SAVEAMOUNT     "saveamount"
 #define KEY_SAVEDIVISOR    "savedivisor"
 #define KEY_SAVEFACTOR     "savefactor"
@@ -242,7 +243,7 @@ cfg_opt_t edf_powerfx_opts[] =
    CFG_STR(KEY_TYPE,      "", CFGF_NONE), // name of powerup effect to give
 
    CFG_FLAG(KEY_ADDITIVETIME, 0, CFGF_SIGNPREFIX), // if +, adds to current duration
-
+   CFG_FLAG(KEY_PERMANENT,    0, CFGF_SIGNPREFIX), // if +, lasts forever
    // TODO: support HUBPOWER and PERSISTENTPOWER properties, etc.
 
    CFG_END()

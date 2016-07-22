@@ -65,7 +65,8 @@ typedef int artitype_t;
 
 // Hard-coded names for specially treated items (needed in DeHackEd, etc.)
 // INVENTORY_TODO: many may become unneeded when P_TouchSpecialThing is finished
-#define ITEMNAME_BERSERKHEALTH "BerserkHealth"
+#define ITEMNAME_BERSERKHEALTH "BerserkHealth" // The health
+#define ITEMNAME_BERZERKBOX    "BerserkBox" // The power
 #define ITEMNAME_HEALTHBONUS   "HealthBonus"
 #define ITEMNAME_MEDIKIT       "Medikit"
 #define ITEMNAME_MEGASPHERE    "MegasphereHealth"
@@ -77,6 +78,12 @@ typedef int artitype_t;
 #define ITEMNAME_SILVERSHIELD  "SilverShield"
 #define ITEMNAME_ENCHANTEDSHLD "EnchantedShield"
 #define ITEMNAME_ARMORBONUS    "ArmorBonus"
+#define ITEMNAME_INVULNSPHERE  "InvulnSphere"
+#define ITEMNAME_INVISISPHERE  "InvisiSphere"
+#define ITEMNAME_RADIATIONSUIT "RadiationSuit"
+#define ITEMNAME_COMPUTERMAP   "ComputerMap"
+#define ITEMNAME_LIGHTAMPVISOR "LightAmpVisor"
+#define ITEMNAME_TOTALINVISI   "TotalInvisiSphere"
 
 // Hard-coded names for specially treated artifact types
 #define ARTI_BACKPACKITEM "BackpackItem"
@@ -89,6 +96,34 @@ typedef int artitype_t;
 #define ARTI_KEYGREEN     "KeyGreen"
 #define ARTI_KEYYELLOW    "KeyYellow"
 #define ARTI_KEYBLUE      "KeyBlue"
+
+// Hard-coded names for the (currently) 11 specially treated powers in powertype_t.
+// These are listed in ascending order of enumeration, as opposed to alphabetical.
+#define POWER_INVULNERABLE "PowerInvulnerable"      // pw_invulnerability
+#define POWER_STRENGTH     "PowerStrength"          // pw_strength (Berserk)
+#define POWER_PARTIALINVIS "PowerPartialInvisibility" // pw_invisibility
+#define POWER_IRONFEET     "PowerIronFeet"          // pw_ironfeet (Env. protection)
+#define POWER_ALLMAP       "PowerAllmap"            // pw_allmap
+#define POWER_INFRARED     "PowerLightAmp"          // pw_infrared (Fullbright)
+#define POWER_TOTALINVIS   "PowerTotalInvisibility" // pw_totalinvis
+#define POWER_GHOST        "PowerGhost"             // pw_ghost
+#define POWER_SILENT       "PowerSilent"            // pw_silencer
+#define POWER_FLIGHT       "PowerFlight"            // pw_flight
+#define POWER_TORCH        "PowerTorch"             // pw_torch (Fullbright w/ flicker)
+
+#define CHEATFX_INVULNERABLE "CheatInvulnerable"      // pw_invulnerability
+#define CHEATFX_STRENGTH     "CheatStrength"          // pw_strength (Berserk)
+#define CHEATFX_PARTIALINVIS "CheatInvisibility"      // pw_invisibility
+#define CHEATFX_IRONFEET     "CheatIronFeet"          // pw_ironfeet (Env. protection)
+#define CHEATFX_ALLMAP       "CheatAllmap"            // pw_allmap
+#define CHEATFX_INFRARED     "CheatInfrared"          // pw_infrared (Fullbright)
+#define CHEATFX_TOTALINVIS   "CheatTotalInvisibility" // pw_totalinvis
+#define CHEATFX_GHOST        "CheatGhost"             // pw_ghost
+#define CHEATFX_SILENT       "CheatSilent"            // pw_silencer
+#define CHEATFX_FLIGHT       "CheatFlight"            // pw_flight
+#define CHEATFX_TORCH        "CheatTorch"             // pw_torch (Fullbright w/ flicker)
+
+extern const char *powerStrings[NUMPOWERS];
 
 //
 // Item Effect
@@ -132,6 +167,9 @@ itemeffecttype_t E_EffectTypeForName(const char *name);
 
 // Find an item effect by name
 itemeffect_t *E_ItemEffectForName(const char *name);
+
+// Find an item by power number
+itemeffect_t *E_ItemEffectForPowerNum(powertype_t powerNum);
 
 // Get the item effects table
 MetaTable *E_GetItemEffects();

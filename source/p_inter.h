@@ -27,13 +27,16 @@
 #ifndef P_INTER_H__
 #define P_INTER_H__
 
+#include "e_inventory.h"
+
 struct player_t;
 class  Mobj;
 
 // follow a player exlusively for 3 seconds
 #define BASETHRESHOLD   (100)
 
-bool P_GivePower(player_t *, int);
+bool P_GivePower(player_t *player, int , int );
+bool P_GivePowerForItem(player_t *, itemeffect_t *);
 void P_TouchSpecialThing(Mobj *special, Mobj *toucher);
 void P_DamageMobj(Mobj *target,Mobj *inflictor,Mobj *source,int damage,int mod);
 void P_DropItems(Mobj *actor, bool tossitems);

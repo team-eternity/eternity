@@ -334,13 +334,27 @@ static void cheat_noclip(const void *arg)
 // 'behold?' power-up cheats (modified for infinite duration -- killough)
 static void cheat_pw(const void *arg)
 {
+   static const char *cheatItems[NUMPOWERS] =
+   {
+      CHEATFX_INVULNERABLE,
+      CHEATFX_STRENGTH,
+      CHEATFX_PARTIALINVIS,
+      CHEATFX_IRONFEET,
+      CHEATFX_ALLMAP,
+      CHEATFX_INFRARED,
+      CHEATFX_TOTALINVIS,
+      CHEATFX_GHOST,
+      CHEATFX_SILENT,
+      CHEATFX_FLIGHT,
+      CHEATFX_TORCH
+   };
    int pw = *(const int *)arg;
 
    if(plyr->powers[pw])
       plyr->powers[pw] = pw!=pw_strength && pw!=pw_allmap && pw!=pw_silencer;  // killough
    else
    {
-      P_GivePower(plyr, pw);
+      P_GivePowerForItem(plyr, E_ItemEffectForName(cheatItems[pw]));
       if(pw != pw_strength && !comp[comp_infcheat])
          plyr->powers[pw] = -1;      // infinite duration -- killough
    }
