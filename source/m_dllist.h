@@ -1,6 +1,5 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
+// The Eternity Engine
 // Copyright (C) 2013 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -16,13 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-// Additional terms and conditions compatible with the GPLv3 apply. See the
-// file COPYING-EE for details.
-//
-//--------------------------------------------------------------------------
-//
-// DESCRIPTION:
-//  Generalized Double-linked List Routines
+// Purpose: EDF Generalized Double-linked List Routines
+// Authors: James Haley
 //
 // haleyjd 08/05/05: This is Lee Killough's smart double-linked list
 // implementation with pointer-to-pointer prev links, generalized to
@@ -31,18 +25,12 @@
 // uniformly even without the use of a dummy head node, and thus it is 
 // very efficient. These routines are inlined for maximum speed.
 //
-// Just put an mdllistitem_t as the first item in a structure and you
-// can then cast a pointer to that structure to mdllistitem_t * and
-// pass it to these routines. You are responsible for defining the 
-// pointer used as the head of the list.
+// You are responsible for defining the pointer used as the head of the list.
 //    
-//-----------------------------------------------------------------------------
 
 #ifndef M_DLLIST_H__
 #define M_DLLIST_H__
 
-// 
-// DLListItem
 //
 // This template class is an evolution of the original mdllistitem_t.
 // However rather than using an is-a relationship, this functions best
@@ -82,16 +70,42 @@ public:
          next->dllPrev = prev;
 
       // haleyjd 05/07/13: safety #2: clear links.
-      dllPrev = NULL;
-      dllNext = NULL;
+      dllPrev = nullptr;
+      dllNext = nullptr;
    }
 
+   // DEPRECATED
    inline    operator T * () const { return dllObject; }
+
+   // DEPRECATED
    inline T *operator ->  () const { return dllObject; }
 };
 
 //
-// DLList
+// Reverse the order of a list made of DLListItem instances.
+//
+template<typename T>
+static void DLList_Reverse(DLListItem<T> **head)
+{
+   if(!(head && *head))
+      return;
+
+   DLListItem<T> *cur  = *head;
+   DLListItem<T> *prev = nullptr;
+   while(cur)
+   {
+      DLListItem<T> *next = cur->dllNext;
+
+      cur->dllNext = prev;
+      cur->dllPrev = next ? &next->dllNext : head;
+
+      prev = cur;
+      cur  = next;
+   }
+
+   *head = prev;
+}
+
 //
 // haleyjd 05/07/13: Added a list type which makes use of DLListItem more
 // regulated. Use is strictly optional. Provide the type and a member to
@@ -105,6 +119,8 @@ public:
    inline void remove(T *object) { (object->*link).remove();              }
    inline void insert(T &object) { insert(&object);                       }
    inline void remove(T &object) { remove(&object);                       }
+
+   inline void reverse() { DLList_Reverse<>(&head); }
 };
 
 #endif
