@@ -843,6 +843,14 @@ sound ht_respawn
   pitchvariance Heretic
 }
 
+sound ht_artiup
+{
+  lump          "artiup"
+  priority      78
+  dehackednum   404
+  pitchvariance Heretic
+}
+
 
 // Environmental Sound Defaults
 // These are altered by the game engine to point to sounds specifed by MapInfo.

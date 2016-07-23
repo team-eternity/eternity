@@ -166,3 +166,201 @@ lockdef 101
 
 endif()
 
+//=============================================================================
+//
+// Power Givers
+//
+
+powereffect MapScroll
+{
+  duration 1
+  type     PowerAllmap
+
+  +permanent
+}
+
+powereffect Shadowsphere
+{
+  duration 60
+  type     PowerGhost
+}
+
+powereffect WingsOfWrath
+{
+  duration 60
+  type     PowerFlight
+}
+
+powereffect RingOfInvincibility
+{
+  duration 30
+  type     PowerInvulnerable  
+}
+
+powereffect TomeOfPower
+{
+  duration 30
+  type     PowerWeaponLevel2
+}
+
+powereffect Torch
+{
+  duration 120
+  type     PowerTorch
+}
+
+//=============================================================================
+//
+// Artefacts
+//
+
+artifact ArtiInvisibility
+{
+  amount         1
+  maxamount      16
+  interhubamount 1
+
+  sortorder      70
+  icon           INVS
+  useeffect      Shadowsphere
+
+  +invbar
+
+  artifacttype   Normal
+}
+
+artifact ArtiHealth
+{
+  amount         1
+  maxamount      16
+  interhubamount 1
+
+  sortorder      10
+  icon           PTN2
+  useeffect      QuartzFlask
+  
+  +invbar
+
+  artifacttype   Normal
+}
+
+artifact ArtiFly
+{
+  amount         1
+  maxamount      16
+  interhubamount 1
+
+  sortorder      100
+  icon           SOAR
+  useeffect      WingsOfWrath
+
+  +invbar
+
+  artifacttype   Normal
+}
+
+artifact ArtiInvulnerability
+{
+  amount         1
+  maxamount      16
+  interhubamount 1
+
+  sortorder      60
+  icon           INVU
+  useeffect      RingOfInvincibility
+
+  +invbar
+
+  artifacttype   Normal
+}
+
+artifact ArtiTomeOfPower
+{
+  amount         1
+  maxamount      16
+  interhubamount 1
+
+  sortorder      30
+  icon           PWBK
+  useeffect      TomeOfPower
+
+  +invbar
+
+  artifacttype   Normal
+}
+
+artifact ArtiEgg
+{
+  amount         1
+  maxamount      16
+  interhubamount 1
+
+  sortorder      50
+  icon           EGGC
+  useeffect      MorphOvum
+
+  +invbar
+
+  artifacttype   Normal
+}
+
+artifact ArtiSuperHealth
+{
+  amount         1
+  maxamount      16
+  interhubamount 1
+
+  sortorder      20
+  icon           SPHL
+  useeffect      MysticUrn
+
+  +invbar
+
+  artifacttype   Normal
+}
+
+artifact ArtiTorch
+{
+  amount         1
+  maxamount      16
+  interhubamount 1
+
+  sortorder      90
+  icon           TRCH
+  useeffect      Torch
+
+  +invbar
+
+  artifacttype   Normal
+}
+
+artifact ArtiTimeBomb
+{
+  amount         1
+  maxamount      16
+  interhubamount 1
+
+  sortorder      40
+  icon           FBMB
+  useeffect      SpawnTimeBomb
+
+  +invbar
+
+  artifacttype   Normal
+}
+
+artifact ArtiTeleport
+{
+  amount         1
+  maxamount      16
+  interhubamount 1
+
+  sortorder      80
+  icon           ATLP
+  useeffect      ChaosOrb
+
+  +invbar
+
+  artifacttype   Normal
+}
+

@@ -423,9 +423,25 @@ bool P_GivePowerForItem(player_t *player, itemeffect_t *power)
 {
    int powerNum;
    const char *powerStr;
+   itemeffect_t *powerTracker;
+   inventoryslot_t *trackerArtifact; // Pointer to the player's tracker for
+                                     // the power to potentially be granted.
+
    if(!(powerStr = power->getString("type", "")))
-      return false; // Something went wrong
-   powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr);
+      return false; // There hasn't been a designated power type
+   if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) == NUMPOWERS)
+      return false; // There's no power for the type provided
+
+   // FIXME: Adapt for new changes to MetaTable
+   powerTracker = E_ItemEffectForName(powerStr);
+   if(trackerArtifact = E_InventorySlotForItem(player, powerTracker))
+   {
+      if(!powerTracker->getInt("power.overridesself", 0))
+      {
+         if(trackerArtifact->amount >= powerTracker->getInt("maxamount", 1))
+            return false;
+      }
+   }
 
    // Unless player has infinite duration cheat, set duration (MaxW stolen from killough)   
    if(player->powers[powerNum] >= 0)
@@ -436,6 +452,7 @@ bool P_GivePowerForItem(player_t *player, itemeffect_t *power)
       else
          duration = duration * TICRATE; // Duration is given in seconds
 
+      E_GiveInventoryItem(player, powerTracker, powerTracker->getInt("amount", 1));
       return P_GivePower(player, powerNum, duration);
    }
 
@@ -542,6 +559,9 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
       break;
    case ITEMFX_AMMO:     // Ammo - give the player some ammo
       pickedup = P_GiveAmmoPickup(player, effect, dropped, special->dropamount);
+      break;
+   case ITEMFX_POWER:
+      pickedup = P_GivePowerForItem(player, effect);
       break;
    case ITEMFX_ARTIFACT: // Artifacts - items which go into the inventory
       pickedup = E_GiveInventoryItem(player, effect);
@@ -757,6 +777,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 
       // power ups
    case PFX_INVULNSPHERE:
+      // INVENTORY_FIXME: temp hard-coded
       effect = E_ItemEffectForName(ITEMNAME_INVULNSPHERE);
       if(!P_GivePowerForItem(player, effect))
          return;
@@ -766,6 +787,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 
       // WEAPON_FIXME: berserk changes to fist
    case PFX_BERZERKBOX:
+      // INVENTORY_FIXME: temp hard-coded
       effect = E_ItemEffectForName(ITEMNAME_BERZERKBOX);
       if(!P_GivePowerForItem(player, effect))
          return;
@@ -785,6 +807,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       break;
 
    case PFX_RADSUIT:
+      // INVENTORY_FIXME: temp hard-coded
       effect = effect = E_ItemEffectForName(ITEMNAME_RADIATIONSUIT);
       if(!P_GivePowerForItem(player, effect))
          return;
@@ -793,6 +816,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       break;
 
    case PFX_ALLMAP:
+      // INVENTORY_FIXME: temp hard-coded
       effect = E_ItemEffectForName(ITEMNAME_COMPUTERMAP);
       if(!P_GivePowerForItem(player, effect))
          return;
@@ -801,6 +825,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       break;
 
    case PFX_LIGHTAMP:
+      // INVENTORY_FIXME: temp hard-coded
       effect = E_ItemEffectForName(ITEMNAME_LIGHTAMPVISOR);
       if(!P_GivePowerForItem(player, effect))
          return;
@@ -993,13 +1018,157 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       break;
 
    case PFX_HMAP: // map scroll
-      effect = E_ItemEffectForName(ITEMNAME_COMPUTERMAP);
+      // INVENTORY_FIXME: temp hard-coded
+      effect = E_ItemEffectForName(ITEMNAME_MAPSCROLL);
       if(!P_GivePowerForItem(player, effect))
          return;
       message = DEH_String("HITEMSUPERMAP");
       sound = sfx_hitemup;
       break;
    
+   case PFX_SHADOWSPHERE:
+      // INVENTORY_FIXME: temp hard-coded
+      effect = E_ItemEffectForName(ARTI_INVISIBILITY);
+      // The player can have up to (by default) 16 of a Heretic artifact, so make sure
+      // that they don't get more than they should be allowed to have.
+      if(E_GetItemOwnedAmount(player, effect) < E_GetMaxAmountForArtifact(player, effect))
+      {
+         E_GiveInventoryItem(player, effect, effect->getInt("amount", 0));
+         message = DEH_String("HITEMSHADOWSPHERE");
+      }
+      else
+         return;
+
+      sound = sfx_artiup;
+      break;
+
+   case PFX_QUARTZFLASK:
+      // INVENTORY_FIXME: temp hard-coded
+      effect = E_ItemEffectForName(ARTI_HEALTH);
+      // The player can have up to (by default) 16 of a Heretic artifact, so make sure
+      // that they don't get more than they should be allowed to have.
+      if(E_GetItemOwnedAmount(player, effect) < E_GetMaxAmountForArtifact(player, effect))
+      {
+         E_GiveInventoryItem(player, effect, effect->getInt("amount", 0));
+         message = DEH_String("HITEMQUARTZFLASK");
+      }
+      else
+         return;
+
+      sound = sfx_artiup;
+      break;
+
+   case PFX_WINGSOFWRATH:
+      // INVENTORY_FIXME: temp hard-coded
+      effect = E_ItemEffectForName(ARTI_FLY);
+      if(E_GetItemOwnedAmount(player, effect) < E_GetMaxAmountForArtifact(player, effect))
+      {
+         E_GiveInventoryItem(player, effect, effect->getInt("amount", 0));
+         message = DEH_String("HITEMWINGSOFWRATH");
+      }
+      else
+         return;
+
+      sound = sfx_artiup;
+      break;
+
+   case PFX_RINGOFINVINCIBILITY:
+      // INVENTORY_FIXME: temp hard-coded
+      effect = E_ItemEffectForName(ARTI_INVULN);
+      if(E_GetItemOwnedAmount(player, effect) < E_GetMaxAmountForArtifact(player, effect))
+      {
+         E_GiveInventoryItem(player, effect, effect->getInt("amount", 0));
+         message = DEH_String("HITEMRINGOFINVINCIBILITY");
+      }
+      else
+         return;
+
+      sound = sfx_artiup;
+      break;
+
+   case PFX_TOMEOFPOWER:
+      // INVENTORY_FIXME: temp hard-coded
+      effect = E_ItemEffectForName(ARTI_TOMEOFPOWER);
+      if(E_GetItemOwnedAmount(player, effect) < E_GetMaxAmountForArtifact(player, effect))
+      {
+         E_GiveInventoryItem(player, effect, effect->getInt("amount", 0));
+         message = DEH_String("HITEMTOMEOFPOWER");
+      }
+      else
+         return;
+
+      sound = sfx_artiup;
+      break;
+
+   case PFX_MORPHOVUM:
+      // INVENTORY_FIXME: temp hard-coded
+      effect = E_ItemEffectForName(ARTI_EGG);
+      if(E_GetItemOwnedAmount(player, effect) < E_GetMaxAmountForArtifact(player, effect))
+      {
+         E_GiveInventoryItem(player, effect, effect->getInt("amount", 0));
+         message = DEH_String("HITEMMORPHOVUM");
+      }
+      else
+         return;
+
+      sound = sfx_artiup;
+      break;
+
+   case PFX_MYSTICURN:
+      // INVENTORY_FIXME: temp hard-coded
+      effect = E_ItemEffectForName(ARTI_SUPERHEALTH);
+      if(E_GetItemOwnedAmount(player, effect) < E_GetMaxAmountForArtifact(player, effect))
+      {
+         E_GiveInventoryItem(player, effect, effect->getInt("amount", 0));
+         message = DEH_String("HITEMMYSTICURN");
+      }
+      else
+         return;
+
+      sound = sfx_artiup;
+      break;
+
+   case PFX_ARTITORCH:
+      // INVENTORY_FIXME: temp hard-coded
+      effect = E_ItemEffectForName(ARTI_TORCH);      
+      if(E_GetItemOwnedAmount(player, effect) < E_GetMaxAmountForArtifact(player, effect))
+      {
+         E_GiveInventoryItem(player, effect, effect->getInt("amount", 0));
+         message = DEH_String("HITEMTORCH");
+      }
+      else
+         return;
+
+      sound = sfx_artiup;
+      break;
+
+   case PFX_TIMEBOMB:
+      // INVENTORY_FIXME: temp hard-coded
+      effect = E_ItemEffectForName(ARTI_TIMEBOMB);
+      if(E_GetItemOwnedAmount(player, effect) < E_GetMaxAmountForArtifact(player, effect))
+      {
+         E_GiveInventoryItem(player, effect, effect->getInt("amount", 0));
+         message = DEH_String("HITEMTIMEBOMB");
+      }
+      else
+         return;
+
+      sound = sfx_artiup;
+      break;
+
+   case PFX_TELEPORT:
+      // INVENTORY_FIXME: temp hard-coded
+      effect = E_ItemEffectForName(ARTI_TELEPORT);
+      if(E_GetItemOwnedAmount(player, effect) < E_GetMaxAmountForArtifact(player, effect))
+      {
+         E_GiveInventoryItem(player, effect, effect->getInt("amount", 0));
+         message = DEH_String("HITEMTELEPORT");
+      }
+      else
+         return;
+
+      sound = sfx_artiup;
+      break;
       // Heretic Ammo items
    case PFX_GWNDWIMPY:
       // HTIC_TODO: give ammo

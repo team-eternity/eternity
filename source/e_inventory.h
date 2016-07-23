@@ -66,7 +66,6 @@ typedef int artitype_t;
 // Hard-coded names for specially treated items (needed in DeHackEd, etc.)
 // INVENTORY_TODO: many may become unneeded when P_TouchSpecialThing is finished
 #define ITEMNAME_BERSERKHEALTH "BerserkHealth" // The health
-#define ITEMNAME_BERZERKBOX    "BerserkBox" // The power
 #define ITEMNAME_HEALTHBONUS   "HealthBonus"
 #define ITEMNAME_MEDIKIT       "Medikit"
 #define ITEMNAME_MEGASPHERE    "MegasphereHealth"
@@ -78,11 +77,13 @@ typedef int artitype_t;
 #define ITEMNAME_SILVERSHIELD  "SilverShield"
 #define ITEMNAME_ENCHANTEDSHLD "EnchantedShield"
 #define ITEMNAME_ARMORBONUS    "ArmorBonus"
-#define ITEMNAME_INVULNSPHERE  "InvulnSphere"
-#define ITEMNAME_INVISISPHERE  "InvisiSphere"
-#define ITEMNAME_RADIATIONSUIT "RadiationSuit"
-#define ITEMNAME_COMPUTERMAP   "ComputerMap"
-#define ITEMNAME_LIGHTAMPVISOR "LightAmpVisor"
+#define ITEMNAME_BERZERKBOX    "Berserk" // The power
+#define ITEMNAME_COMPUTERMAP   "Allmap"
+#define ITEMNAME_INVULNSPHERE  "InvulnerabilitySphere"
+#define ITEMNAME_INVISISPHERE  "BlurSphere"
+#define ITEMNAME_LIGHTAMPVISOR "Infrared"
+#define ITEMNAME_MAPSCROLL     "MapScroll"
+#define ITEMNAME_RADIATIONSUIT "RadSuit"
 #define ITEMNAME_TOTALINVISI   "TotalInvisiSphere"
 
 // Hard-coded names for specially treated artifact types
@@ -96,6 +97,16 @@ typedef int artitype_t;
 #define ARTI_KEYGREEN     "KeyGreen"
 #define ARTI_KEYYELLOW    "KeyYellow"
 #define ARTI_KEYBLUE      "KeyBlue"
+#define ARTI_INVISIBILITY "ArtiInvisibility"
+#define ARTI_HEALTH       "ArtiHealth"
+#define ARTI_FLY          "ArtiFly"
+#define ARTI_INVULN       "ArtiInvulnerability"
+#define ARTI_TOMEOFPOWER  "ArtiTomeOfPower"
+#define ARTI_EGG          "ArtiEgg"
+#define ARTI_SUPERHEALTH  "ArtiSuperHealth"
+#define ARTI_TORCH        "ArtiTorch"
+#define ARTI_TIMEBOMB     "ArtiTimeBomb"
+#define ARTI_TELEPORT     "ArtiTeleport"
 
 // Hard-coded names for the (currently) 11 specially treated powers in powertype_t.
 // These are listed in ascending order of enumeration, as opposed to alphabetical.
@@ -111,6 +122,11 @@ typedef int artitype_t;
 #define POWER_FLIGHT       "PowerFlight"            // pw_flight
 #define POWER_TORCH        "PowerTorch"             // pw_torch (Fullbright w/ flicker)
 
+extern const char *powerStrings[NUMPOWERS];
+
+// TODO: Potentially remove these defines if they're not required
+// Hard-coded names for the (currently) 11 specially treated item powers,
+// which are used in cheats (such as hideme, silence, and iamtheone).
 #define CHEATFX_INVULNERABLE "CheatInvulnerable"      // pw_invulnerability
 #define CHEATFX_STRENGTH     "CheatStrength"          // pw_strength (Berserk)
 #define CHEATFX_PARTIALINVIS "CheatInvisibility"      // pw_invisibility
@@ -122,8 +138,6 @@ typedef int artitype_t;
 #define CHEATFX_SILENT       "CheatSilent"            // pw_silencer
 #define CHEATFX_FLIGHT       "CheatFlight"            // pw_flight
 #define CHEATFX_TORCH        "CheatTorch"             // pw_torch (Fullbright w/ flicker)
-
-extern const char *powerStrings[NUMPOWERS];
 
 //
 // Item Effect
@@ -167,9 +181,6 @@ itemeffecttype_t E_EffectTypeForName(const char *name);
 
 // Find an item effect by name
 itemeffect_t *E_ItemEffectForName(const char *name);
-
-// Find an item by power number
-itemeffect_t *E_ItemEffectForPowerNum(powertype_t powerNum);
 
 // Get the item effects table
 MetaTable *E_GetItemEffects();

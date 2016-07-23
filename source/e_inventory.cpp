@@ -169,6 +169,7 @@ MetaTable *E_GetItemEffects()
 #define KEY_MAXAMOUNT      "maxamount"
 #define KEY_MAXSAVEAMOUNT  "maxsaveamount"
 #define KEY_PERMANENT      "permanent"
+#define KEY_OVERRIDESSELF  "power.overridesself"
 #define KEY_SAVEAMOUNT     "saveamount"
 #define KEY_SAVEDIVISOR    "savedivisor"
 #define KEY_SAVEFACTOR     "savefactor"
@@ -314,7 +315,11 @@ cfg_opt_t edf_artifact_opts[] =
    // Ammo sub-type
    CFG_INT(KEY_BACKPACKAMOUNT, 0, CFGF_NONE),
    CFG_INT(KEY_BACKPACKMAXAMT, 0, CFGF_NONE),
-   
+
+   // Power sub-type
+   CFG_FLAG(KEY_OVERRIDESSELF, 0, CFGF_SIGNPREFIX), // if +, getting the power again while still
+                                                    // under its influence is allowed (a la DOOM)
+
    CFG_END()
 };
 
@@ -1063,6 +1068,16 @@ const char *pickupnames[PFX_NUMFX] =
    "PFX_ENCHANTEDSHIELD",
    "PFX_BAGOFHOLDING",
    "PFX_HMAP",
+   "PFX_SHADOWSPHERE",
+   "PFX_QUARTZFLASK",
+   "PFX_WINGSOFWRATH",
+   "PFX_RINGOFINVINCIBILITY",
+   "PFX_TOMEOFPOWER",
+   "PFX_MORPHOVUM",
+   "PFX_MYSTICURN",
+   "PFX_ARTITORCH",
+   "PFX_TIMEBOMB",
+   "PFX_TELEPORT",
    "PFX_GWNDWIMPY",
    "PFX_GWNDHEFTY",
    "PFX_MACEWIMPY",

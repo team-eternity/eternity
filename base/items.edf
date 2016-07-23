@@ -8,9 +8,197 @@
 
 includeifenabled("doom/items.edf", "DOOM");
 
+ifgametype("DOOM")
+
+artifact PowerInvulnerable
+{
+  amount         1
+  maxamount      1
+  interhubamount 0
+
+  +undroppable
+  -invbar
+  -keepdepleted
+
+  artifacttype   Power
+
+  +power.overridesself
+}
+
+artifact PowerStrength
+{
+  amount         1
+  maxamount      1
+  interhubamount 0
+
+  +undroppable
+  -invbar
+  -keepdepleted
+
+  artifacttype   Power
+
+  +power.overridesself
+}
+
+artifact PowerPartialInvisibility
+{
+  amount         1
+  maxamount      1
+  interhubamount 0
+
+  +undroppable
+  -invbar
+  -keepdepleted
+
+  artifacttype   Power
+
+  +power.overridesself
+}
+
+artifact PowerIronFeet
+{
+  amount         1
+  maxamount      1
+  interhubamount 0
+
+  +undroppable
+  -invbar
+  -keepdepleted
+
+  artifacttype   Power
+
+  +power.overridesself
+}
+
+artifact PowerAllmap
+{
+  amount         1
+  maxamount      1
+  interhubamount 0
+
+  +undroppable
+  -invbar
+  -keepdepleted
+
+  artifacttype   Power
+
+  +power.overridesself
+}
+
+artifact PowerLightAmp
+{
+  amount         1
+  maxamount      1
+  interhubamount 0
+
+  +undroppable
+  -invbar
+  -keepdepleted
+
+  artifacttype   Power
+
+  +power.overridesself
+}
+
+endif()
+
 // Heretic Items --------------------------------------------------------------
 
 includeifenabled("heretic/items.edf", "HERETIC");
+
+ifgametype("HERETIC")
+
+artifact PowerGhost
+{
+  amount         1
+  maxamount      1
+  interhubamount 0
+
+  +undroppable
+  -invbar
+  -keepdepleted
+
+  artifacttype   Power
+
+  -power.overridesself
+}
+
+artifact PowerFlight
+{
+  amount         1
+  maxamount      1
+  interhubamount 0
+
+  +undroppable
+  -invbar
+  -keepdepleted
+
+  artifacttype   Power
+
+  -power.overridesself
+}
+
+artifact PowerInvulnerable
+{
+  amount         1
+  maxamount      1
+  interhubamount 0
+
+  +undroppable
+  -invbar
+  -keepdepleted
+
+  artifacttype   Power
+
+  -power.overridesself
+}
+
+artifact PowerWeaponLevel2
+{
+  amount         1
+  maxamount      1
+  interhubamount 0
+
+  +undroppable
+  -invbar
+  -keepdepleted
+
+  artifacttype   Power
+
+  -power.overridesself
+}
+
+artifact PowerChicken
+{
+  amount         1
+  maxamount      1
+  interhubamount 0
+
+  +undroppable
+  -invbar
+  -keepdepleted
+
+  artifacttype   Power
+
+  -power.overridesself
+}
+
+artifact PowerTorch
+{
+  amount         1
+  maxamount      1
+  interhubamount 0
+
+  +undroppable
+  -invbar
+  -keepdepleted
+
+  artifacttype   Power
+
+  -power.overridesself
+}
+
+endif()
 
 // Shared Items ---------------------------------------------------------------
 
