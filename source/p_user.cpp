@@ -33,10 +33,12 @@
 #include "doomstat.h"
 #include "d_event.h"
 #include "d_gi.h"
+#include "e_inventory.h"
 #include "e_player.h"
 #include "e_states.h"
 #include "g_game.h"
 #include "hu_stuff.h"
+#include "metaapi.h"
 #include "m_random.h"
 #include "p_chase.h"
 #include "p_map.h"
@@ -766,6 +768,8 @@ void P_PlayerThink(player_t *player)
 
    // Counters, time dependent power ups.
 
+   itemeffect_t *effect = nullptr;
+
    // Strength counts up to diminish fade.
 
    if(player->powers[pw_strength])
@@ -774,23 +778,51 @@ void P_PlayerThink(player_t *player)
    // killough 1/98: Make idbeholdx toggle:
 
    if(player->powers[pw_invulnerability] > 0) // killough
-      player->powers[pw_invulnerability]--;
+   {
+      if(!--player->powers[pw_invulnerability])
+      {         
+         effect = E_ItemEffectForName(powerStrings[pw_invulnerability]);
+         E_RemoveInventoryItem(player, effect, 1);
+      }
+   }
 
    if(player->powers[pw_invisibility] > 0)
    {
-      if(!--player->powers[pw_invisibility] )
+      if(!--player->powers[pw_invisibility])
+      {
          player->mo->flags &= ~MF_SHADOW;
+         effect = E_ItemEffectForName(powerStrings[pw_invisibility]);
+         E_RemoveInventoryItem(player, effect, 1);
+      }
    }
 
    if(player->powers[pw_infrared] > 0)        // killough
-      player->powers[pw_infrared]--;
+   {
+      if(!--player->powers[pw_infrared])
+      {
+         effect = E_ItemEffectForName(powerStrings[pw_infrared]);
+         E_RemoveInventoryItem(player, effect, 1);
+      }
+   }
 
    // haleyjd: torch
    if(player->powers[pw_torch] > 0)
-      player->powers[pw_torch]--;
+   {
+      if(!--player->powers[pw_torch])
+      {
+         effect = E_ItemEffectForName(powerStrings[pw_torch]);
+         E_RemoveInventoryItem(player, effect, 1);
+      }
+   }
 
    if(player->powers[pw_ironfeet] > 0)        // killough
-      player->powers[pw_ironfeet]--;
+   {
+      if(!--player->powers[pw_ironfeet])
+      {
+         effect = E_ItemEffectForName(powerStrings[pw_ironfeet]);
+         E_RemoveInventoryItem(player, effect, 1);
+      }
+   }
 
    if(player->powers[pw_ghost] > 0)        // haleyjd
    {
@@ -804,6 +836,8 @@ void P_PlayerThink(player_t *player)
       {
          player->mo->flags2 &= ~MF2_DONTDRAW;
          player->mo->flags4 &= ~MF4_TOTALINVISIBLE;
+         effect = E_ItemEffectForName(powerStrings[pw_totalinvis]);
+         E_RemoveInventoryItem(player, effect, 1);
       }
    }
 
@@ -887,6 +921,9 @@ void P_PlayerStartFlight(player_t *player, bool thrustup)
    if(thrustup && player->mo->z <= player->mo->floorz)
       player->flyheight = 2 * FLIGHT_IMPULSE_AMT;
 
+   itemeffect_t *powerTracker = E_ItemEffectForName(powerStrings[pw_flight]);
+   E_GiveInventoryItem(player, powerTracker, powerTracker->getInt("amount", 1));
+
    // TODO: stop screaming if falling
 }
 
@@ -902,6 +939,9 @@ void P_PlayerStopFlight(player_t *player)
 
    player->mo->flags4 &= ~MF4_FLY;
    player->mo->flags  &= ~MF_NOGRAVITY;
+
+   itemeffect_t *effect = E_ItemEffectForName(powerStrings[pw_infrared]);
+   E_RemoveInventoryItem(player, effect, 1);
 }
 
 #if 0
