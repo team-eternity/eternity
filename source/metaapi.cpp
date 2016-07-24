@@ -492,8 +492,6 @@ void MetaVariant::setValue(const char *s, char **ret)
 //
 
 //
-// MetaTablePimpl
-//
 // Private implementation structure for the MetaTable class. Because I am not
 // about to expose the entire engine to the EHashTable template if I can help
 // it.
@@ -519,6 +517,17 @@ public:
    {
       keyhash.destroy();
       typehash.destroy();
+   }
+
+   //
+   // Reverse the order of the chains in the hash tables. This is a necessary
+   // step when cloning a table, since head insertion logic used by EHashTable
+   // will result in reversal of objects otherwise.
+   //
+   void reverseTables()
+   {
+      keyhash.reverseChains();
+      typehash.reverseChains();
    }
 };
 
@@ -1504,8 +1513,6 @@ const char *MetaTable::removeConstString(const char *key)
 }
 
 //
-// MetaTable::copyTableTo
-//
 // Adds copies of all objects in the source table to the destination table.
 //
 void MetaTable::copyTableTo(MetaTable *dest) const
@@ -1521,6 +1528,11 @@ void MetaTable::copyTableTo(MetaTable *dest) const
       // add the new object to the destination table
       dest->addObject(newObject);
    }
+
+   // since we iterated head to tail above, the items have been added in
+   // reversed order; the only good way to fix this is to have the hash
+   // tables reverse their chains now.
+   dest->pImpl->reverseTables();
 }
 
 //
