@@ -793,19 +793,20 @@ void P_LinkRejectTable()
 //
 // EV_PortalTeleport
 //
-bool EV_PortalTeleport(Mobj *mo, const linkdata_t *link)
+bool EV_PortalTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
+                       int fromid, int toid)
 {
    fixed_t moz = mo->z;
    //fixed_t vh = mo->player ? mo->player->viewheight : 0;
 
-   if(!mo || !link)
+   if(!mo)
       return 0;
 
    // ioanch 20160113: don't teleport. Just change x and y
    P_UnsetThingPosition(mo);
-   mo->x += link->deltax;
-   mo->y += link->deltay;
-   mo->z = moz + link->deltaz;
+   mo->x += dx;
+   mo->y += dy;
+   mo->z = moz + dz;
    // ioanch 20160123: only use interpolation for non-player objects
    // players are exposed to bugs if they interpolate here
    if(mo->player && mo->player->mo == mo)
@@ -815,15 +816,15 @@ bool EV_PortalTeleport(Mobj *mo, const linkdata_t *link)
    else
    {
       // translate the interpolated coordinates
-      mo->prevpos.x += link->deltax;
-      mo->prevpos.y += link->deltay;
-      mo->prevpos.z += link->deltaz;
+      mo->prevpos.x += dx;
+      mo->prevpos.y += dy;
+      mo->prevpos.z += dz;
    }
    P_SetThingPosition(mo);
 
    // Polyobject car enter and exit inertia
-   const polyobj_t *poly[2] = { gGroupPolyobject[link->fromid],
-                                gGroupPolyobject[link->toid] };
+   const polyobj_t *poly[2] = { gGroupPolyobject[fromid],
+                                gGroupPolyobject[toid] };
    v2fixed_t pvel[2] = { };
    bool phave[2];
    for(int i = 0; i < 2; ++i)
@@ -1056,7 +1057,8 @@ void P_SetLPortalBehavior(line_t *line, int newbehavior)
 // Checks if any line portals are crossed between (x, y) and (x+dx, y+dy),
 // updating the target position correctly
 //
-v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy, int *group)
+v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
+                               int *group, bool *passed)
 {
    v2fixed_t cur = { x, y };
    v2fixed_t fin = { x + dx, y + dy };
@@ -1077,8 +1079,8 @@ v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy, int
    {
       
       res = CAM_PathTraverse(cur, fin, CAM_ADDLINES | CAM_REQUIRELINEPORTALS, 
-                             [&cur, &fin, group](const intercept_t *in, 
-                                                 const divline_t &trace)
+                             [&cur, &fin, group, passed](const intercept_t *in,
+                                                         const divline_t &trace)
       {
 
          const line_t *line = in->d.line;
@@ -1109,6 +1111,8 @@ v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy, int
          fin.y += link.deltay;
          if(group)
             *group = link.toid;
+         if(passed)
+            *passed = true;
 
          return false;
       });
