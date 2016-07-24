@@ -36,6 +36,7 @@
 #include "e_things.h"
 #include "m_argv.h"
 #include "m_bbox.h"
+#include "m_compare.h"
 #include "m_random.h"
 #include "p_inter.h"
 #include "p_mobj.h"
@@ -1428,6 +1429,7 @@ static bool P_lineIsCrossedMiddle(fixed_t tx, fixed_t ty, const line_t *line)
 bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 {
    fixed_t oldx, oldy, oldz;
+   int oldgroupid, newgroupid;
    dropoff_func_t dropofffunc;
    
    // haleyjd 11/10/04: 3dMidTex: determine if a thing is on a line:
@@ -1443,10 +1445,64 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    
    clip.felldown = clip.floatok = false;               // killough 11/98
 
+   bool portalteleport = false;
+   fixed_t prex, prey;
+
    // haleyjd: OVER_UNDER
    if(P_Use3DClipping())
    {
       oldz = thing->z;
+
+      oldgroupid = thing->groupid;
+      int ox = (emin(oldx, x) - bmaporgx) >> MAPBLOCKSHIFT;
+      int oy = (emin(oldy, y) - bmaporgy) >> MAPBLOCKSHIFT;
+      int tx = (emax(oldx, x) - bmaporgx) >> MAPBLOCKSHIFT;
+      int ty = (emax(oldy, y) - bmaporgy) >> MAPBLOCKSHIFT;
+   
+      bool hasportals = false;
+      if(gMapHasLinePortals && !(thing->flags & (MF_TELEPORT | MF_NOCLIP)) &&
+         full_demo_version >= make_full_version(340, 48))
+      {
+         for(int bx = ox; bx <= tx; bx++)
+         {
+            if(bx < 0 || bx >= bmapwidth)
+               continue;
+            for(int by = oy; by <= ty; by++)
+            {
+               if(by < 0 || by >= bmapheight)
+                  continue;
+               if(P_BlockHasLinkedPortalLines(by * bmapwidth + bx))
+               {
+                  hasportals = true;
+                  goto outloop;
+               }
+            }
+         }
+      outloop:
+         ;
+      }
+      if(hasportals)
+      {
+         fixed_t oldx = thing->x;
+         fixed_t oldy = thing->y;
+         v2fixed_t dest = P_LinePortalCrossing(oldx, oldy,
+                                               x - oldx, y - oldy, &newgroupid,
+                                               &portalteleport);
+   
+         // Do one final test on the destination point
+         if(portalteleport && !P_CheckPositionExt(thing, dest.x, dest.y))
+            return false;  // This may also update "clip"
+   
+         // Update position
+         if(portalteleport)
+         {
+            prex = x;
+            prey = y;
+         }
+
+         x = dest.x;
+         y = dest.y;
+      }
 
       if(!P_CheckPosition3D(thing, x, y))
       {
@@ -1586,8 +1642,10 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 
    P_UnsetThingPosition (thing);
    
+   // Check portal teleportation
    oldx = thing->x;
    oldy = thing->y;
+   oldgroupid = thing->groupid;
    thing->floorz = clip.floorz;
    thing->ceilingz = clip.ceilingz;
    thing->dropoffz = clip.dropoffz;      // killough 11/98: keep track of dropoffs
@@ -1596,29 +1654,23 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    thing->secfloorz = clip.secfloorz;
    thing->secceilz = clip.secceilz;
 
-   thing->x = x;
-   thing->y = y;
-   
-   P_SetThingPosition(thing);
+   if(portalteleport)
+   {
+      thing->x = prex;
+      thing->y = prey;
+      P_SetThingPosition(thing);
+      // TODO: 3D teleport
+      EV_PortalTeleport(thing, x - prex, y - prey, 0, oldgroupid, newgroupid);
+   }
+   else
+   {
+      thing->x = x;
+      thing->y = y;
+      P_SetThingPosition(thing);
+   }
 
    // haleyjd 08/07/04: new footclip system
    P_AdjustFloorClip(thing);
-
-   // ioanch 20160114: portal teleport
-   //if(full_demo_version >= make_full_version(340, 48) && 
-   //   !(thing->flags & MF_NOCLIP))
-   //{
-   //   const line_t *pline = thing->subsector->sector->portalLine;
-   //   if(pline && pline->pflags & PS_PASSABLE)
-   //   {
-   //      const linkoffset_t *link = P_GetLinkOffset(pline->frontsector->groupid, 
-   //         pline->portal->data.link.toid);
-   //      EV_PortalTeleport(thing, link);
-   //   }
-   //}
-
-   // ioanch 20160117: use this to keep track if a portal line HAS been touched
-   bool hitportallinefront = false;
 
    // if any special lines were hit, do the effect
    // killough 11/98: simplified
@@ -1626,6 +1678,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    {
       fixed_t tx, ty, ox, oy;   // portal aware offsetting
       const linkoffset_t *link;
+      const linkoffset_t *oldlink;
 
       while(clip.numspechit--)
       {
@@ -1636,51 +1689,18 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          if(!line)   // skip if it's nulled out
             continue;
 
-         // ioanch 20160129: portal aware
-         link = P_GetLinkOffset(thing->groupid, line->frontsector->groupid);
-         tx = thing->x + link->x;
-         ty = thing->y + link->y;
-         ox = oldx + link->x;
-         oy = oldy + link->y;
-
-         // ioanch: do NOT trigger 
-         if(line->pflags & PS_PASSABLE && 
-            line->frontsector->groupid == thing->groupid &&
-            P_lineIsCrossedMiddle(tx, ty, line))
-         {
-            // SoM: if the mobj is touching a portal line, and the line is behind
-            // the mobj no matter what the previous lineside was, we missed the 
-            // teleport and NEED to do so now.
-
-            int side = P_PointOnLineSide(tx, ty, line);
-            if(side)
-            {
-               if(thing->touchedportalline == line)   // ioanch:
-                  thing->touchedportalline = nullptr; // clear it, we got it
-
-               // ioanch 20160129: clear all portal lines with the same front
-               // groupid to avoid moving the thing twice or more
-               for(int i = clip.numspechit - 1; i >= 0; --i)
-               {
-                  if(clip.spechit[i] && clip.spechit[i]->pflags & PS_PASSABLE &&
-                     clip.spechit[i]->frontsector->groupid 
-                     == line->frontsector->groupid)
-                  {
-                     clip.spechit[i] = nullptr;
-                  }
-               }
-               EV_PortalTeleport(thing, &line->portal->data.link);
-            }
-            else
-            {
-               // we're in front: remember the last touched line
-               hitportallinefront = true;
-               thing->touchedportalline = line;
-            }
-         }
 #endif
          if(line->special)  // see if the line was crossed
          {
+            link = P_GetLinkOffset(thing->groupid, line->frontsector->groupid);
+            oldlink = thing->groupid == oldgroupid ? link
+            : P_GetLinkOffset(oldgroupid, line->frontsector->groupid);
+
+            tx = thing->x + link->x;
+            ty = thing->y + link->y;
+            ox = oldx + oldlink->x;
+            oy = oldy + oldlink->y;
+
             int oldside;
             if((oldside = P_PointOnLineSide(ox, oy, line)) !=
                P_PointOnLineSide(tx, ty, line))
@@ -1692,17 +1712,6 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       clip.numspechit = 0;
    }
 
-   // ioanch 20160117: we didn't hit now a portal line but previously we did,
-   // except on the wrong side, so now it is time to teleport
-   if(!hitportallinefront && thing->touchedportalline) 
-   {
-      if( thing->touchedportalline->backsector == thing->subsector->sector)
-      {
-         EV_PortalTeleport(thing, &thing->touchedportalline->portal->data.link);
-      }
-      thing->touchedportalline = nullptr; // reset it
-   }
-   
    return true;
 }
 
