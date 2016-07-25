@@ -788,43 +788,30 @@ void P_LinkRejectTable()
    } // i
 }
 
-// -----------------------------------------
-// Begin portal teleportation
 //
-// EV_PortalTeleport
+// The player passed a line portal from P_TryMove; just update viewport and
+// pass-polyobject velocity
 //
-bool EV_PortalTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
-                       int fromid, int toid)
+void P_LinePortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
+                             int fromid, int toid)
 {
-   fixed_t moz = mo->z;
-   //fixed_t vh = mo->player ? mo->player->viewheight : 0;
-
-   if(!mo)
-      return 0;
-
-   // ioanch 20160113: don't teleport. Just change x and y
-   P_UnsetThingPosition(mo);
-   mo->x += dx;
-   mo->y += dy;
-   mo->z = moz + dz;
-   // ioanch 20160123: only use interpolation for non-player objects
-   // players are exposed to bugs if they interpolate here
+   // Prevent bad interpolation
    if(mo->player && mo->player->mo == mo)
    {
+      // FIXME: this is not interpolation, it's just instant movement; must be
+      // fixed to be real interpolation even for the player (camera)
       mo->backupPosition();
    }
    else
    {
-      // translate the interpolated coordinates
       mo->prevpos.x += dx;
       mo->prevpos.y += dy;
       mo->prevpos.z += dz;
    }
-   P_SetThingPosition(mo);
 
    // Polyobject car enter and exit inertia
    const polyobj_t *poly[2] = { gGroupPolyobject[fromid],
-                                gGroupPolyobject[toid] };
+      gGroupPolyobject[toid] };
    v2fixed_t pvel[2] = { };
    bool phave[2];
    for(int i = 0; i < 2; ++i)
@@ -881,11 +868,32 @@ bool EV_PortalTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
       mo->player->deltaviewheight = deltaviewheight;
 
       if(mo->player == players + displayplayer)
-          P_ResetChasecam();
+         P_ResetChasecam();
    }
 
    //mo->backupPosition();
    P_AdjustFloorClip(mo);
+}
+
+// -----------------------------------------
+// Begin portal teleportation
+//
+// EV_PortalTeleport
+//
+bool EV_PortalTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
+                       int fromid, int toid)
+{
+   if(!mo)
+      return 0;
+
+   // ioanch 20160113: don't teleport. Just change x and y
+   P_UnsetThingPosition(mo);
+   mo->x += dx;
+   mo->y += dy;
+   mo->z += dz;
+   P_SetThingPosition(mo);
+
+   P_LinePortalDidTeleport(mo, dx, dy, dz, fromid, toid);
    
    return 1;
 }
