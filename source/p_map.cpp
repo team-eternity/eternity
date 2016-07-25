@@ -1429,7 +1429,7 @@ static bool P_lineIsCrossedMiddle(fixed_t tx, fixed_t ty, const line_t *line)
 bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 {
    fixed_t oldx, oldy, oldz;
-   int oldgroupid, newgroupid;
+   int oldgroupid, newgroupid = thing->groupid;
    dropoff_func_t dropofffunc;
    
    // haleyjd 11/10/04: 3dMidTex: determine if a thing is on a line:
@@ -1451,6 +1451,8 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    // haleyjd: OVER_UNDER
    if(P_Use3DClipping())
    {
+      oldx = thing->x;
+      oldy = thing->y;
       oldz = thing->z;
 
       oldgroupid = thing->groupid;
@@ -1483,19 +1485,14 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       }
       if(hasportals)
       {
-         fixed_t oldx = thing->x;
-         fixed_t oldy = thing->y;
          v2fixed_t dest = P_LinePortalCrossing(oldx, oldy,
-                                               x - oldx, y - oldy, &newgroupid,
-                                               &portalteleport);
+                                               x - oldx, y - oldy, &newgroupid);
    
-         // Do one final test on the destination point
-         if(portalteleport && !P_CheckPositionExt(thing, dest.x, dest.y))
-            return false;  // This may also update "clip"
    
          // Update position
-         if(portalteleport)
+         if(newgroupid != thing->groupid)
          {
+            portalteleport = true;
             prex = x;
             prey = y;
          }
@@ -1504,7 +1501,17 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          y = dest.y;
       }
 
-      if(!P_CheckPosition3D(thing, x, y))
+      bool check;
+      if(portalteleport)
+      {
+         oldgroupid = thing->groupid;
+         thing->groupid = newgroupid;
+         check = P_CheckPosition3D(thing, x, y);
+         thing->groupid = oldgroupid;
+      }
+
+      if((portalteleport && !check)
+         || (!portalteleport && !P_CheckPosition3D(thing, x, y)))
       {
          // Solid wall or thing
          if(!clip.BlockingMobj || clip.BlockingMobj->player || !thing->player)
@@ -1653,20 +1660,15 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    thing->passceilz = clip.passceilz;
    thing->secfloorz = clip.secfloorz;
    thing->secceilz = clip.secceilz;
+   thing->x = x;
+   thing->y = y;
+   P_SetThingPosition(thing);
 
    if(portalteleport)
    {
-      thing->x = prex;
-      thing->y = prey;
-      P_SetThingPosition(thing);
       // TODO: 3D teleport
-      EV_PortalTeleport(thing, x - prex, y - prey, 0, oldgroupid, newgroupid);
-   }
-   else
-   {
-      thing->x = x;
-      thing->y = y;
-      P_SetThingPosition(thing);
+      P_LinePortalDidTeleport(thing, x - prex, y - prey, 0, oldgroupid,
+                              newgroupid);
    }
 
    // haleyjd 08/07/04: new footclip system
