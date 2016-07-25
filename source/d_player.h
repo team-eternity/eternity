@@ -187,6 +187,7 @@ struct player_t
 
    // Inventory
    inventory_t    inventory;     // haleyjd 07/06/13: player's inventory
+   inventoryindex_t inv_ptr;     // MaxW 2016/07/25: Player's currently selected item
    
    // Player name
    char           name[20];

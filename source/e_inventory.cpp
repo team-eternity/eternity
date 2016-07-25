@@ -49,6 +49,7 @@
 #include "info.h"
 #include "m_collection.h"
 #include "metaapi.h"
+#include "p_inter.h"
 #include "p_mobj.h"
 #include "p_skin.h"
 #include "s_sound.h"
@@ -1203,6 +1204,103 @@ static void E_processPickupItems(cfg_t *cfg)
 static PODCollection<itemeffect_t *> e_InventoryItemsByID;
 static inventoryitemid_t e_maxitemid;
 
+inventoryindex_t e_maxvisiblesortorder = INT_MIN;
+
+//
+// E_MoveInventoryCursor
+//
+// Tries to move the inventory cursor 'amount' right.
+//
+void E_MoveInventoryCursor(player_t *player, int amount)
+{
+   if(player->inv_ptr + amount <= 0)
+   {
+      player->inv_ptr = 0;
+   }
+   else if(amount <= 0)
+   {
+      player->inv_ptr += amount;
+   }
+   else
+   {
+      for(int i = 0; i < amount; i++)
+      {
+         itemeffect_t *effect = E_EffectForInventoryItemID(player->inventory[player->inv_ptr + 1].item);
+         if(!effect)
+            return;
+
+         if(effect->getInt(keySortOrder, INT_MAX) > e_maxvisiblesortorder)
+         {
+            break;
+         }
+         else
+         {
+            player->inv_ptr += 1;
+         }
+      }
+   }
+}
+
+//
+// E_getItemEffectType
+//
+// Gets the effect type of an item.
+//
+itemeffecttype_t E_getItemEffectType(itemeffect_t *fx)
+{
+   return static_cast<itemeffecttype_t>(fx->getInt(keyClass, 0));
+}
+
+//
+// E_TryUseItem
+//
+// Tries to use the currently selected item.
+//
+void E_TryUseItem(player_t *player)
+{
+   itemeffect_t *artifact = E_EffectForInventoryItemID(player->inventory[player->inv_ptr].item);
+   if(!artifact)
+      return;
+   if(E_getItemEffectType(artifact) == ITEMFX_ARTIFACT)
+   {
+      if(artifact->getInt(keyArtifactType, -1) == ARTI_NORMAL)
+      {
+         itemeffect_t *effect = E_ItemEffectForName(artifact->getString(KEY_USEEFFECT, ""));
+         bool success = false;
+
+         if(!effect)
+            return;
+
+         switch(E_getItemEffectType(effect))
+         {
+         case ITEMFX_HEALTH:
+            success = P_GiveBody(player, effect);
+            break;
+         case ITEMFX_ARMOR:
+            success = P_GiveArmor(player, effect);
+            break;
+         case ITEMFX_AMMO:
+            success = P_GiveAmmoPickup(player, effect, false, 0);
+            break;
+         case ITEMFX_POWER:
+            success = P_GivePowerForItem(player, effect);
+            break;
+         default:
+            return;
+         }
+
+         if(success)
+         {
+            if(E_RemoveInventoryItem(player, artifact, 1) == INV_REMOVEDSLOT)
+            {
+               E_MoveInventoryCursor(player, -1);
+            }
+         }
+      }
+   }
+}
+
+
 //
 // E_allocateInventoryItemIDs
 //
@@ -1227,11 +1325,41 @@ static void E_allocateInventoryItemIDs()
       // only interested in effects that are recorded in the inventory
       if(fxtype == ITEMFX_ARTIFACT)
       {
+         // If the current item's sort order is the largest thus far and is visible
+         if(item->getInt(KEY_SORTORDER, 0) > e_maxvisiblesortorder
+            && item->getInt(KEY_INVBAR, 0))
+            e_maxvisiblesortorder = item->getInt(KEY_SORTORDER, 0);
+
          // add it to the table
          e_InventoryItemsByID.add(item);
 
          // add the ID to the artifact definition
          item->setInt(keyItemID, e_maxitemid++);
+      }
+   }
+}
+
+//
+// E_allocateSortOrders
+//
+// Allocates sort orders to -invbar items
+//
+static void E_allocateSortOrders()
+{
+   itemeffect_t *item = NULL;
+
+   // scan the effects table and add artifacts to the table
+   while((item = runtime_cast<itemeffect_t *>(e_effectsTable.tableIterator(item))))
+   {
+      itemeffecttype_t fxtype = item->getInt(keyClass, ITEMFX_NONE);
+
+      // only interested in effects that are recorded in the inventory
+      if(fxtype == ITEMFX_ARTIFACT)
+      {
+         // If the current isn't visible
+         if(!item->getInt(KEY_INVBAR, 0))
+            item->setInt(keySortOrder, e_maxvisiblesortorder + 1);
+
       }
    }
 }
@@ -1651,6 +1779,7 @@ void E_ClearInventory(player_t *player)
       player->inventory[i].amount =  0;
       player->inventory[i].item   = -1;
    }
+   player->inv_ptr = 0;
 }
 
 //
@@ -1681,6 +1810,9 @@ void E_ProcessInventory(cfg_t *cfg)
 
    // allocate inventory item IDs
    E_allocateInventoryItemIDs();
+
+   // allocate sort orders to -invbar items
+   E_allocateSortOrders();
 
    // allocate player inventories
    E_allocatePlayerInventories();

@@ -35,6 +35,9 @@ class  Mobj;
 // follow a player exlusively for 3 seconds
 #define BASETHRESHOLD   (100)
 
+bool P_GiveAmmoPickup(player_t *, itemeffect_t *, bool, int);
+bool P_GiveBody(player_t *, itemeffect_t *);
+bool P_GiveArmor(player_t *, itemeffect_t *);
 // MaxW 2016/07/23: P_GivePower is no longer required for external use;
 // previously it was used in m_cheats, but the CheatX powereffects mean
 // that P_GivePowerForItem can be used.

@@ -257,6 +257,32 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
    forward = side = 0;
 
+   // Inventory stuff
+   if(gameactions[ka_inventory_left])
+   {
+      E_MoveInventoryCursor(&players[consoleplayer], -1);
+      gameactions[ka_inventory_left] = false;
+      // REMOVEME: This only exists while inventory bar isn't implemented
+      if(players[consoleplayer].inventory[players[consoleplayer].inv_ptr].amount)
+         doom_printf("Item %s", E_EffectForInventoryItemID(players[consoleplayer].inventory[players[consoleplayer].inv_ptr].item)->getKey());
+   }
+   if(gameactions[ka_inventory_right])
+   {
+      E_MoveInventoryCursor(&players[consoleplayer], 1);
+      gameactions[ka_inventory_right] = false;
+      // REMOVEME: This only exists while inventory bar isn't implemented
+      if(players[consoleplayer].inventory[players[consoleplayer].inv_ptr].amount)
+         doom_printf("Item %s", E_EffectForInventoryItemID(players[consoleplayer].inventory[players[consoleplayer].inv_ptr].item)->getKey());
+   }
+   if(gameactions[ka_inventory_use])
+   {
+      E_TryUseItem(&players[consoleplayer]);
+      gameactions[ka_inventory_use] = false;
+      // FIXME: Handle noartiskip
+   }
+   if(gameactions[ka_inventory_drop])
+      ;
+
    // use two stage accelerative turning on the keyboard and joystick
    if(gameactions[ka_right] || gameactions[ka_left])
       turnheld += ticdup;
@@ -2109,6 +2135,7 @@ void G_PlayerReborn(int player)
    skin_t *playerskin;
    playerclass_t *playerclass;
    inventory_t inventory;
+   inventoryindex_t inv_ptr;
 
    p = &players[player];
 
@@ -2124,6 +2151,7 @@ void G_PlayerReborn(int player)
    playerskin   = p->skin;
    playerclass  = p->pclass;     // haleyjd: playerclass
    inventory    = p->inventory;  // haleyjd: inventory
+   inv_ptr      = p->inv_ptr;
   
    memset(p, 0, sizeof(*p));
 
@@ -2139,6 +2167,7 @@ void G_PlayerReborn(int player)
    p->skin        = playerskin;
    p->pclass      = playerclass;              // haleyjd: playerclass
    p->inventory   = inventory;                // haleyjd: inventory
+   p->inv_ptr     = inv_ptr;
    p->playerstate = PST_LIVE;
    p->health      = p->pclass->initialhealth; // Ty 03/12/98 - use dehacked values
    p->quake       = 0;                        // haleyjd 01/21/07

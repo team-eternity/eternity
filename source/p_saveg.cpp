@@ -467,7 +467,8 @@ static void P_ArchivePlayers(SaveArchive &arc)
              << p.cheats       << p.refire          << p.killcount
              << p.itemcount    << p.secretcount     << p.didsecret
              << p.damagecount  << p.bonuscount      << p.fixedcolormap
-             << p.colormap     << p.quake           << p.jumptime;
+             << p.colormap     << p.quake           << p.jumptime
+             << p.inv_ptr;
 
          int inventorySize;
          if(arc.isSaving())
