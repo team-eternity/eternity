@@ -1159,7 +1159,8 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
       // ioanch 20160109: link offset outside
       if(passheight < ldata->planez)
       {
-         EV_PortalTeleport(mobj, ldata);
+         EV_PortalTeleport(mobj, ldata->deltax, ldata->deltay, ldata->deltaz,
+                           ldata->fromid, ldata->toid);
          ret = true;
       }
    }
@@ -1181,7 +1182,8 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
       // ioanch 20160109: link offset outside
       if(passheight >= ldata->planez)
       {
-         EV_PortalTeleport(mobj, ldata);
+         EV_PortalTeleport(mobj, ldata->deltax, ldata->deltay, ldata->deltaz,
+                           ldata->fromid, ldata->toid);
          ret = true;
       }
    }
@@ -1503,10 +1505,6 @@ void Mobj::serialize(SaveArchive &arc)
 
       arc << targetNum << tracerNum << enemyNum;
 
-      // ioanch 20160117: also save the touched portal line, if existent
-      int tmp = (touchedportalline ? static_cast<unsigned>(touchedportalline - ::lines) :
-         static_cast<unsigned>(-1));
-      arc << tmp;
    }
    else // Loading
    {
@@ -1554,21 +1552,6 @@ void Mobj::serialize(SaveArchive &arc)
 
       // Get the swizzled pointers
       arc << dsInfo->target << dsInfo->tracer << dsInfo->lastenemy;
-
-      // ioanch 20160117
-      int tmp;
-      arc << tmp;
-      if(tmp == -1)
-         touchedportalline = nullptr;
-      else if(tmp >= 0 && tmp < ::numlines)
-         touchedportalline = ::lines + tmp;
-      else
-      {
-         // warn the user
-         touchedportalline = nullptr;
-         C_Printf(FC_ERROR "Mobj::serialize WARNING: invalid touchedportalline "
-            "index %d", tmp);
-      }
    }
 }
 
@@ -1754,9 +1737,6 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    mobj->spriteproj = nullptr;
    // init with an "invalid" value
    mobj->sprojlast.x = mobj->sprojlast.y = mobj->sprojlast.z = D_MAXINT;
-
-   // ioanch 20160117: keep track of last touched line if needed
-   mobj->touchedportalline = nullptr;
 
    // set subsector and/or block links
   

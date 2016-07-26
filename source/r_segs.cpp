@@ -371,7 +371,53 @@ static void R_RenderSegLoop(void)
          {
             if(segclip.l_window)
             {
-               R_WindowAdd(segclip.l_window, i, (float)t, (float)b);
+               // ioanch 20160312
+               if(segclip.markflags & SEG_MARK1SLPORTAL)
+               {
+                  if(segclip.toptex)
+                  {
+                     // ioanch FIXME: copy-paste from other code
+                     column.y1 = t;
+                     column.y2 = (int)(segclip.high > floorclip[i] ? floorclip[i] : segclip.high);
+                     if(column.y2 >= column.y1)
+                     {
+                        column.texmid = segclip.toptexmid;
+                        column.source = R_GetRawColumn(segclip.toptex, (int)texx);
+                        column.texheight = segclip.toptexh;
+                        colfunc();
+                        ceilingclip[i] = (float)(column.y2 + 1);
+                     }
+                     else
+                        ceilingclip[i] = (float)t;
+
+                     segclip.high += segclip.highstep;
+                     
+                  }
+
+                  if(segclip.bottomtex)
+                  {
+                     column.y1 = (int)(segclip.low < ceilingclip[i] ? ceilingclip[i] : segclip.low);
+                     column.y2 = b;
+                     if(column.y2 >= column.y1)
+                     {
+                        column.texmid = segclip.bottomtexmid;
+                        column.source = R_GetRawColumn(segclip.bottomtex, (int)texx);
+                        column.texheight = segclip.bottomtexh;
+                        colfunc();
+                        floorclip[i] = (float)(column.y1 - 1);
+                     }
+                     else
+                        floorclip[i] = (float)b;
+                     segclip.low += segclip.lowstep;
+                     
+                  }
+
+                  R_WindowAdd(segclip.l_window, i, ceilingclip[i], floorclip[i]);
+               }
+               else
+               {
+                  R_WindowAdd(segclip.l_window, i, (float)t, (float)b);
+               }
                ceilingclip[i] = view.height - 1.0f;
                floorclip[i] = 0.0f;
             }

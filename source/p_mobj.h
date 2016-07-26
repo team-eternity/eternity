@@ -227,10 +227,6 @@ public:
    DLListItem<spriteprojnode_t> *spriteproj;
    v3fixed_t sprojlast; // coordinates after last check. Initially "invalid"
 
-   // ioanch 20160117: work around portal teleport spechits to make monster
-   // projectiles detect them surely.
-   const line_t *touchedportalline;
-
    //More drawing info: to determine current sprite.
    angle_t     angle;  // orientation
    spritenum_t sprite; // used to find patch_t and flip value

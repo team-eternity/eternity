@@ -2844,8 +2844,31 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       {
          P_SetPortal(lines[s].frontsector, lines + s, portal, portal_lineonly);
          
-         portal = R_GetLinkedPortal(s, line - lines, planez, toid, fromid);
-         P_SetPortal(sector, line, portal, portal_lineonly);
+         // ioanch 20160226: add partner portals
+         portal_t *portal2 = R_GetLinkedPortal(s, line - lines, planez, toid, fromid);
+         P_SetPortal(sector, line, portal2, portal_lineonly);
+
+         if(!lines[s].backsector || !line->backsector)
+         {
+            // ioanch: make a function to remove duplication
+            auto unblockline = [](line_t *line, line_t *partner)
+            {
+               line->backsector = line->frontsector;
+               line->sidenum[1] = line->sidenum[0];
+               line->flags &= ~ML_BLOCKING;
+               line->flags |= ML_TWOSIDED;
+               line->beyondportalsector = partner->frontsector;
+            };
+            // HACK TO MAKE THEM PASSABLE
+            if(!lines[s].backsector)
+               unblockline(lines + s, line);
+            if(!line->backsector)
+               unblockline(line, lines + s);
+
+            portal->data.link.polyportalpartner = portal2;
+            portal2->data.link.polyportalpartner = portal;
+         }
+
          return;
       }
       break;

@@ -397,6 +397,10 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
             nv->x = M_FloatToFixed(nv->fx);
             nv->y = M_FloatToFixed(nv->fy);
 
+            // ioanch 20160722: fix the polyobject visual clipping bug (more needed)
+            M_AddToBox(bsp->bbox[0], nv->x, nv->y);
+            M_AddToBox(bsp->bbox[1], nv->x, nv->y);
+
             // create new dynaseg from nv to seg->v2
             nds = R_CreateDynaSeg(dseg, nv, lseg->v2);
 
