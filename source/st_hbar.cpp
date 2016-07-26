@@ -50,6 +50,7 @@
 
 // cached patches
 static patch_t *invnums[10];   // inventory numbers
+static patch_t *smallinvnums[10]; // small inventory numbers
 
 // current state variables
 static int chainhealth;        // current position of the gem
@@ -60,11 +61,40 @@ static invbarstate_t hbarstate;
 //
 // ST_GetInventoryState
 //
-// Set's the inventory bar state.
+// Gets the inventory bar state.
 //
 static invbarstate_t &ST_GetInvBarState()
 {
    return hbarstate;
+}
+
+//
+// ST_drawSmallNumber
+//
+// Draws a small (at most) 5 digit number. It is RIGHT aligned for x and y.
+// x is expected to be 8 more than its equivalent Heretic calls.
+//
+static void ST_drawSmallNumber(int val, int x, int y)
+{   
+   if(val > 1)
+   {
+      patch_t *patch;
+      char buf[6];
+
+      // If you want more than 99,999 of something then you probably
+      //  know enough about coding to change this hard limit.
+      if(val > 99999)
+         val = 99999;
+      sprintf(buf, "%d", val);
+      x -= 4 * (strlen(buf));
+      for(char *rover = buf; *rover; rover++)
+      {
+         int i = *rover - '0';
+         patch = smallinvnums[i];
+         V_DrawPatch(x, y, &subscreen43, patch);
+         x += 4;
+      }
+   }
 }
 
 //
@@ -91,6 +121,17 @@ static void ST_HticInit()
       sprintf(lumpname, "IN%d", i);
 
       invnums[i] = PatchLoader::CacheName(wGlobalDir, lumpname, PU_STATIC);
+   }
+
+   // load small inventory numbers
+   for(i = 0; i < 10; ++i)
+   {
+      char lumpname[9];
+
+      memset(lumpname, 0, 9);
+      sprintf(lumpname, "SMALLIN%d", i);
+
+      smallinvnums[i] = PatchLoader::CacheName(wGlobalDir, lumpname, PU_STATIC);
    }
 
    // haleyjd 10/09/05: load key graphics for HUD
@@ -364,6 +405,7 @@ static void ST_drawStatBar()
          {
             V_DrawPatch(179, 160, &subscreen43,
                PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE, lumpinfo_t::ns_sprites));
+            ST_drawSmallNumber(plyr->inventory[plyr->inv_ptr].amount, 209, 182);
          }
       }
    }
@@ -412,7 +454,7 @@ static void ST_drawInvBar()
    int i = 0;
    do
    {
-      if(/*plyr->inv_ptr > leftoffs + i && */plyr->inventory[i + leftoffs].amount > 0)
+      if(plyr->inventory[i + leftoffs].amount > 0)
       {
          if(artifact = E_EffectForInventoryItemID(plyr->inventory[i + leftoffs].item))
          {
@@ -420,6 +462,7 @@ static void ST_drawInvBar()
             {
                V_DrawPatch(50 + i * 31, 160, &subscreen43,
                   PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE, lumpinfo_t::ns_sprites));
+               ST_drawSmallNumber(plyr->inventory[i + leftoffs].amount, 77 + i * 31, 182);
             }
          }
       }

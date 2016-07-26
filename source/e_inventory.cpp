@@ -1273,6 +1273,7 @@ void E_TryUseItem(player_t *player)
       if(artifact->getInt(keyArtifactType, -1) == ARTI_NORMAL)
       {
          itemeffect_t *effect = E_ItemEffectForName(artifact->getString(KEY_USEEFFECT, ""));
+         bool shiftinvleft = false;
          bool success = false;
 
          if(!effect)
@@ -1300,17 +1301,20 @@ void E_TryUseItem(player_t *player)
          {
             if(E_RemoveInventoryItem(player, artifact, 1) == INV_REMOVEDSLOT)
             {
-               E_MoveInventoryCursor(player, -1, player->inv_ptr);
-               E_MoveInventoryCursor(player, -1, invbarstate.inv_ptr);
-               E_MoveInventoryCursor(player, -1, invbarstate.curpos);
+               shiftinvleft = true;
             }
          }
          else
          {
             // Heretic shifts inventory one left if you fail to use your selected item.
+            shiftinvleft = true;
+         }
+
+         if(shiftinvleft)
+         {
             E_MoveInventoryCursor(player, -1, player->inv_ptr);
             E_MoveInventoryCursor(player, -1, invbarstate.inv_ptr);
-            E_MoveInventoryCursor(player, -1 , invbarstate.curpos);
+            E_MoveInventoryCursor(player, -1, invbarstate.curpos);         
          }
       }
    }
