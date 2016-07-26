@@ -8,6 +8,9 @@
 
 includeifenabled("doom/items.edf", "DOOM");
 
+// Do NOT change these artifact definitions. Doing so WILL break demo compat.
+// Feel free to override these definitions for mods, but bear that in mind.
+
 ifgametype("DOOM")
 
 artifact PowerInvulnerable
@@ -184,6 +187,21 @@ artifact PowerChicken
 }
 
 artifact PowerTorch
+{
+  amount         1
+  maxamount      1
+  interhubamount 0
+
+  +undroppable
+  -invbar
+  -keepdepleted
+
+  artifacttype   Power
+
+  -power.overridesself
+}
+
+artifact PowerAllmap
 {
   amount         1
   maxamount      1

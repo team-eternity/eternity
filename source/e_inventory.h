@@ -84,7 +84,7 @@ typedef int artitype_t;
 #define ITEMNAME_INVULNSPHERE  "InvulnerabilitySphere"
 #define ITEMNAME_INVISISPHERE  "BlurSphere"
 #define ITEMNAME_LIGHTAMPVISOR "Infrared"
-#define ITEMNAME_MAPSCROLL     "MapScroll"
+#define ITEMNAME_MAPSCROLL     "SuperMap"
 #define ITEMNAME_RADIATIONSUIT "RadSuit"
 #define ITEMNAME_TOTALINVISI   "TotalInvisiSphere"
 

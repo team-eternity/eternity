@@ -27,9 +27,11 @@
 #include "z_zone.h"
 #include "i_system.h"
 #include "doomstat.h"
+#include "d_dehtbl.h"
 #include "e_inventory.h"
 #include "m_random.h"
 #include "m_swap.h"
+#include "metaapi.h"
 #include "p_mobj.h"
 #include "v_patchfmt.h"
 #include "v_video.h"
@@ -52,6 +54,23 @@ static patch_t *invnums[10];   // inventory numbers
 // current state variables
 static int chainhealth;        // current position of the gem
 static int chainwiggle;        // small randomized addend for chain y coord.
+
+static invbarstate_t hbarstate;
+
+//
+// ST_GetInventoryState
+//
+// Set's the inventory bar state.
+//
+static invbarstate_t &ST_GetInvBarState()
+{
+   return hbarstate;
+}
+
+//
+// Initializes the Heretic status bar:
+// * Caches most patch graphics used throughout
+//
 
 //
 // ST_HticInit
@@ -82,6 +101,9 @@ static void ST_HticInit()
       sprintf(namebuf, "STKEYS%d", i);
       keys[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
+
+   // Initialise the inventory bar state.
+   hbarstate = { false, 0, 0, 0 };
 }
 
 //
@@ -316,6 +338,8 @@ static void ST_drawStatBar()
 {
    int temp;
    patch_t *statbar;
+   const char *patch;
+   itemeffect_t *artifact;
 
    // update the status bar patch for the appropriate game mode
    switch(GameType)
@@ -331,6 +355,18 @@ static void ST_drawStatBar()
    V_DrawPatch(34, 160, &subscreen43, statbar);
 
    // TODO: inventory stuff
+   // It's safety checks all the way down!
+   if(plyr->inventory[plyr->inv_ptr].amount)
+   {
+      if(artifact = E_EffectForInventoryItemID(plyr->inventory[plyr->inv_ptr].item))
+      {
+         if((patch = artifact->getString("icon", "")) != "")
+         {
+            V_DrawPatch(179, 160, &subscreen43,
+               PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE, lumpinfo_t::ns_sprites));
+         }
+      }
+   }
 
    // draw frags or health
    if(GameType == gt_dm)
@@ -365,6 +401,30 @@ static void ST_drawStatBar()
       ST_drawInvNum(E_GetItemOwnedAmount(plyr, ammo), 136, 162);
 }
 
+static void ST_drawInvBar()
+{
+   itemeffect_t *artifact;
+   const char *patch;
+   int x;
+
+   //x = hbarstate.inv_ptr - hbarstate.curpos;
+   V_DrawPatch(34, 160, &subscreen43, PatchLoader::CacheName(wGlobalDir, "INVBAR", PU_CACHE));
+
+   /*for(int i = 0; i < 7; i++)
+   {
+      if(plyr->inv_ptr > x + i && plyr->inventory[x + i].amount > 0)
+      {
+         if(E_EffectForInventoryItemID(plyr->inventory[plyr->inv_ptr].item))
+         {
+            if((patch = artifact->getString("icon", "")) != "")
+            {
+               V_DrawPatch(50 + i * 31, 160, &subscreen43,
+                  PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE));
+            }
+         }
+      }
+   }*/
+}
 //
 // ST_HticDrawer
 //
@@ -377,7 +437,10 @@ static void ST_HticDrawer()
 
    // TODO: choose whether to draw statbar or inventory bar here
    // based on whether the inventory is active
-   ST_drawStatBar();
+   if(hbarstate.inventory)
+      ST_drawInvBar();
+   else
+      ST_drawStatBar();
 }
 
 //
@@ -401,6 +464,7 @@ stbarfns_t HticStatusBar =
    ST_HticFSDrawer,
    ST_HticStart,
    ST_HticInit,
+   ST_GetInvBarState,
 };
 
 // EOF

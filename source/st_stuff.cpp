@@ -183,11 +183,12 @@
 
 // haleyjd 10/12/03: DOOM's status bar object
 
-static void ST_DoomTicker(void);
-static void ST_DoomDrawer(void);
-static void ST_DoomFSDrawer(void);
-static void ST_DoomStart(void);
-static void ST_DoomInit(void);
+static void ST_DoomTicker();
+static void ST_DoomDrawer();
+static void ST_DoomFSDrawer();
+static void ST_DoomStart();
+static void ST_DoomInit();
+invbarstate_t &ST_GetInvBarState();
 
 stbarfns_t DoomStatusBar =
 {
@@ -197,7 +198,8 @@ stbarfns_t DoomStatusBar =
    ST_DoomDrawer,
    ST_DoomFSDrawer,
    ST_DoomStart,
-   ST_DoomInit
+   ST_DoomInit,
+   ST_GetInvBarState,
 };
 
 // sf 15/10/99: removed a load of useless stuff left over from
@@ -331,9 +333,21 @@ static int      keyboxes[3];
 
 extern byte     **translationtables;
 
+static invbarstate_t dbarstate;
+
 //
 // STATUS BAR CODE
 //
+
+//
+// ST_GetInventoryState
+//
+// Set's the inventory bar state.
+//
+static invbarstate_t &ST_GetInvBarState()
+{
+   return dbarstate;
+}
 
 static void ST_refreshBackground()
 {
@@ -1355,6 +1369,9 @@ void ST_Start()
 static void ST_DoomInit()
 {
    ST_loadData();
+
+   // Initialise the inventory bar state.
+   dbarstate = { false, 0, 0, 0 };
 }
 
 //

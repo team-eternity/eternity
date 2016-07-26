@@ -171,7 +171,7 @@ endif()
 // Power Givers
 //
 
-powereffect MapScroll
+powereffect SuperMap
 {
   duration 1
   type     PowerAllmap
@@ -221,7 +221,7 @@ artifact ArtiInvisibility
   interhubamount 1
 
   sortorder      70
-  icon           INVS
+  icon           ARTIINVS
   useeffect      Shadowsphere
 
   +invbar
@@ -236,7 +236,7 @@ artifact ArtiHealth
   interhubamount 1
 
   sortorder      10
-  icon           PTN2
+  icon           ARTIPTN2
   useeffect      QuartzFlask
   
   +invbar
@@ -251,7 +251,7 @@ artifact ArtiFly
   interhubamount 1
 
   sortorder      100
-  icon           SOAR
+  icon           ARTISOAR
   useeffect      WingsOfWrath
 
   +invbar
@@ -266,7 +266,7 @@ artifact ArtiInvulnerability
   interhubamount 1
 
   sortorder      60
-  icon           INVU
+  icon           ARTIINVU
   useeffect      RingOfInvincibility
 
   +invbar
@@ -281,7 +281,7 @@ artifact ArtiTomeOfPower
   interhubamount 1
 
   sortorder      30
-  icon           PWBK
+  icon           ARTIPWBK
   useeffect      TomeOfPower
 
   +invbar
@@ -296,7 +296,7 @@ artifact ArtiEgg
   interhubamount 1
 
   sortorder      50
-  icon           EGGC
+  icon           ARTIEGGC
   useeffect      MorphOvum
 
   +invbar
@@ -311,7 +311,7 @@ artifact ArtiSuperHealth
   interhubamount 1
 
   sortorder      20
-  icon           SPHL
+  icon           ARTISPHL
   useeffect      MysticUrn
 
   +invbar
@@ -326,7 +326,7 @@ artifact ArtiTorch
   interhubamount 1
 
   sortorder      90
-  icon           TRCH
+  icon           ARTITRCH
   useeffect      Torch
 
   +invbar
@@ -341,7 +341,7 @@ artifact ArtiTimeBomb
   interhubamount 1
 
   sortorder      40
-  icon           FBMB
+  icon           ARTIFBMB
   useeffect      SpawnTimeBomb
 
   +invbar
@@ -356,7 +356,7 @@ artifact ArtiTeleport
   interhubamount 1
 
   sortorder      80
-  icon           ATLP
+  icon           ARTIATLP
   useeffect      ChaosOrb
 
   +invbar

@@ -53,6 +53,7 @@
 #include "p_mobj.h"
 #include "p_skin.h"
 #include "s_sound.h"
+#include "st_stuff.h"
 #include "v_video.h"
 
 //=============================================================================
@@ -1213,6 +1214,7 @@ inventoryindex_t e_maxvisiblesortorder = INT_MIN;
 //
 void E_MoveInventoryCursor(player_t *player, int amount)
 {
+   invbarstate_t &invbarstate = GameModeInfo->StatusBar->GetInvBarState();
    if(player->inv_ptr + amount <= 0)
    {
       player->inv_ptr = 0;
@@ -1239,6 +1241,7 @@ void E_MoveInventoryCursor(player_t *player, int amount)
          }
       }
    }
+   
 }
 
 //

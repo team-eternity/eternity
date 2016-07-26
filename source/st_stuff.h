@@ -62,6 +62,13 @@ void ST_Init(void);
 
 void ST_CacheFaces(patch_t **faces, const char *facename);
 
+struct invbarstate_t {
+   bool inventory;  // inventory is currently being viewed?
+   int curpos;
+   int inv_ptr;
+   int ArtifactFlash;
+};
+
 // haleyjd 10/12/03: structure for gamemode-independent status bar interface
 
 struct stbarfns_t
@@ -70,11 +77,12 @@ struct stbarfns_t
    int  height;
 
    // function pointers
-   void (*Ticker)(void);   // tic processing
-   void (*Drawer)(void);   // drawing
-   void (*FSDrawer)(void); // fullscreen drawer
-   void (*Start)(void);    // reinit
-   void (*Init)(void);     // initialize at startup   
+   void (*Ticker)();   // tic processing
+   void (*Drawer)();   // drawing
+   void (*FSDrawer)(); // fullscreen drawer
+   void (*Start)();    // reinit
+   void (*Init)();     // initialize at startup  
+   invbarstate_t& (*GetInvBarState)(); // get ref to invbarstate
 };
 
 extern stbarfns_t DoomStatusBar;

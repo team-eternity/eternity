@@ -219,6 +219,9 @@ void G_CoolViewPoint();
 
 static bool gameactions[NUMKEYACTIONS];
 
+int inventoryTics;
+bool usearti = true;
+
 //
 // G_BuildTiccmd
 //
@@ -244,6 +247,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    ticcmd_t *base;
    double tmousex, tmousey;     // local mousex, mousey
    playerclass_t *pc = players[consoleplayer].pclass;
+   invbarstate_t &invbarstate = GameModeInfo->StatusBar->GetInvBarState();
 
    base = I_BaseTiccmd();    // empty, or external driver
    memcpy(cmd, base, sizeof(*cmd));
@@ -258,8 +262,16 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    forward = side = 0;
 
    // Inventory stuff
+   inventoryindex_t inv_ptr;
+   inventoryitemid_t id;
+   itemeffect_t *effect;
    if(gameactions[ka_inventory_left])
-   {
+   {      
+      inventoryTics = 5 * TICRATE;
+      if(!invbarstate.inventory)
+      {
+         invbarstate.inventory = true;
+      }
       E_MoveInventoryCursor(&players[consoleplayer], -1);
       gameactions[ka_inventory_left] = false;
       // REMOVEME: This only exists while inventory bar isn't implemented
@@ -268,6 +280,11 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    }
    if(gameactions[ka_inventory_right])
    {
+      inventoryTics = 5 * TICRATE;
+      if(!invbarstate.inventory)
+      {
+         invbarstate.inventory = true;
+      }
       E_MoveInventoryCursor(&players[consoleplayer], 1);
       gameactions[ka_inventory_right] = false;
       // REMOVEME: This only exists while inventory bar isn't implemented
@@ -276,7 +293,17 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    }
    if(gameactions[ka_inventory_use])
    {
-      E_TryUseItem(&players[consoleplayer]);
+      if(invbarstate.inventory)
+      {
+         invbarstate.inventory = false;
+         usearti = false;
+      }
+      else if(usearti)
+      {
+         E_TryUseItem(&players[consoleplayer]);
+         usearti = false;
+      }
+      //E_TryUseItem(&players[consoleplayer]);
       gameactions[ka_inventory_use] = false;
       // FIXME: Handle noartiskip
    }
@@ -739,6 +766,7 @@ void G_DoLoadLevel()
 bool G_Responder(event_t* ev)
 {
    int action;
+   invbarstate_t &invbarstate = GameModeInfo->StatusBar->GetInvBarState();
 
    // killough 9/29/98: reformatted
    if(gamestate == GS_LEVEL && 
@@ -752,6 +780,10 @@ bool G_Responder(event_t* ev)
    if(G_KeyResponder(ev, kac_cmd))
       return true;
 
+   if(ev->type == ev_keyup && G_KeyResponder(ev, kac_game) == ka_inventory_use)
+   {
+      usearti = true;
+   }
    // any other key pops up menu if in demos
    //
    // killough 8/2/98: enable automap in -timedemo demos
@@ -2066,6 +2098,13 @@ void G_Ticker()
             }
          }
       }
+   }
+
+   // turn inventory off after a certain amount of time
+   invbarstate_t &invbarstate = GameModeInfo->StatusBar->GetInvBarState();
+   if(invbarstate.inventory && !(--inventoryTics))
+   {
+      invbarstate.inventory = false;
    }
 
    // do main actions
