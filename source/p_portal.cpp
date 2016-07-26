@@ -1107,9 +1107,13 @@ v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
          if(link.fromid == link.toid || (!link.deltax && !link.deltay))
             return true;
 
-         // must face the user
-         if(P_PointOnLineSide(trace.x, trace.y, line) == 1)
+         // double check: line MUST be crossed and trace origin must be in front
+         int originside = P_PointOnLineSide(trace.x, trace.y, line);
+         if(originside != 0 || originside ==
+            P_PointOnLineSide(trace.x + trace.dx, trace.y + trace.dy, line))
+         {
             return true;
+         }
 
          // update the fields
          cur.x += FixedMul(trace.dx, in->frac) + link.deltax;
