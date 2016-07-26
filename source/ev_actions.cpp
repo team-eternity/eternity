@@ -116,6 +116,14 @@ static bool EV_lockCheck(const Mobj *actor, int lockID, bool remote)
    return player && E_PlayerCanUnlock(player, lockID, remote);
 }
 
+//
+// Returns a fixed_t from (whole + frac / 100)
+//
+inline static fixed_t EV_calcCentPrecision(int whole, int frac)
+{
+   return (whole << FRACBITS) + (frac << FRACBITS) / 100;
+}
+
 //=============================================================================
 //
 // Action Routines
@@ -2704,7 +2712,7 @@ DEFINE_ACTION(EV_ActionPolyobjORRotateLeft)
 //
 DEFINE_ACTION(EV_ActionPolyobjStop)
 {  
-   return EV_DoPolyObjStop(instance->args[0]);
+   return EV_DoPolyObjStop(instance->tag);
 }
 
 //
@@ -4060,7 +4068,7 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingLowerRaise)
 //
 DEFINE_ACTION(EV_ActionHealThing)
 {
-  return EV_HealThing(instance->actor, instance->line);
+  return EV_HealThing(instance->actor, instance->args[0], instance->args[1]);
 }
 
 //
@@ -4071,18 +4079,23 @@ DEFINE_ACTION(EV_ActionHealThing)
 //
 DEFINE_ACTION(EV_ActionParamSectorSetRotation)
 {
-   return EV_SectorSetRotation(instance->line, instance->tag);
+   return EV_SectorSetRotation(instance->line, instance->tag, instance->args[1],
+                               instance->args[2]);
 }
 
 //
-// Implements Sector_SetCeilingPanning(amount, tag, x-int, x-frac, y-int, y-frac)
+// Implements Sector_SetCeilingPanning(tag, x-int, x-frac, y-int, y-frac)
 //
 // * ExtraData:         471
 // * Hexen (ZDoom):     186
 //
 DEFINE_ACTION(EV_ActionParamSectorSetCeilingPanning)
 {
-   return EV_SectorSetCeilingPanning(instance->line, instance->tag);
+   return EV_SectorSetCeilingPanning(instance->line, instance->tag,
+                                     EV_calcCentPrecision(instance->args[1],
+                                                          instance->args[2]),
+                                     EV_calcCentPrecision(instance->args[3],
+                                                          instance->args[4]));
 }
 
 //
@@ -4093,7 +4106,11 @@ DEFINE_ACTION(EV_ActionParamSectorSetCeilingPanning)
 //
 DEFINE_ACTION(EV_ActionParamSectorSetFloorPanning)
 {
-   return EV_SectorSetFloorPanning(instance->line, instance->tag);
+   return EV_SectorSetFloorPanning(instance->line, instance->tag,
+                                   EV_calcCentPrecision(instance->args[1],
+                                                        instance->args[2]),
+                                   EV_calcCentPrecision(instance->args[3],
+                                                        instance->args[4]));
 }
 
 // EOF

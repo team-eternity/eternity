@@ -107,17 +107,32 @@ void P_NewSectorActionFromMobj(Mobj *actor)
 //
 // Set's the rotation of the floor or ceiling of tagged sectors
 //
-int EV_SectorSetRotation(const line_t *line, int tag)
+int EV_SectorSetRotation(const line_t *line, int tag, int floorangle,
+                         int ceilingangle)
 {
    int secnum = -1;
+
+   bool manual = false;
+   sector_t *sector;
+   if(!tag)
+   {
+      if(!line || !(sector = line->backsector))
+         return 0;
+      manual = true;
+      goto manualtrig;
+   }
 
    // TODO: Once UDMF, let this work for line arg0 when in UDMF config.
    while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
-      sectors[secnum].floorangle = static_cast<float>
-         (E_NormalizeFlatAngle(line->args[1]) * PI / 180.0f);
-      sectors[secnum].ceilingangle = static_cast<float>
-         (E_NormalizeFlatAngle(line->args[2]) * PI / 180.0f);
+      sector = sectors + secnum;
+   manualtrig:
+      sector->floorangle = static_cast<float>
+         (E_NormalizeFlatAngle(floorangle) * PI / 180.0f);
+      sector->ceilingangle = static_cast<float>
+         (E_NormalizeFlatAngle(ceilingangle) * PI / 180.0f);
+      if(manual)
+         return 1;
    }
 
    return 1; // ZDoom always has this line as sucessful
@@ -128,17 +143,30 @@ int EV_SectorSetRotation(const line_t *line, int tag)
 //
 // Set's the panning of the ceiling of tagged sectors
 //
-int EV_SectorSetCeilingPanning(const line_t *line, int tag)
+int EV_SectorSetCeilingPanning(const line_t *line, int tag, fixed_t xoffs,
+                               fixed_t yoffs)
 {
    int secnum = -1;
+
+   bool manual = false;
+   sector_t *sector;
+   if(!tag)
+   {
+      if(!line || !(sector = line->backsector))
+         return 0;
+      manual = true;
+      goto manualtrig;
+   }
 
    // TODO: Once UDMF, let this work for line arg0 when in UDMF config.
    while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
-      sectors[secnum].ceiling_xoffs =
-         M_DoubleToFixed(line->args[1] + (line->args[2] * 0.01));
-      sectors[secnum].ceiling_xoffs =
-         M_DoubleToFixed(line->args[3] + (line->args[4] * 0.01));
+      sector = sectors + secnum;
+   manualtrig:
+      sector->ceiling_xoffs = xoffs;
+      sector->ceiling_yoffs = yoffs;
+      if(manual)
+         return 1;
    }
 
    return 1; // ZDoom always has this line as sucessful
@@ -149,17 +177,30 @@ int EV_SectorSetCeilingPanning(const line_t *line, int tag)
 //
 // Set's the panning of the floor of tagged sectors
 //
-int EV_SectorSetFloorPanning(const line_t *line, int tag)
+int EV_SectorSetFloorPanning(const line_t *line, int tag, fixed_t xoffs,
+                             fixed_t yoffs)
 {
    int secnum = -1;
+
+   bool manual = false;
+   sector_t *sector;
+   if(!tag)
+   {
+      if(!line || !(sector = line->backsector))
+         return 0;
+      manual = true;
+      goto manualtrig;
+   }
 
    // TODO: Once UDMF, let this work for line arg0 when in UDMF config.
    while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
-      sectors[secnum].floor_xoffs =
-         M_DoubleToFixed(line->args[1] + (line->args[2] * 0.01));
-      sectors[secnum].floor_yoffs =
-         M_DoubleToFixed(line->args[3] + (line->args[4] * 0.01));
+      sector = sectors + secnum;
+   manualtrig:
+      sector->floor_xoffs = xoffs;
+      sector->floor_yoffs = yoffs;
+      if(manual)
+         return 1;
    }
 
    return 1; // ZDoom always has this line as sucessful

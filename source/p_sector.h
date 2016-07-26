@@ -31,9 +31,12 @@ class Mobj;
 void P_SaveSectorPositions();
 void P_SetSectorZoneFromMobj(Mobj *actor);
 
-int EV_SectorSetRotation(const line_t *line, int tag);
-int EV_SectorSetCeilingPanning(const line_t *line, int tag);
-int EV_SectorSetFloorPanning(const line_t *line, int tag);
+int EV_SectorSetRotation(const line_t *line, int tag, int floorangle,
+                         int ceilingangle);
+int EV_SectorSetCeilingPanning(const line_t *line, int tag, fixed_t xoffs,
+                               fixed_t yoffs);
+int EV_SectorSetFloorPanning(const line_t *line, int tag, fixed_t xoffs,
+                             fixed_t yoffs);
 
 #endif
 

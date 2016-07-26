@@ -732,6 +732,7 @@ int EV_StartLightStrobing(const line_t *line, int tag, int darkTime,
 //
 int EV_TurnTagLightsOff(const line_t* line, int tag, bool isParam)
 {
+   int j;
    // search sectors for those with same tag as activating line
    
    // MaxW: Param tag0 support
@@ -746,7 +747,7 @@ int EV_TurnTagLightsOff(const line_t* line, int tag, bool isParam)
    }
 
    // killough 10/98: replaced inefficient search with fast search
-   for(int j = -1; (j = P_FindSectorFromTag(tag, j)) >= 0; )
+   for(j = -1; (j = P_FindSectorFromTag(tag, j)) >= 0; )
    {
       sector = sectors + j;
 
