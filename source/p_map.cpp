@@ -1445,7 +1445,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    
    clip.felldown = clip.floatok = false;               // killough 11/98
 
-   bool portalteleport = false;
+   bool groupidchange = false, portalteleport = false;
    fixed_t prex, prey;
 
    // haleyjd: OVER_UNDER
@@ -1486,23 +1486,21 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       if(hasportals)
       {
          v2fixed_t dest = P_LinePortalCrossing(oldx, oldy,
-                                               x - oldx, y - oldy, &newgroupid);
+                                               x - oldx, y - oldy, &newgroupid,
+                                               &portalteleport);
    
    
          // Update position
-         if(newgroupid != thing->groupid)
-         {
-            portalteleport = true;
-            prex = x;
-            prey = y;
-         }
+         groupidchange = newgroupid != thing->groupid;
+         prex = x;
+         prey = y;
 
          x = dest.x;
          y = dest.y;
       }
 
       bool check;
-      if(portalteleport)
+      if(groupidchange)
       {
          oldgroupid = thing->groupid;
          thing->groupid = newgroupid;
@@ -1510,8 +1508,8 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          thing->groupid = oldgroupid;
       }
 
-      if((portalteleport && !check)
-         || (!portalteleport && !P_CheckPosition3D(thing, x, y)))
+      if((groupidchange && !check)
+         || (!groupidchange && !P_CheckPosition3D(thing, x, y)))
       {
          // Solid wall or thing
          if(!clip.BlockingMobj || clip.BlockingMobj->player || !thing->player)
@@ -1666,6 +1664,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 
    if(portalteleport)
    {
+      // Passed through at least one portal
       // TODO: 3D teleport
       P_LinePortalDidTeleport(thing, x - prex, y - prey, 0, oldgroupid,
                               newgroupid);
