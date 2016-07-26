@@ -730,14 +730,29 @@ int EV_StartLightStrobing(const line_t *line, int tag, int darkTime,
 //
 // jff 2/12/98 added int return value, fixed return
 //
-int EV_TurnTagLightsOff(const line_t* line)
+int EV_TurnTagLightsOff(const line_t* line, int tag, bool isParam)
 {
    // search sectors for those with same tag as activating line
    
-   // killough 10/98: replaced inefficient search with fast search
-   for(int j = -1; (j = P_FindSectorFromLineTag(line, j)) >= 0; )
+   // MaxW: Param tag0 support
+   bool manual = false;
+   sector_t *sector;
+   if(isParam && !tag)
    {
-      sector_t *sector = sectors + j, *tsec;
+      if(!line || !(sector = line->backsector))
+         return 0;
+      manual = true;
+      goto manualLight;
+   }
+
+   // killough 10/98: replaced inefficient search with fast search
+   for(int j = -1; (j = P_FindSectorFromTag(tag, j)) >= 0; )
+   {
+      sector = sectors + j;
+
+   manualLight:
+      ;
+      sector_t *tsec;
       int min = sector->lightlevel;
       
       // find min neighbor light level
@@ -749,6 +764,9 @@ int EV_TurnTagLightsOff(const line_t* line)
       }
       
       sector->lightlevel = min;
+
+      if(manual)
+         return 1;
    }
 
    return 1;

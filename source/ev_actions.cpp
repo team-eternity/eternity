@@ -35,6 +35,7 @@
 #include "ev_specials.h"
 #include "g_game.h"
 #include "p_info.h"
+#include "p_sector.h"
 #include "p_skin.h"
 #include "p_spec.h"
 #include "p_xenemy.h"
@@ -661,7 +662,10 @@ DEFINE_ACTION(EV_ActionBuildStairsTurbo16)
 
 //
 // EV_ActionTurnTagLightsOff
+// Also implements Light_MinNeighbor(tag)
 //
+// * ExtraData: 473
+// * Hexen:     233
 DEFINE_ACTION(EV_ActionTurnTagLightsOff)
 {
    // case 104: (W1)
@@ -669,7 +673,8 @@ DEFINE_ACTION(EV_ActionTurnTagLightsOff)
    // case 173: (S1 - BOOM Extended)
    // case 194: (SR - BOOM Extended)
    // Turn lights off in sector(tag)
-   return EV_TurnTagLightsOff(instance->line);
+   bool isParam = EV_IsParamLineSpec(instance->special);
+   return EV_TurnTagLightsOff(instance->line, instance->tag, isParam);
 }
 
 //
@@ -2691,6 +2696,18 @@ DEFINE_ACTION(EV_ActionPolyobjORRotateLeft)
 }
 
 //
+// EV_ActionPolyobjStop
+//
+// Implements EV_ActionPolyobjStop(id)
+// * ExtraData: 474
+// * Hexen:     87
+//
+DEFINE_ACTION(EV_ActionPolyobjStop)
+{  
+   return EV_DoPolyObjStop(instance->args[0]);
+}
+
+//
 // EV_ActionPillarBuild
 //
 // Implements Pillar_Build(tag, speed, height)
@@ -4033,6 +4050,50 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingLowerRaise)
    fd.crush = -1;
 
    return EV_DoParamFloor(instance->line, instance->tag, &fd);
+}
+
+//
+// Implements HealThing(amount, maxhealth)
+//
+// * ExtraData:         469
+// * Hexen (ZDoom):     248
+//
+DEFINE_ACTION(EV_ActionHealThing)
+{
+  return EV_HealThing(instance->actor, instance->line);
+}
+
+//
+// Implements Sector_SetRotation(tag, floor-angle, ceiling-angle)
+//
+// * ExtraData:         470
+// * Hexen (ZDoom):     185
+//
+DEFINE_ACTION(EV_ActionParamSectorSetRotation)
+{
+   return EV_SectorSetRotation(instance->line, instance->tag);
+}
+
+//
+// Implements Sector_SetCeilingPanning(amount, tag, x-int, x-frac, y-int, y-frac)
+//
+// * ExtraData:         471
+// * Hexen (ZDoom):     186
+//
+DEFINE_ACTION(EV_ActionParamSectorSetCeilingPanning)
+{
+   return EV_SectorSetCeilingPanning(instance->line, instance->tag);
+}
+
+//
+// Implements Sector_SetFloorPanning(amount, tag, x-int, x-frac, y-int, y-frac)
+//
+// * ExtraData:         472
+// * Hexen (ZDoom):     187
+//
+DEFINE_ACTION(EV_ActionParamSectorSetFloorPanning)
+{
+   return EV_SectorSetFloorPanning(instance->line, instance->tag);
 }
 
 // EOF

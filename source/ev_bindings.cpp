@@ -1045,6 +1045,7 @@ PARAMLINE(PolyobjRotateRight);
 PARAMLINE(PolyobjORRotateRight);
 PARAMLINE(PolyobjRotateLeft);
 PARAMLINE(PolyobjORRotateLeft);
+PARAMLINE(PolyobjStop);
 PARAMLINE(PillarBuild);
 PARAMLINE(PillarBuildAndCrush);
 PARAMLINE(PillarOpen);
@@ -1098,6 +1099,11 @@ PARAMLINE(LightTurnOn);
 PARAMLINE(ChangeSkill);
 PARAMLINE(ChangeOnly);
 PARAMLINE(ChangeOnlyNumeric);
+PARAMLINE(HealThing);
+PARAMLINE(ParamSectorSetRotation);
+PARAMLINE(ParamSectorSetFloorPanning);
+PARAMLINE(ParamSectorSetCeilingPanning);
+PARAMLINE(TurnTagLightsOff);
 
 //=============================================================================
 //
@@ -1493,6 +1499,12 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(466, ChangeOnly,                      "Floor_TransferTrigger")
    LINESPECNAMED(467, ChangeOnlyNumeric,               "Floor_TransferNumeric")
    LINESPECNAMED(468, ParamFloorCeilingLowerRaise,     "FloorAndCeiling_LowerRaise")
+   LINESPECNAMED(469, HealThing,                       "HealThing")
+   LINESPECNAMED(470, ParamSectorSetRotation,          "Sector_SetRotation")
+   LINESPECNAMED(471, ParamSectorSetFloorPanning,      "Sector_SetFloorPanning")
+   LINESPECNAMED(472, ParamSectorSetCeilingPanning,    "Sector_SetCeilingPanning")
+   LINESPECNAMED(473, TurnTagLightsOff,                "Light_MinNeighbor")
+   LINESPECNAMED(474, PolyobjStop,                     "Polyobj_Stop")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1607,6 +1619,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(82,  ACSTerminate,                    "ACS_Terminate")
    LINESPECNAMED(83,  ACSLockedExecute,                "ACS_LockedExecute")
    LINESPECNAMED(84,  ACSExecuteWithResult,            "ACS_ExecuteWithResult")
+   LINESPECNAMED(87,  PolyobjStop,                     "Polyobj_Stop")
    LINESPECNAMED(90,  PolyobjORRotateLeft,             "Polyobj_OR_RotateLeft")
    LINESPECNAMED(91,  PolyobjORRotateRight,            "Polyobj_OR_RotateRight")
    LINESPECNAMED(92,  PolyobjORMove,                   "Polyobj_OR_Move")
@@ -1637,6 +1650,9 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(168, ParamCeilingCrushAndRaiseDist,   "Ceiling_CrushAndRaiseDist")
    LINESPECNAMED(176, ThingChangeTID,                  "Thing_ChangeTID")
    LINESPECNAMED(179, ChangeSkill,                     "ChangeSkill")
+   LINESPECNAMED(185, ParamSectorSetRotation,          "Sector_SetRotation")
+   LINESPECNAMED(186, ParamSectorSetFloorPanning,      "Sector_SetFloorPanning")
+   LINESPECNAMED(187, ParamSectorSetCeilingPanning,    "Sector_SetCeilingPanning")
    LINESPECNAMED(192, ParamCeilingLowerToHighestFloor, "Ceiling_LowerToHighestFloor")
    LINESPECNAMED(193, ParamCeilingLowerInstant,        "Ceiling_LowerInstant")
    LINESPECNAMED(194, ParamCeilingRaiseInstant,        "Ceiling_RaiseInstant")
@@ -1651,6 +1667,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(215, ParamTeleportLine,               "Teleport_Line")
    LINESPECNAMED(217, ParamStairsBuildUpDoom,          "Stairs_BuildUpDoom")
    LINESPECNAMED(232, ParamLightStrobeDoom,            "Light_StrobeDoom")
+   LINESPECNAMED(233, TurnTagLightsOff,                "Light_MinNeighbor")
    LINESPECNAMED(234, LightTurnOn,                     "Light_MaxNeighbor")
    LINESPECNAMED(235, ChangeOnly,                      "Floor_TransferTrigger")
    LINESPECNAMED(236, ChangeOnlyNumeric,               "Floor_TransferNumeric")
@@ -1662,6 +1679,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(245, ParamElevatorUp,                 "Elevator_RaiseToNearest")
    LINESPECNAMED(246, ParamElevatorCurrent,            "Elevator_MoveToFloor")
    LINESPECNAMED(247, ParamElevatorDown,               "Elevator_LowerToNearest")
+   LINESPECNAMED(248, HealThing,                       "HealThing")
    LINESPECNAMED(249, ParamDoorCloseWaitOpen,          "Door_CloseWaitOpen")
    LINESPECNAMED(250, ParamDonut,                      "Floor_Donut")
    LINESPECNAMED(251, ParamFloorCeilingLowerRaise,     "FloorAndCeiling_LowerRaise")

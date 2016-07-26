@@ -1412,7 +1412,7 @@ void EV_CloseDoor(int sectag, int speed);
 int EV_StartLightStrobing(const line_t *line, int tag, int darkTime,
                           int brightTime, bool isParam);
 
-int EV_TurnTagLightsOff(const line_t *line);
+int EV_TurnTagLightsOff(const line_t *line, int tag, bool isParam);
 
 int EV_LightTurnOn(const line_t *line, int tag, int bright, bool paramSpecial);
 
@@ -1497,6 +1497,7 @@ int EV_ThrustThing(Mobj *actor, int side, int byteangle, int speed, int tid);
 int EV_ThrustThingZ(Mobj *actor, int tid, int speed, bool upDown, bool setAdd);
 int EV_DamageThing(Mobj *actor, int damage, int mod, int tid);
 int EV_ThingDestroy(int tid, int sectortag);
+int EV_HealThing(Mobj *actor, line_t *line);
 
 
 ////////////////////////////////////////////////////////////////

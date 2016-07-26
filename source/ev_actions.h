@@ -196,6 +196,7 @@ DECLARE_ACTION(EV_ActionPolyobjRotateRight);
 DECLARE_ACTION(EV_ActionPolyobjORRotateRight);
 DECLARE_ACTION(EV_ActionPolyobjRotateLeft);
 DECLARE_ACTION(EV_ActionPolyobjORRotateLeft);
+DECLARE_ACTION(EV_ActionPolyobjStop);
 DECLARE_ACTION(EV_ActionPillarBuild);
 DECLARE_ACTION(EV_ActionPillarBuildAndCrush );
 DECLARE_ACTION(EV_ActionPillarOpen);
@@ -246,6 +247,10 @@ DECLARE_ACTION(EV_ActionParamElevatorUp);
 DECLARE_ACTION(EV_ActionParamElevatorDown);
 DECLARE_ACTION(EV_ActionParamElevatorCurrent);
 DECLARE_ACTION(EV_ActionChangeSkill);
+DECLARE_ACTION(EV_ActionHealThing);
+DECLARE_ACTION(EV_ActionParamSectorSetRotation);
+DECLARE_ACTION(EV_ActionParamSectorSetCeilingPanning);
+DECLARE_ACTION(EV_ActionParamSectorSetFloorPanning);
 
 #endif
 
