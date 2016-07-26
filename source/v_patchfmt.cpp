@@ -251,12 +251,12 @@ patch_t *PatchLoader::CacheNum(WadDirectory &dir, int lumpnum, int tag)
 //
 // Static method to cache a lump as a patch_t, by name
 //
-patch_t *PatchLoader::CacheName(WadDirectory &dir, const char *name, int tag)
+patch_t *PatchLoader::CacheName(WadDirectory &dir, const char *name, int tag, int ns)
 {
    int lumpnum;
    patch_t *ret;
 
-   if((lumpnum = dir.checkNumForName(name)) >= 0)
+   if((lumpnum = dir.checkNumForName(name, ns)) >= 0)
       ret = PatchLoader::CacheNum(dir, lumpnum, tag);
    else
       ret = GetDefaultPatch();
