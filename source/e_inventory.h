@@ -222,7 +222,7 @@ bool E_PlayerCanUnlock(player_t *player, int lockID, bool remote);
 int E_GetLockDefColor(int lockID);
 
 // Tries to move the inventory cursor 'amount' right.
-void E_MoveInventoryCursor(player_t *player, int amount);
+bool E_MoveInventoryCursor(player_t *player, int amount, int &cursor);
 
 // Tries to use the currently selected item.
 void E_TryUseItem(player_t *player);

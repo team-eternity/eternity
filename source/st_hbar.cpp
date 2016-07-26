@@ -405,25 +405,28 @@ static void ST_drawInvBar()
 {
    itemeffect_t *artifact;
    const char *patch;
-   int x;
+   int leftoffs = hbarstate.curpos >= 7 ? hbarstate.curpos - 6 : 0;
 
-   //x = hbarstate.inv_ptr - hbarstate.curpos;
    V_DrawPatch(34, 160, &subscreen43, PatchLoader::CacheName(wGlobalDir, "INVBAR", PU_CACHE));
 
-   /*for(int i = 0; i < 7; i++)
+   int i = 0;
+   do
    {
-      if(plyr->inv_ptr > x + i && plyr->inventory[x + i].amount > 0)
+      if(/*plyr->inv_ptr > leftoffs + i && */plyr->inventory[i + leftoffs].amount > 0)
       {
-         if(E_EffectForInventoryItemID(plyr->inventory[plyr->inv_ptr].item))
+         if(artifact = E_EffectForInventoryItemID(plyr->inventory[i + leftoffs].item))
          {
             if((patch = artifact->getString("icon", "")) != "")
             {
                V_DrawPatch(50 + i * 31, 160, &subscreen43,
-                  PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE));
+                  PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE, lumpinfo_t::ns_sprites));
             }
          }
       }
-   }*/
+   } while(E_MoveInventoryCursor(plyr, 1, i) && i < 7);
+
+   V_DrawPatch(50 + (hbarstate.curpos - leftoffs)* 31, 189, &subscreen43,
+     PatchLoader::CacheName(wGlobalDir, "SELECTBO", PU_CACHE));
 }
 //
 // ST_HticDrawer

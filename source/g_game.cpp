@@ -261,40 +261,12 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
    forward = side = 0;
 
-   // Inventory stuff
-   inventoryindex_t inv_ptr;
-   inventoryitemid_t id;
-   itemeffect_t *effect;
-   if(gameactions[ka_inventory_left])
-   {      
-      inventoryTics = 5 * TICRATE;
-      if(!invbarstate.inventory)
-      {
-         invbarstate.inventory = true;
-      }
-      E_MoveInventoryCursor(&players[consoleplayer], -1);
-      gameactions[ka_inventory_left] = false;
-      // REMOVEME: This only exists while inventory bar isn't implemented
-      if(players[consoleplayer].inventory[players[consoleplayer].inv_ptr].amount)
-         doom_printf("Item %s", E_EffectForInventoryItemID(players[consoleplayer].inventory[players[consoleplayer].inv_ptr].item)->getKey());
-   }
-   if(gameactions[ka_inventory_right])
-   {
-      inventoryTics = 5 * TICRATE;
-      if(!invbarstate.inventory)
-      {
-         invbarstate.inventory = true;
-      }
-      E_MoveInventoryCursor(&players[consoleplayer], 1);
-      gameactions[ka_inventory_right] = false;
-      // REMOVEME: This only exists while inventory bar isn't implemented
-      if(players[consoleplayer].inventory[players[consoleplayer].inv_ptr].amount)
-         doom_printf("Item %s", E_EffectForInventoryItemID(players[consoleplayer].inventory[players[consoleplayer].inv_ptr].item)->getKey());
-   }
    if(gameactions[ka_inventory_use])
    {
+      // FIXME: Handle noartiskip
       if(invbarstate.inventory)
       {
+         players[consoleplayer].inv_ptr = invbarstate.inv_ptr;
          invbarstate.inventory = false;
          usearti = false;
       }
@@ -303,12 +275,8 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          E_TryUseItem(&players[consoleplayer]);
          usearti = false;
       }
-      //E_TryUseItem(&players[consoleplayer]);
       gameactions[ka_inventory_use] = false;
-      // FIXME: Handle noartiskip
    }
-   if(gameactions[ka_inventory_drop])
-      ;
 
    // use two stage accelerative turning on the keyboard and joystick
    if(gameactions[ka_right] || gameactions[ka_left])
@@ -848,6 +816,37 @@ bool G_Responder(event_t* ev)
       {
          gameactions[ka_autorun] = 0;
          autorun = !autorun;
+      }
+
+      if(G_KeyResponder(ev, kac_game) == ka_inventory_left)
+      {
+         inventoryTics = 5 * TICRATE;
+         if(!invbarstate.inventory)
+         {
+            invbarstate.inventory = true;
+            break;
+         }
+         // If curpos needs to be adjusted
+         if(E_MoveInventoryCursor(&players[consoleplayer], -1, invbarstate.inv_ptr))
+         {
+            E_MoveInventoryCursor(&players[consoleplayer], -1, invbarstate.curpos);            
+         }
+         return true;
+      }
+      if(G_KeyResponder(ev, kac_game) == ka_inventory_right)
+      {
+         inventoryTics = 5 * TICRATE;
+         if(!invbarstate.inventory)
+         {
+            invbarstate.inventory = true;
+            break;
+         }
+         // If curpos needs to be adjusted
+         if(E_MoveInventoryCursor(&players[consoleplayer], 1, invbarstate.inv_ptr))
+         {
+            E_MoveInventoryCursor(&players[consoleplayer], 1, invbarstate.curpos);
+         }
+         return true;
       }
 
       return true;    // eat key down events

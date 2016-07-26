@@ -1211,37 +1211,40 @@ inventoryindex_t e_maxvisiblesortorder = INT_MIN;
 // E_MoveInventoryCursor
 //
 // Tries to move the inventory cursor 'amount' right.
+// Returns true if cursor wasn't adjusted (outside of amount being added).
 //
-void E_MoveInventoryCursor(player_t *player, int amount)
+bool E_MoveInventoryCursor(player_t *player, int amount, int &cursor)
 {
-   invbarstate_t &invbarstate = GameModeInfo->StatusBar->GetInvBarState();
-   if(player->inv_ptr + amount <= 0)
+   if(cursor + amount < 0)
    {
-      player->inv_ptr = 0;
+      cursor = 0;
+      return false;
    }
    else if(amount <= 0)
    {
-      player->inv_ptr += amount;
+      cursor += amount;
+      return true;
    }
    else
    {
       for(int i = 0; i < amount; i++)
       {
-         itemeffect_t *effect = E_EffectForInventoryItemID(player->inventory[player->inv_ptr + 1].item);
+         itemeffect_t *effect = E_EffectForInventoryItemID(player->inventory[cursor + 1].item);
          if(!effect)
-            return;
+            return false;
 
          if(effect->getInt(keySortOrder, INT_MAX) > e_maxvisiblesortorder)
          {
+            return false;
             break;
          }
          else
          {
-            player->inv_ptr += 1;
+            cursor += 1;
          }
       }
    }
-   
+   return true;
 }
 
 //
@@ -1261,6 +1264,7 @@ itemeffecttype_t E_getItemEffectType(itemeffect_t *fx)
 //
 void E_TryUseItem(player_t *player)
 {
+   invbarstate_t &invbarstate = GameModeInfo->StatusBar->GetInvBarState();
    itemeffect_t *artifact = E_EffectForInventoryItemID(player->inventory[player->inv_ptr].item);
    if(!artifact)
       return;
@@ -1296,8 +1300,17 @@ void E_TryUseItem(player_t *player)
          {
             if(E_RemoveInventoryItem(player, artifact, 1) == INV_REMOVEDSLOT)
             {
-               E_MoveInventoryCursor(player, -1);
+               E_MoveInventoryCursor(player, -1, player->inv_ptr);
+               E_MoveInventoryCursor(player, -1, invbarstate.inv_ptr);
+               E_MoveInventoryCursor(player, -1, invbarstate.curpos);
             }
+         }
+         else
+         {
+            // Heretic shifts inventory one left if you fail to use your selected item.
+            E_MoveInventoryCursor(player, -1, player->inv_ptr);
+            E_MoveInventoryCursor(player, -1, invbarstate.inv_ptr);
+            E_MoveInventoryCursor(player, -1 , invbarstate.curpos);
          }
       }
    }
@@ -1777,12 +1790,14 @@ void E_InventoryEndHub(player_t *player)
 //
 void E_ClearInventory(player_t *player)
 {
+   invbarstate_t &invbarstate = GameModeInfo->StatusBar->GetInvBarState();
    for(inventoryindex_t i = 0; i < e_maxitemid; i++)
    {
       player->inventory[i].amount =  0;
       player->inventory[i].item   = -1;
    }
    player->inv_ptr = 0;
+   invbarstate = { false, 0, 0, 0 };
 }
 
 //
