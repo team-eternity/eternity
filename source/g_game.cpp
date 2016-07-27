@@ -748,7 +748,8 @@ bool G_Responder(event_t* ev)
    if(G_KeyResponder(ev, kac_cmd))
       return true;
 
-   if(ev->type == ev_keyup && G_KeyResponder(ev, kac_game) == ka_inventory_use)
+   if(ev->type == ev_keyup && G_KeyResponder(ev, kac_game) == ka_inventory_use
+      && players[consoleplayer].playerstate != PST_DEAD)
    {
       usearti = true;
    }

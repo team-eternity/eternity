@@ -418,7 +418,7 @@ static void ST_drawStatBar()
          {
             V_DrawPatch(179, 160, &subscreen43,
                PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE, lumpinfo_t::ns_sprites));
-            ST_drawSmallNumber(plyr->inventory[plyr->inv_ptr].amount, 209, 182);
+            ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact), 209, 182);
          }
       }
    }
@@ -475,7 +475,7 @@ static void ST_drawInvBar()
             {
                V_DrawPatch(50 + i * 31, 160, &subscreen43,
                   PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE, lumpinfo_t::ns_sprites));
-               ST_drawSmallNumber(plyr->inventory[i + leftoffs].amount, 77 + i * 31, 182);
+               ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact), 77 + i * 31, 182);
             }
          }
       }
@@ -494,8 +494,6 @@ static void ST_HticDrawer()
    ST_drawBackground();
    ST_drawLifeChain();
 
-   // TODO: choose whether to draw statbar or inventory bar here
-   // based on whether the inventory is active
    if(hbarstate.inventory)
       ST_drawInvBar();
    else
