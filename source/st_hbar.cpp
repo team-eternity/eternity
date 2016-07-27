@@ -453,7 +453,16 @@ static void ST_drawStatBar()
    // draw ammo amount
    itemeffect_t *ammo = P_GetReadyWeapon(plyr)->ammo;
    if(ammo)
+   {
+      V_DrawPatch(108, 161, &subscreen43,
+         PatchLoader::CacheName(wGlobalDir, "BLACKSQ", PU_CACHE));
+      if((patch = ammo->getString("icon", "")) != "")
+      {
+         V_DrawPatch(111, 172, &subscreen43,
+            PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE));
+      }
       ST_drawInvNum(E_GetItemOwnedAmount(plyr, ammo), 136, 162);
+   }
 }
 
 static void ST_drawInvBar()

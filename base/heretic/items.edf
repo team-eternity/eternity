@@ -168,6 +168,158 @@ endif()
 
 //=============================================================================
 //
+// Ammo Types
+//
+// An artifact is defined for each distinct type of ammo the player can own,
+// and ammoeffect definitions actually give ammo of those types when they are
+// picked up.
+//
+
+artifact AmmoWandCrystal
+{
+  artifacttype   Ammo
+  maxamount      100
+  interhubamount  -1
+  icon           INAMGLD
+
+  ammo.backpackamount     10
+  ammo.backpackmaxamount 200
+}
+
+artifact AmmoEtherealArrow
+{
+  artifacttype   Ammo
+  maxamount      50
+  interhubamount -1
+  icon           INAMBOW
+
+  ammo.backpackamount      5
+  ammo.backpackmaxamount 100
+}
+
+artifact AmmoClawOrb
+{
+  artifacttype   Ammo
+  maxamount      200
+  interhubamount  -1
+  icon           INAMBST
+
+  ammo.backpackamount     10
+  ammo.backpackmaxamount 400
+}
+
+artifact AmmoRune
+{
+  artifacttype   Ammo
+  maxamount      200
+  interhubamount -1
+  icon           INAMRAM
+
+  ammo.backpackamount     20
+  ammo.backpackmaxamount 400
+}
+
+artifact AmmoFlameOrb
+{
+  artifacttype   Ammo
+  maxamount      20
+  interhubamount -1
+  icon           INAMPNX
+
+  ammo.backpackamount     1
+  ammo.backpackmaxamount 40
+}
+
+artifact AmmoMaceSphere
+{
+  artifacttype   Ammo
+  maxamount      150
+  interhubamount -1
+  icon           INAMLOB
+
+  ammo.backpackamount     20
+  ammo.backpackmaxamount 300
+}
+
+//=============================================================================
+//
+// Ammo Givers
+//
+
+ammoeffect GoldWandAmmo
+{
+  ammo       AmmoWandCrystal
+  amount     10
+}
+
+ammoeffect GoldWandHefty
+{
+  ammo       AmmoWandCrystal
+  amount     50
+}
+
+ammoeffect CrossbowAmmo
+{
+  ammo       AmmoEtherealArrow
+  amount     5
+}
+
+ammoeffect CrossbowHefty
+{
+  ammo       AmmoEtherealArrow
+  amount     20
+}
+
+ammoeffect BlasterAmmo
+{
+  ammo       AmmoClawOrb
+  amount     10
+}
+
+ammoeffect BlasterHefty
+{
+  ammo       AmmoClawOrb
+  amount     25
+}
+
+ammoeffect SkullRodAmmo
+{
+  ammo       AmmoRune
+  amount     20
+}
+
+ammoeffect SkullRodHefty
+{
+  ammo       AmmoRune
+  amount     100
+}
+
+ammoeffect PhoenixRodAmmo
+{
+  ammo       AmmoFlameOrb
+  amount     1
+}
+
+ammoeffect PhoenixRodHefty
+{
+  ammo       AmmoFlameOrb
+  amount     10
+}
+
+ammoeffect MaceAmmo
+{
+  ammo       AmmoMaceSphere
+  amount     20
+}
+
+ammoeffect MaceHefty
+{
+  ammo       AmmoMaceSphere
+  amount     100
+}
+
+//=============================================================================
+//
 // Power Givers
 //
 

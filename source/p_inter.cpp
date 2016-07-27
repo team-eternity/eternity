@@ -1171,73 +1171,97 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       break;
       // Heretic Ammo items
    case PFX_GWNDWIMPY:
-      // HTIC_TODO: give ammo
+      // INVENTORY_FIXME: temp hard-coded
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("GoldWandAmmo"), dropped, special->dropamount))
+         return;
       message = DEH_String("HAMMOGOLDWAND1");
       sound = sfx_hitemup;
       break;
    
    case PFX_GWNDHEFTY:
-      // HTIC_TODO: give ammo
+      // INVENTORY_FIXME: temp hard-coded
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("GoldWandHefty"), dropped, special->dropamount))
+         return;
       message = DEH_String("HAMMOGOLDWAND2");
       sound = sfx_hitemup;
       break;
    
    case PFX_MACEWIMPY:
-      // HTIC_TODO: give ammo
+      // INVENTORY_FIXME: temp hard-coded
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("MaceAmmo"), dropped, special->dropamount))
+         return;
       message = DEH_String("HAMMOMACE1");
       sound = sfx_hitemup;
       break;
    
    case PFX_MACEHEFTY:
-      // HTIC_TODO: give ammo
+      // INVENTORY_FIXME: temp hard-coded
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("MaceHefty"), dropped, special->dropamount))
+         return;
       message = DEH_String("HAMMOMACE2");
       sound = sfx_hitemup;
       break;
    
    case PFX_CBOWWIMPY:
-      // HTIC_TODO: give ammo
+      // INVENTORY_FIXME: temp hard-coded
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("CrossbowAmmo"), dropped, special->dropamount))
+         return;
       message = DEH_String("HAMMOCROSSBOW1");
       sound = sfx_hitemup;
       break;
    
    case PFX_CBOWHEFTY:
-      // HTIC_TODO: give ammo
+      // INVENTORY_FIXME: temp hard-coded
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("CrossbowHefty"), dropped, special->dropamount))
+         return;
       message = DEH_String("HAMMOCROSSBOW2");
       sound = sfx_hitemup;
       break;
    
    case PFX_BLSRWIMPY:
-      // HTIC_TODO: give ammo
+      // INVENTORY_FIXME: temp hard-coded
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("BlasterAmmo"), dropped, special->dropamount))
+         return;
       message = DEH_String("HAMMOBLASTER1");
       sound = sfx_hitemup;
       break;
    
    case PFX_BLSRHEFTY:
-      // HTIC_TODO: give ammo
+      // INVENTORY_FIXME: temp hard-coded
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("BlasterHefty"), dropped, special->dropamount))
+         return;
       message = DEH_String("HAMMOBLASTER2");
       sound = sfx_hitemup;
       break;
    
    case PFX_PHRDWIMPY:
-      // HTIC_TODO: give ammo
+      // INVENTORY_FIXME: temp hard-coded
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("PhoenixRodHefty"), dropped, special->dropamount))
+         return;
       message = DEH_String("HAMMOPHOENIXROD1");
       sound = sfx_hitemup;
       break;
    
    case PFX_PHRDHEFTY:
-      // HTIC_TODO: give ammo
+      // INVENTORY_FIXME: temp hard-coded
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("PhoenixRodHefty"), dropped, special->dropamount))
+         return;
       message = DEH_String("HAMMOPHOENIXROD2");
       sound = sfx_hitemup;
       break;
    
    case PFX_SKRDWIMPY:
-      // HTIC_TODO: give ammo
+      // INVENTORY_FIXME: temp hard-coded
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("SkullRodAmmo"), dropped, special->dropamount))
+         return;
       message = DEH_String("HAMMOSKULLROD1");
       sound = sfx_hitemup;
       break;
    
    case PFX_SKRDHEFTY:
-      // HTIC_TODO: give ammo
+      // INVENTORY_FIXME: temp hard-coded
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("SkullRodHefty"), dropped, special->dropamount))
+         return;
       message = DEH_String("HAMMOSKULLROD2");
       sound = sfx_hitemup;
       break;
