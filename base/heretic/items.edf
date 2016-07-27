@@ -222,6 +222,7 @@ artifact ArtiInvisibility
 
   sortorder      70
   icon           ARTIINVS
+  usesound       ht_artiuse
   useeffect      Shadowsphere
 
   +invbar
@@ -237,6 +238,7 @@ artifact ArtiHealth
 
   sortorder      10
   icon           ARTIPTN2
+  usesound       ht_artiuse
   useeffect      QuartzFlask
   
   +invbar
@@ -252,6 +254,7 @@ artifact ArtiFly
 
   sortorder      100
   icon           ARTISOAR
+  usesound       ht_artiuse
   useeffect      WingsOfWrath
 
   +invbar
@@ -267,6 +270,7 @@ artifact ArtiInvulnerability
 
   sortorder      60
   icon           ARTIINVU
+  usesound       ht_artiuse
   useeffect      RingOfInvincibility
 
   +invbar
@@ -282,6 +286,7 @@ artifact ArtiTomeOfPower
 
   sortorder      30
   icon           ARTIPWBK
+  usesound       ht_artiuse
   useeffect      TomeOfPower
 
   +invbar
@@ -297,6 +302,7 @@ artifact ArtiEgg
 
   sortorder      50
   icon           ARTIEGGC
+  usesound       ht_artiuse
   useeffect      MorphOvum
 
   +invbar
@@ -312,6 +318,7 @@ artifact ArtiSuperHealth
 
   sortorder      20
   icon           ARTISPHL
+  usesound       ht_artiuse
   useeffect      MysticUrn
 
   +invbar
@@ -327,6 +334,7 @@ artifact ArtiTorch
 
   sortorder      90
   icon           ARTITRCH
+  usesound       ht_artiuse
   useeffect      Torch
 
   +invbar
@@ -342,6 +350,7 @@ artifact ArtiTimeBomb
 
   sortorder      40
   icon           ARTIFBMB
+  usesound       ht_artiuse
   useeffect      SpawnTimeBomb
 
   +invbar
@@ -357,6 +366,7 @@ artifact ArtiTeleport
 
   sortorder      80
   icon           ARTIATLP
+  usesound       ht_artiuse
   useeffect      ChaosOrb
 
   +invbar

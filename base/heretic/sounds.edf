@@ -851,6 +851,13 @@ sound ht_artiup
   pitchvariance Heretic
 }
 
+sound ht_artiuse
+{
+  lump          "artiuse"
+  priority      78
+  pitchvariance Heretic
+}
+
 
 // Environmental Sound Defaults
 // These are altered by the game engine to point to sounds specifed by MapInfo.

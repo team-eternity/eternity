@@ -36,6 +36,7 @@
 #include "e_hash.h"
 #include "e_inventory.h"
 #include "e_lib.h"
+#include "e_sound.h"
 #include "e_sprite.h"
 
 #include "autopalette.h"
@@ -1275,6 +1276,7 @@ void E_TryUseItem(player_t *player)
          itemeffect_t *effect = E_ItemEffectForName(artifact->getString(KEY_USEEFFECT, ""));
          bool shiftinvleft = false;
          bool success = false;
+         const char *sound;
 
          if(!effect)
             return;
@@ -1303,6 +1305,11 @@ void E_TryUseItem(player_t *player)
             {
                shiftinvleft = true;
             }
+            if((sound = artifact->getString(KEY_USESOUND, "")) != "")
+            {
+               S_StartSoundName(player->mo, sound);
+            }
+            invbarstate.ArtifactFlash = 4;
          }
          else
          {

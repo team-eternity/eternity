@@ -395,9 +395,22 @@ static void ST_drawStatBar()
 
    V_DrawPatch(34, 160, &subscreen43, statbar);
 
-   // TODO: inventory stuff
+   // ArtifactFlash, it's a gas! Gas! Gas!
+   if(hbarstate.ArtifactFlash)
+   {
+      V_DrawPatch(180, 161, &subscreen43,
+         PatchLoader::CacheName(wGlobalDir, "BLACKSQ", PU_CACHE));
+
+      temp = W_GetNumForName(DEH_String("useartia")) + hbarstate.ArtifactFlash - 1;
+
+      V_DrawPatch(182, 161, &subscreen43,
+         PatchLoader::CacheNum(wGlobalDir, temp, PU_CACHE));
+      // TODO: Perhaps introduce a static int and slow down the effect?
+      // MaxW: Choco Heretic does stuff that I'm not sure how to translate to EE.
+      hbarstate.ArtifactFlash--;
+   }
    // It's safety checks all the way down!
-   if(plyr->inventory[plyr->inv_ptr].amount)
+   else if(plyr->inventory[plyr->inv_ptr].amount)
    {
       if(artifact = E_EffectForInventoryItemID(plyr->inventory[plyr->inv_ptr].item))
       {
