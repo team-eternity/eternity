@@ -414,7 +414,7 @@ static void ST_drawStatBar()
    {
       if(artifact = E_EffectForInventoryItemID(plyr->inventory[plyr->inv_ptr].item))
       {
-         if((patch = artifact->getString("icon", "")) != "")
+         if((patch = artifact->getString("icon", "")) != "" && artifact->getInt("invbar", 0))
          {
             V_DrawPatch(179, 160, &subscreen43,
                PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE, lumpinfo_t::ns_sprites));
