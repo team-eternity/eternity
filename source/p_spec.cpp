@@ -1319,6 +1319,7 @@ void P_SpawnSpecials()
       case EV_STATIC_PORTAL_LINKED_CEILING:
       case EV_STATIC_PORTAL_LINKED_FLOOR:
       case EV_STATIC_PORTAL_LINKED_LINE2LINE:
+      case EV_STATIC_PORTAL_HORIZON_LINE:
          P_SpawnPortal(&lines[i], staticFn);
          break;
       
@@ -1423,7 +1424,10 @@ void P_SpawnDeferredSpecials()
             break;
          }
       }
-      sec->portalbox = isbox && foundportal;
+      if(isbox && foundportal)
+         sec->intflags |= SIF_PORTALBOX;
+      else
+         sec->intflags &= ~SIF_PORTALBOX;
    }
 }
 
@@ -2409,6 +2413,7 @@ static void P_getPortalProps(int staticFn, portal_type &type, portal_effect &eff
       { EV_STATIC_PORTAL_HORIZON_CEILING,        portal_horizon,  portal_ceiling  },
       { EV_STATIC_PORTAL_HORIZON_FLOOR,          portal_horizon,  portal_floor    },
       { EV_STATIC_PORTAL_HORIZON_CEILING_FLOOR,  portal_horizon,  portal_both     },
+      { EV_STATIC_PORTAL_HORIZON_LINE,           portal_horizon,  portal_lineonly },
       { EV_STATIC_PORTAL_SKYBOX_CEILING,         portal_skybox,   portal_ceiling  },
       { EV_STATIC_PORTAL_SKYBOX_FLOOR,           portal_skybox,   portal_floor    },
       { EV_STATIC_PORTAL_SKYBOX_CEILING_FLOOR,   portal_skybox,   portal_both     },
@@ -2481,6 +2486,12 @@ static void P_SpawnPortal(line_t *line, int staticFn)
                                   &sector->ceiling_xoffs, &sector->ceiling_yoffs,
                                   &sector->floorbaseangle, &sector->floorangle,
                                   &sector->ceilingbaseangle, &sector->ceilingangle);
+      if(effects == portal_lineonly)
+      {
+         // special case for line-only portal
+         P_SetPortal(sector, line, portal, portal_lineonly);
+         return;
+      }
       break;
 
    case portal_skybox:
@@ -2619,8 +2630,31 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       {
          P_SetPortal(lines[s].frontsector, lines + s, portal, portal_lineonly);
          
-         portal = R_GetLinkedPortal(s, line - lines, planez, toid, fromid);
-         P_SetPortal(sector, line, portal, portal_lineonly);
+         // ioanch 20160226: add partner portals
+         portal_t *portal2 = R_GetLinkedPortal(s, line - lines, planez, toid, fromid);
+         P_SetPortal(sector, line, portal2, portal_lineonly);
+
+         if(!lines[s].backsector || !line->backsector)
+         {
+            // ioanch: make a function to remove duplication
+            auto unblockline = [](line_t *line, line_t *partner)
+            {
+               line->backsector = line->frontsector;
+               line->sidenum[1] = line->sidenum[0];
+               line->flags &= ~ML_BLOCKING;
+               line->flags |= ML_TWOSIDED;
+               line->beyondportalsector = partner->frontsector;
+            };
+            // HACK TO MAKE THEM PASSABLE
+            if(!lines[s].backsector)
+               unblockline(lines + s, line);
+            if(!line->backsector)
+               unblockline(line, lines + s);
+
+            portal->data.link.polyportalpartner = portal2;
+            portal2->data.link.polyportalpartner = portal;
+         }
+
          return;
       }
       break;

@@ -280,6 +280,7 @@ enum
    EV_STATIC_SCROLL_LINE_UP,                // 417
    EV_STATIC_SCROLL_LINE_DOWN,              // 418
    EV_STATIC_SCROLL_LINE_DOWN_FAST,         // 419
+   EV_STATIC_PORTAL_HORIZON_LINE,           // 450
 
    EV_STATIC_MAX
 };

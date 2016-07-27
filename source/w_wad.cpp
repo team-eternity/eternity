@@ -833,7 +833,11 @@ class ArchiveDirFile
 public:
    qstring path;        // path from current directory (for reading)
    qstring innerpath;   // path from within the archive dir (for namespace)
-   off_t size = 0;      // file size
+   off_t size;          // file size
+
+   ArchiveDirFile() : path(), innerpath(), size(0)
+   {
+   }
 
    // for sorting
    bool operator < (const ArchiveDirFile &o) const

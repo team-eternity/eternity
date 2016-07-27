@@ -572,9 +572,6 @@ static void P_InitSector(sector_t *ss)
    // CPP_FIXME: temporary placement construction for sound origins
    ::new (&ss->soundorg)  PointThinker;
    ::new (&ss->csoundorg) PointThinker;
-
-   // ioanch: 20160123: init portalbox=false
-   ss->portalbox = false;
 }
 
 #define DOOM_SECTOR_SIZE 26

@@ -36,6 +36,7 @@
 #include "e_things.h"
 #include "m_argv.h"
 #include "m_bbox.h"
+#include "m_compare.h"
 #include "m_random.h"
 #include "p_inter.h"
 #include "p_mobj.h"
@@ -265,6 +266,11 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
    {
       for (m = mo->touching_sectorlist; m; m = m->m_tnext)
       {
+         if(useportalgroups && full_demo_version >= make_full_version(340, 48) &&
+            !P_SectorTouchesThingVertically(m->m_sector, mo))
+         {
+            continue;
+         }
          if((sec = m->m_sector)->flags & SECF_FRICTION &&
             (sec->friction < friction || friction == ORIG_FRICTION) &&
             (mo->z <= sec->floorheight ||
@@ -1423,6 +1429,7 @@ static bool P_lineIsCrossedMiddle(fixed_t tx, fixed_t ty, const line_t *line)
 bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 {
    fixed_t oldx, oldy, oldz;
+   int oldgroupid, newgroupid = thing->groupid;
    dropoff_func_t dropofffunc;
    
    // haleyjd 11/10/04: 3dMidTex: determine if a thing is on a line:
@@ -1438,12 +1445,71 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    
    clip.felldown = clip.floatok = false;               // killough 11/98
 
+   bool groupidchange = false, portalteleport = false;
+   fixed_t prex, prey;
+
    // haleyjd: OVER_UNDER
    if(P_Use3DClipping())
    {
+      oldx = thing->x;
+      oldy = thing->y;
       oldz = thing->z;
 
-      if(!P_CheckPosition3D(thing, x, y))
+      oldgroupid = thing->groupid;
+      int ox = (emin(oldx, x) - bmaporgx) >> MAPBLOCKSHIFT;
+      int oy = (emin(oldy, y) - bmaporgy) >> MAPBLOCKSHIFT;
+      int tx = (emax(oldx, x) - bmaporgx) >> MAPBLOCKSHIFT;
+      int ty = (emax(oldy, y) - bmaporgy) >> MAPBLOCKSHIFT;
+   
+      bool hasportals = false;
+      if(gMapHasLinePortals && !(thing->flags & (MF_TELEPORT | MF_NOCLIP)) &&
+         full_demo_version >= make_full_version(340, 48))
+      {
+         for(int bx = ox; bx <= tx; bx++)
+         {
+            if(bx < 0 || bx >= bmapwidth)
+               continue;
+            for(int by = oy; by <= ty; by++)
+            {
+               if(by < 0 || by >= bmapheight)
+                  continue;
+               if(P_BlockHasLinkedPortalLines(by * bmapwidth + bx))
+               {
+                  hasportals = true;
+                  goto outloop;
+               }
+            }
+         }
+      outloop:
+         ;
+      }
+      if(hasportals)
+      {
+         v2fixed_t dest = P_LinePortalCrossing(oldx, oldy,
+                                               x - oldx, y - oldy, &newgroupid,
+                                               &portalteleport);
+   
+   
+         // Update position
+         groupidchange = newgroupid != thing->groupid;
+         prex = x;
+         prey = y;
+
+         x = dest.x;
+         y = dest.y;
+      }
+
+      bool check;
+      if(groupidchange)
+      {
+         oldgroupid = thing->groupid;
+         thing->groupid = newgroupid;
+         check = P_CheckPosition3D(thing, x, y);
+         thing->groupid = oldgroupid;
+      }
+
+      if((groupidchange && !check)
+         || (!groupidchange && !P_CheckPosition3D(thing, x, y)))
       {
          // Solid wall or thing
          if(!clip.BlockingMobj || clip.BlockingMobj->player || !thing->player)
@@ -1581,8 +1647,10 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 
    P_UnsetThingPosition (thing);
    
+   // Check portal teleportation
    oldx = thing->x;
    oldy = thing->y;
+   oldgroupid = thing->groupid;
    thing->floorz = clip.floorz;
    thing->ceilingz = clip.ceilingz;
    thing->dropoffz = clip.dropoffz;      // killough 11/98: keep track of dropoffs
@@ -1590,30 +1658,20 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    thing->passceilz = clip.passceilz;
    thing->secfloorz = clip.secfloorz;
    thing->secceilz = clip.secceilz;
-
    thing->x = x;
    thing->y = y;
-   
    P_SetThingPosition(thing);
+
+   if(portalteleport)
+   {
+      // Passed through at least one portal
+      // TODO: 3D teleport
+      P_LinePortalDidTeleport(thing, x - prex, y - prey, 0, oldgroupid,
+                              newgroupid);
+   }
 
    // haleyjd 08/07/04: new footclip system
    P_AdjustFloorClip(thing);
-
-   // ioanch 20160114: portal teleport
-   //if(full_demo_version >= make_full_version(340, 48) && 
-   //   !(thing->flags & MF_NOCLIP))
-   //{
-   //   const line_t *pline = thing->subsector->sector->portalLine;
-   //   if(pline && pline->pflags & PS_PASSABLE)
-   //   {
-   //      const linkoffset_t *link = P_GetLinkOffset(pline->frontsector->groupid, 
-   //         pline->portal->data.link.toid);
-   //      EV_PortalTeleport(thing, link);
-   //   }
-   //}
-
-   // ioanch 20160117: use this to keep track if a portal line HAS been touched
-   bool hitportallinefront = false;
 
    // if any special lines were hit, do the effect
    // killough 11/98: simplified
@@ -1621,6 +1679,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    {
       fixed_t tx, ty, ox, oy;   // portal aware offsetting
       const linkoffset_t *link;
+      const linkoffset_t *oldlink;
 
       while(clip.numspechit--)
       {
@@ -1631,51 +1690,18 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          if(!line)   // skip if it's nulled out
             continue;
 
-         // ioanch 20160129: portal aware
-         link = P_GetLinkOffset(thing->groupid, line->frontsector->groupid);
-         tx = thing->x + link->x;
-         ty = thing->y + link->y;
-         ox = oldx + link->x;
-         oy = oldy + link->y;
-
-         // ioanch: do NOT trigger 
-         if(line->pflags & PS_PASSABLE && 
-            line->frontsector->groupid == thing->groupid &&
-            P_lineIsCrossedMiddle(tx, ty, line))
-         {
-            // SoM: if the mobj is touching a portal line, and the line is behind
-            // the mobj no matter what the previous lineside was, we missed the 
-            // teleport and NEED to do so now.
-
-            int side = P_PointOnLineSide(tx, ty, line);
-            if(side)
-            {
-               if(thing->touchedportalline == line)   // ioanch:
-                  thing->touchedportalline = nullptr; // clear it, we got it
-
-               // ioanch 20160129: clear all portal lines with the same front
-               // groupid to avoid moving the thing twice or more
-               for(int i = clip.numspechit - 1; i >= 0; --i)
-               {
-                  if(clip.spechit[i] && clip.spechit[i]->pflags & PS_PASSABLE &&
-                     clip.spechit[i]->frontsector->groupid 
-                     == line->frontsector->groupid)
-                  {
-                     clip.spechit[i] = nullptr;
-                  }
-               }
-               EV_PortalTeleport(thing, &line->portal->data.link);
-            }
-            else
-            {
-               // we're in front: remember the last touched line
-               hitportallinefront = true;
-               thing->touchedportalline = line;
-            }
-         }
 #endif
          if(line->special)  // see if the line was crossed
          {
+            link = P_GetLinkOffset(thing->groupid, line->frontsector->groupid);
+            oldlink = thing->groupid == oldgroupid ? link
+            : P_GetLinkOffset(oldgroupid, line->frontsector->groupid);
+
+            tx = thing->x + link->x;
+            ty = thing->y + link->y;
+            ox = oldx + oldlink->x;
+            oy = oldy + oldlink->y;
+
             int oldside;
             if((oldside = P_PointOnLineSide(ox, oy, line)) !=
                P_PointOnLineSide(tx, ty, line))
@@ -1687,17 +1713,6 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       clip.numspechit = 0;
    }
 
-   // ioanch 20160117: we didn't hit now a portal line but previously we did,
-   // except on the wrong side, so now it is time to teleport
-   if(!hitportallinefront && thing->touchedportalline) 
-   {
-      if( thing->touchedportalline->backsector == thing->subsector->sector)
-      {
-         EV_PortalTeleport(thing, &thing->touchedportalline->portal->data.link);
-      }
-      thing->touchedportalline = nullptr; // reset it
-   }
-   
    return true;
 }
 
@@ -2776,19 +2791,61 @@ static bool PIT_GetSectors(line_t *ld, polyobj_s *po)
    // allowed to move to this position, then the sector_list
    // will be attached to the Thing's Mobj at touching_sectorlist.
 
-   pClip->sector_list = P_AddSecnode(ld->frontsector, pClip->thing, pClip->sector_list);
+   if(pClip->thing->groupid != ld->frontsector->groupid)
+   {
+      // similar behaviour to PIT_CheckLine3D
+      v2fixed_t inters = P_BoxLinePoint(bbox, ld);
+      v2fixed_t i2;
 
-   // Don't assume all lines are 2-sided, since some Things
-   // like teleport fog are allowed regardless of whether their 
-   // radius takes them beyond an impassable linedef.
-   
-   // killough 3/27/98, 4/4/98:
-   // Use sidedefs instead of 2s flag to determine two-sidedness.
-   // killough 8/1/98: avoid duplicate if same sector on both sides
+      angle_t angle = P_PointToAngle(ld->v1->x, ld->v1->y, ld->dx, ld->dy);
+      angle -= ANG90;
+      i2 = inters;
+      i2.x += FixedMul(FRACUNIT >> 12, finecosine[angle >> ANGLETOFINESHIFT]);
+      i2.y += FixedMul(FRACUNIT >> 12, finesine[angle >> ANGLETOFINESHIFT]);
 
-   if(ld->backsector && ld->backsector != ld->frontsector)
-      pClip->sector_list = P_AddSecnode(ld->backsector, pClip->thing, pClip->sector_list);
-   
+      if(P_PointReachesGroupVertically(i2.x, i2.y, ld->frontsector->floorheight,
+                                       ld->frontsector->groupid,
+                                       pClip->thing->groupid, ld->frontsector,
+                                       pClip->thing->z))
+      {
+         pClip->sector_list = P_AddSecnode(ld->frontsector, pClip->thing,
+                                           pClip->sector_list);
+      }
+
+      if(ld->backsector && ld->backsector != ld->frontsector)
+      {
+         angle += ANG180;
+         i2 = inters;
+         i2.x += FixedMul(FRACUNIT >> 12, finecosine[angle >> ANGLETOFINESHIFT]);
+         i2.y += FixedMul(FRACUNIT >> 12, finesine[angle >> ANGLETOFINESHIFT]);
+         if(P_PointReachesGroupVertically(i2.x, i2.y,
+                                          ld->backsector->floorheight,
+                                          ld->backsector->groupid,
+                                          pClip->thing->groupid, ld->backsector,
+                                          pClip->thing->z))
+         {
+            pClip->sector_list = P_AddSecnode(ld->backsector, pClip->thing, pClip->sector_list);
+         }
+      }
+   }
+   else
+   {
+      pClip->sector_list = P_AddSecnode(ld->frontsector, pClip->thing, pClip->sector_list);
+
+      // Don't assume all lines are 2-sided, since some Things
+      // like teleport fog are allowed regardless of whether their
+      // radius takes them beyond an impassable linedef.
+
+      // killough 3/27/98, 4/4/98:
+      // Use sidedefs instead of 2s flag to determine two-sidedness.
+      // killough 8/1/98: avoid duplicate if same sector on both sides
+
+      if(ld->backsector && ld->backsector != ld->frontsector)
+         pClip->sector_list = P_AddSecnode(ld->backsector, pClip->thing,
+                                           pClip->sector_list);
+
+   }
+
    return true;
 }
 
@@ -2859,16 +2916,18 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
             }
             else
             {
-               const linkoffset_t *link = P_GetLinkOffset(
-                  pClip->thing->groupid, groupid);
-
-               // Get the sector from PREVIOUS groupid
-               sector_t *sector = R_PointInSubsector(pClip->x + link->x,
-                  pClip->y + link->y)->sector;
-
-               // Add it
-               pClip->sector_list = P_AddSecnode(sector, pClip->thing,
-                  pClip->sector_list);
+               sector_t *sector
+               = P_PointReachesGroupVertically(pClip->x, pClip->y,
+                                               pClip->thing->z,
+                                               pClip->thing->groupid, groupid,
+                                               pClip->thing->subsector->sector,
+                                               pClip->thing->z);
+               if(sector)
+               {
+                  // Add it
+                  pClip->sector_list = P_AddSecnode(sector, pClip->thing,
+                                                    pClip->sector_list);
+               }
             }
          }
          P_BlockLinesIterator(x, y, PIT_GetSectors, groupid);

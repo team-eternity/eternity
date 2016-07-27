@@ -20,6 +20,7 @@
 //
 // Purpose: EDF Thing Types Module
 // Authors: James Haley
+//
 
 #define NEED_EDF_DEFINITIONS
 
