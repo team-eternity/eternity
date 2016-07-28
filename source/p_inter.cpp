@@ -1013,6 +1013,11 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 
    case PFX_BAGOFHOLDING: // bag of holding
       // HTIC_TODO: bag of holding effects
+      // INVENTORY_TODO: hardcoded for now
+      if(!E_PlayerHasBackpack(player))
+         E_GiveBackpack(player);
+      // ioanch 20151225: call from here to handle backpack ammo
+      P_giveBackpackAmmo(player);
       message = DEH_String("HITEMBAGOFHOLDING");
       sound = sfx_hitemup;
       break;
