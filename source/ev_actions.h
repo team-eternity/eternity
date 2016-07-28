@@ -237,6 +237,8 @@ DECLARE_ACTION(EV_ActionParamPlatDWUS);
 DECLARE_ACTION(EV_ActionParamPlatDownByValue);
 DECLARE_ACTION(EV_ActionParamPlatUWDS);
 DECLARE_ACTION(EV_ActionParamPlatUpByValue);
+DECLARE_ACTION(EV_ActionParamPlatRaiseNearestChange);
+DECLARE_ACTION(EV_ActionParamPlatRaiseChange);
 DECLARE_ACTION(EV_ActionParamDonut);
 DECLARE_ACTION(EV_ActionParamTeleport);
 DECLARE_ACTION(EV_ActionParamTeleportNoFog);

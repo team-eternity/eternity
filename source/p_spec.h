@@ -413,7 +413,9 @@ typedef enum
    paramDownByValueWaitUpStay,
    paramUpWaitDownStay,
    paramUpByValueWaitDownStay,
-   paramPerpetualRaise
+   paramPerpetualRaise,
+   paramUpByValueStayAndChange,
+   paramRaiseToNearestAndChange
 } paramplattype_e;
 
 // p_doors
@@ -832,6 +834,15 @@ public:
       in_stasis
    } plat_e;
 
+   // This enum is for determining what behaviour a raiseToNearestAndChange
+   // platform uses, as Plat_RaiseAndStayTx0 requires this as a parameter.
+   typedef enum
+   {
+      PRNC_DEFAULT,
+      PRNC_DOOM,
+      PRNC_HERETIC
+   } rnctype_e;
+
 protected:
    void Think();
 
@@ -861,7 +872,8 @@ public:
    int crush;
    int tag;
    int type;
-   struct platlist_t *list;   // killough
+   rnctype_e rnctype;
+   struct platlist_t *list;   // killough   
 };
 
 // p_ceilng
