@@ -1933,7 +1933,7 @@ DEFINE_ACTION(EV_ActionParamFloorLowerInstant)
 //
 // EV_ActionParamFloorToCeilingInstant
 //
-// Implements Floor_ToCeilingInstant(tag, change, crush)
+// Implements Floor_ToCeilingInstant(tag, change, crush, gap)
 // * ExtraData: 322
 //
 DEFINE_ACTION(EV_ActionParamFloorToCeilingInstant)
@@ -1947,6 +1947,7 @@ DEFINE_ACTION(EV_ActionParamFloorToCeilingInstant)
    fd.speed_type  = SpeedNormal;    // unused (always instant).
    EV_floorChangeForArg(fd, instance->args[1]); // change
    fd.crush       = instance->args[2];          // crush
+   fd.adjust      = -instance->args[3] * FRACUNIT;
 
    return EV_DoParamFloor(instance->line, instance->tag, &fd);
 }
