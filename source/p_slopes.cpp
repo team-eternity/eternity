@@ -194,15 +194,15 @@ static void P_getSlopeProps(int staticFn, bool &frontfloor, bool &backfloor,
    if(staticFn == EV_STATIC_SLOPE_PARAM)
    {
       int floor = args[0];
-      if(floor < 0 || floor > 2)
+      if(floor < 0 || floor > 3)
          floor = 0;
       int ceiling = args[1];
-      if(ceiling < 0 || ceiling > 2)
+      if(ceiling < 0 || ceiling > 3)
          ceiling = 0;
-      frontfloor = floor == 1;
-      backfloor = floor == 2;
-      frontceil = ceiling == 1;
-      backceil = ceiling == 2;
+      frontfloor = !!(floor | 1);
+      backfloor = !!(floor | 2);
+      frontceil = !!(ceiling | 1);
+      backceil = !!(ceiling | 2);
       return;
    }
 
