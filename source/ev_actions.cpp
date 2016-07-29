@@ -1384,7 +1384,7 @@ DEFINE_ACTION(EV_ActionParamDoorCloseWaitOpen)
    dd.spac         = instance->spac;
    dd.speed_value  = instance->args[1] * FRACUNIT / 8;
    dd.topcountdown = 0;
-   dd.delay_value  = instance->args[2];
+   dd.delay_value  = instance->args[2] * 35 / 8;   // OCTICS
    dd.altlighttag  = instance->args[3];
    dd.thing        = instance->actor;
 
@@ -3139,13 +3139,14 @@ DEFINE_ACTION(EV_ActionThingChangeTID)
 //
 // EV_ActionThingRaise
 //
-// Implements Thing_Raise(tid)
+// Implements Thing_Raise(tid, keepfriend)
 // * ExtraData: 422
 // * Hexen:     17
 //
 DEFINE_ACTION(EV_ActionThingRaise)
 {
-   return EV_ThingRaise(instance->actor, instance->args[0]);
+   return EV_ThingRaise(instance->actor, instance->args[0],
+                        !!instance->args[1]);
 }
 
 //
