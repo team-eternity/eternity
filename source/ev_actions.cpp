@@ -4115,5 +4115,17 @@ DEFINE_ACTION(EV_ActionParamSectorSetFloorPanning)
                                                         instance->args[4]));
 }
 
+//
+// Implements Thing_Hate(hater, hatee, converter)
+//
+// * ExtraData: 475
+// * Hexen:     177
+//
+DEFINE_ACTION(EV_ActionThingHate)
+{
+   return EV_ThingHate(instance->actor, instance->tag, instance->args[1],
+                       instance->args[2]);
+}
+
 // EOF
 

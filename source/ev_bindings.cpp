@@ -1069,6 +1069,7 @@ PARAMLINE(ThingSpawnNoFog);
 PARAMLINE(TeleportNewMap);
 PARAMLINE(TeleportEndGame);
 PARAMLINE(ThingChangeTID);
+PARAMLINE(ThingHate);
 PARAMLINE(ThingProjectile);
 PARAMLINE(ThingProjectileGravity);
 PARAMLINE(ThingActivate);
@@ -1505,6 +1506,7 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(472, ParamSectorSetCeilingPanning,    "Sector_SetCeilingPanning")
    LINESPECNAMED(473, TurnTagLightsOff,                "Light_MinNeighbor")
    LINESPECNAMED(474, PolyobjStop,                     "Polyobj_Stop")
+   LINESPECNAMED(475, ThingHate,                       "Thing_Hate")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1649,6 +1651,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(138, FloorWaggle,                     "Floor_Waggle")
    LINESPECNAMED(168, ParamCeilingCrushAndRaiseDist,   "Ceiling_CrushAndRaiseDist")
    LINESPECNAMED(176, ThingChangeTID,                  "Thing_ChangeTID")
+   LINESPECNAMED(177, ThingHate,                       "Thing_Hate")
    LINESPECNAMED(179, ChangeSkill,                     "ChangeSkill")
    LINESPECNAMED(185, ParamSectorSetRotation,          "Sector_SetRotation")
    LINESPECNAMED(186, ParamSectorSetFloorPanning,      "Sector_SetFloorPanning")

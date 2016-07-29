@@ -445,6 +445,59 @@ int EV_HealThing(Mobj *actor, int amount, int maxhealth)
    return 0;
 }
 
+//
+// Thing_Hate conversion code. From ZDoom.
+//
+// Ally = won't attack player until shot
+// Hostile = hostile to player, like any infighting monster
+// Slave = will never attack player even if hurt
+//
+// Will be gradually implemented
+//
+enum hateconversion_e
+{
+   HATECONV_DEFAULT = 0,         // same as 4
+   HATECONV_STANDBY_ALLY = 1,    // stands by for target while being an "ally"
+                                 // (will become enemy when fired upon)
+   HATECONV_PURSUIT_ALLY = 2,    // will immediately pursue
+   HATECONV_STANDBY_HOSTILE = 3, // stands by for target OR players
+   HATECONV_PURSUIT_HOSTILE = 4, // pursues a target but still hostile
+   HATECONV_STANDBY_SLAVE = 5,   // stands by for target while "superfriend"
+   HATECONV_PURSUIT_SLAVE = 6,   // pursues while "superfriend"
+};
+
+//
+// Causes some things to target other things
+//
+int EV_ThingHate(Mobj *activator, int hater, int hatee, int conversion)
+{
+   Mobj *mobj = nullptr;
+   Mobj *target = nullptr;
+   int success = 0;
+   // TODO: use conversion
+   // TODO: determine if "ALLY" is like MBF's friend (temporary retaliation)
+   // or makes the monster totally hostile. Also is it appropriate for "SLAVE"
+   // to keep following the player?
+   while((mobj = P_FindMobjFromTID(hater, mobj, activator)))
+   {
+      if(mobj->health < 1)
+         continue;
+      success = 1;
+
+      // Try to distribute haters evenly
+      target = P_FindMobjFromTID(hatee, target, nullptr);
+      if(!target)    // it may have wrapped around
+         target = P_FindMobjFromTID(hatee, target, nullptr);   // try again
+      while(target && target->health < 1)
+         target = P_FindMobjFromTID(hatee, target, nullptr);   // skip dead
+      if(!target || target->health < 1)
+         return 0;   // no targets found at all, or all dead
+      // found a target
+      P_SetTarget<Mobj>(&mobj->target, target);
+   }
+   return success;
+}
+
 //=============================================================================
 //
 // LevelActionThinker

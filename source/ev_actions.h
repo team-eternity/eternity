@@ -220,6 +220,7 @@ DECLARE_ACTION(EV_ActionThingSpawnNoFog);
 DECLARE_ACTION(EV_ActionTeleportNewMap);
 DECLARE_ACTION(EV_ActionTeleportEndGame);
 DECLARE_ACTION(EV_ActionThingChangeTID);
+DECLARE_ACTION(EV_ActionThingHate);
 DECLARE_ACTION(EV_ActionThingProjectile);
 DECLARE_ACTION(EV_ActionThingProjectileGravity);
 DECLARE_ACTION(EV_ActionThingActivate);
