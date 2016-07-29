@@ -53,6 +53,28 @@ struct linkoffset_t;
 struct portal_t;
 struct sector_t;
 
+//
+// Sector_SetPortal arguments
+//
+enum
+{
+   paramPortal_argType = 1,
+   paramPortal_argPlane = 2,
+   paramPortal_argMisc = 3,
+
+   paramPortal_planeFloor = 0,
+   paramPortal_planeCeiling = 1,
+   paramPortal_planeBoth = 2,
+
+   paramPortal_normal = 0,
+   paramPortal_copied = 1,
+   paramPortal_skybox = 2,
+   paramPortal_pplane = 3,
+   paramPortal_horizon = 4,
+   paramPortal_copyline = 5,
+   paramPortal_linked = 6,
+};
+
 
 //
 // P_PortalGroupCount
@@ -87,7 +109,10 @@ void P_LinkRejectTable();
 
 void P_InitPortals();
 
-bool EV_PortalTeleport(Mobj *mo, const linkdata_t *link);
+bool EV_PortalTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
+                       int fromid, int toid);
+void P_LinePortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
+                             int fromid, int toid);
 
 void R_SetSectorGroupID(sector_t *sector, int groupid);
 
@@ -170,7 +195,7 @@ void P_SetLPortalBehavior(line_t *line, int newbehavior);
 // others, and there's no other way to detect line portal change.
 //
 v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
-                               int *group = nullptr);
+                               int *group = nullptr, bool *passed = nullptr);
 
 template <typename T> 
 inline static v2fixed_t P_LinePortalCrossing(T &&u, fixed_t dx, fixed_t dy, 

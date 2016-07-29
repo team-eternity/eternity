@@ -153,10 +153,16 @@ manual_floor:
             P_FindNextLowestFloor(sec,sec->floorheight);
          break;
       case FtoLnC:
+         floor->floordestheight = P_FindLowestCeilingSurrounding(sec) + fd->adjust;
+         break;
+      case FtoLnCInclusive:
          floor->floordestheight = P_FindLowestCeilingSurrounding(sec);
+         if(floor->floordestheight > sec->ceilingheight)
+            floor->floordestheight = sec->ceilingheight;
+         floor->floordestheight += fd->adjust;
          break;
       case FtoC:
-         floor->floordestheight = sec->ceilingheight;
+         floor->floordestheight = sec->ceilingheight + fd->adjust;
          break;
       case FbyST:
          floor->floordestheight = 
@@ -213,30 +219,53 @@ manual_floor:
 
             //jff 5/23/98 find model with ceiling at target height
             //if target is a ceiling type
-            msec = (fd->target_type == FtoLnC || fd->target_type == FtoC)?
+            msec = (fd->target_type == FtoLnC || fd->target_type == FtoC ||
+                    fd->target_type == FtoLnCInclusive) ?
                P_FindModelCeilingSector(floor->floordestheight,secnum) :
                P_FindModelFloorSector(floor->floordestheight,secnum);
             
             if(msec)
             {
-               floor->texture = msec->floorpic;
-               switch(fd->change_type)
+               if(fd->changeOnStart)
                {
-               case FChgZero:  // zero type
-                  //jff 3/14/98 change old field too
-                  P_ZeroSpecialTransfer(&(floor->special));
-                  floor->type = genFloorChg0;
-                  break;
-               case FChgTyp:   // copy type
-                  //jff 3/14/98 change old field too
-                  P_SetupSpecialTransfer(msec, &(floor->special));
-                  floor->type = genFloorChgT;
-                  break;
-               case FChgTxt:   // leave type be
-                  floor->type = genFloorChg;
-                  break;
-               default:
-                  break;
+                  sec->floorpic = msec->floorpic;
+                  switch(fd->change_type)
+                  {
+                     case FChgZero:  // zero type
+                        //jff 3/14/98 change old field too
+                        P_ZeroSpecialTransfer(&(floor->special));
+                        P_TransferSectorSpecial(sec, &floor->special);
+                        break;
+                     case FChgTyp:   // copy type
+                        //jff 3/14/98 change old field too
+                        P_SetupSpecialTransfer(msec, &(floor->special));
+                        P_TransferSectorSpecial(sec, &floor->special);
+                        break;
+                     default:
+                        break;
+                  }
+               }
+               else
+               {
+                  floor->texture = msec->floorpic;
+                  switch(fd->change_type)
+                  {
+                     case FChgZero:  // zero type
+                        //jff 3/14/98 change old field too
+                        P_ZeroSpecialTransfer(&(floor->special));
+                        floor->type = genFloorChg0;
+                        break;
+                     case FChgTyp:   // copy type
+                        //jff 3/14/98 change old field too
+                        P_SetupSpecialTransfer(msec, &(floor->special));
+                        floor->type = genFloorChgT;
+                        break;
+                     case FChgTxt:   // leave type be
+                        floor->type = genFloorChg;
+                        break;
+                     default:
+                        break;
+                  }
                }
             }
          }
@@ -244,23 +273,45 @@ manual_floor:
          {
             if(line) // haleyjd 05/07/04: only line actions can use this
             {
-               floor->texture = line->frontsector->floorpic;
-               switch(fd->change_type)
+               if(fd->changeOnStart)
                {
-               case FChgZero:    // zero type
-                  //jff 3/14/98 change old field too
-                  P_ZeroSpecialTransfer(&(floor->special));
-                  floor->type = genFloorChg0;
-                  break;
-               case FChgTyp:     // copy type
-                  //jff 3/14/98 change old field too
-                  P_SetupSpecialTransfer(line->frontsector, &(floor->special));
-                  floor->type = genFloorChgT;
-                  break;
-               case FChgTxt:     // leave type be
-                  floor->type = genFloorChg;
-               default:
-                  break;
+                  sec->floorpic = line->frontsector->floorpic;
+                  switch(fd->change_type)
+                  {
+                     case FChgZero:    // zero type
+                        //jff 3/14/98 change old field too
+                        P_ZeroSpecialTransfer(&(floor->special));
+                        P_TransferSectorSpecial(sec, &floor->special);
+                        break;
+                     case FChgTyp:     // copy type
+                        //jff 3/14/98 change old field too
+                        P_SetupSpecialTransfer(line->frontsector, &(floor->special));
+                        P_TransferSectorSpecial(sec, &floor->special);
+                        break;
+                     default:
+                        break;
+                  }
+               }
+               else
+               {
+                  floor->texture = line->frontsector->floorpic;
+                  switch(fd->change_type)
+                  {
+                     case FChgZero:    // zero type
+                        //jff 3/14/98 change old field too
+                        P_ZeroSpecialTransfer(&(floor->special));
+                        floor->type = genFloorChg0;
+                        break;
+                     case FChgTyp:     // copy type
+                        //jff 3/14/98 change old field too
+                        P_SetupSpecialTransfer(line->frontsector, &(floor->special));
+                        floor->type = genFloorChgT;
+                        break;
+                     case FChgTxt:     // leave type be
+                        floor->type = genFloorChg;
+                     default:
+                        break;
+                  }
                }
             } // end if(line)
          }
@@ -402,9 +453,27 @@ manual_ceiling:
          break;
       case CtoHnF:
          targheight = P_FindHighestFloorSurrounding(sec);
+         if(cd->ceiling_gap)
+         {
+            // target height needs to be adjusted if gap is non-zero, if we want
+            // gap to have any effect. But if gap is 0, just emulate the buggy
+            // (but compat-fixed) Boom behavior. The only classic specials with
+            // this behavior are from Boom anyway.
+            if(targheight < sec->floorheight)
+               targheight = sec->floorheight;
+            targheight += cd->ceiling_gap;
+
+            // Also slow ceiling down if blocked while gap is nonzero
+            if(cd->flags & CDF_HACKFORDESTF)
+               ceiling->crushflags |= CeilingThinker::crushParamSlow;
+         }
          break;
       case CtoF:
-         targheight = sec->floorheight;
+         targheight = sec->floorheight + cd->ceiling_gap;
+         // ioanch: if hack flag is available, apply the Doom-like behavior if
+         // gap is nonzero
+         if(cd->ceiling_gap && cd->flags & CDF_HACKFORDESTF)
+            ceiling->crushflags |= CeilingThinker::crushParamSlow;
          break;
       case CbyST:
          targheight = (ceiling->sector->ceilingheight>>FRACBITS) +
@@ -469,24 +538,44 @@ manual_ceiling:
                      P_FindModelCeilingSector(targheight, secnum);
             if(msec)
             {
-               ceiling->texture = msec->ceilingpic;
-               switch(cd->change_type)
+               if(cd->flags & CDF_CHANGEONSTART)
                {
-               case CChgZero:  // type is zeroed
-                  //jff 3/14/98 change old field too
-                  P_ZeroSpecialTransfer(&(ceiling->special));
-                  ceiling->type = genCeilingChg0;
-                  break;
-               case CChgTyp:   // type is copied
-                  //jff 3/14/98 change old field too
-                  P_SetupSpecialTransfer(msec, &(ceiling->special));
-                  ceiling->type = genCeilingChgT;
-                  break;
-               case CChgTxt:   // type is left alone
-                  ceiling->type = genCeilingChg;
-                  break;
-               default:
-                  break;
+                  P_SetSectorCeilingPic(sec, msec->ceilingpic);
+                  switch(cd->change_type)
+                  {
+                     case CChgZero:
+                        P_ZeroSpecialTransfer(&(ceiling->special));
+                        P_TransferSectorSpecial(sec, &ceiling->special);
+                        break;
+                     case CChgTyp:
+                        P_SetupSpecialTransfer(msec, &ceiling->special);
+                        P_TransferSectorSpecial(sec, &ceiling->special);
+                        break;
+                     default:
+                        break;
+                  }
+               }
+               else
+               {
+                  ceiling->texture = msec->ceilingpic;
+                  switch(cd->change_type)
+                  {
+                     case CChgZero:  // type is zeroed
+                        //jff 3/14/98 change old field too
+                        P_ZeroSpecialTransfer(&(ceiling->special));
+                        ceiling->type = genCeilingChg0;
+                        break;
+                     case CChgTyp:   // type is copied
+                        //jff 3/14/98 change old field too
+                        P_SetupSpecialTransfer(msec, &(ceiling->special));
+                        ceiling->type = genCeilingChgT;
+                        break;
+                     case CChgTxt:   // type is left alone
+                        ceiling->type = genCeilingChg;
+                        break;
+                     default:
+                        break;
+                  }
                }
             }
          }
@@ -494,24 +583,45 @@ manual_ceiling:
          {
             if(line) // haleyjd 10/05/05: only line actions can use this
             {
-               ceiling->texture = line->frontsector->ceilingpic;
-               switch(cd->change_type)
+               if(cd->flags & CDF_CHANGEONSTART)
                {
-               case CChgZero:    // type is zeroed
-                  //jff 3/14/98 change old field too
-                  P_ZeroSpecialTransfer(&(ceiling->special));
-                  ceiling->type = genCeilingChg0;
-                  break;
-               case CChgTyp:     // type is copied
-                  //jff 3/14/98 change old field too
-                  P_SetupSpecialTransfer(line->frontsector, &(ceiling->special));
-                  ceiling->type = genCeilingChgT;
-                  break;
-               case CChgTxt:     // type is left alone
-                  ceiling->type = genCeilingChg;
-                  break;
-               default:
-                  break;
+                  P_SetSectorCeilingPic(sec, line->frontsector->ceilingpic);
+                  switch(cd->change_type)
+                  {
+                     case CChgZero:
+                        P_ZeroSpecialTransfer(&ceiling->special);
+                        P_TransferSectorSpecial(sec, &ceiling->special);
+                        break;
+                     case CChgTyp:
+                        P_SetupSpecialTransfer(line->frontsector,
+                                               &ceiling->special);
+                        P_TransferSectorSpecial(sec, &ceiling->special);
+                        break;
+                     default:
+                        break;
+                  }
+               }
+               else
+               {
+                  ceiling->texture = line->frontsector->ceilingpic;
+                  switch(cd->change_type)
+                  {
+                     case CChgZero:    // type is zeroed
+                        //jff 3/14/98 change old field too
+                        P_ZeroSpecialTransfer(&(ceiling->special));
+                        ceiling->type = genCeilingChg0;
+                        break;
+                     case CChgTyp:     // type is copied
+                        //jff 3/14/98 change old field too
+                        P_SetupSpecialTransfer(line->frontsector, &(ceiling->special));
+                        ceiling->type = genCeilingChgT;
+                        break;
+                     case CChgTxt:     // type is left alone
+                        ceiling->type = genCeilingChg;
+                        break;
+                     default:
+                        break;
+                  }
                }
             }
          }

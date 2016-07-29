@@ -288,6 +288,8 @@ void CeilingThinker::Think()
             case paramHexenCrush:
             case paramHexenCrushRaiseStay:
             case paramHexenLowerCrush:
+            case genCeiling:  // ioanch: also emulate Doom ceiling fake crush
+                              // slowdown
                // if crusher doesn't rest on victims:
                // this is like ZDoom: if a ceiling speed is set exactly to 8,
                // then apply the Doom crusher slowdown. Otherwise, keep speed

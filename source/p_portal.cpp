@@ -793,42 +793,30 @@ void P_LinkRejectTable()
    } // i
 }
 
-// -----------------------------------------
-// Begin portal teleportation
 //
-// EV_PortalTeleport
+// The player passed a line portal from P_TryMove; just update viewport and
+// pass-polyobject velocity
 //
-bool EV_PortalTeleport(Mobj *mo, const linkdata_t *link)
+void P_LinePortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
+                             int fromid, int toid)
 {
-   fixed_t moz = mo->z;
-   //fixed_t vh = mo->player ? mo->player->viewheight : 0;
-
-   if(!mo || !link)
-      return 0;
-
-   // ioanch 20160113: don't teleport. Just change x and y
-   P_UnsetThingPosition(mo);
-   mo->x += link->deltax;
-   mo->y += link->deltay;
-   mo->z = moz + link->deltaz;
-   // ioanch 20160123: only use interpolation for non-player objects
-   // players are exposed to bugs if they interpolate here
+   // Prevent bad interpolation
    if(mo->player && mo->player->mo == mo)
    {
+      // FIXME: this is not interpolation, it's just instant movement; must be
+      // fixed to be real interpolation even for the player (camera)
       mo->backupPosition();
    }
    else
    {
-      // translate the interpolated coordinates
-      mo->prevpos.x += link->deltax;
-      mo->prevpos.y += link->deltay;
-      mo->prevpos.z += link->deltaz;
+      mo->prevpos.x += dx;
+      mo->prevpos.y += dy;
+      mo->prevpos.z += dz;
    }
-   P_SetThingPosition(mo);
 
    // Polyobject car enter and exit inertia
-   const polyobj_t *poly[2] = { gGroupPolyobject[link->fromid],
-                                gGroupPolyobject[link->toid] };
+   const polyobj_t *poly[2] = { gGroupPolyobject[fromid],
+      gGroupPolyobject[toid] };
    v2fixed_t pvel[2] = { };
    bool phave[2];
    for(int i = 0; i < 2; ++i)
@@ -885,11 +873,32 @@ bool EV_PortalTeleport(Mobj *mo, const linkdata_t *link)
       mo->player->deltaviewheight = deltaviewheight;
 
       if(mo->player == players + displayplayer)
-          P_ResetChasecam();
+         P_ResetChasecam();
    }
 
    //mo->backupPosition();
    P_AdjustFloorClip(mo);
+}
+
+// -----------------------------------------
+// Begin portal teleportation
+//
+// EV_PortalTeleport
+//
+bool EV_PortalTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
+                       int fromid, int toid)
+{
+   if(!mo)
+      return 0;
+
+   // ioanch 20160113: don't teleport. Just change x and y
+   P_UnsetThingPosition(mo);
+   mo->x += dx;
+   mo->y += dy;
+   mo->z += dz;
+   P_SetThingPosition(mo);
+
+   P_LinePortalDidTeleport(mo, dx, dy, dz, fromid, toid);
    
    return 1;
 }
@@ -905,7 +914,7 @@ bool EV_PortalTeleport(Mobj *mo, const linkdata_t *link)
 // Returns the combined state flags for the given portal based on various
 // behavior flags
 //
-static int P_GetPortalState(portal_t *portal, int sflags, bool obscured)
+static int P_GetPortalState(const portal_t *portal, int sflags, bool obscured)
 {
    bool active;
    int     ret = sflags & (PF_FLAGMASK | PS_OVERLAYFLAGS | PO_OPACITYMASK);
@@ -1061,7 +1070,8 @@ void P_SetLPortalBehavior(line_t *line, int newbehavior)
 // Checks if any line portals are crossed between (x, y) and (x+dx, y+dy),
 // updating the target position correctly
 //
-v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy, int *group)
+v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
+                               int *group, bool *passed)
 {
    v2fixed_t cur = { x, y };
    v2fixed_t fin = { x + dx, y + dy };
@@ -1082,8 +1092,8 @@ v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy, int
    {
       
       res = CAM_PathTraverse(cur, fin, CAM_ADDLINES | CAM_REQUIRELINEPORTALS, 
-                             [&cur, &fin, group](const intercept_t *in, 
-                                                 const divline_t &trace)
+                             [&cur, &fin, group, passed](const intercept_t *in,
+                                                         const divline_t &trace)
       {
 
          const line_t *line = in->d.line;
@@ -1102,9 +1112,13 @@ v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy, int
          if(link.fromid == link.toid || (!link.deltax && !link.deltay))
             return true;
 
-         // must face the user
-         if(P_PointOnLineSide(trace.x, trace.y, line) == 1)
+         // double check: line MUST be crossed and trace origin must be in front
+         int originside = P_PointOnLineSide(trace.x, trace.y, line);
+         if(originside != 0 || originside ==
+            P_PointOnLineSide(trace.x + trace.dx, trace.y + trace.dy, line))
+         {
             return true;
+         }
 
          // update the fields
          cur.x += FixedMul(trace.dx, in->frac) + link.deltax;
@@ -1114,6 +1128,8 @@ v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy, int
          fin.y += link.deltay;
          if(group)
             *group = link.toid;
+         if(passed)
+            *passed = true;
 
          return false;
       });

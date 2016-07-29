@@ -77,7 +77,7 @@ static void EV_SectorLightRandomOff(sector_t *sector)
 static void EV_SectorLightStrobeFast(sector_t *sector)
 {
    // strobe fast
-   P_SpawnStrobeFlash(sector, FASTDARK, 0);
+   P_SpawnStrobeFlash(sector, FASTDARK, STROBEBRIGHT, 0);
 }
 
 //
@@ -91,7 +91,7 @@ static void EV_SectorLightStrobeFast(sector_t *sector)
 static void EV_SectorLightStrobeSlow(sector_t *sector)
 {
    // strobe slow
-   P_SpawnStrobeFlash(sector, SLOWDARK, 0);
+   P_SpawnStrobeFlash(sector, SLOWDARK, STROBEBRIGHT, 0);
 }
 
 //
@@ -106,7 +106,7 @@ static void EV_SectorLightStrobeSlow(sector_t *sector)
 static void EV_SectorLightStrobeHurt(sector_t *sector)
 {
    // strobe fast/death slime
-   P_SpawnStrobeFlash(sector, FASTDARK, 0);
+   P_SpawnStrobeFlash(sector, FASTDARK, STROBEBRIGHT, 0);
    
    // haleyjd 12/31/08: sector damage conversion
    sector->damage       = 20;
@@ -211,7 +211,7 @@ static void EV_SectorExitSuperDamage(sector_t *sector)
 static void EV_SectorLightStrobeSlowSync(sector_t *sector)
 {
    // sync strobe slow
-   P_SpawnStrobeFlash(sector, SLOWDARK, 1);
+   P_SpawnStrobeFlash(sector, SLOWDARK, STROBEBRIGHT, 1);
 }
 
 //
@@ -225,7 +225,7 @@ static void EV_SectorLightStrobeSlowSync(sector_t *sector)
 static void EV_SectorLightStrobeFastSync(sector_t *sector)
 {
    // sync strobe fast
-   P_SpawnStrobeFlash(sector, FASTDARK, 1);
+   P_SpawnStrobeFlash(sector, FASTDARK, STROBEBRIGHT, 1);
 }
 
 //
@@ -281,7 +281,7 @@ static void EV_SectorLightFireFlicker(sector_t *sector)
 //
 static void EV_SectorHticScrollEastLavaDamage(sector_t *sector)
 {
-   P_SpawnStrobeFlash(sector, FASTDARK, 0);
+   P_SpawnStrobeFlash(sector, FASTDARK, STROBEBRIGHT, 0);
 
    // custom damage parameters:
    sector->damage       = 5;

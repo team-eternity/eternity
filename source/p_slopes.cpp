@@ -168,7 +168,7 @@ float P_GetExtent(sector_t *sector, line_t *line, v3float_t *o, v2float_t *d)
 // haleyjd 02/05/13: Get slope properties for a static init function.
 //
 static void P_getSlopeProps(int staticFn, bool &frontfloor, bool &backfloor,
-                            bool &frontceil, bool &backceil)
+                            bool &frontceil, bool &backceil, const int *args)
 {
    struct staticslopeprops_t 
    {
@@ -189,6 +189,22 @@ static void P_getSlopeProps(int staticFn, bool &frontfloor, bool &backfloor,
       { EV_STATIC_SLOPE_BACKFLOOR_FRONTCEILING, false, true,  true,  false },
       { EV_STATIC_SLOPE_FRONTFLOOR_BACKCEILING, true,  false, false, true  },
    };
+
+   // Handle parameterized slope
+   if(staticFn == EV_STATIC_SLOPE_PARAM)
+   {
+      int floor = args[0];
+      if(floor < 0 || floor > 3)
+         floor = 0;
+      int ceiling = args[1];
+      if(ceiling < 0 || ceiling > 3)
+         ceiling = 0;
+      frontfloor = !!(floor | 1);
+      backfloor = !!(floor | 2);
+      frontceil = !!(ceiling | 1);
+      backceil = !!(ceiling | 2);
+      return;
+   }
 
    for(size_t i = 0; i < earrlen(props); i++)
    {
@@ -219,12 +235,14 @@ void P_SpawnSlope_Line(int linenum, int staticFn)
    bool frontfloor = false, backfloor = false, 
         frontceil  = false, backceil  = false;
 
-   P_getSlopeProps(staticFn, frontfloor, backfloor, frontceil, backceil);
+   P_getSlopeProps(staticFn, frontfloor, backfloor, frontceil, backceil,
+                   line->args);
    
    // SoM: We don't need the line to retain its special type
    line->special = 0;
 
-   if(!(frontfloor || backfloor || frontceil || backceil))
+   if(!(frontfloor || backfloor || frontceil || backceil) &&
+      staticFn != EV_STATIC_SLOPE_PARAM)  // don't scream on trivial Plane_Align
    {
       C_Printf(FC_ERROR "P_SpawnSlope_Line: called with non-slope line special.");
       return;
