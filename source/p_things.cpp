@@ -430,19 +430,7 @@ int EV_HealThing(Mobj *actor, int amount, int maxhealth)
    }
 
    // If the activator can be given health then activate the switch
-   if(actor->health < maxhealth)
-   {
-      actor->health += amount;
-      // cap to maxhealth
-      if(actor->health > maxhealth)
-         actor->health = maxhealth;
-      // propagate to Mobj's player if it exists
-      if(actor->player)
-         actor->player->health = actor->health;
-
-      return 1;
-   }
-   return 0;
+   return EV_DoHealThing(actor, amount, maxhealth) ? 1 : 0;
 }
 
 //=============================================================================
