@@ -480,7 +480,7 @@ int EV_ThingHate(Mobj *activator, int hater, int hatee, int conversion)
    // to keep following the player?
    while((mobj = P_FindMobjFromTID(hater, mobj, activator)))
    {
-      if(mobj->health < 1)
+      if(mobj->health < 1 || mobj->player)
          continue;
       success = 1;
 
