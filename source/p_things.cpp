@@ -268,7 +268,7 @@ int EV_ThingChangeTID(Mobj *actor, int oldtid, int newtid)
 //
 // Implements Thing_Raise(tid)
 //
-int EV_ThingRaise(Mobj *actor, int tid)
+int EV_ThingRaise(Mobj *actor, int tid, bool keepfriend)
 {
    Mobj *mobj = nullptr;
    int success = 0;
@@ -277,7 +277,7 @@ int EV_ThingRaise(Mobj *actor, int tid)
       if(!P_ThingIsCorpse(mobj) || !P_CheckCorpseRaiseSpace(mobj))
          continue;
       // no raiser allowed, no friendliness transferred
-      P_RaiseCorpse(mobj, nullptr); 
+      P_RaiseCorpse(mobj, keepfriend ? mobj : nullptr);
       success = 1;
    }
    return success;
