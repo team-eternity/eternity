@@ -469,6 +469,7 @@ enum hateconversion_e
 //
 // Causes some things to target other things
 //
+void A_Look(actionargs_t *);
 int EV_ThingHate(Mobj *activator, int hater, int hatee, int conversion)
 {
    Mobj *mobj = nullptr;
@@ -494,6 +495,11 @@ int EV_ThingHate(Mobj *activator, int hater, int hatee, int conversion)
          return 0;   // no targets found at all, or all dead
       // found a target
       P_SetTarget<Mobj>(&mobj->target, target);
+      if(mobj->state->action == A_Look)
+      {
+         // Simulate wake-up
+         P_SetMobjState(mobj, mobj->info->seestate);
+      }
    }
    return success;
 }
