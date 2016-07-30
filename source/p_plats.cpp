@@ -125,7 +125,10 @@ void PlatThinker::Think()
             case raiseToNearestAndChange:
                // haleyjd 07/16/04: In Heretic, this type of plat goes into 
                // stasis forever, preventing any additional actions
-               if(GameModeInfo->type == Game_Heretic)
+               // MaxW 2016/07/19: Parameterised lines can force Heretic
+               // behaviour even when not in Heretic, so that's now considered.
+               if((GameModeInfo->type == Game_Heretic && rnctype == PRNC_DEFAULT)
+                  || rnctype == PRNC_HERETIC)
                   break;
             case blazeDWUS:
             case downWaitUpStay:
@@ -220,12 +223,16 @@ void PlatThinker::serialize(SaveArchive &arc)
 {
    Super::serialize(arc);
 
+   int temprnc = rnctype;
    arc << speed << low << high << wait << count << status << oldstatus
-       << crush << tag << type;
+       << crush << tag << type << temprnc;
 
-   // Reattach to active plats list
    if(arc.isLoading())
+   {
+      rnctype = static_cast<rnctype_e>(temprnc);
+      // Reattach to active plats list
       addActivePlat();
+   }
 }
 
 //
@@ -307,6 +314,7 @@ bool EV_DoPlat(const line_t *line, plattype_e type, int amount )
       plat->tag    = line->tag;
       plat->sector = sec;
       plat->sector->floordata = plat; //jff 2/23/98 multiple thinkers
+      plat->rnctype = PlatThinker::PRNC_DEFAULT;
 
       //jff 1/26/98 Avoid raise plat bouncing a head off a ceiling and then
       //going down forever -- default low to plat height when triggered
@@ -415,6 +423,7 @@ bool EV_DoParamPlat(const line_t *line, const int *args, paramplattype_e type)
    int       secnum = -1;
    bool      manual = false;
    bool      rtn    = false;
+   const char *platTypeStr = "EEPlatNormal";
 
    if(!args[0])
    {
@@ -448,6 +457,7 @@ manual_plat:
       plat->wait   = args[2];
       plat->sector = sec;
       plat->sector->floordata = plat;
+      plat->rnctype = PlatThinker::PRNC_DEFAULT;
 
       switch(type)
       {
@@ -498,12 +508,35 @@ manual_plat:
             plat->high = sec->floorheight;
          break;
 
+      case paramUpByValueStayAndChange:
+         plat->type   = raiseAndChange;
+         plat->status = PlatThinker::up;
+         platTypeStr = "EEPlatRaise";
+         sec->floorpic = sides[line->sidenum[0]].sector->floorpic;         
+         plat->high   = sec->floorheight + args[2] * 8 * FRACUNIT;
+         plat->wait = 0; // We need to override the earlier setting of this         
+         if(plat->high < sec->floorheight)
+            plat->high = sec->floorheight;
+         break;
+
+      case paramRaiseToNearestAndChange:
+         plat->type = raiseToNearestAndChange;
+         plat->status = PlatThinker::up;
+         plat->rnctype = static_cast<PlatThinker::rnctype_e>(args[2]);
+         platTypeStr = "EEPlatRaise";
+         sec->floorpic = sides[line->sidenum[0]].sector->floorpic;
+         plat->high = P_FindNextHighestFloor(sec, sec->floorheight);         
+         plat->wait = 0; // We need to override the earlier setting of this 
+         P_ZeroSectorSpecial(sec);
+         break;
+
       default:
          break;
       }
 
       plat->addActivePlat();
-      P_PlatSequence(sec, "EEPlatNormal");
+      // MaxW 2016/07/19: No longer always "EEPlatNormal"
+      P_PlatSequence(sec, platTypeStr);
 
       if(manual)
          return rtn;
