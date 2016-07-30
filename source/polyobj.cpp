@@ -570,9 +570,9 @@ static void Polyobj_movePortals(const polyobj_t *po, fixed_t dx, fixed_t dy,
       {
          // FIXME: no partnership for R_TWOWAY. Maybe there should be one.
          // TODO: this partnership. But only when we have a line-only special.
-         portal->data.anchor.deltax -= dx;
-         portal->data.anchor.deltay -= dy;
-         // no physical effects. 
+         portal->data.anchor.transform.move.x -= M_FixedToDouble(dx);
+         portal->data.anchor.transform.move.y -= M_FixedToDouble(dy);
+         // no physical effects.
       }
    }
 }

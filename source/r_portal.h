@@ -102,7 +102,6 @@ struct linkdata_t
    // SoM: linked portals are similar to anchored portals
    fixed_t   deltax, deltay, deltaz;
    fixed_t   planez;
-   angle_t   rotation;
    
    // fromid is the group where the portal actually is, toid is the group on 
    // the 'other side' of the portal.
@@ -117,13 +116,20 @@ struct linkdata_t
    portal_t *polyportalpartner;
 };
 
+struct portaltransform_t
+{
+   double rot[2][2];
+   v3double_t move;   // TODO: z offset
+   double angle;
+};
 
 // Represents the information needed for an anchored portal
 struct anchordata_t
 {
-   fixed_t   deltax, deltay, deltaz;
-   angle_t   rotation;
-   
+   // affine 3D transform. Last row is omitted. Includes translate(x, y, z) and
+   // rotation around the Z axis
+   portaltransform_t transform;
+
    // These are for debug purposes (so mappers can find the portats 
    // causing problems)
    int       maker, anchor;
@@ -232,6 +238,7 @@ struct pwindow_t
    pwindowtype_e type;
 
    fixed_t  vx, vy, vz;
+   angle_t  vangle;
 
    float *top;
    float *bottom;

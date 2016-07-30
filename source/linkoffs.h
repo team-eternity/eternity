@@ -40,7 +40,6 @@
 struct linkoffset_t
 {
    fixed_t x, y, z;
-   angle_t rotation;
 };
 
 //

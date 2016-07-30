@@ -341,7 +341,7 @@ linkoffset_t *P_GetLinkIfExists(int fromgroup, int togroup)
 // out of bounds, and 2 of the target group is out of bounds.
 //
 static int P_AddLinkOffset(int startgroup, int targetgroup,
-                           fixed_t x, fixed_t y, fixed_t z, angle_t rotation)
+                           fixed_t x, fixed_t y, fixed_t z)
 {
    linkoffset_t *link;
 
@@ -367,7 +367,6 @@ static int P_AddLinkOffset(int startgroup, int targetgroup,
    link->x = x;
    link->y = y;
    link->z = z;
-   link->rotation = rotation;
 
    return 0;
 }
@@ -427,8 +426,7 @@ static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
       int ret = P_AddLinkOffset(sec->groupid, portal->data.link.toid,
                                 portal->data.link.deltax, 
                                 portal->data.link.deltay, 
-                                portal->data.link.deltaz,
-                                portal->data.link.rotation);
+                                portal->data.link.deltaz);
       if(ret)
          return false;
    }
@@ -458,7 +456,7 @@ static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
 // can be found to go from A to C.
 //
 static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
-                          fixed_t drotation, int via)
+                          int via)
 {
    int i, p;
    linkoffset_t *link, **linklist, **grouplinks;
@@ -479,7 +477,7 @@ static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
             continue;
 
          if((link = linklist[i]))
-            P_GatherLinks(group, link->x, link->y, link->z, link->rotation, i);
+            P_GatherLinks(group, link->x, link->y, link->z, i);
       }
 
       return;
@@ -499,10 +497,8 @@ static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
       if(!(link = linklist[p]) || grouplinks[p])
          continue;
 
-      P_AddLinkOffset(group, p, dx + link->x, dy + link->y, dz + link->z,
-                      drotation + link->rotation);
-      P_GatherLinks(group, dx + link->x, dy + link->y, dz + link->z,
-                    drotation + link->rotation, p);
+      P_AddLinkOffset(group, p, dx + link->x, dy + link->y, dz + link->z);
+      P_GatherLinks(group, dx + link->x, dy + link->y, dz + link->z, p);
    }
 }
 
@@ -718,8 +714,7 @@ bool P_BuildLinkTable()
          {
             if(backlink->x != -link->x ||
                backlink->y != -link->y ||
-               backlink->z != -link->z ||
-               backlink->rotation != -link->rotation)
+               backlink->z != -link->z)
             {
                C_Printf(FC_ERROR "Portal groups %i and %i link and backlink do "
                         "not agree\nLinked portals are disabled\a\n", i, p);
@@ -731,7 +726,7 @@ bool P_BuildLinkTable()
 
    // That first loop has to complete before this can be run!
    for(i = 0; i < groupcount; i++)
-      P_GatherLinks(i, 0, 0, 0, 0, R_NOGROUP);
+      P_GatherLinks(i, 0, 0, 0, R_NOGROUP);
 
    // SoM: one last step. Find all map architecture with a group id of -1 and 
    // assign it to group 0

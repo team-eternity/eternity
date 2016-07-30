@@ -143,6 +143,7 @@ static void R_ClearPortalWindow(pwindow_t *window)
    window->func     = R_RenderPortalNOP;
    window->clipfunc = NULL;
    window->vx = window->vy = window->vz = 0;
+   window->vangle = 0;
 }
 
 static pwindow_t *newPortalWindow()
@@ -298,6 +299,7 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
       window->vx = viewx;
       window->vy = viewy;
       window->vz = viewz;
+      window->vangle = viewangle;
       return;
    }
 
@@ -349,21 +351,45 @@ static portal_t *R_CreatePortal()
 // Calculates the deltas (offset) between two linedefs.
 //
 static void R_CalculateDeltas(int markerlinenum, int anchorlinenum, 
-                              fixed_t *dx, fixed_t *dy, fixed_t *dz,
-                              angle_t *rotation)
+                              fixed_t *dx, fixed_t *dy, fixed_t *dz)
 {
    const line_t *m = lines + markerlinenum;
    const line_t *a = lines + anchorlinenum;
 
-   angle_t angle1 = P_PointToAngle(m->v1->x, m->v1->y, m->v2->x, m->v2->y);
-
-   // anchor points opposite direction
-   angle_t angle2 = P_PointToAngle(a->v2->x, a->v2->y, a->v1->x, a->v1->y);
-
    *dx = ((m->v1->x + m->v2->x) / 2) - ((a->v1->x + a->v2->x) / 2);
    *dy = ((m->v1->y + m->v2->y) / 2) - ((a->v1->y + a->v2->y) / 2);
    *dz = 0; /// ???
-   *rotation = angle2 - angle1;
+}
+
+static void R_calculateTransform(int markerlinenum, int anchorlinenum,
+                                 portaltransform_t *transf)
+{
+   // TODO: define Z offset
+   const line_t *m = lines + markerlinenum;
+   const line_t *a = lines + anchorlinenum;
+
+   // origin point
+   double mx = (m->v1->fx + m->v2->fx) / 2;
+   double my = (m->v1->fy + m->v2->fy) / 2;
+   double ax = (a->v1->fx + a->v2->fx) / 2;
+   double ay = (a->v1->fy + a->v2->fy) / 2;
+
+   // angle delta between the normals behind the linedefs
+   // TODO: add support for flipped anchors (line portals)
+   double rot = atan2(-m->ny, -m->nx) - atan2(-a->ny, -a->nx);
+
+   double cosval = cos(rot);
+   double sinval = sin(rot);
+
+   transf->rot[0][0] = cosval;
+   transf->rot[0][1] = -sinval;
+   transf->rot[1][0] = sinval;
+   transf->rot[1][1] = cosval;
+   transf->move.x = -ax * cosval + ay * sinval + mx;
+   transf->move.y = -ax * sinval - ay * cosval + my;
+   transf->move.z = 0;
+
+   transf->angle = rot;
 }
 
 //
@@ -377,20 +403,16 @@ portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum)
    portal_t *rover, *ret;
    edefstructvar(anchordata_t, adata);
 
-   R_CalculateDeltas(markerlinenum, anchorlinenum, 
-                     &adata.deltax, &adata.deltay, &adata.deltaz,
-                     &adata.rotation);
+   R_calculateTransform(markerlinenum, anchorlinenum, &adata.transform);
 
    adata.maker = markerlinenum;
    adata.anchor = anchorlinenum;
 
    for(rover = portals; rover; rover = rover->next)
    {
-      if(rover->type != R_ANCHORED || 
-         adata.deltax != rover->data.anchor.deltax ||
-         adata.deltay != rover->data.anchor.deltay ||
-         adata.deltaz != rover->data.anchor.deltaz ||
-         adata.rotation != rover->data.anchor.rotation)
+      if(rover->type != R_ANCHORED ||
+         memcmp(&adata.transform, &rover->data.anchor.transform,
+                sizeof(adata.transform)))
          continue;
 
       return rover;
@@ -417,9 +439,7 @@ portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum)
    portal_t *rover, *ret;
    edefstructvar(anchordata_t, adata);
 
-   R_CalculateDeltas(markerlinenum, anchorlinenum, 
-                     &adata.deltax, &adata.deltay, &adata.deltaz,
-                     &adata.rotation);
+   R_calculateTransform(markerlinenum, anchorlinenum, &adata.transform);
 
    adata.maker = markerlinenum;
    adata.anchor = anchorlinenum;
@@ -427,10 +447,8 @@ portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum)
    for(rover = portals; rover; rover = rover->next)
    {
       if(rover->type  != R_TWOWAY                  || 
-         adata.deltax != rover->data.anchor.deltax ||
-         adata.deltay != rover->data.anchor.deltay ||
-         adata.deltaz != rover->data.anchor.deltaz ||
-         adata.rotation != rover->data.anchor.rotation)
+         memcmp(&adata.transform, &rover->data.anchor.transform,
+                sizeof(adata.transform)))
          continue;
 
       return rover;
@@ -973,15 +991,27 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    lastxf = view.x;
    lastyf = view.y;
    lastzf = view.z;
-
+   angle_t lastangle = viewangle;
+   float lastanglef = view.angle;
 
    // SoM 3/10/2005: Use the coordinates stored in the portal struct
-   viewx  = window->vx + portal->data.anchor.deltax;
-   viewy  = window->vy + portal->data.anchor.deltay;
-   viewz  = window->vz + portal->data.anchor.deltaz;
-   view.x = M_FixedToFloat(viewx);
-   view.y = M_FixedToFloat(viewy);
-   view.z = M_FixedToFloat(viewz);
+   const portaltransform_t &tr = portal->data.anchor.transform;
+   double wx = M_FixedToDouble(window->vx);
+   double wy = M_FixedToDouble(window->vy);
+   double vx = tr.rot[0][0] * wx + tr.rot[0][1] * wy + tr.move.x;
+   double vy = tr.rot[1][0] * wx + tr.rot[1][1] * wy + tr.move.y;
+   double vz = M_FixedToDouble(window->vz) + tr.move.z;
+   viewx = M_DoubleToFixed(vx);
+   viewy = M_DoubleToFixed(vy);
+   viewz = M_DoubleToFixed(vz);
+   view.x = static_cast<float>(vx);
+   view.y = static_cast<float>(vy);
+   view.z = static_cast<float>(vz);
+
+   viewangle = window->vangle + static_cast<angle_t>(tr.angle * ANG180 / PI);
+   view.angle = (ANG90 - viewangle) * PI / ANG180;
+   view.sin = sinf(view.angle);
+   view.cos = cosf(view.angle);
 
    R_IncrementFrameid();
    R_RenderBSPNode(numnodes - 1);
@@ -995,9 +1025,14 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    viewx  = lastx;
    viewy  = lasty;
    viewz  = lastz;
+   viewangle = lastangle;
    view.x = lastxf;
    view.y = lastyf;
    view.z = lastzf;
+   view.angle = lastanglef;
+
+   view.sin = (float)sin(view.angle);
+   view.cos = (float)cos(view.angle);
 
    if(window->child)
       R_RenderAnchoredPortal(window->child);
@@ -1069,22 +1104,6 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    viewx  = window->vx + portal->data.link.deltax;
    viewy  = window->vy + portal->data.link.deltay;
    viewz  = window->vz + portal->data.link.deltaz;
-
-   // ioanch 20160227: microscopic adjustment for line portals to make sure
-   // the edge textures in the buffer sectors are seen in case of polyobject
-   // portals
-   //if(window->line && window->line->portal->data.link.polyportalpartner)
-   //{
-   //   if(window->line->dx > 0)
-   //      --viewy;
-   //   else if(window->line->dx < 0)
-   //      ++viewy;
-   //   if(window->line->dy > 0)
-   //      ++viewx;
-   //   else if(window->line->dy < 0)
-   //      --viewx;
-   //}
-
    view.x = M_FixedToFloat(viewx);
    view.y = M_FixedToFloat(viewy);
    view.z = M_FixedToFloat(viewz);
@@ -1301,8 +1320,7 @@ portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,
    ldata.planez = planez;
 
    R_CalculateDeltas(markerlinenum, anchorlinenum, 
-                     &ldata.deltax, &ldata.deltay, &ldata.deltaz,
-                     &ldata.rotation);
+                     &ldata.deltax, &ldata.deltay, &ldata.deltaz);
 
    ldata.maker = markerlinenum;
    ldata.anchor = anchorlinenum;
