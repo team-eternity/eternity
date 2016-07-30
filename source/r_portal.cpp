@@ -814,8 +814,6 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
 
    // SoM: The viewangle should also be offset by the skybox camera angle.
    viewangle += portal->data.camera->angle;
-   viewsin = finesine[viewangle>>ANGLETOFINESHIFT];
-   viewcos = finecosine[viewangle>>ANGLETOFINESHIFT];
 
    view.angle = (ANG90 - viewangle) * PI / ANG180;
    view.sin = (float)sin(view.angle);
@@ -840,8 +838,6 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
    view.z = lastzf;
    view.angle = lastanglef;
 
-   viewsin  = finesine[viewangle>>ANGLETOFINESHIFT];
-   viewcos  = finecosine[viewangle>>ANGLETOFINESHIFT];
    view.sin = (float)sin(view.angle);
    view.cos = (float)cos(view.angle);
 
