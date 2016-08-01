@@ -1050,6 +1050,7 @@ PARAMLINE(PillarBuild);
 PARAMLINE(PillarBuildAndCrush);
 PARAMLINE(PillarOpen);
 PARAMLINE(ACSExecute);
+PARAMLINE(ACSExecuteAlways);
 PARAMLINE(ACSSuspend);
 PARAMLINE(ACSTerminate);
 PARAMLINE(ACSExecuteWithResult);
@@ -1509,6 +1510,7 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(474, PolyobjStop,                     "Polyobj_Stop")
    LINESPECNAMED(475, ParamPlatRaiseNearestChange,     "Plat_RaiseAndStayTx0")
    LINESPECNAMED(476, ParamPlatRaiseChange,            "Plat_UpByValueStayTx")
+   LINESPECNAMED(477, ACSExecuteAlways,                "ACS_ExecuteAlways")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1670,6 +1672,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(205, ParamGenCrusher,                 "Generic_Crusher")
    LINESPECNAMED(215, ParamTeleportLine,               "Teleport_Line")
    LINESPECNAMED(217, ParamStairsBuildUpDoom,          "Stairs_BuildUpDoom")
+   LINESPECNAMED(226, ACSExecuteAlways,                "ACS_ExecuteAlways")
    LINESPECNAMED(228, ParamPlatRaiseNearestChange,     "Plat_RaiseAndStayTx0")
    LINESPECNAMED(230, ParamPlatRaiseChange,            "Plat_UpByValueStayTx")
    LINESPECNAMED(232, ParamLightStrobeDoom,            "Light_StrobeDoom")

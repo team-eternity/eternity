@@ -4137,5 +4137,27 @@ DEFINE_ACTION(EV_ActionParamSectorSetFloorPanning)
                                                         instance->args[4]));
 }
 
+//
+// Implements ACS_ExecuteAlways(script, map, arg1, arg2, arg3)
+//
+// * ExtraData: 477
+// * Hexen:     226
+//
+DEFINE_ACTION(EV_ActionACSExecuteAlways)
+{
+   Mobj   *thing = instance->actor;
+   line_t *line  = instance->line;
+   int     side  = instance->side;
+   int     num   = instance->args[0];
+   int     map   = instance->args[1];
+   int     argc  = NUMLINEARGS - 2;
+   int32_t argv[NUMLINEARGS - 2];
+
+   for(int i = 0; i != argc; ++i)
+      argv[i] = instance->args[i + 2];
+
+   return ACS_ExecuteScriptNumber(num, map, ACS_EXECUTE_ALWAYS, argv, argc, thing, line, side);
+}
+
 // EOF
 

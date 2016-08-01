@@ -201,6 +201,7 @@ DECLARE_ACTION(EV_ActionPillarBuild);
 DECLARE_ACTION(EV_ActionPillarBuildAndCrush );
 DECLARE_ACTION(EV_ActionPillarOpen);
 DECLARE_ACTION(EV_ActionACSExecute);
+DECLARE_ACTION(EV_ActionACSExecuteAlways);
 DECLARE_ACTION(EV_ActionACSSuspend);
 DECLARE_ACTION(EV_ActionACSTerminate);
 DECLARE_ACTION(EV_ActionACSExecuteWithResult);
