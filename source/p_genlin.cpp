@@ -647,7 +647,7 @@ manual_ceiling:
 //
 int EV_DoGenCeiling(const line_t *line)
 {
-   ceilingdata_t cd;
+   edefstructvar(ceilingdata_t, cd);
    int value = line->special - GenCeilingBase;
 
    // parse the bit fields in the line's special type
@@ -1052,7 +1052,7 @@ manual_stair:
 //
 int EV_DoGenStairs(line_t *line)
 {
-   stairdata_t sd;
+   edefstructvar(stairdata_t, sd);
    int         rtn;
    int         value = line->special - GenStairsBase;
 
