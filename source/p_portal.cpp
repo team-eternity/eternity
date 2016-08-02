@@ -909,7 +909,7 @@ bool EV_PortalTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
 // Returns the combined state flags for the given portal based on various
 // behavior flags
 //
-static int P_GetPortalState(portal_t *portal, int sflags, bool obscured)
+static int P_GetPortalState(const portal_t *portal, int sflags, bool obscured)
 {
    bool active;
    int     ret = sflags & (PF_FLAGMASK | PS_OVERLAYFLAGS | PO_OPACITYMASK);

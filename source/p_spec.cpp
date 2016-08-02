@@ -145,6 +145,7 @@ typedef enum
    portal_lineonly, // SoM: Added for linked line-line portals.
 } portal_effect;
 
+static void P_SpawnDeferredParamPortal(line_t *line, int staticFn);
 static void P_SpawnPortal(line_t *, int);
 
 //
@@ -1320,6 +1321,7 @@ void P_SpawnSpecials()
       case EV_STATIC_PORTAL_LINKED_FLOOR:
       case EV_STATIC_PORTAL_LINKED_LINE2LINE:
       case EV_STATIC_PORTAL_HORIZON_LINE:
+      case EV_STATIC_PORTAL_SECTOR_PARAM:
          P_SpawnPortal(&lines[i], staticFn);
          break;
       
@@ -1345,6 +1347,7 @@ void P_SpawnSpecials()
       case EV_STATIC_SLOPE_BSEC_FLOOR_CEILING:
       case EV_STATIC_SLOPE_BACKFLOOR_FRONTCEILING:
       case EV_STATIC_SLOPE_FRONTFLOOR_BACKCEILING:
+      case EV_STATIC_SLOPE_PARAM:
          P_SpawnSlope_Line(i, staticFn);
          break;
 
@@ -1394,6 +1397,12 @@ void P_SpawnDeferredSpecials()
       case EV_STATIC_SLOPE_FRONTFLOORCEILING_TAG:
          // SoM: Copy slopes
          P_CopySectorSlope(line, staticFn);
+      case EV_STATIC_PORTAL_SECTOR_PARAM:
+         if(line->args[paramPortal_argType] == paramPortal_copied ||
+            line->args[paramPortal_argType] == paramPortal_copyline)
+         {
+            P_SpawnDeferredParamPortal(line, staticFn);
+         }
          break;
 
       default: // Not a function handled here
@@ -2439,6 +2448,177 @@ static void P_getPortalProps(int staticFn, portal_type &type, portal_effect &eff
 }
 
 //
+// Handle Sector_SetPortal(tag, type, plane, misc, alpha)
+// From ZDoom.
+// Returns false if it's just a "copy" type. In that case it's handled else-
+// where.
+//
+static bool P_getParamPortalProps(const int *args, portal_type &type,
+                                  portal_effect &effects)
+{
+   // Get portal properties
+   switch(args[paramPortal_argType])   // type
+   {
+      case paramPortal_normal:
+      default:
+         if(args[paramPortal_argMisc])
+            return false;  // anchor
+
+         // Both floor and ceiling portals are anchored, otherwise two-way
+         type = args[paramPortal_argPlane] == paramPortal_planeBoth
+                         ? portal_anchored : portal_twoway;
+
+         break;
+      case paramPortal_copied:
+         return false;  // copy to front sector
+      case paramPortal_skybox:
+         type = portal_skybox;
+         break;
+      case paramPortal_pplane:
+         type = portal_plane;
+         break;
+      case paramPortal_horizon:
+         type = portal_horizon;
+         break;
+      case paramPortal_copyline:
+         return false;  // copy line
+      case paramPortal_linked:
+         if(args[paramPortal_argMisc])
+            return false;  // anchor
+         if(args[paramPortal_argPlane] == paramPortal_planeBoth)
+         {
+            C_Printf(FC_ERROR "Linked portal cannot render on both planes\a\n");
+            return false;
+         }
+         type = portal_linked;
+         break;
+         // TODO: portal_anchored
+   }
+   switch(args[paramPortal_argPlane])   // plane
+   {
+      case paramPortal_planeFloor:
+      default:
+         effects = portal_floor;
+         break;
+      case paramPortal_planeCeiling:
+         effects = portal_ceiling;
+         break;
+      case paramPortal_planeBoth:
+         effects = portal_both;
+         break;
+   }
+   return true;
+}
+
+//
+// Finds the anchor of the corresponding Sector_SetPortal
+//
+static int P_findParamPortalAnchor(const line_t *line)
+{
+   int s;
+   int anchortype = EV_SpecialForStaticInit(EV_STATIC_PORTAL_SECTOR_PARAM);
+   for(s = 0; s < numlines; ++s) // FIXME: no quicker way to search?
+   {
+      if(lines[s].special != anchortype || line == &line[s] ||
+         lines[s].args[0] != line->args[0] ||
+         lines[s].args[paramPortal_argType] != line->args[paramPortal_argType] ||
+         lines[s].args[paramPortal_argPlane] != line->args[paramPortal_argPlane] ||
+         !lines[s].args[paramPortal_argMisc])
+         continue;
+      break;   // found an anchor
+   }
+   return s >= numlines ? -1 : s;
+}
+
+//
+// Handles the parameterized equivalent of 385
+//
+static void P_copyParamPortalSector(line_t *line)
+{
+   int tag = line->args[paramPortal_argMisc];
+   portal_t *cportal = nullptr;
+   portal_t *fportal = nullptr;
+   for(int s = -1; (s = P_FindSectorFromTag(tag, s)) >= 0; )
+   {
+      if(sectors[s].c_portal)
+         cportal = sectors[s].c_portal;
+      if(sectors[s].f_portal)
+         fportal = sectors[s].f_portal;
+      if(cportal && fportal)
+         break;
+   }
+   if(!cportal && !fportal)
+   {
+      line->special = 0;
+      return;
+   }
+   tag = line->args[0];
+   if(tag)
+   {
+      for(int s = -1; (s = P_FindSectorFromTag(tag, s)) >= 0; )
+      {
+         if(cportal)
+            P_SetPortal(sectors + s, nullptr, cportal, portal_ceiling);
+         if(fportal)
+            P_SetPortal(sectors + s, nullptr, fportal, portal_floor);
+      }
+   }
+   else
+   {
+      if(cportal)
+         P_SetPortal(line->frontsector, nullptr, cportal, portal_ceiling);
+      if(fportal)
+         P_SetPortal(line->frontsector, nullptr, fportal, portal_floor);
+   }
+   line->special = 0;
+}
+
+//
+// Handles the parameterized equivalent of 298
+//
+static void P_copyParamPortalLine(line_t *line)
+{
+   int tag = line->args[paramPortal_argMisc];
+   portal_t *portal = nullptr;
+   for(int s = -1; (s = P_FindSectorFromTag(tag, s)) >= 0; )
+   {
+      if(sectors[s].c_portal) // ceiling portal has priority
+      {
+         portal = sectors[s].c_portal;
+         break;
+      }
+      if(!portal && sectors[s].f_portal)
+      {
+         portal = sectors[s].f_portal;
+         break;
+      }
+   }
+   if(!portal)
+   {
+      line->special = 0;
+      return;
+   }
+   tag = line->args[0];
+   if(tag)
+   {
+      for(int s = -1; (s = P_FindLineFromTag(tag, s)) >= 0; )
+         P_SetPortal(lines[s].frontsector, lines + s, portal, portal_lineonly);
+   }
+   else
+      P_SetPortal(line->frontsector, line, portal, portal_lineonly);
+
+   line->special = 0;
+}
+
+static void P_SpawnDeferredParamPortal(line_t *line, int staticFn)
+{
+   if(line->args[paramPortal_argType] == paramPortal_copied)
+      P_copyParamPortalSector(line);
+   else if(line->args[paramPortal_argType] == paramPortal_copyline)
+      P_copyParamPortalLine(line);
+}
+
+//
 // P_SpawnPortal
 //
 // Code by SoM, functionalized by Quasar.
@@ -2459,8 +2639,20 @@ static void P_SpawnPortal(line_t *line, int staticFn)
    int       s;
    int       fromid, toid;
 
-   // haleyjd: get type and effects from static init function
-   P_getPortalProps(staticFn, type, effects);
+   bool param = staticFn == EV_STATIC_PORTAL_SECTOR_PARAM;
+   if(param)
+   {
+      if(!P_getParamPortalProps(line->args, type, effects))
+      {
+         // The parameterized equivalent of 385 really needs separate handling
+         return;  // exit if it's just a copier sought by others
+      }
+   }
+   else
+   {
+      // haleyjd: get type and effects from static init function
+      P_getPortalProps(staticFn, type, effects);
+   }
 
    if(!(sector = line->frontsector))
       return;
@@ -2486,6 +2678,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
                                   &sector->ceiling_xoffs, &sector->ceiling_yoffs,
                                   &sector->floorbaseangle, &sector->floorangle,
                                   &sector->ceilingbaseangle, &sector->ceilingangle);
+      // TODO: line portal
       if(effects == portal_lineonly)
       {
          // special case for line-only portal
@@ -2513,24 +2706,29 @@ static void P_SpawnPortal(line_t *line, int staticFn)
 
    case portal_anchored:
       // determine proper anchor type (see below)
-      if(staticFn == EV_STATIC_PORTAL_ANCHORED_CEILING || 
-         staticFn == EV_STATIC_PORTAL_ANCHORED_CEILING_FLOOR)
-         anchorfunc = EV_STATIC_PORTAL_ANCHOR;
+      if(param)
+         s = P_findParamPortalAnchor(line);
       else
-         anchorfunc = EV_STATIC_PORTAL_ANCHOR_FLOOR;
-
-      // haleyjd: get anchortype for func
-      anchortype = EV_SpecialForStaticInit(anchorfunc);
-
-      // find anchor line
-      for(s = -1; (s = P_FindLineFromLineTag(line, s)) >= 0; )
       {
-         // SoM 3-10-04: Two different anchor linedef codes so I can tag 
-         // two anchored portals to the same sector.
-         if(lines[s].special != anchortype || line == &lines[s])
-            continue;
+         if(staticFn == EV_STATIC_PORTAL_ANCHORED_CEILING ||
+            staticFn == EV_STATIC_PORTAL_ANCHORED_CEILING_FLOOR)
+            anchorfunc = EV_STATIC_PORTAL_ANCHOR;
+         else
+            anchorfunc = EV_STATIC_PORTAL_ANCHOR_FLOOR;
 
-         break;
+         // haleyjd: get anchortype for func
+         anchortype = EV_SpecialForStaticInit(anchorfunc);
+
+         // find anchor line
+         for(s = -1; (s = P_FindLineFromLineTag(line, s)) >= 0; )
+         {
+            // SoM 3-10-04: Two different anchor linedef codes so I can tag
+            // two anchored portals to the same sector.
+            if(lines[s].special != anchortype || line == &lines[s])
+               continue;
+            
+            break;
+         }
       }
       if(s < 0)
       {
@@ -2543,22 +2741,28 @@ static void P_SpawnPortal(line_t *line, int staticFn)
 
    case portal_twoway:
       // two way and linked portals can only be applied to either the floor or ceiling.
-      if(staticFn == EV_STATIC_PORTAL_TWOWAY_CEILING)
-         anchorfunc = EV_STATIC_PORTAL_TWOWAY_ANCHOR;
+      if(param)
+         // We're having (tag, 0, plane, 0). Look for (tag, 0, plane, 1)
+         s = P_findParamPortalAnchor(line);
       else
-         anchorfunc = EV_STATIC_PORTAL_TWOWAY_ANCHOR_FLOOR;
-
-      // haleyjd: get anchortype for func
-      anchortype = EV_SpecialForStaticInit(anchorfunc);
-
-      // find anchor line
-      for(s = -1; (s = P_FindLineFromLineTag(line, s)) >= 0; )
       {
-         // SoM 3-10-04: Two different anchor linedef codes so I can tag 
-         // two anchored portals to the same sector.
-         if(lines[s].special != anchortype || line == &lines[s])
-            continue;
-         break;
+         if(staticFn == EV_STATIC_PORTAL_TWOWAY_CEILING)
+            anchorfunc = EV_STATIC_PORTAL_TWOWAY_ANCHOR;
+         else
+            anchorfunc = EV_STATIC_PORTAL_TWOWAY_ANCHOR_FLOOR;
+
+         // haleyjd: get anchortype for func
+         anchortype = EV_SpecialForStaticInit(anchorfunc);
+
+         // find anchor line
+         for(s = -1; (s = P_FindLineFromLineTag(line, s)) >= 0; )
+         {
+            // SoM 3-10-04: Two different anchor linedef codes so I can tag
+            // two anchored portals to the same sector.
+            if(lines[s].special != anchortype || line == &lines[s])
+               continue;
+            break;
+         }
       }
       if(s < 0)
       {
@@ -2574,36 +2778,46 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          return;
 
       // linked portals can only be applied to either the floor or ceiling.
-      if(staticFn == EV_STATIC_PORTAL_LINKED_CEILING) 
+      if(param)
       {
-         anchorfunc = EV_STATIC_PORTAL_LINKED_ANCHOR;
-         planez = sector->floorheight;
+         planez = line->args[2] == 0 ? sector->ceilingheight
+                                     : sector->floorheight;
+         s = P_findParamPortalAnchor(line);
+         // TODO: line portals not handled yet
       }
-      else if(staticFn == EV_STATIC_PORTAL_LINKED_FLOOR)
+      else
       {
-         anchorfunc = EV_STATIC_PORTAL_LINKED_ANCHOR_FLOOR;
-         planez = sector->ceilingheight;
-      }
-      else if(staticFn == EV_STATIC_PORTAL_LINKED_LINE2LINE) 
-      {
-         // Line-Line linked portals
-         anchorfunc = EV_STATIC_PORTAL_LINKED_L2L_ANCHOR;
-         planez = 0; // SoM: What should this really be? I dunno.
-      }
+         if(staticFn == EV_STATIC_PORTAL_LINKED_CEILING)
+         {
+            anchorfunc = EV_STATIC_PORTAL_LINKED_ANCHOR;
+            planez = sector->floorheight;
+         }
+         else if(staticFn == EV_STATIC_PORTAL_LINKED_FLOOR)
+         {
+            anchorfunc = EV_STATIC_PORTAL_LINKED_ANCHOR_FLOOR;
+            planez = sector->ceilingheight;
+         }
+         else if(staticFn == EV_STATIC_PORTAL_LINKED_LINE2LINE)
+         {
+            // Line-Line linked portals
+            anchorfunc = EV_STATIC_PORTAL_LINKED_L2L_ANCHOR;
+            planez = 0; // SoM: What should this really be? I dunno.
+         }
 
-      // haleyjd: get anchortype for func
-      anchortype = EV_SpecialForStaticInit(anchorfunc);
+         // haleyjd: get anchortype for func
+         anchortype = EV_SpecialForStaticInit(anchorfunc);
 
-      // find anchor line
-      for(s = -1; (s = P_FindLineFromLineTag(line, s)) >= 0; )
-      {
-         // SoM 3-10-04: Two different anchor linedef codes so I can tag 
-         // two anchored portals to the same sector.
-         if(lines[s].special != anchortype || line == &lines[s] 
-           || lines[s].frontsector == NULL)
-            continue;
-
-         break;
+         // find anchor line
+         for(s = -1; (s = P_FindLineFromLineTag(line, s)) >= 0; )
+         {
+            // SoM 3-10-04: Two different anchor linedef codes so I can tag
+            // two anchored portals to the same sector.
+            if(lines[s].special != anchortype || line == &lines[s]
+               || lines[s].frontsector == NULL)
+               continue;
+            
+            break;
+         }
       }
       if(s < 0)
       {
@@ -2665,13 +2879,14 @@ static void P_SpawnPortal(line_t *line, int staticFn)
 
    // attach portal to tagged sector floors/ceilings
    // SoM: TODO: Why am I not checking groupids?
-   for(s = -1; (s = P_FindSectorFromLineTag(line, s)) >= 0; )
+   int tag = param ? line->args[0] : line->tag;
+   for(s = -1; (s = P_FindSectorFromTag(tag, s)) >= 0; )
    {
       P_SetPortal(sectors + s, NULL, portal, effects);
    }
 
    // attach portal to like-tagged 289 lines
-   for(s = -1; (s = P_FindLineFromLineTag(line, s)) >= 0; )
+   for(s = -1; (s = P_FindLineFromTag(tag, s)) >= 0; )
    {
       if(line == &lines[s] || !lines[s].frontsector)
          continue;

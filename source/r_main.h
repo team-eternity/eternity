@@ -39,9 +39,6 @@ struct spandrawer_t;
 // POV related.
 //
 
-extern fixed_t  viewcos;
-extern fixed_t  viewsin;
-
 extern int      centerx;
 extern int      centery;
 extern fixed_t  centerxfrac;
