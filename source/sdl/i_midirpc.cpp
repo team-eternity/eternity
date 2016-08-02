@@ -29,6 +29,7 @@
 #include <windows.h>
 #include "../../midiproc/midiproc.h"
 
+#include "../hal/i_timer.h"
 #include "../m_qstr.h"
 
 #if defined(_DEBUG) && defined(EE_RPC_DEBUG)
@@ -79,6 +80,20 @@ void __RPC_USER midl_user_free(void __RPC_FAR *p)
 #define CHECK_RPC_STATUS()        \
    if(!serverInit || !clientInit) \
       return false
+
+#define MIDIRPC_MAXTRIES 50 // This number * 10 is the amount of time you can try to wait for.
+
+static bool I_MidiRPCWaitForServer()
+{
+   int tries = 0;
+   while(RpcMgmtIsServerListening(hMidiRPCBinding) != RPC_S_OK)
+   {
+      i_haltimer.Sleep(10);
+      if(++tries >= MIDIRPC_MAXTRIES)
+         return false;
+   }
+   return true;
+}
 
 //
 // I_MidiRPCRegisterSong
@@ -323,7 +338,7 @@ bool I_MidiRPCInitClient()
    DEBUGOUT("RPC client initialized");
    clientInit = true;
 
-   return true;
+   return I_MidiRPCWaitForServer();
 }
 
 //

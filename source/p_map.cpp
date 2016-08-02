@@ -1404,21 +1404,6 @@ static bool P_CheckDropOffEE(Mobj *thing, int dropoff)
 typedef bool (*dropoff_func_t)(Mobj *, int);
 
 //
-// P_lineIsCrossedMiddle
-//
-// ioanch 20160227: true if line is crossed only in its segment range, not
-// outside
-//
-static bool P_lineIsCrossedMiddle(fixed_t tx, fixed_t ty, const line_t *line)
-{
-   // use scalar product
-   float mx = M_FixedToFloat(tx);
-   float my = M_FixedToFloat(ty);
-   return (mx - line->v1->fx) * (line->v2->fx - mx) +
-          (my - line->v1->fy) * (line->v2->fy - my) >= 0;
-}
-
-//
 // P_TryMove
 //
 // Attempt to move to a new position,

@@ -59,7 +59,7 @@ struct ev_instance_t
    line_t *line;    // line, if any
    int     special; // special to activate (may == line->special)
    int    *args;    // arguments (may point to line->args)
-   int     tag;     // tag (may == line->tag or line->args[0])
+   int     tag;     // tag (may == line->tag or line->args[0]) // ioanch 20160304: only args[0]
    int     side;    // side of activation
    int     spac;    // special activation type
    int     gentype; // generalized type, if is generalized (-1 otherwise)
@@ -281,6 +281,8 @@ enum
    EV_STATIC_SCROLL_LINE_DOWN,              // 418
    EV_STATIC_SCROLL_LINE_DOWN_FAST,         // 419
    EV_STATIC_PORTAL_HORIZON_LINE,           // 450
+   EV_STATIC_SLOPE_PARAM,                   // 455
+   EV_STATIC_PORTAL_SECTOR_PARAM,           // 456
 
    EV_STATIC_MAX
 };

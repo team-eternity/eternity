@@ -276,6 +276,31 @@ bool P_GiveBody(player_t *player, itemeffect_t *effect)
 }
 
 //
+// EV_DoHealThing
+//
+// Returns false if the health isn't needed at all
+//
+bool EV_DoHealThing(Mobj *actor, int amount, int max)
+{
+   if(actor->health < max)
+   {
+      actor->health += amount;
+
+      // cap to maxhealth
+      if(actor->health > max)
+         actor->health = max;
+
+
+      // propagate to Mobj's player if it exists
+      if(actor->player)
+         actor->player->health = actor->health;
+
+      return true;
+   }
+   return false;
+}
+
+//
 // P_GiveArmor
 //
 // Returns false if the armor is worse
@@ -1996,10 +2021,7 @@ void P_RaiseCorpse(Mobj *corpse, const Mobj *raiser)
          (info->flags & ~MF_FRIEND) | (raiser->flags & MF_FRIEND);
    }
    else
-   {
-      // else reuse the old friend flag.
-      corpse->flags = (info->flags & ~MF_FRIEND) | (corpse->flags & MF_FRIEND);
-   }
+      corpse->flags = info->flags;
 
    corpse->health = info->spawnhealth;
    P_SetTarget<Mobj>(&corpse->target, NULL);  // killough 11/98

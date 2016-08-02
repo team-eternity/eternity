@@ -288,6 +288,8 @@ void CeilingThinker::Think()
             case paramHexenCrush:
             case paramHexenCrushRaiseStay:
             case paramHexenLowerCrush:
+            case genCeiling:  // ioanch: also emulate Doom ceiling fake crush
+                              // slowdown
                // if crusher doesn't rest on victims:
                // this is like ZDoom: if a ceiling speed is set exactly to 8,
                // then apply the Doom crusher slowdown. Otherwise, keep speed
@@ -372,13 +374,13 @@ int EV_DoCeiling(const line_t *line, ceiling_e type)
    case silentCrushAndRaise:
    case crushAndRaise:
       //jff 4/5/98 return if activated
-      rtn = P_ActivateInStasisCeiling(line, line->tag);
+      rtn = P_ActivateInStasisCeiling(line, line->args[0]);
    default:
       break;
    }
   
    // affects all sectors with the same tag as the linedef
-   while((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
+   while((secnum = P_FindSectorFromLineArg0(line,secnum)) >= 0)
    {
       sec = &sectors[secnum];
       
@@ -519,8 +521,7 @@ int P_ActivateInStasisCeiling(const line_t *line, int tag, bool manual)
       for(int i = 0; i < vanilla_MAXCEILINGS; ++i)
       {
          CeilingThinker *ceiling = vanilla_activeceilings[i];
-         if(ceiling && ceiling->tag == tag && 
-            ceiling->direction == plat_stop)
+         if(ceiling && ceiling->tag == tag && ceiling->direction == plat_stop)
          {
             resumeceiling(ceiling);
          }

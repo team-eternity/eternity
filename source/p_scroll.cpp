@@ -259,7 +259,7 @@ static void P_spawnCeilingScroller(int staticFn, line_t *l)
       staticFn == EV_STATIC_SCROLL_DISPLACE_CEILING)
       control = sides[*l->sidenum].sector - sectors;
 
-   for(int s = -1; (s = P_FindSectorFromLineTag(l, s)) >= 0;)
+   for(int s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0;)
       Add_Scroller(ScrollThinker::sc_ceiling, -dx, dy, control, s, accel);
 }
 
@@ -285,7 +285,7 @@ static void P_spawnFloorScroller(int staticFn, line_t *l)
       staticFn == EV_STATIC_SCROLL_DISPLACE_FLOOR)
       control = sides[*l->sidenum].sector - sectors;
 
-   for(int s = -1; (s = P_FindSectorFromLineTag(l, s)) >= 0;)
+   for(int s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0;)
       Add_Scroller(ScrollThinker::sc_floor, -dx, dy, control, s, accel);
 }
 
@@ -311,7 +311,7 @@ static void P_spawnFloorCarrier(int staticFn, line_t *l)
       staticFn == EV_STATIC_CARRY_DISPLACE_FLOOR)
       control = sides[*l->sidenum].sector - sectors;
 
-   for(int s = -1; (s = P_FindSectorFromLineTag(l, s)) >= 0;)
+   for(int s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0;)
       Add_Scroller(ScrollThinker::sc_carry, dx, dy, control, s, accel);
 }
 
@@ -338,7 +338,7 @@ static void P_spawnFloorScrollAndCarry(int staticFn, line_t *l)
       staticFn == EV_STATIC_SCROLL_CARRY_DISPLACE_FLOOR)
       control = sides[*l->sidenum].sector - sectors;
 
-   for(s = -1; (s = P_FindSectorFromLineTag(l, s)) >= 0; )
+   for(s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0; )
       Add_Scroller(ScrollThinker::sc_floor, -dx, dy, control, s, accel);
 
    dx = FixedMul(dx, CARRYFACTOR);
@@ -346,7 +346,7 @@ static void P_spawnFloorScrollAndCarry(int staticFn, line_t *l)
 
    // NB: don't fold these loops together. Even though it would be more
    // efficient, we must maintain BOOM-compatible thinker spawning order.
-   for(s = -1; (s = P_FindSectorFromLineTag(l, s)) >= 0; )
+   for(s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0; )
       Add_Scroller(ScrollThinker::sc_carry, dx, dy, control, s, accel);
 }
 
@@ -375,7 +375,7 @@ static void P_spawnDynamicWallScroller(int staticFn, line_t *l, int linenum)
 
    // killough 3/1/98: scroll wall according to linedef
    // (same direction and speed as scrolling floors)
-   for(int s = -1; (s = P_FindLineFromLineTag(l, s)) >= 0;)
+   for(int s = -1; (s = P_FindLineFromLineArg0(l, s)) >= 0;)
    {
       if(s != linenum)
          Add_WallScroller(dx, dy, lines + s, control, accel);

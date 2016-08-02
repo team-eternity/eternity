@@ -610,8 +610,9 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
    sspot.y = po->spawnSpot.y;
 
    // calculate distance from anchor to spawn spot
-   dist.x = (anchor->x << FRACBITS) - sspot.x;
-   dist.y = (anchor->y << FRACBITS) - sspot.y;
+   // ioanch 20151218: use 32-bit coordinates
+   dist.x = anchor->x - sspot.x;
+   dist.y = anchor->y - sspot.y;
 
    // update linedef bounding boxes
    for(i = 0; i < po->numLines; ++i)
@@ -1845,6 +1846,30 @@ int EV_DoPolyObjMove(polymovedata_t *pmdata)
    }
 
    // action was successful
+   return 1;
+}
+
+int EV_DoPolyObjStop(int polyObjNum)
+{
+   polyobj_t *po;
+   if(!(po = Polyobj_GetForNum(polyObjNum)))
+   {
+      doom_printf(FC_ERROR "EV_DoPolyObjStop: bad polyobj %d", polyObjNum);
+      return 0;
+   }
+
+   // don't allow line actions to affect bad polyobjects
+   if(po->flags & POF_ISBAD)
+      return 0;
+
+   // don't remove thinker if there is no thinker, but do successfully activate
+   if(po->thinker)
+   {
+      po->thinker->removeThinker();
+      po->thinker = nullptr;
+      S_StopPolySequence(po);
+   }
+
    return 1;
 }
 
