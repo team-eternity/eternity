@@ -152,6 +152,7 @@ static ev_static_t HexenStaticBindings[] =
    STATICSPEC(103, EV_STATIC_SCROLL_DOWN_PARAM)
    STATICSPEC(121, EV_STATIC_LINE_SET_IDENTIFICATION)
    STATICSPEC(181, EV_STATIC_SLOPE_PARAM)
+   STATICSPEC(209, EV_STATIC_TRANSFER_HEIGHTS)
    STATICSPEC(210, EV_STATIC_LIGHT_TRANSFER_FLOOR)
    STATICSPEC(211, EV_STATIC_LIGHT_TRANSFER_CEILING)
 };
@@ -574,6 +575,7 @@ int EV_SpecialForStaticInitName(const char *name)
       { EV_STATIC_LINE_SET_IDENTIFICATION, "Line_SetIdentification" },
       { EV_STATIC_LIGHT_TRANSFER_FLOOR,    "Transfer_FloorLight"    },
       { EV_STATIC_LIGHT_TRANSFER_CEILING,  "Transfer_CeilingLight"  },
+      { EV_STATIC_TRANSFER_HEIGHTS,        "Transfer_Heights"       },
    };
 
    // There aren't enough of these to warrant a hash table. Yet.
