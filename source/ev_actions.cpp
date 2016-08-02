@@ -4159,5 +4159,16 @@ DEFINE_ACTION(EV_ActionACSExecuteAlways)
    return ACS_ExecuteScriptNumber(num, map, ACS_EXECUTE_ALWAYS, argv, argc, thing, line, side);
 }
 
+//
+// Implements Thing_Remove(tid)
+//
+// * ExtraData: 478
+// * Hexen:     132
+//
+DEFINE_ACTION(EV_ActionThingRemove)
+{
+   return EV_ThingRemove(instance->tag);
+}
+
 // EOF
 

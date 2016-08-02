@@ -433,6 +433,37 @@ int EV_HealThing(Mobj *actor, int amount, int maxhealth)
    return EV_DoHealThing(actor, amount, maxhealth) ? 1 : 0;
 }
 
+//
+// Removes map objects tagged "tid" from the game
+//
+int EV_ThingRemove(int tid)
+{
+   Mobj *removed;
+   Mobj *mobj = nullptr;
+   mobj = P_FindMobjFromTID(tid, mobj, nullptr);
+   int rtn = 0;
+   while(mobj)
+   {
+      // don't attempt to remove player object because that would crash the game
+      // FIXME: removing voodoo dolls doesn't seem to work anyway
+      if(mobj->player && mobj->player->mo == mobj)
+      {
+         mobj = P_FindMobjFromTID(tid, mobj, nullptr);
+         continue;
+      }
+
+      // TODO: special handling for Hexen-like bridges
+
+      removed = mobj;
+      mobj = P_FindMobjFromTID(tid, mobj, nullptr);
+
+      removed->removeThinker();
+
+      rtn = 1;
+   }
+   return rtn;
+}
+
 //=============================================================================
 //
 // LevelActionThinker

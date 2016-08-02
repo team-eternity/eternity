@@ -1510,6 +1510,7 @@ int EV_ThrustThingZ(Mobj *actor, int tid, int speed, bool upDown, bool setAdd);
 int EV_DamageThing(Mobj *actor, int damage, int mod, int tid);
 int EV_ThingDestroy(int tid, int sectortag);
 int EV_HealThing(Mobj *actor, int amount, int maxhealth);
+int EV_ThingRemove(int tid);
 
 
 ////////////////////////////////////////////////////////////////
