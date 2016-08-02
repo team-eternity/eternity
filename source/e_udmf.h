@@ -54,7 +54,7 @@ class UDMFParser : public ZoneObject
 {
 public:
    
-   UDMFParser()
+   UDMFParser() : mLine(1), mColumn(1)
    {
       static ULinedef linedef;
       mLinedefs.setPrototype(&linedef);
@@ -136,7 +136,7 @@ private:
    class ULinedef : public ZoneObject
    {
    public:
-      int identifier = -1;
+      int identifier;
       int v1, v2;
 
       bool blocking, blockmonsters, twosided, dontpegtop, dontpegbottom, secret,
@@ -149,7 +149,7 @@ private:
       monsterpush, missilecross, repeatspecial;
 
       int special, arg[5];
-      int sidefront, sideback = -1;
+      int sidefront, sideback;
 
       bool v1set, v2set, sfrontset;
       int errorline;
@@ -157,26 +157,34 @@ private:
       // Eternity
       bool midtex3d, firstsideonly, blockeverything, zoneboundary, clipmidtex,
       midtex3dimpassible;
-      float alpha = 1;
+      float alpha;
       qstring renderstyle;
       qstring tranmap;
+
+      ULinedef() : identifier(-1), sideback(-1), alpha(1)
+      {
+      }
    };
 
    class USidedef
    {
    public:
-      int offsetx = 0;
-      int offsety = 0;
+      int offsetx;
+      int offsety;
 
       qstring texturetop;
       qstring texturebottom;
       qstring texturemiddle;
 
-      int sector = 0;
+      int sector;
 
-      bool sset = false;
+      bool sset;
 
-      int errorline = 0;
+      int errorline;
+
+      USidedef() : offsetx(0), offsety(0), sector(0), sset(false), errorline(0)
+      {
+      }
    };
 
    struct uvertex_t
@@ -188,39 +196,43 @@ private:
    class USector : public ZoneObject
    {
    public:
-      int heightfloor = 0;
-      int heightceiling = 0;
-      fixed_t xpanningfloor = 0;
-      fixed_t ypanningfloor = 0;
-      fixed_t xpanningceiling = 0;
-      fixed_t ypanningceiling = 0;
-      double rotationfloor = 0.0;
-      double rotationceiling = 0.0;
+      int heightfloor;
+      int heightceiling;
+      fixed_t xpanningfloor;
+      fixed_t ypanningfloor;
+      fixed_t xpanningceiling;
+      fixed_t ypanningceiling;
+      double rotationfloor;
+      double rotationceiling;
 
       bool secret;
-      int friction = -1;
+      int friction;
 
-      int leakiness = 0;
-      int damageamount = 0;
-      int damageinterval = 0;
-      bool damage_endgodmode = false;
-      bool damage_exitlevel = false;
-      bool damageterraineffect = false;
-      qstring floorterrain = qstring("@flat");
-      qstring ceilingterrain = qstring("@flat");
+      int leakiness;
+      int damageamount;
+      int damageinterval;
+      bool damage_endgodmode;
+      bool damage_exitlevel;
+      bool damageterraineffect;
+      qstring floorterrain;
+      qstring ceilingterrain;
 
-      int lightfloor = 0;
-      int lightceiling = 0;
+      int lightfloor;
+      int lightceiling;
       bool lightfloorabsolute;
       bool lightceilingabsolute;
 
       qstring texturefloor;
       qstring textureceiling;
-      int lightlevel = 160;
-      int special = 0;
-      int identifier = 0;
+      int lightlevel;
+      int special;
+      int identifier;
 
-      bool tfloorset = false, tceilset = false;
+      bool tfloorset, tceilset;
+
+      USector() : friction(-1), floorterrain("@flat"), ceilingterrain("@flat"), lightlevel(160)
+      {
+      }
    };
 
    struct uthing_t
@@ -258,14 +270,14 @@ private:
    bool eof() const { return mPos == mData.length(); }
 
    qstring mData;
-   size_t mPos = 0;
-   int mLine = 1; // for locating errors. 1-based
-   int mColumn = 1;
+   size_t mPos;
+   int mLine; // for locating errors. 1-based
+   int mColumn;
    qstring mError;
 
    qstring mKey;
    Token mValue;
-   bool mInBlock = false;
+   bool mInBlock;
    qstring mBlockName;
 
    // Game stuff

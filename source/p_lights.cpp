@@ -569,7 +569,8 @@ void P_SpawnLightFlash(sector_t *sector)
 //
 // Returns nothing
 //
-void P_SpawnStrobeFlash(sector_t *sector, int fastOrSlow, int inSync)
+void P_SpawnStrobeFlash(sector_t *sector, int darkTime, int brightTime,
+                        int inSync)
 {
    StrobeThinker *flash;
    
@@ -577,8 +578,8 @@ void P_SpawnStrobeFlash(sector_t *sector, int fastOrSlow, int inSync)
    flash->addThinker();
    
    flash->sector = sector;
-   flash->darktime = fastOrSlow;
-   flash->brighttime = STROBEBRIGHT;
+   flash->darktime = darkTime;
+   flash->brighttime = brightTime;
    flash->maxlight = sector->lightlevel;
    flash->minlight = P_FindMinSurroundingLight(sector, sector->lightlevel);
    
@@ -689,21 +690,32 @@ void P_SpawnPSXGlowingLight(sector_t *sector, psxglow_e glowtype)
 //
 // jff 2/12/98 added int return value, fixed return
 //
-int EV_StartLightStrobing(const line_t *line)
+int EV_StartLightStrobing(const line_t *line, int tag, int darkTime,
+                          int brightTime, bool isParam)
 {
    int   secnum;
    sector_t* sec;
+
+   bool manual = false;
+   if(isParam && !tag)
+   {
+      if(!line || !(sec = line->backsector))
+         return 0;
+      manual = true;
+      goto manualLight;
+   }
    
    secnum = -1;
    // start lights strobing in all sectors tagged same as line
-   while((secnum = P_FindSectorFromLineArg0(line, secnum)) >= 0)
+   while(!manual && (secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
       sec = &sectors[secnum];
+   manualLight:
       // if already doing a lighting function, don't start a second
       if(P_SectorActive(lighting_special,sec)) //jff 2/22/98
          continue;
       
-      P_SpawnStrobeFlash(sec, SLOWDARK, 0);
+      P_SpawnStrobeFlash(sec, darkTime, brightTime, 0);
    }
    return 1;
 }
@@ -718,14 +730,30 @@ int EV_StartLightStrobing(const line_t *line)
 //
 // jff 2/12/98 added int return value, fixed return
 //
-int EV_TurnTagLightsOff(const line_t* line)
+int EV_TurnTagLightsOff(const line_t* line, int tag, bool isParam)
 {
+   int j;
    // search sectors for those with same tag as activating line
    
-   // killough 10/98: replaced inefficient search with fast search
-   for(int j = -1; (j = P_FindSectorFromLineArg0(line, j)) >= 0; )
+   // MaxW: Param tag0 support
+   bool manual = false;
+   sector_t *sector;
+   if(isParam && !tag)
    {
-      sector_t *sector = sectors + j, *tsec;
+      if(!line || !(sector = line->backsector))
+         return 0;
+      manual = true;
+      goto manualLight;
+   }
+
+   // killough 10/98: replaced inefficient search with fast search
+   for(j = -1; (j = P_FindSectorFromTag(tag, j)) >= 0; )
+   {
+      sector = sectors + j;
+
+   manualLight:
+      ;
+      sector_t *tsec;
       int min = sector->lightlevel;
       
       // find min neighbor light level
@@ -737,6 +765,9 @@ int EV_TurnTagLightsOff(const line_t* line)
       }
       
       sector->lightlevel = min;
+
+      if(manual)
+         return 1;
    }
 
    return 1;
@@ -753,16 +784,31 @@ int EV_TurnTagLightsOff(const line_t* line)
 //
 // jff 2/12/98 added int return value, fixed return
 //
-int EV_LightTurnOn(const line_t *line, int bright)
+int EV_LightTurnOn(const line_t *line, int tag, int bright, bool isParam)
 {
    int i;
    
    // search all sectors for ones with same tag as activating line
-   
-   // killough 10/98: replace inefficient search with fast search
-   for(i = -1; (i = P_FindSectorFromLineArg0(line, i)) >= 0;)
+
+   // ioanch: param tag0 support
+   bool manual = false;
+   sector_t *sector;
+   if(isParam && !tag)
    {
-      sector_t *temp, *sector = sectors+i;
+      if(!line || !(sector = line->backsector))
+         return 0;
+      manual = true;
+      goto manualLight;
+   }
+
+   // killough 10/98: replace inefficient search with fast search
+   for(i = -1; (i = P_FindSectorFromTag(tag, i)) >= 0;)
+   {
+      sector = sectors+i;
+
+   manualLight:
+      ;
+      sector_t *temp;
       int j, tbright = bright; //jff 5/17/98 search for maximum PER sector
       
       // bright = 0 means to search for highest light level surrounding sector
@@ -784,6 +830,9 @@ int EV_LightTurnOn(const line_t *line, int bright)
       
       if(comp[comp_model])
          bright = tbright;
+
+      if(manual)
+         return 1;
    }
    return 1;
 }

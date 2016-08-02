@@ -39,9 +39,6 @@ struct spandrawer_t;
 // POV related.
 //
 
-extern fixed_t  viewcos;
-extern fixed_t  viewsin;
-
 extern int      centerx;
 extern int      centery;
 extern fixed_t  centerxfrac;
@@ -175,6 +172,9 @@ enum
    // SoM
    SEG_MARKCOVERLAY = 0x10,
    SEG_MARKFOVERLAY = 0x20,
+
+   // ioanch
+   SEG_MARK1SLPORTAL = 0x40,
 };
 
 struct side_t;
