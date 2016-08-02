@@ -104,6 +104,10 @@ typedef struct polyobj_s
 
    unsigned int flags;         // 09/11/09: polyobject flags
 
+   size_t numPortals;          // ioanch 20160228: quick cache if it has
+   portal_t **portals;         // portals. NO NEED TO SERIALIZE THIS. 
+   bool hasLinkedPortals;      // quick check if any portal is linked
+                               
 } polyobj_t;
 
 //
@@ -260,7 +264,7 @@ void Polyobj_MoveOnLoad(polyobj_t *po, angle_t angle, fixed_t x, fixed_t y);
 int EV_DoPolyDoor(polydoordata_t *);
 int EV_DoPolyObjMove(polymovedata_t *);
 int EV_DoPolyObjRotate(polyrotdata_t *);
-
+int EV_DoPolyObjStop(int polyObjNum);
 
 //
 // External Variables

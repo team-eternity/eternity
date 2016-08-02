@@ -106,6 +106,22 @@ static void W_doNerveHack(filelump_t *fileinfo, int numlumps)
 }
 
 //
+// W_doPS3MLHack
+//
+// If the PlayStation 3 masterlevels.wad is loaded, load metadata for it.
+//
+static void W_doPS3MLHack(filelump_t *fileinfo, int numlumps)
+{
+   static bool firsttime = true;
+
+   if(firsttime)
+   {
+      D_DeferredMissionMetaData("EMLSMETA", MD_NONE);
+      firsttime = false;
+   }
+}
+
+//
 // W_doOtakonHack
 //
 // Hack for otakugfx.wad
@@ -152,6 +168,7 @@ static void W_doOtakonHack(filelump_t *fileinfo, int numlumps)
 static w_dirhack_t w_dirhacks[] =
 {
    { "9a296941da455d0009ee3988b55d50ea363a4a84", W_doGothic2Hack }, // gothic2.wad
+   { "5b9a4f587edbd08031d9bbf7dd80dec25433e827", W_doPS3MLHack   }, // masterlevels.wad
    { "fe650cc58c8f12a3642b6f5ef2b3368630a4aaa6", W_doNerveHack   }, // nerve.wad
    { "9f823104462d9575750bf0ba6a4a3a6df0f766e3", W_doOtakonHack  }, // otakugfx.wad
 

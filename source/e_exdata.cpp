@@ -1213,7 +1213,7 @@ static unsigned int E_EDSectorForRecordNum(int recnum)
 // ZDoom decided for us that floors and ceilings should rotate backward with 
 // respect to DOOM's normal angular coordinate system, so don't blame me for 
 // the reversal.
-// MaxW: 2016/06/27: This is no longer static as the function is needed for UDMF
+// MaxW: 2016/07/11: This is no longer static as the function is needed for UDMF
 //
 double E_NormalizeFlatAngle(double input)
 {

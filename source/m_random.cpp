@@ -132,6 +132,10 @@ unsigned int P_RandomEx(pr_class_t pr_class)
    boom = rng.seed[pr_class];
 
    rng.seed[pr_class] = boom * 1664525ul + 221297ul + pr_class*2;
+
+   // ioanch 20160801: needed for better randomness
+   boom = ((boom << 24) | (boom >> 8));
+   boom += (gametic - basetic) * 7;
    
    return boom;
 }

@@ -423,6 +423,9 @@ struct line_t
    unsigned int extflags;   // activation flags for param specials
    int   args[NUMLINEARGS]; // argument values for param specials
    float alpha;             // alpha
+
+   // ioanch 20160312
+   sector_t *beyondportalsector; // reference to a sector beyond a 1-side portal
 };
 
 struct rpolyobj_t;

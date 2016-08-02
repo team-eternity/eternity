@@ -86,7 +86,6 @@ int      centerx, centery;
 fixed_t  centerxfrac, centeryfrac;
 fixed_t  viewx, viewy, viewz;
 angle_t  viewangle;
-fixed_t  viewcos, viewsin;
 player_t *viewplayer;
 extern lighttable_t **walllights;
 bool     showpsprites = 1; //sf
@@ -913,8 +912,6 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    }
 
    extralight = player->extralight;
-   viewsin = finesine[viewangle>>ANGLETOFINESHIFT];
-   viewcos = finecosine[viewangle>>ANGLETOFINESHIFT];
 
    // SoM: Cardboard
    view.x      = M_FixedToFloat(viewx);
