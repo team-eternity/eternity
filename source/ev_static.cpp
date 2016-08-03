@@ -138,6 +138,7 @@ static ev_static_t DOOMStaticBindings[] =
    STATICSPEC(455, EV_STATIC_SLOPE_PARAM)
    STATICSPEC(456, EV_STATIC_PORTAL_SECTOR_PARAM)
    STATICSPEC(457, EV_STATIC_WIND_CONTROL_PARAM)
+   STATICSPEC(479, EV_STATIC_CURRENT_CONTROL_PARAM)
 };
 
 // Hexen Static Init Bindings
@@ -158,6 +159,7 @@ static ev_static_t HexenStaticBindings[] =
    STATICSPEC(211, EV_STATIC_LIGHT_TRANSFER_CEILING)
    STATICSPEC(218, EV_STATIC_WIND_CONTROL_PARAM)
    STATICSPEC(219, EV_STATIC_FRICTION_TRANSFER)
+   STATICSPEC(220, EV_STATIC_CURRENT_CONTROL_PARAM)
 };
 
 // PSX Static Init Bindings
@@ -573,6 +575,7 @@ int EV_SpecialForStaticInitName(const char *name)
       { EV_STATIC_SCROLL_RIGHT_PARAM,      "Scroll_Texture_Right"   },
       { EV_STATIC_SCROLL_UP_PARAM,         "Scroll_Texture_Up"      },
       { EV_STATIC_SCROLL_DOWN_PARAM,       "Scroll_Texture_Down"    },
+      { EV_STATIC_CURRENT_CONTROL_PARAM,   "Sector_SetCurrent"      },
       { EV_STATIC_FRICTION_TRANSFER,       "Sector_SetFriction"     },
       { EV_STATIC_PORTAL_SECTOR_PARAM,     "Sector_SetPortal"       },
       { EV_STATIC_WIND_CONTROL_PARAM,      "Sector_SetWind"         },
@@ -607,6 +610,7 @@ bool EV_IsParamStaticInit(int special)
 {
    switch(EV_StaticInitForSpecial(special))
    {
+   case EV_STATIC_CURRENT_CONTROL_PARAM:
    case EV_STATIC_SLOPE_PARAM:
    case EV_STATIC_POLYOBJ_START_LINE:
    case EV_STATIC_POLYOBJ_EXPLICIT_LINE:

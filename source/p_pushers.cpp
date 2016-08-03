@@ -403,6 +403,26 @@ static void P_spawnHereticWind(line_t *line, int staticFn)
 }
 
 //
+// Computes wind or current strength from parameterized linedef
+//
+static void P_getPusherParams(const line_t *line, int &x_mag, int &y_mag)
+{
+   if(line->args[3])
+   {
+      x_mag = line->dx;
+      y_mag = line->dy;
+   }
+   else
+   {
+      fixed_t strength = line->args[1] << FRACBITS;
+      angle_t angle = line->args[2] << 24;
+      int fineangle = angle >> ANGLETOFINESHIFT;
+      x_mag = FixedMul(strength, finecosine[fineangle]);
+      y_mag = FixedMul(strength, finesine[fineangle]);
+   }
+}
+
+//
 // P_SpawnPushers
 //
 // Initialize the sectors where pushers are present
@@ -429,19 +449,7 @@ void P_SpawnPushers()
       case EV_STATIC_WIND_CONTROL_PARAM:
          {
             int x_mag, y_mag;
-            if(line->args[3])
-            {
-               x_mag = line->dx;
-               y_mag = line->dy;
-            }
-            else
-            {
-               fixed_t strength = line->args[1] << FRACBITS;
-               angle_t angle = line->args[2] << 24;
-               int fineangle = angle >> ANGLETOFINESHIFT;
-               x_mag = FixedMul(strength, finecosine[fineangle]);
-               y_mag = FixedMul(strength, finesine[fineangle]);
-            }
+            P_getPusherParams(line, x_mag, y_mag);
 
             for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
                Add_Pusher(PushThinker::p_wind, x_mag, y_mag, NULL, s);
@@ -452,6 +460,16 @@ void P_SpawnPushers()
          for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
             Add_Pusher(PushThinker::p_current, line->dx, line->dy, NULL, s);
          break;
+
+      case EV_STATIC_CURRENT_CONTROL_PARAM:
+         {
+            int x_mag, y_mag;
+            P_getPusherParams(line, x_mag, y_mag);
+
+            for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
+               Add_Pusher(PushThinker::p_current, x_mag, y_mag, NULL, s);
+            break;
+         }
 
       case EV_STATIC_PUSHPULL_CONTROL: // push/pull
          for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
