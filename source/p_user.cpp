@@ -611,9 +611,10 @@ void P_PlayerThink(player_t *player)
 
    // haleyjd 04/03/05: new yshear code
    if(!allowmlook)
-      player->pitch = 0;
+      player->prevpitch = player->pitch = 0;
    else
    {
+      player->prevpitch = player->pitch;
       int look = cmd->look;
 
       if(look)
@@ -624,10 +625,10 @@ void P_PlayerThink(player_t *player)
          else
          {
             player->pitch -= look << 16;
-            if(player->pitch < -ANGLE_1*32)
-               player->pitch = -ANGLE_1*32;
-            else if(player->pitch > ANGLE_1*32)
-               player->pitch = ANGLE_1*32;
+            if(player->pitch < -ANGLE_1*MAXPITCHUP)
+               player->pitch = -ANGLE_1*MAXPITCHUP;
+            else if(player->pitch > ANGLE_1*MAXPITCHDOWN)
+               player->pitch = ANGLE_1*MAXPITCHDOWN;
          }
       }
    }

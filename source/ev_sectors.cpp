@@ -112,7 +112,7 @@ static void EV_SectorLightStrobeHurt(sector_t *sector)
    sector->damage       = 20;
    sector->damagemask   = 32;
    sector->damagemod    = MOD_SLIME;
-   sector->damageflags |= SDMG_LEAKYSUIT;
+   sector->leakiness    = 5;
 }
 
 //
@@ -197,7 +197,8 @@ static void EV_SectorExitSuperDamage(sector_t *sector)
    sector->damage       = 20;
    sector->damagemask   = 32;
    sector->damagemod    = MOD_SLIME;
-   sector->damageflags |= SDMG_IGNORESUIT|SDMG_ENDGODMODE|SDMG_EXITLEVEL;
+   sector->damageflags |= SDMG_ENDGODMODE|SDMG_EXITLEVEL;
+   sector->leakiness    = 256;
 }
 
 //
@@ -253,7 +254,7 @@ static void EV_SectorDamageSuperHellSlime(sector_t *sector)
    sector->damage       = 20;
    sector->damagemask   = 32;
    sector->damagemod    = MOD_SLIME;
-   sector->damageflags |= SDMG_LEAKYSUIT;
+   sector->leakiness    = 5;
 }
 
 //
@@ -658,6 +659,86 @@ static ev_sectorbinding_t GenBindings[] =
    { 17, EV_SectorLightFireFlicker     }
 };
 
+static ev_sectorbinding_t UDMFEternitySectorBindings[] =
+{
+   {   1, EV_SectorHexenLightPhased },
+   {   2, EV_SectorHexenLightSeqStart },
+   {   3, EV_SectorHexenLightSequence },
+   {   4, EV_SectorHexenLightSeqAlt },
+   // TODO: 26, 27 for stairs
+   {  40, EV_SectorHticWind<0,      0> },
+   {  41, EV_SectorHticWind<0,      1> },
+   {  42, EV_SectorHticWind<0,      2> },
+   {  43, EV_SectorHticWind<ANG90,  0> },
+   {  44, EV_SectorHticWind<ANG90,  1> },
+   {  45, EV_SectorHticWind<ANG90,  2> },
+   {  46, EV_SectorHticWind<ANG270, 0> },
+   {  47, EV_SectorHticWind<ANG270, 1> },
+   {  48, EV_SectorHticWind<ANG270, 2> },
+   {  49, EV_SectorHticWind<ANG180, 0> },
+   {  50, EV_SectorHticWind<ANG180, 1> },
+   {  51, EV_SectorHticWind<ANG180, 2> },
+   {  65, EV_SectorLightRandomOff },
+   {  66, EV_SectorLightStrobeFast },
+   {  67, EV_SectorLightStrobeSlow },
+   {  68, EV_SectorLightStrobeHurt },
+   {  69, EV_SectorDamageHellSlime },
+   {  71, EV_SectorDamageNukage },
+   {  72, EV_SectorLightGlow },
+   {  74, EV_SectorDoorCloseIn30 },
+   {  75, EV_SectorExitSuperDamage },
+   {  76, EV_SectorLightStrobeSlowSync },
+   {  77, EV_SectorLightStrobeFastSync },
+   {  78, EV_SectorDoorRaiseIn5Mins },
+   {  79, EV_SectorHticFrictionLow},
+   {  80, EV_SectorDamageSuperHellSlime },
+   {  81, EV_SectorLightFireFlicker },
+   {  82, EV_SectorHticDamageLavaWimpy},
+   {  83, EV_SectorHticDamageLavaHefty},
+   {  84, EV_SectorHticScrollEastLavaDamage},
+   {  85, EV_SectorHticDamageSludge},
+   // Need to look for the appropriate specials for this initial block,
+   // as some of these may have appropriate functions already there.
+   // TODO: 87 Outside Fog
+   // TODO: 104 5% Damage + Light On + Off Randomly
+   // TODO: 105 Delayed damage weak
+   // TODO: 115 Instant death
+   // TODO: 116 Delayed damage strong
+   // TODO: 118 Carry player by tag
+   // TODO: 195 Hidden
+   // TODO: 196 Healing Sector
+   // TODO 197: Outdoor Lightning
+
+   // MaxW: 2016/29/06: This block was not written by me, so this stuff does need
+   // new functions.
+   // TODO: 198 Lightning
+   // TODO: 199 Lightning Flash
+   // TODO: 200 Sky2
+   // TODO: 201-224 current scrollers
+   // TODO: ZDoom extensions
+
+   { 225, EV_SectorHticScrollEast<0> },
+   { 226, EV_SectorHticScrollEast<1> },
+   { 227, EV_SectorHticScrollEast<2> },
+   { 228, EV_SectorHticScrollEast<3> },
+   { 229, EV_SectorHticScrollEast<4> },
+   { 230, EV_SectorHticScroll<ANG90,  0> },
+   { 231, EV_SectorHticScroll<ANG90,  1> },
+   { 232, EV_SectorHticScroll<ANG90,  2> },
+   { 233, EV_SectorHticScroll<ANG90,  3> },
+   { 234, EV_SectorHticScroll<ANG90,  4> },
+   { 235, EV_SectorHticScroll<ANG270, 0> },
+   { 236, EV_SectorHticScroll<ANG270, 1> },
+   { 237, EV_SectorHticScroll<ANG270, 2> },
+   { 238, EV_SectorHticScroll<ANG270, 3> },
+   { 239, EV_SectorHticScroll<ANG270, 4> },
+   { 240, EV_SectorHticScroll<ANG180, 0> },
+   { 241, EV_SectorHticScroll<ANG180, 1> },
+   { 242, EV_SectorHticScroll<ANG180, 2> },
+   { 243, EV_SectorHticScroll<ANG180, 3> },
+   { 244, EV_SectorHticScroll<ANG180, 4> }
+};
+
 //
 // EV_findBinding
 //
@@ -738,6 +819,16 @@ ev_sectorbinding_t *EV_GenBindingForSectorSpecial(int special)
 }
 
 //
+// EV_UDMFEternityBindingForSectorSpecial
+//
+// Look up a UDMF "Eternity" namespace sector special binding.
+//
+ev_sectorbinding_t *EV_UDMFEternityBindingForSectorSpecial(int special)
+{
+   return EV_findBinding(UDMFEternitySectorBindings, earrlen(UDMFEternitySectorBindings), special);
+}
+
+//
 // EV_BindingForSectorSpecial
 //
 // Gets the binding for a given special depending on the level format and 
@@ -749,6 +840,9 @@ ev_sectorbinding_t *EV_BindingForSectorSpecial(int special)
 
    switch(LevelInfo.mapFormat)
    {
+   case LEVEL_FORMAT_UDMF_ETERNITY:
+      binding = EV_UDMFEternityBindingForSectorSpecial(special);
+      break;
    case LEVEL_FORMAT_HEXEN:
       binding = EV_HexenBindingForSectorSpecial(special);
       break;

@@ -2328,15 +2328,17 @@ static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
       // first spawn of level, before corpses
       for(i = 0; i < playernum; i++)
       {
-         if(players[i].mo->x == mthing->x << FRACBITS &&
-            players[i].mo->y == mthing->y << FRACBITS)
+         // ioanch 20151218: fixed mapthing coordinates
+         if(players[i].mo->x == mthing->x &&
+            players[i].mo->y == mthing->y)
             return false;
       }
       return true;
    }
 
-   x = mthing->x << FRACBITS;
-   y = mthing->y << FRACBITS;
+   // ioanch 20151218: fixed mapthing coordinates
+   x = mthing->x;
+   y = mthing->y;
    
    // killough 4/2/98: fix bug where P_CheckPosition() uses a non-solid
    // corpse to detect collisions with other players in DM starts
@@ -2445,8 +2447,9 @@ int G_ClosestDMSpot(fixed_t x, fixed_t y, int notspot)
 
    for(j = 0; j < numspots; ++j)
    {
-      fixed_t dist = P_AproxDistance(x - deathmatchstarts[j].x * FRACUNIT,
-                                     y - deathmatchstarts[j].y * FRACUNIT);
+      // ioanch 20151218: fixed point mapthing coordinates
+      fixed_t dist = P_AproxDistance(x - deathmatchstarts[j].x,
+                                     y - deathmatchstarts[j].y);
       
       if(dist < closestdist && j != notspot)
       {

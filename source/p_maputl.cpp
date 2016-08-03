@@ -29,6 +29,7 @@
 #include "z_zone.h"
 
 #include "doomstat.h"
+#include "e_exdata.h"
 #include "m_bbox.h"
 #include "p_map.h"
 #include "p_map3d.h"
@@ -326,8 +327,12 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
    // SoM 9/02/02: Um... I know I told Quasar` I would do this after 
    // I got SDL_Mixer support and all, but I WANT THIS NOW hehe
    if(demo_version >= 331 && mo && (linedef->flags & ML_3DMIDTEX) && 
-      sides[linedef->sidenum[0]].midtexture)
+      sides[linedef->sidenum[0]].midtexture &&
+      (!(linedef->extflags & EX_ML_3DMTPASSPROJ) ||
+       !(mo->flags & (MF_MISSILE | MF_BOUNCES))))
    {
+      // ioanch: also support midtex3dimpassible
+
       fixed_t textop, texbot, texmid;
       side_t *side = &sides[linedef->sidenum[0]];
       

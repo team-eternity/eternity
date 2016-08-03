@@ -783,13 +783,15 @@ sector_t *P_FindModelCeilingSector(fixed_t ceildestheight, int secnum)
 // Find the next sector with the same tag as a linedef.
 // Rewritten by Lee Killough to use chained hashing to improve speed
 
-int P_FindSectorFromLineTag(const line_t *line, int start)
+// ioanch 20160303: renamed to use arg0
+
+int P_FindSectorFromLineArg0(const line_t *line, int start)
 {
    start = 
       (start >= 0 ? sectors[start].nexttag :
-       sectors[(unsigned int)line->tag % (unsigned int)numsectors].firsttag);
+       sectors[(unsigned int)line->args[0] % (unsigned int)numsectors].firsttag);
   
-   while(start >= 0 && sectors[start].tag != line->tag)
+   while(start >= 0 && sectors[start].tag != line->args[0])
       start = sectors[start].nexttag;
    
    return start;
@@ -808,9 +810,9 @@ int P_FindLineFromTag(int tag, int start)
    
    return start;
 }
-int P_FindLineFromLineTag(const line_t *line, int start)
+int P_FindLineFromLineArg0(const line_t *line, int start)
 {
-   return P_FindLineFromTag(line->tag, start);
+   return P_FindLineFromTag(line->args[0], start);
 }
 
 // sf: same thing but from just a number
@@ -947,7 +949,7 @@ bool P_WasSecret(const sector_t *sec)
 //
 void P_StartLineScript(line_t *line, Mobj *thing)
 {
-   ACS_ExecuteScriptNumber(line->tag, gamemap, 0, line->args, NUMLINEARGS, 
+   ACS_ExecuteScriptNumber(line->args[0], gamemap, 0, line->args, NUMLINEARGS, 
                            thing, line, 0);
 }
 
@@ -1037,9 +1039,9 @@ void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
    if(enable_nuke && sector->damage > 0) // killough 12/98: nukage disabling cheat
    {
       if(!player->powers[pw_ironfeet]          ||  // no rad suit?
-         sector->damageflags & SDMG_IGNORESUIT ||  // ignores suit?
-         (sector->damageflags & SDMG_LEAKYSUIT &&  // suit leaks?
-          (P_Random(pr_slimehurt) < 5))
+         sector->leakiness >= 256              ||  // ignores suit?
+         (sector->leakiness > 0                &&  // suit leaks?
+          (P_Random(pr_slimehurt) < sector->leakiness))
         )
       {
          // disables god mode?
@@ -1194,7 +1196,7 @@ static void P_SetupHeightTransfer(int linenum, int secnum)
    int s;
    sector_t *heightsec = &sectors[secnum];
 
-   for(s = -1; (s = P_FindSectorFromLineTag(lines + linenum, s)) >= 0; )
+   for(s = -1; (s = P_FindSectorFromLineArg0(lines + linenum, s)) >= 0; )
    {
       sectors[s].heightsec = secnum;
 
@@ -1260,7 +1262,7 @@ void P_SpawnSpecials()
          // floor lighting independently (e.g. lava)
       case EV_STATIC_LIGHT_TRANSFER_FLOOR:
          sec = sides[*lines[i].sidenum].sector-sectors;
-         for(s = -1; (s = P_FindSectorFromLineTag(lines+i,s)) >= 0;)
+         for(s = -1; (s = P_FindSectorFromLineArg0(lines+i,s)) >= 0;)
             sectors[s].floorlightsec = sec;
          break;
 
@@ -1268,7 +1270,7 @@ void P_SpawnSpecials()
          // ceiling lighting independently
       case EV_STATIC_LIGHT_TRANSFER_CEILING:
          sec = sides[*lines[i].sidenum].sector-sectors;
-         for(s = -1; (s = P_FindSectorFromLineTag(lines+i,s)) >= 0;)
+         for(s = -1; (s = P_FindSectorFromLineArg0(lines+i,s)) >= 0;)
             sectors[s].ceilinglightsec = sec;
          break;
 
@@ -1283,8 +1285,20 @@ void P_SpawnSpecials()
 
       case EV_STATIC_SKY_TRANSFER:         // Regular sky
       case EV_STATIC_SKY_TRANSFER_FLIPPED: // Same, only flipped
-         for(s = -1; (s = P_FindSectorFromLineTag(lines+i,s)) >= 0;)
+         for(s = -1; (s = P_FindSectorFromLineArg0(lines+i,s)) >= 0;)
             sectors[s].sky = i | PL_SKYFLAT;
+         break;
+
+         // ioanch 20160803: Static_Init special from ZDoom
+      case EV_STATIC_INIT_PARAM:
+         {
+            int prop = line->args[ev_StaticInit_Arg_Prop];
+            if(prop == ev_StaticInit_Prop_SkyTransfer)   // sky transfer
+            {
+               for(s = -1; (s = P_FindSectorFromLineArg0(line,s)) >= 0;)
+                  sectors[s].sky = i | PL_SKYFLAT;
+            }
+         }
          break;
 
          // SoM 9/19/02
@@ -1581,6 +1595,35 @@ void FrictionThinker::serialize(SaveArchive &arc)
 //=====================================
 
 //
+// ioanch: common function to calculate friction and movefactor, used here and
+// in the UDMF parser
+//
+void P_CalcFriction(int length, int &friction, int &movefactor)
+{
+   friction = (0x1EB8 * length) / 0x80 + 0xD000;
+
+   // The following check might seem odd. At the time of movement,
+   // the move distance is multiplied by 'friction/0x10000', so a
+   // higher friction value actually means 'less friction'.
+
+   if(friction > ORIG_FRICTION)       // ice
+      movefactor = ((0x10092  - friction) * 0x70) / 0x158;
+   else
+      movefactor = ((friction - 0xDB34  ) * 0x0A) / 0x80;
+
+   if(demo_version >= 203)
+   {
+      // killough 8/28/98: prevent odd situations
+      if(friction > FRACUNIT)
+         friction = FRACUNIT;
+      if(friction < 0)
+         friction = 0;
+      if(movefactor < 32)
+         movefactor = 32;
+   }
+}
+
+//
 // P_SpawnFriction
 //
 // Initialize the sectors where friction is increased or decreased
@@ -1611,31 +1654,13 @@ static void P_SpawnFriction()
    {
       if(line->special == fricspec)
       {
-         int length   = P_AproxDistance(line->dx, line->dy) >> FRACBITS;
-         int friction = (0x1EB8 * length) / 0x80 + 0xD000;
+         int length = line->args[1] ? line->args[1]
+                    : P_AproxDistance(line->dx, line->dy) >> FRACBITS;
+         int friction;
          int movefactor, s;
+         P_CalcFriction(length, friction, movefactor);
 
-         // The following check might seem odd. At the time of movement,
-         // the move distance is multiplied by 'friction/0x10000', so a
-         // higher friction value actually means 'less friction'.
-
-         if(friction > ORIG_FRICTION)       // ice
-            movefactor = ((0x10092  - friction) * 0x70) / 0x158;
-         else
-            movefactor = ((friction - 0xDB34  ) * 0x0A) / 0x80;
-
-         if(demo_version >= 203)
-         { 
-            // killough 8/28/98: prevent odd situations
-            if(friction > FRACUNIT)
-               friction = FRACUNIT;
-            if(friction < 0)
-               friction = 0;
-            if(movefactor < 32)
-               movefactor = 32;
-         }
-
-         for(s = -1; (s = P_FindSectorFromLineTag(line, s)) >= 0 ;)
+         for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0 ;)
          {
             // killough 8/28/98:
             //
@@ -1774,6 +1799,7 @@ void P_SetupSpecialTransfer(const sector_t *sector, spectransfer_t *spec)
    spec->damagemask  = sector->damagemask;
    spec->damagemod   = sector->damagemod;
    spec->damageflags = sector->damageflags;
+   spec->leakiness   = sector->leakiness;
 }
 
 //
@@ -1805,6 +1831,7 @@ void P_TransferSectorSpecial(sector_t *sector, const spectransfer_t *spec)
    sector->damagemask  = spec->damagemask;
    sector->damagemod   = spec->damagemod;
    sector->damageflags = spec->damageflags;
+   sector->leakiness   = spec->leakiness;
 }
 
 //
@@ -1822,6 +1849,7 @@ void P_DirectTransferSectorSpecial(const sector_t *src, sector_t *dest)
    dest->damagemask  = src->damagemask;
    dest->damagemod   = src->damagemod;
    dest->damageflags = src->damageflags;
+   dest->leakiness   = src->leakiness;
 }
 
 //
@@ -1838,6 +1866,7 @@ void P_ZeroSectorSpecial(sector_t *sec)
    sec->damagemask  = 0;
    sec->damagemod   = MOD_UNKNOWN;
    sec->damageflags = 0;
+   sec->leakiness   = 0;
 }
 
 //============================================================================
@@ -1979,7 +2008,7 @@ void P_AttachLines(const line_t *cline, bool ceiling)
 
    // Search the lines list. Check for every tagged line that
    // has the 3dmidtex lineflag, then add the line to the attached list.
-   for(start = -1; (start = P_FindLineFromLineTag(cline,start)) >= 0; )
+   for(start = -1; (start = P_FindLineFromLineArg0(cline,start)) >= 0; )
    {
       if(start != cline-lines)
       {
@@ -2216,7 +2245,7 @@ void P_AttachSectors(const line_t *line, int staticFn)
 
    // Search the lines list. Check for every tagged line that
    // has the appropriate special, then add the line's frontsector to the attached list.
-   for(start = -1; (start = P_FindLineFromLineTag(line,start)) >= 0; )
+   for(start = -1; (start = P_FindLineFromLineArg0(line,start)) >= 0; )
    {
       attachedtype_e type;
 
@@ -2720,7 +2749,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          anchortype = EV_SpecialForStaticInit(anchorfunc);
 
          // find anchor line
-         for(s = -1; (s = P_FindLineFromLineTag(line, s)) >= 0; )
+         for(s = -1; (s = P_FindLineFromLineArg0(line, s)) >= 0; )
          {
             // SoM 3-10-04: Two different anchor linedef codes so I can tag
             // two anchored portals to the same sector.
@@ -2755,7 +2784,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          anchortype = EV_SpecialForStaticInit(anchorfunc);
 
          // find anchor line
-         for(s = -1; (s = P_FindLineFromLineTag(line, s)) >= 0; )
+         for(s = -1; (s = P_FindLineFromLineArg0(line, s)) >= 0; )
          {
             // SoM 3-10-04: Two different anchor linedef codes so I can tag
             // two anchored portals to the same sector.
@@ -2808,7 +2837,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          anchortype = EV_SpecialForStaticInit(anchorfunc);
 
          // find anchor line
-         for(s = -1; (s = P_FindLineFromLineTag(line, s)) >= 0; )
+         for(s = -1; (s = P_FindLineFromLineArg0(line, s)) >= 0; )
          {
             // SoM 3-10-04: Two different anchor linedef codes so I can tag
             // two anchored portals to the same sector.
@@ -2879,14 +2908,13 @@ static void P_SpawnPortal(line_t *line, int staticFn)
 
    // attach portal to tagged sector floors/ceilings
    // SoM: TODO: Why am I not checking groupids?
-   int tag = param ? line->args[0] : line->tag;
-   for(s = -1; (s = P_FindSectorFromTag(tag, s)) >= 0; )
+   for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
    {
       P_SetPortal(sectors + s, NULL, portal, effects);
    }
 
    // attach portal to like-tagged 289 lines
-   for(s = -1; (s = P_FindLineFromTag(tag, s)) >= 0; )
+   for(s = -1; (s = P_FindLineFromLineArg0(line, s)) >= 0; )
    {
       if(line == &lines[s] || !lines[s].frontsector)
          continue;

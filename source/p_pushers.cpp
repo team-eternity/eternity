@@ -25,6 +25,7 @@
 
 #include "z_zone.h"
 
+#include "a_small.h"
 #include "doomstat.h"
 #include "e_states.h"
 #include "e_things.h"
@@ -394,11 +395,31 @@ static void P_spawnHereticWind(line_t *line, int staticFn)
       break;
    }
 
-   for(s = -1; (s = P_FindSectorFromLineTag(line, s)) >= 0; )
+   for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
    {
       sectors[s].hticPushType  = pushType;
       sectors[s].hticPushAngle = lineAngle;
       sectors[s].hticPushForce = magnitude;
+   }
+}
+
+//
+// Computes wind or current strength from parameterized linedef
+//
+static void P_getPusherParams(const line_t *line, int &x_mag, int &y_mag)
+{
+   if(line->args[3])
+   {
+      x_mag = line->dx;
+      y_mag = line->dy;
+   }
+   else
+   {
+      fixed_t strength = line->args[1] << FRACBITS;
+      angle_t angle = line->args[2] << 24;
+      int fineangle = angle >> ANGLETOFINESHIFT;
+      x_mag = FixedMul(strength, finecosine[fineangle]);
+      y_mag = FixedMul(strength, finesine[fineangle]);
    }
 }
 
@@ -422,23 +443,87 @@ void P_SpawnPushers()
       switch(staticFn)
       {
       case EV_STATIC_WIND_CONTROL: // wind
-         for(s = -1; (s = P_FindSectorFromLineTag(line, s)) >= 0; )
+         for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
             Add_Pusher(PushThinker::p_wind, line->dx, line->dy, NULL, s);
          break;
 
+      case EV_STATIC_WIND_CONTROL_PARAM:
+         {
+            int x_mag, y_mag;
+            P_getPusherParams(line, x_mag, y_mag);
+
+            for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
+               Add_Pusher(PushThinker::p_wind, x_mag, y_mag, NULL, s);
+            break;
+         }
+
       case EV_STATIC_CURRENT_CONTROL: // current
-         for(s = -1; (s = P_FindSectorFromLineTag(line, s)) >= 0; )
+         for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
             Add_Pusher(PushThinker::p_current, line->dx, line->dy, NULL, s);
          break;
 
+      case EV_STATIC_CURRENT_CONTROL_PARAM:
+         {
+            int x_mag, y_mag;
+            P_getPusherParams(line, x_mag, y_mag);
+
+            for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
+               Add_Pusher(PushThinker::p_current, x_mag, y_mag, NULL, s);
+            break;
+         }
+
       case EV_STATIC_PUSHPULL_CONTROL: // push/pull
-         for(s = -1; (s = P_FindSectorFromLineTag(line, s)) >= 0; )
+         for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
          {
             Mobj *thing = P_GetPushThing(s);
             if(thing) // No P* means no effect
                Add_Pusher(PushThinker::p_push, line->dx, line->dy, thing, s);
          }
          break;
+
+      case EV_STATIC_PUSHPULL_CONTROL_PARAM:
+         {
+            int tag = line->args[0];
+            int x_mag, y_mag;
+            if(line->args[3])
+            {
+               x_mag = line->dx;
+               y_mag = line->dy;
+            }
+            else
+            {
+               x_mag = line->args[2] << FRACBITS;
+               y_mag = 0;
+            }
+
+            if(tag)
+            {
+               for(s = -1; (s = P_FindSectorFromTag(tag, s)) >= 0; )
+               {
+                  Mobj *thing = P_GetPushThing(s);
+                  if(thing) // No P* means no effect
+                  {
+                     Add_Pusher(PushThinker::p_push, line->dx, line->dy, thing,
+                                s);
+                  }
+               }
+            }
+            else
+            {
+               Mobj *thing = nullptr;
+               const int PushType = E_ThingNumForDEHNum(MT_PUSH);
+               const int PullType = E_ThingNumForDEHNum(MT_PULL);
+               while((thing = P_FindMobjFromTID(line->args[1], thing, nullptr)))
+               {
+                  if(thing->type == PushType || thing->type == PullType)
+                  {
+                     Add_Pusher(PushThinker::p_push, x_mag, y_mag, thing,
+                                thing->subsector->sector - sectors);
+                  }
+               }
+            }
+            break;
+         }
 
       case EV_STATIC_HERETIC_WIND:
       case EV_STATIC_HERETIC_CURRENT:

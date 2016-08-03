@@ -917,7 +917,7 @@ DEFINE_ACTION(EV_ActionDoDonut)
    // case 155: (WR - BOOM Extended)
    // case 191: (SR - BOOM Extended)
    // Lower Pillar, Raise Donut
-   return EV_DoParamDonut(instance->line, instance->line->tag, false, 
+   return EV_DoParamDonut(instance->line, instance->line->args[0], false, 
                           FLOORSPEED / 2, FLOORSPEED / 2);
 }
 
@@ -967,7 +967,7 @@ DEFINE_ACTION(EV_ActionSilentTeleport)
    teleparms_t parms;
    parms.teleangle = teleangle_relative_boom;
    parms.keepheight = true;
-   return EV_SilentTeleport(line, line->tag, side, thing, parms);
+   return EV_SilentTeleport(line, instance->tag, side, thing, parms);
 }
 
 //
@@ -1078,7 +1078,7 @@ DEFINE_ACTION(EV_ActionSilentLineTeleport)
    // case 267: (WR - BOOM Extended)
    // jff 4/14/98 add monster-only silent line-line
 
-   return EV_SilentLineTeleport(line, line->tag, side, thing, false);
+   return EV_SilentLineTeleport(line, instance->tag, side, thing, false);
 }
 
 //
@@ -1096,7 +1096,7 @@ DEFINE_ACTION(EV_ActionSilentLineTeleportReverse)
    // case 264: (W1 - BOOM Extended)
    // case 265: (WR - BOOM Extended)
    // jff 4/14/98 add monster-only silent line-line reversed
-   return EV_SilentLineTeleport(line, line->tag, side, thing, true);
+   return EV_SilentLineTeleport(line, instance->tag, side, thing, true);
 }
 
 //
@@ -3261,11 +3261,13 @@ DEFINE_ACTION(EV_ActionParamDoorLockedRaise)
    INIT_STRUCT(doordata_t, dd);
    int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
 
-   dd.kind         = OdCDoor;
+   int delay = instance->args[2];
+
+   dd.kind         = delay || P_LevelIsVanillaHexen() ? OdCDoor : ODoor;
    dd.spac         = instance->spac;
-   dd.speed_value  = instance->args[1] * FRACUNIT / 8;
+   dd.speed_value  = instance->args[1] * (FRACUNIT / 8);
    dd.topcountdown = 0;
-   dd.delay_value  = instance->args[2];
+   dd.delay_value  = delay;
    dd.altlighttag  = instance->args[4];
    dd.thing        = instance->actor;
    
@@ -3824,34 +3826,6 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingRaiseByValue)
    return EV_DoElevator(instance->line, instance->tag, elevateByValue,
                         instance->args[1] * FRACUNIT / 8,
                         instance->args[2] * FRACUNIT, true);
-}
-
-//
-// Implements Door_LockedOpen(tag, speed, lock, lighttag)
-//
-// * ExtraData: 457
-// * Hexen:     273
-//
-DEFINE_ACTION(EV_ActionParamDoorLockedOpen)
-{
-   INIT_STRUCT(doordata_t, dd);
-   int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
-
-   dd.kind         = ODoor;
-   dd.spac         = instance->spac;
-   dd.speed_value  = instance->args[1] * FRACUNIT / 8;
-   dd.topcountdown = 0;
-   dd.delay_value  = 0;
-   dd.altlighttag  = instance->args[3];
-   dd.thing        = instance->actor;
-
-   dd.flags = DDF_HAVESPAC | DDF_USEALTLIGHTTAG;
-   if(extflags & EX_ML_REPEAT)
-      dd.flags |= DDF_REUSABLE;
-
-   if(EV_lockCheck(dd.thing, instance->args[2], instance->tag != 0))
-      return EV_DoParamDoor(instance->line, instance->tag, &dd);
-   return 0;
 }
 
 //

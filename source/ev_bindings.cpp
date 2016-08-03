@@ -970,7 +970,6 @@ PARAMLINE(ParamDoorCloseWaitOpen);
 PARAMLINE(ParamDoorWaitRaise);
 PARAMLINE(ParamDoorWaitClose);
 PARAMLINE(ParamDoorLockedRaise);
-PARAMLINE(ParamDoorLockedOpen);
 PARAMLINE(ParamFloorRaiseToHighest);
 PARAMLINE(ParamEEFloorLowerToHighest); 
 PARAMLINE(ParamFloorLowerToHighest);
@@ -1491,7 +1490,6 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(452, ParamFloorCrushStop,             "Floor_CrushStop")
    LINESPECNAMED(453, ParamFloorCeilingLowerByValue,   "FloorAndCeiling_LowerByValue")
    LINESPECNAMED(454, ParamFloorCeilingRaiseByValue,   "FloorAndCeiling_RaiseByValue")
-   LINESPECNAMED(457, ParamDoorLockedOpen,             "Door_LockedOpen")
    LINESPECNAMED(458, ParamElevatorUp,                 "Elevator_RaiseToNearest")
    LINESPECNAMED(459, ParamElevatorDown,               "Elevator_LowerToNearest")
    LINESPECNAMED(460, ParamElevatorCurrent,            "Elevator_MoveToFloor")
@@ -1699,7 +1697,6 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(253, ParamCeilingLowerToLowest,       "Ceiling_LowerToLowest")
    LINESPECNAMED(254, ParamCeilingLowerToFloor,        "Ceiling_LowerToFloor")
    LINESPECNAMED(255, ParamCeilingCrushRaiseAndStaySilA, "Ceiling_CrushRaiseAndStaySilA")
-   LINESPECNAMED(273, ParamDoorLockedOpen,             "Door_LockedOpen")
 };
 
 const size_t HexenBindingsLen = earrlen(HexenBindings);
@@ -1717,6 +1714,33 @@ ev_binding_t PSXBindings[] =
 };
 
 const size_t PSXBindingsLen = earrlen(PSXBindings);
+
+// UDMF "Eternity" Namespace Bindings
+ev_binding_t UDMFEternityBindings[] =
+{
+   // No bindings for ExtraData as it isn't required any more \o/
+   LINESPECNAMED(105, ParamDoorWaitRaise,              "Door_WaitRaise")
+   LINESPECNAMED(106, ParamDoorWaitClose,              "Door_WaitClose")
+   LINESPECNAMED(256, ParamEEFloorLowerToHighest,      "Floor_LowerToHighestEE")
+   LINESPECNAMED(257, ParamFloorRaiseToLowest,         "Floor_RaiseToLowest")
+   LINESPECNAMED(258, ParamFloorLowerToLowestCeiling,  "Floor_LowerToLowestCeiling")
+   LINESPECNAMED(259, ParamFloorRaiseToCeiling,        "Floor_RaiseToCeiling")
+   LINESPECNAMED(260, ParamFloorToCeilingInstant,      "Floor_ToCeilingInstant")
+   LINESPECNAMED(261, ParamFloorLowerByTexture,        "Floor_LowerByTexture")
+   LINESPECNAMED(262, ParamCeilingRaiseToHighest,      "Ceiling_RaiseToHighest")
+   LINESPECNAMED(263, ParamCeilingToHighestInstant,    "Ceiling_ToHighestInstant")
+   LINESPECNAMED(264, ParamCeilingLowerToNearest,      "Ceiling_LowerToNearest")
+   LINESPECNAMED(265, ParamCeilingRaiseToLowest,       "Ceiling_RaiseToLowest")
+   LINESPECNAMED(266, ParamCeilingRaiseToHighestFloor, "Ceiling_RaiseToHighestFloor")
+   LINESPECNAMED(267, ParamCeilingToFloorInstant,      "Ceiling_ToFloorInstant")
+   LINESPECNAMED(268, ParamCeilingRaiseByTexture,      "Ceiling_RaiseByTexture")
+   LINESPECNAMED(269, ParamCeilingLowerByTexture,      "Ceiling_LowerByTexture")
+   LINESPECNAMED(270, ParamStairsBuildDownDoom,        "Stairs_BuildDownDoom")
+   LINESPECNAMED(271, ParamStairsBuildUpDoomSync,      "Stairs_BuildUpDoomSync")
+   LINESPECNAMED(272, ParamStairsBuildDownDoomSync,    "Stairs_BuildDownDoomSync")
+};
+
+const size_t UDMFEternityBindingsLen = earrlen(UDMFEternityBindings);
 
 // EOF
 

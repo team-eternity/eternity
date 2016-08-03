@@ -59,7 +59,7 @@ struct ev_instance_t
    line_t *line;    // line, if any
    int     special; // special to activate (may == line->special)
    int    *args;    // arguments (may point to line->args)
-   int     tag;     // tag (may == line->tag or line->args[0])
+   int     tag;     // tag (may == line->tag or line->args[0]) // ioanch 20160304: only args[0]
    int     side;    // side of activation
    int     spac;    // special activation type
    int     gentype; // generalized type, if is generalized (-1 otherwise)
@@ -283,8 +283,20 @@ enum
    EV_STATIC_PORTAL_HORIZON_LINE,           // 450
    EV_STATIC_SLOPE_PARAM,                   // 455
    EV_STATIC_PORTAL_SECTOR_PARAM,           // 456
+   EV_STATIC_WIND_CONTROL_PARAM,            // 457
+   EV_STATIC_CURRENT_CONTROL_PARAM,         // 479
+   EV_STATIC_PUSHPULL_CONTROL_PARAM,        // 480
+   EV_STATIC_INIT_PARAM,                    // 481
 
    EV_STATIC_MAX
+};
+
+// Parameterized specifics
+enum
+{
+   ev_StaticInit_Arg_Prop = 1,
+   ev_StaticInit_Prop_SkyTransfer = 255,
+   ev_StaticInit_Arg_Flip = 2,
 };
 
 // Binds a line special number to a static init function

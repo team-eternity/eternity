@@ -954,6 +954,7 @@ struct spectransfer_t
    int damagemask;
    int damagemod;
    unsigned int damageflags;
+   int leakiness;
 };
 
 // p_doors
@@ -1327,10 +1328,10 @@ sector_t *P_FindModelFloorSector(fixed_t floordestheight, int secnum); //jff 02/
 
 sector_t *P_FindModelCeilingSector(fixed_t ceildestheight, int secnum); //jff 02/04/98 
 
-int P_FindSectorFromLineTag(const line_t *line, int start); // killough 4/17/98
+int P_FindSectorFromLineArg0(const line_t *line, int start); // killough 4/17/98
 
 int P_FindLineFromTag(int tag, int start);
-int P_FindLineFromLineTag(const line_t *line, int start);
+int P_FindLineFromLineArg0(const line_t *line, int start);
 
 int P_FindSectorFromTag(const int tag, int start);        // sf
 
@@ -1607,6 +1608,8 @@ void P_AttachSectors(const line_t *line, int staticFn);
 
 bool P_Scroll3DSides(const sector_t *sector, bool ceiling, fixed_t delta,
                      int crush);
+
+void P_CalcFriction(int length, int &friction, int &movefactor); // ioanch
 
 line_t *P_FindLine(int tag, int *searchPosition);
 
