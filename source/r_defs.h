@@ -224,6 +224,7 @@ struct sector_t
    int16_t lightlevel;
    int16_t special;
    int16_t tag;
+   int16_t leakiness;       // ioanch (UDMF): probability / 256 that the suit will leak
    int nexttag, firsttag;   // killough 1/30/98: improves searches for tags.
    int soundtraversed;      // 0 = untraversed, 1,2 = sndlines-1
    Mobj *soundtarget;       // thing that made a sound (or null)
@@ -260,7 +261,7 @@ struct sector_t
    // killough 4/11/98: support for lightlevels coming from another sector
    int floorlightsec, ceilinglightsec;
    // ioanch: UDMF-given floor and ceiling delta light level
-   int floorlightdelta, ceilinglightdelta;
+   int16_t floorlightdelta, ceilinglightdelta;
    
    int bottommap, midmap, topmap; // killough 4/4/98: dynamic colormaps
    
@@ -339,7 +340,6 @@ struct sector_t
    int damagemask;  // damage is done when !(leveltime % mask)
    int damagemod;   // damage method to use
    unsigned int damageflags; // special damage behaviors
-   int leakiness; // probability / 256 that the suit will leak
 
    // SoM 5/10/09: Happy birthday to me. Err, Slopes!
    pslope_t *f_slope;

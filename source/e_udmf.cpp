@@ -124,8 +124,8 @@ void UDMFParser::loadSectors() const
             ss->ceilingterrain = E_TerrainForName(us.ceilingterrain.constPtr());
 
          // Lights
-         ss->floorlightdelta = us.lightfloor;
-         ss->ceilinglightdelta = us.lightceiling;
+         ss->floorlightdelta = static_cast<int16_t>(us.lightfloor);
+         ss->ceilinglightdelta = static_cast<int16_t>(us.lightceiling);
          ss->flags |=
          (us.lightfloorabsolute ? SECF_FLOORLIGHTABSOLUTE : 0) |
          (us.lightceilingabsolute ? SECF_CEILLIGHTABSOLUTE : 0);
