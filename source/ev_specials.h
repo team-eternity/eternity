@@ -286,8 +286,17 @@ enum
    EV_STATIC_WIND_CONTROL_PARAM,            // 457
    EV_STATIC_CURRENT_CONTROL_PARAM,         // 479
    EV_STATIC_PUSHPULL_CONTROL_PARAM,        // 480
+   EV_STATIC_INIT_PARAM,                    // 481
 
    EV_STATIC_MAX
+};
+
+// Parameterized specifics
+enum
+{
+   ev_StaticInit_Arg_Prop = 1,
+   ev_StaticInit_Prop_SkyTransfer = 255,
+   ev_StaticInit_Arg_Flip = 2,
 };
 
 // Binds a line special number to a static init function

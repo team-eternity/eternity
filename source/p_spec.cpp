@@ -1289,6 +1289,18 @@ void P_SpawnSpecials()
             sectors[s].sky = i | PL_SKYFLAT;
          break;
 
+         // ioanch 20160803: Static_Init special from ZDoom
+      case EV_STATIC_INIT_PARAM:
+         {
+            int prop = line->args[ev_StaticInit_Arg_Prop];
+            if(prop == ev_StaticInit_Prop_SkyTransfer)   // sky transfer
+            {
+               for(s = -1; (s = P_FindSectorFromLineArg0(line,s)) >= 0;)
+                  sectors[s].sky = i | PL_SKYFLAT;
+            }
+         }
+         break;
+
          // SoM 9/19/02
          // Support for attaching sectors to each other. When a sector
          // is attached to another sector, the master sector's floor

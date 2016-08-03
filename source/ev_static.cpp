@@ -140,6 +140,7 @@ static ev_static_t DOOMStaticBindings[] =
    STATICSPEC(457, EV_STATIC_WIND_CONTROL_PARAM)
    STATICSPEC(479, EV_STATIC_CURRENT_CONTROL_PARAM)
    STATICSPEC(480, EV_STATIC_PUSHPULL_CONTROL_PARAM)
+   STATICSPEC(481, EV_STATIC_INIT_PARAM)
 };
 
 // Hexen Static Init Bindings
@@ -155,6 +156,7 @@ static ev_static_t HexenStaticBindings[] =
    STATICSPEC(103, EV_STATIC_SCROLL_DOWN_PARAM)
    STATICSPEC(121, EV_STATIC_LINE_SET_IDENTIFICATION)
    STATICSPEC(181, EV_STATIC_SLOPE_PARAM)
+   STATICSPEC(190, EV_STATIC_INIT_PARAM)
    STATICSPEC(209, EV_STATIC_TRANSFER_HEIGHTS)
    STATICSPEC(210, EV_STATIC_LIGHT_TRANSFER_FLOOR)
    STATICSPEC(211, EV_STATIC_LIGHT_TRANSFER_CEILING)
@@ -570,6 +572,7 @@ int EV_SpecialForStaticInitName(const char *name)
    };
    static staticname_t namedStatics[] =
    {
+      { EV_STATIC_INIT_PARAM,              "Static_Init"            },
       { EV_STATIC_SLOPE_PARAM,             "Plane_Align"            },
       { EV_STATIC_POLYOBJ_START_LINE,      "Polyobj_StartLine"      },
       { EV_STATIC_POLYOBJ_EXPLICIT_LINE,   "Polyobj_ExplicitLine"   },
@@ -614,6 +617,7 @@ bool EV_IsParamStaticInit(int special)
    switch(EV_StaticInitForSpecial(special))
    {
    case EV_STATIC_CURRENT_CONTROL_PARAM:
+   case EV_STATIC_INIT_PARAM:
    case EV_STATIC_SLOPE_PARAM:
    case EV_STATIC_POLYOBJ_START_LINE:
    case EV_STATIC_POLYOBJ_EXPLICIT_LINE:
