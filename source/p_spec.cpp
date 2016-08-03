@@ -1642,7 +1642,8 @@ static void P_SpawnFriction()
    {
       if(line->special == fricspec)
       {
-         int length   = P_AproxDistance(line->dx, line->dy) >> FRACBITS;
+         int length = line->args[1] ? line->args[1]
+                    : P_AproxDistance(line->dx, line->dy) >> FRACBITS;
          int friction;
          int movefactor, s;
          P_CalcFriction(length, friction, movefactor);

@@ -155,6 +155,7 @@ static ev_static_t HexenStaticBindings[] =
    STATICSPEC(209, EV_STATIC_TRANSFER_HEIGHTS)
    STATICSPEC(210, EV_STATIC_LIGHT_TRANSFER_FLOOR)
    STATICSPEC(211, EV_STATIC_LIGHT_TRANSFER_CEILING)
+   STATICSPEC(219, EV_STATIC_FRICTION_TRANSFER)
 };
 
 // PSX Static Init Bindings
@@ -570,6 +571,7 @@ int EV_SpecialForStaticInitName(const char *name)
       { EV_STATIC_SCROLL_RIGHT_PARAM,      "Scroll_Texture_Right"   },
       { EV_STATIC_SCROLL_UP_PARAM,         "Scroll_Texture_Up"      },
       { EV_STATIC_SCROLL_DOWN_PARAM,       "Scroll_Texture_Down"    },
+      { EV_STATIC_FRICTION_TRANSFER,       "Sector_SetFriction"     },
       { EV_STATIC_PORTAL_SECTOR_PARAM,     "Sector_SetPortal"       },
       { EV_STATIC_PORTAL_HORIZON_LINE,     "Line_Horizon"           },
       { EV_STATIC_LINE_SET_IDENTIFICATION, "Line_SetIdentification" },
@@ -594,6 +596,9 @@ int EV_SpecialForStaticInitName(const char *name)
 // Test if a given line special is bound to a parameterized static init
 // function. There are only a handful of these, so they are hard-coded
 // here rather than being tablified.
+//
+// ioanch WARNING: do not put formerly classic specials here, if they've become
+// parameterized in the mean time. This may break maps.
 //
 bool EV_IsParamStaticInit(int special)
 {
