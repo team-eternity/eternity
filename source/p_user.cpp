@@ -607,6 +607,7 @@ void P_PlayerThink(player_t *player)
       return;
    }
 
+   player->prevpitch = player->pitch;
    // haleyjd 04/03/05: new yshear code
    if(!allowmlook)
       player->pitch = 0;

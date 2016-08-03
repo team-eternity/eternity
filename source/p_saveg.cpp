@@ -515,6 +515,7 @@ static void P_ArchivePlayers(SaveArchive &arc)
             p.usedown     = false; // sf
             p.cmd.buttons = 0;     // sf
             p.prevviewz   = p.viewz;
+            p.prevpitch   = p.pitch;
          }
       }
    }

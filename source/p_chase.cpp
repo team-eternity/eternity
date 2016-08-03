@@ -516,6 +516,7 @@ static void P_setFollowPitch()
    if(fixedang > ANGLE_1 * 32)
       fixedang = ANGLE_1 * 32;
 
+   followcam.prevpitch = followcam.pitch;
    followcam.pitch = camlower ? -fixedang : fixedang;
 }
 

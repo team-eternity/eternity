@@ -86,6 +86,7 @@ int      centerx, centery;
 fixed_t  centerxfrac, centeryfrac;
 fixed_t  viewx, viewy, viewz;
 angle_t  viewangle;
+fixed_t  viewpitch;
 player_t *viewplayer;
 extern lighttable_t **walllights;
 bool     showpsprites = 1; //sf
@@ -762,6 +763,7 @@ static void R_interpolateViewPoint(player_t *player, fixed_t lerp)
       viewy     = player->mo->y;
       viewz     = player->viewz;
       viewangle = player->mo->angle; //+ viewangleoffset;
+      viewpitch = player->pitch;
    }
    else
    {
@@ -769,6 +771,7 @@ static void R_interpolateViewPoint(player_t *player, fixed_t lerp)
       viewy     = lerpCoord(lerp, player->mo->prevpos.y,     player->mo->y);
       viewz     = lerpCoord(lerp, player->prevviewz,         player->viewz);
       viewangle = lerpAngle(lerp, player->mo->prevpos.angle, player->mo->angle);
+      viewpitch = lerpAngle(lerp, player->prevpitch,         player->pitch);
    }
 }
 
@@ -876,8 +879,7 @@ static fixed_t R_getLerp()
 // R_SetupFrame
 //
 static void R_SetupFrame(player_t *player, camera_t *camera)
-{               
-   fixed_t  pitch;
+{
    fixed_t  viewheightfrac;
    fixed_t  lerp = R_getLerp();
    
@@ -893,7 +895,6 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    if(!camera)
    {
       R_interpolateViewPoint(player, lerp);
-      pitch = player->pitch; // INTERP_FIXME
 
       // haleyjd 01/21/07: earthquakes
       if(player->quake &&
@@ -908,7 +909,6 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    else
    {
       R_interpolateViewPoint(camera, lerp);
-      pitch = camera->pitch;   // INTERP_FIXME
    }
 
    extralight = player->extralight;
@@ -918,7 +918,7 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    view.y      = M_FixedToFloat(viewy);
    view.z      = M_FixedToFloat(viewz);
    view.angle  = (ANG90 - viewangle) * PI / ANG180;
-   view.pitch  = (ANG90 - pitch) * PI / ANG180;
+   view.pitch  = (ANG90 - viewpitch) * PI / ANG180;
    view.sin    = sin(view.angle);
    view.cos    = cos(view.angle);
    view.lerp   = lerp;
@@ -937,10 +937,10 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    // haleyjd 10/08/06: use simpler calculation for pitch == 0 to avoid 
    // unnecessary roundoff error. This is what was causing sky textures to
    // appear a half-pixel too low (the entire display was too low actually).
-   if(pitch)
+   if(viewpitch)
    {
       fixed_t dy = FixedMul(focallen_y, 
-                            finetangent[(ANG90 - pitch) >> ANGLETOFINESHIFT]);
+                            finetangent[(ANG90 - viewpitch) >> ANGLETOFINESHIFT]);
             
       // haleyjd: must bound after zooming
       if(dy < -viewheightfrac)
