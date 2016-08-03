@@ -283,6 +283,7 @@ enum
    EV_STATIC_PORTAL_HORIZON_LINE,           // 450
    EV_STATIC_SLOPE_PARAM,                   // 455
    EV_STATIC_PORTAL_SECTOR_PARAM,           // 456
+   EV_STATIC_WIND_CONTROL_PARAM,            // 457
 
    EV_STATIC_MAX
 };

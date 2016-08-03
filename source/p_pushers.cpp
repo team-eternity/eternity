@@ -426,6 +426,28 @@ void P_SpawnPushers()
             Add_Pusher(PushThinker::p_wind, line->dx, line->dy, NULL, s);
          break;
 
+      case EV_STATIC_WIND_CONTROL_PARAM:
+         {
+            int x_mag, y_mag;
+            if(line->args[3])
+            {
+               x_mag = line->dx;
+               y_mag = line->dy;
+            }
+            else
+            {
+               fixed_t strength = line->args[1] << FRACBITS;
+               angle_t angle = line->args[2] << 24;
+               int fineangle = angle >> ANGLETOFINESHIFT;
+               x_mag = FixedMul(strength, finecosine[fineangle]);
+               y_mag = FixedMul(strength, finesine[fineangle]);
+            }
+
+            for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
+               Add_Pusher(PushThinker::p_wind, x_mag, y_mag, NULL, s);
+            break;
+         }
+
       case EV_STATIC_CURRENT_CONTROL: // current
          for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
             Add_Pusher(PushThinker::p_current, line->dx, line->dy, NULL, s);
