@@ -25,6 +25,7 @@
 
 #include "z_zone.h"
 
+#include "a_small.h"
 #include "doomstat.h"
 #include "e_states.h"
 #include "e_things.h"
@@ -479,6 +480,50 @@ void P_SpawnPushers()
                Add_Pusher(PushThinker::p_push, line->dx, line->dy, thing, s);
          }
          break;
+
+      case EV_STATIC_PUSHPULL_CONTROL_PARAM:
+         {
+            int tag = line->args[0];
+            int x_mag, y_mag;
+            if(line->args[3])
+            {
+               x_mag = line->dx;
+               y_mag = line->dy;
+            }
+            else
+            {
+               x_mag = line->args[2] << FRACBITS;
+               y_mag = 0;
+            }
+
+            if(tag)
+            {
+               for(s = -1; (s = P_FindSectorFromTag(tag, s)) >= 0; )
+               {
+                  Mobj *thing = P_GetPushThing(s);
+                  if(thing) // No P* means no effect
+                  {
+                     Add_Pusher(PushThinker::p_push, line->dx, line->dy, thing,
+                                s);
+                  }
+               }
+            }
+            else
+            {
+               Mobj *thing = nullptr;
+               const int PushType = E_ThingNumForDEHNum(MT_PUSH);
+               const int PullType = E_ThingNumForDEHNum(MT_PULL);
+               while((thing = P_FindMobjFromTID(line->args[1], thing, nullptr)))
+               {
+                  if(thing->type == PushType || thing->type == PullType)
+                  {
+                     Add_Pusher(PushThinker::p_push, x_mag, y_mag, thing,
+                                thing->subsector->sector - sectors);
+                  }
+               }
+            }
+            break;
+         }
 
       case EV_STATIC_HERETIC_WIND:
       case EV_STATIC_HERETIC_CURRENT:
