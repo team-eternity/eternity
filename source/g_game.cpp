@@ -2104,6 +2104,7 @@ void G_Ticker()
    invbarstate_t &invbarstate = GameModeInfo->StatusBar->GetInvBarState();
    if(invbarstate.inventory && !(--inventoryTics))
    {
+      players[consoleplayer].inv_ptr = invbarstate.inv_ptr;
       invbarstate.inventory = false;
    }
 

@@ -444,7 +444,15 @@ void P_DeathThink(player_t *player)
    }
       
    if(player->cmd.buttons & BT_USE)
+   {
+      if(player == &players[consoleplayer])
+      {
+         invbarstate_t &invbarstate = GameModeInfo->StatusBar->GetInvBarState();
+         invbarstate.inv_ptr = 0;
+         invbarstate.curpos  = 0;
+      }
       player->playerstate = PST_REBORN;
+   }
 }
 
 //

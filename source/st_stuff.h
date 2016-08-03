@@ -62,6 +62,8 @@ void ST_Init(void);
 
 void ST_CacheFaces(patch_t **faces, const char *facename);
 
+// FIXME: Fix curpos and inv_ptr, which currently don't reflect Heretic behaviour.
+// The problem is adapting code to handle variable lengths of inventory bars.
 struct invbarstate_t {
    bool inventory;  // inventory is currently being viewed?
    int curpos;

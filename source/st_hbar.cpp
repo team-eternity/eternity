@@ -49,8 +49,12 @@
 //
 
 // cached patches
-static patch_t *invnums[10];   // inventory numbers
+static patch_t *invnums[10];      // inventory numbers
 static patch_t *smallinvnums[10]; // small inventory numbers
+static patch_t *PatchINVLFGEM1;
+static patch_t *PatchINVLFGEM2;
+static patch_t *PatchINVRTGEM1;
+static patch_t *PatchINVRTGEM2;
 
 // current state variables
 static int chainhealth;        // current position of the gem
@@ -133,6 +137,11 @@ static void ST_HticInit()
 
       smallinvnums[i] = PatchLoader::CacheName(wGlobalDir, lumpname, PU_STATIC);
    }
+
+   PatchINVLFGEM1 = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEML1"), PU_STATIC);
+   PatchINVLFGEM2 = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEML2"), PU_STATIC);
+   PatchINVRTGEM1 = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEMR1"), PU_STATIC);
+   PatchINVRTGEM2 = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEMR2"), PU_STATIC);
 
    // haleyjd 10/09/05: load key graphics for HUD
    for(i = 0; i < NUMCARDS+3; ++i)  //jff 2/23/98 show both keys too
@@ -489,6 +498,18 @@ static void ST_drawInvBar()
          }
       }
    } while(E_MoveInventoryCursor(plyr, 1, i) && i < 7);
+
+   if(leftoffs)
+   {
+      V_DrawPatch(38, 159, &subscreen43,
+         !(leveltime & 4) ? PatchINVLFGEM1 : PatchINVLFGEM2);
+   }
+   int temp = i + leftoffs - 1;
+   if(i == 7 && E_MoveInventoryCursor(plyr, 1, temp))
+   {
+      V_DrawPatch(269, 159, &subscreen43,
+         !(leveltime & 4) ? PatchINVRTGEM1 : PatchINVRTGEM2);
+   }
 
    V_DrawPatch(50 + (hbarstate.curpos - leftoffs)* 31, 189, &subscreen43,
      PatchLoader::CacheName(wGlobalDir, "SELECTBO", PU_CACHE));
