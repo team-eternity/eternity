@@ -106,6 +106,9 @@ typedef enum
   CF_IMMORTAL         = 0x10,
 } cheat_t;
 
+// These defines are in degrees:
+#define MAXPITCHUP   32
+#define MAXPITCHDOWN 32
 
 //
 // Extended player object info: player_t

@@ -335,10 +335,10 @@ void P_WalkTicker()
       else
       {
          walkcamera.pitch -= look << 16;
-         if(walkcamera.pitch < -ANGLE_1*32)
-            walkcamera.pitch = -ANGLE_1*32;
-         else if(walkcamera.pitch > ANGLE_1*32)
-            walkcamera.pitch = ANGLE_1*32;
+         if(walkcamera.pitch < -ANGLE_1*MAXPITCHUP)
+            walkcamera.pitch = -ANGLE_1*MAXPITCHUP;
+         else if(walkcamera.pitch > ANGLE_1*MAXPITCHDOWN)
+            walkcamera.pitch = ANGLE_1*MAXPITCHDOWN;
       }
    }
 
