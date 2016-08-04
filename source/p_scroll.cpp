@@ -442,11 +442,22 @@ static void P_spawnDynamicWallScroller(int staticFn, line_t *l, int linenum)
    int control = -1;
    int accel   =  0;
 
-   if(staticFn == EV_STATIC_SCROLL_ACCEL_WALL)
-      accel = 1;
-   if(staticFn == EV_STATIC_SCROLL_ACCEL_WALL ||
-      staticFn == EV_STATIC_SCROLL_DISPLACE_WALL)
-      control = sides[*l->sidenum].sector - sectors;
+   if(staticFn == EV_STATIC_SCROLL_WALL_PARAM)
+   {
+      int bits = l->args[ev_Scroll_Arg_Bits];
+      if(bits & ev_Scroll_Bit_Accel)
+         accel = 1;
+      if(bits & (ev_Scroll_Bit_Accel | ev_Scroll_Bit_Displace))
+         control = sides[*l->sidenum].sector - sectors;
+   }
+   else
+   {
+      if(staticFn == EV_STATIC_SCROLL_ACCEL_WALL)
+         accel = 1;
+      if(staticFn == EV_STATIC_SCROLL_ACCEL_WALL ||
+         staticFn == EV_STATIC_SCROLL_DISPLACE_WALL)
+         control = sides[*l->sidenum].sector - sectors;
+   }
 
    // killough 3/1/98: scroll wall according to linedef
    // (same direction and speed as scrolling floors)
@@ -525,7 +536,8 @@ void P_SpawnScrollers()
 
       case EV_STATIC_SCROLL_ACCEL_WALL:
       case EV_STATIC_SCROLL_DISPLACE_WALL:
-      case EV_STATIC_SCROLL_WALL_WITH:   
+      case EV_STATIC_SCROLL_WALL_WITH:
+      case EV_STATIC_SCROLL_WALL_PARAM:
          // killough 3/1/98: scroll wall according to linedef
          // (same direction and speed as scrolling floors)
          P_spawnDynamicWallScroller(staticFn, line, i);
