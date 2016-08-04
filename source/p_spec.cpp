@@ -1339,6 +1339,7 @@ void P_SpawnSpecials()
       case EV_STATIC_PORTAL_LINKED_LINE2LINE:
       case EV_STATIC_PORTAL_HORIZON_LINE:
       case EV_STATIC_PORTAL_SECTOR_PARAM:
+      case EV_STATIC_PORTAL_LINE_PARAM:
          P_SpawnPortal(&lines[i], staticFn);
          break;
       
@@ -2729,6 +2730,20 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          return;  // exit if it's just a copier sought by others
       }
    }
+   else if(staticFn == EV_STATIC_PORTAL_LINE_PARAM)
+   {
+      // Currently only support ZDoom's Eternity XLAT helper
+      if(line->args[ev_LinePortal_Arg_Type] == ev_LinePortal_Type_EEClassic)
+      {
+         if(line->args[0] != ev_LinePortal_Maker)
+            return;
+         type = portal_linked;
+         effects = portal_lineonly;
+         param = true;
+      }
+      else
+         return;
+   }
    else
    {
       // haleyjd: get type and effects from static init function
@@ -2861,10 +2876,29 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       // linked portals can only be applied to either the floor or ceiling.
       if(param)
       {
-         planez = line->args[2] == 0 ? sector->ceilingheight
-                                     : sector->floorheight;
-         s = P_findParamPortalAnchor(line);
-         // TODO: line portals not handled yet
+         if(staticFn == EV_STATIC_PORTAL_SECTOR_PARAM)
+         {
+            planez = line->args[2] == 0 ? sector->ceilingheight
+               : sector->floorheight;
+            s = P_findParamPortalAnchor(line);
+         }
+         else  // line portal
+         {
+            planez = 0;
+            anchortype = EV_SpecialForStaticInit(EV_STATIC_PORTAL_LINE_PARAM);
+            for(s = -1; (s = P_FindLineFromTag(line->tag, s)) >= 0; )
+            {
+               if(line[s].special != anchortype || line == &lines[s]
+                  || !lines[s].frontsector
+                  || lines[s].args[ev_LinePortal_Arg_Type]
+                      != ev_LinePortal_Type_EEClassic
+                  || lines[s].args[0] != ev_LinePortal_Anchor)
+               {
+                  continue;
+               }
+               break;
+            }
+         }
       }
       else
       {
@@ -2921,7 +2955,8 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       portal = R_GetLinkedPortal(line - lines, s, planez, fromid, toid);
 
       // Special case where the portal was created with the line-to-line portal type
-      if(staticFn == EV_STATIC_PORTAL_LINKED_LINE2LINE)
+      if(staticFn == EV_STATIC_PORTAL_LINKED_LINE2LINE ||
+         staticFn == EV_STATIC_PORTAL_LINE_PARAM)
       {
          P_SetPortal(lines[s].frontsector, lines + s, portal, portal_lineonly);
          

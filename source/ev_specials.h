@@ -291,6 +291,7 @@ enum
    EV_STATIC_SCROLL_CEILING_PARAM,          // 483
    EV_STATIC_SCROLL_FLOOR_PARAM,            // 484
    EV_STATIC_SCROLL_WALL_PARAM,             // 485
+   EV_STATIC_PORTAL_LINE_PARAM,             // 486
 
    EV_STATIC_MAX
 };
@@ -298,6 +299,16 @@ enum
 //
 // Parameterized specifics
 //
+
+// Line_SetPortal
+enum
+{
+   ev_LinePortal_Maker = 0,
+   ev_LinePortal_Anchor = 1,
+   ev_LinePortal_Arg_SelfTag = 1,
+   ev_LinePortal_Arg_Type = 2,
+   ev_LinePortal_Type_EEClassic = 4
+};
 
 // Scroll
 enum
