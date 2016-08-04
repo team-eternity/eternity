@@ -2542,7 +2542,7 @@ static bool P_getParamPortalProps(const int *args, portal_type &type,
    {
       case paramPortal_normal:
       default:
-         if(args[paramPortal_argMisc])
+         if(!args[paramPortal_argMisc])
             return false;  // anchor
 
          // Both floor and ceiling portals are anchored, otherwise two-way
@@ -2564,7 +2564,7 @@ static bool P_getParamPortalProps(const int *args, portal_type &type,
       case paramPortal_copyline:
          return false;  // copy line
       case paramPortal_linked:
-         if(args[paramPortal_argMisc])
+         if(!args[paramPortal_argMisc])
             return false;  // anchor
          if(args[paramPortal_argPlane] == paramPortal_planeBoth)
          {
@@ -2604,7 +2604,7 @@ static int P_findParamPortalAnchor(const line_t *line)
          lines[s].args[0] != line->args[0] ||
          lines[s].args[paramPortal_argType] != line->args[paramPortal_argType] ||
          lines[s].args[paramPortal_argPlane] != line->args[paramPortal_argPlane] ||
-         !lines[s].args[paramPortal_argMisc])
+         lines[s].args[paramPortal_argMisc])
          continue;
       break;   // found an anchor
    }
