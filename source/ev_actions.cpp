@@ -3162,14 +3162,13 @@ DEFINE_ACTION(EV_ActionThingChangeTID)
 //
 // EV_ActionThingRaise
 //
-// Implements Thing_Raise(tid, keepfriend)
+// Implements Thing_Raise(tid)
 // * ExtraData: 422
 // * Hexen:     17
 //
 DEFINE_ACTION(EV_ActionThingRaise)
 {
-   return EV_ThingRaise(instance->actor, instance->args[0],
-                        !!instance->args[1]);
+   return EV_ThingRaise(instance->actor, instance->args[0]);
 }
 
 //
