@@ -287,11 +287,23 @@ enum
    EV_STATIC_CURRENT_CONTROL_PARAM,         // 479
    EV_STATIC_PUSHPULL_CONTROL_PARAM,        // 480
    EV_STATIC_INIT_PARAM,                    // 481
+   EV_STATIC_3DMIDTEX_ATTACH_PARAM,         // 482
 
    EV_STATIC_MAX
 };
 
+//
 // Parameterized specifics
+//
+
+// Sector_Attach3dMidtex
+enum
+{
+   ev_AttachMidtex_Arg_SectorTag = 1,
+   ev_AttachMidtex_Arg_DoCeiling = 2,
+};
+
+// Static_Init
 enum
 {
    ev_StaticInit_Arg_Prop = 1,

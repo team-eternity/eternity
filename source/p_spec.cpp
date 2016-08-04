@@ -1314,6 +1314,9 @@ void P_SpawnSpecials()
       case EV_STATIC_3DMIDTEX_ATTACH_CEILING:
          P_AttachLines(&lines[i], true);
          break;
+      case EV_STATIC_3DMIDTEX_ATTACH_PARAM:
+         P_AttachLines(&lines[i], !!lines[i].args[ev_AttachMidtex_Arg_DoCeiling]);
+         break;
 
          // SoM 12/10/03: added skybox/portal specials
          // haleyjd 01/24/04: functionalized code to reduce footprint
@@ -1942,6 +1945,40 @@ bool P_Scroll3DSides(const sector_t *sector, bool ceiling, fixed_t delta,
 }
 
 //
+// Helper function to add a line to a local static list, for 3dmidtex attachment
+//
+static void P_addLineToAttachList(const line_t *line, int *&attached,
+                                  int &numattach, int &maxattach)
+{
+   if(!line->frontsector || !line->backsector ||
+      !(line->flags & ML_3DMIDTEX))
+   {
+      return;
+   }
+
+   int i;
+   for(i = 0; i < numattach;i++)
+   {
+      if(line - lines == attached[i])
+         break;
+   }
+
+   if(i == numattach)
+   {
+      if(numattach == maxattach)
+      {
+         maxattach += 5;
+
+         attached = erealloc(int *, attached, sizeof(int) * maxattach);
+      }
+
+      attached[numattach++] = line - lines;
+   }
+
+   // SoM 12/8/02: Don't attach the backsector.
+}
+
+//
 // SoM 9/19/2002
 // P_AttachLines
 //
@@ -2006,39 +2043,54 @@ void P_AttachLines(const line_t *cline, bool ceiling)
       Z_Free(cline->frontsector->c_attsectors);
    }
 
+   // ioanch: param specisl
+   int restrictTag = 0;
+   bool alreadyPicked = false;
+   if(EV_StaticInitForSpecial(cline->special) == EV_STATIC_3DMIDTEX_ATTACH_PARAM)
+   {
+      // floor/ceiling choice already set from caller
+      int lineid = cline->args[0];
+      restrictTag = cline->args[ev_AttachMidtex_Arg_SectorTag];
+      if(!lineid && restrictTag)
+      {
+         alreadyPicked = true;   // to avoid looking for lines later
+         for(start = -1; (start = P_FindSectorFromTag(restrictTag, start)) >= 0;)
+         {
+            const sector_t *sector = sectors + start;
+            for(int j = 0; j < sector->linecount; ++j)
+            {
+               line = sector->lines[j];
+
+               P_addLineToAttachList(line, attached, numattach, maxattach);
+            }
+         }
+      }
+
+      // Other cases:
+      // lineid != 0 and restrictTag != 0: will go down and restrict by tag
+      // lineid != 0 and restrictTag == 0: will act normally
+      // lineid == 0 and restrictTag == 0: same as in previous games
+   }
+
    // Search the lines list. Check for every tagged line that
    // has the 3dmidtex lineflag, then add the line to the attached list.
-   for(start = -1; (start = P_FindLineFromLineArg0(cline,start)) >= 0; )
+   if(!alreadyPicked)
    {
-      if(start != cline-lines)
+      for(start = -1; (start = P_FindLineFromLineArg0(cline,start)) >= 0; )
       {
-         line = lines+start;
-
-         if(!line->frontsector || !line->backsector ||
-            !(line->flags & ML_3DMIDTEX))
-            continue;
-
-         for(i = 0; i < numattach;i++)
+         if(start != cline-lines)
          {
-            if(line - lines == attached[i])
-            break;
-         }
-
-         if(i == numattach)
-         {
-            if(numattach == maxattach)
+            line = lines+start;
+            if(restrictTag && line->frontsector->tag != restrictTag &&
+               (!line->backsector || line->backsector->tag != restrictTag))
             {
-              maxattach += 5;
-
-              attached = erealloc(int *, attached, sizeof(int) * maxattach);
+               continue;
             }
 
-            attached[numattach++] = line - lines;
+            P_addLineToAttachList(line, attached, numattach, maxattach);
          }
-         
-         // SoM 12/8/02: Don't attach the backsector.
-      }
-   } // end for
+      } // end for
+   }
 
    // haleyjd: static analyzer says this could happen, so let's just be safe.
    if(!attached)
