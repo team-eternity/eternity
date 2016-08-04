@@ -372,10 +372,9 @@ Mobj* P_GetPushThing(int s)
 //
 // haleyjd 03/12/03: Heretic Wind/Current Transfer specials
 //
-static void P_spawnHereticWind(line_t *line, int staticFn)
+static void P_spawnHereticWind(line_t *line, int pushType)
 {
    int s;
-   int pushType;
    angle_t lineAngle;
    fixed_t magnitude;
 
@@ -385,15 +384,6 @@ static void P_spawnHereticWind(line_t *line, int staticFn)
    // types 20-39 affect the player in P_PlayerThink
    // types 40-51 affect MF3_WINDTHRUST things in P_MobjThinker
    // this is selected by use of lines 294 or 293, respectively
-   switch(staticFn)
-   {
-   case EV_STATIC_HERETIC_CURRENT:
-      pushType = 20;
-      break;
-   default:
-      pushType = 40;
-      break;
-   }
 
    for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
    {
@@ -408,15 +398,15 @@ static void P_spawnHereticWind(line_t *line, int staticFn)
 //
 static void P_getPusherParams(const line_t *line, int &x_mag, int &y_mag)
 {
-   if(line->args[3])
+   if(line->args[ev_SetWind_Arg_UseLine])
    {
       x_mag = line->dx;
       y_mag = line->dy;
    }
    else
    {
-      fixed_t strength = line->args[1] << FRACBITS;
-      angle_t angle = line->args[2] << 24;
+      fixed_t strength = line->args[ev_SetWind_Arg_Strength] << FRACBITS;
+      angle_t angle = line->args[ev_SetWind_Arg_Angle] << 24;
       int fineangle = angle >> ANGLETOFINESHIFT;
       x_mag = FixedMul(strength, finecosine[fineangle]);
       y_mag = FixedMul(strength, finesine[fineangle]);
@@ -528,7 +518,8 @@ void P_SpawnPushers()
       case EV_STATIC_HERETIC_WIND:
       case EV_STATIC_HERETIC_CURRENT:
          // haleyjd 03/12/03: Heretic wind and current transfer specials
-         P_spawnHereticWind(line, staticFn);
+         P_spawnHereticWind(line, staticFn == EV_STATIC_HERETIC_CURRENT 
+            ? SECTOR_HTIC_CURRENT : SECTOR_HTIC_WIND);
          break;
 
       default: // not a function we handle here

@@ -303,6 +303,14 @@ enum
    ev_AttachMidtex_Arg_DoCeiling = 2,
 };
 
+// Sector_SetWind
+enum
+{
+   ev_SetWind_Arg_Strength = 1,
+   ev_SetWind_Arg_Angle = 2,
+   ev_SetWind_Arg_UseLine = 3,
+};
+
 // Static_Init
 enum
 {
