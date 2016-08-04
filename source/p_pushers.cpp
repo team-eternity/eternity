@@ -372,20 +372,20 @@ Mobj* P_GetPushThing(int s)
 //
 // haleyjd 03/12/03: Heretic Wind/Current Transfer specials
 //
-static void P_spawnHereticWind(line_t *line, int pushType)
+static void P_spawnHereticWind(int tag, fixed_t x_mag, fixed_t y_mag, int pushType)
 {
    int s;
    angle_t lineAngle;
    fixed_t magnitude;
 
-   lineAngle = P_PointToAngle(0, 0, line->dx, line->dy);
-   magnitude = (P_AproxDistance(line->dx, line->dy) >> FRACBITS) * 512;
+   lineAngle = P_PointToAngle(0, 0, x_mag, y_mag);
+   magnitude = (P_AproxDistance(x_mag, y_mag) >> FRACBITS) * 512;
 
    // types 20-39 affect the player in P_PlayerThink
    // types 40-51 affect MF3_WINDTHRUST things in P_MobjThinker
    // this is selected by use of lines 294 or 293, respectively
 
-   for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
+   for(s = -1; (s = P_FindSectorFromTag(tag, s)) >= 0; )
    {
       sectors[s].hticPushType  = pushType;
       sectors[s].hticPushAngle = lineAngle;
@@ -442,8 +442,13 @@ void P_SpawnPushers()
             int x_mag, y_mag;
             P_getPusherParams(line, x_mag, y_mag);
 
-            for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
-               Add_Pusher(PushThinker::p_wind, x_mag, y_mag, NULL, s);
+            if(line->args[ev_SetWind_Arg_Flags] & ev_SetWind_Flag_Heretic)
+               P_spawnHereticWind(line->args[0], x_mag, y_mag, SECTOR_HTIC_WIND);
+            else
+            {
+               for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
+                  Add_Pusher(PushThinker::p_wind, x_mag, y_mag, NULL, s);
+            }
             break;
          }
 
@@ -457,8 +462,13 @@ void P_SpawnPushers()
             int x_mag, y_mag;
             P_getPusherParams(line, x_mag, y_mag);
 
-            for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
-               Add_Pusher(PushThinker::p_current, x_mag, y_mag, NULL, s);
+            if(line->args[ev_SetWind_Arg_Flags] & ev_SetWind_Flag_Heretic)
+               P_spawnHereticWind(line->args[0], x_mag, y_mag, SECTOR_HTIC_CURRENT);
+            else 
+            {
+               for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
+                  Add_Pusher(PushThinker::p_current, x_mag, y_mag, NULL, s);
+            }
             break;
          }
 
@@ -518,8 +528,9 @@ void P_SpawnPushers()
       case EV_STATIC_HERETIC_WIND:
       case EV_STATIC_HERETIC_CURRENT:
          // haleyjd 03/12/03: Heretic wind and current transfer specials
-         P_spawnHereticWind(line, staticFn == EV_STATIC_HERETIC_CURRENT 
-            ? SECTOR_HTIC_CURRENT : SECTOR_HTIC_WIND);
+         P_spawnHereticWind(line->args[0], line->dx, line->dy, 
+            staticFn == EV_STATIC_HERETIC_CURRENT ? SECTOR_HTIC_CURRENT 
+                                                  : SECTOR_HTIC_WIND);
          break;
 
       default: // not a function we handle here

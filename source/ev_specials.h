@@ -309,6 +309,8 @@ enum
    ev_SetWind_Arg_Strength = 1,
    ev_SetWind_Arg_Angle = 2,
    ev_SetWind_Arg_UseLine = 3,
+   ev_SetWind_Arg_Flags = 4,
+   ev_SetWind_Flag_Heretic = 1,
 };
 
 // Static_Init
