@@ -171,6 +171,7 @@ static ev_static_t HexenStaticBindings[] =
    STATICSPEC(222, EV_STATIC_SCROLL_WALL_PARAM)
    STATICSPEC(223, EV_STATIC_SCROLL_FLOOR_PARAM)
    STATICSPEC(224, EV_STATIC_SCROLL_CEILING_PARAM)
+   STATICSPEC(225, EV_STATIC_SCROLL_BY_OFFSETS)
    STATICSPEC(227, EV_STATIC_PUSHPULL_CONTROL_PARAM)
 };
 
@@ -586,6 +587,7 @@ int EV_SpecialForStaticInitName(const char *name)
       { EV_STATIC_POLYOBJ_START_LINE,      "Polyobj_StartLine"      },
       { EV_STATIC_POLYOBJ_EXPLICIT_LINE,   "Polyobj_ExplicitLine"   },
       { EV_STATIC_PUSHPULL_CONTROL_PARAM,  "PointPush_SetForce"     },
+      { EV_STATIC_SCROLL_BY_OFFSETS,       "Scroll_Texture_Offsets" },
       { EV_STATIC_SCROLL_CEILING_PARAM,    "Scroll_Ceiling"         },
       { EV_STATIC_SCROLL_FLOOR_PARAM,      "Scroll_Floor"           },
       { EV_STATIC_SCROLL_LEFT_PARAM,       "Scroll_Texture_Left"    },
