@@ -288,6 +288,7 @@ enum
    EV_STATIC_PUSHPULL_CONTROL_PARAM,        // 480
    EV_STATIC_INIT_PARAM,                    // 481
    EV_STATIC_3DMIDTEX_ATTACH_PARAM,         // 482
+   EV_STATIC_SCROLL_CEILING_PARAM,          // 483
 
    EV_STATIC_MAX
 };
@@ -295,6 +296,17 @@ enum
 //
 // Parameterized specifics
 //
+
+// Scroll
+enum
+{
+   ev_Scroll_Arg_Bits = 1,
+   ev_Scroll_Bit_Accel = 1,
+   ev_Scroll_Bit_Displace = 2,
+   ev_Scroll_Bit_UseLine = 4,
+   ev_Scroll_Arg_X = 3,
+   ev_Scroll_Arg_Y = 4,
+};
 
 // Sector_Attach3dMidtex
 enum

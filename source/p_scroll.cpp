@@ -245,19 +245,43 @@ static void Add_WallScroller(int64_t dx, int64_t dy, const line_t *l,
 // * EV_STATIC_SCROLL_CEILING
 // * EV_STATIC_SCROLL_DISPLACE_CEILING
 // * EV_STATIC_SCROLL_ACCEL_CEILING
+// * EV_STATIC_SCROLL_CEILING_PARAM
 //
 static void P_spawnCeilingScroller(int staticFn, line_t *l)
 {
-   fixed_t dx = l->dx >> SCROLL_SHIFT; // direction and speed of scrolling
-   fixed_t dy = l->dy >> SCROLL_SHIFT;
+   fixed_t dx, dy;
    int control = -1;
-   int accel   =  0;
+   int accel = 0;
 
-   if(staticFn == EV_STATIC_SCROLL_ACCEL_CEILING)
-      accel = 1;
-   if(staticFn == EV_STATIC_SCROLL_ACCEL_CEILING ||
-      staticFn == EV_STATIC_SCROLL_DISPLACE_CEILING)
-      control = sides[*l->sidenum].sector - sectors;
+   if(staticFn == EV_STATIC_SCROLL_CEILING_PARAM)
+   {
+      int bits = l->args[ev_Scroll_Arg_Bits];
+      if(bits & ev_Scroll_Bit_UseLine)
+      {
+         dx = l->dx >> SCROLL_SHIFT; // direction and speed of scrolling
+         dy = l->dy >> SCROLL_SHIFT;
+      }
+      else
+      {
+         dx = ((l->args[ev_Scroll_Arg_X] - 128) << FRACBITS) >> SCROLL_SHIFT;
+         dy = ((l->args[ev_Scroll_Arg_Y] - 128) << FRACBITS) >> SCROLL_SHIFT;
+      }
+      if(bits & ev_Scroll_Bit_Accel)
+         accel = 1;
+      if(bits & (ev_Scroll_Bit_Accel | ev_Scroll_Bit_Displace))
+         control = sides[*l->sidenum].sector - sectors;
+   }
+   else
+   {
+      dx = l->dx >> SCROLL_SHIFT; // direction and speed of scrolling
+      dy = l->dy >> SCROLL_SHIFT;
+
+      if(staticFn == EV_STATIC_SCROLL_ACCEL_CEILING)
+         accel = 1;
+      if(staticFn == EV_STATIC_SCROLL_ACCEL_CEILING ||
+         staticFn == EV_STATIC_SCROLL_DISPLACE_CEILING)
+         control = sides[*l->sidenum].sector - sectors;
+   }
 
    for(int s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0;)
       Add_Scroller(ScrollThinker::sc_ceiling, -dx, dy, control, s, accel);
@@ -423,6 +447,7 @@ void P_SpawnScrollers()
       case EV_STATIC_SCROLL_ACCEL_CEILING:
       case EV_STATIC_SCROLL_DISPLACE_CEILING:
       case EV_STATIC_SCROLL_CEILING:     // scroll effect ceiling
+      case EV_STATIC_SCROLL_CEILING_PARAM:
          P_spawnCeilingScroller(staticFn, line);
          break;
    

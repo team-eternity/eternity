@@ -142,6 +142,7 @@ static ev_static_t DOOMStaticBindings[] =
    STATICSPEC(480, EV_STATIC_PUSHPULL_CONTROL_PARAM)
    STATICSPEC(481, EV_STATIC_INIT_PARAM)
    STATICSPEC(482, EV_STATIC_3DMIDTEX_ATTACH_PARAM)
+   STATICSPEC(483, EV_STATIC_SCROLL_CEILING_PARAM)
 };
 
 // Hexen Static Init Bindings
@@ -165,6 +166,7 @@ static ev_static_t HexenStaticBindings[] =
    STATICSPEC(218, EV_STATIC_WIND_CONTROL_PARAM)
    STATICSPEC(219, EV_STATIC_FRICTION_TRANSFER)
    STATICSPEC(220, EV_STATIC_CURRENT_CONTROL_PARAM)
+   STATICSPEC(224, EV_STATIC_SCROLL_CEILING_PARAM)
    STATICSPEC(227, EV_STATIC_PUSHPULL_CONTROL_PARAM)
 };
 
@@ -580,6 +582,7 @@ int EV_SpecialForStaticInitName(const char *name)
       { EV_STATIC_POLYOBJ_START_LINE,      "Polyobj_StartLine"      },
       { EV_STATIC_POLYOBJ_EXPLICIT_LINE,   "Polyobj_ExplicitLine"   },
       { EV_STATIC_PUSHPULL_CONTROL_PARAM,  "PointPush_SetForce"     },
+      { EV_STATIC_SCROLL_CEILING_PARAM,    "Scroll_Ceiling"         },
       { EV_STATIC_SCROLL_LEFT_PARAM,       "Scroll_Texture_Left"    },
       { EV_STATIC_SCROLL_RIGHT_PARAM,      "Scroll_Texture_Right"   },
       { EV_STATIC_SCROLL_UP_PARAM,         "Scroll_Texture_Up"      },
@@ -626,6 +629,7 @@ bool EV_IsParamStaticInit(int special)
    case EV_STATIC_POLYOBJ_START_LINE:
    case EV_STATIC_POLYOBJ_EXPLICIT_LINE:
    case EV_STATIC_PUSHPULL_CONTROL_PARAM:
+   case EV_STATIC_SCROLL_CEILING_PARAM:
    case EV_STATIC_SCROLL_LEFT_PARAM:
    case EV_STATIC_SCROLL_RIGHT_PARAM:
    case EV_STATIC_SCROLL_UP_PARAM:
