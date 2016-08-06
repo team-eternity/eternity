@@ -96,6 +96,10 @@ struct side_t;
 #define MOVESOUND_MASK  0x800
 #define MOVESOUND_SHIFT 11
 
+#define UDMF_SEC_MASK   0xff  // 0-255 are the UDMF non-Boom gen specials
+// right-shift from UDMF generalized namespace to Boom generalized namespace
+#define UDMF_BOOM_SHIFT 3
+
 // haleyjd 12/28/08: mask used to get generalized special bits that are now
 // part of the sector flags
 #define GENSECTOFLAGSMASK \
