@@ -398,7 +398,7 @@ static void P_spawnHereticWind(int tag, fixed_t x_mag, fixed_t y_mag, int pushTy
 //
 static void P_getPusherParams(const line_t *line, int &x_mag, int &y_mag)
 {
-   if(line->args[ev_SetWind_Arg_UseLine])
+   if(line->args[ev_SetWind_Arg_Flags] & ev_SetWind_Flag_UseLine)
    {
       x_mag = line->dx;
       y_mag = line->dy;
