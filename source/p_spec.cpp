@@ -48,6 +48,7 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "e_udmf.h"
 #include "ev_sectors.h"
 #include "ev_specials.h"
 #include "g_game.h"
@@ -1202,9 +1203,12 @@ static void P_SetupHeightTransfer(int linenum, int secnum)
 
       // transfer colormaps to affected sectors instead of getting them from
       // the heightsec during the rendering process
-      sectors[s].topmap    = heightsec->topmap;
-      sectors[s].midmap    = heightsec->midmap;
-      sectors[s].bottommap = heightsec->bottommap;
+      if(!(e_udmfSectorInitFlags[s] & UDMF_SECTOR_INIT_COLORMAPPED))
+      {
+         sectors[s].topmap    = heightsec->topmap;
+         sectors[s].midmap    = heightsec->midmap;
+         sectors[s].bottommap = heightsec->bottommap;
+      }
    }
 }
 
@@ -2888,7 +2892,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
             anchortype = EV_SpecialForStaticInit(EV_STATIC_PORTAL_LINE_PARAM);
             for(s = -1; (s = P_FindLineFromTag(line->tag, s)) >= 0; )
             {
-               if(line[s].special != anchortype || line == &lines[s]
+               if(lines[s].special != anchortype || line == &lines[s]
                   || !lines[s].frontsector
                   || lines[s].args[ev_LinePortal_Arg_Type]
                       != ev_LinePortal_Type_EEClassic

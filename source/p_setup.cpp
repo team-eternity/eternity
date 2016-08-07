@@ -24,6 +24,7 @@
 //
 //-----------------------------------------------------------------------------
 
+#include <memory>
 #include "z_zone.h"
 
 #include "a_small.h"
@@ -559,8 +560,22 @@ void P_InitSector(sector_t *ss)
 
    // killough 4/4/98: colormaps:
    // haleyjd 03/04/07: modifications for per-sector colormap logic
-   ss->bottommap = ss->midmap = ss->topmap =
-      ((ss->intflags & SIF_SKY) ? global_fog_index : global_cmap_index);
+   // MaxW  2016/08/06: Modified to not set colormap if already set (UDMF).
+   int tempcolmap = ((ss->intflags & SIF_SKY) ? global_fog_index : global_cmap_index);
+   if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY)
+   {
+      if(ss->bottommap < 0)
+         ss->bottommap = tempcolmap;
+      if(ss->midmap < 0)
+         ss->midmap = tempcolmap;
+      if(ss->topmap < 0)
+         ss->topmap = tempcolmap;
+   }
+   else
+      ss->bottommap = ss->midmap = ss->topmap = tempcolmap;
+
+   //ss->bottommap = ss->midmap = ss->topmap =
+   //   ((ss->intflags & SIF_SKY) ? global_fog_index : global_cmap_index);
 
    // SoM 9/19/02: Initialize the attached sector list for 3dsides
    ss->c_attached = ss->f_attached = nullptr;
@@ -3201,6 +3216,15 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    
    // possible error: missing flats
    CHECK_ERROR();
+
+   // Setup sector init flags
+   if(!e_udmfSectorInitFlags) // it may have been initialized by UDMF
+      e_udmfSectorInitFlags = ecalloc(unsigned *, numsectors, sizeof(unsigned));
+
+   // Make it die on this function's exit
+   std::unique_ptr<unsigned, void(*)(unsigned *)> autoKilled(e_udmfSectorInitFlags, [](unsigned *p) {
+      efree(p);
+   });
 
    // haleyjd 01/05/14: create sector interpolation data
    P_CreateSectorInterps();

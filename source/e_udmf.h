@@ -48,6 +48,19 @@ struct maplumpindex_t
    int behavior;
 };
 
+//
+// Temporary sector init flags checked only during P_SetupLevel and cleared
+// afterwards.
+//
+
+enum
+{
+   // colormap has been set by UDMF or ExtraData
+   UDMF_SECTOR_INIT_COLORMAPPED = 1,
+};
+
+extern unsigned *e_udmfSectorInitFlags;   // only set while needed
+
 //==============================================================================
 
 class UDMFParser : public ZoneObject
@@ -214,6 +227,7 @@ private:
       bool damage_endgodmode;
       bool damage_exitlevel;
       bool damageterraineffect;
+      qstring damagetype;
       qstring floorterrain;
       qstring ceilingterrain;
 
@@ -221,6 +235,10 @@ private:
       int lightceiling;
       bool lightfloorabsolute;
       bool lightceilingabsolute;
+
+      qstring colormaptop;
+      qstring colormapmid;
+      qstring colormapbottom;
 
       qstring texturefloor;
       qstring textureceiling;
@@ -230,7 +248,9 @@ private:
 
       bool tfloorset, tceilset;
 
-      USector() : friction(-1), floorterrain("@flat"), ceilingterrain("@flat"), lightlevel(160)
+      USector() : friction(-1), floorterrain("@flat"), ceilingterrain("@flat"), damagetype("Unknown"),
+         colormaptop("@default"), colormapmid("@default"), colormapbottom("@default"),
+         lightlevel(160)
       {
       }
    };

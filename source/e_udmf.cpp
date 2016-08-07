@@ -30,6 +30,7 @@
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "e_hash.h"
+#include "e_mod.h"
 #include "e_ttypes.h"
 #include "e_udmf.h"
 #include "m_compare.h"
@@ -41,6 +42,9 @@
 #include "r_state.h"
 #include "w_wad.h"
 #include "z_auto.h"
+
+// Globals
+unsigned *e_udmfSectorInitFlags;
 
 //==============================================================================
 //
@@ -72,6 +76,11 @@ void UDMFParser::loadSectors() const
 {
    numsectors = (int)mSectors.getLength();
    sectors = estructalloctag(sector_t, numsectors, PU_LEVEL);
+
+   // Needed for some sector init stuff
+   if(!e_udmfSectorInitFlags) // it may have been initialized by UDMF
+      e_udmfSectorInitFlags = ecalloc(unsigned *, numsectors, sizeof(unsigned));
+
    for(int i = 0; i < numsectors; ++i)
    {
       sector_t *ss = sectors + i;
@@ -110,6 +119,7 @@ void UDMFParser::loadSectors() const
          // Damage
          ss->damage = us.damageamount;
          ss->damagemask = us.damageinterval;
+         ss->damagemod = E_DamageTypeNumForName(us.damagetype.constPtr());
          // If the following flags are true for the current sector, then set the
          // appropriate damageflags to true, otherwise don't set them.
          ss->damageflags |= us.damage_endgodmode ? SDMG_ENDGODMODE : 0;
@@ -129,6 +139,10 @@ void UDMFParser::loadSectors() const
          ss->flags |=
          (us.lightfloorabsolute ? SECF_FLOORLIGHTABSOLUTE : 0) |
          (us.lightceilingabsolute ? SECF_CEILLIGHTABSOLUTE : 0);
+
+         // sector colormaps
+         ss->topmap = ss->midmap = ss->bottommap = -1; // mark as not specified
+
       }
       else
       {
@@ -142,6 +156,28 @@ void UDMFParser::loadSectors() const
       ss->special = us.special;
       ss->tag = us.identifier;
       P_InitSector(ss);
+
+      //
+      // HERE GO THE PROPERTIES THAT MUST TAKE EFFECT AFTER P_InitSector
+      //
+      if(mNamespace == namespace_Eternity)
+      {
+         if(us.colormaptop.strCaseCmp("@default"))
+         {
+            ss->topmap    = R_ColormapNumForName(us.colormaptop.constPtr());
+            e_udmfSectorInitFlags[i] |= UDMF_SECTOR_INIT_COLORMAPPED;
+         }
+         if(us.colormapmid.strCaseCmp("@default"))
+         {
+            ss->midmap    = R_ColormapNumForName(us.colormapmid.constPtr());
+            e_udmfSectorInitFlags[i] |= UDMF_SECTOR_INIT_COLORMAPPED;
+         }
+         if(us.colormapbottom.strCaseCmp("@default"))
+         {
+            ss->bottommap = R_ColormapNumForName(us.colormapbottom.constPtr());
+            e_udmfSectorInitFlags[i] |= UDMF_SECTOR_INIT_COLORMAPPED;
+         }
+      }
    }
 }
 
@@ -424,12 +460,16 @@ enum token_e
    t_class2,
    t_class3,
    t_clipmidtex,
+   t_colormapbottom,
+   t_colormapmid,
+   t_colormaptop,
    t_coop,
    t_damage_endgodmode,
    t_damage_exitlevel,
    t_damageamount,
    t_damageinterval,
    t_damageterraineffect,
+   t_damagetype,
    t_dm,
    t_dontdraw,
    t_dontpegbottom,
@@ -531,12 +571,16 @@ static keytoken_t gTokenList[] =
    TOKEN(class2),
    TOKEN(class3),
    TOKEN(clipmidtex),
+   TOKEN(colormapbottom),
+   TOKEN(colormapmid),
+   TOKEN(colormaptop),
    TOKEN(coop),
    TOKEN(damage_endgodmode),
    TOKEN(damage_exitlevel),
    TOKEN(damageamount),
    TOKEN(damageinterval),
    TOKEN(damageterraineffect),
+   TOKEN(damagetype),
    TOKEN(dm),
    TOKEN(dontdraw),
    TOKEN(dontpegbottom),
@@ -857,12 +901,17 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                      READ_BOOL(sector, lightfloorabsolute);
                      READ_BOOL(sector, lightceilingabsolute);
 
+                     READ_STRING(sector, colormaptop);
+                     READ_STRING(sector, colormapmid);
+                     READ_STRING(sector, colormapbottom);
+
                      READ_NUMBER(sector, leakiness);
                      READ_NUMBER(sector, damageamount);
                      READ_NUMBER(sector, damageinterval);
                      READ_BOOL(sector, damage_endgodmode);
                      READ_BOOL(sector, damage_exitlevel);
                      READ_BOOL(sector, damageterraineffect);
+                     READ_STRING(sector, damagetype);
 
                      READ_STRING(sector, floorterrain);
                      READ_STRING(sector, ceilingterrain);
