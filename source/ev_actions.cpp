@@ -600,7 +600,7 @@ DEFINE_ACTION(EV_ActionPlatStop)
    // case 163: (S1 - BOOM Extended)
    // case 182: (SR - BOOM Extended)
    // Platform Stop
-   return EV_StopPlatByTag(instance->tag);
+   return EV_StopPlatByTag(instance->tag, false);
 }
 
 //
@@ -3066,13 +3066,27 @@ DEFINE_ACTION(EV_ActionParamPlatPerpetualRaise)
 //
 // EV_ActionParamPlatStop
 //
-// Implements Plat_Stop(tag)
+// Implements Plat_Stop(tag, kind)
 // * ExtraData: 411
 // * Hexen:     61
 //
 DEFINE_ACTION(EV_ActionParamPlatStop)
 {
-   return EV_StopPlatByTag(instance->tag);
+   bool removeThinker = false;
+   switch (instance->args[1])
+   {
+      case 0:                    // compatibility
+         removeThinker = LevelInfo.levelType == LI_TYPE_HEXEN;
+         break;
+      case 1:
+         removeThinker = false;  // Doom style
+         break;
+      case 2:
+         removeThinker = true;   // Hexen style
+         break;
+   }
+
+   return EV_StopPlatByTag(instance->tag, removeThinker);
 }
 
 //

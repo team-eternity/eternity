@@ -585,17 +585,30 @@ void PlatThinker::ActivateInStasis(int tag)
 //
 // jff 2/12/98 added int return value, fixed return
 //
-bool EV_StopPlatByTag(int tag)
+bool EV_StopPlatByTag(int tag, bool removeThinker)
 {
    // search the active plats
    for(platlist_t *pl = activeplats; pl; pl = pl->next)
    {
       PlatThinker *plat = pl->plat;      // for one with the tag not in stasis
-      if(plat->status != PlatThinker::in_stasis && plat->tag == tag)
+      if(!removeThinker)
       {
-         // put it in stasis
-         plat->oldstatus = plat->status; 
-         plat->status    = PlatThinker::in_stasis;
+         if(plat->status != PlatThinker::in_stasis && plat->tag == tag)
+         {
+            // put it in stasis
+            plat->oldstatus = plat->status;
+            plat->status    = PlatThinker::in_stasis;
+         }
+      }
+      else
+      {
+         // Make it possible to completely remove the thinker, like in Hexen
+         if(plat->tag == tag)
+         {
+            plat->sector->floordata = nullptr;
+            S_StopSectorSequence(plat->sector, SEQ_ORIGIN_SECTOR_F);
+            plat->removeThinker();
+         }
       }
    }
 
