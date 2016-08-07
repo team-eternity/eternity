@@ -626,7 +626,7 @@ DEFINE_ACTION(EV_ActionCeilingCrushStop)
    // case 168: (S1 - BOOM Extended)
    // case 188: (SR - BOOM Extended)
    // Ceiling Crush Stop
-   return EV_CeilingCrushStop(instance->line, instance->tag);
+   return EV_CeilingCrushStop(instance->tag);
 }
 
 //
@@ -3365,7 +3365,7 @@ DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaise)
 DEFINE_ACTION(EV_ActionParamCeilingCrushStop)
 {
    // Really the same as EV_ActionCeilingCrushStop
-   return EV_CeilingCrushStop(instance->line, instance->tag);
+   return EV_CeilingCrushStop(instance->tag);
 }
 
 //
