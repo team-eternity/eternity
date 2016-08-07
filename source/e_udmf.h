@@ -222,6 +222,10 @@ private:
       bool lightfloorabsolute;
       bool lightceilingabsolute;
 
+      qstring colormaptop;
+      qstring colormapmid;
+      qstring colormapbottom;
+
       qstring texturefloor;
       qstring textureceiling;
       int lightlevel;
@@ -230,7 +234,8 @@ private:
 
       bool tfloorset, tceilset;
 
-      USector() : friction(-1), floorterrain("@flat"), ceilingterrain("@flat"), lightlevel(160)
+      USector() : friction(-1), floorterrain("@flat"), ceilingterrain("@flat"), colormaptop("@default"), 
+         colormapmid("@default"), colormapbottom("@default"), lightlevel(160)
       {
       }
    };

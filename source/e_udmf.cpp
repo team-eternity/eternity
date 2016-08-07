@@ -129,6 +129,16 @@ void UDMFParser::loadSectors() const
          ss->flags |=
          (us.lightfloorabsolute ? SECF_FLOORLIGHTABSOLUTE : 0) |
          (us.lightceilingabsolute ? SECF_CEILLIGHTABSOLUTE : 0);
+
+         // sector colormaps
+         ss->topmap = ss->midmap = ss->bottommap = -1; // mark as not specified
+
+         if(us.colormaptop.strCaseCmp("@default"))
+            ss->topmap    = R_ColormapNumForName(us.colormaptop.constPtr());
+         if(us.colormapmid.strCaseCmp("@default"))
+            ss->midmap    = R_ColormapNumForName(us.colormapmid.constPtr());
+         if(us.colormapbottom.strCaseCmp("@default"))
+            ss->bottommap = R_ColormapNumForName(us.colormapbottom.constPtr());
       }
       else
       {
@@ -424,6 +434,9 @@ enum token_e
    t_class2,
    t_class3,
    t_clipmidtex,
+   t_colormapbottom,
+   t_colormapmid,
+   t_colormaptop,
    t_coop,
    t_damage_endgodmode,
    t_damage_exitlevel,
@@ -531,6 +544,9 @@ static keytoken_t gTokenList[] =
    TOKEN(class2),
    TOKEN(class3),
    TOKEN(clipmidtex),
+   TOKEN(colormapbottom),
+   TOKEN(colormapmid),
+   TOKEN(colormaptop),
    TOKEN(coop),
    TOKEN(damage_endgodmode),
    TOKEN(damage_exitlevel),
@@ -856,6 +872,10 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                      READ_NUMBER(sector, lightceiling);
                      READ_BOOL(sector, lightfloorabsolute);
                      READ_BOOL(sector, lightceilingabsolute);
+
+                     READ_STRING(sector, colormaptop);
+                     READ_STRING(sector, colormapmid);
+                     READ_STRING(sector, colormapbottom);
 
                      READ_NUMBER(sector, leakiness);
                      READ_NUMBER(sector, damageamount);

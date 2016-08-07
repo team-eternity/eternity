@@ -559,8 +559,16 @@ void P_InitSector(sector_t *ss)
 
    // killough 4/4/98: colormaps:
    // haleyjd 03/04/07: modifications for per-sector colormap logic
-   ss->bottommap = ss->midmap = ss->topmap =
-      ((ss->intflags & SIF_SKY) ? global_fog_index : global_cmap_index);
+   // MaxW  2016/08/06: Modified to not set colormap if already set (UDMF).
+   int tempcolmap = ((ss->intflags & SIF_SKY) ? global_fog_index : global_cmap_index);
+   if(ss->bottommap < 0)
+      ss->bottommap = tempcolmap;
+   if(ss->midmap < 0)
+      ss->midmap = tempcolmap;
+   if(ss->topmap < 0)
+      ss->topmap = tempcolmap;
+   //ss->bottommap = ss->midmap = ss->topmap =
+   //   ((ss->intflags & SIF_SKY) ? global_fog_index : global_cmap_index);
 
    // SoM 9/19/02: Initialize the attached sector list for 3dsides
    ss->c_attached = ss->f_attached = nullptr;

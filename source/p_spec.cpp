@@ -1202,9 +1202,13 @@ static void P_SetupHeightTransfer(int linenum, int secnum)
 
       // transfer colormaps to affected sectors instead of getting them from
       // the heightsec during the rendering process
-      sectors[s].topmap    = heightsec->topmap;
-      sectors[s].midmap    = heightsec->midmap;
-      sectors[s].bottommap = heightsec->bottommap;
+      // MaxW  2016/08/06: Modified to not set colormap if already set (UDMF).
+      if(sectors[s].topmap < 0)
+         sectors[s].topmap    = heightsec->topmap;
+      if(sectors[s].midmap < 0)
+         sectors[s].midmap    = heightsec->midmap;
+      if(sectors[s].bottommap < 0)
+         sectors[s].bottommap = heightsec->bottommap;
    }
 }
 
