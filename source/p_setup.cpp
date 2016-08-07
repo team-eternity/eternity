@@ -561,12 +561,18 @@ void P_InitSector(sector_t *ss)
    // haleyjd 03/04/07: modifications for per-sector colormap logic
    // MaxW  2016/08/06: Modified to not set colormap if already set (UDMF).
    int tempcolmap = ((ss->intflags & SIF_SKY) ? global_fog_index : global_cmap_index);
-   if(ss->bottommap < 0)
-      ss->bottommap = tempcolmap;
-   if(ss->midmap < 0)
-      ss->midmap = tempcolmap;
-   if(ss->topmap < 0)
-      ss->topmap = tempcolmap;
+   if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY)
+   {
+      if(ss->bottommap < 0)
+         ss->bottommap = tempcolmap;
+      if(ss->midmap < 0)
+         ss->midmap = tempcolmap;
+      if(ss->topmap < 0)
+         ss->topmap = tempcolmap;
+   }
+   else
+      ss->bottommap = ss->midmap = ss->topmap = tempcolmap;
+
    //ss->bottommap = ss->midmap = ss->topmap =
    //   ((ss->intflags & SIF_SKY) ? global_fog_index : global_cmap_index);
 
