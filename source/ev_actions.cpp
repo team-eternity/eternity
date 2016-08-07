@@ -600,7 +600,7 @@ DEFINE_ACTION(EV_ActionPlatStop)
    // case 163: (S1 - BOOM Extended)
    // case 182: (SR - BOOM Extended)
    // Platform Stop
-   return EV_StopPlat(instance->line);
+   return EV_StopPlatByTag(instance->tag);
 }
 
 //
