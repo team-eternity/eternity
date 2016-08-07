@@ -552,7 +552,7 @@ int P_ActivateInStasisCeiling(const line_t *line, int tag, bool manual)
 // Passed the linedef stopping the ceilings
 // Returns true if a ceiling put in stasis
 //
-int EV_CeilingCrushStop(const line_t* line, int tag)
+int EV_CeilingCrushStop(int tag)
 {
    int rtn = 0;
    // ioanch 20160314: avoid duplicating code
