@@ -2745,6 +2745,13 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          effects = portal_lineonly;
          param = true;
       }
+      else if(line->args[ev_LinePortal_Arg_Type] == ev_LinePortal_Type_Visual)
+      {
+         // TODO: plane anchor
+         type = portal_twoway;
+         effects = portal_lineonly;
+         param = true;
+      }
       else
          return;
    }
@@ -2842,8 +2849,13 @@ static void P_SpawnPortal(line_t *line, int staticFn)
    case portal_twoway:
       // two way and linked portals can only be applied to either the floor or ceiling.
       if(param)
+      {
          // We're having (tag, 0, plane, 0). Look for (tag, 0, plane, 1)
-         s = P_findParamPortalAnchor(line);
+         if(staticFn == EV_STATIC_PORTAL_SECTOR_PARAM)
+            s = P_findParamPortalAnchor(line);
+         else
+            s = P_FindLineFromLineArg0(line, -1);  // line portal
+      }
       else
       {
          if(staticFn == EV_STATIC_PORTAL_TWOWAY_CEILING)
@@ -2867,6 +2879,14 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       if(s < 0)
       {
          C_Printf(FC_ERROR "No anchor line for portal.\a\n");
+         return;
+      }
+
+      if(effects == portal_lineonly)
+      {
+         // special case for line portals
+         portal = R_GetTwoWayPortal(s, line - lines);
+         P_SetPortal(sector, line, portal, portal_lineonly);
          return;
       }
 
