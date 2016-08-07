@@ -2888,7 +2888,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
             anchortype = EV_SpecialForStaticInit(EV_STATIC_PORTAL_LINE_PARAM);
             for(s = -1; (s = P_FindLineFromTag(line->tag, s)) >= 0; )
             {
-               if(line[s].special != anchortype || line == &lines[s]
+               if(lines[s].special != anchortype || line == &lines[s]
                   || !lines[s].frontsector
                   || lines[s].args[ev_LinePortal_Arg_Type]
                       != ev_LinePortal_Type_EEClassic
