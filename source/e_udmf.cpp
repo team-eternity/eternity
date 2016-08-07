@@ -30,6 +30,7 @@
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "e_hash.h"
+#include "e_mod.h"
 #include "e_ttypes.h"
 #include "e_udmf.h"
 #include "m_compare.h"
@@ -110,6 +111,7 @@ void UDMFParser::loadSectors() const
          // Damage
          ss->damage = us.damageamount;
          ss->damagemask = us.damageinterval;
+         ss->damagemod = E_DamageTypeNumForName(us.damagetype.constPtr());
          // If the following flags are true for the current sector, then set the
          // appropriate damageflags to true, otherwise don't set them.
          ss->damageflags |= us.damage_endgodmode ? SDMG_ENDGODMODE : 0;
@@ -443,6 +445,7 @@ enum token_e
    t_damageamount,
    t_damageinterval,
    t_damageterraineffect,
+   t_damagetype,
    t_dm,
    t_dontdraw,
    t_dontpegbottom,
@@ -553,6 +556,7 @@ static keytoken_t gTokenList[] =
    TOKEN(damageamount),
    TOKEN(damageinterval),
    TOKEN(damageterraineffect),
+   TOKEN(damagetype),
    TOKEN(dm),
    TOKEN(dontdraw),
    TOKEN(dontpegbottom),
@@ -883,6 +887,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                      READ_BOOL(sector, damage_endgodmode);
                      READ_BOOL(sector, damage_exitlevel);
                      READ_BOOL(sector, damageterraineffect);
+                     READ_STRING(sector, damagetype);
 
                      READ_STRING(sector, floorterrain);
                      READ_STRING(sector, ceilingterrain);

@@ -214,6 +214,7 @@ private:
       bool damage_endgodmode;
       bool damage_exitlevel;
       bool damageterraineffect;
+      qstring damagetype;
       qstring floorterrain;
       qstring ceilingterrain;
 
@@ -234,8 +235,9 @@ private:
 
       bool tfloorset, tceilset;
 
-      USector() : friction(-1), floorterrain("@flat"), ceilingterrain("@flat"), colormaptop("@default"), 
-         colormapmid("@default"), colormapbottom("@default"), lightlevel(160)
+      USector() : friction(-1), floorterrain("@flat"), ceilingterrain("@flat"), damagetype("Unknown"),
+         colormaptop("@default"), colormapmid("@default"), colormapbottom("@default"),
+         lightlevel(160)
       {
       }
    };
