@@ -24,6 +24,7 @@
 //
 //-----------------------------------------------------------------------------
 
+#include <memory>
 #include "z_zone.h"
 
 #include "a_small.h"
@@ -3215,6 +3216,15 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    
    // possible error: missing flats
    CHECK_ERROR();
+
+   // Setup sector init flags
+   if(!e_udmfSectorInitFlags) // it may have been initialized by UDMF
+      e_udmfSectorInitFlags = ecalloc(unsigned *, numsectors, sizeof(unsigned));
+
+   // Make it die on this function's exit
+   std::unique_ptr<unsigned, void(*)(unsigned *)> autoKilled(e_udmfSectorInitFlags, [](unsigned *p) {
+      efree(p);
+   });
 
    // haleyjd 01/05/14: create sector interpolation data
    P_CreateSectorInterps();

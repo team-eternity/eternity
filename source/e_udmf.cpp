@@ -43,6 +43,9 @@
 #include "w_wad.h"
 #include "z_auto.h"
 
+// Globals
+unsigned *e_udmfSectorInitFlags;
+
 //==============================================================================
 //
 // Collecting and processing
@@ -73,6 +76,11 @@ void UDMFParser::loadSectors() const
 {
    numsectors = (int)mSectors.getLength();
    sectors = estructalloctag(sector_t, numsectors, PU_LEVEL);
+
+   // Needed for some sector init stuff
+   if(!e_udmfSectorInitFlags) // it may have been initialized by UDMF
+      e_udmfSectorInitFlags = ecalloc(unsigned *, numsectors, sizeof(unsigned));
+
    for(int i = 0; i < numsectors; ++i)
    {
       sector_t *ss = sectors + i;
@@ -135,12 +143,6 @@ void UDMFParser::loadSectors() const
          // sector colormaps
          ss->topmap = ss->midmap = ss->bottommap = -1; // mark as not specified
 
-         if(us.colormaptop.strCaseCmp("@default"))
-            ss->topmap    = R_ColormapNumForName(us.colormaptop.constPtr());
-         if(us.colormapmid.strCaseCmp("@default"))
-            ss->midmap    = R_ColormapNumForName(us.colormapmid.constPtr());
-         if(us.colormapbottom.strCaseCmp("@default"))
-            ss->bottommap = R_ColormapNumForName(us.colormapbottom.constPtr());
       }
       else
       {
@@ -154,6 +156,28 @@ void UDMFParser::loadSectors() const
       ss->special = us.special;
       ss->tag = us.identifier;
       P_InitSector(ss);
+
+      //
+      // HERE GO THE PROPERTIES THAT MUST TAKE EFFECT AFTER P_InitSector
+      //
+      if(mNamespace == namespace_Eternity)
+      {
+         if(us.colormaptop.strCaseCmp("@default"))
+         {
+            ss->topmap    = R_ColormapNumForName(us.colormaptop.constPtr());
+            e_udmfSectorInitFlags[i] |= UDMF_SECTOR_INIT_COLORMAPPED;
+         }
+         if(us.colormapmid.strCaseCmp("@default"))
+         {
+            ss->midmap    = R_ColormapNumForName(us.colormapmid.constPtr());
+            e_udmfSectorInitFlags[i] |= UDMF_SECTOR_INIT_COLORMAPPED;
+         }
+         if(us.colormapbottom.strCaseCmp("@default"))
+         {
+            ss->bottommap = R_ColormapNumForName(us.colormapbottom.constPtr());
+            e_udmfSectorInitFlags[i] |= UDMF_SECTOR_INIT_COLORMAPPED;
+         }
+      }
    }
 }
 

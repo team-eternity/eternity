@@ -48,6 +48,7 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "e_udmf.h"
 #include "ev_sectors.h"
 #include "ev_specials.h"
 #include "g_game.h"
@@ -1202,23 +1203,12 @@ static void P_SetupHeightTransfer(int linenum, int secnum)
 
       // transfer colormaps to affected sectors instead of getting them from
       // the heightsec during the rendering process
-      // MaxW  2016/08/06: Modified to not set colormap if already set (UDMF).
-      if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY)
+      if(!(e_udmfSectorInitFlags[s] & UDMF_SECTOR_INIT_COLORMAPPED))
       {
-         if(sectors[s].topmap < 0)
-            sectors[s].topmap = heightsec->topmap;
-         if(sectors[s].midmap < 0)
-            sectors[s].midmap = heightsec->midmap;
-         if(sectors[s].bottommap < 0)
-            sectors[s].bottommap = heightsec->bottommap;
-      }
-      else
-      {
-         sectors[s].topmap = heightsec->topmap;
-         sectors[s].midmap = heightsec->midmap;
+         sectors[s].topmap    = heightsec->topmap;
+         sectors[s].midmap    = heightsec->midmap;
          sectors[s].bottommap = heightsec->bottommap;
       }
-
    }
 }
 

@@ -48,6 +48,19 @@ struct maplumpindex_t
    int behavior;
 };
 
+//
+// Temporary sector init flags checked only during P_SetupLevel and cleared
+// afterwards.
+//
+
+enum
+{
+   // colormap has been set by UDMF or ExtraData
+   UDMF_SECTOR_INIT_COLORMAPPED = 1,
+};
+
+extern unsigned *e_udmfSectorInitFlags;   // only set while needed
+
 //==============================================================================
 
 class UDMFParser : public ZoneObject
