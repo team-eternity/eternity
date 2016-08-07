@@ -1410,7 +1410,7 @@ int EV_FloorCrushStop(const line_t *line, int tag);
 
 int EV_DoCeiling(const line_t *line, ceiling_e type);
 
-int EV_CeilingCrushStop(int tag);
+int EV_CeilingCrushStop(int tag, bool removeThinker);
 
 void P_ChangeCeilingTex(const char *name, int tag);
 

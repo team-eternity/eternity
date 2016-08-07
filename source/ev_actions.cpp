@@ -626,7 +626,7 @@ DEFINE_ACTION(EV_ActionCeilingCrushStop)
    // case 168: (S1 - BOOM Extended)
    // case 188: (SR - BOOM Extended)
    // Ceiling Crush Stop
-   return EV_CeilingCrushStop(instance->tag);
+   return EV_CeilingCrushStop(instance->tag, false);
 }
 
 //
@@ -3358,14 +3358,26 @@ DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaise)
 //
 // EV_ActionParamCeilingCrushStop
 //
-// Implements Ceiling_CrushStop(tag)
+// Implements Ceiling_CrushStop(tag, kind)
 // * ExtraData: 433
 // * Hexen:     44
 //
 DEFINE_ACTION(EV_ActionParamCeilingCrushStop)
 {
-   // Really the same as EV_ActionCeilingCrushStop
-   return EV_CeilingCrushStop(instance->tag);
+   bool removeThinker = false;
+   switch (instance->args[1])
+   {
+      case 0:                    // compatibility
+         removeThinker = LevelInfo.levelType == LI_TYPE_HEXEN;
+         break;
+      case 1:
+         removeThinker = false;  // Doom style
+         break;
+      case 2:
+         removeThinker = true;   // Hexen style
+         break;
+   }
+   return EV_CeilingCrushStop(instance->tag, removeThinker);
 }
 
 //
