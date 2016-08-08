@@ -43,8 +43,15 @@
 #include "w_wad.h"
 #include "z_auto.h"
 
-// Globals
-unsigned *e_udmfSectorInitFlags;
+//
+// Initializes the internal structure with the sector count
+//
+void UDMFSetupSettings::useSectorCount()
+{
+   if(mSectorInitFlags)
+      return;
+   mSectorInitFlags = ecalloc(unsigned *, ::numsectors, sizeof(unsigned));
+}
 
 //==============================================================================
 //
@@ -72,14 +79,10 @@ void UDMFParser::loadVertices() const
 //
 // Loads sectors
 //
-void UDMFParser::loadSectors() const
+void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
 {
    numsectors = (int)mSectors.getLength();
    sectors = estructalloctag(sector_t, numsectors, PU_LEVEL);
-
-   // Needed for some sector init stuff
-   if(!e_udmfSectorInitFlags) // it may have been initialized by UDMF
-      e_udmfSectorInitFlags = ecalloc(unsigned *, numsectors, sizeof(unsigned));
 
    for(int i = 0; i < numsectors; ++i)
    {
@@ -165,17 +168,17 @@ void UDMFParser::loadSectors() const
          if(us.colormaptop.strCaseCmp("@default"))
          {
             ss->topmap    = R_ColormapNumForName(us.colormaptop.constPtr());
-            e_udmfSectorInitFlags[i] |= UDMF_SECTOR_INIT_COLORMAPPED;
+            setupSettings.setSectorFlag(i, UDMF_SECTOR_INIT_COLORMAPPED);
          }
          if(us.colormapmid.strCaseCmp("@default"))
          {
             ss->midmap    = R_ColormapNumForName(us.colormapmid.constPtr());
-            e_udmfSectorInitFlags[i] |= UDMF_SECTOR_INIT_COLORMAPPED;
+            setupSettings.setSectorFlag(i, UDMF_SECTOR_INIT_COLORMAPPED);
          }
          if(us.colormapbottom.strCaseCmp("@default"))
          {
             ss->bottommap = R_ColormapNumForName(us.colormapbottom.constPtr());
-            e_udmfSectorInitFlags[i] |= UDMF_SECTOR_INIT_COLORMAPPED;
+            setupSettings.setSectorFlag(i, UDMF_SECTOR_INIT_COLORMAPPED);
          }
       }
    }
@@ -660,7 +663,7 @@ static void registerAllKeys()
    static bool called = false;
    if(called)
       return;
-   for(int i = 0; i < earrlen(gTokenList); ++i)
+   for(size_t i = 0; i < earrlen(gTokenList); ++i)
       gTokenTable.addObject(gTokenList[i]);
    called = true;
 }

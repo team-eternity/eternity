@@ -1535,7 +1535,7 @@ void E_LoadLineDefExt(line_t *line, bool applySpecial)
 //
 // E_LoadSectorExt
 //
-void E_LoadSectorExt(line_t *line)
+void E_LoadSectorExt(line_t *line, UDMFSetupSettings &setupSettings)
 {
    unsigned int    edSectorIdx;
    mapsectorext_t *edsector;
@@ -1607,7 +1607,7 @@ void E_LoadSectorExt(line_t *line)
    if(edsector->bottommap >= 0)
       sector->bottommap = edsector->bottommap;
    if(edsector->topmap >= 0 || edsector->midmap >= 0 || edsector->bottommap >= 0)
-      e_udmfSectorInitFlags[sector - sectors] |= UDMF_SECTOR_INIT_COLORMAPPED;
+      setupSettings.setSectorFlag(sector - sectors, UDMF_SECTOR_INIT_COLORMAPPED);
 
    // terrain overrides
    sector->floorterrain   = edsector->floorterrain;

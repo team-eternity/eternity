@@ -48,6 +48,8 @@ struct maplumpindex_t
    int behavior;
 };
 
+//==============================================================================
+
 //
 // Temporary sector init flags checked only during P_SetupLevel and cleared
 // afterwards.
@@ -59,7 +61,36 @@ enum
    UDMF_SECTOR_INIT_COLORMAPPED = 1,
 };
 
-extern unsigned *e_udmfSectorInitFlags;   // only set while needed
+//
+// This holds settings needed during P_SetupLevel and cleared afterwards. Useful
+// to avoid populating map item data with unused fields.
+//
+class UDMFSetupSettings : public ZoneObject
+{
+   unsigned *mSectorInitFlags;
+   void useSectorCount();
+public:
+   UDMFSetupSettings() : mSectorInitFlags(nullptr)
+   {
+   }
+   ~UDMFSetupSettings()
+   {
+      efree(mSectorInitFlags);
+   }
+
+   //
+   // Sector init flag getter and setter
+   //
+   void setSectorFlag(int index, unsigned flag)
+   {
+      useSectorCount();
+      mSectorInitFlags[index] |= flag;
+   }
+   bool sectorIsFlagged(int index, unsigned flag) const
+   {
+      return mSectorInitFlags && !!(mSectorInitFlags[index] & flag);
+   }
+};
 
 //==============================================================================
 
@@ -87,7 +118,7 @@ public:
    };
 
    void loadVertices() const;
-   void loadSectors() const;
+   void loadSectors(UDMFSetupSettings &setupSettings) const;
    void loadSidedefs() const;
    bool loadLinedefs();
    bool loadSidedefs2();
@@ -248,7 +279,7 @@ private:
 
       bool tfloorset, tceilset;
 
-      USector() : friction(-1), floorterrain("@flat"), ceilingterrain("@flat"), damagetype("Unknown"),
+      USector() : friction(-1), damagetype("Unknown"), floorterrain("@flat"), ceilingterrain("@flat"),
          colormaptop("@default"), colormapmid("@default"), colormapbottom("@default"),
          lightlevel(160)
       {

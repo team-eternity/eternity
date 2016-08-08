@@ -98,6 +98,7 @@ typedef struct maplinedefext_s
 // ExtraData sector structure
 
 struct ETerrain;
+class  UDMFSetupSettings;
 
 typedef struct mapsectorext_s
 {
@@ -145,7 +146,7 @@ void    E_LoadLineDefExt(line_t *line, bool applySpecial);
 void    E_GetEDMapThings(mapthing_t **things, int *numthings);
 void    E_GetEDLines(maplinedefext_t **lines, int *numlines);
 int     E_LineSpecForName(const char *name);
-void    E_LoadSectorExt(line_t *line);
+void    E_LoadSectorExt(line_t *line, UDMFSetupSettings &setupSettings);
 double  E_NormalizeFlatAngle(double input); // MaxW: 2016/07/11: Needed for UDMF & Sector_SetRotation
 
 #endif

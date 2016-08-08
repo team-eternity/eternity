@@ -39,6 +39,7 @@ struct player_t;
 class  SaveArchive;
 struct sector_t;
 struct side_t;
+class  UDMFSetupSettings;
 
 //      Define values for map objects
 #define MO_TELEPORTMAN  14
@@ -1529,7 +1530,7 @@ void P_InitPicAnims();
 void P_InitSwitchList();
 
 // at map load
-void P_SpawnSpecials();
+void P_SpawnSpecials(UDMFSetupSettings &setupSettings);
 
 // 
 // P_SpawnDeferredSpecials
