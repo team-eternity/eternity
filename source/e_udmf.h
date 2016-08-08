@@ -248,7 +248,7 @@ private:
 
       bool tfloorset, tceilset;
 
-      USector() : friction(-1), floorterrain("@flat"), ceilingterrain("@flat"), damagetype("Unknown"),
+      USector() : friction(-1), damagetype("Unknown"), floorterrain("@flat"), ceilingterrain("@flat"),
          colormaptop("@default"), colormapmid("@default"), colormapbottom("@default"),
          lightlevel(160)
       {

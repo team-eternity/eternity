@@ -660,7 +660,7 @@ static void registerAllKeys()
    static bool called = false;
    if(called)
       return;
-   for(int i = 0; i < earrlen(gTokenList); ++i)
+   for(size_t i = 0; i < earrlen(gTokenList); ++i)
       gTokenTable.addObject(gTokenList[i]);
    called = true;
 }
