@@ -233,6 +233,7 @@ DECLARE_ACTION(EV_ActionDamageThingEx);   // Thing_Damage
 DECLARE_ACTION(EV_ActionThingDestroy);
 DECLARE_ACTION(EV_ActionThingRemove);
 DECLARE_ACTION(EV_ActionParamPlatPerpetualRaise);
+DECLARE_ACTION(EV_ActionParamPlatPerpetualRaiseLip);
 DECLARE_ACTION(EV_ActionParamPlatStop);
 DECLARE_ACTION(EV_ActionParamPlatDWUS);
 DECLARE_ACTION(EV_ActionParamPlatDWUSLip);

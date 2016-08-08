@@ -4181,7 +4181,7 @@ DEFINE_ACTION(EV_ActionParamPlatToggleCeiling)
 }
 
 //
-// Implements Plat_DownWaitUpStayLip
+// Implements Plat_DownWaitUpStayLip(tag, speed, delay, lip)
 //
 // * ExtraData: 488
 // * Hexen:     206
@@ -4189,6 +4189,17 @@ DEFINE_ACTION(EV_ActionParamPlatToggleCeiling)
 DEFINE_ACTION(EV_ActionParamPlatDWUSLip)
 {
    return EV_DoParamPlat(instance->line, instance->args, paramDownWaitUpStayLip);
+}
+
+//
+// Implements Plat_PerpetualRaiseLip(tag, speed, delay, lip)
+//
+// * ExtraData: 489
+// * Hexen:     207
+//
+DEFINE_ACTION(EV_ActionParamPlatPerpetualRaiseLip)
+{
+   return EV_DoParamPlat(instance->line, instance->args, paramPerpetualRaiseLip);
 }
 
 // EOF

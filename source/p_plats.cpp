@@ -516,9 +516,14 @@ manual_plat:
          break;
       
       case paramPerpetualRaise:
+      case paramPerpetualRaiseLip:
          plat->type   = perpetualRaise;
          plat->status = (P_Random(pr_plats) & 1) ? PlatThinker::down : PlatThinker::up;
-         plat->low    = P_FindLowestFloorSurrounding(sec) + 8 * FRACUNIT;
+         plat->low    = P_FindLowestFloorSurrounding(sec);
+         if(type == paramPerpetualRaise)
+            plat->low += 8 * FRACUNIT;
+         else
+            plat->low += args[3] * FRACUNIT;
          plat->high   = P_FindHighestFloorSurrounding(sec);
          if(plat->low > sec->floorheight)
             plat->low = sec->floorheight;

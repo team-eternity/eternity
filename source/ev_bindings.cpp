@@ -1082,6 +1082,7 @@ PARAMLINE(DamageThingEx);  // Thing_Damage essentially
 PARAMLINE(ThingDestroy);
 PARAMLINE(ThingRemove);
 PARAMLINE(ParamPlatPerpetualRaise);
+PARAMLINE(ParamPlatPerpetualRaiseLip);
 PARAMLINE(ParamPlatStop);
 PARAMLINE(ParamPlatDWUS);
 PARAMLINE(ParamPlatDWUSLip);
@@ -1515,6 +1516,7 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(478, ThingRemove,                     "Thing_Remove")
    LINESPECNAMED(487, ParamPlatToggleCeiling,          "Plat_ToggleCeiling")
    LINESPECNAMED(488, ParamPlatDWUSLip,                "Plat_DownWaitUpStayLip")
+   LINESPECNAMED(489, ParamPlatPerpetualRaiseLip,      "Plat_PerpetualRaiseLip")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1676,6 +1678,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(201, ParamCeilingGeneric,             "Generic_Ceiling")
    LINESPECNAMED(205, ParamGenCrusher,                 "Generic_Crusher")
    LINESPECNAMED(206, ParamPlatDWUSLip,                "Plat_DownWaitUpStayLip")
+   LINESPECNAMED(207, ParamPlatPerpetualRaiseLip,      "Plat_PerpetualRaiseLip")
    LINESPECNAMED(215, ParamTeleportLine,               "Teleport_Line")
    LINESPECNAMED(217, ParamStairsBuildUpDoom,          "Stairs_BuildUpDoom")
    LINESPECNAMED(226, ACSExecuteAlways,                "ACS_ExecuteAlways")
