@@ -421,7 +421,8 @@ typedef enum
    paramPerpetualRaise,
    paramUpByValueStayAndChange,
    paramRaiseToNearestAndChange,
-   paramToggleCeiling
+   paramToggleCeiling,
+   paramDownWaitUpStayLip
 } paramplattype_e;
 
 // p_doors

@@ -4180,5 +4180,16 @@ DEFINE_ACTION(EV_ActionParamPlatToggleCeiling)
    return EV_DoParamPlat(instance->line, instance->args, paramToggleCeiling);
 }
 
+//
+// Implements Plat_DownWaitUpStayLip
+//
+// * ExtraData: 488
+// * Hexen:     206
+//
+DEFINE_ACTION(EV_ActionParamPlatDWUSLip)
+{
+   return EV_DoParamPlat(instance->line, instance->args, paramDownWaitUpStayLip);
+}
+
 // EOF
 

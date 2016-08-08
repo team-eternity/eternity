@@ -474,11 +474,16 @@ manual_plat:
 
       switch(type)
       {
+      case paramDownWaitUpStayLip:
       case paramDownWaitUpStay:
          plat->type   = downWaitUpStay;
          plat->status = PlatThinker::down;
          plat->high   = sec->floorheight;
-         plat->low    = P_FindLowestFloorSurrounding(sec) + 8 * FRACUNIT;
+         plat->low    = P_FindLowestFloorSurrounding(sec);
+         if(type == paramDownWaitUpStay)
+            plat->low += 8 * FRACUNIT;
+         else
+            plat->low += args[3] * FRACUNIT;
          if(plat->low > sec->floorheight)
             plat->low = sec->floorheight;
          break;
