@@ -3119,8 +3119,8 @@ void P_InitThingLists()
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-static void P_doSetupLevel(WadDirectory *dir, const char *mapname, int playermask,
-                           skill_t skill)
+void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
+                  skill_t skill)
 {
    lumpinfo_t **lumpinfo;
    int lumpnum, acslumpnum = -1;
@@ -3178,6 +3178,7 @@ static void P_doSetupLevel(WadDirectory *dir, const char *mapname, int playermas
 
    // IOANCH 20151206: load UDMF
    UDMFParser udmf;  // prepare UDMF processor
+   UDMFSetupSettings setupSettings;
    if(isUdmf)
    {
       if(!udmf.parse(*setupwad, lumpnum + 1))
@@ -3197,7 +3198,7 @@ static void P_doSetupLevel(WadDirectory *dir, const char *mapname, int playermas
 
       // start UDMF loading
       udmf.loadVertices();
-      udmf.loadSectors();
+      udmf.loadSectors(setupSettings);
    }
    else
    {
@@ -3218,13 +3219,7 @@ static void P_doSetupLevel(WadDirectory *dir, const char *mapname, int playermas
    CHECK_ERROR();
 
    // Setup sector init flags
-   if(!e_udmfSectorInitFlags) // it may have been initialized by UDMF
-      e_udmfSectorInitFlags = ecalloc(unsigned *, numsectors, sizeof(unsigned));
-
-   // Make it die on this function's exit
-   std::unique_ptr<unsigned, void(*)(unsigned *)> autoKilled(e_udmfSectorInitFlags, [](unsigned *p) {
-      efree(p);
-   });
+   setupSettings.useSectorCount();
 
    // haleyjd 01/05/14: create sector interpolation data
    P_CreateSectorInterps();
@@ -3365,7 +3360,7 @@ static void P_doSetupLevel(WadDirectory *dir, const char *mapname, int playermas
    iquehead = iquetail = 0;
    
    // set up world state
-   P_SpawnSpecials();
+   P_SpawnSpecials(setupSettings);
 
    // SoM: Deferred specials that need to be spawned after P_SpawnSpecials
    P_SpawnDeferredSpecials();
@@ -3398,13 +3393,6 @@ static void P_doSetupLevel(WadDirectory *dir, const char *mapname, int playermas
       acslumpnum = setupwad->checkNumForNameNSG(LevelInfo.acsScriptLump, lumpinfo_t::ns_acs);
 
    ACS_LoadLevelScript(dir, acslumpnum);
-}
-
-void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
-                  skill_t skill)
-{
-   P_doSetupLevel(dir, mapname, playermask, skill);
-   e_udmfSectorInitFlags = NULL; // should have been freed by now
 }
 
 //

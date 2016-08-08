@@ -48,6 +48,8 @@ struct maplumpindex_t
    int behavior;
 };
 
+//==============================================================================
+
 //
 // Temporary sector init flags checked only during P_SetupLevel and cleared
 // afterwards.
@@ -59,7 +61,36 @@ enum
    UDMF_SECTOR_INIT_COLORMAPPED = 1,
 };
 
-extern unsigned *e_udmfSectorInitFlags;   // only set while needed
+//
+// This holds settings needed during P_SetupLevel and cleared afterwards. Useful
+// to avoid populating map item data with unused fields.
+//
+class UDMFSetupSettings : public ZoneObject
+{
+   unsigned *mSectorInitFlags;
+public:
+   UDMFSetupSettings() : mSectorInitFlags(nullptr)
+   {
+   }
+   ~UDMFSetupSettings()
+   {
+      efree(mSectorInitFlags);
+   }
+
+   void useSectorCount();
+
+   //
+   // Sector init flag getter and setter
+   //
+   void setSectorFlag(int index, unsigned flag)
+   {
+      mSectorInitFlags[index] |= flag;
+   }
+   bool sectorIsFlagged(int index, unsigned flag) const
+   {
+      return !!(mSectorInitFlags[index] & flag);
+   }
+};
 
 //==============================================================================
 
@@ -87,7 +118,7 @@ public:
    };
 
    void loadVertices() const;
-   void loadSectors() const;
+   void loadSectors(UDMFSetupSettings &setupSettings) const;
    void loadSidedefs() const;
    bool loadLinedefs();
    bool loadSidedefs2();

@@ -1192,7 +1192,8 @@ void P_UpdateSpecials()
 //
 // Namely, colormaps.
 //
-static void P_SetupHeightTransfer(int linenum, int secnum)
+static void P_SetupHeightTransfer(int linenum, int secnum,
+                                  const UDMFSetupSettings &setupSettings)
 {
    int s;
    sector_t *heightsec = &sectors[secnum];
@@ -1203,7 +1204,7 @@ static void P_SetupHeightTransfer(int linenum, int secnum)
 
       // transfer colormaps to affected sectors instead of getting them from
       // the heightsec during the rendering process
-      if(!(e_udmfSectorInitFlags[s] & UDMF_SECTOR_INIT_COLORMAPPED))
+      if(!setupSettings.sectorIsFlagged(s, UDMF_SECTOR_INIT_COLORMAPPED))
       {
          sectors[s].topmap    = heightsec->topmap;
          sectors[s].midmap    = heightsec->midmap;
@@ -1217,7 +1218,7 @@ static void P_SetupHeightTransfer(int linenum, int secnum)
 //
 // After the map has been loaded, scan for specials that spawn thinkers
 //
-void P_SpawnSpecials()
+void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
 {
    // sf: -timer moved to d_main.c
    //     -avg also
@@ -1259,7 +1260,7 @@ void P_SpawnSpecials()
          // support for drawn heights coming from different sector
       case EV_STATIC_TRANSFER_HEIGHTS:
          sec = sides[*lines[i].sidenum].sector-sectors;
-         P_SetupHeightTransfer(i, sec); // haleyjd 03/04/07
+         P_SetupHeightTransfer(i, sec, setupSettings); // haleyjd 03/04/07
          break;
 
          // killough 3/16/98: Add support for setting
@@ -1375,7 +1376,7 @@ void P_SpawnSpecials()
 
          // haleyjd 10/16/10: ExtraData sector
       case EV_STATIC_EXTRADATA_SECTOR:         
-         E_LoadSectorExt(&lines[i]);
+         E_LoadSectorExt(&lines[i], setupSettings);
          break;
 
       default: // Not a static special, or not handled here
