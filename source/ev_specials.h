@@ -308,6 +308,7 @@ enum
    ev_LinePortal_Arg_SelfTag = 1,
    ev_LinePortal_Arg_Type = 2,
    ev_LinePortal_Type_Visual = 0,
+   ev_LinePortal_Type_Linked = 3,
    ev_LinePortal_Type_EEClassic = 4
 };
 
