@@ -4169,5 +4169,16 @@ DEFINE_ACTION(EV_ActionThingRemove)
    return EV_ThingRemove(instance->tag);
 }
 
+//
+// Implements Plat_ToggleCeiling(tag)
+//
+// * ExtraData: 487
+// * Hexen:     231
+//
+DEFINE_ACTION(EV_ActionParamPlatToggleCeiling)
+{
+   return EV_DoParamPlat(instance->line, instance->args, paramToggleCeiling);
+}
+
 // EOF
 

@@ -430,7 +430,10 @@ bool EV_DoParamPlat(const line_t *line, const int *args, paramplattype_e type)
    case paramPerpetualRaise:
       PlatThinker::ActivateInStasis(line->args[0]);
       break;
-      // TODO: toggleUpDn equivalent
+   case paramToggleCeiling:
+      PlatThinker::ActivateInStasis(line->args[0]);
+      rtn = true;
+      break;
    default:
       break;
    }
@@ -538,6 +541,17 @@ manual_plat:
          plat->high = P_FindNextHighestFloor(sec, sec->floorheight);         
          plat->wait = 0; // We need to override the earlier setting of this 
          P_ZeroSectorSpecial(sec);
+         break;
+
+      case paramToggleCeiling:
+         plat->type = toggleUpDn;
+         plat->speed = PLATSPEED;      // not used
+         plat->wait = 35 * PLATWAIT;   // not used
+         plat->crush = 10;             // jff 3/14/98 crush anything in the way
+         plat->low = sec->ceilingheight;
+         plat->high = sec->floorheight;
+         plat->status = PlatThinker::down;
+         platTypeStr = "EEPlatSilent";
          break;
 
       default:

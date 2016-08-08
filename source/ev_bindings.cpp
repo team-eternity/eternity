@@ -1089,6 +1089,7 @@ PARAMLINE(ParamPlatUWDS);
 PARAMLINE(ParamPlatUpByValue);
 PARAMLINE(ParamPlatRaiseNearestChange);
 PARAMLINE(ParamPlatRaiseChange);
+PARAMLINE(ParamPlatToggleCeiling);
 PARAMLINE(ParamDonut);
 PARAMLINE(ParamTeleport);
 PARAMLINE(ParamTeleportNoFog);
@@ -1511,6 +1512,7 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(476, ParamPlatRaiseChange,            "Plat_UpByValueStayTx")
    LINESPECNAMED(477, ACSExecuteAlways,                "ACS_ExecuteAlways")
    LINESPECNAMED(478, ThingRemove,                     "Thing_Remove")
+   LINESPECNAMED(487, ParamPlatToggleCeiling,          "Plat_ToggleCeiling")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1676,6 +1678,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(226, ACSExecuteAlways,                "ACS_ExecuteAlways")
    LINESPECNAMED(228, ParamPlatRaiseNearestChange,     "Plat_RaiseAndStayTx0")
    LINESPECNAMED(230, ParamPlatRaiseChange,            "Plat_UpByValueStayTx")
+   LINESPECNAMED(231, ParamPlatToggleCeiling,          "Plat_ToggleCeiling")
    LINESPECNAMED(232, ParamLightStrobeDoom,            "Light_StrobeDoom")
    LINESPECNAMED(233, TurnTagLightsOff,                "Light_MinNeighbor")
    LINESPECNAMED(234, LightTurnOn,                     "Light_MaxNeighbor")
