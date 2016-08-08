@@ -425,6 +425,16 @@ bool EV_DoParamPlat(const line_t *line, const int *args, paramplattype_e type)
    bool      rtn    = false;
    const char *platTypeStr = "EEPlatNormal";
 
+   switch(type)
+   {
+   case paramPerpetualRaise:
+      PlatThinker::ActivateInStasis(line->args[0]);
+      break;
+      // TODO: toggleUpDn equivalent
+   default:
+      break;
+   }
+
    if(!args[0])
    {
       if(!line || !line->backsector)
