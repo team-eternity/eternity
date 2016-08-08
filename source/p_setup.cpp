@@ -3119,8 +3119,8 @@ void P_InitThingLists()
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask, 
-                  skill_t skill)
+static void P_doSetupLevel(WadDirectory *dir, const char *mapname, int playermask,
+                           skill_t skill)
 {
    lumpinfo_t **lumpinfo;
    int lumpnum, acslumpnum = -1;
@@ -3398,6 +3398,13 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       acslumpnum = setupwad->checkNumForNameNSG(LevelInfo.acsScriptLump, lumpinfo_t::ns_acs);
 
    ACS_LoadLevelScript(dir, acslumpnum);
+}
+
+void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
+                  skill_t skill)
+{
+   P_doSetupLevel(dir, mapname, playermask, skill);
+   e_udmfSectorInitFlags = NULL; // should have been freed by now
 }
 
 //
