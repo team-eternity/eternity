@@ -68,6 +68,7 @@ enum
 class UDMFSetupSettings : public ZoneObject
 {
    unsigned *mSectorInitFlags;
+   void useSectorCount();
 public:
    UDMFSetupSettings() : mSectorInitFlags(nullptr)
    {
@@ -77,18 +78,17 @@ public:
       efree(mSectorInitFlags);
    }
 
-   void useSectorCount();
-
    //
    // Sector init flag getter and setter
    //
    void setSectorFlag(int index, unsigned flag)
    {
+      useSectorCount();
       mSectorInitFlags[index] |= flag;
    }
    bool sectorIsFlagged(int index, unsigned flag) const
    {
-      return !!(mSectorInitFlags[index] & flag);
+      return mSectorInitFlags && !!(mSectorInitFlags[index] & flag);
    }
 };
 

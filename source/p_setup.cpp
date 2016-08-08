@@ -3218,9 +3218,6 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    // possible error: missing flats
    CHECK_ERROR();
 
-   // Setup sector init flags
-   setupSettings.useSectorCount();
-
    // haleyjd 01/05/14: create sector interpolation data
    P_CreateSectorInterps();
 

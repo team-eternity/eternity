@@ -84,8 +84,6 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
    numsectors = (int)mSectors.getLength();
    sectors = estructalloctag(sector_t, numsectors, PU_LEVEL);
 
-   setupSettings.useSectorCount();
-
    for(int i = 0; i < numsectors; ++i)
    {
       sector_t *ss = sectors + i;
