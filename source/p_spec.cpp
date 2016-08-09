@@ -2744,22 +2744,18 @@ static void P_SpawnPortal(line_t *line, int staticFn)
             if(line->args[0] != ev_LinePortal_Maker)
                return;
             type = portal_linked;
-            effects = portal_lineonly;
-            param = true;
             break;
          case ev_LinePortal_Type_Visual:
             type = portal_twoway;
-            effects = portal_lineonly;
-            param = true;
             break;
          case ev_LinePortal_Type_Linked:  // this one respects link offsets
             type = portal_linked;
-            effects = portal_lineonly;
-            param = true;
             break;
          default:
             return;
       }
+      effects = portal_lineonly;
+      param = true;
    }
    else
    {
@@ -2863,10 +2859,9 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       break;
 
    case portal_twoway:
-      // two way and linked portals can only be applied to either the floor or ceiling.
       if(param)
       {
-         // We're having (tag, 0, plane, 0). Look for (tag, 0, plane, 1)
+         // We're having (tag, 0, plane, 1). Look for (tag, 0, plane, 0)
          if(staticFn == EV_STATIC_PORTAL_SECTOR_PARAM)
             s = P_findParamPortalAnchor(line);
          else
