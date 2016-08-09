@@ -36,6 +36,7 @@ struct camera_t
    fixed_t z;
    angle_t angle;
    fixed_t pitch;
+   fixed_t prevpitch;
    int     groupid;
    bool    flying;
 
@@ -48,8 +49,9 @@ struct camera_t
       prevpos.y     = y;
       prevpos.z     = z;
       prevpos.angle = angle;
+      prevpitch     = pitch;
 
-      // TODO: pitch etc.
+      // TODO: misc. interpolation stuff
    }
 };
 

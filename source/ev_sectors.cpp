@@ -879,6 +879,9 @@ ev_sectorbinding_t *EV_BindingForSectorSpecial(int special)
 //
 bool EV_IsGenSectorSpecial(int special)
 {
+   // UDMF (based on ZDoom's) sector specials
+   if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY)
+      return (special > UDMF_SEC_MASK);   // from 256 up
    if(LevelInfo.mapFormat == LEVEL_FORMAT_DOOM && LevelInfo.levelType == LI_TYPE_DOOM)
       return (special > LIGHT_MASK);
 
@@ -901,7 +904,11 @@ static void EV_setGeneralizedSectorFlags(sector_t *sector)
    //         12/31/08: convert BOOM generalized damage
 
    // convert special bits into flags (correspondence is direct by design)
-   sector->flags |= (sector->special & GENSECTOFLAGSMASK) >> SECRET_SHIFT;
+   int16_t special = sector->special;
+   if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY)
+      special >>= UDMF_BOOM_SHIFT;  // to get the flags, we need to move bits
+   
+   sector->flags |= (special & GENSECTOFLAGSMASK) >> SECRET_SHIFT;
 }
 
 //
@@ -917,6 +924,17 @@ static void EV_initGeneralizedSector(sector_t *sector)
    if(demo_version < 200)
    {
       sector->special = 0;
+      return;
+   }
+
+   // UDMF format handled right here
+   if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY)
+   {
+      // mask it by the smallest 8 bits
+      auto binding = EV_UDMFEternityBindingForSectorSpecial(sector->special
+                                                            & UDMF_SEC_MASK);
+      if(binding)
+         binding->apply(sector);
       return;
    }
 

@@ -106,6 +106,9 @@ typedef enum
   CF_IMMORTAL         = 0x10,
 } cheat_t;
 
+// These defines are in degrees:
+#define MAXPITCHUP   32
+#define MAXPITCHDOWN 32
 
 //
 // Extended player object info: player_t
@@ -127,6 +130,7 @@ struct player_t
    fixed_t        deltaviewheight; // Bob/squat speed.
    fixed_t        bob;             // bounded/scaled total momentum.
    fixed_t        pitch;           // haleyjd 04/03/05: true pitch angle
+   fixed_t        prevpitch;       // MaxW 2016/08/02: Prev pitch angle, for iterpolation
 
    // killough 10/98: used for realistic bobbing (i.e. not simply overall speed)
    // mo->momx and mo->momy represent true momenta experienced by player.

@@ -2021,7 +2021,10 @@ void P_RaiseCorpse(Mobj *corpse, const Mobj *raiser)
          (info->flags & ~MF_FRIEND) | (raiser->flags & MF_FRIEND);
    }
    else
-      corpse->flags = info->flags;
+   {
+      // else reuse the old friend flag.
+      corpse->flags = (info->flags & ~MF_FRIEND) | (corpse->flags & MF_FRIEND);
+   }
 
    corpse->health = info->spawnhealth;
    P_SetTarget<Mobj>(&corpse->target, NULL);  // killough 11/98

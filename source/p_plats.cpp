@@ -603,16 +603,6 @@ bool EV_StopPlatByTag(int tag)
 }
 
 //
-// EV_StopPlat
-//
-// haleyjd 02/18/13: Refactored to call common implementation above.
-//
-bool EV_StopPlat(const line_t *line)
-{
-   return EV_StopPlatByTag(line->args[0]);
-}
-
-//
 // P_AddActivePlat
 //
 // Add a plat to the head of the active plat list

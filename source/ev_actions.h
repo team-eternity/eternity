@@ -121,7 +121,6 @@ DECLARE_ACTION(EV_ActionParamDoorCloseWaitOpen);
 DECLARE_ACTION(EV_ActionParamDoorWaitRaise);
 DECLARE_ACTION(EV_ActionParamDoorWaitClose);
 DECLARE_ACTION(EV_ActionParamDoorLockedRaise);
-DECLARE_ACTION(EV_ActionParamDoorLockedOpen);
 DECLARE_ACTION(EV_ActionParamFloorRaiseToHighest);
 DECLARE_ACTION(EV_ActionParamEEFloorLowerToHighest);
 DECLARE_ACTION(EV_ActionParamFloorLowerToHighest);
