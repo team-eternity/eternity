@@ -268,7 +268,7 @@ int EV_ThingChangeTID(Mobj *actor, int oldtid, int newtid)
 //
 // Implements Thing_Raise(tid)
 //
-int EV_ThingRaise(Mobj *actor, int tid, bool keepfriend)
+int EV_ThingRaise(Mobj *actor, int tid)
 {
    Mobj *mobj = nullptr;
    int success = 0;
@@ -277,7 +277,7 @@ int EV_ThingRaise(Mobj *actor, int tid, bool keepfriend)
       if(!P_ThingIsCorpse(mobj) || !P_CheckCorpseRaiseSpace(mobj))
          continue;
       // no raiser allowed, no friendliness transferred
-      P_RaiseCorpse(mobj, keepfriend ? mobj : nullptr);
+      P_RaiseCorpse(mobj, nullptr); 
       success = 1;
    }
    return success;
@@ -431,6 +431,37 @@ int EV_HealThing(Mobj *actor, int amount, int maxhealth)
 
    // If the activator can be given health then activate the switch
    return EV_DoHealThing(actor, amount, maxhealth) ? 1 : 0;
+}
+
+//
+// Removes map objects tagged "tid" from the game
+//
+int EV_ThingRemove(int tid)
+{
+   Mobj *removed;
+   Mobj *mobj = nullptr;
+   mobj = P_FindMobjFromTID(tid, mobj, nullptr);
+   int rtn = 0;
+   while(mobj)
+   {
+      // don't attempt to remove player object because that would crash the game
+      // FIXME: removing voodoo dolls doesn't seem to work anyway
+      if(mobj->player && mobj->player->mo == mobj)
+      {
+         mobj = P_FindMobjFromTID(tid, mobj, nullptr);
+         continue;
+      }
+
+      // TODO: special handling for Hexen-like bridges
+
+      removed = mobj;
+      mobj = P_FindMobjFromTID(tid, mobj, nullptr);
+
+      removed->removeThinker();
+
+      rtn = 1;
+   }
+   return rtn;
 }
 
 //=============================================================================

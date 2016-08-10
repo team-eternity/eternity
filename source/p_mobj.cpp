@@ -1042,8 +1042,9 @@ void P_NightmareRespawn(Mobj* mobj)
    mapthing_t*  mthing;
    bool         check; // haleyjd 11/11/04
 
-   x = mobj->spawnpoint.x << FRACBITS;
-   y = mobj->spawnpoint.y << FRACBITS;
+   // ioanch 20151218: fixed point coordinates
+   x = mobj->spawnpoint.x;
+   y = mobj->spawnpoint.y;
 
    // haleyjd: stupid nightmare respawning bug fix
    //
@@ -1934,8 +1935,9 @@ void P_RespawnSpecials()
 
    mthing = &itemrespawnque[iquetail];
 
-   x = mthing->x << FRACBITS;
-   y = mthing->y << FRACBITS;
+   // ioanch 20151218: 32-bit coordinates
+   x = mthing->x;
+   y = mthing->y;
 
    // spawn a teleport fog at the new spot
    ss = R_PointInSubsector(x,y);
@@ -1981,8 +1983,9 @@ void P_SpawnPlayer(mapthing_t* mthing)
    if(p->playerstate == PST_REBORN)
       G_PlayerReborn(mthing->type - 1);
 
-   x    = mthing->x << FRACBITS;
-   y    = mthing->y << FRACBITS;
+   // ioanch 20151218: fixed point coordinates
+   x    = mthing->x;
+   y    = mthing->y;
    z    = ONFLOORZ;
    mobj = P_SpawnMobj(x, y, z, p->pclass->type);
 
@@ -2043,6 +2046,7 @@ void P_SpawnPlayer(mapthing_t* mthing)
 // sf: made to return Mobj* spawned
 //
 // haleyjd 03/03/07: rewritten again to use a unified mapthing_t type.
+// ioanch 20151218: UDMF skill support (extended options)
 //
 Mobj *P_SpawnMapThing(mapthing_t *mthing)
 {
@@ -2159,11 +2163,35 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
       return NULL;  // sf
 
    // killough 11/98: simplify
-   if(gameskill == sk_baby || gameskill == sk_easy ?
-      !(mthing->options & MTF_EASY) :
-      gameskill == sk_hard || gameskill == sk_nightmare ?
-      !(mthing->options & MTF_HARD) : !(mthing->options & MTF_NORMAL))
-      return NULL;  // sf
+   // IOANCH 20151214: UDMF skill update
+   switch(gameskill)
+   {
+   case sk_baby:
+      // If both flags are 0 or both are 1, then exit.
+      if(!!(mthing->extOptions & MTF_EX_BABY_TOGGLE) ==
+         !!(mthing->options & MTF_EASY))
+         return nullptr;
+      break;
+   case sk_easy:
+      if(!(mthing->options & MTF_EASY))
+         return nullptr;
+      break;
+   case sk_medium:
+      if(!(mthing->options & MTF_NORMAL))
+         return nullptr;
+      break;
+   case sk_hard:
+      if(!(mthing->options & MTF_HARD))
+         return nullptr;
+      break;
+   case sk_nightmare:
+      if(!!(mthing->extOptions & MTF_EX_NIGHTMARE_TOGGLE) == 
+         !!(mthing->options & MTF_HARD))
+         return nullptr;
+      break;
+   default:
+      break;
+   }
 
    // find which type to spawn
 
@@ -2201,8 +2229,10 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
       }
       else
       {
-         doom_printf(FC_ERROR "Unknown thing type %i at (%i, %i)",
-                     mthing->type, mthing->x, mthing->y);
+         // ioanch 20151218: fixed point coordinates
+         doom_printf(FC_ERROR "Unknown thing type %i at (%f, %f)",
+                     mthing->type, M_FixedToDouble(mthing->x), 
+                     M_FixedToDouble(mthing->y));
 
          // haleyjd 01/24/07: allow spawning unknowns to mark missing objects
          // at user's discretion, but not when recording/playing demos or in
@@ -2236,8 +2266,9 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
    // spawn it
 spawnit:
 
-   x = mthing->x << FRACBITS;
-   y = mthing->y << FRACBITS;
+   // ioanch 20151218: fixed point coordinates
+   x = mthing->x;
+   y = mthing->y;
 
    z = mobjinfo[i]->flags & MF_SPAWNCEILING ? ONCEILINGZ : ONFLOORZ;
 
@@ -2252,7 +2283,8 @@ spawnit:
    // haleyjd 10/03/05: Hexen-style z positioning
    if(mthing->height && (z == ONFLOORZ || z == ONCEILINGZ))
    {
-      fixed_t rheight = mthing->height << FRACBITS;
+      // ioanch 20151218: fixed point coordinates
+      fixed_t rheight = mthing->height;
 
       if(z == ONCEILINGZ)
          rheight = -rheight;

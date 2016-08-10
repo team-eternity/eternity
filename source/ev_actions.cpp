@@ -600,7 +600,7 @@ DEFINE_ACTION(EV_ActionPlatStop)
    // case 163: (S1 - BOOM Extended)
    // case 182: (SR - BOOM Extended)
    // Platform Stop
-   return EV_StopPlat(instance->line);
+   return EV_StopPlatByTag(instance->tag, false);
 }
 
 //
@@ -626,7 +626,7 @@ DEFINE_ACTION(EV_ActionCeilingCrushStop)
    // case 168: (S1 - BOOM Extended)
    // case 188: (SR - BOOM Extended)
    // Ceiling Crush Stop
-   return EV_CeilingCrushStop(instance->line, instance->tag);
+   return EV_CeilingCrushStop(instance->tag, false);
 }
 
 //
@@ -917,7 +917,7 @@ DEFINE_ACTION(EV_ActionDoDonut)
    // case 155: (WR - BOOM Extended)
    // case 191: (SR - BOOM Extended)
    // Lower Pillar, Raise Donut
-   return EV_DoParamDonut(instance->line, instance->line->tag, false, 
+   return EV_DoParamDonut(instance->line, instance->line->args[0], false, 
                           FLOORSPEED / 2, FLOORSPEED / 2);
 }
 
@@ -967,7 +967,7 @@ DEFINE_ACTION(EV_ActionSilentTeleport)
    teleparms_t parms;
    parms.teleangle = teleangle_relative_boom;
    parms.keepheight = true;
-   return EV_SilentTeleport(line, line->tag, side, thing, parms);
+   return EV_SilentTeleport(line, instance->tag, side, thing, parms);
 }
 
 //
@@ -1078,7 +1078,7 @@ DEFINE_ACTION(EV_ActionSilentLineTeleport)
    // case 267: (WR - BOOM Extended)
    // jff 4/14/98 add monster-only silent line-line
 
-   return EV_SilentLineTeleport(line, line->tag, side, thing, false);
+   return EV_SilentLineTeleport(line, instance->tag, side, thing, false);
 }
 
 //
@@ -1096,7 +1096,7 @@ DEFINE_ACTION(EV_ActionSilentLineTeleportReverse)
    // case 264: (W1 - BOOM Extended)
    // case 265: (WR - BOOM Extended)
    // jff 4/14/98 add monster-only silent line-line reversed
-   return EV_SilentLineTeleport(line, line->tag, side, thing, true);
+   return EV_SilentLineTeleport(line, instance->tag, side, thing, true);
 }
 
 //
@@ -2707,7 +2707,7 @@ DEFINE_ACTION(EV_ActionPolyobjORRotateLeft)
 //
 // EV_ActionPolyobjStop
 //
-// Implements EV_ActionPolyobjStop(id)
+// Implements Polyobj_Stop(id)
 // * ExtraData: 474
 // * Hexen:     87
 //
@@ -3066,13 +3066,27 @@ DEFINE_ACTION(EV_ActionParamPlatPerpetualRaise)
 //
 // EV_ActionParamPlatStop
 //
-// Implements Plat_Stop(tag)
+// Implements Plat_Stop(tag, kind)
 // * ExtraData: 411
 // * Hexen:     61
 //
 DEFINE_ACTION(EV_ActionParamPlatStop)
 {
-   return EV_StopPlatByTag(instance->tag);
+   bool removeThinker = false;
+   switch (instance->args[1])
+   {
+      case 0:                    // compatibility
+         removeThinker = LevelInfo.levelType == LI_TYPE_HEXEN;
+         break;
+      case 1:
+         removeThinker = false;  // Doom style
+         break;
+      case 2:
+         removeThinker = true;   // Hexen style
+         break;
+   }
+
+   return EV_StopPlatByTag(instance->tag, removeThinker);
 }
 
 //
@@ -3162,14 +3176,13 @@ DEFINE_ACTION(EV_ActionThingChangeTID)
 //
 // EV_ActionThingRaise
 //
-// Implements Thing_Raise(tid, keepfriend)
+// Implements Thing_Raise(tid)
 // * ExtraData: 422
 // * Hexen:     17
 //
 DEFINE_ACTION(EV_ActionThingRaise)
 {
-   return EV_ThingRaise(instance->actor, instance->args[0],
-                        !!instance->args[1]);
+   return EV_ThingRaise(instance->actor, instance->args[0]);
 }
 
 //
@@ -3261,11 +3274,13 @@ DEFINE_ACTION(EV_ActionParamDoorLockedRaise)
    INIT_STRUCT(doordata_t, dd);
    int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
 
-   dd.kind         = OdCDoor;
+   int delay = instance->args[2];
+
+   dd.kind         = delay || P_LevelIsVanillaHexen() ? OdCDoor : ODoor;
    dd.spac         = instance->spac;
-   dd.speed_value  = instance->args[1] * FRACUNIT / 8;
+   dd.speed_value  = instance->args[1] * (FRACUNIT / 8);
    dd.topcountdown = 0;
-   dd.delay_value  = instance->args[2];
+   dd.delay_value  = delay;
    dd.altlighttag  = instance->args[4];
    dd.thing        = instance->actor;
    
@@ -3343,14 +3358,26 @@ DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaise)
 //
 // EV_ActionParamCeilingCrushStop
 //
-// Implements Ceiling_CrushStop(tag)
+// Implements Ceiling_CrushStop(tag, kind)
 // * ExtraData: 433
 // * Hexen:     44
 //
 DEFINE_ACTION(EV_ActionParamCeilingCrushStop)
 {
-   // Really the same as EV_ActionCeilingCrushStop
-   return EV_CeilingCrushStop(instance->line, instance->tag);
+   bool removeThinker = false;
+   switch (instance->args[1])
+   {
+      case 0:                    // compatibility
+         removeThinker = LevelInfo.levelType == LI_TYPE_HEXEN;
+         break;
+      case 1:
+         removeThinker = false;  // Doom style
+         break;
+      case 2:
+         removeThinker = true;   // Hexen style
+         break;
+   }
+   return EV_CeilingCrushStop(instance->tag, removeThinker);
 }
 
 //
@@ -3827,34 +3854,6 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingRaiseByValue)
 }
 
 //
-// Implements Door_LockedOpen(tag, speed, lock, lighttag)
-//
-// * ExtraData: 457
-// * Hexen:     273
-//
-DEFINE_ACTION(EV_ActionParamDoorLockedOpen)
-{
-   INIT_STRUCT(doordata_t, dd);
-   int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
-
-   dd.kind         = ODoor;
-   dd.spac         = instance->spac;
-   dd.speed_value  = instance->args[1] * FRACUNIT / 8;
-   dd.topcountdown = 0;
-   dd.delay_value  = 0;
-   dd.altlighttag  = instance->args[3];
-   dd.thing        = instance->actor;
-
-   dd.flags = DDF_HAVESPAC | DDF_USEALTLIGHTTAG;
-   if(extflags & EX_ML_REPEAT)
-      dd.flags |= DDF_REUSABLE;
-
-   if(EV_lockCheck(dd.thing, instance->args[2], instance->tag != 0))
-      return EV_DoParamDoor(instance->line, instance->tag, &dd);
-   return 0;
-}
-
-//
 // Implements Elevator_RaiseToNearest(tag, speed)
 //
 // * ExtraData: 458
@@ -4135,6 +4134,72 @@ DEFINE_ACTION(EV_ActionParamSectorSetFloorPanning)
                                                         instance->args[2]),
                                    EV_calcCentPrecision(instance->args[3],
                                                         instance->args[4]));
+}
+
+//
+// Implements ACS_ExecuteAlways(script, map, arg1, arg2, arg3)
+//
+// * ExtraData: 477
+// * Hexen:     226
+//
+DEFINE_ACTION(EV_ActionACSExecuteAlways)
+{
+   Mobj   *thing = instance->actor;
+   line_t *line  = instance->line;
+   int     side  = instance->side;
+   int     num   = instance->args[0];
+   int     map   = instance->args[1];
+   int     argc  = NUMLINEARGS - 2;
+   int32_t argv[NUMLINEARGS - 2];
+
+   for(int i = 0; i != argc; ++i)
+      argv[i] = instance->args[i + 2];
+
+   return ACS_ExecuteScriptNumber(num, map, ACS_EXECUTE_ALWAYS, argv, argc, thing, line, side);
+}
+
+//
+// Implements Thing_Remove(tid)
+//
+// * ExtraData: 478
+// * Hexen:     132
+//
+DEFINE_ACTION(EV_ActionThingRemove)
+{
+   return EV_ThingRemove(instance->tag);
+}
+
+//
+// Implements Plat_ToggleCeiling(tag)
+//
+// * ExtraData: 487
+// * Hexen:     231
+//
+DEFINE_ACTION(EV_ActionParamPlatToggleCeiling)
+{
+   return EV_DoParamPlat(instance->line, instance->args, paramToggleCeiling);
+}
+
+//
+// Implements Plat_DownWaitUpStayLip(tag, speed, delay, lip)
+//
+// * ExtraData: 488
+// * Hexen:     206
+//
+DEFINE_ACTION(EV_ActionParamPlatDWUSLip)
+{
+   return EV_DoParamPlat(instance->line, instance->args, paramDownWaitUpStayLip);
+}
+
+//
+// Implements Plat_PerpetualRaiseLip(tag, speed, delay, lip)
+//
+// * ExtraData: 489
+// * Hexen:     207
+//
+DEFINE_ACTION(EV_ActionParamPlatPerpetualRaiseLip)
+{
+   return EV_DoParamPlat(instance->line, instance->args, paramPerpetualRaiseLip);
 }
 
 // EOF

@@ -137,6 +137,15 @@ static ev_static_t DOOMStaticBindings[] =
    STATICSPEC(450, EV_STATIC_PORTAL_HORIZON_LINE)
    STATICSPEC(455, EV_STATIC_SLOPE_PARAM)
    STATICSPEC(456, EV_STATIC_PORTAL_SECTOR_PARAM)
+   STATICSPEC(457, EV_STATIC_WIND_CONTROL_PARAM)
+   STATICSPEC(479, EV_STATIC_CURRENT_CONTROL_PARAM)
+   STATICSPEC(480, EV_STATIC_PUSHPULL_CONTROL_PARAM)
+   STATICSPEC(481, EV_STATIC_INIT_PARAM)
+   STATICSPEC(482, EV_STATIC_3DMIDTEX_ATTACH_PARAM)
+   STATICSPEC(483, EV_STATIC_SCROLL_CEILING_PARAM)
+   STATICSPEC(484, EV_STATIC_SCROLL_FLOOR_PARAM)
+   STATICSPEC(485, EV_STATIC_SCROLL_WALL_PARAM)
+   STATICSPEC(486, EV_STATIC_PORTAL_LINE_PARAM)
 };
 
 // Hexen Static Init Bindings
@@ -145,13 +154,27 @@ static ev_static_t HexenStaticBindings[] =
    STATICSPEC(  1, EV_STATIC_POLYOBJ_START_LINE)
    STATICSPEC(  5, EV_STATIC_POLYOBJ_EXPLICIT_LINE)
    STATICSPEC(  9, EV_STATIC_PORTAL_HORIZON_LINE)
+   STATICSPEC( 48, EV_STATIC_3DMIDTEX_ATTACH_PARAM)
    STATICSPEC( 57, EV_STATIC_PORTAL_SECTOR_PARAM)
    STATICSPEC(100, EV_STATIC_SCROLL_LEFT_PARAM)
    STATICSPEC(101, EV_STATIC_SCROLL_RIGHT_PARAM)
    STATICSPEC(102, EV_STATIC_SCROLL_UP_PARAM)
    STATICSPEC(103, EV_STATIC_SCROLL_DOWN_PARAM)
    STATICSPEC(121, EV_STATIC_LINE_SET_IDENTIFICATION)
+   STATICSPEC(156, EV_STATIC_PORTAL_LINE_PARAM)
    STATICSPEC(181, EV_STATIC_SLOPE_PARAM)
+   STATICSPEC(190, EV_STATIC_INIT_PARAM)
+   STATICSPEC(209, EV_STATIC_TRANSFER_HEIGHTS)
+   STATICSPEC(210, EV_STATIC_LIGHT_TRANSFER_FLOOR)
+   STATICSPEC(211, EV_STATIC_LIGHT_TRANSFER_CEILING)
+   STATICSPEC(218, EV_STATIC_WIND_CONTROL_PARAM)
+   STATICSPEC(219, EV_STATIC_FRICTION_TRANSFER)
+   STATICSPEC(220, EV_STATIC_CURRENT_CONTROL_PARAM)
+   STATICSPEC(222, EV_STATIC_SCROLL_WALL_PARAM)
+   STATICSPEC(223, EV_STATIC_SCROLL_FLOOR_PARAM)
+   STATICSPEC(224, EV_STATIC_SCROLL_CEILING_PARAM)
+   STATICSPEC(225, EV_STATIC_SCROLL_BY_OFFSETS)
+   STATICSPEC(227, EV_STATIC_PUSHPULL_CONTROL_PARAM)
 };
 
 // PSX Static Init Bindings
@@ -161,6 +184,12 @@ static ev_static_t PSXStaticBindings[] =
    STATICSPEC(201, EV_STATIC_SCROLL_LINE_RIGHT)
    STATICSPEC(202, EV_STATIC_SCROLL_LINE_UP)
    STATICSPEC(203, EV_STATIC_SCROLL_LINE_DOWN)
+};
+
+// UDMF "Eternity" Namespace Static Bindings
+static ev_static_t UDMFEternityStaticBindings[] =
+{
+   STATICSPEC(121, EV_STATIC_NULL) // Line_SetIdentification isn't needed in UDMF
 };
 
 //
@@ -182,6 +211,10 @@ static EV_StaticSpecHash DOOMStaticSpecHash(earrlen(DOOMStaticBindings));
 // Hexen hashes
 static EV_StaticHash     HexenStaticHash(earrlen(HexenStaticBindings));
 static EV_StaticSpecHash HexenStaticSpecHash(earrlen(HexenStaticBindings));
+
+// UDMF hashes
+static EV_StaticHash     UDMFEternityStaticHash(earrlen(UDMFEternityStaticBindings));
+static EV_StaticSpecHash UDMFEternityStaticSpecHash(earrlen(UDMFEternityStaticBindings));
 
 //
 // EV_addStaticSpecialsToHash
@@ -239,6 +272,20 @@ static void EV_initHexenStaticHash()
    }
 }
 
+static void EV_initUDMFEternityStaticHash()
+{
+   static bool firsttime = true;
+
+   if(firsttime)
+   {
+      firsttime = false;
+
+      // add every item in the Hexen static bindings array
+      EV_addStaticSpecialsToHash(UDMFEternityStaticHash, UDMFEternityStaticSpecHash,
+         UDMFEternityStaticBindings,
+         earrlen(UDMFEternityStaticBindings));
+   }
+}
 //
 // EV_DOOMSpecialForStaticInit
 //
@@ -410,6 +457,49 @@ int EV_PSXStaticInitForSpecial(int special)
 }
 
 //
+// EV_UDMFEternitySpecialForStaticInit
+//
+// Always looks up a special in the UDMFEternity gamemode's static init list, 
+// regardless of the map format or gamemode in use. Returns 0 if no such 
+// special exists.
+//
+int EV_UDMFEternitySpecialForStaticInit(int staticFn)
+{
+   ev_static_t *binding;
+
+   // init the hash if it hasn't been done yet
+   EV_initUDMFEternityStaticHash();
+
+   if((binding = UDMFEternityStaticHash.objectForKey(staticFn)))
+      return binding->actionNumber;
+   else
+      return EV_HexenSpecialForStaticInit(staticFn);
+}
+
+//
+// EV_UDMFEternityStaticInitForSpecial
+//
+// Always looks up a static init function in the UDMFEternity gamemode's static init
+// list, regardless of the map format or gamemode in use. Returns 0 if the given
+// special isn't bound to a static init function.
+//
+int EV_UDMFEternityStaticInitForSpecial(int special)
+{
+   ev_static_t *binding;
+
+   // Early return for special 0 or 121
+   if(!special || special == 121)
+      return EV_STATIC_NULL;
+
+   // init the hash if it hasn't been done yet
+   EV_initUDMFEternityStaticHash();
+   if((binding = UDMFEternityStaticSpecHash.objectForKey(special)))
+      return binding->staticFn;
+   else
+      return EV_HexenStaticInitForSpecial(special);
+}
+
+//
 // EV_SpecialForStaticInit
 //
 // Pass in the symbolic static function name you want the line special for; it
@@ -421,6 +511,8 @@ int EV_SpecialForStaticInit(int staticFn)
 {
    switch(LevelInfo.mapFormat)
    {
+   case LEVEL_FORMAT_UDMF_ETERNITY:
+      return EV_UDMFEternitySpecialForStaticInit(staticFn);
    case LEVEL_FORMAT_HEXEN:
       return EV_HexenSpecialForStaticInit(staticFn);
    case LEVEL_FORMAT_PSX:
@@ -455,6 +547,8 @@ int EV_StaticInitForSpecial(int special)
 
    switch(LevelInfo.mapFormat)
    {
+   case LEVEL_FORMAT_UDMF_ETERNITY:
+      return EV_UDMFEternityStaticInitForSpecial(special);
    case LEVEL_FORMAT_HEXEN:
       return EV_HexenStaticInitForSpecial(special);
    case LEVEL_FORMAT_PSX:
@@ -489,16 +583,30 @@ int EV_SpecialForStaticInitName(const char *name)
    };
    static staticname_t namedStatics[] =
    {
+      { EV_STATIC_3DMIDTEX_ATTACH_PARAM,   "Sector_Attach3dMidtex"  },
+      { EV_STATIC_INIT_PARAM,              "Static_Init"            },
+      { EV_STATIC_PORTAL_LINE_PARAM,       "Line_SetPortal"         },
       { EV_STATIC_SLOPE_PARAM,             "Plane_Align"            },
       { EV_STATIC_POLYOBJ_START_LINE,      "Polyobj_StartLine"      },
       { EV_STATIC_POLYOBJ_EXPLICIT_LINE,   "Polyobj_ExplicitLine"   },
+      { EV_STATIC_PUSHPULL_CONTROL_PARAM,  "PointPush_SetForce"     },
+      { EV_STATIC_SCROLL_BY_OFFSETS,       "Scroll_Texture_Offsets" },
+      { EV_STATIC_SCROLL_CEILING_PARAM,    "Scroll_Ceiling"         },
+      { EV_STATIC_SCROLL_FLOOR_PARAM,      "Scroll_Floor"           },
       { EV_STATIC_SCROLL_LEFT_PARAM,       "Scroll_Texture_Left"    },
+      { EV_STATIC_SCROLL_WALL_PARAM,       "Scroll_Texture_Model"   },
       { EV_STATIC_SCROLL_RIGHT_PARAM,      "Scroll_Texture_Right"   },
       { EV_STATIC_SCROLL_UP_PARAM,         "Scroll_Texture_Up"      },
       { EV_STATIC_SCROLL_DOWN_PARAM,       "Scroll_Texture_Down"    },
+      { EV_STATIC_CURRENT_CONTROL_PARAM,   "Sector_SetCurrent"      },
+      { EV_STATIC_FRICTION_TRANSFER,       "Sector_SetFriction"     },
       { EV_STATIC_PORTAL_SECTOR_PARAM,     "Sector_SetPortal"       },
+      { EV_STATIC_WIND_CONTROL_PARAM,      "Sector_SetWind"         },
       { EV_STATIC_PORTAL_HORIZON_LINE,     "Line_Horizon"           },
       { EV_STATIC_LINE_SET_IDENTIFICATION, "Line_SetIdentification" },
+      { EV_STATIC_LIGHT_TRANSFER_FLOOR,    "Transfer_FloorLight"    },
+      { EV_STATIC_LIGHT_TRANSFER_CEILING,  "Transfer_CeilingLight"  },
+      { EV_STATIC_TRANSFER_HEIGHTS,        "Transfer_Heights"       },
    };
 
    // There aren't enough of these to warrant a hash table. Yet.
@@ -518,19 +626,31 @@ int EV_SpecialForStaticInitName(const char *name)
 // function. There are only a handful of these, so they are hard-coded
 // here rather than being tablified.
 //
+// ioanch WARNING: do not put formerly classic specials here, if they've become
+// parameterized in the mean time. This may break maps.
+//
 bool EV_IsParamStaticInit(int special)
 {
    switch(EV_StaticInitForSpecial(special))
    {
+   case EV_STATIC_3DMIDTEX_ATTACH_PARAM:
+   case EV_STATIC_CURRENT_CONTROL_PARAM:
+   case EV_STATIC_INIT_PARAM:
+   case EV_STATIC_PORTAL_LINE_PARAM:
+   case EV_STATIC_SCROLL_WALL_PARAM:
    case EV_STATIC_SLOPE_PARAM:
    case EV_STATIC_POLYOBJ_START_LINE:
    case EV_STATIC_POLYOBJ_EXPLICIT_LINE:
+   case EV_STATIC_PUSHPULL_CONTROL_PARAM:
+   case EV_STATIC_SCROLL_CEILING_PARAM:
+   case EV_STATIC_SCROLL_FLOOR_PARAM:
    case EV_STATIC_SCROLL_LEFT_PARAM:
    case EV_STATIC_SCROLL_RIGHT_PARAM:
    case EV_STATIC_SCROLL_UP_PARAM:
    case EV_STATIC_SCROLL_DOWN_PARAM:
    case EV_STATIC_PORTAL_SECTOR_PARAM:
    case EV_STATIC_LINE_SET_IDENTIFICATION:
+   case EV_STATIC_WIND_CONTROL_PARAM:
       return true;
    default:
       return false;

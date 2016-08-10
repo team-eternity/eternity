@@ -970,7 +970,6 @@ PARAMLINE(ParamDoorCloseWaitOpen);
 PARAMLINE(ParamDoorWaitRaise);
 PARAMLINE(ParamDoorWaitClose);
 PARAMLINE(ParamDoorLockedRaise);
-PARAMLINE(ParamDoorLockedOpen);
 PARAMLINE(ParamFloorRaiseToHighest);
 PARAMLINE(ParamEEFloorLowerToHighest); 
 PARAMLINE(ParamFloorLowerToHighest);
@@ -1050,6 +1049,7 @@ PARAMLINE(PillarBuild);
 PARAMLINE(PillarBuildAndCrush);
 PARAMLINE(PillarOpen);
 PARAMLINE(ACSExecute);
+PARAMLINE(ACSExecuteAlways);
 PARAMLINE(ACSSuspend);
 PARAMLINE(ACSTerminate);
 PARAMLINE(ACSExecuteWithResult);
@@ -1080,14 +1080,18 @@ PARAMLINE(ThrustThingZ);
 PARAMLINE(DamageThing);
 PARAMLINE(DamageThingEx);  // Thing_Damage essentially
 PARAMLINE(ThingDestroy);
+PARAMLINE(ThingRemove);
 PARAMLINE(ParamPlatPerpetualRaise);
+PARAMLINE(ParamPlatPerpetualRaiseLip);
 PARAMLINE(ParamPlatStop);
 PARAMLINE(ParamPlatDWUS);
+PARAMLINE(ParamPlatDWUSLip);
 PARAMLINE(ParamPlatDownByValue);
 PARAMLINE(ParamPlatUWDS);
 PARAMLINE(ParamPlatUpByValue);
 PARAMLINE(ParamPlatRaiseNearestChange);
 PARAMLINE(ParamPlatRaiseChange);
+PARAMLINE(ParamPlatToggleCeiling);
 PARAMLINE(ParamDonut);
 PARAMLINE(ParamTeleport);
 PARAMLINE(ParamTeleportNoFog);
@@ -1489,7 +1493,6 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(452, ParamFloorCrushStop,             "Floor_CrushStop")
    LINESPECNAMED(453, ParamFloorCeilingLowerByValue,   "FloorAndCeiling_LowerByValue")
    LINESPECNAMED(454, ParamFloorCeilingRaiseByValue,   "FloorAndCeiling_RaiseByValue")
-   LINESPECNAMED(457, ParamDoorLockedOpen,             "Door_LockedOpen")
    LINESPECNAMED(458, ParamElevatorUp,                 "Elevator_RaiseToNearest")
    LINESPECNAMED(459, ParamElevatorDown,               "Elevator_LowerToNearest")
    LINESPECNAMED(460, ParamElevatorCurrent,            "Elevator_MoveToFloor")
@@ -1509,6 +1512,11 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(474, PolyobjStop,                     "Polyobj_Stop")
    LINESPECNAMED(475, ParamPlatRaiseNearestChange,     "Plat_RaiseAndStayTx0")
    LINESPECNAMED(476, ParamPlatRaiseChange,            "Plat_UpByValueStayTx")
+   LINESPECNAMED(477, ACSExecuteAlways,                "ACS_ExecuteAlways")
+   LINESPECNAMED(478, ThingRemove,                     "Thing_Remove")
+   LINESPECNAMED(487, ParamPlatToggleCeiling,          "Plat_ToggleCeiling")
+   LINESPECNAMED(488, ParamPlatDWUSLip,                "Plat_DownWaitUpStayLip")
+   LINESPECNAMED(489, ParamPlatPerpetualRaiseLip,      "Plat_PerpetualRaiseLip")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1645,6 +1653,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(128, ThrustThingZ,                    "ThrustThingZ")
    LINESPECNAMED(130, ThingActivate,                   "Thing_Activate")
    LINESPECNAMED(131, ThingDeactivate,                 "Thing_Deactivate")
+   LINESPECNAMED(132, ThingRemove,                     "Thing_Remove")
    LINESPECNAMED(133, ThingDestroy,                    "Thing_Destroy")
    LINESPECNAMED(134, ThingProjectile,                 "Thing_Projectile")
    LINESPECNAMED(135, ThingSpawn,                      "Thing_Spawn")
@@ -1668,10 +1677,14 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(200, ParamFloorGeneric,               "Generic_Floor")
    LINESPECNAMED(201, ParamCeilingGeneric,             "Generic_Ceiling")
    LINESPECNAMED(205, ParamGenCrusher,                 "Generic_Crusher")
+   LINESPECNAMED(206, ParamPlatDWUSLip,                "Plat_DownWaitUpStayLip")
+   LINESPECNAMED(207, ParamPlatPerpetualRaiseLip,      "Plat_PerpetualRaiseLip")
    LINESPECNAMED(215, ParamTeleportLine,               "Teleport_Line")
    LINESPECNAMED(217, ParamStairsBuildUpDoom,          "Stairs_BuildUpDoom")
+   LINESPECNAMED(226, ACSExecuteAlways,                "ACS_ExecuteAlways")
    LINESPECNAMED(228, ParamPlatRaiseNearestChange,     "Plat_RaiseAndStayTx0")
    LINESPECNAMED(230, ParamPlatRaiseChange,            "Plat_UpByValueStayTx")
+   LINESPECNAMED(231, ParamPlatToggleCeiling,          "Plat_ToggleCeiling")
    LINESPECNAMED(232, ParamLightStrobeDoom,            "Light_StrobeDoom")
    LINESPECNAMED(233, TurnTagLightsOff,                "Light_MinNeighbor")
    LINESPECNAMED(234, LightTurnOn,                     "Light_MaxNeighbor")
@@ -1693,7 +1706,6 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(253, ParamCeilingLowerToLowest,       "Ceiling_LowerToLowest")
    LINESPECNAMED(254, ParamCeilingLowerToFloor,        "Ceiling_LowerToFloor")
    LINESPECNAMED(255, ParamCeilingCrushRaiseAndStaySilA, "Ceiling_CrushRaiseAndStaySilA")
-   LINESPECNAMED(273, ParamDoorLockedOpen,             "Door_LockedOpen")
 };
 
 const size_t HexenBindingsLen = earrlen(HexenBindings);
@@ -1711,6 +1723,33 @@ ev_binding_t PSXBindings[] =
 };
 
 const size_t PSXBindingsLen = earrlen(PSXBindings);
+
+// UDMF "Eternity" Namespace Bindings
+ev_binding_t UDMFEternityBindings[] =
+{
+   // No bindings for ExtraData as it isn't required any more \o/
+   LINESPECNAMED(105, ParamDoorWaitRaise,              "Door_WaitRaise")
+   LINESPECNAMED(106, ParamDoorWaitClose,              "Door_WaitClose")
+   LINESPECNAMED(256, ParamEEFloorLowerToHighest,      "Floor_LowerToHighestEE")
+   LINESPECNAMED(257, ParamFloorRaiseToLowest,         "Floor_RaiseToLowest")
+   LINESPECNAMED(258, ParamFloorLowerToLowestCeiling,  "Floor_LowerToLowestCeiling")
+   LINESPECNAMED(259, ParamFloorRaiseToCeiling,        "Floor_RaiseToCeiling")
+   LINESPECNAMED(260, ParamFloorToCeilingInstant,      "Floor_ToCeilingInstant")
+   LINESPECNAMED(261, ParamFloorLowerByTexture,        "Floor_LowerByTexture")
+   LINESPECNAMED(262, ParamCeilingRaiseToHighest,      "Ceiling_RaiseToHighest")
+   LINESPECNAMED(263, ParamCeilingToHighestInstant,    "Ceiling_ToHighestInstant")
+   LINESPECNAMED(264, ParamCeilingLowerToNearest,      "Ceiling_LowerToNearest")
+   LINESPECNAMED(265, ParamCeilingRaiseToLowest,       "Ceiling_RaiseToLowest")
+   LINESPECNAMED(266, ParamCeilingRaiseToHighestFloor, "Ceiling_RaiseToHighestFloor")
+   LINESPECNAMED(267, ParamCeilingToFloorInstant,      "Ceiling_ToFloorInstant")
+   LINESPECNAMED(268, ParamCeilingRaiseByTexture,      "Ceiling_RaiseByTexture")
+   LINESPECNAMED(269, ParamCeilingLowerByTexture,      "Ceiling_LowerByTexture")
+   LINESPECNAMED(270, ParamStairsBuildDownDoom,        "Stairs_BuildDownDoom")
+   LINESPECNAMED(271, ParamStairsBuildUpDoomSync,      "Stairs_BuildUpDoomSync")
+   LINESPECNAMED(272, ParamStairsBuildDownDoomSync,    "Stairs_BuildDownDoomSync")
+};
+
+const size_t UDMFEternityBindingsLen = earrlen(UDMFEternityBindings);
 
 // EOF
 

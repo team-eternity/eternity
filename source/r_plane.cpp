@@ -1072,7 +1072,12 @@ static void do_draw_plane(visplane_t *pl)
          // to make it easier to use the new feature, while to still
          // allow old sky textures to be used.
          int staticFn = EV_StaticInitForSpecial(l->special);
-         flip = (staticFn == EV_STATIC_SKY_TRANSFER_FLIPPED) ? 0u : ~0u;
+
+         bool flipCond = staticFn == EV_STATIC_SKY_TRANSFER_FLIPPED
+         || (staticFn == EV_STATIC_INIT_PARAM
+             && l->args[ev_StaticInit_Arg_Flip]);
+
+         flip = flipCond ? 0u : ~0u;
       }
       else 	 // Normal Doom sky, only one allowed per level
       {

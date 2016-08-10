@@ -46,6 +46,7 @@
 #include "e_mod.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "e_udmf.h"
 
 #include "d_dehtbl.h" // for dehflags parsing
 #include "d_io.h"
@@ -60,6 +61,7 @@
 #include "r_data.h"
 #include "r_main.h"
 #include "r_portal.h"
+#include "r_state.h"
 #include "w_wad.h"
 
 // statics
@@ -478,6 +480,7 @@ static void E_ProcessEDThings(cfg_t *cfg)
          EDThings[i].options = 0;
       else
          EDThings[i].options = (int16_t)(E_ParseFlags(tempstr, &mt_flagset));
+      EDThings[i].extOptions = 0;   // ioanch: not set by ExtraData
 
       // extended fields
 
@@ -490,7 +493,8 @@ static void E_ProcessEDThings(cfg_t *cfg)
       E_ParseThingArgs(&EDThings[i], thingsec);
 
       // get height
-      EDThings[i].height = (int16_t)cfg_getint(thingsec, FIELD_HEIGHT);
+      // ioanch 20151218: fixed point coordinate
+      EDThings[i].height = (int16_t)cfg_getint(thingsec, FIELD_HEIGHT) << FRACBITS;
 
       // TODO: any other new fields
    }
@@ -1151,6 +1155,7 @@ static void E_ProcessEDLines(cfg_t *cfg)
       EDLines[i].stdfields.tag = (int16_t)cfg_getint(linesec, FIELD_LINE_TAG);
       if(cfg_size(linesec, FIELD_LINE_TAG) > 0)
          tagset = true;
+      // ioanch TODO: set args[0] depending on the specials
 
       // extflags
       tempstr = cfg_getstr(linesec, FIELD_LINE_EXTFLAGS);
@@ -1459,8 +1464,8 @@ Mobj *E_SpawnMapThingExt(mapthing_t *mt)
       (edThingIdx = E_EDThingForRecordNum((uint16_t)(mt->options))) == numEDMapThings)
    {
       // spawn an Unknown thing
-      return P_SpawnMobj(mt->x << FRACBITS, mt->y << FRACBITS, ONFLOORZ, 
-                         UnknownThingType);
+      // ioanch 20151218: fixed point coordinates
+      return P_SpawnMobj(mt->x, mt->y, ONFLOORZ, UnknownThingType);
    }
 
    // get a pointer to the proper ExtraData mapthing record
@@ -1491,7 +1496,7 @@ void E_LoadLineDefExt(line_t *line, bool applySpecial)
 
    // ExtraData record number is stored in line tag
    if(!LevelInfo.extraData || numEDLines == 0 ||
-      (edLineIdx = E_EDLineForRecordNum(line->tag)) == numEDLines)
+      (edLineIdx = E_EDLineForRecordNum(line->args[0])) == numEDLines)
    {
       // if no ExtraData or no such record, zero special and clear tag,
       // and we're finished here.
@@ -1507,7 +1512,7 @@ void E_LoadLineDefExt(line_t *line, bool applySpecial)
    {
       // apply standard fields to the line
       line->special = edline->stdfields.special;
-      line->tag     = edline->stdfields.tag;
+      line->args[0] = edline->stdfields.tag;
    }
 
    // apply extended fields to the line
@@ -1519,8 +1524,9 @@ void E_LoadLineDefExt(line_t *line, bool applySpecial)
    memcpy(line->args, edline->args, 5*sizeof(int));
 
    // 03/03/07: id
-   if(edline->id != -1) // haleyjd: only use this field when it is specified
-      line->tag = edline->id;
+   
+   //if(edline->id != -1) // haleyjd: only use this field when it is specified
+      line->tag = edline->id; // ioanch 20160304: actually apply it always
 
    // 11/11/10: alpha
    line->alpha = edline->alpha;
@@ -1529,7 +1535,7 @@ void E_LoadLineDefExt(line_t *line, bool applySpecial)
 //
 // E_LoadSectorExt
 //
-void E_LoadSectorExt(line_t *line)
+void E_LoadSectorExt(line_t *line, UDMFSetupSettings &setupSettings)
 {
    unsigned int    edSectorIdx;
    mapsectorext_t *edsector;
@@ -1538,7 +1544,7 @@ void E_LoadSectorExt(line_t *line)
    // ExtraData must be loaded
    if(!LevelInfo.extraData || numEDSectors == 0)
    {
-      line->tag = 0;
+      line->args[0] = line->tag = 0;
       return;
    }
    
@@ -1546,9 +1552,9 @@ void E_LoadSectorExt(line_t *line)
    
    // The ExtraData record number is the line's tag; the line's frontsector is the 
    // sector to adjust.
-   if((edSectorIdx = E_EDSectorForRecordNum(line->tag)) == numEDSectors)
+   if((edSectorIdx = E_EDSectorForRecordNum(line->args[0])) == numEDSectors)
    {
-      line->tag = 0;
+      line->args[0] = line->tag = 0;
       return;
    }
 
@@ -1575,6 +1581,13 @@ void E_LoadSectorExt(line_t *line)
    sector->damageflags |=   edsector->damageflagsadd;  // add any flags-to-add
    sector->damageflags &= ~(edsector->damageflagsrem); // remove any flags-to-remove
 
+   // ioanch: set leakiness from these flags
+   if(sector->damageflags & SDMG_LEAKYSUIT)
+      sector->leakiness = 5;
+   if(sector->damageflags & SDMG_IGNORESUIT)
+      sector->leakiness = 256;
+   sector->damageflags &= ~(SDMG_LEAKYSUIT | SDMG_IGNORESUIT);
+   // delete the flags
 
    // flat offsets
    sector->floor_xoffs   = M_DoubleToFixed(edsector->floor_xoffs);
@@ -1593,6 +1606,8 @@ void E_LoadSectorExt(line_t *line)
       sector->midmap    = edsector->midmap;
    if(edsector->bottommap >= 0)
       sector->bottommap = edsector->bottommap;
+   if(edsector->topmap >= 0 || edsector->midmap >= 0 || edsector->bottommap >= 0)
+      setupSettings.setSectorFlag(sector - sectors, UDMF_SECTOR_INIT_COLORMAPPED);
 
    // terrain overrides
    sector->floorterrain   = edsector->floorterrain;
@@ -1610,7 +1625,7 @@ void E_LoadSectorExt(line_t *line)
    // TODO: more?
 
    // clear the line tag
-   line->tag = 0;
+   line->tag = line->args[0] = 0;
 }
 
 void E_GetEDMapThings(mapthing_t **things, int *numthings)

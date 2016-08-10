@@ -243,7 +243,7 @@ int EV_Teleport(int tag, int side, Mobj *thing)
       return 0;
 
    // killough 1/31/98: improve performance by using
-   // P_FindSectorFromLineTag instead of simple linear search.
+   // P_FindSectorFromLineArg0 instead of simple linear search.
 
    for(i = -1; (i = P_FindSectorFromTag(tag, i)) >= 0;)
    {

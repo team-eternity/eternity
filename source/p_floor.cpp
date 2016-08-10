@@ -422,7 +422,7 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
    secnum = -1;
    rtn = 0;
    // move all floors with the same tag as the linedef
-   while((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
+   while((secnum = P_FindSectorFromLineArg0(line,secnum)) >= 0)
    {
       sec = &sectors[secnum];
       
@@ -743,11 +743,11 @@ static int P_FindSectorFromLineTagWithLowerBound(const line_t *l, int start,
                                                  int min)
 {
    // Emulate original Doom's linear lower-bounded 
-   // P_FindSectorFromLineTag as needed
+   // P_FindSectorFromLineArg0 as needed
 
    do
    {
-      start = P_FindSectorFromLineTag(l, start);
+      start = P_FindSectorFromLineArg0(l, start);
    }
    while(start >= 0 && start <= min);
 

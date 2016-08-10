@@ -610,8 +610,9 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
    sspot.y = po->spawnSpot.y;
 
    // calculate distance from anchor to spawn spot
-   dist.x = (anchor->x << FRACBITS) - sspot.x;
-   dist.y = (anchor->y << FRACBITS) - sspot.y;
+   // ioanch 20151218: use 32-bit coordinates
+   dist.x = anchor->x - sspot.x;
+   dist.y = anchor->y - sspot.y;
 
    // update linedef bounding boxes
    for(i = 0; i < po->numLines; ++i)

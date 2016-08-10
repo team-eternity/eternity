@@ -408,16 +408,19 @@ CONSOLE_COMMAND(e_mapthing, cf_level)
    {
       if(things[i].recordnum == recordnum)
       {
+         // ioanch 20151218: print extOptions too
          C_Printf(FC_HI "Data for ED Mapthing %d:\n"
                   FC_HI "Next record: " FC_NORMAL "%d\n"
                   FC_HI "Type: " FC_NORMAL "%d\n"
                   FC_HI "Options: " FC_NORMAL "%d\n"
+                  FC_HI "Extra options: " FC_NORMAL "%d\n"
                   FC_HI "Tid: " FC_NORMAL "%d\n"
                   FC_HI "Args: " FC_NORMAL "%d, %d, %d, %d, %d\n",
                   things[i].recordnum,
                   things[i].next,
                   things[i].type,
                   things[i].options,
+                  things[i].extOptions,
                   things[i].tid,
                   things[i].args[0], things[i].args[1],
                   things[i].args[2], things[i].args[3],
