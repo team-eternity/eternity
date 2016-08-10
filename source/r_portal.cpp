@@ -362,7 +362,7 @@ static void R_CalculateDeltas(int markerlinenum, int anchorlinenum,
 }
 
 static void R_calculateTransform(int markerlinenum, int anchorlinenum,
-                                 portaltransform_t *transf)
+                                 portaltransform_t *transf, bool flipped)
 {
    // TODO: define Z offset
    const line_t *m = lines + markerlinenum;
@@ -376,7 +376,8 @@ static void R_calculateTransform(int markerlinenum, int anchorlinenum,
 
    // angle delta between the normals behind the linedefs
    // TODO: add support for flipped anchors (line portals)
-   double rot = atan2(-m->ny, -m->nx) - atan2(-a->ny, -a->nx);
+   double rot = (flipped ? atan2(-m->ny, -m->nx) : atan2(m->ny, m->nx))
+   - atan2(a->ny, a->nx);
 
    double cosval = cos(rot);
    double sinval = sin(rot);
@@ -392,6 +393,87 @@ static void R_calculateTransform(int markerlinenum, int anchorlinenum,
    transf->angle = rot;
 }
 
+static void R_calculateFixedTransform(int markerlinenum, int anchorlinenum,
+                                      portalfixedform_t *transf, bool flipped)
+{
+   // TODO: define Z offset
+   const line_t *m = lines + markerlinenum;
+   const line_t *a = lines + anchorlinenum;
+
+   fixed_t mx = m->v1->x + m->dx / 2;
+   fixed_t my = m->v1->y + m->dy / 2;
+   fixed_t ax = a->v1->x + a->dx / 2;
+   fixed_t ay = a->v1->y + a->dy / 2;
+
+   fixed_t mdx = m->dx;
+   fixed_t mdy = m->dy;
+   if(flipped)
+   {
+      mdx = -mdx;
+      mdy = -mdy;
+   }
+
+   // Check for trivial angles now
+   if(mdx == a->dx && mdy == a->dy)         // 0 deg
+   {
+      transf->rot[0][0] = transf->rot[1][1] = FRACUNIT;
+      transf->rot[0][1] = transf->rot[1][0] = 0;
+      transf->move.x = mx - ax;
+      transf->move.y = my - ay;
+      transf->move.z = 0;
+      transf->angle = 0;
+      return;
+   }
+   if(mdx == -a->dx && mdy == -a->dy)  // 180 deg
+   {
+      transf->rot[0][0] = transf->rot[1][1] = -FRACUNIT;
+      transf->rot[0][1] = transf->rot[1][0] = 0;
+      transf->move.x = mx + ax;
+      transf->move.y = my + ay;
+      transf->move.z = 0;
+      transf->angle = ANG180;
+      return;
+   }
+   if(mdx == -a->dy && mdy == a->dx)   // 90 deg
+   {
+      transf->rot[0][0] = transf->rot[1][1] = 0;
+      transf->rot[0][1] = -FRACUNIT;
+      transf->rot[1][0] = FRACUNIT;
+      transf->move.x = ay + mx;
+      transf->move.y = -ax + my;
+      transf->move.z = 0;
+      transf->angle = ANG90;
+      return;
+   }
+   if(mdx == a->dy && mdy == -a->dx)   // -90 deg
+   {
+      transf->rot[0][0] = transf->rot[1][1] = 0;
+      transf->rot[0][1] = FRACUNIT;
+      transf->rot[1][0] = -FRACUNIT;
+      transf->move.x = -ay + mx;
+      transf->move.y = ax + my;
+      transf->move.z = 0;
+      transf->angle = -ANG90;
+      return;
+   }
+
+   angle_t rot = (flipped ? P_PointToAngle(m->v2->x, m->v2->y, m->v1->x, m->v1->y)
+   : P_PointToAngle(m->v1->x, m->v1->y, m->v2->x, m->v2->y))
+   - P_PointToAngle(a->v1->x, a->v1->y, a->v2->x, a->v2->y);
+
+   fixed_t cosval = Table_LerpCos(rot);
+   fixed_t sinval = Table_LerpSin(rot);
+
+   transf->rot[0][0] = cosval;
+   transf->rot[0][1] = -sinval;
+   transf->rot[1][0] = sinval;
+   transf->rot[1][1] = cosval;
+   transf->move.x = -FixedMul(ax, cosval) + FixedMul(ay, sinval) + mx;
+   transf->move.y = -FixedMul(ax, sinval) - FixedMul(ay, cosval) + my;
+   transf->move.z = 0;
+   transf->angle = rot;
+}
+
 //
 // R_GetAnchoredPortal
 //
@@ -403,7 +485,7 @@ portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum)
    portal_t *rover, *ret;
    edefstructvar(anchordata_t, adata);
 
-   R_calculateTransform(markerlinenum, anchorlinenum, &adata.transform);
+   R_calculateTransform(markerlinenum, anchorlinenum, &adata.transform, false);
 
    adata.maker = markerlinenum;
    adata.anchor = anchorlinenum;
@@ -439,7 +521,7 @@ portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum)
    portal_t *rover, *ret;
    edefstructvar(anchordata_t, adata);
 
-   R_calculateTransform(markerlinenum, anchorlinenum, &adata.transform);
+   R_calculateTransform(markerlinenum, anchorlinenum, &adata.transform, false);
 
    adata.maker = markerlinenum;
    adata.anchor = anchorlinenum;
@@ -1095,14 +1177,27 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    lastxf = view.x;
    lastyf = view.y;
    lastzf = view.z;
+   angle_t lastangle = viewangle;
+   float lastanglef = view.angle;
 
    // SoM 3/10/2005: Use the coordinates stored in the portal struct
-   viewx  = window->vx + portal->data.link.deltax;
-   viewy  = window->vy + portal->data.link.deltay;
-   viewz  = window->vz + portal->data.link.deltaz;
-   view.x = M_FixedToFloat(viewx);
-   view.y = M_FixedToFloat(viewy);
-   view.z = M_FixedToFloat(viewz);
+   const portaltransform_t &tr = portal->data.link.offset.visual;
+   double wx = M_FixedToDouble(window->vx);
+   double wy = M_FixedToDouble(window->vy);
+   double vx = tr.rot[0][0] * wx + tr.rot[0][1] * wy + tr.move.x;
+   double vy = tr.rot[1][0] * wx + tr.rot[1][1] * wy + tr.move.y;
+   double vz = M_FixedToDouble(window->vz) + tr.move.z;
+   viewx = M_DoubleToFixed(vx);
+   viewy = M_DoubleToFixed(vy);
+   viewz = M_DoubleToFixed(vz);
+   view.x = static_cast<float>(vx);
+   view.y = static_cast<float>(vy);
+   view.z = static_cast<float>(vz);
+
+   viewangle = window->vangle + static_cast<angle_t>(tr.angle * ANG180 / PI);
+   view.angle = (ANG90 - viewangle) * PI / ANG180;
+   view.sin = sinf(view.angle);
+   view.cos = cosf(view.angle);
 
    R_IncrementFrameid();
    R_RenderBSPNode(numnodes - 1);
@@ -1116,9 +1211,14 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    viewx  = lastx;
    viewy  = lasty;
    viewz  = lastz;
+   viewangle = lastangle;
    view.x = lastxf;
    view.y = lastyf;
    view.z = lastzf;
+   view.angle = lastanglef;
+
+   view.sin = (float)sin(view.angle);
+   view.cos = (float)cos(view.angle);
 
    if(window->child)
       R_RenderLinkedPortal(window->child);
@@ -1306,7 +1406,7 @@ void R_RenderPortals()
 
 portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum, 
                             fixed_t planez,    int fromid,
-                            int toid)
+                            int toid, bool flipped)
 {
    portal_t *rover, *ret;
    edefstructvar(linkdata_t, ldata);
@@ -1315,18 +1415,21 @@ portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,
    ldata.toid   = toid;
    ldata.planez = planez;
 
-   R_CalculateDeltas(markerlinenum, anchorlinenum, 
-                     &ldata.deltax, &ldata.deltay, &ldata.deltaz);
+   R_calculateTransform(markerlinenum, anchorlinenum, &ldata.offset.visual,
+                        flipped);
+   R_calculateFixedTransform(markerlinenum, anchorlinenum, &ldata.offset.game,
+                             flipped);
 
    ldata.maker = markerlinenum;
    ldata.anchor = anchorlinenum;
 
    for(rover = portals; rover; rover = rover->next)
    {
-      if(rover->type  != R_LINKED                || 
-         ldata.deltax != rover->data.link.deltax ||
-         ldata.deltay != rover->data.link.deltay ||
-         ldata.deltaz != rover->data.link.deltaz ||
+      if(rover->type  != R_LINKED                ||
+//         memcmp(&ldata.offset.visual, &rover->data.link.offset.visual,
+//                sizeof(ldata.offset.visual)) ||
+         memcmp(&ldata.offset.game, &rover->data.link.offset.game,
+                sizeof(ldata.offset.game)) ||
          ldata.fromid != rover->data.link.fromid ||
          ldata.toid   != rover->data.link.toid   ||
          ldata.planez != rover->data.link.planez)

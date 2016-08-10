@@ -100,11 +100,12 @@ static int P_Teleport(Mobj *thing, const Mobj *landing)
 
    // spawn teleport fog and emit sound at destination
    // ioanch 20160229: portal aware
+   fixed_t zoffs;
    v2fixed_t pos = P_LinePortalCrossing(landing->x, landing->y,
       20 * finecosine[landing->angle >> ANGLETOFINESHIFT],
-      20 * finesine[landing->angle >> ANGLETOFINESHIFT]);
+      20 * finesine[landing->angle >> ANGLETOFINESHIFT], nullptr, nullptr, &zoffs);
    S_StartSound(P_SpawnMobj(pos.x, pos.y,
-                              thing->z + GameModeInfo->teleFogHeight, 
+                              thing->z + GameModeInfo->teleFogHeight + zoffs,
                               E_SafeThingName(GameModeInfo->teleFogType)),
                   GameModeInfo->teleSound);
             

@@ -27,7 +27,7 @@
 #ifndef P_LINKOFFSET_H__
 #define P_LINKOFFSET_H__
 
-#include "m_fixed.h"
+#include "m_vector.h"
 #include "tables.h"
 
 #ifndef R_NOGROUP
@@ -37,9 +37,56 @@
 #define R_NOGROUP -1
 #endif
 
+// This is a visual transform
+struct portaltransform_t
+{
+   double rot[2][2];
+   v3double_t move;
+   double angle;
+
+   // defined in m_vector.cpp
+   void apply(fixed_t &x, fixed_t &y) const;
+   void apply(double &x, double &y) const;
+   void apply(fixed_t &x, fixed_t &y, fixed_t &z) const;
+   void apply(portaltransform_t &tr) const;
+
+   bool isInverseOf(const portaltransform_t &other) const;
+};
+
+struct portalfixedform_t
+{
+   fixed_t rot[2][2];
+   v3fixed_t move;
+   angle_t angle;
+
+   // defined in m_vector.cpp
+   void init()
+   {
+      rot[0][0] = rot[1][1] = FRACUNIT;
+      rot[0][1] = rot[1][0] = 0;
+      move.x = move.y = move.z = 0;
+      angle = 0;
+   }
+   void apply(fixed_t &x, fixed_t &y) const;
+   void apply(fixed_t &x, fixed_t &y, fixed_t &z) const;
+   void apply(portalfixedform_t &tr) const;
+   void applyRotation(fixed_t &x, fixed_t &y) const;
+   void applyBox(fixed_t *bbox) const;
+   void applyZ(fixed_t &z) const
+   {
+      z += move.z;   // so simple for now
+   }
+
+   v2fixed_t applied(fixed_t x, fixed_t y) const;
+};
+
 struct linkoffset_t
 {
-   fixed_t x, y, z;
+//   fixed_t x, y, z;  // TODO: remove these
+   portaltransform_t visual;
+   portalfixedform_t game;
+
+   bool approxEqual(const linkoffset_t &other) const;
 };
 
 //

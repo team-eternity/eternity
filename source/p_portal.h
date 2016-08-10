@@ -109,10 +109,10 @@ void P_LinkRejectTable();
 
 void P_InitPortals();
 
-bool EV_PortalTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
-                       int fromid, int toid);
-void P_LinePortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
-                             int fromid, int toid);
+bool EV_PortalTeleport(Mobj *mo, const linkoffset_t *link, int fromid, int toid);
+void P_LinePortalDidTeleport(Mobj *mo, const portalfixedform_t &trans,
+                             int fromid, int toid,
+                             fixed_t *xmove, fixed_t *ymove);
 
 void R_SetSectorGroupID(sector_t *sector, int groupid);
 
@@ -195,7 +195,9 @@ void P_SetLPortalBehavior(line_t *line, int newbehavior);
 // others, and there's no other way to detect line portal change.
 //
 v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
-                               int *group = nullptr, bool *passed = nullptr);
+                               int *group = nullptr, bool *passed = nullptr,
+                               fixed_t *zoffs = nullptr,
+                               portalfixedform_t *trans = nullptr);
 
 template <typename T> 
 inline static v2fixed_t P_LinePortalCrossing(T &&u, fixed_t dx, fixed_t dy, 
@@ -215,9 +217,11 @@ inline static v2fixed_t P_LinePortalCrossing(T &&u, U &&dv, int *group = nullptr
 // ioanch 20160107
 //
 sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling, 
-                                 sector_t *preCalcSector = nullptr);
+                                 sector_t *preCalcSector = nullptr,
+                                 fixed_t *zoffs = nullptr);
 
-inline static sector_t *P_ExtremeSectorAtPoint(const Mobj *mo, bool ceiling)
+inline static sector_t *P_ExtremeSectorAtPoint(const Mobj *mo, bool ceiling,
+                                               fixed_t *zoffs = nullptr)
 {
    return P_ExtremeSectorAtPoint(mo->x, mo->y, ceiling, mo->subsector->sector);
 }

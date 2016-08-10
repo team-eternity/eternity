@@ -141,8 +141,9 @@ floater:
    {
       fixed_t delta;
       // ioanch 20160110: portal aware
-      if(P_AproxDistance(mo->x - getTargetX(mo), mo->y - getTargetY(mo)) <
-         D_abs(delta = getTargetZ(mo) + (mo->height >> 1) - mo->z) * 3)
+      v3fixed_t pos = getTargetPos(mo);
+      if(P_AproxDistance(mo->x - pos.x, mo->y - pos.y) <
+         D_abs(delta = pos.z + (mo->height >> 1) - mo->z) * 3)
          mo->z += delta < 0 ? -FLOATSPEED : FLOATSPEED;
    }
 
@@ -169,21 +170,22 @@ static Mobj *testz_mobj; // used to hold object found by P_TestMobjZ
 static bool PIT_TestMobjZ(Mobj *thing)
 {
    fixed_t blockdist = thing->radius + clip.thing->radius;
+   // ioanch 20160110: portal aware
+   v3fixed_t pos = getThingPos(clip.thing, thing);
 
    if(!(thing->flags & MF_SOLID) ||                      // non-solid?
       thing->flags & (MF_SPECIAL|MF_NOCLIP|MF_CORPSE) || // other is special?
       clip.thing->flags & MF_SPECIAL ||                   // this is special?
       thing == clip.thing ||                              // same as self?
-      clip.thing->z > thing->z + thing->height ||         // over?
-      clip.thing->z + clip.thing->height <= thing->z)      // under?
+      clip.thing->z > pos.z + thing->height ||         // over?
+      clip.thing->z + clip.thing->height <= pos.z)      // under?
    {
       return true;
    }
 
    // test against collision - from PIT_CheckThing:
-   // ioanch 20160110: portal aware
-   if(D_abs(getThingX(clip.thing, thing) - clip.x) >= blockdist || 
-      D_abs(getThingY(clip.thing, thing) - clip.y) >= blockdist)
+   if(D_abs(pos.x - clip.x) >= blockdist ||
+      D_abs(pos.y - clip.y) >= blockdist)
       return true;
 
    // the thing may be blocking; save a pointer to it
@@ -317,8 +319,11 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
    const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid, 
       thing->groupid);
 
-   if(D_abs(thing->x - link->x - clip.x) >= blockdist ||
-      D_abs(thing->y - link->y - clip.y) >= blockdist)
+   fixed_t cx = clip.x;
+   fixed_t cy = clip.y;
+   link->game.apply(cx, cy);
+   if(D_abs(thing->x - cx) >= blockdist ||
+      D_abs(thing->y - cy) >= blockdist)
       return true; // didn't hit it
 
    // ioanch 20160122: reject if the things don't belong to the same group and
@@ -328,10 +333,18 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
       // Important: find line portals between three coordinates
       // first get between 
       int finalgroup = clip.thing->groupid;   // default placeholder
-      v2fixed_t pos = P_LinePortalCrossing(*clip.thing, clip.x - clip.thing->x, 
-                                          clip.y - clip.thing->y, &finalgroup);
-      P_LinePortalCrossing(pos, thing->x - link->x - pos.x, 
-         thing->y - link->y - pos.y, &finalgroup);
+      v2fixed_t pos = P_LinePortalCrossing(clip.thing->x, clip.thing->y,
+                                           clip.x - clip.thing->x,
+                                           clip.y - clip.thing->y, &finalgroup);
+
+      // FIXME: this was added because things looked suspicious without it
+      // Remove it if bugs get reported!!
+      if(finalgroup != clip.thing->groupid)
+         link = P_GetLinkOffset(finalgroup, thing->groupid);
+
+      link->game.apply(pos.x, pos.y);
+
+      P_LinePortalCrossing(pos, thing->x - pos.x, thing->y - pos.y, &finalgroup);
 
       if(finalgroup != thing->groupid && 
          !P_ThingReachesGroupVertically(thing, finalgroup, 
@@ -353,6 +366,8 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
 
    // haleyjd 1/17/00: set global hit reference
    clip.BlockingMobj = thing;
+   // clip.BlockingMobjZOffs will be the delta Z to it
+   link->game.applyZ(clip.BlockingMobjZOffs = 0);
 
    // haleyjd: from zdoom: OVER_UNDER
    topz = thing->z + thing->height;
@@ -598,27 +613,26 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
 
    // ioanch 20160110: portal aware floor and ceiling z detection
    const sector_t *bottomsector = newsubsec->sector;
-#ifdef R_LINKEDPORTALS
-   if(demo_version >= 333 && newsubsec->sector->f_pflags & PS_PASSABLE && 
+   if(demo_version >= 333 && newsubsec->sector->f_pflags & PS_PASSABLE &&
       !(clip.thing->flags & MF_NOCLIP))
    {
+      fixed_t fzoffs;
       bottomsector = P_ExtremeSectorAtPoint(x, y, false, 
-         newsubsec->sector);
-      clip.floorz = clip.dropoffz = bottomsector->floorheight;
+         newsubsec->sector, &fzoffs);
+      clip.floorz = clip.dropoffz = bottomsector->floorheight - fzoffs;
    }
    else
-#endif
       clip.floorz = clip.dropoffz = newsubsec->sector->floorheight;
 
-#ifdef R_LINKEDPORTALS
    if(demo_version >= 333 && newsubsec->sector->c_pflags & PS_PASSABLE &&
       !(clip.thing->flags & MF_NOCLIP))
    {
-      clip.ceilingz = P_ExtremeSectorAtPoint(x, y, true, 
-         newsubsec->sector)->ceilingheight;
+      fixed_t czoffs, cheight;
+      cheight = P_ExtremeSectorAtPoint(x, y, true,
+                                       newsubsec->sector, &czoffs)->ceilingheight;
+      clip.ceilingz = cheight - czoffs;
    }
    else
-#endif
       clip.ceilingz = newsubsec->sector->ceilingheight;
 
    clip.secfloorz = clip.passfloorz = clip.floorz;
@@ -651,7 +665,9 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
    bbox[BOXTOP] = clip.bbox[BOXTOP] + MAXRADIUS;
    
    clip.BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
+   clip.BlockingMobjZOffs = 0;
    thingblocker = NULL;
+   fixed_t tbzoffs = 0;
    stepthing    = NULL;
 
    // [RH] Fake taller height to catch stepping up into things.
@@ -661,7 +677,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
    // ioanch: portal aware
    // keep the lines indented to minimize git diff
    if(!P_TransPortalBlockWalker(bbox, thing->groupid, true,
-      [thing, realheight, &thingblocker](int x, int y, int groupid) -> bool
+      [thing, realheight, &thingblocker, &tbzoffs](int x, int y, int groupid) -> bool
    {
          // haleyjd: from zdoom:
          Mobj *robin = NULL;
@@ -683,15 +699,23 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
                }
                else if(!clip.BlockingMobj->player && 
                        !(thing->flags & (MF_FLOAT|MF_MISSILE|MF_SKULLFLY)) &&
-                       clip.BlockingMobj->z + clip.BlockingMobj->height - thing->z <= STEPSIZE)
+                       clip.BlockingMobj->z + clip.BlockingMobj->height
+                       - clip.BlockingMobjZOffs - thing->z <= STEPSIZE)
                {
-                  if(thingblocker == NULL || clip.BlockingMobj->z > thingblocker->z)
+                  if(thingblocker == NULL ||
+                     clip.BlockingMobj->z - clip.BlockingMobjZOffs >
+                     thingblocker->z - tbzoffs)
+                  {
                      thingblocker = clip.BlockingMobj;
+                     tbzoffs = clip.BlockingMobjZOffs;
+                  }
                   robin = clip.BlockingMobj;
                   clip.BlockingMobj = NULL;
+                  clip.BlockingMobjZOffs = 0;
                }
                else if(thing->player &&
-                       thing->z + thing->height - clip.BlockingMobj->z <= STEPSIZE)
+                       thing->z + thing->height - clip.BlockingMobj->z
+                       + clip.BlockingMobjZOffs <= STEPSIZE)
                {
                   if(thingblocker)
                   { 
@@ -705,6 +729,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
                   // if there is something else to step on.
                   robin = clip.BlockingMobj;
                   clip.BlockingMobj = NULL;
+                  clip.BlockingMobjZOffs = 0;
                }
                else
                { // Definitely blocking
@@ -724,9 +749,13 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
    // check lines
    
    clip.BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
+   clip.BlockingMobjZOffs = 0;
    thing->height = realheight;
    if(clip.thing->flags & MF_NOCLIP)
+   {
+      clip.BlockingMobjZOffs = tbzoffs;
       return (clip.BlockingMobj = thingblocker) == NULL;
+   }
 
    memcpy(bbox, clip.bbox, sizeof(bbox));
    
@@ -768,6 +797,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
          
    if(stepthing != NULL)
       clip.dropoffz = thingdropoffz;
+   clip.BlockingMobjZOffs = tbzoffs;
    
    return (clip.BlockingMobj = thingblocker) == NULL;
 }

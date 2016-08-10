@@ -1603,7 +1603,6 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
 
       // SoM: restructured a bit
       fixed_t thrust = damage*(FRACUNIT>>3)*tf/target->info->mass;
-#ifdef R_LINKEDPORTALS
       unsigned ang;
 
       {
@@ -1615,14 +1614,12 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
          else
          {
             auto link = P_GetLinkOffset(target->groupid, inflictor->groupid);
-            ang = P_PointToAngle(inflictor->x, inflictor->y, 
-                                  target->x + link->x, target->y + link->y);
+            fixed_t tx = target->x;
+            fixed_t ty = target->y;
+            link->game.apply(tx, ty);
+            ang = P_PointToAngle(inflictor->x, inflictor->y, tx, ty);
          }
       }
-#else
-      unsigned ang = P_PointToAngle (inflictor->x, inflictor->y,
-                                      target->x, target->y);
-#endif
 
       // make fall forwards sometimes
       if(damage < 40 && damage > target->health

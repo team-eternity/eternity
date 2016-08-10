@@ -56,10 +56,19 @@
 // the offset is located in linktable[startgroup * groupcount + targetgroup]
 linkoffset_t **linktable = NULL;
 
+// quick escape
+inline static linkoffset_t identity()
+{
+   linkoffset_t ret;
+   memset(&ret, 0, sizeof(ret));
+   ret.visual.rot[0][0] = ret.visual.rot[1][1] = 1;
+   ret.game.rot[0][0] = ret.game.rot[1][1] = FRACUNIT;
+   return ret;
+}
 
 // This guy is a (0, 0, 0) link offset which is used to populate null links in the 
 // linktable and is returned by P_GetLinkOffset for invalid inputs
-linkoffset_t zerolink = {0, 0, 0};
+linkoffset_t zerolink = identity();
 
 // The group list is allocated PU_STATIC because it isn't level specific, however,
 // each element is allocated PU_LEVEL. P_InitPortals clears the list and sets the 
@@ -341,7 +350,7 @@ linkoffset_t *P_GetLinkIfExists(int fromgroup, int togroup)
 // out of bounds, and 2 of the target group is out of bounds.
 //
 static int P_AddLinkOffset(int startgroup, int targetgroup,
-                           fixed_t x, fixed_t y, fixed_t z)
+                           const linkoffset_t &newlink)
 {
    linkoffset_t *link;
 
@@ -363,10 +372,8 @@ static int P_AddLinkOffset(int startgroup, int targetgroup,
 
    link = (linkoffset_t *)(Z_Malloc(sizeof(linkoffset_t), PU_LEVEL, 0));
    linktable[startgroup * groupcount + targetgroup] = link;
-   
-   link->x = x;
-   link->y = y;
-   link->z = z;
+
+   *link = newlink;
 
    return 0;
 }
@@ -424,18 +431,14 @@ static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
    if(!link)
    {
       int ret = P_AddLinkOffset(sec->groupid, portal->data.link.toid,
-                                portal->data.link.deltax, 
-                                portal->data.link.deltay, 
-                                portal->data.link.deltaz);
+                                portal->data.link.offset);
       if(ret)
          return false;
    }
    else
    {
       // Check for consistency
-      if(link->x != portal->data.link.deltax ||
-         link->y != portal->data.link.deltay ||
-         link->z != portal->data.link.deltaz)
+      if(!link->approxEqual(portal->data.link.offset))
       {
          C_Printf(FC_ERROR "P_BuildLinkTable: sector %i in group %i contains "
                   "inconsistent reference to group %i.\n"
@@ -455,8 +458,7 @@ static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
 // group, that is, if group A has a link to B, and B has a link to C, a link
 // can be found to go from A to C.
 //
-static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
-                          int via)
+static void P_GatherLinks(int group, const linkoffset_t *inlink, int via)
 {
    int i, p;
    linkoffset_t *link, **linklist, **grouplinks;
@@ -477,7 +479,7 @@ static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
             continue;
 
          if((link = linklist[i]))
-            P_GatherLinks(group, link->x, link->y, link->z, i);
+            P_GatherLinks(group, link, i);
       }
 
       return;
@@ -497,8 +499,12 @@ static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
       if(!(link = linklist[p]) || grouplinks[p])
          continue;
 
-      P_AddLinkOffset(group, p, dx + link->x, dy + link->y, dz + link->z);
-      P_GatherLinks(group, dx + link->x, dy + link->y, dz + link->z, p);
+      linkoffset_t newlink = *inlink;
+      link->visual.apply(newlink.visual);
+      link->game.apply(newlink.game);
+
+      P_AddLinkOffset(group, p, newlink);
+      P_GatherLinks(group, &newlink, p);
    }
 }
 
@@ -712,9 +718,7 @@ bool P_BuildLinkTable()
          // check the links
          if(link && backlink)
          {
-            if(backlink->x != -link->x ||
-               backlink->y != -link->y ||
-               backlink->z != -link->z)
+            if(!backlink->visual.isInverseOf(link->visual))
             {
                C_Printf(FC_ERROR "Portal groups %i and %i link and backlink do "
                         "not agree\nLinked portals are disabled\a\n", i, p);
@@ -726,7 +730,7 @@ bool P_BuildLinkTable()
 
    // That first loop has to complete before this can be run!
    for(i = 0; i < groupcount; i++)
-      P_GatherLinks(i, 0, 0, 0, R_NOGROUP);
+      P_GatherLinks(i, nullptr, R_NOGROUP);
 
    // SoM: one last step. Find all map architecture with a group id of -1 and 
    // assign it to group 0
@@ -792,9 +796,18 @@ void P_LinkRejectTable()
 // The player passed a line portal from P_TryMove; just update viewport and
 // pass-polyobject velocity
 //
-void P_LinePortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
-                             int fromid, int toid)
+void P_LinePortalDidTeleport(Mobj *mo, const portalfixedform_t &trans,
+                             int fromid, int toid,
+                             fixed_t *xmove, fixed_t *ymove)
 {
+   // set angle
+   mo->angle += trans.angle;
+
+   // update velocity to fit angle!!!
+   trans.applyRotation(mo->momx, mo->momy);
+   if(xmove && ymove)
+      trans.applyRotation(*xmove, *ymove);
+
    // Prevent bad interpolation
    if(mo->player && mo->player->mo == mo)
    {
@@ -804,9 +817,7 @@ void P_LinePortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
    }
    else
    {
-      mo->prevpos.x += dx;
-      mo->prevpos.y += dy;
-      mo->prevpos.z += dz;
+      trans.apply(mo->prevpos.x, mo->prevpos.y, mo->prevpos.z);
    }
 
    // Polyobject car enter and exit inertia
@@ -880,20 +891,17 @@ void P_LinePortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
 //
 // EV_PortalTeleport
 //
-bool EV_PortalTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
-                       int fromid, int toid)
+bool EV_PortalTeleport(Mobj *mo, const linkoffset_t *link, int fromid, int toid)
 {
    if(!mo)
       return 0;
 
    // ioanch 20160113: don't teleport. Just change x and y
    P_UnsetThingPosition(mo);
-   mo->x += dx;
-   mo->y += dy;
-   mo->z += dz;
+   link->game.apply(mo->x, mo->y, mo->z);
    P_SetThingPosition(mo);
 
-   P_LinePortalDidTeleport(mo, dx, dy, dz, fromid, toid);
+   P_LinePortalDidTeleport(mo, link->game, fromid, toid, nullptr, nullptr);
    
    return 1;
 }
@@ -1066,7 +1074,8 @@ void P_SetLPortalBehavior(line_t *line, int newbehavior)
 // updating the target position correctly
 //
 v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
-                               int *group, bool *passed)
+                               int *group, bool *passed, fixed_t *zoffs,
+                               portalfixedform_t *trans)
 {
    v2fixed_t cur = { x, y };
    v2fixed_t fin = { x + dx, y + dy };
@@ -1082,13 +1091,17 @@ v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
    // number should be as large as possible to prevent accidental exits on valid
    // hyperdetailed maps, but low enough to release the game on time.
    int recprotection = 32768;
-   
+   if(zoffs)
+      *zoffs = 0;
+   if(trans)
+      trans->init();
+
    do
    {
       
       res = CAM_PathTraverse(cur, fin, CAM_ADDLINES | CAM_REQUIRELINEPORTALS, 
-                             [&cur, &fin, group, passed](const intercept_t *in,
-                                                         const divline_t &trace)
+                             [&cur, &fin, group, passed, zoffs, trans]
+                             (const intercept_t *in, const divline_t &trace)
       {
 
          const line_t *line = in->d.line;
@@ -1104,7 +1117,7 @@ v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
          // must be a valid portal line
          const linkdata_t &link = line->portal->data.link;
          // FIXME: does this really happen?
-         if(link.fromid == link.toid || (!link.deltax && !link.deltay))
+         if(link.fromid == link.toid)
             return true;
 
          // double check: line MUST be crossed and trace origin must be in front
@@ -1115,12 +1128,17 @@ v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
             return true;
          }
 
+         if(zoffs)
+            link.offset.game.applyZ(*zoffs);
+         if(trans)
+            link.offset.game.apply(*trans);
+
          // update the fields
-         cur.x += FixedMul(trace.dx, in->frac) + link.deltax;
-         cur.y += FixedMul(trace.dy, in->frac) + link.deltay;
+         cur.x += FixedMul(trace.dx, in->frac);
+         cur.y += FixedMul(trace.dy, in->frac);
+         link.offset.game.apply(cur.x, cur.y);
          // deltaz doesn't matter because we're not using Z here
-         fin.x += link.deltax;
-         fin.y += link.deltay;
+         link.offset.game.apply(fin.x, fin.y);
          if(group)
             *group = link.toid;
          if(passed)
@@ -1213,10 +1231,7 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
 
    do
    {
-      movedBBox[BOXLEFT] += link->x;
-      movedBBox[BOXRIGHT] += link->x;
-      movedBBox[BOXBOTTOM] += link->y;
-      movedBBox[BOXTOP] += link->y;
+      link->game.applyBox(movedBBox);
       // set the blocks to be visited
       int xl = (movedBBox[BOXLEFT] - bmaporgx) >> MAPBLOCKSHIFT;
       int xh = (movedBBox[BOXRIGHT] - bmaporgx) >> MAPBLOCKSHIFT;
@@ -1313,15 +1328,15 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
             ++queuehead;
 
             // make sure to reject trivial (zero) links
-         } while(!link->x && !link->y && queuehead < queueback);
+         } while(link == &zerolink && queuehead < queueback);
 
          // if a valid link has been found, also update current groupid
-         if(link->x || link->y)
+         if(link != &zerolink)
             groupid = groupqueue[queuehead - 1];
       }
 
       // if a valid link has been found (and groupid updated) continue
-   } while(link->x || link->y);
+   } while(link != &zerolink);
 
    // we now have the list of accessedgroupids
    
@@ -1337,10 +1352,12 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
 // If point x/y resides in a sector with portal, pass through it
 //
 sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling, 
-                                 sector_t *sector)
+                                 sector_t *sector, fixed_t *zoffs)
 {
    if(!sector) // if not preset
       sector = R_PointInSubsector(x, y)->sector;
+   if(zoffs)
+      zoffs = 0;
 
    int numgroups = P_PortalGroupCount();
    if(numgroups <= 1 || full_demo_version < make_full_version(340, 48) || 
@@ -1360,19 +1377,18 @@ sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling,
 
       // Also quit early if the planez is obscured by a dynamic horizontal plane
       // or if deltax and deltay are somehow zero
-      if((ceiling ? sector->ceilingheight < link.planez
-                  :   sector->floorheight > link.planez) ||
-                          (!link.deltax && !link.deltay))
+      if(ceiling ? sector->ceilingheight < link.planez
+                 :   sector->floorheight > link.planez)
       {
          return sector;
       }
 
-      // adding deltaz doesn't matter because a sector portal MUST be in a
-      // different location
-      
       // move into the new sector
-      x += link.deltax;
-      y += link.deltay;
+
+      if(zoffs)
+         link.offset.game.apply(x, y, *zoffs);
+      else
+         link.offset.game.apply(x, y);
       sector = R_PointInSubsector(x, y)->sector;
 
    }
@@ -1464,8 +1480,7 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
       while(sector->*pflags[i] & PS_PASSABLE)
       {
          link = P_GetLinkOffset(groupid, (sector->*portal[i])->data.link.toid);
-         x += link->x;
-         y += link->y;
+         link->game.apply(x, y);
          sector = R_PointInSubsector(x, y)->sector;
          groupid = sector->groupid;
          if(groupid == tgroupid)
@@ -1487,9 +1502,11 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
 void P_MoveLinkedPortal(portal_t *portal, fixed_t dx, fixed_t dy, bool movebehind)
 {
    linkdata_t &data = portal->data.link;
-   data.deltax += dx;
-   data.deltay += dy;
-   linkoffset_t *link;
+   data.offset.visual.move.x += M_FixedToDouble(dx);
+   data.offset.visual.move.y += M_FixedToDouble(dy);
+   data.offset.game.move.x += dx;
+   data.offset.game.move.y += dy;
+   linkoffset_t *link, *mylink;
    for(int i = 0; i < groupcount; ++i)
    {
       if(movebehind)
@@ -1498,8 +1515,12 @@ void P_MoveLinkedPortal(portal_t *portal, fixed_t dx, fixed_t dy, bool movebehin
          link = P_GetLinkOffset(i, data.toid);
          if(link == &zerolink)
             continue;
-         link->x += dx;
-         link->y += dy;
+         mylink = P_GetLinkOffset(i, data.fromid);
+         if(mylink == &zerolink)
+            continue;
+         *link = *mylink;
+         data.offset.visual.apply(link->visual);
+         data.offset.game.apply(link->game);
       }
       else
       {
@@ -1507,8 +1528,12 @@ void P_MoveLinkedPortal(portal_t *portal, fixed_t dx, fixed_t dy, bool movebehin
          link = P_GetLinkOffset(data.fromid, i);
          if(link == &zerolink)
             continue;
-         link->x += dx;
-         link->y += dy;
+         mylink = P_GetLinkOffset(data.toid, i);
+         if(mylink == &zerolink)
+            continue;
+         *link = data.offset;
+         mylink->visual.apply(link->visual);
+         mylink->game.apply(link->game);
       }
    }
 }

@@ -1395,24 +1395,22 @@ void A_BouncingBFG(actionargs_t *actionargs)
       P_SetTarget<Mobj>(&newmo->target, mo->target); // pass on the player
 
       // ioanch 20151230: make portal aware
-      fixed_t ltx = getThingX(newmo, clip.linetarget);
-      fixed_t lty = getThingY(newmo, clip.linetarget);
-      fixed_t ltz = getThingZ(newmo, clip.linetarget);
+      v3fixed_t ltpos = getThingPos(newmo, clip.linetarget);
 
-      an2 = P_PointToAngle(newmo->x, newmo->y, ltx, lty);
+      an2 = P_PointToAngle(newmo->x, newmo->y, ltpos.x, ltpos.y);
       newmo->angle = an2;
       
       an2 >>= ANGLETOFINESHIFT;
       newmo->momx = FixedMul(newmo->info->speed, finecosine[an2]);
       newmo->momy = FixedMul(newmo->info->speed, finesine[an2]);
 
-      dist = P_AproxDistance(ltx - newmo->x, lty - newmo->y);
+      dist = P_AproxDistance(ltpos.x - newmo->x, ltpos.y - newmo->y);
       dist = dist / newmo->info->speed;
       
       if(dist < 1)
          dist = 1;
       
-      newmo->momz = (ltz + (clip.linetarget->height>>1) - newmo->z) / dist;
+      newmo->momz = (ltpos.z + (clip.linetarget->height>>1) - newmo->z) / dist;
 
       newmo->extradata.bfgcount = mo->extradata.bfgcount - 1; // count down
       P_SetTarget<Mobj>(&newmo->tracer, clip.linetarget); // haleyjd: track target
@@ -1441,7 +1439,8 @@ void A_BFG11KHit(actionargs_t *actionargs)
       return;
    
    // check the originator and hurt them if too close
-   origdist = P_AproxDistance(mo->x - getTargetX(mo), mo->y - getTargetY(mo));
+   v3fixed_t pos = getTargetPos(mo);
+   origdist = P_AproxDistance(mo->x - pos.x, mo->y - pos.y);
    
    if(origdist < 96*FRACUNIT)
    {

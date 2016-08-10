@@ -356,12 +356,14 @@ void A_SpawnGlitter(actionargs_t *actionargs)
    // ioanch 20160107: correctly spawn behind line portal
    fixed_t dx = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
    fixed_t dy = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
-   v2fixed_t pos = P_LinePortalCrossing(*actor, dx, dy);
+   fixed_t zoffs;
+   v2fixed_t pos = P_LinePortalCrossing(actor->x, actor->y, dx, dy, nullptr,
+                                        nullptr, &zoffs);
    
    x = pos.x;
    y = pos.y;
 
-   z = actor->floorz;
+   z = actor->floorz + zoffs;
 
    glitter = P_SpawnMobj(x, y, z, glitterType);
 
@@ -624,12 +626,10 @@ void A_GenTracer(actionargs_t *actionargs)
       return;
 
    // ioanch 20151230: portal-aware
-   fixed_t dx = getThingX(actor, dest);
-   fixed_t dy = getThingY(actor, dest);
-   fixed_t dz = getThingZ(actor, dest);
+   v3fixed_t dpos = getThingPos(actor, dest);
 
    // change angle
-   exact = P_PointToAngle(actor->x, actor->y, dx, dy);
+   exact = P_PointToAngle(actor->x, actor->y, dpos.x, dpos.y);
 
    if(exact != actor->angle)
    {
@@ -652,14 +652,14 @@ void A_GenTracer(actionargs_t *actionargs)
    actor->momy = FixedMul(actor->info->speed, finesine[exact]);
 
    // change slope
-   dist = P_AproxDistance(dx - actor->x, dy - actor->y);
+   dist = P_AproxDistance(dpos.x - actor->x, dpos.y - actor->y);
    
    dist = dist / actor->info->speed;
 
    if(dist < 1)
       dist = 1;
 
-   slope = (dz + 40*FRACUNIT - actor->z) / dist;
+   slope = (dpos.z + 40*FRACUNIT - actor->z) / dist;
    
    if(slope < actor->momz)
       actor->momz -= FRACUNIT/8;
@@ -858,15 +858,8 @@ void A_MissileSpread(actionargs_t *actionargs)
    for(i = 0; i < num; ++i)
    {
       // calculate z momentum
-#ifdef R_LINKEDPORTALS
-      momz = P_MissileMomz(getTargetX(actor) - actor->x,
-                           getTargetY(actor) - actor->y,
-                           getTargetZ(actor) - actor->z,
-#else
-      momz = P_MissileMomz(actor->target->x - actor->x,
-                           actor->target->y - actor->y,
-                           actor->target->z - actor->z,
-#endif
+      v3fixed_t pos = getTargetPos(actor);
+      momz = P_MissileMomz(pos.x - actor->x, pos.y - actor->y, pos.z - actor->z,
                            mobjinfo[type]->speed);
 
       P_SpawnMissileAngle(actor, type, ang, momz, z);
@@ -1035,11 +1028,15 @@ void A_ThingSummon(actionargs_t *actionargs)
    // ioanch 20160107: spawn past portals in front of spawner
    v2fixed_t relpos = { actor->x + FixedMul(prestep, finecosine[an]),
                         actor->y + FixedMul(prestep, finesine[an]) };
-   v2fixed_t pos = P_LinePortalCrossing(*actor, relpos - *actor);
+   v2fixed_t relpos2 = relpos - *actor;
+   fixed_t zoffs;
+   v2fixed_t pos = P_LinePortalCrossing(actor->x, actor->y,
+                                        relpos2.x, relpos2.y, nullptr, nullptr,
+                                        &zoffs);
 
    x = pos.x;
    y = pos.y;
-   z = actor->z + deltaz;
+   z = actor->z + deltaz + zoffs;
 
    // Check whether the thing is being spawned through a 1-sided
    // wall or an impassible line, or a "monsters can't cross" line.
@@ -1056,11 +1053,12 @@ void A_ThingSummon(actionargs_t *actionargs)
 
    // ioanch 20160107: consider sectors when killing things stuck in floor or
    // ceiling. Also remove redundant parentheses.
-   const sector_t *csector = P_ExtremeSectorAtPoint(newmobj, true);
-   const sector_t *fsector = P_ExtremeSectorAtPoint(newmobj, false);
+   fixed_t czoffs, fzoffs;
+   const sector_t *csector = P_ExtremeSectorAtPoint(newmobj, true, &czoffs);
+   const sector_t *fsector = P_ExtremeSectorAtPoint(newmobj, false, &fzoffs);
    
-   if(newmobj->z > csector->ceilingheight - newmobj->height ||
-      newmobj->z < fsector->floorheight)
+   if(newmobj->z + czoffs > csector->ceilingheight - newmobj->height ||
+      newmobj->z + fzoffs < fsector->floorheight)
    {
       actionargs_t dieaction;
 
@@ -1187,14 +1185,9 @@ void A_AproxDistance(actionargs_t *actionargs)
       *dest = -1;
       return;
    }
-   
-#ifdef R_LINKEDPORTALS
-   distance = P_AproxDistance(actor->x - getTargetX(actor), 
-                              actor->y - getTargetY(actor));
-#else   
-   distance = P_AproxDistance(actor->x - actor->target->x, 
-                              actor->y - actor->target->y);
-#endif
+
+   v3fixed_t pos = getTargetPos(actor);
+   distance = P_AproxDistance(actor->x - pos.x, actor->y - pos.y);
 
    *dest = distance >> FRACBITS;
 }

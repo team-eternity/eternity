@@ -46,11 +46,14 @@
 static int untouchedViaOffset(line_t *ld, const linkoffset_t *link)
 {
    fixed_t x, y, tmbbox[4];
+   fixed_t thx = clip.thing->x;
+   fixed_t thy = clip.thing->y;
+   link->game.apply(thx, thy);
    return 
-     (tmbbox[BOXRIGHT] = (x = clip.thing->x + link->x) + clip.thing->radius) <= 
+     (tmbbox[BOXRIGHT] = (x = thx) + clip.thing->radius) <=
      ld->bbox[BOXLEFT] ||
      (tmbbox[BOXLEFT] = x - clip.thing->radius) >= ld->bbox[BOXRIGHT] ||
-     (tmbbox[BOXTOP] = (y = clip.thing->y + link->y) + clip.thing->radius) <= 
+     (tmbbox[BOXTOP] = (y = thy) + clip.thing->radius) <=
      ld->bbox[BOXBOTTOM] ||
      (tmbbox[BOXBOTTOM] = y - clip.thing->radius) >= ld->bbox[BOXTOP] ||
      P_BoxOnLineSide(tmbbox, ld) != -1;
@@ -191,10 +194,8 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
 
    const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid, linegroupid);
    fixed_t bbox[4];
-   bbox[BOXLEFT] = clip.bbox[BOXLEFT] + link->x;
-   bbox[BOXBOTTOM] = clip.bbox[BOXBOTTOM] + link->y;
-   bbox[BOXRIGHT] = clip.bbox[BOXRIGHT] + link->x;
-   bbox[BOXTOP] = clip.bbox[BOXTOP] + link->y;
+   memcpy(bbox, clip.bbox, 4 * sizeof(fixed_t));
+   link->game.applyBox(bbox);
 
    if(bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   || 
       bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  || 
@@ -241,8 +242,11 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
    // clip.opensecceil
    // clip.touch3dside
 
-   fixed_t thingtopz = clip.thing->z + clip.thing->height;
-   fixed_t thingz = clip.thing->z;
+   v3fixed_t thingtranslated = {clip.thing->x, clip.thing->y, clip.thing->z};
+   link->game.apply(thingtranslated.x, thingtranslated.y, thingtranslated.z);
+
+   fixed_t thingtopz = thingtranslated.z + clip.thing->height;
+   fixed_t thingz = thingtranslated.z;
    fixed_t thingmid = thingz / 2 + thingtopz / 2;
 
    // ioanch 20160121: possibility to postpone floorz, ceilz if it's from a

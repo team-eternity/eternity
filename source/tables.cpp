@@ -2122,6 +2122,29 @@ void Table_InitTanToAngle(void)
    }
 }
 
+//
+// ioanch: interpolated sin and cos for finesine and finecosine
+// Not meant for performance; it should be calculated rarely.
+//
+fixed_t Table_LerpSin(angle_t angle)
+{
+   static const fixed_t step = 1 << ANGLETOFINESHIFT;
+   fixed_t floor = angle >> ANGLETOFINESHIFT << ANGLETOFINESHIFT;
+   fixed_t frac = FixedDiv(angle - floor, step);
+   unsigned fineangle = angle >> ANGLETOFINESHIFT;
+   return finesine[fineangle]
+   + FixedMul(frac, finesine[(fineangle + 1) & FINEMASK] - finesine[fineangle]);
+}
+fixed_t Table_LerpCos(angle_t angle)
+{
+   static const fixed_t step = 1 << ANGLETOFINESHIFT;
+   fixed_t floor = angle >> ANGLETOFINESHIFT << ANGLETOFINESHIFT;
+   fixed_t frac = FixedDiv(angle - floor, step);
+   unsigned fineangle = angle >> ANGLETOFINESHIFT;
+   return finecosine[fineangle]
+   + FixedMul(frac, finecosine[(fineangle + 1) & FINEMASK] - finecosine[fineangle]);
+}
+
 //----------------------------------------------------------------------------
 //
 // $Log: tables.c,v $

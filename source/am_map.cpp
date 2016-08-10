@@ -383,8 +383,13 @@ static void AM_restoreScaleAndLoc()
       {
          auto link = P_GetLinkOffset(plr->mo->groupid, 0);
 
-         m_x = M_FixedToDouble(plr->mo->x + link->x) - m_w/2;
-         m_y = M_FixedToDouble(plr->mo->y + link->y) - m_h/2;
+         fixed_t px = plr->mo->x;
+         fixed_t py = plr->mo->y;
+
+         link->visual.apply(px, py);
+
+         m_x = M_FixedToDouble(px) - m_w/2;
+         m_y = M_FixedToDouble(py) - m_h/2;
       }
       else
       {
@@ -452,10 +457,8 @@ static void AM_findMinMaxBoundaries()
       {
          auto link = P_GetLinkOffset(lines[i].frontsector->groupid, 0);
 
-         x1 += M_FixedToDouble(link->x);
-         y1 += M_FixedToDouble(link->y);
-         x2 += M_FixedToDouble(link->x);
-         y2 += M_FixedToDouble(link->y);
+         link->visual.apply(x1, y1);
+         link->visual.apply(x2, y2);
       }
 
       if(x1 < min_x)
@@ -569,8 +572,13 @@ static void AM_initVariables()
       if(mapportal_overlay && plr->mo->groupid > 0)
       {
          auto link = P_GetLinkOffset(plr->mo->groupid, 0);
-         m_x = M_FixedToDouble(plr->mo->x + link->x) - m_w/2;
-         m_y = M_FixedToDouble(plr->mo->y + link->y) - m_h/2;
+
+         fixed_t px = plr->mo->x;
+         fixed_t py = plr->mo->y;
+         link->visual.apply(px, py);
+
+         m_x = M_FixedToDouble(px) - m_w/2;
+         m_y = M_FixedToDouble(py) - m_h/2;
       }
       else
       {
@@ -980,8 +988,11 @@ static void AM_doFollowPlayer()
       if(mapportal_overlay && plr->mo->groupid > 0)
       {
          auto link = P_GetLinkOffset(plr->mo->groupid, 0);
-         m_x = FTOM(MTOF(M_FixedToDouble(plr->mo->x + link->x))) - m_w/2;
-         m_y = FTOM(MTOF(M_FixedToDouble(plr->mo->y + link->y))) - m_h/2;
+         fixed_t px = plr->mo->x;
+         fixed_t py = plr->mo->y;
+         link->visual.apply(px, py);
+         m_x = FTOM(MTOF(M_FixedToDouble(px))) - m_w/2;
+         m_y = FTOM(MTOF(M_FixedToDouble(py))) - m_h/2;
       }
       else
       {
@@ -1677,11 +1688,8 @@ static void AM_drawWalls()
          if(line->frontsector->groupid > 0)
          {
             auto link = P_GetLinkOffset(line->frontsector->groupid, 0);
-
-            l.a.x += M_FixedToDouble(link->x);
-            l.a.y += M_FixedToDouble(link->y);
-            l.b.x += M_FixedToDouble(link->x);
-            l.b.y += M_FixedToDouble(link->y);
+            link->visual.apply(l.a.x, l.a.y);
+            link->visual.apply(l.b.x, l.b.y);
          }
          // if line has been seen or IDDT has been used
          if(ddt_cheating || (line->flags & ML_MAPPED))
@@ -1732,11 +1740,8 @@ static void AM_drawWalls()
          if(line->frontsector && line->frontsector->groupid > 0)
          {
             linkoffset_t *link = P_GetLinkOffset(line->frontsector->groupid, 0);
-
-            l.a.x += M_FixedToDouble(link->x);
-            l.a.y += M_FixedToDouble(link->y);
-            l.b.x += M_FixedToDouble(link->x);
-            l.b.y += M_FixedToDouble(link->y);
+            link->visual.apply(l.a.x, l.a.y);
+            link->visual.apply(l.b.x, l.b.y);
          }
       }
 
@@ -2013,14 +2018,19 @@ static void AM_drawPlayers()
    int   color;
    // SoM: player x and y
    fixed_t px, py;
+   angle_t dangle = 0;
 
    if(!netgame)
    {
       if(mapportal_overlay && plr->mo->groupid > 0)
       {
          auto link = P_GetLinkOffset(plr->mo->groupid, 0);
-         px = plr->mo->x + link->x;
-         py = plr->mo->y + link->y;
+
+         px = plr->mo->x;
+         py = plr->mo->y;
+         dangle = link->game.angle;
+
+         link->visual.apply(px, py);
       }
       else
       {
@@ -2035,7 +2045,7 @@ static void AM_drawPlayers()
             cheat_player_arrow,
             NUMCHEATPLYRLINES,
             0.0,
-            plr->mo->angle,
+            plr->mo->angle + dangle,
             mapcolor_sngl,      //jff color
             px,
             py
@@ -2048,7 +2058,7 @@ static void AM_drawPlayers()
             player_arrow,
             NUMPLYRLINES,
             0.0,
-            plr->mo->angle,
+            plr->mo->angle + dangle,
             mapcolor_sngl,      //jff color
             px,
             py
@@ -2072,8 +2082,12 @@ static void AM_drawPlayers()
       if(mapportal_overlay && plr->mo->groupid > 0)
       {
          auto link = P_GetLinkOffset(plr->mo->groupid, 0);
-         px = p->mo->x + link->x;
-         py = p->mo->y + link->y;
+
+         px = p->mo->x;
+         py = p->mo->y;
+         dangle = link->game.angle;
+
+         link->visual.apply(px, py);
       }
       else
       {
@@ -2107,7 +2121,7 @@ static void AM_drawPlayers()
          player_arrow,
          NUMPLYRLINES,
          0.0,
-         p->mo->angle,
+         p->mo->angle + dangle,
          color,
          px,
          py
@@ -2126,6 +2140,7 @@ static void AM_drawPlayers()
 static void AM_drawThings(int colors, int colorrange)
 {
    fixed_t tx, ty; // SoM: Moved thing coords to variables for linked portals
+   angle_t dangle = 0;
    
    // for all sectors
    for(int i = 0; i < numsectors; i++)
@@ -2136,12 +2151,13 @@ static void AM_drawThings(int colors, int colorrange)
       {
          tx = t->x;
          ty = t->y;
+         dangle = 0;
 
          if(mapportal_overlay && t->subsector->sector->groupid > 0)
          {
             auto link = P_GetLinkOffset(t->subsector->sector->groupid, 0);
-            tx += link->x;
-            ty += link->y;
+            link->visual.apply(tx, ty);
+            dangle = link->game.angle;
          }
          // FIXME / HTIC_TODO: Heretic support and EDF editing?
 
@@ -2157,7 +2173,7 @@ static void AM_drawThings(int colors, int colorrange)
                    cross_mark,
                    NUMCROSSMARKLINES,
                    16.0,
-                   t->angle,
+                   t->angle + dangle,
                    mapcolor_rkey!=-1? mapcolor_rkey : mapcolor_sprt,
                    tx,
                    ty
@@ -2170,7 +2186,7 @@ static void AM_drawThings(int colors, int colorrange)
                    cross_mark,
                    NUMCROSSMARKLINES,
                    16.0,
-                   t->angle,
+                   t->angle + dangle,
                    mapcolor_ykey!=-1? mapcolor_ykey : mapcolor_sprt,
                    tx,
                    ty
@@ -2183,7 +2199,7 @@ static void AM_drawThings(int colors, int colorrange)
                    cross_mark,
                    NUMCROSSMARKLINES,
                    16.0,
-                   t->angle,
+                   t->angle + dangle,
                    mapcolor_bkey!=-1? mapcolor_bkey : mapcolor_sprt,
                    tx,
                    ty
@@ -2202,7 +2218,7 @@ static void AM_drawThings(int colors, int colorrange)
              thintriangle_guy,
              NUMTHINTRIANGLEGUYLINES,
              16.0,
-             t->angle,
+             t->angle + dangle,
              // killough 8/8/98: mark friends specially
              t->flags & MF_FRIEND && !t->player ? mapcolor_frnd : mapcolor_sprt,
              tx,

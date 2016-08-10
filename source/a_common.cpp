@@ -236,8 +236,8 @@ void A_FaceTarget(actionargs_t *actionargs)
       return;
 
    actor->flags &= ~MF_AMBUSH;
-   actor->angle = P_PointToAngle(actor->x, actor->y,
-                                 getTargetX(actor), getTargetY(actor));
+   v3fixed_t pos = getTargetPos(actor);
+   actor->angle = P_PointToAngle(actor->x, actor->y, pos.x, pos.y);
 
    int shiftamount = P_GetAimShift(actor->target, false);
    if(shiftamount >= 0)

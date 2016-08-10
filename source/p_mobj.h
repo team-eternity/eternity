@@ -518,32 +518,26 @@ void P_ChangeThingHeights(void);
 extern fixed_t FloatBobOffsets[64];
 
 // Made these use getThing* to eliminate the code duplication
-#define getTargetX(mo) getThingX((mo), (mo)->target)
-#define getTargetY(mo) getThingY((mo), (mo)->target)
-#define getTargetZ(mo) getThingZ((mo), (mo)->target)
+#define getTargetPos(mo) getThingPos((mo), (mo)->target)
 
 // haleyjd 05/21/08: Functions like the above, but when we have a specific
 // Mobj pointer we want to use, and not mo->target.
 
-inline static fixed_t getThingX(Mobj *mo1, Mobj *mo2)
+inline static v3fixed_t getThingPos(const Mobj *mo1, const Mobj *mo2)
 {
-   if(!mo2) return 0;
-   if(!mo1) return mo2->x;
-   return mo2->x + P_GetLinkOffset(mo2->groupid, mo1->groupid)->x;
-}
-
-inline static fixed_t getThingY(Mobj *mo1, Mobj *mo2)
-{
-   if(!mo2) return 0;
-   if(!mo1) return mo2->y;
-   return mo2->y + P_GetLinkOffset(mo2->groupid, mo1->groupid)->y;
-}
-
-inline static fixed_t getThingZ(Mobj *mo1, Mobj *mo2)
-{
-   if(!mo2) return 0;
-   if(!mo1) return mo2->z;
-   return mo2->z + P_GetLinkOffset(mo2->groupid, mo1->groupid)->z;
+   v3fixed_t ret;
+   if(!mo2)
+   {
+      ret.x = ret.y = ret.z = 0;
+      return ret;
+   }
+   ret.x = mo2->x;
+   ret.y = mo2->y;
+   ret.z = mo2->z;
+   if(!mo1)
+      return ret;
+   P_GetLinkOffset(mo2->groupid, mo1->groupid)->game.apply(ret.x, ret.y, ret.z);
+   return ret;
 }
 
 //=============================================================================

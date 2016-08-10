@@ -66,10 +66,13 @@ static void P_spawnGlitter(Mobj *actor, int type)
    // ioanch 20160116: make it portal-aware BOTH beyond line and sector gates
    fixed_t dx = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
    fixed_t dy = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
-   v2fixed_t pos = P_LinePortalCrossing(*actor, dx, dy);
+   fixed_t zoffs;
+   v2fixed_t pos = P_LinePortalCrossing(actor->x, actor->y, dx, dy, nullptr,
+                                        nullptr, &zoffs);
 
-   Mobj *mo = P_SpawnMobj(pos.x, pos.y, 
-      P_ExtremeSectorAtPoint(actor, false)->floorheight, type);
+   fixed_t fzoffs;
+   fixed_t fheight = P_ExtremeSectorAtPoint(actor, false, &fzoffs)->floorheight;
+   Mobj *mo = P_SpawnMobj(pos.x, pos.y, fheight - fzoffs + zoffs, type);
    mo->momz = FRACUNIT / 4;
 }
 
@@ -217,11 +220,9 @@ void P_HticTracer(Mobj *actor, angle_t threshold, angle_t maxturn)
       return;
 
    // ioanch 20151230: portal aware
-   fixed_t dx = getThingX(actor, dest);
-   fixed_t dy = getThingY(actor, dest);
-   fixed_t dz = getThingZ(actor, dest);
+   v3fixed_t dpos = getThingPos(actor, dest);
 
-   exact = P_PointToAngle(actor->x, actor->y, dx, dy);
+   exact = P_PointToAngle(actor->x, actor->y, dpos.x, dpos.y);
 
    if(exact > actor->angle)
    {
@@ -261,11 +262,11 @@ void P_HticTracer(Mobj *actor, angle_t threshold, angle_t maxturn)
    actor->momy = FixedMul(actor->info->speed, finesine[diff]);
 
    // adjust z only when significant height difference exists
-   if(actor->z + actor->height < dz ||
-      dz  + dest->height  < actor->z)
+   if(actor->z + actor->height < dpos.z ||
+      dpos.z + dest->height  < actor->z)
    {
       // directly from above
-      dist = P_AproxDistance(dx - actor->x, dy - actor->y);
+      dist = P_AproxDistance(dpos.x - actor->x, dpos.y - actor->y);
       
       dist = dist / actor->info->speed;
       
@@ -274,7 +275,7 @@ void P_HticTracer(Mobj *actor, angle_t threshold, angle_t maxturn)
 
       // momentum is set to equal slope rather than having some
       // added to it
-      actor->momz = (dz - actor->z) / dist;
+      actor->momz = (dpos.z - actor->z) / dist;
    }
 }
 
@@ -659,10 +660,21 @@ void A_GenWizard(actionargs_t *actionargs)
                     wizType);
 
    // ioanch 20160116: portal aware
-   if(!P_CheckPosition(mo, mo->x, mo->y) ||
-      (mo->z >
-      (P_ExtremeSectorAtPoint(mo, true)->ceilingheight - mo->height)) ||
-      (mo->z < P_ExtremeSectorAtPoint(mo, false)->floorheight))
+   if(!P_CheckPosition(mo, mo->x, mo->y))
+   {
+      mo->removeThinker();
+      return;
+   }
+   fixed_t czoffs;
+   fixed_t cheight = P_ExtremeSectorAtPoint(mo, true, &czoffs)->ceilingheight;
+   if(mo->z + czoffs > cheight - mo->height)
+   {
+      mo->removeThinker();
+      return;
+   }
+   fixed_t fzoffs;
+   fixed_t fheight = P_ExtremeSectorAtPoint(mo, false, &fzoffs)->floorheight;
+   if(mo->z + fzoffs < fheight)
    {
       // doesn't fit, so remove it immediately
       mo->removeThinker();
@@ -1252,14 +1264,10 @@ void A_MinotaurDecide(actionargs_t *actionargs)
       return;
 
    S_StartSound(actor, sfx_minsit);
-   
-#ifdef R_LINKEDPORTALS
-   dist = P_AproxDistance(actor->x - getTargetX(actor), 
-                          actor->y - getTargetY(actor));
-#else   
-   dist = P_AproxDistance(actor->x - target->x, actor->y - target->y);
-#endif
-   
+
+   v3fixed_t pos = getTargetPos(actor);
+   dist = P_AproxDistance(actor->x - pos.x, actor->y - pos.y);
+
    // charge attack
    if(P_CheckMntrCharge(dist, actor, target))
    {
@@ -1544,13 +1552,9 @@ void A_LichAttack(actionargs_t *actionargs)
    }
    
    // determine distance and use it to alter attack probabilities
-#ifdef R_LINKEDPORTALS
-   dist = (P_AproxDistance(actor->x - getTargetX(actor), 
-                          actor->y - getTargetY(actor)) > 512*FRACUNIT);
-#else
-   dist = (P_AproxDistance(actor->x-target->x, actor->y-target->y) > 512*FRACUNIT);
-#endif
-   
+   v3fixed_t pos = getTargetPos(actor);
+   dist = (P_AproxDistance(actor->x - pos.x, actor->y - pos.y) > 512*FRACUNIT);
+
    randAttack = P_Random(pr_lichattack);
    
    if(randAttack < (dist ? 150 : 50))

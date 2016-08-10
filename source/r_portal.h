@@ -28,6 +28,7 @@
 #define R_PORTALS_H__
 
 #include "doomdef.h"
+#include "linkoffs.h"
 
 struct line_t;
 class  Mobj;
@@ -95,12 +96,12 @@ typedef enum
    PS_BLENDFLAGS         = PS_OVERLAYFLAGS | PO_OPACITYMASK,
 } portalflag_e;
 
-
 // Contains information representing a link from one portal group to another
 struct linkdata_t
 {
    // SoM: linked portals are similar to anchored portals
-   fixed_t   deltax, deltay, deltaz;
+   linkoffset_t offset;
+
    fixed_t   planez;
    
    // fromid is the group where the portal actually is, toid is the group on 
@@ -114,13 +115,6 @@ struct linkdata_t
    // ioanch 20160226: access the partner portal (if any) in case of polyobject
    // cars
    portal_t *polyportalpartner;
-};
-
-struct portaltransform_t
-{
-   double rot[2][2];
-   v3double_t move;   // TODO: z offset
-   double angle;
 };
 
 // Represents the information needed for an anchored portal
@@ -208,7 +202,7 @@ void R_ClearPortals();
 void R_RenderPortals();
 
 portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum, 
-                            fixed_t planez, int fromid, int toid);
+                            fixed_t planez, int fromid, int toid, bool flipped);
 
 //=============================================================================
 //

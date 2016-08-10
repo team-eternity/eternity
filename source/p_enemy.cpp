@@ -112,13 +112,13 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       // lines, the portal structure won't tell you what sector is on the
       // other side of the portal. SO
       sector_t *other;
-      line_t *check = sec->lines[0];
+      const line_t *check = sec->lines[0];
 
-      other = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) 
-                             + R_FPLink(sec)->deltax,
-                            ((check->v1->y + check->v2->y) / 2) 
-                             + R_FPLink(sec)->deltay)->sector;
+      fixed_t beyondx = (check->v1->x + check->v2->x) / 2;
+      fixed_t beyondy = (check->v1->y + check->v2->y) / 2;
+      R_FPLink(sec)->offset.game.apply(beyondx, beyondy);
+
+      other = R_PointInSubsector(beyondx, beyondy)->sector;
 
       P_RecursiveSound(other, soundblocks, soundtarget);
    }
@@ -129,13 +129,13 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       // lines, the portal structure won't tell you what sector is on the 
       // other side of the portal. SO
       sector_t *other;
-      line_t *check = sec->lines[0];
+      const line_t *check = sec->lines[0];
 
-      other = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) 
-                             + R_CPLink(sec)->deltax,
-                            ((check->v1->y + check->v2->y) / 2) 
-                             + R_CPLink(sec)->deltay)->sector;
+      fixed_t beyondx = (check->v1->x + check->v2->x) / 2;
+      fixed_t beyondy = (check->v1->y + check->v2->y) / 2;
+      R_CPLink(sec)->offset.game.apply(beyondx, beyondy);
+
+      other = R_PointInSubsector(beyondx, beyondy)->sector;
 
       P_RecursiveSound(other, soundblocks, soundtarget);
    }
@@ -151,9 +151,11 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       {
          sector_t *iother;
 
-         iother = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) + check->portal->data.link.deltax,
-                            ((check->v1->y + check->v2->y) / 2) + check->portal->data.link.deltay)->sector;
+         fixed_t beyondx = (check->v1->x + check->v2->x) / 2;
+         fixed_t beyondy = (check->v1->y + check->v2->y) / 2;
+         check->portal->data.link.offset.game.apply(beyondx, beyondy);
+
+         iother = R_PointInSubsector(beyondx, beyondy)->sector;
 
          P_RecursiveSound(iother, soundblocks, soundtarget);
       }
@@ -203,18 +205,11 @@ bool P_CheckMeleeRange(Mobj *actor)
    }
 
    // ioanch 20151225: make it linked-portal aware
-   fixed_t tx, ty;
-#ifdef R_LINKEDPORTALS
-   tx = getThingX(actor, pl);
-   ty = getThingY(actor, pl);
-#else
-   tx = pl->x;
-   ty = pl->y;
-#endif
+   v3fixed_t tpos = getThingPos(actor, pl);
 
    return  // killough 7/18/98: friendly monsters don't attack other friends
       pl && !(actor->flags & pl->flags & MF_FRIEND) &&
-      (P_AproxDistance(tx - actor->x, ty - actor->y) <
+      (P_AproxDistance(tpos.x - actor->x, tpos.y - actor->y) <
        MELEERANGE - 20*FRACUNIT + pl->info->radius) &&
       P_CheckSight(actor, actor->target);
 }
@@ -236,17 +231,11 @@ bool P_HitFriend(Mobj *actor)
    if(actor->target)
    {
       angle_t angle;
-      fixed_t dist, tx, ty;
+      fixed_t dist;
 
-#ifdef R_LINKEDPORTALS
-      tx = getTargetX(actor);
-      ty = getTargetY(actor);
-#else
-      tx = actor->target->x;
-      ty = actor->target->y;
-#endif
-      angle = P_PointToAngle(actor->x, actor->y, tx, ty);
-      dist  = P_AproxDistance(actor->x - tx, actor->y - ty);
+      v3fixed_t tpos = getTargetPos(actor);
+      angle = P_PointToAngle(actor->x, actor->y, tpos.x, tpos.y);
+      dist  = P_AproxDistance(actor->x - tpos.x, actor->y - tpos.y);
 
       P_AimLineAttack(actor, angle, dist, 0);
 
@@ -297,13 +286,8 @@ bool P_CheckMissileRange(Mobj *actor)
       return false;       // do not attack yet
 
    // OPTIMIZE: get this from a global checksight
-#ifdef R_LINKEDPORTALS
-   dist = P_AproxDistance(actor->x - getTargetX(actor),
-                          actor->y - getTargetY(actor)) - 64*FRACUNIT;
-#else
-   dist = P_AproxDistance(actor->x - actor->target->x,
-                          actor->y - actor->target->y) - 64*FRACUNIT;
-#endif
+   v3fixed_t pos = getTargetPos(actor);
+   dist = P_AproxDistance(actor->x - pos.x, actor->y - pos.y) - 64*FRACUNIT;
 
    if(actor->info->meleestate == NullStateNum)
       dist -= 128*FRACUNIT;       // no melee attack, so fire more
@@ -630,16 +614,11 @@ bool P_SmartMove(Mobj *actor)
    // as well as any thing that has the MF2_JUMPDOWN flag
    // (includes DOGS)
 
+   v3fixed_t pos = getTargetPos(actor);
    if((actor->flags2 & MF2_JUMPDOWN || (actor->type == HelperThing)) &&
       target && dog_jumping &&
       !((target->flags ^ actor->flags) & MF_FRIEND) &&
-#ifdef R_LINKEDPORTALS
-      P_AproxDistance(actor->x - getTargetX(actor),
-                      actor->y - getTargetY(actor)) < FRACUNIT*144 &&
-#else
-      P_AproxDistance(actor->x - target->x,
-                      actor->y - target->y) < FRACUNIT*144 &&
-#endif      
+      P_AproxDistance(actor->x - pos.x, actor->y - pos.y) < FRACUNIT*144 &&
       P_Random(pr_dropoff) < 235)
    {
       dropoff = 2;
@@ -844,13 +823,9 @@ static fixed_t P_AvoidDropoff(Mobj *actor)
 void P_NewChaseDir(Mobj *actor)
 {
    Mobj *target = actor->target;
-#ifdef R_LINKEDPORTALS
-   fixed_t deltax = getTargetX(actor) - actor->x;
-   fixed_t deltay = getTargetY(actor) - actor->y;
-#else
-   fixed_t deltax = target->x - actor->x;
-   fixed_t deltay = target->y - actor->y;
-#endif
+   v3fixed_t deltapos = getTargetPos(actor);
+   fixed_t deltax = deltapos.x - actor->x;
+   fixed_t deltay = deltapos.y - actor->y;
 
    // killough 8/8/98: sometimes move away from target, keeping distance
    //
@@ -932,12 +907,12 @@ static bool P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
       return 0;  // haleyjd: total invisibility!
 
    // ioanch
-   fixed_t mox = getThingX(actor, mo), moy = getThingY(actor, mo);
+   v3fixed_t mopos = getThingPos(actor, mo);
 
    // haleyjd 11/14/02: Heretic ghost effects
    if(mo->flags3 & MF3_GHOST)
    {
-      if(P_AproxDistance(mox - actor->x, moy - actor->y) > 2*MELEERANGE 
+      if(P_AproxDistance(mopos.x - actor->x, mopos.y - actor->y) > 2*MELEERANGE
          && P_AproxDistance(mo->momx, mo->momy) < 5*FRACUNIT)
       {
          // when distant and moving slow, target is considered
@@ -951,9 +926,9 @@ static bool P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
    if(!allaround)
    {
       angle_t an = P_PointToAngle(actor->x, actor->y, 
-                                   mox, moy) - actor->angle;
+                                   mopos.x, mopos.y) - actor->angle;
       if(an > ANG90 && an < ANG270 &&
-         P_AproxDistance(mox-actor->x, moy-actor->y) > MELEERANGE)
+         P_AproxDistance(mopos.x-actor->x, mopos.y-actor->y) > MELEERANGE)
          return false;
    }
 
@@ -1361,14 +1336,15 @@ void P_SkullFly(Mobj *actor, fixed_t speed)
    an = actor->angle >> ANGLETOFINESHIFT;
    actor->momx = FixedMul(speed, finecosine[an]);
    actor->momy = FixedMul(speed, finesine[an]);
+
+   v3fixed_t pos = getTargetPos(actor);
    
-   dist = P_AproxDistance(getTargetX(actor) - actor->x, 
-                          getTargetY(actor) - actor->y);
+   dist = P_AproxDistance(pos.x - actor->x, pos.y - actor->y);
    dist = dist / speed;
    if(dist < 1)
       dist = 1;
 
-   actor->momz = (getTargetZ(actor)+ (dest->height >> 1) - actor->z) / dist;
+   actor->momz = (pos.z + (dest->height >> 1) - actor->z) / dist;
 }
 
 //
@@ -1396,16 +1372,14 @@ void P_BossTeleport(bossteleport_t *bt)
    {
       int i = P_Random(bt->rngNum) % bt->mc->getLength();
       int starti = i;
-      fixed_t x, y;
       bool foundSpot = true;
 
       while(1)
       {
          targ = (*bt->mc)[(unsigned int)i];
          // ioanch 20151230: portal aware
-         x = getThingX(boss, targ);
-         y = getThingY(boss, targ);
-         if(P_AproxDistance(boss->x - x, boss->y - y) > bt->minDistance)
+         v3fixed_t pos = getThingPos(boss, targ);
+         if(P_AproxDistance(boss->x - pos.x, boss->y - pos.y) > bt->minDistance)
          {
             foundSpot = true;
             break;
