@@ -1932,7 +1932,7 @@ static void R_AddLine(seg_t *line, bool dynasegs)
 
    // ioanch 20160312: also treat polyobject portal lines as 1-sided
    const sector_t *beyond;
-   if(seg.line->linedef->flags & MLI_POLYPORTALLINE)
+   if(seg.line->linedef->intflags & MLI_POLYPORTALLINE)
       beyond = seg.line->linedef->beyondportalline->frontsector;
    else
       beyond = nullptr;

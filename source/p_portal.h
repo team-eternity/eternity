@@ -265,6 +265,7 @@ inline static sector_t *P_ThingReachesGroupVertically(const Mobj *mo,
       mo->groupid, groupid, mo->subsector->sector, midzhint);
 }
 
+void P_UpdateLinkOffsets(const portal_t *portal, bool movebehind);
 void P_MoveLinkedPortal(portal_t *portal, fixed_t dx, fixed_t dy,
                         bool movebehind);
 

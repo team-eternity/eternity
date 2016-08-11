@@ -32,6 +32,7 @@
 
 #include "c_io.h"
 #include "p_maputl.h"
+#include "p_portal.h"
 #include "r_bsp.h"
 #include "r_draw.h"
 #include "r_main.h"
@@ -391,6 +392,7 @@ static void R_calculateTransform(int markerlinenum, int anchorlinenum,
    transf->move.z = 0;
 
    transf->angle = rot;
+   printf("%g\n", rot*180/PI);
 }
 
 static void R_calculateFixedTransform(int markerlinenum, int anchorlinenum,
@@ -1446,6 +1448,19 @@ portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,
    ret->tainted = 0;
 
    return ret;
+}
+
+//
+// Updates a linked portal's transforms if lines have moved
+//
+void R_UpdateLinkedPortal(portal_t *portal, int makerlinenum, int anchorlinenum,
+                          bool movebehind)
+{
+   R_calculateTransform(makerlinenum, anchorlinenum,
+                        &portal->data.link.offset.visual, true);
+   R_calculateFixedTransform(makerlinenum, anchorlinenum,
+                             &portal->data.link.offset.game, true);
+   P_UpdateLinkOffsets(portal, movebehind);
 }
 
 // EOF

@@ -45,6 +45,7 @@
 #include "p_portal.h"
 #include "p_saveg.h"
 #include "p_setup.h"
+#include "p_slopes.h"
 #include "p_tick.h"
 #include "polyobj.h"
 #include "r_main.h"
@@ -578,6 +579,46 @@ static void Polyobj_movePortals(const polyobj_t *po, fixed_t dx, fixed_t dy,
 }
 
 //
+// After a polyobject underwent a more complex transformation (e.g. rotation),
+// update its portal(s) according to line vectors
+//
+static void Polyobj_updatePortals(const polyobj_t *po, bool cancel)
+{
+   for(size_t i = 0; i < po->numPortals; ++i)
+   {
+      portal_t *portal = po->portals[i];
+      if(portal->type == R_LINKED)
+      {
+         // Find the line
+         // FIXME: optimize this
+         for(int j = 0; j < po->numLines; ++j)
+         {
+            const line_t *line = po->lines[j];
+            const line_t *beyond = line->beyondportalline;
+            if(line->portal == portal && beyond &&
+               beyond->beyondportalline == line)
+            {
+               const linkdata_t &ldata = portal->data.link;
+               R_UpdateLinkedPortal(portal, beyond - lines, line - lines, true);
+               portal_t *partner = ldata.polyportalpartner;
+               if(partner)
+               {
+                  R_UpdateLinkedPortal(partner, line - lines,
+                                       beyond - lines, true);
+               }
+               gGroupPolyobject[ldata.toid] = cancel ? nullptr : po;
+               break;
+            }
+         }
+      }
+      else if(portal->type == R_ANCHORED || portal->type == R_TWOWAY)
+      {
+         // TODO
+      }
+   }
+}
+
+//
 // Polyobj_moveToSpawnSpot
 //
 // Translates the polyobject's vertices with respect to the difference between
@@ -1048,6 +1089,8 @@ static void Polyobj_rotateLine(line_t *ld)
    // 04/19/09: reposition sound origin
    ld->soundorg.x = v1->x + ld->dx / 2;
    ld->soundorg.y = v1->y + ld->dy / 2;
+
+   P_MakeLineNormal(ld);   // from p_slopes.h
 }
 
 //
@@ -1092,6 +1135,7 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
       for(i = 0; i < po->numLines; ++i)
          hitthing |= Polyobj_clipThings(po, po->lines[i]);
 
+   bool cancel = false;
    if(hitthing)
    {
       // reset vertices to previous positions
@@ -1101,6 +1145,7 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
       // reset lines
       for(i = 0; i < po->numLines; ++i)
          Polyobj_rotateLine(po->lines[i]);
+      cancel = true;
    }
    else
    {
@@ -1113,6 +1158,9 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
       Polyobj_setCenterPt(po);
       R_AttachPolyObject(po);
    }
+
+   if(!cancel)
+      Polyobj_updatePortals(po, false);
 
    return !hitthing;
 }

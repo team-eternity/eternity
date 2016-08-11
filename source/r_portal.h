@@ -203,6 +203,8 @@ void R_RenderPortals();
 
 portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum, 
                             fixed_t planez, int fromid, int toid, bool flipped);
+void R_UpdateLinkedPortal(portal_t *portal, int makerlinenum, int anchorlinenum,
+                          bool movebehind);
 
 //=============================================================================
 //

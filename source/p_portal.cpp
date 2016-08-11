@@ -1494,18 +1494,11 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
 }
 
 //
-// P_MoveLinkedPortal
+// Updates link offsets after a linked portal's transforms were changed
 //
-// ioanch 20160226: moves the offset of a linked portal
-// TODO: do the same for anchored portals
-//
-void P_MoveLinkedPortal(portal_t *portal, fixed_t dx, fixed_t dy, bool movebehind)
+void P_UpdateLinkOffsets(const portal_t *portal, bool movebehind)
 {
-   linkdata_t &data = portal->data.link;
-   data.offset.visual.move.x += M_FixedToDouble(dx);
-   data.offset.visual.move.y += M_FixedToDouble(dy);
-   data.offset.game.move.x += dx;
-   data.offset.game.move.y += dy;
+   const linkdata_t &data = portal->data.link;
    linkoffset_t *link, *mylink;
    for(int i = 0; i < groupcount; ++i)
    {
@@ -1536,6 +1529,22 @@ void P_MoveLinkedPortal(portal_t *portal, fixed_t dx, fixed_t dy, bool movebehin
          mylink->game.apply(link->game);
       }
    }
+}
+
+//
+// P_MoveLinkedPortal
+//
+// ioanch 20160226: moves the offset of a linked portal
+// TODO: do the same for anchored portals
+//
+void P_MoveLinkedPortal(portal_t *portal, fixed_t dx, fixed_t dy, bool movebehind)
+{
+   linkdata_t &data = portal->data.link;
+   data.offset.visual.move.x += M_FixedToDouble(dx);
+   data.offset.visual.move.y += M_FixedToDouble(dy);
+   data.offset.game.move.x += dx;
+   data.offset.game.move.y += dy;
+   P_UpdateLinkOffsets(portal, movebehind);
 }
 
 //
