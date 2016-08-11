@@ -863,8 +863,12 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr)
    {
       const line_t &l = *portalrender.curwindow->line;
 
-      if(l.beyondportalline &&
-         P_PointOnLineSide(thing->x, thing->y, l.beyondportalline) == 1)
+      // sprite position, shifted by offset
+      // do NOT use interpolated coordinates for this check!
+      v2fixed_t pv = {thing->x - viewx + portalrender.curwindow->vx,
+                      thing->y - viewy + portalrender.curwindow->vy};
+
+      if(P_PointOnLineSide(pv.x, pv.y, &l) == 0)
       {
          return;
       }
@@ -1850,7 +1854,10 @@ inline static sector_t *R_addProjNode(Mobj *mobj, const linkdata_t *data,
                                       DLListItem<spriteprojnode_t> **&tail)
 {
    sector_t *sector;
-   data->offset.visual.apply(delta.x, delta.y, delta.z);
+
+   delta.x += data->deltax;
+   delta.y += data->deltay;
+   delta.z += data->deltaz;
    sector = R_PointInSubsector(mobj->x + delta.x, mobj->y + delta.y)->sector;
    if(!item)
    {

@@ -1015,16 +1015,13 @@ int enable_nuke = 1;  // killough 12/98: nukage disabling cheat
 void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
 {
    // ioanch 20160116: portal aware
-   fixed_t fzoffs = 0;
    if(!sector)
-   {
-      sector = P_ExtremeSectorAtPoint(player->mo, false, &fzoffs);
-   }
+      sector = P_ExtremeSectorAtPoint(player->mo, false);
 
    // TODO: waterzones should damage whenever you're in them
    // Falling, not all the way down yet?
    // Sector specials don't apply in mid-air
-   if(player->mo->z + fzoffs != sector->floorheight)
+   if(player->mo->z != sector->floorheight)
       return;
 
    // haleyjd 12/28/08: We handle secrets uniformly now, through the
@@ -2788,10 +2785,11 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       line->sidenum[1] = line->sidenum[0];
       line->flags &= ~ML_BLOCKING;
       line->flags |= ML_TWOSIDED;
-      line->intflags |= MLI_POLYPORTALLINE;
+      line->beyondportalsector = partner->frontsector;
    };
 
    // create the appropriate type of portal
+   int tmp = 0;
    switch(type)
    {
    case portal_plane:
@@ -2917,7 +2915,6 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          // special case for line portals
          portal = R_GetTwoWayPortal(s, line - lines);
          P_SetPortal(sector, line, portal, portal_lineonly);
-         line->beyondportalline = lines + s;
          return;
       }
 
@@ -3028,9 +3025,8 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       if(staticFn == EV_STATIC_PORTAL_LINE_PARAM &&
          line->args[ev_LinePortal_Arg_Type] != ev_LinePortal_Type_EEClassic)
       {
-         portal = R_GetLinkedPortal(s, line - lines, planez, toid, fromid, true);
+         portal = R_GetLinkedPortal(s, line - lines, planez, toid, fromid);
          P_SetPortal(sector, line, portal, portal_lineonly);
-         line->beyondportalline = lines + s;
 
          // Also check for polyobject portals
          if(lines[s].portal && lines[s].portal->type == R_LINKED &&
@@ -3049,10 +3045,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          return;
       }
 
-      portal = R_GetLinkedPortal(line - lines, s, planez, fromid, toid,
-                                staticFn == EV_STATIC_PORTAL_LINKED_LINE2LINE ||
-                                    staticFn == EV_STATIC_POLYOBJ_START_LINE ||
-                                    staticFn == EV_STATIC_PORTAL_LINE_PARAM);
+      portal = R_GetLinkedPortal(line - lines, s, planez, fromid, toid);
 
       // Special case where the portal was created with the line-to-line portal type
       if(staticFn == EV_STATIC_PORTAL_LINKED_LINE2LINE ||
@@ -3060,13 +3053,10 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          staticFn == EV_STATIC_PORTAL_LINE_PARAM)
       {
          P_SetPortal(lines[s].frontsector, lines + s, portal, portal_lineonly);
-         lines[s].beyondportalline = line;
          
          // ioanch 20160226: add partner portals
-         portal_t *portal2 = R_GetLinkedPortal(s, line - lines, planez, toid,
-                                               fromid, true);
+         portal_t *portal2 = R_GetLinkedPortal(s, line - lines, planez, toid, fromid);
          P_SetPortal(sector, line, portal2, portal_lineonly);
-         line->beyondportalline = lines + s;
 
          if(!lines[s].backsector || !line->backsector)
          {

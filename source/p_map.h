@@ -63,8 +63,7 @@ extern bool donut_emulation;    // haleyjd 10/16/09
 //
 
 // killough 3/15/98: add fourth argument to P_TryMove
-bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff,
-               fixed_t *xmove = nullptr, fixed_t *ymove = nullptr);
+bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff);
 
 bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y);
 
@@ -234,7 +233,6 @@ struct doom_mapinter_t
    msecnode_t *sector_list;     // phares 3/16/98
    
    Mobj       *BlockingMobj;    // haleyjd 1/17/00: global hit reference
-   fixed_t     BlockingMobjZOffs;   // ioanch 20160731: z offset
 
    // ioanch 20160121: list of lines postponed to be visited thru portals
    struct linepoly_t

@@ -499,7 +499,7 @@ void P_XYMovement(Mobj* mo)
 
       // killough 3/15/98: Allow objects to drop off
 
-      if(!P_TryMove(mo, ptryx, ptryy, true, &xmove, &ymove))
+      if(!P_TryMove(mo, ptryx, ptryy, true))
       {
          // blocked move
 
@@ -643,16 +643,9 @@ void P_XYMovement(Mobj* mo)
    if(((mo->flags & MF_BOUNCES && mo->z > mo->dropoffz) ||
        mo->flags & MF_CORPSE || mo->intflags & MIF_FALLING) &&
       (mo->momx > FRACUNIT/4 || mo->momx < -FRACUNIT/4 ||
-       mo->momy > FRACUNIT/4 || mo->momy < -FRACUNIT/4))
-   {
-      fixed_t fheight, fzoffs;
-      fheight = P_ExtremeSectorAtPoint(mo, false, &fzoffs)->floorheight;
-      if(mo->floorz + fzoffs != fheight)
-      {
-         return;  // do not stop sliding if halfway off a step with some momentum
-      }
-   }
-
+       mo->momy > FRACUNIT/4 || mo->momy < -FRACUNIT/4) &&
+      mo->floorz != P_ExtremeSectorAtPoint(mo, false)->floorheight)
+      return;  // do not stop sliding if halfway off a step with some momentum
 
    // killough 11/98:
    // Stop voodoo dolls that have come to rest, despite any
@@ -924,9 +917,13 @@ floater:
       mo->target)     // killough 11/98: simplify
    {
       fixed_t delta;
-      v3fixed_t pos = getTargetPos(mo);
-      if(P_AproxDistance(mo->x - pos.x, mo->y - pos.y) <
-         D_abs(delta = pos.z + (mo->height>>1) - mo->z)*3)
+#ifdef R_LINKEDPORTALS
+      if(P_AproxDistance(mo->x - getTargetX(mo), mo->y - getTargetY(mo)) <
+         D_abs(delta = getTargetZ(mo) + (mo->height>>1) - mo->z)*3)
+#else
+      if(P_AproxDistance(mo->x - mo->target->x, mo->y - mo->target->y) <
+         D_abs(delta = mo->target->z + (mo->height>>1) - mo->z)*3)
+#endif
          mo->z += delta < 0 ? -FLOATSPEED : FLOATSPEED;
    }
 
@@ -1094,10 +1091,9 @@ void P_NightmareRespawn(Mobj* mobj)
    // spawn a teleport fog at old spot
    // because of removal of the body?
    // ioanch 20160116: portal aware
-   fixed_t fzoffs;
-   fixed_t fheight = P_ExtremeSectorAtPoint(mobj, false, &fzoffs)->floorheight;
-   mo = P_SpawnMobj(mobj->x, mobj->y, fheight - fzoffs +
-                    GameModeInfo->teleFogHeight,
+   mo = P_SpawnMobj(mobj->x, mobj->y,
+                    P_ExtremeSectorAtPoint(mobj, false)->floorheight +
+                       GameModeInfo->teleFogHeight,
                     E_SafeThingName(GameModeInfo->teleFogType));
 
    // initiate teleport sound
@@ -1164,7 +1160,8 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
       // ioanch 20160109: link offset outside
       if(passheight < ldata->planez)
       {
-         EV_PortalTeleport(mobj, &ldata->offset, ldata->fromid, ldata->toid);
+         EV_PortalTeleport(mobj, ldata->deltax, ldata->deltay, ldata->deltaz,
+                           ldata->fromid, ldata->toid);
          ret = true;
       }
    }
@@ -1186,7 +1183,8 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
       // ioanch 20160109: link offset outside
       if(passheight >= ldata->planez)
       {
-         EV_PortalTeleport(mobj, &ldata->offset, ldata->fromid, ldata->toid);
+         EV_PortalTeleport(mobj, ldata->deltax, ldata->deltay, ldata->deltaz,
+                           ldata->fromid, ldata->toid);
          ret = true;
       }
    }
@@ -1236,7 +1234,6 @@ void Mobj::Think()
    // (we use pointer reference counting now)
 
    clip.BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
-   clip.BlockingMobjZOffs = 0;
 
    // haleyjd 08/07/04: handle deep water plane hits
    if(subsector->sector->heightsec != -1)
@@ -1258,7 +1255,6 @@ void Mobj::Think()
 
    // momentum movement
    clip.BlockingMobj = NULL;
-   clip.BlockingMobjZOffs = 0;
    if(momx | momy || flags & MF_SKULLFLY)
    {
       P_XYMovement(this);
@@ -1267,10 +1263,7 @@ void Mobj::Think()
    }
 
    if(!P_Use3DClipping())
-   {
       clip.BlockingMobj = NULL;
-      clip.BlockingMobjZOffs = 0;
-   }
 
    lz = z;
 
@@ -1751,12 +1744,9 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    P_SetThingPosition(mobj);
 
    // ioanch 20160201: fix floorz and ceilingz to be portal-aware
-   fixed_t fzoffs;
-   fixed_t fheight = P_ExtremeSectorAtPoint(mobj, false, &fzoffs)->floorheight;
    mobj->dropoffz =           // killough 11/98: for tracking dropoffs
-      mobj->floorz = fheight - fzoffs;
-   fheight = P_ExtremeSectorAtPoint(mobj, true, &fzoffs)->ceilingheight;
-   mobj->ceilingz = fheight - fzoffs;
+      mobj->floorz = P_ExtremeSectorAtPoint(mobj, false)->floorheight;
+   mobj->ceilingz = P_ExtremeSectorAtPoint(mobj, true)->ceilingheight;
 
    mobj->z = z == ONFLOORZ ? mobj->floorz : z == ONCEILINGZ ?
       mobj->ceilingz - mobj->height : z;
@@ -2574,12 +2564,13 @@ BloodSpawner::BloodSpawner(Mobj *ptarget, fixed_t px, fixed_t py, fixed_t pz, in
 BloodSpawner::BloodSpawner(Mobj *ptarget, Mobj *source, int pdamage, Mobj *pinflictor)
    : target(ptarget), inflictor(pinflictor), damage(pdamage)
 {
-   v3fixed_t dpos = getThingPos(target, source);
+   fixed_t dx = getThingX(target, source);
+   fixed_t dy = getThingY(target, source);
 
    x   = source->x;
    y   = source->y;
    z   = source->z;
-   dir = P_PointToAngle(target->x, target->y, dpos.x, dpos.y);
+   dir = P_PointToAngle(target->x, target->y, dx, dy);
 }
 
 //
@@ -2795,13 +2786,11 @@ Mobj *P_SpawnMissile(Mobj *source, Mobj *dest, mobjtype_t type, fixed_t z)
 
    memset(&missileinfo, 0, sizeof(missileinfo));
 
-   v3fixed_t pos = getThingPos(source, dest);
-
    missileinfo.source = source;
    missileinfo.dest   = dest;
-   missileinfo.destx  = pos.x;
-   missileinfo.desty  = pos.y;
-   missileinfo.destz  = pos.z;
+   missileinfo.destx  = getThingX(source, dest);
+   missileinfo.desty  = getThingY(source, dest);
+   missileinfo.destz  = dest->z;
    missileinfo.type   = type;
    missileinfo.z      = z;
 

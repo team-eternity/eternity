@@ -404,26 +404,27 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    
    // ioanch 20160113: use correct floor and ceiling heights
    const sector_t *bottomfloorsector = newsubsec->sector;
+#ifdef R_LINKEDPORTALS
     //newsubsec->sector->floorheight - clip.thing->height;
    if(demo_version >= 333 && newsubsec->sector->f_pflags & PS_PASSABLE)
    {
-      fixed_t fzoffs;
       bottomfloorsector = P_ExtremeSectorAtPoint(x, y, false, 
-            newsubsec->sector, &fzoffs);
-      clip.floorz = clip.dropoffz = bottomfloorsector->floorheight - fzoffs;
+            newsubsec->sector);
+      clip.floorz = clip.dropoffz = bottomfloorsector->floorheight;
    }
    else
+#endif
       clip.floorz = clip.dropoffz = newsubsec->sector->floorheight;
 
+#ifdef R_LINKEDPORTALS
     //newsubsec->sector->ceilingheight + clip.thing->height;
    if(demo_version >= 333 && newsubsec->sector->c_pflags & PS_PASSABLE)
    {
-      fixed_t czoffs;
-      fixed_t cheight = P_ExtremeSectorAtPoint(x, y, true,
-                                               newsubsec->sector, &czoffs)->ceilingheight;
-      clip.ceilingz = cheight - czoffs;
+      clip.ceilingz = P_ExtremeSectorAtPoint(x, y, true, 
+            newsubsec->sector)->ceilingheight;
    }
    else
+#endif
       clip.ceilingz = newsubsec->sector->ceilingheight;
 
    clip.secfloorz = clip.passfloorz = clip.floorz;
@@ -859,7 +860,6 @@ bool P_SkullHit(Mobj *thing)
       P_SetMobjState(clip.thing, clip.thing->info->spawnstate);
 
       clip.BlockingMobj = NULL; // haleyjd: from zdoom
-      clip.BlockingMobjZOffs = 0;
 
       ret = true; // stop moving
    }
@@ -916,7 +916,6 @@ static bool PIT_CheckThing(Mobj *thing) // killough 3/26/98: make static
 
    // haleyjd 1/17/00: set global hit reference
    clip.BlockingMobj = thing;
-   clip.BlockingMobjZOffs = 0;
 
    // killough 11/98:
    //
@@ -1217,7 +1216,6 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y)
    yh = (clip.bbox[BOXTOP]    - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
 
    clip.BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
-   clip.BlockingMobjZOffs = 0;
 
    for(bx = xl; bx <= xh; bx++)
    {
@@ -1231,7 +1229,6 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y)
    // check lines
    
    clip.BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
-   clip.BlockingMobjZOffs = 0;
    
    xl = (clip.bbox[BOXLEFT]   - bmaporgx) >> MAPBLOCKSHIFT;
    xh = (clip.bbox[BOXRIGHT]  - bmaporgx) >> MAPBLOCKSHIFT;
@@ -1414,8 +1411,7 @@ typedef bool (*dropoff_func_t)(Mobj *, int);
 //
 // killough 3/15/98: allow dropoff as option
 //
-bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff,
-               fixed_t *xmove, fixed_t *ymove)
+bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 {
    fixed_t oldx, oldy, oldz;
    int oldgroupid, newgroupid = thing->groupid;
@@ -1436,7 +1432,6 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff,
 
    bool groupidchange = false, portalteleport = false;
    fixed_t prex, prey;
-   portalfixedform_t trans;
 
    // haleyjd: OVER_UNDER
    if(P_Use3DClipping())
@@ -1477,7 +1472,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff,
       {
          v2fixed_t dest = P_LinePortalCrossing(oldx, oldy,
                                                x - oldx, y - oldy, &newgroupid,
-                                               &portalteleport, nullptr, &trans);
+                                               &portalteleport);
    
    
          // Update position
@@ -1508,21 +1503,11 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff,
          {
             // haleyjd: yikes...
             // ioanch 20160111: updated for portals
-            if(clip.BlockingMobj->z - clip.BlockingMobjZOffs
-               + clip.BlockingMobj->height - thing->z > STEPSIZE)
-            {
-               return false;
-            }
-
-            fixed_t czoffs;
-            fixed_t cheight = P_ExtremeSectorAtPoint(clip.BlockingMobj, true,
-                                                     &czoffs)->ceilingheight;
-
-            if(cheight - czoffs - (clip.BlockingMobj->z
-                                   + clip.BlockingMobj->height
-                                   - clip.BlockingMobjZOffs) < thing->height ||
-               clip.ceilingz - (clip.BlockingMobj->z - clip.BlockingMobjZOffs
-                                + clip.BlockingMobj->height) < thing->height)
+            if(clip.BlockingMobj->z + clip.BlockingMobj->height-thing->z > STEPSIZE || 
+               (P_ExtremeSectorAtPoint(clip.BlockingMobj, true)->ceilingheight
+                 - (clip.BlockingMobj->z + clip.BlockingMobj->height) < thing->height) ||
+               (clip.ceilingz - (clip.BlockingMobj->z + clip.BlockingMobj->height) 
+                 < thing->height))
             {
                return false;
             }
@@ -1665,8 +1650,9 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff,
    if(portalteleport)
    {
       // Passed through at least one portal
-      P_LinePortalDidTeleport(thing, trans, oldgroupid, newgroupid,
-                              xmove, ymove);
+      // TODO: 3D teleport
+      P_LinePortalDidTeleport(thing, x - prex, y - prey, 0, oldgroupid,
+                              newgroupid);
    }
 
    // haleyjd 08/07/04: new footclip system
@@ -1682,23 +1668,24 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff,
 
       while(clip.numspechit--)
       {
+// PTODO
          // ioanch 20160113: no longer use portals unless demo version is low
+#ifdef R_LINKEDPORTALS
          line_t *line = clip.spechit[clip.numspechit];
          if(!line)   // skip if it's nulled out
             continue;
 
+#endif
          if(line->special)  // see if the line was crossed
          {
             link = P_GetLinkOffset(thing->groupid, line->frontsector->groupid);
             oldlink = thing->groupid == oldgroupid ? link
             : P_GetLinkOffset(oldgroupid, line->frontsector->groupid);
 
-            tx = thing->x;
-            ty = thing->y;
-            link->game.apply(tx, ty);
-            ox = oldx;
-            oy = oldy;
-            oldlink->game.apply(ox, oy);
+            tx = thing->x + link->x;
+            ty = thing->y + link->y;
+            ox = oldx + oldlink->x;
+            oy = oldy + oldlink->y;
 
             int oldside;
             if((oldside = P_PointOnLineSide(ox, oy, line)) !=
@@ -1734,8 +1721,10 @@ static bool PIT_ApplyTorque(line_t *ld, polyobj_s *po)
    const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid,
       ld->frontsector->groupid);
    fixed_t bbox[4];
-   memcpy(bbox, clip.bbox, 4 * sizeof(fixed_t));
-   link->game.applyBox(bbox);
+   bbox[BOXRIGHT] = clip.bbox[BOXRIGHT] + link->x;
+   bbox[BOXLEFT] = clip.bbox[BOXLEFT] + link->x;
+   bbox[BOXTOP] = clip.bbox[BOXTOP] + link->y;
+   bbox[BOXBOTTOM] = clip.bbox[BOXBOTTOM] + link->y;
 
    if(ld->backsector &&       // If thing touches two-sided pivot linedef
       bbox[BOXRIGHT]  > ld->bbox[BOXLEFT]  &&
@@ -1746,10 +1735,8 @@ static bool PIT_ApplyTorque(line_t *ld, polyobj_s *po)
    {
       Mobj *mo = clip.thing;
 
-      fixed_t mox = mo->x;
-      fixed_t moy = mo->y;
-      fixed_t moz = mo->z;
-      link->game.apply(mox, moy, moz);
+      fixed_t mox = mo->x + link->x;
+      fixed_t moy = mo->y + link->y;
 
       fixed_t dist =                               // lever arm
          + (ld->dx >> FRACBITS) * (moy >> FRACBITS)
@@ -1772,14 +1759,14 @@ static bool PIT_ApplyTorque(line_t *ld, polyobj_s *po)
          // with portals and advanced version, also allow equal floor heights
          // if one side has portals. Require equal floor height though
          cond = dist < 0 ?                               // dropoff direction
-         (ld->frontsector->floorheight < moz ||
-         (ld->frontsector->floorheight == moz &&
+         (ld->frontsector->floorheight < mo->z ||
+         (ld->frontsector->floorheight == mo->z && 
          ld->frontsector->f_pflags & PS_PASSABLE)) &&
-         ld->backsector->floorheight == moz :
-         (ld->backsector->floorheight < moz ||
-         (ld->backsector->floorheight == moz &&
+         ld->backsector->floorheight == mo->z :
+         (ld->backsector->floorheight < mo->z ||
+         (ld->backsector->floorheight == mo->z &&
          ld->backsector->f_pflags & PS_PASSABLE)) &&
-         ld->frontsector->floorheight == moz;
+         ld->frontsector->floorheight == mo->z;
       }
 
       if(cond)
@@ -2328,9 +2315,8 @@ static bool PIT_RadiusAttack(Mobj *thing)
    }
 
    // ioanch 20151225: portal-aware behaviour
-   v3fixed_t pos = getThingPos(bombspot, thing);
-   dx   = D_abs(pos.x - bombspot->x);
-   dy   = D_abs(pos.y - bombspot->y);
+   dx   = D_abs(getThingX(bombspot, thing) - bombspot->x);
+   dy   = D_abs(getThingY(bombspot, thing) - bombspot->y);
    dist = dx > dy ? dx : dy;
    dist = (dist - thing->radius) >> FRACBITS;
 
@@ -2343,7 +2329,7 @@ static bool PIT_RadiusAttack(Mobj *thing)
    // haleyjd: optional z check for Hexen-style explosions
    if(theBomb->bombflags & RAF_CLIPHEIGHT)
    {
-      if((D_abs(pos.z - bombspot->z) / FRACUNIT) > 2 * bombdistance)
+      if((D_abs(getThingZ(bombspot, thing) - bombspot->z) / FRACUNIT) > 2 * bombdistance)
          return true;
    }
 
@@ -2769,9 +2755,11 @@ static bool PIT_GetSectors(line_t *ld, polyobj_s *po)
    fixed_t bbox[4];
    const linkoffset_t *link = P_GetLinkOffset(pClip->thing->groupid, 
       ld->frontsector->groupid);
-   memcpy(bbox, pClip->bbox, 4 * sizeof(fixed_t));
-   link->game.applyBox(bbox);
-
+   bbox[BOXRIGHT] = pClip->bbox[BOXRIGHT] + link->x;
+   bbox[BOXLEFT] = pClip->bbox[BOXLEFT] + link->x;
+   bbox[BOXTOP] = pClip->bbox[BOXTOP] + link->y;
+   bbox[BOXBOTTOM] = pClip->bbox[BOXBOTTOM] + link->y;
+   
    if(bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   ||
       bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  ||
       bbox[BOXTOP]    <= ld->bbox[BOXBOTTOM] ||

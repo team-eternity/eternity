@@ -1524,11 +1524,8 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
 // ioanch 20160131: Returns false if the line is touching the (view/portal-line)
 // triangle. Returns true otherwise.
 //
-static bool R_allowBehindLinePortal(const line_t *portalLine,
-                                    const line_t *renderLine)
+static bool R_allowBehindLinePortal(const line_t *portalLine, const line_t *renderLine)
 {
-   if(!portalLine)
-      return true;
    // for saving space
    v2fixed_t rv1 = {renderLine->v1->x, renderLine->v1->y};
    v2fixed_t rv2 = {renderLine->v2->x, renderLine->v2->y};
@@ -1538,8 +1535,10 @@ static bool R_allowBehindLinePortal(const line_t *portalLine,
       return false;  // easily rejected here
 
    // portal line vertices, shifted by offset
-   v2fixed_t pv1 = {portalLine->v2->x, portalLine->v2->y};
-   v2fixed_t pv2 = {portalLine->v1->x, portalLine->v1->y};
+   v2fixed_t pv1 = {portalLine->v1->x + viewx - portalrender.curwindow->vx,
+                    portalLine->v1->y + viewy - portalrender.curwindow->vy};
+   v2fixed_t pv2 = {portalLine->v2->x + viewx - portalrender.curwindow->vx,
+                    portalLine->v2->y + viewy - portalrender.curwindow->vy};
 
    // get portal line divline
    divline_t dl;
@@ -1666,8 +1665,7 @@ static void R_AddLine(seg_t *line, bool dynasegs)
       rportaltype_e type = portalrender.curwindow->portal->type;
 
       if((type == R_LINKED || type == R_ANCHORED || type == R_TWOWAY) &&
-         !R_allowBehindLinePortal(portalrender.curwindow->line->beyondportalline,
-                                  line->linedef))
+         !R_allowBehindLinePortal(portalrender.curwindow->line, line->linedef))
       {
          return;
       }
@@ -1931,13 +1929,8 @@ static void R_AddLine(seg_t *line, bool dynasegs)
    seg.f_portalignore = seg.c_portalignore = false;
 
    // ioanch 20160312: also treat polyobject portal lines as 1-sided
-   const sector_t *beyond;
-   if(seg.line->linedef->flags & MLI_POLYPORTALLINE)
-      beyond = seg.line->linedef->beyondportalline->frontsector;
-   else
-      beyond = nullptr;
-
-   if(!seg.backsec || beyond)
+   const sector_t *beyond = seg.line->linedef->beyondportalsector;
+   if(!seg.backsec || beyond) 
    {
       seg.twosided = false;
       if(!beyond)

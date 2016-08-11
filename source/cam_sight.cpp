@@ -149,7 +149,7 @@ public:
       bottomslope = params->tz - sightzstart;
       if(link)
       {
-         link->game.applyZ(bottomslope);  // also adjust for Z offset
+         bottomslope += link->z; // also adjust for Z offset
       }
 
       topslope    = bottomslope + params->theight;
@@ -1012,11 +1012,9 @@ bool CamContext::recurse(int newfromid, fixed_t x, fixed_t y,
       return false;  // protection
 
    camsightparams_t params;
-
-   params.cx = x;
-   params.cy = y;
-   params.cz = this->params->cz;
-   data.offset.game.apply(params.cx, params.cy, params.cz);
+   params.cx = x + data.deltax;
+   params.cy = y + data.deltay;
+   params.cz = this->params->cz + data.deltaz;
    params.cheight = this->params->cheight;
    params.tx = this->params->tx;
    params.ty = this->params->ty;
@@ -1048,7 +1046,7 @@ bool CamContext::checkSight(const camsightparams_t &params,
    {
       // is there a link between these groups?
       // if so, ignore reject
-      link = P_GetLinkIfExists(params.tgroupid, params.cgroupid);
+      link = P_GetLinkIfExists(params.cgroupid, params.tgroupid);
    }
 
    const sector_t *csec, *tsec;
@@ -1092,7 +1090,8 @@ bool CamContext::checkSight(const camsightparams_t &params,
       fixed_t ty = params.ty;
       if(link)
       {
-         link->game.apply(tx, ty);
+         tx -= link->x;
+         ty -= link->y;
       }
       PTDef def;
       def.flags = CAM_ADDLINES;
@@ -1525,13 +1524,15 @@ fixed_t AimContext::recurse(State &newstate, fixed_t partialfrac,
    if(state.reclevel > RECURSION_LIMIT)
       return false;
 
-   data.offset.game.apply(newstate.cx, newstate.cy, newstate.cz);
+   newstate.cx += data.deltax;
+   newstate.cy += data.deltay;
+   newstate.cz += data.deltaz;
 
    fixed_t lessdist = attackrange - FixedMul(attackrange, partialfrac);
    newstate.prev = this;
          
-   fixed_t res = aimLineAttack(thing, angle + data.offset.game.angle, lessdist,
-                               aimflagsmask, &newstate, outTarget, outDist);
+   fixed_t res = aimLineAttack(thing, angle, lessdist, aimflagsmask, &newstate, 
+      outTarget, outDist);
    if(outSlope)
       *outSlope = res;
    return true;
@@ -1666,7 +1667,9 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
       fixed_t dist = FixedMul(FixedMul(attackrange, infrac), absratio);
       fixed_t remdist = attackrange - dist;
 
-      portaldata->offset.game.apply(x, y, z);
+      x += portaldata->deltax;
+      y += portaldata->deltay;
+      z += portaldata->deltaz;
 
       State newstate(state);
       newstate.groupid = newfromid;
@@ -1677,8 +1680,7 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
       newstate.z = z;
       newstate.reclevel++;
 
-      lineAttack(thing, angle + portaldata->offset.game.angle, remdist,
-                 aimslope, damage, &newstate);
+      lineAttack(thing, angle, remdist, aimslope, damage, &newstate);
 
       return true;
    }
@@ -1758,8 +1760,10 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
             fixed_t remdist = context.attackrange - dist;
 
             const linkdata_t &data = li->portal->data.link;
-
-            data.offset.game.apply(x, y, z);
+            
+            x += data.deltax;
+            y += data.deltay;
+            z += data.deltaz;  // why not
             
             State newstate(context.state);
             newstate.groupid = newfromid;
@@ -1770,8 +1774,8 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
             newstate.origindist += dist;
             ++newstate.reclevel;
 
-            lineAttack(context.thing, context.angle + data.offset.game.angle,
-                       remdist, context.aimslope, context.damage, &newstate);
+            lineAttack(context.thing, context.angle, remdist, context.aimslope,
+               context.damage, &newstate);
 
             return false;
          }
@@ -1975,11 +1979,11 @@ public:
       int reclevel;
    };
 
-   static void useLines(const player_t *player, angle_t angle, fixed_t x,
-                        fixed_t y, const State *instate);
+   static void useLines(const player_t *player, fixed_t x, fixed_t y,
+      const State *instate);
 
 private:
-   UseContext(const player_t *player, angle_t angle, const State *state);
+   UseContext(const player_t *player, const State *state);
    static bool useTraverse(const intercept_t *in, void *context, 
       const divline_t &trace);
    static bool noWayTraverse(const intercept_t *in, void *context, 
@@ -1987,7 +1991,6 @@ private:
 
    State state;
    const player_t *player;
-   angle_t myangle;
    Mobj *thing;
    bool portalhit;
 };
@@ -1997,12 +2000,12 @@ private:
 //
 // Actions. Returns true if a switch has been hit
 //
-void UseContext::useLines(const player_t *player, angle_t angle, fixed_t x,
-                          fixed_t y, const State *state)
+void UseContext::useLines(const player_t *player, fixed_t x, fixed_t y, 
+                          const State *state)
 {
-   UseContext context(player, angle, state);
+   UseContext context(player, state);
 
-   angle >>= ANGLETOFINESHIFT;
+   int angle = player->mo->angle >> ANGLETOFINESHIFT;
 
    fixed_t x2 = x + (context.state.attackrange >> FRACBITS) * finecosine[angle];
    fixed_t y2 = y + (context.state.attackrange >> FRACBITS) * finesine[angle];
@@ -2032,8 +2035,8 @@ void UseContext::useLines(const player_t *player, angle_t angle, fixed_t x,
 //
 // Constructor
 //
-UseContext::UseContext(const player_t *inplayer, angle_t angle, const State *instate)
-   : player(inplayer), myangle(angle), thing(inplayer->mo), portalhit(false)
+UseContext::UseContext(const player_t *inplayer, const State *instate) 
+   : player(inplayer), thing(inplayer->mo), portalhit(false)
 {
    if(instate)
       state = *instate;
@@ -2064,11 +2067,9 @@ bool UseContext::useTraverse(const intercept_t *in, void *vcontext,
       // ioanch 20160131: portal aware
       const linkoffset_t *link = P_GetLinkOffset(context->thing->groupid,
          li->frontsector->groupid);
-
-      fixed_t tx = context->thing->x;
-      fixed_t ty = context->thing->y;
-      link->game.apply(tx, ty);
-      P_UseSpecialLine(context->thing, li, P_PointOnLineSide(tx, ty, li) == 1);
+      P_UseSpecialLine(context->thing, li,
+         P_PointOnLineSide(context->thing->x + link->x, 
+                           context->thing->y + link->y, li) == 1);
 
       //WAS can't use for than one special line in a row
       //jff 3/21/98 NOW multiple use allowed with enabling line flag
@@ -2105,12 +2106,10 @@ bool UseContext::useTraverse(const intercept_t *in, void *vcontext,
       newState.attackrange -= FixedMul(newState.attackrange, in->frac);
       newState.groupid = newfromid;
       newState.reclevel++;
-      fixed_t x = trace.x + FixedMul(trace.dx, in->frac);
-      fixed_t y = trace.y + FixedMul(trace.dy, in->frac);
-      li->portal->data.link.offset.game.apply(x, y);
+      fixed_t x = trace.x + FixedMul(trace.dx, in->frac) + li->portal->data.link.deltax;
+      fixed_t y = trace.y + FixedMul(trace.dy, in->frac) + li->portal->data.link.deltay;
 
-      useLines(context->player, context->myangle
-               + li->portal->data.link.offset.game.angle, x, y, &newState);
+      useLines(context->player, x, y, &newState);
       context->portalhit = true;
       return false;
    }
@@ -2151,8 +2150,7 @@ bool UseContext::noWayTraverse(const intercept_t *in, void *vcontext,
 //
 void CAM_UseLines(const player_t *player)
 {
-   UseContext::useLines(player, player->mo->angle, player->mo->x, player->mo->y,
-                        nullptr);
+   UseContext::useLines(player, player->mo->x, player->mo->y, nullptr);
 }
 
 // EOF

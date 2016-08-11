@@ -837,9 +837,8 @@ static void E_TerrainHit(ETerrain *terrain, Mobj *thing, fixed_t z,
 
    // ioanch 20160116: portal aware
    const linkoffset_t *link = P_GetLinkOffset(thing->groupid, sector->groupid);
-   fixed_t tx = thing->x;
-   fixed_t ty = thing->y;
-   link->game.apply(tx, ty, z);
+   fixed_t tx = thing->x + link->x;
+   fixed_t ty = thing->y + link->y;
 
    // low mass splash?
    // note: small splash didn't exist before version 3.33

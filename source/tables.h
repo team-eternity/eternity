@@ -88,8 +88,6 @@ extern angle_t tantoangle_acc[2049];
 
 void Table_InitTanToAngle(void);
 
-fixed_t Table_LerpSin(angle_t angle);
-fixed_t Table_LerpCos(angle_t angle);
 //
 // haleyjd 06/07/06:
 //

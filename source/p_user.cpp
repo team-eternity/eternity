@@ -405,8 +405,10 @@ void P_DeathThink(player_t *player)
    if(player->attacker && player->attacker != player->mo)
    {
       // ioanch 20151226: use portal-translated coordinates if needed
-      v3fixed_t pos = getThingPos(player->mo, player->attacker);
-      angle = P_PointToAngle(player->mo->x, player->mo->y, pos.x, pos.y);
+      angle = P_PointToAngle(player->mo->x,
+                             player->mo->y,
+                             getThingX(player->mo, player->attacker),
+                             getThingY(player->mo, player->attacker));
 
       delta = angle - player->mo->angle;
       

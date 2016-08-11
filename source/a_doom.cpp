@@ -506,9 +506,12 @@ void A_Tracer(actionargs_t *actionargs)
    if(!dest || dest->health <= 0)
       return;
 
-   v3fixed_t dpos = getThingPos(actor, dest);
+   fixed_t dx = getThingX(actor, dest);
+   fixed_t dy = getThingY(actor, dest);
+   fixed_t dz = getThingZ(actor, dest);
+
    // change angle
-   exact = P_PointToAngle(actor->x, actor->y, dpos.x, dpos.y);
+   exact = P_PointToAngle(actor->x, actor->y, dx, dy);
 
    if(exact != actor->angle)
    {
@@ -531,14 +534,14 @@ void A_Tracer(actionargs_t *actionargs)
    actor->momy = FixedMul(actor->info->speed, finesine[exact]);
 
    // change slope
-   dist = P_AproxDistance(dpos.x - actor->x, dpos.y - actor->y);
+   dist = P_AproxDistance(dx - actor->x, dy - actor->y);
    
    dist = dist / actor->info->speed;
 
    if(dist < 1)
       dist = 1;
 
-   slope = (dpos.z + 40*FRACUNIT - actor->z) / dist;
+   slope = (dz + 40*FRACUNIT - actor->z) / dist;
    
    if(slope < actor->momz)
       actor->momz -= FRACUNIT/8;
@@ -607,10 +610,9 @@ bool PIT_VileCheck(Mobj *thing)
       return true;
    
    maxdist = thing->info->radius + mobjinfo[vileType]->radius;
-
-   v3fixed_t tpos = getThingPos(vileobj, thing);
-   if(D_abs(tpos.x - viletryx) > maxdist ||
-      D_abs(tpos.y - viletryy) > maxdist)
+   
+   if(D_abs(getThingX(vileobj, thing) - viletryx) > maxdist ||
+      D_abs(getThingY(vileobj, thing) - viletryy) > maxdist)
       return true;                // not actually touching
 
    // ioanch 20160108: since now it's portal aware, make sure that corpses
@@ -731,15 +733,12 @@ void A_Fire(actionargs_t *actionargs)
    
    P_UnsetThingPosition(actor);
    // IOANCH 20160106: correct line portal behaviour
-   fixed_t zoffs;
-   v2fixed_t pos = P_LinePortalCrossing(dest->x, dest->y,
+   v2fixed_t pos = P_LinePortalCrossing(*dest,
                                         FixedMul(24*FRACUNIT, finecosine[an]),
-                                        FixedMul(24*FRACUNIT, finesine[an]),
-                                        nullptr, nullptr, &zoffs);
-
+                                        FixedMul(24*FRACUNIT, finesine[an]));
    actor->x = pos.x;
    actor->y = pos.y;
-   actor->z = dest->z + zoffs;
+   actor->z = dest->z;
    actor->backupPosition();
    P_SetThingPosition(actor);
 }
@@ -1068,13 +1067,10 @@ void A_PainShootSkull(Mobj *actor, angle_t angle)
    // lation. Needed for Check_Sides
    v2fixed_t relpos = { actor->x + FixedMul(prestep, finecosine[an]),
                         actor->y + FixedMul(prestep, finesine[an]) };
-   v2fixed_t relpos2 = relpos - *actor;
-   fixed_t zoffs;
-   v2fixed_t pos = P_LinePortalCrossing(actor->x, actor->y, relpos2.x, relpos2.y,
-                                        nullptr, nullptr, &zoffs);
+   v2fixed_t pos = P_LinePortalCrossing(*actor, relpos - *actor);
    x = pos.x;
    y = pos.y;
-   z = actor->z + 8*FRACUNIT + zoffs;
+   z = actor->z + 8*FRACUNIT;
    
    if(comp[comp_skull])   // killough 10/98: compatibility-optioned
       newmobj = P_SpawnMobj(x, y, z, skullType);                    // phares
@@ -1099,15 +1095,12 @@ void A_PainShootSkull(Mobj *actor, angle_t angle)
 
       // ioanch 20160107: check against the floor or ceiling sector behind any
       // portals
-      fixed_t czoffs, fzoffs;
-      const sector_t *ceilingsector = P_ExtremeSectorAtPoint(newmobj, true,
-                                                             &czoffs);
-      const sector_t *floorsector = P_ExtremeSectorAtPoint(newmobj, false,
-                                                           &fzoffs);
+      const sector_t *ceilingsector = P_ExtremeSectorAtPoint(newmobj, true);
+      const sector_t *floorsector = P_ExtremeSectorAtPoint(newmobj, false);
       // ioanch: removed redundant parentheses (of which the compiler doesn't 
       // cry)
-      if(newmobj->z + czoffs > ceilingsector->ceilingheight - newmobj->height ||
-         newmobj->z + fzoffs < floorsector->floorheight)
+      if(newmobj->z > ceilingsector->ceilingheight - newmobj->height ||
+         newmobj->z < floorsector->floorheight)
       {
          // kill it immediately
          P_DamageMobj(newmobj,actor,actor,10000,MOD_UNKNOWN);

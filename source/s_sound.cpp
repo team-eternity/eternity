@@ -229,7 +229,8 @@ static int S_AdjustSoundParams(camera_t *listener, const PointThinker *source,
       // The listener and the source are not in the same subspace, so offset
       // the sound origin so it will sound correct to the player.
       linkoffset_t *link = P_GetLinkOffset(source->groupid, listener->groupid);
-      link->visual.apply(sx, sy);
+      sx += link->x;
+      sy += link->y;
    }
 
    adx = D_abs((listener->x >> FRACBITS) - (sx >> FRACBITS));
