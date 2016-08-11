@@ -332,25 +332,37 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
    {
       // Important: find line portals between three coordinates
       // first get between 
-      int finalgroup = clip.thing->groupid;   // default placeholder
+      int midgroup = clip.thing->groupid;   // default placeholder
       v2fixed_t pos = P_LinePortalCrossing(clip.thing->x, clip.thing->y,
                                            clip.x - clip.thing->x,
-                                           clip.y - clip.thing->y, &finalgroup);
+                                           clip.y - clip.thing->y, &midgroup);
 
-      // FIXME: this was added because things looked suspicious without it
-      // Remove it if bugs get reported!!
-      if(finalgroup != clip.thing->groupid)
-         link = P_GetLinkOffset(finalgroup, thing->groupid);
-
-      link->game.apply(pos.x, pos.y);
-
-      P_LinePortalCrossing(pos, thing->x - pos.x, thing->y - pos.y, &finalgroup);
-
-      if(finalgroup != thing->groupid && 
-         !P_ThingReachesGroupVertically(thing, finalgroup, 
-                                        clip.thing->z + clip.thing->height / 2))
+      if(midgroup != thing->groupid)
       {
-         return true;
+         // FIXME: this was added because things looked suspicious without it
+         // Remove it if bugs get reported!!
+         const linkoffset_t *midlink = midgroup != clip.thing->groupid ?
+               P_GetLinkOffset(midgroup, thing->groupid) : link;
+
+         midlink->game.apply(pos.x, pos.y);
+
+         // Now trace a line from the hit thing to the mid position relative to it
+         // Also update pos
+         int midgroup2;
+         fixed_t zoffs = 0;
+         pos = P_LinePortalCrossing(thing->x, thing->y,
+                                    pos.x - thing->x, pos.y - thing->y, &midgroup2,
+                                    nullptr, &zoffs);
+
+         // midgroup2 should match midgroup, or go vertically through a portal
+         if(midgroup2 != midgroup &&
+            !P_PointReachesGroupVertically(pos.x, pos.y, thing->z + zoffs, midgroup2,
+                                           midgroup,
+                                           R_PointInSubsector(pos.x, pos.y)->sector,
+                                           clip.thing->z + clip.thing->height / 2))
+         {
+            return true;
+         }
       }
    }
 

@@ -1613,11 +1613,11 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
          }
          else
          {
-            auto link = P_GetLinkOffset(target->groupid, inflictor->groupid);
-            fixed_t tx = target->x;
-            fixed_t ty = target->y;
-            link->game.apply(tx, ty);
-            ang = P_PointToAngle(inflictor->x, inflictor->y, tx, ty);
+            auto link = P_GetLinkOffset(inflictor->groupid, target->groupid);
+            fixed_t ix = inflictor->x;
+            fixed_t iy = inflictor->y;
+            link->game.apply(ix, iy);
+            ang = P_PointToAngle(ix, iy, target->x, target->y);
          }
       }
 
