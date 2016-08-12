@@ -31,6 +31,7 @@
 #include "i_system.h"
 
 #include "c_io.h"
+#include "d_gi.h"
 #include "r_bsp.h"
 #include "r_draw.h"
 #include "r_main.h"
@@ -882,7 +883,7 @@ static void R_ShowTainted(pwindow_t *window)
 
       while(count > 0)
       {
-         *dest = 0;
+         *dest = GameModeInfo->blackIndex;
          dest += video.pitch;
 
          count--;
