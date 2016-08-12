@@ -1778,9 +1778,17 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
       if(context.shotCheck2SLine(li, lineside, in->frac))
       {
          // ioanch 20160101: line portal aware
-         if(li->pflags & PS_PASSABLE && lineside == 0 && in->frac > 0)
+         const portal_t *portal = nullptr;
+         if(li->pflags & PS_PASSABLE)
+            portal = li->portal;
+         else if(li->extflags & EX_ML_EXTNDFPORTAL && li->backsector &&
+                 li->backsector->f_pflags & PS_PASSABLE)
          {
-            int newfromid = li->portal->data.link.toid;
+            portal = li->backsector->f_portal;
+         }
+         if(portal && lineside == 0 && in->frac > 0)
+         {
+            int newfromid = portal->data.link.toid;
             if(newfromid == context.state.groupid)
                return true;
 
@@ -1795,7 +1803,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
             fixed_t dist =  FixedMul(context.attackrange, in->frac);
             fixed_t remdist = context.attackrange - dist;
 
-            const linkdata_t &data = li->portal->data.link;
+            const linkdata_t &data = portal->data.link;
             
             x += data.deltax;
             y += data.deltay;
