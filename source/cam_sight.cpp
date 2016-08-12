@@ -746,7 +746,10 @@ static void CAM_lineOpening(LineOpening &lo, const line_t *linedef)
 
    // no need to apply the portal hack (1024 units) here fortunately
    lo.opentop = emin(front->ceilingheight, back->ceilingheight);
-   lo.openbottom = emax(front->floorheight, back->floorheight);  
+   if(linedef->extflags & EX_ML_EXTNDFPORTAL)
+      lo.openbottom = front->floorheight;
+   else
+      lo.openbottom = emax(front->floorheight, back->floorheight);
    lo.openrange = lo.opentop - lo.openbottom;
 }
 
@@ -864,6 +867,24 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
    if(context.state.topslope <= context.state.bottomslope)
       return false;  // stop
 
+   // have we hit a lower edge portal
+   if(li->extflags & EX_ML_EXTNDFPORTAL && li->backsector &&
+      li->backsector->f_pflags & PS_PASSABLE &&
+      P_PointOnLineSide(trace.x, trace.y, li) == 0 && in->frac > 0)
+   {
+      State state(context.state);
+      state.originfrac = totalfrac;
+      if(context.recurse(li->backsector->f_portal->data.link.toid,
+                         context.params->cx + FixedMul(trace.dx, in->frac),
+                         context.params->cy + FixedMul(trace.dy, in->frac),
+                         state, &context.portalresult,
+                         li->backsector->f_portal->data.link))
+      {
+         context.portalexit = true;
+         return false;
+      }
+   }
+
    // have we hit a portal line
    if(li->pflags & PS_PASSABLE && P_PointOnLineSide(trace.x, trace.y, li) == 0 &&
       in->frac > 0)
@@ -879,7 +900,6 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
          context.portalexit = true;
          return false;
       }
-      return true;
    }
 
    return true;   // keep going
