@@ -2788,8 +2788,9 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       line->beyondportalsector = partner->frontsector;
    };
 
+   bool otherIsEdge = false;
+
    // create the appropriate type of portal
-   int tmp = 0;
    switch(type)
    {
    case portal_plane:
@@ -2994,7 +2995,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          {
             // SoM 3-10-04: Two different anchor linedef codes so I can tag
             // two anchored portals to the same sector.
-            if(lines[s].special != anchortype || line == &lines[s]
+            if((lines[s].special != anchortype && !(lines[s].extflags & EX_ML_EXTNDFPORTAL)) || line == &lines[s]
               || lines[s].frontsector == NULL)
                continue;
 
@@ -3045,20 +3046,23 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          return;
       }
 
-      portal = R_GetLinkedPortal(line - lines, s, planez, fromid, toid);
+      otherIsEdge = !!(lines[s].extflags & EX_ML_EXTNDFPORTAL);
+      if(!otherIsEdge)
+         portal = R_GetLinkedPortal(line - lines, s, planez, fromid, toid);
 
       // Special case where the portal was created with the line-to-line portal type
       if(staticFn == EV_STATIC_PORTAL_LINKED_LINE2LINE ||
          staticFn == EV_STATIC_POLYOBJ_START_LINE ||
          staticFn == EV_STATIC_PORTAL_LINE_PARAM)
       {
-         P_SetPortal(lines[s].frontsector, lines + s, portal, portal_lineonly);
+         if(!otherIsEdge)
+            P_SetPortal(lines[s].frontsector, lines + s, portal, portal_lineonly);
          
          // ioanch 20160226: add partner portals
          portal_t *portal2 = R_GetLinkedPortal(s, line - lines, planez, toid, fromid);
          P_SetPortal(sector, line, portal2, portal_lineonly);
 
-         if(!lines[s].backsector || !line->backsector)
+         if(!otherIsEdge && (!lines[s].backsector || !line->backsector))
          {
             // HACK TO MAKE THEM PASSABLE
             if(!lines[s].backsector)
