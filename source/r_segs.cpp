@@ -464,7 +464,20 @@ static void R_RenderSegLoop(void)
                ceilingclip[i] = (float)t;
 
 
-            if(segclip.bottomtex)
+            if(segclip.b_window)
+            {
+               column.y1 = (int)(segclip.low < ceilingclip[i] ? ceilingclip[i] : segclip.low);
+               column.y2 = b;
+               if(column.y2 >= column.y1)
+               {
+                  R_WindowAdd(segclip.b_window, i, column.y1, column.y2);
+                  floorclip[i] = static_cast<float>(column.y1 - 1);
+               }
+               else
+                  floorclip[i] = static_cast<float>(b);
+               segclip.low += segclip.lowstep;
+            }
+            else if(segclip.bottomtex)
             {
                column.y1 = (int)(segclip.low < ceilingclip[i] ? ceilingclip[i] : segclip.low);
                column.y2 = b;

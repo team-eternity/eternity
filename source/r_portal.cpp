@@ -1185,7 +1185,7 @@ static void R_SetPortalFunction(pwindow_t *window)
 //
 // functions return a portal window based on the given parameters.
 //
-pwindow_t *R_GetFloorPortalWindow(portal_t *portal)
+pwindow_t *R_GetFloorPortalWindow(portal_t *portal, fixed_t planez)
 {
    pwindow_t *rover = windowhead;
 
@@ -1193,30 +1193,43 @@ pwindow_t *R_GetFloorPortalWindow(portal_t *portal)
    {
       // SoM: TODO: There could be the possibility of multiple portals
       // being able to share a single window set.
-      if(rover->portal == portal && rover->type == pw_floor)
+      // ioanch: also added plane checks
+      if(rover->portal == portal && rover->type == pw_floor &&
+         rover->planez == planez && !rover->up)
+      {
          return rover;
+      }
    
       rover = rover->next;
    }
 
    // not found, so make it
-   return R_NewPortalWindow(portal, NULL, pw_floor);
+   pwindow_t *window = R_NewPortalWindow(portal, NULL, pw_floor);
+   window->planez = planez;
+   window->up = false;
+   return window;
 }
 
-pwindow_t *R_GetCeilingPortalWindow(portal_t *portal)
+pwindow_t *R_GetCeilingPortalWindow(portal_t *portal, fixed_t planez)
 {
    pwindow_t *rover = windowhead;
 
    while(rover)
    {
-      if(rover->portal == portal && rover->type == pw_ceiling)
+      if(rover->portal == portal && rover->type == pw_ceiling &&
+         rover->planez == planez && rover->up)
+      {
          return rover;
+      }
 
       rover = rover->next;
    }
 
    // not found, so make it
-   return R_NewPortalWindow(portal, NULL, pw_ceiling);
+   pwindow_t *window = R_NewPortalWindow(portal, NULL, pw_ceiling);
+   window->planez = planez;
+   window->up = true;
+   return window;
 }
 
 pwindow_t *R_GetLinePortalWindow(portal_t *portal, line_t *line)

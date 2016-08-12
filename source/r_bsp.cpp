@@ -1193,7 +1193,8 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
        seg.frontsec->c_portal != seg.backsec->c_portal))
    {
       seg.markflags |= SEG_MARKCPORTAL;
-      seg.c_window   = R_GetCeilingPortalWindow(seg.frontsec->c_portal);
+      seg.c_window   = R_GetCeilingPortalWindow(seg.frontsec->c_portal,
+                                                seg.frontsec->ceilingheight);
    }
    else
       seg.c_window   = NULL;
@@ -1243,7 +1244,8 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
        seg.frontsec->f_portal != seg.backsec->f_portal))
    {
       seg.markflags |= SEG_MARKFPORTAL;
-      seg.f_window   = R_GetFloorPortalWindow(seg.frontsec->f_portal);
+      seg.f_window   = R_GetFloorPortalWindow(seg.frontsec->f_portal,
+                                              seg.frontsec->floorheight);
    }
    else
       seg.f_window = NULL;
@@ -1285,9 +1287,15 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
          seg.c_portalignore = true;
    }
 
+   bool toolow = portalrender.w && portalrender.w->up
+         && portalrender.w->planez >= seg.backsec->floorheight;
+
    // SoM: Get this from the actual sector because R_FakeFlat can mess with heights.
+   bool havebportal = seg.backsec && seg.backsec->f_portal
+         && seg.line->linedef->extflags & EX_ML_EXTNDFPORTAL;
+
    texlow = seg.line->backsector->floorheightf - view.z;
-   if((b > l || b2 > l2) && side->bottomtexture)
+   if(!toolow && !havebportal && (b > l || b2 > l2) && side->bottomtexture)
    {
       seg.bottomtex = texturetranslation[side->bottomtexture];
       seg.bottomtexh = textures[side->bottomtexture]->height;
@@ -1312,6 +1320,14 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    }
    else
       seg.l_window = NULL;
+
+   if(!toolow && havebportal && (b > l || b2 > l2))
+   {
+      seg.b_window = R_GetLinePortalWindow(seg.backsec->f_portal, line->linedef);
+      seg.segtextured = true;
+   }
+   else
+      seg.b_window = nullptr;
 }
 
 static void R_2S_Normal(float pstep, float i1, float i2, float textop, 
@@ -1412,7 +1428,8 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
        seg.frontsec->c_portal != seg.backsec->c_portal))
    {
       seg.markflags |= SEG_MARKCPORTAL;
-      seg.c_window   = R_GetCeilingPortalWindow(seg.frontsec->c_portal);
+      seg.c_window   = R_GetCeilingPortalWindow(seg.frontsec->c_portal,
+                                                seg.frontsec->ceilingheight);
    }
    else
       seg.c_window = NULL;
@@ -1461,7 +1478,8 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
        seg.frontsec->f_portal != seg.backsec->f_portal))
    {
       seg.markflags |= SEG_MARKFPORTAL;
-      seg.f_window   = R_GetFloorPortalWindow(seg.frontsec->f_portal);
+      seg.f_window   = R_GetFloorPortalWindow(seg.frontsec->f_portal,
+                                              seg.frontsec->floorheight);
    }
    else
       seg.f_window = NULL;
@@ -1489,9 +1507,19 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    seg.low2 = view.ycenter - ((seg.backsec->floorheightf - view.z) * i2);
    seg.lowstep = (seg.low2 - seg.low) * pstep;
 
+   // ioanch: don't render lower textures or portals if they're below the
+   // current plane-z window. Necessary for edge portals
+   bool toolow = portalrender.w && portalrender.w->up
+         && portalrender.w->planez >= seg.backsec->floorheight;
+
    // SoM: Get this from the actual sector because R_FakeFlat can mess with heights.
+   bool havebportal = seg.backsec && seg.backsec->f_portal
+         && seg.line->linedef->extflags & EX_ML_EXTNDFPORTAL;
+
    texlow = seg.line->backsector->floorheightf - view.z;
-   if(seg.frontsec->floorheight < seg.backsec->floorheight && side->bottomtexture)
+   if(!toolow && !havebportal
+      && seg.frontsec->floorheight < seg.backsec->floorheight
+      && side->bottomtexture)
    {
       seg.bottomtex  = texturetranslation[side->bottomtexture];
       seg.bottomtexh = textures[side->bottomtexture]->height;
@@ -1516,6 +1544,15 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    }
    else
       seg.l_window = NULL;
+
+   if(!toolow && havebportal &&
+      seg.frontsec->floorheight < seg.backsec->floorheight)
+   {
+      seg.b_window = R_GetLinePortalWindow(seg.backsec->f_portal, line->linedef);
+      seg.segtextured = true;
+   }
+   else
+      seg.b_window = nullptr;
 }
 
 //
@@ -1995,14 +2032,16 @@ static void R_AddLine(seg_t *line, bool dynasegs)
          (seg.frontsec->c_pflags & PS_VISIBLE && seg.frontsec->ceilingheight > viewz)))
       {
          seg.markflags |= SEG_MARKCPORTAL;
-         seg.c_window   = R_GetCeilingPortalWindow(seg.frontsec->c_portal);
+         seg.c_window   = R_GetCeilingPortalWindow(seg.frontsec->c_portal,
+                                                   seg.frontsec->ceilingheight);
       }
 
       if(seg.frontsec->f_portal && (seg.frontsec->f_portal->type < R_TWOWAY ||
         (seg.frontsec->f_pflags & PS_VISIBLE && seg.frontsec->floorheight <= viewz)))
       {
          seg.markflags |= SEG_MARKFPORTAL;
-         seg.f_window   = R_GetFloorPortalWindow(seg.frontsec->f_portal);
+         seg.f_window   = R_GetFloorPortalWindow(seg.frontsec->f_portal,
+                                                 seg.frontsec->floorheight);
       }
 
       if(seg.ceilingplane != NULL)

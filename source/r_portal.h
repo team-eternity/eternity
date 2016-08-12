@@ -237,6 +237,9 @@ struct pwindow_t
    line_t *line;
    pwindowtype_e type;
 
+   fixed_t planez;   // if line == nullptr, this is the sector portal plane z
+   bool up;          // if line == nullptr, this is true if portal is upwards
+
    fixed_t  vx, vy, vz;
    angle_t  vangle;
 
@@ -258,8 +261,8 @@ struct pwindow_t
 // SoM: Cardboard
 void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom);
 
-pwindow_t *R_GetFloorPortalWindow(portal_t *portal);
-pwindow_t *R_GetCeilingPortalWindow(portal_t *portal);
+pwindow_t *R_GetFloorPortalWindow(portal_t *portal, fixed_t planez);
+pwindow_t *R_GetCeilingPortalWindow(portal_t *portal, fixed_t planez);
 pwindow_t *R_GetLinePortalWindow(portal_t *portal, line_t *line);
 
 
