@@ -1341,6 +1341,22 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata,
       if(context.state.topslope <= context.state.bottomslope)
          return false;
 
+      if(li->extflags & EX_ML_EXTNDFPORTAL && li->backsector &&
+         li->backsector->f_pflags & PS_PASSABLE &&
+         P_PointOnLineSide(trace.x, trace.y, li) == 0 && in->frac > 0)
+      {
+         State newState(context.state);
+         newState.cx = trace.x + FixedMul(trace.dx, in->frac);
+         newState.cy = trace.y + FixedMul(trace.dy, in->frac);
+         newState.groupid = li->backsector->f_portal->data.link.toid;
+         newState.origindist = totaldist;
+         return !context.recurse(newState,
+                                 in->frac,
+                                 &context.aimslope,
+                                 &context.linetarget,
+                                 nullptr, li->backsector->f_portal->data.link);
+      }
+
       if(li->pflags & PS_PASSABLE && P_PointOnLineSide(trace.x, trace.y, li) == 0 &&
          in->frac > 0)
       {
