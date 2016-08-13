@@ -114,6 +114,12 @@ struct linkdata_t
    // ioanch 20160226: access the partner portal (if any) in case of polyobject
    // cars
    portal_t *polyportalpartner;
+
+   inline bool deltaEquals(const linkdata_t &data) const
+   {
+      return deltax == data.deltax && deltay == data.deltay &&
+             deltaz == data.deltaz;
+   }
 };
 
 struct portaltransform_t
