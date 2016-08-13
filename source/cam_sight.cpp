@@ -1343,18 +1343,31 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata,
 
       if(li->extflags & EX_ML_EXTNDFPORTAL && li->backsector &&
          li->backsector->f_pflags & PS_PASSABLE &&
-         P_PointOnLineSide(trace.x, trace.y, li) == 0 && in->frac > 0)
+         context.state.bottomslope
+         <= FixedDiv(li->backsector->floorheight - context.state.cz, totaldist)
+         && P_PointOnLineSide(trace.x, trace.y, li) == 0 && in->frac > 0)
       {
          State newState(context.state);
          newState.cx = trace.x + FixedMul(trace.dx, in->frac);
          newState.cy = trace.y + FixedMul(trace.dy, in->frac);
          newState.groupid = li->backsector->f_portal->data.link.toid;
          newState.origindist = totaldist;
-         return !context.recurse(newState,
-                                 in->frac,
-                                 &context.aimslope,
-                                 &context.linetarget,
-                                 nullptr, li->backsector->f_portal->data.link);
+         newState.reclevel = context.state.reclevel + 1;
+
+         fixed_t outSlope;
+         Mobj *outTarget = nullptr;
+         fixed_t outDist;
+
+         if(context.recurse(newState, in->frac, &outSlope, &outTarget, &outDist,
+                            li->backsector->f_portal->data.link))
+         {
+            if(outTarget && (!context.linetarget || outDist < context.targetdist))
+            {
+               context.linetarget = outTarget;
+               context.targetdist = outDist;
+               context.aimslope = outSlope;
+            }
+         }
       }
 
       if(li->pflags & PS_PASSABLE && P_PointOnLineSide(trace.x, trace.y, li) == 0 &&
@@ -1365,12 +1378,10 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata,
          newState.cy = trace.y + FixedMul(trace.dy, in->frac);
          newState.groupid = li->portal->data.link.toid;
          newState.origindist = totaldist;
-         
-         return !context.recurse(newState,
-            in->frac,
-            &context.aimslope,
-            &context.linetarget,
-            nullptr, li->portal->data.link);
+         newState.reclevel = context.state.reclevel + 1;
+         return !context.recurse(newState, in->frac, &context.aimslope,
+                                 &context.linetarget, nullptr,
+                                 li->portal->data.link);
       }
 
       return true;
@@ -1611,7 +1622,7 @@ private:
    bool checkShootFlatPortal(const sector_t *sector, fixed_t infrac) const;
    bool shoot2SLine(line_t *li, int lineside, fixed_t dist, 
       const LineOpening &lo) const;
-   bool shotCheck2SLine(line_t *li, int lineside, fixed_t frac) const;
+   bool shotCheck2SLine(line_t *li, int lineside, fixed_t dist) const;
    static bool shootTraverse(const intercept_t *in, void *data, 
       const divline_t &trace);
    ShootContext(Mobj *source, angle_t inangle, fixed_t distance, fixed_t slope,
@@ -1743,7 +1754,7 @@ bool ShootContext::shoot2SLine(line_t *li, int lineside, fixed_t dist,
 //
 // ShootContext::shotCheck2SLine
 //
-bool ShootContext::shotCheck2SLine(line_t *li, int lineside, fixed_t frac) const
+bool ShootContext::shotCheck2SLine(line_t *li, int lineside, fixed_t dist) const
 {
    bool ret = false;
    if(li->extflags & EX_ML_BLOCKALL)
@@ -1753,7 +1764,6 @@ bool ShootContext::shotCheck2SLine(line_t *li, int lineside, fixed_t frac) const
    {
       LineOpening lo = { 0 };
       CAM_lineOpening(lo, li);
-      fixed_t dist = FixedMul(attackrange, frac);
       if(shoot2SLine(li, lineside, dist, lo))
          ret = true;
    }
@@ -1775,16 +1785,24 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
       // same as the source thing origin, as it happens in PTR_ShootTraverse
       int lineside = P_PointOnLineSide(trace.x, trace.y, li);
 
-      if(context.shotCheck2SLine(li, lineside, in->frac))
+      fixed_t dist = FixedMul(context.attackrange, in->frac);
+      if(context.shotCheck2SLine(li, lineside, dist))
       {
          // ioanch 20160101: line portal aware
          const portal_t *portal = nullptr;
-         if(li->pflags & PS_PASSABLE)
-            portal = li->portal;
-         else if(li->extflags & EX_ML_EXTNDFPORTAL && li->backsector &&
-                 li->backsector->f_pflags & PS_PASSABLE)
+         if(li->extflags & EX_ML_EXTNDFPORTAL && li->backsector &&
+            li->backsector->f_pflags & PS_PASSABLE &&
+            FixedDiv(li->backsector->floorheight - context.state.z, dist)
+            >= context.aimslope)
          {
             portal = li->backsector->f_portal;
+         }
+         else if(li->pflags & PS_PASSABLE &&
+                 (!(li->extflags & EX_ML_EXTNDFPORTAL) ||
+                  FixedDiv(li->backsector->floorheight - context.state.z, dist)
+                  < context.aimslope))
+         {
+            portal = li->portal;
          }
          if(portal && lineside == 0 && in->frac > 0)
          {
@@ -2135,10 +2153,17 @@ bool UseContext::useTraverse(const intercept_t *in, void *vcontext,
    }
 
    // ioanch 20160131: opportunity to pass through portals
-   if(li->pflags & PS_PASSABLE && P_PointOnLineSide(trace.x, trace.y, li) == 0 && 
-      in->frac > 0)
+   const portal_t *portal = nullptr;
+   if(li->pflags & PS_PASSABLE)
+      portal = li->portal;
+   else if(li->extflags & EX_ML_EXTNDFPORTAL && li->backsector &&
+           li->backsector->f_pflags & PS_PASSABLE)
    {
-      int newfromid = li->portal->data.link.toid;
+      portal = li->backsector->f_portal;
+   }
+   if(portal && P_PointOnLineSide(trace.x, trace.y, li) == 0 && in->frac > 0)
+   {
+      int newfromid = portal->data.link.toid;
       if(newfromid == context->state.groupid || 
          context->state.reclevel >= RECURSION_LIMIT)
       {
@@ -2150,8 +2175,8 @@ bool UseContext::useTraverse(const intercept_t *in, void *vcontext,
       newState.attackrange -= FixedMul(newState.attackrange, in->frac);
       newState.groupid = newfromid;
       newState.reclevel++;
-      fixed_t x = trace.x + FixedMul(trace.dx, in->frac) + li->portal->data.link.deltax;
-      fixed_t y = trace.y + FixedMul(trace.dy, in->frac) + li->portal->data.link.deltay;
+      fixed_t x = trace.x + FixedMul(trace.dx, in->frac) + portal->data.link.deltax;
+      fixed_t y = trace.y + FixedMul(trace.dy, in->frac) + portal->data.link.deltay;
 
       useLines(context->player, x, y, &newState);
       context->portalhit = true;
