@@ -39,6 +39,7 @@ struct player_t;
 class  SaveArchive;
 struct sector_t;
 struct side_t;
+class  UDMFSetupSettings;
 
 //      Define values for map objects
 #define MO_TELEPORTMAN  14
@@ -95,6 +96,10 @@ struct side_t;
 #define KILLSOUND_SHIFT 10
 #define MOVESOUND_MASK  0x800
 #define MOVESOUND_SHIFT 11
+
+#define UDMF_SEC_MASK   0xff  // 0-255 are the UDMF non-Boom gen specials
+// right-shift from UDMF generalized namespace to Boom generalized namespace
+#define UDMF_BOOM_SHIFT 3
 
 // haleyjd 12/28/08: mask used to get generalized special bits that are now
 // part of the sector flags
@@ -415,7 +420,10 @@ typedef enum
    paramUpByValueWaitDownStay,
    paramPerpetualRaise,
    paramUpByValueStayAndChange,
-   paramRaiseToNearestAndChange
+   paramRaiseToNearestAndChange,
+   paramToggleCeiling,
+   paramDownWaitUpStayLip,
+   paramPerpetualRaiseLip
 } paramplattype_e;
 
 // p_doors
@@ -1406,7 +1414,7 @@ int EV_FloorCrushStop(const line_t *line, int tag);
 
 int EV_DoCeiling(const line_t *line, ceiling_e type);
 
-int EV_CeilingCrushStop(const line_t *line, int tag);
+int EV_CeilingCrushStop(int tag, bool removeThinker);
 
 void P_ChangeCeilingTex(const char *name, int tag);
 
@@ -1468,8 +1476,7 @@ void P_ChangeFloorTex(const char *name, int tag);
 
 bool EV_DoPlat(const line_t *line, plattype_e type, int amount);
 bool EV_DoParamPlat(const line_t *line, const int *args, paramplattype_e type);
-bool EV_StopPlatByTag(int tag);
-bool EV_StopPlat(const line_t *line);
+bool EV_StopPlatByTag(int tag, bool removeThinker);
 
 // p_genlin
 
@@ -1504,7 +1511,7 @@ int EV_ThingSpawn(const int *args, bool fog);
 int EV_ThingActivate(int tid);
 int EV_ThingDeactivate(int tid);
 int EV_ThingChangeTID(Mobj *actor, int oldtid, int newtid);
-int EV_ThingRaise(Mobj *actor, int tid, bool keepfriend);
+int EV_ThingRaise(Mobj *actor, int tid);
 int EV_ThingStop(Mobj *actor, int tid);
 int EV_ThrustThing(Mobj *actor, int side, int byteangle, int speed, int tid);
 int EV_ThrustThingZ(Mobj *actor, int tid, int speed, bool upDown, bool setAdd);
@@ -1526,7 +1533,7 @@ void P_InitPicAnims();
 void P_InitSwitchList();
 
 // at map load
-void P_SpawnSpecials();
+void P_SpawnSpecials(UDMFSetupSettings &setupSettings);
 
 // 
 // P_SpawnDeferredSpecials

@@ -46,6 +46,7 @@
 #include "e_mod.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "e_udmf.h"
 
 #include "d_dehtbl.h" // for dehflags parsing
 #include "d_io.h"
@@ -60,6 +61,7 @@
 #include "r_data.h"
 #include "r_main.h"
 #include "r_portal.h"
+#include "r_state.h"
 #include "w_wad.h"
 
 // statics
@@ -1533,7 +1535,7 @@ void E_LoadLineDefExt(line_t *line, bool applySpecial)
 //
 // E_LoadSectorExt
 //
-void E_LoadSectorExt(line_t *line)
+void E_LoadSectorExt(line_t *line, UDMFSetupSettings &setupSettings)
 {
    unsigned int    edSectorIdx;
    mapsectorext_t *edsector;
@@ -1604,6 +1606,8 @@ void E_LoadSectorExt(line_t *line)
       sector->midmap    = edsector->midmap;
    if(edsector->bottommap >= 0)
       sector->bottommap = edsector->bottommap;
+   if(edsector->topmap >= 0 || edsector->midmap >= 0 || edsector->bottommap >= 0)
+      setupSettings.setSectorFlag(sector - sectors, UDMF_SECTOR_INIT_COLORMAPPED);
 
    // terrain overrides
    sector->floorterrain   = edsector->floorterrain;

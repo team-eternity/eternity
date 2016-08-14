@@ -48,6 +48,7 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "e_udmf.h"
 #include "ev_sectors.h"
 #include "ev_specials.h"
 #include "g_game.h"
@@ -1191,7 +1192,8 @@ void P_UpdateSpecials()
 //
 // Namely, colormaps.
 //
-static void P_SetupHeightTransfer(int linenum, int secnum)
+static void P_SetupHeightTransfer(int linenum, int secnum,
+                                  const UDMFSetupSettings &setupSettings)
 {
    int s;
    sector_t *heightsec = &sectors[secnum];
@@ -1202,9 +1204,12 @@ static void P_SetupHeightTransfer(int linenum, int secnum)
 
       // transfer colormaps to affected sectors instead of getting them from
       // the heightsec during the rendering process
-      sectors[s].topmap    = heightsec->topmap;
-      sectors[s].midmap    = heightsec->midmap;
-      sectors[s].bottommap = heightsec->bottommap;
+      if(!setupSettings.sectorIsFlagged(s, UDMF_SECTOR_INIT_COLORMAPPED))
+      {
+         sectors[s].topmap    = heightsec->topmap;
+         sectors[s].midmap    = heightsec->midmap;
+         sectors[s].bottommap = heightsec->bottommap;
+      }
    }
 }
 
@@ -1213,7 +1218,7 @@ static void P_SetupHeightTransfer(int linenum, int secnum)
 //
 // After the map has been loaded, scan for specials that spawn thinkers
 //
-void P_SpawnSpecials()
+void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
 {
    // sf: -timer moved to d_main.c
    //     -avg also
@@ -1255,7 +1260,7 @@ void P_SpawnSpecials()
          // support for drawn heights coming from different sector
       case EV_STATIC_TRANSFER_HEIGHTS:
          sec = sides[*lines[i].sidenum].sector-sectors;
-         P_SetupHeightTransfer(i, sec); // haleyjd 03/04/07
+         P_SetupHeightTransfer(i, sec, setupSettings); // haleyjd 03/04/07
          break;
 
          // killough 3/16/98: Add support for setting
@@ -1314,6 +1319,9 @@ void P_SpawnSpecials()
       case EV_STATIC_3DMIDTEX_ATTACH_CEILING:
          P_AttachLines(&lines[i], true);
          break;
+      case EV_STATIC_3DMIDTEX_ATTACH_PARAM:
+         P_AttachLines(&lines[i], !!lines[i].args[ev_AttachMidtex_Arg_DoCeiling]);
+         break;
 
          // SoM 12/10/03: added skybox/portal specials
          // haleyjd 01/24/04: functionalized code to reduce footprint
@@ -1336,6 +1344,7 @@ void P_SpawnSpecials()
       case EV_STATIC_PORTAL_LINKED_LINE2LINE:
       case EV_STATIC_PORTAL_HORIZON_LINE:
       case EV_STATIC_PORTAL_SECTOR_PARAM:
+      case EV_STATIC_PORTAL_LINE_PARAM:
          P_SpawnPortal(&lines[i], staticFn);
          break;
       
@@ -1367,7 +1376,7 @@ void P_SpawnSpecials()
 
          // haleyjd 10/16/10: ExtraData sector
       case EV_STATIC_EXTRADATA_SECTOR:         
-         E_LoadSectorExt(&lines[i]);
+         E_LoadSectorExt(&lines[i], setupSettings);
          break;
 
       default: // Not a static special, or not handled here
@@ -1942,6 +1951,40 @@ bool P_Scroll3DSides(const sector_t *sector, bool ceiling, fixed_t delta,
 }
 
 //
+// Helper function to add a line to a local static list, for 3dmidtex attachment
+//
+static void P_addLineToAttachList(const line_t *line, int *&attached,
+                                  int &numattach, int &maxattach)
+{
+   if(!line->frontsector || !line->backsector ||
+      !(line->flags & ML_3DMIDTEX))
+   {
+      return;
+   }
+
+   int i;
+   for(i = 0; i < numattach;i++)
+   {
+      if(line - lines == attached[i])
+         break;
+   }
+
+   if(i == numattach)
+   {
+      if(numattach == maxattach)
+      {
+         maxattach += 5;
+
+         attached = erealloc(int *, attached, sizeof(int) * maxattach);
+      }
+
+      attached[numattach++] = line - lines;
+   }
+
+   // SoM 12/8/02: Don't attach the backsector.
+}
+
+//
 // SoM 9/19/2002
 // P_AttachLines
 //
@@ -2006,39 +2049,54 @@ void P_AttachLines(const line_t *cline, bool ceiling)
       Z_Free(cline->frontsector->c_attsectors);
    }
 
+   // ioanch: param specisl
+   int restrictTag = 0;
+   bool alreadyPicked = false;
+   if(EV_StaticInitForSpecial(cline->special) == EV_STATIC_3DMIDTEX_ATTACH_PARAM)
+   {
+      // floor/ceiling choice already set from caller
+      int lineid = cline->args[0];
+      restrictTag = cline->args[ev_AttachMidtex_Arg_SectorTag];
+      if(!lineid && restrictTag)
+      {
+         alreadyPicked = true;   // to avoid looking for lines later
+         for(start = -1; (start = P_FindSectorFromTag(restrictTag, start)) >= 0;)
+         {
+            const sector_t *sector = sectors + start;
+            for(int j = 0; j < sector->linecount; ++j)
+            {
+               line = sector->lines[j];
+
+               P_addLineToAttachList(line, attached, numattach, maxattach);
+            }
+         }
+      }
+
+      // Other cases:
+      // lineid != 0 and restrictTag != 0: will go down and restrict by tag
+      // lineid != 0 and restrictTag == 0: will act normally
+      // lineid == 0 and restrictTag == 0: same as in previous games
+   }
+
    // Search the lines list. Check for every tagged line that
    // has the 3dmidtex lineflag, then add the line to the attached list.
-   for(start = -1; (start = P_FindLineFromLineArg0(cline,start)) >= 0; )
+   if(!alreadyPicked)
    {
-      if(start != cline-lines)
+      for(start = -1; (start = P_FindLineFromLineArg0(cline,start)) >= 0; )
       {
-         line = lines+start;
-
-         if(!line->frontsector || !line->backsector ||
-            !(line->flags & ML_3DMIDTEX))
-            continue;
-
-         for(i = 0; i < numattach;i++)
+         if(start != cline-lines)
          {
-            if(line - lines == attached[i])
-            break;
-         }
-
-         if(i == numattach)
-         {
-            if(numattach == maxattach)
+            line = lines+start;
+            if(restrictTag && line->frontsector->tag != restrictTag &&
+               (!line->backsector || line->backsector->tag != restrictTag))
             {
-              maxattach += 5;
-
-              attached = erealloc(int *, attached, sizeof(int) * maxattach);
+               continue;
             }
 
-            attached[numattach++] = line - lines;
+            P_addLineToAttachList(line, attached, numattach, maxattach);
          }
-         
-         // SoM 12/8/02: Don't attach the backsector.
-      }
-   } // end for
+      } // end for
+   }
 
    // haleyjd: static analyzer says this could happen, so let's just be safe.
    if(!attached)
@@ -2490,7 +2548,7 @@ static bool P_getParamPortalProps(const int *args, portal_type &type,
    {
       case paramPortal_normal:
       default:
-         if(args[paramPortal_argMisc])
+         if(!args[paramPortal_argMisc])
             return false;  // anchor
 
          // Both floor and ceiling portals are anchored, otherwise two-way
@@ -2512,7 +2570,7 @@ static bool P_getParamPortalProps(const int *args, portal_type &type,
       case paramPortal_copyline:
          return false;  // copy line
       case paramPortal_linked:
-         if(args[paramPortal_argMisc])
+         if(!args[paramPortal_argMisc])
             return false;  // anchor
          if(args[paramPortal_argPlane] == paramPortal_planeBoth)
          {
@@ -2552,7 +2610,7 @@ static int P_findParamPortalAnchor(const line_t *line)
          lines[s].args[0] != line->args[0] ||
          lines[s].args[paramPortal_argType] != line->args[paramPortal_argType] ||
          lines[s].args[paramPortal_argPlane] != line->args[paramPortal_argPlane] ||
-         !lines[s].args[paramPortal_argMisc])
+         lines[s].args[paramPortal_argMisc])
          continue;
       break;   // found an anchor
    }
@@ -2677,6 +2735,28 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          return;  // exit if it's just a copier sought by others
       }
    }
+   else if(staticFn == EV_STATIC_PORTAL_LINE_PARAM)
+   {
+      // Currently only support ZDoom's Eternity XLAT helper
+      switch(line->args[ev_LinePortal_Arg_Type])
+      {
+         case ev_LinePortal_Type_EEClassic:
+            if(line->args[0] != ev_LinePortal_Maker)
+               return;
+            type = portal_linked;
+            break;
+         case ev_LinePortal_Type_Visual:
+            type = portal_twoway;
+            break;
+         case ev_LinePortal_Type_Linked:  // this one respects link offsets
+            type = portal_linked;
+            break;
+         default:
+            return;
+      }
+      effects = portal_lineonly;
+      param = true;
+   }
    else
    {
       // haleyjd: get type and effects from static init function
@@ -2685,6 +2765,16 @@ static void P_SpawnPortal(line_t *line, int staticFn)
 
    if(!(sector = line->frontsector))
       return;
+
+   // ioanch: make a function to remove duplication (linked polyobject portals)
+   auto unblockline = [](line_t *line, line_t *partner)
+   {
+      line->backsector = line->frontsector;
+      line->sidenum[1] = line->sidenum[0];
+      line->flags &= ~ML_BLOCKING;
+      line->flags |= ML_TWOSIDED;
+      line->beyondportalsector = partner->frontsector;
+   };
 
    // create the appropriate type of portal
    switch(type)
@@ -2769,10 +2859,18 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       break;
 
    case portal_twoway:
-      // two way and linked portals can only be applied to either the floor or ceiling.
       if(param)
-         // We're having (tag, 0, plane, 0). Look for (tag, 0, plane, 1)
-         s = P_findParamPortalAnchor(line);
+      {
+         // We're having (tag, 0, plane, 1). Look for (tag, 0, plane, 0)
+         if(staticFn == EV_STATIC_PORTAL_SECTOR_PARAM)
+            s = P_findParamPortalAnchor(line);
+         else
+         {
+            s = P_FindLineFromLineArg0(line, -1);  // line portal
+            if(s == line - lines)
+               s = P_FindLineFromLineArg0(line, s);  // avoid getting this line
+         }
+      }
       else
       {
          if(staticFn == EV_STATIC_PORTAL_TWOWAY_CEILING)
@@ -2799,6 +2897,14 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          return;
       }
 
+      if(effects == portal_lineonly)
+      {
+         // special case for line portals
+         portal = R_GetTwoWayPortal(s, line - lines);
+         P_SetPortal(sector, line, portal, portal_lineonly);
+         return;
+      }
+
       portal = R_GetTwoWayPortal(line - lines, s);
       break;
 
@@ -2809,10 +2915,38 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       // linked portals can only be applied to either the floor or ceiling.
       if(param)
       {
-         planez = line->args[2] == 0 ? sector->ceilingheight
-                                     : sector->floorheight;
-         s = P_findParamPortalAnchor(line);
-         // TODO: line portals not handled yet
+         if(staticFn == EV_STATIC_PORTAL_SECTOR_PARAM)
+         {
+            planez = line->args[2] == 0 ? sector->ceilingheight
+               : sector->floorheight;
+            s = P_findParamPortalAnchor(line);
+         }
+         else  // line portal
+         {
+            planez = 0;
+            if(line->args[ev_LinePortal_Arg_Type] == ev_LinePortal_Type_EEClassic)
+            {
+               anchortype = EV_SpecialForStaticInit(EV_STATIC_PORTAL_LINE_PARAM);
+               for(s = -1; (s = P_FindLineFromTag(line->tag, s)) >= 0; )
+               {
+                  if(lines[s].special != anchortype || line == &lines[s]
+                     || !lines[s].frontsector
+                     || lines[s].args[ev_LinePortal_Arg_Type]
+                         != ev_LinePortal_Type_EEClassic
+                     || lines[s].args[0] != ev_LinePortal_Anchor)
+                  {
+                     continue;
+                  }
+                  break;
+               }
+            }
+            else
+            {
+               s = P_FindLineFromLineArg0(line, -1);  // line portal
+               if(s == line - lines)
+                  s = P_FindLineFromLineArg0(line, s);  // avoid getting this line
+            }
+         }
       }
       else
       {
@@ -2865,11 +2999,36 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       
       toid = sector->groupid;
       fromid = lines[s].frontsector->groupid;
-            
+
+      // Special case for parameterized line portal
+      if(staticFn == EV_STATIC_PORTAL_LINE_PARAM &&
+         line->args[ev_LinePortal_Arg_Type] != ev_LinePortal_Type_EEClassic)
+      {
+         portal = R_GetLinkedPortal(s, line - lines, planez, toid, fromid);
+         P_SetPortal(sector, line, portal, portal_lineonly);
+
+         // Also check for polyobject portals
+         if(lines[s].portal && lines[s].portal->type == R_LINKED &&
+            (!line->backsector || !lines[s].backsector))
+         {
+            // we now have a linked portal through a potential polyobject
+            // HACK TO MAKE THEM PASSABLE
+            if(!lines[s].backsector)
+               unblockline(lines + s, line);
+            if(!line->backsector)
+               unblockline(line, lines + s);
+            portal->data.link.polyportalpartner = lines[s].portal;
+            lines[s].portal->data.link.polyportalpartner = portal;
+         }
+
+         return;
+      }
+
       portal = R_GetLinkedPortal(line - lines, s, planez, fromid, toid);
 
       // Special case where the portal was created with the line-to-line portal type
-      if(staticFn == EV_STATIC_PORTAL_LINKED_LINE2LINE)
+      if(staticFn == EV_STATIC_PORTAL_LINKED_LINE2LINE ||
+         staticFn == EV_STATIC_PORTAL_LINE_PARAM)
       {
          P_SetPortal(lines[s].frontsector, lines + s, portal, portal_lineonly);
          
@@ -2879,15 +3038,6 @@ static void P_SpawnPortal(line_t *line, int staticFn)
 
          if(!lines[s].backsector || !line->backsector)
          {
-            // ioanch: make a function to remove duplication
-            auto unblockline = [](line_t *line, line_t *partner)
-            {
-               line->backsector = line->frontsector;
-               line->sidenum[1] = line->sidenum[0];
-               line->flags &= ~ML_BLOCKING;
-               line->flags |= ML_TWOSIDED;
-               line->beyondportalsector = partner->frontsector;
-            };
             // HACK TO MAKE THEM PASSABLE
             if(!lines[s].backsector)
                unblockline(lines + s, line);

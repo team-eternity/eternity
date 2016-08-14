@@ -50,6 +50,50 @@ struct maplumpindex_t
 
 //==============================================================================
 
+//
+// Temporary sector init flags checked only during P_SetupLevel and cleared
+// afterwards.
+//
+
+enum
+{
+   // colormap has been set by UDMF or ExtraData
+   UDMF_SECTOR_INIT_COLORMAPPED = 1,
+};
+
+//
+// This holds settings needed during P_SetupLevel and cleared afterwards. Useful
+// to avoid populating map item data with unused fields.
+//
+class UDMFSetupSettings : public ZoneObject
+{
+   unsigned *mSectorInitFlags;
+   void useSectorCount();
+public:
+   UDMFSetupSettings() : mSectorInitFlags(nullptr)
+   {
+   }
+   ~UDMFSetupSettings()
+   {
+      efree(mSectorInitFlags);
+   }
+
+   //
+   // Sector init flag getter and setter
+   //
+   void setSectorFlag(int index, unsigned flag)
+   {
+      useSectorCount();
+      mSectorInitFlags[index] |= flag;
+   }
+   bool sectorIsFlagged(int index, unsigned flag) const
+   {
+      return mSectorInitFlags && !!(mSectorInitFlags[index] & flag);
+   }
+};
+
+//==============================================================================
+
 class UDMFParser : public ZoneObject
 {
 public:
@@ -74,7 +118,7 @@ public:
    };
 
    void loadVertices() const;
-   void loadSectors() const;
+   void loadSectors(UDMFSetupSettings &setupSettings) const;
    void loadSidedefs() const;
    bool loadLinedefs();
    bool loadSidedefs2();
@@ -214,6 +258,7 @@ private:
       bool damage_endgodmode;
       bool damage_exitlevel;
       bool damageterraineffect;
+      qstring damagetype;
       qstring floorterrain;
       qstring ceilingterrain;
 
@@ -221,6 +266,10 @@ private:
       int lightceiling;
       bool lightfloorabsolute;
       bool lightceilingabsolute;
+
+      qstring colormaptop;
+      qstring colormapmid;
+      qstring colormapbottom;
 
       qstring texturefloor;
       qstring textureceiling;
@@ -230,7 +279,9 @@ private:
 
       bool tfloorset, tceilset;
 
-      USector() : friction(-1), floorterrain("@flat"), ceilingterrain("@flat"), lightlevel(160)
+      USector() : friction(-1), damagetype("Unknown"), floorterrain("@flat"), ceilingterrain("@flat"),
+         colormaptop("@default"), colormapmid("@default"), colormapbottom("@default"),
+         lightlevel(160)
       {
       }
    };

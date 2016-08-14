@@ -600,7 +600,7 @@ DEFINE_ACTION(EV_ActionPlatStop)
    // case 163: (S1 - BOOM Extended)
    // case 182: (SR - BOOM Extended)
    // Platform Stop
-   return EV_StopPlat(instance->line);
+   return EV_StopPlatByTag(instance->tag, false);
 }
 
 //
@@ -626,7 +626,7 @@ DEFINE_ACTION(EV_ActionCeilingCrushStop)
    // case 168: (S1 - BOOM Extended)
    // case 188: (SR - BOOM Extended)
    // Ceiling Crush Stop
-   return EV_CeilingCrushStop(instance->line, instance->tag);
+   return EV_CeilingCrushStop(instance->tag, false);
 }
 
 //
@@ -2707,7 +2707,7 @@ DEFINE_ACTION(EV_ActionPolyobjORRotateLeft)
 //
 // EV_ActionPolyobjStop
 //
-// Implements EV_ActionPolyobjStop(id)
+// Implements Polyobj_Stop(id)
 // * ExtraData: 474
 // * Hexen:     87
 //
@@ -3066,13 +3066,27 @@ DEFINE_ACTION(EV_ActionParamPlatPerpetualRaise)
 //
 // EV_ActionParamPlatStop
 //
-// Implements Plat_Stop(tag)
+// Implements Plat_Stop(tag, kind)
 // * ExtraData: 411
 // * Hexen:     61
 //
 DEFINE_ACTION(EV_ActionParamPlatStop)
 {
-   return EV_StopPlatByTag(instance->tag);
+   bool removeThinker = false;
+   switch (instance->args[1])
+   {
+      case 0:                    // compatibility
+         removeThinker = LevelInfo.levelType == LI_TYPE_HEXEN;
+         break;
+      case 1:
+         removeThinker = false;  // Doom style
+         break;
+      case 2:
+         removeThinker = true;   // Hexen style
+         break;
+   }
+
+   return EV_StopPlatByTag(instance->tag, removeThinker);
 }
 
 //
@@ -3162,14 +3176,13 @@ DEFINE_ACTION(EV_ActionThingChangeTID)
 //
 // EV_ActionThingRaise
 //
-// Implements Thing_Raise(tid, keepfriend)
+// Implements Thing_Raise(tid)
 // * ExtraData: 422
 // * Hexen:     17
 //
 DEFINE_ACTION(EV_ActionThingRaise)
 {
-   return EV_ThingRaise(instance->actor, instance->args[0],
-                        !!instance->args[1]);
+   return EV_ThingRaise(instance->actor, instance->args[0]);
 }
 
 //
@@ -3345,14 +3358,26 @@ DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaise)
 //
 // EV_ActionParamCeilingCrushStop
 //
-// Implements Ceiling_CrushStop(tag)
+// Implements Ceiling_CrushStop(tag, kind)
 // * ExtraData: 433
 // * Hexen:     44
 //
 DEFINE_ACTION(EV_ActionParamCeilingCrushStop)
 {
-   // Really the same as EV_ActionCeilingCrushStop
-   return EV_CeilingCrushStop(instance->line, instance->tag);
+   bool removeThinker = false;
+   switch (instance->args[1])
+   {
+      case 0:                    // compatibility
+         removeThinker = LevelInfo.levelType == LI_TYPE_HEXEN;
+         break;
+      case 1:
+         removeThinker = false;  // Doom style
+         break;
+      case 2:
+         removeThinker = true;   // Hexen style
+         break;
+   }
+   return EV_CeilingCrushStop(instance->tag, removeThinker);
 }
 
 //
@@ -4142,6 +4167,39 @@ DEFINE_ACTION(EV_ActionACSExecuteAlways)
 DEFINE_ACTION(EV_ActionThingRemove)
 {
    return EV_ThingRemove(instance->tag);
+}
+
+//
+// Implements Plat_ToggleCeiling(tag)
+//
+// * ExtraData: 487
+// * Hexen:     231
+//
+DEFINE_ACTION(EV_ActionParamPlatToggleCeiling)
+{
+   return EV_DoParamPlat(instance->line, instance->args, paramToggleCeiling);
+}
+
+//
+// Implements Plat_DownWaitUpStayLip(tag, speed, delay, lip)
+//
+// * ExtraData: 488
+// * Hexen:     206
+//
+DEFINE_ACTION(EV_ActionParamPlatDWUSLip)
+{
+   return EV_DoParamPlat(instance->line, instance->args, paramDownWaitUpStayLip);
+}
+
+//
+// Implements Plat_PerpetualRaiseLip(tag, speed, delay, lip)
+//
+// * ExtraData: 489
+// * Hexen:     207
+//
+DEFINE_ACTION(EV_ActionParamPlatPerpetualRaiseLip)
+{
+   return EV_DoParamPlat(instance->line, instance->args, paramPerpetualRaiseLip);
 }
 
 // EOF

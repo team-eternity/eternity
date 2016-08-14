@@ -233,13 +233,16 @@ DECLARE_ACTION(EV_ActionDamageThingEx);   // Thing_Damage
 DECLARE_ACTION(EV_ActionThingDestroy);
 DECLARE_ACTION(EV_ActionThingRemove);
 DECLARE_ACTION(EV_ActionParamPlatPerpetualRaise);
+DECLARE_ACTION(EV_ActionParamPlatPerpetualRaiseLip);
 DECLARE_ACTION(EV_ActionParamPlatStop);
 DECLARE_ACTION(EV_ActionParamPlatDWUS);
+DECLARE_ACTION(EV_ActionParamPlatDWUSLip);
 DECLARE_ACTION(EV_ActionParamPlatDownByValue);
 DECLARE_ACTION(EV_ActionParamPlatUWDS);
 DECLARE_ACTION(EV_ActionParamPlatUpByValue);
 DECLARE_ACTION(EV_ActionParamPlatRaiseNearestChange);
 DECLARE_ACTION(EV_ActionParamPlatRaiseChange);
+DECLARE_ACTION(EV_ActionParamPlatToggleCeiling);
 DECLARE_ACTION(EV_ActionParamDonut);
 DECLARE_ACTION(EV_ActionParamTeleport);
 DECLARE_ACTION(EV_ActionParamTeleportNoFog);
