@@ -41,6 +41,7 @@
 #include "metaapi.h"
 #include "m_random.h"
 #include "p_chase.h"
+#include "p_info.h"
 #include "p_map.h"
 #include "p_map3d.h"
 #include "p_maputl.h"
@@ -657,7 +658,7 @@ void P_PlayerThink(player_t *player)
 
       // Handle actions   -- joek 12/22/07
       
-      if(cmd->actions & AC_JUMP)
+      if(cmd->actions & AC_JUMP && !LevelInfo.disableJump)
       {
          if((player->mo->z == player->mo->floorz || 
              (player->mo->intflags & MIF_ONMOBJ)) && !player->jumptime)

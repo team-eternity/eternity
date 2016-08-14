@@ -122,6 +122,9 @@ struct LevelInfo_t
    int  skyDelta;             // double-sky scroll speeds (units/tic)
    int  sky2Delta;
 
+   // gameplay options
+   bool disableJump;          // if true, jumping is disabled
+
    // misc
    int gravity;               // gravity factor
    const char *creator;       // creator: name of who made this map
