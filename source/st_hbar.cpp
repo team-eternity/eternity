@@ -404,6 +404,7 @@ static void ST_drawStatBar()
 
    V_DrawPatch(34, 160, &subscreen43, statbar);
 
+   // FIXME: Make this wait for the next tic, instead of iterating every frame.
    // ArtifactFlash, it's a gas! Gas! Gas!
    if(hbarstate.ArtifactFlash)
    {
@@ -414,7 +415,6 @@ static void ST_drawStatBar()
 
       V_DrawPatch(182, 161, &subscreen43,
          PatchLoader::CacheNum(wGlobalDir, temp, PU_CACHE));
-      // TODO: Perhaps introduce a static int and slow down the effect?
       // MaxW: Choco Heretic does stuff that I'm not sure how to translate to EE.
       hbarstate.ArtifactFlash--;
    }
@@ -423,7 +423,8 @@ static void ST_drawStatBar()
    {
       if(artifact = E_EffectForInventoryItemID(plyr->inventory[plyr->inv_ptr].item))
       {
-         if((patch = artifact->getString("icon", "")) != "" && artifact->getInt("invbar", 0))
+         patch = artifact->getString("icon", "");
+         if(strcmp(patch, "") && artifact->getInt("invbar", 0))
          {
             V_DrawPatch(179, 160, &subscreen43,
                PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE, lumpinfo_t::ns_sprites));
@@ -465,7 +466,8 @@ static void ST_drawStatBar()
    {
       V_DrawPatch(108, 161, &subscreen43,
          PatchLoader::CacheName(wGlobalDir, "BLACKSQ", PU_CACHE));
-      if((patch = ammo->getString("icon", "")) != "")
+      patch = ammo->getString("icon", "");
+      if(strcmp(patch, ""))
       {
          V_DrawPatch(111, 172, &subscreen43,
             PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE));
@@ -489,7 +491,8 @@ static void ST_drawInvBar()
       {
          if(artifact = E_EffectForInventoryItemID(plyr->inventory[i + leftoffs].item))
          {
-            if((patch = artifact->getString("icon", "")) != "")
+            patch = artifact->getString("icon", "");
+            if(strcmp(patch, ""))
             {
                V_DrawPatch(50 + i * 31, 160, &subscreen43,
                   PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE, lumpinfo_t::ns_sprites));

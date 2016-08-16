@@ -1305,7 +1305,8 @@ void E_TryUseItem(player_t *player)
             {
                shiftinvleft = true;
             }
-            if((sound = artifact->getString(KEY_USESOUND, "")) != "")
+            sound = artifact->getString(KEY_USESOUND, "");
+            if(strcmp(sound, ""))
             {
                S_StartSoundName(player->mo, sound);
             }
