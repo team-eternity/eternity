@@ -103,6 +103,21 @@ artifact PowerLightAmp
   +power.overridesself
 }
 
+artifact PowerFlight
+{
+  amount         1
+  maxamount      1
+  interhubamount 0
+
+  +undroppable
+  -invbar
+  -keepdepleted
+
+  artifacttype   Power
+
+  +power.overridesself
+}
+
 endif()
 
 // Heretic Items --------------------------------------------------------------
@@ -264,6 +279,36 @@ lockdef 228
 //
 // Common powers, and cheat powers
 //
+artifact PowerTotalInvisibility
+{
+  amount         1
+  maxamount      1
+  interhubamount 0
+
+  +undroppable
+  -invbar
+  -keepdepleted
+
+  artifacttype   Power
+
+  +power.overridesself
+}
+
+artifact PowerSilent
+{
+  amount         1
+  maxamount      1
+  interhubamount 0
+
+  +undroppable
+  -invbar
+  -keepdepleted
+
+  artifacttype   Power
+
+  +power.overridesself
+}
+
 powereffect TotalInvisiSphere
 {
   duration 60
