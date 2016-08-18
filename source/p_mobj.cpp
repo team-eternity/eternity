@@ -1217,6 +1217,22 @@ bool Mobj::shouldApplyTorque()
 IMPLEMENT_THINKER_TYPE(Mobj)
 
 //
+// Routine to check mobj projection, from wherever the coordinates might change
+//
+inline static void P_checkMobjProjections(Mobj &mobj)
+{
+   if(gMapHasSectorPortals && (mobj.z != mobj.sprojlast.z ||
+                               mobj.x != mobj.sprojlast.x ||
+                               mobj.y != mobj.sprojlast.y))
+   {
+      R_CheckMobjProjections(&mobj);
+      mobj.sprojlast.x = mobj.x;
+      mobj.sprojlast.y = mobj.y;
+      mobj.sprojlast.z = mobj.z;
+   }
+}
+
+//
 // P_MobjThinker
 //
 void Mobj::Think()
@@ -1354,14 +1370,6 @@ void Mobj::Think()
 
 #ifdef R_LINKEDPORTALS
    P_CheckPortalTeleport(this);
-   if(gMapHasSectorPortals && (z != sprojlast.z || x != sprojlast.x ||
-                               y != sprojlast.y))
-   {
-      R_CheckMobjProjections(this);
-      sprojlast.x = x;
-      sprojlast.y = y;
-      sprojlast.z = z;
-   }
 #endif
 
    // haleyjd 11/06/05: handle crashstate here
@@ -1438,6 +1446,10 @@ void Mobj::Think()
             P_NightmareRespawn(this);
       }
    }
+
+   // Check mobj sprite projections before getting out
+   // FIXME: may be insufficient
+   P_checkMobjProjections(*this);
 }
 
 //
