@@ -210,8 +210,15 @@ void camsightparams_t::setTargetMobj(const Mobj *mo)
 //
 struct PTDef
 {
+   enum earlyout_e
+   {
+      eo_no,
+      eo_always,
+      eo_noearlycheck,
+   };
+
    bool (*trav)(const intercept_t *in, void *context, const divline_t &trace);
-   bool earlyOut;
+   earlyout_e earlyOut;
    uint32_t flags;
 };
 
@@ -318,8 +325,11 @@ bool PathTraverser::traverseIntercepts() const
 //
 bool PathTraverser::blockThingsIterator(int x, int y)
 {
-   if(!def.earlyOut && (x < 0 || y < 0 || x >= ::bmapwidth || y >= ::bmapheight))
+   if(def.earlyOut != PTDef::eo_always &&
+      (x < 0 || y < 0 || x >= ::bmapwidth || y >= ::bmapheight))
+   {
       return true;
+   }
 
    Mobj *thing = blocklinks[y * bmapwidth + x];
    for(; thing; thing = thing->bnext)
@@ -398,7 +408,7 @@ bool PathTraverser::checkLine(size_t linenum)
 
    // Early outs are only possible if we haven't crossed a portal block
    // ioanch 20151230: aim cams never quit
-   if(def.earlyOut && !portalguard.hitpblock) 
+   if(def.earlyOut != PTDef::eo_no && !portalguard.hitpblock)
    {
       // try to early out the check
       if(!ld->backsector)
@@ -434,8 +444,11 @@ bool PathTraverser::checkLine(size_t linenum)
 //
 bool PathTraverser::blockLinesIterator(int x, int y)
 {
-   if(!def.earlyOut && (x < 0 || y < 0 || x >= ::bmapwidth || y >= ::bmapheight))
+   if(def.earlyOut != PTDef::eo_always &&
+      (x < 0 || y < 0 || x >= ::bmapwidth || y >= ::bmapheight))
+   {
       return true;
+   }
 
    int  offset;
    int *list;
@@ -546,10 +559,12 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
    // points should never be out of bounds, but check once instead of
    // each block
    // ioanch 20151231: only for sight
-   if(def.earlyOut &&
+   if(def.earlyOut == PTDef::eo_always &&
       (xt1 < 0 || yt1 < 0 || xt1 >= bmapwidth || yt1 >= bmapheight ||
       xt2 < 0 || yt2 < 0 || xt2 >= bmapwidth || yt2 >= bmapheight))
+   {
       return false;
+   }
 
    if(xt2 > xt1)
    {
@@ -1092,7 +1107,7 @@ bool CamContext::checkSight(const camsightparams_t &params,
       }
       PTDef def;
       def.flags = CAM_ADDLINES;
-      def.earlyOut = true;
+      def.earlyOut = link ? PTDef::eo_noearlycheck : PTDef::eo_always;
       def.trav = CamContext::sightTraverse;
       PathTraverser traverser(def, &context);
       result = traverser.traverse(params.cx, params.cy, tx, ty);
@@ -1179,7 +1194,7 @@ fixed_t AimContext::aimLineAttack(const Mobj *t1, angle_t angle,
 
    PTDef def;
    def.flags = CAM_ADDLINES | CAM_ADDTHINGS;
-   def.earlyOut = false;
+   def.earlyOut = PTDef::eo_no;
    def.trav = aimTraverse;
    PathTraverser traverser(def, &context);
 
@@ -1602,7 +1617,7 @@ void ShootContext::lineAttack(Mobj *source, angle_t angle, fixed_t distance,
 
    PTDef def;
    def.flags = CAM_ADDLINES | CAM_ADDTHINGS;
-   def.earlyOut = false;
+   def.earlyOut = PTDef::eo_no;
    def.trav = shootTraverse;
    PathTraverser traverser(def, &context);
    
@@ -1954,7 +1969,7 @@ bool CAM_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
 {
    PTDef def;
    def.flags = flags;
-   def.earlyOut = false;
+   def.earlyOut = PTDef::eo_no;
    def.trav = trav;
    return PathTraverser(def, data).traverse(x1, y1, x2, y2);
 }
@@ -2008,7 +2023,7 @@ void UseContext::useLines(const player_t *player, fixed_t x, fixed_t y,
    fixed_t y2 = y + (context.state.attackrange >> FRACBITS) * finesine[angle];
 
    PTDef def;
-   def.earlyOut = false;
+   def.earlyOut = PTDef::eo_no;
    def.flags = CAM_ADDLINES;
    def.trav = useTraverse;
    PathTraverser traverser(def, &context);
@@ -2017,7 +2032,7 @@ void UseContext::useLines(const player_t *player, fixed_t x, fixed_t y,
       if(!context.portalhit)
       {
          PTDef def;
-         def.earlyOut = false;
+         def.earlyOut = PTDef::eo_no;
          def.flags = CAM_ADDLINES;
          def.trav = noWayTraverse;
          PathTraverser traverser(def, &context);
