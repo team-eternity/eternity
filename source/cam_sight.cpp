@@ -122,8 +122,6 @@ public:
    // portal traversal information
    int  fromid;        // current source group id
    int  toid;          // group id of the target
-   bool hitpblock;     // traversed a block with a line portal
-   bool addedportal;   // added a portal line to the intercepts list in current block
    bool portalresult;  // result from portal recursion
    bool portalexit;    // if true, returned from portal
 
@@ -137,7 +135,6 @@ public:
         opentop(0), openbottom(0), openrange(0),
         intercepts(),
         fromid(sp.cgroupid), toid(sp.tgroupid), 
-        hitpblock(false), addedportal(false), 
         portalresult(false), portalexit(false),
         params(&sp)
    {
