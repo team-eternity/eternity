@@ -1217,6 +1217,22 @@ bool Mobj::shouldApplyTorque()
 IMPLEMENT_THINKER_TYPE(Mobj)
 
 //
+// Routine to check mobj projection, from wherever the coordinates might change
+//
+inline static void P_checkMobjProjections(Mobj &mobj)
+{
+   if(gMapHasSectorPortals && (mobj.z != mobj.sprojlast.z ||
+                               mobj.x != mobj.sprojlast.x ||
+                               mobj.y != mobj.sprojlast.y))
+   {
+      R_CheckMobjProjections(&mobj);
+      mobj.sprojlast.x = mobj.x;
+      mobj.sprojlast.y = mobj.y;
+      mobj.sprojlast.z = mobj.z;
+   }
+}
+
+//
 // P_MobjThinker
 //
 void Mobj::Think()
@@ -1354,14 +1370,6 @@ void Mobj::Think()
 
 #ifdef R_LINKEDPORTALS
    P_CheckPortalTeleport(this);
-   if(gMapHasSectorPortals && (z != sprojlast.z || x != sprojlast.x ||
-                               y != sprojlast.y))
-   {
-      R_CheckMobjProjections(this);
-      sprojlast.x = x;
-      sprojlast.y = y;
-      sprojlast.z = z;
-   }
 #endif
 
    // haleyjd 11/06/05: handle crashstate here
@@ -1438,6 +1446,10 @@ void Mobj::Think()
             P_NightmareRespawn(this);
       }
    }
+
+   // Check mobj sprite projections before getting out
+   // FIXME: may be insufficient
+   P_checkMobjProjections(*this);
 }
 
 //
@@ -2678,9 +2690,16 @@ bool P_CheckMissileSpawn(Mobj* th)
    // move a little forward so an angle can
    // be computed if it immediately explodes
 
-   th->x += th->momx >> 1;
-   th->y += th->momy >> 1;
+   int newgroupid = th->groupid;
+   v2fixed_t pos = P_LinePortalCrossing(th->x, th->y, th->momx >> 1,
+                                        th->momy >> 1, &newgroupid);
+
+   // ioanch: this was already hacky as hell. We still need to adjust
+   // coordinates by portal, and group ID though.
+   th->x = pos.x;
+   th->y = pos.y;
    th->z += th->momz >> 1;
+   th->groupid = newgroupid;
 
    // killough 8/12/98: for non-missile objects (e.g. grenades)
    if(!(th->flags & MF_MISSILE) && demo_version >= 203)
