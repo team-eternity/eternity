@@ -2678,9 +2678,16 @@ bool P_CheckMissileSpawn(Mobj* th)
    // move a little forward so an angle can
    // be computed if it immediately explodes
 
-   th->x += th->momx >> 1;
-   th->y += th->momy >> 1;
+   int newgroupid = th->groupid;
+   v2fixed_t pos = P_LinePortalCrossing(th->x, th->y, th->momx >> 1,
+                                        th->momy >> 1, &newgroupid);
+
+   // ioanch: this was already hacky as hell. We still need to adjust
+   // coordinates by portal, and group ID though.
+   th->x = pos.x;
+   th->y = pos.y;
    th->z += th->momz >> 1;
+   th->groupid = newgroupid;
 
    // killough 8/12/98: for non-missile objects (e.g. grenades)
    if(!(th->flags & MF_MISSILE) && demo_version >= 203)
