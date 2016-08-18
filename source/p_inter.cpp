@@ -421,6 +421,7 @@ bool P_GivePower(player_t *player, int power)
    case pw_silencer:
       if(player->powers[pw_silencer])
          return false;
+      break;
    case pw_flight:       // haleyjd: flight
       if(player->powers[pw_flight] < 0 || player->powers[pw_flight] > 4*32)
          return false;
