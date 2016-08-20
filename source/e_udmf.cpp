@@ -39,6 +39,7 @@
 #include "r_data.h"
 #include "r_defs.h"
 #include "r_main.h" // Needed for PI
+#include "r_portal.h" // Needed for portalflags
 #include "r_state.h"
 #include "w_wad.h"
 #include "z_auto.h"
@@ -180,6 +181,31 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
             ss->bottommap = R_ColormapNumForName(us.colormapbottom.constPtr());
             setupSettings.setSectorFlag(i, UDMF_SECTOR_INIT_COLORMAPPED);
          }
+
+         // Portal fields
+         // Floors
+         ss->f_pflags |= us.portal_floor_alpha << PO_OPACITYSHIFT;
+         ss->f_pflags |= us.portal_floor_blocksound ? PF_BLOCKSOUND : 0;
+         ss->f_pflags |= us.portal_floor_disabled ? PF_DISABLED : 0;
+         ss->f_pflags |= us.portal_floor_nopass ? PF_NOPASS : 0;
+         ss->f_pflags |= us.portal_floor_norender ? PF_NORENDER : 0;
+         if(!us.portal_floor_overlaytype.strCaseCmp("translucent"))
+            ss->f_pflags |= PS_OVERLAY;
+         else if(!us.portal_floor_overlaytype.strCaseCmp("additive"))
+            ss->f_pflags |= PS_OBLENDFLAGS; // PS_OBLENDFLAGS is PS_OVERLAY | PS_ADDITIVE
+         ss->f_pflags |= us.portal_floor_useglobaltex ? PS_USEGLOBALTEX : 0;
+
+         // Ceilings
+         ss->c_pflags |= us.portal_ceil_alpha << PO_OPACITYSHIFT;
+         ss->c_pflags |= us.portal_ceil_blocksound ? PF_BLOCKSOUND : 0;
+         ss->c_pflags |= us.portal_ceil_disabled ? PF_DISABLED : 0;
+         ss->c_pflags |= us.portal_ceil_nopass ? PF_NOPASS : 0;
+         ss->c_pflags |= us.portal_ceil_norender ? PF_NORENDER : 0;
+         if(!us.portal_ceil_overlaytype.strCaseCmp("translucent"))
+            ss->c_pflags |= PS_OVERLAY;
+         else if(!us.portal_ceil_overlaytype.strCaseCmp("additive"))
+            ss->c_pflags |= PS_OBLENDFLAGS; // PS_OBLENDFLAGS is PS_OVERLAY | PS_ADDITIVE
+         ss->c_pflags |= us.portal_ceil_useglobaltex ? PS_USEGLOBALTEX : 0;
       }
    }
 }
@@ -504,6 +530,20 @@ enum token_e
    t_monsteruse,
    t_offsetx,
    t_offsety,
+   t_portal_ceil_alpha,
+   t_portal_ceil_blocksound,
+   t_portal_ceil_disabled,
+   t_portal_ceil_nopass,
+   t_portal_ceil_norender,
+   t_portal_ceil_overlaytype,
+   t_portal_ceil_useglobaltex,
+   t_portal_floor_alpha,
+   t_portal_floor_blocksound,
+   t_portal_floor_disabled,
+   t_portal_floor_nopass,
+   t_portal_floor_norender,
+   t_portal_floor_overlaytype,
+   t_portal_floor_useglobaltex,
    t_passuse,
    t_playercross,
    t_playerpush,
@@ -615,6 +655,20 @@ static keytoken_t gTokenList[] =
    TOKEN(monsteruse),
    TOKEN(offsetx),
    TOKEN(offsety),
+   TOKEN(portal_ceil_alpha),
+   TOKEN(portal_ceil_blocksound),
+   TOKEN(portal_ceil_disabled),
+   TOKEN(portal_ceil_nopass),
+   TOKEN(portal_ceil_norender),
+   TOKEN(portal_ceil_overlaytype),
+   TOKEN(portal_ceil_useglobaltex),
+   TOKEN(portal_floor_alpha),
+   TOKEN(portal_floor_blocksound),
+   TOKEN(portal_floor_disabled),
+   TOKEN(portal_floor_nopass),
+   TOKEN(portal_floor_norender),
+   TOKEN(portal_floor_overlaytype),
+   TOKEN(portal_floor_useglobaltex),
    TOKEN(passuse),
    TOKEN(playercross),
    TOKEN(playerpush),
@@ -918,6 +972,22 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
 
                      READ_STRING(sector, floorterrain);
                      READ_STRING(sector, ceilingterrain);
+
+                     READ_STRING(sector, portal_floor_overlaytype);
+                     READ_NUMBER(sector, portal_floor_alpha);
+                     READ_BOOL(sector, portal_floor_blocksound);
+                     READ_BOOL(sector, portal_floor_disabled);
+                     READ_BOOL(sector, portal_floor_nopass);
+                     READ_BOOL(sector, portal_floor_norender);
+                     READ_BOOL(sector, portal_floor_useglobaltex);
+
+                     READ_STRING(sector, portal_ceil_overlaytype);
+                     READ_NUMBER(sector, portal_ceil_alpha);
+                     READ_BOOL(sector, portal_ceil_blocksound);
+                     READ_BOOL(sector, portal_ceil_disabled);
+                     READ_BOOL(sector, portal_ceil_nopass);
+                     READ_BOOL(sector, portal_ceil_norender);
+                     READ_BOOL(sector, portal_ceil_useglobaltex);
                      default:
                         break;
                   }
