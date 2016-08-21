@@ -44,6 +44,13 @@
 #include "w_wad.h"
 #include "z_auto.h"
 
+// SOME CONSTANTS
+static const char DEFAULT_default[] = "@default";
+static const char DEFAULT_flat[] = "@flat";
+
+static const char RENDERSTYLE_translucent[] = "translucent";
+static const char RENDERSTYLE_add[] = "add";
+
 //
 // Initializes the internal structure with the sector count
 //
@@ -132,9 +139,9 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          ss->leakiness = eclamp(us.leakiness, 0, 256);
 
          // Terrain types
-         if(us.floorterrain.strCaseCmp("@flat"))
+         if(us.floorterrain.strCaseCmp(DEFAULT_flat))
             ss->floorterrain = E_TerrainForName(us.floorterrain.constPtr());
-         if (us.ceilingterrain.strCaseCmp("@flat"))
+         if (us.ceilingterrain.strCaseCmp(DEFAULT_flat))
             ss->ceilingterrain = E_TerrainForName(us.ceilingterrain.constPtr());
 
          // Lights
@@ -166,17 +173,17 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
       //
       if(mNamespace == namespace_Eternity)
       {
-         if(us.colormaptop.strCaseCmp("@default"))
+         if(us.colormaptop.strCaseCmp(DEFAULT_default))
          {
             ss->topmap    = R_ColormapNumForName(us.colormaptop.constPtr());
             setupSettings.setSectorFlag(i, UDMF_SECTOR_INIT_COLORMAPPED);
          }
-         if(us.colormapmid.strCaseCmp("@default"))
+         if(us.colormapmid.strCaseCmp(DEFAULT_default))
          {
             ss->midmap    = R_ColormapNumForName(us.colormapmid.constPtr());
             setupSettings.setSectorFlag(i, UDMF_SECTOR_INIT_COLORMAPPED);
          }
-         if(us.colormapbottom.strCaseCmp("@default"))
+         if(us.colormapbottom.strCaseCmp(DEFAULT_default))
          {
             ss->bottommap = R_ColormapNumForName(us.colormapbottom.constPtr());
             setupSettings.setSectorFlag(i, UDMF_SECTOR_INIT_COLORMAPPED);
@@ -189,9 +196,9 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          ss->f_pflags |= us.portal_floor_disabled ? PF_DISABLED : 0;
          ss->f_pflags |= us.portal_floor_nopass ? PF_NOPASS : 0;
          ss->f_pflags |= us.portal_floor_norender ? PF_NORENDER : 0;
-         if(!us.portal_floor_overlaytype.strCaseCmp("translucent"))
+         if(!us.portal_floor_overlaytype.strCaseCmp(RENDERSTYLE_translucent))
             ss->f_pflags |= PS_OVERLAY;
-         else if(!us.portal_floor_overlaytype.strCaseCmp("additive"))
+         else if(!us.portal_floor_overlaytype.strCaseCmp(RENDERSTYLE_add))
             ss->f_pflags |= PS_OBLENDFLAGS; // PS_OBLENDFLAGS is PS_OVERLAY | PS_ADDITIVE
          ss->f_pflags |= us.portal_floor_useglobaltex ? PS_USEGLOBALTEX : 0;
 
@@ -201,9 +208,9 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          ss->c_pflags |= us.portal_ceil_disabled ? PF_DISABLED : 0;
          ss->c_pflags |= us.portal_ceil_nopass ? PF_NOPASS : 0;
          ss->c_pflags |= us.portal_ceil_norender ? PF_NORENDER : 0;
-         if(!us.portal_ceil_overlaytype.strCaseCmp("translucent"))
+         if(!us.portal_ceil_overlaytype.strCaseCmp(RENDERSTYLE_translucent))
             ss->c_pflags |= PS_OVERLAY;
-         else if(!us.portal_ceil_overlaytype.strCaseCmp("additive"))
+         else if(!us.portal_ceil_overlaytype.strCaseCmp(RENDERSTYLE_add))
             ss->c_pflags |= PS_OBLENDFLAGS; // PS_OBLENDFLAGS is PS_OVERLAY | PS_ADDITIVE
          ss->c_pflags |= us.portal_ceil_useglobaltex ? PS_USEGLOBALTEX : 0;
       }
@@ -324,7 +331,7 @@ bool UDMFParser::loadLinedefs()
       if(mNamespace == namespace_Eternity)
       {
          ld->alpha = uld.alpha;
-         if(!uld.renderstyle.strCaseCmp("add"))
+         if(!uld.renderstyle.strCaseCmp(RENDERSTYLE_add))
             ld->extflags |= EX_ML_ADDITIVE;
          if(!uld.tranmap.empty())
          {
@@ -788,7 +795,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
          {
             linedef = &mLinedefs.addNew();
             linedef->errorline = mLine;
-            linedef->renderstyle = "translucent";
+            linedef->renderstyle = RENDERSTYLE_translucent;
          }
          else if(!mBlockName.strCaseCmp("sidedef"))
          {
