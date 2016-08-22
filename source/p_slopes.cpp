@@ -199,10 +199,10 @@ static void P_getSlopeProps(int staticFn, bool &frontfloor, bool &backfloor,
       int ceiling = args[1];
       if(ceiling < 0 || ceiling > 3)
          ceiling = 0;
-      frontfloor = !!(floor | 1);
-      backfloor = !!(floor | 2);
-      frontceil = !!(ceiling | 1);
-      backceil = !!(ceiling | 2);
+      frontfloor = !!(floor & 1);
+      backfloor = !!(floor & 2);
+      frontceil = !!(ceiling & 1);
+      backceil = !!(ceiling & 2);
       return;
    }
 
