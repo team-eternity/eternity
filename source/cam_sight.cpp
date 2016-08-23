@@ -757,7 +757,11 @@ static void CAM_lineOpening(LineOpening &lo, const line_t *linedef)
    const sector_t *back = linedef->backsector;
 
    // no need to apply the portal hack (1024 units) here fortunately
-   lo.opentop = emin(front->ceilingheight, back->ceilingheight);
+   if(linedef->extflags & EX_ML_EXTNDCPORTAL)
+      lo.opentop = front->ceilingheight;
+   else
+      lo.opentop = emin(front->ceilingheight, back->ceilingheight);
+
    if(linedef->extflags & EX_ML_EXTNDFPORTAL)
       lo.openbottom = front->floorheight;
    else
@@ -882,6 +886,8 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
    // have we hit a lower edge portal
    if(li->extflags & EX_ML_EXTNDFPORTAL && li->backsector &&
       li->backsector->f_pflags & PS_PASSABLE &&
+      context.state.bottomslope <=
+      FixedDiv(li->backsector->floorheight - context.sightzstart, totalfrac) &&
       P_PointOnLineSide(trace.x, trace.y, li) == 0 && in->frac > 0)
    {
       State state(context.state);
@@ -891,6 +897,25 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
                          context.params->cy + FixedMul(trace.dy, in->frac),
                          state, &context.portalresult,
                          li->backsector->f_portal->data.link))
+      {
+         context.portalexit = true;
+         return false;
+      }
+   }
+
+   if(li->extflags & EX_ML_EXTNDCPORTAL && li->backsector &&
+      li->backsector->c_pflags & PS_PASSABLE &&
+      context.state.topslope >=
+      FixedDiv(li->backsector->ceilingheight - context.sightzstart, totalfrac) &&
+      P_PointOnLineSide(trace.x, trace.y, li) == 0 && in->frac > 0)
+   {
+      State state(context.state);
+      state.originfrac = totalfrac;
+      if(context.recurse(li->backsector->c_portal->data.link.toid,
+                         context.params->cx + FixedMul(trace.dx, in->frac),
+                         context.params->cy + FixedMul(trace.dy, in->frac),
+                         state, &context.portalresult,
+                         li->backsector->c_portal->data.link))
       {
          context.portalexit = true;
          return false;
@@ -1372,6 +1397,34 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata,
 
          if(context.recurse(newState, in->frac, &outSlope, &outTarget, &outDist,
                             li->backsector->f_portal->data.link))
+         {
+            if(outTarget && (!context.linetarget || outDist < context.targetdist))
+            {
+               context.linetarget = outTarget;
+               context.targetdist = outDist;
+               context.aimslope = outSlope;
+            }
+         }
+      }
+      if(li->extflags & EX_ML_EXTNDCPORTAL && li->backsector &&
+         li->backsector->c_pflags & PS_PASSABLE &&
+         context.state.topslope
+         >= FixedDiv(li->backsector->ceilingheight - context.state.cz, totaldist)
+         && P_PointOnLineSide(trace.x, trace.y, li) == 0 && in->frac > 0)
+      {
+         State newState(context.state);
+         newState.cx = trace.x + FixedMul(trace.dx, in->frac);
+         newState.cy = trace.y + FixedMul(trace.dy, in->frac);
+         newState.groupid = li->backsector->c_portal->data.link.toid;
+         newState.origindist = totaldist;
+         newState.reclevel = context.state.reclevel + 1;
+
+         fixed_t outSlope;
+         Mobj *outTarget = nullptr;
+         fixed_t outDist;
+
+         if(context.recurse(newState, in->frac, &outSlope, &outTarget, &outDist,
+                            li->backsector->c_portal->data.link))
          {
             if(outTarget && (!context.linetarget || outDist < context.targetdist))
             {

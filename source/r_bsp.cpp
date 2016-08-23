@@ -1217,7 +1217,14 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
       seg.markflags |= seg.c_portal ? SEG_MARKCOVERLAY : SEG_MARKCEILING;
    }
 
-   if(heightchange && side->toptexture)
+   bool havetportal = seg.backsec && seg.backsec->c_portal &&
+         seg.line->linedef->extflags & EX_ML_EXTNDCPORTAL;
+
+   bool toohigh = havetportal && portalrender.w && !portalrender.w->up &&
+         !portalrender.w->line &&
+         portalrender.w->planez <= seg.backsec->ceilingheight;
+
+   if(!toohigh && !havetportal && heightchange && side->toptexture)
    {
       seg.toptex = texturetranslation[side->toptexture];
       seg.toptexh = textures[side->toptexture]->height;
@@ -1229,6 +1236,14 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    }
    else
       seg.toptex = 0;
+
+   if(!toohigh && havetportal && heightchange)
+   {
+      seg.t_window = R_GetLinePortalWindow(seg.backsec->c_portal, line->linedef);
+      seg.segtextured = true;
+   }
+   else
+      seg.t_window = nullptr;
 
    // -- Floors -- 
    // SoM: TODO: Float comparisons should be done within an epsilon
@@ -1287,12 +1302,13 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
          seg.c_portalignore = true;
    }
 
-   bool toolow = portalrender.w && portalrender.w->up
-         && portalrender.w->planez >= seg.backsec->floorheight;
+   bool havebportal = seg.backsec && seg.backsec->f_portal &&
+         seg.line->linedef->extflags & EX_ML_EXTNDFPORTAL;
+   bool toolow = havebportal && portalrender.w && portalrender.w->up &&
+         !portalrender.w->line &&
+         portalrender.w->planez >= seg.backsec->floorheight;
 
    // SoM: Get this from the actual sector because R_FakeFlat can mess with heights.
-   bool havebportal = seg.backsec && seg.backsec->f_portal
-         && seg.line->linedef->extflags & EX_ML_EXTNDFPORTAL;
 
    texlow = seg.line->backsector->floorheightf - view.z;
    if(!toolow && !havebportal && (b > l || b2 > l2) && side->bottomtexture)
@@ -1434,7 +1450,14 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    else
       seg.c_window = NULL;
 
-   if(seg.frontsec->ceilingheight > seg.backsec->ceilingheight &&
+   bool havetportal = seg.backsec && seg.backsec->c_portal &&
+         seg.line->linedef->extflags & EX_ML_EXTNDCPORTAL;
+   bool toohigh = havetportal && portalrender.w && !portalrender.w->up &&
+         !portalrender.w->line &&
+         portalrender.w->planez <= seg.backsec->ceilingheight;
+
+   if(!toohigh && !havetportal &&
+      seg.frontsec->ceilingheight > seg.backsec->ceilingheight &&
      !(seg.frontsec->intflags & SIF_SKY && seg.backsec->intflags & SIF_SKY) && 
       side->toptexture)
    {
@@ -1449,8 +1472,16 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    else
       seg.toptex = 0;
 
+   if(!toohigh && havetportal &&
+      seg.frontsec->ceilingheight > seg.backsec->ceilingheight)
+   {
+      seg.t_window = R_GetLinePortalWindow(seg.backsec->c_portal, line->linedef);
+      seg.segtextured = true;
+   }
+   else
+      seg.t_window = nullptr;
 
-   markblend = seg.frontsec->f_portal != NULL 
+   markblend = seg.frontsec->f_portal != NULL
             && seg.backsec->f_portal != NULL 
             && (seg.frontsec->f_pflags & PS_BLENDFLAGS) != (seg.backsec->f_pflags & PS_BLENDFLAGS);
              
@@ -1509,12 +1540,13 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
 
    // ioanch: don't render lower textures or portals if they're below the
    // current plane-z window. Necessary for edge portals
-   bool toolow = portalrender.w && portalrender.w->up
-         && portalrender.w->planez >= seg.backsec->floorheight;
+   bool havebportal = seg.backsec && seg.backsec->f_portal &&
+         seg.line->linedef->extflags & EX_ML_EXTNDFPORTAL;
+   bool toolow = havebportal && portalrender.w && portalrender.w->up &&
+         !portalrender.w->line &&
+         portalrender.w->planez >= seg.backsec->floorheight;
 
    // SoM: Get this from the actual sector because R_FakeFlat can mess with heights.
-   bool havebportal = seg.backsec && seg.backsec->f_portal
-         && seg.line->linedef->extflags & EX_ML_EXTNDFPORTAL;
 
    texlow = seg.line->backsector->floorheightf - view.z;
    if(!toolow && !havebportal
@@ -2334,6 +2366,16 @@ static void R_Subsector(int num)
    // killough 3/8/98, 4/4/98: Deep water / fake ceiling effect
    seg.frontsec = R_FakeFlat(seg.frontsec, &tempsec, &floorlightlevel,
                              &ceilinglightlevel, false);   // killough 4/11/98
+
+   // ioanch: more checking (needed for edge portals
+   if(portalrender.w && portalrender.w->line &&
+      (seg.frontsec->ceilingheight <=
+       portalrender.w->line->frontsector->floorheight ||
+       seg.frontsec->floorheight >=
+       portalrender.w->line->frontsector->ceilingheight))
+   {
+      return;  // rejection
+   }
 
    // haleyjd 01/05/08: determine angles for floor and ceiling
    floorangle   = seg.frontsec->floorbaseangle   + seg.frontsec->floorangle;

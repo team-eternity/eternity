@@ -218,7 +218,7 @@ struct cb_seg_t
    seg_t *line;
 
    portal_t  *f_portal, *c_portal;
-   pwindow_t *l_window, *f_window, *c_window, *b_window;
+   pwindow_t *l_window, *f_window, *c_window, *b_window, *t_window;
    // ioanch: added b_window for bottom edge portal
 
    // SoM: used for portals

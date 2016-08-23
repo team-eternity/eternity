@@ -296,8 +296,10 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
       frontfz = clip.openfrontsector->floorheight;
       backfz = clip.openbacksector->floorheight;
    }
-   
-   if(frontceilz < backceilz)
+
+   if(linedef->extflags & EX_ML_EXTNDCPORTAL)
+      clip.opentop = frontceilz;
+   else if(frontceilz < backceilz)
       clip.opentop = frontceilz;
    else
       clip.opentop = backceilz;

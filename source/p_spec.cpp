@@ -2995,9 +2995,14 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          {
             // SoM 3-10-04: Two different anchor linedef codes so I can tag
             // two anchored portals to the same sector.
-            if((lines[s].special != anchortype && !(lines[s].extflags & EX_ML_EXTNDFPORTAL)) || line == &lines[s]
-              || lines[s].frontsector == NULL)
+            if((lines[s].special != anchortype &&
+                !(lines[s].extflags &
+                  (EX_ML_EXTNDFPORTAL | EX_ML_EXTNDCPORTAL))) ||
+               line == &lines[s] ||
+               lines[s].frontsector == NULL)
+            {
                continue;
+            }
 
             break;
          }
@@ -3046,7 +3051,8 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          return;
       }
 
-      otherIsEdge = !!(lines[s].extflags & EX_ML_EXTNDFPORTAL);
+      otherIsEdge = !!(lines[s].extflags &
+                       (EX_ML_EXTNDFPORTAL | EX_ML_EXTNDCPORTAL));
       if(!otherIsEdge)
          portal = R_GetLinkedPortal(line - lines, s, planez, fromid, toid);
 
