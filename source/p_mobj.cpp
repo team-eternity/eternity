@@ -781,6 +781,7 @@ static void P_ZMovement(Mobj* mo)
    //          scope
    bool correct_lost_soul_bounce;
    bool moving_down;
+   fixed_t initial_mo_z = mo->z;
 
    if(demo_compatibility) // v1.9 demos
       correct_lost_soul_bounce = ((GameModeInfo->flags & GIF_LOSTSOULBOUNCE) != 0);
@@ -964,7 +965,7 @@ floater:
 
       mo->z = mo->floorz;
 
-      if(moving_down)
+      if(moving_down && initial_mo_z != mo->floorz)
          E_HitFloor(mo);
 
       /* cph 2001/05/26 -

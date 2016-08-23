@@ -279,8 +279,28 @@ private:
 
       bool tfloorset, tceilset;
 
+      // ED's portalflags.ceiling, and overlayalpha.ceiling
+      bool         portal_ceil_disabled;
+      bool         portal_ceil_norender;
+      bool         portal_ceil_nopass;
+      bool         portal_ceil_blocksound;
+      bool         portal_ceil_useglobaltex;
+      qstring      portal_ceil_overlaytype; // OVERLAY and ADDITIVE consolidated into a single property
+      unsigned int portal_ceil_alpha;
+
+      // ED's portalflags.floor, and overlayalpha.floor
+      bool         portal_floor_disabled;
+      bool         portal_floor_norender;
+      bool         portal_floor_nopass;
+      bool         portal_floor_blocksound;
+      bool         portal_floor_useglobaltex;
+      qstring      portal_floor_overlaytype; // OVERLAY and ADDITIVE consolidated into a single property
+      unsigned int portal_floor_alpha;
+
       USector() : friction(-1), damagetype("Unknown"), floorterrain("@flat"), ceilingterrain("@flat"),
          colormaptop("@default"), colormapmid("@default"), colormapbottom("@default"),
+         portal_ceil_overlaytype("none"), portal_ceil_alpha(255),
+         portal_floor_overlaytype("none"), portal_floor_alpha(255),
          lightlevel(160)
       {
       }
