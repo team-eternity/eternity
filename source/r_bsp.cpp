@@ -1609,6 +1609,10 @@ static bool R_allowBehindLinePortal(const line_t *portalLine, const line_t *rend
    v2fixed_t pv2 = {portalLine->v2->x + viewx - portalrender.curwindow->vx,
                     portalLine->v2->y + viewy - portalrender.curwindow->vy};
 
+   // resolve exact target line
+   if(rv1.x == pv2.x && rv1.y == pv2.y && rv2.x == pv1.x && rv2.y == pv1.y)
+      return false;
+
    // get portal line divline
    divline_t dl;
    dl.x = pv1.x;
