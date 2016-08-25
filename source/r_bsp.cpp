@@ -1326,7 +1326,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
 
    seg.midtex = 0;
    seg.maskedtex = !!seg.side->midtexture;
-   seg.segtextured = (seg.maskedtex || seg.bottomtex || seg.toptex);
+   seg.segtextured = (seg.maskedtex || seg.bottomtex || seg.toptex || seg.t_window);
 
    if(line->linedef->portal && //line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
       line->linedef->sidenum[0] == line->sidedef - sides)
@@ -1566,7 +1566,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
 
    seg.midtex = 0;
    seg.maskedtex = !!seg.side->midtexture;
-   seg.segtextured = (seg.maskedtex || seg.bottomtex || seg.toptex);
+   seg.segtextured = (seg.maskedtex || seg.bottomtex || seg.toptex || seg.t_window);
 
    if(line->linedef->portal && //line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
       line->linedef->sidenum[0] == line->sidedef - sides)
