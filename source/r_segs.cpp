@@ -445,7 +445,8 @@ static void R_RenderSegLoop(void)
                column.y2 = (int)(segclip.high > floorclip[i] ? floorclip[i] : segclip.high);
                if(column.y2 >= column.y1)
                {
-                  R_WindowAdd(segclip.t_window, i, column.y1, column.y2);
+                  R_WindowAdd(segclip.t_window, i, 
+                     static_cast<float>(column.y1), static_cast<float>(column.y2));
                   ceilingclip[i] = static_cast<float>(column.y2 + 1);
                }
                else
@@ -483,7 +484,8 @@ static void R_RenderSegLoop(void)
                column.y2 = b;
                if(column.y2 >= column.y1)
                {
-                  R_WindowAdd(segclip.b_window, i, column.y1, column.y2);
+                  R_WindowAdd(segclip.b_window, i, 
+                     static_cast<float>(column.y1), static_cast<float>(column.y2));
                   floorclip[i] = static_cast<float>(column.y1 - 1);
                }
                else
