@@ -1862,6 +1862,13 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          {
             portal = li->backsector->f_portal;
          }
+         else if(li->extflags & EX_ML_EXTNDCPORTAL && li->backsector &&
+            li->backsector->c_pflags & PS_PASSABLE &&
+            FixedDiv(li->backsector->ceilingheight - context.state.z, dist)
+            <= context.aimslope)
+         {
+            portal = li->backsector->c_portal;
+         }
          else if(li->pflags & PS_PASSABLE &&
                  (!(li->extflags & EX_ML_EXTNDFPORTAL) ||
                   FixedDiv(li->backsector->floorheight - context.state.z, dist)
