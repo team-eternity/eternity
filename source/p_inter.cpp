@@ -452,15 +452,16 @@ bool P_GivePowerForItem(player_t *player, itemeffect_t *power)
    itemeffect_t *powerTracker;
    inventoryslot_t *trackerArtifact; // Pointer to the player's tracker for
                                      // the power to potentially be granted.
-
-   if(!(powerStr = power->getString("type", "")))
+   
+   powerStr = power->getString("type", "");
+   if(!powerStr || !strcmp(powerStr, ""))
       return false; // There hasn't been a designated power type
    if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) == NUMPOWERS)
       return false; // There's no power for the type provided
 
    // FIXME: Adapt for new changes to MetaTable
    powerTracker = E_ItemEffectForName(powerStr);
-   if(trackerArtifact = E_InventorySlotForItem(player, powerTracker))
+   if((trackerArtifact = E_InventorySlotForItem(player, powerTracker)))
    {
       if(!powerTracker->getInt("power.overridesself", 0))
       {

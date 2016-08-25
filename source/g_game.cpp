@@ -748,11 +748,14 @@ bool G_Responder(event_t* ev)
    if(G_KeyResponder(ev, kac_cmd))
       return true;
 
+   // This code is like Heretic's (to an extent). If the key is up and is the
+   // inventory key (and the player isn't dead) then use the current artifact.
    if(ev->type == ev_keyup && G_KeyResponder(ev, kac_game) == ka_inventory_use
       && players[consoleplayer].playerstate != PST_DEAD)
    {
       usearti = true;
    }
+
    // any other key pops up menu if in demos
    //
    // killough 8/2/98: enable automap in -timedemo demos

@@ -3436,7 +3436,7 @@ menu_t menu_weaponbindings =
 {
    mn_weaponbindings_items,
    &menu_advkeys,           // previous page
-   &menu_envinvbindings,       // next page
+   &menu_envinvbindings,    // next page
    &menu_movekeys,          // rootpage
    150, 15,                 // x,y offsets
    4,
@@ -3527,7 +3527,7 @@ static menuitem_t mn_function_items[] =
 menu_t menu_funcbindings =
 {
    mn_function_items,
-   &menu_envinvbindings,       // previous page
+   &menu_envinvbindings,    // previous page
    &menu_menukeys,          // next page
    &menu_movekeys,          // rootpage
    150, 15,                 // x,y offsets

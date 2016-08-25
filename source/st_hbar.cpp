@@ -421,7 +421,7 @@ static void ST_drawStatBar()
    // It's safety checks all the way down!
    else if(plyr->inventory[plyr->inv_ptr].amount)
    {
-      if(artifact = E_EffectForInventoryItemID(plyr->inventory[plyr->inv_ptr].item))
+      if((artifact = E_EffectForInventoryItemID(plyr->inventory[plyr->inv_ptr].item)))
       {
          patch = artifact->getString("icon", "");
          if(strcmp(patch, "") && artifact->getInt("invbar", 0))
@@ -487,9 +487,11 @@ static void ST_drawInvBar()
    int i = 0;
    do
    {
+      // Safety check that the player has an inventory item, then that the effect exists
+      // for the selected item, then that there is an associated patch for that effect.
       if(plyr->inventory[i + leftoffs].amount > 0)
       {
-         if(artifact = E_EffectForInventoryItemID(plyr->inventory[i + leftoffs].item))
+         if((artifact = E_EffectForInventoryItemID(plyr->inventory[i + leftoffs].item)))
          {
             patch = artifact->getString("icon", "");
             if(strcmp(patch, ""))
@@ -499,8 +501,8 @@ static void ST_drawInvBar()
                ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact), 77 + i * 31, 182);
             }
          }
-      }
-   } while(E_MoveInventoryCursor(plyr, 1, i) && i < 7);
+      } // E_MoveInventoryCursor returns false when it hits the boundary of the visible inventory,
+   } while(E_MoveInventoryCursor(plyr, 1, i) && i < 7); // so it's a useful iterator here.
 
    if(leftoffs)
    {
