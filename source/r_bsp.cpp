@@ -2371,16 +2371,6 @@ static void R_Subsector(int num)
    seg.frontsec = R_FakeFlat(seg.frontsec, &tempsec, &floorlightlevel,
                              &ceilinglightlevel, false);   // killough 4/11/98
 
-   // ioanch: more checking (needed for edge portals
-   if(portalrender.w && portalrender.w->line &&
-      (seg.frontsec->ceilingheight <=
-       portalrender.w->line->frontsector->floorheight ||
-       seg.frontsec->floorheight >=
-       portalrender.w->line->frontsector->ceilingheight))
-   {
-      return;  // rejection
-   }
-
    // haleyjd 01/05/08: determine angles for floor and ceiling
    floorangle   = seg.frontsec->floorbaseangle   + seg.frontsec->floorangle;
    ceilingangle = seg.frontsec->ceilingbaseangle + seg.frontsec->ceilingangle;
