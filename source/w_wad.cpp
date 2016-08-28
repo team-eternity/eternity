@@ -846,6 +846,7 @@ public:
    }
 };
 
+#define MAX_DEPTH 10 // I seriously doubt anybody needs more than a depth of 10
 //
 // Helper function to add a path to a collection, from a base.
 //
@@ -886,9 +887,9 @@ static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
       {
          if(S_ISDIR(sbuf.st_mode)) // if it's a directory, recurse in it
          {
-            if(depth == 0)
+            if(depth < MAX_DEPTH)
             {
-               // do not go deeper than one directory.
+               // we need to go deeper.
                path = subpath;
                path.pathConcatenate(ent->d_name);
                W_recurseFiles(paths, base, path.constPtr(), prevPaths, depth + 1);
