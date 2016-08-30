@@ -50,7 +50,8 @@ ev_action_t NullAction =
    EV_ActionNull,
    0,
    0,
-   "None"
+   "None",
+   0
 };
 
 // Macro to declare a DOOM-style W1 line action
@@ -61,7 +62,8 @@ ev_action_t NullAction =
       EV_Action ## action,                   \
       flags,                                 \
       version,                               \
-      #name                                  \
+      #name,                                 \
+      0                                      \
    }
 
 // Macro to declare a DOOM-style WR line action
@@ -72,7 +74,8 @@ ev_action_t NullAction =
       EV_Action ## action,                   \
       flags,                                 \
       version,                               \
-      #name                                  \
+      #name,                                 \
+      0                                      \
    }
 
 // Macro to declare a DOOM-style S1 line action
@@ -83,7 +86,8 @@ ev_action_t NullAction =
       EV_Action ## action,                   \
       flags,                                 \
       version,                               \
-      #name                                  \
+      #name,                                 \
+      0                                      \
    }
 
 // Macro to declare a DOOM-style SR line action
@@ -94,7 +98,8 @@ ev_action_t NullAction =
       EV_Action ## action,                   \
       flags,                                 \
       version,                               \
-      #name                                  \
+      #name,                                 \
+      0                                      \
    }
 
 // Macro to declare a DOOM-style DR line action
@@ -105,7 +110,8 @@ ev_action_t NullAction =
       EV_Action ## action,                   \
       flags,                                 \
       version,                               \
-      #name                                  \
+      #name,                                 \
+      0                                      \
    }
 
 // Macro to declare a DOOM-style G1 line action
@@ -116,7 +122,8 @@ ev_action_t NullAction =
       EV_Action ## action,                   \
       flags,                                 \
       version,                               \
-      #name                                  \
+      #name,                                 \
+      0                                      \
    }
 
 // Macro to declare a DOOM-style GR line action
@@ -127,7 +134,8 @@ ev_action_t NullAction =
       EV_Action ## action,                   \
       flags,                                 \
       version,                               \
-      #name                                  \
+      #name,                                 \
+      0                                      \
    }
 
 // DOOM Line Type 1 - DR Raise Door
@@ -943,7 +951,8 @@ ev_action_t BoomGenAction =
    EV_ActionBoomGen,      // use a single action function
    0,                     // flags aren't used
    200,                   // BOOM or up
-   "BoomGenAction"        // display name
+   "BoomGenAction",       // display name
+   0                      // lock ID
 };
 
 //=============================================================================
@@ -960,7 +969,19 @@ ev_action_t BoomGenAction =
       EV_Action ## name,     \
       0,                     \
       333,                   \
-      #name                  \
+      #name,                 \
+      0                      \
+   }
+
+#define PARAMLINELOCKED(name, lockid) \
+   static ev_action_t name =          \
+   {                                  \
+      &ParamActionType,               \
+      EV_Action ## name,              \
+      EV_PARAMLOCKID,                 \
+      333,                            \
+      #name,                          \
+      lockid                          \
    }
 
 PARAMLINE(ParamDoorRaise);
@@ -969,7 +990,7 @@ PARAMLINE(ParamDoorClose);
 PARAMLINE(ParamDoorCloseWaitOpen);
 PARAMLINE(ParamDoorWaitRaise);
 PARAMLINE(ParamDoorWaitClose);
-PARAMLINE(ParamDoorLockedRaise);
+PARAMLINELOCKED(ParamDoorLockedRaise, 3);
 PARAMLINE(ParamFloorRaiseToHighest);
 PARAMLINE(ParamEEFloorLowerToHighest); 
 PARAMLINE(ParamFloorLowerToHighest);
@@ -1053,7 +1074,7 @@ PARAMLINE(ACSExecuteAlways);
 PARAMLINE(ACSSuspend);
 PARAMLINE(ACSTerminate);
 PARAMLINE(ACSExecuteWithResult);
-PARAMLINE(ACSLockedExecute);
+PARAMLINELOCKED(ACSLockedExecute, 4);
 PARAMLINE(ParamLightRaiseByValue);
 PARAMLINE(ParamLightLowerByValue);
 PARAMLINE(ParamLightChangeToValue);

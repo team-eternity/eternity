@@ -1510,9 +1510,9 @@ static void AM_drawGrid(int color)
 //
 // jff 4/3/98 add routine to get color of generalized keyed door
 //
-static int AM_DoorColor(int type)
+static int AM_DoorColor(line_t *line)
 {
-   int lockdefID = EV_LockDefIDForSpecial(type);
+   int lockdefID = EV_LockDefIDForLine(line);
 
    if(lockdefID)
       return E_GetLockDefColor(lockdefID);
@@ -1608,7 +1608,7 @@ inline static bool AM_drawAsTeleporter(line_t *line)
 //
 inline static bool AM_drawAsLockedDoor(line_t *line)
 {
-   return E_GetLockDefColor(EV_LockDefIDForSpecial(line->special)) != 0;
+   return E_GetLockDefColor(EV_LockDefIDForLine(line)) != 0;
 }
 
 //
@@ -1782,7 +1782,7 @@ static void AM_drawWalls()
                if(AM_isDoorClosed(line))
                {
                   int lockColor;
-                  if((lockColor = AM_DoorColor(line->special)) >= 0)
+                  if((lockColor = AM_DoorColor(line)) >= 0)
                      AM_drawMline(&l, lockColor ? lockColor : mapcolor_cchg);
                }
                else
