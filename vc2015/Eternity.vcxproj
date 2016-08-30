@@ -88,10 +88,10 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>./Release/snes_spc.lib;./Release/libpng.lib;./Release/zlib.lib;sdl.lib;sdl_mixer.lib;sdl_net.lib;oldnames.lib;msvcrt.lib;opengl32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>./Release/snes_spc.lib;./Release/libpng.lib;./Release/zlib.lib;sdl.lib;sdl_mixer.lib;sdl_net.lib;oldnames.lib;opengl32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Release/Eternity.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <ProgramDatabaseFile>.\Release/Eternity.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
       <MapFileName>.\Release/Eternity.map</MapFileName>
