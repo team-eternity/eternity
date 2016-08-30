@@ -73,6 +73,7 @@ enum
    EX_ML_BLOCKALL     = 0x00000400, // line blocks everything
    EX_ML_ZONEBOUNDARY = 0x00000800, // line marks a sound zone boundary
    EX_ML_CLIPMIDTEX   = 0x00001000, // line clips midtextures to floor and ceiling height
+   EX_ML_3DMTPASSPROJ = 0x00002000, // with ML_3DMIDTEX, makes it pass projectiles
 };
 
 // ExtraData line structure
@@ -97,6 +98,7 @@ typedef struct maplinedefext_s
 // ExtraData sector structure
 
 struct ETerrain;
+class  UDMFSetupSettings;
 
 typedef struct mapsectorext_s
 {
@@ -144,7 +146,8 @@ void    E_LoadLineDefExt(line_t *line, bool applySpecial);
 void    E_GetEDMapThings(mapthing_t **things, int *numthings);
 void    E_GetEDLines(maplinedefext_t **lines, int *numlines);
 int     E_LineSpecForName(const char *name);
-void    E_LoadSectorExt(line_t *line);
+void    E_LoadSectorExt(line_t *line, UDMFSetupSettings &setupSettings);
+double  E_NormalizeFlatAngle(double input); // MaxW: 2016/07/11: Needed for UDMF & Sector_SetRotation
 
 #endif
 

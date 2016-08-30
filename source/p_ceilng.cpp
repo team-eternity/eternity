@@ -288,6 +288,8 @@ void CeilingThinker::Think()
             case paramHexenCrush:
             case paramHexenCrushRaiseStay:
             case paramHexenLowerCrush:
+            case genCeiling:  // ioanch: also emulate Doom ceiling fake crush
+                              // slowdown
                // if crusher doesn't rest on victims:
                // this is like ZDoom: if a ceiling speed is set exactly to 8,
                // then apply the Doom crusher slowdown. Otherwise, keep speed
@@ -372,13 +374,13 @@ int EV_DoCeiling(const line_t *line, ceiling_e type)
    case silentCrushAndRaise:
    case crushAndRaise:
       //jff 4/5/98 return if activated
-      rtn = P_ActivateInStasisCeiling(line, line->tag);
+      rtn = P_ActivateInStasisCeiling(line, line->args[0]);
    default:
       break;
    }
   
    // affects all sectors with the same tag as the linedef
-   while((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
+   while((secnum = P_FindSectorFromLineArg0(line,secnum)) >= 0)
    {
       sec = &sectors[secnum];
       
@@ -519,8 +521,7 @@ int P_ActivateInStasisCeiling(const line_t *line, int tag, bool manual)
       for(int i = 0; i < vanilla_MAXCEILINGS; ++i)
       {
          CeilingThinker *ceiling = vanilla_activeceilings[i];
-         if(ceiling && ceiling->tag == tag && 
-            ceiling->direction == plat_stop)
+         if(ceiling && ceiling->tag == tag && ceiling->direction == plat_stop)
          {
             resumeceiling(ceiling);
          }
@@ -544,6 +545,25 @@ int P_ActivateInStasisCeiling(const line_t *line, int tag, bool manual)
 }
 
 //
+// Activates stasis for a ceiling thinker
+//
+static void P_putThinkerInStasis(CeilingThinker *ceiling)
+{
+   ceiling->olddirection = ceiling->direction;
+   ceiling->direction = plat_stop;
+   ceiling->inStasis = true;
+   // ioanch 20160314: like in vanilla, do not make click sound when stopping
+   // these types
+   if(ceiling->type == silentCrushAndRaise ||
+      ceiling->crushflags & CeilingThinker::crushSilent)
+   {
+      S_SquashSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C);
+   }
+   else
+      S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C); // haleyjd 09/28/06
+}
+
+//
 // EV_CeilingCrushStop()
 //
 // Stops all active ceilings with the right tag
@@ -551,35 +571,17 @@ int P_ActivateInStasisCeiling(const line_t *line, int tag, bool manual)
 // Passed the linedef stopping the ceilings
 // Returns true if a ceiling put in stasis
 //
-int EV_CeilingCrushStop(const line_t* line, int tag)
+int EV_CeilingCrushStop(int tag, bool removeThinker)
 {
    int rtn = 0;
-   // ioanch 20160314: avoid duplicating code
-   auto pauseceiling = [&rtn](CeilingThinker *ceiling)
-   {
-      ceiling->olddirection = ceiling->direction;
-      ceiling->direction = plat_stop;
-      ceiling->inStasis = true;
-      // ioanch 20160314: like in vanilla, do not make click sound when stopping
-      // these types
-      if(ceiling->type == silentCrushAndRaise || 
-         ceiling->crushflags & CeilingThinker::crushSilent)
-      {
-         S_SquashSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C);
-      }
-      else
-         S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C); // haleyjd 09/28/06
-      rtn = 1;
-   };
    
    // ioanch 20160306
-   bool vanillaHexen = P_LevelIsVanillaHexen();
-   if(demo_compatibility || vanillaHexen)
+   if(demo_compatibility || P_LevelIsVanillaHexen())
    {
       for(int i = 0; i < vanilla_MAXCEILINGS; ++i)
       {
          CeilingThinker *ceiling = vanilla_activeceilings[i];
-         if(vanillaHexen)
+         if(removeThinker)
          {
             if(ceiling && ceiling->tag == tag)
             {
@@ -592,7 +594,8 @@ int EV_CeilingCrushStop(const line_t* line, int tag)
          else if(ceiling && ceiling->tag == tag && 
             ceiling->direction != plat_stop)
          {
-            pauseceiling(ceiling);
+            P_putThinkerInStasis(ceiling);
+            rtn = 1;
          }
       }
       return rtn;
@@ -603,13 +606,20 @@ int EV_CeilingCrushStop(const line_t* line, int tag)
    for(cl = activeceilings; cl; cl = cl->next)
    {
       CeilingThinker *ceiling = cl->ceiling;
-      if(ceiling->direction != plat_stop && ceiling->tag == tag)
+      if(removeThinker)
       {
-         pauseceiling(ceiling);
+         if(ceiling->tag == tag)
+         {
+            P_RemoveActiveCeiling(ceiling);
+            rtn = 1;
+         }
+      }
+      else if(ceiling->direction != plat_stop && ceiling->tag == tag)
+      {
+         P_putThinkerInStasis(ceiling);
+         rtn = 1;
       }
    }
-
-   // hack to emulate the Hexen
 
    return rtn;
 }

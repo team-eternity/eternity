@@ -1134,7 +1134,7 @@ static void ACS_funcSetThingPitch(ACS_FUNCARG)
    for(Mobj *mo = NULL; (mo = P_FindMobjFromTID(tid, mo, thread->trigger));)
    {
       if(mo->player)
-         mo->player->pitch = pitch;
+         mo->player->prevpitch = mo->player->pitch = pitch;
    }
 }
 
@@ -1325,7 +1325,8 @@ void ACS_SetThingVar(Mobj *thing, uint32_t var, int32_t val)
    case ACS_THINGVAR_MomX:           thing->momx = val; break;
    case ACS_THINGVAR_MomY:           thing->momy = val; break;
    case ACS_THINGVAR_MomZ:           thing->momz = val; break;
-   case ACS_THINGVAR_Pitch:          if(thing->player) thing->player->pitch = val << 16; break;
+   case ACS_THINGVAR_Pitch:          if(thing->player) thing->player->prevpitch =
+                                                       thing->player->pitch = val << 16; break;
    case ACS_THINGVAR_PlayerNumber:   break;
    case ACS_THINGVAR_SigilPieces:    break;
    case ACS_THINGVAR_TID:            P_RemoveThingTID(thing); P_AddThingTID(thing, val); break;

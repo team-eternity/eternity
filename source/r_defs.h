@@ -96,16 +96,20 @@ typedef struct attachedsurface_s
 enum
 {
    // BOOM generalized sector properties
-   SECF_SECRET        = 0x00000001, // bit 7 of generalized special
-   SECF_FRICTION      = 0x00000002, // bit 8 of generalized special
-   SECF_PUSH          = 0x00000004, // bit 9 of generalized special
-   SECF_KILLSOUND     = 0x00000008, // bit A of generalized special
-   SECF_KILLMOVESOUND = 0x00000010, // bit B of generalized special
+   SECF_SECRET             = 0x00000001,  // bit 7 of generalized special
+   SECF_FRICTION           = 0x00000002,  // bit 8 of generalized special
+   SECF_PUSH               = 0x00000004,  // bit 9 of generalized special
+   SECF_KILLSOUND          = 0x00000008,  // bit A of generalized special
+   SECF_KILLMOVESOUND      = 0x00000010,  // bit B of generalized special
 
    // Hexen phased lighting
-   SECF_PHASEDLIGHT   = 0x00000020, // spawned with sequence start special
-   SECF_LIGHTSEQUENCE = 0x00000040, // spawned with sequence special
-   SECF_LIGHTSEQALT   = 0x00000080  // spawned with sequence alt special
+   SECF_PHASEDLIGHT        = 0x00000020,  // spawned with sequence start special
+   SECF_LIGHTSEQUENCE      = 0x00000040,  // spawned with sequence special
+   SECF_LIGHTSEQALT        = 0x00000080,  // spawned with sequence alt special
+
+   // UDMF given
+   SECF_FLOORLIGHTABSOLUTE = 0x00000100,  // lightfloor is set absolutely
+   SECF_CEILLIGHTABSOLUTE  = 0x00000200,  // lightceiling is set absolutely
 };
 
 // haleyjd 12/31/08: sector damage flags
@@ -123,7 +127,9 @@ enum
 {
    SIF_SKY       = 0x00000001, // sector is sky
    SIF_WASSECRET = 0x00000002, // sector was previously secret
-   SIF_PHASESCAN = 0x00000004  // being scanned for phased light
+   SIF_PHASESCAN = 0x00000004, // being scanned for phased light
+   SIF_PORTALBOX = 0x00000008  // sector is a line portal buffer: all its lines
+                               // are either 1-sided walls or portal walls.
 };
 
 // haleyjd 06/22/14: Heretic push types
@@ -218,6 +224,7 @@ struct sector_t
    int16_t lightlevel;
    int16_t special;
    int16_t tag;
+   int16_t leakiness;       // ioanch (UDMF): probability / 256 that the suit will leak
    int nexttag, firsttag;   // killough 1/30/98: improves searches for tags.
    int soundtraversed;      // 0 = untraversed, 1,2 = sndlines-1
    Mobj *soundtarget;       // thing that made a sound (or null)
@@ -253,6 +260,8 @@ struct sector_t
    
    // killough 4/11/98: support for lightlevels coming from another sector
    int floorlightsec, ceilinglightsec;
+   // ioanch: UDMF-given floor and ceiling delta light level
+   int16_t floorlightdelta, ceilinglightdelta;
    
    int bottommap, midmap, topmap; // killough 4/4/98: dynamic colormaps
    
@@ -348,11 +357,6 @@ struct sector_t
 
    // haleyjd 01/12/14: sound environment
    int soundzone;
-
-   // ioanch 20160123: true if this is a simple portal box: all its lines are
-   // either 1-sided walls or portal walls. Not needed to be saved because it's
-   // set dynamically at map start
-   bool portalbox;
 };
 
 //
@@ -419,6 +423,9 @@ struct line_t
    unsigned int extflags;   // activation flags for param specials
    int   args[NUMLINEARGS]; // argument values for param specials
    float alpha;             // alpha
+
+   // ioanch 20160312
+   sector_t *beyondportalsector; // reference to a sector beyond a 1-side portal
 };
 
 struct rpolyobj_t;

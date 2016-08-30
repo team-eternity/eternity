@@ -476,14 +476,19 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
 
    if(floorlightlevel)
    {
-      *floorlightlevel = sec->floorlightsec == -1 ?
-         sec->lightlevel : sectors[sec->floorlightsec].lightlevel;
+      *floorlightlevel =
+      (sec->flags & SECF_FLOORLIGHTABSOLUTE ? 0 : sec->floorlightsec == -1 ?
+       sec->lightlevel : sectors[sec->floorlightsec].lightlevel)
+      + sec->floorlightdelta;
    }
 
    if(ceilinglightlevel)
    {
-      *ceilinglightlevel = sec->ceilinglightsec == -1 ? // killough 4/11/98
-         sec->lightlevel : sectors[sec->ceilinglightsec].lightlevel;
+       // killough 4/11/98
+      *ceilinglightlevel =
+      (sec->flags & SECF_CEILLIGHTABSOLUTE ? 0 : sec->ceilinglightsec == -1 ?
+       sec->lightlevel : sectors[sec->ceilinglightsec].lightlevel)
+      + sec->ceilinglightdelta;
    }
 
    if(sec->heightsec != -1 || sec->f_portal || sec->c_portal)
@@ -552,14 +557,20 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
          
          if(floorlightlevel)
          {
-            *floorlightlevel = s->floorlightsec == -1 ? s->lightlevel :
-               sectors[s->floorlightsec].lightlevel; // killough 3/16/98
+            *floorlightlevel =
+            (s->flags & SECF_FLOORLIGHTABSOLUTE ? 0 : s->floorlightsec == -1 ?
+             s->lightlevel : sectors[s->floorlightsec].lightlevel)
+            + s->floorlightdelta;
+            // killough 3/16/98
          }
 
          if (ceilinglightlevel)
          {
-            *ceilinglightlevel = s->ceilinglightsec == -1 ? s->lightlevel :
-               sectors[s->ceilinglightsec].lightlevel; // killough 4/11/98
+            *ceilinglightlevel =
+            (s->flags & SECF_CEILLIGHTABSOLUTE ? 0 : s->ceilinglightsec == -1 ?
+             s->lightlevel : sectors[s->ceilinglightsec].lightlevel)
+            + s->ceilinglightdelta;
+            // killough 4/11/98
          }
       }
       else if(heightsec != -1 && 
@@ -598,14 +609,20 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
          
          if(floorlightlevel)
          {
-            *floorlightlevel = s->floorlightsec == -1 ? s->lightlevel :
-               sectors[s->floorlightsec].lightlevel; // killough 3/16/98
+            *floorlightlevel =
+            (s->flags & SECF_FLOORLIGHTABSOLUTE ? 0 : s->floorlightsec == -1 ?
+             s->lightlevel : sectors[s->floorlightsec].lightlevel)
+            + s->floorlightdelta;
+            // killough 3/16/98
          }
 
          if(ceilinglightlevel)
          {
-            *ceilinglightlevel = s->ceilinglightsec == -1 ? s->lightlevel :
-               sectors[s->ceilinglightsec].lightlevel; // killough 4/11/98
+            *ceilinglightlevel =
+            (s->flags & SECF_CEILLIGHTABSOLUTE ? 0 : s->ceilinglightsec == -1 ?
+             s->lightlevel : sectors[s->ceilinglightsec].lightlevel)
+            + s->ceilinglightdelta;
+            // killough 4/11/98
          }
       }
       else if(heightsec != -1)
@@ -1189,6 +1206,9 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
          seg.backsec->ceilingbaseangle + seg.backsec->ceilingangle) || // haleyjd: angles
         seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
         seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ||
+        seg.frontsec->ceilinglightdelta != seg.backsec->ceilinglightdelta ||
+        (seg.frontsec->flags & SECF_CEILLIGHTABSOLUTE) !=
+         (seg.backsec->flags & SECF_CEILLIGHTABSOLUTE) ||
         seg.frontsec->topmap != seg.backsec->topmap ||
         seg.frontsec->c_portal != seg.backsec->c_portal ||
         !R_CompareSlopes(seg.frontsec->c_slope, seg.backsec->c_slope) || markblend)) // haleyjd
@@ -1236,6 +1256,9 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
         seg.backsec->floorbaseangle + seg.backsec->floorangle) || // haleyjd: angles
        seg.frontsec->floorpic != seg.backsec->floorpic ||
        seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
+       seg.frontsec->floorlightdelta != seg.backsec->floorlightdelta ||
+       (seg.frontsec->flags & SECF_FLOORLIGHTABSOLUTE) !=
+        (seg.backsec->flags & SECF_FLOORLIGHTABSOLUTE) ||
        seg.frontsec->bottommap != seg.backsec->bottommap ||
        seg.frontsec->f_portal != seg.backsec->f_portal ||
        !R_CompareSlopes(seg.frontsec->f_slope, seg.backsec->f_slope) || markblend)) // haleyjd
@@ -1281,7 +1304,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    seg.maskedtex = !!seg.side->midtexture;
    seg.segtextured = (seg.maskedtex || seg.bottomtex || seg.toptex);
 
-   if(line->linedef->portal && line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
+   if(line->linedef->portal && //line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
       line->linedef->sidenum[0] == line->sidedef - sides)
    {
       seg.l_window = R_GetLinePortalWindow(line->linedef->portal, line->linedef);
@@ -1374,6 +1397,9 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
        seg.backsec->ceilingbaseangle + seg.backsec->ceilingangle) || // haleyjd: angles
       seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
       seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ||
+      seg.frontsec->ceilinglightdelta != seg.backsec->ceilinglightdelta ||
+      (seg.frontsec->flags & SECF_CEILLIGHTABSOLUTE) !=
+       (seg.backsec->flags & SECF_CEILLIGHTABSOLUTE) ||
       seg.frontsec->topmap != seg.backsec->topmap ||
       seg.frontsec->c_portal != seg.backsec->c_portal || markblend) // haleyjd
    {
@@ -1419,6 +1445,9 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
        seg.backsec->floorbaseangle + seg.backsec->floorangle) || // haleyjd
       seg.frontsec->floorpic != seg.backsec->floorpic ||
       seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
+      seg.frontsec->floorlightdelta != seg.backsec->floorlightdelta ||
+      (seg.frontsec->flags & SECF_FLOORLIGHTABSOLUTE) !=
+       (seg.backsec->flags & SECF_FLOORLIGHTABSOLUTE) ||
       seg.frontsec->bottommap != seg.backsec->bottommap ||
       seg.frontsec->f_portal != seg.backsec->f_portal || 
       markblend) // haleyjd
@@ -1479,7 +1508,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    seg.maskedtex = !!seg.side->midtexture;
    seg.segtextured = (seg.maskedtex || seg.bottomtex || seg.toptex);
 
-   if(line->linedef->portal && line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
+   if(line->linedef->portal && //line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
       line->linedef->sidenum[0] == line->sidedef - sides)
    {
       seg.l_window = R_GetLinePortalWindow(line->linedef->portal, line->linedef);
@@ -1510,6 +1539,10 @@ static bool R_allowBehindLinePortal(const line_t *portalLine, const line_t *rend
                     portalLine->v1->y + viewy - portalrender.curwindow->vy};
    v2fixed_t pv2 = {portalLine->v2->x + viewx - portalrender.curwindow->vx,
                     portalLine->v2->y + viewy - portalrender.curwindow->vy};
+
+   // resolve exact target line
+   if(rv1.x == pv2.x && rv1.y == pv2.y && rv2.x == pv1.x && rv2.y == pv1.y)
+      return false;
 
    // get portal line divline
    divline_t dl;
@@ -1635,7 +1668,7 @@ static void R_AddLine(seg_t *line, bool dynasegs)
       // only reject if they're anchored portals (including linked)
       rportaltype_e type = portalrender.curwindow->portal->type;
 
-      if((type == R_LINKED || type == R_ANCHORED) &&
+      if((type == R_LINKED || type == R_ANCHORED || type == R_TWOWAY) &&
          !R_allowBehindLinePortal(portalrender.curwindow->line, line->linedef))
       {
          return;
@@ -1700,7 +1733,11 @@ static void R_AddLine(seg_t *line, bool dynasegs)
       
       // killough 4/16/98: consider altered lighting
       && seg.backsec->floorlightsec   == seg.frontsec->floorlightsec
+      && seg.backsec->floorlightdelta == seg.frontsec->floorlightdelta
       && seg.backsec->ceilinglightsec == seg.frontsec->ceilinglightsec
+      && seg.backsec->ceilinglightdelta == seg.frontsec->ceilinglightdelta
+      && (seg.backsec->flags & (SECF_FLOORLIGHTABSOLUTE | SECF_CEILLIGHTABSOLUTE))
+      == (seg.frontsec->flags & (SECF_FLOORLIGHTABSOLUTE | SECF_CEILLIGHTABSOLUTE))
 
       && seg.backsec->floorheight   == seg.frontsec->floorheight
       && seg.backsec->ceilingheight == seg.frontsec->ceilingheight
@@ -1895,10 +1932,57 @@ static void R_AddLine(seg_t *line, bool dynasegs)
 
    seg.f_portalignore = seg.c_portalignore = false;
 
-   if(!seg.backsec) 
+   // ioanch 20160312: also treat polyobject portal lines as 1-sided
+   const sector_t *beyond = seg.line->linedef->beyondportalsector;
+   if(!seg.backsec || beyond) 
    {
       seg.twosided = false;
-      seg.toptex   = seg.bottomtex = 0;
+      if(!beyond)
+         seg.toptex   = seg.bottomtex = 0;
+      else
+      {
+         // ioanch FIXME: copy-paste from R_2S_Normal
+         if(seg.frontsec->ceilingheight > beyond->ceilingheight &&
+           !(seg.frontsec->intflags & SIF_SKY && beyond->intflags & SIF_SKY) && 
+            side->toptexture)
+         {
+            seg.toptex = texturetranslation[side->toptexture];
+            seg.toptexh = textures[side->toptexture]->height;
+
+            float texhigh = beyond->ceilingheightf - view.z;
+
+            if(seg.line->linedef->flags & ML_DONTPEGTOP)
+               seg.toptexmid = M_FloatToFixed(textop + seg.toffsety);
+            else
+               seg.toptexmid = M_FloatToFixed(texhigh + seg.toptexh + seg.toffsety);
+
+            seg.high  = view.ycenter - ((beyond->ceilingheightf - view.z) * i1) - 1.0f;
+            seg.high2 = view.ycenter - ((beyond->ceilingheightf - view.z) * i2) - 1.0f;
+            seg.highstep = (seg.high2 - seg.high) * pstep;
+         }
+         else
+            seg.toptex = 0;
+
+         if(seg.frontsec->floorheight < beyond->floorheight && side->bottomtexture)
+         {
+            seg.bottomtex  = texturetranslation[side->bottomtexture];
+            seg.bottomtexh = textures[side->bottomtexture]->height;
+
+            float texlow = beyond->floorheightf - view.z;
+
+            if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
+               seg.bottomtexmid = M_FloatToFixed(textop + seg.toffsety);
+            else
+               seg.bottomtexmid = M_FloatToFixed(texlow + seg.toffsety);
+
+            seg.low  = view.ycenter - ((beyond->floorheightf - view.z) * i1);
+            seg.low2 = view.ycenter - ((beyond->floorheightf - view.z) * i2);
+            seg.lowstep = (seg.low2 - seg.low) * pstep;
+         }
+         else
+            seg.bottomtex = 0;
+
+      }
       seg.midtex   = texturetranslation[side->midtexture];
       seg.midtexh  = textures[side->midtexture]->height;
 
@@ -1907,7 +1991,7 @@ static void R_AddLine(seg_t *line, bool dynasegs)
       else
          seg.midtexmid = M_FloatToFixed(textop + seg.toffsety);
 
-      seg.markflags = 0;
+      seg.markflags = beyond ? SEG_MARK1SLPORTAL : 0;
       seg.c_window = seg.f_window = NULL;
 
       // SoM: these should be treated differently! 
@@ -2200,8 +2284,7 @@ static void R_Subsector(int num)
 
    // ioanch 20160120: don't draw from other group ids than the intended one
    // Also ignore sectors behind portal lines
-   if(seg.frontsec->portalbox || 
-      (portalrender.active &&
+   if((portalrender.active &&
        portalrender.curwindow->portal->type == R_LINKED &&
        portalrender.curwindow->portal->data.link.toid != seg.frontsec->groupid))
    {

@@ -234,10 +234,6 @@ public:
    DLListItem<spriteprojnode_t> *spriteproj;
    v3fixed_t sprojlast; // coordinates after last check. Initially "invalid"
 
-   // ioanch 20160117: work around portal teleport spechits to make monster
-   // projectiles detect them surely.
-   const line_t *touchedportalline;
-
    //More drawing info: to determine current sprite.
    angle_t     angle;  // orientation
    spritenum_t sprite; // used to find patch_t and flip value
@@ -435,7 +431,7 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
 bool  P_SetMobjState(Mobj *mobj, statenum_t state);
 void  P_MobjThinker(Mobj *mobj);
 void  P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown, bool ptcl);
-Mobj *P_SpawnMapThing(mapthing_t *);
+Mobj *P_SpawnMapThing(mapthing_t *mt);
 bool  P_CheckMissileSpawn(Mobj *);  // killough 8/2/98
 void  P_ExplodeMissile(Mobj *);     // killough
 
@@ -717,6 +713,9 @@ enum
    MIF_WIMPYDEATH  = 0x00002000, // haleyjd: for player, died wimpy (10 damage or less)
    MIF_CLEARMOMZ   = 0x00004000, // davidph: clear momz (and this flag) in P_MovePlayer
    MIF_PLYRCORPSE  = 0x00008000, // haleyjd: object has been in the player corpse queue
+
+   // these should be cleared when a thing is being raised
+   MIF_CLEARRAISED = (MIF_DIEDFALLING|MIF_SCREAMED|MIF_CRASHED|MIF_WIMPYDEATH),
 };
 
 #endif

@@ -145,13 +145,19 @@ static bool D_getRegistryString(const registry_value_t &regval, qstring &str)
 // Prefix of uninstall value strings
 #define UNINSTALLER_STRING "\\uninstl.exe /S "
 
+#if _WIN64
+#define SOFTWARE_KEY "Software\\Wow6432Node"
+#else
+#define SOFTWARE_KEY "Software"
+#endif
+
 // CD Installer Locations
 static registry_value_t cdUninstallValues[] =
 {
    // Ultimate Doom CD version (Depths of Doom Trilogy)
    {
       HKEY_LOCAL_MACHINE,
-      "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\"
+      SOFTWARE_KEY "\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\"
       "Ultimate Doom for Windows 95",
       "UninstallString"
    },
@@ -159,7 +165,7 @@ static registry_value_t cdUninstallValues[] =
    // DOOM II CD version (Depths of Doom Trilogy)
    {
       HKEY_LOCAL_MACHINE,
-      "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\"
+      SOFTWARE_KEY "\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\"
       "Doom II for Windows 95",
       "UninstallString"
    },
@@ -167,7 +173,7 @@ static registry_value_t cdUninstallValues[] =
    // Final Doom
    {
       HKEY_LOCAL_MACHINE,
-      "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\"
+      SOFTWARE_KEY "\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\"
       "Final Doom for Windows 95",
       "UninstallString"
    },
@@ -175,7 +181,7 @@ static registry_value_t cdUninstallValues[] =
    // Shareware version
    {
       HKEY_LOCAL_MACHINE,
-      "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\"
+      SOFTWARE_KEY "\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\"
       "Doom Shareware for Windows 95",
       "UninstallString"
    },
@@ -188,7 +194,7 @@ static registry_value_t cdUninstallValues[] =
 static registry_value_t collectorsEditionValue =
 {
    HKEY_LOCAL_MACHINE,
-   "Software\\Activision\\DOOM Collector's Edition\\v1.0",
+   SOFTWARE_KEY "\\Activision\\DOOM Collector's Edition\\v1.0",
    "INSTALLPATH"
 };
 
@@ -215,21 +221,21 @@ static registry_value_t gogInstallValues[GOG_KEY_MAX+1] =
    // Ultimate Doom install
    {
       HKEY_LOCAL_MACHINE,
-      "Software\\GOG.com\\Games\\1435827232",
+      SOFTWARE_KEY "\\GOG.com\\Games\\1435827232",
       "PATH"
    },
 
    // Doom II install
    {
       HKEY_LOCAL_MACHINE,
-      "Software\\GOG.com\\Games\\1435848814",
+      SOFTWARE_KEY "\\GOG.com\\Games\\1435848814",
       "PATH"
    },
 
    // Final Doom install
    {
       HKEY_LOCAL_MACHINE,
-      "Software\\GOG.com\\Games\\1435848742",
+      SOFTWARE_KEY "\\GOG.com\\Games\\1435848742",
       "PATH"
    },
 
@@ -253,7 +259,7 @@ static const char *gogMasterLevelsPath = "master\\wads";
 static registry_value_t steamInstallValue =
 {
    HKEY_LOCAL_MACHINE,
-   "Software\\Valve\\Steam",
+   SOFTWARE_KEY "\\Valve\\Steam",
    "InstallPath"
 };
 
@@ -282,7 +288,7 @@ static const char *steamMasterLevelsPath = "Master Levels of Doom\\master\\wads"
 static registry_value_t hexen95Value =
 {
    HKEY_LOCAL_MACHINE,
-   "Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\hexen95.exe",
+   SOFTWARE_KEY "\\Microsoft\\Windows\\CurrentVersion\\App Paths\\hexen95.exe",
    "Path"
 };
 

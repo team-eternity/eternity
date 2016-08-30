@@ -35,6 +35,7 @@
 #include "ev_specials.h"
 #include "g_game.h"
 #include "p_info.h"
+#include "p_sector.h"
 #include "p_skin.h"
 #include "p_spec.h"
 #include "p_xenemy.h"
@@ -113,6 +114,14 @@ static bool EV_lockCheck(const Mobj *actor, int lockID, bool remote)
 {
    player_t *player = actor ? actor->player : nullptr;
    return player && E_PlayerCanUnlock(player, lockID, remote);
+}
+
+//
+// Returns a fixed_t from (whole + frac / 100)
+//
+inline static fixed_t EV_calcCentPrecision(int whole, int frac)
+{
+   return (whole << FRACBITS) + (frac << FRACBITS) / 100;
 }
 
 //=============================================================================
@@ -232,6 +241,10 @@ DEFINE_ACTION(EV_ActionPlatDownWaitUpStay)
 
 //
 // EV_ActionLightTurnOn
+// Also implements Light_MaxNeighbor(tag)
+//
+// * ExtraData: 461
+// * Hexen:     234
 //
 DEFINE_ACTION(EV_ActionLightTurnOn)
 {
@@ -240,7 +253,8 @@ DEFINE_ACTION(EV_ActionLightTurnOn)
    // case 169: (S1 - BOOM Extended)
    // case 192: (SR - BOOM Extended)
    // Light Turn On - brightest near
-   return EV_LightTurnOn(instance->line, 0);
+   bool isParam = EV_IsParamLineSpec(instance->special);
+   return EV_LightTurnOn(instance->line, instance->tag, 0, isParam);
 }
 
 //
@@ -252,7 +266,7 @@ DEFINE_ACTION(EV_ActionLightTurnOn255)
    // case  81: (WR)
    // case 138: (SR)
    // Light Turn On 255
-   return EV_LightTurnOn(instance->line, 255);
+   return EV_LightTurnOn(instance->line, instance->tag, 255, false);
 }
 
 //
@@ -278,7 +292,8 @@ DEFINE_ACTION(EV_ActionStartLightStrobing)
    // case 172: (S1 - BOOM Extended)
    // case 193: (SR - BOOM Extended)
    // Start Light Strobing
-   return EV_StartLightStrobing(instance->line);
+   return EV_StartLightStrobing(instance->line, instance->tag, SLOWDARK,
+                                STROBEBRIGHT, false);
 }
 
 //
@@ -344,7 +359,7 @@ DEFINE_ACTION(EV_ActionLightsVeryDark)
    // case 139: (SR)
    // case 170: (S1 - BOOM Extended)
    // Lights Very Dark
-   return EV_LightTurnOn(instance->line, 35);
+   return EV_LightTurnOn(instance->line, instance->tag, 35, false);
 }
 
 //
@@ -585,7 +600,7 @@ DEFINE_ACTION(EV_ActionPlatStop)
    // case 163: (S1 - BOOM Extended)
    // case 182: (SR - BOOM Extended)
    // Platform Stop
-   return EV_StopPlat(instance->line);
+   return EV_StopPlatByTag(instance->tag, false);
 }
 
 //
@@ -611,7 +626,7 @@ DEFINE_ACTION(EV_ActionCeilingCrushStop)
    // case 168: (S1 - BOOM Extended)
    // case 188: (SR - BOOM Extended)
    // Ceiling Crush Stop
-   return EV_CeilingCrushStop(instance->line, instance->tag);
+   return EV_CeilingCrushStop(instance->tag, false);
 }
 
 //
@@ -655,7 +670,10 @@ DEFINE_ACTION(EV_ActionBuildStairsTurbo16)
 
 //
 // EV_ActionTurnTagLightsOff
+// Also implements Light_MinNeighbor(tag)
 //
+// * ExtraData: 473
+// * Hexen:     233
 DEFINE_ACTION(EV_ActionTurnTagLightsOff)
 {
    // case 104: (W1)
@@ -663,7 +681,8 @@ DEFINE_ACTION(EV_ActionTurnTagLightsOff)
    // case 173: (S1 - BOOM Extended)
    // case 194: (SR - BOOM Extended)
    // Turn lights off in sector(tag)
-   return EV_TurnTagLightsOff(instance->line);
+   bool isParam = EV_IsParamLineSpec(instance->special);
+   return EV_TurnTagLightsOff(instance->line, instance->tag, isParam);
 }
 
 //
@@ -898,7 +917,7 @@ DEFINE_ACTION(EV_ActionDoDonut)
    // case 155: (WR - BOOM Extended)
    // case 191: (SR - BOOM Extended)
    // Lower Pillar, Raise Donut
-   return EV_DoParamDonut(instance->line, instance->line->tag, false, 
+   return EV_DoParamDonut(instance->line, instance->line->args[0], false, 
                           FLOORSPEED / 2, FLOORSPEED / 2);
 }
 
@@ -948,11 +967,15 @@ DEFINE_ACTION(EV_ActionSilentTeleport)
    teleparms_t parms;
    parms.teleangle = teleangle_relative_boom;
    parms.keepheight = true;
-   return EV_SilentTeleport(line, line->tag, side, thing, parms);
+   return EV_SilentTeleport(line, instance->tag, side, thing, parms);
 }
 
 //
 // EV_ActionChangeOnly
+//
+// Also implements Floor_TransferTrigger(tag)
+// * ExtraData: 466
+// * Hexen:     235
 //
 DEFINE_ACTION(EV_ActionChangeOnly)
 {
@@ -963,7 +986,8 @@ DEFINE_ACTION(EV_ActionChangeOnly)
    // case 189: (S1 - BOOM Extended)
    // case 190: (SR - BOOM Extended)
    // Texture/Type Change Only (Trig)
-   return EV_DoChange(instance->line, trigChangeOnly);
+   bool isParam = EV_IsParamLineSpec(instance->special);
+   return EV_DoChange(instance->line, instance->tag, trigChangeOnly, isParam);
 }
 
 //
@@ -977,7 +1001,8 @@ DEFINE_ACTION(EV_ActionChangeOnlyNumeric)
    // case 240: (WR - BOOM Extended)
    // case 241: (S1 - BOOM Extended)
    // Texture/Type Change Only (Numeric)
-   return EV_DoChange(instance->line, numChangeOnly);
+   bool isParam = EV_IsParamLineSpec(instance->special);
+   return EV_DoChange(instance->line, instance->tag, numChangeOnly, isParam);
 }
 
 //
@@ -1003,7 +1028,8 @@ DEFINE_ACTION(EV_ActionElevatorUp)
    // case 229: (S1 - BOOM Extended)
    // case 230: (SR - BOOM Extended)
    // Raise elevator next floor
-   return EV_DoElevator(instance->line, elevateUp);
+   return EV_DoElevator(instance->line, instance->tag, elevateUp,
+                        ELEVATORSPEED, 0, false);
 }
 
 //
@@ -1016,7 +1042,8 @@ DEFINE_ACTION(EV_ActionElevatorDown)
    // case 233: (S1 - BOOM Extended)
    // case 234: (SR - BOOM Extended)
    // Lower elevator next floor
-   return EV_DoElevator(instance->line, elevateDown);
+   return EV_DoElevator(instance->line, instance->tag, elevateDown,
+                        ELEVATORSPEED, 0, false);
 
 }
 
@@ -1030,7 +1057,8 @@ DEFINE_ACTION(EV_ActionElevatorCurrent)
    // case 237: (S1 - BOOM Extended)
    // case 238: (SR - BOOM Extended)
    // Elevator to current floor
-   return EV_DoElevator(instance->line, elevateCurrent);
+   return EV_DoElevator(instance->line, instance->tag, elevateCurrent,
+                        ELEVATORSPEED, 0, false);
 }
 
 //
@@ -1050,7 +1078,7 @@ DEFINE_ACTION(EV_ActionSilentLineTeleport)
    // case 267: (WR - BOOM Extended)
    // jff 4/14/98 add monster-only silent line-line
 
-   return EV_SilentLineTeleport(line, line->tag, side, thing, false);
+   return EV_SilentLineTeleport(line, instance->tag, side, thing, false);
 }
 
 //
@@ -1068,7 +1096,7 @@ DEFINE_ACTION(EV_ActionSilentLineTeleportReverse)
    // case 264: (W1 - BOOM Extended)
    // case 265: (WR - BOOM Extended)
    // jff 4/14/98 add monster-only silent line-line reversed
-   return EV_SilentLineTeleport(line, line->tag, side, thing, true);
+   return EV_SilentLineTeleport(line, instance->tag, side, thing, true);
 }
 
 //
@@ -1356,7 +1384,7 @@ DEFINE_ACTION(EV_ActionParamDoorCloseWaitOpen)
    dd.spac         = instance->spac;
    dd.speed_value  = instance->args[1] * FRACUNIT / 8;
    dd.topcountdown = 0;
-   dd.delay_value  = instance->args[2];
+   dd.delay_value  = instance->args[2] * 35 / 8;   // OCTICS
    dd.altlighttag  = instance->args[3];
    dd.thing        = instance->actor;
 
@@ -1431,13 +1459,17 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToHighest)
    INIT_STRUCT(floordata_t, fd);
 
    fd.direction   = 1;              // up
-   fd.target_type = FtoHnF;         // to highest neighboring floor
+   if(P_LevelIsVanillaHexen())   // vanilla Hexen compatibility
+      fd.target_type = FtoLnCInclusive;
+   else
+      fd.target_type = FtoHnF;         // to highest neighboring floor
    fd.spac        = instance->spac; // activated Hexen-style
    fd.flags       = FDF_HAVESPAC;
    fd.speed_type  = SpeedParam;
    fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
    EV_floorChangeForArg(fd, instance->args[2]);       // change
    fd.crush       = instance->args[3];                // crush
+   fd.changeOnStart = true;
    
    return EV_DoParamFloor(instance->line, instance->tag, &fd);
 }
@@ -1507,6 +1539,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToLowest)
    fd.speed_type  = SpeedNormal;    // target is lower, so motion is instant.
    EV_floorChangeForArg(fd, instance->args[1]); // change
    fd.crush       = instance->args[2];          // crush
+   fd.changeOnStart = true;
    
    return EV_DoParamFloor(instance->line, instance->tag, &fd);
 }
@@ -1553,6 +1586,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToNearest)
    fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
    EV_floorChangeForArg(fd, instance->args[2]);       // change
    fd.crush       = instance->args[3];                // crush
+   fd.changeOnStart = true;
 
    return EV_DoParamFloor(instance->line, instance->tag, &fd);
 }
@@ -1569,7 +1603,10 @@ DEFINE_ACTION(EV_ActionParamFloorLowerToNearest)
    INIT_STRUCT(floordata_t, fd);
 
    fd.direction   = 0;              // down
-   fd.target_type = FtoNnF;         // to nearest neighboring floor
+   if(P_LevelIsVanillaHexen())
+      fd.target_type = FtoHnF;   // ioanch: in Hexen it's actually to "highest"
+   else
+      fd.target_type = FtoNnF;         // to nearest neighboring floor
    fd.spac        = instance->spac; // activated Hexen-style
    fd.flags       = FDF_HAVESPAC;
    fd.speed_type  = SpeedParam;
@@ -1583,7 +1620,7 @@ DEFINE_ACTION(EV_ActionParamFloorLowerToNearest)
 //
 // EV_ActionParamFloorRaiseToLowestCeiling
 //
-// Implements Floor_RaiseToLowestCeiling(tag, speed, change, crush)
+// Implements Floor_RaiseToLowestCeiling(tag, speed, change, crush, gap)
 // * ExtraData: 312
 // * Hexen (ZDoom Extension): 238
 //
@@ -1592,13 +1629,15 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToLowestCeiling)
    INIT_STRUCT(floordata_t, fd);
 
    fd.direction   = 1;              // up
-   fd.target_type = FtoLnC;         // to lowest neighboring ceiling
+   fd.target_type = FtoLnCInclusive;// to lowest neighboring ceiling
    fd.spac        = instance->spac; // activated Hexen-style
    fd.flags       = FDF_HAVESPAC;
    fd.speed_type  = SpeedParam;
    fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
    EV_floorChangeForArg(fd, instance->args[2]);       // change
    fd.crush       = instance->args[3];                // crush
+   fd.adjust      = -instance->args[4] * FRACUNIT;
+   fd.changeOnStart = true;
 
    return EV_DoParamFloor(instance->line, instance->tag, &fd);
 }
@@ -1628,7 +1667,7 @@ DEFINE_ACTION(EV_ActionParamFloorLowerToLowestCeiling)
 //
 // EV_ActionParamFloorRaiseToCeiling
 //
-// Implements Floor_RaiseToCeiling(tag, speed, change, crush)
+// Implements Floor_RaiseToCeiling(tag, speed, change, crush, gap)
 // * ExtraData: 314
 //
 DEFINE_ACTION(EV_ActionParamFloorRaiseToCeiling)
@@ -1643,6 +1682,8 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToCeiling)
    fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
    EV_floorChangeForArg(fd, instance->args[2]);       // change
    fd.crush       = instance->args[3];                // crush
+   fd.adjust      = -instance->args[4] * FRACUNIT;
+   fd.changeOnStart = true;
 
    return EV_DoParamFloor(instance->line, instance->tag, &fd);
 }
@@ -1666,6 +1707,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseByTexture)
    fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
    EV_floorChangeForArg(fd, instance->args[2]);       // change
    fd.crush       = instance->args[3];                // crush
+   fd.changeOnStart = true;
 
    return EV_DoParamFloor(instance->line, instance->tag, &fd);
 }
@@ -1712,6 +1754,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseByValue)
    fd.height_value = instance->args[2] * FRACUNIT;     // height
    EV_floorChangeForArg(fd, instance->args[3]);        // change
    fd.crush        = instance->args[4];                // crush
+   fd.changeOnStart = true;
 
    return EV_DoParamFloor(instance->line, instance->tag, &fd);
 }
@@ -1736,6 +1779,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseByValueTimes8)
    fd.height_value = instance->args[2] * FRACUNIT * 8; // height
    EV_floorChangeForArg(fd, instance->args[3]);        // change
    fd.crush        = instance->args[4];                // crush
+   fd.changeOnStart = true;
 
    return EV_DoParamFloor(instance->line, instance->tag, &fd);
 }
@@ -1889,7 +1933,7 @@ DEFINE_ACTION(EV_ActionParamFloorLowerInstant)
 //
 // EV_ActionParamFloorToCeilingInstant
 //
-// Implements Floor_ToCeilingInstant(tag, change, crush)
+// Implements Floor_ToCeilingInstant(tag, change, crush, gap)
 // * ExtraData: 322
 //
 DEFINE_ACTION(EV_ActionParamFloorToCeilingInstant)
@@ -1903,6 +1947,7 @@ DEFINE_ACTION(EV_ActionParamFloorToCeilingInstant)
    fd.speed_type  = SpeedNormal;    // unused (always instant).
    EV_floorChangeForArg(fd, instance->args[1]); // change
    fd.crush       = instance->args[2];          // crush
+   fd.adjust      = -instance->args[3] * FRACUNIT;
 
    return EV_DoParamFloor(instance->line, instance->tag, &fd);
 }
@@ -1986,7 +2031,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerToNearest)
    cd.direction     = 0;              // down
    cd.target_type   = CtoNnC;         // to nearest neighboring ceiling
    cd.spac          = instance->spac; // activated Hexen-style
-   cd.flags         = CDF_HAVESPAC;
+   cd.flags         = CDF_HAVESPAC | CDF_CHANGEONSTART;
    cd.speed_type    = SpeedParam;
    cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
    EV_ceilingChangeForArg(cd, instance->args[2]);       // change
@@ -2031,7 +2076,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerToLowest)
    cd.direction     = 0;              // down
    cd.target_type   = CtoLnC;         // to lowest neighboring ceiling
    cd.spac          = instance->spac; // activated Hexen-style
-   cd.flags         = CDF_HAVESPAC;
+   cd.flags         = CDF_HAVESPAC | CDF_CHANGEONSTART;
    cd.speed_type    = SpeedParam;
    cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
    EV_ceilingChangeForArg(cd, instance->args[2]);       // change
@@ -2065,7 +2110,7 @@ DEFINE_ACTION(EV_ActionParamCeilingRaiseToHighestFloor)
 //
 // EV_ActionParamCeilingLowerToHighestFloor
 //
-// Implements Ceiling_LowerToHighestFloor(tag, speed, change crush)
+// Implements Ceiling_LowerToHighestFloor(tag, speed, change, crush, gap)
 // * ExtraData: 330
 // * Hexen (ZDoom Extension): 192
 //
@@ -2076,11 +2121,12 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerToHighestFloor)
    cd.direction     = 0;              // down
    cd.target_type   = CtoHnF;         // to highest neighboring floor
    cd.spac          = instance->spac; // activated Hexen-style
-   cd.flags         = CDF_HAVESPAC;
+   cd.flags         = CDF_HAVESPAC | CDF_HACKFORDESTF | CDF_CHANGEONSTART;
    cd.speed_type    = SpeedParam;
    cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
    EV_ceilingChangeForArg(cd, instance->args[2]);       // change
    cd.crush         = instance->args[3];                // crush
+   cd.ceiling_gap   = instance->args[4] * FRACUNIT;
 
    return EV_DoParamCeiling(instance->line, instance->tag, &cd);
 }
@@ -2088,7 +2134,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerToHighestFloor)
 //
 // EV_ActionParamCeilingToFloorInstant
 //
-// Implements Ceiling_ToFloorInstant(tag, change, crush)
+// Implements Ceiling_ToFloorInstant(tag, change, crush, gap)
 // * ExtraData: 331
 //
 DEFINE_ACTION(EV_ActionParamCeilingToFloorInstant)
@@ -2102,6 +2148,7 @@ DEFINE_ACTION(EV_ActionParamCeilingToFloorInstant)
    cd.speed_type    = SpeedNormal;    // not used
    EV_ceilingChangeForArg(cd, instance->args[1]); // change
    cd.crush         = instance->args[2];          // crush
+   cd.ceiling_gap   = instance->args[3] * FRACUNIT;
 
    return EV_DoParamCeiling(instance->line, instance->tag, &cd);
 }
@@ -2109,7 +2156,7 @@ DEFINE_ACTION(EV_ActionParamCeilingToFloorInstant)
 //
 // EV_ActionParamCeilingLowerToFloor
 //
-// Implements Ceiling_LowerToFloor(tag, speed, change, crush)
+// Implements Ceiling_LowerToFloor(tag, speed, change, crush, gap)
 // * ExtraData: 332
 // * Hexen (ZDoom Extension): 254
 //
@@ -2120,11 +2167,12 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerToFloor)
    cd.direction     = 0;              // down
    cd.target_type   = CtoF;           // to sector floor
    cd.spac          = instance->spac; // activated Hexen-style
-   cd.flags         = CDF_HAVESPAC;
+   cd.flags         = CDF_HAVESPAC | CDF_HACKFORDESTF | CDF_CHANGEONSTART;
    cd.speed_type    = SpeedParam;
    cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
    EV_ceilingChangeForArg(cd, instance->args[2]);       // change
    cd.crush         = instance->args[3];                // crush
+   cd.ceiling_gap   = instance->args[4] * FRACUNIT;
 
    return EV_DoParamCeiling(instance->line, instance->tag, &cd);
 }
@@ -2164,7 +2212,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerByTexture)
    cd.direction     = 0;              // down
    cd.target_type   = CbyST;          // by shortest upper texture
    cd.spac          = instance->spac; // activated Hexen-style
-   cd.flags         = CDF_HAVESPAC;
+   cd.flags         = CDF_HAVESPAC | CDF_CHANGEONSTART;
    cd.speed_type    = SpeedParam;
    cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
    EV_ceilingChangeForArg(cd, instance->args[2]);       // change
@@ -2211,7 +2259,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerByValue)
    cd.direction     = 0;              // down
    cd.target_type   = CbyParam;       // by value
    cd.spac          = instance->spac; // activated Hexen-style
-   cd.flags         = CDF_HAVESPAC;
+   cd.flags         = CDF_HAVESPAC | CDF_CHANGEONSTART;
    cd.speed_type    = SpeedParam;
    cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
    cd.height_value  = instance->args[2] * FRACUNIT;     // height
@@ -2257,7 +2305,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerByValueTimes8)
    cd.direction     = 0;              // down
    cd.target_type   = CbyParam;       // by value
    cd.spac          = instance->spac; // activated Hexen-style
-   cd.flags         = CDF_HAVESPAC;
+   cd.flags         = CDF_HAVESPAC | CDF_CHANGEONSTART;
    cd.speed_type    = SpeedParam;
    cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
    cd.height_value  = instance->args[2] * FRACUNIT * 8; // height
@@ -2657,6 +2705,18 @@ DEFINE_ACTION(EV_ActionPolyobjORRotateLeft)
 }
 
 //
+// EV_ActionPolyobjStop
+//
+// Implements Polyobj_Stop(id)
+// * ExtraData: 474
+// * Hexen:     87
+//
+DEFINE_ACTION(EV_ActionPolyobjStop)
+{  
+   return EV_DoPolyObjStop(instance->tag);
+}
+
+//
 // EV_ActionPillarBuild
 //
 // Implements Pillar_Build(tag, speed, height)
@@ -3006,13 +3066,27 @@ DEFINE_ACTION(EV_ActionParamPlatPerpetualRaise)
 //
 // EV_ActionParamPlatStop
 //
-// Implements Plat_Stop(tag)
+// Implements Plat_Stop(tag, kind)
 // * ExtraData: 411
 // * Hexen:     61
 //
 DEFINE_ACTION(EV_ActionParamPlatStop)
 {
-   return EV_StopPlatByTag(instance->tag);
+   bool removeThinker = false;
+   switch (instance->args[1])
+   {
+      case 0:                    // compatibility
+         removeThinker = LevelInfo.levelType == LI_TYPE_HEXEN;
+         break;
+      case 1:
+         removeThinker = false;  // Doom style
+         break;
+      case 2:
+         removeThinker = true;   // Hexen style
+         break;
+   }
+
+   return EV_StopPlatByTag(instance->tag, removeThinker);
 }
 
 //
@@ -3061,6 +3135,28 @@ DEFINE_ACTION(EV_ActionParamPlatUWDS)
 DEFINE_ACTION(EV_ActionParamPlatUpByValue)
 {
    return EV_DoParamPlat(instance->line, instance->args, paramUpByValueWaitDownStay);
+}
+
+//
+// EV_ActionPlatRaiseNearestChange
+//
+// Implements Plat_RaiseAndStayTx0(tag, speed, lockout)
+// * ExtraData: 475
+// * Hexen:     228
+DEFINE_ACTION(EV_ActionParamPlatRaiseNearestChange)
+{
+   return EV_DoParamPlat(instance->line, instance->args, paramRaiseToNearestAndChange);
+}
+
+//
+// EV_ActionPlatRaiseParamChange
+//
+// Implements Plat_UpByValueStayTx(tag, speed, height)
+// * ExtraData: 476
+// * Hexen:     230
+DEFINE_ACTION(EV_ActionParamPlatRaiseChange)
+{
+   return EV_DoParamPlat(instance->line, instance->args, paramUpByValueStayAndChange);
 }
 
 //
@@ -3178,11 +3274,13 @@ DEFINE_ACTION(EV_ActionParamDoorLockedRaise)
    INIT_STRUCT(doordata_t, dd);
    int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
 
-   dd.kind         = OdCDoor;
+   int delay = instance->args[2];
+
+   dd.kind         = delay || P_LevelIsVanillaHexen() ? OdCDoor : ODoor;
    dd.spac         = instance->spac;
-   dd.speed_value  = instance->args[1] * FRACUNIT / 8;
+   dd.speed_value  = instance->args[1] * (FRACUNIT / 8);
    dd.topcountdown = 0;
-   dd.delay_value  = instance->args[2];
+   dd.delay_value  = delay;
    dd.altlighttag  = instance->args[4];
    dd.thing        = instance->actor;
    
@@ -3260,14 +3358,26 @@ DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaise)
 //
 // EV_ActionParamCeilingCrushStop
 //
-// Implements Ceiling_CrushStop(tag)
+// Implements Ceiling_CrushStop(tag, kind)
 // * ExtraData: 433
 // * Hexen:     44
 //
 DEFINE_ACTION(EV_ActionParamCeilingCrushStop)
 {
-   // Really the same as EV_ActionCeilingCrushStop
-   return EV_CeilingCrushStop(instance->line, instance->tag);
+   bool removeThinker = false;
+   switch (instance->args[1])
+   {
+      case 0:                    // compatibility
+         removeThinker = LevelInfo.levelType == LI_TYPE_HEXEN;
+         break;
+      case 1:
+         removeThinker = false;  // Doom style
+         break;
+      case 2:
+         removeThinker = true;   // Hexen style
+         break;
+   }
+   return EV_CeilingCrushStop(instance->tag, removeThinker);
 }
 
 //
@@ -3620,6 +3730,476 @@ DEFINE_ACTION(EV_ActionTeleportNewMap)
    // TODO: the other arguments (position, face)
 
    return 1;
+}
+
+//
+// Implements Floor_RaiseAndCrush(tag, speed, crush)
+//
+// * ExtraData: 451
+// * Hexen:     28
+//
+DEFINE_ACTION(EV_ActionParamFloorRaiseAndCrush)
+{
+   INIT_STRUCT(floordata_t, fd);
+
+   fd.direction   = 1;              // up
+   fd.target_type = FtoC;           // to sector ceiling
+   fd.adjust      = -8 * FRACUNIT;
+   fd.spac        = instance->spac; // activated Hexen-style
+   fd.flags       = FDF_HAVESPAC;
+   fd.speed_type  = SpeedParam;
+   fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   fd.crush       = instance->args[2];                // crush
+
+   return EV_DoParamFloor(instance->line, instance->tag, &fd);
+}
+
+//
+// Implements Floor_CrushStop(tag)
+//
+// * ExtraData: 452
+// * Hexen:     46
+//
+DEFINE_ACTION(EV_ActionParamFloorCrushStop)
+{
+   return EV_FloorCrushStop(instance->line, instance->tag);
+}
+
+//
+// Implements FloorAndCeiling_LowerByValue(tag, speed, height)
+//
+// * ExtraData: 453
+// * Hexen:     95
+//
+DEFINE_ACTION(EV_ActionParamFloorCeilingLowerByValue)
+{
+   // If level is vanilla Hexen, try to emulate its behavior as much as possible
+   if(P_LevelIsVanillaHexen())
+   {
+      INIT_STRUCT(floordata_t, fd);
+
+      fd.direction = 0; // down
+      fd.target_type = FbyParam;
+      fd.spac = instance->spac;
+      fd.flags = FDF_HAVESPAC;
+      fd.speed_type = SpeedParam;
+      fd.speed_value = instance->args[1] * FRACUNIT / 8;
+      fd.height_value = instance->args[2] * FRACUNIT;
+      fd.crush = -1;
+
+      INIT_STRUCT(ceilingdata_t, cd);
+
+      cd.direction = 0;
+      cd.target_type = CbyParam;
+      cd.speed_type = instance->spac;
+      cd.flags = CDF_HAVESPAC;
+      cd.speed_type = SpeedParam;
+      cd.speed_value = instance->args[1] * FRACUNIT / 8;
+      cd.height_value = instance->args[2] * FRACUNIT;
+      cd.crush = -1;
+
+      return EV_DoFloorAndCeiling(instance->line, instance->tag, fd, cd);
+   }
+
+   // If it's a contemporary level, try to make it as the user expects it to
+   // work: Boom elevator moved by value
+
+   return EV_DoElevator(instance->line, instance->tag, elevateByValue,
+                        instance->args[1] * FRACUNIT / 8,
+                       -instance->args[2] * FRACUNIT, true);
+
+}
+
+//
+// Implements FloorAndCeiling_RaiseByValue(tag, speed, height)
+//
+// * ExtraData: 454
+// * Hexen:     96
+//
+DEFINE_ACTION(EV_ActionParamFloorCeilingRaiseByValue)
+{
+   if(P_LevelIsVanillaHexen())
+   {
+      INIT_STRUCT(floordata_t, fd);
+
+      fd.direction = 1; // up
+      fd.target_type = FbyParam;
+      fd.spac = instance->spac;
+      fd.flags = FDF_HAVESPAC;
+      fd.speed_type = SpeedParam;
+      fd.speed_value = instance->args[1] * FRACUNIT / 8;
+      fd.height_value = instance->args[2] * FRACUNIT;
+      fd.crush = -1;
+
+      INIT_STRUCT(ceilingdata_t, cd);
+
+      cd.direction = 1;
+      cd.target_type = CbyParam;
+      cd.speed_type = instance->spac;
+      cd.flags = CDF_HAVESPAC;
+      cd.speed_type = SpeedParam;
+      cd.speed_value = instance->args[1] * FRACUNIT / 8;
+      cd.height_value = instance->args[2] * FRACUNIT;
+      cd.crush = -1;
+
+      return EV_DoFloorAndCeiling(instance->line, instance->tag, fd, cd);
+   }
+
+   // If it's a contemporary level, try to make it as the user expects it to
+   // work: Boom elevator moved by value
+
+   return EV_DoElevator(instance->line, instance->tag, elevateByValue,
+                        instance->args[1] * FRACUNIT / 8,
+                        instance->args[2] * FRACUNIT, true);
+}
+
+//
+// Implements Elevator_RaiseToNearest(tag, speed)
+//
+// * ExtraData: 458
+// * Hexen:     245
+//
+DEFINE_ACTION(EV_ActionParamElevatorUp)
+{
+   return EV_DoElevator(instance->line, instance->tag, elevateUp,
+                        instance->args[1] * FRACUNIT / 8, 0, true);
+}
+
+//
+// Implements Elevator_LowerToNearest(tag, speed)
+//
+// * ExtraData: 459
+// * Hexen:     247
+//
+DEFINE_ACTION(EV_ActionParamElevatorDown)
+{
+   return EV_DoElevator(instance->line, instance->tag, elevateDown,
+                        instance->args[1] * FRACUNIT / 8, 0, true);
+}
+
+//
+// Implements Elevator_MoveToFloor(tag, speed)
+//
+// * ExtraData: 460
+// * Hexen:     246
+//
+DEFINE_ACTION(EV_ActionParamElevatorCurrent)
+{
+   return EV_DoElevator(instance->line, instance->tag, elevateCurrent,
+                        instance->args[1] * FRACUNIT / 8, 0, true);
+}
+
+//
+// EV_ActionChangeSkill
+//
+// Implements ChangeSkill(skill)
+// * ExtraData: 462
+// * Hexen (ZDoom Extension): 179
+//
+DEFINE_ACTION(EV_ActionChangeSkill)
+{
+   // Sanity check the argument, skills 0 through 4 are valid
+   if(instance->args[0] < sk_baby || instance->args[0] > sk_nightmare)
+      return 0;
+
+   gameskill = (skill_t)instance->line->args[0];
+   return 1;
+}
+
+//
+// Implements Light_StrobeDoom(tag, u-tics, l-tics)
+//
+// * ExtraData: 463
+// * Hexen:     232
+//
+DEFINE_ACTION(EV_ActionParamLightStrobeDoom)
+{
+   return EV_StartLightStrobing(instance->line, instance->tag,
+                                instance->args[2], instance->args[1], true);
+}
+
+//
+// Implements Generic_Floor(tag, speed, height, target, flags)
+//
+// * ExtraData: 464
+// * Hexen:     200
+//
+DEFINE_ACTION(EV_ActionParamFloorGeneric)
+{
+   INIT_STRUCT(floordata_t, fd);
+   int flags = instance->args[4];
+   fd.crush = (flags & 16) ? 10 : -1;
+   fd.change_type = flags & 3;
+   int target = instance->args[3];
+   if(!target) // move by parameter
+   {
+      int height = instance->args[2];
+      switch(height)
+      {
+         case 24:
+            fd.target_type = Fby24; // keep using Boom types if available
+            break;
+         case 32:
+            fd.target_type = Fby32;
+            break;
+         default:
+            fd.target_type = FbyParam;
+            fd.height_value = height * FRACUNIT;
+            break;
+      }
+   }
+   else
+   {
+      fd.target_type = target - 1;
+      if(fd.target_type < FtoHnF)
+         fd.target_type = FtoHnF;
+      else if(fd.target_type > FbyST)
+         fd.target_type = FbyST;
+   }
+   fd.direction = (flags & 8) ? 1 : 0;
+   fd.change_model = (flags & 4) ? FNumericModel : FTriggerModel;
+   int speed = instance->args[1];
+   switch(speed)
+   {
+      case 8:
+         fd.speed_type = SpeedSlow;
+         break;
+      case 16:
+         fd.speed_type = SpeedNormal;
+         break;
+      case 32:
+         fd.speed_type = SpeedFast;
+         break;
+      case 64:
+         fd.speed_type = SpeedTurbo;
+         break;
+      default:
+         fd.speed_type = SpeedParam;
+         fd.speed_value = speed * (FRACUNIT / 8);
+         break;
+   }
+   fd.flags = FDF_HAVESPAC;
+   fd.spac = instance->spac;
+
+   return EV_DoParamFloor(instance->line, instance->tag, &fd);
+}
+
+//
+// Implements Generic_Ceiling(tag, speed, height, target, flag)
+//
+// * ExtraData: 465
+// * Hexen:     201
+//
+DEFINE_ACTION(EV_ActionParamCeilingGeneric)
+{
+   INIT_STRUCT(ceilingdata_t, cd);
+   int flags = instance->args[4];
+   cd.crush = (flags & 16) ? 10 : -1;
+   cd.change_type = flags & 3;
+   int target = instance->args[3];
+   if(!target)
+   {
+      int height = instance->args[2];
+      switch(height)
+      {
+         case 24:
+            cd.target_type = Cby24;
+            break;
+         case 32:
+            cd.target_type = Cby32;
+            break;
+         default:
+            cd.target_type = CbyParam;
+            cd.height_value = height * FRACUNIT;
+            break;
+      }
+   }
+   else
+   {
+      cd.target_type = target - 1;
+      if(cd.target_type < CtoHnC)
+         cd.target_type = CtoHnC;
+      else if(cd.target_type > CbyST)
+         cd.target_type = CbyST;
+   }
+   cd.direction = (flags & 8) ? 1 : 0;
+   cd.change_model = (flags & 4) ? CNumericModel : CTriggerModel;
+   int speed = instance->args[1];
+   switch(speed)
+   {
+      case 8:
+         cd.speed_type = SpeedSlow;
+         break;
+      case 16:
+         cd.speed_type = SpeedNormal;
+         break;
+      case 32:
+         cd.speed_type = SpeedFast;
+         break;
+      case 64:
+         cd.speed_type = SpeedTurbo;
+         break;
+      default:
+         cd.speed_type = SpeedParam;
+         cd.speed_value = speed * (FRACUNIT / 8);
+         break;
+   }
+   cd.flags = CDF_HAVESPAC;
+   cd.spac = instance->spac;
+
+   return EV_DoParamCeiling(instance->line, instance->tag, &cd);
+}
+
+//
+// Implements FloorAndCeiling_LowerRaise(tag, fspeed, cspeed, boomemu)
+//
+// * ExtraData: 468
+// * Hexen:     251
+//
+DEFINE_ACTION(EV_ActionParamFloorCeilingLowerRaise)
+{
+   INIT_STRUCT(ceilingdata_t, cd);
+   cd.direction = 1; // up
+   cd.target_type = CtoHnC;
+   cd.spac = instance->spac;
+   cd.flags = CDF_HAVESPAC;
+   cd.speed_type = SpeedParam;
+   cd.speed_value = instance->args[2] * (FRACUNIT / 8);
+   cd.crush = -1;
+
+   int rtn = EV_DoParamCeiling(instance->line, instance->tag, &cd);
+   if(instance->args[3] == 1998 && rtn)   // Boom specials 166/185 emulation
+      return rtn;
+
+   INIT_STRUCT(floordata_t, fd);
+   fd.direction = 0; // down
+   fd.target_type = FtoLnF;
+   fd.spac = instance->spac;
+   fd.flags = FDF_HAVESPAC;
+   fd.speed_type = SpeedParam;
+   fd.speed_value = instance->args[1] * (FRACUNIT / 8);
+   fd.crush = -1;
+
+   return EV_DoParamFloor(instance->line, instance->tag, &fd);
+}
+
+//
+// Implements HealThing(amount, maxhealth)
+//
+// * ExtraData:         469
+// * Hexen (ZDoom):     248
+//
+DEFINE_ACTION(EV_ActionHealThing)
+{
+  return EV_HealThing(instance->actor, instance->args[0], instance->args[1]);
+}
+
+//
+// Implements Sector_SetRotation(tag, floor-angle, ceiling-angle)
+//
+// * ExtraData:         470
+// * Hexen (ZDoom):     185
+//
+DEFINE_ACTION(EV_ActionParamSectorSetRotation)
+{
+   return EV_SectorSetRotation(instance->line, instance->tag, instance->args[1],
+                               instance->args[2]);
+}
+
+//
+// Implements Sector_SetCeilingPanning(tag, x-int, x-frac, y-int, y-frac)
+//
+// * ExtraData:         471
+// * Hexen (ZDoom):     186
+//
+DEFINE_ACTION(EV_ActionParamSectorSetCeilingPanning)
+{
+   return EV_SectorSetCeilingPanning(instance->line, instance->tag,
+                                     EV_calcCentPrecision(instance->args[1],
+                                                          instance->args[2]),
+                                     EV_calcCentPrecision(instance->args[3],
+                                                          instance->args[4]));
+}
+
+//
+// Implements Sector_SetFloorPanning(amount, tag, x-int, x-frac, y-int, y-frac)
+//
+// * ExtraData:         472
+// * Hexen (ZDoom):     187
+//
+DEFINE_ACTION(EV_ActionParamSectorSetFloorPanning)
+{
+   return EV_SectorSetFloorPanning(instance->line, instance->tag,
+                                   EV_calcCentPrecision(instance->args[1],
+                                                        instance->args[2]),
+                                   EV_calcCentPrecision(instance->args[3],
+                                                        instance->args[4]));
+}
+
+//
+// Implements ACS_ExecuteAlways(script, map, arg1, arg2, arg3)
+//
+// * ExtraData: 477
+// * Hexen:     226
+//
+DEFINE_ACTION(EV_ActionACSExecuteAlways)
+{
+   Mobj   *thing = instance->actor;
+   line_t *line  = instance->line;
+   int     side  = instance->side;
+   int     num   = instance->args[0];
+   int     map   = instance->args[1];
+   int     argc  = NUMLINEARGS - 2;
+   int32_t argv[NUMLINEARGS - 2];
+
+   for(int i = 0; i != argc; ++i)
+      argv[i] = instance->args[i + 2];
+
+   return ACS_ExecuteScriptNumber(num, map, ACS_EXECUTE_ALWAYS, argv, argc, thing, line, side);
+}
+
+//
+// Implements Thing_Remove(tid)
+//
+// * ExtraData: 478
+// * Hexen:     132
+//
+DEFINE_ACTION(EV_ActionThingRemove)
+{
+   return EV_ThingRemove(instance->tag);
+}
+
+//
+// Implements Plat_ToggleCeiling(tag)
+//
+// * ExtraData: 487
+// * Hexen:     231
+//
+DEFINE_ACTION(EV_ActionParamPlatToggleCeiling)
+{
+   return EV_DoParamPlat(instance->line, instance->args, paramToggleCeiling);
+}
+
+//
+// Implements Plat_DownWaitUpStayLip(tag, speed, delay, lip)
+//
+// * ExtraData: 488
+// * Hexen:     206
+//
+DEFINE_ACTION(EV_ActionParamPlatDWUSLip)
+{
+   return EV_DoParamPlat(instance->line, instance->args, paramDownWaitUpStayLip);
+}
+
+//
+// Implements Plat_PerpetualRaiseLip(tag, speed, delay, lip)
+//
+// * ExtraData: 489
+// * Hexen:     207
+//
+DEFINE_ACTION(EV_ActionParamPlatPerpetualRaiseLip)
+{
+   return EV_DoParamPlat(instance->line, instance->args, paramPerpetualRaiseLip);
 }
 
 // EOF

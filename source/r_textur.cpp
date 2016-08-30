@@ -1455,7 +1455,7 @@ byte *R_GetRawColumn(int tex, int32_t col)
       col = (col & t->widthmask) * t->height;
 
    // Lee Killough, eat your heart out! ... well this isn't really THAT bad...
-   return (t->flags & TF_SWIRLY && t->flatsize == FLAT_64) ?
+   return (t->flags & TF_SWIRLY) ?
           R_DistortedFlat(tex) + col :
           !t->buffer ? R_GetLinearBuffer(tex) + col :
           t->buffer + col;

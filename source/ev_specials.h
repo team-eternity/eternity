@@ -59,7 +59,7 @@ struct ev_instance_t
    line_t *line;    // line, if any
    int     special; // special to activate (may == line->special)
    int    *args;    // arguments (may point to line->args)
-   int     tag;     // tag (may == line->tag or line->args[0])
+   int     tag;     // tag (may == line->tag or line->args[0]) // ioanch 20160304: only args[0]
    int     side;    // side of activation
    int     spac;    // special activation type
    int     gentype; // generalized type, if is generalized (-1 otherwise)
@@ -280,8 +280,76 @@ enum
    EV_STATIC_SCROLL_LINE_UP,                // 417
    EV_STATIC_SCROLL_LINE_DOWN,              // 418
    EV_STATIC_SCROLL_LINE_DOWN_FAST,         // 419
+   EV_STATIC_PORTAL_HORIZON_LINE,           // 450
+   EV_STATIC_SLOPE_PARAM,                   // 455
+   EV_STATIC_PORTAL_SECTOR_PARAM,           // 456
+   EV_STATIC_WIND_CONTROL_PARAM,            // 457
+   EV_STATIC_CURRENT_CONTROL_PARAM,         // 479
+   EV_STATIC_PUSHPULL_CONTROL_PARAM,        // 480
+   EV_STATIC_INIT_PARAM,                    // 481
+   EV_STATIC_3DMIDTEX_ATTACH_PARAM,         // 482
+   EV_STATIC_SCROLL_CEILING_PARAM,          // 483
+   EV_STATIC_SCROLL_FLOOR_PARAM,            // 484
+   EV_STATIC_SCROLL_WALL_PARAM,             // 485
+   EV_STATIC_PORTAL_LINE_PARAM,             // 486
 
    EV_STATIC_MAX
+};
+
+//
+// Parameterized specifics
+//
+
+// Line_SetPortal
+enum
+{
+   ev_LinePortal_Maker = 0,
+   ev_LinePortal_Anchor = 1,
+   ev_LinePortal_Arg_SelfTag = 1,
+   ev_LinePortal_Arg_Type = 2,
+   ev_LinePortal_Type_Visual = 0,
+   ev_LinePortal_Type_Linked = 3,
+   ev_LinePortal_Type_EEClassic = 4
+};
+
+// Scroll
+enum
+{
+   ev_Scroll_Arg_Bits = 1,
+   ev_Scroll_Bit_Accel = 1,
+   ev_Scroll_Bit_Displace = 2,
+   ev_Scroll_Bit_UseLine = 4,
+   ev_Scroll_Arg_Type = 2,
+   ev_Scroll_Type_Scroll = 0,
+   ev_Scroll_Type_Carry = 1,
+   ev_Scroll_Type_ScrollCarry = 2,
+   ev_Scroll_Arg_X = 3,
+   ev_Scroll_Arg_Y = 4,
+};
+
+// Sector_Attach3dMidtex
+enum
+{
+   ev_AttachMidtex_Arg_SectorTag = 1,
+   ev_AttachMidtex_Arg_DoCeiling = 2,
+};
+
+// Sector_SetWind
+enum
+{
+   ev_SetWind_Arg_Strength = 1,
+   ev_SetWind_Arg_Angle = 2,
+   ev_SetWind_Arg_Flags = 3,
+   ev_SetWind_Flag_UseLine = 1,
+   ev_SetWind_Flag_Heretic = 2,
+};
+
+// Static_Init
+enum
+{
+   ev_StaticInit_Arg_Prop = 1,
+   ev_StaticInit_Prop_SkyTransfer = 255,
+   ev_StaticInit_Arg_Flip = 2,
 };
 
 // Binds a line special number to a static init function

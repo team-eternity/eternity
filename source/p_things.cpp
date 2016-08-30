@@ -29,7 +29,9 @@
 #include "doomstat.h"
 #include "d_gi.h"
 #include "d_mod.h"
+#include "e_inventory.h"
 #include "ev_specials.h"
+#include "metaapi.h"
 #include "p_inter.h"
 #include "p_mobj.h"
 #include "p_map.h"
@@ -392,6 +394,74 @@ int EV_ThingDestroy(int tid, int sectortag)
       }
    }
    return success;
+}
+
+//
+// EV_HealThing
+//
+// Returns 0 if the health isn't needed at all
+//
+int EV_HealThing(Mobj *actor, int amount, int maxhealth)
+{
+   if(!actor)
+      return 0;
+   mobjinfo_t *info = mobjinfo[actor->type];
+
+   if(!maxhealth || !actor->player)
+   {
+      // If second arg is 0, or the activator isn't a player
+      // then set the maxhealth to the activator's spawning health.
+      maxhealth = info->spawnhealth;
+   }
+   else if(maxhealth == 1)
+   {
+      // Otherwise if second arg is 1 and the SoulSphere's effect is present,
+      // then set maxhealth to the maximum health provided by a SoulSphere.
+      itemeffect_t *soulsphereeffect
+      = E_ItemEffectForName(ITEMNAME_SOULSPHERE);
+
+      if(soulsphereeffect)
+         maxhealth = soulsphereeffect->getInt("maxamount", 0);
+      else
+      {
+         // FIXME: Handle this with a bit more finesse.
+         maxhealth = info->spawnhealth + 100;
+      }
+   }
+
+   // If the activator can be given health then activate the switch
+   return EV_DoHealThing(actor, amount, maxhealth) ? 1 : 0;
+}
+
+//
+// Removes map objects tagged "tid" from the game
+//
+int EV_ThingRemove(int tid)
+{
+   Mobj *removed;
+   Mobj *mobj = nullptr;
+   mobj = P_FindMobjFromTID(tid, mobj, nullptr);
+   int rtn = 0;
+   while(mobj)
+   {
+      // don't attempt to remove player object because that would crash the game
+      // FIXME: removing voodoo dolls doesn't seem to work anyway
+      if(mobj->player && mobj->player->mo == mobj)
+      {
+         mobj = P_FindMobjFromTID(tid, mobj, nullptr);
+         continue;
+      }
+
+      // TODO: special handling for Hexen-like bridges
+
+      removed = mobj;
+      mobj = P_FindMobjFromTID(tid, mobj, nullptr);
+
+      removed->removeThinker();
+
+      rtn = 1;
+   }
+   return rtn;
 }
 
 //=============================================================================

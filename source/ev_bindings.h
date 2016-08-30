@@ -56,11 +56,13 @@ extern ev_binding_t DOOMBindings[];
 extern ev_binding_t HereticBindings[];
 extern ev_binding_t HexenBindings[];
 extern ev_binding_t PSXBindings[];
+extern ev_binding_t UDMFEternityBindings[];
 
 extern const size_t DOOMBindingsLen;
 extern const size_t HereticBindingsLen;
 extern const size_t HexenBindingsLen;
 extern const size_t PSXBindingsLen;
+extern const size_t UDMFEternityBindingsLen;
 
 extern ev_lockdef_t DOOMLockDefs[];
 extern ev_lockdef_t HereticLockDefs[];

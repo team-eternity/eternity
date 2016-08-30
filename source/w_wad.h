@@ -149,15 +149,16 @@ struct lumpinfo_t
 // Flags for wfileadd_t
 enum WFileAddFlags
 {
-   WFA_ALLOWINEXACTFN = 0x0001, // Filename can be modified with AddDefaultExtension
-   WFA_OPENFAILFATAL  = 0x0002, // Failure to open file is fatal
-   WFA_PRIVATE        = 0x0004, // Loading into a private directory
-   WFA_SUBFILE        = 0x0008, // Loading a physical subfile
-   WFA_REQUIREFORMAT  = 0x0010, // A specific archive format is required for this load
-   WFA_DIRECTORY      = 0x0020, // Loading a physical disk directory
-   WFA_ALLOWHACKS     = 0x0040, // Allow application of wad directory hacks
-   WFA_INMEMORY       = 0x0080, // Archive is in memory
-   WFA_ISIWADFILE     = 0x0100, // Archive is the main IWAD file
+   WFA_ALLOWINEXACTFN      = 0x0001, // Filename can be modified with AddDefaultExtension
+   WFA_OPENFAILFATAL       = 0x0002, // Failure to open file is fatal
+   WFA_PRIVATE             = 0x0004, // Loading into a private directory
+   WFA_SUBFILE             = 0x0008, // Loading a physical subfile
+   WFA_REQUIREFORMAT       = 0x0010, // A specific archive format is required for this load
+   WFA_DIRECTORY_RAW       = 0x0020, // Loading a physical disk directory
+   WFA_ALLOWHACKS          = 0x0040, // Allow application of wad directory hacks
+   WFA_INMEMORY            = 0x0080, // Archive is in memory
+   WFA_ISIWADFILE          = 0x0100, // Archive is the main IWAD file
+   WFA_DIRECTORY_ARCHIVE   = 0x0200, // Archive is a directory compressible as PKE
 };
 
 //
@@ -277,15 +278,17 @@ protected:
    void initResources();
    void addInfoPtr(lumpinfo_t *infoptr);
    void coalesceMarkedResources();
-   void incrementSource(openwad_t &openData);
-   void handleOpenError(openwad_t &openData, wfileadd_t &addInfo,
+   void incrementSource(const openwad_t &openData);
+   void handleOpenError(openwad_t &openData, const wfileadd_t &addInfo,
                         const char *filename);
-   openwad_t openFile(wfileadd_t &addInfo);
+   openwad_t openFile(const wfileadd_t &addInfo);
    lumpinfo_t *reAllocLumpInfo(int numnew, int startlump);
    bool addSingleFile(openwad_t &openData, wfileadd_t &addInfo, int startlump);
    bool addMemoryWad(openwad_t &openData, wfileadd_t &addInfo, int startlump);
    bool addWadFile(openwad_t &openData, wfileadd_t &addInfo, int startlump);
    bool addZipFile(openwad_t &openData, wfileadd_t &addInfo, int startlump);
+   bool addDirectoryAsArchive(openwad_t &openData, wfileadd_t &addInfo,
+                              int startlump);
    bool addFile(wfileadd_t &addInfo);
    void freeDirectoryLumps();  // haleyjd 06/27/09
    void freeDirectoryAllocs(); // haleyjd 06/06/10

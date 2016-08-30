@@ -787,6 +787,7 @@ static void P_ZMovement(Mobj* mo)
    //          scope
    bool correct_lost_soul_bounce;
    bool moving_down;
+   fixed_t initial_mo_z = mo->z;
 
    if(demo_compatibility) // v1.9 demos
       correct_lost_soul_bounce = ((GameModeInfo->flags & GIF_LOSTSOULBOUNCE) != 0);
@@ -970,7 +971,7 @@ floater:
 
       mo->z = mo->floorz;
 
-      if(moving_down)
+      if(moving_down && initial_mo_z != mo->floorz)
          E_HitFloor(mo);
 
       /* cph 2001/05/26 -
@@ -1048,8 +1049,9 @@ void P_NightmareRespawn(Mobj* mobj)
    mapthing_t*  mthing;
    bool         check; // haleyjd 11/11/04
 
-   x = mobj->spawnpoint.x << FRACBITS;
-   y = mobj->spawnpoint.y << FRACBITS;
+   // ioanch 20151218: fixed point coordinates
+   x = mobj->spawnpoint.x;
+   y = mobj->spawnpoint.y;
 
    // haleyjd: stupid nightmare respawning bug fix
    //
@@ -1165,7 +1167,8 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
       // ioanch 20160109: link offset outside
       if(passheight < ldata->planez)
       {
-         EV_PortalTeleport(mobj, ldata);
+         EV_PortalTeleport(mobj, ldata->deltax, ldata->deltay, ldata->deltaz,
+                           ldata->fromid, ldata->toid);
          ret = true;
       }
    }
@@ -1187,7 +1190,8 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
       // ioanch 20160109: link offset outside
       if(passheight >= ldata->planez)
       {
-         EV_PortalTeleport(mobj, ldata);
+         EV_PortalTeleport(mobj, ldata->deltax, ldata->deltay, ldata->deltaz,
+                           ldata->fromid, ldata->toid);
          ret = true;
       }
    }
@@ -1218,6 +1222,22 @@ bool Mobj::shouldApplyTorque()
 
 // Mobj RTTI Proxy Type
 IMPLEMENT_THINKER_TYPE(Mobj)
+
+//
+// Routine to check mobj projection, from wherever the coordinates might change
+//
+inline static void P_checkMobjProjections(Mobj &mobj)
+{
+   if(gMapHasSectorPortals && (mobj.z != mobj.sprojlast.z ||
+                               mobj.x != mobj.sprojlast.x ||
+                               mobj.y != mobj.sprojlast.y))
+   {
+      R_CheckMobjProjections(&mobj);
+      mobj.sprojlast.x = mobj.x;
+      mobj.sprojlast.y = mobj.y;
+      mobj.sprojlast.z = mobj.z;
+   }
+}
 
 //
 // P_MobjThinker
@@ -1357,14 +1377,6 @@ void Mobj::Think()
 
 #ifdef R_LINKEDPORTALS
    P_CheckPortalTeleport(this);
-   if(gMapHasSectorPortals && (z != sprojlast.z || x != sprojlast.x ||
-                               y != sprojlast.y))
-   {
-      R_CheckMobjProjections(this);
-      sprojlast.x = x;
-      sprojlast.y = y;
-      sprojlast.z = z;
-   }
 #endif
 
    // haleyjd 11/06/05: handle crashstate here
@@ -1441,6 +1453,11 @@ void Mobj::Think()
             P_NightmareRespawn(this);
       }
    }
+
+   // Check mobj sprite projections before getting out
+   // FIXME: may be insufficient
+   if(!removed)
+      P_checkMobjProjections(*this);
 }
 
 //
@@ -1509,10 +1526,6 @@ void Mobj::serialize(SaveArchive &arc)
 
       arc << targetNum << tracerNum << enemyNum;
 
-      // ioanch 20160117: also save the touched portal line, if existent
-      int tmp = (touchedportalline ? static_cast<unsigned>(touchedportalline - ::lines) :
-         static_cast<unsigned>(-1));
-      arc << tmp;
    }
    else // Loading
    {
@@ -1560,21 +1573,6 @@ void Mobj::serialize(SaveArchive &arc)
 
       // Get the swizzled pointers
       arc << dsInfo->target << dsInfo->tracer << dsInfo->lastenemy;
-
-      // ioanch 20160117
-      int tmp;
-      arc << tmp;
-      if(tmp == -1)
-         touchedportalline = nullptr;
-      else if(tmp >= 0 && tmp < ::numlines)
-         touchedportalline = ::lines + tmp;
-      else
-      {
-         // warn the user
-         touchedportalline = nullptr;
-         C_Printf(FC_ERROR "Mobj::serialize WARNING: invalid touchedportalline "
-            "index %d", tmp);
-      }
    }
 }
 
@@ -1760,9 +1758,6 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    mobj->spriteproj = nullptr;
    // init with an "invalid" value
    mobj->sprojlast.x = mobj->sprojlast.y = mobj->sprojlast.z = D_MAXINT;
-
-   // ioanch 20160117: keep track of last touched line if needed
-   mobj->touchedportalline = nullptr;
 
    // set subsector and/or block links
   
@@ -1966,8 +1961,9 @@ void P_RespawnSpecials()
 
    mthing = &itemrespawnque[iquetail];
 
-   x = mthing->x << FRACBITS;
-   y = mthing->y << FRACBITS;
+   // ioanch 20151218: 32-bit coordinates
+   x = mthing->x;
+   y = mthing->y;
 
    // spawn a teleport fog at the new spot
    ss = R_PointInSubsector(x,y);
@@ -2013,8 +2009,9 @@ void P_SpawnPlayer(mapthing_t* mthing)
    if(p->playerstate == PST_REBORN)
       G_PlayerReborn(mthing->type - 1);
 
-   x    = mthing->x << FRACBITS;
-   y    = mthing->y << FRACBITS;
+   // ioanch 20151218: fixed point coordinates
+   x    = mthing->x;
+   y    = mthing->y;
    z    = ONFLOORZ;
    mobj = P_SpawnMobj(x, y, z, p->pclass->type);
 
@@ -2075,6 +2072,7 @@ void P_SpawnPlayer(mapthing_t* mthing)
 // sf: made to return Mobj* spawned
 //
 // haleyjd 03/03/07: rewritten again to use a unified mapthing_t type.
+// ioanch 20151218: UDMF skill support (extended options)
 //
 Mobj *P_SpawnMapThing(mapthing_t *mthing)
 {
@@ -2191,11 +2189,35 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
       return NULL;  // sf
 
    // killough 11/98: simplify
-   if(gameskill == sk_baby || gameskill == sk_easy ?
-      !(mthing->options & MTF_EASY) :
-      gameskill == sk_hard || gameskill == sk_nightmare ?
-      !(mthing->options & MTF_HARD) : !(mthing->options & MTF_NORMAL))
-      return NULL;  // sf
+   // IOANCH 20151214: UDMF skill update
+   switch(gameskill)
+   {
+   case sk_baby:
+      // If both flags are 0 or both are 1, then exit.
+      if(!!(mthing->extOptions & MTF_EX_BABY_TOGGLE) ==
+         !!(mthing->options & MTF_EASY))
+         return nullptr;
+      break;
+   case sk_easy:
+      if(!(mthing->options & MTF_EASY))
+         return nullptr;
+      break;
+   case sk_medium:
+      if(!(mthing->options & MTF_NORMAL))
+         return nullptr;
+      break;
+   case sk_hard:
+      if(!(mthing->options & MTF_HARD))
+         return nullptr;
+      break;
+   case sk_nightmare:
+      if(!!(mthing->extOptions & MTF_EX_NIGHTMARE_TOGGLE) == 
+         !!(mthing->options & MTF_HARD))
+         return nullptr;
+      break;
+   default:
+      break;
+   }
 
    // find which type to spawn
 
@@ -2233,8 +2255,10 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
       }
       else
       {
-         doom_printf(FC_ERROR "Unknown thing type %i at (%i, %i)",
-                     mthing->type, mthing->x, mthing->y);
+         // ioanch 20151218: fixed point coordinates
+         doom_printf(FC_ERROR "Unknown thing type %i at (%f, %f)",
+                     mthing->type, M_FixedToDouble(mthing->x), 
+                     M_FixedToDouble(mthing->y));
 
          // haleyjd 01/24/07: allow spawning unknowns to mark missing objects
          // at user's discretion, but not when recording/playing demos or in
@@ -2268,8 +2292,9 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
    // spawn it
 spawnit:
 
-   x = mthing->x << FRACBITS;
-   y = mthing->y << FRACBITS;
+   // ioanch 20151218: fixed point coordinates
+   x = mthing->x;
+   y = mthing->y;
 
    z = mobjinfo[i]->flags & MF_SPAWNCEILING ? ONCEILINGZ : ONFLOORZ;
 
@@ -2284,7 +2309,8 @@ spawnit:
    // haleyjd 10/03/05: Hexen-style z positioning
    if(mthing->height && (z == ONFLOORZ || z == ONCEILINGZ))
    {
-      fixed_t rheight = mthing->height << FRACBITS;
+      // ioanch 20151218: fixed point coordinates
+      fixed_t rheight = mthing->height;
 
       if(z == ONCEILINGZ)
          rheight = -rheight;
@@ -2678,9 +2704,16 @@ bool P_CheckMissileSpawn(Mobj* th)
    // move a little forward so an angle can
    // be computed if it immediately explodes
 
-   th->x += th->momx >> 1;
-   th->y += th->momy >> 1;
+   int newgroupid = th->groupid;
+   v2fixed_t pos = P_LinePortalCrossing(th->x, th->y, th->momx >> 1,
+                                        th->momy >> 1, &newgroupid);
+
+   // ioanch: this was already hacky as hell. We still need to adjust
+   // coordinates by portal, and group ID though.
+   th->x = pos.x;
+   th->y = pos.y;
    th->z += th->momz >> 1;
+   th->groupid = newgroupid;
 
    // killough 8/12/98: for non-missile objects (e.g. grenades)
    if(!(th->flags & MF_MISSILE) && demo_version >= 203)

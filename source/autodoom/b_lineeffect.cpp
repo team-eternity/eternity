@@ -1557,7 +1557,7 @@ static void B_collectGeneralizedTargetSectors(const line_t *line, bool noshoot,
    }
 
    int secnum = -1;
-   while ((secnum = P_FindSectorFromLineTag(line, secnum)) >= 0)
+   while ((secnum = P_FindSectorFromLineArg0(line, secnum)) >= 0)
    {
       if(isStair)
          B_insertStairs(&sectors[secnum], stairIgnoreTextures, set);
@@ -1784,7 +1784,7 @@ static void B_collectClassicTargetSectors(const line_t *line, const ev_action_t 
    }
 
    int secnum = -1;
-   while ((secnum = P_FindSectorFromLineTag(line, secnum)) >= 0)
+   while ((secnum = P_FindSectorFromLineArg0(line, secnum)) >= 0)
    {
       const sector_t *sector = sectors + secnum;
       if (stairset.count(action->action))

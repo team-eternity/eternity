@@ -326,8 +326,8 @@ SaveArchive &SaveArchive::operator << (line_t *&ln)
 // Serialize a spectransfer_t structure (contained in many thinkers)
 SaveArchive &SaveArchive::operator << (spectransfer_t &st)
 {
-   *this << st.damage << st.damageflags << st.damagemask << st.damagemod
-         << st.flags << st.newspecial;
+   *this << st.damage << st.damageflags << st.leakiness << st.damagemask
+         << st.damagemod << st.flags << st.newspecial;
    
    return *this;
 }
@@ -335,7 +335,8 @@ SaveArchive &SaveArchive::operator << (spectransfer_t &st)
 // Serialize a mapthing_t structure
 SaveArchive &SaveArchive::operator << (mapthing_t &mt)
 {
-   *this << mt.angle << mt.height << mt.next << mt.options
+   // ioanch 20151218: add extended options
+   *this << mt.angle << mt.height << mt.next << mt.options << mt.extOptions
          << mt.recordnum << mt.special << mt.tid << mt.type
          << mt.x << mt.y;
 
@@ -515,6 +516,7 @@ static void P_ArchivePlayers(SaveArchive &arc)
             p.usedown     = false; // sf
             p.cmd.buttons = 0;     // sf
             p.prevviewz   = p.viewz;
+            p.prevpitch   = p.pitch;
          }
       }
    }
@@ -553,9 +555,11 @@ static void P_ArchiveWorld(SaveArchive &arc)
           << sec->friction << sec->movefactor  
           << sec->topmap << sec->midmap << sec->bottommap
           << sec->flags << sec->intflags 
-          << sec->damage << sec->damageflags << sec->damagemask << sec->damagemod
+          << sec->damage << sec->damageflags << sec->leakiness << sec->damagemask
+          << sec->damagemod
           << sec->floorpic << sec->ceilingpic
-          << sec->lightlevel << sec->oldlightlevel 
+          << sec->lightlevel << sec->oldlightlevel
+          << sec->floorlightdelta << sec->ceilinglightdelta
           << sec->special << sec->tag; // needed?   yes -- transfer types -- killough
 
       if(arc.isLoading())
@@ -577,7 +581,8 @@ static void P_ArchiveWorld(SaveArchive &arc)
    {
       int j;
 
-      arc << li->flags << li->special << li->tag;
+      arc << li->flags << li->special << li->tag
+         << li->args[0] << li->args[1] << li->args[2] << li->args[3] << li->args[4];
 
       for(j = 0; j < 2; j++)
       {

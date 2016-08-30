@@ -1242,12 +1242,12 @@ void A_BossDeath(actionargs_t *actionargs)
          case BSPEC_E4M8:
          case BSPEC_MAP07_1:
             // lower floors tagged 666 to lowest neighbor
-            junk.tag = 666;
+            junk.args[0] = junk.tag = 666;
             EV_DoFloor(&junk, lowerFloorToLowest);
             break;
          case BSPEC_MAP07_2:
             // raise floors tagged 667 by shortest lower texture
-            junk.tag = 667;
+            junk.args[0] = junk.tag = 667;
             EV_DoFloor(&junk, raiseToTexture);
             break;
          case BSPEC_E2M8:
@@ -1257,7 +1257,7 @@ void A_BossDeath(actionargs_t *actionargs)
             return;
          case BSPEC_E4M6:
             // open sectors tagged 666 as blazing doors
-            junk.tag = 666;
+            junk.args[0] = junk.tag = 666;
             EV_DoDoor(&junk, blazeOpen);
             break;
          default:
@@ -1293,7 +1293,7 @@ void A_KeenDie(actionargs_t *actionargs)
       }
    }
 
-   junk.tag = 666;
+   junk.args[0] = junk.tag = 666;
    EV_DoDoor(&junk, doorOpen);
 }
 

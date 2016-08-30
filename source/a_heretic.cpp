@@ -833,7 +833,7 @@ void A_HticBossDeath(actionargs_t *actionargs)
             
             // fall through
          case BSPEC_E1M8:
-            junk.tag = 666;
+            junk.tag = junk.args[0] = 666;
             EV_DoFloor(&junk, lowerFloor);
             break;
          } // end switch

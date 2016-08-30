@@ -864,8 +864,9 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr)
       const line_t &l = *portalrender.curwindow->line;
 
       // sprite position, shifted by offset
-      v2fixed_t pv = {spritepos.x - viewx + portalrender.curwindow->vx,
-                      spritepos.y - viewy + portalrender.curwindow->vy};
+      // do NOT use interpolated coordinates for this check!
+      v2fixed_t pv = {thing->x - viewx + portalrender.curwindow->vx,
+                      thing->y - viewy + portalrender.curwindow->vy};
 
       if(P_PointOnLineSide(pv.x, pv.y, &l) == 0)
       {

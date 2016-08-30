@@ -276,7 +276,7 @@ const PathFinder::TeleItem* PathFinder::checkTeleportation(const BNeigh& neigh)
     if (!m_teleCache.count(line))
     {
         // CODE LARGELY COPIED FROM EV_Teleport
-        for (i = -1; (i = P_FindSectorFromLineTag(line, i)) >= 0;)
+        for (i = -1; (i = P_FindSectorFromLineArg0(line, i)) >= 0;)
         {
             for (thinker = thinkercap.next; thinker != &thinkercap;
                  thinker = thinker->next)

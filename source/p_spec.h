@@ -39,6 +39,7 @@ struct player_t;
 class  SaveArchive;
 struct sector_t;
 struct side_t;
+class  UDMFSetupSettings;
 
 //      Define values for map objects
 #define MO_TELEPORTMAN  14
@@ -95,6 +96,10 @@ struct side_t;
 #define KILLSOUND_SHIFT 10
 #define MOVESOUND_MASK  0x800
 #define MOVESOUND_SHIFT 11
+
+#define UDMF_SEC_MASK   0xff  // 0-255 are the UDMF non-Boom gen specials
+// right-shift from UDMF generalized namespace to Boom generalized namespace
+#define UDMF_BOOM_SHIFT 3
 
 // haleyjd 12/28/08: mask used to get generalized special bits that are now
 // part of the sector flags
@@ -259,7 +264,8 @@ typedef enum
   
    FbyParam, // haleyjd 05/07/04: parameterized extensions
    FtoAbs,
-   FInst
+   FInst,
+   FtoLnCInclusive
 } floortarget_e;
 
 // define names for the Changer Type field of the general floor
@@ -412,7 +418,12 @@ typedef enum
    paramDownByValueWaitUpStay,
    paramUpWaitDownStay,
    paramUpByValueWaitDownStay,
-   paramPerpetualRaise
+   paramPerpetualRaise,
+   paramUpByValueStayAndChange,
+   paramRaiseToNearestAndChange,
+   paramToggleCeiling,
+   paramDownWaitUpStayLip,
+   paramPerpetualRaiseLip
 } paramplattype_e;
 
 // p_doors
@@ -563,7 +574,8 @@ typedef enum
 {
    elevateUp,
    elevateDown,
-   elevateCurrent
+   elevateCurrent,
+   elevateByValue // for Hexen additions
 } elevator_e;
 
 // haleyjd 01/09/07: p_lights
@@ -830,6 +842,15 @@ public:
       in_stasis
    } plat_e;
 
+   // This enum is for determining what behaviour a raiseToNearestAndChange
+   // platform uses, as Plat_RaiseAndStayTx0 requires this as a parameter.
+   typedef enum
+   {
+      PRNC_DEFAULT,
+      PRNC_DOOM,
+      PRNC_HERETIC
+   } rnctype_e;
+
 protected:
    void Think();
 
@@ -859,7 +880,8 @@ public:
    int crush;
    int tag;
    int type;
-   struct platlist_t *list;   // killough
+   rnctype_e rnctype;
+   struct platlist_t *list;   // killough   
 };
 
 // p_ceilng
@@ -940,6 +962,7 @@ struct spectransfer_t
    int damagemask;
    int damagemod;
    unsigned int damageflags;
+   int leakiness;
 };
 
 // p_doors
@@ -1007,6 +1030,8 @@ enum
    CDF_HAVETRIGGERTYPE = 0x00000001, // has BOOM-style gen action trigger
    CDF_HAVESPAC        = 0x00000002, // has Hexen-style spac
    CDF_PARAMSILENT     = 0x00000004, // ioanch 20160314: parameterized silent
+   CDF_HACKFORDESTF    = 0x00000008, // ioanch: hack to emulate fake-crush Doom
+   CDF_CHANGEONSTART   = 0x00000010, // ioanch: change sector properties on start
 };
 
 // haleyjd 10/05/05: extended data struct for parameterized ceilings
@@ -1027,6 +1052,7 @@ typedef struct ceilingdata_s
    // parameterized values
    fixed_t height_value;
    fixed_t speed_value;
+   fixed_t ceiling_gap;
 } ceilingdata_t;
 
 // ioanch 20160305
@@ -1112,6 +1138,7 @@ typedef struct floordata_s
    fixed_t speed_value;
    int     adjust;        // valid IFF flags & FDF_HACKFORDESTHNF
    int     force_adjust;  // valid IFF flags & FDF_HACKFORDESTHNF
+   bool    changeOnStart; // change texture and type immediately, not on landing
 } floordata_t;
 
 // haleyjd 01/21/13: stairdata flags
@@ -1322,10 +1349,10 @@ sector_t *P_FindModelFloorSector(fixed_t floordestheight, int secnum);
 sector_t *P_FindModelCeilingSector(fixed_t ceildestheight, int secnum);
 //jff 02/04/98
 
-int P_FindSectorFromLineTag(const line_t *line, int start); // killough 4/17/98
+int P_FindSectorFromLineArg0(const line_t *line, int start); // killough 4/17/98
 
 int P_FindLineFromTag(int tag, int start);
-int P_FindLineFromLineTag(const line_t *line, int start);
+int P_FindLineFromLineArg0(const line_t *line, int start);
 
 int P_FindSectorFromTag(const int tag, int start);        // sf
 
@@ -1387,17 +1414,20 @@ int EV_ParamSilentTeleport(int tid, const line_t *line, int tag, int side,
 
 // p_floor
 
-int EV_DoElevator(const line_t *line, elevator_e type);
+int EV_DoElevator(const line_t *line, int tag, elevator_e type, fixed_t speed,
+                  fixed_t amount, bool isParam);
 
 int EV_BuildStairs(const line_t *line, stair_e type);
 
 int EV_DoFloor(const line_t *line, floor_e floortype);
 
+int EV_FloorCrushStop(const line_t *line, int tag);
+
 // p_ceilng
 
 int EV_DoCeiling(const line_t *line, ceiling_e type);
 
-int EV_CeilingCrushStop(const line_t *line, int tag);
+int EV_CeilingCrushStop(int tag, bool removeThinker);
 
 void P_ChangeCeilingTex(const char *name, int tag);
 
@@ -1413,11 +1443,12 @@ void EV_CloseDoor(int sectag, int speed);
 
 // p_lights
 
-int EV_StartLightStrobing(const line_t *line);
+int EV_StartLightStrobing(const line_t *line, int tag, int darkTime,
+                          int brightTime, bool isParam);
 
-int EV_TurnTagLightsOff(const line_t *line);
+int EV_TurnTagLightsOff(const line_t *line, int tag, bool isParam);
 
-int EV_LightTurnOn(const line_t *line, int bright);
+int EV_LightTurnOn(const line_t *line, int tag, int bright, bool paramSpecial);
 
 int EV_LightTurnOnPartway(int tag, fixed_t level);  // killough 10/10/98
 
@@ -1438,7 +1469,7 @@ int EV_FlickerLight(const line_t *, int tag, int maxval, int minval);
 
 // p_floor
 
-int EV_DoChange(const line_t *line, change_e changetype);
+int EV_DoChange(const line_t *line, int tag, change_e changetype, bool isParam);
 
 // ioanch: now it's parameterized
 int EV_DoParamDonut(const line_t *line, int tag, bool havespac,
@@ -1458,8 +1489,7 @@ void P_ChangeFloorTex(const char *name, int tag);
 
 bool EV_DoPlat(const line_t *line, plattype_e type, int amount);
 bool EV_DoParamPlat(const line_t *line, const int *args, paramplattype_e type);
-bool EV_StopPlatByTag(int tag);
-bool EV_StopPlat(const line_t *line);
+bool EV_StopPlatByTag(int tag, bool removeThinker);
 
 // p_genlin
 
@@ -1468,6 +1498,9 @@ int EV_DoGenFloor(const line_t *line);
 
 int EV_DoParamCeiling(const line_t *line, int tag, const ceilingdata_t *cd);
 int EV_DoGenCeiling(const line_t *line);
+
+int EV_DoFloorAndCeiling(const line_t *line, int tag, const floordata_t &fd,
+                         const ceilingdata_t &cd);
 
 int EV_DoGenLift(const line_t *line);
 
@@ -1497,6 +1530,8 @@ int EV_ThrustThing(Mobj *actor, int side, int byteangle, int speed, int tid);
 int EV_ThrustThingZ(Mobj *actor, int tid, int speed, bool upDown, bool setAdd);
 int EV_DamageThing(Mobj *actor, int damage, int mod, int tid);
 int EV_ThingDestroy(int tid, int sectortag);
+int EV_HealThing(Mobj *actor, int amount, int maxhealth);
+int EV_ThingRemove(int tid);
 
 
 ////////////////////////////////////////////////////////////////
@@ -1511,7 +1546,7 @@ void P_InitPicAnims();
 void P_InitSwitchList();
 
 // at map load
-void P_SpawnSpecials();
+void P_SpawnSpecials(UDMFSetupSettings &setupSettings);
 
 // 
 // P_SpawnDeferredSpecials
@@ -1545,7 +1580,8 @@ void P_SpawnFireFlicker(sector_t *sector);
 
 void P_SpawnLightFlash(sector_t *sector);
 
-void P_SpawnStrobeFlash(sector_t *sector, int fastOrSlow, int inSync);
+void P_SpawnStrobeFlash(sector_t *sector, int darkTime, int brightTime,
+                        int inSync);
 
 void P_SpawnPSXStrobeFlash(sector_t *sector, int speed, bool inSync);
 
@@ -1592,6 +1628,8 @@ void P_AttachSectors(const line_t *line, int staticFn);
 
 bool P_Scroll3DSides(const sector_t *sector, bool ceiling, fixed_t delta,
                      int crush);
+
+void P_CalcFriction(int length, int &friction, int &movefactor); // ioanch
 
 line_t *P_FindLine(int tag, int *searchPosition);
 

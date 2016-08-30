@@ -114,7 +114,17 @@ void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
    wadfiles[numwadfiles].requiredFmt  = -1;
    
    // haleyjd 10/27/12: setup flags
-   flags = WFA_ALLOWINEXACTFN | WFA_OPENFAILFATAL | WFA_ALLOWHACKS;
+
+   // ioanch: check if it's a directory. Do not allow "subfiles" or special
+   // addflags
+   struct stat sbuf;
+   if(addflags == DAF_NONE && !fp &&
+      !stat(file, &sbuf) && S_ISDIR(sbuf.st_mode))
+   {
+      flags = WFA_DIRECTORY_ARCHIVE | WFA_OPENFAILFATAL;
+   }
+   else
+      flags = WFA_ALLOWINEXACTFN | WFA_OPENFAILFATAL | WFA_ALLOWHACKS;
 
    // adding a subfile?
    if(fp)
@@ -159,7 +169,7 @@ void D_AddDirectory(const char *dir)
    wadfiles[numwadfiles].baseoffset   = 0;
 
    // haleyjd 10/27/12: flags
-   wadfiles[numwadfiles].flags = WFA_OPENFAILFATAL | WFA_DIRECTORY;
+   wadfiles[numwadfiles].flags = WFA_OPENFAILFATAL | WFA_DIRECTORY_RAW;
 
    wadfiles[numwadfiles+1].filename = NULL;
 

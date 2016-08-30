@@ -39,6 +39,7 @@
 #include "hu_stuff.h"
 #include "m_random.h"
 #include "p_chase.h"
+#include "p_info.h"
 #include "p_map.h"
 #include "p_map3d.h"
 #include "p_maputl.h"
@@ -609,9 +610,10 @@ void P_PlayerThink(player_t *player)
 
    // haleyjd 04/03/05: new yshear code
    if(!allowmlook)
-      player->pitch = 0;
+      player->prevpitch = player->pitch = 0;
    else
    {
+      player->prevpitch = player->pitch;
       int look = cmd->look;
 
       if(look)
@@ -622,10 +624,10 @@ void P_PlayerThink(player_t *player)
          else
          {
             player->pitch -= look << 16;
-            if(player->pitch < -ANGLE_1*32)
-               player->pitch = -ANGLE_1*32;
-            else if(player->pitch > ANGLE_1*32)
-               player->pitch = ANGLE_1*32;
+            if(player->pitch < -ANGLE_1*MAXPITCHUP)
+               player->pitch = -ANGLE_1*MAXPITCHUP;
+            else if(player->pitch > ANGLE_1*MAXPITCHDOWN)
+               player->pitch = ANGLE_1*MAXPITCHDOWN;
          }
       }
    }
@@ -646,7 +648,7 @@ void P_PlayerThink(player_t *player)
 
       // Handle actions   -- joek 12/22/07
       
-      if(cmd->actions & AC_JUMP)
+      if(cmd->actions & AC_JUMP && !LevelInfo.disableJump)
       {
          if((player->mo->z == player->mo->floorz || 
              (player->mo->intflags & MIF_ONMOBJ)) && !player->jumptime)

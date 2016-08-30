@@ -334,7 +334,7 @@ int EV_DoDoor(const line_t *line, vldoor_e type)
    VerticalDoorThinker *door;
 
    // open all doors with the same tag as the activating line
-   while((secnum = P_FindSectorFromLineTag(line, secnum)) >= 0)
+   while((secnum = P_FindSectorFromLineArg0(line, secnum)) >= 0)
    {
       sec = &sectors[secnum];
       // if the ceiling already moving, don't start the door action
@@ -513,7 +513,7 @@ int EV_VerticalDoor(line_t *line, const Mobj *thing, int lockID)
    door->topwait   = VDOORWAIT;
 
    // killough 10/98: use gradual lighting changes if nonzero tag given
-   door->lighttag = comp[comp_doorlight] ? 0 : line->tag; // killough 10/98
+   door->lighttag = comp[comp_doorlight] ? 0 : line->args[0]; // killough 10/98
    
    // set the type of door from the activating linedef type
    switch(line->special)

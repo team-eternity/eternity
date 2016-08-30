@@ -24,6 +24,7 @@
 //
 //-----------------------------------------------------------------------------
 
+#include <memory>
 #include "z_zone.h"
 
 #include "a_small.h"
@@ -44,6 +45,7 @@
 #include "e_exdata.h" // haleyjd: ExtraData!
 #include "e_reverbs.h"
 #include "e_ttypes.h"
+#include "e_udmf.h"  // IOANCH 20151206: UDMF
 #include "ev_specials.h"
 #include "g_game.h"
 #include "hu_frags.h"
@@ -84,6 +86,20 @@
 
 extern const char *level_error;
 extern void R_DynaSegOffset(seg_t *lseg, line_t *line, int side);
+
+//
+// ZNodeType
+//
+// IOANCH: ZDoom node type enum
+//
+enum ZNodeType
+{
+   ZNodeType_Invalid,
+   ZNodeType_Normal,
+   ZNodeType_GL,
+   ZNodeType_GL2,
+   ZNodeType_GL3,
+};
 
 //
 // MAP related Lookup tables.
@@ -547,8 +563,9 @@ static void P_LoadSubsectors_V4(int lump)
 // P_InitSector
 //
 // Shared initialization code for sectors across all map formats.
+// IOANCH 20151212: made extern
 //
-static void P_InitSector(sector_t *ss)
+void P_InitSector(sector_t *ss)
 {
    // haleyjd 09/24/06: determine what the default sound sequence is
    int defaultSndSeq = LevelInfo.noAutoSequences ? 0 : -1;
@@ -566,8 +583,22 @@ static void P_InitSector(sector_t *ss)
 
    // killough 4/4/98: colormaps:
    // haleyjd 03/04/07: modifications for per-sector colormap logic
-   ss->bottommap = ss->midmap = ss->topmap =
-      ((ss->intflags & SIF_SKY) ? global_fog_index : global_cmap_index);
+   // MaxW  2016/08/06: Modified to not set colormap if already set (UDMF).
+   int tempcolmap = ((ss->intflags & SIF_SKY) ? global_fog_index : global_cmap_index);
+   if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY)
+   {
+      if(ss->bottommap < 0)
+         ss->bottommap = tempcolmap;
+      if(ss->midmap < 0)
+         ss->midmap = tempcolmap;
+      if(ss->topmap < 0)
+         ss->topmap = tempcolmap;
+   }
+   else
+      ss->bottommap = ss->midmap = ss->topmap = tempcolmap;
+
+   //ss->bottommap = ss->midmap = ss->topmap =
+   //   ((ss->intflags & SIF_SKY) ? global_fog_index : global_cmap_index);
 
    // SoM 9/19/02: Initialize the attached sector list for 3dsides
    ss->c_attached = ss->f_attached = nullptr;
@@ -595,9 +626,6 @@ static void P_InitSector(sector_t *ss)
    // CPP_FIXME: temporary placement construction for sound origins
    ::new (&ss->soundorg)  PointThinker;
    ::new (&ss->csoundorg) PointThinker;
-
-   // ioanch: 20160123: init portalbox=false
-   ss->portalbox = false;
 }
 
 #define DOOM_SECTOR_SIZE 26
@@ -796,6 +824,25 @@ static void P_CalcNodeCoefficients(node_t *node, fnode_t *fnode)
 }
 
 //
+// P_CalcNodeCoefficients2
+//
+// IOANCH 20151217: high-resolution nodes (from XGL3 ZDBSP nodes)
+//
+static void P_CalcNodeCoefficients2(const node_t &node, fnode_t &fnode)
+{
+   fnode.fx = M_FixedToDouble(node.x);
+   fnode.fy = M_FixedToDouble(node.y);
+   fnode.fdx = M_FixedToDouble(node.dx);
+   fnode.fdy = M_FixedToDouble(node.dy);
+   
+   // IOANCH: same as code above
+   fnode.a   = -fnode.fdy;
+   fnode.b   =  fnode.fdx;
+   fnode.c   =  fnode.fdy * fnode.fx - fnode.fdx * fnode.fy;
+   fnode.len = sqrt(fnode.fdx * fnode.fdx + fnode.fdy * fnode.fdy);
+}
+
+//
 // P_LoadNodes
 //
 // killough 5/3/98: reformatted, cleaned up
@@ -953,27 +1000,65 @@ static bool P_CheckForDeePBSPv4Nodes(int lumpnum)
 // P_CheckForZDoomUncompressedNodes
 //
 // http://zdoom.org/wiki/ZDBSP#Compressed_Nodes
+// IOANCH 20151213: modified to use the NODES lump num and return the signature
+// Also added actual node lump, if it's SSECTORS in a classic map
 //
-static bool P_CheckForZDoomUncompressedNodes(int lumpnum)
+static ZNodeType P_CheckForZDoomUncompressedNodes(int nodelumpnum, 
+                                                  int *actualNodeLump, 
+                                                  bool udmf)
 {
    const void *data;
-   bool result = false;
+   
+   *actualNodeLump = nodelumpnum;
+   bool glNodesFallback = false;
 
    // haleyjd: be sure something is actually there
    // ioanch: actually check for 4 bytes so we can memcmp for "XNOD"
-   if(setupwad->lumpLength(lumpnum + ML_NODES) < 4)
-      return result;
-
-   // haleyjd: load at PU_CACHE and it may stick around for later.
-   data = setupwad->cacheLumpNum(lumpnum + ML_NODES, PU_CACHE);
-
-   if(!memcmp(data, "XNOD", 4))
+   if(setupwad->lumpLength(nodelumpnum) < 4)
    {
-      C_Printf("ZDoom uncompressed normal nodes detected\n");
-      result = true;
+      if(!udmf)
+      {
+         *actualNodeLump = nodelumpnum - ML_NODES + ML_SSECTORS;
+         glNodesFallback = true;
+         if(setupwad->lumpLength(*actualNodeLump) < 4)
+            return ZNodeType_Invalid;
+      }
+      else
+         return ZNodeType_Invalid;
    }
 
-   return result;
+   // haleyjd: load at PU_CACHE and it may stick around for later.
+   data = setupwad->cacheLumpNum(*actualNodeLump, PU_CACHE);
+
+   if(!udmf && !glNodesFallback && !memcmp(data, "XNOD", 4))
+   {
+      // only classic maps with NODES having XNOD
+      C_Printf("ZDoom uncompressed normal nodes detected\n");
+      return ZNodeType_Normal;
+   }
+
+
+   if(glNodesFallback || udmf)
+   {
+      if(!memcmp(data, "XGLN", 4))
+      {
+         C_Printf("ZDoom uncompressed GL nodes version 1 detected\n");
+         return ZNodeType_GL;
+      }
+      if(!memcmp(data, "XGL2", 4))
+      {
+         C_Printf("ZDoom uncompressed GL nodes version 2 detected\n");
+         return ZNodeType_GL2;
+      }
+      if(!memcmp(data, "XGL3", 4))
+      {
+         C_Printf("ZDoom uncompressed GL nodes version 3 detected\n");
+         return ZNodeType_GL3;
+      }
+   }
+
+
+   return ZNodeType_Invalid;
 }
 
 //
@@ -989,19 +1074,39 @@ static void CheckZNodesOverflowFN(int *size, int count)
       level_error = "Overflow in ZDoom XNOD lump";
 }
 
+// IOANCH 20151217: updated for XGLN and XGL2
 typedef struct mapseg_znod_s
 {
-   uint32_t v1, v2;
-   uint16_t linedef;
+   uint32_t v1;
+   union // IOANCH
+   {
+      uint32_t v2;
+      uint32_t partner; // XGLN, XGL2
+   };
+   uint32_t linedef; // IOANCH: use 32-bit instead of 16-bit   
    byte     side;
 } mapseg_znod_t;
 
+// IOANCH: modified to support XGL3 nodes
 typedef struct mapnode_znod_s
 {
-  int16_t x;  // Partition line from (x,y) to x+dx,y+dy)
-  int16_t y;
-  int16_t dx;
-  int16_t dy;
+  union
+  {
+     struct
+     {
+        int16_t x;  // Partition line from (x,y) to x+dx,y+dy)
+        int16_t y;
+        int16_t dx;
+        int16_t dy;             
+     };
+     struct
+     {
+        int32_t x32;  // Partition line from (x,y) to x+dx,y+dy)
+        int32_t y32;
+        int32_t dx32;
+        int32_t dy32;             
+     };
+  };
   // Bounding box for each child, clip against view frustum.
   int16_t bbox[2][4];
   // If NF_SUBSECTOR its a subsector, else it's a node of another subtree.
@@ -1012,27 +1117,78 @@ typedef struct mapnode_znod_s
 // P_LoadZSegs
 //
 // Loads segs from ZDoom uncompressed nodes
+// IOANCH 20151217: use signature
 //
-static void P_LoadZSegs(byte *data)
+static void P_LoadZSegs(byte *data, ZNodeType signature)
 {
+   // IOANCH TODO: read the segs according to signature
    int i;
+   
+   subsector_t *ss = ::subsectors; // IOANCH: for GL znodes
+   int actualSegIndex = 0;
+   seg_t *prevSegToSet = nullptr;
+   vertex_t *firstV1 = nullptr;   // IOANCH: first vertex of first seg
 
-   for(i = 0; i < numsegs; i++)
+   for(i = 0; i < numsegs; i++, ++actualSegIndex)
    {
       line_t *ldef;
       uint32_t v1, v2;
       uint32_t linedef;
       byte side;
-      seg_t *li = segs+i;
+      seg_t *li = segs+actualSegIndex;
       mapseg_znod_t ml;
+      
+      // IOANCH: shift the seg back
+      //::segs[actualSegIndex] = ::segs[i];
+      
+      // IOANCH: increment current subsector if applicable
+      if(signature != ZNodeType_Normal)
+      {
+         if(actualSegIndex >= ss->firstline + ss->numlines)
+         {
+            ++ss;
+            ss->firstline = actualSegIndex;
+            firstV1 = nullptr;
+         }
+      }
 
       // haleyjd: FIXME - see no verification of vertex indices
       v1 = ml.v1 = GetBinaryUDWord(&data);
-      v2 = ml.v2 = GetBinaryUDWord(&data);
-      ml.linedef = GetBinaryUWord(&data);
+      if(signature == ZNodeType_Normal)   // IOANCH: only set directly for nonGL
+         v2 = ml.v2 = GetBinaryUDWord(&data);
+      else
+      {
+         if(actualSegIndex == ss->firstline && !firstV1) // only set it once
+            firstV1 = ::vertexes + v1;
+         else if(prevSegToSet)
+         {
+            // set the second vertex of previous
+            prevSegToSet->v2 = ::vertexes + v1;   
+            P_CalcSegLength(prevSegToSet);
+            prevSegToSet = nullptr;   // consume it
+         }
+         
+         ml.partner = GetBinaryUDWord(&data);   // IOANCH: not used in EE
+      }
+      
+      // IOANCH
+      if(signature == ZNodeType_Normal || signature == ZNodeType_GL)
+         ml.linedef = GetBinaryUWord(&data);
+      else
+         ml.linedef = GetBinaryUDWord(&data);
       ml.side    = *data++;
+      
+      if((signature == ZNodeType_GL && ml.linedef == 0xffff)
+         || ((signature == ZNodeType_GL2 || signature == ZNodeType_GL3) 
+             && ml.linedef == 0xffffffff))
+      {
+         --actualSegIndex;
+         --ss->numlines;
+         continue;   // skip strictly GL nodes
+      }
 
-      linedef = SafeRealUintIndex(ml.linedef, numlines, "seg", i, "line");
+      linedef = SafeRealUintIndex(ml.linedef, numlines, "seg", actualSegIndex, 
+                                  "line");
 
       ldef = &lines[linedef];
       li->linedef = ldef;
@@ -1052,11 +1208,29 @@ static void P_LoadZSegs(byte *data)
          li->backsector = NULL;
 
       li->v1 = &vertexes[v1];
-      li->v2 = &vertexes[v2];
+      if(signature == ZNodeType_Normal)
+         li->v2 = &vertexes[v2];
+      else
+      {
+         if(actualSegIndex + 1 == ss->firstline + ss->numlines)
+         {
+            li->v2 = firstV1;
+            P_CalcSegLength(li);
+            firstV1 = nullptr;
+         }
+         else
+         {
+            prevSegToSet = li;
+         }
+      }
 
-      P_CalcSegLength(li);
+      if(li->v2)  // IOANCH: only count if v2 is available.
+         P_CalcSegLength(li);
       R_DynaSegOffset(li, ldef, side);
    }
+   
+   // IOANCH: update the seg count
+   ::numsegs = actualSegIndex;
 }
 
 #define CheckZNodesOverflow(size, count) \
@@ -1071,10 +1245,11 @@ static void P_LoadZSegs(byte *data)
 // P_LoadZNodes
 //
 // Loads ZDoom uncompressed nodes.
+// IOANCH 20151217: check signature and use different gl nodes if needed
 // ioanch: 20151221: fixed some memory leaks. Also moved the bounds checks 
 // before attempting to allocate memory, so the app won't terminate.
 //
-static void P_LoadZNodes(int lump)
+static void P_LoadZNodes(int lump, ZNodeType signature)
 {
    byte *data, *lumpptr;
    unsigned int i;
@@ -1178,12 +1353,19 @@ static void P_LoadZNodes(int lump)
 
    numsegs = (int)numSegs;
 
-   CheckZNodesOverflow(len, numsegs * 11);
+   // IOANCH 20151217: set reading size
+   int totalSegSize;
+   if(signature == ZNodeType_Normal || signature == ZNodeType_GL)
+      totalSegSize = numsegs * 11; // haleyjd: hardcoded original structure size
+   else
+      totalSegSize = numsegs * 13; // IOANCH: DWORD linedef
+   
+   CheckZNodesOverflow(len, totalSegSize);
    segs = estructalloctag(seg_t, numsegs, PU_LEVEL);
-
-   P_LoadZSegs(data);
-   data += numsegs * 11; // haleyjd: hardcoded original structure size
-
+   P_LoadZSegs(data, signature);
+   
+   data += totalSegSize;
+   
    // Read nodes
    CheckZNodesOverflow(len, sizeof(numNodes));
    numNodes = GetBinaryUDWord(&data);
@@ -1199,10 +1381,20 @@ static void P_LoadZNodes(int lump)
       node_t *no = nodes + i;
       mapnode_znod_t mn;
 
-      mn.x  = GetBinaryWord(&data);
-      mn.y  = GetBinaryWord(&data);
-      mn.dx = GetBinaryWord(&data);
-      mn.dy = GetBinaryWord(&data);
+      if(signature == ZNodeType_GL3)
+      {
+         mn.x32  = GetBinaryDWord(&data);
+         mn.y32  = GetBinaryDWord(&data);
+         mn.dx32 = GetBinaryDWord(&data);
+         mn.dy32 = GetBinaryDWord(&data);
+      }
+      else
+      {
+         mn.x  = GetBinaryWord(&data);
+         mn.y  = GetBinaryWord(&data);
+         mn.dx = GetBinaryWord(&data);
+         mn.dy = GetBinaryWord(&data);
+      }
 
       for(j = 0; j < 2; j++)
          for(k = 0; k < 4; k++)
@@ -1211,17 +1403,29 @@ static void P_LoadZNodes(int lump)
       for(j = 0; j < 2; j++)
          mn.children[j] = GetBinaryDWord(&data);
 
-      no->x  = mn.x; 
-      no->y  = mn.y; 
-      no->dx = mn.dx;
-      no->dy = mn.dy;
+      if(signature == ZNodeType_GL3)
+      {
+         no->x = mn.x32;
+         no->y = mn.y32;
+         no->dx = mn.dx32;
+         no->dy = mn.dy32;
+         
+         P_CalcNodeCoefficients2(*no, fnodes[i]);
+      }
+      else
+      {
+         no->x  = mn.x; 
+         no->y  = mn.y; 
+         no->dx = mn.dx;
+         no->dy = mn.dy;
 
-      P_CalcNodeCoefficients(no, &fnodes[i]);
+         P_CalcNodeCoefficients(no, &fnodes[i]);
 
-      no->x  <<= FRACBITS;
-      no->y  <<= FRACBITS;
-      no->dx <<= FRACBITS;
-      no->dy <<= FRACBITS;
+         no->x  <<= FRACBITS;
+         no->y  <<= FRACBITS;
+         no->dx <<= FRACBITS;
+         no->dy <<= FRACBITS;
+      }
 
       for(j = 0; j < 2; j++)
       {
@@ -1240,9 +1444,37 @@ static void P_LoadZNodes(int lump)
 //
 //=============================================================================
 
-static void P_ConvertDoomExtendedSpawnNum(mapthing_t *mthing);
-static void P_ConvertHereticThing(mapthing_t *mthing);
+// IOANCH 20151214: deleted static definitions
 static void P_ConvertPSXThing(mapthing_t *mthing);
+
+//
+// P_CheckThingDoomBan
+//
+// IOANCH 20151213: Checks that a thing type is banned from Doom 1
+// Needed as a separate function because of UDMF
+//
+bool P_CheckThingDoomBan(int16_t type)
+{
+   if(demo_version < 331 && GameModeInfo->type == Game_DOOM &&
+      GameModeInfo->id != commercial)
+   {
+      switch(type)
+      {
+      case 68:  // Arachnotron
+      case 64:  // Archvile
+      case 88:  // Boss Brain
+      case 89:  // Boss Shooter
+      case 69:  // Hell Knight
+      case 67:  // Mancubus
+      case 71:  // Pain Elemental
+      case 65:  // Former Human Commando
+      case 66:  // Revenant
+      case 84:  // Wolf SS
+         return true;
+      }
+   }
+   return false;
+}
 
 //
 // P_LoadThings
@@ -1282,28 +1514,14 @@ void P_LoadThings(int lump)
 
       // Do not spawn cool, new monsters if !commercial
       // haleyjd: removing this for Heretic and DeHackEd
-      if(demo_version < 331 && GameModeInfo->type == Game_DOOM &&
-         GameModeInfo->id != commercial)
-      {
-         switch(ft->type)
-         {
-         case 68:  // Arachnotron
-         case 64:  // Archvile
-         case 88:  // Boss Brain
-         case 89:  // Boss Shooter
-         case 69:  // Hell Knight
-         case 67:  // Mancubus
-         case 71:  // Pain Elemental
-         case 65:  // Former Human Commando
-         case 66:  // Revenant
-         case 84:  // Wolf SS
-            continue;
-         }
-      }
+      // IOANCH 20151213: use function
+      if(P_CheckThingDoomBan(ft->type))
+         continue;
       
       // Do spawn all other stuff.
-      ft->x       = SwapShort(mt->x);
-      ft->y       = SwapShort(mt->y);
+      // ioanch 20151218: fixed point coordinates
+      ft->x       = SwapShort(mt->x) << FRACBITS;
+      ft->y       = SwapShort(mt->y) << FRACBITS;
       ft->angle   = SwapShort(mt->angle);      
       ft->options = SwapShort(mt->options);
 
@@ -1380,14 +1598,21 @@ void P_LoadHexenThings(int lump)
       mapthing_t      *ft = &mapthings[i];
       
       ft->tid     = SwapShort(mt->tid);
-      ft->x       = SwapShort(mt->x);
-      ft->y       = SwapShort(mt->y);
-      ft->height  = SwapShort(mt->height);
+      // ioanch 20151218: fixed point coordinates
+      ft->x       = SwapShort(mt->x) << FRACBITS;
+      ft->y       = SwapShort(mt->y) << FRACBITS;
+      ft->height  = SwapShort(mt->height) << FRACBITS;
       ft->angle   = SwapShort(mt->angle);
       ft->type    = SwapShort(mt->type);
       ft->options = SwapShort(mt->options);
 
       // note: args are already in order since they're just bytes
+      ft->special = mt->special;
+      ft->args[0] = mt->args[0];
+      ft->args[1] = mt->args[1];
+      ft->args[2] = mt->args[2];
+      ft->args[3] = mt->args[3];
+      ft->args[4] = mt->args[4];
 
       // haleyjd 10/05/05: convert heretic things
       if(LevelInfo.levelType == LI_TYPE_HERETIC)
@@ -1424,8 +1649,9 @@ void P_LoadHexenThings(int lump)
 // P_InitLineDef
 //
 // haleyjd 03/28/11: Shared code for DOOM- and Hexen-format linedef loading.
+// IOANCH 20151213: made global
 //
-static void P_InitLineDef(line_t *ld)
+void P_InitLineDef(line_t *ld)
 {
    vertex_t *v1 = ld->v1, *v2 = ld->v2;
 
@@ -1498,8 +1724,9 @@ static void P_InitLineDef(line_t *ld)
 // P_PostProcessLineFlags
 //
 // haleyjd 04/30/11: Make some line flags consistent.
+// IOANCH 20151213: made global
 //
-static void P_PostProcessLineFlags(line_t *ld)
+void P_PostProcessLineFlags(line_t *ld)
 {
    // EX_ML_BLOCKALL implies that ML_BLOCKING should be set.
    if(ld->extflags & EX_ML_BLOCKALL)
@@ -1536,6 +1763,7 @@ void P_LoadLineDefs(int lump)
       ld->flags   = SwapShort(mld->flags);
       ld->special = (int)(SwapShort(mld->special)) & 0xffff;
       ld->tag     = SwapShort(mld->tag);
+      ld->args[0] = ld->tag;
 
       // haleyjd 06/19/06: convert indices to unsigned
       ld->v1 = &vertexes[SafeUintIndex(mld->v1, numvertexes, "line", i, "vertex")];
@@ -1738,13 +1966,13 @@ void P_LoadLineDefs2()
          int lump, j;
       case EV_STATIC_TRANSLUCENT: // killough 4/11/98: translucent 2s textures
          lump = sides[*ld->sidenum].special; // translucency from sidedef
-         if(!ld->tag)                        // if tag == 0,
+         if(!ld->args[0])                    // if tag == 0,
             ld->tranlump = lump;             // affect this linedef only
          else
          {
             for(j = 0; j < numlines; ++j)    // if tag != 0,
             {
-               if(lines[j].tag == ld->tag)   // affect all matching linedefs
+               if(lines[j].tag == ld->args[0])   // affect all matching linedefs
                   lines[j].tranlump = lump;
             }
          }
@@ -1765,6 +1993,87 @@ void P_LoadSideDefs(int lump)
 {
    numsides = setupwad->lumpLength(lump) / sizeof(mapsidedef_t);
    sides    = estructalloctag(side_t, numsides, PU_LEVEL);
+}
+
+//
+// P_SetupSidedefTextures
+//
+// IOANCH 20151213: moved this here because it's used both by the Doom/Hexen
+// formats and the UDMF format, called elsewhere
+//
+void P_SetupSidedefTextures(side_t &sd, const char *bottomTexture, 
+                            const char *midTexture, const char *topTexture)
+{
+   // killough 4/4/98: allow sidedef texture names to be overloaded
+   // killough 4/11/98: refined to allow colormaps to work as wall
+   // textures if invalid as colormaps but valid as textures.
+   // haleyjd 02/06/13: look up static init function
+
+   int staticFn = EV_StaticInitForSpecial(sd.special);
+   int cmap;
+   sector_t &sec = *sd.sector;
+
+   switch(staticFn)
+   {
+   case EV_STATIC_TRANSFER_HEIGHTS:
+      // variable colormap via 242 linedef
+      if((cmap = R_ColormapNumForName(bottomTexture)) < 0)
+         sd.bottomtexture = R_FindWall(bottomTexture);
+      else
+      {
+         sec.bottommap = cmap;
+         sd.bottomtexture = 0;
+      }
+      if((cmap = R_ColormapNumForName(midTexture)) < 0)
+         sd.midtexture = R_FindWall(midTexture);
+      else
+      {
+         sec.midmap = cmap;
+         sd.midtexture = 0;
+      }
+      if((cmap = R_ColormapNumForName(topTexture)) < 0)
+         sd.toptexture = R_FindWall(topTexture);
+      else
+      {
+         sec.topmap = cmap;
+         sd.toptexture = 0;
+      }
+      break;
+
+   case EV_STATIC_TRANSLUCENT:
+      // killough 4/11/98: apply translucency to 2s normal texture
+      if(strncasecmp("TRANMAP", midTexture, 8))
+      {
+         sd.special = W_CheckNumForName(midTexture);
+         if(sd.special < 0 || W_LumpLength(sd.special) != 65536)
+         {
+            // not found or not apparently a tranmap lump, try texture.
+            sd.special = 0;
+            sd.midtexture = R_FindWall(midTexture);
+         }
+         else
+         {
+            // bump it up by one to make a tranmap index; clear texture.
+            ++sd.special;
+            sd.midtexture = 0;
+         }
+      }
+      else
+      {
+         // is "TRANMAP", which is generated as tranmap #0
+         sd.special = 0;
+         sd.midtexture = 0;
+      }
+      sd.toptexture = R_FindWall(topTexture);
+      sd.bottomtexture = R_FindWall(bottomTexture);
+      break;
+
+   default:
+      sd.midtexture = R_FindWall(midTexture);
+      sd.toptexture = R_FindWall(topTexture);
+      sd.bottomtexture = R_FindWall(bottomTexture);
+      break;
+   }
 }
 
 // killough 4/4/98: delay using texture names until
@@ -1789,8 +2098,7 @@ void P_LoadSideDefs2(int lumpnum)
    for(i = 0; i < numsides; i++)
    {
       side_t *sd = sides + i;
-      sector_t *sec;
-      int cmap, secnum;
+      int secnum;
 
       sd->textureoffset = GetBinaryWord(&data) << FRACBITS;
       sd->rowoffset     = GetBinaryWord(&data) << FRACBITS; 
@@ -1802,77 +2110,11 @@ void P_LoadSideDefs2(int lumpnum)
 
       // haleyjd 06/19/06: convert indices to unsigned
       secnum = SafeUintIndex(GetBinaryWord(&data), numsectors, "side", i, "sector");
-      sd->sector = sec = &sectors[secnum];
+      sd->sector = &sectors[secnum];
 
-      // killough 4/4/98: allow sidedef texture names to be overloaded
-      // killough 4/11/98: refined to allow colormaps to work as wall
-      // textures if invalid as colormaps but valid as textures.
-      // haleyjd 02/06/13: look up static init function
-
-      int staticFn = EV_StaticInitForSpecial(sd->special);
-
-      switch(staticFn)
-      {
-      case EV_STATIC_TRANSFER_HEIGHTS: 
-         // variable colormap via 242 linedef
-         if((cmap = R_ColormapNumForName(bottomtexture)) < 0)
-            sd->bottomtexture = R_FindWall(bottomtexture);
-         else
-         {
-            sec->bottommap = cmap;
-            sd->bottomtexture = 0;
-         }
-         if((cmap = R_ColormapNumForName(midtexture)) < 0)
-            sd->midtexture = R_FindWall(midtexture);
-         else
-         {
-            sec->midmap = cmap;
-            sd->midtexture = 0;
-         }
-         if((cmap = R_ColormapNumForName(toptexture)) < 0)
-            sd->toptexture = R_FindWall(toptexture);
-         else
-         {
-            sec->topmap = cmap;
-            sd->toptexture = 0;
-         }
-         break;
-
-      case EV_STATIC_TRANSLUCENT: 
-         // killough 4/11/98: apply translucency to 2s normal texture
-         if(strncasecmp("TRANMAP", midtexture, 8))
-         {
-            sd->special = W_CheckNumForName(midtexture);
-
-            if(sd->special < 0 || W_LumpLength(sd->special) != 65536)
-            {
-               // not found or not apparently a tranmap lump, try texture.
-               sd->special    = 0;
-               sd->midtexture = R_FindWall(midtexture);
-            }
-            else
-            {
-               // bump it up by one to make a tranmap index; clear texture.
-               sd->special++;
-               sd->midtexture = 0;
-            }
-         }
-         else
-         {
-            // is "TRANMAP", which is generated as tranmap #0
-            sd->special    = 0;
-            sd->midtexture = 0;
-         }
-         sd->toptexture    = R_FindWall(toptexture);
-         sd->bottomtexture = R_FindWall(bottomtexture);
-         break;
-
-      default:                        // normal cases
-         sd->midtexture    = R_FindWall(midtexture);
-         sd->toptexture    = R_FindWall(toptexture);
-         sd->bottomtexture = R_FindWall(bottomtexture);
-         break;
-      }
+      // IOANCH 20151213: this will be in a separate function, because UDMF
+      // also uses it
+      P_SetupSidedefTextures(*sd, bottomtexture, midtexture, toptexture);
    }
 
    Z_Free(lump);
@@ -2143,7 +2385,8 @@ static bool P_VerifyBlockMap(int count)
 //
 void P_LoadBlockMap(int lump)
 {
-   int len   = setupwad->lumpLength(lump);
+   // IOANCH 20151215: no lump means no data. So that Eternity will generate.
+   int len   = lump >= 0 ? setupwad->lumpLength(lump) : 0;
    int count = len / 2;
    
    // sf: -blockmap checkparm made into variable
@@ -2481,7 +2724,8 @@ static void P_LoadReject(int lump)
    int size;
    int expectedsize;
 
-   size = setupwad->lumpLength(lump);
+   // IOANCH 20151215: support missing lump
+   size = lump >= 0 ? setupwad->lumpLength(lump) : 0;
 
    // haleyjd: round numsectors^2 to next higher multiple of 8, then divide by
    // 8 to get the expected reject size for this level
@@ -2583,11 +2827,55 @@ static int P_checkConsoleFormat(WadDirectory *dir, int lumpnum)
 //
 // sf 11/9/99: We need to do this now because we no longer have to conform to
 // the MAPxy or ExMy standard previously imposed.
+// IOANCH 20151213: added MGLA, optional parameter to assign values to.
 //
-int P_CheckLevel(WadDirectory *dir, int lumpnum)
+int P_CheckLevel(WadDirectory *dir, int lumpnum, maplumpindex_t *mgla,
+                 bool *udmf)
 {
    int          numlumps = dir->getNumLumps();
    lumpinfo_t **lumpinfo = dir->getLumpInfo();
+
+   if(mgla) // reset it to negative (missing) values
+      memset(mgla, -1, sizeof(*mgla));
+   if(udmf)
+      *udmf = false;
+
+   // IOANCH 20151206: check for UDMF lumps structure
+   if(lumpnum + 1 < numlumps 
+      && !strncmp(lumpinfo[lumpnum + 1]->name, "TEXTMAP", 8))
+   {
+      // found a TEXTMAP. Look for ENDMAP
+      bool foundEndMap = false;
+      const char *lname;
+
+      for(int i = lumpnum + 2; i < numlumps; ++i)
+      {
+         lname = lumpinfo[i]->name;
+         if(mgla)
+         {
+            if(!strncmp(lname, "ZNODES", 8))
+               mgla->nodes = i;
+            else if(!strncmp(lname, levellumps[ML_REJECT], 8))
+               mgla->reject = i;
+            else if(!strncmp(lname, levellumps[ML_BLOCKMAP], 8))
+               mgla->blockmap = i;
+            else if(!strncmp(lname, levellumps[ML_BEHAVIOR], 8))
+               mgla->behavior = i;
+         }
+
+         if(!strncmp(lname, "ENDMAP", 8))
+         {
+            foundEndMap = true;
+            break;
+         }
+      }
+      if(!foundEndMap || (mgla && mgla->nodes < 0))
+         return LEVEL_FORMAT_INVALID;  // must have ENDMAP
+      // Found ENDMAP. This may be a valid UDMF lump. Return it
+      if(udmf)
+         *udmf = true;
+      return LEVEL_FORMAT_DOOM;  // consider "Doom" format even for UDMF.
+   }
    
    for(int i = ML_THINGS; i <= ML_BEHAVIOR; i++)
    {
@@ -2609,6 +2897,31 @@ int P_CheckLevel(WadDirectory *dir, int lumpnum)
          }
          else
             return LEVEL_FORMAT_INVALID;
+      }
+      else if(mgla)
+      {
+         // IOANCH 20151213: respect MGLA even if it's not UDMF
+         switch(i)
+         {
+         case ML_SEGS:
+            mgla->segs = ln;
+            break;
+         case ML_SSECTORS:
+            mgla->ssectors = ln;
+            break;
+         case ML_NODES:
+            mgla->nodes = ln;
+            break;
+         case ML_REJECT:
+            mgla->reject = ln;
+            break;
+         case ML_BLOCKMAP:
+            mgla->blockmap = ln;
+            break;
+         case ML_BEHAVIOR:
+            mgla->behavior = ln;
+            break;
+         }
       }
    }
 
@@ -2664,8 +2977,9 @@ void P_InitThingLists(); // haleyjd
 // P_SetupLevelError
 // 
 // haleyjd 02/18/10: Error handling routine for P_SetupLevel
+// IOANCH 20151210: Made global
 //
-static void P_SetupLevelError(const char *msg, const char *levelname)
+void P_SetupLevelError(const char *msg, const char *levelname)
 {
    C_Printf(FC_ERROR "%s: '%s'\n", msg, levelname);
    C_SetConsole();
@@ -2892,7 +3206,7 @@ void P_InitThingLists()
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask, 
+void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
                   skill_t skill)
 {
    lumpinfo_t **lumpinfo;
@@ -2913,8 +3227,13 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       return;
    }
 
+   // IOANCH 20151213: udmf
+   maplumpindex_t mgla;  // will be set by P_CheckLevel
+   bool isUdmf = false;
+
    // determine map format; if invalid, abort
-   if((LevelInfo.mapFormat = P_CheckLevel(setupwad, lumpnum)) == LEVEL_FORMAT_INVALID)
+   if((LevelInfo.mapFormat = P_CheckLevel(setupwad, lumpnum, &mgla, &isUdmf)) 
+      == LEVEL_FORMAT_INVALID)
    {
       P_SetupLevelError("Not a valid level", mapname);
       return;
@@ -2951,17 +3270,44 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    // to allow texture names to be used in special linedefs
 
    level_error = NULL; // reset
-   
-   switch(LevelInfo.mapFormat)
+
+   // IOANCH 20151206: load UDMF
+   UDMFParser udmf;  // prepare UDMF processor
+   UDMFSetupSettings setupSettings;
+   if(isUdmf)
    {
-   case LEVEL_FORMAT_PSX:
-      P_LoadConsoleVertexes(lumpnum + ML_VERTEXES);
-      P_LoadPSXSectors(lumpnum + ML_SECTORS);
-      break;
-   default:
-      P_LoadVertexes(lumpnum + ML_VERTEXES);
-      P_LoadSectors (lumpnum + ML_SECTORS);
-      break;
+      if(!udmf.parse(*setupwad, lumpnum + 1))
+      {
+         P_SetupLevelError(udmf.error().constPtr(), mapname);
+         return;
+      }
+
+      //
+      // Update map format
+      //
+      if((LevelInfo.mapFormat = udmf.getMapFormat()) == LEVEL_FORMAT_INVALID)
+      {
+         P_SetupLevelError("Unsupported UDMF namespace", mapname);
+         return;
+      }
+
+      // start UDMF loading
+      udmf.loadVertices();
+      udmf.loadSectors(setupSettings);
+   }
+   else
+   {
+      switch(LevelInfo.mapFormat)
+      {
+      case LEVEL_FORMAT_PSX:
+         P_LoadConsoleVertexes(lumpnum + ML_VERTEXES);
+         P_LoadPSXSectors(lumpnum + ML_SECTORS);
+         break;
+      default:
+         P_LoadVertexes(lumpnum + ML_VERTEXES);
+         P_LoadSectors (lumpnum + ML_SECTORS);
+         break;
+      }
    }
    
    // IOANCH: create the line effect stacks for the bot.
@@ -2975,10 +3321,23 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    // haleyjd 01/05/14: create sector interpolation data
    P_CreateSectorInterps();
 
-   P_LoadSideDefs(lumpnum + ML_SIDEDEFS); // killough 4/4/98
+   // IOANCH 20151212: UDMF
+   if(isUdmf)
+      udmf.loadSidedefs();
+   else
+      P_LoadSideDefs(lumpnum + ML_SIDEDEFS); // killough 4/4/98
 
    // haleyjd 10/03/05: handle multiple map formats
-   switch(LevelInfo.mapFormat)
+   // IOANCH 20151212: UDMF
+   if(isUdmf)
+   {
+      if(!udmf.loadLinedefs())
+      {
+         P_SetupLevelError(udmf.error().constPtr(), mapname);
+         return;
+      }
+   }
+   else switch(LevelInfo.mapFormat)
    {
    case LEVEL_FORMAT_DOOM:
    case LEVEL_FORMAT_PSX:
@@ -2989,15 +3348,31 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       break;
    }
 
-   P_LoadSideDefs2(lumpnum + ML_SIDEDEFS);
+   // IOANCH 20151213: udmf
+   if(isUdmf)
+   {
+      if(!udmf.loadSidedefs2())
+      {
+         P_SetupLevelError(udmf.error().constPtr(), mapname);
+         return;
+      }
+   }
+   else
+      P_LoadSideDefs2(lumpnum + ML_SIDEDEFS);
+   
    P_LoadLineDefs2();                      // killough 4/4/98
    
-   // IOANCH NOTE: blockmap is not hashed
-   P_LoadBlockMap (lumpnum + ML_BLOCKMAP); // killough 3/1/98
+   // IOANCH 20151213: use mgla here and elsewhere
    
-   if(P_CheckForZDoomUncompressedNodes(lumpnum))
+   P_LoadBlockMap (mgla.blockmap); // killough 3/1/98
+   
+   // IOANCH: at this point, mgla.nodes is valid. Check ZDoom node signature too
+   ZNodeType znodeSignature;
+   int actualNodeLump = -1;
+   if((znodeSignature = P_CheckForZDoomUncompressedNodes(mgla.nodes, 
+      &actualNodeLump, isUdmf)) != ZNodeType_Invalid && actualNodeLump >= 0)
    {
-      P_LoadZNodes(lumpnum + ML_NODES);
+      P_LoadZNodes(actualNodeLump, znodeSignature);
 
       CHECK_ERROR();
    }
@@ -3012,13 +3387,22 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    }
    else
    {
-      P_LoadSubsectors(lumpnum + ML_SSECTORS);
-      P_LoadNodes     (lumpnum + ML_NODES);
+      // IOANCH 20151215: make sure everything is valid. Can happen if UDMF has
+      // invalid ZNODES entry
+      if(mgla.ssectors < 0 || mgla.segs < 0)
+      {
+         P_SetupLevelError("UDMF levels don't support vanilla BSP", mapname);
+         return;
+      }
+
+      // IOANCH: at this point, it's not a UDMF map so mgla will be valid
+      P_LoadSubsectors(mgla.ssectors);
+      P_LoadNodes     (mgla.nodes);
 
       // possible error: missing nodes or subsectors
       CHECK_ERROR();
 
-      P_LoadSegs(lumpnum + ML_SEGS); 
+      P_LoadSegs(mgla.segs); 
 
       // possible error: malformed segs
       CHECK_ERROR();
@@ -3027,7 +3411,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    // ioanch 20160309: reversed P_GroupLines with P_LoadReject to fix the
    // overrun
    P_GroupLines();
-   P_LoadReject(lumpnum + ML_REJECT); // haleyjd 01/26/04
+   P_LoadReject(mgla.reject); // haleyjd 01/26/04
 
    // haleyjd 01/12/14: build sound environment zones
    P_CreateSoundZones();
@@ -3040,7 +3424,16 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    deathmatch_p = deathmatchstarts;
 
    // haleyjd 10/03/05: handle multiple map formats
-   switch(LevelInfo.mapFormat)
+   // IOANCH 20151214: UDMF things
+   if(isUdmf)
+   {
+      if(!udmf.loadThings())
+      {
+         P_SetupLevelError(udmf.error().constPtr(), mapname);
+         return;
+      }
+   }
+   else switch(LevelInfo.mapFormat)
    {
    case LEVEL_FORMAT_DOOM:
    case LEVEL_FORMAT_PSX:
@@ -3064,7 +3457,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    iquehead = iquetail = 0;
    
    // set up world state
-   P_SpawnSpecials();
+   P_SpawnSpecials(setupSettings);
 
    // SoM: Deferred specials that need to be spawned after P_SpawnSpecials
    P_SpawnDeferredSpecials();
@@ -3090,8 +3483,9 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    // haleyjd 01/07/07: initialize ACS for Hexen maps
    //         03/19/11: also allow for DOOM-format maps via MapInfo
-   if(LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN)
-      acslumpnum = lumpnum + ML_BEHAVIOR;
+   // IOANCH 20151214: changed to use mgla
+   if(mgla.behavior >= 0)
+      acslumpnum = mgla.behavior;
    else if(LevelInfo.acsScriptLump)
       acslumpnum = setupwad->checkNumForNameNSG(LevelInfo.acsScriptLump, lumpinfo_t::ns_acs);
 
@@ -3180,8 +3574,9 @@ void P_LoadOlo(void)
 // 6005 - 6089 -> 5    - 89
 // 6201 - 6249 -> 2001 - 2049
 // 6301 - 6306 -> 3001 - 3006
+// IOANCH 20151213: made public
 //
-static void P_ConvertDoomExtendedSpawnNum(mapthing_t *mthing)
+void P_ConvertDoomExtendedSpawnNum(mapthing_t *mthing)
 {
    int16_t num = mthing->type;
 
@@ -3209,8 +3604,9 @@ static void P_ConvertDoomExtendedSpawnNum(mapthing_t *mthing)
 // 2001 - 2005 -> 7201 - 7205
 // 2035        -> 7235
 // Covers all Heretic thingtypes.
+// IOANCH 20151213: made public
 //
-static void P_ConvertHereticThing(mapthing_t *mthing)
+void P_ConvertHereticThing(mapthing_t *mthing)
 {
    int16_t num = mthing->type;
 
