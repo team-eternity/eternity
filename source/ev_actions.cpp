@@ -3319,6 +3319,31 @@ DEFINE_ACTION(EV_ActionACSLockedExecute)
 }
 
 //
+// EV_ActionACSLockedExecuteDoor
+//
+// Implements ACS_LockedExecuteDoor(script, map, arg1, arg2, lock)
+// * ExtraData: 490
+// * Hexen:     85
+//
+DEFINE_ACTION(EV_ActionACSLockedExecuteDoor)
+{
+   Mobj   *thing = instance->actor;
+   line_t *line = instance->line;
+   int     side = instance->side;
+   int     num = instance->args[0];
+   int     map = instance->args[1];
+   int     argc = NUMLINEARGS - 3;
+   int32_t argv[NUMLINEARGS - 3];
+
+   for(int i = 0; i != argc; ++i)
+      argv[i] = instance->args[i + 2];
+
+   if(EV_lockCheck(thing, instance->args[4], false))
+      return ACS_ExecuteScriptNumber(num, map, 0, argv, argc, thing, line, side);
+   return 0;
+}
+
+//
 // EV_ActionParamDonut
 //
 // Implements Floor_Donut(ptag, pspeed, sspeed)
