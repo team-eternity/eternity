@@ -1218,7 +1218,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    }
 
    bool havetportal = seg.backsec && seg.backsec->c_portal &&
-         seg.line->linedef->extflags & EX_ML_EXTNDCPORTAL;
+         seg.line->linedef->extflags & EX_ML_UPPERPORTAL;
 
    bool toohigh = havetportal && portalrender.w && !portalrender.w->up &&
          !portalrender.w->line &&
@@ -1303,7 +1303,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    }
 
    bool havebportal = seg.backsec && seg.backsec->f_portal &&
-         seg.line->linedef->extflags & EX_ML_EXTNDFPORTAL;
+         seg.line->linedef->extflags & EX_ML_LOWERPORTAL;
    bool toolow = havebportal && portalrender.w && portalrender.w->up &&
          !portalrender.w->line &&
          portalrender.w->planez >= seg.backsec->floorheight;
@@ -1451,7 +1451,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
       seg.c_window = NULL;
 
    bool havetportal = seg.backsec && seg.backsec->c_portal &&
-         seg.line->linedef->extflags & EX_ML_EXTNDCPORTAL;
+         seg.line->linedef->extflags & EX_ML_UPPERPORTAL;
    bool toohigh = havetportal && portalrender.w && !portalrender.w->up &&
          !portalrender.w->line &&
          portalrender.w->planez <= seg.backsec->ceilingheight;
@@ -1541,7 +1541,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    // ioanch: don't render lower textures or portals if they're below the
    // current plane-z window. Necessary for edge portals
    bool havebportal = seg.backsec && seg.backsec->f_portal &&
-         seg.line->linedef->extflags & EX_ML_EXTNDFPORTAL;
+         seg.line->linedef->extflags & EX_ML_LOWERPORTAL;
    bool toolow = havebportal && portalrender.w && portalrender.w->up &&
          !portalrender.w->line &&
          portalrender.w->planez >= seg.backsec->floorheight;

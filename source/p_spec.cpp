@@ -2997,7 +2997,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
             // two anchored portals to the same sector.
             if((lines[s].special != anchortype &&
                 !(lines[s].extflags &
-                  (EX_ML_EXTNDFPORTAL | EX_ML_EXTNDCPORTAL))) ||
+                  (EX_ML_LOWERPORTAL | EX_ML_UPPERPORTAL))) ||
                line == &lines[s] ||
                lines[s].frontsector == NULL)
             {
@@ -3052,7 +3052,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       }
 
       otherIsEdge = !!(lines[s].extflags &
-                       (EX_ML_EXTNDFPORTAL | EX_ML_EXTNDCPORTAL));
+                       (EX_ML_LOWERPORTAL | EX_ML_UPPERPORTAL));
       if(!otherIsEdge)
          portal = R_GetLinkedPortal(line - lines, s, planez, fromid, toid);
 

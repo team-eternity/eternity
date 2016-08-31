@@ -74,8 +74,8 @@ enum
    EX_ML_ZONEBOUNDARY = 0x00000800, // line marks a sound zone boundary
    EX_ML_CLIPMIDTEX   = 0x00001000, // line clips midtextures to floor and ceiling height
    EX_ML_3DMTPASSPROJ = 0x00002000, // with ML_3DMIDTEX, makes it pass projectiles
-   EX_ML_EXTNDFPORTAL = 0x00004000, // extends the floor portal of the back sector
-   EX_ML_EXTNDCPORTAL = 0x00008000, // extends the ceiling portal of the back sector
+   EX_ML_LOWERPORTAL  = 0x00004000, // extends the floor portal of the back sector
+   EX_ML_UPPERPORTAL  = 0x00008000, // extends the ceiling portal of the back sector
 };
 
 // ExtraData line structure

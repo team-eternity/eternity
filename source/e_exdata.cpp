@@ -204,8 +204,8 @@ static dehflags_t extlineflags[] =
    { "BLOCKALL",     EX_ML_BLOCKALL     },
    { "ZONEBOUNDARY", EX_ML_ZONEBOUNDARY },
    { "CLIPMIDTEX",   EX_ML_CLIPMIDTEX   },
-   { "EXTNDFPORTAL", EX_ML_EXTNDFPORTAL },
-   { "EXTNDCPORTAL", EX_ML_EXTNDCPORTAL },
+   { "LOWERPORTAL",  EX_ML_LOWERPORTAL  },
+   { "UPPERPORTAL",  EX_ML_UPPERPORTAL  },
    { NULL,           0                  }
 };
 

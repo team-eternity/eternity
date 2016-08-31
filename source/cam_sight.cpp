@@ -757,12 +757,12 @@ static void CAM_lineOpening(LineOpening &lo, const line_t *linedef)
    const sector_t *back = linedef->backsector;
 
    // no need to apply the portal hack (1024 units) here fortunately
-   if(linedef->extflags & EX_ML_EXTNDCPORTAL)
+   if(linedef->extflags & EX_ML_UPPERPORTAL)
       lo.opentop = front->ceilingheight;
    else
       lo.opentop = emin(front->ceilingheight, back->ceilingheight);
 
-   if(linedef->extflags & EX_ML_EXTNDFPORTAL)
+   if(linedef->extflags & EX_ML_LOWERPORTAL)
       lo.openbottom = front->floorheight;
    else
       lo.openbottom = emax(front->floorheight, back->floorheight);
@@ -884,7 +884,7 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
       return false;  // stop
 
    // have we hit a lower edge portal
-   if(li->extflags & EX_ML_EXTNDFPORTAL && li->backsector &&
+   if(li->extflags & EX_ML_LOWERPORTAL && li->backsector &&
       li->backsector->f_pflags & PS_PASSABLE &&
       context.state.bottomslope <=
       FixedDiv(li->backsector->floorheight - context.sightzstart, totalfrac) &&
@@ -903,7 +903,7 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
       }
    }
 
-   if(li->extflags & EX_ML_EXTNDCPORTAL && li->backsector &&
+   if(li->extflags & EX_ML_UPPERPORTAL && li->backsector &&
       li->backsector->c_pflags & PS_PASSABLE &&
       context.state.topslope >=
       FixedDiv(li->backsector->ceilingheight - context.sightzstart, totalfrac) &&
@@ -1378,7 +1378,7 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata,
       if(context.state.topslope <= context.state.bottomslope)
          return false;
 
-      if(li->extflags & EX_ML_EXTNDFPORTAL && li->backsector &&
+      if(li->extflags & EX_ML_LOWERPORTAL && li->backsector &&
          li->backsector->f_pflags & PS_PASSABLE &&
          context.state.bottomslope
          <= FixedDiv(li->backsector->floorheight - context.state.cz, totaldist)
@@ -1406,7 +1406,7 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata,
             }
          }
       }
-      if(li->extflags & EX_ML_EXTNDCPORTAL && li->backsector &&
+      if(li->extflags & EX_ML_UPPERPORTAL && li->backsector &&
          li->backsector->c_pflags & PS_PASSABLE &&
          context.state.topslope
          >= FixedDiv(li->backsector->ceilingheight - context.state.cz, totaldist)
@@ -1855,14 +1855,14 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
       {
          // ioanch 20160101: line portal aware
          const portal_t *portal = nullptr;
-         if(li->extflags & EX_ML_EXTNDFPORTAL && li->backsector &&
+         if(li->extflags & EX_ML_LOWERPORTAL && li->backsector &&
             li->backsector->f_pflags & PS_PASSABLE &&
             FixedDiv(li->backsector->floorheight - context.state.z, dist)
             >= context.aimslope)
          {
             portal = li->backsector->f_portal;
          }
-         else if(li->extflags & EX_ML_EXTNDCPORTAL && li->backsector &&
+         else if(li->extflags & EX_ML_UPPERPORTAL && li->backsector &&
             li->backsector->c_pflags & PS_PASSABLE &&
             FixedDiv(li->backsector->ceilingheight - context.state.z, dist)
             <= context.aimslope)
@@ -1870,7 +1870,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
             portal = li->backsector->c_portal;
          }
          else if(li->pflags & PS_PASSABLE &&
-                 (!(li->extflags & EX_ML_EXTNDFPORTAL) ||
+                 (!(li->extflags & EX_ML_LOWERPORTAL) ||
                   FixedDiv(li->backsector->floorheight - context.state.z, dist)
                   < context.aimslope))
          {
@@ -2228,7 +2228,7 @@ bool UseContext::useTraverse(const intercept_t *in, void *vcontext,
    const portal_t *portal = nullptr;
    if(li->pflags & PS_PASSABLE)
       portal = li->portal;
-   else if(li->extflags & EX_ML_EXTNDFPORTAL && li->backsector &&
+   else if(li->extflags & EX_ML_LOWERPORTAL && li->backsector &&
            li->backsector->f_pflags & PS_PASSABLE)
    {
       portal = li->backsector->f_portal;
