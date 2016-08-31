@@ -1247,7 +1247,8 @@ int EV_LockDefIDForSpecial(int special)
    {
       return EV_lockdefIDForGenSpec(special); // generalized lock
    }
-   else if(LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN)
+   else if(LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN ||
+           LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY)
    {
       return 0; // Hexen doesn't work this way.
    }
