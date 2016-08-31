@@ -200,7 +200,7 @@ private:
 
       // Eternity
       bool midtex3d, firstsideonly, blockeverything, zoneboundary, clipmidtex,
-      midtex3dimpassible;
+      midtex3dimpassible, lowerportal, upperportal;
       float alpha;
       qstring renderstyle;
       qstring tranmap;

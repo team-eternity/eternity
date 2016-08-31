@@ -277,6 +277,10 @@ bool UDMFParser::loadLinedefs()
             ld->extflags |= EX_ML_CLIPMIDTEX;
          if(uld.midtex3dimpassible)
             ld->extflags |= EX_ML_3DMTPASSPROJ;
+         if(uld.lowerportal)
+            ld->extflags |= EX_ML_LOWERPORTAL;
+         if(uld.upperportal)
+            ld->extflags |= EX_ML_UPPERPORTAL;
       }
 
       // TODO: Strife
@@ -528,6 +532,7 @@ enum token_e
    t_lightfloor,
    t_lightfloorabsolute,
    t_lightlevel,
+   t_lowerportal,
    t_mapped,
    t_midtex3d,
    t_midtex3dimpassible,
@@ -581,6 +586,7 @@ enum token_e
    t_translucent,
    t_twosided,
    t_type,
+   t_upperportal,
    t_v1,
    t_v2,
    t_x,
@@ -653,6 +659,7 @@ static keytoken_t gTokenList[] =
    TOKEN(lightfloor),
    TOKEN(lightfloorabsolute),
    TOKEN(lightlevel),
+   TOKEN(lowerportal),
    TOKEN(mapped),
    TOKEN(midtex3d),
    TOKEN(midtex3dimpassible),
@@ -706,6 +713,7 @@ static keytoken_t gTokenList[] =
    TOKEN(translucent),
    TOKEN(twosided),
    TOKEN(type),
+   TOKEN(upperportal),
    TOKEN(v1),
    TOKEN(v2),
    TOKEN(x),
@@ -878,6 +886,8 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                   READ_BOOL(linedef, blockeverything);
                   READ_BOOL(linedef, zoneboundary);
                   READ_BOOL(linedef, clipmidtex);
+                  READ_BOOL(linedef, lowerportal);
+                  READ_BOOL(linedef, upperportal);
                   READ_NUMBER(linedef, alpha);
                   READ_STRING(linedef, renderstyle);
                   READ_STRING(linedef, tranmap);
