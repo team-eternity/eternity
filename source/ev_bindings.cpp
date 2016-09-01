@@ -1086,6 +1086,7 @@ PARAMLINE(ACSSuspend);
 PARAMLINE(ACSTerminate);
 PARAMLINE(ACSExecuteWithResult);
 PARAMLINELOCKED(ACSLockedExecute, 4);
+PARAMLINELOCKED(ACSLockedExecuteDoor, 4);
 PARAMLINE(ParamLightRaiseByValue);
 PARAMLINE(ParamLightLowerByValue);
 PARAMLINE(ParamLightChangeToValue);
@@ -1549,6 +1550,7 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(487, ParamPlatToggleCeiling,              "Plat_ToggleCeiling")
    LINESPECNAMED(488, ParamPlatDWUSLip,                    "Plat_DownWaitUpStayLip")
    LINESPECNAMED(489, ParamPlatPerpetualRaiseLip,          "Plat_PerpetualRaiseLip")
+   LINESPECNAMED(490, ACSLockedExecuteDoor,                "ACS_LockedExecuteDoor")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1663,6 +1665,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(82,  ACSTerminate,                        "ACS_Terminate")
    LINESPECNAMED(83,  ACSLockedExecute,                    "ACS_LockedExecute")
    LINESPECNAMED(84,  ACSExecuteWithResult,                "ACS_ExecuteWithResult")
+   LINESPECNAMED(85,  ACSLockedExecuteDoor,                "ACS_LockedExecuteDoor")
    LINESPECNAMED(87,  PolyobjStop,                         "Polyobj_Stop")
    LINESPECNAMED(90,  PolyobjORRotateLeft,                 "Polyobj_OR_RotateLeft")
    LINESPECNAMED(91,  PolyobjORRotateRight,                "Polyobj_OR_RotateRight")

@@ -1400,6 +1400,7 @@ DEFINE_ACTION(EV_ActionParamDoorCloseWaitOpen)
 //
 // Implements Door_WaitRaise(tag, speed, delay, topcount, lighttag)
 // * ExtraData: 304
+// * UDMF:      105
 //
 DEFINE_ACTION(EV_ActionParamDoorWaitRaise)
 {
@@ -1426,6 +1427,7 @@ DEFINE_ACTION(EV_ActionParamDoorWaitRaise)
 //
 // Implements Door_WaitClose(tag, speed, topcount, lighttag)
 // * ExtraData: 305
+// * UDMF:      106
 //
 DEFINE_ACTION(EV_ActionParamDoorWaitClose)
 {
@@ -1479,6 +1481,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToHighest)
 //
 // Implements Floor_LowerToHighestEE(tag, speed, change)
 // * ExtraData: 307
+// * UDMF:      256
 //
 // NB: Not ZDoom-compatible with special of same name
 //
@@ -1527,6 +1530,7 @@ DEFINE_ACTION(EV_ActionParamFloorLowerToHighest)
 //
 // Implements Floor_RaiseToLowest(tag, change, crush)
 // * ExtraData: 308
+// * UDMF:      257
 //
 DEFINE_ACTION(EV_ActionParamFloorRaiseToLowest)
 {
@@ -1647,6 +1651,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToLowestCeiling)
 //
 // Implements Floor_LowerToLowestCeiling(tag, speed, change)
 // * ExtraData: 313
+// * UDMF:      258
 //
 DEFINE_ACTION(EV_ActionParamFloorLowerToLowestCeiling)
 {
@@ -1669,6 +1674,7 @@ DEFINE_ACTION(EV_ActionParamFloorLowerToLowestCeiling)
 //
 // Implements Floor_RaiseToCeiling(tag, speed, change, crush, gap)
 // * ExtraData: 314
+// * UDMF:      259
 //
 DEFINE_ACTION(EV_ActionParamFloorRaiseToCeiling)
 {
@@ -1717,6 +1723,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseByTexture)
 //
 // Implements Floor_LowerByTexture(tag, speed, change)
 // * ExtraData: 316
+// * UDMF:      261
 //
 DEFINE_ACTION(EV_ActionParamFloorLowerByTexture)
 {
@@ -1935,6 +1942,7 @@ DEFINE_ACTION(EV_ActionParamFloorLowerInstant)
 //
 // Implements Floor_ToCeilingInstant(tag, change, crush, gap)
 // * ExtraData: 322
+// * UDMF:      260
 //
 DEFINE_ACTION(EV_ActionParamFloorToCeilingInstant)
 {
@@ -1957,6 +1965,7 @@ DEFINE_ACTION(EV_ActionParamFloorToCeilingInstant)
 //
 // Implements Ceiling_RaiseToHighest(tag, speed, change)
 // * ExtraData: 323
+// * UDMF:      262
 //
 DEFINE_ACTION(EV_ActionParamCeilingRaiseToHighest)
 {
@@ -1979,6 +1988,7 @@ DEFINE_ACTION(EV_ActionParamCeilingRaiseToHighest)
 //
 // Implements Ceiling_ToHighestInstant(tag, change, crush)
 // * ExtraData: 324
+// * UDMF:      263
 //
 DEFINE_ACTION(EV_ActionParamCeilingToHighestInstant)
 {
@@ -2023,6 +2033,7 @@ DEFINE_ACTION(EV_ActionParamCeilingRaiseToNearest)
 //
 // Implements Ceiling_LowerToNearest(tag, speed, change, crush)
 // * ExtraData: 326
+// * UDMF:      264
 //
 DEFINE_ACTION(EV_ActionParamCeilingLowerToNearest)
 {
@@ -2045,6 +2056,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerToNearest)
 //
 // Implements Ceiling_RaiseToLowest(tag, speed, change)
 // * ExtraData: 327
+// * UDMF:      265
 //
 DEFINE_ACTION(EV_ActionParamCeilingRaiseToLowest)
 {
@@ -2090,6 +2102,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerToLowest)
 //
 // Implements Ceiling_RaiseToHighestFloor(tag, speed, change)
 // * ExtraData: 329
+// * UDMF:      266
 //
 DEFINE_ACTION(EV_ActionParamCeilingRaiseToHighestFloor)
 {
@@ -2136,6 +2149,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerToHighestFloor)
 //
 // Implements Ceiling_ToFloorInstant(tag, change, crush, gap)
 // * ExtraData: 331
+// * UDMF:      267
 //
 DEFINE_ACTION(EV_ActionParamCeilingToFloorInstant)
 {
@@ -2182,6 +2196,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerToFloor)
 //
 // Implements Ceiling_RaiseByTexture(tag, speed, change)
 // * ExtraData: 333
+// * UDMF:      268
 //
 DEFINE_ACTION(EV_ActionParamCeilingRaiseByTexture)
 {
@@ -2204,6 +2219,7 @@ DEFINE_ACTION(EV_ActionParamCeilingRaiseByTexture)
 //
 // Implements Ceiling_LowerByTexture(tag, speed, change, crush)
 // * ExtraData: 334
+// * UDMF:      269
 //
 DEFINE_ACTION(EV_ActionParamCeilingLowerByTexture)
 {
@@ -2441,6 +2457,7 @@ DEFINE_ACTION(EV_ActionParamStairsBuildUpDoom)
 //
 // Implements Stairs_BuildDownDoom(tag, speed, height, delay, reset)
 // * ExtraData: 341
+// * UDMF:      270
 //
 DEFINE_ACTION(EV_ActionParamStairsBuildDownDoom)
 {
@@ -2464,6 +2481,7 @@ DEFINE_ACTION(EV_ActionParamStairsBuildDownDoom)
 //
 // Implements Stairs_BuildUpDoomSync(tag, speed, height, reset)
 // * ExtraData: 342
+// * UDMF:      271
 //
 DEFINE_ACTION(EV_ActionParamStairsBuildUpDoomSync)
 {
@@ -2487,6 +2505,7 @@ DEFINE_ACTION(EV_ActionParamStairsBuildUpDoomSync)
 //
 // Implements Stairs_BuildDownDoomSync(tag, speed, height, reset)
 // * ExtraData: 343
+// * UDMF:      272
 //
 DEFINE_ACTION(EV_ActionParamStairsBuildDownDoomSync)
 {
@@ -3288,6 +3307,8 @@ DEFINE_ACTION(EV_ActionParamDoorLockedRaise)
    if(extflags & EX_ML_REPEAT)
       dd.flags |= DDF_REUSABLE;
 
+   // If the tag is nonzero then display the "object" message, as the player
+   // isn't activating the door directly.
    if(EV_lockCheck(dd.thing, instance->args[3], instance->tag != 0))
       return EV_DoParamDoor(instance->line, instance->tag, &dd);
    return 0;
@@ -3313,7 +3334,34 @@ DEFINE_ACTION(EV_ActionACSLockedExecute)
    for(int i = 0; i != argc; ++i)
       argv[i] = instance->args[i + 2];
 
+   // Always display the "object" message.
    if(EV_lockCheck(thing, instance->args[4], true))
+      return ACS_ExecuteScriptNumber(num, map, 0, argv, argc, thing, line, side);
+   return 0;
+}
+
+//
+// EV_ActionACSLockedExecuteDoor
+//
+// Implements ACS_LockedExecuteDoor(script, map, arg1, arg2, lock)
+// * ExtraData: 490
+// * Hexen:     85
+//
+DEFINE_ACTION(EV_ActionACSLockedExecuteDoor)
+{
+   Mobj   *thing = instance->actor;
+   line_t *line = instance->line;
+   int     side = instance->side;
+   int     num = instance->args[0];
+   int     map = instance->args[1];
+   int     argc = NUMLINEARGS - 3;
+   int32_t argv[NUMLINEARGS - 3];
+
+   for(int i = 0; i != argc; ++i)
+      argv[i] = instance->args[i + 2];
+
+   // Always display the "door" message.
+   if(EV_lockCheck(thing, instance->args[4], false))
       return ACS_ExecuteScriptNumber(num, map, 0, argv, argc, thing, line, side);
    return 0;
 }
