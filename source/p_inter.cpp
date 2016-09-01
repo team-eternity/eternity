@@ -2260,6 +2260,9 @@ void P_RaiseCorpse(Mobj *corpse, const Mobj *raiser)
       corpse->flags = (info->flags & ~MF_FRIEND) | (corpse->flags & MF_FRIEND);
    }
 
+   // clear ephemeral MIF flags that may persist from previous death
+   corpse->intflags &= ~MIF_CLEARRAISED;
+
    corpse->health = info->spawnhealth;
    P_SetTarget<Mobj>(&corpse->target, NULL);  // killough 11/98
 

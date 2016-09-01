@@ -1541,6 +1541,12 @@ void P_LoadHexenThings(int lump)
       ft->options = SwapShort(mt->options);
 
       // note: args are already in order since they're just bytes
+      ft->special = mt->special;
+      ft->args[0] = mt->args[0];
+      ft->args[1] = mt->args[1];
+      ft->args[2] = mt->args[2];
+      ft->args[3] = mt->args[3];
+      ft->args[4] = mt->args[4];
 
       // haleyjd 10/05/05: convert heretic things
       if(LevelInfo.levelType == LI_TYPE_HERETIC)
@@ -3556,6 +3562,8 @@ static void P_ConvertStrifeThing(mapthing_t *mthing)
       num += 5900;
    else if(num >= 3001 && num <= 3006)
       num += 4950;
+
+   mthing->type = num;
 }
 
 #define DEN_PSXCHAIN   64
