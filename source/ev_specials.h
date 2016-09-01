@@ -52,6 +52,11 @@ enum EVActionFlags
    EV_PARAMLINESPEC    = 0x00000200, // Is a parameterized line special
 
    EV_PARAMLOCKID      = 0x00000400, // Has a parameterized lockdef ID
+
+   EV_ISTELEPORTER     = 0x00000800, // Is a teleporter action, for automap
+   EV_ISLIFT           = 0x00001000, // Is a lift action
+   EV_ISMBFLIFT        = 0x00002000, // Is a lift for MBF friends during demo_version 203
+   EV_ISMAPPEDEXIT     = 0x00004000, // Is an exit line for purposes of automap
 };
 
 // Data related to an instance of a special activation.
