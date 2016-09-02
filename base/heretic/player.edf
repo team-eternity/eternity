@@ -1,0 +1,128 @@
+//
+// EDF for Eternity Engine v3.40.50
+//
+// Heretic Weapons
+//
+
+//=============================================================================
+//
+// Weapon Trackers
+//
+
+artifact WeaponStaff
+{
+  artifact Weapon
+}
+
+artifact WeaponGoldWand
+{
+  artifacttype Weapon
+
+  interhubamount 1
+}
+
+artifact WeaponCrossbow
+{
+  artifacttype Weapon
+
+  interhubamount 1
+}
+
+artifact WeaponBlaster
+{
+  artifacttype Weapon
+
+  interhubamount 1
+}
+
+artifact WeaponSkullRod
+{
+  artifacttype Weapon
+
+  interhubamount 1
+}
+
+artifact WeaponPhoenixRod
+{
+  artifacttype Weapon
+
+  interhubamount 1
+}
+
+artifact WeaponGauntlets
+{
+  artifacttype Weapon
+
+  interhubamount 1
+}
+
+//=============================================================================
+//
+// Weapon Givers
+//
+
+WeaponGiver Staff
+{
+  weapon "WeaponStaff"
+}
+
+WeaponGiver GoldWand
+{
+  weapon "WeaponGoldWand"
+}
+
+WeaponGiver Crossbow
+{
+  weapon "WeaponCrossbow"
+
+  ammo.dmstay   10
+  ammo.coopstay 10
+  ammo.give     10
+  ammo.dropped  10
+}
+
+WeaponGiver Blaster
+{
+  weapon "WeaponBlaster"
+
+  ammo.dmstay   30
+  ammo.coopstay 30
+  ammo.give     30
+  ammo.dropped  30
+}
+
+WeaponGiver SkullRod
+{
+  weapon "WeaponSkullRod"
+
+  ammo.dmstay   50
+  ammo.coopstay 50
+  ammo.give     50
+  ammo.dropped  50
+}
+
+WeaponGiver PhoenixRod
+{
+  weapon "WeaponPhoenixRod"
+
+  ammo.dmstay   2
+  ammo.coopstay 2
+  ammo.give     2
+  ammo.dropped  2
+}
+
+WeaponGiver Mace
+{
+  weapon "WeaponMace"
+
+  ammo.dmstay   50
+  ammo.coopstay 50
+  ammo.give     50
+  ammo.dropped  50
+}
+
+WeaponGiver Gauntlets
+{
+  weapon "WeaponGauntlets"
+}
+

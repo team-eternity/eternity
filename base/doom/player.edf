@@ -1,0 +1,152 @@
+//
+// EDF for Eternity Engine v3.40.50
+//
+// DOOM Weapons
+//
+
+//=============================================================================
+//
+// Weapon Trackers
+//
+
+artifact WeaponFist
+{
+  artifacttype Weapon
+}
+
+artifact WeaponPistol
+{
+  artifacttype Weapon
+
+  interhubamount 1
+}
+
+artifact WeaponShotgun
+{
+  artifacttype Weapon
+
+  interhubamount 1
+}
+
+artifact WeaponChaingun
+{
+  artifacttype Weapon
+
+  interhubamount 1
+}
+
+artifact MissileLauncher
+{
+  artifacttype Weapon
+
+  interhubamount 1
+}
+
+artifact PlasmaRifle
+{
+  artifacttype Weapon
+
+  interhubamount 1
+}
+
+artifact BFG9000
+{
+  artifacttype Weapon
+
+  interhubamount 1
+}
+
+artifact WeaponChainsaw
+{
+  artifacttype Weapon
+
+  interhubamount 1
+}
+
+artifact WeaponSuperShotgun
+{
+  artifacttype Weapon
+
+  interhubamount 1
+}
+
+//=============================================================================
+//
+// Weapon Givers
+//
+
+WeaponGiver Fist
+{
+  weapon "WeaponFist"
+}
+
+WeaponGiver Pistol
+{
+  weapon "WeaponPistol"
+}
+
+WeaponGiver Shotgun
+{
+  weapon "WeaponShotgun"
+
+  ammo.dmstay   20
+  ammo.coopstay 8
+  ammo.give     8
+  ammo.dropped  4
+}
+
+WeaponGiver Chaingun
+{
+  weapon "WeaponChaingun"
+
+  ammo.dmstay   50
+  ammo.coopstay 20
+  ammo.give     20
+  ammo.dropped  10
+}
+
+WeaponGiver MissileLauncher
+{
+  weapon "WeaponMissileLauncher"
+
+  ammo.dmstay   5
+  ammo.coopstay 2
+  ammo.give     2
+  ammo.dropped  1
+}
+
+WeaponGiver PlasmaRifle
+{
+  weapon "WeaponPlasmaRifle"
+
+  ammo.dmstay   100
+  ammo.coopstay 40
+  ammo.give     40
+  ammo.dropped  20
+}
+
+WeaponGiver BFG9000
+{
+  weapon "WeaponBFG9000"
+
+  ammo.dmstay   100
+  ammo.coopstay 40
+  ammo.give     40
+  ammo.dropped  20
+}
+
+WeaponGiver Chainsaw
+{
+  weapon "WeaponChainsaw"
+}
+
+WeaponGiver SuperShotgun
+{
+  weapon "WeaponSuperShotgun"
+
+  ammo.dmstay   20
+  ammo.coopstay 8
+  ammo.give     8
+  ammo.dropped  4
+}
+
