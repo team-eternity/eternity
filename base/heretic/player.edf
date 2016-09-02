@@ -11,7 +11,9 @@
 
 artifact WeaponStaff
 {
-  artifact Weapon
+  artifacttype Weapon
+
+  interhubamount 1
 }
 
 artifact WeaponGoldWand

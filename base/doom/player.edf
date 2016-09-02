@@ -12,6 +12,8 @@
 artifact WeaponFist
 {
   artifacttype Weapon
+
+  interhubamount 1
 }
 
 artifact WeaponPistol
