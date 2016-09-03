@@ -3671,18 +3671,18 @@ DEFINE_ACTION(EV_ActionParamTeleportNoFog)
    teleparms_t parms;
    switch(instance->args[1])
    {
-      case 0:
-         parms.teleangle = teleangle_keep;      // hexen
-         break;
-      case 1:
-         parms.teleangle = teleangle_absolute;  // zdoom extension
-         break;
-      case 2:
-         parms.teleangle = teleangle_relative_boom;  // boom
-         break;
-      default:
-         parms.teleangle = teleangle_relative_correct;   // boom corrected
-         break;
+   case 0: // hexen
+      parms.teleangle = teleangle_keep;
+      break;
+   case 1: // zdoom extension
+      parms.teleangle = teleangle_absolute;
+      break;
+   case 2: // boom
+      parms.teleangle = teleangle_relative_boom;
+      break;
+   default: // boom corrected
+      parms.teleangle = teleangle_relative_correct;
+      break;
    }
    parms.keepheight = instance->args[3] != 0;
    return EV_ParamSilentTeleport(instance->args[0], instance->line,
