@@ -1344,8 +1344,8 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
       case EV_STATIC_PORTAL_LINKED_LINE2LINE:
       case EV_STATIC_PORTAL_HORIZON_LINE:
       case EV_STATIC_POLYOBJ_START_LINE:
-      case EV_STATIC_PORTAL_SECTOR_PARAM:
-      case EV_STATIC_PORTAL_LINE_PARAM:
+      case EV_STATIC_PORTAL_SECTOR_PARAM_COMPAT:
+      case EV_STATIC_PORTAL_LINE_PARAM_COMPAT:
          P_SpawnPortal(&lines[i], staticFn);
          break;
       
@@ -1421,7 +1421,7 @@ void P_SpawnDeferredSpecials()
       case EV_STATIC_SLOPE_FRONTFLOORCEILING_TAG:
          // SoM: Copy slopes
          P_CopySectorSlope(line, staticFn);
-      case EV_STATIC_PORTAL_SECTOR_PARAM:
+      case EV_STATIC_PORTAL_SECTOR_PARAM_COMPAT:
          if(line->args[paramPortal_argType] == paramPortal_copied ||
             line->args[paramPortal_argType] == paramPortal_copyline)
          {
@@ -2604,7 +2604,7 @@ static bool P_getParamPortalProps(const int *args, portal_type &type,
 static int P_findParamPortalAnchor(const line_t *line)
 {
    int s;
-   int anchortype = EV_SpecialForStaticInit(EV_STATIC_PORTAL_SECTOR_PARAM);
+   int anchortype = EV_SpecialForStaticInit(EV_STATIC_PORTAL_SECTOR_PARAM_COMPAT);
    for(s = 0; s < numlines; ++s) // FIXME: no quicker way to search?
    {
       if(lines[s].special != anchortype || line == &line[s] ||
@@ -2739,7 +2739,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       else
          return;
    }
-   else if(staticFn == EV_STATIC_PORTAL_SECTOR_PARAM)
+   else if(staticFn == EV_STATIC_PORTAL_SECTOR_PARAM_COMPAT)
    {
       param = true;
       if(!P_getParamPortalProps(line->args, type, effects))
@@ -2747,7 +2747,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          return;  // exit if it's just a copier sought by others
       }
    }
-   else if(staticFn == EV_STATIC_PORTAL_LINE_PARAM)
+   else if(staticFn == EV_STATIC_PORTAL_LINE_PARAM_COMPAT)
    {
       // Currently only support ZDoom's Eternity XLAT helper
       switch(line->args[ev_LinePortal_Arg_Type])
@@ -2876,7 +2876,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       if(param)
       {
          // We're having (tag, 0, plane, 1). Look for (tag, 0, plane, 0)
-         if(staticFn == EV_STATIC_PORTAL_SECTOR_PARAM)
+         if(staticFn == EV_STATIC_PORTAL_SECTOR_PARAM_COMPAT)
             s = P_findParamPortalAnchor(line);
          else
          {
@@ -2929,7 +2929,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       // linked portals can only be applied to either the floor or ceiling.
       if(param)
       {
-         if(staticFn == EV_STATIC_PORTAL_SECTOR_PARAM)
+         if(staticFn == EV_STATIC_PORTAL_SECTOR_PARAM_COMPAT)
          {
             planez = line->args[2] == 0 ? sector->ceilingheight
                : sector->floorheight;
@@ -2940,7 +2940,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
             planez = 0;
             if(line->args[ev_LinePortal_Arg_Type] == ev_LinePortal_Type_EEClassic)
             {
-               anchortype = EV_SpecialForStaticInit(EV_STATIC_PORTAL_LINE_PARAM);
+               anchortype = EV_SpecialForStaticInit(EV_STATIC_PORTAL_LINE_PARAM_COMPAT);
                for(s = -1; (s = P_FindLineFromTag(line->tag, s)) >= 0; )
                {
                   if(lines[s].special != anchortype || line == &lines[s]
@@ -3028,7 +3028,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       fromid = lines[s].frontsector->groupid;
 
       // Special case for parameterized line portal
-      if(staticFn == EV_STATIC_PORTAL_LINE_PARAM &&
+      if(staticFn == EV_STATIC_PORTAL_LINE_PARAM_COMPAT &&
          line->args[ev_LinePortal_Arg_Type] != ev_LinePortal_Type_EEClassic)
       {
          portal = R_GetLinkedPortal(s, line - lines, planez, toid, fromid);
@@ -3059,7 +3059,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       // Special case where the portal was created with the line-to-line portal type
       if(staticFn == EV_STATIC_PORTAL_LINKED_LINE2LINE ||
          staticFn == EV_STATIC_POLYOBJ_START_LINE ||
-         staticFn == EV_STATIC_PORTAL_LINE_PARAM)
+         staticFn == EV_STATIC_PORTAL_LINE_PARAM_COMPAT)
       {
          if(!otherIsEdge)
             P_SetPortal(lines[s].frontsector, lines + s, portal, portal_lineonly);
