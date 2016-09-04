@@ -32,6 +32,7 @@
 
 #include "c_io.h"
 #include "d_gi.h"
+#include "e_exdata.h"
 #include "e_things.h"
 #include "p_maputl.h"
 #include "p_spec.h"
@@ -1433,6 +1434,97 @@ void R_SpawnSimpleLinePortal(line_t &curline, const int lineid, int type)
       P_SetPortal(sector, line, portal, portal_lineonly);
       line = lineid > 0 ? P_FindLine(lineid, &searchPosition) : nullptr;
    } while(line);
+}
+
+//
+// Implements Line_SetAnchoredPortal
+//
+// For spawning anchored portals going from current line to destination line.
+// Portals can be angled if linked is not set.
+//
+// Parameters:
+// * destination line id: tag of anchor linedef; must be set.
+// * flags: can be sum of the following values:
+//   1: make portal linked (interactive). This means it will have to obey link
+//      offset rules and won't be able to rotate
+//   2: make portal two-way: the anchor target linedef will also have a portal
+//      of the same kind pointing back.
+//
+int P_CreatePortalGroup(sector_t *from);
+void R_SpawnAnchoredLinePortal(line_t &line, int destlineid, int flags)
+{
+   if(destlineid <= 0)
+   {
+      C_Printf(FC_ERROR "Anchored line portal target line ID must be > 0\a\n");
+      return;
+   }
+
+   int searchPosition = -1;
+   line_t *otherline = P_FindLine(destlineid, &searchPosition);
+   if(!otherline)
+   {
+      C_Printf(FC_ERROR "No anchor for portal\a\n");
+      return;
+   }
+
+   bool linked = !!(flags & 1);
+   bool twoway = !!(flags & 2);
+
+   int makerlinenum = static_cast<int>(otherline - lines);
+   int anchorlinenum = static_cast<int>(&line - lines);
+
+   if(!linked)
+   {
+      // TODO: fix this to work with lines, whose anchors are flipped
+      portal_t *portal = R_GetTwoWayPortal(makerlinenum, anchorlinenum);
+      P_SetPortal(line.frontsector, &line, portal, portal_lineonly);
+      if(twoway)
+      {
+         portal = R_GetTwoWayPortal(anchorlinenum, makerlinenum);
+         P_SetPortal(otherline->frontsector, otherline, portal, portal_lineonly);
+      }
+   }
+   else
+   {
+      if(line.frontsector->groupid == R_NOGROUP)
+         P_CreatePortalGroup(line.frontsector);
+      if(otherline->frontsector->groupid == R_NOGROUP)
+         P_CreatePortalGroup(otherline->frontsector);
+      int toid = otherline->frontsector->groupid;
+      int fromid = line.frontsector->groupid;
+      portal_t *portal = R_GetLinkedPortal(makerlinenum, anchorlinenum, 0,
+                                           fromid, toid);
+      P_SetPortal(line.frontsector, &line, portal, portal_lineonly);
+      bool otherIsEdge = !!(otherline->extflags &
+                            (EX_ML_LOWERPORTAL | EX_ML_UPPERPORTAL));
+      if(twoway && !otherIsEdge)
+      {
+         portal_t *portal2 = R_GetLinkedPortal(anchorlinenum, makerlinenum, 0,
+                                               toid, fromid);
+         P_SetPortal(otherline->frontsector, otherline, portal2, portal_lineonly);
+
+         if(!line.backsector || !otherline->backsector)
+         {
+            // HACK TO MAKE THEM PASSABLE
+            // ioanch: make a function to remove duplication (linked polyobject portals)
+            static auto unblockline = [](line_t *line, line_t *partner)
+            {
+               line->backsector = line->frontsector;
+               line->sidenum[1] = line->sidenum[0];
+               line->flags &= ~ML_BLOCKING;
+               line->flags |= ML_TWOSIDED;
+               line->beyondportalsector = partner->frontsector;
+            };
+
+            if(!line.backsector)
+               unblockline(&line, otherline);
+            if(!otherline->backsector)
+               unblockline(otherline, &line);
+            portal->data.link.polyportalpartner = portal2;
+            portal2->data.link.polyportalpartner = portal;
+         }
+      }
+   }
 }
 
 // EOF

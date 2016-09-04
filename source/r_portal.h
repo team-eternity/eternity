@@ -222,6 +222,7 @@ portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,
 //
 
 void R_SpawnSimpleLinePortal(line_t &line, int lineid, int type);
+void R_SpawnAnchoredLinePortal(line_t &line, int destlineid, int flags);
 
 //=============================================================================
 //
