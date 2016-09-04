@@ -218,6 +218,13 @@ portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,
 
 //=============================================================================
 //
+// Spawning portals from advanced specials (not in p_spec.cpp)
+//
+
+void R_SpawnSimpleLinePortal(line_t &line, int lineid, int type);
+
+//=============================================================================
+//
 // Portal windows
 //
 // A portal window represents the screen reigon through which the player is 

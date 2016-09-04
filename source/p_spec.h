@@ -36,6 +36,7 @@
 struct line_t;
 class  Mobj;
 struct player_t;
+struct portal_t;
 class  SaveArchive;
 struct sector_t;
 struct side_t;
@@ -1527,6 +1528,14 @@ int EV_ThingRemove(int tid);
 //
 ////////////////////////////////////////////////////////////////
 
+typedef enum
+{
+   portal_ceiling,
+   portal_floor,
+   portal_both,
+   portal_lineonly, // SoM: Added for linked line-line portals.
+} portal_effect;
+
 // at game start
 void P_InitPicAnims();
 
@@ -1541,6 +1550,9 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings);
 // SoM: Specials that copy slopes, ect., need to be collected in a separate 
 // pass
 void P_SpawnDeferredSpecials();
+
+// portal stuff
+void P_SetPortal(sector_t *sec, line_t *line, portal_t *portal, portal_effect effects);
 
 // every tic
 void P_UpdateSpecials();

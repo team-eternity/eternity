@@ -32,7 +32,9 @@
 
 #include "c_io.h"
 #include "d_gi.h"
+#include "e_things.h"
 #include "p_maputl.h"
+#include "p_spec.h"
 #include "r_bsp.h"
 #include "r_draw.h"
 #include "r_main.h"
@@ -1357,6 +1359,80 @@ portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,
    ret->tainted = 0;
 
    return ret;
+}
+
+//=============================================================================
+//
+// Spawn portals from specials (legacy ones still in p_spec.cpp / P_SpawnPortal)
+//
+
+//
+// Implements Line_SetSimplePortal
+//
+// Parameters:
+// * line_id: tag of lines to receive the portal. If 0, it will be the current
+//   line.
+// * type: 0 - plane, 1 - horizon, 2 - skybox.
+//
+void R_SpawnSimpleLinePortal(line_t &curline, const int lineid, int type)
+{
+   int searchPosition = -1;
+   line_t *line = lineid > 0 ? P_FindLine(lineid, &searchPosition) : &curline;
+   if(!line)   // exit quickly if no line found
+      return;
+
+   // Happy coincidence: just reuse enum portal_type
+   if(type < 0)
+      type = 0;
+   else if(type > 2)
+      type = 2;
+
+   portal_t *portal;
+   sector_t *const sector = curline.frontsector;
+   Mobj *skycam;
+   const int CamType = E_ThingNumForName("EESkyboxCam");
+   switch(type)
+   {
+   case 0:  // plane portal
+      portal = R_GetPlanePortal(&sector->ceilingpic,
+                                &sector->ceilingheight,
+                                &sector->lightlevel,
+                                &sector->ceiling_xoffs,
+                                &sector->ceiling_yoffs,
+                                &sector->ceilingbaseangle,
+                                &sector->ceilingangle);
+      break;
+   case 1:  // horizon portal
+      portal = R_GetHorizonPortal(&sector->floorpic, &sector->ceilingpic,
+                                  &sector->floorheight, &sector->ceilingheight,
+                                  &sector->lightlevel, &sector->lightlevel,
+                                  &sector->floor_xoffs, &sector->floor_yoffs,
+                                  &sector->ceiling_xoffs, &sector->ceiling_yoffs,
+                                  &sector->floorbaseangle, &sector->floorangle,
+                                  &sector->ceilingbaseangle, &sector->ceilingangle);
+      break;
+   case 2:  // skybox portal
+      skycam = sector->thinglist;
+      while(skycam)
+      {
+         if(skycam->type == CamType)
+            break;
+         skycam = skycam->snext;
+      }
+      if(!skycam)
+      {
+         C_Printf(FC_ERROR "Skybox found with no skybox camera\a\n");
+         return;
+      }
+      portal = R_GetSkyBoxPortal(skycam);
+      break;
+   }
+
+   do
+   {
+      P_SetPortal(sector, line, portal, portal_lineonly);
+      line = lineid > 0 ? P_FindLine(lineid, &searchPosition) : nullptr;
+   } while(line);
 }
 
 // EOF

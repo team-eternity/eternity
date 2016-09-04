@@ -138,14 +138,6 @@ typedef enum
    portal_linked
 } portal_type;
 
-typedef enum
-{
-   portal_ceiling,
-   portal_floor,
-   portal_both,
-   portal_lineonly, // SoM: Added for linked line-line portals.
-} portal_effect;
-
 static void P_SpawnDeferredParamPortal(line_t *line, int staticFn);
 static void P_SpawnPortal(line_t *, int);
 
@@ -1349,6 +1341,11 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
          P_SpawnPortal(&lines[i], staticFn);
          break;
       
+         // new portal specials
+      case EV_STATIC_PORTAL_LINE_PARAM_SIMPLE:
+         R_SpawnSimpleLinePortal(lines[i], lines[i].args[0], lines[i].args[1]);
+         break;
+
          // haleyjd 02/28/07: Line_SetIdentification
          // TODO: allow upper byte in args[2] for Hexen-format maps
       case EV_STATIC_LINE_SET_IDENTIFICATION: 
@@ -2456,7 +2453,7 @@ void P_AttachSectors(const line_t *line, int staticFn)
 //
 // P_SetPortal
 //
-static void P_SetPortal(sector_t *sec, line_t *line, portal_t *portal, portal_effect effects)
+void P_SetPortal(sector_t *sec, line_t *line, portal_t *portal, portal_effect effects)
 {
    if(portal->type == R_LINKED && sec->groupid == R_NOGROUP)
    {
