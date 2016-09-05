@@ -261,8 +261,7 @@ public:
    // Returns NULL when the search has reached the end of the hash chain.
    // Overload for pre-computed unmodulated hash codes.
    //
-   item_type *keyIterator(item_type *object, param_key_type key,
-                          unsigned int unmodHC)
+   item_type *keyIterator(item_type *object, param_key_type key, unsigned int unmodHC) const
    {
       item_type *ret;
 
@@ -293,7 +292,7 @@ public:
    // same key. If passed NULL in object, it will start a new search.
    // Returns NULL when the search has reached the end of the hash chain.
    //
-   item_type *keyIterator(item_type *object, param_key_type key)
+   item_type *keyIterator(item_type *object, param_key_type key) const
    {
       item_type *ret;
 

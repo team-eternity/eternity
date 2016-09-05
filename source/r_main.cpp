@@ -919,8 +919,8 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    view.z      = M_FixedToFloat(viewz);
    view.angle  = (ANG90 - viewangle) * PI / ANG180;
    view.pitch  = (ANG90 - viewpitch) * PI / ANG180;
-   view.sin    = sin(view.angle);
-   view.cos    = cos(view.angle);
+   view.sin    = sinf(view.angle);
+   view.cos    = cosf(view.angle);
    view.lerp   = lerp;
    view.sector = R_PointInSubsector(viewx, viewy)->sector;
 

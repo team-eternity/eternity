@@ -412,7 +412,7 @@ typedef enum
 
 extern gametype_t GameType, DefaultGameType;
 
-extern int markUnknowns;
+extern int p_markunknowns;
 
 #endif
 

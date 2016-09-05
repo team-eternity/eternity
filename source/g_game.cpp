@@ -1062,7 +1062,7 @@ void G_DoPlayDemo(void)
       default_allowmlook = allowmlook;
       allowmlook = 0;
 
-      // haleyjd 06/07/12: for the sake of Heretic/Hexen demos only
+      // for the sake of Heretic/Hexen demos only
       pitchedflight = false;
 
       // killough 3/6/98: rearrange to fix savegame bugs (moved fastparm,
@@ -2051,12 +2051,7 @@ void G_Ticker()
    C_NetTicker();        // sf: console network commands
    if(inwipe)
       Wipe_Ticker();
-
-#if 0
-   // haleyjd 03/15/03: execute scheduled Small callbacks
-   SM_ExecuteCallbacks();
-#endif
-   
+ 
    if(gamestate == GS_LEVEL)
    {
       P_Ticker();
@@ -2532,7 +2527,6 @@ static char    d_mapname[10];
 
 int G_GetMapForName(const char *name)
 {
-   // haleyjd 03/17/02: do not write back into argument!
    char normName[9];
    int episode, map;
 
@@ -2600,8 +2594,8 @@ void G_DeferedInitNew(skill_t skill, const char *levelname)
    
    d_skill = skill;
 
-   // haleyjd 06/16/10: default to NULL
-   d_dir = NULL;
+   // managed directory defaults to null
+   d_dir = nullptr;
    inmanageddir = MD_NONE;
    
    gameaction = ga_newgame;

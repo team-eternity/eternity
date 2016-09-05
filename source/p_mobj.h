@@ -424,6 +424,7 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
 bool  P_SetMobjState(Mobj *mobj, statenum_t state);
 void  P_MobjThinker(Mobj *mobj);
 void  P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown, bool ptcl);
+void  P_SpawnUnknownThings();
 Mobj *P_SpawnMapThing(mapthing_t *mt);
 bool  P_CheckMissileSpawn(Mobj *);  // killough 8/2/98
 void  P_ExplodeMissile(Mobj *);     // killough
@@ -551,7 +552,7 @@ inline static fixed_t getThingZ(Mobj *mo1, Mobj *mo2)
 // Misc. mobj flags
 //
 
-enum
+enum mobjflags_e : unsigned int
 {
    MF_SPECIAL      = 0x00000001, // Call P_SpecialThing when touched.
    MF_SOLID        = 0x00000002, // Blocks.    
@@ -587,7 +588,7 @@ enum
    MF_TRANSLUCENT  = 0x80000000  // Translucent sprite - phares
 };
 
-enum
+enum mobjflags2_e : unsigned int
 {
    // haleyjd 04/09/99: extended mobj flags
    // More of these will be filled in as I add support.
@@ -626,7 +627,7 @@ enum
 };
 
 // haleyjd 11/03/02: flags3 -- even more stuff!
-enum
+enum mobjflags3_e : unsigned int
 {
    MF3_GHOST        = 0x00000001,  // heretic ghost effect
    MF3_THRUGHOST    = 0x00000002,  // object passes through ghosts
@@ -662,7 +663,7 @@ enum
    MF3_RIP          = 0x80000000   // ripper - goes through everything
 };
 
-enum
+enum mobjflags4_e : unsigned int
 {
    MF4_AUTOTRANSLATE  = 0x00000001, // DOOM sprite is automatically translated
    MF4_NORADIUSDMG    = 0x00000002, // Doesn't take damage from blast radii
