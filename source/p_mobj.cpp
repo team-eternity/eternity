@@ -2019,6 +2019,31 @@ void P_SpawnPlayer(mapthing_t* mthing)
       P_ResetChasecam();
 }
 
+static PODCollection<mapthing_t> UnknownThings;
+
+// 
+// Spawn unknowns at the location of unsupported object types
+//
+void P_SpawnUnknownThings()
+{
+   // must be enabled, not in a netgame, and not dealing with demos
+   if(!p_markunknowns || netgame || demorecording || demoplayback)
+      return;
+
+   if(UnknownThings.isEmpty())
+      return;
+
+   for(auto &mt : UnknownThings)
+   {
+      int type = UnknownThingType;
+      if(mt.type == 32000)
+         type = E_SafeThingName("DoomBuilderCameraSpot");
+
+      P_SpawnMobj(mt.x, mt.y, ONFLOORZ, type);
+   }
+
+   UnknownThings.clear();
+}
 
 //
 // P_SpawnMapThing
@@ -2192,19 +2217,21 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
                      M_FixedToDouble(mthing->x),
                      M_FixedToDouble(mthing->y));
       }
+      else
+         UnknownThings.add(*mthing);
 
-       return nullptr;  // sf
+       return nullptr;
    }
 
    // don't spawn keycards and players in deathmatch
    if(GameType == gt_dm && (mobjinfo[i]->flags & MF_NOTDMATCH))
-      return nullptr;        // sf
+      return nullptr;
 
    // don't spawn any monsters if -nomonsters
    if(nomonsters &&
       ((mobjinfo[i]->flags3 & MF3_KILLABLE) ||
        (mobjinfo[i]->flags & MF_COUNTKILL)))
-      return nullptr;        // sf
+      return nullptr;
 
    // haleyjd 08/18/13: Heretic includes some registered-only items in its
    // first episode, as a bonus for play on the registered version. Unlike
