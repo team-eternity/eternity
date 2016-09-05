@@ -1370,6 +1370,50 @@ portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,
 //
 
 //
+// Helper for decoding portal type from number
+//
+portal_t *R_portalFromCode(sector_t *sector, int code)
+{
+   code &= 3;
+   Mobj *skycam;
+   const int CamType = E_ThingNumForName("EESkyboxCam");
+   switch(code)
+   {
+   case 0:  // plane portal
+      return R_GetPlanePortal(&sector->ceilingpic,
+                              &sector->ceilingheight,
+                              &sector->lightlevel,
+                              &sector->ceiling_xoffs,
+                              &sector->ceiling_yoffs,
+                              &sector->ceilingbaseangle,
+                              &sector->ceilingangle);
+   case 1: // horizon portal
+      return R_GetHorizonPortal(&sector->floorpic, &sector->ceilingpic,
+                                &sector->floorheight, &sector->ceilingheight,
+                                &sector->lightlevel, &sector->lightlevel,
+                                &sector->floor_xoffs, &sector->floor_yoffs,
+                                &sector->ceiling_xoffs, &sector->ceiling_yoffs,
+                                &sector->floorbaseangle, &sector->floorangle,
+                                &sector->ceilingbaseangle, &sector->ceilingangle);
+   case 2:
+      skycam = sector->thinglist;
+      while(skycam)
+      {
+         if(skycam->type == CamType)
+            break;
+         skycam = skycam->snext;
+      }
+      if(!skycam)
+      {
+         C_Printf(FC_ERROR "Skybox found with no skybox camera\a\n");
+         return nullptr;
+      }
+      return R_GetSkyBoxPortal(skycam);
+   }
+   return nullptr;
+}
+
+//
 // Implements Line_SetSimplePortal
 //
 // Parameters:
@@ -1384,58 +1428,21 @@ void R_SpawnSimpleLinePortal(line_t &curline, const int lineid, int type)
    if(!line)   // exit quickly if no line found
       return;
 
-   // Happy coincidence: just reuse enum portal_type
    if(type < 0)
       type = 0;
    else if(type > 2)
       type = 2;
 
-   portal_t *portal;
-   sector_t *const sector = curline.frontsector;
-   Mobj *skycam;
-   const int CamType = E_ThingNumForName("EESkyboxCam");
-   switch(type)
-   {
-   case 0:  // plane portal
-      portal = R_GetPlanePortal(&sector->ceilingpic,
-                                &sector->ceilingheight,
-                                &sector->lightlevel,
-                                &sector->ceiling_xoffs,
-                                &sector->ceiling_yoffs,
-                                &sector->ceilingbaseangle,
-                                &sector->ceilingangle);
-      break;
-   case 1:  // horizon portal
-      portal = R_GetHorizonPortal(&sector->floorpic, &sector->ceilingpic,
-                                  &sector->floorheight, &sector->ceilingheight,
-                                  &sector->lightlevel, &sector->lightlevel,
-                                  &sector->floor_xoffs, &sector->floor_yoffs,
-                                  &sector->ceiling_xoffs, &sector->ceiling_yoffs,
-                                  &sector->floorbaseangle, &sector->floorangle,
-                                  &sector->ceilingbaseangle, &sector->ceilingangle);
-      break;
-   case 2:  // skybox portal
-      skycam = sector->thinglist;
-      while(skycam)
-      {
-         if(skycam->type == CamType)
-            break;
-         skycam = skycam->snext;
-      }
-      if(!skycam)
-      {
-         C_Printf(FC_ERROR "Skybox found with no skybox camera\a\n");
-         return;
-      }
-      portal = R_GetSkyBoxPortal(skycam);
-      break;
-   }
+   portal_t *portal = R_portalFromCode(curline.frontsector, type);
 
-   do
+   if(portal)
    {
-      P_SetPortal(sector, line, portal, portal_lineonly);
-      line = lineid > 0 ? P_FindLine(lineid, &searchPosition) : nullptr;
-   } while(line);
+      do
+      {
+         P_SetPortal(line->frontsector, line, portal, portal_lineonly);
+         line = lineid > 0 ? P_FindLine(lineid, &searchPosition) : nullptr;
+      } while(line);
+   }
 }
 
 //
@@ -1530,6 +1537,48 @@ void R_SpawnAnchoredLinePortal(line_t &line, int destlineid, int flags)
             portal2->data.link.polyportalpartner = portal;
          }
       }
+   }
+}
+
+//
+// Implements Sector_SetSimplePortals
+//
+// Applies a plane, horizon or skybox portal on tagged floor or ceiling
+//
+// Parameters:
+// * tag: tag of target sectors
+// * type: add 0 (plane), 1 (horizon), 2 (skybox) to 0 (floor), 4 (ceiling), 8
+//   (both)
+//
+void R_SpawnSimpleSectorPortal(const line_t &line, int tag, int type)
+{
+   if((type & 3) == 3 || type > 10 || type < 0)
+   {
+      C_Printf(FC_ERROR "Invalid type %d\a\n", type);
+      return;
+   }
+   if(tag <= 0)
+   {
+      C_Printf(FC_ERROR "Anchored sector portal target tag must be > 0\a\n");
+      return;
+   }
+
+   portal_t *portal = R_portalFromCode(line.frontsector, type);
+   if(!portal)
+      return;
+
+   portal_effect effect;
+   if(type < 4)
+      effect = portal_floor;
+   else if(type < 8)
+      effect = portal_ceiling;
+   else
+      effect = portal_both;
+
+   int s = -1;
+   while((s = P_FindSectorFromTag(tag, s)) >= 0)
+   {
+      P_SetPortal(&sectors[s], nullptr, portal, effect);
    }
 }
 
