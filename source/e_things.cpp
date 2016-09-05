@@ -940,10 +940,10 @@ static void E_RemoveMetaStatePtr(mobjinfo_t *mi, MetaState *ms)
 //
 static void E_RemoveMetaState(mobjinfo_t *mi, const char *name)
 {
-   MetaObject *obj;
+   MetaState *obj;
 
-   if((obj = mi->meta->getObjectKeyAndType(name, RTTI(MetaState))))
-      E_RemoveMetaStatePtr(mi, static_cast<MetaState *>(obj));
+   if((obj = mi->meta->getObjectKeyAndTypeEx<MetaState>(name)))
+      E_RemoveMetaStatePtr(mi, obj);
 }
 
 //
@@ -952,13 +952,7 @@ static void E_RemoveMetaState(mobjinfo_t *mi, const char *name)
 //
 static MetaState *E_GetMetaState(mobjinfo_t *mi, const char *name)
 {
-   MetaObject *obj = nullptr;
-   MetaState  *ret = nullptr;
-   
-   if((obj = mi->meta->getObjectKeyAndType(name, RTTI(MetaState))))
-      ret = static_cast<MetaState *>(obj);
-
-   return ret;
+   return mi->meta->getObjectKeyAndTypeEx<MetaState>(name);
 }
 
 //
@@ -1435,9 +1429,8 @@ static void E_ProcessDecorateStatesRecursive(cfg_t *thingsec, int thingnum, bool
 static void E_ProcessDamageFactors(mobjinfo_t *info, cfg_t *cfg)
 {
    unsigned int numfactors = cfg_size(cfg, ITEM_TNG_DAMAGEFACTOR);
-   unsigned int i;
 
-   for(i = 0; i < numfactors; ++i)
+   for(unsigned int i = 0; i < numfactors; i++)
    {
       cfg_t  *sec = cfg_getnmvprop(cfg, ITEM_TNG_DAMAGEFACTOR, i);
       emod_t *mod = E_DamageTypeForName(cfg_getstr(sec, ITEM_TNG_DMGF_MODNAME));
