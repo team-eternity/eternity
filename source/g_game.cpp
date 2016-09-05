@@ -2051,12 +2051,7 @@ void G_Ticker()
    C_NetTicker();        // sf: console network commands
    if(inwipe)
       Wipe_Ticker();
-
-#if 0
-   // haleyjd 03/15/03: execute scheduled Small callbacks
-   SM_ExecuteCallbacks();
-#endif
-   
+ 
    if(gamestate == GS_LEVEL)
    {
       P_Ticker();
