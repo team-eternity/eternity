@@ -50,9 +50,11 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>$(IncludePath)</IncludePath>
+    <LibraryPath>c:\users\quasar\code\SDL-1.2.15\lib\x86;c:\users\quasar\code\SDL_mixer-1.2.12\lib\x86;c:\users\quasar\code\SDL_net-1.2.8\lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>$(IncludePath)</IncludePath>
+    <LibraryPath>c:\Users\Quasar\code\SDL-1.2.15\lib\x86;c:\Users\Quasar\Code\SDL_mixer-1.2.12\lib\x86;c:\users\Quasar\Code\SDL_net-1.2.8\lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Midl>
