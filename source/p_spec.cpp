@@ -2786,7 +2786,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       line->sidenum[1] = line->sidenum[0];
       line->flags &= ~ML_BLOCKING;
       line->flags |= ML_TWOSIDED;
-      line->beyondportalsector = partner->frontsector;
+      line->intflags |= MLI_POLYPORTALLINE;
    };
 
    bool otherIsEdge = false;
@@ -2916,6 +2916,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       {
          // special case for line portals
          portal = R_GetTwoWayPortal(s, line - lines);
+         line->beyondportalline = &lines[s];
          P_SetPortal(sector, line, portal, portal_lineonly);
          return;
       }
@@ -3033,6 +3034,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          line->args[ev_LinePortal_Arg_Type] != ev_LinePortal_Type_EEClassic)
       {
          portal = R_GetLinkedPortal(s, line - lines, planez, toid, fromid);
+         line->beyondportalline = &lines[s];
          P_SetPortal(sector, line, portal, portal_lineonly);
 
          // Also check for polyobject portals
@@ -3062,11 +3064,15 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          staticFn == EV_STATIC_POLYOBJ_START_LINE ||
          staticFn == EV_STATIC_PORTAL_LINE_PARAM_COMPAT)
       {
-         if(!otherIsEdge)
+         if (!otherIsEdge)
+         {
+            lines[s].beyondportalline = line;
             P_SetPortal(lines[s].frontsector, lines + s, portal, portal_lineonly);
+         }
          
          // ioanch 20160226: add partner portals
          portal_t *portal2 = R_GetLinkedPortal(s, line - lines, planez, toid, fromid);
+         line->beyondportalline = &lines[s];
          P_SetPortal(sector, line, portal2, portal_lineonly);
 
          if(!otherIsEdge && (!lines[s].backsector || !line->backsector))

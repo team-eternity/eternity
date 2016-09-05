@@ -425,7 +425,7 @@ struct line_t
    float alpha;             // alpha
 
    // ioanch 20160312
-   sector_t *beyondportalsector; // reference to a sector beyond a 1-side portal
+   line_t *beyondportalline; // reference to a sector beyond a 1-side portal
 };
 
 struct rpolyobj_t;

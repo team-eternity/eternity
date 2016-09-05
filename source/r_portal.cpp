@@ -366,7 +366,8 @@ static void R_CalculateDeltas(int markerlinenum, int anchorlinenum,
 }
 
 static void R_calculateTransform(int markerlinenum, int anchorlinenum,
-                                 portaltransform_t *transf)
+                                 portaltransform_t *transf, 
+                                 bool flipped = false)
 {
    // TODO: define Z offset
    const line_t *m = lines + markerlinenum;
@@ -380,7 +381,7 @@ static void R_calculateTransform(int markerlinenum, int anchorlinenum,
 
    // angle delta between the normals behind the linedefs
    // TODO: add support for flipped anchors (line portals)
-   double rot = atan2(-m->ny, -m->nx) - atan2(-a->ny, -a->nx);
+   double rot = atan2(flipped ? m->ny : -m->ny, flipped ? m->nx : -m->nx) - atan2(-a->ny, -a->nx);
 
    double cosval = cos(rot);
    double sinval = sin(rot);
@@ -438,12 +439,13 @@ portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum)
 // Either finds a matching existing two-way anchored portal matching the
 // parameters, or creates a new one. Used in p_spec.c.
 //
-portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum)
+portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum, bool flipped)
 {
    portal_t *rover, *ret;
    edefstructvar(anchordata_t, adata);
 
-   R_calculateTransform(markerlinenum, anchorlinenum, &adata.transform);
+   R_calculateTransform(markerlinenum, anchorlinenum, &adata.transform,
+      flipped);
 
    adata.maker = markerlinenum;
    adata.anchor = anchorlinenum;
@@ -1476,11 +1478,13 @@ void R_SpawnAnchoredLinePortal(line_t &line, int destlineid, int flags)
    if(!linked)
    {
       // TODO: fix this to work with lines, whose anchors are flipped
-      portal_t *portal = R_GetTwoWayPortal(makerlinenum, anchorlinenum);
+      portal_t *portal = R_GetTwoWayPortal(makerlinenum, anchorlinenum, true);
+      line.beyondportalline = otherline;
       P_SetPortal(line.frontsector, &line, portal, portal_lineonly);
       if(twoway)
       {
-         portal = R_GetTwoWayPortal(anchorlinenum, makerlinenum);
+         portal = R_GetTwoWayPortal(anchorlinenum, makerlinenum, true);
+         otherline->beyondportalline = &line;
          P_SetPortal(otherline->frontsector, otherline, portal, portal_lineonly);
       }
    }
@@ -1494,6 +1498,7 @@ void R_SpawnAnchoredLinePortal(line_t &line, int destlineid, int flags)
       int fromid = line.frontsector->groupid;
       portal_t *portal = R_GetLinkedPortal(makerlinenum, anchorlinenum, 0,
                                            fromid, toid);
+      line.beyondportalline = otherline;
       P_SetPortal(line.frontsector, &line, portal, portal_lineonly);
       bool otherIsEdge = !!(otherline->extflags &
                             (EX_ML_LOWERPORTAL | EX_ML_UPPERPORTAL));
@@ -1501,6 +1506,7 @@ void R_SpawnAnchoredLinePortal(line_t &line, int destlineid, int flags)
       {
          portal_t *portal2 = R_GetLinkedPortal(anchorlinenum, makerlinenum, 0,
                                                toid, fromid);
+         otherline->beyondportalline = &line;
          P_SetPortal(otherline->frontsector, otherline, portal2, portal_lineonly);
 
          if(!line.backsector || !otherline->backsector)
@@ -1513,7 +1519,7 @@ void R_SpawnAnchoredLinePortal(line_t &line, int destlineid, int flags)
                line->sidenum[1] = line->sidenum[0];
                line->flags &= ~ML_BLOCKING;
                line->flags |= ML_TWOSIDED;
-               line->beyondportalsector = partner->frontsector;
+               line->intflags |= MLI_POLYPORTALLINE;
             };
 
             if(!line.backsector)

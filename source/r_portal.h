@@ -196,7 +196,8 @@ struct portal_t
 
 portal_t *R_GetSkyBoxPortal(Mobj *camera);
 portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum);
-portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum);
+portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum, 
+   bool flipped = false);
 
 portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic, 
                              fixed_t *floorz, fixed_t *ceilingz, 

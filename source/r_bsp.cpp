@@ -1603,11 +1603,9 @@ static bool R_allowBehindLinePortal(const line_t *portalLine, const line_t *rend
    if((rv1.x == viewx && rv1.y == viewy) || (rv2.x == viewx && rv2.y == viewy))
       return false;  // easily rejected here
 
-   // portal line vertices, shifted by offset
-   v2fixed_t pv1 = {portalLine->v1->x + viewx - portalrender.curwindow->vx,
-                    portalLine->v1->y + viewy - portalrender.curwindow->vy};
-   v2fixed_t pv2 = {portalLine->v2->x + viewx - portalrender.curwindow->vx,
-                    portalLine->v2->y + viewy - portalrender.curwindow->vy};
+   // portal line vertices, flipped
+   v2fixed_t pv1 = {portalLine->v2->x, portalLine->v2->y};
+   v2fixed_t pv2 = {portalLine->v1->x, portalLine->v1->y};
 
    // resolve exact target line
    if(rv1.x == pv2.x && rv1.y == pv2.y && rv2.x == pv1.x && rv2.y == pv1.y)
@@ -1736,9 +1734,10 @@ static void R_AddLine(seg_t *line, bool dynasegs)
    {
       // only reject if they're anchored portals (including linked)
       rportaltype_e type = portalrender.curwindow->portal->type;
+      const line_t *otherline = portalrender.curwindow->line->beyondportalline;
 
-      if((type == R_LINKED || type == R_ANCHORED || type == R_TWOWAY) &&
-         !R_allowBehindLinePortal(portalrender.curwindow->line, line->linedef))
+      if(otherline && (type == R_LINKED || type == R_ANCHORED || type == R_TWOWAY) &&
+         !R_allowBehindLinePortal(otherline, line->linedef))
       {
          return;
       }
@@ -2002,7 +2001,9 @@ static void R_AddLine(seg_t *line, bool dynasegs)
    seg.f_portalignore = seg.c_portalignore = false;
 
    // ioanch 20160312: also treat polyobject portal lines as 1-sided
-   const sector_t *beyond = seg.line->linedef->beyondportalsector;
+   const sector_t *beyond = seg.line->linedef->intflags & MLI_POLYPORTALLINE && 
+      seg.line->linedef->beyondportalline ? 
+      seg.line->linedef->beyondportalline->frontsector : nullptr;
    if(!seg.backsec || beyond) 
    {
       seg.twosided = false;

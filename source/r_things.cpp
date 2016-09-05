@@ -861,17 +861,9 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr)
    // line portal
    if(portalrender.curwindow && portalrender.curwindow->line) 
    {
-      const line_t &l = *portalrender.curwindow->line;
-
-      // sprite position, shifted by offset
-      // do NOT use interpolated coordinates for this check!
-      v2fixed_t pv = {thing->x - viewx + portalrender.curwindow->vx,
-                      thing->y - viewy + portalrender.curwindow->vy};
-
-      if(P_PointOnLineSide(pv.x, pv.y, &l) == 0)
-      {
+      const line_t *otherline = portalrender.curwindow->line->beyondportalline;
+      if (otherline && P_PointOnLineSide(thing->x, thing->y, otherline) != 0)
          return;
-      }
    }
 
    rotx = (tempx * view.cos) - (tempy * view.sin);
