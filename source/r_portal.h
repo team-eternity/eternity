@@ -197,7 +197,7 @@ struct portal_t
 portal_t *R_GetSkyBoxPortal(Mobj *camera);
 portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum);
 portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum, 
-   bool flipped = false);
+   bool flipped = false, fixed_t zoffset = 0);
 
 portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic, 
                              fixed_t *floorz, fixed_t *ceilingz, 
@@ -223,7 +223,8 @@ portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,
 //
 
 void R_SpawnSimpleLinePortal(line_t &line, int lineid, int type);
-void R_SpawnAnchoredLinePortal(line_t &line, int destlineid, int flags);
+void R_SpawnAnchoredLinePortal(line_t &line, int destlineid, int flags, 
+   fixed_t zoffset);
 void R_SpawnSimpleSectorPortal(const line_t &line, int tag, int type);
 
 //=============================================================================

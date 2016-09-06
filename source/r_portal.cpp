@@ -367,7 +367,7 @@ static void R_CalculateDeltas(int markerlinenum, int anchorlinenum,
 
 static void R_calculateTransform(int markerlinenum, int anchorlinenum,
                                  portaltransform_t *transf, 
-                                 bool flipped = false)
+                                 bool flipped = false, fixed_t zoffset = 0)
 {
    // TODO: define Z offset
    const line_t *m = lines + markerlinenum;
@@ -392,7 +392,7 @@ static void R_calculateTransform(int markerlinenum, int anchorlinenum,
    transf->rot[1][1] = cosval;
    transf->move.x = -ax * cosval + ay * sinval + mx;
    transf->move.y = -ax * sinval - ay * cosval + my;
-   transf->move.z = 0;
+   transf->move.z = M_FixedToDouble(zoffset);
 
    transf->angle = rot;
 }
@@ -439,13 +439,14 @@ portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum)
 // Either finds a matching existing two-way anchored portal matching the
 // parameters, or creates a new one. Used in p_spec.c.
 //
-portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum, bool flipped)
+portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum, bool flipped,
+   fixed_t zoffset)
 {
    portal_t *rover, *ret;
    edefstructvar(anchordata_t, adata);
 
    R_calculateTransform(markerlinenum, anchorlinenum, &adata.transform,
-      flipped);
+      flipped, zoffset);
 
    adata.maker = markerlinenum;
    adata.anchor = anchorlinenum;
@@ -1458,9 +1459,11 @@ void R_SpawnSimpleLinePortal(line_t &curline, const int lineid, int type)
 //      offset rules and won't be able to rotate
 //   2: make portal two-way: the anchor target linedef will also have a portal
 //      of the same kind pointing back.
+// * Z offset from this line to destination line
 //
 int P_CreatePortalGroup(sector_t *from);
-void R_SpawnAnchoredLinePortal(line_t &line, int destlineid, int flags)
+void R_SpawnAnchoredLinePortal(line_t &line, int destlineid, int flags, 
+   fixed_t zoffset)
 {
    if(destlineid <= 0)
    {
@@ -1485,12 +1488,14 @@ void R_SpawnAnchoredLinePortal(line_t &line, int destlineid, int flags)
    if(!linked)
    {
       // TODO: fix this to work with lines, whose anchors are flipped
-      portal_t *portal = R_GetTwoWayPortal(makerlinenum, anchorlinenum, true);
+      portal_t *portal = R_GetTwoWayPortal(makerlinenum, anchorlinenum, true,
+         zoffset);
       line.beyondportalline = otherline;
       P_SetPortal(line.frontsector, &line, portal, portal_lineonly);
       if(twoway)
       {
-         portal = R_GetTwoWayPortal(anchorlinenum, makerlinenum, true);
+         portal = R_GetTwoWayPortal(anchorlinenum, makerlinenum, true, 
+            -zoffset);
          otherline->beyondportalline = &line;
          P_SetPortal(otherline->frontsector, otherline, portal, portal_lineonly);
       }
