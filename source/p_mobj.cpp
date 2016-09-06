@@ -2212,7 +2212,7 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
    {
       if(!p_markunknowns)
       {
-         doom_printf(FC_ERROR "Unknown thing type %i at (%f, %f)",
+         doom_printf(FC_ERROR "Unknown thing type %d at (%.2f, %.2f)",
                      mthing->type,
                      M_FixedToDouble(mthing->x),
                      M_FixedToDouble(mthing->y));
