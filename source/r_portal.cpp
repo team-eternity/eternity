@@ -403,12 +403,14 @@ static void R_calculateTransform(int markerlinenum, int anchorlinenum,
 // Either finds a matching existing anchored portal matching the
 // parameters, or creates a new one. Used in p_spec.c.
 //
-portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum)
+portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum, 
+   fixed_t zoffset)
 {
    portal_t *rover, *ret;
    edefstructvar(anchordata_t, adata);
 
-   R_calculateTransform(markerlinenum, anchorlinenum, &adata.transform);
+   R_calculateTransform(markerlinenum, anchorlinenum, &adata.transform, false,
+      zoffset);
 
    adata.maker = markerlinenum;
    adata.anchor = anchorlinenum;
@@ -1492,7 +1494,9 @@ void R_SpawnAnchoredLinePortal(line_t &line, int destlineid, int flags,
          zoffset);
       line.beyondportalline = otherline;
       P_SetPortal(line.frontsector, &line, portal, portal_lineonly);
-      if(twoway)
+      bool otherIsEdge = !!(otherline->extflags &
+         (EX_ML_LOWERPORTAL | EX_ML_UPPERPORTAL));
+      if(twoway && !otherIsEdge)
       {
          portal = R_GetTwoWayPortal(anchorlinenum, makerlinenum, true, 
             -zoffset);
@@ -1584,6 +1588,74 @@ void R_SpawnSimpleSectorPortal(const line_t &line, int tag, int type)
    while((s = P_FindSectorFromTag(tag, s)) >= 0)
    {
       P_SetPortal(&sectors[s], nullptr, portal, effect);
+   }
+}
+
+//
+// Implements Sector_SetAnchoredPortal
+//
+// Strictly for nonlinked portals
+//
+// Args:
+// * anchor line id
+// * tag of sectors near this line
+// * tag of sectors near anchor line
+// * type: 0 = floor, 1 = ceiling, 2 = both
+// * z offset (optional)
+//
+void R_SpawnAnchoredSectorPortal(const line_t &line, int lineid, int heretag,
+   int theretag, int type, fixed_t zoffset)
+{
+   if (type < 0 || type > 2)
+   {
+      C_Printf(FC_ERROR "Invalid type %d\a\n", type);
+      return;
+   }
+   if (lineid <= 0)
+   {
+      C_Printf(FC_ERROR "Anchored sector portal target line ID must be > 0\a\n");
+      return;
+   }
+   int searchPosition = -1;
+   line_t *otherline = P_FindLine(lineid, &searchPosition);
+   if (!otherline)
+   {
+      C_Printf(FC_ERROR "No anchor for portal\a\n");
+      return;
+   }
+
+   const int makerlinenum = static_cast<int>(otherline - lines);
+   const int anchorlinenum = static_cast<int>(&line - lines);
+
+   portal_t *hereportal = nullptr;
+   portal_t *thereportal = nullptr;
+
+   portal_effect effect = type == 0 ? portal_floor : type == 1 ? 
+      portal_ceiling : portal_both;
+
+   for (int s = -1; (s = P_FindSectorFromTag(heretag, s)) >= 0; )
+   {
+      if (!hereportal)
+      {
+         hereportal = effect != portal_both ?
+            R_GetTwoWayPortal(makerlinenum, anchorlinenum, false, zoffset) :
+            R_GetAnchoredPortal(makerlinenum, anchorlinenum, zoffset);
+      }
+      P_SetPortal(&sectors[s], nullptr, hereportal, effect);
+   }
+   if (effect != portal_both)
+   {
+      portal_effect opposite = effect == portal_floor ? portal_ceiling : 
+         portal_floor;
+      for (int s = -1; (s = P_FindSectorFromTag(theretag, s)) >= 0; )
+      {
+         if (!thereportal)
+         {
+            thereportal = R_GetTwoWayPortal(anchorlinenum, makerlinenum, false,
+               zoffset);
+         }
+         P_SetPortal(&sectors[s], nullptr, thereportal, opposite);
+      }
    }
 }
 
