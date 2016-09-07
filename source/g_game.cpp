@@ -1564,6 +1564,7 @@ static void G_DoCompleted()
    if(g_destmap)
    {
       wminfo.next = g_destmap;
+      wminfo.nextexplicit = true;
       if(!(GameModeInfo->flags & GIF_MAPXY))
       {
          if(wminfo.next < 1)
@@ -1574,6 +1575,8 @@ static void G_DoCompleted()
       wminfo.next--;
       g_destmap = 0;
    }
+   else
+      wminfo.nextexplicit = false;
 
    wminfo.maxkills  = totalkills;
    wminfo.maxitems  = totalitems;
@@ -1610,7 +1613,7 @@ static void G_DoWorldDone()
    gamemap = wminfo.next+1;
 
    // haleyjd: handle heretic hidden levels via missioninfo samelevel rules
-   if(GameModeInfo->missionInfo->sameLevels)
+   if(!wminfo.nextexplicit && GameModeInfo->missionInfo->sameLevels)
    {
       samelevel_t *sameLevel = GameModeInfo->missionInfo->sameLevels;
       while(sameLevel->episode != -1)
@@ -1627,7 +1630,7 @@ static void G_DoWorldDone()
    // haleyjd: customizable secret exits
    if(secretexit)
    {
-      if(*LevelInfo.nextSecret)
+      if(!wminfo.nextexplicit && *LevelInfo.nextSecret)
          G_SetGameMapName(LevelInfo.nextSecret);
       else
          G_SetGameMapName(G_GetNameForMap(gameepisode, gamemap));
@@ -1635,7 +1638,7 @@ static void G_DoWorldDone()
    else
    {
       // haleyjd 12/14/01: don't use nextlevel for secret exits here either!
-      if(*LevelInfo.nextLevel)
+      if(!wminfo.nextexplicit && *LevelInfo.nextLevel)
          G_SetGameMapName(LevelInfo.nextLevel);
       else
          G_SetGameMapName(G_GetNameForMap(gameepisode, gamemap));
