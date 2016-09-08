@@ -1633,17 +1633,20 @@ void R_SpawnAnchoredSectorPortal(const line_t &line, int lineid, int heretag,
    portal_effect effect = type == 0 ? portal_floor : type == 1 ? 
       portal_ceiling : portal_both;
 
-   for (int s = -1; (s = P_FindSectorFromTag(heretag, s)) >= 0; )
+   if(heretag > 0)
    {
-      if (!hereportal)
+      for (int s = -1; (s = P_FindSectorFromTag(heretag, s)) >= 0; )
       {
-         hereportal = effect != portal_both ?
-            R_GetTwoWayPortal(makerlinenum, anchorlinenum, false, zoffset) :
-            R_GetAnchoredPortal(makerlinenum, anchorlinenum, zoffset);
+         if (!hereportal)
+         {
+            hereportal = effect != portal_both ?
+               R_GetTwoWayPortal(makerlinenum, anchorlinenum, false, zoffset) :
+               R_GetAnchoredPortal(makerlinenum, anchorlinenum, zoffset);
+         }
+         P_SetPortal(&sectors[s], nullptr, hereportal, effect);
       }
-      P_SetPortal(&sectors[s], nullptr, hereportal, effect);
    }
-   if (effect != portal_both)
+   if (theretag > 0 && effect != portal_both)
    {
       portal_effect opposite = effect == portal_floor ? portal_ceiling : 
          portal_floor;
@@ -1656,6 +1659,83 @@ void R_SpawnAnchoredSectorPortal(const line_t &line, int lineid, int heretag,
          }
          P_SetPortal(&sectors[s], nullptr, thereportal, opposite);
       }
+   }
+}
+
+//
+// Implements Sector_SetLinkedPortal
+//
+// Unlike anchored portals, the last argument is plane Z offset, not view Z
+// offset. Plane Z is the height the portal plane exists at, because it can be
+// detached from the sector.
+//
+// Type is 0 for floor and 1 for ceiling.
+//
+void R_SpawnLinkedSectorPortal(const line_t &line, int lineid, int heretag,
+                               int theretag, int type, fixed_t planezoffset)
+{
+   if (type < 0 || type > 1)
+   {
+      C_Printf(FC_ERROR "Invalid type %d\a\n", type);
+      return;
+   }
+   if (lineid <= 0)
+   {
+      C_Printf(FC_ERROR "Linked sector portal target line ID must be > 0\a\n");
+      return;
+   }
+   int searchPosition = -1;
+   line_t *otherline = P_FindLine(lineid, &searchPosition);
+   if (!otherline)
+   {
+      C_Printf(FC_ERROR "No anchor for portal\a\n");
+      return;
+   }
+
+   const int makerlinenum = static_cast<int>(otherline - lines);
+   const int anchorlinenum = static_cast<int>(&line - lines);
+
+   portal_t *hereportal = nullptr;
+   portal_t *thereportal = nullptr;
+
+   portal_effect effect = type == 0 ? portal_floor : portal_ceiling;
+   fixed_t planez = (effect == portal_floor ? line.frontsector->floorheight :
+      line.frontsector->ceilingheight) + planezoffset;
+
+   if(line.frontsector->groupid == R_NOGROUP)
+      P_CreatePortalGroup(line.frontsector);
+   if(otherline->frontsector->groupid == R_NOGROUP)
+      P_CreatePortalGroup(otherline->frontsector);
+
+   int fromid = line.frontsector->groupid;
+   int toid = otherline->frontsector->groupid;
+
+   if(heretag > 0)
+   {
+      for (int s = -1; (s = P_FindSectorFromTag(heretag, s)) >= 0; )
+      {
+         if(!hereportal)
+         {
+            hereportal = R_GetLinkedPortal(makerlinenum, anchorlinenum, planez,
+                                           fromid, toid);
+         }
+         P_SetPortal(&sectors[s], nullptr, hereportal, effect);
+      }
+   }
+   if(theretag > 0)
+   {
+      portal_effect opposite = effect == portal_floor ? portal_ceiling :
+         portal_floor;
+      for (int s = -1; (s = P_FindSectorFromTag(theretag, s)) >= 0; )
+      {
+         if(!thereportal)
+         {
+            thereportal = R_GetLinkedPortal(anchorlinenum, makerlinenum, planez,
+                                            toid, fromid);
+         }
+         P_SetPortal(&sectors[s], nullptr, thereportal, opposite);
+      }
+
    }
 }
 

@@ -1360,6 +1360,11 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
             lines[i].args[2], lines[i].args[3], lines[i].args[4] << FRACBITS);
          break;
 
+      case EV_STATIC_PORTAL_SECTOR_PARAM_LINKED:
+         R_SpawnLinkedSectorPortal(lines[i], lines[i].args[0], lines[i].args[1],
+            lines[i].args[2], lines[i].args[3], lines[i].args[4] << FRACBITS);
+         break;
+
          // haleyjd 02/28/07: Line_SetIdentification
          // TODO: allow upper byte in args[2] for Hexen-format maps
       case EV_STATIC_LINE_SET_IDENTIFICATION: 
@@ -3066,8 +3071,6 @@ static void P_SpawnPortal(line_t *line, int staticFn)
 
       otherIsEdge = !!(lines[s].extflags &
                        (EX_ML_LOWERPORTAL | EX_ML_UPPERPORTAL));
-      if(!otherIsEdge)
-         portal = R_GetLinkedPortal(line - lines, s, planez, fromid, toid);
 
       // Special case where the portal was created with the line-to-line portal type
       if(staticFn == EV_STATIC_PORTAL_LINKED_LINE2LINE ||
@@ -3076,6 +3079,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       {
          if (!otherIsEdge)
          {
+            portal = R_GetLinkedPortal(line - lines, s, planez, fromid, toid);
             lines[s].beyondportalline = line;
             P_SetPortal(lines[s].frontsector, lines + s, portal, portal_lineonly);
          }
@@ -3099,6 +3103,8 @@ static void P_SpawnPortal(line_t *line, int staticFn)
 
          return;
       }
+      else  // prepare it for sector portal
+         portal = R_GetLinkedPortal(line - lines, s, planez, fromid, toid);
       break;
 
    default:

@@ -229,6 +229,8 @@ void R_SpawnAnchoredLinePortal(line_t &line, int destlineid, int flags,
 void R_SpawnSimpleSectorPortal(const line_t &line, int tag, int type);
 void R_SpawnAnchoredSectorPortal(const line_t &line, int lineid, int heretag,
    int theretag, int type, fixed_t zoffset);
+void R_SpawnLinkedSectorPortal(const line_t &line, int lineid, int heretag,
+   int theretag, int type, fixed_t planezoffset);
 
 //=============================================================================
 //
