@@ -426,14 +426,14 @@ public:
    unsigned int getNumItems()   const; // returns number of items in the table
 
    // Search functions. Frankly, it's more efficient to just use the "get" routines :P
-   bool hasKey(const char *key);
-   bool hasType(const char *type);
-   bool hasKeyAndType(const char *key, const char *type);
+   bool hasKey(const char *key) const;
+   bool hasType(const char *type) const;
+   bool hasKeyAndType(const char *key, const char *type) const;
 
    // Count functions.
-   int countOfKey(const char *key);
-   int countOfType(const char *type);
-   int countOfKeyAndType(const char *key, const char *type);
+   int countOfKey(const char *key) const;
+   int countOfType(const char *type) const;
+   int countOfKeyAndType(const char *key, const char *type) const;
 
    // Add/Remove Objects
    void addObject(MetaObject *object);
@@ -443,61 +443,61 @@ public:
 
    // Find objects in the table:
    // * By Key
-   MetaObject *getObject(const char *key);
-   MetaObject *getObject(size_t keyIndex);
+   MetaObject *getObject(const char *key) const;
+   MetaObject *getObject(size_t keyIndex) const;
    // * By Type
-   MetaObject *getObjectType(const char *type);
-   MetaObject *getObjectType(const MetaObject::Type &type);
+   MetaObject *getObjectType(const char *type) const;
+   MetaObject *getObjectType(const MetaObject::Type &type) const;
    // * By Key AND Type
    MetaObject *getObjectKeyAndType(const char *key, const MetaObject::Type *type) const;
-   MetaObject *getObjectKeyAndType(const char *key, const char *type);
+   MetaObject *getObjectKeyAndType(const char *key, const char *type) const;
    MetaObject *getObjectKeyAndType(size_t keyIndex, const MetaObject::Type *type) const;
-   MetaObject *getObjectKeyAndType(size_t keyIndex, const char *type);
+   MetaObject *getObjectKeyAndType(size_t keyIndex, const char *type) const;
 
    // Template finders
-   template<typename M> M *getObjectTypeEx()
+   template<typename M> M *getObjectTypeEx() const
    {
       return static_cast<M *>(getObjectType(M::StaticType));
    }
 
-   template<typename M> M *getObjectKeyAndTypeEx(const char *key)
+   template<typename M> M *getObjectKeyAndTypeEx(const char *key) const
    {
       return static_cast<M *>(getObjectKeyAndType(key, RTTI(M)));
    }
 
-   template<typename M> M *getObjectKeyAndTypeEx(size_t keyIndex)
+   template<typename M> M *getObjectKeyAndTypeEx(size_t keyIndex) const
    {
       return static_cast<M *>(getObjectKeyAndType(keyIndex, RTTI(M)));
    }
 
    // Iterators
    // * By Key
-   MetaObject *getNextObject(MetaObject *object, const char *key);
-   MetaObject *getNextObject(MetaObject *object, size_t keyIndex);
+   MetaObject *getNextObject(MetaObject *object, const char *key) const;
+   MetaObject *getNextObject(MetaObject *object, size_t keyIndex) const;
    // * By Type
-   MetaObject *getNextType(MetaObject *object, const char *type);
-   MetaObject *getNextType(MetaObject *object, const MetaObject::Type *type);
+   MetaObject *getNextType(MetaObject *object, const char *type) const;
+   MetaObject *getNextType(MetaObject *object, const MetaObject::Type *type) const;
    // * By Key AND Type
-   MetaObject *getNextKeyAndType(MetaObject *object, const char *key, const char *type);
-   MetaObject *getNextKeyAndType(MetaObject *object, size_t keyIdx,   const char *type);
-   MetaObject *getNextKeyAndType(MetaObject *object, const char *key, const MetaObject::Type *type);
-   MetaObject *getNextKeyAndType(MetaObject *object, size_t keyIdx,   const MetaObject::Type *type);
+   MetaObject *getNextKeyAndType(MetaObject *object, const char *key, const char *type) const;
+   MetaObject *getNextKeyAndType(MetaObject *object, size_t keyIdx,   const char *type) const;
+   MetaObject *getNextKeyAndType(MetaObject *object, const char *key, const MetaObject::Type *type) const;
+   MetaObject *getNextKeyAndType(MetaObject *object, size_t keyIdx,   const MetaObject::Type *type) const;
    // * Full table iterators
    MetaObject *tableIterator(MetaObject *object) const;
    const MetaObject *tableIterator(const MetaObject *object) const;
 
    // Template iterators
-   template<typename M> M *getNextTypeEx(M *object)
+   template<typename M> M *getNextTypeEx(M *object) const
    {
       return static_cast<M *>(getNextType(object, RTTI(M)));
    }
 
-   template<typename M> M *getNextKeyAndTypeEx(M *object, const char *key)
+   template<typename M> M *getNextKeyAndTypeEx(M *object, const char *key) const
    {
       return static_cast<M *>(getNextKeyAndType(object, key, RTTI(M)));
    }
 
-   template<typename M> M *getNextKeyAndTypeEx(M *object, size_t keyIdx)
+   template<typename M> M *getNextKeyAndTypeEx(M *object, size_t keyIdx) const
    {
       return static_cast<M *>(getNextKeyAndType(object, keyIdx, RTTI(M)));
    }
@@ -508,7 +508,7 @@ public:
    void addInt(size_t keyIndex, int value);
    void addInt(const char *key, int value);
    int  getInt(size_t keyIndex, int defValue) const;
-   int  getInt(const char *key, int defValue);
+   int  getInt(const char *key, int defValue) const;
    void setInt(size_t keyIndex, int newValue);
    void setInt(const char *key, int newValue);
    int  removeInt(const char *key);
@@ -521,13 +521,13 @@ public:
 
    // Double floating-point
    void   addDouble(const char *key, double value);
-   double getDouble(const char *key, double defValue);
+   double getDouble(const char *key, double defValue) const;
    void   setDouble(const char *key, double newValue);
    double removeDouble(const char *key);
 
    // Managed strings
    void        addString(const char *key, const char *value);
-   const char *getString(const char *key, const char *defValue);
+   const char *getString(const char *key, const char *defValue) const;
    void        setString(const char *key, const char *newValue);
    char       *removeString(const char *key);
    void        removeStringNR(const char *key);
@@ -535,7 +535,7 @@ public:
    // Constant shared strings
    void        addConstString(size_t keyIndex, const char *value);
    void        addConstString(const char *key, const char *value);
-   const char *getConstString(const char *key, const char *defValue);
+   const char *getConstString(const char *key, const char *defValue) const;
    void        setConstString(size_t keyIndex, const char *newValue);
    void        setConstString(const char *key, const char *newValue);
    const char *removeConstString(const char *key);

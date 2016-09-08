@@ -58,15 +58,6 @@
     <Filter Include="Source Files\G_\G_ Headers">
       <UniqueIdentifier>{b05fb77d-4cf7-4c32-93f6-ad442d8848f3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\HU_">
-      <UniqueIdentifier>{8b988616-fb19-4f45-a018-ab8486c1f4da}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\HU_\HU_ Source">
-      <UniqueIdentifier>{430ac966-e835-4c8f-a47f-494cc732bd59}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\HU_\HU_ Headers">
-      <UniqueIdentifier>{adac8b7e-981e-409e-801b-fbfc2ce5243a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\IN">
       <UniqueIdentifier>{ef3ee0e1-f0a4-4029-ad0c-bd280e5fc1ed}</UniqueIdentifier>
     </Filter>
@@ -226,11 +217,26 @@
       <UniqueIdentifier>{f508b859-c713-472e-9f57-6c830f4015f8}</UniqueIdentifier>
       <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
     </Filter>
+    <Filter Include="Source Files\HU_">
+      <UniqueIdentifier>{8b988616-fb19-4f45-a018-ab8486c1f4da}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\HU_\HU_ Source">
+      <UniqueIdentifier>{430ac966-e835-4c8f-a47f-494cc732bd59}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\HU_\HU_ Headers">
+      <UniqueIdentifier>{adac8b7e-981e-409e-801b-fbfc2ce5243a}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source Files\S_\S_ Headers">
-      <UniqueIdentifier>{b8415fb6-1d4f-4bdc-8967-f429fb530f59}</UniqueIdentifier>
+      <UniqueIdentifier>{6f49c79b-9ba7-479b-982f-80a88a32eace}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\S_\S_ Source">
-      <UniqueIdentifier>{240d5493-be00-42a4-80f9-b8cd2a93490a}</UniqueIdentifier>
+      <UniqueIdentifier>{db06d03f-cab2-4823-98b6-8b2bd21b98be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\XL_\XL_ Headers">
+      <UniqueIdentifier>{83a57dbd-d96f-4232-9c63-ed719eee9717}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\XL_\XL_ Source">
+      <UniqueIdentifier>{09ccd1ab-91bb-4216-9ff4-c314b45f28c8}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -639,12 +645,6 @@
     <ClCompile Include="..\source\r_voxels.cpp">
       <Filter>Source Files\R_\R_ Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Win32\i_exception.cpp">
-      <Filter>Source Files\SDL\SDL Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Win32\i_fnames.cpp">
-      <Filter>Source Files\SDL\SDL Source</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\sdl\i_input.cpp">
       <Filter>Source Files\SDL\SDL Source</Filter>
     </ClCompile>
@@ -655,9 +655,6 @@
       <Filter>Source Files\SDL\SDL Source</Filter>
     </ClCompile>
     <ClCompile Include="..\Source\sdl\i_net.cpp">
-      <Filter>Source Files\SDL\SDL Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\Win32\i_opndir.cpp">
       <Filter>Source Files\SDL\SDL Source</Filter>
     </ClCompile>
     <ClCompile Include="..\source\sdl\i_pcsound.cpp">
@@ -685,9 +682,6 @@
       <Filter>Source Files\SDL\SDL Source</Filter>
     </ClCompile>
     <ClCompile Include="..\Source\sdl\i_system.cpp">
-      <Filter>Source Files\SDL\SDL Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\Win32\i_w32main.cpp">
       <Filter>Source Files\SDL\SDL Source</Filter>
     </ClCompile>
     <ClCompile Include="..\Source\sdl\mmus2mid.cpp">
@@ -840,9 +834,6 @@
     <ClCompile Include="..\source\a_hexen.cpp">
       <Filter>Source Files\A_\A_ Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\xl_scripts.cpp">
-      <Filter>Source Files\XL_</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\hal\i_gamepads.cpp">
       <Filter>Source Files\HAL\HAL Source</Filter>
     </ClCompile>
@@ -906,6 +897,18 @@
     <ClCompile Include="..\source\mn_items.cpp">
       <Filter>Source Files\Mn_\Mn_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\Win32\i_w32main.cpp">
+      <Filter>Source Files\Win32\Win32 Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Win32\i_exception.cpp">
+      <Filter>Source Files\Win32\Win32 Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Win32\i_fnames.cpp">
+      <Filter>Source Files\Win32\Win32 Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Win32\i_opndir.cpp">
+      <Filter>Source Files\Win32\Win32 Source</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\v_image.cpp">
       <Filter>Source Files\V_\V_ Source</Filter>
     </ClCompile>
@@ -932,6 +935,30 @@
     </ClCompile>
     <ClCompile Include="..\source\sdl\i_sdltimer.cpp">
       <Filter>Source Files\SDL\SDL Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\xl_scripts.cpp">
+      <Filter>Source Files\XL_\XL_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\xl_musinfo.cpp">
+      <Filter>Source Files\XL_\XL_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\xl_sndinfo.cpp">
+      <Filter>Source Files\XL_\XL_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\xl_mapinfo.cpp">
+      <Filter>Source Files\XL_\XL_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\xl_emapinfo.cpp">
+      <Filter>Source Files\XL_\XL_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\ev_sectors.cpp">
+      <Filter>Source Files\EV_\EV_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\e_udmf.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+	</ClCompile>
+    <ClCompile Include="..\source\p_portalclip.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1355,16 +1382,10 @@
     <ClInclude Include="..\source\r_voxels.h">
       <Filter>Source Files\R_\R_ Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Win32\i_fnames.h">
-      <Filter>Source Files\SDL\SDL Headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\sdl\i_midirpc.h">
       <Filter>Source Files\SDL\SDL Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\i_net.h">
-      <Filter>Source Files\SDL\SDL Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\Win32\i_opndir.h">
       <Filter>Source Files\SDL\SDL Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\source\sdl\i_sdlgamepads.h">
@@ -1538,9 +1559,6 @@
     <ClInclude Include="..\source\a_doom.h">
       <Filter>Source Files\A_\A_ Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\xl_scripts.h">
-      <Filter>Source Files\XL_</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\hal\i_gamepads.h">
       <Filter>Source Files\HAL\HAL Headers</Filter>
     </ClInclude>
@@ -1570,9 +1588,6 @@
     </ClInclude>
     <ClInclude Include="..\source\gl\gl_vars.h">
       <Filter>Source Files\GL\GL Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\metaadapter.h">
-      <Filter>Source Files\MetaAPI</Filter>
     </ClInclude>
     <ClInclude Include="..\source\metaapi.h">
       <Filter>Source Files\MetaAPI</Filter>
@@ -1622,14 +1637,20 @@
     <ClInclude Include="..\source\mn_items.h">
       <Filter>Source Files\Mn_\Mn_ Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\m_ctype.h">
-      <Filter>Source Files\M_\M_ Headers</Filter>
+    <ClInclude Include="..\Source\Win32\i_fnames.h">
+      <Filter>Source Files\Win32\Win32 Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\m_binary.h">
+    <ClInclude Include="..\source\Win32\i_opndir.h">
+      <Filter>Source Files\Win32\Win32 Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\m_ctype.h">
       <Filter>Source Files\M_\M_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\source\v_image.h">
       <Filter>Source Files\V_\V_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\m_binary.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\source\s_sndseq.h">
       <Filter>Source Files\S_\S_ Headers</Filter>
@@ -1660,6 +1681,36 @@
     </ClInclude>
     <ClInclude Include="..\source\sdl\i_sdltimer.h">
       <Filter>Source Files\SDL\SDL Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\r_textur.h">
+      <Filter>Source Files\R_\R_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\xl_scripts.h">
+      <Filter>Source Files\XL_\XL_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\xl_musinfo.h">
+      <Filter>Source Files\XL_\XL_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\xl_sndinfo.h">
+      <Filter>Source Files\XL_\XL_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\xl_mapinfo.h">
+      <Filter>Source Files\XL_\XL_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\xl_emapinfo.h">
+      <Filter>Source Files\XL_\XL_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\p_things.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\ev_sectors.h">
+      <Filter>Source Files\EV_\EV_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\e_udmf.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
+	</ClInclude>
+    <ClInclude Include="..\source\p_portalclip.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

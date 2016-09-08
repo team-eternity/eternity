@@ -253,7 +253,7 @@ default_t defaults[] =
    DEFAULT_INT("p_lastenemyroar", &p_lastenemyroar, NULL, 1, 0, 1, default_t::wad_yes,
                "1 to enable monster roaring when last enemy is remembered"),
 
-   DEFAULT_INT("p_markunknowns", &markUnknowns, NULL, 1, 0, 1, default_t::wad_no,
+   DEFAULT_INT("p_markunknowns", &p_markunknowns, NULL, 1, 0, 1, default_t::wad_no,
                "1 to mark unknown thingtype locations"),
 
    DEFAULT_BOOL("p_pitchedflight", &default_pitchedflight, &pitchedflight, true, default_t::wad_yes, 

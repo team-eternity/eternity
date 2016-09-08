@@ -3668,6 +3668,8 @@ static void P_ConvertStrifeThing(mapthing_t *mthing)
       num += 5900;
    else if(num >= 3001 && num <= 3006)
       num += 4950;
+
+   mthing->type = num;
 }
 
 #define DEN_PSXCHAIN   64

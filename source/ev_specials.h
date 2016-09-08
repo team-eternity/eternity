@@ -50,6 +50,13 @@ enum EVActionFlags
    EV_POSTCHANGESIDED  = 0x00000100, // Switch texture changes on proper side of line
 
    EV_PARAMLINESPEC    = 0x00000200, // Is a parameterized line special
+
+   EV_PARAMLOCKID      = 0x00000400, // Has a parameterized lockdef ID
+
+   EV_ISTELEPORTER     = 0x00000800, // Is a teleporter action, for automap
+   EV_ISLIFT           = 0x00001000, // Is a lift action
+   EV_ISMBFLIFT        = 0x00002000, // Is a lift for MBF friends during demo_version 203
+   EV_ISMAPPEDEXIT     = 0x00004000, // Is an exit line for purposes of automap
 };
 
 // Data related to an instance of a special activation.
@@ -116,6 +123,7 @@ struct ev_action_t
    unsigned int     flags;      // action flags
    int              minversion; // minimum demo version
    const char      *name;       // name for display purposes
+   int              lockarg;    // if(flags & EV_PARAMLOCKID), use this arg #
 };
 
 // Binds a line special action to a specific action number.
@@ -140,7 +148,7 @@ struct ev_binding_t
 //
 inline static unsigned int EV_CompositeActionFlags(const ev_action_t *action)
 {
-   return (action->type->flags | action->flags);
+   return (action ? (action->type->flags | action->flags) : 0);
 }
 
 // Action Types
@@ -175,6 +183,9 @@ ev_action_t  *EV_ActionForSpecial(int special);
 
 // Lockdef ID for Special
 int EV_LockDefIDForSpecial(int special);
+
+// Lockdef ID for Linedef
+int EV_LockDefIDForLine(line_t *line);
 
 // Testing
 bool EV_IsParamLineSpec(int special);

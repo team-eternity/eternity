@@ -412,6 +412,13 @@ static void V_initSubScreen43()
    {
       subwidth = vbscreen.height * 4 / 3;
       offset   = (vbscreen.width - subwidth) / 2;
+
+      // FIXME(?): our scaling code cannot handle a subscreen smaller than 320x200
+      if(subwidth < SCREENWIDTH)
+      {
+         subwidth = vbscreen.width;
+         offset   = 0;
+      }
    }
 
    V_InitSubVBuffer(&subscreen43, &vbscreen, offset, 0, subwidth, vbscreen.height);

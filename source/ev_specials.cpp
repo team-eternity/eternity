@@ -1249,7 +1249,8 @@ int EV_LockDefIDForSpecial(int special)
    {
       return EV_lockdefIDForGenSpec(special); // generalized lock
    }
-   else if(LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN)
+   else if(LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN ||
+           LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY)
    {
       return 0; // Hexen doesn't work this way.
    }
@@ -1267,6 +1268,22 @@ int EV_LockDefIDForSpecial(int special)
          return 0; // STRIFE_TODO
       }
    }
+}
+
+//
+// Test lockdef ID bindings for the current gamemode based on a line. 
+// Returns zero when there's no lockdef ID binding for that special.
+//
+int EV_LockDefIDForLine(line_t *line)
+{
+   ev_action_t *action = EV_ActionForSpecial(line->special);
+
+   // handle parameterized functions which accept a lockdef ID argument
+   if(EV_CompositeActionFlags(action) & EV_PARAMLOCKID)
+      return line->args[action->lockarg];
+
+   // otherwise, perform normal processing
+   return EV_LockDefIDForSpecial(line->special);
 }
 
 //=============================================================================
@@ -1496,17 +1513,8 @@ bool EV_ActivateAction(ev_action_t *action, int *args, Mobj *thing)
 //
 bool EV_IsParamLineSpec(int special)
 {
-   bool result = false;
-   ev_action_t *action;
-
-   if((action = EV_ActionForSpecial(special)))
-   {
-      unsigned int flags = EV_CompositeActionFlags(action);
-
-      result = ((flags & EV_PARAMLINESPEC) == EV_PARAMLINESPEC);
-   }
-
-   return result;
+   ev_action_t *action = EV_ActionForSpecial(special);
+   return ((EV_CompositeActionFlags(action) & EV_PARAMLINESPEC) == EV_PARAMLINESPEC);
 }
 
 //=============================================================================
