@@ -668,7 +668,8 @@ void ACS_LoadLevelScript(WadDirectory *dir, int lump)
       return;
 
    // Finish adding modules to map scope.
-   ACSenv.map->addModules(&modules[0], modules.getLength());
+   if(!modules.isEmpty())
+      ACSenv.map->addModules(&modules[0], modules.getLength());
 
    // Start open and enter scripts.
    {
