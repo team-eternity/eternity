@@ -2965,7 +2965,7 @@ DEFINE_ACTION(EV_ActionParamLightStrobe)
 //
 DEFINE_ACTION(EV_ActionRadiusQuake)
 {
-   return P_StartQuake(instance->args);
+   return P_StartQuake(instance->args, instance->actor);
 }
 
 //
