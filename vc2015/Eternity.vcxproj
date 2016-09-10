@@ -1232,7 +1232,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h" />
-    <ClInclude Include="..\source\acs_op.h" />
     <ClInclude Include="..\Source\am_map.h" />
     <ClInclude Include="..\source\a_args.h" />
     <ClInclude Include="..\Source\a_small.h" />
