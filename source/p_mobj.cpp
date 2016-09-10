@@ -28,6 +28,7 @@
 
 #include "a_args.h"
 #include "a_small.h"
+#include "c_io.h" // ioanch
 #include "d_dehtbl.h"
 #include "d_gi.h"
 #include "d_mod.h"
@@ -44,6 +45,7 @@
 #include "hu_stuff.h"
 #include "info.h"
 #include "in_lude.h"
+#include "m_collection.h"
 #include "m_random.h"
 #include "p_chase.h"
 #include "p_enemy.h"
@@ -330,7 +332,7 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
    if(ret && !mobj->tics)  // killough 4/9/98: detect state cycles
       doom_printf(FC_ERROR "Warning: State Cycle Detected");
 
-   // haleyjd 03/27/10: put seenstates onto freelist
+   // put seenstates onto freelist
    if(seenstates)
       P_FreeSeenStates(seenstates);
 
@@ -363,7 +365,7 @@ bool P_SetMobjStateNF(Mobj *mobj, statenum_t state)
    st = states[state];
    mobj->state = st;
 
-   // haleyjd 09/29/09: don't leave an object in a state with 0 tics
+   // don't leave an object in a state with 0 tics
    mobj->tics = (st->tics > 0) ? st->tics : 1;
    
    if(mobj->skin && st->sprite == mobj->info->defsprite)
@@ -439,7 +441,6 @@ void P_XYMovement(Mobj* mo)
    player_t *player = mo->player;
    fixed_t xmove, ymove;
 
-   //e6y
    fixed_t oldx, oldy; // phares 9/10/98: reducing bobbing/momentum on ice
 
    if(!(mo->momx | mo->momy)) // Any momentum?
@@ -589,8 +590,7 @@ void P_XYMovement(Mobj* mo)
                if (demo_compatibility ||  // killough
                   mo->z > clip.ceilingline->backsector->ceilingheight)
                {
-                  // Hack to prevent missiles exploding
-                  // against the sky.
+                  // Hack to prevent missiles exploding against the sky.
                   // Does not handle sky floors.
 
                   // haleyjd: in fact, doesn't handle sky ceilings either --
@@ -638,11 +638,12 @@ void P_XYMovement(Mobj* mo)
    // killough 8/11/98: add bouncers
    // killough 9/15/98: add objects falling off ledges
    // killough 11/98: only include bouncers hanging off ledges
+   // ioanch 20160116: portal aware
    if(((mo->flags & MF_BOUNCES && mo->z > mo->dropoffz) ||
        mo->flags & MF_CORPSE || mo->intflags & MIF_FALLING) &&
       (mo->momx > FRACUNIT/4 || mo->momx < -FRACUNIT/4 ||
        mo->momy > FRACUNIT/4 || mo->momy < -FRACUNIT/4) &&
-      mo->floorz != mo->subsector->sector->floorheight)
+      mo->floorz != P_ExtremeSectorAtPoint(mo, false)->floorheight)
       return;  // do not stop sliding if halfway off a step with some momentum
 
    // killough 11/98:
@@ -656,10 +657,7 @@ void P_XYMovement(Mobj* mo)
    {
       // if in a walking frame, stop moving
 
-      // haleyjd 09/29/07: use E_PlayerInWalkingState
-      // killough 10/98:
-      // Don't affect main player when voodoo dolls stop, except in old demos:
-
+      // killough 10/98: Don't affect main player when voodoo dolls stop, except in old demos
       if(player && E_PlayerInWalkingState(player) && 
          (player->mo == mo || demo_version < 203))
          P_SetMobjState(player->mo, player->mo->info->spawnstate);
@@ -667,12 +665,12 @@ void P_XYMovement(Mobj* mo)
       mo->momx = mo->momy = 0;
 
       // killough 10/98: kill any bobbing momentum too (except in voodoo dolls)
-      if (player && player->mo == mo)
+      if(player && player->mo == mo)
          player->momx = player->momy = 0;
    }
    else
    {
-      // haleyjd 04/11/10: BOOM friction compatibility 
+      // BOOM friction compatibility 
       if(demo_version <= 201)
       {
          // phares 3/17/98
@@ -735,7 +733,7 @@ void P_PlayerHitFloor(Mobj *mo, bool onthing)
    // after hitting the ground (hard),
    // and utter appropriate sound.
 
-   // haleyjd 06/05/12: not when flying
+   // not when flying
    if(mo->flags4 & MF4_FLY)
       return;
 
@@ -747,8 +745,8 @@ void P_PlayerHitFloor(Mobj *mo, bool onthing)
    {
       if(!comp[comp_fallingdmg] && demo_version >= 329)
       {
-         // haleyjd: new features -- feet sound for normal hits,
-         //          grunt for harder, falling damage for worse
+         // new features -- feet sound for normal hits,
+         // grunt for harder, falling damage for worse
 
          if(mo->momz < -23*FRACUNIT)
          {
@@ -772,13 +770,13 @@ void P_PlayerHitFloor(Mobj *mo, bool onthing)
 // P_ZMovement
 //
 // Attempt vertical movement.
-
+//
 static void P_ZMovement(Mobj* mo)
 {
-   // haleyjd: part of lost soul fix, moved up here for maximum
-   //          scope
+   // haleyjd: part of lost soul fix, moved up here for maximum scope
    bool correct_lost_soul_bounce;
    bool moving_down;
+   fixed_t initial_mo_z = mo->z;
 
    if(demo_compatibility) // v1.9 demos
       correct_lost_soul_bounce = ((GameModeInfo->flags & GIF_LOSTSOULBOUNCE) != 0);
@@ -962,7 +960,7 @@ floater:
 
       mo->z = mo->floorz;
 
-      if(moving_down)
+      if(moving_down && initial_mo_z != mo->floorz)
          E_HitFloor(mo);
 
       /* cph 2001/05/26 -
@@ -987,7 +985,7 @@ floater:
       // davidph 06/06/12: Objects in flight need to have air friction.
       mo->momz = FixedMul(mo->momz, FRICTION_FLY);
    }
-   else if(mo->flags2 & MF2_LOGRAV) // haleyjd 04/09/99
+   else if(mo->flags2 & MF2_LOGRAV) // low gravity objects
    {
       if(!mo->momz)
          mo->momz = -(LevelInfo.gravity / 8) * 2;
@@ -1004,7 +1002,7 @@ floater:
       }
    }
 
-   // haleyjd 08/07/04: new footclip system
+   // new footclip system
    P_AdjustFloorClip(mo);
 
    if(mo->z + mo->height > mo->ceilingz)
@@ -1040,15 +1038,10 @@ void P_NightmareRespawn(Mobj* mobj)
    mapthing_t*  mthing;
    bool         check; // haleyjd 11/11/04
 
-   x = mobj->spawnpoint.x << FRACBITS;
-   y = mobj->spawnpoint.y << FRACBITS;
+   x = mobj->spawnpoint.x;
+   y = mobj->spawnpoint.y;
 
-   // haleyjd: stupid nightmare respawning bug fix
-   //
-   // 08/09/00: This fixes the notorious nightmare respawning bug that
-   // causes monsters that didn't spawn at level startup to respawn at
-   // the point (0,0) regardless of that point's nature.
-
+   // stupid nightmare respawning bug fix
    if(!comp[comp_respawnfix] && demo_version >= 329 && x == 0 && y == 0)
    {
       // spawnpoint was zeroed out, so use point of death instead
@@ -1061,15 +1054,14 @@ void P_NightmareRespawn(Mobj* mobj)
    // haleyjd 11/11/04: This has been broken since BOOM when Lee changed
    // PIT_CheckThing to allow non-solid things to move through solid
    // things.
-
    if(demo_version >= 331)
       mobj->flags |= MF_SOLID;
 
-   if(P_Use3DClipping()) // haleyjd: OVER_UNDER
+   if(P_Use3DClipping()) // 3D object clipping
    {
       fixed_t sheight = mobj->height;
 
-      // haleyjd 11/04/06: need to restore real height before checking
+      // need to restore real height before checking
       mobj->height = P_ThingInfoHeight(mobj->info);
 
       check = P_CheckPositionExt(mobj, x, y);
@@ -1087,20 +1079,16 @@ void P_NightmareRespawn(Mobj* mobj)
 
    // spawn a teleport fog at old spot
    // because of removal of the body?
-
    mo = P_SpawnMobj(mobj->x, mobj->y,
-                    mobj->subsector->sector->floorheight +
+                    P_ExtremeSectorAtPoint(mobj, false)->floorheight +
                        GameModeInfo->teleFogHeight,
                     E_SafeThingName(GameModeInfo->teleFogType));
 
    // initiate teleport sound
-
    S_StartSound(mo, GameModeInfo->teleSound);
 
    // spawn a teleport fog at the new spot
-
-   ss = R_PointInSubsector(x,y);
-
+   ss = R_PointInSubsector(x, y);
    mo = P_SpawnMobj(x, y,
                     ss->sector->floorheight + GameModeInfo->teleFogHeight,
                     E_SafeThingName(GameModeInfo->teleFogType));
@@ -1108,15 +1096,12 @@ void P_NightmareRespawn(Mobj* mobj)
    S_StartSound(mo, GameModeInfo->teleSound);
 
    // spawn the new monster
-
    mthing = &mobj->spawnpoint;
    z = mobj->info->flags & MF_SPAWNCEILING ? ONCEILINGZ : ONFLOORZ;
 
    // inherit attributes from deceased one
-
    mo = P_SpawnMobj(x, y, z, mobj->type);
    mo->spawnpoint = mobj->spawnpoint;
-   // sf: use R_WadToAngle
    mo->angle = R_WadToAngle(mthing->angle);
 
    if(mthing->options & MTF_AMBUSH)
@@ -1128,20 +1113,23 @@ void P_NightmareRespawn(Mobj* mobj)
    mo->reactiontime = 18;
 
    // remove the old monster,
-
    mobj->removeThinker();
 }
 
-// PTODO
-#ifdef R_LINKEDPORTALS
+//
+// Check for passing through an interactive portal plane.
+//
 static bool P_CheckPortalTeleport(Mobj *mobj)
 {
    bool ret = false;
 
-   if(mobj->subsector->sector->f_pflags & PS_PASSABLE)
+   // ioanch 20160109: reference sector
+   const sector_t *sector = mobj->subsector->sector;
+
+   if(sector->f_pflags & PS_PASSABLE)
    {
       fixed_t passheight;
-      linkdata_t *ldata = R_FPLink(mobj->subsector->sector);
+      const linkdata_t *ldata = R_FPLink(sector);
 
       if(mobj->player)
       {
@@ -1151,24 +1139,20 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
       else
          passheight = mobj->z + (mobj->height >> 1);
 
-
+      // ioanch 20160109: link offset outside
       if(passheight < ldata->planez)
       {
-         linkoffset_t *link = P_GetLinkOffset(mobj->subsector->sector->groupid,
-                                              ldata->toid);
-         if(link)
-         {
-            EV_PortalTeleport(mobj, link);
-            ret = true;
-         }
+         EV_PortalTeleport(mobj, ldata->deltax, ldata->deltay, ldata->deltaz,
+                           ldata->fromid, ldata->toid);
+         ret = true;
       }
    }
    
-   if(!ret && mobj->subsector->sector->c_pflags & PS_PASSABLE)
+   if(!ret && sector->c_pflags & PS_PASSABLE)
    {
       // Calculate the height at which the mobj should pass through the portal
       fixed_t passheight;
-      linkdata_t *ldata = R_CPLink(mobj->subsector->sector);
+      linkdata_t *ldata = R_CPLink(sector);
 
       if(mobj->player)
       {
@@ -1178,24 +1162,18 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
       else
          passheight = mobj->z + (mobj->height >> 1);
 
+      // ioanch 20160109: link offset outside
       if(passheight >= ldata->planez)
       {
-         linkoffset_t *link = P_GetLinkOffset(mobj->subsector->sector->groupid,
-                                              ldata->toid);
-         if(link)
-         {
-            EV_PortalTeleport(mobj, link);
-            ret = true;
-         }
+         EV_PortalTeleport(mobj, ldata->deltax, ldata->deltay, ldata->deltaz,
+                           ldata->fromid, ldata->toid);
+         ret = true;
       }
    }
 
    return ret;
 }
-#endif
 
-//
-// Mobj::shouldApplyTorque
 //
 // Returns true or false if the Mobj should have torque simulation applied.
 //
@@ -1218,6 +1196,22 @@ bool Mobj::shouldApplyTorque()
 IMPLEMENT_THINKER_TYPE(Mobj)
 
 //
+// Routine to check mobj projection, from wherever the coordinates might change
+//
+inline static void P_checkMobjProjections(Mobj &mobj)
+{
+   if(gMapHasSectorPortals && (mobj.z != mobj.sprojlast.z ||
+                               mobj.x != mobj.sprojlast.x ||
+                               mobj.y != mobj.sprojlast.y))
+   {
+      R_CheckMobjProjections(&mobj);
+      mobj.sprojlast.x = mobj.x;
+      mobj.sprojlast.y = mobj.y;
+      mobj.sprojlast.z = mobj.z;
+   }
+}
+
+//
 // P_MobjThinker
 //
 void Mobj::Think()
@@ -1234,7 +1228,7 @@ void Mobj::Think()
    // removed old code which looked at target references
    // (we use pointer reference counting now)
 
-   clip.BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
+   clip.BlockingMobj = NULL;
 
    // haleyjd 08/07/04: handle deep water plane hits
    if(subsector->sector->heightsec != -1)
@@ -1244,8 +1238,7 @@ void Mobj::Think()
       waterstate = (z < hs->floorheight);
    }
 
-   // haleyjd 03/12/03: Heretic Wind transfer specials
-   // haleyjd 03/19/06: moved here from P_XYMovement
+   // Heretic Wind transfer specials
    if((flags3 & MF3_WINDTHRUST) && !(flags & MF_NOCLIP))
    {
       sector_t *sec = subsector->sector;
@@ -1259,8 +1252,8 @@ void Mobj::Think()
    if(momx | momy || flags & MF_SKULLFLY)
    {
       P_XYMovement(this);
-      if(removed) // killough
-         return;       // mobj was removed
+      if(removed) // killough: mobj was removed
+         return;       
    }
 
    if(!P_Use3DClipping())
@@ -1268,7 +1261,7 @@ void Mobj::Think()
 
    lz = z;
 
-   if(flags2 & MF2_FLOATBOB) // haleyjd
+   if(flags2 & MF2_FLOATBOB)
    {
       int idx = (floatbob + leveltime) & 63;
 
@@ -1276,7 +1269,6 @@ void Mobj::Think()
       lz = z - FloatBobOffsets[idx];
    }
 
-   // haleyjd: OVER_UNDER: major changes
    if(momz || clip.BlockingMobj || lz != floorz)
    {
       if(P_Use3DClipping() && ((flags3 & MF3_PASSMOBJ) || (flags & MF_SPECIAL)))
@@ -1337,8 +1329,8 @@ void Mobj::Think()
       else
          P_ZMovement(this);
 
-      if(removed) // killough
-         return;       // mobj was removed
+      if(removed) // killough: mobj was removed
+         return;       
    }
    else if(!(momx | momy) && !sentient(this))
    {                                  // non-sentient objects at rest
@@ -1353,11 +1345,10 @@ void Mobj::Think()
          intflags &= ~MIF_FALLING, gear = 0; // Reset torque
    }
 
-#ifdef R_LINKEDPORTALS
+   // check if we are passing an interactive portal plane
    P_CheckPortalTeleport(this);
-#endif
 
-   // haleyjd 11/06/05: handle crashstate here
+   // handle crashstate here
    if(info->crashstate != NullStateNum
       && flags & MF_CORPSE
       && !(intflags & MIF_CRASHED)
@@ -1367,7 +1358,7 @@ void Mobj::Think()
       P_SetMobjState(this, info->crashstate);
    }
 
-   // haleyjd 08/07/04: handle deep water plane hits
+   // handle deep water plane hits
    oldwaterstate = waterstate;
 
    if(subsector->sector->heightsec != -1)
@@ -1393,7 +1384,6 @@ void Mobj::Think()
 
    // cycle through states,
    // calling action functions at transitions
-   // killough 11/98: simplify
 
    if(tics != -1) // you can cycle through multiple states in a tic
    {
@@ -1402,7 +1392,6 @@ void Mobj::Think()
    }
    else
    {
-      // haleyjd: minor restructuring, eternity features
       // A thing can respawn if:
       // 1) counts for kill AND
       // 2) respawn is on OR
@@ -1412,12 +1401,11 @@ void Mobj::Think()
            (respawnmonsters ||
             (flags2 & (MF2_ALWAYSRESPAWN | MF2_REMOVEDEAD)));
 
-      // haleyjd 07/13/05: increment mobj->movecount earlier
+      // increment mobj->movecount earlier
       if(can_respawn || effects & FX_FLIESONDEATH)
          ++movecount;
 
-      // don't respawn dormant things
-      // don't respawn norespawn things
+      // don't respawn dormant things or norespawn things
       if(flags2 & (MF2_DORMANT | MF2_NORESPAWN))
          return;
 
@@ -1431,6 +1419,11 @@ void Mobj::Think()
             P_NightmareRespawn(this);
       }
    }
+
+   // Check mobj sprite projections before getting out
+   // FIXME: may be insufficient
+   if(!removed)
+      P_checkMobjProjections(*this);
 }
 
 //
@@ -1498,6 +1491,7 @@ void Mobj::serialize(SaveArchive &arc)
       enemyNum  = P_NumForThinker(lastenemy);
 
       arc << targetNum << tracerNum << enemyNum;
+
    }
    else // Loading
    {
@@ -1587,9 +1581,10 @@ void Mobj::updateThinker()
    int tclass = th_misc;
 
    if(removed)
+   {
       tclass = th_delete;
-   else if(health > 0 && 
-           (flags & MF_COUNTKILL || flags3 & MF3_KILLABLE))
+   }
+   else if(health > 0 && (flags & MF_COUNTKILL || flags3 & MF3_KILLABLE))
    {
       if(flags & MF_FRIEND)
          tclass = th_friends;
@@ -1688,13 +1683,12 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
       mobj->flags &= ~MF_TRANSLUCENT;
    }
 
-   // haleyjd 11/22/09: scaling
+   // scaling
    mobj->xscale = info->xscale;
    mobj->yscale = info->yscale;
 
-   //sf: not friends in deathmatch!
-
    // killough 8/23/98: no friends, bouncers, or touchy things in old demos
+   // sf: not friends in deathmatch!
    if(demo_version < 203)
    {
       mobj->flags &= ~(MF_BOUNCES | MF_FRIEND | MF_TOUCHY);
@@ -1725,19 +1719,25 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
       mobj->sprite = st->sprite;
    mobj->frame  = st->frame;
 
-   // set subsector and/or block links
+   // ioanch 20160109: init spriteproj. They won't be set in P_SetThingPosition 
+   // but P_CheckPortalTeleport
+   mobj->spriteproj = nullptr;
+   // init with an "invalid" value
+   mobj->sprojlast.x = mobj->sprojlast.y = mobj->sprojlast.z = D_MAXINT;
 
+   // set subsector and/or block links
+  
    P_SetThingPosition(mobj);
 
-   mobj->dropoffz =           // killough 11/98: for tracking dropoffs
-      mobj->floorz = mobj->subsector->sector->floorheight;
-   mobj->ceilingz = mobj->subsector->sector->ceilingheight;
+   // killough 11/98: for tracking dropoffs
+   // ioanch 20160201: fix floorz and ceilingz to be portal-aware
+   mobj->dropoffz = mobj->floorz = P_ExtremeSectorAtPoint(mobj, false)->floorheight;
+   mobj->ceilingz = P_ExtremeSectorAtPoint(mobj, true)->ceilingheight;
 
-   mobj->z = z == ONFLOORZ ? mobj->floorz : z == ONCEILINGZ ?
-      mobj->ceilingz - mobj->height : z;
+   mobj->z = 
+      (z == ONFLOORZ ? mobj->floorz : z == ONCEILINGZ ? mobj->ceilingz - mobj->height : z);
 
-   // haleyjd 10/13/02: floatrand
-   // haleyjd 03/16/09: changed to Heretic method
+   // floatrand, for Heretic
    if(z == FLOATRANDZ)
    {
       fixed_t space = (mobj->ceilingz - mobj->height) - mobj->floorz;
@@ -1751,30 +1751,30 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
          mobj->z = mobj->floorz;
    }
 
-   // haleyjd: initialize floatbob seed
+   // initialize floatbob seed
    if(mobj->flags2 & MF2_FLOATBOB)
    {
       mobj->floatbob = P_Random(pr_floathealth);
       mobj->z += FloatBobOffsets[(mobj->floatbob + leveltime - 1) & 63];
    }
 
-   // haleyjd 08/07/04: new floorclip system
+   // new floorclip system
    P_AdjustFloorClip(mobj);
 
    mobj->addThinker();
 
-   // haleyjd 01/04/14: set initial position as backup position
+   // set initial position as backup position
    mobj->backupPosition();
 
-   // e6y
+   // for BOOM 2.02 friction emulation
    mobj->friction = ORIG_FRICTION;
 
-   // haleyjd 01/12/04: support translation lumps
+   // support translation lumps
    if(mobj->info->colour)
       mobj->colour = mobj->info->colour;
    else
    {
-      // haleyjd 09/13/09: automatic DOOM->etc. translation
+      // automatic DOOM->etc. translation
       if(mobj->flags4 & MF4_AUTOTRANSLATE && GameModeInfo->defTranslate)
       {
          // cache in mobj->info for next time
@@ -1837,6 +1837,9 @@ void Mobj::removeThinker()
 
    // unlink from sector and block lists
    P_UnsetThingPosition(this);
+
+   // ioanch 20160109: remove portal sprite projections
+   R_RemoveMobjProjections(this);
 
    // Delete all nodes on the current sector_list -- phares 3/16/98
    if(this->old_sectorlist)
@@ -1917,8 +1920,8 @@ void P_RespawnSpecials()
 
    mthing = &itemrespawnque[iquetail];
 
-   x = mthing->x << FRACBITS;
-   y = mthing->y << FRACBITS;
+   x = mthing->x;
+   y = mthing->y;
 
    // spawn a teleport fog at the new spot
    ss = R_PointInSubsector(x,y);
@@ -1964,8 +1967,8 @@ void P_SpawnPlayer(mapthing_t* mthing)
    if(p->playerstate == PST_REBORN)
       G_PlayerReborn(mthing->type - 1);
 
-   x    = mthing->x << FRACBITS;
-   y    = mthing->y << FRACBITS;
+   x    = mthing->x;
+   y    = mthing->y;
    z    = ONFLOORZ;
    mobj = P_SpawnMobj(x, y, z, p->pclass->type);
 
@@ -1977,7 +1980,7 @@ void P_SpawnPlayer(mapthing_t* mthing)
    mobj->health = p->health;
    mobj->backupPosition();
 
-   // haleyjd: verify that the player skin is valid
+   // verify that the player skin is valid
    if(!p->skin)
       I_Error("P_SpawnPlayer: player skin undefined!\n");
 
@@ -2016,16 +2019,36 @@ void P_SpawnPlayer(mapthing_t* mthing)
       P_ResetChasecam();
 }
 
+static PODCollection<mapthing_t> UnknownThings;
+
+// 
+// Spawn unknowns at the location of unsupported object types
+//
+void P_SpawnUnknownThings()
+{
+   // must be enabled, not in a netgame, and not dealing with demos
+   if(!p_markunknowns || netgame || demorecording || demoplayback)
+      return;
+
+   if(UnknownThings.isEmpty())
+      return;
+
+   for(auto &mt : UnknownThings)
+   {
+      int type = UnknownThingType;
+      if(mt.type == 32000)
+         type = E_SafeThingName("DoomBuilderCameraSpot");
+
+      P_SpawnMobj(mt.x, mt.y, ONFLOORZ, type);
+   }
+
+   UnknownThings.clear();
+}
 
 //
 // P_SpawnMapThing
 //
-// The fields of the mapthing should
-// already be in host byte order.
-//
-// sf: made to return Mobj* spawned
-//
-// haleyjd 03/03/07: rewritten again to use a unified mapthing_t type.
+// The fields of the mapthing should already be in host byte order.
 //
 Mobj *P_SpawnMapThing(mapthing_t *mthing)
 {
@@ -2040,9 +2063,8 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
    case DEN_PLAYER6:
    case DEN_PLAYER7:
    case DEN_PLAYER8:
-      return NULL;
-   case ED_CTRL_DOOMEDNUM:
-      // haleyjd 10/08/03: ExtraData mapthing support
+      return nullptr;
+   case ED_CTRL_DOOMEDNUM: // ExtraData mapthing support
       return E_SpawnMapThingExt(mthing);
    }
 
@@ -2067,7 +2089,7 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
 
       // haleyjd 01/03/15: must not spawn more than 10 DM starts during old demos
       if(demo_compatibility && offset >= 10u)
-         return NULL;
+         return nullptr;
 
       if(offset >= num_deathmatchstarts)
       {
@@ -2078,13 +2100,13 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
          deathmatch_p = deathmatchstarts + offset;
       }
       memcpy(deathmatch_p++, mthing, sizeof*mthing);
-      return NULL; //sf
+      return nullptr; //sf
    }
 
    // haleyjd: now handled through IN_AddCameras
    // return NULL for old demos
    if(mthing->type == 5003 && demo_version < 331)
-      return NULL;
+      return nullptr;
 
    // check for players specially
 
@@ -2100,18 +2122,12 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
 
          // killough 10/98: force it to be a friend
          mthing->options |= MTF_FRIEND;
-
-         i = E_SafeThingType(MT_DOGS);
-
+         
          // haleyjd 9/22/99: [HELPER] bex block type substitution
          if(HelperThing != -1)
-         {
-            // haleyjd 07/05/03: adjusted for EDF
-            if(HelperThing != -1)
-               i = HelperThing;
-            else
-               doom_printf(FC_ERROR "Invalid value for helper, ignored.");
-         }
+            i = HelperThing;
+         else
+            i = E_SafeThingType(MT_DOGS);
 
          goto spawnit;
       }
@@ -2121,32 +2137,50 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
       if(GameType != gt_dm)
          P_SpawnPlayer(mthing);
 
-      return NULL; //sf
+      return nullptr; //sf
    }
 
-   // check for apropriate skill level
+   // check for appropriate skill level
 
    //jff "not single" thing flag
-
    if(GameType == gt_single && (mthing->options & MTF_NOTSINGLE))
-      return NULL; //sf
+      return nullptr; //sf
 
    //jff 3/30/98 implement "not deathmatch" thing flag
-
    if(GameType == gt_dm && (mthing->options & MTF_NOTDM))
-      return NULL; //sf
+      return nullptr; //sf
 
    //jff 3/30/98 implement "not cooperative" thing flag
-
    if(GameType == gt_coop && (mthing->options & MTF_NOTCOOP))
-      return NULL;  // sf
+      return nullptr;  // sf
 
-   // killough 11/98: simplify
-   if(gameskill == sk_baby || gameskill == sk_easy ?
-      !(mthing->options & MTF_EASY) :
-      gameskill == sk_hard || gameskill == sk_nightmare ?
-      !(mthing->options & MTF_HARD) : !(mthing->options & MTF_NORMAL))
-      return NULL;  // sf
+   // ioanch: updated handling for UDMF
+   switch(gameskill)
+   {
+   case sk_baby:
+      // If both flags are 0 or both are 1, then exit.
+      if(!!(mthing->extOptions & MTF_EX_BABY_TOGGLE) == !!(mthing->options & MTF_EASY))
+         return nullptr;
+      break;
+   case sk_easy:
+      if(!(mthing->options & MTF_EASY))
+         return nullptr;
+      break;
+   case sk_medium:
+      if(!(mthing->options & MTF_NORMAL))
+         return nullptr;
+      break;
+   case sk_hard:
+      if(!(mthing->options & MTF_HARD))
+         return nullptr;
+      break;
+   case sk_nightmare:
+      if(!!(mthing->extOptions & MTF_EX_NIGHTMARE_TOGGLE) == !!(mthing->options & MTF_HARD))
+         return nullptr;
+      break;
+   default:
+      break;
+   }
 
    // find which type to spawn
 
@@ -2176,51 +2210,41 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
    // EDF3-FIXME: eliminate different behavior of doomednum hash
    if(i == -1 || i == NUMMOBJTYPES)
    {
-      // haleyjd: handle Doom Builder camera spots specially here, so that they
-      // cannot desync demos recorded in BOOM-compatible ports
-      if(mthing->type == 32000 && !(netgame || demorecording || demoplayback))
+      if(!p_markunknowns)
       {
-         i = E_SafeThingName("DoomBuilderCameraSpot");
+         doom_printf(FC_ERROR "Unknown thing type %d at (%.2f, %.2f)",
+                     mthing->type,
+                     M_FixedToDouble(mthing->x),
+                     M_FixedToDouble(mthing->y));
       }
       else
-      {
-         doom_printf(FC_ERROR "Unknown thing type %i at (%i, %i)",
-                     mthing->type, mthing->x, mthing->y);
+         UnknownThings.add(*mthing);
 
-         // haleyjd 01/24/07: allow spawning unknowns to mark missing objects
-         // at user's discretion, but not when recording/playing demos or in
-         // netgames.
-         if(markUnknowns && !(netgame || demorecording || demoplayback))
-            i = UnknownThingType;
-         else
-            return NULL;  // sf
-      }
+       return nullptr;
    }
 
    // don't spawn keycards and players in deathmatch
-
    if(GameType == gt_dm && (mobjinfo[i]->flags & MF_NOTDMATCH))
-      return NULL;        // sf
+      return nullptr;
 
    // don't spawn any monsters if -nomonsters
-
    if(nomonsters &&
       ((mobjinfo[i]->flags3 & MF3_KILLABLE) ||
        (mobjinfo[i]->flags & MF_COUNTKILL)))
-      return NULL;        // sf
+      return nullptr;
 
    // haleyjd 08/18/13: Heretic includes some registered-only items in its
    // first episode, as a bonus for play on the registered version. Unlike
    // some other checks EE has removed, we still need to enforce this one as
    // the items have no resources in the shareware IWAD.
    if(GameModeInfo->flags & GIF_SHAREWARE && mobjinfo[i]->flags4 & MF4_NOTSHAREWARE)
-      return NULL;
+      return nullptr;
 
    // spawn it
 spawnit:
 
-   x = mthing->x << FRACBITS;
-   y = mthing->y << FRACBITS;
+   x = mthing->x;
+   y = mthing->y;
 
    z = mobjinfo[i]->flags & MF_SPAWNCEILING ? ONCEILINGZ : ONFLOORZ;
 
@@ -2235,7 +2259,7 @@ spawnit:
    // haleyjd 10/03/05: Hexen-style z positioning
    if(mthing->height && (z == ONFLOORZ || z == ONCEILINGZ))
    {
-      fixed_t rheight = mthing->height << FRACBITS;
+      fixed_t rheight = mthing->height;
 
       if(z == ONCEILINGZ)
          rheight = -rheight;
@@ -2261,8 +2285,8 @@ spawnit:
       mthing->options & MTF_FRIEND &&
       demo_version >= 203)
    {
-      mobj->flags |= MF_FRIEND;            // killough 10/98:
-      mobj->updateThinker();                      // transfer friendliness flag
+      mobj->flags |= MF_FRIEND;  // killough 10/98:
+      mobj->updateThinker();     // transfer friendliness flag
    }
 
    // killough 7/20/98: exclude friends
@@ -2361,34 +2385,11 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
    }
 }
 
-
 //
-// P_SpawnBlood
+// Spawn particle blood suited for Doom-style blood objects
 //
-void P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, Mobj *target)
+static void P_DoomParticleBlood(Mobj *th, Mobj *target, fixed_t x, fixed_t y, fixed_t z, angle_t dir)
 {
-   // HTIC_TODO: Heretic support
-   Mobj *th;
-
-   // haleyjd 08/05/04: use new function
-   z += P_SubRandom(pr_spawnblood) << 10;
-
-   th = P_SpawnMobj(x,y,z, E_SafeThingType(MT_BLOOD));
-   th->momz = FRACUNIT*2;
-   th->tics -= P_Random(pr_spawnblood)&3;
-
-   if(th->tics < 1)
-      th->tics = 1;
-
-   if(damage <= 12 && damage >= 9)
-   {
-      P_SetMobjState(th, E_SafeState(S_BLOOD2));
-   }
-   else if (damage < 9)
-   {
-      P_SetMobjState(th, E_SafeState(S_BLOOD3));
-   }
-
    // for demo sync, etc, we still need to do the above, so
    // we'll make the sprites above invisible and draw particles
    // instead
@@ -2397,6 +2398,201 @@ void P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, Mobj
       if(bloodsplat_particle != 2)
          th->translucency = 0;
       P_BloodSpray(target, 32, x, y, z, dir);
+   }
+}
+
+//
+// DOOM blood spawning
+//
+static void P_spawnBloodDoom(mobjtype_t type, const BloodSpawner &params)
+{
+   Mobj *th;
+   fixed_t z = params.z;
+
+   // haleyjd 08/05/04: use new function
+   z += P_SubRandom(pr_spawnblood) << 10;
+
+   th = P_SpawnMobj(params.x, params.y, z, type);
+   th->momz = FRACUNIT*2;
+   th->tics -= P_Random(pr_spawnblood)&3;
+
+   if(th->tics < 1)
+      th->tics = 1;
+
+   if(params.damage <= 12 && params.damage >= 9)
+   {
+      state_t *st;
+      if(!(st = E_GetStateForMobj(th, "Blood2")))
+         st = states[E_SafeState(S_BLOOD2)];
+      P_SetMobjState(th, st->index);
+   }
+   else if(params.damage < 9)
+   {
+      state_t *st;
+      if(!(st = E_GetStateForMobj(th, "Blood3")))
+         st = states[E_SafeState(S_BLOOD3)];
+      P_SetMobjState(th, st->index);
+   }
+
+   P_DoomParticleBlood(th, params.target, params.x, params.y, z, params.dir);
+}
+
+//
+// Strife blood spawning
+//
+static void P_spawnBloodStrife(mobjtype_t type, const BloodSpawner &params)
+{
+   Mobj *th;
+   fixed_t z = params.z;
+
+   // haleyjd 08/05/04: use new function
+   z += P_SubRandom(pr_rogueblood) << 10;
+
+   th = P_SpawnMobj(params.x, params.y, z, type);
+   th->momz = FRACUNIT*2;
+
+   state_t *st;
+   if(params.damage >= 10 && params.damage <= 13)
+   {
+      if((st = E_GetStateForMobj(th, "Blood0")))
+         P_SetMobjState(th, st->index);
+   }
+   else if(params.damage >= 7 && params.damage < 10)
+   {
+      if((st = E_GetStateForMobj(th, "Blood1")))
+         P_SetMobjState(th, st->index);
+   }
+   else if(params.damage < 7)
+   {
+      if((st = E_GetStateForMobj(th, "Blood2")))
+         P_SetMobjState(th, st->index);
+   }
+
+   P_DoomParticleBlood(th, params.target, params.x, params.y, z, params.dir);
+}
+
+//
+// Raven blood spawning
+//
+static void P_spawnBloodRaven(mobjtype_t type, const BloodSpawner &params, bool isHexen)
+{
+   Mobj    *mo    = P_SpawnMobj(params.x, params.y, params.z, type);
+   int      shift = isHexen ? 10 : 9;
+   fixed_t  momz  = isHexen ? 3*FRACUNIT : 2*FRACUNIT;
+
+   P_SetTarget(&mo->target, params.target);
+   mo->momx = P_SubRandom(pr_ravenblood) << shift;
+   mo->momy = P_SubRandom(pr_ravenblood) << shift;
+   mo->momz = momz;
+
+   P_DoomParticleBlood(mo, params.target, params.x, params.y, params.z, params.dir);
+}
+
+//
+// Ripper blood spawning
+//
+static void P_spawnBloodRip(mobjtype_t type, const BloodSpawner &params, bool isHexen)
+{
+   Mobj *mo = params.inflictor ? params.inflictor : params.target;
+   fixed_t x = mo->x + (P_SubRandom(pr_ripperblood) << 12);
+   fixed_t y = mo->y + (P_SubRandom(pr_ripperblood) << 12);
+   fixed_t z = mo->z + (P_SubRandom(pr_ripperblood) << 12);
+   
+   Mobj *th = P_SpawnMobj(x, y, z, type);
+   
+   if(!isHexen)
+      th->flags |= MF_NOGRAVITY;
+
+   th->momx  = mo->momx / 2;
+   th->momy  = mo->momy / 2;
+   th->tics += P_Random(pr_ripperblood) & 3;
+   if(th->tics < 1)
+      th->tics = 1;
+}
+
+//
+// Crusher blood spawning
+//
+static void P_spawnCrusherBlood(Mobj *thing, mobjtype_t type)
+{
+   // spray blood in a random direction
+   Mobj *mo = P_SpawnMobj(thing->x, thing->y, thing->z + thing->height/2, type);
+         
+   mo->momx = P_SubRandom(pr_crush) << 12;
+   mo->momy = P_SubRandom(pr_crush) << 12;
+}
+
+//
+// BloodSpawner constructor for divline_t; the angle is calculated properly.
+//
+BloodSpawner::BloodSpawner(Mobj *ptarget, fixed_t px, fixed_t py, fixed_t pz, int pdamage,
+                           const divline_t &dv, Mobj *pinflictor)
+   : target(ptarget), inflictor(pinflictor), x(px), y(py), z(pz), damage(pdamage)
+{
+   dir = P_PointToAngle(0, 0, dv.dx, dv.dy) - ANG180;
+}
+
+//
+// BloodSpawner constructor for damage from a source mobj. x, y, z, and dir are calculated
+// using the source thing.
+//
+BloodSpawner::BloodSpawner(Mobj *ptarget, Mobj *source, int pdamage, Mobj *pinflictor)
+   : target(ptarget), inflictor(pinflictor), damage(pdamage)
+{
+   fixed_t dx = getThingX(target, source);
+   fixed_t dy = getThingY(target, source);
+
+   x   = source->x;
+   y   = source->y;
+   z   = source->z;
+   dir = P_PointToAngle(target->x, target->y, dx, dy);
+}
+
+//
+// Crushing constructor; x, y, z, and dir are taken from the thing being damaged.
+//
+BloodSpawner::BloodSpawner(Mobj *crushtarget, int pdamage)
+   : target(crushtarget), inflictor(nullptr), damage(pdamage)
+{
+   x   = crushtarget->x;
+   y   = crushtarget->y;
+   z   = crushtarget->z + crushtarget->height/2;
+   dir = crushtarget->angle;
+}
+
+//
+// Spawn some blood in response to damage
+//
+void BloodSpawner::spawn(bloodaction_e action) const
+{
+   mobjtype_t type = E_BloodTypeForThing(target, action);
+   if(type < 0)
+      return;
+
+   bloodtype_e behavior = E_GetBloodBehaviorForAction(mobjinfo[type], action);
+   switch(behavior)
+   {
+   case BLOODTYPE_DOOM:
+      P_spawnBloodDoom(type, *this);
+      break;
+   case BLOODTYPE_HERETIC:
+   case BLOODTYPE_HEXEN:
+      P_spawnBloodRaven(type, *this, (behavior == BLOODTYPE_HEXEN));
+      break;
+   case BLOODTYPE_HERETICRIP:
+   case BLOODTYPE_HEXENRIP:
+      P_spawnBloodRip(type, *this, (behavior == BLOODTYPE_HEXENRIP));
+      break;
+   case BLOODTYPE_STRIFE:
+      P_spawnBloodStrife(type, *this);
+      break;
+   case BLOODTYPE_CRUSH:
+      P_spawnCrusherBlood(target, type);
+      break;
+   case BLOODTYPE_CUSTOM: // TODO: define spawning routine via Aeon
+      break;
+   default: // invalid
+      break;
    }
 }
 
@@ -2457,9 +2653,16 @@ bool P_CheckMissileSpawn(Mobj* th)
    // move a little forward so an angle can
    // be computed if it immediately explodes
 
-   th->x += th->momx >> 1;
-   th->y += th->momy >> 1;
+   int newgroupid = th->groupid;
+   v2fixed_t pos = P_LinePortalCrossing(th->x, th->y, th->momx >> 1,
+                                        th->momy >> 1, &newgroupid);
+
+   // ioanch: this was already hacky as hell. We still need to adjust
+   // coordinates by portal, and group ID though.
+   th->x = pos.x;
+   th->y = pos.y;
    th->z += th->momz >> 1;
+   th->groupid = newgroupid;
 
    // killough 8/12/98: for non-missile objects (e.g. grenades)
    if(!(th->flags & MF_MISSILE) && demo_version >= 203)
@@ -2822,7 +3025,7 @@ void P_AdjustFloorClip(Mobj *thing)
 //
 // Function to retrieve proper thing height information for a thing.
 //
-int P_ThingInfoHeight(mobjinfo_t *mi)
+int P_ThingInfoHeight(const mobjinfo_t *mi)
 {
    return
       ((demo_version >= 333 && !comp[comp_theights] &&

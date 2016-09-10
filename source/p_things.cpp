@@ -28,10 +28,16 @@
 
 #include "doomstat.h"
 #include "d_gi.h"
+#include "d_mod.h"
+#include "e_inventory.h"
 #include "ev_specials.h"
+#include "metaapi.h"
+#include "p_inter.h"
 #include "p_mobj.h"
+#include "p_map.h"
 #include "p_map3d.h"
 #include "p_saveg.h"
+#include "p_setup.h"
 #include "p_things.h"
 #include "a_small.h"
 #include "acs_intr.h"
@@ -228,6 +234,234 @@ int EV_ThingDeactivate(int tid)
    }
 
    return success;
+}
+
+//
+// EV_ThingChangeTID
+//
+// ioanch 20160221 (originally by DavidPH)
+// Implements Thing_ChangeTID(oldtid, newtid)
+//
+int EV_ThingChangeTID(Mobj *actor, int oldtid, int newtid)
+{
+   Mobj   *mo     = nullptr;
+   Mobj   *next   = nullptr;
+   bool    found  = false;
+
+   mo    = P_FindMobjFromTID(oldtid, nullptr, actor);
+   found = mo != nullptr;
+   while(mo)
+   {
+      // Find next Mobj before changing TID.
+      next = P_FindMobjFromTID(oldtid, mo, actor);
+
+      P_RemoveThingTID(mo);
+      P_AddThingTID(mo, newtid);
+      mo = next;
+   }
+
+   return found;
+}
+
+//
+// EV_ThingRaise
+//
+// Implements Thing_Raise(tid)
+//
+int EV_ThingRaise(Mobj *actor, int tid)
+{
+   Mobj *mobj = nullptr;
+   int success = 0;
+   while((mobj = P_FindMobjFromTID(tid, mobj, actor)))
+   {
+      if(!P_ThingIsCorpse(mobj) || !P_CheckCorpseRaiseSpace(mobj))
+         continue;
+      // no raiser allowed, no friendliness transferred
+      P_RaiseCorpse(mobj, nullptr); 
+      success = 1;
+   }
+   return success;
+}
+
+//
+// EV_ThingStop
+//
+// Implements Thing_Stop(tid)
+//
+int EV_ThingStop(Mobj *actor, int tid)
+{
+   Mobj *mobj = nullptr;
+   int success = 0;
+   while((mobj = P_FindMobjFromTID(tid, mobj, actor)))
+   {
+      mobj->momx = mobj->momy = mobj->momz = 0; // same as A_Stop
+      success = 1;
+   }
+   return success;
+}
+
+//
+// EV_ThrustThing
+//
+// Implements ThrustThing(angle, speed, reserved, tid)
+//
+int EV_ThrustThing(Mobj *actor, int side, int byteangle, int ispeed, int tid)
+{
+   // Hexen format maps cannot have ExtraData, and in Hexen activation is only
+   // done from the front side, so keep compatible with that. Otherwise, in
+   // ExtraData-possible maps and eventually UDMF, the author can choose.
+   
+   // args[2] is reserved. In the ZDoom equivalent, it has something to do with
+   // setting huge speeds (> 30.0)
+
+   int success = 0;
+
+   // Either thrust if not compatible (i.e. modern) or only if the front
+   // side is touched (in Hexen). Back side will have no effect in plain Hexen
+   // maps.
+   if(!P_LevelIsVanillaHexen() || side == 0)
+   {
+      Mobj *mobj = nullptr;
+
+      angle_t angle = byteangle * (ANG90 / 64);
+      fixed_t speed = ispeed << FRACBITS;
+
+      // tid argument is also in ZDoom
+
+      while((mobj = P_FindMobjFromTID(tid, mobj, actor)))
+      {
+         P_ThrustMobj(mobj, angle, speed);
+         success = 1;
+      }
+   }
+   return success;
+}
+
+//
+// EV_ThrustThingZ
+//
+// Implements ThrustThingZ(tid, speed, updown, setadd)
+//
+int EV_ThrustThingZ(Mobj *actor, int tid, int ispeed, bool upDown, bool setAdd)
+{
+   fixed_t speed = ispeed << (FRACBITS - 2);
+   int sign = upDown ? -1 : 1;
+
+   int success = 0;
+
+   Mobj *mobj = nullptr;
+   while((mobj = P_FindMobjFromTID(tid, mobj, actor)))
+   {
+      mobj->momz = (setAdd ? mobj->momz : 0) + speed * sign;
+      success = 1;
+   }
+   return success;
+}
+
+//
+// EV_DamageThing
+//
+// Implements DamageThing(damage, mod)
+//
+int EV_DamageThing(Mobj *actor, int damage, int mod, int tid)
+{
+   Mobj *mobj = nullptr;
+   int success = 0;
+   while((mobj = P_FindMobjFromTID(tid, mobj, actor)))
+   {
+      P_DamageMobj(mobj, nullptr, nullptr, damage, mod);
+      success = 1;
+   }
+   return success;
+}
+
+//
+// EV_ThingDestroy
+//
+// Implements Thing_Destroy(tid, reserved, sectortag)
+//
+int EV_ThingDestroy(int tid, int sectortag)
+{
+   Mobj *mobj = nullptr;
+   int success = 0;
+   while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
+   {
+      if(mobj->flags & MF_SHOOTABLE &&
+         (!sectortag || mobj->subsector->sector->tag == sectortag))
+      {
+         P_DamageMobj(mobj, nullptr, nullptr, 10000, MOD_UNKNOWN);
+         success = 1;
+      }
+   }
+   return success;
+}
+
+//
+// EV_HealThing
+//
+// Returns 0 if the health isn't needed at all
+//
+int EV_HealThing(Mobj *actor, int amount, int maxhealth)
+{
+   if(!actor)
+      return 0;
+   mobjinfo_t *info = mobjinfo[actor->type];
+
+   if(!maxhealth || !actor->player)
+   {
+      // If second arg is 0, or the activator isn't a player
+      // then set the maxhealth to the activator's spawning health.
+      maxhealth = info->spawnhealth;
+   }
+   else if(maxhealth == 1)
+   {
+      // Otherwise if second arg is 1 and the SoulSphere's effect is present,
+      // then set maxhealth to the maximum health provided by a SoulSphere.
+      itemeffect_t *soulsphereeffect
+      = E_ItemEffectForName(ITEMNAME_SOULSPHERE);
+
+      if(soulsphereeffect)
+         maxhealth = soulsphereeffect->getInt("maxamount", 0);
+      else
+      {
+         // FIXME: Handle this with a bit more finesse.
+         maxhealth = info->spawnhealth + 100;
+      }
+   }
+
+   // If the activator can be given health then activate the switch
+   return EV_DoHealThing(actor, amount, maxhealth) ? 1 : 0;
+}
+
+//
+// Removes map objects tagged "tid" from the game
+//
+int EV_ThingRemove(int tid)
+{
+   Mobj *removed;
+   Mobj *mobj = nullptr;
+   mobj = P_FindMobjFromTID(tid, mobj, nullptr);
+   int rtn = 0;
+   while(mobj)
+   {
+      // don't attempt to remove player object because that would crash the game
+      // FIXME: removing voodoo dolls doesn't seem to work anyway
+      if(mobj->player && mobj->player->mo == mobj)
+      {
+         mobj = P_FindMobjFromTID(tid, mobj, nullptr);
+         continue;
+      }
+
+      // TODO: special handling for Hexen-like bridges
+
+      removed = mobj;
+      mobj = P_FindMobjFromTID(tid, mobj, nullptr);
+
+      removed->removeThinker();
+
+      rtn = 1;
+   }
+   return rtn;
 }
 
 //=============================================================================

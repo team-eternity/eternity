@@ -37,12 +37,17 @@
 // Needs precompiled tables/data structures.
 #include "info.h"
 #include "m_fixed.h"
+#include "m_vector.h"   // ioanch 20160109: for portal rendering
 #include "r_interpolate.h"
+#include "r_things.h"   // ioanch 20160109: for portal rendering
 #include "tables.h"
+#include "linkoffs.h"
 
 struct msecnode_t;
 struct player_t;
 struct skin_t;
+struct divline_t;
+class  BloodSpawner;
 
 // Defines
 
@@ -75,6 +80,7 @@ struct skin_t;
 #define NUMMOBJCOUNTERS 8
 
 // Mobjs are attached to subsectors by pointer.
+struct line_t;
 struct subsector_t;
 
 //
@@ -216,6 +222,10 @@ public:
    // More list: links in sector (if needed)
    Mobj  *snext;
    Mobj **sprev; // killough 8/10/98: change to ptr-to-ptr
+
+   // ioanch 20160109: sprite projection chains
+   DLListItem<spriteprojnode_t> *spriteproj;
+   v3fixed_t sprojlast; // coordinates after last check. Initially "invalid"
 
    //More drawing info: to determine current sprite.
    angle_t     angle;  // orientation
@@ -399,15 +409,57 @@ void P_StartMobjFade(Mobj *mo, int alphavelocity);
 extern int iquehead;
 extern int iquetail;
 
+enum bloodaction_e : int
+{
+   BLOOD_SHOT,   // bullet
+   BLOOD_IMPACT, // projectile impact
+   BLOOD_RIP,    // ripper projectile
+   BLOOD_CRUSH,  // crusher blood
+   
+   NUMBLOODACTIONS
+};
+
 void  P_RespawnSpecials();
 Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
 bool  P_SetMobjState(Mobj *mobj, statenum_t state);
 void  P_MobjThinker(Mobj *mobj);
 void  P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown, bool ptcl);
-void  P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, Mobj *target);
-Mobj *P_SpawnMapThing(mapthing_t *);
+void  P_SpawnUnknownThings();
+Mobj *P_SpawnMapThing(mapthing_t *mt);
 bool  P_CheckMissileSpawn(Mobj *);  // killough 8/2/98
 void  P_ExplodeMissile(Mobj *);     // killough
+
+//
+// Blood spawning
+//
+class BloodSpawner
+{
+public:
+   Mobj   *target;    // thing being damaged (always valid)
+   Mobj   *inflictor; // inflictor (not always valid)
+   fixed_t x;         // x position for spawn
+   fixed_t y;         // y position for spawn
+   fixed_t z;         // z position for spawn
+   angle_t dir;       // angular offset (used by particle fx)
+   int     damage;    // damage inflicted
+
+   BloodSpawner(Mobj *ptarget, fixed_t px, fixed_t py, fixed_t pz, int pdamage, 
+                angle_t pdir, Mobj *pinflictor = nullptr)
+      : target(ptarget), inflictor(pinflictor), x(px), y(py), z(pz), dir(pdir),
+        damage(pdamage)
+   {
+   }
+
+   BloodSpawner(Mobj *ptarget, fixed_t px, fixed_t py, fixed_t pz, int pdamage,
+                const divline_t &dv, Mobj *pinflictor = nullptr);
+
+   BloodSpawner(Mobj *ptarget, Mobj *source, int pdamage, Mobj *pinflictor = nullptr);
+
+   BloodSpawner(Mobj *crushtarget, int pdamage);
+
+   void spawn(bloodaction_e action) const;
+};
+
 
 // particles and lines: sf
 /*
@@ -460,21 +512,16 @@ void P_RemoveThingTID(Mobj *mo);
 
 void P_AdjustFloorClip(Mobj *thing);
 
-int P_ThingInfoHeight(mobjinfo_t *mi);
+int P_ThingInfoHeight(const mobjinfo_t *mi);
 void P_ChangeThingHeights(void);
 
 // extern data
 extern fixed_t FloatBobOffsets[64];
 
-// end new Eternity mobj functions
-
-#ifdef R_LINKEDPORTALS
-#include "linkoffs.h"
-
 // Made these use getThing* to eliminate the code duplication
-#define getTargetX(mo) getThingX(mo, mo->target)
-#define getTargetY(mo) getThingY(mo, mo->target)
-#define getTargetZ(mo) getThingZ(mo, mo->target)
+#define getTargetX(mo) getThingX((mo), (mo)->target)
+#define getTargetY(mo) getThingY((mo), (mo)->target)
+#define getTargetZ(mo) getThingZ((mo), (mo)->target)
 
 // haleyjd 05/21/08: Functions like the above, but when we have a specific
 // Mobj pointer we want to use, and not mo->target.
@@ -500,14 +547,12 @@ inline static fixed_t getThingZ(Mobj *mo1, Mobj *mo2)
    return mo2->z + P_GetLinkOffset(mo2->groupid, mo1->groupid)->z;
 }
 
-#endif
-
 //=============================================================================
 //
 // Misc. mobj flags
 //
 
-enum
+enum mobjflags_e : unsigned int
 {
    MF_SPECIAL      = 0x00000001, // Call P_SpecialThing when touched.
    MF_SOLID        = 0x00000002, // Blocks.    
@@ -543,7 +588,7 @@ enum
    MF_TRANSLUCENT  = 0x80000000  // Translucent sprite - phares
 };
 
-enum
+enum mobjflags2_e : unsigned int
 {
    // haleyjd 04/09/99: extended mobj flags
    // More of these will be filled in as I add support.
@@ -582,7 +627,7 @@ enum
 };
 
 // haleyjd 11/03/02: flags3 -- even more stuff!
-enum
+enum mobjflags3_e : unsigned int
 {
    MF3_GHOST        = 0x00000001,  // heretic ghost effect
    MF3_THRUGHOST    = 0x00000002,  // object passes through ghosts
@@ -618,7 +663,7 @@ enum
    MF3_RIP          = 0x80000000   // ripper - goes through everything
 };
 
-enum
+enum mobjflags4_e : unsigned int
 {
    MF4_AUTOTRANSLATE  = 0x00000001, // DOOM sprite is automatically translated
    MF4_NORADIUSDMG    = 0x00000002, // Doesn't take damage from blast radii
@@ -638,6 +683,7 @@ enum
    MF4_NOZERODAMAGE   = 0x00008000, // Missile won't inflict damage if damage is 0
    MF4_TLSTYLESUB     = 0x00010000, // Use subtractive blending map
    MF4_TOTALINVISIBLE = 0x00020000, // Thing is invisible to monsters
+   MF4_DRAWSBLOOD     = 0x00040000, // For missiles, spawn blood when hitting bleeding things
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh
@@ -661,6 +707,9 @@ enum
    MIF_WIMPYDEATH  = 0x00002000, // haleyjd: for player, died wimpy (10 damage or less)
    MIF_CLEARMOMZ   = 0x00004000, // davidph: clear momz (and this flag) in P_MovePlayer
    MIF_PLYRCORPSE  = 0x00008000, // haleyjd: object has been in the player corpse queue
+
+   // these should be cleared when a thing is being raised
+   MIF_CLEARRAISED = (MIF_DIEDFALLING|MIF_SCREAMED|MIF_CRASHED|MIF_WIMPYDEATH),
 };
 
 #endif

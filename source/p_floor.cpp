@@ -378,6 +378,32 @@ void PillarThinker::serialize(SaveArchive &arc)
 ///////////////////////////////////////////////////////////////////////
 
 //
+// Just for Hexen compatibility
+//
+int EV_FloorCrushStop(const line_t *line, int tag)
+{
+   // This will just stop all crushing floors with given tag
+   int rtn = 0;
+   for(Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
+   {
+      auto fmt = thinker_cast<FloorMoveThinker *>(th);
+      if(!fmt || fmt->crush <= 0)
+      {
+         continue;
+      }
+      // Odd: in Hexen this affects ALL sectors
+      if(P_LevelIsVanillaHexen() || fmt->sector->tag == tag)
+      {
+         rtn = 1;
+         fmt->sector->floordata = nullptr;
+         S_StopSectorSequence(fmt->sector, SEQ_ORIGIN_SECTOR_F);
+         fmt->removeThinker();
+      }
+   }
+   return rtn;
+}
+
+//
 // EV_DoFloor()
 //
 // Handle regular and extended floor types
@@ -396,7 +422,7 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
    secnum = -1;
    rtn = 0;
    // move all floors with the same tag as the linedef
-   while((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
+   while((secnum = P_FindSectorFromLineArg0(line,secnum)) >= 0)
    {
       sec = &sectors[secnum];
       
@@ -620,6 +646,26 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
 }
 
 //
+// Floor and ceiling mover. Mainly for Hexen compatibility
+//
+int EV_DoFloorAndCeiling(const line_t *line, int tag, const floordata_t &fd,
+                         const ceilingdata_t &cd)
+{
+   int floor = EV_DoParamFloor(line, tag, &fd);
+   if(P_LevelIsVanillaHexen())
+   {
+      // Clear ceilingdata to emulate Hexen bug
+      int secnum = -1;
+      while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
+      {
+         sectors[secnum].ceilingdata = nullptr;
+      }
+   }
+   int ceiling = EV_DoParamCeiling(line, tag, &cd);
+   return floor || ceiling ? 1 : 0;
+}
+
+//
 // EV_DoChange()
 //
 // Handle pure change types. These change floor texture and sector type
@@ -630,19 +676,32 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
 //
 // jff 3/15/98 added to better support generalized sector types
 //
-int EV_DoChange(const line_t *line, change_e changetype)
+int EV_DoChange(const line_t *line, int tag, change_e changetype, bool isParam)
 {
    int                   secnum;
    int                   rtn;
    sector_t*             sec;
    sector_t*             secm;
 
-   secnum = -1;
+   if(changetype == trigChangeOnly && !line)
+      return 0;   // ioanch: sanity check
+
    rtn = 0;
+   bool manual = false;
+   if(isParam && !tag)
+   {
+      if(!line || !(sec = line->backsector))
+         return rtn;
+      manual = true;
+      goto manualChange;
+   }
+
+   secnum = -1;
    // change all sectors with the same tag as the linedef
-   while((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
+   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
       sec = &sectors[secnum];
+   manualChange:
       
       rtn = 1;
 
@@ -664,6 +723,8 @@ int EV_DoChange(const line_t *line, change_e changetype)
       default:
          break;
       }
+      if(manual)
+         return rtn;
    }
    return rtn;
 }
@@ -682,11 +743,11 @@ static int P_FindSectorFromLineTagWithLowerBound(const line_t *l, int start,
                                                  int min)
 {
    // Emulate original Doom's linear lower-bounded 
-   // P_FindSectorFromLineTag as needed
+   // P_FindSectorFromLineArg0 as needed
 
    do
    {
-      start = P_FindSectorFromLineTag(l, start);
+      start = P_FindSectorFromLineArg0(l, start);
    }
    while(start >= 0 && start <= min);
 
@@ -926,7 +987,7 @@ static bool DonutOverflow(fixed_t *pfloorheight, int16_t *pfloorpic)
 }
 
 //
-// EV_DoDonut()
+// EV_DoParamDonut()
 //
 // Handle donut function: lower pillar, raise surrounding pool, both to height,
 // texture and type of the sector surrounding the pool.
@@ -934,7 +995,10 @@ static bool DonutOverflow(fixed_t *pfloorheight, int16_t *pfloorpic)
 // Passed the linedef that triggered the donut
 // Returns whether a thinker was created
 //
-int EV_DoDonut(const line_t *line)
+// ioanch 20160305: made parameterized
+//
+int EV_DoParamDonut(const line_t *line, int tag, bool havespac,
+                    fixed_t pspeed, fixed_t sspeed)
 {
    sector_t    *s1, *s2, *s3;
    int          secnum;
@@ -946,14 +1010,29 @@ int EV_DoDonut(const line_t *line)
 
    secnum = -1;
    rtn = 0;
+
+   // ioanch: param tag0 support
+   bool manual = false;
+   if(havespac && !tag)
+   {
+      if(!line || !(s1 = line->backsector))
+         return rtn;
+      secnum = s1 - sectors;
+      manual = true;
+      goto manual_donut;
+   }
    // do function on all sectors with same tag as linedef
-   while((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
+   while(!manual && (secnum = P_FindSectorFromTag(tag,secnum)) >= 0)
    {
       s1 = &sectors[secnum];                // s1 is pillar's sector
-              
+   manual_donut:  // ioanch
       // do not start the donut if the pillar is already moving
       if(P_SectorActive(floor_special, s1)) //jff 2/22/98
+      {
+         if(manual)
+            return rtn;
          continue;
+      }
                       
       s2 = getNextSector(s1->lines[0], s1); // s2 is pool's sector
       if(!s2) continue;           // note lowest numbered line around
@@ -1010,7 +1089,7 @@ int EV_DoDonut(const line_t *line)
          floor->crush     = -1;
          floor->direction = plat_up;
          floor->sector    = s2;
-         floor->speed     = FLOORSPEED / 2;
+         floor->speed     = sspeed;
          floor->texture   = s3_floorpic;
          P_ZeroSpecialTransfer(&(floor->special));
          floor->floordestheight = s3_floorheight;
@@ -1024,11 +1103,13 @@ int EV_DoDonut(const line_t *line)
          floor->crush     = -1;
          floor->direction = plat_down;
          floor->sector    = s1;
-         floor->speed     = FLOORSPEED / 2;
+         floor->speed     = pspeed;
          floor->floordestheight = s3_floorheight;
          P_FloorSequence(floor->sector);
          break;
       }
+      if(manual)
+         return rtn;
    }
    return rtn;
 }
@@ -1043,8 +1124,8 @@ int EV_DoDonut(const line_t *line)
 // jff 2/22/98 new type to move floor and ceiling in parallel
 //
 int EV_DoElevator
-( const line_t* line,
-  elevator_e    elevtype )
+( const line_t* line, int tag,
+  elevator_e    elevtype, fixed_t speed, fixed_t amount, bool isParam )
 {
    int                   secnum;
    int                   rtn;
@@ -1053,14 +1134,27 @@ int EV_DoElevator
 
    secnum = -1;
    rtn = 0;
+   bool manual = false;
+   if(isParam && !tag)
+   {
+      if(!line || !(sec = line->backsector))
+         return rtn;
+      manual = true;
+      goto manualElevator;
+   }
    // act on all sectors with the same tag as the triggering linedef
-   while((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
+   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
       sec = &sectors[secnum];
               
+   manualElevator:
       // If either floor or ceiling is already activated, skip it
       if(sec->floordata || sec->ceilingdata) //jff 2/22/98
+      {
+         if(manual)
+            return rtn; // ioanch: also take care of manual activation
          continue;
+      }
       
       // create and initialize new elevator thinker
       rtn = 1;
@@ -1070,14 +1164,15 @@ int EV_DoElevator
       sec->ceilingdata = elevator; //jff 2/22/98
       elevator->type = elevtype;
 
+      elevator->speed = speed;
+      elevator->sector = sec;
+
       // set up the fields according to the type of elevator action
       switch(elevtype)
       {
       // elevator down to next floor
       case elevateDown:
          elevator->direction = plat_down;
-         elevator->sector = sec;
-         elevator->speed = ELEVATORSPEED;
          elevator->floordestheight =
             P_FindNextLowestFloor(sec,sec->floorheight);
          elevator->ceilingdestheight =
@@ -1087,8 +1182,6 @@ int EV_DoElevator
       // elevator up to next floor
       case elevateUp:
          elevator->direction = plat_up;
-         elevator->sector = sec;
-         elevator->speed = ELEVATORSPEED;
          elevator->floordestheight =
             P_FindNextHighestFloor(sec,sec->floorheight);
          elevator->ceilingdestheight =
@@ -1097,19 +1190,24 @@ int EV_DoElevator
 
       // elevator to floor height of activating switch's front sector
       case elevateCurrent:
-         elevator->sector = sec;
-         elevator->speed = ELEVATORSPEED;
          elevator->floordestheight = line->frontsector->floorheight;
          elevator->ceilingdestheight =
             elevator->floordestheight + sec->ceilingheight - sec->floorheight;
          elevator->direction =
             elevator->floordestheight>sec->floorheight ? plat_up : plat_down;
          break;
-
+      case elevateByValue:
+         elevator->floordestheight = sec->floorheight + amount;
+         elevator->ceilingdestheight =
+            elevator->floordestheight + sec->ceilingheight - sec->floorheight;
+         elevator->direction = amount > 0 ? plat_up : plat_down;
+         break;
       default:
          break;
       }
       P_FloorSequence(elevator->sector);
+      if(manual)
+         return rtn;
    }
    return rtn;
 }

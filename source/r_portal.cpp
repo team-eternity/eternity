@@ -31,6 +31,7 @@
 #include "i_system.h"
 
 #include "c_io.h"
+#include "d_gi.h"
 #include "r_bsp.h"
 #include "r_draw.h"
 #include "r_main.h"
@@ -40,6 +41,12 @@
 #include "r_things.h"
 #include "v_alloc.h"
 #include "v_misc.h"
+
+enum
+{
+   PORTAL_RECURSION_LIMIT = 128, // maximum times same portal is drawn in a
+                                 // recursion
+};
 
 //=============================================================================
 //
@@ -573,6 +580,8 @@ static void R_RenderPlanePortal(pwindow_t *window)
    float angle;
    portal_t *portal = window->portal;
 
+   portalrender.curwindow = window;
+
    if(portal->type != R_PLANE)
       return;
 
@@ -617,6 +626,8 @@ static void R_RenderHorizonPortal(pwindow_t *window)
    visplane_t *topplane, *bottomplane;
    int x;
    portal_t *portal = window->portal;
+
+   portalrender.curwindow = window;
 
    if(portal->type != R_HORIZON)
       return;
@@ -717,6 +728,8 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
    float   lastxf, lastyf, lastzf, lastanglef;
    portal_t *portal = window->portal;
 
+   portalrender.curwindow = window;
+
    if(portal->type != R_SKYBOX)
       return;
 
@@ -772,8 +785,6 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
 
    // SoM: The viewangle should also be offset by the skybox camera angle.
    viewangle += portal->data.camera->angle;
-   viewsin = finesine[viewangle>>ANGLETOFINESHIFT];
-   viewcos = finecosine[viewangle>>ANGLETOFINESHIFT];
 
    view.angle = (ANG90 - viewangle) * PI / ANG180;
    view.sin = (float)sin(view.angle);
@@ -798,8 +809,6 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
    view.z = lastzf;
    view.angle = lastanglef;
 
-   viewsin  = finesine[viewangle>>ANGLETOFINESHIFT];
-   viewcos  = finecosine[viewangle>>ANGLETOFINESHIFT];
    view.sin = (float)sin(view.angle);
    view.cos = (float)cos(view.angle);
 
@@ -816,8 +825,48 @@ extern int    showtainted;
 
 static void R_ShowTainted(pwindow_t *window)
 {
-   static byte taintcolor = 0;
    int y1, y2, count;
+
+   if(window->line)
+   {
+      const sector_t *sector = window->line->frontsector;
+      float floorangle = sector->floorbaseangle + sector->floorangle;
+      float ceilingangle = sector->ceilingbaseangle + sector->ceilingangle;
+      visplane_t *topplane = R_FindPlane(sector->ceilingheight, 
+         sector->ceilingpic, sector->lightlevel, sector->ceiling_xoffs, 
+         sector->ceiling_yoffs, ceilingangle, nullptr, 0, 255, nullptr);
+      visplane_t *bottomplane = R_FindPlane(sector->floorheight,
+         sector->floorpic, sector->lightlevel, sector->floor_xoffs,
+         sector->floor_yoffs, floorangle, nullptr, 0, 255, nullptr);
+      topplane = R_CheckPlane(topplane, window->minx, window->maxx);
+      bottomplane = R_CheckPlane(bottomplane, window->minx, window->maxx);
+
+      for(int x = window->minx; x <= window->maxx; x++)
+      {
+         if(window->top[x] > window->bottom[x])
+            continue;
+         if(window->top[x] <= view.ycenter - 1.0f && 
+            window->bottom[x] >= view.ycenter)
+         {
+            topplane->top[x] = static_cast<int>(window->top[x]);
+            topplane->bottom[x] = centery - 1;
+            bottomplane->top[x] = centery;
+            bottomplane->bottom[x] = static_cast<int>(window->bottom[x]);
+         }
+         else if(window->top[x] <= view.ycenter - 1.0f)
+         {
+            topplane->top[x] = static_cast<int>(window->top[x]);
+            topplane->bottom[x] = static_cast<int>(window->bottom[x]);
+         }
+         else if(window->bottom[x] > view.ycenter - 1.0f)
+         {
+            bottomplane->top[x] = static_cast<int>(window->top[x]);
+            bottomplane->bottom[x] = static_cast<int>(window->bottom[x]);
+         }
+      }
+      
+      return;
+   }
 
    for(int i = window->minx; i <= window->maxx; i++)
    {
@@ -834,13 +883,12 @@ static void R_ShowTainted(pwindow_t *window)
 
       while(count > 0)
       {
-         *dest = taintcolor;
+         *dest = GameModeInfo->blackIndex;
          dest += video.pitch;
 
          count--;
       }
    }
-   taintcolor += 16;
 }
 
 //
@@ -852,6 +900,9 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    float   lastxf, lastyf, lastzf;
    portal_t *portal = window->portal;
 
+   // ioanch 20160123: don't forget
+   portalrender.curwindow = window;
+
    if(portal->type != R_ANCHORED && portal->type != R_TWOWAY)
       return;
 
@@ -859,14 +910,11 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
       return;
 
    // haleyjd: temporary debug
-   if(portal->tainted > 6)
+   if(portal->tainted > PORTAL_RECURSION_LIMIT)
    {
-      if(showtainted)
-         R_ShowTainted(window);         
+      R_ShowTainted(window);         
 
       portal->tainted++;
-      C_Printf(FC_ERROR "Refused to draw portal (line=%i) (t=%d)\n", 
-               portal->data.anchor.maker, portal->tainted);
       return;
    } 
 
@@ -946,18 +994,18 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    float   lastxf, lastyf, lastzf;
    portal_t *portal = window->portal;
 
+   // ioanch 20160123: keep track of window
+   portalrender.curwindow = window;
+
    if(portal->type != R_LINKED || window->maxx < window->minx)
       return;
 
    // haleyjd: temporary debug
-   if(portal->tainted > 6)
+   if(portal->tainted > PORTAL_RECURSION_LIMIT)
    {
-      if(showtainted)
-         R_ShowTainted(window);         
+      R_ShowTainted(window);         
 
       portal->tainted++;
-      C_Printf(FC_ERROR "Refused to draw portal (line=%i) (t=%d)", 
-               portal->data.link.maker, portal->tainted);
       return;
    } 
 
@@ -1006,6 +1054,22 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    viewx  = window->vx + portal->data.link.deltax;
    viewy  = window->vy + portal->data.link.deltay;
    viewz  = window->vz + portal->data.link.deltaz;
+
+   // ioanch 20160227: microscopic adjustment for line portals to make sure
+   // the edge textures in the buffer sectors are seen in case of polyobject
+   // portals
+   //if(window->line && window->line->portal->data.link.polyportalpartner)
+   //{
+   //   if(window->line->dx > 0)
+   //      --viewy;
+   //   else if(window->line->dx < 0)
+   //      ++viewy;
+   //   if(window->line->dy > 0)
+   //      ++viewx;
+   //   else if(window->line->dy < 0)
+   //      --viewx;
+   //}
+
    view.x = M_FixedToFloat(viewx);
    view.y = M_FixedToFloat(viewy);
    view.z = M_FixedToFloat(viewz);
@@ -1173,6 +1237,7 @@ void R_RenderPortals()
       portalrender.w = windowhead;
       portalrender.segClipFunc = windowhead->clipfunc;
       portalrender.overlay = windowhead->portal->poverlay;
+      portalrender.curwindow = windowhead;   // ioanch 20160123: for safety
 
       if(windowhead->maxx >= windowhead->minx)
          windowhead->func(windowhead);
@@ -1181,6 +1246,7 @@ void R_RenderPortals()
       portalrender.w = NULL;
       portalrender.segClipFunc = NULL;
       portalrender.overlay = NULL;
+      portalrender.curwindow = nullptr;   // ioanch 20160123: reset it
 
       // free the window structs
       w = windowhead->child;

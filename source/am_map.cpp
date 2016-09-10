@@ -1440,13 +1440,8 @@ static void AM_drawMline(mline_t *ml, int color)
    if(color == 247) // jff 4/3/98 if color is 247 (xparent), use black
       color=0;
    
-   /*
    if(AM_clipMline(ml, &fl))
-      AM_drawFline(&fl, color); // draws it on frame buffer using fb coords
-   */
-   // TEST:
-   if(AM_clipMline(ml, &fl))
-      AM_drawFlineWu(&fl, color);
+      AM_drawFlineWu(&fl, color); // draws it on frame buffer using fb coords
 }
 
 //
@@ -1510,9 +1505,9 @@ static void AM_drawGrid(int color)
 //
 // jff 4/3/98 add routine to get color of generalized keyed door
 //
-static int AM_DoorColor(int type)
+static int AM_DoorColor(line_t *line)
 {
-   int lockdefID = EV_LockDefIDForSpecial(type);
+   int lockdefID = EV_LockDefIDForLine(line);
 
    if(lockdefID)
       return E_GetLockDefColor(lockdefID);
@@ -1534,14 +1529,8 @@ static int AM_DoorColor(int type)
 //
 inline static bool AM_drawAsExitLine(line_t *line)
 {
-   // FIXME: needs to be controlled by line special bindings
-   return (mapcolor_exit &&
-           (line->special==11  ||
-            line->special==52  ||
-            line->special==197 ||
-            line->special==51  ||
-            line->special==124 ||
-            line->special==198));
+   ev_action_t *action = EV_ActionForSpecial(line->special);
+   return (mapcolor_exit && (EV_CompositeActionFlags(action) & EV_ISMAPPEDEXIT));
 }
 
 //
@@ -1594,10 +1583,9 @@ inline static bool AM_drawAs2sSecret(line_t *line)
 //
 inline static bool AM_drawAsTeleporter(line_t *line)
 {
-   // FIXME: needs to be controlled by line special bindings
+   ev_action_t *action = EV_ActionForSpecial(line->special);   
    return (mapcolor_tele && !(line->flags & ML_SECRET) && 
-           (line->special == 39  || line->special == 97 ||
-            line->special == 125 || line->special == 126));
+           (EV_CompositeActionFlags(action) & EV_ISTELEPORTER));
 }
 
 //
@@ -1608,7 +1596,7 @@ inline static bool AM_drawAsTeleporter(line_t *line)
 //
 inline static bool AM_drawAsLockedDoor(line_t *line)
 {
-   return E_GetLockDefColor(EV_LockDefIDForSpecial(line->special)) != 0;
+   return E_GetLockDefColor(EV_LockDefIDForLine(line)) != 0;
 }
 
 //
@@ -1782,7 +1770,7 @@ static void AM_drawWalls()
                if(AM_isDoorClosed(line))
                {
                   int lockColor;
-                  if((lockColor = AM_DoorColor(line->special)) >= 0)
+                  if((lockColor = AM_DoorColor(line)) >= 0)
                      AM_drawMline(&l, lockColor ? lockColor : mapcolor_cchg);
                }
                else

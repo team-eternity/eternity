@@ -40,6 +40,16 @@ void P_DropItems(Mobj *actor, bool tossitems);
 
 void P_Whistle(Mobj *actor, int mobjtype);
 
+// ioanch 20160221
+// Archvile interaction check. Used by the A_VileChase and Thing_Raise
+bool P_ThingIsCorpse(const Mobj *mobj);
+bool P_CheckCorpseRaiseSpace(Mobj *corpse);
+void P_RaiseCorpse(Mobj *corpse, const Mobj *raiser);
+
+// MaxW: 2016/07/14:
+// Used by HealThing line actions
+bool EV_DoHealThing(Mobj *actor, int amount, int max);
+
 // killough 5/2/98: moved from d_deh.c, g_game.c, m_misc.c, others:
 
 extern int god_health;   // Ty 03/09/98 - deh support, see also p_inter.c

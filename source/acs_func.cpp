@@ -53,6 +53,7 @@
 #include "p_map.h"
 #include "p_map3d.h"
 #include "p_maputl.h"
+#include "p_portal.h"   // ioanch 20160116
 #include "p_spec.h"
 #include "p_xenemy.h"
 #include "r_data.h"

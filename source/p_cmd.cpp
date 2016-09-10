@@ -320,8 +320,8 @@ VARIABLE_TOGGLE(donut_emulation, NULL, onoff);
 CONSOLE_VARIABLE(donut_emulation, donut_emulation, 0) {}
 
 // haleyjd 01/24/07: spawn Unknowns for missing things on maps?
-VARIABLE_BOOLEAN(markUnknowns, NULL, yesno);
-CONSOLE_VARIABLE(p_markunknowns, markUnknowns, 0) {}
+VARIABLE_BOOLEAN(p_markunknowns, NULL, yesno);
+CONSOLE_VARIABLE(p_markunknowns, p_markunknowns, 0) {}
 
 // haleyjd 10/09/07
 extern int wipewait;

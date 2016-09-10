@@ -1062,7 +1062,7 @@ void G_DoPlayDemo(void)
       default_allowmlook = allowmlook;
       allowmlook = 0;
 
-      // haleyjd 06/07/12: for the sake of Heretic/Hexen demos only
+      // for the sake of Heretic/Hexen demos only
       pitchedflight = false;
 
       // killough 3/6/98: rearrange to fix savegame bugs (moved fastparm,
@@ -1564,6 +1564,7 @@ static void G_DoCompleted()
    if(g_destmap)
    {
       wminfo.next = g_destmap;
+      wminfo.nextexplicit = true;
       if(!(GameModeInfo->flags & GIF_MAPXY))
       {
          if(wminfo.next < 1)
@@ -1574,6 +1575,8 @@ static void G_DoCompleted()
       wminfo.next--;
       g_destmap = 0;
    }
+   else
+      wminfo.nextexplicit = false;
 
    wminfo.maxkills  = totalkills;
    wminfo.maxitems  = totalitems;
@@ -1610,7 +1613,7 @@ static void G_DoWorldDone()
    gamemap = wminfo.next+1;
 
    // haleyjd: handle heretic hidden levels via missioninfo samelevel rules
-   if(GameModeInfo->missionInfo->sameLevels)
+   if(!wminfo.nextexplicit && GameModeInfo->missionInfo->sameLevels)
    {
       samelevel_t *sameLevel = GameModeInfo->missionInfo->sameLevels;
       while(sameLevel->episode != -1)
@@ -1627,7 +1630,7 @@ static void G_DoWorldDone()
    // haleyjd: customizable secret exits
    if(secretexit)
    {
-      if(*LevelInfo.nextSecret)
+      if(!wminfo.nextexplicit && *LevelInfo.nextSecret)
          G_SetGameMapName(LevelInfo.nextSecret);
       else
          G_SetGameMapName(G_GetNameForMap(gameepisode, gamemap));
@@ -1635,7 +1638,7 @@ static void G_DoWorldDone()
    else
    {
       // haleyjd 12/14/01: don't use nextlevel for secret exits here either!
-      if(*LevelInfo.nextLevel)
+      if(!wminfo.nextexplicit && *LevelInfo.nextLevel)
          G_SetGameMapName(LevelInfo.nextLevel);
       else
          G_SetGameMapName(G_GetNameForMap(gameepisode, gamemap));
@@ -2049,12 +2052,7 @@ void G_Ticker()
    C_NetTicker();        // sf: console network commands
    if(inwipe)
       Wipe_Ticker();
-
-#if 0
-   // haleyjd 03/15/03: execute scheduled Small callbacks
-   SM_ExecuteCallbacks();
-#endif
-   
+ 
    if(gamestate == GS_LEVEL)
    {
       P_Ticker();
@@ -2258,15 +2256,17 @@ static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
       // first spawn of level, before corpses
       for(i = 0; i < playernum; i++)
       {
-         if(players[i].mo->x == mthing->x << FRACBITS &&
-            players[i].mo->y == mthing->y << FRACBITS)
+         // ioanch 20151218: fixed mapthing coordinates
+         if(players[i].mo->x == mthing->x &&
+            players[i].mo->y == mthing->y)
             return false;
       }
       return true;
    }
 
-   x = mthing->x << FRACBITS;
-   y = mthing->y << FRACBITS;
+   // ioanch 20151218: fixed mapthing coordinates
+   x = mthing->x;
+   y = mthing->y;
    
    // killough 4/2/98: fix bug where P_CheckPosition() uses a non-solid
    // corpse to detect collisions with other players in DM starts
@@ -2375,8 +2375,9 @@ int G_ClosestDMSpot(fixed_t x, fixed_t y, int notspot)
 
    for(j = 0; j < numspots; ++j)
    {
-      fixed_t dist = P_AproxDistance(x - deathmatchstarts[j].x * FRACUNIT,
-                                     y - deathmatchstarts[j].y * FRACUNIT);
+      // ioanch 20151218: fixed point mapthing coordinates
+      fixed_t dist = P_AproxDistance(x - deathmatchstarts[j].x,
+                                     y - deathmatchstarts[j].y);
       
       if(dist < closestdist && j != notspot)
       {
@@ -2527,7 +2528,6 @@ static char    d_mapname[10];
 
 int G_GetMapForName(const char *name)
 {
-   // haleyjd 03/17/02: do not write back into argument!
    char normName[9];
    int episode, map;
 
@@ -2595,8 +2595,8 @@ void G_DeferedInitNew(skill_t skill, const char *levelname)
    
    d_skill = skill;
 
-   // haleyjd 06/16/10: default to NULL
-   d_dir = NULL;
+   // managed directory defaults to null
+   d_dir = nullptr;
    inmanageddir = MD_NONE;
    
    gameaction = ga_newgame;

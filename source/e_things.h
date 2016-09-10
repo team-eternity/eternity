@@ -33,6 +33,8 @@
 struct emod_t;
 struct mobjinfo_t;
 struct state_t;
+class  Mobj;
+enum   bloodaction_e : int;
 
 // Global Data
 extern int UnknownThingType;
@@ -80,6 +82,29 @@ state_t *E_StateForModNum(mobjinfo_t *mi, const char *base, int num);
 void     E_SplitTypeAndState(char *src, char **type, char **state);
 int     *E_GetNativeStateLoc(mobjinfo_t *mi, const char *label);
 state_t *E_GetStateForMobjInfo(mobjinfo_t *mi, const char *label);
+state_t *E_GetStateForMobj(Mobj *mo, const char *label);
+
+// ioanch 20160220: metastate key names used throughout the code. They also
+// work as DECORATE state label names.
+#define METASTATE_HEAL "Heal"
+
+// blood types
+enum bloodtype_e : int
+{
+   BLOODTYPE_DOOM, 
+   BLOODTYPE_HERETIC, 
+   BLOODTYPE_HERETICRIP, 
+   BLOODTYPE_HEXEN,
+   BLOODTYPE_HEXENRIP,
+   BLOODTYPE_STRIFE,
+   BLOODTYPE_CRUSH,
+   BLOODTYPE_CUSTOM,
+
+   BLOODTYPE_MAX // must be last
+};
+
+int E_BloodTypeForThing(Mobj *mo, bloodaction_e action);
+bloodtype_e E_GetBloodBehaviorForAction(mobjinfo_t *info, bloodaction_e action);
 
 #endif
 

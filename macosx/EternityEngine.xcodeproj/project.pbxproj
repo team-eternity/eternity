@@ -17,6 +17,7 @@
 		4F36247D18A567CD00B94FA1 /* xl_mapinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F36247418A567CD00B94FA1 /* xl_mapinfo.cpp */; };
 		4F36247F18A567CD00B94FA1 /* xl_musinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F36247618A567CD00B94FA1 /* xl_musinfo.cpp */; };
 		4F36248118A567CD00B94FA1 /* xl_sndinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F36247818A567CD00B94FA1 /* xl_sndinfo.cpp */; };
+		4F3EC9C51C1C12D400AA43C2 /* e_udmf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F3EC9C31C1C12D400AA43C2 /* e_udmf.cpp */; };
 		4F42A5CC188B336600E6CACD /* i_timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F42A5C9188B336600E6CACD /* i_timer.cpp */; };
 		4F42A5D0188B338600E6CACD /* i_sdltimer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F42A5CD188B338600E6CACD /* i_sdltimer.cpp */; };
 		4F43B448182D9D5800730C02 /* SDLMain.m in Sources */ = {isa = PBXBuildFile; fileRef = FA601C6616961D9A00046D2D /* SDLMain.m */; };
@@ -288,6 +289,7 @@
 		4F5F399E182D9C1A0027813A /* libmikmod.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF6A1753482C00E70FEC /* libmikmod.a */; };
 		4F5F399F182D9C1C0027813A /* libsmpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF6B1753482C00E70FEC /* libsmpeg.a */; };
 		4F68CE8D1963D88100E7B8BE /* ev_sectors.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F68CE8B1963D88100E7B8BE /* ev_sectors.cpp */; };
+		4FB5F0051CCB5A0D00EFF2D9 /* p_portalclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FB5F0031CCB5A0D00EFF2D9 /* p_portalclip.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -322,6 +324,8 @@
 		4F36247718A567CD00B94FA1 /* xl_musinfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = xl_musinfo.h; path = ../source/xl_musinfo.h; sourceTree = "<group>"; };
 		4F36247818A567CD00B94FA1 /* xl_sndinfo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = xl_sndinfo.cpp; path = ../source/xl_sndinfo.cpp; sourceTree = "<group>"; };
 		4F36247918A567CD00B94FA1 /* xl_sndinfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = xl_sndinfo.h; path = ../source/xl_sndinfo.h; sourceTree = "<group>"; };
+		4F3EC9C31C1C12D400AA43C2 /* e_udmf.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = e_udmf.cpp; path = ../source/e_udmf.cpp; sourceTree = "<group>"; };
+		4F3EC9C41C1C12D400AA43C2 /* e_udmf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = e_udmf.h; path = ../source/e_udmf.h; sourceTree = "<group>"; };
 		4F42A5C9188B336600E6CACD /* i_timer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = i_timer.cpp; path = ../source/hal/i_timer.cpp; sourceTree = "<group>"; };
 		4F42A5CA188B336600E6CACD /* i_timer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = i_timer.h; path = ../source/hal/i_timer.h; sourceTree = "<group>"; };
 		4F42A5CD188B338600E6CACD /* i_sdltimer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = i_sdltimer.cpp; path = ../source/sdl/i_sdltimer.cpp; sourceTree = "<group>"; };
@@ -354,6 +358,8 @@
 		4F9F72D016BFB70A00C405AE /* p_scroll.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = p_scroll.h; path = ../source/p_scroll.h; sourceTree = "<group>"; };
 		4F9F72D116BFB73200C405AE /* p_pushers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_pushers.cpp; path = ../source/p_pushers.cpp; sourceTree = "<group>"; };
 		4F9F72D216BFB73200C405AE /* p_scroll.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_scroll.cpp; path = ../source/p_scroll.cpp; sourceTree = "<group>"; };
+		4FB5F0031CCB5A0D00EFF2D9 /* p_portalclip.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_portalclip.cpp; path = ../source/p_portalclip.cpp; sourceTree = "<group>"; };
+		4FB5F0041CCB5A0D00EFF2D9 /* p_portalclip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = p_portalclip.h; path = ../source/p_portalclip.h; sourceTree = "<group>"; };
 		4FF640B81735256700793714 /* v_alloc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = v_alloc.cpp; path = ../source/v_alloc.cpp; sourceTree = "<group>"; };
 		4FF640B91735256700793714 /* v_alloc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = v_alloc.h; path = ../source/v_alloc.h; sourceTree = "<group>"; };
 		4FFD27341796990400E4E5B1 /* a_args.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = a_args.h; path = ../source/a_args.h; sourceTree = "<group>"; };
@@ -1314,6 +1320,8 @@
 				FA16D3EF15E01E96002318D1 /* e_things.h */,
 				FABF5CE8158BF42800C49E93 /* e_ttypes.cpp */,
 				FA16D3F015E01E96002318D1 /* e_ttypes.h */,
+				4F3EC9C31C1C12D400AA43C2 /* e_udmf.cpp */,
+				4F3EC9C41C1C12D400AA43C2 /* e_udmf.h */,
 				4F0165DC178375EF00D04FAE /* e_weapons.cpp */,
 				4F0165DD178375EF00D04FAE /* e_weapons.h */,
 			);
@@ -1478,6 +1486,8 @@
 				FABF5D20158BF42800C49E93 /* p_plats.cpp */,
 				FABF5D21158BF42800C49E93 /* p_portal.cpp */,
 				FACACB571652F1170091AF2E /* p_portal.h */,
+				4FB5F0031CCB5A0D00EFF2D9 /* p_portalclip.cpp */,
+				4FB5F0041CCB5A0D00EFF2D9 /* p_portalclip.h */,
 				FABF5D22158BF42800C49E93 /* p_pspr.cpp */,
 				FA16D42E15E01E96002318D1 /* p_pspr.h */,
 				4F9F72D116BFB73200C405AE /* p_pushers.cpp */,
@@ -1993,6 +2003,7 @@
 				4F5F394D182D9B0E0027813A /* txt_label.c in Sources */,
 				4F5F394E182D9B0E0027813A /* txt_radiobutton.c in Sources */,
 				4F5F394F182D9B0E0027813A /* txt_scrollpane.c in Sources */,
+				4F3EC9C51C1C12D400AA43C2 /* e_udmf.cpp in Sources */,
 				4F5F3950182D9B0E0027813A /* txt_sdl.c in Sources */,
 				4F5F3951182D9B0E0027813A /* txt_separator.c in Sources */,
 				4F5F3952182D9B0E0027813A /* txt_spinctrl.c in Sources */,
@@ -2080,6 +2091,7 @@
 				4F5F390C182D9AC00027813A /* p_plats.cpp in Sources */,
 				4F5F390D182D9AC00027813A /* p_portal.cpp in Sources */,
 				4F5F390E182D9AC00027813A /* p_pspr.cpp in Sources */,
+				4FB5F0051CCB5A0D00EFF2D9 /* p_portalclip.cpp in Sources */,
 				4F015B111870EA5900ADB3F4 /* s_formats.cpp in Sources */,
 				4F5F390F182D9AC00027813A /* p_pushers.cpp in Sources */,
 				4F5F3910182D9AC00027813A /* p_saveg.cpp in Sources */,
@@ -2215,7 +2227,6 @@
 					R_PORTALS,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
@@ -2258,7 +2269,6 @@
 					NDEBUG,
 					R_LINKEDPORTALS,
 				);
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;

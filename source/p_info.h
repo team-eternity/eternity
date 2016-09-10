@@ -122,6 +122,9 @@ struct LevelInfo_t
    int  skyDelta;             // double-sky scroll speeds (units/tic)
    int  sky2Delta;
 
+   // gameplay options
+   bool disableJump;          // if true, jumping is disabled
+
    // misc
    int gravity;               // gravity factor
    const char *creator;       // creator: name of who made this map
@@ -169,6 +172,9 @@ struct levelnamedata_t;
 void P_DoomDefaultLevelName(levelnamedata_t &lnd);
 void P_Doom2DefaultLevelName(levelnamedata_t &lnd);
 void P_HticDefaultLevelName(levelnamedata_t &lnd);
+
+// ioanch
+bool P_LevelIsVanillaHexen();
 
 #endif
 

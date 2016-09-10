@@ -46,6 +46,7 @@
 #include "m_swap.h"
 #include "p_info.h"
 #include "p_maputl.h"
+#include "polyobj.h"
 #include "p_saveg.h"
 #include "p_spec.h"
 #include "r_state.h"

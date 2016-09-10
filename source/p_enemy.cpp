@@ -366,9 +366,10 @@ static bool P_IsOnLift(const Mobj *actor)
 
    // Check to see if it's in a sector which can be 
    // activated as a lift.
-   if((line.tag = sec->tag))
+   // ioanch 20160303: use args[0]
+   if((line.args[0] = sec->tag))
    {
-      for(l = -1; (l = P_FindLineFromLineTag(&line, l)) >= 0;)
+      for(l = -1; (l = P_FindLineFromLineArg0(&line, l)) >= 0;)
       {
          switch(lines[l].special)
          {
@@ -765,7 +766,7 @@ static void P_DoNewChaseDir(Mobj *actor, fixed_t deltax, fixed_t deltay)
 
 static fixed_t dropoff_deltax, dropoff_deltay, floorz;
 
-static bool PIT_AvoidDropoff(line_t *line)
+static bool PIT_AvoidDropoff(line_t *line, polyobj_s *po)
 {
    if(line->backsector                          && // Ignore one-sided linedefs
       clip.bbox[BOXRIGHT]  > line->bbox[BOXLEFT]   &&
@@ -1949,8 +1950,12 @@ static void P_ResurrectPlayer()
       edefstructvar(mapthing_t, mthing);
       Mobj *oldmo = p->mo;
 
-      mthing.x     = (int16_t)(p->mo->x >> FRACBITS);
-      mthing.y     = (int16_t)(p->mo->y >> FRACBITS);
+      // IOANCH 20151218: 32-bit mapthing_t coordinates
+      // To avoid any change, keep truncating the subunit values
+      // This is to preserve the old behaviour, when mapthing_t had short-int
+      // coordinates.
+      mthing.x     = p->mo->x & ~(FRACUNIT - 1);
+      mthing.y     = p->mo->y & ~(FRACUNIT - 1);
       mthing.angle = (int16_t)(p->mo->angle / ANGLE_1);
       mthing.type  = (p - players) + 1;
 

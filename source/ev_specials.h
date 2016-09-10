@@ -50,6 +50,13 @@ enum EVActionFlags
    EV_POSTCHANGESIDED  = 0x00000100, // Switch texture changes on proper side of line
 
    EV_PARAMLINESPEC    = 0x00000200, // Is a parameterized line special
+
+   EV_PARAMLOCKID      = 0x00000400, // Has a parameterized lockdef ID
+
+   EV_ISTELEPORTER     = 0x00000800, // Is a teleporter action, for automap
+   EV_ISLIFT           = 0x00001000, // Is a lift action
+   EV_ISMBFLIFT        = 0x00002000, // Is a lift for MBF friends during demo_version 203
+   EV_ISMAPPEDEXIT     = 0x00004000, // Is an exit line for purposes of automap
 };
 
 // Data related to an instance of a special activation.
@@ -59,7 +66,7 @@ struct ev_instance_t
    line_t *line;    // line, if any
    int     special; // special to activate (may == line->special)
    int    *args;    // arguments (may point to line->args)
-   int     tag;     // tag (may == line->tag or line->args[0])
+   int     tag;     // tag (may == line->tag or line->args[0]) // ioanch 20160304: only args[0]
    int     side;    // side of activation
    int     spac;    // special activation type
    int     gentype; // generalized type, if is generalized (-1 otherwise)
@@ -116,6 +123,7 @@ struct ev_action_t
    unsigned int     flags;      // action flags
    int              minversion; // minimum demo version
    const char      *name;       // name for display purposes
+   int              lockarg;    // if(flags & EV_PARAMLOCKID), use this arg #
 };
 
 // Binds a line special action to a specific action number.
@@ -140,7 +148,7 @@ struct ev_binding_t
 //
 inline static unsigned int EV_CompositeActionFlags(ev_action_t *action)
 {
-   return (action->type->flags | action->flags);
+   return (action ? (action->type->flags | action->flags) : 0);
 }
 
 // Action Types
@@ -175,6 +183,9 @@ ev_action_t  *EV_ActionForSpecial(int special);
 
 // Lockdef ID for Special
 int EV_LockDefIDForSpecial(int special);
+
+// Lockdef ID for Linedef
+int EV_LockDefIDForLine(line_t *line);
 
 // Testing
 bool EV_IsParamLineSpec(int special);
@@ -280,8 +291,76 @@ enum
    EV_STATIC_SCROLL_LINE_UP,                // 417
    EV_STATIC_SCROLL_LINE_DOWN,              // 418
    EV_STATIC_SCROLL_LINE_DOWN_FAST,         // 419
+   EV_STATIC_PORTAL_HORIZON_LINE,           // 450
+   EV_STATIC_SLOPE_PARAM,                   // 455
+   EV_STATIC_PORTAL_SECTOR_PARAM,           // 456
+   EV_STATIC_WIND_CONTROL_PARAM,            // 457
+   EV_STATIC_CURRENT_CONTROL_PARAM,         // 479
+   EV_STATIC_PUSHPULL_CONTROL_PARAM,        // 480
+   EV_STATIC_INIT_PARAM,                    // 481
+   EV_STATIC_3DMIDTEX_ATTACH_PARAM,         // 482
+   EV_STATIC_SCROLL_CEILING_PARAM,          // 483
+   EV_STATIC_SCROLL_FLOOR_PARAM,            // 484
+   EV_STATIC_SCROLL_WALL_PARAM,             // 485
+   EV_STATIC_PORTAL_LINE_PARAM,             // 486
 
    EV_STATIC_MAX
+};
+
+//
+// Parameterized specifics
+//
+
+// Line_SetPortal
+enum
+{
+   ev_LinePortal_Maker = 0,
+   ev_LinePortal_Anchor = 1,
+   ev_LinePortal_Arg_SelfTag = 1,
+   ev_LinePortal_Arg_Type = 2,
+   ev_LinePortal_Type_Visual = 0,
+   ev_LinePortal_Type_Linked = 3,
+   ev_LinePortal_Type_EEClassic = 4
+};
+
+// Scroll
+enum
+{
+   ev_Scroll_Arg_Bits = 1,
+   ev_Scroll_Bit_Accel = 1,
+   ev_Scroll_Bit_Displace = 2,
+   ev_Scroll_Bit_UseLine = 4,
+   ev_Scroll_Arg_Type = 2,
+   ev_Scroll_Type_Scroll = 0,
+   ev_Scroll_Type_Carry = 1,
+   ev_Scroll_Type_ScrollCarry = 2,
+   ev_Scroll_Arg_X = 3,
+   ev_Scroll_Arg_Y = 4,
+};
+
+// Sector_Attach3dMidtex
+enum
+{
+   ev_AttachMidtex_Arg_SectorTag = 1,
+   ev_AttachMidtex_Arg_DoCeiling = 2,
+};
+
+// Sector_SetWind
+enum
+{
+   ev_SetWind_Arg_Strength = 1,
+   ev_SetWind_Arg_Angle = 2,
+   ev_SetWind_Arg_Flags = 3,
+   ev_SetWind_Flag_UseLine = 1,
+   ev_SetWind_Flag_Heretic = 2,
+};
+
+// Static_Init
+enum
+{
+   ev_StaticInit_Arg_Prop = 1,
+   ev_StaticInit_Prop_SkyTransfer = 255,
+   ev_StaticInit_Arg_Flip = 2,
 };
 
 // Binds a line special number to a static init function

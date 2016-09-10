@@ -41,25 +41,20 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "i_system.h"
 
 #include "d_gi.h"
 #include "d_mod.h"
-#include "doomdef.h"
 #include "doomstat.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "m_bbox.h"
-#include "m_random.h"
 #include "p_map.h"
 #include "p_maputl.h"
-#include "p_mobj.h"
 #include "p_mobjcol.h"
 #include "p_inter.h"
-#include "p_partcl.h"
 #include "p_portal.h"
+#include "p_portalclip.h"  // ioanch 20160115
 #include "p_setup.h"
-#include "r_defs.h"
 #include "r_main.h"
 #include "r_pcheck.h"
 
@@ -145,8 +140,9 @@ floater:
       mo->target)     // killough 11/98: simplify
    {
       fixed_t delta;
-      if(P_AproxDistance(mo->x - mo->target->x, mo->y - mo->target->y) <
-         D_abs(delta = mo->target->z + (mo->height >> 1) - mo->z) * 3)
+      // ioanch 20160110: portal aware
+      if(P_AproxDistance(mo->x - getTargetX(mo), mo->y - getTargetY(mo)) <
+         D_abs(delta = getTargetZ(mo) + (mo->height >> 1) - mo->z) * 3)
          mo->z += delta < 0 ? -FLOATSPEED : FLOATSPEED;
    }
 
@@ -185,8 +181,9 @@ static bool PIT_TestMobjZ(Mobj *thing)
    }
 
    // test against collision - from PIT_CheckThing:
-   if(D_abs(thing->x - clip.x) >= blockdist || 
-      D_abs(thing->y - clip.y) >= blockdist)
+   // ioanch 20160110: portal aware
+   if(D_abs(getThingX(clip.thing, thing) - clip.x) >= blockdist || 
+      D_abs(getThingY(clip.thing, thing) - clip.y) >= blockdist)
       return true;
 
    // the thing may be blocking; save a pointer to it
@@ -201,8 +198,6 @@ static bool PIT_TestMobjZ(Mobj *thing)
 //
 bool P_TestMobjZ(Mobj *mo)
 {
-   int xl, xh, yl, yh, x, y;
-   
    // a no-clipping thing is always good
    if(mo->flags & MF_NOCLIP)
       return true;
@@ -216,17 +211,20 @@ bool P_TestMobjZ(Mobj *mo)
    clip.bbox[BOXRIGHT]  = clip.x + mo->radius;
    clip.bbox[BOXBOTTOM] = clip.y - mo->radius;
    clip.bbox[BOXTOP]    = clip.y + mo->radius;
-   
-   xl = (clip.bbox[BOXLEFT]   - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
-   xh = (clip.bbox[BOXRIGHT]  - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
-   yl = (clip.bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
-   yh = (clip.bbox[BOXTOP]    - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
 
-   // standard P_BlockThingsIterator loop
-   for(x = xl; x <= xh; ++x)
-      for(y = yl; y <= yh; ++y)
-         if(!P_BlockThingsIterator(x, y, PIT_TestMobjZ))
-            return false;
+   // ioanch 20160110: portal aware
+   fixed_t bbox[4];
+   bbox[BOXLEFT] = clip.bbox[BOXLEFT] - MAXRADIUS;
+   bbox[BOXRIGHT] = clip.bbox[BOXRIGHT] + MAXRADIUS;
+   bbox[BOXBOTTOM] = clip.bbox[BOXBOTTOM] - MAXRADIUS;
+   bbox[BOXTOP] = clip.bbox[BOXTOP] + MAXRADIUS;
+
+   if(!P_TransPortalBlockWalker(bbox, mo->groupid, true, nullptr, 
+      [](int x, int y, int groupid, void *data) -> bool
+   {
+      return P_BlockThingsIterator(x, y, groupid, PIT_TestMobjZ);
+   }))
+      return false;
 
    return true;
 }
@@ -260,8 +258,10 @@ Mobj *P_GetThingUnder(Mobj *mo)
 // a search, which is an extension borrowed from zdoom and is needed for 3D 
 // object clipping.
 //
-bool P_SBlockThingsIterator(int x, int y, bool (*func)(Mobj *), 
-                            Mobj *actor)
+// ioanch 20160110: added optional groupid
+//
+static bool P_SBlockThingsIterator(int x, int y, bool (*func)(Mobj *), 
+                                   Mobj *actor, int groupid = R_NOGROUP)
 {
    Mobj *mobj;
 
@@ -274,15 +274,20 @@ bool P_SBlockThingsIterator(int x, int y, bool (*func)(Mobj *),
       mobj = actor->bnext;
 
    for(; mobj; mobj = mobj->bnext)
+   {
+      if(groupid != R_NOGROUP && mobj->groupid != R_NOGROUP && 
+         groupid != mobj->groupid)
+      {
+         continue;
+      }
       if(!func(mobj))
          return false;
+   }
    
    return true;
 }
 
 static Mobj *stepthing;
-
-extern bool PIT_CheckLine(line_t *ld);
 
 extern bool P_Touched(Mobj *thing);
 extern int  P_MissileBlockHeight(Mobj *mo);
@@ -308,9 +313,33 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
 
    blockdist = thing->radius + clip.thing->radius;
 
-   if(D_abs(thing->x - clip.x) >= blockdist ||
-      D_abs(thing->y - clip.y) >= blockdist)
+   // ioanch 20160110: portal aware
+   const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid, 
+      thing->groupid);
+
+   if(D_abs(thing->x - link->x - clip.x) >= blockdist ||
+      D_abs(thing->y - link->y - clip.y) >= blockdist)
       return true; // didn't hit it
+
+   // ioanch 20160122: reject if the things don't belong to the same group and
+   // there's no visible connection between them
+   if(clip.thing->groupid != thing->groupid)
+   {
+      // Important: find line portals between three coordinates
+      // first get between 
+      int finalgroup = clip.thing->groupid;   // default placeholder
+      v2fixed_t pos = P_LinePortalCrossing(*clip.thing, clip.x - clip.thing->x, 
+                                          clip.y - clip.thing->y, &finalgroup);
+      P_LinePortalCrossing(pos, thing->x - link->x - pos.x, 
+         thing->y - link->y - pos.y, &finalgroup);
+
+      if(finalgroup != thing->groupid && 
+         !P_ThingReachesGroupVertically(thing, finalgroup, 
+                                        clip.thing->z + clip.thing->height / 2))
+      {
+         return true;
+      }
+   }
 
    // killough 11/98:
    //
@@ -418,14 +447,14 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
       // haleyjd 10/15/08: rippers
       if(clip.thing->flags3 & MF3_RIP)
       {
-         // TODO: P_RipperBlood
-         /*
-         if(!(thing->flags&MF_NOBLOOD))
-         { 
-            // Ok to spawn some blood
-            P_RipperBlood(clip.thing);
+         damage = ((P_Random(pr_rip) & 3) + 2) * clip.thing->damage;
+
+         if(!(thing->flags & MF_NOBLOOD) &&
+            !(thing->flags2 & MF2_REFLECTIVE) &&
+            !(thing->flags2 & MF2_INVULNERABLE))
+         {
+            BloodSpawner(thing, clip.thing, damage, clip.thing).spawn(BLOOD_RIP);
          }
-         */
          
          // TODO: ripper sound - gamemode dependent? thing dependent?
          //S_StartSound(clip.thing, sfx_ripslop);
@@ -478,7 +507,17 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
       // haleyjd: in Heretic & Hexen, zero-damage missiles don't make this call
       if(damage || !(clip.thing->flags4 & MF4_NOZERODAMAGE))
       {
-         // HTIC_TODO: ability for missiles to draw blood is checked here
+         // 20160312: ability for missiles to draw blood
+         if(clip.thing->flags4 & MF4_DRAWSBLOOD &&
+            !(thing->flags & MF_NOBLOOD) &&
+            !(thing->flags2 & MF2_REFLECTIVE) &&
+            !(thing->flags2 & MF2_INVULNERABLE))
+         {
+            if(P_Random(pr_drawblood) < 192)
+            {
+               BloodSpawner(thing, clip.thing, damage, clip.thing).spawn(BLOOD_IMPACT);
+            }
+         }
 
          P_DamageMobj(thing, clip.thing, clip.thing->target, damage,
                       clip.thing->info->mod);
@@ -523,7 +562,6 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
 //
 bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y) 
 {
-   int xl, xh, yl, yh, bx, by;
    subsector_t *newsubsec;
    fixed_t thingdropoffz;
 
@@ -558,10 +596,16 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
    // Any contacted lines the step closer together
    // will adjust them.
 
+   // ioanch 20160110: portal aware floor and ceiling z detection
+   const sector_t *bottomsector = newsubsec->sector;
 #ifdef R_LINKEDPORTALS
    if(demo_version >= 333 && newsubsec->sector->f_pflags & PS_PASSABLE && 
       !(clip.thing->flags & MF_NOCLIP))
-      clip.floorz = clip.dropoffz = newsubsec->sector->floorheight - (1024 * FRACUNIT);
+   {
+      bottomsector = P_ExtremeSectorAtPoint(x, y, false, 
+         newsubsec->sector);
+      clip.floorz = clip.dropoffz = bottomsector->floorheight;
+   }
    else
 #endif
       clip.floorz = clip.dropoffz = newsubsec->sector->floorheight;
@@ -569,7 +613,10 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
 #ifdef R_LINKEDPORTALS
    if(demo_version >= 333 && newsubsec->sector->c_pflags & PS_PASSABLE &&
       !(clip.thing->flags & MF_NOCLIP))
-      clip.ceilingz = newsubsec->sector->ceilingheight + (1024 * FRACUNIT);
+   {
+      clip.ceilingz = P_ExtremeSectorAtPoint(x, y, true, 
+         newsubsec->sector)->ceilingheight;
+   }
    else
 #endif
       clip.ceilingz = newsubsec->sector->ceilingheight;
@@ -578,7 +625,8 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
    clip.secceilz = clip.passceilz = clip.ceilingz;
 
    // haleyjd
-   clip.floorpic = newsubsec->sector->floorpic;
+   // ioanch 20160114: use bottom sector
+   clip.floorpic = bottomsector->floorpic;
    // SoM: 09/07/02: 3dsides monster fix
    clip.touch3dside = 0;
    validcount++;
@@ -595,29 +643,32 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
    // based on their origin point, and can overlap
    // into adjacent blocks by up to MAXRADIUS units.
 
-   xl = (clip.bbox[BOXLEFT]   - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
-   xh = (clip.bbox[BOXRIGHT]  - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
-   yl = (clip.bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
-   yh = (clip.bbox[BOXTOP]    - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
-
+   // ioanch 20160110: portal aware iterator
+   fixed_t bbox[4];
+   bbox[BOXLEFT] = clip.bbox[BOXLEFT] - MAXRADIUS;
+   bbox[BOXRIGHT] = clip.bbox[BOXRIGHT] + MAXRADIUS;
+   bbox[BOXBOTTOM] = clip.bbox[BOXBOTTOM] - MAXRADIUS;
+   bbox[BOXTOP] = clip.bbox[BOXTOP] + MAXRADIUS;
+   
    clip.BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
    thingblocker = NULL;
    stepthing    = NULL;
 
    // [RH] Fake taller height to catch stepping up into things.
    if(thing->player)   
-      thing->height = realheight + 24*FRACUNIT;
-   
-   for(bx = xl; bx <= xh; ++bx)
+      thing->height = realheight + STEPSIZE;
+
+   // ioanch: portal aware
+   // keep the lines indented to minimize git diff
+   if(!P_TransPortalBlockWalker(bbox, thing->groupid, true,
+      [thing, realheight, &thingblocker](int x, int y, int groupid) -> bool
    {
-      for(by = yl; by <= yh; ++by)
-      {
          // haleyjd: from zdoom:
          Mobj *robin = NULL;
 
          do
          {
-            if(!P_SBlockThingsIterator(bx, by, PIT_CheckThing3D, robin))
+            if(!P_SBlockThingsIterator(x, y, PIT_CheckThing3D, robin, groupid))
             { 
                // [RH] If a thing can be stepped up on, we need to continue checking
                // other things in the blocks and see if we hit something that is
@@ -632,7 +683,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
                }
                else if(!clip.BlockingMobj->player && 
                        !(thing->flags & (MF_FLOAT|MF_MISSILE|MF_SKULLFLY)) &&
-                       clip.BlockingMobj->z + clip.BlockingMobj->height-thing->z <= 24*FRACUNIT)
+                       clip.BlockingMobj->z + clip.BlockingMobj->height - thing->z <= STEPSIZE)
                {
                   if(thingblocker == NULL || clip.BlockingMobj->z > thingblocker->z)
                      thingblocker = clip.BlockingMobj;
@@ -640,7 +691,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
                   clip.BlockingMobj = NULL;
                }
                else if(thing->player &&
-                       thing->z + thing->height - clip.BlockingMobj->z <= 24*FRACUNIT)
+                       thing->z + thing->height - clip.BlockingMobj->z <= STEPSIZE)
                {
                   if(thingblocker)
                   { 
@@ -666,28 +717,51 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
                robin = NULL;
          } 
          while(robin);
-      }
-   }
-
+         return true;
+   }))
+      return false;
+   
    // check lines
    
    clip.BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
    thing->height = realheight;
    if(clip.thing->flags & MF_NOCLIP)
       return (clip.BlockingMobj = thingblocker) == NULL;
-   
-   xl = (clip.bbox[BOXLEFT]   - bmaporgx) >> MAPBLOCKSHIFT;
-   xh = (clip.bbox[BOXRIGHT]  - bmaporgx) >> MAPBLOCKSHIFT;
-   yl = (clip.bbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
-   yh = (clip.bbox[BOXTOP]    - bmaporgy) >> MAPBLOCKSHIFT;
 
+   memcpy(bbox, clip.bbox, sizeof(bbox));
+   
    thingdropoffz = clip.floorz;
    clip.floorz = clip.dropoffz;
 
-   for(bx = xl; bx <= xh; ++bx)
-      for(by = yl; by <= yh; ++by)
-         if(!P_BlockLinesIterator(bx, by, PIT_CheckLine))
-            return false; // doesn't fit
+   // ioanch 20160121: reset portalhits and thing-visited groups
+   clip.numportalhit = 0;
+   if(gGroupVisit)
+   {
+      memset(gGroupVisit, 0, sizeof(bool) * P_PortalGroupCount());
+      gGroupVisit[clip.thing->groupid] = true;
+   }
+
+   // ioanch 20160112: portal-aware
+   if(!P_TransPortalBlockWalker(bbox, thing->groupid, true, nullptr, 
+      [](int x, int y, int groupid, void *data) -> bool
+   {
+      // ioanch 20160112: try 3D portal check-line
+      if(!P_BlockLinesIterator(x, y, PIT_CheckLine3D, groupid))
+         return false; // doesn't fit
+      return true;
+   }))
+      return false;
+
+   // ioanch 20160121: we may have some portalhits. Check postponed visited.
+   int nph = clip.numportalhit;
+   clip.numportalhit = 0;  // reset it on time
+   for(int i = 0; i < nph; ++i)
+   {
+      // they will not change the spechit list
+      if(gGroupVisit[clip.portalhit[i].ld->frontsector->groupid])
+         if(!PIT_CheckLine3D(clip.portalhit[i].ld, clip.portalhit[i].po))
+            return false;
+   }
 
    if(clip.ceilingz - clip.floorz < thing->height)
       return false;
@@ -915,8 +989,6 @@ static void P_FindBelowIntersectors(Mobj *actor)
 //
 static void P_DoCrunch(Mobj *thing)
 {
-   Mobj *mo;
-   
    // crunch bodies to giblets
    // TODO: support DONTGIB flag like zdoom?
    // TODO: support custom gib state for actors?
@@ -969,13 +1041,7 @@ static void P_DoCrunch(Mobj *thing)
       // FIXME: needs comp flag!
       if(demo_version < 333 || !(thing->flags & MF_NOBLOOD))
       {
-         // spray blood in a random direction
-         mo = P_SpawnMobj(thing->x, thing->y, thing->z + thing->height/2,
-                          E_SafeThingType(MT_BLOOD));
-         
-         // haleyjd 08/05/04: use new function
-         mo->momx = P_SubRandom(pr_crush) << 12;
-         mo->momy = P_SubRandom(pr_crush) << 12;         
+         BloodSpawner(thing, crushchange).spawn(BLOOD_CRUSH);
       }
    } // end if
 }
@@ -1271,6 +1337,12 @@ bool P_ChangeSector3D(sector_t *sector, int crunch, int amt, int floorOrCeil)
    {
       for(n = sector->touching_thinglist; n; n = n->m_snext) // go through list
       {
+         // ioanch 20160115: portal aware
+         if(useportalgroups && full_demo_version >= make_full_version(340, 48) &&
+            !P_SectorTouchesThingVertically(sector, n->m_thing))
+         {
+            continue;
+         }
          if(!n->visited) // unprocessed thing found
          {
             n->visited = true;                       // mark thing as processed

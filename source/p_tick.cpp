@@ -273,6 +273,10 @@ void P_Ticker()
                  players[consoleplayer].viewz != 1))
       return;
 
+   // spawn unknowns at start of map if requested and possible
+   if(!leveltime)
+      P_SpawnUnknownThings();
+
    // interpolation: save current sector heights
    P_SaveSectorPositions();
    

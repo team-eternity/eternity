@@ -36,6 +36,7 @@
 #include "doomstat.h"
 #include "e_things.h"
 #include "g_game.h"
+#include "hal/i_platform.h"
 #include "hal/i_timer.h"
 #include "hu_over.h"
 #include "i_video.h"
@@ -85,7 +86,7 @@ int      centerx, centery;
 fixed_t  centerxfrac, centeryfrac;
 fixed_t  viewx, viewy, viewz;
 angle_t  viewangle;
-fixed_t  viewcos, viewsin;
+fixed_t  viewpitch;
 player_t *viewplayer;
 extern lighttable_t **walllights;
 bool     showpsprites = 1; //sf
@@ -191,7 +192,14 @@ void R_SetSpanEngine(void)
 //
 // killough 5/2/98: reformatted
 //
+
+// ioanch 20160423: make variables volatile in OSX, to prevent demo desyncing.
+// FIXME: also check if Linux/GCC are affected by this.
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX && defined(__clang__)
+int R_PointOnSide(volatile fixed_t x, volatile fixed_t y, node_t *node)
+#else
 int R_PointOnSide(fixed_t x, fixed_t y, node_t *node)
+#endif
 {
    if(!node->dx)
       return x <= node->x ? node->dy > 0 : node->dy < 0;
@@ -344,7 +352,8 @@ angle_t R_PointToAngle2(fixed_t pviewx, fixed_t pviewy, fixed_t x, fixed_t y)
    }
    else
    {
-      return (angle_t)(atan2((double)y, x) * (ANG180 / PI));
+      // Sneakernets: Fix cast issue on ARM
+      return angle_t(int(atan2(double(y), x) * (ANG180 / PI)));
    }
 
    return 0;
@@ -754,6 +763,7 @@ static void R_interpolateViewPoint(player_t *player, fixed_t lerp)
       viewy     = player->mo->y;
       viewz     = player->viewz;
       viewangle = player->mo->angle; //+ viewangleoffset;
+      viewpitch = player->pitch;
    }
    else
    {
@@ -761,6 +771,7 @@ static void R_interpolateViewPoint(player_t *player, fixed_t lerp)
       viewy     = lerpCoord(lerp, player->mo->prevpos.y,     player->mo->y);
       viewz     = lerpCoord(lerp, player->prevviewz,         player->viewz);
       viewangle = lerpAngle(lerp, player->mo->prevpos.angle, player->mo->angle);
+      viewpitch = lerpAngle(lerp, player->prevpitch,         player->pitch);
    }
 }
 
@@ -868,8 +879,7 @@ static fixed_t R_getLerp()
 // R_SetupFrame
 //
 static void R_SetupFrame(player_t *player, camera_t *camera)
-{               
-   fixed_t  pitch;
+{
    fixed_t  viewheightfrac;
    fixed_t  lerp = R_getLerp();
    
@@ -885,7 +895,6 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    if(!camera)
    {
       R_interpolateViewPoint(player, lerp);
-      pitch = player->pitch; // INTERP_FIXME
 
       // haleyjd 01/21/07: earthquakes
       if(player->quake &&
@@ -900,21 +909,18 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    else
    {
       R_interpolateViewPoint(camera, lerp);
-      pitch = camera->pitch;   // INTERP_FIXME
    }
 
    extralight = player->extralight;
-   viewsin = finesine[viewangle>>ANGLETOFINESHIFT];
-   viewcos = finecosine[viewangle>>ANGLETOFINESHIFT];
 
    // SoM: Cardboard
    view.x      = M_FixedToFloat(viewx);
    view.y      = M_FixedToFloat(viewy);
    view.z      = M_FixedToFloat(viewz);
    view.angle  = (ANG90 - viewangle) * PI / ANG180;
-   view.pitch  = (ANG90 - pitch) * PI / ANG180;
-   view.sin    = sin(view.angle);
-   view.cos    = cos(view.angle);
+   view.pitch  = (ANG90 - viewpitch) * PI / ANG180;
+   view.sin    = sinf(view.angle);
+   view.cos    = cosf(view.angle);
    view.lerp   = lerp;
    view.sector = R_PointInSubsector(viewx, viewy)->sector;
 
@@ -931,10 +937,10 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    // haleyjd 10/08/06: use simpler calculation for pitch == 0 to avoid 
    // unnecessary roundoff error. This is what was causing sky textures to
    // appear a half-pixel too low (the entire display was too low actually).
-   if(pitch)
+   if(viewpitch)
    {
       fixed_t dy = FixedMul(focallen_y, 
-                            finetangent[(ANG90 - pitch) >> ANGLETOFINESHIFT]);
+                            finetangent[(ANG90 - viewpitch) >> ANGLETOFINESHIFT]);
             
       // haleyjd: must bound after zooming
       if(dy < -viewheightfrac)

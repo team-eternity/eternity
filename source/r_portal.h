@@ -110,6 +110,10 @@ struct linkdata_t
    // These are for debug purposes (so mappers can find the portats 
    // causing problems)
    int       maker, anchor;
+
+   // ioanch 20160226: access the partner portal (if any) in case of polyobject
+   // cars
+   portal_t *polyportalpartner;
 };
 
 
@@ -258,6 +262,7 @@ struct portalrender_t
    float miny, maxy;
 
    pwindow_t *w;
+   pwindow_t *curwindow;   // ioanch 20160123: keep track of current window
 
    void (*segClipFunc)();
    

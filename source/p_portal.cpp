@@ -27,17 +27,22 @@
 #include "z_zone.h"
 #include "i_system.h"
 
+#include "cam_sight.h"
 #include "c_io.h"
 #include "doomstat.h"
+#include "m_bbox.h"        // ioanch 20160107
+#include "m_collection.h"  // ioanch 20160106
 #include "p_chase.h"
 #include "p_map.h"
 #include "p_maputl.h"   // ioanch
+#include "polyobj.h"
 #include "p_portal.h"
 #include "p_setup.h"
 #include "p_user.h"
 #include "r_bsp.h"
 #include "r_draw.h"
 #include "r_main.h"
+#include "r_pcheck.h"
 #include "r_plane.h"
 #include "r_portal.h"
 #include "r_state.h"
@@ -76,6 +81,13 @@ static int      grouplimit = 0;
 // operate differently. This flag is cleared on P_PortalInit and is ONLY to be
 // set true by P_BuildLinkTable.
 bool useportalgroups = false;
+
+// ioanch 20160109: needed for sprite projecting
+bool gMapHasSectorPortals;
+bool gMapHasLinePortals;   // ioanch 20160131: needed for P_UseLines
+bool *gGroupVisit;
+// ioanch 20160227: each group may have a polyobject owner
+const polyobj_t **gGroupPolyobject;
 
 //
 // P_PortalGroupCount
@@ -527,14 +539,38 @@ static void P_GlobalPortalStateCheck()
 //
 static void P_buildPortalMap()
 {
+   PODCollection<int> curGroups; // ioanch 20160106: keep list of current groups
+   size_t pcount = P_PortalGroupCount();
+   gGroupVisit = ecalloctag(bool *, sizeof(bool), pcount, PU_LEVEL, nullptr);
+   // ioanch 20160227: prepare other groups too
+   gGroupPolyobject = ecalloctag(decltype(gGroupPolyobject),
+      sizeof(*gGroupPolyobject), pcount, PU_LEVEL, nullptr);
+   pcount *= sizeof(bool);
+
+   gMapHasSectorPortals = false; // init with false
+   gMapHasLinePortals = false;
+   
+   auto addPortal = [&curGroups](int groupid)
+   {
+      if(!gGroupVisit[groupid])
+      {
+         gGroupVisit[groupid] = true;
+         curGroups.add(groupid);
+      }
+   };
+   
+   int writeOfs;
    for(int y = 0; y < bmapheight; y++)
    {
       for(int x = 0; x < bmapwidth; x++)
       {
          int offset;
          int *list;
+         
+         curGroups.makeEmpty();
+         memset(gGroupVisit, 0, pcount);
 
-         offset = y * bmapwidth + x;
+         writeOfs = offset = y * bmapwidth + x;
          offset = *(blockmap + offset);
          list = blockmaplump + offset;
 
@@ -552,25 +588,64 @@ static void P_buildPortalMap()
                ::bmaporgy + (y << MAPBLOCKSHIFT) + (MAPBLOCKSHIFT / 2))->sector;
 
             if(sector->c_pflags & PS_PASSABLE)
-               portalmap[y * bmapwidth + x] |= PMF_CEILING;
+            {
+               portalmap[writeOfs] |= PMF_CEILING;
+               curGroups.add(sector->c_portal->data.link.toid);
+               gMapHasSectorPortals = true;
+            }
             if(sector->f_pflags & PS_PASSABLE)
-               portalmap[y * bmapwidth + x] |= PMF_FLOOR;
+            {
+               portalmap[writeOfs] |= PMF_FLOOR;
+               curGroups.add(sector->f_portal->data.link.toid);
+               gMapHasSectorPortals = true;
+            }
          }
          else for(; *tmplist != -1; tmplist++)
          {
             const line_t &li = lines[*tmplist];
             if(li.pflags & PS_PASSABLE)
-               portalmap[y * bmapwidth + x] |= PMF_LINE;
-            if(li.frontsector->c_pflags & PS_PASSABLE 
-               || (li.backsector && li.backsector->c_pflags & PS_PASSABLE))
             {
-               portalmap[y * bmapwidth + x] |= PMF_CEILING;
+               portalmap[writeOfs] |= PMF_LINE;
+               addPortal(li.portal->data.link.toid);
+               gMapHasLinePortals = true;
             }
-            if(li.frontsector->f_pflags & PS_PASSABLE
-               || (li.backsector && li.backsector->f_pflags & PS_PASSABLE))
+            if(li.frontsector->c_pflags & PS_PASSABLE)
             {
-               portalmap[y * bmapwidth + x] |= PMF_FLOOR;
+               portalmap[writeOfs] |= PMF_CEILING;
+               addPortal(li.frontsector->c_portal->data.link.toid);
+               gMapHasSectorPortals = true;
             }
+            if(li.backsector && li.backsector->c_pflags & PS_PASSABLE)
+            {
+               portalmap[writeOfs] |= PMF_CEILING;
+               addPortal(li.backsector->c_portal->data.link.toid);
+               gMapHasSectorPortals = true;
+            }
+            if(li.frontsector->f_pflags & PS_PASSABLE)
+            {
+               portalmap[writeOfs] |= PMF_FLOOR;
+               addPortal(li.frontsector->f_portal->data.link.toid);
+               gMapHasSectorPortals = true;
+            }
+            if(li.backsector && li.backsector->f_pflags & PS_PASSABLE)
+            {
+               portalmap[writeOfs] |= PMF_FLOOR;
+               addPortal(li.backsector->f_portal->data.link.toid);
+               gMapHasSectorPortals = true;
+            }
+         }
+         if(gBlockGroups[writeOfs])
+            I_Error("P_buildPortalMap: non-null gBlockGroups entry!");
+         
+         size_t curSize = curGroups.getLength();
+         gBlockGroups[writeOfs] = emalloctag(int *, 
+            (curSize + 1) * sizeof(int), PU_LEVEL, nullptr);
+         gBlockGroups[writeOfs][0] = static_cast<int>(curSize);
+         // just copy...
+         if(curSize)
+         {
+            memcpy(gBlockGroups[writeOfs] + 1, &curGroups[0], 
+               curSize * sizeof(int));
          }
       }
    }
@@ -713,29 +788,57 @@ void P_LinkRejectTable()
    } // i
 }
 
-// -----------------------------------------
-// Begin portal teleportation
 //
-// EV_PortalTeleport
+// The player passed a line portal from P_TryMove; just update viewport and
+// pass-polyobject velocity
 //
-bool EV_PortalTeleport(Mobj *mo, const linkoffset_t *link)
+void P_LinePortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
+                             int fromid, int toid)
 {
-   fixed_t moz = mo->z;
-   fixed_t momx = mo->momx;
-   fixed_t momy = mo->momy;
-   fixed_t momz = mo->momz;
-   //fixed_t vh = mo->player ? mo->player->viewheight : 0;
+   // Prevent bad interpolation
+   // FIXME: this is not interpolation, it's just instant movement; must be
+   // fixed to be real interpolation even for the player (camera)
+   mo->backupPosition();
 
-   if(!mo || !link)
-      return 0;
-   if(!P_PortalTeleportMove(mo, mo->x + link->x, mo->y + link->y))
-      return 0;
-
-   mo->z = moz + link->z;
-
-   mo->momx = momx;
-   mo->momy = momy;
-   mo->momz = momz;
+   // Polyobject car enter and exit inertia
+   const polyobj_t *poly[2] = { gGroupPolyobject[fromid],
+      gGroupPolyobject[toid] };
+   v2fixed_t pvel[2] = { };
+   bool phave[2];
+   for(int i = 0; i < 2; ++i)
+   {
+      if(poly[i])
+      {
+         const auto th = thinker_cast<PolyMoveThinker *>(poly[i]->thinker);
+         if(th)
+         {
+            pvel[i].x = th->momx;
+            pvel[i].y = th->momy;
+            phave[i] = true;
+         }
+         else
+         {
+            const auto th = thinker_cast<PolySlideDoorThinker *>(poly[i]->thinker);
+            if(th && !th->delayCount)
+            {
+               pvel[i].x = th->momx;
+               pvel[i].y = th->momy;
+               phave[i] = true;
+            }
+            else
+            {
+               pvel[i].x = pvel[i].y = 0;
+               phave[i] = false;
+            }
+         }
+      }
+   }
+   if(phave[0] || phave[1])
+   {
+      // inertia!
+      mo->momx += pvel[0].x - pvel[1].x;
+      mo->momy += pvel[0].y - pvel[1].y;
+   }
 
    // SoM: Boom's code for silent teleports. Fixes view bob jerk.
    // Adjust a player's view, in case there has been a height change
@@ -756,11 +859,32 @@ bool EV_PortalTeleport(Mobj *mo, const linkoffset_t *link)
       mo->player->deltaviewheight = deltaviewheight;
 
       if(mo->player == players + displayplayer)
-          P_ResetChasecam();
+         P_ResetChasecam();
    }
 
-   mo->backupPosition();
+   //mo->backupPosition();
    P_AdjustFloorClip(mo);
+}
+
+// -----------------------------------------
+// Begin portal teleportation
+//
+// EV_PortalTeleport
+//
+bool EV_PortalTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
+                       int fromid, int toid)
+{
+   if(!mo)
+      return 0;
+
+   // ioanch 20160113: don't teleport. Just change x and y
+   P_UnsetThingPosition(mo);
+   mo->x += dx;
+   mo->y += dy;
+   mo->z += dz;
+   P_SetThingPosition(mo);
+
+   P_LinePortalDidTeleport(mo, dx, dy, dz, fromid, toid);
    
    return 1;
 }
@@ -776,7 +900,7 @@ bool EV_PortalTeleport(Mobj *mo, const linkoffset_t *link)
 // Returns the combined state flags for the given portal based on various
 // behavior flags
 //
-static int P_GetPortalState(portal_t *portal, int sflags, bool obscured)
+static int P_GetPortalState(const portal_t *portal, int sflags, bool obscured)
 {
    bool active;
    int     ret = sflags & (PF_FLAGMASK | PS_OVERLAYFLAGS | PO_OPACITYMASK);
@@ -923,6 +1047,484 @@ void P_SetLPortalBehavior(line_t *line, int newbehavior)
       
    line->pflags = newbehavior;
    P_CheckLPortalState(line);
+}
+
+//
+// P_LinePortalCrossing
+//
+// ioanch 20160106
+// Checks if any line portals are crossed between (x, y) and (x+dx, y+dy),
+// updating the target position correctly
+//
+v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
+                               int *group, bool *passed)
+{
+   v2fixed_t cur = { x, y };
+   v2fixed_t fin = { x + dx, y + dy };
+
+   if((!dx && !dy) || full_demo_version < make_full_version(340, 48) || 
+      P_PortalGroupCount() <= 1)
+   {
+      return fin; // quick return in trivial case
+   }
+
+   bool res;
+
+   // number should be as large as possible to prevent accidental exits on valid
+   // hyperdetailed maps, but low enough to release the game on time.
+   int recprotection = 32768;
+   
+   do
+   {
+      
+      res = CAM_PathTraverse(cur, fin, CAM_ADDLINES | CAM_REQUIRELINEPORTALS, 
+                             [&cur, &fin, group, passed](const intercept_t *in,
+                                                         const divline_t &trace)
+      {
+
+         const line_t *line = in->d.line;
+
+         // must be a portal line
+         if(!(line->pflags & PS_PASSABLE))
+            return true;
+
+         // rule out invalid cases
+         if(in->frac <= 0 || in->frac > FRACUNIT)
+            return true;
+
+         // must be a valid portal line
+         const linkdata_t &link = line->portal->data.link;
+         // FIXME: does this really happen?
+         if(link.fromid == link.toid || (!link.deltax && !link.deltay))
+            return true;
+
+         // double check: line MUST be crossed and trace origin must be in front
+         int originside = P_PointOnLineSide(trace.x, trace.y, line);
+         if(originside != 0 || originside ==
+            P_PointOnLineSide(trace.x + trace.dx, trace.y + trace.dy, line))
+         {
+            return true;
+         }
+
+         // update the fields
+         cur.x += FixedMul(trace.dx, in->frac) + link.deltax;
+         cur.y += FixedMul(trace.dy, in->frac) + link.deltay;
+         // deltaz doesn't matter because we're not using Z here
+         fin.x += link.deltax;
+         fin.y += link.deltay;
+         if(group)
+            *group = link.toid;
+         if(passed)
+            *passed = true;
+
+         return false;
+      });
+      --recprotection;
+      
+      // Continue looking for portals after passing through one, from the new
+      // coordinates
+   } while (!res && recprotection);
+
+   if(!recprotection)
+      C_Printf("Warning: P_PortalCrossing loop");
+
+   return fin;
+}
+
+//
+// P_simpleBlockWalker
+//
+// ioanch 20160108: simple variant of the function below, for maps without
+// portals
+//
+inline static bool P_simpleBlockWalker(const fixed_t bbox[4], bool xfirst, void *data, 
+                                       bool (*func)(int x, int y, int groupid, void *data))
+{
+   int xl = (bbox[BOXLEFT] - bmaporgx) >> MAPBLOCKSHIFT;
+   int xh = (bbox[BOXRIGHT] - bmaporgx) >> MAPBLOCKSHIFT;
+   int yl = (bbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
+   int yh = (bbox[BOXTOP] - bmaporgy) >> MAPBLOCKSHIFT;
+
+   if(xl < 0)
+      xl = 0;
+   if(yl < 0)
+      yl = 0;
+   if(xh >= bmapwidth)
+      xh = bmapwidth - 1;
+   if(yh >= bmapheight)
+      yh = bmapheight - 1;
+
+   int x, y;
+   if(xfirst)
+   {
+      for(x = xl; x <= xh; ++x)
+         for(y = yl; y <= yh; ++y)
+            if(!func(x, y, R_NOGROUP, data))
+               return false;
+   }
+   else
+      for(y = yl; y <= yh; ++y)
+         for(x = xl; x <= xh; ++x)
+            if(!func(x, y, R_NOGROUP, data))
+               return false;
+
+   return true;
+}
+
+//
+// P_TransPortalBlockWalker
+//
+// ioanch 20160107
+// Having a bounding box in a group id, visit all blocks it touches as well as
+// whatever is behind portals
+//
+bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
+                              void *data, 
+                              bool (*func)(int x, int y, int groupid, void *data))
+{
+   int gcount = P_PortalGroupCount();
+   if(gcount <= 1 || groupid == R_NOGROUP || 
+      full_demo_version < make_full_version(340, 48))
+   {
+      return P_simpleBlockWalker(bbox, xfirst, data, func);
+   }
+
+   // OPTIMIZE: if needed, use some global store instead of malloc
+   bool *accessedgroupids = ecalloc(bool *, gcount, sizeof(*accessedgroupids));
+   accessedgroupids[groupid] = true;
+   int *groupqueue = ecalloc(int *, gcount, sizeof(*groupqueue));
+   int queuehead = 0;
+   int queueback = 0;
+
+   // initialize link with zero link because we're visiting the current area.
+   // groupid has already been set in the parameter
+   const linkoffset_t *link = &zerolink;
+
+   fixed_t movedBBox[4] = { bbox[0], bbox[1], bbox[2], bbox[3] };
+
+   do
+   {
+      movedBBox[BOXLEFT] += link->x;
+      movedBBox[BOXRIGHT] += link->x;
+      movedBBox[BOXBOTTOM] += link->y;
+      movedBBox[BOXTOP] += link->y;
+      // set the blocks to be visited
+      int xl = (movedBBox[BOXLEFT] - bmaporgx) >> MAPBLOCKSHIFT;
+      int xh = (movedBBox[BOXRIGHT] - bmaporgx) >> MAPBLOCKSHIFT;
+      int yl = (movedBBox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
+      int yh = (movedBBox[BOXTOP] - bmaporgy) >> MAPBLOCKSHIFT;
+   
+      if(xl < 0)
+         xl = 0;
+      if(yl < 0)
+         yl = 0;
+      if(xh >= bmapwidth)
+         xh = bmapwidth - 1;
+      if(yh >= bmapheight)
+         yh = bmapheight - 1;
+   
+      // Define a function to use in the 'for' blocks
+      auto operate = [accessedgroupids, groupqueue, &queueback, func, 
+         &groupid, data, gcount] (int x, int y) -> bool
+      {
+         // Check for portals
+         const int *block = gBlockGroups[y * bmapwidth + x];
+         for(int i = 1; i <= block[0]; ++i)
+         {
+#ifdef RANGECHECK
+            if(block[i] < 0 || block[i] >= gcount)
+               I_Error("P_TransPortalBlockWalker: i (%d) out of range (count %d)", block[i], gcount);
+#endif
+            // Add to queue and visitlist
+            if(!accessedgroupids[block[i]])
+            {
+               accessedgroupids[block[i]] = true;
+               groupqueue[queueback++] = block[i];
+            }
+         }
+
+         // Also check for polyobjects
+         for(const DLListItem<polymaplink_t> *plink 
+            = polyblocklinks[y * bmapwidth + x]; plink; plink = plink->dllNext)
+         {
+            const polyobj_t *po = (*plink)->po;
+            for(size_t i = 0; i < po->numPortals; ++i)
+            {
+               if(po->portals[i]->type != R_LINKED)
+                  continue;
+               int groupid = po->portals[i]->data.link.toid;
+               // TODO: use the portal itself, not the group ID
+               if(!accessedgroupids[groupid])
+               {
+                  accessedgroupids[groupid] = true;
+                  groupqueue[queueback++] = groupid;
+               }
+            }
+         }
+
+         // now call the function
+         if(!func(x, y, groupid, data))
+         {
+            // make it possible to escape by func returning false
+            return false;
+         }
+         return true;
+      };
+
+      int x, y;
+      if(xfirst)
+      {
+         for(x = xl; x <= xh; ++x)
+            for(y = yl; y <= yh; ++y)
+               if(!operate(x, y))
+               {
+                  efree(groupqueue);
+                  efree(accessedgroupids);
+                  return false;
+               }
+      }
+      else
+         for(y = yl; y <= yh; ++y)
+            for(x = xl; x <= xh; ++x)
+               if(!operate(x, y))
+               {
+                  efree(groupqueue);
+                  efree(accessedgroupids);
+                  return false;
+               }
+
+
+      // look at queue
+      link = &zerolink;
+      if(queuehead < queueback)
+      {
+         do
+         {
+            link = P_GetLinkOffset(groupid, groupqueue[queuehead]);
+            ++queuehead;
+
+            // make sure to reject trivial (zero) links
+         } while(!link->x && !link->y && queuehead < queueback);
+
+         // if a valid link has been found, also update current groupid
+         if(link->x || link->y)
+            groupid = groupqueue[queuehead - 1];
+      }
+
+      // if a valid link has been found (and groupid updated) continue
+   } while(link->x || link->y);
+
+   // we now have the list of accessedgroupids
+   
+   efree(groupqueue);
+   efree(accessedgroupids);
+   return true;
+}
+
+//
+// P_ExtremeSectorAtPoint
+//
+// ioanch 20160107
+// If point x/y resides in a sector with portal, pass through it
+//
+sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling, 
+                                 sector_t *sector)
+{
+   if(!sector) // if not preset
+      sector = R_PointInSubsector(x, y)->sector;
+
+   int numgroups = P_PortalGroupCount();
+   if(numgroups <= 1 || full_demo_version < make_full_version(340, 48) || 
+      !gMapHasSectorPortals || sector->groupid == R_NOGROUP)
+   {
+      return sector; // just return the current sector in this case
+   }
+
+   auto pflags = ceiling ? &sector_t::c_pflags : &sector_t::f_pflags;
+   auto portal = ceiling ? &sector_t::c_portal : &sector_t::f_portal;
+   
+   int loopprotection = 32768;
+      
+   while(sector->*pflags & PS_PASSABLE && loopprotection--)
+   {
+      const linkdata_t &link = (sector->*portal)->data.link;
+
+      // Also quit early if the planez is obscured by a dynamic horizontal plane
+      // or if deltax and deltay are somehow zero
+      if((ceiling ? sector->ceilingheight < link.planez
+                  :   sector->floorheight > link.planez) ||
+                          (!link.deltax && !link.deltay))
+      {
+         return sector;
+      }
+
+      // adding deltaz doesn't matter because a sector portal MUST be in a
+      // different location
+      
+      // move into the new sector
+      x += link.deltax;
+      y += link.deltay;
+      sector = R_PointInSubsector(x, y)->sector;
+
+   }
+   
+   if(loopprotection < 0)
+      C_Printf("Warning: P_ExtremeSectorAtPoint loop");
+   
+   return sector;
+}
+
+//
+// P_SectorTouchesThingVertically
+//
+// ioanch 20160115: true if a thing touches a sector vertically
+//
+bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj)
+{
+   fixed_t topz = mobj->z + mobj->height;
+   if(topz < sector->floorheight || mobj->z > sector->ceilingheight)
+      return false;
+   if(sector->f_pflags & PS_PASSABLE && 
+      topz < sector->f_portal->data.link.planez)
+   {
+      return false;
+   }
+   if(sector->c_pflags & PS_PASSABLE &&
+      mobj->z > sector->c_portal->data.link.planez)
+   {
+      return false;
+   }
+   return true;
+}
+
+//
+// P_ThingReachesGroupVertically
+//
+// Simple function that just checks if mobj is in a position that vertically
+// points to groupid. This does NOT change gGroupVisit.
+//
+// Returns the sector that's reached, or nullptr if group is not reached
+//
+sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
+                                        int cgroupid, int tgroupid,
+                                        sector_t *csector, fixed_t midzhint)
+{
+   if(cgroupid == tgroupid)
+      return csector;
+
+   static bool *groupVisit;
+   if(!groupVisit)
+   {
+      groupVisit = ecalloctag(bool *, P_PortalGroupCount(), 
+                        sizeof(*groupVisit), PU_LEVEL, (void**)&groupVisit);
+   }
+   else 
+      memset(groupVisit, 0, sizeof(*groupVisit) * P_PortalGroupCount());
+   groupVisit[cgroupid] = true;
+
+   unsigned sector_t::*pflags[2];
+   portal_t *sector_t::*portal[2];
+
+   if(midzhint < cmidz)
+   {
+      pflags[0] = &sector_t::f_pflags;
+      pflags[1] = &sector_t::c_pflags;
+      portal[0] = &sector_t::f_portal;
+      portal[1] = &sector_t::c_portal;
+   }
+   else
+   {
+      pflags[0] = &sector_t::c_pflags;
+      pflags[1] = &sector_t::f_pflags;
+      portal[0] = &sector_t::c_portal;
+      portal[1] = &sector_t::f_portal;
+   }
+
+   sector_t *sector;
+   int groupid;
+   fixed_t x, y;
+   
+   const linkoffset_t *link;
+
+   for(int i = 0; i < 2; ++i)
+   {
+      sector = csector;
+      groupid = cgroupid;
+      x = cx, y = cy;
+      
+      while(sector->*pflags[i] & PS_PASSABLE)
+      {
+         link = P_GetLinkOffset(groupid, (sector->*portal[i])->data.link.toid);
+         x += link->x;
+         y += link->y;
+         sector = R_PointInSubsector(x, y)->sector;
+         groupid = sector->groupid;
+         if(groupid == tgroupid)
+            return sector;
+         if(groupVisit[groupid])
+            break;
+         groupVisit[groupid] = true;
+      }
+   }
+   return nullptr;
+}
+
+//
+// P_MoveLinkedPortal
+//
+// ioanch 20160226: moves the offset of a linked portal
+// TODO: do the same for anchored portals
+//
+void P_MoveLinkedPortal(portal_t *portal, fixed_t dx, fixed_t dy, bool movebehind)
+{
+   linkdata_t &data = portal->data.link;
+   data.deltax += dx;
+   data.deltay += dy;
+   linkoffset_t *link;
+   for(int i = 0; i < groupcount; ++i)
+   {
+      if(movebehind)
+      {
+         // the group behind appears to be moving in relation to the others
+         link = P_GetLinkOffset(i, data.toid);
+         if(link == &zerolink)
+            continue;
+         link->x += dx;
+         link->y += dy;
+      }
+      else
+      {
+         // the group in front of the portal appears to be moving
+         link = P_GetLinkOffset(data.fromid, i);
+         if(link == &zerolink)
+            continue;
+         link->x += dx;
+         link->y += dy;
+      }
+   }
+}
+
+//
+// P_BlockHasLinkedPortalLines
+//
+// ioanch 20160228: return true if block has portalmap 1 or a polyportal
+// It's coarse
+//
+bool P_BlockHasLinkedPortalLines(int index)
+{
+   // safe for overflow
+   if(index < 0 || index >= bmapheight * bmapwidth)
+      return false;
+   if(portalmap[index] & PMF_LINE)
+      return true;
+   
+   for(const DLListItem<polymaplink_t> *plink = polyblocklinks[index]; plink;
+      plink = plink->dllNext)
+   {
+      if((*plink)->po->hasLinkedPortals)
+         return true;
+   }
+   return false;
 }
 
 // EOF

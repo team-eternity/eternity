@@ -29,10 +29,12 @@
 #include "z_zone.h"
 
 #include "doomstat.h"
+#include "e_exdata.h"
 #include "m_bbox.h"
 #include "p_map.h"
 #include "p_map3d.h"
 #include "p_maputl.h"
+#include "p_portalclip.h"
 #include "p_setup.h"
 #include "polyobj.h"
 #include "r_data.h"
@@ -104,6 +106,54 @@ int P_BoxOnLineSide(const fixed_t *tmbox, const line_t *ld)
 }
 
 //
+// P_BoxLinePoint
+//
+// ioanch 20160116: returns a good point of intersection between the bounding
+// box diagonals and linedef. This assumes P_BoxOnLineSide returned -1.
+//
+v2fixed_t P_BoxLinePoint(const fixed_t bbox[4], const line_t *ld)
+{
+   v2fixed_t ret;
+   switch(ld->slopetype)
+   {
+   default:
+      ret.x = ret.y = 0;   // just so no warnings ari
+      break;
+   case ST_HORIZONTAL:
+      ret.x = bbox[BOXLEFT] / 2 + bbox[BOXRIGHT] / 2;
+      ret.y = ld->v1->y;
+      break;
+   case ST_VERTICAL:
+      ret.x = ld->v1->x;
+      ret.y = bbox[BOXBOTTOM] / 2 + bbox[BOXTOP] / 2;
+      break;
+   case ST_POSITIVE:
+      {
+         divline_t d1 = { bbox[BOXLEFT], bbox[BOXTOP], 
+            bbox[BOXRIGHT] - bbox[BOXLEFT],
+            bbox[BOXBOTTOM] - bbox[BOXTOP] };
+         divline_t d2 = { ld->v1->x, ld->v1->y, ld->dx, ld->dy };
+         fixed_t frac = P_InterceptVector(&d1, &d2);
+         ret.x = d1.x + FixedMul(d1.dx, frac);
+         ret.y = d1.y + FixedMul(d1.dy, frac);
+      }
+      break;
+   case ST_NEGATIVE:
+      {
+         divline_t d1 = { bbox[BOXLEFT], bbox[BOXBOTTOM], 
+            bbox[BOXRIGHT] - bbox[BOXLEFT],
+            bbox[BOXTOP] - bbox[BOXBOTTOM] };
+         divline_t d2 = { ld->v1->x, ld->v1->y, ld->dx, ld->dy };
+         fixed_t frac = P_InterceptVector(&d1, &d2);
+         ret.x = d1.x + FixedMul(d1.dx, frac);
+         ret.y = d1.y + FixedMul(d1.dy, frac);
+      }
+      break;
+   }
+   return ret;
+}
+
+//
 // P_PointOnDivlineSide
 // Returns 0 or 1.
 //
@@ -154,8 +204,10 @@ fixed_t P_InterceptVector(const divline_t *v2, const divline_t *v1)
 // Sets opentop and openbottom to the window
 // through a two sided line.
 // OPTIMIZE: keep this precalculated
+// ioanch 20160113: added portal detection (optional)
 //
-void P_LineOpening(const line_t *linedef, const Mobj *mo)
+void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
+                   uint32_t *lineclipflags)
 {
    fixed_t frontceilz, frontfloorz, backceilz, backfloorz;
    // SoM: used for 3dmidtex
@@ -166,7 +218,11 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo)
       clip.openrange = 0;
       return;
    }
-   
+
+   if(portaldetect)  // ioanch
+   {
+      *lineclipflags = 0;
+   }
    clip.openfrontsector = linedef->frontsector;
    clip.openbacksector  = linedef->backsector;
 
@@ -179,7 +235,17 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo)
          clip.openbacksector->c_pflags & PS_PASSABLE && 
          clip.openfrontsector->c_portal == clip.openbacksector->c_portal)
       {
-         frontceilz = backceilz = clip.openfrontsector->ceilingheight + (1024 * FRACUNIT);
+         if(!portaldetect) // ioanch
+         {
+            frontceilz = backceilz = clip.openfrontsector->ceilingheight
+            + (1024 * FRACUNIT);
+         }
+         else
+         {
+            *lineclipflags |= LINECLIP_UNDERPORTAL;
+            frontceilz = clip.openfrontsector->ceilingheight;
+            backceilz  = clip.openbacksector->ceilingheight;
+         }
       }
       else
 #endif
@@ -200,7 +266,16 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo)
          clip.openbacksector->f_pflags & PS_PASSABLE && 
          clip.openfrontsector->f_portal == clip.openbacksector->f_portal)
       {
-         frontfloorz = backfloorz = clip.openfrontsector->floorheight - (1024 * FRACUNIT); //mo->height;
+         if(!portaldetect)  // ioanch
+         {
+            frontfloorz = backfloorz = clip.openfrontsector->floorheight - (1024 * FRACUNIT); //mo->height;
+         }
+         else
+         {
+            *lineclipflags |= LINECLIP_ABOVEPORTAL;
+            frontfloorz = clip.openfrontsector->floorheight;
+            backfloorz  = clip.openbacksector->floorheight;
+         }
       }
       else 
 #endif
@@ -218,20 +293,22 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo)
    else
       clip.opentop = backceilz;
 
-   
+   // ioanch 20160114: don't change floorpic if portaldetect is on
    if(frontfloorz > backfloorz)
    {
       clip.openbottom = frontfloorz;
       clip.lowfloor = backfloorz;
       // haleyjd
-      clip.floorpic = clip.openfrontsector->floorpic;
+      if(!portaldetect || !(clip.openfrontsector->f_pflags & PS_PASSABLE))
+         clip.floorpic = clip.openfrontsector->floorpic;
    }
    else
    {
       clip.openbottom = backfloorz;
       clip.lowfloor = frontfloorz;
       // haleyjd
-      clip.floorpic = clip.openbacksector->floorpic;
+      if(!portaldetect || !(clip.openbacksector->f_pflags & PS_PASSABLE))
+         clip.floorpic = clip.openbacksector->floorpic;
    }
 
    if(frontcz < backcz)
@@ -250,8 +327,12 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo)
    // SoM 9/02/02: Um... I know I told Quasar` I would do this after 
    // I got SDL_Mixer support and all, but I WANT THIS NOW hehe
    if(demo_version >= 331 && mo && (linedef->flags & ML_3DMIDTEX) && 
-      sides[linedef->sidenum[0]].midtexture)
+      sides[linedef->sidenum[0]].midtexture &&
+      (!(linedef->extflags & EX_ML_3DMTPASSPROJ) ||
+       !(mo->flags & (MF_MISSILE | MF_BOUNCES))))
    {
+      // ioanch: also support midtex3dimpassible
+
       fixed_t textop, texbot, texmid;
       side_t *side = &sides[linedef->sidenum[0]];
       
@@ -282,11 +363,17 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo)
       {
          if(texbot < clip.opentop)
             clip.opentop = texbot;
+         // ioanch 20160318: mark if 3dmidtex affects clipping
+         if(portaldetect)
+            *lineclipflags |= LINECLIP_UNDER3DMIDTEX;
       }
       else
       {
          if(textop > clip.openbottom)
             clip.openbottom = textop;
+         // ioanch 20160318: mark if 3dmidtex affects clipping
+         if(portaldetect)
+            *lineclipflags |= LINECLIP_OVER3DMIDTEX;
 
          // The mobj is above the 3DMidTex, so check to see if it's ON the 3DMidTex
          // SoM 01/12/06: let monsters walk over dropoffs
@@ -524,8 +611,10 @@ bool ThingIsOnLine(const Mobj *t, const line_t *l)
 // to it.
 //
 // killough 5/3/98: reformatted, cleaned up
+// ioanch 20160111: added groupid
+// ioanch 20160114: enhanced the callback
 //
-bool P_BlockLinesIterator(int x, int y, bool func(line_t*))
+bool P_BlockLinesIterator(int x, int y, bool func(line_t*, polyobj_t*), int groupid)
 {
    int        offset;
    const int  *list;     // killough 3/1/98: for removal of blockmap limit
@@ -552,7 +641,7 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*))
             if(po->lines[i]->validcount == validcount) // line has been checked
                continue;
             po->lines[i]->validcount = validcount;
-            if(!func(po->lines[i]))
+            if(!func(po->lines[i], po))
                return false;
          }
       }
@@ -581,10 +670,13 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*))
          continue;
 
       ld = &lines[*list];
+      // ioanch 20160111: check groupid
+      if(groupid != R_NOGROUP && groupid != ld->frontsector->groupid)
+         continue;
       if(ld->validcount == validcount)
          continue;       // line has already been checked
       ld->validcount = validcount;
-      if(!func(ld))
+      if(!func(ld, nullptr))
          return false;
    }
    return true;  // everything was checked
@@ -594,16 +686,25 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*))
 // P_BlockThingsIterator
 //
 // killough 5/3/98: reformatted, cleaned up
+// ioanch 20160108: variant with groupid
 //
-bool P_BlockThingsIterator(int x, int y, bool func(Mobj*))
+bool P_BlockThingsIterator(int x, int y, int groupid, bool (*func)(Mobj *))
 {
    if(!(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
    {
       Mobj *mobj = blocklinks[y * bmapwidth + x];
 
       for(; mobj; mobj = mobj->bnext)
+      {
+         // ioanch: if mismatching group id (in case it's declared), skip
+         if(groupid != R_NOGROUP && mobj->groupid != R_NOGROUP && 
+            groupid != mobj->groupid)
+         {
+            continue;   // ignore objects from wrong groupid
+         }
          if(!func(mobj))
             return false;
+      }
    }
    return true;
 }

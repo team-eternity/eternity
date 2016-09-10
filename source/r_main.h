@@ -39,9 +39,6 @@ struct spandrawer_t;
 // POV related.
 //
 
-extern fixed_t  viewcos;
-extern fixed_t  viewsin;
-
 extern int      centerx;
 extern int      centery;
 extern fixed_t  centerxfrac;
@@ -91,6 +88,13 @@ angle_t R_PointToAngle(fixed_t x, fixed_t y);
 angle_t R_PointToAngle2(fixed_t pviewx, fixed_t pviewy, fixed_t x, fixed_t y);
 subsector_t *R_PointInSubsector(fixed_t x, fixed_t y);
 void R_SectorColormap(sector_t *s);
+
+// ioanch 20160106: template variants
+template<typename T> 
+inline static subsector_t *R_PointInSubsector(T &&v)
+{
+   return R_PointInSubsector(v.x, v.y);
+}
 
 //
 // REFRESH - the actual rendering functions.
@@ -168,6 +172,9 @@ enum
    // SoM
    SEG_MARKCOVERLAY = 0x10,
    SEG_MARKFOVERLAY = 0x20,
+
+   // ioanch
+   SEG_MARK1SLPORTAL = 0x40,
 };
 
 struct side_t;

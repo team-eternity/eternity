@@ -28,6 +28,7 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+#include "m_bbox.h"
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_dynseg.h"
@@ -353,6 +354,10 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
       int side_v1 = R_PointOnSide(lseg->v1->x, lseg->v1->y, bsp);
       int side_v2 = R_PointOnSide(lseg->v2->x, lseg->v2->y, bsp);
 
+      // ioanch 20160226: fix the polyobject visual clipping bug
+      M_AddToBox(bsp->bbox[side_v1], lseg->v1->x, lseg->v1->y);
+      M_AddToBox(bsp->bbox[side_v2], lseg->v2->x, lseg->v2->y);
+
       // get distance of vertices from partition line
       double dist_v1 = R_PartitionDistance(lseg->v1->fx, lseg->v1->fy, fnode);
       double dist_v2 = R_PartitionDistance(lseg->v2->fx, lseg->v2->fy, fnode);
@@ -391,6 +396,10 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
             // also set fixed-point coordinates
             nv->x = M_FloatToFixed(nv->fx);
             nv->y = M_FloatToFixed(nv->fy);
+
+            // ioanch 20160722: fix the polyobject visual clipping bug (more needed)
+            M_AddToBox(bsp->bbox[0], nv->x, nv->y);
+            M_AddToBox(bsp->bbox[1], nv->x, nv->y);
 
             // create new dynaseg from nv to seg->v2
             nds = R_CreateDynaSeg(dseg, nv, lseg->v2);

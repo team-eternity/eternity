@@ -46,6 +46,7 @@
 #include "p_maputl.h"
 #include "p_mobjcol.h"
 #include "p_mobj.h"
+#include "p_portal.h"   // ioanch 20160116
 #include "p_pspr.h"
 #include "p_setup.h"
 #include "p_spec.h"
@@ -62,10 +63,13 @@
 //
 static void P_spawnGlitter(Mobj *actor, int type)
 {
-   fixed_t x = actor->x + ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
-   fixed_t y = actor->y + ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
+   // ioanch 20160116: make it portal-aware BOTH beyond line and sector gates
+   fixed_t dx = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
+   fixed_t dy = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
+   v2fixed_t pos = P_LinePortalCrossing(*actor, dx, dy);
 
-   Mobj *mo = P_SpawnMobj(x, y, actor->subsector->sector->floorheight, type);
+   Mobj *mo = P_SpawnMobj(pos.x, pos.y, 
+      P_ExtremeSectorAtPoint(actor, false)->floorheight, type);
    mo->momz = FRACUNIT / 4;
 }
 
@@ -654,10 +658,11 @@ void A_GenWizard(actionargs_t *actionargs)
                     actor->z-mobjinfo[wizType]->height/2, 
                     wizType);
 
+   // ioanch 20160116: portal aware
    if(!P_CheckPosition(mo, mo->x, mo->y) ||
       (mo->z >
-      (mo->subsector->sector->ceilingheight - mo->height)) ||
-      (mo->z < mo->subsector->sector->floorheight))
+      (P_ExtremeSectorAtPoint(mo, true)->ceilingheight - mo->height)) ||
+      (mo->z < P_ExtremeSectorAtPoint(mo, false)->floorheight))
    {
       // doesn't fit, so remove it immediately
       mo->removeThinker();
@@ -756,8 +761,9 @@ void A_HticExplode(actionargs_t *actionargs)
 
    P_RadiusAttack(actor, actor->target, damage, damage, actor->info->mod, 0);
 
+   // ioanch 20160116: portal aware Z
    if(actor->z <= actor->secfloorz + damage * FRACUNIT)
-      E_HitWater(actor, actor->subsector->sector);
+      E_HitWater(actor, P_ExtremeSectorAtPoint(actor, false));
 }
 
 typedef struct boss_spec_htic_s
@@ -827,7 +833,7 @@ void A_HticBossDeath(actionargs_t *actionargs)
             
             // fall through
          case BSPEC_E1M8:
-            junk.tag = 666;
+            junk.tag = junk.args[0] = 666;
             EV_DoFloor(&junk, lowerFloor);
             break;
          } // end switch

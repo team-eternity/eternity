@@ -30,6 +30,7 @@
 
 // The most basic types we use, portability.
 #include "doomtype.h"
+#include "m_fixed.h" // ioanch 20151218: fixed point mapthing coordinates
 
 // haleyjd 10/03/05: all these structures should be byte aligned
 #if defined(_MSC_VER) || defined(__GNUC__)
@@ -175,7 +176,9 @@ typedef struct maplinedefhexen_s maplinedefhexen_t;
 // haleyjd 01/22/11: internal line flags
 enum
 {
-   MLI_DYNASEGLINE = 0x01 // Consider only via dynasegs for rendering, etc.
+   MLI_DYNASEGLINE = 0x01, // Consider only via dynasegs for rendering, etc.
+   MLI_FLOORPORTALCOPIED = 0x02, // ioanch 20160219: for type 385
+   MLI_CEILINGPORTALCOPIED = 0x04, // ioanch 20160219: for type 385
 };
 
 // Sector definition, from editing.
@@ -297,17 +300,20 @@ typedef struct mapthinghexen_s mapthinghexen_t;
 // read things from the wad lump, but this new mapthing_t is used to store the
 // data in memory now. This eliminates some weirdness and redundancies
 
+// ioanch 20151218: use fixed point coordinates.
+
 #define NUMMTARGS 5
 
 struct mapthing_t
 {
    int16_t tid;       // scripting id
-   int16_t x;         // x coord
-   int16_t y;         // y coord
-   int16_t height;    // z height relative to floor
+   fixed_t x;         // x coord
+   fixed_t y;         // y coord
+   fixed_t height;    // z height relative to floor
    int16_t angle;     // angle in wad format
    int16_t type;      // doomednum
    int16_t options;   // bitflags
+   uint32_t extOptions; // ioanch 20151218: extended options (needed by UDMF)
    int     special;   // scripting special
 
    int     args[NUMMTARGS]; // arguments for special

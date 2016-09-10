@@ -218,6 +218,11 @@ typedef enum {
   pr_decjump2,
   pr_spotspawn,   // For use with MobjCollection::spawnAtRandom
   pr_moverandom,  // For use with MobjCollection::moveToRandom
+  pr_ravenblood,  // Raven blood spawning
+  pr_ripperblood, // Ripper blood spawning
+  pr_rogueblood,  // Strife blood spawning
+  pr_drawblood,   // Missile blood-drawing chance
+  pr_hexenteleport,  // ioanch 20160329: used by Hexen teleporters
 
   NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;

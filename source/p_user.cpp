@@ -39,9 +39,11 @@
 #include "hu_stuff.h"
 #include "m_random.h"
 #include "p_chase.h"
+#include "p_info.h"
 #include "p_map.h"
 #include "p_map3d.h"
 #include "p_maputl.h"
+#include "p_portal.h"
 #include "p_skin.h"
 #include "p_spec.h"
 #include "p_user.h"
@@ -565,7 +567,7 @@ static int P_PlayerLightTics(player_t *player)
 //
 // haleyjd 12/28/08: Determines whether or not a sector is special.
 //
-inline static bool P_SectorIsSpecial(sector_t *sector)
+inline static bool P_SectorIsSpecial(const sector_t *sector)
 {
    return (sector->special || sector->flags || sector->damage);
 }
@@ -608,9 +610,10 @@ void P_PlayerThink(player_t *player)
 
    // haleyjd 04/03/05: new yshear code
    if(!allowmlook)
-      player->pitch = 0;
+      player->prevpitch = player->pitch = 0;
    else
    {
+      player->prevpitch = player->pitch;
       int look = cmd->look;
 
       if(look)
@@ -621,10 +624,10 @@ void P_PlayerThink(player_t *player)
          else
          {
             player->pitch -= look << 16;
-            if(player->pitch < -ANGLE_1*32)
-               player->pitch = -ANGLE_1*32;
-            else if(player->pitch > ANGLE_1*32)
-               player->pitch = ANGLE_1*32;
+            if(player->pitch < -ANGLE_1*MAXPITCHUP)
+               player->pitch = -ANGLE_1*MAXPITCHUP;
+            else if(player->pitch > ANGLE_1*MAXPITCHDOWN)
+               player->pitch = ANGLE_1*MAXPITCHDOWN;
          }
       }
    }
@@ -645,7 +648,7 @@ void P_PlayerThink(player_t *player)
 
       // Handle actions   -- joek 12/22/07
       
-      if(cmd->actions & AC_JUMP)
+      if(cmd->actions & AC_JUMP && !LevelInfo.disableJump)
       {
          if((player->mo->z == player->mo->floorz || 
              (player->mo->intflags & MIF_ONMOBJ)) && !player->jumptime)
@@ -677,8 +680,10 @@ void P_PlayerThink(player_t *player)
    // Determine if there's anything about the sector you're in that's
    // going to affect you, like painful floors.
 
-   if(P_SectorIsSpecial(player->mo->subsector->sector))
-      P_PlayerInSpecialSector(player);
+   // ioanch 20160116: portal aware
+   sector_t *sector = P_ExtremeSectorAtPoint(player->mo, false);
+   if(P_SectorIsSpecial(sector))
+      P_PlayerInSpecialSector(player, sector);
 
    // haleyjd 08/23/05: terrain-based effects
    P_PlayerOnSpecialFlat(player);
@@ -710,6 +715,10 @@ void P_PlayerThink(player_t *player)
       if(demo_compatibility)
       { 
          // compatibility mode -- required for old demos -- killough
+         // ioanch 20160426: imported the following line from PrBoom+
+         //e6y
+         newweapon = (cmd->buttons & BT_WEAPONMASK_OLD)>>BT_WEAPONSHIFT;
+
          if(newweapon == wp_fist && player->weaponowned[wp_chainsaw] &&
             (player->readyweapon != wp_chainsaw ||
              !player->powers[pw_strength]))

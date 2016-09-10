@@ -37,15 +37,18 @@
 #include "ev_specials.h"
 #include "g_game.h"
 #include "m_bbox.h"
+#include "m_collection.h"
 #include "m_queue.h"
 #include "p_inter.h"
 #include "p_map.h"
 #include "p_maputl.h"
+#include "p_portal.h"
 #include "p_saveg.h"
 #include "p_setup.h"
 #include "p_tick.h"
 #include "polyobj.h"
 #include "r_main.h"
+#include "r_portal.h"
 #include "r_state.h"
 #include "r_dynseg.h"
 #include "s_sndseq.h"
@@ -496,6 +499,85 @@ static void Polyobj_spawnPolyObj(int num, Mobj *spawnSpot, int id)
 static void Polyobj_setCenterPt(polyobj_t *po);
 
 //
+// Polyobj_collectPortals
+//
+// ioanch 20160228: Inits the portal collection, if any.
+// Adds anchored and linked portals
+//
+static void Polyobj_collectPortals(polyobj_t *po)
+{
+   // Collect them in an easy collection
+   PODCollection<portal_t *> portals;
+   bool hasLinked = false;
+   for(int i = 0; i < po->numLines; ++i)
+   {
+      portal_t *portal = po->lines[i]->portal;
+      if(!portal || (portal->type != R_LINKED && portal->type != R_ANCHORED &&
+                     portal->type != R_TWOWAY))
+      {
+         continue;
+      }
+
+      for(portal_t *prevPortal : portals)
+      {
+         if(prevPortal == portal)
+            goto nextLine;
+      }
+
+      if(po->lines[i]->pflags & PS_PASSABLE)
+         hasLinked = true;
+
+      portals.add(portal);
+
+   nextLine:
+      ;
+   }
+
+   // copy it into the permanent array
+   po->numPortals = portals.getLength();
+   po->hasLinkedPortals = hasLinked;
+   if(po->numPortals)
+   {
+      po->portals = emalloctag(decltype(po->portals), 
+         po->numPortals * sizeof(*po->portals), PU_LEVEL, nullptr);
+      memcpy(po->portals, &portals[0], po->numPortals * sizeof(*po->portals));
+   }
+}
+
+//
+// Polyobj_movePortals
+//
+// ioanch 20160226: moves the portals from the polyobject
+// The 'cancel' argument sets whether to keep or remove the reference
+//
+static void Polyobj_movePortals(const polyobj_t *po, fixed_t dx, fixed_t dy,
+                               bool cancel)
+{
+   for(size_t i = 0; i < po->numPortals; ++i)
+   {
+      portal_t *portal = po->portals[i];
+      if(portal->type == R_LINKED)
+      {
+         P_MoveLinkedPortal(portal, -dx, -dy, true);
+         const linkdata_t &ldata = portal->data.link;
+         portal_t *partner = ldata.polyportalpartner;
+         if(partner)
+            P_MoveLinkedPortal(partner, dx, dy, false);
+         // mark the group as being moved by the portal or not.
+         gGroupPolyobject[ldata.toid] = cancel ? nullptr : po;
+      }
+      else if(portal->type == R_ANCHORED || portal->type == R_TWOWAY)
+      {
+         // FIXME: no partnership for R_TWOWAY. Maybe there should be one.
+         // TODO: this partnership. But only when we have a line-only special.
+         portal->data.anchor.deltax -= dx;
+         portal->data.anchor.deltay -= dy;
+         // no physical effects. 
+      }
+   }
+}
+
+//
 // Polyobj_moveToSpawnSpot
 //
 // Translates the polyobject's vertices with respect to the difference between
@@ -528,8 +610,9 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
    sspot.y = po->spawnSpot.y;
 
    // calculate distance from anchor to spawn spot
-   dist.x = (anchor->x << FRACBITS) - sspot.x;
-   dist.y = (anchor->y << FRACBITS) - sspot.y;
+   // ioanch 20151218: use 32-bit coordinates
+   dist.x = anchor->x - sspot.x;
+   dist.y = anchor->y - sspot.y;
 
    // update linedef bounding boxes
    for(i = 0; i < po->numLines; ++i)
@@ -544,6 +627,10 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
       po->lines[i]->frontsector->groupid = mo->subsector->sector->groupid;
       po->lines[i]->soundorg.groupid     = mo->subsector->sector->groupid;
    }
+
+   // ioanch 20160226: update portal position
+   Polyobj_collectPortals(po);
+   Polyobj_movePortals(po, -dist.x, -dist.y, false);
 
    // translate vertices and record original coordinates relative to spawn spot
    for(i = 0; i < po->numVertices; ++i)
@@ -794,8 +881,23 @@ static bool Polyobj_clipThings(polyobj_t *po, line_t *line)
                if(((mo->flags & MF_SOLID) || mo->player) && 
                   !Polyobj_untouched(line, mo))
                {
-                  Polyobj_pushThing(po, line, mo);
-                  hitthing = true;
+                  // ioanch 20160226: in case of portal lines, just make sure
+                  // the mobj budges a bit just to detect the specline
+                  if(line->pflags & PS_PASSABLE)
+                  {
+                     if(!P_TryMove(mo, mo->x, mo->y, false))
+                     {
+                        // FIXME: this one needs checking after i figure out
+                        // portalmap
+                        Polyobj_pushThing(po, line, mo);
+                        hitthing = true;
+                     }
+                  }
+                  else
+                  {
+                     Polyobj_pushThing(po, line, mo);
+                     hitthing = true;
+                  }
                }
                mo = next; // demo compatibility is not a factor here
             }
@@ -811,7 +913,7 @@ static bool Polyobj_clipThings(polyobj_t *po, line_t *line)
 //
 // Moves a polyobject on the x-y plane.
 //
-static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y)
+static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = false)
 {
    int i;
    vertex_t vec;
@@ -824,6 +926,9 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y)
    if(po->flags & POF_ISBAD)
       return false;
 
+   // ioanch 20160226: update portal position
+   Polyobj_movePortals(po, x, y, false);
+
    // translate vertices
    for(i = 0; i < po->numVertices; ++i)
       Polyobj_vecAdd(po->vertices[i], &vec);
@@ -833,8 +938,10 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y)
       Polyobj_bboxAdd(po->lines[i]->bbox, &vec);
 
    // check for blocking things (yes, it needs to be done separately)
-   for(i = 0; i < po->numLines; ++i)
-      hitthing |= Polyobj_clipThings(po, po->lines[i]);
+   // ioanch 20160302: do NOT collide and get back if onload = true.
+   if(!onload)
+      for(i = 0; i < po->numLines; ++i)
+         hitthing |= Polyobj_clipThings(po, po->lines[i]);
 
    if(hitthing)
    {
@@ -845,6 +952,9 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y)
       // reset lines that have been moved
       for(i = 0; i < po->numLines; ++i)
          Polyobj_bboxSub(po->lines[i]->bbox, &vec);      
+
+      // ioanch 20160226: update portal position
+      Polyobj_movePortals(po, -x, -y, true);
    }
    else
    {
@@ -945,7 +1055,7 @@ static void Polyobj_rotateLine(line_t *ld)
 //
 // Rotates a polyobject around its start point.
 //
-static bool Polyobj_rotate(polyobj_t *po, angle_t delta)
+static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
 {
    int i, angle;
    vertex_t origin;
@@ -977,8 +1087,10 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta)
       Polyobj_rotateLine(po->lines[i]);
 
    // check for blocking things
-   for(i = 0; i < po->numLines; ++i)
-      hitthing |= Polyobj_clipThings(po, po->lines[i]);
+   // ioanch 20160302: do NOT collide if onload = true.
+   if(!onload)
+      for(i = 0; i < po->numLines; ++i)
+         hitthing |= Polyobj_clipThings(po, po->lines[i]);
 
    if(hitthing)
    {
@@ -1150,15 +1262,20 @@ void Polyobj_MoveOnLoad(polyobj_t *po, angle_t angle, fixed_t x, fixed_t y)
 {
    fixed_t dx, dy;
    
+   // ioanch 20160302: do NOT collide and get back if onload = true.
+
    // first, rotate to the saved angle
-   Polyobj_rotate(po, angle);
+   // ioanch 20160310: loadgame fix: don't budge polyobjects ever so little
+   // if they haven't rotated anyway. Angle 0 still means some error.
+   if(angle)
+      Polyobj_rotate(po, angle, true);
    
    // determine component distances to translate
    dx = x - po->spawnSpot.x;
    dy = y - po->spawnSpot.y;
 
    // translate
-   Polyobj_moveXY(po, dx, dy);
+   Polyobj_moveXY(po, dx, dy, true);
 }
 
 // Thinker Functions
@@ -1237,6 +1354,9 @@ void PolyRotateThinker::serialize(SaveArchive &arc)
    Super::serialize(arc);
 
    arc << polyObjNum << speed << distance << hasBeenPositive;
+   // ioanch 20160310: fix the thinker reference
+   if(arc.isLoading())
+      Polyobj_GetForNum(polyObjNum)->thinker = this;
 }
 
 //
@@ -1317,6 +1437,10 @@ void PolyMoveThinker::serialize(SaveArchive &arc)
    Super::serialize(arc);
 
    arc << polyObjNum << speed << momx << momy << distance << angle;
+
+   // ioanch 20160310: fix the thinker reference
+   if(arc.isLoading())
+      Polyobj_GetForNum(polyObjNum)->thinker = this;
 }
 
 
@@ -1426,6 +1550,9 @@ void PolySlideDoorThinker::serialize(SaveArchive &arc)
    arc << polyObjNum << delay << delayCount << initSpeed << speed
        << initDistance << distance << initAngle << angle << revAngle
        << momx << momy << closing;
+   // ioanch 20160310: fix the thinker reference
+   if(arc.isLoading())
+      Polyobj_GetForNum(polyObjNum)->thinker = this;
 }
 
 
@@ -1533,6 +1660,9 @@ void PolySwingDoorThinker::serialize(SaveArchive &arc)
 
    arc << polyObjNum << delay << delayCount << initSpeed << speed
        << initDistance << distance << closing << hasBeenPositive;
+   // ioanch 20160310: fix the thinker reference
+   if(arc.isLoading())
+      Polyobj_GetForNum(polyObjNum)->thinker = this;
 }
 
 // Linedef Handlers
@@ -1716,6 +1846,30 @@ int EV_DoPolyObjMove(polymovedata_t *pmdata)
    }
 
    // action was successful
+   return 1;
+}
+
+int EV_DoPolyObjStop(int polyObjNum)
+{
+   polyobj_t *po;
+   if(!(po = Polyobj_GetForNum(polyObjNum)))
+   {
+      doom_printf(FC_ERROR "EV_DoPolyObjStop: bad polyobj %d", polyObjNum);
+      return 0;
+   }
+
+   // don't allow line actions to affect bad polyobjects
+   if(po->flags & POF_ISBAD)
+      return 0;
+
+   // don't remove thinker if there is no thinker, but do successfully activate
+   if(po->thinker)
+   {
+      po->thinker->removeThinker();
+      po->thinker = nullptr;
+      S_StopPolySequence(po);
+   }
+
    return 1;
 }
 

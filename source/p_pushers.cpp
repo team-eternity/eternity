@@ -25,6 +25,7 @@
 
 #include "z_zone.h"
 
+#include "a_small.h"
 #include "doomstat.h"
 #include "e_states.h"
 #include "e_things.h"
@@ -33,6 +34,7 @@
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
+#include "p_portal.h"   // ioanch 20160115: portal aware
 #include "p_pushers.h"
 #include "p_saveg.h"
 #include "p_setup.h"
@@ -251,6 +253,13 @@ void PushThinker::Think()
 
    for( ; node; node = node->m_snext)
     {
+      // ioanch 20160115: portal aware
+      if(useportalgroups && full_demo_version >= make_full_version(340, 48) &&
+         !P_SectorTouchesThingVertically(sec, node->m_thing))
+      {
+         continue;
+      }
+
       thing = node->m_thing;
       if(!thing->player || 
          (thing->flags2 & MF2_NOTHRUST) ||                // haleyjd
@@ -363,34 +372,44 @@ Mobj* P_GetPushThing(int s)
 //
 // haleyjd 03/12/03: Heretic Wind/Current Transfer specials
 //
-static void P_spawnHereticWind(line_t *line, int staticFn)
+static void P_spawnHereticWind(int tag, fixed_t x_mag, fixed_t y_mag, int pushType)
 {
    int s;
-   int pushType;
    angle_t lineAngle;
    fixed_t magnitude;
 
-   lineAngle = P_PointToAngle(0, 0, line->dx, line->dy);
-   magnitude = (P_AproxDistance(line->dx, line->dy) >> FRACBITS) * 512;
+   lineAngle = P_PointToAngle(0, 0, x_mag, y_mag);
+   magnitude = (P_AproxDistance(x_mag, y_mag) >> FRACBITS) * 512;
 
    // types 20-39 affect the player in P_PlayerThink
    // types 40-51 affect MF3_WINDTHRUST things in P_MobjThinker
    // this is selected by use of lines 294 or 293, respectively
-   switch(staticFn)
-   {
-   case EV_STATIC_HERETIC_CURRENT:
-      pushType = 20;
-      break;
-   default:
-      pushType = 40;
-      break;
-   }
 
-   for(s = -1; (s = P_FindSectorFromLineTag(line, s)) >= 0; )
+   for(s = -1; (s = P_FindSectorFromTag(tag, s)) >= 0; )
    {
       sectors[s].hticPushType  = pushType;
       sectors[s].hticPushAngle = lineAngle;
       sectors[s].hticPushForce = magnitude;
+   }
+}
+
+//
+// Computes wind or current strength from parameterized linedef
+//
+static void P_getPusherParams(const line_t *line, int &x_mag, int &y_mag)
+{
+   if(line->args[ev_SetWind_Arg_Flags] & ev_SetWind_Flag_UseLine)
+   {
+      x_mag = line->dx;
+      y_mag = line->dy;
+   }
+   else
+   {
+      fixed_t strength = line->args[ev_SetWind_Arg_Strength] << FRACBITS;
+      angle_t angle = line->args[ev_SetWind_Arg_Angle] << 24;
+      int fineangle = angle >> ANGLETOFINESHIFT;
+      x_mag = FixedMul(strength, finecosine[fineangle]);
+      y_mag = FixedMul(strength, finesine[fineangle]);
    }
 }
 
@@ -414,17 +433,47 @@ void P_SpawnPushers()
       switch(staticFn)
       {
       case EV_STATIC_WIND_CONTROL: // wind
-         for(s = -1; (s = P_FindSectorFromLineTag(line, s)) >= 0; )
+         for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
             Add_Pusher(PushThinker::p_wind, line->dx, line->dy, NULL, s);
          break;
 
+      case EV_STATIC_WIND_CONTROL_PARAM:
+         {
+            int x_mag, y_mag;
+            P_getPusherParams(line, x_mag, y_mag);
+
+            if(line->args[ev_SetWind_Arg_Flags] & ev_SetWind_Flag_Heretic)
+               P_spawnHereticWind(line->args[0], x_mag, y_mag, SECTOR_HTIC_WIND);
+            else
+            {
+               for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
+                  Add_Pusher(PushThinker::p_wind, x_mag, y_mag, NULL, s);
+            }
+            break;
+         }
+
       case EV_STATIC_CURRENT_CONTROL: // current
-         for(s = -1; (s = P_FindSectorFromLineTag(line, s)) >= 0; )
+         for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
             Add_Pusher(PushThinker::p_current, line->dx, line->dy, NULL, s);
          break;
 
+      case EV_STATIC_CURRENT_CONTROL_PARAM:
+         {
+            int x_mag, y_mag;
+            P_getPusherParams(line, x_mag, y_mag);
+
+            if(line->args[ev_SetWind_Arg_Flags] & ev_SetWind_Flag_Heretic)
+               P_spawnHereticWind(line->args[0], x_mag, y_mag, SECTOR_HTIC_CURRENT);
+            else 
+            {
+               for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
+                  Add_Pusher(PushThinker::p_current, x_mag, y_mag, NULL, s);
+            }
+            break;
+         }
+
       case EV_STATIC_PUSHPULL_CONTROL: // push/pull
-         for(s = -1; (s = P_FindSectorFromLineTag(line, s)) >= 0; )
+         for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
          {
             Mobj *thing = P_GetPushThing(s);
             if(thing) // No P* means no effect
@@ -432,10 +481,56 @@ void P_SpawnPushers()
          }
          break;
 
+      case EV_STATIC_PUSHPULL_CONTROL_PARAM:
+         {
+            int tag = line->args[0];
+            int x_mag, y_mag;
+            if(line->args[3])
+            {
+               x_mag = line->dx;
+               y_mag = line->dy;
+            }
+            else
+            {
+               x_mag = line->args[2] << FRACBITS;
+               y_mag = 0;
+            }
+
+            if(tag)
+            {
+               for(s = -1; (s = P_FindSectorFromTag(tag, s)) >= 0; )
+               {
+                  Mobj *thing = P_GetPushThing(s);
+                  if(thing) // No P* means no effect
+                  {
+                     Add_Pusher(PushThinker::p_push, line->dx, line->dy, thing,
+                                s);
+                  }
+               }
+            }
+            else
+            {
+               Mobj *thing = nullptr;
+               const int PushType = E_ThingNumForDEHNum(MT_PUSH);
+               const int PullType = E_ThingNumForDEHNum(MT_PULL);
+               while((thing = P_FindMobjFromTID(line->args[1], thing, nullptr)))
+               {
+                  if(thing->type == PushType || thing->type == PullType)
+                  {
+                     Add_Pusher(PushThinker::p_push, x_mag, y_mag, thing,
+                                thing->subsector->sector - sectors);
+                  }
+               }
+            }
+            break;
+         }
+
       case EV_STATIC_HERETIC_WIND:
       case EV_STATIC_HERETIC_CURRENT:
          // haleyjd 03/12/03: Heretic wind and current transfer specials
-         P_spawnHereticWind(line, staticFn);
+         P_spawnHereticWind(line->args[0], line->dx, line->dy, 
+            staticFn == EV_STATIC_HERETIC_CURRENT ? SECTOR_HTIC_CURRENT 
+                                                  : SECTOR_HTIC_WIND);
          break;
 
       default: // not a function we handle here

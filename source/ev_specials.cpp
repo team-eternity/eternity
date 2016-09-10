@@ -433,7 +433,7 @@ static bool EV_BOOMGenPreActivate(ev_action_t *action, ev_instance_t *instance)
    REQUIRE_LINE(line);
 
    // check against zero tags
-   if(!line->tag)
+   if(!line->args[0])
    {
       switch(instance->genspac)
       {
@@ -626,7 +626,12 @@ static int EV_ParamPostActivate(ev_action_t *action, int result,
    // check for switch texture change and special clear
    if(result && instance->line)
    {
-      int reuse = (instance->line->extflags & EX_ML_REPEAT);
+      // ioanch 20160229: do NOT reset special for non-parameterized "Start line
+      // script" SR/WR/GR lines.
+      const ev_action_t *action = EV_ActionForSpecial(instance->line->special);
+      int reuse = (instance->line->extflags & EX_ML_REPEAT) ||
+         (action && action->action == EV_ActionStartLineScript && 
+                  !(action->type->flags & EV_POSTCLEARSPECIAL));
 
       if(!reuse)
          instance->line->special = 0;
@@ -773,9 +778,11 @@ typedef EHashTable<ev_binding_t, ENCStringHashKey, &ev_binding_t::name,
 static EV_SpecHash DOOMSpecHash;
 static EV_SpecHash HereticSpecHash;
 static EV_SpecHash HexenSpecHash;
+static EV_SpecHash UDMFEternitySpecHash;
 
 static EV_SpecNameHash DOOMSpecNameHash;
 static EV_SpecNameHash HexenSpecNameHash;
+static EV_SpecNameHash UDMFEternitySpecNameHash;
 
 //
 // EV_initSpecHash
@@ -851,6 +858,22 @@ static void EV_initHexenSpecHash()
 
    EV_initSpecHash    (HexenSpecHash,     HexenBindings, HexenBindingsLen);
    EV_initSpecNameHash(HexenSpecNameHash, HexenBindings, HexenBindingsLen);
+}
+
+//
+// EV_initUDMFEternitySpecHash
+//
+// Initializes the Hexen special bindings hash table the first time it is
+// called.
+//
+static void EV_initUDMFEternitySpecHash()
+{
+   if (UDMFEternitySpecHash.isInitialized())
+      return;
+
+   EV_initSpecHash(UDMFEternitySpecHash, UDMFEternityBindings, UDMFEternityBindingsLen);
+   EV_initSpecNameHash(UDMFEternitySpecNameHash, UDMFEternityBindings, UDMFEternityBindingsLen);
+   EV_initHexenSpecHash();
 }
 
 //
@@ -1013,13 +1036,71 @@ ev_action_t *EV_PSXActionForSpecial(int special)
 }
 
 //
+// EV_UDMFEternityBindingForSpecial
+//
+// Returns a special binding from the UDMFEternity gamemode's bindings array,
+// regardless of the current gamemode or map format. Returns NULL if
+// the special is not bound to an action.
+//
+ev_binding_t *EV_UDMFEternityBindingForSpecial(int special)
+{
+   ev_binding_t *bind;
+
+   EV_initUDMFEternitySpecHash(); // ensure table is initialized
+
+  // Try UDMFEternity's bindings first. If nothing is found, defer to Hexen's 
+  // bindings.
+   if(!(bind = UDMFEternitySpecHash.objectForKey(special)))
+      bind = HexenSpecHash.objectForKey(special);
+
+   return bind;
+}
+
+//
+// EV_UDMFEternityBindingForName
+//
+// Returns a special binding from the UDMFEternity gamemode's bindings array
+// by name.
+//
+ev_binding_t *EV_UDMFEternityBindingForName(const char *name)
+{
+   ev_binding_t *bind;
+
+   EV_initUDMFEternitySpecHash(); // ensure table is initialized
+
+   // Try UDMFEternity's bindings first. If nothing is found, defer to Hexen's 
+   // bindings.
+   if(!(bind = UDMFEternitySpecNameHash.objectForKey(name)))
+      bind = HexenSpecNameHash.objectForKey(name);
+
+   return bind;
+}
+
+//
+// EV_UDMFEternityActionForSpecial
+//
+// Returns a special binding from the UDMFEternity gamemode's bindings array,
+// regardless of the current gamemode or map format. Returns NULL if
+// the special is not bound to an action.
+//
+ev_action_t *EV_UDMFEternityActionForSpecial(int special)
+{
+   ev_binding_t *bind = EV_UDMFEternityBindingForSpecial(special);
+
+   return bind ? bind->action : NULL;
+
+}
+
+//
 // EV_BindingForName
 //
 // Look up a binding by name depending on the current map format and gamemode.
 //
 ev_binding_t *EV_BindingForName(const char *name)
 {
-   if(LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN)
+   if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY)
+      return EV_UDMFEternityBindingForName(name);
+   else if(LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN)
       return EV_HexenBindingForName(name);
    else
       return EV_DOOMBindingForName(name);
@@ -1081,6 +1162,8 @@ ev_action_t *EV_ActionForSpecial(int special)
 {
    switch(LevelInfo.mapFormat)
    {
+   case LEVEL_FORMAT_UDMF_ETERNITY:
+      return EV_UDMFEternityActionForSpecial(special);
    case LEVEL_FORMAT_HEXEN:
       return EV_HexenActionForSpecial(special);
    case LEVEL_FORMAT_PSX:
@@ -1106,7 +1189,7 @@ ev_action_t *EV_ActionForSpecial(int special)
 // Given an instance, obtain the corresponding ev_action_t structure,
 // within the currently defined set of bindings.
 //
-ev_action_t *EV_ActionForInstance(ev_instance_t &instance)
+static ev_action_t *EV_ActionForInstance(ev_instance_t &instance)
 {
    // check if it is a generalized type 
    instance.gentype = EV_GenTypeForSpecial(instance.special);
@@ -1164,7 +1247,8 @@ int EV_LockDefIDForSpecial(int special)
    {
       return EV_lockdefIDForGenSpec(special); // generalized lock
    }
-   else if(LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN)
+   else if(LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN ||
+           LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY)
    {
       return 0; // Hexen doesn't work this way.
    }
@@ -1182,6 +1266,22 @@ int EV_LockDefIDForSpecial(int special)
          return 0; // STRIFE_TODO
       }
    }
+}
+
+//
+// Test lockdef ID bindings for the current gamemode based on a line. 
+// Returns zero when there's no lockdef ID binding for that special.
+//
+int EV_LockDefIDForLine(line_t *line)
+{
+   ev_action_t *action = EV_ActionForSpecial(line->special);
+
+   // handle parameterized functions which accept a lockdef ID argument
+   if(EV_CompositeActionFlags(action) & EV_PARAMLOCKID)
+      return line->args[action->lockarg];
+
+   // otherwise, perform normal processing
+   return EV_LockDefIDForSpecial(line->special);
 }
 
 //=============================================================================
@@ -1305,7 +1405,7 @@ bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing, int spa
    instance.special = line->special;
    instance.side    = side;
    instance.spac    = spac;
-   instance.tag     = line->tag;
+   instance.tag     = line->args[0];
 
    // get action
    if(!(action = EV_ActionForInstance(instance)))
@@ -1404,17 +1504,8 @@ bool EV_ActivateAction(ev_action_t *action, int *args, Mobj *thing)
 //
 bool EV_IsParamLineSpec(int special)
 {
-   bool result = false;
-   ev_action_t *action;
-
-   if((action = EV_ActionForSpecial(special)))
-   {
-      unsigned int flags = EV_CompositeActionFlags(action);
-
-      result = ((flags & EV_PARAMLINESPEC) == EV_PARAMLINESPEC);
-   }
-
-   return result;
+   ev_action_t *action = EV_ActionForSpecial(special);
+   return ((EV_CompositeActionFlags(action) & EV_PARAMLINESPEC) == EV_PARAMLINESPEC);
 }
 
 //=============================================================================

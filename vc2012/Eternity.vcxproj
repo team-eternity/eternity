@@ -389,6 +389,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\source\e_udmf.cpp" />
     <ClCompile Include="..\source\e_weapons.cpp" />
     <ClCompile Include="..\Source\f_finale.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -465,6 +466,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\source\mn_items.cpp" />
+    <ClCompile Include="..\source\p_portalclip.cpp" />
     <ClCompile Include="..\source\sdl\i_sdltimer.cpp" />
     <ClCompile Include="..\source\s_formats.cpp" />
     <ClCompile Include="..\source\s_reverb.cpp" />
@@ -1289,6 +1291,7 @@
     <ClInclude Include="..\Source\e_string.h" />
     <ClInclude Include="..\Source\e_things.h" />
     <ClInclude Include="..\Source\e_ttypes.h" />
+    <ClInclude Include="..\source\e_udmf.h" />
     <ClInclude Include="..\source\e_weapons.h" />
     <ClInclude Include="..\Source\f_finale.h" />
     <ClInclude Include="..\Source\f_wipe.h" />
@@ -1308,6 +1311,7 @@
     <ClInclude Include="..\source\m_binary.h" />
     <ClInclude Include="..\source\m_compare.h" />
     <ClInclude Include="..\source\m_ctype.h" />
+    <ClInclude Include="..\source\p_portalclip.h" />
     <ClInclude Include="..\source\p_sector.h" />
     <ClInclude Include="..\source\p_things.h" />
     <ClInclude Include="..\source\r_interpolate.h" />

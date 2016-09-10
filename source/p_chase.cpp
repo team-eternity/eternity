@@ -45,6 +45,7 @@
 #include "p_tick.h"
 #include "r_defs.h"
 #include "r_main.h"
+#include "r_portal.h"
 #include "r_state.h"
 
 //=============================================================================
@@ -117,7 +118,8 @@ static bool PTR_chaseTraverse(intercept_t *in)
       x = trace.dl.x + FixedMul(trace.dl.dx, frac);
       y = trace.dl.y + FixedMul(trace.dl.dy, frac);
 
-      if(li->flags & ML_TWOSIDED)
+      // ioanch 20160225: portal lines are currently not crossed
+      if(li->flags & ML_TWOSIDED && !(li->pflags & PS_PASSABLE))
       {  // crosses a two sided line
 
          // sf: find which side it hit
@@ -183,7 +185,8 @@ static void P_GetChasecamTarget()
    // aiming at something seems to cure it
    // ioanch 20160101: don't let P_AimLineAttack change global trace.attackrange
    fixed_t oldAttackRange = trace.attackrange;
-   P_AimLineAttack(players[consoleplayer].mo, 0, MELEERANGE, 0);
+   // ioanch 20160225: just change trace.attackrange, don't call P_AimLineAttack
+   trace.attackrange = MELEERANGE;
    
    // check for intersections
    P_PathTraverse(playermobj->x, playermobj->y, targetx, targety,
@@ -332,10 +335,10 @@ void P_WalkTicker()
       else
       {
          walkcamera.pitch -= look << 16;
-         if(walkcamera.pitch < -ANGLE_1*32)
-            walkcamera.pitch = -ANGLE_1*32;
-         else if(walkcamera.pitch > ANGLE_1*32)
-            walkcamera.pitch = ANGLE_1*32;
+         if(walkcamera.pitch < -ANGLE_1*MAXPITCHUP)
+            walkcamera.pitch = -ANGLE_1*MAXPITCHUP;
+         else if(walkcamera.pitch > ANGLE_1*MAXPITCHDOWN)
+            walkcamera.pitch = ANGLE_1*MAXPITCHDOWN;
       }
    }
 
@@ -389,8 +392,9 @@ void P_WalkTicker()
 static void P_ResetWalkcam()
 {
    sector_t *sec;
-   walkcamera.x      = playerstarts[0].x << FRACBITS;
-   walkcamera.y      = playerstarts[0].y << FRACBITS;
+   // ioanch 20151218: fixed point mapthing coordinates
+   walkcamera.x      = playerstarts[0].x;
+   walkcamera.y      = playerstarts[0].y;
    walkcamera.angle  = R_WadToAngle(playerstarts[0].angle);
    walkcamera.pitch  = 0;
    walkcamera.flying = false;
@@ -512,6 +516,7 @@ static void P_setFollowPitch()
    if(fixedang > ANGLE_1 * 32)
       fixedang = ANGLE_1 * 32;
 
+   followcam.prevpitch = followcam.pitch;
    followcam.pitch = camlower ? -fixedang : fixedang;
 }
 

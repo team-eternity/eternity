@@ -1,6 +1,5 @@
-// Emacs style mode select -*- C++ -*-
-//----------------------------------------------------------------------------
 //
+// The Eternity Engine
 // Copyright (C) 2013 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -19,13 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+// Purpose: EDF Thing Types Module
+// Authors: James Haley
 //
-// EDF Thing Types Module
-//
-// By James Haley
-//
-//----------------------------------------------------------------------------
 
 #define NEED_EDF_DEFINITIONS
 
@@ -95,6 +90,7 @@ int UnknownThingType;
 #define ITEM_TNG_DTHSTATESREM  "dmg_deathstates.remove"
 #define ITEM_TNG_XDEATHSTATE   "xdeathstate"
 #define ITEM_TNG_RAISESTATE    "raisestate"
+#define ITEM_TNG_HEALSTATE     "healstate"   // ioanch 20160220
 #define ITEM_TNG_CRASHSTATE    "crashstate"
 #define ITEM_TNG_ACTIVESTATE   "activestate"
 #define ITEM_TNG_INACTIVESTATE "inactivestate"
@@ -198,10 +194,16 @@ int UnknownThingType;
 #define ITEM_DELTA_NAME "name"
 
 // Blood Properties
-#define ITEM_TNG_BLOODNORM  "bloodtype.normal"
-#define ITEM_TNG_BLOODRIP   "bloodtype.rip"
-#define ITEM_TNG_BLOODCRUSH "bloodtype.crush"
-#define ITEM_TNG_BLOODBEHAV "bloodbehaviour"
+#define ITEM_TNG_BLOODNORM   "bloodtype.normal"
+#define ITEM_TNG_BLOODIMPACT "bloodtype.impact"
+#define ITEM_TNG_BLOODRIP    "bloodtype.rip"
+#define ITEM_TNG_BLOODCRUSH  "bloodtype.crush"
+
+#define ITEM_TNG_BLOODBEHAV  "bloodbehavior"
+#define ITEM_TNG_CLRBLOODBEH "clearbloodbehaviors"
+
+#define ITEM_TNG_BB_ACTION   "action"
+#define ITEM_TNG_BB_BEHAVIOR "behavior"
 
 //
 // Field-Specific Data
@@ -224,7 +226,7 @@ static dehflags_t particlefx[] =
    { "PURPLEFOUNTAIN", FX_PURPLEFOUNTAIN },
    { "BLACKFOUNTAIN",  FX_BLACKFOUNTAIN },
    { "WHITEFOUNTAIN",  FX_WHITEFOUNTAIN },
-   { NULL,             0 }
+   { nullptr,          0 }
 };
 
 static dehflagset_t particle_flags =
@@ -240,7 +242,7 @@ static dehflags_t acs_gamemodes[] =
    { "doom",    ACS_MODE_DOOM },
    { "heretic", ACS_MODE_HTIC },
    { "all",     ACS_MODE_ALL  },
-   { NULL,      0             }
+   { nullptr,   0             }
 };
 
 static dehflagset_t acs_gamemode_flags =
@@ -267,13 +269,13 @@ static const char *inflictorTypes[INFLICTOR_NUMTYPES] =
    "Whirlwind",
 };
 
-// haleyjd 07/05/06: Basic types for things. These determine a number of
-// alternate "defaults" for the thingtype that will make it behave in a
-// typical manner for things of its basic type (ie: monster, projectile).
-// The nice thing about basic types is that they can change, and things
-// dependent upon them will be automatically updated for new versions of
-// the engine.
-
+//
+// Basic types for things. These determine a number of alternate "defaults"
+// for the thingtype that will make it behave in a typical manner for things
+// of its basic type (ie: monster, projectile). The nice thing about basic
+// types is that they can change, and things dependent upon them will be 
+// automatically updated for new versions of the engine.
+//
 static const char *BasicTypeNames[] =
 {
    "Monster",           // normal walking monster with no fancy features
@@ -445,11 +447,11 @@ static cfg_opt_t dmgf_opts[] =
 // dropitem multi-value property options
 static cfg_opt_t dropitem_opts[] =
 {
-   CFG_STR(ITEM_TNG_DROPITEM_ITEM,   NULL, CFGF_NONE),
-   CFG_INT(ITEM_TNG_DROPITEM_CHANCE, 255,  CFGF_NONE),
-   CFG_INT(ITEM_TNG_DROPITEM_AMOUNT, 0,    CFGF_NONE),
+   CFG_STR(ITEM_TNG_DROPITEM_ITEM,   nullptr, CFGF_NONE),
+   CFG_INT(ITEM_TNG_DROPITEM_CHANCE, 255,     CFGF_NONE),
+   CFG_INT(ITEM_TNG_DROPITEM_AMOUNT, 0,       CFGF_NONE),
 
-   CFG_FLAG(ITEM_TNG_DROPITEM_TOSS,  0,    CFGF_SIGNPREFIX),
+   CFG_FLAG(ITEM_TNG_DROPITEM_TOSS,  0,       CFGF_SIGNPREFIX),
 
    CFG_END()
 };
@@ -461,6 +463,14 @@ static cfg_opt_t colspawn_opts[] =
    CFG_INT(ITEM_TNG_COLSPAWN_SP,    0, CFGF_NONE),
    CFG_INT(ITEM_TNG_COLSPAWN_COOP,  0, CFGF_NONE),
    CFG_INT(ITEM_TNG_COLSPAWN_DM,    0, CFGF_NONE),
+   CFG_END()
+};
+
+// bloodbehavior multi-value property options
+static cfg_opt_t bloodbeh_opts[] =
+{
+   CFG_STR(ITEM_TNG_BB_ACTION,   "", CFGF_NONE), // action
+   CFG_STR(ITEM_TNG_BB_BEHAVIOR, "", CFGF_NONE), // behavior
    CFG_END()
 };
 
@@ -485,10 +495,11 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_DTHSTATESREM,    0,             CFGF_LIST), \
    CFG_STR(ITEM_TNG_XDEATHSTATE,     "S_NULL",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_RAISESTATE,      "S_NULL",      CFGF_NONE), \
+   CFG_STR(ITEM_TNG_HEALSTATE,       "S_NULL",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_CRASHSTATE,      "S_NULL",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_ACTIVESTATE,     "S_NULL",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_INACTIVESTATE,   "S_NULL",      CFGF_NONE), \
-   CFG_STR(ITEM_TNG_FIRSTDECSTATE,   NULL,          CFGF_NONE), \
+   CFG_STR(ITEM_TNG_FIRSTDECSTATE,   nullptr,       CFGF_NONE), \
    CFG_STR(ITEM_TNG_STATES,          0,             CFGF_NONE), \
    CFG_STR(ITEM_TNG_SEESOUND,        "none",        CFGF_NONE), \
    CFG_STR(ITEM_TNG_ATKSOUND,        "none",        CFGF_NONE), \
@@ -524,7 +535,7 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_FLAGS4,          "",            CFGF_NONE), \
    CFG_STR(ITEM_TNG_PARTICLEFX,      "",            CFGF_NONE), \
    CFG_STR(ITEM_TNG_SKINSPRITE,      "noskin",      CFGF_NONE), \
-   CFG_STR(ITEM_TNG_DEFSPRITE,       NULL,          CFGF_NONE), \
+   CFG_STR(ITEM_TNG_DEFSPRITE,       nullptr,       CFGF_NONE), \
    CFG_SEC(ITEM_TNG_ACS_SPAWN,       acs_data,      CFGF_NOCASE), \
    CFG_STR(ITEM_TNG_REMDROPITEM,     "",            CFGF_MULTI), \
    CFG_STR(ITEM_TNG_ITEMRESPAT,      "",            CFGF_NONE), \
@@ -542,10 +553,12 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_MVPROP(ITEM_TNG_DAMAGEFACTOR, dmgf_opts,     CFGF_MULTI|CFGF_NOCASE   ), \
    CFG_MVPROP(ITEM_TNG_DROPITEM,     dropitem_opts, CFGF_MULTI|CFGF_NOCASE   ), \
    CFG_MVPROP(ITEM_TNG_COLSPAWN,     colspawn_opts, CFGF_NOCASE              ), \
-   CFG_STR(ITEM_TNG_BLOODNORM,       ""           , CFGF_NONE                ), \
-   CFG_STR(ITEM_TNG_BLOODRIP,        ""           , CFGF_NONE                ), \
-   CFG_STR(ITEM_TNG_BLOODCRUSH,      ""           , CFGF_NONE                ), \
-   CFG_STR(ITEM_TNG_BLOODBEHAV,      ""           , CFGF_NONE                ), \
+   CFG_MVPROP(ITEM_TNG_BLOODBEHAV,   bloodbeh_opts, CFGF_MULTI|CFGF_NOCASE   ), \
+   CFG_FLAG(ITEM_TNG_CLRBLOODBEH,    0,             CFGF_NONE                ), \
+   CFG_STR(ITEM_TNG_BLOODNORM,       "",            CFGF_NONE                ), \
+   CFG_STR(ITEM_TNG_BLOODIMPACT,     "",            CFGF_NONE                ), \
+   CFG_STR(ITEM_TNG_BLOODRIP,        "",            CFGF_NONE                ), \
+   CFG_STR(ITEM_TNG_BLOODCRUSH,      "",            CFGF_NONE                ), \
    CFG_END()
 
 cfg_opt_t edf_thing_opts[] =
@@ -582,15 +595,13 @@ static EHashTable<mobjinfo_t, EIntHashKey,
                   &mobjinfo_t::dehnum, &mobjinfo_t::numlinks> thing_dehhash(NUMTHINGCHAINS);
 
 //
-// E_ThingNumForDEHNum
-//
 // As with states, things need to store their DeHackEd number now.
 // Returns -1 if a thing type is not found. This is used
 // extensively by parameterized codepointers.
 //
 int E_ThingNumForDEHNum(int dehnum)
 {
-   mobjinfo_t *info = NULL;
+   mobjinfo_t *info = nullptr;
    int ret = -1;
 
    if((info = thing_dehhash.objectForKey(dehnum)))
@@ -599,8 +610,6 @@ int E_ThingNumForDEHNum(int dehnum)
    return ret;
 }
 
-//
-// E_GetThingNumForDEHNum
 //
 // As above, but causes a fatal error if a thing type is not found.
 //
@@ -614,8 +623,6 @@ int E_GetThingNumForDEHNum(int dehnum)
    return thingnum;
 }
 
-//
-// E_SafeThingType
 //
 // As above, but returns the 'Unknown' type if the requested
 // one was not found.
@@ -631,8 +638,6 @@ int E_SafeThingType(int dehnum)
 }
 
 //
-// E_SafeThingName
-//
 // As above, but for names
 //
 int E_SafeThingName(const char *name)
@@ -646,14 +651,12 @@ int E_SafeThingName(const char *name)
 }
 
 //
-// E_ThingNumForName
-//
 // Returns a thing type index given its name. Returns -1
 // if a thing type is not found.
 //
 int E_ThingNumForName(const char *name)
 {
-   mobjinfo_t *info = NULL;
+   mobjinfo_t *info = nullptr;
    int ret = -1;
 
    if((info = thing_namehash.objectForKey(name)))
@@ -662,8 +665,6 @@ int E_ThingNumForName(const char *name)
    return ret;
 }
 
-//
-// E_GetThingNumForName
 //
 // As above, but causes a fatal error if the thing type isn't found.
 //
@@ -677,17 +678,15 @@ int E_GetThingNumForName(const char *name)
    return thingnum;
 }
 
-// haleyjd 03/22/06: automatic dehnum allocation
+// allocation starts at D_MAXINT and works toward 0
+static int edf_alloc_thing_dehnum = D_MAXINT;
+
 //
 // Automatic allocation of dehacked numbers allows things to be used with
 // parameterized codepointers without having had a DeHackEd number explicitly
 // assigned to them by the EDF author. This was requested by several users
 // after v3.33.02.
 //
-
-// allocation starts at D_MAXINT and works toward 0
-static int edf_alloc_thing_dehnum = D_MAXINT;
-
 bool E_AutoAllocThingDEHNum(int thingnum)
 {
    int dehnum;
@@ -726,9 +725,7 @@ bool E_AutoAllocThingDEHNum(int thingnum)
 // Dynamic Reallocation - haleyjd 11/06/11
 
 //
-// E_ReallocThings
-//
-// haleyjd 11/06/11: Function to reallocate the thingtypes array safely.
+// Function to reallocate the thingtypes array safely.
 //
 static void E_ReallocThings(int numnewthings)
 {
@@ -755,17 +752,15 @@ static void E_ReallocThings(int numnewthings)
       // reallocate mobjinfo[]
       mobjinfo = erealloc(mobjinfo_t **, mobjinfo, numthingsalloc * sizeof(mobjinfo_t *));
 
-      // set the new mobjinfo pointers to NULL
+      // set the new mobjinfo pointers to null
       for(i = NUMMOBJTYPES; i < numthingsalloc; i++)
-         mobjinfo[i] = NULL;
+         mobjinfo[i] = nullptr;
    }
 
    // increment NUMMOBJTYPES
    NUMMOBJTYPES += numnewthings;
 }
 
-//
-// E_CollectThings
 //
 // Pre-creates and hashes by name the thingtypes, for purpose 
 // of mutual and forward references.
@@ -776,7 +771,7 @@ void E_CollectThings(cfg_t *cfg)
    unsigned int numthingtypes;     // number of thingtypes defined by the cfg
    unsigned int firstnewthing = 0; // index of first new thingtype
    unsigned int curnewthing = 0;   // index of current new thingtype being used
-   mobjinfo_t  *newMobjInfo = NULL;
+   mobjinfo_t  *newMobjInfo = nullptr;
    static bool firsttime = true;
 
    // get number of thingtypes defined by the cfg
@@ -814,7 +809,7 @@ void E_CollectThings(cfg_t *cfg)
    {
       cfg_t *thingcfg   = cfg_getnsec(cfg, EDF_SEC_THING, i);
       const char *name  = cfg_title(thingcfg);
-      cfg_t *titleprops = NULL;
+      cfg_t *titleprops = nullptr;
       int dehnum = -1;
 
       // This is a new mobjinfo, whether or not one already exists by this name
@@ -868,8 +863,6 @@ void E_CollectThings(cfg_t *cfg)
 }
 
 //
-// E_ThingSound
-//
 // Does sound name lookup & verification and then stores the resulting
 // sound DeHackEd number into *target.
 //
@@ -878,7 +871,7 @@ static void E_ThingSound(const char *data, const char *fieldname,
 {
    sfxinfo_t *sfx;
 
-   if((sfx = E_EDFSoundForName(data)) == NULL)
+   if((sfx = E_EDFSoundForName(data)) == nullptr)
    {
       // haleyjd 05/31/06: relaxed to warning
       E_EDFLoggedWarning(2, "Warning: thing '%s': invalid %s '%s'\n",
@@ -898,8 +891,6 @@ static void E_ThingSound(const char *data, const char *fieldname,
    }
 }
 
-//
-// E_ThingFrame
 //
 // Does frame name lookup & verification and then stores the resulting
 // frame index into *target.
@@ -926,8 +917,6 @@ static void E_ThingFrame(const char *data, const char *fieldname,
 IMPLEMENT_RTTI_TYPE(MetaState)
 
 //
-// E_AddMetaState
-//
 // Adds a state to the mobjinfo metatable.
 //
 static void E_AddMetaState(mobjinfo_t *mi, state_t *state, const char *name)
@@ -935,8 +924,6 @@ static void E_AddMetaState(mobjinfo_t *mi, state_t *state, const char *name)
    mi->meta->addObject(new MetaState(name, state));
 }
 
-//
-// E_RemoveMetaStatePtr
 //
 // Removes a state from the mobjinfo metatable given a metastate pointer.
 //
@@ -948,34 +935,62 @@ static void E_RemoveMetaStatePtr(mobjinfo_t *mi, MetaState *ms)
 }
 
 //
-// E_RemoveMetaState
-//
 // Removes a state from the mobjinfo metatable given a name under which
 // it is keyed into the table. If no such state exists, nothing happens.
 //
 static void E_RemoveMetaState(mobjinfo_t *mi, const char *name)
 {
-   MetaObject *obj;
+   MetaState *obj;
 
-   if((obj = mi->meta->getObjectKeyAndType(name, RTTI(MetaState))))
-      E_RemoveMetaStatePtr(mi, static_cast<MetaState *>(obj));
+   if((obj = mi->meta->getObjectKeyAndTypeEx<MetaState>(name)))
+      E_RemoveMetaStatePtr(mi, obj);
 }
 
 //
-// E_GetMetaState
-//
 // Gets a state that is stored inside an mobjinfo metatable.
-// Returns NULL if no such object exists.
+// Returns null if no such object exists.
 //
 static MetaState *E_GetMetaState(mobjinfo_t *mi, const char *name)
 {
-   MetaObject *obj = NULL;
-   MetaState  *ret = NULL;
-   
-   if((obj = mi->meta->getObjectKeyAndType(name, RTTI(MetaState))))
-      ret = static_cast<MetaState *>(obj);
+   return mi->meta->getObjectKeyAndTypeEx<MetaState>(name);
+}
 
-   return ret;
+//
+// If state is not the null state, set it as a metastate under the "name"
+// key. If state IS the null state, remove any such named metastate from the
+// mobjinfo.
+//
+static void E_SetMetaState(mobjinfo_t *mi, state_t *state, const char *name)
+{
+   if(state->index != NullStateNum)
+   {
+      MetaState *ms;
+      
+      if((ms = mi->meta->getObjectKeyAndTypeEx<MetaState>(name)))
+         ms->state = state;
+      else
+         E_AddMetaState(mi, state, name);
+   }
+   else
+      E_RemoveMetaState(mi, name);      
+}
+
+//
+// ioanch 20160220: variant with metastate
+//
+static void E_ThingFrame(const char *data, const char *fieldname,
+                         int thingnum, const char *metakey)
+{
+   int index;
+   if((index = E_StateNumForName(data)) < 0)
+   {
+      E_EDFLoggedErr(2, "E_ThingFrame: thing '%s': invalid %s '%s'\n",
+                     mobjinfo[thingnum]->name, fieldname, data);
+   }
+   else
+   {
+      E_SetMetaState(mobjinfo[thingnum], states[index], metakey);
+   }
 }
 
 //=============================================================================
@@ -983,8 +998,6 @@ static MetaState *E_GetMetaState(mobjinfo_t *mi, const char *name)
 // MOD States
 //
 
-//
-// E_ModFieldName
 //
 // Constructs the appropriate label name for a metaproperty that
 // uses a mod name as a suffix.
@@ -1000,14 +1013,12 @@ const char *E_ModFieldName(const char *base, emod_t *mod)
 }
 
 //
-// E_StateForMod
-//
 // Returns the state from the given mobjinfo for the given mod type and
-// base label, if such exists. If not, NULL is returned.
+// base label, if such exists. If not, null is returned.
 //
 state_t *E_StateForMod(mobjinfo_t *mi, const char *base, emod_t *mod)
 {
-   state_t   *ret = NULL;
+   state_t   *ret = nullptr;
    MetaState *mstate;
 
    if((mstate = E_GetMetaState(mi, E_ModFieldName(base, mod))))
@@ -1017,15 +1028,13 @@ state_t *E_StateForMod(mobjinfo_t *mi, const char *base, emod_t *mod)
 }
 
 //
-// E_StateForModNum
-//
 // Convenience wrapper routine to get the state node for a given
 // mod type by number, rather than with a pointer to the damagetype object.
 //
 state_t *E_StateForModNum(mobjinfo_t *mi, const char *base, int num)
 {
    emod_t  *mod = E_DamageTypeForNum(num);
-   state_t *ret = NULL;
+   state_t *ret = nullptr;
 
    if(mod->num != 0)
       ret = E_StateForMod(mi, base, mod);
@@ -1033,8 +1042,6 @@ state_t *E_StateForModNum(mobjinfo_t *mi, const char *base, int num)
    return ret;
 }
 
-//
-// E_AddDamageTypeState
 //
 // Adds a deathstate for a particular dynamic damage type to the given
 // mobjinfo. An mobjinfo can only contain one deathstate for each 
@@ -1053,13 +1060,11 @@ static void E_AddDamageTypeState(mobjinfo_t *info, const char *base,
 }
 
 //
-// E_DisposeDamageTypeList
-//
 // Trashes all the states in the given list.
 //
 static void E_DisposeDamageTypeList(mobjinfo_t *mi, const char *base)
 {
-   MetaState *state = NULL;
+   MetaState *state = nullptr;
 
    // iterate on the metatable to look for metastate_t objects with
    // the base string as the initial part of their name
@@ -1071,7 +1076,7 @@ static void E_DisposeDamageTypeList(mobjinfo_t *mi, const char *base)
          E_RemoveMetaStatePtr(mi, state);
 
          // must restart search (iterator invalidated)
-         state = NULL;
+         state = nullptr;
       }
    }
 }
@@ -1091,8 +1096,6 @@ enum
    E_DTS_FIELD_DEATH,
 };
 
-//
-// E_ProcessDamageTypeStates
 //
 // Given the parent cfg object, the name of a list item within it,
 // the destination mobjinfo, and the mode to work in (add, remove, or
@@ -1184,10 +1187,8 @@ static void E_ProcessDamageTypeStates(cfg_t *cfg, const char *name,
 }
 
 //
-// E_IsMobjInfoDescendantOf
-//
 // Returns an mobjinfo_t * if the given mobjinfo inherits from the given type 
-// by name. Returns NULL otherwise. Self-identity is *not* considered 
+// by name. Returns null otherwise. Self-identity is *not* considered 
 // inheritance.
 //
 mobjinfo_t *E_IsMobjInfoDescendantOf(mobjinfo_t *mi, const char *type)
@@ -1208,10 +1209,8 @@ mobjinfo_t *E_IsMobjInfoDescendantOf(mobjinfo_t *mi, const char *type)
 }
 
 //
-// E_SplitTypeAndState
-//
-// haleyjd 06/22/10: Takes a single string containing a :: operator and returns
-// the tokens on either side of it. The string passed in src should be mutable.
+// Takes a single string containing a :: operator and returns the tokens on
+// either side of it. The string passed in src should be mutable.
 //
 // The pointers will not be modified if an error occurs.
 //
@@ -1232,10 +1231,7 @@ void E_SplitTypeAndState(char *src, char **type, char **state)
 }
 
 //
-// E_processDecorateGotos
-//
-// haleyjd 06/22/10: Deal with unresolved goto entries in the DECORATE
-// state object.
+// Deal with unresolved goto entries in the DECORATE state object.
 //
 static void E_processDecorateGotos(mobjinfo_t *mi, edecstateout_t *dso)
 {
@@ -1243,10 +1239,10 @@ static void E_processDecorateGotos(mobjinfo_t *mi, edecstateout_t *dso)
 
    for(i = 0; i < dso->numgotos; ++i)
    {
-      mobjinfo_t *type = NULL;
+      mobjinfo_t *type = nullptr;
       state_t *state;
       statenum_t statenum;
-      char *statename = NULL;
+      char *statename = nullptr;
 
       // see if the label contains a colon, and if so, it may be an
       // access to an inherited state
@@ -1254,7 +1250,7 @@ static void E_processDecorateGotos(mobjinfo_t *mi, edecstateout_t *dso)
 
       if(colon)
       {
-         char *typestr = NULL;
+         char *typestr = nullptr;
 
          E_SplitTypeAndState(dso->gotos[i].label, &typestr, &statename);
 
@@ -1311,10 +1307,7 @@ static void E_processDecorateGotos(mobjinfo_t *mi, edecstateout_t *dso)
 }
 
 //
-// E_processDecorateStates
-//
-// haleyjd 06/22/10: Add all labeled states from a DECORATE state block to the
-// given mobjinfo.
+// Add all labeled states from a DECORATE state block to the given mobjinfo.
 //
 static void E_processDecorateStates(mobjinfo_t *mi, edecstateout_t *dso)
 {
@@ -1342,10 +1335,7 @@ static void E_processDecorateStates(mobjinfo_t *mi, edecstateout_t *dso)
 }
 
 //
-// E_processKillStates
-//
-// haleyjd 06/22/10: Processes killstates (states to be removed) in the
-// DECORATE state block.
+// Processes killstates (states to be removed) in the DECORATE state block.
 //
 static void E_processKillStates(mobjinfo_t *mi, edecstateout_t *dso)
 {
@@ -1364,9 +1354,7 @@ static void E_processKillStates(mobjinfo_t *mi, edecstateout_t *dso)
 }
 
 //
-// E_ProcessDecorateStateList
-//
-// haleyjd 06/22/10: Processes the DECORATE state list in a thing
+// Processes the DECORATE state list in a thing
 //
 static void E_ProcessDecorateStateList(mobjinfo_t *mi, const char *str, 
                                        const char *firststate, bool recursive)
@@ -1397,14 +1385,12 @@ static void E_ProcessDecorateStateList(mobjinfo_t *mi, const char *str,
 }
 
 //
-// E_ProcessDecorateStatesRecursive
-//
-// haleyjd 01/02/12: A change-over to DECORATE-format states in the default EDFs
-// requires that we not drop DECORATE state blocks defined in sections that are
-// displaced via a more recent definition during initial EDF processing. A small
-// modification to libConfuse has made this possible to achieve. This recursive
-// processing is only necessary when the displaced thingtype definition uses the
-// "firstdecoratestate" mechanism to populate global states with its data.
+// A change-over to DECORATE-format states in the default EDFs requires that we not
+// drop DECORATE state blocks defined in sections that are displaced via a more recent
+// definition during initial EDF processing. A small modification to libConfuse has made
+// this possible to achieve. This recursive processing is only necessary when the 
+// displaced thingtype definition uses the "firstdecoratestate" mechanism to populate 
+// global states with its data.
 //
 static void E_ProcessDecorateStatesRecursive(cfg_t *thingsec, int thingnum, bool recursive)
 {
@@ -1420,7 +1406,7 @@ static void E_ProcessDecorateStatesRecursive(cfg_t *thingsec, int thingnum, bool
       // 01/01/12: allow use of pre-existing reserved states; they must be
       // defined consecutively in EDF and should be flagged +decorate in order
       // for values inside them to be overridden by the DECORATE state block.
-      // If this isn't being done, firststate will be NULL.
+      // If this isn't being done, firststate will be null.
       const char *firststate = cfg_getstr(thingsec, ITEM_TNG_FIRSTDECSTATE);
       const char *tempstr    = cfg_getstr(thingsec, ITEM_TNG_STATES);
 
@@ -1433,22 +1419,18 @@ static void E_ProcessDecorateStatesRecursive(cfg_t *thingsec, int thingnum, bool
 //
 // Damage Factors
 //
-// haleyjd 09/26/09: damage factors are also stored in the mobjinfo
-// metatable. These floating point properties adjust the amount of damage 
-// done to objects by specific damage types.
+// Damage factors are also stored in the mobjinfo metatable. These floating point 
+// properties adjust the amount of damage done to objects by specific damage types.
 //
 
-//
-// E_ProcessDamageFactors
 //
 // Processes the damage factor objects for a thingtype definition.
 //
 static void E_ProcessDamageFactors(mobjinfo_t *info, cfg_t *cfg)
 {
    unsigned int numfactors = cfg_size(cfg, ITEM_TNG_DAMAGEFACTOR);
-   unsigned int i;
 
-   for(i = 0; i < numfactors; ++i)
+   for(unsigned int i = 0; i < numfactors; i++)
    {
       cfg_t  *sec = cfg_getnmvprop(cfg, ITEM_TNG_DAMAGEFACTOR, i);
       emod_t *mod = E_DamageTypeForName(cfg_getstr(sec, ITEM_TNG_DMGF_MODNAME));
@@ -1467,36 +1449,32 @@ static void E_ProcessDamageFactors(mobjinfo_t *info, cfg_t *cfg)
 //
 // DropItems
 //
-// haleyjd 08/05/13: multiple dropitems can now be assigned to thing types.
+// Multiple dropitems can now be assigned to thing types.
 //
 
 IMPLEMENT_RTTI_TYPE(MetaDropItem)
 
 //
-// E_clearDropItems
-//
 // Clear all dropitems from an mobjinfo's MetaTable
 //
 static void E_clearDropItems(mobjinfo_t *mi)
 {
-   MetaDropItem *mdi = NULL;
+   MetaDropItem *mdi = nullptr;
 
    while((mdi = mi->meta->getNextTypeEx(mdi)))
    {
       mi->meta->removeObject(mdi);
       delete mdi;
-      mdi = NULL; // must restart search
+      mdi = nullptr; // must restart search
    }
 }
 
-//
-// E_findDropItemForType
 //
 // Find a dropitem for a particular item type
 // 
 static MetaDropItem *E_findDropItemForType(mobjinfo_t *mi, const char *item)
 {
-   MetaDropItem *mdi = NULL;
+   MetaDropItem *mdi = nullptr;
 
    while((mdi = mi->meta->getNextTypeEx(mdi)))
    {
@@ -1504,11 +1482,9 @@ static MetaDropItem *E_findDropItemForType(mobjinfo_t *mi, const char *item)
          return mdi;
    }
 
-   return NULL;
+   return nullptr;
 }
 
-//
-// E_addDropItem
 //
 // Add a new dropitem to the mobjinfo's MetaTable
 //
@@ -1518,8 +1494,6 @@ static void E_addDropItem(mobjinfo_t *mi, const char *item, int chance,
    mi->meta->addObject(new MetaDropItem("dropitem", item, chance, amount, toss));
 }
 
-//
-// E_removeDropItem
 //
 // Remove a particular dropitem from the mobjinfo's MetaTable
 //
@@ -1533,8 +1507,6 @@ static void E_removeDropItem(mobjinfo_t *mi, const char *item)
    }
 }
 
-//
-// E_processDropItems
 //
 // Process dropitem multi-valued property defintions inside a thingtype.
 //
@@ -1581,8 +1553,9 @@ static void E_processCollectionSpawn(mobjinfo_t *mi, cfg_t *spawn)
    MobjCollections.addCollection(mi->name);
 }
 
+//
 // Collection item respawning
-
+//
 static void E_processItemRespawnAt(mobjinfo_t *mi, const char *name)
 {
    if(*name)
@@ -1590,7 +1563,7 @@ static void E_processItemRespawnAt(mobjinfo_t *mi, const char *name)
       if(E_ThingNumForName(name) < 0)
       {
          E_EDFLoggedWarning(2, 
-            "Warning: Unknown thingtype '%s' specified as itemrespawnat for '%s'",
+            "Warning: Unknown thingtype '%s' specified as itemrespawnat for '%s'\n",
             name, mi->name);
       }
       mi->meta->setString("itemrespawnat", name);
@@ -1604,19 +1577,27 @@ static void E_processItemRespawnAt(mobjinfo_t *mi, const char *name)
 }
 
 //
-// E_ProcessBlood
+// Blood types
+//
+// These are specified on a SHOOTABLE mobj to override the game's default blood
+// types for various types of damaging actions.
+//
+
 //
 // Proceses a given blood property.
 //
 void E_ProcessBlood(int i, cfg_t *cfg, const char *searchedprop)
 {
    const char *bloodVal = cfg_getstr(cfg, searchedprop);
-   if(*bloodVal)
+
+   // if empty or set to @default, this blood type definition will be removed.
+   if(*bloodVal && strcasecmp(bloodVal, "@default"))
    {
-      if(E_SafeThingName(bloodVal) < 0)
+      // "@none" is explicitly reserved in order to disable a specific type of blood
+      if(strcasecmp(bloodVal, "@none") && E_ThingNumForName(bloodVal) < 0)
       {
-         E_EDFLoggedWarning(2, "Invalid %s '%s' for thingtype '%s'",
-            searchedprop, bloodVal, mobjinfo[i]->name);
+         E_EDFLoggedWarning(2, "Invalid %s '%s' for thingtype '%s'\n", 
+                            searchedprop, bloodVal, mobjinfo[i]->name);         
       }
       mobjinfo[i]->meta->addString(searchedprop, bloodVal);
    }
@@ -1624,8 +1605,177 @@ void E_ProcessBlood(int i, cfg_t *cfg, const char *searchedprop)
       mobjinfo[i]->meta->removeStringNR(searchedprop);
 }
 
+static const char *const keyForBloodAction[NUMBLOODACTIONS] =
+{
+   ITEM_TNG_BLOODNORM,   // bullet
+   ITEM_TNG_BLOODIMPACT, // projectile impact
+   ITEM_TNG_BLOODRIP,    // ripper projectile
+   ITEM_TNG_BLOODCRUSH,  // crusher blood
+};
+
+static const char * gamemodeinfo_t::* defaultForBloodAction[NUMBLOODACTIONS] =
+{
+   &gamemodeinfo_t::bloodDefaultNormal,
+   &gamemodeinfo_t::bloodDefaultImpact,
+   &gamemodeinfo_t::bloodDefaultRIP,
+   &gamemodeinfo_t::bloodDefaultCrush
+};
+
 //
-// E_ColorCB
+// Get the proper blood type to use for an Mobj in response to the given action.
+// Returns -1 if there is not a valid blood type for this action. This may, in the
+// case of an @none indicator, mean that no blood is meant to be spawned.
+//
+int E_BloodTypeForThing(Mobj *mo, bloodaction_e action)
+{
+   const char *actionKey   = keyForBloodAction[action];
+   const char *defaultType = GameModeInfo->*(defaultForBloodAction[action]);
+   const char *typeName    = mo->info->meta->getString(actionKey, defaultType);
+
+   return E_ThingNumForName(typeName);
+}
+
+//
+// Blood behaviors
+//
+// These are specified on a blood object to specify how it behaves when spawned
+// in response to the different types of actions which spawn blood.
+//
+
+IMPLEMENT_RTTI_TYPE(MetaBloodBehavior)
+
+// blood behavior names
+static const char *bloodBehaviors[BLOODTYPE_MAX] = 
+{
+   "DOOM", 
+   "HERETIC", 
+   "HERETICRIP", 
+   "HEXEN",
+   "HEXENRIP",
+   "STRIFE", 
+   "CRUSH",
+   "CUSTOM" // NB: reserved for future Aeon usage
+};
+
+// blood action names
+static const char *bloodActions[NUMBLOODACTIONS] = 
+{
+   "SHOT",   // bullet
+   "IMPACT", // projectile impact
+   "RIP",    // ripper projectile
+   "CRUSH"   // crusher blood
+};
+
+//
+// Clear all blood behaviors from an mobjinfo's MetaTable
+//
+static void E_clearBloodBehaviors(mobjinfo_t *mi)
+{
+   MetaBloodBehavior *mbb = nullptr;
+
+   while((mbb = mi->meta->getNextTypeEx(mbb)))
+   {
+      mi->meta->removeObject(mbb);
+      delete mbb;
+      mbb = nullptr; // must restart search
+   }
+}
+
+//
+// Find a blood behavior for a particular action
+// 
+static MetaBloodBehavior *E_findBloodBehavior(mobjinfo_t *mi, bloodaction_e action)
+{
+   MetaBloodBehavior *mbb = nullptr;
+
+   while((mbb = mi->meta->getNextTypeEx(mbb)))
+   {
+      if(mbb->action == action)
+         return mbb;
+   }
+
+   return nullptr;
+}
+
+//
+// Add a new blood behavior to the mobjinfo's MetaTable
+//
+static void E_addBloodBehavior(mobjinfo_t *mi, bloodaction_e action, bloodtype_e behavior)
+{
+   MetaBloodBehavior *mbb = nullptr;
+
+   while((mbb = mi->meta->getNextTypeEx(mbb)))
+   {
+      if(mbb->action == action)
+      {
+         mbb->behavior = behavior;
+         return;
+      }
+   }
+
+   // none was found, so create a new one
+   mi->meta->addObject(new MetaBloodBehavior(ITEM_TNG_BLOODBEHAV, action, behavior));
+}
+
+//
+// Remove a particular blood behavior from the mobjinfo's MetaTable
+//
+static void E_removeBloodBehavior(mobjinfo_t *mi, bloodaction_e action)
+{
+   MetaBloodBehavior *mbb;
+   while((mbb = E_findBloodBehavior(mi, action)))
+   {
+      mi->meta->removeObject(mbb);
+      delete mbb;
+   }
+}
+
+//
+// Process bloodbehavior multi-valued property definitions inside a thingtype.
+//
+static void E_processBloodBehaviors(mobjinfo_t *mi, cfg_t *thingsec)
+{
+   unsigned int numBloodBehaviors = cfg_size(thingsec, ITEM_TNG_BLOODBEHAV);
+
+   for(unsigned int i = 0; i < numBloodBehaviors; i++)
+   {
+      cfg_t *prop = cfg_getnmvprop(thingsec, ITEM_TNG_BLOODBEHAV, i);
+      const char *action   = cfg_getstr(prop, ITEM_TNG_BB_ACTION);
+      const char *behavior = cfg_getstr(prop, ITEM_TNG_BB_BEHAVIOR);
+
+      int actionnum = E_StrToNumLinear(bloodActions, NUMBLOODACTIONS, action);
+      if(actionnum == NUMBLOODACTIONS)
+      {
+         E_EDFLoggedWarning(2, 
+            "Warning: Unknown blood action '%s' specified in bloodbehavior for '%s'\n",
+            action, mi->name);
+         continue;
+      }
+
+      int behaviornum = E_StrToNumLinear(bloodBehaviors, BLOODTYPE_MAX, behavior);
+      if(behaviornum == BLOODTYPE_MAX)
+      {
+         // a string such as "none" or "default" will remove the specification
+         E_removeBloodBehavior(mi, static_cast<bloodaction_e>(actionnum));
+      }
+      else
+      {
+         // set a new specification for this action
+         E_addBloodBehavior(mi, static_cast<bloodaction_e>(actionnum),
+                                static_cast<bloodtype_e>(behaviornum));
+      }
+   }
+}
+
+//
+// Get the blood behavior type for a particular action for this thing type.
+//
+bloodtype_e E_GetBloodBehaviorForAction(mobjinfo_t *info, bloodaction_e action)
+{
+   MetaBloodBehavior *mbb = E_findBloodBehavior(info, action);   
+   return mbb ? mbb->behavior : GameModeInfo->defBloodBehaviors[action];
+}
+
 //
 // libConfuse value-parsing callback for the thingtype translation
 // field. Can accept an integer value which indicates one of the 14
@@ -1686,14 +1836,12 @@ void E_ThingDefaultGibHealth(mobjinfo_t *mi)
 // Thing type inheritance code -- 01/27/04
 
 // thing_hitlist: keeps track of what thingtypes are initialized
-static byte *thing_hitlist = NULL;
+static byte *thing_hitlist = nullptr;
 
 // thing_pstack: used by recursive E_ProcessThing to track inheritance
-static int  *thing_pstack  = NULL;
+static int  *thing_pstack  = nullptr;
 static int   thing_pindex  = 0;
 
-//
-// E_CheckThingInherit
 //
 // Makes sure the thing type being inherited from has not already
 // been inherited during the current inheritance chain. Returns
@@ -1701,9 +1849,7 @@ static int   thing_pindex  = 0;
 //
 static bool E_CheckThingInherit(int pnum)
 {
-   int i;
-
-   for(i = 0; i < NUMMOBJTYPES; ++i)
+   for(int i = 0; i < NUMMOBJTYPES; i++)
    {
       // circular inheritance
       if(thing_pstack[i] == pnum)
@@ -1717,8 +1863,6 @@ static bool E_CheckThingInherit(int pnum)
    return true;
 }
 
-//
-// E_AddThingToPStack
 //
 // Adds a type number to the inheritance stack.
 //
@@ -1734,23 +1878,17 @@ static void E_AddThingToPStack(int num)
 }
 
 //
-// E_ResetThingPStack
-//
 // Resets the thingtype inheritance stack, setting all the pstack
 // values to -1, and setting pindex back to zero.
 //
 static void E_ResetThingPStack()
 {
-   int i;
-
-   for(i = 0; i < NUMMOBJTYPES; ++i)
+   for(int i = 0; i < NUMMOBJTYPES; i++)
       thing_pstack[i] = -1;
 
    thing_pindex = 0;
 }
 
-//
-// E_CopyThing
 //
 // Copies one thingtype into another.
 //
@@ -1814,8 +1952,6 @@ struct thingtitleprops_t
 };
 
 //
-// E_getThingTitleProps
-//
 // Retrieve all the values in the thing's title properties, if such
 // are defined.
 //
@@ -1832,14 +1968,12 @@ void E_getThingTitleProps(cfg_t *thingsec, thingtitleprops_t &props, bool def)
    }
    else
    {
-      props.superclass  = NULL;
+      props.superclass  = nullptr;
       props.dehackednum = -1;
       props.doomednum   = -1;
    }
 }
 
-//
-// E_resolveParentThingType
 //
 // Get the mobjinfo index for the thing's superclass thingtype.
 //
@@ -1879,8 +2013,6 @@ static int E_resolveParentThingType(cfg_t *thingsec,
    ((def && !inherits && !hasbtype) || cfg_size(thingsec, (name)) > 0)
 
 //
-// E_ProcessThing
-//
 // Generalized code to process the data for a single thing type
 // structure. Doubles as code for thingtype and thingdelta.
 //
@@ -1894,7 +2026,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    bool hasbtype = false;
    thingtitleprops_t titleprops;
 
-   // if thingsec is NULL, we are in the situation of inheriting from a thing
+   // if thingsec is null, we are in the situation of inheriting from a thing
    // that was processed in a previous EDF generation, so no processing is
    // required; return immediately.
    if(!thingsec)
@@ -1933,7 +2065,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
          E_AddThingToPStack(pnum);
 
          // process parent recursively
-         // 12/12/2011: must use cfg_gettsec; note can return NULL
+         // 12/12/2011: must use cfg_gettsec; note can return null
          parent_tngsec = cfg_gettsec(pcfg, EDF_SEC_THING, mobjinfo[pnum]->name);
          E_ProcessThing(pnum, parent_tngsec, pcfg, true);
          
@@ -1947,7 +2079,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
          inherits = true;
       }
       else
-         mobjinfo[i]->parent = NULL; // 6/19/09: no parent.
+         mobjinfo[i]->parent = nullptr; // 6/19/09: no parent.
 
       // mark this thingtype as processed
       thing_hitlist[i] = 1;
@@ -2049,6 +2181,13 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       tempstr = cfg_getstr(thingsec, ITEM_TNG_RAISESTATE);
       E_ThingFrame(tempstr, ITEM_TNG_RAISESTATE, i,
                    &(mobjinfo[i]->raisestate));
+   }
+
+   // ioanch 20160220: process healstate
+   if(cfg_size(thingsec, ITEM_TNG_HEALSTATE) > 0)
+   {
+      tempstr = cfg_getstr(thingsec, ITEM_TNG_HEALSTATE);
+      E_ThingFrame(tempstr, ITEM_TNG_HEALSTATE, i, METASTATE_HEAL);
    }
 
    // 08/07/04: process crashstate
@@ -2357,7 +2496,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
             mobjinfo[i]->name, tempstr);
       }
       
-      if(dp->cptr != NULL)
+      if(dp->cptr != nullptr)
          mobjinfo[i]->nukespec = dp->cptr;
    }
 
@@ -2414,7 +2553,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    if(IS_SET(ITEM_TNG_MOD))
    {
       emod_t *mod;
-      char *endpos = NULL;
+      char *endpos = nullptr;
       tempstr = cfg_getstr(thingsec, ITEM_TNG_MOD);
 
       tempint = strtol(tempstr, &endpos, 0);
@@ -2439,7 +2578,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       if(strcasecmp(tempstr, "NONE"))
          mobjinfo[i]->obituary = estrdup(tempstr);
       else
-         mobjinfo[i]->obituary = NULL;
+         mobjinfo[i]->obituary = nullptr;
    }
 
    if(IS_SET(ITEM_TNG_OBIT2))
@@ -2453,7 +2592,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       if(strcasecmp(tempstr, "NONE"))
          mobjinfo[i]->meleeobit = estrdup(tempstr);
       else
-         mobjinfo[i]->meleeobit = NULL;
+         mobjinfo[i]->meleeobit = nullptr;
    }
 
    // 01/12/04: process translation
@@ -2536,39 +2675,23 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
 
    // MaxW: 20150620: process blood types and behavior
    if(IS_SET(ITEM_TNG_BLOODNORM))
-   {
       E_ProcessBlood(i, thingsec, ITEM_TNG_BLOODNORM);
-   }
-   else
-   {
-      mobjinfo[i]->meta->addString(ITEM_TNG_BLOODCRUSH, GameModeInfo->bloodDefaultNormal);
-   }
+
+   if(IS_SET(ITEM_TNG_BLOODIMPACT))
+      E_ProcessBlood(i, thingsec, ITEM_TNG_BLOODIMPACT);
+
    if(IS_SET(ITEM_TNG_BLOODRIP))
-   {
       E_ProcessBlood(i, thingsec, ITEM_TNG_BLOODRIP);
-   }
-   else
-   {
-      mobjinfo[i]->meta->addString(ITEM_TNG_BLOODCRUSH, GameModeInfo->bloodDefaultRIP);
-   }
+
    if(IS_SET(ITEM_TNG_BLOODCRUSH))
-   {
       E_ProcessBlood(i, thingsec, ITEM_TNG_BLOODCRUSH);
-   }
-   else
-   {
-      mobjinfo[i]->meta->addString(ITEM_TNG_BLOODCRUSH, GameModeInfo->bloodDefaultCrush);
-   }
-   if(IS_SET(ITEM_TNG_BLOODBEHAV))
-   {
-      const char *behaviors[] = {"DOOM", "RAVEN", "RAVENRIP", "STRIFE", "CUSTOM"};
-      mobjinfo[i]->meta->addInt(ITEM_TNG_BLOODBEHAV,
-         E_StrToNumLinear(behaviors, 5, cfg_getstr(thingsec, ITEM_TNG_BLOODBEHAV)));
-   }
-   else
-   {
-      mobjinfo[i]->meta->addInt(ITEM_TNG_BLOODBEHAV, 0);
-   }
+
+   // check for clear blood behaviors flag
+   if(cfg_size(thingsec, ITEM_TNG_CLRBLOODBEH) > 0)
+      E_clearBloodBehaviors(mobjinfo[i]);
+
+   // process blood behaviors
+   E_processBloodBehaviors(mobjinfo[i], thingsec);
 
    // 01/17/07: process acs_spawndata
    if(cfg_size(thingsec, ITEM_TNG_ACS_SPAWN) > 0)
@@ -2597,12 +2720,10 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       }
    }
 
-   // haleyjd 06/22/10: Process DECORATE state block
+   // Process DECORATE state block
    E_ProcessDecorateStatesRecursive(thingsec, i, false);
 }
 
-//
-// E_ProcessThings
 //
 // Resolves and loads all information for the mobjinfo_t structures.
 //
@@ -2619,8 +2740,7 @@ void E_ProcessThings(cfg_t *cfg)
    thing_hitlist = ecalloc(byte *, NUMMOBJTYPES, sizeof(byte));
    thing_pstack  = ecalloc(int  *, NUMMOBJTYPES, sizeof(int));
 
-   // haleyjd 11/06/11: add all things from previous generations to the
-   // processed hit list
+   // add all things from previous generations to the processed hit list
    for(i = 0; i < (unsigned int)NUMMOBJTYPES; i++)
    {
       if(mobjinfo[i]->generation != edf_thing_generation)
@@ -2661,8 +2781,6 @@ void E_ProcessThings(cfg_t *cfg)
 }
 
 //
-// E_ProcessThingDeltas
-//
 // Does processing for thingdelta sections, which allow cascading
 // editing of existing things. The thingdelta shares most of its
 // fields and processing code with the thingtype section.
@@ -2698,16 +2816,12 @@ void E_ProcessThingDeltas(cfg_t *cfg)
 }
 
 //
-// E_SetThingDefaultSprites
-//
 // Post-processing routine; sets things' unspecified default sprites to the
 // sprite in the thing's spawnstate.
 //
 void E_SetThingDefaultSprites()
 {
-   int i;
-
-   for(i = 0; i < NUMMOBJTYPES; ++i)
+   for(int i = 0; i < NUMMOBJTYPES; ++i)
    {
       if(mobjinfo[i]->defsprite == -1)
          mobjinfo[i]->defsprite = states[mobjinfo[i]->spawnstate]->sprite;
@@ -2742,7 +2856,7 @@ static const char *nativeStateLabels[] =
 //
 // Matching enumeration for above names
 //
-enum
+enum nstatetypes_e
 {
    NSTATE_SPAWN,
    NSTATE_SEE,
@@ -2760,16 +2874,14 @@ enum
 #define NUMNATIVESTATES earrlen(nativeStateLabels)
 
 //
-// E_GetNativeStateLoc
-//
 // Returns a pointer to an mobjinfo's native state field if the given name
-// is a match for that field's corresponding DECORATE label. Returns NULL
+// is a match for that field's corresponding DECORATE label. Returns null
 // if the name is not a match for a native state field.
 //
 int *E_GetNativeStateLoc(mobjinfo_t *mi, const char *label)
 {
    int nativenum = E_StrToNumLinear(nativeStateLabels, NUMNATIVESTATES, label);
-   int *ret = NULL;
+   int *ret = nullptr;
 
    switch(nativenum)
    {
@@ -2792,17 +2904,15 @@ int *E_GetNativeStateLoc(mobjinfo_t *mi, const char *label)
 }
 
 //
-// E_GetStateForMobjInfo
-//
 // Retrieves any state for an mobjinfo, either native or metastate.
-// Returns NULL if no such state can be found. Note that the null state is
+// Returns null if no such state can be found. Note that the null state is
 // not considered a valid state.
 //
 state_t *E_GetStateForMobjInfo(mobjinfo_t *mi, const char *label)
 {
    MetaState *ms;
-   state_t *ret = NULL;
-   int *nativefield = NULL;
+   state_t *ret = nullptr;
+   int *nativefield = nullptr;
 
    // check metastates
    if((ms = E_GetMetaState(mi, label)))
@@ -2817,8 +2927,6 @@ state_t *E_GetStateForMobjInfo(mobjinfo_t *mi, const char *label)
    return ret;
 }
 
-//
-// E_GetStateForMobj
 //
 // Convenience routine to call the above given an Mobj.
 //
