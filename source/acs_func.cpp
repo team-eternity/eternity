@@ -626,7 +626,7 @@ uint32_t ACS_GetLevelProp(uint32_t var)
    {
    case ACS_LP_ParTime:        return LevelInfo.partime;
    case ACS_LP_ClusterNumber:  return 0;
-   case ACS_LP_LevelNumber:    return 0;
+   case ACS_LP_LevelNumber:    return gamemap;
    case ACS_LP_TotalSecrets:   return wminfo.maxsecret;
    case ACS_LP_FoundSecrets:   return players[consoleplayer].secretcount;
    case ACS_LP_TotalItems:     return wminfo.maxitems;
