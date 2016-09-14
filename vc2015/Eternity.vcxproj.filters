@@ -240,12 +240,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\acs_acs0.cpp">
-      <Filter>Source Files\ACS_</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\acs_acse.cpp">
-      <Filter>Source Files\ACS_</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\acs_func.cpp">
       <Filter>Source Files\ACS_</Filter>
     </ClCompile>
@@ -956,16 +950,13 @@
     </ClCompile>
     <ClCompile Include="..\source\e_udmf.cpp">
       <Filter>Source Files\E_\E_ Source</Filter>
-	</ClCompile>
+    </ClCompile>
     <ClCompile Include="..\source\p_portalclip.cpp">
       <Filter>Source Files\P_\P_ Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
-      <Filter>Source Files\ACS_</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\acs_op.h">
       <Filter>Source Files\ACS_</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\am_map.h">
@@ -1708,7 +1699,7 @@
     </ClInclude>
     <ClInclude Include="..\source\e_udmf.h">
       <Filter>Source Files\E_\E_ Headers</Filter>
-	</ClInclude>
+    </ClInclude>
     <ClInclude Include="..\source\p_portalclip.h">
       <Filter>Source Files\P_\P_ Headers</Filter>
     </ClInclude>
