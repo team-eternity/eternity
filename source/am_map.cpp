@@ -1530,7 +1530,7 @@ static int AM_DoorColor(line_t *line)
 inline static bool AM_drawAsExitLine(line_t *line)
 {
    ev_action_t *action = EV_ActionForSpecial(line->special);
-   return (mapcolor_exit && action && (EV_CompositeActionFlags(action) & EV_ISMAPPEDEXIT));
+   return (mapcolor_exit && (EV_CompositeActionFlags(action) & EV_ISMAPPEDEXIT));
 }
 
 //
@@ -1585,7 +1585,7 @@ inline static bool AM_drawAsTeleporter(line_t *line)
 {
    ev_action_t *action = EV_ActionForSpecial(line->special);   
    return (mapcolor_tele && !(line->flags & ML_SECRET) && 
-           action && (EV_CompositeActionFlags(action) & EV_ISTELEPORTER));
+           (EV_CompositeActionFlags(action) & EV_ISTELEPORTER));
 }
 
 //

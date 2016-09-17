@@ -228,7 +228,8 @@ struct wbstartstruct_t
     
   // previous and next levels, origin 0
   int         last;
-  int         next;   
+  int         next;
+  bool        nextexplicit; // true if next was set by g_destmap
     
   int         maxkills;
   int         maxitems;

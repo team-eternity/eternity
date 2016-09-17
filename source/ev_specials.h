@@ -148,7 +148,7 @@ struct ev_binding_t
 //
 inline static unsigned int EV_CompositeActionFlags(ev_action_t *action)
 {
-   return (action->type->flags | action->flags);
+   return (action ? (action->type->flags | action->flags) : 0);
 }
 
 // Action Types
