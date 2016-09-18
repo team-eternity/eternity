@@ -1961,9 +1961,9 @@ void P_LoadLineDefs2()
       // haleyjd 02/06/13: lookup static init
       int staticFn = EV_StaticInitForSpecial(ld->special);
 
+      int lump, j;
       switch(staticFn)
       {                       // killough 4/11/98: handle special types
-         int lump, j;
       case EV_STATIC_TRANSLUCENT: // killough 4/11/98: translucent 2s textures
          lump = sides[*ld->sidenum].special; // translucency from sidedef
          if(!ld->args[0])                    // if tag == 0,
