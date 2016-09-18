@@ -827,7 +827,8 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
        return; // if no shooters, don't attack monsters who are too far
 
     // Save the threat
-    m_currentTargetMobj = highestThreat->isLine ? nullptr : highestThreat->mobj;
+    P_SetTarget(&m_currentTargetMobj,
+                highestThreat->isLine ? nullptr : highestThreat->mobj);
 
     angle_t highestTangle = P_PointToAngle(mx, my, highestThreat->coord.x, highestThreat->coord.y);
 

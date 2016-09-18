@@ -42,7 +42,7 @@ private:
    // Data members
    // killough 11/98: count of how many other objects reference
    // this one using pointers. Used for garbage collection.
-   unsigned int references;
+   mutable unsigned int references;
    
    // Statics
    // Current position in list during RunThinkers
@@ -83,8 +83,8 @@ public:
    bool isRemoved() const { return removed; }
    
    // Reference counting
-   void addReference() { ++references; }
-   void delReference() { --references; }
+   void addReference() const { ++references; }
+   void delReference() const { --references; }
 
    // Enumeration 
    // For thinkers needing savegame enumeration.
