@@ -1318,6 +1318,7 @@ void A_HealthJump(actionargs_t *);
 void A_CounterJump(actionargs_t *);
 void A_CounterJumpEx(actionargs_t *);
 void A_CounterSwitch(actionargs_t *);
+void A_CounterSwitchEx(actionargs_t *);
 void A_SetCounter(actionargs_t *);
 void A_CopyCounter(actionargs_t *);
 void A_CounterOp(actionargs_t *);
@@ -1637,6 +1638,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(CounterJump),
    POINTER(CounterJumpEx),
    POINTER(CounterSwitch),
+   POINTER(CounterSwitchEx),
    POINTER(SetCounter),
    POINTER(CopyCounter),
    POINTER(CounterOp),
