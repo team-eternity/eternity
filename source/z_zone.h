@@ -31,7 +31,7 @@
 #ifndef Z_ZONE_H__
 #define Z_ZONE_H__
 
-// haleyjd 05/22/02
+// haleyjd 05/22/02: keyword defines needed globally
 #include "d_keywds.h" 
 
 #ifndef __STDC_CONSTANT_MACROS
@@ -40,6 +40,7 @@
 
 #include <errno.h>
 #include <float.h>
+#include <inttypes.h>
 #include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -55,9 +56,6 @@
 #include <sys/types.h>
 #endif
 #include <time.h>
-
-// haleyjd: inttypes.h - on Windows, this comes from the source\Win32 directory
-#include <inttypes.h>
 
 // haleyjd: C++ headers
 #include <new>
@@ -207,7 +205,7 @@ public:
    ZoneObject();
    virtual ~ZoneObject();
    void *operator new (size_t size);
-   void *operator new (size_t size, int tag, void **user = NULL);
+   void *operator new (size_t size, int tag, void **user = nullptr);
    void  operator delete (void *p);
    void  operator delete (void *p, int, void **);
    void  changeTag(int tag);
