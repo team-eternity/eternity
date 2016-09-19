@@ -1316,6 +1316,7 @@ void A_MissileSpread(actionargs_t *);
 void A_BulletAttack(actionargs_t *);
 void A_HealthJump(actionargs_t *);
 void A_CounterJump(actionargs_t *);
+void A_CounterJumpEx(actionargs_t *);
 void A_CounterSwitch(actionargs_t *);
 void A_SetCounter(actionargs_t *);
 void A_CopyCounter(actionargs_t *);
@@ -1634,6 +1635,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(BulletAttack),
    POINTER(HealthJump),
    POINTER(CounterJump),
+   POINTER(CounterJumpEx),
    POINTER(CounterSwitch),
    POINTER(SetCounter),
    POINTER(CopyCounter),

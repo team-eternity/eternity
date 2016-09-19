@@ -276,6 +276,79 @@ void A_CounterJump(actionargs_t *actionargs)
 }
 
 //
+// A_CounterJumpEx
+//
+// Parameterized codepointer for branching based on comparisons
+// against a thing's counter values.
+//
+// args[0] : offset || state label
+// args[1] : comparison type
+// args[2] : immediate value || counter number
+// args[3] : counter # to use
+//
+void A_CounterJumpEx(actionargs_t *actionargs)
+{
+   Mobj      *mo = actionargs->actor;
+   arglist_t *args = actionargs->args;
+   bool branch = false;
+   int checktype, value, cnum;
+   int *counter;
+   state_t *state;
+
+   state = E_ArgAsStateLabel(mo, args, 0);
+   checktype = E_ArgAsKwd(args, 1, &cpckwds, 0);
+   value = E_ArgAsInt(args, 2, 0);
+   cnum = E_ArgAsInt(args, 3, 0);
+
+   // validate state
+   if(!state)
+      return;
+
+   if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
+      return; // invalid
+
+   counter = &(mo->counters[cnum]);
+
+   // support getting check value from a counter
+   // if checktype is greater than the last immediate operator,
+   // then the comparison value is actually a counter number
+
+   if(checktype >= CPC_NUMIMMEDIATE)
+   {
+      // turn it into the corresponding immediate operation
+      checktype -= CPC_NUMIMMEDIATE;
+
+      if(value < 0 || value >= NUMMOBJCOUNTERS)
+         return; // invalid counter number
+
+      value = mo->counters[value];
+   }
+
+   switch(checktype)
+   {
+   case CPC_LESS:
+      branch = (*counter < value);  break;
+   case CPC_LESSOREQUAL:
+      branch = (*counter <= value); break;
+   case CPC_GREATER:
+      branch = (*counter > value);  break;
+   case CPC_GREATEROREQUAL:
+      branch = (*counter >= value); break;
+   case CPC_EQUAL:
+      branch = (*counter == value); break;
+   case CPC_NOTEQUAL:
+      branch = (*counter != value); break;
+   case CPC_BITWISEAND:
+      branch = !!(*counter & value);  break;
+   default:
+      break;
+   }
+
+   if(branch)
+      P_SetMobjState(mo, state->index);
+}
+
+//
 // A_CounterSwitch
 //
 // This powerful codepointer can branch to one of N states
