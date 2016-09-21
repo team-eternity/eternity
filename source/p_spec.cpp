@@ -1335,7 +1335,6 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
       case EV_STATIC_PORTAL_LINKED_FLOOR:
       case EV_STATIC_PORTAL_LINKED_LINE2LINE:
       case EV_STATIC_PORTAL_HORIZON_LINE:
-      case EV_STATIC_POLYOBJ_START_LINE:
       case EV_STATIC_PORTAL_SECTOR_PARAM_COMPAT:
       case EV_STATIC_PORTAL_LINE_PARAM_COMPAT:
          P_SpawnPortal(&lines[i], staticFn);
@@ -2745,17 +2744,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
 
    // haleyjd: get type and effects from static init function
    bool param = false;
-   if(staticFn == EV_STATIC_POLYOBJ_START_LINE)
-   {
-      if(line->args[4])
-      {
-         type = portal_linked;
-         effects = portal_lineonly;
-      }
-      else
-         return;
-   }
-   else if(staticFn == EV_STATIC_PORTAL_SECTOR_PARAM_COMPAT)
+   if(staticFn == EV_STATIC_PORTAL_SECTOR_PARAM_COMPAT)
    {
       param = true;
       if(!P_getParamPortalProps(line->args, type, effects))
@@ -2991,8 +2980,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
             anchorfunc = EV_STATIC_PORTAL_LINKED_ANCHOR_FLOOR;
             planez = sector->ceilingheight;
          }
-         else if(staticFn == EV_STATIC_PORTAL_LINKED_LINE2LINE ||
-                 staticFn == EV_STATIC_POLYOBJ_START_LINE)
+         else if(staticFn == EV_STATIC_PORTAL_LINKED_LINE2LINE)
          {
             // Line-Line linked portals
             anchorfunc = EV_STATIC_PORTAL_LINKED_L2L_ANCHOR;
@@ -3005,8 +2993,6 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          // find anchor line
 
          int tag = line->args[0];
-         if(staticFn == EV_STATIC_POLYOBJ_START_LINE)
-            tag = line->args[4];
 
          for(s = -1; (s = P_FindLineFromTag(tag, s)) >= 0; )
          {
@@ -3074,7 +3060,6 @@ static void P_SpawnPortal(line_t *line, int staticFn)
 
       // Special case where the portal was created with the line-to-line portal type
       if(staticFn == EV_STATIC_PORTAL_LINKED_LINE2LINE ||
-         staticFn == EV_STATIC_POLYOBJ_START_LINE ||
          staticFn == EV_STATIC_PORTAL_LINE_PARAM_COMPAT)
       {
          if (!otherIsEdge)
