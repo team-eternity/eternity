@@ -1699,8 +1699,8 @@ void R_SpawnLinkedSectorPortal(const line_t &line, int lineid, int heretag,
    portal_t *thereportal = nullptr;
 
    portal_effect effect = type == 0 ? portal_floor : portal_ceiling;
-   fixed_t planez = (effect == portal_floor ? line.frontsector->floorheight :
-      line.frontsector->ceilingheight) + planezoffset;
+   fixed_t planez = planezoffset ? planezoffset : (effect == portal_floor ? 
+      line.frontsector->floorheight : line.frontsector->ceilingheight);
 
    if(line.frontsector->groupid == R_NOGROUP)
       P_CreatePortalGroup(line.frontsector);
