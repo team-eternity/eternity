@@ -131,17 +131,17 @@ void QuakeThinker::serialize(SaveArchive &arc)
 //
 // Starts an earthquake at each object with the tid in args[4]
 //
-bool P_StartQuake(int *args)
+bool P_StartQuake(int *args, Mobj *activator)
 {
    Mobj *mo = NULL;
    bool ret = false;
 
-   while((mo = P_FindMobjFromTID(args[4], mo, NULL)))
+   while((mo = P_FindMobjFromTID(args[4], mo, activator)))
    {
       QuakeThinker *qt;
       ret = true;
 
-      qt = new QuakeThinker;
+      qt = new QuakeThinker();
       qt->addThinker();
 
       qt->intensity    = args[0];
