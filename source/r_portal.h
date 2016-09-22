@@ -226,7 +226,7 @@ portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,
 void R_SpawnSimpleLinePortal(line_t &line, int lineid, int type);
 void R_SpawnAnchoredLinePortal(line_t &line, int destlineid, int flags, 
    fixed_t zoffset);
-void R_SpawnSimpleSectorPortal(const line_t &line, int tag, int type);
+void R_SpawnSimpleSectorPortal(const line_t &line, int tag, int type, int flags);
 void R_SpawnAnchoredSectorPortal(const line_t &line, int lineid, int heretag,
    int theretag, int type, fixed_t zoffset);
 void R_SpawnLinkedSectorPortal(const line_t &line, int lineid, int heretag,

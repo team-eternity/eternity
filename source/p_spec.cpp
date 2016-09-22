@@ -1351,7 +1351,7 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
          break;
 
       case EV_STATIC_PORTAL_SECTOR_PARAM_SIMPLE:
-         R_SpawnSimpleSectorPortal(lines[i], lines[i].args[0], lines[i].args[1]);
+         R_SpawnSimpleSectorPortal(lines[i], lines[i].args[0], lines[i].args[1], lines[i].args[2]);
          break;
 
       case EV_STATIC_PORTAL_SECTOR_PARAM_ANCHORED:

@@ -1556,12 +1556,12 @@ void R_SpawnAnchoredLinePortal(line_t &line, int destlineid, int flags,
 //
 // Parameters:
 // * tag: tag of target sectors
-// * type: add 0 (plane), 1 (horizon), 2 (skybox) to 0 (floor), 4 (ceiling), 8
-//   (both)
+// * type: 0 (plane), 1 (horizon), 2 (skybox) 
+// * flags: 1 (floor), 2 (ceiling)
 //
-void R_SpawnSimpleSectorPortal(const line_t &line, int tag, int type)
+void R_SpawnSimpleSectorPortal(const line_t &line, int tag, int type, int flags)
 {
-   if((type & 3) == 3 || type > 10 || type < 0)
+   if(type < 0 || type > 2)
    {
       C_Printf(FC_ERROR "Invalid type %d\a\n", type);
       return;
@@ -1576,13 +1576,24 @@ void R_SpawnSimpleSectorPortal(const line_t &line, int tag, int type)
    if(!portal)
       return;
 
+   if(flags < 1 || flags > 3)
+   {
+      C_Printf(FC_ERROR "Invalid flags value: %d\a\n", flags);
+      return;
+   }
+
+   // We know for a fact that effect must be assigned assigned, otherwise
+   // the code above would have printed an error and returned. Regardless,
+   // we'll use else if in case some weird new portal_effect crops up.
    portal_effect effect;
-   if(type < 4)
-      effect = portal_floor;
-   else if(type < 8)
-      effect = portal_ceiling;
-   else
+   
+   // Order must be descending, otherwise issues ensue with non-binary values
+   if(flags & 3)
       effect = portal_both;
+   else if(flags & 2)
+      effect = portal_ceiling;
+   else if(flags & 1)
+      effect = portal_floor;
 
    int s = -1;
    while((s = P_FindSectorFromTag(tag, s)) >= 0)
