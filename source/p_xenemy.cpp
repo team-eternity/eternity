@@ -61,9 +61,7 @@ void QuakeThinker::Think()
       return;
    }
 
-   const char *snd = soundName.empty() ? "Earthquake" : soundName.constPtr();
-   
-   params.sfx = E_SoundForName(snd);
+   params.sfx = E_SoundForName(soundName.constPtr());
 
    // loop quake sound
    if(params.sfx && !S_CheckSoundPlaying(this, params.sfx))
@@ -154,6 +152,7 @@ bool P_StartQuake(int *args, Mobj *activator)
       qt->duration     = args[1];
       qt->damageRadius = args[2] * (64 * FRACUNIT);
       qt->quakeRadius  = args[3] * (64 * FRACUNIT);
+      qt->soundName    = "Earthquake";
 
       qt->x       = mo->x;
       qt->y       = mo->y;
