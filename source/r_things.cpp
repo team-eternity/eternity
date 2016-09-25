@@ -1116,7 +1116,8 @@ void R_AddSprites(sector_t* sec, int lightlevel)
    // ioanch 20160109: handle partial sprite projections
    for(auto item = sec->spriteproj; item; item = item->dllNext)
    {
-      R_ProjectSprite((*item)->mobj, &(*item)->delta);
+      if(!((*item)->mobj->intflags & MIF_HIDDENBYQUAKE))
+         R_ProjectSprite((*item)->mobj, &(*item)->delta);
    }
 
    // haleyjd 02/20/04: Handle all particles in sector.
