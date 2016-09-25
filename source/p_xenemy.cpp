@@ -60,8 +60,10 @@ void QuakeThinker::Think()
       this->removeThinker();
       return;
    }
+
+   const char *snd = soundName.empty() ? "Earthquake" : soundName.constPtr();
    
-   params.sfx = E_SoundForName("Earthquake");
+   params.sfx = E_SoundForName(snd);
 
    // loop quake sound
    if(params.sfx && !S_CheckSoundPlaying(this, params.sfx))
@@ -127,6 +129,7 @@ void QuakeThinker::serialize(SaveArchive &arc)
    Super::serialize(arc);
 
    arc << intensity << duration << quakeRadius << damageRadius;
+   soundName.archive(arc);
 }
 
 //
