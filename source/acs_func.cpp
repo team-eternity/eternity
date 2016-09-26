@@ -460,6 +460,38 @@ static void ACS_funcGetCVarString(ACS_FUNCARG)
 }
 
 //
+// Returns the X coordinate of line's centre point
+//
+static void ACS_funcGetLineCenterX(ACS_FUNCARG)
+{
+   int lineid = args[0];
+   int linenum = -1;
+   const line_t *line = P_FindLine(lineid, &linenum);
+   if (!line)
+   {
+      *retn++ = 0;
+      return;
+   }
+   *retn++ = line->v1->x + line->dx / 2;
+}
+
+//
+// Returns the Y coordinate of line's centre point
+//
+static void ACS_funcGetLineCenterY(ACS_FUNCARG)
+{
+   int lineid = args[0];
+   int linenum = -1;
+   const line_t *line = P_FindLine(lineid, &linenum);
+   if (!line)
+   {
+      *retn++ = 0;
+      return;
+   }
+   *retn++ = line->v1->y + line->dy / 2;
+}
+
+//
 // ACS_funcGetPlayerInput
 //
 static void ACS_funcGetPlayerInput(ACS_FUNCARG)
