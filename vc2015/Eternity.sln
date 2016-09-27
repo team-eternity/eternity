@@ -3,6 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Eternity", "Eternity.vcxproj", "{233045E2-53A6-4579-A272-3D3CF6D97405}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A3D79066-950D-42E4-8555-D7663BA5E0C7} = {A3D79066-950D-42E4-8555-D7663BA5E0C7}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "snes_spc", "snes_spc.vcxproj", "{8B8CBCA2-21D3-4C23-A397-A4D084F649D3}"
 EndProject
