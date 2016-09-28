@@ -11,6 +11,12 @@ monsters defined fully using DECORATE states. CounterSwitchEx notably takes
 args[0] as the counter # to use, and args[N] as the offset or state label to
 jump to, and the number of states does not need to be specified.
 
+-------------------------------------------------------------------------------
+2016/09/28
+
+Altered IWAD detection so that FreeDM and Freedoom 2 are now  in the correct
+positions when autodetected.
+
 ================================================================================
 EOF
 ================================================================================
