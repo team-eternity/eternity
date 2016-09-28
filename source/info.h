@@ -393,10 +393,12 @@ struct mobjinfo_t
    void (*nukespec)(actionargs_t *); // haleyjd 08/18/09: nukespec made a native property
    
    // haleyjd: fields needed for EDF identification and hashing
-   DLListItem<mobjinfo_t> namelinks; // haleyjd 11/03/11: new hashing: by name
-   DLListItem<mobjinfo_t> numlinks;  // haleyjd 11/03/11: new hashing: by dehnum
+   DLListItem<mobjinfo_t> namelinks;  // hashing: by name
+   DLListItem<mobjinfo_t> cnamelinks; // hashing: by compatname
+   DLListItem<mobjinfo_t> numlinks;   // hashing: by dehnum
 
    char *name;         // buffer for name (max 128 chars)
+   char *compatname;   // compatibility name for ACS and UDMF
    int   dehnum;       // DeHackEd number for fast access, comp.
    int   index;        // index in mobjinfo
    int   generation;   // EDF generation number
