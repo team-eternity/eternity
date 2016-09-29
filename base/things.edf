@@ -38,6 +38,7 @@ includeifenabled("heretic/things.edf", "HERETIC")
 
 thingtype TeleportSpot : Mobj, 14, 42
 {
+  compatname TeleportDest
   flags NOSECTOR|NOBLOCKMAP
 }
 
@@ -45,6 +46,7 @@ thingtype TeleportSpot : Mobj, 14, 42
 
 thingtype BoomPushPoint : Mobj, 5001, 138
 {
+  compatname  PointPusher
   spawnstate  S_TNT1
   radius      0.0001220703125 // haleyjd: very odd values...
   height      0.0001220703125
@@ -54,6 +56,7 @@ thingtype BoomPushPoint : Mobj, 5001, 138
 
 thingtype BoomPullPoint : Mobj, 5002, 139
 {
+  compatname  PointPusher
   spawnstate  S_TNT1
   radius      0.0001220703125 // haleyjd: very odd values...
   height      0.0001220703125
@@ -148,6 +151,7 @@ thingtype Unknown : Mobj, 5005
 
 thingtype EESkyboxCam : Mobj, 5006
 {
+  compatname  SkyViewpoint
   spawnstate  S_TNT1
   radius      10.0
   height      10.0
@@ -175,12 +179,14 @@ thingtype EERavenObj : Unknown, 5008
 
 thingtype EEMapSpot : Mobj, 9001, 152
 {
+  compatname  MapSpot
   spawnstate  S_TNT1
   cflags      NOBLOCKMAP|NOSECTOR|NOGRAVITY
 }
 
 thingtype EEMapSpotGravity : Mobj, 9013, 153
 {
+  compatname  MapSpotGravity
   spawnstate  S_TNT1
   cflags      DONTDRAW|NOSPLASH
 }
@@ -255,12 +261,14 @@ thingtype DoomBuilderCameraSpot : Unknown
 
 thingtype EETerrainLavaSplash : Mobj, -1, 145
 {
+  compatname  LavaSpalsh
   spawnstate  S_LAVASPLASH1
   cflags      NOBLOCKMAP|NOGRAVITY|NOSPLASH
 }
 
 thingtype EETerrainLavaSmoke : Mobj, -1, 146
 {
+  compatname   LavaSmoke
   spawnstate   S_LAVASMOKE1
   cflags       NOBLOCKMAP|NOGRAVITY|NOSPLASH
   translucency 26624
@@ -269,6 +277,7 @@ thingtype EETerrainLavaSmoke : Mobj, -1, 146
 
 thingtype EETerrainWaterSplash : Mobj, -1, 147
 {
+  compatname  WaterSplash
   spawnstate  S_SPLASH1
   deathstate  S_SPLASHX
   radius      2.0
@@ -278,12 +287,14 @@ thingtype EETerrainWaterSplash : Mobj, -1, 147
 
 thingtype EETerrainWaterBase : Mobj, -1, 148
 {
+  compatname  WaterSplashBase
   spawnstate  S_SPLASHBASE1
   cflags      NOBLOCKMAP|NOGRAVITY|NOSPLASH
 }
 
 thingtype EETerrainSludgeChunk : Mobj, -1, 149
 {
+  compatname  SludgeChunk
   spawnstate  S_SLUDGE1
   deathstate  S_SLUDGEX
   radius      2.0
@@ -294,6 +305,7 @@ thingtype EETerrainSludgeChunk : Mobj, -1, 149
 
 thingtype EETerrainSludgeBase : Mobj, -1, 150
 {
+  compatname  SludgeSplash
   spawnstate  S_SLUDGEBASE1
   cflags      NOBLOCKMAP|NOGRAVITY|NOSPLASH
 }

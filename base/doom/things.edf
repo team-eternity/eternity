@@ -117,6 +117,7 @@ thingtype Zombieman
 
 thingtype Sergeant 
 {
+  compatname  ShotgunGuy
   doomednum   9
   dehackednum 3
   spawnhealth 30
@@ -236,6 +237,7 @@ thingtype Archvile
 
 thingtype VileFire 
 {
+  compatname  ArchvileFire
   dehackednum 5
   flags       NOBLOCKMAP|NOGRAVITY|TRANSLUCENT
   
@@ -315,6 +317,7 @@ thingtype Revenant
 
 thingtype TracerShot 
 {
+  compatname  RevenantTracer
   dehackednum 7
   seesound    skeatk
   deathsound  barexp
@@ -345,6 +348,7 @@ thingtype TracerShot
 
 thingtype TracerSmoke 
 {
+  compatname  RevenantTracerSmoke
   dehackednum 8
   flags       NOBLOCKMAP|NOGRAVITY|TRANSLUCENT
     
@@ -359,6 +363,7 @@ thingtype TracerSmoke
 
 thingtype Mancubus 
 {
+  compatname  Fatso
   doomednum   67
   dehackednum 9
   spawnhealth 600
@@ -419,6 +424,7 @@ thingtype Mancubus
 
 thingtype MancubusShot 
 {
+  compatname  FatShot
   dehackednum 10
   seesound    firsht
   deathsound  firxpl
@@ -449,6 +455,7 @@ thingtype MancubusShot
 
 thingtype Chaingunner 
 {
+  compatname  ChaingunGuy
   doomednum   65
   dehackednum 11
   spawnhealth 70
@@ -764,6 +771,7 @@ thingtype BaronOfHell
 
 thingtype BaronShot 
 {
+  compatname  BaronBall
   dehackednum 17
   seesound    firsht
   deathsound  firxpl
@@ -901,6 +909,7 @@ thingtype LostSoul
 
 thingtype Spiderdemon 
 {
+  compatname  SpiderMastermind
   doomednum   7
   dehackednum 20
   spawnhealth 3000
@@ -1130,6 +1139,7 @@ thingtype PainElemental
 
 thingtype WolfSS 
 {
+  compatname  WolfensteinSS
   doomednum   84
   dehackednum 24
   spawnhealth 50
@@ -1254,6 +1264,7 @@ thingtype BossBrain
 
 thingtype BossCubeSpitter 
 {
+  compatname BossEye
   doomednum   89
   dehackednum 27
   height      32.0
@@ -1274,6 +1285,7 @@ thingtype BossCubeSpitter
 
 thingtype BossSpawnSpot 
 {
+  compatname  BossTarget
   doomednum   87
   dehackednum 28
   height      32.0
@@ -1282,6 +1294,7 @@ thingtype BossSpawnSpot
 
 thingtype BossSpawnCube 
 {
+  compatname SpawnShot
   dehackednum 29
   seesound    bospit
   deathsound  firxpl
@@ -1305,6 +1318,7 @@ thingtype BossSpawnCube
 
 thingtype BossSpawnFire 
 {
+  compatname SpawnFire
   dehackednum 30  
   flags       NOBLOCKMAP|NOGRAVITY|TRANSLUCENT
   acs_spawndata 
@@ -1324,6 +1338,7 @@ thingtype BossSpawnFire
 
 thingtype DoomBarrel 
 {
+  compatname     ExplosiveBarrel
   doomednum      2035
   dehackednum    31
   spawnhealth    20
@@ -1357,6 +1372,7 @@ thingtype DoomBarrel
 
 thingtype DoomImpShot 
 {
+  compatname  DoomImpBall
   dehackednum 32
   seesound    firsht  
   deathsound  firxpl
@@ -1386,6 +1402,7 @@ thingtype DoomImpShot
 
 thingtype CacodemonShot 
 {
+  compatname  CacodemonBall
   dehackednum 33
   seesound    firsht
   deathsound  firxpl
@@ -1415,6 +1432,7 @@ thingtype CacodemonShot
 
 thingtype RocketShot 
 {
+  compatname  Rocket
   dehackednum 34
   seesound    rlaunc
   deathsound  barexp
@@ -1447,6 +1465,7 @@ thingtype RocketShot
 
 thingtype PlasmaShot 
 {
+  compatname  PlasmaBall
   dehackednum 35
   seesound    plasma  
   deathsound  firxpl
@@ -1476,6 +1495,7 @@ thingtype PlasmaShot
 
 thingtype BFGShot 
 {
+  compatname  BFGBall
   dehackednum 36
   deathsound  rxplod
   speed       25.0
@@ -1507,6 +1527,7 @@ thingtype BFGShot
 
 thingtype ArachnotronShot 
 {
+  compatname  ArachnotronPlasma
   dehackednum 37
   seesound    plasma
   deathsound  firxpl
@@ -1555,6 +1576,7 @@ thingtype BulletPuff
 
 thingtype DoomBlood 
 {
+  compatname  Blood
   dehackednum 39
   cflags      NOBLOCKMAP|NOSPLASH
   acs_spawndata 
@@ -1574,6 +1596,7 @@ thingtype DoomBlood
 
 thingtype DoomTeleFog 
 {
+  compatname  TeleportFog
   dehackednum 40
   flags       NOBLOCKMAP|NOGRAVITY|TRANSLUCENT
 
@@ -1588,6 +1611,7 @@ thingtype DoomTeleFog
 
 thingtype DoomItemFog 
 {
+  compatname  ItemFog
   dehackednum 41
   flags       NOBLOCKMAP|NOGRAVITY|TRANSLUCENT
     
@@ -1604,6 +1628,7 @@ thingtype DoomItemFog
 
 thingtype BFGFlash 
 {
+  compatname  BFGExtra
   dehackednum 43
   flags       NOBLOCKMAP|NOGRAVITY
     
@@ -1700,6 +1725,7 @@ thingtype ArmorBonus
 
 thingtype DoomBlueCard 
 {
+  compatname  BlueCard
   doomednum   5
   dehackednum 48
   flags       SPECIAL|NOTDMATCH
@@ -1721,6 +1747,7 @@ thingtype DoomBlueCard
 
 thingtype DoomRedCard 
 {
+  compatname  RedCard
   doomednum   13
   dehackednum 49
   flags       SPECIAL|NOTDMATCH
@@ -1742,6 +1769,7 @@ thingtype DoomRedCard
 
 thingtype DoomYellowCard 
 {
+  compatname  YellowCard
   doomednum   6
   dehackednum 50
   flags       SPECIAL|NOTDMATCH
@@ -1763,6 +1791,7 @@ thingtype DoomYellowCard
 
 thingtype DoomYellowSkull 
 {
+  compatname  YellowSkull
   doomednum   39
   dehackednum 51
   flags       SPECIAL|NOTDMATCH
@@ -1784,6 +1813,7 @@ thingtype DoomYellowSkull
 
 thingtype DoomRedSkull 
 {
+  compatname  RedSkull
   doomednum   38
   dehackednum 52
   flags       SPECIAL|NOTDMATCH
@@ -1805,6 +1835,7 @@ thingtype DoomRedSkull
 
 thingtype DoomBlueSkull 
 {
+  compatname  BlueSkull
   doomednum   40
   dehackednum 53
   flags       SPECIAL|NOTDMATCH
@@ -1886,6 +1917,7 @@ thingtype SoulSphere
 
 thingtype InvulnSphere 
 {
+  compatname  InvulnerabilitySphere
   doomednum   2022
   dehackednum 57
   cflags      SPECIAL|COUNTITEM|TRANSLUCENT|SUPERITEM
@@ -1906,6 +1938,7 @@ thingtype InvulnSphere
 
 thingtype BerzerkBox 
 {
+  compatname  Berserk
   doomednum   2023
   dehackednum 58
   flags       SPECIAL|COUNTITEM
@@ -1926,6 +1959,7 @@ thingtype BerzerkBox
 
 thingtype InvisiSphere 
 {
+  compatname  BlurSphere
   doomednum   2024
   dehackednum 59
   cflags      SPECIAL|COUNTITEM|TRANSLUCENT|SUPERITEM
@@ -1946,6 +1980,7 @@ thingtype InvisiSphere
 
 thingtype RadiationSuit 
 {
+  compatname  RadSuit
   doomednum   2025
   dehackednum 60
   flags       SPECIAL
@@ -1966,6 +2001,7 @@ thingtype RadiationSuit
 
 thingtype ComputerMap 
 {
+  compatname  Allmap
   doomednum   2026
   dehackednum 61
   flags       SPECIAL|COUNTITEM
@@ -1986,6 +2022,7 @@ thingtype ComputerMap
 
 thingtype LightAmpVisor 
 {
+  compatname  Infrared
   doomednum   2045
   dehackednum 62
   flags       SPECIAL|COUNTITEM
@@ -2027,6 +2064,7 @@ thingtype MegaSphere
 
 thingtype AmmoClip 
 {
+  compatname  Clip
   doomednum   2007
   dehackednum 64
   flags       SPECIAL
@@ -2047,6 +2085,7 @@ thingtype AmmoClip
 
 thingtype AmmoBulletBox 
 {
+  compatname  ClipBox
   doomednum   2048
   dehackednum 65
   flags       SPECIAL
@@ -2067,6 +2106,7 @@ thingtype AmmoBulletBox
 
 thingtype AmmoRocket 
 {
+  compatname  RocketAmmo
   doomednum   2010
   dehackednum 66
   flags       SPECIAL
@@ -2087,6 +2127,7 @@ thingtype AmmoRocket
 
 thingtype AmmoRocketBox 
 {
+  compatname  RocketBox
   doomednum   2046
   dehackednum 67
   flags       SPECIAL
@@ -2107,6 +2148,7 @@ thingtype AmmoRocketBox
 
 thingtype AmmoCell 
 {
+  compatname  Cell
   doomednum   2047
   dehackednum 68
   flags       SPECIAL
@@ -2127,6 +2169,7 @@ thingtype AmmoCell
 
 thingtype AmmoCellPack 
 {
+  compatname  CellPack
   doomednum   17
   dehackednum 69
   flags       SPECIAL
@@ -2147,6 +2190,7 @@ thingtype AmmoCellPack
 
 thingtype AmmoShells 
 {
+  compatname  Shell
   doomednum   2008
   dehackednum 70
   flags       SPECIAL
@@ -2167,6 +2211,7 @@ thingtype AmmoShells
 
 thingtype AmmoShellBox 
 {
+  compatname  ShellBox
   doomednum   2049
   dehackednum 71
   flags       SPECIAL
@@ -2207,6 +2252,7 @@ thingtype Backpack
 
 thingtype WeaponBFG 
 {
+  compatname  BFG9000
   doomednum   2006
   dehackednum 73
   flags       SPECIAL
@@ -2227,6 +2273,7 @@ thingtype WeaponBFG
 
 thingtype WeaponChaingun 
 {
+  compatname  Chaingun
   doomednum   2002
   dehackednum 74
   flags       SPECIAL
@@ -2247,6 +2294,7 @@ thingtype WeaponChaingun
 
 thingtype WeaponChainsaw 
 {
+  compatname  Chainsaw
   doomednum   2005
   dehackednum 75
   flags       SPECIAL
@@ -2267,6 +2315,7 @@ thingtype WeaponChainsaw
 
 thingtype WeaponRocketLauncher 
 {
+  compatname  RocketLauncher
   doomednum   2003
   dehackednum 76
   flags       SPECIAL
@@ -2287,6 +2336,7 @@ thingtype WeaponRocketLauncher
 
 thingtype WeaponPlasmaGun 
 {
+  compatname  PlasmaRifle
   doomednum   2004
   dehackednum 77
   flags       SPECIAL
@@ -2307,6 +2357,7 @@ thingtype WeaponPlasmaGun
 
 thingtype WeaponShotgun 
 {
+  compatname  Shotgun
   doomednum   2001
   dehackednum 78
   flags       SPECIAL
@@ -2327,6 +2378,7 @@ thingtype WeaponShotgun
 
 thingtype WeaponSSG 
 {
+  compatname  SuperShotgun
   doomednum   82
   dehackednum 79
   flags       SPECIAL
@@ -2347,6 +2399,7 @@ thingtype WeaponSSG
 
 thingtype TechLamp1 
 {
+  compatname     TechLamp
   doomednum      85
   dehackednum    80
   radius         16.0
