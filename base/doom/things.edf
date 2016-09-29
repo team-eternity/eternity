@@ -1264,7 +1264,7 @@ thingtype BossBrain
 
 thingtype BossCubeSpitter 
 {
-  compatname BossEye
+  compatname  BossEye
   doomednum   89
   dehackednum 27
   height      32.0
@@ -1294,7 +1294,7 @@ thingtype BossSpawnSpot
 
 thingtype BossSpawnCube 
 {
-  compatname SpawnShot
+  compatname  SpawnShot
   dehackednum 29
   seesound    bospit
   deathsound  firxpl
@@ -1318,7 +1318,7 @@ thingtype BossSpawnCube
 
 thingtype BossSpawnFire 
 {
-  compatname SpawnFire
+  compatname  SpawnFire
   dehackednum 30  
   flags       NOBLOCKMAP|NOGRAVITY|TRANSLUCENT
   acs_spawndata 
@@ -2434,6 +2434,7 @@ thingtype TechLamp2
 
 thingtype ShortLamp 
 {
+  compatname     Column
   doomednum      2028
   dehackednum    82
   radius         16.0
@@ -2451,6 +2452,7 @@ thingtype ShortLamp
 
 thingtype ColumnGreenTall 
 {
+  compatname     TallGreenColumn
   doomednum      30
   dehackednum    83
   radius         16.0
@@ -2468,6 +2470,7 @@ thingtype ColumnGreenTall
 
 thingtype ColumnGreenShort 
 {
+  compatname     ShortGreenColumn
   doomednum      31
   dehackednum    84
   radius         16.0
@@ -2485,6 +2488,7 @@ thingtype ColumnGreenShort
 
 thingtype ColumnRedTall 
 {
+  compatname     TallRedColumn
   doomednum      32
   dehackednum    85
   radius         16.0
@@ -2502,6 +2506,7 @@ thingtype ColumnRedTall
 
 thingtype ColumnRedShort 
 {
+  compatname     ShortRedColumn
   doomednum      33
   dehackednum    86
   radius         16.0
@@ -2519,6 +2524,7 @@ thingtype ColumnRedShort
 
 thingtype ColumnRedSkull 
 {
+  compatname     SkullColumn
   doomednum      37
   dehackednum    87
   radius         16.0
@@ -2536,6 +2542,7 @@ thingtype ColumnRedSkull
 
 thingtype ColumnGreenHeart 
 {
+  compatname     HeartColumn
   doomednum      36
   dehackednum    88
   radius         16.0
@@ -2570,6 +2577,7 @@ thingtype EvilEye
 
 thingtype FloatingSkulls 
 {
+  compatname     FloatingSkull
   doomednum      42
   dehackednum    90
   radius         16.0
@@ -2587,6 +2595,7 @@ thingtype FloatingSkulls
 
 thingtype TreeGrayShort 
 {
+  compatname     TorchTree
   doomednum      43
   dehackednum    91
   radius         16.0
@@ -2604,6 +2613,7 @@ thingtype TreeGrayShort
 
 thingtype TorchBlueTall 
 {
+  compatname     BlueTorch
   doomednum      44
   dehackednum    92
   radius         16.0
@@ -2621,6 +2631,7 @@ thingtype TorchBlueTall
 
 thingtype TorchGreenTall 
 {
+  compatname     GreenTorch
   doomednum      45
   dehackednum    93
   radius         16.0
@@ -2638,6 +2649,7 @@ thingtype TorchGreenTall
 
 thingtype TorchRedTall 
 {
+  compatname     RedTorch
   doomednum      46
   dehackednum    94
   radius         16.0
@@ -2655,6 +2667,7 @@ thingtype TorchRedTall
 
 thingtype TorchBlueShort 
 {
+  compatname     ShortBlueTorch
   doomednum      55
   dehackednum    95
   radius         16.0
@@ -2672,6 +2685,7 @@ thingtype TorchBlueShort
 
 thingtype TorchGreenShort 
 {
+  compatname     ShortGreenTorch
   doomednum      56
   dehackednum    96
   radius         16.0
@@ -2689,6 +2703,7 @@ thingtype TorchGreenShort
 
 thingtype TorchRedShort 
 {
+  compatname     ShortRedTorch
   doomednum      57
   dehackednum    97
   radius         16.0
@@ -2706,6 +2721,7 @@ thingtype TorchRedShort
 
 thingtype ThornySpikes 
 {
+  compatname     Stalagtite
   doomednum      47
   dehackednum    98
   radius         16.0
@@ -2723,6 +2739,7 @@ thingtype ThornySpikes
 
 thingtype TechPillar 
 {
+  compatname     PillarTechno
   doomednum      48
   dehackednum    99
   radius         16.0
@@ -2740,6 +2757,7 @@ thingtype TechPillar
 
 thingtype BlackCandle 
 {
+  compatname  Candlestick
   doomednum   34
   dehackednum 100
   
@@ -2771,6 +2789,7 @@ thingtype Candelabra
 
 thingtype HangingBodyTwitch 
 {
+  compatname  BloodyTwitch
   doomednum   49
   dehackednum 102
   radius      16.0
@@ -2791,6 +2810,7 @@ thingtype HangingBodyTwitch
 
 thingtype HangingBodyJacket 
 {
+  compatname  Meat2
   doomednum   50
   dehackednum 103
   radius      16.0
@@ -2808,6 +2828,7 @@ thingtype HangingBodyJacket
 
 thingtype HangingBodyNoLeg 
 {
+  compatname     Meat3
   doomednum      51
   dehackednum    104
   radius         16.0
@@ -2826,6 +2847,7 @@ thingtype HangingBodyNoLeg
 
 thingtype HangingBodyTorso 
 {
+  compatname     Meat4
   doomednum      52
   dehackednum    105
   radius         16.0
@@ -2844,6 +2866,7 @@ thingtype HangingBodyTorso
 
 thingtype HangingBodyLeg 
 {
+  compatname   Meat5
   doomednum    53
   dehackednum  106
   radius       16.0
@@ -2861,6 +2884,7 @@ thingtype HangingBodyLeg
 
 thingtype HangingBodyJacketPass 
 {
+  compatname  NonsolidMeat2
   doomednum   59
   dehackednum 107
   height      84.0
@@ -2871,6 +2895,7 @@ thingtype HangingBodyJacketPass
 
 thingtype HangingBodyTorsoPass 
 {
+  compatname  NonsolidMeat4
   doomednum   60
   dehackednum 108
   height      68.0
@@ -2881,6 +2906,7 @@ thingtype HangingBodyTorsoPass
 
 thingtype HangingBodyNoLegPass 
 {
+  compatname  NonsolidMeat3
   doomednum   61
   dehackednum 109
   height      52.0
@@ -2891,6 +2917,7 @@ thingtype HangingBodyNoLegPass
 
 thingtype HangingBodyLegPass 
 {
+  compatname  NonsolidMeat5
   doomednum   62
   dehackednum 110
   height      52.0
@@ -2901,6 +2928,7 @@ thingtype HangingBodyLegPass
 
 thingtype HangingBodyTwitchPass 
 {
+  compatname  NonsolidTwitch
   doomednum   63
   dehackednum 111
   height      68.0
@@ -2919,6 +2947,7 @@ thingtype DeadCacodemon
 
 thingtype DeadDoomPlayer 
 {
+  compatname  DeadMarine
   doomednum   15
   dehackednum 113
   
@@ -2959,6 +2988,7 @@ thingtype DeadDoomImp
 
 thingtype DeadSergeant 
 {
+  compatname  DeadShotgunGuy
   doomednum   19
   dehackednum 118
   
@@ -2967,6 +2997,7 @@ thingtype DeadSergeant
 
 thingtype DeadDoomPlayerGibs 
 {
+  compatname  GibbedMarine
   doomednum   10
   dehackednum 119
   acs_spawndata
@@ -2980,6 +3011,7 @@ thingtype DeadDoomPlayerGibs
 
 thingtype DeadDoomPlayerGibs2 
 {
+  compatname  GibbedMarineExtra
   doomednum   12
   dehackednum 120
   
@@ -2988,6 +3020,7 @@ thingtype DeadDoomPlayerGibs2
 
 thingtype HeadShishkabob 
 {
+  compatname     HeadsOnAStick
   doomednum      28
   dehackednum    121
   radius         16.0
@@ -3005,6 +3038,7 @@ thingtype HeadShishkabob
 
 thingtype CrushedGibs 
 {
+  compatname  Gibs
   doomednum   24
   dehackednum 122
   acs_spawndata 
@@ -3024,6 +3058,7 @@ thingtype CrushedGibs
 
 thingtype HeadOnStick 
 {
+  compatname     HeadOnAStick
   doomednum      27
   dehackednum    123
   radius         16.0
@@ -3041,6 +3076,7 @@ thingtype HeadOnStick
 
 thingtype SkullsAndCandles 
 {
+  compatname     HeadCandles
   doomednum      29
   dehackednum    124
   radius         16.0
@@ -3059,6 +3095,7 @@ thingtype SkullsAndCandles
 
 thingtype ImpaledZombieman 
 {
+  compatname     DeadStick
   doomednum      25
   dehackednum    125
   radius         16.0
@@ -3076,6 +3113,7 @@ thingtype ImpaledZombieman
 
 thingtype ImpaledZombiemanAlive 
 {
+  compatname     LiveStick
   doomednum      26
   dehackednum    126
   radius         16.0
@@ -3094,6 +3132,7 @@ thingtype ImpaledZombiemanAlive
 
 thingtype TreeTanLarge 
 {
+  compatname     BigTree
   doomednum      54
   dehackednum    127
   radius         32.0
@@ -3111,6 +3150,7 @@ thingtype TreeTanLarge
 
 thingtype FlamingBarrel 
 {
+  compatname     BurningBarrel
   doomednum      70
   dehackednum    128
   radius         16.0
@@ -3133,6 +3173,7 @@ thingtype FlamingBarrel
 
 thingtype HangingCorpseNoGuts 
 {
+  compatname  HangNoGuts
   doomednum   73
   dehackednum 129
   radius      16.0
@@ -3150,6 +3191,7 @@ thingtype HangingCorpseNoGuts
 
 thingtype HangingCorpseNoBrain 
 {
+  compatname  HangBNoBrain
   doomednum   74
   dehackednum 130
   radius      16.0
@@ -3167,6 +3209,7 @@ thingtype HangingCorpseNoBrain
 
 thingtype HangingCorpseTop 
 {
+  compatname  HangTLookingDown
   doomednum   75
   dehackednum 131
   radius      16.0
@@ -3184,6 +3227,7 @@ thingtype HangingCorpseTop
 
 thingtype HangingCorpseTopBrain 
 {
+  compatname  HangTSkull
   doomednum   76
   dehackednum 132
   radius      16.0
@@ -3201,6 +3245,7 @@ thingtype HangingCorpseTopBrain
 
 thingtype HangingCorpseTopLookUp 
 {
+  compatname  HangTLookingUp
   doomednum   77
   dehackednum 133
   radius      16.0
@@ -3218,6 +3263,7 @@ thingtype HangingCorpseTopLookUp
 
 thingtype HangingCorpseTopNoBrain 
 {
+  compatname  HangTNoBrain
   doomednum   78
   dehackednum 134
   radius      16.0
@@ -3235,6 +3281,7 @@ thingtype HangingCorpseTopNoBrain
 
 thingtype PoolBloodAndGuts 
 {
+  compatname  ColonGibs
   doomednum   79
   dehackednum 135
   flags       NOBLOCKMAP
@@ -3255,6 +3302,7 @@ thingtype PoolBloodAndGuts
 
 thingtype PoolBlood 
 {
+  compatname  SmallBloodPool
   doomednum   80
   dehackednum 136
   flags       NOBLOCKMAP
@@ -3275,6 +3323,7 @@ thingtype PoolBlood
 
 thingtype PoolBrain 
 {
+  compatname  BrainStem
   doomednum   81
   dehackednum 137
   flags       NOBLOCKMAP
@@ -3299,6 +3348,7 @@ thingtype PoolBrain
 
 thingtype MBFBetaPlasma1 
 {
+  compatname  PlasmaBall1
   dehackednum 141
   spawnstate  S_PLS1BALL
   seesound    plasma
@@ -3314,6 +3364,7 @@ thingtype MBFBetaPlasma1
 
 thingtype MBFBetaPlasma2 
 {
+  compatname  PlasmaBall2
   dehackednum 142
   spawnstate  S_PLS2BALL
   seesound    plasma
@@ -3420,9 +3471,10 @@ frameblock
 
 thingtype EEBetaLostSoul : LostSoul, 9037, 161
 {
-  addflags COUNTKILL
-  remflags KILLABLE|DEADFLOAT
-  damage   1
+  compatname BetaSkull
+  addflags   COUNTKILL
+  remflags   KILLABLE|DEADFLOAT
+  damage     1
   
   states
   @"

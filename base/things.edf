@@ -56,7 +56,7 @@ thingtype BoomPushPoint : Mobj, 5001, 138
 
 thingtype BoomPullPoint : Mobj, 5002, 139
 {
-  compatname  PointPusher
+  compatname  PointPuller
   spawnstate  S_TNT1
   radius      0.0001220703125 // haleyjd: very odd values...
   height      0.0001220703125
@@ -151,7 +151,7 @@ thingtype Unknown : Mobj, 5005
 
 thingtype EESkyboxCam : Mobj, 5006
 {
-  compatname  SkyViewpoint
+  compatname  SkyCamCompat
   spawnstate  S_TNT1
   radius      10.0
   height      10.0
@@ -203,6 +203,7 @@ thingtype EEParticleFountain
 
 thingtype EESoundEnvironment : Mobj, 9048
 {
+  compatname SoundEnvironment
   spawnstate S_TNT1
   cflags     NOBLOCKMAP|NOSECTOR|NOGRAVITY
 }
@@ -237,6 +238,7 @@ thingtype EEPolyObjSpawnSpotDamage : Mobj, 9303, 157
 
 thingtype EEAmbience : Mobj, 14065
 {
+  compatname AmbientSound
   spawnstate S_EE_AMBIENCE_SPAWN
   cflags     NOBLOCKMAP|NOGRAVITY
 }
@@ -245,6 +247,7 @@ thingtype EEAmbience : Mobj, 14065
 
 thingtype EEMusicChanger : Mobj, 14165
 {
+  compatname MusicChanger
   spawnstate S_TNT1
   cflags     NOBLOCKMAP|NOSECTOR|NOGRAVITY
 }
@@ -254,6 +257,7 @@ thingtype EEMusicChanger : Mobj, 14165
 
 thingtype DoomBuilderCameraSpot : Unknown
 {
+  compatname DoomBuilderCamera
   translucency 33%
 }
 
@@ -261,7 +265,7 @@ thingtype DoomBuilderCameraSpot : Unknown
 
 thingtype EETerrainLavaSplash : Mobj, -1, 145
 {
-  compatname  LavaSpalsh
+  compatname  LavaSplash
   spawnstate  S_LAVASPLASH1
   cflags      NOBLOCKMAP|NOGRAVITY|NOSPLASH
 }
