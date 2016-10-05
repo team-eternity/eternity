@@ -621,7 +621,7 @@ protected:
          atEOF = true;
 
       zlStream.next_in  = deflateBuffer;
-      zlStream.avail_in = bytesRead;
+      zlStream.avail_in = uInt(bytesRead);
    }
 
 public:
@@ -644,7 +644,7 @@ public:
       inflateEnd(&zlStream);
    }
 
-   void read(void *outbuffer, uint32_t len)
+   void read(void *outbuffer, size_t len)
    {
       int code;
 

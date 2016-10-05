@@ -708,6 +708,12 @@ enum
    MIF_CLEARMOMZ   = 0x00004000, // davidph: clear momz (and this flag) in P_MovePlayer
    MIF_PLYRCORPSE  = 0x00008000, // haleyjd: object has been in the player corpse queue
 
+   // Player sprites must be temporarily hidden using DONTDRAW during quakes,
+   // because they change view position. This isn't sufficient however for
+   // hiding cross-portal sprite projections, so the HIDDENBYQUAKE internal flag
+   // was added to keep track.
+   MIF_HIDDENBYQUAKE = 0x00010000,
+
    // these should be cleared when a thing is being raised
    MIF_CLEARRAISED = (MIF_DIEDFALLING|MIF_SCREAMED|MIF_CRASHED|MIF_WIMPYDEATH),
 };

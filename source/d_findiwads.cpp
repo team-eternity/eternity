@@ -549,6 +549,7 @@ static void D_determineIWADVersion(const qstring &fullpath)
    version.gamemission = none;
    version.hassecrets  = false;
    version.freedoom    = false;
+   version.freedm      = false;
    version.bfgedition  = false;
    version.error       = false;
    version.flags       = IWADF_NOERRORS;
@@ -582,7 +583,12 @@ static void D_determineIWADVersion(const qstring &fullpath)
    case commercial: // DOOM II
       if(version.freedoom)
       {
-         if(estrempty(gi_path_fdoom)) // FreeDoom
+         if(version.freedm)
+         {
+            if(estrempty(gi_path_freedm)) // FreeDM
+               var = &gi_path_freedm;
+         }
+         else if(estrempty(gi_path_fdoom)) // FreeDoom            
             var = &gi_path_fdoom;
       }
       else

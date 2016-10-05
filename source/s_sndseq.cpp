@@ -294,7 +294,7 @@ void S_StartSectorSequence(sector_t *s, int seqtype)
       origintype = SEQ_ORIGIN_SECTOR_F;
    
    S_StartSequenceNum(SECTOR_ORIGIN(s, origintype), s->sndSeqID, seqtype, 
-                      origintype, s - sectors);
+                      origintype, int(s - sectors));
 }
 
 //
@@ -315,7 +315,7 @@ void S_ReplaceSectorSequence(sector_t *s, int seqtype)
    S_SquashSectorSequence(s, originType);
    
    S_StartSequenceNum(SECTOR_ORIGIN(s, originType), s->sndSeqID, seqtype,
-                      originType, s - sectors);
+                      originType, int(s - sectors));
 }
 
 //
@@ -380,7 +380,7 @@ void S_StartSequenceName(PointThinker *mo, const char *seqname, int seqOriginTyp
 void S_StartSectorSequenceName(sector_t *s, const char *seqname, int originType)
 {
    S_StartSequenceName(SECTOR_ORIGIN(s, originType), seqname, originType, 
-                       s - sectors);
+                       int(s - sectors));
 }
 
 //
@@ -394,7 +394,7 @@ void S_ReplaceSectorSequenceName(sector_t *s, const char *seqname, int originTyp
    S_SquashSectorSequence(s, originType);
 
    S_StartSequenceName(SECTOR_ORIGIN(s, originType), seqname, originType,
-                       s - sectors);
+                       int(s - sectors));
 }
 
 //
