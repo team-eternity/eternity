@@ -1322,9 +1322,9 @@ static bool EV_checkSpac(ev_action_t *action, ev_instance_t *instance)
    }
    else // activation ability is determined by the linedef's flags
    {
-      Mobj   *thing   = instance->actor;
-      line_t *line    = instance->line;
-      int     flags   = 0;
+      Mobj   *thing = instance->actor;
+      line_t *line  = instance->line;
+      int     flags = 0;
 
       REQUIRE_ACTOR(thing);
       REQUIRE_LINE(line);
