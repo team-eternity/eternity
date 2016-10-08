@@ -333,6 +333,7 @@ dehflags_t deh_mobjflags[] =
   {"TLSTYLESUB",       0x00010000, 3}, // use subtractive blending map
   {"TOTALINVISIBLE",   0x00020000, 3}, // thing is totally invisible to monsters
   {"DRAWSBLOOD",       0x00040000, 3}, // missile draws blood
+  {"SPACPUSHWALL",     0x00080000, 3}, // thing can activate push walls
 
   { NULL,              0 }             // NULL terminator
 };
