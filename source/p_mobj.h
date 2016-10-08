@@ -684,6 +684,7 @@ enum mobjflags4_e : unsigned int
    MF4_TLSTYLESUB     = 0x00010000, // Use subtractive blending map
    MF4_TOTALINVISIBLE = 0x00020000, // Thing is invisible to monsters
    MF4_DRAWSBLOOD     = 0x00040000, // For missiles, spawn blood when hitting bleeding things
+   MF4_SPACPUSHWALL   = 0x00080000, // thing can activate push walls
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh

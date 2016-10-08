@@ -1746,8 +1746,8 @@ static int spac_flags_tlate[HX_SPAC_NUMSPAC] =
    EX_ML_CROSS  | EX_ML_PLAYER,                   // SPAC_CROSS
    EX_ML_USE    | EX_ML_PLAYER,                   // SPAC_USE
    EX_ML_CROSS  | EX_ML_MONSTER,                  // SPAC_MCROSS
-   EX_ML_IMPACT | EX_ML_MISSILE,                  // SPAC_IMPACT
-   EX_ML_PUSH   | EX_ML_PLAYER   | EX_ML_MONSTER, // SPAC_PUSH
+   EX_ML_IMPACT | EX_ML_PLAYER  | EX_ML_MISSILE,  // SPAC_IMPACT
+   EX_ML_PUSH,                                    // SPAC_PUSH
    EX_ML_CROSS  | EX_ML_MISSILE                   // SPAC_PCROSS
 };
 
