@@ -1341,7 +1341,7 @@ static bool EV_checkSpac(ev_action_t *action, ev_instance_t *instance)
             return false;
 
          // secret lines can't be activated by monsters
-         if(!(line->flags & ML_SECRET))
+         if(line->flags & ML_SECRET)
             return false;
 
          flags |= EX_ML_MONSTER;
