@@ -210,7 +210,7 @@ static bool ZIP_FindEndOfCentralDir(InBuffer &fin, long &position)
    if(fin.seek(0, SEEK_END))
       return false;
 
-   FileSize  = fin.Tell();
+   FileSize  = fin.tell();
    uMaxBack  = emin<long>(0xffff, FileSize);
    uBackRead = 4;
 

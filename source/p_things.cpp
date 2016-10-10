@@ -417,8 +417,7 @@ int EV_HealThing(Mobj *actor, int amount, int maxhealth)
    {
       // Otherwise if second arg is 1 and the SoulSphere's effect is present,
       // then set maxhealth to the maximum health provided by a SoulSphere.
-      itemeffect_t *soulsphereeffect
-      = E_ItemEffectForName(ITEMNAME_SOULSPHERE);
+      itemeffect_t *soulsphereeffect = E_ItemEffectForName(ITEMNAME_SOULSPHERE);
 
       if(soulsphereeffect)
          maxhealth = soulsphereeffect->getInt("maxamount", 0);

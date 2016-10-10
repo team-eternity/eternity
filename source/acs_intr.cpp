@@ -2680,7 +2680,7 @@ void ACSDeferred::archive(SaveArchive &arc)
 
    arc << type << number << mapnum << flags << argc;
 
-   arc.ArchiveLString(name, len);
+   arc.archiveLString(name, len);
 
    if(arc.isLoading())
       argv = estructalloc(int32_t, argc);
@@ -2734,7 +2734,7 @@ void ACSVM::ArchiveStrings(SaveArchive &arc)
 
       // Write the strings.
       for(unsigned int i = GlobalNumStringsBase; i != GlobalNumStrings; ++i)
-         arc.WriteLString(GlobalStrings[i]->data.s, GlobalStrings[i]->data.l);
+         arc.writeLString(GlobalStrings[i]->data.s, GlobalStrings[i]->data.l);
    }
    else
    {

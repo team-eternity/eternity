@@ -1770,13 +1770,8 @@ static void P_ConvertHexenLineFlags(line_t *line)
    if(line->flags & HX_ML_REPEAT_SPECIAL)
       line->extflags |= EX_ML_REPEAT;
 
-   // FIXME/TODO: set 1SONLY line flag here, or elsewhere? Depends on special...
-
    // clear line flags to those that are shared with DOOM
    line->flags &= HX_SHAREDFLAGS;
-
-   // FIXME/TODO: how to support Eternity's extended normal flags in Hexen?
-   // We want Hexen to be able to use stuff like 3DMidTex also.
 }
 
 //
