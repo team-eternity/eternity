@@ -39,9 +39,6 @@
 
 #include "../zlib/zlib.h"
 
-#define MEMBER16 MUint16Descriptor
-#define MEMBER32 MUint32Descriptor
-
 // Internal ZIP file structures
 
 #define ZIP_LOCAL_FILE_SIG  "PK\x3\x4"
@@ -68,19 +65,19 @@ struct ZIPLocalFileHeader
 
 typedef ZIPLocalFileHeader ZLFH_t;
 
-static MEMBER16<ZLFH_t, &ZLFH_t::extraLength > lfExtraLength (NULL);
-static MEMBER16<ZLFH_t, &ZLFH_t::nameLength  > lfNameLength  (&lfExtraLength);
-static MEMBER32<ZLFH_t, &ZLFH_t::uncompressed> lfUncompressed(&lfNameLength);
-static MEMBER32<ZLFH_t, &ZLFH_t::compressed  > lfCompressed  (&lfUncompressed);
-static MEMBER32<ZLFH_t, &ZLFH_t::crc32       > lfCrc32       (&lfCompressed);
-static MEMBER16<ZLFH_t, &ZLFH_t::fileDate    > lfFileDate    (&lfCrc32);
-static MEMBER16<ZLFH_t, &ZLFH_t::fileTime    > lfFileTime    (&lfFileDate);
-static MEMBER16<ZLFH_t, &ZLFH_t::method      > lfMethod      (&lfFileTime);
-static MEMBER16<ZLFH_t, &ZLFH_t::gpFlags     > lfGPFlags     (&lfMethod);
-static MEMBER16<ZLFH_t, &ZLFH_t::extrVersion > lfExtrVersion (&lfGPFlags);
-static MEMBER32<ZLFH_t, &ZLFH_t::signature   > lfSignature   (&lfExtrVersion);
-
-static MStructReader<ZIPLocalFileHeader> localFileReader(&lfSignature);
+static MStructReader<ZIPLocalFileHeader> localFileReader([] (MStructReader<ZIPLocalFileHeader> &obj) {
+   obj.addField(new MUint16Descriptor<ZLFH_t, &ZLFH_t::extraLength >());
+   obj.addField(new MUint16Descriptor<ZLFH_t, &ZLFH_t::nameLength  >());
+   obj.addField(new MUint32Descriptor<ZLFH_t, &ZLFH_t::uncompressed>());
+   obj.addField(new MUint32Descriptor<ZLFH_t, &ZLFH_t::compressed  >());
+   obj.addField(new MUint32Descriptor<ZLFH_t, &ZLFH_t::crc32       >());
+   obj.addField(new MUint16Descriptor<ZLFH_t, &ZLFH_t::fileDate    >());
+   obj.addField(new MUint16Descriptor<ZLFH_t, &ZLFH_t::fileTime    >());
+   obj.addField(new MUint16Descriptor<ZLFH_t, &ZLFH_t::method      >());
+   obj.addField(new MUint16Descriptor<ZLFH_t, &ZLFH_t::gpFlags     >());
+   obj.addField(new MUint16Descriptor<ZLFH_t, &ZLFH_t::extrVersion >());
+   obj.addField(new MUint32Descriptor<ZLFH_t, &ZLFH_t::signature   >());
+});
 
 #define ZIP_CENTRAL_DIR_SIG  "PK\x1\x2"
 #define ZIP_CENTRAL_DIR_SIZE 46
@@ -113,32 +110,32 @@ struct ZIPCentralDirEntry
 
 typedef ZIPCentralDirEntry ZCDE_t;
 
-static MEMBER32<ZCDE_t, &ZCDE_t::localOffset  > cdLocalOffset  (NULL);
-static MEMBER32<ZCDE_t, &ZCDE_t::extAttribs   > cdExtAttribs   (&cdLocalOffset);
-static MEMBER16<ZCDE_t, &ZCDE_t::intAttribs   > cdIntAttribs   (&cdExtAttribs);
-static MEMBER16<ZCDE_t, &ZCDE_t::diskStartNum > cdDiskStartNum (&cdIntAttribs);
-static MEMBER16<ZCDE_t, &ZCDE_t::commentLength> cdCommentLength(&cdDiskStartNum);
-static MEMBER16<ZCDE_t, &ZCDE_t::extraLength  > cdExtraLength  (&cdCommentLength);
-static MEMBER16<ZCDE_t, &ZCDE_t::nameLength   > cdNameLength   (&cdExtraLength);
-static MEMBER32<ZCDE_t, &ZCDE_t::uncompressed > cdUncompressed (&cdNameLength);
-static MEMBER32<ZCDE_t, &ZCDE_t::compressed   > cdCompressed   (&cdUncompressed);
-static MEMBER32<ZCDE_t, &ZCDE_t::crc32        > cdCrc32        (&cdCompressed);
-static MEMBER16<ZCDE_t, &ZCDE_t::fileDate     > cdFileDate     (&cdCrc32);
-static MEMBER16<ZCDE_t, &ZCDE_t::fileTime     > cdFileTime     (&cdFileDate);
-static MEMBER16<ZCDE_t, &ZCDE_t::method       > cdMethod       (&cdFileTime);
-static MEMBER16<ZCDE_t, &ZCDE_t::gpFlags      > cdGPFlags      (&cdMethod);
-static MEMBER16<ZCDE_t, &ZCDE_t::extrVersion  > cdExtrVersion  (&cdGPFlags);
-static MEMBER16<ZCDE_t, &ZCDE_t::madeByVersion> cdMadeByVersion(&cdExtrVersion);
-static MEMBER32<ZCDE_t, &ZCDE_t::signature    > cdSignature    (&cdMadeByVersion);
-
-static MStructReader<ZIPCentralDirEntry> centralDirReader(&cdSignature);
+static MStructReader<ZIPCentralDirEntry> centralDirReader([] (MStructReader<ZIPCentralDirEntry> &obj) {
+   obj.addField(new MUint32Descriptor<ZCDE_t, &ZCDE_t::localOffset  >());
+   obj.addField(new MUint32Descriptor<ZCDE_t, &ZCDE_t::extAttribs   >());
+   obj.addField(new MUint16Descriptor<ZCDE_t, &ZCDE_t::intAttribs   >());
+   obj.addField(new MUint16Descriptor<ZCDE_t, &ZCDE_t::diskStartNum >());
+   obj.addField(new MUint16Descriptor<ZCDE_t, &ZCDE_t::commentLength>());
+   obj.addField(new MUint16Descriptor<ZCDE_t, &ZCDE_t::extraLength  >());
+   obj.addField(new MUint16Descriptor<ZCDE_t, &ZCDE_t::nameLength   >());
+   obj.addField(new MUint32Descriptor<ZCDE_t, &ZCDE_t::uncompressed >());
+   obj.addField(new MUint32Descriptor<ZCDE_t, &ZCDE_t::compressed   >());
+   obj.addField(new MUint32Descriptor<ZCDE_t, &ZCDE_t::crc32        >());
+   obj.addField(new MUint16Descriptor<ZCDE_t, &ZCDE_t::fileDate     >());
+   obj.addField(new MUint16Descriptor<ZCDE_t, &ZCDE_t::fileTime     >());
+   obj.addField(new MUint16Descriptor<ZCDE_t, &ZCDE_t::method       >());
+   obj.addField(new MUint16Descriptor<ZCDE_t, &ZCDE_t::gpFlags      >());
+   obj.addField(new MUint16Descriptor<ZCDE_t, &ZCDE_t::extrVersion  >());
+   obj.addField(new MUint16Descriptor<ZCDE_t, &ZCDE_t::madeByVersion>());
+   obj.addField(new MUint32Descriptor<ZCDE_t, &ZCDE_t::signature    >());
+});
 
 #define ZIP_END_OF_DIR_SIG  "PK\x5\x6"
 #define ZIP_END_OF_DIR_SIZE 22
 
 struct ZIPEndOfCentralDir
 {
-   uint32_t signature;        // Must be "PK\x5\6"
+   uint32_t signature;        // Must be "PK\x5\x6"
    uint16_t diskNum;          // Disk number (NB: multi-partite zips are NOT supported)
    uint16_t centralDirDiskNo; // Disk number containing the central directory
    uint16_t numEntriesOnDisk; // Number of entries on this disk
@@ -153,16 +150,16 @@ struct ZIPEndOfCentralDir
 
 typedef ZIPEndOfCentralDir ZECD_t;
 
-static MEMBER16<ZECD_t, &ZECD_t::zipCommentLength> endZipCommentLength(NULL);
-static MEMBER32<ZECD_t, &ZECD_t::centralDirOffset> endCentralDirOffset(&endZipCommentLength);
-static MEMBER32<ZECD_t, &ZECD_t::centralDirSize  > endCentralDirSize  (&endCentralDirOffset);
-static MEMBER16<ZECD_t, &ZECD_t::numEntriesTotal > endNumEntriesTotal (&endCentralDirSize);
-static MEMBER16<ZECD_t, &ZECD_t::numEntriesOnDisk> endNumEntriesOnDisk(&endNumEntriesTotal);
-static MEMBER16<ZECD_t, &ZECD_t::centralDirDiskNo> endCentralDirDiskNo(&endNumEntriesOnDisk);
-static MEMBER16<ZECD_t, &ZECD_t::diskNum         > endDiskNum         (&endCentralDirDiskNo);
-static MEMBER32<ZECD_t, &ZECD_t::signature       > endSignature       (&endDiskNum);
-
-static MStructReader<ZIPEndOfCentralDir> endCentralDirReader(&endSignature);
+static MStructReader<ZIPEndOfCentralDir> endCentralDirReader([] (MStructReader<ZIPEndOfCentralDir> &obj) {
+   obj.addField(new MUint16Descriptor<ZECD_t, &ZECD_t::zipCommentLength>());
+   obj.addField(new MUint32Descriptor<ZECD_t, &ZECD_t::centralDirOffset>());
+   obj.addField(new MUint32Descriptor<ZECD_t, &ZECD_t::centralDirSize  >());
+   obj.addField(new MUint16Descriptor<ZECD_t, &ZECD_t::numEntriesTotal >());
+   obj.addField(new MUint16Descriptor<ZECD_t, &ZECD_t::numEntriesOnDisk>());
+   obj.addField(new MUint16Descriptor<ZECD_t, &ZECD_t::centralDirDiskNo>());
+   obj.addField(new MUint16Descriptor<ZECD_t, &ZECD_t::diskNum         >());
+   obj.addField(new MUint32Descriptor<ZECD_t, &ZECD_t::signature       >());
+});
 
 #define ZF_ENCRYPTED   0x01
 #define BUFREADCOMMENT 0x400

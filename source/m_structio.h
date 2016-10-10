@@ -29,20 +29,21 @@
 #ifndef M_STRUCTIO_H__
 #define M_STRUCTIO_H__
 
+#include "z_zone.h"
 #include "m_buffer.h"
+#include "m_dllist.h"
 
 //
 // Abstract base class for all structure field descriptors.
 // This allows all the descriptors for a class to be iterated over in order
 // even though they point to different member variable types.
 //
-template<typename S> class MDescriptorBase
+template<typename S> class MDescriptorBase : public ZoneObject
 {
-protected:
-   MDescriptorBase<S> *next; // Next descriptor for the structure
-
 public:
-   MDescriptorBase<S>(MDescriptorBase<S> *pNext) : next(pNext)
+   DLListItem<MDescriptorBase<S>> links;
+
+   MDescriptorBase<S>() : ZoneObject(), links()
    {
    }
 
@@ -53,7 +54,10 @@ public:
    virtual bool readField(S &structure, InBuffer &fin) = 0;
 
    // Get the next descriptor for the structure.
-   MDescriptorBase<S> *nextField() const { return next; }
+   MDescriptorBase<S> *nextField() const 
+   { 
+      return links.dllNext ? links.dllNext->dllObject : nullptr;
+   }
 };
 
 //
@@ -65,7 +69,7 @@ class MUint16Descriptor : public MDescriptorBase<S>
 public:
    typedef MDescriptorBase<S> Super;
 
-   MUint16Descriptor(Super *pNext) : Super(pNext) {}
+   MUint16Descriptor() : Super() {}
 
    // Read a uint16_t from the InBuffer and assign it to the field
    // this descriptor represents.
@@ -84,7 +88,7 @@ class MUint32Descriptor : public MDescriptorBase<S>
 public:
    typedef MDescriptorBase<S> Super;
 
-   MUint32Descriptor(Super *pNext) : Super(pNext) {}
+   MUint32Descriptor() : Super() {}
 
    // Read a uint32_t from the InBuffer and assign it to the field
    // this descriptor represents.
@@ -98,22 +102,34 @@ template<typename S> class MStructReader
 {
 public:
    typedef MDescriptorBase<S> FieldType;
+   typedef void (*fieldadd_t)(MStructReader<S> &);
 
 protected:
-   FieldType *firstField; // Descriptor for the first field in the structure.
+   DLList<FieldType, &FieldType::links> descriptors; // List of field descriptors
 
 public:
    // Pass the address of the first structure field's descriptor. The remaining
    // descriptors must link to each other via their constructors, in order to
    // form a linked list of field descriptors.
-   MStructReader(FieldType *pFirstField) : firstField(pFirstField) {}
+   MStructReader(fieldadd_t fieldAdder) : descriptors() 
+   {
+      fieldAdder(*this);
+   }
+
+   void addField(FieldType *field)
+   {
+      descriptors.insert(field);
+   }
 
    // Read all fields for this structure from an InBuffer, in the order their
    // descriptors are linked together. Returns false if an IO error occurs, and
    // true otherwise.
    bool readFields(S &instance, InBuffer &fin)
    {
-      FieldType *field = firstField;
+      if(!descriptors.head)
+         return false;
+
+      FieldType *field = descriptors.head->dllObject;
 
       // walk the descriptor list
       while(field)
