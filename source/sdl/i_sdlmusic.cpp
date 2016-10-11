@@ -171,7 +171,6 @@ static bool serverMidiPlaying;
 // julian (10/25/2005): rewrote (nearly) entirely
 
 #include "mmus2mid.h"
-#include "../m_misc.h"
 
 // Only one track at a time
 static Mix_Music *music = NULL;

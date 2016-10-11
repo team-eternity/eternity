@@ -71,7 +71,7 @@ int pvsnprintf(char *str, size_t nmax, const char *format, va_list ap)
    if(result < 0 || (size_t)result >= nmax)
    {
       str[nmax - 1] = '\0';
-      result = nmax - 1;
+      result = int(nmax - 1);
    }
 
    return result;

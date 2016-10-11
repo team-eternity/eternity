@@ -69,6 +69,7 @@
 #include "m_misc.h"
 #include "m_syscfg.h"
 #include "m_qstr.h"
+#include "m_utils.h"
 #include "mn_engin.h"
 #include "p_chase.h"
 #include "p_setup.h"

@@ -48,6 +48,7 @@
 #include "m_misc.h"
 #include "m_qstr.h"
 #include "m_swap.h"
+#include "m_utils.h"
 #include "p_info.h"
 #include "sounds.h"
 #include "w_formats.h"

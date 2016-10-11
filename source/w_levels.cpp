@@ -39,7 +39,7 @@
 #include "e_hash.h"
 #include "g_game.h"
 #include "m_dllist.h"
-#include "m_misc.h"
+#include "m_utils.h"
 #include "mn_engin.h"
 #include "mn_files.h"
 #include "p_setup.h"
