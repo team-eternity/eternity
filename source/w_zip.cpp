@@ -65,18 +65,18 @@ struct ZIPLocalFileHeader
 
 typedef ZIPLocalFileHeader ZLFH_t;
 
-static MStructReader<ZIPLocalFileHeader> localFileReader([] (MStructReader<ZIPLocalFileHeader> &obj) {
-   obj.addField(new MUint16Descriptor<ZLFH_t, &ZLFH_t::extraLength >());
-   obj.addField(new MUint16Descriptor<ZLFH_t, &ZLFH_t::nameLength  >());
-   obj.addField(new MUint32Descriptor<ZLFH_t, &ZLFH_t::uncompressed>());
-   obj.addField(new MUint32Descriptor<ZLFH_t, &ZLFH_t::compressed  >());
-   obj.addField(new MUint32Descriptor<ZLFH_t, &ZLFH_t::crc32       >());
-   obj.addField(new MUint16Descriptor<ZLFH_t, &ZLFH_t::fileDate    >());
-   obj.addField(new MUint16Descriptor<ZLFH_t, &ZLFH_t::fileTime    >());
-   obj.addField(new MUint16Descriptor<ZLFH_t, &ZLFH_t::method      >());
-   obj.addField(new MUint16Descriptor<ZLFH_t, &ZLFH_t::gpFlags     >());
-   obj.addField(new MUint16Descriptor<ZLFH_t, &ZLFH_t::extrVersion >());
-   obj.addField(new MUint32Descriptor<ZLFH_t, &ZLFH_t::signature   >());
+static MStructReader<ZLFH_t> localFileReader([] (MStructReader<ZLFH_t> &obj) {
+   obj.addField(&ZLFH_t::signature   );
+   obj.addField(&ZLFH_t::extrVersion );
+   obj.addField(&ZLFH_t::gpFlags     );
+   obj.addField(&ZLFH_t::method      );
+   obj.addField(&ZLFH_t::fileTime    );
+   obj.addField(&ZLFH_t::fileDate    );
+   obj.addField(&ZLFH_t::crc32       );
+   obj.addField(&ZLFH_t::compressed  );
+   obj.addField(&ZLFH_t::uncompressed);
+   obj.addField(&ZLFH_t::nameLength  );
+   obj.addField(&ZLFH_t::extraLength );
 });
 
 #define ZIP_CENTRAL_DIR_SIG  "PK\x1\x2"
@@ -110,24 +110,24 @@ struct ZIPCentralDirEntry
 
 typedef ZIPCentralDirEntry ZCDE_t;
 
-static MStructReader<ZIPCentralDirEntry> centralDirReader([] (MStructReader<ZIPCentralDirEntry> &obj) {
-   obj.addField(new MUint32Descriptor<ZCDE_t, &ZCDE_t::localOffset  >());
-   obj.addField(new MUint32Descriptor<ZCDE_t, &ZCDE_t::extAttribs   >());
-   obj.addField(new MUint16Descriptor<ZCDE_t, &ZCDE_t::intAttribs   >());
-   obj.addField(new MUint16Descriptor<ZCDE_t, &ZCDE_t::diskStartNum >());
-   obj.addField(new MUint16Descriptor<ZCDE_t, &ZCDE_t::commentLength>());
-   obj.addField(new MUint16Descriptor<ZCDE_t, &ZCDE_t::extraLength  >());
-   obj.addField(new MUint16Descriptor<ZCDE_t, &ZCDE_t::nameLength   >());
-   obj.addField(new MUint32Descriptor<ZCDE_t, &ZCDE_t::uncompressed >());
-   obj.addField(new MUint32Descriptor<ZCDE_t, &ZCDE_t::compressed   >());
-   obj.addField(new MUint32Descriptor<ZCDE_t, &ZCDE_t::crc32        >());
-   obj.addField(new MUint16Descriptor<ZCDE_t, &ZCDE_t::fileDate     >());
-   obj.addField(new MUint16Descriptor<ZCDE_t, &ZCDE_t::fileTime     >());
-   obj.addField(new MUint16Descriptor<ZCDE_t, &ZCDE_t::method       >());
-   obj.addField(new MUint16Descriptor<ZCDE_t, &ZCDE_t::gpFlags      >());
-   obj.addField(new MUint16Descriptor<ZCDE_t, &ZCDE_t::extrVersion  >());
-   obj.addField(new MUint16Descriptor<ZCDE_t, &ZCDE_t::madeByVersion>());
-   obj.addField(new MUint32Descriptor<ZCDE_t, &ZCDE_t::signature    >());
+static MStructReader<ZCDE_t> centralDirReader([] (MStructReader<ZCDE_t> &obj) {
+   obj.addField(&ZCDE_t::signature    );
+   obj.addField(&ZCDE_t::madeByVersion);
+   obj.addField(&ZCDE_t::extrVersion  );
+   obj.addField(&ZCDE_t::gpFlags      );
+   obj.addField(&ZCDE_t::method       );
+   obj.addField(&ZCDE_t::fileTime     );
+   obj.addField(&ZCDE_t::fileDate     );
+   obj.addField(&ZCDE_t::crc32        );
+   obj.addField(&ZCDE_t::compressed   );
+   obj.addField(&ZCDE_t::uncompressed );
+   obj.addField(&ZCDE_t::nameLength   );
+   obj.addField(&ZCDE_t::extraLength  );
+   obj.addField(&ZCDE_t::commentLength);
+   obj.addField(&ZCDE_t::diskStartNum );
+   obj.addField(&ZCDE_t::intAttribs   );
+   obj.addField(&ZCDE_t::extAttribs   );
+   obj.addField(&ZCDE_t::localOffset  );
 });
 
 #define ZIP_END_OF_DIR_SIG  "PK\x5\x6"
@@ -150,15 +150,15 @@ struct ZIPEndOfCentralDir
 
 typedef ZIPEndOfCentralDir ZECD_t;
 
-static MStructReader<ZIPEndOfCentralDir> endCentralDirReader([] (MStructReader<ZIPEndOfCentralDir> &obj) {
-   obj.addField(new MUint16Descriptor<ZECD_t, &ZECD_t::zipCommentLength>());
-   obj.addField(new MUint32Descriptor<ZECD_t, &ZECD_t::centralDirOffset>());
-   obj.addField(new MUint32Descriptor<ZECD_t, &ZECD_t::centralDirSize  >());
-   obj.addField(new MUint16Descriptor<ZECD_t, &ZECD_t::numEntriesTotal >());
-   obj.addField(new MUint16Descriptor<ZECD_t, &ZECD_t::numEntriesOnDisk>());
-   obj.addField(new MUint16Descriptor<ZECD_t, &ZECD_t::centralDirDiskNo>());
-   obj.addField(new MUint16Descriptor<ZECD_t, &ZECD_t::diskNum         >());
-   obj.addField(new MUint32Descriptor<ZECD_t, &ZECD_t::signature       >());
+static MStructReader<ZECD_t> endCentralDirReader([] (MStructReader<ZECD_t> &obj) {
+   obj.addField(&ZECD_t::signature       );
+   obj.addField(&ZECD_t::diskNum         );
+   obj.addField(&ZECD_t::centralDirDiskNo);
+   obj.addField(&ZECD_t::numEntriesOnDisk);
+   obj.addField(&ZECD_t::numEntriesTotal );
+   obj.addField(&ZECD_t::centralDirSize  );
+   obj.addField(&ZECD_t::centralDirOffset);
+   obj.addField(&ZECD_t::zipCommentLength);
 });
 
 #define ZF_ENCRYPTED   0x01

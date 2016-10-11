@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2016 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,125 +18,131 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+// Purpose: Object-oriented portable structure IO
+// Authors: James Haley
 //
-// DESCRIPTION:
-//   Object-oriented portable structure IO
-//
-//-----------------------------------------------------------------------------
 
 #ifndef M_STRUCTIO_H__
 #define M_STRUCTIO_H__
 
-#include "z_zone.h"
 #include "m_buffer.h"
-#include "m_dllist.h"
+#include "m_collection.h"
 
 //
-// Abstract base class for all structure field descriptors.
-// This allows all the descriptors for a class to be iterated over in order
-// even though they point to different member variable types.
+// Structure field descriptor class
+// Stores the type of the field and a pointer-to-member to that field.
 //
-template<typename S> class MDescriptorBase : public ZoneObject
+template<typename S>
+class MFieldDescriptor
 {
 public:
-   DLListItem<MDescriptorBase<S>> links;
-
-   MDescriptorBase<S>() : ZoneObject(), links()
+   enum mfdtype_e
    {
+      MFD_UINT16,
+      MFD_UINT32
+   };
+
+protected:
+   // pointer-to-member
+   union mfdfield_u
+   {
+      uint16_t S::*u16;
+      uint32_t S::*u32;
+   } fields;
+
+   // type of field
+   mfdtype_e type;
+
+public:
+   MFieldDescriptor(uint16_t S::*field) : type(MFD_UINT16)
+   {
+      fields.u16 = field;
    }
 
-   // Pure virtual. Override in each descriptor class to read that
-   // particular type of field out of an InBuffer and then store the
-   // value read into the structure instance. Return false if an IO
-   // error occurs.
-   virtual bool readField(S &structure, InBuffer &fin) = 0;
+   MFieldDescriptor(uint32_t S::*field) : type(MFD_UINT32)
+   {
+      fields.u32 = field;
+   }
 
-   // Get the next descriptor for the structure.
-   MDescriptorBase<S> *nextField() const 
-   { 
-      return links.dllNext ? links.dllNext->dllObject : nullptr;
+   MFieldDescriptor(const MFieldDescriptor &other) : type(other.type)
+   {
+      switch(type)
+      {
+      case MFD_UINT16:
+         fields.u16 = other.fields.u16;
+         break;
+      case MFD_UINT32:
+         fields.u32 = other.fields.u32;
+         break;
+      }
+   }
+
+   MFieldDescriptor(MFieldDescriptor &&other) noexcept
+      : type(other.type)
+   {
+      switch(type)
+      {
+      case MFD_UINT16:
+         fields.u16 = other.fields.u16;
+         break;
+      case MFD_UINT32:
+         fields.u32 = other.fields.u32;
+         break;
+      }
+   }
+
+   // Returns true if the field was successfully read from the input stream, 
+   // and false otherwise.
+   bool readField(S &instance, InBuffer &fin)
+   {
+      switch(type)
+      {
+      case MFD_UINT16:
+         return fin.readUint16(instance.*(fields.u16));
+      case MFD_UINT32:
+         return fin.readUint32(instance.*(fields.u32));
+      default:
+         return false;
+      }
    }
 };
 
 //
-// Descriptor class for uint16_t structure fields.
+// Object-oriented structure reader. Use a callback during construction to add
+// fields in the structure to this reader. Call the readFields method with an
+// instance of the structure type to read all its fields from an InBuffer using
+// alignment- and endianness-agnostic reads.
 //
-template<typename S, uint16_t S::*field> 
-class MUint16Descriptor : public MDescriptorBase<S>
+template<typename S>
+class MStructReader
 {
 public:
-   typedef MDescriptorBase<S> Super;
-
-   MUint16Descriptor() : Super() {}
-
-   // Read a uint16_t from the InBuffer and assign it to the field
-   // this descriptor represents.
-   bool readField(S &structure, InBuffer &fin)
-   {
-      return fin.readUint16(structure.*field);
-   }
-};
-
-//
-// Descriptor class for a uint32_t structure field.
-//
-template<typename S, uint32_t S::*field>
-class MUint32Descriptor : public MDescriptorBase<S>
-{
-public:
-   typedef MDescriptorBase<S> Super;
-
-   MUint32Descriptor() : Super() {}
-
-   // Read a uint32_t from the InBuffer and assign it to the field
-   // this descriptor represents.
-   bool readField(S &structure, InBuffer &fin)
-   {
-      return fin.readUint32(structure.*field);
-   }
-};
-
-template<typename S> class MStructReader
-{
-public:
-   typedef MDescriptorBase<S> FieldType;
    typedef void (*fieldadd_t)(MStructReader<S> &);
 
 protected:
-   DLList<FieldType, &FieldType::links> descriptors; // List of field descriptors
+   Collection<MFieldDescriptor<S>> descriptors;
 
 public:
-   // Pass the address of the first structure field's descriptor. The remaining
-   // descriptors must link to each other via their constructors, in order to
-   // form a linked list of field descriptors.
-   MStructReader(fieldadd_t fieldAdder) : descriptors() 
+   MStructReader(fieldadd_t fieldAdder) : descriptors()
    {
       fieldAdder(*this);
    }
 
-   void addField(FieldType *field)
+   // Add a field to the structure reader
+   template<typename T>
+   void addField(T S::*field)
    {
-      descriptors.insert(field);
+      descriptors.add(MFieldDescriptor<S>(field));
    }
 
-   // Read all fields for this structure from an InBuffer, in the order their
-   // descriptors are linked together. Returns false if an IO error occurs, and
-   // true otherwise.
+   // Read all the structure's fields from the input buffer. 
+   // Returns true if all reads were successful, false otherwise.
    bool readFields(S &instance, InBuffer &fin)
    {
-      if(!descriptors.head)
-         return false;
-
-      FieldType *field = descriptors.head->dllObject;
-
-      // walk the descriptor list
-      while(field)
+      for(auto &obj : descriptors)
       {
-         if(!field->readField(instance, fin))
+         if(!obj.readField(instance, fin))
             return false;
-
-         field = field->nextField();
       }
 
       return true;
