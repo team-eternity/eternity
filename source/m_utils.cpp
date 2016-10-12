@@ -136,7 +136,7 @@ char *M_LoadStringFromFile(const char *filename)
 size_t M_Strnlen(const char *s, size_t count)
 {
    const char *p = s;
-   while (*p && count-- > 0)
+   while(*p && count-- > 0)
       p++;
 
    return p - s;

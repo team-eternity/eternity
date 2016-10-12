@@ -26,6 +26,8 @@
 #ifndef I_SYSTEM_H__
 #define I_SYSTEM_H__
 
+#include "d_keywds.h"
+
 struct ticcmd_t;
 
 // Called by DoomMain.
@@ -86,10 +88,10 @@ void I_Error(const char *error, ...) __attribute__((noreturn, format(printf,1,2)
 void I_ErrorVA(const char *error, va_list args) __attribute__((noreturn));
 #else
 // haleyjd 05/21/10
-void I_FatalError(int code, const char *error, ...);
+void I_FatalError(int code, E_FORMAT_STRING(const char *error), ...);
 
 //SoM 3/14/2002: vc++ 
-void I_Error(const char *error, ...);
+void I_Error(E_FORMAT_STRING(const char *error), ...);
 
 void I_ErrorVA(const char *error, va_list args);
 #endif

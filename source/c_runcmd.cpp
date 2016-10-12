@@ -1611,16 +1611,9 @@ void C_RunCmdLineScripts()
             file = !strcasecmp(myargv[p], "-exec"); // allow multiple -exec
          else if(file)
          {
-            char *filename = NULL;
-            
-            M_StringAlloca(&filename, 1, 6, myargv[p]);
-
-            strcpy(filename, myargv[p]);
-
-            M_NormalizeSlashes(M_AddDefaultExtension(filename, ".csc"));
-
-            if(!access(".", R_OK))
-               C_RunScriptFromFile(filename);
+            qstring filename(myargv[p]);
+            filename.addDefaultExtension(".csc").normalizeSlashes();
+            C_RunScriptFromFile(filename.constPtr());
          }
       }
    }

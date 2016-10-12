@@ -1390,7 +1390,7 @@ static void M_populateDefaultMethods(defaultfile_t *df)
 //
 // Call this when a fatal error occurs writing the configuration file.
 //
-static void M_defaultFileWriteError(defaultfile_t *df, char *tmpfile)
+static void M_defaultFileWriteError(defaultfile_t *df, const char *tmpfile)
 {
    // haleyjd 01/29/11: Why was this fatal? just print the message.
    printf("Warning: could not write defaults to %s: %s\n%s left unchanged\n",
@@ -1402,8 +1402,7 @@ static void M_defaultFileWriteError(defaultfile_t *df, char *tmpfile)
 //
 void M_SaveDefaultFile(defaultfile_t *df)
 {
-   char *tmpfile = NULL;
-   size_t len;
+   qstring tmpfile; //char *tmpfile = NULL;
    default_t *dp;
    unsigned int line, blanks;
    FILE *f;
@@ -1412,15 +1411,17 @@ void M_SaveDefaultFile(defaultfile_t *df)
    if(!df->loaded || !df->fileName)
       return;
 
-   len = M_StringAlloca(&tmpfile, 2, 1, userpath, "/tmpetern.cfg");
+   //len = M_StringAlloca(&tmpfile, 2, 1, userpath, "/tmpetern.cfg");
 
-   psnprintf(tmpfile, len, "%s/tmpetern.cfg", userpath);
-   M_NormalizeSlashes(tmpfile);
+   tmpfile = userpath;
+   tmpfile.pathConcatenate("tmpetern.cfg");
+   //psnprintf(tmpfile, len, "%s/tmpetern.cfg", userpath);
+   //M_NormalizeSlashes(tmpfile);
 
    errno = 0;
-   if(!(f = fopen(tmpfile, "w")))  // killough 9/21/98
+   if(!(f = fopen(tmpfile.constPtr(), "w")))  // killough 9/21/98
    {
-      M_defaultFileWriteError(df, tmpfile);
+      M_defaultFileWriteError(df, tmpfile.constPtr());
       return;
    }
 
@@ -1434,7 +1435,7 @@ void M_SaveDefaultFile(defaultfile_t *df)
               ";* at end indicates variable is settable in wads\n"
               ";variable   value\n\n") == EOF)
    {
-      M_defaultFileWriteError(df, tmpfile);
+      M_defaultFileWriteError(df, tmpfile.constPtr());
       return;
    }
 
@@ -1449,7 +1450,7 @@ void M_SaveDefaultFile(defaultfile_t *df)
 
       if(!blanks && putc('\n',f) == EOF)
       {
-         M_defaultFileWriteError(df, tmpfile);
+         M_defaultFileWriteError(df, tmpfile.constPtr());
          return;
       }
 
@@ -1467,7 +1468,7 @@ void M_SaveDefaultFile(defaultfile_t *df)
          if(dp->methods->writeHelp(dp, f) ||
             fprintf(f, " %s %s\n", dp->help, dp->wad_allowed ? "*" : "") == EOF)
          {
-            M_defaultFileWriteError(df, tmpfile);
+            M_defaultFileWriteError(df, tmpfile.constPtr());
             return;         
          }
       }
@@ -1481,20 +1482,20 @@ void M_SaveDefaultFile(defaultfile_t *df)
 
       if(dp->methods->writeOpt(dp, f))
       {
-         M_defaultFileWriteError(df, tmpfile);
+         M_defaultFileWriteError(df, tmpfile.constPtr());
          return;
       }
    }
 
    if(fclose(f) == EOF)
    {
-      M_defaultFileWriteError(df, tmpfile);
+      M_defaultFileWriteError(df, tmpfile.constPtr());
       return;
    }
 
    remove(df->fileName);
 
-   if(rename(tmpfile, df->fileName))
+   if(rename(tmpfile.constPtr(), df->fileName))
    {
       // haleyjd 01/29/11: No error here, just print the message
       printf("Warning: could not write defaults to %s: %s\n", df->fileName,

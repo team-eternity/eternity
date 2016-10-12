@@ -31,6 +31,7 @@
 #include "d_io.h"
 #include "doomstat.h"
 #include "m_buffer.h"
+#include "m_qstr.h"
 #include "m_utils.h"
 #include "p_skin.h"
 #include "s_sound.h"
@@ -590,35 +591,33 @@ static shotformat_t shotFormats[SHOT_NUMSHOTFORMATS] =
 void M_ScreenShot()
 {
    bool success = false;
-   char   *path = nullptr;
-   size_t  len;
+   qstring path;
    OutBuffer ob;
    shotformat_t *format = &shotFormats[screenshot_pcx];
    
    errno = 0;
 
-   len = M_StringAlloca(&path, 1, 6, userpath);
-
    // haleyjd 11/23/06: use userpath/shots
-   psnprintf(path, len, "%s/shots", userpath);
+   path = userpath;
+   path.pathConcatenate("shots");
    
    // haleyjd 05/23/02: corrected uses of access to use defined
    // constants rather than integers, some of which were not even
    // correct under DJGPP to begin with (it's a wonder it worked...)
    
-   if(!access(path, W_OK))
+   if(!access(path.constPtr(), W_OK))
    {
       static int shot;
-      char *lbmname = NULL;
+      char *lbmname = nullptr;
       int tries = 10000;
 
-      len = M_StringAlloca(&lbmname, 2, 16, path, format->extension);
+      size_t len = M_StringAlloca(&lbmname, 2, 16, path.constPtr(), format->extension);
       
       do
       {
          // jff 3/30/98 pcx or bmp?
          // haleyjd: use format extension.
-         psnprintf(lbmname, len, "%s/etrn%02d.%s", path, shot++, format->extension);
+         psnprintf(lbmname, len, "%s/etrn%02d.%s", path.constPtr(), shot++, format->extension);
       }
       while(!access(lbmname, F_OK) && --tries);
 

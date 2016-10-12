@@ -155,7 +155,7 @@ void qstring::freeBuffer()
 // haleyjd 05/22/2013: Enable C++11 move semantics for qstring instances.
 // Required for efficiency when using qstring with Collection<T>.
 //
-qstring::qstring(qstring &&other)
+qstring::qstring(qstring &&other) noexcept
    : ZoneObject(), index(0), size(16)
 {
    // When other is not localized, take direct ownership of its buffer
@@ -167,7 +167,7 @@ qstring::qstring(qstring &&other)
       memset(local, 0, sizeof(local));
 
       // leave the other object in a usable state, it's not necessarily dead.
-      other.buffer = NULL;
+      other.buffer = nullptr;
       other.freeBuffer(); // returns to being localized
    }
    else
@@ -234,7 +234,6 @@ const char &qstring::operator [] (size_t idx) const
 
    return buffer[idx];
 }
-
 
 //=============================================================================
 //
