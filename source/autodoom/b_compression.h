@@ -54,9 +54,9 @@ public:
     }
     ~GZCompression();
 
-    bool CreateFile(const char *filename, size_t pLen, int pEndian, CompressLevel level = CompressLevel_Default);
-    bool Flush();
-    void Close();
+    bool createFile(const char *filename, size_t pLen, int pEndian, CompressLevel level = CompressLevel_Default);
+    bool flush();
+    void close();
 
     // Write inherited from OutBuffer
     
@@ -93,7 +93,7 @@ public:
    size_t read(void *dest, size_t size);
    int skip(size_t skipAmt) = delete;
 
-   void Close();
+   void close();
 };
 
 #endif

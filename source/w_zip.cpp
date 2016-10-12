@@ -210,7 +210,7 @@ static bool ZIP_FindEndOfCentralDir(InBuffer &fin, long &position)
    if(fin.seek(0, SEEK_END))
       return false;
 
-   FileSize  = fin.Tell();
+   FileSize  = fin.tell();
    uMaxBack  = emin<long>(0xffff, FileSize);
    uBackRead = 4;
 
@@ -621,7 +621,7 @@ protected:
          atEOF = true;
 
       zlStream.next_in  = deflateBuffer;
-      zlStream.avail_in = static_cast<uInt>(bytesRead);
+      zlStream.avail_in = uInt(bytesRead);
    }
 
 public:
@@ -644,7 +644,7 @@ public:
       inflateEnd(&zlStream);
    }
 
-   void read(void *outbuffer, uint32_t len)
+   void read(void *outbuffer, size_t len)
    {
       int code;
 

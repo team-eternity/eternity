@@ -52,16 +52,16 @@ int screenshot_gamma;
 // killough 10/98: changed into macro to return failure instead of aborting
 
 #define SafeWrite(ob, data, size) \
-   if(!ob->Write(data, size)) return false
+   if(!ob->write(data, size)) return false
 
 #define SafeWrite32(ob, data) \
-   if(!ob->WriteUint32(data)) return false
+   if(!ob->writeUint32(data)) return false
 
 #define SafeWrite16(ob, data) \
-   if(!ob->WriteUint16(data)) return false
+   if(!ob->writeUint16(data)) return false
 
 #define SafeWrite8(ob, data) \
-   if(!ob->WriteUint8(data)) return false
+   if(!ob->writeUint8(data)) return false
 
 //=============================================================================
 //
@@ -146,8 +146,8 @@ static bool pcx_Writer(OutBuffer *ob, byte *data,
       }
       else
       {
-         if(!ob->WriteUint8(0xc1) || 
-            !ob->WriteUint8(*data))
+         if(!ob->writeUint8(0xc1) || 
+            !ob->writeUint8(*data))
             return false;
          ++data;
       }
@@ -414,7 +414,7 @@ static void PNG_dataWrite(png_structp png_ptr, png_bytep data, png_size_t length
 {
    pngiodata_t *pngIoData = static_cast<pngiodata_t *>(png_get_io_ptr(png_ptr));
 
-   pngIoData->writeOK = (pngIoData->ob->Write(data, length) && pngIoData->writeOK);
+   pngIoData->writeOK = (pngIoData->ob->write(data, length) && pngIoData->writeOK);
 }
 
 //
@@ -480,7 +480,7 @@ static bool png_Writer(OutBuffer *ob, byte *data,
    // setup info pointer
    if(!(pngInfo = png_create_info_struct(pngStruct)))
    {
-      png_destroy_write_struct(&pngStruct, NULL);
+      png_destroy_write_struct(&pngStruct, nullptr);
       return false;
    }
    
@@ -587,10 +587,10 @@ static shotformat_t shotFormats[SHOT_NUMSHOTFORMATS] =
 //
 // killough 10/98: improved error-handling
 //
-void M_ScreenShot(void)
+void M_ScreenShot()
 {
    bool success = false;
-   char   *path = NULL;
+   char   *path = nullptr;
    size_t  len;
    OutBuffer ob;
    shotformat_t *format = &shotFormats[screenshot_pcx];
@@ -622,7 +622,7 @@ void M_ScreenShot(void)
       }
       while(!access(lbmname, F_OK) && --tries);
 
-      if(tries && ob.CreateFile(lbmname, 512*1024, format->endian))
+      if(tries && ob.createFile(lbmname, 512*1024, format->endian))
       {
          // killough 4/18/98: make palette stay around
          // (PU_CACHE could cause crash)         
@@ -640,7 +640,7 @@ void M_ScreenShot(void)
                                   pal.get());
 
          // haleyjd: close the buffer
-         ob.Close();
+         ob.close();
 
          // if not successful, remove the file now
          if(!success)

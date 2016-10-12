@@ -33,11 +33,9 @@
 // Replaced old code with inlined code which works regardless of endianess.
 //
 
-// haleyjd 12/28/09: added semi-redundant unsigned versions for type safety.
-
 //=============================================================================
 //
-// Swap 16bit, that is, MSB and LSB byte.
+// Swap 16-bit, that is, MSB and LSB byte.
 //
 
 inline static int16_t SwapShort(int16_t x)
@@ -68,7 +66,7 @@ inline static uint16_t SwapBigUShort(uint16_t x)
 
 //=============================================================================
 //
-// Swapping 32bit.
+// Swapping 32-bit.
 //
 
 inline static int32_t SwapLong(int32_t x)
@@ -105,33 +103,35 @@ inline static uint32_t SwapBigULong(uint32_t x)
            ((uint8_t *) &x)[3];
 }
 
-// IOANCH: also added int64_t and uint64_t
+//============================================================================
+//
+// Swapping 64-bit.
+//
 
-inline static int64_t SwapLongLong(int64_t x)
+inline static int64_t SwapInt64(int64_t x)
 {
-   return
-   ((int64_t)((uint8_t *) &x)[7] << 56) |
-   ((int64_t)((uint8_t *) &x)[6] << 48) |
-   ((int64_t)((uint8_t *) &x)[5] << 40) |
-   ((int64_t)((uint8_t *) &x)[4] << 32) |
-   ((int64_t)((uint8_t *) &x)[3] << 24) |
-   ((int64_t)((uint8_t *) &x)[2] << 16) |
-   ((int64_t)((uint8_t *) &x)[1] <<  8) |
-    (int64_t)((uint8_t *) &x)[0];
+  return (int64_t(((uint8_t *) &x)[7]) << 56) |
+         (int64_t(((uint8_t *) &x)[6]) << 48) |
+         (int64_t(((uint8_t *) &x)[5]) << 40) |
+         (int64_t(((uint8_t *) &x)[4]) << 32) |
+         (int64_t(((uint8_t *) &x)[3]) << 24) |
+         (int64_t(((uint8_t *) &x)[2]) << 16) |
+         (int64_t(((uint8_t *) &x)[1]) <<  8) |
+          int64_t(((uint8_t *) &x)[0]);
 }
 
-inline static uint64_t SwapULongLong(uint64_t x)
+inline static uint64_t SwapUInt64(uint64_t x)
 {
-   return
-   ((uint64_t)((uint8_t *) &x)[7] << 56) |
-   ((uint64_t)((uint8_t *) &x)[6] << 48) |
-   ((uint64_t)((uint8_t *) &x)[5] << 40) |
-   ((uint64_t)((uint8_t *) &x)[4] << 32) |
-   ((uint64_t)((uint8_t *) &x)[3] << 24) |
-   ((uint64_t)((uint8_t *) &x)[2] << 16) |
-   ((uint64_t)((uint8_t *) &x)[1] <<  8) |
-    (uint64_t)((uint8_t *) &x)[0];
+   return (uint64_t(((uint8_t *) &x)[7]) << 56) |
+          (uint64_t(((uint8_t *) &x)[6]) << 48) |
+          (uint64_t(((uint8_t *) &x)[5]) << 40) |
+          (uint64_t(((uint8_t *) &x)[4]) << 32) |
+          (uint64_t(((uint8_t *) &x)[3]) << 24) |
+          (uint64_t(((uint8_t *) &x)[2]) << 16) |
+          (uint64_t(((uint8_t *) &x)[1]) <<  8) |
+           uint64_t(((uint8_t *) &x)[0]);
 }
+
 
 #endif
 

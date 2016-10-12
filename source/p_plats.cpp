@@ -428,10 +428,10 @@ bool EV_DoParamPlat(const line_t *line, const int *args, paramplattype_e type)
    switch(type)
    {
    case paramPerpetualRaise:
-      PlatThinker::ActivateInStasis(line->args[0]);
+      PlatThinker::ActivateInStasis(args[0]);
       break;
    case paramToggleCeiling:
-      PlatThinker::ActivateInStasis(line->args[0]);
+      PlatThinker::ActivateInStasis(args[0]);
       rtn = true;
       break;
    default:
@@ -535,7 +535,8 @@ manual_plat:
          plat->type   = raiseAndChange;
          plat->status = PlatThinker::up;
          platTypeStr = "EEPlatRaise";
-         sec->floorpic = sides[line->sidenum[0]].sector->floorpic;         
+         if(line)
+            sec->floorpic = sides[line->sidenum[0]].sector->floorpic;
          plat->high   = sec->floorheight + args[2] * 8 * FRACUNIT;
          plat->wait = 0; // We need to override the earlier setting of this         
          if(plat->high < sec->floorheight)
@@ -547,7 +548,8 @@ manual_plat:
          plat->status = PlatThinker::up;
          plat->rnctype = static_cast<PlatThinker::rnctype_e>(args[2]);
          platTypeStr = "EEPlatRaise";
-         sec->floorpic = sides[line->sidenum[0]].sector->floorpic;
+         if(line)
+            sec->floorpic = sides[line->sidenum[0]].sector->floorpic;
          plat->high = P_FindNextHighestFloor(sec, sec->floorheight);         
          plat->wait = 0; // We need to override the earlier setting of this 
          P_ZeroSectorSpecial(sec);

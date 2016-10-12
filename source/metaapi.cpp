@@ -65,9 +65,9 @@ int metaerrno = 0;
 static bool commonWriteString(const char* value, OutBuffer& outbuf)
 {
     size_t s = strlen(value);
-    if (!outbuf.WriteUint32((uint32_t)s))
+    if (!outbuf.writeUint32((uint32_t)s))
         return false;
-    return outbuf.Write(value, s);
+    return outbuf.write(value, s);
 }
 
 //! Common function for reading string from file. Reads size, then content.
@@ -368,7 +368,7 @@ const char *MetaInteger::toString() const
 // IOANCH: writeToFile
 bool MetaInteger::writeToFile(OutBuffer& outbuf) const
 {
-    return Super::writeToFile(outbuf) && outbuf.WriteSint32(value);
+    return Super::writeToFile(outbuf) && outbuf.writeSint32(value);
 }
 
 bool MetaInteger::readFromFile(InBuffer &inbuf)
@@ -400,7 +400,7 @@ const char *MetaV2Fixed::toString() const
 
 bool MetaV2Fixed::writeToFile(OutBuffer& outbuf) const
 {
-    return Super::writeToFile(outbuf) && outbuf.WriteSint32(value.x) && outbuf.WriteSint32(value.y);
+    return Super::writeToFile(outbuf) && outbuf.writeSint32(value.x) && outbuf.writeSint32(value.y);
 }
 
 bool MetaV2Fixed::readFromFile(InBuffer &inbuf)
@@ -432,7 +432,7 @@ const char *MetaDouble::toString() const
 
 bool MetaDouble::writeToFile(OutBuffer& outbuf) const
 {
-    return Super::writeToFile(outbuf) && outbuf.Write(&value, sizeof(value));
+    return Super::writeToFile(outbuf) && outbuf.write(&value, sizeof(value));
 }
 
 bool MetaDouble::readFromFile(InBuffer &inbuf)
@@ -1805,7 +1805,7 @@ size_t MetaTable::IndexForKey(const char *key)
 // IOANCH: serialization
 bool MetaTable::writeToFile(OutBuffer& outbuf) const
 {
-    if (!Super::writeToFile(outbuf) || !outbuf.WriteUint32(getNumItems()))
+    if (!Super::writeToFile(outbuf) || !outbuf.writeUint32(getNumItems()))
         return false;
     for (const MetaObject* mo = tableIterator((const MetaObject*)nullptr); mo; mo = tableIterator(mo))
     {

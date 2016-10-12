@@ -90,7 +90,7 @@ void AutomapSvgWriter::write()
       OutBuffer outBuffer;
       outBuffer.setThrowing(true);
 
-      if(tries && outBuffer.CreateFile(subPath, 512 * 1024, BufferedFileBase::NENDIAN))
+      if(tries && outBuffer.createFile(subPath, 512 * 1024, BufferedFileBase::NENDIAN))
       {
          try
          {
@@ -98,7 +98,7 @@ void AutomapSvgWriter::write()
 
             AutoPalette palette(wGlobalDir);
 
-            outBuffer.Write(SVG_ROOT, sizeof(SVG_ROOT) - 1);
+            outBuffer.write(SVG_ROOT, sizeof(SVG_ROOT) - 1);
 
             for (Line &line : mLines)
             {
@@ -112,12 +112,12 @@ void AutomapSvgWriter::write()
                                  palette[3 * line.color],
                                  palette[3 * line.color + 1],
                                  palette[3 * line.color + 2]);
-               outBuffer.Write(lineString.constPtr(), lineString.length());
+               outBuffer.write(lineString.constPtr(), lineString.length());
             }
 
-            outBuffer.Write(SVG_ROOT_END, sizeof(SVG_ROOT_END) - 1);
+            outBuffer.write(SVG_ROOT_END, sizeof(SVG_ROOT_END) - 1);
 
-            outBuffer.Close();   // if i don't call this, nothing will get written
+            outBuffer.close();   // if i don't call this, nothing will get written
             
             success = true;
          }

@@ -50,19 +50,22 @@ public:
    SaveArchive(InBuffer  *pLoadFile);
 
    // Accessors
-   bool isSaving()  const   { return (savefile != NULL); }
-   bool isLoading() const   { return (loadfile != NULL); }
+   bool isSaving()  const   { return (savefile != nullptr); }
+   bool isLoading() const   { return (loadfile != nullptr); }
    OutBuffer *getSaveFile() { return savefile; }
    InBuffer  *getLoadFile() { return loadfile; }
 
    // Methods
-   void ArchiveCString(char *str,  size_t maxLen);
-   void ArchiveLString(char *&str, size_t &len);
+   void archiveCString(char *str,  size_t maxLen);
+   void archiveLString(char *&str, size_t &len);
    
-   // WriteLString is valid during saving only. This is to accomodate const
+   // writeLString is valid during saving only. This is to accomodate const
    // char *'s which must be saved, and are read into temporary buffers 
    // during loading.
-   void WriteLString(const char *str, size_t len = 0);
+   void writeLString(const char *str, size_t len = 0);
+
+   // archive a size_t
+   void archiveSize(size_t &value);
 
    // Operators
    // Similar to ZDoom's FArchive class, these are symmetric - they are used

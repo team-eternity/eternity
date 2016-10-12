@@ -58,12 +58,12 @@ static int zlibLevelForCompressLevel(CompressLevel clevel)
 //
 // Initializes the compressed file
 //
-bool GZCompression::CreateFile(const char *filename, size_t pLen, int pEndian, CompressLevel clevel)
+bool GZCompression::createFile(const char *filename, size_t pLen, int pEndian, CompressLevel clevel)
 {
 
    // FIXME: do something in case it's open already
 
-    if (!OutBuffer::CreateFile(filename, pLen, pEndian))
+    if (!OutBuffer::createFile(filename, pLen, pEndian))
         return false;
 
     int level = zlibLevelForCompressLevel(clevel);
@@ -80,7 +80,7 @@ bool GZCompression::CreateFile(const char *filename, size_t pLen, int pEndian, C
     if (ret != Z_OK)
     {
         memset(&m_strm, 0, sizeof(m_strm));
-        Close();
+        close();
         return false;
     }
 
@@ -94,7 +94,7 @@ bool GZCompression::CreateFile(const char *filename, size_t pLen, int pEndian, C
 //
 // Flush from buffer, doing the actual writing
 //
-bool GZCompression::Flush()
+bool GZCompression::flush()
 {
     if (idx)
     {
@@ -136,12 +136,12 @@ bool GZCompression::Flush()
 //
 // Flush everything, finalize compression and close file
 //
-void GZCompression::Close()
+void GZCompression::close()
 {
     try
     {
         if (f)
-            Flush();
+            flush();
 
         // now remove it.
         if (f && m_init)
@@ -179,7 +179,7 @@ void GZCompression::Close()
         m_init = false;
     }
 
-    BufferedFileBase::Close();
+    BufferedFileBase::close();
 }
 
 //
@@ -189,7 +189,7 @@ void GZCompression::Close()
 //
 GZCompression::~GZCompression()
 {
-    Close();
+    close();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -205,7 +205,7 @@ GZCompression::~GZCompression()
 //
 bool GZExpansion::initZStream(int pEndian, size_t pLen)
 {
-   InitBuffer(pLen, pEndian);
+   initBuffer(pLen, pEndian);
    idx = len;  // start with idx at the end
 
    if (m_init)
@@ -223,7 +223,7 @@ bool GZExpansion::initZStream(int pEndian, size_t pLen)
    if(ret != Z_OK)
    {
       memset(&m_strm, 0, sizeof(m_strm));
-      Close();
+      close();
       return false;
    }
 
@@ -351,7 +351,7 @@ size_t GZExpansion::read(void *vdest, size_t size)
    }
 }
 
-void GZExpansion::Close()
+void GZExpansion::close()
 {
     if (m_init)
     {
@@ -359,12 +359,12 @@ void GZExpansion::Close()
         m_init = false;
     }
     m_ongoing = false;
-    BufferedFileBase::Close();
+    BufferedFileBase::close();
 }
 
 GZExpansion::~GZExpansion()
 {
-    Close();
+    close();
 }
 
 // EOF

@@ -63,11 +63,11 @@ protected:
    bool throwing; // throws exceptions on IO errors
    bool ownFile;  // buffer owns the file
    
-   void InitBuffer(size_t pLen, int pEndian);
+   void initBuffer(size_t pLen, int pEndian);
 
 public:
    BufferedFileBase() 
-      : f(NULL), buffer(NULL), len(0), idx(0), endian(0), throwing(false),
+      : f(nullptr), buffer(nullptr), len(0), idx(0), endian(0), throwing(false),
         ownFile(false)
    {
    }
@@ -80,18 +80,18 @@ public:
       if(buffer)
       {
          efree(buffer);
-         buffer = NULL;
+         buffer = nullptr;
       }
    }
 
-   long Tell();
-   virtual void Close();
+   long tell();
+   virtual void close();
 
-   void SwapLong  (int32_t  &x);
-   void SwapLongLong(int64_t &x);
-   void SwapShort (int16_t  &x);
-   void SwapULong (uint32_t &x);
-   void SwapUShort(uint16_t &x);
+   void swapLong  (int32_t  &x);
+   void swapLongLong(int64_t &x);
+   void swapShort (int16_t  &x);
+   void swapULong (uint32_t &x);
+   void swapUShort(uint16_t &x);
 
    void setThrowing(bool val) { throwing = val;  }
    bool getThrowing() const   { return throwing; }
@@ -114,17 +114,19 @@ public:
 class OutBuffer : public BufferedFileBase
 {
 public:
-   virtual bool CreateFile(const char *filename, size_t pLen, int pEndian);
-   virtual bool Flush();
-   virtual void Close();
+   virtual bool createFile(const char *filename, size_t pLen, int pEndian);
+   virtual bool flush();
+   virtual void close();
 
-   bool Write(const void *data, size_t size);
-   bool WriteSint32(int32_t  num);
-   bool WriteUint32(uint32_t num);
-   bool WriteSint16(int16_t  num);
-   bool WriteUint16(uint16_t num);
-   bool WriteSint8 (int8_t   num);
-   bool WriteUint8 (uint8_t  num);
+   bool write(const void *data, size_t size);
+   bool writeSint64(int64_t  num);
+   bool writeUint64(uint64_t num);
+   bool writeSint32(int32_t  num);
+   bool writeUint32(uint32_t num);
+   bool writeSint16(int16_t  num);
+   bool writeUint16(uint16_t num);
+   bool writeSint8 (int8_t   num);
+   bool writeUint8 (uint8_t  num);
 };
 
 //
@@ -146,9 +148,10 @@ public:
    int    seek(long offset, int origin);
    virtual size_t read(void *dest, size_t size);
    int    skip(size_t skipAmt);
+   bool   readSint64(int64_t  &num);
+   bool   readUint64(uint64_t &num);
    bool   readSint32(int32_t  &num);
    bool   readUint32(uint32_t &num);
-   bool   readSint64(int64_t  &num);
    bool   readSint16(int16_t  &num);
    bool   readUint16(uint16_t &num);
    bool   readSint8 (int8_t   &num);

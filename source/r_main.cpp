@@ -1086,7 +1086,10 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
       quake = true;
       savedflags = player->mo->flags2;
       player->mo->flags2 |= MF2_DONTDRAW;
+      player->mo->intflags |= MIF_HIDDENBYQUAKE;   // keep track
    }
+   else
+      player->mo->intflags &= ~MIF_HIDDENBYQUAKE;  // zero it otherwise
 
    // The head node is the last node output.
    R_RenderBSPNode(numnodes - 1);

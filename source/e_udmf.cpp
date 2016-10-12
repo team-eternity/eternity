@@ -1455,9 +1455,9 @@ bool UDMFParser::next(Token &token)
 //
 // Increases position by given amount. Updates line and column accordingly.
 //
-void UDMFParser::addPos(int amount)
+void UDMFParser::addPos(size_t amount)
 {
-   for(int i = 0; i < amount; ++i)
+   for(size_t i = 0; i < amount; i++)
    {
       if(mPos == mData.length())
          return;

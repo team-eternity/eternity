@@ -691,6 +691,7 @@ enum mobjflags4_e : unsigned int
    MF4_TLSTYLESUB     = 0x00010000, // Use subtractive blending map
    MF4_TOTALINVISIBLE = 0x00020000, // Thing is invisible to monsters
    MF4_DRAWSBLOOD     = 0x00040000, // For missiles, spawn blood when hitting bleeding things
+   MF4_SPACPUSHWALL   = 0x00080000, // thing can activate push walls
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh
@@ -714,6 +715,12 @@ enum
    MIF_WIMPYDEATH  = 0x00002000, // haleyjd: for player, died wimpy (10 damage or less)
    MIF_CLEARMOMZ   = 0x00004000, // davidph: clear momz (and this flag) in P_MovePlayer
    MIF_PLYRCORPSE  = 0x00008000, // haleyjd: object has been in the player corpse queue
+
+   // Player sprites must be temporarily hidden using DONTDRAW during quakes,
+   // because they change view position. This isn't sufficient however for
+   // hiding cross-portal sprite projections, so the HIDDENBYQUAKE internal flag
+   // was added to keep track.
+   MIF_HIDDENBYQUAKE = 0x00010000,
 
    // these should be cleared when a thing is being raised
    MIF_CLEARRAISED = (MIF_DIEDFALLING|MIF_SCREAMED|MIF_CRASHED|MIF_WIMPYDEATH),

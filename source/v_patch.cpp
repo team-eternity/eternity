@@ -825,7 +825,7 @@ patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize,
    for(x = 0; x < w; ++x)
    {
       // set entry in columnofs table
-      columnofs[x] = static_cast<int>(dest - out);
+      columnofs[x] = int(dest - out);
 
       // set basic column properties
       c = (column_t *)dest;

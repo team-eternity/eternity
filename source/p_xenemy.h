@@ -32,6 +32,7 @@
 #define P_XENEMY_H__
 
 #include "p_mobj.h"
+#include "m_qstr.h"
 
 // Earthquakes
 
@@ -51,6 +52,8 @@ public:
    int duration;         // how long it lasts
    fixed_t quakeRadius;  // radius of shaking effects
    fixed_t damageRadius; // radius of damage effects (if any)
+
+   qstring soundName;    // name of sound to play (default: Earthquake)
 };
 
 bool P_StartQuake(int *args, Mobj *activator);

@@ -640,7 +640,7 @@ void BotMap::cacheToFile(const char* path) const
 
     GZCompression file;
     file.setThrowing(true);
-    if (!file.CreateFile(path, CACHE_BUFFER_SIZE, BufferedFileBase::LENDIAN, CompressLevel_Space))
+    if (!file.createFile(path, CACHE_BUFFER_SIZE, BufferedFileBase::LENDIAN, CompressLevel_Space))
     {
         C_Printf(FC_ERROR "WARNING: can't create bot map cache file at %s\n", path);
         return;
@@ -651,15 +651,15 @@ void BotMap::cacheToFile(const char* path) const
     try
     {
         // First, write the version magic
-        file.Write(BOTMAP_CACHE_MAGIC, strlen(BOTMAP_CACHE_MAGIC));
+        file.write(BOTMAP_CACHE_MAGIC, strlen(BOTMAP_CACHE_MAGIC));
 
         // vertices
-        file.WriteSint32(numverts);
+        file.writeSint32(numverts);
         int i;
         for (i = 0; i < numverts; ++i)
         {
-            file.WriteSint32(vertices[i].x);
-            file.WriteSint32(vertices[i].y);
+            file.writeSint32(vertices[i].x);
+            file.writeSint32(vertices[i].y);
         }
 
         // Build a metasector->index map
@@ -671,7 +671,7 @@ void BotMap::cacheToFile(const char* path) const
         }
 
         // metasectors
-        file.WriteUint32((uint32_t)metasectors.getLength());
+        file.writeUint32((uint32_t)metasectors.getLength());
        int nullMSecIndex = -1;
        i = 0;
         for (const auto msec : metasectors)
@@ -681,109 +681,109 @@ void BotMap::cacheToFile(const char* path) const
               nullMSecIndex = i;
            ++i;
         }
-       file.WriteSint32(nullMSecIndex);
+       file.writeSint32(nullMSecIndex);
 
         // lines
-        file.WriteSint32(numlines);
+        file.writeSint32(numlines);
         for (i = 0; i < numlines; ++i)
         {
-            file.WriteSint32(lines[i].v[0] ? (int32_t)(lines[i].v[0] - vertices) : -1);
-            file.WriteSint32(lines[i].v[1] ? (int32_t)(lines[i].v[1] - vertices) : -1);
-            file.WriteSint32(lines[i].msec[0] ? msecIndexMap[lines[i].msec[0]] : -1);
-            file.WriteSint32(lines[i].msec[1] ? msecIndexMap[lines[i].msec[1]] : -1);
-            file.WriteSint32(lines[i].specline ? (int32_t)(lines[i].specline - ::lines) : -1);
+            file.writeSint32(lines[i].v[0] ? (int32_t)(lines[i].v[0] - vertices) : -1);
+            file.writeSint32(lines[i].v[1] ? (int32_t)(lines[i].v[1] - vertices) : -1);
+            file.writeSint32(lines[i].msec[0] ? msecIndexMap[lines[i].msec[0]] : -1);
+            file.writeSint32(lines[i].msec[1] ? msecIndexMap[lines[i].msec[1]] : -1);
+            file.writeSint32(lines[i].specline ? (int32_t)(lines[i].specline - ::lines) : -1);
         }
 
-       file.WriteSint32(bMapOrgX);
-       file.WriteSint32(bMapOrgY);
-       file.WriteSint32(bMapWidth);
-       file.WriteSint32(bMapHeight);
+       file.writeSint32(bMapOrgX);
+       file.writeSint32(bMapOrgY);
+       file.writeSint32(bMapWidth);
+       file.writeSint32(bMapHeight);
 
         // segs
-        file.WriteUint32((uint32_t)segs.getLength());
+        file.writeUint32((uint32_t)segs.getLength());
         for (const auto& seg : segs)
         {
-            file.WriteSint32(seg.v[0] ? (int32_t)(seg.v[0] - vertices) : -1);
-            file.WriteSint32(seg.v[1] ? (int32_t)(seg.v[1] - vertices) : -1);
-            file.WriteSint32(seg.dx);
-            file.WriteSint32(seg.dy);
-            file.WriteSint32(seg.ln ? (int32_t)(seg.ln - lines) : -1);
-            file.WriteUint8(seg.isback);
-            file.WriteSint32(seg.partner ? (int32_t)(seg.partner - &segs[0]) : -1);
-            file.WriteSint32(seg.bbox[0]);
-            file.WriteSint32(seg.bbox[1]);
-            file.WriteSint32(seg.bbox[2]);
-            file.WriteSint32(seg.bbox[3]);
-            file.WriteSint32(seg.mid.x);
-            file.WriteSint32(seg.mid.y);
-            file.WriteSint32(seg.owner ? (int32_t)(seg.owner - &ssectors[0]) : -1);
-            file.WriteUint32((uint32_t)seg.blocklist.getLength());
+            file.writeSint32(seg.v[0] ? (int32_t)(seg.v[0] - vertices) : -1);
+            file.writeSint32(seg.v[1] ? (int32_t)(seg.v[1] - vertices) : -1);
+            file.writeSint32(seg.dx);
+            file.writeSint32(seg.dy);
+            file.writeSint32(seg.ln ? (int32_t)(seg.ln - lines) : -1);
+            file.writeUint8(seg.isback);
+            file.writeSint32(seg.partner ? (int32_t)(seg.partner - &segs[0]) : -1);
+            file.writeSint32(seg.bbox[0]);
+            file.writeSint32(seg.bbox[1]);
+            file.writeSint32(seg.bbox[2]);
+            file.writeSint32(seg.bbox[3]);
+            file.writeSint32(seg.mid.x);
+            file.writeSint32(seg.mid.y);
+            file.writeSint32(seg.owner ? (int32_t)(seg.owner - &ssectors[0]) : -1);
+            file.writeUint32((uint32_t)seg.blocklist.getLength());
             for (auto j : seg.blocklist)
             {
-                file.WriteSint32(j);
+                file.writeSint32(j);
             }
         }
 
         // ssectors
-        file.WriteUint32((uint32_t)ssectors.getLength());
+        file.writeUint32((uint32_t)ssectors.getLength());
         for (const auto& ssector : ssectors)
         {
-            file.WriteSint32(ssector.segs ? (int32_t)(ssector.segs - &segs[0]) : -1);
-            file.WriteSint32(ssector.msector ? msecIndexMap[ssector.msector] : -1);
-            file.WriteSint32(ssector.nsegs);
+            file.writeSint32(ssector.segs ? (int32_t)(ssector.segs - &segs[0]) : -1);
+            file.writeSint32(ssector.msector ? msecIndexMap[ssector.msector] : -1);
+            file.writeSint32(ssector.nsegs);
             // mobjlist dynamic
             // linelist dynamic
-            file.WriteSint32(ssector.mid.x);
-            file.WriteSint32(ssector.mid.y);
-            file.WriteUint32((uint32_t)ssector.neighs.getLength());
+            file.writeSint32(ssector.mid.x);
+            file.writeSint32(ssector.mid.y);
+            file.writeUint32((uint32_t)ssector.neighs.getLength());
             for (const auto& neigh : ssector.neighs)
             {
-                file.WriteSint32(neigh.otherss ? (int32_t)(neigh.otherss - &ssectors[0]) : -1);
-                file.WriteSint32(neigh.myss ? (int32_t)(neigh.myss - &ssectors[0]) : -1);
-                file.WriteSint32(neigh.v.x);
-                file.WriteSint32(neigh.v.y);
-                file.WriteSint32(neigh.d.x);
-                file.WriteSint32(neigh.d.y);
-                file.WriteSint32(neigh.line ? (int32_t)(neigh.line - lines) : -1);
-                file.WriteSint32(neigh.dist);
+                file.writeSint32(neigh.otherss ? (int32_t)(neigh.otherss - &ssectors[0]) : -1);
+                file.writeSint32(neigh.myss ? (int32_t)(neigh.myss - &ssectors[0]) : -1);
+                file.writeSint32(neigh.v.x);
+                file.writeSint32(neigh.v.y);
+                file.writeSint32(neigh.d.x);
+                file.writeSint32(neigh.d.y);
+                file.writeSint32(neigh.line ? (int32_t)(neigh.line - lines) : -1);
+                file.writeSint32(neigh.dist);
             }
         }
 
         // nodes
-        file.WriteSint32(numnodes);
+        file.writeSint32(numnodes);
         for (i = 0; i < numnodes; ++i)
         {
-            file.WriteSint32(nodes[i].x);
-            file.WriteSint32(nodes[i].y);
-            file.WriteSint32(nodes[i].dx);
-            file.WriteSint32(nodes[i].dy);
-            file.WriteSint32(nodes[i].child[0]);
-            file.WriteSint32(nodes[i].child[1]);
+            file.writeSint32(nodes[i].x);
+            file.writeSint32(nodes[i].y);
+            file.writeSint32(nodes[i].dx);
+            file.writeSint32(nodes[i].dy);
+            file.writeSint32(nodes[i].child[0]);
+            file.writeSint32(nodes[i].child[1]);
         }
 
-        file.WriteUint32((uint32_t)segBlocks.getLength());
+        file.writeUint32((uint32_t)segBlocks.getLength());
         for (const auto& coll : segBlocks)
         {
-            file.WriteUint32((uint32_t)coll.getLength());
+            file.writeUint32((uint32_t)coll.getLength());
             for (const auto pseg : coll)
             {
-                file.WriteSint32(pseg ? (int32_t)(pseg - &segs[0]) : -1);
+                file.writeSint32(pseg ? (int32_t)(pseg - &segs[0]) : -1);
             }
         }
 
        // From 04 onwards
-       file.WriteUint32((uint32_t)lineBlocks.getLength());
+       file.writeUint32((uint32_t)lineBlocks.getLength());
        for(const auto &coll : lineBlocks)
        {
-          file.WriteUint32((uint32_t)coll.getLength());
+          file.writeUint32((uint32_t)coll.getLength());
           for(const auto pline : coll)
           {
-             file.WriteSint32(pline ? (int32_t)(pline - &lines[0]) : -1);
+             file.writeSint32(pline ? (int32_t)(pline - &lines[0]) : -1);
           }
        }
        // end
 
-        file.WriteSint32(radius);
+        file.writeSint32(radius);
 
         // mobjSecMap dynamic
         // lineSecMap dynamic
@@ -791,12 +791,12 @@ void BotMap::cacheToFile(const char* path) const
         // thrownProjectiles dynamic
         // sectorFlags dynamic
         // gunLines dynamic
-       file.Close();
+       file.close();
     }
     catch (const BufferedIOException&)
     {
         C_Printf(FC_ERROR "WARNING: can't write bot map cache file at %s\n", path);
-        file.Close();
+        file.close();
 
         // try to delete it if it fails in the middle of the write.
         if (remove(path) != 0)
@@ -1028,7 +1028,7 @@ void BotMap::loadFromCache(const char* path)
       FAIL();
    }
 
-   file.Close();
+   file.close();
 
    // now it's time to validate all the data
    // metasectors

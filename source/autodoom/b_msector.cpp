@@ -88,8 +88,8 @@ MetaSector* MetaSector::readFromFile(InBuffer& file)
 //
 void SimpleMSector::writeToFile(OutBuffer& file) const
 {
-    file.WriteUint8(MSEC_SIMPLE);
-    file.WriteSint32(sector ? (int32_t)(sector - ::sectors) : -1);
+    file.writeUint8(MSEC_SIMPLE);
+    file.writeSint32(sector ? (int32_t)(sector - ::sectors) : -1);
 }
 SimpleMSector* SimpleMSector::readFromFile(InBuffer& file)
 {
@@ -108,10 +108,10 @@ bool SimpleMSector::convertIndicesToPointers()
 //
 void LineMSector::writeToFile(OutBuffer& file) const
 {
-    file.WriteUint8(MSEC_LINE);
-    file.WriteSint32(sector[0] ? (int32_t)(sector[0] - ::sectors) : -1);
-    file.WriteSint32(sector[1] ? (int32_t)(sector[1] - ::sectors) : -1);
-    file.WriteSint32(line ? (int32_t)(line - ::lines) : -1);
+    file.writeUint8(MSEC_LINE);
+    file.writeSint32(sector[0] ? (int32_t)(sector[0] - ::sectors) : -1);
+    file.writeSint32(sector[1] ? (int32_t)(sector[1] - ::sectors) : -1);
+    file.writeSint32(line ? (int32_t)(line - ::lines) : -1);
 }
 LineMSector* LineMSector::readFromFile(InBuffer& file) 
 {
@@ -133,9 +133,9 @@ bool LineMSector::convertIndicesToPointers()
 //
 void ThingMSector::writeToFile(OutBuffer& file) const
 {
-    file.WriteUint8(MSEC_THING);
-    file.WriteSint32(sector ? (int32_t)(sector - ::sectors) : -1);
-    file.WriteSint32(mobj ? p_mobjIndexMap[mobj] : -1);
+    file.writeUint8(MSEC_THING);
+    file.writeSint32(sector ? (int32_t)(sector - ::sectors) : -1);
+    file.writeSint32(mobj ? p_mobjIndexMap[mobj] : -1);
 }
 ThingMSector* ThingMSector::readFromFile(InBuffer& file)
 {
@@ -155,11 +155,11 @@ bool ThingMSector::convertIndicesToPointers()
 //
 void CompoundMSector::writeToFile(OutBuffer& file) const
 {
-    file.WriteUint8(MSEC_COMPOUND);
-    file.WriteSint32(numElem);
+    file.writeUint8(MSEC_COMPOUND);
+    file.writeSint32(numElem);
     for (int i = 0; i < numElem; ++i)
     {
-        file.WriteSint32(msectors[i] ? botMap->msecIndexMap[msectors[i]] : -1);
+        file.writeSint32(msectors[i] ? botMap->msecIndexMap[msectors[i]] : -1);
     }
 }
 CompoundMSector* CompoundMSector::readFromFile(InBuffer& file)

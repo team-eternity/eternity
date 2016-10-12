@@ -55,6 +55,7 @@ struct iwadcheck_t
    GameMission_t gamemission;
    bool          hassecrets;
    bool          freedoom;
+   bool          freedm;
    bool          bfgedition;
 };
 

@@ -1397,17 +1397,11 @@ int qstring::Printf(size_t maxlen, const char *fmt, ...)
 //
 void qstring::archive(SaveArchive &arc)
 {
-   uint32_t indexTemp;
-
    if(arc.isLoading())
       freeBuffer(); // haleyjd: do not leak memory
 
-   arc.ArchiveLString(buffer, size);
-
-   if(arc.isSaving())
-      indexTemp = static_cast<uint32_t>(index);
-
-   arc << indexTemp;
+   arc.archiveLString(buffer, size);
+   arc.archiveSize(index);
 
    if(arc.isLoading())
    {
@@ -1417,8 +1411,6 @@ void qstring::archive(SaveArchive &arc)
          buffer = local;
          size   = 0;
       }
-
-      index = indexTemp;
    }
 }
 
