@@ -46,7 +46,7 @@
 #include "info.h"
 #include "metaapi.h"
 #include "m_cheat.h"
-#include "m_misc.h"
+#include "m_utils.h"
 #include "p_info.h"
 #include "p_inter.h"
 #include "p_mobj.h"

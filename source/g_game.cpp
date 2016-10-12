@@ -63,6 +63,7 @@
 #include "m_misc.h"
 #include "m_random.h"
 #include "m_shots.h"
+#include "m_utils.h"
 #include "metaapi.h"
 #include "mn_engin.h"
 #include "mn_menus.h"

@@ -46,7 +46,7 @@
 #include "../m_bbox.h"
 #include "../m_buffer.h"
 #include "../m_hash.h"
-#include "../m_misc.h"
+#include "../m_utils.h"
 #include "../m_qstr.h"
 #include "../p_maputl.h"
 #include "../p_setup.h"

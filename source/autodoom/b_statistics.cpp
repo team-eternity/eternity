@@ -32,7 +32,7 @@
 #include "b_util.h"
 #include "../doomstat.h"
 #include "../info.h"
-#include "../m_misc.h"
+#include "../m_utils.h"
 
 #define MONSTER_STATS_NAME "damagestats.data"
 

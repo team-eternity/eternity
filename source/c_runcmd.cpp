@@ -48,6 +48,7 @@
 #include "m_argv.h"
 #include "m_misc.h"
 #include "m_qstr.h"
+#include "m_utils.h"
 #include "mn_engin.h"
 #include "v_misc.h"
 #include "w_wad.h"
@@ -1610,16 +1611,9 @@ void C_RunCmdLineScripts()
             file = !strcasecmp(myargv[p], "-exec"); // allow multiple -exec
          else if(file)
          {
-            char *filename = NULL;
-            
-            M_StringAlloca(&filename, 1, 6, myargv[p]);
-
-            strcpy(filename, myargv[p]);
-
-            M_NormalizeSlashes(M_AddDefaultExtension(filename, ".csc"));
-
-            if(!access(".", R_OK))
-               C_RunScriptFromFile(filename);
+            qstring filename(myargv[p]);
+            filename.addDefaultExtension(".csc").normalizeSlashes();
+            C_RunScriptFromFile(filename.constPtr());
          }
       }
    }

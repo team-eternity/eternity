@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2016 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,12 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+// Purpose: Collection objects
+// Authors: James Haley, David Hill, Ioan Chera
 //
-// DESCRIPTION:
-//      Collection objects
-//
-//-----------------------------------------------------------------------------
 
 #ifndef M_COLLECTION_H__
 #define M_COLLECTION_H__
@@ -36,12 +32,11 @@
 #include "m_random.h"
 
 //
-// BaseCollection
-//
 // This is a base class for functionality shared by the other collection types.
 // It cannot be used directly but must be inherited from.
 //
-template<typename T> class BaseCollection : public ZoneObject
+template<typename T> 
+class BaseCollection : public ZoneObject
 {
 protected:
    T *ptrArray;
@@ -50,12 +45,10 @@ protected:
    size_t wrapiterator;
 
    BaseCollection()
-      : ZoneObject(), ptrArray(NULL), length(0), numalloc(0), wrapiterator(0)
+      : ZoneObject(), ptrArray(nullptr), length(0), numalloc(0), wrapiterator(0)
    {
    }
 
-   //
-   // baseResize
    //
    // Resizes the internal array by the amount provided
    //
@@ -72,21 +65,17 @@ protected:
    }
 
    //
-   // baseClear
-   //
    // Frees the storage, if any is allocated, and clears all member variables
    //
    void baseClear()
    {
 		efree(ptrArray);
-      ptrArray = NULL;
+      ptrArray = nullptr;
       length = 0;
       numalloc = 0;
       wrapiterator = 0;
    }
 
-   //
-   // checkWrapIterator
    //
    // Certain operations may invalidate the wrap iterator.
    //
@@ -97,14 +86,12 @@ protected:
    }
 
 public:
-   // getLength
+   // get the length of the collection
    size_t getLength() const { return length; }
 
-   // isEmpty: test if the collection is empty or not
+   // test if the collection is empty or not
    bool isEmpty() const { return length == 0; }
    
-   //
-   // wrapIterator
    //
    // Returns the next item in the collection, wrapping to the beginning
    // once the end is reached. The iteration state is stored in the
@@ -132,9 +119,6 @@ public:
          wrapiterator = i;
    }
 
-
-   //
-   // at
    //
    // Get the item at a given index. Index must be in range from 0 to length-1.
    //
@@ -145,11 +129,9 @@ public:
       return ptrArray[index];
    }
 
-   // operator[] - Overloaded operator wrapper for at method.
+   // Overloaded operator wrapper for at method.
    T &operator [] (size_t index) const { return at(index); }
    
-   //
-   // getRandom
    //
    // Returns a random item from the collection.
    //
@@ -175,14 +157,34 @@ public:
 };
 
 //
-// PODCollection
-//
 // This class can store primitive/intrinsic data types or POD objects. It does
 // not do any construction or destruction of the objects it stores; it is just
 // a simple reallocating array with maximum efficiency.
 //
-template<typename T> class PODCollection : public BaseCollection<T>
+template<typename T> 
+class PODCollection : public BaseCollection<T>
 {
+protected:
+   //
+   // For move constructor and move assignment - transfer allocation from other
+   // and set other to empty state.
+   //
+   void moveFrom(PODCollection<T> &&other) noexcept
+   {
+      if(this->ptrArray == other.ptrArray) // same object?
+         return;
+
+      this->clear();
+      this->ptrArray     = other.ptrArray;
+      this->length       = other.length;
+      this->numalloc     = other.numalloc;
+      this->wrapiterator = other.wrapiterator;
+
+      other.ptrArray = nullptr;
+      other.length = other.numalloc = 0;
+      other.wrapiterator = 0;
+   }
+
 public:
    // Basic constructor
    PODCollection() : BaseCollection<T>()
@@ -217,11 +219,8 @@ public:
    {
       this->assign(other);
    }
-   
-   // Destructor
-   ~PODCollection() { clear(); }
 
-   // operator = - Overloaded operator wrapper for assign method
+   // Overloaded operator wrapper for assign method
    PODCollection<T> &operator = (const PODCollection<T> &other)
    {
       this->assign(other);
@@ -248,28 +247,29 @@ public:
 		other.wrapiterator = 0;
 		other.numalloc = 0;
    }
-   
-   // Copy constructor
-   PODCollection(PODCollection<T> &&other) : BaseCollection<T>()
+
+   // Move constructor
+   PODCollection(PODCollection<T> &&other) noexcept
    {
-      this->assign(other);
-   }
-   // operator = - Overloaded operator wrapper for assign method
-   PODCollection<T> &operator = (PODCollection<T> &&other)
-   {
-      this->assign(other);
-      return *this;
+      moveFrom(std::move(other));
    }
 
-   //
-   // clear
+   // Move assignment
+   PODCollection<T> &operator = (PODCollection<T> &&other) noexcept 
+   { 
+      moveFrom(std::move(other)); 
+      return *this;
+   }
+   
+   // Destructor
+   ~PODCollection() { clear(); }
+
+
    //
    // Empties the collection and frees its storage.
    //
    void clear() { this->baseClear(); }
 
-   //
-   // makeEmpty
    //
    // Marks the collection as empty but doesn't free the storage.
    //
@@ -282,8 +282,6 @@ public:
    }
 
    //
-   // zero
-   //
    // Zero out the storage but do not change any other properties, including
    // length.
    //
@@ -293,8 +291,6 @@ public:
          memset(this->ptrArray, 0, this->numalloc * sizeof(T));
    }
 
-   //
-   // add
    //
    // Adds a new item to the end of the collection.
    //
@@ -307,8 +303,6 @@ public:
    }
 
    //
-   // addNew
-   //
    // Adds a new zero-initialized item to the end of the collection.
    //
    T &addNew()
@@ -320,8 +314,6 @@ public:
       return this->ptrArray[this->length++];
    }
 
-   //
-   // pop
    //
    // davidph 11/23/11: Returns the last item and decrements the length.
    //
@@ -343,8 +335,6 @@ public:
        this->wrapiterator = 0;
    }
    
-   //
-   // resize
    //
    // Change the length of the array.
    //
@@ -420,24 +410,44 @@ public:
 };
 
 //
-// Collection
-//
 // This class can store any type of data, including objects that require 
 // constructor/destructor calls and contain virtual methods.
 //
-template<typename T> class Collection : public BaseCollection<T>
+template<typename T> 
+class Collection : public BaseCollection<T>
 {
 protected:
    const T *prototype; // An unowned object of type T that serves as a prototype
 
+   //
+   // For move constructor and move assignment - transfer allocation from other
+   // and set other to empty state.
+   //
+   void moveFrom(Collection<T> &&other) noexcept
+   {
+      if(this->ptrArray == other.ptrArray) // same object?
+         return;
+
+      this->clear();
+      this->ptrArray     = other.ptrArray;
+      this->length       = other.length;
+      this->numalloc     = other.numalloc;
+      this->wrapiterator = other.wrapiterator;
+      this->prototype    = other.prototype;
+
+      other.ptrArray = nullptr;
+      other.length = other.numalloc = 0;
+      other.wrapiterator = 0;
+   }
+
 public:
    // Basic constructor
-   Collection() : BaseCollection<T>(), prototype(NULL)
+   Collection() : BaseCollection<T>(), prototype(nullptr)
    {
    }
    
    // Parameterized constructor
-   Collection(size_t initSize) : BaseCollection<T>(), prototype(NULL)
+   Collection(size_t initSize) : BaseCollection<T>(), prototype(nullptr)
    {
       this->baseResize(initSize);
    }
@@ -461,11 +471,29 @@ public:
       assign(other);
    }
 
+   // Copy assignment
+   Collection<T> &operator = (const Collection<T> &other) 
+   { 
+      assign(other); 
+      return *this;
+   }
+
+   // Move constructor
+   Collection(Collection<T> &&other) noexcept
+   {
+      moveFrom(std::move(other));
+   }
+
+   // Move assignment
+   Collection<T> &operator = (Collection<T> &&other) noexcept 
+   { 
+      moveFrom(std::move(other)); 
+      return *this;
+   }
+
    // Destructor
    ~Collection() { this->clear(); }
 
-   //
-   // setPrototype
    //
    // Set the pointer to a prototype object of type T that can be used
    // for construction of new items in the collection without constant
@@ -476,8 +504,6 @@ public:
    void setPrototype(const T *pPrototype) { prototype = pPrototype; }
    const T *getPrototype() const { return prototype; }
 
-   //
-   // clear
    //
    // Empties the collection and frees its storage.
    //
@@ -492,8 +518,6 @@ public:
       this->baseClear();
    }
    
-   //
-   // makeEmpty
    //
    // Marks the collection as empty but doesn't free the storage.
    //
@@ -510,8 +534,6 @@ public:
       this->length = this->wrapiterator = 0;
    }
 
-   //
-   // add
    //
    // Adds a new item to the end of the collection.
    //
@@ -542,8 +564,6 @@ public:
    }
 
    //
-   // add
-   //
    // Adds a new item to the end of the collection, using the
    // prototype as the copy source - the prototype must be valid!
    //
@@ -555,8 +575,6 @@ public:
       add(*prototype);
    }
 
-   //
-   // addNew
    //
    // Adds a new item to the end of the collection, using the prototype
    // as the copy source - must have a valid prototype!

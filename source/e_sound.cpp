@@ -58,7 +58,7 @@
 #include "d_io.h"
 #include "d_dehtbl.h"
 #include "i_sound.h"
-#include "m_misc.h"
+#include "m_utils.h"
 #include "p_mobj.h"
 #include "p_skin.h"
 #include "sounds.h"

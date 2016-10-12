@@ -32,7 +32,7 @@
 #include "d_io.h"
 #include "doomstat.h"
 #include "m_buffer.h"
-#include "m_misc.h"
+#include "m_utils.h"
 #include "m_qstr.h"
 #include "p_skin.h"
 #include "s_sound.h"

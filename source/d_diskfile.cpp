@@ -29,7 +29,7 @@
 #include "z_zone.h"
 #include "i_system.h"
 #include "m_swap.h"
-#include "m_misc.h"
+#include "m_utils.h"
 #include "d_diskfile.h"
 
 //

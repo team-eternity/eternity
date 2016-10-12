@@ -53,7 +53,7 @@
 #include "../in_lude.h"
 #include "../metaapi.h"
 #include "../m_compare.h"
-#include "../m_misc.h"
+#include "../m_utils.h"
 #include "../p_maputl.h"
 #include "../p_pspr.h"
 #include "../p_setup.h"

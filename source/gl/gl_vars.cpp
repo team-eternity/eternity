@@ -31,7 +31,6 @@
 #include "../z_zone.h"
 #include "../c_io.h"
 #include "../c_runcmd.h"
-#include "../m_misc.h"
 
 #include "gl_vars.h"
 

@@ -312,6 +312,7 @@
 		4F5F399E182D9C1A0027813A /* libmikmod.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF6A1753482C00E70FEC /* libmikmod.a */; };
 		4F5F399F182D9C1C0027813A /* libsmpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF6B1753482C00E70FEC /* libsmpeg.a */; };
 		4F68CE8D1963D88100E7B8BE /* ev_sectors.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F68CE8B1963D88100E7B8BE /* ev_sectors.cpp */; };
+		4F83BF781DAEAEC900DFDD52 /* m_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F83BF761DAEAEC900DFDD52 /* m_utils.cpp */; };
 		4F96871E1A90CF4D00C4D342 /* am_svg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F96871C1A90CF4D00C4D342 /* am_svg.cpp */; };
 		4FAC15D41BFDA06B003FA3A4 /* b_compression.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FAC15D21BFDA06B003FA3A4 /* b_compression.cpp */; };
 		4FE91CD6196FDFC600FB6336 /* b_itemlearn.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FE91CD4196FDFC600FB6336 /* b_itemlearn.cpp */; };
@@ -422,6 +423,8 @@
 		4F69650916C3B1EB00FF2028 /* ev_static.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ev_static.cpp; path = ../source/ev_static.cpp; sourceTree = "<group>"; };
 		4F7BB78C175797640079E263 /* i_directory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = i_directory.cpp; path = ../source/hal/i_directory.cpp; sourceTree = "<group>"; };
 		4F7BB78D175797640079E263 /* i_directory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = i_directory.h; path = ../source/hal/i_directory.h; sourceTree = "<group>"; };
+		4F83BF761DAEAEC900DFDD52 /* m_utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = m_utils.cpp; path = ../source/m_utils.cpp; sourceTree = "<group>"; };
+		4F83BF771DAEAEC900DFDD52 /* m_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = m_utils.h; path = ../source/m_utils.h; sourceTree = "<group>"; };
 		4F8B42E816C1101000765638 /* zutil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = zutil.c; path = ../zlib/zutil.c; sourceTree = "<group>"; };
 		4F96871C1A90CF4D00C4D342 /* am_svg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = am_svg.cpp; path = ../source/am_svg.cpp; sourceTree = "<group>"; };
 		4F96871D1A90CF4D00C4D342 /* am_svg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = am_svg.h; path = ../source/am_svg.h; sourceTree = "<group>"; };
@@ -1574,6 +1577,8 @@
 				FA16D41915E01E96002318D1 /* m_swap.h */,
 				FABF5D02158BF42800C49E93 /* m_syscfg.cpp */,
 				FA16D41A15E01E96002318D1 /* m_syscfg.h */,
+				4F83BF761DAEAEC900DFDD52 /* m_utils.cpp */,
+				4F83BF771DAEAEC900DFDD52 /* m_utils.h */,
 				FABF5D03158BF42800C49E93 /* m_vector.cpp */,
 				FA16D41B15E01E96002318D1 /* m_vector.h */,
 			);
@@ -2076,6 +2081,7 @@
 				4F5F397E182D9B9A0027813A /* pngrutil.c in Sources */,
 				4F5F397F182D9B9A0027813A /* pngset.c in Sources */,
 				4F5F3980182D9B9A0027813A /* pngtrans.c in Sources */,
+				4F83BF781DAEAEC900DFDD52 /* m_utils.cpp in Sources */,
 				4F5F3981182D9B9A0027813A /* png.c in Sources */,
 				4F5F3982182D9B9A0027813A /* pngerror.c in Sources */,
 				4F5F3983182D9B9A0027813A /* pngget.c in Sources */,
