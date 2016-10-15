@@ -48,6 +48,7 @@
 #include "../m_hash.h"
 #include "../m_utils.h"
 #include "../m_qstr.h"
+#include "../p_map.h"
 #include "../p_maputl.h"
 #include "../p_setup.h"
 #include "../r_defs.h"
@@ -422,8 +423,6 @@ static void B_setSpecLinePositions()
 //   int n, j;
 //   fixed_t lenx, leny;
    
-   fixed_t botsize = 4 * botMap->radius / 2;
-   
    BSubsec *ss;
    botMap->gunLines.makeEmpty();
    
@@ -433,6 +432,7 @@ static void B_setSpecLinePositions()
       const ev_action_t *action = EV_ActionForSpecial(line.special);
       if(action)
       {
+         // TODO: also take into account generalized actions
          if(action->type == &S1ActionType || action->type == &SRActionType
                  || action->type == &DRActionType)
          {
@@ -440,12 +440,23 @@ static void B_setSpecLinePositions()
                (line.v1->y + line.v2->y) / 2};
             angle_t ang = P_PointToAngle(line.v1->x, line.v1->y,
                                          line.v2->x, line.v2->y) - ANG90;
-            mid.x += FixedMul(botsize, B_AngleCosine(ang));
-            mid.y += FixedMul(botsize, B_AngleSine(ang));
+
+            mid.x += FixedMul(USERANGE / 2, B_AngleCosine(ang));
+            mid.y += FixedMul(USERANGE / 2, B_AngleSine(ang));
             
             ss = &botMap->pointInSubsector(mid.x, mid.y);
             ss->linelist.insert(&line);
             botMap->lineSecMap[&line].add(ss);
+
+            mid.x += FixedMul(USERANGE / 2, B_AngleCosine(ang));
+            mid.y += FixedMul(USERANGE / 2, B_AngleSine(ang));
+
+            ss = &botMap->pointInSubsector(mid.x, mid.y);
+            if(!ss->linelist.count(&line))
+            {
+               ss->linelist.insert(&line);
+               botMap->lineSecMap[&line].add(ss);
+            }
          }
          else if(action->type == &G1ActionType || action->type == &GRActionType)
          {

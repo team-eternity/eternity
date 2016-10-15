@@ -45,6 +45,7 @@
 //#include "../doomdef.h"
 #include "../doomstat.h"
 #include "../e_edf.h"
+#include "../e_exdata.h"
 #include "../e_player.h"
 #include "../e_states.h"
 #include "../e_things.h"
@@ -1023,6 +1024,36 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
     }
 }
 
+static bool B_checkSwitchReach(const Mobj &mo, const v2fixed_t &coord,
+                               const line_t &swline)
+{
+   if(B_ExactDistance(mo.x - coord.x, mo.y - coord.y) >= USERANGE)
+      return false;
+   RTraversal trav;
+
+   return trav.Execute(mo.x, mo.y, coord.x, coord.y, PT_ADDLINES, [](intercept_t *in, void *parm) {
+
+      const line_t &l = *in->d.line;
+      if(&l == parm)
+         return true;
+
+      if(l.special)
+         return !demo_compatibility && in->d.line->flags & ML_PASSUSE;
+
+      // no special. Check if blocking.
+      if(l.extflags & EX_ML_BLOCKALL || l.sidenum[1] == -1 ||
+         l.frontsector->floorheight >= l.frontsector->ceilingheight ||
+         l.backsector->floorheight >= l.backsector->ceilingheight ||
+         l.frontsector->floorheight >= l.backsector->ceilingheight ||
+         l.backsector->floorheight >= l.frontsector->ceilingheight)
+      {
+         return false;
+      }
+
+      return true;
+   }, const_cast<line_t *>(&swline));
+}
+
 //
 // Bot::doNonCombatAI
 //
@@ -1053,15 +1084,18 @@ void Bot::doNonCombatAI()
     const BSubsec* nextss = nullptr;
 
     v2fixed_t endCoord;
+   const line_t *swline = nullptr;
     if (m_path.end.kind == BotPathEnd::KindCoord)
     {
         endCoord = m_path.end.coord;
     }
     else if (m_path.end.kind == BotPathEnd::KindWalkLine)
     {
-        const line_t& line = *m_path.end.walkLine;
+        swline = m_path.end.walkLine;
         endCoord = B_ProjectionOnSegment(pl->mo->x, pl->mo->y,
-            line.v1->x, line.v1->y, line.dx, line.dy, pl->mo->radius);
+                                         swline->v1->x, swline->v1->y,
+                                         swline->dx, swline->dy,
+                                         pl->mo->radius);
     }
     else
         endCoord = { 0, 0 };
@@ -1167,9 +1201,8 @@ void Bot::doNonCombatAI()
     mx = pl->mo->x;
     my = pl->mo->y;
     m_intoSwitch = false;
-    if (goalTable.hasKey(BOT_WALKTRIG)
-        && B_ExactDistance(mx - endCoord.x, my - endCoord.y)
-        < 2 * pl->mo->radius)
+    if (goalTable.hasKey(BOT_WALKTRIG) &&
+        B_checkSwitchReach(*pl->mo, endCoord, *swline))
     {
         m_intoSwitch = true;
         if(prevCtr % 2 == 0)
@@ -1180,14 +1213,18 @@ void Bot::doNonCombatAI()
         LevelStateStack::UseRealHeights(true);
         const sector_t* nextsec = nextss->msector->getCeilingSector();
         LevelStateStack::UseRealHeights(false);
-        
-        if(!nextsec->ceilingdata
-           && botMap->sectorFlags[nextsec - ::sectors].isDoor)
-        {
-            m_intoSwitch = true;
-            if(prevCtr % 2 == 0)
+
+       if(botMap->sectorFlags[nextsec - ::sectors].isDoor)
+       {
+          auto doorTh = thinker_cast<VerticalDoorThinker *>
+          (nextsec->ceilingdata);
+          if(!doorTh || doorTh->direction == plat_down)
+          {
+             m_intoSwitch = true;
+             if(prevCtr % 2 == 0)
                 cmd->buttons |= BT_USE;
-        }
+          }
+       }
     }
 
     if (goalAchieved())
