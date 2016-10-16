@@ -416,6 +416,57 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
     return false;
 }
 
+static bool BTR_switchReachTraverse(intercept_t *in, void *parm)
+{
+   const line_t &l = *in->d.line;
+   if(&l == parm)
+      return true;
+
+   if(l.special)
+      return !demo_compatibility && in->d.line->flags & ML_PASSUSE;
+
+   // no special. Check if blocking.
+   if(l.extflags & EX_ML_BLOCKALL || l.sidenum[1] == -1 ||
+      l.frontsector->floorheight >= l.frontsector->ceilingheight ||
+      l.backsector->floorheight >= l.backsector->ceilingheight ||
+      l.frontsector->floorheight >= l.backsector->ceilingheight ||
+      l.backsector->floorheight >= l.frontsector->ceilingheight)
+   {
+      return false;
+   }
+
+   return true;
+}
+
+static bool B_checkSwitchReach(fixed_t mox, fixed_t moy, const v2fixed_t &coord,
+                               const line_t &swline)
+{
+   if(B_ExactDistance(mox - coord.x, moy - coord.y) >= USERANGE)
+      return false;
+   RTraversal trav;
+
+   return trav.Execute(mox, moy, coord.x, coord.y, PT_ADDLINES,
+                       BTR_switchReachTraverse, const_cast<line_t *>(&swline));
+}
+
+// This version checks if a line is by itself reachable, without assuming a user
+static bool B_checkSwitchReach(fixed_t range, const line_t &swline)
+{
+   RTraversal trav;
+
+   angle_t ang = P_PointToAngle(swline.v1->x, swline.v1->y,
+                                swline.v2->x, swline.v2->y) - ANG90;
+   unsigned fang = ang >> ANGLETOFINESHIFT;
+
+   fixed_t mx, my;
+   mx = swline.v1->x + swline.dx / 2;
+   my = swline.v1->y + swline.dy / 2;
+   return trav.Execute(mx + FixedMul(range, finecosine[fang]),
+                       my + FixedMul(range, finesine[fang]), mx, my,
+                       PT_ADDLINES, BTR_switchReachTraverse,
+                       const_cast<line_t *>(&swline));
+}
+
 bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
 {
 
@@ -537,6 +588,13 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
     for (auto it = ss.linelist.begin(); it != ss.linelist.end(); ++it)
     {
         line = *it;
+       // Check if it's really accessible
+       if(!B_checkSwitchReach(USERANGE, *line) &&
+          !B_checkSwitchReach(USERANGE / 2, *line))
+       {
+          continue;
+       }
+
         if(self.handleLineGoal(ss, coord, *line))
             return true;
     }
@@ -1024,36 +1082,6 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
     }
 }
 
-static bool B_checkSwitchReach(const Mobj &mo, const v2fixed_t &coord,
-                               const line_t &swline)
-{
-   if(B_ExactDistance(mo.x - coord.x, mo.y - coord.y) >= USERANGE)
-      return false;
-   RTraversal trav;
-
-   return trav.Execute(mo.x, mo.y, coord.x, coord.y, PT_ADDLINES, [](intercept_t *in, void *parm) {
-
-      const line_t &l = *in->d.line;
-      if(&l == parm)
-         return true;
-
-      if(l.special)
-         return !demo_compatibility && in->d.line->flags & ML_PASSUSE;
-
-      // no special. Check if blocking.
-      if(l.extflags & EX_ML_BLOCKALL || l.sidenum[1] == -1 ||
-         l.frontsector->floorheight >= l.frontsector->ceilingheight ||
-         l.backsector->floorheight >= l.backsector->ceilingheight ||
-         l.frontsector->floorheight >= l.backsector->ceilingheight ||
-         l.backsector->floorheight >= l.frontsector->ceilingheight)
-      {
-         return false;
-      }
-
-      return true;
-   }, const_cast<line_t *>(&swline));
-}
-
 //
 // Bot::doNonCombatAI
 //
@@ -1202,7 +1230,7 @@ void Bot::doNonCombatAI()
     my = pl->mo->y;
     m_intoSwitch = false;
     if (goalTable.hasKey(BOT_WALKTRIG) &&
-        B_checkSwitchReach(*pl->mo, endCoord, *swline))
+        B_checkSwitchReach(mx, my, endCoord, *swline))
     {
         m_intoSwitch = true;
         if(prevCtr % 2 == 0)
