@@ -572,7 +572,7 @@ void BotMap::SpecialIsDoor(int n, SectorTrait& st, const line_t* line)
        case VLS_SRDoorBlazeOpenBlue:
        case VLS_SRDoorBlazeOpenRed:
        case VLS_SRDoorBlazeOpenYellow:
-          if(line->backsector && line->tag == line->backsector->tag)
+          if(line->backsector && line->args[0] == line->backsector->tag)
              st.isDoor = true;
           break;
        default:
