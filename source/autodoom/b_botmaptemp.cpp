@@ -1073,11 +1073,17 @@ static void FindDynamicSectors(bool* dynamicSectors)
                for(j = 0; j < sector->linecount; ++j)
                {
                   sector2 = sector->lines[j]->frontsector;
-                  if(sector2 != sector || !(sector->lines[j]->flags & ML_TWOSIDED))
+                  if(sector2 != sector ||
+                     !(sector->lines[j]->flags & ML_TWOSIDED))
+                  {
                      continue;
+                  }
                   sector2 = sector->lines[j]->backsector;
-                  if(!sector2 || sector2->floorpic != sector->floorpic)
+                  if(!sector2 || sector2->floorpic != sector->floorpic ||
+                     sector2 == sector)
+                  {
                      continue;
+                  }
                   
                   dynamicSectors[sector2 - ::sectors] = true;
                   sector = sector2;
