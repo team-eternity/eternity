@@ -506,9 +506,10 @@ bool P_SetMobjStateNF(Mobj *mobj, statenum_t state); // sets state without calli
 void P_ThrustMobj(Mobj *mo, angle_t angle, fixed_t move);
 
 // TIDs
-void P_InitTIDHash(void);
-void P_AddThingTID(Mobj *mo, int tid);
-void P_RemoveThingTID(Mobj *mo);
+void  P_InitTIDHash(void);
+void  P_AddThingTID(Mobj *mo, int tid);
+void  P_RemoveThingTID(Mobj *mo);
+Mobj *P_FindMobjFromTID(int tid, Mobj *rover, Mobj *trigger);
 
 void P_AdjustFloorClip(Mobj *thing);
 

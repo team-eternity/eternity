@@ -31,7 +31,6 @@
 
 #include "z_zone.h"
 
-#include "a_small.h"
 #include "acs_intr.h"
 #include "c_runcmd.h"
 #include "doomstat.h"
