@@ -702,6 +702,40 @@ enum
 };
 
 //
+// ACS_CF_GetLineCenterX
+//
+// int GetLineCenterX(int lineid);
+//
+// Returns the X coordinate of line's center point.
+//
+bool ACS_CF_GetLineCenterX(ACS_CF_ARGS)
+{
+   int           lineid  = argV[0];
+   int           linenum = -1;
+   const line_t *line    = P_FindLine(lineid, &linenum);
+
+   thread->dataStk.push(line ? line->v1->x + line->dx / 2 : 0);
+   return false;
+}
+
+//
+// ACS_CF_GetLineCenterY
+//
+// int GetLineCenterY(int lineid);
+//
+// Returns the Y coordinate of line's center point.
+//
+bool ACS_CF_GetLineCenterY(ACS_CF_ARGS)
+{
+   int           lineid  = argV[0];
+   int           linenum = -1;
+   const line_t *line    = P_FindLine(lineid, &linenum);
+
+   thread->dataStk.push(line ? line->v1->y + line->dy / 2 : 0);
+   return false;
+}
+
+//
 // ACS_CF_GetPlayerInput
 //
 // int GetPlayerInput(int player, int input);

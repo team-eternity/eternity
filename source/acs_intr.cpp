@@ -362,6 +362,9 @@ ACSEnvironment::ACSEnvironment() :
  //addFuncDataACS0( 89, addCallFunc(ACS_CF_SetThingRoll));
  //addFuncDataACS0( 90, addCallFunc(ACS_CF_GetThingRoll));
  //addFuncDataACS0( 91, addCallFunc(ACS_CF_QuakeEx));
+
+   addFuncDataACS0(300, addCallFunc(ACS_CF_GetLineCenterX));
+   addFuncDataACS0(301, addCallFunc(ACS_CF_GetLineCenterY));
 }
 
 //
