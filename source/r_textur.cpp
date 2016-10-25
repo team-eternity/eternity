@@ -941,7 +941,7 @@ static void FinishTexture(texture_t *tex)
             col = NextTempCol(col);
             
             col->yoff = y;
-            col->ptroff = maskp - tempmask.buffer;
+            col->ptroff = uint32_t(maskp - tempmask.buffer);
             
             while(y < tex->height && *maskp > 0)
             {

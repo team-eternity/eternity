@@ -852,6 +852,8 @@ static void D_checkIWAD_WAD(FILE *fp, const char *iwadname, iwadcheck_t &version
          ++sosr;
       else if(!lumpnamecmp(n, "FREEDOOM"))
          version.freedoom = true;
+      else if(!lumpnamecmp(n, "FREEDM")) // Needed to discern freedm from freedoom2
+         version.freedm   = true;
       else if(!lumpnamecmp(n, "HACX-R"))
          ++hacx;
       else if(!lumpnamecmp(n, "M_ACPT"  ) || // haleyjd 11/03/12: BFG Edition
@@ -1481,6 +1483,7 @@ static void D_identifyIWAD()
       version.gamemission = none;
       version.hassecrets  = false;
       version.freedoom    = false;
+      version.freedm      = false;
       version.bfgedition  = false;
       version.error       = false;
       version.flags       = IWADF_FATALNOTOPEN | IWADF_FATALNOTWAD;

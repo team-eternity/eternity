@@ -1,0 +1,22 @@
+================================================================================
+Changes since Eternity Engine v3.40.48 (older source comments with dates may be
+removed and placed in maxw_changelog_0.txt, if need be)
+================================================================================
+--------------------------------------------------------------------------------
+2016/09/19
+
+Added two new codepointers: "A_CounterJumpEx", and "A_CounterSwitchEx".
+These function similarly to their non-Ex counterparts, but are useable in
+monsters defined fully using DECORATE states. CounterSwitchEx notably takes
+args[0] as the counter # to use, and args[N] as the offset or state label to
+jump to, and the number of states does not need to be specified.
+
+-------------------------------------------------------------------------------
+2016/09/28
+
+Altered IWAD detection so that FreeDM and Freedoom 2 are now  in the correct
+positions when autodetected.
+
+================================================================================
+EOF
+================================================================================

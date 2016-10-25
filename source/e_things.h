@@ -65,12 +65,13 @@ void E_SetThingDefaultSprites(void);
 #endif
 
 // For Game Engine:
-int E_ThingNumForDEHNum(int dehnum);        // dehnum lookup
-int E_GetThingNumForDEHNum(int dehnum);     //   fatal error version
-int E_SafeThingType(int dehnum);            //   fallback version
-int E_ThingNumForName(const char *name);    // mnemonic lookup
-int E_GetThingNumForName(const char *name); //   fatal error version
-int E_SafeThingName(const char *name);      //   fallback version
+int E_ThingNumForDEHNum(int dehnum);           // dehnum lookup
+int E_GetThingNumForDEHNum(int dehnum);        //   fatal error version
+int E_SafeThingType(int dehnum);               //   fallback version
+int E_ThingNumForName(const char *name);       // mnemonic lookup
+int E_GetThingNumForName(const char *name);    //   fatal error version
+int E_SafeThingName(const char *name);         //   fallback version
+int E_ThingNumForCompatName(const char *name); //   ACS compat version
 
 // setup default gibhealth
 void E_ThingDefaultGibHealth(mobjinfo_t *mi);

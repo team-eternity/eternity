@@ -336,7 +336,7 @@ private:
    readresult_e readItem();
 
    bool next(Token &token);
-   void addPos(int amount);
+   void addPos(size_t amount);
 
    bool eof() const { return mPos == mData.length(); }
 

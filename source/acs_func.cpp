@@ -1295,15 +1295,14 @@ bool ACS_CF_RadiusQuake(ACS_CF_ARGS)
 
       qt->intensity    = intensity;
       qt->duration     = duration;
-      qt->damageRadius = damageRadius;
-      qt->quakeRadius  = quakeRadius;
+      qt->damageRadius = damageRadius << FRACBITS;
+      qt->quakeRadius  = quakeRadius << FRACBITS;
+      qt->soundName    = snd;
 
       qt->x       = mo->x;
       qt->y       = mo->y;
       qt->z       = mo->z;
       qt->groupid = mo->groupid;
-
-      S_StartSoundNameAtVolume(qt, snd, 127, ATTN_NORMAL, CHAN_AUTO);
    }
 
    thread->dataStk.push(0);
