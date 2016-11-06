@@ -1,6 +1,6 @@
 ##-----------------------------------------------------------------------------
 ##
-## Copyright (C) 2015 David Hill
+## Copyright (C) 2015-2016 David Hill
 ##
 ## See COPYING for license information.
 ##
@@ -58,54 +58,54 @@ endfunction()
 ##
 ## ACSVM_TRY_C_FLAG
 ##
-if(NOT ACSVM_NOFLAGS)
-   function(ACSVM_TRY_C_FLAG flag name)
-      CHECK_C_COMPILER_FLAG(${flag} ${name})
+function(ACSVM_TRY_C_FLAG flag name)
+   CHECK_C_COMPILER_FLAG(${flag} ACSVM_C_FLAG_${name})
 
-      if(${name})
-         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${flag}" PARENT_SCOPE)
-      endif()
-   endfunction()
-endif()
+   if(ACSVM_C_FLAG_${name})
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${flag}" PARENT_SCOPE)
+   endif()
+endfunction()
 
 ##
 ## ACSVM_TRY_CXX_FLAG
 ##
-if(NOT ACSVM_NOFLAGS)
-   function(ACSVM_TRY_CXX_FLAG flag name)
-      CHECK_CXX_COMPILER_FLAG(${flag} ${name})
+function(ACSVM_TRY_CXX_FLAG flag name)
+   CHECK_CXX_COMPILER_FLAG(${flag} ACSVM_CXX_FLAG_${name})
 
-      if(${name})
-         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${flag}" PARENT_SCOPE)
-      endif()
-   endfunction()
-endif()
+   if(ACSVM_CXX_FLAG_${name})
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${flag}" PARENT_SCOPE)
+   endif()
+endfunction()
 
 
 ##----------------------------------------------------------------------------|
 ## Environment Detection                                                      |
 ##
 
+set(ACSVM_SHARED_DEFAULT ON)
+
 if(NOT ACSVM_NOFLAGS)
    if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
-      ACSVM_TRY_C_FLAG(-Wall      ACSVM_C_FLAG_Wall   )
-      ACSVM_TRY_C_FLAG(-Wextra    ACSVM_C_FLAG_Wextra )
-      ACSVM_TRY_C_FLAG(-Wpedantic ACSVM_C_FLAG_Wpedantic)
-      ACSVM_TRY_C_FLAG(-Wshadow   ACSVM_C_FLAG_Wshadow)
+      ACSVM_TRY_C_FLAG(-Wall    Wall)
+      ACSVM_TRY_C_FLAG(-Wextra  Wextra)
+      ACSVM_TRY_C_FLAG(-Wshadow Wshadow)
 
-      ACSVM_TRY_C_FLAG(-std=c11 ACSVM_C_FLAG_C11)
+      ACSVM_TRY_C_FLAG(-std=c11 STD_C)
    endif()
 
    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-      ACSVM_TRY_CXX_FLAG(-Wall      ACSVM_CXX_FLAG_Wall   )
-      ACSVM_TRY_CXX_FLAG(-Wextra    ACSVM_CXX_FLAG_Wextra )
-      ACSVM_TRY_CXX_FLAG(-Wpedantic ACSVM_CXX_FLAG_Wpedantic)
-      ACSVM_TRY_CXX_FLAG(-Wshadow   ACSVM_CXX_FLAG_Wshadow)
+      ACSVM_TRY_CXX_FLAG(-Wall    Wall)
+      ACSVM_TRY_CXX_FLAG(-Wextra  Wextra)
+      ACSVM_TRY_CXX_FLAG(-Wshadow Wshadow)
 
-      ACSVM_TRY_CXX_FLAG(-Wno-gnu-label-as-value ACSVM_CXX_FLAG_Wno_gnu_label)
-
-      ACSVM_TRY_CXX_FLAG(-std=c++11 ACSVM_CXX_FLAG_CXX11)
+      ACSVM_TRY_CXX_FLAG(-std=c++11 STD_CXX)
    endif()
+endif()
+
+if(MSVC)
+   # Disable shared by default, as the source does not contain the needed
+   # declaration annotations to make that work under MSVC.
+   set(ACSVM_SHARED_DEFAULT OFF)
 endif()
 
 
@@ -117,7 +117,7 @@ endif()
 ## ACSVM_INSTALL_API
 ##
 if(NOT DEFINED ACSVM_INSTALL_API)
-   set(ACSVM_INSTALL_API OFF CACHE BOOL "Install ACSVM headers.")
+   set(ACSVM_INSTALL_API ON CACHE BOOL "Install ACSVM headers.")
 endif()
 
 ##
@@ -148,7 +148,8 @@ endif()
 ## they are built as STATIC.
 ##
 if(NOT DEFINED ACSVM_SHARED)
-   set(ACSVM_SHARED ON CACHE BOOL "Build libraries as shared objects.")
+   set(ACSVM_SHARED ${ACSVM_SHARED_DEFAULT} CACHE BOOL
+      "Build libraries as shared objects.")
 endif()
 
 ##

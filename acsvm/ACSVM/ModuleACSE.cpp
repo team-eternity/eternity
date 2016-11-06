@@ -440,6 +440,8 @@ namespace ACSVM
    {
       if(chunkName != ChunkID("MINI")) return false;
 
+      if(size % 8) throw ReadError("bad MINI size");
+
       Word regC = 0;
 
       // Determine highest index.
