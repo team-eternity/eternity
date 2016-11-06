@@ -702,36 +702,70 @@ enum
 };
 
 //
-// ACS_CF_GetLineCenterX
+// ACS_CF_GetLineX
 //
-// int GetLineCenterX(int lineid);
+// int GetLineX(lineid, lineratio, linedist);
 //
-// Returns the X coordinate of line's center point.
+// Returns the X coordinate of lineratio across the tagged line,
+// and linedist away from it (perpendicular).
 //
-bool ACS_CF_GetLineCenterX(ACS_CF_ARGS)
+bool ACS_CF_GetLineX(ACS_CF_ARGS)
 {
    int           lineid  = argV[0];
+   int           lineratio = argV[1];
+   int           linedist = argV[2];
+
    int           linenum = -1;
    const line_t *line    = P_FindLine(lineid, &linenum);
 
-   thread->dataStk.push(line ? line->v1->x + line->dx / 2 : 0);
+   if(!line)
+   {
+      thread->dataStk.push(0);
+      return false;
+   }
+   int32_t result = line->v1->x + FixedMul(line->dx, lineratio);
+   if(linedist)
+   {
+      angle_t angle = P_PointToAngle(line->v1->x, line->v1->y, line->v2->x, line->v2->y);
+      angle -= ANG90;
+      unsigned fineangle = angle >> ANGLETOFINESHIFT;
+      result += FixedMul(finecosine[fineangle], linedist);
+   }
+   thread->dataStk.push(result);
    return false;
 }
 
 //
-// ACS_CF_GetLineCenterY
+// ACS_CF_GetLineY
 //
-// int GetLineCenterY(int lineid);
+// int GetLineY(lineid, lineratio, linedist);
 //
-// Returns the Y coordinate of line's center point.
+// Returns the Y coordinate of lineratio across the tagged line,
+// and linedist away from it (perpendicular).
 //
-bool ACS_CF_GetLineCenterY(ACS_CF_ARGS)
+bool ACS_CF_GetLineY(ACS_CF_ARGS)
 {
-   int           lineid  = argV[0];
-   int           linenum = -1;
-   const line_t *line    = P_FindLine(lineid, &linenum);
+   int           lineid = argV[0];
+   int           lineratio = argV[1];
+   int           linedist = argV[2];
 
-   thread->dataStk.push(line ? line->v1->y + line->dy / 2 : 0);
+   int           linenum = -1;
+   const line_t *line = P_FindLine(lineid, &linenum);
+
+   if(!line)
+   {
+      thread->dataStk.push(0);
+      return false;
+   }
+   int32_t result = line->v1->y + FixedMul(line->dy, lineratio);
+   if(linedist)
+   {
+      angle_t angle = P_PointToAngle(line->v1->x, line->v1->y, line->v2->x, line->v2->y);
+      angle -= ANG90;
+      unsigned fineangle = angle >> ANGLETOFINESHIFT;
+      result += FixedMul(finecosine[fineangle], linedist);
+   }
+   thread->dataStk.push(result);
    return false;
 }
 
