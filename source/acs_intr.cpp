@@ -92,9 +92,7 @@ ACSEnvironment::ACSEnvironment() :
    dir   {nullptr},
    global{getGlobalScope(0)},
    hub   {nullptr},
-   map   {nullptr},
-
-   strBEHAVIOR{getString("BEHAVIOR", 8)}
+   map   {nullptr}
 {
    global->active = true;
 
@@ -483,8 +481,6 @@ ACSVM::ModuleName ACSEnvironment::readModuleName(std::istream &in) const
 void ACSEnvironment::refStrings()
 {
    ACSVM::Environment::refStrings();
-
-   strBEHAVIOR->ref = true;
 }
 
 //
@@ -655,7 +651,10 @@ void ACS_LoadLevelScript(WadDirectory *dir, int lump)
 
    // Load the level script, if any.
    if(lump != -1)
-      ACS_loadModule(modules, {ACSenv.strBEHAVIOR, dir, (size_t)lump});
+   {
+      ACSVM::String *lumpName = ACSenv.getString(dir->getLumpName(lump));
+      ACS_loadModule(modules, {lumpName, dir, (size_t)lump});
+   }
 
    // Load LOADACS modules.
    WadChainIterator wci(*dir, "LOADACS");

@@ -195,7 +195,6 @@ public:
    ACSVM::GlobalScope *global;
    ACSVM::HubScope    *hub;
    ACSVM::MapScope    *map;
-   ACSVM::String      *strBEHAVIOR;
 
    size_t errors;
 };
