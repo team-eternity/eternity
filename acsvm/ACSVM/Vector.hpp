@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2016 David Hill
 //
 // See COPYING for license information.
 //
@@ -50,7 +50,7 @@ namespace ACSVM
          dataC = c;
          dataV = static_cast<T *>(::operator new(sizeof(T) * dataC));
 
-         for(T *itr = dataV, *end = itr + dataC; itr != end; ++itr)
+         for(T *itr = dataV, *last = itr + dataC; itr != last; ++itr)
             new(itr) T{*v++};
       }
 
@@ -71,7 +71,7 @@ namespace ACSVM
          dataC = count;
          dataV = static_cast<T *>(::operator new(sizeof(T) * dataC));
 
-         for(T *itr = dataV, *end = itr + dataC; itr != end; ++itr)
+         for(T *itr = dataV, *last = itr + dataC; itr != last; ++itr)
             new(itr) T{args...};
       }
 
@@ -99,6 +99,28 @@ namespace ACSVM
          ::operator delete(dataV);
          dataV = nullptr;
          dataC = 0;
+      }
+
+      //
+      // realloc
+      //
+      template<typename... Args>
+      void realloc(size_type count, Args const &...args)
+      {
+         if(count == dataC) return;
+
+         Vector<T> old{std::move(*this)};
+
+         dataC = count;
+         dataV = static_cast<T *>(::operator new(sizeof(T) * dataC));
+
+         T *itr = begin(), *last = end(), *oldItr = old.begin();
+         T *mid = count > old.size() ? dataV + old.size() : last;
+
+         while(itr != mid)
+            new(itr++) T{std::move(*oldItr++)};
+         while(itr != last)
+            new(itr++) T{args...};
       }
 
       // size

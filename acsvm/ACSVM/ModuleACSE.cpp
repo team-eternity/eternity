@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2016 David Hill
 //
 // See COPYING for license information.
 //
@@ -440,18 +440,16 @@ namespace ACSVM
    {
       if(chunkName != ChunkID("MINI")) return false;
 
-      if(size % 8) throw ReadError("bad MINI size");
+      if(size % 4 || size < 4) throw ReadError("bad MINI size");
 
-      Word regC = 0;
+      Word idx  = ReadLE4(data);
+      Word regC = idx + size / 4 - 1;
 
-      // Determine highest index.
-      for(std::size_t iter = 0; iter != size; iter += 8)
-         regC = std::max<Word>(regC, ReadLE4(data + iter) + 1);
+      if(regC > regInitV.size())
+         regInitV.realloc(regC);
 
-      regInitV.alloc(regC);
-
-      for(std::size_t iter = 0; iter != size; iter += 8)
-         regInitV[ReadLE4(data + iter)] = ReadLE4(data + iter + 4);
+      for(std::size_t iter = 4; iter != size; iter += 4)
+         regInitV[idx++] = ReadLE4(data + iter);
 
       return true;
    }
