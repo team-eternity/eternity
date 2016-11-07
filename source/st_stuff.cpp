@@ -333,7 +333,7 @@ static int      keyboxes[3];
 
 extern byte     **translationtables;
 
-static invbarstate_t dbarstate;
+static invbarstate_t dbarstate[MAXPLAYERS];
 
 //
 // STATUS BAR CODE
@@ -346,7 +346,7 @@ static invbarstate_t dbarstate;
 //
 static invbarstate_t &ST_GetInvBarState()
 {
-   return dbarstate;
+   return dbarstate[consoleplayer];
 }
 
 static void ST_refreshBackground()
@@ -1370,8 +1370,9 @@ static void ST_DoomInit()
 {
    ST_loadData();
 
-   // Initialise the inventory bar state.
-   dbarstate = { false, 0, 0, 0 };
+   // Initialise the inventory bar states.
+	for(int i = 0; i < MAXPLAYERS; i++)
+		dbarstate[i] = { false, 0, 0, 0 };
 }
 
 //
