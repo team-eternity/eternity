@@ -83,14 +83,14 @@ void ScrollThinker::Think()
    if(!(dx | dy))                   // no-op if both (x,y) offsets 0
       return;
 
+   side_t *side;
+   sector_t *sec;
+   fixed_t height, waterheight;  // killough 4/4/98: add waterheight
+   msecnode_t *node;
+   Mobj *thing;
+
    switch(this->type)
    {
-      side_t *side;
-      sector_t *sec;
-      fixed_t height, waterheight;  // killough 4/4/98: add waterheight
-      msecnode_t *node;
-      Mobj *thing;
-
    case ScrollThinker::sc_side:          // killough 3/7/98: Scroll wall texture
       side = sides + this->affectee;
       side->textureoffset += dx;

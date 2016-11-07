@@ -364,16 +364,24 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
          if(texbot < clip.opentop)
             clip.opentop = texbot;
          // ioanch 20160318: mark if 3dmidtex affects clipping
-         if(portaldetect)
+         // Also don't flag lines that are offset into the floor/ceiling
+         if(portaldetect && (texbot < clip.openfrontsector->ceilingheight ||
+                             texbot < clip.openbacksector->ceilingheight))
+         {
             *lineclipflags |= LINECLIP_UNDER3DMIDTEX;
+         }
       }
       else
       {
          if(textop > clip.openbottom)
             clip.openbottom = textop;
          // ioanch 20160318: mark if 3dmidtex affects clipping
-         if(portaldetect)
+         // Also don't flag lines that are offset into the floor/ceiling
+         if(portaldetect && (textop > clip.openfrontsector->floorheight ||
+                             textop > clip.openbacksector->floorheight))
+         {
             *lineclipflags |= LINECLIP_OVER3DMIDTEX;
+         }
 
          // The mobj is above the 3DMidTex, so check to see if it's ON the 3DMidTex
          // SoM 01/12/06: let monsters walk over dropoffs

@@ -60,7 +60,7 @@ static patch_t *PatchINVRTGEM2;
 static int chainhealth;        // current position of the gem
 static int chainwiggle;        // small randomized addend for chain y coord.
 
-static invbarstate_t hbarstate;
+static invbarstate_t hbarstate[MAXPLAYERS];
 
 //
 // ST_GetInventoryState
@@ -69,7 +69,7 @@ static invbarstate_t hbarstate;
 //
 static invbarstate_t &ST_GetInvBarState()
 {
-   return hbarstate;
+   return hbarstate[consoleplayer];
 }
 
 //
@@ -152,8 +152,9 @@ static void ST_HticInit()
       keys[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
 
-   // Initialise the inventory bar state.
-   hbarstate = { false, 0, 0, 0 };
+   // Initialise the inventory bar states.
+	for(int i = 0; i < MAXPLAYERS; i++)
+		hbarstate[i] = { false, 0, 0, 0 };
 }
 
 //
@@ -406,17 +407,17 @@ static void ST_drawStatBar()
 
    // FIXME: Make this wait for the next tic, instead of iterating every frame.
    // ArtifactFlash, it's a gas! Gas! Gas!
-   if(hbarstate.ArtifactFlash)
+   if(hbarstate[consoleplayer].ArtifactFlash)
    {
       V_DrawPatch(180, 161, &subscreen43,
          PatchLoader::CacheName(wGlobalDir, "BLACKSQ", PU_CACHE));
 
-      temp = W_GetNumForName(DEH_String("useartia")) + hbarstate.ArtifactFlash - 1;
+      temp = W_GetNumForName(DEH_String("useartia")) + hbarstate[consoleplayer].ArtifactFlash - 1;
 
       V_DrawPatch(182, 161, &subscreen43,
          PatchLoader::CacheNum(wGlobalDir, temp, PU_CACHE));
       // MaxW: Choco Heretic does stuff that I'm not sure how to translate to EE.
-      hbarstate.ArtifactFlash--;
+      hbarstate[consoleplayer].ArtifactFlash--;
    }
    // It's safety checks all the way down!
    else if(plyr->inventory[plyr->inv_ptr].amount)
@@ -480,12 +481,14 @@ static void ST_drawInvBar()
 {
    itemeffect_t *artifact;
    const char *patch;
-   int leftoffs = hbarstate.curpos >= 7 ? hbarstate.curpos - 6 : 0;
+   int leftoffs = hbarstate[consoleplayer].curpos >= 7 ? hbarstate[consoleplayer].curpos - 6 : 0;
 
    V_DrawPatch(34, 160, &subscreen43, PatchLoader::CacheName(wGlobalDir, "INVBAR", PU_CACHE));
 
-   int i = 0;
-   do
+   int i = -1;
+	// E_MoveInventoryCursor returns false when it hits the boundary of the visible inventory,
+	// so it's a useful iterator here.
+   while(E_MoveInventoryCursor(plyr, 1, i) && i < 7)
    {
       // Safety check that the player has an inventory item, then that the effect exists
       // for the selected item, then that there is an associated patch for that effect.
@@ -501,8 +504,8 @@ static void ST_drawInvBar()
                ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact), 77 + i * 31, 182);
             }
          }
-      } // E_MoveInventoryCursor returns false when it hits the boundary of the visible inventory,
-   } while(E_MoveInventoryCursor(plyr, 1, i) && i < 7); // so it's a useful iterator here.
+      }
+   }
 
    if(leftoffs)
    {
@@ -516,7 +519,7 @@ static void ST_drawInvBar()
          !(leveltime & 4) ? PatchINVRTGEM1 : PatchINVRTGEM2);
    }
 
-   V_DrawPatch(50 + (hbarstate.curpos - leftoffs)* 31, 189, &subscreen43,
+   V_DrawPatch(50 + (hbarstate[consoleplayer].curpos - leftoffs)* 31, 189, &subscreen43,
      PatchLoader::CacheName(wGlobalDir, "SELECTBO", PU_CACHE));
 }
 //
@@ -529,7 +532,7 @@ static void ST_HticDrawer()
    ST_drawBackground();
    ST_drawLifeChain();
 
-   if(hbarstate.inventory)
+   if(hbarstate[consoleplayer].inventory)
       ST_drawInvBar();
    else
       ST_drawStatBar();

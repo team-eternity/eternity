@@ -1252,10 +1252,10 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
       line_t *line = &lines[i];
       int staticFn = EV_StaticInitForSpecial(line->special);
 
+      int s, sec;
+
       switch(staticFn)
       {
-         int s, sec;
-
          // killough 3/7/98:
          // support for drawn heights coming from different sector
       case EV_STATIC_TRANSFER_HEIGHTS:

@@ -60,8 +60,8 @@ void QuakeThinker::Think()
       this->removeThinker();
       return;
    }
-   
-   params.sfx = E_SoundForName("Earthquake");
+
+   params.sfx = E_SoundForName(soundName.constPtr());
 
    // loop quake sound
    if(params.sfx && !S_CheckSoundPlaying(this, params.sfx))
@@ -74,14 +74,17 @@ void QuakeThinker::Think()
    tics = this->duration--;
 
    // do some rumbling
+   const linkoffset_t *link;
    for(i = 0; i < MAXPLAYERS; i++)
    {
       if(playeringame[i])
       {
          player_t *p  = &players[i];
          Mobj     *mo = p->mo;
-         fixed_t  dst = P_AproxDistance(this->x - mo->x, 
-                                        this->y - mo->y);
+
+         link = P_GetLinkOffset(this->groupid, mo->groupid);
+         fixed_t dst = P_AproxDistance(this->x - mo->x + link->x,
+                                       this->y - mo->y + link->y);
 
          // test if player is in quake radius
          // haleyjd 04/16/07: only set p->quake when qt->intensity is greater;
@@ -124,6 +127,7 @@ void QuakeThinker::serialize(SaveArchive &arc)
    Super::serialize(arc);
 
    arc << intensity << duration << quakeRadius << damageRadius;
+   soundName.archive(arc);
 }
 
 //
@@ -131,23 +135,24 @@ void QuakeThinker::serialize(SaveArchive &arc)
 //
 // Starts an earthquake at each object with the tid in args[4]
 //
-bool P_StartQuake(int *args)
+bool P_StartQuake(int *args, Mobj *activator)
 {
    Mobj *mo = NULL;
    bool ret = false;
 
-   while((mo = P_FindMobjFromTID(args[4], mo, NULL)))
+   while((mo = P_FindMobjFromTID(args[4], mo, activator)))
    {
       QuakeThinker *qt;
       ret = true;
 
-      qt = new QuakeThinker;
+      qt = new QuakeThinker();
       qt->addThinker();
 
       qt->intensity    = args[0];
       qt->duration     = args[1];
       qt->damageRadius = args[2] * (64 * FRACUNIT);
       qt->quakeRadius  = args[3] * (64 * FRACUNIT);
+      qt->soundName    = "Earthquake";
 
       qt->x       = mo->x;
       qt->y       = mo->y;

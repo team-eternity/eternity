@@ -919,8 +919,8 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    view.z      = M_FixedToFloat(viewz);
    view.angle  = (ANG90 - viewangle) * PI / ANG180;
    view.pitch  = (ANG90 - viewpitch) * PI / ANG180;
-   view.sin    = sin(view.angle);
-   view.cos    = cos(view.angle);
+   view.sin    = sinf(view.angle);
+   view.cos    = cosf(view.angle);
    view.lerp   = lerp;
    view.sector = R_PointInSubsector(viewx, viewy)->sector;
 
@@ -1086,7 +1086,10 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
       quake = true;
       savedflags = player->mo->flags2;
       player->mo->flags2 |= MF2_DONTDRAW;
+      player->mo->intflags |= MIF_HIDDENBYQUAKE;   // keep track
    }
+   else
+      player->mo->intflags &= ~MIF_HIDDENBYQUAKE;  // zero it otherwise
 
    // The head node is the last node output.
    R_RenderBSPNode(numnodes - 1);

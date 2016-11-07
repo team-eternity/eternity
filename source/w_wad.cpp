@@ -168,7 +168,7 @@ Collection<qstring> WadDirectoryPimpl::SourceFileNames;
 WadDirectory::WadDirectory()
  : ZoneObject(), lumpinfo(NULL), numlumps(0), ispublic(false), type(0)
 {
-   pImpl = new WadDirectoryPimpl;
+   pImpl = new WadDirectoryPimpl();
    memset(m_namespaces, 0, sizeof(m_namespaces));
 }
 
