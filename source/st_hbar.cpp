@@ -153,8 +153,8 @@ static void ST_HticInit()
    }
 
    // Initialise the inventory bar states.
-	for(int i = 0; i < MAXPLAYERS; i++)
-		hbarstate[i] = { false, 0, 0 };
+   for(int i = 0; i < MAXPLAYERS; i++)
+      hbarstate[i] = { false, 0, 0 };
 }
 
 //
@@ -486,8 +486,8 @@ static void ST_drawInvBar()
    V_DrawPatch(34, 160, &subscreen43, PatchLoader::CacheName(wGlobalDir, "INVBAR", PU_CACHE));
 
    int i = -1;
-	// E_MoveInventoryCursor returns false when it hits the boundary of the visible inventory,
-	// so it's a useful iterator here.
+   // E_MoveInventoryCursor returns false when it hits the boundary of the visible inventory,
+   // so it's a useful iterator here.
    while(E_MoveInventoryCursor(plyr, 1, i) && i < 7)
    {
       // Safety check that the player has an inventory item, then that the effect exists
