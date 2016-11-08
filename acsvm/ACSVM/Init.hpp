@@ -67,7 +67,7 @@ namespace ACSVM
       WordInit(Word val_, InitTag tag_) : val{val_}, tag{tag_} {}
 
       explicit operator bool () const
-         {return !val && tag == InitTag::Integer;}
+         {return val || tag != InitTag::Integer;}
 
       Word getValue(Module *module) const;
 
