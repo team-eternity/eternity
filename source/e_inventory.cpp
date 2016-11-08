@@ -1322,7 +1322,6 @@ void E_TryUseItem(player_t *player)
          {
             E_MoveInventoryCursor(player, -1, player->inv_ptr);
             E_MoveInventoryCursor(player, -1, invbarstate.inv_ptr);
-            E_MoveInventoryCursor(player, -1, invbarstate.curpos);         
          }
       }
    }
@@ -1809,7 +1808,7 @@ void E_ClearInventory(player_t *player)
       player->inventory[i].item   = -1;
    }
    player->inv_ptr = 0;
-   invbarstate = { false, 0, 0, 0 };
+   invbarstate = { false, 0, 0 };
 }
 
 //

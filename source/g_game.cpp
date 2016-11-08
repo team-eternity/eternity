@@ -830,11 +830,7 @@ bool G_Responder(event_t* ev)
             invbarstate.inventory = true;
             break;
          }
-         // If curpos needs to be adjusted
-         if(E_MoveInventoryCursor(&players[consoleplayer], -1, invbarstate.inv_ptr))
-         {
-            E_MoveInventoryCursor(&players[consoleplayer], -1, invbarstate.curpos);            
-         }
+         E_MoveInventoryCursor(&players[consoleplayer], -1, invbarstate.inv_ptr);
          return true;
       }
       if(G_KeyResponder(ev, kac_game) == ka_inventory_right)
@@ -845,11 +841,7 @@ bool G_Responder(event_t* ev)
             invbarstate.inventory = true;
             break;
          }
-         // If curpos needs to be adjusted
-         if(E_MoveInventoryCursor(&players[consoleplayer], 1, invbarstate.inv_ptr))
-         {
-            E_MoveInventoryCursor(&players[consoleplayer], 1, invbarstate.curpos);
-         }
+         E_MoveInventoryCursor(&players[consoleplayer], 1, invbarstate.inv_ptr);
          return true;
       }
 

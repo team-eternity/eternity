@@ -1372,7 +1372,7 @@ static void ST_DoomInit()
 
    // Initialise the inventory bar states.
 	for(int i = 0; i < MAXPLAYERS; i++)
-		dbarstate[i] = { false, 0, 0, 0 };
+		dbarstate[i] = { false, 0, 0 };
 }
 
 //

@@ -154,7 +154,7 @@ static void ST_HticInit()
 
    // Initialise the inventory bar states.
 	for(int i = 0; i < MAXPLAYERS; i++)
-		hbarstate[i] = { false, 0, 0, 0 };
+		hbarstate[i] = { false, 0, 0 };
 }
 
 //
@@ -481,7 +481,7 @@ static void ST_drawInvBar()
 {
    itemeffect_t *artifact;
    const char *patch;
-   int leftoffs = hbarstate[consoleplayer].curpos >= 7 ? hbarstate[consoleplayer].curpos - 6 : 0;
+   int leftoffs = hbarstate[consoleplayer].inv_ptr >= 7 ? hbarstate[consoleplayer].inv_ptr - 6 : 0;
 
    V_DrawPatch(34, 160, &subscreen43, PatchLoader::CacheName(wGlobalDir, "INVBAR", PU_CACHE));
 
@@ -519,7 +519,7 @@ static void ST_drawInvBar()
          !(leveltime & 4) ? PatchINVRTGEM1 : PatchINVRTGEM2);
    }
 
-   V_DrawPatch(50 + (hbarstate[consoleplayer].curpos - leftoffs)* 31, 189, &subscreen43,
+   V_DrawPatch(50 + (hbarstate[consoleplayer].inv_ptr - leftoffs)* 31, 189, &subscreen43,
      PatchLoader::CacheName(wGlobalDir, "SELECTBO", PU_CACHE));
 }
 //
