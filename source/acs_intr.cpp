@@ -107,10 +107,10 @@ ACSEnvironment::ACSEnvironment() :
    addCodeDataACS0( 62, {"W",       0, addCallFunc(ACS_CF_WaitSector)});
    addCodeDataACS0( 63, {"",        1, addCallFunc(ACS_CF_WaitPolyObj)});
    addCodeDataACS0( 64, {"W",       0, addCallFunc(ACS_CF_WaitPolyObj)});
-   addCodeDataACS0( 65, {"",        2, addCallFunc(ACS_CF_ChangeCeil)});
-   addCodeDataACS0( 66, {"WWS",     0, addCallFunc(ACS_CF_ChangeCeil)});
-   addCodeDataACS0( 67, {"",        2, addCallFunc(ACS_CF_ChangeFloor)});
-   addCodeDataACS0( 68, {"WWS",     0, addCallFunc(ACS_CF_ChangeFloor)});
+   addCodeDataACS0( 65, {"",        2, addCallFunc(ACS_CF_ChangeFloor)});
+   addCodeDataACS0( 66, {"WWS",     0, addCallFunc(ACS_CF_ChangeFloor)});
+   addCodeDataACS0( 67, {"",        2, addCallFunc(ACS_CF_ChangeCeil)});
+   addCodeDataACS0( 68, {"WWS",     0, addCallFunc(ACS_CF_ChangeCeil)});
    // 69-79: ACSVM internal codes.
    addCodeDataACS0( 80, {"",        0, addCallFunc(ACS_CF_LineSide)});
    // 81-82: ACSVM internal codes.
