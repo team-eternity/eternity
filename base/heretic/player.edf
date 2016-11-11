@@ -11,51 +11,86 @@
 
 artifact WeaponStaff
 {
-  artifacttype Weapon
-
+  amount         1
+  maxamount      1
   interhubamount 1
+
+  +undroppable
+  -invbar
+
+  artifacttype Weapon
 }
 
 artifact WeaponGoldWand
 {
-  artifacttype Weapon
-
+  amount         1
+  maxamount      1
   interhubamount 1
+
+  +undroppable
+  -invbar
+
+  artifacttype Weapon
 }
 
 artifact WeaponCrossbow
 {
-  artifacttype Weapon
-
+  amount         1
+  maxamount      1
   interhubamount 1
+
+  +undroppable
+  -invbar
+
+  artifacttype Weapon
 }
 
 artifact WeaponBlaster
 {
-  artifacttype Weapon
-
+  amount         1
+  maxamount      1
   interhubamount 1
+
+  +undroppable
+  -invbar
+
+  artifacttype Weapon
 }
 
 artifact WeaponSkullRod
 {
-  artifacttype Weapon
-
+  amount         1
+  maxamount      1
   interhubamount 1
+
+  +undroppable
+  -invbar
+
+  artifacttype Weapon
 }
 
 artifact WeaponPhoenixRod
 {
-  artifacttype Weapon
-
+  amount         1
+  maxamount      1
   interhubamount 1
+
+  +undroppable
+  -invbar
+
+  artifacttype Weapon
 }
 
 artifact WeaponGauntlets
 {
-  artifacttype Weapon
-
+  amount         1
+  maxamount      1
   interhubamount 1
+
+  +undroppable
+  -invbar
+
+  artifacttype Weapon
 }
 
 //=============================================================================
@@ -63,68 +98,73 @@ artifact WeaponGauntlets
 // Weapon Givers
 //
 
-WeaponGiver Staff
+weapongiver Staff
 {
-  weapon "WeaponStaff"
+  weapon WeaponStaff
 }
 
-WeaponGiver GoldWand
+weapongiver GoldWand
 {
-  weapon "WeaponGoldWand"
+  weapon WeaponGoldWand
 }
 
-WeaponGiver Crossbow
+weapongiver Crossbow
 {
-  weapon "WeaponCrossbow"
+  weapon WeaponCrossbow
 
+  ammo          AmmoEtherealArrow
   ammo.dmstay   10
   ammo.coopstay 10
   ammo.give     10
   ammo.dropped  10
 }
 
-WeaponGiver Blaster
+weapongiver Blaster
 {
-  weapon "WeaponBlaster"
+  weapon WeaponBlaster
 
+  ammo          AmmoClawOrb
   ammo.dmstay   30
   ammo.coopstay 30
   ammo.give     30
   ammo.dropped  30
 }
 
-WeaponGiver SkullRod
+weapongiver SkullRod
 {
-  weapon "WeaponSkullRod"
+  weapon WeaponSkullRod
 
+  ammo          AmmoRune
   ammo.dmstay   50
   ammo.coopstay 50
   ammo.give     50
   ammo.dropped  50
 }
 
-WeaponGiver PhoenixRod
+weapongiver PhoenixRod
 {
-  weapon "WeaponPhoenixRod"
-
+  weapon WeaponPhoenixRod
+  
+  ammo          AmmoFlameOrb
   ammo.dmstay   2
   ammo.coopstay 2
   ammo.give     2
   ammo.dropped  2
 }
 
-WeaponGiver Mace
+weapongiver Mace
 {
-  weapon "WeaponMace"
+  weapon WeaponMace
 
+  ammo          AmmoMaceSphere
   ammo.dmstay   50
   ammo.coopstay 50
   ammo.give     50
   ammo.dropped  50
 }
 
-WeaponGiver Gauntlets
+weapongiver Gauntlets
 {
-  weapon "WeaponGauntlets"
+  weapon WeaponGauntlets
 }
 

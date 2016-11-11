@@ -11,65 +11,110 @@
 
 artifact WeaponFist
 {
-  artifacttype Weapon
-
+  amount         1
+  maxamount      1
   interhubamount 1
+
+  +undroppable
+  -invbar
+
+  artifacttype Weapon
 }
 
 artifact WeaponPistol
 {
-  artifacttype Weapon
-
+  amount         1
+  maxamount      1
   interhubamount 1
+
+  +undroppable
+  -invbar
+
+  artifacttype Weapon
 }
 
 artifact WeaponShotgun
 {
-  artifacttype Weapon
-
+  amount         1
+  maxamount      1
   interhubamount 1
+
+  +undroppable
+  -invbar
+
+  artifacttype Weapon
 }
 
 artifact WeaponChaingun
 {
-  artifacttype Weapon
-
+  amount         1
+  maxamount      1
   interhubamount 1
+
+  +undroppable
+  -invbar
+
+  artifacttype Weapon
 }
 
 artifact MissileLauncher
 {
-  artifacttype Weapon
-
+  amount         1
+  maxamount      1
   interhubamount 1
+
+  +undroppable
+  -invbar
+
+  artifacttype Weapon
 }
 
 artifact PlasmaRifle
 {
-  artifacttype Weapon
-
+  amount         1
+  maxamount      1
   interhubamount 1
+
+  +undroppable
+  -invbar
+
+  artifacttype Weapon
 }
 
 artifact BFG9000
 {
-  artifacttype Weapon
-
+  amount         1
+  maxamount      1
   interhubamount 1
+
+  +undroppable
+  -invbar
+
+  artifacttype Weapon
 }
 
 artifact WeaponChainsaw
 {
-  artifacttype Weapon
-
+  amount         1
+  maxamount      1
   interhubamount 1
+
+  +undroppable
+  -invbar
+
+  artifacttype Weapon
 }
 
 artifact WeaponSuperShotgun
 {
-  artifacttype Weapon
-
+  amount         1
+  maxamount      1
   interhubamount 1
+
+  +undroppable
+  -invbar
+
+  artifacttype Weapon
 }
 
 //=============================================================================
@@ -77,75 +122,81 @@ artifact WeaponSuperShotgun
 // Weapon Givers
 //
 
-WeaponGiver Fist
+weapongiver Fist
 {
-  weapon "WeaponFist"
+  weapon WeaponFist
 }
 
-WeaponGiver Pistol
+weapongiver Pistol
 {
-  weapon "WeaponPistol"
+  weapon WeaponPistol
 }
 
-WeaponGiver Shotgun
+weapongiver Shotgun
 {
-  weapon "WeaponShotgun"
+  weapon WeaponShotgun
 
+  ammo          AmmoShell
   ammo.dmstay   20
   ammo.coopstay 8
   ammo.give     8
   ammo.dropped  4
 }
 
-WeaponGiver Chaingun
+weapongiver Chaingun
 {
-  weapon "WeaponChaingun"
+  weapon WeaponChaingun
 
+  ammo          AmmoClip
   ammo.dmstay   50
   ammo.coopstay 20
   ammo.give     20
   ammo.dropped  10
 }
 
-WeaponGiver MissileLauncher
+weapongiver MissileLauncher
 {
-  weapon "WeaponMissileLauncher"
+  weapon WeaponMissileLauncher
 
+  ammo          AmmoMissile
   ammo.dmstay   5
   ammo.coopstay 2
   ammo.give     2
   ammo.dropped  1
 }
 
-WeaponGiver PlasmaRifle
+weapongiver PlasmaRifle
 {
-  weapon "WeaponPlasmaRifle"
+  weapon WeaponPlasmaRifle
 
+  ammo          AmmoCell
   ammo.dmstay   100
   ammo.coopstay 40
   ammo.give     40
   ammo.dropped  20
 }
 
-WeaponGiver BFG9000
+weapongiver BFG9000
 {
-  weapon "WeaponBFG9000"
+  weapon WeaponBFG9000
 
+  ammo          AmmoCell
   ammo.dmstay   100
   ammo.coopstay 40
   ammo.give     40
   ammo.dropped  20
 }
 
-WeaponGiver Chainsaw
+weapongiver Chainsaw
 {
-  weapon "WeaponChainsaw"
+  weapon WeaponChainsaw
 }
 
-WeaponGiver SuperShotgun
+weapongiver SuperShotgun
 {
-  weapon "WeaponSuperShotgun"
+  weapon WeaponSuperShotgun
 
+  ammo          AmmoShell
   ammo.dmstay   20
   ammo.coopstay 8
   ammo.give     8
