@@ -135,56 +135,31 @@ weapongiver Pistol
 weapongiver Shotgun
 {
   weapon WeaponShotgun
-
-  ammo          AmmoShell
-  ammo.dmstay   20
-  ammo.coopstay 8
-  ammo.give     8
-  ammo.dropped  4
+  ammogiven AmmoShell, 8, 4, 20, 8
 }
 
 weapongiver Chaingun
 {
   weapon WeaponChaingun
-
-  ammo          AmmoClip
-  ammo.dmstay   50
-  ammo.coopstay 20
-  ammo.give     20
-  ammo.dropped  10
+  ammogiven AmmoClip, 20, 10, 50, 10
 }
 
 weapongiver MissileLauncher
 {
   weapon WeaponMissileLauncher
-
-  ammo          AmmoMissile
-  ammo.dmstay   5
-  ammo.coopstay 2
-  ammo.give     2
-  ammo.dropped  1
+  ammogiven AmmoMissile, 2, 1, 5, 2
 }
 
 weapongiver PlasmaRifle
 {
   weapon WeaponPlasmaRifle
-
-  ammo          AmmoCell
-  ammo.dmstay   100
-  ammo.coopstay 40
-  ammo.give     40
-  ammo.dropped  20
+  ammogiven AmmoCell, 40, 20, 100, 40
 }
 
 weapongiver BFG9000
 {
   weapon WeaponBFG9000
-
-  ammo          AmmoCell
-  ammo.dmstay   100
-  ammo.coopstay 40
-  ammo.give     40
-  ammo.dropped  20
+  ammogiven AmmoCell, 40, 20, 100, 40
 }
 
 weapongiver Chainsaw
@@ -195,11 +170,6 @@ weapongiver Chainsaw
 weapongiver SuperShotgun
 {
   weapon WeaponSuperShotgun
-
-  ammo          AmmoShell
-  ammo.dmstay   20
-  ammo.coopstay 8
-  ammo.give     8
-  ammo.dropped  4
+  ammogiven AmmoShell, 8, 4, 20, 8
 }
 

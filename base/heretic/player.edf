@@ -110,57 +110,32 @@ weapongiver GoldWand
 
 weapongiver Crossbow
 {
-  weapon WeaponCrossbow
-
-  ammo          AmmoEtherealArrow
-  ammo.dmstay   10
-  ammo.coopstay 10
-  ammo.give     10
-  ammo.dropped  10
+  weapon    WeaponCrossbow
+  ammogiven AmmoEtherealArrow, 10
 }
 
 weapongiver Blaster
 {
-  weapon WeaponBlaster
-
-  ammo          AmmoClawOrb
-  ammo.dmstay   30
-  ammo.coopstay 30
-  ammo.give     30
-  ammo.dropped  30
+  weapon    WeaponBlaster
+  ammogiven AmmoClawOrb, 30
 }
 
 weapongiver SkullRod
 {
-  weapon WeaponSkullRod
-
-  ammo          AmmoRune
-  ammo.dmstay   50
-  ammo.coopstay 50
-  ammo.give     50
-  ammo.dropped  50
+  weapon    WeaponSkullRod
+  ammogiven AmmoRune, 50
 }
 
 weapongiver PhoenixRod
 {
-  weapon WeaponPhoenixRod
-  
-  ammo          AmmoFlameOrb
-  ammo.dmstay   2
-  ammo.coopstay 2
-  ammo.give     2
-  ammo.dropped  2
+  weapon    WeaponPhoenixRod
+  ammogiven AmmoFlameOrb, 2
 }
 
 weapongiver Mace
 {
-  weapon WeaponMace
-
-  ammo          AmmoMaceSphere
-  ammo.dmstay   50
-  ammo.coopstay 50
-  ammo.give     50
-  ammo.dropped  50
+  weapon    WeaponMace
+  ammogiven AmmoMaceSphere, 50
 }
 
 weapongiver Gauntlets
