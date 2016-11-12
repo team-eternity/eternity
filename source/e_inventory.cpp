@@ -1832,6 +1832,39 @@ int E_GetInventoryAllocSize()
    return e_maxitemid;
 }
 
+//
+// Process a given weapongiver definition.
+//
+static void E_processWeaponGiver(cfg_t *sec)
+{
+   unsigned numAmmoGivers = cfg_size(sec, KEY_AMMOGIVEN);
+   for(unsigned int i = 0; i < numAmmoGivers; i ++)
+   {
+      cfg_t *ammogiver = cfg_getnmvprop(sec, KEY_AMMOGIVEN, i);
+      const char *type = cfg_getstr(ammogiver, KEY_TYPE);
+
+      int give = cfg_getint(ammogiver, KEY_AMMOGIVE);
+      int dropped = cfg_getint(ammogiver, KEY_AMMODROPPED);
+      dropped = dropped ? dropped : give;
+      int dmstay = cfg_getint(ammogiver, KEY_AMMODMSTAY);
+      dmstay = dmstay ? dmstay : give;
+      int coopstay = cfg_getint(ammogiver, KEY_AMMOCOOPSTAY);
+      coopstay = coopstay ? coopstay : give;
+   }
+}
+//
+// Process all weapongiver definitions.
+//
+static void E_processWeaponGivers(cfg_t *cfg)
+{
+   unsigned int numWeaponGivers;
+   if((numWeaponGivers = cfg_size(cfg, EDF_SEC_WEAPGFX)) > 0)
+   {
+      for(unsigned int i = 0; i < numWeaponGivers; i++)
+         E_processWeaponGiver(cfg_getnsec(cfg, EDF_SEC_WEAPGFX, i));
+   }
+}
+
 //=============================================================================
 //
 // Global Processing
@@ -1866,7 +1899,10 @@ void E_ProcessInventory(cfg_t *cfg)
    // process lockdefs
    E_processLockDefs(cfg);
 
-   // TODO: MOAR?
+   // process weapongivers
+   E_processWeaponGivers(cfg);
+
+   // TODO: MOAR!
 }
 
 // EOF
