@@ -138,7 +138,7 @@ typedef enum
    portal_linked
 } portal_type;
 
-static void P_SpawnDeferredParamPortal(line_t *line, int staticFn);
+static void P_spawnDeferredParamPortal(line_t *line, int staticFn);
 static void P_SpawnPortal(line_t *, int);
 
 //
@@ -1415,16 +1415,59 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
    P_SpawnLevelActions();
 }
 
+//
+// Applies the copyfloorportal and copyceilingportal properties on line.
+// When it finds sector with a given tag and valid portal, it copies that
+// portal.
+//
+static void P_udmfCopyPortalToLine(line_t *line, int ceilingtag, int floortag)
+{
+   if (!ceilingtag && !floortag)
+      return;
+   int index;
+   const sector_t *sector;
+   // ceiling takes priority
+   if(ceilingtag)
+   {
+      for(index = -1; (index = P_FindSectorFromTag(ceilingtag, index)) >= 0; )
+      {
+         sector = sectors + index;
+         if(!sector->c_portal)
+            continue;
+         // found one
+         P_SetPortal(line->frontsector, line, sector->c_portal, portal_lineonly);
+         return;
+      }
+   }
+   if(floortag)
+   {
+      for(index = -1; (index = P_FindSectorFromTag(floortag, index)) >= 0; )
+      {
+         sector = sectors + index;
+         if(!sector->f_portal)
+            continue;
+         P_SetPortal(line->frontsector, line, sector->f_portal, portal_lineonly);
+         return;
+      }
+   }
+}
+
 // 
 // P_SpawnDeferredSpecials
 //
 // SoM: Specials that copy slopes, etc., need to be collected in a separate pass
 //
-void P_SpawnDeferredSpecials()
+void P_SpawnDeferredSpecials(UDMFSetupSettings &setupSettings)
 {
+   int copyceiling, copyfloor;
+
    for(int i = 0; i < numlines; i++)
    {
       line_t *line = &lines[i];
+
+      // Check if there are portal lines to copy
+      setupSettings.getCopyPortal(i, copyceiling, copyfloor);
+      P_udmfCopyPortalToLine(line, copyceiling, copyfloor);
 
       // haleyjd 02/05/13: lookup the static init function
       int staticFn = EV_StaticInitForSpecial(line->special);
@@ -1436,17 +1479,12 @@ void P_SpawnDeferredSpecials()
       case EV_STATIC_SLOPE_FRONTFLOORCEILING_TAG:
          // SoM: Copy slopes
          P_CopySectorSlope(line, staticFn);
-         break;
       case EV_STATIC_PORTAL_SECTOR_PARAM_COMPAT:
          if(line->args[paramPortal_argType] == paramPortal_copied ||
             line->args[paramPortal_argType] == paramPortal_copyline)
          {
-            P_SpawnDeferredParamPortal(line, staticFn);
+            P_spawnDeferredParamPortal(line, staticFn);
          }
-         break;
-      case EV_STATIC_PORTAL_LINE_PARAM_COPIED:
-      case EV_STATIC_PORTAL_SECTOR_PARAM_COPIED:
-         P_SpawnDeferredParamPortal(line, staticFn);
          break;
 
       default: // Not a function handled here
@@ -2641,9 +2679,9 @@ static int P_findParamPortalAnchor(const line_t *line)
 //
 // Handles the parameterized equivalent of 385
 //
-static void P_copyParamPortalSector(line_t *line, int tag, int sourcetag)
+static void P_copyParamPortalSector(line_t *line)
 {
-   //int tag = line->args[paramPortal_argMisc];
+   int tag = line->args[paramPortal_argMisc];
    portal_t *cportal = nullptr;
    portal_t *fportal = nullptr;
    for(int s = -1; (s = P_FindSectorFromTag(tag, s)) >= 0; )
@@ -2660,10 +2698,10 @@ static void P_copyParamPortalSector(line_t *line, int tag, int sourcetag)
       line->special = 0;
       return;
    }
-   //tag = line->args[0];
-   if(sourcetag)
+   tag = line->args[0];
+   if(tag)
    {
-      for(int s = -1; (s = P_FindSectorFromTag(sourcetag, s)) >= 0; )
+      for(int s = -1; (s = P_FindSectorFromTag(tag, s)) >= 0; )
       {
          if(cportal)
             P_SetPortal(sectors + s, nullptr, cportal, portal_ceiling);
@@ -2682,12 +2720,13 @@ static void P_copyParamPortalSector(line_t *line, int tag, int sourcetag)
 }
 
 //
-// Handles the parameterized equivalent of 289
+// Handles the parameterized equivalent of 298
 //
-static void P_copyParamPortalLine(line_t *line, int tag, int sourcetag)
+static void P_copyParamPortalLine(line_t *line)
 {
+   int tag = line->args[paramPortal_argMisc];
    portal_t *portal = nullptr;
-   for(int s = -1; (s = P_FindSectorFromTag(sourcetag, s)) >= 0; )
+   for(int s = -1; (s = P_FindSectorFromTag(tag, s)) >= 0; )
    {
       if(sectors[s].c_portal) // ceiling portal has priority
       {
@@ -2705,6 +2744,7 @@ static void P_copyParamPortalLine(line_t *line, int tag, int sourcetag)
       line->special = 0;
       return;
    }
+   tag = line->args[0];
    if(tag)
    {
       for(int s = -1; (s = P_FindLineFromTag(tag, s)) >= 0; )
@@ -2716,25 +2756,17 @@ static void P_copyParamPortalLine(line_t *line, int tag, int sourcetag)
    line->special = 0;
 }
 
-static void P_SpawnDeferredParamPortal(line_t *line, int staticFn)
+//
+// Called from P_SpawnDeferredSpecials when we need references to already 
+// created portals
+//
+static void P_spawnDeferredParamPortal(line_t *line, int staticFn)
 {
-   switch(staticFn)
-   {
-   case EV_STATIC_PORTAL_SECTOR_PARAM_COMPAT:
-      if(line->args[paramPortal_argType] == paramPortal_copied)
-         P_copyParamPortalSector(line, line->args[0], line->args[paramPortal_argMisc]);
-      else if(line->args[paramPortal_argType] == paramPortal_copyline)
-         P_copyParamPortalLine(line, line->args[0], line->args[paramPortal_argMisc]);
-      break;
-   case EV_STATIC_PORTAL_LINE_PARAM_COPIED:
-      P_copyParamPortalLine(line, line->args[0], line->args[1]);
-      break;
-   case EV_STATIC_PORTAL_SECTOR_PARAM_COPIED:
-      P_copyParamPortalSector(line, line->args[0], line->args[1]);
-      break;
-   default: // This default should never run; including it shuts up warnings
-      break;
-   }
+   // Currently it's used by the ZDoom-compatible Sector_SetPortal
+   if(line->args[paramPortal_argType] == paramPortal_copied)
+      P_copyParamPortalSector(line);
+   else if(line->args[paramPortal_argType] == paramPortal_copyline)
+      P_copyParamPortalLine(line);
 }
 
 //

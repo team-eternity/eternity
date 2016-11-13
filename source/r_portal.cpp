@@ -1585,10 +1585,10 @@ void R_SpawnSimpleSectorPortal(const line_t &line, int tag, int type, int flags)
    // We know for a fact that effect must be assigned assigned, otherwise
    // the code above would have printed an error and returned. Regardless,
    // we'll use else if in case some weird new portal_effect crops up.
-   portal_effect effect;
+   portal_effect effect;   // already validated
    
    // Order must be descending, otherwise issues ensue with non-binary values
-   if(flags & 3)
+   if((flags & 3) == 3)
       effect = portal_both;
    else if(flags & 2)
       effect = portal_ceiling;

@@ -61,6 +61,13 @@ void UDMFSetupSettings::useSectorCount()
    mSectorInitFlags = ecalloc(unsigned *, ::numsectors, sizeof(unsigned));
 }
 
+void UDMFSetupSettings::useLineCount()
+{
+   if (mLineInitData)
+      return;
+   mLineInitData = estructalloc(lineinfo_t, ::numlines);
+}
+
 //==============================================================================
 //
 // Collecting and processing
@@ -229,7 +236,7 @@ void UDMFParser::loadSidedefs() const
 //
 // Loads linedefs. Returns false on error.
 //
-bool UDMFParser::loadLinedefs()
+bool UDMFParser::loadLinedefs(UDMFSetupSettings &setupSettings)
 {
    numlines = (int)mLinedefs.getLength();
    lines = estructalloctag(line_t, numlines, PU_LEVEL);
@@ -281,6 +288,8 @@ bool UDMFParser::loadLinedefs()
             ld->extflags |= EX_ML_LOWERPORTAL;
          if(uld.upperportal)
             ld->extflags |= EX_ML_UPPERPORTAL;
+         setupSettings.setCopyPortal(i, uld.copyceilingportal, 
+            uld.copyfloorportal);
       }
 
       // TODO: Strife
@@ -504,6 +513,8 @@ enum token_e
    t_colormapmid,
    t_colormaptop,
    t_coop,
+   t_copyceilingportal,
+   t_copyfloorportal,
    t_damage_endgodmode,
    t_damage_exitlevel,
    t_damageamount,
@@ -630,6 +641,8 @@ static keytoken_t gTokenList[] =
    TOKEN(colormapbottom),
    TOKEN(colormapmid),
    TOKEN(colormaptop),
+   TOKEN(copyceilingportal),
+   TOKEN(copyfloorportal),
    TOKEN(coop),
    TOKEN(damage_endgodmode),
    TOKEN(damage_exitlevel),
@@ -888,6 +901,8 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                   READ_BOOL(linedef, clipmidtex);
                   READ_BOOL(linedef, lowerportal);
                   READ_BOOL(linedef, upperportal);
+                  READ_NUMBER(linedef, copyceilingportal);
+                  READ_NUMBER(linedef, copyfloorportal);
                   READ_NUMBER(linedef, alpha);
                   READ_STRING(linedef, renderstyle);
                   READ_STRING(linedef, tranmap);

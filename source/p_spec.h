@@ -1549,7 +1549,7 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings);
 //
 // SoM: Specials that copy slopes, ect., need to be collected in a separate 
 // pass
-void P_SpawnDeferredSpecials();
+void P_SpawnDeferredSpecials(UDMFSetupSettings &setupSettings);
 
 // portal stuff
 void P_SetPortal(sector_t *sec, line_t *line, portal_t *portal, portal_effect effects);

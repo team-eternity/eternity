@@ -67,15 +67,25 @@ enum
 //
 class UDMFSetupSettings : public ZoneObject
 {
+   struct lineinfo_t
+   {
+      int copyceilingportal;
+      int copyfloorportal;
+   };
+
    unsigned *mSectorInitFlags;
+   lineinfo_t *mLineInitData;
+
    void useSectorCount();
+   void useLineCount();
 public:
-   UDMFSetupSettings() : mSectorInitFlags(nullptr)
+   UDMFSetupSettings() : mSectorInitFlags(nullptr), mLineInitData(nullptr)
    {
    }
    ~UDMFSetupSettings()
    {
       efree(mSectorInitFlags);
+      efree(mLineInitData);
    }
 
    //
@@ -89,6 +99,28 @@ public:
    bool sectorIsFlagged(int index, unsigned flag) const
    {
       return mSectorInitFlags && !!(mSectorInitFlags[index] & flag);
+   }
+
+   //
+   // Linedef init getter and setter
+   //
+   void setCopyPortal(int index, int ceiling, int floor)
+   {
+      useLineCount();
+      mLineInitData[index].copyceilingportal = ceiling;
+      mLineInitData[index].copyfloorportal = floor;
+   }
+   void getCopyPortal(int index, int &ceiling, int &floor) const
+   {
+      if (mLineInitData)
+      {
+         ceiling = mLineInitData[index].copyceilingportal;
+         floor = mLineInitData[index].copyfloorportal;
+         return;
+      }
+      // no data
+      ceiling = 0;
+      floor = 0;
    }
 };
 
@@ -120,7 +152,7 @@ public:
    void loadVertices() const;
    void loadSectors(UDMFSetupSettings &setupSettings) const;
    void loadSidedefs() const;
-   bool loadLinedefs();
+   bool loadLinedefs(UDMFSetupSettings &setupSettings);
    bool loadSidedefs2();
    bool loadThings();
 
@@ -180,30 +212,43 @@ private:
    class ULinedef : public ZoneObject
    {
    public:
-      int identifier;
-      int v1, v2;
+      int identifier;   // tag
+      int v1, v2;       // vertices
 
+      // Classic
       bool blocking, blockmonsters, twosided, dontpegtop, dontpegbottom, secret,
       blocksound, dontdraw, mapped;
 
-      bool passuse;
-      bool translucent, jumpover, blockfloaters;
+      // Inherited from games
+      bool passuse;                                // Boom
+      bool translucent, jumpover, blockfloaters;   // Strife
 
+      // Activation specials
       bool playercross, playeruse, monstercross, monsteruse, impact, playerpush,
       monsterpush, missilecross, repeatspecial;
 
-      int special, arg[5];
-      int sidefront, sideback;
+      int special, arg[5];       // linedef special and args
+      int sidefront, sideback;   // sidedef references
 
-      bool v1set, v2set, sfrontset;
-      int errorline;
+      // auxiliary fields
+      bool v1set, v2set, sfrontset; // (mandatory field internal flags)
+      int errorline;                // parsing error (not a property)
 
       // Eternity
-      bool midtex3d, firstsideonly, blockeverything, zoneboundary, clipmidtex,
-      midtex3dimpassible, lowerportal, upperportal;
-      float alpha;
-      qstring renderstyle;
-      qstring tranmap;
+      bool midtex3d;             // 3dmidtex
+      bool firstsideonly;        // special only activateable from front side
+      bool blockeverything;      // zdoomish blocks-everything
+      bool zoneboundary;         // zdoomish audio reverb boundary
+      bool clipmidtex;           // zdoomish cut rendering of middle texture
+      bool midtex3dimpassible;   // zdoomish trick to make projectiles pass
+      bool lowerportal;          // lower part acts as a portal extension
+      bool upperportal;          // upper part acts as a portal extension
+      int copyceilingportal;     // copy ceiling portal from tagged sector
+      int copyfloorportal;       // copy floor portal from tagged sector
+      float alpha;               // opacity ratio
+      qstring renderstyle;       // zdoomish renderstyle (add, translucent)
+      qstring tranmap;           // boomish translucency lump
+      
 
       ULinedef() : identifier(-1), sideback(-1), alpha(1)
       {
