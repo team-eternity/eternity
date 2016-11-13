@@ -1364,6 +1364,10 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
             lines[i].args[2], lines[i].args[3], lines[i].args[4] << FRACBITS);
          break;
 
+      case EV_STATIC_PORTAL_DEFINE:
+         R_DefinePortal(lines[i]);
+         break;
+
          // haleyjd 02/28/07: Line_SetIdentification
          // TODO: allow upper byte in args[2] for Hexen-format maps
       case EV_STATIC_LINE_SET_IDENTIFICATION: 

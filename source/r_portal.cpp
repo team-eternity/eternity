@@ -34,6 +34,7 @@
 #include "d_gi.h"
 #include "e_exdata.h"
 #include "e_things.h"
+#include "m_collection.h"
 #include "p_maputl.h"
 #include "p_spec.h"
 #include "r_bsp.h"
@@ -51,6 +52,31 @@ enum
    PORTAL_RECURSION_LIMIT = 128, // maximum times same portal is drawn in a
                                  // recursion
 };
+
+//
+// Portal type used in special portal_define()
+//
+enum portaltype_e
+{
+   portaltype_plane,
+   portaltype_horizon,
+   portaltype_skybox,
+   portaltype_anchor,
+   portaltype_twoway,
+   portaltype_linked,
+   portaltype_MAX
+};
+
+//
+// Defined portal (using Portal_Define)
+//
+struct portalentry_t
+{
+   int id;
+   const portal_t *portal;
+};
+
+static PODCollection<portalentry_t> gPortals;   // defined portals
 
 //=============================================================================
 //
@@ -601,6 +627,8 @@ void R_InitPortals()
 {
    portals = last = NULL;
    windowhead = unusedhead = windowlast = NULL;
+
+   gPortals.clear(); // clear the portal list
 }
 
 //=============================================================================
@@ -1748,6 +1776,119 @@ void R_SpawnLinkedSectorPortal(const line_t &line, int lineid, int heretag,
       }
 
    }
+}
+
+//
+// Defines a portal without placing it in the map
+//
+void R_DefinePortal(const line_t &line)
+{
+   int portalid = line.args[0];
+   int int_type = line.args[1];
+   int anchorid = line.args[2];
+   fixed_t zoffset = line.args[3] << FRACBITS;
+
+   if(int_type < 0 || int_type >= static_cast<int>(portaltype_MAX))
+   {
+      C_Printf(FC_ERROR "Wrong portal type %d for line %d\a\n", int_type, 
+         static_cast<int>(&line - lines));
+      return;
+   }
+
+   for(const auto &entry : gPortals)
+   {
+      if(entry.id == portalid)
+      {
+         C_Printf(FC_ERROR, "Portal id %d was already set\a\n", 
+            portalid);
+         return;
+      }
+   }
+
+   auto type = static_cast<portaltype_e>(int_type);
+   const portal_t *portal;
+   sector_t *sector = line.frontsector;
+   Mobj *skycam;
+   int destlineid;
+   const int thislineid = static_cast<int>(&line - lines);
+   int toid, fromid;
+
+   const int CamType = E_ThingNumForName("EESkyboxCam");
+
+   switch(type)
+   {
+   case portaltype_plane:
+      portal = R_GetPlanePortal(&sector->ceilingpic, &sector->ceilingheight,
+         &sector->lightlevel, &sector->ceiling_xoffs, &sector->ceiling_yoffs,
+         &sector->ceilingbaseangle, &sector->ceilingangle);
+      break;
+   case portaltype_horizon:
+      portal = R_GetHorizonPortal(&sector->floorpic, &sector->ceilingpic,
+         &sector->floorheight, &sector->ceilingheight, &sector->lightlevel,
+         &sector->lightlevel, &sector->floor_xoffs, &sector->floor_yoffs,
+         &sector->ceiling_xoffs, &sector->ceiling_yoffs,
+         &sector->floorbaseangle, &sector->floorangle,
+         &sector->ceilingbaseangle, &sector->ceilingangle);
+      break;
+   case portaltype_skybox:
+      skycam = sector->thinglist;
+      while(skycam)
+      {
+         if(skycam->type == CamType)
+            break;
+         skycam = skycam->snext;
+      }
+      if(!skycam)
+      {
+         C_Printf(FC_ERROR, "Skybox found with no camera\a\n");
+         return;
+      }
+      portal = R_GetSkyBoxPortal(skycam);
+      break;
+   case portaltype_anchor:
+   case portaltype_twoway:
+   case portaltype_linked:
+      if(!anchorid)
+      {
+         C_Printf(FC_ERROR, "Anchored portal must have anchor line id\a\n");
+         return;
+      }
+      for(destlineid = -1; 
+         (destlineid = P_FindLineFromTag(anchorid, destlineid)) >= 0; )
+      {
+         if(&lines[destlineid] == &line)  // don't allow same target
+            continue;
+         break;
+      }
+      if(destlineid == -1)
+      {
+         C_Printf(FC_ERROR, "No anchor line found\a\n");
+         return;
+      }
+      if(type == portaltype_anchor)
+         portal = R_GetAnchoredPortal(destlineid, thislineid, zoffset);
+      else if(type == portaltype_twoway)
+         portal = R_GetTwoWayPortal(destlineid, thislineid, false, zoffset);
+      else
+      {
+         if(sector->groupid == R_NOGROUP)
+            P_CreatePortalGroup(sector);
+         if(lines[destlineid].frontsector->groupid == R_NOGROUP)
+            P_CreatePortalGroup(lines[destlineid].frontsector);
+         fromid = sector->groupid;
+         toid = lines[destlineid].frontsector->groupid;
+         portal = R_GetLinkedPortal(destlineid, thislineid, zoffset, fromid, toid);
+      }
+      break;
+   default:
+      return;
+   }
+   
+   // Done
+   edefstructvar(portalentry_t, entry);
+   entry.id = portalid;
+   entry.portal = portal;
+   gPortals.add(entry);
 }
 
 // EOF

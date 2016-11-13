@@ -151,6 +151,7 @@ static ev_static_t DOOMStaticBindings[] =
    STATICSPEC(493, EV_STATIC_PORTAL_SECTOR_PARAM_SIMPLE)
    STATICSPEC(494, EV_STATIC_PORTAL_SECTOR_PARAM_ANCHORED)
    STATICSPEC(495, EV_STATIC_PORTAL_SECTOR_PARAM_LINKED)
+   STATICSPEC(496, EV_STATIC_PORTAL_DEFINE)
 };
 
 // Hexen Static Init Bindings
@@ -197,6 +198,7 @@ static ev_static_t UDMFEternityStaticBindings[] =
    STATICSPEC(121, EV_STATIC_NULL) // Line_SetIdentification isn't needed in UDMF
    STATICSPEC(300, EV_STATIC_PORTAL_LINE_PARAM_SIMPLE)
    STATICSPEC(301, EV_STATIC_PORTAL_LINE_PARAM_ANCHORED)
+   STATICSPEC(302, EV_STATIC_PORTAL_DEFINE)
    // Leave gap, for if we want EV_STATIC_PORTAL_LINE_PARAM_LINKED at some point
    STATICSPEC(305, EV_STATIC_PORTAL_SECTOR_PARAM_SIMPLE)
    STATICSPEC(306, EV_STATIC_PORTAL_SECTOR_PARAM_ANCHORED)
@@ -606,6 +608,7 @@ int EV_SpecialForStaticInitName(const char *name)
       { EV_STATIC_POLYOBJ_START_LINE,      "Polyobj_StartLine"      },
       { EV_STATIC_POLYOBJ_EXPLICIT_LINE,   "Polyobj_ExplicitLine"   },
       { EV_STATIC_PUSHPULL_CONTROL_PARAM,  "PointPush_SetForce"     },
+      { EV_STATIC_PORTAL_DEFINE,           "Portal_Define"          },
       { EV_STATIC_SCROLL_BY_OFFSETS,       "Scroll_Texture_Offsets" },
       { EV_STATIC_SCROLL_CEILING_PARAM,    "Scroll_Ceiling"         },
       { EV_STATIC_SCROLL_FLOOR_PARAM,      "Scroll_Floor"           },
@@ -652,6 +655,7 @@ bool EV_IsParamStaticInit(int special)
    case EV_STATIC_3DMIDTEX_ATTACH_PARAM:
    case EV_STATIC_CURRENT_CONTROL_PARAM:
    case EV_STATIC_INIT_PARAM:
+   case EV_STATIC_PORTAL_DEFINE:
    case EV_STATIC_PORTAL_LINE_PARAM_ANCHORED:
    case EV_STATIC_PORTAL_LINE_PARAM_COMPAT:
    case EV_STATIC_PORTAL_LINE_PARAM_SIMPLE:
