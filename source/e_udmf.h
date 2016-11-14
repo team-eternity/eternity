@@ -73,18 +73,25 @@ class UDMFSetupSettings : public ZoneObject
       int copyfloorportal;
    };
 
-   unsigned *mSectorInitFlags;
+   struct sectorinfo_t
+   {
+      unsigned flags;
+      int portalceiling;
+      int portalfloor;
+   };
+
+   sectorinfo_t *mSectorInitData;
    lineinfo_t *mLineInitData;
 
    void useSectorCount();
    void useLineCount();
 public:
-   UDMFSetupSettings() : mSectorInitFlags(nullptr), mLineInitData(nullptr)
+   UDMFSetupSettings() : mSectorInitData(nullptr), mLineInitData(nullptr)
    {
    }
    ~UDMFSetupSettings()
    {
-      efree(mSectorInitFlags);
+      efree(mSectorInitData);
       efree(mLineInitData);
    }
 
@@ -94,11 +101,29 @@ public:
    void setSectorFlag(int index, unsigned flag)
    {
       useSectorCount();
-      mSectorInitFlags[index] |= flag;
+      mSectorInitData[index].flags |= flag;
    }
    bool sectorIsFlagged(int index, unsigned flag) const
    {
-      return mSectorInitFlags && !!(mSectorInitFlags[index] & flag);
+      return mSectorInitData && !!(mSectorInitData[index].flags & flag);
+   }
+   void setSectorPortals(int index, int portalceiling, int portalfloor)
+   {
+      useSectorCount();
+      mSectorInitData[index].portalceiling = portalceiling;
+      mSectorInitData[index].portalfloor = portalfloor;
+   }
+   void getSectorPortals(int index, int &portalceiling, int &portalfloor) const
+   {
+      if(mSectorInitData)
+      {
+         portalceiling = mSectorInitData[index].portalceiling;
+         portalfloor = mSectorInitData[index].portalfloor;
+         return;
+      }
+      // no data
+      portalceiling = 0;
+      portalfloor = 0;
    }
 
    //
@@ -341,6 +366,9 @@ private:
       bool         portal_floor_useglobaltex;
       qstring      portal_floor_overlaytype; // OVERLAY and ADDITIVE consolidated into a single property
       unsigned int portal_floor_alpha;
+
+      int          portalceiling;   // floor portal id
+      int          portalfloor;     // floor portal id
 
       USector() : friction(-1), damagetype("Unknown"), floorterrain("@flat"), ceilingterrain("@flat"),
          colormaptop("@default"), colormapmid("@default"), colormapbottom("@default"),

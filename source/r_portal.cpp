@@ -73,7 +73,7 @@ enum portaltype_e
 struct portalentry_t
 {
    int id;
-   const portal_t *portal;
+   portal_t *portal;
 };
 
 static PODCollection<portalentry_t> gPortals;   // defined portals
@@ -1795,9 +1795,15 @@ void R_DefinePortal(const line_t &line)
       return;
    }
 
+   if(portalid <= 0)
+   {
+      C_Printf(FC_ERROR, "Portal id 0 or negative not allowed\a\n");
+      return;
+   }
+
    for(const auto &entry : gPortals)
    {
-      if(entry.id == portalid)
+      if(abs(entry.id) == portalid) // also check against negatives
       {
          C_Printf(FC_ERROR, "Portal id %d was already set\a\n", 
             portalid);
@@ -1806,12 +1812,14 @@ void R_DefinePortal(const line_t &line)
    }
 
    auto type = static_cast<portaltype_e>(int_type);
-   const portal_t *portal;
+   portal_t *portal, *mirrorportal = nullptr;
    sector_t *sector = line.frontsector;
+   sector_t *othersector;
    Mobj *skycam;
-   int destlineid;
-   const int thislineid = static_cast<int>(&line - lines);
+   int destlinenum;
+   const int thislinenum = static_cast<int>(&line - lines);
    int toid, fromid;
+   fixed_t planez;
 
    const int CamType = E_ThingNumForName("EESkyboxCam");
 
@@ -1853,31 +1861,49 @@ void R_DefinePortal(const line_t &line)
          C_Printf(FC_ERROR, "Anchored portal must have anchor line id\a\n");
          return;
       }
-      for(destlineid = -1; 
-         (destlineid = P_FindLineFromTag(anchorid, destlineid)) >= 0; )
+      for(destlinenum = -1; 
+         (destlinenum = P_FindLineFromTag(anchorid, destlinenum)) >= 0; )
       {
-         if(&lines[destlineid] == &line)  // don't allow same target
+         if(&lines[destlinenum] == &line)  // don't allow same target
             continue;
          break;
       }
-      if(destlineid == -1)
+      if(destlinenum == -1)
       {
          C_Printf(FC_ERROR, "No anchor line found\a\n");
          return;
       }
       if(type == portaltype_anchor)
-         portal = R_GetAnchoredPortal(destlineid, thislineid, zoffset);
+         portal = R_GetAnchoredPortal(destlinenum, thislinenum, zoffset);
       else if(type == portaltype_twoway)
-         portal = R_GetTwoWayPortal(destlineid, thislineid, false, zoffset);
+      {
+         portal = R_GetTwoWayPortal(destlinenum, thislinenum, false, zoffset);
+         mirrorportal = R_GetTwoWayPortal(thislinenum, destlinenum, false, 
+            -zoffset);
+      }
       else
       {
+         othersector = lines[destlinenum].frontsector;
          if(sector->groupid == R_NOGROUP)
             P_CreatePortalGroup(sector);
-         if(lines[destlineid].frontsector->groupid == R_NOGROUP)
-            P_CreatePortalGroup(lines[destlineid].frontsector);
+         if(othersector->groupid == R_NOGROUP)
+            P_CreatePortalGroup(othersector);
          fromid = sector->groupid;
-         toid = lines[destlineid].frontsector->groupid;
-         portal = R_GetLinkedPortal(destlineid, thislineid, zoffset, fromid, toid);
+         toid = othersector->groupid;
+
+         if(othersector->floorheight / 2 + othersector->ceilingheight / 2 <=
+            sector->floorheight / 2 + sector->ceilingheight / 2)
+         {
+            // this sector is above the other
+            planez = sector->floorheight + zoffset;
+         }
+         else
+            planez = sector->ceilingheight + zoffset;
+
+         portal = R_GetLinkedPortal(destlinenum, thislinenum, planez, fromid, 
+            toid);
+         mirrorportal = R_GetLinkedPortal(thislinenum, destlinenum, planez, 
+            toid, fromid);
       }
       break;
    default:
@@ -1889,6 +1915,37 @@ void R_DefinePortal(const line_t &line)
    entry.id = portalid;
    entry.portal = portal;
    gPortals.add(entry);
+   if(mirrorportal)
+   {
+      entry.portal = mirrorportal;
+      entry.id = -entry.id;
+      gPortals.add(entry);
+   }
+}
+
+//
+// Applies the portals defined with IDs
+//
+void R_ApplyPortals(sector_t &sector, int portalceiling, int portalfloor)
+{
+   if(portalceiling || portalfloor)
+   {
+      for(const auto &entry : gPortals)
+      {
+         if(portalceiling && entry.id == portalceiling)
+         {
+            P_SetPortal(&sector, nullptr, entry.portal, portal_ceiling);
+            portalceiling = 0;
+         }
+         if(portalfloor && entry.id == portalfloor)
+         {
+            P_SetPortal(&sector, nullptr, entry.portal, portal_floor);
+            portalfloor = 0;
+         }
+         if(!portalfloor && !portalceiling)
+            return;
+      }
+   }
 }
 
 // EOF

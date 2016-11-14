@@ -56,9 +56,9 @@ static const char RENDERSTYLE_add[] = "add";
 //
 void UDMFSetupSettings::useSectorCount()
 {
-   if(mSectorInitFlags)
+   if(mSectorInitData)
       return;
-   mSectorInitFlags = ecalloc(unsigned *, ::numsectors, sizeof(unsigned));
+   mSectorInitData = estructalloc(sectorinfo_t, ::numsectors);
 }
 
 void UDMFSetupSettings::useLineCount()
@@ -161,6 +161,7 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          // sector colormaps
          ss->topmap = ss->midmap = ss->bottommap = -1; // mark as not specified
 
+         setupSettings.setSectorPortals(i, us.portalceiling, us.portalfloor);
       }
       else
       {
@@ -553,6 +554,7 @@ enum token_e
    t_monsteruse,
    t_offsetx,
    t_offsety,
+   t_portalceiling,
    t_portal_ceil_alpha,
    t_portal_ceil_blocksound,
    t_portal_ceil_disabled,
@@ -560,6 +562,7 @@ enum token_e
    t_portal_ceil_norender,
    t_portal_ceil_overlaytype,
    t_portal_ceil_useglobaltex,
+   t_portalfloor,
    t_portal_floor_alpha,
    t_portal_floor_blocksound,
    t_portal_floor_disabled,
@@ -682,6 +685,7 @@ static keytoken_t gTokenList[] =
    TOKEN(monsteruse),
    TOKEN(offsetx),
    TOKEN(offsety),
+   TOKEN(portalceiling),
    TOKEN(portal_ceil_alpha),
    TOKEN(portal_ceil_blocksound),
    TOKEN(portal_ceil_disabled),
@@ -689,6 +693,7 @@ static keytoken_t gTokenList[] =
    TOKEN(portal_ceil_norender),
    TOKEN(portal_ceil_overlaytype),
    TOKEN(portal_ceil_useglobaltex),
+   TOKEN(portalfloor),
    TOKEN(portal_floor_alpha),
    TOKEN(portal_floor_blocksound),
    TOKEN(portal_floor_disabled),
@@ -1020,6 +1025,9 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                      READ_BOOL(sector, portal_ceil_nopass);
                      READ_BOOL(sector, portal_ceil_norender);
                      READ_BOOL(sector, portal_ceil_useglobaltex);
+
+                     READ_NUMBER(sector, portalceiling);
+                     READ_NUMBER(sector, portalfloor);
                      default:
                         break;
                   }

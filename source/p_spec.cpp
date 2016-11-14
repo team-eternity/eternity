@@ -1404,6 +1404,16 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
       }
    }
 
+   // Sector extra UDMF data
+   int portalfloor, portalceiling;
+   for(int i = 0; i < numsectors; i++)
+   {
+      // These must be after the line checking
+      sector_t &sector = sectors[i];
+      setupSettings.getSectorPortals(i, portalceiling, portalfloor);
+      R_ApplyPortals(sector, portalceiling, portalfloor);
+   }
+
    // SoM: This seems like the place to put this.
    if(!P_BuildLinkTable())
    {
