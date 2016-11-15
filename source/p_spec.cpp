@@ -1350,11 +1350,6 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
             lines[i].args[2] << FRACBITS);
          break;
 
-      case EV_STATIC_PORTAL_SECTOR_PARAM_ANCHORED:
-         R_SpawnAnchoredSectorPortal(lines[i], lines[i].args[0], lines[i].args[1],
-            lines[i].args[2], lines[i].args[3], lines[i].args[4] << FRACBITS);
-         break;
-
       case EV_STATIC_PORTAL_SECTOR_PARAM_LINKED:
          R_SpawnLinkedSectorPortal(lines[i], lines[i].args[0], lines[i].args[1],
             lines[i].args[2], lines[i].args[3], lines[i].args[4] << FRACBITS);
