@@ -1578,59 +1578,6 @@ void R_SpawnAnchoredLinePortal(line_t &line, int destlineid, int flags,
 }
 
 //
-// Implements Sector_SetSimplePortals
-//
-// Applies a plane, horizon or skybox portal on tagged floor or ceiling
-//
-// Parameters:
-// * tag: tag of target sectors
-// * type: 0 (plane), 1 (horizon), 2 (skybox) 
-// * flags: 1 (floor), 2 (ceiling)
-//
-void R_SpawnSimpleSectorPortal(const line_t &line, int tag, int type, int flags)
-{
-   if(type < 0 || type > 2)
-   {
-      C_Printf(FC_ERROR "Invalid type %d\a\n", type);
-      return;
-   }
-   if(tag <= 0)
-   {
-      C_Printf(FC_ERROR "Anchored sector portal target tag must be > 0\a\n");
-      return;
-   }
-
-   portal_t *portal = R_portalFromCode(line.frontsector, type);
-   if(!portal)
-      return;
-
-   if(flags < 1 || flags > 3)
-   {
-      C_Printf(FC_ERROR "Invalid flags value: %d\a\n", flags);
-      return;
-   }
-
-   // We know for a fact that effect must be assigned assigned, otherwise
-   // the code above would have printed an error and returned. Regardless,
-   // we'll use else if in case some weird new portal_effect crops up.
-   portal_effect effect;   // already validated
-   
-   // Order must be descending, otherwise issues ensue with non-binary values
-   if((flags & 3) == 3)
-      effect = portal_both;
-   else if(flags & 2)
-      effect = portal_ceiling;
-   else if(flags & 1)
-      effect = portal_floor;
-
-   int s = -1;
-   while((s = P_FindSectorFromTag(tag, s)) >= 0)
-   {
-      P_SetPortal(&sectors[s], nullptr, portal, effect);
-   }
-}
-
-//
 // Implements Sector_SetAnchoredPortal
 //
 // Strictly for nonlinked portals
