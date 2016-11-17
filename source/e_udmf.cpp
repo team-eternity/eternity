@@ -635,8 +635,6 @@ static keytoken_t gTokenList[] =
    TOKEN(colormapbottom),
    TOKEN(colormapmid),
    TOKEN(colormaptop),
-   TOKEN(copyceilingportal),
-   TOKEN(copyfloorportal),
    TOKEN(coop),
    TOKEN(damage_endgodmode),
    TOKEN(damage_exitlevel),
@@ -897,8 +895,6 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                   READ_BOOL(linedef, clipmidtex);
                   READ_BOOL(linedef, lowerportal);
                   READ_BOOL(linedef, upperportal);
-                  READ_NUMBER(linedef, copyceilingportal);
-                  READ_NUMBER(linedef, copyfloorportal);
                   READ_NUMBER(linedef, alpha);
                   READ_STRING(linedef, renderstyle);
                   READ_STRING(linedef, tranmap);
