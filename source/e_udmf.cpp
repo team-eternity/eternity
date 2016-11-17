@@ -61,13 +61,6 @@ void UDMFSetupSettings::useSectorCount()
    mSectorInitData = estructalloc(sectorinfo_t, ::numsectors);
 }
 
-void UDMFSetupSettings::useLineCount()
-{
-   if (mLineInitData)
-      return;
-   mLineInitData = estructalloc(lineinfo_t, ::numlines);
-}
-
 //==============================================================================
 //
 // Collecting and processing
@@ -289,8 +282,6 @@ bool UDMFParser::loadLinedefs(UDMFSetupSettings &setupSettings)
             ld->extflags |= EX_ML_LOWERPORTAL;
          if(uld.upperportal)
             ld->extflags |= EX_ML_UPPERPORTAL;
-         setupSettings.setCopyPortal(i, uld.copyceilingportal, 
-            uld.copyfloorportal);
       }
 
       // TODO: Strife

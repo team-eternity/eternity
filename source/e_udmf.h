@@ -67,12 +67,6 @@ enum
 //
 class UDMFSetupSettings : public ZoneObject
 {
-   struct lineinfo_t
-   {
-      int copyceilingportal;
-      int copyfloorportal;
-   };
-
    struct sectorinfo_t
    {
       unsigned flags;
@@ -81,18 +75,15 @@ class UDMFSetupSettings : public ZoneObject
    };
 
    sectorinfo_t *mSectorInitData;
-   lineinfo_t *mLineInitData;
 
    void useSectorCount();
-   void useLineCount();
 public:
-   UDMFSetupSettings() : mSectorInitData(nullptr), mLineInitData(nullptr)
+   UDMFSetupSettings() : mSectorInitData(nullptr)
    {
    }
    ~UDMFSetupSettings()
    {
       efree(mSectorInitData);
-      efree(mLineInitData);
    }
 
    //
@@ -124,28 +115,6 @@ public:
       // no data
       portalceiling = 0;
       portalfloor = 0;
-   }
-
-   //
-   // Linedef init getter and setter
-   //
-   void setCopyPortal(int index, int ceiling, int floor)
-   {
-      useLineCount();
-      mLineInitData[index].copyceilingportal = ceiling;
-      mLineInitData[index].copyfloorportal = floor;
-   }
-   void getCopyPortal(int index, int &ceiling, int &floor) const
-   {
-      if (mLineInitData)
-      {
-         ceiling = mLineInitData[index].copyceilingportal;
-         floor = mLineInitData[index].copyfloorportal;
-         return;
-      }
-      // no data
-      ceiling = 0;
-      floor = 0;
    }
 };
 

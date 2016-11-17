@@ -1415,43 +1415,6 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
    P_SpawnLevelActions();
 }
 
-//
-// Applies the copyfloorportal and copyceilingportal properties on line.
-// When it finds sector with a given tag and valid portal, it copies that
-// portal.
-//
-static void P_udmfCopyPortalToLine(line_t *line, int ceilingtag, int floortag)
-{
-   if (!ceilingtag && !floortag)
-      return;
-   int index;
-   const sector_t *sector;
-   // ceiling takes priority
-   if(ceilingtag)
-   {
-      for(index = -1; (index = P_FindSectorFromTag(ceilingtag, index)) >= 0; )
-      {
-         sector = sectors + index;
-         if(!sector->c_portal)
-            continue;
-         // found one
-         P_SetPortal(line->frontsector, line, sector->c_portal, portal_lineonly);
-         return;
-      }
-   }
-   if(floortag)
-   {
-      for(index = -1; (index = P_FindSectorFromTag(floortag, index)) >= 0; )
-      {
-         sector = sectors + index;
-         if(!sector->f_portal)
-            continue;
-         P_SetPortal(line->frontsector, line, sector->f_portal, portal_lineonly);
-         return;
-      }
-   }
-}
-
 // 
 // P_SpawnDeferredSpecials
 //
@@ -1459,15 +1422,9 @@ static void P_udmfCopyPortalToLine(line_t *line, int ceilingtag, int floortag)
 //
 void P_SpawnDeferredSpecials(UDMFSetupSettings &setupSettings)
 {
-   int copyceiling, copyfloor;
-
    for(int i = 0; i < numlines; i++)
    {
       line_t *line = &lines[i];
-
-      // Check if there are portal lines to copy
-      setupSettings.getCopyPortal(i, copyceiling, copyfloor);
-      P_udmfCopyPortalToLine(line, copyceiling, copyfloor);
 
       // haleyjd 02/05/13: lookup the static init function
       int staticFn = EV_StaticInitForSpecial(line->special);
