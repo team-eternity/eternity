@@ -1747,5 +1747,19 @@ void R_ApplyPortals(sector_t &sector, int portalceiling, int portalfloor)
    }
 }
 
+//
+// Applies portal marked id on a line
+//
+void R_ApplyPortal(line_t &line, int portal)
+{
+   if(portal)
+      for(const auto &entry : gPortals)
+         if(entry.id == portal)
+         {
+            P_SetPortal(line.frontsector, &line, entry.portal, portal_lineonly);
+            return;
+         }
+}
+
 // EOF
 

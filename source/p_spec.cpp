@@ -1206,6 +1206,46 @@ static void P_SetupHeightTransfer(int linenum, int secnum,
 }
 
 //
+// Spawns portals from UDMF settings. Must be called before P_BuildLinkTable
+//
+static void P_spawnPortals(UDMFSetupSettings &setupSettings)
+{
+   // Sector extra UDMF data
+   int portalfloor, portalceiling;
+   for(int i = 0; i < numsectors; i++)
+   {
+      // These must be after the line checking
+      sector_t &sector = sectors[i];
+      setupSettings.getSectorPortals(i, portalceiling, portalfloor);
+      R_ApplyPortals(sector, portalceiling, portalfloor);
+   }
+
+   for(int i = 0; i < numlines; i++)
+   {
+      line_t *line = &lines[i];
+
+      R_ApplyPortal(*line, setupSettings.getLinePortal(i));
+
+      // haleyjd 02/05/13: lookup the static init function
+      int staticFn = EV_StaticInitForSpecial(line->special);
+
+      switch(staticFn)
+      {
+      case EV_STATIC_PORTAL_SECTOR_PARAM_COMPAT:
+         if(line->args[paramPortal_argType] == paramPortal_copied ||
+            line->args[paramPortal_argType] == paramPortal_copyline)
+         {
+            P_spawnDeferredParamPortal(line, staticFn);
+         }
+         break;
+
+      default: // Not a function handled here
+         break;
+      }
+   }
+}
+
+//
 // P_SpawnSpecials
 //
 // After the map has been loaded, scan for specials that spawn thinkers
@@ -1390,15 +1430,7 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
       }
    }
 
-   // Sector extra UDMF data
-   int portalfloor, portalceiling;
-   for(int i = 0; i < numsectors; i++)
-   {
-      // These must be after the line checking
-      sector_t &sector = sectors[i];
-      setupSettings.getSectorPortals(i, portalceiling, portalfloor);
-      R_ApplyPortals(sector, portalceiling, portalfloor);
-   }
+   P_spawnPortals(setupSettings);
 
    // SoM: This seems like the place to put this.
    if(!P_BuildLinkTable())
@@ -1436,12 +1468,6 @@ void P_SpawnDeferredSpecials(UDMFSetupSettings &setupSettings)
       case EV_STATIC_SLOPE_FRONTFLOORCEILING_TAG:
          // SoM: Copy slopes
          P_CopySectorSlope(line, staticFn);
-      case EV_STATIC_PORTAL_SECTOR_PARAM_COMPAT:
-         if(line->args[paramPortal_argType] == paramPortal_copied ||
-            line->args[paramPortal_argType] == paramPortal_copyline)
-         {
-            P_spawnDeferredParamPortal(line, staticFn);
-         }
          break;
 
       default: // Not a function handled here

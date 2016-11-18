@@ -74,16 +74,24 @@ class UDMFSetupSettings : public ZoneObject
       int portalfloor;
    };
 
+   struct lineinfo_t
+   {
+      int portal;
+   };
+
    sectorinfo_t *mSectorInitData;
+   lineinfo_t *mLineInitData;
 
    void useSectorCount();
+   void useLineCount();
 public:
-   UDMFSetupSettings() : mSectorInitData(nullptr)
+   UDMFSetupSettings() : mSectorInitData(nullptr), mLineInitData(nullptr)
    {
    }
    ~UDMFSetupSettings()
    {
       efree(mSectorInitData);
+      efree(mLineInitData);
    }
 
    //
@@ -115,6 +123,18 @@ public:
       // no data
       portalceiling = 0;
       portalfloor = 0;
+   }
+
+   void setLinePortal(int index, int portal)
+   {
+      useLineCount();
+      mLineInitData[index].portal = portal;
+   }
+   int getLinePortal(int index) const
+   {
+      if(mLineInitData)
+         return mLineInitData[index].portal;
+      return 0;
    }
 };
 
@@ -237,6 +257,7 @@ private:
       bool midtex3dimpassible;   // zdoomish trick to make projectiles pass
       bool lowerportal;          // lower part acts as a portal extension
       bool upperportal;          // upper part acts as a portal extension
+      int portal;
       float alpha;               // opacity ratio
       qstring renderstyle;       // zdoomish renderstyle (add, translucent)
       qstring tranmap;           // boomish translucency lump

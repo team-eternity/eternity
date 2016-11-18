@@ -61,6 +61,13 @@ void UDMFSetupSettings::useSectorCount()
    mSectorInitData = estructalloc(sectorinfo_t, ::numsectors);
 }
 
+void UDMFSetupSettings::useLineCount()
+{
+   if(mLineInitData)
+      return;
+   mLineInitData = estructalloc(lineinfo_t, ::numlines);
+}
+
 //==============================================================================
 //
 // Collecting and processing
@@ -282,6 +289,7 @@ bool UDMFParser::loadLinedefs(UDMFSetupSettings &setupSettings)
             ld->extflags |= EX_ML_LOWERPORTAL;
          if(uld.upperportal)
             ld->extflags |= EX_ML_UPPERPORTAL;
+         setupSettings.setLinePortal(i, uld.portal);
       }
 
       // TODO: Strife
@@ -545,6 +553,7 @@ enum token_e
    t_monsteruse,
    t_offsetx,
    t_offsety,
+   t_portal,
    t_portalceiling,
    t_portal_ceil_alpha,
    t_portal_ceil_blocksound,
@@ -674,6 +683,7 @@ static keytoken_t gTokenList[] =
    TOKEN(monsteruse),
    TOKEN(offsetx),
    TOKEN(offsety),
+   TOKEN(portal),
    TOKEN(portalceiling),
    TOKEN(portal_ceil_alpha),
    TOKEN(portal_ceil_blocksound),
@@ -895,6 +905,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                   READ_BOOL(linedef, clipmidtex);
                   READ_BOOL(linedef, lowerportal);
                   READ_BOOL(linedef, upperportal);
+                  READ_NUMBER(linedef, portal);
                   READ_NUMBER(linedef, alpha);
                   READ_STRING(linedef, renderstyle);
                   READ_STRING(linedef, tranmap);
