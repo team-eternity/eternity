@@ -197,7 +197,8 @@ void P_InitPicAnims(void)
       if(animdefs[i].istexture)
       {
          // different episode ?
-         if(R_CheckForWall(animdefs[i].startname) == -1)
+         if(R_CheckForWall(animdefs[i].startname) == -1 ||
+            R_CheckForWall(animdefs[i].endname) == -1)
             continue;
          
          lastanim->picnum = R_FindWall(animdefs[i].endname);
@@ -205,7 +206,8 @@ void P_InitPicAnims(void)
       }
       else
       {
-         if(R_CheckForFlat(animdefs[i].startname) == -1)
+         if(R_CheckForFlat(animdefs[i].startname) == -1 ||
+            R_CheckForFlat(animdefs[i].endname) == -1)
             continue;
          
          lastanim->picnum = R_FindFlat(animdefs[i].endname);
