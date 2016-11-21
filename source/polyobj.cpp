@@ -837,10 +837,17 @@ static void Polyobj_pushThing(polyobj_t *po, line_t *line, Mobj *mo)
    // if object doesn't fit at desired location, possibly hurt it
    if(po->damage && mo->flags & MF_SHOOTABLE)
    {
-      if((po->flags & POF_DAMAGING) || 
-         !P_CheckPosition(mo, mo->x + momx, mo->y + momy))
-      {
+      if(po->flags & POF_DAMAGING)
          P_DamageMobj(mo, NULL, NULL, po->damage, MOD_CRUSH);
+      else
+      {
+         // Temporarily remove from blockmap to avoid this poly's lines from
+         // counting as collision lines. Only separate walls should block and 
+         // damage the mobj.
+         Polyobj_removeFromBlockmap(po);
+         if(!P_CheckPosition(mo, mo->x + momx, mo->y + momy))
+            P_DamageMobj(mo, NULL, NULL, po->damage, MOD_CRUSH);
+         Polyobj_linkToBlockmap(po);
       }
    }
 }
