@@ -58,6 +58,8 @@ visplane_t *R_FindPlane(fixed_t height,
                         int lightlevel,
                         fixed_t xoffs,       // killough 2/28/98: add x-y offsets
                         fixed_t yoffs,
+                        float xscale,
+                        float yscale,
                         float angle,         // haleyjd 01/08/05: add angle
                         pslope_t *slope,     // SoM: slopes
                         int blendflags,      // SoM: Blending flags for the plane
@@ -83,6 +85,7 @@ struct cb_span_t
 struct cb_plane_t
 {
    float xoffset, yoffset;
+   float xscale, yscale;
    float height;
    float pviewx, pviewy, pviewz, pviewsin, pviewcos;
    int   picnum;

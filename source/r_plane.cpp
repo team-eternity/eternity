@@ -265,8 +265,8 @@ static void R_MapPlane(int y, int x1, int x2)
    slope = (float)fabs(plane.height / dy);
    realy = slope * view.yfoc;
 
-   xstep = plane.pviewcos * slope * view.focratio;
-   ystep = plane.pviewsin * slope * view.focratio;
+   xstep = plane.pviewcos * slope * view.focratio * plane.xscale;
+   ystep = plane.pviewsin * slope * view.focratio * plane.yscale;
 
    // haleyjd: #if 0 for test
 #if 0
@@ -313,12 +313,12 @@ static void R_MapPlane(int y, int x1, int x2)
    {
       double value;
 
-      value = (plane.pviewx + plane.xoffset + (plane.pviewsin * realy) +
+      value = (((plane.pviewx + plane.xoffset) * plane.xscale) + (plane.pviewsin * realy * plane.xscale) +
                (((double)x1 - view.xcenter) * xstep)) * plane.fixedunitx;
 
       span.xfrac = R_doubleToUint32(value);
 
-      value = (-plane.pviewy + plane.yoffset + (-plane.pviewcos * realy) +
+      value = (((-plane.pviewy + plane.yoffset) * plane.yscale) + (-plane.pviewcos * realy * plane.yscale) +
                (((double)x1 - view.xcenter) * ystep)) * plane.fixedunity;
 
       span.yfrac = R_doubleToUint32(value);
@@ -712,7 +712,8 @@ static visplane_t *new_visplane(unsigned hash, planehash_t *table)
 // haleyjd 01/05/08: Add angle
 //
 visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
-                        fixed_t xoffs, fixed_t yoffs, float angle,
+                        fixed_t xoffs, fixed_t yoffs,
+                        float xscale, float yscale, float angle,
                         pslope_t *slope, int blendflags, byte opacity,
                         planehash_t *table)
 {
@@ -754,6 +755,8 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
          lightlevel == check->lightlevel &&
          xoffs == check->xoffs &&      // killough 2/28/98: Add offset checks
          yoffs == check->yoffs &&
+         xscale == check->xscale &&
+         yscale == check->yscale &&
          angle == check->angle &&      // haleyjd 01/05/08: Add angle
          zlight == check->colormap &&
          fixedcolormap == check->fixedcolormap && 
@@ -776,6 +779,8 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    check->maxx = -1;
    check->xoffs = xoffs;               // killough 2/28/98: Save offsets
    check->yoffs = yoffs;
+   check->xscale = xscale;
+   check->yscale = yscale;
    check->angle = angle;               // haleyjd 01/05/08: Save angle
    check->colormap = zlight;
    check->fixedcolormap = fixedcolormap; // haleyjd 10/16/06
@@ -878,6 +883,8 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
 
       // SoM: copy converted stuffs too
       new_pl->heightf = pl->heightf;
+      new_pl->yscale = pl->yscale;
+      new_pl->xscale = pl->xscale;
       new_pl->xoffsf = pl->xoffsf;
       new_pl->yoffsf = pl->yoffsf;
       
@@ -1206,6 +1213,9 @@ static void do_draw_plane(visplane_t *pl)
         
       plane.xoffset = pl->xoffsf;  // killough 2/28/98: Add offsets
       plane.yoffset = pl->yoffsf;
+
+      plane.xscale = pl->xscale;
+      plane.yscale = pl->yscale;
 
       plane.pviewx   = pl->viewxf;
       plane.pviewy   = pl->viewyf;
