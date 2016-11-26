@@ -358,8 +358,10 @@ static void R_MapSlope(int y, int x1, int x2)
    s.y = y - view.ycenter + 1;
    s.z = view.xfoc;
 
-   slopespan.iufrac = M_DotVec3(&s, &slope->A) * (double)plane.tex->width * plane.yscale;
-   slopespan.ivfrac = M_DotVec3(&s, &slope->B) * (double)plane.tex->height * plane.xscale;
+   slopespan.iufrac = M_DotVec3(&s, &slope->A) * (double)plane.tex->width *
+                      static_cast<double>(plane.yscale);
+   slopespan.ivfrac = M_DotVec3(&s, &slope->B) * (double)plane.tex->height *
+                      static_cast<double>(plane.xscale);
    slopespan.idfrac = M_DotVec3(&s, &slope->C);
 
    slopespan.iustep = slope->A.x * (double)plane.tex->width * plane.yscale;
