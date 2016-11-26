@@ -214,10 +214,10 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
             ss->c_pflags |= PS_OBLENDFLAGS; // PS_OBLENDFLAGS is PS_OVERLAY | PS_ADDITIVE
          ss->c_pflags |= us.portal_ceil_useglobaltex ? PS_USEGLOBALTEX : 0;
 
-         ss->floor_xscale = us.xscalefloor;
-         ss->floor_yscale = us.yscalefloor;
-         ss->ceiling_xscale = us.xscaleceiling;
-         ss->ceiling_yscale = us.yscaleceiling;
+         ss->floor_xscale = static_cast<float>(us.xscalefloor);
+         ss->floor_yscale = static_cast<float>(us.yscalefloor);
+         ss->ceiling_xscale = static_cast<float>(us.xscaleceiling);
+         ss->ceiling_yscale = static_cast<float>(us.yscaleceiling);
       }
    }
 }

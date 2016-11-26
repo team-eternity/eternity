@@ -268,47 +268,6 @@ static void R_MapPlane(int y, int x1, int x2)
    xstep = plane.pviewcos * slope * view.focratio * plane.xscale;
    ystep = plane.pviewsin * slope * view.focratio * plane.yscale;
 
-   // haleyjd: #if 0 for test
-#if 0
-#ifdef __APPLE__
-   {
-      double value;
-      
-      value = fmod(plane.pviewx + plane.xoffset + (plane.pviewsin * realy)
-                   + (x1 - view.xcenter) * xstep, (double)plane.tex->width); 
-      if(value < 0) value += plane.tex->width;
-      span.xfrac = (int)(value * plane.fixedunitx);
-      span.xfrac <<= 2;
-
-      value = fmod(-plane.pviewy + plane.yoffset + (-plane.pviewcos * realy)
-                   + (x1 - view.xcenter) * ystep, (double)plane.tex->height);
-      if(value < 0) value += plane.tex->height;
-      span.yfrac = (int)(value * plane.fixedunity);
-      span.yfrac <<= 2;
-      
-      value = fmod(xstep, (double)plane.tex->width);
-      if(value < 0) value += plane.tex->width;
-      span.xstep = (int)(value * plane.fixedunitx);
-      span.xstep <<= 2;
-            
-      value = fmod(ystep, (double)plane.tex->height);
-      if(value < 0) value += plane.tex->height;
-      span.ystep = (int)(value * plane.fixedunity);
-      span.ystep <<= 2;
-   }
-#else
-   span.xfrac = 
-      (unsigned int)((plane.pviewx + plane.xoffset + (plane.pviewsin * realy)
-                      + ((x1 - view.xcenter) * xstep)) * plane.fixedunitx);
-   span.yfrac = 
-      (unsigned int)((-plane.pviewy + plane.yoffset + (-plane.pviewcos * realy)
-                      + ((x1 - view.xcenter) * ystep)) * plane.fixedunity);
-   span.xstep = (unsigned int)(xstep * plane.fixedunitx);
-   span.ystep = (unsigned int)(ystep * plane.fixedunity);
-#endif
-#endif
-
-   // haleyjd: TEST
    // Use Mozilla routine for portable double->uint32 conversion
    {
       double value;
@@ -339,62 +298,6 @@ static void R_MapPlane(int y, int x1, int x2)
    // BIG FLATS
    flatfunc();
 }
-
-// haleyjd: NOTE: This version below has scaling implemented. Don't delete it!
-// TODO: integrate flat scaling.
-/*
-static void R_MapPlane(int y, int x1, int x2)
-{
-   float dy, xstep, ystep, realy, slope;
-
-   static float scale = 2.0f
-
-#ifdef RANGECHECK
-   if(x2 < x1 || x1 < 0 || x2 >= viewwindow.width || y < 0 || y >= viewwindow.height)
-      I_Error("R_MapPlane: %i, %i at %i\n", x1, x2, y);
-#endif
-  
-   // SoM: because ycenter is an actual row of pixels (and it isn't really the 
-   // center row because there are an even number of rows) some corrections need
-   // to be made depending on where the row lies relative to the ycenter row.
-   if(view.ycenter == y)
-      dy = 0.01f;
-   else if(y < view.ycenter)
-      dy = (float)fabs(view.ycenter - y) - 1;
-   else
-      dy = (float)fabs(view.ycenter - y) + 1;
-
-   slope = (float)fabs(plane.height / dy);
-   realy = slope * view.yfoc * scale;
-
-   xstep = view.sin * slope * view.focratio * scale;
-   ystep = view.cos * slope * view.focratio * scale;
-
-   span.xfrac = (unsigned int)((((-plane.pviewy + plane.yoffset) * scale) + (-view.cos * realy) 
-                            + ((x1 - view.xcenter) * xstep)) * plane.fixedunit);
-   span.yfrac = (unsigned int)((((plane.pviewx + plane.xoffset) * scale) + (view.sin * realy) 
-                            + ((x1 - view.xcenter) * ystep)) * plane.fixedunit);
-   span.xstep = (unsigned int)(xstep * plane.fixedunit);
-   span.ystep = (unsigned int)(ystep * plane.fixedunit);
-
-   // killough 2/28/98: Add offsets
-   if((span.colormap = plane.fixedcolormap) == NULL) // haleyjd 10/16/06
-   {
-      int index = (int)(realy / 16.0f);
-      if(index >= MAXLIGHTZ )
-         index = MAXLIGHTZ-1;
-      span.colormap = plane.planezlight[index];
-   }
-   
-   span.y  = y;
-   span.x1 = x1;
-   span.x2 = x2;
-   span.source = plane.source;
-   
-   // BIG FLATS
-   flatfunc();
-}
-*/
 
 //
 // R_SlopeLights
@@ -455,12 +358,12 @@ static void R_MapSlope(int y, int x1, int x2)
    s.y = y - view.ycenter + 1;
    s.z = view.xfoc;
 
-   slopespan.iufrac = M_DotVec3(&s, &slope->A) * (double)plane.tex->width;
-   slopespan.ivfrac = M_DotVec3(&s, &slope->B) * (double)plane.tex->height;
+   slopespan.iufrac = M_DotVec3(&s, &slope->A) * (double)plane.tex->width * plane.yscale;
+   slopespan.ivfrac = M_DotVec3(&s, &slope->B) * (double)plane.tex->height * plane.xscale;
    slopespan.idfrac = M_DotVec3(&s, &slope->C);
 
-   slopespan.iustep = slope->A.x * (double)plane.tex->width;
-   slopespan.ivstep = slope->B.x * (double)plane.tex->height;
+   slopespan.iustep = slope->A.x * (double)plane.tex->width * plane.yscale;
+   slopespan.ivstep = slope->B.x * (double)plane.tex->height * plane.xscale;
    slopespan.idstep = slope->C.x;
 
    slopespan.source = plane.source;
