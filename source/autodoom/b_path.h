@@ -179,6 +179,10 @@ private:
     std::map<const line_t*, TeleItem> m_teleCache; // teleporter cache
 };
 
+bool B_FindBreadthFirst(const BSubsec &first,
+                        std::function<bool(const BNeigh &)> &&passfunc,
+                        std::function<bool(const BSubsec &)> &&scanfunc);
+
 #endif /* defined(__EternityEngine__b_path__) */
 
 // EOF

@@ -27,6 +27,8 @@
 //
 //-----------------------------------------------------------------------------
 
+#include <queue>
+#include <vector>
 #include "../z_zone.h"
 
 #include "b_path.h"
@@ -331,6 +333,48 @@ void PathFinder::DataBox::IncrementValidcount()
     if (!validcount)  // wrap around: reset former validcounts!
         memset(ssvisit, 0xff, sscount * sizeof(*ssvisit));
 
+}
+
+//
+// Does a breadth-first (neighbourhood-based, but not distance-aware) search
+// from a starting subsector ahead.
+//
+// There are two functions to use here:
+//  passfunc(): returns true if neigh can be passed (usually by a player).
+//  scanfunc(): returns true if subsector has goal.
+// Both functions can capture external parameters, so it's feasible to return
+// false from scanfunc() but still use it to gather data.
+//
+bool B_FindBreadthFirst(const BSubsec &first,
+                        std::function<bool(const BNeigh &)> &&passfunc,
+                        std::function<bool(const BSubsec &)> &&scanfunc)
+{
+   std::queue<const BSubsec *> q;
+   std::vector<bool> visited;
+   visited.resize(botMap->ssectors.getLength());
+
+   const BSubsec &fss = botMap->ssectors[0];
+
+   q.push(&first);
+   visited[&first - &fss] = true;
+   while(!q.empty())
+   {
+      const BSubsec *ss = q.front();
+      q.pop();
+      if(scanfunc(*ss))
+         return true;
+      for(const auto &neigh : ss->neighs)
+      {
+         if(!passfunc(neigh))
+            continue;
+         const BSubsec *nss = neigh.otherss;
+         if(visited[nss - &fss])
+            continue;
+         q.push(nss);
+         visited[nss - &fss] = true;
+      }
+   }
+   return false;
 }
 
 // EOF
