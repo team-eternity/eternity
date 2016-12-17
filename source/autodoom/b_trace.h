@@ -59,6 +59,7 @@ public:
    ~RTraversal()
    {
       efree(m_lineValidcount);
+      efree(m_intercepts);
    }
 
    static bool TRaimTraverse(intercept_t*, void*);
