@@ -1108,8 +1108,10 @@ bool P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       {
          nopickStats->reset(true);
       }
-      
-      plbot->addXYEvent(BOT_PICKUP, B_CoordXY(*special));
+
+      for(int i = 0; i < MAXPLAYERS; ++i)
+         if(playeringame[i])
+            bots[i].addXYEvent(BOT_PICKUP, B_CoordXY(*special));
    }
 
    if(removeobj)
@@ -1125,6 +1127,18 @@ bool P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    {
       player->bonuscount += BONUSADD;
       S_StartSound(player->mo, sound);   // killough 4/25/98, 12/98
+   }
+
+   // FOR BOT
+   if(!removeobj && !pickup_fx)
+   {
+      if(botMap)
+      {
+         Bot::getNopickStats(special->sprite).reduceByCurrentState(*player);
+         for(int i = 0; i < MAXPLAYERS; ++i)
+            if(playeringame[i])
+               bots[i].addXYEvent(BOT_PICKUP, B_CoordXY(*special));
+      }
    }
 
    return false;

@@ -678,7 +678,7 @@ void Bot::enemyVisible(PODCollection<Target>& targets)
         while(it != botMap->livingMonsters.end())
         {
             const Mobj* m = *it;
-            if (m->health <= 0 || !(m->flags & MF_SHOOTABLE))
+            if (m->health <= 0 || !m->isBotTargettable())
             {
 //                ++it;
                 botMap->livingMonsters.erase(it);
@@ -845,7 +845,7 @@ const Bot::Target *Bot::pickBestTarget(const PODCollection<Target>& targets, Com
          }
 
          // set combat info
-         if (!cinfo.hasShooters && B_MobjHasMissileAttack(*target.mobj))
+         if (!cinfo.hasShooters && B_MobjHasMissileAttack(*target.mobj) && !target.mobj->player)
             cinfo.hasShooters = true;
       }
 
@@ -909,7 +909,7 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
 
     RTraversal rt;
     rt.SafeAimLineAttack(pl->mo, pl->mo->angle, MISSILERANGE / 2, 0);
-    if (rt.m_clip.linetarget)
+    if (rt.m_clip.linetarget && !rt.m_clip.linetarget->player)
     {
        const BotWeaponInfo &bwi = g_botweapons[pl->readyweapon];
        const Mobj &t = *rt.m_clip.linetarget;

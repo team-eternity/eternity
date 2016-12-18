@@ -831,9 +831,10 @@ bool P_CheckPickUp(Mobj *thing)
       player_t *player = clip.thing->player;
       if(botMap && nopick && player)
       {
-         Bot *plbot = &bots[player - players];
          Bot::getNopickStats(spnum).reduceByCurrentState(*player);
-         plbot->addXYEvent(BOT_PICKUP, coord);
+         for(int i = 0; i < MAXPLAYERS; ++i)
+            if(playeringame[i])
+               bots[i].addXYEvent(BOT_PICKUP, coord);
       }
    }
 
