@@ -135,7 +135,7 @@ void C_SendCmd(int dest, int cmdnum, const char *s,...)
 
    s = tempstr;
   
-   if(!netgame || demoplayback)
+   if(!G_RealNetGame())
    {
       Console.cmdsrc = consoleplayer;
       Console.cmdtype = c_netcmd;
@@ -172,7 +172,7 @@ void C_NetTicker(void)
 {
    int i;
 
-   if(netgame && !demoplayback)      // only deal with chat chars in netgames
+   if(G_RealNetGame())      // only deal with chat chars in netgames
    {
       // check for incoming chat chars
       for(i=0; i<MAXPLAYERS; i++)

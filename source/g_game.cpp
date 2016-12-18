@@ -136,6 +136,7 @@ int             basetic;       // killough 9/29/98: for demo sync
 int             totalkills, totalitems, totalsecret;    // for intermission
 bool            demorecording;
 bool            demoplayback;
+bool            netbot;
 bool            singledemo;           // quit after playing a demo from cmdline
 bool            precache = true;      // if true, load all graphics at start
 wbstartstruct_t wminfo;               // parms for world map / intermission
@@ -667,7 +668,7 @@ void G_DoLoadLevel()
 
    HU_FragsUpdate();
 
-   if(!netgame || demoplayback)
+   if(!G_RealNetGame())
       consoleplayer = 0;
    
    gameaction = ga_nothing;
@@ -2059,7 +2060,7 @@ void G_Ticker()
             memcpy(cmd, &netcmds[i][buf], sizeof *cmd);
             
             // IOANCH: add bot commands if game is running
-            if(botMap && !demoplayback && !paused && i == consoleplayer)
+            if(botMap && !demoplayback && !paused && i != consoleplayer)
             {
                bots[i].doCommand();
             }
@@ -2080,7 +2081,7 @@ void G_Ticker()
                doom_printf("%s is turbo!", players[i].name); // killough 9/29/98
             }
             
-            if(netgame && !netdemo && !(gametic % ticdup))
+            if(netgame && !netdemo && !netbot && !(gametic % ticdup))
             {
                if(gametic > BACKUPTICS && 
                   consistency[i][buf] != cmd->consistency)
@@ -2777,6 +2778,12 @@ void G_ReloadDefaults()
    
    // killough 2/21/98:
    memset(playeringame+1, 0, sizeof(*playeringame)*(MAXPLAYERS-1));
+   if(netbot)
+   {
+      playeringame[1] = true;
+      netgame = true;
+      netbot = true;
+   }
    
    consoleplayer = 0;
    
@@ -3680,6 +3687,11 @@ void G_CoolViewPoint()
   
    // pick a random number of seconds until changing the viewpoint
    cooldemo_tics = (6 + M_Random() % 4) * TICRATE;
+}
+
+bool G_RealNetGame()
+{
+   return netgame && !demoplayback && !netbot;
 }
 
 #if 0

@@ -127,7 +127,7 @@ void G_QuitDoom()
    // haleyjd: re-added code for playing random sound before exit
    extern int snd_card;
 
-   if((!netgame || demoplayback) && !nosfxparm && snd_card &&
+   if(!G_RealNetGame() && !nosfxparm && snd_card &&
       GameModeInfo->flags & GIF_HASEXITSOUNDS)
    {
       S_StartInterfaceSound(GameModeInfo->exitSounds[(gametic>>2)&7]);

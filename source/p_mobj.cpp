@@ -2039,7 +2039,7 @@ static PODCollection<mapthing_t> UnknownThings;
 void P_SpawnUnknownThings()
 {
    // must be enabled, not in a netgame, and not dealing with demos
-   if(!p_markunknowns || netgame || demorecording || demoplayback)
+   if(!p_markunknowns || netgame || demorecording || demoplayback || netbot)
       return;
 
    if(UnknownThings.isEmpty())

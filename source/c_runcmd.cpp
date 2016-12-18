@@ -271,7 +271,7 @@ static int C_CheckFlags(command_t *command, const char **errormsg)
    // check the flags
    *errormsg = NULL;
    
-   if((command->flags & cf_notnet) && (netgame && !demoplayback))
+   if((command->flags & cf_notnet) && G_RealNetGame())
       *errormsg = "not available in netgame";
    if((command->flags & cf_netonly) && !netgame && !demoplayback)
       *errormsg = "only available in netgame";

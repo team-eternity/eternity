@@ -125,7 +125,7 @@ static void HSendPacket(int node, int flags)
       return;
    }
 
-   if(demoplayback)
+   if(demoplayback || netbot)
       return;
 
    if(!netgame)
@@ -151,10 +151,7 @@ static bool HGetPacket()
       return true;
    }
    
-   if(!netgame)
-      return false;
-   
-   if(demoplayback)
+   if(!G_RealNetGame())
       return false;
 
    doomcom->command = CMD_GET;
@@ -585,7 +582,7 @@ void D_InitNetGame()
 //
 void D_QuitNetGame()
 {
-   if(!netgame || !usergame || consoleplayer == -1 || demoplayback)
+   if(!G_RealNetGame() || !usergame || consoleplayer == -1)
       return;
   
    // send a bunch of packets for security
@@ -692,7 +689,7 @@ static bool RunGameTics()
    
    frameon++;
    
-   if(!demoplayback)
+   if(!demoplayback && !netbot)
    {   
       int pnum;
 

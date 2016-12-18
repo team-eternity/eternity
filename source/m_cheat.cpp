@@ -835,7 +835,7 @@ bool M_FindCheats(int key)
       // if match found & allowed
       if((curcht.gametype == -1 || curcht.gametype == GameModeInfo->type) &&
          (sr & curcht.mask) == curcht.code && 
-         !(curcht.when & not_dm   && netgame && GameType == gt_dm && !demoplayback) &&
+         !(curcht.when & not_dm   && G_RealNetGame() && GameType == gt_dm) &&
          !(curcht.when & not_coop && netgame && GameType == gt_coop) &&
          !(curcht.when & not_demo && (demorecording || demoplayback)) &&
          !curcht.deh_disabled)

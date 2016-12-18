@@ -247,6 +247,7 @@ extern  int leveltime;  // tics in game play for par
 extern  bool usergame;
 extern  bool demoplayback;
 extern  bool demorecording;
+extern  bool netbot;
 
 // Quit after playing a demo from cmdline.
 extern  bool singledemo;

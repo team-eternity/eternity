@@ -252,7 +252,7 @@ void MN_Doom2NewGame()
 //
 CONSOLE_COMMAND(mn_newgame, 0)
 {
-   if(netgame && !demoplayback)
+   if(G_RealNetGame())
    {
       MN_Alert("%s", DEH_String("NEWGAME"));
       return;
@@ -1450,7 +1450,7 @@ void MN_LoadGameDrawer()
 
 CONSOLE_COMMAND(mn_loadgame, 0)
 {
-   if(netgame && !demoplayback)
+   if(G_RealNetGame())
    {
       MN_Alert("%s", DEH_String("LOADNET"));
       return;
@@ -1504,7 +1504,7 @@ CONSOLE_COMMAND(quickload, 0)
 {
    char tempstring[80];
    
-   if(netgame && !demoplayback)
+   if(G_RealNetGame())
    {
       MN_Alert("%s", DEH_String("QLOADNET"));
       return;

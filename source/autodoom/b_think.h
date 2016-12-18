@@ -218,6 +218,8 @@ public:
 
    static void storePlayerStats();
    static void loadPlayerStats();
+
+   static void setupCoopBot();
 };
 
 extern Bot bots[];
