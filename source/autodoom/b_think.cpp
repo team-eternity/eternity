@@ -467,6 +467,99 @@ static bool B_checkSwitchReach(fixed_t range, const line_t &swline)
                        const_cast<line_t *>(&swline));
 }
 
+//
+// Checks if an item sprite is gettable
+//
+bool Bot::checkItemType(spritenum_t sprite) const
+{
+   enum
+   {
+      usearmour,
+      usebody
+   } usetype;
+
+   if(sprite < 0 || sprite >= NUMSPRITES)
+      return false;
+
+   const itemeffect_t *effect;
+
+   switch(pickupfx[sprite].tempeffect)
+   {
+      case PFX_GREENARMOR:
+         effect = E_ItemEffectForName(ITEMNAME_GREENARMOR);
+         usetype = usearmour;
+         break;
+
+      case PFX_BLUEARMOR:
+         effect = E_ItemEffectForName(ITEMNAME_BLUEARMOR);
+         usetype = usearmour;
+         break;
+
+      case PFX_POTION:
+         effect = E_ItemEffectForName(ITEMNAME_HEALTHBONUS);
+         usetype = usebody;
+         break;
+
+      case PFX_ARMORBONUS:
+         effect = E_ItemEffectForName(ITEMNAME_ARMORBONUS);
+         usetype = usearmour;
+         break;
+   }
+
+   if(!effect)
+      return false;
+
+   switch(usetype)
+   {
+      case usearmour:
+      {
+         int hits = effect->getInt("saveamount", 0);
+         int savefactor = effect->getInt("savefactor", 1);
+         int savedivisor = effect->getInt("savedivisor", 3);
+
+         if(!hits || !savefactor || !savedivisor)
+            return false;
+
+         if(!effect->getInt("alwayspickup", 0) && pl->armorpoints >= hits)
+            return false;
+
+         if(effect->getInt("bonus", 0))
+         {
+            int maxsaveamount = effect->getInt("maxsaveamount", 0);
+            return pl->armorpoints + hits <= maxsaveamount + hits / 3;
+         }
+
+         // FIXME: potential overflow in insane mods
+         return (savedivisor ? hits * savefactor / savedivisor : 0) >
+         (pl->armordivisor ?
+          pl->armorpoints * pl->armorfactor / pl->armordivisor : 0);
+      }
+      case usebody:
+      {
+         int amount = effect->getInt("amount", 0);
+         int maxamount = effect->getInt("maxamount", 0);
+         if(demo_version >= 200 && demo_version < 335)
+         {
+            if(effect->hasKey("compatmaxamount"))
+               maxamount = effect->getInt("compatmaxamount", 0);
+         }
+         if(!effect->getInt("alwayspickup", 0) && pl->health >= maxamount)
+            return false;
+
+         if(effect->getInt("sethealth", 0))
+            return pl->health < amount;
+         return pl->health + amount <= maxamount + amount / 3; // allow some
+      }
+   }
+
+   return false;
+}
+
+//
+// Returns true if there's an object of interest (item, switch or anything else
+// which can be a goal) in given subsector. Outputs the object's exact
+// coordinates.
+//
 bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
 {
 
