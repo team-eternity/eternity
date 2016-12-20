@@ -191,7 +191,7 @@ inventoryslot_t *E_InventorySlotForItem(const player_t *player, const itemeffect
 inventoryslot_t *E_InventorySlotForItemName(player_t *player, const char *name);
 
 // Special function to test for player backpack.
-bool E_PlayerHasBackpack(player_t *player);
+bool E_PlayerHasBackpack(const player_t *player);
 
 // Special function to give the player a backpack.
 bool E_GiveBackpack(player_t *player);
@@ -200,7 +200,8 @@ bool E_GiveBackpack(player_t *player);
 bool E_RemoveBackpack(player_t *player);
 
 // Lookup the maximum amount a player can carry of a specific artifact type.
-int E_GetMaxAmountForArtifact(player_t *player, itemeffect_t *artifact);
+int E_GetMaxAmountForArtifact(const player_t *player,
+                              const itemeffect_t *artifact);
 
 // Get amount of an item owned for a specific artifact type
 int E_GetItemOwnedAmount(const player_t *player, const itemeffect_t *artifact);
@@ -233,9 +234,11 @@ void E_ClearInventory(player_t *player);
 int E_GetInventoryAllocSize();
 
 // IOANCH: needed by bot
-bool E_WantInventoryItem(player_t *player, itemeffect_t *artifact, int amount,
-                         bool wantfull);
-
+void E_GetInventoryItemDetails(const itemeffect_t *artifact,
+                               itemeffecttype_t &fxtype,
+                               inventoryitemid_t &itemid,
+                               int &amountToGive,
+                               int &fullAmount);
 
 //
 // EDF-Only Definitions

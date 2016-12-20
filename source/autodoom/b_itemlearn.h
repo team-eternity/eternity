@@ -31,6 +31,7 @@
 
 #include "../../rapidjson/document.h"
 #include "../d_player.h"
+#include "../e_inventory.h"
 
 //
 // PlayerStatDiff
@@ -109,5 +110,13 @@ public:
    }
 };
 
+bool B_CheckArmour(const player_t *pl, const char *effectname);
+bool B_CheckBody(const player_t *pl, const char *effectname);
+bool B_CheckCard(const player_t *pl, const char *effectname);
+bool B_CheckPower(const player_t *pl, int power);
+bool B_CheckAmmoPickup(const player_t *pl, const char *effectname, bool dropped,
+                       int dropamount);
+bool B_CheckBackpack(const player_t *pl);
+bool B_CheckWeapon(const player_t *pl, weapontype_t weapon, bool dropped);
 
 #endif /* defined(__EternityEngine__b_itemlearn__) */

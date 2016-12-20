@@ -470,86 +470,149 @@ static bool B_checkSwitchReach(fixed_t range, const line_t &swline)
 //
 // Checks if an item sprite is gettable
 //
-bool Bot::checkItemType(spritenum_t sprite) const
+bool Bot::checkItemType(const Mobj *special) const
 {
-   enum
-   {
-      usearmour,
-      usebody
-   } usetype;
-
+   spritenum_t sprite = special->sprite;
    if(sprite < 0 || sprite >= NUMSPRITES)
       return false;
 
-   const itemeffect_t *effect;
+   bool dropped = !!(special->flags & MF_DROPPED);
 
    switch(pickupfx[sprite].tempeffect)
    {
       case PFX_GREENARMOR:
-         effect = E_ItemEffectForName(ITEMNAME_GREENARMOR);
-         usetype = usearmour;
-         break;
+         return B_CheckArmour(pl, ITEMNAME_GREENARMOR);
 
       case PFX_BLUEARMOR:
-         effect = E_ItemEffectForName(ITEMNAME_BLUEARMOR);
-         usetype = usearmour;
-         break;
+         return B_CheckArmour(pl, ITEMNAME_BLUEARMOR);
 
       case PFX_POTION:
-         effect = E_ItemEffectForName(ITEMNAME_HEALTHBONUS);
-         usetype = usebody;
-         break;
+         return B_CheckBody(pl, ITEMNAME_HEALTHBONUS);
 
       case PFX_ARMORBONUS:
-         effect = E_ItemEffectForName(ITEMNAME_ARMORBONUS);
-         usetype = usearmour;
-         break;
-   }
+         return B_CheckArmour(pl, ITEMNAME_ARMORBONUS);
 
-   if(!effect)
-      return false;
+      case PFX_SOULSPHERE:
+         return B_CheckBody(pl, ITEMNAME_SOULSPHERE);
 
-   switch(usetype)
-   {
-      case usearmour:
-      {
-         int hits = effect->getInt("saveamount", 0);
-         int savefactor = effect->getInt("savefactor", 1);
-         int savedivisor = effect->getInt("savedivisor", 3);
+      case PFX_MEGASPHERE:
+         return B_CheckBody(pl, ITEMNAME_MEGASPHERE) ||
+         B_CheckArmour(pl, ITEMNAME_BLUEARMOR);
 
-         if(!hits || !savefactor || !savedivisor)
-            return false;
+      case PFX_BLUEKEY:
+         return B_CheckCard(pl, ARTI_BLUECARD);
 
-         if(!effect->getInt("alwayspickup", 0) && pl->armorpoints >= hits)
-            return false;
+      case PFX_YELLOWKEY:
+         return B_CheckCard(pl, ARTI_YELLOWCARD);
 
-         if(effect->getInt("bonus", 0))
-         {
-            int maxsaveamount = effect->getInt("maxsaveamount", 0);
-            return pl->armorpoints + hits <= maxsaveamount + hits / 3;
-         }
+      case PFX_REDKEY:
+         return B_CheckCard(pl, ARTI_REDCARD);
 
-         // FIXME: potential overflow in insane mods
-         return (savedivisor ? hits * savefactor / savedivisor : 0) >
-         (pl->armordivisor ?
-          pl->armorpoints * pl->armorfactor / pl->armordivisor : 0);
-      }
-      case usebody:
-      {
-         int amount = effect->getInt("amount", 0);
-         int maxamount = effect->getInt("maxamount", 0);
-         if(demo_version >= 200 && demo_version < 335)
-         {
-            if(effect->hasKey("compatmaxamount"))
-               maxamount = effect->getInt("compatmaxamount", 0);
-         }
-         if(!effect->getInt("alwayspickup", 0) && pl->health >= maxamount)
-            return false;
+      case PFX_BLUESKULL:
+         return B_CheckCard(pl, ARTI_BLUESKULL);
 
-         if(effect->getInt("sethealth", 0))
-            return pl->health < amount;
-         return pl->health + amount <= maxamount + amount / 3; // allow some
-      }
+      case PFX_YELLOWSKULL:
+         return B_CheckCard(pl, ARTI_YELLOWSKULL);
+
+      case PFX_REDSKULL:
+         return B_CheckCard(pl, ARTI_REDSKULL);
+
+      case PFX_STIMPACK:
+         return B_CheckBody(pl, ITEMNAME_STIMPACK);
+
+      case PFX_MEDIKIT:
+         return B_CheckBody(pl, ITEMNAME_MEDIKIT);
+
+      case PFX_INVULNSPHERE:
+         return B_CheckPower(pl, pw_invulnerability);
+
+      case PFX_BERZERKBOX:
+         return B_CheckPower(pl, pw_strength);
+
+      case PFX_INVISISPHERE:
+         return B_CheckPower(pl, pw_invisibility);
+
+      case PFX_RADSUIT:
+         return B_CheckPower(pl, pw_ironfeet);
+
+      case PFX_ALLMAP:
+      case PFX_HMAP:
+         return B_CheckPower(pl, pw_allmap);
+
+      case PFX_LIGHTAMP:
+         return B_CheckPower(pl, pw_infrared);
+
+      case PFX_CLIP:
+         return B_CheckAmmoPickup(pl, "Clip", dropped, special->dropamount);
+
+      case PFX_CLIPBOX:
+         return B_CheckAmmoPickup(pl, "ClipBox", false, 0);
+
+      case PFX_ROCKET:
+         return B_CheckAmmoPickup(pl, "RocketAmmo", false, 0);
+
+      case PFX_ROCKETBOX:
+         return B_CheckAmmoPickup(pl, "RocketBox", false, 0);
+
+      case PFX_CELL:
+         return B_CheckAmmoPickup(pl, "Cell", false, 0);
+
+      case PFX_CELLPACK:
+         return B_CheckAmmoPickup(pl, "CellPack", false, 0);
+
+      case PFX_SHELL:
+         return B_CheckAmmoPickup(pl, "Shell", false, 0);
+
+      case PFX_SHELLBOX:
+         return B_CheckAmmoPickup(pl, "ShellBox", false, 0);
+
+      case PFX_BACKPACK:
+         return B_CheckBackpack(pl);
+
+      case PFX_BFG:
+         return B_CheckWeapon(pl, wp_bfg, false);
+
+      case PFX_CHAINGUN:
+         return B_CheckWeapon(pl, wp_chaingun, dropped);
+
+      case PFX_CHAINSAW:
+         return B_CheckWeapon(pl, wp_chainsaw, false);
+
+      case PFX_LAUNCHER:
+         return B_CheckWeapon(pl, wp_missile, false);
+
+      case PFX_PLASMA:
+         return B_CheckWeapon(pl, wp_plasma, false);
+
+      case PFX_SHOTGUN:
+         return B_CheckWeapon(pl, wp_shotgun, dropped);
+
+      case PFX_SSG:
+         return B_CheckWeapon(pl, wp_supershotgun, dropped);
+
+      case PFX_HGREENKEY:
+         return B_CheckCard(pl, ARTI_KEYGREEN);
+
+      case PFX_HBLUEKEY:
+         return B_CheckCard(pl, ARTI_KEYBLUE);
+
+      case PFX_HYELLOWKEY:
+         return B_CheckCard(pl, ARTI_KEYYELLOW);
+
+      case PFX_HPOTION:
+         return B_CheckBody(pl, "CrystalVial");
+
+      case PFX_SILVERSHIELD:
+         return B_CheckArmour(pl, ITEMNAME_SILVERSHIELD);
+
+      case PFX_ENCHANTEDSHIELD:
+         return B_CheckArmour(pl, ITEMNAME_ENCHANTEDSHLD);
+
+      case PFX_TOTALINVIS:
+         return B_CheckPower(pl, pw_totalinvis);
+
+      default:
+         return false;
    }
 
    return false;
@@ -603,60 +666,21 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
         }
         if (item->flags & MF_SPECIAL)
         {
-            if (item->sprite < 0 || item->sprite >= NUMSPRITES)
-                continue;
-
-            effect = effectStats.find(item->sprite);
-            nopick = nopickStats.find(item->sprite);
-
-            if (effect == effectStats.cend())
-            {
-                // unknown (new) item
-                // Does it have nopick stats?
-                if (nopick == nopickStats.cend())
-                {
-                    // no. Totally unknown
-                    if (self.m_deepSearchMode == DeepNormal)
-                    {
-                        coord.kind = BotPathEnd::KindCoord;
-                        coord.coord = B_CoordXY(*item);
-                        self.goalTable.setV2Fixed(BOT_PICKUP, coord.coord);
-                    }
-                    return self.checkDeadEndTrap(ss);
-                }
-                else
-                {
-                    // yes. Is it greater than current status?
-                    if (nopick->second.greaterThan(*self.pl))
-                    {
-                        // Yes. It might be pickable now
-                        if (self.m_deepSearchMode == DeepNormal)
-                        {
-                            coord.kind = BotPathEnd::KindCoord;
-                            coord.coord = B_CoordXY(*item);
-                            self.goalTable.setV2Fixed(BOT_PICKUP, coord.coord);
-                        }
-                        return self.checkDeadEndTrap(ss);
-                    }
-                }
-            }
-            else
-            {
-                // known item.
-                // currently just try to pick it up
-                if (nopick == nopickStats.cend() ||
-                    effect->second.fillsGap(*self.pl, nopick->second))
-                {
-                    if (self.m_deepSearchMode == DeepNormal)
-                    {
-                        coord.kind = BotPathEnd::KindCoord;
-                        coord.coord = B_CoordXY(*item);
-                        self.goalTable.setV2Fixed(BOT_PICKUP, coord.coord);
-                    }
-                    return self.checkDeadEndTrap(ss);
-                }
-            }
+           if(self.checkItemType(item))
+           {
+              if (self.m_deepSearchMode == DeepNormal)
+              {
+                 coord.kind = BotPathEnd::KindCoord;
+                 coord.coord = B_CoordXY(*item);
+                 self.goalTable.setV2Fixed(BOT_PICKUP, coord.coord);
+              }
+              return self.checkDeadEndTrap(ss);
+           }
         }
+       else
+       {
+          // TODO: boss specials
+       }
     }
 
     // look for walkover triggers.

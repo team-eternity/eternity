@@ -1368,7 +1368,7 @@ static void E_sortInventory(player_t *player, inventoryindex_t newIndex, int sor
 //
 // Special lookup function to test if the player has a backpack.
 //
-bool E_PlayerHasBackpack(player_t *player)
+bool E_PlayerHasBackpack(const player_t *player)
 {
    auto backpackItem = runtime_cast<itemeffect_t *>(e_effectsTable.getObject(keyBackpackItem));
    return (E_GetItemOwnedAmount(player, backpackItem) > 0);
@@ -1424,7 +1424,7 @@ bool E_RemoveBackpack(player_t *player)
 // Get the max amount of an artifact that can be carried. There are some
 // special cases for different token subtypes of artifact.
 //
-int E_GetMaxAmountForArtifact(player_t *player, itemeffect_t *artifact)
+int E_GetMaxAmountForArtifact(const player_t *player, const itemeffect_t *artifact)
 {
    if(!artifact)
       return 0;
@@ -1528,49 +1528,18 @@ bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact, int amount)
 }
 
 //
-// E_WantAmmoInventoryItem
+// Gets some private data
 //
-// IOANCH 20130814: added here from Bot's commands so it can reach static data
-// Returns true if item is pickable. May contain duplicate code, but I won't
-// change the original because it's rapidly modifying from upstream.
-//
-bool E_WantInventoryItem(player_t *player, itemeffect_t *artifact, int amount,
-                         bool wantfull)
+void E_GetInventoryItemDetails(const itemeffect_t *artifact,
+                               itemeffecttype_t &fxtype,
+                               inventoryitemid_t &itemid,
+                               int &amountToGive,
+                               int &fullAmount)
 {
-   if(!artifact)
-      return false;
-   
-   itemeffecttype_t  fxtype = artifact->getInt(keyClass, ITEMFX_NONE);
-   inventoryitemid_t itemid = artifact->getInt(keyItemID, -1);
-   
-   // Not an artifact??
-   if(fxtype != ITEMFX_ARTIFACT || itemid < 0)
-      return false;
-
-   inventoryindex_t newSlot = -1;
-   int amountToGive = artifact->getInt(keyAmount, 1);
-   int maxAmount    = E_GetMaxAmountForArtifact(player, artifact);
-
-   // may override amount to give via parameter "amount", if > 0
-   if(amount > 0)
-      amountToGive = amount;
-
-   // Does the player already have this item?
-   inventoryslot_t *slot = E_InventorySlotForItemID(player, itemid);
-   
-   // If not, make a slot for it
-   if(!slot)
-   {
-      if((newSlot = E_findInventorySlot(player->inventory)) < 0)
-         return false; // internal error, actually... shouldn't happen
-      slot = &player->inventory[newSlot];
-   }
-   
-   // If must collect full amount, but it won't fit, return now.
-   if((artifact->getInt(keyFullAmountOnly, 0) || wantfull) &&
-      slot->amount + amountToGive > maxAmount)
-      return false;
-   return true;
+   fxtype = artifact->getInt(keyClass, ITEMFX_NONE);
+   itemid = artifact->getInt(keyItemID, -1);
+   amountToGive = artifact->getInt(keyAmount, 1);
+   fullAmount = artifact->getInt(keyFullAmountOnly, 0);
 }
 
 //

@@ -32,6 +32,7 @@
 struct line_t;
 class  Mobj;
 struct planehash_t;
+struct portal_t;
 struct pwindow_t;
 
 typedef enum
