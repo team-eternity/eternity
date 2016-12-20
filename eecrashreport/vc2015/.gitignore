@@ -1,0 +1,6 @@
+*.suo
+*.user
+Debug
+Release
+crashlog.txt
+eecrashreport.ncb
