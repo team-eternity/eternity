@@ -1,3 +1,9 @@
+*.aps
+*.db
+*.lib
+*.opendb
+*.opensdf
+*.sdf
 *.suo
 *.user
 Debug
