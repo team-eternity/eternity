@@ -390,12 +390,12 @@ static int32_t ACS_getLevelVar(uint32_t var)
    case ACS_LEVELVAR_ParTime:        return LevelInfo.partime;
    case ACS_LEVELVAR_ClusterNumber:  return 0;
    case ACS_LEVELVAR_LevelNumber:    return gamemap;
-   case ACS_LEVELVAR_TotalSecrets:   return wminfo.maxsecret;
-   case ACS_LEVELVAR_FoundSecrets:   return players[consoleplayer].secretcount;
-   case ACS_LEVELVAR_TotalItems:     return wminfo.maxitems;
-   case ACS_LEVELVAR_FoundItems:     return players[consoleplayer].itemcount;
-   case ACS_LEVELVAR_TotalMonsters:  return wminfo.maxkills;
-   case ACS_LEVELVAR_KilledMonsters: return players[consoleplayer].killcount;
+   case ACS_LEVELVAR_TotalSecrets:   return totalsecret;
+   case ACS_LEVELVAR_FoundSecrets:   return G_TotalFoundSecrets();
+   case ACS_LEVELVAR_TotalItems:     return totalitems;
+   case ACS_LEVELVAR_FoundItems:     return G_TotalFoundItems();
+   case ACS_LEVELVAR_TotalMonsters:  return totalkills;
+   case ACS_LEVELVAR_KilledMonsters: return G_TotalKilledMonsters();
    case ACS_LEVELVAR_SuckTime:       return 1;
 
    default: return 0;
