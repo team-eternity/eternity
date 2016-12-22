@@ -3694,6 +3694,35 @@ bool G_RealNetGame()
    return netgame && !demoplayback && !netbot;
 }
 
+//
+// Counts the total kills, items, secrets or whatever
+//
+static int G_totalPlayerParam(int player_t::*tally)
+{
+   int score = 0;
+   for(int i = 0; i < MAXPLAYERS; ++i)
+   {
+      if(!playeringame[i])
+         return score;
+      score += players[i].*tally;
+   }
+   return score;
+}
+
+// Named this way to prevent confusion with similarly named variables
+int G_TotalKilledMonsters()
+{
+   return G_totalPlayerParam(&player_t::killcount);
+}
+int G_TotalFoundItems()
+{
+   return G_totalPlayerParam(&player_t::itemcount);
+}
+int G_TotalFoundSecrets()
+{
+   return G_totalPlayerParam(&player_t::secretcount);
+}
+
 #if 0
 
 //

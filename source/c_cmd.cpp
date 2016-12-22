@@ -32,7 +32,6 @@
 
 #include "z_zone.h"
 
-#include "a_small.h"    // haleyjd
 #include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"

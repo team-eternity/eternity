@@ -107,6 +107,10 @@ typedef struct mapsectorext_s
    double floor_yoffs;
    double ceiling_xoffs;
    double ceiling_yoffs;
+   double floor_xscale;
+   double floor_yscale;
+   double ceiling_xscale;
+   double ceiling_yscale;
    double floorangle;
    double ceilingangle;
    unsigned int flags;

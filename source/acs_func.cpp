@@ -34,7 +34,6 @@
 
 #include "z_zone.h"
 
-#include "a_small.h"
 #include "acs_intr.h"
 #include "c_runcmd.h"
 #include "d_event.h"
@@ -461,10 +460,14 @@ static void ACS_funcGetCVarString(ACS_FUNCARG)
 
 //
 // Returns the X coordinate of line's centre point
+// ACS: GetLineX(lineid, lineratio, linedist)
 //
-static void ACS_funcGetLineCenterX(ACS_FUNCARG)
+static void ACS_funcGetLineX(ACS_FUNCARG)
 {
    int lineid = args[0];
+   fixed_t lineratio = args[1];
+   fixed_t linedist = args[2];
+
    int linenum = -1;
    const line_t *line = P_FindLine(lineid, &linenum);
    if (!line)
@@ -472,15 +475,26 @@ static void ACS_funcGetLineCenterX(ACS_FUNCARG)
       *retn++ = 0;
       return;
    }
-   *retn++ = line->v1->x + line->dx / 2;
+   int32_t result = line->v1->x + FixedMul(line->dx, lineratio);
+   if (linedist)
+   {
+      angle_t angle = P_PointToAngle(line->v1->x, line->v1->y, line->v2->x, line->v2->y);
+      angle -= ANG90;
+      unsigned fineangle = angle >> ANGLETOFINESHIFT;
+      result += FixedMul(finecosine[fineangle], linedist);
+   }
+   *retn++ = result;
 }
 
 //
 // Returns the Y coordinate of line's centre point
 //
-static void ACS_funcGetLineCenterY(ACS_FUNCARG)
+static void ACS_funcGetLineY(ACS_FUNCARG)
 {
    int lineid = args[0];
+   fixed_t lineratio = args[1];
+   fixed_t linedist = args[2];
+
    int linenum = -1;
    const line_t *line = P_FindLine(lineid, &linenum);
    if (!line)
@@ -488,7 +502,15 @@ static void ACS_funcGetLineCenterY(ACS_FUNCARG)
       *retn++ = 0;
       return;
    }
-   *retn++ = line->v1->y + line->dy / 2;
+   int32_t result = line->v1->y + FixedMul(line->dy, lineratio);
+   if (linedist)
+   {
+      angle_t angle = P_PointToAngle(line->v1->x, line->v1->y, line->v2->x, line->v2->y);
+      angle -= ANG90;
+      unsigned fineangle = angle >> ANGLETOFINESHIFT;
+      result += FixedMul(finesine[fineangle], linedist);
+   }
+   *retn++ = result;
 }
 
 //

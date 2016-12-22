@@ -596,6 +596,8 @@ static void R_RenderPlanePortal(pwindow_t *window)
                         *portal->data.plane.lightlevel, 
                         *portal->data.plane.xoff, 
                         *portal->data.plane.yoff,
+                         1.0,
+                            1.0,
                         angle, NULL, 0, 255, NULL);
 
    vplane = R_CheckPlane(vplane, window->minx, window->maxx);
@@ -642,18 +644,22 @@ static void R_RenderHorizonPortal(pwindow_t *window)
    ceilingangle = *portal->data.horizon.ceilingbaseangle +
                   *portal->data.horizon.ceilingangle;
 
+   // FIXME: Replace the 1.0s?
    topplane = R_FindPlane(*portal->data.horizon.ceilingz, 
                           *portal->data.horizon.ceilingpic, 
                           *portal->data.horizon.ceilinglight, 
                           *portal->data.horizon.ceilingxoff, 
                           *portal->data.horizon.ceilingyoff,
+                          1.0, 1.0,
                           ceilingangle, NULL, 0, 255, NULL);
 
+   // FIXME: Replace the 1.0s?
    bottomplane = R_FindPlane(*portal->data.horizon.floorz, 
                              *portal->data.horizon.floorpic, 
                              *portal->data.horizon.floorlight, 
                              *portal->data.horizon.floorxoff, 
                              *portal->data.horizon.flooryoff,
+                             1.0, 1.0,
                              floorangle, NULL, 0, 255, NULL);
 
    topplane = R_CheckPlane(topplane, window->minx, window->maxx);
@@ -834,10 +840,12 @@ static void R_ShowTainted(pwindow_t *window)
       float ceilingangle = sector->ceilingbaseangle + sector->ceilingangle;
       visplane_t *topplane = R_FindPlane(sector->ceilingheight, 
          sector->ceilingpic, sector->lightlevel, sector->ceiling_xoffs, 
-         sector->ceiling_yoffs, ceilingangle, nullptr, 0, 255, nullptr);
+         sector->ceiling_yoffs, sector->ceiling_xscale, sector->ceiling_yscale,
+         ceilingangle, nullptr, 0, 255, nullptr);
       visplane_t *bottomplane = R_FindPlane(sector->floorheight,
          sector->floorpic, sector->lightlevel, sector->floor_xoffs,
-         sector->floor_yoffs, floorangle, nullptr, 0, 255, nullptr);
+         sector->floor_yoffs, sector->floor_xscale, sector->floor_yscale,
+         floorangle, nullptr, 0, 255, nullptr);
       topplane = R_CheckPlane(topplane, window->minx, window->maxx);
       bottomplane = R_CheckPlane(bottomplane, window->minx, window->maxx);
 

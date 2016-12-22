@@ -30,7 +30,6 @@
 
 #include "a_args.h"
 #include "a_common.h"
-#include "a_small.h"
 #include "d_gi.h"
 #include "d_mod.h"
 #include "doomstat.h"

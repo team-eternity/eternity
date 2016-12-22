@@ -255,6 +255,9 @@ struct sector_t
    fixed_t   floor_xoffs,   floor_yoffs;
    fixed_t ceiling_xoffs, ceiling_yoffs;
 
+   float floor_xscale,   floor_yscale;
+   float ceiling_xscale, ceiling_yscale;
+
    // killough 3/7/98: support flat heights drawn at another sector's heights
    int heightsec;    // other sector, or -1 if no other sector
    
@@ -599,6 +602,7 @@ struct visplane_t
    lighttable_t *fullcolormap;   // SoM: Used by slopes.
    lighttable_t *fixedcolormap;  // haleyjd 10/16/06
    fixed_t xoffs, yoffs;         // killough 2/28/98: Support scrolling flats
+   float xscale, yscale;
 
    // SoM: The plane silhouette arrays are allocated based on screen-size now.
    int *top;

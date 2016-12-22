@@ -29,7 +29,6 @@
 
 #include "z_zone.h"
 
-#include "a_small.h"
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "e_args.h"

@@ -1610,12 +1610,12 @@ inline static bool AM_drawAsLockedDoor(line_t *line)
 //
 // AM_isDoorClosed
 //
-// Returns true if a door is closed, false otherwise.
+// Returns true if a door has no thinker, false otherwise.
 //
 inline static bool AM_isDoorClosed(line_t *line)
 {
-   return ((line->backsector->floorheight  == line->backsector->ceilingheight) ||
-           (line->frontsector->floorheight == line->frontsector->ceilingheight));
+   return !line->backsector->ceilingdata ||
+          !line->backsector->ceilingdata->isDescendantOf(RTTI(VerticalDoorThinker));
 }
 
 //
@@ -1755,6 +1755,12 @@ static void AM_drawWalls()
             {
                // jff 1/10/98 add new color for 1S secret sector boundary
                AM_drawMline(&l, mapcolor_secr); // line bounding secret sector
+            }
+            else if(AM_drawAsLockedDoor(line))
+            {
+               int lockColor;
+               if((lockColor = AM_DoorColor(line)) >= 0)
+                  AM_drawMline(&l, lockColor ? lockColor : mapcolor_cchg);
             }
             else                                //jff 2/16/98 fixed bug
                AM_drawMline(&l, mapcolor_wall); // special was cleared

@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2016 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+// Purpose: WAD I/O functions
 //
-// DESCRIPTION:
-//      WAD I/O functions.
-//
-//-----------------------------------------------------------------------------
 
 #ifndef W_WAD_H__
 #define W_WAD_H__
@@ -38,16 +33,16 @@ struct ZipLump;
 
 struct wadinfo_t
 {
-  char identification[4];                  // Should be "IWAD" or "PWAD".
-  int  numlumps;
-  int  infotableofs;
+   char identification[4];                  // Should be "IWAD" or "PWAD".
+   int  numlumps;
+   int  infotableofs;
 };
 
 struct filelump_t
 {
-  int  filepos;
-  int  size;
-  char name[8];
+   int  filepos;
+   int  size;
+   char name[8];
 };
 
 // A direct lump can be read from its archive with C FILE IO facilities.
@@ -316,10 +311,9 @@ public:
    int   addDirectory(const char *dirpath);
    bool  addInMemoryWad(void *buffer, size_t size);
    int   lumpLength(int lump);
-   void  readLump(int lump, void *dest, WadLumpLoader *lfmt = NULL);
-   int   readLumpHeader(int lump, void *dest, size_t size);
-   void *cacheLumpNum(int lump, int tag, WadLumpLoader *lfmt = NULL);
-   void *cacheLumpName(const char *name, int tag, WadLumpLoader *lfmt = NULL);
+   void  readLump(int lump, void *dest, WadLumpLoader *lfmt = nullptr);
+   void *cacheLumpNum(int lump, int tag, WadLumpLoader *lfmt = nullptr);
+   void *cacheLumpName(const char *name, int tag, WadLumpLoader *lfmt = nullptr);
    void  cacheLumpAuto(int lumpnum, ZAutoBuffer &buffer);
    void  cacheLumpAuto(const char *name, ZAutoBuffer &buffer);
    bool  writeLump(const char *lumpname, const char *destpath);
@@ -346,13 +340,12 @@ public:
 
 extern WadDirectory wGlobalDir; // the global wad directory
 
-int         W_CheckNumForName(const char *name);   // killough 4/17/98
-int         W_CheckNumForNameNS(const char *name, int li_namespace);
-int         W_GetNumForName(const char* name);
+int      W_CheckNumForName(const char *name);   // killough 4/17/98
+int      W_CheckNumForNameNS(const char *name, int li_namespace);
+int      W_GetNumForName(const char* name);
 
-int         W_LumpLength(int lump);
-uint32_t    W_LumpCheckSum(int lumpnum);
-int         W_ReadLumpHeader(int lump, void *dest, size_t size);
+int      W_LumpLength(int lump);
+uint32_t W_LumpCheckSum(int lumpnum);
 
 #endif
 
