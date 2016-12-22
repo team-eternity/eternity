@@ -141,7 +141,7 @@
       <PrecompiledHeaderOutputFile>.\x64/Debug/snes_spc.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\x64/Debug/</AssemblerListingLocation>
       <ObjectFileName>.\x64/Debug/</ObjectFileName>
-      <ProgramDataBaseFileName>.\Debug/</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>.\x64/Debug/</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -231,7 +231,7 @@
       <PrecompiledHeaderOutputFile>.\x64/Release/snes_spc.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\x64/Release/</AssemblerListingLocation>
       <ObjectFileName>.\x64/Release/</ObjectFileName>
-      <ProgramDataBaseFileName>.\Release/</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>.\x64/Release/</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </ClCompile>
@@ -242,7 +242,7 @@
     <Link>
       <OutputFile>.\x64/Release/snes_spc.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ModuleDefinitionFile>..\x64/snes_spc\snes_spc.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\snes_spc\snes_spc.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>.\x64/Release/snes_spc.pdb</ProgramDatabaseFile>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
