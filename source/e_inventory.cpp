@@ -1306,7 +1306,8 @@ inventoryslot_t *E_InventorySlotForItem(const player_t *player, const itemeffect
 // if one exists. NULL is returned if the item is not in the player's 
 // inventory.
 //
-inventoryslot_t *E_InventorySlotForItemName(player_t *player, const char *name)
+inventoryslot_t *E_InventorySlotForItemName(const player_t *player,
+                                            const char *name)
 {
    return E_InventorySlotForItem(player, E_ItemEffectForName(name));
 }
@@ -1464,7 +1465,7 @@ int E_GetItemOwnedAmount(const player_t *player, const itemeffect_t *artifact)
 //
 // As above, but also doing a lookup on name.
 //
-int E_GetItemOwnedAmountName(player_t *player, const char *name)
+int E_GetItemOwnedAmountName(const player_t *player, const char *name)
 {
    auto slot = E_InventorySlotForItemName(player, name);
 

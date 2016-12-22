@@ -188,7 +188,8 @@ inventoryslot_t *E_InventorySlotForItem(const player_t *player, const itemeffect
 
 // Get the slot being used for a particular inventory item, by name, if one 
 // exists. Returns NULL if the item isn't in the player's inventory.
-inventoryslot_t *E_InventorySlotForItemName(player_t *player, const char *name);
+inventoryslot_t *E_InventorySlotForItemName(const player_t *player,
+                                            const char *name);
 
 // Special function to test for player backpack.
 bool E_PlayerHasBackpack(const player_t *player);
@@ -207,7 +208,7 @@ int E_GetMaxAmountForArtifact(const player_t *player,
 int E_GetItemOwnedAmount(const player_t *player, const itemeffect_t *artifact);
 
 // Get amount of an item owned by name
-int E_GetItemOwnedAmountName(player_t *player, const char *name);
+int E_GetItemOwnedAmountName(const player_t *player, const char *name);
 
 // Place an item into a player's inventory. 
 bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact, int amount = -1);

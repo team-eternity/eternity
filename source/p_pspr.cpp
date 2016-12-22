@@ -266,7 +266,7 @@ static int weapon_preferences[NUMWEAPONS+1] =
 // this won't matter, because the raised weapon has no ammo anyway. When called
 // from G_BuildTiccmd you want to toggle to a different weapon regardless.
 //
-weapontype_t P_SwitchWeapon(player_t *player)
+weapontype_t P_SwitchWeapon(const player_t *player)
 {
    int *prefer = weapon_preferences; // killough 3/22/98
    weapontype_t currentweapon = player->readyweapon;
@@ -463,7 +463,7 @@ void P_DropWeapon(player_t *player)
 // WEAPON_TODO: Will need to change as system evolves.
 // PCLASS_FIXME: weapons
 //
-weaponinfo_t *P_GetReadyWeapon(player_t *player)
+weaponinfo_t *P_GetReadyWeapon(const player_t *player)
 {
    return &(weaponinfo[player->readyweapon]);
 }

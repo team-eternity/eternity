@@ -573,7 +573,7 @@ static void cheat_weapx(const void *arg)
             doom_printf("Weapon Added");  // Ty 03/27/98 - *not* externalized
          else 
          {
-            weapontype_t P_SwitchWeapon(player_t *player);
+            weapontype_t P_SwitchWeapon(const player_t *player);
             
             doom_printf("Weapon Removed"); // Ty 03/27/98 - *not* externalized
             if(w == plyr->readyweapon)     // maybe switch if weapon removed
