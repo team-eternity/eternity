@@ -205,7 +205,7 @@ cd ../vc2015</Command>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\Release/Eternity.bsc</OutputFile>
+      <OutputFile>.\x64/Release/Eternity.bsc</OutputFile>
     </Bscmake>
     <Manifest>
       <AdditionalManifestFiles>res/DeclareDPIAware.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
@@ -311,7 +311,7 @@ cd ../vc2015</Command>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\Debug/Eternity.bsc</OutputFile>
+      <OutputFile>.\x64/Debug/Eternity.bsc</OutputFile>
     </Bscmake>
     <Manifest>
       <AdditionalManifestFiles>res/DeclareDPIAware.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
