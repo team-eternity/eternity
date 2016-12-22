@@ -136,6 +136,7 @@ class Bot : public ZoneObject
    bool goalAchieved();
    
    void pickRandomWeapon(const Target& target);
+   void pickBestWeapon(const Target& target);
    const Target *pickBestTarget(const PODCollection<Target>& targets, CombatInfo &cinfo);
    void doCombatAI(const PODCollection<Target>& targets);
    void doNonCombatAI();

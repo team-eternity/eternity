@@ -2778,12 +2778,6 @@ void G_ReloadDefaults()
    
    // killough 2/21/98:
    memset(playeringame+1, 0, sizeof(*playeringame)*(MAXPLAYERS-1));
-   if(netbot)
-   {
-      playeringame[1] = true;
-      netgame = true;
-      netbot = true;
-   }
    
    consoleplayer = 0;
    
@@ -3015,6 +3009,13 @@ void G_InitNew(skill_t skill, char *name)
       netgame = false;
       displayplayer = consoleplayer = 0;
       P_ResetChasecam();      // sf: displayplayer changed
+   }
+
+   if(netbot)
+   {
+      playeringame[1] = true;
+      netgame = true;
+      netbot = true;
    }
 
    demoplayback = false;

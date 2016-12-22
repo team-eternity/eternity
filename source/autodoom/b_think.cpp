@@ -983,6 +983,58 @@ const Bot::Target *Bot::pickBestTarget(const PODCollection<Target>& targets, Com
    return highestThreat;
 }
 
+void Bot::pickBestWeapon(const Target &target)
+{
+   if(target.isLine)
+      return;
+
+   const Mobj &t = *target.mobj;
+   fixed_t dist = target.dist;
+
+   const BotWeaponInfo &bwi = g_botweapons[pl->readyweapon];
+   double currentDmgRate =
+   bwi.calcHitscanDamage(dist, t.radius, t.height,
+                         !!pl->powers[pw_strength], false) /
+   (double)bwi.refireRate;
+   double maxDmgRate = currentDmgRate;
+   double newDmgRate;
+   int maxI = -1;
+
+   // check weapons
+   for(int i = 0; i < NUMWEAPONS; ++i)
+   {
+      if(!pl->weaponowned[i] || pl->readyweapon == i ||
+         !E_GetItemOwnedAmount(pl, weaponinfo[i].ammo) ||
+         g_botweapons[i].flags &
+         (BWI_MELEE_ONLY | BWI_DANGEROUS | BWI_ULTIMATE))
+      {
+         continue;
+      }
+      newDmgRate = g_botweapons[i].calcHitscanDamage(dist, t.radius,
+                                                     t.height,
+                                                     !!pl->powers[pw_strength], false) / (double)g_botweapons[i].refireRate;
+      if(newDmgRate > maxDmgRate)
+      {
+         maxDmgRate = newDmgRate;
+         maxI = i;
+      }
+      if(g_botweapons[i].flags & BWI_TAP_SNIPE)
+      {
+         newDmgRate = g_botweapons[i].calcHitscanDamage(dist, t.radius, t.height, !!pl->powers[pw_strength], true) / (double)g_botweapons[i].oneShotRate;
+         if(newDmgRate > maxDmgRate)
+         {
+            maxDmgRate = newDmgRate;
+            maxI = i;
+         }
+      }
+   }
+   if(maxI >= 0)
+   {
+      cmd->buttons |= BT_CHANGE;
+      cmd->buttons |= maxI << BT_WEAPONSHIFT;
+   }
+}
+
 void Bot::doCombatAI(const PODCollection<Target>& targets)
 {
     fixed_t mx, my, nx, ny;
@@ -1024,6 +1076,9 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
     if (!m_intoSwitch)
         cmd->angleturn = angleturn * random.range(1, 2);
 
+   if(!highestThreat->isLine)
+      pickBestWeapon(*highestThreat);
+
     RTraversal rt;
     rt.SafeAimLineAttack(pl->mo, pl->mo->angle, MISSILERANGE / 2, 0);
     if (rt.m_clip.linetarget && !rt.m_clip.linetarget->player)
@@ -1032,42 +1087,11 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
        const Mobj &t = *rt.m_clip.linetarget;
        fixed_t dist = B_ExactDistance(t.x - mx, t.y - my);
 
-       double currentDmgRate =
+       const double currentDmgRate =
        bwi.calcHitscanDamage(dist, t.radius, t.height,
                              !!pl->powers[pw_strength], false) /
        (double)bwi.refireRate;
-       double maxDmgRate = currentDmgRate;
-       double newDmgRate;
-       int maxI = -1;
 
-       // check weapons
-       for(int i = 0; i < NUMWEAPONS; ++i)
-       {
-          if(!pl->weaponowned[i] || pl->readyweapon == i || !E_GetItemOwnedAmount(pl, weaponinfo[i].ammo) || g_botweapons[i].flags & (BWI_MELEE_ONLY | BWI_DANGEROUS | BWI_ULTIMATE))
-          {
-             continue;
-          }
-          newDmgRate = g_botweapons[i].calcHitscanDamage(dist, t.radius, t.height, !!pl->powers[pw_strength], false) / (double)g_botweapons[i].refireRate;
-          if(newDmgRate > maxDmgRate)
-          {
-             maxDmgRate = newDmgRate;
-             maxI = i;
-          }
-          if(g_botweapons[i].flags & BWI_TAP_SNIPE)
-          {
-             newDmgRate = g_botweapons[i].calcHitscanDamage(dist, t.radius, t.height, !!pl->powers[pw_strength], true) / (double)g_botweapons[i].oneShotRate;
-             if(newDmgRate > maxDmgRate)
-             {
-                maxDmgRate = newDmgRate;
-                maxI = i;
-             }
-          }
-       }
-       if(maxI >= 0)
-       {
-          cmd->buttons |= BT_CHANGE;
-          cmd->buttons |= maxI << BT_WEAPONSHIFT;
-       }
        cmd->buttons |= BT_ATTACK;
        if(bwi.flags & BWI_TAP_SNIPE)
        {
@@ -1669,9 +1693,16 @@ void Bot::cruiseControl(fixed_t nx, fixed_t ny, bool moveslow)
 //
 void Bot::simulateBaseTiccmd()
 {
-   int newweapon =  wp_nochange;
+   int newweapon = wp_nochange;
    if(!demo_compatibility && pl->attackdown && !P_CheckAmmo(pl))
+   {
       newweapon = P_SwitchWeapon(pl);
+      if(newweapon != wp_nochange)
+      {
+         pl->cmd.buttons |= BT_CHANGE;
+         pl->cmd.buttons |= newweapon << BT_WEAPONSHIFT;
+      }
+   }
 }
 
 //
