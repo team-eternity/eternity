@@ -1664,6 +1664,17 @@ void Bot::cruiseControl(fixed_t nx, fixed_t ny, bool moveslow)
 }
 
 //
+// Assuming bot's player is not the console player, reproduce key behaviour from
+// G_BuildTiccmd that's not necessarily user input activated.
+//
+void Bot::simulateBaseTiccmd()
+{
+   int newweapon =  wp_nochange;
+   if(!demo_compatibility && pl->attackdown && !P_CheckAmmo(pl))
+      newweapon = P_SwitchWeapon(pl);
+}
+
+//
 // Bot::doCommand
 //
 // Called from G_Ticker right before ticcmd is passed into the player. Gets the
@@ -1675,6 +1686,8 @@ void Bot::doCommand()
 {
    if(!active)
       return;  // do nothing if out of game
+   if(pl - players != consoleplayer)
+      simulateBaseTiccmd();
    if(gamestate == GS_INTERMISSION)
    {
       if(GameModeInfo->interfuncs->TallyDone())

@@ -156,6 +156,8 @@ class Bot : public ZoneObject
    static bool objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v);
    bool handleLineGoal(const BSubsec& ss, BotPathEnd& coord, const line_t& line);
    static PathResult reachableItem(const BSubsec& ss, void* v);
+
+   void simulateBaseTiccmd();
    
 public:
    
