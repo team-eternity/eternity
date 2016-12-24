@@ -185,7 +185,7 @@ ev_action_t  *EV_ActionForSpecial(int special);
 int EV_LockDefIDForSpecial(int special);
 
 // Lockdef ID for Linedef
-int EV_LockDefIDForLine(line_t *line);
+int EV_LockDefIDForLine(const line_t *line);
 
 // Testing
 bool EV_IsParamLineSpec(int special);
