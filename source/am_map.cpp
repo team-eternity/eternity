@@ -1505,7 +1505,7 @@ static void AM_drawGrid(int color)
 //
 // jff 4/3/98 add routine to get color of generalized keyed door
 //
-static int AM_DoorColor(line_t *line)
+static int AM_DoorColor(const line_t *line)
 {
    int lockdefID = EV_LockDefIDForLine(line);
 
@@ -1527,9 +1527,9 @@ static int AM_DoorColor(line_t *line)
 // Returns true if line is an exit and the exit map color is
 // defined; returns false otherwise.
 //
-inline static bool AM_drawAsExitLine(line_t *line)
+inline static bool AM_drawAsExitLine(const line_t *line)
 {
-   ev_action_t *action = EV_ActionForSpecial(line->special);
+   const ev_action_t *action = EV_ActionForSpecial(line->special);
    return (mapcolor_exit && (EV_CompositeActionFlags(action) & EV_ISMAPPEDEXIT));
 }
 
@@ -1539,7 +1539,7 @@ inline static bool AM_drawAsExitLine(line_t *line)
 // Returns true if a 1S line is or was secret and the secret line
 // map color is defined; returns false otherwise.
 //
-inline static bool AM_drawAs1sSecret(line_t *line)
+inline static bool AM_drawAs1sSecret(const line_t *line)
 {
    return (mapcolor_secr &&
            ((map_secret_after &&
@@ -1555,7 +1555,7 @@ inline static bool AM_drawAs1sSecret(line_t *line)
 // Returns true if a 2S line is or was secret and the secret line
 // map color is defined; returns false otherwise.
 //
-inline static bool AM_drawAs2sSecret(line_t *line)
+inline static bool AM_drawAs2sSecret(const line_t *line)
 {
    //jff 2/16/98 fixed bug: special was cleared after getting it
    
@@ -1581,9 +1581,9 @@ inline static bool AM_drawAs2sSecret(line_t *line)
 // Returns true if a line is a teleporter and the teleporter map
 // color is defined; returns false otherwise.
 //
-inline static bool AM_drawAsTeleporter(line_t *line)
+inline static bool AM_drawAsTeleporter(const line_t *line)
 {
-   ev_action_t *action = EV_ActionForSpecial(line->special);   
+   const ev_action_t *action = EV_ActionForSpecial(line->special);   
    return (mapcolor_tele && !(line->flags & ML_SECRET) && 
            (EV_CompositeActionFlags(action) & EV_ISTELEPORTER));
 }
@@ -1594,7 +1594,7 @@ inline static bool AM_drawAsTeleporter(line_t *line)
 // Returns true if a line is a locked door for which the corresponding
 // map color is defined; returns false otherwise.
 //
-inline static bool AM_drawAsLockedDoor(line_t *line)
+inline static bool AM_drawAsLockedDoor(const line_t *line)
 {
    return E_GetLockDefColor(EV_LockDefIDForLine(line)) != 0;
 }
@@ -1604,7 +1604,7 @@ inline static bool AM_drawAsLockedDoor(line_t *line)
 //
 // Returns true if a door has no thinker, false otherwise.
 //
-inline static bool AM_isDoorClosed(line_t *line)
+inline static bool AM_isDoorClosed(const line_t *line)
 {
    return !line->backsector->ceilingdata ||
           !line->backsector->ceilingdata->isDescendantOf(RTTI(VerticalDoorThinker));
@@ -1616,11 +1616,13 @@ inline static bool AM_isDoorClosed(line_t *line)
 // Returns true if a door is closed, not secret, and closed door
 // map color is defined; returns false otherwise.
 //
-inline static bool AM_drawAsClosedDoor(line_t *line)
+inline static bool AM_drawAsClosedDoor(const line_t *line)
 {
    return (mapcolor_clsd &&  
            !(line->flags & ML_SECRET) &&    // non-secret closed door
-           AM_isDoorClosed(line));
+           AM_isDoorClosed(line) &&
+           (line->backsector->floorheight == line->backsector->ceilingheight ||
+            line->frontsector->floorheight == line->backsector->ceilingheight));
 }
 
 //
@@ -1652,7 +1654,7 @@ static void AM_drawWalls()
    {
       for(i = 0; i < numlines; ++i)
       {
-         line_t *line = &lines[i];
+         const line_t *line = &lines[i];
 
          if(line->frontsector->groupid == plrgroup)
             continue;
@@ -1705,7 +1707,7 @@ static void AM_drawWalls()
    // draw the unclipped visible portions of all lines
    for(i = 0; i < numlines; i++)
    {
-      line_t *line = &lines[i];
+      const line_t *line = &lines[i];
 
       l.a.x = line->v1->fx;
       l.a.y = line->v1->fy;

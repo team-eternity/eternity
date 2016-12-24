@@ -1272,7 +1272,7 @@ int EV_LockDefIDForSpecial(int special)
 // Test lockdef ID bindings for the current gamemode based on a line. 
 // Returns zero when there's no lockdef ID binding for that special.
 //
-int EV_LockDefIDForLine(line_t *line)
+int EV_LockDefIDForLine(const line_t *line)
 {
    ev_action_t *action = EV_ActionForSpecial(line->special);
 
