@@ -406,7 +406,8 @@ namespace ACSVM
                throw std::bad_alloc();
             #endif
 
-            idx = new PrivData::FuncElem{std::move(namePair), pd->functionByIdx.size()};
+            idx = new PrivData::FuncElem{ std::move(namePair),
+                                          static_cast<Word>(pd->functionByIdx.size()) };
             pd->functionByName.insert(idx);
 
             pd->functionByIdx.emplace_back();

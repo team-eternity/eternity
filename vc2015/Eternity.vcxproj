@@ -170,7 +170,7 @@ cd ../vc2015</Command>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <WholeProgramOptimization>true</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(SDL1_2)\include;$(SDLMIXER1_2)\include;$(SDLNET1_2)\include;..\source\win32;..\libpng;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SDL1_2)\include;$(SDLMIXER1_2)\include;$(SDLNET1_2)\include;..\source\win32;..\libpng;..\acsvm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;HAVE_SPCLIB;EE_FEATURE_OPENGL;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;EE_FEATURE_REGISTRYSCAN;EE_FEATURE_MIDIRPC;EE_FEATURE_XINPUT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -190,7 +190,7 @@ cd ../vc2015</Command>
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>./x64/Release/snes_spc.lib;./x64/Release/libpng.lib;./x64/Release/zlib.lib;$(SDL1_2)\lib\x64\sdl.lib;$(SDLMIXER1_2)\lib\x64\sdl_mixer.lib;$(SDLNET1_2)\lib\x64\sdl_net.lib;oldnames.lib;opengl32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>./x64/Release/snes_spc.lib;./x64/Release/libpng.lib;./x64/Release/zlib.lib;./x64/Release/ACSVM.lib;$(SDL1_2)\lib\x64\sdl.lib;$(SDLMIXER1_2)\lib\x64\sdl_mixer.lib;$(SDLNET1_2)\lib\x64\sdl_net.lib;oldnames.lib;opengl32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\x64/Release/Eternity.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
@@ -279,7 +279,7 @@ cd ../vc2015</Command>
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(SDL1_2)\include;$(SDLMIXER1_2)\include;$(SDLNET1_2)\include;..\source\win32;..\libpng;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SDL1_2)\include;$(SDLMIXER1_2)\include;$(SDLNET1_2)\include;..\source\win32;..\libpng;..\acsvm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;RANGECHECK;INSTRUMENTED;ZONEIDCHECK;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;HAVE_SPCLIB;EE_FEATURE_OPENGL;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;EE_FEATURE_REGISTRYSCAN;EE_FEATURE_MIDIRPC;EE_FEATURE_XINPUT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -297,7 +297,7 @@ cd ../vc2015</Command>
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>./x64/Debug/snes_spc.lib;./x64/Debug/libpng.lib;./x64/Debug/zlib.lib;$(SDL1_2)\lib\x64\sdl.lib;$(SDLMIXER1_2)\lib\x64\sdl_mixer.lib;$(SDLNET1_2)\lib\x64\sdl_net.lib;oldnames.lib;opengl32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>./x64/Debug/snes_spc.lib;./x64/Debug/libpng.lib;./x64/Debug/zlib.lib;./x64/Debug/ACSVM.lib;$(SDL1_2)\lib\x64\sdl.lib;$(SDLMIXER1_2)\lib\x64\sdl_mixer.lib;$(SDLNET1_2)\lib\x64\sdl_net.lib;oldnames.lib;opengl32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\x64/Debug/Eternity.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
