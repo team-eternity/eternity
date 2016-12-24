@@ -34,7 +34,6 @@
 
 #include "z_zone.h"
 
-#include "a_small.h"
 #include "acs_intr.h"
 #include "c_runcmd.h"
 #include "d_event.h"
@@ -627,12 +626,12 @@ uint32_t ACS_GetLevelProp(uint32_t var)
    case ACS_LP_ParTime:        return LevelInfo.partime;
    case ACS_LP_ClusterNumber:  return 0;
    case ACS_LP_LevelNumber:    return gamemap;
-   case ACS_LP_TotalSecrets:   return wminfo.maxsecret;
-   case ACS_LP_FoundSecrets:   return players[consoleplayer].secretcount;
-   case ACS_LP_TotalItems:     return wminfo.maxitems;
-   case ACS_LP_FoundItems:     return players[consoleplayer].itemcount;
-   case ACS_LP_TotalMonsters:  return wminfo.maxkills;
-   case ACS_LP_KilledMonsters: return players[consoleplayer].killcount;
+   case ACS_LP_TotalSecrets:   return totalsecret;
+   case ACS_LP_FoundSecrets:   return G_TotalFoundSecrets();
+   case ACS_LP_TotalItems:     return totalitems;
+   case ACS_LP_FoundItems:     return G_TotalFoundItems();
+   case ACS_LP_TotalMonsters:  return totalkills;
+   case ACS_LP_KilledMonsters: return G_TotalKilledMonsters();
    case ACS_LP_SuckTime:       return 1;
 
    default: return 0;

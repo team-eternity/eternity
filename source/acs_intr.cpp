@@ -31,7 +31,6 @@
 
 #include "z_zone.h"
 
-#include "a_small.h"
 #include "acs_intr.h"
 #include "c_runcmd.h"
 #include "doomstat.h"
@@ -41,9 +40,9 @@
 #include "hu_stuff.h"
 #include "m_buffer.h"
 #include "m_collection.h"
-#include "m_misc.h"
 #include "m_qstr.h"
 #include "m_swap.h"
+#include "m_utils.h"
 #include "p_info.h"
 #include "p_maputl.h"
 #include "polyobj.h"
@@ -839,7 +838,7 @@ protected:
    virtual int overflow(int c)
    {
       // Write single byte to destination.
-      if(!out || !out->WriteUint8(c)) return EOF;
+      if(!out || !out->writeUint8(c)) return EOF;
       return c;
    }
 

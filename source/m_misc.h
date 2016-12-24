@@ -19,7 +19,7 @@
 //--------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//    Misc stuff - config file, screenshots
+//    Config file
 //    
 //-----------------------------------------------------------------------------
 
@@ -32,35 +32,7 @@
 // MISC
 //
 
-bool  M_WriteFile(const char *name, void *source, size_t length);
-int   M_ReadFile(const char *name, byte **buffer);
-char *M_LoadStringFromFile(const char *filename);
-void  M_LoadOptions(void);                             // killough 11/98
-
-// haleyjd: Portable versions of common non-standard C functions, as well as
-// some misc string routines that really don't fit anywhere else. Some of these
-// default to the platform implementation if its existence is verifiable 
-// (see d_keywds.h)
-
-char *M_Strupr(char *string);
-char *M_Strlwr(char *string);
-char *M_Itoa(int value, char *string, int radix);
-int   M_CountNumLines(const char *str);
-
-// Misc file routines
-// haleyjd: moved a number of these here from w_wad module.
-
-// TODO: Put this function in a more appropriate place.
-// MaxW: 20151221: M_Strnlen moved from psnprntf.cpp, originally called pstrnlen.
-size_t M_Strnlen(const char *s, size_t count); 
-void  M_GetFilePath(const char *fn, char *base, size_t len); // haleyjd
-long  M_FileLength(FILE *f);
-void  M_ExtractFileBase(const char *, char *);               // killough
-char *M_AddDefaultExtension(char *, const char *);           // killough 1/18/98
-void  M_NormalizeSlashes(char *);                            // killough 11/98
-
-int   M_StringAlloca(char **str, int numstrs, size_t extra, const char *str1, ...);
-char *M_SafeFilePath(const char *pbasepath, const char *newcomponent);
+void  M_LoadOptions(); // killough 11/98
 
 extern int config_help;
 
@@ -86,7 +58,7 @@ struct default_t;
 struct variable_t;
 
 // haleyjd 07/03/10: interface object for defaults
-typedef struct default_i_s
+struct default_i
 {
    bool (*writeHelp) (default_t *, FILE *);       // write help message
    bool (*writeOpt)  (default_t *, FILE *);       // write option key and value
@@ -95,7 +67,7 @@ typedef struct default_i_s
    void (*setDefault)(default_t *);               // set to hardcoded default
    bool (*checkCVar) (default_t *, variable_t *); // check against a cvar
    void (*getDefault)(default_t *, void *);       // get the default externally
-} default_i;
+};
 
 struct default_t
 {

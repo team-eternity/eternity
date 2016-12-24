@@ -32,7 +32,7 @@
 #include "e_string.h"
 #include "e_things.h"
 #include "info.h"
-#include "m_misc.h"
+#include "m_utils.h"
 #include "p_mobj.h"
 
 // haleyjd 05/21/10: a static empty string, to avoid allocating tons of memory 

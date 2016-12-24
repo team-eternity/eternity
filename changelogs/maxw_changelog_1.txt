@@ -17,6 +17,13 @@ jump to, and the number of states does not need to be specified.
 Altered IWAD detection so that FreeDM and Freedoom 2 are now  in the correct
 positions when autodetected.
 
+-------------------------------------------------------------------------------
+2016/10/16
+
+Locked parameterised doors now rely on the presence of a thinker to determine
+whether or not to draw the door-activating line as coloured. Also 1S lines are
+now correctly coloured if they have a locked parameterised action.
+
 ================================================================================
 EOF
 ================================================================================

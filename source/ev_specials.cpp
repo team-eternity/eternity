@@ -1329,13 +1329,33 @@ static bool EV_checkSpac(ev_action_t *action, ev_instance_t *instance)
       REQUIRE_ACTOR(thing);
       REQUIRE_LINE(line);
 
-      // check player / monster / missile enable flags
-      if(thing->player)                   // treat as player?
+      // check player / monster / missile / push enable flags
+      if(thing->player)                    // treat as player?
          flags |= EX_ML_PLAYER;
-      if(thing->flags3 & MF3_SPACMISSILE) // treat as missile?
+      if(thing->flags3 & MF3_SPACMISSILE)  // treat as missile?
          flags |= EX_ML_MISSILE;
-      if(thing->flags3 & MF3_SPACMONSTER) // treat as monster?
+      if(thing->flags3 & MF3_SPACMONSTER)  // treat as monster?
+      {
+         // in vanilla Hexen, monsters can only cross lines.
+         if(P_LevelIsVanillaHexen() && instance->spac != SPAC_CROSS)
+            return false;
+
+         // secret lines can't be activated by monsters
+         if(line->flags & ML_SECRET)
+            return false;
+
          flags |= EX_ML_MONSTER;
+      }
+      if(thing->flags4 & MF4_SPACPUSHWALL) // treat as a wall pusher?
+      {
+         // in vanilla Hexen, players or missiles can push walls;
+         // otherwise, we allow any object so tagged to do the activation.
+         if(instance->spac == SPAC_PUSH &&
+            (!P_LevelIsVanillaHexen() || (flags & (EX_ML_PLAYER | EX_ML_MISSILE))))
+         {
+            flags = EX_ML_PUSH;
+         }
+      }
 
       if(!(line->extflags & flags))
          return false;

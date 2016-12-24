@@ -246,6 +246,10 @@ private:
       fixed_t ypanningfloor;
       fixed_t xpanningceiling;
       fixed_t ypanningceiling;
+      double xscalefloor;
+      double yscalefloor;
+      double xscaleceiling;
+      double yscaleceiling;
       double rotationfloor;
       double rotationceiling;
 
@@ -297,7 +301,8 @@ private:
       qstring      portal_floor_overlaytype; // OVERLAY and ADDITIVE consolidated into a single property
       unsigned int portal_floor_alpha;
 
-      USector() : friction(-1), damagetype("Unknown"), floorterrain("@flat"), ceilingterrain("@flat"),
+      USector() : xscalefloor(1.0), yscalefloor(1.0), xscaleceiling(1.0), yscaleceiling(1.0),
+         friction(-1), damagetype("Unknown"), floorterrain("@flat"), ceilingterrain("@flat"),
          colormaptop("@default"), colormapmid("@default"), colormapbottom("@default"),
          portal_ceil_overlaytype("none"), portal_ceil_alpha(255),
          portal_floor_overlaytype("none"), portal_floor_alpha(255),

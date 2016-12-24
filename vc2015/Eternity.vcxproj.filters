@@ -10,9 +10,6 @@
     <Filter Include="Source Files\AM_">
       <UniqueIdentifier>{3fed5f3f-8630-435c-8a6b-4389a396c89b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\AMX">
-      <UniqueIdentifier>{fd46737d-1614-4e16-8b89-b325a841c1aa}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\C_">
       <UniqueIdentifier>{3fb78d11-e099-4f49-9e96-b9d5672a9df3}</UniqueIdentifier>
     </Filter>
@@ -251,12 +248,6 @@
     </ClCompile>
     <ClCompile Include="..\Source\am_map.cpp">
       <Filter>Source Files\AM_</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\a_fixed.cpp">
-      <Filter>Source Files\AMX</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\a_small.cpp">
-      <Filter>Source Files\AMX</Filter>
     </ClCompile>
     <ClCompile Include="..\source\c_batch.cpp">
       <Filter>Source Files\C_\C_ Source</Filter>
@@ -954,6 +945,9 @@
     <ClCompile Include="..\source\p_portalclip.cpp">
       <Filter>Source Files\P_\P_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\m_utils.cpp">
+      <Filter>Source Files\M_\M_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -961,9 +955,6 @@
     </ClInclude>
     <ClInclude Include="..\Source\am_map.h">
       <Filter>Source Files\AM_</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\a_small.h">
-      <Filter>Source Files\AMX</Filter>
     </ClInclude>
     <ClInclude Include="..\source\c_batch.h">
       <Filter>Source Files\C_\C_ Headers</Filter>
@@ -1702,6 +1693,9 @@
     </ClInclude>
     <ClInclude Include="..\source\p_portalclip.h">
       <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\m_utils.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -46,7 +46,6 @@
 #include "doomstat.h"
 #include "doomtype.h"
 #include "hu_stuff.h"
-#include "m_misc.h"
 #include "m_qstr.h"
 #include "p_info.h"
 #include "p_spec.h"

@@ -506,9 +506,10 @@ bool P_SetMobjStateNF(Mobj *mobj, statenum_t state); // sets state without calli
 void P_ThrustMobj(Mobj *mo, angle_t angle, fixed_t move);
 
 // TIDs
-void P_InitTIDHash(void);
-void P_AddThingTID(Mobj *mo, int tid);
-void P_RemoveThingTID(Mobj *mo);
+void  P_InitTIDHash(void);
+void  P_AddThingTID(Mobj *mo, int tid);
+void  P_RemoveThingTID(Mobj *mo);
+Mobj *P_FindMobjFromTID(int tid, Mobj *rover, Mobj *trigger);
 
 void P_AdjustFloorClip(Mobj *thing);
 
@@ -684,6 +685,7 @@ enum mobjflags4_e : unsigned int
    MF4_TLSTYLESUB     = 0x00010000, // Use subtractive blending map
    MF4_TOTALINVISIBLE = 0x00020000, // Thing is invisible to monsters
    MF4_DRAWSBLOOD     = 0x00040000, // For missiles, spawn blood when hitting bleeding things
+   MF4_SPACPUSHWALL   = 0x00080000, // thing can activate push walls
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh

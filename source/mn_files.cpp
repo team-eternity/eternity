@@ -49,6 +49,7 @@
 #include "g_bind.h"
 #include "m_misc.h"
 #include "m_qstr.h"
+#include "m_utils.h"
 #include "mn_engin.h"
 #include "mn_files.h"
 #include "mn_misc.h"

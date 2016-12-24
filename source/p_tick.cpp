@@ -253,7 +253,7 @@ void Thinker::RunThinkers(void)
 void Thinker::serialize(SaveArchive &arc)
 {
    if(arc.isSaving())
-      arc.WriteLString(getClassName());
+      arc.writeLString(getClassName());
 }
 
 //
