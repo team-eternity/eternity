@@ -51,9 +51,11 @@
 #include "../e_things.h"
 #include "../ev_specials.h"
 #include "../g_dmflag.h"
+#include "../Hu_stuff.h"
 #include "../in_lude.h"
 #include "../metaapi.h"
 #include "../m_compare.h"
+#include "../m_qstr.h"
 #include "../m_utils.h"
 #include "../p_maputl.h"
 #include "../p_pspr.h"
@@ -123,6 +125,7 @@ void Bot::mapInit()
     m_currentTargetMobj = nullptr;
 
    m_exitDelay = 0;
+   m_lastHelpCry = 0;
 }
 
 //
@@ -919,9 +922,23 @@ void Bot::pickRandomWeapon(const Target& target)
     cmd->buttons |= result << BT_WEAPONSHIFT;
 }
 
+inline static int B_calcPlayerHealth(const player_t *pl)
+{
+   return pl->armordivisor ? pl->mo->health + emin(pl->armorpoints * pl->armorfactor / pl->armordivisor, pl->mo->health) : pl->mo->health;
+}
+
+bool Bot::shouldChat()
+{
+   camsightparams_t params;
+   params.setLookerMobj(players[0].mo);
+   params.setTargetMobj(pl->mo);
+   return pl - players > 0 && !CAM_CheckSight(params);
+}
+
 const Bot::Target *Bot::pickBestTarget(const PODCollection<Target>& targets, CombatInfo &cinfo)
 {
    const Target* highestThreat = &targets[0];
+   double totalThreat = 0;
    if (!targets[0].isLine)
    {
       double highestThreatRating = -DBL_MAX, threat;
@@ -949,6 +966,7 @@ const Bot::Target *Bot::pickBestTarget(const PODCollection<Target>& targets, Com
          }
 
          threat = B_GetMonsterThreatLevel(target.mobj->info);
+         totalThreat += threat;
          if (threat > highestThreatRating)
          {
             highestThreat = &target;
@@ -964,6 +982,21 @@ const Bot::Target *Bot::pickBestTarget(const PODCollection<Target>& targets, Com
          // set combat info
          if (!cinfo.hasShooters && B_MobjHasMissileAttack(*target.mobj) && !target.mobj->player)
             cinfo.hasShooters = true;
+
+         
+      }
+
+
+      if(!highestThreat->isLine && totalThreat >= B_calcPlayerHealth(pl) && 
+         (m_lastHelpCry + 20 * TICRATE < gametic || !m_lastHelpCry))
+      {
+         if(shouldChat())
+         {
+            m_lastHelpCry = gametic;
+            qstring message;
+            message << "Help! A " << highestThreat->mobj->info->name << " is killing me!";
+            HU_Say(pl, message.constPtr());
+         }
       }
 
       // Keep shooting current monster but choose another one if it's more threatening

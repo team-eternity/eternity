@@ -92,6 +92,7 @@ class Bot : public ZoneObject
    int                      m_goalTimer;
    const Mobj*              m_currentTargetMobj;
    int                     m_exitDelay;
+   int                      m_lastHelpCry;
    
    // internal states
    unsigned prevCtr;
@@ -159,6 +160,8 @@ class Bot : public ZoneObject
    static PathResult reachableItem(const BSubsec& ss, void* v);
 
    void simulateBaseTiccmd();
+
+   bool shouldChat();
    
 public:
    
@@ -188,6 +191,7 @@ public:
    m_goalTimer(0),
    m_currentTargetMobj(nullptr),
    m_exitDelay(0),
+   m_lastHelpCry(0),
    prevCtr(0),
    m_searchstage(0),
    justPunched(0)

@@ -1551,6 +1551,16 @@ const char english_shiftxform[] =
 // Console Commands
 //
 
+//
+// Called both in console and by bots
+//
+void HU_Say(const player_t *player, const char *message)
+{
+   S_StartInterfaceSound(GameModeInfo->c_ChatSound);
+
+   doom_printf("%s: %s", player->name, message);
+}
+
 VARIABLE_BOOLEAN(showMessages,  NULL,                   onoff);
 VARIABLE_INT(mess_colour,       NULL, 0, CR_BUILTIN,    textcolours);
 
@@ -1578,9 +1588,7 @@ CONSOLE_VARIABLE(hu_messages, showMessages, 0) {}
 CONSOLE_VARIABLE(hu_messagecolor, mess_colour, 0) {}
 CONSOLE_NETCMD(say, cf_netvar, netcmd_chat)
 {
-   S_StartInterfaceSound(GameModeInfo->c_ChatSound);
-   
-   doom_printf("%s: %s", players[Console.cmdsrc].name, Console.args.constPtr());
+   HU_Say(&players[Console.cmdsrc], Console.args.constPtr());
 }
 
 CONSOLE_VARIABLE(hu_messagelines, hud_msg_lines, 0) {}

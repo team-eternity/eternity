@@ -22,6 +22,7 @@
 #define HU_STUFF_H__
 
 struct event_t;
+struct player_t;
 
 enum
 {
@@ -48,6 +49,8 @@ void HU_WriteText(const char *s, int x, int y);
 void HU_PlayerMsg(const char *s);
 void HU_CenterMessage(const char *s);
 void HU_CenterMsgTimedColor(const char *s, const char *color, int tics);
+
+void HU_Say(const player_t *player, const char *message);
 
 #define CROSSHAIRS 3
 extern int crosshairnum;       // 0= none
