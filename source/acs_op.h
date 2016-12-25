@@ -647,6 +647,8 @@
    ACS_FUNC(ExecuteScriptResultName)
    ACS_FUNC(GetCVar)
    ACS_FUNC(GetCVarString)
+   ACS_FUNC(GetLineX)
+   ACS_FUNC(GetLineY)
    ACS_FUNC(GetPlayerInput)
    ACS_FUNC(GetPolyobjX)
    ACS_FUNC(GetPolyobjY)

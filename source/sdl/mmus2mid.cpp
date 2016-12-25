@@ -177,12 +177,10 @@ static UBYTE MidiEvent(MIDI *mididata,UBYTE midicode,UBYTE MIDIchannel,
 //
 static int TWriteByte(MIDI *mididata, int MIDItrack, unsigned char byte)
 {
-   ULONG pos;
-   
-   pos = mididata->track[MIDItrack].len;
+   size_t pos = mididata->track[MIDItrack].len;
    
    // proff: Added typecast to avoid warning
-   if(pos >= (unsigned int)track[MIDItrack].alloced)
+   if(pos >= (size_t)track[MIDItrack].alloced)
    {
       track[MIDItrack].alloced =        // double allocation
         track[MIDItrack].alloced?       // or set initial TRACKBUFFERSIZE
@@ -428,10 +426,10 @@ int mmus2mid(UBYTE *mus, size_t size, MIDI *mididata, UWORD division, int nocomp
       return MEMALLOC;
 
    // key C major
-   memcpy(mididata->track[0].data,midikey,sizeof(midikey));
+   memcpy(mididata->track[0].data, midikey, sizeof(midikey));
    // tempo uS/qnote 
-   memcpy(mididata->track[0].data+sizeof(midikey),miditempo,sizeof(miditempo));
-   mididata->track[0].len = sizeof(midikey)+sizeof(miditempo); 
+   memcpy(mididata->track[0].data+sizeof(midikey), miditempo, sizeof(miditempo));
+   mididata->track[0].len = sizeof(midikey) + sizeof(miditempo); 
 
    TrackCnt++;   // music tracks start at 1
    
@@ -602,7 +600,7 @@ int mmus2mid(UBYTE *mus, size_t size, MIDI *mididata, UWORD division, int nocomp
          // jff 1/23/98 fix failure to set data NULL, len 0 for unused tracks
          // shorten allocation to proper length (important for Allegro)
          if(!(mididata->track[i].data =
-            erealloc(unsigned char *, mididata->track[i].data,mididata->track[i].len)))
+            erealloc(unsigned char *, mididata->track[i].data, mididata->track[i].len)))
             return MEMALLOC;
       }
       else
@@ -682,8 +680,8 @@ int MidiToMIDI(UBYTE *mid,MIDI *mididata)
       
       // read a track
       mididata->track[i].data = 
-         erealloc(unsigned char *, mididata->track[i].data,mididata->track[i].len);
-      memcpy(mididata->track[i].data,mid,mididata->track[i].len);
+         erealloc(unsigned char *, mididata->track[i].data, mididata->track[i].len);
+      memcpy(mididata->track[i].data, mid, mididata->track[i].len);
       mid += mididata->track[i].len;
    }
 
@@ -736,7 +734,7 @@ static void FreeTracks(MIDI *mididata)
 // Passed a pointer to the pointer to a midi buffer, and the length to write
 // Returns nothing
 //
-static void TWriteLength(UBYTE **midiptr, ULONG length)
+static void TWriteLength(UBYTE **midiptr, size_t length)
 {
    // proff: Added typecast to avoid warning
    *(*midiptr)++ = (unsigned char)((length >> 24) & 0xff);
@@ -796,16 +794,16 @@ int MIDIToMidi(MIDI *mididata, UBYTE **mid, int *midlen)
       {
          memcpy(midiptr,trackhdr,sizeof(trackhdr));    // header
          midiptr += sizeof(trackhdr);
-         TWriteLength(&midiptr,mididata->track[i].len);  // track length
+         TWriteLength(&midiptr, mididata->track[i].len);  // track length
          // data
-         memcpy(midiptr,mididata->track[i].data,mididata->track[i].len); 
+         memcpy(midiptr, mididata->track[i].data, mididata->track[i].len); 
          midiptr += mididata->track[i].len;
       }
    }
 
    // return length information
    
-   *midlen = midiptr - *mid;
+   *midlen = int(midiptr - *mid);
    
    return 0;
 }

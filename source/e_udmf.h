@@ -304,6 +304,10 @@ private:
       fixed_t ypanningfloor;
       fixed_t xpanningceiling;
       fixed_t ypanningceiling;
+      double xscalefloor;
+      double yscalefloor;
+      double xscaleceiling;
+      double yscaleceiling;
       double rotationfloor;
       double rotationceiling;
 
@@ -358,7 +362,8 @@ private:
       int          portalceiling;   // floor portal id
       int          portalfloor;     // floor portal id
 
-      USector() : friction(-1), damagetype("Unknown"), floorterrain("@flat"), ceilingterrain("@flat"),
+      USector() : xscalefloor(1.0), yscalefloor(1.0), xscaleceiling(1.0), yscaleceiling(1.0),
+         friction(-1), damagetype("Unknown"), floorterrain("@flat"), ceilingterrain("@flat"),
          colormaptop("@default"), colormapmid("@default"), colormapbottom("@default"),
          portal_ceil_overlaytype("none"), portal_ceil_alpha(255),
          portal_floor_overlaytype("none"), portal_floor_alpha(255),
@@ -397,7 +402,7 @@ private:
    readresult_e readItem();
 
    bool next(Token &token);
-   void addPos(int amount);
+   void addPos(size_t amount);
 
    bool eof() const { return mPos == mData.length(); }
 

@@ -29,7 +29,6 @@
 #include "z_zone.h"
 
 #include "a_args.h"
-#include "a_small.h"
 #include "doomstat.h"
 #include "d_gi.h"
 #include "e_args.h"

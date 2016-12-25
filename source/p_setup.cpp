@@ -594,6 +594,12 @@ void P_InitSector(sector_t *ss)
    ss->floorheightf   = M_FixedToFloat(ss->floorheight);
    ss->ceilingheightf = M_FixedToFloat(ss->ceilingheight);
 
+   // needs to be defaulted as it starts as nonzero
+   ss->floor_xscale = 1.0;
+   ss->floor_yscale = 1.0;
+   ss->ceiling_xscale = 1.0;
+   ss->ceiling_yscale = 1.0;
+
    // haleyjd 09/24/06: sound sequences -- set default
    ss->sndSeqID = defaultSndSeq;
 
@@ -1746,8 +1752,8 @@ static int spac_flags_tlate[HX_SPAC_NUMSPAC] =
    EX_ML_CROSS  | EX_ML_PLAYER,                   // SPAC_CROSS
    EX_ML_USE    | EX_ML_PLAYER,                   // SPAC_USE
    EX_ML_CROSS  | EX_ML_MONSTER,                  // SPAC_MCROSS
-   EX_ML_IMPACT | EX_ML_MISSILE,                  // SPAC_IMPACT
-   EX_ML_PUSH   | EX_ML_PLAYER   | EX_ML_MONSTER, // SPAC_PUSH
+   EX_ML_IMPACT | EX_ML_PLAYER  | EX_ML_MISSILE,  // SPAC_IMPACT
+   EX_ML_PUSH,                                    // SPAC_PUSH
    EX_ML_CROSS  | EX_ML_MISSILE                   // SPAC_PCROSS
 };
 
@@ -1770,13 +1776,8 @@ static void P_ConvertHexenLineFlags(line_t *line)
    if(line->flags & HX_ML_REPEAT_SPECIAL)
       line->extflags |= EX_ML_REPEAT;
 
-   // FIXME/TODO: set 1SONLY line flag here, or elsewhere? Depends on special...
-
    // clear line flags to those that are shared with DOOM
    line->flags &= HX_SHAREDFLAGS;
-
-   // FIXME/TODO: how to support Eternity's extended normal flags in Hexen?
-   // We want Hexen to be able to use stuff like 3DMidTex also.
 }
 
 //

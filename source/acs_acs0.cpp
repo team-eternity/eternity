@@ -528,6 +528,8 @@ static void ACS_translateFuncACS0(int32_t *&codePtr, uint32_t func, uint32_t arg
  //case  88: funcnum = ACS_FUNC_SetThingRoll;            break;
  //case  89: funcnum = ACS_FUNC_ChangeThingRoll;         break;
  //case  90: funcnum = ACS_FUNC_GetActorRoll;            break;
+   case 300: funcnum = ACS_FUNC_GetLineX;                break;
+   case 301: funcnum = ACS_FUNC_GetLineY;                break;
    }
 
    *codePtr++ = ACS_OP_CALLFUNC_ZD;

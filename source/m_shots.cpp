@@ -31,7 +31,8 @@
 #include "d_io.h"
 #include "doomstat.h"
 #include "m_buffer.h"
-#include "m_misc.h"
+#include "m_qstr.h"
+#include "m_utils.h"
 #include "p_skin.h"
 #include "s_sound.h"
 #include "v_misc.h"
@@ -52,16 +53,16 @@ int screenshot_gamma;
 // killough 10/98: changed into macro to return failure instead of aborting
 
 #define SafeWrite(ob, data, size) \
-   if(!ob->Write(data, size)) return false
+   if(!ob->write(data, size)) return false
 
 #define SafeWrite32(ob, data) \
-   if(!ob->WriteUint32(data)) return false
+   if(!ob->writeUint32(data)) return false
 
 #define SafeWrite16(ob, data) \
-   if(!ob->WriteUint16(data)) return false
+   if(!ob->writeUint16(data)) return false
 
 #define SafeWrite8(ob, data) \
-   if(!ob->WriteUint8(data)) return false
+   if(!ob->writeUint8(data)) return false
 
 //=============================================================================
 //
@@ -146,8 +147,8 @@ static bool pcx_Writer(OutBuffer *ob, byte *data,
       }
       else
       {
-         if(!ob->WriteUint8(0xc1) || 
-            !ob->WriteUint8(*data))
+         if(!ob->writeUint8(0xc1) || 
+            !ob->writeUint8(*data))
             return false;
          ++data;
       }
@@ -414,7 +415,7 @@ static void PNG_dataWrite(png_structp png_ptr, png_bytep data, png_size_t length
 {
    pngiodata_t *pngIoData = static_cast<pngiodata_t *>(png_get_io_ptr(png_ptr));
 
-   pngIoData->writeOK = (pngIoData->ob->Write(data, length) && pngIoData->writeOK);
+   pngIoData->writeOK = (pngIoData->ob->write(data, length) && pngIoData->writeOK);
 }
 
 //
@@ -480,7 +481,7 @@ static bool png_Writer(OutBuffer *ob, byte *data,
    // setup info pointer
    if(!(pngInfo = png_create_info_struct(pngStruct)))
    {
-      png_destroy_write_struct(&pngStruct, NULL);
+      png_destroy_write_struct(&pngStruct, nullptr);
       return false;
    }
    
@@ -587,42 +588,40 @@ static shotformat_t shotFormats[SHOT_NUMSHOTFORMATS] =
 //
 // killough 10/98: improved error-handling
 //
-void M_ScreenShot(void)
+void M_ScreenShot()
 {
    bool success = false;
-   char   *path = NULL;
-   size_t  len;
+   qstring path;
    OutBuffer ob;
    shotformat_t *format = &shotFormats[screenshot_pcx];
    
    errno = 0;
 
-   len = M_StringAlloca(&path, 1, 6, userpath);
-
    // haleyjd 11/23/06: use userpath/shots
-   psnprintf(path, len, "%s/shots", userpath);
+   path = userpath;
+   path.pathConcatenate("shots");
    
    // haleyjd 05/23/02: corrected uses of access to use defined
    // constants rather than integers, some of which were not even
    // correct under DJGPP to begin with (it's a wonder it worked...)
    
-   if(!access(path, W_OK))
+   if(!access(path.constPtr(), W_OK))
    {
       static int shot;
-      char *lbmname = NULL;
+      char *lbmname = nullptr;
       int tries = 10000;
 
-      len = M_StringAlloca(&lbmname, 2, 16, path, format->extension);
+      size_t len = M_StringAlloca(&lbmname, 2, 16, path.constPtr(), format->extension);
       
       do
       {
          // jff 3/30/98 pcx or bmp?
          // haleyjd: use format extension.
-         psnprintf(lbmname, len, "%s/etrn%02d.%s", path, shot++, format->extension);
+         psnprintf(lbmname, len, "%s/etrn%02d.%s", path.constPtr(), shot++, format->extension);
       }
       while(!access(lbmname, F_OK) && --tries);
 
-      if(tries && ob.CreateFile(lbmname, 512*1024, format->endian))
+      if(tries && ob.createFile(lbmname, 512*1024, format->endian))
       {
          // killough 4/18/98: make palette stay around
          // (PU_CACHE could cause crash)         
@@ -640,7 +639,7 @@ void M_ScreenShot(void)
                                   pal.get());
 
          // haleyjd: close the buffer
-         ob.Close();
+         ob.close();
 
          // if not successful, remove the file now
          if(!success)

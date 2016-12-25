@@ -221,6 +221,11 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          else if(!us.portal_ceil_overlaytype.strCaseCmp(RENDERSTYLE_add))
             ss->c_pflags |= PS_OBLENDFLAGS; // PS_OBLENDFLAGS is PS_OVERLAY | PS_ADDITIVE
          ss->c_pflags |= us.portal_ceil_useglobaltex ? PS_USEGLOBALTEX : 0;
+
+         ss->floor_xscale = static_cast<float>(us.xscalefloor);
+         ss->floor_yscale = static_cast<float>(us.yscalefloor);
+         ss->ceiling_xscale = static_cast<float>(us.xscaleceiling);
+         ss->ceiling_yscale = static_cast<float>(us.yscaleceiling);
       }
    }
 }
@@ -606,9 +611,13 @@ enum token_e
    t_x,
    t_xpanningceiling,
    t_xpanningfloor,
+   t_xscaleceiling,
+   t_xscalefloor,
    t_y,
    t_ypanningceiling,
    t_ypanningfloor,
+   t_yscaleceiling,
+   t_yscalefloor,
    t_zoneboundary,
 };
 
@@ -736,9 +745,13 @@ static keytoken_t gTokenList[] =
    TOKEN(x),
    TOKEN(xpanningceiling),
    TOKEN(xpanningfloor),
+   TOKEN(xscaleceiling),
+   TOKEN(xscalefloor),
    TOKEN(y),
    TOKEN(ypanningceiling),
    TOKEN(ypanningfloor),
+   TOKEN(yscaleceiling),
+   TOKEN(yscalefloor),
    TOKEN(zoneboundary),
 };
 
@@ -982,6 +995,10 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                      READ_FIXED(sector, ypanningfloor);
                      READ_FIXED(sector, xpanningceiling);
                      READ_FIXED(sector, ypanningceiling);
+                     READ_NUMBER(sector, xscaleceiling);
+                     READ_NUMBER(sector, xscalefloor);
+                     READ_NUMBER(sector, yscaleceiling);
+                     READ_NUMBER(sector, yscalefloor);
                      READ_NUMBER(sector, rotationfloor);
                      READ_NUMBER(sector, rotationceiling);
 
@@ -1486,9 +1503,9 @@ bool UDMFParser::next(Token &token)
 //
 // Increases position by given amount. Updates line and column accordingly.
 //
-void UDMFParser::addPos(int amount)
+void UDMFParser::addPos(size_t amount)
 {
-   for(int i = 0; i < amount; ++i)
+   for(size_t i = 0; i < amount; i++)
    {
       if(mPos == mData.length())
          return;

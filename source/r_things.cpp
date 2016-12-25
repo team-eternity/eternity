@@ -584,8 +584,8 @@ void R_PushPost(bool pushmasked, planehash_t *overlay)
       else
          post->masked->firstds = post->masked->firstsprite = 0;
          
-      post->masked->lastds     = ds_p - drawsegs;
-      post->masked->lastsprite = num_vissprite;
+      post->masked->lastds     = int(ds_p - drawsegs);
+      post->masked->lastsprite = int(num_vissprite);
       
       memcpy(post->masked->ceilingclip, portaltop,    sizeof(*portaltop)    * video.width);
       memcpy(post->masked->floorclip,   portalbottom, sizeof(*portalbottom) * video.width);
@@ -1013,13 +1013,13 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr)
 
    vis->ytop = y1;
    vis->ybottom = y2;
-   vis->sector = sec - sectors; // haleyjd: use interpolated sector
+   vis->sector = int(sec - sectors); // haleyjd: use interpolated sector
 
    //if(x1 < vis->x1)
       vis->startx += vis->xstep * (vis->x1 - x1);
 
    // haleyjd 09/01/02
-   vis->translucency = static_cast<uint16_t>(thing->translucency - 1); 
+   vis->translucency = uint16_t(thing->translucency - 1);
 
    // haleyjd 11/14/02: ghost flag
    if(thing->flags3 & MF3_GHOST && vis->translucency == FRACUNIT - 1)
@@ -1108,7 +1108,8 @@ void R_AddSprites(sector_t* sec, int lightlevel)
    // ioanch 20160109: handle partial sprite projections
    for(auto item = sec->spriteproj; item; item = item->dllNext)
    {
-      R_ProjectSprite((*item)->mobj, &(*item)->delta);
+      if(!((*item)->mobj->intflags & MIF_HIDDENBYQUAKE))
+         R_ProjectSprite((*item)->mobj, &(*item)->delta);
    }
 
    // haleyjd 02/20/04: Handle all particles in sector.
@@ -1218,7 +1219,7 @@ static void R_DrawPSprite(pspdef_t *psp)
    vis->scale        = view.pspriteyscale;
    vis->ytop         = (view.height * 0.5f) - (M_FixedToFloat(vis->texturemid) * vis->scale);
    vis->ybottom      = vis->ytop + (spriteheight[lump] * vis->scale);
-   vis->sector       = view.sector - sectors;
+   vis->sector       = int(view.sector - sectors);
    
    // haleyjd 07/01/07: use actual pixel range to scale graphic
    if(flip)
@@ -1985,7 +1986,7 @@ particle_t *newParticle()
       result = Particles + inactiveParticles;
       inactiveParticles = result->next;
       result->next = activeParticles;
-      activeParticles = result - Particles;
+      activeParticles = int(result - Particles);
    }
 
    return result;
@@ -2140,7 +2141,7 @@ static void R_ProjectParticle(particle_t *particle)
    vis->ytop = y1;
    vis->ybottom = y2;
    vis->scale = yscale;
-   vis->sector = sector - sectors;  
+   vis->sector = int(sector - sectors);
    
    if(fixedcolormap ==
       fullcolormap + INVERSECOLORMAP*256*sizeof(lighttable_t))

@@ -26,6 +26,7 @@
 #ifndef D_MAIN_H__
 #define D_MAIN_H__
 
+#include "d_keywds.h"
 #include "doomdef.h"
 
 // jff make startskill globally visible
@@ -68,7 +69,7 @@ void D_StartTitle();
 void D_DoomMain();
 
 // sf: display a message to the player: either in text mode or graphics
-void usermsg(const char *s, ...);
+void usermsg(E_FORMAT_STRING(const char *s), ...);
 void startupmsg(const char *func, const char *desc);
 
 #endif

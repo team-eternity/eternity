@@ -62,6 +62,7 @@
 #include "m_misc.h"
 #include "m_random.h"
 #include "m_shots.h"
+#include "m_utils.h"
 #include "metaapi.h"
 #include "mn_engin.h"
 #include "mn_menus.h"
@@ -1337,7 +1338,7 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
 //
 static void G_WriteDemoTiccmd(ticcmd_t *cmd)
 {
-   unsigned int position = demo_p - demobuffer;
+   unsigned int position = static_cast<unsigned int>(demo_p - demobuffer);
    int i = 0;
    
    demo_p[i++] = cmd->forwardmove;
@@ -2368,7 +2369,7 @@ static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
 //
 int G_ClosestDMSpot(fixed_t x, fixed_t y, int notspot)
 {
-   int j, numspots = deathmatch_p - deathmatchstarts;
+   int j, numspots = int(deathmatch_p - deathmatchstarts);
    int closestspot = -1;
    fixed_t closestdist = 32767*FRACUNIT;
 
@@ -2401,7 +2402,7 @@ extern const char *level_error;
 //
 void G_DeathMatchSpawnPlayer(int playernum)
 {
-   int j, selections = deathmatch_p - deathmatchstarts;
+   int j, selections = int(deathmatch_p - deathmatchstarts);
    Mobj *fog = NULL;
    
    if(selections < MAXPLAYERS)
@@ -3592,6 +3593,35 @@ void G_CoolViewPoint()
   
    // pick a random number of seconds until changing the viewpoint
    cooldemo_tics = (6 + M_Random() % 4) * TICRATE;
+}
+
+//
+// Counts the total kills, items, secrets or whatever
+//
+static int G_totalPlayerParam(int player_t::*tally)
+{
+   int score = 0;
+   for(int i = 0; i < MAXPLAYERS; ++i)
+   {
+      if(!playeringame[i])
+         return score;
+      score += players[i].*tally;
+   }
+   return score;
+}
+
+// Named this way to prevent confusion with similarly named variables
+int G_TotalKilledMonsters()
+{
+   return G_totalPlayerParam(&player_t::killcount);
+}
+int G_TotalFoundItems()
+{
+   return G_totalPlayerParam(&player_t::itemcount);
+}
+int G_TotalFoundSecrets()
+{
+   return G_totalPlayerParam(&player_t::secretcount);
 }
 
 #if 0

@@ -34,7 +34,6 @@
 #include "doomstat.h"
 #include "e_hash.h"
 #include "m_compare.h"
-#include "m_misc.h"
 #include "m_swap.h"
 #include "p_info.h"   // haleyjd
 #include "p_skin.h"

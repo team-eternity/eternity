@@ -837,10 +837,17 @@ static void Polyobj_pushThing(polyobj_t *po, line_t *line, Mobj *mo)
    // if object doesn't fit at desired location, possibly hurt it
    if(po->damage && mo->flags & MF_SHOOTABLE)
    {
-      if((po->flags & POF_DAMAGING) || 
-         !P_CheckPosition(mo, mo->x + momx, mo->y + momy))
-      {
+      if(po->flags & POF_DAMAGING)
          P_DamageMobj(mo, NULL, NULL, po->damage, MOD_CRUSH);
+      else
+      {
+         // Temporarily remove from blockmap to avoid this poly's lines from
+         // counting as collision lines. Only separate walls should block and 
+         // damage the mobj.
+         Polyobj_removeFromBlockmap(po);
+         if(!P_CheckPosition(mo, mo->x + momx, mo->y + momy))
+            P_DamageMobj(mo, NULL, NULL, po->damage, MOD_CRUSH);
+         Polyobj_linkToBlockmap(po);
       }
    }
 }
@@ -849,9 +856,12 @@ static void Polyobj_pushThing(polyobj_t *po, line_t *line, Mobj *mo)
 // Polyobj_clipThings
 //
 // Checks for things that are in the way of a polyobject line move.
+// Argument vec is non-null if the polyobject was moved and is used for linked
+// portal walls.
 // Returns true if something was hit.
 //
-static bool Polyobj_clipThings(polyobj_t *po, line_t *line)
+static bool Polyobj_clipThings(polyobj_t *po, line_t *line, 
+   const vertex_t *vec = nullptr)
 {
    bool hitthing = false;
    fixed_t linebox[4];
@@ -885,8 +895,17 @@ static bool Polyobj_clipThings(polyobj_t *po, line_t *line)
                   // the mobj budges a bit just to detect the specline
                   if(line->pflags & PS_PASSABLE)
                   {
-                     if(!P_TryMove(mo, mo->x, mo->y, false))
+                     // HACK
+                     v2fixed_t pos = { mo->x, mo->y };
+                     if(vec)
                      {
+                        mo->x += vec->x;
+                        mo->y += vec->y;
+                     }
+                     if(!P_TryMove(mo, pos.x, pos.y, false))
+                     {
+                        mo->x = pos.x;
+                        mo->y = pos.y;
                         // FIXME: this one needs checking after i figure out
                         // portalmap
                         Polyobj_pushThing(po, line, mo);
@@ -941,7 +960,7 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
    // ioanch 20160302: do NOT collide and get back if onload = true.
    if(!onload)
       for(i = 0; i < po->numLines; ++i)
-         hitthing |= Polyobj_clipThings(po, po->lines[i]);
+         hitthing |= Polyobj_clipThings(po, po->lines[i], &vec);
 
    if(hitthing)
    {

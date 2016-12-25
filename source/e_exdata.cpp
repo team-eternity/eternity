@@ -122,10 +122,14 @@ static unsigned int sector_chains[NUMSECCHAINS];
 #define FIELD_SECTOR_FLOORANGLE     "floorangle"
 #define FIELD_SECTOR_FLOOROFFSETX   "flooroffsetx"
 #define FIELD_SECTOR_FLOOROFFSETY   "flooroffsety"
+#define FIELD_SECTOR_FLOORSCALEX    "floorscalex"
+#define FIELD_SECTOR_FLOORSCALEY    "floorscaley"
 #define FIELD_SECTOR_CEILINGTERRAIN "ceilingterrain"
 #define FIELD_SECTOR_CEILINGANGLE   "ceilingangle"
 #define FIELD_SECTOR_CEILINGOFFSETX "ceilingoffsetx"
 #define FIELD_SECTOR_CEILINGOFFSETY "ceilingoffsety"
+#define FIELD_SECTOR_CEILINGSCALEX  "ceilingscalex"
+#define FIELD_SECTOR_CEILINGSCALEY  "ceilingscaley"
 #define FIELD_SECTOR_TOPMAP         "colormaptop"
 #define FIELD_SECTOR_MIDMAP         "colormapmid"
 #define FIELD_SECTOR_BOTTOMMAP      "colormapbottom"
@@ -239,6 +243,10 @@ static cfg_opt_t sector_opts[] =
    CFG_FLOAT(FIELD_SECTOR_FLOOROFFSETY,   0.0,        CFGF_NONE),
    CFG_FLOAT(FIELD_SECTOR_CEILINGOFFSETX, 0.0,        CFGF_NONE),
    CFG_FLOAT(FIELD_SECTOR_CEILINGOFFSETY, 0.0,        CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_FLOORSCALEX,    1.0,        CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_FLOORSCALEY,    1.0,        CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_CEILINGSCALEX,  1.0,        CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_CEILINGSCALEY,  1.0,        CFGF_NONE),
    CFG_FLOAT(FIELD_SECTOR_FLOORANGLE,     0.0,        CFGF_NONE),
    CFG_FLOAT(FIELD_SECTOR_CEILINGANGLE,   0.0,        CFGF_NONE),
 
@@ -1337,6 +1345,13 @@ static void E_ProcessEDSectors(cfg_t *cfg)
       sec->ceiling_xoffs = cfg_getfloat(section, FIELD_SECTOR_CEILINGOFFSETX);
       sec->ceiling_yoffs = cfg_getfloat(section, FIELD_SECTOR_CEILINGOFFSETY);
 
+      // floor and ceiling scale
+      sec->floor_xscale   = cfg_getfloat(section, FIELD_SECTOR_FLOORSCALEX);
+      sec->floor_yscale   = cfg_getfloat(section, FIELD_SECTOR_FLOORSCALEY);
+      sec->ceiling_xscale = cfg_getfloat(section, FIELD_SECTOR_CEILINGSCALEX);
+      sec->ceiling_yscale = cfg_getfloat(section, FIELD_SECTOR_CEILINGSCALEY);
+
+
       // floor and ceiling angles
       tempdouble = cfg_getfloat(section, FIELD_SECTOR_FLOORANGLE);
       sec->floorangle = E_NormalizeFlatAngle(tempdouble);
@@ -1596,6 +1611,12 @@ void E_LoadSectorExt(line_t *line, UDMFSetupSettings &setupSettings)
    sector->floor_yoffs   = M_DoubleToFixed(edsector->floor_yoffs);
    sector->ceiling_xoffs = M_DoubleToFixed(edsector->ceiling_xoffs);
    sector->ceiling_yoffs = M_DoubleToFixed(edsector->ceiling_yoffs);
+
+   // floor and ceiling scale
+   sector->floor_xscale = static_cast<float>(edsector->floor_xscale);
+   sector->floor_yscale = static_cast<float>(edsector->floor_yscale);
+   sector->ceiling_xscale = static_cast<float>(edsector->ceiling_xscale);
+   sector->ceiling_yscale = static_cast<float>(edsector->ceiling_yscale);
 
    // flat angles
    sector->floorbaseangle   = (float)(edsector->floorangle   * PI / 180.0f);

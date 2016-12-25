@@ -31,7 +31,6 @@
 
 #include "z_zone.h"
 
-#include "a_small.h"
 #include "m_fixed.h"
 #include "tables.h"
 

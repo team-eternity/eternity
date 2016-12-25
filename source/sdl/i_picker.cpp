@@ -31,7 +31,7 @@
 
 #include "../doomstat.h"
 #include "../doomtype.h"
-#include "../m_misc.h"
+#include "../m_utils.h"
 #include "../v_png.h"
 #include "../w_wad.h"
 
