@@ -92,7 +92,10 @@ class Bot : public ZoneObject
    int                      m_goalTimer;
    const Mobj*              m_currentTargetMobj;
    int                     m_exitDelay;
+
+   // Chat time keepers
    int                      m_lastHelpCry;
+   int                     m_lastDunnoMessage;
    
    // internal states
    unsigned prevCtr;
@@ -192,6 +195,7 @@ public:
    m_currentTargetMobj(nullptr),
    m_exitDelay(0),
    m_lastHelpCry(0),
+   m_lastDunnoMessage(0),
    prevCtr(0),
    m_searchstage(0),
    justPunched(0)

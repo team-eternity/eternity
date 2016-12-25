@@ -77,6 +77,11 @@ enum
     // obtain the distance the object will move before stopping while on ground
     DRIFT_TIME = (fixed_t)(0xffffffffll / (FRACUNIT - ORIG_FRICTION)),
     DRIFT_TIME_INV = FRACUNIT - ORIG_FRICTION,
+
+   URGENT_CHAT_INTERVAL_SEC = 20,
+   IDLE_CHAT_INTERVAL_SEC = 300, // Five minutes
+   DUNNO_CONCESSION_SEC = 3,
+
 };
 
 enum
@@ -126,6 +131,7 @@ void Bot::mapInit()
 
    m_exitDelay = 0;
    m_lastHelpCry = 0;
+   m_lastDunnoMessage = 0;
 }
 
 //
@@ -990,7 +996,8 @@ const Bot::Target *Bot::pickBestTarget(const PODCollection<Target>& targets, Com
             cinfo.hasShooters = true;
       }
 
-      if(shouldChat(m_lastHelpCry, 20) && !highestThreat->isLine &&
+      if(shouldChat(m_lastHelpCry, URGENT_CHAT_INTERVAL_SEC) &&
+         !highestThreat->isLine &&
          totalThreat >= B_calcPlayerHealth(pl))
       {
          m_lastHelpCry = gametic;
@@ -1274,10 +1281,16 @@ void Bot::doNonCombatAI()
                 pl->pclass->sidemove[0]);
             cmd->forwardmove += random.range(-pl->pclass->forwardmove[0],
                 pl->pclass->forwardmove[0]);
+           if(m_searchstage > DUNNO_CONCESSION_SEC * TICRATE && shouldChat(IDLE_CHAT_INTERVAL_SEC, m_lastDunnoMessage))
+           {
+              m_lastDunnoMessage = gametic;
+              HU_Say(pl, "Dunno where to go now...");
+           }
             return;
         }
         m_hasPath = true;
         m_runfast = false;
+       m_lastDunnoMessage = 0;   // will reset here so new events appear
     }
 
     // found path to exit
