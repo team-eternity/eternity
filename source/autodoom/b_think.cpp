@@ -132,6 +132,7 @@ void Bot::mapInit()
    m_exitDelay = 0;
    m_lastHelpCry = 0;
    m_lastDunnoMessage = 0;
+   m_lastExitMessage = 0;
 }
 
 //
@@ -225,10 +226,28 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
         // sure goals
     case VLS_S1ExitLevel:
     case VLS_WRExitLevel:
-        return m_searchstage >= SearchStage_ExitNormal;
+          if(m_searchstage >= SearchStage_ExitNormal)
+          {
+             if(shouldChat(URGENT_CHAT_INTERVAL_SEC, m_lastExitMessage))
+             {
+                m_lastExitMessage = gametic;
+                HU_Say(pl, "I'm going to the exit now!");
+             }
+             return true;
+          }
+        return false;
     case VLS_S1SecretExit:
     case VLS_WRSecretExit:
-        return m_searchstage >= SearchStage_ExitSecret;
+          if(m_searchstage >= SearchStage_ExitSecret)
+          {
+             if(shouldChat(URGENT_CHAT_INTERVAL_SEC, m_lastExitMessage))
+             {
+                m_lastExitMessage = gametic;
+                HU_Say(pl, "Let's take the secret exit!");
+             }
+             return true;
+          }
+        return false;
 
         // would only block or cause harm
     case VLS_W1CloseDoor:

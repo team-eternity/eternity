@@ -95,6 +95,7 @@ class Bot : public ZoneObject
 
    // Chat time keepers
    int                      m_lastHelpCry;
+   int                     m_lastExitMessage;
    int                     m_lastDunnoMessage;
    
    // internal states
@@ -195,6 +196,7 @@ public:
    m_currentTargetMobj(nullptr),
    m_exitDelay(0),
    m_lastHelpCry(0),
+   m_lastExitMessage(0),
    m_lastDunnoMessage(0),
    prevCtr(0),
    m_searchstage(0),
