@@ -859,10 +859,10 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr)
 
    // ioanch 20160125: reject sprites in front of portal line when rendering
    // line portal
-   if(portalrender.curwindow && portalrender.curwindow->line) 
+   if(portalrender.w && portalrender.w->line) 
    {
-      const line_t *otherline = portalrender.curwindow->line->beyondportalline;
-      if (otherline && P_PointOnLineSide(thing->x, thing->y, otherline) != 0)
+      const renderbarrier_t &barrier = portalrender.w->barrier;
+      if (P_PointOnDivlineSide(thing->x, thing->y, &barrier.dl) == 0)
          return;
    }
 

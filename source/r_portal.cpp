@@ -199,6 +199,32 @@ static pwindow_t *newPortalWindow()
    return ret;
 }
 
+//
+// Calculates the render barrier based on portal type and source linedef
+// (assuming line portal)
+//
+static void R_calcRenderBarrier(const portal_t *portal, const line_t *line,
+   renderbarrier_t &barrier)
+{
+   if(portal->type == R_ANCHORED || portal->type == R_TWOWAY)
+   {
+      const portaltransform_t &tr = portal->data.anchor.transform;
+      P_MakeDivline(line, &barrier.dl);
+      tr.applyTo(barrier.dl.x, barrier.dl.y);
+      tr.applyTo(barrier.dl.dx, barrier.dl.dy, nullptr, nullptr, true);
+      return;
+   }
+   if(portal->type == R_LINKED)
+   {
+      const linkdata_t &link = portal->data.link;
+      P_MakeDivline(line, &barrier.dl);
+      barrier.dl.x += link.deltax;
+      barrier.dl.y += link.deltay;
+      return;
+   }
+   // Other portal: ignore
+}
+
 static pwindow_t *R_NewPortalWindow(portal_t *p, line_t *l, pwindowtype_e type)
 {
    pwindow_t *ret = newPortalWindow();
@@ -207,6 +233,14 @@ static pwindow_t *R_NewPortalWindow(portal_t *p, line_t *l, pwindowtype_e type)
    ret->line   = l;
    ret->type   = type;
    ret->head   = ret;
+   if(type == pw_line)
+   {
+#ifdef RANGECHECK
+      if(!l)
+         I_Error("R_NewPortalWindow: Null line despite type == pw_line!");
+#endif
+      R_calcRenderBarrier(p, l, ret->barrier);
+   }
    
    R_SetPortalFunction(ret);
    
@@ -240,6 +274,7 @@ static void R_CreateChildWindow(pwindow_t *parent)
    child->head     = parent->head;
    child->portal   = parent->portal;
    child->line     = parent->line;
+   child->barrier  = parent->barrier;  // FIXME: not sure if necessary
    child->type     = parent->type;
    child->func     = parent->func;
    child->clipfunc = parent->clipfunc;
@@ -646,8 +681,6 @@ static void R_RenderPlanePortal(pwindow_t *window)
    float angle;
    portal_t *portal = window->portal;
 
-   portalrender.curwindow = window;
-
    if(portal->type != R_PLANE)
       return;
 
@@ -694,8 +727,6 @@ static void R_RenderHorizonPortal(pwindow_t *window)
    visplane_t *topplane, *bottomplane;
    int x;
    portal_t *portal = window->portal;
-
-   portalrender.curwindow = window;
 
    if(portal->type != R_HORIZON)
       return;
@@ -799,8 +830,6 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
    fixed_t lastx, lasty, lastz, lastangle;
    float   lastxf, lastyf, lastzf, lastanglef;
    portal_t *portal = window->portal;
-
-   portalrender.curwindow = window;
 
    if(portal->type != R_SKYBOX)
       return;
@@ -974,9 +1003,6 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    float   lastxf, lastyf, lastzf;
    portal_t *portal = window->portal;
 
-   // ioanch 20160123: don't forget
-   portalrender.curwindow = window;
-
    if(portal->type != R_ANCHORED && portal->type != R_TWOWAY)
       return;
 
@@ -1037,16 +1063,9 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
 
    // SoM 3/10/2005: Use the coordinates stored in the portal struct
    const portaltransform_t &tr = portal->data.anchor.transform;
-   double wx = M_FixedToDouble(window->vx);
-   double wy = M_FixedToDouble(window->vy);
-   double vx = tr.rot[0][0] * wx + tr.rot[0][1] * wy + tr.move.x;
-   double vy = tr.rot[1][0] * wx + tr.rot[1][1] * wy + tr.move.y;
+   tr.applyTo(viewx, viewy, &view.x, &view.y);
    double vz = M_FixedToDouble(window->vz) + tr.move.z;
-   viewx = M_DoubleToFixed(vx);
-   viewy = M_DoubleToFixed(vy);
    viewz = M_DoubleToFixed(vz);
-   view.x = static_cast<float>(vx);
-   view.y = static_cast<float>(vy);
    view.z = static_cast<float>(vz);
 
    viewangle = window->vangle + static_cast<angle_t>(tr.angle * ANG180 / PI);
@@ -1084,9 +1103,6 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    fixed_t lastx, lasty, lastz;
    float   lastxf, lastyf, lastzf;
    portal_t *portal = window->portal;
-
-   // ioanch 20160123: keep track of window
-   portalrender.curwindow = window;
 
    if(portal->type != R_LINKED || window->maxx < window->minx)
       return;
@@ -1325,7 +1341,6 @@ void R_RenderPortals()
       portalrender.w = windowhead;
       portalrender.segClipFunc = windowhead->clipfunc;
       portalrender.overlay = windowhead->portal->poverlay;
-      portalrender.curwindow = windowhead;   // ioanch 20160123: for safety
 
       if(windowhead->maxx >= windowhead->minx)
          windowhead->func(windowhead);
@@ -1334,7 +1349,6 @@ void R_RenderPortals()
       portalrender.w = NULL;
       portalrender.segClipFunc = NULL;
       portalrender.overlay = NULL;
-      portalrender.curwindow = nullptr;   // ioanch 20160123: reset it
 
       // free the window structs
       w = windowhead->child;
@@ -1355,6 +1369,35 @@ void R_RenderPortals()
    }
 
    windowlast = windowhead;
+}
+
+//=============================================================================
+//
+// Portal matrix methods
+//
+
+//
+// Apply transform to fixed-point values
+//
+void portaltransform_t::applyTo(fixed_t &x, fixed_t &y, 
+   float *fx, float *fy, bool nomove) const
+{
+   double wx = M_FixedToDouble(x);
+   double wy = M_FixedToDouble(y);
+   double vx = rot[0][0] * wx + rot[0][1] * wy;
+   double vy = rot[1][0] * wx + rot[1][1] * wy;
+   if(!nomove)
+   {
+      vx += move.x;
+      vy += move.y;
+   }
+   x = M_DoubleToFixed(vx);
+   y = M_DoubleToFixed(vy);
+   if(fx && fy)
+   {
+      *fx = static_cast<float>(vx);
+      *fy = static_cast<float>(vy);
+   }
 }
 
 //=============================================================================

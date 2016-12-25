@@ -28,6 +28,7 @@
 #define R_PORTALS_H__
 
 #include "doomdef.h"
+#include "p_maputl.h"
 
 struct line_t;
 class  Mobj;
@@ -127,6 +128,9 @@ struct portaltransform_t
    double rot[2][2];
    v3double_t move;   // TODO: z offset
    double angle;
+   
+   void portaltransform_t::applyTo(fixed_t &x, fixed_t &y,
+      float *fx = nullptr, float *fy = nullptr, bool nomove = false) const;
 };
 
 // Represents the information needed for an anchored portal
@@ -250,11 +254,24 @@ typedef void (*R_ClipSegFunc)();
 
 extern R_ClipSegFunc segclipfuncs[];
 
+//
+// Render barrier: used by anchored portals to mark limits for rendering
+// geometry and sprites.
+//
+struct renderbarrier_t
+{
+   divline_t dl;  // currently holds linedef coordinates
+
+   // TODO: sector barriers
+};
+
 // SoM: TODO: Overlays go in here.
 struct pwindow_t
 {
    portal_t *portal;
    line_t *line;
+   // rendering barrier: blocks unwanted objects from showing
+   renderbarrier_t barrier;
    pwindowtype_e type;
 
    fixed_t planez;   // if line == nullptr, this is the sector portal plane z
@@ -294,7 +311,6 @@ struct portalrender_t
    float miny, maxy;
 
    pwindow_t *w;
-   pwindow_t *curwindow;   // ioanch 20160123: keep track of current window
 
    void (*segClipFunc)();
    
