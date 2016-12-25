@@ -1810,8 +1810,12 @@ void Bot::doCommand()
    ss = &botMap->pointInSubsector(pl->mo->x, pl->mo->y);
    cmd = &pl->cmd;
 
-    if(pl->health <= 0 && prevCtr % 128 == 0)
-        cmd->buttons |= BT_USE; // respawn 
+    if(pl->health <= 0)
+    {
+       if(prevCtr % 128 == 0)
+          cmd->buttons |= BT_USE; // respawn
+       return; // don't try anything else in this case
+    }
 
    // Do non-combat for now
 
