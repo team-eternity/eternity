@@ -161,7 +161,7 @@ class Bot : public ZoneObject
 
    void simulateBaseTiccmd();
 
-   bool shouldChat();
+   bool shouldChat(int intervalSec = 0, int timekeeper = 0) const;
    
 public:
    

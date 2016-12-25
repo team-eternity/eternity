@@ -922,17 +922,23 @@ void Bot::pickRandomWeapon(const Target& target)
     cmd->buttons |= result << BT_WEAPONSHIFT;
 }
 
+//
+// Rough approximation of player health, counting also his armour
+//
 inline static int B_calcPlayerHealth(const player_t *pl)
 {
    return pl->armordivisor ? pl->mo->health + emin(pl->armorpoints * pl->armorfactor / pl->armordivisor, pl->mo->health) : pl->mo->health;
 }
 
-bool Bot::shouldChat()
+//
+// Whether the bot should chat, optionally limited by a timeout (with a given
+// variable)
+//
+bool Bot::shouldChat(int intervalSec, int timekeeper) const
 {
-   camsightparams_t params;
-   params.setLookerMobj(players[0].mo);
-   params.setTargetMobj(pl->mo);
-   return pl - players > 0 && !CAM_CheckSight(params);
+   // TODO: also check whether players[0] is not human-controlled
+   return pl - players > 0 && (!intervalSec || !timekeeper ||
+                               timekeeper + intervalSec * TICRATE < gametic);
 }
 
 const Bot::Target *Bot::pickBestTarget(const PODCollection<Target>& targets, CombatInfo &cinfo)
@@ -982,21 +988,15 @@ const Bot::Target *Bot::pickBestTarget(const PODCollection<Target>& targets, Com
          // set combat info
          if (!cinfo.hasShooters && B_MobjHasMissileAttack(*target.mobj) && !target.mobj->player)
             cinfo.hasShooters = true;
-
-         
       }
 
-
-      if(!highestThreat->isLine && totalThreat >= B_calcPlayerHealth(pl) && 
-         (m_lastHelpCry + 20 * TICRATE < gametic || !m_lastHelpCry))
+      if(shouldChat(m_lastHelpCry, 20) && !highestThreat->isLine &&
+         totalThreat >= B_calcPlayerHealth(pl))
       {
-         if(shouldChat())
-         {
-            m_lastHelpCry = gametic;
-            qstring message;
-            message << "Help! A " << highestThreat->mobj->info->name << " is killing me!";
-            HU_Say(pl, message.constPtr());
-         }
+         m_lastHelpCry = gametic;
+         qstring message;
+         message << "Help! A " << highestThreat->mobj->info->name << " is killing me!";
+         HU_Say(pl, message.constPtr());
       }
 
       // Keep shooting current monster but choose another one if it's more threatening
