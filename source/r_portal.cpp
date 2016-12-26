@@ -34,6 +34,7 @@
 #include "d_gi.h"
 #include "e_exdata.h"
 #include "e_things.h"
+#include "m_bbox.h"
 #include "m_collection.h"
 #include "p_maputl.h"
 #include "p_spec.h"
@@ -174,6 +175,7 @@ static void R_ClearPortalWindow(pwindow_t *window)
    window->clipfunc = NULL;
    window->vx = window->vy = window->vz = 0;
    window->vangle = 0;
+   memset(&window->barrier, 0, sizeof(window->barrier));
 }
 
 static pwindow_t *newPortalWindow()
@@ -200,29 +202,66 @@ static pwindow_t *newPortalWindow()
 }
 
 //
+// Applies portal transform based on whether it's an anchored or linked portal
+//
+inline static void R_applyPortalTransformTo(const portal_t *portal, 
+   fixed_t &x, fixed_t &y, bool applyTranslation)
+{
+   if(portal->type == R_ANCHORED || portal->type == R_TWOWAY)
+   {
+      const portaltransform_t &tr = portal->data.anchor.transform;
+      tr.applyTo(x, y, nullptr, nullptr, !applyTranslation);
+   }
+   else if(portal->type == R_LINKED && applyTranslation)
+   {
+      const linkdata_t &link = portal->data.link;
+      x += link.deltax;
+      y += link.deltay;
+   }
+}
+
+//
 // Calculates the render barrier based on portal type and source linedef
 // (assuming line portal)
 //
 static void R_calcRenderBarrier(const portal_t *portal, const line_t *line,
    renderbarrier_t &barrier)
 {
-   if(portal->type == R_ANCHORED || portal->type == R_TWOWAY)
+   P_MakeDivline(line, &barrier.dl);
+   R_applyPortalTransformTo(portal, barrier.dl.x, barrier.dl.y, true);
+   R_applyPortalTransformTo(portal, barrier.dl.dx, barrier.dl.dy, false);
+}
+
+//
+// Expands a portal barrier BBox. For sector portals
+//
+void R_CalcRenderBarrier(pwindow_t *window, const subsector_t *ss)
+{
+   const portal_t *portal = window->portal;
+   if(portal->type != R_ANCHORED && portal->type != R_TWOWAY &&
+      portal->type != R_LINKED)
    {
-      const portaltransform_t &tr = portal->data.anchor.transform;
-      P_MakeDivline(line, &barrier.dl);
-      tr.applyTo(barrier.dl.x, barrier.dl.y);
-      tr.applyTo(barrier.dl.dx, barrier.dl.dy, nullptr, nullptr, true);
       return;
    }
-   if(portal->type == R_LINKED)
+   const seg_t *seg;
+   v2fixed_t tv;
+   int i;
+   renderbarrier_t &barrier = window->barrier;
+   for(i = 0; i < ss->numlines; ++i)
    {
-      const linkdata_t &link = portal->data.link;
-      P_MakeDivline(line, &barrier.dl);
-      barrier.dl.x += link.deltax;
-      barrier.dl.y += link.deltay;
-      return;
+      seg = &segs[ss->firstline + i];
+      tv = { seg->v1->x, seg->v1->y };
+      R_applyPortalTransformTo(portal, tv.x, tv.y, true);
+      M_AddToBox(barrier.bbox, tv.x, tv.y);
    }
-   // Other portal: ignore
+   if(i) // take last one too
+   {
+      --i;
+      seg = &segs[ss->firstline + i];
+      tv = { seg->v2->x, seg->v2->y };
+      R_applyPortalTransformTo(portal, tv.x, tv.y, true);
+      M_AddToBox(barrier.bbox, tv.x, tv.y);
+   }
 }
 
 static pwindow_t *R_NewPortalWindow(portal_t *p, line_t *l, pwindowtype_e type)
@@ -1268,6 +1307,8 @@ pwindow_t *R_GetFloorPortalWindow(portal_t *portal, fixed_t planez)
    pwindow_t *window = R_NewPortalWindow(portal, NULL, pw_floor);
    window->planez = planez;
    window->up = false;
+   M_ClearBox(window->barrier.bbox);
+
    return window;
 }
 
@@ -1290,6 +1331,8 @@ pwindow_t *R_GetCeilingPortalWindow(portal_t *portal, fixed_t planez)
    pwindow_t *window = R_NewPortalWindow(portal, NULL, pw_ceiling);
    window->planez = planez;
    window->up = true;
+   M_ClearBox(window->barrier.bbox);
+
    return window;
 }
 

@@ -1606,13 +1606,9 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
 }
 
 //
-// R_allowBehindLinePortal
+// Checks if a line is behind a portal-generated divline (barrier)
 //
-// ioanch 20160131: Returns false if the line is touching the (view/portal-line)
-// triangle. Returns true otherwise.
-//
-static bool R_allowBehindLinePortal(const renderbarrier_t &barrier, 
-   const seg_t *renderSeg)
+static bool R_allowBehindDivline(const divline_t &dl, const seg_t *renderSeg)
 {
    divline_t rend;
    rend.x = renderSeg->v1->x;
@@ -1620,16 +1616,75 @@ static bool R_allowBehindLinePortal(const renderbarrier_t &barrier,
    rend.dx = renderSeg->v2->x - rend.x;
    rend.dy = renderSeg->v2->y - rend.y;
 
-   int p1 = P_PointOnDivlineSide(rend.x, rend.y, &barrier.dl);
-   int p2 = P_PointOnDivlineSide(rend.x + rend.dx, rend.y + rend.dy, &barrier.dl);
+   int p1 = P_PointOnDivlineSide(rend.x, rend.y, &dl);
+   int p2 = P_PointOnDivlineSide(rend.x + rend.dx, rend.y + rend.dy, &dl);
 
    if(p1 == p2)
       return p1 == 1;   // only accept if behind the barrier line
 
    // At least one point must be in front of the rendered line
-   return P_PointOnDivlineSide(barrier.dl.x, barrier.dl.y, &rend) == 0 || 
-      P_PointOnDivlineSide(barrier.dl.x + barrier.dl.dx, 
-         barrier.dl.y + barrier.dl.dy, &rend) == 0;
+   return P_PointOnDivlineSide(dl.x, dl.y, &rend) == 0 || 
+      P_PointOnDivlineSide(dl.x + dl.dx, dl.y + dl.dy, &rend) == 0;
+}
+
+//
+// Given a bounding box, picks the two divlines nearest to the viewer
+//
+void R_PickSidesNearViewer(const fixed_t bbox[4], divline_t ports[2])
+{
+   ports[0].dx = 0;
+   ports[1].dy = 0;
+   if(viewx < bbox[BOXLEFT])
+   {
+      ports[0].x = bbox[BOXLEFT];
+      ports[0].y = bbox[BOXTOP];
+      ports[0].dy = bbox[BOXBOTTOM] - bbox[BOXTOP];
+   }
+   else if(viewx < bbox[BOXRIGHT])
+   {
+      ports[0].dy = 0;
+   }
+   else
+   {
+      ports[0].x = bbox[BOXRIGHT];
+      ports[0].y = bbox[BOXBOTTOM];
+      ports[0].dy = bbox[BOXTOP] - bbox[BOXBOTTOM];
+   }
+
+   if(viewy < bbox[BOXBOTTOM])
+   {
+      ports[1].x = bbox[BOXLEFT];
+      ports[1].y = bbox[BOXBOTTOM];
+      ports[1].dx = bbox[BOXRIGHT] - bbox[BOXLEFT];
+   }
+   else if(viewy < bbox[BOXTOP])
+      ports[1].dx = 0;
+   else
+   {
+      ports[1].x = bbox[BOXRIGHT];
+      ports[1].y = bbox[BOXTOP];
+      ports[1].dx = bbox[BOXLEFT] - bbox[BOXRIGHT];
+   }
+}
+
+//
+// For sectors
+//
+static bool R_allowBehindSectorPortal(const renderbarrier_t &barrier, 
+   const seg_t *renderSeg)
+{
+   divline_t ports[2];
+   const fixed_t *bbox = barrier.bbox;
+
+   R_PickSidesNearViewer(bbox, ports);
+
+   // now check
+   bool allow = true;
+   if(ports[0].dy)
+      allow = R_allowBehindDivline(ports[0], renderSeg);
+   if(ports[1].dx)
+      allow = allow && R_allowBehindDivline(ports[1], renderSeg);
+   return allow;
 }
 
 //
@@ -1653,11 +1708,19 @@ static void R_AddLine(seg_t *line, bool dynasegs)
    vertex_t  *v1, *v2;
 
    // ioanch 20160125: reject segs in front of line when rendering line portal
-   if(portalrender.w && portalrender.w->line)
+   if(portalrender.w)
    {
       // only reject if they're anchored portals (including linked)
-      if(!R_allowBehindLinePortal(portalrender.w->barrier, line))
-         return;
+      if(portalrender.w->line)
+      {
+         if(!R_allowBehindDivline(portalrender.w->barrier.dl, line))
+            return;
+      }
+      else
+      {
+         if(!R_allowBehindSectorPortal(portalrender.w->barrier, line))
+            return;
+      }
    }
    // SoM: one of the byproducts of the portal height enforcement: The top 
    // silhouette should be drawn at ceilingheight but the actual texture 
@@ -2433,6 +2496,11 @@ static void R_Subsector(int num)
 
    while(count--)
       R_AddLine(line++, false);
+
+   if(seg.f_window)
+      R_CalcRenderBarrier(seg.f_window, sub);
+   if(seg.c_window)
+      R_CalcRenderBarrier(seg.c_window, sub);
 }
 
 //

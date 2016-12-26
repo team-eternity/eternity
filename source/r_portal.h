@@ -222,6 +222,8 @@ void R_RenderPortals();
 portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum, 
                             fixed_t planez, int fromid, int toid);
 
+void R_CalcRenderBarrier(pwindow_t *window, const subsector_t *ss);
+
 //=============================================================================
 //
 // Spawning portals from advanced specials (not in p_spec.cpp)
@@ -260,9 +262,12 @@ extern R_ClipSegFunc segclipfuncs[];
 //
 struct renderbarrier_t
 {
-   divline_t dl;  // currently holds linedef coordinates
-
-   // TODO: sector barriers
+   // Selection depends on context
+   union
+   {
+      divline_t dl;     // currently holds linedef coordinates
+      fixed_t bbox[4];  // for sector portals (very rough, won't cover all cases)
+   };
 };
 
 // SoM: TODO: Overlays go in here.
