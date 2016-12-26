@@ -29,86 +29,9 @@
 #ifndef __EternityEngine__b_itemlearn__
 #define __EternityEngine__b_itemlearn__
 
-#include "../../rapidjson/document.h"
-#include "../d_player.h"
-#include "../e_inventory.h"
+#include "../doomdef.h"
 
-//
-// PlayerStatDiff
-//
-// Used to get the difference of player stats after bot picks up an item
-//
-class PlayerStats : public ZoneObject
-{
-   //
-   // Values
-   //
-   // Internal class that holds the values
-   //
-   class Values : public ZoneObject
-   {
-   public:
-      int health;
-      int armorpoints;
-      fixed_t armortype;
-      int powers[NUMPOWERS];
-      int weaponowned[NUMWEAPONS];
-      int itemcount;
-      inventory_t inventory;
-      int inv_size;
-      
-      Values(bool maxOut) : inventory(nullptr)
-      {
-         reset(maxOut);
-      }
-      Values(const Values &other);
-      Values(Values &&other);
-      Values(const rapidjson::Value& json, bool maxOutFallback);
-      //
-      // Destructor
-      //
-      ~Values()
-      {
-         efree(inventory);
-      }
-      
-      void reset(bool maxOut);
-
-      rapidjson::Value makeJson(rapidjson::Document::AllocatorType& allocator) const;
-   };
-   
-   Values data;
-   Values prior;
-   
-public:
-   //
-   // Constructor
-   //
-   PlayerStats(bool maxOut) : data(maxOut), prior(false)
-   {
-   }
-   PlayerStats(const rapidjson::Value& json, bool maxOutFallback);
-   
-   void reduceByCurrentState(const player_t &pl);
-   void setPriorState(const player_t &pl);
-   void maximizeByStateDelta(const player_t &pl);
-   
-   bool greaterThan(player_t &pl) const;
-   bool fillsGap(player_t &pl, const PlayerStats &cap) const;
-   bool overlaps(player_t &pl, const PlayerStats &cap) const;
-
-   rapidjson::Value makeJson(rapidjson::Document::AllocatorType& allocator) const;
-   
-   //
-   // reset
-   //
-   // Sets the values to the initial ones
-   //
-   void reset(bool maxOut)
-   {
-      data.reset(maxOut);
-   }
-};
+struct player_t;
 
 bool B_CheckArmour(const player_t *pl, const char *effectname);
 bool B_CheckBody(const player_t *pl, const char *effectname);

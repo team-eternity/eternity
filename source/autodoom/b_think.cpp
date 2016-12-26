@@ -28,12 +28,9 @@
 
 #include <queue>
 #include "../z_zone.h"
-#include "../../rapidjson/document.h"
-#include "../../rapidjson/filereadstream.h"
-#include "../../rapidjson/filewritestream.h"
-#include "../../rapidjson/writer.h"
 
 #include "b_analysis.h"
+#include "b_itemlearn.h"
 #include "b_statistics.h"
 #include "b_think.h"
 #include "b_trace.h"
@@ -41,33 +38,19 @@
 #include "../cam_sight.h"
 #include "../d_event.h"
 #include "../d_gi.h"
-//#include "../d_ticcmd.h"
-//#include "../doomdef.h"
 #include "../doomstat.h"
 #include "../e_edf.h"
 #include "../e_exdata.h"
+#include "../e_inventory.h"
 #include "../e_player.h"
 #include "../e_states.h"
-#include "../e_things.h"
 #include "../ev_specials.h"
-#include "../g_dmflag.h"
-#include "../Hu_stuff.h"
+#include "../hu_stuff.h"
 #include "../in_lude.h"
-#include "../metaapi.h"
 #include "../m_compare.h"
 #include "../m_qstr.h"
-#include "../m_utils.h"
-#include "../p_maputl.h"
-#include "../p_pspr.h"
-#include "../p_setup.h"
 #include "../p_spec.h"
-#include "../r_defs.h"
 #include "../r_state.h"
-
-#define ITEM_NOPICK_STATS_JSON "itemNopickStats.json"
-#define ITEM_EFFECT_STATS_JSON "itemEffectStats.json"
-#define JSON_SPRITENUM "spritenum"
-#define JSON_STATS "stats"
 
 void A_WeaponReady(actionargs_t *);
 
@@ -81,7 +64,7 @@ enum
    URGENT_CHAT_INTERVAL_SEC = 20,
    IDLE_CHAT_INTERVAL_SEC = 300, // Five minutes
    DUNNO_CONCESSION_SEC = 3,
-
+   DEATH_REVIVE_INTERVAL = 128
 };
 
 enum
@@ -94,8 +77,6 @@ enum
 
 // The commands that the bots will send to the players to be added in G_Ticker
 Bot bots[MAXPLAYERS];
-
-std::unordered_map<spritenum_t, PlayerStats> Bot::nopickStats, Bot::effectStats;
 
 //
 // Bot::mapInit
@@ -679,7 +660,6 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
     const Mobj* item;
     fixed_t fh;
     const Mobj& plmo = *self.pl->mo;
-    std::unordered_map<spritenum_t, PlayerStats>::const_iterator effect, nopick;
     for (auto it = ss.mobjlist.begin(); it != ss.mobjlist.end(); ++it)
     {
         item = *it;
@@ -1812,7 +1792,7 @@ void Bot::doCommand()
 
     if(pl->health <= 0)
     {
-       if(prevCtr % 128 == 0)
+       if(prevCtr % DEATH_REVIVE_INTERVAL == 0)
           cmd->buttons |= BT_USE; // respawn
        return; // don't try anything else in this case
     }
@@ -1849,128 +1829,6 @@ void Bot::InitBots()
 
    // Analyze all available weapons, assigning tags to each
    B_AnalyzeWeapons();
-}
-
-//
-// Bot::getNopickStats
-//
-// Gets the nopick state, creating one if not existing
-//
-PlayerStats &Bot::getNopickStats(spritenum_t spnum)
-{
-   auto nopick = nopickStats.find(spnum);
-   if(nopick == nopickStats.cend())
-   {
-      nopickStats.emplace(spnum, PlayerStats(true));
-      return nopickStats.find(spnum)->second;
-   }
-
-   return nopick->second;
-}
-
-//
-// Bot::getEffectStats
-//
-// Gets the effect state, creating one if not existing
-//
-PlayerStats &Bot::getEffectStats(spritenum_t spnum)
-{
-   auto effect = effectStats.find(spnum);
-   if(effect == effectStats.cend())
-   {
-      effectStats.emplace(spnum, PlayerStats(false));
-      return effectStats.find(spnum)->second;
-   }
-
-   return effect->second;
-}
-
-//
-// Bot::loadPlayerStats
-//
-// Get item pickup data from JSON
-//
-static void loadStatsForMap(std::unordered_map<spritenum_t, PlayerStats> &map, const char* filename, bool fallbackFlag)
-{
-    FILE* f = fopen(filename, "rt");
-    if (!f)
-    {
-        B_Log("%s not written yet.", filename);
-        return;
-    }
-    char readBuffer[BUFSIZ];
-    rapidjson::FileReadStream stream(f, readBuffer, sizeof(readBuffer));
-    rapidjson::Document json;
-    json.ParseStream(stream);
-    if (json.HasParseError() || !json.IsArray())
-        goto fail;
-
-    spritenum_t sn;
-    for (auto it = json.Begin(); it != json.End(); ++it)
-    {
-        if (!it->IsObject())
-            goto fail;
-        auto oit = it->FindMember(JSON_SPRITENUM);
-        if (oit == it->MemberEnd() || !oit->value.IsInt())
-            goto fail;
-        sn = oit->value.GetInt();
-        oit = it->FindMember(JSON_STATS);
-        if (oit == it->MemberEnd() || !oit->value.IsObject())
-            goto fail;
-        map.emplace(sn, PlayerStats(oit->value, fallbackFlag));
-    }
-
-    fclose(f);
-    return;
-fail:
-    // Failure case: reset the maps.
-    map.clear();
-    fclose(f);
-}
-
-void Bot::loadPlayerStats()
-{
-    loadStatsForMap(nopickStats, M_SafeFilePath(g_autoDoomPath, ITEM_NOPICK_STATS_JSON), true);
-    loadStatsForMap(effectStats, M_SafeFilePath(g_autoDoomPath, ITEM_EFFECT_STATS_JSON), false);
-}
-
-//
-// Bot::storePlayerStats
-//
-// Saves the two item stat maps to JSON files
-//
-static void storeStatsForMap(const std::unordered_map<spritenum_t, PlayerStats> &map, const char* filename)
-{
-    rapidjson::Document document;
-    auto& allocator = document.GetAllocator();
-    document.SetArray();
-
-    for (auto it = map.begin(); it != map.end(); ++it)
-    {
-        rapidjson::Value item(rapidjson::kObjectType);
-        item.AddMember(JSON_SPRITENUM, it->first, allocator);
-        item.AddMember(JSON_STATS, it->second.makeJson(allocator), allocator);
-        document.PushBack(item, allocator);
-    }
-
-    FILE* f = fopen(filename, "wt");
-    if (!f)
-    {
-        B_Log("Failed creating %s!!", filename);
-        return;
-    }
-    char writeBuffer[BUFSIZ];
-    rapidjson::FileWriteStream stream(f, writeBuffer, sizeof(writeBuffer));
-    rapidjson::Writer<rapidjson::FileWriteStream> writer(stream);
-    document.Accept(writer);
-    
-    fclose(f);
-}
-
-void Bot::storePlayerStats()
-{
-    storeStatsForMap(nopickStats, M_SafeFilePath(g_autoDoomPath, ITEM_NOPICK_STATS_JSON));
-    storeStatsForMap(effectStats, M_SafeFilePath(g_autoDoomPath, ITEM_EFFECT_STATS_JSON));
 }
 
 // EOF

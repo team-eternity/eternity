@@ -98,8 +98,6 @@ inline static void gbSetBar(int barnum, int count)
 //
 void B_GLBSP_Start()
 {
-	// get json value pointer. Normally won't be null because calling function is guaranteed not to. But let's accept nullptr possibility and push an error
-
    B_GLBSP_setupReferences();
    
    // Setup the functions

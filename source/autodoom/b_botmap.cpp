@@ -498,7 +498,7 @@ void BotMap::createBlockMap()
 //
 // B_buildBotMapFromScratch
 //
-// Builds bot map from scratch and saves result to JSON
+// Builds bot map from scratch and saves result to GZip-compressed data
 //
 static void B_buildTempBotMapFromScratch(fixed_t radius, const char *digest)
 {

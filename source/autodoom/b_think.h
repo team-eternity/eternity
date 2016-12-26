@@ -32,10 +32,7 @@
 struct player_t;
 struct ticcmd_t;
 
-#include "b_botmap.h"
-#include "b_itemlearn.h"
 #include "b_path.h"
-#include "../e_inventory.h"
 #include "../metaapi.h"
 
 // goal metatable keys
@@ -102,11 +99,6 @@ class Bot : public ZoneObject
    unsigned prevCtr;
    unsigned m_searchstage;
 
-   // Item knowledge builder
-   // nopickStats: the minimum stats by which an item won't be picked
-   // effectStats: the maximum benefit from picking up an item.
-   static std::unordered_map<spritenum_t, PlayerStats> nopickStats, effectStats;
-   
    struct Target
    {
       union
@@ -185,9 +177,6 @@ public:
    m_finder(nullptr),
    m_runfast(false),
    m_hasPath(false),
-   
-   
-   
    m_deepSearchMode(DeepNormal),
    m_deepRepeat(nullptr),
    m_justGotLost(false),
@@ -218,22 +207,6 @@ public:
    void mapInit();
    
    static void InitBots();
-
-   static PlayerStats &getNopickStats(spritenum_t spnum);
-   static PlayerStats *findNopickStats(spritenum_t spnum)
-   {
-      auto fnd = nopickStats.find(spnum);
-      if(fnd != nopickStats.cend())
-         return &fnd->second;
-      return nullptr;
-   }
-
-   static PlayerStats &getEffectStats(spritenum_t spnum);
-
-   static void storePlayerStats();
-   static void loadPlayerStats();
-
-   static void setupCoopBot();
 };
 
 extern Bot bots[];

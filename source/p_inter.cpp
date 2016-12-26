@@ -632,16 +632,6 @@ bool P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    // Identify by sprite.
    // INVENTORY_FIXME: apply pickupfx[].effect instead!
    
-   // IOANCH 20131007: bot learn item
-   Bot *plbot = nullptr;
-   PlayerStats* effectStats = nullptr;
-   if(botMap)
-   {
-      plbot = &bots[player - players];
-      effectStats = &Bot::getEffectStats(special->sprite);
-      effectStats->setPriorState(*player);
-   }
-   //plbot->getNopickStats(special->sprite).reduceByCurrentState(*player);
    switch(pickupfx[special->sprite].tempeffect)
    {
       // armor
@@ -1101,18 +1091,9 @@ bool P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    
    // IOANCH 20130815: add item to bot's stack
    if(botMap)
-   {
-      effectStats->maximizeByStateDelta(*player);
-      PlayerStats *nopickStats = Bot::findNopickStats(special->sprite);
-      if(nopickStats && effectStats->overlaps(*player, *nopickStats))
-      {
-         nopickStats->reset(true);
-      }
-
       for(int i = 0; i < MAXPLAYERS; ++i)
          if(playeringame[i])
             bots[i].addXYEvent(BOT_PICKUP, B_CoordXY(*special));
-   }
 
    if(removeobj)
    {
@@ -1127,18 +1108,6 @@ bool P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    {
       player->bonuscount += BONUSADD;
       S_StartSound(player->mo, sound);   // killough 4/25/98, 12/98
-   }
-
-   // FOR BOT
-   if(!removeobj && !pickup_fx)
-   {
-      if(botMap)
-      {
-         Bot::getNopickStats(special->sprite).reduceByCurrentState(*player);
-         for(int i = 0; i < MAXPLAYERS; ++i)
-            if(playeringame[i])
-               bots[i].addXYEvent(BOT_PICKUP, B_CoordXY(*special));
-      }
    }
 
    return false;

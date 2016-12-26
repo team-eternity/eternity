@@ -826,16 +826,12 @@ bool P_CheckPickUp(Mobj *thing)
       // IOANCH 20131007: pickup item bot control
 
       v2fixed_t coord = B_CoordXY(*thing);
-      spritenum_t spnum = thing->sprite;
       bool nopick = P_TouchSpecialThing(thing, clip.thing); // can remove thing
       player_t *player = clip.thing->player;
       if(botMap && nopick && player)
-      {
-         Bot::getNopickStats(spnum).reduceByCurrentState(*player);
          for(int i = 0; i < MAXPLAYERS; ++i)
             if(playeringame[i])
                bots[i].addXYEvent(BOT_PICKUP, coord);
-      }
    }
 
    return !solid;
