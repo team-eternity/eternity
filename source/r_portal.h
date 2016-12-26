@@ -139,6 +139,9 @@ struct anchordata_t
    // affine 3D transform. Last row is omitted. Includes translate(x, y, z) and
    // rotation around the Z axis
    portaltransform_t transform;
+   // ioanch 20160226: access the partner portal (if any) in case of polyobject
+   // cars
+   portal_t *polyportalpartner;
 
    // These are for debug purposes (so mappers can find the portats 
    // causing problems)
@@ -198,9 +201,18 @@ struct portal_t
    int16_t tainted;
 };
 
+//
+// Nicer way to determine if a portal has an anchor
+//
+inline static bool R_portalIsAnchored(const portal_t *portal)
+{
+   return portal->type == R_ANCHORED || portal->type == R_TWOWAY || 
+      portal->type == R_LINKED;
+}
+
 portal_t *R_GetSkyBoxPortal(Mobj *camera);
-portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum, 
-   fixed_t zoffset = 0);
+portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum,
+   bool flipped = false, fixed_t zoffset = 0);
 portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum, 
    bool flipped = false, fixed_t zoffset = 0);
 

@@ -512,8 +512,7 @@ static void Polyobj_collectPortals(polyobj_t *po)
    for(int i = 0; i < po->numLines; ++i)
    {
       portal_t *portal = po->lines[i]->portal;
-      if(!portal || (portal->type != R_LINKED && portal->type != R_ANCHORED &&
-                     portal->type != R_TWOWAY))
+      if(!portal || !R_portalIsAnchored(portal))
       {
          continue;
       }
@@ -570,8 +569,16 @@ static void Polyobj_movePortals(const polyobj_t *po, fixed_t dx, fixed_t dy,
       {
          // FIXME: no partnership for R_TWOWAY. Maybe there should be one.
          // TODO: this partnership. But only when we have a line-only special.
-         portal->data.anchor.transform.move.x -= M_FixedToDouble(dx);
-         portal->data.anchor.transform.move.y -= M_FixedToDouble(dy);
+         anchordata_t &adata = portal->data.anchor;
+         adata.transform.move.x -= M_FixedToDouble(dx);
+         adata.transform.move.y -= M_FixedToDouble(dy);
+
+         portal_t *partner = adata.polyportalpartner;
+         if(partner)
+         {
+            partner->data.anchor.transform.move.x += M_FixedToDouble(dx);
+            partner->data.anchor.transform.move.y += M_FixedToDouble(dy);
+         }
          // no physical effects.
       }
    }

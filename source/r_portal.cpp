@@ -37,6 +37,7 @@
 #include "m_bbox.h"
 #include "m_collection.h"
 #include "p_maputl.h"
+#include "p_setup.h"
 #include "p_spec.h"
 #include "r_bsp.h"
 #include "r_draw.h"
@@ -238,8 +239,7 @@ static void R_calcRenderBarrier(const portal_t *portal, const line_t *line,
 void R_CalcRenderBarrier(pwindow_t *window, const subsector_t *ss)
 {
    const portal_t *portal = window->portal;
-   if(portal->type != R_ANCHORED && portal->type != R_TWOWAY &&
-      portal->type != R_LINKED)
+   if(!R_portalIsAnchored(portal))
    {
       return;
    }
@@ -503,13 +503,13 @@ static void R_calculateTransform(int markerlinenum, int anchorlinenum,
 // Either finds a matching existing anchored portal matching the
 // parameters, or creates a new one. Used in p_spec.c.
 //
-portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum, 
-   fixed_t zoffset)
+portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum,
+   bool flipped, fixed_t zoffset)
 {
    portal_t *rover, *ret;
    edefstructvar(anchordata_t, adata);
 
-   R_calculateTransform(markerlinenum, anchorlinenum, &adata.transform, false,
+   R_calculateTransform(markerlinenum, anchorlinenum, &adata.transform, flipped,
       zoffset);
 
    adata.maker = markerlinenum;
@@ -1102,6 +1102,8 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
 
    // SoM 3/10/2005: Use the coordinates stored in the portal struct
    const portaltransform_t &tr = portal->data.anchor.transform;
+   viewx = window->vx;
+   viewy = window->vy;
    tr.applyTo(viewx, viewy, &view.x, &view.y);
    double vz = M_FixedToDouble(window->vz) + tr.move.z;
    viewz = M_DoubleToFixed(vz);
@@ -1680,6 +1682,7 @@ void R_DefinePortal(const line_t &line)
    int int_type = line.args[1];
    int anchorid = line.args[2];
    fixed_t zoffset = line.args[3] << FRACBITS;
+   bool flipped = line.args[4] == 1;
 
    if(int_type < 0 || int_type >= static_cast<int>(portaltype_MAX))
    {
@@ -1767,11 +1770,11 @@ void R_DefinePortal(const line_t &line)
          return;
       }
       if(type == portaltype_anchor)
-         portal = R_GetAnchoredPortal(destlinenum, thislinenum, zoffset);
+         portal = R_GetAnchoredPortal(destlinenum, thislinenum, flipped, zoffset);
       else if(type == portaltype_twoway)
       {
-         portal = R_GetTwoWayPortal(destlinenum, thislinenum, false, zoffset);
-         mirrorportal = R_GetTwoWayPortal(thislinenum, destlinenum, false, 
+         portal = R_GetTwoWayPortal(destlinenum, thislinenum, flipped, zoffset);
+         mirrorportal = R_GetTwoWayPortal(thislinenum, destlinenum, flipped, 
             -zoffset);
       }
       else
@@ -1842,6 +1845,89 @@ void R_ApplyPortals(sector_t &sector, int portalceiling, int portalfloor)
 }
 
 //
+// Bonds two portal lines for some features depending on it to work. Does 
+// blockmap search to find the partner.
+//
+static void R_pairPortalLines(line_t &line)
+{
+   v2fixed_t tv1 = { line.v1->x, line.v1->y };
+   v2fixed_t tv2 = { line.v2->x, line.v2->y };
+   R_applyPortalTransformTo(line.portal, tv1.x, tv1.y, true);
+   R_applyPortalTransformTo(line.portal, tv2.x, tv2.y, true);
+   // Do a blockmap search
+   int bx = (tv1.x - bmaporgx) >> MAPBLOCKSHIFT;
+   int by = (tv1.y - bmaporgy) >> MAPBLOCKSHIFT;
+   if(bx < 0 || bx >= bmapwidth || by < 0 || by >= bmapheight)
+      return;  // sanity check
+
+   int neighbourhood[3] = { 0, -1, 1 };
+   int i, j;
+
+   // Also search neighbouring blocks. A bit overkill and shouldn't happen
+   // in well-built maps, but the idea is to treat edge cases where a line
+   // is right on a block boundary. Normally I should check the proximity of
+   // the vector on that boundary, but you know map authors in the wild...
+   for(i = 0; i < 3; ++i)
+      for(j = 0; j < 3; ++j)
+      {
+         int nbx = bx + neighbourhood[j];
+         int nby = by + neighbourhood[i];
+         if(nbx < 0 || nbx >= bmapwidth || nby < 0 || nby >= bmapheight)
+            continue;  // sanity check
+
+         int offset = nby * bmapwidth + nbx;
+         offset = *(blockmap + offset);
+         const int *list = blockmaplump + offset;
+
+         ++list;
+         for(; *list != -1; ++list)
+         {
+            if(*list >= numlines || *list < 0)
+               continue;
+            line_t &pline = lines[*list];
+
+            // As close as possible, but not exaggerated
+            if(D_abs(pline.v2->x - tv1.x) > FRACUNIT / 16 ||
+               D_abs(pline.v2->y - tv1.y) > FRACUNIT / 16 ||
+               D_abs(pline.v1->x - tv2.x) > FRACUNIT / 16 ||
+               D_abs(pline.v1->y - tv2.y) > FRACUNIT / 16)
+            {
+               continue;
+            }
+
+            // Set the partner!
+            line.beyondportalline = &pline;  // used with MLI_POLYPOERTALLINE
+            line.intflags |= MLI_POLYPORTALLINE;   // for rendering
+            if(!line.backsector && line.portal && line.portal->type == R_LINKED)
+            {
+               // MAKE IT PASSABLE
+               line.backsector = line.frontsector;
+               line.sidenum[1] = line.sidenum[0];
+               line.flags &= ~ML_BLOCKING;
+               line.flags |= ML_TWOSIDED;
+               
+            }
+            if(line.portal && pline.portal)
+            {
+               if(line.portal->type == R_LINKED &&
+                  pline.portal->type == R_LINKED)
+               {
+                  line.portal->data.link.polyportalpartner = pline.portal;
+                  pline.portal->data.link.polyportalpartner = line.portal;
+               }
+               else if(line.portal->type == R_TWOWAY &&
+                  pline.portal->type == R_TWOWAY)
+               {
+                  line.portal->data.anchor.polyportalpartner = pline.portal;
+                  pline.portal->data.anchor.polyportalpartner = line.portal;
+               }
+            }
+            return;
+         }
+      }
+}
+
+//
 // Applies portal marked id on a line
 //
 void R_ApplyPortal(line_t &line, int portal)
@@ -1851,6 +1937,8 @@ void R_ApplyPortal(line_t &line, int portal)
          if(entry.id == portal)
          {
             P_SetPortal(line.frontsector, &line, entry.portal, portal_lineonly);
+            if(R_portalIsAnchored(entry.portal))
+               R_pairPortalLines(line);
             return;
          }
 }

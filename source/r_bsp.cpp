@@ -1622,6 +1622,15 @@ static bool R_allowBehindDivline(const divline_t &dl, const seg_t *renderSeg)
    if(p1 == p2)
       return p1 == 1;   // only accept if behind the barrier line
 
+   // Check cases where vertices are common
+   if(D_abs(dl.x - rend.x) < 256 && D_abs(dl.y - rend.y) < 256)
+      return P_PointOnDivlineSide(dl.x + dl.dx, dl.y + dl.dy, &rend) == 0;
+   if(D_abs(dl.x + dl.dx - rend.x - rend.dx) < 256 &&
+      D_abs(dl.y + dl.dy - rend.y - rend.dy) < 256)
+   {
+      return P_PointOnDivlineSide(dl.x, dl.y, &rend) == 0;
+   }
+
    // At least one point must be in front of the rendered line
    return P_PointOnDivlineSide(dl.x, dl.y, &rend) == 0 || 
       P_PointOnDivlineSide(dl.x + dl.dx, dl.y + dl.dy, &rend) == 0;
