@@ -1382,11 +1382,6 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
          P_SpawnPortal(&lines[i], staticFn);
          break;
       
-         // new portal specials
-      case EV_STATIC_PORTAL_LINE_PARAM_SIMPLE:
-         R_SpawnSimpleLinePortal(lines[i], lines[i].args[0], lines[i].args[1]);
-         break;
-
       case EV_STATIC_PORTAL_LINE_PARAM_QUICK:
          R_SpawnQuickLinePortal(lines[i]);
          break;

@@ -241,7 +241,6 @@ void R_CalcRenderBarrier(pwindow_t *window, const subsector_t *ss);
 // Spawning portals from advanced specials (not in p_spec.cpp)
 //
 
-void R_SpawnSimpleLinePortal(line_t &line, int lineid, int type);
 void R_SpawnQuickLinePortal(line_t &line);
 void R_DefinePortal(const line_t &line);
 void R_ApplyPortals(sector_t &sector, int portalceiling, int portalfloor);

@@ -146,7 +146,6 @@ static ev_static_t DOOMStaticBindings[] =
    STATICSPEC(484, EV_STATIC_SCROLL_FLOOR_PARAM)
    STATICSPEC(485, EV_STATIC_SCROLL_WALL_PARAM)
    STATICSPEC(486, EV_STATIC_PORTAL_LINE_PARAM_COMPAT)
-   STATICSPEC(491, EV_STATIC_PORTAL_LINE_PARAM_SIMPLE)
    STATICSPEC(492, EV_STATIC_PORTAL_LINE_PARAM_QUICK)
    STATICSPEC(496, EV_STATIC_PORTAL_DEFINE)
 };
@@ -193,7 +192,6 @@ static ev_static_t PSXStaticBindings[] =
 static ev_static_t UDMFEternityStaticBindings[] =
 {
    STATICSPEC(121, EV_STATIC_NULL) // Line_SetIdentification isn't needed in UDMF
-   STATICSPEC(300, EV_STATIC_PORTAL_LINE_PARAM_SIMPLE)
    STATICSPEC(301, EV_STATIC_PORTAL_LINE_PARAM_QUICK)
    STATICSPEC(302, EV_STATIC_PORTAL_DEFINE)
 };
@@ -593,7 +591,6 @@ int EV_SpecialForStaticInitName(const char *name)
       { EV_STATIC_INIT_PARAM,              "Static_Init"            },
       { EV_STATIC_PORTAL_LINE_PARAM_QUICK, "Line_QuickPortal" },
       { EV_STATIC_PORTAL_LINE_PARAM_COMPAT, "Line_SetPortal"        },
-      { EV_STATIC_PORTAL_LINE_PARAM_SIMPLE, "Line_SetSimplePortal"  },
       { EV_STATIC_SLOPE_PARAM,             "Plane_Align"            },
       { EV_STATIC_POLYOBJ_START_LINE,      "Polyobj_StartLine"      },
       { EV_STATIC_POLYOBJ_EXPLICIT_LINE,   "Polyobj_ExplicitLine"   },
@@ -648,7 +645,6 @@ bool EV_IsParamStaticInit(int special)
    case EV_STATIC_PORTAL_DEFINE:
    case EV_STATIC_PORTAL_LINE_PARAM_QUICK:
    case EV_STATIC_PORTAL_LINE_PARAM_COMPAT:
-   case EV_STATIC_PORTAL_LINE_PARAM_SIMPLE:
    case EV_STATIC_SCROLL_WALL_PARAM:
    case EV_STATIC_SLOPE_PARAM:
    case EV_STATIC_POLYOBJ_START_LINE:
