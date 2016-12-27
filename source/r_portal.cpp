@@ -1897,16 +1897,19 @@ static void R_pairPortalLines(line_t &line)
 
             // Set the partner!
             line.beyondportalline = &pline;  // used with MLI_POLYPOERTALLINE
-            line.intflags |= MLI_POLYPORTALLINE;   // for rendering
-            if(!line.backsector && line.portal && line.portal->type == R_LINKED)
+            if(!line.backsector)
             {
-               // MAKE IT PASSABLE
-               line.backsector = line.frontsector;
-               line.sidenum[1] = line.sidenum[0];
-               line.flags &= ~ML_BLOCKING;
-               line.flags |= ML_TWOSIDED;
-               
+               line.intflags |= MLI_POLYPORTALLINE;   // for rendering
+               if(line.portal && line.portal->type == R_LINKED)
+               {
+                  // MAKE IT PASSABLE
+                  line.backsector = line.frontsector;
+                  line.sidenum[1] = line.sidenum[0];
+                  line.flags &= ~ML_BLOCKING;
+                  line.flags |= ML_TWOSIDED;
+               }
             }
+            
             if(line.portal && pline.portal)
             {
                if(line.portal->type == R_LINKED &&
