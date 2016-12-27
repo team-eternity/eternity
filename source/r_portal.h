@@ -129,7 +129,7 @@ struct portaltransform_t
    v3double_t move;   // TODO: z offset
    double angle;
    
-   void portaltransform_t::applyTo(fixed_t &x, fixed_t &y,
+   void applyTo(fixed_t &x, fixed_t &y,
       float *fx = nullptr, float *fy = nullptr, bool nomove = false) const;
 };
 
