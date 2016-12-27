@@ -1247,6 +1247,8 @@ static void P_spawnPortals(UDMFSetupSettings &setupSettings)
    }
 }
 
+static void P_attachSectors(UDMFSetupSettings &settings);
+
 //
 // P_SpawnSpecials
 //
@@ -1425,6 +1427,9 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
          break;
       }
    }
+
+   // Also attach from setup settings
+   P_attachSectors(setupSettings);
 
    P_spawnPortals(setupSettings);
 
@@ -2279,7 +2284,7 @@ bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
 //
 // Attaches sectors from UDMF data
 //
-void P_AttachSectors(UDMFSetupSettings &settings)
+static void P_attachSectors(UDMFSetupSettings &settings)
 {
    PODCollection<attachedsurface_t> floornew, ceilingnew;
    bool found;

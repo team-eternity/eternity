@@ -361,7 +361,7 @@ private:
       int identifier;
 
       int floorid, ceilingid;
-      int attachtofloor, attachtoceiling;
+      int attachfloor, attachceiling;
 
       bool tfloorset, tceilset;
 
