@@ -62,6 +62,17 @@ enum
 };
 
 //
+// Data for UDMF attaching
+//
+struct udmfattach_t
+{
+   int floorid;
+   int ceilingid;
+   int attachfloor;
+   int attachceiling;
+};
+
+//
 // This holds settings needed during P_SetupLevel and cleared afterwards. Useful
 // to avoid populating map item data with unused fields.
 //
@@ -72,6 +83,7 @@ class UDMFSetupSettings : public ZoneObject
       unsigned flags;
       int portalceiling;
       int portalfloor;
+      udmfattach_t attach;
    };
 
    struct lineinfo_t
@@ -135,6 +147,15 @@ public:
       if(mLineInitData)
          return mLineInitData[index].portal;
       return 0;
+   }
+
+   //
+   // Attaching. This merely gets a reference you can modify
+   //
+   udmfattach_t &getAttachInfo(int index)
+   {
+      useSectorCount();
+      return mSectorInitData[index].attach;
    }
 };
 
@@ -338,6 +359,9 @@ private:
       int lightlevel;
       int special;
       int identifier;
+
+      int floorid, ceilingid;
+      int attachfloor, attachceiling;
 
       bool tfloorset, tceilset;
 

@@ -1247,6 +1247,8 @@ static void P_spawnPortals(UDMFSetupSettings &setupSettings)
    }
 }
 
+static void P_attachSectors(UDMFSetupSettings &settings);
+
 //
 // P_SpawnSpecials
 //
@@ -1425,6 +1427,9 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
          break;
       }
    }
+
+   // Also attach from setup settings
+   P_attachSectors(setupSettings);
 
    P_spawnPortals(setupSettings);
 
@@ -2274,6 +2279,146 @@ bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
    }
 
    return ok;
+}
+
+//
+// Attaches sectors from UDMF data
+//
+static void P_attachSectors(UDMFSetupSettings &settings)
+{
+   PODCollection<attachedsurface_t> floornew, ceilingnew;
+   bool found;
+   int settype;
+   for(int i = 0; i < numsectors; ++i)
+   {
+      const udmfattach_t &attach = settings.getAttachInfo(i);
+      if(!attach.floorid && !attach.ceilingid)
+         continue;
+      if(attach.floorid)
+         floornew.makeEmpty();
+      if(attach.ceilingid)
+         ceilingnew.makeEmpty();
+      for(int j = 0; j < numsectors; ++j)
+      {
+         const udmfattach_t &slave = settings.getAttachInfo(j);
+         if(attach.floorid)
+         {
+            if(abs(slave.attachfloor) == attach.floorid)
+            {
+               if(j == i)
+                  continue;
+               found = false;
+               settype = (slave.attachfloor ^ attach.floorid) >= 0 ?
+                  AS_FLOOR : AS_MIRRORFLOOR;
+
+               for(auto &surface : floornew)
+                  if(surface.sector == &sectors[j])
+                  {
+                     if(!(surface.type & (AS_FLOOR | AS_MIRRORFLOOR)))
+                        surface.type |= settype;
+                     found = true;
+                     break;
+                  }
+
+               if(!found)
+               {
+                  attachedsurface_t &surface = floornew.addNew();
+                  surface.sector = &sectors[j];
+                  surface.type = settype;
+               }
+            }
+            if(abs(slave.attachceiling) == attach.floorid)
+            {
+               found = false;
+               settype = (slave.attachceiling ^ attach.floorid) >= 0 ?
+                  AS_CEILING : AS_MIRRORCEILING;
+
+               for(auto &surface : floornew)
+                  if(surface.sector == &sectors[j])
+                  {
+                     if(!(surface.type & (AS_CEILING | AS_MIRRORCEILING)))
+                        surface.type |= settype;
+                     found = true;
+                     break;
+                  }
+
+               if(!found)
+               {
+                  attachedsurface_t &surface = floornew.addNew();
+                  surface.sector = &sectors[j];
+                  surface.type = settype;
+               }
+            }
+         }
+         if(attach.ceilingid)
+         {
+            if(abs(slave.attachfloor) == attach.ceilingid)
+            {
+               found = false;
+               settype = (slave.attachfloor ^ attach.ceilingid) >= 0 ?
+                  AS_FLOOR : AS_MIRRORFLOOR;
+
+               for(auto &surface : ceilingnew)
+                  if(surface.sector == &sectors[j])
+                  {
+                     if(!(surface.type & (AS_FLOOR | AS_MIRRORFLOOR)))
+                        surface.type |= settype;
+                     found = true;
+                     break;
+                  }
+
+               if(!found)
+               {
+                  attachedsurface_t &surface = ceilingnew.addNew();
+                  surface.sector = &sectors[j];
+                  surface.type = settype;
+               }
+            }
+            if(abs(slave.attachceiling) == attach.ceilingid)
+            {
+               if(j == i)
+                  continue;
+               found = false;
+               settype = (slave.attachceiling ^ attach.ceilingid) >= 0 ?
+                  AS_CEILING : AS_MIRRORCEILING;
+
+               for(auto &surface : ceilingnew)
+                  if(surface.sector == &sectors[j])
+                  {
+                     if(!(surface.type & (AS_CEILING | AS_MIRRORCEILING)))
+                        surface.type |= settype;
+                     found = true;
+                     break;
+                  }
+
+               if(!found)
+               {
+                  attachedsurface_t &surface = ceilingnew.addNew();
+                  surface.sector = &sectors[j];
+                  surface.type = settype;
+               }
+            }
+         }
+      }
+      if(!floornew.isEmpty())
+      {
+         efree(sectors[i].f_asurfaces);
+         sectors[i].f_asurfaces = estructalloctag(attachedsurface_t, 
+            floornew.getLength(), PU_LEVEL);
+         sectors[i].f_asurfacecount = floornew.getLength();
+         memcpy(sectors[i].f_asurfaces, &floornew[0], 
+            sectors[i].f_asurfacecount * sizeof(attachedsurface_t));
+      }
+      if(!ceilingnew.isEmpty())
+      {
+         efree(sectors[i].c_asurfaces);
+         sectors[i].c_asurfaces = estructalloctag(attachedsurface_t,
+            ceilingnew.getLength(), PU_LEVEL);
+         sectors[i].c_asurfacecount = ceilingnew.getLength();
+         memcpy(sectors[i].c_asurfaces, &ceilingnew[0],
+            sectors[i].c_asurfacecount * sizeof(attachedsurface_t));
+      }
+   }
 }
 
 //

@@ -162,6 +162,8 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          ss->topmap = ss->midmap = ss->bottommap = -1; // mark as not specified
 
          setupSettings.setSectorPortals(i, us.portalceiling, us.portalfloor);
+         setupSettings.getAttachInfo(i) = udmfattach_t{ us.floorid, 
+            us.ceilingid, us.attachfloor, us.attachceiling };
       }
       else
       {
@@ -504,11 +506,14 @@ enum token_e
    t_arg2,
    t_arg3,
    t_arg4,
+   t_attachceiling,
+   t_attachfloor,
    t_blockeverything,
    t_blockfloaters,
    t_blocking,
    t_blockmonsters,
    t_blocksound,
+   t_ceilingid,
    t_ceilingterrain,
    t_class1,
    t_class2,
@@ -532,6 +537,7 @@ enum token_e
    t_dontpegtop,
    t_dormant,
    t_firstsideonly,
+   t_floorid,
    t_floorterrain,
    t_friction,
    t_friend,
@@ -640,11 +646,14 @@ static keytoken_t gTokenList[] =
    TOKEN(arg2),
    TOKEN(arg3),
    TOKEN(arg4),
+   TOKEN(attachceiling),
+   TOKEN(attachfloor),
    TOKEN(blockeverything),
    TOKEN(blockfloaters),
    TOKEN(blocking),
    TOKEN(blockmonsters),
    TOKEN(blocksound),
+   TOKEN(ceilingid),
    TOKEN(ceilingterrain),
    TOKEN(class1),
    TOKEN(class2),
@@ -666,6 +675,7 @@ static keytoken_t gTokenList[] =
    TOKEN(dontpegtop),
    TOKEN(dormant),
    TOKEN(firstsideonly),
+   TOKEN(floorid),
    TOKEN(floorterrain),
    TOKEN(friction),
    TOKEN(friend),
@@ -1024,6 +1034,11 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
 
                      READ_STRING(sector, floorterrain);
                      READ_STRING(sector, ceilingterrain);
+
+                     READ_NUMBER(sector, floorid);
+                     READ_NUMBER(sector, ceilingid);
+                     READ_NUMBER(sector, attachfloor);
+                     READ_NUMBER(sector, attachceiling);
 
                      READ_STRING(sector, portal_floor_overlaytype);
                      READ_NUMBER(sector, portal_floor_alpha);
