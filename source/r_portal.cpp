@@ -1573,104 +1573,158 @@ void R_SpawnSimpleLinePortal(line_t &curline, const int lineid, int type)
 }
 
 //
-// Implements Line_SetAnchoredPortal
+// Actually pairs the lines. Make sure to call from both lines
 //
-// For spawning anchored portals going from current line to destination line.
-// Portals can be angled if linked is not set.
+static void R_pairPortalLines(line_t &line, line_t &pline)
+{
+   line.beyondportalline = &pline;  // used with MLI_POLYPORTALLINE
+   if(!line.backsector)
+   {
+      line.intflags |= MLI_POLYPORTALLINE;   // for rendering
+      if(line.portal && line.portal->type == R_LINKED)
+      {
+         // MAKE IT PASSABLE
+         line.backsector = line.frontsector;
+         line.sidenum[1] = line.sidenum[0];
+         line.flags &= ~ML_BLOCKING;
+         line.flags |= ML_TWOSIDED;
+      }
+   }
+
+   if(line.portal && pline.portal)
+   {
+      if(line.portal->type == R_LINKED &&
+         pline.portal->type == R_LINKED)
+      {
+         line.portal->data.link.polyportalpartner = pline.portal;
+         pline.portal->data.link.polyportalpartner = line.portal;
+      }
+      else if(line.portal->type == R_TWOWAY &&
+         pline.portal->type == R_TWOWAY)
+      {
+         line.portal->data.anchor.polyportalpartner = pline.portal;
+         pline.portal->data.anchor.polyportalpartner = line.portal;
+      }
+   }
+}
+
 //
-// Parameters:
-// * destination line id: tag of anchor linedef; must be set.
-// * flags: can be sum of the following values:
-//   1: make portal linked (interactive). This means it will have to obey link
-//      offset rules and won't be able to rotate
-//   2: make portal two-way: the anchor target linedef will also have a portal
-//      of the same kind pointing back.
-// * Z offset from this line to destination line
+// Implements Line_QuickPortal
+//
+// Convenience special for easily creating a line portal connecting two areas
+// mutually. Apply this on two linedefs of equal length belonging to separate
+// areas. A pair of portals will be created for these two lines, visually (and
+// possibly spatially) connecting them. If the portal is NOT interactive, the
+// lines will also be possible to have different angles.
+//
+// Due to potential future changes, do NOT place the two linked (interactive)
+// portal linedefs at different angles, assuming that the resulting portal won't
+// have angles. For now, always place interactive portal lines at the same angle.
+// You can use different angles for non-interactive anchored portals.
+//
+// Arguments:
+// * type: portal type (0: interactive, 1: only visual)
 //
 int P_CreatePortalGroup(sector_t *from);
-void R_SpawnAnchoredLinePortal(line_t &line, int destlineid, int flags, 
-   fixed_t zoffset)
+void R_SpawnQuickLinePortal(line_t &line)
 {
-   if(destlineid <= 0)
+   if(!line.tag)
    {
-      C_Printf(FC_ERROR "Anchored line portal target line ID must be > 0\a\n");
+      C_Printf(FC_ERROR "Line_QuickPortal can't use tag 0\a\n");
       return;
    }
-
+   if(line.args[0] != 0 && line.args[0] != 1)
+   {
+      C_Printf(FC_ERROR "Line_QuickPortal first argument must be 0 or 1\a\n");
+      return;
+   }
    int searchPosition = -1;
-   line_t *otherline = P_FindLine(destlineid, &searchPosition);
+   line_t *otherline;
+   while((otherline = P_FindLine(line.tag, &searchPosition)))
+   {
+      if(otherline == &line || otherline->special != line.special ||
+         otherline->args[0] != line.args[0])
+      {
+         continue;
+      }
+      break;
+   }
    if(!otherline)
    {
-      C_Printf(FC_ERROR "No anchor for portal\a\n");
+      C_Printf(FC_ERROR "Line_QuickPortal couldn't find the other like-tagged "
+         "line\a\n");
+      return;
+   }
+   bool linked = line.args[0] == 0;
+   // Strict requirement for angle equality for linked portals
+   if(linked && otherline->dx != -line.dx && otherline->dy != -line.dy)
+   {
+      C_Printf(FC_ERROR "Line_QuickPortal linked portal changing angle not "
+         "currently supported\a\n");
       return;
    }
 
-   bool linked = !!(flags & 1);
-   bool twoway = !!(flags & 2);
+   int linenum = static_cast<int>(&line - lines);
+   int otherlinenum = static_cast<int>(otherline - lines);
 
-   int makerlinenum = static_cast<int>(otherline - lines);
-   int anchorlinenum = static_cast<int>(&line - lines);
-
+   portal_t *portals[2];
    if(!linked)
    {
-      // TODO: fix this to work with lines, whose anchors are flipped
-      portal_t *portal = R_GetTwoWayPortal(makerlinenum, anchorlinenum, true,
-         zoffset);
-      line.beyondportalline = otherline;
-      P_SetPortal(line.frontsector, &line, portal, portal_lineonly);
-      bool otherIsEdge = !!(otherline->extflags &
-         (EX_ML_LOWERPORTAL | EX_ML_UPPERPORTAL));
-      if(twoway && !otherIsEdge)
-      {
-         portal = R_GetTwoWayPortal(anchorlinenum, makerlinenum, true, 
-            -zoffset);
-         otherline->beyondportalline = &line;
-         P_SetPortal(otherline->frontsector, otherline, portal, portal_lineonly);
-      }
+      portals[0] = R_GetAnchoredPortal(otherlinenum, linenum, true, 0);
+      portals[1] = R_GetAnchoredPortal(linenum, otherlinenum, true, 0);
    }
    else
    {
+
       if(line.frontsector->groupid == R_NOGROUP)
          P_CreatePortalGroup(line.frontsector);
       if(otherline->frontsector->groupid == R_NOGROUP)
          P_CreatePortalGroup(otherline->frontsector);
-      int toid = otherline->frontsector->groupid;
       int fromid = line.frontsector->groupid;
-      portal_t *portal = R_GetLinkedPortal(makerlinenum, anchorlinenum, 0,
-                                           fromid, toid);
-      line.beyondportalline = otherline;
-      P_SetPortal(line.frontsector, &line, portal, portal_lineonly);
-      bool otherIsEdge = !!(otherline->extflags &
-                            (EX_ML_LOWERPORTAL | EX_ML_UPPERPORTAL));
-      if(twoway && !otherIsEdge)
-      {
-         portal_t *portal2 = R_GetLinkedPortal(anchorlinenum, makerlinenum, 0,
-                                               toid, fromid);
-         otherline->beyondportalline = &line;
-         P_SetPortal(otherline->frontsector, otherline, portal2, portal_lineonly);
+      int toid = otherline->frontsector->groupid;
 
-         if(!line.backsector || !otherline->backsector)
-         {
-            // HACK TO MAKE THEM PASSABLE
-            // ioanch: make a function to remove duplication (linked polyobject portals)
-            static auto unblockline = [](line_t *line, line_t *partner)
-            {
-               line->backsector = line->frontsector;
-               line->sidenum[1] = line->sidenum[0];
-               line->flags &= ~ML_BLOCKING;
-               line->flags |= ML_TWOSIDED;
-               line->intflags |= MLI_POLYPORTALLINE;
-            };
-
-            if(!line.backsector)
-               unblockline(&line, otherline);
-            if(!otherline->backsector)
-               unblockline(otherline, &line);
-            portal->data.link.polyportalpartner = portal2;
-            portal2->data.link.polyportalpartner = portal;
-         }
-      }
+      portals[0] = R_GetLinkedPortal(otherlinenum, linenum, 0, fromid, toid);
+      portals[1] = R_GetLinkedPortal(linenum, otherlinenum, 0, toid, fromid);
    }
+
+   P_SetPortal(line.frontsector, &line, portals[0], portal_lineonly);
+   P_SetPortal(otherline->frontsector, otherline, portals[1], portal_lineonly);
+   if(linked)
+   {
+      R_pairPortalLines(line, *otherline);
+      R_pairPortalLines(*otherline, line);
+   }
+
+   // Now delete the special
+   line.special = 0;
+   memset(line.args, 0, sizeof(line.args));
+   otherline->special = 0;
+   memset(otherline->args, 0, sizeof(otherline->args));
+}
+
+//
+// Finds the first free portal id. Useful for map designers who are having 
+// trouble finding one.
+//
+static int R_findFreePortalId()
+{
+   int free = 1;
+   PODCollection<int> busylist;
+   for(const auto &entry : gPortals)
+   {
+      busylist.add(abs(entry.id));
+   }
+   qsort(&busylist[0], busylist.getLength(), sizeof(int), [](const void *a, const void *b) {
+      return *(int *)a - *(int *)b;
+   });
+   for(int b : busylist)
+   {
+      if(b == free)
+         ++free;
+      else if(b > free)
+         break;
+   }
+   return free;
 }
 
 //
@@ -1693,7 +1747,7 @@ void R_DefinePortal(const line_t &line)
 
    if(portalid <= 0)
    {
-      C_Printf(FC_ERROR, "Portal id 0 or negative not allowed\a\n");
+      C_Printf(FC_ERROR "Portal id 0 or negative not allowed\a\n");
       return;
    }
 
@@ -1701,8 +1755,9 @@ void R_DefinePortal(const line_t &line)
    {
       if(abs(entry.id) == portalid) // also check against negatives
       {
-         C_Printf(FC_ERROR, "Portal id %d was already set\a\n", 
-            portalid);
+         int freeid = R_findFreePortalId();
+         C_Printf(FC_ERROR "Portal id %d was already set. Use %d instead on linedef %d.\a\n", 
+            portalid, freeid, (int)(&line - lines));
          return;
       }
    }
@@ -1744,7 +1799,7 @@ void R_DefinePortal(const line_t &line)
       }
       if(!skycam)
       {
-         C_Printf(FC_ERROR, "Skybox found with no camera\a\n");
+         C_Printf(FC_ERROR "Skybox found with no camera\a\n");
          return;
       }
       portal = R_GetSkyBoxPortal(skycam);
@@ -1754,7 +1809,7 @@ void R_DefinePortal(const line_t &line)
    case portaltype_linked:
       if(!anchorid)
       {
-         C_Printf(FC_ERROR, "Anchored portal must have anchor line id\a\n");
+         C_Printf(FC_ERROR "Anchored portal must have anchor line id\a\n");
          return;
       }
       for(destlinenum = -1; 
@@ -1766,7 +1821,7 @@ void R_DefinePortal(const line_t &line)
       }
       if(destlinenum == -1)
       {
-         C_Printf(FC_ERROR, "No anchor line found\a\n");
+         C_Printf(FC_ERROR "No anchor line found\a\n");
          return;
       }
       if(type == portaltype_anchor)
@@ -1848,7 +1903,7 @@ void R_ApplyPortals(sector_t &sector, int portalceiling, int portalfloor)
 // Bonds two portal lines for some features depending on it to work. Does 
 // blockmap search to find the partner.
 //
-static void R_pairPortalLines(line_t &line)
+static void R_findPairPortalLines(line_t &line)
 {
    v2fixed_t tv1 = { line.v1->x, line.v1->y };
    v2fixed_t tv2 = { line.v2->x, line.v2->y };
@@ -1895,36 +1950,7 @@ static void R_pairPortalLines(line_t &line)
                continue;
             }
 
-            // Set the partner!
-            line.beyondportalline = &pline;  // used with MLI_POLYPOERTALLINE
-            if(!line.backsector)
-            {
-               line.intflags |= MLI_POLYPORTALLINE;   // for rendering
-               if(line.portal && line.portal->type == R_LINKED)
-               {
-                  // MAKE IT PASSABLE
-                  line.backsector = line.frontsector;
-                  line.sidenum[1] = line.sidenum[0];
-                  line.flags &= ~ML_BLOCKING;
-                  line.flags |= ML_TWOSIDED;
-               }
-            }
-            
-            if(line.portal && pline.portal)
-            {
-               if(line.portal->type == R_LINKED &&
-                  pline.portal->type == R_LINKED)
-               {
-                  line.portal->data.link.polyportalpartner = pline.portal;
-                  pline.portal->data.link.polyportalpartner = line.portal;
-               }
-               else if(line.portal->type == R_TWOWAY &&
-                  pline.portal->type == R_TWOWAY)
-               {
-                  line.portal->data.anchor.polyportalpartner = pline.portal;
-                  pline.portal->data.anchor.polyportalpartner = line.portal;
-               }
-            }
+            R_pairPortalLines(line, pline);
             return;
          }
       }
@@ -1941,7 +1967,7 @@ void R_ApplyPortal(line_t &line, int portal)
          {
             P_SetPortal(line.frontsector, &line, entry.portal, portal_lineonly);
             if(R_portalIsAnchored(entry.portal))
-               R_pairPortalLines(line);
+               R_findPairPortalLines(line);
             return;
          }
 }

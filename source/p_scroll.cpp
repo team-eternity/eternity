@@ -420,7 +420,7 @@ static void P_spawnFloorParam(const line_t *l)
          break;
       default:
          // wrong arg values will just do nothing, but it's undefined anyway
-         C_Printf(FC_ERROR, "Unknown scroll type %d at line %d\a\n",
+         C_Printf(FC_ERROR "Unknown scroll type %d at line %d\a\n",
                   l->args[ev_Scroll_Arg_Type], (int)(l - lines));
    }
 }
