@@ -252,7 +252,7 @@ void Thinker::RunThinkers(void)
 void Thinker::serialize(SaveArchive &arc)
 {
    if(arc.isSaving())
-      arc.WriteLString(getClassName());
+      arc.writeLString(getClassName());
 }
 
 //
@@ -271,6 +271,10 @@ void P_Ticker()
    if(paused || ((menuactive || consoleactive) && !demoplayback && !netgame &&
                  players[consoleplayer].viewz != 1))
       return;
+
+   // spawn unknowns at start of map if requested and possible
+   if(!leveltime)
+      P_SpawnUnknownThings();
 
    // interpolation: save current sector heights
    P_SaveSectorPositions();

@@ -69,7 +69,7 @@
 #include "m_dllist.h"
 #include "m_qstr.h"
 #include "m_qstrkeys.h"
-#include "m_misc.h"
+#include "m_utils.h"
 #include "metaapi.h"
 #include "p_info.h"
 #include "p_mobj.h"
@@ -1380,6 +1380,9 @@ static void P_ClearLevelVars()
    // haleyjd: default sound environment zone
    LevelInfo.defaultEnvironment = 0;
 
+   // gameplay
+   LevelInfo.disableJump = false;
+
    // haleyjd: construct defaults
    P_InfoDefaultLevelName();
    P_InfoDefaultSoundNames();
@@ -1540,6 +1543,7 @@ static levelvar_t levelvars[]=
    LI_STRING("colormap",           colorMap),
    LI_STRING("creator",            creator),
    LI_ENVIRO("defaultenvironment", defaultEnvironment),
+   LI_BOOLNF("disable-jump",       disableJump),
    LI_BOOLNF("doublesky",          doubleSky),
    LI_BOOLNF("edf-intername",      useEDFInterName),
    LI_BOOLNF("endofgame",          endOfGame),

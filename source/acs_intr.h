@@ -589,8 +589,8 @@ public:
       return strnum < GlobalNumStrings ? GlobalStrings[strnum] : NULL;
    }
 
-   static uint32_t AddString(const char *s) {return AddString(s, strlen(s));}
    static uint32_t AddString(const char *s, uint32_t l);
+   static uint32_t AddString(const char *s) { return AddString(s, uint32_t(strlen(s))); }  
 
    static void ArchiveStrings(SaveArchive &arc);
 

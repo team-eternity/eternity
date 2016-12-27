@@ -420,7 +420,10 @@ typedef enum
    paramUpByValueWaitDownStay,
    paramPerpetualRaise,
    paramUpByValueStayAndChange,
-   paramRaiseToNearestAndChange
+   paramRaiseToNearestAndChange,
+   paramToggleCeiling,
+   paramDownWaitUpStayLip,
+   paramPerpetualRaiseLip
 } paramplattype_e;
 
 // p_doors
@@ -1411,7 +1414,7 @@ int EV_FloorCrushStop(const line_t *line, int tag);
 
 int EV_DoCeiling(const line_t *line, ceiling_e type);
 
-int EV_CeilingCrushStop(int tag);
+int EV_CeilingCrushStop(int tag, bool removeThinker);
 
 void P_ChangeCeilingTex(const char *name, int tag);
 
@@ -1473,7 +1476,7 @@ void P_ChangeFloorTex(const char *name, int tag);
 
 bool EV_DoPlat(const line_t *line, plattype_e type, int amount);
 bool EV_DoParamPlat(const line_t *line, const int *args, paramplattype_e type);
-bool EV_StopPlatByTag(int tag);
+bool EV_StopPlatByTag(int tag, bool removeThinker);
 
 // p_genlin
 

@@ -35,7 +35,7 @@
 //
 float M_MagnitudeVec2(const v2float_t &vec)
 {
-   return sqrt(vec.x * vec.x + vec.y * vec.y);
+   return sqrtf(vec.x * vec.x + vec.y * vec.y);
 }
 
 //

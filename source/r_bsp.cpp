@@ -526,6 +526,8 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
          tempsec->floorpic       = s->floorpic;
          tempsec->floor_xoffs    = s->floor_xoffs;
          tempsec->floor_yoffs    = s->floor_yoffs;
+         tempsec->floor_xscale   = s->floor_xscale;
+         tempsec->floor_yscale   = s->floor_yscale;
          tempsec->floorbaseangle = s->floorbaseangle; // haleyjd: angles
          tempsec->floorangle     = s->floorangle;
 
@@ -536,6 +538,8 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
             tempsec->ceilingpic       = tempsec->floorpic;
             tempsec->ceiling_xoffs    = tempsec->floor_xoffs;
             tempsec->ceiling_yoffs    = tempsec->floor_yoffs;
+            tempsec->ceiling_xscale     = tempsec->floor_xscale;
+            tempsec->ceiling_yscale     = tempsec->floor_yscale;
             tempsec->ceilingbaseangle = tempsec->floorbaseangle; // haleyjd: angles
             tempsec->ceilingangle     = tempsec->floorangle;
          }
@@ -544,6 +548,8 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
             tempsec->ceilingpic       = s->ceilingpic;
             tempsec->ceiling_xoffs    = s->ceiling_xoffs;
             tempsec->ceiling_yoffs    = s->ceiling_yoffs;
+            tempsec->ceiling_xscale   = s->ceiling_xscale;
+            tempsec->ceiling_yscale   = s->ceiling_yscale;
             tempsec->ceilingbaseangle = s->ceilingbaseangle; // haleyjd: angles
             tempsec->ceilingangle     = s->ceilingangle;
          }
@@ -587,6 +593,8 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
          tempsec->floorpic       = tempsec->ceilingpic       = s->ceilingpic;
          tempsec->floor_xoffs    = tempsec->ceiling_xoffs    = s->ceiling_xoffs;
          tempsec->floor_yoffs    = tempsec->ceiling_yoffs    = s->ceiling_yoffs;
+         tempsec->floor_xscale   = tempsec->ceiling_xscale   = s->ceiling_xscale;
+         tempsec->floor_yscale   = tempsec->ceiling_yscale   = s->ceiling_yscale;
          tempsec->floorbaseangle = tempsec->ceilingbaseangle = s->ceilingbaseangle;
          tempsec->floorangle     = tempsec->ceilingangle     = s->ceilingangle; // haleyjd: angles
 
@@ -596,6 +604,8 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
             tempsec->floorpic       = s->floorpic;
             tempsec->floor_xoffs    = s->floor_xoffs;
             tempsec->floor_yoffs    = s->floor_yoffs;
+            tempsec->floor_xscale   = s->floor_xscale;
+            tempsec->floor_yscale   = s->floor_yscale;
             tempsec->floorbaseangle = s->floorbaseangle; // haleyjd: angles
             tempsec->floorangle     = s->floorangle;
          }
@@ -1202,6 +1212,8 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
        (mark || seg.clipsolid || heightchange ||
         seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
         seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
+        seg.frontsec->ceiling_xscale != seg.backsec->ceiling_xscale ||
+        seg.frontsec->ceiling_yscale != seg.backsec->ceiling_yscale ||
         (seg.frontsec->ceilingbaseangle + seg.frontsec->ceilingangle !=
          seg.backsec->ceilingbaseangle + seg.backsec->ceilingangle) || // haleyjd: angles
         seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
@@ -1252,6 +1264,8 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
       (mark || seg.clipsolid || heightchange ||
        seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
        seg.frontsec->floor_yoffs != seg.backsec->floor_yoffs ||
+       seg.frontsec->floor_xscale != seg.backsec->floor_xscale ||
+       seg.frontsec->floor_yscale != seg.backsec->floor_yscale ||
        (seg.frontsec->floorbaseangle + seg.frontsec->floorangle != 
         seg.backsec->floorbaseangle + seg.backsec->floorangle) || // haleyjd: angles
        seg.frontsec->floorpic != seg.backsec->floorpic ||
@@ -1393,6 +1407,8 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    if(mark || seg.clipsolid || frontc != backc || 
       seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
       seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
+      seg.frontsec->ceiling_xscale != seg.backsec->ceiling_xscale ||
+      seg.frontsec->ceiling_yscale != seg.backsec->ceiling_yscale ||
       (seg.frontsec->ceilingbaseangle + seg.frontsec->ceilingangle !=
        seg.backsec->ceilingbaseangle + seg.backsec->ceilingangle) || // haleyjd: angles
       seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
@@ -1441,6 +1457,8 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
       seg.frontsec->floorheight != seg.backsec->floorheight ||
       seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
       seg.frontsec->floor_yoffs != seg.backsec->floor_yoffs ||
+      seg.frontsec->floor_xscale != seg.backsec->floor_xscale ||
+      seg.frontsec->floor_yscale != seg.backsec->floor_yscale ||
       (seg.frontsec->floorbaseangle + seg.frontsec->floorangle !=
        seg.backsec->floorbaseangle + seg.backsec->floorangle) || // haleyjd
       seg.frontsec->floorpic != seg.backsec->floorpic ||
@@ -1539,6 +1557,10 @@ static bool R_allowBehindLinePortal(const line_t *portalLine, const line_t *rend
                     portalLine->v1->y + viewy - portalrender.curwindow->vy};
    v2fixed_t pv2 = {portalLine->v2->x + viewx - portalrender.curwindow->vx,
                     portalLine->v2->y + viewy - portalrender.curwindow->vy};
+
+   // resolve exact target line
+   if(rv1.x == pv2.x && rv1.y == pv2.y && rv2.x == pv1.x && rv2.y == pv1.y)
+      return false;
 
    // get portal line divline
    divline_t dl;
@@ -1720,6 +1742,11 @@ static void R_AddLine(seg_t *line, bool dynasegs)
       && seg.backsec->floor_yoffs   == seg.frontsec->floor_yoffs
       && seg.backsec->ceiling_xoffs == seg.frontsec->ceiling_xoffs
       && seg.backsec->ceiling_yoffs == seg.frontsec->ceiling_yoffs
+
+      && seg.backsec->floor_xscale   == seg.frontsec->floor_xscale
+      && seg.backsec->floor_yscale   == seg.frontsec->floor_yscale
+      && seg.backsec->ceiling_xscale == seg.backsec->ceiling_xscale
+      && seg.backsec->ceiling_yscale == seg.backsec->ceiling_yscale
 
       // haleyjd 11/04/10: angles
       && (seg.backsec->floorbaseangle + seg.backsec->floorangle ==
@@ -2335,6 +2362,8 @@ static void R_Subsector(int num)
                     floorlightlevel,                // killough 3/16/98
                     seg.frontsec->floor_xoffs,       // killough 3/7/98
                     seg.frontsec->floor_yoffs,
+                    seg.frontsec->floor_xscale,
+                    seg.frontsec->floor_yscale,
                     floorangle, seg.frontsec->f_slope, 
                     seg.frontsec->f_pflags,
                     fpalpha,
@@ -2353,6 +2382,8 @@ static void R_Subsector(int num)
                     floorlightlevel,                // killough 3/16/98
                     seg.frontsec->floor_xoffs,       // killough 3/7/98
                     seg.frontsec->floor_yoffs,
+                    seg.frontsec->floor_xscale,
+                    seg.frontsec->floor_yscale,
                     floorangle, seg.frontsec->f_slope, 0, 255, NULL) : NULL;
    }
    
@@ -2383,6 +2414,8 @@ static void R_Subsector(int num)
                     ceilinglightlevel,                // killough 3/16/98
                     seg.frontsec->ceiling_xoffs,       // killough 3/7/98
                     seg.frontsec->ceiling_yoffs,
+                    seg.frontsec->ceiling_xscale,
+                    seg.frontsec->ceiling_yscale,
                     ceilingangle, seg.frontsec->c_slope, 
                     seg.frontsec->c_pflags,
                     cpalpha,
@@ -2401,6 +2434,8 @@ static void R_Subsector(int num)
                     ceilinglightlevel,              // killough 4/11/98
                     seg.frontsec->ceiling_xoffs,     // killough 3/7/98
                     seg.frontsec->ceiling_yoffs,
+                    seg.frontsec->ceiling_xscale,
+                    seg.frontsec->ceiling_yscale,
                     ceilingangle, seg.frontsec->c_slope, 0, 255, NULL) : NULL;
    }
   

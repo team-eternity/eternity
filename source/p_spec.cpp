@@ -197,7 +197,8 @@ void P_InitPicAnims(void)
       if(animdefs[i].istexture)
       {
          // different episode ?
-         if(R_CheckForWall(animdefs[i].startname) == -1)
+         if(R_CheckForWall(animdefs[i].startname) == -1 ||
+            R_CheckForWall(animdefs[i].endname) == -1)
             continue;
          
          lastanim->picnum = R_FindWall(animdefs[i].endname);
@@ -205,7 +206,8 @@ void P_InitPicAnims(void)
       }
       else
       {
-         if(R_CheckForFlat(animdefs[i].startname) == -1)
+         if(R_CheckForFlat(animdefs[i].startname) == -1 ||
+            R_CheckForFlat(animdefs[i].endname) == -1)
             continue;
          
          lastanim->picnum = R_FindFlat(animdefs[i].endname);
@@ -1252,10 +1254,10 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
       line_t *line = &lines[i];
       int staticFn = EV_StaticInitForSpecial(line->special);
 
+      int s, sec;
+
       switch(staticFn)
       {
-         int s, sec;
-
          // killough 3/7/98:
          // support for drawn heights coming from different sector
       case EV_STATIC_TRANSFER_HEIGHTS:
@@ -2738,16 +2740,24 @@ static void P_SpawnPortal(line_t *line, int staticFn)
    else if(staticFn == EV_STATIC_PORTAL_LINE_PARAM)
    {
       // Currently only support ZDoom's Eternity XLAT helper
-      if(line->args[ev_LinePortal_Arg_Type] == ev_LinePortal_Type_EEClassic)
+      switch(line->args[ev_LinePortal_Arg_Type])
       {
-         if(line->args[0] != ev_LinePortal_Maker)
+         case ev_LinePortal_Type_EEClassic:
+            if(line->args[0] != ev_LinePortal_Maker)
+               return;
+            type = portal_linked;
+            break;
+         case ev_LinePortal_Type_Visual:
+            type = portal_twoway;
+            break;
+         case ev_LinePortal_Type_Linked:  // this one respects link offsets
+            type = portal_linked;
+            break;
+         default:
             return;
-         type = portal_linked;
-         effects = portal_lineonly;
-         param = true;
       }
-      else
-         return;
+      effects = portal_lineonly;
+      param = true;
    }
    else
    {
@@ -2757,6 +2767,16 @@ static void P_SpawnPortal(line_t *line, int staticFn)
 
    if(!(sector = line->frontsector))
       return;
+
+   // ioanch: make a function to remove duplication (linked polyobject portals)
+   auto unblockline = [](line_t *line, line_t *partner)
+   {
+      line->backsector = line->frontsector;
+      line->sidenum[1] = line->sidenum[0];
+      line->flags &= ~ML_BLOCKING;
+      line->flags |= ML_TWOSIDED;
+      line->beyondportalsector = partner->frontsector;
+   };
 
    // create the appropriate type of portal
    switch(type)
@@ -2841,10 +2861,18 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       break;
 
    case portal_twoway:
-      // two way and linked portals can only be applied to either the floor or ceiling.
       if(param)
-         // We're having (tag, 0, plane, 0). Look for (tag, 0, plane, 1)
-         s = P_findParamPortalAnchor(line);
+      {
+         // We're having (tag, 0, plane, 1). Look for (tag, 0, plane, 0)
+         if(staticFn == EV_STATIC_PORTAL_SECTOR_PARAM)
+            s = P_findParamPortalAnchor(line);
+         else
+         {
+            s = P_FindLineFromLineArg0(line, -1);  // line portal
+            if(s == line - lines)
+               s = P_FindLineFromLineArg0(line, s);  // avoid getting this line
+         }
+      }
       else
       {
          if(staticFn == EV_STATIC_PORTAL_TWOWAY_CEILING)
@@ -2871,6 +2899,14 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          return;
       }
 
+      if(effects == portal_lineonly)
+      {
+         // special case for line portals
+         portal = R_GetTwoWayPortal(s, line - lines);
+         P_SetPortal(sector, line, portal, portal_lineonly);
+         return;
+      }
+
       portal = R_GetTwoWayPortal(line - lines, s);
       break;
 
@@ -2890,18 +2926,27 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          else  // line portal
          {
             planez = 0;
-            anchortype = EV_SpecialForStaticInit(EV_STATIC_PORTAL_LINE_PARAM);
-            for(s = -1; (s = P_FindLineFromTag(line->tag, s)) >= 0; )
+            if(line->args[ev_LinePortal_Arg_Type] == ev_LinePortal_Type_EEClassic)
             {
-               if(lines[s].special != anchortype || line == &lines[s]
-                  || !lines[s].frontsector
-                  || lines[s].args[ev_LinePortal_Arg_Type]
-                      != ev_LinePortal_Type_EEClassic
-                  || lines[s].args[0] != ev_LinePortal_Anchor)
+               anchortype = EV_SpecialForStaticInit(EV_STATIC_PORTAL_LINE_PARAM);
+               for(s = -1; (s = P_FindLineFromTag(line->tag, s)) >= 0; )
                {
-                  continue;
+                  if(lines[s].special != anchortype || line == &lines[s]
+                     || !lines[s].frontsector
+                     || lines[s].args[ev_LinePortal_Arg_Type]
+                         != ev_LinePortal_Type_EEClassic
+                     || lines[s].args[0] != ev_LinePortal_Anchor)
+                  {
+                     continue;
+                  }
+                  break;
                }
-               break;
+            }
+            else
+            {
+               s = P_FindLineFromLineArg0(line, -1);  // line portal
+               if(s == line - lines)
+                  s = P_FindLineFromLineArg0(line, s);  // avoid getting this line
             }
          }
       }
@@ -2956,7 +3001,31 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       
       toid = sector->groupid;
       fromid = lines[s].frontsector->groupid;
-            
+
+      // Special case for parameterized line portal
+      if(staticFn == EV_STATIC_PORTAL_LINE_PARAM &&
+         line->args[ev_LinePortal_Arg_Type] != ev_LinePortal_Type_EEClassic)
+      {
+         portal = R_GetLinkedPortal(s, line - lines, planez, toid, fromid);
+         P_SetPortal(sector, line, portal, portal_lineonly);
+
+         // Also check for polyobject portals
+         if(lines[s].portal && lines[s].portal->type == R_LINKED &&
+            (!line->backsector || !lines[s].backsector))
+         {
+            // we now have a linked portal through a potential polyobject
+            // HACK TO MAKE THEM PASSABLE
+            if(!lines[s].backsector)
+               unblockline(lines + s, line);
+            if(!line->backsector)
+               unblockline(line, lines + s);
+            portal->data.link.polyportalpartner = lines[s].portal;
+            lines[s].portal->data.link.polyportalpartner = portal;
+         }
+
+         return;
+      }
+
       portal = R_GetLinkedPortal(line - lines, s, planez, fromid, toid);
 
       // Special case where the portal was created with the line-to-line portal type
@@ -2971,15 +3040,6 @@ static void P_SpawnPortal(line_t *line, int staticFn)
 
          if(!lines[s].backsector || !line->backsector)
          {
-            // ioanch: make a function to remove duplication
-            auto unblockline = [](line_t *line, line_t *partner)
-            {
-               line->backsector = line->frontsector;
-               line->sidenum[1] = line->sidenum[0];
-               line->flags &= ~ML_BLOCKING;
-               line->flags |= ML_TWOSIDED;
-               line->beyondportalsector = partner->frontsector;
-            };
             // HACK TO MAKE THEM PASSABLE
             if(!lines[s].backsector)
                unblockline(lines + s, line);

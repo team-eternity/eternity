@@ -421,6 +421,7 @@ bool P_GivePower(player_t *player, int power)
    case pw_silencer:
       if(player->powers[pw_silencer])
          return false;
+      break;
    case pw_flight:       // haleyjd: flight
       if(player->powers[pw_flight] < 0 || player->powers[pw_flight] > 4*32)
          return false;
@@ -2025,6 +2026,9 @@ void P_RaiseCorpse(Mobj *corpse, const Mobj *raiser)
       // else reuse the old friend flag.
       corpse->flags = (info->flags & ~MF_FRIEND) | (corpse->flags & MF_FRIEND);
    }
+
+   // clear ephemeral MIF flags that may persist from previous death
+   corpse->intflags &= ~MIF_CLEARRAISED;
 
    corpse->health = info->spawnhealth;
    P_SetTarget<Mobj>(&corpse->target, NULL);  // killough 11/98

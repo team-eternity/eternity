@@ -29,7 +29,6 @@
 #include "z_zone.h"
 
 #include "a_args.h"
-#include "a_small.h"
 #include "doomstat.h"
 #include "d_gi.h"
 #include "e_args.h"
@@ -276,6 +275,76 @@ void A_CounterJump(actionargs_t *actionargs)
 }
 
 //
+// Parameterized codepointer for branching based on comparisons
+// against a thing's counter values.
+//
+// args[0] : offset || state label
+// args[1] : comparison type
+// args[2] : immediate value || counter number
+// args[3] : counter # to use
+//
+void A_CounterJumpEx(actionargs_t *actionargs)
+{
+   Mobj      *mo = actionargs->actor;
+   arglist_t *args = actionargs->args;
+   bool branch = false;
+   int checktype, value, cnum;
+   state_t *state;
+
+   state = E_ArgAsStateLabel(mo, args, 0);
+   checktype = E_ArgAsKwd(args, 1, &cpckwds, 0);
+   value = E_ArgAsInt(args, 2, 0);
+   cnum = E_ArgAsInt(args, 3, 0);
+
+   // validate state
+   if(!state)
+      return;
+
+   if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
+      return; // invalid
+
+   int &counter = mo->counters[cnum];
+
+   // support getting check value from a counter
+   // if checktype is greater than the last immediate operator,
+   // then the comparison value is actually a counter number
+
+   if(checktype >= CPC_NUMIMMEDIATE)
+   {
+      // turn it into the corresponding immediate operation
+      checktype -= CPC_NUMIMMEDIATE;
+
+      if(value < 0 || value >= NUMMOBJCOUNTERS)
+         return; // invalid counter number
+
+      value = mo->counters[value];
+   }
+
+   switch(checktype)
+   {
+   case CPC_LESS:
+      branch = (counter < value);  break;
+   case CPC_LESSOREQUAL:
+      branch = (counter <= value); break;
+   case CPC_GREATER:
+      branch = (counter > value);  break;
+   case CPC_GREATEROREQUAL:
+      branch = (counter >= value); break;
+   case CPC_EQUAL:
+      branch = (counter == value); break;
+   case CPC_NOTEQUAL:
+      branch = (counter != value); break;
+   case CPC_BITWISEAND:
+      branch = !!(counter & value);  break;
+   default:
+      break;
+   }
+
+   if(branch)
+      P_SetMobjState(mo, state->index);
+}
+
+//
 // A_CounterSwitch
 //
 // This powerful codepointer can branch to one of N states
@@ -318,6 +387,42 @@ void A_CounterSwitch(actionargs_t *actionargs)
 
    // jump!
    P_SetMobjState(mo, startstate + *counter);
+}
+
+//
+// This powerful codepointer can branch to one of N states
+// depending on the value of the indicated counter, and it
+// remains totally safe at all times. If the entire indicated
+// frame set is not valid, no actions will be taken.
+//
+// args[0] : counter # to use
+// args[N] : offset || state label
+//
+void A_CounterSwitchEx(actionargs_t *actionargs)
+{
+   Mobj      *mo = actionargs->actor;
+   arglist_t *args = actionargs->args;
+   int cnum, numstates;   
+   state_t *state;
+
+   cnum = E_ArgAsInt(args, 0, 0);
+
+   // numstates is the top index
+   numstates = args->numargs - 2;
+
+   // get counter
+   if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
+      return; // invalid
+
+   int &counter = mo->counters[cnum];
+
+   // verify counter is in range
+   if(counter < 0 || counter > numstates)
+      return;
+
+   // validate state
+   if((state = E_ArgAsStateLabel(mo, args, 1 + counter)))
+      P_SetMobjState(mo, state->index); // jump!
 }
 
 static const char *kwds_CPSetOps[] =

@@ -48,6 +48,7 @@
 #include "m_misc.h"
 #include "m_qstr.h"
 #include "m_swap.h"
+#include "m_utils.h"
 #include "p_info.h"
 #include "sounds.h"
 #include "w_formats.h"
@@ -450,7 +451,8 @@ static void D_parseMetaData(const char *metatext, int mission)
 //
 static void D_DiskMetaData()
 {
-   char *name  = NULL, *metatext = NULL;
+   qstring name;
+   char *metatext = NULL;
    const char *slash = NULL;
    int slen = 0;
    diskwad_t wad;
@@ -466,25 +468,23 @@ static void D_DiskMetaData()
       return;
 
    // construct the metadata filename
-   M_StringAlloca(&name, 2, 1, wad.name, "metadata.txt");
-   
    if(!(slash = strrchr(wad.name, '\\')))
       return;
 
    slen = slash - wad.name;
    ++slen;
-   strncpy(name, wad.name, slen);
-   strcpy(name + slen, "metadata.txt");
+   name.copy(wad.name, slen);
+   name.concat("metadata.txt");
 
    // load it up
-   if(!(metatext = (char *)(D_CacheDiskFileResource(diskfile, name, true))))
-      return;
+   if((metatext = (char *)(D_CacheDiskFileResource(diskfile, name.constPtr(), true))))
+   {
+      // parse it
+      D_parseMetaData(metatext, MD_NONE);
 
-   // parse it
-   D_parseMetaData(metatext, MD_NONE);
-
-   // done with metadata resource
-   efree(metatext);
+      // done with metadata resource
+      efree(metatext);
+   }
 }
 
 //
@@ -852,6 +852,8 @@ static void D_checkIWAD_WAD(FILE *fp, const char *iwadname, iwadcheck_t &version
          ++sosr;
       else if(!lumpnamecmp(n, "FREEDOOM"))
          version.freedoom = true;
+      else if(!lumpnamecmp(n, "FREEDM")) // Needed to discern freedm from freedoom2
+         version.freedm   = true;
       else if(!lumpnamecmp(n, "HACX-R"))
          ++hacx;
       else if(!lumpnamecmp(n, "M_ACPT"  ) || // haleyjd 11/03/12: BFG Edition
@@ -1481,6 +1483,7 @@ static void D_identifyIWAD()
       version.gamemission = none;
       version.hassecrets  = false;
       version.freedoom    = false;
+      version.freedm      = false;
       version.bfgedition  = false;
       version.error       = false;
       version.flags       = IWADF_FATALNOTOPEN | IWADF_FATALNOTWAD;

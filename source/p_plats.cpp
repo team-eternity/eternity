@@ -425,6 +425,19 @@ bool EV_DoParamPlat(const line_t *line, const int *args, paramplattype_e type)
    bool      rtn    = false;
    const char *platTypeStr = "EEPlatNormal";
 
+   switch(type)
+   {
+   case paramPerpetualRaise:
+      PlatThinker::ActivateInStasis(args[0]);
+      break;
+   case paramToggleCeiling:
+      PlatThinker::ActivateInStasis(args[0]);
+      rtn = true;
+      break;
+   default:
+      break;
+   }
+
    if(!args[0])
    {
       if(!line || !line->backsector)
@@ -461,11 +474,16 @@ manual_plat:
 
       switch(type)
       {
+      case paramDownWaitUpStayLip:
       case paramDownWaitUpStay:
          plat->type   = downWaitUpStay;
          plat->status = PlatThinker::down;
          plat->high   = sec->floorheight;
-         plat->low    = P_FindLowestFloorSurrounding(sec) + 8 * FRACUNIT;
+         plat->low    = P_FindLowestFloorSurrounding(sec);
+         if(type == paramDownWaitUpStay)
+            plat->low += 8 * FRACUNIT;
+         else
+            plat->low += args[3] * FRACUNIT;
          if(plat->low > sec->floorheight)
             plat->low = sec->floorheight;
          break;
@@ -498,9 +516,14 @@ manual_plat:
          break;
       
       case paramPerpetualRaise:
+      case paramPerpetualRaiseLip:
          plat->type   = perpetualRaise;
          plat->status = (P_Random(pr_plats) & 1) ? PlatThinker::down : PlatThinker::up;
-         plat->low    = P_FindLowestFloorSurrounding(sec) + 8 * FRACUNIT;
+         plat->low    = P_FindLowestFloorSurrounding(sec);
+         if(type == paramPerpetualRaise)
+            plat->low += 8 * FRACUNIT;
+         else
+            plat->low += args[3] * FRACUNIT;
          plat->high   = P_FindHighestFloorSurrounding(sec);
          if(plat->low > sec->floorheight)
             plat->low = sec->floorheight;
@@ -512,7 +535,8 @@ manual_plat:
          plat->type   = raiseAndChange;
          plat->status = PlatThinker::up;
          platTypeStr = "EEPlatRaise";
-         sec->floorpic = sides[line->sidenum[0]].sector->floorpic;         
+         if(line)
+            sec->floorpic = sides[line->sidenum[0]].sector->floorpic;
          plat->high   = sec->floorheight + args[2] * 8 * FRACUNIT;
          plat->wait = 0; // We need to override the earlier setting of this         
          if(plat->high < sec->floorheight)
@@ -524,10 +548,22 @@ manual_plat:
          plat->status = PlatThinker::up;
          plat->rnctype = static_cast<PlatThinker::rnctype_e>(args[2]);
          platTypeStr = "EEPlatRaise";
-         sec->floorpic = sides[line->sidenum[0]].sector->floorpic;
+         if(line)
+            sec->floorpic = sides[line->sidenum[0]].sector->floorpic;
          plat->high = P_FindNextHighestFloor(sec, sec->floorheight);         
          plat->wait = 0; // We need to override the earlier setting of this 
          P_ZeroSectorSpecial(sec);
+         break;
+
+      case paramToggleCeiling:
+         plat->type = toggleUpDn;
+         plat->speed = PLATSPEED;      // not used
+         plat->wait = 35 * PLATWAIT;   // not used
+         plat->crush = 10;             // jff 3/14/98 crush anything in the way
+         plat->low = sec->ceilingheight;
+         plat->high = sec->floorheight;
+         plat->status = PlatThinker::down;
+         platTypeStr = "EEPlatSilent";
          break;
 
       default:
@@ -585,17 +621,30 @@ void PlatThinker::ActivateInStasis(int tag)
 //
 // jff 2/12/98 added int return value, fixed return
 //
-bool EV_StopPlatByTag(int tag)
+bool EV_StopPlatByTag(int tag, bool removeThinker)
 {
    // search the active plats
    for(platlist_t *pl = activeplats; pl; pl = pl->next)
    {
       PlatThinker *plat = pl->plat;      // for one with the tag not in stasis
-      if(plat->status != PlatThinker::in_stasis && plat->tag == tag)
+      if(!removeThinker)
       {
-         // put it in stasis
-         plat->oldstatus = plat->status; 
-         plat->status    = PlatThinker::in_stasis;
+         if(plat->status != PlatThinker::in_stasis && plat->tag == tag)
+         {
+            // put it in stasis
+            plat->oldstatus = plat->status;
+            plat->status    = PlatThinker::in_stasis;
+         }
+      }
+      else
+      {
+         // Make it possible to completely remove the thinker, like in Hexen
+         if(plat->tag == tag)
+         {
+            plat->sector->floordata = nullptr;
+            S_StopSectorSequence(plat->sector, SEQ_ORIGIN_SECTOR_F);
+            plat->removeThinker();
+         }
       }
    }
 

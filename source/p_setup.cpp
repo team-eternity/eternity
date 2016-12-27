@@ -594,6 +594,12 @@ void P_InitSector(sector_t *ss)
    ss->floorheightf   = M_FixedToFloat(ss->floorheight);
    ss->ceilingheightf = M_FixedToFloat(ss->ceilingheight);
 
+   // needs to be defaulted as it starts as nonzero
+   ss->floor_xscale = 1.0;
+   ss->floor_yscale = 1.0;
+   ss->ceiling_xscale = 1.0;
+   ss->ceiling_yscale = 1.0;
+
    // haleyjd 09/24/06: sound sequences -- set default
    ss->sndSeqID = defaultSndSeq;
 
@@ -1541,6 +1547,12 @@ void P_LoadHexenThings(int lump)
       ft->options = SwapShort(mt->options);
 
       // note: args are already in order since they're just bytes
+      ft->special = mt->special;
+      ft->args[0] = mt->args[0];
+      ft->args[1] = mt->args[1];
+      ft->args[2] = mt->args[2];
+      ft->args[3] = mt->args[3];
+      ft->args[4] = mt->args[4];
 
       // haleyjd 10/05/05: convert heretic things
       if(LevelInfo.levelType == LI_TYPE_HERETIC)
@@ -1740,8 +1752,8 @@ static int spac_flags_tlate[HX_SPAC_NUMSPAC] =
    EX_ML_CROSS  | EX_ML_PLAYER,                   // SPAC_CROSS
    EX_ML_USE    | EX_ML_PLAYER,                   // SPAC_USE
    EX_ML_CROSS  | EX_ML_MONSTER,                  // SPAC_MCROSS
-   EX_ML_IMPACT | EX_ML_MISSILE,                  // SPAC_IMPACT
-   EX_ML_PUSH   | EX_ML_PLAYER   | EX_ML_MONSTER, // SPAC_PUSH
+   EX_ML_IMPACT | EX_ML_PLAYER  | EX_ML_MISSILE,  // SPAC_IMPACT
+   EX_ML_PUSH,                                    // SPAC_PUSH
    EX_ML_CROSS  | EX_ML_MISSILE                   // SPAC_PCROSS
 };
 
@@ -1764,13 +1776,8 @@ static void P_ConvertHexenLineFlags(line_t *line)
    if(line->flags & HX_ML_REPEAT_SPECIAL)
       line->extflags |= EX_ML_REPEAT;
 
-   // FIXME/TODO: set 1SONLY line flag here, or elsewhere? Depends on special...
-
    // clear line flags to those that are shared with DOOM
    line->flags &= HX_SHAREDFLAGS;
-
-   // FIXME/TODO: how to support Eternity's extended normal flags in Hexen?
-   // We want Hexen to be able to use stuff like 3DMidTex also.
 }
 
 //
@@ -1877,9 +1884,9 @@ void P_LoadLineDefs2()
       // haleyjd 02/06/13: lookup static init
       int staticFn = EV_StaticInitForSpecial(ld->special);
 
+      int lump, j;
       switch(staticFn)
       {                       // killough 4/11/98: handle special types
-         int lump, j;
       case EV_STATIC_TRANSLUCENT: // killough 4/11/98: translucent 2s textures
          lump = sides[*ld->sidenum].special; // translucency from sidedef
          if(!ld->args[0])                    // if tag == 0,
@@ -3559,6 +3566,8 @@ static void P_ConvertStrifeThing(mapthing_t *mthing)
       num += 5900;
    else if(num >= 3001 && num <= 3006)
       num += 4950;
+
+   mthing->type = num;
 }
 
 #define DEN_PSXCHAIN   64

@@ -31,7 +31,6 @@
 
 #include "z_zone.h"
 
-#include "a_small.h"
 #include "acs_intr.h"
 #include "c_runcmd.h"
 #include "doomstat.h"
@@ -41,9 +40,9 @@
 #include "hu_stuff.h"
 #include "m_buffer.h"
 #include "m_collection.h"
-#include "m_misc.h"
 #include "m_qstr.h"
 #include "m_swap.h"
+#include "m_utils.h"
 #include "p_info.h"
 #include "p_maputl.h"
 #include "polyobj.h"
@@ -391,12 +390,12 @@ static int32_t ACS_getLevelVar(uint32_t var)
    case ACS_LEVELVAR_ParTime:        return LevelInfo.partime;
    case ACS_LEVELVAR_ClusterNumber:  return 0;
    case ACS_LEVELVAR_LevelNumber:    return gamemap;
-   case ACS_LEVELVAR_TotalSecrets:   return wminfo.maxsecret;
-   case ACS_LEVELVAR_FoundSecrets:   return players[consoleplayer].secretcount;
-   case ACS_LEVELVAR_TotalItems:     return wminfo.maxitems;
-   case ACS_LEVELVAR_FoundItems:     return players[consoleplayer].itemcount;
-   case ACS_LEVELVAR_TotalMonsters:  return wminfo.maxkills;
-   case ACS_LEVELVAR_KilledMonsters: return players[consoleplayer].killcount;
+   case ACS_LEVELVAR_TotalSecrets:   return totalsecret;
+   case ACS_LEVELVAR_FoundSecrets:   return G_TotalFoundSecrets();
+   case ACS_LEVELVAR_TotalItems:     return totalitems;
+   case ACS_LEVELVAR_FoundItems:     return G_TotalFoundItems();
+   case ACS_LEVELVAR_TotalMonsters:  return totalkills;
+   case ACS_LEVELVAR_KilledMonsters: return G_TotalKilledMonsters();
    case ACS_LEVELVAR_SuckTime:       return 1;
 
    default: return 0;
@@ -2680,7 +2679,7 @@ void ACSDeferred::archive(SaveArchive &arc)
 
    arc << type << number << mapnum << flags << argc;
 
-   arc.ArchiveLString(name, len);
+   arc.archiveLString(name, len);
 
    if(arc.isLoading())
       argv = estructalloc(int32_t, argc);
@@ -2734,7 +2733,7 @@ void ACSVM::ArchiveStrings(SaveArchive &arc)
 
       // Write the strings.
       for(unsigned int i = GlobalNumStringsBase; i != GlobalNumStrings; ++i)
-         arc.WriteLString(GlobalStrings[i]->data.s, GlobalStrings[i]->data.l);
+         arc.writeLString(GlobalStrings[i]->data.s, GlobalStrings[i]->data.l);
    }
    else
    {

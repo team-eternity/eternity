@@ -1,7 +1,6 @@
-// Emacs style mode select -*- C++ -*-
-//----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2016 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,13 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+// Purpose: EDF Argument Management
+// Authors: James Haley
 //
-// EDF Argument Management
-//
-// By James Haley
-//
-//----------------------------------------------------------------------------
 
 #include "z_zone.h"
 
@@ -37,11 +32,11 @@
 #include "e_string.h"
 #include "e_things.h"
 #include "info.h"
-#include "m_misc.h"
+#include "m_utils.h"
 #include "p_mobj.h"
 
-// haleyjd 05/21/10: an empty string, to avoid allocating tons of memory for
-// single-byte strings.
+// haleyjd 05/21/10: a static empty string, to avoid allocating tons of memory 
+// for single-byte strings.
 static char e_argemptystr[] = "";
 
 // test if a string is empty
@@ -50,8 +45,6 @@ static char e_argemptystr[] = "";
 // test if a string is the global arg empty string
 #define ISARGEMPTYSTR(s) ((s) == e_argemptystr)
 
-//
-// E_AddArgToList
 //
 // Adds an argument to the end of an argument list, if possible.
 // Returns false if the operation fails.
@@ -74,8 +67,6 @@ bool E_AddArgToList(arglist_t *al, const char *value)
    return added;
 }
 
-//
-// E_SetArg
 //
 // Sets the argument at the given index to a new value. If that argument
 // does not exist already, empty arguments will be added until that index 
@@ -108,8 +99,6 @@ bool E_SetArg(arglist_t *al, int index, const char *value)
 }
 
 //
-// E_SetArgFromNumber
-//
 // Calls E_SetArg after performing an itoa operation on the argument.
 // This is for convenience in DeHackEd, which is not very smart about 
 // setting arguments.
@@ -124,15 +113,11 @@ bool E_SetArgFromNumber(arglist_t *al, int index, int value)
 }
 
 //
-// E_DisposeArgs
-//
 // Resets an arglist_t to its initial state.
 //
 void E_DisposeArgs(arglist_t *al)
 {
-   int i;
-
-   for(i = 0; i < al->numargs; ++i)
+   for(int i = 0; i < al->numargs; i++)
    {
       if(!ISARGEMPTYSTR(al->args[i]))
          efree(al->args[i]);
@@ -141,8 +126,6 @@ void E_DisposeArgs(arglist_t *al)
    memset(al, 0, sizeof(arglist_t));
 }
 
-//
-// E_ResetArgEval
 //
 // Marks an arg (if it exists) as unevaluated.
 //
@@ -153,31 +136,23 @@ void E_ResetArgEval(arglist_t *al, int index)
 }
 
 //
-// E_ResetAllArgEvals
-//
 // haleyjd 03/28/10: Reset the evaluation state of all state argument lists,
 // to flush the state of the system after a runtime modification to EDF.
 //
-void E_ResetAllArgEvals(void)
+void E_ResetAllArgEvals()
 {
-   int stnum;
-
-   for(stnum = 0; stnum < NUMSTATES; ++stnum)
+   for(int stnum = 0; stnum < NUMSTATES; stnum++)
    {
       arglist_t *args = states[stnum]->args;
 
       if(args)
       {
-         int argnum;
-
-         for(argnum = 0; argnum < args->numargs; ++argnum)
+         for(int argnum = 0; argnum < args->numargs; argnum++)
             args->values[argnum].type = EVALTYPE_NONE;
       }
    }
 }
 
-//
-// E_ArgAsString
 //
 // This is just a safe method to get the argument string at the given
 // index. If the argument doesn't exist, defvalue is returned.
@@ -188,8 +163,6 @@ const char *E_ArgAsString(arglist_t *al, int index, const char *defvalue)
 }
 
 //
-// E_ArgAsInt
-//
 // Gets the arg value at index i as an integer, if such argument exists.
 // The evaluated value will be cached so that it can be returned on
 // subsequent calls. If the argument does not exist, the value passed in
@@ -197,28 +170,24 @@ const char *E_ArgAsString(arglist_t *al, int index, const char *defvalue)
 //
 int E_ArgAsInt(arglist_t *al, int index, int defvalue)
 {
-   evalcache_t *eval;
-
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
    if(!al || index >= al->numargs)
       return defvalue;
 
-   eval = &(al->values[index]);
+   evalcache_t &eval = al->values[index];
 
    // if the value is cached, return the cached value
-   if(eval->type != EVALTYPE_INT)
+   if(eval.type != EVALTYPE_INT)
    {
       // calculate the value and cache it
-      eval->type    = EVALTYPE_INT;
-      eval->value.i = (int)(strtol(al->args[index], NULL, 0));
+      eval.type    = EVALTYPE_INT;
+      eval.value.i = int(strtol(al->args[index], nullptr, 0));
    }
 
-   return eval->value.i;
+   return eval.value.i;
 }
 
-//
-// E_ArgAsFixed
 //
 // Gets the arg value at index i as a fixed_t, if such argument exists.
 // The evaluated value will be cached so that it can be returned on
@@ -227,28 +196,24 @@ int E_ArgAsInt(arglist_t *al, int index, int defvalue)
 //
 fixed_t E_ArgAsFixed(arglist_t *al, int index, fixed_t defvalue)
 {
-   evalcache_t *eval;
-
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
    if(!al || index >= al->numargs)
       return defvalue;
 
-   eval = &(al->values[index]);
+   evalcache_t &eval = al->values[index];
 
    // if the value is cached, return the cached value
-   if(eval->type != EVALTYPE_FIXED)
+   if(eval.type != EVALTYPE_FIXED)
    {
       // calculate the value and cache it
-      eval->type    = EVALTYPE_FIXED;
-      eval->value.x = M_DoubleToFixed(strtod(al->args[index], NULL));
+      eval.type    = EVALTYPE_FIXED;
+      eval.value.x = M_DoubleToFixed(strtod(al->args[index], nullptr));
    }
 
-   return eval->value.x;
+   return eval.value.x;
 }
 
-//
-// E_ArgAsDouble
 //
 // Gets the arg value at index i as a double, if such argument exists.
 // The evaluated value will be cached so that it can be returned on
@@ -257,28 +222,24 @@ fixed_t E_ArgAsFixed(arglist_t *al, int index, fixed_t defvalue)
 //
 double E_ArgAsDouble(arglist_t *al, int index, double defvalue)
 {
-   evalcache_t *eval;
-
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
    if(!al || index >= al->numargs)
       return defvalue;
 
-   eval = &(al->values[index]);
+   evalcache_t &eval = al->values[index];
 
    // if the value is cached, return the cached value
-   if(eval->type != EVALTYPE_DOUBLE)
+   if(eval.type != EVALTYPE_DOUBLE)
    {
       // calculate the value and cache it
-      eval->type    = EVALTYPE_DOUBLE;
-      eval->value.d = strtod(al->args[index], NULL);
+      eval.type    = EVALTYPE_DOUBLE;
+      eval.value.d = strtod(al->args[index], nullptr);
    }
 
-   return eval->value.d;
+   return eval.value.d;
 }
 
-//
-// E_ArgAsThingNum
 //
 // Gets the arg value at index i as a thingtype number, if such 
 // argument exists. The evaluated value will be cached so that it can
@@ -287,83 +248,76 @@ double E_ArgAsDouble(arglist_t *al, int index, double defvalue)
 //
 int E_ArgAsThingNum(arglist_t *al, int index)
 {
-   evalcache_t *eval;
-
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
    if(!al || index >= al->numargs)
       return UnknownThingType;
 
-   eval = &(al->values[index]);
+   evalcache_t &eval = al->values[index];
 
-   if(eval->type != EVALTYPE_THINGNUM)
+   if(eval.type != EVALTYPE_THINGNUM)
    {
-      char *pos = NULL;
+      char *pos = nullptr;
       long num;
 
-      eval->type = EVALTYPE_THINGNUM;
+      eval.type = EVALTYPE_THINGNUM;
 
       // see if this is a string or an integer
       num = strtol(al->args[index], &pos, 0);
-
-      if(pos && *pos != '\0')
+      if(estrnonempty(pos))
       {
          // it is a name
-         eval->value.i = E_SafeThingName(al->args[index]);
+         eval.value.i = E_SafeThingName(al->args[index]);
       }
       else
       {
          // it is a DeHackEd number
-         eval->value.i = E_SafeThingType((int)num);
+         eval.value.i = E_SafeThingType((int)num);
       }
    }
 
-   return eval->value.i;
+   return eval.value.i;
 }
 
-//
-// E_ArgAsThingNumG0
 //
 // Only converts numbers to things if the number is greater than zero.
 // G0 == "greater than zero"
 //
 int E_ArgAsThingNumG0(arglist_t *al, int index)
 {
-   evalcache_t *eval;
-
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
    if(!al || index >= al->numargs)
       return -1;
 
-   eval = &(al->values[index]);
+   evalcache_t &eval = al->values[index];
 
-   if(eval->type != EVALTYPE_THINGNUM)
+   if(eval.type != EVALTYPE_THINGNUM)
    {
-      char *pos = NULL;
+      char *pos = nullptr;
       long num;
 
-      eval->type = EVALTYPE_THINGNUM;
+      eval.type = EVALTYPE_THINGNUM;
 
       // see if this is a string or an integer
       num = strtol(al->args[index], &pos, 0);
 
-      if(pos && *pos != '\0')
+      if(estrnonempty(pos))
       {
          // it is a name
-         eval->value.i = E_ThingNumForName(al->args[index]);
+         eval.value.i = E_ThingNumForName(al->args[index]);
       }
       else
       {
          // it is a DeHackEd number
          if(num > 0)
-            eval->value.i = E_ThingNumForDEHNum((int)num);
+            eval.value.i = E_ThingNumForDEHNum((int)num);
          else
-            eval->value.i = -1;
+            eval.value.i = -1;
       }
    }
 
-   return eval->value.i;
+   return eval.value.i;
 }
 
 //=============================================================================
@@ -382,8 +336,6 @@ int E_ArgAsThingNumG0(arglist_t *al, int index)
 //
 
 //
-// E_GetJumpInfo
-//
 // Returns the target state given an initial type and label text. Assuming that
 // the text does not contain a :: operator, the information returned will be 
 // the ordinary plain state named by the input string. Otherwise, both the mobjinfo
@@ -394,7 +346,7 @@ state_t *E_GetJumpInfo(mobjinfo_t *mi, const char *arg)
    char *temparg = Z_Strdupa(arg);
    char *colon   = strchr(temparg, ':');
 
-   char *statename = NULL, *type = NULL;
+   char *statename = nullptr, *type = nullptr;
 
    // if the statename does not contain a colon, there is no potential for 
    // redirection.
@@ -418,7 +370,7 @@ state_t *E_GetJumpInfo(mobjinfo_t *mi, const char *arg)
       
       // non-existent thingtype is an error, no jump will happen
       if(thingtype == -1)
-         return NULL;
+         return nullptr;
       else
          mi = mobjinfo[thingtype];
    }
@@ -427,8 +379,6 @@ state_t *E_GetJumpInfo(mobjinfo_t *mi, const char *arg)
 }
 
 //
-// E_ArgAsStateLabel
-//
 // This evaluator only allows DECORATE state labels or numbers, and will not 
 // make reference to global states. Because evaluation of this type of argument
 // is relative to the mobjinfo, this evaluation is never cached.
@@ -436,30 +386,28 @@ state_t *E_GetJumpInfo(mobjinfo_t *mi, const char *arg)
 state_t *E_ArgAsStateLabel(Mobj *mo, arglist_t *al, int index)
 {
    const char *arg;
-   char       *end   = NULL;
+   char       *end   = nullptr;
    state_t    *state = mo->state;
    long        num;
 
    if(!al || index >= al->numargs)
-      return NULL;
+      return nullptr;
 
    arg = al->args[index];
 
    num = strtol(arg, &end, 0);
 
    // if not a number, this is a state label
-   if(end && *end != '\0')
+   if(estrnonempty(end))
       return E_GetJumpInfo(mo->info, arg);
    else
    {
       long idx = state->index + num;
 
-      return (idx >= 0 && idx < NUMSTATES) ? states[idx] : NULL;
+      return (idx >= 0 && idx < NUMSTATES) ? states[idx] : nullptr;
    }
 }
 
-//
-// E_ArgAsStateNum
 //
 // Gets the arg value at index i as a state number, if such argument exists.
 // The evaluated value will be cached so that it can be returned on subsequent
@@ -467,24 +415,22 @@ state_t *E_ArgAsStateLabel(Mobj *mo, arglist_t *al, int index)
 //
 int E_ArgAsStateNum(arglist_t *al, int index, Mobj *mo)
 {
-   evalcache_t *eval;
-
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
    if(!al || index >= al->numargs)
       return NullStateNum;
 
-   eval = &(al->values[index]);
+   evalcache_t &eval = al->values[index];
 
-   if(eval->type != EVALTYPE_STATENUM)
+   if(eval.type != EVALTYPE_STATENUM)
    {
-      char *pos = NULL;
+      char *pos = nullptr;
       long num;
 
       // see if this is a string or an integer
       num = strtol(al->args[index], &pos, 0);
 
-      if(pos && *pos != '\0')
+      if(estrnonempty(pos))
       {
          // it is a name
          int statenum;
@@ -495,8 +441,8 @@ int E_ArgAsStateNum(arglist_t *al, int index, Mobj *mo)
          if((statenum = E_StateNumForName(al->args[index])) >= 0)
          {
             // it was a valid EDF state mnemonic
-            eval->type = EVALTYPE_STATENUM;
-            eval->value.i = statenum;
+            eval.type = EVALTYPE_STATENUM;
+            eval.value.i = statenum;
          }
          else
          {
@@ -509,24 +455,22 @@ int E_ArgAsStateNum(arglist_t *al, int index, Mobj *mo)
             else
             {
                // whatever it is, we dunno of it.
-               eval->type = EVALTYPE_STATENUM;
-               eval->value.i = NullStateNum;
+               eval.type = EVALTYPE_STATENUM;
+               eval.value.i = NullStateNum;
             }
          }
       }
       else
       {
          // it is a DeHackEd number
-         eval->type = EVALTYPE_STATENUM;
-         eval->value.i = E_SafeState((int)num);
+         eval.type = EVALTYPE_STATENUM;
+         eval.value.i = E_SafeState((int)num);
       }
    }
 
-   return eval->value.i;
+   return eval.value.i;
 }
 
-//
-// E_ArgAsStateNumNI
 //
 // Gets the arg value at index i as a state number, if such argument exists.
 // The evaluated value will be cached so that it can be returned on subsequent
@@ -536,24 +480,22 @@ int E_ArgAsStateNum(arglist_t *al, int index, Mobj *mo)
 //
 int E_ArgAsStateNumNI(arglist_t *al, int index, Mobj *mo)
 {
-   evalcache_t *eval;
-
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
    if(!al || index >= al->numargs)
       return -1;
 
-   eval = &(al->values[index]);
+   evalcache_t &eval = al->values[index];
 
-   if(eval->type != EVALTYPE_STATENUM)
+   if(eval.type != EVALTYPE_STATENUM)
    {
-      char *pos = NULL;
+      char *pos = nullptr;
       long num;
 
       // see if this is a string or an integer
       num = strtol(al->args[index], &pos, 0);
 
-      if(pos && *pos != '\0')
+      if(estrnonempty(pos))
       {
          // it is a name
          int statenum;
@@ -564,8 +506,8 @@ int E_ArgAsStateNumNI(arglist_t *al, int index, Mobj *mo)
          if((statenum = E_StateNumForName(al->args[index])) >= 0)
          {
             // it was a valid EDF state mnemonic
-            eval->type = EVALTYPE_STATENUM;
-            eval->value.i = statenum;
+            eval.type = EVALTYPE_STATENUM;
+            eval.value.i = statenum;
          }
          else
          {
@@ -578,24 +520,22 @@ int E_ArgAsStateNumNI(arglist_t *al, int index, Mobj *mo)
             else
             {
                // whatever it is, we dunno of it.
-               eval->type = EVALTYPE_STATENUM;
-               eval->value.i = -1;
+               eval.type = EVALTYPE_STATENUM;
+               eval.value.i = -1;
             }
          }      
       }
       else
       {
          // it is a DeHackEd number
-         eval->type = EVALTYPE_STATENUM;
-         eval->value.i = E_StateNumForDEHNum((int)num);
+         eval.type = EVALTYPE_STATENUM;
+         eval.value.i = E_StateNumForDEHNum((int)num);
       }
    }
 
-   return eval->value.i;
+   return eval.value.i;
 }
 
-//
-// E_ArgAsStateNumG0
 //
 // Only converts numbers to states if the number is greater than or
 // equal to zero.
@@ -603,24 +543,22 @@ int E_ArgAsStateNumNI(arglist_t *al, int index, Mobj *mo)
 //
 int E_ArgAsStateNumG0(arglist_t *al, int index, Mobj *mo)
 {
-   evalcache_t *eval;
-
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
    if(!al || index >= al->numargs)
       return -1;
 
-   eval = &(al->values[index]);
+   evalcache_t &eval = al->values[index];
 
-   if(eval->type != EVALTYPE_STATENUM)
+   if(eval.type != EVALTYPE_STATENUM)
    {
-      char *pos = NULL;
+      char *pos = nullptr;
       long num;
 
       // see if this is a string or an integer
       num = strtol(al->args[index], &pos, 0);
 
-      if(pos && *pos != '\0')
+      if(estrnonempty(pos))
       {
          // it is a name
          int statenum;
@@ -631,8 +569,8 @@ int E_ArgAsStateNumG0(arglist_t *al, int index, Mobj *mo)
          if((statenum = E_StateNumForName(al->args[index])) >= 0)
          {
             // it was a valid EDF state mnemonic
-            eval->type = EVALTYPE_STATENUM;
-            eval->value.i = statenum;
+            eval.type = EVALTYPE_STATENUM;
+            eval.value.i = statenum;
          }
          else
          {
@@ -645,28 +583,26 @@ int E_ArgAsStateNumG0(arglist_t *al, int index, Mobj *mo)
             else
             {
                // whatever it is, we dunno of it.
-               eval->type = EVALTYPE_STATENUM;
-               eval->value.i = -1;
+               eval.type = EVALTYPE_STATENUM;
+               eval.value.i = -1;
             }
          }      
       }
       else
       {
-         eval->type = EVALTYPE_STATENUM;
+         eval.type = EVALTYPE_STATENUM;
          
          // it is a DeHackEd number if it is >= 0
          if(num >= 0)
-            eval->value.i = E_StateNumForDEHNum((int)num);
+            eval.value.i = E_StateNumForDEHNum((int)num);
          else
-            eval->value.i = (int)num;
+            eval.value.i = (int)num;
       }
    }
 
-   return eval->value.i;
+   return eval.value.i;
 }
 
-//
-// E_ArgAsThingFlags
 //
 // Gets the arg value at index i as a set of thing flag masks, if such argument 
 // exists. The evaluated value will be cached so that it can be returned on 
@@ -674,35 +610,31 @@ int E_ArgAsStateNumG0(arglist_t *al, int index, Mobj *mo)
 //
 unsigned int *E_ArgAsThingFlags(arglist_t *al, int index)
 {
-   evalcache_t *eval;
-
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
    if(!al || index >= al->numargs)
-      return NULL;
+      return nullptr;
 
-   eval = &(al->values[index]);
+   evalcache_t &eval = al->values[index];
 
-   if(eval->type != EVALTYPE_THINGFLAG)
+   if(eval.type != EVALTYPE_THINGFLAG)
    {
-      eval->type = EVALTYPE_THINGFLAG;
+      eval.type = EVALTYPE_THINGFLAG;
 
       // empty string is zero
       if(*(al->args[index]) != '\0')
       {
          unsigned int *flagvals = deh_ParseFlagsCombined(al->args[index]);
 
-         memcpy(eval->value.flags, flagvals, MAXFLAGFIELDS * sizeof(int));
+         memcpy(eval.value.flags, flagvals, MAXFLAGFIELDS * sizeof(unsigned int));
       }
       else
-         memset(eval->value.flags, 0, MAXFLAGFIELDS * sizeof(int));
+         memset(eval.value.flags, 0, MAXFLAGFIELDS * sizeof(unsigned int));
    }
 
-   return eval->value.flags;
+   return eval.value.flags;
 }
 
-//
-// E_ArgAsSound
 //
 // Gets the arg value at index i as a sound, if such argument exists.
 // The evaluated value will be cached so that it can be returned on subsequent
@@ -710,42 +642,38 @@ unsigned int *E_ArgAsThingFlags(arglist_t *al, int index)
 //
 sfxinfo_t *E_ArgAsSound(arglist_t *al, int index)
 {
-   evalcache_t *eval;
-
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
    if(!al || index >= al->numargs)
-      return NULL;
+      return nullptr;
 
-   eval = &(al->values[index]);
+   evalcache_t &eval = al->values[index];
 
-   if(eval->type != EVALTYPE_SOUND)
+   if(eval.type != EVALTYPE_SOUND)
    {
-      char *pos = NULL;
+      char *pos = nullptr;
       long num;
 
-      eval->type = EVALTYPE_SOUND;
+      eval.type = EVALTYPE_SOUND;
 
       // see if this is a string or an integer
       num = strtol(al->args[index], &pos, 0);
 
-      if(pos && *pos != '\0')
+      if(estrnonempty(pos))
       {
          // it is a name
-         eval->value.s = E_SoundForName(al->args[index]);
+         eval.value.s = E_SoundForName(al->args[index]);
       }
       else
       {
          // it is a DeHackEd number
-         eval->value.s = E_SoundForDEHNum((int)num);
+         eval.value.s = E_SoundForDEHNum((int)num);
       }
    }
 
-   return eval->value.s;
+   return eval.value.s;
 }
 
-//
-// E_ArgAsBexptr
 //
 // Gets the arg value at index i as a bexptr index, if such argument exists.
 // The evaluated value will be cached so that it can be returned on subsequent
@@ -753,28 +681,24 @@ sfxinfo_t *E_ArgAsSound(arglist_t *al, int index)
 //
 int E_ArgAsBexptr(arglist_t *al, int index)
 {
-   evalcache_t *eval;
-
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
    if(!al || index >= al->numargs)
       return -1;
 
-   eval = &(al->values[index]);
+   evalcache_t &eval = al->values[index];
 
-   if(eval->type != EVALTYPE_BEXPTR)
+   if(eval.type != EVALTYPE_BEXPTR)
    {
       deh_bexptr *ptr = D_GetBexPtr(al->args[index]);
 
-      eval->type    = EVALTYPE_BEXPTR;
-      eval->value.i = ptr ? ptr - deh_bexptrs : -1;
+      eval.type    = EVALTYPE_BEXPTR;
+      eval.value.i = ptr ? ptr - deh_bexptrs : -1;
    }
 
-   return eval->value.i;
+   return eval.value.i;
 }
 
-//
-// E_ArgAsEDFString
 //
 // Gets the arg value at index i as an EDF string, if such argument exists.
 // The evaluated value will be cached so that it can be returned on subsequent
@@ -782,42 +706,38 @@ int E_ArgAsBexptr(arglist_t *al, int index)
 //
 edf_string_t *E_ArgAsEDFString(arglist_t *al, int index)
 {
-   evalcache_t *eval;
-
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
    if(!al || index >= al->numargs)
-      return NULL;
+      return nullptr;
 
-   eval = &(al->values[index]);
+   evalcache_t &eval = al->values[index];
 
-   if(eval->type != EVALTYPE_EDFSTRING)
+   if(eval.type != EVALTYPE_EDFSTRING)
    {
-      char *pos = NULL;
+      char *pos = nullptr;
       long num;
 
-      eval->type = EVALTYPE_EDFSTRING;
+      eval.type = EVALTYPE_EDFSTRING;
 
       // see if this is a string or an integer
       num = strtol(al->args[index], &pos, 0);
 
-      if(pos && *pos != '\0')
+      if(estrnonempty(pos))
       {
          // it is a name
-         eval->value.estr = E_StringForName(al->args[index]);
+         eval.value.estr = E_StringForName(al->args[index]);
       }
       else
       {
          // it is a string number
-         eval->value.estr = E_StringForNum((int)num);
+         eval.value.estr = E_StringForNum((int)num);
       }
    }
 
-   return eval->value.estr;
+   return eval.value.estr;
 }
 
-//
-// E_ArgAsKwd
 //
 // Gets the argument at index i as the corresponding enumeration value for a
 // keyword string, given the provided keyword set. Returns the default value
@@ -825,43 +745,39 @@ edf_string_t *E_ArgAsEDFString(arglist_t *al, int index)
 //
 int E_ArgAsKwd(arglist_t *al, int index, argkeywd_t *kw, int defvalue)
 {
-   evalcache_t *eval;
-
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
    if(!al || index >= al->numargs)
       return defvalue;
 
-   eval = &(al->values[index]);
+      evalcache_t &eval = al->values[index];
 
-   if(eval->type != EVALTYPE_KEYWORD)
+   if(eval.type != EVALTYPE_KEYWORD)
    {
-      char *pos = NULL;
+      char *pos = nullptr;
       long num;
 
-      eval->type = EVALTYPE_KEYWORD;
+      eval.type = EVALTYPE_KEYWORD;
 
       // see if this is a string or an integer
       num = strtol(al->args[index], &pos, 0);
 
-      if(pos && *pos != '\0')
+      if(estrnonempty(pos))
       {
          // it is a name
-         eval->value.i = E_StrToNumLinear(kw->keywords, 
-                                          kw->numkeywords,
-                                          al->args[index]);
+         eval.value.i = E_StrToNumLinear(kw->keywords, kw->numkeywords, al->args[index]);
 
-         if(eval->value.i == kw->numkeywords)
-            eval->value.i = defvalue;
+         if(eval.value.i == kw->numkeywords)
+            eval.value.i = defvalue;
       }
       else
       {
          // it is just a number
-         eval->value.i = (int)num;
+         eval.value.i = (int)num;
       }
    }
 
-   return eval->value.i;
+   return eval.value.i;
 }
 
 // EOF

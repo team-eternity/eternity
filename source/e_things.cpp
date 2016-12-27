@@ -72,6 +72,7 @@ int UnknownThingType;
 // ID / Type Info
 #define ITEM_TNG_DOOMEDNUM    "doomednum"
 #define ITEM_TNG_DEHNUM       "dehackednum"
+#define ITEM_TNG_COMPATNAME   "compatname"
 #define ITEM_TNG_INHERITS     "inherits"
 #define ITEM_TNG_BASICTYPE    "basictype"
 
@@ -480,6 +481,7 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
 #define THINGTYPE_FIELDS \
    CFG_INT(ITEM_TNG_DOOMEDNUM,       -1,            CFGF_NONE), \
    CFG_INT(ITEM_TNG_DEHNUM,          -1,            CFGF_NONE), \
+   CFG_STR(ITEM_TNG_COMPATNAME,      "",            CFGF_NONE), \
    CFG_STR(ITEM_TNG_BASICTYPE,       "",            CFGF_NONE), \
    CFG_STR(ITEM_TNG_SPAWNSTATE,      "S_NULL",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_SEESTATE,        "S_NULL",      CFGF_NONE), \
@@ -590,6 +592,10 @@ cfg_opt_t edf_tdelta_opts[] =
 static EHashTable<mobjinfo_t, ENCStringHashKey, 
                   &mobjinfo_t::name, &mobjinfo_t::namelinks> thing_namehash(NUMTHINGCHAINS);
 
+// hash by compatname
+static EHashTable<mobjinfo_t, ENCStringHashKey,
+                  &mobjinfo_t::compatname, &mobjinfo_t::cnamelinks> thing_cnamehash(NUMTHINGCHAINS);
+
 // hash by DeHackEd number
 static EHashTable<mobjinfo_t, EIntHashKey,
                   &mobjinfo_t::dehnum, &mobjinfo_t::numlinks> thing_dehhash(NUMTHINGCHAINS);
@@ -676,6 +682,25 @@ int E_GetThingNumForName(const char *name)
       I_Error("E_GetThingNumForName: bad thing type %s\n", name);
 
    return thingnum;
+}
+
+//
+// Get a thingtype index by name, but allowing fallback to the ACS compatibility
+// hash if nothing is initially found. This extends ACS mod compatibility with
+// ZDoom w/o requiring special handling inside ACS itself.
+//
+int E_ThingNumForCompatName(const char *name)
+{
+   int ret = -1;
+
+   if((ret = E_ThingNumForName(name)) < 0)
+   {
+      mobjinfo_t *info; 
+      if((info = thing_cnamehash.objectForKey(name)))
+         ret = info->index;
+   }
+
+   return ret;
 }
 
 // allocation starts at D_MAXINT and works toward 0
@@ -809,6 +834,7 @@ void E_CollectThings(cfg_t *cfg)
    {
       cfg_t *thingcfg   = cfg_getnsec(cfg, EDF_SEC_THING, i);
       const char *name  = cfg_title(thingcfg);
+      const char *cname = cfg_getstr(thingcfg, ITEM_TNG_COMPATNAME);
       cfg_t *titleprops = nullptr;
       int dehnum = -1;
 
@@ -841,6 +867,13 @@ void E_CollectThings(cfg_t *cfg)
       // if appropriate
       if((mi->dehnum = dehnum) >= 0)
          thing_dehhash.addObject(mi);
+
+      // check for compatname
+      if(estrnonempty(cname))
+      {
+         mi->compatname = estrdup(cname);
+         thing_cnamehash.addObject(mi);
+      }
 
       // set generation
       mi->generation = edf_thing_generation;
@@ -940,10 +973,10 @@ static void E_RemoveMetaStatePtr(mobjinfo_t *mi, MetaState *ms)
 //
 static void E_RemoveMetaState(mobjinfo_t *mi, const char *name)
 {
-   MetaObject *obj;
+   MetaState *obj;
 
-   if((obj = mi->meta->getObjectKeyAndType(name, RTTI(MetaState))))
-      E_RemoveMetaStatePtr(mi, static_cast<MetaState *>(obj));
+   if((obj = mi->meta->getObjectKeyAndTypeEx<MetaState>(name)))
+      E_RemoveMetaStatePtr(mi, obj);
 }
 
 //
@@ -952,13 +985,7 @@ static void E_RemoveMetaState(mobjinfo_t *mi, const char *name)
 //
 static MetaState *E_GetMetaState(mobjinfo_t *mi, const char *name)
 {
-   MetaObject *obj = nullptr;
-   MetaState  *ret = nullptr;
-   
-   if((obj = mi->meta->getObjectKeyAndType(name, RTTI(MetaState))))
-      ret = static_cast<MetaState *>(obj);
-
-   return ret;
+   return mi->meta->getObjectKeyAndTypeEx<MetaState>(name);
 }
 
 //
@@ -1435,9 +1462,8 @@ static void E_ProcessDecorateStatesRecursive(cfg_t *thingsec, int thingnum, bool
 static void E_ProcessDamageFactors(mobjinfo_t *info, cfg_t *cfg)
 {
    unsigned int numfactors = cfg_size(cfg, ITEM_TNG_DAMAGEFACTOR);
-   unsigned int i;
 
-   for(i = 0; i < numfactors; ++i)
+   for(unsigned int i = 0; i < numfactors; i++)
    {
       cfg_t  *sec = cfg_getnmvprop(cfg, ITEM_TNG_DAMAGEFACTOR, i);
       emod_t *mod = E_DamageTypeForName(cfg_getstr(sec, ITEM_TNG_DMGF_MODNAME));
@@ -1902,8 +1928,8 @@ static void E_ResetThingPStack()
 static void E_CopyThing(int num, int pnum)
 {
    mobjinfo_t *this_mi;
-   DLListItem<mobjinfo_t> namelinks, numlinks;
-   char       *name;
+   DLListItem<mobjinfo_t> namelinks, cnamelinks, numlinks;
+   char       *name, *cname;
    int         dehnum;
    MetaTable  *meta;
    int         index;
@@ -1913,8 +1939,10 @@ static void E_CopyThing(int num, int pnum)
 
    // must save the following fields in the destination thing:
    namelinks  = this_mi->namelinks;
+   cnamelinks = this_mi->cnamelinks;
    numlinks   = this_mi->numlinks;
    name       = this_mi->name;
+   cname      = this_mi->compatname;
    dehnum     = this_mi->dehnum;
    meta       = this_mi->meta;
    index      = this_mi->index;
@@ -1939,8 +1967,10 @@ static void E_CopyThing(int num, int pnum)
 
    // must restore name and dehacked num data
    this_mi->namelinks  = namelinks;
+   this_mi->cnamelinks = cnamelinks;
    this_mi->numlinks   = numlinks;
    this_mi->name       = name;
+   this_mi->compatname = cname;
    this_mi->dehnum     = dehnum;
    this_mi->index      = index;
    this_mi->generation = generation;

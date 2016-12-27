@@ -34,7 +34,7 @@
 #include "doomtype.h"
 #include "d_io.h"
 #include "d_dwfile.h"
-#include "m_misc.h"
+#include "m_utils.h"
 #include "w_wad.h"
 
 //

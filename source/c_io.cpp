@@ -51,7 +51,6 @@
 #include "s_sound.h"
 #include "d_gi.h"
 #include "g_bind.h"
-#include "a_small.h" // haleyjd
 #include "e_fonts.h"
 #include "m_qstr.h"
 #include "v_block.h"

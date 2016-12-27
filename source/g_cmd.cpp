@@ -50,6 +50,7 @@
 #include "m_shots.h"
 #include "m_random.h"
 #include "m_syscfg.h"
+#include "m_utils.h"
 #include "mn_engin.h"
 #include "mn_misc.h"  // haleyjd
 #include "p_inter.h"

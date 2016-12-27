@@ -79,7 +79,6 @@ int  SM_AddCallback(char *scrname, sc_vm_e vm,
 class Mobj;
 
 // haleyjd 07/06/04: FINE put it here!
-Mobj *P_FindMobjFromTID(int tid, Mobj *rover, Mobj *trigger);
 
 #endif
 

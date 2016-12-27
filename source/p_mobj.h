@@ -424,6 +424,7 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
 bool  P_SetMobjState(Mobj *mobj, statenum_t state);
 void  P_MobjThinker(Mobj *mobj);
 void  P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown, bool ptcl);
+void  P_SpawnUnknownThings();
 Mobj *P_SpawnMapThing(mapthing_t *mt);
 bool  P_CheckMissileSpawn(Mobj *);  // killough 8/2/98
 void  P_ExplodeMissile(Mobj *);     // killough
@@ -505,9 +506,10 @@ bool P_SetMobjStateNF(Mobj *mobj, statenum_t state); // sets state without calli
 void P_ThrustMobj(Mobj *mo, angle_t angle, fixed_t move);
 
 // TIDs
-void P_InitTIDHash(void);
-void P_AddThingTID(Mobj *mo, int tid);
-void P_RemoveThingTID(Mobj *mo);
+void  P_InitTIDHash(void);
+void  P_AddThingTID(Mobj *mo, int tid);
+void  P_RemoveThingTID(Mobj *mo);
+Mobj *P_FindMobjFromTID(int tid, Mobj *rover, Mobj *trigger);
 
 void P_AdjustFloorClip(Mobj *thing);
 
@@ -551,7 +553,7 @@ inline static fixed_t getThingZ(Mobj *mo1, Mobj *mo2)
 // Misc. mobj flags
 //
 
-enum
+enum mobjflags_e : unsigned int
 {
    MF_SPECIAL      = 0x00000001, // Call P_SpecialThing when touched.
    MF_SOLID        = 0x00000002, // Blocks.    
@@ -587,7 +589,7 @@ enum
    MF_TRANSLUCENT  = 0x80000000  // Translucent sprite - phares
 };
 
-enum
+enum mobjflags2_e : unsigned int
 {
    // haleyjd 04/09/99: extended mobj flags
    // More of these will be filled in as I add support.
@@ -626,7 +628,7 @@ enum
 };
 
 // haleyjd 11/03/02: flags3 -- even more stuff!
-enum
+enum mobjflags3_e : unsigned int
 {
    MF3_GHOST        = 0x00000001,  // heretic ghost effect
    MF3_THRUGHOST    = 0x00000002,  // object passes through ghosts
@@ -662,7 +664,7 @@ enum
    MF3_RIP          = 0x80000000   // ripper - goes through everything
 };
 
-enum
+enum mobjflags4_e : unsigned int
 {
    MF4_AUTOTRANSLATE  = 0x00000001, // DOOM sprite is automatically translated
    MF4_NORADIUSDMG    = 0x00000002, // Doesn't take damage from blast radii
@@ -683,6 +685,7 @@ enum
    MF4_TLSTYLESUB     = 0x00010000, // Use subtractive blending map
    MF4_TOTALINVISIBLE = 0x00020000, // Thing is invisible to monsters
    MF4_DRAWSBLOOD     = 0x00040000, // For missiles, spawn blood when hitting bleeding things
+   MF4_SPACPUSHWALL   = 0x00080000, // thing can activate push walls
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh
@@ -706,6 +709,15 @@ enum
    MIF_WIMPYDEATH  = 0x00002000, // haleyjd: for player, died wimpy (10 damage or less)
    MIF_CLEARMOMZ   = 0x00004000, // davidph: clear momz (and this flag) in P_MovePlayer
    MIF_PLYRCORPSE  = 0x00008000, // haleyjd: object has been in the player corpse queue
+
+   // Player sprites must be temporarily hidden using DONTDRAW during quakes,
+   // because they change view position. This isn't sufficient however for
+   // hiding cross-portal sprite projections, so the HIDDENBYQUAKE internal flag
+   // was added to keep track.
+   MIF_HIDDENBYQUAKE = 0x00010000,
+
+   // these should be cleared when a thing is being raised
+   MIF_CLEARRAISED = (MIF_DIEDFALLING|MIF_SCREAMED|MIF_CRASHED|MIF_WIMPYDEATH),
 };
 
 #endif

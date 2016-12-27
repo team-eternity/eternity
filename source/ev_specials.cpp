@@ -1247,7 +1247,8 @@ int EV_LockDefIDForSpecial(int special)
    {
       return EV_lockdefIDForGenSpec(special); // generalized lock
    }
-   else if(LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN)
+   else if(LevelInfo.mapFormat == LEVEL_FORMAT_HEXEN ||
+           LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY)
    {
       return 0; // Hexen doesn't work this way.
    }
@@ -1265,6 +1266,22 @@ int EV_LockDefIDForSpecial(int special)
          return 0; // STRIFE_TODO
       }
    }
+}
+
+//
+// Test lockdef ID bindings for the current gamemode based on a line. 
+// Returns zero when there's no lockdef ID binding for that special.
+//
+int EV_LockDefIDForLine(const line_t *line)
+{
+   ev_action_t *action = EV_ActionForSpecial(line->special);
+
+   // handle parameterized functions which accept a lockdef ID argument
+   if(EV_CompositeActionFlags(action) & EV_PARAMLOCKID)
+      return line->args[action->lockarg];
+
+   // otherwise, perform normal processing
+   return EV_LockDefIDForSpecial(line->special);
 }
 
 //=============================================================================
@@ -1312,13 +1329,33 @@ static bool EV_checkSpac(ev_action_t *action, ev_instance_t *instance)
       REQUIRE_ACTOR(thing);
       REQUIRE_LINE(line);
 
-      // check player / monster / missile enable flags
-      if(thing->player)                   // treat as player?
+      // check player / monster / missile / push enable flags
+      if(thing->player)                    // treat as player?
          flags |= EX_ML_PLAYER;
-      if(thing->flags3 & MF3_SPACMISSILE) // treat as missile?
+      if(thing->flags3 & MF3_SPACMISSILE)  // treat as missile?
          flags |= EX_ML_MISSILE;
-      if(thing->flags3 & MF3_SPACMONSTER) // treat as monster?
+      if(thing->flags3 & MF3_SPACMONSTER)  // treat as monster?
+      {
+         // in vanilla Hexen, monsters can only cross lines.
+         if(P_LevelIsVanillaHexen() && instance->spac != SPAC_CROSS)
+            return false;
+
+         // secret lines can't be activated by monsters
+         if(line->flags & ML_SECRET)
+            return false;
+
          flags |= EX_ML_MONSTER;
+      }
+      if(thing->flags4 & MF4_SPACPUSHWALL) // treat as a wall pusher?
+      {
+         // in vanilla Hexen, players or missiles can push walls;
+         // otherwise, we allow any object so tagged to do the activation.
+         if(instance->spac == SPAC_PUSH &&
+            (!P_LevelIsVanillaHexen() || (flags & (EX_ML_PLAYER | EX_ML_MISSILE))))
+         {
+            flags = EX_ML_PUSH;
+         }
+      }
 
       if(!(line->extflags & flags))
          return false;
@@ -1487,17 +1524,8 @@ bool EV_ActivateAction(ev_action_t *action, int *args, Mobj *thing)
 //
 bool EV_IsParamLineSpec(int special)
 {
-   bool result = false;
-   ev_action_t *action;
-
-   if((action = EV_ActionForSpecial(special)))
-   {
-      unsigned int flags = EV_CompositeActionFlags(action);
-
-      result = ((flags & EV_PARAMLINESPEC) == EV_PARAMLINESPEC);
-   }
-
-   return result;
+   ev_action_t *action = EV_ActionForSpecial(special);
+   return ((EV_CompositeActionFlags(action) & EV_PARAMLINESPEC) == EV_PARAMLINESPEC);
 }
 
 //=============================================================================

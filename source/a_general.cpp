@@ -30,7 +30,6 @@
 
 #include "a_args.h"
 #include "a_common.h"
-#include "a_small.h"
 #include "acs_intr.h"
 #include "c_io.h"
 #include "d_gi.h"
@@ -1483,7 +1482,7 @@ void A_DetonateEx(actionargs_t *actionargs)
    int   damage   =  E_ArgAsInt(args, 0, 128);
    int   radius   =  E_ArgAsInt(args, 1, 128);
    bool  hurtself = (E_ArgAsInt(args, 2, 1) == 1);
-   bool  alert    = (E_ArgAsInt(args, 3, 1) == 1);
+   bool  alert    = (E_ArgAsInt(args, 3, 0) == 1);
    bool  zclip    = (E_ArgAsInt(args, 7, 0) == 1);
    bool  spotsrc  = (E_ArgAsInt(args, 8, 0) == 1);
    Mobj *source   = actor->target;

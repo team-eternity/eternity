@@ -34,7 +34,6 @@
 #include "z_zone.h"
 
 #include "e_lib.h"
-#include "m_misc.h"
 #include "w_wad.h"
 #include "xl_emapinfo.h"
 #include "xl_mapinfo.h"

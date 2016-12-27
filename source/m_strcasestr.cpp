@@ -27,9 +27,8 @@
 
 #include "z_zone.h"
 #include "m_ctype.h"
+#include "m_utils.h"
 #include "i_system.h"
-#include "m_misc.h"
-
 
 //
 // Knuth-Morris-Pratt algorithm.
@@ -174,7 +173,7 @@ const char *M_StrCaseStr(const char *haystack, const char *needle)
             if(needle_last_ccount)
             {
                needle_last_ccount += M_Strnlen(needle_last_ccount,
-                                              comparison_count - last_ccount);
+                                               comparison_count - last_ccount);
                if(!*needle_last_ccount)
                   needle_last_ccount = NULL;
                last_ccount = comparison_count;

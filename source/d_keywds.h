@@ -33,12 +33,16 @@
 #define __attribute__(x)
 #endif
 
-// function inlining is available on most platforms, however,
-// the GNU C __inline__ is too common and conflicts with a 
-// definition in SDL, so it needs to be factored out into a 
-// custom macro definition
-
-// haleyjd 04/13/11: C++ supports inline natively
+#if _MSC_VER >= 1400 && defined(_DEBUG) && !defined(EE_NO_SAL)
+#include <sal.h>
+#if _MSC_VER > 1400
+#define E_FORMAT_STRING(p) _Printf_format_string_ p
+#else
+#define E_FORMAT_STRING(p) __format_string p
+#endif
+#else
+#define E_FORMAT_STRING(p) p
+#endif
 
 //
 // Non-standard function availability defines

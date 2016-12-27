@@ -49,6 +49,7 @@
 #include "i_system.h"
 #include "m_argv.h"
 #include "m_misc.h"
+#include "m_utils.h"
 #include "p_setup.h"
 #include "p_skin.h"
 #include "r_data.h"

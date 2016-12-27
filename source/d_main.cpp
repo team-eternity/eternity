@@ -69,6 +69,7 @@
 #include "m_misc.h"
 #include "m_syscfg.h"
 #include "m_qstr.h"
+#include "m_utils.h"
 #include "mn_engin.h"
 #include "p_chase.h"
 #include "p_setup.h"
@@ -881,20 +882,18 @@ void FindResponseFile()
          char *file = NULL, *firstargv;
          char **moreargs = ecalloc(char **, myargc, sizeof(char *));
          char **newargv;
-         char *fname = NULL;
+         qstring fname;
          
-         size_t len = M_StringAlloca(&fname, 1, 6, myargv[i]);
-
-         strncpy(fname, &myargv[i][1], len);
-         M_AddDefaultExtension(fname, ".rsp");
+         fname = &myargv[i][1];
+         fname.addDefaultExtension(".rsp");
 
          // read the response file into memory
-         if((size = M_ReadFile(fname, &f)) < 0)
-            I_Error("No such response file: %s\n", fname);
+         if((size = M_ReadFile(fname.constPtr(), &f)) < 0)
+            I_Error("No such response file: %s\n", fname.constPtr());
 
          file = (char *)f;
 
-         printf("Found response file %s\n", fname);
+         printf("Found response file %s\n", fname.constPtr());
 
          // proff 04/05/2000: Added check for empty rsp file
          if(!size)
@@ -1017,22 +1016,22 @@ static void D_ProcessDehCommandLine(void)
          {
             if(deh)
             {
-               char *file; // killough
-               M_StringAlloca(&file, 1, 6, myargv[p]);
+               qstring file; // killough
                   
-               M_AddDefaultExtension(strcpy(file, myargv[p]), ".bex");
-               if(access(file, F_OK))  // nope
+               file = myargv[p];
+               file.addDefaultExtension(".bex");
+               if(access(file.constPtr(), F_OK))  // nope
                {
-                  M_AddDefaultExtension(strcpy(file, myargv[p]), ".deh");
-                  if(access(file, F_OK))  // still nope
-                     I_Error("Cannot find .deh or .bex file named %s\n",
-                             myargv[p]);
+                  file = myargv[p];
+                  file.addDefaultExtension(".deh");
+                  if(access(file.constPtr(), F_OK))  // still nope
+                     I_Error("Cannot find .deh or .bex file named '%s'\n", myargv[p]);
                }
                // during the beta we have debug output to dehout.txt
                // (apparently, this was never removed after Boom beta-killough)
                //ProcessDehFile(file, D_dehout(), 0);  // killough 10/98
                // haleyjd: queue the file, process it later
-               D_QueueDEH(file, 0);
+               D_QueueDEH(file.constPtr(), 0);
             }
          }
       }
@@ -1042,7 +1041,7 @@ static void D_ProcessDehCommandLine(void)
 
 // killough 10/98: support preloaded wads
 
-static void D_ProcessWadPreincludes(void)
+static void D_ProcessWadPreincludes()
 {
    // haleyjd 09/30/08: don't do in shareware
    if(!M_CheckParm("-noload") && !(GameModeInfo->flags & GIF_SHAREWARE))
@@ -1056,14 +1055,14 @@ static void D_ProcessWadPreincludes(void)
                s++;
             if(*s)
             {
-               char *file = NULL;
-               M_StringAlloca(&file, 1, 6, s);
+               qstring file;
 
-               M_AddDefaultExtension(strcpy(file, s), ".wad");
-               if(!access(file, R_OK))
-                  D_AddFile(file, lumpinfo_t::ns_global, NULL, 0, DAF_NONE);
+               file = s;
+               file.addDefaultExtension(".wad");
+               if(!access(file.constPtr(), R_OK))
+                  D_AddFile(file.constPtr(), lumpinfo_t::ns_global, nullptr, 0, DAF_NONE);
                else
-                  printf("\nWarning: could not open %s\n", file);
+                  printf("\nWarning: could not open '%s'\n", file.constPtr());
             }
          }
    }
@@ -1085,19 +1084,20 @@ static void D_ProcessDehPreincludes(void)
                s++;
             if(*s)
             {
-               char *file = NULL;
-               M_StringAlloca(&file, 1, 6, s);
+               qstring file;
 
-               M_AddDefaultExtension(strcpy(file, s), ".bex");
-               if(!access(file, R_OK))
-                  D_QueueDEH(file, 0); // haleyjd: queue it
+               file = s;
+               file.addDefaultExtension(".bex");
+               if(!access(file.constPtr(), R_OK))
+                  D_QueueDEH(file.constPtr(), 0); // haleyjd: queue it
                else
                {
-                  M_AddDefaultExtension(strcpy(file, s), ".deh");
-                  if(!access(file, R_OK))
-                     D_QueueDEH(file, 0); // haleyjd: queue it
+                  file = s;
+                  file.addDefaultExtension(".deh");
+                  if(!access(file.constPtr(), R_OK))
+                     D_QueueDEH(file.constPtr(), 0); // haleyjd: queue it
                   else
-                     printf("\nWarning: could not open %s .deh or .bex\n", s);
+                     printf("\nWarning: could not open '%s' .deh or .bex\n", s);
                }
             } // end if(*s)
          } // end if((s = deh_files[i]))
@@ -1126,12 +1126,12 @@ static void D_AutoExecScripts()
                s++;
             if(*s)
             {
-               char *file = NULL;
-               M_StringAlloca(&file, 1, 6, s);
-                  
-               M_AddDefaultExtension(strcpy(file, s), ".csc");
-               if(!access(file, R_OK))
-                  C_RunScriptFromFile(file);
+               qstring file;
+
+               file = s;
+               file.addDefaultExtension(".csc");
+               if(!access(file.constPtr(), R_OK))
+                  C_RunScriptFromFile(file.constPtr());
                else
                   usermsg("\nWarning: could not open console script %s\n", s);
             }
@@ -1187,12 +1187,12 @@ static void D_ProcessDehInWads()
 //
 static void D_LoadSysConfig(void)
 {
-   char *filename = NULL;
-   size_t len = M_StringAlloca(&filename, 2, 2, userpath, "system.cfg");
+   qstring filename;
 
-   psnprintf(filename, len, "%s/system.cfg", userpath);
+   filename = userpath;
+   filename.pathConcatenate("system.cfg");
 
-   M_LoadSysConfig(filename);
+   M_LoadSysConfig(filename.constPtr());
 }
 
 //
@@ -1280,17 +1280,17 @@ static void D_DoomInit()
    // haleyjd 11/22/03: support loose GFS on the command line too
    if((p = M_CheckParm("-gfs")) && p < myargc - 1)
    {
-      char *fn = NULL;
-      M_StringAlloca(&fn, 1, 6, myargv[p + 1]);
+      qstring fn;
          
       // haleyjd 01/19/05: corrected use of AddDefaultExtension
-      M_AddDefaultExtension(strcpy(fn, myargv[p + 1]), ".gfs");
-      if(access(fn, F_OK))
-         I_Error("GFS file %s not found\n", fn);
+      fn = myargv[p + 1];
+      fn.addDefaultExtension(".gfs");
+      if(access(fn.constPtr(), F_OK))
+         I_Error("GFS file '%s' not found\n", fn.constPtr());
 
-      printf("Parsing GFS file %s\n", fn);
+      printf("Parsing GFS file '%s'\n", fn.constPtr());
 
-      gfs = G_LoadGFS(fn);
+      gfs = G_LoadGFS(fn.constPtr());
       haveGFS = true;
    }
    else if((gfs = D_LooseGFS())) // look for a loose GFS for drag-and-drop support
@@ -1299,13 +1299,13 @@ static void D_DoomInit()
    }
    else if(gamepathset) // haleyjd 08/19/07: look for default.gfs in specified game path
    {
-      char *fn = NULL;
-      size_t len = M_StringAlloca(&fn, 1, 14, basegamepath);
-         
-      psnprintf(fn, len, "%s/default.gfs", basegamepath);
-      if(!access(fn, R_OK))
+      qstring fn;
+      
+      fn = basegamepath;
+      fn.pathConcatenate("default.gfs");
+      if(!access(fn.constPtr(), R_OK))
       {
-         gfs = G_LoadGFS(fn);
+         gfs = G_LoadGFS(fn.constPtr());
          haveGFS = true;
       }
    }
@@ -1436,14 +1436,13 @@ static void D_DoomInit()
    if((p && p < myargc - 1) || loosedemo)
    {
       const char *demosource = loosedemo ? loosedemo : myargv[p + 1];
-      char *file = NULL;
-      size_t len = M_StringAlloca(&file, 1, 6, demosource);
-         
-      strncpy(file, demosource, len);
+      qstring file;
+      
+      file = demosource;
+      file.addDefaultExtension(".lmp"); // killough
 
-      M_AddDefaultExtension(file, ".lmp");     // killough
-      D_AddFile(file, lumpinfo_t::ns_demos, NULL, 0, DAF_DEMO);
-      usermsg("Playing demo %s\n", file);
+      D_AddFile(file.constPtr(), lumpinfo_t::ns_demos, NULL, 0, DAF_DEMO);
+      usermsg("Playing demo '%s'\n", file.constPtr());
    }
 
    // get skill / episode / map from parms

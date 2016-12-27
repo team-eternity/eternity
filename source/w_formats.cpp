@@ -28,8 +28,8 @@
 
 #include "z_zone.h"
 
-#include "m_misc.h"
 #include "m_qstr.h"
+#include "m_utils.h"
 #include "w_formats.h"
 #include "w_wad.h"
 

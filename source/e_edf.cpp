@@ -89,7 +89,7 @@
 #include "doomstat.h"
 #include "info.h"
 #include "m_argv.h"
-#include "m_misc.h"
+#include "m_utils.h"
 #include "mn_engin.h"
 #include "p_enemy.h"
 #include "p_pspr.h"
