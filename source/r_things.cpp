@@ -864,17 +864,17 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr)
       const renderbarrier_t &barrier = portalrender.w->barrier;
       if(portalrender.w->line)
       {
-         if(P_PointOnDivlineSide(spritepos.x, spritepos.y, &barrier.dl) == 0)
+         if(P_PointOnDivlineSide(spritepos.x, spritepos.y, &barrier.dln.dl) == 0)
             return;
       }
       else
       {
-         divline_t ports[2];
+         dlnormal_t ports[2];
          R_PickSidesNearViewer(barrier.bbox, ports);
-         if((ports[0].dy &&
-            P_PointOnDivlineSide(spritepos.x, spritepos.y, ports) == 0) ||
-            (ports[1].dx &&
-               P_PointOnDivlineSide(spritepos.x, spritepos.y, ports + 1) == 0))
+         if((ports[0].dl.dy &&
+            P_PointOnDivlineSide(spritepos.x, spritepos.y, &ports[0].dl) == 0) ||
+            (ports[1].dl.dx &&
+               P_PointOnDivlineSide(spritepos.x, spritepos.y, &ports[1].dl) == 0))
          {
             return;
          }

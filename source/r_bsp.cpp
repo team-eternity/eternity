@@ -1605,16 +1605,27 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
       seg.b_window = nullptr;
 }
 
+inline static const bool tooclose(fixed_t n1, fixed_t n2)
+{
+   return D_abs(n1 - n2) < 256;
+}
+
 //
 // Checks if a line is behind a portal-generated divline (barrier)
 //
-static bool R_allowBehindDivline(const divline_t &dl, const seg_t *renderSeg)
+static bool R_allowBehindDivline(const dlnormal_t &dln, const seg_t *renderSeg)
 {
    divline_t rend;
    rend.x = renderSeg->v1->x;
    rend.y = renderSeg->v1->y;
    rend.dx = renderSeg->v2->x - rend.x;
    rend.dy = renderSeg->v2->y - rend.y;
+
+   // HACK: pull render-seg to me as a slack to avoid on-line points
+   rend.x += M_FloatToFixed(dln.nx / 256.f);
+   rend.y += M_FloatToFixed(dln.ny / 256.f);
+
+   const divline_t &dl = dln.dl;
 
    int p1 = P_PointOnDivlineSide(rend.x, rend.y, &dl);
    int p2 = P_PointOnDivlineSide(rend.x + rend.dx, rend.y + rend.dy, &dl);
@@ -1623,10 +1634,10 @@ static bool R_allowBehindDivline(const divline_t &dl, const seg_t *renderSeg)
       return p1 == 1;   // only accept if behind the barrier line
 
    // Check cases where vertices are common
-   if(D_abs(dl.x - rend.x) < 256 && D_abs(dl.y - rend.y) < 256)
+   if(tooclose(dl.x, rend.x) && tooclose(dl.y, rend.y))
       return P_PointOnDivlineSide(dl.x + dl.dx, dl.y + dl.dy, &rend) == 0;
-   if(D_abs(dl.x + dl.dx - rend.x - rend.dx) < 256 &&
-      D_abs(dl.y + dl.dy - rend.y - rend.dy) < 256)
+   if(tooclose(dl.x + dl.dx, rend.x + rend.dx) && 
+      tooclose(dl.y + dl.dy, rend.y + rend.dy))
    {
       return P_PointOnDivlineSide(dl.x, dl.y, &rend) == 0;
    }
@@ -1639,40 +1650,46 @@ static bool R_allowBehindDivline(const divline_t &dl, const seg_t *renderSeg)
 //
 // Given a bounding box, picks the two divlines nearest to the viewer
 //
-void R_PickSidesNearViewer(const fixed_t bbox[4], divline_t ports[2])
+void R_PickSidesNearViewer(const fixed_t bbox[4], dlnormal_t ports[2])
 {
-   ports[0].dx = 0;
-   ports[1].dy = 0;
+   ports[0].dl.dx = 0;
+   ports[0].ny = 0;
+   ports[1].dl.dy = 0;
+   ports[1].nx = 0;
    if(viewx < bbox[BOXLEFT])
    {
-      ports[0].x = bbox[BOXLEFT];
-      ports[0].y = bbox[BOXTOP];
-      ports[0].dy = bbox[BOXBOTTOM] - bbox[BOXTOP];
+      ports[0].dl.x = bbox[BOXLEFT];
+      ports[0].dl.y = bbox[BOXTOP];
+      ports[0].dl.dy = bbox[BOXBOTTOM] - bbox[BOXTOP];
+      ports[0].nx = -1.f;
    }
    else if(viewx < bbox[BOXRIGHT])
    {
-      ports[0].dy = 0;
+      ports[0].dl.dy = 0;
    }
    else
    {
-      ports[0].x = bbox[BOXRIGHT];
-      ports[0].y = bbox[BOXBOTTOM];
-      ports[0].dy = bbox[BOXTOP] - bbox[BOXBOTTOM];
+      ports[0].dl.x = bbox[BOXRIGHT];
+      ports[0].dl.y = bbox[BOXBOTTOM];
+      ports[0].dl.dy = bbox[BOXTOP] - bbox[BOXBOTTOM];
+      ports[0].nx = 1.f;
    }
 
    if(viewy < bbox[BOXBOTTOM])
    {
-      ports[1].x = bbox[BOXLEFT];
-      ports[1].y = bbox[BOXBOTTOM];
-      ports[1].dx = bbox[BOXRIGHT] - bbox[BOXLEFT];
+      ports[1].dl.x = bbox[BOXLEFT];
+      ports[1].dl.y = bbox[BOXBOTTOM];
+      ports[1].dl.dx = bbox[BOXRIGHT] - bbox[BOXLEFT];
+      ports[1].ny = -1.f;
    }
    else if(viewy < bbox[BOXTOP])
-      ports[1].dx = 0;
+      ports[1].dl.dx = 0;
    else
    {
-      ports[1].x = bbox[BOXRIGHT];
-      ports[1].y = bbox[BOXTOP];
-      ports[1].dx = bbox[BOXLEFT] - bbox[BOXRIGHT];
+      ports[1].dl.x = bbox[BOXRIGHT];
+      ports[1].dl.y = bbox[BOXTOP];
+      ports[1].dl.dx = bbox[BOXLEFT] - bbox[BOXRIGHT];
+      ports[1].ny = 1.f;
    }
 }
 
@@ -1682,16 +1699,16 @@ void R_PickSidesNearViewer(const fixed_t bbox[4], divline_t ports[2])
 static bool R_allowBehindSectorPortal(const renderbarrier_t &barrier, 
    const seg_t *renderSeg)
 {
-   divline_t ports[2];
+   dlnormal_t ports[2];
    const fixed_t *bbox = barrier.bbox;
 
    R_PickSidesNearViewer(bbox, ports);
 
    // now check
    bool allow = true;
-   if(ports[0].dy)
+   if(ports[0].dl.dy)
       allow = R_allowBehindDivline(ports[0], renderSeg);
-   if(ports[1].dx)
+   if(ports[1].dl.dx)
       allow = allow && R_allowBehindDivline(ports[1], renderSeg);
    return allow;
 }
@@ -1722,7 +1739,7 @@ static void R_AddLine(seg_t *line, bool dynasegs)
       // only reject if they're anchored portals (including linked)
       if(portalrender.w->line)
       {
-         if(!R_allowBehindDivline(portalrender.w->barrier.dl, line))
+         if(!R_allowBehindDivline(portalrender.w->barrier.dln, line))
             return;
       }
       else

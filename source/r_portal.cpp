@@ -220,6 +220,21 @@ inline static void R_applyPortalTransformTo(const portal_t *portal,
       y += link.deltay;
    }
 }
+inline static void R_applyPortalTransformTo(const portal_t *portal,
+   float &x, float &y, bool applyTranslation)
+{
+   if(portal->type == R_ANCHORED || portal->type == R_TWOWAY)
+   {
+      const portaltransform_t &tr = portal->data.anchor.transform;
+      tr.applyTo(x, y, !applyTranslation);
+   }
+   else if(portal->type == R_LINKED && applyTranslation)
+   {
+      const linkdata_t &link = portal->data.link;
+      x += M_FixedToFloat(link.deltax);
+      y += M_FixedToFloat(link.deltay);
+   }
+}
 
 //
 // Calculates the render barrier based on portal type and source linedef
@@ -228,9 +243,12 @@ inline static void R_applyPortalTransformTo(const portal_t *portal,
 static void R_calcRenderBarrier(const portal_t *portal, const line_t *line,
    renderbarrier_t &barrier)
 {
-   P_MakeDivline(line, &barrier.dl);
-   R_applyPortalTransformTo(portal, barrier.dl.x, barrier.dl.y, true);
-   R_applyPortalTransformTo(portal, barrier.dl.dx, barrier.dl.dy, false);
+   P_MakeDivline(line, &barrier.dln.dl);
+   barrier.dln.nx = line->nx;
+   barrier.dln.ny = line->ny;
+   R_applyPortalTransformTo(portal, barrier.dln.dl.x, barrier.dln.dl.y, true);
+   R_applyPortalTransformTo(portal, barrier.dln.dl.dx, barrier.dln.dl.dy, false);
+   R_applyPortalTransformTo(portal, barrier.dln.nx, barrier.dln.ny, false);
 }
 
 //
@@ -1443,6 +1461,18 @@ void portaltransform_t::applyTo(fixed_t &x, fixed_t &y,
       *fx = static_cast<float>(vx);
       *fy = static_cast<float>(vy);
    }
+}
+void portaltransform_t::applyTo(float &x, float &y, bool nomove) const
+{
+   double vx = rot[0][0] * x + rot[0][1] * y;
+   double vy = rot[1][0] * x + rot[1][1] * y;
+   if(!nomove)
+   {
+      vx += move.x;
+      vy += move.y;
+   }
+   x = static_cast<float>(vx);
+   y = static_cast<float>(vy);
 }
 
 //=============================================================================

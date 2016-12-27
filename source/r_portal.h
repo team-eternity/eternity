@@ -131,6 +131,7 @@ struct portaltransform_t
    
    void applyTo(fixed_t &x, fixed_t &y,
       float *fx = nullptr, float *fy = nullptr, bool nomove = false) const;
+   void applyTo(float &x, float &y, bool nomove = false) const;
 };
 
 // Represents the information needed for an anchored portal
@@ -275,7 +276,7 @@ struct renderbarrier_t
    // Selection depends on context
    union
    {
-      divline_t dl;     // currently holds linedef coordinates
+      dlnormal_t dln;
       fixed_t bbox[4];  // for sector portals (very rough, won't cover all cases)
    };
 };
