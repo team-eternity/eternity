@@ -192,8 +192,8 @@ static ev_static_t PSXStaticBindings[] =
 static ev_static_t UDMFEternityStaticBindings[] =
 {
    STATICSPEC(121, EV_STATIC_NULL) // Line_SetIdentification isn't needed in UDMF
-   STATICSPEC(301, EV_STATIC_PORTAL_LINE_PARAM_QUICK)
-   STATICSPEC(302, EV_STATIC_PORTAL_DEFINE)
+   STATICSPEC(300, EV_STATIC_PORTAL_DEFINE)
+   STATICSPEC(301, EV_STATIC_PORTAL_LINE_PARAM_QUICK)   
 };
 
 //
@@ -589,7 +589,7 @@ int EV_SpecialForStaticInitName(const char *name)
    {
       { EV_STATIC_3DMIDTEX_ATTACH_PARAM,   "Sector_Attach3dMidtex"  },
       { EV_STATIC_INIT_PARAM,              "Static_Init"            },
-      { EV_STATIC_PORTAL_LINE_PARAM_QUICK, "Line_QuickPortal" },
+      { EV_STATIC_PORTAL_LINE_PARAM_QUICK, "Line_QuickPortal"       },
       { EV_STATIC_PORTAL_LINE_PARAM_COMPAT, "Line_SetPortal"        },
       { EV_STATIC_SLOPE_PARAM,             "Plane_Align"            },
       { EV_STATIC_POLYOBJ_START_LINE,      "Polyobj_StartLine"      },
