@@ -1744,8 +1744,8 @@ static void R_AddLine(seg_t *line, bool dynasegs)
       }
       else
       {
-         if(!R_allowBehindSectorPortal(portalrender.w->barrier, line))
-            return;
+         //if(!R_allowBehindSectorPortal(portalrender.w->barrier, line))
+         //   return;
       }
    }
    // SoM: one of the byproducts of the portal height enforcement: The top 
@@ -2523,10 +2523,10 @@ static void R_Subsector(int num)
    while(count--)
       R_AddLine(line++, false);
 
-   if(seg.f_window)
-      R_CalcRenderBarrier(seg.f_window, sub);
-   if(seg.c_window)
-      R_CalcRenderBarrier(seg.c_window, sub);
+   //if(seg.f_window)
+   //   R_CalcRenderBarrier(seg.f_window, sub);
+   //if(seg.c_window)
+   //   R_CalcRenderBarrier(seg.c_window, sub);
 }
 
 //

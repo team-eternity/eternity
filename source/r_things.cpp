@@ -869,15 +869,15 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr)
       }
       else
       {
-         dlnormal_t ports[2];
-         R_PickSidesNearViewer(barrier.bbox, ports);
-         if((ports[0].dl.dy &&
-            P_PointOnDivlineSide(spritepos.x, spritepos.y, &ports[0].dl) == 0) ||
-            (ports[1].dl.dx &&
-               P_PointOnDivlineSide(spritepos.x, spritepos.y, &ports[1].dl) == 0))
-         {
-            return;
-         }
+         //dlnormal_t ports[2];
+         //R_PickSidesNearViewer(barrier.bbox, ports);
+         //if((ports[0].dl.dy &&
+         //   P_PointOnDivlineSide(spritepos.x, spritepos.y, &ports[0].dl) == 0) ||
+         //   (ports[1].dl.dx &&
+         //      P_PointOnDivlineSide(spritepos.x, spritepos.y, &ports[1].dl) == 0))
+         //{
+         //   return;
+         //}
       }
    }
 
