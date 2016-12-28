@@ -487,7 +487,7 @@ bool UDMFParser::loadThings()
       Mobj *mobj = P_SpawnMapThing(ft);
 
       // New specials
-      if(mobj && ut.health)   // "health" property
+      if(mobj && ut.health && ut.health != 1.0)   // "health" property
       {
          if(ut.health > 0)    // either multiply spawnhealth
             mobj->health = static_cast<int>(round(mobj->health * ut.health));
@@ -893,7 +893,10 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
          else if(!mBlockName.strCaseCmp("sector"))
             sector = &mSectors.addNew();
          else if(!mBlockName.strCaseCmp("thing"))
+         {
             thing = &mThings.addNew();
+            thing->health = 1.0;
+         }
          continue;
       }
       if(result == result_Assignment && mInBlock)
