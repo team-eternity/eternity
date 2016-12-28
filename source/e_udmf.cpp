@@ -484,7 +484,18 @@ bool UDMFParser::loadThings()
          P_ConvertHereticThing(ft);
 
       P_ConvertDoomExtendedSpawnNum(ft);
-      P_SpawnMapThing(ft);
+      Mobj *mobj = P_SpawnMapThing(ft);
+
+      // New specials
+      if(mobj && ut.health)   // "health" property
+      {
+         if(ut.health > 0)    // either multiply spawnhealth
+            mobj->health = static_cast<int>(round(mobj->health * ut.health));
+         else                 // or use the absolute in case of negative
+            mobj->health = static_cast<int>(fabs(round(ut.health)));
+         if(mobj->health <= 0)   // ensure valid health
+            mobj->health = 1;
+      }
    }
 
    // haleyjd: all player things for players in this game should now be valid
@@ -561,6 +572,7 @@ enum token_e
    t_floorterrain,
    t_friction,
    t_friend,
+   t_health,
    t_height,
    t_heightceiling,
    t_heightfloor,
@@ -700,6 +712,7 @@ static keytoken_t gTokenList[] =
    TOKEN(floorterrain),
    TOKEN(friction),
    TOKEN(friend),
+   TOKEN(health),
    TOKEN(height),
    TOKEN(heightceiling),
    TOKEN(heightfloor),
@@ -1137,6 +1150,13 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                      break;
                   default:
                      break;
+               }
+               if(mNamespace == namespace_Eternity)
+               {
+                  switch(kt->token)
+                  {
+                     READ_NUMBER(thing, health);
+                  }
                }
             }
          }

@@ -411,6 +411,9 @@ private:
       bool standing, strifeally, translucent, invisible;
       int special, arg[5];
 
+      // new stuff
+      double health;
+
       bool xset, yset, typeset;
    };
 
