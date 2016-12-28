@@ -363,6 +363,8 @@ private:
       int floorid, ceilingid;
       int attachfloor, attachceiling;
 
+      qstring soundsequence;
+
       bool tfloorset, tceilset;
 
       // ED's portalflags.ceiling, and overlayalpha.ceiling

@@ -31,6 +31,7 @@
 #include "e_exdata.h"
 #include "e_hash.h"
 #include "e_mod.h"
+#include "e_sound.h"
 #include "e_ttypes.h"
 #include "e_udmf.h"
 #include "m_compare.h"
@@ -228,6 +229,25 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          ss->floor_yscale = static_cast<float>(us.yscalefloor);
          ss->ceiling_xscale = static_cast<float>(us.xscaleceiling);
          ss->ceiling_yscale = static_cast<float>(us.yscaleceiling);
+
+         // Sound sequences
+         if(!us.soundsequence.empty())
+         {
+            char *endptr = nullptr;
+            long number = strtol(us.soundsequence.constPtr(), &endptr, 10);
+            if(endptr == us.soundsequence.constPtr())
+            {
+               // We got a string then
+               const ESoundSeq_t *seq = E_SequenceForName(us.soundsequence.constPtr());
+               if(seq)
+                  ss->sndSeqID = seq->index;
+            }
+            else
+            {
+               // We got ourselves a number
+               ss->sndSeqID = static_cast<int>(number);
+            }
+         }
       }
    }
 }
@@ -599,6 +619,7 @@ enum token_e
    t_skill3,
    t_skill4,
    t_skill5,
+   t_soundsequence,
    t_special,
    t_standing,
    t_strifeally,
@@ -737,6 +758,7 @@ static keytoken_t gTokenList[] =
    TOKEN(skill3),
    TOKEN(skill4),
    TOKEN(skill5),
+   TOKEN(soundsequence),
    TOKEN(special),
    TOKEN(standing),
    TOKEN(strifeally),
@@ -1039,6 +1061,8 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                      READ_NUMBER(sector, ceilingid);
                      READ_NUMBER(sector, attachfloor);
                      READ_NUMBER(sector, attachceiling);
+
+                     READ_STRING(sector, soundsequence);
 
                      READ_STRING(sector, portal_floor_overlaytype);
                      READ_NUMBER(sector, portal_floor_alpha);
