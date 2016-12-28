@@ -954,6 +954,18 @@
     <ClCompile Include="..\source\m_utils.cpp">
       <Filter>Source Files\M_\M_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\cam_aim.cpp">
+      <Filter>Source Files\Cam</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\cam_common.cpp">
+      <Filter>Source Files\Cam</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\cam_shoot.cpp">
+      <Filter>Source Files\Cam</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\cam_use.cpp">
+      <Filter>Source Files\Cam</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1705,6 +1717,9 @@
     </ClInclude>
     <ClInclude Include="..\source\m_utils.h">
       <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\cam_common.h">
+      <Filter>Source Files\Cam</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

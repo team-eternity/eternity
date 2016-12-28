@@ -357,6 +357,10 @@ cd ../vc2015</Command>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\source\cam_aim.cpp" />
+    <ClCompile Include="..\source\cam_common.cpp" />
+    <ClCompile Include="..\source\cam_shoot.cpp" />
+    <ClCompile Include="..\source\cam_use.cpp" />
     <ClCompile Include="..\source\c_batch.cpp" />
     <ClCompile Include="..\Source\c_cmd.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -2046,6 +2050,7 @@ cd ../vc2015</Command>
     <ClInclude Include="..\source\acs_op.h" />
     <ClInclude Include="..\Source\am_map.h" />
     <ClInclude Include="..\source\a_args.h" />
+    <ClInclude Include="..\source\cam_common.h" />
     <ClInclude Include="..\source\c_batch.h" />
     <ClInclude Include="..\Source\c_io.h" />
     <ClInclude Include="..\Source\c_net.h" />
