@@ -84,49 +84,7 @@ private:
    angle_t angle;
 };
 
-//
-// Starts aiming
-//
-fixed_t AimContext::aimLineAttack(const Mobj *t1, angle_t angle,
-   fixed_t distance, uint32_t mask,
-   const State *state, Mobj **outTarget,
-   fixed_t *outDist)
-{
-   AimContext context(t1, angle, distance, mask, state);
 
-   PTDef def;
-   def.flags = CAM_ADDLINES | CAM_ADDTHINGS;
-   def.earlyOut = PTDef::eo_no;
-   def.trav = aimTraverse;
-   PathTraverser traverser(def, &context);
-
-   fixed_t tx = context.state.cx + (distance >> FRACBITS) *
-      finecosine[angle >> ANGLETOFINESHIFT];
-   fixed_t ty = context.state.cy + (distance >> FRACBITS) *
-      finesine[angle >> ANGLETOFINESHIFT];
-
-   if(traverser.traverse(context.state.cx, context.state.cy, tx, ty))
-   {
-      const sector_t *endsector = R_PointInSubsector(tx, ty)->sector;
-      if(context.checkPortalSector(endsector, distance, FRACUNIT,
-         traverser.trace))
-      {
-         if(outTarget)
-            *outTarget = context.linetarget;
-         if(outDist)
-            *outDist = context.targetdist;
-
-         return context.linetarget ? context.aimslope : context.lookslope;
-      }
-   }
-
-   if(outTarget)
-      *outTarget = context.linetarget;
-   if(outDist)
-      *outDist = context.targetdist;
-
-   return context.linetarget ? context.aimslope : context.lookslope;
-}
 
 //
 // Creates the context
@@ -169,6 +127,162 @@ AimContext::AimContext(const Mobj *t1, angle_t inangle, fixed_t distance,
    }
 
 }
+
+//
+// AimContext::checkPortalSector
+//
+bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
+   fixed_t partialfrac, const divline_t &trace)
+{
+   fixed_t linehitz, fixedratio;
+   int newfromid;
+
+   fixed_t x, y, newslope;
+
+   if(state.topslope > 0 && sector->c_pflags & PS_PASSABLE &&
+      (newfromid = sector->c_portal->data.link.toid) != state.groupid)
+   {
+      // ceiling portal (slope must be up)
+      linehitz = state.cz + FixedMul(state.topslope, totalfrac);
+      fixed_t planez = R_CPLink(sector)->planez;
+      if(linehitz > planez)
+      {
+         // update cam.bottomslope to be the top of the sector wall
+         newslope = FixedDiv(planez - state.cz, totalfrac);
+         // if totalfrac == 0, then it will just be a very big slope
+         if(newslope < state.bottomslope)
+            newslope = state.bottomslope;
+
+         // get x and y of position
+         if(linehitz == state.cz)
+         {
+            // handle this edge case: put point right on line
+            x = trace.x + FixedMul(trace.dx, partialfrac);
+            y = trace.y + FixedMul(trace.dy, partialfrac);
+         }
+         else
+         {
+            // add a unit just to ensure that it enters the sector
+            fixedratio = FixedDiv(planez - state.cz, linehitz - state.cz);
+            // update z frac
+            totalfrac = FixedMul(fixedratio, totalfrac);
+            // retrieve the xy frac using the origin frac
+            partialfrac = FixedDiv(totalfrac - state.origindist, attackrange);
+
+            x = trace.x + FixedMul(partialfrac + 1, trace.dx);
+            y = trace.y + FixedMul(partialfrac + 1, trace.dy);
+
+         }
+
+         if(partialfrac + 1 > 0) // don't allow if it's going back
+         {
+            fixed_t outSlope;
+            Mobj *outTarget = nullptr;
+            fixed_t outDist;
+
+            State newstate(state);
+            newstate.cx = x;
+            newstate.cy = y;
+            newstate.groupid = newfromid;
+            newstate.origindist = totalfrac;
+            newstate.bottomslope = newslope;
+            newstate.reclevel = state.reclevel + 1;
+
+            if(recurse(newstate, partialfrac, &outSlope, &outTarget, &outDist, *R_CPLink(sector)))
+            {
+               if(outTarget && (!linetarget || outDist < targetdist))
+               {
+                  linetarget = outTarget;
+                  targetdist = outDist;
+                  aimslope = outSlope;
+               }
+            }
+         }
+
+
+      }
+   }
+   if(state.bottomslope < 0 && sector->f_pflags & PS_PASSABLE &&
+      (newfromid = sector->f_portal->data.link.toid) != state.groupid)
+   {
+      linehitz = state.cz + FixedMul(state.bottomslope, totalfrac);
+      fixed_t planez = R_FPLink(sector)->planez;
+      if(linehitz < planez)
+      {
+         newslope = FixedDiv(planez - state.cz, totalfrac);
+         if(newslope > state.topslope)
+            newslope = state.topslope;
+
+         if(linehitz == state.cz)
+         {
+            x = trace.x + FixedMul(trace.dx, partialfrac);
+            y = trace.y + FixedMul(trace.dy, partialfrac);
+         }
+         else
+         {
+            fixedratio = FixedDiv(planez - state.cz, linehitz - state.cz);
+            totalfrac = FixedMul(fixedratio, totalfrac);
+            partialfrac = FixedDiv(totalfrac - state.origindist, attackrange);
+
+            x = trace.x + FixedMul(partialfrac + 1, trace.dx);
+            y = trace.y + FixedMul(partialfrac + 1, trace.dy);
+         }
+
+         if(partialfrac + 1 > 0)
+         {
+            fixed_t outSlope;
+            Mobj *outTarget = nullptr;
+            fixed_t outDist;
+
+            State newstate(state);
+            newstate.cx = x;
+            newstate.cy = y;
+            newstate.groupid = newfromid;
+            newstate.origindist = totalfrac;
+            newstate.topslope = newslope;
+            newstate.reclevel = state.reclevel + 1;
+
+            if(recurse(newstate, partialfrac, &outSlope, &outTarget, &outDist, *R_FPLink(sector)))
+            {
+               if(outTarget && (!linetarget || outDist < targetdist))
+               {
+                  linetarget = outTarget;
+                  targetdist = outDist;
+                  aimslope = outSlope;
+               }
+            }
+         }
+
+      }
+   }
+   return false;
+}
+
+
+fixed_t AimContext::recurse(State &newstate, fixed_t partialfrac,
+   fixed_t *outSlope, Mobj **outTarget,
+   fixed_t *outDist, const linkdata_t &data) const
+{
+   if(newstate.groupid == state.groupid)
+      return false;
+
+   if(state.reclevel > RECURSION_LIMIT)
+      return false;
+
+   newstate.cx += data.deltax;
+   newstate.cy += data.deltay;
+   newstate.cz += data.deltaz;
+
+   fixed_t lessdist = attackrange - FixedMul(attackrange, partialfrac);
+   newstate.prev = this;
+
+   fixed_t res = aimLineAttack(thing, angle, lessdist, aimflagsmask, &newstate,
+      outTarget, outDist);
+   if(outSlope)
+      *outSlope = res;
+   return true;
+}
+
 
 //
 // Called when hitting a line or object
@@ -361,148 +475,47 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata,
 }
 
 //
-// AimContext::checkPortalSector
+// Starts aiming
 //
-bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
-   fixed_t partialfrac, const divline_t &trace)
+fixed_t AimContext::aimLineAttack(const Mobj *t1, angle_t angle,
+   fixed_t distance, uint32_t mask,
+   const State *state, Mobj **outTarget,
+   fixed_t *outDist)
 {
-   fixed_t linehitz, fixedratio;
-   int newfromid;
+   AimContext context(t1, angle, distance, mask, state);
 
-   fixed_t x, y, newslope;
+   PTDef def;
+   def.flags = CAM_ADDLINES | CAM_ADDTHINGS;
+   def.earlyOut = PTDef::eo_no;
+   def.trav = aimTraverse;
+   PathTraverser traverser(def, &context);
 
-   if(state.topslope > 0 && sector->c_pflags & PS_PASSABLE &&
-      (newfromid = sector->c_portal->data.link.toid) != state.groupid)
+   fixed_t tx = context.state.cx + (distance >> FRACBITS) *
+      finecosine[angle >> ANGLETOFINESHIFT];
+   fixed_t ty = context.state.cy + (distance >> FRACBITS) *
+      finesine[angle >> ANGLETOFINESHIFT];
+
+   if(traverser.traverse(context.state.cx, context.state.cy, tx, ty))
    {
-      // ceiling portal (slope must be up)
-      linehitz = state.cz + FixedMul(state.topslope, totalfrac);
-      fixed_t planez = R_CPLink(sector)->planez;
-      if(linehitz > planez)
+      const sector_t *endsector = R_PointInSubsector(tx, ty)->sector;
+      if(context.checkPortalSector(endsector, distance, FRACUNIT,
+         traverser.trace))
       {
-         // update cam.bottomslope to be the top of the sector wall
-         newslope = FixedDiv(planez - state.cz, totalfrac);
-         // if totalfrac == 0, then it will just be a very big slope
-         if(newslope < state.bottomslope)
-            newslope = state.bottomslope;
+         if(outTarget)
+            *outTarget = context.linetarget;
+         if(outDist)
+            *outDist = context.targetdist;
 
-         // get x and y of position
-         if(linehitz == state.cz)
-         {
-            // handle this edge case: put point right on line
-            x = trace.x + FixedMul(trace.dx, partialfrac);
-            y = trace.y + FixedMul(trace.dy, partialfrac);
-         }
-         else
-         {
-            // add a unit just to ensure that it enters the sector
-            fixedratio = FixedDiv(planez - state.cz, linehitz - state.cz);
-            // update z frac
-            totalfrac = FixedMul(fixedratio, totalfrac);
-            // retrieve the xy frac using the origin frac
-            partialfrac = FixedDiv(totalfrac - state.origindist, attackrange);
-
-            x = trace.x + FixedMul(partialfrac + 1, trace.dx);
-            y = trace.y + FixedMul(partialfrac + 1, trace.dy);
-
-         }
-
-         fixed_t outSlope;
-         Mobj *outTarget = nullptr;
-         fixed_t outDist;
-
-         State newstate(state);
-         newstate.cx = x;
-         newstate.cy = y;
-         newstate.groupid = newfromid;
-         newstate.origindist = totalfrac;
-         newstate.bottomslope = newslope;
-         newstate.reclevel = state.reclevel + 1;
-
-         if(recurse(newstate, partialfrac, &outSlope, &outTarget, &outDist, *R_CPLink(sector)))
-         {
-            if(outTarget && (!linetarget || outDist < targetdist))
-            {
-               linetarget = outTarget;
-               targetdist = outDist;
-               aimslope = outSlope;
-            }
-         }
+         return context.linetarget ? context.aimslope : context.lookslope;
       }
    }
-   if(state.bottomslope < 0 && sector->f_pflags & PS_PASSABLE &&
-      (newfromid = sector->f_portal->data.link.toid) != state.groupid)
-   {
-      linehitz = state.cz + FixedMul(state.bottomslope, totalfrac);
-      fixed_t planez = R_FPLink(sector)->planez;
-      if(linehitz < planez)
-      {
-         newslope = FixedDiv(planez - state.cz, totalfrac);
-         if(newslope > state.topslope)
-            newslope = state.topslope;
 
-         if(linehitz == state.cz)
-         {
-            x = trace.x + FixedMul(trace.dx, partialfrac);
-            y = trace.y + FixedMul(trace.dy, partialfrac);
-         }
-         else
-         {
-            fixedratio = FixedDiv(planez - state.cz, linehitz - state.cz);
-            totalfrac = FixedMul(fixedratio, totalfrac);
-            partialfrac = FixedDiv(totalfrac - state.origindist, attackrange);
+   if(outTarget)
+      *outTarget = context.linetarget;
+   if(outDist)
+      *outDist = context.targetdist;
 
-            x = trace.x + FixedMul(partialfrac + 1, trace.dx);
-            y = trace.y + FixedMul(partialfrac + 1, trace.dy);
-         }
-
-         fixed_t outSlope;
-         Mobj *outTarget = nullptr;
-         fixed_t outDist;
-
-         State newstate(state);
-         newstate.cx = x;
-         newstate.cy = y;
-         newstate.groupid = newfromid;
-         newstate.origindist = totalfrac;
-         newstate.topslope = newslope;
-         newstate.reclevel = state.reclevel + 1;
-
-         if(recurse(newstate, partialfrac, &outSlope, &outTarget, &outDist, *R_FPLink(sector)))
-         {
-            if(outTarget && (!linetarget || outDist < targetdist))
-            {
-               linetarget = outTarget;
-               targetdist = outDist;
-               aimslope = outSlope;
-            }
-         }
-      }
-   }
-   return false;
-}
-
-fixed_t AimContext::recurse(State &newstate, fixed_t partialfrac,
-   fixed_t *outSlope, Mobj **outTarget,
-   fixed_t *outDist, const linkdata_t &data) const
-{
-   if(newstate.groupid == state.groupid)
-      return false;
-
-   if(state.reclevel > RECURSION_LIMIT)
-      return false;
-
-   newstate.cx += data.deltax;
-   newstate.cy += data.deltay;
-   newstate.cz += data.deltaz;
-
-   fixed_t lessdist = attackrange - FixedMul(attackrange, partialfrac);
-   newstate.prev = this;
-
-   fixed_t res = aimLineAttack(thing, angle, lessdist, aimflagsmask, &newstate,
-      outTarget, outDist);
-   if(outSlope)
-      *outSlope = res;
-   return true;
+   return context.linetarget ? context.aimslope : context.lookslope;
 }
 
 //

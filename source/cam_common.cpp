@@ -566,5 +566,22 @@ void lineopening_t::calculate(const line_t *linedef)
    openrange = opentop - openbottom;
 }
 
+//
+// CAM_PathTraverse
+//
+// Public wrapper for PathTraverser
+//
+bool CAM_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
+   uint32_t flags, void *data,
+   bool(*trav)(const intercept_t *in, void *data,
+      const divline_t &trace))
+{
+   PTDef def;
+   def.flags = flags;
+   def.earlyOut = PTDef::eo_no;
+   def.trav = trav;
+   return PathTraverser(def, data).traverse(x1, y1, x2, y2);
+}
+
 // EOF
 

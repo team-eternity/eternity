@@ -425,17 +425,21 @@ bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
             x = trace.x + FixedMul(partialfrac + 1, trace.dx);
             y = trace.y + FixedMul(partialfrac + 1, trace.dy);
          }
-         
-         newstate.bottomslope = newslope;
-         newstate.topslope = state.topslope;
-         newstate.originfrac = totalfrac;
-         newstate.reclevel = state.reclevel + 1;
 
-         if(recurse(newfromid, x, y, newstate, &result, *R_CPLink(sector)) && 
-            result)
+         if(partialfrac + 1 > 0) // don't allow going back
          {
-            return true;
+            newstate.bottomslope = newslope;
+            newstate.topslope = state.topslope;
+            newstate.originfrac = totalfrac;
+            newstate.reclevel = state.reclevel + 1;
+
+            if(recurse(newfromid, x, y, newstate, &result, *R_CPLink(sector)) &&
+               result)
+            {
+               return true;
+            }
          }
+         
       }
    }
 
@@ -466,15 +470,19 @@ bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
             y = trace.y + FixedMul(partialfrac + 1, trace.dy);
          }
 
-         newstate.bottomslope = state.bottomslope;
-         newstate.topslope = newslope;
-         newstate.originfrac = totalfrac;
-         newstate.reclevel = state.reclevel + 1;
-
-         if(recurse(newfromid, x, y, newstate, &result, *R_FPLink(sector)) &&
-            result)
+         if(partialfrac + 1 > 0)
          {
-            return true;
+
+            newstate.bottomslope = state.bottomslope;
+            newstate.topslope = newslope;
+            newstate.originfrac = totalfrac;
+            newstate.reclevel = state.reclevel + 1;
+
+            if(recurse(newfromid, x, y, newstate, &result, *R_FPLink(sector)) &&
+               result)
+            {
+               return true;
+            }
          }
       }
    }
@@ -613,63 +621,6 @@ bool CAM_CheckSight(const camsightparams_t &params)
 {
    return CamContext::checkSight(params, nullptr);
 }
-
-///////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-
-
-
-
-
-
-
-///////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-
-
-
-
-
-
-//
-// CAM_PathTraverse
-//
-// Public wrapper for PathTraverser
-//
-bool CAM_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
-                      uint32_t flags, void *data,
-                      bool (*trav)(const intercept_t *in, void *data,
-                                   const divline_t &trace))
-{
-   PTDef def;
-   def.flags = flags;
-   def.earlyOut = PTDef::eo_no;
-   def.trav = trav;
-   return PathTraverser(def, data).traverse(x1, y1, x2, y2);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-
-
-
-
-
 
 // EOF
 

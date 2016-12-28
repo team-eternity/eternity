@@ -139,7 +139,7 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
          newfromid = sidesector->f_portal->data.link.toid;
       }
    }
-   if(portaldata)
+   if(portaldata && pfrac > 0)
    {
       // update x and y as well
       fixed_t x = state.x + FixedMul(cos, pfrac);
