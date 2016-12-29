@@ -374,7 +374,7 @@ private:
       bool         portal_ceil_blocksound;
       bool         portal_ceil_useglobaltex;
       qstring      portal_ceil_overlaytype; // OVERLAY and ADDITIVE consolidated into a single property
-      unsigned int portal_ceil_alpha;
+      double       alphaceiling;
 
       // ED's portalflags.floor, and overlayalpha.floor
       bool         portal_floor_disabled;
@@ -383,7 +383,7 @@ private:
       bool         portal_floor_blocksound;
       bool         portal_floor_useglobaltex;
       qstring      portal_floor_overlaytype; // OVERLAY and ADDITIVE consolidated into a single property
-      unsigned int portal_floor_alpha;
+      double       alphafloor;
 
       int          portalceiling;   // floor portal id
       int          portalfloor;     // floor portal id
@@ -391,8 +391,8 @@ private:
       USector() : xscalefloor(1.0), yscalefloor(1.0), xscaleceiling(1.0), yscaleceiling(1.0),
          friction(-1), damagetype("Unknown"), floorterrain("@flat"), ceilingterrain("@flat"),
          colormaptop("@default"), colormapmid("@default"), colormapbottom("@default"),
-         portal_ceil_overlaytype("none"), portal_ceil_alpha(255),
-         portal_floor_overlaytype("none"), portal_floor_alpha(255),
+         portal_ceil_overlaytype("none"), alphaceiling(1.0),
+         portal_floor_overlaytype("none"), alphafloor(1.0),
          lightlevel(160)
       {
       }

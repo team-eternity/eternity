@@ -202,7 +202,10 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
 
          // Portal fields
          // Floors
-         ss->f_pflags |= us.portal_floor_alpha << PO_OPACITYSHIFT;
+         int balpha = us.alphafloor >= 1.0 ? 255 : us.alphafloor <= 0 ? 
+            0 : int(round(255 * us.alphafloor));
+         balpha = eclamp(balpha, 0, 255);
+         ss->f_pflags |= balpha << PO_OPACITYSHIFT;
          ss->f_pflags |= us.portal_floor_blocksound ? PF_BLOCKSOUND : 0;
          ss->f_pflags |= us.portal_floor_disabled ? PF_DISABLED : 0;
          ss->f_pflags |= us.portal_floor_nopass ? PF_NOPASS : 0;
@@ -214,7 +217,10 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          ss->f_pflags |= us.portal_floor_useglobaltex ? PS_USEGLOBALTEX : 0;
 
          // Ceilings
-         ss->c_pflags |= us.portal_ceil_alpha << PO_OPACITYSHIFT;
+         balpha = us.alphaceiling >= 1.0 ? 255 : us.alphaceiling <= 0 ? 
+            0 : int(round(255 * us.alphaceiling));
+         balpha = eclamp(balpha, 0, 255);
+         ss->c_pflags |= balpha << PO_OPACITYSHIFT;
          ss->c_pflags |= us.portal_ceil_blocksound ? PF_BLOCKSOUND : 0;
          ss->c_pflags |= us.portal_ceil_disabled ? PF_DISABLED : 0;
          ss->c_pflags |= us.portal_ceil_nopass ? PF_NOPASS : 0;
@@ -530,6 +536,8 @@ bool UDMFParser::loadThings()
 enum token_e
 {
    t_alpha,
+   t_alphaceiling,
+   t_alphafloor,
    t_ambush,
    t_angle,
    t_arg0,
@@ -598,7 +606,6 @@ enum token_e
    t_offsety,
    t_portal,
    t_portalceiling,
-   t_portal_ceil_alpha,
    t_portal_ceil_blocksound,
    t_portal_ceil_disabled,
    t_portal_ceil_nopass,
@@ -606,7 +613,6 @@ enum token_e
    t_portal_ceil_overlaytype,
    t_portal_ceil_useglobaltex,
    t_portalfloor,
-   t_portal_floor_alpha,
    t_portal_floor_blocksound,
    t_portal_floor_disabled,
    t_portal_floor_nopass,
@@ -672,6 +678,8 @@ struct keytoken_t
 static keytoken_t gTokenList[] =
 {
    TOKEN(alpha),
+   TOKEN(alphaceiling),
+   TOKEN(alphafloor),
    TOKEN(ambush),
    TOKEN(angle),
    TOKEN(arg0),
@@ -738,7 +746,6 @@ static keytoken_t gTokenList[] =
    TOKEN(offsety),
    TOKEN(portal),
    TOKEN(portalceiling),
-   TOKEN(portal_ceil_alpha),
    TOKEN(portal_ceil_blocksound),
    TOKEN(portal_ceil_disabled),
    TOKEN(portal_ceil_nopass),
@@ -746,7 +753,6 @@ static keytoken_t gTokenList[] =
    TOKEN(portal_ceil_overlaytype),
    TOKEN(portal_ceil_useglobaltex),
    TOKEN(portalfloor),
-   TOKEN(portal_floor_alpha),
    TOKEN(portal_floor_blocksound),
    TOKEN(portal_floor_disabled),
    TOKEN(portal_floor_nopass),
@@ -1081,7 +1087,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                      READ_STRING(sector, soundsequence);
 
                      READ_STRING(sector, portal_floor_overlaytype);
-                     READ_NUMBER(sector, portal_floor_alpha);
+                     READ_NUMBER(sector, alphafloor);
                      READ_BOOL(sector, portal_floor_blocksound);
                      READ_BOOL(sector, portal_floor_disabled);
                      READ_BOOL(sector, portal_floor_nopass);
@@ -1089,7 +1095,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                      READ_BOOL(sector, portal_floor_useglobaltex);
 
                      READ_STRING(sector, portal_ceil_overlaytype);
-                     READ_NUMBER(sector, portal_ceil_alpha);
+                     READ_NUMBER(sector, alphaceiling);
                      READ_BOOL(sector, portal_ceil_blocksound);
                      READ_BOOL(sector, portal_ceil_disabled);
                      READ_BOOL(sector, portal_ceil_nopass);
