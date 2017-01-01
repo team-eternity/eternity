@@ -944,8 +944,12 @@ bool P_WasSecret(const sector_t *sec)
 //
 void P_StartLineScript(line_t *line, Mobj *thing)
 {
-   ACS_ExecuteScriptNumber(line->args[0], gamemap, 0, line->args, NUMLINEARGS, 
-                           thing, line, 0);
+   constexpr uint32_t argc = NUMLINEARGS - 1;
+   uint32_t args[argc];
+   for(size_t i = argc; i--;)
+      args[i] = line->args[i + 1];
+
+   ACS_ExecuteScriptI(line->args[0], gamemap, args, argc, thing, line, 0);
 }
 
 //=============================================================================

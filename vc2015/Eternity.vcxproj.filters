@@ -237,12 +237,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\acs_acs0.cpp">
-      <Filter>Source Files\ACS_</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\acs_acse.cpp">
-      <Filter>Source Files\ACS_</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\acs_func.cpp">
       <Filter>Source Files\ACS_</Filter>
     </ClCompile>
@@ -969,9 +963,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
-      <Filter>Source Files\ACS_</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\acs_op.h">
       <Filter>Source Files\ACS_</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\am_map.h">

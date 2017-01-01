@@ -489,22 +489,21 @@ void A_StartScript(actionargs_t *actionargs)
    }
    else
    {
-      int flags = ACS_EXECUTE_ALWAYS | ACS_EXECUTE_IMMEDIATE;
       int argc = E_GetArgCount(args);
 
       if(argc > 2)
       {
-         int32_t argv[EMAXARGS - 2];
+         uint32_t argv[EMAXARGS - 2];
          argc -= 2;
 
          for(int i = 0; i < argc; ++i)
              argv[i] = E_ArgAsInt(args, i + 2, 0);
 
-         ACS_ExecuteScriptNumber(scriptnum, gamemap, flags, argv, argc, actor, NULL, 0);
+         ACS_ExecuteScriptIResult(scriptnum, argv, argc, actor, NULL, 0);
       }
       else
       {
-         ACS_ExecuteScriptNumber(scriptnum, gamemap, flags, NULL, 0, actor, NULL, 0);
+         ACS_ExecuteScriptIResult(scriptnum, NULL, 0, actor, NULL, 0);
       }
    }
 }
@@ -527,22 +526,21 @@ void A_StartScriptNamed(actionargs_t *actionargs)
    }
    else
    {
-      int flags = ACS_EXECUTE_ALWAYS | ACS_EXECUTE_IMMEDIATE;
       int argc = E_GetArgCount(args);
 
       if(argc > 2)
       {
-         int32_t argv[EMAXARGS - 2];
+         uint32_t argv[EMAXARGS - 2];
          argc -= 2;
 
          for(int i = 0; i < argc; ++i)
              argv[i] = E_ArgAsInt(args, i + 2, 0);
 
-         ACS_ExecuteScriptName(scriptname, gamemap, flags, argv, argc, actor, NULL, 0);
+         ACS_ExecuteScriptSResult(scriptname, argv, argc, actor, NULL, 0);
       }
       else
       {
-         ACS_ExecuteScriptName(scriptname, gamemap, flags, NULL, 0, actor, NULL, 0);
+         ACS_ExecuteScriptSResult(scriptname, NULL, 0, actor, NULL, 0);
       }
    }
 }

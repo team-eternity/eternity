@@ -24,6 +24,34 @@ Locked parameterised doors now rely on the presence of a thinker to determine
 whether or not to draw the door-activating line as coloured. Also 1S lines are
 now correctly coloured if they have a locked parameterised action.
 
+
+-------------------------------------------------------------------------------
+2016/11/20
+
+ANIMATED entries are now discarded if either texture/flat is invalid.
+Previously if the first was valid and the last wasn't then it would animate
+through every texture/flat.
+
+-------------------------------------------------------------------------------
+2016/11/26
+
+Add scaling for flats, via ExtraData and UDMF. This works on both slopes and
+regular flats.
+
+-------------------------------------------------------------------------------
+2016/12/24
+
+Over the course of the week sorted out x64 compilation under MSVC. This has
+also been ported so that ACSVM branch compiles under x64 as well. One of the
+more notable changes is that there are now batch scripts that handle use of the
+MIDL compiler (the MIDL commands used originally were lost).
+
+The README has also been updated to reflect the fact that the vc2012 no longer
+exists.
+
+Happy holidays to all, and to all a happy new year (well those of you that use
+the Gregorian calendar at least)!
+
 ================================================================================
 EOF
 ================================================================================

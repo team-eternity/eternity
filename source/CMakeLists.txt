@@ -93,7 +93,7 @@ FILE (GLOB SDL_SOURCES sdl/*.cpp)
 ADD_EXECUTABLE (eternity ${ARCH_SPECIFIC_SOURCES} ${ETERNITY_SOURCES} ${CONFUSE_SOURCES}
                 ${TEXTSCREEN_SOURCES} ${HAL_SOURCES} ${GL_SOURCES} ${SDL_SOURCES})
 
-target_link_libraries(eternity ${SDL_LIBRARY} ${SDLMIXER_LIBRARY} ${SDLNET_LIBRARY} png15_static snes_spc)
+target_link_libraries(eternity ${SDL_LIBRARY} ${SDLMIXER_LIBRARY} ${SDLNET_LIBRARY} acsvm png15_static snes_spc)
 
 if(OPENGL_LIBRARY)
    target_link_libraries(eternity ${OPENGL_LIBRARY})

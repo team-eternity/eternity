@@ -310,8 +310,13 @@ ENDIF (WIN32)
 ################################################################################
 ######################### Set Build Targets   ##################################
 
+INCLUDE_DIRECTORIES(acsvm)
 INCLUDE_DIRECTORIES(libpng)
 INCLUDE_DIRECTORIES(zlib)
+
+SET(ACSVM_NOFLAGS ON)
+SET(ACSVM_SHARED OFF)
+ADD_SUBDIRECTORY(acsvm)
 
 ADD_SUBDIRECTORY(zlib)
 ADD_SUBDIRECTORY(libpng)

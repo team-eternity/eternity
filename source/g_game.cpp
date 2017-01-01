@@ -1664,8 +1664,6 @@ static void G_DoWorldDone()
    hub_changelevel = false;
    G_DoLoadLevel();
    gameaction = ga_nothing;
-   // haleyjd 01/07/07: run deferred ACS scripts
-   ACS_RunDeferredScripts();
 }
 
 //
