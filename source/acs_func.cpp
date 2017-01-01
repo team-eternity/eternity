@@ -378,7 +378,7 @@ bool ACS_ChkThingProp(Mobj *mo, uint32_t var, uint32_t val)
    case ACS_TP_PlayerNumber: return mo->player ? mo->player - players == val : false;
    case ACS_TP_SigilPieces:  return false;
    case ACS_TP_TID:          return mo->tid == val;
-   case ACS_TP_Type:         return mo->type == E_ThingNumForName(ACSenv.getString(val)->str);
+   case ACS_TP_Type:         return mo->type == E_ThingNumForCompatName(ACSenv.getString(val)->str);
    case ACS_TP_X:            return mo->x == val;
    case ACS_TP_Y:            return mo->y == val;
    case ACS_TP_Z:            return mo->z == val;
@@ -2114,7 +2114,7 @@ bool ACS_CF_SpawnMissile(ACS_CF_ARGS)
 {
    auto       info    = &static_cast<ACSThread *>(thread)->info;
    int32_t    spotid  = argV[0];
-   mobjtype_t type    = E_ThingNumForName(thread->scopeMap->getString(argV[1])->str);
+   mobjtype_t type    = E_ThingNumForCompatName(thread->scopeMap->getString(argV[1])->str);
    angle_t    angle   = argV[2] << 24;
    int32_t    speed   = argV[3] * 8;
    int32_t    vspeed  = argV[4] * 8;
@@ -2139,7 +2139,7 @@ bool ACS_CF_SpawnMissile(ACS_CF_ARGS)
 //
 static void ACS_spawnPoint(ACS_CF_ARGS, bool forced)
 {
-   mobjtype_t type  = E_ThingNumForName(thread->scopeMap->getString(argV[0])->str);
+   mobjtype_t type  = E_ThingNumForCompatName(thread->scopeMap->getString(argV[0])->str);
    fixed_t    x     = argV[1];
    fixed_t    y     = argV[2];
    fixed_t    z     = argV[3];
@@ -2177,7 +2177,7 @@ bool ACS_CF_SpawnPointF(ACS_CF_ARGS)
 static void ACS_spawnSpot(ACS_CF_ARGS, bool forced)
 {
    auto        info   = &static_cast<ACSThread *>(thread)->info;
-   mobjtype_t  type   = E_ThingNumForName(thread->scopeMap->getString(argV[0])->str);
+   mobjtype_t  type   = E_ThingNumForCompatName(thread->scopeMap->getString(argV[0])->str);
    int32_t     spotid = argV[1];
    int32_t     tid    = argV[2];
    angle_t     angle  = argV[3] << 24;
@@ -2218,7 +2218,7 @@ bool ACS_CF_SpawnSpotF(ACS_CF_ARGS)
 static void ACS_spawnSpotAng(ACS_CF_ARGS, bool forced)
 {
    auto       info   = &static_cast<ACSThread *>(thread)->info;
-   mobjtype_t type   = E_ThingNumForName(thread->scopeMap->getString(argV[0])->str);
+   mobjtype_t type   = E_ThingNumForCompatName(thread->scopeMap->getString(argV[0])->str);
    int32_t    spotid = argV[1];
    int32_t    tid    = argV[2];
    Mobj      *spot   = nullptr;
@@ -2359,7 +2359,7 @@ bool ACS_CF_ThingCount(ACS_CF_ARGS)
 //
 bool ACS_CF_ThingCountStr(ACS_CF_ARGS)
 {
-   mobjtype_t type = E_ThingNumForName(thread->scopeMap->getString(argV[0])->str);
+   mobjtype_t type = E_ThingNumForCompatName(thread->scopeMap->getString(argV[0])->str);
    int32_t    tid  = argV[1];
 
    thread->dataStk.push(ACS_thingCount(type, tid));
@@ -2425,7 +2425,7 @@ bool ACS_CF_ThingCountSec(ACS_CF_ARGS)
 bool ACS_CF_ThingCountSecStr(ACS_CF_ARGS)
 {
    int32_t    tag  = argV[0];
-   mobjtype_t type = E_ThingNumForName(thread->scopeMap->getString(argV[1])->str);
+   mobjtype_t type = E_ThingNumForCompatName(thread->scopeMap->getString(argV[1])->str);
    int32_t    tid  = argV[2];
 
    thread->dataStk.push(ACS_thingCountSec(tag, type, tid));
