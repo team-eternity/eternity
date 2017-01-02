@@ -42,46 +42,6 @@ struct linkoffset_t
    fixed_t x, y, z;
 };
 
-//
-// Combined portal transformation. Contains rotation and translation. Formula
-// for a single portal is: D * P * A * P^-1, where:
-//
-// P is translation(line.center.x, line.center.y)
-// A is rotation(angle)
-// D is translation(deltax, deltay)
-//
-// Only store the relevant lines, the other ones are constant.
-//
-// Type is fixed point because it must be deterministic. Do NOT use this for
-// rendering.
-//
-// "rotation" is total angle difference, needed for gameplay to know how much
-// to rotate things.
-//
-// Non-inline methods are defined in m_vector.cpp
-//
-struct linkmatrix_t
-{
-    fixed_t a[2][3];
-    angle_t rotation;
-
-    void identity()
-    {
-        a[0][0] = a[1][1] = 1;
-        a[0][1] = a[0][2] = a[1][0] = a[1][2] = 0;
-        rotation = 0;
-    }
-
-    void translate(fixed_t dx, fixed_t dy)
-    {
-        a[0][2] += dx;
-        a[1][2] += dy;
-    }
-
-    void rotate(angle_t angle);
-    void portal(fixed_t ox, fixed_t oy, fixed_t dx, fixed_t dy, angle_t angle);
-};
-
 extern linkoffset_t **linktable;
 extern linkoffset_t zerolink;
 
