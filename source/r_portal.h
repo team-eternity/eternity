@@ -213,9 +213,9 @@ inline static bool R_portalIsAnchored(const portal_t *portal)
 
 portal_t *R_GetSkyBoxPortal(Mobj *camera);
 portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum,
-   bool flipped = false, fixed_t zoffset = 0);
+   bool allowrotate, bool flipped, fixed_t zoffset);
 portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum, 
-   bool flipped = false, fixed_t zoffset = 0);
+   bool allowrotate, bool flipped, fixed_t zoffset);
 
 portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic, 
                              fixed_t *floorz, fixed_t *ceilingz, 

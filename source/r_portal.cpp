@@ -484,8 +484,8 @@ static void R_CalculateDeltas(int markerlinenum, int anchorlinenum,
 }
 
 static void R_calculateTransform(int markerlinenum, int anchorlinenum,
-                                 portaltransform_t *transf, 
-                                 bool flipped = false, fixed_t zoffset = 0)
+                                 portaltransform_t *transf, bool allowrotate,
+                                 bool flipped, fixed_t zoffset)
 {
    // TODO: define Z offset
    const line_t *m = lines + markerlinenum;
@@ -499,11 +499,20 @@ static void R_calculateTransform(int markerlinenum, int anchorlinenum,
 
    // angle delta between the normals behind the linedefs
    // TODO: add support for flipped anchors (line portals)
-   double rot = atan2(flipped ? m->ny : -m->ny, flipped ? m->nx : -m->nx) - atan2(-a->ny, -a->nx);
-
-   double cosval = cos(rot);
-   double sinval = sin(rot);
-
+   double rot, cosval, sinval;
+   if(allowrotate)
+   {
+      rot = atan2(flipped ? m->ny : -m->ny, flipped ? m->nx : -m->nx) - atan2(-a->ny, -a->nx);
+      cosval = cos(rot);
+      sinval = sin(rot);
+   }
+   else
+   {
+      rot = 0;
+      cosval = 1;
+      sinval = 0;
+   }
+   
    transf->rot[0][0] = cosval;
    transf->rot[0][1] = -sinval;
    transf->rot[1][0] = sinval;
@@ -522,13 +531,13 @@ static void R_calculateTransform(int markerlinenum, int anchorlinenum,
 // parameters, or creates a new one. Used in p_spec.c.
 //
 portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum,
-   bool flipped, fixed_t zoffset)
+   bool allowrotate, bool flipped, fixed_t zoffset)
 {
    portal_t *rover, *ret;
    edefstructvar(anchordata_t, adata);
 
-   R_calculateTransform(markerlinenum, anchorlinenum, &adata.transform, flipped,
-      zoffset);
+   R_calculateTransform(markerlinenum, anchorlinenum, &adata.transform, 
+      allowrotate, flipped, zoffset);
 
    adata.maker = markerlinenum;
    adata.anchor = anchorlinenum;
@@ -559,14 +568,14 @@ portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum,
 // Either finds a matching existing two-way anchored portal matching the
 // parameters, or creates a new one. Used in p_spec.c.
 //
-portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum, bool flipped,
-   fixed_t zoffset)
+portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum,
+   bool allowrotate, bool flipped, fixed_t zoffset)
 {
    portal_t *rover, *ret;
    edefstructvar(anchordata_t, adata);
 
-   R_calculateTransform(markerlinenum, anchorlinenum, &adata.transform,
-      flipped, zoffset);
+   R_calculateTransform(markerlinenum, anchorlinenum, &adata.transform, 
+      allowrotate, flipped, zoffset);
 
    adata.maker = markerlinenum;
    adata.anchor = anchorlinenum;
@@ -1624,8 +1633,8 @@ void R_SpawnQuickLinePortal(line_t &line)
    portal_t *portals[2];
    if(!linked)
    {
-      portals[0] = R_GetAnchoredPortal(otherlinenum, linenum, true, 0);
-      portals[1] = R_GetAnchoredPortal(linenum, otherlinenum, true, 0);
+      portals[0] = R_GetTwoWayPortal(otherlinenum, linenum, true, true, 0);
+      portals[1] = R_GetTwoWayPortal(linenum, otherlinenum, true, true, 0);
    }
    else
    {
@@ -1779,12 +1788,13 @@ void R_DefinePortal(const line_t &line)
          return;
       }
       if(type == portaltype_anchor)
-         portal = R_GetAnchoredPortal(destlinenum, thislinenum, flipped, zoffset);
+         portal = R_GetAnchoredPortal(destlinenum, thislinenum, true, flipped, zoffset);
       else if(type == portaltype_twoway)
       {
-         portal = R_GetTwoWayPortal(destlinenum, thislinenum, flipped, zoffset);
-         mirrorportal = R_GetTwoWayPortal(thislinenum, destlinenum, flipped, 
-            -zoffset);
+         portal = R_GetTwoWayPortal(destlinenum, thislinenum, true, flipped,
+            zoffset);
+         mirrorportal = R_GetTwoWayPortal(thislinenum, destlinenum, true,
+            flipped, -zoffset);
       }
       else
       {
