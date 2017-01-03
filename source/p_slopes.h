@@ -30,6 +30,7 @@
 struct line_t;
 struct pslope_t;
 struct v3float_t;
+class UDMFSetupSettings;
 
 // P_MakeLineNormal
 // Calculates a 2D normal for the given line and stores it in the line
@@ -41,6 +42,7 @@ void P_MakeLineNormal(line_t *line);
 // sectors.
 void P_SpawnSlope_Line(int linenum, int staticFn);
 
+void P_SpawnVertexSlopes(const UDMFSetupSettings &setupSettings);
 
 //
 // P_CopySectorSlope
@@ -54,7 +56,7 @@ fixed_t P_GetZAt(pslope_t *slope, fixed_t x, fixed_t y);
 
 
 // Returns the height of the sloped plane at (x, y) as a float
-float P_GetZAtf(pslope_t *slope, float x, float y);
+float P_GetZAtf(const pslope_t *slope, float x, float y);
 
 
 // Returns the distance of the given point from the given origin and normal.

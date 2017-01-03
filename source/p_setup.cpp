@@ -3204,7 +3204,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       }
 
       // start UDMF loading
-      udmf.loadVertices();
+      udmf.loadVertices(setupSettings);
       udmf.loadSectors(setupSettings);
    }
    else

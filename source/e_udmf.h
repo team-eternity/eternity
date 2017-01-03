@@ -91,19 +91,31 @@ class UDMFSetupSettings : public ZoneObject
       int portal;
    };
 
+   struct vertexinfo_t
+   {
+      fixed_t zfloor, zceiling;
+   };
+
    sectorinfo_t *mSectorInitData;
    lineinfo_t *mLineInitData;
+   vertexinfo_t *mVertexInitData;
 
    void useSectorCount();
    void useLineCount();
+   void useVertexCount();
 public:
-   UDMFSetupSettings() : mSectorInitData(nullptr), mLineInitData(nullptr)
+   bool hasSectorData() const { return !!mSectorInitData; }
+   bool hasLineData() const { return !!mLineInitData; }
+   bool hasVertexData() const { return !!mVertexInitData; }
+
+   UDMFSetupSettings() : mSectorInitData(nullptr), mLineInitData(nullptr), mVertexInitData(nullptr)
    {
    }
    ~UDMFSetupSettings()
    {
       efree(mSectorInitData);
       efree(mLineInitData);
+      efree(mVertexInitData);
    }
 
    //
@@ -157,6 +169,27 @@ public:
       useSectorCount();
       return mSectorInitData[index].attach;
    }
+
+   //
+   // Vertex stuff
+   //
+   void setVertexSlope(int index, fixed_t zfloor, fixed_t zceiling)
+   {
+      useVertexCount();
+      mVertexInitData[index].zfloor = zfloor;
+      mVertexInitData[index].zceiling = zceiling;
+   }
+   void getVertexSlope(int index, fixed_t &zfloor, fixed_t &zceiling) const
+   {
+      if(mVertexInitData)
+      {
+         zfloor = mVertexInitData[index].zfloor;
+         zceiling = mVertexInitData[index].zceiling;
+         return;
+      }
+      zfloor = 0;
+      zceiling = 0;
+   }
 };
 
 //==============================================================================
@@ -184,7 +217,7 @@ public:
       namespace_Eternity
    };
 
-   void loadVertices() const;
+   void loadVertices(UDMFSetupSettings &setupSettings) const;
    void loadSectors(UDMFSetupSettings &setupSettings) const;
    void loadSidedefs() const;
    bool loadLinedefs(UDMFSetupSettings &setupSettings);
@@ -314,6 +347,10 @@ private:
    {
       fixed_t x, y;
       bool xset, yset;
+
+      // Eternity
+      fixed_t zfloor;
+      fixed_t zceiling;
    };
 
    class USector : public ZoneObject

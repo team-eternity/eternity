@@ -69,6 +69,13 @@ void UDMFSetupSettings::useLineCount()
    mLineInitData = estructalloc(lineinfo_t, ::numlines);
 }
 
+void UDMFSetupSettings::useVertexCount()
+{
+   if(mVertexInitData)
+      return;
+   mVertexInitData = estructalloc(vertexinfo_t, ::numvertexes);
+}
+
 //==============================================================================
 //
 // Collecting and processing
@@ -78,17 +85,23 @@ void UDMFSetupSettings::useLineCount()
 //
 // Reads the raw vertices and obtains final ones
 //
-void UDMFParser::loadVertices() const
+void UDMFParser::loadVertices(UDMFSetupSettings &setupSettings) const
 {
    numvertexes = (int)mVertices.getLength();
    vertexes = estructalloctag(vertex_t, numvertexes, PU_LEVEL);
    for(int i = 0; i < numvertexes; i++)
    {
-      vertexes[i].x = mVertices[i].x;
-      vertexes[i].y = mVertices[i].y;
+      const uvertex_t &uv = mVertices[i];
+      vertexes[i].x = uv.x;
+      vertexes[i].y = uv.y;
       // SoM: Cardboard stores float versions of vertices.
       vertexes[i].fx = M_FixedToFloat(vertexes[i].x);
       vertexes[i].fy = M_FixedToFloat(vertexes[i].y);
+
+      if(mNamespace == namespace_Eternity)
+      {
+         setupSettings.setVertexSlope(i, uv.zfloor, uv.zceiling);
+      }
    }
 }
 
@@ -663,6 +676,8 @@ enum token_e
    t_ypanningfloor,
    t_yscaleceiling,
    t_yscalefloor,
+   t_zceiling,      
+   t_zfloor,
    t_zoneboundary,
 };
 
@@ -803,6 +818,8 @@ static keytoken_t gTokenList[] =
    TOKEN(ypanningfloor),
    TOKEN(yscaleceiling),
    TOKEN(yscalefloor),
+   TOKEN(zceiling),
+   TOKEN(zfloor),
    TOKEN(zoneboundary),
 };
 
@@ -895,7 +912,11 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
             sidedef->errorline = mLine;
          }
          else if(!mBlockName.strCaseCmp("vertex"))
+         {
             vertex = &mVertices.addNew();
+            vertex->zceiling = D_MAXINT;
+            vertex->zfloor = D_MAXINT;
+         }
          else if(!mBlockName.strCaseCmp("sector"))
             sector = &mSectors.addNew();
          else if(!mBlockName.strCaseCmp("thing"))
@@ -1007,10 +1028,13 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
             }
             else if(vertex)
             {
-               if(kt->token == t_x)
-                  requireFixed(vertex->x, vertex->xset);
-               else if(kt->token == t_y)
-                  requireFixed(vertex->y, vertex->yset);
+               switch(kt->token)
+               {
+                  REQUIRE_FIXED(vertex, x, xset);
+                  REQUIRE_FIXED(vertex, y, yset);
+                  READ_FIXED(vertex, zfloor);
+                  READ_FIXED(vertex, zceiling);
+               }
             }
             else if(sector)
             {

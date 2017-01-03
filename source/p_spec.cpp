@@ -1218,37 +1218,39 @@ static void P_spawnPortals(UDMFSetupSettings &setupSettings)
 {
    // Sector extra UDMF data
    int portalfloor, portalceiling;
-   for(int i = 0; i < numsectors; i++)
-   {
-      // These must be after the line checking
-      sector_t &sector = sectors[i];
-      setupSettings.getSectorPortals(i, portalceiling, portalfloor);
-      R_ApplyPortals(sector, portalceiling, portalfloor);
-   }
-
-   for(int i = 0; i < numlines; i++)
-   {
-      line_t *line = &lines[i];
-
-      R_ApplyPortal(*line, setupSettings.getLinePortal(i));
-
-      // haleyjd 02/05/13: lookup the static init function
-      int staticFn = EV_StaticInitForSpecial(line->special);
-
-      switch(staticFn)
+   if(setupSettings.hasSectorData())
+      for(int i = 0; i < numsectors; i++)
       {
-      case EV_STATIC_PORTAL_SECTOR_PARAM_COMPAT:
-         if(line->args[paramPortal_argType] == paramPortal_copied ||
-            line->args[paramPortal_argType] == paramPortal_copyline)
-         {
-            P_spawnDeferredParamPortal(line, staticFn);
-         }
-         break;
-
-      default: // Not a function handled here
-         break;
+         // These must be after the line checking
+         sector_t &sector = sectors[i];
+         setupSettings.getSectorPortals(i, portalceiling, portalfloor);
+         R_ApplyPortals(sector, portalceiling, portalfloor);
       }
-   }
+
+   if(setupSettings.hasLineData())
+      for(int i = 0; i < numlines; i++)
+      {
+         line_t *line = &lines[i];
+
+         R_ApplyPortal(*line, setupSettings.getLinePortal(i));
+
+         // haleyjd 02/05/13: lookup the static init function
+         int staticFn = EV_StaticInitForSpecial(line->special);
+
+         switch(staticFn)
+         {
+         case EV_STATIC_PORTAL_SECTOR_PARAM_COMPAT:
+            if(line->args[paramPortal_argType] == paramPortal_copied ||
+               line->args[paramPortal_argType] == paramPortal_copyline)
+            {
+               P_spawnDeferredParamPortal(line, staticFn);
+            }
+            break;
+
+         default: // Not a function handled here
+            break;
+         }
+      }
 }
 
 static void P_attachSectors(UDMFSetupSettings &settings);
@@ -1286,6 +1288,9 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
    P_SpawnFriction();  // phares 3/12/98: New friction model using linedefs
    
    P_SpawnPushers();   // phares 3/20/98: New pusher model using linedefs
+
+   // For vertex-based slopes
+   P_SpawnVertexSlopes(setupSettings);
 
    for(int i = 0; i < numlines; i++)
    {
@@ -2293,6 +2298,8 @@ static void P_attachSectors(UDMFSetupSettings &settings)
    PODCollection<attachedsurface_t> floornew, ceilingnew;
    bool found;
    int settype;
+   if(!settings.hasSectorData())
+      return;
    for(int i = 0; i < numsectors; ++i)
    {
       const udmfattach_t &attach = settings.getAttachInfo(i);
