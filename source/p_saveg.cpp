@@ -175,11 +175,11 @@ void SaveArchive::archiveSize(size_t &value)
       savefile->writeUint64(uv);
    else
    {
+      loadfile->readUint64(uv);
 #if SIZE_MAX > UINT_MAX
       if(uv > UINT_MAX)
          I_Error("Cannot load save game: size_t value out of range on this platform\n");
 #endif
-      loadfile->readUint64(uv);
       value = size_t(uv);
    }
 }
