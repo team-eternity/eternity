@@ -411,6 +411,8 @@ static void P_makeVertexSlope(sector_t &sector,
    fixed_t zmid;
    float zdiff;
 
+   if(zfloor[0] != sector.floorheight || zfloor[1] != sector.floorheight || 
+      zfloor[2] != sector.floorheight)
    {
       zmid = zfloor[0] / 3 + zfloor[1] / 3 + zfloor[2] / 3;
       zpos[0] = M_FixedToDouble(zfloor[0]);
@@ -441,6 +443,9 @@ static void P_makeVertexSlope(sector_t &sector,
       sector.f_slope = P_MakeSlope(&centre, &direction, zdiff, false);
    }
 
+   if(zceiling[0] != sector.ceilingheight || 
+      zceiling[1] != sector.ceilingheight || 
+      zceiling[2] != sector.ceilingheight)
    {
       zmid = zceiling[0] / 3 + zceiling[1] / 3 + zceiling[2] / 3;
       zpos[0] = M_FixedToDouble(zceiling[0]);
