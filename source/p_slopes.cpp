@@ -581,5 +581,45 @@ float P_DistFromPlanef(const v3float_t *point, const v3float_t *pori,
           (point->z - pori->z) * pnormal->z;
 }
 
+//
+// Returns the floor height of a possibly sloped sector, specifying coordinates
+// and even group id, in case the coordinates are across a portal to the sector.
+// Group id can be R_NOGROUP if we don't care about this detail.
+//
+fixed_t P_GetFloorHeight(const sector_t *sector, fixed_t x, fixed_t y,
+   int groupid)
+{
+   if(sector->f_slope)
+   {
+      if(groupid != R_NOGROUP)
+      {
+         const linkoffset_t *link = P_GetLinkOffset(groupid, sector->groupid);
+         x += link->x;
+         y += link->y;
+      }
+      return P_GetZAt(sector->f_slope, x, y);
+   }
+   return sector->floorheight;
+}
+
+//
+// Same as above, but for ceiling
+//
+fixed_t P_GetCeilingHeight(const sector_t *sector, fixed_t x, fixed_t y,
+   int groupid)
+{
+   if(sector->c_slope)
+   {
+      if(groupid != R_NOGROUP)
+      {
+         const linkoffset_t *link = P_GetLinkOffset(groupid, sector->groupid);
+         x += link->x;
+         y += link->y;
+      }
+      return P_GetZAt(sector->c_slope, x, y);
+   }
+   return sector->ceilingheight;
+}
+
 // EOF
 

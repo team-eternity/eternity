@@ -27,6 +27,8 @@
 #ifndef P_SLOPES_H__
 #define P_SLOPES_H__
 
+#include "linkoffs.h"
+
 struct line_t;
 struct pslope_t;
 struct v3float_t;
@@ -62,6 +64,27 @@ float P_GetZAtf(const pslope_t *slope, float x, float y);
 // Returns the distance of the given point from the given origin and normal.
 float P_DistFromPlanef(const v3float_t *point, const v3float_t *pori, 
                        const v3float_t *pnormal);
+
+fixed_t P_GetFloorHeight(const sector_t *sector, fixed_t x, fixed_t y,
+   int groupid = R_NOGROUP);
+
+fixed_t P_GetCeilingHeight(const sector_t *sector, fixed_t x, fixed_t y,
+   int groupid = R_NOGROUP);
+
+//
+// Use templates to avoid the need of including headers.
+// This is for convenience.
+//
+template <typename MOBJ>
+inline static fixed_t P_GetFloorHeight(const sector_t *sector, const MOBJ *mobj)
+{
+   return P_GetFloorHeight(sector, mobj->x, mobj->y, mobj->groupid);
+}
+template <typename MOBJ>
+inline static fixed_t P_GetCeilingHeight(const sector_t *sector, const MOBJ *mobj)
+{
+   return P_GetCeilingHeight(sector, mobj->x, mobj->y, mobj->groupid);
+}
 
 #endif
 
