@@ -3057,7 +3057,8 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          return;
       }
 
-      portal = R_GetAnchoredPortal(line - lines, s);
+      // Doom format doesn't allow rotating portals
+      portal = R_GetAnchoredPortal(line - lines, s, false, false, 0);
       break;
 
    case portal_twoway:
@@ -3102,13 +3103,13 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       if(effects == portal_lineonly)
       {
          // special case for line portals
-         portal = R_GetTwoWayPortal(s, line - lines);
+         portal = R_GetTwoWayPortal(s, line - lines, false, false, 0);
          line->beyondportalline = &lines[s];
          P_SetPortal(sector, line, portal, portal_lineonly);
          return;
       }
 
-      portal = R_GetTwoWayPortal(line - lines, s);
+      portal = R_GetTwoWayPortal(line - lines, s, false, false, 0);
       break;
 
    case portal_linked:
