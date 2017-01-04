@@ -411,16 +411,8 @@ static void P_makeVertexSlope(sector_t &sector,
    fixed_t zmid;
    float zdiff;
 
-   if(zfloor[0] == zfloor[1] && zfloor[0] == zfloor[2])
-   {
-      if(zfloor[0] != sector.floorheight)
-         P_SetFloorHeight(&sector, zfloor[0]);
-   }
-   else
    {
       zmid = zfloor[0] / 3 + zfloor[1] / 3 + zfloor[2] / 3;
-      if(zmid != sector.floorheight)
-         P_SetFloorHeight(&sector, zmid);
       zpos[0] = M_FixedToDouble(zfloor[0]);
       zpos[1] = M_FixedToDouble(zfloor[1]);
       zpos[2] = M_FixedToDouble(zfloor[2]);
@@ -433,26 +425,24 @@ static void P_makeVertexSlope(sector_t &sector,
 
       centre.x = vertices[0]->fx / 3 + vertices[1]->fx / 3 + vertices[2]->fx / 3;
       centre.y = vertices[0]->fy / 3 + vertices[1]->fy / 3 + vertices[2]->fy / 3;
-      centre.z = sector.floorheightf;
+      centre.z = M_FixedToFloat(zmid);
 
       zdiff = sqrtf(direction.x * direction.x + direction.y * direction.y);
       if(!zdiff)
-         return;
-      direction.x /= zdiff;
-      direction.y /= zdiff;
+      {
+         direction.x = 1;
+         direction.y = 0;
+      }
+      else
+      {
+         direction.x /= zdiff;
+         direction.y /= zdiff;
+      }
       sector.f_slope = P_MakeSlope(&centre, &direction, zdiff, false);
    }
 
-   if(zceiling[0] == zceiling[1] && zceiling[0] == zceiling[2])
-   {
-      if(zceiling[0])
-         P_SetCeilingHeight(&sector, zceiling[0]);
-   }
-   else
    {
       zmid = zceiling[0] / 3 + zceiling[1] / 3 + zceiling[2] / 3;
-      if(zmid != sector.ceilingheight)
-         P_SetCeilingHeight(&sector, zmid);
       zpos[0] = M_FixedToDouble(zceiling[0]);
       zpos[1] = M_FixedToDouble(zceiling[1]);
       zpos[2] = M_FixedToDouble(zceiling[2]);
@@ -465,13 +455,19 @@ static void P_makeVertexSlope(sector_t &sector,
 
       centre.x = vertices[0]->fx / 3 + vertices[1]->fx / 3 + vertices[2]->fx / 3;
       centre.y = vertices[0]->fy / 3 + vertices[1]->fy / 3 + vertices[2]->fy / 3;
-      centre.z = sector.ceilingheightf;
+      centre.z = M_FixedToFloat(zmid);;
 
       zdiff = sqrtf(direction.x * direction.x + direction.y * direction.y);
       if(!zdiff)
-         return;
-      direction.x /= zdiff;
-      direction.y /= zdiff;
+      {
+         direction.x = 1;
+         direction.y = 0;
+      }
+      else
+      {
+         direction.x /= zdiff;
+         direction.y /= zdiff;
+      }
       sector.c_slope = P_MakeSlope(&centre, &direction, zdiff, true);
    }
 }
