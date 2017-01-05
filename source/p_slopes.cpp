@@ -410,70 +410,53 @@ static void P_makeVertexSlope(sector_t &sector,
    v3float_t centre;
    fixed_t zmid;
    float zdiff;
+      
+   centre.x = vertices[0]->fx / 3 + vertices[1]->fx / 3 + vertices[2]->fx / 3;
+   centre.y = vertices[0]->fy / 3 + vertices[1]->fy / 3 + vertices[2]->fy / 3;
 
-   if(zfloor[0] != sector.floorheight || zfloor[1] != sector.floorheight || 
-      zfloor[2] != sector.floorheight)
+   // The items to alternate
+   const fixed_t *zlist;
+   fixed_t sectorheight;
+   pslope_t **pslope;
+   bool isceiling;
+
+   for(int alternation = 0; alternation < 2; ++alternation)
    {
-      zmid = zfloor[0] / 3 + zfloor[1] / 3 + zfloor[2] / 3;
-      zpos[0] = M_FixedToDouble(zfloor[0]);
-      zpos[1] = M_FixedToDouble(zfloor[1]);
-      zpos[2] = M_FixedToDouble(zfloor[2]);
-      deltax = zpos[0] * ypos[1] + zpos[1] * ypos[2] + zpos[2] * ypos[0] -
-         zpos[2] * ypos[1] - zpos[0] * ypos[2] - zpos[1] * ypos[0];
-      deltay = xpos[0] * zpos[1] + xpos[1] * zpos[2] + xpos[2] * zpos[0] -
-         xpos[2] * zpos[1] - xpos[0] * zpos[2] - xpos[1] * zpos[0];
-      direction.x = static_cast<float>(deltax / delta);
-      direction.y = static_cast<float>(deltay / delta);
+      zlist = !alternation ? zfloor : zceiling;
+      sectorheight = !alternation ? sector.floorheight : sector.ceilingheight;
+      pslope = !alternation ? &sector.f_slope : &sector.c_slope;
+      isceiling = !alternation ? false : true;
 
-      centre.x = vertices[0]->fx / 3 + vertices[1]->fx / 3 + vertices[2]->fx / 3;
-      centre.y = vertices[0]->fy / 3 + vertices[1]->fy / 3 + vertices[2]->fy / 3;
-      centre.z = M_FixedToFloat(zmid);
-
-      zdiff = sqrtf(direction.x * direction.x + direction.y * direction.y);
-      if(!zdiff)
+      if(zlist[0] != sectorheight || zlist[1] != sectorheight || 
+         zlist[2] != sectorheight)
       {
-         direction.x = 1;
-         direction.y = 0;
-      }
-      else
-      {
-         direction.x /= zdiff;
-         direction.y /= zdiff;
-      }
-      sector.f_slope = P_MakeSlope(&centre, &direction, zdiff, false);
-   }
+         zmid = zlist[0] / 3 + zlist[1] / 3 + zlist[2] / 3;
+         centre.z = M_FixedToFloat(zmid);
 
-   if(zceiling[0] != sector.ceilingheight || 
-      zceiling[1] != sector.ceilingheight || 
-      zceiling[2] != sector.ceilingheight)
-   {
-      zmid = zceiling[0] / 3 + zceiling[1] / 3 + zceiling[2] / 3;
-      zpos[0] = M_FixedToDouble(zceiling[0]);
-      zpos[1] = M_FixedToDouble(zceiling[1]);
-      zpos[2] = M_FixedToDouble(zceiling[2]);
-      deltax = zpos[0] * ypos[1] + zpos[1] * ypos[2] + zpos[2] * ypos[0] -
-         zpos[2] * ypos[1] - zpos[0] * ypos[2] - zpos[1] * ypos[0];
-      deltay = xpos[0] * zpos[1] + xpos[1] * zpos[2] + xpos[2] * zpos[0] -
-         xpos[2] * zpos[1] - xpos[0] * zpos[2] - xpos[1] * zpos[0];
-      direction.x = static_cast<float>(deltax / delta);
-      direction.y = static_cast<float>(deltay / delta);
+         zpos[0] = M_FixedToDouble(zlist[0]);
+         zpos[1] = M_FixedToDouble(zlist[1]);
+         zpos[2] = M_FixedToDouble(zlist[2]);
+         deltax = zpos[0] * ypos[1] + zpos[1] * ypos[2] + zpos[2] * ypos[0] -
+            zpos[2] * ypos[1] - zpos[0] * ypos[2] - zpos[1] * ypos[0];
+         deltay = xpos[0] * zpos[1] + xpos[1] * zpos[2] + xpos[2] * zpos[0] -
+            xpos[2] * zpos[1] - xpos[0] * zpos[2] - xpos[1] * zpos[0];
 
-      centre.x = vertices[0]->fx / 3 + vertices[1]->fx / 3 + vertices[2]->fx / 3;
-      centre.y = vertices[0]->fy / 3 + vertices[1]->fy / 3 + vertices[2]->fy / 3;
-      centre.z = M_FixedToFloat(zmid);;
+         direction.x = static_cast<float>(deltax / delta);
+         direction.y = static_cast<float>(deltay / delta);
 
-      zdiff = sqrtf(direction.x * direction.x + direction.y * direction.y);
-      if(!zdiff)
-      {
-         direction.x = 1;
-         direction.y = 0;
+         zdiff = sqrtf(direction.x * direction.x + direction.y * direction.y);
+         if(!zdiff)
+         {
+            direction.x = 1;
+            direction.y = 0;
+         }
+         else
+         {
+            direction.x /= zdiff;
+            direction.y /= zdiff;
+         }
+         *pslope = P_MakeSlope(&centre, &direction, zdiff, isceiling);
       }
-      else
-      {
-         direction.x /= zdiff;
-         direction.y /= zdiff;
-      }
-      sector.c_slope = P_MakeSlope(&centre, &direction, zdiff, true);
    }
 }
 
