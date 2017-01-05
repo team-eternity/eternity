@@ -53,6 +53,7 @@
 #include "p_map3d.h"
 #include "p_maputl.h"
 #include "p_portal.h"   // ioanch 20160116
+#include "p_slopes.h"
 #include "p_spec.h"
 #include "p_xenemy.h"
 #include "r_data.h"
@@ -903,8 +904,8 @@ bool ACS_CF_GetSectorCeilZ(ACS_CF_ARGS)
 
    if(secnum >= 0)
    {
-      // TODO/FIXME: sloped sectors
-      thread->dataStk.push(sectors[secnum].ceilingheight);
+      thread->dataStk.push(P_GetCeilingHeight(&sectors[secnum], 
+         argV[1] << FRACBITS, argV[2] << FRACBITS));
    }
    else
       thread->dataStk.push(0);
@@ -923,8 +924,8 @@ bool ACS_CF_GetSectorFloorZ(ACS_CF_ARGS)
 
    if(secnum >= 0)
    {
-      // TODO/FIXME: sloped sectors
-      thread->dataStk.push(sectors[secnum].floorheight);
+      thread->dataStk.push(P_GetFloorHeight(&sectors[secnum], 
+         argV[1] << FRACBITS, argV[2] << FRACBITS));
    }
    else
       thread->dataStk.push(0);
