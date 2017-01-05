@@ -51,6 +51,7 @@
 #include "p_portal.h"
 #include "p_pspr.h"
 #include "p_setup.h"
+#include "p_slopes.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "r_state.h"
@@ -1056,8 +1057,8 @@ void A_ThingSummon(actionargs_t *actionargs)
    const sector_t *csector = P_ExtremeSectorAtPoint(newmobj, true);
    const sector_t *fsector = P_ExtremeSectorAtPoint(newmobj, false);
    
-   if(newmobj->z > csector->ceilingheight - newmobj->height ||
-      newmobj->z < fsector->floorheight)
+   if(newmobj->z > P_GetCeilingHeight(csector, newmobj) - newmobj->height ||
+      newmobj->z < P_GetFloorHeight(fsector, newmobj))
    {
       actionargs_t dieaction;
 
