@@ -842,13 +842,15 @@ protected:
       return c;
    }
 
-   virtual int uflow()
+   virtual int underflow()
    {
       // Read single byte from source.
-      uint8_t c;
-      if(!in || !in->readUint8(c)) return EOF;
-      return c;
+      if(!in || in->read(buf, 1) != 1) return EOF;
+      setg(buf, buf, buf + 1);
+      return buf[0];
    }
+
+   char buf[1];
 };
 
 //
