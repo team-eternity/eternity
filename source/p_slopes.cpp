@@ -503,17 +503,22 @@ void P_SpawnVertexSlopes(const UDMFSetupSettings &setupSettings)
 //
 void P_copyPlane(int tag, sector_t *dest, bool copyCeil)
 {
-   const sector_t *srcsec;
-   int secnum = P_FindSectorFromTag(tag, -1);
-   if(secnum == -1)
-      return;
+   for(int secnum = -1; (secnum = P_FindSectorFromTag(tag, secnum)) != -1; )
+   {
+      // Deliberately overwrite the plane_align slope
+      const sector_t &srcsec = sectors[secnum];
+      if(copyCeil && srcsec.c_slope)
+      {
+         dest->c_slope = P_CopySlope(srcsec.c_slope);
+         return;
+      }
 
-   srcsec = &sectors[secnum];
-
-   if(copyCeil)
-      dest->c_slope = P_CopySlope(srcsec->c_slope);
-   else
-      dest->f_slope = P_CopySlope(srcsec->f_slope);
+      if(!copyCeil && srcsec.f_slope)
+      {
+         dest->f_slope = P_CopySlope(srcsec.f_slope);
+         return;
+      }
+   }
 }
 
 //
