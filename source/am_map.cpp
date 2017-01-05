@@ -42,6 +42,7 @@
 #include "p_maputl.h"
 #include "p_portal.h"
 #include "p_setup.h"
+#include "p_slopes.h"
 #include "p_spec.h"
 #include "st_stuff.h"
 #include "r_draw.h"
@@ -1016,7 +1017,7 @@ void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z)
    {
       x = M_DoubleToFixed(m_x + m_w / 2);
       y = M_DoubleToFixed(m_y + m_h / 2);
-      z = R_PointInSubsector(x, y)->sector->floorheight;
+      z = P_GetFloorHeight(R_PointInSubsector(x, y)->sector, x, y);
    }
 }
 
