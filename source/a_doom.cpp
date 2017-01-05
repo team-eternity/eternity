@@ -51,6 +51,7 @@
 #include "p_pspr.h"
 #include "p_setup.h"
 #include "p_skin.h"
+#include "p_slopes.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "r_defs.h"
@@ -1098,8 +1099,8 @@ void A_PainShootSkull(Mobj *actor, angle_t angle)
       const sector_t *floorsector = P_ExtremeSectorAtPoint(newmobj, false);
       // ioanch: removed redundant parentheses (of which the compiler doesn't 
       // cry)
-      if(newmobj->z > ceilingsector->ceilingheight - newmobj->height ||
-         newmobj->z < floorsector->floorheight)
+      if(newmobj->z > P_GetCeilingHeight(ceilingsector, newmobj) - newmobj->height ||
+         newmobj->z < P_GetFloorHeight(floorsector, newmobj))
       {
          // kill it immediately
          P_DamageMobj(newmobj,actor,actor,10000,MOD_UNKNOWN);
