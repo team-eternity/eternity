@@ -1476,6 +1476,7 @@ void P_SpawnDeferredSpecials(UDMFSetupSettings &setupSettings)
       case EV_STATIC_SLOPE_FRONTFLOOR_TAG: 
       case EV_STATIC_SLOPE_FRONTCEILING_TAG:
       case EV_STATIC_SLOPE_FRONTFLOORCEILING_TAG:
+      case EV_STATIC_SLOPE_PARAM_TAG:
          // SoM: Copy slopes
          P_CopySectorSlope(line, staticFn);
          break;
