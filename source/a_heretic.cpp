@@ -48,6 +48,7 @@
 #include "p_portal.h"   // ioanch 20160116
 #include "p_pspr.h"
 #include "p_setup.h"
+#include "p_slopes.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "r_defs.h"
@@ -65,10 +66,13 @@ static void P_spawnGlitter(Mobj *actor, int type)
    // ioanch 20160116: make it portal-aware BOTH beyond line and sector gates
    fixed_t dx = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
    fixed_t dy = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
-   v2fixed_t pos = P_LinePortalCrossing(*actor, dx, dy);
+   int groupid = R_NOGROUP;
+   v2fixed_t pos = P_LinePortalCrossing(*actor, dx, dy, &groupid);
+
+   const sector_t *floorsector = P_ExtremeSectorAtPoint(actor, false);
 
    Mobj *mo = P_SpawnMobj(pos.x, pos.y, 
-      P_ExtremeSectorAtPoint(actor, false)->floorheight, type);
+      P_GetFloorHeight(floorsector, pos.x, pos.y, groupid), type);
    mo->momz = FRACUNIT / 4;
 }
 
