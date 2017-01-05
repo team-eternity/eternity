@@ -664,8 +664,8 @@ void A_GenWizard(actionargs_t *actionargs)
    // ioanch 20160116: portal aware
    if(!P_CheckPosition(mo, mo->x, mo->y) ||
       (mo->z >
-      (P_ExtremeSectorAtPoint(mo, true)->ceilingheight - mo->height)) ||
-      (mo->z < P_ExtremeSectorAtPoint(mo, false)->floorheight))
+      (P_GetCeilingHeight(P_ExtremeSectorAtPoint(mo, true), mo) - mo->height)) ||
+      (mo->z < P_GetFloorHeight(P_ExtremeSectorAtPoint(mo, false), mo)))
    {
       // doesn't fit, so remove it immediately
       mo->removeThinker();
