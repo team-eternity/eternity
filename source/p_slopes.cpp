@@ -341,7 +341,7 @@ void P_SpawnSlope_Line(int linenum, int staticFn)
 //
 void P_copyPlane(int tag, sector_t *dest, bool copyCeil)
 {
-   sector_t *srcsec;
+   const sector_t *srcsec;
    int secnum = P_FindSectorFromTag(tag, -1);
    if(secnum == -1)
       return;
@@ -381,20 +381,20 @@ void P_copySectorSlopeParam(line_t *line)
          line->backsector->f_slope = P_CopySlope(line->frontsector->f_slope);
       else if((line->args[4] & 3) == 2)
          line->frontsector->f_slope = P_CopySlope(line->backsector->f_slope);
-      else if(line->args[4] & 3)
+      else if((line->args[4] & 3) == 3)
       {
          C_Printf(FC_ERROR "P_CopySectorSlopeParam: Plane_Copy[4] flags 1 and 2 are mutually"
-            " exclusive.");
+            " exclusive.\n");
       }
 
       if((line->args[4] & 12) == 4)
          line->backsector->c_slope = P_CopySlope(line->frontsector->c_slope);
       else if((line->args[4] & 12) == 8)
          line->frontsector->c_slope = P_CopySlope(line->backsector->c_slope);
-      else if(line->args[4] & 12)
+      else if((line->args[4] & 12) == 12)
       {
          C_Printf(FC_ERROR "P_CopySectorSlopeParam: Plane_Copy[4] flags 4 and 8 are mutually"
-            " exclusive.");
+            " exclusive.\n");
       }
    }
 
@@ -434,7 +434,7 @@ void P_CopySectorSlope(line_t *line, int staticFn)
    // Check for copy linedefs
    for(i = -1; (i = P_FindSectorFromLineArg0(line, i)) >= 0;)
    {
-      sector_t *srcsec = &sectors[i];
+      const sector_t *srcsec = &sectors[i];
 
       if(copyFloor && !fsec->f_slope && srcsec->f_slope)
          fsec->f_slope = P_CopySlope(srcsec->f_slope);
