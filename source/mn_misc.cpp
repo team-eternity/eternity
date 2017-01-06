@@ -388,34 +388,48 @@ static const char *cat_strs[NUMCATS] =
    FC_ABSCENTER FC_HI "Special Thanks",
 };
 
-static const char *val_strs_l[][NUMCATS] =
+struct val_str_t
 {
-   { "James Haley\n", "David Hill\n", "" },
-      
-   {""},
+   const char *l; // String in the left column
+   const char *m; // String in the middle (if no string is on either side)
+   const char *r; // String in the right column
 
-   {"Sarah Mancuso\n"},
-   {"Joe Kennedy\n", "Joel Murdoch\n", ""},
+   bool isNull() const { return l == nullptr && m == nullptr && r == nullptr; }
 };
 
-static const char *val_strs_m[NUMCATS] =
+static const val_str_t val_programmers[] =
 {
-   FC_ABSCENTER "Stephen McGranahan\n",
-
-   FC_ABSCENTER FC_HI "SMMU" FC_NORMAL " by Simon Howard\n",
-
-   "",
-   FC_ABSCENTER "SargeBaldy\n",
+   { "James Haley", nullptr, "David Hill" },
+   { "Ioan Chera", nullptr, "Max Waine" },
+   { nullptr, FC_ABSCENTER "Stephen McGranahan\n", nullptr },
+   { nullptr, nullptr, nullptr }
 };
 
-static const char *val_strs_r[][NUMCATS] =
+static const val_str_t val_basedon[] =
 {
-   { "Ioan Chera\n", "Max Waine\n", "" },
+   {nullptr, FC_ABSCENTER FC_HI "SMMU" FC_NORMAL " by Simon Howard", nullptr},
+   { nullptr, nullptr, nullptr }
+};
 
-   { "" },
+static const val_str_t val_graphics[] = {
+   { "Sarah Mancuso", nullptr, "Sven Ruthner" },
+   { nullptr, nullptr, nullptr }
+};
 
-   { "Sven Ruthner\n" },
-   { "Julian Aubourg\n", "Anders Astrand\n", "" },
+static const val_str_t val_thanks[] =
+{
+   { "Joe Kennedy", nullptr, "Julian Aubourg" },
+   { "Joel Murdoch", nullptr, "Anders Astrand" },
+   { nullptr, FC_ABSCENTER "SargeBaldy", nullptr },
+   { nullptr, nullptr, nullptr }
+};
+
+static const val_str_t *val_strs[NUMCATS] =
+{
+   val_programmers,
+   val_basedon,
+   val_graphics,
+   val_thanks
 };
 
 void MN_DrawCredits()
@@ -446,23 +460,26 @@ void MN_DrawCredits()
 
       y += V_FontStringHeight(menu_font_normal, cat_strs[i]);
 
-      for(int j = 0; val_strs_l[i][j]; j++)
+      // Iterate through the val_str_t's for the current category.
+      // TODO: Figure out if there's a way to process all the val_str_t's at once for a single
+      // category. ATM it iterates through so it can correctly align the left strings.
+      for(int j = 0; !val_strs[i][j].isNull(); j++)
       {
-         // Write left
-         int valStrLWidth = V_FontStringWidth(menu_font_normal, val_strs_l[i][j]);
-         V_FontWriteText(menu_font_normal, val_strs_l[i][j], line_x - valStrLWidth - 8,
-                         y, &subscreen43);
+         // Write left if need be
+         if(val_strs[i][j].l != nullptr)
+         {
+            int valStrLWidth = V_FontStringWidth(menu_font_normal, val_strs[i][j].l);
+            V_FontWriteText(menu_font_normal, val_strs[i][j].l, line_x - valStrLWidth - 8,
+                            y, &subscreen43);
+         }
 
-         // Write right
-         V_FontWriteText(menu_font_normal, val_strs_r[i][j], line_x + 8,
-            y, &subscreen43);
+         // Write right if need be
+         if(val_strs[i][j].r != nullptr)
+            V_FontWriteText(menu_font_normal, val_strs[i][j].r, line_x + 8, y, &subscreen43);
 
          // Write middle if need be
-         if(!strcmp(val_strs_l[i][j], "") && strcmp(val_strs_m[i], ""))
-         {
-            V_FontWriteText(menu_font_normal, val_strs_m[i], 0,
-               y, &subscreen43);
-         }
+         if(val_strs[i][j].m != nullptr)
+            V_FontWriteText(menu_font_normal, val_strs[i][j].m, 0,  y, &subscreen43);
 
          y += V_FontStringHeight(menu_font_normal, "");
        }
