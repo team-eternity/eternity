@@ -1063,6 +1063,7 @@ PARAMLINE(ParamCeilingLowerAndCrushDist);
 PARAMLINE(ParamCeilingGeneric);
 PARAMLINE(ParamGenCrusher);
 PARAMLINE(ParamStairsBuildUpDoom);
+PARAMLINE(ParamStairsBuildUpDoomCrush);
 PARAMLINE(ParamStairsBuildDownDoom);
 PARAMLINE(ParamStairsBuildUpDoomSync);
 PARAMLINE(ParamStairsBuildDownDoomSync);
@@ -1551,6 +1552,7 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(488, ParamPlatDWUSLip,                    "Plat_DownWaitUpStayLip")
    LINESPECNAMED(489, ParamPlatPerpetualRaiseLip,          "Plat_PerpetualRaiseLip")
    LINESPECNAMED(490, ACSLockedExecuteDoor,                "ACS_LockedExecuteDoor")
+   LINESPECNAMED(494, ParamStairsBuildUpDoomCrush,         "Stairs_BuildUpDoomCrush")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1782,6 +1784,7 @@ ev_binding_t UDMFEternityBindings[] =
    LINESPECNAMED(270, ParamStairsBuildDownDoom,        "Stairs_BuildDownDoom")
    LINESPECNAMED(271, ParamStairsBuildUpDoomSync,      "Stairs_BuildUpDoomSync")
    LINESPECNAMED(272, ParamStairsBuildDownDoomSync,    "Stairs_BuildDownDoomSync")
+   LINESPECNAMED(273, ParamStairsBuildUpDoomCrush,     "Stairs_BuildUpDoomCrush")
 };
 
 const size_t UDMFEternityBindingsLen = earrlen(UDMFEternityBindings);

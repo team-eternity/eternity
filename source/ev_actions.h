@@ -182,6 +182,7 @@ DECLARE_ACTION(EV_ActionParamCeilingLowerAndCrushDist);
 DECLARE_ACTION(EV_ActionParamCeilingGeneric);
 DECLARE_ACTION(EV_ActionParamGenCrusher);
 DECLARE_ACTION(EV_ActionParamStairsBuildUpDoom);
+DECLARE_ACTION(EV_ActionParamStairsBuildUpDoomCrush);
 DECLARE_ACTION(EV_ActionParamStairsBuildDownDoom);
 DECLARE_ACTION(EV_ActionParamStairsBuildUpDoomSync);
 DECLARE_ACTION(EV_ActionParamStairsBuildDownDoomSync);

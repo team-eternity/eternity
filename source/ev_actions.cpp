@@ -4246,5 +4246,29 @@ DEFINE_ACTION(EV_ActionParamPlatPerpetualRaiseLip)
    return EV_DoParamPlat(instance->line, instance->args, paramPerpetualRaiseLip);
 }
 
+//
+// Implements Stairs_BuildUpDoomCrush(tag, speed, stepsize, delay, reset)
+//
+// * ExtraData: 494
+// * UDMF:      273
+//
+DEFINE_ACTION(EV_ActionParamStairsBuildUpDoomCrush)
+{
+   INIT_STRUCT(stairdata_t, sd);
+
+   sd.flags = SDF_HAVESPAC;
+   sd.spac = instance->spac; // Hexen-style activation
+   sd.direction = 1;              // up
+   sd.speed_type = SpeedParam;
+   sd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   sd.stepsize_type = StepSizeParam;
+   sd.stepsize_value = instance->args[2] * FRACUNIT;     // height
+   sd.delay_value = instance->args[3];                // delay
+   sd.reset_value = instance->args[4];                // reset
+   sd.crush = true;
+
+   return EV_DoParamStairs(instance->line, instance->tag, &sd);
+}
+
 // EOF
 

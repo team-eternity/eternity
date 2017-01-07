@@ -1168,6 +1168,7 @@ typedef struct stairdata_s
    fixed_t speed_value;
    int delay_value;
    int reset_value;
+   bool crush; // does it crush
 } stairdata_t;
 
 class ElevatorThinker : public SectorThinker
