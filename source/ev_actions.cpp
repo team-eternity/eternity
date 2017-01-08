@@ -4270,5 +4270,16 @@ DEFINE_ACTION(EV_ActionParamStairsBuildUpDoomCrush)
    return EV_DoParamStairs(instance->line, instance->tag, &sd);
 }
 
+//
+// Implements Sector_ChangeSound(tag, sound)
+//
+// * ExtraData: 495
+// * Hexen:     140
+//
+DEFINE_ACTION(EV_ActionParamSectorChangeSound)
+{
+   return EV_SectorSoundChange(instance->tag, instance->args[1]);
+}
+
 // EOF
 

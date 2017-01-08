@@ -1143,6 +1143,7 @@ PARAMLINE(HealThing);
 PARAMLINE(ParamSectorSetRotation);
 PARAMLINE(ParamSectorSetFloorPanning);
 PARAMLINE(ParamSectorSetCeilingPanning);
+PARAMLINE(ParamSectorChangeSound);
 PARAMLINE(TurnTagLightsOff);
 
 //=============================================================================
@@ -1553,6 +1554,7 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(489, ParamPlatPerpetualRaiseLip,          "Plat_PerpetualRaiseLip")
    LINESPECNAMED(490, ACSLockedExecuteDoor,                "ACS_LockedExecuteDoor")
    LINESPECNAMED(494, ParamStairsBuildUpDoomCrush,         "Stairs_BuildUpDoomCrush")
+   LINESPECNAMED(495, ParamSectorChangeSound,              "Sector_ChangeSound")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1697,6 +1699,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(136, ThingProjectileGravity,              "Thing_ProjectileGravity")
    LINESPECNAMED(137, ThingSpawnNoFog,                     "Thing_SpawnNoFog")
    LINESPECNAMED(138, FloorWaggle,                         "Floor_Waggle")
+   LINESPECNAMED(140, ParamSectorChangeSound,              "Sector_ChangeSound")
    LINESPECNAMED(168, ParamCeilingCrushAndRaiseDist,       "Ceiling_CrushAndRaiseDist")
    LINESPECNAMED(176, ThingChangeTID,                      "Thing_ChangeTID")
    LINESPECNAMED(179, ChangeSkill,                         "ChangeSkill")
