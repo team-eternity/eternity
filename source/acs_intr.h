@@ -135,6 +135,15 @@ enum
    ACS_TP_Friction     = 42,
    ACS_TP_DamageMult   = 43,
 
+   ACS_TP_Counter0     = 100,
+   ACS_TP_Counter1     = 101,
+   ACS_TP_Counter2     = 102,
+   ACS_TP_Counter3     = 103,
+   ACS_TP_Counter4     = 104,
+   ACS_TP_Counter5     = 105,
+   ACS_TP_Counter6     = 106,
+   ACS_TP_Counter7     = 107,
+
    // Internal properties, not meant for external use.
    ACS_TP_Angle,
    ACS_TP_Armor,

@@ -362,6 +362,14 @@ bool ACS_ChkThingProp(Mobj *mo, uint32_t var, uint32_t val)
    case ACS_TP_StencilColor: return false;
    case ACS_TP_Friction:     return false;
    case ACS_TP_DamageMult:   return false;
+   case ACS_TP_Counter0:     return mo->counters[0] == val;
+   case ACS_TP_Counter1:     return mo->counters[1] == val;
+   case ACS_TP_Counter2:     return mo->counters[2] == val;
+   case ACS_TP_Counter3:     return mo->counters[3] == val;
+   case ACS_TP_Counter4:     return mo->counters[4] == val;
+   case ACS_TP_Counter5:     return mo->counters[5] == val;
+   case ACS_TP_Counter6:     return mo->counters[6] == val;
+   case ACS_TP_Counter7:     return mo->counters[7] == val;
 
    case ACS_TP_Angle:        return mo->angle >> 16 == (uint32_t)val;
    case ACS_TP_Armor:        return mo->player ? mo->player->armorpoints == val : false;
@@ -1074,6 +1082,14 @@ uint32_t ACS_GetThingProp(Mobj *mo, uint32_t prop)
    case ACS_TP_StencilColor: return 0;
    case ACS_TP_Friction:     return 0;
    case ACS_TP_DamageMult:   return 0;
+   case ACS_TP_Counter0:     return mo->counters[0];
+   case ACS_TP_Counter1:     return mo->counters[1];
+   case ACS_TP_Counter2:     return mo->counters[2];
+   case ACS_TP_Counter3:     return mo->counters[3];
+   case ACS_TP_Counter4:     return mo->counters[4];
+   case ACS_TP_Counter5:     return mo->counters[5];
+   case ACS_TP_Counter6:     return mo->counters[6];
+   case ACS_TP_Counter7:     return mo->counters[7];
 
    case ACS_TP_Angle:        return mo->angle >> 16;
    case ACS_TP_Armor:        return mo->player ? mo->player->armorpoints : 0;
@@ -1915,6 +1931,14 @@ void ACS_SetThingProp(Mobj *thing, uint32_t var, uint32_t val)
    case ACS_TP_StencilColor: break;
    case ACS_TP_Friction:     break;
    case ACS_TP_DamageMult:   break;
+   case ACS_TP_Counter0:     thing->counters[0] = val; break;
+   case ACS_TP_Counter1:     thing->counters[1] = val; break;
+   case ACS_TP_Counter2:     thing->counters[2] = val; break;
+   case ACS_TP_Counter3:     thing->counters[3] = val; break;
+   case ACS_TP_Counter4:     thing->counters[4] = val; break;
+   case ACS_TP_Counter5:     thing->counters[5] = val; break;
+   case ACS_TP_Counter6:     thing->counters[6] = val; break;
+   case ACS_TP_Counter7:     thing->counters[7] = val; break;
 
    case ACS_TP_Angle:        thing->angle = val << 16; break;
    case ACS_TP_Armor:        break;
