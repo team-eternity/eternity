@@ -1400,9 +1400,6 @@
     <ClInclude Include="..\Source\sdl\mmus2mid.h">
       <Filter>Source Files\SDL\SDL Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\midiproc\midiproc.h">
-      <Filter>Source Files\SDL\midiproc</Filter>
-    </ClInclude>
     <ClInclude Include="..\Source\st_lib.h">
       <Filter>Source Files\ST_</Filter>
     </ClInclude>
