@@ -100,8 +100,8 @@ ACSEnvironment::ACSEnvironment() :
    // 0-56: ACSVM internal codes.
    addCodeDataACS0( 57, {"",        2, addCallFunc(ACS_CF_Random)});
    addCodeDataACS0( 58, {"WW",      0, addCallFunc(ACS_CF_Random)});
-   addCodeDataACS0( 59, {"",        1, addCallFunc(ACS_CF_ThingCount)});
-   addCodeDataACS0( 60, {"W",       0, addCallFunc(ACS_CF_ThingCount)});
+   addCodeDataACS0( 59, {"",        2, addCallFunc(ACS_CF_ThingCount)});
+   addCodeDataACS0( 60, {"WW",      0, addCallFunc(ACS_CF_ThingCount)});
    addCodeDataACS0( 61, {"",        1, addCallFunc(ACS_CF_WaitSector)});
    addCodeDataACS0( 62, {"W",       0, addCallFunc(ACS_CF_WaitSector)});
    addCodeDataACS0( 63, {"",        1, addCallFunc(ACS_CF_WaitPolyObj)});
