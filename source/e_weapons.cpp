@@ -40,6 +40,30 @@
 #include "d_dehtbl.h"
 #include "d_items.h"
 
+// Weapon Keywords
+// TODO: Currently in order of weaponinfo_t, reorder
+
+//#define ITEM_WPN_NAME         "name"
+#define ITEM_WPN_AMMO         "ammotype"
+#define ITEM_WPN_UPSTATE      "upstate"
+#define ITEM_WPN_DOWNSTATE    "downstate"
+#define ITEM_WPN_READYSTATE   "readystate"
+#define ITEM_WPN_ATKSTATE     "attackstate"
+#define ITEM_WPN_FLASHSTATE   "flashstate"
+#define ITEM_WPN_AMMOPERSHOT  "ammouse"
+
+#define ITEM_WPN_NEXTINCYCLE  "nextincycle"
+#define ITEM_WPN_PREVINCYCLE  "previncycle"
+
+#define ITEM_WPN_FLAGS        "flags"
+#define ITEM_WPN_ADDFLAGS     "addflags"
+#define ITEM_WPN_REMFLAGS     "remflags"
+#define ITEM_WPN_MOD          "mod"
+#define ITEM_WPN_RECOIL       "recoil"
+#define ITEM_WPN_HAPTICRECOIL "hapticrecoil"
+#define ITEM_WPN_HAPTICTIME   "haptictime"
+#define ITEM_WPN_UPSOUND      "upsound"
+
 //=============================================================================
 //
 // Globals

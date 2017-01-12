@@ -4,6 +4,182 @@
 // DOOM Weapons
 //
 
+/*
+//=============================================================================
+//
+// Weapon Info
+//
+weaponinfo Fist
+{
+  upstate      S_PUNCHUP
+  downstate    S_PUNCHDOWN
+  readystate   S_PUNCH
+  attackstate  S_PUNCH1
+
+  nextincycle  Chainsaw
+  previncycle  BFG9000
+
+  flags        FLEEMELEE|NOHITGHOSTS|SILENCER
+  mod          ""
+  recoil       10
+}
+
+weaponinfo Pistol
+{
+  ammotype     AmmoClip
+  upstate      S_PISTOLUP
+  downstate    S_PISTOLDOWN
+  readystate   S_PISTOL
+  attackstate  S_PISTOL1
+  flashstate   S_PISTOLFLASH
+  ammouse      1
+
+  nextincycle  Shotgun
+  previncycle  Chainsaw
+
+  flags        SILENCER|HAPTICRECOIL
+  mod          ""
+  recoil       10
+  hapticrecoil 1
+  haptictime   1
+}
+
+weaponinfo Shotgun
+{
+  ammotype     AmmoShell
+  upstate      S_SGUNUP
+  downstate    S_SGUNDOWN
+  readystate   S_SGUN
+  attackstate  S_SGUN1
+  flashstate   S_SGUNFLASH1
+  ammouse      1
+
+  nextincycle  SuperShotgun
+  previncycle  Pistol
+
+  flags        SILENCER|HAPTICRECOIL
+  mod          ""
+  recoil       30
+  hapticrecoil 3
+  haptictime   3
+}
+
+weaponinfo Chaingun
+{
+  ammotype     AmmoClip
+  upstate      S_CHAINUP
+  downstate    S_CHAINDOWN
+  readystate   S_CHAIN
+  attackstate  S_CHAIN1
+  flashstate   S_CHAINFLASH1
+  ammouse      1
+
+  nextincycle  MissileLauncher
+  previncycle  SuperShotgun
+
+  flags        SILENCER|HAPTICRECOIL
+  mod          ""
+  recoil       10
+  hapticrecoil 1
+  haptictime   1
+}
+
+weaponinfo MissileLauncher
+{
+  ammotype     AmmoMissile
+  upstate      S_MISSILEUP
+  downstate    S_MISSILEDOWN
+  readystate   S_MISSILE
+  attackstate  S_MISSILE1
+  flashstate   S_MISSILEFLASH1
+  ammouse      1
+
+  nextincycle  PlasmaRifle
+  previncycle  Chaingun
+
+  flags        NOAUTOFIRE|SILENCER|HAPTICRECOIL
+  mod          ""
+  recoil       100
+  hapticrecoil 6
+  haptictime   8
+}
+
+weaponinfo PlasmaRifle
+{
+  ammotype     AmmoCell
+  upstate      S_PLASMAUP
+  downstate    S_PLASMADOWN
+  readystate   S_PLASMA
+  attackstate  S_PLASMA1
+  flashstate   S_PLASMAFLASH1
+  ammouse      1
+
+  nextincycle  BFG9000
+  previncycle  MissileLauncher
+
+  flags        SILENCER|HAPTICRECOIL|NOTSHAREWARE
+  mod          ""
+  recoil       20
+  hapticrecoil 2
+  haptictime   1
+}
+
+weaponinfo BFG9000
+{
+  ammotype     AmmoCell
+  upstate      S_BFGUP
+  downstate    S_BFGDOWN
+  readystate   S_BFG
+  attackstate  S_BFG1
+  flashstate   S_BFGFLASH1
+  ammouse      40
+
+  nextincycle  Fist
+  previncycle  PlasmaRifle
+
+  flags        SILENCER|HAPTICRECOIL|NOTSHAREWARE
+  mod          ""
+  recoil       20
+  hapticrecoil 2
+  haptictime   1
+}
+
+weaponinfo Chainsaw
+{
+  upstate      S_SAWUP
+  downstate    S_SAWDOWN
+  readystate   S_SAW
+  attackstate  S_SAW1
+
+  nextincycle  Pistol
+  previncycle  Fist
+
+  flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCER
+  mod          ""
+  upsound      sawup
+}
+
+weaponinfo SuperShotgun
+{
+  ammotype     AmmoShell
+  upstate      S_DSGUNUP
+  downstate    S_DSGUNDOWN
+  readystate   S_DSGUN
+  attackstate  S_DSGUN1
+  flashstate   S_DSGUNFLASH1
+  ammouse      2
+
+  nextincycle  Chaingun
+  previncycle  Shotgun
+
+  flags        SILENCER|HAPTICRECOIL
+  mod          ""
+  recoil       80
+  hapticrecoil 5
+  haptictime   5
+}
+*/
+
 //=============================================================================
 //
 // Weapon Trackers
