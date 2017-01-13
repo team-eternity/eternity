@@ -43,6 +43,7 @@
 #include "e_mod.h"
 #include "e_states.h"
 #include "e_things.h"
+#include "ev_specials.h"
 #include "g_dmflag.h"
 #include "g_game.h"
 #include "hu_frags.h"
@@ -1241,6 +1242,9 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
    // This determines the kind of object spawned
    // during the death frame of a thing.
    P_DropItems(target, false);
+
+   if(EV_ActivateSpecialNum(target->special, target->args, target))
+      target->special = 0; // Stop special from executing if revived/respawned
 }
 
 //

@@ -1470,7 +1470,9 @@ void Mobj::serialize(SaveArchive &arc)
       << translucency << alphavelocity                     // Alpha blending
       << xscale << yscale                                  // Scaling
       // Inventory related fields
-      << dropamount;
+      << dropamount
+      // Scripting related fields
+      << special;
 
    // Arrays
    P_ArchiveArray<int>(arc, counters, NUMMOBJCOUNTERS); // Counters
@@ -2274,7 +2276,7 @@ spawnit:
    // haleyjd 10/03/05: Hexen-style args
    memcpy(mobj->args, mthing->args, 5 * sizeof(int));
 
-   // TODO: special
+   mobj->special = mthing->special;
 
    mobj->spawnpoint = *mthing;
 
