@@ -238,8 +238,8 @@ ACSEnvironment::ACSEnvironment() :
    // 277-279: Unused codes.
    addCodeDataACS0(280, {"",        7, addCallFunc(ACS_CF_SpawnMissile)});
    addCodeDataACS0(281, {"",        1, addCallFunc(ACS_CF_GetSectorLight)});
-   addCodeDataACS0(292, {"",        1, addCallFunc(ACS_CF_GetThingCeilZ)});
-   addCodeDataACS0(293, {"",        5, addCallFunc(ACS_CF_SetThingPos)});
+   addCodeDataACS0(282, {"",        1, addCallFunc(ACS_CF_GetThingCeilZ)});
+   addCodeDataACS0(283, {"",        5, addCallFunc(ACS_CF_SetThingPos)});
  //addCodeDataACS0(284, {"",        1, addCallFunc(ACS_CF_ClrThingInv)});
  //addCodeDataACS0(285, {"",        3, addCallFunc(ACS_CF_AddThingInv)});
  //addCodeDataACS0(286, {"",        3, addCallFunc(ACS_CF_SubThingInv)});
