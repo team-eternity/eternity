@@ -654,7 +654,7 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
 static void Polyobj_setCenterPt(polyobj_t *po)
 {
    subsector_t  *ss;
-   double center_x = 0.0, center_y = 0.0;
+   fixed_t center_x = 0, center_y = 0;
    int i;
 
    // never attach a bad polyobject
@@ -663,15 +663,12 @@ static void Polyobj_setCenterPt(polyobj_t *po)
 
    for(i = 0; i < po->numVertices; ++i)
    {
-      center_x += M_FixedToDouble(po->vertices[i]->x);
-      center_y += M_FixedToDouble(po->vertices[i]->y);
+      center_x += po->vertices[i]->x / po->numVertices;
+      center_y += po->vertices[i]->y / po->numVertices;
    }
    
-   center_x /= po->numVertices;
-   center_y /= po->numVertices;
-   
-   po->centerPt.x = M_DoubleToFixed(center_x);
-   po->centerPt.y = M_DoubleToFixed(center_y);
+   po->centerPt.x = center_x;
+   po->centerPt.y = center_y;
 
    ss = R_PointInSubsector(po->centerPt.x, po->centerPt.y);
 
