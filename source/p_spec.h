@@ -1659,7 +1659,7 @@ enum
    SPAC_PUSH,
 };
 
-extern void P_StartLineScript(line_t *line, Mobj *thing);
+extern void P_StartLineScript(line_t *line, Mobj *thing, polyobj_s *po);
 
 #endif
 

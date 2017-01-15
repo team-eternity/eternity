@@ -196,7 +196,8 @@ bool EV_IsParamLineSpec(int special);
 bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing,
    polyobj_s *poly, int spac);
 bool EV_ActivateSpecialNum(int special, int *args, Mobj *thing);
-int  EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *thing);
+int  EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *thing,
+   polyobj_s *poly);
 bool EV_ActivateAction(ev_action_t *action, int *args, Mobj *thing);
 
 //

@@ -1485,7 +1485,8 @@ bool EV_ActivateSpecialNum(int special, int *args, Mobj *thing)
 //
 // Activate a special for ACS.
 //
-int EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *thing)
+int EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *thing,
+   polyobj_t *poly)
 {
    ev_action_t *action;
    INIT_STRUCT(ev_instance_t, instance);
@@ -1494,6 +1495,7 @@ int EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *
    instance.actor   = thing;
    instance.args    = args;
    instance.line    = line;
+   instance.poly    = poly;
    instance.special = special;
    instance.side    = side;
    instance.spac    = SPAC_CROSS;

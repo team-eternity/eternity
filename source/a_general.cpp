@@ -499,11 +499,11 @@ void A_StartScript(actionargs_t *actionargs)
          for(int i = 0; i < argc; ++i)
              argv[i] = E_ArgAsInt(args, i + 2, 0);
 
-         ACS_ExecuteScriptIResult(scriptnum, argv, argc, actor, NULL, 0);
+         ACS_ExecuteScriptIResult(scriptnum, argv, argc, actor, NULL, 0, nullptr);
       }
       else
       {
-         ACS_ExecuteScriptIResult(scriptnum, NULL, 0, actor, NULL, 0);
+         ACS_ExecuteScriptIResult(scriptnum, NULL, 0, actor, NULL, 0, nullptr);
       }
    }
 }
@@ -536,11 +536,11 @@ void A_StartScriptNamed(actionargs_t *actionargs)
          for(int i = 0; i < argc; ++i)
              argv[i] = E_ArgAsInt(args, i + 2, 0);
 
-         ACS_ExecuteScriptSResult(scriptname, argv, argc, actor, NULL, 0);
+         ACS_ExecuteScriptSResult(scriptname, argv, argc, actor, NULL, 0, nullptr);
       }
       else
       {
-         ACS_ExecuteScriptSResult(scriptname, NULL, 0, actor, NULL, 0);
+         ACS_ExecuteScriptSResult(scriptname, NULL, 0, actor, NULL, 0, nullptr);
       }
    }
 }

@@ -101,6 +101,15 @@ static bool ACS_SetThingProp(ACSThread *thread, int32_t tid, uint32_t prop, uint
    return false;
 }
 
+//=============================================================================
+// Helpers
+//
+inline static PointThinker *ACS_getSoundSource(const ACSThreadInfo *info)
+{
+   // It can be activated both by polyobjects and mobjs. In that case, 
+   // prioritize mobj
+   return info->mo ? info->mo : info->po ? &info->po->spawnSpot : nullptr;
+}
 
 //=============================================================================
 // CallFuncs
@@ -157,7 +166,7 @@ bool ACS_CF_ActivatorSound(ACS_CF_ARGS)
    const char *snd  = thread->scopeMap->getString(argV[0])->str;
    int         vol  = argV[1];
 
-   S_StartSoundNameAtVolume(info->mo, snd, vol, ATTN_NORMAL, CHAN_AUTO);
+   S_StartSoundNameAtVolume(ACS_getSoundSource(info), snd, vol, ATTN_NORMAL, CHAN_AUTO);
 
    return false;
 }

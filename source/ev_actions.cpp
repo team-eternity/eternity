@@ -1117,7 +1117,7 @@ DEFINE_ACTION(EV_ActionPlatToggleUpDown)
 //
 DEFINE_ACTION(EV_ActionStartLineScript)
 {
-   P_StartLineScript(instance->line, instance->actor);
+   P_StartLineScript(instance->line, instance->actor, instance->poly);
    return true;
 }
 
@@ -2806,6 +2806,7 @@ DEFINE_ACTION(EV_ActionACSExecute)
    Mobj    *thing = instance->actor;
    line_t  *line  = instance->line;
    int      side  = instance->side;
+   polyobj_t *po  = instance->poly;
    int      num   = instance->args[0];
    int      map   = instance->args[1];
    int      argc  = NUMLINEARGS - 2;
@@ -2814,7 +2815,7 @@ DEFINE_ACTION(EV_ActionACSExecute)
    for(int i = 0; i != argc; ++i)
       argv[i] = instance->args[i + 2];
 
-   return ACS_ExecuteScriptI(num, map, argv, argc, thing, line, side);
+   return ACS_ExecuteScriptI(num, map, argv, argc, thing, line, side, po);
 }
 
 
@@ -2854,6 +2855,7 @@ DEFINE_ACTION(EV_ActionACSExecuteWithResult)
    Mobj    *thing = instance->actor;
    line_t  *line  = instance->line;
    int      side  = instance->side;
+   polyobj_s *po = instance->poly;
    int      num   = instance->args[0];
    int      argc  = NUMLINEARGS - 1;
    uint32_t argv[NUMLINEARGS - 1];
@@ -2861,7 +2863,7 @@ DEFINE_ACTION(EV_ActionACSExecuteWithResult)
    for(int i = 0; i != argc; ++i)
       argv[i] = instance->args[i + 1];
 
-   return ACS_ExecuteScriptIResult(num, argv, argc, thing, line, side);
+   return ACS_ExecuteScriptIResult(num, argv, argc, thing, line, side, po);
 }
 
 //
@@ -3322,6 +3324,7 @@ DEFINE_ACTION(EV_ActionACSLockedExecute)
    Mobj    *thing = instance->actor;
    line_t  *line  = instance->line;
    int      side  = instance->side;
+   polyobj_t *po  = instance->poly;
    int      num   = instance->args[0];
    int      map   = instance->args[1];
    int      argc  = NUMLINEARGS - 3;
@@ -3332,7 +3335,7 @@ DEFINE_ACTION(EV_ActionACSLockedExecute)
 
    // Always display the "object" message.
    if(EV_lockCheck(thing, instance->args[4], true))
-      return ACS_ExecuteScriptI(num, map, argv, argc, thing, line, side);
+      return ACS_ExecuteScriptI(num, map, argv, argc, thing, line, side, po);
    return 0;
 }
 
@@ -3348,6 +3351,7 @@ DEFINE_ACTION(EV_ActionACSLockedExecuteDoor)
    Mobj    *thing = instance->actor;
    line_t  *line = instance->line;
    int      side = instance->side;
+   polyobj_t *po = instance->poly;
    int      num = instance->args[0];
    int      map = instance->args[1];
    int      argc = NUMLINEARGS - 3;
@@ -3358,7 +3362,7 @@ DEFINE_ACTION(EV_ActionACSLockedExecuteDoor)
 
    // Always display the "door" message.
    if(EV_lockCheck(thing, instance->args[4], false))
-      return ACS_ExecuteScriptI(num, map, argv, argc, thing, line, side);
+      return ACS_ExecuteScriptI(num, map, argv, argc, thing, line, side, po);
    return 0;
 }
 
@@ -4191,6 +4195,7 @@ DEFINE_ACTION(EV_ActionACSExecuteAlways)
    Mobj    *thing = instance->actor;
    line_t  *line  = instance->line;
    int      side  = instance->side;
+   polyobj_s *po = instance->poly;
    int      num   = instance->args[0];
    int      map   = instance->args[1];
    int      argc  = NUMLINEARGS - 2;
@@ -4199,7 +4204,7 @@ DEFINE_ACTION(EV_ActionACSExecuteAlways)
    for(int i = 0; i != argc; ++i)
       argv[i] = instance->args[i + 2];
 
-   return ACS_ExecuteScriptIAlways(num, map, argv, argc, thing, line, side);
+   return ACS_ExecuteScriptIAlways(num, map, argv, argc, thing, line, side, po);
 }
 
 //

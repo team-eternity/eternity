@@ -384,7 +384,7 @@ ACSVM::Word ACSEnvironment::callSpecImpl(ACSVM::Thread *thread, ACSVM::Word spec
    for(ACSVM::Word i = argC < NUMLINEARGS ? argC : NUMLINEARGS; i--;)
       args[i] = argV[i];
 
-   return EV_ActivateACSSpecial(info->line, spec, args, info->side, info->mo);
+   return EV_ActivateACSSpecial(info->line, spec, args, info->side, info->mo, info->po);
 }
 
 //
@@ -714,10 +714,10 @@ void ACS_Exec()
 // ACS_ExecuteScriptI
 //
 bool ACS_ExecuteScriptI(uint32_t name, uint32_t mapnum, const uint32_t *argv,
-                        uint32_t argc, Mobj *mo, line_t *line, int side)
+                        uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po)
 {
    ACSVM::ScopeID scope{ACSenv.global->id, ACSenv.hub->id, mapnum ? mapnum : gamemap};
-   ACSThreadInfo  info{mo, line, side};
+   ACSThreadInfo  info{mo, line, side, po};
    return ACSenv.map->scriptStart(name, scope, {argv, argc, &info});
 }
 
@@ -725,10 +725,10 @@ bool ACS_ExecuteScriptI(uint32_t name, uint32_t mapnum, const uint32_t *argv,
 // ACS_ExecuteScriptIAlways
 //
 bool ACS_ExecuteScriptIAlways(uint32_t name, uint32_t mapnum, const uint32_t *argv,
-                              uint32_t argc, Mobj *mo, line_t *line, int side)
+                              uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po)
 {
    ACSVM::ScopeID scope{ACSenv.global->id, ACSenv.hub->id, mapnum ? mapnum : gamemap};
-   ACSThreadInfo  info{mo, line, side};
+   ACSThreadInfo  info{mo, line, side, po};
    return ACSenv.map->scriptStartForced(name, scope, {argv, argc, &info});
 }
 
@@ -736,9 +736,9 @@ bool ACS_ExecuteScriptIAlways(uint32_t name, uint32_t mapnum, const uint32_t *ar
 // ACS_ExecuteScriptIResult
 //
 uint32_t ACS_ExecuteScriptIResult(uint32_t name, const uint32_t *argv,
-                                  uint32_t argc, Mobj *mo, line_t *line, int side)
+                                  uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po)
 {
-   ACSThreadInfo info{mo, line, side};
+   ACSThreadInfo info{mo, line, side, po};
    return ACSenv.map->scriptStartResult(name, {argv, argc, &info});
 }
 
@@ -746,11 +746,11 @@ uint32_t ACS_ExecuteScriptIResult(uint32_t name, const uint32_t *argv,
 // ACS_ExecuteScriptS
 //
 bool ACS_ExecuteScriptS(const char *str, uint32_t mapnum, const uint32_t *argv,
-                        uint32_t argc, Mobj *mo, line_t *line, int side)
+                        uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po)
 {
    ACSVM::String *name = ACSenv.getString(str, strlen(str));
    ACSVM::ScopeID scope{ACSenv.global->id, ACSenv.hub->id, mapnum ? mapnum : gamemap};
-   ACSThreadInfo  info{mo, line, side};
+   ACSThreadInfo  info{mo, line, side, po};
    return ACSenv.map->scriptStart(name, scope, {argv, argc, &info});
 }
 
@@ -758,11 +758,11 @@ bool ACS_ExecuteScriptS(const char *str, uint32_t mapnum, const uint32_t *argv,
 // ACS_ExecuteScriptSAlways
 //
 bool ACS_ExecuteScriptSAlways(const char *str, uint32_t mapnum, const uint32_t *argv,
-                              uint32_t argc, Mobj *mo, line_t *line, int side)
+                              uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po)
 {
    ACSVM::String *name = ACSenv.getString(str, strlen(str));
    ACSVM::ScopeID scope{ACSenv.global->id, ACSenv.hub->id, mapnum ? mapnum : gamemap};
-   ACSThreadInfo  info{mo, line, side};
+   ACSThreadInfo  info{mo, line, side, po};
    return ACSenv.map->scriptStartForced(name, scope, {argv, argc, &info});
 }
 
@@ -770,10 +770,10 @@ bool ACS_ExecuteScriptSAlways(const char *str, uint32_t mapnum, const uint32_t *
 // ACS_ExecuteScriptSResult
 //
 uint32_t ACS_ExecuteScriptSResult(const char *str, const uint32_t *argv,
-                                 uint32_t argc, Mobj *mo, line_t *line, int side)
+                                 uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po)
 {
    ACSVM::String *name = ACSenv.getString(str, strlen(str));
-   ACSThreadInfo  info{mo, line, side};
+   ACSThreadInfo  info{mo, line, side, po};
    return ACSenv.map->scriptStartResult(name, {argv, argc, &info});
 }
 

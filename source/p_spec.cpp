@@ -942,14 +942,14 @@ bool P_WasSecret(const sector_t *sec)
 //
 // haleyjd 06/01/04: starts a script from a linedef.
 //
-void P_StartLineScript(line_t *line, Mobj *thing)
+void P_StartLineScript(line_t *line, Mobj *thing, polyobj_s *po)
 {
    constexpr uint32_t argc = NUMLINEARGS - 1;
    uint32_t args[argc];
    for(size_t i = argc; i--;)
       args[i] = line->args[i + 1];
 
-   ACS_ExecuteScriptI(line->args[0], gamemap, args, argc, thing, line, 0);
+   ACS_ExecuteScriptI(line->args[0], gamemap, args, argc, thing, line, 0, po);
 }
 
 //=============================================================================
