@@ -1690,7 +1690,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             int oldside;
             if((oldside = P_PointOnLineSide(ox, oy, line)) !=
                P_PointOnLineSide(tx, ty, line))
-               P_CrossSpecialLine(line, oldside, thing);
+               P_CrossSpecialLine(line, oldside, thing, nullptr);
          }
       }
 

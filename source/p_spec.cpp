@@ -973,11 +973,11 @@ void P_StartLineScript(line_t *line, Mobj *thing)
 //
 // killough 11/98: change linenum parameter to a line_t pointer
 
-void P_CrossSpecialLine(line_t *line, int side, Mobj *thing)
+void P_CrossSpecialLine(line_t *line, int side, Mobj *thing, polyobj_t *poly)
 {
    // EV_SPECIALS TODO: This function should return success or failure to 
    // the caller.
-   EV_ActivateSpecialLineWithSpac(line, side, thing, SPAC_CROSS);
+   EV_ActivateSpecialLineWithSpac(line, side, thing, poly, SPAC_CROSS);
 }
 
 //
@@ -996,7 +996,7 @@ void P_ShootSpecialLine(Mobj *thing, line_t *line, int side)
 {
    // EV_SPECIALS TODO: This function should return success or failure to 
    // the caller.
-   EV_ActivateSpecialLineWithSpac(line, side, thing, SPAC_IMPACT);
+   EV_ActivateSpecialLineWithSpac(line, side, thing, nullptr, SPAC_IMPACT);
 }
 
         // sf: changed to enable_nuke for console

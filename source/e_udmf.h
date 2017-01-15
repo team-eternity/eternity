@@ -260,7 +260,7 @@ private:
 
       // Activation specials
       bool playercross, playeruse, monstercross, monsteruse, impact, playerpush,
-      monsterpush, missilecross, repeatspecial;
+      monsterpush, missilecross, repeatspecial, polycross;
 
       int special, arg[5];       // linedef special and args
       int sidefront, sideback;   // sidedef references

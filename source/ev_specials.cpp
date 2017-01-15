@@ -1326,9 +1326,19 @@ static bool EV_checkSpac(ev_action_t *action, ev_instance_t *instance)
       line_t *line  = instance->line;
       int     flags = 0;
 
-      REQUIRE_ACTOR(thing);
       REQUIRE_LINE(line);
 
+      if(instance->poly)
+      {
+         // check 1S only flag -- if set, must be activated from first side
+         if((line->extflags & EX_ML_1SONLY) && instance->side != 0)
+            return false;
+         flags = EX_ML_POLYOBJECT | EX_ML_CROSS;
+         return instance->spac == SPAC_CROSS &&
+            (line->extflags & flags) == flags;
+      }
+      REQUIRE_ACTOR(thing);
+      
       // check player / monster / missile / push enable flags
       if(thing->player)                    // treat as player?
          flags |= EX_ML_PLAYER;
@@ -1413,7 +1423,8 @@ static int EV_ActivateSpecial(ev_action_t *action, ev_instance_t *instance)
 // Populates the ev_instance_t from separate arguments and then activates the
 // special.
 //
-bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing, int spac)
+bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing,
+   polyobj_t *poly, int spac)
 {
    ev_action_t *action;
    INIT_STRUCT(ev_instance_t, instance);
@@ -1422,6 +1433,7 @@ bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing, int spa
    instance.actor   = thing;
    instance.args    = line->args;
    instance.line    = line;
+   instance.poly    = poly;
    instance.special = line->special;
    instance.side    = side;
    instance.spac    = spac;

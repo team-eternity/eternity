@@ -347,6 +347,8 @@ bool UDMFParser::loadLinedefs(UDMFSetupSettings &setupSettings)
             ld->extflags |= EX_ML_MISSILE | EX_ML_CROSS;
          if(uld.repeatspecial)
             ld->extflags |= EX_ML_REPEAT;
+         if(uld.polycross)
+            ld->extflags |= EX_ML_POLYOBJECT | EX_ML_CROSS;
       }
 
       ld->special = uld.special;
@@ -604,6 +606,7 @@ enum token_e
    t_monsteruse,
    t_offsetx,
    t_offsety,
+   t_polycross,
    t_portal,
    t_portalceiling,
    t_portal_ceil_blocksound,
@@ -744,6 +747,7 @@ static keytoken_t gTokenList[] =
    TOKEN(monsteruse),
    TOKEN(offsetx),
    TOKEN(offsety),
+   TOKEN(polycross),
    TOKEN(portal),
    TOKEN(portalceiling),
    TOKEN(portal_ceil_blocksound),
@@ -963,6 +967,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                   READ_BOOL(linedef, monsterpush);
                   READ_BOOL(linedef, missilecross);
                   READ_BOOL(linedef, repeatspecial);
+                  READ_BOOL(linedef, polycross);
 
                   READ_BOOL(linedef, midtex3d);
                   READ_BOOL(linedef, midtex3dimpassible);

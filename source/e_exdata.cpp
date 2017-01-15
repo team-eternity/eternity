@@ -212,6 +212,7 @@ static dehflags_t extlineflags[] =
    { "CLIPMIDTEX",   EX_ML_CLIPMIDTEX   },
    { "LOWERPORTAL",  EX_ML_LOWERPORTAL  },
    { "UPPERPORTAL",  EX_ML_UPPERPORTAL  },
+   { "POLYOBJECT",   EX_ML_POLYOBJECT   },
    { NULL,           0                  }
 };
 
