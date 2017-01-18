@@ -143,6 +143,7 @@ enum {
   comp_planeshoot,  //         09/22/07: ability to shoot floor/ceiling
   comp_special,     //         08/29/09: special failure behavior
   comp_ninja,       //         04/18/10: ninja spawn in G_CheckSpot
+  comp_noaircontrol, // Disable air control
   COMP_TOTAL=32  // Some extra room for additional variables
 };
 
