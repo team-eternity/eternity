@@ -171,7 +171,7 @@ static bool PIT_TestMobjZ(Mobj *thing)
    fixed_t blockdist = thing->radius + clip.thing->radius;
 
    if(!(thing->flags & MF_SOLID) ||                      // non-solid?
-      thing->flags & (MF_SPECIAL|MF_NOCLIP|MF_CORPSE) || // other is special?
+      thing->flags & (MF_SPECIAL|MF_NOCLIP) || // other is special?
       clip.thing->flags & MF_SPECIAL ||                   // this is special?
       thing == clip.thing ||                              // same as self?
       clip.thing->z > thing->z + thing->height ||         // over?
@@ -861,7 +861,7 @@ static bool PIT_FindAboveIntersectors(Mobj *thing)
 {
    fixed_t blockdist;
    if(!(thing->flags & MF_SOLID) ||               // Can't hit thing?
-      (thing->flags & (MF_CORPSE|MF_SPECIAL)) ||  // Corpse or special?
+      (thing->flags & MF_SPECIAL) ||  // Corpse or special?
       thing == clip.thing)                         // clipping against self?
       return true;
    
@@ -886,7 +886,7 @@ bool PIT_FindBelowIntersectors(Mobj *thing)
 {
    fixed_t blockdist;
    if(!(thing->flags & MF_SOLID) ||               // Can't hit thing?
-      (thing->flags & (MF_CORPSE|MF_SPECIAL)) ||  // Corpse or special?
+      (thing->flags & MF_SPECIAL) ||  // Corpse or special?
       thing == clip.thing)                           // clipping against self?
       return true;
 
