@@ -76,6 +76,25 @@ Add Plane_Copy. It copies slopes.
 Updated the credits screen to include myself, and amend Sarah Mancuso's name.
 The credits now have two names per column, and are separated down the middle.
 
+-------------------------------------------------------------------------------
+2017/01/08
+Fixed CMake for Windows VS2015 generation.
+
+-------------------------------------------------------------------------------
+2017/01/13
+Added thing specials, made them activate on death. Useable in UDMF and
+ExtraData.
+
+-------------------------------------------------------------------------------
+2017/01/14
+Added ZDoom codepointer, A_SetSpecial. Fixed x/y offsets on png's being broken.
+They're now no longer sunk into the floor.
+
+-------------------------------------------------------------------------------
+2017/01/21
+Allow playback of slightly faulty wav files, such as those in Darch's Preacher
+BOOM mapset.
+
 ================================================================================
 EOF
 ================================================================================
