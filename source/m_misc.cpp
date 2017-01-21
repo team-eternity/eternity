@@ -436,8 +436,8 @@ default_t defaults[] =
    DEFAULT_INT("comp_ninja", &default_comp[comp_ninja], &comp[comp_ninja],
                0, 0, 1, default_t::wad_yes, "Silent spawns at W/SW/S-facing DM spots"),
    
-   DEFAULT_INT("comp_noaircontrol", &default_comp[comp_noaircontrol], &comp[comp_noaircontrol],
-               1, 0, 1, default_t::wad_yes, "Disable air control when jumping"),
+   DEFAULT_INT("comp_aircontrol", &default_comp[comp_aircontrol], &comp[comp_aircontrol],
+               1, 0, 1, default_t::wad_yes, "Disable air control for jumping"),
 
    // For key bindings, the values stored in the key_* variables       // phares
    // are the internal Doom Codes. The values stored in the default.cfg

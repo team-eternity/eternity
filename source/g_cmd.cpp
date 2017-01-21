@@ -791,7 +791,7 @@ const char *comp_strings[] =
   "planeshoot", //          09/22/07: plane shooting
   "special",    //          08/29/09: special failure behavior
   "ninja",      //          04/18/10: ninja spawn
-  "noaircontrol"
+  "aircontrol"
 };
 
 static void Handler_CompTHeights()
@@ -801,7 +801,7 @@ static void Handler_CompTHeights()
 
 void G_AddCompat()
 {
-   for(int i = 0; i <= comp_noaircontrol; i++)   // haleyjd: update this regularly
+   for(int i = 0; i <= comp_aircontrol; i++)   // haleyjd: update this regularly
    {
       variable_t *variable;
       command_t  *command;

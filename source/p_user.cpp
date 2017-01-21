@@ -353,7 +353,7 @@ void P_MovePlayer(player_t* player)
             P_Thrust(player, mo->angle-ANG90, 0, cmd->sidemove*movefactor);
          }
       }
-      else if(!comp[comp_noaircontrol])
+      else if(!comp[comp_aircontrol])
       {
          // Do not move player 
          if(cmd->forwardmove)
