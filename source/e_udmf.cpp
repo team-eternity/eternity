@@ -1170,6 +1170,8 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                   switch(kt->token)
                   {
                      READ_NUMBER(thing, health);
+                     default:
+                        break;
                   }
                }
             }
