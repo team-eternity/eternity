@@ -71,7 +71,7 @@ public:
 };
 
 void Add_Scroller(int type, fixed_t dx, fixed_t dy,
-                  int control, int affectee, int accel);
+                  int control, int affectee, int accel, bool acs = false);
 
 void P_SpawnScrollers();
 void P_SpawnFloorParam(const line_t *l, bool acs);

@@ -1683,6 +1683,8 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(96,  ParamFloorCeilingRaiseByValue,       "FloorAndCeiling_RaiseByValue")
    LINESPECNAMED(97,  ParamCeilingLowerAndCrushDist,       "Ceiling_LowerAndCrushDist")
    LINESPECNAMED(104, ParamCeilingCrushAndRaiseSilentDist, "Ceiling_CrushAndRaiseSilentDist")
+   LINESPECNAMED(105, ParamDoorWaitRaise,                  "Door_WaitRaise")
+   LINESPECNAMED(106, ParamDoorWaitClose,                  "Door_WaitClose")
    LINESPECNAMED(110, ParamLightRaiseByValue,              "Light_RaiseByValue")
    LINESPECNAMED(111, ParamLightLowerByValue,              "Light_LowerByValue")
    LINESPECNAMED(112, ParamLightChangeToValue,             "Light_ChangeToValue")
@@ -1771,8 +1773,6 @@ const size_t PSXBindingsLen = earrlen(PSXBindings);
 ev_binding_t UDMFEternityBindings[] =
 {
    // No bindings for ExtraData as it isn't required any more \o/
-   LINESPECNAMED(105, ParamDoorWaitRaise,              "Door_WaitRaise")
-   LINESPECNAMED(106, ParamDoorWaitClose,              "Door_WaitClose")
    LINESPECNAMED(256, ParamEEFloorLowerToHighest,      "Floor_LowerToHighestEE")
    LINESPECNAMED(257, ParamFloorRaiseToLowest,         "Floor_RaiseToLowest")
    LINESPECNAMED(258, ParamFloorLowerToLowestCeiling,  "Floor_LowerToLowestCeiling")

@@ -1107,9 +1107,7 @@ ev_action_t *EV_UDMFEternityActionForSpecial(int special)
 
 
 //
-// EV_UDMFEternityBindingForSpecial
-//
-// Returns a special binding from the UDMFEternity gamemode's bindings array,
+// Returns a special binding from the ACS gamemode's bindings array,
 // regardless of the current gamemode or map format. Returns NULL if
 // the special is not bound to an action.
 //

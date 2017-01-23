@@ -176,6 +176,9 @@ void ScrollThinker::serialize(SaveArchive &arc)
       addScroller();
 }
 
+//
+// Adds a scroll thinker to the list
+//
 void ScrollThinker::addScroller()
 {
    list = estructalloc(scrollerlist_t, 1);
@@ -186,6 +189,9 @@ void ScrollThinker::addScroller()
    scrollers = list;
 }
 
+//
+// Removes a scroll thinker to the list
+//
 void ScrollThinker::removeScroller()
 {
    removeThinker();
@@ -209,6 +215,9 @@ void ScrollThinker::RemoveAllScrollers()
    }
 }
 
+//
+// Stop a scroller based on sector number
+//
 bool EV_stopFlatScrollerBySecnum(int type, int secnum)
 {
    bool flickback = false;
@@ -256,7 +265,7 @@ bool EV_stopFlatScrollerBySecnum(int type, int secnum)
 // accel: non-zero if this is an accelerative effect
 //
 void Add_Scroller(int type, fixed_t dx, fixed_t dy,
-                  int control, int affectee, int accel)
+                  int control, int affectee, int accel, bool acs)
 {
    ScrollThinker *s = new ScrollThinker;
 
@@ -274,7 +283,8 @@ void Add_Scroller(int type, fixed_t dx, fixed_t dy,
 
    if(type != ScrollThinker::sc_side)
    {
-      EV_stopFlatScrollerBySecnum(type, affectee);
+      if(acs)
+         EV_stopFlatScrollerBySecnum(type, affectee);
       s->addScroller();
    }
 
@@ -387,7 +397,7 @@ void P_SpawnCeilingParam(const line_t *l, bool acs)
    P_getScrollParams(l, dx, dy, control, accel, acs);
 
    for(int s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0;)
-      Add_Scroller(ScrollThinker::sc_ceiling, -dx, dy, control, s, accel);
+      Add_Scroller(ScrollThinker::sc_ceiling, -dx, dy, control, s, accel, acs);
 }
 
 //
@@ -420,7 +430,7 @@ static void P_spawnFloorScroller(int staticFn, const line_t *l, bool acs = false
    }
 
    for(int s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0;)
-      Add_Scroller(ScrollThinker::sc_floor, -dx, dy, control, s, accel);
+      Add_Scroller(ScrollThinker::sc_floor, -dx, dy, control, s, accel, acs);
 }
 
 //
@@ -457,7 +467,7 @@ static void P_spawnFloorCarrier(int staticFn, const line_t *l, bool acs = false)
    }
 
    for(int s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0;)
-      Add_Scroller(ScrollThinker::sc_carry, dx, dy, control, s, accel);
+      Add_Scroller(ScrollThinker::sc_carry, dx, dy, control, s, accel, acs);
 }
 
 //
@@ -491,7 +501,7 @@ static void P_spawnFloorScrollAndCarry(int staticFn, const line_t *l, bool acs =
    }
 
    for(s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0; )
-      Add_Scroller(ScrollThinker::sc_floor, -dx, dy, control, s, accel);
+      Add_Scroller(ScrollThinker::sc_floor, -dx, dy, control, s, accel, acs);
 
    dx = FixedMul(dx, CARRYFACTOR);
    dy = FixedMul(dy, CARRYFACTOR);
@@ -499,7 +509,7 @@ static void P_spawnFloorScrollAndCarry(int staticFn, const line_t *l, bool acs =
    // NB: don't fold these loops together. Even though it would be more
    // efficient, we must maintain BOOM-compatible thinker spawning order.
    for(s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0; )
-      Add_Scroller(ScrollThinker::sc_carry, dx, dy, control, s, accel);
+      Add_Scroller(ScrollThinker::sc_carry, dx, dy, control, s, accel, acs);
 }
 
 void P_SpawnFloorParam(const line_t *l, bool acs)
