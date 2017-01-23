@@ -779,6 +779,7 @@ static EV_SpecHash DOOMSpecHash;
 static EV_SpecHash HereticSpecHash;
 static EV_SpecHash HexenSpecHash;
 static EV_SpecHash UDMFEternitySpecHash;
+static EV_SpecHash ACSSpecHash;
 
 static EV_SpecNameHash DOOMSpecNameHash;
 static EV_SpecNameHash HexenSpecNameHash;
@@ -863,7 +864,7 @@ static void EV_initHexenSpecHash()
 //
 // EV_initUDMFEternitySpecHash
 //
-// Initializes the Hexen special bindings hash table the first time it is
+// Initializes the UDMF special bindings hash table the first time it is
 // called.
 //
 static void EV_initUDMFEternitySpecHash()
@@ -874,6 +875,19 @@ static void EV_initUDMFEternitySpecHash()
    EV_initSpecHash(UDMFEternitySpecHash, UDMFEternityBindings, UDMFEternityBindingsLen);
    EV_initSpecNameHash(UDMFEternitySpecNameHash, UDMFEternityBindings, UDMFEternityBindingsLen);
    EV_initHexenSpecHash();
+}
+
+//
+// Initializes the ACS special bindings hash table the first time it is
+// called.
+//
+static void EV_initACSSpecHash()
+{
+   if(ACSSpecHash.isInitialized())
+      return;
+
+   EV_initSpecHash(ACSSpecHash, ACSBindings, ACSBindingsLen);
+   EV_initUDMFEternitySpecHash();
 }
 
 //
@@ -1086,6 +1100,43 @@ ev_binding_t *EV_UDMFEternityBindingForName(const char *name)
 ev_action_t *EV_UDMFEternityActionForSpecial(int special)
 {
    ev_binding_t *bind = EV_UDMFEternityBindingForSpecial(special);
+
+   return bind ? bind->action : NULL;
+
+}
+
+
+//
+// EV_UDMFEternityBindingForSpecial
+//
+// Returns a special binding from the UDMFEternity gamemode's bindings array,
+// regardless of the current gamemode or map format. Returns NULL if
+// the special is not bound to an action.
+//
+ev_binding_t *EV_ACSBindingForSpecial(int special)
+{
+   ev_binding_t *bind;
+
+   EV_initACSSpecHash(); // ensure table is initialized
+
+  // Try ACS's bindings first. If nothing is found, defer to UDMFEternity's 
+  // bindings, then to Hexen's.
+   if(!(bind = ACSSpecHash.objectForKey(special)))
+   {
+      if(!(bind = UDMFEternitySpecHash.objectForKey(special)))
+         bind = HexenSpecHash.objectForKey(special);
+   }
+
+   return bind;
+}
+//
+// Returns a special binding from the ACS's bindings array,
+// regardless of the current gamemode or map format. Returns NULL if
+// the special is not bound to an action.
+//
+ev_action_t *EV_ACSActionForSpecial(int special)
+{
+   ev_binding_t *bind = EV_ACSBindingForSpecial(special);
 
    return bind ? bind->action : NULL;
 
@@ -1502,7 +1553,7 @@ int EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *
    instance.tag     = args[0];
 
    // get action (always from within the Hexen namespace)
-   if(!(action = EV_HexenActionForSpecial(special)))
+   if(!(action = EV_ACSActionForSpecial(special)))
       return false;
 
    return EV_ActivateSpecial(action, &instance);

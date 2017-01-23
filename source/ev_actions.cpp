@@ -35,6 +35,7 @@
 #include "ev_specials.h"
 #include "g_game.h"
 #include "p_info.h"
+#include "p_scroll.h"
 #include "p_sector.h"
 #include "p_skin.h"
 #include "p_spec.h"
@@ -4284,6 +4285,53 @@ DEFINE_ACTION(EV_ActionParamStairsBuildUpDoomCrush)
 DEFINE_ACTION(EV_ActionParamSectorChangeSound)
 {
    return EV_SectorSoundChange(instance->tag, instance->args[1]);
+}
+
+//=============================================================================
+//
+// ACS-specific specials
+//
+
+//
+// Implements Scroll_Floor(tag, x-move, y-move, type)
+//
+// * ACS: 223
+//
+DEFINE_ACTION(EV_ActionACSScrollFloor)
+{
+   INIT_STRUCT(line_t, ln);
+
+   // convert (tag, x-move, y-move, type) to (tag, scrollbits, type, x-move, y-move)
+   ln.args[0] = instance->args[0];
+   ln.args[1] = 0;
+   ln.args[2] = instance->args[3];
+   ln.args[3] = instance->args[1];
+   ln.args[4] = instance->args[2];
+
+   P_SpawnFloorParam(&ln, true);
+
+   return 1;
+}
+
+//
+// Implements Scroll_Ceiling(tag, x-move, y-move, unused)
+//
+// * ACS: 224
+//
+DEFINE_ACTION(EV_ActionACSScrollCeiling)
+{
+   INIT_STRUCT(line_t, ln);
+
+   // convert (tag, x-move, y-move, unused) to (tag, scrollbits, unused, x-move, y-move)
+   ln.args[0] = instance->args[0];
+   ln.args[1] = 0;
+   ln.args[2] = 0;
+   ln.args[3] = instance->args[1];
+   ln.args[4] = instance->args[2];
+
+   P_SpawnCeilingParam(&ln, true);
+
+   return 1;
 }
 
 // EOF

@@ -1146,6 +1146,9 @@ PARAMLINE(ParamSectorSetCeilingPanning);
 PARAMLINE(ParamSectorChangeSound);
 PARAMLINE(TurnTagLightsOff);
 
+PARAMLINE(ACSScrollFloor);
+PARAMLINE(ACSScrollCeiling);
+
 //=============================================================================
 //
 // Special Bindings
@@ -1791,6 +1794,16 @@ ev_binding_t UDMFEternityBindings[] =
 };
 
 const size_t UDMFEternityBindingsLen = earrlen(UDMFEternityBindings);
+
+// ACS-specific bindings, for functions that are static but need to be
+// accessible by ACS, or that have multiple definitions, one for lines, one for ACS
+ev_binding_t ACSBindings[] =
+{
+   LINESPEC(223, ACSScrollFloor)
+   LINESPEC(224, ACSScrollCeiling)
+};
+
+const size_t ACSBindingsLen = earrlen(ACSBindings);
 
 // EOF
 

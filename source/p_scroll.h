@@ -66,6 +66,8 @@ void Add_Scroller(int type, fixed_t dx, fixed_t dy,
                   int control, int affectee, int accel);
 
 void P_SpawnScrollers();
+void P_SpawnFloorParam(const line_t *l, bool acs);
+void P_SpawnCeilingParam(const line_t *l, bool acs);
 
 #endif
 

@@ -181,6 +181,7 @@ ev_binding_t *EV_BindingForName(const char *name);
 ev_action_t  *EV_DOOMActionForSpecial(int special);
 ev_action_t  *EV_HereticActionForSpecial(int special);
 ev_action_t  *EV_HexenActionForSpecial(int special);
+ev_action_t  *EV_ACSActionForSpecial(int special);
 ev_action_t  *EV_ActionForSpecial(int special);
 
 // Lockdef ID for Special
