@@ -95,6 +95,11 @@ They're now no longer sunk into the floor.
 Allow playback of slightly faulty wav files, such as those in Darch's Preacher
 BOOM mapset.
 
+-------------------------------------------------------------------------------
+2017/01/23
+Allow for the specific ACS versions of Scroll_Floor and Scroll_Ceiling. This is
+achieved by introducing a separate line bindings specifically for ACS.
+
 ================================================================================
 EOF
 ================================================================================

@@ -41,8 +41,15 @@ protected:
    void Think();
 
 public:
-   // Methods
+   // Overridden Methods
    virtual void serialize(SaveArchive &arc);
+
+   // Methods
+   void addScroller();
+   void removeScroller();
+
+   // Static Methods
+   static void RemoveAllScrollers();
    
    // Data Members
    fixed_t dx, dy;      // (dx,dy) scroll speeds
@@ -60,6 +67,7 @@ public:
       sc_carry_ceiling,  // killough 4/11/98: carry objects hanging on ceilings
    };
    int type;              // Type of scroll effect
+   struct scrollerlist_t *list;
 };
 
 void Add_Scroller(int type, fixed_t dx, fixed_t dy,

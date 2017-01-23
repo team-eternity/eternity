@@ -38,6 +38,15 @@
 #include "v_misc.h"
 
 
+struct scrollerlist_t
+{
+   ScrollThinker    *scroller;
+   scrollerlist_t   *next;
+   scrollerlist_t  **prev;
+};
+
+static scrollerlist_t *scrollers;
+
 IMPLEMENT_THINKER_TYPE(ScrollThinker)
 
 // killough 2/28/98:
@@ -162,6 +171,71 @@ void ScrollThinker::serialize(SaveArchive &arc)
 
    arc << dx << dy << affectee << control << last_height << vdx << vdy
        << accel << type;
+
+   if(arc.isLoading())
+      addScroller();
+}
+
+void ScrollThinker::addScroller()
+{
+   list = estructalloc(scrollerlist_t, 1);
+   list->scroller = this;
+   if((list->next = scrollers))
+      list->next->prev = &list->next;
+   list->prev = &scrollers;
+   scrollers = list;
+}
+
+void ScrollThinker::removeScroller()
+{
+   removeThinker();
+   if((*list->prev = list->next))
+      list->next->prev = list->prev;
+   efree(list);
+}
+
+//
+// Remove all scrollers
+//
+// Passed nothing, returns nothing
+//
+void ScrollThinker::RemoveAllScrollers()
+{
+   while(scrollers)
+   {
+      scrollerlist_t *next = scrollers->next;
+      efree(scrollers);
+      scrollers = next;
+   }
+}
+
+bool EV_stopFlatScrollerBySecnum(int type, int secnum)
+{
+   bool flickback = false;
+   if(!scrollers)
+      return false;
+
+   // search the scrolled sectors
+   for(scrollerlist_t *sl = scrollers; sl; sl = sl->next)
+   {
+      if(flickback == true)
+      {
+         sl = *sl->prev;
+         flickback = false;
+      }
+      ScrollThinker *scroller = sl->scroller;
+
+      if(scroller->affectee == secnum && scroller->type == type)
+      {
+         if(!((sl = sl->next)))
+            break; 
+
+         flickback = true;
+         scroller->removeScroller();
+      }
+   }
+
+   return true;
 }
 
 //
@@ -197,6 +271,13 @@ void Add_Scroller(int type, fixed_t dx, fixed_t dy,
        sectors[control].floorheight + sectors[control].ceilingheight;
 
    s->affectee = affectee;
+
+   if(type != ScrollThinker::sc_side)
+   {
+      EV_stopFlatScrollerBySecnum(type, affectee);
+      s->addScroller();
+   }
+
    s->addThinker();
 }
 
@@ -306,9 +387,7 @@ void P_SpawnCeilingParam(const line_t *l, bool acs)
    P_getScrollParams(l, dx, dy, control, accel, acs);
 
    for(int s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0;)
-   {
       Add_Scroller(ScrollThinker::sc_ceiling, -dx, dy, control, s, accel);
-   }
 }
 
 //
