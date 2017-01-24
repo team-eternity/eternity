@@ -977,6 +977,19 @@ void G_DoPlayDemo(void)
    }
 
    demobuffer = demo_p = (byte *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC)); // killough
+
+   // Check for empty demo lumps
+   if(!demo_p)
+   {
+      if(singledemo)
+         I_Error("G_DoPlayDemo: empty demo %s\n", basename);
+      else
+      {
+         gameaction = ga_nothing;
+         D_AdvanceDemo();
+      }
+      return;  // protect against zero-length lumps
+   }
    
    // killough 2/22/98, 2/28/98: autodetect old demos and act accordingly.
    // Old demos turn on demo_compatibility => compatibility; new demos load
