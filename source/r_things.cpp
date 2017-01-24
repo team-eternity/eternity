@@ -1903,10 +1903,15 @@ inline static sector_t *R_addProjNode(Mobj *mobj, const linkdata_t *data,
 void R_CheckMobjProjections(Mobj *mobj)
 {
    sector_t *sector = mobj->subsector->sector;
-   if(!mobj->spriteproj && !(sector->f_pflags & PS_PASSABLE) &&
-      !(sector->c_pflags & PS_PASSABLE))
+   if(!mobj->spriteproj && ((!(sector->f_pflags & PS_PASSABLE) &&
+      !(sector->c_pflags & PS_PASSABLE)) || mobj->flags & MF_NOSECTOR))
    {
       return;  // exit quickly if nothing to do
+   }
+   if(mobj->flags & MF_NOSECTOR) // NOSECTOR shouldn't link this to sector
+   {
+      R_RemoveMobjProjections(mobj);
+      return;
    }
 
    // MAJOR FIXME: don't use an "arbitrary margin". Instead use accurate sprite
