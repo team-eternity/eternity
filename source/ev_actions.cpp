@@ -4299,7 +4299,9 @@ DEFINE_ACTION(EV_ActionParamSectorChangeSound)
 //
 DEFINE_ACTION(EV_ActionACSScrollFloor)
 {
-   INIT_STRUCT(line_t, ln);
+   // Don't use INIT_STRUCT or memset because of line_t PointThinker vtable
+   // warnings. Just zero-init it.
+   line_t ln = { 0 };
 
    // convert (tag, x-move, y-move, type) to (tag, scrollbits, type, x-move, y-move)
    ln.args[0] = instance->args[0];
@@ -4320,7 +4322,8 @@ DEFINE_ACTION(EV_ActionACSScrollFloor)
 //
 DEFINE_ACTION(EV_ActionACSScrollCeiling)
 {
-   INIT_STRUCT(line_t, ln);
+   // See other comment in this file on this
+   line_t ln = { 0 };
 
    // convert (tag, x-move, y-move, unused) to (tag, scrollbits, unused, x-move, y-move)
    ln.args[0] = instance->args[0];
