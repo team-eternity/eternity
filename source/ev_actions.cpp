@@ -1118,7 +1118,7 @@ DEFINE_ACTION(EV_ActionPlatToggleUpDown)
 //
 DEFINE_ACTION(EV_ActionStartLineScript)
 {
-   P_StartLineScript(instance->line, instance->actor, instance->poly);
+   P_StartLineScript(instance->line, instance->side, instance->actor, instance->poly);
    return true;
 }
 
