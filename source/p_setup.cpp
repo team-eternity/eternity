@@ -3331,7 +3331,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    // IOANCH 20151212: UDMF
    if(isUdmf)
    {
-      if(!udmf.loadLinedefs())
+      if(!udmf.loadLinedefs(setupSettings))
       {
          P_SetupLevelError(udmf.error().constPtr(), mapname);
          return;
@@ -3460,7 +3460,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    P_SpawnSpecials(setupSettings);
 
    // SoM: Deferred specials that need to be spawned after P_SpawnSpecials
-   P_SpawnDeferredSpecials();
+   P_SpawnDeferredSpecials(setupSettings);
 
    // haleyjd
    P_InitLightning();

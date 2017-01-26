@@ -859,18 +859,25 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr)
 
    // ioanch 20160125: reject sprites in front of portal line when rendering
    // line portal
-   if(portalrender.curwindow && portalrender.curwindow->line) 
+   if(portalrender.w) 
    {
-      const line_t &l = *portalrender.curwindow->line;
-
-      // sprite position, shifted by offset
-      // do NOT use interpolated coordinates for this check!
-      v2fixed_t pv = {thing->x - viewx + portalrender.curwindow->vx,
-                      thing->y - viewy + portalrender.curwindow->vy};
-
-      if(P_PointOnLineSide(pv.x, pv.y, &l) == 0)
+      const renderbarrier_t &barrier = portalrender.w->barrier;
+      if(portalrender.w->line)
       {
-         return;
+         if(P_PointOnDivlineSide(spritepos.x, spritepos.y, &barrier.dln.dl) == 0)
+            return;
+      }
+      else
+      {
+         //dlnormal_t ports[2];
+         //R_PickSidesNearViewer(barrier.bbox, ports);
+         //if((ports[0].dl.dy &&
+         //   P_PointOnDivlineSide(spritepos.x, spritepos.y, &ports[0].dl) == 0) ||
+         //   (ports[1].dl.dx &&
+         //      P_PointOnDivlineSide(spritepos.x, spritepos.y, &ports[1].dl) == 0))
+         //{
+         //   return;
+         //}
       }
    }
 
@@ -1896,10 +1903,15 @@ inline static sector_t *R_addProjNode(Mobj *mobj, const linkdata_t *data,
 void R_CheckMobjProjections(Mobj *mobj)
 {
    sector_t *sector = mobj->subsector->sector;
-   if(!mobj->spriteproj && !(sector->f_pflags & PS_PASSABLE) &&
-      !(sector->c_pflags & PS_PASSABLE))
+   if(!mobj->spriteproj && ((!(sector->f_pflags & PS_PASSABLE) &&
+      !(sector->c_pflags & PS_PASSABLE)) || mobj->flags & MF_NOSECTOR))
    {
       return;  // exit quickly if nothing to do
+   }
+   if(mobj->flags & MF_NOSECTOR) // NOSECTOR shouldn't link this to sector
+   {
+      R_RemoveMobjProjections(mobj);
+      return;
    }
 
    // MAJOR FIXME: don't use an "arbitrary margin". Instead use accurate sprite

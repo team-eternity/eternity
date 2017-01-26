@@ -215,6 +215,10 @@ bool VPNGImagePimpl::readImage(const void *data)
       png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
                    NULL, NULL, NULL);
 
+      // Set offsets (retrieved via V_pngReadUnknownChunk)
+      xoffset = ioStruct.offsets.x;
+      yoffset = ioStruct.offsets.y;
+
       // Strip 16-bit color elements to 8-bit precision
       png_set_strip_16(png_ptr);
 

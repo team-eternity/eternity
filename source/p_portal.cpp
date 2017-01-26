@@ -340,8 +340,8 @@ linkoffset_t *P_GetLinkIfExists(int fromgroup, int togroup)
 // Returns 0 if the link offset was added successfully, 1 if the start group is
 // out of bounds, and 2 of the target group is out of bounds.
 //
-int P_AddLinkOffset(int startgroup, int targetgroup, 
-                    fixed_t x, fixed_t y, fixed_t z)
+static int P_AddLinkOffset(int startgroup, int targetgroup,
+                           fixed_t x, fixed_t y, fixed_t z)
 {
    linkoffset_t *link;
 
@@ -455,7 +455,7 @@ static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
 // group, that is, if group A has a link to B, and B has a link to C, a link
 // can be found to go from A to C.
 //
-static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz, 
+static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
                           int via)
 {
    int i, p;

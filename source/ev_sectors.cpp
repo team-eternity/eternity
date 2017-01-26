@@ -296,7 +296,7 @@ static void EV_SectorHticScrollEastLavaDamage(sector_t *sector)
    sector->hticPushForce = 2048*28;
    
    // scrolls to the east:
-   Add_Scroller(ScrollThinker::sc_floor, (-FRACUNIT/2)<<3, 0, -1, static_cast<int>(sector - sectors), 0);
+   Add_Scroller(ScrollThinker::sc_floor, (-FRACUNIT/2) * 8, 0, -1, sector - sectors, 0);
 }
 
 //

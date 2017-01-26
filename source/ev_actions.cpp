@@ -35,6 +35,7 @@
 #include "ev_specials.h"
 #include "g_game.h"
 #include "p_info.h"
+#include "p_scroll.h"
 #include "p_sector.h"
 #include "p_skin.h"
 #include "p_spec.h"
@@ -1117,7 +1118,7 @@ DEFINE_ACTION(EV_ActionPlatToggleUpDown)
 //
 DEFINE_ACTION(EV_ActionStartLineScript)
 {
-   P_StartLineScript(instance->line, instance->actor);
+   P_StartLineScript(instance->line, instance->side, instance->actor, instance->poly);
    return true;
 }
 
@@ -2803,18 +2804,19 @@ DEFINE_ACTION(EV_ActionPillarOpen)
 //
 DEFINE_ACTION(EV_ActionACSExecute)
 {
-   Mobj   *thing = instance->actor;
-   line_t *line  = instance->line;
-   int     side  = instance->side;
-   int     num   = instance->args[0];
-   int     map   = instance->args[1];
-   int     argc  = NUMLINEARGS - 2;
-   int32_t argv[NUMLINEARGS - 2];
+   Mobj    *thing = instance->actor;
+   line_t  *line  = instance->line;
+   int      side  = instance->side;
+   polyobj_t *po  = instance->poly;
+   int      num   = instance->args[0];
+   int      map   = instance->args[1];
+   int      argc  = NUMLINEARGS - 2;
+   uint32_t argv[NUMLINEARGS - 2];
 
    for(int i = 0; i != argc; ++i)
       argv[i] = instance->args[i + 2];
 
-   return ACS_ExecuteScriptNumber(num, map, 0, argv, argc, thing, line, side);
+   return ACS_ExecuteScriptI(num, map, argv, argc, thing, line, side, po);
 }
 
 
@@ -2827,7 +2829,7 @@ DEFINE_ACTION(EV_ActionACSExecute)
 //
 DEFINE_ACTION(EV_ActionACSSuspend)
 {
-   return ACS_SuspendScriptNumber(instance->args[0], instance->args[1]);
+   return ACS_SuspendScriptI(instance->args[0], instance->args[1]);
 }
 
 //
@@ -2839,7 +2841,7 @@ DEFINE_ACTION(EV_ActionACSSuspend)
 //
 DEFINE_ACTION(EV_ActionACSTerminate)
 {
-   return ACS_TerminateScriptNumber(instance->args[0], instance->args[1]);
+   return ACS_TerminateScriptI(instance->args[0], instance->args[1]);
 }
 
 //
@@ -2851,21 +2853,18 @@ DEFINE_ACTION(EV_ActionACSTerminate)
 //
 DEFINE_ACTION(EV_ActionACSExecuteWithResult)
 {
-   Mobj   *thing = instance->actor;
-   line_t *line  = instance->line;
-   int     side  = instance->side;
-   int     flags = ACS_EXECUTE_ALWAYS | ACS_EXECUTE_IMMEDIATE;
-   int     num   = instance->args[0];
-   int     argc  = NUMLINEARGS - 1;
-   int32_t argv[NUMLINEARGS - 1];
+   Mobj    *thing = instance->actor;
+   line_t  *line  = instance->line;
+   int      side  = instance->side;
+   polyobj_s *po = instance->poly;
+   int      num   = instance->args[0];
+   int      argc  = NUMLINEARGS - 1;
+   uint32_t argv[NUMLINEARGS - 1];
 
    for(int i = 0; i != argc; ++i)
       argv[i] = instance->args[i + 1];
 
-   ACSThinker *thread = NULL;
-   ACS_ExecuteScriptNumber(num, 0, flags, argv, argc, thing, line, side, &thread);
-
-   return thread ? thread->result : 0;
+   return ACS_ExecuteScriptIResult(num, argv, argc, thing, line, side, po);
 }
 
 //
@@ -3323,20 +3322,21 @@ DEFINE_ACTION(EV_ActionParamDoorLockedRaise)
 //
 DEFINE_ACTION(EV_ActionACSLockedExecute)
 {
-   Mobj   *thing = instance->actor;
-   line_t *line  = instance->line;
-   int     side  = instance->side;
-   int     num   = instance->args[0];
-   int     map   = instance->args[1];
-   int     argc  = NUMLINEARGS - 3;
-   int32_t argv[NUMLINEARGS - 3];
+   Mobj    *thing = instance->actor;
+   line_t  *line  = instance->line;
+   int      side  = instance->side;
+   polyobj_t *po  = instance->poly;
+   int      num   = instance->args[0];
+   int      map   = instance->args[1];
+   int      argc  = NUMLINEARGS - 3;
+   uint32_t argv[NUMLINEARGS - 3];
 
    for(int i = 0; i != argc; ++i)
       argv[i] = instance->args[i + 2];
 
    // Always display the "object" message.
    if(EV_lockCheck(thing, instance->args[4], true))
-      return ACS_ExecuteScriptNumber(num, map, 0, argv, argc, thing, line, side);
+      return ACS_ExecuteScriptI(num, map, argv, argc, thing, line, side, po);
    return 0;
 }
 
@@ -3349,20 +3349,21 @@ DEFINE_ACTION(EV_ActionACSLockedExecute)
 //
 DEFINE_ACTION(EV_ActionACSLockedExecuteDoor)
 {
-   Mobj   *thing = instance->actor;
-   line_t *line = instance->line;
-   int     side = instance->side;
-   int     num = instance->args[0];
-   int     map = instance->args[1];
-   int     argc = NUMLINEARGS - 3;
-   int32_t argv[NUMLINEARGS - 3];
+   Mobj    *thing = instance->actor;
+   line_t  *line = instance->line;
+   int      side = instance->side;
+   polyobj_t *po = instance->poly;
+   int      num = instance->args[0];
+   int      map = instance->args[1];
+   int      argc = NUMLINEARGS - 3;
+   uint32_t argv[NUMLINEARGS - 3];
 
    for(int i = 0; i != argc; ++i)
       argv[i] = instance->args[i + 2];
 
    // Always display the "door" message.
    if(EV_lockCheck(thing, instance->args[4], false))
-      return ACS_ExecuteScriptNumber(num, map, 0, argv, argc, thing, line, side);
+      return ACS_ExecuteScriptI(num, map, argv, argc, thing, line, side, po);
    return 0;
 }
 
@@ -4192,18 +4193,19 @@ DEFINE_ACTION(EV_ActionParamSectorSetFloorPanning)
 //
 DEFINE_ACTION(EV_ActionACSExecuteAlways)
 {
-   Mobj   *thing = instance->actor;
-   line_t *line  = instance->line;
-   int     side  = instance->side;
-   int     num   = instance->args[0];
-   int     map   = instance->args[1];
-   int     argc  = NUMLINEARGS - 2;
-   int32_t argv[NUMLINEARGS - 2];
+   Mobj    *thing = instance->actor;
+   line_t  *line  = instance->line;
+   int      side  = instance->side;
+   polyobj_s *po = instance->poly;
+   int      num   = instance->args[0];
+   int      map   = instance->args[1];
+   int      argc  = NUMLINEARGS - 2;
+   uint32_t argv[NUMLINEARGS - 2];
 
    for(int i = 0; i != argc; ++i)
       argv[i] = instance->args[i + 2];
 
-   return ACS_ExecuteScriptNumber(num, map, ACS_EXECUTE_ALWAYS, argv, argc, thing, line, side);
+   return ACS_ExecuteScriptIAlways(num, map, argv, argc, thing, line, side, po);
 }
 
 //
@@ -4248,6 +4250,91 @@ DEFINE_ACTION(EV_ActionParamPlatDWUSLip)
 DEFINE_ACTION(EV_ActionParamPlatPerpetualRaiseLip)
 {
    return EV_DoParamPlat(instance->line, instance->args, paramPerpetualRaiseLip);
+}
+
+//
+// Implements Stairs_BuildUpDoomCrush(tag, speed, stepsize, delay, reset)
+//
+// * ExtraData: 494
+// * UDMF:      273
+//
+DEFINE_ACTION(EV_ActionParamStairsBuildUpDoomCrush)
+{
+   INIT_STRUCT(stairdata_t, sd);
+
+   sd.flags = SDF_HAVESPAC;
+   sd.spac = instance->spac; // Hexen-style activation
+   sd.direction = 1;              // up
+   sd.speed_type = SpeedParam;
+   sd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   sd.stepsize_type = StepSizeParam;
+   sd.stepsize_value = instance->args[2] * FRACUNIT;     // height
+   sd.delay_value = instance->args[3];                // delay
+   sd.reset_value = instance->args[4];                // reset
+   sd.crush = true;
+
+   return EV_DoParamStairs(instance->line, instance->tag, &sd);
+}
+
+//
+// Implements Sector_ChangeSound(tag, sound)
+//
+// * ExtraData: 495
+// * Hexen:     140
+//
+DEFINE_ACTION(EV_ActionParamSectorChangeSound)
+{
+   return EV_SectorSoundChange(instance->tag, instance->args[1]);
+}
+
+//=============================================================================
+//
+// ACS-specific specials
+//
+
+//
+// Implements Scroll_Floor(tag, x-move, y-move, type)
+//
+// * ACS: 223
+//
+DEFINE_ACTION(EV_ActionACSScrollFloor)
+{
+   // Don't use INIT_STRUCT or memset because of line_t PointThinker vtable
+   // warnings. Just zero-init it.
+   line_t ln = { 0 };
+
+   // convert (tag, x-move, y-move, type) to (tag, scrollbits, type, x-move, y-move)
+   ln.args[0] = instance->args[0];
+   ln.args[1] = 0;
+   ln.args[2] = instance->args[3];
+   ln.args[3] = instance->args[1];
+   ln.args[4] = instance->args[2];
+
+   P_SpawnFloorParam(&ln, true);
+
+   return 1;
+}
+
+//
+// Implements Scroll_Ceiling(tag, x-move, y-move, unused)
+//
+// * ACS: 224
+//
+DEFINE_ACTION(EV_ActionACSScrollCeiling)
+{
+   // See other comment in this file on this
+   line_t ln = { 0 };
+
+   // convert (tag, x-move, y-move, unused) to (tag, scrollbits, unused, x-move, y-move)
+   ln.args[0] = instance->args[0];
+   ln.args[1] = 0;
+   ln.args[2] = 0;
+   ln.args[3] = instance->args[1];
+   ln.args[4] = instance->args[2];
+
+   P_SpawnCeilingParam(&ln, true);
+
+   return 1;
 }
 
 // EOF

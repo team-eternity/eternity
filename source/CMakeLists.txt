@@ -53,7 +53,19 @@ endif()
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
    file(GLOB ARCH_SPECIFIC_SOURCES Win32/*.cpp)
    if(MSVC)
-      set(ARCH_SPECIFIC_SOURCES ${ARCH_SPECIFIC_SOURCES} ../midiproc/midiproc_c.c)
+      if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+         add_custom_command(OUTPUT midiproc_c.c midiproc_s.c midiproc.h
+         COMMAND midl -Oicf -W1 -Zp8 /env amd64 /protocol dce /app_config /out ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../midiproc/midiproc.idl
+         MAIN_DEPENDENCY ../midiproc/midiproc.idl)
+	  elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+	     add_custom_command(OUTPUT midiproc_c.c midiproc_s.c midiproc.h
+         COMMAND midl -Oicf -W1 -Zp8 /env win32 /protocol dce /app_config /out ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../midiproc/midiproc.idl
+         MAIN_DEPENDENCY ../midiproc/midiproc.idl)
+	  endif()
+      include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+      set(ARCH_SPECIFIC_SOURCES ${ARCH_SPECIFIC_SOURCES} midiproc_c.c)
+	  
       include_directories(Win32/)
    endif()
 endif()
@@ -99,7 +111,7 @@ FILE (GLOB AUTODOOM_GLBSP_SOURCES autodoom/glbsp/*.c)
 ADD_EXECUTABLE (eternity ${ARCH_SPECIFIC_SOURCES} ${ETERNITY_SOURCES} ${CONFUSE_SOURCES}
                 ${TEXTSCREEN_SOURCES} ${HAL_SOURCES} ${GL_SOURCES} ${SDL_SOURCES} ${AUTODOOM_SOURCES} ${AUTODOOM_GLBSP_SOURCES})
 
-target_link_libraries(eternity ${SDL_LIBRARY} ${SDLMIXER_LIBRARY} ${SDLNET_LIBRARY} png15_static snes_spc)
+target_link_libraries(eternity ${SDL_LIBRARY} ${SDLMIXER_LIBRARY} ${SDLNET_LIBRARY} acsvm png15_static snes_spc)
 
 if(OPENGL_LIBRARY)
    target_link_libraries(eternity ${OPENGL_LIBRARY})

@@ -282,7 +282,7 @@ void A_LineEffect(actionargs_t *actionargs)
          player.health = 100;                        // Alive player
          junk.args[0] = junk.tag = mo->state->misc2;            // Sector tag for linedef
          if(!P_UseSpecialLine(mo, &junk, 0))         // Try using it
-            P_CrossSpecialLine(&junk, 0, mo);        // Try crossing it
+            P_CrossSpecialLine(&junk, 0, mo, nullptr);  // Try crossing it
          if(!junk.special)                           // If type cleared,
             mo->intflags |= MIF_LINEDONE;            // no more for this thing
          mo->player = oldplayer;                     // Restore player status
@@ -489,22 +489,21 @@ void A_StartScript(actionargs_t *actionargs)
    }
    else
    {
-      int flags = ACS_EXECUTE_ALWAYS | ACS_EXECUTE_IMMEDIATE;
       int argc = E_GetArgCount(args);
 
       if(argc > 2)
       {
-         int32_t argv[EMAXARGS - 2];
+         uint32_t argv[EMAXARGS - 2];
          argc -= 2;
 
          for(int i = 0; i < argc; ++i)
              argv[i] = E_ArgAsInt(args, i + 2, 0);
 
-         ACS_ExecuteScriptNumber(scriptnum, gamemap, flags, argv, argc, actor, NULL, 0);
+         ACS_ExecuteScriptIResult(scriptnum, argv, argc, actor, NULL, 0, nullptr);
       }
       else
       {
-         ACS_ExecuteScriptNumber(scriptnum, gamemap, flags, NULL, 0, actor, NULL, 0);
+         ACS_ExecuteScriptIResult(scriptnum, NULL, 0, actor, NULL, 0, nullptr);
       }
    }
 }
@@ -527,22 +526,21 @@ void A_StartScriptNamed(actionargs_t *actionargs)
    }
    else
    {
-      int flags = ACS_EXECUTE_ALWAYS | ACS_EXECUTE_IMMEDIATE;
       int argc = E_GetArgCount(args);
 
       if(argc > 2)
       {
-         int32_t argv[EMAXARGS - 2];
+         uint32_t argv[EMAXARGS - 2];
          argc -= 2;
 
          for(int i = 0; i < argc; ++i)
              argv[i] = E_ArgAsInt(args, i + 2, 0);
 
-         ACS_ExecuteScriptName(scriptname, gamemap, flags, argv, argc, actor, NULL, 0);
+         ACS_ExecuteScriptSResult(scriptname, argv, argc, actor, NULL, 0, nullptr);
       }
       else
       {
-         ACS_ExecuteScriptName(scriptname, gamemap, flags, NULL, 0, actor, NULL, 0);
+         ACS_ExecuteScriptSResult(scriptname, NULL, 0, actor, NULL, 0, nullptr);
       }
    }
 }

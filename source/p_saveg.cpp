@@ -176,11 +176,11 @@ void SaveArchive::archiveSize(size_t &value)
       savefile->writeUint64(uv);
    else
    {
-#if SIZE_MAX > UINT_MAX
-      if(uv > UINT_MAX)
+      loadfile->readUint64(uv);
+#if SIZE_MAX < UINT64_MAX
+      if(uv > SIZE_MAX)
          I_Error("Cannot load save game: size_t value out of range on this platform\n");
 #endif
-      loadfile->readUint64(uv);
       value = size_t(uv);
    }
 }
@@ -1517,9 +1517,6 @@ void P_LoadGame(const char *filename)
    //  for 'seamless' travel between levels
    if(hub_changelevel) 
       P_RestorePlayerPosition();
-
-   // haleyjd 01/07/07: run deferred ACS scripts
-   ACS_RunDeferredScripts();
 }
 
 //----------------------------------------------------------------------------

@@ -948,7 +948,7 @@ manual_stair:
       speed        = floor->speed;
       height       = sec->floorheight + floor->direction * stairsize;
       texture      = sec->floorpic;
-      floor->crush = -1;
+      floor->crush = sd->crush ? 10 : -1; // constant crush damage, for now
       floor->type  = genBuildStair; // jff 3/31/98 do not leave uninited
       
       floor->floordestheight = height;
@@ -1033,7 +1033,7 @@ manual_stair:
                floor->speed = speed;
             
             floor->floordestheight = height;
-            floor->crush = -1;
+            floor->crush = sd->crush ? 10 : -1;
             floor->type = genBuildStair; // jff 3/31/98 do not leave uninited
 
             // haleyjd 10/13/05: init reset and delay properties

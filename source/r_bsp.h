@@ -26,6 +26,7 @@
 #ifndef R_BSP_H__
 #define R_BSP_H__
 
+struct dlnormal_t;
 struct drawseg_t;
 struct line_t;
 struct seg_t;

@@ -368,6 +368,7 @@ public:
    prevpos_t prevpos;   // previous position for interpolation
 
    // scripting fields
+   int special;         // special
    int args[NUMMTARGS]; // arguments
    uint16_t tid;        // thing id used by scripts
 

@@ -421,7 +421,7 @@ int EV_DoDoor(const line_t *line, vldoor_e type)
 //
 int EV_VerticalDoor(line_t *line, const Mobj *thing, int lockID)
 {
-   const player_t *player = thing->player;
+   player_t *player = thing ? thing->player : nullptr;
    sector_t *sec;
    VerticalDoorThinker *door;
    SectorThinker       *secThinker;
@@ -475,7 +475,7 @@ int EV_VerticalDoor(line_t *line, const Mobj *thing, int lockID)
       case  27:
       case  28:
       case  117:
-         return secThinker->reTriggerVerticalDoor(!!thing->player);
+         return secThinker->reTriggerVerticalDoor(thing && thing->player);
       }
       
       // haleyjd 01/22/12: never start multiple thinkers on a door sector.

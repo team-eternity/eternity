@@ -34,6 +34,7 @@
 struct ev_action_t;
 struct line_t;
 class  Mobj;
+struct polyobj_s;
 
 // Action flags
 enum EVActionFlags
@@ -71,6 +72,7 @@ struct ev_instance_t
    int     spac;    // special activation type
    int     gentype; // generalized type, if is generalized (-1 otherwise)
    int     genspac; // generalized activation type, if generalized
+   polyobj_s *poly;  // possible polyobject activator
 };
 
 //
@@ -179,6 +181,7 @@ ev_binding_t *EV_BindingForName(const char *name);
 ev_action_t  *EV_DOOMActionForSpecial(int special);
 ev_action_t  *EV_HereticActionForSpecial(int special);
 ev_action_t  *EV_HexenActionForSpecial(int special);
+ev_action_t  *EV_ACSActionForSpecial(int special);
 ev_action_t  *EV_ActionForSpecial(int special);
 
 // Lockdef ID for Special
@@ -191,9 +194,11 @@ int EV_LockDefIDForLine(const line_t *line);
 bool EV_IsParamLineSpec(int special);
 
 // Activation
-bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing, int spac);
+bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing,
+   polyobj_s *poly, int spac);
 bool EV_ActivateSpecialNum(int special, int *args, Mobj *thing);
-int  EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *thing);
+int  EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *thing,
+   polyobj_s *poly);
 bool EV_ActivateAction(ev_action_t *action, int *args, Mobj *thing);
 
 //
@@ -293,7 +298,7 @@ enum
    EV_STATIC_SCROLL_LINE_DOWN_FAST,         // 419
    EV_STATIC_PORTAL_HORIZON_LINE,           // 450
    EV_STATIC_SLOPE_PARAM,                   // 455
-   EV_STATIC_PORTAL_SECTOR_PARAM,           // 456
+   EV_STATIC_PORTAL_SECTOR_PARAM_COMPAT,    // 456
    EV_STATIC_WIND_CONTROL_PARAM,            // 457
    EV_STATIC_CURRENT_CONTROL_PARAM,         // 479
    EV_STATIC_PUSHPULL_CONTROL_PARAM,        // 480
@@ -302,7 +307,10 @@ enum
    EV_STATIC_SCROLL_CEILING_PARAM,          // 483
    EV_STATIC_SCROLL_FLOOR_PARAM,            // 484
    EV_STATIC_SCROLL_WALL_PARAM,             // 485
-   EV_STATIC_PORTAL_LINE_PARAM,             // 486
+   EV_STATIC_PORTAL_LINE_PARAM_COMPAT,      // 486
+   EV_STATIC_PORTAL_LINE_PARAM_QUICK,       // 491
+   EV_STATIC_PORTAL_DEFINE,                 // 492
+   EV_STATIC_SLOPE_PARAM_TAG,               // 493
 
    EV_STATIC_MAX
 };

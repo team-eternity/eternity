@@ -353,6 +353,20 @@ void P_MovePlayer(player_t* player)
             P_Thrust(player, mo->angle-ANG90, 0, cmd->sidemove*movefactor);
          }
       }
+      else if(!comp[comp_aircontrol])
+      {
+         // Do not move player 
+         if(cmd->forwardmove)
+         {
+            P_Thrust(player, mo->angle, 0, FRACUNIT >> 8);
+         }
+
+         // TODO: disable this part in Strife
+         if(cmd->sidemove)
+         {
+            P_Thrust(player, mo->angle, 0, FRACUNIT >> 8);
+         }
+      }
 
       if(mo->state == states[mo->info->spawnstate])
          P_SetMobjState(mo, mo->info->seestate);

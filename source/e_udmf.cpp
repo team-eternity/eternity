@@ -31,6 +31,7 @@
 #include "e_exdata.h"
 #include "e_hash.h"
 #include "e_mod.h"
+#include "e_sound.h"
 #include "e_ttypes.h"
 #include "e_udmf.h"
 #include "m_compare.h"
@@ -56,9 +57,16 @@ static const char RENDERSTYLE_add[] = "add";
 //
 void UDMFSetupSettings::useSectorCount()
 {
-   if(mSectorInitFlags)
+   if(mSectorInitData)
       return;
-   mSectorInitFlags = ecalloc(unsigned *, ::numsectors, sizeof(unsigned));
+   mSectorInitData = estructalloc(sectorinfo_t, ::numsectors);
+}
+
+void UDMFSetupSettings::useLineCount()
+{
+   if(mLineInitData)
+      return;
+   mLineInitData = estructalloc(lineinfo_t, ::numlines);
 }
 
 //==============================================================================
@@ -154,6 +162,9 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          // sector colormaps
          ss->topmap = ss->midmap = ss->bottommap = -1; // mark as not specified
 
+         setupSettings.setSectorPortals(i, us.portalceiling, us.portalfloor);
+         setupSettings.getAttachInfo(i) = udmfattach_t{ us.floorid, 
+            us.ceilingid, us.attachfloor, us.attachceiling };
       }
       else
       {
@@ -191,7 +202,10 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
 
          // Portal fields
          // Floors
-         ss->f_pflags |= us.portal_floor_alpha << PO_OPACITYSHIFT;
+         int balpha = us.alphafloor >= 1.0 ? 255 : us.alphafloor <= 0 ? 
+            0 : int(round(255 * us.alphafloor));
+         balpha = eclamp(balpha, 0, 255);
+         ss->f_pflags |= balpha << PO_OPACITYSHIFT;
          ss->f_pflags |= us.portal_floor_blocksound ? PF_BLOCKSOUND : 0;
          ss->f_pflags |= us.portal_floor_disabled ? PF_DISABLED : 0;
          ss->f_pflags |= us.portal_floor_nopass ? PF_NOPASS : 0;
@@ -203,7 +217,10 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          ss->f_pflags |= us.portal_floor_useglobaltex ? PS_USEGLOBALTEX : 0;
 
          // Ceilings
-         ss->c_pflags |= us.portal_ceil_alpha << PO_OPACITYSHIFT;
+         balpha = us.alphaceiling >= 1.0 ? 255 : us.alphaceiling <= 0 ? 
+            0 : int(round(255 * us.alphaceiling));
+         balpha = eclamp(balpha, 0, 255);
+         ss->c_pflags |= balpha << PO_OPACITYSHIFT;
          ss->c_pflags |= us.portal_ceil_blocksound ? PF_BLOCKSOUND : 0;
          ss->c_pflags |= us.portal_ceil_disabled ? PF_DISABLED : 0;
          ss->c_pflags |= us.portal_ceil_nopass ? PF_NOPASS : 0;
@@ -218,6 +235,25 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          ss->floor_yscale = static_cast<float>(us.yscalefloor);
          ss->ceiling_xscale = static_cast<float>(us.xscaleceiling);
          ss->ceiling_yscale = static_cast<float>(us.yscaleceiling);
+
+         // Sound sequences
+         if(!us.soundsequence.empty())
+         {
+            char *endptr = nullptr;
+            long number = strtol(us.soundsequence.constPtr(), &endptr, 10);
+            if(endptr == us.soundsequence.constPtr())
+            {
+               // We got a string then
+               const ESoundSeq_t *seq = E_SequenceForName(us.soundsequence.constPtr());
+               if(seq)
+                  ss->sndSeqID = seq->index;
+            }
+            else
+            {
+               // We got ourselves a number
+               ss->sndSeqID = static_cast<int>(number);
+            }
+         }
       }
    }
 }
@@ -234,7 +270,7 @@ void UDMFParser::loadSidedefs() const
 //
 // Loads linedefs. Returns false on error.
 //
-bool UDMFParser::loadLinedefs()
+bool UDMFParser::loadLinedefs(UDMFSetupSettings &setupSettings)
 {
    numlines = (int)mLinedefs.getLength();
    lines = estructalloctag(line_t, numlines, PU_LEVEL);
@@ -282,6 +318,11 @@ bool UDMFParser::loadLinedefs()
             ld->extflags |= EX_ML_CLIPMIDTEX;
          if(uld.midtex3dimpassible)
             ld->extflags |= EX_ML_3DMTPASSPROJ;
+         if(uld.lowerportal)
+            ld->extflags |= EX_ML_LOWERPORTAL;
+         if(uld.upperportal)
+            ld->extflags |= EX_ML_UPPERPORTAL;
+         setupSettings.setLinePortal(i, uld.portal);
       }
 
       // TODO: Strife
@@ -306,6 +347,8 @@ bool UDMFParser::loadLinedefs()
             ld->extflags |= EX_ML_MISSILE | EX_ML_CROSS;
          if(uld.repeatspecial)
             ld->extflags |= EX_ML_REPEAT;
+         if(uld.polycross)
+            ld->extflags |= EX_ML_POLYOBJECT | EX_ML_CROSS;
       }
 
       ld->special = uld.special;
@@ -449,7 +492,18 @@ bool UDMFParser::loadThings()
          P_ConvertHereticThing(ft);
 
       P_ConvertDoomExtendedSpawnNum(ft);
-      P_SpawnMapThing(ft);
+      Mobj *mobj = P_SpawnMapThing(ft);
+
+      // New specials
+      if(mobj && ut.health && ut.health != 1.0)   // "health" property
+      {
+         if(ut.health > 0)    // either multiply spawnhealth
+            mobj->health = static_cast<int>(round(mobj->health * ut.health));
+         else                 // or use the absolute in case of negative
+            mobj->health = static_cast<int>(fabs(round(ut.health)));
+         if(mobj->health <= 0)   // ensure valid health
+            mobj->health = 1;
+      }
    }
 
    // haleyjd: all player things for players in this game should now be valid
@@ -484,6 +538,8 @@ bool UDMFParser::loadThings()
 enum token_e
 {
    t_alpha,
+   t_alphaceiling,
+   t_alphafloor,
    t_ambush,
    t_angle,
    t_arg0,
@@ -491,11 +547,14 @@ enum token_e
    t_arg2,
    t_arg3,
    t_arg4,
+   t_attachceiling,
+   t_attachfloor,
    t_blockeverything,
    t_blockfloaters,
    t_blocking,
    t_blockmonsters,
    t_blocksound,
+   t_ceilingid,
    t_ceilingterrain,
    t_class1,
    t_class2,
@@ -505,6 +564,8 @@ enum token_e
    t_colormapmid,
    t_colormaptop,
    t_coop,
+   t_copyceilingportal,
+   t_copyfloorportal,
    t_damage_endgodmode,
    t_damage_exitlevel,
    t_damageamount,
@@ -517,9 +578,11 @@ enum token_e
    t_dontpegtop,
    t_dormant,
    t_firstsideonly,
+   t_floorid,
    t_floorterrain,
    t_friction,
    t_friend,
+   t_health,
    t_height,
    t_heightceiling,
    t_heightfloor,
@@ -533,6 +596,7 @@ enum token_e
    t_lightfloor,
    t_lightfloorabsolute,
    t_lightlevel,
+   t_lowerportal,
    t_mapped,
    t_midtex3d,
    t_midtex3dimpassible,
@@ -542,14 +606,16 @@ enum token_e
    t_monsteruse,
    t_offsetx,
    t_offsety,
-   t_portal_ceil_alpha,
+   t_polycross,
+   t_portal,
+   t_portalceiling,
    t_portal_ceil_blocksound,
    t_portal_ceil_disabled,
    t_portal_ceil_nopass,
    t_portal_ceil_norender,
    t_portal_ceil_overlaytype,
    t_portal_ceil_useglobaltex,
-   t_portal_floor_alpha,
+   t_portalfloor,
    t_portal_floor_blocksound,
    t_portal_floor_disabled,
    t_portal_floor_nopass,
@@ -574,6 +640,7 @@ enum token_e
    t_skill3,
    t_skill4,
    t_skill5,
+   t_soundsequence,
    t_special,
    t_standing,
    t_strifeally,
@@ -586,6 +653,7 @@ enum token_e
    t_translucent,
    t_twosided,
    t_type,
+   t_upperportal,
    t_v1,
    t_v2,
    t_x,
@@ -613,6 +681,8 @@ struct keytoken_t
 static keytoken_t gTokenList[] =
 {
    TOKEN(alpha),
+   TOKEN(alphaceiling),
+   TOKEN(alphafloor),
    TOKEN(ambush),
    TOKEN(angle),
    TOKEN(arg0),
@@ -620,11 +690,14 @@ static keytoken_t gTokenList[] =
    TOKEN(arg2),
    TOKEN(arg3),
    TOKEN(arg4),
+   TOKEN(attachceiling),
+   TOKEN(attachfloor),
    TOKEN(blockeverything),
    TOKEN(blockfloaters),
    TOKEN(blocking),
    TOKEN(blockmonsters),
    TOKEN(blocksound),
+   TOKEN(ceilingid),
    TOKEN(ceilingterrain),
    TOKEN(class1),
    TOKEN(class2),
@@ -646,9 +719,11 @@ static keytoken_t gTokenList[] =
    TOKEN(dontpegtop),
    TOKEN(dormant),
    TOKEN(firstsideonly),
+   TOKEN(floorid),
    TOKEN(floorterrain),
    TOKEN(friction),
    TOKEN(friend),
+   TOKEN(health),
    TOKEN(height),
    TOKEN(heightceiling),
    TOKEN(heightfloor),
@@ -662,6 +737,7 @@ static keytoken_t gTokenList[] =
    TOKEN(lightfloor),
    TOKEN(lightfloorabsolute),
    TOKEN(lightlevel),
+   TOKEN(lowerportal),
    TOKEN(mapped),
    TOKEN(midtex3d),
    TOKEN(midtex3dimpassible),
@@ -671,14 +747,16 @@ static keytoken_t gTokenList[] =
    TOKEN(monsteruse),
    TOKEN(offsetx),
    TOKEN(offsety),
-   TOKEN(portal_ceil_alpha),
+   TOKEN(polycross),
+   TOKEN(portal),
+   TOKEN(portalceiling),
    TOKEN(portal_ceil_blocksound),
    TOKEN(portal_ceil_disabled),
    TOKEN(portal_ceil_nopass),
    TOKEN(portal_ceil_norender),
    TOKEN(portal_ceil_overlaytype),
    TOKEN(portal_ceil_useglobaltex),
-   TOKEN(portal_floor_alpha),
+   TOKEN(portalfloor),
    TOKEN(portal_floor_blocksound),
    TOKEN(portal_floor_disabled),
    TOKEN(portal_floor_nopass),
@@ -703,6 +781,7 @@ static keytoken_t gTokenList[] =
    TOKEN(skill3),
    TOKEN(skill4),
    TOKEN(skill5),
+   TOKEN(soundsequence),
    TOKEN(special),
    TOKEN(standing),
    TOKEN(strifeally),
@@ -715,6 +794,7 @@ static keytoken_t gTokenList[] =
    TOKEN(translucent),
    TOKEN(twosided),
    TOKEN(type),
+   TOKEN(upperportal),
    TOKEN(v1),
    TOKEN(v2),
    TOKEN(x),
@@ -823,7 +903,10 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
          else if(!mBlockName.strCaseCmp("sector"))
             sector = &mSectors.addNew();
          else if(!mBlockName.strCaseCmp("thing"))
+         {
             thing = &mThings.addNew();
+            thing->health = 1.0;
+         }
          continue;
       }
       if(result == result_Assignment && mInBlock)
@@ -884,6 +967,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                   READ_BOOL(linedef, monsterpush);
                   READ_BOOL(linedef, missilecross);
                   READ_BOOL(linedef, repeatspecial);
+                  READ_BOOL(linedef, polycross);
 
                   READ_BOOL(linedef, midtex3d);
                   READ_BOOL(linedef, midtex3dimpassible);
@@ -891,6 +975,9 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                   READ_BOOL(linedef, blockeverything);
                   READ_BOOL(linedef, zoneboundary);
                   READ_BOOL(linedef, clipmidtex);
+                  READ_BOOL(linedef, lowerportal);
+                  READ_BOOL(linedef, upperportal);
+                  READ_NUMBER(linedef, portal);
                   READ_NUMBER(linedef, alpha);
                   READ_STRING(linedef, renderstyle);
                   READ_STRING(linedef, tranmap);
@@ -997,8 +1084,15 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                      READ_STRING(sector, floorterrain);
                      READ_STRING(sector, ceilingterrain);
 
+                     READ_NUMBER(sector, floorid);
+                     READ_NUMBER(sector, ceilingid);
+                     READ_NUMBER(sector, attachfloor);
+                     READ_NUMBER(sector, attachceiling);
+
+                     READ_STRING(sector, soundsequence);
+
                      READ_STRING(sector, portal_floor_overlaytype);
-                     READ_NUMBER(sector, portal_floor_alpha);
+                     READ_NUMBER(sector, alphafloor);
                      READ_BOOL(sector, portal_floor_blocksound);
                      READ_BOOL(sector, portal_floor_disabled);
                      READ_BOOL(sector, portal_floor_nopass);
@@ -1006,12 +1100,15 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                      READ_BOOL(sector, portal_floor_useglobaltex);
 
                      READ_STRING(sector, portal_ceil_overlaytype);
-                     READ_NUMBER(sector, portal_ceil_alpha);
+                     READ_NUMBER(sector, alphaceiling);
                      READ_BOOL(sector, portal_ceil_blocksound);
                      READ_BOOL(sector, portal_ceil_disabled);
                      READ_BOOL(sector, portal_ceil_nopass);
                      READ_BOOL(sector, portal_ceil_norender);
                      READ_BOOL(sector, portal_ceil_useglobaltex);
+
+                     READ_NUMBER(sector, portalceiling);
+                     READ_NUMBER(sector, portalfloor);
                      default:
                         break;
                   }
@@ -1067,6 +1164,15 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                      break;
                   default:
                      break;
+               }
+               if(mNamespace == namespace_Eternity)
+               {
+                  switch(kt->token)
+                  {
+                     READ_NUMBER(thing, health);
+                     default:
+                        break;
+                  }
                }
             }
          }

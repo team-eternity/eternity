@@ -38,6 +38,15 @@
 #include "v_misc.h"
 
 
+struct scrollerlist_t
+{
+   ScrollThinker    *scroller;
+   scrollerlist_t   *next;
+   scrollerlist_t  **prev;
+};
+
+static scrollerlist_t *scrollers;
+
 IMPLEMENT_THINKER_TYPE(ScrollThinker)
 
 // killough 2/28/98:
@@ -162,6 +171,80 @@ void ScrollThinker::serialize(SaveArchive &arc)
 
    arc << dx << dy << affectee << control << last_height << vdx << vdy
        << accel << type;
+
+   if(arc.isLoading())
+      addScroller();
+}
+
+//
+// Adds a scroll thinker to the list
+//
+void ScrollThinker::addScroller()
+{
+   list = estructalloc(scrollerlist_t, 1);
+   list->scroller = this;
+   if((list->next = scrollers))
+      list->next->prev = &list->next;
+   list->prev = &scrollers;
+   scrollers = list;
+}
+
+//
+// Removes a scroll thinker to the list
+//
+void ScrollThinker::removeScroller()
+{
+   removeThinker();
+   if((*list->prev = list->next))
+      list->next->prev = list->prev;
+   efree(list);
+}
+
+//
+// Remove all scrollers
+//
+// Passed nothing, returns nothing
+//
+void ScrollThinker::RemoveAllScrollers()
+{
+   while(scrollers)
+   {
+      scrollerlist_t *next = scrollers->next;
+      efree(scrollers);
+      scrollers = next;
+   }
+}
+
+//
+// Stop a scroller based on sector number
+//
+bool EV_stopFlatScrollerBySecnum(int type, int secnum)
+{
+   bool flickback = false;
+   if(!scrollers)
+      return false;
+
+   // search the scrolled sectors
+   for(scrollerlist_t *sl = scrollers; sl; sl = sl->next)
+   {
+      if(flickback == true)
+      {
+         sl = *sl->prev;
+         flickback = false;
+      }
+      ScrollThinker *scroller = sl->scroller;
+
+      if(scroller->affectee == secnum && scroller->type == type)
+      {
+         if(!((sl = sl->next)))
+            break; 
+
+         flickback = true;
+         scroller->removeScroller();
+      }
+   }
+
+   return true;
 }
 
 //
@@ -182,7 +265,7 @@ void ScrollThinker::serialize(SaveArchive &arc)
 // accel: non-zero if this is an accelerative effect
 //
 void Add_Scroller(int type, fixed_t dx, fixed_t dy,
-                  int control, int affectee, int accel)
+                  int control, int affectee, int accel, bool acs)
 {
    ScrollThinker *s = new ScrollThinker;
 
@@ -197,6 +280,14 @@ void Add_Scroller(int type, fixed_t dx, fixed_t dy,
        sectors[control].floorheight + sectors[control].ceilingheight;
 
    s->affectee = affectee;
+
+   if(type != ScrollThinker::sc_side)
+   {
+      if(acs)
+         EV_stopFlatScrollerBySecnum(type, affectee);
+      s->addScroller();
+   }
+
    s->addThinker();
 }
 
@@ -240,7 +331,7 @@ static void Add_WallScroller(int64_t dx, int64_t dy, const line_t *l,
 // are accelerative.
 
 static void P_getScrollParams(const line_t *l, fixed_t &dx, fixed_t &dy,
-                              int &control, int &accel)
+                              int &control, int &accel, bool acs = false)
 {
    int bits = l->args[ev_Scroll_Arg_Bits];
    if(bits & ev_Scroll_Bit_UseLine)
@@ -248,10 +339,17 @@ static void P_getScrollParams(const line_t *l, fixed_t &dx, fixed_t &dy,
       dx = l->dx >> SCROLL_SHIFT; // direction and speed of scrolling
       dy = l->dy >> SCROLL_SHIFT;
    }
-   else
+   else if(!acs)
    {
       dx = ((l->args[ev_Scroll_Arg_X] - 128) << FRACBITS) >> SCROLL_SHIFT;
       dy = ((l->args[ev_Scroll_Arg_Y] - 128) << FRACBITS) >> SCROLL_SHIFT;
+   }
+   else
+   {
+      // For some reason ACS Scroll_Floor and Scroll_Ceiling have different
+      // meaning for dx/dy if they're called from ACS. This is a ZDoom thing.
+      dx = (l->args[ev_Scroll_Arg_X] << FRACBITS) >> SCROLL_SHIFT;
+      dy = (l->args[ev_Scroll_Arg_Y] << FRACBITS) >> SCROLL_SHIFT;
    }
    if(bits & ev_Scroll_Bit_Accel)
       accel = 1;
@@ -267,7 +365,6 @@ static void P_getScrollParams(const line_t *l, fixed_t &dx, fixed_t &dy,
 // * EV_STATIC_SCROLL_CEILING
 // * EV_STATIC_SCROLL_DISPLACE_CEILING
 // * EV_STATIC_SCROLL_ACCEL_CEILING
-// * EV_STATIC_SCROLL_CEILING_PARAM
 //
 static void P_spawnCeilingScroller(int staticFn, const line_t *l)
 {
@@ -275,22 +372,32 @@ static void P_spawnCeilingScroller(int staticFn, const line_t *l)
    int control = -1;
    int accel = 0;
 
-   if(staticFn == EV_STATIC_SCROLL_CEILING_PARAM)
-      P_getScrollParams(l, dx, dy, control, accel);
-   else
-   {
-      dx = l->dx >> SCROLL_SHIFT; // direction and speed of scrolling
-      dy = l->dy >> SCROLL_SHIFT;
+   dx = l->dx >> SCROLL_SHIFT; // direction and speed of scrolling
+   dy = l->dy >> SCROLL_SHIFT;
 
-      if(staticFn == EV_STATIC_SCROLL_ACCEL_CEILING)
-         accel = 1;
-      if(staticFn == EV_STATIC_SCROLL_ACCEL_CEILING ||
-         staticFn == EV_STATIC_SCROLL_DISPLACE_CEILING)
-         control = static_cast<int>(sides[*l->sidenum].sector - sectors);
-   }
+   if(staticFn == EV_STATIC_SCROLL_ACCEL_CEILING)
+      accel = 1;
+   if(staticFn == EV_STATIC_SCROLL_ACCEL_CEILING ||
+      staticFn == EV_STATIC_SCROLL_DISPLACE_CEILING)
+      control = sides[*l->sidenum].sector - sectors;
 
    for(int s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0;)
       Add_Scroller(ScrollThinker::sc_ceiling, -dx, dy, control, s, accel);
+}
+
+// Spawns a parameterised ceiling scroller, either by ACS or by static init.
+// Handles the following static init function:
+// * EV_STATIC_SCROLL_CEILING_PARAM
+void P_SpawnCeilingParam(const line_t *l, bool acs)
+{
+   fixed_t dx, dy;
+   int control = -1;
+   int accel = 0;
+
+   P_getScrollParams(l, dx, dy, control, accel, acs);
+
+   for(int s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0;)
+      Add_Scroller(ScrollThinker::sc_ceiling, -dx, dy, control, s, accel, acs);
 }
 
 //
@@ -302,14 +409,14 @@ static void P_spawnCeilingScroller(int staticFn, const line_t *l)
 // * EV_STATIC_SCROLL_DISPLACE_FLOOR
 // * EV_STATIC_SCROLL_ACCEL_FLOOR
 //
-static void P_spawnFloorScroller(int staticFn, const line_t *l)
+static void P_spawnFloorScroller(int staticFn, const line_t *l, bool acs = false)
 {
    fixed_t dx, dy;
    int control = -1;
    int accel = 0;
 
    if(staticFn == EV_STATIC_SCROLL_FLOOR_PARAM)
-      P_getScrollParams(l, dx, dy, control, accel);
+      P_getScrollParams(l, dx, dy, control, accel, acs);
    else
    {
       dx = l->dx >> SCROLL_SHIFT;
@@ -323,7 +430,7 @@ static void P_spawnFloorScroller(int staticFn, const line_t *l)
    }
 
    for(int s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0;)
-      Add_Scroller(ScrollThinker::sc_floor, -dx, dy, control, s, accel);
+      Add_Scroller(ScrollThinker::sc_floor, -dx, dy, control, s, accel, acs);
 }
 
 //
@@ -335,7 +442,7 @@ static void P_spawnFloorScroller(int staticFn, const line_t *l)
 // * EV_STATIC_CARRY_DISPLACE_FLOOR
 // * EV_STATIC_CARRY_ACCEL_FLOOR
 //
-static void P_spawnFloorCarrier(int staticFn, const line_t *l)
+static void P_spawnFloorCarrier(int staticFn, const line_t *l, bool acs = false)
 {
    fixed_t dx, dy;
    int control = -1;
@@ -343,7 +450,7 @@ static void P_spawnFloorCarrier(int staticFn, const line_t *l)
 
    if(staticFn == EV_STATIC_SCROLL_FLOOR_PARAM)
    {
-      P_getScrollParams(l, dx, dy, control, accel);
+      P_getScrollParams(l, dx, dy, control, accel, acs);
       dx = FixedMul(dx, CARRYFACTOR);
       dy = FixedMul(dy, CARRYFACTOR);
    }
@@ -360,7 +467,7 @@ static void P_spawnFloorCarrier(int staticFn, const line_t *l)
    }
 
    for(int s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0;)
-      Add_Scroller(ScrollThinker::sc_carry, dx, dy, control, s, accel);
+      Add_Scroller(ScrollThinker::sc_carry, dx, dy, control, s, accel, acs);
 }
 
 //
@@ -372,7 +479,7 @@ static void P_spawnFloorCarrier(int staticFn, const line_t *l)
 // * EV_STATIC_SCROLL_CARRY_DISPLACE_FLOOR
 // * EV_STATIC_SCROLL_CARRY_ACCEL_FLOOR
 //
-static void P_spawnFloorScrollAndCarry(int staticFn, const line_t *l)
+static void P_spawnFloorScrollAndCarry(int staticFn, const line_t *l, bool acs = false)
 {
    fixed_t dx, dy;
    int control = -1;
@@ -380,7 +487,7 @@ static void P_spawnFloorScrollAndCarry(int staticFn, const line_t *l)
    int s;
 
    if(staticFn == EV_STATIC_SCROLL_FLOOR_PARAM)
-      P_getScrollParams(l, dx, dy, control, accel);
+      P_getScrollParams(l, dx, dy, control, accel, acs);
    else
    {
       dx = l->dx >> SCROLL_SHIFT;
@@ -394,7 +501,7 @@ static void P_spawnFloorScrollAndCarry(int staticFn, const line_t *l)
    }
 
    for(s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0; )
-      Add_Scroller(ScrollThinker::sc_floor, -dx, dy, control, s, accel);
+      Add_Scroller(ScrollThinker::sc_floor, -dx, dy, control, s, accel, acs);
 
    dx = FixedMul(dx, CARRYFACTOR);
    dy = FixedMul(dy, CARRYFACTOR);
@@ -402,25 +509,25 @@ static void P_spawnFloorScrollAndCarry(int staticFn, const line_t *l)
    // NB: don't fold these loops together. Even though it would be more
    // efficient, we must maintain BOOM-compatible thinker spawning order.
    for(s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0; )
-      Add_Scroller(ScrollThinker::sc_carry, dx, dy, control, s, accel);
+      Add_Scroller(ScrollThinker::sc_carry, dx, dy, control, s, accel, acs);
 }
 
-static void P_spawnFloorParam(const line_t *l)
+void P_SpawnFloorParam(const line_t *l, bool acs)
 {
    switch(l->args[ev_Scroll_Arg_Type])
    {
       case ev_Scroll_Type_Scroll:
-         P_spawnFloorScroller(EV_STATIC_SCROLL_FLOOR_PARAM, l);
+         P_spawnFloorScroller(EV_STATIC_SCROLL_FLOOR_PARAM, l, acs);
          break;
       case ev_Scroll_Type_Carry:
-         P_spawnFloorCarrier(EV_STATIC_SCROLL_FLOOR_PARAM, l);
+         P_spawnFloorCarrier(EV_STATIC_SCROLL_FLOOR_PARAM, l, acs);
          break;
       case ev_Scroll_Type_ScrollCarry:
-         P_spawnFloorScrollAndCarry(EV_STATIC_SCROLL_FLOOR_PARAM, l);
+         P_spawnFloorScrollAndCarry(EV_STATIC_SCROLL_FLOOR_PARAM, l, acs);
          break;
       default:
          // wrong arg values will just do nothing, but it's undefined anyway
-         C_Printf(FC_ERROR, "Unknown scroll type %d at line %d\a\n",
+         C_Printf(FC_ERROR "Unknown scroll type %d at line %d\a\n",
                   l->args[ev_Scroll_Arg_Type], (int)(l - lines));
    }
 }
@@ -509,10 +616,12 @@ void P_SpawnScrollers()
       case EV_STATIC_SCROLL_ACCEL_CEILING:
       case EV_STATIC_SCROLL_DISPLACE_CEILING:
       case EV_STATIC_SCROLL_CEILING:     // scroll effect ceiling
-      case EV_STATIC_SCROLL_CEILING_PARAM:
          P_spawnCeilingScroller(staticFn, line);
          break;
-   
+      case EV_STATIC_SCROLL_CEILING_PARAM:
+         P_SpawnCeilingParam(line, false);
+         break;
+
       case EV_STATIC_SCROLL_ACCEL_FLOOR:
       case EV_STATIC_SCROLL_DISPLACE_FLOOR:
       case EV_STATIC_SCROLL_FLOOR:       // scroll effect floor
@@ -531,7 +640,7 @@ void P_SpawnScrollers()
          P_spawnFloorScrollAndCarry(staticFn, line);
          break;
       case EV_STATIC_SCROLL_FLOOR_PARAM:
-         P_spawnFloorParam(line);
+         P_SpawnFloorParam(line, false);
          break;
 
       case EV_STATIC_SCROLL_ACCEL_WALL:
