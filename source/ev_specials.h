@@ -388,6 +388,7 @@ int  EV_StaticInitForSpecial(int special);
 int  EV_SpecialForStaticInitName(const char *name);
 bool EV_IsParamStaticInit(int special);
 int  EV_GenActivationType(int special);
+int EV_GenTypeForSpecial(int special);
 
 #endif
 

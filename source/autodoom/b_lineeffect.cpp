@@ -1397,6 +1397,141 @@ bool B_VlsTypeIsD(VanillaLineSpecial vls)
    return false;
 }
 
+//
+// True if the linedef special triggers a backsector
+//
+bool B_LineTriggersBackSector(const line_t &line)
+{
+   if(!line.special)
+      return false;
+   // check for generalized
+   int gentype = EV_GenTypeForSpecial(line.special);
+   if(gentype >= GenTypeFloor)
+   {
+      int genspac = EV_GenActivationType(line.special);
+      return genspac == PushOnce || genspac == PushMany;
+   }
+
+   const ev_action_t *action = EV_ActionForSpecial(line.special);
+   if(!action)
+      return false;
+
+   EVActionFunc func = action->action;
+
+   if(func == EV_ActionVerticalDoor)   // always
+      return true;
+
+   static std::unordered_set<EVActionFunc> hybridFuncs = {
+      // Sector changers may matter, though
+      EV_ActionChangeOnly,
+      EV_ActionChangeOnlyNumeric,
+      // Lights don't really matter for the bot
+//      EV_ActionLightTurnOn,
+//      EV_ActionTurnTagLightsOff
+   };
+
+   static std::unordered_set<EVActionFunc> paramFuncs = {
+      EV_ActionFloorWaggle,
+      EV_ActionHereticDoorRaise3x,
+      EV_ActionHereticStairsBuildUp16FS,
+      EV_ActionHereticStairsBuildUp8FS,
+      EV_ActionParamCeilingCrushAndRaise,
+      EV_ActionParamCeilingCrushAndRaiseA,
+      EV_ActionParamCeilingCrushAndRaiseDist,
+      EV_ActionParamCeilingCrushAndRaiseSilentA,
+      EV_ActionParamCeilingCrushAndRaiseSilentDist,
+      EV_ActionParamCeilingCrushRaiseAndStay,
+      EV_ActionParamCeilingCrushRaiseAndStayA,
+      EV_ActionParamCeilingCrushRaiseAndStaySilA,
+      EV_ActionParamCeilingGeneric,
+      EV_ActionParamCeilingLowerAndCrush,
+      EV_ActionParamCeilingLowerAndCrushDist,
+      EV_ActionParamCeilingLowerByTexture,
+      EV_ActionParamCeilingLowerByValue,
+      EV_ActionParamCeilingLowerByValueTimes8,
+      EV_ActionParamCeilingLowerInstant,
+      EV_ActionParamCeilingLowerToFloor,
+      EV_ActionParamCeilingLowerToHighestFloor,
+      EV_ActionParamCeilingLowerToNearest,
+      EV_ActionParamCeilingMoveToValue,
+      EV_ActionParamCeilingMoveToValueTimes8,
+      EV_ActionParamCeilingRaiseByTexture,
+      EV_ActionParamCeilingRaiseByValue,
+      EV_ActionParamCeilingRaiseByValueTimes8,
+      EV_ActionParamCeilingRaiseInstant,
+      EV_ActionParamCeilingRaiseToHighest,
+      EV_ActionParamCeilingRaiseToHighestFloor,
+      EV_ActionParamCeilingRaiseToLowest,
+      EV_ActionParamCeilingRaiseToNearest,
+      EV_ActionParamCeilingToFloorInstant,
+      EV_ActionParamCeilingToHighestInstant,
+      EV_ActionParamDonut,
+      EV_ActionParamDoorClose,
+      EV_ActionParamDoorCloseWaitOpen,
+      EV_ActionParamDoorLockedRaise,
+      EV_ActionParamDoorOpen,
+      EV_ActionParamDoorRaise,
+      EV_ActionParamDoorWaitClose,
+      EV_ActionParamDoorWaitRaise,
+      EV_ActionParamEEFloorLowerToHighest,
+      EV_ActionParamElevatorCurrent,
+      EV_ActionParamElevatorDown,
+      EV_ActionParamElevatorUp,
+      EV_ActionParamFloorCeilingLowerByValue,
+      EV_ActionParamFloorCeilingLowerRaise,
+      EV_ActionParamFloorCeilingRaiseByValue,
+      EV_ActionParamFloorGeneric,
+      EV_ActionParamFloorLowerByTexture,
+      EV_ActionParamFloorLowerByValue,
+      EV_ActionParamFloorLowerByValueTimes8,
+      EV_ActionParamFloorLowerInstant,
+      EV_ActionParamFloorLowerToHighest,
+      EV_ActionParamFloorLowerToLowest,
+      EV_ActionParamFloorLowerToLowestCeiling,
+      EV_ActionParamFloorLowerToNearest,
+      EV_ActionParamFloorMoveToValue,
+      EV_ActionParamFloorMoveToValueTimes8,
+      EV_ActionParamFloorRaiseAndCrush,
+      EV_ActionParamFloorRaiseByTexture,
+      EV_ActionParamFloorRaiseByValue,
+      EV_ActionParamFloorRaiseByValueTimes8,
+      EV_ActionParamFloorRaiseInstant,
+      EV_ActionParamFloorRaiseToCeiling,
+      EV_ActionParamFloorRaiseToHighest,
+      EV_ActionParamFloorRaiseToLowest,
+      EV_ActionParamFloorRaiseToLowestCeiling,
+      EV_ActionParamFloorRaiseToNearest,
+      EV_ActionParamFloorToCeilingInstant,
+      EV_ActionParamGenCrusher,
+      EV_ActionParamPlatDWUS,
+      EV_ActionParamPlatDWUSLip,
+      EV_ActionParamPlatDownByValue,
+      EV_ActionParamPlatPerpetualRaise,
+      EV_ActionParamPlatPerpetualRaiseLip,
+      EV_ActionParamPlatRaiseChange,
+      EV_ActionParamPlatRaiseNearestChange,
+      EV_ActionParamPlatToggleCeiling,
+      EV_ActionParamPlatUWDS,
+      EV_ActionParamPlatUpByValue,
+      EV_ActionParamStairsBuildDownDoom,
+      EV_ActionParamStairsBuildDownDoomSync,
+      EV_ActionParamStairsBuildUpDoom,
+      EV_ActionParamStairsBuildUpDoomCrush,
+      EV_ActionParamStairsBuildUpDoomSync,
+      EV_ActionPillarBuild,
+      EV_ActionPillarBuildAndCrush,
+      EV_ActionPillarOpen,
+   };
+
+   if(!line.args[0] && (paramFuncs.count(func) || (hybridFuncs.count(func) &&
+      EV_CompositeActionFlags(action) & EV_PARAMLINESPEC)))
+   {
+      return true;
+   }
+
+   return false;
+}
+
 bool B_VlsTypeIsStair(VanillaLineSpecial vls)
 {
    switch(vls)
