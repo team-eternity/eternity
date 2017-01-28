@@ -1438,6 +1438,9 @@ void C_AddCommand(command_t *command)
    if(command->flags & cf_netvar && command->netcmd == 0)
       C_Printf(FC_ERROR "C_AddCommand: cf_netvar without a netcmd (%s)\n", command->name);
    
+   if(command->netcmd >= NUMNETCMDS || command->netcmd < 0)
+      I_Error("Illegal netcmd index %d (must be positive and less than %d)\n",
+              command->netcmd, NUMNETCMDS);
    c_netcmds[command->netcmd] = command;
 
    if(command->type == ct_variable || command->type == ct_constant)

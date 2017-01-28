@@ -801,7 +801,7 @@ static void Handler_CompTHeights()
 
 void G_AddCompat()
 {
-   for(int i = 0; i <= comp_aircontrol; i++)   // haleyjd: update this regularly
+   for(int i = 0; i < COMP_NUM_USED; i++)   // haleyjd: update this regularly
    {
       variable_t *variable;
       command_t  *command;
@@ -836,7 +836,7 @@ void G_AddCompat()
       }
 
       command->variable = variable;
-      command->netcmd   = netcmd_comp_0 + i;
+      command->netcmd   = NETCMD_COMP_0 + i;
 
       C_AddCommand(command); // hook into cmdlist
    }
