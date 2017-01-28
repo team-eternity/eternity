@@ -1018,7 +1018,6 @@ void TempBotMap::createBlockMap()
 static void FindDynamicSectors(bool* dynamicSectors)
 {
    // 1. Find all lines with effects
-   const line_t* line;
    VanillaSectorSpecial vss;
    
    // tagged sectors
@@ -1030,40 +1029,40 @@ static void FindDynamicSectors(bool* dynamicSectors)
    
    for(i = 0; i < ::numlines; ++i)
    {
-      line = ::lines + i;
+      const line_t &line = lines[i];
       
-      if(!line->special)
+      if(!line.special)
          continue;
       
       // Has a special
       
-      if(B_LineTriggersBackSector(*line))
+      if(B_LineTriggersBackSector(line))
       {
-         if(!line->backsector)
+         if(!line.backsector)
             continue;
          
          // Register back sector
-         dynamicSectors[line->backsector - ::sectors] = true;
+         dynamicSectors[line.backsector - ::sectors] = true;
          continue;
       }
       
       // Must point to a tag, now
-      if(!line->tag)
+      if(!line.args[0])
          continue;
       
       // Not a door  type
-      while((secnum = P_FindSectorFromTag(line->tag, secnum)) >= 0)
+      while((secnum = P_FindSectorFromTag(line.args[0], secnum)) >= 0)
       {
          dynamicSectors[secnum] = true;
          // Also do it for secondary sectors: from stairs or donuts
-         if(B_LineTriggersDonut(*line))
+         if(B_LineTriggersDonut(line))
          {
             sector = ::sectors + secnum;
             sector2 = getNextSector(sector->lines[0], sector);
             if(sector2)
                dynamicSectors[sector2 - ::sectors] = true;
          }
-         else if(B_LineTriggersStairs(*line))
+         else if(B_LineTriggersStairs(line))
          {
             sector = ::sectors + secnum;
             do
