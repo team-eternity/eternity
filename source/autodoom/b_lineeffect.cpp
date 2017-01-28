@@ -1382,7 +1382,7 @@ bool B_LineTriggersBackSector(const line_t &line)
       return false;
    // check for generalized
    int gentype = EV_GenTypeForSpecial(line.special);
-   if(gentype >= GenTypeFloor)
+   if(gentype != -1)
    {
       int genspac = EV_GenActivationType(line.special);
       return genspac == PushOnce || genspac == PushMany;
@@ -1397,7 +1397,7 @@ bool B_LineTriggersBackSector(const line_t &line)
    if(func == EV_ActionVerticalDoor)   // always
       return true;
 
-   static std::unordered_set<EVActionFunc> hybridFuncs = {
+   static const std::unordered_set<EVActionFunc> hybridFuncs = {
       // Sector changers may matter, though
       EV_ActionChangeOnly,
       EV_ActionChangeOnlyNumeric,
@@ -1406,7 +1406,7 @@ bool B_LineTriggersBackSector(const line_t &line)
 //      EV_ActionTurnTagLightsOff
    };
 
-   static std::unordered_set<EVActionFunc> paramFuncs = {
+   static const std::unordered_set<EVActionFunc> paramFuncs = {
       EV_ActionFloorWaggle,
       EV_ActionHereticDoorRaise3x,
       EV_ActionHereticStairsBuildUp16FS,
@@ -1508,23 +1508,54 @@ bool B_LineTriggersBackSector(const line_t &line)
    return false;
 }
 
-bool B_VlsTypeIsStair(VanillaLineSpecial vls)
+//
+// True if the linedef special affects both tagged sectors and the surrounding
+// ones, using the donut model
+//
+bool B_LineTriggersDonut(const line_t &line)
 {
-   switch(vls)
-   {
-      case VLS_S1BuildStairsUp8:
-      case VLS_SRBuildStairsUp8:
-      case VLS_W1BuildStairsUp8:
-      case VLS_WRBuildStairsUp8:
-      case VLS_S1BuildStairsTurbo16:
-      case VLS_WRBuildStairsTurbo16:
-      case VLS_W1BuildStairsTurbo16:
-      case VLS_SRBuildStairsTurbo16:
-         return true;
-      default:
-         break;
-   }
-   return false;
+   if(!line.special)
+      return false;
+
+   // generalized specials not available here
+
+   const ev_action_t *action = EV_ActionForSpecial(line.special);
+   if(!action)
+      return false;
+
+   EVActionFunc func = action->action;
+   return func == EV_ActionDoDonut || func == EV_ActionParamDonut;
+}
+
+//
+// True if line triggers Doom-style stairs
+//
+bool B_LineTriggersStairs(const line_t &line)
+{
+   if(!line.special)
+      return false;
+
+   // check for generalized
+   if(EV_GenTypeForSpecial(line.special) == GenTypeStairs)
+      return true;
+
+   const ev_action_t *action = EV_ActionForSpecial(line.special);
+   if(!action)
+      return false;
+
+   static const std::unordered_set<EVActionFunc> funcs = {
+      EV_ActionBuildStairsTurbo16,
+      EV_ActionBuildStairsUp8,
+      EV_ActionHereticStairsBuildUp16FS,
+      EV_ActionHereticStairsBuildUp8FS,
+      EV_ActionParamStairsBuildDownDoom,
+      EV_ActionParamStairsBuildDownDoomSync,
+      EV_ActionParamStairsBuildUpDoom,
+      EV_ActionParamStairsBuildUpDoomCrush,
+      EV_ActionParamStairsBuildUpDoomSync,
+   };
+
+   return !!funcs.count(action->action);
 }
 
 bool B_SectorTypeIsHarmless(int16_t special)

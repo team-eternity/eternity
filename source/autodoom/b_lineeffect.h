@@ -335,11 +335,8 @@ enum VanillaSectorSpecial
 };
 
 bool B_LineTriggersBackSector(const line_t &line);
-inline static bool B_VlsTypeIsDonut(VanillaLineSpecial vls)
-{
-   return vls == VLS_S1DoDonut || vls == VLS_SRDoDonut || vls == VLS_W1DoDonut || vls == VLS_WRDoDonut;
-}
-bool B_VlsTypeIsStair(VanillaLineSpecial vls);
+bool B_LineTriggersDonut(const line_t &line);
+bool B_LineTriggersStairs(const line_t &line);
 
 bool B_SectorTypeIsHarmless(int16_t special);
 

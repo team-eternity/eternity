@@ -1019,7 +1019,6 @@ static void FindDynamicSectors(bool* dynamicSectors)
 {
    // 1. Find all lines with effects
    const line_t* line;
-   VanillaLineSpecial vls;
    VanillaSectorSpecial vss;
    
    // tagged sectors
@@ -1038,7 +1037,6 @@ static void FindDynamicSectors(bool* dynamicSectors)
       
       // Has a special
       
-      vls = (VanillaLineSpecial)line->special;
       if(B_LineTriggersBackSector(*line))
       {
          if(!line->backsector)
@@ -1058,14 +1056,14 @@ static void FindDynamicSectors(bool* dynamicSectors)
       {
          dynamicSectors[secnum] = true;
          // Also do it for secondary sectors: from stairs or donuts
-         if(B_VlsTypeIsDonut(vls))
+         if(B_LineTriggersDonut(*line))
          {
             sector = ::sectors + secnum;
             sector2 = getNextSector(sector->lines[0], sector);
             if(sector2)
                dynamicSectors[sector2 - ::sectors] = true;
          }
-         else if(B_VlsTypeIsStair(vls))
+         else if(B_LineTriggersStairs(*line))
          {
             sector = ::sectors + secnum;
             do
