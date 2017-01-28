@@ -1703,13 +1703,23 @@ static void D_DoomInit()
 
    // haleyjd 04/10/03: set coop gametype
    // haleyjd 04/01/10: support -solo-net parameter
-   if((netgame || M_CheckParm("-solo-net") || true) && GameType == gt_single)
+
+   // ioanch: -bots <n>
+   netbot = 0;
+   if((p = M_CheckParm("-bots")) && p < myargc - 1)
+      netbot = atoi(myargv[p + 1]);
+
+   if((netgame || M_CheckParm("-solo-net") || netbot) &&
+      GameType == gt_single)
    {
-      if(!netgame)
+      if(netbot)
       {
          playeringame[1] = true;
+         if(netbot >= 2)
+            playeringame[2] = true;
+         if(netbot >= 3)
+            playeringame[3] = true;
          netgame = true;
-         netbot = true;
       }
       GameType = DefaultGameType = gt_coop;
       G_SetDefaultDMFlags(0, true);

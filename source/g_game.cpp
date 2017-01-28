@@ -136,7 +136,7 @@ int             basetic;       // killough 9/29/98: for demo sync
 int             totalkills, totalitems, totalsecret;    // for intermission
 bool            demorecording;
 bool            demoplayback;
-bool            netbot;
+int             netbot;               // number of single-player helper bots
 bool            singledemo;           // quit after playing a demo from cmdline
 bool            precache = true;      // if true, load all graphics at start
 wbstartstruct_t wminfo;               // parms for world map / intermission
@@ -2072,8 +2072,11 @@ void G_Ticker()
             memcpy(cmd, &netcmds[i][buf], sizeof *cmd);
             
             // IOANCH: add bot commands if game is running
-            if(botMap && !demoplayback && !paused && i != consoleplayer)
+            if(botMap && !demoplayback && !paused &&
+               (!netbot ^ i != consoleplayer))
             {
+               // if -netbot (0), then move all other players.
+               // if not -netbot (1), then only move console player
                bots[i].doCommand();
             }
             
@@ -3026,8 +3029,11 @@ void G_InitNew(skill_t skill, char *name)
    if(netbot)
    {
       playeringame[1] = true;
+      if(netbot >= 2)
+         playeringame[2] = true;
+      if(netbot >= 3)
+         playeringame[3] = true;
       netgame = true;
-      netbot = true;
    }
 
    demoplayback = false;
