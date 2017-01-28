@@ -1039,10 +1039,8 @@ static void FindDynamicSectors(bool* dynamicSectors)
       // Has a special
       
       vls = (VanillaLineSpecial)line->special;
-      
-      if(B_VlsTypeIsD(vls))
+      if(B_LineTriggersBackSector(*line))
       {
-         // door type
          if(!line->backsector)
             continue;
          

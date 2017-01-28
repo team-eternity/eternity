@@ -1373,30 +1373,6 @@ void LevelStateStack::UseRealHeights(bool value)
    g_useRealHeights = value;
 }
 
-bool B_VlsTypeIsD(VanillaLineSpecial vls)
-{
-   switch (vls)
-   {
-      case VLS_D1DoorBlazeOpen:
-      case VLS_D1OpenDoor:
-      case VLS_D1OpenDoorBlue:
-      case VLS_D1OpenDoorRed:
-      case VLS_D1OpenDoorYellow:
-      case VLS_DRDoorBlazeRaise:
-      case VLS_DRRaiseDoor:
-      case VLS_DRRaiseDoorBlue:
-      case VLS_DRRaiseDoorRed:
-      case VLS_DRRaiseDoorYellow:
-         
-         return true;
-         
-      default:
-         break;
-   }
-   
-   return false;
-}
-
 //
 // True if the linedef special triggers a backsector
 //

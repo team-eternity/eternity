@@ -334,7 +334,7 @@ enum VanillaSectorSpecial
    VSS_LightFireFlicker = 17,
 };
 
-bool B_VlsTypeIsD(VanillaLineSpecial vls);
+bool B_LineTriggersBackSector(const line_t &line);
 inline static bool B_VlsTypeIsDonut(VanillaLineSpecial vls)
 {
    return vls == VLS_S1DoDonut || vls == VLS_SRDoDonut || vls == VLS_W1DoDonut || vls == VLS_WRDoDonut;
