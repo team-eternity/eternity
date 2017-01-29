@@ -375,7 +375,7 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
    {
       const char *extension;
       extension = Console.argv[0]->bufferAt(Console.argv[0]->length() - 4);
-      if(!strcmp(extension, ".wad"))
+      if(!strcasecmp(extension, ".wad"))
       {
          if(D_AddNewFile(Console.argv[0]->constPtr()))
          {
