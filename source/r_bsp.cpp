@@ -362,7 +362,8 @@ void R_ClearClipSegs()
 //
 // R_SetupPortalClipsegs
 //
-bool R_SetupPortalClipsegs(int minx, int maxx, float *top, float *bottom)
+bool R_SetupPortalClipsegs(int minx, int maxx, 
+   const float *top, const float *bottom)
 {
    int i = minx, stop = maxx + 1;
    cliprange_t *solidseg = solidsegs;
