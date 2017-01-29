@@ -937,8 +937,10 @@ void R_StoreWallRange(const int start, const int stop)
       ds_p->bsilheight = D_MAXINT;
    }
 
-   if(!segclip.clipsolid && 
-      (ds_p->silhouette & SIL_TOP || ds_p->silhouette & SIL_BOTTOM))
+   // ioanch: also check for portalrender, and detect any columns shut by the
+   // portal window, which would otherwise be ignored. Necessary for correct
+   // sprite rendering.
+   if(!segclip.clipsolid && (ds_p->silhouette || portalrender.active))
       R_DetectClosedColumns();
 
    ++ds_p;
