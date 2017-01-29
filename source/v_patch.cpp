@@ -854,6 +854,58 @@ patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize,
    return p;
 }
 
+//
+// Get the size of a patch to be created from a linear
+//
+size_t V_transPatchSizeForLinear(byte *linear, int w, int h, int color_key)
+{
+   size_t ret;
+   int      x, y;
+   byte     *src;
+
+   // Basic header info
+   ret = 4 * sizeof(int16_t);
+   
+   // Columnofs table
+   ret += w * sizeof(int32_t);
+
+   for(x = 0; x < w; ++x)
+   {
+      bool neednewspan = true;
+      bool firstspan = true;
+
+      // copy bytes
+      for(y = 0, src = linear + x; y < h; ++y, src += w)
+      {
+         // create a new span if need be
+         if(neednewspan && (*src != color_key))
+         {
+            if(!firstspan)
+               ret++;
+            else
+               firstspan = false;
+
+            ret += sizeof(column_t) + 1;
+            neednewspan = false;
+         }
+
+         if(*src != color_key)
+            ret++;
+         else if(!neednewspan)
+            neednewspan = true;
+      }
+
+
+      if(firstspan)
+         ret += sizeof(column_t) + 1;
+
+      // skip to next column location 
+      ret += 2;
+   }
+
+   // voila!
+   return ret;
+}
 
 //
 // converts a linear graphic to a patch with transparency
@@ -868,7 +920,7 @@ patch_t *V_LinearToTransPatch(byte *linear, int w, int h, size_t *memsize,
    byte     *src, *dest;
 
    // Oversize now, and shrink later.
-   size_t total_size = sizeof(patch_t) + 4 * w * h;
+   size_t total_size = V_transPatchSizeForLinear(linear, w, h, color_key);
 
    byte *out = ecalloctag(byte *, 1, total_size, tag, user);
 
@@ -921,6 +973,15 @@ patch_t *V_LinearToTransPatch(byte *linear, int w, int h, size_t *memsize,
          }
          else if(!neednewspan)
             neednewspan = true;
+      }
+
+      // add a blank first span if need be
+      if(firstspan)
+      {
+         c = (column_t *)dest;
+         c->length = 0;
+         c->topdelta = 0;
+         dest += sizeof(column_t) + 1;
       }
 
       // create end post
