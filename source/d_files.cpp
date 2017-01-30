@@ -55,6 +55,7 @@
 #include "r_data.h"
 #include "r_main.h"
 #include "s_sound.h"
+#include "st_stuff.h"
 #include "v_misc.h"
 #include "w_formats.h"
 #include "w_wad.h"
@@ -513,6 +514,7 @@ static void D_reInitWadfiles()
    D_ProcessDEHQueue();    // haleyjd 09/12/03: run any queued DEHs
    R_Init();
    P_Init();
+   ST_Init();
 }
 
 // FIXME: various parts of this routine need tightening up
