@@ -83,6 +83,17 @@ extern const char *level_error;
 extern void R_DynaSegOffset(seg_t *lseg, line_t *line, int side);
 
 //
+// Miscellaneous constants
+//
+enum
+{
+   // vertex distance limit over which NOT to fix slime trails. Useful for
+   // the new vanilla Doom rendering trick discovered by Linguica. Link here:
+   // http://www.doomworld.com/vb/doom-editing/74354-stupid-bsp-tricks/
+   LINGUORTAL_THRESHOLD = 8 * FRACUNIT,   
+};
+
+//
 // ZNodeType
 //
 // IOANCH: ZDoom node type enum
@@ -2567,9 +2578,20 @@ void P_RemoveSlimeTrails()             // killough 10/98
                   int     x0  = v->x, y0 = v->y, x1 = l->v1->x, y1 = l->v1->y;
                   v->x = (fixed_t)((dx2 * x0 + dy2 * x1 + dxy * (y0 - y1)) / s);
                   v->y = (fixed_t)((dy2 * y0 + dx2 * y1 + dxy * (x0 - x1)) / s);
-                  // Cardboard store float versions of vertices.
-                  v->fx = M_FixedToFloat(v->x);
-                  v->fy = M_FixedToFloat(v->y);
+
+                  // ioanch: add linguortal support, from PrBoom+/[crispy]
+                  if(D_abs(x0 - v->x) > LINGUORTAL_THRESHOLD || 
+                     D_abs(y0 - v->y) > LINGUORTAL_THRESHOLD)
+                  {
+                     v->x = x0;  // reset
+                     v->y = y0;
+                  }
+                  else
+                  {
+                     // Cardboard store float versions of vertices.
+                     v->fx = M_FixedToFloat(v->x);
+                     v->fy = M_FixedToFloat(v->y);
+                  }
                }
             }  
          } // Obfuscated C contest entry:   :)
