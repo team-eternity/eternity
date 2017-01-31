@@ -514,6 +514,7 @@ static void D_reInitWadfiles()
    E_ProcessNewEDF();      // haleyjd 03/24/10: process any new EDF lumps
    XL_ParseHexenScripts(); // haleyjd 03/27/11: process Hexen scripts
    D_ProcessDEHQueue();    // haleyjd 09/12/03: run any queued DEHs
+   C_InitBackdrop();       // update the console background
    R_Init();
    P_Init();
    ST_Init();
