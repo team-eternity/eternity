@@ -2580,8 +2580,10 @@ void P_RemoveSlimeTrails()             // killough 10/98
                   v->y = (fixed_t)((dy2 * y0 + dx2 * y1 + dxy * (x0 - x1)) / s);
 
                   // ioanch: add linguortal support, from PrBoom+/[crispy]
-                  if(D_abs(x0 - v->x) > LINGUORTAL_THRESHOLD || 
-                     D_abs(y0 - v->y) > LINGUORTAL_THRESHOLD)
+                  // demo_version check needed, for similar reasons as above
+                  if(demo_version >= 342 &&
+                     (D_abs(x0 - v->x) > LINGUORTAL_THRESHOLD ||
+                      D_abs(y0 - v->y) > LINGUORTAL_THRESHOLD))
                   {
                      v->x = x0;  // reset
                      v->y = y0;
