@@ -172,6 +172,8 @@ byte     *portalmap;              // haleyjd: for portals
 // ioanch 20160106: more detailed info (list of groups for each block)
 int     **gBlockGroups; 
 
+bool      skipblstart;            // MaxW: Skip initial blocklist short
+
 //
 // REJECT
 // For fast sight rejection.
@@ -2246,6 +2248,8 @@ static bool P_VerifyBlockMap(int count)
 
    bmaperrormsg = NULL;
 
+   skipblstart = true;
+
    for(y = 0; y < bmapheight; y++)
    {
       for(x = 0; x < bmapwidth; x++)
@@ -2267,6 +2271,9 @@ static bool P_VerifyBlockMap(int count)
          
          offset = *blockoffset;         
          list   = blockmaplump + offset;
+
+         if(*list != 0)
+            skipblstart = false;
 
          // scan forward for a -1 terminator before maxoffs
          for(tmplist = list; ; tmplist++)
