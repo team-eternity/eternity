@@ -688,7 +688,7 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*, polyobj_t*), int grou
    // MaxW: 2016/02/02: if before 3.42 always skip, skip if all blocklists start w/ 0
    // killough 2/22/98: demo_compatibility check
    // skip 0 starting delimiter -- phares
-   if((!demo_compatibility && demo_version < 342) || skipblstart)
+   if((!demo_compatibility && demo_version < 342) || (demo_version >= 342 && skipblstart))
       list++;     
    for( ; *list != -1; list++)
    {
