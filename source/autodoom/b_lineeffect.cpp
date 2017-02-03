@@ -239,16 +239,17 @@ bool LevelStateStack::Push(const line_t& line, const player_t& player,
    // Prepare the new list of indices to the global stack
    PODCollection<int>& coll = g_indexListStack.addNew();
    
-   const ev_action_t* action = EV_ActionForSpecial(line.special);
-
-   if (action && action->type == &DRActionType)
+   if(B_LineTriggersBackSector(line))
    {
-       if (line.sidenum[1] >= 0)
-           B_pushSectorHeights((int)(sides[line.sidenum[1]].sector - sectors), line, coll, player);
+      if(line.backsector)
+      {
+         B_pushSectorHeights((int)(line.backsector - sectors), line, coll,
+                             player);
+      }
    }
    else
    {
-      while((secnum = P_FindSectorFromTag(line.tag, secnum)) >= 0)
+      while((secnum = P_FindSectorFromLineArg0(&line, secnum)) >= 0)
       {
          // For each successful state push, add an index to the collection
 
