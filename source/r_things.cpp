@@ -284,7 +284,7 @@ static void R_ProjectParticle(particle_t *particle);
 //
 // R_SetMaskedSilhouette
 //
-void R_SetMaskedSilhouette(float *top, float *bottom)
+void R_SetMaskedSilhouette(const float *top, const float *bottom)
 {
    if(!top || !bottom)
    {

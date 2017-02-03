@@ -153,6 +153,14 @@ inline static unsigned int EV_CompositeActionFlags(const ev_action_t *action)
    return (action ? (action->type->flags | action->flags) : 0);
 }
 
+//
+// Like EV_IsParamLineSpec, but directly on action
+//
+inline static bool EV_IsParamAction(const ev_action_t &action)
+{
+   return !!(EV_CompositeActionFlags(&action) & EV_PARAMLINESPEC);
+}
+
 // Action Types
 extern ev_actiontype_t NullActionType;
 extern ev_actiontype_t WRActionType;

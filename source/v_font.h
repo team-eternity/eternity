@@ -55,6 +55,16 @@ typedef struct vfontfilter_s
 } vfontfilter_t;
 
 //
+// Linear lump wad reload data
+//
+struct vfont_linearindex_t
+{
+   size_t nameIndex; // index of the lump name in the collection
+   int format;       // fmt
+   bool requantize;  // requantize flag
+};
+
+//
 // vfont structure
 //
 // Contains all the data necessary to allow generalized font drawing.
@@ -96,6 +106,8 @@ struct vfont_t
    vfontfilter_t *filters;   // graphic loading filters
    unsigned int numfilters;  // number of filters
    int patchnumoffset;       // used during font loading only
+
+   vfont_linearindex_t linearreload; // data useful to reload linear font data
 };
 
 enum vtextflags_e

@@ -714,7 +714,7 @@ patch_t *VPNGImage::getAsPatch(int tag, void **user, size_t *size) const
    int      w      = static_cast<int>(getWidth());
    int      h      = static_cast<int>(getHeight());
 
-   patch = V_LinearToPatch(linear, w, h, size, tag, user);
+   patch = V_LinearToTransPatch(linear, w, h, size, pImpl->color_key, tag, user);
 
    patch->leftoffset = static_cast<int16_t>(pImpl->xoffset);
    patch->topoffset  = static_cast<int16_t>(pImpl->yoffset);

@@ -519,7 +519,6 @@
 		4FF640B91735256700793714 /* v_alloc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = v_alloc.h; path = ../source/v_alloc.h; sourceTree = "<group>"; };
 		4FFD27341796990400E4E5B1 /* a_args.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = a_args.h; path = ../source/a_args.h; sourceTree = "<group>"; };
 		4FFD27351796990400E4E5B1 /* p_henemy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_henemy.cpp; path = ../source/p_henemy.cpp; sourceTree = "<group>"; };
-		4FFD27361796990400E4E5B1 /* sclinux.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sclinux.h; path = ../source/sclinux.h; sourceTree = "<group>"; };
 		4FFD27371796990400E4E5B1 /* w_iterator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = w_iterator.h; path = ../source/w_iterator.h; sourceTree = "<group>"; };
 		4FFFDF691753482C00E70FEC /* libFLAC.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libFLAC.a; path = staticlib/libFLAC.a; sourceTree = "<group>"; };
 		4FFFDF6A1753482C00E70FEC /* libmikmod.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmikmod.a; path = staticlib/libmikmod.a; sourceTree = "<group>"; };
@@ -1964,7 +1963,6 @@
 				FA16D40715E01E96002318D1 /* info.h */,
 				FABF5D32158BF42800C49E93 /* psnprntf.cpp */,
 				FA16D43815E01E96002318D1 /* psnprntf.h */,
-				4FFD27361796990400E4E5B1 /* sclinux.h */,
 				FABF5D49158BF42800C49E93 /* tables.cpp */,
 				FACACB751652FC980091AF2E /* tables.h */,
 				FABF5D52158BF42800C49E93 /* version.cpp */,

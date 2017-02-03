@@ -630,7 +630,7 @@ void P_PlayerThink(player_t *player)
       player->prevpitch = player->pitch;
       int look = cmd->look;
 
-      if(look)
+      if(look && (!player->mo->reactiontime || demo_version < 342))
       {
          // test for special centerview value
          if(look == -32768)

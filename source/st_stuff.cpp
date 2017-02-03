@@ -968,10 +968,62 @@ void ST_Drawer(bool fullscreen)
       StatusBar->Drawer();
 }
 
+//
+// Frees old graphics resources, in case they were previously loaded. Needed for
+// runtime wad with status bar loading
+//
+static void ST_unloadOldGraphics(patch_t **faces)
+{
+   for(int i = 0; i < 10; ++i)
+   {
+      efree(tallnum[i]);
+      tallnum[i] = nullptr;
+      efree(shortnum[i]);
+      shortnum[i] = nullptr;
+   }
+   efree(tallpercent);
+   tallpercent = nullptr;
+   for(int i = 0; i < NUMCARDS + 3; ++i)
+   {
+      efree(keys[i]);
+      keys[i] = nullptr;
+   }
+   efree(armsbg);
+   armsbg = nullptr;
+   for(int i = 0; i < 6; ++i)
+   {
+      efree(arms[i][0]);
+      arms[i][0] = nullptr;
+      arms[i][1] = nullptr;   // already freed, don't call efree
+   }
+   efree(faceback);
+   faceback = nullptr;
+   efree(sbar);
+   sbar = nullptr;
+   efree(fs_health);
+   fs_health = nullptr;
+   efree(fs_armorg);
+   fs_armorg = nullptr;
+   efree(fs_armorb);
+   fs_armorb = nullptr;
+   for(int i = 0; i < 4; ++i)
+   {
+      efree(fs_ammo[i]);
+      fs_ammo[i] = nullptr;
+   }
+   for(int i = 0; i < ST_NUMFACES; ++i)
+   {
+      efree(faces[i]);
+      faces[i] = nullptr;
+   }
+}
+
 static void ST_loadGraphics()
 {
    int  i;
    char namebuf[9];
+
+   ST_unloadOldGraphics(default_faces);
 
    // Load the numbers, tall and short
    for(i = 0; i < 10; i++)

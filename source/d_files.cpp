@@ -46,6 +46,7 @@
 #include "d_main.h"
 #include "doomstat.h"
 #include "e_edf.h"
+#include "e_fonts.h"
 #include "g_gfs.h"
 #include "i_system.h"
 #include "m_argv.h"
@@ -56,6 +57,7 @@
 #include "r_data.h"
 #include "r_main.h"
 #include "s_sound.h"
+#include "st_stuff.h"
 #include "v_misc.h"
 #include "w_formats.h"
 #include "w_wad.h"
@@ -509,11 +511,14 @@ void D_LoadEDF(gfs_t *gfs)
 static void D_reInitWadfiles()
 {
    R_FreeData();
+   E_ReloadFonts();        // needed because font patches may change without EDF
    E_ProcessNewEDF();      // haleyjd 03/24/10: process any new EDF lumps
    XL_ParseHexenScripts(); // haleyjd 03/27/11: process Hexen scripts
    D_ProcessDEHQueue();    // haleyjd 09/12/03: run any queued DEHs
+   C_InitBackdrop();       // update the console background
    R_Init();
    P_Init();
+   ST_Init();
 }
 
 // FIXME: various parts of this routine need tightening up

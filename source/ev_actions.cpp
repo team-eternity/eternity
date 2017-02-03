@@ -254,8 +254,8 @@ DEFINE_ACTION(EV_ActionLightTurnOn)
    // case 169: (S1 - BOOM Extended)
    // case 192: (SR - BOOM Extended)
    // Light Turn On - brightest near
-   bool isParam = EV_IsParamLineSpec(instance->special);
-   return EV_LightTurnOn(instance->line, instance->tag, 0, isParam);
+   return EV_LightTurnOn(instance->line, instance->tag, 0,
+                         EV_IsParamAction(*action));
 }
 
 //
@@ -682,8 +682,8 @@ DEFINE_ACTION(EV_ActionTurnTagLightsOff)
    // case 173: (S1 - BOOM Extended)
    // case 194: (SR - BOOM Extended)
    // Turn lights off in sector(tag)
-   bool isParam = EV_IsParamLineSpec(instance->special);
-   return EV_TurnTagLightsOff(instance->line, instance->tag, isParam);
+   return EV_TurnTagLightsOff(instance->line, instance->tag,
+                              EV_IsParamAction(*action));
 }
 
 //
@@ -987,8 +987,8 @@ DEFINE_ACTION(EV_ActionChangeOnly)
    // case 189: (S1 - BOOM Extended)
    // case 190: (SR - BOOM Extended)
    // Texture/Type Change Only (Trig)
-   bool isParam = EV_IsParamLineSpec(instance->special);
-   return EV_DoChange(instance->line, instance->tag, trigChangeOnly, isParam);
+   return EV_DoChange(instance->line, instance->tag, trigChangeOnly,
+                      EV_IsParamAction(*action));
 }
 
 //
@@ -1002,8 +1002,8 @@ DEFINE_ACTION(EV_ActionChangeOnlyNumeric)
    // case 240: (WR - BOOM Extended)
    // case 241: (S1 - BOOM Extended)
    // Texture/Type Change Only (Numeric)
-   bool isParam = EV_IsParamLineSpec(instance->special);
-   return EV_DoChange(instance->line, instance->tag, numChangeOnly, isParam);
+   return EV_DoChange(instance->line, instance->tag, numChangeOnly,
+                      EV_IsParamAction(*action));
 }
 
 //

@@ -88,6 +88,7 @@ extern fixed_t  bmaporgy;        // origin of block map
 extern Mobj   **blocklinks;      // for thing chains
 extern byte    *portalmap;       // haleyjd: for fast linked portal checks
 extern int    **gBlockGroups;    // ioanch 20160106: for each block, prt. groups
+extern bool     skipblstart;     // MaxW: Skip initial blocklist short
 
 // IOANCH 20131229: level hash
 extern HashData g_levelHash;

@@ -687,13 +687,17 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*, polyobj_t*), int grou
    offset = *(blockmap + offset);
    list = blockmaplump + offset;
 
+   // MaxW: 2016/02/02: This skip isn't feasible to do for recent play,
+   // as it has been found that the starting delimiter can have a use.
+
    // killough 1/31/98: for compatibility we need to use the old method.
    // Most demos go out of sync, and maybe other problems happen, if we
    // don't consider linedef 0. For safety this should be qualified.
 
+   // MaxW: 2016/02/02: if before 3.42 always skip, skip if all blocklists start w/ 0
    // killough 2/22/98: demo_compatibility check
    // skip 0 starting delimiter -- phares
-   if(!demo_compatibility)
+   if((!demo_compatibility && demo_version < 342) || (demo_version >= 342 && skipblstart))
       list++;     
    for( ; *list != -1; list++)
    {
