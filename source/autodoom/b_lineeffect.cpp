@@ -307,10 +307,11 @@ void LevelStateStack::Clear()
 // Tries to execute a state change on a sector. Returns false if it can't be
 // done, for any reason (terminal/momentary state, non-sector action).
 //
-static bool fillInStairs(const sector_t* sector, SectorStateEntry& sae,
-                         VanillaLineSpecial vls, PODCollection<int>& coll);
-static bool fillInDonut(const sector_t& sector, SectorStateEntry& sae,
-                        VanillaLineSpecial vls, PODCollection<int>& coll);
+static bool B_fillInStairs(const sector_t* sector, SectorStateEntry& sae,
+                           EVActionFunc func, int special,
+                           PODCollection<int>& coll);
+static bool B_fillInDonut(const sector_t& sector, SectorStateEntry& sae,
+                          int special, PODCollection<int>& coll);
 static fixed_t getMinTextureSize(const sector_t& sector);
 
 static bool doorBusy(const sector_t& sector)
@@ -655,518 +656,312 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
    sae.ceilingTerminal = ceilingBlocked;
    sae.altFloorHeight = 0;  // this needs to be initialized in order to avoid Visual Studio debug errors.
    
-   VanillaLineSpecial vls = static_cast<VanillaLineSpecial>(line.special);
    bool othersAffected = false;
-   int amount;
 
-   /*
-   int lockID = EV_LockDefIDForSpecial(instance->special);
-   return !!EV_VerticalDoor(instance->line, instance->actor, lockID);
-   */
+   const ev_action_t *action = EV_ActionForSpecial(line.special);
+   if(!action)
+      return;
+   EVActionFunc func = action->action;
    int lockID;
-   switch (vls)
+
+   if(func == EV_ActionDoorBlazeOpen || func == EV_ActionOpenDoor)
    {
-      case VLS_D1DoorBlazeOpen:
-      case VLS_D1OpenDoor:
-          if (ceilingBlocked || doorBusy(sector))
-              return;
-          sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4
-              * FRACUNIT;
-          break;
-
-      case VLS_GROpenDoor:
-      case VLS_S1DoorBlazeOpen:
-      case VLS_S1OpenDoor:
-      case VLS_SRDoorBlazeOpen:
-      case VLS_SROpenDoor:
-      case VLS_W1DoorBlazeOpen:
-      case VLS_W1OpenDoor:
-      case VLS_WRDoorBlazeOpen:
-      case VLS_WROpenDoor:
-         if(ceilingBlocked)
-            return;
-         sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4
-         * FRACUNIT;
-         break;
-      case VLS_D1OpenDoorBlue:
-      case VLS_D1OpenDoorRed:
-      case VLS_D1OpenDoorYellow:
-      {
-          if (ceilingBlocked || doorBusy(sector))
-              return;
-          lockID = EV_LockDefIDForSpecial(line.special);
-          if (!E_PlayerCanUnlock(&player, lockID, false, true))
-              return;
-          sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4
-              * FRACUNIT;
-          break;
-      }
-
-      case VLS_S1DoorBlazeOpenBlue:
-      case VLS_S1DoorBlazeOpenRed:
-      case VLS_S1DoorBlazeOpenYellow:
-      case VLS_SRDoorBlazeOpenBlue:
-      case VLS_SRDoorBlazeOpenRed:
-      case VLS_SRDoorBlazeOpenYellow:
-      {
-          if (ceilingBlocked)
-              return;
-          lockID = EV_LockDefIDForSpecial(line.special);
-          if (!E_PlayerCanUnlock(&player, lockID, false, true))
-              return;
-          sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4
-              * FRACUNIT;
-          break;
-      }
-
-      case VLS_DRDoorBlazeRaise:
-      case VLS_DRRaiseDoor:
-          if (ceilingBlocked || doorBusy(sector))
-              return;
-          sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4
-              * FRACUNIT;
-          sae.ceilingTerminal = true;
-          break;
-
-      case VLS_S1DoorBlazeRaise:
-      case VLS_S1RaiseDoor:
-      case VLS_SRDoorBlazeRaise:
-      case VLS_SRRaiseDoor:
-      case VLS_WRDoorBlazeRaise:
-      case VLS_W1RaiseDoor:
-      case VLS_WRRaiseDoor:
-      case VLS_W1DoorBlazeRaise:
-         if(ceilingBlocked)
-            return;
-         sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4
-         * FRACUNIT;
-         sae.ceilingTerminal = true;
-         break;
-
-      case VLS_DRRaiseDoorBlue:
-      case VLS_DRRaiseDoorRed:
-      case VLS_DRRaiseDoorYellow:
-      {
-          if (ceilingBlocked || doorBusy(sector))
-              return;
-          lockID = EV_LockDefIDForSpecial(line.special);
-          if (!E_PlayerCanUnlock(&player, lockID, false, true))
-              return;
-          sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4
-              * FRACUNIT;
-          sae.ceilingTerminal = true;
-          break;
-      }
-         
-      case VLS_S1CeilingLowerToFloor:
-      case VLS_SRCeilingLowerToFloor:
-      case VLS_W1CeilingLowerToFloor:
-      case VLS_WRCeilingLowerToFloor:
-      case VLS_S1CloseDoor:
-      case VLS_SRCloseDoor:
-      case VLS_W1CloseDoor:
-      case VLS_WRCloseDoor:
-      case VLS_W1DoorBlazeClose:
-      case VLS_WRDoorBlazeClose:
-      case VLS_S1DoorBlazeClose:
-      case VLS_SRDoorBlazeClose:
-         if(ceilingBlocked)
-            return;
-         sae.ceilingHeight = sae.floorHeight;
-         break;
-         
-      case VLS_W1CeilingLowerAndCrush:
-      case VLS_WRCeilingLowerAndCrush:
-      case VLS_S1CeilingLowerAndCrush:
-      case VLS_SRCeilingLowerAndCrush:
-         if(ceilingBlocked)
-            return;
-         sae.ceilingHeight = sae.floorHeight + 8 * FRACUNIT;
-         break;
-         
-      case VLS_W1CloseDoor30:
-      case VLS_WRCloseDoor30:
-      case VLS_S1CloseDoor30:
-      case VLS_SRCloseDoor30:
-         if(ceilingBlocked)
-            return;
-         sae.ceilingHeight = sae.floorHeight;
-         sae.ceilingTerminal = true;
-         break;
-         
-      case VLS_W1CeilingLowerToLowest:
-      case VLS_WRCeilingLowerToLowest:
-      case VLS_S1CeilingLowerToLowest:
-      case VLS_SRCeilingLowerToLowest:
-          if (ceilingBlocked)
-              return;
-          sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true);
-          break;
-
-      case VLS_W1CeilingLowerToMaxFloor:
-      case VLS_WRCeilingLowerToMaxFloor:
-      case VLS_S1CeilingLowerToMaxFloor:
-      case VLS_SRCeilingLowerToMaxFloor:
-          if (ceilingBlocked)
-              return;
-          sae.ceilingHeight = P_FindHighestFloorSurrounding(&sector, true);
-          break;
-
-      case VLS_W1FloorLowerToNearest:
-      case VLS_WRFloorLowerToNearest:
-      case VLS_S1FloorLowerToNearest:
-      case VLS_SRFloorLowerToNearest:
-          if (floorBlocked)
-              return;
-          sae.floorHeight = P_FindNextLowestFloor(&sector, lastFloorHeight, true);
-          break;
-
-      case VLS_S1PlatDownWaitUpStay:
-      case VLS_SRPlatDownWaitUpStay:
-      case VLS_W1PlatDownWaitUpStay:
-      case VLS_WRPlatDownWaitUpStay:
-      case VLS_WRPlatBlazeDWUS:
-      case VLS_W1PlatBlazeDWUS:
-      case VLS_S1PlatBlazeDWUS:
-      case VLS_SRPlatBlazeDWUS:
-      {
-         if(floorBlocked)
-            return;
-         fixed_t newheight = P_FindLowestFloorSurrounding(&sector, true);
-         if(newheight < sae.floorHeight)
-            sae.floorHeight = newheight;
-         sae.floorTerminal = true;
-         sae.altFloorHeight = lastFloorHeight;
-         break;
-      }
-         
-      case VLS_W1LowerFloor:
-      case VLS_WRLowerFloor:
-      case VLS_S1LowerFloor:
-	   case VLS_SRLowerFloor:
-         if(floorBlocked)
-            return;
-         sae.floorHeight = P_FindHighestFloorSurrounding(&sector, true);
-         break;
-         
-      case VLS_S1LowerFloorTurbo:
-      case VLS_SRLowerFloorTurbo:
-      case VLS_W1LowerFloorTurbo:
-      case VLS_WRLowerFloorTurbo:
-         if(floorBlocked)
-            return;
-         sae.floorHeight = P_FindHighestFloorSurrounding(&sector, true);
-         if(sae.floorHeight != lastFloorHeight)
-            sae.floorHeight += 8 * FRACUNIT;
-         break;
-         
-      case VLS_S1FloorLowerToLowest:
-      case VLS_SRFloorLowerToLowest:
-      case VLS_W1FloorLowerToLowest:
-      case VLS_WRFloorLowerToLowest:
-      case VLS_W1FloorLowerAndChange:
-      case VLS_WRFloorLowerAndChange:
-      case VLS_S1FloorLowerAndChange:
-      case VLS_SRFloorLowerAndChange:
-         if(floorBlocked)
-            return;
-         sae.floorHeight = P_FindLowestFloorSurrounding(&sector, true);
-         break;
-         
-      case VLS_S1PlatRaise24Change:
-      case VLS_SRPlatRaise24Change:
-      case VLS_W1PlatRaise24Change:
-      case VLS_WRPlatRaise24Change:
-      case VLS_W1RaiseFloor24:
-      case VLS_WRRaiseFloor24:
-      case VLS_S1RaiseFloor24:
-      case VLS_SRRaiseFloor24:
-      case VLS_W1RaiseFloor24Change:
-      case VLS_WRRaiseFloor24Change:
-      case VLS_S1RaiseFloor24Change:
-      case VLS_SRRaiseFloor24Change:
-         amount = 24;
-         goto platraise;
-      case VLS_S1PlatRaise32Change:
-      case VLS_SRPlatRaise32Change:
-      case VLS_W1PlatRaise32Change:
-      case VLS_WRPlatRaise32Change:
-         amount = 32;
-         goto platraise;
-      case VLS_S1RaiseFloor512:
-      case VLS_SRRaiseFloor512:
-      case VLS_W1RaiseFloor512:
-      case VLS_WRRaiseFloor512:
-          amount = 512;
-      platraise:
-         if(floorBlocked)
-            return;
-         sae.floorHeight += amount * FRACUNIT;
-         break;
-         
-      case VLS_W1FloorRaiseToTexture:
-      case VLS_WRFloorRaiseToTexture:
-      case VLS_S1FloorRaiseToTexture:
-      case VLS_SRFloorRaiseToTexture:
-      {
-         if(floorBlocked)
-            return;
-         fixed_t minsize = getMinTextureSize(sector);
-         if(comp[comp_model])
-            sae.floorHeight += minsize;
-         else
-         {
-            sae.floorHeight = (sae.floorHeight >> FRACBITS)
-            + (minsize >> FRACBITS);
-            if(sae.floorHeight > 32000)
-               sae.floorHeight = 32000;
-            sae.floorHeight <<= FRACBITS;
-         }
-         break;
-      }
-
-      case VLS_W1PlatPerpetualRaise:
-      case VLS_WRPlatPerpetualRaise:
-      case VLS_S1PlatPerpetualRaise:
-      case VLS_SRPlatPerpetualRaise:
-      case VLS_SRPlatToggleUpDown:
-      case VLS_WRPlatToggleUpDown:
-          if (floorBlocked)
-              return;
-          sae.floorHeight = P_FindLowestFloorSurrounding(&sector, true);
-          if (sae.floorHeight > lastFloorHeight)
-              sae.floorHeight = lastFloorHeight;
-
-          sae.altFloorHeight = P_FindHighestFloorSurrounding(&sector, true);
-          if (sae.altFloorHeight < lastFloorHeight)
-              sae.altFloorHeight = lastFloorHeight;
-
-          sae.floorTerminal = true;
-
-          break;
-         
-      case VLS_G1ExitLevel:
-      case VLS_G1SecretExit:
-      case VLS_G1StartLineScript:
-      case VLS_GRStartLineScript:
-      case VLS_S1CeilingCrushStop:
-      case VLS_S1ChangeOnly:
-      case VLS_S1ChangeOnlyNumeric:
-      case VLS_S1ExitLevel:
-      case VLS_S1LightsVeryDark:
-      case VLS_S1LightTurnOn:
-      case VLS_S1LightTurnOn255:
-      case VLS_S1PlatStop:
-      case VLS_S1SecretExit:
-      case VLS_S1StartLightStrobing:
-      case VLS_S1StartLineScript:
-      case VLS_S1SilentTeleport:
-      case VLS_S1Teleport:
-      case VLS_S1TurnTagLightsOff:
-      case VLS_SRCeilingCrushStop:
-      case VLS_SRChangeOnly:
-      case VLS_SRChangeOnlyNumeric:
-      case VLS_SRLightsVeryDark:
-      case VLS_SRLightTurnOn:
-      case VLS_SRLightTurnOn255:
-      case VLS_SRPlatStop:
-      case VLS_SRSilentTeleport:
-      case VLS_SRStartLightStrobing:
-      case VLS_SRStartLineScript:
-      case VLS_SRTeleport:
-      case VLS_SRTurnTagLightsOff:
-      case VLS_W1CeilingCrushStop:
-      case VLS_W1ChangeOnly:
-      case VLS_W1ChangeOnlyNumeric:
-      case VLS_W1LightsVeryDark:
-      case VLS_W1LightTurnOn:
-      case VLS_W1LightTurnOn255:
-      case VLS_W1PlatStop:
-      case VLS_W1SilentLineTeleMonsters:
-      case VLS_W1SilentLineTeleport:
-      case VLS_W1SilentLineTeleportReverse:
-      case VLS_W1SilentLineTRMonsters:
-      case VLS_W1SilentTeleport:
-      case VLS_W1SilentTeleportMonsters:
-      case VLS_W1StartLightStrobing:
-      case VLS_W1StartLineScript:
-      case VLS_W1StartLineScript1S:
-      case VLS_W1Teleport:
-      case VLS_W1TeleportMonsters:
-      case VLS_W1TurnTagLightsOff:
-      case VLS_WRCeilingCrushStop:
-      case VLS_WRChangeOnly:
-      case VLS_WRChangeOnlyNumeric:
-      case VLS_WRExitLevel:
-      case VLS_WRLightsVeryDark:
-      case VLS_WRLightTurnOn:
-      case VLS_WRLightTurnOn255:
-      case VLS_WRPlatStop:
-      case VLS_WRSecretExit:
-      case VLS_WRSilentLineTeleMonsters:
-      case VLS_WRSilentLineTeleport:
-      case VLS_WRSilentLineTeleportReverse:
-      case VLS_WRSilentLineTRMonsters:
-      case VLS_WRSilentTeleport:
-      case VLS_WRSilentTeleportMonsters:
-      case VLS_WRStartLightStrobing:
-      case VLS_WRStartLineScript:
-      case VLS_WRStartLineScript1S:
-      case VLS_WRTeleport:
-      case VLS_WRTeleportMonsters:
-      case VLS_WRTurnTagLightsOff:
-         return;  // nope
-         
-         // CRUSHERS: just say "floor + 8" so the bot can avoid them
-         // EDIT: bad idea, unless i also put altCeilheight = original height,
-         // which is pointless. So just have no effect.
-      case VLS_S1CeilingCrushAndRaise:
-      case VLS_SRCeilingCrushAndRaise:
-      case VLS_W1CeilingCrushAndRaise:
-      case VLS_WRCeilingCrushAndRaise:
-      case VLS_W1FastCeilCrushRaise:
-      case VLS_WRFastCeilCrushRaise:
-      case VLS_S1FastCeilCrushRaise:
-      case VLS_SRFastCeilCrushRaise:
-      case VLS_W1SilentCrushAndRaise:
-      case VLS_WRSilentCrushAndRaise:
-      case VLS_S1SilentCrushAndRaise:
-      case VLS_SRSilentCrushAndRaise:
-      {
-          const CeilingThinker* ct = thinker_cast<const CeilingThinker*>(sector.ceilingdata);
-          if (ct && ct->inStasis)
-          {
-              sae.ceilingHeight = ct->topheight;
-              sae.ceilingTerminal = true;
-          }
-          else
-          {
-//              if (ceilingBlocked)
-                  return;
-//              sae.ceilingHeight = sae.floorHeight + 8 * FRACUNIT;
-//              sae.ceilingTerminal = true;
-          }
-      }
-         break;
-         
-      case VLS_G1PlatRaiseNearestChange:
-      case VLS_S1PlatRaiseNearestChange:
-      case VLS_SRPlatRaiseNearestChange:
-      case VLS_W1PlatRaiseNearestChange:
-      case VLS_WRPlatRaiseNearestChange:
-      case VLS_S1FloorRaiseToNearest:
-      case VLS_SRFloorRaiseToNearest:
-      case VLS_W1FloorRaiseToNearest:
-      case VLS_WRFloorRaiseToNearest:
-      case VLS_WRRaiseFloorTurbo:
-      case VLS_W1RaiseFloorTurbo:
-      case VLS_S1RaiseFloorTurbo:
-      case VLS_SRRaiseFloorTurbo:
-         if(floorBlocked)
-            return;
-         sae.floorHeight = P_FindNextHighestFloor(&sector, sae.floorHeight,
-                                                  true);
-         break;
-         
-      case VLS_G1RaiseFloor:
-      case VLS_W1RaiseFloor:
-      case VLS_WRRaiseFloor:
-      case VLS_S1RaiseFloor:
-      case VLS_SRRaiseFloor:
-         if(floorBlocked)
-            return;
-         sae.floorHeight = P_FindLowestCeilingSurrounding(&sector, true);
-         if(sae.floorHeight > sae.ceilingHeight)
-            sae.floorHeight = sae.ceilingHeight;
-         break;
-
-      case VLS_S1FloorRaiseCrush:
-      case VLS_SRFloorRaiseCrush:
-      case VLS_W1FloorRaiseCrush:
-      case VLS_WRFloorRaiseCrush:
-          if (floorBlocked)
-              return;
-          sae.floorHeight = P_FindLowestCeilingSurrounding(&sector, true);
-          if (sae.floorHeight > sae.ceilingHeight)
-              sae.floorHeight = sae.ceilingHeight;
-          sae.floorHeight -= 8 * FRACUNIT;
-          break;
-         
-      case VLS_W1RaiseCeilingLowerFloor:  // just ceiling
-      case VLS_WRRaiseCeilingLowerFloor:
-         if(ceilingBlocked)
-            return;
-         sae.ceilingHeight = P_FindHighestCeilingSurrounding(&sector, true);
-         break;
-         
-      case VLS_S1BOOMRaiseCeilingOrLowerFloor:
-      case VLS_SRBOOMRaiseCeilingOrLowerFloor:
-         if(!ceilingBlocked)
-            sae.ceilingHeight = P_FindHighestCeilingSurrounding(&sector, true);
-         else if(!floorBlocked)
-            sae.floorHeight = P_FindLowestFloorSurrounding(&sector, true);
-         else
-            return;
-         break;
-         
-      case VLS_S1BuildStairsUp8:
-      case VLS_SRBuildStairsUp8:
-      case VLS_W1BuildStairsUp8:
-      case VLS_WRBuildStairsUp8:
-      case VLS_S1BuildStairsTurbo16:
-      case VLS_WRBuildStairsTurbo16:
-      case VLS_W1BuildStairsTurbo16:
-      case VLS_SRBuildStairsTurbo16:
-         if(floorBlocked)
-            return;
-         othersAffected = fillInStairs(&sector, sae, vls, indexList);
-         break;
-      case VLS_S1DoDonut:
-      case VLS_SRDoDonut:
-      case VLS_W1DoDonut:
-      case VLS_WRDoDonut:
-         if(floorBlocked)
-            return;
-         othersAffected = fillInDonut(sector, sae, vls, indexList);
-         break;
-
-      case VLS_W1ElevatorUp:
-      case VLS_WRElevatorUp:
-      case VLS_S1ElevatorUp:
-      case VLS_SRElevatorUp:
-          if (floorBlocked || ceilingBlocked)
-              return;
-          sae.floorHeight = P_FindNextHighestFloor(&sector, lastFloorHeight, true);
-          sae.ceilingHeight = sae.floorHeight + lastCeilingHeight - lastFloorHeight;
-          break;
-
-      case VLS_W1ElevatorDown:
-      case VLS_WRElevatorDown:
-      case VLS_S1ElevatorDown:
-      case VLS_SRElevatorDown:
-          if (floorBlocked || ceilingBlocked)
-              return;
-          sae.floorHeight = P_FindNextLowestFloor(&sector, lastFloorHeight, true);
-          sae.ceilingHeight = sae.floorHeight + lastCeilingHeight - lastFloorHeight;
-          break;
-
-      case VLS_W1ElevatorCurrent:
-      case VLS_WRElevatorCurrent:
-      case VLS_S1ElevatorCurrent:
-      case VLS_SRElevatorCurrent:
-      {
-          if (floorBlocked || ceilingBlocked)
-              return;
-          const SectorHeightStack& front = g_affectedSectors[line.frontsector - sectors];
-
-          sae.floorHeight = front.getFloorHeight();
-          sae.ceilingHeight = sae.floorHeight + lastCeilingHeight - lastFloorHeight;
-          break;
-      }
-      default:
+      if(ceilingBlocked || B_LineTriggersBackSector(line) && doorBusy(sector))
          return;
-         
+      sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4
+      * FRACUNIT;
    }
+   else if(func == EV_ActionVerticalDoor)
+   {
+      if(ceilingBlocked || B_LineTriggersBackSector(line) && doorBusy(sector))
+         return;
+      lockID = EV_LockDefIDForSpecial(line.special);
+      if(lockID && !E_PlayerCanUnlock(&player, lockID, false, true))
+         return;
+      sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4
+      * FRACUNIT;
+      switch(line.special)
+      {
+         case 1:
+         case 26:
+         case 27:
+         case 28:
+         case 117:
+            sae.ceilingTerminal = true;
+            break;
+      }
+   }
+   else if(func == EV_ActionDoLockedDoor)
+   {
+      if(ceilingBlocked)
+         return;
+      lockID = EV_LockDefIDForSpecial(line.special);
+      if(lockID && !E_PlayerCanUnlock(&player, lockID, true, true))
+         return;
+      sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4
+      * FRACUNIT;
+   }
+   else if(func == EV_ActionDoorBlazeRaise || func == EV_ActionRaiseDoor)
+   {
+      if(ceilingBlocked)
+         return;
+      sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4
+      * FRACUNIT;
+      sae.ceilingTerminal = true;
+   }
+   else if(func == EV_ActionCloseDoor ||
+           func == EV_ActionCeilingLowerToFloor ||
+           func == EV_ActionDoorBlazeClose)
+   {
+      if(ceilingBlocked)
+         return;
+      sae.ceilingHeight = sae.floorHeight;
+   }
+   else if(func == EV_ActionCeilingLowerAndCrush)
+   {
+      if(ceilingBlocked)
+         return;
+      sae.ceilingHeight = sae.floorHeight + 8 * FRACUNIT;
+   }
+   else if(func == EV_ActionCloseDoor30)
+   {
+      if(ceilingBlocked)
+         return;
+      sae.ceilingHeight = sae.floorHeight;
+      sae.ceilingTerminal = true;
+   }
+   else if(func == EV_ActionCeilingLowerToLowest)
+   {
+      if (ceilingBlocked)
+         return;
+      sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true);
+   }
+   else if(func == EV_ActionCeilingLowerToMaxFloor)
+   {
+      if (ceilingBlocked)
+         return;
+      sae.ceilingHeight = P_FindHighestFloorSurrounding(&sector, true);
+   }
+   else if(func == EV_ActionFloorLowerToNearest)
+   {
+      if (floorBlocked)
+         return;
+      sae.floorHeight = P_FindNextLowestFloor(&sector, lastFloorHeight, true);
+   }
+   else if(func == EV_ActionRaiseDoor)
+   {
+      if(ceilingBlocked || B_LineTriggersBackSector(line) && doorBusy(sector))
+         return;
+      sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4
+      * FRACUNIT;
+      sae.ceilingTerminal = true;
+   }
+   else if(func == EV_ActionLowerFloor)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorHeight = P_FindHighestFloorSurrounding(&sector, true);
+   }
+   else if(func == EV_ActionLowerFloorTurbo)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorHeight = P_FindHighestFloorSurrounding(&sector, true);
+      if(sae.floorHeight != lastFloorHeight)
+         sae.floorHeight += 8 * FRACUNIT;
+   }
+   else if(func == EV_ActionFloorLowerAndChange ||
+           func == EV_ActionFloorLowerToLowest)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorHeight = P_FindLowestFloorSurrounding(&sector, true);
+   }
+   else if(func == EV_ActionRaiseFloor24 ||
+           func == EV_ActionPlatRaise24Change ||
+           func == EV_ActionRaiseFloor24Change)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorHeight += 24 * FRACUNIT;
+   }
+   else if(func == EV_ActionPlatRaise32Change)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorHeight += 32 * FRACUNIT;
+   }
+   else if(func == EV_ActionRaiseFloor512)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorHeight += 512 * FRACUNIT;
+   }
+   else if(func == EV_ActionPlatPerpetualRaise)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorHeight = P_FindLowestFloorSurrounding(&sector, true);
+      if (sae.floorHeight > lastFloorHeight)
+         sae.floorHeight = lastFloorHeight;
+
+      sae.altFloorHeight = P_FindHighestFloorSurrounding(&sector, true);
+      if (sae.altFloorHeight < lastFloorHeight)
+         sae.altFloorHeight = lastFloorHeight;
+
+      sae.floorTerminal = true;
+   }
+   else if(func == EV_ActionPlatToggleUpDown)
+   {
+      if(floorBlocked)
+      {
+         const PlatThinker *pt = thinker_cast<PlatThinker *>(sector.floordata);
+         if(pt && pt->type == toggleUpDn &&
+            pt->status == PlatThinker::in_stasis)
+         {
+            sae.floorHeight = pt->high;   // consider this
+            sae.floorTerminal = true;
+         }
+         else
+            return;
+      }
+      sae.floorHeight = sector.ceilingheight;
+      sae.floorTerminal = true;
+   }
+   else if(func == EV_ActionPlatRaiseNearestChange ||
+           func == EV_ActionFloorRaiseToNearest ||
+           func == EV_ActionRaiseFloorTurbo)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorHeight = P_FindNextHighestFloor(&sector, sae.floorHeight,
+                                               true);
+   }
+   else if(func == EV_ActionRaiseFloor)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorHeight = P_FindLowestCeilingSurrounding(&sector, true);
+      if(sae.floorHeight > sae.ceilingHeight)
+         sae.floorHeight = sae.ceilingHeight;
+   }
+   else if(func == EV_ActionFloorRaiseCrush)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorHeight = P_FindLowestCeilingSurrounding(&sector, true);
+      if (sae.floorHeight > sae.ceilingHeight)
+         sae.floorHeight = sae.ceilingHeight;
+      sae.floorHeight -= 8 * FRACUNIT;
+   }
+   else if(func == EV_ActionRaiseCeilingLowerFloor)
+   {
+      if(ceilingBlocked)
+         return;
+      sae.ceilingHeight = P_FindHighestCeilingSurrounding(&sector, true);
+   }
+   else if(func == EV_ActionBOOMRaiseCeilingOrLowerFloor)
+   {
+      if(!ceilingBlocked)
+         sae.ceilingHeight = P_FindHighestCeilingSurrounding(&sector, true);
+      else if(!floorBlocked)
+         sae.floorHeight = P_FindLowestFloorSurrounding(&sector, true);
+      else
+         return;
+   }
+   else if(func == EV_ActionBOOMRaiseCeilingLowerFloor)
+   {
+      if(ceilingBlocked && floorBlocked)
+         return;
+      if(!ceilingBlocked)
+         sae.ceilingHeight = P_FindHighestCeilingSurrounding(&sector, true);
+      if(!floorBlocked)
+         sae.floorHeight = P_FindLowestFloorSurrounding(&sector, true);
+   }
+   else if(func == EV_ActionFloorRaiseToTexture)
+   {
+      if(floorBlocked)
+         return;
+      fixed_t minsize = getMinTextureSize(sector);
+      if(comp[comp_model])
+         sae.floorHeight += minsize;
+      else
+      {
+         sae.floorHeight = (sae.floorHeight >> FRACBITS)
+         + (minsize >> FRACBITS);
+         if(sae.floorHeight > 32000)
+            sae.floorHeight = 32000;
+         sae.floorHeight <<= FRACBITS;
+      }
+   }
+   else if(func == EV_ActionCeilingCrushAndRaise ||
+           func == EV_ActionFastCeilCrushRaise ||
+           func == EV_ActionSilentCrushAndRaise)
+   {
+      const CeilingThinker* ct = thinker_cast<const CeilingThinker*>(sector.ceilingdata);
+      if (ct && ct->inStasis)
+      {
+         sae.ceilingHeight = ct->topheight;
+         sae.ceilingTerminal = true;
+      }
+      else
+      {
+         //              if (ceilingBlocked)
+         return;
+         //              sae.ceilingHeight = sae.floorHeight + 8 * FRACUNIT;
+         //              sae.ceilingTerminal = true;
+      }
+   }
+   else if(func == EV_ActionBuildStairsUp8 ||
+           func == EV_ActionBuildStairsTurbo16)
+   {
+      if(floorBlocked)
+         return;
+      othersAffected = B_fillInStairs(&sector, sae, func, line.special,
+                                      indexList);
+   }
+   else if(func == EV_ActionDoDonut)
+   {
+      if(floorBlocked)
+         return;
+      othersAffected = B_fillInDonut(sector, sae, line.special, indexList);
+   }
+   else if(func == EV_ActionElevatorUp)
+   {
+      if (floorBlocked || ceilingBlocked)
+         return;
+      sae.floorHeight = P_FindNextHighestFloor(&sector, lastFloorHeight, true);
+      sae.ceilingHeight = sae.floorHeight + lastCeilingHeight - lastFloorHeight;
+   }
+   else if(func == EV_ActionElevatorDown)
+   {
+      if (floorBlocked || ceilingBlocked)
+         return;
+      sae.floorHeight = P_FindNextLowestFloor(&sector, lastFloorHeight, true);
+      sae.ceilingHeight = sae.floorHeight + lastCeilingHeight - lastFloorHeight;
+   }
+   else if(func == EV_ActionElevatorCurrent)
+   {
+      if (floorBlocked || ceilingBlocked)
+         return;
+      const SectorHeightStack& front = g_affectedSectors[line.frontsector - sectors];
+
+      sae.floorHeight = front.getFloorHeight();
+      sae.ceilingHeight = sae.floorHeight + lastCeilingHeight - lastFloorHeight;
+   }
+   else if(func == EV_ActionPlatDownWaitUpStay ||
+           func == EV_ActionPlatBlazeDWUS)
+   {
+      if(floorBlocked)
+         return;
+      fixed_t newheight = P_FindLowestFloorSurrounding(&sector, true);
+      if(newheight < sae.floorHeight)
+         sae.floorHeight = newheight;
+      sae.floorTerminal = true;
+      sae.altFloorHeight = lastFloorHeight;
+   }
+   else
+      return;  // unknown or useless/irrelevant actions (e.g. lights) are ignored
    
    if(!othersAffected && sae.floorHeight == lastFloorHeight
       && sae.ceilingHeight == lastCeilingHeight && (!sae.floorTerminal || sae.altFloorHeight == lastFloorHeight))
@@ -1179,19 +974,18 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
    affSector.stack.add(sae);
 }
 
-static bool fillInStairs(const sector_t* sector, SectorStateEntry& sae,
-                         VanillaLineSpecial vls, PODCollection<int>& coll)
+static bool B_fillInStairs(const sector_t* sector, SectorStateEntry& sae,
+                           EVActionFunc func, int special,
+                           PODCollection<int>& coll)
 {
    fixed_t stairIncrement;
-   
-   if(vls == VLS_S1BuildStairsTurbo16 || vls == VLS_SRBuildStairsTurbo16
-      || vls == VLS_W1BuildStairsTurbo16 || vls == VLS_WRBuildStairsTurbo16)
-   {
+
+   if(func == EV_ActionBuildStairsTurbo16)
       stairIncrement = 16 * FRACUNIT;
-   }
    else
       stairIncrement = 8 * FRACUNIT;
-   
+   // TODO: other specials
+
    fixed_t height = sae.floorHeight + stairIncrement;
    sae.floorHeight = height;
    bool ok;
@@ -1228,7 +1022,7 @@ static bool fillInStairs(const sector_t* sector, SectorStateEntry& sae,
             othersAffected = true;
          
          SectorStateEntry tsae;
-         tsae.actionNumber = vls;
+         tsae.actionNumber = special;
          tsae.floorHeight = height;
          tsae.ceilingHeight = otherAffSector->getCeilingHeight();
          tsae.floorTerminal = false;
@@ -1242,8 +1036,8 @@ static bool fillInStairs(const sector_t* sector, SectorStateEntry& sae,
 }
 
 // CODE LARGELY TAKEN FROM EV_DoDonut
-static bool fillInDonut(const sector_t& sector, SectorStateEntry& sae,
-                        VanillaLineSpecial vls, PODCollection<int>& coll)
+static bool B_fillInDonut(const sector_t& sector, SectorStateEntry& sae,
+                          int special, PODCollection<int>& coll)
 {
    const sector_t* s2 = getNextSector(sector.lines[0], &sector);
    if(!s2)
@@ -1288,7 +1082,7 @@ static bool fillInDonut(const sector_t& sector, SectorStateEntry& sae,
       // ok
       // rising moat
       SectorStateEntry s2ae;
-      s2ae.actionNumber = vls;
+      s2ae.actionNumber = special;
       s2ae.floorHeight = s3_floorheight;
       s2ae.ceilingHeight = otherAffSector.getCeilingHeight();
       // CAUTION: we're ignoring if it's already terminal!!
