@@ -1459,7 +1459,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             {
                if(by < 0 || by >= bmapheight)
                   continue;
-               if(P_BlockHasLinkedPortalLines(by * bmapwidth + bx))
+               if(P_BlockHasLinkedPortals(by * bmapwidth + bx, false))
                {
                   hasportals = true;
                   goto outloop;

@@ -264,7 +264,7 @@ inline static sector_t *P_ThingReachesGroupVertically(const Mobj *mo,
 void P_MoveLinkedPortal(portal_t *portal, fixed_t dx, fixed_t dy,
                         bool movebehind);
 
-bool P_BlockHasLinkedPortalLines(int index);
+bool P_BlockHasLinkedPortals(int index, bool includesectors);
 
 #endif
 

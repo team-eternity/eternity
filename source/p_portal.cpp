@@ -1510,13 +1510,16 @@ void P_MoveLinkedPortal(portal_t *portal, fixed_t dx, fixed_t dy, bool movebehin
 // ioanch 20160228: return true if block has portalmap 1 or a polyportal
 // It's coarse
 //
-bool P_BlockHasLinkedPortalLines(int index)
+bool P_BlockHasLinkedPortals(int index, bool includesectors)
 {
    // safe for overflow
    if(index < 0 || index >= bmapheight * bmapwidth)
       return false;
-   if(portalmap[index] & PMF_LINE)
+   if(portalmap[index] & (PMF_LINE |
+      (includesectors ? PMF_FLOOR | PMF_CEILING : 0)))
+   {
       return true;
+   }
    
    for(const DLListItem<polymaplink_t> *plink = polyblocklinks[index]; plink;
       plink = plink->dllNext)
