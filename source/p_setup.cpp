@@ -1496,6 +1496,28 @@ bool P_CheckThingDoomBan(int16_t type)
 }
 
 //
+// Hashes the thing to bot map, if appropiate
+//
+static void P_addToBotMap(int index, const mapthing_t &ft, const Mobj &mobj)
+{
+   p_indexMobjMap[index] = &mobj;
+   p_mobjIndexMap[&mobj] = index;
+
+   // heighted objects currently not supported
+   if(!ft.height && B_IsMobjSolidDecor(mobj))
+   {
+      uint32_t uind;
+      uind = SwapULong(index);
+      g_levelHash.addData(reinterpret_cast<uint8_t *>(&uind), 4);
+      int32_t rad = SwapLong(static_cast<int32_t>(mobj.radius));
+      // Also keep track of radius and height
+      g_levelHash.addData(reinterpret_cast<uint8_t *>(&rad), 4);
+      rad = SwapLong(static_cast<int32_t>(mobj.height));
+      g_levelHash.addData(reinterpret_cast<uint8_t *>(&rad), 4);
+   }
+}
+
+//
 // P_LoadThings
 //
 // killough 5/3/98: reformatted, cleaned up
@@ -1558,19 +1580,7 @@ void P_LoadThings(int lump)
       // IOANCH: add it to map and index-map
       mobj = P_SpawnMapThing(ft);
       if (mobj)
-      {
-          p_indexMobjMap[i] = mobj;
-          p_mobjIndexMap[mobj] = i;
-         if(B_IsMobjSolidDecor(*mobj))
-         {
-            uint8_t ind[4];
-            ind[0] = i & 0xff;
-            ind[1] = i >> 8 & 0xff;
-            ind[2] = i >> 16 & 0xff;
-            ind[3] = i >> 24 & 0xff;
-            g_levelHash.addData(ind, 4);
-         }
-      }
+         P_addToBotMap(i, *ft, *mobj);
    }
    
    // haleyjd: all player things for players in this game should now be valid
@@ -1642,11 +1652,8 @@ void P_LoadHexenThings(int lump)
       
       // IOANCH: add it to map and index-map
       mobj = P_SpawnMapThing(ft);
-      p_indexMobjMap[i] = mobj;
       if (mobj)
-      {
-          p_mobjIndexMap[mobj] = i;
-      }
+         P_addToBotMap(i, *ft, *mobj);
    }
    
    // haleyjd: all player things for players in this game
