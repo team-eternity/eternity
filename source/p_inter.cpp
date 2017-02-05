@@ -1774,7 +1774,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       // This will slightly increase the chances that enemies will choose to
       // "finish it off", but its main purpose is to alert friends of danger.
 
-      if(target->health * 2 < target->info->spawnhealth)
+      if(target->health * 2 < target->getModifiedSpawnHealth())
       {
          Thinker *cap = 
             &thinkerclasscap[target->flags & MF_FRIEND ? 
@@ -2050,7 +2050,7 @@ void P_RaiseCorpse(Mobj *corpse, const Mobj *raiser)
    // clear ephemeral MIF flags that may persist from previous death
    corpse->intflags &= ~MIF_CLEARRAISED;
 
-   corpse->health = info->spawnhealth;
+   corpse->health = corpse->getModifiedSpawnHealth();
    P_SetTarget<Mobj>(&corpse->target, NULL);  // killough 11/98
 
    if(demo_version >= 203)

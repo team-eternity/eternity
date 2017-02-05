@@ -216,6 +216,7 @@ public:
    // Methods
    void backupPosition();
    void copyPosition(const Mobj *other);
+   int getModifiedSpawnHealth() const;
    
    // Data members
 

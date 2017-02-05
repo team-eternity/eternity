@@ -411,7 +411,7 @@ int EV_HealThing(Mobj *actor, int amount, int maxhealth)
    {
       // If second arg is 0, or the activator isn't a player
       // then set the maxhealth to the activator's spawning health.
-      maxhealth = info->spawnhealth;
+      maxhealth = actor->getModifiedSpawnHealth();
    }
    else if(maxhealth == 1)
    {
@@ -424,7 +424,7 @@ int EV_HealThing(Mobj *actor, int amount, int maxhealth)
       else
       {
          // FIXME: Handle this with a bit more finesse.
-         maxhealth = info->spawnhealth + 100;
+         maxhealth = actor->getModifiedSpawnHealth() + 100;
       }
    }
 

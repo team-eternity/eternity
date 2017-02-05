@@ -344,7 +344,7 @@ bool ACS_ChkThingProp(Mobj *mo, uint32_t var, uint32_t val)
    case ACS_TP_ChaseGoal:    return false;
    case ACS_TP_Frightened:   return false;
    case ACS_TP_Friendly:     return !!(mo->flags & MF_FRIEND) == !!val;
-   case ACS_TP_SpawnHealth:  return mo->info->spawnhealth == val;
+   case ACS_TP_SpawnHealth:  return mo->getModifiedSpawnHealth() == val;
    case ACS_TP_Dropped:      return !!(mo->flags & MF_DROPPED) == !!val;
    case ACS_TP_NoTarget:     return false;
    case ACS_TP_Species:      return false;
@@ -1064,7 +1064,7 @@ uint32_t ACS_GetThingProp(Mobj *mo, uint32_t prop)
    case ACS_TP_ChaseGoal:    return 0;
    case ACS_TP_Frightened:   return 0;
    case ACS_TP_Friendly:     return !!(mo->flags & MF_FRIEND);
-   case ACS_TP_SpawnHealth:  return mo->info->spawnhealth;
+   case ACS_TP_SpawnHealth:  return mo->getModifiedSpawnHealth();
    case ACS_TP_Dropped:      return !!(mo->flags & MF_DROPPED);
    case ACS_TP_NoTarget:     return 0;
    case ACS_TP_Species:      return 0;

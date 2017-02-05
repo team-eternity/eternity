@@ -1102,6 +1102,7 @@ void P_NightmareRespawn(Mobj* mobj)
    // inherit attributes from deceased one
    mo = P_SpawnMobj(x, y, z, mobj->type);
    mo->spawnpoint = mobj->spawnpoint;
+   mo->health = mo->getModifiedSpawnHealth();
    mo->angle = R_WadToAngle(mthing->angle);
 
    if(mthing->options & MTF_AMBUSH)
@@ -1636,6 +1637,20 @@ void Mobj::copyPosition(const Mobj *other)
    intflags  |= (other->intflags & (MIF_ONFLOOR|MIF_ONSECFLOOR|MIF_ONMOBJ));
 }
 
+//
+// Returns mobjinfo spawn health possibly modified by the spawnpoint healthModifier
+//
+int Mobj::getModifiedSpawnHealth() const
+{
+   // info always assumed to exist
+   if(!spawnpoint.healthModifier || spawnpoint.healthModifier == FRACUNIT)
+      return info->spawnhealth;
+   if(spawnpoint.healthModifier > 0)   // positive means multiplication
+      return FixedMul(info->spawnhealth, spawnpoint.healthModifier);
+   // negative means absolute
+   return abs(spawnpoint.healthModifier);
+}
+
 extern fixed_t tmsecfloorz;
 extern fixed_t tmsecceilz;
 
@@ -1940,6 +1955,7 @@ void P_RespawnSpecials()
 
    mo = P_SpawnMobj(x, y, z, i);
    mo->spawnpoint = *mthing;
+   mo->health = mo->getModifiedSpawnHealth();
    // sf
    mo->angle = R_WadToAngle(mthing->angle);
 
@@ -2279,6 +2295,7 @@ spawnit:
    mobj->special = mthing->special;
 
    mobj->spawnpoint = *mthing;
+   mobj->health = mobj->getModifiedSpawnHealth();
 
    if(mobj->tics > 0 && !(mobj->flags4 & MF4_SYNCHRONIZED))
       mobj->tics = 1 + (P_Random(pr_spawnthing) % mobj->tics);
