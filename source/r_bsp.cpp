@@ -1669,7 +1669,8 @@ static void R_AddLine(seg_t *line, bool dynasegs)
    vertex_t  *v1, *v2;
 
    // ioanch 20160125: reject segs in front of line when rendering line portal
-   if(portalrender.w)
+   if(portalrender.w && portalrender.w->portal &&
+      portalrender.w->portal->type != R_SKYBOX)
    {
       // only reject if they're anchored portals (including linked)
       if(portalrender.w->line)
