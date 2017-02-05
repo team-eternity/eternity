@@ -110,6 +110,10 @@ Starting delimiters are now no longer skipped, except for some demos where it's
 needed. It also is heuristically checked, so that the performance increase can
 still occur if using new versions.
 
+-------------------------------------------------------------------------------
+2017/02/05
+Starting delimiters are now no longer skipped, except for some demos where it's
+
 ================================================================================
 EOF
 ================================================================================
