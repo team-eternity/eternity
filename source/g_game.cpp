@@ -366,7 +366,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
         gameactions[ka_weapon7] && GameModeInfo->id != shareware ? wp_bfg :
         gameactions[ka_weapon8] ? wp_chainsaw :
         (!demo_compatibility && gameactions[ka_weapon9] &&  // MaxW: Adopted from PRBoom
-        GameModeInfo->id == commercial) ? wp_supershotgun :
+        enable_ssg) ? wp_supershotgun :
         wp_nochange;
 
       // killough 3/22/98: For network and demo consistency with the
