@@ -516,6 +516,7 @@ static void R_InitSpriteDefs(char **namelist)
 void R_InitSprites(char **namelist)
 {
    R_InitSpriteDefs(namelist);
+   R_InitSpriteProjSpan();
 }
 
 //
@@ -1904,33 +1905,34 @@ inline static sector_t *R_addProjNode(Mobj *mobj, const linkdata_t *data,
 void R_CheckMobjProjections(Mobj *mobj)
 {
    sector_t *sector = mobj->subsector->sector;
-   if(!mobj->spriteproj && ((!(sector->f_pflags & PS_PASSABLE) &&
-      !(sector->c_pflags & PS_PASSABLE)) || mobj->flags & MF_NOSECTOR))
+
+   bool overflown = (unsigned)mobj->sprite >= (unsigned)numsprites ||
+   (mobj->frame & FF_FRAMEMASK) >= sprites[mobj->sprite].numframes;
+
+   if((!(sector->f_pflags & PS_PASSABLE) && !(sector->c_pflags & PS_PASSABLE)) ||
+      mobj->flags & MF_NOSECTOR ||
+      overflown)
    {
-      return;  // exit quickly if nothing to do
-   }
-   if(mobj->flags & MF_NOSECTOR) // NOSECTOR shouldn't link this to sector
-   {
-      R_RemoveMobjProjections(mobj);
+      if(mobj->spriteproj)
+         R_RemoveMobjProjections(mobj);
       return;
    }
-
-   // MAJOR FIXME: don't use an "arbitrary margin". Instead use accurate sprite
-   // size
-   enum
-   {
-      ARBITRARY_MARGIN = 64 << FRACBITS,
-   };
 
    const linkdata_t *data;
 
    DLListItem<spriteprojnode_t> *item = mobj->spriteproj;
    DLListItem<spriteprojnode_t> **tail = &mobj->spriteproj;
 
+   const sprvertspan_t &span =
+   r_sprvertspan[mobj->sprite][mobj->frame & FF_FRAMEMASK];
+
+   fixed_t scaledtop = M_FloatToFixed(span.top * mobj->yscale + 0.5f);
+   fixed_t scaledbottom = M_FloatToFixed(span.bottom * mobj->yscale - 0.5f);
+
    v3fixed_t delta = {0, 0, 0};
    int loopprot = 0;
    while(++loopprot < 32768 && sector && sector->f_pflags & PS_PASSABLE && 
-      (data = R_FPLink(sector))->planez > mobj->z - ARBITRARY_MARGIN)
+      (data = R_FPLink(sector))->planez > mobj->z + scaledbottom)
    {
       // always accept first sector
       sector = R_addProjNode(mobj, data, delta, item, tail);
@@ -1940,7 +1942,7 @@ void R_CheckMobjProjections(Mobj *mobj)
    sector = mobj->subsector->sector;
    delta.x = delta.y = delta.z = 0;
    while(++loopprot < 32768 && sector && sector->c_pflags & PS_PASSABLE &&
-      (data = R_CPLink(sector))->planez < mobj->z + mobj->height + ARBITRARY_MARGIN)
+      (data = R_CPLink(sector))->planez < mobj->z + scaledtop)
    {
       // always accept first sector
       sector = R_addProjNode(mobj, data, delta, item, tail);

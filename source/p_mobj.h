@@ -168,6 +168,15 @@ public:
 };
 
 //
+// Keep track, for sprite portal copying
+//
+struct sprojlast_t
+{
+   v3fixed_t pos;    // holds coordinates
+   uint32_t sprite;  // holds both sprite num and frame num
+};
+
+//
 // Map Object definition.
 //
 // killough 2/20/98:
@@ -226,7 +235,7 @@ public:
 
    // ioanch 20160109: sprite projection chains
    DLListItem<spriteprojnode_t> *spriteproj;
-   v3fixed_t sprojlast; // coordinates after last check. Initially "invalid"
+   sprojlast_t sprojlast; // coordinates after last check. Initially "invalid"
 
    //More drawing info: to determine current sprite.
    angle_t     angle;  // orientation

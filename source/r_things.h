@@ -91,8 +91,6 @@ extern cb_maskedcolumn_t maskedcolumn;
 // ioanch 20160109: rendering of sprites cut by sector portals
 //
 
-struct linkoffset_t;
-
 //
 // spriteprojnode_t
 //

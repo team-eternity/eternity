@@ -1201,14 +1201,17 @@ IMPLEMENT_THINKER_TYPE(Mobj)
 //
 inline static void P_checkMobjProjections(Mobj &mobj)
 {
-   if(gMapHasSectorPortals && (mobj.z != mobj.sprojlast.z ||
-                               mobj.x != mobj.sprojlast.x ||
-                               mobj.y != mobj.sprojlast.y))
+   uint32_t spritecomp = mobj.sprite << 16 | (mobj.frame & 0xffff);
+   if(gMapHasSectorPortals && (mobj.z != mobj.sprojlast.pos.z ||
+                               mobj.x != mobj.sprojlast.pos.x ||
+                               mobj.y != mobj.sprojlast.pos.y ||
+                               spritecomp != mobj.sprojlast.sprite))
    {
       R_CheckMobjProjections(&mobj);
-      mobj.sprojlast.x = mobj.x;
-      mobj.sprojlast.y = mobj.y;
-      mobj.sprojlast.z = mobj.z;
+      mobj.sprojlast.pos.x = mobj.x;
+      mobj.sprojlast.pos.y = mobj.y;
+      mobj.sprojlast.pos.z = mobj.z;
+      mobj.sprojlast.sprite = spritecomp;
    }
 }
 
@@ -1740,7 +1743,7 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    // but P_CheckPortalTeleport
    mobj->spriteproj = nullptr;
    // init with an "invalid" value
-   mobj->sprojlast.x = mobj->sprojlast.y = mobj->sprojlast.z = D_MAXINT;
+   mobj->sprojlast.pos.x = mobj->sprojlast.pos.y = mobj->sprojlast.pos.z = D_MAXINT;
 
    // set subsector and/or block links
   
