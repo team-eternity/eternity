@@ -859,7 +859,8 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr)
 
    // ioanch 20160125: reject sprites in front of portal line when rendering
    // line portal
-   if(portalrender.w) 
+   if(portalrender.w && portalrender.w->portal &&
+      portalrender.w->portal->type != R_SKYBOX)
    {
       const renderbarrier_t &barrier = portalrender.w->barrier;
       if(portalrender.w->line)
