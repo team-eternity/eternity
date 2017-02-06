@@ -1648,7 +1648,7 @@ int Mobj::getModifiedSpawnHealth() const
    if(spawnpoint.healthModifier > 0)   // positive means multiplication
       return FixedMul(info->spawnhealth, spawnpoint.healthModifier);
    // negative means absolute
-   return abs(spawnpoint.healthModifier);
+   return (abs(spawnpoint.healthModifier) + (FRACUNIT >> 1)) >> FRACBITS;
 }
 
 extern fixed_t tmsecfloorz;
