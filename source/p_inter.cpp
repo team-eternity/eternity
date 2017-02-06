@@ -196,11 +196,11 @@ static void P_giveBackpackAmmo(player_t *player)
 // Executes a thing's special and zeroes it, like in Hexen. Useful for reusable
 // things; they'll only execute their special once.
 //
-static void P_consumeSpecial(Mobj *special)
+static void P_consumeSpecial(player_t *activator, Mobj *special)
 {
    if(special->special)
    {
-      EV_ActivateSpecialNum(special->special, special->args, special);
+      EV_ActivateSpecialNum(special->special, special->args, activator->mo);
       special->special = 0;
    }
 }
@@ -228,7 +228,7 @@ static bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped,
       
       player->pendingweapon = weapon;
       S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
-      P_consumeSpecial(special); // need to handle it here
+      P_consumeSpecial(player, special); // need to handle it here
       return false;
    }
 
@@ -379,7 +379,7 @@ static void P_GiveCard(player_t *player, itemeffect_t *card, Mobj *special)
 
    // Make sure to consume its special if the player needed it, even if it
    // may or may not be removed later.
-   P_consumeSpecial(special);
+   P_consumeSpecial(player, special);
 }
 
 /*
@@ -1106,7 +1106,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    {
       // this will cover all disappearing items. Non-disappearing ones have
       // their own special cases.
-      P_consumeSpecial(special);
+      P_consumeSpecial(player, special);
       if(special->flags4 & MF4_RAVENRESPAWN)
          P_RavenRespawn(special);
       else
