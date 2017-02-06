@@ -796,11 +796,12 @@ bool P_CheckPositionExt(Mobj *mo, fixed_t x, fixed_t y)
    if(xygood)
    { 
       fixed_t z = mo->z;
+      subsector_t *newsubsec = R_PointInSubsector(x, y);
       
       if(mo->flags2 & MF2_FLOATBOB)
          z -= FloatBobOffsets[(mo->floatbob + leveltime - 1) & 63];
 
-      if(z < mo->floorz || z + mo->height > mo->ceilingz)
+      if(z < newsubsec->sector->floorheight || z + mo->height > newsubsec->sector->ceilingheight)
          return false;
    }
    
