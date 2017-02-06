@@ -497,7 +497,7 @@ bool UDMFParser::loadThings()
          P_ConvertHereticThing(ft);
 
       P_ConvertDoomExtendedSpawnNum(ft);
-      Mobj *mobj = P_SpawnMapThing(ft);
+      P_SpawnMapThing(ft);
    }
 
    // haleyjd: all player things for players in this game should now be valid

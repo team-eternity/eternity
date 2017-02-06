@@ -405,7 +405,6 @@ int EV_HealThing(Mobj *actor, int amount, int maxhealth)
 {
    if(!actor)
       return 0;
-   mobjinfo_t *info = mobjinfo[actor->type];
 
    if(!maxhealth || !actor->player)
    {
