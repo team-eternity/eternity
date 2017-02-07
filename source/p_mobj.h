@@ -174,6 +174,7 @@ struct sprojlast_t
 {
    v3fixed_t pos;    // holds coordinates
    uint32_t sprite;  // holds both sprite num and frame num
+   float yscale;     // if scale changes, sprojheight may also do
 };
 
 //

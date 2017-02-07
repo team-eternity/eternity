@@ -1205,13 +1205,15 @@ inline static void P_checkMobjProjections(Mobj &mobj)
    if(gMapHasSectorPortals && (mobj.z != mobj.sprojlast.pos.z ||
                                mobj.x != mobj.sprojlast.pos.x ||
                                mobj.y != mobj.sprojlast.pos.y ||
-                               spritecomp != mobj.sprojlast.sprite))
+                               spritecomp != mobj.sprojlast.sprite ||
+                               mobj.yscale != mobj.sprojlast.yscale))
    {
       R_CheckMobjProjections(&mobj);
       mobj.sprojlast.pos.x = mobj.x;
       mobj.sprojlast.pos.y = mobj.y;
       mobj.sprojlast.pos.z = mobj.z;
       mobj.sprojlast.sprite = spritecomp;
+      mobj.sprojlast.yscale = mobj.yscale;
    }
 }
 
