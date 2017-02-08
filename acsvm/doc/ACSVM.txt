@@ -436,6 +436,25 @@ Returns:
   ModuleName object formed from input string.
 
 -----------------------------------------------------------
+ACSVM::Environment::getScriptType
+-----------------------------------------------------------
+
+Synopsis:
+  virtual std::pair<Word, Word> getScriptTypeACS0(Word name);
+  virtual Word getScriptTypeACSE(Word type);
+
+Description:
+  Translates a bytecode script type into an internal type.
+
+  First form takes the script number and must return the type and name.
+
+  The base implementation of the first form translates by dividing by 1000. The
+  second form returns the type unaltered.
+
+Returns:
+  Translated script type or (type, name) pair.
+
+-----------------------------------------------------------
 ACSVM::Environment::getString
 -----------------------------------------------------------
 
@@ -838,8 +857,8 @@ Synopsis:
       ScriptStartInfo const &info);
     Word scriptStartResult(Script *script, ScriptStartInfo const &info);
     Word scriptStartResult(ScriptName name, ScriptStartInfo const &info);
-    Word scriptStartType(ScriptType type, ScriptStartInfo const &info);
-    Word scriptStartTypeForced(ScriptType type, ScriptStartInfo const &info);
+    Word scriptStartType(Word type, ScriptStartInfo const &info);
+    Word scriptStartTypeForced(Word type, ScriptStartInfo const &info);
     bool scriptStop(Script *script);
     bool scriptStop(ScriptName name, ScopeID scope);
 
@@ -905,30 +924,6 @@ Scripts <ACSVM/ACSVM/Script.hpp>
 ===============================================================================
 
 ===========================================================
-ACSVM::ScriptType
-===========================================================
-
-Synopsis:
-  #include <ACSVM/ACSVM/Script.hpp>
-  enum class ScriptType
-  {
-    Closed,
-    BlueReturn,
-    Death,
-    Disconnect,
-    Enter,
-    Event,
-    Lightning,
-    Open,
-    Pickup,
-    RedReturn,
-    Respawn,
-    Return,
-    Unloading,
-    WhiteReturn,
-  };
-
-===========================================================
 ACSVM::ScriptName
 ===========================================================
 
@@ -962,12 +957,12 @@ Synopsis:
 
     ScriptName name;
 
-    Word       argC;
-    Word       codeIdx;
-    Word       flags;
-    Word       locArrC;
-    Word       locRegC;
-    ScriptType type;
+    Word argC;
+    Word codeIdx;
+    Word flags;
+    Word locArrC;
+    Word locRegC;
+    Word type;
 
     bool flagClient : 1;
     bool flagNet    : 1;

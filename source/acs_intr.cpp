@@ -423,6 +423,32 @@ ACSVM::ModuleName ACSEnvironment::getModuleName(char const *str, size_t len)
 }
 
 //
+// ACSEnvironment::getScriptTypeACS0
+//
+std::pair<ACSVM::Word /*type*/, ACSVM::Word /*name*/>
+ACSEnvironment::getScriptTypeACS0(ACSVM::Word name)
+{
+   if(name >= 1000)
+      return {ACS_STYPE_Open, name - 1000};
+   else
+      return {ACS_STYPE_Closed, name};
+}
+
+//
+// ACSEnvironment::getSCriptTypeACSE
+//
+ACSVM::Word ACSEnvironment::getScriptTypeACSE(ACSVM::Word type)
+{
+   switch(type)
+   {
+   default:
+   case  0: return ACS_STYPE_Closed;
+   case  1: return ACS_STYPE_Open;
+   case  4: return ACS_STYPE_Enter;
+   }
+}
+
+//
 // ACSEnvironment::loadModule
 //
 void ACSEnvironment::loadModule(ACSVM::Module *module)
@@ -680,14 +706,14 @@ void ACS_LoadLevelScript(WadDirectory *dir, int lump)
       // Set initial thread delay.
       scriptInfo.func = [](ACSVM::Thread *thread)
       {
-         if(thread->script->type == ACSVM::ScriptType::Open && LevelInfo.acsOpenDelay)
+         if(thread->script->type == ACS_STYPE_Open && LevelInfo.acsOpenDelay)
             thread->delay = TICRATE;
          else
             thread->delay = 1;
       };
 
       // Open scripts.
-      ACSenv.map->scriptStartType(ACSVM::ScriptType::Open, scriptInfo);
+      ACSenv.map->scriptStartType(ACS_STYPE_Open, scriptInfo);
 
       // Enter scripts.
       for(int pnum = 0; pnum != MAXPLAYERS; ++pnum)
@@ -696,7 +722,7 @@ void ACS_LoadLevelScript(WadDirectory *dir, int lump)
          {
             threadInfo.mo   = players[pnum].mo;
             scriptInfo.info = &threadInfo;
-            ACSenv.map->scriptStartTypeForced(ACSVM::ScriptType::Enter, scriptInfo);
+            ACSenv.map->scriptStartTypeForced(ACS_STYPE_Enter, scriptInfo);
          }
       }
    }

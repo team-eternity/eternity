@@ -64,6 +64,14 @@ enum
    ACS_MODE_ALL  = ACS_MODE_DOOM | ACS_MODE_HTIC,
 };
 
+// Script types.
+enum acs_stype_t
+{
+   ACS_STYPE_Closed,
+   ACS_STYPE_Enter,
+   ACS_STYPE_Open,
+};
+
 // Tag types.
 enum acs_tagtype_t
 {
@@ -192,6 +200,10 @@ public:
    virtual bool checkTag(ACSVM::Word type, ACSVM::Word tag);
 
    virtual ACSVM::ModuleName getModuleName(char const *str, size_t len);
+
+   virtual std::pair<ACSVM::Word /*type*/, ACSVM::Word /*name*/>
+   getScriptTypeACS0(ACSVM::Word name);
+   virtual ACSVM::Word getScriptTypeACSE(ACSVM::Word type);
 
    virtual void loadModule(ACSVM::Module *module);
 

@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2017 David Hill
 //
 // See COPYING for license information.
 //
@@ -46,7 +46,6 @@ namespace ACSVM
    enum class Func;
    enum class FuncACS0;
    enum class InitTag;
-   enum class ScriptType;
    class Array;
    class ArrayInit;
    class CodeData;
