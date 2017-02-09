@@ -1059,12 +1059,15 @@ void P_NightmareRespawn(Mobj* mobj)
 
    if(P_Use3DClipping()) // 3D object clipping
    {
+      subsector_t *newsubsec = R_PointInSubsector(x, y);
+
       fixed_t sheight = mobj->height;
+      fixed_t tz      = newsubsec->sector->floorheight + mobj->spawnpoint.height;
 
       // need to restore real height before checking
       mobj->height = P_ThingInfoHeight(mobj->info);
 
-      check = P_CheckPositionExt(mobj, x, y);
+      check = P_CheckPositionExt(mobj, x, y, tz);
 
       mobj->height = sheight;
    }

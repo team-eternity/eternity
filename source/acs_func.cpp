@@ -1836,7 +1836,7 @@ bool ACS_CF_SetThingPos(ACS_CF_ARGS)
 
       mo->z = z;
 
-      if(P_CheckPositionExt(mo, x, y))
+      if(P_CheckPositionExt(mo, x, y, z))
       {
          subsector_t *newsubsec;
 
@@ -2089,7 +2089,7 @@ static Mobj *ACS_spawn(mobjtype_t type, fixed_t x, fixed_t y, fixed_t z,
    if(type != -1 && (mo = P_SpawnMobj(x, y, z, type)))
    {
       // If not forcing spawn, check that the position is OK.
-      if(!forced && !P_CheckPositionExt(mo, mo->x, mo->y))
+      if(!forced && !P_CheckPositionExt(mo, mo->x, mo->y, mo->z))
       {
          // And if not, unmake the Mobj.
          mo->state = NULL;

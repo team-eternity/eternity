@@ -141,7 +141,7 @@ int EV_ThingSpawn(const int *args, bool fog)
 
       newMobj = P_SpawnMobj(mobj->x, mobj->y, z, moType);
       
-      if(!P_CheckPositionExt(newMobj, newMobj->x, newMobj->y)) // Didn't fit?
+      if(!P_CheckPositionExt(newMobj, newMobj->x, newMobj->y, newMobj->z)) // Didn't fit?
          newMobj->removeThinker();
       else
       {

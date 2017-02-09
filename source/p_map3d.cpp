@@ -779,7 +779,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
 // floorz/ceilingz clip. This is just for testing, and stuff like collecting
 // powerups and exploding touchy objects won't happen.
 //
-bool P_CheckPositionExt(Mobj *mo, fixed_t x, fixed_t y)
+bool P_CheckPositionExt(Mobj *mo, fixed_t x, fixed_t y, fixed_t z)
 {
    unsigned int flags;
    bool xygood;
@@ -794,8 +794,7 @@ bool P_CheckPositionExt(Mobj *mo, fixed_t x, fixed_t y)
    mo->intflags &= ~MIF_NOTOUCH;
 
    if(xygood)
-   { 
-      fixed_t z = mo->z;
+   {
       subsector_t *newsubsec = R_PointInSubsector(x, y);
       
       if(mo->flags2 & MF2_FLOATBOB)
