@@ -1263,10 +1263,10 @@ itemeffecttype_t E_getItemEffectType(itemeffect_t *fx)
 //
 // Tries to use the currently selected item.
 //
-void E_TryUseItem(player_t *player)
+void E_TryUseItem(player_t *player, inventoryitemid_t ID)
 {
    invbarstate_t &invbarstate = GameModeInfo->StatusBar->GetInvBarState();
-   itemeffect_t *artifact = E_EffectForInventoryItemID(player->inventory[player->inv_ptr].item);
+   itemeffect_t *artifact = E_EffectForInventoryItemID(ID);
    if(!artifact)
       return;
    if(E_getItemEffectType(artifact) == ITEMFX_ARTIFACT)

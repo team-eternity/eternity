@@ -69,6 +69,7 @@ struct ticcmd_t
    byte    chatchar;
    byte    buttons;
    byte    actions;
+   int8_t  itemID;        // MaxW: ID of used inventory item
 };
 
 #if defined(_MSC_VER) || defined(__GNUC__)

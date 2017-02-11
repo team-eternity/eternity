@@ -261,6 +261,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
    forward = side = 0;
 
+   cmd->itemID = -1; // Nothing to see here
    if(gameactions[ka_inventory_use])
    {
       // FIXME: Handle noartiskip
@@ -272,7 +273,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       }
       else if(usearti)
       {
-         E_TryUseItem(&players[consoleplayer]);
+         cmd->itemID = players[consoleplayer].inventory[players[consoleplayer].inv_ptr].item;
          usearti = false;
       }
       gameactions[ka_inventory_use] = false;
@@ -1364,6 +1365,11 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
       else
          cmd->fly = 0;
       
+      if(full_demo_version >= make_full_version(340, 48))
+         cmd->itemID = *demo_p++;
+      else
+         cmd->itemID = -1;
+
       // killough 3/26/98, 10/98: Ignore savegames in demos 
       if(demoplayback && 
          cmd->buttons & BT_SPECIAL && cmd->buttons & BTS_SAVEGAME)
@@ -1418,7 +1424,10 @@ static void G_WriteDemoTiccmd(ticcmd_t *cmd)
    }
 
    if(full_demo_version >= make_full_version(340, 23))
-      demo_p[i] = cmd->fly;
+      demo_p[i++] = cmd->fly;
+
+   if(full_demo_version >= make_full_version(340, 48))
+      demo_p[i] = cmd->itemID;
    
    if(position + 16 > maxdemosize)   // killough 8/23/98
    {
