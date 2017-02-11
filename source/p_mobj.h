@@ -168,6 +168,16 @@ public:
 };
 
 //
+// Keep track, for sprite portal copying
+//
+struct sprojlast_t
+{
+   v3fixed_t pos;    // holds coordinates
+   uint32_t sprite;  // holds both sprite num and frame num
+   float yscale;     // if scale changes, sprojheight may also do
+};
+
+//
 // Map Object definition.
 //
 // killough 2/20/98:
@@ -216,6 +226,7 @@ public:
    // Methods
    void backupPosition();
    void copyPosition(const Mobj *other);
+   int getModifiedSpawnHealth() const;
    
    // Data members
 
@@ -225,7 +236,7 @@ public:
 
    // ioanch 20160109: sprite projection chains
    DLListItem<spriteprojnode_t> *spriteproj;
-   v3fixed_t sprojlast; // coordinates after last check. Initially "invalid"
+   sprojlast_t sprojlast; // coordinates after last check. Initially "invalid"
 
    //More drawing info: to determine current sprite.
    angle_t     angle;  // orientation
@@ -361,6 +372,7 @@ public:
    prevpos_t prevpos;   // previous position for interpolation
 
    // scripting fields
+   int special;         // special
    int args[NUMMTARGS]; // arguments
    uint16_t tid;        // thing id used by scripts
 
@@ -506,9 +518,10 @@ bool P_SetMobjStateNF(Mobj *mobj, statenum_t state); // sets state without calli
 void P_ThrustMobj(Mobj *mo, angle_t angle, fixed_t move);
 
 // TIDs
-void P_InitTIDHash(void);
-void P_AddThingTID(Mobj *mo, int tid);
-void P_RemoveThingTID(Mobj *mo);
+void  P_InitTIDHash(void);
+void  P_AddThingTID(Mobj *mo, int tid);
+void  P_RemoveThingTID(Mobj *mo);
+Mobj *P_FindMobjFromTID(int tid, Mobj *rover, Mobj *trigger);
 
 void P_AdjustFloorClip(Mobj *thing);
 
@@ -684,6 +697,7 @@ enum mobjflags4_e : unsigned int
    MF4_TLSTYLESUB     = 0x00010000, // Use subtractive blending map
    MF4_TOTALINVISIBLE = 0x00020000, // Thing is invisible to monsters
    MF4_DRAWSBLOOD     = 0x00040000, // For missiles, spawn blood when hitting bleeding things
+   MF4_SPACPUSHWALL   = 0x00080000, // thing can activate push walls
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh

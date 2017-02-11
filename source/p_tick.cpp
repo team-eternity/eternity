@@ -25,6 +25,7 @@
 
 #include "z_zone.h"
 
+#include "acs_intr.h"
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_dehtbl.h"
@@ -252,7 +253,7 @@ void Thinker::RunThinkers(void)
 void Thinker::serialize(SaveArchive &arc)
 {
    if(arc.isSaving())
-      arc.WriteLString(getClassName());
+      arc.writeLString(getClassName());
 }
 
 //
@@ -295,6 +296,7 @@ void P_Ticker()
    }
 
    Thinker::RunThinkers();
+   ACS_Exec();
    P_UpdateSpecials();
    P_RespawnSpecials();
    if(demo_version >= 329)

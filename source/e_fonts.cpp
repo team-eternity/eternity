@@ -43,6 +43,7 @@
 #include "hu_over.h"
 #include "hu_stuff.h"
 #include "in_lude.h"
+#include "m_collection.h"
 #include "m_qstr.h"
 #include "mn_engin.h"
 #include "r_draw.h"
@@ -202,6 +203,9 @@ typedef EHashTable<vfont_t, ENCStringHashKey,
 
 static EFontNumHash  e_font_numhash;
 static EFontNameHash e_font_namehash;
+
+// Keep a string table needed for reloading linear graphics
+static Collection<qstring> e_linearLumpNames;
 
 //=============================================================================
 //
@@ -914,6 +918,10 @@ static void E_ProcessFont(cfg_t *sec)
       // check for requantization flag (for PNGs)
       requantize = cfg_getbool(sec, ITEM_FONT_REQUAN);
 
+      e_linearLumpNames.add(qstring(tempstr));
+      font->linearreload.nameIndex = e_linearLumpNames.getLength() - 1;
+      font->linearreload.format = format;
+      font->linearreload.requantize = requantize;
       E_LoadLinearFont(font, tempstr, format, requantize);
    }
    else
@@ -1043,6 +1051,30 @@ void E_ProcessFonts(cfg_t *cfg)
 
    // process global font variables
    E_ProcessFontVars(cfg);
+}
+
+//
+// Reloads patch fonts when a new wad is loaded at runtime
+//
+void E_ReloadFonts()
+{
+   vfont_t *font = nullptr;
+
+   // run down all hash chains
+   // WARNING: do not use e_font_namehash here, because it's already iterated
+   // inside the called function.
+   while((font = e_font_numhash.tableIterator(font)))
+   {
+      if(!font->linear)
+         E_LoadPatchFont(font);
+      else if(font->linearreload.nameIndex < e_linearLumpNames.getLength())
+      {
+         E_LoadLinearFont(font,
+            e_linearLumpNames[font->linearreload.nameIndex].constPtr(),
+            font->linearreload.format,
+            font->linearreload.requantize);
+      }
+   }
 }
 
 //

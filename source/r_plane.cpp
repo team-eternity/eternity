@@ -265,60 +265,19 @@ static void R_MapPlane(int y, int x1, int x2)
    slope = (float)fabs(plane.height / dy);
    realy = slope * view.yfoc;
 
-   xstep = plane.pviewcos * slope * view.focratio;
-   ystep = plane.pviewsin * slope * view.focratio;
+   xstep = plane.pviewcos * slope * view.focratio * plane.xscale;
+   ystep = plane.pviewsin * slope * view.focratio * plane.yscale;
 
-   // haleyjd: #if 0 for test
-#if 0
-#ifdef __APPLE__
-   {
-      double value;
-      
-      value = fmod(plane.pviewx + plane.xoffset + (plane.pviewsin * realy)
-                   + (x1 - view.xcenter) * xstep, (double)plane.tex->width); 
-      if(value < 0) value += plane.tex->width;
-      span.xfrac = (int)(value * plane.fixedunitx);
-      span.xfrac <<= 2;
-
-      value = fmod(-plane.pviewy + plane.yoffset + (-plane.pviewcos * realy)
-                   + (x1 - view.xcenter) * ystep, (double)plane.tex->height);
-      if(value < 0) value += plane.tex->height;
-      span.yfrac = (int)(value * plane.fixedunity);
-      span.yfrac <<= 2;
-      
-      value = fmod(xstep, (double)plane.tex->width);
-      if(value < 0) value += plane.tex->width;
-      span.xstep = (int)(value * plane.fixedunitx);
-      span.xstep <<= 2;
-            
-      value = fmod(ystep, (double)plane.tex->height);
-      if(value < 0) value += plane.tex->height;
-      span.ystep = (int)(value * plane.fixedunity);
-      span.ystep <<= 2;
-   }
-#else
-   span.xfrac = 
-      (unsigned int)((plane.pviewx + plane.xoffset + (plane.pviewsin * realy)
-                      + ((x1 - view.xcenter) * xstep)) * plane.fixedunitx);
-   span.yfrac = 
-      (unsigned int)((-plane.pviewy + plane.yoffset + (-plane.pviewcos * realy)
-                      + ((x1 - view.xcenter) * ystep)) * plane.fixedunity);
-   span.xstep = (unsigned int)(xstep * plane.fixedunitx);
-   span.ystep = (unsigned int)(ystep * plane.fixedunity);
-#endif
-#endif
-
-   // haleyjd: TEST
    // Use Mozilla routine for portable double->uint32 conversion
    {
       double value;
 
-      value = (plane.pviewx + plane.xoffset + (plane.pviewsin * realy) +
+      value = (((plane.pviewx + plane.xoffset) * plane.xscale) + (plane.pviewsin * realy * plane.xscale) +
                (((double)x1 - view.xcenter) * xstep)) * plane.fixedunitx;
 
       span.xfrac = R_doubleToUint32(value);
 
-      value = (-plane.pviewy + plane.yoffset + (-plane.pviewcos * realy) +
+      value = (((-plane.pviewy + plane.yoffset) * plane.yscale) + (-plane.pviewcos * realy * plane.yscale) +
                (((double)x1 - view.xcenter) * ystep)) * plane.fixedunity;
 
       span.yfrac = R_doubleToUint32(value);
@@ -339,62 +298,6 @@ static void R_MapPlane(int y, int x1, int x2)
    // BIG FLATS
    flatfunc();
 }
-
-// haleyjd: NOTE: This version below has scaling implemented. Don't delete it!
-// TODO: integrate flat scaling.
-/*
-static void R_MapPlane(int y, int x1, int x2)
-{
-   float dy, xstep, ystep, realy, slope;
-
-   static float scale = 2.0f
-
-#ifdef RANGECHECK
-   if(x2 < x1 || x1 < 0 || x2 >= viewwindow.width || y < 0 || y >= viewwindow.height)
-      I_Error("R_MapPlane: %i, %i at %i\n", x1, x2, y);
-#endif
-  
-   // SoM: because ycenter is an actual row of pixels (and it isn't really the 
-   // center row because there are an even number of rows) some corrections need
-   // to be made depending on where the row lies relative to the ycenter row.
-   if(view.ycenter == y)
-      dy = 0.01f;
-   else if(y < view.ycenter)
-      dy = (float)fabs(view.ycenter - y) - 1;
-   else
-      dy = (float)fabs(view.ycenter - y) + 1;
-
-   slope = (float)fabs(plane.height / dy);
-   realy = slope * view.yfoc * scale;
-
-   xstep = view.sin * slope * view.focratio * scale;
-   ystep = view.cos * slope * view.focratio * scale;
-
-   span.xfrac = (unsigned int)((((-plane.pviewy + plane.yoffset) * scale) + (-view.cos * realy) 
-                            + ((x1 - view.xcenter) * xstep)) * plane.fixedunit);
-   span.yfrac = (unsigned int)((((plane.pviewx + plane.xoffset) * scale) + (view.sin * realy) 
-                            + ((x1 - view.xcenter) * ystep)) * plane.fixedunit);
-   span.xstep = (unsigned int)(xstep * plane.fixedunit);
-   span.ystep = (unsigned int)(ystep * plane.fixedunit);
-
-   // killough 2/28/98: Add offsets
-   if((span.colormap = plane.fixedcolormap) == NULL) // haleyjd 10/16/06
-   {
-      int index = (int)(realy / 16.0f);
-      if(index >= MAXLIGHTZ )
-         index = MAXLIGHTZ-1;
-      span.colormap = plane.planezlight[index];
-   }
-   
-   span.y  = y;
-   span.x1 = x1;
-   span.x2 = x2;
-   span.source = plane.source;
-   
-   // BIG FLATS
-   flatfunc();
-}
-*/
 
 //
 // R_SlopeLights
@@ -455,12 +358,14 @@ static void R_MapSlope(int y, int x1, int x2)
    s.y = y - view.ycenter + 1;
    s.z = view.xfoc;
 
-   slopespan.iufrac = M_DotVec3(&s, &slope->A) * (double)plane.tex->width;
-   slopespan.ivfrac = M_DotVec3(&s, &slope->B) * (double)plane.tex->height;
+   slopespan.iufrac = M_DotVec3(&s, &slope->A) * (double)plane.tex->width *
+                      static_cast<double>(plane.yscale);
+   slopespan.ivfrac = M_DotVec3(&s, &slope->B) * (double)plane.tex->height *
+                      static_cast<double>(plane.xscale);
    slopespan.idfrac = M_DotVec3(&s, &slope->C);
 
-   slopespan.iustep = slope->A.x * (double)plane.tex->width;
-   slopespan.ivstep = slope->B.x * (double)plane.tex->height;
+   slopespan.iustep = slope->A.x * (double)plane.tex->width * plane.yscale;
+   slopespan.ivstep = slope->B.x * (double)plane.tex->height * plane.xscale;
    slopespan.idstep = slope->C.x;
 
    slopespan.source = plane.source;
@@ -712,7 +617,8 @@ static visplane_t *new_visplane(unsigned hash, planehash_t *table)
 // haleyjd 01/05/08: Add angle
 //
 visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
-                        fixed_t xoffs, fixed_t yoffs, float angle,
+                        fixed_t xoffs, fixed_t yoffs,
+                        float xscale, float yscale, float angle,
                         pslope_t *slope, int blendflags, byte opacity,
                         planehash_t *table)
 {
@@ -754,6 +660,8 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
          lightlevel == check->lightlevel &&
          xoffs == check->xoffs &&      // killough 2/28/98: Add offset checks
          yoffs == check->yoffs &&
+         xscale == check->xscale &&
+         yscale == check->yscale &&
          angle == check->angle &&      // haleyjd 01/05/08: Add angle
          zlight == check->colormap &&
          fixedcolormap == check->fixedcolormap && 
@@ -776,6 +684,8 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    check->maxx = -1;
    check->xoffs = xoffs;               // killough 2/28/98: Save offsets
    check->yoffs = yoffs;
+   check->xscale = xscale;
+   check->yscale = yscale;
    check->angle = angle;               // haleyjd 01/05/08: Save angle
    check->colormap = zlight;
    check->fixedcolormap = fixedcolormap; // haleyjd 10/16/06
@@ -878,6 +788,8 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
 
       // SoM: copy converted stuffs too
       new_pl->heightf = pl->heightf;
+      new_pl->yscale = pl->yscale;
+      new_pl->xscale = pl->xscale;
       new_pl->xoffsf = pl->xoffsf;
       new_pl->yoffsf = pl->yoffsf;
       
@@ -1206,6 +1118,9 @@ static void do_draw_plane(visplane_t *pl)
         
       plane.xoffset = pl->xoffsf;  // killough 2/28/98: Add offsets
       plane.yoffset = pl->yoffsf;
+
+      plane.xscale = pl->xscale;
+      plane.yscale = pl->yscale;
 
       plane.pviewx   = pl->viewxf;
       plane.pviewy   = pl->viewyf;

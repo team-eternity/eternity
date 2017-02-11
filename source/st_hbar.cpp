@@ -124,6 +124,7 @@ static void ST_HticInit()
       memset(lumpname, 0, 9);
       sprintf(lumpname, "IN%d", i);
 
+      efree(invnums[i]);
       invnums[i] = PatchLoader::CacheName(wGlobalDir, lumpname, PU_STATIC);
    }
 
@@ -149,6 +150,8 @@ static void ST_HticInit()
       extern patch_t *keys[];
       char namebuf[9];
       sprintf(namebuf, "STKEYS%d", i);
+
+      efree(keys[i]);
       keys[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
 

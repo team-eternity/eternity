@@ -62,6 +62,7 @@
 #include "m_misc.h"
 #include "m_random.h"
 #include "m_shots.h"
+#include "m_utils.h"
 #include "metaapi.h"
 #include "mn_engin.h"
 #include "mn_menus.h"
@@ -386,7 +387,8 @@ void G_BuildTiccmd(ticcmd_t *cmd)
         gameactions[ka_weapon6] && GameModeInfo->id != shareware ? wp_plasma :
         gameactions[ka_weapon7] && GameModeInfo->id != shareware ? wp_bfg :
         gameactions[ka_weapon8] ? wp_chainsaw :
-        gameactions[ka_weapon9] && enable_ssg ? wp_supershotgun :
+        (!demo_compatibility && gameactions[ka_weapon9] &&  // MaxW: Adopted from PRBoom
+        enable_ssg) ? wp_supershotgun :
         wp_nochange;
 
       // killough 3/22/98: For network and demo consistency with the
@@ -965,6 +967,7 @@ struct complevel_s
    { 329, 329 }, // comp_planeshoot
    { 335, 335 }, // comp_special
    { 337, 337 }, // comp_ninja
+   { 340, 340 }, // comp_aircontrol
    { 0,   0   }
 };
 
@@ -1029,6 +1032,19 @@ void G_DoPlayDemo(void)
    }
 
    demobuffer = demo_p = (byte *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC)); // killough
+
+   // Check for empty demo lumps
+   if(!demo_p)
+   {
+      if(singledemo)
+         I_Error("G_DoPlayDemo: empty demo %s\n", basename);
+      else
+      {
+         gameaction = ga_nothing;
+         D_AdvanceDemo();
+      }
+      return;  // protect against zero-length lumps
+   }
    
    // killough 2/22/98, 2/28/98: autodetect old demos and act accordingly.
    // Old demos turn on demo_compatibility => compatibility; new demos load
@@ -1725,8 +1741,6 @@ static void G_DoWorldDone()
    hub_changelevel = false;
    G_DoLoadLevel();
    gameaction = ga_nothing;
-   // haleyjd 01/07/07: run deferred ACS scripts
-   ACS_RunDeferredScripts();
 }
 
 //
@@ -3665,6 +3679,35 @@ void G_CoolViewPoint()
   
    // pick a random number of seconds until changing the viewpoint
    cooldemo_tics = (6 + M_Random() % 4) * TICRATE;
+}
+
+//
+// Counts the total kills, items, secrets or whatever
+//
+static int G_totalPlayerParam(int player_t::*tally)
+{
+   int score = 0;
+   for(int i = 0; i < MAXPLAYERS; ++i)
+   {
+      if(!playeringame[i])
+         return score;
+      score += players[i].*tally;
+   }
+   return score;
+}
+
+// Named this way to prevent confusion with similarly named variables
+int G_TotalKilledMonsters()
+{
+   return G_totalPlayerParam(&player_t::killcount);
+}
+int G_TotalFoundItems()
+{
+   return G_totalPlayerParam(&player_t::itemcount);
+}
+int G_TotalFoundSecrets()
+{
+   return G_totalPlayerParam(&player_t::secretcount);
 }
 
 #if 0

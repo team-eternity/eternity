@@ -51,9 +51,9 @@
 #include "g_game.h"
 #include "m_argv.h"
 #include "m_qstr.h"
+#include "m_utils.h"
 #include "mn_engin.h"
 #include "mn_misc.h"
-#include "m_misc.h"
 #include "v_font.h"
 #include "v_misc.h"
 #include "v_video.h"
@@ -820,24 +820,27 @@ CONSOLE_COMMAND(g_padprofile, 0)
 
 // default script:
 
-static char *cfg_file = NULL; 
+static char *cfg_file = nullptr; 
 
 void G_LoadDefaults()
 {
-   char *temp = NULL;
-   size_t len;
+   qstring temp;
    DWFILE dwfile;
-
-   len = M_StringAlloca(&temp, 1, 18, usergamepath);
 
    // haleyjd 11/23/06: use basegamepath
    // haleyjd 08/29/09: allow use_doom_config override
    if(GameModeInfo->type == Game_DOOM && use_doom_config)
-      psnprintf(temp, len, "%s/doom/keys.csc", userpath);
+   {
+      temp = userpath;
+      temp.pathConcatenate("doom/keys.csc");
+   }
    else
-      psnprintf(temp, len, "%s/keys.csc", usergamepath);
+   {
+      temp = usergamepath;
+      temp.pathConcatenate("keys.csc");
+   }
 
-   cfg_file = estrdup(temp);
+   cfg_file = temp.duplicate();
 
    if(access(cfg_file, R_OK))
    {

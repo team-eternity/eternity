@@ -855,6 +855,151 @@ patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize,
 }
 
 //
+// Get the size of a patch to be created from a linear
+//
+size_t V_transPatchSizeForLinear(byte *linear, int w, int h, int color_key)
+{
+   size_t ret;
+   int      x, y;
+   byte     *src;
+
+   // Basic header info
+   ret = 4 * sizeof(int16_t);
+   
+   // Columnofs table
+   ret += w * sizeof(int32_t);
+
+   for(x = 0; x < w; ++x)
+   {
+      bool neednewspan = true;
+      bool firstspan = true;
+
+      // copy bytes
+      for(y = 0, src = linear + x; y < h; ++y, src += w)
+      {
+         // create a new span if need be
+         if(neednewspan && (*src != color_key))
+         {
+            if(!firstspan)
+               ret++;
+            else
+               firstspan = false;
+
+            ret += sizeof(column_t) + 1;
+            neednewspan = false;
+         }
+
+         if(*src != color_key)
+            ret++;
+         else if(!neednewspan)
+            neednewspan = true;
+      }
+
+
+      if(firstspan)
+         ret += sizeof(column_t) + 1;
+
+      // skip to next column location 
+      ret += 2;
+   }
+
+   // voila!
+   return ret;
+}
+
+//
+// converts a linear graphic to a patch with transparency
+//
+patch_t *V_LinearToTransPatch(byte *linear, int w, int h, size_t *memsize,
+                              int color_key, int tag, void **user)
+{
+   int      x, y;
+   patch_t  *p;
+   column_t *c;
+   int      *columnofs;
+   byte     *src, *dest;
+
+   // Oversize now, and shrink later.
+   size_t total_size = V_transPatchSizeForLinear(linear, w, h, color_key);
+
+   byte *out = ecalloctag(byte *, 1, total_size, tag, user);
+
+   p = (patch_t *)out;
+
+   // set basic header information
+   p->width = w;
+   p->height = h;
+   p->topoffset = 0;
+   p->leftoffset = 0;
+
+   // get pointer to columnofs table
+   columnofs = (int *)(out + 4 * sizeof(int16_t));
+
+   // skip past columnofs table
+   dest = out + 4 * sizeof(int16_t) + w * sizeof(int32_t);
+
+   // convert columns of linear graphic into true columns
+   for(x = 0; x < w; ++x)
+   {
+      bool neednewspan = true;
+      bool firstspan = true;
+
+      // set entry in columnofs table
+      columnofs[x] = int(dest - out);
+
+      // copy bytes
+      for(y = 0, src = linear + x; y < h; ++y, src += w)
+      {
+         // create a new span if need be
+         if(neednewspan && (*src != color_key))
+         {
+            // if not the first span in the column, we need to increment dest (I dunno why)
+            if(!firstspan)
+               dest++;
+            else
+               firstspan = false;
+
+            c = (column_t *)dest;
+            c->length = 0;
+            c->topdelta = y;
+            dest += sizeof(column_t) + 1;
+            neednewspan = false;
+         }
+
+         if(*src != color_key)
+         {
+            c->length++;
+            *dest++ = *src;
+         }
+         else if(!neednewspan)
+            neednewspan = true;
+      }
+
+      // add a blank first span if need be
+      if(firstspan)
+      {
+         c = (column_t *)dest;
+         c->length = 0;
+         c->topdelta = 0;
+         dest += sizeof(column_t) + 1;
+      }
+
+      // create end post
+      *(dest + 1) = 255;
+
+      // skip to next column location 
+      dest += 2;
+   }
+
+   // allow returning size of allocation in *memsize
+   if(memsize)
+      *memsize = total_size;
+
+   // voila!
+   return p;
+}
+
+//
 // V_WritePatchAsPNG
 //
 // Does what it says on the box.

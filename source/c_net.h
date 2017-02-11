@@ -64,34 +64,36 @@ enum
   netcmd_dmflags,       // haleyjd 04/14/03
   netcmd_dogjumping,    // haleyjd 11/06/05
   netcmd_pitchedflight, // haleyjd 06/07/12
-  netcmd_comp_0,
-  netcmd_comp_1,
-  netcmd_comp_2,
-  netcmd_comp_3,
-  netcmd_comp_4,
-  netcmd_comp_5,
-  netcmd_comp_6,
-  netcmd_comp_7,
-  netcmd_comp_8,
-  netcmd_comp_9,
-  netcmd_comp_10,
-  netcmd_comp_11,
-  netcmd_comp_12,
-  netcmd_comp_13,
-  netcmd_comp_14,
-  netcmd_comp_15,
-  netcmd_comp_16,
-  netcmd_comp_17,
-  netcmd_comp_18,
-  netcmd_comp_19,   // haleyjd: TerrainTypes
-  netcmd_comp_20,   //          respawn fix
-  netcmd_comp_21,   //          falling damage
-  netcmd_comp_22,   //          lost soul bouncing
-  netcmd_comp_23,   //          thing heights fix
-  netcmd_comp_24,   //          extended z clipping
-  netcmd_comp_25,   //          plane shooting
-  netcmd_comp_26,   //          special failure
-  netcmd_comp_27,   //          ninja spawn
+  NETCMD_COMP_0,        // keep this as 0-base index
+  netcmd_comp_telefrag = NETCMD_COMP_0,
+  netcmd_comp_dropoff,
+  netcmd_comp_vile,
+  netcmd_comp_pain,
+  netcmd_comp_skull,
+  netcmd_comp_blazing,
+  netcmd_comp_doorlight,
+  netcmd_comp_model,
+  netcmd_comp_god,
+  netcmd_comp_falloff,
+  netcmd_comp_floors,
+  netcmd_comp_skymap,
+  netcmd_comp_pursuit,
+  netcmd_comp_doorstuck,
+  netcmd_comp_staylift,
+  netcmd_comp_zombie,
+  netcmd_comp_stairs,
+  netcmd_comp_infcheat,
+  netcmd_comp_zerotags,
+  netcmd_comp_terrain,     // haleyjd: TerrainTypes
+  netcmd_comp_respawnfix,  //          respawn fix
+  netcmd_comp_fallingdmg,  //          falling damage
+  netcmd_comp_soul,        //          lost soul bouncing
+  netcmd_comp_theights,    //          thing heights fix
+  netcmd_comp_overunder,   //          extended z clipping
+  netcmd_comp_planeshoot,  //          plane shooting
+  netcmd_comp_special,     //          special failure
+  netcmd_comp_ninja,       //          ninja spawn
+  netcmd_comp_aircontrol,  // ioanch:  air control for jumping
   NUMNETCMDS
 };
 

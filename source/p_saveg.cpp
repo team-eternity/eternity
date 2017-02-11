@@ -78,50 +78,42 @@
 //
 
 //
-// SaveArchive::SaveArchive(OutBuffer *)
-//
 // Constructs a SaveArchive object in saving mode.
 //
 SaveArchive::SaveArchive(OutBuffer *pSaveFile) 
-   : savefile(pSaveFile), loadfile(NULL)
+   : savefile(pSaveFile), loadfile(nullptr)
 {
    if(!pSaveFile)
       I_Error("SaveArchive: created a save file without a valid OutBuffer\n");
 }
 
 //
-// SaveArchive::SaveArchive(InBuffer *)
-//
 // Constructs a SaveArchive object in loading mode.
 //
 SaveArchive::SaveArchive(InBuffer *pLoadFile)
-   : savefile(NULL), loadfile(pLoadFile)
+   : savefile(nullptr), loadfile(pLoadFile)
 {
    if(!pLoadFile)
       I_Error("SaveArchive: created a load file without a valid InBuffer\n");
 }
 
 //
-// SaveArchive::ArchiveCString
-//
 // Writes/reads strings with a fixed maximum length, which should be 
 // null-extended prior to the call.
 //
-void SaveArchive::ArchiveCString(char *str, size_t maxLen)
+void SaveArchive::archiveCString(char *str, size_t maxLen)
 {
    if(savefile)
-      savefile->Write(str, maxLen);
+      savefile->write(str, maxLen);
    else
       loadfile->read(str, maxLen);
 }
 
 //
-// SaveArchive::ArchiveLString
-//
 // Writes/reads a C string with prepended length field.
 // When reading, the result is returned in a calloc'd buffer.
 //
-void SaveArchive::ArchiveLString(char *&str, size_t &len)
+void SaveArchive::archiveLString(char *&str, size_t &len)
 {
    if(savefile)
    {
@@ -130,45 +122,66 @@ void SaveArchive::ArchiveLString(char *&str, size_t &len)
          if(!len)
             len = strlen(str) + 1;
 
-         savefile->WriteUint32((uint32_t)len); // FIXME: size_t
-         savefile->Write(str, len);
+         archiveSize(len);
+         savefile->write(str, len);
       }
       else
-         savefile->WriteUint32(0);
+         savefile->writeUint32(0);
    }
    else
    {
-      uint32_t tempLen;
-      loadfile->readUint32(tempLen);
-      len = (size_t)tempLen; // FIXME: size_t
+      archiveSize(len);
       if(len != 0)
       {
          str = ecalloc(char *, 1, len);
          loadfile->read(str, len);
       }
       else
-         str = NULL;
+         str = nullptr;
    }
 }
 
 //
-// SaveArchive::WriteLString
-//
 // Writes a C string with prepended length field. Do not call when loading!
-// Instead you must call ArchiveLString.
+// Instead you must call archiveLString.
 //
-void SaveArchive::WriteLString(const char *str, size_t len)
+void SaveArchive::writeLString(const char *str, size_t len)
 {
    if(savefile)
    {
       if(!len)
          len = strlen(str) + 1;
 
-      savefile->WriteUint32((uint32_t)len); // FIXME: size_t
-      savefile->Write(str, len);
+      archiveSize(len);
+      savefile->write(str, len);
    }
    else
-      I_Error("SaveArchive::WriteLString: cannot deserialize!\n");
+      I_Error("SaveArchive::writeLString: cannot deserialize!\n");
+}
+
+#define SAVE_MIN_SIZEOF_SIZE_T 4
+#define SAVE_MAX_SIZEOF_SIZE_T 8
+
+//
+// Archive a size_t
+//
+void SaveArchive::archiveSize(size_t &value)
+{
+   static_assert(sizeof(size_t) == SAVE_MIN_SIZEOF_SIZE_T || 
+                 sizeof(size_t) == SAVE_MAX_SIZEOF_SIZE_T, "Unsupported sizeof(size_t)");
+
+   uint64_t uv = uint64_t(value);
+   if(savefile)
+      savefile->writeUint64(uv);
+   else
+   {
+      loadfile->readUint64(uv);
+#if SIZE_MAX < UINT64_MAX
+      if(uv > SIZE_MAX)
+         I_Error("Cannot load save game: size_t value out of range on this platform\n");
+#endif
+      value = size_t(uv);
+   }
 }
 
 //
@@ -178,7 +191,7 @@ void SaveArchive::WriteLString(const char *str, size_t len)
 SaveArchive &SaveArchive::operator << (int32_t &x)
 {
    if(savefile)
-      savefile->WriteSint32(x);
+      savefile->writeSint32(x);
    else
       loadfile->readSint32(x);
 
@@ -188,7 +201,7 @@ SaveArchive &SaveArchive::operator << (int32_t &x)
 SaveArchive &SaveArchive::operator << (uint32_t &x)
 {
    if(savefile)
-      savefile->WriteUint32(x);
+      savefile->writeUint32(x);
    else
       loadfile->readUint32(x);
 
@@ -198,7 +211,7 @@ SaveArchive &SaveArchive::operator << (uint32_t &x)
 SaveArchive &SaveArchive::operator << (int16_t &x)
 {
    if(savefile)
-      savefile->WriteSint16(x);
+      savefile->writeSint16(x);
    else
       loadfile->readSint16(x);
 
@@ -208,7 +221,7 @@ SaveArchive &SaveArchive::operator << (int16_t &x)
 SaveArchive &SaveArchive::operator << (uint16_t &x)
 {
    if(savefile)
-      savefile->WriteUint16(x);
+      savefile->writeUint16(x);
    else
       loadfile->readUint16(x);
 
@@ -218,7 +231,7 @@ SaveArchive &SaveArchive::operator << (uint16_t &x)
 SaveArchive &SaveArchive::operator << (int8_t &x)
 {
    if(savefile)
-      savefile->WriteSint8(x);
+      savefile->writeSint8(x);
    else
       loadfile->readSint8(x);
 
@@ -228,7 +241,7 @@ SaveArchive &SaveArchive::operator << (int8_t &x)
 SaveArchive &SaveArchive::operator << (uint8_t &x)
 {
    if(savefile)
-      savefile->WriteUint8(x);
+      savefile->writeUint8(x);
    else
       loadfile->readUint8(x);
 
@@ -238,7 +251,7 @@ SaveArchive &SaveArchive::operator << (uint8_t &x)
 SaveArchive &SaveArchive::operator << (bool &x)
 {
    if(savefile)
-      savefile->WriteUint8((uint8_t)x);
+      savefile->writeUint8((uint8_t)x);
    else
    {
       uint8_t temp;
@@ -253,7 +266,7 @@ SaveArchive &SaveArchive::operator << (float &x)
 {
    // FIXME/TODO: Fix non-portable IO.
    if(savefile)
-      savefile->Write(&x, sizeof(x));
+      savefile->write(&x, sizeof(x));
    else
       loadfile->read(&x, sizeof(x));
 
@@ -264,7 +277,7 @@ SaveArchive &SaveArchive::operator << (double &x)
 {
    // FIXME/TODO: Fix non-portable IO.
    if(savefile)
-      savefile->Write(&x, sizeof(x));
+      savefile->write(&x, sizeof(x));
    else
       loadfile->read(&x, sizeof(x));
 
@@ -278,8 +291,8 @@ SaveArchive &SaveArchive::operator << (sector_t *&s)
 
    if(savefile)
    {
-      sectornum = s - sectors;
-      savefile->WriteSint32(sectornum);
+      sectornum = int32_t(s - sectors);
+      savefile->writeSint32(sectornum);
    }
    else
    {
@@ -303,14 +316,14 @@ SaveArchive &SaveArchive::operator << (line_t *&ln)
    if(savefile)
    {
       if(ln)
-         linenum = ln - lines;
-      savefile->WriteSint32(linenum);
+         linenum = int32_t(ln - lines);
+      savefile->writeSint32(linenum);
    }
    else
    {
       loadfile->readSint32(linenum);
       if(linenum == -1) // Some line pointers can be NULL
-         ln = NULL;
+         ln = nullptr;
       else if(linenum < 0 || linenum >= numlines)
       {
          I_Error("SaveArchive: line num %d out of range\n", linenum);
@@ -337,7 +350,7 @@ SaveArchive &SaveArchive::operator << (mapthing_t &mt)
    // ioanch 20151218: add extended options
    *this << mt.angle << mt.height << mt.next << mt.options << mt.extOptions
          << mt.recordnum << mt.special << mt.tid << mt.type
-         << mt.x << mt.y;
+         << mt.x << mt.y << mt.healthModifier;
 
    P_ArchiveArray<int>(*this, mt.args, NUMMTARGS);
 
@@ -440,7 +453,7 @@ static void P_ArchivePSprite(SaveArchive &arc, pspdef_t &pspr)
       if(statenum != -1) // TODO: bounds-check!
          pspr.state = states[statenum];
       else
-         pspr.state = NULL;
+         pspr.state = nullptr;
    }
 }
 
@@ -503,15 +516,15 @@ static void P_ArchivePlayers(SaveArchive &arc)
          for(j = 0; j < NUMPSPRITES; j++)
             P_ArchivePSprite(arc, p.psprites[j]);
 
-         arc.ArchiveCString(p.name, 20);
+         arc.archiveCString(p.name, 20);
 
          if(arc.isLoading())
          {
             // will be set when unarc thinker
-            p.mo          = NULL;
-            p.attacker    = NULL;
-            p.skin        = NULL;
-            p.pclass      = NULL;
+            p.mo          = nullptr;
+            p.attacker    = nullptr;
+            p.skin        = nullptr;
+            p.pclass      = nullptr;
             p.attackdown  = false; // sf
             p.usedown     = false; // sf
             p.cmd.buttons = 0;     // sf
@@ -565,10 +578,10 @@ static void P_ArchiveWorld(SaveArchive &arc)
       if(arc.isLoading())
       {
          // jff 2/22/98 now three thinker fields, not two
-         sec->ceilingdata  = NULL;
-         sec->floordata    = NULL;
-         sec->lightingdata = NULL;
-         sec->soundtarget  = NULL;
+         sec->ceilingdata  = nullptr;
+         sec->floordata    = nullptr;
+         sec->lightingdata = nullptr;
+         sec->soundtarget  = nullptr;
 
          // SoM: update the heights
          P_SetFloorHeight(sec, sec->floorheight);
@@ -642,7 +655,7 @@ static void P_ArchiveSoundTargets(SaveArchive &arc)
          if((target = thinker_cast<Mobj *>(P_ThinkerForNum(ordinal))))
             P_SetNewTarget(&sectors[i].soundtarget, target);
          else
-            sectors[i].soundtarget = NULL;
+            sectors[i].soundtarget = nullptr;
       }
    }
 }
@@ -656,7 +669,7 @@ static void P_ArchiveSoundTargets(SaveArchive &arc)
 //
 // P_RemoveAllThinkers
 //
-static void P_RemoveAllThinkers(void)
+static void P_RemoveAllThinkers()
 {
    Thinker *th;
 
@@ -703,11 +716,11 @@ static void P_ArchiveThinkers(SaveArchive &arc)
       }
 
       // add a terminating marker
-      arc.WriteLString(tc_end);
+      arc.writeLString(tc_end);
    }
    else
    {
-      char *className = NULL;
+      char *className = nullptr;
       size_t len;
       unsigned int idx = 1; // Start at index 1, as 0 means NULL
       Thinker::Type *thinkerType;
@@ -725,7 +738,7 @@ static void P_ArchiveThinkers(SaveArchive &arc)
             efree(className);
 
          // Get the next class name
-         arc.ArchiveLString(className, len);
+         arc.archiveLString(className, len);
 
          // Find the ThinkerType matching this name
          if(!(thinkerType = RTTIObject::FindTypeCls<Thinker>(className)))
@@ -774,7 +787,7 @@ static void P_ArchiveThinkers(SaveArchive &arc)
 //
 void P_SetNewTarget(Mobj **mop, Mobj *targ)
 {
-   *mop = NULL;
+   *mop = nullptr;
    P_SetTarget<Mobj>(mop, targ);
 }
 
@@ -839,7 +852,7 @@ static void P_ArchivePolyObj(SaveArchive &arc, polyobj_t *po)
    // the thinkers themselves will fight over who gets the field
    // when they first start to run.
    if(arc.isLoading())
-      po->thinker = NULL;
+      po->thinker = nullptr;
 
    if(arc.isSaving())
    {
@@ -855,10 +868,10 @@ static void P_ArchivePolyObj(SaveArchive &arc, polyobj_t *po)
    // Thinker::serialize won't read its own name so we need to do that here.
    if(arc.isLoading())
    {
-      char *className = NULL;
+      char *className = nullptr;
       size_t len = 0;
       
-      arc.ArchiveLString(className, len);
+      arc.archiveLString(className, len);
 
       if(!className || strncmp(className, "PointThinker", len))
          I_Error("P_ArchivePolyObj: no PointThinker for polyobject");
@@ -908,122 +921,6 @@ static void P_ArchivePolyObjects(SaveArchive &arc)
 // higher architecture. ::sighs::
 //
 
-#if 0
-//
-// P_ArchiveCallbacks
-//
-// Archives the Small callback list, which is maintained in
-// a_small.c -- the entire callback structures are saved, but
-// the next and prev pointer values will not be used on restore.
-// The order of callbacks is insignificant, and therefore they
-// will simply be relinked at runtime in their archived order.
-// The list of callbacks is terminated with a single byte value
-// equal to SC_VM_END.
-//
-// FIXME: Order may be important after all, at least for the
-// -recordfrom command.
-//
-static void P_ArchiveCallbacks(SaveArchive &arc)
-{
-
-   int callback_count = 0;
-   
-   if(arc.isSaving())
-   {
-      sc_callback_t *list = SM_GetCallbackList();
-      sc_callback_t *rover;
-
-      for(rover = list->next; rover != list; rover = rover->next)
-         ++callback_count;
-
-      // save number of callbacks
-      arc << callback_count;
-
-      // save off the callbacks
-      for(rover = list->next; rover != list; rover = rover->next)
-      {
-         int8_t vm = rover->vm;
-
-         arc << rover->flags << rover->scriptNum << vm
-             << rover->wait_data << rover->wait_type;
-      }
-   }
-   else
-   {
-      // kill any existing callbacks
-      SM_RemoveCallbacks(-1);
-
-      // get number of callbacks
-      arc << callback_count;
-
-      // read until the end marker is hit
-      for(int i = 0; i < callback_count; i++)
-      {
-         sc_callback_t *newCallback = estructalloc(sc_callback_t, 1);
-         int8_t vm;
-
-         arc << newCallback->flags << newCallback->scriptNum << vm 
-             << newCallback->wait_data << newCallback->wait_type;
-
-         newCallback->vm = vm;
-
-         // nullify pointers for maximum safety
-         newCallback->next = newCallback->prev = NULL;
-
-         // put this callback into the callback list
-         SM_LinkCallback(newCallback);
-      }
-   }
-}
-
-//=============================================================================
-//
-// Script saving functions
-//
-
-//
-// P_ArchiveScripts
-//
-// Saves the presence of the gamescript and levelscript, then
-// saves them if they exist.  Any scheduled callbacks are then
-// saved.
-//
-void P_ArchiveScripts(SaveArchive &arc)
-{
-   bool haveGameScript = false, haveLevelScript = false;
-
-   if(arc.isSaving())
-   {
-      haveGameScript  = gameScriptLoaded;
-      haveLevelScript = levelScriptLoaded;
-   }
-
-   arc << haveGameScript;
-   arc << haveLevelScript;
-
-   // check for presence consistency
-   if(arc.isLoading() &&
-      ((haveGameScript  != gameScriptLoaded) ||
-       (haveLevelScript != levelScriptLoaded)))
-   {
-      I_Error("P_UnArchiveScripts: vm presence inconsistency\n");
-   }
-
-   // save gamescript
-   if(haveGameScript)
-      P_ArchiveSmallAMX(arc, &GameScript.smallAMX);
-
-   // save levelscript
-   if(haveLevelScript)
-      P_ArchiveSmallAMX(arc, &LevelScript.smallAMX);
-
-   // save callbacks
-   P_ArchiveCallbacks(arc);
-
-   // TODO: execute load game event callbacks?
-}
-#endif
-
 //============================================================================
 //
 // haleyjd 10/17/06: Sound Sequences
@@ -1034,7 +931,7 @@ static void P_ArchiveSndSeq(SaveArchive &arc, SndSeq_t *seq)
    unsigned int twizzle;
 
    // save name of EDF sequence
-   arc.ArchiveCString(seq->sequence->name, 33);
+   arc.archiveCString(seq->sequence->name, 33);
 
    // twizzle command pointer
    twizzle = seq->cmdPtr - seq->sequence->commands;
@@ -1079,7 +976,7 @@ static void P_UnArchiveSndSeq(SaveArchive &arc)
    newSeq = estructalloctag(SndSeq_t, 1, PU_LEVEL);
 
    // get corresponding EDF sequence
-   arc.ArchiveCString(name, 33);
+   arc.archiveCString(name, 33);
 
    if(!(newSeq->sequence = E_SequenceForName(name)))
    {
@@ -1087,7 +984,7 @@ static void P_UnArchiveSndSeq(SaveArchive &arc)
               name);
    }
 
-   newSeq->currentSound = NULL; // not currently playing a sound
+   newSeq->currentSound = nullptr; // not currently playing a sound
 
    // reset command pointer
    arc << twizzle;
@@ -1254,7 +1151,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
    OutBuffer savefile;
    SaveArchive arc(&savefile);
 
-   if(!savefile.CreateFile(filename, 512*1024, OutBuffer::NENDIAN))
+   if(!savefile.createFile(filename, 512*1024, OutBuffer::NENDIAN))
    {
       const char *str =
          errno ? strerror(errno) : FC_ERROR "Could not save game: Error unknown";
@@ -1267,13 +1164,13 @@ void P_SaveCurrentLevel(char *filename, char *description)
 
    try
    {
-      arc.ArchiveCString(description, SAVESTRINGSIZE);
+      arc.archiveCString(description, SAVESTRINGSIZE);
       
       // killough 2/22/98: "proprietary" version string :-)
       memset(name2, 0, sizeof(name2));
       sprintf(name2, VERSIONID, version);
    
-      arc.ArchiveCString(name2, VERSIONSIZE);
+      arc.archiveCString(name2, VERSIONSIZE);
    
       // killough 2/14/98: save old compatibility flag:
       // haleyjd 06/16/10: save "inmasterlevels" state
@@ -1297,7 +1194,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
 
          // save length of managed directory filename string and
          // managed directory filename string
-         arc.WriteLString(fn, len);
+         arc.writeLString(fn, len);
       }
       else
       {
@@ -1337,7 +1234,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
 
       byte options[GAME_OPTION_SIZE];
       G_WriteOptions(options);    // killough 3/1/98: save game options
-      savefile.Write(options, sizeof(options));
+      savefile.write(options, sizeof(options));
    
       //killough 11/98: save entire word
       arc << leveltime;
@@ -1377,13 +1274,13 @@ void P_SaveCurrentLevel(char *filename, char *description)
 
       // Close the file and remove it
       savefile.setThrowing(false);
-      savefile.Close();
+      savefile.close();
       remove(filename);
       return;
    }
 
    // Close the save file
-   savefile.Close();
+   savefile.close();
 
    // Check the heap.
    Z_CheckHeap();
@@ -1421,12 +1318,12 @@ void P_LoadGame(const char *filename)
       // skip description
       char throwaway[SAVESTRINGSIZE];
 
-      arc.ArchiveCString(throwaway, SAVESTRINGSIZE);
+      arc.archiveCString(throwaway, SAVESTRINGSIZE);
       
       // killough 2/22/98: "proprietary" version string :-)
       sprintf(vcheck, VERSIONID, version);
 
-      arc.ArchiveCString(vread, VERSIONSIZE);
+      arc.archiveCString(vread, VERSIONSIZE);
    
       // killough 2/22/98: Friendly savegame version difference message
       // FIXME/TODO: restore proper version verification
@@ -1469,7 +1366,7 @@ void P_LoadGame(const char *filename)
 
          // read a name of len bytes 
          char *fn = ecalloc(char *, 1, len);
-         arc.ArchiveCString(fn, (size_t)len);
+         arc.archiveCString(fn, (size_t)len);
 
          // Try to get an existing managed wad first. If none such exists, try
          // adding it now. If that doesn't work, the normal error message appears
@@ -1586,7 +1483,7 @@ void P_LoadGame(const char *filename)
       I_Error("P_LoadGame: Savegame read error\n");
    }
 
-   loadfile.Close();
+   loadfile.close();
 
    if (setsizeneeded)
       R_ExecuteSetViewSize();
@@ -1613,9 +1510,6 @@ void P_LoadGame(const char *filename)
    //  for 'seamless' travel between levels
    if(hub_changelevel) 
       P_RestorePlayerPosition();
-
-   // haleyjd 01/07/07: run deferred ACS scripts
-   ACS_RunDeferredScripts();
 }
 
 //----------------------------------------------------------------------------

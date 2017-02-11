@@ -215,6 +215,10 @@ bool VPNGImagePimpl::readImage(const void *data)
       png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
                    NULL, NULL, NULL);
 
+      // Set offsets (retrieved via V_pngReadUnknownChunk)
+      xoffset = ioStruct.offsets.x;
+      yoffset = ioStruct.offsets.y;
+
       // Strip 16-bit color elements to 8-bit precision
       png_set_strip_16(png_ptr);
 
@@ -710,7 +714,7 @@ patch_t *VPNGImage::getAsPatch(int tag, void **user, size_t *size) const
    int      w      = static_cast<int>(getWidth());
    int      h      = static_cast<int>(getHeight());
 
-   patch = V_LinearToPatch(linear, w, h, size, tag, user);
+   patch = V_LinearToTransPatch(linear, w, h, size, pImpl->color_key, tag, user);
 
    patch->leftoffset = static_cast<int16_t>(pImpl->xoffset);
    patch->topoffset  = static_cast<int16_t>(pImpl->yoffset);

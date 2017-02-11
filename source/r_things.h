@@ -62,7 +62,7 @@ struct poststack_t
 void R_PushPost(bool pushmasked, planehash_t *overlay);
 
 // SoM: Cardboard
-void R_SetMaskedSilhouette(float *top, float *bottom);
+void R_SetMaskedSilhouette(const float *top, const float *bottom);
 
 struct texture_t;
 struct texcol_t;
@@ -90,8 +90,6 @@ extern cb_maskedcolumn_t maskedcolumn;
 //
 // ioanch 20160109: rendering of sprites cut by sector portals
 //
-
-struct linkoffset_t;
 
 //
 // spriteprojnode_t

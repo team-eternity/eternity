@@ -28,6 +28,7 @@ struct event_t;
 class qstring;
 
 void C_Init(void);
+void C_InitBackdrop();
 void C_Ticker(void);
 void C_Drawer(void);
 bool C_Responder(event_t* ev);

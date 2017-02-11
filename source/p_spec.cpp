@@ -138,15 +138,7 @@ typedef enum
    portal_linked
 } portal_type;
 
-typedef enum
-{
-   portal_ceiling,
-   portal_floor,
-   portal_both,
-   portal_lineonly, // SoM: Added for linked line-line portals.
-} portal_effect;
-
-static void P_SpawnDeferredParamPortal(line_t *line, int staticFn);
+static void P_spawnDeferredParamPortal(line_t *line, int staticFn);
 static void P_SpawnPortal(line_t *, int);
 
 //
@@ -197,7 +189,8 @@ void P_InitPicAnims(void)
       if(animdefs[i].istexture)
       {
          // different episode ?
-         if(R_CheckForWall(animdefs[i].startname) == -1)
+         if(R_CheckForWall(animdefs[i].startname) == -1 ||
+            R_CheckForWall(animdefs[i].endname) == -1)
             continue;
          
          lastanim->picnum = R_FindWall(animdefs[i].endname);
@@ -205,7 +198,8 @@ void P_InitPicAnims(void)
       }
       else
       {
-         if(R_CheckForFlat(animdefs[i].startname) == -1)
+         if(R_CheckForFlat(animdefs[i].startname) == -1 ||
+            R_CheckForFlat(animdefs[i].endname) == -1)
             continue;
          
          lastanim->picnum = R_FindFlat(animdefs[i].endname);
@@ -948,10 +942,14 @@ bool P_WasSecret(const sector_t *sec)
 //
 // haleyjd 06/01/04: starts a script from a linedef.
 //
-void P_StartLineScript(line_t *line, Mobj *thing)
+void P_StartLineScript(line_t *line, int side, Mobj *thing, polyobj_s *po)
 {
-   ACS_ExecuteScriptNumber(line->args[0], gamemap, 0, line->args, NUMLINEARGS, 
-                           thing, line, 0);
+   constexpr uint32_t argc = NUMLINEARGS - 1;
+   uint32_t args[argc];
+   for(size_t i = argc; i--;)
+      args[i] = line->args[i + 1];
+
+   ACS_ExecuteScriptI(line->args[0], gamemap, args, argc, thing, line, side, po);
 }
 
 //=============================================================================
@@ -975,11 +973,11 @@ void P_StartLineScript(line_t *line, Mobj *thing)
 //
 // killough 11/98: change linenum parameter to a line_t pointer
 
-void P_CrossSpecialLine(line_t *line, int side, Mobj *thing)
+void P_CrossSpecialLine(line_t *line, int side, Mobj *thing, polyobj_t *poly)
 {
    // EV_SPECIALS TODO: This function should return success or failure to 
    // the caller.
-   EV_ActivateSpecialLineWithSpac(line, side, thing, SPAC_CROSS);
+   EV_ActivateSpecialLineWithSpac(line, side, thing, poly, SPAC_CROSS);
 }
 
 //
@@ -998,7 +996,7 @@ void P_ShootSpecialLine(Mobj *thing, line_t *line, int side)
 {
    // EV_SPECIALS TODO: This function should return success or failure to 
    // the caller.
-   EV_ActivateSpecialLineWithSpac(line, side, thing, SPAC_IMPACT);
+   EV_ActivateSpecialLineWithSpac(line, side, thing, nullptr, SPAC_IMPACT);
 }
 
         // sf: changed to enable_nuke for console
@@ -1214,6 +1212,48 @@ static void P_SetupHeightTransfer(int linenum, int secnum,
 }
 
 //
+// Spawns portals from UDMF settings. Must be called before P_BuildLinkTable
+//
+static void P_spawnPortals(UDMFSetupSettings &setupSettings)
+{
+   // Sector extra UDMF data
+   int portalfloor, portalceiling;
+   for(int i = 0; i < numsectors; i++)
+   {
+      // These must be after the line checking
+      sector_t &sector = sectors[i];
+      setupSettings.getSectorPortals(i, portalceiling, portalfloor);
+      R_ApplyPortals(sector, portalceiling, portalfloor);
+   }
+
+   for(int i = 0; i < numlines; i++)
+   {
+      line_t *line = &lines[i];
+
+      R_ApplyPortal(*line, setupSettings.getLinePortal(i));
+
+      // haleyjd 02/05/13: lookup the static init function
+      int staticFn = EV_StaticInitForSpecial(line->special);
+
+      switch(staticFn)
+      {
+      case EV_STATIC_PORTAL_SECTOR_PARAM_COMPAT:
+         if(line->args[paramPortal_argType] == paramPortal_copied ||
+            line->args[paramPortal_argType] == paramPortal_copyline)
+         {
+            P_spawnDeferredParamPortal(line, staticFn);
+         }
+         break;
+
+      default: // Not a function handled here
+         break;
+      }
+   }
+}
+
+static void P_attachSectors(UDMFSetupSettings &settings);
+
+//
 // P_SpawnSpecials
 //
 // After the map has been loaded, scan for specials that spawn thinkers
@@ -1232,6 +1272,8 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
    P_RemoveAllActiveCeilings();  // jff 2/22/98 use killough's scheme
    
    PlatThinker::RemoveAllActivePlats(); // killough
+
+   ScrollThinker::RemoveAllScrollers();
 
    // clear buttons (haleyjd 10/16/05: button stuff -> p_switch.c)
    P_ClearButtons();
@@ -1343,11 +1385,19 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
       case EV_STATIC_PORTAL_LINKED_FLOOR:
       case EV_STATIC_PORTAL_LINKED_LINE2LINE:
       case EV_STATIC_PORTAL_HORIZON_LINE:
-      case EV_STATIC_PORTAL_SECTOR_PARAM:
-      case EV_STATIC_PORTAL_LINE_PARAM:
+      case EV_STATIC_PORTAL_SECTOR_PARAM_COMPAT:
+      case EV_STATIC_PORTAL_LINE_PARAM_COMPAT:
          P_SpawnPortal(&lines[i], staticFn);
          break;
       
+      case EV_STATIC_PORTAL_LINE_PARAM_QUICK:
+         R_SpawnQuickLinePortal(lines[i]);
+         break;
+
+      case EV_STATIC_PORTAL_DEFINE:
+         R_DefinePortal(lines[i]);
+         break;
+
          // haleyjd 02/28/07: Line_SetIdentification
          // TODO: allow upper byte in args[2] for Hexen-format maps
       case EV_STATIC_LINE_SET_IDENTIFICATION: 
@@ -1384,6 +1434,11 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
       }
    }
 
+   // Also attach from setup settings
+   P_attachSectors(setupSettings);
+
+   P_spawnPortals(setupSettings);
+
    // SoM: This seems like the place to put this.
    if(!P_BuildLinkTable())
    {
@@ -1404,7 +1459,7 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
 //
 // SoM: Specials that copy slopes, etc., need to be collected in a separate pass
 //
-void P_SpawnDeferredSpecials()
+void P_SpawnDeferredSpecials(UDMFSetupSettings &setupSettings)
 {
    for(int i = 0; i < numlines; i++)
    {
@@ -1418,14 +1473,9 @@ void P_SpawnDeferredSpecials()
       case EV_STATIC_SLOPE_FRONTFLOOR_TAG: 
       case EV_STATIC_SLOPE_FRONTCEILING_TAG:
       case EV_STATIC_SLOPE_FRONTFLOORCEILING_TAG:
+      case EV_STATIC_SLOPE_PARAM_TAG:
          // SoM: Copy slopes
          P_CopySectorSlope(line, staticFn);
-      case EV_STATIC_PORTAL_SECTOR_PARAM:
-         if(line->args[paramPortal_argType] == paramPortal_copied ||
-            line->args[paramPortal_argType] == paramPortal_copyline)
-         {
-            P_SpawnDeferredParamPortal(line, staticFn);
-         }
          break;
 
       default: // Not a function handled here
@@ -2239,6 +2289,146 @@ bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
 }
 
 //
+// Attaches sectors from UDMF data
+//
+static void P_attachSectors(UDMFSetupSettings &settings)
+{
+   PODCollection<attachedsurface_t> floornew, ceilingnew;
+   bool found;
+   int settype;
+   for(int i = 0; i < numsectors; ++i)
+   {
+      const udmfattach_t &attach = settings.getAttachInfo(i);
+      if(!attach.floorid && !attach.ceilingid)
+         continue;
+      if(attach.floorid)
+         floornew.makeEmpty();
+      if(attach.ceilingid)
+         ceilingnew.makeEmpty();
+      for(int j = 0; j < numsectors; ++j)
+      {
+         const udmfattach_t &slave = settings.getAttachInfo(j);
+         if(attach.floorid)
+         {
+            if(abs(slave.attachfloor) == attach.floorid)
+            {
+               if(j == i)
+                  continue;
+               found = false;
+               settype = (slave.attachfloor ^ attach.floorid) >= 0 ?
+                  AS_FLOOR : AS_MIRRORFLOOR;
+
+               for(auto &surface : floornew)
+                  if(surface.sector == &sectors[j])
+                  {
+                     if(!(surface.type & (AS_FLOOR | AS_MIRRORFLOOR)))
+                        surface.type |= settype;
+                     found = true;
+                     break;
+                  }
+
+               if(!found)
+               {
+                  attachedsurface_t &surface = floornew.addNew();
+                  surface.sector = &sectors[j];
+                  surface.type = settype;
+               }
+            }
+            if(abs(slave.attachceiling) == attach.floorid)
+            {
+               found = false;
+               settype = (slave.attachceiling ^ attach.floorid) >= 0 ?
+                  AS_CEILING : AS_MIRRORCEILING;
+
+               for(auto &surface : floornew)
+                  if(surface.sector == &sectors[j])
+                  {
+                     if(!(surface.type & (AS_CEILING | AS_MIRRORCEILING)))
+                        surface.type |= settype;
+                     found = true;
+                     break;
+                  }
+
+               if(!found)
+               {
+                  attachedsurface_t &surface = floornew.addNew();
+                  surface.sector = &sectors[j];
+                  surface.type = settype;
+               }
+            }
+         }
+         if(attach.ceilingid)
+         {
+            if(abs(slave.attachfloor) == attach.ceilingid)
+            {
+               found = false;
+               settype = (slave.attachfloor ^ attach.ceilingid) >= 0 ?
+                  AS_FLOOR : AS_MIRRORFLOOR;
+
+               for(auto &surface : ceilingnew)
+                  if(surface.sector == &sectors[j])
+                  {
+                     if(!(surface.type & (AS_FLOOR | AS_MIRRORFLOOR)))
+                        surface.type |= settype;
+                     found = true;
+                     break;
+                  }
+
+               if(!found)
+               {
+                  attachedsurface_t &surface = ceilingnew.addNew();
+                  surface.sector = &sectors[j];
+                  surface.type = settype;
+               }
+            }
+            if(abs(slave.attachceiling) == attach.ceilingid)
+            {
+               if(j == i)
+                  continue;
+               found = false;
+               settype = (slave.attachceiling ^ attach.ceilingid) >= 0 ?
+                  AS_CEILING : AS_MIRRORCEILING;
+
+               for(auto &surface : ceilingnew)
+                  if(surface.sector == &sectors[j])
+                  {
+                     if(!(surface.type & (AS_CEILING | AS_MIRRORCEILING)))
+                        surface.type |= settype;
+                     found = true;
+                     break;
+                  }
+
+               if(!found)
+               {
+                  attachedsurface_t &surface = ceilingnew.addNew();
+                  surface.sector = &sectors[j];
+                  surface.type = settype;
+               }
+            }
+         }
+      }
+      if(!floornew.isEmpty())
+      {
+         efree(sectors[i].f_asurfaces);
+         sectors[i].f_asurfaces = estructalloctag(attachedsurface_t, 
+            floornew.getLength(), PU_LEVEL);
+         sectors[i].f_asurfacecount = floornew.getLength();
+         memcpy(sectors[i].f_asurfaces, &floornew[0], 
+            sectors[i].f_asurfacecount * sizeof(attachedsurface_t));
+      }
+      if(!ceilingnew.isEmpty())
+      {
+         efree(sectors[i].c_asurfaces);
+         sectors[i].c_asurfaces = estructalloctag(attachedsurface_t,
+            ceilingnew.getLength(), PU_LEVEL);
+         sectors[i].c_asurfacecount = ceilingnew.getLength();
+         memcpy(sectors[i].c_asurfaces, &ceilingnew[0],
+            sectors[i].c_asurfacecount * sizeof(attachedsurface_t));
+      }
+   }
+}
+
+//
 // SoM 10/14/2007
 // P_AttachSectors
 //
@@ -2455,7 +2645,7 @@ void P_AttachSectors(const line_t *line, int staticFn)
 //
 // P_SetPortal
 //
-static void P_SetPortal(sector_t *sec, line_t *line, portal_t *portal, portal_effect effects)
+void P_SetPortal(sector_t *sec, line_t *line, portal_t *portal, portal_effect effects)
 {
    if(portal->type == R_LINKED && sec->groupid == R_NOGROUP)
    {
@@ -2603,7 +2793,7 @@ static bool P_getParamPortalProps(const int *args, portal_type &type,
 static int P_findParamPortalAnchor(const line_t *line)
 {
    int s;
-   int anchortype = EV_SpecialForStaticInit(EV_STATIC_PORTAL_SECTOR_PARAM);
+   int anchortype = EV_SpecialForStaticInit(EV_STATIC_PORTAL_SECTOR_PARAM_COMPAT);
    for(s = 0; s < numlines; ++s) // FIXME: no quicker way to search?
    {
       if(lines[s].special != anchortype || line == &line[s] ||
@@ -2697,8 +2887,13 @@ static void P_copyParamPortalLine(line_t *line)
    line->special = 0;
 }
 
-static void P_SpawnDeferredParamPortal(line_t *line, int staticFn)
+//
+// Called from P_SpawnDeferredSpecials when we need references to already 
+// created portals
+//
+static void P_spawnDeferredParamPortal(line_t *line, int staticFn)
 {
+   // Currently it's used by the ZDoom-compatible Sector_SetPortal
    if(line->args[paramPortal_argType] == paramPortal_copied)
       P_copyParamPortalSector(line);
    else if(line->args[paramPortal_argType] == paramPortal_copyline)
@@ -2726,16 +2921,17 @@ static void P_SpawnPortal(line_t *line, int staticFn)
    int       s;
    int       fromid, toid;
 
-   bool param = staticFn == EV_STATIC_PORTAL_SECTOR_PARAM;
-   if(param)
+   // haleyjd: get type and effects from static init function
+   bool param = false;
+   if(staticFn == EV_STATIC_PORTAL_SECTOR_PARAM_COMPAT)
    {
+      param = true;
       if(!P_getParamPortalProps(line->args, type, effects))
       {
-         // The parameterized equivalent of 385 really needs separate handling
          return;  // exit if it's just a copier sought by others
       }
    }
-   else if(staticFn == EV_STATIC_PORTAL_LINE_PARAM)
+   else if(staticFn == EV_STATIC_PORTAL_LINE_PARAM_COMPAT)
    {
       // Currently only support ZDoom's Eternity XLAT helper
       switch(line->args[ev_LinePortal_Arg_Type])
@@ -2773,8 +2969,10 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       line->sidenum[1] = line->sidenum[0];
       line->flags &= ~ML_BLOCKING;
       line->flags |= ML_TWOSIDED;
-      line->beyondportalsector = partner->frontsector;
+      line->intflags |= MLI_POLYPORTALLINE;
    };
+
+   bool otherIsEdge = false;
 
    // create the appropriate type of portal
    switch(type)
@@ -2855,14 +3053,15 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          return;
       }
 
-      portal = R_GetAnchoredPortal(line - lines, s);
+      // Doom format doesn't allow rotating portals
+      portal = R_GetAnchoredPortal(line - lines, s, false, false, 0);
       break;
 
    case portal_twoway:
       if(param)
       {
          // We're having (tag, 0, plane, 1). Look for (tag, 0, plane, 0)
-         if(staticFn == EV_STATIC_PORTAL_SECTOR_PARAM)
+         if(staticFn == EV_STATIC_PORTAL_SECTOR_PARAM_COMPAT)
             s = P_findParamPortalAnchor(line);
          else
          {
@@ -2900,12 +3099,13 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       if(effects == portal_lineonly)
       {
          // special case for line portals
-         portal = R_GetTwoWayPortal(s, line - lines);
+         portal = R_GetTwoWayPortal(s, line - lines, false, false, 0);
+         line->beyondportalline = &lines[s];
          P_SetPortal(sector, line, portal, portal_lineonly);
          return;
       }
 
-      portal = R_GetTwoWayPortal(line - lines, s);
+      portal = R_GetTwoWayPortal(line - lines, s, false, false, 0);
       break;
 
    case portal_linked:
@@ -2915,7 +3115,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       // linked portals can only be applied to either the floor or ceiling.
       if(param)
       {
-         if(staticFn == EV_STATIC_PORTAL_SECTOR_PARAM)
+         if(staticFn == EV_STATIC_PORTAL_SECTOR_PARAM_COMPAT)
          {
             planez = line->args[2] == 0 ? sector->ceilingheight
                : sector->floorheight;
@@ -2926,7 +3126,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
             planez = 0;
             if(line->args[ev_LinePortal_Arg_Type] == ev_LinePortal_Type_EEClassic)
             {
-               anchortype = EV_SpecialForStaticInit(EV_STATIC_PORTAL_LINE_PARAM);
+               anchortype = EV_SpecialForStaticInit(EV_STATIC_PORTAL_LINE_PARAM_COMPAT);
                for(s = -1; (s = P_FindLineFromTag(line->tag, s)) >= 0; )
                {
                   if(lines[s].special != anchortype || line == &lines[s]
@@ -2971,17 +3171,27 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          anchortype = EV_SpecialForStaticInit(anchorfunc);
 
          // find anchor line
-         for(s = -1; (s = P_FindLineFromLineArg0(line, s)) >= 0; )
+
+         int tag = line->args[0];
+
+         for(s = -1; (s = P_FindLineFromTag(tag, s)) >= 0; )
          {
             // SoM 3-10-04: Two different anchor linedef codes so I can tag
             // two anchored portals to the same sector.
-            if(lines[s].special != anchortype || line == &lines[s]
-               || lines[s].frontsector == NULL)
+            if((lines[s].special != anchortype &&
+                !(lines[s].extflags &
+                  (EX_ML_LOWERPORTAL | EX_ML_UPPERPORTAL))) ||
+               line == &lines[s] ||
+               lines[s].frontsector == NULL)
+            {
                continue;
-            
+            }
+
             break;
          }
       }
+
+
       if(s < 0)
       {
          C_Printf(FC_ERROR "No anchor line for portal. (line %i)\a\n", line - lines);
@@ -3001,10 +3211,11 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       fromid = lines[s].frontsector->groupid;
 
       // Special case for parameterized line portal
-      if(staticFn == EV_STATIC_PORTAL_LINE_PARAM &&
+      if(staticFn == EV_STATIC_PORTAL_LINE_PARAM_COMPAT &&
          line->args[ev_LinePortal_Arg_Type] != ev_LinePortal_Type_EEClassic)
       {
          portal = R_GetLinkedPortal(s, line - lines, planez, toid, fromid);
+         line->beyondportalline = &lines[s];
          P_SetPortal(sector, line, portal, portal_lineonly);
 
          // Also check for polyobject portals
@@ -3024,19 +3235,26 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          return;
       }
 
-      portal = R_GetLinkedPortal(line - lines, s, planez, fromid, toid);
+      otherIsEdge = !!(lines[s].extflags &
+                       (EX_ML_LOWERPORTAL | EX_ML_UPPERPORTAL));
 
       // Special case where the portal was created with the line-to-line portal type
       if(staticFn == EV_STATIC_PORTAL_LINKED_LINE2LINE ||
-         staticFn == EV_STATIC_PORTAL_LINE_PARAM)
+         staticFn == EV_STATIC_PORTAL_LINE_PARAM_COMPAT)
       {
-         P_SetPortal(lines[s].frontsector, lines + s, portal, portal_lineonly);
+         if (!otherIsEdge)
+         {
+            portal = R_GetLinkedPortal(line - lines, s, planez, fromid, toid);
+            lines[s].beyondportalline = line;
+            P_SetPortal(lines[s].frontsector, lines + s, portal, portal_lineonly);
+         }
          
          // ioanch 20160226: add partner portals
          portal_t *portal2 = R_GetLinkedPortal(s, line - lines, planez, toid, fromid);
+         line->beyondportalline = &lines[s];
          P_SetPortal(sector, line, portal2, portal_lineonly);
 
-         if(!lines[s].backsector || !line->backsector)
+         if(!otherIsEdge && (!lines[s].backsector || !line->backsector))
          {
             // HACK TO MAKE THEM PASSABLE
             if(!lines[s].backsector)
@@ -3050,6 +3268,8 @@ static void P_SpawnPortal(line_t *line, int staticFn)
 
          return;
       }
+      else  // prepare it for sector portal
+         portal = R_GetLinkedPortal(line - lines, s, planez, fromid, toid);
       break;
 
    default:

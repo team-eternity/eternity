@@ -284,7 +284,7 @@ static void R_ProjectParticle(particle_t *particle);
 //
 // R_SetMaskedSilhouette
 //
-void R_SetMaskedSilhouette(float *top, float *bottom)
+void R_SetMaskedSilhouette(const float *top, const float *bottom)
 {
    if(!top || !bottom)
    {
@@ -516,6 +516,7 @@ static void R_InitSpriteDefs(char **namelist)
 void R_InitSprites(char **namelist)
 {
    R_InitSpriteDefs(namelist);
+   R_InitSpriteProjSpan();
 }
 
 //
@@ -859,18 +860,26 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr)
 
    // ioanch 20160125: reject sprites in front of portal line when rendering
    // line portal
-   if(portalrender.curwindow && portalrender.curwindow->line) 
+   if(portalrender.w && portalrender.w->portal &&
+      portalrender.w->portal->type != R_SKYBOX)
    {
-      const line_t &l = *portalrender.curwindow->line;
-
-      // sprite position, shifted by offset
-      // do NOT use interpolated coordinates for this check!
-      v2fixed_t pv = {thing->x - viewx + portalrender.curwindow->vx,
-                      thing->y - viewy + portalrender.curwindow->vy};
-
-      if(P_PointOnLineSide(pv.x, pv.y, &l) == 0)
+      const renderbarrier_t &barrier = portalrender.w->barrier;
+      if(portalrender.w->line)
       {
-         return;
+         if(P_PointOnDivlineSide(spritepos.x, spritepos.y, &barrier.dln.dl) == 0)
+            return;
+      }
+      else
+      {
+         //dlnormal_t ports[2];
+         //R_PickSidesNearViewer(barrier.bbox, ports);
+         //if((ports[0].dl.dy &&
+         //   P_PointOnDivlineSide(spritepos.x, spritepos.y, &ports[0].dl) == 0) ||
+         //   (ports[1].dl.dx &&
+         //      P_PointOnDivlineSide(spritepos.x, spritepos.y, &ports[1].dl) == 0))
+         //{
+         //   return;
+         //}
       }
    }
 
@@ -1896,28 +1905,34 @@ inline static sector_t *R_addProjNode(Mobj *mobj, const linkdata_t *data,
 void R_CheckMobjProjections(Mobj *mobj)
 {
    sector_t *sector = mobj->subsector->sector;
-   if(!mobj->spriteproj && !(sector->f_pflags & PS_PASSABLE) &&
-      !(sector->c_pflags & PS_PASSABLE))
-   {
-      return;  // exit quickly if nothing to do
-   }
 
-   // MAJOR FIXME: don't use an "arbitrary margin". Instead use accurate sprite
-   // size
-   enum
+   bool overflown = (unsigned)mobj->sprite >= (unsigned)numsprites ||
+   (mobj->frame & FF_FRAMEMASK) >= sprites[mobj->sprite].numframes;
+
+   if((!(sector->f_pflags & PS_PASSABLE) && !(sector->c_pflags & PS_PASSABLE)) ||
+      mobj->flags & MF_NOSECTOR ||
+      overflown)
    {
-      ARBITRARY_MARGIN = 64 << FRACBITS,
-   };
+      if(mobj->spriteproj)
+         R_RemoveMobjProjections(mobj);
+      return;
+   }
 
    const linkdata_t *data;
 
    DLListItem<spriteprojnode_t> *item = mobj->spriteproj;
    DLListItem<spriteprojnode_t> **tail = &mobj->spriteproj;
 
+   const sprvertspan_t &span =
+   r_sprvertspan[mobj->sprite][mobj->frame & FF_FRAMEMASK];
+
+   fixed_t scaledtop = M_FloatToFixed(span.top * mobj->yscale + 0.5f);
+   fixed_t scaledbottom = M_FloatToFixed(span.bottom * mobj->yscale - 0.5f);
+
    v3fixed_t delta = {0, 0, 0};
    int loopprot = 0;
    while(++loopprot < 32768 && sector && sector->f_pflags & PS_PASSABLE && 
-      (data = R_FPLink(sector))->planez > mobj->z - ARBITRARY_MARGIN)
+      (data = R_FPLink(sector))->planez > mobj->z + scaledbottom)
    {
       // always accept first sector
       sector = R_addProjNode(mobj, data, delta, item, tail);
@@ -1927,7 +1942,7 @@ void R_CheckMobjProjections(Mobj *mobj)
    sector = mobj->subsector->sector;
    delta.x = delta.y = delta.z = 0;
    while(++loopprot < 32768 && sector && sector->c_pflags & PS_PASSABLE &&
-      (data = R_CPLink(sector))->planez < mobj->z + mobj->height + ARBITRARY_MARGIN)
+      (data = R_CPLink(sector))->planez < mobj->z + scaledtop)
    {
       // always accept first sector
       sector = R_addProjNode(mobj, data, delta, item, tail);

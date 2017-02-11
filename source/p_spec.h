@@ -36,6 +36,8 @@
 struct line_t;
 class  Mobj;
 struct player_t;
+struct polyobj_s;
+struct portal_t;
 class  SaveArchive;
 struct sector_t;
 struct side_t;
@@ -1167,6 +1169,7 @@ typedef struct stairdata_s
    fixed_t speed_value;
    int delay_value;
    int reset_value;
+   bool crush; // does it crush
 } stairdata_t;
 
 class ElevatorThinker : public SectorThinker
@@ -1527,6 +1530,14 @@ int EV_ThingRemove(int tid);
 //
 ////////////////////////////////////////////////////////////////
 
+typedef enum
+{
+   portal_ceiling,
+   portal_floor,
+   portal_both,
+   portal_lineonly, // SoM: Added for linked line-line portals.
+} portal_effect;
+
 // at game start
 void P_InitPicAnims();
 
@@ -1540,7 +1551,10 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings);
 //
 // SoM: Specials that copy slopes, ect., need to be collected in a separate 
 // pass
-void P_SpawnDeferredSpecials();
+void P_SpawnDeferredSpecials(UDMFSetupSettings &setupSettings);
+
+// portal stuff
+void P_SetPortal(sector_t *sec, line_t *line, portal_t *portal, portal_effect effects);
 
 // every tic
 void P_UpdateSpecials();
@@ -1550,7 +1564,8 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side);
 
 void P_ShootSpecialLine(Mobj *thing, line_t *line, int side);
 
-void P_CrossSpecialLine(line_t *, int side, Mobj *thing); // killough 11/98
+// killough 11/98
+void P_CrossSpecialLine(line_t *, int side, Mobj *thing, polyobj_s *poly); 
 
 void P_PlayerInSpecialSector(player_t *player, sector_t *sector);
 void P_PlayerOnSpecialFlat(const player_t *player);
@@ -1644,7 +1659,7 @@ enum
    SPAC_PUSH,
 };
 
-extern void P_StartLineScript(line_t *line, Mobj *thing);
+extern void P_StartLineScript(line_t *line, int side, Mobj *thing, polyobj_s *po);
 
 #endif
 

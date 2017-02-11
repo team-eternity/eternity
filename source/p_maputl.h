@@ -54,6 +54,15 @@ struct divline_t
    fixed_t     dy;
 };
 
+//
+// A divline_t with a normal included
+//
+struct dlnormal_t
+{
+   divline_t dl;
+   float nx;      // likely copied from linedef
+   float ny;
+};
 
 // SoM: linetracer_t contains a divline_t for the appropriate functions but 
 // holds much more data which is needed for making tracers correctly travel

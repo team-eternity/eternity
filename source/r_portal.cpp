@@ -32,6 +32,13 @@
 
 #include "c_io.h"
 #include "d_gi.h"
+#include "e_exdata.h"
+#include "e_things.h"
+#include "m_bbox.h"
+#include "m_collection.h"
+#include "p_maputl.h"
+#include "p_setup.h"
+#include "p_spec.h"
 #include "r_bsp.h"
 #include "r_draw.h"
 #include "r_main.h"
@@ -47,6 +54,31 @@ enum
    PORTAL_RECURSION_LIMIT = 128, // maximum times same portal is drawn in a
                                  // recursion
 };
+
+//
+// Portal type used in special portal_define()
+//
+enum portaltype_e
+{
+   portaltype_plane,
+   portaltype_horizon,
+   portaltype_skybox,
+   portaltype_anchor,
+   portaltype_twoway,
+   portaltype_linked,
+   portaltype_MAX
+};
+
+//
+// Defined portal (using Portal_Define)
+//
+struct portalentry_t
+{
+   int id;
+   portal_t *portal;
+};
+
+static PODCollection<portalentry_t> gPortals;   // defined portals
 
 //=============================================================================
 //
@@ -143,6 +175,8 @@ static void R_ClearPortalWindow(pwindow_t *window)
    window->func     = R_RenderPortalNOP;
    window->clipfunc = NULL;
    window->vx = window->vy = window->vz = 0;
+   window->vangle = 0;
+   memset(&window->barrier, 0, sizeof(window->barrier));
 }
 
 static pwindow_t *newPortalWindow()
@@ -168,6 +202,86 @@ static pwindow_t *newPortalWindow()
    return ret;
 }
 
+//
+// Applies portal transform based on whether it's an anchored or linked portal
+//
+inline static void R_applyPortalTransformTo(const portal_t *portal, 
+   fixed_t &x, fixed_t &y, bool applyTranslation)
+{
+   if(portal->type == R_ANCHORED || portal->type == R_TWOWAY)
+   {
+      const portaltransform_t &tr = portal->data.anchor.transform;
+      tr.applyTo(x, y, nullptr, nullptr, !applyTranslation);
+   }
+   else if(portal->type == R_LINKED && applyTranslation)
+   {
+      const linkdata_t &link = portal->data.link;
+      x += link.deltax;
+      y += link.deltay;
+   }
+}
+inline static void R_applyPortalTransformTo(const portal_t *portal,
+   float &x, float &y, bool applyTranslation)
+{
+   if(portal->type == R_ANCHORED || portal->type == R_TWOWAY)
+   {
+      const portaltransform_t &tr = portal->data.anchor.transform;
+      tr.applyTo(x, y, !applyTranslation);
+   }
+   else if(portal->type == R_LINKED && applyTranslation)
+   {
+      const linkdata_t &link = portal->data.link;
+      x += M_FixedToFloat(link.deltax);
+      y += M_FixedToFloat(link.deltay);
+   }
+}
+
+//
+// Calculates the render barrier based on portal type and source linedef
+// (assuming line portal)
+//
+static void R_calcRenderBarrier(const portal_t *portal, const line_t *line,
+   renderbarrier_t &barrier)
+{
+   P_MakeDivline(line, &barrier.dln.dl);
+   barrier.dln.nx = line->nx;
+   barrier.dln.ny = line->ny;
+   R_applyPortalTransformTo(portal, barrier.dln.dl.x, barrier.dln.dl.y, true);
+   R_applyPortalTransformTo(portal, barrier.dln.dl.dx, barrier.dln.dl.dy, false);
+   R_applyPortalTransformTo(portal, barrier.dln.nx, barrier.dln.ny, false);
+}
+
+//
+// Expands a portal barrier BBox. For sector portals
+//
+void R_CalcRenderBarrier(pwindow_t *window, const subsector_t *ss)
+{
+   const portal_t *portal = window->portal;
+   if(!R_portalIsAnchored(portal))
+   {
+      return;
+   }
+   const seg_t *seg;
+   v2fixed_t tv;
+   int i;
+   renderbarrier_t &barrier = window->barrier;
+   for(i = 0; i < ss->numlines; ++i)
+   {
+      seg = &segs[ss->firstline + i];
+      tv = { seg->v1->x, seg->v1->y };
+      R_applyPortalTransformTo(portal, tv.x, tv.y, true);
+      M_AddToBox(barrier.bbox, tv.x, tv.y);
+   }
+   if(i) // take last one too
+   {
+      --i;
+      seg = &segs[ss->firstline + i];
+      tv = { seg->v2->x, seg->v2->y };
+      R_applyPortalTransformTo(portal, tv.x, tv.y, true);
+      M_AddToBox(barrier.bbox, tv.x, tv.y);
+   }
+}
+
 static pwindow_t *R_NewPortalWindow(portal_t *p, line_t *l, pwindowtype_e type)
 {
    pwindow_t *ret = newPortalWindow();
@@ -176,6 +290,14 @@ static pwindow_t *R_NewPortalWindow(portal_t *p, line_t *l, pwindowtype_e type)
    ret->line   = l;
    ret->type   = type;
    ret->head   = ret;
+   if(type == pw_line)
+   {
+#ifdef RANGECHECK
+      if(!l)
+         I_Error("R_NewPortalWindow: Null line despite type == pw_line!");
+#endif
+      R_calcRenderBarrier(p, l, ret->barrier);
+   }
    
    R_SetPortalFunction(ret);
    
@@ -209,6 +331,7 @@ static void R_CreateChildWindow(pwindow_t *parent)
    child->head     = parent->head;
    child->portal   = parent->portal;
    child->line     = parent->line;
+   child->barrier  = parent->barrier;  // FIXME: not sure if necessary
    child->type     = parent->type;
    child->func     = parent->func;
    child->clipfunc = parent->clipfunc;
@@ -298,6 +421,7 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
       window->vx = viewx;
       window->vy = viewy;
       window->vz = viewz;
+      window->vangle = viewangle;
       return;
    }
 
@@ -351,12 +475,53 @@ static portal_t *R_CreatePortal()
 static void R_CalculateDeltas(int markerlinenum, int anchorlinenum, 
                               fixed_t *dx, fixed_t *dy, fixed_t *dz)
 {
-   line_t *m = lines + markerlinenum;
-   line_t *a = lines + anchorlinenum;
+   const line_t *m = lines + markerlinenum;
+   const line_t *a = lines + anchorlinenum;
 
    *dx = ((m->v1->x + m->v2->x) / 2) - ((a->v1->x + a->v2->x) / 2);
    *dy = ((m->v1->y + m->v2->y) / 2) - ((a->v1->y + a->v2->y) / 2);
    *dz = 0; /// ???
+}
+
+static void R_calculateTransform(int markerlinenum, int anchorlinenum,
+                                 portaltransform_t *transf, bool allowrotate,
+                                 bool flipped, fixed_t zoffset)
+{
+   // TODO: define Z offset
+   const line_t *m = lines + markerlinenum;
+   const line_t *a = lines + anchorlinenum;
+
+   // origin point
+   double mx = (m->v1->fx + m->v2->fx) / 2;
+   double my = (m->v1->fy + m->v2->fy) / 2;
+   double ax = (a->v1->fx + a->v2->fx) / 2;
+   double ay = (a->v1->fy + a->v2->fy) / 2;
+
+   // angle delta between the normals behind the linedefs
+   // TODO: add support for flipped anchors (line portals)
+   double rot, cosval, sinval;
+   if(allowrotate)
+   {
+      rot = atan2(flipped ? m->ny : -m->ny, flipped ? m->nx : -m->nx) - atan2(-a->ny, -a->nx);
+      cosval = cos(rot);
+      sinval = sin(rot);
+   }
+   else
+   {
+      rot = 0;
+      cosval = 1;
+      sinval = 0;
+   }
+   
+   transf->rot[0][0] = cosval;
+   transf->rot[0][1] = -sinval;
+   transf->rot[1][0] = sinval;
+   transf->rot[1][1] = cosval;
+   transf->move.x = -ax * cosval + ay * sinval + mx;
+   transf->move.y = -ax * sinval - ay * cosval + my;
+   transf->move.z = M_FixedToDouble(zoffset);
+
+   transf->angle = rot;
 }
 
 //
@@ -365,23 +530,23 @@ static void R_CalculateDeltas(int markerlinenum, int anchorlinenum,
 // Either finds a matching existing anchored portal matching the
 // parameters, or creates a new one. Used in p_spec.c.
 //
-portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum)
+portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum,
+   bool allowrotate, bool flipped, fixed_t zoffset)
 {
    portal_t *rover, *ret;
    edefstructvar(anchordata_t, adata);
 
-   R_CalculateDeltas(markerlinenum, anchorlinenum, 
-                     &adata.deltax, &adata.deltay, &adata.deltaz);
+   R_calculateTransform(markerlinenum, anchorlinenum, &adata.transform, 
+      allowrotate, flipped, zoffset);
 
    adata.maker = markerlinenum;
    adata.anchor = anchorlinenum;
 
    for(rover = portals; rover; rover = rover->next)
    {
-      if(rover->type != R_ANCHORED || 
-         adata.deltax != rover->data.anchor.deltax ||
-         adata.deltay != rover->data.anchor.deltay ||
-         adata.deltaz != rover->data.anchor.deltaz)
+      if(rover->type != R_ANCHORED ||
+         memcmp(&adata.transform, &rover->data.anchor.transform,
+                sizeof(adata.transform)))
          continue;
 
       return rover;
@@ -403,13 +568,14 @@ portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum)
 // Either finds a matching existing two-way anchored portal matching the
 // parameters, or creates a new one. Used in p_spec.c.
 //
-portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum)
+portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum,
+   bool allowrotate, bool flipped, fixed_t zoffset)
 {
    portal_t *rover, *ret;
    edefstructvar(anchordata_t, adata);
 
-   R_CalculateDeltas(markerlinenum, anchorlinenum, 
-                     &adata.deltax, &adata.deltay, &adata.deltaz);
+   R_calculateTransform(markerlinenum, anchorlinenum, &adata.transform, 
+      allowrotate, flipped, zoffset);
 
    adata.maker = markerlinenum;
    adata.anchor = anchorlinenum;
@@ -417,9 +583,8 @@ portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum)
    for(rover = portals; rover; rover = rover->next)
    {
       if(rover->type  != R_TWOWAY                  || 
-         adata.deltax != rover->data.anchor.deltax ||
-         adata.deltay != rover->data.anchor.deltay ||
-         adata.deltaz != rover->data.anchor.deltaz)
+         memcmp(&adata.transform, &rover->data.anchor.transform,
+                sizeof(adata.transform)))
          continue;
 
       return rover;
@@ -563,6 +728,8 @@ void R_InitPortals()
 {
    portals = last = NULL;
    windowhead = unusedhead = windowlast = NULL;
+
+   gPortals.clear(); // clear the portal list
 }
 
 //=============================================================================
@@ -580,8 +747,6 @@ static void R_RenderPlanePortal(pwindow_t *window)
    float angle;
    portal_t *portal = window->portal;
 
-   portalrender.curwindow = window;
-
    if(portal->type != R_PLANE)
       return;
 
@@ -596,6 +761,8 @@ static void R_RenderPlanePortal(pwindow_t *window)
                         *portal->data.plane.lightlevel, 
                         *portal->data.plane.xoff, 
                         *portal->data.plane.yoff,
+                         1.0,
+                            1.0,
                         angle, NULL, 0, 255, NULL);
 
    vplane = R_CheckPlane(vplane, window->minx, window->maxx);
@@ -627,8 +794,6 @@ static void R_RenderHorizonPortal(pwindow_t *window)
    int x;
    portal_t *portal = window->portal;
 
-   portalrender.curwindow = window;
-
    if(portal->type != R_HORIZON)
       return;
 
@@ -642,18 +807,22 @@ static void R_RenderHorizonPortal(pwindow_t *window)
    ceilingangle = *portal->data.horizon.ceilingbaseangle +
                   *portal->data.horizon.ceilingangle;
 
+   // FIXME: Replace the 1.0s?
    topplane = R_FindPlane(*portal->data.horizon.ceilingz, 
                           *portal->data.horizon.ceilingpic, 
                           *portal->data.horizon.ceilinglight, 
                           *portal->data.horizon.ceilingxoff, 
                           *portal->data.horizon.ceilingyoff,
+                          1.0, 1.0,
                           ceilingangle, NULL, 0, 255, NULL);
 
+   // FIXME: Replace the 1.0s?
    bottomplane = R_FindPlane(*portal->data.horizon.floorz, 
                              *portal->data.horizon.floorpic, 
                              *portal->data.horizon.floorlight, 
                              *portal->data.horizon.floorxoff, 
                              *portal->data.horizon.flooryoff,
+                             1.0, 1.0,
                              floorangle, NULL, 0, 255, NULL);
 
    topplane = R_CheckPlane(topplane, window->minx, window->maxx);
@@ -727,8 +896,6 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
    fixed_t lastx, lasty, lastz, lastangle;
    float   lastxf, lastyf, lastzf, lastanglef;
    portal_t *portal = window->portal;
-
-   portalrender.curwindow = window;
 
    if(portal->type != R_SKYBOX)
       return;
@@ -834,10 +1001,12 @@ static void R_ShowTainted(pwindow_t *window)
       float ceilingangle = sector->ceilingbaseangle + sector->ceilingangle;
       visplane_t *topplane = R_FindPlane(sector->ceilingheight, 
          sector->ceilingpic, sector->lightlevel, sector->ceiling_xoffs, 
-         sector->ceiling_yoffs, ceilingangle, nullptr, 0, 255, nullptr);
+         sector->ceiling_yoffs, sector->ceiling_xscale, sector->ceiling_yscale,
+         ceilingangle, nullptr, 0, 255, nullptr);
       visplane_t *bottomplane = R_FindPlane(sector->floorheight,
          sector->floorpic, sector->lightlevel, sector->floor_xoffs,
-         sector->floor_yoffs, floorangle, nullptr, 0, 255, nullptr);
+         sector->floor_yoffs, sector->floor_xscale, sector->floor_yscale,
+         floorangle, nullptr, 0, 255, nullptr);
       topplane = R_CheckPlane(topplane, window->minx, window->maxx);
       bottomplane = R_CheckPlane(bottomplane, window->minx, window->maxx);
 
@@ -900,9 +1069,6 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    float   lastxf, lastyf, lastzf;
    portal_t *portal = window->portal;
 
-   // ioanch 20160123: don't forget
-   portalrender.curwindow = window;
-
    if(portal->type != R_ANCHORED && portal->type != R_TWOWAY)
       return;
 
@@ -958,15 +1124,22 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    lastxf = view.x;
    lastyf = view.y;
    lastzf = view.z;
-
+   angle_t lastangle = viewangle;
+   float lastanglef = view.angle;
 
    // SoM 3/10/2005: Use the coordinates stored in the portal struct
-   viewx  = window->vx + portal->data.anchor.deltax;
-   viewy  = window->vy + portal->data.anchor.deltay;
-   viewz  = window->vz + portal->data.anchor.deltaz;
-   view.x = M_FixedToFloat(viewx);
-   view.y = M_FixedToFloat(viewy);
-   view.z = M_FixedToFloat(viewz);
+   const portaltransform_t &tr = portal->data.anchor.transform;
+   viewx = window->vx;
+   viewy = window->vy;
+   tr.applyTo(viewx, viewy, &view.x, &view.y);
+   double vz = M_FixedToDouble(window->vz) + tr.move.z;
+   viewz = M_DoubleToFixed(vz);
+   view.z = static_cast<float>(vz);
+
+   viewangle = window->vangle + static_cast<angle_t>(tr.angle * ANG180 / PI);
+   view.angle = (ANG90 - viewangle) * PI / ANG180;
+   view.sin = sinf(view.angle);
+   view.cos = cosf(view.angle);
 
    R_IncrementFrameid();
    R_RenderBSPNode(numnodes - 1);
@@ -980,9 +1153,14 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    viewx  = lastx;
    viewy  = lasty;
    viewz  = lastz;
+   viewangle = lastangle;
    view.x = lastxf;
    view.y = lastyf;
    view.z = lastzf;
+   view.angle = lastanglef;
+
+   view.sin = (float)sin(view.angle);
+   view.cos = (float)cos(view.angle);
 
    if(window->child)
       R_RenderAnchoredPortal(window->child);
@@ -993,9 +1171,6 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    fixed_t lastx, lasty, lastz;
    float   lastxf, lastyf, lastzf;
    portal_t *portal = window->portal;
-
-   // ioanch 20160123: keep track of window
-   portalrender.curwindow = window;
 
    if(portal->type != R_LINKED || window->maxx < window->minx)
       return;
@@ -1054,22 +1229,6 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    viewx  = window->vx + portal->data.link.deltax;
    viewy  = window->vy + portal->data.link.deltay;
    viewz  = window->vz + portal->data.link.deltaz;
-
-   // ioanch 20160227: microscopic adjustment for line portals to make sure
-   // the edge textures in the buffer sectors are seen in case of polyobject
-   // portals
-   //if(window->line && window->line->portal->data.link.polyportalpartner)
-   //{
-   //   if(window->line->dx > 0)
-   //      --viewy;
-   //   else if(window->line->dx < 0)
-   //      ++viewy;
-   //   if(window->line->dy > 0)
-   //      ++viewx;
-   //   else if(window->line->dy < 0)
-   //      --viewx;
-   //}
-
    view.x = M_FixedToFloat(viewx);
    view.y = M_FixedToFloat(viewy);
    view.z = M_FixedToFloat(viewz);
@@ -1155,7 +1314,7 @@ static void R_SetPortalFunction(pwindow_t *window)
 //
 // functions return a portal window based on the given parameters.
 //
-pwindow_t *R_GetFloorPortalWindow(portal_t *portal)
+pwindow_t *R_GetFloorPortalWindow(portal_t *portal, fixed_t planez)
 {
    pwindow_t *rover = windowhead;
 
@@ -1163,30 +1322,47 @@ pwindow_t *R_GetFloorPortalWindow(portal_t *portal)
    {
       // SoM: TODO: There could be the possibility of multiple portals
       // being able to share a single window set.
-      if(rover->portal == portal && rover->type == pw_floor)
+      // ioanch: also added plane checks
+      if(rover->portal == portal && rover->type == pw_floor &&
+         rover->planez == planez && !rover->up)
+      {
          return rover;
+      }
    
       rover = rover->next;
    }
 
    // not found, so make it
-   return R_NewPortalWindow(portal, NULL, pw_floor);
+   pwindow_t *window = R_NewPortalWindow(portal, NULL, pw_floor);
+   window->planez = planez;
+   window->up = false;
+   M_ClearBox(window->barrier.bbox);
+
+   return window;
 }
 
-pwindow_t *R_GetCeilingPortalWindow(portal_t *portal)
+pwindow_t *R_GetCeilingPortalWindow(portal_t *portal, fixed_t planez)
 {
    pwindow_t *rover = windowhead;
 
    while(rover)
    {
-      if(rover->portal == portal && rover->type == pw_ceiling)
+      if(rover->portal == portal && rover->type == pw_ceiling &&
+         rover->planez == planez && rover->up)
+      {
          return rover;
+      }
 
       rover = rover->next;
    }
 
    // not found, so make it
-   return R_NewPortalWindow(portal, NULL, pw_ceiling);
+   pwindow_t *window = R_NewPortalWindow(portal, NULL, pw_ceiling);
+   window->planez = planez;
+   window->up = true;
+   M_ClearBox(window->barrier.bbox);
+
+   return window;
 }
 
 pwindow_t *R_GetLinePortalWindow(portal_t *portal, line_t *line)
@@ -1237,7 +1413,6 @@ void R_RenderPortals()
       portalrender.w = windowhead;
       portalrender.segClipFunc = windowhead->clipfunc;
       portalrender.overlay = windowhead->portal->poverlay;
-      portalrender.curwindow = windowhead;   // ioanch 20160123: for safety
 
       if(windowhead->maxx >= windowhead->minx)
          windowhead->func(windowhead);
@@ -1246,7 +1421,6 @@ void R_RenderPortals()
       portalrender.w = NULL;
       portalrender.segClipFunc = NULL;
       portalrender.overlay = NULL;
-      portalrender.curwindow = nullptr;   // ioanch 20160123: reset it
 
       // free the window structs
       w = windowhead->child;
@@ -1267,6 +1441,47 @@ void R_RenderPortals()
    }
 
    windowlast = windowhead;
+}
+
+//=============================================================================
+//
+// Portal matrix methods
+//
+
+//
+// Apply transform to fixed-point values
+//
+void portaltransform_t::applyTo(fixed_t &x, fixed_t &y, 
+   float *fx, float *fy, bool nomove) const
+{
+   double wx = M_FixedToDouble(x);
+   double wy = M_FixedToDouble(y);
+   double vx = rot[0][0] * wx + rot[0][1] * wy;
+   double vy = rot[1][0] * wx + rot[1][1] * wy;
+   if(!nomove)
+   {
+      vx += move.x;
+      vy += move.y;
+   }
+   x = M_DoubleToFixed(vx);
+   y = M_DoubleToFixed(vy);
+   if(fx && fy)
+   {
+      *fx = static_cast<float>(vx);
+      *fy = static_cast<float>(vy);
+   }
+}
+void portaltransform_t::applyTo(float &x, float &y, bool nomove) const
+{
+   double vx = rot[0][0] * x + rot[0][1] * y;
+   double vy = rot[1][0] * x + rot[1][1] * y;
+   if(!nomove)
+   {
+      vx += move.x;
+      vy += move.y;
+   }
+   x = static_cast<float>(vx);
+   y = static_cast<float>(vy);
 }
 
 //=============================================================================
@@ -1313,6 +1528,412 @@ portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,
    ret->tainted = 0;
 
    return ret;
+}
+
+//=============================================================================
+//
+// Spawn portals from specials (legacy ones still in p_spec.cpp / P_SpawnPortal)
+//
+
+//
+// Actually pairs the lines. Make sure to call from both lines
+//
+static void R_pairPortalLines(line_t &line, line_t &pline)
+{
+   line.beyondportalline = &pline;  // used with MLI_POLYPORTALLINE
+   if(!line.backsector)
+   {
+      line.intflags |= MLI_POLYPORTALLINE;   // for rendering
+      if(line.portal && line.portal->type == R_LINKED)
+      {
+         // MAKE IT PASSABLE
+         line.backsector = line.frontsector;
+         line.sidenum[1] = line.sidenum[0];
+         line.flags &= ~ML_BLOCKING;
+         line.flags |= ML_TWOSIDED;
+      }
+   }
+
+   if(line.portal && pline.portal)
+   {
+      if(line.portal->type == R_LINKED &&
+         pline.portal->type == R_LINKED)
+      {
+         line.portal->data.link.polyportalpartner = pline.portal;
+         pline.portal->data.link.polyportalpartner = line.portal;
+      }
+      else if(line.portal->type == R_TWOWAY &&
+         pline.portal->type == R_TWOWAY)
+      {
+         line.portal->data.anchor.polyportalpartner = pline.portal;
+         pline.portal->data.anchor.polyportalpartner = line.portal;
+      }
+   }
+}
+
+//
+// Implements Line_QuickPortal
+//
+// Convenience special for easily creating a line portal connecting two areas
+// mutually. Apply this on two linedefs of equal length belonging to separate
+// areas. A pair of portals will be created for these two lines, visually (and
+// possibly spatially) connecting them. If the portal is NOT interactive, the
+// lines will also be possible to have different angles.
+//
+// Due to potential future changes, do NOT place the two linked (interactive)
+// portal linedefs at different angles, assuming that the resulting portal won't
+// have angles. For now, always place interactive portal lines at the same angle.
+// You can use different angles for non-interactive anchored portals.
+//
+// Arguments:
+// * type: portal type (0: interactive, 1: only visual)
+//
+int P_CreatePortalGroup(sector_t *from);
+void R_SpawnQuickLinePortal(line_t &line)
+{
+   if(!line.tag)
+   {
+      C_Printf(FC_ERROR "Line_QuickPortal can't use tag 0\a\n");
+      return;
+   }
+   if(line.args[0] != 0 && line.args[0] != 1)
+   {
+      C_Printf(FC_ERROR "Line_QuickPortal first argument must be 0 or 1\a\n");
+      return;
+   }
+   int searchPosition = -1;
+   line_t *otherline;
+   while((otherline = P_FindLine(line.tag, &searchPosition)))
+   {
+      if(otherline == &line || otherline->special != line.special ||
+         otherline->args[0] != line.args[0])
+      {
+         continue;
+      }
+      break;
+   }
+   if(!otherline)
+   {
+      C_Printf(FC_ERROR "Line_QuickPortal couldn't find the other like-tagged "
+         "line\a\n");
+      return;
+   }
+   bool linked = line.args[0] == 0;
+   // Strict requirement for angle equality for linked portals
+   if(linked && otherline->dx != -line.dx && otherline->dy != -line.dy)
+   {
+      C_Printf(FC_ERROR "Line_QuickPortal linked portal changing angle not "
+         "currently supported\a\n");
+      return;
+   }
+
+   int linenum = static_cast<int>(&line - lines);
+   int otherlinenum = static_cast<int>(otherline - lines);
+
+   portal_t *portals[2];
+   if(!linked)
+   {
+      portals[0] = R_GetTwoWayPortal(otherlinenum, linenum, true, true, 0);
+      portals[1] = R_GetTwoWayPortal(linenum, otherlinenum, true, true, 0);
+   }
+   else
+   {
+
+      if(line.frontsector->groupid == R_NOGROUP)
+         P_CreatePortalGroup(line.frontsector);
+      if(otherline->frontsector->groupid == R_NOGROUP)
+         P_CreatePortalGroup(otherline->frontsector);
+      int fromid = line.frontsector->groupid;
+      int toid = otherline->frontsector->groupid;
+
+      portals[0] = R_GetLinkedPortal(otherlinenum, linenum, 0, fromid, toid);
+      portals[1] = R_GetLinkedPortal(linenum, otherlinenum, 0, toid, fromid);
+   }
+
+   P_SetPortal(line.frontsector, &line, portals[0], portal_lineonly);
+   P_SetPortal(otherline->frontsector, otherline, portals[1], portal_lineonly);
+   if(linked)
+   {
+      R_pairPortalLines(line, *otherline);
+      R_pairPortalLines(*otherline, line);
+   }
+
+   // Now delete the special
+   line.special = 0;
+   memset(line.args, 0, sizeof(line.args));
+   otherline->special = 0;
+   memset(otherline->args, 0, sizeof(otherline->args));
+}
+
+//
+// Finds the first free portal id. Useful for map designers who are having 
+// trouble finding one.
+//
+static int R_findFreePortalId()
+{
+   int free = 1;
+   PODCollection<int> busylist;
+   for(const auto &entry : gPortals)
+   {
+      busylist.add(abs(entry.id));
+   }
+   qsort(&busylist[0], busylist.getLength(), sizeof(int), [](const void *a, const void *b) {
+      return *(int *)a - *(int *)b;
+   });
+   for(int b : busylist)
+   {
+      if(b == free)
+         ++free;
+      else if(b > free)
+         break;
+   }
+   return free;
+}
+
+//
+// Defines a portal without placing it in the map
+//
+void R_DefinePortal(const line_t &line)
+{
+   int portalid = line.args[0];
+   int int_type = line.args[1];
+   int anchorid = line.args[2];
+   fixed_t zoffset = line.args[3] << FRACBITS;
+   bool flipped = line.args[4] == 1;
+
+   if(int_type < 0 || int_type >= static_cast<int>(portaltype_MAX))
+   {
+      C_Printf(FC_ERROR "Wrong portal type %d for line %d\a\n", int_type, 
+         static_cast<int>(&line - lines));
+      return;
+   }
+
+   if(portalid <= 0)
+   {
+      C_Printf(FC_ERROR "Portal id 0 or negative not allowed\a\n");
+      return;
+   }
+
+   for(const auto &entry : gPortals)
+   {
+      if(abs(entry.id) == portalid) // also check against negatives
+      {
+         int freeid = R_findFreePortalId();
+         C_Printf(FC_ERROR "Portal id %d was already set. Use %d instead on linedef %d.\a\n", 
+            portalid, freeid, (int)(&line - lines));
+         return;
+      }
+   }
+
+   auto type = static_cast<portaltype_e>(int_type);
+   portal_t *portal, *mirrorportal = nullptr;
+   sector_t *sector = line.frontsector;
+   sector_t *othersector;
+   Mobj *skycam;
+   int destlinenum;
+   const int thislinenum = static_cast<int>(&line - lines);
+   int toid, fromid;
+   fixed_t planez;
+
+   const int CamType = E_ThingNumForName("EESkyboxCam");
+
+   switch(type)
+   {
+   case portaltype_plane:
+      portal = R_GetPlanePortal(&sector->ceilingpic, &sector->ceilingheight,
+         &sector->lightlevel, &sector->ceiling_xoffs, &sector->ceiling_yoffs,
+         &sector->ceilingbaseangle, &sector->ceilingangle);
+      break;
+   case portaltype_horizon:
+      portal = R_GetHorizonPortal(&sector->floorpic, &sector->ceilingpic,
+         &sector->floorheight, &sector->ceilingheight, &sector->lightlevel,
+         &sector->lightlevel, &sector->floor_xoffs, &sector->floor_yoffs,
+         &sector->ceiling_xoffs, &sector->ceiling_yoffs,
+         &sector->floorbaseangle, &sector->floorangle,
+         &sector->ceilingbaseangle, &sector->ceilingangle);
+      break;
+   case portaltype_skybox:
+      skycam = sector->thinglist;
+      while(skycam)
+      {
+         if(skycam->type == CamType)
+            break;
+         skycam = skycam->snext;
+      }
+      if(!skycam)
+      {
+         C_Printf(FC_ERROR "Skybox found with no camera\a\n");
+         return;
+      }
+      portal = R_GetSkyBoxPortal(skycam);
+      break;
+   case portaltype_anchor:
+   case portaltype_twoway:
+   case portaltype_linked:
+      if(!anchorid)
+      {
+         C_Printf(FC_ERROR "Anchored portal must have anchor line id\a\n");
+         return;
+      }
+      for(destlinenum = -1; 
+         (destlinenum = P_FindLineFromTag(anchorid, destlinenum)) >= 0; )
+      {
+         if(&lines[destlinenum] == &line)  // don't allow same target
+            continue;
+         break;
+      }
+      if(destlinenum == -1)
+      {
+         C_Printf(FC_ERROR "No anchor line found\a\n");
+         return;
+      }
+      if(type == portaltype_anchor)
+         portal = R_GetAnchoredPortal(destlinenum, thislinenum, true, flipped, zoffset);
+      else if(type == portaltype_twoway)
+      {
+         portal = R_GetTwoWayPortal(destlinenum, thislinenum, true, flipped,
+            zoffset);
+         mirrorportal = R_GetTwoWayPortal(thislinenum, destlinenum, true,
+            flipped, -zoffset);
+      }
+      else
+      {
+         othersector = lines[destlinenum].frontsector;
+         if(sector->groupid == R_NOGROUP)
+            P_CreatePortalGroup(sector);
+         if(othersector->groupid == R_NOGROUP)
+            P_CreatePortalGroup(othersector);
+         fromid = sector->groupid;
+         toid = othersector->groupid;
+
+         if(othersector->floorheight / 2 + othersector->ceilingheight / 2 <=
+            sector->floorheight / 2 + sector->ceilingheight / 2)
+         {
+            // this sector is above the other
+            planez = sector->floorheight + zoffset;
+         }
+         else
+            planez = sector->ceilingheight + zoffset;
+
+         portal = R_GetLinkedPortal(destlinenum, thislinenum, planez, fromid, 
+            toid);
+         mirrorportal = R_GetLinkedPortal(thislinenum, destlinenum, planez, 
+            toid, fromid);
+      }
+      break;
+   default:
+      return;
+   }
+   
+   // Done
+   edefstructvar(portalentry_t, entry);
+   entry.id = portalid;
+   entry.portal = portal;
+   gPortals.add(entry);
+   if(mirrorportal)
+   {
+      entry.portal = mirrorportal;
+      entry.id = -entry.id;
+      gPortals.add(entry);
+   }
+}
+
+//
+// Applies the portals defined with IDs
+//
+void R_ApplyPortals(sector_t &sector, int portalceiling, int portalfloor)
+{
+   if(portalceiling || portalfloor)
+   {
+      for(const auto &entry : gPortals)
+      {
+         if(portalceiling && entry.id == portalceiling)
+         {
+            P_SetPortal(&sector, nullptr, entry.portal, portal_ceiling);
+            portalceiling = 0;
+         }
+         if(portalfloor && entry.id == portalfloor)
+         {
+            P_SetPortal(&sector, nullptr, entry.portal, portal_floor);
+            portalfloor = 0;
+         }
+         if(!portalfloor && !portalceiling)
+            return;
+      }
+   }
+}
+
+//
+// Bonds two portal lines for some features depending on it to work. Does 
+// blockmap search to find the partner.
+//
+static void R_findPairPortalLines(line_t &line)
+{
+   v2fixed_t tv1 = { line.v1->x, line.v1->y };
+   v2fixed_t tv2 = { line.v2->x, line.v2->y };
+   R_applyPortalTransformTo(line.portal, tv1.x, tv1.y, true);
+   R_applyPortalTransformTo(line.portal, tv2.x, tv2.y, true);
+   // Do a blockmap search
+   int bx = (tv1.x - bmaporgx) >> MAPBLOCKSHIFT;
+   int by = (tv1.y - bmaporgy) >> MAPBLOCKSHIFT;
+   if(bx < 0 || bx >= bmapwidth || by < 0 || by >= bmapheight)
+      return;  // sanity check
+
+   int neighbourhood[3] = { 0, -1, 1 };
+   int i, j;
+
+   // Also search neighbouring blocks. A bit overkill and shouldn't happen
+   // in well-built maps, but the idea is to treat edge cases where a line
+   // is right on a block boundary. Normally I should check the proximity of
+   // the vector on that boundary, but you know map authors in the wild...
+   for(i = 0; i < 3; ++i)
+      for(j = 0; j < 3; ++j)
+      {
+         int nbx = bx + neighbourhood[j];
+         int nby = by + neighbourhood[i];
+         if(nbx < 0 || nbx >= bmapwidth || nby < 0 || nby >= bmapheight)
+            continue;  // sanity check
+
+         int offset = nby * bmapwidth + nbx;
+         offset = *(blockmap + offset);
+         const int *list = blockmaplump + offset;
+
+         ++list;
+         for(; *list != -1; ++list)
+         {
+            if(*list >= numlines || *list < 0)
+               continue;
+            line_t &pline = lines[*list];
+
+            // As close as possible, but not exaggerated
+            if(D_abs(pline.v2->x - tv1.x) > FRACUNIT / 16 ||
+               D_abs(pline.v2->y - tv1.y) > FRACUNIT / 16 ||
+               D_abs(pline.v1->x - tv2.x) > FRACUNIT / 16 ||
+               D_abs(pline.v1->y - tv2.y) > FRACUNIT / 16)
+            {
+               continue;
+            }
+
+            R_pairPortalLines(line, pline);
+            return;
+         }
+      }
+}
+
+//
+// Applies portal marked id on a line
+//
+void R_ApplyPortal(line_t &line, int portal)
+{
+   if(portal)
+      for(const auto &entry : gPortals)
+         if(entry.id == portal)
+         {
+            P_SetPortal(line.frontsector, &line, entry.portal, portal_lineonly);
+            if(R_portalIsAnchored(entry.portal))
+               R_findPairPortalLines(line);
+            return;
+         }
 }
 
 // EOF

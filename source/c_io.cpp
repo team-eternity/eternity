@@ -51,7 +51,6 @@
 #include "s_sound.h"
 #include "d_gi.h"
 #include "g_bind.h"
-#include "a_small.h" // haleyjd
 #include "e_fonts.h"
 #include "m_qstr.h"
 #include "v_block.h"
@@ -104,7 +103,7 @@ char *c_fontname;
 // ticker, responder, drawer, init etc.
 //
 
-static void C_initBackdrop()
+void C_InitBackdrop()
 {
    const char *lumpname;
    int lumpnum;
@@ -467,7 +466,7 @@ void C_Drawer(void)
    // SoM: Check width too.
    if(oldscreenheight != video.height || oldscreenwidth != video.width)
    {
-      C_initBackdrop();       // re-init to the new screen size
+      C_InitBackdrop();       // re-init to the new screen size
       oldscreenheight = video.height;
       oldscreenwidth = video.width;
    }

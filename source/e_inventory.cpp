@@ -932,7 +932,7 @@ bool E_PlayerCanUnlock(player_t *player, int lockID, bool remote)
 int E_GetLockDefColor(int lockID)
 {
    int color = 0;
-   lockdef_t *lock;
+   const lockdef_t *lock;
 
    if((lock = E_LockDefForID(lockID)))
    {

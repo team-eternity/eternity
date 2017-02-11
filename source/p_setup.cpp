@@ -83,6 +83,17 @@ extern const char *level_error;
 extern void R_DynaSegOffset(seg_t *lseg, line_t *line, int side);
 
 //
+// Miscellaneous constants
+//
+enum
+{
+   // vertex distance limit over which NOT to fix slime trails. Useful for
+   // the new vanilla Doom rendering trick discovered by Linguica. Link here:
+   // http://www.doomworld.com/vb/doom-editing/74354-stupid-bsp-tricks/
+   LINGUORTAL_THRESHOLD = 8 * FRACUNIT,   
+};
+
+//
 // ZNodeType
 //
 // IOANCH: ZDoom node type enum
@@ -160,6 +171,8 @@ Mobj    **blocklinks;             // for thing chains
 byte     *portalmap;              // haleyjd: for portals
 // ioanch 20160106: more detailed info (list of groups for each block)
 int     **gBlockGroups; 
+
+bool      skipblstart;            // MaxW: Skip initial blocklist short
 
 //
 // REJECT
@@ -593,6 +606,12 @@ void P_InitSector(sector_t *ss)
    // SoM: These are kept current with floorheight and ceilingheight now
    ss->floorheightf   = M_FixedToFloat(ss->floorheight);
    ss->ceilingheightf = M_FixedToFloat(ss->ceilingheight);
+
+   // needs to be defaulted as it starts as nonzero
+   ss->floor_xscale = 1.0;
+   ss->floor_yscale = 1.0;
+   ss->ceiling_xscale = 1.0;
+   ss->ceiling_yscale = 1.0;
 
    // haleyjd 09/24/06: sound sequences -- set default
    ss->sndSeqID = defaultSndSeq;
@@ -1746,8 +1765,8 @@ static int spac_flags_tlate[HX_SPAC_NUMSPAC] =
    EX_ML_CROSS  | EX_ML_PLAYER,                   // SPAC_CROSS
    EX_ML_USE    | EX_ML_PLAYER,                   // SPAC_USE
    EX_ML_CROSS  | EX_ML_MONSTER,                  // SPAC_MCROSS
-   EX_ML_IMPACT | EX_ML_MISSILE,                  // SPAC_IMPACT
-   EX_ML_PUSH   | EX_ML_PLAYER   | EX_ML_MONSTER, // SPAC_PUSH
+   EX_ML_IMPACT | EX_ML_PLAYER  | EX_ML_MISSILE,  // SPAC_IMPACT
+   EX_ML_PUSH,                                    // SPAC_PUSH
    EX_ML_CROSS  | EX_ML_MISSILE                   // SPAC_PCROSS
 };
 
@@ -1770,13 +1789,8 @@ static void P_ConvertHexenLineFlags(line_t *line)
    if(line->flags & HX_ML_REPEAT_SPECIAL)
       line->extflags |= EX_ML_REPEAT;
 
-   // FIXME/TODO: set 1SONLY line flag here, or elsewhere? Depends on special...
-
    // clear line flags to those that are shared with DOOM
    line->flags &= HX_SHAREDFLAGS;
-
-   // FIXME/TODO: how to support Eternity's extended normal flags in Hexen?
-   // We want Hexen to be able to use stuff like 3DMidTex also.
 }
 
 //
@@ -2234,6 +2248,8 @@ static bool P_VerifyBlockMap(int count)
 
    bmaperrormsg = NULL;
 
+   skipblstart = true;
+
    for(y = 0; y < bmapheight; y++)
    {
       for(x = 0; x < bmapwidth; x++)
@@ -2255,6 +2271,9 @@ static bool P_VerifyBlockMap(int count)
          
          offset = *blockoffset;         
          list   = blockmaplump + offset;
+
+         if(*list != 0)
+            skipblstart = false;
 
          // scan forward for a -1 terminator before maxoffs
          for(tmplist = list; ; tmplist++)
@@ -2566,9 +2585,22 @@ void P_RemoveSlimeTrails()             // killough 10/98
                   int     x0  = v->x, y0 = v->y, x1 = l->v1->x, y1 = l->v1->y;
                   v->x = (fixed_t)((dx2 * x0 + dy2 * x1 + dxy * (y0 - y1)) / s);
                   v->y = (fixed_t)((dy2 * y0 + dx2 * y1 + dxy * (x0 - x1)) / s);
-                  // Cardboard store float versions of vertices.
-                  v->fx = M_FixedToFloat(v->x);
-                  v->fy = M_FixedToFloat(v->y);
+
+                  // ioanch: add linguortal support, from PrBoom+/[crispy]
+                  // demo_version check needed, for similar reasons as above
+                  if(demo_version >= 342 &&
+                     (D_abs(x0 - v->x) > LINGUORTAL_THRESHOLD ||
+                      D_abs(y0 - v->y) > LINGUORTAL_THRESHOLD))
+                  {
+                     v->x = x0;  // reset
+                     v->y = y0;
+                  }
+                  else
+                  {
+                     // Cardboard store float versions of vertices.
+                     v->fx = M_FixedToFloat(v->x);
+                     v->fy = M_FixedToFloat(v->y);
+                  }
                }
             }  
          } // Obfuscated C contest entry:   :)
@@ -3237,7 +3269,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    // IOANCH 20151212: UDMF
    if(isUdmf)
    {
-      if(!udmf.loadLinedefs())
+      if(!udmf.loadLinedefs(setupSettings))
       {
          P_SetupLevelError(udmf.error().constPtr(), mapname);
          return;
@@ -3366,7 +3398,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    P_SpawnSpecials(setupSettings);
 
    // SoM: Deferred specials that need to be spawned after P_SpawnSpecials
-   P_SpawnDeferredSpecials();
+   P_SpawnDeferredSpecials(setupSettings);
 
    // haleyjd
    P_InitLightning();

@@ -97,6 +97,7 @@ static unsigned int sector_chains[NUMSECCHAINS];
 #define FIELD_OPTIONS "options"
 #define FIELD_ARGS    "args"
 #define FIELD_HEIGHT  "height"
+#define FIELD_SPECIAL "special"
 
 // linedef fields:
 #define FIELD_LINE_NUM       "recordnum"
@@ -122,10 +123,14 @@ static unsigned int sector_chains[NUMSECCHAINS];
 #define FIELD_SECTOR_FLOORANGLE     "floorangle"
 #define FIELD_SECTOR_FLOOROFFSETX   "flooroffsetx"
 #define FIELD_SECTOR_FLOOROFFSETY   "flooroffsety"
+#define FIELD_SECTOR_FLOORSCALEX    "floorscalex"
+#define FIELD_SECTOR_FLOORSCALEY    "floorscaley"
 #define FIELD_SECTOR_CEILINGTERRAIN "ceilingterrain"
 #define FIELD_SECTOR_CEILINGANGLE   "ceilingangle"
 #define FIELD_SECTOR_CEILINGOFFSETX "ceilingoffsetx"
 #define FIELD_SECTOR_CEILINGOFFSETY "ceilingoffsety"
+#define FIELD_SECTOR_CEILINGSCALEX  "ceilingscalex"
+#define FIELD_SECTOR_CEILINGSCALEY  "ceilingscaley"
 #define FIELD_SECTOR_TOPMAP         "colormaptop"
 #define FIELD_SECTOR_MIDMAP         "colormapmid"
 #define FIELD_SECTOR_BOTTOMMAP      "colormapbottom"
@@ -144,6 +149,7 @@ static cfg_opt_t mapthing_opts[] =
    CFG_STR(FIELD_OPTIONS, "", CFGF_NONE),
    CFG_STR(FIELD_ARGS,    0,  CFGF_LIST),
    CFG_INT(FIELD_HEIGHT,  0,  CFGF_NONE),
+   CFG_INT(FIELD_SPECIAL, 0,  CFGF_NONE),
    CFG_END()
 };
 
@@ -204,6 +210,9 @@ static dehflags_t extlineflags[] =
    { "BLOCKALL",     EX_ML_BLOCKALL     },
    { "ZONEBOUNDARY", EX_ML_ZONEBOUNDARY },
    { "CLIPMIDTEX",   EX_ML_CLIPMIDTEX   },
+   { "LOWERPORTAL",  EX_ML_LOWERPORTAL  },
+   { "UPPERPORTAL",  EX_ML_UPPERPORTAL  },
+   { "POLYOBJECT",   EX_ML_POLYOBJECT   },
    { NULL,           0                  }
 };
 
@@ -237,6 +246,10 @@ static cfg_opt_t sector_opts[] =
    CFG_FLOAT(FIELD_SECTOR_FLOOROFFSETY,   0.0,        CFGF_NONE),
    CFG_FLOAT(FIELD_SECTOR_CEILINGOFFSETX, 0.0,        CFGF_NONE),
    CFG_FLOAT(FIELD_SECTOR_CEILINGOFFSETY, 0.0,        CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_FLOORSCALEX,    1.0,        CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_FLOORSCALEY,    1.0,        CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_CEILINGSCALEX,  1.0,        CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_CEILINGSCALEY,  1.0,        CFGF_NONE),
    CFG_FLOAT(FIELD_SECTOR_FLOORANGLE,     0.0,        CFGF_NONE),
    CFG_FLOAT(FIELD_SECTOR_CEILINGANGLE,   0.0,        CFGF_NONE),
 
@@ -495,6 +508,8 @@ static void E_ProcessEDThings(cfg_t *cfg)
       // get height
       // ioanch 20151218: fixed point coordinate
       EDThings[i].height = (int16_t)cfg_getint(thingsec, FIELD_HEIGHT) << FRACBITS;
+
+      EDThings[i].special = int16_t(cfg_getint(thingsec, FIELD_SPECIAL));
 
       // TODO: any other new fields
    }
@@ -1335,6 +1350,13 @@ static void E_ProcessEDSectors(cfg_t *cfg)
       sec->ceiling_xoffs = cfg_getfloat(section, FIELD_SECTOR_CEILINGOFFSETX);
       sec->ceiling_yoffs = cfg_getfloat(section, FIELD_SECTOR_CEILINGOFFSETY);
 
+      // floor and ceiling scale
+      sec->floor_xscale   = cfg_getfloat(section, FIELD_SECTOR_FLOORSCALEX);
+      sec->floor_yscale   = cfg_getfloat(section, FIELD_SECTOR_FLOORSCALEY);
+      sec->ceiling_xscale = cfg_getfloat(section, FIELD_SECTOR_CEILINGSCALEX);
+      sec->ceiling_yscale = cfg_getfloat(section, FIELD_SECTOR_CEILINGSCALEY);
+
+
       // floor and ceiling angles
       tempdouble = cfg_getfloat(section, FIELD_SECTOR_FLOORANGLE);
       sec->floorangle = E_NormalizeFlatAngle(tempdouble);
@@ -1594,6 +1616,12 @@ void E_LoadSectorExt(line_t *line, UDMFSetupSettings &setupSettings)
    sector->floor_yoffs   = M_DoubleToFixed(edsector->floor_yoffs);
    sector->ceiling_xoffs = M_DoubleToFixed(edsector->ceiling_xoffs);
    sector->ceiling_yoffs = M_DoubleToFixed(edsector->ceiling_yoffs);
+
+   // floor and ceiling scale
+   sector->floor_xscale = static_cast<float>(edsector->floor_xscale);
+   sector->floor_yscale = static_cast<float>(edsector->floor_yscale);
+   sector->ceiling_xscale = static_cast<float>(edsector->ceiling_xscale);
+   sector->ceiling_yscale = static_cast<float>(edsector->ceiling_yscale);
 
    // flat angles
    sector->floorbaseangle   = (float)(edsector->floorangle   * PI / 180.0f);

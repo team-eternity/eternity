@@ -34,7 +34,7 @@
 #include "doomtype.h"
 #include "d_io.h"
 #include "d_dwfile.h"
-#include "m_misc.h"
+#include "m_utils.h"
 #include "w_wad.h"
 
 //
@@ -67,7 +67,7 @@ char *DWFILE::getStr(char *buf, size_t n)
       return fgets(buf, n, (FILE *)inp);
    
    // If no more characters
-   if(!n || !*inp || size <= 0)
+   if(!n || size <= 0 || !*inp)
       return NULL;
   
    if(n == 1)

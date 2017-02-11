@@ -34,7 +34,6 @@
 #include "doomstat.h"
 #include "e_hash.h"
 #include "m_compare.h"
-#include "m_misc.h"
 #include "m_swap.h"
 #include "p_info.h"   // haleyjd
 #include "p_skin.h"
@@ -76,6 +75,8 @@ int         firstspritelump, lastspritelump, numspritelumps;
 fixed_t     *spritewidth, *spriteoffset, *spritetopoffset;
 // SoM: used by cardboard
 float       *spriteheight;
+// ioanch: portal sprite copying cache info
+sprvertspan_t **r_sprvertspan;
 
 //
 // R_InitSpriteLumps
@@ -120,6 +121,49 @@ void R_InitSpriteLumps(void)
       spriteoffset[i]    = patch->leftoffset << FRACBITS;
       spritetopoffset[i] = patch->topoffset << FRACBITS;
       spriteheight[i]    = (float)patch->height;
+   }
+}
+
+//
+// Init height cache for rendering across sector portals
+//
+void R_InitSpriteProjSpan()
+{
+   r_sprvertspan = emalloctag(decltype(r_sprvertspan),
+                              numsprites * sizeof(*r_sprvertspan), PU_RENDERER,
+                              nullptr);
+   for(int i = 0; i < numsprites; ++i)
+   {
+      const spritedef_t &sprite = sprites[i];
+      r_sprvertspan[i] = emalloctag(sprvertspan_t *,
+                                    sprite.numframes * sizeof(**r_sprvertspan),
+                                    PU_RENDERER, nullptr);
+      for(int j = 0; j < sprite.numframes; ++j)
+      {
+         const spriteframe_t &frame = sprite.spriteframes[j];
+         sprvertspan_t &span = r_sprvertspan[i][j];
+         if(frame.rotate)
+         {
+            span.bottom = FLT_MAX;
+            span.top = -FLT_MAX;
+            for(int16_t lump : frame.lump)
+            {
+               float height = spriteheight[lump];
+               auto yofs = static_cast<float>(spritetopoffset[lump] >> FRACBITS);
+
+               if(yofs - height < span.bottom)
+                  span.bottom = yofs - height;
+               if(yofs > span.top)
+                  span.top = yofs;
+            }
+         }
+         else
+         {
+            int16_t lump = frame.lump[0];
+            span.top = static_cast<float>(spritetopoffset[lump] >> FRACBITS);
+            span.bottom = span.top - spriteheight[lump];
+         }
+      }
    }
 }
 
