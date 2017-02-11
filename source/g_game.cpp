@@ -249,6 +249,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    double tmousex, tmousey;     // local mousex, mousey
    playerclass_t *pc = players[consoleplayer].pclass;
    invbarstate_t &invbarstate = GameModeInfo->StatusBar->GetInvBarState();
+   player_t &p = players[consoleplayer]; // used to pretty-up code
 
    base = I_BaseTiccmd();    // empty, or external driver
    memcpy(cmd, base, sizeof(*cmd));
@@ -262,7 +263,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
    forward = side = 0;
 
-   cmd->itemID = -1; // Nothing to see here
+   cmd->itemID = 0; // Nothing to see here
    if(gameactions[ka_inventory_use])
    {
       // FIXME: Handle noartiskip
@@ -274,7 +275,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       }
       else if(usearti)
       {
-         cmd->itemID = players[consoleplayer].inventory[players[consoleplayer].inv_ptr].item;
+         cmd->itemID = p.inventory[p.inv_ptr].item + 1;
          usearti = false;
       }
       gameactions[ka_inventory_use] = false;
@@ -1381,10 +1382,13 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
       else
          cmd->fly = 0;
       
-      if(full_demo_version >= make_full_version(340, 48))
-         cmd->itemID = *demo_p++;
+      if(full_demo_version >= make_full_version(342, 1))
+      {
+         cmd->itemID =   *demo_p++;
+         cmd->itemID |= (*demo_p++) << 8;
+      }
       else
-         cmd->itemID = -1;
+         cmd->itemID = 0;
 
       // killough 3/26/98, 10/98: Ignore savegames in demos 
       if(demoplayback && 
@@ -1442,8 +1446,11 @@ static void G_WriteDemoTiccmd(ticcmd_t *cmd)
    if(full_demo_version >= make_full_version(340, 23))
       demo_p[i++] = cmd->fly;
 
-   if(full_demo_version >= make_full_version(340, 48))
-      demo_p[i] = cmd->itemID;
+   if(full_demo_version >= make_full_version(342, 1))
+   {
+      demo_p[i++] =  cmd->itemID & 0xff;
+      demo_p[i] = (cmd->itemID >> 8) & 0xff;
+   }
    
    if(position + 16 > maxdemosize)   // killough 8/23/98
    {

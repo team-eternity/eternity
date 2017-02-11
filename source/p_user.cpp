@@ -618,9 +618,9 @@ void P_PlayerThink(player_t *player)
 
    cmd = &player->cmd;
 
-   if(cmd->itemID != -1)
+   if(cmd->itemID)
    {
-      E_TryUseItem(player, cmd->itemID);
+      E_TryUseItem(player, cmd->itemID - 1); // ticcmd ID is off by one
    }
 
    if(player->mo->flags & MF_JUSTATTACKED)

@@ -258,7 +258,7 @@ bool PacketSend(void)
          NETWRITEBYTEIF(netbuffer->d.cmds[c].actions,  TCF_ACTIONS);
          NETWRITESHORTIF(netbuffer->d.cmds[c].look,    TCF_LOOK);
          NETWRITEBYTEIF(netbuffer->d.cmds[c].fly,      TCF_FLY);
-         NETWRITEBYTEIF(netbuffer->d.cmds[c].itemID,   TCF_ITEMID);
+         NETWRITESHORTIF(netbuffer->d.cmds[c].itemID,  TCF_ITEMID);
 
          // go back to ticstart and write in the flags
          ticend = rover;
@@ -390,7 +390,10 @@ bool PacketGet(void)
          if(ticcmdflags & TCF_FLY)
             netbuffer->d.cmds[c].fly = *rover++;
          if(ticcmdflags & TCF_ITEMID)
-            netbuffer->d.cmds[c].itemID = *rover++;
+         {
+            netbuffer->d.cmds[c].itemID = NetToHost16(rover);
+            rover += 2;
+         }
       }
    }
    else
