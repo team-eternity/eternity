@@ -1627,6 +1627,22 @@ inline static bool AM_drawAsClosedDoor(const line_t *line)
 }
 
 //
+// True if floor or ceiling heights are different, lower or upper portal aware
+//
+inline static bool AM_differentFloor(const line_t &line)
+{
+   return line.frontsector->floorheight > line.backsector->floorheight ||
+   (line.frontsector->floorheight < line.backsector->floorheight &&
+    !(line.extflags & EX_ML_LOWERPORTAL));
+}
+inline static bool AM_differentCeiling(const line_t &line)
+{
+   return line.frontsector->ceilingheight < line.backsector->ceilingheight ||
+   (line.frontsector->ceilingheight > line.backsector->ceilingheight &&
+    !(line.extflags & EX_ML_UPPERPORTAL));
+}
+
+//
 // Determines visible lines, draws them.
 // This is LineDef based, not LineSeg based.
 //
@@ -1675,9 +1691,7 @@ static void AM_drawWalls()
             l.b.y += M_FixedToDouble(link->y);
          }
          // if line has been seen or IDDT has been used
-         if(ddt_cheating || (line->flags & ML_MAPPED &&
-                             !(line->extflags & (EX_ML_LOWERPORTAL |
-                                                 EX_ML_UPPERPORTAL))))
+         if(ddt_cheating || (line->flags & ML_MAPPED))
          {
             // check for DONTDRAW flag; those lines are only visible
             // if using the IDDT cheat.
@@ -1685,8 +1699,7 @@ static void AM_drawWalls()
                continue;
 
             if(!line->backsector ||
-               line->backsector->floorheight != line->frontsector->floorheight ||
-               line->backsector->ceilingheight != line->frontsector->ceilingheight)
+               AM_differentFloor(*line) || AM_differentCeiling(*line))
             {
                AM_drawMline(&l, mapcolor_prtl);
             }
@@ -1697,8 +1710,7 @@ static void AM_drawWalls()
             if(!(line->flags & ML_DONTDRAW)) // invisible flag lines do not show
             {
                if(!line->backsector ||
-                  line->backsector->floorheight != line->frontsector->floorheight ||
-                  line->backsector->ceilingheight != line->frontsector->ceilingheight)
+                  AM_differentFloor(*line) || AM_differentCeiling(*line))
                {
                   AM_drawMline(&l, mapcolor_prtl);
                }
@@ -1734,9 +1746,7 @@ static void AM_drawWalls()
       }
 
       // if line has been seen or IDDT has been used
-      if(ddt_cheating || (line->flags & ML_MAPPED &&
-                          !(line->extflags & (EX_ML_LOWERPORTAL |
-                                              EX_ML_UPPERPORTAL))))
+      if(ddt_cheating || (line->flags & ML_MAPPED))
       {
          // check for DONTDRAW flag; those lines are only visible
          // if using the IDDT cheat.
@@ -1801,13 +1811,11 @@ static void AM_drawWalls()
             {
                AM_drawMline(&l, mapcolor_secr); // line bounding secret sector
             } 
-            else if(line->backsector->floorheight !=
-                    line->frontsector->floorheight)
+            else if(AM_differentFloor(*line))
             {
                AM_drawMline(&l, mapcolor_fchg); // floor level change
             }
-            else if(line->backsector->ceilingheight !=
-                    line->frontsector->ceilingheight)
+            else if(AM_differentCeiling(*line))
             {
                AM_drawMline(&l, mapcolor_cchg); // ceiling level change
             }
@@ -1822,11 +1830,8 @@ static void AM_drawWalls()
          // now draw the lines only visible because the player has computermap
          if(!(line->flags & ML_DONTDRAW)) // invisible flag lines do not show
          {
-            if(mapcolor_flat ||
-               !line->backsector ||
-               line->backsector->floorheight != line->frontsector->floorheight ||
-               line->backsector->ceilingheight != line->frontsector->ceilingheight
-              )
+            if(mapcolor_flat || !line->backsector ||
+               AM_differentFloor(*line) || AM_differentCeiling(*line))
             {
                AM_drawMline(&l, mapcolor_unsn);
             }
