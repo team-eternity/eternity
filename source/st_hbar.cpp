@@ -425,7 +425,7 @@ static void ST_drawStatBar()
    // It's safety checks all the way down!
    else if(plyr->inventory[plyr->inv_ptr].amount)
    {
-      if((artifact = E_EffectForInventoryItemID(plyr->inventory[plyr->inv_ptr].item)))
+      if((artifact = E_EffectForInventoryIndex(plyr, plyr->inv_ptr)))
       {
          patch = artifact->getString("icon", "");
          if(strcmp(patch, "") && artifact->getInt("invbar", 0))
@@ -497,7 +497,7 @@ static void ST_drawInvBar()
       // for the selected item, then that there is an associated patch for that effect.
       if(plyr->inventory[i + leftoffs].amount > 0)
       {
-         if((artifact = E_EffectForInventoryItemID(plyr->inventory[i + leftoffs].item)))
+         if((artifact = E_EffectForInventoryIndex(plyr, i + leftoffs)))
          {
             patch = artifact->getString("icon", "");
             if(strcmp(patch, ""))
