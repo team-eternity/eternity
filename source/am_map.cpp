@@ -1642,6 +1642,12 @@ inline static bool AM_differentCeiling(const line_t &line)
     !(line.extflags & EX_ML_UPPERPORTAL));
 }
 
+inline static bool AM_dontDraw(const line_t &line)
+{
+   return line.flags & ML_DONTDRAW ||
+   line.frontsector->intflags & SIF_PORTALBOX;
+}
+
 //
 // Determines visible lines, draws them.
 // This is LineDef based, not LineSeg based.
@@ -1695,7 +1701,7 @@ static void AM_drawWalls()
          {
             // check for DONTDRAW flag; those lines are only visible
             // if using the IDDT cheat.
-            if((line->flags & ML_DONTDRAW) && !ddt_cheating)
+            if(AM_dontDraw(*line) && !ddt_cheating)
                continue;
 
             if(!line->backsector ||
@@ -1707,7 +1713,7 @@ static void AM_drawWalls()
          else if(plr->powers[pw_allmap]) // computermap visible lines
          {
             // now draw the lines only visible because the player has computermap
-            if(!(line->flags & ML_DONTDRAW)) // invisible flag lines do not show
+            if(!AM_dontDraw(*line)) // invisible flag lines do not show
             {
                if(!line->backsector ||
                   AM_differentFloor(*line) || AM_differentCeiling(*line))
@@ -1750,7 +1756,7 @@ static void AM_drawWalls()
       {
          // check for DONTDRAW flag; those lines are only visible
          // if using the IDDT cheat.
-         if((line->flags & ML_DONTDRAW) && !ddt_cheating)
+         if(AM_dontDraw(*line) && !ddt_cheating)
             continue;
 
          if(!line->backsector) // 1S lines
@@ -1828,7 +1834,7 @@ static void AM_drawWalls()
       else if(plr->powers[pw_allmap]) // computermap visible lines
       {
          // now draw the lines only visible because the player has computermap
-         if(!(line->flags & ML_DONTDRAW)) // invisible flag lines do not show
+         if(!AM_dontDraw(*line)) // invisible flag lines do not show
          {
             if(mapcolor_flat || !line->backsector ||
                AM_differentFloor(*line) || AM_differentCeiling(*line))
