@@ -530,6 +530,13 @@ static void P_ArchivePlayers(SaveArchive &arc)
             p.cmd.buttons = 0;     // sf
             p.prevviewz   = p.viewz;
             p.prevpitch   = p.pitch;
+
+            // FIXME: This is terrible; maybe make invbarstate a member of player_t?
+            if(i == consoleplayer)
+            {
+               invbarstate_t &invbarstate = GameModeInfo->StatusBar->GetInvBarState();
+               invbarstate.inv_ptr = p.inv_ptr;
+            }
          }
       }
    }
