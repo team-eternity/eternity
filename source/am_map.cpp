@@ -36,6 +36,7 @@
 #include "d_main.h"
 #include "doomstat.h"
 #include "dstrings.h"
+#include "e_exdata.h"
 #include "e_inventory.h"
 #include "ev_specials.h"
 #include "g_bind.h"
@@ -1674,7 +1675,9 @@ static void AM_drawWalls()
             l.b.y += M_FixedToDouble(link->y);
          }
          // if line has been seen or IDDT has been used
-         if(ddt_cheating || (line->flags & ML_MAPPED))
+         if(ddt_cheating || (line->flags & ML_MAPPED &&
+                             !(line->extflags & (EX_ML_LOWERPORTAL |
+                                                 EX_ML_UPPERPORTAL))))
          {
             // check for DONTDRAW flag; those lines are only visible
             // if using the IDDT cheat.
@@ -1731,7 +1734,9 @@ static void AM_drawWalls()
       }
 
       // if line has been seen or IDDT has been used
-      if(ddt_cheating || (line->flags & ML_MAPPED))
+      if(ddt_cheating || (line->flags & ML_MAPPED &&
+                          !(line->extflags & (EX_ML_LOWERPORTAL |
+                                              EX_ML_UPPERPORTAL))))
       {
          // check for DONTDRAW flag; those lines are only visible
          // if using the IDDT cheat.
