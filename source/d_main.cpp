@@ -542,7 +542,7 @@ void D_DrawWings()
 
    if(gamestate == GS_LEVEL && !MN_CheckFullScreen())
    {
-      if(scaledwindow.height != SCREENHEIGHT || automapactive)
+      if(scaledwindow.height != SCREENHEIGHT || automapstate == amstate_full)
       {
          unsigned int bottom   = SCREENHEIGHT - 1;
          unsigned int statbarh = static_cast<unsigned int>(GameModeInfo->StatusBar->height);
@@ -600,7 +600,7 @@ void D_Display()
          if(oldgamestate != GS_LEVEL)
             R_FillBackScreen(scaledwindow); // draw the pattern into the back screen
          
-         if(automapactive)
+         if(automapstate == amstate_full)
          {
             AM_Drawer();
          }
@@ -608,6 +608,8 @@ void D_Display()
          {
             R_DrawViewBorder();    // redraw border
             R_RenderPlayerView(&players[displayplayer], camera);
+            if(automapstate == amstate_over)
+               AM_Drawer();
          }
          
          ST_Drawer(scaledwindow.height == SCREENHEIGHT);  // killough 11/98
@@ -645,7 +647,7 @@ void D_Display()
          int width = patch->width;
          int x = (SCREENWIDTH - width) / 2 + patch->leftoffset;
          // SoM 2-4-04: ANYRES
-         int y = 4 + (automapactive ? 0 : scaledwindow.y);
+         int y = 4 + (automapstate == amstate_full ? 0 : scaledwindow.y);
          
          V_DrawPatch(x, y, &subscreen43, patch);
       }

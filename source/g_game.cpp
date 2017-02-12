@@ -759,7 +759,7 @@ bool G_Responder(event_t* ev)
       if(!walkcam_active) // if so, we need to go on below
       {
          if(gamestate == GS_DEMOSCREEN && !(paused & 2) && 
-            !automapactive &&
+            automapstate != amstate_full &&
             (ev->type == ev_keydown ||
              (ev->type == ev_mouse && ev->data1)))
          {
@@ -1528,7 +1528,7 @@ static void G_DoCompleted()
    // clear hubs now
    P_ClearHubs();
    
-   if(automapactive)
+   if(automapstate != amstate_off)
       AM_Stop();
 
    if(LevelInfo.finaleEarly && G_doFinale())
@@ -1614,7 +1614,7 @@ static void G_DoCompleted()
    }
   
    gamestate = GS_INTERMISSION;
-   automapactive = false;
+   automapstate = amstate_off;
    
    if(statcopy)
       memcpy(statcopy, &wminfo, sizeof(wminfo));
@@ -2940,7 +2940,7 @@ void G_InitNew(skill_t skill, char *name)
    
    //G_StopDemo();
    
-   automapactive = false;
+   automapstate = amstate_off;
    gameskill = skill;
 
    G_SetGameMapName(name);

@@ -732,7 +732,7 @@ void HUDTextWidget::drawer()
 {
    // Do not ever draw automap-only widgets if not in automap mode.
    // This fixes a long-standing bug automatically.
-   if(flags & TW_AUTOMAP_ONLY && !automapactive)
+   if(flags & TW_AUTOMAP_ONLY && automapstate != amstate_full)
       return;
 
    // 10/08/05: boxed message support
@@ -979,7 +979,8 @@ void HUDCrossHairWidget::drawer()
    
    // haleyjd 03/03/07: don't display while showing a center message
    if(!crosshairnum || crosshairs[crosshairnum - 1] == -1 || 
-      viewcamera || automapactive || centermessage_widget.cleartic > leveltime)
+      viewcamera || automapstate == amstate_full ||
+      centermessage_widget.cleartic > leveltime)
       return;
 
    patch = PatchLoader::CacheNum(wGlobalDir, crosshairs[crosshairnum - 1], PU_CACHE);
@@ -1081,7 +1082,7 @@ void HUDLevelTimeWidget::ticker()
    static char timestr[32];
    int seconds;
    
-   if(!automapactive || !hu_showtime)
+   if(automapstate != amstate_full || !hu_showtime)
    {
       message = NULL;
       return;
@@ -1176,7 +1177,7 @@ int hu_levelnamecolor;
 //
 void HUDLevelNameWidget::ticker()
 {
-   message = automapactive ? LevelInfo.levelName : NULL;
+   message = automapstate == amstate_full ? LevelInfo.levelName : NULL;
    color   = hu_levelnamecolor + 1;
 }
 
@@ -1423,7 +1424,7 @@ void HUDAutomapCoordWidget::ticker()
    static char coordystr[16];
    static char coordzstr[16];
 
-   if(!automapactive || !hu_showcoords)
+   if(automapstate != amstate_full || !hu_showcoords)
    {
       message = NULL;
       return;
@@ -1877,7 +1878,7 @@ static cell AMX_NATIVE_CALL sm_centermsgtimed(AMX *amx, cell *params)
 //
 static cell AMX_NATIVE_CALL sm_inautomap(AMX *amx, cell *params)
 {
-   return (cell)automapactive;
+   return (cell)(automapstate == amstate_full);
 }
 
 static cell AMX_NATIVE_CALL sm_gethudmode(AMX *amx, cell *params)

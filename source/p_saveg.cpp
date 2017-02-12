@@ -809,7 +809,9 @@ static void P_ArchiveRNG(SaveArchive &arc)
 //
 static void P_ArchiveMap(SaveArchive &arc)
 {
-   arc << automapactive << followplayer << automap_grid << markpointnum;
+   int32_t amactive = (int32_t)automapstate;
+   arc << amactive << followplayer << automap_grid << markpointnum;
+   automapstate = (amstate_t)amactive;
 
    if(markpointnum)
    {
@@ -820,7 +822,7 @@ static void P_ArchiveMap(SaveArchive &arc)
       }
       else
       {
-         if(automapactive)
+         if(automapstate != amstate_off)
             AM_Start();
 
          while(markpointnum >= markpointnum_max)

@@ -52,6 +52,13 @@ typedef enum
   bfg_burst,    // haleyjd
 } bfg_t;
 
+enum amstate_t
+{
+   amstate_off,
+   amstate_over,
+   amstate_full
+};
+
 extern int use_doom_config;
 
 // ------------------------
@@ -217,7 +224,7 @@ extern int snd_DesiredSfxDevice;
 //  status bar explicitely.
 extern  bool statusbaractive;
 
-extern  bool automapactive; // In AutoMap mode?
+extern  amstate_t automapstate; // In AutoMap mode?
 extern  bool menuactive;    // Menu overlayed?
 extern  int  paused;        // Game Pause?
 extern  int  hud_active;    //jff 2/17/98 toggles heads-up status display

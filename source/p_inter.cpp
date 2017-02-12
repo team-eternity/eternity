@@ -1232,7 +1232,8 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
       target->player->playerstate = PST_DEAD;
       P_DropWeapon(target->player);
 
-      if(target->player == &players[consoleplayer] && automapactive)
+      if(target->player == &players[consoleplayer] &&
+         automapstate != amstate_off)
       {
          if(!demoplayback) // killough 11/98: don't switch out in demos, though
             AM_Stop();    // don't die in auto map; switch view prior to dying

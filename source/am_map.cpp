@@ -219,7 +219,7 @@ int ddt_cheating = 0;         // killough 2/7/98: make global, rename to ddt_*
 
 int automap_grid = 0;
 
-bool automapactive = false;
+amstate_t automapstate = amstate_off;
 
 // location of window on screen
 static int  f_x;
@@ -539,8 +539,9 @@ extern void ST_AutomapEvent(int type);
 static void AM_initVariables()
 {
    int pnum;   
-   
-   automapactive = true;
+
+   if(automapstate == amstate_off)
+      automapstate = amstate_full;
 
    // haleyjd: need to redraw the backscreen?
    am_needbackscreen = (vbscreen.getVirtualAspectRatio() > 4*FRACUNIT/3);
@@ -717,7 +718,7 @@ static void AM_LevelInit()
 void AM_Stop()
 {  
    AM_unloadPics();
-   automapactive = false;
+   automapstate = amstate_off;
    am_needbackscreen = false;
    ST_AutomapEvent(AM_MSGEXITED);
    stopped = true;
@@ -808,7 +809,7 @@ bool AM_Responder(event_t *ev)
    // haleyjd 07/07/04: dynamic bindings
    int action = G_KeyResponder(ev, kac_map);
 
-   if(!automapactive)
+   if(automapstate == amstate_off)
    {
       if(ev->type != ev_keydown)
          return false;
@@ -816,6 +817,7 @@ bool AM_Responder(event_t *ev)
       switch(action)
       {
       case ka_map_toggle: // activate automap
+         automapstate = amstate_over;
          AM_Start();
          return true;
       default:
@@ -856,7 +858,7 @@ bool AM_Responder(event_t *ev)
       switch(action)
       {
       case ka_map_right: // pan right
-         if(!followplayer)
+         if(automapstate == amstate_full && !followplayer)
          {
             m_paninc.x = FTOM(HORZ_PAN_SCALE(F_PANINC));
             return true;
@@ -864,7 +866,7 @@ bool AM_Responder(event_t *ev)
          return false;
 
       case ka_map_left: // pan left
-         if(!followplayer)
+         if(automapstate == amstate_full && !followplayer)
          {
             m_paninc.x = -FTOM(HORZ_PAN_SCALE(F_PANINC));
             return true;
@@ -872,7 +874,7 @@ bool AM_Responder(event_t *ev)
          return false;
 
       case ka_map_up: // pan up
-         if(!followplayer)
+         if(automapstate == amstate_full && !followplayer)
          {
             m_paninc.y = FTOM(VERT_PAN_SCALE(F_PANINC));
             return true;
@@ -880,7 +882,7 @@ bool AM_Responder(event_t *ev)
          return false;
 
       case ka_map_down: // pan down
-         if(!followplayer)
+         if(automapstate == amstate_full && !followplayer)
          {
             m_paninc.y = -FTOM(VERT_PAN_SCALE(F_PANINC));
             return true;
@@ -898,11 +900,21 @@ bool AM_Responder(event_t *ev)
          return true;
 
       case ka_map_toggle: // deactivate map
-         bigstate = 0;
-         AM_Stop();
+         if(automapstate == amstate_over)
+         {
+            automapstate = amstate_full;
+            AM_Start();
+         }
+         else
+         {
+            bigstate = 0;
+            AM_Stop();
+         }
          return true;
 
       case ka_map_gobig: // "go big"
+         if(automapstate != amstate_full)
+            return false;
          bigstate = !bigstate;
          if(bigstate)
          {
@@ -914,6 +926,8 @@ bool AM_Responder(event_t *ev)
          return true;
 
       case ka_map_follow: // toggle follow mode
+         if(automapstate != amstate_full)
+            return false;
          followplayer = !followplayer;
          f_oldloc.x = D_MAXINT;
          // Ty 03/27/98 - externalized
@@ -922,6 +936,8 @@ bool AM_Responder(event_t *ev)
          return true;
 
       case ka_map_grid: // toggle grid
+         if(automapstate != amstate_full)
+            return false;
          automap_grid = !automap_grid; // killough 2/28/98
          // Ty 03/27/98 - *not* externalized
          doom_printf("%s", DEH_String(automap_grid ? "AMSTR_GRIDON" 
@@ -929,13 +945,17 @@ bool AM_Responder(event_t *ev)
          return true;
 
       case ka_map_mark: // mark a spot
-         // Ty 03/27/98 - *not* externalized     
+         if(automapstate != amstate_full)
+            return false;
+         // Ty 03/27/98 - *not* externalized
          // sf: fixed this (buffer at start, presumably from an old sprintf
          doom_printf("%s %d", DEH_String("AMSTR_MARKEDSPOT"), markpointnum);
          AM_addMark();
          return true;
 
       case ka_map_clear: // clear all marked spots
+         if(automapstate != amstate_full)
+            return false;
          AM_clearMarks();  // Ty 03/27/98 - *not* externalized
          doom_printf("%s", DEH_String("AMSTR_MARKSCLEARED"));
          return true;
@@ -1030,12 +1050,12 @@ void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z)
 //
 void AM_Ticker()
 {
-   if(!automapactive)
+   if(automapstate == amstate_off)
       return;
    
    amclock++;
    
-   if(followplayer)
+   if(followplayer || automapstate == amstate_over)
       AM_doFollowPlayer();
    
    // Change the zoom if necessary
@@ -2298,14 +2318,17 @@ inline static void AM_drawCrosshair(int color)
 //
 void AM_Drawer()
 {
-   if(!automapactive)
+   if(automapstate == amstate_off)
       return;
 
-   AM_clearFB(mapcolor_back);       //jff 1/5/98 background default color
+   if(automapstate == amstate_full)
+   {
+      AM_clearFB(mapcolor_back);       //jff 1/5/98 background default color
    
-   if(automap_grid)                 // killough 2/28/98: change var name
-      AM_drawGrid(mapcolor_grid);   //jff 1/7/98 grid default color
-   
+      if(automap_grid)                 // killough 2/28/98: change var name
+         AM_drawGrid(mapcolor_grid);   //jff 1/7/98 grid default color
+   }
+
    AM_drawWalls();
 
    // haleyjd 05/17/08:
