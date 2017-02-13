@@ -448,7 +448,7 @@ static void E_ProcessEDThings(cfg_t *cfg)
       return;
 
    // allocate the mapthing_t structures
-   EDThings = (mapthing_t *)(Z_Malloc(numEDMapThings * sizeof(mapthing_t), PU_LEVEL, NULL));
+   EDThings = estructalloctag(mapthing_t, numEDMapThings, PU_LEVEL);
 
    // initialize the hash chains
    for(i = 0; i < NUMMTCHAINS; ++i)
@@ -1132,8 +1132,7 @@ static void E_ProcessEDLines(cfg_t *cfg)
       return;
 
    // allocate the maplinedefext_t structures
-   EDLines = (maplinedefext_t *)(Z_Malloc(numEDLines * sizeof(maplinedefext_t),
-                                          PU_LEVEL, NULL));
+   EDLines = estructalloctag(maplinedefext_t, numEDLines, PU_LEVEL);
 
    // initialize the hash chains
    for(i = 0; i < NUMLDCHAINS; ++i)
