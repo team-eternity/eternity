@@ -45,6 +45,7 @@
 #include "hu_stuff.h"
 #include "info.h"
 #include "in_lude.h"
+#include "m_bbox.h"
 #include "m_collection.h"
 #include "m_random.h"
 #include "p_chase.h"
@@ -72,6 +73,10 @@
 #include "st_stuff.h"
 #include "v_misc.h"
 #include "v_video.h"
+
+// Local constants (ioanch)
+// Bounding box distance to avoid and get away from edge portals
+static const fixed_t AVOID_EDGE_PORTAL_RANGE = FRACUNIT >> 8;
 
 void P_FallingDamage(player_t *);
 
@@ -1121,6 +1126,53 @@ void P_NightmareRespawn(Mobj* mobj)
 }
 
 //
+// Moves the mobj away from a local portal line when it's about to sink into the
+// sector portal. Hack needed to prevent wall portal / edge portal margin bug.
+//
+// The mobj is already assumed to be sunk into the sector portal.
+//
+static void P_avoidPortalEdges(Mobj &mobj, bool isceiling)
+{
+   const sector_t &sector = *mobj.subsector->sector;
+   unsigned flag = isceiling ? EX_ML_UPPERPORTAL : EX_ML_LOWERPORTAL;
+
+   fixed_t box[4];
+
+   v2fixed_t displace = { mobj.x, mobj.y };   // displacement. If not 0, it will move.
+   box[BOXLEFT] = displace.x - AVOID_EDGE_PORTAL_RANGE;
+   box[BOXBOTTOM] = displace.y - AVOID_EDGE_PORTAL_RANGE;
+   box[BOXRIGHT] = displace.x + AVOID_EDGE_PORTAL_RANGE;
+   box[BOXTOP] = displace.y + AVOID_EDGE_PORTAL_RANGE;
+
+   for(int i = 0; i < sector.linecount; ++i)
+   {
+      const line_t &line = *sector.lines[i];
+
+      // line must be an edge portal with its back towards the sector.
+      // The thing's centre must be very close to the line
+      if(line.frontsector == &sector || !(line.extflags & flag) ||
+         !P_BoxesIntersect(box, line.bbox) || P_BoxOnLineSide(box, &line) != -1)
+      {
+         continue;
+      }
+
+      // Got one. Add to the vector
+      angle_t angle = P_PointToAngle(0, 0, line.dx, line.dy) + ANG90;
+      unsigned fine = angle >> ANGLETOFINESHIFT;
+      displace.x += FixedMul(AVOID_EDGE_PORTAL_RANGE, finecosine[fine]);
+      displace.y += FixedMul(AVOID_EDGE_PORTAL_RANGE, finesine[fine]);
+
+      // Now move the box
+      box[BOXLEFT] = displace.x - AVOID_EDGE_PORTAL_RANGE;
+      box[BOXBOTTOM] = displace.y - AVOID_EDGE_PORTAL_RANGE;
+      box[BOXRIGHT] = displace.x + AVOID_EDGE_PORTAL_RANGE;
+      box[BOXTOP] = displace.y + AVOID_EDGE_PORTAL_RANGE;
+   }
+   if(displace.x != mobj.x || displace.y != mobj.y)
+      P_TryMove(&mobj, displace.x, displace.y, 1);
+}
+
+//
 // Check for passing through an interactive portal plane.
 //
 static bool P_CheckPortalTeleport(Mobj *mobj)
@@ -1146,6 +1198,7 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
       // ioanch 20160109: link offset outside
       if(passheight < ldata->planez)
       {
+         P_avoidPortalEdges(*mobj, false);
          EV_PortalTeleport(mobj, ldata->deltax, ldata->deltay, ldata->deltaz,
                            ldata->fromid, ldata->toid);
          ret = true;
@@ -1169,6 +1222,7 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
       // ioanch 20160109: link offset outside
       if(passheight >= ldata->planez)
       {
+         P_avoidPortalEdges(*mobj, true);
          EV_PortalTeleport(mobj, ldata->deltax, ldata->deltay, ldata->deltaz,
                            ldata->fromid, ldata->toid);
          ret = true;

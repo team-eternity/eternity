@@ -154,6 +154,16 @@ v2fixed_t P_BoxLinePoint(const fixed_t bbox[4], const line_t *ld)
 }
 
 //
+// Returns true if two bounding boxes intersect. Assumes they're correctly set.
+//
+bool P_BoxesIntersect(const fixed_t bbox1[4], const fixed_t bbox2[4])
+{
+   return bbox1[BOXLEFT] < bbox2[BOXRIGHT] &&
+   bbox1[BOXRIGHT] > bbox2[BOXLEFT] && bbox1[BOXBOTTOM] < bbox2[BOXTOP] &&
+   bbox1[BOXTOP] > bbox2[BOXBOTTOM];
+}
+
+//
 // P_PointOnDivlineSide
 // Returns 0 or 1.
 //
