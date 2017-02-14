@@ -761,6 +761,10 @@ void AM_Start()
       lastlevel = gamemap;
       lastepisode = gameepisode;
    }
+   f_h = automapstate == amstate_over && scaledwindow.height == SCREENHEIGHT ?
+   video.height : video.height - ((GameModeInfo->StatusBar->height *
+                                   video.yscale) >> FRACBITS);
+
    AM_initVariables();
    AM_loadPics();
 }
