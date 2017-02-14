@@ -1221,30 +1221,19 @@ bool E_MoveInventoryCursor(player_t *player, int amount, int &cursor)
       cursor = 0;
       return false;
    }
-   else if(amount <= 0)
+   if(amount <= 0)
    {
       cursor += amount;
-      return true;
+      return true; // We know that the cursor will succeed in moving left
    }
-   else
-   {
-      for(int i = 0; i < amount; i++)
-      {
-         itemeffect_t *effect = E_EffectForInventoryIndex(player, cursor + 1);
-         if(!effect)
-            return false;
 
-         if(effect->getInt(keySortOrder, INT_MAX) > e_maxvisiblesortorder)
-         {
-            return false;
-            break;
-         }
-         else
-         {
-            cursor += 1;
-         }
-      }
-   }
+   itemeffect_t *effect = E_EffectForInventoryIndex(player, cursor + amount);
+   if(!effect)
+      return false;
+   if(effect->getInt(keySortOrder, INT_MAX) > e_maxvisiblesortorder)
+      return false;
+   
+   cursor += amount;
    return true;
 }
 

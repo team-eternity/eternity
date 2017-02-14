@@ -128,14 +128,30 @@ by referring to the key (string), or the "num" property (int).
 
 --------------------------------------------------------------------------------
 2017/02/10
+inventory-branch-2016
 Fixed item use in demos
 
 --------------------------------------------------------------------------------
 2017/02/11
+inventory-branch-2016
 Fixed item use in netgames, changed the itemID in ticcmd_t from int8_t to
 uint16_t. To compensate, the ticcmd itemID is 1 higher than it should be.
 
-Also fix demo checks being wrong, they checked for ver > 340.48 instead of 342.1
+--------------------------------------------------------------------------------
+2017/02/12
+inventory-branch-2016
+Fixed picking up an item higher-priority than the currently-selected item not
+updating the inv_ptr
+
+Fixed loading not setting the visual inv_ptr.
+
+Beautified some code so that it now uses E_EffectForIndex where appropriate,
+instead of for ID.
+
+--------------------------------------------------------------------------------
+2017/02/13
+inventory-branch-2016
+Made E_MoveInventoryCursor sane.
 
 ================================================================================
 EOF
