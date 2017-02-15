@@ -1300,15 +1300,13 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID)
          if(success)
          {
             if(E_RemoveInventoryItem(player, artifact, 1) == INV_REMOVEDSLOT)
-            {
                shiftinvleft = true;
-            }
+
             sound = artifact->getString(KEY_USESOUND, "");
             if(strcmp(sound, ""))
-            {
                S_StartSoundName(player->mo, sound);
-            }
-            invbarstate.ArtifactFlash = 4;
+
+            invbarstate.ArtifactFlash = 5;
          }
          else
          {

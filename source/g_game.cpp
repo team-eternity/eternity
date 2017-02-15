@@ -269,7 +269,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       // FIXME: Handle noartiskip
       if(invbarstate.inventory)
       {
-         players[consoleplayer].inv_ptr = invbarstate.inv_ptr;
+         p.inv_ptr = invbarstate.inv_ptr;
          invbarstate.inventory = false;
          usearti = false;
       }

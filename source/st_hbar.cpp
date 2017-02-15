@@ -410,17 +410,17 @@ static void ST_drawStatBar()
 
    // FIXME: Make this wait for the next tic, instead of iterating every frame.
    // ArtifactFlash, it's a gas! Gas! Gas!
-   if(hbarstate[consoleplayer].ArtifactFlash)
+   if(hbarstate[displayplayer].ArtifactFlash)
    {
       V_DrawPatch(180, 161, &subscreen43,
          PatchLoader::CacheName(wGlobalDir, "BLACKSQ", PU_CACHE));
 
-      temp = W_GetNumForName(DEH_String("useartia")) + hbarstate[consoleplayer].ArtifactFlash - 1;
+      temp = W_GetNumForName(DEH_String("useartia")) + hbarstate[displayplayer].ArtifactFlash - 1;
 
       V_DrawPatch(182, 161, &subscreen43,
          PatchLoader::CacheNum(wGlobalDir, temp, PU_CACHE));
       // MaxW: Choco Heretic does stuff that I'm not sure how to translate to EE.
-      hbarstate[consoleplayer].ArtifactFlash--;
+      hbarstate[displayplayer].ArtifactFlash--;
    }
    // It's safety checks all the way down!
    else if(plyr->inventory[plyr->inv_ptr].amount)
@@ -484,7 +484,7 @@ static void ST_drawInvBar()
 {
    itemeffect_t *artifact;
    const char *patch;
-   int leftoffs = hbarstate[consoleplayer].inv_ptr >= 7 ? hbarstate[consoleplayer].inv_ptr - 6 : 0;
+   int leftoffs = hbarstate[displayplayer].inv_ptr >= 7 ? hbarstate[displayplayer].inv_ptr - 6 : 0;
 
    V_DrawPatch(34, 160, &subscreen43, PatchLoader::CacheName(wGlobalDir, "INVBAR", PU_CACHE));
 
@@ -522,7 +522,7 @@ static void ST_drawInvBar()
          !(leveltime & 4) ? PatchINVRTGEM1 : PatchINVRTGEM2);
    }
 
-   V_DrawPatch(50 + (hbarstate[consoleplayer].inv_ptr - leftoffs)* 31, 189, &subscreen43,
+   V_DrawPatch(50 + (hbarstate[displayplayer].inv_ptr - leftoffs)* 31, 189, &subscreen43,
      PatchLoader::CacheName(wGlobalDir, "SELECTBO", PU_CACHE));
 }
 //
@@ -535,7 +535,7 @@ static void ST_HticDrawer()
    ST_drawBackground();
    ST_drawLifeChain();
 
-   if(hbarstate[consoleplayer].inventory)
+   if(hbarstate[displayplayer].inventory)
       ST_drawInvBar();
    else
       ST_drawStatBar();
