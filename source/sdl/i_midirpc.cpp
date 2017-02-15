@@ -27,7 +27,7 @@
 #ifdef EE_FEATURE_MIDIRPC
 
 #include <windows.h>
-#include "../../midiproc/midiproc.h"
+#include "midiproc.h"
 
 #include "../hal/i_timer.h"
 #include "../m_qstr.h"

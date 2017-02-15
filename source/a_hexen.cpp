@@ -46,7 +46,6 @@
 #include "r_state.h"
 #include "sounds.h"
 #include "s_sound.h"
-#include "a_small.h"
 
 #include "e_args.h"
 #include "e_sound.h"

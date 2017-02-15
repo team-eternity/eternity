@@ -31,6 +31,7 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "cam_sight.h"
 #include "i_system.h"
 #include "doomstat.h"
 #include "d_mod.h"
@@ -45,6 +46,7 @@
 #include "p_portal.h"
 #include "p_saveg.h"
 #include "p_setup.h"
+#include "p_spec.h"
 #include "p_tick.h"
 #include "polyobj.h"
 #include "r_main.h"
@@ -512,8 +514,7 @@ static void Polyobj_collectPortals(polyobj_t *po)
    for(int i = 0; i < po->numLines; ++i)
    {
       portal_t *portal = po->lines[i]->portal;
-      if(!portal || (portal->type != R_LINKED && portal->type != R_ANCHORED &&
-                     portal->type != R_TWOWAY))
+      if(!portal || !R_portalIsAnchored(portal))
       {
          continue;
       }
@@ -570,9 +571,17 @@ static void Polyobj_movePortals(const polyobj_t *po, fixed_t dx, fixed_t dy,
       {
          // FIXME: no partnership for R_TWOWAY. Maybe there should be one.
          // TODO: this partnership. But only when we have a line-only special.
-         portal->data.anchor.deltax -= dx;
-         portal->data.anchor.deltay -= dy;
-         // no physical effects. 
+         anchordata_t &adata = portal->data.anchor;
+         adata.transform.move.x -= M_FixedToDouble(dx);
+         adata.transform.move.y -= M_FixedToDouble(dy);
+
+         portal_t *partner = adata.polyportalpartner;
+         if(partner)
+         {
+            partner->data.anchor.transform.move.x += M_FixedToDouble(dx);
+            partner->data.anchor.transform.move.y += M_FixedToDouble(dy);
+         }
+         // no physical effects.
       }
    }
 }
@@ -647,7 +656,7 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
 static void Polyobj_setCenterPt(polyobj_t *po)
 {
    subsector_t  *ss;
-   double center_x = 0.0, center_y = 0.0;
+   fixed_t center_x = 0, center_y = 0;
    int i;
 
    // never attach a bad polyobject
@@ -656,15 +665,12 @@ static void Polyobj_setCenterPt(polyobj_t *po)
 
    for(i = 0; i < po->numVertices; ++i)
    {
-      center_x += M_FixedToDouble(po->vertices[i]->x);
-      center_y += M_FixedToDouble(po->vertices[i]->y);
+      center_x += po->vertices[i]->x / po->numVertices;
+      center_y += po->vertices[i]->y / po->numVertices;
    }
    
-   center_x /= po->numVertices;
-   center_y /= po->numVertices;
-   
-   po->centerPt.x = M_DoubleToFixed(center_x);
-   po->centerPt.y = M_DoubleToFixed(center_y);
+   po->centerPt.x = center_x;
+   po->centerPt.y = center_y;
 
    ss = R_PointInSubsector(po->centerPt.x, po->centerPt.y);
 
@@ -837,10 +843,17 @@ static void Polyobj_pushThing(polyobj_t *po, line_t *line, Mobj *mo)
    // if object doesn't fit at desired location, possibly hurt it
    if(po->damage && mo->flags & MF_SHOOTABLE)
    {
-      if((po->flags & POF_DAMAGING) || 
-         !P_CheckPosition(mo, mo->x + momx, mo->y + momy))
-      {
+      if(po->flags & POF_DAMAGING)
          P_DamageMobj(mo, NULL, NULL, po->damage, MOD_CRUSH);
+      else
+      {
+         // Temporarily remove from blockmap to avoid this poly's lines from
+         // counting as collision lines. Only separate walls should block and 
+         // damage the mobj.
+         Polyobj_removeFromBlockmap(po);
+         if(!P_CheckPosition(mo, mo->x + momx, mo->y + momy))
+            P_DamageMobj(mo, NULL, NULL, po->damage, MOD_CRUSH);
+         Polyobj_linkToBlockmap(po);
       }
    }
 }
@@ -849,9 +862,12 @@ static void Polyobj_pushThing(polyobj_t *po, line_t *line, Mobj *mo)
 // Polyobj_clipThings
 //
 // Checks for things that are in the way of a polyobject line move.
+// Argument vec is non-null if the polyobject was moved and is used for linked
+// portal walls.
 // Returns true if something was hit.
 //
-static bool Polyobj_clipThings(polyobj_t *po, line_t *line)
+static bool Polyobj_clipThings(polyobj_t *po, line_t *line, 
+   const vertex_t *vec = nullptr)
 {
    bool hitthing = false;
    fixed_t linebox[4];
@@ -885,8 +901,17 @@ static bool Polyobj_clipThings(polyobj_t *po, line_t *line)
                   // the mobj budges a bit just to detect the specline
                   if(line->pflags & PS_PASSABLE)
                   {
-                     if(!P_TryMove(mo, mo->x, mo->y, false))
+                     // HACK
+                     v2fixed_t pos = { mo->x, mo->y };
+                     if(vec)
                      {
+                        mo->x += vec->x;
+                        mo->y += vec->y;
+                     }
+                     if(!P_TryMove(mo, pos.x, pos.y, false))
+                     {
+                        mo->x = pos.x;
+                        mo->y = pos.y;
                         // FIXME: this one needs checking after i figure out
                         // portalmap
                         Polyobj_pushThing(po, line, mo);
@@ -906,6 +931,29 @@ static bool Polyobj_clipThings(polyobj_t *po, line_t *line)
    } // end for(y)
 
    return hitthing;
+}
+
+//
+// Cross any special lines. Uses the centre point as reference, thus allowing
+// both moving and rotating polyobjects 
+//
+static void Polyobj_crossLines(polyobj_t *po, v2fixed_t oldcentre)
+{
+   if(oldcentre.x == po->centerPt.x && oldcentre.y == po->centerPt.y)
+      return;
+   CAM_PathTraverse(oldcentre.x, oldcentre.y, po->centerPt.x, po->centerPt.y,
+      CAM_ADDLINES, po,
+      [](const intercept_t *in, void *data, const divline_t &trace) {
+
+      auto *po = static_cast<polyobj_t *>(data);
+      if(in->d.line->special)
+      {
+         P_CrossSpecialLine(in->d.line,
+            P_PointOnLineSide(trace.x, trace.y, in->d.line), nullptr, po);
+      }
+
+      return true;
+   });
 }
 
 //
@@ -941,7 +989,7 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
    // ioanch 20160302: do NOT collide and get back if onload = true.
    if(!onload)
       for(i = 0; i < po->numLines; ++i)
-         hitthing |= Polyobj_clipThings(po, po->lines[i]);
+         hitthing |= Polyobj_clipThings(po, po->lines[i], &vec);
 
    if(hitthing)
    {
@@ -972,7 +1020,10 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
       Polyobj_removeFromBlockmap(po); // unlink it from the blockmap
       R_DetachPolyObject(po);
       Polyobj_linkToBlockmap(po);     // relink to blockmap
+      v2fixed_t oldcentre = { po->centerPt.x, po->centerPt.y };
       Polyobj_setCenterPt(po);
+      if(!onload)
+         Polyobj_crossLines(po, oldcentre);
       R_AttachPolyObject(po);
    }
 
@@ -1110,7 +1161,10 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
       Polyobj_removeFromBlockmap(po); // unlink it from the blockmap
       R_DetachPolyObject(po);
       Polyobj_linkToBlockmap(po);     // relink to blockmap
+      v2fixed_t oldcentre = { po->centerPt.x, po->centerPt.y };
       Polyobj_setCenterPt(po);
+      if(!onload)
+         Polyobj_crossLines(po, oldcentre);
       R_AttachPolyObject(po);
    }
 

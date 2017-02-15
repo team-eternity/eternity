@@ -11,11 +11,147 @@ monsters defined fully using DECORATE states. CounterSwitchEx notably takes
 args[0] as the counter # to use, and args[N] as the offset or state label to
 jump to, and the number of states does not need to be specified.
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 2016/09/28
 
 Altered IWAD detection so that FreeDM and Freedoom 2 are now  in the correct
 positions when autodetected.
+
+--------------------------------------------------------------------------------
+2016/10/16
+
+Locked parameterised doors now rely on the presence of a thinker to determine
+whether or not to draw the door-activating line as coloured. Also 1S lines are
+now correctly coloured if they have a locked parameterised action.
+
+
+--------------------------------------------------------------------------------
+2016/11/20
+
+ANIMATED entries are now discarded if either texture/flat is invalid.
+Previously if the first was valid and the last wasn't then it would animate
+through every texture/flat.
+
+--------------------------------------------------------------------------------
+2016/11/26
+
+Add scaling for flats, via ExtraData and UDMF. This works on both slopes and
+regular flats.
+
+--------------------------------------------------------------------------------
+2016/12/24
+
+Over the course of the week sorted out x64 compilation under MSVC. This has
+also been ported so that ACSVM branch compiles under x64 as well. One of the
+more notable changes is that there are now batch scripts that handle use of the
+MIDL compiler (the MIDL commands used originally were lost).
+
+The README has also been updated to reflect the fact that the vc2012 no longer
+exists.
+
+Happy holidays to all, and to all a happy new year (well those of you that use
+the Gregorian calendar at least)!
+
+--------------------------------------------------------------------------------
+2017/01/03
+
+Fixed 64-bit savegame loading thanks to Doomworld Forums user, grommile.
+
+--------------------------------------------------------------------------------
+2017/01/04
+
+Fixed an invalid access in DWFILE::getStr thanks to GitHub user, worktycho.
+Previously if size == 0 then inp would be invalid.
+
+--------------------------------------------------------------------------------
+2017/01/05
+
+Fixed a value/range check in SaveArchive::archiveSave.
+
+Add Plane_Copy. It copies slopes.
+
+--------------------------------------------------------------------------------
+2017/01/06
+
+Updated the credits screen to include myself, and amend Sarah Mancuso's name.
+The credits now have two names per column, and are separated down the middle.
+
+--------------------------------------------------------------------------------
+2017/01/08
+Fixed CMake for Windows VS2015 generation.
+
+--------------------------------------------------------------------------------
+2017/01/13
+Added thing specials, made them activate on death. Useable in UDMF and
+ExtraData.
+
+--------------------------------------------------------------------------------
+2017/01/14
+Added ZDoom codepointer, A_SetSpecial. Fixed x/y offsets on png's being broken.
+They're now no longer sunk into the floor.
+
+--------------------------------------------------------------------------------
+2017/01/21
+Allow playback of slightly faulty wav files, such as those in Darch's Preacher
+BOOM mapset.
+
+--------------------------------------------------------------------------------
+2017/01/23
+Allow for the specific ACS versions of Scroll_Floor and Scroll_Ceiling. This is
+achieved by introducing a separate line bindings specifically for ACS.
+
+--------------------------------------------------------------------------------
+2017/01/29
+Made it so transparent paletted PNGs are now correctly converted to patches.
+
+--------------------------------------------------------------------------------
+2017/02/02
+Starting delimiters are now no longer skipped, except for some demos where it's
+needed. It also is heuristically checked, so that the performance increase can
+still occur if using new versions.
+
+--------------------------------------------------------------------------------
+2017/02/05
+Fixed demo desync issue brought up here:
+https://www.doomworld.com/vb/post/1713773
+
+--------------------------------------------------------------------------------
+2017/02/06
+Fixed pickups so that the player that picks up the pickup is considered the
+activator.
+
+Fixed P_CheckPositionExt considering the check in the current sector the Mobj
+is in, as opposed to where the x and y args are.
+
+Add a 4th arg to A_Scratch, which designates means-of-death. This is achieved
+by referring to the key (string), or the "num" property (int).
+
+--------------------------------------------------------------------------------
+2017/02/10
+inventory-branch-2016
+Fixed item use in demos
+
+--------------------------------------------------------------------------------
+2017/02/11
+inventory-branch-2016
+Fixed item use in netgames, changed the itemID in ticcmd_t from int8_t to
+uint16_t. To compensate, the ticcmd itemID is 1 higher than it should be.
+
+--------------------------------------------------------------------------------
+2017/02/12
+inventory-branch-2016
+Fixed picking up an item higher-priority than the currently-selected item not
+updating the inv_ptr
+
+Fixed loading not setting the visual inv_ptr.
+
+Beautified some code so that it now uses E_EffectForIndex where appropriate,
+instead of for ID.
+
+--------------------------------------------------------------------------------
+2017/02/13
+inventory-branch-2016
+Made E_MoveInventoryCursor sane.
 
 ================================================================================
 EOF

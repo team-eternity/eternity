@@ -29,7 +29,6 @@
 #include "z_zone.h"
 
 #include "a_args.h"
-#include "a_small.h"
 #include "doomstat.h"
 #include "d_gi.h"
 #include "e_args.h"
@@ -445,6 +444,27 @@ void A_PlaySoundEx(actionargs_t *actionargs)
       params.volumeScale = 127;
 
    S_StartSfxInfo(params);
+}
+
+//
+// ZDoom-inspired action function, implemented using wiki docs.
+//
+// args[0] : special
+// args[1] : arg0
+// args[2] : arg1
+// args[3] : arg2
+// args[4] : arg3
+// args[5] : arg4
+//
+void A_SetSpecial(actionargs_t *actionargs)
+{
+   Mobj *actor = actionargs->actor;
+   arglist_t *args = actionargs->args;
+   
+   actor->special = E_ArgAsInt(args, 0, 0);
+
+   for(int i = 1; i >= 5; i++)
+      actor->args[i - 1] = E_ArgAsInt(args, i, 0);
 }
 
 // EOF

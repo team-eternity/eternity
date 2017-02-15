@@ -43,8 +43,8 @@
 
 #include "i_system.h"
 #include "doomtype.h"
-#include "m_misc.h"
 #include "g_gfs.h"
+#include "m_utils.h"
 #include "e_lib.h"
 
 static gfs_t gfs;

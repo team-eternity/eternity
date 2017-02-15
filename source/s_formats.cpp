@@ -264,10 +264,14 @@ static bool S_isWaveSample(byte *data, size_t len, sounddata_t &sd)
 
    r += 4;
    size_t bytes = GetBinaryUDWord(&r);
-   if(!bytes || bytes + totalMDSize > len) // empty or truncated sample stream
+   if(!bytes) // empty sample stream
       return false;
 
-   sd.samplecount = bytes / (bps/8);
+   if(bytes + totalMDSize > len) // truncated sample stream
+      sd.samplecount = (len - totalMDSize) / (bps / 8);
+   else
+      sd.samplecount = bytes / (bps / 8);
+
    sd.samplestart = data + sampleOffset;
 
    return true;

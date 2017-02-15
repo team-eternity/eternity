@@ -81,6 +81,10 @@ void G_DoPlayDemo();
 
 void R_InitPortals();
 
+int G_TotalKilledMonsters();
+int G_TotalFoundItems();
+int G_TotalFoundSecrets();
+
 // killough 1/18/98: Doom-style printf;   killough 4/25/98: add gcc attributes
 void doom_printf(const char *, ...) __attribute__((format(printf,1,2)));
 

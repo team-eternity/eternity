@@ -1001,7 +1001,7 @@ static bool PIT_FindTarget(Mobj *mo)
    if(targ && targ->target == mo &&
       P_Random(pr_skiptarget) > 100 &&
       (targ->flags ^ mo->flags) & MF_FRIEND &&
-       targ->health*2 >= targ->info->spawnhealth)
+       targ->health*2 >= targ->getModifiedSpawnHealth())
    {
       return true;
    }
@@ -1296,7 +1296,7 @@ bool P_HelpFriend(Mobj *actor)
    Thinker *cap, *th;
 
    // If less than 33% health, self-preservation rules
-   if(actor->health*3 < actor->info->spawnhealth)
+   if(actor->health*3 < actor->getModifiedSpawnHealth())
       return false;
 
    current_actor = actor;
@@ -1314,7 +1314,7 @@ bool P_HelpFriend(Mobj *actor)
          
       mo = static_cast<Mobj *>(th);
 
-      if(mo->health*2 >= mo->info->spawnhealth)
+      if(mo->health*2 >= mo->getModifiedSpawnHealth())
       {
          if(P_Random(pr_helpfriend) < 180)
             break;

@@ -206,6 +206,23 @@ int EV_SectorSetFloorPanning(const line_t *line, int tag, fixed_t xoffs,
    return 1; // ZDoom always has this line as sucessful
 }
 
+//
+// Changes tagged sectors' sound sequence
+//
+int EV_SectorSoundChange(int tag, int sndSeqID)
+{
+   if(!tag)
+      return 0;
+   int secNum = -1;
+   bool rtn = false;
+   while((secNum = P_FindSectorFromTag(tag, secNum)) >= 0)
+   {
+      sectors[secNum].sndSeqID = sndSeqID;
+      rtn = true;
+   }
+   return rtn ? 1 : 0;
+}
+
 //=============================================================================
 //
 // Sector Interpolation

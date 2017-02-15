@@ -18,9 +18,10 @@
 #ifndef PSNPRINTF_H
 #define PSNPRINTF_H
 
-int psnprintf(char *str, size_t n, const char *format, ...);
-int pvsnprintf(char *str, size_t n, const char *format, va_list ap);
+#include "d_keywds.h"
 
+int psnprintf(char *str, size_t n, E_FORMAT_STRING(const char *format), ...);
+int pvsnprintf(char *str, size_t n, E_FORMAT_STRING(const char *format), va_list ap);
 
 #endif /* ifdef PSNPRINTF_H */
 

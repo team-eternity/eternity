@@ -225,7 +225,7 @@ int E_GetLockDefColor(int lockID);
 bool E_MoveInventoryCursor(player_t *player, int amount, int &cursor);
 
 // Tries to use the currently selected item.
-void E_TryUseItem(player_t *player);
+void E_TryUseItem(player_t *player, inventoryitemid_t ID);
 
 // Obtain an item effect definition for its inventory item ID
 itemeffect_t *E_EffectForInventoryItemID(inventoryitemid_t id);

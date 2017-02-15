@@ -355,6 +355,20 @@ void P_MovePlayer(player_t* player)
             P_Thrust(player, mo->angle-ANG90, 0, cmd->sidemove*movefactor);
          }
       }
+      else if(!comp[comp_aircontrol])
+      {
+         // Do not move player 
+         if(cmd->forwardmove)
+         {
+            P_Thrust(player, mo->angle, 0, FRACUNIT >> 8);
+         }
+
+         // TODO: disable this part in Strife
+         if(cmd->sidemove)
+         {
+            P_Thrust(player, mo->angle, 0, FRACUNIT >> 8);
+         }
+      }
 
       if(mo->state == states[mo->info->spawnstate])
          P_SetMobjState(mo, mo->info->seestate);
@@ -450,7 +464,6 @@ void P_DeathThink(player_t *player)
       {
          invbarstate_t &invbarstate = GameModeInfo->StatusBar->GetInvBarState();
          invbarstate.inv_ptr = 0;
-         invbarstate.curpos  = 0;
       }
       player->playerstate = PST_REBORN;
    }
@@ -604,6 +617,12 @@ void P_PlayerThink(player_t *player)
    // chain saw run forward
 
    cmd = &player->cmd;
+
+   if(cmd->itemID)
+   {
+      E_TryUseItem(player, cmd->itemID - 1); // ticcmd ID is off by one
+   }
+
    if(player->mo->flags & MF_JUSTATTACKED)
    {
       cmd->angleturn = 0;
@@ -626,7 +645,7 @@ void P_PlayerThink(player_t *player)
       player->prevpitch = player->pitch;
       int look = cmd->look;
 
-      if(look)
+      if(look && (!player->mo->reactiontime || demo_version < 342))
       {
          // test for special centerview value
          if(look == -32768)

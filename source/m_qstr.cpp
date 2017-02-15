@@ -36,8 +36,8 @@
 #include "d_dehtbl.h"     // for D_HashTableKey
 #include "i_system.h"
 #include "m_qstr.h"
-#include "m_misc.h"       // for M_Strupr/M_Strlwr
 #include "m_strcasestr.h" // for M_StrCaseStr
+#include "m_utils.h"      // for M_Itoa, M_Strlwr/upr, M_NormalizeSlashes
 #include "p_saveg.h"
 #include "d_io.h"         // for strcasecmp
 
@@ -155,7 +155,7 @@ void qstring::freeBuffer()
 // haleyjd 05/22/2013: Enable C++11 move semantics for qstring instances.
 // Required for efficiency when using qstring with Collection<T>.
 //
-qstring::qstring(qstring &&other)
+qstring::qstring(qstring &&other) noexcept
    : ZoneObject(), index(0), size(16)
 {
    // When other is not localized, take direct ownership of its buffer
@@ -167,7 +167,7 @@ qstring::qstring(qstring &&other)
       memset(local, 0, sizeof(local));
 
       // leave the other object in a usable state, it's not necessarily dead.
-      other.buffer = NULL;
+      other.buffer = nullptr;
       other.freeBuffer(); // returns to being localized
    }
    else
@@ -234,7 +234,6 @@ const char &qstring::operator [] (size_t idx) const
 
    return buffer[idx];
 }
-
 
 //=============================================================================
 //
@@ -1391,17 +1390,11 @@ int qstring::Printf(size_t maxlen, const char *fmt, ...)
 //
 void qstring::archive(SaveArchive &arc)
 {
-   uint32_t indexTemp;
-
    if(arc.isLoading())
       freeBuffer(); // haleyjd: do not leak memory
 
-   arc.ArchiveLString(buffer, size);
-
-   if(arc.isSaving())
-      indexTemp = index;
-
-   arc << indexTemp;
+   arc.archiveLString(buffer, size);
+   arc.archiveSize(index);
 
    if(arc.isLoading())
    {
@@ -1411,8 +1404,6 @@ void qstring::archive(SaveArchive &arc)
          buffer = local;
          size   = 0;
       }
-
-      index = indexTemp;
    }
 }
 

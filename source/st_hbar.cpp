@@ -124,6 +124,7 @@ static void ST_HticInit()
       memset(lumpname, 0, 9);
       sprintf(lumpname, "IN%d", i);
 
+      efree(invnums[i]);
       invnums[i] = PatchLoader::CacheName(wGlobalDir, lumpname, PU_STATIC);
    }
 
@@ -149,12 +150,14 @@ static void ST_HticInit()
       extern patch_t *keys[];
       char namebuf[9];
       sprintf(namebuf, "STKEYS%d", i);
+
+      efree(keys[i]);
       keys[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
 
    // Initialise the inventory bar states.
-	for(int i = 0; i < MAXPLAYERS; i++)
-		hbarstate[i] = { false, 0, 0, 0 };
+   for(int i = 0; i < MAXPLAYERS; i++)
+      hbarstate[i] = { false, 0, 0 };
 }
 
 //
@@ -407,22 +410,22 @@ static void ST_drawStatBar()
 
    // FIXME: Make this wait for the next tic, instead of iterating every frame.
    // ArtifactFlash, it's a gas! Gas! Gas!
-   if(hbarstate[consoleplayer].ArtifactFlash)
+   if(hbarstate[displayplayer].ArtifactFlash)
    {
       V_DrawPatch(180, 161, &subscreen43,
          PatchLoader::CacheName(wGlobalDir, "BLACKSQ", PU_CACHE));
 
-      temp = W_GetNumForName(DEH_String("useartia")) + hbarstate[consoleplayer].ArtifactFlash - 1;
+      temp = W_GetNumForName(DEH_String("useartia")) + hbarstate[displayplayer].ArtifactFlash - 1;
 
       V_DrawPatch(182, 161, &subscreen43,
          PatchLoader::CacheNum(wGlobalDir, temp, PU_CACHE));
       // MaxW: Choco Heretic does stuff that I'm not sure how to translate to EE.
-      hbarstate[consoleplayer].ArtifactFlash--;
+      hbarstate[displayplayer].ArtifactFlash--;
    }
    // It's safety checks all the way down!
    else if(plyr->inventory[plyr->inv_ptr].amount)
    {
-      if((artifact = E_EffectForInventoryItemID(plyr->inventory[plyr->inv_ptr].item)))
+      if((artifact = E_EffectForInventoryIndex(plyr, plyr->inv_ptr)))
       {
          patch = artifact->getString("icon", "");
          if(strcmp(patch, "") && artifact->getInt("invbar", 0))
@@ -481,20 +484,20 @@ static void ST_drawInvBar()
 {
    itemeffect_t *artifact;
    const char *patch;
-   int leftoffs = hbarstate[consoleplayer].curpos >= 7 ? hbarstate[consoleplayer].curpos - 6 : 0;
+   int leftoffs = hbarstate[displayplayer].inv_ptr >= 7 ? hbarstate[displayplayer].inv_ptr - 6 : 0;
 
    V_DrawPatch(34, 160, &subscreen43, PatchLoader::CacheName(wGlobalDir, "INVBAR", PU_CACHE));
 
    int i = -1;
-	// E_MoveInventoryCursor returns false when it hits the boundary of the visible inventory,
-	// so it's a useful iterator here.
+   // E_MoveInventoryCursor returns false when it hits the boundary of the visible inventory,
+   // so it's a useful iterator here.
    while(E_MoveInventoryCursor(plyr, 1, i) && i < 7)
    {
       // Safety check that the player has an inventory item, then that the effect exists
       // for the selected item, then that there is an associated patch for that effect.
       if(plyr->inventory[i + leftoffs].amount > 0)
       {
-         if((artifact = E_EffectForInventoryItemID(plyr->inventory[i + leftoffs].item)))
+         if((artifact = E_EffectForInventoryIndex(plyr, i + leftoffs)))
          {
             patch = artifact->getString("icon", "");
             if(strcmp(patch, ""))
@@ -519,7 +522,7 @@ static void ST_drawInvBar()
          !(leveltime & 4) ? PatchINVRTGEM1 : PatchINVRTGEM2);
    }
 
-   V_DrawPatch(50 + (hbarstate[consoleplayer].curpos - leftoffs)* 31, 189, &subscreen43,
+   V_DrawPatch(50 + (hbarstate[displayplayer].inv_ptr - leftoffs)* 31, 189, &subscreen43,
      PatchLoader::CacheName(wGlobalDir, "SELECTBO", PU_CACHE));
 }
 //
@@ -532,7 +535,7 @@ static void ST_HticDrawer()
    ST_drawBackground();
    ST_drawLifeChain();
 
-   if(hbarstate[consoleplayer].inventory)
+   if(hbarstate[displayplayer].inventory)
       ST_drawInvBar();
    else
       ST_drawStatBar();

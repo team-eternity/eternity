@@ -48,7 +48,7 @@
 //
 // Front-end's controller
 //
-@interface LauncherController : NSWindowController
+@interface LauncherController : NSWindowController<NSApplicationDelegate>
 {
 	IBOutlet NSWindow *mainWindow;
 	

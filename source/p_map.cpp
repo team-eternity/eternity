@@ -38,6 +38,7 @@
 #include "m_bbox.h"
 #include "m_compare.h"
 #include "m_random.h"
+#include "p_info.h"
 #include "p_inter.h"
 #include "p_mobj.h"
 #include "p_maputl.h"
@@ -1458,7 +1459,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             {
                if(by < 0 || by >= bmapheight)
                   continue;
-               if(P_BlockHasLinkedPortalLines(by * bmapwidth + bx))
+               if(P_BlockHasLinkedPortals(by * bmapwidth + bx, false))
                {
                   hasportals = true;
                   goto outloop;
@@ -1503,7 +1504,13 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          {
             // haleyjd: yikes...
             // ioanch 20160111: updated for portals
-            if(clip.BlockingMobj->z + clip.BlockingMobj->height-thing->z > STEPSIZE || 
+            fixed_t steplimit;
+            if(clip.BlockingMobj->flags & MF_CORPSE && LevelInfo.levelType != LI_TYPE_HEXEN)
+               steplimit = 0;
+            else
+               steplimit = STEPSIZE;
+
+            if(clip.BlockingMobj->z + clip.BlockingMobj->height - thing->z > steplimit || 
                (P_ExtremeSectorAtPoint(clip.BlockingMobj, true)->ceilingheight
                  - (clip.BlockingMobj->z + clip.BlockingMobj->height) < thing->height) ||
                (clip.ceilingz - (clip.BlockingMobj->z + clip.BlockingMobj->height) 
@@ -1690,7 +1697,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             int oldside;
             if((oldside = P_PointOnLineSide(ox, oy, line)) !=
                P_PointOnLineSide(tx, ty, line))
-               P_CrossSpecialLine(line, oldside, thing);
+               P_CrossSpecialLine(line, oldside, thing, nullptr);
          }
       }
 

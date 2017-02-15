@@ -340,8 +340,8 @@ linkoffset_t *P_GetLinkIfExists(int fromgroup, int togroup)
 // Returns 0 if the link offset was added successfully, 1 if the start group is
 // out of bounds, and 2 of the target group is out of bounds.
 //
-int P_AddLinkOffset(int startgroup, int targetgroup, 
-                    fixed_t x, fixed_t y, fixed_t z)
+static int P_AddLinkOffset(int startgroup, int targetgroup,
+                           fixed_t x, fixed_t y, fixed_t z)
 {
    linkoffset_t *link;
 
@@ -455,7 +455,7 @@ static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
 // group, that is, if group A has a link to B, and B has a link to C, a link
 // can be found to go from A to C.
 //
-static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz, 
+static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
                           int via)
 {
    int i, p;
@@ -1510,13 +1510,16 @@ void P_MoveLinkedPortal(portal_t *portal, fixed_t dx, fixed_t dy, bool movebehin
 // ioanch 20160228: return true if block has portalmap 1 or a polyportal
 // It's coarse
 //
-bool P_BlockHasLinkedPortalLines(int index)
+bool P_BlockHasLinkedPortals(int index, bool includesectors)
 {
    // safe for overflow
    if(index < 0 || index >= bmapheight * bmapwidth)
       return false;
-   if(portalmap[index] & PMF_LINE)
+   if(portalmap[index] & (PMF_LINE |
+      (includesectors ? PMF_FLOOR | PMF_CEILING : 0)))
+   {
       return true;
+   }
    
    for(const DLListItem<polymaplink_t> *plink = polyblocklinks[index]; plink;
       plink = plink->dllNext)

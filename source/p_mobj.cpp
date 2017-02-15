@@ -1059,12 +1059,15 @@ void P_NightmareRespawn(Mobj* mobj)
 
    if(P_Use3DClipping()) // 3D object clipping
    {
+      subsector_t *newsubsec = R_PointInSubsector(x, y);
+
       fixed_t sheight = mobj->height;
+      fixed_t tz      = newsubsec->sector->floorheight + mobj->spawnpoint.height;
 
       // need to restore real height before checking
       mobj->height = P_ThingInfoHeight(mobj->info);
 
-      check = P_CheckPositionExt(mobj, x, y);
+      check = P_CheckPositionExt(mobj, x, y, tz);
 
       mobj->height = sheight;
    }
@@ -1102,6 +1105,7 @@ void P_NightmareRespawn(Mobj* mobj)
    // inherit attributes from deceased one
    mo = P_SpawnMobj(x, y, z, mobj->type);
    mo->spawnpoint = mobj->spawnpoint;
+   mo->health = mo->getModifiedSpawnHealth();
    mo->angle = R_WadToAngle(mthing->angle);
 
    if(mthing->options & MTF_AMBUSH)
@@ -1200,14 +1204,19 @@ IMPLEMENT_THINKER_TYPE(Mobj)
 //
 inline static void P_checkMobjProjections(Mobj &mobj)
 {
-   if(gMapHasSectorPortals && (mobj.z != mobj.sprojlast.z ||
-                               mobj.x != mobj.sprojlast.x ||
-                               mobj.y != mobj.sprojlast.y))
+   uint32_t spritecomp = mobj.sprite << 16 | (mobj.frame & 0xffff);
+   if(gMapHasSectorPortals && (mobj.z != mobj.sprojlast.pos.z ||
+                               mobj.x != mobj.sprojlast.pos.x ||
+                               mobj.y != mobj.sprojlast.pos.y ||
+                               spritecomp != mobj.sprojlast.sprite ||
+                               mobj.yscale != mobj.sprojlast.yscale))
    {
       R_CheckMobjProjections(&mobj);
-      mobj.sprojlast.x = mobj.x;
-      mobj.sprojlast.y = mobj.y;
-      mobj.sprojlast.z = mobj.z;
+      mobj.sprojlast.pos.x = mobj.x;
+      mobj.sprojlast.pos.y = mobj.y;
+      mobj.sprojlast.pos.z = mobj.z;
+      mobj.sprojlast.sprite = spritecomp;
+      mobj.sprojlast.yscale = mobj.yscale;
    }
 }
 
@@ -1470,7 +1479,9 @@ void Mobj::serialize(SaveArchive &arc)
       << translucency << alphavelocity                     // Alpha blending
       << xscale << yscale                                  // Scaling
       // Inventory related fields
-      << dropamount;
+      << dropamount
+      // Scripting related fields
+      << special;
 
    // Arrays
    P_ArchiveArray<int>(arc, counters, NUMMOBJCOUNTERS); // Counters
@@ -1634,6 +1645,20 @@ void Mobj::copyPosition(const Mobj *other)
    intflags  |= (other->intflags & (MIF_ONFLOOR|MIF_ONSECFLOOR|MIF_ONMOBJ));
 }
 
+//
+// Returns mobjinfo spawn health possibly modified by the spawnpoint healthModifier
+//
+int Mobj::getModifiedSpawnHealth() const
+{
+   // info always assumed to exist
+   if(!spawnpoint.healthModifier || spawnpoint.healthModifier == FRACUNIT)
+      return info->spawnhealth;
+   if(spawnpoint.healthModifier > 0)   // positive means multiplication
+      return FixedMul(info->spawnhealth, spawnpoint.healthModifier);
+   // negative means absolute
+   return (abs(spawnpoint.healthModifier) + (FRACUNIT >> 1)) >> FRACBITS;
+}
+
 extern fixed_t tmsecfloorz;
 extern fixed_t tmsecceilz;
 
@@ -1723,7 +1748,7 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    // but P_CheckPortalTeleport
    mobj->spriteproj = nullptr;
    // init with an "invalid" value
-   mobj->sprojlast.x = mobj->sprojlast.y = mobj->sprojlast.z = D_MAXINT;
+   mobj->sprojlast.pos.x = mobj->sprojlast.pos.y = mobj->sprojlast.pos.z = D_MAXINT;
 
    // set subsector and/or block links
   
@@ -1938,6 +1963,7 @@ void P_RespawnSpecials()
 
    mo = P_SpawnMobj(x, y, z, i);
    mo->spawnpoint = *mthing;
+   mo->health = mo->getModifiedSpawnHealth();
    // sf
    mo->angle = R_WadToAngle(mthing->angle);
 
@@ -2274,9 +2300,10 @@ spawnit:
    // haleyjd 10/03/05: Hexen-style args
    memcpy(mobj->args, mthing->args, 5 * sizeof(int));
 
-   // TODO: special
+   mobj->special = mthing->special;
 
    mobj->spawnpoint = *mthing;
+   mobj->health = mobj->getModifiedSpawnHealth();
 
    if(mobj->tics > 0 && !(mobj->flags4 & MF4_SYNCHRONIZED))
       mobj->tics = 1 + (P_Random(pr_spawnthing) % mobj->tics);

@@ -54,9 +54,9 @@
 #include "hu_stuff.h" // haleyjd
 #include "i_system.h"
 #include "i_video.h"
-#include "m_misc.h"
 #include "m_random.h"
 #include "m_swap.h"
+#include "m_utils.h"
 #include "mn_htic.h"
 #include "mn_engin.h"
 #include "mn_emenu.h"
@@ -3154,6 +3154,7 @@ static menuitem_t mn_compat1_items[] =
    { it_toggle, "Powerup cheats are time limited",     "comp_infcheat"  },
    { it_toggle, "Sky is normal when invulnerable",     "comp_skymap"    },
    { it_toggle, "Zombie players can exit levels",      "comp_zombie"    },
+   { it_toggle, "Disable air control for jumping",    "comp_aircontrol" },
    { it_gap },
    { it_info,   "Monster AI",             NULL, NULL, MENUITEM_CENTERED },
    { it_toggle, "Arch-viles can create ghosts",        "comp_vile"      },

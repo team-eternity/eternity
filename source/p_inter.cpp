@@ -44,6 +44,7 @@
 #include "e_mod.h"
 #include "e_states.h"
 #include "e_things.h"
+#include "ev_specials.h"
 #include "g_dmflag.h"
 #include "g_game.h"
 #include "hu_frags.h"
@@ -193,11 +194,25 @@ static void P_giveBackpackAmmo(player_t *player)
 }
 
 //
+// Executes a thing's special and zeroes it, like in Hexen. Useful for reusable
+// things; they'll only execute their special once.
+//
+static void P_consumeSpecial(player_t *activator, Mobj *special)
+{
+   if(special->special)
+   {
+      EV_ActivateSpecialNum(special->special, special->args, activator->mo);
+      special->special = 0;
+   }
+}
+
+//
 // P_GiveWeapon
 //
 // The weapon name may have a MF_DROPPED flag ored in.
 //
-bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped)
+static bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped,
+   Mobj *special)
 {
    bool gaveweapon = false;
    weaponinfo_t *wp = &weaponinfo[weapon];
@@ -214,6 +229,7 @@ bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped)
       
       player->pendingweapon = weapon;
       S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
+      P_consumeSpecial(player, special); // need to handle it here
       return false;
    }
 
@@ -354,13 +370,17 @@ bool P_GiveArmor(player_t *player, itemeffect_t *effect)
 //
 // P_GiveCard
 //
-void P_GiveCard(player_t *player, itemeffect_t *card)
+static void P_GiveCard(player_t *player, itemeffect_t *card, Mobj *special)
 {
    if(E_GetItemOwnedAmount(player, card))
       return;
 
    player->bonuscount = BONUSADD; // INVENTORY_TODO: hard-coded for now
    E_GiveInventoryItem(player, card);
+
+   // Make sure to consume its special if the player needed it, even if it
+   // may or may not be removed later.
+   P_consumeSpecial(player, special);
 }
 
 /*
@@ -734,7 +754,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       effect = E_ItemEffectForName(ARTI_BLUECARD);
       if(!E_GetItemOwnedAmount(player, effect))
          message = DEH_String("GOTBLUECARD"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, effect);
+      P_GiveCard(player, effect, special);
       removeobj = pickup_fx = (GameType == gt_single);
       break;
 
@@ -743,7 +763,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       effect = E_ItemEffectForName(ARTI_YELLOWCARD);
       if(!E_GetItemOwnedAmount(player, effect))
          message = DEH_String("GOTYELWCARD"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, effect);
+      P_GiveCard(player, effect, special);
       removeobj = pickup_fx = (GameType == gt_single);
       break;
 
@@ -752,7 +772,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       effect = E_ItemEffectForName(ARTI_REDCARD);
       if(!E_GetItemOwnedAmount(player, effect))
          message = DEH_String("GOTREDCARD"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, effect);
+      P_GiveCard(player, effect, special);
       removeobj = pickup_fx = (GameType == gt_single);
       break;
       
@@ -761,7 +781,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       effect = E_ItemEffectForName(ARTI_BLUESKULL);
       if(!E_GetItemOwnedAmount(player, effect))
          message = DEH_String("GOTBLUESKUL"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, effect);
+      P_GiveCard(player, effect, special);
       removeobj = pickup_fx = (GameType == gt_single);
       break;
       
@@ -770,7 +790,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       effect = E_ItemEffectForName(ARTI_YELLOWSKULL);
       if(!E_GetItemOwnedAmount(player, effect))
          message = DEH_String("GOTYELWSKUL"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, effect);
+      P_GiveCard(player, effect, special);
       removeobj = pickup_fx = (GameType == gt_single);
       break;
 
@@ -779,7 +799,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       effect = E_ItemEffectForName(ARTI_REDSKULL);
       if(!E_GetItemOwnedAmount(player, effect))
          message = DEH_String("GOTREDSKULL"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, effect);
+      P_GiveCard(player, effect, special);
       removeobj = pickup_fx = (GameType == gt_single);
       break;
 
@@ -929,7 +949,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       // WEAPON_FIXME: Weapon collection
       // weapons
    case PFX_BFG:
-      if(!P_GiveWeapon(player, wp_bfg, false))
+      if(!P_GiveWeapon(player, wp_bfg, false, special))
          return;
       // FIXME: externalize all BFG pickup strings
       message = bfgtype==0 ? DEH_String("GOTBFG9000") // sf
@@ -942,42 +962,42 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       break;
 
    case PFX_CHAINGUN:
-      if(!P_GiveWeapon(player, wp_chaingun, dropped))
+      if(!P_GiveWeapon(player, wp_chaingun, dropped, special))
          return;
       message = DEH_String("GOTCHAINGUN"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 
    case PFX_CHAINSAW:
-      if(!P_GiveWeapon(player, wp_chainsaw, false))
+      if(!P_GiveWeapon(player, wp_chainsaw, false, special))
          return;
       message = DEH_String("GOTCHAINSAW"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 
    case PFX_LAUNCHER:
-      if(!P_GiveWeapon(player, wp_missile, false))
+      if(!P_GiveWeapon(player, wp_missile, false, special))
          return;
       message = DEH_String("GOTLAUNCHER"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 
    case PFX_PLASMA:
-      if(!P_GiveWeapon(player, wp_plasma, false))
+      if(!P_GiveWeapon(player, wp_plasma, false, special))
          return;
       message = DEH_String("GOTPLASMA"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 
    case PFX_SHOTGUN:
-      if(!P_GiveWeapon(player, wp_shotgun, dropped))
+      if(!P_GiveWeapon(player, wp_shotgun, dropped, special))
          return;
       message = DEH_String("GOTSHOTGUN"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 
    case PFX_SSG:
-      if(!P_GiveWeapon(player, wp_supershotgun, dropped))
+      if(!P_GiveWeapon(player, wp_supershotgun, dropped, special))
          return;
       message = DEH_String("GOTSHOTGUN2"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
@@ -990,7 +1010,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       effect = E_ItemEffectForName(ARTI_KEYGREEN);
       if(!E_GetItemOwnedAmount(player, effect))
          message = DEH_String("HGOTGREENKEY");
-      P_GiveCard(player, effect);
+      P_GiveCard(player, effect, special);
       removeobj = pickup_fx = (GameType == gt_single);
       sound = sfx_keyup;
       break;
@@ -1000,7 +1020,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       effect = E_ItemEffectForName(ARTI_KEYBLUE);
       if(!E_GetItemOwnedAmount(player, effect))
          message = DEH_String("HGOTBLUEKEY");
-      P_GiveCard(player, effect);
+      P_GiveCard(player, effect, special);
       removeobj = pickup_fx = (GameType == gt_single);
       sound = sfx_keyup;
       break;
@@ -1010,7 +1030,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       effect = E_ItemEffectForName(ARTI_KEYYELLOW);
       if(!E_GetItemOwnedAmount(player, effect))
          message = DEH_String("HGOTYELLOWKEY");
-      P_GiveCard(player, effect);
+      P_GiveCard(player, effect, special);
       removeobj = pickup_fx = (GameType == gt_single);
       sound = sfx_keyup;
       break;
@@ -1323,6 +1343,9 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 
    if(removeobj)
    {
+      // this will cover all disappearing items. Non-disappearing ones have
+      // their own special cases.
+      P_consumeSpecial(player, special);
       if(special->flags4 & MF4_RAVENRESPAWN)
          P_RavenRespawn(special);
       else
@@ -1480,6 +1503,9 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
    // This determines the kind of object spawned
    // during the death frame of a thing.
    P_DropItems(target, false);
+
+   if(EV_ActivateSpecialNum(target->special, target->args, target))
+      target->special = 0; // Stop special from executing if revived/respawned
 }
 
 //
@@ -1987,7 +2013,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       // This will slightly increase the chances that enemies will choose to
       // "finish it off", but its main purpose is to alert friends of danger.
 
-      if(target->health * 2 < target->info->spawnhealth)
+      if(target->health * 2 < target->getModifiedSpawnHealth())
       {
          Thinker *cap = 
             &thinkerclasscap[target->flags & MF_FRIEND ? 
@@ -2263,7 +2289,7 @@ void P_RaiseCorpse(Mobj *corpse, const Mobj *raiser)
    // clear ephemeral MIF flags that may persist from previous death
    corpse->intflags &= ~MIF_CLEARRAISED;
 
-   corpse->health = info->spawnhealth;
+   corpse->health = corpse->getModifiedSpawnHealth();
    P_SetTarget<Mobj>(&corpse->target, NULL);  // killough 11/98
 
    if(demo_version >= 203)

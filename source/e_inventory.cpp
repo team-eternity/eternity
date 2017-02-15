@@ -941,7 +941,7 @@ bool E_PlayerCanUnlock(player_t *player, int lockID, bool remote)
 int E_GetLockDefColor(int lockID)
 {
    int color = 0;
-   lockdef_t *lock;
+   const lockdef_t *lock;
 
    if((lock = E_LockDefForID(lockID)))
    {
@@ -1230,31 +1230,29 @@ bool E_MoveInventoryCursor(player_t *player, int amount, int &cursor)
       cursor = 0;
       return false;
    }
-   else if(amount <= 0)
+   if(amount <= 0)
    {
       cursor += amount;
-      return true;
+      return true; // We know that the cursor will succeed in moving left
    }
-   else
-   {
-      for(int i = 0; i < amount; i++)
-      {
-         itemeffect_t *effect = E_EffectForInventoryItemID(player->inventory[cursor + 1].item);
-         if(!effect)
-            return false;
 
-         if(effect->getInt(keySortOrder, INT_MAX) > e_maxvisiblesortorder)
-         {
-            return false;
-            break;
-         }
-         else
-         {
-            cursor += 1;
-         }
-      }
-   }
+   itemeffect_t *effect = E_EffectForInventoryIndex(player, cursor + amount);
+   if(!effect)
+      return false;
+   if(effect->getInt(keySortOrder, INT_MAX) > e_maxvisiblesortorder)
+      return false;
+   
+   cursor += amount;
    return true;
+}
+
+//
+// Says if a player possesses at least one item w/ +invbar
+//
+inline bool E_playerHasVisibleInvItem(player_t *player)
+{
+   int i = -1;
+   return E_MoveInventoryCursor(player, 1, i);
 }
 
 //
@@ -1272,10 +1270,10 @@ itemeffecttype_t E_getItemEffectType(itemeffect_t *fx)
 //
 // Tries to use the currently selected item.
 //
-void E_TryUseItem(player_t *player)
+void E_TryUseItem(player_t *player, inventoryitemid_t ID)
 {
    invbarstate_t &invbarstate = GameModeInfo->StatusBar->GetInvBarState();
-   itemeffect_t *artifact = E_EffectForInventoryItemID(player->inventory[player->inv_ptr].item);
+   itemeffect_t *artifact = E_EffectForInventoryItemID(ID);
    if(!artifact)
       return;
    if(E_getItemEffectType(artifact) == ITEMFX_ARTIFACT)
@@ -1311,15 +1309,13 @@ void E_TryUseItem(player_t *player)
          if(success)
          {
             if(E_RemoveInventoryItem(player, artifact, 1) == INV_REMOVEDSLOT)
-            {
                shiftinvleft = true;
-            }
+
             sound = artifact->getString(KEY_USESOUND, "");
             if(strcmp(sound, ""))
-            {
                S_StartSoundName(player->mo, sound);
-            }
-            invbarstate.ArtifactFlash = 4;
+
+            invbarstate.ArtifactFlash = 5;
          }
          else
          {
@@ -1331,7 +1327,6 @@ void E_TryUseItem(player_t *player)
          {
             E_MoveInventoryCursor(player, -1, player->inv_ptr);
             E_MoveInventoryCursor(player, -1, invbarstate.inv_ptr);
-            E_MoveInventoryCursor(player, -1, invbarstate.curpos);         
          }
       }
    }
@@ -1677,6 +1672,7 @@ bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact, int amount)
 
    // Does the player already have this item?
    inventoryslot_t *slot = E_InventorySlotForItemID(player, itemid);
+   const inventoryslot_t *initslot = slot;
 
    // If not, make a slot for it
    if(!slot)
@@ -1690,6 +1686,18 @@ bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact, int amount)
    if(artifact->getInt(keyFullAmountOnly, 0) && 
       slot->amount + amountToGive > maxAmount)
       return false;
+
+   // Make sure the player's inv_ptr is updated if need be
+   if(!initslot && E_playerHasVisibleInvItem(player))
+   {
+      if(artifact->getInt(keySortOrder, 0) <
+         E_EffectForInventoryIndex(player, player->inv_ptr)->getInt(keySortOrder, 0))
+      {
+         player->inv_ptr++;
+         invbarstate_t &invbarstate = GameModeInfo->StatusBar->GetInvBarState();
+         invbarstate.inv_ptr++;
+      }
+   }
 
    // set the item type in case the slot is new, and increment the amount owned
    // by the amount this item gives, capping to the maximum allowed amount
@@ -1818,7 +1826,7 @@ void E_ClearInventory(player_t *player)
       player->inventory[i].item   = -1;
    }
    player->inv_ptr = 0;
-   invbarstate = { false, 0, 0, 0 };
+   invbarstate = { false, 0, 0 };
 }
 
 //

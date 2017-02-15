@@ -230,11 +230,16 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
    // z is if both sides of that line have the same portal.
    {
 #ifdef R_LINKEDPORTALS
-      if(mo && demo_version >= 333 && 
-         clip.openfrontsector->c_pflags & PS_PASSABLE &&
+      if(mo && demo_version >= 333 &&
+         ((clip.openfrontsector->c_pflags & PS_PASSABLE &&
          clip.openbacksector->c_pflags & PS_PASSABLE && 
-         clip.openfrontsector->c_portal == clip.openbacksector->c_portal)
+         clip.openfrontsector->c_portal == clip.openbacksector->c_portal) ||
+         (clip.openfrontsector->c_pflags & PS_PASSABLE &&
+          linedef->pflags & PS_PASSABLE &&
+          clip.openfrontsector->c_portal
+          ->data.link.deltaEquals(linedef->portal->data.link))))
       {
+         // also handle line portal + ceiling portal, for edge portals
          if(!portaldetect) // ioanch
          {
             frontceilz = backceilz = clip.openfrontsector->ceilingheight
@@ -262,9 +267,13 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
    {
 #ifdef R_LINKEDPORTALS
       if(mo && demo_version >= 333 && 
-         clip.openfrontsector->f_pflags & PS_PASSABLE &&
+         ((clip.openfrontsector->f_pflags & PS_PASSABLE &&
          clip.openbacksector->f_pflags & PS_PASSABLE && 
-         clip.openfrontsector->f_portal == clip.openbacksector->f_portal)
+         clip.openfrontsector->f_portal == clip.openbacksector->f_portal) ||
+          (clip.openfrontsector->f_pflags & PS_PASSABLE &&
+           linedef->pflags & PS_PASSABLE &&
+           clip.openfrontsector->f_portal
+           ->data.link.deltaEquals(linedef->portal->data.link))))
       {
          if(!portaldetect)  // ioanch
          {
@@ -287,14 +296,23 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
       frontfz = clip.openfrontsector->floorheight;
       backfz = clip.openbacksector->floorheight;
    }
-   
-   if(frontceilz < backceilz)
+
+   if(linedef->extflags & EX_ML_UPPERPORTAL)
+      clip.opentop = frontceilz;
+   else if(frontceilz < backceilz)
       clip.opentop = frontceilz;
    else
       clip.opentop = backceilz;
 
    // ioanch 20160114: don't change floorpic if portaldetect is on
-   if(frontfloorz > backfloorz)
+   if(linedef->extflags & EX_ML_LOWERPORTAL)
+   {
+      clip.openbottom = frontfloorz;
+      clip.lowfloor = frontfloorz;
+      if(!portaldetect || !(clip.openfrontsector->f_pflags & PS_PASSABLE))
+         clip.floorpic = clip.openfrontsector->floorpic;
+   }
+   else if(frontfloorz > backfloorz)
    {
       clip.openbottom = frontfloorz;
       clip.lowfloor = backfloorz;
@@ -660,13 +678,17 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*, polyobj_t*), int grou
    offset = *(blockmap + offset);
    list = blockmaplump + offset;
 
+   // MaxW: 2016/02/02: This skip isn't feasible to do for recent play,
+   // as it has been found that the starting delimiter can have a use.
+
    // killough 1/31/98: for compatibility we need to use the old method.
    // Most demos go out of sync, and maybe other problems happen, if we
    // don't consider linedef 0. For safety this should be qualified.
 
+   // MaxW: 2016/02/02: if before 3.42 always skip, skip if all blocklists start w/ 0
    // killough 2/22/98: demo_compatibility check
    // skip 0 starting delimiter -- phares
-   if(!demo_compatibility)
+   if((!demo_compatibility && demo_version < 342) || (demo_version >= 342 && skipblstart))
       list++;     
    for( ; *list != -1; list++)
    {

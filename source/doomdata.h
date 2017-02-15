@@ -179,6 +179,7 @@ enum
    MLI_DYNASEGLINE = 0x01, // Consider only via dynasegs for rendering, etc.
    MLI_FLOORPORTALCOPIED = 0x02, // ioanch 20160219: for type 385
    MLI_CEILINGPORTALCOPIED = 0x04, // ioanch 20160219: for type 385
+   MLI_POLYPORTALLINE = 0x08, // polyobject portal single-sided line
 };
 
 // Sector definition, from editing.
@@ -314,8 +315,10 @@ struct mapthing_t
    int16_t type;      // doomednum
    int16_t options;   // bitflags
    uint32_t extOptions; // ioanch 20151218: extended options (needed by UDMF)
-   int     special;   // scripting special
+   fixed_t healthModifier; // Overriding health, based on UDMF thing health.
+                           // 0 to ignore
 
+   int     special;   // scripting special
    int     args[NUMMTARGS]; // arguments for special
 
    int     recordnum; // for ExtraData hashing

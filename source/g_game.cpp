@@ -62,6 +62,7 @@
 #include "m_misc.h"
 #include "m_random.h"
 #include "m_shots.h"
+#include "m_utils.h"
 #include "metaapi.h"
 #include "mn_engin.h"
 #include "mn_menus.h"
@@ -248,6 +249,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    double tmousex, tmousey;     // local mousex, mousey
    playerclass_t *pc = players[consoleplayer].pclass;
    invbarstate_t &invbarstate = GameModeInfo->StatusBar->GetInvBarState();
+   player_t &p = players[consoleplayer]; // used to pretty-up code
 
    base = I_BaseTiccmd();    // empty, or external driver
    memcpy(cmd, base, sizeof(*cmd));
@@ -261,18 +263,19 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
    forward = side = 0;
 
+   cmd->itemID = 0; // Nothing to see here
    if(gameactions[ka_inventory_use])
    {
       // FIXME: Handle noartiskip
       if(invbarstate.inventory)
       {
-         players[consoleplayer].inv_ptr = invbarstate.inv_ptr;
+         p.inv_ptr = invbarstate.inv_ptr;
          invbarstate.inventory = false;
          usearti = false;
       }
       else if(usearti)
       {
-         E_TryUseItem(&players[consoleplayer]);
+         cmd->itemID = p.inventory[p.inv_ptr].item + 1;
          usearti = false;
       }
       gameactions[ka_inventory_use] = false;
@@ -385,7 +388,8 @@ void G_BuildTiccmd(ticcmd_t *cmd)
         gameactions[ka_weapon6] && GameModeInfo->id != shareware ? wp_plasma :
         gameactions[ka_weapon7] && GameModeInfo->id != shareware ? wp_bfg :
         gameactions[ka_weapon8] ? wp_chainsaw :
-        gameactions[ka_weapon9] && enable_ssg ? wp_supershotgun :
+        (!demo_compatibility && gameactions[ka_weapon9] &&  // MaxW: Adopted from PRBoom
+        enable_ssg) ? wp_supershotgun :
         wp_nochange;
 
       // killough 3/22/98: For network and demo consistency with the
@@ -830,11 +834,7 @@ bool G_Responder(event_t* ev)
             invbarstate.inventory = true;
             break;
          }
-         // If curpos needs to be adjusted
-         if(E_MoveInventoryCursor(&players[consoleplayer], -1, invbarstate.inv_ptr))
-         {
-            E_MoveInventoryCursor(&players[consoleplayer], -1, invbarstate.curpos);            
-         }
+         E_MoveInventoryCursor(&players[consoleplayer], -1, invbarstate.inv_ptr);
          return true;
       }
       if(G_KeyResponder(ev, kac_game) == ka_inventory_right)
@@ -845,11 +845,7 @@ bool G_Responder(event_t* ev)
             invbarstate.inventory = true;
             break;
          }
-         // If curpos needs to be adjusted
-         if(E_MoveInventoryCursor(&players[consoleplayer], 1, invbarstate.inv_ptr))
-         {
-            E_MoveInventoryCursor(&players[consoleplayer], 1, invbarstate.curpos);
-         }
+         E_MoveInventoryCursor(&players[consoleplayer], 1, invbarstate.inv_ptr);
          return true;
       }
 
@@ -972,6 +968,7 @@ struct complevel_s
    { 329, 329 }, // comp_planeshoot
    { 335, 335 }, // comp_special
    { 337, 337 }, // comp_ninja
+   { 340, 340 }, // comp_aircontrol
    { 0,   0   }
 };
 
@@ -1036,6 +1033,19 @@ void G_DoPlayDemo(void)
    }
 
    demobuffer = demo_p = (byte *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC)); // killough
+
+   // Check for empty demo lumps
+   if(!demo_p)
+   {
+      if(singledemo)
+         I_Error("G_DoPlayDemo: empty demo %s\n", basename);
+      else
+      {
+         gameaction = ga_nothing;
+         D_AdvanceDemo();
+      }
+      return;  // protect against zero-length lumps
+   }
    
    // killough 2/22/98, 2/28/98: autodetect old demos and act accordingly.
    // Old demos turn on demo_compatibility => compatibility; new demos load
@@ -1372,6 +1382,14 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
       else
          cmd->fly = 0;
       
+      if(full_demo_version >= make_full_version(342, 1))
+      {
+         cmd->itemID =   *demo_p++;
+         cmd->itemID |= (*demo_p++) << 8;
+      }
+      else
+         cmd->itemID = 0;
+
       // killough 3/26/98, 10/98: Ignore savegames in demos 
       if(demoplayback && 
          cmd->buttons & BT_SPECIAL && cmd->buttons & BTS_SAVEGAME)
@@ -1426,7 +1444,13 @@ static void G_WriteDemoTiccmd(ticcmd_t *cmd)
    }
 
    if(full_demo_version >= make_full_version(340, 23))
-      demo_p[i] = cmd->fly;
+      demo_p[i++] = cmd->fly;
+
+   if(full_demo_version >= make_full_version(342, 1))
+   {
+      demo_p[i++] =  cmd->itemID & 0xff;
+      demo_p[i] = (cmd->itemID >> 8) & 0xff;
+   }
    
    if(position + 16 > maxdemosize)   // killough 8/23/98
    {
@@ -1724,8 +1748,6 @@ static void G_DoWorldDone()
    hub_changelevel = false;
    G_DoLoadLevel();
    gameaction = ga_nothing;
-   // haleyjd 01/07/07: run deferred ACS scripts
-   ACS_RunDeferredScripts();
 }
 
 //
@@ -3664,6 +3686,35 @@ void G_CoolViewPoint()
   
    // pick a random number of seconds until changing the viewpoint
    cooldemo_tics = (6 + M_Random() % 4) * TICRATE;
+}
+
+//
+// Counts the total kills, items, secrets or whatever
+//
+static int G_totalPlayerParam(int player_t::*tally)
+{
+   int score = 0;
+   for(int i = 0; i < MAXPLAYERS; ++i)
+   {
+      if(!playeringame[i])
+         return score;
+      score += players[i].*tally;
+   }
+   return score;
+}
+
+// Named this way to prevent confusion with similarly named variables
+int G_TotalKilledMonsters()
+{
+   return G_totalPlayerParam(&player_t::killcount);
+}
+int G_TotalFoundItems()
+{
+   return G_totalPlayerParam(&player_t::itemcount);
+}
+int G_TotalFoundSecrets()
+{
+   return G_totalPlayerParam(&player_t::secretcount);
 }
 
 #if 0
