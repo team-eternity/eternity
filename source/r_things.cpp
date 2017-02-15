@@ -1650,6 +1650,38 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
    }
    // killough 3/27/98: end special clipping for deep water / fake ceilings
 
+   // SoM: special clipping for linked portals
+   if(useportalgroups)
+   {
+      float h, mh;
+
+      sector_t *sector = sectors + spr->sector;
+
+      mh = M_FixedToFloat(sector->floorheight) - view.z;
+      if(sector->f_pflags & PS_PASSABLE && sector->floorheight > spr->gz)
+      {
+         h = eclamp(view.ycenter - (mh * spr->scale), 0.0f, view.height - 1);
+
+         for(x = spr->x1; x <= spr->x2; x++)
+         {
+            if(clipbot[x] == -2 || h < clipbot[x])
+               clipbot[x] = h;
+         }
+      }
+
+      mh = M_FixedToFloat(sector->ceilingheight) - view.z;
+      if(sector->c_pflags & PS_PASSABLE && sector->ceilingheight < spr->gzt)
+      {
+         h = eclamp(view.ycenter - (mh * spr->scale), 0.0f, view.height - 1);
+
+         for(x = spr->x1; x <= spr->x2; x++)
+         {
+            if(cliptop[x] == -2 || h > cliptop[x])
+               cliptop[x] = h;
+         }
+      }
+   }
+
    // all clipping has been performed, so draw the sprite
    // check for unclipped columns
    
