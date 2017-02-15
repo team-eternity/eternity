@@ -111,9 +111,18 @@ cfg_opt_t edf_skin_opts[] =
 #define ITEM_PCLASS_SPEEDLOOKSLOW  "speedlookslow"
 #define ITEM_PCLASS_SPEEDLOOKFAST  "speedlookfast"
 #define ITEM_PCLASS_REBORNITEM     "rebornitem"
+#define ITEM_PCLASS_WEAPONSLOT     "weaponslot"
 
 #define ITEM_REBORN_NAME   "name"
 #define ITEM_REBORN_AMOUNT "amount"
+
+#define ITEM_WPNSLOT_WPNS "weapons"
+
+static cfg_opt_t edf_wpnslot_opts[] =
+{
+   CFG_STR(ITEM_WPNSLOT_WPNS, 0, CFGF_LIST),
+   CFG_END()
+};
 
 static cfg_opt_t edf_reborn_opts[] =
 {
@@ -144,6 +153,9 @@ cfg_opt_t edf_pclass_opts[] =
 
    // reborn inventory items
    CFG_MVPROP(ITEM_PCLASS_REBORNITEM, edf_reborn_opts, CFGF_MULTI|CFGF_NOCASE),
+
+   // weapon slots
+   CFG_SEC(ITEM_PCLASS_WEAPONSLOT,   edf_wpnslot_opts, CFGF_MULTI|CFGF_TITLE|CFGF_NOCASE),
 
    CFG_END()
 };
