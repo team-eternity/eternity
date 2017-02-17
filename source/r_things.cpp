@@ -81,6 +81,8 @@ extern int global_cmap_index; // haleyjd: NGCS
 #define IS_FULLBRIGHT(actor) \
    (((actor)->frame & FF_FULLBRIGHT) || ((actor)->flags4 & MF4_BRIGHT))
 
+#define CLIP_UNDEF (-2)
+
 //=============================================================================
 //
 // Globals
@@ -1460,7 +1462,7 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
    float      fardist;
 
    for(x = spr->x1; x <= spr->x2; x++)
-      clipbot[x] = cliptop[x] = -2;
+      clipbot[x] = cliptop[x] = CLIP_UNDEF;
 
    // haleyjd 04/25/10:
    // e6y: optimization
@@ -1514,7 +1516,7 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
          {
             for(x = r1; x <= r2; x++)
             {
-               if(clipbot[x] == -2)
+               if(clipbot[x] == CLIP_UNDEF)
                   clipbot[x] = ds->sprbottomclip[x];
             }
          }
@@ -1524,7 +1526,7 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
          {
             for(x = r1; x <= r2; x++)
             {
-               if(cliptop[x] == -2)
+               if(cliptop[x] == CLIP_UNDEF)
                   cliptop[x] = ds->sprtopclip[x];
             }
          }
@@ -1572,7 +1574,7 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
          {
             for(x = r1; x <= r2; x++)
             {
-               if(clipbot[x] == -2)
+               if(clipbot[x] == CLIP_UNDEF)
                   clipbot[x] = ds->sprbottomclip[x];
             }
          }
@@ -1582,7 +1584,7 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
          {
             for(x = r1; x <= r2; x++)
             {
-               if(cliptop[x] == -2)
+               if(cliptop[x] == CLIP_UNDEF)
                   cliptop[x] = ds->sprtopclip[x];
             }
          }
@@ -1607,7 +1609,7 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
             // clip bottom
             for(x = spr->x1; x <= spr->x2; x++)
             {
-               if(clipbot[x] == -2 || h < clipbot[x])
+               if(clipbot[x] == CLIP_UNDEF || h < clipbot[x])
                   clipbot[x] = h;
             }
          }
@@ -1617,7 +1619,7 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
             {
                for(x = spr->x1; x <= spr->x2; x++)
                {
-                  if(cliptop[x] == -2 || h > cliptop[x])
+                  if(cliptop[x] == CLIP_UNDEF || h > cliptop[x])
                      cliptop[x] = h;
                }
             }
@@ -1634,7 +1636,7 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
             // clip bottom
             for(x = spr->x1; x <= spr->x2; x++)
             {
-               if(clipbot[x] == -2 || h < clipbot[x])
+               if(clipbot[x] == CLIP_UNDEF || h < clipbot[x])
                   clipbot[x] = h;
             }
          }
@@ -1642,7 +1644,7 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
          {
             for(x = spr->x1; x <= spr->x2; x++)
             {
-               if(cliptop[x] == -2 || h > cliptop[x])
+               if(cliptop[x] == CLIP_UNDEF || h > cliptop[x])
                   cliptop[x] = h;
             }
          }
@@ -1664,7 +1666,7 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
 
          for(x = spr->x1; x <= spr->x2; x++)
          {
-            if(clipbot[x] == -2 || h < clipbot[x])
+            if(clipbot[x] == CLIP_UNDEF || h < clipbot[x])
                clipbot[x] = h;
          }
       }
@@ -1676,7 +1678,7 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
 
          for(x = spr->x1; x <= spr->x2; x++)
          {
-            if(cliptop[x] == -2 || h > cliptop[x])
+            if(cliptop[x] == CLIP_UNDEF || h > cliptop[x])
                cliptop[x] = h;
          }
       }
@@ -1687,10 +1689,10 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
    
    for(x = spr->x1; x <= spr->x2; x++)
    {
-      if(clipbot[x] == -2 || clipbot[x] > pbottom[x])
+      if(clipbot[x] == CLIP_UNDEF || clipbot[x] > pbottom[x])
          clipbot[x] = pbottom[x];
 
-      if(cliptop[x] == -2 || cliptop[x] < ptop[x])
+      if(cliptop[x] == CLIP_UNDEF || cliptop[x] < ptop[x])
          cliptop[x] = ptop[x];
    }
 
