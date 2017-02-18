@@ -1260,18 +1260,20 @@ IMPLEMENT_THINKER_TYPE(Mobj)
 inline static void P_checkMobjProjections(Mobj &mobj)
 {
    uint32_t spritecomp = mobj.sprite << 16 | (mobj.frame & 0xffff);
-   if(gMapHasSectorPortals && (mobj.z != mobj.sprojlast.pos.z ||
-                               mobj.x != mobj.sprojlast.pos.x ||
-                               mobj.y != mobj.sprojlast.pos.y ||
-                               spritecomp != mobj.sprojlast.sprite ||
-                               mobj.yscale != mobj.sprojlast.yscale))
+   bool xychanged = mobj.x != mobj.sprojlast.pos.x ||
+   mobj.y != mobj.sprojlast.pos.y || mobj.xscale != mobj.sprojlast.xscale;
+   if(useportalgroups && (mobj.z != mobj.sprojlast.pos.z || xychanged ||
+                          spritecomp != mobj.sprojlast.sprite ||
+                          mobj.yscale != mobj.sprojlast.yscale))
    {
-      R_CheckMobjProjections(&mobj);
+      bool checklines = gMapHasLinePortals && xychanged;
+      R_CheckMobjProjections(&mobj, checklines);
       mobj.sprojlast.pos.x = mobj.x;
       mobj.sprojlast.pos.y = mobj.y;
       mobj.sprojlast.pos.z = mobj.z;
       mobj.sprojlast.sprite = spritecomp;
       mobj.sprojlast.yscale = mobj.yscale;
+      mobj.sprojlast.xscale = mobj.xscale;
    }
 }
 

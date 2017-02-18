@@ -58,12 +58,13 @@ extern fixed_t *spritetopoffset;
 // SoM: Needed for cardboard
 extern float   *spriteheight;
 // ioanch: portal sprite copying cache info
-struct sprvertspan_t
+struct spritespan_t
 {
    float top;
    float bottom;
+   float side;
 };
-extern sprvertspan_t **r_sprvertspan;
+extern spritespan_t **r_spritespan;
 
 extern lighttable_t **colormaps;         // killough 3/20/98, 4/4/98
 extern lighttable_t  *fullcolormap;      // killough 3/20/98

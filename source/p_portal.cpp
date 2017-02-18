@@ -28,6 +28,7 @@
 
 #include "c_io.h"
 #include "doomstat.h"
+#include "e_exdata.h"
 #include "m_collection.h"  // ioanch 20160106
 #include "p_chase.h"
 #include "polyobj.h"
@@ -639,6 +640,8 @@ static void P_buildPortalMap()
          }
       }
    }
+
+   pLPortalMap.mapInit();
 }
 
 //
@@ -1098,6 +1101,80 @@ bool P_BlockHasLinkedPortals(int index, bool includesectors)
          return true;
    }
    return false;
+}
+
+//==============================================================================
+//
+// More portal blockmap stuff (besides portalmap and gBlockGroups from p_setup)
+//
+LinePortalBlockmap pLPortalMap;
+
+//
+// Initialization per map. Makes PU_LEVEL allocations
+//
+void LinePortalBlockmap::mapInit()
+{
+   mMap.clear();
+   int numblocks = bmapwidth * bmapheight;
+   for(int i = 0; i < numblocks; ++i)
+   {
+      int offset = blockmap[i];
+      const int *list = blockmaplump + offset;
+      // MaxW: 2016/02/02: if before 3.42 always skip, skip if all blocklists start w/ 0
+      // killough 2/22/98: demo_compatibility check
+      // skip 0 starting delimiter -- phares
+      if((!demo_compatibility && demo_version < 342) ||
+         (demo_version >= 342 && skipblstart))
+      {
+         list++;
+      }
+
+      PODCollection<const line_t *> coll;
+
+      for(; *list != -1; ++list)
+      {
+         if(*list >= numlines)
+            continue;
+         const line_t &line = lines[*list];
+         if(line.backsector &&
+            (line.pflags & PS_PASSABLE ||
+             (line.extflags & EX_ML_LOWERPORTAL &&
+              line.backsector->f_portal &&
+              line.backsector->f_portal->type == R_LINKED) ||
+             (line.extflags & EX_ML_UPPERPORTAL &&
+              line.backsector->c_portal &&
+              line.backsector->c_portal->type == R_LINKED)))
+         {
+            coll.add(&line);
+         }
+      }
+
+      mMap.add(coll);
+   }
+
+   mValids = ecalloctag(decltype(mValids), numlines, sizeof(*mValids), PU_LEVEL,
+                        nullptr);
+}
+
+//
+// Does the iteration
+//
+bool LinePortalBlockmap::iterator(int x, int y, void *data,
+                                  bool (*func)(const line_t &, void *data)) const
+{
+   if(x < 0 || x >= bmapwidth || y < 0 || y >= bmapheight)
+      return true;
+   int i = y * bmapwidth + x;
+   const PODCollection<const line_t *> coll = mMap[i];
+   for(const line_t *line : coll)
+   {
+      if(mValids[line - lines] == mValidcount)
+         continue;
+      mValids[line - lines] = mValidcount;
+      if(!func(*line, data))
+         return false;
+   }
+   return true;
 }
 
 // EOF

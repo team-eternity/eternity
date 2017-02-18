@@ -26,6 +26,7 @@
 #ifndef R_THINGS_H__
 #define R_THINGS_H__
 
+struct line_t;
 struct sector_t;
 struct particle_t;
 struct planehash_t;
@@ -98,17 +99,18 @@ extern cb_maskedcolumn_t maskedcolumn;
 //
 struct spriteprojnode_t
 {
-   v3fixed_t delta;                       // portal accumulated delta (do not
-                                          // link offsets)
    Mobj *mobj;                            // source mobj
    const sector_t *sector;                // sector where this appears
+   v3fixed_t delta;                       // portal accumulated delta (do not
+                                          // link offsets)
+   const line_t *portalline;              // portal line (if applicable)
    DLListItem<spriteprojnode_t> mobjlink; // vertical link (links separate layers)
    DLListItem<spriteprojnode_t> sectlink; // horizontal link (links separate mobjs)
    DLListItem<spriteprojnode_t> freelink; // free list link (for recycling)
 };
 
 void R_RemoveMobjProjections(Mobj *mobj);
-void R_CheckMobjProjections(Mobj *mobj);
+void R_CheckMobjProjections(Mobj *mobj, bool checklines);
 
 ///////////////////////////////////////////////////////////////////////////////
 

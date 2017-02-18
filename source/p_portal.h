@@ -27,6 +27,8 @@
 #ifndef P_PORTAL_H__
 #define P_PORTAL_H__
 
+#include "m_collection.h"
+
 struct polyobj_s;
 
 extern bool useportalgroups;
@@ -185,6 +187,37 @@ void P_MoveLinkedPortal(portal_t *portal, fixed_t dx, fixed_t dy,
                         bool movebehind);
 
 bool P_BlockHasLinkedPortals(int index, bool includesectors);
+
+//==============================================================================
+//
+// More portal blockmap stuff (besides portalmap and gBlockGroups from p_setup)
+//
+
+//
+// Line portal blockmap: stores just the portal linedefs on the blockmap
+//
+class LinePortalBlockmap
+{
+public:
+   LinePortalBlockmap() : mValidcount(0), mValids(nullptr)
+   {
+   }
+
+   void mapInit();
+   void newSession()
+   {
+      ++mValidcount;
+   }
+   bool iterator(int x, int y, void *data,
+                 bool (*func)(const line_t &, void *data)) const;
+
+private:
+   Collection<PODCollection<const line_t *>> mMap;
+   int mValidcount;
+   int *mValids;
+};
+
+extern LinePortalBlockmap pLPortalMap;
 
 #endif
 

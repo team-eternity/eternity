@@ -33,8 +33,10 @@
 #include "d_main.h"
 #include "doomstat.h"
 #include "e_edf.h"
+#include "e_exdata.h"
 #include "g_game.h"
 #include "m_argv.h"
+#include "m_bbox.h"
 #include "m_compare.h"
 #include "m_swap.h"
 #include "p_chase.h"
@@ -42,6 +44,7 @@
 #include "p_maputl.h"   // ioanch 20160125
 #include "p_partcl.h"
 #include "p_portal.h"
+#include "p_setup.h"
 #include "p_skin.h"
 #include "p_user.h"
 #include "r_bsp.h"
@@ -814,7 +817,8 @@ static void R_interpolateThingPosition(const Mobj *thing, spritepos_t &pos)
 // Generates a vissprite for a thing if it might be visible.
 // ioanch 20160109: added optional arguments for offsetting the sprite
 //
-static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr)
+static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
+                            const line_t *portalline = nullptr)
 {
    spritepos_t    spritepos;
    fixed_t        gzt;            // killough 3/27/98
@@ -866,22 +870,10 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr)
       portalrender.w->portal->type != R_SKYBOX)
    {
       const renderbarrier_t &barrier = portalrender.w->barrier;
-      if(portalrender.w->line)
+      if(portalrender.w->line && portalrender.w->line != portalline &&
+         P_PointOnDivlineSide(spritepos.x, spritepos.y, &barrier.dln.dl) == 0)
       {
-         if(P_PointOnDivlineSide(spritepos.x, spritepos.y, &barrier.dln.dl) == 0)
-            return;
-      }
-      else
-      {
-         //dlnormal_t ports[2];
-         //R_PickSidesNearViewer(barrier.bbox, ports);
-         //if((ports[0].dl.dy &&
-         //   P_PointOnDivlineSide(spritepos.x, spritepos.y, &ports[0].dl) == 0) ||
-         //   (ports[1].dl.dx &&
-         //      P_PointOnDivlineSide(spritepos.x, spritepos.y, &ports[1].dl) == 0))
-         //{
-         //   return;
-         //}
+         return;
       }
    }
 
@@ -1126,10 +1118,8 @@ void R_AddSprites(sector_t* sec, int lightlevel)
 
    // ioanch 20160109: handle partial sprite projections
    for(auto item = sec->spriteproj; item; item = item->dllNext)
-   {
       if(!((*item)->mobj->intflags & MIF_HIDDENBYQUAKE))
-         R_ProjectSprite((*item)->mobj, &(*item)->delta);
-   }
+         R_ProjectSprite((*item)->mobj, &(*item)->delta, (*item)->portalline);
 
    // haleyjd 02/20/04: Handle all particles in sector.
 
@@ -1817,6 +1807,7 @@ inline static void R_freeProjNode(spriteprojnode_t *node)
 {
    node->mobj = nullptr;
    node->sector = nullptr;
+   node->portalline = nullptr;
    memset(&node->delta, 0, sizeof(node->delta));
    node->mobjlink.remove();
    node->sectlink.remove();
@@ -1863,7 +1854,8 @@ static spriteprojnode_t *R_newProjNode()
 inline static sector_t *R_addProjNode(Mobj *mobj, const linkdata_t *data,
                                       v3fixed_t &delta,
                                       DLListItem<spriteprojnode_t> *&item,
-                                      DLListItem<spriteprojnode_t> **&tail)
+                                      DLListItem<spriteprojnode_t> **&tail,
+                                      const line_t *line)
 {
    sector_t *sector;
 
@@ -1878,6 +1870,7 @@ inline static sector_t *R_addProjNode(Mobj *mobj, const linkdata_t *data,
       newnode->delta = delta;
       newnode->mobj = mobj;
       newnode->sector = sector;
+      newnode->portalline = line;
       newnode->mobjlink.insert(newnode, tail);
       newnode->sectlink.insert(newnode, &sector->spriteproj);
       tail = &newnode->mobjlink.dllNext;
@@ -1891,6 +1884,7 @@ inline static sector_t *R_addProjNode(Mobj *mobj, const linkdata_t *data,
          (*item)->sectlink.insert((*item), &sector->spriteproj);
       }
       (*item)->delta = delta;
+      (*item)->portalline = line;
       tail = &item->dllNext;
       item = item->dllNext;
       
@@ -1900,33 +1894,88 @@ inline static sector_t *R_addProjNode(Mobj *mobj, const linkdata_t *data,
 }
 
 //
+// Data passed through iterator
+//
+struct mobjprojinfo_t
+{
+   Mobj *mobj;
+   fixed_t bbox[4];
+   DLListItem<spriteprojnode_t> **item;
+   DLListItem<spriteprojnode_t> ***tail;
+   fixed_t scaledbottom, scaledtop;
+};
+
+//
+// Iterator called by R_CheckMobjProjection
+//
+static bool RIT_checkMobjProjection(const line_t &line, void *vdata)
+{
+   const auto &mpi = *static_cast<mobjprojinfo_t *>(vdata);
+   if(P_PointOnLineSide(mpi.mobj->x, mpi.mobj->y, &line) == 1 ||
+      P_BoxOnLineSide(mpi.bbox, &line) != -1)
+   {
+      return true;
+   }
+
+   const linkdata_t *data = nullptr, *data2 = nullptr;
+
+   if(line.pflags & PS_PASSABLE)
+      data = &line.portal->data.link;
+   else
+   {
+      if(line.extflags & EX_ML_LOWERPORTAL &&
+         line.backsector->f_pflags & PS_PASSABLE &&
+         mpi.mobj->z + mpi.scaledbottom < line.backsector->floorheight)
+      {
+         data = &line.backsector->f_portal->data.link;
+      }
+      if(line.extflags & EX_ML_UPPERPORTAL &&
+         line.backsector->c_pflags & PS_PASSABLE &&
+         mpi.mobj->z + mpi.scaledtop > line.backsector->ceilingheight)
+      {
+         data2 = &line.backsector->c_portal->data.link;
+      }
+   }
+   v3fixed_t v = { 0, 0, 0 };
+   if(data)
+      R_addProjNode(mpi.mobj, data, v, *mpi.item, *mpi.tail, &line);
+   if(data2)
+   {
+      v.x = v.y = v.z = 0;
+      R_addProjNode(mpi.mobj, data2, v, *mpi.item, *mpi.tail, &line);
+   }
+   return true;
+}
+
+//
 // R_CheckMobjProjections
 //
 // Looks above and below for portals and prepares projection nodes
 //
-void R_CheckMobjProjections(Mobj *mobj)
+void R_CheckMobjProjections(Mobj *mobj, bool checklines)
 {
    sector_t *sector = mobj->subsector->sector;
 
    bool overflown = (unsigned)mobj->sprite >= (unsigned)numsprites ||
    (mobj->frame & FF_FRAMEMASK) >= sprites[mobj->sprite].numframes;
 
-   if((!(sector->f_pflags & PS_PASSABLE) && !(sector->c_pflags & PS_PASSABLE)) ||
-      mobj->flags & MF_NOSECTOR ||
-      overflown)
+   DLListItem<spriteprojnode_t> *item = mobj->spriteproj;
+
+   if(mobj->flags & MF_NOSECTOR || overflown ||
+      (!(sector->f_pflags & PS_PASSABLE) && !(sector->c_pflags & PS_PASSABLE) &&
+       !checklines))
    {
-      if(mobj->spriteproj)
+      if(item)
          R_RemoveMobjProjections(mobj);
       return;
    }
 
    const linkdata_t *data;
 
-   DLListItem<spriteprojnode_t> *item = mobj->spriteproj;
    DLListItem<spriteprojnode_t> **tail = &mobj->spriteproj;
 
-   const sprvertspan_t &span =
-   r_sprvertspan[mobj->sprite][mobj->frame & FF_FRAMEMASK];
+   const spritespan_t &span =
+   r_spritespan[mobj->sprite][mobj->frame & FF_FRAMEMASK];
 
    fixed_t scaledtop = M_FloatToFixed(span.top * mobj->yscale + 0.5f);
    fixed_t scaledbottom = M_FloatToFixed(span.bottom * mobj->yscale - 0.5f);
@@ -1937,7 +1986,7 @@ void R_CheckMobjProjections(Mobj *mobj)
       (data = R_FPLink(sector))->planez > mobj->z + scaledbottom)
    {
       // always accept first sector
-      sector = R_addProjNode(mobj, data, delta, item, tail);
+      sector = R_addProjNode(mobj, data, delta, item, tail, nullptr);
    }
 
    // restart from mobj's group
@@ -1947,8 +1996,30 @@ void R_CheckMobjProjections(Mobj *mobj)
       (data = R_CPLink(sector))->planez < mobj->z + scaledtop)
    {
       // always accept first sector
-      sector = R_addProjNode(mobj, data, delta, item, tail);
+      sector = R_addProjNode(mobj, data, delta, item, tail, nullptr);
    }
+
+   // Now check line portals
+   pLPortalMap.newSession();
+   mobjprojinfo_t mpi;
+   fixed_t xspan = M_FloatToFixed(span.side * mobj->xscale);
+   mpi.mobj = mobj;
+   mpi.bbox[BOXLEFT] = mobj->x - xspan;
+   mpi.bbox[BOXRIGHT] = mobj->x + xspan;
+   mpi.bbox[BOXBOTTOM] = mobj->y - xspan;
+   mpi.bbox[BOXTOP] = mobj->y + xspan;
+   mpi.scaledbottom = scaledbottom;
+   mpi.scaledtop = scaledtop;
+   mpi.item = &item;
+   mpi.tail = &tail;
+   int bx1 = (mpi.bbox[BOXLEFT] - bmaporgx) >> MAPBLOCKSHIFT;
+   int bx2 = (mpi.bbox[BOXRIGHT] - bmaporgx) >> MAPBLOCKSHIFT;
+   int by1 = (mpi.bbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
+   int by2 = (mpi.bbox[BOXTOP] - bmaporgy) >> MAPBLOCKSHIFT;
+
+   for(int by = by1; by <= by2; ++by)
+      for(int bx = bx1; bx <= bx2; ++bx)
+         pLPortalMap.iterator(bx, by, &mpi, RIT_checkMobjProjection);
 
    // remove trailing items
    DLListItem<spriteprojnode_t> *next;
