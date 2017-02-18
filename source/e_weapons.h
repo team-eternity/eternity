@@ -37,7 +37,11 @@ struct weaponinfo_t;
 
 // Section Names
 #define EDF_SEC_WEAPONINFO "weaponinfo"
+#define EDF_SEC_WPNDELTA   "weapondelta"
+
+// Section Options
 extern cfg_opt_t edf_wpninfo_opts[];
+extern cfg_opt_t edf_wdelta_opts[];
 
 #endif
 
@@ -47,10 +51,6 @@ struct weaponslot_t
    weaponinfo_t *weapon;           // weapon in the slot
    DLListItem<weaponslot_t> links; // link to next weapon in the same slot
 };
-
-#define NUMWEAPONSLOTS 16
-
-extern weaponslot_t *weaponslots[NUMWEAPONSLOTS];
 
 // Global Functions
 weaponinfo_t *E_WeaponForID(int id);

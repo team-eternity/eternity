@@ -188,6 +188,7 @@ playerclass_t *edf_player_classes[NUMEDFPCLASSCHAINS];
 // to enable last-chance defaults processing.
 static int num_edf_skins;
 static int num_edf_pclasses;
+static DLListItem<weaponslot_t> *slotlists[NUMWEAPONSLOTS];
 
 //==============================================================================
 //
@@ -461,7 +462,6 @@ static void E_processWeaponSlot(cfg_t *slot, playerclass_t *pc)
    }
 
    weaponslot_t *curslot = nullptr;
-   DLListItem<weaponslot_t> *finishedslots = nullptr;
    for(int i = 0; i < numweapons; i++)
    {
       const char *weaponname = cfg_getnstr(slot, ITEM_WPNSLOT_WPNS, i);
@@ -470,12 +470,10 @@ static void E_processWeaponSlot(cfg_t *slot, playerclass_t *pc)
       {
          curslot = estructalloc(weaponslot_t, 1);
          curslot->weapon = weapon;
-         curslot->links.insert(curslot, &finishedslots);
+         curslot->links.insert(curslot, &slotlists[slotindex]);
       }
       else
          E_EDFLoggedErr(2, "E_processWeaponSlot: Weapon \"%s\" not found\n", weaponname);
-
-
    }
    pc->weaponslots[slotindex] = curslot;
 }
