@@ -20,7 +20,7 @@ weaponinfo Fist
   previncycle  BFG9000
 
   flags        FLEEMELEE|NOHITGHOSTS|SILENCER
-  mod          ""
+  mod          Fist
   recoil       10
 }
 
@@ -38,7 +38,7 @@ weaponinfo Pistol
   previncycle  Chainsaw
 
   flags        SILENCER|HAPTICRECOIL
-  mod          ""
+  mod          Pistol
   recoil       10
   hapticrecoil 1
   haptictime   1
@@ -58,7 +58,7 @@ weaponinfo Shotgun
   previncycle  Pistol
 
   flags        SILENCER|HAPTICRECOIL
-  mod          ""
+  mod          Shotgun
   recoil       30
   hapticrecoil 3
   haptictime   3
@@ -78,7 +78,7 @@ weaponinfo Chaingun
   previncycle  SuperShotgun
 
   flags        SILENCER|HAPTICRECOIL
-  mod          ""
+  mod          Chaingun
   recoil       10
   hapticrecoil 1
   haptictime   1
@@ -98,7 +98,7 @@ weaponinfo MissileLauncher
   previncycle  Chaingun
 
   flags        NOAUTOFIRE|SILENCER|HAPTICRECOIL
-  mod          ""
+  //mod          ""
   recoil       100
   hapticrecoil 6
   haptictime   8
@@ -118,7 +118,7 @@ weaponinfo PlasmaRifle
   previncycle  MissileLauncher
 
   flags        SILENCER|HAPTICRECOIL|NOTSHAREWARE
-  mod          ""
+  //mod          ""
   recoil       20
   hapticrecoil 2
   haptictime   1
@@ -138,7 +138,7 @@ weaponinfo BFG9000
   previncycle  PlasmaRifle
 
   flags        SILENCER|HAPTICRECOIL|NOTSHAREWARE
-  mod          ""
+  //mod          ""
   recoil       20
   hapticrecoil 2
   haptictime   1
@@ -155,7 +155,7 @@ weaponinfo Chainsaw
   previncycle  Fist
 
   flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCER
-  mod          ""
+  mod          Chainsaw
   upsound      sawup
 }
 
@@ -173,7 +173,7 @@ weaponinfo SuperShotgun
   previncycle  Shotgun
 
   flags        SILENCER|HAPTICRECOIL
-  mod          ""
+  mod          SShotgun
   recoil       80
   hapticrecoil 5
   haptictime   5

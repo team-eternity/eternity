@@ -429,7 +429,9 @@ static void E_processRebornItem(cfg_t *item, playerclass_t *pc, unsigned int ind
    ri->amount   = cfg_getint(item, ITEM_REBORN_AMOUNT);
 }
 
-
+//
+// Free a player class's default weapon slots when recreating it.
+//
 static void E_freeWeaponsSlots(playerclass_t *pc)
 {
    for(int i = 0; i < NUMWEAPONSLOTS; i++)
@@ -442,6 +444,9 @@ static void E_freeWeaponsSlots(playerclass_t *pc)
    }
 }
 
+//
+// Process a single weaponslot for the player's default inventory.
+//
 static void E_processWeaponSlot(cfg_t *slot, playerclass_t *pc)
 {
    const qstring titlestr = qstring(cfg_title(slot));
