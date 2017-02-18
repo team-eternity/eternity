@@ -465,17 +465,17 @@ static void E_processWeaponSlot(cfg_t *slot, playerclass_t *pc)
    for(int i = 0; i < numweapons; i++)
    {
       const char *weaponname = cfg_getnstr(slot, ITEM_WPNSLOT_WPNS, i);
-      // /TODO: This E_WeaponForName call always returns nullptr until we load weapons
       weaponinfo_t *weapon = E_WeaponForName(weaponname);
-      if(!weapon) // TODO: Remove braces once the below E_EDFLoggedErr is uncommented
+      if(weapon)
       {
-         // E_EDFLoggedErr(2, "E_processWeaponSlot: Weapon \"%s\" not found\n", weaponname);
+         curslot = estructalloc(weaponslot_t, 1);
+         curslot->weapon = weapon;
+         curslot->links.insert(curslot, &finishedslots);
       }
-      // TODO: Move this into a condition once we process weapons
-      curslot = estructalloc(weaponslot_t, 1);
-      curslot->weapon = weapon;
-      curslot->links.insert(curslot, &finishedslots);
-      curslot->links.dllData = i; // TODO: Remove when weapons are finally done being read in
+      else
+         E_EDFLoggedErr(2, "E_processWeaponSlot: Weapon \"%s\" not found\n", weaponname);
+
+
    }
    pc->weaponslots[slotindex] = curslot;
 }

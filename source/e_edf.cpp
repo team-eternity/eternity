@@ -1644,6 +1644,9 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
    // process inventory
    E_ProcessInventory(cfg);
 
+   // process weapons
+   E_ProcessWeapons(cfg);
+
    // process player sections
    E_ProcessPlayerData(cfg);
 

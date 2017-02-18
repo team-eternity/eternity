@@ -56,6 +56,8 @@ extern weaponslot_t *weaponslots[NUMWEAPONSLOTS];
 weaponinfo_t *E_WeaponForID(int id);
 weaponinfo_t *E_WeaponForName(const char *name);
 
+void E_ProcessWeapons(cfg_t *cfg);
+
 #endif
 
 // EOF

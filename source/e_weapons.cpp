@@ -199,10 +199,13 @@ static void E_processWeaponInfo(int i, cfg_t *weapon, bool def)
    weaponinfo->id = i;
 
    tempstr = cfg_title(weapon);
-   weaponinfo->name = cfg_title(weapon);
+   weaponinfo->name = tempstr;
 
-   if((tempstr = cfg_getstr(weapon, ITEM_WPN_AMMO)))
+   if(IS_SET(ITEM_WPN_AMMO))
+   {
+      tempstr = cfg_getstr(weapon, ITEM_WPN_AMMO);
       weaponinfo->ammo = E_ItemEffectForName(tempstr);
+   }
 
    if(IS_SET(ITEM_WPN_UPSTATE))
    {
@@ -274,11 +277,30 @@ static void E_processWeaponInfo(int i, cfg_t *weapon, bool def)
          weaponinfo->upsound = E_EDFSoundForName(tempstr)->dehackednum;
    }
 
+   e_WeaponIDHash.addObject(*weaponinfo);
+   e_WeaponNameHash.addObject(*weaponinfo);
 }
 
 static void E_processWeaponCycle(cfg_t *weapon)
 {
-   
+   const char *tempstr = cfg_title(weapon);
+   if((tempstr = cfg_getstr(weapon, ITEM_WPN_NEXTINCYCLE)))
+      weaponinfo->nextInCycle = E_WeaponForName(tempstr);
+   if((tempstr = cfg_getstr(weapon, ITEM_WPN_PREVINCYCLE)))
+      weaponinfo->prevInCycle = E_WeaponForName(tempstr);
+}
+
+void E_ProcessWeapons(cfg_t *cfg)
+{
+   unsigned int numWeapons = cfg_size(cfg, EDF_SEC_WEAPONINFO);
+
+   E_EDFLogPuts("\t* Processing gameproperties\n");
+
+   for(unsigned int i = 0; i < numWeapons; i++)
+      E_processWeaponInfo(i, cfg_getnsec(cfg, EDF_SEC_WEAPONINFO, i), false);
+
+   for(unsigned int i = 0; i < numWeapons; i++)
+      E_processWeaponCycle(cfg_getnsec(cfg, EDF_SEC_WEAPONINFO, i));
 }
 
 // EOF
