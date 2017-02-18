@@ -45,6 +45,8 @@
 #include "e_sprite.h"
 #include "e_states.h"
 #include "e_things.h"
+#include "e_weapons.h"
+#include "m_qstr.h"
 #include "p_mobj.h"
 #include "p_skin.h"
 #include "v_misc.h"
@@ -427,6 +429,52 @@ static void E_processRebornItem(cfg_t *item, playerclass_t *pc, unsigned int ind
    ri->amount   = cfg_getint(item, ITEM_REBORN_AMOUNT);
 }
 
+
+static void E_freeWeaponsSlots(playerclass_t *pc)
+{
+   for(int i = 0; i < NUMWEAPONSLOTS; i++)
+   {
+      if(pc->weaponslots[i])
+      {
+         // TODO: Figure out if the DLListItem stuff needs deleting, and delete if so
+         efree(pc->weaponslots[i]);
+      }
+   }
+}
+
+static void E_processWeaponSlot(cfg_t *slot, playerclass_t *pc)
+{
+   const qstring titlestr = qstring(cfg_title(slot));
+   const int slotindex = titlestr.toInt() - 1;
+   const int numweapons = cfg_size(slot, ITEM_WPNSLOT_WPNS);
+
+   if(slotindex > NUMWEAPONSLOTS - 1 || slotindex < 0)
+   {
+      E_EDFLoggedErr(2, "E_processWeaponSlot: Slot number %d larger than "
+                        "%d or less than 1\n", slotindex + 1, NUMWEAPONSLOTS);
+      return;
+   }
+
+   weaponslot_t *curslot = nullptr;
+   DLListItem<weaponslot_t> *finishedslots = nullptr;
+   for(int i = 0; i < numweapons; i++)
+   {
+      const char *weaponname = cfg_getnstr(slot, ITEM_WPNSLOT_WPNS, i);
+      // /TODO: This E_WeaponForName call always returns nullptr until we load weapons
+      weaponinfo_t *weapon = E_WeaponForName(weaponname);
+      if(!weapon) // TODO: Remove braces once the below E_EDFLoggedErr is uncommented
+      {
+         // E_EDFLoggedErr(2, "E_processWeaponSlot: Weapon \"%s\" not found\n", weaponname);
+      }
+      // TODO: Move this into a condition once we process weapons
+      curslot = estructalloc(weaponslot_t, 1);
+      curslot->weapon = weapon;
+      curslot->links.insert(curslot, &finishedslots);
+      curslot->links.dllData = i; // TODO: Remove when weapons are finally done being read in
+   }
+   pc->weaponslots[slotindex] = curslot;
+}
+
 //
 // E_ProcessPlayerClass
 //
@@ -577,6 +625,15 @@ static void E_ProcessPlayerClass(cfg_t *pcsec)
 
       for(unsigned int i = 0; i < numitems; i++)
          E_processRebornItem(cfg_getnmvprop(pcsec, ITEM_PCLASS_REBORNITEM, i), pc, i);
+   }
+
+   unsigned int numweaponslots;
+   if((numweaponslots = cfg_size(pcsec, ITEM_PCLASS_WEAPONSLOT)) > 0)
+   {
+      // E_freeWeaponSlots(pc);
+
+      for(unsigned int i = 0; i < numweaponslots; i++)
+         E_processWeaponSlot(cfg_getnsec(pcsec, ITEM_PCLASS_WEAPONSLOT, i), pc);
    }
 }
 

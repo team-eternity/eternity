@@ -24,6 +24,8 @@ playerclass DoomMarine
    weaponslot 5 { weapons : MissileLauncher }
    weaponslot 6 { weapons : PlasmaRifle }
    weaponslot 7 { weapons : BFG9000 }
+   weaponslot 8 { weapons : Chainsaw }
+   weaponslot 9 { weapons : SuperShotgun }
 
    // INVENTORY_TODO: reborn weapons
    rebornitem AmmoClip, 50
