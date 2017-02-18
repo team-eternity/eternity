@@ -54,6 +54,7 @@
 #include "p_inter.h"
 #include "p_portal.h"
 #include "p_portalclip.h"  // ioanch 20160115
+#include "p_portalcross.h"
 #include "p_setup.h"
 #include "r_main.h"
 #include "r_pcheck.h"

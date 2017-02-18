@@ -45,7 +45,7 @@
 #include "p_maputl.h"
 #include "p_mobjcol.h"
 #include "p_mobj.h"
-#include "p_portal.h"   // ioanch 20160116
+#include "p_portalcross.h"
 #include "p_pspr.h"
 #include "p_setup.h"
 #include "p_spec.h"

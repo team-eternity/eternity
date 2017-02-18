@@ -30,6 +30,7 @@
 #include "ev_specials.h"
 #include "p_mobj.h"
 #include "p_portal.h"   // ioanch 20160115: portal aware
+#include "p_portalcross.h"
 #include "p_saveg.h"
 #include "p_scroll.h"
 #include "p_spec.h"

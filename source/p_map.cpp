@@ -46,6 +46,7 @@
 #include "p_map3d.h"
 #include "p_partcl.h"
 #include "p_portal.h"
+#include "p_portalcross.h"
 #include "p_setup.h"
 #include "p_skin.h"
 #include "p_spec.h"

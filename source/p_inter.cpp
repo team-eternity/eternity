@@ -53,7 +53,7 @@
 #include "p_inter.h"
 #include "p_map.h"
 #include "p_maputl.h"
-#include "p_portal.h"   // ioanch 20160116
+#include "p_portalcross.h"
 #include "p_skin.h"
 #include "p_tick.h"
 #include "p_user.h"
