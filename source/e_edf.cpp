@@ -112,6 +112,7 @@
 #include "e_string.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "e_weapons.h"
 #include "mn_emenu.h"
 
 // EDF Keywords used by features implemented in this module
@@ -245,6 +246,7 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_FONT,        edf_font_opts,     EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_STRING,      edf_string_opts,   EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_GAMEPROPS,   edf_game_opts,     EDF_NSEC_FLAGS),
+   CFG_SEC(EDF_SEC_WEAPONINFO,  edf_wpninfo_opts,  EDF_TSEC_FLAGS),
    CFG_STR(SEC_CASTORDER,       0,                 CFGF_LIST),
    CFG_STR(SEC_BOSSTYPES,       0,                 CFGF_LIST),
    CFG_INT(SEC_BOSSPROBS,       0,                 CFGF_LIST), // schepe

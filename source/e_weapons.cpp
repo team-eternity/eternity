@@ -35,10 +35,15 @@
 #include "e_edf.h"
 #include "e_hash.h"
 #include "e_lib.h"
+#include "e_mod.h"
+#include "e_sound.h"
+#include "e_states.h"
 #include "e_weapons.h"
+#include "m_qstr.h"
 
 #include "d_dehtbl.h"
 #include "d_items.h"
+#include "p_inter.h"
 
 // Weapon Keywords
 // TODO: Currently in order of weaponinfo_t, reorder
@@ -63,6 +68,47 @@
 #define ITEM_WPN_HAPTICRECOIL "hapticrecoil"
 #define ITEM_WPN_HAPTICTIME   "haptictime"
 #define ITEM_WPN_UPSOUND      "upsound"
+
+
+#define ITEM_WPN_INHERITS     "inherits"
+
+// WeaponInfo Delta Keywords
+#define ITEM_DELTA_NAME "name"
+
+
+
+#define WEAPONINFO_FIELDS \
+   CFG_STR(ITEM_WPN_AMMO,         "",       CFGF_NONE), \
+   CFG_STR(ITEM_WPN_UPSTATE,      "S_NULL", CFGF_NONE), \
+   CFG_STR(ITEM_WPN_DOWNSTATE,    "S_NULL", CFGF_NONE), \
+   CFG_STR(ITEM_WPN_READYSTATE,   "S_NULL", CFGF_NONE), \
+   CFG_STR(ITEM_WPN_ATKSTATE,     "S_NULL", CFGF_NONE), \
+   CFG_STR(ITEM_WPN_FLASHSTATE,   "S_NULL", CFGF_NONE), \
+   CFG_INT(ITEM_WPN_AMMOPERSHOT,  0,        CFGF_NONE), \
+   CFG_STR(ITEM_WPN_NEXTINCYCLE,  "",       CFGF_NONE), \
+   CFG_STR(ITEM_WPN_PREVINCYCLE,  "",       CFGF_NONE), \
+   CFG_STR(ITEM_WPN_FLAGS,        "",       CFGF_NONE), \
+   CFG_STR(ITEM_WPN_ADDFLAGS,     "",       CFGF_NONE), \
+   CFG_STR(ITEM_WPN_REMFLAGS,     "",       CFGF_NONE), \
+   CFG_STR(ITEM_WPN_MOD,          "",       CFGF_NONE), \
+   CFG_INT(ITEM_WPN_RECOIL,       0,        CFGF_NONE), \
+   CFG_INT(ITEM_WPN_HAPTICRECOIL, 0,        CFGF_NONE), \
+   CFG_INT(ITEM_WPN_HAPTICTIME,   0,        CFGF_NONE), \
+   CFG_STR(ITEM_WPN_UPSOUND,      "none",   CFGF_NONE), \
+   CFG_END()
+
+cfg_opt_t edf_wpninfo_opts[] =
+{
+   //CFG_TPROPS(wpninfo_tprops,       CFGF_NOCASE),
+   CFG_STR(ITEM_WPN_INHERITS,  0, CFGF_NONE),
+   WEAPONINFO_FIELDS
+};
+
+cfg_opt_t edf_wdelta_opts[] =
+{
+   CFG_STR(ITEM_DELTA_NAME, 0, CFGF_NONE),
+   WEAPONINFO_FIELDS
+};
 
 //=============================================================================
 //
@@ -135,6 +181,104 @@ weaponinfo_t *E_WeaponForID(int id)
 weaponinfo_t *E_WeaponForName(const char *name)
 {
    return e_WeaponNameHash.objectForKey(name);
+}
+
+#undef  IS_SET
+#define IS_SET(name) ((def && !inherits) || cfg_size(weapon, (name)) > 0)
+
+static void E_processWeaponInfo(int i, cfg_t *weapon, bool def)
+{
+   bool inherits = false;
+
+   weaponinfo_t *weaponinfo = nullptr;
+   weaponinfo = estructalloc(weaponinfo_t, 1);
+
+   const char *tempstr;
+   int tempint;
+
+   weaponinfo->id = i;
+
+   tempstr = cfg_title(weapon);
+   weaponinfo->name = cfg_title(weapon);
+
+   if((tempstr = cfg_getstr(weapon, ITEM_WPN_AMMO)))
+      weaponinfo->ammo = E_ItemEffectForName(tempstr);
+
+   if(IS_SET(ITEM_WPN_UPSTATE))
+   {
+      tempstr = cfg_getstr(weapon, ITEM_WPN_UPSTATE);
+      weaponinfo->upstate = E_GetStateNumForName(tempstr);
+   }
+
+   if(IS_SET(ITEM_WPN_DOWNSTATE))
+   {
+      tempstr = cfg_getstr(weapon, ITEM_WPN_DOWNSTATE);
+      weaponinfo->downstate = E_GetStateNumForName(tempstr);
+   }
+   if(IS_SET(ITEM_WPN_READYSTATE))
+   {
+      tempstr = cfg_getstr(weapon, ITEM_WPN_READYSTATE);
+      weaponinfo->readystate = E_GetStateNumForName(tempstr);
+   }
+   if(IS_SET(ITEM_WPN_ATKSTATE))
+   {
+      tempstr = cfg_getstr(weapon, ITEM_WPN_ATKSTATE);
+      weaponinfo->atkstate = E_GetStateNumForName(tempstr);
+   }
+   if(IS_SET(ITEM_WPN_FLASHSTATE))
+   {
+      tempstr = cfg_getstr(weapon, ITEM_WPN_FLASHSTATE);
+      weaponinfo->flashstate = E_GetStateNumForName(tempstr);
+   }
+   else
+      weaponinfo->flashstate = E_SafeState(S_NULL);
+
+   if(IS_SET(ITEM_WPN_AMMOPERSHOT))
+      weaponinfo->ammopershot = cfg_getint(weapon, ITEM_WPN_AMMOPERSHOT);
+
+   if(IS_SET(ITEM_WPN_MOD))
+   {
+      tempstr = cfg_getstr(weapon, ITEM_WPN_MOD);
+      weaponinfo->mod = E_DamageTypeNumForName(tempstr);
+   }
+   else
+      weaponinfo->mod = 0; // MOD_UNKNOWN
+
+   // 02/19/04: process combined flags first
+   if(IS_SET(ITEM_WPN_FLAGS))
+   {
+      tempstr = cfg_getstr(weapon, ITEM_WPN_FLAGS);
+      if(*tempstr == '\0')
+      {
+         weaponinfo->flags = 0;
+      }
+      else
+      {
+         unsigned int results = E_ParseFlags(tempstr, &e_weaponFlagSet);
+         weaponinfo->flags = results;
+      }
+   }
+
+   if(IS_SET(ITEM_WPN_RECOIL))
+      weaponinfo->recoil = cfg_getint(weapon, ITEM_WPN_RECOIL);
+   if(IS_SET(ITEM_WPN_HAPTICRECOIL))
+      weaponinfo->hapticrecoil = cfg_getint(weapon, ITEM_WPN_HAPTICRECOIL);
+   if(IS_SET(ITEM_WPN_HAPTICTIME))
+      weaponinfo->haptictime = cfg_getint(weapon, ITEM_WPN_HAPTICTIME);
+
+   if(IS_SET(ITEM_WPN_UPSOUND))
+   {
+      tempstr = ITEM_WPN_UPSOUND;
+      sfxinfo_t *tempsfx = E_EDFSoundForName(tempstr);
+      if(tempsfx)
+         weaponinfo->upsound = E_EDFSoundForName(tempstr)->dehackednum;
+   }
+
+}
+
+static void E_processWeaponCycle(cfg_t *weapon)
+{
+   
 }
 
 // EOF

@@ -37,6 +37,7 @@ struct weaponinfo_t;
 
 // Section Names
 #define EDF_SEC_WEAPONINFO "weaponinfo"
+extern cfg_opt_t edf_wpninfo_opts[];
 
 #endif
 
