@@ -2319,6 +2319,16 @@ static void R_Subsector(int num)
    seg.frontsec = R_FakeFlat(seg.frontsec, &tempsec, &floorlightlevel,
                              &ceilinglightlevel, false);   // killough 4/11/98
 
+   // ioanch: reject all sectors fully above or below a sector portal.
+   if(portalrender.active && portalrender.w->portal->type != R_SKYBOX &&
+      !portalrender.w->line && ((portalrender.w->up &&
+         seg.frontsec->ceilingheight < portalrender.w->planez) ||
+         (!portalrender.w->up && 
+            seg.frontsec->floorheight > portalrender.w->planez)))
+   {
+      return;
+   }
+
    // haleyjd 01/05/08: determine angles for floor and ceiling
    floorangle   = seg.frontsec->floorbaseangle   + seg.frontsec->floorangle;
    ceilingangle = seg.frontsec->ceilingbaseangle + seg.frontsec->ceilingangle;
