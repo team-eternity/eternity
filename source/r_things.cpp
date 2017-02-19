@@ -875,6 +875,11 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
       {
          return;
       }
+      if(!portalrender.w->line && 
+         !R_AllowBehindSectorPortal(barrier.bbox, spritepos.x, spritepos.y))
+      {
+         return;
+      }
    }
 
    rotx = (tempx * view.cos) - (tempy * view.sin);

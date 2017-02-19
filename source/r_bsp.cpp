@@ -1649,6 +1649,20 @@ static bool R_allowBehindDivline(const dlnormal_t &dln, const seg_t *renderSeg)
 }
 
 //
+// Checks seg against seg
+//
+bool R_AllowBehindSectorPortal(const fixed_t bbox[4], fixed_t x, fixed_t y)
+{
+   divline_t dl;
+   dl.x = x;
+   dl.y = y;
+   dl.dx = 8 * viewsin; // just define the direction
+   dl.dy = -8 * viewcos;
+   // Return okay if any part is on the correct side
+   return P_BoxOnDivlineSide(bbox, dl) != 1;
+}
+
+//
 // R_AddLine
 //
 // Clips the given segment
@@ -1680,8 +1694,13 @@ static void R_AddLine(seg_t *line, bool dynasegs)
       }
       else
       {
-         //if(!R_allowBehindSectorPortal(portalrender.w->barrier, line))
-         //   return;
+         if(!R_AllowBehindSectorPortal(portalrender.w->barrier.bbox,
+            line->v1->x, line->v1->y) &&
+            !R_AllowBehindSectorPortal(portalrender.w->barrier.bbox,
+               line->v2->x, line->v2->y))
+         {
+            return;
+         }
       }
    }
    // SoM: one of the byproducts of the portal height enforcement: The top 
@@ -2469,10 +2488,10 @@ static void R_Subsector(int num)
    while(count--)
       R_AddLine(line++, false);
 
-   //if(seg.f_window)
-   //   R_CalcRenderBarrier(seg.f_window, sub);
-   //if(seg.c_window)
-   //   R_CalcRenderBarrier(seg.c_window, sub);
+   if(seg.f_window)
+      R_CalcRenderBarrier(*seg.f_window, *sub);
+   if(seg.c_window)
+      R_CalcRenderBarrier(*seg.c_window, *sub);
 }
 
 //

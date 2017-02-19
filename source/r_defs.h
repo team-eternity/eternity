@@ -204,6 +204,15 @@ struct sectorinterp_t
 };
 
 //
+// Sector box info
+//
+struct sectorbox_t
+{
+   fixed_t box[4];   // bounding box per sector
+   int frameid;      // updated to avoid visiting more than once
+};
+
+//
 // Sound Zones
 //
 struct soundzone_t

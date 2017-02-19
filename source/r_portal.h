@@ -235,7 +235,7 @@ void R_RenderPortals();
 portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum, 
                             fixed_t planez, int fromid, int toid);
 
-void R_CalcRenderBarrier(pwindow_t *window, const subsector_t *ss);
+void R_CalcRenderBarrier(pwindow_t &window, const subsector_t &ss);
 
 //=============================================================================
 //

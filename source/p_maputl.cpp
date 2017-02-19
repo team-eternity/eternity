@@ -106,6 +106,32 @@ int P_BoxOnLineSide(const fixed_t *tmbox, const line_t *ld)
 }
 
 //
+// Also divline version
+//
+int P_BoxOnDivlineSide(const fixed_t *tmbox, const divline_t &dl)
+{
+   int p;
+
+   if(!dl.dy)
+   {
+      return (tmbox[BOXBOTTOM] > dl.y) == (p = tmbox[BOXTOP] > dl.y) ?
+         p ^ (dl.dx < 0) : -1;
+   }
+   if(!dl.dx)
+   {
+      return (tmbox[BOXLEFT] < dl.x) == (p = tmbox[BOXRIGHT] < dl.x) ?
+         p ^ (dl.dy < 0) : -1;
+   }
+   if((dl.dx ^ dl.dy) >= 0)
+   {
+      return P_PointOnDivlineSide(tmbox[BOXRIGHT], tmbox[BOXBOTTOM], &dl) ==
+         (p = P_PointOnDivlineSide(tmbox[BOXLEFT], tmbox[BOXTOP], &dl)) ? p : -1;
+   }
+   return P_PointOnDivlineSide(tmbox[BOXLEFT], tmbox[BOXBOTTOM], &dl) ==
+      (p = P_PointOnDivlineSide(tmbox[BOXRIGHT], tmbox[BOXTOP], &dl)) ? p : -1;
+}
+
+//
 // P_BoxLinePoint
 //
 // ioanch 20160116: returns a good point of intersection between the bounding
