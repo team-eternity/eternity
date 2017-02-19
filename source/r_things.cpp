@@ -1916,7 +1916,11 @@ struct mobjprojinfo_t
 static bool RIT_checkMobjProjection(const line_t &line, void *vdata)
 {
    const auto &mpi = *static_cast<mobjprojinfo_t *>(vdata);
-   if(P_PointOnLineSide(mpi.mobj->x, mpi.mobj->y, &line) == 1 ||
+   if(line.bbox[BOXLEFT] >= mpi.bbox[BOXRIGHT] ||
+      line.bbox[BOXBOTTOM] >= mpi.bbox[BOXTOP] ||
+      line.bbox[BOXRIGHT] <= mpi.bbox[BOXLEFT] ||
+      line.bbox[BOXTOP] <= mpi.bbox[BOXBOTTOM] ||
+      P_PointOnLineSide(mpi.mobj->x, mpi.mobj->y, &line) == 1 ||
       P_BoxOnLineSide(mpi.bbox, &line) != -1)
    {
       return true;
