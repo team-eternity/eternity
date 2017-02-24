@@ -254,16 +254,11 @@ static void R_calcRenderBarrier(const portal_t *portal, const line_t *line,
 //
 // Expands a portal barrier BBox. For sector portals
 //
-void R_CalcRenderBarrier(pwindow_t &window, const subsector_t &ss)
+void R_CalcRenderBarrier(pwindow_t &window, const sectorbox_t &box)
 {
    const portal_t *portal = window.portal;
    if(!R_portalIsAnchored(portal))
       return;
-   
-   sectorbox_t &box = pSectorBoxes[ss.sector - sectors];
-   if(box.frameid == frameid) // don't do it more than once
-      return;
-   box.frameid = frameid;
 
    static const int ind[2][4] = { 
       {BOXLEFT, BOXRIGHT, BOXRIGHT, BOXLEFT}, 

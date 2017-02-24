@@ -751,7 +751,7 @@ void R_IncrementFrameid()
 
       // Do as the description says...
       for(int i = 0; i < numsectors; ++i)
-         pSectorBoxes[i].frameid = 0;
+         pSectorBoxes[i].fframeid = pSectorBoxes[i].cframeid = 0;
    }
 }
 

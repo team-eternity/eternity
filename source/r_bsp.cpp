@@ -2129,6 +2129,18 @@ static void R_AddLine(seg_t *line, bool dynasegs)
 
    // Add new solid segs when it is safe to do so...
    R_AddMarkedSegs();
+
+   sectorbox_t &box = pSectorBoxes[seg.line->frontsector - sectors];
+   if(seg.f_window && box.fframeid != frameid)
+   {
+      box.fframeid = frameid;
+      R_CalcRenderBarrier(*seg.f_window, box);
+   }
+   if(seg.c_window && box.cframeid != frameid)
+   {
+      box.cframeid = frameid;
+      R_CalcRenderBarrier(*seg.c_window, box);
+   }
 }
 
 
@@ -2487,11 +2499,6 @@ static void R_Subsector(int num)
 
    while(count--)
       R_AddLine(line++, false);
-
-   if(seg.f_window)
-      R_CalcRenderBarrier(*seg.f_window, *sub);
-   if(seg.c_window)
-      R_CalcRenderBarrier(*seg.c_window, *sub);
 }
 
 //
