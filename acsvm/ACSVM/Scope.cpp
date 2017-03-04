@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015-2016 David Hill
+// Copyright (C) 2015-2017 David Hill
 //
 // See COPYING for license information.
 //
@@ -1037,7 +1037,7 @@ namespace ACSVM
    //
    // MapScope::scriptStartType
    //
-   Word MapScope::scriptStartType(ScriptType type, ScriptStartInfo const &info)
+   Word MapScope::scriptStartType(Word type, ScriptStartInfo const &info)
    {
       Word result = 0;
 
@@ -1053,7 +1053,7 @@ namespace ACSVM
    //
    // MapScope::scriptStartTypeForced
    //
-   Word MapScope::scriptStartTypeForced(ScriptType type, ScriptStartInfo const &info)
+   Word MapScope::scriptStartTypeForced(Word type, ScriptStartInfo const &info)
    {
       Word result = 0;
 

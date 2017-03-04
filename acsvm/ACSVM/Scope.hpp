@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015-2016 David Hill
+// Copyright (C) 2015-2017 David Hill
 //
 // See COPYING for license information.
 //
@@ -206,8 +206,8 @@ namespace ACSVM
       bool scriptStartForced(ScriptName name, ScopeID scope, ScriptStartInfo const &info);
       Word scriptStartResult(Script *script, ScriptStartInfo const &info);
       Word scriptStartResult(ScriptName name, ScriptStartInfo const &info);
-      Word scriptStartType(ScriptType type, ScriptStartInfo const &info);
-      Word scriptStartTypeForced(ScriptType type, ScriptStartInfo const &info);
+      Word scriptStartType(Word type, ScriptStartInfo const &info);
+      Word scriptStartTypeForced(Word type, ScriptStartInfo const &info);
       bool scriptStop(Script *script);
       bool scriptStop(ScriptName name, ScopeID scope);
 

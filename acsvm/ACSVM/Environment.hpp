@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2017 David Hill
 //
 // See COPYING for license information.
 //
@@ -87,6 +87,15 @@ namespace ACSVM
 
       ModuleName getModuleName(char const *str);
       virtual ModuleName getModuleName(char const *str, std::size_t len);
+
+      // Called to translate script type from ACS0 script number.
+      // Default behavior is to modulus 1000 the name.
+      virtual std::pair<Word /*type*/, Word /*name*/> getScriptTypeACS0(Word name)
+         {return {name / 1000, name % 1000};}
+
+      // Called to translate script type from ACSE SPTR.
+      // Default behavior is to return the type as-is.
+      virtual Word getScriptTypeACSE(Word type) {return type;}
 
       String *getString(Word idx) {return &stringTable[~idx];}
 

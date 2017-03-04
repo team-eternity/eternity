@@ -54,6 +54,7 @@
 #include "p_inter.h"
 #include "p_portal.h"
 #include "p_portalclip.h"  // ioanch 20160115
+#include "p_portalcross.h"
 #include "p_setup.h"
 #include "r_main.h"
 #include "r_pcheck.h"
@@ -779,7 +780,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
 // floorz/ceilingz clip. This is just for testing, and stuff like collecting
 // powerups and exploding touchy objects won't happen.
 //
-bool P_CheckPositionExt(Mobj *mo, fixed_t x, fixed_t y)
+bool P_CheckPositionExt(Mobj *mo, fixed_t x, fixed_t y, fixed_t z)
 {
    unsigned int flags;
    bool xygood;
@@ -794,13 +795,13 @@ bool P_CheckPositionExt(Mobj *mo, fixed_t x, fixed_t y)
    mo->intflags &= ~MIF_NOTOUCH;
 
    if(xygood)
-   { 
-      fixed_t z = mo->z;
+   {
+      subsector_t *newsubsec = R_PointInSubsector(x, y);
       
       if(mo->flags2 & MF2_FLOATBOB)
          z -= FloatBobOffsets[(mo->floatbob + leveltime - 1) & 63];
 
-      if(z < mo->floorz || z + mo->height > mo->ceilingz)
+      if(z < newsubsec->sector->floorheight || z + mo->height > newsubsec->sector->ceilingheight)
          return false;
    }
    

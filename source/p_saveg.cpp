@@ -351,7 +351,7 @@ SaveArchive &SaveArchive::operator << (mapthing_t &mt)
    // ioanch 20151218: add extended options
    *this << mt.angle << mt.height << mt.next << mt.options << mt.extOptions
          << mt.recordnum << mt.special << mt.tid << mt.type
-         << mt.x << mt.y;
+         << mt.x << mt.y << mt.healthModifier;
 
    P_ArchiveArray<int>(*this, mt.args, NUMMTARGS);
 

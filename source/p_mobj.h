@@ -168,6 +168,17 @@ public:
 };
 
 //
+// Keep track, for sprite portal copying
+//
+struct sprojlast_t
+{
+   v3fixed_t pos;    // holds coordinates
+   uint32_t sprite;  // holds both sprite num and frame num
+   float yscale;     // if scale changes, sprojheight may also do
+   float xscale;
+};
+
+//
 // Map Object definition.
 //
 // killough 2/20/98:
@@ -223,6 +234,7 @@ public:
       return !player && flags & 0x4 && !(flags & 0x10)   // 4 = shootable, 16 = noblockmap
       && health > 0;
    }
+   int getModifiedSpawnHealth() const;
    
    // Data members
 
@@ -232,7 +244,7 @@ public:
 
    // ioanch 20160109: sprite projection chains
    DLListItem<spriteprojnode_t> *spriteproj;
-   v3fixed_t sprojlast; // coordinates after last check. Initially "invalid"
+   sprojlast_t sprojlast; // coordinates after last check. Initially "invalid"
 
    //More drawing info: to determine current sprite.
    angle_t     angle;  // orientation

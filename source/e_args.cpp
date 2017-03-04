@@ -739,6 +739,47 @@ edf_string_t *E_ArgAsEDFString(arglist_t *al, int index)
 }
 
 //
+// Gets the arg value at index i as an EDF damage type, if such argument exists.
+// The evaluated value will be cached so that it can be returned on subsequent
+// calls. If the arg does not exist, the default value will be looked up. If
+// that value does not exist, the "Unknown" damagetype is returned courtesy of
+// EDF logic.
+//
+emod_t *E_ArgAsDamageType(arglist_t *al, int index, int defvalue)
+{
+   // if the arglist doesn't exist or doesn't hold this many arguments,
+   // return the default value.
+   if(!al || index >= al->numargs)
+      return E_DamageTypeForNum(defvalue);
+
+   evalcache_t &eval = al->values[index];
+
+   if(eval.type != EVALTYPE_MOD)
+   {
+      char *pos = nullptr;
+      long num;
+
+      eval.type = EVALTYPE_MOD;
+
+      // see if this is a string or an integer
+      num = strtol(al->args[index], &pos, 0);
+
+      if(estrnonempty(pos))
+      {
+         // it is a name
+         eval.value.mod = E_DamageTypeForName(al->args[index]);
+      }
+      else
+      {
+         // it is a number
+         eval.value.mod = E_DamageTypeForNum((int)num);
+      }
+   }
+
+   return eval.value.mod;
+}
+
+//
 // Gets the argument at index i as the corresponding enumeration value for a
 // keyword string, given the provided keyword set. Returns the default value
 // if the argument doesn't exist, or the keyword is not matched.

@@ -1649,6 +1649,20 @@ static bool R_allowBehindDivline(const dlnormal_t &dln, const seg_t *renderSeg)
 }
 
 //
+// Checks seg against seg
+//
+bool R_AllowBehindSectorPortal(const fixed_t bbox[4], fixed_t x, fixed_t y)
+{
+   divline_t dl;
+   dl.x = x;
+   dl.y = y;
+   dl.dx = 8 * viewsin; // just define the direction
+   dl.dy = -8 * viewcos;
+   // Return okay if any part is on the correct side
+   return P_BoxOnDivlineSide(bbox, dl) != 1;
+}
+
+//
 // R_AddLine
 //
 // Clips the given segment
@@ -1669,7 +1683,8 @@ static void R_AddLine(seg_t *line, bool dynasegs)
    vertex_t  *v1, *v2;
 
    // ioanch 20160125: reject segs in front of line when rendering line portal
-   if(portalrender.w)
+   if(portalrender.w && portalrender.w->portal &&
+      portalrender.w->portal->type != R_SKYBOX)
    {
       // only reject if they're anchored portals (including linked)
       if(portalrender.w->line)
@@ -1679,8 +1694,13 @@ static void R_AddLine(seg_t *line, bool dynasegs)
       }
       else
       {
-         //if(!R_allowBehindSectorPortal(portalrender.w->barrier, line))
-         //   return;
+         if(!R_AllowBehindSectorPortal(portalrender.w->barrier.bbox,
+            line->v1->x, line->v1->y) &&
+            !R_AllowBehindSectorPortal(portalrender.w->barrier.bbox,
+               line->v2->x, line->v2->y))
+         {
+            return;
+         }
       }
    }
    // SoM: one of the byproducts of the portal height enforcement: The top 
@@ -2109,6 +2129,18 @@ static void R_AddLine(seg_t *line, bool dynasegs)
 
    // Add new solid segs when it is safe to do so...
    R_AddMarkedSegs();
+
+   sectorbox_t &box = pSectorBoxes[seg.line->frontsector - sectors];
+   if(seg.f_window && box.fframeid != frameid)
+   {
+      box.fframeid = frameid;
+      R_CalcRenderBarrier(*seg.f_window, box);
+   }
+   if(seg.c_window && box.cframeid != frameid)
+   {
+      box.cframeid = frameid;
+      R_CalcRenderBarrier(*seg.c_window, box);
+   }
 }
 
 
@@ -2318,6 +2350,16 @@ static void R_Subsector(int num)
    seg.frontsec = R_FakeFlat(seg.frontsec, &tempsec, &floorlightlevel,
                              &ceilinglightlevel, false);   // killough 4/11/98
 
+   // ioanch: reject all sectors fully above or below a sector portal.
+   if(portalrender.active && portalrender.w->portal->type != R_SKYBOX &&
+      !portalrender.w->line && ((portalrender.w->up &&
+         seg.frontsec->ceilingheight < portalrender.w->planez) ||
+         (!portalrender.w->up && 
+            seg.frontsec->floorheight > portalrender.w->planez)))
+   {
+      return;
+   }
+
    // haleyjd 01/05/08: determine angles for floor and ceiling
    floorangle   = seg.frontsec->floorbaseangle   + seg.frontsec->floorangle;
    ceilingangle = seg.frontsec->ceilingbaseangle + seg.frontsec->ceilingangle;
@@ -2457,11 +2499,6 @@ static void R_Subsector(int num)
 
    while(count--)
       R_AddLine(line++, false);
-
-   //if(seg.f_window)
-   //   R_CalcRenderBarrier(seg.f_window, sub);
-   //if(seg.c_window)
-   //   R_CalcRenderBarrier(seg.c_window, sub);
 }
 
 //

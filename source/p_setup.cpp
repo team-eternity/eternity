@@ -133,6 +133,10 @@ sector_t *sectors;
 // haleyjd 01/05/14: sector interpolation data
 sectorinterp_t *sectorinterps;
 
+// ioanch: list of sector bounding boxes for sector portal seg rejection (coarse)
+// length: numsectors * 4
+sectorbox_t *pSectorBoxes;
+
 // haleyjd 01/12/14: sector sound environment zones
 int         numsoundzones;
 soundzone_t *soundzones;
@@ -751,6 +755,27 @@ static void P_CreateSectorInterps()
       sectorinterps[i].prevceilingheight  = sectors[i].ceilingheight;
       sectorinterps[i].prevfloorheightf   = sectors[i].floorheightf;
       sectorinterps[i].prevceilingheightf = sectors[i].ceilingheightf;
+   }
+}
+
+//
+// Setup sector bounding boxes
+//
+static void P_createSectorBoundingBoxes()
+{
+   pSectorBoxes = estructalloctag(sectorbox_t, numsectors, PU_LEVEL);
+
+   for(int i = 0; i < numsectors; ++i)
+   {
+      const sector_t &sector = sectors[i];
+      fixed_t *box = pSectorBoxes[i].box;
+      M_ClearBox(box);
+      for(int j = 0; j < sector.linecount; ++j)
+      {
+         const line_t &line = *sector.lines[j];
+         M_AddToBox(box, line.v1->x, line.v1->y);
+         M_AddToBox(box, line.v2->x, line.v2->y);
+      }
    }
 }
 
@@ -3450,6 +3475,9 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    // overrun
    P_GroupLines();
    P_LoadReject(mgla.reject); // haleyjd 01/26/04
+
+   // Create bounding boxes now
+   P_createSectorBoundingBoxes();
 
    // haleyjd 01/12/14: build sound environment zones
    P_CreateSoundZones();

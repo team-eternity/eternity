@@ -45,7 +45,7 @@
 #include "p_maputl.h"
 #include "p_mobjcol.h"
 #include "p_mobj.h"
-#include "p_portal.h"   // ioanch 20160116
+#include "p_portalcross.h"
 #include "p_pspr.h"
 #include "p_setup.h"
 #include "p_spec.h"
@@ -438,7 +438,7 @@ void A_Srcr1Attack(actionargs_t *actionargs)
       return;
    }
 
-   if(actor->health > (actor->info->spawnhealth * 2) / 3)
+   if(actor->health > (actor->getModifiedSpawnHealth() * 2) / 3)
    {
       // regular attack, one fire ball
       P_SpawnMissile(actor, actor->target, srcrfxType, mheight);
@@ -455,7 +455,7 @@ void A_Srcr1Attack(actionargs_t *actionargs)
                           momz, mheight);
       
       // desperation -- attack twice
-      if(actor->health * 3 < actor->info->spawnhealth)
+      if(actor->health * 3 < actor->getModifiedSpawnHealth())
       {
          if(actor->counters[1])
          {
@@ -560,7 +560,7 @@ void A_Srcr2Decide(actionargs_t *actionargs)
    static int chance[] = { 192, 120, 120, 120, 64, 64, 32, 16, 0 };
 
    Mobj *actor = actionargs->actor;
-   int   index = actor->health / (actor->info->spawnhealth / 8);
+   int   index = actor->health / (actor->getModifiedSpawnHealth() / 8);
    
    // if no spots, no teleportation
    if(sorcspots.isEmpty())
@@ -605,7 +605,7 @@ void A_Srcr2Attack(actionargs_t *actionargs)
       return;
    }
 
-   chance = (actor->health * 2 < actor->info->spawnhealth) ? 96 : 48;
+   chance = (actor->health * 2 < actor->getModifiedSpawnHealth()) ? 96 : 48;
 
    if(P_Random(pr_soratk2) < chance)
    {

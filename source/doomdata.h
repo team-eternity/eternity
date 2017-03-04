@@ -315,8 +315,10 @@ struct mapthing_t
    int16_t type;      // doomednum
    int16_t options;   // bitflags
    uint32_t extOptions; // ioanch 20151218: extended options (needed by UDMF)
-   int     special;   // scripting special
+   fixed_t healthModifier; // Overriding health, based on UDMF thing health.
+                           // 0 to ignore
 
+   int     special;   // scripting special
    int     args[NUMMTARGS]; // arguments for special
 
    int     recordnum; // for ExtraData hashing

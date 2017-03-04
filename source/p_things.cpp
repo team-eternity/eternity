@@ -141,7 +141,7 @@ int EV_ThingSpawn(const int *args, bool fog)
 
       newMobj = P_SpawnMobj(mobj->x, mobj->y, z, moType);
       
-      if(!P_CheckPositionExt(newMobj, newMobj->x, newMobj->y)) // Didn't fit?
+      if(!P_CheckPositionExt(newMobj, newMobj->x, newMobj->y, newMobj->z)) // Didn't fit?
          newMobj->removeThinker();
       else
       {
@@ -405,13 +405,12 @@ int EV_HealThing(Mobj *actor, int amount, int maxhealth)
 {
    if(!actor)
       return 0;
-   mobjinfo_t *info = mobjinfo[actor->type];
 
    if(!maxhealth || !actor->player)
    {
       // If second arg is 0, or the activator isn't a player
       // then set the maxhealth to the activator's spawning health.
-      maxhealth = info->spawnhealth;
+      maxhealth = actor->getModifiedSpawnHealth();
    }
    else if(maxhealth == 1)
    {
@@ -424,7 +423,7 @@ int EV_HealThing(Mobj *actor, int amount, int maxhealth)
       else
       {
          // FIXME: Handle this with a bit more finesse.
-         maxhealth = info->spawnhealth + 100;
+         maxhealth = actor->getModifiedSpawnHealth() + 100;
       }
    }
 

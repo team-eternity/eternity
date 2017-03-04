@@ -46,6 +46,7 @@
 #include "hu_stuff.h"
 #include "info.h"
 #include "in_lude.h"
+#include "m_bbox.h"
 #include "m_collection.h"
 #include "m_random.h"
 #include "p_chase.h"
@@ -57,6 +58,7 @@
 #include "p_map3d.h"
 #include "p_partcl.h"
 #include "p_portal.h"
+#include "p_portalcross.h"
 #include "p_saveg.h"
 #include "p_sector.h"
 #include "p_skin.h"
@@ -73,6 +75,10 @@
 #include "st_stuff.h"
 #include "v_misc.h"
 #include "v_video.h"
+
+// Local constants (ioanch)
+// Bounding box distance to avoid and get away from edge portals
+static const fixed_t AVOID_EDGE_PORTAL_RANGE = FRACUNIT >> 8;
 
 void P_FallingDamage(player_t *);
 
@@ -1065,12 +1071,15 @@ void P_NightmareRespawn(Mobj* mobj)
 
    if(P_Use3DClipping()) // 3D object clipping
    {
+      subsector_t *newsubsec = R_PointInSubsector(x, y);
+
       fixed_t sheight = mobj->height;
+      fixed_t tz      = newsubsec->sector->floorheight + mobj->spawnpoint.height;
 
       // need to restore real height before checking
       mobj->height = P_ThingInfoHeight(mobj->info);
 
-      check = P_CheckPositionExt(mobj, x, y);
+      check = P_CheckPositionExt(mobj, x, y, tz);
 
       mobj->height = sheight;
    }
@@ -1108,6 +1117,7 @@ void P_NightmareRespawn(Mobj* mobj)
    // inherit attributes from deceased one
    mo = P_SpawnMobj(x, y, z, mobj->type);
    mo->spawnpoint = mobj->spawnpoint;
+   mo->health = mo->getModifiedSpawnHealth();
    mo->angle = R_WadToAngle(mthing->angle);
 
    if(mthing->options & MTF_AMBUSH)
@@ -1120,6 +1130,53 @@ void P_NightmareRespawn(Mobj* mobj)
 
    // remove the old monster,
    mobj->removeThinker();
+}
+
+//
+// Moves the mobj away from a local portal line when it's about to sink into the
+// sector portal. Hack needed to prevent wall portal / edge portal margin bug.
+//
+// The mobj is already assumed to be sunk into the sector portal.
+//
+static void P_avoidPortalEdges(Mobj &mobj, bool isceiling)
+{
+   const sector_t &sector = *mobj.subsector->sector;
+   unsigned flag = isceiling ? EX_ML_UPPERPORTAL : EX_ML_LOWERPORTAL;
+
+   fixed_t box[4];
+
+   v2fixed_t displace = { mobj.x, mobj.y };   // displacement. If not 0, it will move.
+   box[BOXLEFT] = displace.x - AVOID_EDGE_PORTAL_RANGE;
+   box[BOXBOTTOM] = displace.y - AVOID_EDGE_PORTAL_RANGE;
+   box[BOXRIGHT] = displace.x + AVOID_EDGE_PORTAL_RANGE;
+   box[BOXTOP] = displace.y + AVOID_EDGE_PORTAL_RANGE;
+
+   for(int i = 0; i < sector.linecount; ++i)
+   {
+      const line_t &line = *sector.lines[i];
+
+      // line must be an edge portal with its back towards the sector.
+      // The thing's centre must be very close to the line
+      if(line.frontsector == &sector || !(line.extflags & flag) ||
+         !P_BoxesIntersect(box, line.bbox) || P_BoxOnLineSide(box, &line) != -1)
+      {
+         continue;
+      }
+
+      // Got one. Add to the vector
+      angle_t angle = P_PointToAngle(0, 0, line.dx, line.dy) + ANG90;
+      unsigned fine = angle >> ANGLETOFINESHIFT;
+      displace.x += FixedMul(AVOID_EDGE_PORTAL_RANGE, finecosine[fine]);
+      displace.y += FixedMul(AVOID_EDGE_PORTAL_RANGE, finesine[fine]);
+
+      // Now move the box
+      box[BOXLEFT] = displace.x - AVOID_EDGE_PORTAL_RANGE;
+      box[BOXBOTTOM] = displace.y - AVOID_EDGE_PORTAL_RANGE;
+      box[BOXRIGHT] = displace.x + AVOID_EDGE_PORTAL_RANGE;
+      box[BOXTOP] = displace.y + AVOID_EDGE_PORTAL_RANGE;
+   }
+   if(displace.x != mobj.x || displace.y != mobj.y)
+      P_TryMove(&mobj, displace.x, displace.y, 1);
 }
 
 //
@@ -1148,6 +1205,7 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
       // ioanch 20160109: link offset outside
       if(passheight < ldata->planez)
       {
+         P_avoidPortalEdges(*mobj, false);
          EV_PortalTeleport(mobj, ldata->deltax, ldata->deltay, ldata->deltaz,
                            ldata->fromid, ldata->toid);
          ret = true;
@@ -1171,6 +1229,7 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
       // ioanch 20160109: link offset outside
       if(passheight >= ldata->planez)
       {
+         P_avoidPortalEdges(*mobj, true);
          EV_PortalTeleport(mobj, ldata->deltax, ldata->deltay, ldata->deltaz,
                            ldata->fromid, ldata->toid);
          ret = true;
@@ -1206,14 +1265,21 @@ IMPLEMENT_THINKER_TYPE(Mobj)
 //
 inline static void P_checkMobjProjections(Mobj &mobj)
 {
-   if(gMapHasSectorPortals && (mobj.z != mobj.sprojlast.z ||
-                               mobj.x != mobj.sprojlast.x ||
-                               mobj.y != mobj.sprojlast.y))
+   uint32_t spritecomp = mobj.sprite << 16 | (mobj.frame & 0xffff);
+   bool xychanged = mobj.x != mobj.sprojlast.pos.x ||
+   mobj.y != mobj.sprojlast.pos.y || mobj.xscale != mobj.sprojlast.xscale;
+   if(useportalgroups && (mobj.z != mobj.sprojlast.pos.z || xychanged ||
+                          spritecomp != mobj.sprojlast.sprite ||
+                          mobj.yscale != mobj.sprojlast.yscale))
    {
-      R_CheckMobjProjections(&mobj);
-      mobj.sprojlast.x = mobj.x;
-      mobj.sprojlast.y = mobj.y;
-      mobj.sprojlast.z = mobj.z;
+      bool checklines = gMapHasLinePortals && xychanged;
+      R_CheckMobjProjections(&mobj, checklines);
+      mobj.sprojlast.pos.x = mobj.x;
+      mobj.sprojlast.pos.y = mobj.y;
+      mobj.sprojlast.pos.z = mobj.z;
+      mobj.sprojlast.sprite = spritecomp;
+      mobj.sprojlast.yscale = mobj.yscale;
+      mobj.sprojlast.xscale = mobj.xscale;
    }
 }
 
@@ -1642,6 +1708,20 @@ void Mobj::copyPosition(const Mobj *other)
    intflags  |= (other->intflags & (MIF_ONFLOOR|MIF_ONSECFLOOR|MIF_ONMOBJ));
 }
 
+//
+// Returns mobjinfo spawn health possibly modified by the spawnpoint healthModifier
+//
+int Mobj::getModifiedSpawnHealth() const
+{
+   // info always assumed to exist
+   if(!spawnpoint.healthModifier || spawnpoint.healthModifier == FRACUNIT)
+      return info->spawnhealth;
+   if(spawnpoint.healthModifier > 0)   // positive means multiplication
+      return FixedMul(info->spawnhealth, spawnpoint.healthModifier);
+   // negative means absolute
+   return (abs(spawnpoint.healthModifier) + (FRACUNIT >> 1)) >> FRACBITS;
+}
+
 extern fixed_t tmsecfloorz;
 extern fixed_t tmsecceilz;
 
@@ -1731,7 +1811,7 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    // but P_CheckPortalTeleport
    mobj->spriteproj = nullptr;
    // init with an "invalid" value
-   mobj->sprojlast.x = mobj->sprojlast.y = mobj->sprojlast.z = D_MAXINT;
+   mobj->sprojlast.pos.x = mobj->sprojlast.pos.y = mobj->sprojlast.pos.z = D_MAXINT;
 
    // set subsector and/or block links
   
@@ -1952,6 +2032,7 @@ void P_RespawnSpecials()
 
    mo = P_SpawnMobj(x, y, z, i);
    mo->spawnpoint = *mthing;
+   mo->health = mo->getModifiedSpawnHealth();
    // sf
    mo->angle = R_WadToAngle(mthing->angle);
 
@@ -2291,6 +2372,7 @@ spawnit:
    mobj->special = mthing->special;
 
    mobj->spawnpoint = *mthing;
+   mobj->health = mobj->getModifiedSpawnHealth();
 
    if(mobj->tics > 0 && !(mobj->flags4 & MF4_SYNCHRONIZED))
       mobj->tics = 1 + (P_Random(pr_spawnthing) % mobj->tics);

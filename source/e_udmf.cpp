@@ -487,23 +487,17 @@ bool UDMFParser::loadThings()
          ft->args[4] = ut.arg[4];
       }
 
+      if(mNamespace == namespace_Eternity)
+      {
+         ft->healthModifier = M_DoubleToFixed(ut.health);
+      }
+
       // haleyjd 10/05/05: convert heretic things
       if(mNamespace == namespace_Heretic)
          P_ConvertHereticThing(ft);
 
       P_ConvertDoomExtendedSpawnNum(ft);
-      Mobj *mobj = P_SpawnMapThing(ft);
-
-      // New specials
-      if(mobj && ut.health && ut.health != 1.0)   // "health" property
-      {
-         if(ut.health > 0)    // either multiply spawnhealth
-            mobj->health = static_cast<int>(round(mobj->health * ut.health));
-         else                 // or use the absolute in case of negative
-            mobj->health = static_cast<int>(fabs(round(ut.health)));
-         if(mobj->health <= 0)   // ensure valid health
-            mobj->health = 1;
-      }
+      P_SpawnMapThing(ft);
    }
 
    // haleyjd: all player things for players in this game should now be valid

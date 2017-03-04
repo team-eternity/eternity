@@ -47,6 +47,7 @@
 #include "p_map3d.h"
 #include "p_partcl.h"
 #include "p_portal.h"
+#include "p_portalcross.h"
 #include "p_setup.h"
 #include "p_skin.h"
 #include "p_spec.h"
@@ -1470,7 +1471,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             {
                if(by < 0 || by >= bmapheight)
                   continue;
-               if(P_BlockHasLinkedPortalLines(by * bmapwidth + bx))
+               if(P_BlockHasLinkedPortals(by * bmapwidth + bx, false))
                {
                   hasportals = true;
                   goto outloop;
