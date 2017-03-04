@@ -854,8 +854,8 @@ bool ACS_TerminateScriptS(const char *str, uint32_t mapnum)
 class ACSBuffer : public std::streambuf
 {
 public:
-   ACSBuffer(InBuffer *in_) : in{in_}, out{nullptr} {}
-   ACSBuffer(OutBuffer *out_) : in{nullptr}, out{out_} {}
+   explicit ACSBuffer(InBuffer *in_) : in{in_}, out{nullptr} {}
+   explicit ACSBuffer(OutBuffer *out_) : in{nullptr}, out{out_} {}
 
    InBuffer  *in;
    OutBuffer *out;

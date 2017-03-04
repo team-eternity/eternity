@@ -75,7 +75,7 @@ public:
    {
    }
 
-   EHashTable(unsigned int pNumChains)
+   explicit EHashTable(unsigned int pNumChains)
       : chains(nullptr), isInit(false), numChains(0), numItems(0),
         loadFactor(0.0f), iteratorPos(-1)
    {

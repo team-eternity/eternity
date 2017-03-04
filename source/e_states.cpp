@@ -368,7 +368,6 @@ void E_CollectStates(cfg_t *cfg)
    unsigned int i;
    unsigned int numstates;         // number of states defined by the cfg
    unsigned int numnew;            // number of states that are new
-   unsigned int firstnewstate = 0; // index of first new state
    unsigned int curnewstate = 0;   // index of current new state being used
    state_t *statestructs = nullptr;
    static bool firsttime = true;
@@ -384,6 +383,7 @@ void E_CollectStates(cfg_t *cfg)
 
    if(numnew)
    {
+      unsigned firstnewstate = 0;   // index of first new state
       // allocate state_t structures for the new states
       statestructs = estructalloc(state_t, numnew);
 
@@ -644,9 +644,8 @@ static void E_AssignMiscBexptr(int *target, deh_bexptr *dp, const char *name)
 //
 static void E_ParseMiscField(const char *value, int *target)
 {
-   int i;
    char prefix[16];
-   const char *colonloc, *strval;
+   const char *colonloc;
    
    memset(prefix, 0, 16);
 
@@ -656,9 +655,9 @@ static void E_ParseMiscField(const char *value, int *target)
    if(colonloc)
    {
       // a colon was found, so identify the prefix
-      strval = colonloc + 1;
+      const char *strval = colonloc + 1;
 
-      i = E_StrToNumLinear(misc_prefixes, NUM_MISC_PREFIXES, prefix);
+      int i = E_StrToNumLinear(misc_prefixes, NUM_MISC_PREFIXES, prefix);
 
       switch(i)
       {
@@ -736,12 +735,11 @@ static void E_ParseMiscField(const char *value, int *target)
    {
       char  *endptr;
       int    val;
-      double dval;
 
       // see if it is a number
       if(strchr(value, '.')) // has a decimal point?
       {
-         dval = strtod(value, &endptr);
+         double dval = strtod(value, &endptr);
 
          // convert result to fixed-point
          val = (fixed_t)(dval * FRACUNIT);
@@ -1022,7 +1020,7 @@ static void E_ProcessCmpState(const char *value, int i)
 {
    qstring buffer;
    char *curtoken = nullptr;
-   int tok_index = 0, j;
+   int tok_index = 0;
 
    // initialize tokenizer variables
    in_action = false;
@@ -1137,7 +1135,7 @@ static void E_ProcessCmpState(const char *value, int i)
       E_CreateArgList(states[i]);
 
       // process args
-      for(j = 0; j < 5; ++j) // Only 5 args are supported here. Deprecated.
+      for(int j = 0; j < 5; ++j) // Only 5 args are supported here. Deprecated.
       {
          NEXTTOKEN();
 

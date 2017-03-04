@@ -171,7 +171,7 @@ void P_InitPicAnims(void)
    
    //  Init animation
    //jff 3/23/98 read from predefined or wad lump instead of table
-   animdefs = (animdef_t *)wGlobalDir.cacheLumpName("ANIMATED", PU_STATIC);
+   animdefs = static_cast<animdef_t *>(wGlobalDir.cacheLumpName("ANIMATED", PU_STATIC));
 
    lastanim = anims;
    for(i = 0; animdefs[i].istexture != 0xff; i++)
@@ -2095,7 +2095,6 @@ void P_AttachLines(const line_t *cline, bool ceiling)
       memcpy(attached, cline->frontsector->c_attached, sizeof(int) * numattach);
       Z_Free(cline->frontsector->c_attached);
       cline->frontsector->c_attached = NULL;
-      cline->frontsector->c_numattached = 0;
       cline->frontsector->c_numattached = 0;
       Z_Free(cline->frontsector->c_attsectors);
    }

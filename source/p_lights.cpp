@@ -809,13 +809,13 @@ int EV_LightTurnOn(const line_t *line, int tag, int bright, bool isParam)
    manualLight:
       ;
       sector_t *temp;
-      int j, tbright = bright; //jff 5/17/98 search for maximum PER sector
+      int tbright = bright; //jff 5/17/98 search for maximum PER sector
       
       // bright = 0 means to search for highest light level surrounding sector
       
       if(!bright)
       {
-         for(j = 0;j < sector->linecount; j++)
+         for(int j = 0;j < sector->linecount; j++)
          {
             if((temp = getNextSector(sector->lines[j],sector)) &&
                temp->lightlevel > tbright)

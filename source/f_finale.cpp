@@ -457,7 +457,7 @@ void F_CastTicker()
       
    if(castframes == 12)
    {
-      int i, stnum;
+      int stnum;
 
       // go into attack frame
       castattacking = true;
@@ -483,7 +483,7 @@ void F_CastTicker()
       if(!castorder[castnum].stopattack)
       {
          sfx = 0;
-         for(i = 0; i < 4; ++i)
+         for(int i = 0; i < 4; ++i)
          {
             if(stnum == castorder[castnum].sounds[i].frame)
                sfx = castorder[castnum].sounds[i].sound;

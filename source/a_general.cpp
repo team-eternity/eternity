@@ -80,7 +80,7 @@ void A_Mushroom(actionargs_t *actionargs)
 
    ShotType = E_ArgAsThingNumG0(args, 0);
 
-   if(ShotType < 0 || ShotType == -1)
+   if(ShotType < 0/* || ShotType == -1*/)
       ShotType = E_SafeThingType(MT_FATSHOT);
    
    A_Explode(actionargs);         // make normal explosion
@@ -737,7 +737,7 @@ void A_MissileAttack(actionargs_t *actionargs)
    Mobj      *mo;
    int        type, a, statenum;
    bool       homing, hastarget = true;
-   fixed_t    z, momz;
+   fixed_t    z;
    angle_t    ang;
 
    if(!actor->target || actor->target->health <= 0)
@@ -787,10 +787,10 @@ void A_MissileAttack(actionargs_t *actionargs)
       // calculate z momentum
       Mobj *target = actor->target;
 
-      momz = P_MissileMomz(target->x - actor->x,
-                           target->y - actor->y,
-                           target->z - actor->z,
-                           mobjinfo[type]->speed);
+      fixed_t momz = P_MissileMomz(target->x - actor->x,
+                                   target->y - actor->y,
+                                   target->z - actor->z,
+                                   mobjinfo[type]->speed);
 
       mo = P_SpawnMissileAngle(actor, type, actor->angle + ang, momz, z);
    }

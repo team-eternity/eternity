@@ -302,7 +302,6 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
 {
    fixed_t topz;      // haleyjd: from zdoom
    fixed_t blockdist;
-   int damage;
 
    // EDF FIXME: haleyjd 07/13/03: these may be temporary fixes
    int bruiserType = E_ThingNumForDEHNum(MT_BRUISER); 
@@ -416,6 +415,7 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
    if(clip.thing->flags & MF_MISSILE || 
       (clip.thing->flags & MF_BOUNCES && !(clip.thing->flags & MF_SOLID)))
    {
+      int damage;
       // haleyjd 07/06/05: some objects may use info->height instead
       // of their current height value in this situation, to avoid
       // altering the playability of maps when 3D object clipping

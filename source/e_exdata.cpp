@@ -377,7 +377,7 @@ static int E_ParseTypeField(const char *value)
    long num;
    int  i;
    char prefix[16];
-   const char *colonloc, *strval;
+   const char *colonloc;
    char *numpos = NULL;
 
    num = strtol(value, &numpos, 0);
@@ -388,6 +388,7 @@ static int E_ParseTypeField(const char *value)
    // If has a colon, or is otherwise not just a number...
    if(colonloc || (numpos && *numpos != '\0'))
    {
+      const char *strval;
       if(colonloc) // allow a thing: prefix for compatibility
          strval = colonloc + 1;
       else

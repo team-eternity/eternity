@@ -99,24 +99,18 @@ static int zi(int64_t dist, int64_t totaldist, int64_t ztarget, int64_t playerz)
 //
 static bool PTR_chaseTraverse(intercept_t *in)
 {
-   fixed_t dist, frac;
-   subsector_t *ss;
-   int x, y;
-   int z;
-   sector_t *othersector;
-
    if(in->isaline)
    {
       line_t *li = in->d.line;
       
-      dist = FixedMul(trace.attackrange, in->frac);
-      frac = in->frac - FixedDiv(12*FRACUNIT, trace.attackrange);
+      fixed_t dist = FixedMul(trace.attackrange, in->frac);
+      fixed_t frac = in->frac - FixedDiv(12*FRACUNIT, trace.attackrange);
       
       // hit line
       // position a bit closer
       
-      x = trace.dl.x + FixedMul(trace.dl.dx, frac);
-      y = trace.dl.y + FixedMul(trace.dl.dy, frac);
+      int x = trace.dl.x + FixedMul(trace.dl.dx, frac);
+      int y = trace.dl.y + FixedMul(trace.dl.dy, frac);
 
       // ioanch 20160225: portal lines are currently not crossed
       if(li->flags & ML_TWOSIDED && !(li->pflags & PS_PASSABLE))
@@ -124,16 +118,16 @@ static bool PTR_chaseTraverse(intercept_t *in)
 
          // sf: find which side it hit
          
-         ss = R_PointInSubsector (x, y);
+         subsector_t *ss = R_PointInSubsector (x, y);
          
-         othersector = li->backsector;
+         sector_t *othersector = li->backsector;
          
          if(ss->sector==li->backsector)      // other side
             othersector = li->frontsector;
 
          // interpolate, find z at the point of intersection
          
-         z = zi(dist, trace.attackrange, targetz, playermobj->z+28*FRACUNIT);
+         int z = zi(dist, trace.attackrange, targetz, playermobj->z+28*FRACUNIT);
          
          // found which side, check for intersections
          if((li->flags & ML_BLOCKING) || 

@@ -304,8 +304,6 @@ int P_GetMoveFactor(Mobj *mo, int *frictionp)
    // haleyjd 04/11/10: restored BOOM friction code for compatibility
    if(demo_version < 203)
    {
-      int momentum;
-
       movefactor = ORIG_FRICTION_FACTOR;
 
       if(!compatibility && variable_friction && 
@@ -325,7 +323,7 @@ int P_GetMoveFactor(Mobj *mo, int *frictionp)
             // phares 3/11/98: you start off slowly, then increase as
             // you get better footing
 
-            momentum = (P_AproxDistance(mo->momx, mo->momy));
+            int momentum = (P_AproxDistance(mo->momx, mo->momy));
             movefactor = mo->movefactor;
             if (momentum > MORE_FRICTION_MOMENTUM<<2)
                movefactor <<= 3;
@@ -890,7 +888,6 @@ int P_MissileBlockHeight(Mobj *mo)
 static bool PIT_CheckThing(Mobj *thing) // killough 3/26/98: make static
 {
    fixed_t blockdist;
-   int damage;
 
    // EDF FIXME: haleyjd 07/13/03: these may be temporary fixes
    int bruiserType = E_ThingNumForDEHNum(MT_BRUISER); 
@@ -941,6 +938,7 @@ static bool PIT_CheckThing(Mobj *thing) // killough 3/26/98: make static
    if(clip.thing->flags & MF_MISSILE || 
       (clip.thing->flags & MF_BOUNCES && !(clip.thing->flags & MF_SOLID)))
    {
+      int damage;
       // haleyjd 07/06/05: some objects may use info->height instead
       // of their current height value in this situation, to avoid
       // altering the playability of maps when 3D object clipping
@@ -1952,7 +1950,6 @@ static void P_HitSlideLine(line_t *ld)
    angle_t moveangle;
    angle_t deltaangle;
    fixed_t movelen;
-   fixed_t newlen;
    bool icyfloor;  // is floor icy?
 
    // phares:
@@ -2058,7 +2055,7 @@ static void P_HitSlideLine(line_t *ld)
       
       lineangle >>= ANGLETOFINESHIFT;
       deltaangle >>= ANGLETOFINESHIFT;
-      newlen = FixedMul (movelen, finecosine[deltaangle]);
+      fixed_t newlen = FixedMul (movelen, finecosine[deltaangle]);
       tmxmove = FixedMul (newlen, finecosine[lineangle]);
       tmymove = FixedMul (newlen, finesine[lineangle]);
    }
@@ -2855,7 +2852,6 @@ static bool PIT_GetSectors(line_t *ld, polyobj_s *po)
 //
 msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
 {
-   int xl, xh, yl, yh, bx, by;
    msecnode_t *node, *list;
 
    if(demo_version < 200 || demo_version >= 329)
@@ -2931,14 +2927,14 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
    else
    {
       // ioanch: classic mode
-      xl = (pClip->bbox[BOXLEFT  ] - bmaporgx) >> MAPBLOCKSHIFT;
-      xh = (pClip->bbox[BOXRIGHT ] - bmaporgx) >> MAPBLOCKSHIFT;
-      yl = (pClip->bbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
-      yh = (pClip->bbox[BOXTOP   ] - bmaporgy) >> MAPBLOCKSHIFT;
+      int xl = (pClip->bbox[BOXLEFT  ] - bmaporgx) >> MAPBLOCKSHIFT;
+      int xh = (pClip->bbox[BOXRIGHT ] - bmaporgx) >> MAPBLOCKSHIFT;
+      int yl = (pClip->bbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
+      int yh = (pClip->bbox[BOXTOP   ] - bmaporgy) >> MAPBLOCKSHIFT;
 
-      for(bx = xl; bx <= xh; bx++)
+      for(int bx = xl; bx <= xh; bx++)
       {
-         for(by = yl; by <= yh; by++)
+         for(int by = yl; by <= yh; by++)
             P_BlockLinesIterator(bx, by, PIT_GetSectors);
       }
 

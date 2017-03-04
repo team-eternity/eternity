@@ -52,8 +52,6 @@
 //
 void P_DoorSequence(bool raise, bool turbo, bool bounced, sector_t *s)
 {
-   const char *seqName;
-
    // haleyjd 09/25/06: apparently fraggle forgot silentmove for doors
    if(silentmove(s))
       return;
@@ -67,6 +65,7 @@ void P_DoorSequence(bool raise, bool turbo, bool bounced, sector_t *s)
    }
    else
    {
+      const char *seqName;
       if(raise)
          seqName = turbo ? "EEDoorOpenBlazing" : "EEDoorOpenNormal";
       else

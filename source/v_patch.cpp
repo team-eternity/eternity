@@ -769,7 +769,7 @@ byte *V_PatchToLinear(patch_t *patch, bool flipped, byte fillcolor,
             }
             while(--count);
          }
-         column = (column_t *)(source + 1); // killough 2/21/98 even faster
+         column = reinterpret_cast<const column_t *>(source + 1); // killough 2/21/98 even faster
       }
    }
 
@@ -807,7 +807,7 @@ patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize,
    
    byte *out = ecalloctag(byte *, 1, total_size, tag, user);
 
-   p = (patch_t *)out;
+   p = reinterpret_cast<patch_t *>(out);
 
    // set basic header information
    p->width      = w;
@@ -828,7 +828,7 @@ patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize,
       columnofs[x] = int(dest - out);
 
       // set basic column properties
-      c = (column_t *)dest;
+      c = reinterpret_cast<column_t *>(dest);
       c->length   = h;
       c->topdelta = 0;
 
@@ -924,7 +924,7 @@ patch_t *V_LinearToTransPatch(byte *linear, int w, int h, size_t *memsize,
 
    byte *out = ecalloctag(byte *, 1, total_size, tag, user);
 
-   p = (patch_t *)out;
+   p = reinterpret_cast<patch_t *>(out);
 
    // set basic header information
    p->width = w;
@@ -959,7 +959,7 @@ patch_t *V_LinearToTransPatch(byte *linear, int w, int h, size_t *memsize,
             else
                firstspan = false;
 
-            c = (column_t *)dest;
+            c = reinterpret_cast<column_t *>(dest);
             c->length = 0;
             c->topdelta = y;
             dest += sizeof(column_t) + 1;
@@ -978,7 +978,7 @@ patch_t *V_LinearToTransPatch(byte *linear, int w, int h, size_t *memsize,
       // add a blank first span if need be
       if(firstspan)
       {
-         c = (column_t *)dest;
+         c = reinterpret_cast<column_t *>(dest);
          c->length = 0;
          c->topdelta = 0;
          dest += sizeof(column_t) + 1;

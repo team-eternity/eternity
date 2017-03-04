@@ -503,7 +503,7 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
    {
       int underwater; // haleyjd: restructured
       
-      int heightsec = -1;
+      int heightsec;
       
       const sector_t *s = &sectors[sec->heightsec];
       
