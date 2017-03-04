@@ -857,11 +857,11 @@ patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize,
 //
 // Get the size of a patch to be created from a linear
 //
-size_t V_transPatchSizeForLinear(byte *linear, int w, int h, int color_key)
+size_t V_transPatchSizeForLinear(const byte *linear, int w, int h, int color_key)
 {
    size_t ret;
    int      x, y;
-   byte     *src;
+   const byte     *src;
 
    // Basic header info
    ret = 4 * sizeof(int16_t);
@@ -910,14 +910,15 @@ size_t V_transPatchSizeForLinear(byte *linear, int w, int h, int color_key)
 //
 // converts a linear graphic to a patch with transparency
 //
-patch_t *V_LinearToTransPatch(byte *linear, int w, int h, size_t *memsize,
+patch_t *V_LinearToTransPatch(const byte *linear, int w, int h, size_t *memsize,
                               int color_key, int tag, void **user)
 {
    int      x, y;
    patch_t  *p;
    column_t *c;
    int      *columnofs;
-   byte     *src, *dest;
+   const byte *src;
+   byte     *dest;
 
    // Oversize now, and shrink later.
    size_t total_size = V_transPatchSizeForLinear(linear, w, h, color_key);

@@ -1440,7 +1440,6 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       oldy = thing->y;
       oldz = thing->z;
 
-      oldgroupid = thing->groupid;
       int ox = (emin(oldx, x) - bmaporgx) >> MAPBLOCKSHIFT;
       int oy = (emin(oldy, y) - bmaporgy) >> MAPBLOCKSHIFT;
       int tx = (emax(oldx, x) - bmaporgx) >> MAPBLOCKSHIFT;

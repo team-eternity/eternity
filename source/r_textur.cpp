@@ -1401,7 +1401,7 @@ void R_InitTextures()
    // read texture lumps
    texnum = R_ReadTextureLump(maptex1, patchlookup, texnum, &errors);
    texnum = R_ReadTextureLump(maptex2, patchlookup, texnum, &errors);
-   texnum = R_ReadTextureNamespace(texnum);
+   R_ReadTextureNamespace(texnum);
 
    // done with patch lookup
    if(patchlookup)

@@ -797,7 +797,7 @@ void P_LinePortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
    const polyobj_t *poly[2] = { gGroupPolyobject[fromid],
       gGroupPolyobject[toid] };
    v2fixed_t pvel[2] = { };
-   bool phave[2];
+   bool phave[2] = { };
    for(int i = 0; i < 2; ++i)
    {
       if(poly[i])

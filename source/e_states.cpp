@@ -235,7 +235,7 @@ int E_SafeStateNameOrLabel(mobjinfo_t *mi, const char *name)
    // Not a number? It is a state name.
    if(estrnonempty(pos))
    {
-      int      statenum = NullStateNum;
+      int      statenum;
       state_t *state    = nullptr;
       
       // Try global resolution first.
