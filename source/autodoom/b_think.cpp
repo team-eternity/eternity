@@ -666,8 +666,8 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
         if (item == &plmo)
             continue;
         fh = ss.msector->getFloorHeight();
-        if (self.m_deepSearchMode == DeepNormal && (fh + plmo.height < item->z
-                                                    || fh > item->z
+        if (self.m_deepSearchMode == DeepNormal && (fh + plmo.height <= item->z
+                                                    || fh >= item->z
                                                     + item->height))
         {
             continue;
