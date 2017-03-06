@@ -370,6 +370,14 @@ struct sector_t
 
    // haleyjd 01/12/14: sound environment
    int soundzone;
+
+   //
+   // METHODS
+   //
+   inline bool isShut() const
+   {
+      return floorheight >= ceilingheight;
+   }
 };
 
 //

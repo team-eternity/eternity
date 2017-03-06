@@ -709,19 +709,17 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
     }
 
     // look for other triggers.
-    const line_t* line;
     for (auto it = ss.linelist.begin(); it != ss.linelist.end(); ++it)
     {
-        line = *it;
-       // Check if it's really accessible
-       if(!B_checkSwitchReach(USERANGE, *line) &&
-          !B_checkSwitchReach(USERANGE / 2, *line))
-       {
+       const line_t &line = *it->first;
+       if(line.frontsector->isShut())  // quick out
           continue;
-       }
+       // Check if it's really accessible
+       if(!B_checkSwitchReach(it->second, line))
+          continue;
 
-        if(self.handleLineGoal(ss, coord, *line))
-            return true;
+       if(self.handleLineGoal(ss, coord, line))
+          return true;
     }
 
     return false;

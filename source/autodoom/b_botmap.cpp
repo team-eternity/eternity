@@ -425,21 +425,17 @@ static void B_setSpecLinePositions()
             mid.y += FixedMul(USERANGE / 2, B_AngleSine(ang));
             
             ss = &botMap->pointInSubsector(mid.x, mid.y);
-            ss->linelist.insert(&line);
+            ss->linelist[&line] = USERANGE / 2;
 
             mid.x += FixedMul(USERANGE / 2, B_AngleCosine(ang));
             mid.y += FixedMul(USERANGE / 2, B_AngleSine(ang));
 
             ss = &botMap->pointInSubsector(mid.x, mid.y);
             if(!ss->linelist.count(&line))
-            {
-               ss->linelist.insert(&line);
-            }
+               ss->linelist[&line] = USERANGE;
          }
          else if(action->type == &G1ActionType || action->type == &GRActionType)
-         {
             botMap->gunLines.add(&line);
-         }
       }
       
    }
