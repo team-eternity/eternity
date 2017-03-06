@@ -1261,6 +1261,50 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
 }
 
 //
+// Tries to recover the path, if the bot slipped away from it. Has a greater
+// chance of happening if the bot didn't fall off path.
+//
+bool Bot::recoverPath()
+{
+   // I didn't fall, so try to correct the path instead of
+   // restarting search
+   BotPath recoverpath;
+   bool recovered = m_finder.FindNextGoal(pl->mo->x, pl->mo->y, recoverpath, [](const BSubsec &ss, BotPathEnd &bpe, void *parm) -> bool {
+
+      const Bot &self = *static_cast<const Bot *>(parm);
+      return self.m_path.sss.count(&ss);
+   }, this);
+   if(recovered)
+   {
+      // Managed to find the way back
+//      B_Log("Recovered");
+      size_t invindex = 0;
+      if(recoverpath.last != m_path.last)
+         for (const BNeigh* neigh : m_path.inv)
+         {
+            ++invindex;
+            if(neigh->myss == recoverpath.last)
+            {
+               break;
+            }
+         }
+      for(const BNeigh *repair : recoverpath.inv)
+      {
+         if(invindex < m_path.inv.getLength())
+            m_path.inv[invindex++] = repair;
+         else
+         {
+            m_path.inv.add(repair);
+            ++invindex;
+         }
+      }
+      m_path.inv.resize(invindex);
+      m_path.start = recoverpath.start;
+   }
+   return recovered;
+}
+
+//
 // Bot::doNonCombatAI
 //
 // Does whatever needs to be done when not fighting
@@ -1400,6 +1444,11 @@ void Bot::doNonCombatAI()
                         }
                     }
                 }
+               else if(recoverPath())
+               {
+                  m_lastPathSS = nullptr;
+                  return;
+               }
                 m_lastPathSS = nullptr;
             }
             m_searchstage = SearchStage_Normal;

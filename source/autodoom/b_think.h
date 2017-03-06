@@ -136,6 +136,8 @@ class Bot : public ZoneObject
    void pickBestWeapon(const Target& target);
    const Target *pickBestTarget(const PODCollection<Target>& targets, CombatInfo &cinfo);
    void doCombatAI(const PODCollection<Target>& targets);
+
+   bool recoverPath();
    void doNonCombatAI();
 
    // Movement control

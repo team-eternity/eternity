@@ -87,6 +87,7 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
     const BSubsec* t;
     const BNeigh* n;
     path.inv.makeEmpty<true>();
+   path.sss.clear();
     const TeleItem* bytele;
     fixed_t tentative;
 
@@ -104,12 +105,14 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
         {
             path.last = t;
             path.end = coord;
+           path.sss.insert(t);
             for (;;)
             {
                 n = db[1].ssprev[t - first];
                 if (!n)
                     break;
                 path.inv.add(n);
+               path.sss.insert(n->myss);
                 t = n->myss;
             }
             return true;

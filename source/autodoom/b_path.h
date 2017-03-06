@@ -58,6 +58,7 @@ class BotPath
 {
 public:
     PODCollection<const BNeigh*>    inv;    // path from end to start
+   std::unordered_set<const BSubsec *> sss;
     const BSubsec*                  last;
     v2fixed_t                       start;
     BotPathEnd                      end;
