@@ -109,6 +109,7 @@ struct deh_block
 
 #define DEH_BUFFERMAX 1024 // input buffer area size, hardcoded for now
 #define DEH_MAXKEYLEN 32   // as much of any key as we'll look at
+#define DEH_MAXKEYLEN_FMT "31"  // for scanf format strings
 #define DEH_MOBJINFOMAX 27 // number of ints in the mobjinfo_t structure (!) haleyjd: 27
 
 // Put all the block header values, and the function to be called when that
@@ -721,7 +722,7 @@ void deh_procBexCodePointers(DWFILE *fpin, char *line)
          break;   // killough 11/98: really exit on blank line
 
       // killough 8/98: allow hex numbers in input:
-      if((3 != sscanf(inbuffer,"%s %i = %s", key, &indexnum, mnemonic))
+      if((3 != sscanf(inbuffer,"%s %i = %" DEH_MAXKEYLEN_FMT "s", key, &indexnum, mnemonic))
          || strcasecmp(key, "FRAME")) // NOTE: different format from normal
       {
          deh_LogPrintf(
@@ -998,7 +999,7 @@ void deh_procThing(DWFILE *fpin, char *line)
    deh_LogPrintf("Thing line: '%s'\n", inbuffer);
 
    // killough 8/98: allow hex numbers in input:
-   ix = sscanf(inbuffer, "%s %i", key, &indexnum);
+   ix = sscanf(inbuffer, "%" DEH_MAXKEYLEN_FMT "s %i", key, &indexnum);
    deh_LogPrintf("count=%d, Thing %d\n", ix, indexnum);
 
    // Note that the mobjinfo[] array is base zero, but object numbers
@@ -1126,7 +1127,7 @@ void deh_procFrame(DWFILE *fpin, char *line)
    strncpy(inbuffer,line,DEH_BUFFERMAX);
    
    // killough 8/98: allow hex numbers in input:
-   sscanf(inbuffer,"%s %i",key, &indexnum);
+   sscanf(inbuffer,"%" DEH_MAXKEYLEN_FMT "s %i",key, &indexnum);
 
    // haleyjd: resolve state number through EDF
    indexnum = E_GetStateNumForDEHNum(indexnum);
@@ -1255,7 +1256,7 @@ void deh_procPointer(DWFILE *fpin, char *line) // done
    // NOTE: different format from normal
 
    // killough 8/98: allow hex numbers in input, fix error case:
-   if(sscanf(inbuffer, "%*s %*i (%s %i)", key, &indexnum) != 2)
+   if(sscanf(inbuffer, "%*s %*i (%" DEH_MAXKEYLEN_FMT "s %i)", key, &indexnum) != 2)
    {
       deh_LogPrintf("Bad data pair in '%s'\n", inbuffer);
       return;
@@ -1336,7 +1337,7 @@ void deh_procSounds(DWFILE *fpin, char *line)
    strncpy(inbuffer, line, DEH_BUFFERMAX);
    
    // killough 8/98: allow hex numbers in input:
-   sscanf(inbuffer, "%s %i", key, &indexnum);
+   sscanf(inbuffer, "%" DEH_MAXKEYLEN_FMT "s %i", key, &indexnum);
 
    deh_LogPrintf("Processing Sounds at index %d: %s\n", indexnum, key);
 
@@ -1434,7 +1435,7 @@ void deh_procAmmo(DWFILE *fpin, char *line)
    strncpy(inbuffer, line, DEH_BUFFERMAX);
    
    // killough 8/98: allow hex numbers in input:
-   sscanf(inbuffer, "%s %i", key, &indexnum);
+   sscanf(inbuffer, "%" DEH_MAXKEYLEN_FMT "s %i", key, &indexnum);
 
    deh_LogPrintf("Processing Ammo at index %d: %s\n", indexnum, key);
   
@@ -1533,7 +1534,7 @@ void deh_procWeapon(DWFILE *fpin, char *line)
    strncpy(inbuffer,line,DEH_BUFFERMAX);
    
    // killough 8/98: allow hex numbers in input:
-   sscanf(inbuffer,"%s %i",key, &indexnum);
+   sscanf(inbuffer,"%" DEH_MAXKEYLEN_FMT "s %i",key, &indexnum);
    deh_LogPrintf("Processing Weapon at index %d: %s\n", indexnum, key);
 
    if(indexnum < 0 || indexnum >= NUMWEAPONS)
@@ -1606,7 +1607,7 @@ void deh_procSprite(DWFILE *fpin, char *line) // Not supported
    strncpy(inbuffer,line,DEH_BUFFERMAX);
    
    // killough 8/98: allow hex numbers in input:
-   sscanf(inbuffer,"%s %i",key, &indexnum);
+   sscanf(inbuffer,"%" DEH_MAXKEYLEN_FMT "s %i",key, &indexnum);
    deh_LogPrintf("Ignoring Sprite offset change at index %d: %s\n",
                  indexnum, key);
 
@@ -1652,7 +1653,7 @@ void deh_procPars(DWFILE *fpin, char *line) // extension
    strncpy(inbuffer,line,DEH_BUFFERMAX);
    
    // killough 8/98: allow hex numbers in input:
-   sscanf(inbuffer,"%s %i",key, &indexnum);
+   sscanf(inbuffer,"%" DEH_MAXKEYLEN_FMT "s %i",key, &indexnum);
    deh_LogPrintf("Processing Par value at index %d: %s\n", indexnum,  key);
 
    // indexnum is a dummy entry
@@ -1962,7 +1963,7 @@ void deh_procText(DWFILE *fpin, char *line)
    }
 
    // killough 8/98: allow hex numbers in input:
-   sscanf(line, "%s %i %i", key, &fromlen, &tolen);
+   sscanf(line, "%" DEH_MAXKEYLEN_FMT "s %i %i", key, &fromlen, &tolen);
 
    deh_LogPrintf("Processing Text (key=%s, from=%d, to=%d)\n", 
                  key, fromlen, tolen);

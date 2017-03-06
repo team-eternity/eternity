@@ -801,7 +801,7 @@ static void AddTexPatch(texture_t *tex, tcomponent_t *component)
                
          if(y2 <= 0)
          {
-            column = (const column_t *)(src + column->length + 1);
+            column = reinterpret_cast<const column_t *>(src + column->length + 1);
             continue;
          }
          
@@ -829,7 +829,7 @@ static void AddTexPatch(texture_t *tex, tcomponent_t *component)
          if(y2 - y1 > 0)
             AddTexColumn(tex, src + srcoff, 1, destoff, y2 - y1);
             
-         column = (const column_t *)(src + column->length + 1);
+         column = reinterpret_cast<const column_t *>(src + column->length + 1);
       }
    }
 }
@@ -1401,7 +1401,7 @@ void R_InitTextures()
    // read texture lumps
    texnum = R_ReadTextureLump(maptex1, patchlookup, texnum, &errors);
    texnum = R_ReadTextureLump(maptex2, patchlookup, texnum, &errors);
-   texnum = R_ReadTextureNamespace(texnum);
+   R_ReadTextureNamespace(texnum);
 
    // done with patch lookup
    if(patchlookup)

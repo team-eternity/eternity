@@ -315,7 +315,7 @@ public:
    // Register the command on the global list of commands. The list is walked
    // during program init (after all instances have constructed).
    //
-   CCmdRegistry(command_t *pCmd)
+   explicit CCmdRegistry(command_t *pCmd)
    {
       command = pCmd;
       links.insert(this, &commands);

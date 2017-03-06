@@ -517,12 +517,12 @@ void C_Drawer(void)
    if(Console.current_height > c_font->absh && Console.showprompt && 
       message_pos == message_last)
    {
-      const char *a_prompt;
       char tempstr[LINELENGTH];
       
       // if we are scrolled back, dont draw the input line
       if(message_pos == message_last)
       {
+         const char *a_prompt;
          if(gamestate == GS_LEVEL && !strcasecmp(players[0].name, "quasar"))
             a_prompt = altprompt;
          else

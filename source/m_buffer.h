@@ -41,7 +41,7 @@ protected:
    const char *message;
 
 public:
-   BufferedIOException(const char *pMsg) : message(pMsg) {}
+   explicit BufferedIOException(const char *pMsg) : message(pMsg) {}
    const char *GetMessage() { return message; }
 };
 

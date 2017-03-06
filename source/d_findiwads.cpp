@@ -76,7 +76,7 @@ protected:
 
 public:
    // Constructor. Open the key described by rval.
-   AutoRegKey(const registry_value_t &rval) : valid(false)
+   explicit AutoRegKey(const registry_value_t &rval) : valid(false)
    {
       if(!RegOpenKeyEx(rval.root, rval.path, 0, KEY_READ, &key))
          valid = true;

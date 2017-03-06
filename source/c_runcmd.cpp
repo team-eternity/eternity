@@ -208,7 +208,6 @@ static void C_GetTokens(const char *command)
 static void C_RunIndivTextCmd(const char *cmdname)
 {
    command_t *command;
-   alias_t *alias;
    
    // cut off leading spaces
    while(*cmdname == ' ')
@@ -226,6 +225,7 @@ static void C_RunIndivTextCmd(const char *cmdname)
    if(!command) // no _command_ called that
    {
       // alias?
+      alias_t *alias;
       if((alias = C_GetAlias(cmdtokens[0]->constPtr())))
       {
          // save the options into cmdoptions
@@ -688,7 +688,6 @@ static bool isnum(const char *text)
 //
 static const char *C_ValueForDefine(variable_t *variable, const char *s, int setflags)
 {
-   int count;
    static qstring returnstr;
 
    returnstr.clearOrCreate(1024);
@@ -699,7 +698,7 @@ static const char *C_ValueForDefine(variable_t *variable, const char *s, int set
 
    if(variable->defines)
    {
-      for(count = variable->min; count <= variable->max; count++)
+      for(int count = variable->min; count <= variable->max; count++)
       {
          if(!C_Strcmp(s, variable->defines[count-variable->min]))
          {

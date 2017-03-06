@@ -738,7 +738,7 @@ int WadDirectory::addDirectory(const char *dirpath)
    // count the files in the directory
    while((ent = readdir(dir)))
    {
-      dirfile_t newfile;
+      edefstructvar(dirfile_t, newfile);
       struct stat sbuf;
 
       if(!strcmp(ent->d_name, ".")  || !strcmp(ent->d_name, ".."))

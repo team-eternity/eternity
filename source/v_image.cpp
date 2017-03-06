@@ -122,7 +122,7 @@ int VImageManager::lookupResourceNum(WadDirectory &dir, const char *name,
                                      int li_namespace, bool allowglobal)
 {
    bool useNSG = false;
-   bool lfn;
+   bool lfn = false;
 
    if(allowglobal && li_namespace != lumpinfo_t::ns_global)
       useNSG = true;

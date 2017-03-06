@@ -1826,7 +1826,7 @@ bool ACS_CF_SetThingPos(ACS_CF_ARGS)
    fixed_t  z    = argV[3];
    bool     fog  = argV[4] ? true : false;
    uint32_t res  = 0;
-   Mobj    *mo, *fogmo;
+   Mobj    *mo;
 
    if((mo = P_FindMobjFromTID(tid, nullptr, info->mo)))
    {
@@ -1861,7 +1861,7 @@ bool ACS_CF_SetThingPos(ACS_CF_ARGS)
          if(fog)
          {
             // Teleport fog at source...
-            fogmo = P_SpawnMobj(oldx, oldy, oldz + GameModeInfo->teleFogHeight,
+            Mobj *fogmo = P_SpawnMobj(oldx, oldy, oldz + GameModeInfo->teleFogHeight,
                                 E_SafeThingName(GameModeInfo->teleFogType));
             S_StartSound(fogmo, GameModeInfo->teleSound);
 

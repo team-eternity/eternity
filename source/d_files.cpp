@@ -607,10 +607,10 @@ static int D_CheckBasePath(const qstring &qpath)
       if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
       {
          DIR *dir;
-         int score = 0;
          
          if((dir = opendir(path)))
          {
+            int score = 0;
             // directory should contain at least startup.wad, root.edf, and /doom
             dirent *ent;
             while((ent = readdir(dir)))
@@ -844,10 +844,10 @@ static int D_CheckUserPath(const qstring &qpath)
       if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
       {
          DIR *dir;
-         int score = 0;
          
          if((dir = opendir(path)))
          {
+            int score = 0;
             // directory should contain at least a /doom and /shots folder
             dirent *ent;
             while((ent = readdir(dir)))

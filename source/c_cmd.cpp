@@ -236,9 +236,7 @@ CONSOLE_COMMAND(cvarhelp, 0)
 {
    command_t  *current;
    variable_t *var;
-   int         count;
    const char *name;
-   default_t  *def;
 
    if(Console.argc != 1)
    {
@@ -255,7 +253,7 @@ CONSOLE_COMMAND(cvarhelp, 0)
    if(current && current->type == ct_variable && !(current->flags & cf_hidden))
    {
       var = current->variable;
-      def = current->variable->cfgDefault; // haleyjd 07/05/10: print defaults
+      default_t *def = current->variable->cfgDefault; // haleyjd 07/05/10: print defaults
 
       switch(var->type)
       {
@@ -263,7 +261,7 @@ CONSOLE_COMMAND(cvarhelp, 0)
          if(var->defines && var->min <= var->max)
          {
             C_Printf("Possible values for '%s':\n", name);
-            for(count = var->min; count <= var->max; count++)
+            for(int count = var->min; count <= var->max; count++)
             {
                C_Printf("%s\n", var->defines[count - var->min]);
             }
@@ -307,7 +305,7 @@ CONSOLE_COMMAND(cvarhelp, 0)
          if(var->defines)
          {
             C_Printf("Possible values for '%s':\n", name);
-            for(count = var->min; count <= var->max; count++)
+            for(int count = var->min; count <= var->max; count++)
                C_Printf(" %s\n", var->defines[count - var->min]);
 
             if(def)

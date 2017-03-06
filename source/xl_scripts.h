@@ -97,7 +97,7 @@ protected:
 
 public:
    // Constructor / Destructor
-   XLTokenizer(const char *str) 
+   explicit XLTokenizer(const char *str) 
       : state(STATE_SCAN), input(str), idx(0), tokentype(TOKEN_NONE), token(32),
         flags(TF_DEFAULT)
    { 
@@ -135,7 +135,7 @@ protected:
 
 public:
    // Constructors
-   XLParser(const char *pLumpname) 
+   explicit XLParser(const char *pLumpname) 
       : lumpname(pLumpname), lumpdata(NULL), waddir(NULL)
    {
    }

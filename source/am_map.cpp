@@ -614,7 +614,7 @@ static void AM_loadPics()
    // haleyjd 10/09/05: get format string from GameModeInfo
    for(int i = 0; i < 10; i++)
    {
-      sprintf(namebuf, GameModeInfo->markNumFmt, i);
+      snprintf(namebuf, earrlen(namebuf), GameModeInfo->markNumFmt, i);
       marknums[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
 
@@ -809,8 +809,6 @@ static void AM_maxOutWindowScale()
 //
 bool AM_Responder(event_t *ev)
 {
-   static int bigstate = 0;
-  
    // haleyjd 07/07/04: dynamic bindings
    int action = G_KeyResponder(ev, kac_map);
 
@@ -858,6 +856,8 @@ bool AM_Responder(event_t *ev)
       // all other events are keydown only
       if(ev->type != ev_keydown)
          return false;
+
+      static int bigstate = 0;
 
       switch(action)
       {

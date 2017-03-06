@@ -46,8 +46,8 @@ protected:
    InBuffer  *loadfile;        // valid when loading
 
 public:
-   SaveArchive(OutBuffer *pSaveFile);
-   SaveArchive(InBuffer  *pLoadFile);
+   explicit SaveArchive(OutBuffer *pSaveFile);
+   explicit SaveArchive(InBuffer  *pLoadFile);
 
    // Accessors
    bool isSaving()  const   { return (savefile != nullptr); }

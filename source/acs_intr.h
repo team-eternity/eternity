@@ -268,7 +268,7 @@ public:
 class ACSThread : public ACSVM::Thread
 {
 public:
-   ACSThread(ACSVM::Environment *env_) : ACSVM::Thread{env_} {}
+   explicit ACSThread(ACSVM::Environment *env_) : ACSVM::Thread{env_} {}
 
    virtual ACSVM::ThreadInfo const *getInfo() const {return &info;}
 

@@ -2636,7 +2636,7 @@ static char    d_mapname[10];
 int G_GetMapForName(const char *name)
 {
    char normName[9];
-   int episode, map;
+   int map;
 
    strncpy(normName, name, 9);
 
@@ -2650,6 +2650,7 @@ int G_GetMapForName(const char *name)
    }
    else
    {
+      int episode;
       if(isExMy(normName))
       {
          episode = normName[1] - '0';
@@ -2928,14 +2929,13 @@ void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
 void G_SetFastParms(int fast_pending)
 {
    static int fast = 0;            // remembers fast state
-   int i;
    MetaSpeedSet *mss;
    
    if(fast != fast_pending)       // only change if necessary
    {
       if((fast = fast_pending))
       {
-         for(i = 0; i < NUMSTATES; i++)
+         for(int i = 0; i < NUMSTATES; i++)
          {
             if(states[i]->flags & STATEF_SKILL5FAST)
             {
@@ -2946,7 +2946,7 @@ void G_SetFastParms(int fast_pending)
             }
          }
 
-         for(i = 0; i < NUMMOBJTYPES; i++)
+         for(int i = 0; i < NUMMOBJTYPES; i++)
          {
             MetaTable *meta = mobjinfo[i]->meta;
             if((mss = meta->getObjectKeyAndTypeEx<MetaSpeedSet>(speedsetKey)))
@@ -2955,13 +2955,13 @@ void G_SetFastParms(int fast_pending)
       }
       else
       {
-         for(i = 0; i < NUMSTATES; i++)
+         for(int i = 0; i < NUMSTATES; i++)
          {
             if(states[i]->flags & STATEF_SKILL5FAST)
                states[i]->tics <<= 1;
          }
 
-         for(i = 0; i < NUMMOBJTYPES; i++)
+         for(int i = 0; i < NUMMOBJTYPES; i++)
          {
             MetaTable *meta = mobjinfo[i]->meta;
             if((mss = meta->getObjectKeyAndTypeEx<MetaSpeedSet>(speedsetKey)))

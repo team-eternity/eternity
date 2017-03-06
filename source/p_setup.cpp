@@ -1259,8 +1259,13 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
          if(actualSegIndex + 1 == ss->firstline + ss->numlines)
          {
             li->v2 = firstV1;
-            P_CalcSegLength(li);
-            firstV1 = nullptr;
+            if(firstV1) // firstV1 can be null because of malformed subsectors
+            {
+               P_CalcSegLength(li);
+               firstV1 = nullptr;
+            }
+            else
+               level_error = "Bad ZDBSP nodes; can't start level.";
          }
          else
          {

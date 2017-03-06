@@ -543,15 +543,13 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, bool def)
    // process the lump name
    if(IS_SET(ITEM_SND_LUMP))
    {
-      const char *lumpname;
-
       // if this is the definition, and the lump name is not
       // defined, duplicate the mnemonic as the sound name
       if(def && cfg_size(section, ITEM_SND_LUMP) == 0)
          strncpy(sfx->name, sfx->mnemonic, 9);
       else
       {
-         lumpname = cfg_getstr(section, ITEM_SND_LUMP);
+         const char *lumpname = cfg_getstr(section, ITEM_SND_LUMP);
 
          strncpy(sfx->name, lumpname, 9);
 

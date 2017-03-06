@@ -385,8 +385,6 @@ void P_ParticleThinker(void)
    prev = NULL;
    while(i != -1) 
    {
-      unsigned int oldtrans;
-      
       particle = Particles + i;
       i = particle->next;
 
@@ -398,7 +396,7 @@ void P_ParticleThinker(void)
       if(!(particle->styleflags & PS_FALLTOGROUND))
       {
          // perform fading
-         oldtrans = particle->trans;
+         unsigned oldtrans = particle->trans;
          particle->trans -= particle->fade;
          
          // is it time to kill this particle?
@@ -584,7 +582,6 @@ static void MakeFountain(Mobj *actor, byte color1, byte color2)
 static void P_RunEffect(Mobj *actor, unsigned int effects)
 {
    angle_t moveangle = P_PointToAngle(0,0,actor->momx,actor->momy);
-   particle_t *particle;
 
    if(effects & FX_FLIES || 
       (effects & FX_FLIESONDEATH && actor->tics == -1 &&
@@ -612,7 +609,7 @@ static void P_RunEffect(Mobj *actor, unsigned int effects)
       
       angle_t an = (moveangle + ANG90) >> ANGLETOFINESHIFT;
 
-      particle = JitterParticle(3 + (M_Random() & 31));
+      particle_t *particle = JitterParticle(3 + (M_Random() & 31));
       if(particle)
       {
          fixed_t pathdist = M_Random()<<8;
@@ -912,7 +909,6 @@ void P_BloodSpray(Mobj *mo, int count, fixed_t x, fixed_t y, fixed_t z,
    particle_t *p;
    angle_t an;
    int bloodcolor = mo->info->bloodcolor;
-   int tempcol;
 
    // get blood colors
    if(bloodcolor < 0 || bloodcolor >= NUMBLOODCOLORS)
@@ -929,7 +925,7 @@ void P_BloodSpray(Mobj *mo, int count, fixed_t x, fixed_t y, fixed_t z,
    // swap colors if reversed
    if(color2 < color1)
    {
-      tempcol = color1;
+      int tempcol = color1;
       color1  = color2;
       color2  = tempcol;
    }

@@ -1610,7 +1610,7 @@ static void P_parseLevelString(levelvar_t *var, const qstring &value)
 //
 static void P_parseLevelStrNum(levelvar_t *var, const qstring &value)
 {
-   textvals_t *tv = (textvals_t *)var->extra;
+   textvals_t *tv = static_cast<textvals_t *>(var->extra);
    int val = E_StrToNumLinear(tv->vals, tv->numvals, value.constPtr());
 
    if(val >= tv->numvals)
@@ -1646,7 +1646,7 @@ static void P_parseLevelBool(levelvar_t *var, const qstring &value)
 //
 static void P_parseLevelFlags(levelvar_t *var, const qstring &value)
 {
-   dehflagset_t *flagset = (dehflagset_t *)var->extra;
+   dehflagset_t *flagset = static_cast<dehflagset_t *>(var->extra);
    *(unsigned int *)var->variable = E_ParseFlags(value.constPtr(), flagset);
 }
 

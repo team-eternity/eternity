@@ -102,7 +102,7 @@ byte *V_PatchToLinear(patch_t *patch, bool flipped, byte fillcolor,
 patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize, 
                          int tag, void **user = NULL);
 
-patch_t *V_LinearToTransPatch(byte *linear, int w, int h, size_t *memsize,
+patch_t *V_LinearToTransPatch(const byte *linear, int w, int h, size_t *memsize,
                               int color_key, int tag, void **user = NULL);
 
 bool V_WritePatchAsPNG(const char *lump, const char *filename, byte fillcolor);
