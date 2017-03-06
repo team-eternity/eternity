@@ -179,8 +179,6 @@ public:
    
    std::unordered_map<const Mobj *, PODCollection<Subsec *> >
    mobjSecMap;
-   std::unordered_map<const line_t *, PODCollection<Subsec *> >
-   lineSecMap;
    
    //
    // Constructor

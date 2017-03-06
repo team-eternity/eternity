@@ -426,7 +426,6 @@ static void B_setSpecLinePositions()
             
             ss = &botMap->pointInSubsector(mid.x, mid.y);
             ss->linelist.insert(&line);
-            botMap->lineSecMap[&line].add(ss);
 
             mid.x += FixedMul(USERANGE / 2, B_AngleCosine(ang));
             mid.y += FixedMul(USERANGE / 2, B_AngleSine(ang));
@@ -435,7 +434,6 @@ static void B_setSpecLinePositions()
             if(!ss->linelist.count(&line))
             {
                ss->linelist.insert(&line);
-               botMap->lineSecMap[&line].add(ss);
             }
          }
          else if(action->type == &G1ActionType || action->type == &GRActionType)
