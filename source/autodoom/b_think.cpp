@@ -993,7 +993,7 @@ const Bot::Target *Bot::pickBestTarget(const PODCollection<Target>& targets, Com
             cinfo.hasShooters = true;
       }
 
-      if(shouldChat(m_lastHelpCry, URGENT_CHAT_INTERVAL_SEC) &&
+      if(shouldChat(URGENT_CHAT_INTERVAL_SEC, m_lastHelpCry) &&
          !highestThreat->isLine &&
          totalThreat >= B_calcPlayerHealth(pl))
       {
