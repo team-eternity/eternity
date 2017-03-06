@@ -281,26 +281,6 @@ void BotMap::setThingPosition(const Mobj *thing)
 }
 
 //
-// BotMap::unsetLinePositions
-//
-// Removes all line-subsec references.
-// FIXME: currently unused
-//
-void BotMap::unsetLinePositions(const line_t &line)
-{
-   if(lineSecMap.count(&line))
-   {
-      for (auto it = lineSecMap.at(&line).begin();
-           it != lineSecMap.at(&line).end();
-           ++it)
-      {
-         (*it)->linelist.erase(&line);
-      }
-      lineSecMap.at(&line).makeEmpty();
-   }
-}
-
-//
 // BotMap::operator new
 //
 // Overloaded to support user
