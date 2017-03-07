@@ -41,7 +41,7 @@ protected:
    AutoPalette(const AutoPalette &other) {} 
 
 public:
-   AutoPalette(WadDirectory &dir)
+   explicit AutoPalette(WadDirectory &dir)
    {
       palette = static_cast<byte *>(dir.cacheLumpName("PLAYPAL", PU_STATIC));
    }

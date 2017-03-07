@@ -333,8 +333,8 @@ char *W_FindMapInLevelWad(WadDirectory *dir, bool mapxy)
 //
 static int W_sortLevels(const void *first, const void *second)
 {
-   wadlevel_t *firstLevel  = (wadlevel_t *)first;
-   wadlevel_t *secondLevel = (wadlevel_t *)second;
+   const wadlevel_t *firstLevel  = static_cast<const wadlevel_t *>(first);
+   const wadlevel_t *secondLevel = static_cast<const wadlevel_t *>(second);
 
    return strncasecmp(firstLevel->header, secondLevel->header, 9);
 }
@@ -348,7 +348,7 @@ static int W_sortLevels(const void *first, const void *second)
 wadlevel_t *W_FindAllMapsInLevelWad(WadDirectory *dir)
 {
    int i, format;
-   wadlevel_t *levels = NULL;
+   wadlevel_t *levels;
    int numlevels;
    int numlevelsalloc;
    int          numlumps = dir->getNumLumps();

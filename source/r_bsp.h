@@ -26,6 +26,7 @@
 #ifndef R_BSP_H__
 #define R_BSP_H__
 
+struct dlnormal_t;
 struct drawseg_t;
 struct line_t;
 struct seg_t;
@@ -51,7 +52,8 @@ extern drawseg_t *ds_p;
 // of the line are rendered and the solidsegs array isn't being traversed.. >_<
 void R_MarkSolidSeg(int x1, int x2);
 
-bool R_SetupPortalClipsegs(int minx, int maxx, float *top, float *bottom);
+bool R_SetupPortalClipsegs(int minx, int maxx, 
+   const float *top, const float *bottom);
 
 void R_ClearClipSegs();
 void R_ClearDrawSegs();
@@ -61,6 +63,8 @@ int R_DoorClosed();   // killough 1/17/98
 
 // killough 4/13/98: fake floors/ceilings for deep water / fake ceilings:
 sector_t *R_FakeFlat(sector_t *, sector_t *, int *, int *, bool);
+
+bool R_AllowBehindSectorPortal(const fixed_t bbox[4], fixed_t x, fixed_t y);
 
 extern int detaillevel;
 

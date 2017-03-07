@@ -86,6 +86,7 @@ int      centerx, centery;
 fixed_t  centerxfrac, centeryfrac;
 fixed_t  viewx, viewy, viewz;
 angle_t  viewangle;
+fixed_t  viewcos, viewsin;
 fixed_t  viewpitch;
 player_t *viewplayer;
 extern lighttable_t **walllights;
@@ -747,6 +748,10 @@ void R_IncrementFrameid()
                "GET A LIFE.\a\n");
 
       frameid = 1;
+
+      // Do as the description says...
+      for(int i = 0; i < numsectors; ++i)
+         pSectorBoxes[i].fframeid = pSectorBoxes[i].cframeid = 0;
    }
 }
 
@@ -912,6 +917,8 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    }
 
    extralight = player->extralight;
+   viewsin = finesine[viewangle>>ANGLETOFINESHIFT];
+   viewcos = finecosine[viewangle>>ANGLETOFINESHIFT];
 
    // SoM: Cardboard
    view.x      = M_FixedToFloat(viewx);

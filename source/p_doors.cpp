@@ -52,8 +52,6 @@
 //
 void P_DoorSequence(bool raise, bool turbo, bool bounced, sector_t *s)
 {
-   const char *seqName;
-
    // haleyjd 09/25/06: apparently fraggle forgot silentmove for doors
    if(silentmove(s))
       return;
@@ -67,6 +65,7 @@ void P_DoorSequence(bool raise, bool turbo, bool bounced, sector_t *s)
    }
    else
    {
+      const char *seqName;
       if(raise)
          seqName = turbo ? "EEDoorOpenBlazing" : "EEDoorOpenNormal";
       else
@@ -421,7 +420,7 @@ int EV_DoDoor(const line_t *line, vldoor_e type)
 //
 int EV_VerticalDoor(line_t *line, const Mobj *thing, int lockID)
 {
-   player_t *player = thing->player;
+   player_t *player = thing ? thing->player : nullptr;
    sector_t *sec;
    VerticalDoorThinker *door;
    SectorThinker       *secThinker;
@@ -438,7 +437,8 @@ int EV_VerticalDoor(line_t *line, const Mobj *thing, int lockID)
    // if the wrong side of door is pushed, give oof sound
    if(line->sidenum[1] == -1)                      // killough
    {
-      S_StartSound(player->mo, GameModeInfo->playerSounds[sk_oof]); // killough 3/20/98
+      if(player)
+         S_StartSound(player->mo, GameModeInfo->playerSounds[sk_oof]); // killough 3/20/98
       return 0;
    }
 
@@ -475,7 +475,7 @@ int EV_VerticalDoor(line_t *line, const Mobj *thing, int lockID)
       case  27:
       case  28:
       case  117:
-         return secThinker->reTriggerVerticalDoor(!!thing->player);
+         return secThinker->reTriggerVerticalDoor(thing && thing->player);
       }
       
       // haleyjd 01/22/12: never start multiple thinkers on a door sector.

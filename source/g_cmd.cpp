@@ -375,7 +375,7 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
    {
       const char *extension;
       extension = Console.argv[0]->bufferAt(Console.argv[0]->length() - 4);
-      if(!strcmp(extension, ".wad"))
+      if(!strcasecmp(extension, ".wad"))
       {
          if(D_AddNewFile(Console.argv[0]->constPtr()))
          {
@@ -791,6 +791,7 @@ const char *comp_strings[] =
   "planeshoot", //          09/22/07: plane shooting
   "special",    //          08/29/09: special failure behavior
   "ninja",      //          04/18/10: ninja spawn
+  "aircontrol"
 };
 
 static void Handler_CompTHeights()
@@ -800,7 +801,7 @@ static void Handler_CompTHeights()
 
 void G_AddCompat()
 {
-   for(int i = 0; i <= comp_ninja; i++)   // haleyjd: update this regularly
+   for(int i = 0; i < COMP_NUM_USED; i++)   // haleyjd: update this regularly
    {
       variable_t *variable;
       command_t  *command;
@@ -835,7 +836,7 @@ void G_AddCompat()
       }
 
       command->variable = variable;
-      command->netcmd   = netcmd_comp_0 + i;
+      command->netcmd   = NETCMD_COMP_0 + i;
 
       C_AddCommand(command); // hook into cmdlist
    }

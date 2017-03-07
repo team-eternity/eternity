@@ -168,6 +168,17 @@ public:
 };
 
 //
+// Keep track, for sprite portal copying
+//
+struct sprojlast_t
+{
+   v3fixed_t pos;    // holds coordinates
+   uint32_t sprite;  // holds both sprite num and frame num
+   float yscale;     // if scale changes, sprojheight may also do
+   float xscale;
+};
+
+//
 // Map Object definition.
 //
 // killough 2/20/98:
@@ -216,6 +227,7 @@ public:
    // Methods
    void backupPosition();
    void copyPosition(const Mobj *other);
+   int getModifiedSpawnHealth() const;
    
    // Data members
 
@@ -225,7 +237,7 @@ public:
 
    // ioanch 20160109: sprite projection chains
    DLListItem<spriteprojnode_t> *spriteproj;
-   v3fixed_t sprojlast; // coordinates after last check. Initially "invalid"
+   sprojlast_t sprojlast; // coordinates after last check. Initially "invalid"
 
    //More drawing info: to determine current sprite.
    angle_t     angle;  // orientation
@@ -361,6 +373,7 @@ public:
    prevpos_t prevpos;   // previous position for interpolation
 
    // scripting fields
+   int special;         // special
    int args[NUMMTARGS]; // arguments
    uint16_t tid;        // thing id used by scripts
 

@@ -36,6 +36,7 @@
 #include "d_main.h"
 #include "doomstat.h"
 #include "dstrings.h"
+#include "e_exdata.h"
 #include "e_inventory.h"
 #include "ev_specials.h"
 #include "g_bind.h"
@@ -607,7 +608,7 @@ static void AM_loadPics()
    // haleyjd 10/09/05: get format string from GameModeInfo
    for(int i = 0; i < 10; i++)
    {
-      sprintf(namebuf, GameModeInfo->markNumFmt, i);
+      snprintf(namebuf, earrlen(namebuf), GameModeInfo->markNumFmt, i);
       marknums[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
 
@@ -802,8 +803,6 @@ static void AM_maxOutWindowScale()
 //
 bool AM_Responder(event_t *ev)
 {
-   static int bigstate = 0;
-  
    // haleyjd 07/07/04: dynamic bindings
    int action = G_KeyResponder(ev, kac_map);
 
@@ -851,6 +850,8 @@ bool AM_Responder(event_t *ev)
       // all other events are keydown only
       if(ev->type != ev_keydown)
          return false;
+
+      static int bigstate = 0;
 
       switch(action)
       {
@@ -1626,6 +1627,28 @@ inline static bool AM_drawAsClosedDoor(const line_t *line)
 }
 
 //
+// True if floor or ceiling heights are different, lower or upper portal aware
+//
+inline static bool AM_differentFloor(const line_t &line)
+{
+   return line.frontsector->floorheight > line.backsector->floorheight ||
+   (line.frontsector->floorheight < line.backsector->floorheight &&
+    !(line.extflags & EX_ML_LOWERPORTAL));
+}
+inline static bool AM_differentCeiling(const line_t &line)
+{
+   return line.frontsector->ceilingheight < line.backsector->ceilingheight ||
+   (line.frontsector->ceilingheight > line.backsector->ceilingheight &&
+    !(line.extflags & EX_ML_UPPERPORTAL));
+}
+
+inline static bool AM_dontDraw(const line_t &line)
+{
+   return line.flags & ML_DONTDRAW ||
+   line.frontsector->intflags & SIF_PORTALBOX;
+}
+
+//
 // Determines visible lines, draws them.
 // This is LineDef based, not LineSeg based.
 //
@@ -1678,12 +1701,11 @@ static void AM_drawWalls()
          {
             // check for DONTDRAW flag; those lines are only visible
             // if using the IDDT cheat.
-            if((line->flags & ML_DONTDRAW) && !ddt_cheating)
+            if(AM_dontDraw(*line) && !ddt_cheating)
                continue;
 
             if(!line->backsector ||
-               line->backsector->floorheight != line->frontsector->floorheight ||
-               line->backsector->ceilingheight != line->frontsector->ceilingheight)
+               AM_differentFloor(*line) || AM_differentCeiling(*line))
             {
                AM_drawMline(&l, mapcolor_prtl);
             }
@@ -1691,11 +1713,10 @@ static void AM_drawWalls()
          else if(plr->powers[pw_allmap]) // computermap visible lines
          {
             // now draw the lines only visible because the player has computermap
-            if(!(line->flags & ML_DONTDRAW)) // invisible flag lines do not show
+            if(!AM_dontDraw(*line)) // invisible flag lines do not show
             {
                if(!line->backsector ||
-                  line->backsector->floorheight != line->frontsector->floorheight ||
-                  line->backsector->ceilingheight != line->frontsector->ceilingheight)
+                  AM_differentFloor(*line) || AM_differentCeiling(*line))
                {
                   AM_drawMline(&l, mapcolor_prtl);
                }
@@ -1735,7 +1756,7 @@ static void AM_drawWalls()
       {
          // check for DONTDRAW flag; those lines are only visible
          // if using the IDDT cheat.
-         if((line->flags & ML_DONTDRAW) && !ddt_cheating)
+         if(AM_dontDraw(*line) && !ddt_cheating)
             continue;
 
          if(!line->backsector) // 1S lines
@@ -1796,13 +1817,11 @@ static void AM_drawWalls()
             {
                AM_drawMline(&l, mapcolor_secr); // line bounding secret sector
             } 
-            else if(line->backsector->floorheight !=
-                    line->frontsector->floorheight)
+            else if(AM_differentFloor(*line))
             {
                AM_drawMline(&l, mapcolor_fchg); // floor level change
             }
-            else if(line->backsector->ceilingheight !=
-                    line->frontsector->ceilingheight)
+            else if(AM_differentCeiling(*line))
             {
                AM_drawMline(&l, mapcolor_cchg); // ceiling level change
             }
@@ -1815,13 +1834,10 @@ static void AM_drawWalls()
       else if(plr->powers[pw_allmap]) // computermap visible lines
       {
          // now draw the lines only visible because the player has computermap
-         if(!(line->flags & ML_DONTDRAW)) // invisible flag lines do not show
+         if(!AM_dontDraw(*line)) // invisible flag lines do not show
          {
-            if(mapcolor_flat ||
-               !line->backsector ||
-               line->backsector->floorheight != line->frontsector->floorheight ||
-               line->backsector->ceilingheight != line->frontsector->ceilingheight
-              )
+            if(mapcolor_flat || !line->backsector ||
+               AM_differentFloor(*line) || AM_differentCeiling(*line))
             {
                AM_drawMline(&l, mapcolor_unsn);
             }

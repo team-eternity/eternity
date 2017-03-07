@@ -83,6 +83,17 @@ extern const char *level_error;
 extern void R_DynaSegOffset(seg_t *lseg, line_t *line, int side);
 
 //
+// Miscellaneous constants
+//
+enum
+{
+   // vertex distance limit over which NOT to fix slime trails. Useful for
+   // the new vanilla Doom rendering trick discovered by Linguica. Link here:
+   // http://www.doomworld.com/vb/doom-editing/74354-stupid-bsp-tricks/
+   LINGUORTAL_THRESHOLD = 8 * FRACUNIT,   
+};
+
+//
 // ZNodeType
 //
 // IOANCH: ZDoom node type enum
@@ -116,6 +127,10 @@ sector_t *sectors;
 
 // haleyjd 01/05/14: sector interpolation data
 sectorinterp_t *sectorinterps;
+
+// ioanch: list of sector bounding boxes for sector portal seg rejection (coarse)
+// length: numsectors * 4
+sectorbox_t *pSectorBoxes;
 
 // haleyjd 01/12/14: sector sound environment zones
 int         numsoundzones;
@@ -160,6 +175,8 @@ Mobj    **blocklinks;             // for thing chains
 byte     *portalmap;              // haleyjd: for portals
 // ioanch 20160106: more detailed info (list of groups for each block)
 int     **gBlockGroups; 
+
+bool      skipblstart;            // MaxW: Skip initial blocklist short
 
 //
 // REJECT
@@ -713,6 +730,27 @@ static void P_CreateSectorInterps()
 }
 
 //
+// Setup sector bounding boxes
+//
+static void P_createSectorBoundingBoxes()
+{
+   pSectorBoxes = estructalloctag(sectorbox_t, numsectors, PU_LEVEL);
+
+   for(int i = 0; i < numsectors; ++i)
+   {
+      const sector_t &sector = sectors[i];
+      fixed_t *box = pSectorBoxes[i].box;
+      M_ClearBox(box);
+      for(int j = 0; j < sector.linecount; ++j)
+      {
+         const line_t &line = *sector.lines[j];
+         M_AddToBox(box, line.v1->x, line.v1->y);
+         M_AddToBox(box, line.v2->x, line.v2->y);
+      }
+   }
+}
+
+//
 // P_propagateSoundZone
 //
 // haleyjd 01/12/14: Recursive routine to propagate a sound zone from a
@@ -1189,8 +1227,13 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
          if(actualSegIndex + 1 == ss->firstline + ss->numlines)
          {
             li->v2 = firstV1;
-            P_CalcSegLength(li);
-            firstV1 = nullptr;
+            if(firstV1) // firstV1 can be null because of malformed subsectors
+            {
+               P_CalcSegLength(li);
+               firstV1 = nullptr;
+            }
+            else
+               level_error = "Bad ZDBSP nodes; can't start level.";
          }
          else
          {
@@ -2235,6 +2278,8 @@ static bool P_VerifyBlockMap(int count)
 
    bmaperrormsg = NULL;
 
+   skipblstart = true;
+
    for(y = 0; y < bmapheight; y++)
    {
       for(x = 0; x < bmapwidth; x++)
@@ -2256,6 +2301,9 @@ static bool P_VerifyBlockMap(int count)
          
          offset = *blockoffset;         
          list   = blockmaplump + offset;
+
+         if(*list != 0)
+            skipblstart = false;
 
          // scan forward for a -1 terminator before maxoffs
          for(tmplist = list; ; tmplist++)
@@ -2567,9 +2615,22 @@ void P_RemoveSlimeTrails()             // killough 10/98
                   int     x0  = v->x, y0 = v->y, x1 = l->v1->x, y1 = l->v1->y;
                   v->x = (fixed_t)((dx2 * x0 + dy2 * x1 + dxy * (y0 - y1)) / s);
                   v->y = (fixed_t)((dy2 * y0 + dx2 * y1 + dxy * (x0 - x1)) / s);
-                  // Cardboard store float versions of vertices.
-                  v->fx = M_FixedToFloat(v->x);
-                  v->fy = M_FixedToFloat(v->y);
+
+                  // ioanch: add linguortal support, from PrBoom+/[crispy]
+                  // demo_version check needed, for similar reasons as above
+                  if(demo_version >= 342 &&
+                     (D_abs(x0 - v->x) > LINGUORTAL_THRESHOLD ||
+                      D_abs(y0 - v->y) > LINGUORTAL_THRESHOLD))
+                  {
+                     v->x = x0;  // reset
+                     v->y = y0;
+                  }
+                  else
+                  {
+                     // Cardboard store float versions of vertices.
+                     v->fx = M_FixedToFloat(v->x);
+                     v->fy = M_FixedToFloat(v->y);
+                  }
                }
             }  
          } // Obfuscated C contest entry:   :)
@@ -3241,7 +3302,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    // IOANCH 20151212: UDMF
    if(isUdmf)
    {
-      if(!udmf.loadLinedefs())
+      if(!udmf.loadLinedefs(setupSettings))
       {
          P_SetupLevelError(udmf.error().constPtr(), mapname);
          return;
@@ -3323,6 +3384,9 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    P_GroupLines();
    P_LoadReject(mgla.reject); // haleyjd 01/26/04
 
+   // Create bounding boxes now
+   P_createSectorBoundingBoxes();
+
    // haleyjd 01/12/14: build sound environment zones
    P_CreateSoundZones();
 
@@ -3370,7 +3434,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    P_SpawnSpecials(setupSettings);
 
    // SoM: Deferred specials that need to be spawned after P_SpawnSpecials
-   P_SpawnDeferredSpecials();
+   P_SpawnDeferredSpecials(setupSettings);
 
    // haleyjd
    P_InitLightning();

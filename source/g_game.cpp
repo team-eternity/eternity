@@ -365,7 +365,8 @@ void G_BuildTiccmd(ticcmd_t *cmd)
         gameactions[ka_weapon6] && GameModeInfo->id != shareware ? wp_plasma :
         gameactions[ka_weapon7] && GameModeInfo->id != shareware ? wp_bfg :
         gameactions[ka_weapon8] ? wp_chainsaw :
-        gameactions[ka_weapon9] && enable_ssg ? wp_supershotgun :
+        (!demo_compatibility && gameactions[ka_weapon9] &&  // MaxW: Adopted from PRBoom
+        enable_ssg) ? wp_supershotgun :
         wp_nochange;
 
       // killough 3/22/98: For network and demo consistency with the
@@ -912,6 +913,7 @@ struct complevel_s
    { 329, 329 }, // comp_planeshoot
    { 335, 335 }, // comp_special
    { 337, 337 }, // comp_ninja
+   { 340, 340 }, // comp_aircontrol
    { 0,   0   }
 };
 
@@ -976,6 +978,19 @@ void G_DoPlayDemo(void)
    }
 
    demobuffer = demo_p = (byte *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC)); // killough
+
+   // Check for empty demo lumps
+   if(!demo_p)
+   {
+      if(singledemo)
+         I_Error("G_DoPlayDemo: empty demo %s\n", basename);
+      else
+      {
+         gameaction = ga_nothing;
+         D_AdvanceDemo();
+      }
+      return;  // protect against zero-length lumps
+   }
    
    // killough 2/22/98, 2/28/98: autodetect old demos and act accordingly.
    // Old demos turn on demo_compatibility => compatibility; new demos load
@@ -1668,8 +1683,6 @@ static void G_DoWorldDone()
    hub_changelevel = false;
    G_DoLoadLevel();
    gameaction = ga_nothing;
-   // haleyjd 01/07/07: run deferred ACS scripts
-   ACS_RunDeferredScripts();
 }
 
 //
@@ -2536,7 +2549,7 @@ static char    d_mapname[10];
 int G_GetMapForName(const char *name)
 {
    char normName[9];
-   int episode, map;
+   int map;
 
    strncpy(normName, name, 9);
 
@@ -2550,6 +2563,7 @@ int G_GetMapForName(const char *name)
    }
    else
    {
+      int episode;
       if(isExMy(normName))
       {
          episode = normName[1] - '0';
@@ -2828,14 +2842,13 @@ void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
 void G_SetFastParms(int fast_pending)
 {
    static int fast = 0;            // remembers fast state
-   int i;
    MetaSpeedSet *mss;
    
    if(fast != fast_pending)       // only change if necessary
    {
       if((fast = fast_pending))
       {
-         for(i = 0; i < NUMSTATES; i++)
+         for(int i = 0; i < NUMSTATES; i++)
          {
             if(states[i]->flags & STATEF_SKILL5FAST)
             {
@@ -2846,7 +2859,7 @@ void G_SetFastParms(int fast_pending)
             }
          }
 
-         for(i = 0; i < NUMMOBJTYPES; i++)
+         for(int i = 0; i < NUMMOBJTYPES; i++)
          {
             MetaTable *meta = mobjinfo[i]->meta;
             if((mss = meta->getObjectKeyAndTypeEx<MetaSpeedSet>(speedsetKey)))
@@ -2855,13 +2868,13 @@ void G_SetFastParms(int fast_pending)
       }
       else
       {
-         for(i = 0; i < NUMSTATES; i++)
+         for(int i = 0; i < NUMSTATES; i++)
          {
             if(states[i]->flags & STATEF_SKILL5FAST)
                states[i]->tics <<= 1;
          }
 
-         for(i = 0; i < NUMMOBJTYPES; i++)
+         for(int i = 0; i < NUMMOBJTYPES; i++)
          {
             MetaTable *meta = mobjinfo[i]->meta;
             if((mss = meta->getObjectKeyAndTypeEx<MetaSpeedSet>(speedsetKey)))

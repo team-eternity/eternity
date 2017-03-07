@@ -1502,6 +1502,7 @@ void A_CheckPlayerDone(actionargs_t *);
 void A_FadeIn(actionargs_t *);
 void A_FadeOut(actionargs_t *);
 void A_PlaySoundEx(actionargs_t *mo);
+void A_SetSpecial(actionargs_t *);
 void A_Jump(actionargs_t *actor);
 
 // eternity tc ptrs: TODO: remove these?
@@ -1825,6 +1826,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(FadeOut),
    POINTER(JumpIfTargetInLOS),
    POINTER(PlaySoundEx),
+   POINTER(SetSpecial),
    POINTER(SetTranslucent),
    POINTER(Jump),
 

@@ -436,6 +436,8 @@ default_t defaults[] =
    DEFAULT_INT("comp_ninja", &default_comp[comp_ninja], &comp[comp_ninja],
                0, 0, 1, default_t::wad_yes, "Silent spawns at W/SW/S-facing DM spots"),
    
+   DEFAULT_INT("comp_aircontrol", &default_comp[comp_aircontrol], &comp[comp_aircontrol],
+               1, 0, 1, default_t::wad_yes, "Disable air control for jumping"),
 
    // For key bindings, the values stored in the key_* variables       // phares
    // are the internal Doom Codes. The values stored in the default.cfg
@@ -1436,6 +1438,7 @@ void M_SaveDefaultFile(defaultfile_t *df)
               ";variable   value\n\n") == EOF)
    {
       M_defaultFileWriteError(df, tmpfile.constPtr());
+      fclose(f);
       return;
    }
 
@@ -1451,6 +1454,7 @@ void M_SaveDefaultFile(defaultfile_t *df)
       if(!blanks && putc('\n',f) == EOF)
       {
          M_defaultFileWriteError(df, tmpfile.constPtr());
+         fclose(f);
          return;
       }
 
@@ -1469,6 +1473,7 @@ void M_SaveDefaultFile(defaultfile_t *df)
             fprintf(f, " %s %s\n", dp->help, dp->wad_allowed ? "*" : "") == EOF)
          {
             M_defaultFileWriteError(df, tmpfile.constPtr());
+            fclose(f);
             return;         
          }
       }
@@ -1483,6 +1488,7 @@ void M_SaveDefaultFile(defaultfile_t *df)
       if(dp->methods->writeOpt(dp, f))
       {
          M_defaultFileWriteError(df, tmpfile.constPtr());
+         fclose(f);
          return;
       }
    }
@@ -1657,13 +1663,12 @@ void M_LoadDefaultFile(defaultfile_t *df)
 //
 void M_LoadDefaults()
 {
-   int p;
-   
    defaultfile_t *df = &maindefaults;
 
    // check for a custom default file   
    if(!df->fileName)
    {
+      int p;
       if((p = M_CheckParm("-config")) && p < myargc - 1)
          printf(" default file: %s\n", df->fileName = estrdup(myargv[p + 1]));
       else

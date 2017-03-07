@@ -39,6 +39,9 @@ struct spandrawer_t;
 // POV related.
 //
 
+extern fixed_t  viewcos;
+extern fixed_t  viewsin;
+
 extern int      centerx;
 extern int      centery;
 extern fixed_t  centerxfrac;
@@ -218,7 +221,8 @@ struct cb_seg_t
    seg_t *line;
 
    portal_t  *f_portal, *c_portal;
-   pwindow_t *l_window, *f_window, *c_window;
+   pwindow_t *l_window, *f_window, *c_window, *b_window, *t_window;
+   // ioanch: added b_window for bottom edge portal
 
    // SoM: used for portals
    fixed_t  frontfloorz, frontceilz, backfloorz, backceilz;

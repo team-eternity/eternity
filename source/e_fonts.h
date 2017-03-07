@@ -52,6 +52,8 @@ void    E_ProcessFonts(cfg_t *);
 
 #endif
 
+void     E_ReloadFonts();
+
 vfont_t *E_FontForName(const char *);
 vfont_t *E_FontForNum(int);
 int      E_FontNumForName(const char *);

@@ -175,11 +175,11 @@ void SaveArchive::archiveSize(size_t &value)
       savefile->writeUint64(uv);
    else
    {
-#if SIZE_MAX > UINT_MAX
-      if(uv > UINT_MAX)
+      loadfile->readUint64(uv);
+#if SIZE_MAX < UINT64_MAX
+      if(uv > SIZE_MAX)
          I_Error("Cannot load save game: size_t value out of range on this platform\n");
 #endif
-      loadfile->readUint64(uv);
       value = size_t(uv);
    }
 }
@@ -350,7 +350,7 @@ SaveArchive &SaveArchive::operator << (mapthing_t &mt)
    // ioanch 20151218: add extended options
    *this << mt.angle << mt.height << mt.next << mt.options << mt.extOptions
          << mt.recordnum << mt.special << mt.tid << mt.type
-         << mt.x << mt.y;
+         << mt.x << mt.y << mt.healthModifier;
 
    P_ArchiveArray<int>(*this, mt.args, NUMMTARGS);
 
@@ -1509,9 +1509,6 @@ void P_LoadGame(const char *filename)
    //  for 'seamless' travel between levels
    if(hub_changelevel) 
       P_RestorePlayerPosition();
-
-   // haleyjd 01/07/07: run deferred ACS scripts
-   ACS_RunDeferredScripts();
 }
 
 //----------------------------------------------------------------------------

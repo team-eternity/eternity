@@ -337,6 +337,76 @@ void P_SpawnSlope_Line(int linenum, int staticFn)
 }
 
 //
+// Copies a slope plane (ceil/floor) from tagged sector to dest
+//
+void P_copyPlane(int tag, sector_t *dest, bool copyCeil)
+{
+   for(int secnum = -1; (secnum = P_FindSectorFromTag(tag, secnum)) != -1; )
+   {
+      // Deliberately overwrite the plane_align slope
+      const sector_t &srcsec = sectors[secnum];
+      if(copyCeil && srcsec.c_slope)
+      {
+         dest->c_slope = P_CopySlope(srcsec.c_slope);
+         return;
+      }
+
+      if(!copyCeil && srcsec.f_slope)
+      {
+         dest->f_slope = P_CopySlope(srcsec.f_slope);
+         return;
+      }
+   }
+}
+
+//
+// Implements Plane_Copy(frontfloortag, frontceiltag, backfloortag, backceiltag, shareslope)
+// shareslope copies w/ flags:
+// 1: Front floor copied to back,   2: Back floor copied to front
+// 4: Front ceil copied to back,    8: Back ceil copied to front
+//
+// * ExtraData: 493
+// * Hexen:     118
+//
+void P_copySectorSlopeParam(line_t *line)
+{
+   // If there's no backsector, only consider args[0] and args[1]
+   for(int i = 0; i <= (line->backsector ? 3 : 1); i++)
+   {
+      if(line->args[i])
+      {
+         // If i is 2 or 3, backsector is dest, else frontsec is. If i is odd then copy to ceil
+         P_copyPlane(line->args[i], i & 2 ? line->backsector : line->frontsector, i & 1);
+      }
+   }
+
+   if(line->backsector)
+   {
+      if((line->args[4] & 3) == 1)
+         line->backsector->f_slope = P_CopySlope(line->frontsector->f_slope);
+      else if((line->args[4] & 3) == 2)
+         line->frontsector->f_slope = P_CopySlope(line->backsector->f_slope);
+      else if((line->args[4] & 3) == 3)
+      {
+         C_Printf(FC_ERROR "P_CopySectorSlopeParam: Plane_Copy[4] flags 1 and 2 are mutually"
+            " exclusive.\n");
+      }
+
+      if((line->args[4] & 12) == 4)
+         line->backsector->c_slope = P_CopySlope(line->frontsector->c_slope);
+      else if((line->args[4] & 12) == 8)
+         line->frontsector->c_slope = P_CopySlope(line->backsector->c_slope);
+      else if((line->args[4] & 12) == 12)
+      {
+         C_Printf(FC_ERROR "P_CopySectorSlopeParam: Plane_Copy[4] flags 4 and 8 are mutually"
+            " exclusive.\n");
+      }
+   }
+
+   line->special = 0;
+}
+
+//
 // P_CopySectorSlope
 //
 // Searches through tagged sectors and copies
@@ -359,6 +429,9 @@ void P_CopySectorSlope(line_t *line, int staticFn)
    case EV_STATIC_SLOPE_FRONTFLOORCEILING_TAG:
       copyFloor = copyCeiling = true;
       break;
+   case EV_STATIC_SLOPE_PARAM_TAG:
+      P_copySectorSlopeParam(line);
+      return;
    default:
       I_Error("P_CopySectorSlope: unknown static init %d\n", staticFn);
    }
@@ -366,7 +439,7 @@ void P_CopySectorSlope(line_t *line, int staticFn)
    // Check for copy linedefs
    for(i = -1; (i = P_FindSectorFromLineArg0(line, i)) >= 0;)
    {
-      sector_t *srcsec = &sectors[i];
+      const sector_t *srcsec = &sectors[i];
 
       if(copyFloor && !fsec->f_slope && srcsec->f_slope)
          fsec->f_slope = P_CopySlope(srcsec->f_slope);

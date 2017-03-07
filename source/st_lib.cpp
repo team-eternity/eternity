@@ -107,9 +107,6 @@ static void STlib_drawNum(st_number_t *n, byte *outrng, int alpha)
       num = -num;
    }
 
-   // clear the area
-   x = n->x - numdigits*w;
-
    // if non-number, do not draw it
    if(num == 1994)
       return;

@@ -693,6 +693,7 @@ int EV_DoChange(const line_t *line, int tag, change_e changetype, bool isParam)
       if(!line || !(sec = line->backsector))
          return rtn;
       manual = true;
+      secnum = static_cast<int>(sec - sectors);
       goto manualChange;
    }
 

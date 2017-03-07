@@ -237,12 +237,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\acs_acs0.cpp">
-      <Filter>Source Files\ACS_</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\acs_acse.cpp">
-      <Filter>Source Files\ACS_</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\acs_func.cpp">
       <Filter>Source Files\ACS_</Filter>
     </ClCompile>
@@ -954,12 +948,24 @@
     <ClCompile Include="..\source\m_utils.cpp">
       <Filter>Source Files\M_\M_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\cam_aim.cpp">
+      <Filter>Source Files\Cam</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\cam_common.cpp">
+      <Filter>Source Files\Cam</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\cam_shoot.cpp">
+      <Filter>Source Files\Cam</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\cam_use.cpp">
+      <Filter>Source Files\Cam</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\p_portalcross.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
-      <Filter>Source Files\ACS_</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\acs_op.h">
       <Filter>Source Files\ACS_</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\am_map.h">
@@ -1397,9 +1403,6 @@
     <ClInclude Include="..\Source\sdl\mmus2mid.h">
       <Filter>Source Files\SDL\SDL Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\midiproc\midiproc.h">
-      <Filter>Source Files\SDL\midiproc</Filter>
-    </ClInclude>
     <ClInclude Include="..\Source\st_lib.h">
       <Filter>Source Files\ST_</Filter>
     </ClInclude>
@@ -1705,6 +1708,12 @@
     </ClInclude>
     <ClInclude Include="..\source\m_utils.h">
       <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\cam_common.h">
+      <Filter>Source Files\Cam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\p_portalcross.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

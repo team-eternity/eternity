@@ -114,6 +114,9 @@ extern int demo_insurance, default_demo_insurance;      // killough 4/5/98
 // -------------------------------------------
 // killough 10/98: compatibility vector
 
+// IMPORTANT: when searching for usage in the code, do NOT include the comp_
+// prefix. Just search for e.g. "telefrag" or "dropoff".
+
 enum {
   comp_telefrag,
   comp_dropoff,
@@ -143,6 +146,8 @@ enum {
   comp_planeshoot,  //         09/22/07: ability to shoot floor/ceiling
   comp_special,     //         08/29/09: special failure behavior
   comp_ninja,       //         04/18/10: ninja spawn in G_CheckSpot
+  comp_aircontrol,  // Disable air control
+  COMP_NUM_USED,    // counts the used comps. MUST BE LAST ONE + 1.
   COMP_TOTAL=32  // Some extra room for additional variables
 };
 

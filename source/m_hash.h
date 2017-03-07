@@ -61,7 +61,7 @@ protected:
 
 public:
    HashData();
-   HashData(hashtype_e pType);
+   explicit HashData(hashtype_e pType);
    HashData(hashtype_e pType, const uint8_t *data, uint32_t size, 
             bool doWrapUp = true);
 

@@ -382,53 +382,64 @@ enum
 
 static const char *cat_strs[NUMCATS] =
 {
-   FC_HI "Programming:",
-   FC_HI "Based On:",
-   FC_HI "Graphics:",
-   FC_HI "Special Thanks:",
+   FC_ABSCENTER FC_HI "Programming",
+   FC_ABSCENTER FC_HI "Based On",
+   FC_ABSCENTER FC_HI "Graphics",
+   FC_ABSCENTER FC_HI "Special Thanks",
 };
 
-static const char *val_strs[NUMCATS] =
+struct val_str_t
 {
-   "James Haley\nStephen McGranahan\nDavid Hill\nIoan Chera\n",
-   
-   FC_HI "SMMU" FC_NORMAL " by Simon Howard\n",
+   const char *l; // String in the left column
+   const char *m; // String in the middle (if no string is on either side)
+   const char *r; // String in the right column
 
-   "Michael Mancuso\nSven Ruthner\n",
-   "Joe Kennedy\nJulian Aubourg\nJoel Murdoch\nAnders Astrand\nSargeBaldy\n",
+   bool isNull() const { return l == nullptr && m == nullptr && r == nullptr; }
+};
+
+static const val_str_t val_programmers[] =
+{
+   { "James Haley", nullptr, "David Hill" },
+   { "Ioan Chera", nullptr, "Max Waine" },
+   { nullptr, FC_ABSCENTER "Stephen McGranahan\n", nullptr },
+   { nullptr, nullptr, nullptr }
+};
+
+static const val_str_t val_basedon[] =
+{
+   {nullptr, FC_ABSCENTER FC_HI "SMMU" FC_NORMAL " by Simon Howard", nullptr},
+   { nullptr, nullptr, nullptr }
+};
+
+static const val_str_t val_graphics[] = {
+   { "Sarah Mancuso", nullptr, "Sven Ruthner" },
+   { nullptr, nullptr, nullptr }
+};
+
+static const val_str_t val_thanks[] =
+{
+   { "Joe Kennedy", nullptr, "Julian Aubourg" },
+   { "Joel Murdoch", nullptr, "Anders Astrand" },
+   { nullptr, FC_ABSCENTER "SargeBaldy", nullptr },
+   { nullptr, nullptr, nullptr }
+};
+
+static const val_str_t *val_strs[NUMCATS] =
+{
+   val_programmers,
+   val_basedon,
+   val_graphics,
+   val_thanks
 };
 
 void MN_DrawCredits()
 {
-   static int cat_width = -1, val_width = -1, line_x;
+   static int line_x = -1;
    int i, y;
    const char *str;
 
-   if(cat_width == -1)
-   {
-      // determine widest category string
-      int w;
-
-      for(i = 0; i < NUMCATS; ++i)
-      {
-         w = V_FontStringWidth(menu_font_normal, cat_strs[i]);
-
-         if(w > cat_width)
-            cat_width = w;
-      }
-
-      // determine widest value string
-      for(i = 0; i < NUMCATS; ++i)
-      {
-         w = V_FontStringWidth(menu_font_normal, val_strs[i]);
-
-         if(w > val_width)
-            val_width = w;
-      }
-
-      // determine line position
-      line_x = (SCREENWIDTH - (cat_width + val_width + 16)) >> 1;
-   }
+   if(line_x == -1)
+      line_x = SCREENWIDTH >> 1;
 
    inhelpscreens = true;
 
@@ -445,19 +456,39 @@ void MN_DrawCredits()
    // draw info categories
    for(i = 0; i < NUMCATS; ++i)
    {
-      int catStrWidth = V_FontStringWidth(menu_font_normal, cat_strs[i]);
+      V_FontWriteText(menu_font_normal, cat_strs[i], 0, y, &subscreen43);
 
-      V_FontWriteText(menu_font_normal, cat_strs[i], 
-                      line_x + (cat_width - catStrWidth), y, &subscreen43);
+      y += V_FontStringHeight(menu_font_normal, cat_strs[i]);
 
-      V_FontWriteText(menu_font_normal, val_strs[i], line_x + cat_width + 16, y,
-                      &subscreen43);
+      // Iterate through the val_str_t's for the current category.
+      // TODO: Figure out if there's a way to process all the val_str_t's at once for a single
+      // category. ATM it iterates through so it can correctly align the left strings.
+      for(int j = 0; !val_strs[i][j].isNull(); j++)
+      {
+         // Write left if need be
+         if(val_strs[i][j].l != nullptr)
+         {
+            int valStrLWidth = V_FontStringWidth(menu_font_normal, val_strs[i][j].l);
+            V_FontWriteText(menu_font_normal, val_strs[i][j].l, line_x - valStrLWidth - 8,
+                            y, &subscreen43);
+         }
 
-      y += V_FontStringHeight(menu_font_normal, val_strs[i]);
+         // Write right if need be
+         if(val_strs[i][j].r != nullptr)
+            V_FontWriteText(menu_font_normal, val_strs[i][j].r, line_x + 8, y, &subscreen43);
+
+         // Write middle if need be
+         if(val_strs[i][j].m != nullptr)
+            V_FontWriteText(menu_font_normal, val_strs[i][j].m, 0,  y, &subscreen43);
+
+         y += V_FontStringHeight(menu_font_normal, "");
+       }
+
+      y += V_FontStringHeight(menu_font_normal, "");
    }
 
    V_FontWriteText(menu_font_normal, 
-                   FC_ABSCENTER "Copyright 2016 Team Eternity et al.", 
+                   FC_ABSCENTER "Copyright 2017 Team Eternity et al.", 
                    0, y, &subscreen43);
 }
 

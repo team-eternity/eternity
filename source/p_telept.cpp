@@ -34,7 +34,7 @@
 #include "p_chase.h"
 #include "p_maputl.h"
 #include "p_map.h"
-#include "p_portal.h"
+#include "p_portalcross.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "p_user.h"
@@ -239,7 +239,7 @@ int EV_Teleport(int tag, int side, Mobj *thing)
    // don't teleport missiles
    // Don't teleport if hit back of line,
    //  so you can get out of teleporter.
-   if(side || thing->flags & MF_MISSILE)
+   if(!thing || side || thing->flags & MF_MISSILE)
       return 0;
 
    // killough 1/31/98: improve performance by using
@@ -290,7 +290,7 @@ int EV_ParamTeleport(int tid, int tag, int side, Mobj *thing)
    // don't teleport missiles
    // Don't teleport if hit back of line,
    //  so you can get out of teleporter.
-   if(side || thing->flags & MF_MISSILE)
+   if(!thing || side || thing->flags & MF_MISSILE)
       return 0;
 
    if(tid)
@@ -321,7 +321,7 @@ int EV_SilentTeleport(const line_t *line, int tag, int side, Mobj *thing,
    // Don't teleport if hit back of line,
    // so you can get out of teleporter.
    
-   if(side || thing->flags & MF_MISSILE)
+   if(!thing || side || thing->flags & MF_MISSILE)
       return 0;
 
    for(i = -1; (i = P_FindSectorFromTag(tag, i)) >= 0;)
@@ -347,7 +347,7 @@ int EV_SilentTeleport(const line_t *line, int tag, int side, Mobj *thing,
 int EV_ParamSilentTeleport(int tid, const line_t *line, int tag, int side,
                            Mobj *thing, teleparms_t parms)
 {
-   if(side || thing->flags & MF_MISSILE)
+   if(!thing || side || thing->flags & MF_MISSILE)
       return 0;
 
    if(tid)

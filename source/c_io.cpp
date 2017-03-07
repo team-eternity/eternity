@@ -103,7 +103,7 @@ char *c_fontname;
 // ticker, responder, drawer, init etc.
 //
 
-static void C_initBackdrop()
+void C_InitBackdrop()
 {
    const char *lumpname;
    int lumpnum;
@@ -466,7 +466,7 @@ void C_Drawer(void)
    // SoM: Check width too.
    if(oldscreenheight != video.height || oldscreenwidth != video.width)
    {
-      C_initBackdrop();       // re-init to the new screen size
+      C_InitBackdrop();       // re-init to the new screen size
       oldscreenheight = video.height;
       oldscreenwidth = video.width;
    }
@@ -517,12 +517,12 @@ void C_Drawer(void)
    if(Console.current_height > c_font->absh && Console.showprompt && 
       message_pos == message_last)
    {
-      const char *a_prompt;
       char tempstr[LINELENGTH];
       
       // if we are scrolled back, dont draw the input line
       if(message_pos == message_last)
       {
+         const char *a_prompt;
          if(gamestate == GS_LEVEL && !strcasecmp(players[0].name, "quasar"))
             a_prompt = altprompt;
          else
