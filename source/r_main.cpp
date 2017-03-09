@@ -196,6 +196,7 @@ void R_SetSpanEngine(void)
 
 // ioanch 20160423: make variables volatile in OSX, to prevent demo desyncing.
 // FIXME: also check if Linux/GCC are affected by this.
+// MORE INFO: competn/doom/fp2-3655.lmp E2M3 fails here
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX && defined(__clang__)
 int R_PointOnSide(volatile fixed_t x, volatile fixed_t y, node_t *node)
 #else
