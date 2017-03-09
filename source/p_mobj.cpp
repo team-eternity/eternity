@@ -547,8 +547,11 @@ void P_XYMovement(Mobj* mo)
                mo->momx = mo->momy = 0;
             }
          }
-         else if(mo->flags3 & MF3_SLIDE) // haleyjd: SLIDE flag
+         else if(demo_version <= 203 ? !!player : !!(mo->flags3 & MF3_SLIDE)) // haleyjd: SLIDE flag
          {
+            // Checking against "player" is still needed for MBF and lower demo
+            // compatibility. Relevant for respawned players' old corpses.
+            // Safe to use, since old demos don't have MF3_SLIDE.
             P_SlideMove(mo); // try to slide along it
          }
          else if(mo->flags & MF_MISSILE)
