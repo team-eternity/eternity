@@ -1054,7 +1054,7 @@ void Bot::pickBestWeapon(const Target &target)
       if(!pl->weaponowned[i] || pl->readyweapon == i ||
          !E_GetItemOwnedAmount(pl, weaponinfo[i].ammo) ||
          g_botweapons[i].flags &
-         (BWI_MELEE_ONLY | BWI_DANGEROUS | BWI_ULTIMATE))
+         (BWI_DANGEROUS | BWI_ULTIMATE))
       {
          continue;
       }
