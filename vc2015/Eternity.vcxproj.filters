@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
@@ -984,9 +984,6 @@
     <ClCompile Include="..\source\autodoom\b_path.cpp">
       <Filter>Source Files\autodoom</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\autodoom\b_ptrmap.cpp">
-      <Filter>Source Files\autodoom</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\autodoom\b_statistics.cpp">
       <Filter>Source Files\autodoom</Filter>
     </ClCompile>
@@ -1031,7 +1028,7 @@
     </ClCompile>
     <ClCompile Include="..\source\autodoom\glbsp\wad.c">
       <Filter>Source Files\autodoom\glbsp</Filter>
-	</ClCompile>
+    </ClCompile>
     <ClCompile Include="..\source\cam_aim.cpp">
       <Filter>Source Files\Cam</Filter>
     </ClCompile>
@@ -1823,9 +1820,6 @@
     <ClInclude Include="..\source\autodoom\b_path.h">
       <Filter>Source Files\autodoom</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\autodoom\b_ptrmap.h">
-      <Filter>Source Files\autodoom</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\autodoom\b_statistics.h">
       <Filter>Source Files\autodoom</Filter>
     </ClInclude>
@@ -1873,7 +1867,7 @@
     </ClInclude>
     <ClInclude Include="..\source\autodoom\glbsp\wad.h">
       <Filter>Source Files\autodoom\glbsp</Filter>
-	</ClInclude>
+    </ClInclude>
     <ClInclude Include="..\source\cam_common.h">
       <Filter>Source Files\Cam</Filter>
     </ClInclude>
