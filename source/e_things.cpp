@@ -777,8 +777,6 @@ static void E_ReallocThings(int numnewthings)
 
       // reallocate mobjinfo[]
       mobjinfo = erealloc(mobjinfo_t **, mobjinfo, numthingsalloc * sizeof(mobjinfo_t *));
-      // IOANCH: reallocate associated bot learn info
-      B_UpdateMobjInfoSet(numthingsalloc);
 
       // set the new mobjinfo pointers to null
       for(i = NUMMOBJTYPES; i < numthingsalloc; i++)
@@ -817,6 +815,8 @@ void E_CollectThings(cfg_t *cfg)
       curnewthing = firstnewthing = NUMMOBJTYPES;
 
       E_ReallocThings((int)numthingtypes);
+      // IOANCH: reallocate associated bot learn info
+      B_UpdateMobjInfoSet(NUMMOBJTYPES);
 
       // set pointers in mobjinfo[] to the proper structures;
       // also set self-referential index member, and allocate a

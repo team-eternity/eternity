@@ -48,24 +48,39 @@ enum Trait
    Trait_hostile = 1,
    Trait_hitscan = 2,
    Trait_explosiveDeath = 4,
+   Trait_summoner = 8,
 };
 
 // Set of traits for each mobjinfo index. Limited to 32 per entry.
 static uint32_t* g_traitSet;
 
+//
+// Clears cache for things when reloading wad
+//
 void B_UpdateMobjInfoSet(int numthingsalloc)
 {
    g_traitSet = erealloc(decltype(g_traitSet), g_traitSet, numthingsalloc * sizeof(*g_traitSet));
    memset(g_traitSet, 0, numthingsalloc * sizeof(*g_traitSet));
 }
 
+typedef std::unordered_set<statenum_t> StateSet;
+typedef std::queue<statenum_t> StateQue;
+typedef void(*ActionFunction)(actionargs_t*);
+
+static std::unordered_map<long, StateSet> preAttackStates;
+
+//
+// Clears cache for states when reloading wad
+//
+void B_UpdateStateInfoSet(int numstates)
+{
+   preAttackStates.clear();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // State walking
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef std::unordered_set<statenum_t> StateSet;
-typedef std::queue<statenum_t> StateQue;
-typedef void(*ActionFunction)(actionargs_t*);
 
 void A_PosAttack(actionargs_t *);
 void A_SPosAttack(actionargs_t *);
@@ -780,8 +795,7 @@ int B_MobjDeathExplosion(const Mobj& mo)
 //
 static const StateSet *B_getPreAttackStates(const Mobj& mo)
 {
-    // Cache the results here
-    static std::unordered_map<long, StateSet> preAttackStates;
+    // Cache the results
 
     auto index = (long)(mo.info - mobjinfo[0]);
     auto found = preAttackStates.find(index);
@@ -923,6 +937,29 @@ void B_GetMobjSectorTargetActions(const Mobj& mo, SectorAffectingStates &table)
    if (mi.spawnstate == NullStateNum)
       return;  // has null start frame, invalid
    B_stateEncounters(mi.spawnstate, &mo, nullptr, B_stateSetSectorState, false, &table);
+}
+
+//
+// True if monster calls PainAttack or ThingSummon or is an archvile
+//
+bool B_MobjIsSummoner(const Mobj &mo)
+{
+   // Cache the results here
+   if(g_traitSet[mo.type] & Trait_summoner)
+      return true;
+
+   const mobjinfo_t &mi = *mo.info;
+   if(mi.spawnstate ==  NullStateNum)
+      return false;
+   bool result = B_stateEncounters(mi.spawnstate, &mo, nullptr, [](statenum_t sn, const mobjinfo_t &mi, void *miscData) -> bool {
+
+      return states[sn]->action == A_PainAttack ||
+      states[sn]->action == A_ThingSummon ||
+      states[sn]->action == A_VileChase;
+   });
+   if(result)
+      g_traitSet[mo.type] |= Trait_summoner;
+   return result;
 }
 
 //==============================================================================

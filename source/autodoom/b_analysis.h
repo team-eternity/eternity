@@ -60,6 +60,7 @@ struct SectorAffectingStates
 };
 
 void B_UpdateMobjInfoSet(int numthingsalloc);
+void B_UpdateStateInfoSet(int numstates);
 
 bool B_IsMobjSolidDecor(const Mobj &mo);
 bool B_MobjHasMissileAttack(const Mobj& mo);
@@ -68,6 +69,7 @@ int B_MobjDeathExplosion(const Mobj& mo);
 bool B_MonsterIsInPreAttack(const Mobj& mo);
 bool B_MobjUsesCodepointer(const Mobj& mo, void(*action)(actionargs_t *args));
 void B_GetMobjSectorTargetActions(const Mobj& mo, SectorAffectingStates &table);
+bool B_MobjIsSummoner(const Mobj &mo);
 
 //
 // WEAPON ANALYSIS

@@ -23,6 +23,7 @@
 //
 
 #include "z_zone.h"
+#include "autodoom/b_analysis.h"
 #include "i_system.h"
 #include "p_partcl.h"
 #include "d_io.h"
@@ -391,6 +392,7 @@ void E_CollectStates(cfg_t *cfg)
       curnewstate = firstnewstate = NUMSTATES;
 
       E_ReallocStates((int)numnew);
+      B_UpdateStateInfoSet(NUMSTATES);
       
       // set pointers in states[] to the proper structures
       for(i = firstnewstate; i < (unsigned int)NUMSTATES; ++i)

@@ -970,6 +970,9 @@ const Bot::Target *Bot::pickBestTarget(const PODCollection<Target>& targets, Com
       const Target* currentTargetInSight = nullptr;
       double currentTargetRating;
 
+      const Target *summonerThreat = nullptr;
+      double summonerThreatRating = -DBL_MAX;
+
       for (const Target& target : targets)
       {
          if (target.isLine)
@@ -987,6 +990,14 @@ const Bot::Target *Bot::pickBestTarget(const PODCollection<Target>& targets, Com
 
          threat = B_GetMonsterThreatLevel(target.mobj->info);
          totalThreat += threat;
+
+         // keep track of summoners and pick the worst one
+         if(B_MobjIsSummoner(*target.mobj) && threat > summonerThreatRating)
+         {
+            summonerThreat = &target;
+            summonerThreatRating = threat;
+         }
+
          if (threat > highestThreatRating)
          {
             highestThreat = &target;
@@ -1002,6 +1013,12 @@ const Bot::Target *Bot::pickBestTarget(const PODCollection<Target>& targets, Com
          // set combat info
          if (!cinfo.hasShooters && B_MobjHasMissileAttack(*target.mobj) && !target.mobj->player)
             cinfo.hasShooters = true;
+      }
+
+      if(summonerThreat)   // always prioritize summoners
+      {
+         highestThreat = summonerThreat;
+         highestThreatRating = summonerThreatRating;
       }
 
       if(shouldChat(URGENT_CHAT_INTERVAL_SEC, m_lastHelpCry) &&
