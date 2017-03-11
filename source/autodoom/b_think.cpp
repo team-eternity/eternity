@@ -64,7 +64,10 @@ enum
    URGENT_CHAT_INTERVAL_SEC = 20,
    IDLE_CHAT_INTERVAL_SEC = 300, // Five minutes
    DUNNO_CONCESSION_SEC = 3,
-   DEATH_REVIVE_INTERVAL = 128
+   DEATH_REVIVE_INTERVAL = 128,
+
+   WEAPONCHANGE_HYST_NUM = 3,
+   WEAPONCHANGE_HYST_DEN = 2,
 };
 
 enum
@@ -1058,7 +1061,7 @@ void Bot::pickBestWeapon(const Target &target)
       newDmgRate = g_botweapons[i].calcHitscanDamage(dist, t.radius,
                                                      t.height,
                                                      !!pl->powers[pw_strength], false) / (double)g_botweapons[i].refireRate;
-      if(newDmgRate > maxDmgRate)
+      if(newDmgRate > WEAPONCHANGE_HYST_NUM * maxDmgRate / WEAPONCHANGE_HYST_DEN)
       {
          maxDmgRate = newDmgRate;
          maxI = i;
@@ -1066,7 +1069,7 @@ void Bot::pickBestWeapon(const Target &target)
       if(g_botweapons[i].flags & BWI_TAP_SNIPE)
       {
          newDmgRate = g_botweapons[i].calcHitscanDamage(dist, t.radius, t.height, !!pl->powers[pw_strength], true) / (double)g_botweapons[i].oneShotRate;
-         if(newDmgRate > maxDmgRate)
+         if(newDmgRate > WEAPONCHANGE_HYST_NUM * maxDmgRate / WEAPONCHANGE_HYST_DEN)
          {
             maxDmgRate = newDmgRate;
             maxI = i;
