@@ -661,8 +661,9 @@ void P_PlayerThink(player_t *player)
       P_MovePlayer(player);
 
       // Handle actions   -- joek 12/22/07
-      
-      if(cmd->actions & AC_JUMP && !LevelInfo.disableJump)
+      // ioanch: not on demo_version lower than some amount. Was happening
+      // accidentally in -vanilla.
+      if(cmd->actions & AC_JUMP && demo_version >= 335 && !LevelInfo.disableJump)
       {
          if((player->mo->z == player->mo->floorz || 
              (player->mo->intflags & MIF_ONMOBJ)) && !player->jumptime)
