@@ -132,6 +132,14 @@ void Bot::capCommands()
    
    if(cmd->sidemove > fm)      cmd->sidemove = fm;
    else if(cmd->sidemove < -fm)      cmd->sidemove = -fm;
+
+   // Fix the SSG choice in vanilla mode
+   if(demo_compatibility && (cmd->buttons & BT_WEAPONMASK) >> BT_WEAPONSHIFT ==
+      wp_supershotgun)
+   {
+      cmd->buttons &= ~BT_WEAPONMASK;
+      cmd->buttons |= wp_shotgun << BT_WEAPONSHIFT;
+   }
 }
 
 //
