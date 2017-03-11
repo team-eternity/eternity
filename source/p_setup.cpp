@@ -43,6 +43,7 @@
 #include "d_mod.h"
 #include "doomstat.h"
 #include "e_exdata.h" // haleyjd: ExtraData!
+#include "e_player.h"
 #include "e_reverbs.h"
 #include "e_ttypes.h"
 #include "e_udmf.h"  // IOANCH 20151206: UDMF
@@ -3563,6 +3564,14 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    ACS_LoadLevelScript(dir, acslumpnum);
 
    // IOANCH: finish the digest
+   // Add player class width and height
+   {
+      int32_t temp;
+      temp = SwapLong(mobjinfo[players[consoleplayer].pclass->type]->radius);
+      g_levelHash.addData(reinterpret_cast<const uint8_t *>(&temp), 4);
+      temp = SwapLong(mobjinfo[players[consoleplayer].pclass->type]->height);
+      g_levelHash.addData(reinterpret_cast<const uint8_t *>(&temp), 4);
+   }
    g_levelHash.wrapUp();
    
    // IOANCH: create the bot map

@@ -42,6 +42,7 @@
 #include "../c_io.h"
 #include "../d_files.h"
 #include "../doomstat.h"
+#include "../e_player.h"
 #include "../ev_specials.h"
 #include "../m_bbox.h"
 #include "../m_buffer.h"
@@ -1226,7 +1227,7 @@ void BotMap::Build()
            botMap = new (PU_LEVEL, nullptr) BotMap;
        B_MEASURE_CLOCK(newBotMap)
 
-       fixed_t radius = 16 * FRACUNIT;
+       fixed_t radius = mobjinfo[players[consoleplayer].pclass->type]->radius;
        botMap->radius = radius;
 
        // Create blockmap
