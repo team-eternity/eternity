@@ -29,7 +29,17 @@
 #ifndef A_DOOM_H__
 #define A_DOOM_H__
 
+#define NUM_BOSS_SPECS 7
+
 struct actionargs_t;
+
+typedef struct boss_spec_s
+{
+   unsigned int thing_flag;
+   unsigned int level_flag;
+} boss_spec_t;
+
+extern boss_spec_t boss_specs[NUM_BOSS_SPECS];
 
 void A_Fire(actionargs_t *actor);
 

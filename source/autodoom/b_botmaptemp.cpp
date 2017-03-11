@@ -31,8 +31,10 @@
 #include "b_botmap.h"
 #include "b_botmaptemp.h"
 #include "b_util.h"
+#include "../a_doom.h"
 #include "../ev_specials.h"
 #include "../m_buffer.h"
+#include "../p_info.h"
 #include "../p_maputl.h"
 #include "../p_setup.h"
 #include "../p_spec.h"
@@ -1096,6 +1098,23 @@ static void FindDynamicSectors(bool* dynamicSectors)
    for(i = 0; i < ::numsectors; ++i)
    {
       sector = ::sectors + i;
+      if(sector->tag == 666)  // any level can have KeenDie
+      {
+         dynamicSectors[i] = true;
+         continue;
+      }
+
+      if(sector->tag == 667)
+         for(int j = 0; j < NUM_BOSS_SPECS; ++j)
+         {
+            if(LevelInfo.bossSpecs & boss_specs[j].level_flag &&
+               boss_specs[j].level_flag == BSPEC_MAP07_2)
+            {
+               dynamicSectors[i] = true;
+               goto nextSector;
+            }
+         }
+
       if(!sector->special)
          continue;
       
@@ -1103,6 +1122,8 @@ static void FindDynamicSectors(bool* dynamicSectors)
       
       if(vss == VSS_DoorCloseIn30 || vss == VSS_DoorRaiseIn5Mins)
          dynamicSectors[i] = true;
+   nextSector:
+      ;
    }
 }
 

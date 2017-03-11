@@ -30,6 +30,7 @@
 
 #include "a_args.h"
 #include "a_common.h"
+#include "a_doom.h"
 #include "d_gi.h"
 #include "d_mod.h"
 #include "doomstat.h"
@@ -1168,15 +1169,7 @@ void A_PainDie(actionargs_t *actionargs)
 // Special Death Effects
 //
 
-typedef struct boss_spec_s
-{
-   unsigned int thing_flag;
-   unsigned int level_flag;
-} boss_spec_t;
-
-#define NUM_BOSS_SPECS 7
-
-static boss_spec_t boss_specs[NUM_BOSS_SPECS] =
+boss_spec_t boss_specs[NUM_BOSS_SPECS] =
 {
    { MF2_MAP07BOSS1, BSPEC_MAP07_1 },
    { MF2_MAP07BOSS2, BSPEC_MAP07_2 },
