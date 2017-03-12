@@ -30,6 +30,7 @@
 #include "a_small.h"
 #include "acs_intr.h"
 #include "autodoom/b_analysis.h"
+#include "autodoom/b_ape.h"
 #include "autodoom/b_botmap.h"   // IOANCH
 #include "autodoom/b_lineeffect.h"
 #include "autodoom/b_statistics.h"
@@ -3580,7 +3581,10 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       BotMap::Build();
       for (int i = 0; i < MAXPLAYERS; ++i)
          if(playeringame[i])
+         {
             bots[i].mapInit();
+            gPlayerObservers[i].mapInit();
+         }
    }
 }
 

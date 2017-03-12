@@ -740,6 +740,11 @@ enum
    MIF_CLEARRAISED = (MIF_DIEDFALLING|MIF_SCREAMED|MIF_CRASHED|MIF_WIMPYDEATH),
 };
 
+inline static bool P_MobjOnGround(const Mobj &mo)
+{
+   return mo.z <= mo.floorz || mo.intflags & MIF_ONMOBJ;
+}
+
 #endif
 
 //----------------------------------------------------------------------------

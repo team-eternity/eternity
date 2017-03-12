@@ -36,6 +36,7 @@
 #include "a_small.h"
 #include "acs_intr.h"
 #include "am_map.h"
+#include "autodoom/b_ape.h"
 #include "autodoom/b_think.h"
 #include "c_io.h"
 #include "c_net.h"
@@ -2079,6 +2080,8 @@ void G_Ticker()
                // if not -netbot (1), then only move console player
                bots[i].doCommand();
             }
+            if(!paused)
+               gPlayerObservers[i].makeObservations();
             
             if(demoplayback)
                G_ReadDemoTiccmd(cmd);

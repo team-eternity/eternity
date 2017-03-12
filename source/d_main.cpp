@@ -36,6 +36,7 @@
 
 #include "acs_intr.h"
 #include "am_map.h"
+#include "autodoom/b_ape.h"
 #include "autodoom/b_statistics.h"
 #include "autodoom/b_think.h" // IOANCH
 #include "c_io.h"
@@ -1894,6 +1895,7 @@ static void D_DoomInit()
 
    // IOANCH 20130814: init static bot stuff
    Bot::InitBots();
+   PlayerObserver::initObservers();
 
    startlevel = estrdup(G_GetNameForMap(startepisode, startmap));
 
