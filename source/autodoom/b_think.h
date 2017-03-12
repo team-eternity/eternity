@@ -50,7 +50,6 @@ class Bot : public ZoneObject
    
    player_t *pl; // the controlled player. He'll likely receive the tic
                      // commands
-   bool active;      // whether active (Can be turned off)
    ticcmd_t *cmd;    // my commands to output
    const BSubsec *ss;  // subsector reference
    const BSubsec* m_lastPathSS;  // last subsector when on path
@@ -162,6 +161,7 @@ class Bot : public ZoneObject
    
 public:
    
+   bool active;      // whether active (Can be turned off)
    int justPunched;
    
    //
@@ -169,7 +169,6 @@ public:
    //
     Bot() : ZoneObject(),
    pl(nullptr),
-   active(true),
    cmd(nullptr),
    ss(nullptr),
    m_lastPathSS(nullptr),
@@ -190,6 +189,7 @@ public:
    m_lastDunnoMessage(0),
    prevCtr(0),
    m_searchstage(0),
+   active(true),
    justPunched(0)
    {
       random.initialize((unsigned)time(nullptr));

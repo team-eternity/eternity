@@ -1714,6 +1714,7 @@ static void D_DoomInit()
    {
       if(netbot)
       {
+         bots[0].active = false;
          playeringame[1] = true;
          if(netbot >= 2)
             playeringame[2] = true;

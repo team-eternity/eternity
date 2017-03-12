@@ -2073,8 +2073,7 @@ void G_Ticker()
             memcpy(cmd, &netcmds[i][buf], sizeof *cmd);
             
             // IOANCH: add bot commands if game is running
-            if(botMap && !demoplayback && !paused &&
-               (!netbot ^ i != consoleplayer))
+            if(botMap && !demoplayback && !paused)
             {
                // if -netbot (0), then move all other players.
                // if not -netbot (1), then only move console player
@@ -3029,6 +3028,7 @@ void G_InitNew(skill_t skill, char *name)
 
    if(netbot)
    {
+      bots[0].active = false;
       playeringame[1] = true;
       if(netbot >= 2)
          playeringame[2] = true;
