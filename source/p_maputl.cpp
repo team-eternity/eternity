@@ -261,6 +261,11 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
    }
    clip.openfrontsector = linedef->frontsector;
    clip.openbacksector  = linedef->backsector;
+   sector_t *beyond = linedef->intflags & MLI_POLYPORTALLINE &&
+      linedef->beyondportalline ?
+      linedef->beyondportalline->frontsector : nullptr;
+   if(beyond)
+      clip.openbacksector = beyond;
 
    // SoM: ok, new plan. The only way a 2s line should give a lowered floor or hightened ceiling
    // z is if both sides of that line have the same portal.
