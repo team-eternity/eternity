@@ -38,8 +38,10 @@ struct player_t;
 
 struct JumpObservation
 {
+   const BotMap::Line *takeoff;
    const BSubsec *destss;
-   v3fixed_t startpos;
+   v2fixed_t start1;
+   v2fixed_t start2;
    v3fixed_t vel;
    bool success;
 };

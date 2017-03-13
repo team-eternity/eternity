@@ -78,7 +78,9 @@ void PlayerObserver::observeJumping()
       mJump.vel.x = pl->mo->momx;
       mJump.vel.y = pl->mo->momy;
       mJump.vel.z = pl->mo->momz;
-      mJump.startpos = prevpos;
+      mJump.start1.x = prevpos.x;
+      mJump.start1.y = prevpos.y;
+      mJump.start2 = mJump.start1;
    }
    if(mInAir)
    {
@@ -96,6 +98,8 @@ void PlayerObserver::observeJumping()
          const MetaSector *ms2 = line.msec[side ^ 1];
          if(!ms1 || !ms2)
             return false;  // 1-sided line stops
+         if(!mJump.takeoff && !botMap->canPass(ms2, ms1, pl->mo->height))
+            mJump.takeoff = &line;
          if(!botMap->canPass(ms1, ms2, pl->mo->height))
             mJump.success = true;
          return true;
@@ -107,15 +111,43 @@ void PlayerObserver::observeJumping()
             mJump.destss = &botMap->pointInSubsector(pl->mo->x, pl->mo->y);
             // We now have a jump point at startpos, facing vel, reaching ss
             // now when bot does pathfinding, use this as option
-            const BSubsec &startss = botMap->pointInSubsector(mJump.startpos.x,
-                                                              mJump.startpos.y);
-//            ssJumps[&startss].add(mJump);
-//            B_Log("Registered jump from (%g %g %g %d) by velocity (%g %g %g) to ss %d",
-//                  mJump.startpos.x / 65536., mJump.startpos.y / 65536.,
-//                  mJump.startpos.z / 65536.,
-//                  int(&startss - &botMap->ssectors[0]), mJump.vel.x / 65536.,
-//                  mJump.vel.y / 65536., mJump.vel.z / 65536.,
-//                  int(mJump.destss - &botMap->ssectors[0]));
+            const BSubsec &startss = botMap->pointInSubsector(mJump.start1.x,
+                                                              mJump.start1.y);
+            bool found = false;
+            for(auto &jump : ssJumps[&startss])
+            {
+               if(jump.takeoff == mJump.takeoff && jump.destss == mJump.destss)
+               {
+                  // Found a jump from the same take-off line into the same sub-
+                  // sector.
+                  found = true;
+                  // Just extend the area.
+                  if(mJump.start1.x < jump.start1.x)
+                     jump.start1 = mJump.start1;
+                  else if(mJump.start1.x > jump.start2.x)
+                     jump.start2 = mJump.start1;
+                  else if(mJump.start1.y < jump.start1.y)
+                     jump.start1 = mJump.start1;
+                  else
+                     jump.start2 = mJump.start1;
+//                  B_Log("Extended jump from %d (%g %g - %g %g) to %d",
+//                        int(&startss - &botMap->ssectors[0]),
+//                        jump.start1.x/65536., jump.start1.y/65536.,
+//                        jump.start2.x/65536., jump.start2.y/65536.,
+//                        int(jump.destss - &botMap->ssectors[0]));
+                  break;
+               }
+            }
+            if(!found)
+            {
+               ssJumps[&startss].add(mJump);
+
+//               B_Log("Registered jump from (%g %g %d) by velocity (%g %g %g) to ss %d",
+//                     mJump.start1.x / 65536., mJump.start1.y / 65536.,
+//                     int(&startss - &botMap->ssectors[0]), mJump.vel.x / 65536.,
+//                     mJump.vel.y / 65536., mJump.vel.z / 65536.,
+//                     int(mJump.destss - &botMap->ssectors[0]));
+            }
          }
          mInAir = false;
       }
