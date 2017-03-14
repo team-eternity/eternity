@@ -553,6 +553,11 @@ void lineopening_t::calculate(const line_t *linedef)
    const sector_t *front = linedef->frontsector;
    const sector_t *back = linedef->backsector;
 
+   const sector_t *beyond = linedef->intflags & MLI_POLYPORTALLINE &&
+      linedef->beyondportalline ? linedef->beyondportalline->frontsector : nullptr;
+   if(beyond)
+      back = beyond;
+
    // no need to apply the portal hack (1024 units) here fortunately
    if(linedef->extflags & EX_ML_UPPERPORTAL)
       opentop = front->ceilingheight;
