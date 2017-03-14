@@ -353,6 +353,7 @@
     </ClCompile>
     <ClCompile Include="..\source\am_svg.cpp" />
     <ClCompile Include="..\source\autodoom\b_analysis.cpp" />
+    <ClCompile Include="..\source\autodoom\b_ape.cpp" />
     <ClCompile Include="..\source\autodoom\b_botmap.cpp" />
     <ClCompile Include="..\source\autodoom\b_botmaptemp.cpp" />
     <ClCompile Include="..\source\autodoom\b_compression.cpp" />
@@ -2070,6 +2071,7 @@
     <ClInclude Include="..\Source\am_map.h" />
     <ClInclude Include="..\source\am_svg.h" />
     <ClInclude Include="..\source\autodoom\b_analysis.h" />
+    <ClInclude Include="..\source\autodoom\b_ape.h" />
     <ClInclude Include="..\source\autodoom\b_botmap.h" />
     <ClInclude Include="..\source\autodoom\b_botmaptemp.h" />
     <ClInclude Include="..\source\autodoom\b_compression.h" />

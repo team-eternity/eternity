@@ -1044,6 +1044,9 @@
     <ClCompile Include="..\source\p_portalcross.cpp">
       <Filter>Source Files\P_\P_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\autodoom\b_ape.cpp">
+      <Filter>Source Files\autodoom</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1873,6 +1876,9 @@
     </ClInclude>
     <ClInclude Include="..\source\p_portalcross.h">
       <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\b_ape.h">
+      <Filter>Source Files\autodoom</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
