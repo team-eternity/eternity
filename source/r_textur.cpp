@@ -33,6 +33,7 @@
 #include "d_main.h"
 #include "e_hash.h"
 #include "m_compare.h"
+#include "m_qstr.h"
 #include "m_swap.h"
 #include "p_setup.h"
 #include "p_skin.h"
@@ -975,6 +976,50 @@ static void FinishTexture(texture_t *tex)
 }
 
 //
+// Prepares data for placeholder
+//
+static void R_makePlaceHolderData(texture_t *tex)
+{
+   // allocate buffer
+   tex->buffer = emalloctag(byte *, 64*64, PU_RENDERER, nullptr);
+
+   // allocate column pointers
+   tex->columns = ecalloctag(texcol_t **, sizeof(texcol_t *), tex->width,
+                             PU_RENDERER, nullptr);
+
+   // make columns
+   for(int i = 0; i < tex->width; i++)
+   {
+      tex->columns[i] = estructalloctag(texcol_t, 1, PU_RENDERER);
+      tex->columns[i]->next = NULL;
+      tex->columns[i]->yoff = 0;
+      tex->columns[i]->len = tex->height;
+      tex->columns[i]->ptroff = i * tex->height;
+   }
+}
+
+//
+// Replaces a texture (by freeing) with a black texture with the same name and
+// index. Needed because of the apparent standard convened by ZDoom and PrBoom+
+// where invalid textures become all-black (which is a rather neutral aspect,
+// easily placed by mistake by authors).
+//
+static void R_replaceWithBlackTexture(texture_t *&tex)
+{
+   int index = tex->index;
+   qstring name(tex->namebuf);
+
+   efree(tex);
+
+   tex = R_AllocTexStruct(name.constPtr(), 64, 64, 0);
+   tex->index = index;
+
+   R_makePlaceHolderData(tex);
+
+   memset(tex->buffer, GameModeInfo->blackIndex, 4096);
+}
+
+//
 // R_CacheTexture
 // 
 // Caches a texture in memory, building it from component parts.
@@ -993,11 +1038,11 @@ texture_t *R_CacheTexture(int num)
    if(tex->buffer)
       return tex;
    
-   // SoM: This situation would most certainly require an abort.
    if(tex->ccount == 0)
    {
-      I_Error("R_CacheTexture: texture %s cached with no buffer and no components.\n", 
-              (const char *)(tex->name));
+      // Use ZDoom and PRBOOM black placeholders
+      R_replaceWithBlackTexture(textures[num]);
+      return textures[num];
    }
 
    // This function has two primary branches:
@@ -1044,22 +1089,7 @@ texture_t *R_CacheTexture(int num)
 //
 static void R_checkerBoardTexture(texture_t *tex)
 {
-   // allocate buffer
-   tex->buffer = emalloctag(byte *, 64*64, PU_RENDERER, nullptr);
-
-   // allocate column pointers
-   tex->columns = ecalloctag(texcol_t **, sizeof(texcol_t *), tex->width, 
-                             PU_RENDERER, nullptr);
-
-   // make columns
-   for(int i = 0; i < tex->width; i++)
-   {
-      tex->columns[i] = estructalloctag(texcol_t, 1, PU_RENDERER);
-      tex->columns[i]->next = NULL;
-      tex->columns[i]->yoff = 0;
-      tex->columns[i]->len = tex->height;
-      tex->columns[i]->ptroff = i * tex->height;
-   }
+   R_makePlaceHolderData(tex);
    
    // fill pixels
    byte c1 = GameModeInfo->whiteIndex;
