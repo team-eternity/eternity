@@ -996,7 +996,7 @@ texture_t *R_CacheTexture(int num)
    // SoM: This situation would most certainly require an abort.
    if(tex->ccount == 0)
    {
-      I_Error("R_CacheTexture: texture %s cached with no buffer and no components.\n", 
+      I_Error("R_CacheTexture: texture %s cached with no buffer and no components.\n",
               (const char *)(tex->name));
    }
 
@@ -1097,6 +1097,18 @@ static void R_MakeMissingTexture(int count)
    badtex = count;
    textures[badtex] = R_AllocTexStruct("BAADF00D", 64, 64, 0);
    R_checkerBoardTexture(textures[badtex]);   
+}
+
+//
+// Checks if a texture is invalid and replaces it with a missing texture
+// Must be called at PU_RENDER init time.
+//
+static void R_checkInvalidTexture(int num)
+{
+   // don't care about leaking; invalid texture memory are reclaimed at
+   // PU_RENDER purge time.
+   if(textures[num] && !textures[num]->buffer && !textures[num]->ccount)
+      R_MakeMissingTexture(num);
 }
 
 //=============================================================================
@@ -1418,7 +1430,10 @@ void R_InitTextures()
    // textures on map start would probably be preferable 99.9% of the time...
    // Precache textures
    for(i = wallstart; i < wallstop; i++)
+   {
+      R_checkInvalidTexture(i);
       R_CacheTexture(i);
+   }
    
    if(errors)
       I_Error("\n\n%d texture errors.\n", errors); 
