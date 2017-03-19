@@ -779,7 +779,7 @@ bool ACS_CF_GetLineY(ACS_CF_ARGS)
       angle_t angle = P_PointToAngle(line->v1->x, line->v1->y, line->v2->x, line->v2->y);
       angle -= ANG90;
       unsigned fineangle = angle >> ANGLETOFINESHIFT;
-      result += FixedMul(finecosine[fineangle], linedist);
+      result += FixedMul(finesine[fineangle], linedist);
    }
    thread->dataStk.push(result);
    return false;
