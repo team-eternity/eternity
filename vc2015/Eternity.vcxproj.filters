@@ -960,6 +960,9 @@
     <ClCompile Include="..\source\cam_use.cpp">
       <Filter>Source Files\Cam</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\p_portalcross.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1400,9 +1403,6 @@
     <ClInclude Include="..\Source\sdl\mmus2mid.h">
       <Filter>Source Files\SDL\SDL Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\midiproc\midiproc.h">
-      <Filter>Source Files\SDL\midiproc</Filter>
-    </ClInclude>
     <ClInclude Include="..\Source\st_lib.h">
       <Filter>Source Files\ST_</Filter>
     </ClInclude>
@@ -1711,6 +1711,9 @@
     </ClInclude>
     <ClInclude Include="..\source\cam_common.h">
       <Filter>Source Files\Cam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\p_portalcross.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

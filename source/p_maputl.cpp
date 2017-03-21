@@ -106,6 +106,32 @@ int P_BoxOnLineSide(const fixed_t *tmbox, const line_t *ld)
 }
 
 //
+// Also divline version
+//
+int P_BoxOnDivlineSide(const fixed_t *tmbox, const divline_t &dl)
+{
+   int p;
+
+   if(!dl.dy)
+   {
+      return (tmbox[BOXBOTTOM] > dl.y) == (p = tmbox[BOXTOP] > dl.y) ?
+         p ^ (dl.dx < 0) : -1;
+   }
+   if(!dl.dx)
+   {
+      return (tmbox[BOXLEFT] < dl.x) == (p = tmbox[BOXRIGHT] < dl.x) ?
+         p ^ (dl.dy < 0) : -1;
+   }
+   if((dl.dx ^ dl.dy) >= 0)
+   {
+      return P_PointOnDivlineSide(tmbox[BOXRIGHT], tmbox[BOXBOTTOM], &dl) ==
+         (p = P_PointOnDivlineSide(tmbox[BOXLEFT], tmbox[BOXTOP], &dl)) ? p : -1;
+   }
+   return P_PointOnDivlineSide(tmbox[BOXLEFT], tmbox[BOXBOTTOM], &dl) ==
+      (p = P_PointOnDivlineSide(tmbox[BOXRIGHT], tmbox[BOXTOP], &dl)) ? p : -1;
+}
+
+//
 // P_BoxLinePoint
 //
 // ioanch 20160116: returns a good point of intersection between the bounding
@@ -151,6 +177,16 @@ v2fixed_t P_BoxLinePoint(const fixed_t bbox[4], const line_t *ld)
       break;
    }
    return ret;
+}
+
+//
+// Returns true if two bounding boxes intersect. Assumes they're correctly set.
+//
+bool P_BoxesIntersect(const fixed_t bbox1[4], const fixed_t bbox2[4])
+{
+   return bbox1[BOXLEFT] < bbox2[BOXRIGHT] &&
+   bbox1[BOXRIGHT] > bbox2[BOXLEFT] && bbox1[BOXBOTTOM] < bbox2[BOXTOP] &&
+   bbox1[BOXTOP] > bbox2[BOXBOTTOM];
 }
 
 //
@@ -225,6 +261,11 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
    }
    clip.openfrontsector = linedef->frontsector;
    clip.openbacksector  = linedef->backsector;
+   sector_t *beyond = linedef->intflags & MLI_POLYPORTALLINE &&
+      linedef->beyondportalline ?
+      linedef->beyondportalline->frontsector : nullptr;
+   if(beyond)
+      clip.openbacksector = beyond;
 
    // SoM: ok, new plan. The only way a 2s line should give a lowered floor or hightened ceiling
    // z is if both sides of that line have the same portal.
@@ -678,13 +719,17 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*, polyobj_t*), int grou
    offset = *(blockmap + offset);
    list = blockmaplump + offset;
 
+   // MaxW: 2016/02/02: This skip isn't feasible to do for recent play,
+   // as it has been found that the starting delimiter can have a use.
+
    // killough 1/31/98: for compatibility we need to use the old method.
    // Most demos go out of sync, and maybe other problems happen, if we
    // don't consider linedef 0. For safety this should be qualified.
 
+   // MaxW: 2016/02/02: if before 3.42 always skip, skip if all blocklists start w/ 0
    // killough 2/22/98: demo_compatibility check
    // skip 0 starting delimiter -- phares
-   if(!demo_compatibility)
+   if((!demo_compatibility && demo_version < 342) || (demo_version >= 342 && skipblstart))
       list++;     
    for( ; *list != -1; list++)
    {

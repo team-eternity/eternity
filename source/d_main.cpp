@@ -1717,7 +1717,6 @@ static void D_DoomInit()
 
       // this is the last GFS action, so free the gfs now
       G_FreeGFS(gfs);
-      haveGFS = false;
    }
 
    // haleyjd: GFS is no longer valid from here!

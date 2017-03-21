@@ -34,6 +34,7 @@
 #include "p_maputl.h"
 #include "p_portal.h"
 #include "p_portalclip.h"
+#include "p_portalcross.h"
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_portal.h"

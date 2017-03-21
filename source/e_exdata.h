@@ -76,6 +76,7 @@ enum
    EX_ML_3DMTPASSPROJ = 0x00002000, // with ML_3DMIDTEX, makes it pass projectiles
    EX_ML_LOWERPORTAL  = 0x00004000, // extends the floor portal of the back sector
    EX_ML_UPPERPORTAL  = 0x00008000, // extends the ceiling portal of the back sector
+   EX_ML_POLYOBJECT   = 0x00010000, // enabled for polyobjects
 };
 
 // ExtraData line structure

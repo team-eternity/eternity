@@ -35,6 +35,7 @@
 #include "ev_specials.h"
 #include "g_game.h"
 #include "p_info.h"
+#include "p_scroll.h"
 #include "p_sector.h"
 #include "p_skin.h"
 #include "p_spec.h"
@@ -253,8 +254,8 @@ DEFINE_ACTION(EV_ActionLightTurnOn)
    // case 169: (S1 - BOOM Extended)
    // case 192: (SR - BOOM Extended)
    // Light Turn On - brightest near
-   bool isParam = EV_IsParamLineSpec(instance->special);
-   return EV_LightTurnOn(instance->line, instance->tag, 0, isParam);
+   return EV_LightTurnOn(instance->line, instance->tag, 0,
+                         EV_IsParamAction(*action));
 }
 
 //
@@ -681,8 +682,8 @@ DEFINE_ACTION(EV_ActionTurnTagLightsOff)
    // case 173: (S1 - BOOM Extended)
    // case 194: (SR - BOOM Extended)
    // Turn lights off in sector(tag)
-   bool isParam = EV_IsParamLineSpec(instance->special);
-   return EV_TurnTagLightsOff(instance->line, instance->tag, isParam);
+   return EV_TurnTagLightsOff(instance->line, instance->tag,
+                              EV_IsParamAction(*action));
 }
 
 //
@@ -986,8 +987,8 @@ DEFINE_ACTION(EV_ActionChangeOnly)
    // case 189: (S1 - BOOM Extended)
    // case 190: (SR - BOOM Extended)
    // Texture/Type Change Only (Trig)
-   bool isParam = EV_IsParamLineSpec(instance->special);
-   return EV_DoChange(instance->line, instance->tag, trigChangeOnly, isParam);
+   return EV_DoChange(instance->line, instance->tag, trigChangeOnly,
+                      EV_IsParamAction(*action));
 }
 
 //
@@ -1001,8 +1002,8 @@ DEFINE_ACTION(EV_ActionChangeOnlyNumeric)
    // case 240: (WR - BOOM Extended)
    // case 241: (S1 - BOOM Extended)
    // Texture/Type Change Only (Numeric)
-   bool isParam = EV_IsParamLineSpec(instance->special);
-   return EV_DoChange(instance->line, instance->tag, numChangeOnly, isParam);
+   return EV_DoChange(instance->line, instance->tag, numChangeOnly,
+                      EV_IsParamAction(*action));
 }
 
 //
@@ -1117,7 +1118,7 @@ DEFINE_ACTION(EV_ActionPlatToggleUpDown)
 //
 DEFINE_ACTION(EV_ActionStartLineScript)
 {
-   P_StartLineScript(instance->line, instance->actor);
+   P_StartLineScript(instance->line, instance->side, instance->actor, instance->poly);
    return true;
 }
 
@@ -2806,6 +2807,7 @@ DEFINE_ACTION(EV_ActionACSExecute)
    Mobj    *thing = instance->actor;
    line_t  *line  = instance->line;
    int      side  = instance->side;
+   polyobj_t *po  = instance->poly;
    int      num   = instance->args[0];
    int      map   = instance->args[1];
    int      argc  = NUMLINEARGS - 2;
@@ -2814,7 +2816,7 @@ DEFINE_ACTION(EV_ActionACSExecute)
    for(int i = 0; i != argc; ++i)
       argv[i] = instance->args[i + 2];
 
-   return ACS_ExecuteScriptI(num, map, argv, argc, thing, line, side);
+   return ACS_ExecuteScriptI(num, map, argv, argc, thing, line, side, po);
 }
 
 
@@ -2854,6 +2856,7 @@ DEFINE_ACTION(EV_ActionACSExecuteWithResult)
    Mobj    *thing = instance->actor;
    line_t  *line  = instance->line;
    int      side  = instance->side;
+   polyobj_s *po = instance->poly;
    int      num   = instance->args[0];
    int      argc  = NUMLINEARGS - 1;
    uint32_t argv[NUMLINEARGS - 1];
@@ -2861,7 +2864,7 @@ DEFINE_ACTION(EV_ActionACSExecuteWithResult)
    for(int i = 0; i != argc; ++i)
       argv[i] = instance->args[i + 1];
 
-   return ACS_ExecuteScriptIResult(num, argv, argc, thing, line, side);
+   return ACS_ExecuteScriptIResult(num, argv, argc, thing, line, side, po);
 }
 
 //
@@ -3322,6 +3325,7 @@ DEFINE_ACTION(EV_ActionACSLockedExecute)
    Mobj    *thing = instance->actor;
    line_t  *line  = instance->line;
    int      side  = instance->side;
+   polyobj_t *po  = instance->poly;
    int      num   = instance->args[0];
    int      map   = instance->args[1];
    int      argc  = NUMLINEARGS - 3;
@@ -3332,7 +3336,7 @@ DEFINE_ACTION(EV_ActionACSLockedExecute)
 
    // Always display the "object" message.
    if(EV_lockCheck(thing, instance->args[4], true))
-      return ACS_ExecuteScriptI(num, map, argv, argc, thing, line, side);
+      return ACS_ExecuteScriptI(num, map, argv, argc, thing, line, side, po);
    return 0;
 }
 
@@ -3348,6 +3352,7 @@ DEFINE_ACTION(EV_ActionACSLockedExecuteDoor)
    Mobj    *thing = instance->actor;
    line_t  *line = instance->line;
    int      side = instance->side;
+   polyobj_t *po = instance->poly;
    int      num = instance->args[0];
    int      map = instance->args[1];
    int      argc = NUMLINEARGS - 3;
@@ -3358,7 +3363,7 @@ DEFINE_ACTION(EV_ActionACSLockedExecuteDoor)
 
    // Always display the "door" message.
    if(EV_lockCheck(thing, instance->args[4], false))
-      return ACS_ExecuteScriptI(num, map, argv, argc, thing, line, side);
+      return ACS_ExecuteScriptI(num, map, argv, argc, thing, line, side, po);
    return 0;
 }
 
@@ -4191,6 +4196,7 @@ DEFINE_ACTION(EV_ActionACSExecuteAlways)
    Mobj    *thing = instance->actor;
    line_t  *line  = instance->line;
    int      side  = instance->side;
+   polyobj_s *po = instance->poly;
    int      num   = instance->args[0];
    int      map   = instance->args[1];
    int      argc  = NUMLINEARGS - 2;
@@ -4199,7 +4205,7 @@ DEFINE_ACTION(EV_ActionACSExecuteAlways)
    for(int i = 0; i != argc; ++i)
       argv[i] = instance->args[i + 2];
 
-   return ACS_ExecuteScriptIAlways(num, map, argv, argc, thing, line, side);
+   return ACS_ExecuteScriptIAlways(num, map, argv, argc, thing, line, side, po);
 }
 
 //
@@ -4244,6 +4250,91 @@ DEFINE_ACTION(EV_ActionParamPlatDWUSLip)
 DEFINE_ACTION(EV_ActionParamPlatPerpetualRaiseLip)
 {
    return EV_DoParamPlat(instance->line, instance->args, paramPerpetualRaiseLip);
+}
+
+//
+// Implements Stairs_BuildUpDoomCrush(tag, speed, stepsize, delay, reset)
+//
+// * ExtraData: 494
+// * UDMF:      273
+//
+DEFINE_ACTION(EV_ActionParamStairsBuildUpDoomCrush)
+{
+   INIT_STRUCT(stairdata_t, sd);
+
+   sd.flags = SDF_HAVESPAC;
+   sd.spac = instance->spac; // Hexen-style activation
+   sd.direction = 1;              // up
+   sd.speed_type = SpeedParam;
+   sd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   sd.stepsize_type = StepSizeParam;
+   sd.stepsize_value = instance->args[2] * FRACUNIT;     // height
+   sd.delay_value = instance->args[3];                // delay
+   sd.reset_value = instance->args[4];                // reset
+   sd.crush = true;
+
+   return EV_DoParamStairs(instance->line, instance->tag, &sd);
+}
+
+//
+// Implements Sector_ChangeSound(tag, sound)
+//
+// * ExtraData: 495
+// * Hexen:     140
+//
+DEFINE_ACTION(EV_ActionParamSectorChangeSound)
+{
+   return EV_SectorSoundChange(instance->tag, instance->args[1]);
+}
+
+//=============================================================================
+//
+// ACS-specific specials
+//
+
+//
+// Implements Scroll_Floor(tag, x-move, y-move, type)
+//
+// * ACS: 223
+//
+DEFINE_ACTION(EV_ActionACSScrollFloor)
+{
+   // Don't use INIT_STRUCT or memset because of line_t PointThinker vtable
+   // warnings. Just zero-init it.
+   line_t ln = { 0 };
+
+   // convert (tag, x-move, y-move, type) to (tag, scrollbits, type, x-move, y-move)
+   ln.args[0] = instance->args[0];
+   ln.args[1] = 0;
+   ln.args[2] = instance->args[3];
+   ln.args[3] = instance->args[1];
+   ln.args[4] = instance->args[2];
+
+   P_SpawnFloorParam(&ln, true);
+
+   return 1;
+}
+
+//
+// Implements Scroll_Ceiling(tag, x-move, y-move, unused)
+//
+// * ACS: 224
+//
+DEFINE_ACTION(EV_ActionACSScrollCeiling)
+{
+   // See other comment in this file on this
+   line_t ln = { 0 };
+
+   // convert (tag, x-move, y-move, unused) to (tag, scrollbits, unused, x-move, y-move)
+   ln.args[0] = instance->args[0];
+   ln.args[1] = 0;
+   ln.args[2] = 0;
+   ln.args[3] = instance->args[1];
+   ln.args[4] = instance->args[2];
+
+   P_SpawnCeilingParam(&ln, true);
+
+   return 1;
 }
 
 // EOF

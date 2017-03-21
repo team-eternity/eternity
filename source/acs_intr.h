@@ -40,6 +40,7 @@
 class  qstring;
 class  Mobj;
 struct line_t;
+struct polyobj_s;
 class  WadDirectory;
 
 //
@@ -61,6 +62,14 @@ enum
    ACS_MODE_DOOM = 0x00000001,
    ACS_MODE_HTIC = 0x00000002,
    ACS_MODE_ALL  = ACS_MODE_DOOM | ACS_MODE_HTIC,
+};
+
+// Script types.
+enum acs_stype_t
+{
+   ACS_STYPE_Closed,
+   ACS_STYPE_Enter,
+   ACS_STYPE_Open,
 };
 
 // Tag types.
@@ -135,6 +144,15 @@ enum
    ACS_TP_Friction     = 42,
    ACS_TP_DamageMult   = 43,
 
+   ACS_TP_Counter0     = 100,
+   ACS_TP_Counter1     = 101,
+   ACS_TP_Counter2     = 102,
+   ACS_TP_Counter3     = 103,
+   ACS_TP_Counter4     = 104,
+   ACS_TP_Counter5     = 105,
+   ACS_TP_Counter6     = 106,
+   ACS_TP_Counter7     = 107,
+
    // Internal properties, not meant for external use.
    ACS_TP_Angle,
    ACS_TP_Armor,
@@ -183,6 +201,10 @@ public:
 
    virtual ACSVM::ModuleName getModuleName(char const *str, size_t len);
 
+   virtual std::pair<ACSVM::Word /*type*/, ACSVM::Word /*name*/>
+   getScriptTypeACS0(ACSVM::Word name);
+   virtual ACSVM::Word getScriptTypeACSE(ACSVM::Word type);
+
    virtual void loadModule(ACSVM::Module *module);
 
    virtual void loadState(std::istream &in);
@@ -205,16 +227,16 @@ public:
 class ACSThreadInfo : public ACSVM::ThreadInfo
 {
 public:
-   ACSThreadInfo() : mo{nullptr}, line{nullptr}, side{0} {}
+   ACSThreadInfo() : mo{ nullptr }, line{ nullptr }, side{ 0 }, po{ nullptr } {}
 
    ACSThreadInfo(const ACSThreadInfo &info) :
-      mo{nullptr}, line{info.line}, side{info.side}
+      mo{ nullptr }, line{ info.line }, side{ info.side }, po{ info.po }
    {
       P_SetTarget(&mo, info.mo);
    }
 
-   ACSThreadInfo(Mobj *mo_, line_t *line_, int side_) :
-      mo{nullptr}, line{line_}, side{side_}
+   ACSThreadInfo(Mobj *mo_, line_t *line_, int side_, polyobj_s *po_) :
+      mo{nullptr}, line{line_}, side{side_}, po{po_}
    {
       P_SetTarget(&mo, mo_);
    }
@@ -229,6 +251,7 @@ public:
       P_SetTarget(&mo, info.mo);
       line = info.line;
       side = info.side;
+      po = info.po;
 
       return *this;
    }
@@ -236,6 +259,7 @@ public:
    Mobj   *mo;   // Mobj that activated.
    line_t *line; // Line that activated.
    int     side; // Side of actived line.
+   polyobj_s *po;
 };
 
 //
@@ -244,7 +268,7 @@ public:
 class ACSThread : public ACSVM::Thread
 {
 public:
-   ACSThread(ACSVM::Environment *env_) : ACSVM::Thread{env_} {}
+   explicit ACSThread(ACSVM::Environment *env_) : ACSVM::Thread{env_} {}
 
    virtual ACSVM::ThreadInfo const *getInfo() const {return &info;}
 
@@ -274,17 +298,17 @@ void ACS_Archive(SaveArchive &arc);
 
 // Script control.
 bool ACS_ExecuteScriptI(uint32_t name, uint32_t mapnum, const uint32_t *argv,
-                        uint32_t argc, Mobj *mo, line_t *line, int side);
+                        uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po);
 bool ACS_ExecuteScriptIAlways(uint32_t name, uint32_t mapnum, const uint32_t *argv,
-                              uint32_t argc, Mobj *mo, line_t *line, int side);
+                              uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po);
 uint32_t ACS_ExecuteScriptIResult(uint32_t name, const uint32_t *argv,
-                                 uint32_t argc, Mobj *mo, line_t *line, int side);
+                                 uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po);
 bool ACS_ExecuteScriptS(const char *name, uint32_t mapnum, const uint32_t *argv,
-                        uint32_t argc, Mobj *mo, line_t *line, int side);
+                        uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po);
 bool ACS_ExecuteScriptSAlways(const char *name, uint32_t mapnum, const uint32_t *argv,
-                              uint32_t argc, Mobj *mo, line_t *line, int side);
+                              uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po);
 uint32_t ACS_ExecuteScriptSResult(const char *name, const uint32_t *argv,
-                                 uint32_t argc, Mobj *mo, line_t *line, int side);
+                                 uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po);
 bool ACS_SuspendScriptI(uint32_t name, uint32_t mapnum);
 bool ACS_SuspendScriptS(const char *name, uint32_t mapnum);
 bool ACS_TerminateScriptI(uint32_t name, uint32_t mapnum);

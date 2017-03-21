@@ -101,7 +101,7 @@ namespace ACSVM
    //
    void ArrayInit::setTag(Word idx, InitTag tag)
    {
-      if(idx <= pd->initV.size())
+      if(idx >= pd->initV.size())
          pd->initV.resize(idx + 1, 0);
 
       pd->initV[idx].tag = tag;
@@ -112,7 +112,7 @@ namespace ACSVM
    //
    void ArrayInit::setVal(Word idx, Word val)
    {
-      if(idx <= pd->initV.size())
+      if(idx >= pd->initV.size())
          pd->initV.resize(idx + 1, 0);
 
       pd->initV[idx].val = val;

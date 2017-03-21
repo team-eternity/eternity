@@ -273,7 +273,7 @@ bool PathTraverser::blockLinesIterator(int x, int y)
    // build a full intercepts list.
    // ioanch 20151229: don't just check for line portals, also consider 
    // floor/ceiling
-   if(P_BlockHasLinkedPortalLines(offset))
+   if(P_BlockHasLinkedPortals(offset, true))
       portalguard.hitpblock = true;
 
    // Check polyobjects first
@@ -446,7 +446,7 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
       // if a flag is set, only accept blocks with line portals (needed for
       // some function in the code)
       if(!(def.flags & CAM_REQUIRELINEPORTALS) ||
-         P_BlockHasLinkedPortalLines(mapy * ::bmapwidth + mapx))
+         P_BlockHasLinkedPortals(mapy * ::bmapwidth + mapx, false))
       {
          if(def.flags & CAM_ADDLINES && !blockLinesIterator(mapx, mapy))
             return false;	// early out (ioanch: not for aim)
@@ -492,7 +492,7 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
          // loop continues), but the other two blocks adjacent to the corner
          // also need to be checked.
          if(!(def.flags & CAM_REQUIRELINEPORTALS) ||
-            P_BlockHasLinkedPortalLines(mapy * ::bmapwidth + mapx))
+            P_BlockHasLinkedPortals(mapy * ::bmapwidth + mapx, false))
          {
             if(def.flags & CAM_ADDLINES
                && (!blockLinesIterator(mapx + mapxstep, mapy)
@@ -552,6 +552,11 @@ void lineopening_t::calculate(const line_t *linedef)
 
    const sector_t *front = linedef->frontsector;
    const sector_t *back = linedef->backsector;
+
+   const sector_t *beyond = linedef->intflags & MLI_POLYPORTALLINE &&
+      linedef->beyondportalline ? linedef->beyondportalline->frontsector : nullptr;
+   if(beyond)
+      back = beyond;
 
    // no need to apply the portal hack (1024 units) here fortunately
    if(linedef->extflags & EX_ML_UPPERPORTAL)

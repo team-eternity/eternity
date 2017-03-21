@@ -37,6 +37,7 @@ struct node_t;
 struct fnode_t;
 struct player_t;
 struct sector_t;
+struct sectorbox_t;
 struct sectorinterp_t;
 struct seg_t;
 struct side_t;
@@ -57,6 +58,14 @@ extern fixed_t *spriteoffset;
 extern fixed_t *spritetopoffset;
 // SoM: Needed for cardboard
 extern float   *spriteheight;
+// ioanch: portal sprite copying cache info
+struct spritespan_t
+{
+   float top;
+   float bottom;
+   float side;
+};
+extern spritespan_t **r_spritespan;
 
 extern lighttable_t **colormaps;         // killough 3/20/98, 4/4/98
 extern lighttable_t  *fullcolormap;      // killough 3/20/98
@@ -87,6 +96,7 @@ extern seg_t            *segs;
 extern int              numsectors;
 extern sector_t         *sectors;
 extern sectorinterp_t   *sectorinterps;
+extern sectorbox_t      *pSectorBoxes;
 
 extern int              numsoundzones;
 extern soundzone_t      *soundzones;

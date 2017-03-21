@@ -712,10 +712,17 @@ iwadMightBe:
 	[panel setCanChooseFiles:true];
 	[panel setCanChooseDirectories:true];
    [panel setMessage:@"Choose add-on file"];
-	[panel beginSheetForDirectory:nil file:nil types:pwadTypes
-                  modalForWindow:[NSApp mainWindow] modalDelegate:self
-                  didEndSelector:@selector(addPwadEnded:returnCode:contextInfo:)
-                     contextInfo:nil];
+   [panel setAllowedFileTypes:pwadTypes];
+   [panel beginSheetModalForWindow:[NSApp mainWindow] completionHandler:^(NSInteger result) {
+      if(result == NSFileHandlingPanelCancelButton)
+      {
+         return;
+      }
+
+      // Look thru the array to locate the PWAD and put that on.
+
+      [self doAddPwadsFromURLs:[panel URLs] atIndexes:nil];
+   }];
 }
 
 //
@@ -738,10 +745,22 @@ iwadMightBe:
 	[panel setCanChooseFiles:true];
 	[panel setCanChooseDirectories:false];
    [panel setMessage:@"Choose main game WAD"];
-	[panel beginSheetForDirectory:nil file:nil types:pwadTypes
-                  modalForWindow:[NSApp mainWindow] modalDelegate:self
-                  didEndSelector:@selector(addIwadEnded:returnCode:contextInfo:)
-                     contextInfo:nil];
+   [panel setAllowedFileTypes:pwadTypes];
+   [panel beginSheetModalForWindow:[NSApp mainWindow] completionHandler:^(NSInteger result) {
+      if(result == NSFileHandlingPanelCancelButton)
+      {
+         return;
+      }
+
+      // Look thru the array to locate the IWAD and put that on.
+      NSURL *openCandidate;
+
+      for(openCandidate in [panel URLs])
+      {
+         [self doAddIwadFromURL:openCandidate];
+         
+      }
+   }];
 }
 
 //
@@ -804,42 +823,6 @@ iwadMightBe:
 -(void)doAddPwadFromURL:(NSURL *)wURL
 {
    [self doAddPwadsFromURLs:[NSArray arrayWithObject:wURL] atIndexes:nil];
-}
-
-//
-// addPwadEnded:returnCode:contextInfo:
-//
--(void)addPwadEnded:(NSOpenPanel *)panel returnCode:(int)code contextInfo:(void *)info
-{
-	if(code == NSCancelButton)
-	{
-		return;
-	}
-	
-	// Look thru the array to locate the PWAD and put that on.
-   
-   [self doAddPwadsFromURLs:[panel URLs] atIndexes:nil];
-	
-}
-
-//
-// addIwadEnded:returnCode:contextInfo:
-//
--(void)addIwadEnded:(NSOpenPanel *)panel returnCode:(int)code contextInfo:(void *)info
-{
-	if(code == NSCancelButton)
-	{
-		return;
-	}
-	
-	// Look thru the array to locate the IWAD and put that on.
-	NSURL *openCandidate;
-	
-	for(openCandidate in [panel URLs])
-	{
-      [self doAddIwadFromURL:openCandidate];
-
-	}
 }
 
 //
@@ -931,7 +914,13 @@ iwadMightBe:
 	NSSavePanel *panel = [NSSavePanel savePanel];
 	NSArray *types = [NSArray arrayWithObject:@"lmp"];
 	[panel setAllowedFileTypes:types];
-	[panel beginSheetForDirectory:nil file:nil modalForWindow:[NSApp mainWindow] modalDelegate:self didEndSelector:@selector(chooseRecordDidEnd:returnCode:contextInfo:) contextInfo:nil];
+   [panel beginSheetModalForWindow:[NSApp mainWindow] completionHandler:^(NSInteger result) {
+      if(result == NSFileHandlingPanelCancelButton)
+      {
+         return;
+      }
+      [self setRecordDemo:[[panel URL] path]];
+   }];
 }
 
 //
@@ -960,19 +949,6 @@ iwadMightBe:
 }
 
 //
-// chooseRecordDidEnd:returnCode:contextInfo:
-//
--(void)chooseRecordDidEnd:(NSSavePanel *)panel returnCode:(int)returnCode contextInfo:(void *)contextInfo
-{
-	if(returnCode == NSCancelButton)
-	{
-		return;
-	}
-   [self setRecordDemo:[[panel URL] path]];
-	
-}
-
-//
 // choosePlayDemo:
 //
 -(IBAction)choosePlayDemo:(id)sender
@@ -982,24 +958,16 @@ iwadMightBe:
 	[panel setCanChooseFiles:true];
 	[panel setCanChooseDirectories:false];
 	NSArray *types = [NSArray arrayWithObject:@"lmp"];
-	[panel beginSheetForDirectory:nil file:nil types:types modalForWindow:[NSApp mainWindow] modalDelegate:self didEndSelector:@selector(choosePlayDidEnd:returnCode:contextInfo:) contextInfo:nil];
-}
+   [panel setAllowedFileTypes:types];
+   [panel beginSheetModalForWindow:[NSApp mainWindow] completionHandler:^(NSInteger result) {
+      if(result == NSFileHandlingPanelCancelButton)
+      {
+         return;
+      }
+      [playDemoField setStringValue:[[panel URL] relativePath]];
 
-//
-// choosePlayDidEnd:returnCode:contextInfo:
-//
-// Write into the text field the file name
-//
--(void)choosePlayDidEnd:(NSOpenPanel *)panel returnCode:(int)code contextInfo:(void *)info
-{
-	if(code == NSCancelButton)
-	{
-		return;
-	}
-	[playDemoField setStringValue:[[panel URL] relativePath]];
-	
-	[self updateParameters:self];
-	
+      [self updateParameters:self];
+   }];
 }
 
 //
@@ -1121,7 +1089,10 @@ iwadMightBe:
 	NSSavePanel *panel = [NSSavePanel savePanel];
 	NSArray *types = [NSArray arrayWithObject:@"gfs"];
 	[panel setAllowedFileTypes:types];
-	[panel beginSheetForDirectory:nil file:nil modalForWindow:[NSApp mainWindow] modalDelegate:self didEndSelector:@selector(saveAsGFSDidEnd:returnCode:contextInfo:) contextInfo:nil];
+   [panel beginSheetModalForWindow:[NSApp mainWindow] completionHandler:^(NSInteger result) {
+      if(result != NSFileHandlingPanelCancelButton)
+         [self saveAsGFSDidEnd:panel];
+   }];
 }
 
 //
@@ -1129,13 +1100,8 @@ iwadMightBe:
 //
 // Save parameters into a GFS
 //
--(void)saveAsGFSDidEnd:(NSSavePanel *)panel returnCode:(int)returnCode contextInfo:(void *)contextInfo
+-(void)saveAsGFSDidEnd:(NSSavePanel *)panel
 {
-	if(returnCode == NSCancelButton)
-	{
-		return;
-	}
-	
 	NSMutableString *gfsOut = [[[NSMutableString alloc] init] autorelease];
 	
 	if([iwadPopUp numberOfItems] > 0)

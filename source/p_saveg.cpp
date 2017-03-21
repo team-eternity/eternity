@@ -350,7 +350,7 @@ SaveArchive &SaveArchive::operator << (mapthing_t &mt)
    // ioanch 20151218: add extended options
    *this << mt.angle << mt.height << mt.next << mt.options << mt.extOptions
          << mt.recordnum << mt.special << mt.tid << mt.type
-         << mt.x << mt.y;
+         << mt.x << mt.y << mt.healthModifier;
 
    P_ArchiveArray<int>(*this, mt.args, NUMMTARGS);
 
@@ -811,23 +811,24 @@ static void P_ArchiveMap(SaveArchive &arc)
 {
    arc << automapactive << followplayer << automap_grid << markpointnum;
 
-   if(markpointnum)
+   if(arc.isSaving())
    {
-      if(arc.isSaving())
-      {
+      if(markpointnum)
          for(int i = 0; i < markpointnum; i++)
             arc << markpoints[i].x << markpoints[i].y;
-      }
-      else
-      {
-         if(automapactive)
-            AM_Start();
+   }
+   else
+   {
+      if(automapactive)
+         AM_Start();
 
+      if(markpointnum)
+      {
          while(markpointnum >= markpointnum_max)
          {
             markpointnum_max = markpointnum_max ? markpointnum_max * 2 : 16;
-            markpoints = erealloc(mpoint_t *, markpoints, 
-                                  sizeof *markpoints * markpointnum_max);
+            markpoints = erealloc(mpoint_t *, markpoints,
+               sizeof *markpoints * markpointnum_max);
          }
 
          for(int i = 0; i < markpointnum; i++)

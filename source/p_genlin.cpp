@@ -933,7 +933,7 @@ manual_stair:
       speed        = floor->speed;
       height       = sec->floorheight + floor->direction * stairsize;
       texture      = sec->floorpic;
-      floor->crush = -1;
+      floor->crush = sd->crush ? 10 : -1; // constant crush damage, for now
       floor->type  = genBuildStair; // jff 3/31/98 do not leave uninited
       
       floor->floordestheight = height;
@@ -1018,7 +1018,7 @@ manual_stair:
                floor->speed = speed;
             
             floor->floordestheight = height;
-            floor->crush = -1;
+            floor->crush = sd->crush ? 10 : -1;
             floor->type = genBuildStair; // jff 3/31/98 do not leave uninited
 
             // haleyjd 10/13/05: init reset and delay properties
@@ -1568,7 +1568,7 @@ enum
 void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool usetag)
 {
    line_t *l = NULL;
-   int linenum = -1, texnum;
+   int linenum, texnum;
    
    texnum = R_FindWall(texture);
    linenum = -1;
@@ -1737,8 +1737,6 @@ static cell AMX_NATIVE_CALL sm_changelinetextag(AMX *amx, cell *params)
 
 CONSOLE_COMMAND(p_linespec, cf_notnet|cf_level)
 {
-   int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
-
    if(!Console.argc)
    {
       C_Printf("usage: p_linespec name args\n");
@@ -1750,6 +1748,7 @@ CONSOLE_COMMAND(p_linespec, cf_notnet|cf_level)
    {
       if(EV_CompositeActionFlags(bind->action) & EV_PARAMLINESPEC)
       {
+         int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
          int numargs = emin(Console.argc - 1, NUMLINEARGS);
          for(int i = 0; i < numargs; i++)
             args[i] = Console.argv[i + 1]->toInt();

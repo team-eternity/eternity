@@ -58,6 +58,7 @@
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_portal.h"
+#include "p_portalcross.h"
 #include "p_pushers.h"
 #include "p_saveg.h"
 #include "p_scroll.h"
@@ -170,7 +171,7 @@ void P_InitPicAnims(void)
    
    //  Init animation
    //jff 3/23/98 read from predefined or wad lump instead of table
-   animdefs = (animdef_t *)wGlobalDir.cacheLumpName("ANIMATED", PU_STATIC);
+   animdefs = static_cast<animdef_t *>(wGlobalDir.cacheLumpName("ANIMATED", PU_STATIC));
 
    lastanim = anims;
    for(i = 0; animdefs[i].istexture != 0xff; i++)
@@ -942,14 +943,14 @@ bool P_WasSecret(const sector_t *sec)
 //
 // haleyjd 06/01/04: starts a script from a linedef.
 //
-void P_StartLineScript(line_t *line, Mobj *thing)
+void P_StartLineScript(line_t *line, int side, Mobj *thing, polyobj_s *po)
 {
    constexpr uint32_t argc = NUMLINEARGS - 1;
    uint32_t args[argc];
    for(size_t i = argc; i--;)
       args[i] = line->args[i + 1];
 
-   ACS_ExecuteScriptI(line->args[0], gamemap, args, argc, thing, line, 0);
+   ACS_ExecuteScriptI(line->args[0], gamemap, args, argc, thing, line, side, po);
 }
 
 //=============================================================================
@@ -973,11 +974,11 @@ void P_StartLineScript(line_t *line, Mobj *thing)
 //
 // killough 11/98: change linenum parameter to a line_t pointer
 
-void P_CrossSpecialLine(line_t *line, int side, Mobj *thing)
+void P_CrossSpecialLine(line_t *line, int side, Mobj *thing, polyobj_t *poly)
 {
    // EV_SPECIALS TODO: This function should return success or failure to 
    // the caller.
-   EV_ActivateSpecialLineWithSpac(line, side, thing, SPAC_CROSS);
+   EV_ActivateSpecialLineWithSpac(line, side, thing, poly, SPAC_CROSS);
 }
 
 //
@@ -996,7 +997,7 @@ void P_ShootSpecialLine(Mobj *thing, line_t *line, int side)
 {
    // EV_SPECIALS TODO: This function should return success or failure to 
    // the caller.
-   EV_ActivateSpecialLineWithSpac(line, side, thing, SPAC_IMPACT);
+   EV_ActivateSpecialLineWithSpac(line, side, thing, nullptr, SPAC_IMPACT);
 }
 
         // sf: changed to enable_nuke for console
@@ -1274,6 +1275,8 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
    P_RemoveAllActiveCeilings();  // jff 2/22/98 use killough's scheme
    
    PlatThinker::RemoveAllActivePlats(); // killough
+
+   ScrollThinker::RemoveAllScrollers();
 
    // clear buttons (haleyjd 10/16/05: button stuff -> p_switch.c)
    P_ClearButtons();
@@ -2097,7 +2100,6 @@ void P_AttachLines(const line_t *cline, bool ceiling)
       memcpy(attached, cline->frontsector->c_attached, sizeof(int) * numattach);
       Z_Free(cline->frontsector->c_attached);
       cline->frontsector->c_attached = NULL;
-      cline->frontsector->c_numattached = 0;
       cline->frontsector->c_numattached = 0;
       Z_Free(cline->frontsector->c_attsectors);
    }

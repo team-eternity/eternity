@@ -79,8 +79,6 @@ static void P_LightningFlash()
 {
    int i;
    sector_t *tempSec;
-   bool foundSec;
-   int flashLight;
    static PointThinker thunderSndOrigin;
    skyflat_t *sky1 = R_SkyFlatForIndex(0);
 
@@ -121,9 +119,9 @@ static void P_LightningFlash()
    else
    {
       LightningFlash = (P_Random(pr_lightning) & 7) + 8;
-      flashLight     = 200 + (P_Random(pr_lightning) & 31);
+      int flashLight     = 200 + (P_Random(pr_lightning) & 31);
       
-      foundSec = false;
+      bool foundSec = false;
 
       for(i = 0; i < numsectors; i++)
       {

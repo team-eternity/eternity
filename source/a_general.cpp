@@ -36,6 +36,7 @@
 #include "d_mod.h"
 #include "doomstat.h"
 #include "e_args.h"
+#include "e_mod.h"
 #include "e_sound.h"
 #include "e_states.h"
 #include "e_string.h"
@@ -48,7 +49,7 @@
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
-#include "p_portal.h"
+#include "p_portalcross.h"
 #include "p_pspr.h"
 #include "p_setup.h"
 #include "p_slopes.h"
@@ -80,7 +81,7 @@ void A_Mushroom(actionargs_t *actionargs)
 
    ShotType = E_ArgAsThingNumG0(args, 0);
 
-   if(ShotType < 0 || ShotType == -1)
+   if(ShotType < 0/* || ShotType == -1*/)
       ShotType = E_SafeThingType(MT_FATSHOT);
    
    A_Explode(actionargs);         // make normal explosion
@@ -182,6 +183,7 @@ static argkeywd_t scratchkwds =
 //              * 3 == use constant value in args[1]
 // * args[1] == counter number for mode 2; constant for mode 3
 // * args[2] == EDF sound name
+// * args[3] == damagetype, either string or int
 //
 void A_Scratch(actionargs_t *actionargs)
 {
@@ -234,7 +236,9 @@ void A_Scratch(actionargs_t *actionargs)
             S_StartSfxInfo(params.setNormalDefaults(mo));
       }
 
-      P_DamageMobj(mo->target, mo, mo, damage, MOD_HIT);
+      // Set mod to 4th arg
+      const int mod = E_ArgAsDamageType(args, 3, MOD_HIT)->num;
+      P_DamageMobj(mo->target, mo, mo, damage, mod);
    }
 }
 
@@ -283,7 +287,7 @@ void A_LineEffect(actionargs_t *actionargs)
          player.health = 100;                        // Alive player
          junk.args[0] = junk.tag = mo->state->misc2;            // Sector tag for linedef
          if(!P_UseSpecialLine(mo, &junk, 0))         // Try using it
-            P_CrossSpecialLine(&junk, 0, mo);        // Try crossing it
+            P_CrossSpecialLine(&junk, 0, mo, nullptr);  // Try crossing it
          if(!junk.special)                           // If type cleared,
             mo->intflags |= MIF_LINEDONE;            // no more for this thing
          mo->player = oldplayer;                     // Restore player status
@@ -500,11 +504,11 @@ void A_StartScript(actionargs_t *actionargs)
          for(int i = 0; i < argc; ++i)
              argv[i] = E_ArgAsInt(args, i + 2, 0);
 
-         ACS_ExecuteScriptIResult(scriptnum, argv, argc, actor, NULL, 0);
+         ACS_ExecuteScriptIResult(scriptnum, argv, argc, actor, NULL, 0, nullptr);
       }
       else
       {
-         ACS_ExecuteScriptIResult(scriptnum, NULL, 0, actor, NULL, 0);
+         ACS_ExecuteScriptIResult(scriptnum, NULL, 0, actor, NULL, 0, nullptr);
       }
    }
 }
@@ -537,11 +541,11 @@ void A_StartScriptNamed(actionargs_t *actionargs)
          for(int i = 0; i < argc; ++i)
              argv[i] = E_ArgAsInt(args, i + 2, 0);
 
-         ACS_ExecuteScriptSResult(scriptname, argv, argc, actor, NULL, 0);
+         ACS_ExecuteScriptSResult(scriptname, argv, argc, actor, NULL, 0, nullptr);
       }
       else
       {
-         ACS_ExecuteScriptSResult(scriptname, NULL, 0, actor, NULL, 0);
+         ACS_ExecuteScriptSResult(scriptname, NULL, 0, actor, NULL, 0, nullptr);
       }
    }
 }
@@ -734,7 +738,7 @@ void A_MissileAttack(actionargs_t *actionargs)
    Mobj      *mo;
    int        type, a, statenum;
    bool       homing, hastarget = true;
-   fixed_t    z, momz;
+   fixed_t    z;
    angle_t    ang;
 
    if(!actor->target || actor->target->health <= 0)
@@ -784,10 +788,10 @@ void A_MissileAttack(actionargs_t *actionargs)
       // calculate z momentum
       Mobj *target = actor->target;
 
-      momz = P_MissileMomz(target->x - actor->x,
-                           target->y - actor->y,
-                           target->z - actor->z,
-                           mobjinfo[type]->speed);
+      fixed_t momz = P_MissileMomz(target->x - actor->x,
+                                   target->y - actor->y,
+                                   target->z - actor->z,
+                                   mobjinfo[type]->speed);
 
       mo = P_SpawnMissileAngle(actor, type, actor->angle + ang, momz, z);
    }

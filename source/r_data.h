@@ -156,6 +156,8 @@ void R_InitData(void);
 void R_FreeData(void);
 void R_PrecacheLevel(void);
 
+void R_InitSpriteProjSpan();
+
 // Retrieval.
 // Floor/ceiling opaque texture tiles,
 // lookup by name.

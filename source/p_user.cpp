@@ -43,7 +43,7 @@
 #include "p_map.h"
 #include "p_map3d.h"
 #include "p_maputl.h"
-#include "p_portal.h"
+#include "p_portalcross.h"
 #include "p_skin.h"
 #include "p_spec.h"
 #include "p_user.h"
@@ -353,6 +353,20 @@ void P_MovePlayer(player_t* player)
             P_Thrust(player, mo->angle-ANG90, 0, cmd->sidemove*movefactor);
          }
       }
+      else if(!comp[comp_aircontrol])
+      {
+         // Do not move player 
+         if(cmd->forwardmove)
+         {
+            P_Thrust(player, mo->angle, 0, FRACUNIT >> 8);
+         }
+
+         // TODO: disable this part in Strife
+         if(cmd->sidemove)
+         {
+            P_Thrust(player, mo->angle, 0, FRACUNIT >> 8);
+         }
+      }
 
       if(mo->state == states[mo->info->spawnstate])
          P_SetMobjState(mo, mo->info->seestate);
@@ -616,7 +630,7 @@ void P_PlayerThink(player_t *player)
       player->prevpitch = player->pitch;
       int look = cmd->look;
 
-      if(look)
+      if(look && (!player->mo->reactiontime || demo_version < 342))
       {
          // test for special centerview value
          if(look == -32768)
@@ -647,8 +661,9 @@ void P_PlayerThink(player_t *player)
       P_MovePlayer(player);
 
       // Handle actions   -- joek 12/22/07
-      
-      if(cmd->actions & AC_JUMP && !LevelInfo.disableJump)
+      // ioanch: not on demo_version lower than some amount. Was happening
+      // accidentally in -vanilla.
+      if(cmd->actions & AC_JUMP && demo_version >= 335 && !LevelInfo.disableJump)
       {
          if((player->mo->z == player->mo->floorz || 
              (player->mo->intflags & MIF_ONMOBJ)) && !player->jumptime)

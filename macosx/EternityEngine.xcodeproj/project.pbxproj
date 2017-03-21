@@ -288,6 +288,7 @@
 		4F5F399F182D9C1C0027813A /* libsmpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF6B1753482C00E70FEC /* libsmpeg.a */; };
 		4F68CE8D1963D88100E7B8BE /* ev_sectors.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F68CE8B1963D88100E7B8BE /* ev_sectors.cpp */; };
 		4F7ADA181E0C623900E34F5F /* m_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F7ADA161E0C623900E34F5F /* m_utils.cpp */; };
+		4FAAD5941E583113001D7263 /* p_portalcross.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FAAD5931E583113001D7263 /* p_portalcross.cpp */; };
 		4FB5F0051CCB5A0D00EFF2D9 /* p_portalclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FB5F0031CCB5A0D00EFF2D9 /* p_portalclip.cpp */; };
 		4FC0A9271E1E2A50006CEC45 /* Action.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FC0A8FB1E1E2A50006CEC45 /* Action.cpp */; };
 		4FC0A9281E1E2A50006CEC45 /* Array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FC0A8FD1E1E2A50006CEC45 /* Array.cpp */; };
@@ -381,6 +382,8 @@
 		4F9F72D016BFB70A00C405AE /* p_scroll.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = p_scroll.h; path = ../source/p_scroll.h; sourceTree = "<group>"; };
 		4F9F72D116BFB73200C405AE /* p_pushers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_pushers.cpp; path = ../source/p_pushers.cpp; sourceTree = "<group>"; };
 		4F9F72D216BFB73200C405AE /* p_scroll.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_scroll.cpp; path = ../source/p_scroll.cpp; sourceTree = "<group>"; };
+		4FAAD5921E583052001D7263 /* p_portalcross.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = p_portalcross.h; path = ../source/p_portalcross.h; sourceTree = "<group>"; };
+		4FAAD5931E583113001D7263 /* p_portalcross.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_portalcross.cpp; path = ../source/p_portalcross.cpp; sourceTree = "<group>"; };
 		4FB5F0031CCB5A0D00EFF2D9 /* p_portalclip.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_portalclip.cpp; path = ../source/p_portalclip.cpp; sourceTree = "<group>"; };
 		4FB5F0041CCB5A0D00EFF2D9 /* p_portalclip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = p_portalclip.h; path = ../source/p_portalclip.h; sourceTree = "<group>"; };
 		4FC0A8FB1E1E2A50006CEC45 /* Action.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Action.cpp; path = ../acsvm/ACSVM/Action.cpp; sourceTree = SOURCE_ROOT; };
@@ -436,7 +439,6 @@
 		4FF640B91735256700793714 /* v_alloc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = v_alloc.h; path = ../source/v_alloc.h; sourceTree = "<group>"; };
 		4FFD27341796990400E4E5B1 /* a_args.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = a_args.h; path = ../source/a_args.h; sourceTree = "<group>"; };
 		4FFD27351796990400E4E5B1 /* p_henemy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_henemy.cpp; path = ../source/p_henemy.cpp; sourceTree = "<group>"; };
-		4FFD27361796990400E4E5B1 /* sclinux.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sclinux.h; path = ../source/sclinux.h; sourceTree = "<group>"; };
 		4FFD27371796990400E4E5B1 /* w_iterator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = w_iterator.h; path = ../source/w_iterator.h; sourceTree = "<group>"; };
 		4FFFDF691753482C00E70FEC /* libFLAC.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libFLAC.a; path = staticlib/libFLAC.a; sourceTree = "<group>"; };
 		4FFFDF6A1753482C00E70FEC /* libmikmod.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmikmod.a; path = staticlib/libmikmod.a; sourceTree = "<group>"; };
@@ -1608,6 +1610,8 @@
 				FACACB571652F1170091AF2E /* p_portal.h */,
 				4FB5F0031CCB5A0D00EFF2D9 /* p_portalclip.cpp */,
 				4FB5F0041CCB5A0D00EFF2D9 /* p_portalclip.h */,
+				4FAAD5931E583113001D7263 /* p_portalcross.cpp */,
+				4FAAD5921E583052001D7263 /* p_portalcross.h */,
 				FABF5D22158BF42800C49E93 /* p_pspr.cpp */,
 				FA16D42E15E01E96002318D1 /* p_pspr.h */,
 				4F9F72D116BFB73200C405AE /* p_pushers.cpp */,
@@ -1809,7 +1813,6 @@
 				FA16D40715E01E96002318D1 /* info.h */,
 				FABF5D32158BF42800C49E93 /* psnprntf.cpp */,
 				FA16D43815E01E96002318D1 /* psnprntf.h */,
-				4FFD27361796990400E4E5B1 /* sclinux.h */,
 				FABF5D49158BF42800C49E93 /* tables.cpp */,
 				FACACB751652FC980091AF2E /* tables.h */,
 				FABF5D52158BF42800C49E93 /* version.cpp */,
@@ -2076,6 +2079,7 @@
 				4F5F3967182D9B820027813A /* w_wad.cpp in Sources */,
 				4F5F3968182D9B820027813A /* w_zip.cpp in Sources */,
 				4F5F3969182D9B820027813A /* xl_scripts.cpp in Sources */,
+				4FAAD5941E583113001D7263 /* p_portalcross.cpp in Sources */,
 				4F5F396A182D9B820027813A /* z_native.cpp in Sources */,
 				4F5F396B182D9B820027813A /* dsp.cpp in Sources */,
 				4F5F396C182D9B820027813A /* SNES_SPC_misc.cpp in Sources */,

@@ -611,7 +611,7 @@ int I_Pick_DoPicker(bool haveIWADs[], int startchoice)
       {
          ++currentiwad;
       }
-      while(!haveIWADs[currentiwad] && currentiwad < NUMPICKIWADS);
+      while(currentiwad < NUMPICKIWADS && !haveIWADs[currentiwad]);
    }
 
    // this really shouldn't happen, but I check for safety

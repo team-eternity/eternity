@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2017 David Hill
 //
 // See COPYING for license information.
 //
@@ -22,27 +22,6 @@
 
 namespace ACSVM
 {
-   //
-   // ScriptType
-   //
-   enum class ScriptType
-   {
-      Closed,
-      BlueReturn,
-      Death,
-      Disconnect,
-      Enter,
-      Event,
-      Lightning,
-      Open,
-      Pickup,
-      RedReturn,
-      Respawn,
-      Return,
-      Unloading,
-      WhiteReturn,
-   };
-
    //
    // ScriptName
    //
@@ -71,12 +50,12 @@ namespace ACSVM
 
       ScriptName name;
 
-      Word       argC;
-      Word       codeIdx;
-      Word       flags;
-      Word       locArrC;
-      Word       locRegC;
-      ScriptType type;
+      Word argC;
+      Word codeIdx;
+      Word flags;
+      Word locArrC;
+      Word locRegC;
+      Word type;
 
       bool flagClient : 1;
       bool flagNet    : 1;

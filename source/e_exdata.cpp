@@ -97,6 +97,7 @@ static unsigned int sector_chains[NUMSECCHAINS];
 #define FIELD_OPTIONS "options"
 #define FIELD_ARGS    "args"
 #define FIELD_HEIGHT  "height"
+#define FIELD_SPECIAL "special"
 
 // linedef fields:
 #define FIELD_LINE_NUM       "recordnum"
@@ -148,6 +149,7 @@ static cfg_opt_t mapthing_opts[] =
    CFG_STR(FIELD_OPTIONS, "", CFGF_NONE),
    CFG_STR(FIELD_ARGS,    0,  CFGF_LIST),
    CFG_INT(FIELD_HEIGHT,  0,  CFGF_NONE),
+   CFG_INT(FIELD_SPECIAL, 0,  CFGF_NONE),
    CFG_END()
 };
 
@@ -210,6 +212,7 @@ static dehflags_t extlineflags[] =
    { "CLIPMIDTEX",   EX_ML_CLIPMIDTEX   },
    { "LOWERPORTAL",  EX_ML_LOWERPORTAL  },
    { "UPPERPORTAL",  EX_ML_UPPERPORTAL  },
+   { "POLYOBJECT",   EX_ML_POLYOBJECT   },
    { NULL,           0                  }
 };
 
@@ -374,7 +377,7 @@ static int E_ParseTypeField(const char *value)
    long num;
    int  i;
    char prefix[16];
-   const char *colonloc, *strval;
+   const char *colonloc;
    char *numpos = NULL;
 
    num = strtol(value, &numpos, 0);
@@ -385,6 +388,7 @@ static int E_ParseTypeField(const char *value)
    // If has a colon, or is otherwise not just a number...
    if(colonloc || (numpos && *numpos != '\0'))
    {
+      const char *strval;
       if(colonloc) // allow a thing: prefix for compatibility
          strval = colonloc + 1;
       else
@@ -445,7 +449,7 @@ static void E_ProcessEDThings(cfg_t *cfg)
       return;
 
    // allocate the mapthing_t structures
-   EDThings = (mapthing_t *)(Z_Malloc(numEDMapThings * sizeof(mapthing_t), PU_LEVEL, NULL));
+   EDThings = estructalloctag(mapthing_t, numEDMapThings, PU_LEVEL);
 
    // initialize the hash chains
    for(i = 0; i < NUMMTCHAINS; ++i)
@@ -505,6 +509,8 @@ static void E_ProcessEDThings(cfg_t *cfg)
       // get height
       // ioanch 20151218: fixed point coordinate
       EDThings[i].height = (int16_t)cfg_getint(thingsec, FIELD_HEIGHT) << FRACBITS;
+
+      EDThings[i].special = int16_t(cfg_getint(thingsec, FIELD_SPECIAL));
 
       // TODO: any other new fields
    }
@@ -1127,8 +1133,7 @@ static void E_ProcessEDLines(cfg_t *cfg)
       return;
 
    // allocate the maplinedefext_t structures
-   EDLines = (maplinedefext_t *)(Z_Malloc(numEDLines * sizeof(maplinedefext_t),
-                                          PU_LEVEL, NULL));
+   EDLines = estructalloctag(maplinedefext_t, numEDLines, PU_LEVEL);
 
    // initialize the hash chains
    for(i = 0; i < NUMLDCHAINS; ++i)

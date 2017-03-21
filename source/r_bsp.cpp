@@ -362,7 +362,8 @@ void R_ClearClipSegs()
 //
 // R_SetupPortalClipsegs
 //
-bool R_SetupPortalClipsegs(int minx, int maxx, float *top, float *bottom)
+bool R_SetupPortalClipsegs(int minx, int maxx, 
+   const float *top, const float *bottom)
 {
    int i = minx, stop = maxx + 1;
    cliprange_t *solidseg = solidsegs;
@@ -502,7 +503,7 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
    {
       int underwater; // haleyjd: restructured
       
-      int heightsec = -1;
+      int heightsec;
       
       const sector_t *s = &sectors[sec->heightsec];
       
@@ -1648,69 +1649,17 @@ static bool R_allowBehindDivline(const dlnormal_t &dln, const seg_t *renderSeg)
 }
 
 //
-// Given a bounding box, picks the two divlines nearest to the viewer
+// Checks seg against seg
 //
-void R_PickSidesNearViewer(const fixed_t bbox[4], dlnormal_t ports[2])
+bool R_AllowBehindSectorPortal(const fixed_t bbox[4], fixed_t x, fixed_t y)
 {
-   ports[0].dl.dx = 0;
-   ports[0].ny = 0;
-   ports[1].dl.dy = 0;
-   ports[1].nx = 0;
-   if(viewx < bbox[BOXLEFT])
-   {
-      ports[0].dl.x = bbox[BOXLEFT];
-      ports[0].dl.y = bbox[BOXTOP];
-      ports[0].dl.dy = bbox[BOXBOTTOM] - bbox[BOXTOP];
-      ports[0].nx = -1.f;
-   }
-   else if(viewx < bbox[BOXRIGHT])
-   {
-      ports[0].dl.dy = 0;
-   }
-   else
-   {
-      ports[0].dl.x = bbox[BOXRIGHT];
-      ports[0].dl.y = bbox[BOXBOTTOM];
-      ports[0].dl.dy = bbox[BOXTOP] - bbox[BOXBOTTOM];
-      ports[0].nx = 1.f;
-   }
-
-   if(viewy < bbox[BOXBOTTOM])
-   {
-      ports[1].dl.x = bbox[BOXLEFT];
-      ports[1].dl.y = bbox[BOXBOTTOM];
-      ports[1].dl.dx = bbox[BOXRIGHT] - bbox[BOXLEFT];
-      ports[1].ny = -1.f;
-   }
-   else if(viewy < bbox[BOXTOP])
-      ports[1].dl.dx = 0;
-   else
-   {
-      ports[1].dl.x = bbox[BOXRIGHT];
-      ports[1].dl.y = bbox[BOXTOP];
-      ports[1].dl.dx = bbox[BOXLEFT] - bbox[BOXRIGHT];
-      ports[1].ny = 1.f;
-   }
-}
-
-//
-// For sectors
-//
-static bool R_allowBehindSectorPortal(const renderbarrier_t &barrier, 
-   const seg_t *renderSeg)
-{
-   dlnormal_t ports[2];
-   const fixed_t *bbox = barrier.bbox;
-
-   R_PickSidesNearViewer(bbox, ports);
-
-   // now check
-   bool allow = true;
-   if(ports[0].dl.dy)
-      allow = R_allowBehindDivline(ports[0], renderSeg);
-   if(ports[1].dl.dx)
-      allow = allow && R_allowBehindDivline(ports[1], renderSeg);
-   return allow;
+   divline_t dl;
+   dl.x = x;
+   dl.y = y;
+   dl.dx = 8 * viewsin; // just define the direction
+   dl.dy = -8 * viewcos;
+   // Return okay if any part is on the correct side
+   return P_BoxOnDivlineSide(bbox, dl) != 1;
 }
 
 //
@@ -1734,7 +1683,8 @@ static void R_AddLine(seg_t *line, bool dynasegs)
    vertex_t  *v1, *v2;
 
    // ioanch 20160125: reject segs in front of line when rendering line portal
-   if(portalrender.w)
+   if(portalrender.w && portalrender.w->portal &&
+      portalrender.w->portal->type != R_SKYBOX)
    {
       // only reject if they're anchored portals (including linked)
       if(portalrender.w->line)
@@ -1744,8 +1694,13 @@ static void R_AddLine(seg_t *line, bool dynasegs)
       }
       else
       {
-         //if(!R_allowBehindSectorPortal(portalrender.w->barrier, line))
-         //   return;
+         if(!R_AllowBehindSectorPortal(portalrender.w->barrier.bbox,
+            line->v1->x, line->v1->y) &&
+            !R_AllowBehindSectorPortal(portalrender.w->barrier.bbox,
+               line->v2->x, line->v2->y))
+         {
+            return;
+         }
       }
    }
    // SoM: one of the byproducts of the portal height enforcement: The top 
@@ -2174,6 +2129,18 @@ static void R_AddLine(seg_t *line, bool dynasegs)
 
    // Add new solid segs when it is safe to do so...
    R_AddMarkedSegs();
+
+   sectorbox_t &box = pSectorBoxes[seg.line->frontsector - sectors];
+   if(seg.f_window && box.fframeid != frameid)
+   {
+      box.fframeid = frameid;
+      R_CalcRenderBarrier(*seg.f_window, box);
+   }
+   if(seg.c_window && box.cframeid != frameid)
+   {
+      box.cframeid = frameid;
+      R_CalcRenderBarrier(*seg.c_window, box);
+   }
 }
 
 
@@ -2383,6 +2350,16 @@ static void R_Subsector(int num)
    seg.frontsec = R_FakeFlat(seg.frontsec, &tempsec, &floorlightlevel,
                              &ceilinglightlevel, false);   // killough 4/11/98
 
+   // ioanch: reject all sectors fully above or below a sector portal.
+   if(portalrender.active && portalrender.w->portal->type != R_SKYBOX &&
+      !portalrender.w->line && ((portalrender.w->up &&
+         seg.frontsec->ceilingheight < portalrender.w->planez) ||
+         (!portalrender.w->up && 
+            seg.frontsec->floorheight > portalrender.w->planez)))
+   {
+      return;
+   }
+
    // haleyjd 01/05/08: determine angles for floor and ceiling
    floorangle   = seg.frontsec->floorbaseangle   + seg.frontsec->floorangle;
    ceilingangle = seg.frontsec->ceilingbaseangle + seg.frontsec->ceilingangle;
@@ -2522,11 +2499,6 @@ static void R_Subsector(int num)
 
    while(count--)
       R_AddLine(line++, false);
-
-   //if(seg.f_window)
-   //   R_CalcRenderBarrier(seg.f_window, sub);
-   //if(seg.c_window)
-   //   R_CalcRenderBarrier(seg.c_window, sub);
 }
 
 //

@@ -35,6 +35,7 @@
 #include "m_fixed.h"
 
 struct edf_string_t;
+struct emod_t;
 class  Mobj;
 struct mobjinfo_t;
 struct sfxinfo_t;
@@ -60,6 +61,7 @@ typedef enum
    EVALTYPE_BEXPTR,    // evaluated to a bexptr
    EVALTYPE_EDFSTRING, // evaluated to an edf string
    EVALTYPE_KEYWORD,   // evaluated to a keyword enumeration value
+   EVALTYPE_MOD,       // evaluated to a damagetype/means of damage
    EVALTYPE_NUMTYPES
 } evaltype_e;
 
@@ -73,6 +75,7 @@ typedef struct evalcache_s
       double        d;
       sfxinfo_t    *s;
       edf_string_t *estr;
+      emod_t       *mod;
       unsigned int  flags[MAXFLAGFIELDS];
    } value;
 } evalcache_t;
@@ -112,6 +115,7 @@ unsigned int *E_ArgAsThingFlags(arglist_t *al, int index);
 sfxinfo_t    *E_ArgAsSound(arglist_t *al, int index);
 int           E_ArgAsBexptr(arglist_t *al, int index);
 edf_string_t *E_ArgAsEDFString(arglist_t *al, int index);
+emod_t       *E_ArgAsDamageType(arglist_t *al, int index, int defvalue);
 int           E_ArgAsKwd(arglist_t *al, int index, argkeywd_t *kw, int defvalue);
 
 state_t      *E_GetJumpInfo(mobjinfo_t *mi, const char *arg);

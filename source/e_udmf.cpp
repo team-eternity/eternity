@@ -360,6 +360,8 @@ bool UDMFParser::loadLinedefs(UDMFSetupSettings &setupSettings)
             ld->extflags |= EX_ML_MISSILE | EX_ML_CROSS;
          if(uld.repeatspecial)
             ld->extflags |= EX_ML_REPEAT;
+         if(uld.polycross)
+            ld->extflags |= EX_ML_POLYOBJECT | EX_ML_CROSS;
       }
 
       ld->special = uld.special;
@@ -498,23 +500,17 @@ bool UDMFParser::loadThings()
          ft->args[4] = ut.arg[4];
       }
 
+      if(mNamespace == namespace_Eternity)
+      {
+         ft->healthModifier = M_DoubleToFixed(ut.health);
+      }
+
       // haleyjd 10/05/05: convert heretic things
       if(mNamespace == namespace_Heretic)
          P_ConvertHereticThing(ft);
 
       P_ConvertDoomExtendedSpawnNum(ft);
-      Mobj *mobj = P_SpawnMapThing(ft);
-
-      // New specials
-      if(mobj && ut.health && ut.health != 1.0)   // "health" property
-      {
-         if(ut.health > 0)    // either multiply spawnhealth
-            mobj->health = static_cast<int>(round(mobj->health * ut.health));
-         else                 // or use the absolute in case of negative
-            mobj->health = static_cast<int>(fabs(round(ut.health)));
-         if(mobj->health <= 0)   // ensure valid health
-            mobj->health = 1;
-      }
+      P_SpawnMapThing(ft);
    }
 
    // haleyjd: all player things for players in this game should now be valid
@@ -617,6 +613,7 @@ enum token_e
    t_monsteruse,
    t_offsetx,
    t_offsety,
+   t_polycross,
    t_portal,
    t_portalceiling,
    t_portal_ceil_blocksound,
@@ -759,6 +756,7 @@ static keytoken_t gTokenList[] =
    TOKEN(monsteruse),
    TOKEN(offsetx),
    TOKEN(offsety),
+   TOKEN(polycross),
    TOKEN(portal),
    TOKEN(portalceiling),
    TOKEN(portal_ceil_blocksound),
@@ -984,6 +982,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                   READ_BOOL(linedef, monsterpush);
                   READ_BOOL(linedef, missilecross);
                   READ_BOOL(linedef, repeatspecial);
+                  READ_BOOL(linedef, polycross);
 
                   READ_BOOL(linedef, midtex3d);
                   READ_BOOL(linedef, midtex3dimpassible);
@@ -1189,6 +1188,8 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                   switch(kt->token)
                   {
                      READ_NUMBER(thing, health);
+                     default:
+                        break;
                   }
                }
             }

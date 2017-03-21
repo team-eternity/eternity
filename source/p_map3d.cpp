@@ -54,6 +54,7 @@
 #include "p_inter.h"
 #include "p_portal.h"
 #include "p_portalclip.h"  // ioanch 20160115
+#include "p_portalcross.h"
 #include "p_setup.h"
 #include "r_main.h"
 #include "r_pcheck.h"
@@ -171,7 +172,7 @@ static bool PIT_TestMobjZ(Mobj *thing)
    fixed_t blockdist = thing->radius + clip.thing->radius;
 
    if(!(thing->flags & MF_SOLID) ||                      // non-solid?
-      thing->flags & (MF_SPECIAL|MF_NOCLIP|MF_CORPSE) || // other is special?
+      thing->flags & (MF_SPECIAL|MF_NOCLIP) || // other is special?
       clip.thing->flags & MF_SPECIAL ||                   // this is special?
       thing == clip.thing ||                              // same as self?
       clip.thing->z > thing->z + thing->height ||         // over?
@@ -301,7 +302,6 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
 {
    fixed_t topz;      // haleyjd: from zdoom
    fixed_t blockdist;
-   int damage;
 
    // EDF FIXME: haleyjd 07/13/03: these may be temporary fixes
    int bruiserType = E_ThingNumForDEHNum(MT_BRUISER); 
@@ -415,6 +415,7 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
    if(clip.thing->flags & MF_MISSILE || 
       (clip.thing->flags & MF_BOUNCES && !(clip.thing->flags & MF_SOLID)))
    {
+      int damage;
       // haleyjd 07/06/05: some objects may use info->height instead
       // of their current height value in this situation, to avoid
       // altering the playability of maps when 3D object clipping
@@ -779,7 +780,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
 // floorz/ceilingz clip. This is just for testing, and stuff like collecting
 // powerups and exploding touchy objects won't happen.
 //
-bool P_CheckPositionExt(Mobj *mo, fixed_t x, fixed_t y)
+bool P_CheckPositionExt(Mobj *mo, fixed_t x, fixed_t y, fixed_t z)
 {
    unsigned int flags;
    bool xygood;
@@ -794,13 +795,13 @@ bool P_CheckPositionExt(Mobj *mo, fixed_t x, fixed_t y)
    mo->intflags &= ~MIF_NOTOUCH;
 
    if(xygood)
-   { 
-      fixed_t z = mo->z;
+   {
+      subsector_t *newsubsec = R_PointInSubsector(x, y);
       
       if(mo->flags2 & MF2_FLOATBOB)
          z -= FloatBobOffsets[(mo->floatbob + leveltime - 1) & 63];
 
-      if(z < mo->floorz || z + mo->height > mo->ceilingz)
+      if(z < newsubsec->sector->floorheight || z + mo->height > newsubsec->sector->ceilingheight)
          return false;
    }
    
@@ -861,15 +862,18 @@ static bool PIT_FindAboveIntersectors(Mobj *thing)
 {
    fixed_t blockdist;
    if(!(thing->flags & MF_SOLID) ||               // Can't hit thing?
-      (thing->flags & (MF_CORPSE|MF_SPECIAL)) ||  // Corpse or special?
+      (thing->flags & MF_SPECIAL) ||  // Corpse or special?
       thing == clip.thing)                         // clipping against self?
       return true;
    
    blockdist = thing->radius + clip.thing->radius;
    
+   // Be portal aware
+   const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid, thing->groupid);
+
    // Didn't hit thing?
-   if(D_abs(thing->x - clip.x) >= blockdist || 
-      D_abs(thing->y - clip.y) >= blockdist)
+   if(D_abs(thing->x - link->x - clip.x) >= blockdist || 
+      D_abs(thing->y - link->y - clip.y) >= blockdist)
       return true;
 
    // Thing intersects above the base?
@@ -883,15 +887,18 @@ bool PIT_FindBelowIntersectors(Mobj *thing)
 {
    fixed_t blockdist;
    if(!(thing->flags & MF_SOLID) ||               // Can't hit thing?
-      (thing->flags & (MF_CORPSE|MF_SPECIAL)) ||  // Corpse or special?
+      (thing->flags & MF_SPECIAL) ||  // Corpse or special?
       thing == clip.thing)                           // clipping against self?
       return true;
 
    blockdist = thing->radius + clip.thing->radius;
    
+   // Be portal aware
+   const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid, thing->groupid);
+
    // Didn't hit thing?
-   if(D_abs(thing->x - clip.x) >= blockdist || 
-      D_abs(thing->y - clip.y) >= blockdist)
+   if(D_abs(thing->x - link->x - clip.x) >= blockdist ||
+      D_abs(thing->y - link->y - clip.y) >= blockdist)
       return true;
 
    if(thing->z + thing->height <= clip.thing->z + clip.thing->height &&
@@ -912,7 +919,6 @@ bool PIT_FindBelowIntersectors(Mobj *thing)
 //
 static void P_FindAboveIntersectors(Mobj *actor)
 {
-   int	xl, xh, yl, yh, bx, by;
    fixed_t x, y;
 
    if(actor->flags & MF_NOCLIP)
@@ -930,15 +936,17 @@ static void P_FindAboveIntersectors(Mobj *actor)
    clip.bbox[BOXRIGHT]  = x + actor->radius;
    clip.bbox[BOXLEFT]   = x - actor->radius;
 
-   xl = (clip.bbox[BOXLEFT]   - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
-   xh = (clip.bbox[BOXRIGHT]  - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
-   yl = (clip.bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
-   yh = (clip.bbox[BOXTOP]    - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
+   fixed_t bbox[4];
+   bbox[BOXLEFT] = clip.bbox[BOXLEFT] - MAXRADIUS;
+   bbox[BOXRIGHT] = clip.bbox[BOXRIGHT] + MAXRADIUS;
+   bbox[BOXBOTTOM] = clip.bbox[BOXBOTTOM] - MAXRADIUS;
+   bbox[BOXTOP] = clip.bbox[BOXTOP] + MAXRADIUS;
 
-   for(bx = xl; bx <= xh; bx++)
-      for(by = yl; by <= yh; by++)
-         if(!P_BlockThingsIterator(bx, by, PIT_FindAboveIntersectors))
-            return;
+   if(!P_TransPortalBlockWalker(bbox, actor->groupid, true, nullptr,
+      [](int x, int y, int groupid, void *data) -> bool {
+      return P_BlockThingsIterator(x, y, groupid, PIT_FindAboveIntersectors);
+   }))
+      return;
 
    return;
 }
@@ -950,7 +958,6 @@ static void P_FindAboveIntersectors(Mobj *actor)
 //
 static void P_FindBelowIntersectors(Mobj *actor)
 {
-   int	xl,xh,yl,yh,bx,by;
    fixed_t x, y;
    
    if(actor->flags & MF_NOCLIP)
@@ -968,15 +975,17 @@ static void P_FindBelowIntersectors(Mobj *actor)
    clip.bbox[BOXRIGHT]  = x + actor->radius;
    clip.bbox[BOXLEFT]   = x - actor->radius;
 
-   xl = (clip.bbox[BOXLEFT]   - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
-   xh = (clip.bbox[BOXRIGHT]  - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
-   yl = (clip.bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
-   yh = (clip.bbox[BOXTOP]    - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
+   fixed_t bbox[4];
+   bbox[BOXLEFT] = clip.bbox[BOXLEFT] - MAXRADIUS;
+   bbox[BOXRIGHT] = clip.bbox[BOXRIGHT] + MAXRADIUS;
+   bbox[BOXBOTTOM] = clip.bbox[BOXBOTTOM] - MAXRADIUS;
+   bbox[BOXTOP] = clip.bbox[BOXTOP] + MAXRADIUS;
 
-   for(bx = xl; bx <= xh; bx++)
-      for(by = yl; by <= yh; by++)
-         if(!P_BlockThingsIterator(bx, by, PIT_FindBelowIntersectors))
-            return;
+   if(!P_TransPortalBlockWalker(bbox, actor->groupid, true, nullptr,
+      [](int x, int y, int groupid, void *data) -> bool {
+      return P_BlockThingsIterator(x, y, groupid, PIT_FindBelowIntersectors);
+   }))
+      return;
 
    return;
 }

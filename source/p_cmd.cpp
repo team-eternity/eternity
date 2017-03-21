@@ -355,7 +355,7 @@ CONSOLE_COMMAND(puke, cf_notnet)
       args[i - 1] = Console.argv[i]->toInt();
 
    ACS_ExecuteScriptIAlways(Console.argv[0]->toInt(), gamemap,
-                           args, 5, NULL, NULL, 0);
+                           args, 5, NULL, NULL, 0, nullptr);
 }
 
 CONSOLE_COMMAND(enable_lightning, 0)

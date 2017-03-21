@@ -102,6 +102,15 @@ static bool ACS_SetThingProp(ACSThread *thread, int32_t tid, uint32_t prop, uint
    return false;
 }
 
+//=============================================================================
+// Helpers
+//
+inline static PointThinker *ACS_getSoundSource(const ACSThreadInfo *info)
+{
+   // It can be activated both by polyobjects and mobjs. In that case, 
+   // prioritize mobj
+   return info->mo ? info->mo : info->po ? &info->po->spawnSpot : nullptr;
+}
 
 //=============================================================================
 // CallFuncs
@@ -158,7 +167,7 @@ bool ACS_CF_ActivatorSound(ACS_CF_ARGS)
    const char *snd  = thread->scopeMap->getString(argV[0])->str;
    int         vol  = argV[1];
 
-   S_StartSoundNameAtVolume(info->mo, snd, vol, ATTN_NORMAL, CHAN_AUTO);
+   S_StartSoundNameAtVolume(ACS_getSoundSource(info), snd, vol, ATTN_NORMAL, CHAN_AUTO);
 
    return false;
 }
@@ -336,7 +345,7 @@ bool ACS_ChkThingProp(Mobj *mo, uint32_t var, uint32_t val)
    case ACS_TP_ChaseGoal:    return false;
    case ACS_TP_Frightened:   return false;
    case ACS_TP_Friendly:     return !!(mo->flags & MF_FRIEND) == !!val;
-   case ACS_TP_SpawnHealth:  return mo->info->spawnhealth == val;
+   case ACS_TP_SpawnHealth:  return mo->getModifiedSpawnHealth() == val;
    case ACS_TP_Dropped:      return !!(mo->flags & MF_DROPPED) == !!val;
    case ACS_TP_NoTarget:     return false;
    case ACS_TP_Species:      return false;
@@ -363,6 +372,14 @@ bool ACS_ChkThingProp(Mobj *mo, uint32_t var, uint32_t val)
    case ACS_TP_StencilColor: return false;
    case ACS_TP_Friction:     return false;
    case ACS_TP_DamageMult:   return false;
+   case ACS_TP_Counter0:     return mo->counters[0] == val;
+   case ACS_TP_Counter1:     return mo->counters[1] == val;
+   case ACS_TP_Counter2:     return mo->counters[2] == val;
+   case ACS_TP_Counter3:     return mo->counters[3] == val;
+   case ACS_TP_Counter4:     return mo->counters[4] == val;
+   case ACS_TP_Counter5:     return mo->counters[5] == val;
+   case ACS_TP_Counter6:     return mo->counters[6] == val;
+   case ACS_TP_Counter7:     return mo->counters[7] == val;
 
    case ACS_TP_Angle:        return mo->angle >> 16 == (uint32_t)val;
    case ACS_TP_Armor:        return mo->player ? mo->player->armorpoints == val : false;
@@ -763,7 +780,7 @@ bool ACS_CF_GetLineY(ACS_CF_ARGS)
       angle_t angle = P_PointToAngle(line->v1->x, line->v1->y, line->v2->x, line->v2->y);
       angle -= ANG90;
       unsigned fineangle = angle >> ANGLETOFINESHIFT;
-      result += FixedMul(finecosine[fineangle], linedist);
+      result += FixedMul(finesine[fineangle], linedist);
    }
    thread->dataStk.push(result);
    return false;
@@ -1048,7 +1065,7 @@ uint32_t ACS_GetThingProp(Mobj *mo, uint32_t prop)
    case ACS_TP_ChaseGoal:    return 0;
    case ACS_TP_Frightened:   return 0;
    case ACS_TP_Friendly:     return !!(mo->flags & MF_FRIEND);
-   case ACS_TP_SpawnHealth:  return mo->info->spawnhealth;
+   case ACS_TP_SpawnHealth:  return mo->getModifiedSpawnHealth();
    case ACS_TP_Dropped:      return !!(mo->flags & MF_DROPPED);
    case ACS_TP_NoTarget:     return 0;
    case ACS_TP_Species:      return 0;
@@ -1075,6 +1092,14 @@ uint32_t ACS_GetThingProp(Mobj *mo, uint32_t prop)
    case ACS_TP_StencilColor: return 0;
    case ACS_TP_Friction:     return 0;
    case ACS_TP_DamageMult:   return 0;
+   case ACS_TP_Counter0:     return mo->counters[0];
+   case ACS_TP_Counter1:     return mo->counters[1];
+   case ACS_TP_Counter2:     return mo->counters[2];
+   case ACS_TP_Counter3:     return mo->counters[3];
+   case ACS_TP_Counter4:     return mo->counters[4];
+   case ACS_TP_Counter5:     return mo->counters[5];
+   case ACS_TP_Counter6:     return mo->counters[6];
+   case ACS_TP_Counter7:     return mo->counters[7];
 
    case ACS_TP_Angle:        return mo->angle >> 16;
    case ACS_TP_Armor:        return mo->player ? mo->player->armorpoints : 0;
@@ -1802,7 +1827,7 @@ bool ACS_CF_SetThingPos(ACS_CF_ARGS)
    fixed_t  z    = argV[3];
    bool     fog  = argV[4] ? true : false;
    uint32_t res  = 0;
-   Mobj    *mo, *fogmo;
+   Mobj    *mo;
 
    if((mo = P_FindMobjFromTID(tid, nullptr, info->mo)))
    {
@@ -1812,7 +1837,7 @@ bool ACS_CF_SetThingPos(ACS_CF_ARGS)
 
       mo->z = z;
 
-      if(P_CheckPositionExt(mo, x, y))
+      if(P_CheckPositionExt(mo, x, y, z))
       {
          subsector_t *newsubsec;
 
@@ -1837,7 +1862,7 @@ bool ACS_CF_SetThingPos(ACS_CF_ARGS)
          if(fog)
          {
             // Teleport fog at source...
-            fogmo = P_SpawnMobj(oldx, oldy, oldz + GameModeInfo->teleFogHeight,
+            Mobj *fogmo = P_SpawnMobj(oldx, oldy, oldz + GameModeInfo->teleFogHeight,
                                 E_SafeThingName(GameModeInfo->teleFogType));
             S_StartSound(fogmo, GameModeInfo->teleSound);
 
@@ -1916,6 +1941,14 @@ void ACS_SetThingProp(Mobj *thing, uint32_t var, uint32_t val)
    case ACS_TP_StencilColor: break;
    case ACS_TP_Friction:     break;
    case ACS_TP_DamageMult:   break;
+   case ACS_TP_Counter0:     thing->counters[0] = val; break;
+   case ACS_TP_Counter1:     thing->counters[1] = val; break;
+   case ACS_TP_Counter2:     thing->counters[2] = val; break;
+   case ACS_TP_Counter3:     thing->counters[3] = val; break;
+   case ACS_TP_Counter4:     thing->counters[4] = val; break;
+   case ACS_TP_Counter5:     thing->counters[5] = val; break;
+   case ACS_TP_Counter6:     thing->counters[6] = val; break;
+   case ACS_TP_Counter7:     thing->counters[7] = val; break;
 
    case ACS_TP_Angle:        thing->angle = val << 16; break;
    case ACS_TP_Armor:        break;
@@ -2057,7 +2090,7 @@ static Mobj *ACS_spawn(mobjtype_t type, fixed_t x, fixed_t y, fixed_t z,
    if(type != -1 && (mo = P_SpawnMobj(x, y, z, type)))
    {
       // If not forcing spawn, check that the position is OK.
-      if(!forced && !P_CheckPositionExt(mo, mo->x, mo->y))
+      if(!forced && !P_CheckPositionExt(mo, mo->x, mo->y, mo->z))
       {
          // And if not, unmake the Mobj.
          mo->state = NULL;

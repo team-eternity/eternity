@@ -125,7 +125,7 @@ public:
 
    // ioanch 20151229: added optional bottom and top slope preset
    // in case of portal continuation
-   CamSight(const camsightparams_t &sp)
+   explicit CamSight(const camsightparams_t &sp)
       : cx(sp.cx), cy(sp.cy), tx(sp.tx), ty(sp.ty),
         opentop(0), openbottom(0), openrange(0),
         intercepts(),

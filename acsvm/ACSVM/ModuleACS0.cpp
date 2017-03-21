@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2017 David Hill
 //
 // See COPYING for license information.
 //
@@ -102,13 +102,7 @@ namespace ACSVM
          scr.codeIdx = ReadLE4(data + iter); iter += 4;
          scr.argC    = ReadLE4(data + iter); iter += 4;
 
-         if(scr.name.i >= 1000)
-         {
-            scr.name.i -= 1000;
-            scr.type    = ScriptType::Open;
-         }
-         else
-            scr.type = ScriptType::Closed;
+         std::tie(scr.type, scr.name.i) = env->getScriptTypeACS0(scr.name.i);
       }
 
       // Read string table.

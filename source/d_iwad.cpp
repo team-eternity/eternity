@@ -250,14 +250,13 @@ static int disktype;         // type of disk file
 static void D_CheckDiskFileParm()
 {
    int p;
-   const char *fn;
 
    if((p = M_CheckParm("-disk")) && p < myargc - 1)
    {
       havediskfile = true;
 
       // get diskfile name
-      fn = myargv[p + 1];
+      const char *fn = myargv[p + 1];
 
       // have a pwad name as well?
       if(p < myargc - 2 && *(myargv[p + 2]) != '-')

@@ -1063,6 +1063,7 @@ PARAMLINE(ParamCeilingLowerAndCrushDist);
 PARAMLINE(ParamCeilingGeneric);
 PARAMLINE(ParamGenCrusher);
 PARAMLINE(ParamStairsBuildUpDoom);
+PARAMLINE(ParamStairsBuildUpDoomCrush);
 PARAMLINE(ParamStairsBuildDownDoom);
 PARAMLINE(ParamStairsBuildUpDoomSync);
 PARAMLINE(ParamStairsBuildDownDoomSync);
@@ -1142,7 +1143,11 @@ PARAMLINE(HealThing);
 PARAMLINE(ParamSectorSetRotation);
 PARAMLINE(ParamSectorSetFloorPanning);
 PARAMLINE(ParamSectorSetCeilingPanning);
+PARAMLINE(ParamSectorChangeSound);
 PARAMLINE(TurnTagLightsOff);
+
+PARAMLINE(ACSScrollFloor);
+PARAMLINE(ACSScrollCeiling);
 
 //=============================================================================
 //
@@ -1551,6 +1556,8 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(488, ParamPlatDWUSLip,                    "Plat_DownWaitUpStayLip")
    LINESPECNAMED(489, ParamPlatPerpetualRaiseLip,          "Plat_PerpetualRaiseLip")
    LINESPECNAMED(490, ACSLockedExecuteDoor,                "ACS_LockedExecuteDoor")
+   LINESPECNAMED(494, ParamStairsBuildUpDoomCrush,         "Stairs_BuildUpDoomCrush")
+   LINESPECNAMED(495, ParamSectorChangeSound,              "Sector_ChangeSound")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1676,6 +1683,8 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(96,  ParamFloorCeilingRaiseByValue,       "FloorAndCeiling_RaiseByValue")
    LINESPECNAMED(97,  ParamCeilingLowerAndCrushDist,       "Ceiling_LowerAndCrushDist")
    LINESPECNAMED(104, ParamCeilingCrushAndRaiseSilentDist, "Ceiling_CrushAndRaiseSilentDist")
+   LINESPECNAMED(105, ParamDoorWaitRaise,                  "Door_WaitRaise")
+   LINESPECNAMED(106, ParamDoorWaitClose,                  "Door_WaitClose")
    LINESPECNAMED(110, ParamLightRaiseByValue,              "Light_RaiseByValue")
    LINESPECNAMED(111, ParamLightLowerByValue,              "Light_LowerByValue")
    LINESPECNAMED(112, ParamLightChangeToValue,             "Light_ChangeToValue")
@@ -1695,12 +1704,13 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(136, ThingProjectileGravity,              "Thing_ProjectileGravity")
    LINESPECNAMED(137, ThingSpawnNoFog,                     "Thing_SpawnNoFog")
    LINESPECNAMED(138, FloorWaggle,                         "Floor_Waggle")
+   LINESPECNAMED(140, ParamSectorChangeSound,              "Sector_ChangeSound")
    LINESPECNAMED(168, ParamCeilingCrushAndRaiseDist,       "Ceiling_CrushAndRaiseDist")
    LINESPECNAMED(176, ThingChangeTID,                      "Thing_ChangeTID")
    LINESPECNAMED(179, ChangeSkill,                         "ChangeSkill")
    LINESPECNAMED(185, ParamSectorSetRotation,              "Sector_SetRotation")
-   LINESPECNAMED(186, ParamSectorSetFloorPanning,          "Sector_SetFloorPanning")
-   LINESPECNAMED(187, ParamSectorSetCeilingPanning,        "Sector_SetCeilingPanning")
+   LINESPECNAMED(186, ParamSectorSetCeilingPanning,        "Sector_SetCeilingPanning")
+   LINESPECNAMED(187, ParamSectorSetFloorPanning,          "Sector_SetFloorPanning")
    LINESPECNAMED(192, ParamCeilingLowerToHighestFloor,     "Ceiling_LowerToHighestFloor")
    LINESPECNAMED(193, ParamCeilingLowerInstant,            "Ceiling_LowerInstant")
    LINESPECNAMED(194, ParamCeilingRaiseInstant,            "Ceiling_RaiseInstant")
@@ -1763,8 +1773,6 @@ const size_t PSXBindingsLen = earrlen(PSXBindings);
 ev_binding_t UDMFEternityBindings[] =
 {
    // No bindings for ExtraData as it isn't required any more \o/
-   LINESPECNAMED(105, ParamDoorWaitRaise,              "Door_WaitRaise")
-   LINESPECNAMED(106, ParamDoorWaitClose,              "Door_WaitClose")
    LINESPECNAMED(256, ParamEEFloorLowerToHighest,      "Floor_LowerToHighestEE")
    LINESPECNAMED(257, ParamFloorRaiseToLowest,         "Floor_RaiseToLowest")
    LINESPECNAMED(258, ParamFloorLowerToLowestCeiling,  "Floor_LowerToLowestCeiling")
@@ -1782,9 +1790,20 @@ ev_binding_t UDMFEternityBindings[] =
    LINESPECNAMED(270, ParamStairsBuildDownDoom,        "Stairs_BuildDownDoom")
    LINESPECNAMED(271, ParamStairsBuildUpDoomSync,      "Stairs_BuildUpDoomSync")
    LINESPECNAMED(272, ParamStairsBuildDownDoomSync,    "Stairs_BuildDownDoomSync")
+   LINESPECNAMED(273, ParamStairsBuildUpDoomCrush,     "Stairs_BuildUpDoomCrush")
 };
 
 const size_t UDMFEternityBindingsLen = earrlen(UDMFEternityBindings);
+
+// ACS-specific bindings, for functions that are static but need to be
+// accessible by ACS, or that have multiple definitions, one for lines, one for ACS
+ev_binding_t ACSBindings[] =
+{
+   LINESPEC(223, ACSScrollFloor)
+   LINESPEC(224, ACSScrollCeiling)
+};
+
+const size_t ACSBindingsLen = earrlen(ACSBindings);
 
 // EOF
 

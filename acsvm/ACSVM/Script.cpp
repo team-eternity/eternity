@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2017 David Hill
 //
 // See COPYING for license information.
 //
@@ -35,7 +35,7 @@ namespace ACSVM
       flags  {0},
       locArrC{0},
       locRegC{module->env->scriptLocRegC},
-      type   {ScriptType::Closed},
+      type   {0},
 
       flagClient{false},
       flagNet   {false}

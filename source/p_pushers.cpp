@@ -35,6 +35,7 @@
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_portal.h"   // ioanch 20160115: portal aware
+#include "p_portalcross.h"
 #include "p_pushers.h"
 #include "p_saveg.h"
 #include "p_setup.h"

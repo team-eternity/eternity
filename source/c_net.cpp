@@ -170,12 +170,10 @@ void C_DealWithChar(unsigned char c, int source);
 
 void C_NetTicker(void)
 {
-   int i;
-
    if(netgame && !demoplayback)      // only deal with chat chars in netgames
    {
       // check for incoming chat chars
-      for(i=0; i<MAXPLAYERS; i++)
+      for(int i=0; i<MAXPLAYERS; i++)
       {
          if(!playeringame[i]) 
             continue;
@@ -231,7 +229,6 @@ char *G_GetNameForMap(int episode, int map);
 
 void C_SendNetData()
 {
-  char tempstr[100];
   command_t *command;
   int i;
 
@@ -264,7 +261,8 @@ void C_SendNetData()
   
   if(consoleplayer == 0)      // if server, send command to warp to map
   {
-     sprintf(tempstr, "map %s", startlevel);
+     char tempstr[100];
+     snprintf(tempstr, earrlen(tempstr), "map %s", startlevel);
      C_RunTextCmd(tempstr);
   }
 }

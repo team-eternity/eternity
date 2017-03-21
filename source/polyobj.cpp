@@ -31,6 +31,7 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "cam_sight.h"
 #include "i_system.h"
 #include "doomstat.h"
 #include "d_mod.h"
@@ -45,6 +46,7 @@
 #include "p_portal.h"
 #include "p_saveg.h"
 #include "p_setup.h"
+#include "p_spec.h"
 #include "p_tick.h"
 #include "polyobj.h"
 #include "r_main.h"
@@ -654,7 +656,7 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
 static void Polyobj_setCenterPt(polyobj_t *po)
 {
    subsector_t  *ss;
-   double center_x = 0.0, center_y = 0.0;
+   fixed_t center_x = 0, center_y = 0;
    int i;
 
    // never attach a bad polyobject
@@ -663,15 +665,12 @@ static void Polyobj_setCenterPt(polyobj_t *po)
 
    for(i = 0; i < po->numVertices; ++i)
    {
-      center_x += M_FixedToDouble(po->vertices[i]->x);
-      center_y += M_FixedToDouble(po->vertices[i]->y);
+      center_x += po->vertices[i]->x / po->numVertices;
+      center_y += po->vertices[i]->y / po->numVertices;
    }
    
-   center_x /= po->numVertices;
-   center_y /= po->numVertices;
-   
-   po->centerPt.x = M_DoubleToFixed(center_x);
-   po->centerPt.y = M_DoubleToFixed(center_y);
+   po->centerPt.x = center_x;
+   po->centerPt.y = center_y;
 
    ss = R_PointInSubsector(po->centerPt.x, po->centerPt.y);
 
@@ -935,6 +934,29 @@ static bool Polyobj_clipThings(polyobj_t *po, line_t *line,
 }
 
 //
+// Cross any special lines. Uses the centre point as reference, thus allowing
+// both moving and rotating polyobjects 
+//
+static void Polyobj_crossLines(polyobj_t *po, v2fixed_t oldcentre)
+{
+   if(oldcentre.x == po->centerPt.x && oldcentre.y == po->centerPt.y)
+      return;
+   CAM_PathTraverse(oldcentre.x, oldcentre.y, po->centerPt.x, po->centerPt.y,
+      CAM_ADDLINES, po,
+      [](const intercept_t *in, void *data, const divline_t &trace) {
+
+      auto *po = static_cast<polyobj_t *>(data);
+      if(in->d.line->special)
+      {
+         P_CrossSpecialLine(in->d.line,
+            P_PointOnLineSide(trace.x, trace.y, in->d.line), nullptr, po);
+      }
+
+      return true;
+   });
+}
+
+//
 // Polyobj_moveXY
 //
 // Moves a polyobject on the x-y plane.
@@ -998,7 +1020,10 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
       Polyobj_removeFromBlockmap(po); // unlink it from the blockmap
       R_DetachPolyObject(po);
       Polyobj_linkToBlockmap(po);     // relink to blockmap
+      v2fixed_t oldcentre = { po->centerPt.x, po->centerPt.y };
       Polyobj_setCenterPt(po);
+      if(!onload)
+         Polyobj_crossLines(po, oldcentre);
       R_AttachPolyObject(po);
    }
 
@@ -1136,7 +1161,10 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
       Polyobj_removeFromBlockmap(po); // unlink it from the blockmap
       R_DetachPolyObject(po);
       Polyobj_linkToBlockmap(po);     // relink to blockmap
+      v2fixed_t oldcentre = { po->centerPt.x, po->centerPt.y };
       Polyobj_setCenterPt(po);
+      if(!onload)
+         Polyobj_crossLines(po, oldcentre);
       R_AttachPolyObject(po);
    }
 

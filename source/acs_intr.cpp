@@ -100,8 +100,8 @@ ACSEnvironment::ACSEnvironment() :
    // 0-56: ACSVM internal codes.
    addCodeDataACS0( 57, {"",        2, addCallFunc(ACS_CF_Random)});
    addCodeDataACS0( 58, {"WW",      0, addCallFunc(ACS_CF_Random)});
-   addCodeDataACS0( 59, {"",        1, addCallFunc(ACS_CF_ThingCount)});
-   addCodeDataACS0( 60, {"W",       0, addCallFunc(ACS_CF_ThingCount)});
+   addCodeDataACS0( 59, {"",        2, addCallFunc(ACS_CF_ThingCount)});
+   addCodeDataACS0( 60, {"WW",      0, addCallFunc(ACS_CF_ThingCount)});
    addCodeDataACS0( 61, {"",        1, addCallFunc(ACS_CF_WaitSector)});
    addCodeDataACS0( 62, {"W",       0, addCallFunc(ACS_CF_WaitSector)});
    addCodeDataACS0( 63, {"",        1, addCallFunc(ACS_CF_WaitPolyObj)});
@@ -238,8 +238,8 @@ ACSEnvironment::ACSEnvironment() :
    // 277-279: Unused codes.
    addCodeDataACS0(280, {"",        7, addCallFunc(ACS_CF_SpawnMissile)});
    addCodeDataACS0(281, {"",        1, addCallFunc(ACS_CF_GetSectorLight)});
-   addCodeDataACS0(292, {"",        1, addCallFunc(ACS_CF_GetThingCeilZ)});
-   addCodeDataACS0(293, {"",        5, addCallFunc(ACS_CF_SetThingPos)});
+   addCodeDataACS0(282, {"",        1, addCallFunc(ACS_CF_GetThingCeilZ)});
+   addCodeDataACS0(283, {"",        5, addCallFunc(ACS_CF_SetThingPos)});
  //addCodeDataACS0(284, {"",        1, addCallFunc(ACS_CF_ClrThingInv)});
  //addCodeDataACS0(285, {"",        3, addCallFunc(ACS_CF_AddThingInv)});
  //addCodeDataACS0(286, {"",        3, addCallFunc(ACS_CF_SubThingInv)});
@@ -384,7 +384,7 @@ ACSVM::Word ACSEnvironment::callSpecImpl(ACSVM::Thread *thread, ACSVM::Word spec
    for(ACSVM::Word i = argC < NUMLINEARGS ? argC : NUMLINEARGS; i--;)
       args[i] = argV[i];
 
-   return EV_ActivateACSSpecial(info->line, spec, args, info->side, info->mo);
+   return EV_ActivateACSSpecial(info->line, spec, args, info->side, info->mo, info->po);
 }
 
 //
@@ -420,6 +420,32 @@ ACSVM::ModuleName ACSEnvironment::getModuleName(char const *str, size_t len)
    int lump =  dir->checkNumForName(str, lumpinfo_t::ns_acs);
 
    return {name, dir, static_cast<size_t>(lump)};
+}
+
+//
+// ACSEnvironment::getScriptTypeACS0
+//
+std::pair<ACSVM::Word /*type*/, ACSVM::Word /*name*/>
+ACSEnvironment::getScriptTypeACS0(ACSVM::Word name)
+{
+   if(name >= 1000)
+      return {ACS_STYPE_Open, name - 1000};
+   else
+      return {ACS_STYPE_Closed, name};
+}
+
+//
+// ACSEnvironment::getSCriptTypeACSE
+//
+ACSVM::Word ACSEnvironment::getScriptTypeACSE(ACSVM::Word type)
+{
+   switch(type)
+   {
+   default:
+   case  0: return ACS_STYPE_Closed;
+   case  1: return ACS_STYPE_Open;
+   case  4: return ACS_STYPE_Enter;
+   }
 }
 
 //
@@ -680,14 +706,14 @@ void ACS_LoadLevelScript(WadDirectory *dir, int lump)
       // Set initial thread delay.
       scriptInfo.func = [](ACSVM::Thread *thread)
       {
-         if(thread->script->type == ACSVM::ScriptType::Open && LevelInfo.acsOpenDelay)
+         if(thread->script->type == ACS_STYPE_Open && LevelInfo.acsOpenDelay)
             thread->delay = TICRATE;
          else
             thread->delay = 1;
       };
 
       // Open scripts.
-      ACSenv.map->scriptStartType(ACSVM::ScriptType::Open, scriptInfo);
+      ACSenv.map->scriptStartType(ACS_STYPE_Open, scriptInfo);
 
       // Enter scripts.
       for(int pnum = 0; pnum != MAXPLAYERS; ++pnum)
@@ -696,7 +722,7 @@ void ACS_LoadLevelScript(WadDirectory *dir, int lump)
          {
             threadInfo.mo   = players[pnum].mo;
             scriptInfo.info = &threadInfo;
-            ACSenv.map->scriptStartTypeForced(ACSVM::ScriptType::Enter, scriptInfo);
+            ACSenv.map->scriptStartTypeForced(ACS_STYPE_Enter, scriptInfo);
          }
       }
    }
@@ -714,10 +740,10 @@ void ACS_Exec()
 // ACS_ExecuteScriptI
 //
 bool ACS_ExecuteScriptI(uint32_t name, uint32_t mapnum, const uint32_t *argv,
-                        uint32_t argc, Mobj *mo, line_t *line, int side)
+                        uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po)
 {
    ACSVM::ScopeID scope{ACSenv.global->id, ACSenv.hub->id, mapnum ? mapnum : gamemap};
-   ACSThreadInfo  info{mo, line, side};
+   ACSThreadInfo  info{mo, line, side, po};
    return ACSenv.map->scriptStart(name, scope, {argv, argc, &info});
 }
 
@@ -725,10 +751,10 @@ bool ACS_ExecuteScriptI(uint32_t name, uint32_t mapnum, const uint32_t *argv,
 // ACS_ExecuteScriptIAlways
 //
 bool ACS_ExecuteScriptIAlways(uint32_t name, uint32_t mapnum, const uint32_t *argv,
-                              uint32_t argc, Mobj *mo, line_t *line, int side)
+                              uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po)
 {
    ACSVM::ScopeID scope{ACSenv.global->id, ACSenv.hub->id, mapnum ? mapnum : gamemap};
-   ACSThreadInfo  info{mo, line, side};
+   ACSThreadInfo  info{mo, line, side, po};
    return ACSenv.map->scriptStartForced(name, scope, {argv, argc, &info});
 }
 
@@ -736,9 +762,9 @@ bool ACS_ExecuteScriptIAlways(uint32_t name, uint32_t mapnum, const uint32_t *ar
 // ACS_ExecuteScriptIResult
 //
 uint32_t ACS_ExecuteScriptIResult(uint32_t name, const uint32_t *argv,
-                                  uint32_t argc, Mobj *mo, line_t *line, int side)
+                                  uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po)
 {
-   ACSThreadInfo info{mo, line, side};
+   ACSThreadInfo info{mo, line, side, po};
    return ACSenv.map->scriptStartResult(name, {argv, argc, &info});
 }
 
@@ -746,11 +772,11 @@ uint32_t ACS_ExecuteScriptIResult(uint32_t name, const uint32_t *argv,
 // ACS_ExecuteScriptS
 //
 bool ACS_ExecuteScriptS(const char *str, uint32_t mapnum, const uint32_t *argv,
-                        uint32_t argc, Mobj *mo, line_t *line, int side)
+                        uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po)
 {
    ACSVM::String *name = ACSenv.getString(str, strlen(str));
    ACSVM::ScopeID scope{ACSenv.global->id, ACSenv.hub->id, mapnum ? mapnum : gamemap};
-   ACSThreadInfo  info{mo, line, side};
+   ACSThreadInfo  info{mo, line, side, po};
    return ACSenv.map->scriptStart(name, scope, {argv, argc, &info});
 }
 
@@ -758,11 +784,11 @@ bool ACS_ExecuteScriptS(const char *str, uint32_t mapnum, const uint32_t *argv,
 // ACS_ExecuteScriptSAlways
 //
 bool ACS_ExecuteScriptSAlways(const char *str, uint32_t mapnum, const uint32_t *argv,
-                              uint32_t argc, Mobj *mo, line_t *line, int side)
+                              uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po)
 {
    ACSVM::String *name = ACSenv.getString(str, strlen(str));
    ACSVM::ScopeID scope{ACSenv.global->id, ACSenv.hub->id, mapnum ? mapnum : gamemap};
-   ACSThreadInfo  info{mo, line, side};
+   ACSThreadInfo  info{mo, line, side, po};
    return ACSenv.map->scriptStartForced(name, scope, {argv, argc, &info});
 }
 
@@ -770,10 +796,10 @@ bool ACS_ExecuteScriptSAlways(const char *str, uint32_t mapnum, const uint32_t *
 // ACS_ExecuteScriptSResult
 //
 uint32_t ACS_ExecuteScriptSResult(const char *str, const uint32_t *argv,
-                                 uint32_t argc, Mobj *mo, line_t *line, int side)
+                                 uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po)
 {
    ACSVM::String *name = ACSenv.getString(str, strlen(str));
-   ACSThreadInfo  info{mo, line, side};
+   ACSThreadInfo  info{mo, line, side, po};
    return ACSenv.map->scriptStartResult(name, {argv, argc, &info});
 }
 
@@ -828,8 +854,8 @@ bool ACS_TerminateScriptS(const char *str, uint32_t mapnum)
 class ACSBuffer : public std::streambuf
 {
 public:
-   ACSBuffer(InBuffer *in_) : in{in_}, out{nullptr} {}
-   ACSBuffer(OutBuffer *out_) : in{nullptr}, out{out_} {}
+   explicit ACSBuffer(InBuffer *in_) : in{in_}, out{nullptr} {}
+   explicit ACSBuffer(OutBuffer *out_) : in{nullptr}, out{out_} {}
 
    InBuffer  *in;
    OutBuffer *out;

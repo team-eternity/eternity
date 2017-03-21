@@ -34,6 +34,7 @@
 struct ev_action_t;
 struct line_t;
 class  Mobj;
+struct polyobj_s;
 
 // Action flags
 enum EVActionFlags
@@ -71,6 +72,7 @@ struct ev_instance_t
    int     spac;    // special activation type
    int     gentype; // generalized type, if is generalized (-1 otherwise)
    int     genspac; // generalized activation type, if generalized
+   polyobj_s *poly;  // possible polyobject activator
 };
 
 //
@@ -151,6 +153,14 @@ inline static unsigned int EV_CompositeActionFlags(const ev_action_t *action)
    return (action ? (action->type->flags | action->flags) : 0);
 }
 
+//
+// Like EV_IsParamLineSpec, but directly on action
+//
+inline static bool EV_IsParamAction(const ev_action_t &action)
+{
+   return !!(EV_CompositeActionFlags(&action) & EV_PARAMLINESPEC);
+}
+
 // Action Types
 extern ev_actiontype_t NullActionType;
 extern ev_actiontype_t WRActionType;
@@ -179,6 +189,7 @@ ev_binding_t *EV_BindingForName(const char *name);
 ev_action_t  *EV_DOOMActionForSpecial(int special);
 ev_action_t  *EV_HereticActionForSpecial(int special);
 ev_action_t  *EV_HexenActionForSpecial(int special);
+ev_action_t  *EV_ACSActionForSpecial(int special);
 ev_action_t  *EV_ActionForSpecial(int special);
 
 // Lockdef ID for Special
@@ -191,9 +202,11 @@ int EV_LockDefIDForLine(const line_t *line);
 bool EV_IsParamLineSpec(int special);
 
 // Activation
-bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing, int spac);
+bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing,
+   polyobj_s *poly, int spac);
 bool EV_ActivateSpecialNum(int special, int *args, Mobj *thing);
-int  EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *thing);
+int  EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *thing,
+   polyobj_s *poly);
 bool EV_ActivateAction(ev_action_t *action, int *args, Mobj *thing);
 
 //
