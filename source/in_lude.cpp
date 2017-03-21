@@ -43,6 +43,7 @@
 #include "p_enemy.h"
 #include "p_info.h"
 #include "p_mobjcol.h"
+#include "p_slopes.h"
 #include "p_tick.h"
 #include "r_main.h"
 #include "s_sndseq.h"
@@ -133,7 +134,7 @@ void IN_StartCamera()
       intercam.pitch = 0;
 
       subsector_t *subsec = R_PointInSubsector(intercam.x, intercam.y);
-      intercam.z = subsec->sector->floorheight + 41*FRACUNIT;
+      intercam.z = P_GetFloorHeight(subsec->sector, wi_camera) + 41*FRACUNIT;
 
       intercam.backupPosition();
       
