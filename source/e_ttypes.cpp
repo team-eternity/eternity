@@ -48,6 +48,7 @@
 #include "p_enemy.h"
 #include "p_mobj.h"
 #include "p_partcl.h"
+#include "p_slopes.h"
 #include "p_tick.h"
 #include "r_data.h"
 #include "r_defs.h"
@@ -678,7 +679,7 @@ void E_InitTerrainTypes(void)
 // haleyjd 10/16/10: Except that's never been sufficient. So in 
 // newer versions return the appropriate floor's type.
 //
-ETerrain *E_GetThingFloorType(Mobj *thing, bool usefloorz)
+ETerrain *E_GetThingFloorType(const Mobj *thing, bool usefloorz)
 {
    ETerrain *terrain = NULL;
    
@@ -884,7 +885,7 @@ static void E_TerrainHit(ETerrain *terrain, Mobj *thing, fixed_t z,
 //
 // Called when a thing hits a floor or passes a deep water plane.
 //
-bool E_HitWater(Mobj *thing, sector_t *sector)
+bool E_HitWater(Mobj *thing, const sector_t *sector)
 {
    fixed_t z;
    ETerrain *terrain;
@@ -901,9 +902,13 @@ bool E_HitWater(Mobj *thing, sector_t *sector)
    if(thing->flags2 & MF2_NOSPLASH || thing->flags2 & MF2_FLOATBOB)
       terrain = &solid;
 
+   // Use R_NOGROUP for heightsec because (at least in theory) slopes are
+   // extended from the heightsec along the same plane to the target sector.
+   // TODO: actually verify this in comparison to ports like ZDoom.
    z = sector->heightsec != -1 ? 
-         sectors[sector->heightsec].floorheight :
-         sector->floorheight;
+         P_GetFloorHeight(&sectors[sector->heightsec], thing->x, thing->y,
+                          R_NOGROUP) :
+         P_GetFloorHeight(sector, thing);
 
    // ioanch 20160116: also use "sector" as a parameter in case it's in another
    // group

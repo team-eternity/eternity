@@ -99,10 +99,10 @@ typedef struct EFloor_s
 
 void      E_InitTerrainTypes(void);
 ETerrain *E_TerrainForName(const char *name);
-ETerrain *E_GetThingFloorType(Mobj *thing, bool usefloorz);
+ETerrain *E_GetThingFloorType(const Mobj *thing, bool usefloorz);
 ETerrain *E_GetTerrainTypeForPt(fixed_t x, fixed_t y, int pos);
 fixed_t   E_SectorFloorClip(sector_t *sector);
-bool      E_HitWater(Mobj *thing, sector_t *sector);
+bool      E_HitWater(Mobj *thing, const sector_t *sector);
 bool      E_HitFloor(Mobj *thing);
 void      E_PtclTerrainHit(particle_t *);
 
