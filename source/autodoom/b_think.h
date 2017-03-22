@@ -38,6 +38,7 @@ struct ticcmd_t;
 // goal metatable keys
 #define BOT_PICKUP "pickupEvent"
 #define BOT_WALKTRIG "walkTriggerEvent"
+#define BOT_FLOORSECTOR "floorSectorEvent"
 
 //
 // Bot

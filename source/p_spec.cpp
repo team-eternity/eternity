@@ -36,7 +36,9 @@
 
 #include "a_small.h"
 #include "acs_intr.h"
+#include "autodoom/b_botmap.h"
 #include "autodoom/b_lineeffect.h"
+#include "autodoom/b_think.h"
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_deh.h"
@@ -1096,8 +1098,18 @@ void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
          }
 
          // possibly exit the level
-         if(sector->damageflags & SDMG_EXITLEVEL && player->health <= 10)
-            G_ExitLevel();
+         if(sector->damageflags & SDMG_EXITLEVEL)
+         {
+            if(botMap)
+               for(int i = 0; i < MAXPLAYERS; ++i)
+                  if(playeringame[i])
+                  {
+                     bots[i].addXYEvent(BOT_FLOORSECTOR,
+                                        v2fixed_t{(int)(sector - sectors), 0});
+                  }
+            if(player->health <= 10)
+               G_ExitLevel();
+         }
       }
    }
 

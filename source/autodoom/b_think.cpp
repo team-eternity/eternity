@@ -662,10 +662,18 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
 	if(self.m_deepSearchMode == DeepCheckLosses)
 		return false;
 	
-    if(self.m_searchstage >= SearchStage_ExitNormal
-       && ss.msector->getFloorSector()->damageflags & SDMG_EXITLEVEL)
+    if(self.m_searchstage >= SearchStage_ExitNormal)
     {
-        return true;
+       const sector_t &floorsector = *ss.msector->getFloorSector();
+       if(floorsector.damageflags & SDMG_EXITLEVEL)
+       {
+          coord.kind = BotPathEnd::KindCoord;
+          coord.coord = ss.mid;
+          self.goalTable.setV2Fixed(BOT_FLOORSECTOR,
+                                    v2fixed_t{(int)(&floorsector - ::sectors),
+                                       0});
+          return true;
+       }
     }
 
     const Mobj* item;
