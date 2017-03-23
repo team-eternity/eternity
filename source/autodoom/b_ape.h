@@ -41,8 +41,11 @@ struct JumpObservation
    const BotMap::Line *takeoff;
    const BSubsec *destss;
    v2fixed_t start1;
+   double ratio1;
    v2fixed_t start2;
-   v3fixed_t vel;
+   double ratio2;
+   v3fixed_t vel1;
+   v3fixed_t vel2;
    bool success;
 };
 

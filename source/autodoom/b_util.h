@@ -255,6 +255,8 @@ int B_BoxOnLineSide(fixed_t top, fixed_t bottom, fixed_t left, fixed_t right,
 void B_EmptyTableAndDelete(MetaTable &meta);
 bool B_SegmentsIntersect(fixed_t x11, fixed_t y11, fixed_t x12, fixed_t y12,
                          fixed_t x21, fixed_t y21, fixed_t x22, fixed_t y22);
+double B_RatioAlongLine(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
+                        fixed_t x, fixed_t y);
 
 template <typename T, typename U, typename V, typename W> bool B_SegmentsIntersect(const T &v11, const U &v12, const V &v21, const W &v22)
 {

@@ -289,6 +289,25 @@ bool B_SegmentsIntersect(fixed_t x11, fixed_t y11, fixed_t x12, fixed_t y12,
 }
 
 //
+// Calculates how a point is in relation to a line: 0 is on top of v1, 1 on top
+// of v2, decimal values in-between.
+//
+double B_RatioAlongLine(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
+                        fixed_t x, fixed_t y)
+{
+   double x1d = M_FixedToDouble(x1);
+   double x2d = M_FixedToDouble(x2);
+   double y1d = M_FixedToDouble(y1);
+   double y2d = M_FixedToDouble(y2);
+   double linesize = sqrt(pow(x2d - x1d, 2) + pow(y2d - y1d, 2));
+   if(!linesize)
+      return 0;
+   v2double_t v1 = { (x2d - x1d) / linesize, (y2d - y1d) / linesize };
+   return ((M_FixedToDouble(x) - x1d) * v1.x + (M_FixedToDouble(y) - y1d) * v1.y)
+   / linesize;
+}
+
+//
 // B_Log
 //
 // Only in debug mode, it writes an output message for debugging

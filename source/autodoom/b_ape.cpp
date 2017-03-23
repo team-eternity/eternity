@@ -75,9 +75,10 @@ void PlayerObserver::observeJumping()
    {
       mInAir = true;
       mJump = {0};
-      mJump.vel.x = pl->mo->momx;
-      mJump.vel.y = pl->mo->momy;
-      mJump.vel.z = pl->mo->momz;
+      mJump.vel1.x = pl->mo->momx;
+      mJump.vel1.y = pl->mo->momy;
+      mJump.vel1.z = pl->mo->momz;
+      mJump.vel2 = mJump.vel1;
       mJump.start1.x = prevpos.x;
       mJump.start1.y = prevpos.y;
       mJump.start2 = mJump.start1;
@@ -99,7 +100,12 @@ void PlayerObserver::observeJumping()
          if(!ms1 || !ms2)
             return false;  // 1-sided line stops
          if(!mJump.takeoff && !botMap->canPass(ms2, ms1, pl->mo->height))
+         {
             mJump.takeoff = &line;
+            mJump.ratio1 = mJump.ratio2 =
+            B_RatioAlongLine(line.v[0]->x, line.v[0]->y, line.v[1]->x,
+                             line.v[1]->y, mJump.start1.x, mJump.start1.y);
+         }
          if(!botMap->canPass(ms1, ms2, pl->mo->height))
             mJump.success = true;
          return true;
@@ -116,20 +122,32 @@ void PlayerObserver::observeJumping()
             bool found = false;
             for(auto &jump : ssJumps[&startss])
             {
-               if(jump.takeoff == mJump.takeoff && jump.destss == mJump.destss)
+               const BotMap::Line &line = *jump.takeoff;
+               if(&line == mJump.takeoff && jump.destss == mJump.destss)
                {
                   // Found a jump from the same take-off line into the same sub-
                   // sector.
                   found = true;
                   // Just extend the area.
-                  if(mJump.start1.x < jump.start1.x)
+                  double newratio = B_RatioAlongLine(line.v[0]->x, line.v[0]->y,
+                                                     line.v[1]->x, line.v[1]->y,
+                                                     mJump.start1.x,
+                                                     mJump.start1.y);
+
+                  if(newratio < jump.ratio1)
+                  {
                      jump.start1 = mJump.start1;
-                  else if(mJump.start1.x > jump.start2.x)
-                     jump.start2 = mJump.start1;
-                  else if(mJump.start1.y < jump.start1.y)
-                     jump.start1 = mJump.start1;
+                     jump.ratio1 = newratio;
+                     jump.vel1 = mJump.vel1;
+                  }
+                  else if(newratio > jump.ratio2)
+                  {
+                     jump.start2 = mJump.start2;
+                     jump.ratio2 = newratio;
+                     jump.vel2 = mJump.vel2;
+                  }
                   else
-                     jump.start2 = mJump.start1;
+                     break;
 //                  B_Log("Extended jump from %d (%g %g - %g %g) to %d",
 //                        int(&startss - &botMap->ssectors[0]),
 //                        jump.start1.x/65536., jump.start1.y/65536.,
