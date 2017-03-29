@@ -559,6 +559,8 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
          // ioanch 20160205: not always
          if(!R_IsSkyFlat(tempsec->ceilingpic))
             tempsec->intflags &= ~SIF_SKY;
+         else
+            tempsec->intflags |= SIF_SKY;
 
          tempsec->lightlevel  = s->lightlevel;
          
@@ -615,6 +617,8 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
          // ioanch 20160205: not always
          if(!R_IsSkyFlat(tempsec->ceilingpic))
             tempsec->intflags &= ~SIF_SKY;
+         else
+            tempsec->intflags |= SIF_SKY;
          
          tempsec->lightlevel  = s->lightlevel;
          
