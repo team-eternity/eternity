@@ -402,6 +402,9 @@ bool ACSEnvironment::checkTag(ACSVM::Word type, ACSVM::Word tag)
             return false;
       }
       return true;
+   case ACS_TAGTYPE_POLYOBJ:
+      const polyobj_t *po = Polyobj_GetForNum(tag);
+      return !po || po->thinker == nullptr;
    }
 
    return false;
