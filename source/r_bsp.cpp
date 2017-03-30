@@ -1240,7 +1240,9 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
          !portalrender.w->line &&
          portalrender.w->planez <= seg.backsec->ceilingheight;
 
-   if(!toohigh && !havetportal && heightchange && side->toptexture)
+   if(!toohigh && !havetportal && heightchange && 
+      !(seg.frontsec->intflags & SIF_SKY && seg.backsec->intflags & SIF_SKY) && 
+      side->toptexture)
    {
       seg.toptex = texturetranslation[side->toptexture];
       seg.toptexh = textures[side->toptexture]->height;
