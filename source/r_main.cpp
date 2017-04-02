@@ -44,6 +44,7 @@
 #include "m_random.h"
 #include "mn_engin.h"
 #include "p_chase.h"
+#include "p_info.h"
 #include "p_partcl.h"
 #include "p_xenemy.h"
 #include "r_bsp.h"
@@ -1012,9 +1013,13 @@ void R_SectorColormap(const sector_t *s)
 
    // haleyjd: Under BOOM logic, the view sector determines the colormap of
    // all sectors in view. This is supported for backward compatibility.
-   if(r_boomcolormaps)
+   if(r_boomcolormaps || demo_version <= 203 ||
+      LevelInfo.sectorColormaps == INFO_SECMAP_BOOM)
+   {
       s = view.sector;
-   else if(view.sector->heightsec != -1 && 
+   }
+   else if(LevelInfo.sectorColormaps != INFO_SECMAP_SMMU && 
+      view.sector->heightsec != -1 && 
       (view.sector->topmap | view.sector->midmap | view.sector->bottommap) & 
       COLORMAP_BOOMKIND)
    {
@@ -1051,8 +1056,11 @@ void R_SectorColormap(const sector_t *s)
       // If we got Boom-set colormaps on OTHER sectors than the view sector,
       // then use the view sector's colormap. Needed to prevent Boom-coloured
       // sectors from showing up when seen from non-coloured sectors.
-      if(!r_boomcolormaps && !boomover)
+      if(!r_boomcolormaps && !boomover &&
+         LevelInfo.sectorColormaps != INFO_SECMAP_SMMU)
+      {
          cm = R_getSectorColormap(*view.sector, viewarea);
+      }
 
       cm &= ~COLORMAP_BOOMKIND;
    }

@@ -161,6 +161,20 @@ static textvals_t finaleTypeVals =
    0
 };
 
+static const char *sectorColormapStrs[] =
+{
+   "normal",
+   "Boom",
+   "SMMU"
+};
+
+static textvals_t sectorColormapVals =
+{
+   sectorColormapStrs,
+   earrlen(sectorColormapStrs),
+   0
+};
+
 //=============================================================================
 //
 // Meta Info
@@ -1574,6 +1588,7 @@ static levelvar_t levelvars[]=
    LI_BOOLNF("noautosequences",    noAutoSequences),
    LI_STRING("outdoorfog",         outdoorFog),
    LI_INTEGR("partime",            partime),
+   LI_STRNUM("sector-colormaps",   sectorColormaps,   sectorColormapVals),
    LI_INTEGR("skydelta",           skyDelta),
    LI_INTEGR("sky2delta",          sky2Delta),
    LI_STRING("skyname",            skyName),
@@ -1610,7 +1625,7 @@ static void P_parseLevelString(levelvar_t *var, const qstring &value)
 //
 static void P_parseLevelStrNum(levelvar_t *var, const qstring &value)
 {
-   textvals_t *tv = static_cast<textvals_t *>(var->extra);
+   const textvals_t *tv = static_cast<textvals_t *>(var->extra);
    int val = E_StrToNumLinear(tv->vals, tv->numvals, value.constPtr());
 
    if(val >= tv->numvals)
