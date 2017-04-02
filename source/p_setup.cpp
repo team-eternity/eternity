@@ -581,11 +581,11 @@ void P_InitSector(sector_t *ss)
    int tempcolmap = ((ss->intflags & SIF_SKY) ? global_fog_index : global_cmap_index);
    if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY)
    {
-      if(ss->bottommap < 0)
+      if(ss->bottommap == -1)
          ss->bottommap = tempcolmap;
-      if(ss->midmap < 0)
+      if(ss->midmap == -1)
          ss->midmap = tempcolmap;
-      if(ss->topmap < 0)
+      if(ss->topmap == -1)
          ss->topmap = tempcolmap;
    }
    else
@@ -1987,21 +1987,21 @@ void P_SetupSidedefTextures(side_t &sd, const char *bottomTexture,
          sd.bottomtexture = R_FindWall(bottomTexture);
       else
       {
-         sec.bottommap = cmap;
+         sec.bottommap = cmap | COLORMAP_BOOMKIND;
          sd.bottomtexture = 0;
       }
       if((cmap = R_ColormapNumForName(midTexture)) < 0)
          sd.midtexture = R_FindWall(midTexture);
       else
       {
-         sec.midmap = cmap;
+         sec.midmap = cmap | COLORMAP_BOOMKIND;
          sd.midtexture = 0;
       }
       if((cmap = R_ColormapNumForName(topTexture)) < 0)
          sd.toptexture = R_FindWall(topTexture);
       else
       {
-         sec.topmap = cmap;
+         sec.topmap = cmap | COLORMAP_BOOMKIND;
          sd.toptexture = 0;
       }
       break;
