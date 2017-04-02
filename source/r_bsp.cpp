@@ -1832,25 +1832,25 @@ static void R_AddLine(seg_t *line, bool dynasegs)
       if(t2.fy < nearclip)
          return;
 
-      movey = nearclip - t1.fy;
+      movey = NEARCLIP - t1.fy;
       t1.fx += (move = movey * ((t2.fx - t1.fx) / (t2.fy - t1.fy)));
 
       lclip1 = (float)sqrt(move * move + movey * movey);
-      t1.fy = nearclip;
+      t1.fy = NEARCLIP;
    }
 
    i1 = 1.0f / t1.fy;
    x1 = (view.xcenter + (t1.fx * i1 * view.xfoc));
 
-   if(t2.fy < nearclip)
+   if(t2.fy < NEARCLIP)
    {
       float move, movey;
 
-      movey = nearclip - t2.fy;
+      movey = NEARCLIP - t2.fy;
       t2.fx += (move = movey * ((t2.fx - t1.fx) / (t2.fy - t1.fy)));
 
       lclip2 -= (float)sqrt(move * move + movey * movey);
-      t2.fy = nearclip;
+      t2.fy = NEARCLIP;
    }
 
    i2 = 1.0f / t2.fy;
