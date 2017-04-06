@@ -208,6 +208,9 @@ bool PathTraverser::checkLine(size_t linenum)
 
    VALID_SET(validlines, linenum);
 
+   if(def.flags & CAM_REQUIRELINEPORTALS && !(ld->pflags & PS_PASSABLE))
+      return true;
+
    s1 = P_PointOnDivlineSide(ld->v1->x, ld->v1->y, &trace);
    s2 = P_PointOnDivlineSide(ld->v2->x, ld->v2->y, &trace);
    if(s1 == s2)

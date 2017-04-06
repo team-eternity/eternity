@@ -1035,6 +1035,7 @@ void G_DoPlayDemo(void)
       return;
    }
    
+   int dmtype = 0;
    if(demover < 200)     // Autodetect old demos
    {
       // haleyjd 10/08/06: longtics support
@@ -1092,7 +1093,7 @@ void G_DoPlayDemo(void)
          skill = (skill_t)(*demo_p++);
          episode = *demo_p++;
          map = *demo_p++;
-         deathmatch = !!(*demo_p++);
+         dmtype = *demo_p++;
          respawnparm = !!(*demo_p++);
          fastparm = !!(*demo_p++);
          nomonsters = !!(*demo_p++);
@@ -1103,7 +1104,7 @@ void G_DoPlayDemo(void)
          skill = (skill_t)demover;
          episode = *demo_p++;
          map = *demo_p++;
-         deathmatch = respawnparm = fastparm = nomonsters = false;
+         dmtype = respawnparm = fastparm = nomonsters = false;
          consoleplayer = 0;
       }
    }
@@ -1139,7 +1140,7 @@ void G_DoPlayDemo(void)
       skill = (skill_t)(*demo_p++);
       episode = *demo_p++;
       map = *demo_p++;
-      deathmatch = !!(*demo_p++);
+      dmtype = *demo_p++;
       consoleplayer = *demo_p++;
 
       // haleyjd 10/08/06: determine longtics support in new demos
@@ -1197,10 +1198,10 @@ void G_DoPlayDemo(void)
    if(demo_version < 331)
    {
       // note: do NOT set default_dmflags here
-      if(deathmatch)
+      if(dmtype)
       {
          GameType = gt_dm;
-         G_SetDefaultDMFlags(deathmatch, false);
+         G_SetDefaultDMFlags(dmtype, false);
       }
       else
       {
@@ -1211,9 +1212,10 @@ void G_DoPlayDemo(void)
    else
    {
       // dmflags was already set above,
-      // "deathmatch" now holds the game type
-      GameType = (gametype_t)deathmatch;
+      // "dmtype" now holds the game type
+      GameType = (gametype_t)dmtype;
    }
+   deathmatch = !!dmtype; // ioanch: fix this now
    
    // don't spend a lot of time in loadlevel
 
@@ -3384,7 +3386,15 @@ static void G_BeginRecordingOld()
    *demo_p++ = gameskill;
    *demo_p++ = gameepisode;
    *demo_p++ = gamemap;
-   *demo_p++ = (GameType == gt_dm);
+   if(GameType == gt_dm)
+   {
+      if(dmflags & DM_ITEMRESPAWN)
+         *demo_p++ = 2;
+      else
+         *demo_p++ = 1;
+   }
+   else
+      *demo_p = 0;
    *demo_p++ = respawnparm;
    *demo_p++ = fastparm;
    *demo_p++ = nomonsters;

@@ -44,6 +44,7 @@
 #include "m_random.h"
 #include "mn_engin.h"
 #include "p_chase.h"
+#include "p_info.h"
 #include "p_partcl.h"
 #include "p_xenemy.h"
 #include "r_bsp.h"
@@ -981,6 +982,22 @@ typedef enum
 bool r_boomcolormaps;
 
 //
+// Get sector colormap based on the view area constant
+//
+static int R_getSectorColormap(const sector_t &sector, area_t viewarea)
+{
+   switch(viewarea)
+   {
+   case area_above:
+      return sector.topmap;
+   case area_below:
+      return sector.bottommap;
+   default:
+      return sector.midmap;
+   }
+}
+
+//
 // R_SectorColormap
 //
 // killough 3/20/98, 4/4/98: select colormap based on player status
@@ -988,39 +1005,64 @@ bool r_boomcolormaps;
 // instead of from its heightsec if it has one (heightsec colormaps are
 // transferred to their affected sectors at level setup now).
 //
-void R_SectorColormap(sector_t *s)
+void R_SectorColormap(const sector_t *s)
 {
    int cm = 0;
    area_t viewarea;
+   bool boomover = false;
 
    // haleyjd: Under BOOM logic, the view sector determines the colormap of
    // all sectors in view. This is supported for backward compatibility.
-   if(r_boomcolormaps)
-      s = view.sector;
-
-   if(s->heightsec == -1)
-      viewarea = area_normal;
-   else
+   if(r_boomcolormaps || demo_version <= 203 ||
+      LevelInfo.sectorColormaps == INFO_SECMAP_BOOM)
    {
-      // find which area the viewpoint is in
+      s = view.sector;
+   }
+   else if(LevelInfo.sectorColormaps != INFO_SECMAP_SMMU && 
+      view.sector->heightsec != -1 && 
+      (view.sector->topmap | view.sector->midmap | view.sector->bottommap) & 
+      COLORMAP_BOOMKIND)
+   {
+      // We're in a Boom-kind sector. Now check each area
       int hs = view.sector->heightsec;
-      viewarea = 
-         (hs == -1 ? area_normal :
-          viewz < sectors[hs].floorheight ? area_below :
-          viewz > sectors[hs].ceilingheight ? area_above : area_normal);
+      viewarea = (viewz < sectors[hs].floorheight ? area_below : 
+         viewz > sectors[hs].ceilingheight ? area_above : area_normal);
+      cm = R_getSectorColormap(*view.sector, viewarea);
+      if(cm & COLORMAP_BOOMKIND)
+      {
+         boomover = true;
+         s = view.sector;
+      }
+   }
+    
+   if(!boomover)  // if overridden by Boom transfers, don't process this again
+   {
+      if(s->heightsec == -1)
+         viewarea = area_normal;
+      else
+      {
+         // find which area the viewpoint is in
+         int hs = view.sector->heightsec;
+         viewarea =
+            (hs == -1 ? area_normal :
+               viewz < sectors[hs].floorheight ? area_below :
+               viewz > sectors[hs].ceilingheight ? area_above : area_normal);
+      }
+      cm = R_getSectorColormap(*s, viewarea);
    }
 
-   switch(viewarea)
+   if(cm & COLORMAP_BOOMKIND)
    {
-   case area_normal:
-      cm = s->midmap;
-      break;
-   case area_above:
-      cm = s->topmap;
-      break;
-   case area_below:
-      cm = s->bottommap;
-      break;
+      // If we got Boom-set colormaps on OTHER sectors than the view sector,
+      // then use the view sector's colormap. Needed to prevent Boom-coloured
+      // sectors from showing up when seen from non-coloured sectors.
+      if(!r_boomcolormaps && !boomover &&
+         LevelInfo.sectorColormaps != INFO_SECMAP_SMMU)
+      {
+         cm = R_getSectorColormap(*view.sector, viewarea);
+      }
+
+      cm &= ~COLORMAP_BOOMKIND;
    }
 
    fullcolormap = colormaps[cm];

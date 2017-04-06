@@ -1248,12 +1248,12 @@ static void P_SetupHeightTransfer(int linenum, int secnum,
 
       // transfer colormaps to affected sectors instead of getting them from
       // the heightsec during the rendering process
-      if(!setupSettings.sectorIsFlagged(s, UDMF_SECTOR_INIT_COLORMAPPED))
-      {
+      if(!setupSettings.sectorIsFlagged(s, UDMF_SECTOR_INIT_COLOR_TOP))
          sectors[s].topmap    = heightsec->topmap;
+      if(!setupSettings.sectorIsFlagged(s, UDMF_SECTOR_INIT_COLOR_MIDDLE))
          sectors[s].midmap    = heightsec->midmap;
+      if(!setupSettings.sectorIsFlagged(s, UDMF_SECTOR_INIT_COLOR_BOTTOM))
          sectors[s].bottommap = heightsec->bottommap;
-      }
    }
 }
 

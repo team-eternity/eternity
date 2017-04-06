@@ -58,7 +58,9 @@ struct maplumpindex_t
 enum
 {
    // colormap has been set by UDMF or ExtraData
-   UDMF_SECTOR_INIT_COLORMAPPED = 1,
+   UDMF_SECTOR_INIT_COLOR_TOP = 1,
+   UDMF_SECTOR_INIT_COLOR_MIDDLE = 2,
+   UDMF_SECTOR_INIT_COLOR_BOTTOM = 4,
 };
 
 //

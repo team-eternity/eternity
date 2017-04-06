@@ -1080,6 +1080,8 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
       R_ShowTainted(window);         
 
       portal->tainted++;
+      C_Printf(FC_ERROR "Refused to draw portal (line=%i) (t=%d)\n",
+         portal->data.anchor.maker, portal->tainted);
       return;
    } 
 
@@ -1180,6 +1182,8 @@ static void R_RenderLinkedPortal(pwindow_t *window)
       R_ShowTainted(window);         
 
       portal->tainted++;
+      C_Printf(FC_ERROR "Refused to draw portal (line=%i) (t=%d)\n",
+         portal->data.anchor.maker, portal->tainted);
       return;
    } 
 

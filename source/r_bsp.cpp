@@ -559,6 +559,8 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
          // ioanch 20160205: not always
          if(!R_IsSkyFlat(tempsec->ceilingpic))
             tempsec->intflags &= ~SIF_SKY;
+         else
+            tempsec->intflags |= SIF_SKY;
 
          tempsec->lightlevel  = s->lightlevel;
          
@@ -615,6 +617,8 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
          // ioanch 20160205: not always
          if(!R_IsSkyFlat(tempsec->ceilingpic))
             tempsec->intflags &= ~SIF_SKY;
+         else
+            tempsec->intflags |= SIF_SKY;
          
          tempsec->lightlevel  = s->lightlevel;
          
@@ -1100,7 +1104,6 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    // ioanch 20160130: be sure to check for portal line too!
    mark = (seg.frontsec->lightlevel != seg.backsec->lightlevel ||
            seg.line->linedef->portal ||
-           seg.frontsec->heightsec != -1 ||
            seg.frontsec->heightsec != seg.backsec->heightsec ||
            seg.frontsec->midmap != seg.backsec->midmap ||
            (seg.line->sidedef->midtexture &&
@@ -1237,7 +1240,9 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
          !portalrender.w->line &&
          portalrender.w->planez <= seg.backsec->ceilingheight;
 
-   if(!toohigh && !havetportal && heightchange && side->toptexture)
+   if(!toohigh && !havetportal && heightchange && 
+      !(seg.frontsec->intflags & SIF_SKY && seg.backsec->intflags & SIF_SKY) && 
+      side->toptexture)
    {
       seg.toptex = texturetranslation[side->toptexture];
       seg.toptexh = textures[side->toptexture]->height;
@@ -1381,7 +1386,6 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    // ioanch 20160130: be sure to check for portal line too!
    mark = (seg.frontsec->lightlevel != seg.backsec->lightlevel ||
            seg.line->linedef->portal ||
-           seg.frontsec->heightsec != -1 ||
            seg.frontsec->heightsec != seg.backsec->heightsec ||
            seg.frontsec->midmap != seg.backsec->midmap ||
            (seg.line->sidedef->midtexture && 
@@ -1828,25 +1832,25 @@ static void R_AddLine(seg_t *line, bool dynasegs)
       if(t2.fy < nearclip)
          return;
 
-      movey = nearclip - t1.fy;
+      movey = NEARCLIP - t1.fy;
       t1.fx += (move = movey * ((t2.fx - t1.fx) / (t2.fy - t1.fy)));
 
       lclip1 = (float)sqrt(move * move + movey * movey);
-      t1.fy = nearclip;
+      t1.fy = NEARCLIP;
    }
 
    i1 = 1.0f / t1.fy;
    x1 = (view.xcenter + (t1.fx * i1 * view.xfoc));
 
-   if(t2.fy < nearclip)
+   if(t2.fy < NEARCLIP)
    {
       float move, movey;
 
-      movey = nearclip - t2.fy;
+      movey = NEARCLIP - t2.fy;
       t2.fx += (move = movey * ((t2.fx - t1.fx) / (t2.fy - t1.fy)));
 
       lclip2 -= (float)sqrt(move * move + movey * movey);
-      t2.fy = nearclip;
+      t2.fy = NEARCLIP;
    }
 
    i2 = 1.0f / t2.fy;
