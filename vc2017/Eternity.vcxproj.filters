@@ -235,6 +235,12 @@
     <Filter Include="Source Files\XL_\XL_ Source">
       <UniqueIdentifier>{09ccd1ab-91bb-4216-9ff4-c314b45f28c8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\AutoDoom">
+      <UniqueIdentifier>{ce76eaa5-b881-4413-9200-416cef93d48f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\AutoDoom\glbsp">
+      <UniqueIdentifier>{49751c61-84c7-4682-9d80-3a7bb644c6f5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\acs_func.cpp">
@@ -962,6 +968,84 @@
     </ClCompile>
     <ClCompile Include="..\source\p_portalcross.cpp">
       <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\b_analysis.cpp">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\b_ape.cpp">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\b_botmap.cpp">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\b_botmaptemp.cpp">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\b_compression.cpp">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\b_glbsp.cpp">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\b_intset.cpp">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\b_itemlearn.cpp">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\b_lineeffect.cpp">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\b_msector.cpp">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\b_path.cpp">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\b_statistics.cpp">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\b_think.cpp">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\b_trace.cpp">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\b_util.cpp">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\glbsp\analyze.c">
+      <Filter>Source Files\AutoDoom\glbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\glbsp\blockmap.c">
+      <Filter>Source Files\AutoDoom\glbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\glbsp\glbsp.c">
+      <Filter>Source Files\AutoDoom\glbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\glbsp\level.c">
+      <Filter>Source Files\AutoDoom\glbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\glbsp\node.c">
+      <Filter>Source Files\AutoDoom\glbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\glbsp\reject.c">
+      <Filter>Source Files\AutoDoom\glbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\glbsp\seg.c">
+      <Filter>Source Files\AutoDoom\glbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\glbsp\system.c">
+      <Filter>Source Files\AutoDoom\glbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\glbsp\util.c">
+      <Filter>Source Files\AutoDoom\glbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\glbsp\wad.c">
+      <Filter>Source Files\AutoDoom\glbsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\am_svg.cpp">
+      <Filter>Source Files\AM_</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1714,6 +1798,87 @@
     </ClInclude>
     <ClInclude Include="..\source\p_portalcross.h">
       <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\b_analysis.h">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\b_ape.h">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\b_botmap.h">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\b_botmaptemp.h">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\b_compression.h">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\b_glbsp.h">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\b_intset.h">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\b_itemlearn.h">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\b_lineeffect.h">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\b_msector.h">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\b_path.h">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\b_statistics.h">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\b_think.h">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\b_trace.h">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\b_util.h">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\glbsp\analyze.h">
+      <Filter>Source Files\AutoDoom\glbsp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\glbsp\blockmap.h">
+      <Filter>Source Files\AutoDoom\glbsp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\glbsp\glbsp.h">
+      <Filter>Source Files\AutoDoom\glbsp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\glbsp\level.h">
+      <Filter>Source Files\AutoDoom\glbsp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\glbsp\node.h">
+      <Filter>Source Files\AutoDoom\glbsp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\glbsp\reject.h">
+      <Filter>Source Files\AutoDoom\glbsp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\glbsp\seg.h">
+      <Filter>Source Files\AutoDoom\glbsp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\glbsp\structs.h">
+      <Filter>Source Files\AutoDoom\glbsp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\glbsp\system.h">
+      <Filter>Source Files\AutoDoom\glbsp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\glbsp\util.h">
+      <Filter>Source Files\AutoDoom\glbsp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\glbsp\wad.h">
+      <Filter>Source Files\AutoDoom\glbsp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\am_svg.h">
+      <Filter>Source Files\AM_</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
