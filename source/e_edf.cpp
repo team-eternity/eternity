@@ -1047,8 +1047,9 @@ static void E_ParseLumpRecursive(cfg_t *cfg, const char *name, int ln)
       E_ParseLumpRecursive(cfg, name, lumpinfo[ln]->namehash.next);
 
       // handle this lump
-      if(!strncasecmp(lumpinfo[ln]->name, name, 8) &&         // name match
-         lumpinfo[ln]->li_namespace == lumpinfo_t::ns_global) // is global
+      if(!strncasecmp(lumpinfo[ln]->name, name, 8) &&             // name match
+         lumpinfo[ln]->li_namespace == lumpinfo_t::ns_global &&   // is global
+         lumpinfo[ln]->size)  // skip empty lumps (Confuse rejects opening them)
       {
          int err;
 
