@@ -3445,18 +3445,27 @@ bool G_CheckDemoStatus()
    if(demorecording)
    {
       demorecording = false;
-      *demo_p++ = DEMOMARKER;
-      
-      if(!M_WriteFile(demoname, demobuffer, demo_p - demobuffer))
+      if(demo_p)
       {
-         // killough 11/98
-         I_Error("Error recording demo %s: %s\n", demoname,
-                 errno ? strerror(errno) : "(Unknown Error)");
+         *demo_p++ = DEMOMARKER;
+
+         if(!M_WriteFile(demoname, demobuffer, demo_p - demobuffer))
+         {
+            // killough 11/98
+            I_Error("Error recording demo %s: %s\n", demoname,
+               errno ? strerror(errno) : "(Unknown Error)");
+         }
       }
       
       efree(demobuffer);
       demobuffer = NULL;  // killough
-      I_ExitWithMessage("Demo %s recorded\n", demoname);
+      if(demo_p)
+         I_ExitWithMessage("Demo %s recorded\n", demoname);
+      else
+      {
+         I_ExitWithMessage("Demo %s not recorded: exited prematurely\n", 
+            demoname);
+      }
       return false;  // killough
    }
 
