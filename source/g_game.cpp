@@ -3290,7 +3290,7 @@ static void G_BeginRecordingOld()
          *demo_p++ = 1;
    }
    else
-      *demo_p = 0;
+      *demo_p++ = 0;
    *demo_p++ = respawnparm;
    *demo_p++ = fastparm;
    *demo_p++ = nomonsters;
