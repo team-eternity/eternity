@@ -45,7 +45,7 @@
 #include "p_maputl.h"
 #include "p_mobjcol.h"
 #include "p_mobj.h"
-#include "p_portal.h"   // ioanch 20160116
+#include "p_portalcross.h"
 #include "p_pspr.h"
 #include "p_setup.h"
 #include "p_spec.h"
@@ -205,7 +205,6 @@ void A_HticDrop(actionargs_t *actionargs)
 void P_HticTracer(Mobj *actor, angle_t threshold, angle_t maxturn)
 {
    angle_t exact, diff;
-   fixed_t dist;
    Mobj   *dest;
    bool    dir;
   
@@ -264,7 +263,7 @@ void P_HticTracer(Mobj *actor, angle_t threshold, angle_t maxturn)
       dz  + dest->height  < actor->z)
    {
       // directly from above
-      dist = P_AproxDistance(dx - actor->x, dy - actor->y);
+      fixed_t dist = P_AproxDistance(dx - actor->x, dy - actor->y);
       
       dist = dist / actor->info->speed;
       
@@ -323,7 +322,6 @@ void A_MummyFX1Seek(actionargs_t *actionargs)
 void A_ClinkAttack(actionargs_t *actionargs)
 {
    Mobj *actor = actionargs->actor;
-   int dmg;
 
    if(!actor->target)
       return;
@@ -332,7 +330,7 @@ void A_ClinkAttack(actionargs_t *actionargs)
 
    if(P_CheckMeleeRange(actor))
    {
-      dmg = (P_Random(pr_clinkatk) % 7) + 3;
+      int dmg = (P_Random(pr_clinkatk) % 7) + 3;
       P_DamageMobj(actor->target, actor, actor, dmg, MOD_HIT);
    }
 }
@@ -420,8 +418,6 @@ void A_Srcr1Attack(actionargs_t *actionargs)
 {
    Mobj *actor = actionargs->actor;
    Mobj *mo;
-   fixed_t momz;
-   angle_t angle;
    fixed_t mheight = actor->z + 48*FRACUNIT;
    int srcrfxType = E_SafeThingType(MT_SRCRFX1);
 
@@ -447,8 +443,8 @@ void A_Srcr1Attack(actionargs_t *actionargs)
    {
       // "limit break": 3 fire balls
       mo = P_SpawnMissile(actor, actor->target, srcrfxType, mheight);
-      momz = mo->momz;
-      angle = mo->angle;
+      fixed_t momz = mo->momz;
+      angle_t angle = mo->angle;
       P_SpawnMissileAngle(actor, srcrfxType, angle-ANGLE_1*3, 
                           momz, mheight);
       P_SpawnMissileAngle(actor, srcrfxType, angle+ANGLE_1*3,
@@ -1191,7 +1187,6 @@ void A_SnakeAttack2(actionargs_t *actionargs)
 void A_MinotaurAtk1(actionargs_t *actionargs)
 {
    Mobj     *actor = actionargs->actor;
-   player_t *player;
 
    if(!actor->target)
       return;
@@ -1204,7 +1199,8 @@ void A_MinotaurAtk1(actionargs_t *actionargs)
                    ((P_Random(pr_minatk1) & 7) + 1) * 4, MOD_HIT);
    
       // if target is player, make the viewheight go down
-      if((player = actor->target->player) != NULL)
+      player_t *player = actor->target->player;
+      if(player != NULL)
          player->deltaviewheight = -16*FRACUNIT;
    }
 }
@@ -1242,7 +1238,6 @@ inline static bool P_CheckFloorFire(fixed_t dist, Mobj *target)
 //
 void A_MinotaurDecide(actionargs_t *actionargs)
 {
-   angle_t angle;
    Mobj *actor = actionargs->actor;
    Mobj *target;
    int dist;
@@ -1269,7 +1264,7 @@ void A_MinotaurDecide(actionargs_t *actionargs)
       actor->flags |= MF_SKULLFLY;
       
       // give him momentum
-      angle = actor->angle >> ANGLETOFINESHIFT;
+      angle_t angle = actor->angle >> ANGLETOFINESHIFT;
       actor->momx = FixedMul(13*FRACUNIT, finecosine[angle]);
       actor->momy = FixedMul(13*FRACUNIT, finesine[angle]);
       
@@ -1297,12 +1292,11 @@ void A_MinotaurCharge(actionargs_t *actionargs)
 {
    int   puffType = E_SafeThingType(MT_PHOENIXPUFF);
    Mobj *actor = actionargs->actor;
-   Mobj *puff;
    
    if(actor->counters[0]) // test charge timer
    {
       // spawn some smoke and count down the charge
-      puff = P_SpawnMobj(actor->x, actor->y, actor->z, puffType);
+      Mobj *puff = P_SpawnMobj(actor->x, actor->y, actor->z, puffType);
       puff->momz = 2 * FRACUNIT;
       --actor->counters[0];
    }
@@ -1324,8 +1318,6 @@ void A_MinotaurAtk2(actionargs_t *actionargs)
    int      mntrfxType = E_SafeThingType(MT_MNTRFX1);
    Mobj    *actor = actionargs->actor;
    Mobj    *mo;
-   angle_t  angle;
-   fixed_t  momz;
    
    if(!actor->target)
       return;
@@ -1346,8 +1338,8 @@ void A_MinotaurAtk2(actionargs_t *actionargs)
       S_StartSound(mo, sfx_minat2);
 
       // shoot 4 more missiles in a spread
-      momz = mo->momz;
-      angle = mo->angle;
+      fixed_t momz = mo->momz;
+      angle_t angle = mo->angle;
       P_SpawnMissileAngle(actor, mntrfxType, angle - (ANG45/8),  momz, z);
       P_SpawnMissileAngle(actor, mntrfxType, angle + (ANG45/8),  momz, z);
       P_SpawnMissileAngle(actor, mntrfxType, angle - (ANG45/16), momz, z);
@@ -1364,8 +1356,6 @@ void A_MinotaurAtk3(actionargs_t *actionargs)
 {
    int       mntrfxType = E_SafeThingType(MT_MNTRFX2);
    Mobj     *actor = actionargs->actor;
-   Mobj     *mo;
-   player_t *player;
 
    if(!actor->target)
       return;
@@ -1376,13 +1366,14 @@ void A_MinotaurAtk3(actionargs_t *actionargs)
                    ((P_Random(pr_minatk3) & 7) + 1) * 5, MOD_HIT);
 
       // if target is player, decrease viewheight
-      if((player = actor->target->player) != NULL)
+      player_t *player = actor->target->player;
+      if(player != NULL)
          player->deltaviewheight = -16*FRACUNIT;
    }
    else
    {
       // floor fire attack
-      mo = P_SpawnMissile(actor, actor->target, mntrfxType, ONFLOORZ);
+      Mobj *mo = P_SpawnMissile(actor, actor->target, mntrfxType, ONFLOORZ);
       S_StartSound(mo, sfx_minat1);
    }
 

@@ -71,6 +71,8 @@
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_partcl.h"
+#include "p_portal.h"
+#include "p_portalcross.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "r_defs.h"
@@ -378,15 +380,13 @@ void P_ParticleThinker(void)
 {
    int i;
    particle_t *particle, *prev;
-   sector_t *psec;
+   const sector_t *psec;
    fixed_t floorheight;
    
    i = activeParticles;
    prev = NULL;
    while(i != -1) 
    {
-      unsigned int oldtrans;
-      
       particle = Particles + i;
       i = particle->next;
 
@@ -398,7 +398,7 @@ void P_ParticleThinker(void)
       if(!(particle->styleflags & PS_FALLTOGROUND))
       {
          // perform fading
-         oldtrans = particle->trans;
+         unsigned oldtrans = particle->trans;
          particle->trans -= particle->fade;
          
          // is it time to kill this particle?
@@ -415,9 +415,20 @@ void P_ParticleThinker(void)
          }
       }
 
-      // update and link to new position
-      particle->x += particle->velx;
-      particle->y += particle->vely;
+      // Check for wall portals
+      if(gMapHasLinePortals && particle->velx | particle->vely)
+      {
+         v2fixed_t destination = P_LinePortalCrossing(particle->x, particle->y, 
+            particle->velx, particle->vely);
+         particle->x = destination.x;
+         particle->y = destination.y;
+      }
+      else
+      {
+         // update and link to new position
+         particle->x += particle->velx;
+         particle->y += particle->vely;
+      }
       particle->z += particle->velz;
       P_SetParticlePosition(particle);
 
@@ -445,7 +456,7 @@ void P_ParticleThinker(void)
       // floor clipping
       if(particle->z < floorheight && psec->f_pflags & PS_PASSABLE)
       {
-         linkdata_t *ldata = R_FPLink(psec);
+         const linkdata_t *ldata = R_FPLink(psec);
 
          P_UnsetParticlePosition(particle);
          particle->x += ldata->deltax;
@@ -470,6 +481,16 @@ void P_ParticleThinker(void)
             if(particle->styleflags & PS_SPLASH)
                E_PtclTerrainHit(particle);
          }
+      }
+      else if(particle->z > psec->ceilingheight && psec->c_pflags & PS_PASSABLE)
+      {
+         const linkdata_t *ldata = R_CPLink(psec);
+
+         P_UnsetParticlePosition(particle);
+         particle->x += ldata->deltax;
+         particle->y += ldata->deltay;
+         particle->z += ldata->deltaz;
+         P_SetParticlePosition(particle);
       }
       
       prev = particle;
@@ -584,7 +605,6 @@ static void MakeFountain(Mobj *actor, byte color1, byte color2)
 static void P_RunEffect(Mobj *actor, unsigned int effects)
 {
    angle_t moveangle = P_PointToAngle(0,0,actor->momx,actor->momy);
-   particle_t *particle;
 
    if(effects & FX_FLIES || 
       (effects & FX_FLIESONDEATH && actor->tics == -1 &&
@@ -612,7 +632,7 @@ static void P_RunEffect(Mobj *actor, unsigned int effects)
       
       angle_t an = (moveangle + ANG90) >> ANGLETOFINESHIFT;
 
-      particle = JitterParticle(3 + (M_Random() & 31));
+      particle_t *particle = JitterParticle(3 + (M_Random() & 31));
       if(particle)
       {
          fixed_t pathdist = M_Random()<<8;
@@ -912,7 +932,6 @@ void P_BloodSpray(Mobj *mo, int count, fixed_t x, fixed_t y, fixed_t z,
    particle_t *p;
    angle_t an;
    int bloodcolor = mo->info->bloodcolor;
-   int tempcol;
 
    // get blood colors
    if(bloodcolor < 0 || bloodcolor >= NUMBLOODCOLORS)
@@ -929,7 +948,7 @@ void P_BloodSpray(Mobj *mo, int count, fixed_t x, fixed_t y, fixed_t z,
    // swap colors if reversed
    if(color2 < color1)
    {
-      tempcol = color1;
+      int tempcol = color1;
       color1  = color2;
       color2  = tempcol;
    }

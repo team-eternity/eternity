@@ -45,6 +45,7 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "ev_specials.h"
 #include "g_game.h"
 #include "m_bbox.h"
 #include "m_random.h"
@@ -193,9 +194,11 @@ void P_NoiseAlert(Mobj *target, Mobj *emitter)
 bool P_CheckMeleeRange(Mobj *actor)
 {
    Mobj *pl = actor->target;
+   if (!pl)
+       return false;
    
    // haleyjd 02/15/02: revision of joel's fix for z height check
-   if(pl && P_Use3DClipping())
+   if(P_Use3DClipping())
    {
       if(pl->z > actor->z + actor->height || // pl is too far above
          actor->z > pl->z + pl->height)      // pl is too far below
@@ -358,7 +361,6 @@ static bool P_IsOnLift(const Mobj *actor)
 {
    const sector_t *sec = actor->subsector->sector;
    line_t line;
-   int l;
 
    // Short-circuit: it's on a lift which is active.
    if(thinker_cast<PlatThinker *>(sec->floordata) != NULL)
@@ -369,16 +371,27 @@ static bool P_IsOnLift(const Mobj *actor)
    // ioanch 20160303: use args[0]
    if((line.args[0] = sec->tag))
    {
-      for(l = -1; (l = P_FindLineFromLineArg0(&line, l)) >= 0;)
+      for(int l = -1; (l = P_FindLineFromLineArg0(&line, l)) >= 0;)
       {
-         switch(lines[l].special)
+         // FIXME: I'm still keeping the old code because I don't know of any MBF
+         // demos which can verify all of this. If you're confident you found one,
+         // feel free to remove this block.
+         if(demo_version <= 203)
          {
-         case  10: case  14: case  15: case  20: case  21: case  22:
-         case  47: case  53: case  62: case  66: case  67: case  68:
-         case  87: case  88: case  95: case 120: case 121: case 122:
-         case 123: case 143: case 162: case 163: case 181: case 182:
-         case 144: case 148: case 149: case 211: case 227: case 228:
-         case 231: case 232: case 235: case 236:
+            switch(lines[l].special)
+            {
+            case  10: case  14: case  15: case  20: case  21: case  22:
+            case  47: case  53: case  62: case  66: case  67: case  68:
+            case  87: case  88: case  95: case 120: case 121: case 122:
+            case 123: case 143: case 162: case 163: case 181: case 182:
+            case 144: case 148: case 149: case 211: case 227: case 228:
+            case 231: case 232: case 235: case 236:
+               return true;
+            }
+         }
+         else if(EV_CompositeActionFlags(EV_ActionForSpecial(lines[l].special)) &
+            EV_ISMBFLIFT)
+         {
             return true;
          }
       }
@@ -1383,7 +1396,7 @@ void P_SkullFly(Mobj *actor, fixed_t speed)
 //
 void P_BossTeleport(bossteleport_t *bt)
 {
-   Mobj *boss, *mo, *targ;
+   Mobj *boss, *targ;
    fixed_t prevx, prevy, prevz;
 
    if(bt->mc->isEmpty())
@@ -1432,7 +1445,7 @@ void P_BossTeleport(bossteleport_t *bt)
       if(bt->hereThere <= BOSSTELE_BOTH &&
          bt->hereThere != BOSSTELE_NONE)
       {
-         mo = P_SpawnMobj(prevx, prevy, prevz + bt->zpamt, bt->fxtype);
+         Mobj *mo = P_SpawnMobj(prevx, prevy, prevz + bt->zpamt, bt->fxtype);
          S_StartSound(mo, bt->soundNum);
       }
 
@@ -1518,7 +1531,6 @@ void A_FogSpawn(actionargs_t *actionargs)
 {
    Mobj *actor = actionargs->actor;
    Mobj *mo = NULL;
-   angle_t delta;
 
    if(actor->counters[0]-- > 0)
      return;
@@ -1542,7 +1554,7 @@ void A_FogSpawn(actionargs_t *actionargs)
    }
    if(mo)
    {
-      delta = (P_Random(pr_fogangle)&0x7f)+1;
+      angle_t delta = (P_Random(pr_fogangle)&0x7f)+1;
       mo->angle = actor->angle + (((P_Random(pr_fogangle)%delta)-(delta>>1))<<24);
       mo->target = actor;
       mo->args[0] = (P_Random(pr_fogangle)%FOGSPEED)+1; // haleyjd: narrowed range
@@ -1561,7 +1573,6 @@ void A_FogMove(actionargs_t *actionargs)
    Mobj *actor = actionargs->actor;
    int speed = actor->args[0]<<FRACBITS;
    angle_t angle;
-   int weaveindex;
 
    if(!(actor->args[4]))
      return;
@@ -1574,7 +1585,7 @@ void A_FogMove(actionargs_t *actionargs)
 
    if((actor->args[3]%4) == 0)
    {
-      weaveindex = actor->counters[1];
+      int weaveindex = actor->counters[1];
       actor->z += FloatBobOffsets[weaveindex]>>1;
       actor->counters[1] = (weaveindex+1)&63;
    }
@@ -1623,9 +1634,7 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
    int vileFireType  = E_ThingNumForName("VileFire");
    int spawnSpotType = E_ThingNumForName("BossSpawnSpot");
 
-   fixed_t  x, y, z;
    Mobj   *newmobj;
-   int      prestep;
    player_t *plyr = &players[consoleplayer];
 
    // if it's a missile, shoot it
@@ -1642,12 +1651,12 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
    {
       // do a good old Pain-Elemental style summoning
       an = (plyr->mo->angle + an) >> ANGLETOFINESHIFT;
-      prestep = 4*FRACUNIT + 3*(plyr->mo->info->radius + mobjinfo[type]->radius)/2;
+      int prestep = 4*FRACUNIT + 3*(plyr->mo->info->radius + mobjinfo[type]->radius)/2;
       
-      x = plyr->mo->x + FixedMul(prestep, finecosine[an]);
-      y = plyr->mo->y + FixedMul(prestep, finesine[an]);
+      fixed_t x = plyr->mo->x + FixedMul(prestep, finecosine[an]);
+      fixed_t y = plyr->mo->y + FixedMul(prestep, finesine[an]);
       
-      z = (mobjinfo[type]->flags & MF_SPAWNCEILING) ? ONCEILINGZ : ONFLOORZ;
+      fixed_t z = (mobjinfo[type]->flags & MF_SPAWNCEILING) ? ONCEILINGZ : ONFLOORZ;
       
       if(Check_Sides(plyr->mo, x, y))
          return;

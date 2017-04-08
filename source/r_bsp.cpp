@@ -503,7 +503,7 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
    {
       int underwater; // haleyjd: restructured
       
-      int heightsec = -1;
+      int heightsec;
       
       const sector_t *s = &sectors[sec->heightsec];
       
@@ -559,6 +559,8 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
          // ioanch 20160205: not always
          if(!R_IsSkyFlat(tempsec->ceilingpic))
             tempsec->intflags &= ~SIF_SKY;
+         else
+            tempsec->intflags |= SIF_SKY;
 
          tempsec->lightlevel  = s->lightlevel;
          
@@ -615,6 +617,8 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
          // ioanch 20160205: not always
          if(!R_IsSkyFlat(tempsec->ceilingpic))
             tempsec->intflags &= ~SIF_SKY;
+         else
+            tempsec->intflags |= SIF_SKY;
          
          tempsec->lightlevel  = s->lightlevel;
          
@@ -1100,7 +1104,6 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    // ioanch 20160130: be sure to check for portal line too!
    mark = (seg.frontsec->lightlevel != seg.backsec->lightlevel ||
            seg.line->linedef->portal ||
-           seg.frontsec->heightsec != -1 ||
            seg.frontsec->heightsec != seg.backsec->heightsec ||
            seg.frontsec->midmap != seg.backsec->midmap ||
            (seg.line->sidedef->midtexture &&
@@ -1237,7 +1240,9 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
          !portalrender.w->line &&
          portalrender.w->planez <= seg.backsec->ceilingheight;
 
-   if(!toohigh && !havetportal && heightchange && side->toptexture)
+   if(!toohigh && !havetportal && heightchange && 
+      !(seg.frontsec->intflags & SIF_SKY && seg.backsec->intflags & SIF_SKY) && 
+      side->toptexture)
    {
       seg.toptex = texturetranslation[side->toptexture];
       seg.toptexh = textures[side->toptexture]->height;
@@ -1381,7 +1386,6 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    // ioanch 20160130: be sure to check for portal line too!
    mark = (seg.frontsec->lightlevel != seg.backsec->lightlevel ||
            seg.line->linedef->portal ||
-           seg.frontsec->heightsec != -1 ||
            seg.frontsec->heightsec != seg.backsec->heightsec ||
            seg.frontsec->midmap != seg.backsec->midmap ||
            (seg.line->sidedef->midtexture && 
@@ -1649,6 +1653,20 @@ static bool R_allowBehindDivline(const dlnormal_t &dln, const seg_t *renderSeg)
 }
 
 //
+// Checks seg against seg
+//
+bool R_AllowBehindSectorPortal(const fixed_t bbox[4], fixed_t x, fixed_t y)
+{
+   divline_t dl;
+   dl.x = x;
+   dl.y = y;
+   dl.dx = 8 * viewsin; // just define the direction
+   dl.dy = -8 * viewcos;
+   // Return okay if any part is on the correct side
+   return P_BoxOnDivlineSide(bbox, dl) != 1;
+}
+
+//
 // R_AddLine
 //
 // Clips the given segment
@@ -1680,8 +1698,13 @@ static void R_AddLine(seg_t *line, bool dynasegs)
       }
       else
       {
-         //if(!R_allowBehindSectorPortal(portalrender.w->barrier, line))
-         //   return;
+         if(!R_AllowBehindSectorPortal(portalrender.w->barrier.bbox,
+            line->v1->x, line->v1->y) &&
+            !R_AllowBehindSectorPortal(portalrender.w->barrier.bbox,
+               line->v2->x, line->v2->y))
+         {
+            return;
+         }
       }
    }
    // SoM: one of the byproducts of the portal height enforcement: The top 
@@ -1809,25 +1832,25 @@ static void R_AddLine(seg_t *line, bool dynasegs)
       if(t2.fy < nearclip)
          return;
 
-      movey = nearclip - t1.fy;
+      movey = NEARCLIP - t1.fy;
       t1.fx += (move = movey * ((t2.fx - t1.fx) / (t2.fy - t1.fy)));
 
       lclip1 = (float)sqrt(move * move + movey * movey);
-      t1.fy = nearclip;
+      t1.fy = NEARCLIP;
    }
 
    i1 = 1.0f / t1.fy;
    x1 = (view.xcenter + (t1.fx * i1 * view.xfoc));
 
-   if(t2.fy < nearclip)
+   if(t2.fy < NEARCLIP)
    {
       float move, movey;
 
-      movey = nearclip - t2.fy;
+      movey = NEARCLIP - t2.fy;
       t2.fx += (move = movey * ((t2.fx - t1.fx) / (t2.fy - t1.fy)));
 
       lclip2 -= (float)sqrt(move * move + movey * movey);
-      t2.fy = nearclip;
+      t2.fy = NEARCLIP;
    }
 
    i2 = 1.0f / t2.fy;
@@ -2110,6 +2133,18 @@ static void R_AddLine(seg_t *line, bool dynasegs)
 
    // Add new solid segs when it is safe to do so...
    R_AddMarkedSegs();
+
+   sectorbox_t &box = pSectorBoxes[seg.line->frontsector - sectors];
+   if(seg.f_window && box.fframeid != frameid)
+   {
+      box.fframeid = frameid;
+      R_CalcRenderBarrier(*seg.f_window, box);
+   }
+   if(seg.c_window && box.cframeid != frameid)
+   {
+      box.cframeid = frameid;
+      R_CalcRenderBarrier(*seg.c_window, box);
+   }
 }
 
 
@@ -2319,6 +2354,16 @@ static void R_Subsector(int num)
    seg.frontsec = R_FakeFlat(seg.frontsec, &tempsec, &floorlightlevel,
                              &ceilinglightlevel, false);   // killough 4/11/98
 
+   // ioanch: reject all sectors fully above or below a sector portal.
+   if(portalrender.active && portalrender.w->portal->type != R_SKYBOX &&
+      !portalrender.w->line && ((portalrender.w->up &&
+         seg.frontsec->ceilingheight < portalrender.w->planez) ||
+         (!portalrender.w->up && 
+            seg.frontsec->floorheight > portalrender.w->planez)))
+   {
+      return;
+   }
+
    // haleyjd 01/05/08: determine angles for floor and ceiling
    floorangle   = seg.frontsec->floorbaseangle   + seg.frontsec->floorangle;
    ceilingangle = seg.frontsec->ceilingbaseangle + seg.frontsec->ceilingangle;
@@ -2458,11 +2503,6 @@ static void R_Subsector(int num)
 
    while(count--)
       R_AddLine(line++, false);
-
-   //if(seg.f_window)
-   //   R_CalcRenderBarrier(seg.f_window, sub);
-   //if(seg.c_window)
-   //   R_CalcRenderBarrier(seg.c_window, sub);
 }
 
 //

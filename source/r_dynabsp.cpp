@@ -367,7 +367,7 @@ static int R_classifyDynaSeg(dynaseg_t *part, dynaseg_t *seg, double pdx, double
 static void R_divideSegs(rpolynode_t *rpn, dseglist_t *ts, 
                          dseglist_t *rs, dseglist_t *ls)
 {
-   dynaseg_t *best = NULL, *add_to_rs = NULL, *add_to_ls = NULL;
+   dynaseg_t *best, *add_to_rs = NULL, *add_to_ls = NULL;
    
    // select best seg to use as partition line
    best = rpn->partition = R_selectPartition(*ts);

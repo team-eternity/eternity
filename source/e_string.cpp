@@ -108,7 +108,6 @@ static void E_DelStringFromNumHash(edf_string_t *str)
 //
 edf_string_t *E_CreateString(const char *value, const char *key, int num)
 {
-   int keyval;
    edf_string_t *newStr;
 
    if((newStr = E_StringForName(key)))
@@ -151,7 +150,7 @@ edf_string_t *E_CreateString(const char *value, const char *key, int num)
       
       // add to hash tables
       
-      keyval = D_HashTableKey(newStr->key) % NUM_EDFSTR_CHAINS;
+      int keyval = D_HashTableKey(newStr->key) % NUM_EDFSTR_CHAINS;
       newStr->next = edf_str_chains[keyval];
       edf_str_chains[keyval] = newStr;
       

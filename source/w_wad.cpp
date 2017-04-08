@@ -738,7 +738,7 @@ int WadDirectory::addDirectory(const char *dirpath)
    // count the files in the directory
    while((ent = readdir(dir)))
    {
-      dirfile_t newfile;
+      edefstructvar(dirfile_t, newfile);
       struct stat sbuf;
 
       if(!strcmp(ent->d_name, ".")  || !strcmp(ent->d_name, ".."))
@@ -1148,7 +1148,7 @@ void WadDirectory::coalesceMarkedResources()
 
    // scan the entire wad directory; save off lumps that belong in each
    // namespace
-   for(ns = lumpinfo_t::ns_sprites; ns < lumpinfo_t::ns_max; ns++)
+   for(ns = lumpinfo_t::ns_MIN_LOCAL; ns < lumpinfo_t::ns_max; ns++)
    {
       for(int lumpnum = 0; lumpnum < numlumps; lumpnum++)
          namespaces[ns].checkLump(lumpinfo[lumpnum]);

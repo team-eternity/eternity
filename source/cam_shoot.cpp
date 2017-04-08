@@ -83,7 +83,6 @@ void ShootContext::lineAttack(Mobj *source, angle_t angle, fixed_t distance,
    fixed_t slope, int damage, const State *state)
 {
    ShootContext context(source, angle, distance, slope, damage, state);
-   angle >>= ANGLETOFINESHIFT;
    fixed_t x2 = context.state.x + (distance >> FRACBITS) * context.cos;
    fixed_t y2 = context.state.y + (distance >> FRACBITS) * context.sin;
 

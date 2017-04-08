@@ -254,31 +254,26 @@ static void R_calcRenderBarrier(const portal_t *portal, const line_t *line,
 //
 // Expands a portal barrier BBox. For sector portals
 //
-void R_CalcRenderBarrier(pwindow_t *window, const subsector_t *ss)
+void R_CalcRenderBarrier(pwindow_t &window, const sectorbox_t &box)
 {
-   const portal_t *portal = window->portal;
+   const portal_t *portal = window.portal;
    if(!R_portalIsAnchored(portal))
-   {
       return;
-   }
-   const seg_t *seg;
-   v2fixed_t tv;
-   int i;
-   renderbarrier_t &barrier = window->barrier;
-   for(i = 0; i < ss->numlines; ++i)
+
+   static const int ind[2][4] = { 
+      {BOXLEFT, BOXRIGHT, BOXRIGHT, BOXLEFT}, 
+      {BOXBOTTOM, BOXBOTTOM, BOXTOP, BOXTOP} 
+   };
+   
+   renderbarrier_t &barrier = window.barrier;
+   fixed_t x, y;
+   for(int i = 0; i < 4; ++i)
    {
-      seg = &segs[ss->firstline + i];
-      tv = { seg->v1->x, seg->v1->y };
-      R_applyPortalTransformTo(portal, tv.x, tv.y, true);
-      M_AddToBox(barrier.bbox, tv.x, tv.y);
-   }
-   if(i) // take last one too
-   {
-      --i;
-      seg = &segs[ss->firstline + i];
-      tv = { seg->v2->x, seg->v2->y };
-      R_applyPortalTransformTo(portal, tv.x, tv.y, true);
-      M_AddToBox(barrier.bbox, tv.x, tv.y);
+      // Use the corners of the box when applying transformation
+      x = box.box[ind[0][i]];
+      y = box.box[ind[1][i]];
+      R_applyPortalTransformTo(portal, x, y, true);
+      M_AddToBox(barrier.bbox, x, y);
    }
 }
 
@@ -952,6 +947,8 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
 
    // SoM: The viewangle should also be offset by the skybox camera angle.
    viewangle += portal->data.camera->angle;
+   viewsin = finesine[viewangle>>ANGLETOFINESHIFT];
+   viewcos = finecosine[viewangle>>ANGLETOFINESHIFT];
 
    view.angle = (ANG90 - viewangle) * PI / ANG180;
    view.sin = (float)sin(view.angle);
@@ -976,6 +973,8 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
    view.z = lastzf;
    view.angle = lastanglef;
 
+   viewsin  = finesine[viewangle>>ANGLETOFINESHIFT];
+   viewcos  = finecosine[viewangle>>ANGLETOFINESHIFT];
    view.sin = (float)sin(view.angle);
    view.cos = (float)cos(view.angle);
 
@@ -1081,6 +1080,8 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
       R_ShowTainted(window);         
 
       portal->tainted++;
+      C_Printf(FC_ERROR "Refused to draw portal (line=%i) (t=%d)\n",
+         portal->data.anchor.maker, portal->tainted);
       return;
    } 
 
@@ -1181,6 +1182,8 @@ static void R_RenderLinkedPortal(pwindow_t *window)
       R_ShowTainted(window);         
 
       portal->tainted++;
+      C_Printf(FC_ERROR "Refused to draw portal (line=%i) (t=%d)\n",
+         portal->data.anchor.maker, portal->tainted);
       return;
    } 
 

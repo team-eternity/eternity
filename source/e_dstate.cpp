@@ -1921,7 +1921,7 @@ static edecstateout_t *E_DecoratePrincipals(const char *input, const char *first
       // if not using reserved states, create new ones
       if(!firststate)
       {
-         state_t *newstates = NULL;
+         state_t *newstates;
 
          // Add the required number of pointers to the states array
          E_ReallocStates(totalstates);

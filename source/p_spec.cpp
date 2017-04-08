@@ -58,6 +58,7 @@
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_portal.h"
+#include "p_portalcross.h"
 #include "p_pushers.h"
 #include "p_saveg.h"
 #include "p_scroll.h"
@@ -170,7 +171,7 @@ void P_InitPicAnims(void)
    
    //  Init animation
    //jff 3/23/98 read from predefined or wad lump instead of table
-   animdefs = (animdef_t *)wGlobalDir.cacheLumpName("ANIMATED", PU_STATIC);
+   animdefs = static_cast<animdef_t *>(wGlobalDir.cacheLumpName("ANIMATED", PU_STATIC));
 
    lastanim = anims;
    for(i = 0; animdefs[i].istexture != 0xff; i++)
@@ -1202,12 +1203,12 @@ static void P_SetupHeightTransfer(int linenum, int secnum,
 
       // transfer colormaps to affected sectors instead of getting them from
       // the heightsec during the rendering process
-      if(!setupSettings.sectorIsFlagged(s, UDMF_SECTOR_INIT_COLORMAPPED))
-      {
+      if(!setupSettings.sectorIsFlagged(s, UDMF_SECTOR_INIT_COLOR_TOP))
          sectors[s].topmap    = heightsec->topmap;
+      if(!setupSettings.sectorIsFlagged(s, UDMF_SECTOR_INIT_COLOR_MIDDLE))
          sectors[s].midmap    = heightsec->midmap;
+      if(!setupSettings.sectorIsFlagged(s, UDMF_SECTOR_INIT_COLOR_BOTTOM))
          sectors[s].bottommap = heightsec->bottommap;
-      }
    }
 }
 
@@ -2094,7 +2095,6 @@ void P_AttachLines(const line_t *cline, bool ceiling)
       memcpy(attached, cline->frontsector->c_attached, sizeof(int) * numattach);
       Z_Free(cline->frontsector->c_attached);
       cline->frontsector->c_attached = NULL;
-      cline->frontsector->c_numattached = 0;
       cline->frontsector->c_numattached = 0;
       Z_Free(cline->frontsector->c_attsectors);
    }

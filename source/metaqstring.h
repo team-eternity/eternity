@@ -44,7 +44,7 @@ public:
    {
    }
 
-   MetaQString(const char *key) : Super(key), value()
+   explicit MetaQString(const char *key) : Super(key), value()
    {
    }
 

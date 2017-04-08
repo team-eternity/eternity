@@ -128,6 +128,10 @@ sector_t *sectors;
 // haleyjd 01/05/14: sector interpolation data
 sectorinterp_t *sectorinterps;
 
+// ioanch: list of sector bounding boxes for sector portal seg rejection (coarse)
+// length: numsectors * 4
+sectorbox_t *pSectorBoxes;
+
 // haleyjd 01/12/14: sector sound environment zones
 int         numsoundzones;
 soundzone_t *soundzones;
@@ -577,11 +581,11 @@ void P_InitSector(sector_t *ss)
    int tempcolmap = ((ss->intflags & SIF_SKY) ? global_fog_index : global_cmap_index);
    if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY)
    {
-      if(ss->bottommap < 0)
+      if(ss->bottommap == -1)
          ss->bottommap = tempcolmap;
-      if(ss->midmap < 0)
+      if(ss->midmap == -1)
          ss->midmap = tempcolmap;
-      if(ss->topmap < 0)
+      if(ss->topmap == -1)
          ss->topmap = tempcolmap;
    }
    else
@@ -722,6 +726,27 @@ static void P_CreateSectorInterps()
       sectorinterps[i].prevceilingheight  = sectors[i].ceilingheight;
       sectorinterps[i].prevfloorheightf   = sectors[i].floorheightf;
       sectorinterps[i].prevceilingheightf = sectors[i].ceilingheightf;
+   }
+}
+
+//
+// Setup sector bounding boxes
+//
+static void P_createSectorBoundingBoxes()
+{
+   pSectorBoxes = estructalloctag(sectorbox_t, numsectors, PU_LEVEL);
+
+   for(int i = 0; i < numsectors; ++i)
+   {
+      const sector_t &sector = sectors[i];
+      fixed_t *box = pSectorBoxes[i].box;
+      M_ClearBox(box);
+      for(int j = 0; j < sector.linecount; ++j)
+      {
+         const line_t &line = *sector.lines[j];
+         M_AddToBox(box, line.v1->x, line.v1->y);
+         M_AddToBox(box, line.v2->x, line.v2->y);
+      }
    }
 }
 
@@ -1202,8 +1227,13 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
          if(actualSegIndex + 1 == ss->firstline + ss->numlines)
          {
             li->v2 = firstV1;
-            P_CalcSegLength(li);
-            firstV1 = nullptr;
+            if(firstV1) // firstV1 can be null because of malformed subsectors
+            {
+               P_CalcSegLength(li);
+               firstV1 = nullptr;
+            }
+            else
+               level_error = "Bad ZDBSP nodes; can't start level.";
          }
          else
          {
@@ -1957,21 +1987,21 @@ void P_SetupSidedefTextures(side_t &sd, const char *bottomTexture,
          sd.bottomtexture = R_FindWall(bottomTexture);
       else
       {
-         sec.bottommap = cmap;
+         sec.bottommap = cmap | COLORMAP_BOOMKIND;
          sd.bottomtexture = 0;
       }
       if((cmap = R_ColormapNumForName(midTexture)) < 0)
          sd.midtexture = R_FindWall(midTexture);
       else
       {
-         sec.midmap = cmap;
+         sec.midmap = cmap | COLORMAP_BOOMKIND;
          sd.midtexture = 0;
       }
       if((cmap = R_ColormapNumForName(topTexture)) < 0)
          sd.toptexture = R_FindWall(topTexture);
       else
       {
-         sec.topmap = cmap;
+         sec.topmap = cmap | COLORMAP_BOOMKIND;
          sd.toptexture = 0;
       }
       break;
@@ -3350,6 +3380,9 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    // overrun
    P_GroupLines();
    P_LoadReject(mgla.reject); // haleyjd 01/26/04
+
+   // Create bounding boxes now
+   P_createSectorBoundingBoxes();
 
    // haleyjd 01/12/14: build sound environment zones
    P_CreateSoundZones();

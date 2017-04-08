@@ -244,9 +244,9 @@ int EV_ThingDeactivate(int tid)
 //
 int EV_ThingChangeTID(Mobj *actor, int oldtid, int newtid)
 {
-   Mobj   *mo     = nullptr;
+   Mobj   *mo;
    Mobj   *next   = nullptr;
-   bool    found  = false;
+   bool    found;
 
    mo    = P_FindMobjFromTID(oldtid, nullptr, actor);
    found = mo != nullptr;

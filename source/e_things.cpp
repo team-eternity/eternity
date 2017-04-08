@@ -794,7 +794,6 @@ void E_CollectThings(cfg_t *cfg)
 {
    unsigned int i;
    unsigned int numthingtypes;     // number of thingtypes defined by the cfg
-   unsigned int firstnewthing = 0; // index of first new thingtype
    unsigned int curnewthing = 0;   // index of current new thingtype being used
    mobjinfo_t  *newMobjInfo = nullptr;
    static bool firsttime = true;
@@ -807,6 +806,7 @@ void E_CollectThings(cfg_t *cfg)
 
    if(numthingtypes)
    {
+      unsigned int firstnewthing = 0; // index of first new thingtype
       // allocate mobjinfo_t structures for the new thingtypes
       newMobjInfo = estructalloc(mobjinfo_t, numthingtypes);
 

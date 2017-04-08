@@ -126,6 +126,8 @@
 	[pwindow center];
 
 	[textField setFont:[NSFont fontWithName:@"Andale Mono" size:12]];
+   [textField setTextColor:[NSColor whiteColor]];
+   [textField setBackgroundColor:[NSColor blackColor]];
 	
 	pipe = [NSPipe pipe];
 	

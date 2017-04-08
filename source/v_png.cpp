@@ -709,7 +709,7 @@ byte *VPNGImage::getAs24Bit() const
 patch_t *VPNGImage::getAsPatch(int tag, void **user, size_t *size) const
 {
    AutoPalette pal(wGlobalDir);
-   patch_t *patch  = NULL;
+   patch_t *patch;
    byte    *linear = getAs8Bit(pal.get());
    int      w      = static_cast<int>(getWidth());
    int      h      = static_cast<int>(getHeight());

@@ -44,7 +44,7 @@ protected:
    allocfn_t allocator;
 
 public:
-   VAllocItem(allocfn_t p_allocator) : links(), allocator(p_allocator) 
+   explicit VAllocItem(allocfn_t p_allocator) : links(), allocator(p_allocator) 
    {
       links.insert(this, &vAllocList);
    }
