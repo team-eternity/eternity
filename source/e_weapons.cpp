@@ -45,6 +45,8 @@
 #include "d_items.h"
 #include "p_inter.h"
 
+#include "e_player.h" // DO NOT MOVE. COMPILE FAILS IF MOVED BEFORE p_inter.h INCLUDE
+
 // Weapon Keywords
 // TODO: Currently in order of weaponinfo_t, reorder
 
