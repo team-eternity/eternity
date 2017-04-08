@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4F015B83187598D500ADB3F4 /* libc++.1.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 4F015B7F187598D100ADB3F4 /* libc++.1.dylib */; };
-		4F015B84187598D800ADB3F4 /* libc++abi.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 4F015B80187598D100ADB3F4 /* libc++abi.dylib */; };
 		4F015B8C18775CB100ADB3F4 /* AUTHORS in Resources */ = {isa = PBXBuildFile; fileRef = 4F015B8A18775CB100ADB3F4 /* AUTHORS */; };
 		4F015B8D18775CB100ADB3F4 /* COPYING in Resources */ = {isa = PBXBuildFile; fileRef = 4F015B8B18775CB100ADB3F4 /* COPYING */; };
 		4F015B901877613100ADB3F4 /* About.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4F015B8E1877613100ADB3F4 /* About.xib */; };
@@ -45,8 +43,6 @@
 /* Begin PBXFileReference section */
 		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		256AC3F00F4B6AF500CF3369 /* EternityLaunch_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EternityLaunch_Prefix.pch; sourceTree = "<group>"; };
-		4F015B7F187598D100ADB3F4 /* libc++.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libc++.1.dylib"; path = "../libc++/libc++.1.dylib"; sourceTree = "<group>"; };
-		4F015B80187598D100ADB3F4 /* libc++abi.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libc++abi.dylib"; path = "../libc++/libc++abi.dylib"; sourceTree = "<group>"; };
 		4F015B8A18775CB100ADB3F4 /* AUTHORS */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = AUTHORS; path = ../../AUTHORS; sourceTree = "<group>"; };
 		4F015B8B18775CB100ADB3F4 /* COPYING */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = COPYING; path = ../../COPYING; sourceTree = "<group>"; };
 		4F015B8F1877613100ADB3F4 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/About.xib; sourceTree = "<group>"; };
@@ -125,8 +121,6 @@
 			children = (
 				4F015B8A18775CB100ADB3F4 /* AUTHORS */,
 				4F015B8B18775CB100ADB3F4 /* COPYING */,
-				4F015B7F187598D100ADB3F4 /* libc++.1.dylib */,
-				4F015B80187598D100ADB3F4 /* libc++abi.dylib */,
 				FA8216B2164712B100FF998A /* Eternity companions */,
 				FABF5F00158C710400C49E93 /* Eternity.icns */,
 				8D1107310486CEB800E47090 /* EternityLaunch-Info.plist */,
@@ -268,8 +262,6 @@
 				FABF6000158C8F6300C49E93 /* Credits.rtf in Resources */,
 				FAB103DC15911F4E00393DE3 /* DumpConsole.xib in Resources */,
 				FA601C7B1696246800046D2D /* Launcher.xib in Resources */,
-				4F015B83187598D500ADB3F4 /* libc++.1.dylib in Resources */,
-				4F015B84187598D800ADB3F4 /* libc++abi.dylib in Resources */,
 				4F2F32BA186710F300EED7DE /* eternity in Resources */,
 				4F2F32BB1867111400EED7DE /* base in Resources */,
 				4F015B8D18775CB100ADB3F4 /* COPYING in Resources */,
