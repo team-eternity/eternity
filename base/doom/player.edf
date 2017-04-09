@@ -317,7 +317,7 @@ weapongiver Shotgun
 weapongiver Chaingun
 {
   weapon WeaponChaingun
-  ammogiven AmmoClip, 20, 10, 50, 10
+  ammogiven AmmoClip, 20, 10, 50, 20
 }
 
 weapongiver MissileLauncher
