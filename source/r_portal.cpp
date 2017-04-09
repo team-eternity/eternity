@@ -1901,7 +1901,8 @@ static void R_findPairPortalLines(line_t &line)
          offset = *(blockmap + offset);
          const int *list = blockmaplump + offset;
 
-         ++list;
+         if(skipblstart)
+            ++list;
          for(; *list != -1; ++list)
          {
             if(*list >= numlines || *list < 0)
