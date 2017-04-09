@@ -1138,6 +1138,8 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    view.z = static_cast<float>(vz);
 
    viewangle = window->vangle + static_cast<angle_t>(tr.angle * ANG180 / PI);
+   viewsin = finesine[viewangle >> ANGLETOFINESHIFT];
+   viewcos = finecosine[viewangle >> ANGLETOFINESHIFT];
    view.angle = (ANG90 - viewangle) * PI / ANG180;
    view.sin = sinf(view.angle);
    view.cos = cosf(view.angle);
@@ -1155,6 +1157,8 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    viewy  = lasty;
    viewz  = lastz;
    viewangle = lastangle;
+   viewsin = finesine[viewangle >> ANGLETOFINESHIFT];
+   viewcos = finecosine[viewangle >> ANGLETOFINESHIFT];
    view.x = lastxf;
    view.y = lastyf;
    view.z = lastzf;
@@ -1170,7 +1174,9 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
 static void R_RenderLinkedPortal(pwindow_t *window)
 {
    fixed_t lastx, lasty, lastz;
+   angle_t lastangle;
    float   lastxf, lastyf, lastzf;
+   float   lastanglef;
    portal_t *portal = window->portal;
 
    if(portal->type != R_LINKED || window->maxx < window->minx)
@@ -1227,6 +1233,8 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    lastxf = view.x;
    lastyf = view.y;
    lastzf = view.z;
+   lastangle = viewangle;
+   lastanglef = view.angle;
 
    // SoM 3/10/2005: Use the coordinates stored in the portal struct
    viewx  = window->vx + portal->data.link.deltax;
@@ -1235,6 +1243,16 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    view.x = M_FixedToFloat(viewx);
    view.y = M_FixedToFloat(viewy);
    view.z = M_FixedToFloat(viewz);
+
+   if(window->vangle != viewangle)
+   {
+      viewangle = window->vangle;
+      viewsin = finesine[viewangle >> ANGLETOFINESHIFT];
+      viewcos = finecosine[viewangle >> ANGLETOFINESHIFT];
+      view.angle = (ANG90 - viewangle) * PI / ANG180;
+      view.sin = sinf(view.angle);
+      view.cos = cosf(view.angle);
+   }
 
    R_IncrementFrameid();
    R_RenderBSPNode(numnodes - 1);
@@ -1248,9 +1266,15 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    viewx  = lastx;
    viewy  = lasty;
    viewz  = lastz;
+   viewangle = lastangle;
+   viewsin = finesine[viewangle >> ANGLETOFINESHIFT];
+   viewcos = finecosine[viewangle >> ANGLETOFINESHIFT];
    view.x = lastxf;
    view.y = lastyf;
    view.z = lastzf;
+   view.angle = lastanglef;
+   view.sin = (float)sin(view.angle);
+   view.cos = (float)cos(view.angle);
 
    if(window->child)
       R_RenderLinkedPortal(window->child);
