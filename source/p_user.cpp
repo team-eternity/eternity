@@ -765,7 +765,7 @@ void P_PlayerThink(player_t *player)
 
       // WEAPON_FIXME: setting pendingweapon
 
-      if(player->weaponowned[newweapon] && E_WeaponIsCurrentNum(newweapon, player))
+      if(player->weaponowned[newweapon] && !E_WeaponIsCurrentNum(newweapon, player))
       {
          // Do not go to plasma or BFG in shareware, even if cheated.
          // haleyjd 06/28/13: generalized for EDF weapon system
