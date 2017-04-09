@@ -216,7 +216,7 @@ static bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped,
    Mobj *special)
 {
    bool gaveweapon = false;
-   weaponinfo_t *wp = &weaponinfo[weapon];
+   weaponinfo_t *wp = E_WeaponForSlot(weapon);
 
    if((dmflags & DM_WEAPONSTAY) && !dropped)
    {

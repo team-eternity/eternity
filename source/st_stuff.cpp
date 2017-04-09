@@ -939,7 +939,7 @@ static void ST_DoomFSDrawer()
    ST_updateWidgets();
 
    // ammo
-   itemeffect_t *ammo = weaponinfo[w_ready.data].ammo;
+   itemeffect_t *ammo = E_WeaponForSlot(w_ready.data)->ammo;
    if(ammo)
    {
       int num = E_StrToNumLinear(st_AmmoForNum, NUMAMMO, ammo->getKey());

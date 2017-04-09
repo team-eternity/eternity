@@ -52,7 +52,7 @@ enum
 struct weaponinfo_t
 {
    weapontype_t id;           // haleyjd 06/28/13: weapontype id number
-   char  *name;         // haleyjd 06/29/13: name of weapon
+   const char  *name;         // haleyjd 06/29/13: name of weapon
 
    MetaTable   *ammo;         // haleyjd 08/05/13: ammo artifact type
    int          upstate;
@@ -85,7 +85,7 @@ struct weaponinfo_t
    DLListItem<weaponinfo_t> namelinks; // hash by name
 };
 
-extern weaponinfo_t weaponinfo[NUMWEAPONS];
+//extern weaponinfo_t weaponinfo[NUMWEAPONS];
 
 // haleyjd: temporary hack
 void D_InitWeaponInfo();

@@ -54,7 +54,7 @@ bool enable_ssg = false;
 //  haleyjd 08/10/02: added ammopershot field to allow customized
 //   ammo usage for any weapon via DeHackEd
 //
-weaponinfo_t weaponinfo[NUMWEAPONS] =
+/*weaponinfo_t weaponinfo[NUMWEAPONS] =
 {
   {
     // fist
@@ -232,7 +232,7 @@ weaponinfo_t weaponinfo[NUMWEAPONS] =
     0,
     20, 8, 8, 4
   },  
-};
+};*/
 
 // INVENTORY_FIXME: temporary default ammo type names for each weapon;
 // eventually to be specified via EDF
@@ -257,7 +257,7 @@ static const char *d_ammoTypesForWeapons[NUMWEAPONS] =
 //
 void D_InitWeaponInfo()
 {
-   int i;
+   /*int i;
 
    for(i = 0; i < NUMWEAPONS; ++i)
    {
@@ -269,7 +269,7 @@ void D_InitWeaponInfo()
 
       if(d_ammoTypesForWeapons[i])
          weaponinfo[i].ammo = E_ItemEffectForName(d_ammoTypesForWeapons[i]);
-   }
+   }*/
 
    // haleyjd 11/28/08: SSG enable
    if(GameModeInfo->type == Game_DOOM && 

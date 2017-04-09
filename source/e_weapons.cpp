@@ -350,6 +350,7 @@ static void E_processWeaponInfo(int i, cfg_t *weapon, bool def)
 static void E_processWeaponCycle(cfg_t *weapon)
 {
    const char *tempstr = cfg_title(weapon);
+   weaponinfo_t *weaponinfo = E_WeaponForName(tempstr);
    if((tempstr = cfg_getstr(weapon, ITEM_WPN_NEXTINCYCLE)))
       weaponinfo->nextInCycle = E_WeaponForName(tempstr);
    if((tempstr = cfg_getstr(weapon, ITEM_WPN_PREVINCYCLE)))

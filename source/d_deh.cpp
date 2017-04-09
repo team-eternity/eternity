@@ -42,6 +42,7 @@
 #include "e_sound.h"
 #include "e_states.h"
 #include "e_things.h"
+#include "e_weapons.h"
 #include "g_game.h"
 #include "info.h"
 #include "metaapi.h"
@@ -1500,13 +1501,13 @@ void deh_procAmmo(DWFILE *fpin, char *line)
          // adjustment later to loop over all weapons defined via EDF
          for(int wp = 0; wp < NUMWEAPONS; wp++)
          {
-            weaponinfo_t *weapon = &weaponinfo[wp];
-            if(weapon->ammo == ammotype)
+            weaponinfo_t &weapon = *E_WeaponForSlot(wp);
+            if(weapon.ammo == ammotype)
             {
-               weapon->dmstayammo   = value * 5;
-               weapon->coopstayammo = value * 2;
-               weapon->giveammo     = value * 2;
-               weapon->dropammo     = value;
+               weapon.dmstayammo   = value * 5;
+               weapon.coopstayammo = value * 2;
+               weapon.giveammo     = value * 2;
+               weapon.dropammo     = value;
             }
          }
       }
@@ -1558,29 +1559,30 @@ void deh_procWeapon(DWFILE *fpin, char *line)
          continue;
       }
 
+      weaponinfo_t &weaponinfo = *E_WeaponForSlot(indexnum);
       // haleyjd: resolution adjusted for EDF
       if(!strcasecmp(key, deh_weapon[0]))  // Ammo type
       {
          if(value < 0 || value >= NUMAMMO)
-            weaponinfo[indexnum].ammo = NULL; // no ammo
+            weaponinfo.ammo = NULL; // no ammo
          else
-            weaponinfo[indexnum].ammo = E_ItemEffectForName(deh_itemsForAmmoNum[value][0]);
+            weaponinfo.ammo = E_ItemEffectForName(deh_itemsForAmmoNum[value][0]);
       }
       else if(!strcasecmp(key, deh_weapon[1]))  // Deselect frame
-         weaponinfo[indexnum].upstate = E_GetStateNumForDEHNum(value);
+         weaponinfo.upstate = E_GetStateNumForDEHNum(value);
       else if(!strcasecmp(key, deh_weapon[2]))  // Select frame
-         weaponinfo[indexnum].downstate = E_GetStateNumForDEHNum(value);
+         weaponinfo.downstate = E_GetStateNumForDEHNum(value);
       else if(!strcasecmp(key, deh_weapon[3]))  // Bobbing frame
-         weaponinfo[indexnum].readystate = E_GetStateNumForDEHNum(value);
+         weaponinfo.readystate = E_GetStateNumForDEHNum(value);
       else if(!strcasecmp(key, deh_weapon[4]))  // Shooting frame
-         weaponinfo[indexnum].atkstate = E_GetStateNumForDEHNum(value);
+         weaponinfo.atkstate = E_GetStateNumForDEHNum(value);
       else if(!strcasecmp(key, deh_weapon[5]))  // Firing frame
-         weaponinfo[indexnum].flashstate = E_GetStateNumForDEHNum(value);
+         weaponinfo.flashstate = E_GetStateNumForDEHNum(value);
       else if(!strcasecmp(key, deh_weapon[6])) // haleyjd: Ammo per shot
       {
-         weaponinfo[indexnum].ammopershot = value;
+         weaponinfo.ammopershot = value;
          // enable ammo per shot value usage for this weapon
-         weaponinfo[indexnum].flags |= WPF_ENABLEAPS;
+         weaponinfo.flags |= WPF_ENABLEAPS;
       }
       else
          deh_LogPrintf("Invalid weapon string index for '%s'\n", key);
@@ -1917,7 +1919,8 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
       {
          // WEAPON_FIXME: BFG ammopershot
          // haleyjd 08/10/02: propagate to weapon info
-         bfgcells = weaponinfo[wp_bfg].ammopershot = value;
+         weaponinfo_t &bfginfo = *E_WeaponForName("BFG9000");
+         bfgcells = bfginfo.ammopershot = value;
       }
       else if(!strcasecmp(key,deh_misc[15])) // Monsters Infight
          /* No such switch in DOOM - nop */ 

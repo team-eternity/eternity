@@ -417,7 +417,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          // have the berserker strength.
 
          if(newweapon==wp_fist && player->weaponowned[wp_chainsaw] &&
-            E_WeaponIsCurrent("Chainsaw", player) &&
+            !E_WeaponIsCurrent("Chainsaw", player) &&
             (E_WeaponIsCurrent("Fist", player) ||
              !player->powers[pw_strength] ||
              P_WeaponPreferred(wp_chainsaw, wp_fist)))
@@ -434,7 +434,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
             player->weaponowned[wp_supershotgun] &&
             (!player->weaponowned[wp_shotgun] ||
              E_WeaponIsCurrent("Shotgun", player) ||
-             (E_WeaponIsCurrent("SuperShotgun", player) &&
+             !(E_WeaponIsCurrent("SuperShotgun", player) &&
               P_WeaponPreferred(wp_supershotgun, wp_shotgun))))
          {
             newweapon = wp_supershotgun;

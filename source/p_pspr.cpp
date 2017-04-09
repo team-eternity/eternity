@@ -482,7 +482,7 @@ weaponinfo_t *P_GetPendingWeapon(player_t *player)
 {
    return 
       (player->pendingweapon >= 0 && player->pendingweapon < NUMWEAPONS) ? 
-       &(weaponinfo[player->pendingweapon]) : NULL;
+       E_WeaponForSlot(player->pendingweapon) : NULL;
 }
 
 //
@@ -496,8 +496,19 @@ weaponinfo_t *P_GetPendingWeapon(player_t *player)
 //
 weaponinfo_t *P_GetPlayerWeapon(player_t *player, int index)
 {
+   weaponslot_t *slot;
+   if((slot = player->pclass->weaponslots[index]))
+   {
+      if(E_WeaponIsCurrent(slot->weapon->name, player))
+         return slot->links->weapon;
+      else
+         return slot->weapon;
+   }
+  /* else
+      return NUMWEAPONSLOTS
+
    // currently there is only one linear weaponinfo
-   return &weaponinfo[index];
+   return &weaponinfo[index];*/
 }
 
 //
@@ -986,7 +997,7 @@ void A_FireOldBFG(actionargs_t *actionargs)
 
    if(weapon_recoil && !(mo->flags & MF_NOCLIP))
       P_Thrust(player, ANG180 + mo->angle, 0,
-               512*weaponinfo[wp_plasma].recoil);
+               512*E_WeaponForName("PlasmaRifle")->recoil);
 
    // WEAPON_FIXME: ammopershot for classic BFG
    auto weapon   = player->readyweaponnew;
