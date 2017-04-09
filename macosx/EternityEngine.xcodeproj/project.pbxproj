@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		4F015B111870EA5900ADB3F4 /* s_formats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F015B0E1870EA5900ADB3F4 /* s_formats.cpp */; };
+		4F015B761875988900ADB3F4 /* libc++.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F015B731875988900ADB3F4 /* libc++.1.dylib */; };
+		4F015B781875988900ADB3F4 /* libc++abi.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F015B741875988900ADB3F4 /* libc++abi.dylib */; };
 		4F2F32AC1867100100EED7DE /* e_reverbs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F2F32A21867100100EED7DE /* e_reverbs.cpp */; };
 		4F2F32AE1867100100EED7DE /* s_reverb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F2F32A71867100100EED7DE /* s_reverb.cpp */; };
 		4F2F32B01867100100EED7DE /* v_image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F2F32A91867100100EED7DE /* v_image.cpp */; };
@@ -931,7 +933,9 @@
 				4F5F399C182D9C140027813A /* libvorbisfile.a in Frameworks */,
 				4F5F399A182D9C0D0027813A /* libogg.a in Frameworks */,
 				4F5F399F182D9C1C0027813A /* libsmpeg.a in Frameworks */,
+				4F015B781875988900ADB3F4 /* libc++abi.dylib in Frameworks */,
 				4F5F399E182D9C1A0027813A /* libmikmod.a in Frameworks */,
+				4F015B761875988900ADB3F4 /* libc++.1.dylib in Frameworks */,
 				4F5F3997182D9C070027813A /* libSDL_mixer.a in Frameworks */,
 				4F5F399D182D9C160027813A /* libFLAC.a in Frameworks */,
 				4F5F3999182D9C0B0027813A /* libSDL.a in Frameworks */,
@@ -2380,6 +2384,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					staticlib,
+					"libc++",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
@@ -2421,6 +2426,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					staticlib,
+					"libc++",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
