@@ -51,6 +51,7 @@
 #include "e_player.h"
 #include "e_states.h"
 #include "e_things.h"
+#include "e_weapons.h"
 #include "f_finale.h"
 #include "f_wipe.h"
 #include "g_bind.h"
@@ -375,7 +376,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    if((!demo_compatibility && players[consoleplayer].attackdown &&
        !P_CheckAmmo(&players[consoleplayer])) || gameactions[ka_nextweapon])
    {
-      newweapon = P_SwitchWeapon(&players[consoleplayer]); // phares
+      newweapon = E_SlotForWeapon(P_SwitchWeapon(&players[consoleplayer])); // phares
    }
    else
    {                                 // phares 02/26/98: Added gamemode checks
@@ -416,8 +417,8 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          // have the berserker strength.
 
          if(newweapon==wp_fist && player->weaponowned[wp_chainsaw] &&
-            player->readyweapon!=wp_chainsaw &&
-            (player->readyweapon==wp_fist ||
+            E_WeaponIsCurrent("Chainsaw", player) &&
+            (E_WeaponIsCurrent("Fist", player) ||
              !player->powers[pw_strength] ||
              P_WeaponPreferred(wp_chainsaw, wp_fist)))
          {
@@ -432,8 +433,8 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          if(newweapon == wp_shotgun && enable_ssg &&
             player->weaponowned[wp_supershotgun] &&
             (!player->weaponowned[wp_shotgun] ||
-             player->readyweapon == wp_shotgun ||
-             (player->readyweapon != wp_supershotgun &&
+             E_WeaponIsCurrent("Shotgun", player) ||
+             (E_WeaponIsCurrent("SuperShotgun", player) &&
               P_WeaponPreferred(wp_supershotgun, wp_shotgun))))
          {
             newweapon = wp_supershotgun;
@@ -2256,7 +2257,8 @@ void G_PlayerReborn(int player)
    }
 
    // INVENTORY_TODO: reborn weapons
-   p->readyweapon = p->pendingweapon = wp_pistol;
+   p->pendingweapon = wp_pistol;
+   p->readyweaponnew = E_WeaponForName("Pistol");
 
    // INVENTORY_TODO: eliminate?
    // sf: different weapons owned

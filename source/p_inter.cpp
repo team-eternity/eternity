@@ -44,6 +44,7 @@
 #include "e_mod.h"
 #include "e_states.h"
 #include "e_things.h"
+#include "e_weapons.h"
 #include "ev_specials.h"
 #include "g_dmflag.h"
 #include "g_game.h"
@@ -118,7 +119,7 @@ bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
    // INVENTORY_TODO: hardcoded behaviors for now...
    if(!strcasecmp(ammo->getKey(), "AmmoClip"))
    {
-      if(player->readyweapon == wp_fist)
+      if(E_WeaponIsCurrent("Fist", player))
       {
          if(player->weaponowned[wp_chaingun])
             player->pendingweapon = wp_chaingun;
@@ -128,19 +129,19 @@ bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoShell"))
    {
-      if(player->readyweapon == wp_fist || player->readyweapon == wp_pistol)
+      if(E_WeaponIsCurrent("Fist", player) || E_WeaponIsCurrent("Pistol", player))
          if(player->weaponowned[wp_shotgun])
             player->pendingweapon = wp_shotgun;
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoCell"))
    {
-      if(player->readyweapon == wp_fist || player->readyweapon == wp_pistol)
+      if(E_WeaponIsCurrent("Fist", player) || E_WeaponIsCurrent("Pistol", player))
          if(player->weaponowned[wp_plasma])
             player->pendingweapon = wp_plasma;
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoMissile"))
    {
-      if(player->readyweapon == wp_fist)
+      if(E_WeaponIsCurrent("Fist", player))
          if(player->weaponowned[wp_missile])
             player->pendingweapon = wp_missile;
    }
@@ -839,7 +840,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       if(!P_GivePowerForItem(player, effect))
          return;
       message = DEH_String("GOTBERSERK"); // Ty 03/22/98 - externalized
-      if(player->readyweapon != wp_fist)
+      if(E_WeaponIsCurrent("Fist", player))
          // sf: removed beta
          player->pendingweapon = wp_fist;
       sound = sfx_getpow;
@@ -1750,7 +1751,7 @@ static int P_AdjustDamageType(Mobj *source, Mobj *inflictor, int mod)
       // players
       if(source->player && mod == MOD_PLAYERMISC)
       {
-         weaponinfo_t *weapon = P_GetReadyWeapon(source->player);
+         weaponinfo_t *weapon = source->player->readyweaponnew;
 
          // redirect based on weapon mod
          newmod = weapon->mod;
@@ -1861,7 +1862,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
 
    if(inflictor && !(target->flags & MF_NOCLIP) &&
       (!source || !source->player ||
-       !(P_GetReadyWeapon(source->player)->flags & WPF_NOTHRUST)) &&
+       !(source->player->readyweaponnew->flags & WPF_NOTHRUST)) &&
       !(inflictor->flags3 & MF3_NODMGTHRUST)) // haleyjd 11/14/02
    {
       // haleyjd: thrust factor differs for Heretic

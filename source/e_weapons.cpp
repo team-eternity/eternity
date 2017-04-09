@@ -32,19 +32,21 @@
 #include "i_system.h"
 
 #include "Confuse/confuse.h"
+#include "doomdef.h"
 #include "e_edf.h"
 #include "e_hash.h"
 #include "e_lib.h"
 #include "e_mod.h"
 #include "e_sound.h"
 #include "e_states.h"
-#include "e_weapons.h"
+
 #include "m_qstr.h"
 
 #include "d_dehtbl.h"
 #include "d_items.h"
 #include "p_inter.h"
 
+#include "e_weapons.h"
 #include "e_player.h" // DO NOT MOVE. COMPILE FAILS IF MOVED BEFORE p_inter.h INCLUDE
 
 // Weapon Keywords
@@ -185,6 +187,67 @@ weaponinfo_t *E_WeaponForName(const char *name)
    return e_WeaponNameHash.objectForKey(name);
 }
 
+weaponinfo_t *E_WeaponForSlot(int slot)
+{
+   switch(slot)
+   {
+   case wp_fist:
+      return E_WeaponForName("Fist");
+   case wp_pistol:
+      return E_WeaponForName("Pistol");
+   case wp_shotgun:
+      return E_WeaponForName("Shotgun");
+   case wp_chaingun:
+      return E_WeaponForName("Chaingun");
+   case wp_missile:
+      return E_WeaponForName("MissileLauncher");
+   case wp_plasma:
+      return E_WeaponForName("PlasmaRifle");
+   case wp_bfg:
+      return E_WeaponForName("BFG9000");
+   case wp_chainsaw:
+      return E_WeaponForName("Chainsaw");
+   case wp_supershotgun:
+      return E_WeaponForName("SuperShotgun");
+   default:
+      return nullptr;
+   }
+}
+
+int E_SlotForWeapon(weaponinfo_t *weapon)
+{
+   if(!strcmp(weapon->name, "Fist"))
+      return wp_fist;
+   if(!strcmp(weapon->name, "Pistol"))
+      return wp_pistol;
+   if(!strcmp(weapon->name, "Shotgun"))
+      return wp_shotgun;
+   if(!strcmp(weapon->name, "Chaingun"))
+      return wp_chaingun;
+   if(!strcmp(weapon->name, "MissileLauncher"))
+      return wp_missile;
+   if(!strcmp(weapon->name, "PlasmaRifle"))
+      return wp_plasma;
+   if(!strcmp(weapon->name, "BFG9000"))
+      return wp_bfg;
+   if(!strcmp(weapon->name, "Chainsaw"))
+      return wp_chainsaw;
+   if(!strcmp(weapon->name, "SuperShotgun"))
+      return wp_supershotgun;
+
+   return wp_nochange;
+}
+
+bool E_WeaponIsCurrent(const char *name, const player_t *player)
+{
+   return player->readyweaponnew->id == E_WeaponForName(name)->id;
+}
+
+bool E_WeaponIsCurrentNum(const int num, const player_t *player)
+{
+   return player->readyweaponnew->id == E_WeaponForSlot(num)->id;
+}
+
 #undef  IS_SET
 #define IS_SET(name) ((def && !inherits) || cfg_size(weapon, (name)) > 0)
 
@@ -201,7 +264,8 @@ static void E_processWeaponInfo(int i, cfg_t *weapon, bool def)
    weaponinfo->id = i;
 
    tempstr = cfg_title(weapon);
-   weaponinfo->name = tempstr;
+   //weaponinfo->name = tempstr;
+   weaponinfo->name = estrdup(tempstr);
 
    if(IS_SET(ITEM_WPN_AMMO))
    {

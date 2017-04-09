@@ -36,6 +36,7 @@
 #include "e_inventory.h"
 #include "e_player.h"
 #include "e_states.h"
+#include "e_weapons.h"
 #include "g_game.h"
 #include "hu_stuff.h"
 #include "metaapi.h"
@@ -750,13 +751,13 @@ void P_PlayerThink(player_t *player)
          newweapon = (cmd->buttons & BT_WEAPONMASK_OLD)>>BT_WEAPONSHIFT;
 
          if(newweapon == wp_fist && player->weaponowned[wp_chainsaw] &&
-            (player->readyweapon != wp_chainsaw ||
+            (E_WeaponIsCurrent("Chainsaw", player) ||
              !player->powers[pw_strength]))
             newweapon = wp_chainsaw;
          if(enable_ssg &&
             newweapon == wp_shotgun &&
             player->weaponowned[wp_supershotgun] &&
-            player->readyweapon != wp_supershotgun)
+            E_WeaponIsCurrent("SuperShotgun", player))
             newweapon = wp_supershotgun;
       }
 
@@ -764,7 +765,7 @@ void P_PlayerThink(player_t *player)
 
       // WEAPON_FIXME: setting pendingweapon
 
-      if(player->weaponowned[newweapon] && newweapon != player->readyweapon)
+      if(player->weaponowned[newweapon] && E_WeaponIsCurrentNum(newweapon, player))
       {
          // Do not go to plasma or BFG in shareware, even if cheated.
          // haleyjd 06/28/13: generalized for EDF weapon system

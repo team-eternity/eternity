@@ -52,7 +52,7 @@ enum
 struct weaponinfo_t
 {
    weapontype_t id;           // haleyjd 06/28/13: weapontype id number
-   const char  *name;         // haleyjd 06/29/13: name of weapon
+   char  *name;         // haleyjd 06/29/13: name of weapon
 
    MetaTable   *ammo;         // haleyjd 08/05/13: ammo artifact type
    int          upstate;

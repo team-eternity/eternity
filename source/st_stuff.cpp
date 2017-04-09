@@ -36,6 +36,7 @@
 #include "dstrings.h"
 #include "e_inventory.h"
 #include "e_lib.h"
+#include "e_weapons.h"
 #include "hu_over.h"    // haleyjd
 #include "i_video.h"
 #include "metaapi.h"
@@ -640,8 +641,8 @@ static const char *st_AmmoForNum[NUMAMMO] =
 static void ST_updateWidgets()
 {
    // update ready weapon ammo
-   w_ready.data  = plyr->readyweapon;
-   auto weapon   = P_GetReadyWeapon(plyr);
+   w_ready.data  = E_SlotForWeapon(plyr->readyweaponnew);
+   auto weapon   = plyr->readyweaponnew;
    auto ammoType = weapon->ammo;
 
    w_ready.num = ammoType ? E_GetItemOwnedAmount(plyr, ammoType) : 1994;
@@ -1227,7 +1228,7 @@ static void ST_createWidgets()
                  ST_AMMOWIDTH );
 
    // the last weapon type
-   w_ready.data = plyr->readyweapon;
+   w_ready.data = E_SlotForWeapon(plyr->readyweaponnew);
 
    // health percentage
    STlib_initPercent(&w_health,

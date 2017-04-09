@@ -46,6 +46,7 @@
 #include "e_inventory.h"
 #include "e_player.h"
 #include "e_states.h"
+#include "e_weapons.h"
 #include "g_game.h"
 #include "metaapi.h"
 #include "m_argv.h"
@@ -587,11 +588,11 @@ static void cheat_weapx(const void *arg)
             doom_printf("Weapon Added");  // Ty 03/27/98 - *not* externalized
          else 
          {
-            weapontype_t P_SwitchWeapon(player_t *player);
+            weaponinfo_t *P_SwitchWeapon(player_t *player);
             
             doom_printf("Weapon Removed"); // Ty 03/27/98 - *not* externalized
-            if(w == plyr->readyweapon)     // maybe switch if weapon removed
-               plyr->pendingweapon = P_SwitchWeapon(plyr);
+            if(E_WeaponIsCurrentNum(w, plyr))     // maybe switch if weapon removed
+               plyr->pendingweapon = E_SlotForWeapon(P_SwitchWeapon(plyr));
          }
       }
    }

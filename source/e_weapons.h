@@ -46,6 +46,7 @@ extern cfg_opt_t edf_wdelta_opts[];
 #endif
 
 // Structures
+struct cfg_t;
 struct weaponslot_t
 {
    weaponinfo_t *weapon;           // weapon in the slot
@@ -55,6 +56,12 @@ struct weaponslot_t
 // Global Functions
 weaponinfo_t *E_WeaponForID(int id);
 weaponinfo_t *E_WeaponForName(const char *name);
+weaponinfo_t *E_WeaponForSlot(int slot);
+int E_SlotForWeapon(weaponinfo_t *weapon);
+
+
+bool   E_WeaponIsCurrent(const char *name, const player_t *player);
+bool   E_WeaponIsCurrentNum(const int num, const player_t *player);
 
 void E_ProcessWeapons(cfg_t *cfg);
 
