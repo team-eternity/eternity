@@ -337,7 +337,7 @@ static void E_processWeaponInfo(int i, cfg_t *weapon, bool def)
 
    if(IS_SET(ITEM_WPN_UPSOUND))
    {
-      tempstr = ITEM_WPN_UPSOUND;
+      tempstr = cfg_getstr(weapon, ITEM_WPN_UPSOUND);
       sfxinfo_t *tempsfx = E_EDFSoundForName(tempstr);
       if(tempsfx)
          weaponinfo->upsound = E_EDFSoundForName(tempstr)->dehackednum;
