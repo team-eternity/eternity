@@ -80,7 +80,14 @@
 // WeaponInfo Delta Keywords
 #define ITEM_DELTA_NAME "name"
 
+/*// Title properties 
+#define ITEM_WPN_TITLE_SUPER     "superclass" 
 
+cfg_opt_t wpninfo_tprops[] =
+{
+   CFG_STR(ITEM_WPN_TITLE_SUPER,      0, CFGF_NONE),
+   CFG_END()
+};*/
 
 #define WEAPONINFO_FIELDS \
    CFG_STR(ITEM_WPN_AMMO,         "",       CFGF_NONE), \
@@ -125,7 +132,7 @@ cfg_opt_t edf_wdelta_opts[] =
 // Weapon Slots
 //
 // There are up to 16 possible slots for weapons to stack in, but any number
-// of weapons can stack in each slot. The correlation to the weapon action 
+// of weapons can stack in each slot. The correlation to the weaponsec action 
 // binding used to cycle through weapons in that slot is direct. The order of
 // weapons in the slot is determined by their relative priorities.
 //
@@ -190,9 +197,9 @@ weaponinfo_t *E_WeaponForName(const char *name)
 }
 
 #undef  IS_SET
-#define IS_SET(name) ((def && !inherits) || cfg_size(weapon, (name)) > 0)
+#define IS_SET(name) ((def && !inherits) || cfg_size(weaponsec, (name)) > 0)
 
-static void E_processWeaponInfo(int i, cfg_t *weapon, bool def)
+static void E_processWeaponInfo(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
 {
    bool inherits = false;
 
@@ -204,62 +211,62 @@ static void E_processWeaponInfo(int i, cfg_t *weapon, bool def)
 
    weaponinfo->id = i;
 
-   tempstr = cfg_title(weapon);
+   tempstr = cfg_title(weaponsec);
    weaponinfo->name = estrdup(tempstr);
 
    if(IS_SET(ITEM_WPN_TRACKER))
    {
-      const char *tempeffectname = cfg_getstr(weapon, ITEM_WPN_TRACKER);
+      const char *tempeffectname = cfg_getstr(weaponsec, ITEM_WPN_TRACKER);
       itemeffect_t *tempeffect;
       if((tempeffect = E_ItemEffectForName(tempeffectname)))
          weaponinfo->tracker = tempeffect;
-      else // A weapon is worthless without its tracker
+      else // A weaponsec is worthless without its tracker
          E_EDFLoggedErr(2, "Tracker \"%s\" in weaponinfo \"%s\" is undefined\n", tempeffectname, tempstr);
    }
    else
-      E_EDFLoggedErr(2, "No tracker defined for weapon \"%s\"\n", tempstr);
+      E_EDFLoggedErr(2, "No tracker defined for weaponsec \"%s\"\n", tempstr);
 
    if(IS_SET(ITEM_WPN_AMMO))
    {
-      tempstr = cfg_getstr(weapon, ITEM_WPN_AMMO);
+      tempstr = cfg_getstr(weaponsec, ITEM_WPN_AMMO);
       weaponinfo->ammo = E_ItemEffectForName(tempstr);
    }
 
    if(IS_SET(ITEM_WPN_UPSTATE))
    {
-      tempstr = cfg_getstr(weapon, ITEM_WPN_UPSTATE);
+      tempstr = cfg_getstr(weaponsec, ITEM_WPN_UPSTATE);
       weaponinfo->upstate = E_GetStateNumForName(tempstr);
    }
 
    if(IS_SET(ITEM_WPN_DOWNSTATE))
    {
-      tempstr = cfg_getstr(weapon, ITEM_WPN_DOWNSTATE);
+      tempstr = cfg_getstr(weaponsec, ITEM_WPN_DOWNSTATE);
       weaponinfo->downstate = E_GetStateNumForName(tempstr);
    }
    if(IS_SET(ITEM_WPN_READYSTATE))
    {
-      tempstr = cfg_getstr(weapon, ITEM_WPN_READYSTATE);
+      tempstr = cfg_getstr(weaponsec, ITEM_WPN_READYSTATE);
       weaponinfo->readystate = E_GetStateNumForName(tempstr);
    }
    if(IS_SET(ITEM_WPN_ATKSTATE))
    {
-      tempstr = cfg_getstr(weapon, ITEM_WPN_ATKSTATE);
+      tempstr = cfg_getstr(weaponsec, ITEM_WPN_ATKSTATE);
       weaponinfo->atkstate = E_GetStateNumForName(tempstr);
    }
    if(IS_SET(ITEM_WPN_FLASHSTATE))
    {
-      tempstr = cfg_getstr(weapon, ITEM_WPN_FLASHSTATE);
+      tempstr = cfg_getstr(weaponsec, ITEM_WPN_FLASHSTATE);
       weaponinfo->flashstate = E_GetStateNumForName(tempstr);
    }
    else
       weaponinfo->flashstate = E_SafeState(S_NULL);
 
    if(IS_SET(ITEM_WPN_AMMOPERSHOT))
-      weaponinfo->ammopershot = cfg_getint(weapon, ITEM_WPN_AMMOPERSHOT);
+      weaponinfo->ammopershot = cfg_getint(weaponsec, ITEM_WPN_AMMOPERSHOT);
 
    if(IS_SET(ITEM_WPN_MOD))
    {
-      tempstr = cfg_getstr(weapon, ITEM_WPN_MOD);
+      tempstr = cfg_getstr(weaponsec, ITEM_WPN_MOD);
       weaponinfo->mod = E_DamageTypeNumForName(tempstr);
    }
    else
@@ -268,7 +275,7 @@ static void E_processWeaponInfo(int i, cfg_t *weapon, bool def)
    // 02/19/04: process combined flags first
    if(IS_SET(ITEM_WPN_FLAGS))
    {
-      tempstr = cfg_getstr(weapon, ITEM_WPN_FLAGS);
+      tempstr = cfg_getstr(weaponsec, ITEM_WPN_FLAGS);
       if(*tempstr == '\0')
       {
          weaponinfo->flags = 0;
@@ -281,15 +288,15 @@ static void E_processWeaponInfo(int i, cfg_t *weapon, bool def)
    }
 
    if(IS_SET(ITEM_WPN_RECOIL))
-      weaponinfo->recoil = cfg_getint(weapon, ITEM_WPN_RECOIL);
+      weaponinfo->recoil = cfg_getint(weaponsec, ITEM_WPN_RECOIL);
    if(IS_SET(ITEM_WPN_HAPTICRECOIL))
-      weaponinfo->hapticrecoil = cfg_getint(weapon, ITEM_WPN_HAPTICRECOIL);
+      weaponinfo->hapticrecoil = cfg_getint(weaponsec, ITEM_WPN_HAPTICRECOIL);
    if(IS_SET(ITEM_WPN_HAPTICTIME))
-      weaponinfo->haptictime = cfg_getint(weapon, ITEM_WPN_HAPTICTIME);
+      weaponinfo->haptictime = cfg_getint(weaponsec, ITEM_WPN_HAPTICTIME);
 
    if(IS_SET(ITEM_WPN_UPSOUND))
    {
-      tempstr = cfg_getstr(weapon, ITEM_WPN_UPSOUND);
+      tempstr = cfg_getstr(weaponsec, ITEM_WPN_UPSOUND);
       sfxinfo_t *tempsfx = E_EDFSoundForName(tempstr);
       if(tempsfx)
          weaponinfo->upsound = E_EDFSoundForName(tempstr)->dehackednum;
@@ -311,15 +318,31 @@ static void E_processWeaponCycle(cfg_t *weapon)
 
 void E_ProcessWeapons(cfg_t *cfg)
 {
-   unsigned int numWeapons = cfg_size(cfg, EDF_SEC_WEAPONINFO);
+   E_EDFLogPuts("\t* Processing weaponinfo data\n");
 
-   E_EDFLogPuts("\t* Processing gameproperties\n");
+   const unsigned int numWeapons = cfg_size(cfg, EDF_SEC_WEAPONINFO);
 
    for(unsigned int i = 0; i < numWeapons; i++)
-      E_processWeaponInfo(i, cfg_getnsec(cfg, EDF_SEC_WEAPONINFO, i), false);
+   {
+      cfg_t *thingsec = cfg_getnsec(cfg, EDF_SEC_WEAPONINFO, i);
+      E_processWeaponInfo(i, thingsec, cfg, true);
+   }
 
    for(unsigned int i = 0; i < numWeapons; i++)
       E_processWeaponCycle(cfg_getnsec(cfg, EDF_SEC_WEAPONINFO, i));
+}
+
+void E_ProcessWeaponDeltas(cfg_t *cfg)
+{
+   E_EDFLogPuts("\t* Processing weapondelta data\n");
+
+   const unsigned int numDeltas = cfg_size(cfg, EDF_SEC_WPNDELTA);
+
+   for(unsigned int i = 0; i < numDeltas; i++)
+   {
+      cfg_t *deltasec = cfg_getnsec(cfg, EDF_SEC_WPNDELTA, i);
+      E_processWeaponInfo(i, deltasec, cfg, false);
+   }
 }
 
 //=============================================================================
@@ -385,7 +408,7 @@ int E_SlotForWeapon(weaponinfo_t *weapon)
 }
 
 //
-// Check if the named weapon is currently equipped
+// Check if the named weaponsec is currently equipped
 //
 bool E_WeaponIsCurrent(const player_t *player, const char *name)
 {
@@ -393,7 +416,7 @@ bool E_WeaponIsCurrent(const player_t *player, const char *name)
 }
 
 //
-// Check if the weapon in the slotnum is currently equipped
+// Check if the weaponsec in the slotnum is currently equipped
 // TODO: This should also become redundant
 //
 bool E_WeaponIsCurrentNum(player_t *player, const int num)

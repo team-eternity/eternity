@@ -81,6 +81,7 @@ bool E_WeaponIsCurrentNum(player_t *player, const int num);
 inline bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon);
 
 void E_ProcessWeapons(cfg_t *cfg);
+void E_ProcessWeaponDeltas(cfg_t *cfg);
 
 #endif
 
