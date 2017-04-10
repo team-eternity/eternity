@@ -65,6 +65,10 @@ struct weaponslot_t
    DLListItem<weaponslot_t> links; // link to next weapon in the same slot
 };
 
+#define NUMWEAPONSLOTS 16
+
+extern weaponslot_t *weaponslots[NUMWEAPONSLOTS];
+
 // Global Functions
 weaponinfo_t *E_WeaponForID(int id);
 weaponinfo_t *E_WeaponForName(const char *name);

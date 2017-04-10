@@ -30,6 +30,7 @@
 #include "m_dllist.h"
 
 class MetaTable;
+typedef MetaTable itemeffect_t;
 
 //
 // haleyjd 09/11/07: weapon flags
@@ -73,6 +74,8 @@ struct weaponinfo_t
    int          hapticrecoil; // haptic recoil strength, from 1 to 10
    int          haptictime;   // haptic recoil duration, from 1 to 10
    int          upsound;      // sound made when weapon is being brought up
+
+   itemeffect_t *tracker;     // tracker artifact for weapon
 
    // TODO: move to EDF weapon pickup definitions
    int          dmstayammo;   // amount of ammo given on pickup in DM when weapons stay

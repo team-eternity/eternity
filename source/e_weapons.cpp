@@ -73,6 +73,7 @@
 #define ITEM_WPN_HAPTICTIME   "haptictime"
 #define ITEM_WPN_UPSOUND      "upsound"
 
+#define ITEM_WPN_TRACKER      "tracker"
 
 #define ITEM_WPN_INHERITS     "inherits"
 
@@ -99,6 +100,7 @@
    CFG_INT(ITEM_WPN_HAPTICRECOIL, 0,        CFGF_NONE), \
    CFG_INT(ITEM_WPN_HAPTICTIME,   0,        CFGF_NONE), \
    CFG_STR(ITEM_WPN_UPSOUND,      "none",   CFGF_NONE), \
+   CFG_STR(ITEM_WPN_TRACKER,      "",       CFGF_NONE), \
    CFG_END()
 
 cfg_opt_t edf_wpninfo_opts[] =
@@ -264,8 +266,19 @@ static void E_processWeaponInfo(int i, cfg_t *weapon, bool def)
    weaponinfo->id = i;
 
    tempstr = cfg_title(weapon);
-   //weaponinfo->name = tempstr;
    weaponinfo->name = estrdup(tempstr);
+
+   if(IS_SET(ITEM_WPN_TRACKER))
+   {
+      const char *tempeffectname = cfg_getstr(weapon, ITEM_WPN_TRACKER);
+      itemeffect_t *tempeffect;
+      if((tempeffect = E_ItemEffectForName(tempeffectname)))
+         weaponinfo->tracker = tempeffect;
+      else // A weapon is worthless without its tracker
+         E_EDFLoggedErr(2, "Tracker \"%s\" in weaponinfo \"%s\" is undefined\n", tempeffectname, tempstr);
+   }
+   else
+      E_EDFLoggedErr(2, "No tracker defined for weapon \"%s\"\n", tempstr);
 
    if(IS_SET(ITEM_WPN_AMMO))
    {
