@@ -71,6 +71,7 @@
 #include "r_main.h"
 #include "r_sky.h"
 #include "r_things.h"
+#include "s_musinfo.h"
 #include "s_sndseq.h"
 #include "s_sound.h"
 #include "v_misc.h"
@@ -3119,6 +3120,10 @@ static void P_InitNewLevel(int lumpnum, WadDirectory *waddir)
    
    // console message
    P_NewLevelMsg();
+
+   //==============================================
+   // MUSINFO
+   S_MusInfoClear();
 }
 
 //

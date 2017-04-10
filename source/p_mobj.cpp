@@ -70,6 +70,7 @@
 #include "r_portal.h"
 #include "r_state.h"
 #include "sounds.h"
+#include "s_musinfo.h"
 #include "s_sound.h"
 #include "st_stuff.h"
 #include "v_misc.h"
@@ -1285,6 +1286,12 @@ inline static void P_checkMobjProjections(Mobj &mobj)
 //
 void Mobj::Think()
 {
+   if(intflags & MIF_MUSICCHANGER)
+   {
+      S_MusInfoThink(*this);
+      return;
+   }
+
    int oldwaterstate, waterstate = 0;
    fixed_t lz;
 
@@ -2427,7 +2434,10 @@ spawnit:
 
    // haleyjd: set music number for first 64 types
    if(mthing->type >= 14101 && mthing->type <= 14164)
+   {
+      mobj->intflags |= MIF_MUSICCHANGER;
       mobj->args[0] = mthing->type - 14100;
+   }
 
    mobj->backupPosition();
 

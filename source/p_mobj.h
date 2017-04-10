@@ -729,6 +729,9 @@ enum
    // was added to keep track.
    MIF_HIDDENBYQUAKE = 0x00010000,
 
+   // A substitute for calling E_SafeThingName every tic for every Mobj
+   MIF_MUSICCHANGER = 0x00020000,
+
    // these should be cleared when a thing is being raised
    MIF_CLEARRAISED = (MIF_DIEDFALLING|MIF_SCREAMED|MIF_CRASHED|MIF_WIMPYDEATH),
 };
