@@ -189,67 +189,6 @@ weaponinfo_t *E_WeaponForName(const char *name)
    return e_WeaponNameHash.objectForKey(name);
 }
 
-weaponinfo_t *E_WeaponForSlot(int slot)
-{
-   switch(slot)
-   {
-   case wp_fist:
-      return E_WeaponForName(WEAPNAME_FIST);
-   case wp_pistol:
-      return E_WeaponForName(WEAPNAME_PISTOL);
-   case wp_shotgun:
-      return E_WeaponForName(WEAPNAME_SHOTGUN);
-   case wp_chaingun:
-      return E_WeaponForName(WEAPNAME_CHAINGUN);
-   case wp_missile:
-      return E_WeaponForName(WEAPNAME_MISSILE);
-   case wp_plasma:
-      return E_WeaponForName(WEAPNAME_PLASMA);
-   case wp_bfg:
-      return E_WeaponForName(WEAPNAME_BFG9000);
-   case wp_chainsaw:
-      return E_WeaponForName(WEAPNAME_CHAINSAW);
-   case wp_supershotgun:
-      return E_WeaponForName(WEAPNAME_SSG);
-   default:
-      return nullptr;
-   }
-}
-
-int E_SlotForWeapon(weaponinfo_t *weapon)
-{
-   if(!strcmp(weapon->name, WEAPNAME_FIST))
-      return wp_fist;
-   if(!strcmp(weapon->name, WEAPNAME_PISTOL))
-      return wp_pistol;
-   if(!strcmp(weapon->name, WEAPNAME_SHOTGUN))
-      return wp_shotgun;
-   if(!strcmp(weapon->name, WEAPNAME_CHAINGUN))
-      return wp_chaingun;
-   if(!strcmp(weapon->name, WEAPNAME_MISSILE))
-      return wp_missile;
-   if(!strcmp(weapon->name, WEAPNAME_PLASMA))
-      return wp_plasma;
-   if(!strcmp(weapon->name, WEAPNAME_BFG9000))
-      return wp_bfg;
-   if(!strcmp(weapon->name, WEAPNAME_CHAINSAW))
-      return wp_chainsaw;
-   if(!strcmp(weapon->name, WEAPNAME_SSG))
-      return wp_supershotgun;
-
-   return wp_nochange;
-}
-
-bool E_WeaponIsCurrent(const char *name, const player_t *player)
-{
-   return player->readyweaponnew->id == E_WeaponForName(name)->id;
-}
-
-bool E_WeaponIsCurrentNum(const int num, const player_t *player)
-{
-   return player->readyweaponnew->id == E_WeaponForSlot(num)->id;
-}
-
 #undef  IS_SET
 #define IS_SET(name) ((def && !inherits) || cfg_size(weapon, (name)) > 0)
 
@@ -381,6 +320,90 @@ void E_ProcessWeapons(cfg_t *cfg)
 
    for(unsigned int i = 0; i < numWeapons; i++)
       E_processWeaponCycle(cfg_getnsec(cfg, EDF_SEC_WEAPONINFO, i));
+}
+
+//=============================================================================
+//
+// Weapon Utiliy Functions
+//
+
+//
+// TODO: This should lose almost all applicability at some point
+//
+weaponinfo_t *E_WeaponForSlot(int slot)
+{
+   switch(slot)
+   {
+   case wp_fist:
+      return E_WeaponForName(WEAPNAME_FIST);
+   case wp_pistol:
+      return E_WeaponForName(WEAPNAME_PISTOL);
+   case wp_shotgun:
+      return E_WeaponForName(WEAPNAME_SHOTGUN);
+   case wp_chaingun:
+      return E_WeaponForName(WEAPNAME_CHAINGUN);
+   case wp_missile:
+      return E_WeaponForName(WEAPNAME_MISSILE);
+   case wp_plasma:
+      return E_WeaponForName(WEAPNAME_PLASMA);
+   case wp_bfg:
+      return E_WeaponForName(WEAPNAME_BFG9000);
+   case wp_chainsaw:
+      return E_WeaponForName(WEAPNAME_CHAINSAW);
+   case wp_supershotgun:
+      return E_WeaponForName(WEAPNAME_SSG);
+   default:
+      return nullptr;
+   }
+}
+
+//
+// TODO: This should also hopefully become worthless at some point
+//
+int E_SlotForWeapon(weaponinfo_t *weapon)
+{
+   if(!strcmp(weapon->name, WEAPNAME_FIST))
+      return wp_fist;
+   if(!strcmp(weapon->name, WEAPNAME_PISTOL))
+      return wp_pistol;
+   if(!strcmp(weapon->name, WEAPNAME_SHOTGUN))
+      return wp_shotgun;
+   if(!strcmp(weapon->name, WEAPNAME_CHAINGUN))
+      return wp_chaingun;
+   if(!strcmp(weapon->name, WEAPNAME_MISSILE))
+      return wp_missile;
+   if(!strcmp(weapon->name, WEAPNAME_PLASMA))
+      return wp_plasma;
+   if(!strcmp(weapon->name, WEAPNAME_BFG9000))
+      return wp_bfg;
+   if(!strcmp(weapon->name, WEAPNAME_CHAINSAW))
+      return wp_chainsaw;
+   if(!strcmp(weapon->name, WEAPNAME_SSG))
+      return wp_supershotgun;
+
+   return wp_nochange;
+}
+
+//
+// Check if the named weapon is currently equipped
+//
+bool E_WeaponIsCurrent(const player_t *player, const char *name)
+{
+   return player->readyweaponnew->id == E_WeaponForName(name)->id;
+}
+
+//
+// Check if the weapon in the slotnum is currently equipped
+// TODO: This should also become redundant
+//
+bool E_WeaponIsCurrentNum(player_t *player, const int num)
+{
+   return player->readyweaponnew->id == E_WeaponForSlot(num)->id;
+}
+
+inline bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon)
+{
+   return E_GetItemOwnedAmount(player, weapon->tracker);
 }
 
 // EOF

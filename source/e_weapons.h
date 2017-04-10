@@ -76,8 +76,9 @@ weaponinfo_t *E_WeaponForSlot(int slot);
 int E_SlotForWeapon(weaponinfo_t *weapon);
 
 
-bool   E_WeaponIsCurrent(const char *name, const player_t *player);
-bool   E_WeaponIsCurrentNum(const int num, const player_t *player);
+bool E_WeaponIsCurrent(const player_t *player, const char *name);
+bool E_WeaponIsCurrentNum(player_t *player, const int num);
+inline bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon);
 
 void E_ProcessWeapons(cfg_t *cfg);
 

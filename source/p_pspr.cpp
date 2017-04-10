@@ -499,7 +499,7 @@ weaponinfo_t *P_GetPlayerWeapon(player_t *player, int index)
    weaponslot_t *slot;
    if((slot = player->pclass->weaponslots[index]))
    {
-      if(E_WeaponIsCurrent(slot->weapon->name, player))
+      if(E_WeaponIsCurrent(player, slot->weapon->name))
          return slot->links->weapon;
       else
          return slot->weapon;
@@ -581,7 +581,7 @@ void A_WeaponReady(actionargs_t *actionargs)
       P_SetMobjState(mo, mo->info->spawnstate);
    }
 
-   if(E_WeaponIsCurrent(WEAPNAME_CHAINSAW, player) &&
+   if(E_WeaponIsCurrent(player, WEAPNAME_CHAINSAW) &&
       psp->state == states[E_SafeState(S_SAW)])
    {
       S_StartSound(player->mo, sfx_sawidl);

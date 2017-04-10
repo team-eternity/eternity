@@ -591,7 +591,7 @@ static void cheat_weapx(const void *arg)
             weaponinfo_t *P_SwitchWeapon(player_t *player);
             
             doom_printf("Weapon Removed"); // Ty 03/27/98 - *not* externalized
-            if(E_WeaponIsCurrentNum(w, plyr))     // maybe switch if weapon removed
+            if(E_WeaponIsCurrentNum(plyr, w))     // maybe switch if weapon removed
                plyr->pendingweapon = E_SlotForWeapon(P_SwitchWeapon(plyr));
          }
       }

@@ -119,7 +119,7 @@ bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
    // INVENTORY_TODO: hardcoded behaviors for now...
    if(!strcasecmp(ammo->getKey(), "AmmoClip"))
    {
-      if(E_WeaponIsCurrent(WEAPNAME_FIST, player))
+      if(E_WeaponIsCurrent(player, WEAPNAME_FIST))
       {
          if(player->weaponowned[wp_chaingun])
             player->pendingweapon = wp_chaingun;
@@ -129,19 +129,19 @@ bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoShell"))
    {
-      if(E_WeaponIsCurrent(WEAPNAME_FIST, player) || E_WeaponIsCurrent(WEAPNAME_PISTOL, player))
+      if(E_WeaponIsCurrent(player, WEAPNAME_FIST) || E_WeaponIsCurrent(player, WEAPNAME_PISTOL))
          if(player->weaponowned[wp_shotgun])
             player->pendingweapon = wp_shotgun;
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoCell"))
    {
-      if(E_WeaponIsCurrent(WEAPNAME_FIST, player) || E_WeaponIsCurrent(WEAPNAME_PISTOL, player))
+      if(E_WeaponIsCurrent(player, WEAPNAME_FIST) || E_WeaponIsCurrent(player, WEAPNAME_PISTOL))
          if(player->weaponowned[wp_plasma])
             player->pendingweapon = wp_plasma;
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoMissile"))
    {
-      if(E_WeaponIsCurrent(WEAPNAME_FIST, player))
+      if(E_WeaponIsCurrent(player, WEAPNAME_FIST))
          if(player->weaponowned[wp_missile])
             player->pendingweapon = wp_missile;
    }
@@ -248,6 +248,46 @@ static bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped,
 
    return gaveweapon || gaveammo;
 }
+
+//
+// The weapon name may have a MF_DROPPED flag ored in.
+//
+/*static bool P_GiveWeaponNew(player_t *player, const char *weaponname, bool dropped,
+   Mobj *special)
+{
+   bool gaveweapon = false;
+   weaponinfo_t *wp = E_WeaponForName(weaponname);
+
+   if((dmflags & DM_WEAPONSTAY) && !dropped)
+   {
+      // leave placed weapons forever on net games
+      if(player->weaponowned[weapon])
+         return false;
+
+      player->bonuscount += BONUSADD;
+      player->weaponowned[weapon] = true;
+      P_GiveAmmo(player, wp->ammo, (GameType == gt_dm) ? wp->dmstayammo : wp->coopstayammo);
+
+      player->pendingweapon = weapon;
+      S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
+      P_consumeSpecial(player, special); // need to handle it here
+      return false;
+   }
+
+   // give one clip with a dropped weapon, two clips with a found weapon
+   int  amount = dropped ? wp->dropammo : wp->giveammo;
+   bool gaveammo = (wp->ammo ? P_GiveAmmo(player, wp->ammo, amount) : false);
+
+   // haleyjd 10/4/11: de-Killoughized
+   if(!player->weaponowned[weapon])
+   {
+      player->pendingweapon = weapon;
+      player->weaponowned[weapon] = 1;
+      gaveweapon = true;
+   }
+
+   return gaveweapon || gaveammo;
+}*/
 
 //
 // P_GiveBody
@@ -840,7 +880,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       if(!P_GivePowerForItem(player, effect))
          return;
       message = DEH_String("GOTBERSERK"); // Ty 03/22/98 - externalized
-      if(E_WeaponIsCurrent(WEAPNAME_FIST, player))
+      if(E_WeaponIsCurrent(player, WEAPNAME_FIST))
          // sf: removed beta
          player->pendingweapon = wp_fist;
       sound = sfx_getpow;
