@@ -963,6 +963,9 @@
     <ClCompile Include="..\source\p_portalcross.cpp">
       <Filter>Source Files\P_\P_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\s_musinfo.cpp">
+      <Filter>Source Files\S_\S_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1714,6 +1717,9 @@
     </ClInclude>
     <ClInclude Include="..\source\p_portalcross.h">
       <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\s_musinfo.h">
+      <Filter>Source Files\S_\S_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
