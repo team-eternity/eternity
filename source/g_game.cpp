@@ -416,7 +416,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          // the fist is already in use, or the player does not
          // have the berserker strength.
 
-         if(newweapon==wp_fist && player->weaponowned[wp_chainsaw] &&
+         if(newweapon==wp_fist && E_PlayerOwnsWeaponSlot(player, wp_chainsaw) &&
             !E_WeaponIsCurrent(player, WEAPNAME_CHAINSAW) &&
             (E_WeaponIsCurrent(player, WEAPNAME_FIST) ||
              !player->powers[pw_strength] ||
@@ -431,8 +431,8 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          // player prefers it.
 
          if(newweapon == wp_shotgun && enable_ssg &&
-            player->weaponowned[wp_supershotgun] &&
-            (!player->weaponowned[wp_shotgun] ||
+            E_PlayerOwnsWeaponSlot(player, wp_supershotgun) &&
+            (!E_PlayerOwnsWeaponSlot(player, wp_shotgun) ||
              E_WeaponIsCurrent(player, WEAPNAME_SHOTGUN) ||
              !(E_WeaponIsCurrent(player, WEAPNAME_SSG) &&
               P_WeaponPreferred(wp_supershotgun, wp_shotgun))))
@@ -2262,12 +2262,12 @@ void G_PlayerReborn(int player)
 
    // INVENTORY_TODO: eliminate?
    // sf: different weapons owned
-   memcpy(p->weaponowned, default_weaponowned, sizeof(p->weaponowned));
+   //memcpy(p->weaponowned, default_weaponowned, sizeof(p->weaponowned));
    
    // WEAPON_FIXME: always owned weapons
    // PCLASS_FIXME: always owned weapons
-   p->weaponowned[wp_fist] = true;     // always fist and pistol
-   p->weaponowned[wp_pistol] = true;
+   //p->weaponowned[wp_fist] = true;     // always fist and pistol
+   //p->weaponowned[wp_pistol] = true;
 }
 
 void P_SpawnPlayer(mapthing_t *mthing);

@@ -424,9 +424,14 @@ bool E_WeaponIsCurrentNum(player_t *player, const int num)
    return player->readyweaponnew->id == E_WeaponForSlot(num)->id;
 }
 
-inline bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon)
+bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon)
 {
    return E_GetItemOwnedAmount(player, weapon->tracker);
+}
+
+bool E_PlayerOwnsWeaponSlot(const player_t *player, int slot)
+{
+   return E_PlayerOwnsWeapon(const_cast<player_t *>(player), E_WeaponForSlot(slot));
 }
 
 // EOF

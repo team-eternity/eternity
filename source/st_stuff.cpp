@@ -323,6 +323,9 @@ static int      st_oldhealth = -1;
 // used for evil grin
 static int      oldweaponsowned[NUMWEAPONS];
 
+// used for number colouring
+static int      weaponsowned[NUMWEAPONS];
+
  // count until face changes
 static int      st_facecount = 0;
 
@@ -488,10 +491,10 @@ static void ST_updateFaceWidget()
 
          for(i = 0; i < NUMWEAPONS; i++)
          {
-            if(oldweaponsowned[i] != plyr->weaponowned[i])
+            if(oldweaponsowned[i] != E_PlayerOwnsWeaponSlot(plyr, i) ? 1 : 0)
             {
                doevilgrin = true;
-               oldweaponsowned[i] = plyr->weaponowned[i];
+               oldweaponsowned[i] = E_PlayerOwnsWeaponSlot(plyr, i) ? 1 : 0;
             }
          }
          if(doevilgrin)
@@ -628,6 +631,14 @@ static void ST_updateFaceWidget()
    st_facecount--;
 }
 
+static void ST_updateWeaponsOwned()
+{
+   for(int i = 0; i < NUMWEAPONS; i++)
+   {
+      weaponsowned[i] = E_PlayerOwnsWeaponSlot(plyr, i) ? 1 : 0;
+   }
+}
+
 int sts_traditional_keys; // killough 2/28/98: traditional status bar keys
 
 static const char *st_AmmoForNum[NUMAMMO] =
@@ -698,6 +709,8 @@ static void ST_updateWidgets()
 static void ST_DoomTicker()
 {
    st_clock++;
+   // update weapons owned array
+   ST_updateWeaponsOwned();
    // refresh everything if this is him coming back to life
    ST_updateFaceWidget();
    st_oldhealth = plyr->health;
@@ -1206,7 +1219,7 @@ static void ST_initData()
    st_oldhealth = -1;
 
    for(i = 0; i < NUMWEAPONS; i++)
-      oldweaponsowned[i] = plyr->weaponowned[i];
+      oldweaponsowned[i] = weaponsowned[i] = E_PlayerOwnsWeaponSlot(plyr, i);
 
    for(i = 0; i < 3; i++)
       keyboxes[i] = -1;
@@ -1253,7 +1266,7 @@ static void ST_createWidgets()
       STlib_initMultIcon(&w_arms[i],
                          ST_ARMSX+(i%3)*ST_ARMSXSPACE,
                          ST_ARMSY+(i/3)*ST_ARMSYSPACE,
-                         arms[i], &plyr->weaponowned[i+1],
+                         arms[i], &weaponsowned[i+1],
                          &st_armson);
    }
 

@@ -213,7 +213,7 @@ int P_NextWeapon(player_t *player)
       newweapon = newweapon->nextInCycle;
       ammototry = P_WeaponHasAmmo(player, newweapon);
    }
-   while((!player->weaponowned[newweapon->id] || !ammototry) &&
+   while((!E_PlayerOwnsWeaponSlot(player, newweapon->id) || !ammototry) &&
          newweapon != currentweapon);
 
    return newweapon != currentweapon ? newweapon->id : wp_nochange;
@@ -235,7 +235,7 @@ int P_PrevWeapon(player_t *player)
       newweapon = newweapon->prevInCycle;
       ammototry = P_WeaponHasAmmo(player, newweapon);
    }
-   while((!player->weaponowned[newweapon->id] || !ammototry) &&
+   while((!E_PlayerOwnsWeaponSlot(player, newweapon->id) || !ammototry) &&
          newweapon != currentweapon);
 
    return newweapon != currentweapon ? newweapon->id : wp_nochange;
@@ -304,32 +304,32 @@ weaponinfo_t *P_SwitchWeapon(player_t *player)
             newweapon = E_WeaponForName(WEAPNAME_PISTOL);
          break;
       case 3:
-         if(player->weaponowned[wp_shotgun] && shells)
+         if(E_PlayerOwnsWeaponSlot(player, wp_shotgun) && shells)
             newweapon = E_WeaponForName(WEAPNAME_SHOTGUN);
          break;
       case 4:
-         if(player->weaponowned[wp_chaingun] && clips)
+         if(E_PlayerOwnsWeaponSlot(player, wp_chaingun) && clips)
             newweapon = E_WeaponForName(WEAPNAME_CHAINGUN);
          break;
       case 5:
-         if(player->weaponowned[wp_missile] && rockets)
+         if(E_PlayerOwnsWeaponSlot(player, wp_missile) && rockets)
             newweapon = E_WeaponForName(WEAPNAME_MISSILE);
          break;
       case 6:
-         if(player->weaponowned[wp_plasma] && cells && GameModeInfo->id != shareware)
+         if(E_PlayerOwnsWeaponSlot(player, wp_plasma) && cells && GameModeInfo->id != shareware)
             newweapon = E_WeaponForName(WEAPNAME_PLASMA);
          break;
       case 7:
-         if(player->weaponowned[wp_bfg] && GameModeInfo->id != shareware &&
+         if(E_PlayerOwnsWeaponSlot(player, wp_bfg) && GameModeInfo->id != shareware &&
             cells >= (demo_compatibility ? 41 : 40))
             newweapon = E_WeaponForName(WEAPNAME_BFG9000);
          break;
       case 8:
-         if(player->weaponowned[wp_chainsaw])
+         if(E_PlayerOwnsWeaponSlot(player, wp_chainsaw))
             newweapon = E_WeaponForName(WEAPNAME_CHAINSAW);
          break;
       case 9:
-         if(player->weaponowned[wp_supershotgun] && 
+         if(E_PlayerOwnsWeaponSlot(player, wp_supershotgun) &&
             enable_ssg &&
             shells >= (demo_compatibility ? 3 : 2))
             newweapon = E_WeaponForName(WEAPNAME_SSG);

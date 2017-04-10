@@ -421,7 +421,7 @@ static void HU_drawWeapons(int x, int y)
   
    for(int i = 0; i < NUMWEAPONS; i++)
    {
-      if(hu_player.weaponowned[i])
+      if(E_PlayerOwnsWeaponSlot(&hu_player, i))
       {
          // got it
          fontcolor = weapcolor(E_WeaponForSlot(i));
