@@ -192,23 +192,23 @@ weaponinfo_t *E_WeaponForSlot(int slot)
    switch(slot)
    {
    case wp_fist:
-      return E_WeaponForName("Fist");
+      return E_WeaponForName(WEAPNAME_FIST);
    case wp_pistol:
-      return E_WeaponForName("Pistol");
+      return E_WeaponForName(WEAPNAME_PISTOL);
    case wp_shotgun:
-      return E_WeaponForName("Shotgun");
+      return E_WeaponForName(WEAPNAME_SHOTGUN);
    case wp_chaingun:
-      return E_WeaponForName("Chaingun");
+      return E_WeaponForName(WEAPNAME_CHAINGUN);
    case wp_missile:
-      return E_WeaponForName("MissileLauncher");
+      return E_WeaponForName(WEAPNAME_MISSILE);
    case wp_plasma:
-      return E_WeaponForName("PlasmaRifle");
+      return E_WeaponForName(WEAPNAME_PLASMA);
    case wp_bfg:
-      return E_WeaponForName("BFG9000");
+      return E_WeaponForName(WEAPNAME_BFG9000);
    case wp_chainsaw:
-      return E_WeaponForName("Chainsaw");
+      return E_WeaponForName(WEAPNAME_CHAINSAW);
    case wp_supershotgun:
-      return E_WeaponForName("SuperShotgun");
+      return E_WeaponForName(WEAPNAME_SSG);
    default:
       return nullptr;
    }
@@ -216,23 +216,23 @@ weaponinfo_t *E_WeaponForSlot(int slot)
 
 int E_SlotForWeapon(weaponinfo_t *weapon)
 {
-   if(!strcmp(weapon->name, "Fist"))
+   if(!strcmp(weapon->name, WEAPNAME_FIST))
       return wp_fist;
-   if(!strcmp(weapon->name, "Pistol"))
+   if(!strcmp(weapon->name, WEAPNAME_PISTOL))
       return wp_pistol;
-   if(!strcmp(weapon->name, "Shotgun"))
+   if(!strcmp(weapon->name, WEAPNAME_SHOTGUN))
       return wp_shotgun;
-   if(!strcmp(weapon->name, "Chaingun"))
+   if(!strcmp(weapon->name, WEAPNAME_CHAINGUN))
       return wp_chaingun;
-   if(!strcmp(weapon->name, "MissileLauncher"))
+   if(!strcmp(weapon->name, WEAPNAME_MISSILE))
       return wp_missile;
-   if(!strcmp(weapon->name, "PlasmaRifle"))
+   if(!strcmp(weapon->name, WEAPNAME_PLASMA))
       return wp_plasma;
-   if(!strcmp(weapon->name, "BFG9000"))
+   if(!strcmp(weapon->name, WEAPNAME_BFG9000))
       return wp_bfg;
-   if(!strcmp(weapon->name, "Chainsaw"))
+   if(!strcmp(weapon->name, WEAPNAME_CHAINSAW))
       return wp_chainsaw;
-   if(!strcmp(weapon->name, "SuperShotgun"))
+   if(!strcmp(weapon->name, WEAPNAME_SSG))
       return wp_supershotgun;
 
    return wp_nochange;

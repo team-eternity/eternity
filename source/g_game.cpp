@@ -417,8 +417,8 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          // have the berserker strength.
 
          if(newweapon==wp_fist && player->weaponowned[wp_chainsaw] &&
-            !E_WeaponIsCurrent("Chainsaw", player) &&
-            (E_WeaponIsCurrent("Fist", player) ||
+            !E_WeaponIsCurrent(WEAPNAME_CHAINSAW, player) &&
+            (E_WeaponIsCurrent(WEAPNAME_FIST, player) ||
              !player->powers[pw_strength] ||
              P_WeaponPreferred(wp_chainsaw, wp_fist)))
          {
@@ -433,8 +433,8 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          if(newweapon == wp_shotgun && enable_ssg &&
             player->weaponowned[wp_supershotgun] &&
             (!player->weaponowned[wp_shotgun] ||
-             E_WeaponIsCurrent("Shotgun", player) ||
-             !(E_WeaponIsCurrent("SuperShotgun", player) &&
+             E_WeaponIsCurrent(WEAPNAME_SHOTGUN, player) ||
+             !(E_WeaponIsCurrent(WEAPNAME_SSG, player) &&
               P_WeaponPreferred(wp_supershotgun, wp_shotgun))))
          {
             newweapon = wp_supershotgun;
@@ -2258,7 +2258,7 @@ void G_PlayerReborn(int player)
 
    // INVENTORY_TODO: reborn weapons
    p->pendingweapon = wp_pistol;
-   p->readyweaponnew = E_WeaponForName("Pistol");
+   p->readyweaponnew = E_WeaponForName(WEAPNAME_PISTOL);
 
    // INVENTORY_TODO: eliminate?
    // sf: different weapons owned

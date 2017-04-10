@@ -751,13 +751,13 @@ void P_PlayerThink(player_t *player)
          newweapon = (cmd->buttons & BT_WEAPONMASK_OLD)>>BT_WEAPONSHIFT;
 
          if(newweapon == wp_fist && player->weaponowned[wp_chainsaw] &&
-            (E_WeaponIsCurrent("Chainsaw", player) ||
+            (E_WeaponIsCurrent(WEAPNAME_CHAINSAW, player) ||
              !player->powers[pw_strength]))
             newweapon = wp_chainsaw;
          if(enable_ssg &&
             newweapon == wp_shotgun &&
             player->weaponowned[wp_supershotgun] &&
-            E_WeaponIsCurrent("SuperShotgun", player))
+            E_WeaponIsCurrent(WEAPNAME_SSG, player))
             newweapon = wp_supershotgun;
       }
 

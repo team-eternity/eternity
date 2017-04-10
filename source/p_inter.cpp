@@ -119,7 +119,7 @@ bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
    // INVENTORY_TODO: hardcoded behaviors for now...
    if(!strcasecmp(ammo->getKey(), "AmmoClip"))
    {
-      if(E_WeaponIsCurrent("Fist", player))
+      if(E_WeaponIsCurrent(WEAPNAME_FIST, player))
       {
          if(player->weaponowned[wp_chaingun])
             player->pendingweapon = wp_chaingun;
@@ -129,19 +129,19 @@ bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoShell"))
    {
-      if(E_WeaponIsCurrent("Fist", player) || E_WeaponIsCurrent("Pistol", player))
+      if(E_WeaponIsCurrent(WEAPNAME_FIST, player) || E_WeaponIsCurrent(WEAPNAME_PISTOL, player))
          if(player->weaponowned[wp_shotgun])
             player->pendingweapon = wp_shotgun;
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoCell"))
    {
-      if(E_WeaponIsCurrent("Fist", player) || E_WeaponIsCurrent("Pistol", player))
+      if(E_WeaponIsCurrent(WEAPNAME_FIST, player) || E_WeaponIsCurrent(WEAPNAME_PISTOL, player))
          if(player->weaponowned[wp_plasma])
             player->pendingweapon = wp_plasma;
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoMissile"))
    {
-      if(E_WeaponIsCurrent("Fist", player))
+      if(E_WeaponIsCurrent(WEAPNAME_FIST, player))
          if(player->weaponowned[wp_missile])
             player->pendingweapon = wp_missile;
    }
@@ -840,7 +840,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       if(!P_GivePowerForItem(player, effect))
          return;
       message = DEH_String("GOTBERSERK"); // Ty 03/22/98 - externalized
-      if(E_WeaponIsCurrent("Fist", player))
+      if(E_WeaponIsCurrent(WEAPNAME_FIST, player))
          // sf: removed beta
          player->pendingweapon = wp_fist;
       sound = sfx_getpow;

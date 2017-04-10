@@ -1919,7 +1919,7 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
       {
          // WEAPON_FIXME: BFG ammopershot
          // haleyjd 08/10/02: propagate to weapon info
-         weaponinfo_t &bfginfo = *E_WeaponForName("BFG9000");
+         weaponinfo_t &bfginfo = *E_WeaponForName(WEAPNAME_BFG9000);
          bfgcells = bfginfo.ammopershot = value;
       }
       else if(!strcasecmp(key,deh_misc[15])) // Monsters Infight

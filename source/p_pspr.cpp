@@ -297,42 +297,42 @@ weaponinfo_t *P_SwitchWeapon(player_t *player)
          if(!player->powers[pw_strength])  // allow chainsaw override
             break;
       case 0:
-         newweapon = E_WeaponForName("Fist");
+         newweapon = E_WeaponForName(WEAPNAME_FIST);
          break;
       case 2:
          if(clips)
-            newweapon = E_WeaponForName("Pistol");
+            newweapon = E_WeaponForName(WEAPNAME_PISTOL);
          break;
       case 3:
          if(player->weaponowned[wp_shotgun] && shells)
-            newweapon = E_WeaponForName("Shotgun");
+            newweapon = E_WeaponForName(WEAPNAME_SHOTGUN);
          break;
       case 4:
          if(player->weaponowned[wp_chaingun] && clips)
-            newweapon = E_WeaponForName("Chaingun");
+            newweapon = E_WeaponForName(WEAPNAME_CHAINGUN);
          break;
       case 5:
          if(player->weaponowned[wp_missile] && rockets)
-            newweapon = E_WeaponForName("MissileLauncher");
+            newweapon = E_WeaponForName(WEAPNAME_MISSILE);
          break;
       case 6:
          if(player->weaponowned[wp_plasma] && cells && GameModeInfo->id != shareware)
-            newweapon = E_WeaponForName("PlasmaRifle");
+            newweapon = E_WeaponForName(WEAPNAME_PLASMA);
          break;
       case 7:
          if(player->weaponowned[wp_bfg] && GameModeInfo->id != shareware &&
             cells >= (demo_compatibility ? 41 : 40))
-            newweapon = E_WeaponForName("BFG9000");
+            newweapon = E_WeaponForName(WEAPNAME_BFG9000);
          break;
       case 8:
          if(player->weaponowned[wp_chainsaw])
-            newweapon = E_WeaponForName("Chainsaw");
+            newweapon = E_WeaponForName(WEAPNAME_CHAINSAW);
          break;
       case 9:
          if(player->weaponowned[wp_supershotgun] && 
             enable_ssg &&
             shells >= (demo_compatibility ? 3 : 2))
-            newweapon = E_WeaponForName("SuperShotgun");
+            newweapon = E_WeaponForName(WEAPNAME_SSG);
          break;
       }
    }
@@ -581,7 +581,7 @@ void A_WeaponReady(actionargs_t *actionargs)
       P_SetMobjState(mo, mo->info->spawnstate);
    }
 
-   if(E_WeaponIsCurrent("Chainsaw", player) && 
+   if(E_WeaponIsCurrent(WEAPNAME_CHAINSAW, player) &&
       psp->state == states[E_SafeState(S_SAW)])
    {
       S_StartSound(player->mo, sfx_sawidl);
@@ -997,7 +997,7 @@ void A_FireOldBFG(actionargs_t *actionargs)
 
    if(weapon_recoil && !(mo->flags & MF_NOCLIP))
       P_Thrust(player, ANG180 + mo->angle, 0,
-               512*E_WeaponForName("PlasmaRifle")->recoil);
+               512*E_WeaponForName(WEAPNAME_PLASMA)->recoil);
 
    // WEAPON_FIXME: ammopershot for classic BFG
    auto weapon   = player->readyweaponnew;
