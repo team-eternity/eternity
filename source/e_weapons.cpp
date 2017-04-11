@@ -424,14 +424,34 @@ bool E_WeaponIsCurrentNum(player_t *player, const int num)
    return player->readyweaponnew->id == E_WeaponForSlot(num)->id;
 }
 
+//
+// Convenience function to check if a player owns a weapon
+//
 bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon)
 {
    return E_GetItemOwnedAmount(player, weapon->tracker);
 }
 
+//
+// TODO: Remove this?
+//
 bool E_PlayerOwnsWeaponSlot(const player_t *player, int slot)
 {
    return E_PlayerOwnsWeapon(const_cast<player_t *>(player), E_WeaponForSlot(slot));
+}
+
+//
+// Give the player ALL weapons indiscriminately
+//
+void E_GiveAllWeapons(player_t *player)
+{
+   weaponinfo_t *weapon;
+   int i = 0;
+   while((weapon = E_WeaponForID(i++)))
+   {
+      if(!E_PlayerOwnsWeapon(player, weapon))
+         E_GiveInventoryItem(player, weapon->tracker, 1);
+   }
 }
 
 // EOF

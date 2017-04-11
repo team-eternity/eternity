@@ -72,6 +72,7 @@ struct playerclass_t
    
    // weaponslots
    weaponslot_t *weaponslots[NUMWEAPONSLOTS];
+   bool          hasslots;
 
    // hashing data
    char mnemonic[129];

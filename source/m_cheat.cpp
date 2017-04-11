@@ -312,18 +312,7 @@ static void cheat_fa(const void *arg)
 
    // WEAPON_FIXME: IDFA cheat
    
-   // TODO: Externalise to a "give player all weapons including EDF ones" function
-   // You can't own weapons that aren't in the game - phares 02/27/98
-   for(i = 0; i < NUMWEAPONS; i++)
-   {
-      if(!(((i == wp_plasma || i == wp_bfg) && GameModeInfo->id == shareware) ||
-         (i == wp_supershotgun && !enable_ssg)))
-      {
-         weaponinfo_t *weapon = E_WeaponForName(cheatWeapons[i]);
-         if(!E_PlayerOwnsWeapon(plyr, weapon))
-            E_GiveInventoryItem(plyr, weapon->tracker, 1);
-      }
-   }
+   E_GiveAllWeapons(plyr);
 
    // give full ammo
    E_GiveAllAmmo(plyr, GAA_MAXAMOUNT);
