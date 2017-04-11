@@ -491,10 +491,10 @@ static void ST_updateFaceWidget()
 
          for(i = 0; i < NUMWEAPONS; i++)
          {
-            if(oldweaponsowned[i] != E_PlayerOwnsWeaponSlot(plyr, i) ? 1 : 0)
+            if(oldweaponsowned[i] != weaponsowned[i])
             {
                doevilgrin = true;
-               oldweaponsowned[i] = E_PlayerOwnsWeaponSlot(plyr, i) ? 1 : 0;
+               oldweaponsowned[i] = weaponsowned[i];
             }
          }
          if(doevilgrin)

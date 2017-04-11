@@ -217,7 +217,6 @@ static bool P_GiveWeapon(player_t *player, weaponinfo_t *wp, bool dropped,
 {
    bool gaveweapon = false;
    int slot = E_SlotForWeapon(wp);
-   //weaponinfo_t *wp = E_WeaponForSlot(weapon);
    itemeffect_t *tracker = wp->tracker;
 
    if((dmflags & DM_WEAPONSTAY) && !dropped)
@@ -250,46 +249,6 @@ static bool P_GiveWeapon(player_t *player, weaponinfo_t *wp, bool dropped,
 
    return gaveweapon || gaveammo;
 }
-
-//
-// The weapon name may have a MF_DROPPED flag ored in.
-//
-/*static bool P_GiveWeaponNew(player_t *player, const char *weaponname, bool dropped,
-   Mobj *special)
-{
-   bool gaveweapon = false;
-   weaponinfo_t *wp = E_WeaponForName(weaponname);
-
-   if((dmflags & DM_WEAPONSTAY) && !dropped)
-   {
-      // leave placed weapons forever on net games
-      if(player->weaponowned[weapon])
-         return false;
-
-      player->bonuscount += BONUSADD;
-      player->weaponowned[weapon] = true;
-      P_GiveAmmo(player, wp->ammo, (GameType == gt_dm) ? wp->dmstayammo : wp->coopstayammo);
-
-      player->pendingweapon = weapon;
-      S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
-      P_consumeSpecial(player, special); // need to handle it here
-      return false;
-   }
-
-   // give one clip with a dropped weapon, two clips with a found weapon
-   int  amount = dropped ? wp->dropammo : wp->giveammo;
-   bool gaveammo = (wp->ammo ? P_GiveAmmo(player, wp->ammo, amount) : false);
-
-   // haleyjd 10/4/11: de-Killoughized
-   if(!player->weaponowned[weapon])
-   {
-      player->pendingweapon = weapon;
-      player->weaponowned[weapon] = 1;
-      gaveweapon = true;
-   }
-
-   return gaveweapon || gaveammo;
-}*/
 
 //
 // P_GiveBody
