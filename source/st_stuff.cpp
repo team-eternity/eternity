@@ -633,10 +633,13 @@ static void ST_updateFaceWidget()
 
 static void ST_updateWeaponsOwned()
 {
+   // TODO: Improve the check here, use a better function.
    for(int i = 0; i < NUMWEAPONS; i++)
    {
       weaponsowned[i] = E_PlayerOwnsWeaponSlot(plyr, i) ? 1 : 0;
    }
+   weaponsowned[wp_fist] |= E_PlayerOwnsWeaponSlot(plyr, wp_chainsaw);
+   weaponsowned[wp_shotgun] |= E_PlayerOwnsWeaponSlot(plyr, wp_supershotgun);
 }
 
 int sts_traditional_keys; // killough 2/28/98: traditional status bar keys
@@ -1218,8 +1221,10 @@ static void ST_initData()
 
    st_oldhealth = -1;
 
+   ST_updateWeaponsOwned();
+
    for(i = 0; i < NUMWEAPONS; i++)
-      oldweaponsowned[i] = weaponsowned[i] = E_PlayerOwnsWeaponSlot(plyr, i);
+      oldweaponsowned[i] = weaponsowned[i];
 
    for(i = 0; i < 3; i++)
       keyboxes[i] = -1;
