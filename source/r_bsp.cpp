@@ -1236,9 +1236,9 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    bool havetportal = seg.backsec && seg.backsec->c_portal &&
          seg.line->linedef->extflags & EX_ML_UPPERPORTAL;
 
-   bool toohigh = havetportal && portalrender.w && !portalrender.w->up &&
-         !portalrender.w->line &&
-         portalrender.w->planez <= seg.backsec->ceilingheight;
+   bool toohigh = havetportal && portalrender.w &&
+   portalrender.w->type == pw_floor &&
+   portalrender.w->planez <= seg.backsec->ceilingheight;
 
    if(!toohigh && !havetportal && heightchange && 
       !(seg.frontsec->intflags & SIF_SKY && seg.backsec->intflags & SIF_SKY) && 
@@ -1324,9 +1324,9 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
 
    bool havebportal = seg.backsec && seg.backsec->f_portal &&
          seg.line->linedef->extflags & EX_ML_LOWERPORTAL;
-   bool toolow = havebportal && portalrender.w && portalrender.w->up &&
-         !portalrender.w->line &&
-         portalrender.w->planez >= seg.backsec->floorheight;
+   bool toolow = havebportal && portalrender.w &&
+   portalrender.w->type == pw_ceiling &&
+   portalrender.w->planez >= seg.backsec->floorheight;
 
    // SoM: Get this from the actual sector because R_FakeFlat can mess with heights.
 
@@ -1473,9 +1473,9 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
 
    bool havetportal = seg.backsec && seg.backsec->c_portal &&
          seg.line->linedef->extflags & EX_ML_UPPERPORTAL;
-   bool toohigh = havetportal && portalrender.w && !portalrender.w->up &&
-         !portalrender.w->line &&
-         portalrender.w->planez <= seg.backsec->ceilingheight;
+   bool toohigh = havetportal && portalrender.w &&
+   portalrender.w->type == pw_floor &&
+   portalrender.w->planez <= seg.backsec->ceilingheight;
 
    if(!toohigh && !havetportal &&
       seg.frontsec->ceilingheight > seg.backsec->ceilingheight &&
@@ -1565,9 +1565,9 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    // current plane-z window. Necessary for edge portals
    bool havebportal = seg.backsec && seg.backsec->f_portal &&
          seg.line->linedef->extflags & EX_ML_LOWERPORTAL;
-   bool toolow = havebportal && portalrender.w && portalrender.w->up &&
-         !portalrender.w->line &&
-         portalrender.w->planez >= seg.backsec->floorheight;
+   bool toolow = havebportal && portalrender.w &&
+   portalrender.w->type == pw_ceiling &&
+   portalrender.w->planez >= seg.backsec->floorheight;
 
    // SoM: Get this from the actual sector because R_FakeFlat can mess with heights.
 
@@ -2356,10 +2356,10 @@ static void R_Subsector(int num)
 
    // ioanch: reject all sectors fully above or below a sector portal.
    if(portalrender.active && portalrender.w->portal->type != R_SKYBOX &&
-      !portalrender.w->line && ((portalrender.w->up &&
-         seg.frontsec->ceilingheight < portalrender.w->planez) ||
-         (!portalrender.w->up && 
-            seg.frontsec->floorheight > portalrender.w->planez)))
+      ((portalrender.w->type == pw_ceiling &&
+        seg.frontsec->ceilingheight < portalrender.w->planez) ||
+       (portalrender.w->type == pw_floor &&
+        seg.frontsec->floorheight > portalrender.w->planez)))
    {
       return;
    }

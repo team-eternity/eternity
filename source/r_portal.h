@@ -292,7 +292,6 @@ struct pwindow_t
    pwindowtype_e type;
 
    fixed_t planez;   // if line == nullptr, this is the sector portal plane z
-   bool up;          // if line == nullptr, this is true if portal is upwards
 
    fixed_t  vx, vy, vz;
    angle_t  vangle;

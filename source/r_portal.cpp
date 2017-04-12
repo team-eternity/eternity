@@ -1351,7 +1351,7 @@ pwindow_t *R_GetFloorPortalWindow(portal_t *portal, fixed_t planez)
       // being able to share a single window set.
       // ioanch: also added plane checks
       if(rover->portal == portal && rover->type == pw_floor &&
-         rover->planez == planez && !rover->up)
+         rover->planez == planez)
       {
          return rover;
       }
@@ -1362,7 +1362,6 @@ pwindow_t *R_GetFloorPortalWindow(portal_t *portal, fixed_t planez)
    // not found, so make it
    pwindow_t *window = R_NewPortalWindow(portal, NULL, pw_floor);
    window->planez = planez;
-   window->up = false;
    M_ClearBox(window->barrier.bbox);
 
    return window;
@@ -1375,7 +1374,7 @@ pwindow_t *R_GetCeilingPortalWindow(portal_t *portal, fixed_t planez)
    while(rover)
    {
       if(rover->portal == portal && rover->type == pw_ceiling &&
-         rover->planez == planez && rover->up)
+         rover->planez == planez)
       {
          return rover;
       }
@@ -1386,7 +1385,6 @@ pwindow_t *R_GetCeilingPortalWindow(portal_t *portal, fixed_t planez)
    // not found, so make it
    pwindow_t *window = R_NewPortalWindow(portal, NULL, pw_ceiling);
    window->planez = planez;
-   window->up = true;
    M_ClearBox(window->barrier.bbox);
 
    return window;
