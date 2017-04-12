@@ -763,19 +763,18 @@ void P_PlayerThink(player_t *player)
 
       // killough 2/8/98, 3/22/98 -- end of weapon selection changes
 
-      // WEAPON_FIXME: setting pendingweapon
 
-      if(E_PlayerOwnsWeapon(player, E_WeaponForSlot(newweapon)) && !E_WeaponIsCurrentNum(player, newweapon))
+      // Do not go to plasma or BFG in shareware, even if cheated.
+      // haleyjd 06/28/13: generalized for EDF weapon system
+      weaponinfo_t *pendingweapon = P_GetPlayerWeapon(player, newweapon);
+      if(E_PlayerOwnsWeapon(player, pendingweapon) &&
+         pendingweapon->id != player->readyweaponnew->id)   
       {
-         // Do not go to plasma or BFG in shareware, even if cheated.
-         // haleyjd 06/28/13: generalized for EDF weapon system
-         weaponinfo_t *pendingweapon = P_GetPlayerWeapon(player, newweapon);
-         
          if(pendingweapon && 
             !(GameModeInfo->flags & GIF_SHAREWARE && 
               pendingweapon->flags & WPF_NOTSHAREWARE))
          {
-            player->pendingweapon = newweapon;
+            player->pendingweaponnew = pendingweapon;
          }
       }
    }

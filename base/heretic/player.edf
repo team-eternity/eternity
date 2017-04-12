@@ -4,6 +4,178 @@
 // Heretic Weapons
 //
 
+
+//=============================================================================
+//
+// Weapon Info
+//
+weaponinfo Staff
+{
+  upstate      S_PUNCHUP
+  downstate    S_PUNCHDOWN
+  readystate   S_PUNCH
+  attackstate  S_PUNCH1
+
+  nextincycle  Gauntlets
+  previncycle  BFG9000
+
+  flags        FLEEMELEE|NOHITGHOSTS|SILENCER
+  mod          Fist
+  recoil       10
+
+  tracker      WeaponStaff
+}
+
+weaponinfo GoldWand
+{
+  ammotype     AmmoWandCrystal
+  upstate      S_PISTOLUP
+  downstate    S_PISTOLDOWN
+  readystate   S_PISTOL
+  attackstate  S_PISTOL1
+  flashstate   S_PISTOLFLASH
+  ammouse      1
+
+  nextincycle  Crossbow
+  previncycle  Gauntlets
+
+  flags        SILENCER|HAPTICRECOIL
+  mod          Pistol
+  recoil       10
+  hapticrecoil 1
+  haptictime   1
+
+  tracker      WeaponGoldWand
+}
+
+weaponinfo Crossbow
+{
+  ammotype     AmmoEtherealArrow
+  upstate      S_SGUNUP
+  downstate    S_SGUNDOWN
+  readystate   S_SGUN
+  attackstate  S_SGUN1
+  flashstate   S_SGUNFLASH1
+  ammouse      1
+
+  nextincycle  Blaster
+  previncycle  GoldWand
+
+  flags        SILENCER|HAPTICRECOIL
+  mod          Shotgun
+  recoil       30
+  hapticrecoil 3
+  haptictime   3
+
+  tracker      WeaponCrossbow
+}
+
+weaponinfo Blaster
+{
+  ammotype     AmmoClawOrb
+  upstate      S_CHAINUP
+  downstate    S_CHAINDOWN
+  readystate   S_CHAIN
+  attackstate  S_CHAIN1
+  flashstate   S_CHAINFLASH1
+  ammouse      1
+
+  nextincycle  SkullRod
+  previncycle  Crossbow
+
+  flags        SILENCER|HAPTICRECOIL
+  mod          Chaingun
+  recoil       10
+  hapticrecoil 1
+  haptictime   1
+
+  tracker      WeaponBlaster
+}
+
+weaponinfo SkullRod
+{
+  ammotype     AmmoRune
+  upstate      S_MISSILEUP
+  downstate    S_MISSILEDOWN
+  readystate   S_MISSILE
+  attackstate  S_MISSILE1
+  flashstate   S_MISSILEFLASH1
+  ammouse      1
+
+  nextincycle  PhoenixRod
+  previncycle  Blaster
+
+  flags        NOAUTOFIRE|SILENCER|HAPTICRECOIL
+  //mod          ""
+  recoil       100
+  hapticrecoil 6
+  haptictime   8
+
+  tracker      WeaponSkullRod
+}
+
+weaponinfo PhoenixRod
+{
+  ammotype     AmmoFlameOrb
+  upstate      S_PLASMAUP
+  downstate    S_PLASMADOWN
+  readystate   S_PLASMA
+  attackstate  S_PLASMA1
+  flashstate   S_PLASMAFLASH1
+  ammouse      1
+
+  nextincycle  Mace
+  previncycle  SkullRod
+
+  flags        SILENCER|HAPTICRECOIL|NOTSHAREWARE
+  //mod          ""
+  recoil       20
+  hapticrecoil 2
+  haptictime   1
+
+  tracker      WeaponPhoenixRod
+}
+
+weaponinfo Mace
+{
+  ammotype     AmmoMaceSphere
+  upstate      S_BFGUP
+  downstate    S_BFGDOWN
+  readystate   S_BFG
+  attackstate  S_BFG1
+  flashstate   S_BFGFLASH1
+  ammouse      40
+
+  nextincycle  Staff
+  previncycle  PhoenixRod
+
+  flags        SILENCER|HAPTICRECOIL|NOTSHAREWARE
+  //mod          ""
+  recoil       20
+  hapticrecoil 2
+  haptictime   1
+
+  tracker      WeaponMace
+}
+
+weaponinfo Gauntlets
+{
+  upstate      S_SAWUP
+  downstate    S_SAWDOWN
+  readystate   S_SAW
+  attackstate  S_SAW1
+
+  nextincycle  GoldWand
+  previncycle  Fist
+
+  flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCER
+  mod          Chainsaw
+  upsound      sawup
+
+  tracker      WeaponGauntlets
+}
+
+
 //=============================================================================
 //
 // Weapon Trackers
@@ -70,6 +242,18 @@ artifact WeaponSkullRod
 }
 
 artifact WeaponPhoenixRod
+{
+  amount         1
+  maxamount      1
+  interhubamount 1
+
+  +undroppable
+  -invbar
+
+  artifacttype Weapon
+}
+
+artifact WeaponMace
 {
   amount         1
   maxamount      1

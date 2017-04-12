@@ -122,28 +122,28 @@ bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
       if(E_WeaponIsCurrent(player, WEAPNAME_FIST))
       {
          if(E_PlayerOwnsWeaponSlot(player, wp_chaingun)) // FIXME: Make this not-a-hack
-            player->pendingweapon = wp_chaingun;
+            player->pendingweaponnew = E_WeaponForSlot(wp_chaingun);
          else
-            player->pendingweapon = wp_pistol;
+            player->pendingweaponnew = E_WeaponForSlot(wp_pistol);
       }
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoShell"))
    {
       if(E_WeaponIsCurrent(player, WEAPNAME_FIST) || E_WeaponIsCurrent(player, WEAPNAME_PISTOL))
          if(E_PlayerOwnsWeaponSlot(player, wp_shotgun)) // FIXME: Make this not-a-hack
-            player->pendingweapon = wp_shotgun;
+            player->pendingweaponnew = E_WeaponForSlot(wp_shotgun);
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoCell"))
    {
       if(E_WeaponIsCurrent(player, WEAPNAME_FIST) || E_WeaponIsCurrent(player, WEAPNAME_PISTOL))
          if(E_PlayerOwnsWeaponSlot(player, wp_plasma)) // FIXME: Make this not-a-hack
-            player->pendingweapon = wp_plasma;
+            player->pendingweaponnew = E_WeaponForSlot(wp_plasma);
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoMissile"))
    {
       if(E_WeaponIsCurrent(player, WEAPNAME_FIST))
          if(E_PlayerOwnsWeaponSlot(player, wp_missile)) // FIXME: Make this not-a-hack
-            player->pendingweapon = wp_missile;
+            player->pendingweaponnew = E_WeaponForSlot(wp_missile);
    }
 
    return true;
@@ -229,7 +229,7 @@ static bool P_GiveWeapon(player_t *player, weaponinfo_t *wp, bool dropped,
       E_GiveInventoryItem(player, wp->tracker, 1); // TODO: Change 3rd value
       P_GiveAmmo(player, wp->ammo, (GameType == gt_dm) ? wp->dmstayammo : wp->coopstayammo);
       
-      player->pendingweapon = slot;
+      player->pendingweaponnew = wp;
       S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
       P_consumeSpecial(player, special); // need to handle it here
       return false;
@@ -242,7 +242,7 @@ static bool P_GiveWeapon(player_t *player, weaponinfo_t *wp, bool dropped,
    // haleyjd 10/4/11: de-Killoughized
    if(!E_PlayerOwnsWeapon(player, wp))
    {
-      player->pendingweapon = slot;
+      player->pendingweaponnew = wp;
       E_GiveInventoryItem(player, wp->tracker, 1); // TODO: Change 3rd value
       gaveweapon = true;
    }
@@ -843,7 +843,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       message = DEH_String("GOTBERSERK"); // Ty 03/22/98 - externalized
       if(E_WeaponIsCurrent(player, WEAPNAME_FIST))
          // sf: removed beta
-         player->pendingweapon = wp_fist;
+         player->pendingweaponnew = E_WeaponForSlot(wp_fist);
       sound = sfx_getpow;
       break;
 

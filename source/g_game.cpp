@@ -2256,18 +2256,12 @@ void G_PlayerReborn(int player)
          E_GiveInventoryItem(p, effect, amount);
    }
 
-   // INVENTORY_TODO: reborn weapons
-   p->pendingweapon = wp_pistol;
-   p->readyweaponnew = E_WeaponForName(WEAPNAME_PISTOL);
-
-   // INVENTORY_TODO: eliminate?
-   // sf: different weapons owned
-   //memcpy(p->weaponowned, default_weaponowned, sizeof(p->weaponowned));
-   
-   // WEAPON_FIXME: always owned weapons
-   // PCLASS_FIXME: always owned weapons
-   //p->weaponowned[wp_fist] = true;     // always fist and pistol
-   //p->weaponowned[wp_pistol] = true;
+   // FIXME: De hard-code this
+   p->pendingweaponnew = E_WeaponForSlot(wp_pistol);
+   if(GameModeInfo->type == Game_Heretic)
+      p->readyweaponnew = E_WeaponForName("GoldWand");
+   else
+      p->readyweaponnew = E_WeaponForName(WEAPNAME_PISTOL);
 }
 
 void P_SpawnPlayer(mapthing_t *mthing);

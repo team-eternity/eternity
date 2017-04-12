@@ -604,7 +604,7 @@ static void cheat_weapx(const void *arg)
             E_RemoveInventoryItem(plyr, weapon->tracker, 1);
             doom_printf("Weapon Removed"); // Ty 03/27/98 - *not* externalized
             if(E_WeaponIsCurrentNum(plyr, w))     // maybe switch if weapon removed
-               plyr->pendingweapon = E_SlotForWeapon(P_SwitchWeapon(plyr));
+               plyr->pendingweaponnew = P_SwitchWeapon(plyr);
          }
       }
    }
@@ -1072,6 +1072,11 @@ CONSOLE_NETCMD(nuke, cf_server|cf_level, netcmd_nuke)
    // killough 3/22/98: make more intelligent about plural
    // Ty 03/27/98 - string(s) *not* externalized
    doom_printf("%d Monster%s Killed", kills,  (kills == 1) ? "" : "s");
+}
+
+CONSOLE_COMMAND(GIVEWEPS, cf_server|cf_level)
+{
+   cheat_fa("a");
 }
 
 //----------------------------------------------------------------------------

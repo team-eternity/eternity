@@ -157,8 +157,8 @@ static void P_BringUpWeapon(player_t *player)
 {
    statenum_t newstate;
    
-   if(player->pendingweapon == wp_nochange)
-      player->pendingweapon = E_SlotForWeapon(player->readyweaponnew);
+   if(player->pendingweaponnew == nullptr)
+      player->pendingweaponnew = player->readyweaponnew;
    
    weaponinfo_t *pendingweapon;
    if((pendingweapon = P_GetPendingWeapon(player)))
@@ -169,7 +169,7 @@ static void P_BringUpWeapon(player_t *player)
   
       newstate = pendingweapon->upstate;
   
-      player->pendingweapon = wp_nochange;
+      player->pendingweaponnew = nullptr;
    
       // killough 12/98: prevent pistol from starting visibly at bottom of screen:
       player->psprites[ps_weapon].sy = demo_version >= 203 ? 
@@ -382,7 +382,7 @@ bool P_CheckAmmo(player_t *player)
    
    if(demo_compatibility)
    {
-      player->pendingweapon = E_SlotForWeapon(P_SwitchWeapon(player));      // phares
+      player->pendingweaponnew = P_SwitchWeapon(player);      // phares
       // Now set appropriate weapon overlay.
       P_SetPsprite(player,ps_weapon,player->readyweaponnew->downstate);
    }
@@ -481,8 +481,7 @@ void P_DropWeapon(player_t *player)
 weaponinfo_t *P_GetPendingWeapon(player_t *player)
 {
    return 
-      (player->pendingweapon >= 0 && player->pendingweapon < NUMWEAPONS) ? 
-       E_WeaponForSlot(player->pendingweapon) : NULL;
+      (player->pendingweaponnew != nullptr) ? player->pendingweaponnew : nullptr;
 }
 
 //
@@ -498,19 +497,32 @@ weaponinfo_t *P_GetPlayerWeapon(player_t *player, int index)
    if(!player->pclass->weaponslots[index])
       return nullptr;
 
+   weaponinfo_t *ret = player->pclass->weaponslots[index]->weapon;
+   bool hit = false;
+
    DLListItem<weaponslot_t> *weaponslot = &player->pclass->weaponslots[index]->links;
-   while(weaponslot)
+   for(int i = 0; weaponslot; i++, weaponslot = weaponslot->dllNext)
    {
       // If the weapon in the slot is the current weapon,
       // then the next weapon is what we want to swap to.
-      if(weaponslot->dllObject->weapon->id == player->readyweaponnew->id && weaponslot->dllNext)
-         return weaponslot->dllNext->dllObject->weapon;
+      if(weaponslot->dllObject->weapon->id == player->readyweaponnew->id &&
+         weaponslot->dllNext)
+      {
+         hit = true;
+         ret = weaponslot->dllNext->dllObject->weapon;
+      }
 
-      weaponslot = weaponslot->dllNext;
+      // Otherwise, if it's the first weapon the player owns and we haven't
+      // already found a weapon
+      if(!hit && E_PlayerOwnsWeapon(player, weaponslot->dllObject->weapon))
+      {
+         hit = true;
+         ret = weaponslot->dllObject->weapon;
+      }
    }
    // Either the current weapon is the last in the slot, or we didn't find it,
    // so return the first weapon.
-   return player->pclass->weaponslots[index]->weapon;
+   return ret;
 }
 
 //
@@ -583,18 +595,18 @@ void A_WeaponReady(actionargs_t *actionargs)
       P_SetMobjState(mo, mo->info->spawnstate);
    }
 
-   if(E_WeaponIsCurrent(player, WEAPNAME_CHAINSAW) &&
+   /*if(E_WeaponIsCurrent(player, WEAPNAME_CHAINSAW) &&
       psp->state == states[E_SafeState(S_SAW)])
    {
       S_StartSound(player->mo, sfx_sawidl);
       if(player == &players[consoleplayer])
          I_StartHaptic(HALHapticInterface::EFFECT_CONSTANT, 3, 108);
-   }
+   }*/
 
    // check for change
    //  if player is dead, put the weapon away
    
-   if(player->pendingweapon != wp_nochange || !player->health)
+   if(player->pendingweaponnew != nullptr || !player->health)
    {
       // change weapon (pending weapon should already be validated)
       statenum_t newstate = player->readyweaponnew->downstate;
@@ -642,7 +654,7 @@ void A_ReFire(actionargs_t *actionargs)
    //  (if a weaponchange is pending, let it go through instead)
    
    if((player->cmd.buttons & BT_ATTACK)
-      && player->pendingweapon == wp_nochange && player->health)
+      && player->pendingweaponnew == nullptr && player->health)
    {
       player->refire++;
       P_FireWeapon(player);
@@ -717,8 +729,8 @@ void A_Lower(actionargs_t *actionargs)
    }
 
    // haleyjd 03/28/10: do not assume pendingweapon is valid
-   if(player->pendingweapon < NUMWEAPONS)
-      player->readyweaponnew = E_WeaponForSlot(player->pendingweapon);
+   if(player->pendingweaponnew != nullptr)
+      player->readyweaponnew = player->pendingweaponnew;
 
    P_BringUpWeapon(player);
 }
@@ -1561,7 +1573,7 @@ void P_SetupPsprites(player_t *player)
       player->psprites[i].state = NULL;
    
    // spawn the gun
-   player->pendingweapon = E_SlotForWeapon(player->readyweaponnew);
+   player->pendingweaponnew = player->readyweaponnew;
    P_BringUpWeapon(player);
 }
 

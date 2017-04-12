@@ -153,7 +153,8 @@ struct player_t
    
   // weapontype_t   readyweapon;
    weaponinfo_t  *readyweaponnew;
-   weapontype_t   pendingweapon; // Is wp_nochange if not changing.
+  // weapontype_t   pendingweapon; // Is wp_nochange if not changing.
+   weaponinfo_t  *pendingweaponnew;
 
    weaponslot_t  *readyweaponnslot;
    weaponslot_t  *pendingweaponslot; // Is nullptr if not changing.
