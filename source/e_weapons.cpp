@@ -454,5 +454,26 @@ void E_GiveAllWeapons(player_t *player)
    }
 }
 
+//
+// Give the player all class weapons
+// TODO: Consider the global "weaponslots" variable
+//
+void E_GiveAllClassWeapons(player_t *player)
+{
+   for(int i = 0; i < NUMWEAPONSLOTS; i++)
+   {
+      if(!player->pclass->weaponslots[i])
+         continue;
+
+      DLListItem<weaponslot_t> *weaponslot = &player->pclass->weaponslots[i]->links;
+      while(weaponslot)
+      {
+         if(!E_PlayerOwnsWeapon(player, weaponslot->dllObject->weapon))
+            E_GiveInventoryItem(player, weaponslot->dllObject->weapon->tracker, 1);
+         weaponslot = weaponslot->dllNext;
+      }
+   }
+}
+
 // EOF
 

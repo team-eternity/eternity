@@ -312,7 +312,7 @@ static void cheat_fa(const void *arg)
 
    // WEAPON_FIXME: IDFA cheat
    
-   E_GiveAllWeapons(plyr);
+   E_GiveAllClassWeapons(plyr);
 
    // give full ammo
    E_GiveAllAmmo(plyr, GAA_MAXAMOUNT);
