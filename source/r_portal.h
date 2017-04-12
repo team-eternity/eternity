@@ -330,8 +330,8 @@ struct portalrender_t
    pwindow_t *w;
 
    void (*segClipFunc)();
-   
-   planehash_t *overlay;
+
+//   planehash_t *overlay;
 };
 
 extern portalrender_t  portalrender;

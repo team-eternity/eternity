@@ -1439,7 +1439,7 @@ void R_RenderPortals()
       portalrender.active = true;
       portalrender.w = windowhead;
       portalrender.segClipFunc = windowhead->clipfunc;
-      portalrender.overlay = windowhead->portal->poverlay;
+//      portalrender.overlay = windowhead->portal->poverlay;
 
       if(windowhead->maxx >= windowhead->minx)
          windowhead->func(windowhead);
@@ -1447,7 +1447,7 @@ void R_RenderPortals()
       portalrender.active = false;
       portalrender.w = NULL;
       portalrender.segClipFunc = NULL;
-      portalrender.overlay = NULL;
+//      portalrender.overlay = NULL;
 
       // free the window structs
       w = windowhead->child;
