@@ -297,8 +297,6 @@ static const char *cheatWeapons[NUMWEAPONS] =
 
 static void cheat_fa(const void *arg)
 {
-   int i;
-   
    if(!E_PlayerHasBackpack(plyr))
       E_GiveBackpack(plyr);
    

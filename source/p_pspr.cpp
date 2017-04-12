@@ -491,24 +491,26 @@ weaponinfo_t *P_GetPendingWeapon(player_t *player)
 // haleyjd 09/16/07:
 // Gets weapon at given index for the given player.
 // 
-// WEAPON_TODO: must redirect through playerclass lookup
-// PCLASS_FIXME: weapons
+// WEAPON_TODO: must consider the global weaponslots
 //
 weaponinfo_t *P_GetPlayerWeapon(player_t *player, int index)
 {
-   weaponslot_t *slot;
-   if((slot = player->pclass->weaponslots[index]))
-   {
-      if(E_WeaponIsCurrent(player, slot->weapon->name))
-         return slot->links->weapon;
-      else
-         return slot->weapon;
-   }
-  /* else
-      return NUMWEAPONSLOTS
+   if(!player->pclass->weaponslots[index])
+      return nullptr;
 
-   // currently there is only one linear weaponinfo
-   return &weaponinfo[index];*/
+   DLListItem<weaponslot_t> *weaponslot = &player->pclass->weaponslots[index]->links;
+   while(weaponslot)
+   {
+      // If the weapon in the slot is the current weapon,
+      // then the next weapon is what we want to swap to.
+      if(weaponslot->dllObject->weapon->id == player->readyweaponnew->id && weaponslot->dllNext)
+         return weaponslot->dllNext->dllObject->weapon;
+
+      weaponslot = weaponslot->dllNext;
+   }
+   // Either the current weapon is the last in the slot, or we didn't find it,
+   // so return the first weapon.
+   return player->pclass->weaponslots[index]->weapon;
 }
 
 //
