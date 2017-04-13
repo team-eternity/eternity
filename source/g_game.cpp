@@ -416,7 +416,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          // the fist is already in use, or the player does not
          // have the berserker strength.
 
-         if(newweapon==wp_fist && E_PlayerOwnsWeaponSlot(player, wp_chainsaw) &&
+         /*if(newweapon==wp_fist && E_PlayerOwnsWeaponSlot(player, wp_chainsaw) &&
             !E_WeaponIsCurrent(player, WEAPNAME_CHAINSAW) &&
             (E_WeaponIsCurrent(player, WEAPNAME_FIST) ||
              !player->powers[pw_strength] ||
@@ -438,7 +438,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
               P_WeaponPreferred(wp_supershotgun, wp_shotgun))))
          {
             newweapon = wp_supershotgun;
-         }
+         }*/
       }
       // killough 2/8/98, 3/22/98 -- end of weapon selection changes
    }

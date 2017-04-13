@@ -636,10 +636,11 @@ static void E_ProcessPlayerClass(cfg_t *pcsec)
       pc->hasslots = true;
       // E_freeWeaponSlots(pc);
 
-      for(unsigned int i = 0; i < numweaponslots; i++)
+      for(int i = numweaponslots; i --> 0;)
          E_processWeaponSlot(cfg_getnsec(pcsec, ITEM_PCLASS_WEAPONSLOT, i), pc);
    }
-   pc->hasslots = false;
+   else
+      pc->hasslots = false;
 }
 
 //

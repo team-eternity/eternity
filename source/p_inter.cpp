@@ -841,7 +841,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       if(!P_GivePowerForItem(player, effect))
          return;
       message = DEH_String("GOTBERSERK"); // Ty 03/22/98 - externalized
-      if(E_WeaponIsCurrent(player, WEAPNAME_FIST))
+      if(!E_WeaponIsCurrent(player, WEAPNAME_FIST))
          // sf: removed beta
          player->pendingweaponnew = E_WeaponForSlot(wp_fist);
       sound = sfx_getpow;

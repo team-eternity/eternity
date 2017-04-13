@@ -595,13 +595,13 @@ void A_WeaponReady(actionargs_t *actionargs)
       P_SetMobjState(mo, mo->info->spawnstate);
    }
 
-   /*if(E_WeaponIsCurrent(player, WEAPNAME_CHAINSAW) &&
+   if(E_WeaponIsCurrent(player, WEAPNAME_CHAINSAW) &&
       psp->state == states[E_SafeState(S_SAW)])
    {
       S_StartSound(player->mo, sfx_sawidl);
       if(player == &players[consoleplayer])
          I_StartHaptic(HALHapticInterface::EFFECT_CONSTANT, 3, 108);
-   }*/
+   }
 
    // check for change
    //  if player is dead, put the weapon away

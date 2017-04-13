@@ -412,7 +412,10 @@ int E_SlotForWeapon(weaponinfo_t *weapon)
 //
 bool E_WeaponIsCurrent(const player_t *player, const char *name)
 {
-   return player->readyweaponnew->id == E_WeaponForName(name)->id;
+   weaponinfo_t *weapon = E_WeaponForName(name);
+   if(!weapon)
+      return false;
+   return player->readyweaponnew->id == weapon->id;
 }
 
 //

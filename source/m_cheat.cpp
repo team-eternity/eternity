@@ -1074,9 +1074,10 @@ CONSOLE_NETCMD(nuke, cf_server|cf_level, netcmd_nuke)
    doom_printf("%d Monster%s Killed", kills,  (kills == 1) ? "" : "s");
 }
 
-CONSOLE_COMMAND(GIVEWEPS, cf_server|cf_level)
+// WEAPON_FIXME: This is a temporary measure, remove as soon as isn't required
+CONSOLE_COMMAND(GIVEARSENAL, cf_server|cf_level)
 {
-   cheat_fa("a");
+   cheat_fa("");
 }
 
 //----------------------------------------------------------------------------
