@@ -756,7 +756,7 @@ void P_PlayerThink(player_t *player)
             newweapon = wp_chainsaw;
          if(enable_ssg &&
             newweapon == wp_shotgun &&
-            E_PlayerOwnsWeaponSlot(player, wp_supershotgun) &&
+            E_PlayerOwnsWeaponForSlot(player, wp_supershotgun) &&
             !E_WeaponIsCurrent(player, WEAPNAME_SSG))
             newweapon = wp_supershotgun;
       }

@@ -81,7 +81,8 @@ void E_ProcessWeaponDeltas(cfg_t *cfg);
 bool E_WeaponIsCurrent(const player_t *player, const char *name);
 bool E_WeaponIsCurrentNum(player_t *player, const int num);
 bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon);
-bool E_PlayerOwnsWeaponSlot(const player_t *player, int slot);
+bool E_PlayerOwnsWeaponForSlot(player_t *player, int slot);
+bool E_PlayerOwnsWeaponInSlot(player_t *player, int slot);
 
 void E_GiveAllWeapons(player_t *player);
 void E_GiveAllClassWeapons(player_t *player);

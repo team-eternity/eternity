@@ -438,9 +438,24 @@ bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon)
 //
 // TODO: Remove this?
 //
-bool E_PlayerOwnsWeaponSlot(const player_t *player, int slot)
+bool E_PlayerOwnsWeaponForSlot(player_t *player, int slot)
 {
-   return E_PlayerOwnsWeapon(const_cast<player_t *>(player), E_WeaponForSlot(slot));
+   return E_PlayerOwnsWeapon(player, E_WeaponForSlot(slot));
+}
+
+bool E_PlayerOwnsWeaponInSlot(player_t *player, int slot)
+{
+   if(!player->pclass->weaponslots[slot])
+      return false;
+
+   DLListItem<weaponslot_t> *weaponslot = &player->pclass->weaponslots[slot]->links;
+   while(weaponslot)
+   {
+      if(E_PlayerOwnsWeapon(player, weaponslot->dllObject->weapon))
+         return true;
+      weaponslot = weaponslot->dllNext;
+   }
+   return false;
 }
 
 //
