@@ -95,10 +95,9 @@ static pwindow_t *unusedhead = NULL, *windowhead = NULL, *windowlast = NULL;
 //
 VALLOCATION(portals)
 {
+   planehash_t *hash;
    for(portal_t *p = portals; p; p = p->next)
    {
-      planehash_t *hash;
-
       // clear portal overlay visplane hash tables
       if((hash = p->poverlay))
       {
@@ -118,6 +117,9 @@ VALLOCATION(portals)
       while(child)
       {
          next = child->child;
+         if((hash = child->poverlay))
+            for(int i = 0; i < hash->chaincount; ++i)
+               hash->chains[i] = nullptr;
          efree(child->top);
          efree(child);
          child = next;
@@ -125,6 +127,9 @@ VALLOCATION(portals)
 
       // free this window
       next = rover->next;
+      if((hash = rover->poverlay))
+         for(int i = 0; i < hash->chaincount; ++i)
+            hash->chains[i] = nullptr;
       efree(rover->top);
       efree(rover);
       rover = next;
@@ -135,6 +140,9 @@ VALLOCATION(portals)
    while(rover)
    {
       pwindow_t *next = rover->next;
+      if((hash = rover->poverlay))
+         for(int i = 0; i < hash->chaincount; ++i)
+            hash->chains[i] = nullptr;
       efree(rover->top);
       efree(rover);
       rover = next;
@@ -157,7 +165,7 @@ static void R_RenderPortalNOP(pwindow_t *window)
 
 static void R_SetPortalFunction(pwindow_t *window);
 
-static void R_ClearPortalWindow(pwindow_t *window)
+static void R_ClearPortalWindow(pwindow_t *window, bool noplanes)
 {
    window->maxx = 0;
    window->minx = viewwindow.width - 1;
@@ -177,9 +185,21 @@ static void R_ClearPortalWindow(pwindow_t *window)
    window->vx = window->vy = window->vz = 0;
    window->vangle = 0;
    memset(&window->barrier, 0, sizeof(window->barrier));
+   if(!noplanes)
+   {
+      if(!window->poverlay)
+         window->poverlay = R_NewOverlaySet();
+      else
+      {
+         R_ClearPlaneHash(window->poverlay);
+#ifdef RANGECHECK
+         I_Error("Non-null window overlay set\n");
+#endif
+      }
+   }
 }
 
-static pwindow_t *newPortalWindow()
+static pwindow_t *newPortalWindow(bool noplanes = false)
 {
    pwindow_t *ret;
 
@@ -197,7 +217,7 @@ static pwindow_t *newPortalWindow()
       ret->bottom = buf + video.width;
    }
 
-   R_ClearPortalWindow(ret);
+   R_ClearPortalWindow(ret, noplanes);
    
    return ret;
 }
@@ -320,7 +340,7 @@ static void R_CreateChildWindow(pwindow_t *parent)
       I_Error("R_CreateChildWindow: child portal displaced\n");
 #endif
 
-   auto child = newPortalWindow();
+   auto child = newPortalWindow(true);
 
    parent->child   = child;
    child->head     = parent->head;
@@ -723,6 +743,7 @@ void R_InitPortals()
 {
    portals = last = NULL;
    windowhead = unusedhead = windowlast = NULL;
+   R_MapInitOverlaySets();
 
    gPortals.clear(); // clear the portal list
 }
@@ -771,8 +792,8 @@ static void R_RenderPlanePortal(pwindow_t *window)
       }
    }
 
-   if(window->head == window && window->portal->poverlay)
-      R_PushPost(false, window->portal->poverlay);
+   if(window->head == window && window->poverlay)
+      R_PushPost(false, window);
       
    if(window->child)
       R_RenderPlanePortal(window->child);
@@ -862,8 +883,8 @@ static void R_RenderHorizonPortal(pwindow_t *window)
    view.y = M_FixedToFloat(viewy);
    view.z = M_FixedToFloat(viewz);
 
-   if(window->head == window && window->portal->poverlay)
-      R_PushPost(false, window->portal->poverlay);
+   if(window->head == window && window->poverlay)
+      R_PushPost(false, window);
       
    if(window->child)
       R_RenderHorizonPortal(window->child);
@@ -958,7 +979,7 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
    R_RenderBSPNode(numnodes - 1);
    
    // Only push the overlay if this is the head window
-   R_PushPost(true, window->head == window ? window->portal->poverlay : NULL);
+   R_PushPost(true, window->head == window ? window : NULL);
 
    floorclip   = floorcliparray;
    ceilingclip = ceilingcliparray;
@@ -1148,7 +1169,7 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    R_RenderBSPNode(numnodes - 1);
 
    // Only push the overlay if this is the head window
-   R_PushPost(true, window->head == window ? window->portal->poverlay : NULL);
+   R_PushPost(true, window->head == window ? window : NULL);
 
    floorclip = floorcliparray;
    ceilingclip = ceilingcliparray;
@@ -1258,7 +1279,7 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    R_RenderBSPNode(numnodes - 1);
 
    // Only push the overlay if this is the head window
-   R_PushPost(true, window->head == window ? window->portal->poverlay : NULL);
+   R_PushPost(true, window->head == window ? window : NULL);
 
    floorclip = floorcliparray;
    ceilingclip = ceilingcliparray;
@@ -1408,6 +1429,24 @@ pwindow_t *R_GetLinePortalWindow(portal_t *portal, line_t *line)
 }
 
 //
+// Moves portal overlay to window, clearing data from portal.
+//
+void R_MovePortalOverlayToWindow(bool isceiling)
+{
+//   const portal_t *portal = isceiling ? seg.c_portal : seg.f_portal;
+   pwindow_t *window = isceiling ? seg.c_window : seg.f_window;
+   visplane_t *&plane = isceiling ? seg.ceilingplane : seg.floorplane;
+   if(plane)
+   {
+      plane = R_FindPlane(plane->height, plane->picnum, plane->lightlevel,
+         plane->xoffs, plane->yoffs, plane->xscale, plane->yscale, plane->angle,
+         plane->pslope, plane->bflags, plane->opacity, window->head->poverlay);
+   }
+//   if(portal)
+//      R_ClearPlaneHash(portal->poverlay);
+}
+
+//
 // R_ClearPortals
 //
 // Called at the start of each frame
@@ -1441,6 +1480,11 @@ void R_RenderPortals()
 
       if(windowhead->maxx >= windowhead->minx)
          windowhead->func(windowhead);
+      else if(windowhead->poverlay)
+      {
+         R_FreeOverlaySet(windowhead->poverlay);
+         windowhead->poverlay = nullptr;
+      }
 
       portalrender.active = false;
       portalrender.w = NULL;

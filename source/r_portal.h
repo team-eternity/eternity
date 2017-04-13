@@ -230,6 +230,7 @@ portal_t *R_GetPlanePortal(int *pic, fixed_t *delta, int16_t *lightlevel,
                            fixed_t *xoff, fixed_t *yoff, float *baseangle,
                            float *angle);
 
+void R_MovePortalOverlayToWindow(bool isceiling);
 void R_ClearPortals();
 void R_RenderPortals();
 
@@ -309,6 +310,8 @@ struct pwindow_t
    // Families of windows. Head is the main window, and child is the next
    // child down the chain.
    pwindow_t *head, *child;
+
+   planehash_t *poverlay;  // Portal overlays are now stored per window
 };
 
 // SoM: Cardboard
