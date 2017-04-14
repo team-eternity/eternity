@@ -460,7 +460,6 @@ static void E_CopyWeapon(int num, int pnum)
 
    // copy metatable
    meta->copyTableFrom(weaponinfo[pnum]->meta);
-   //ammo->copyTableFrom(weaponinfo[pnum]->ammo);
 
    // restore metatable pointer
    this_mi->meta = meta;
@@ -471,6 +470,7 @@ static void E_CopyWeapon(int num, int pnum)
    this_mi->name = name;
    this_mi->id = id;
    this_mi->generation = generation;
+   this_mi->ammo = ammo; // YES, THIS POINTER ASSIGNMENT IS INTENTIONAL
    this_mi->nextInCycle = nextInCycle;
    this_mi->prevInCycle = prevInCycle;
 
