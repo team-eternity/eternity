@@ -72,10 +72,16 @@ extern weaponslot_t *weaponslots[NUMWEAPONSLOTS];
 // Global Functions
 weaponinfo_t *E_WeaponForID(int id);
 weaponinfo_t *E_WeaponForName(const char *name);
+
+// FIXME: Reorder to be cleaner
+void E_CollectWeapons(cfg_t *cfg);
+
+
+
 weaponinfo_t *E_WeaponForSlot(int slot);
 int E_SlotForWeapon(weaponinfo_t *weapon);
 
-void E_ProcessWeapons(cfg_t *cfg);
+void E_ProcessWeaponInfo(cfg_t *cfg);
 void E_ProcessWeaponDeltas(cfg_t *cfg);
 
 bool E_WeaponIsCurrent(const player_t *player, const char *name);

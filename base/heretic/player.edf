@@ -15,7 +15,7 @@ weaponinfo Staff
   previncycle  BFG9000
 
   flags        FLEEMELEE|NOHITGHOSTS|SILENCER
-  mod          Fist
+  //mod          ""
   recoil       10
 
   tracker      WeaponStaff
@@ -30,7 +30,7 @@ weaponinfo GoldWand
   previncycle  Gauntlets
 
   flags        SILENCER|HAPTICRECOIL
-  mod          Pistol
+  //mod          ""
   recoil       10
   hapticrecoil 1
   haptictime   1
@@ -47,7 +47,7 @@ weaponinfo Crossbow
   previncycle  GoldWand
 
   flags        SILENCER|HAPTICRECOIL
-  mod          Shotgun
+  //mod          ""
   recoil       30
   hapticrecoil 3
   haptictime   3
@@ -64,7 +64,7 @@ weaponinfo Blaster
   previncycle  Crossbow
 
   flags        SILENCER|HAPTICRECOIL
-  mod          Chaingun
+  //mod          ""
   recoil       10
   hapticrecoil 1
   haptictime   1
@@ -126,10 +126,10 @@ weaponinfo Mace
 weaponinfo Gauntlets
 {
   nextincycle  GoldWand
-  previncycle  Fist
+  previncycle  Staff
 
   flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCER
-  mod          Chainsaw
+  //mod          ""
   upsound      sawup
 
   tracker      WeaponGauntlets

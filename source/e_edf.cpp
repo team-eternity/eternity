@@ -1232,6 +1232,12 @@ static void E_ProcessStatesAndThings(cfg_t *cfg)
    E_ProcessThings(cfg);
 }
 
+static void E_ProcessWeapons(cfg_t *cfg)
+{
+   E_CollectWeapons(cfg);   // see e_weapons.cpp
+   E_ProcessWeaponInfo(cfg);
+}
+
 //
 // E_ProcessPlayerData
 //

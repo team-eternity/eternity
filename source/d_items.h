@@ -86,6 +86,12 @@ struct weaponinfo_t
    // EDF hashing
    DLListItem<weaponinfo_t> idlinks;   // hash by id
    DLListItem<weaponinfo_t> namelinks; // hash by name
+
+   int   generation;   // EDF generation number
+
+   MetaTable *meta; // metatable
+
+   weaponinfo_t *parent; // inheritance chain for DECORATE-like semantics where required
 };
 
 //extern weaponinfo_t weaponinfo[NUMWEAPONS];

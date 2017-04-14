@@ -39,8 +39,7 @@
 #include "e_mod.h"
 #include "e_sound.h"
 #include "e_states.h"
-
-#include "m_qstr.h"
+#include "metaapi.h"
 
 #include "d_dehtbl.h"
 #include "d_items.h"
@@ -48,6 +47,12 @@
 
 #include "e_weapons.h"
 #include "e_player.h" // DO NOT MOVE. COMPILE FAILS IF MOVED BEFORE p_inter.h INCLUDE
+
+static weaponinfo_t **weaponinfo = nullptr;
+static int NUMWEAPONTYPES = 0;
+
+// track generations
+static int edf_weapon_generation = 1;
 
 // Weapon Keywords
 // TODO: Currently in order of weaponinfo_t, reorder
@@ -83,14 +88,14 @@
 // WeaponInfo Delta Keywords
 #define ITEM_DELTA_NAME "name"
 
-/*// Title properties 
+// Title properties 
 #define ITEM_WPN_TITLE_SUPER     "superclass" 
 
 cfg_opt_t wpninfo_tprops[] =
 {
    CFG_STR(ITEM_WPN_TITLE_SUPER,      0, CFGF_NONE),
    CFG_END()
-};*/
+};
 
 #define WEAPONINFO_FIELDS \
    CFG_STR(ITEM_WPN_AMMO,         "",       CFGF_NONE), \
@@ -116,7 +121,7 @@ cfg_opt_t wpninfo_tprops[] =
 
 cfg_opt_t edf_wpninfo_opts[] =
 {
-   //CFG_TPROPS(wpninfo_tprops,       CFGF_NOCASE),
+   CFG_TPROPS(wpninfo_tprops,       CFGF_NOCASE),
    CFG_STR(ITEM_WPN_INHERITS,  0, CFGF_NONE),
    WEAPONINFO_FIELDS
 };
@@ -200,6 +205,206 @@ weaponinfo_t *E_WeaponForName(const char *name)
    return e_WeaponNameHash.objectForKey(name);
 }
 
+//
+// Returns a thing type index given its name. Returns -1
+// if a thing type is not found.
+//
+int E_WeaponNumForName(const char *name)
+{
+   weaponinfo_t *info = nullptr;
+   int ret = -1;
+
+   if((info = e_WeaponNameHash.objectForKey(name)))
+      ret = info->id;
+
+   return ret;
+}
+
+//
+// As above, but causes a fatal error if the thing type isn't found.
+//
+int E_GetWeaponNumForName(const char *name)
+{
+   int weaponnum = E_WeaponNumForName(name);
+
+   if(weaponnum == -1)
+      I_Error("E_GetThingNumForName: bad thing type %s\n", name);
+
+   return weaponnum;
+}
+
+// 
+// Processing Functions
+//
+
+//
+// Function to reallocate the weaponinfo array safely.
+//
+static void E_ReallocWeapons(int numnewweapons)
+{
+   static int numweaponsalloc = 0;
+
+   // only realloc when needed
+   if(!numweaponsalloc || (NUMWEAPONTYPES < numweaponsalloc + numnewweapons))
+   {
+      int i;
+
+      // First time, just allocate the requested number of weaponinfo.
+      // Afterward:
+      // * If the number of weaponinfo requested is small, add 2 times as many
+      //   requested, plus a small constant amount.
+      // * If the number is large, just add that number.
+
+      if(!numweaponsalloc)
+         numweaponsalloc = numnewweapons;
+      else if(numnewweapons <= 50)
+         numweaponsalloc += numnewweapons * 2 + 32;
+      else
+         numweaponsalloc += numnewweapons;
+
+      // reallocate weaponinfo[]
+      weaponinfo = erealloc(weaponinfo_t **, weaponinfo, numweaponsalloc *
+                            sizeof(weaponinfo_t *));
+
+      for(i = NUMWEAPONTYPES; i < numweaponsalloc; i++)
+         weaponinfo[i] = nullptr;
+   }
+
+   NUMWEAPONTYPES += numnewweapons;
+}
+
+//
+// Pre-creates and hashes by name the weaponinfo, for purpose 
+// of mutual and forward references.
+//
+void E_CollectWeapons(cfg_t *cfg)
+{
+   unsigned int i;
+   unsigned int numweapons;        // number of weaponinfo defined by the cfg
+   unsigned int curnewweapon = 0;  // index of current new weaponinfo being used
+   weaponinfo_t *newWeapon = nullptr;
+   static bool firsttime = true;
+
+   // get number of weaponinfos defined by the cfg
+   numweapons = cfg_size(cfg, EDF_SEC_WEAPONINFO);
+
+   // echo counts
+   E_EDFLogPrintf("\t\t%u weaponinfo defined\n", numweapons);
+
+   if(numweapons)
+   {
+      unsigned int firstnewweapon = 0; // index of first new weaponinfo
+      // allocate weaponinfo_t structures for the new weapons
+      newWeapon = estructalloc(weaponinfo_t, numweapons);
+
+      // add space to the weaponinfo array
+      curnewweapon = firstnewweapon = NUMWEAPONTYPES;
+
+      E_ReallocWeapons(int(numweapons));
+
+      // set pointers in weaponinfo[] to the proper structures;
+      // also set self-referential index member, and allocate a
+      // metatable.
+      for(i = firstnewweapon; i < unsigned int(NUMWEAPONTYPES); i++)
+      {
+         weaponinfo[i] = &newWeapon[i - firstnewweapon];
+         weaponinfo[i]->id = i;
+         weaponinfo[i]->meta = new MetaTable("weaponinfo");
+      }
+   }
+
+   // build hash tables
+   E_EDFLogPuts("\t\tBuilding weapon hash tables\n");
+
+   // cycle through the weaponinfo defined in the cfg
+   for(i = 0; i < numweapons; i++)
+   {
+      cfg_t *weaponcfg  = cfg_getnsec(cfg, EDF_SEC_WEAPONINFO, i);
+      const char *name  = cfg_title(weaponcfg);
+      cfg_t *titleprops = nullptr;
+
+      // This is a new weaponinfo, whether or not one already exists by this name
+      // in the hash table. For subsequent addition of EDF weapontypes at runtime,
+      // the hash table semantics of "find newest first" take care of overriding,
+      // while not breaking objects that depend on the original definition of
+      // the weapontype for inheritance purposes.
+      weaponinfo_t *wi = weaponinfo[curnewweapon++];
+
+      // initialize name
+      wi->name = estrdup(name);
+
+      // add to name & ID hash
+      e_WeaponIDHash.addObject(wi);
+      e_WeaponNameHash.addObject(wi);
+
+      // TODO: dehnum stuff maybe at some point?
+      /*// check for titleprops definition first
+      if(cfg_size(weaponcfg, "#title") > 0)
+      {
+         titleprops = cfg_gettitleprops(weaponcfg);
+         if(titleprops)
+            dehnum = cfg_getint(titleprops, ITEM_WPN_TITLE_DEHNUM)
+      }
+
+      // If undefined, check the legacy value inside the section
+      if(dehnum == -1)
+         dehnum = cfg_getint(weaponnum, ITEM_WPN_DEHNUM);*/
+
+
+      // set generation
+      wi->generation = edf_weapon_generation;
+   }
+
+   // first-time-only events
+   if(firsttime)
+   {
+      // check that at least one weaponinfo was defined
+      if(!NUMWEAPONTYPES)
+         E_EDFLoggedErr(2, "E_CollectWeapons: no weaponinfo defined.\n");
+
+      // TODO: verify the existance of the Unknown weapon type?
+      /*UnknownWeaponInfo = E_WeaponNumForName("Unknown");
+      if(UnknownWeaponInfo < 0)
+         E_EDFLoggedErr(2, "E_CollectWeapons: 'Unknown' weaponinfo must be defined.\n");*/
+
+      firsttime = false;
+   }
+}
+
+// weapon_hitlist: keeps track of what thingtypes are initialized
+static byte *weapon_hitlist = nullptr;
+
+// weapon_pstack: used by recursive E_ProcessWeapon to track inheritance
+static int  *weapon_pstack = nullptr;
+static int   weapon_pindex = 0;
+
+//
+// Adds a type number to the inheritance stack.
+//
+static void E_AddWeaponToPStack(int num)
+{
+   // Overflow shouldn't happen since it would require cyclic
+   // inheritance as well, but I'll guard against it anyways.
+
+   if(weapon_pindex >= NUMWEAPONTYPES)
+      E_EDFLoggedErr(2, "E_AddWeaponToPStack: max inheritance depth exceeded\n");
+
+   weapon_pstack[weapon_pindex++] = num;
+}
+
+//
+// Resets the weapontype inheritance stack, setting all the pstack
+// values to -1, and setting pindex back to zero.
+//
+static void E_ResetWeaponPStack()
+{
+   for(int i = 0; i < NUMWEAPONTYPES; i++)
+      weapon_pstack[i] = -1;
+
+   weapon_pindex = 0;
+}
+
+
 #undef  IS_SET
 #define IS_SET(name) ((def && !inherits) || cfg_size(weaponsec, (name)) > 0)
 
@@ -207,29 +412,31 @@ weaponinfo_t *E_WeaponForName(const char *name)
 // Process a single weaponinfo
 // TODO: Deltas, inheritance
 //
-static void E_processWeaponInfo(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
+static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
 {
    bool inherits = false;
-
-   weaponinfo_t *weaponinfo = nullptr;
-   weaponinfo = estructalloc(weaponinfo_t, 1);
 
    const char *tempstr;
    int tempint;
 
-   weaponinfo->id = i;
+   weaponinfo[i]->id = i;
 
    tempstr = cfg_title(weaponsec);
-   weaponinfo->name = estrdup(tempstr);
+   weaponinfo[i]->name = estrdup(tempstr);
+
+   if((tempstr = cfg_getstr(weaponsec, ITEM_WPN_NEXTINCYCLE)))
+      weaponinfo[i]->nextInCycle = E_WeaponForName(tempstr);
+   if((tempstr = cfg_getstr(weaponsec, ITEM_WPN_PREVINCYCLE)))
+      weaponinfo[i]->prevInCycle = E_WeaponForName(tempstr);
 
    if(IS_SET(ITEM_WPN_TRACKER))
    {
       const char *tempeffectname = cfg_getstr(weaponsec, ITEM_WPN_TRACKER);
       itemeffect_t *tempeffect;
       if((tempeffect = E_ItemEffectForName(tempeffectname)))
-         weaponinfo->tracker = tempeffect;
+         weaponinfo[i]->tracker = tempeffect;
       else // A weaponsec is worthless without its tracker
-         E_EDFLoggedErr(2, "Tracker \"%s\" in weaponinfo \"%s\" is undefined\n", tempeffectname, tempstr);
+         E_EDFLoggedErr(2, "Tracker \"%s\" in weaponinfo[i] \"%s\" is undefined\n", tempeffectname, tempstr);
    }
    else
       E_EDFLoggedErr(2, "No tracker defined for weaponsec \"%s\"\n", tempstr);
@@ -237,48 +444,48 @@ static void E_processWeaponInfo(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
    if(IS_SET(ITEM_WPN_AMMO))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_AMMO);
-      weaponinfo->ammo = E_ItemEffectForName(tempstr);
+      weaponinfo[i]->ammo = E_ItemEffectForName(tempstr);
    }
 
    if(IS_SET(ITEM_WPN_UPSTATE))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_UPSTATE);
-      weaponinfo->upstate = E_GetStateNumForName(tempstr);
+      weaponinfo[i]->upstate = E_GetStateNumForName(tempstr);
    }
 
    if(IS_SET(ITEM_WPN_DOWNSTATE))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_DOWNSTATE);
-      weaponinfo->downstate = E_GetStateNumForName(tempstr);
+      weaponinfo[i]->downstate = E_GetStateNumForName(tempstr);
    }
    if(IS_SET(ITEM_WPN_READYSTATE))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_READYSTATE);
-      weaponinfo->readystate = E_GetStateNumForName(tempstr);
+      weaponinfo[i]->readystate = E_GetStateNumForName(tempstr);
    }
    if(IS_SET(ITEM_WPN_ATKSTATE))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_ATKSTATE);
-      weaponinfo->atkstate = E_GetStateNumForName(tempstr);
+      weaponinfo[i]->atkstate = E_GetStateNumForName(tempstr);
    }
    if(IS_SET(ITEM_WPN_FLASHSTATE))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_FLASHSTATE);
-      weaponinfo->flashstate = E_GetStateNumForName(tempstr);
+      weaponinfo[i]->flashstate = E_GetStateNumForName(tempstr);
    }
    else
-      weaponinfo->flashstate = E_SafeState(S_NULL);
+      weaponinfo[i]->flashstate = E_SafeState(S_NULL);
 
    if(IS_SET(ITEM_WPN_AMMOPERSHOT))
-      weaponinfo->ammopershot = cfg_getint(weaponsec, ITEM_WPN_AMMOPERSHOT);
+      weaponinfo[i]->ammopershot = cfg_getint(weaponsec, ITEM_WPN_AMMOPERSHOT);
 
    if(IS_SET(ITEM_WPN_MOD))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_MOD);
-      weaponinfo->mod = E_DamageTypeNumForName(tempstr);
+      weaponinfo[i]->mod = E_DamageTypeNumForName(tempstr);
    }
    else
-      weaponinfo->mod = 0; // MOD_UNKNOWN
+      weaponinfo[i]->mod = 0; // MOD_UNKNOWN
 
    // 02/19/04: process combined flags first
    if(IS_SET(ITEM_WPN_FLAGS))
@@ -286,32 +493,29 @@ static void E_processWeaponInfo(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_FLAGS);
       if(*tempstr == '\0')
       {
-         weaponinfo->flags = 0;
+         weaponinfo[i]->flags = 0;
       }
       else
       {
          unsigned int results = E_ParseFlags(tempstr, &e_weaponFlagSet);
-         weaponinfo->flags = results;
+         weaponinfo[i]->flags = results;
       }
    }
 
    if(IS_SET(ITEM_WPN_RECOIL))
-      weaponinfo->recoil = cfg_getint(weaponsec, ITEM_WPN_RECOIL);
+      weaponinfo[i]->recoil = cfg_getint(weaponsec, ITEM_WPN_RECOIL);
    if(IS_SET(ITEM_WPN_HAPTICRECOIL))
-      weaponinfo->hapticrecoil = cfg_getint(weaponsec, ITEM_WPN_HAPTICRECOIL);
+      weaponinfo[i]->hapticrecoil = cfg_getint(weaponsec, ITEM_WPN_HAPTICRECOIL);
    if(IS_SET(ITEM_WPN_HAPTICTIME))
-      weaponinfo->haptictime = cfg_getint(weaponsec, ITEM_WPN_HAPTICTIME);
+      weaponinfo[i]->haptictime = cfg_getint(weaponsec, ITEM_WPN_HAPTICTIME);
 
    if(IS_SET(ITEM_WPN_UPSOUND))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_UPSOUND);
       sfxinfo_t *tempsfx = E_EDFSoundForName(tempstr);
       if(tempsfx)
-         weaponinfo->upsound = E_EDFSoundForName(tempstr)->dehackednum;
+         weaponinfo[i]->upsound = E_EDFSoundForName(tempstr)->dehackednum;
    }
-
-   e_WeaponIDHash.addObject(*weaponinfo);
-   e_WeaponNameHash.addObject(*weaponinfo);
 }
 
 //
@@ -330,20 +534,46 @@ static void E_processWeaponCycle(cfg_t *weapon)
 //
 // Process all weapons!
 //
-void E_ProcessWeapons(cfg_t *cfg)
+void E_ProcessWeaponInfo(cfg_t *cfg)
 {
    E_EDFLogPuts("\t* Processing weaponinfo data\n");
 
    const unsigned int numWeapons = cfg_size(cfg, EDF_SEC_WEAPONINFO);
 
-   for(unsigned int i = 0; i < numWeapons; i++)
+   // allocate inheritance stack and hitlist
+   weapon_hitlist = ecalloc(byte *, NUMWEAPONTYPES, sizeof(byte));
+   weapon_pstack  = ecalloc(int *, NUMWEAPONTYPES, sizeof(int));
+
+   for(unsigned int i = 0; i < unsigned int(NUMWEAPONTYPES); i++)
    {
-      cfg_t *thingsec = cfg_getnsec(cfg, EDF_SEC_WEAPONINFO, i);
-      E_processWeaponInfo(i, thingsec, cfg, true);
+      if(weaponinfo[i]->generation != edf_weapon_generation)
+         weapon_hitlist[i] = 1;
    }
 
    for(unsigned int i = 0; i < numWeapons; i++)
-      E_processWeaponCycle(cfg_getnsec(cfg, EDF_SEC_WEAPONINFO, i));
+   {
+      cfg_t *weaponsec = cfg_getnsec(cfg, EDF_SEC_WEAPONINFO, i);
+      const char *name = cfg_title(weaponsec);
+      int weaponnum = E_WeaponNumForName(name);
+
+      // reset the inheritance stack
+      E_ResetWeaponPStack();
+
+      // add this weapon to the stack
+      E_AddWeaponToPStack(weaponnum);
+
+      E_processWeapon(weaponnum, weaponsec, cfg, true);
+
+      E_EDFLogPrintf("\t\tFinished thingtype %s (#%d)\n",
+         weaponinfo[weaponnum]->name, weaponnum);
+   }
+
+   // free tables
+   efree(weapon_hitlist);
+   efree(weapon_pstack);
+
+   // increment generation count
+   ++edf_weapon_generation;
 }
 
 void E_ProcessWeaponDeltas(cfg_t *cfg)
@@ -355,7 +585,7 @@ void E_ProcessWeaponDeltas(cfg_t *cfg)
    for(unsigned int i = 0; i < numDeltas; i++)
    {
       cfg_t *deltasec = cfg_getnsec(cfg, EDF_SEC_WPNDELTA, i);
-      E_processWeaponInfo(i, deltasec, cfg, false);
+      E_processWeapon(i, deltasec, cfg, false);
    }
 }
 
