@@ -481,15 +481,15 @@ static void E_CopyWeapon(int num, int pnum)
 }
 
 
-static void E_getWeaponTitleProps(cfg_t *weaponsec, const char *tprop, bool def)
+static const char *E_getWeaponTitleProps(cfg_t *weaponsec, bool def)
 {
    cfg_t *titleprops;
 
    if(def && cfg_size(weaponsec, "#title") > 0 &&
       (titleprops = cfg_gettitleprops(weaponsec)))
-      tprop = cfg_getstr(titleprops, ITEM_WPN_TITLE_SUPER);
+      return cfg_getstr(titleprops, ITEM_WPN_TITLE_SUPER);
    else
-      tprop = nullptr;
+      return nullptr;
 }
 
 //
@@ -528,7 +528,7 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
    const char *tempstr;
    bool inherits = false;
    bool cflags   = false;
-   const char *tprop = nullptr; // Shut up warnings about possibly being uninit'd
+   const char *tprop;
 
    // if weaponsec is null, we are in the situation of inheriting from a thing
    // that was processed in a previous EDF generation, so no processing is
@@ -537,7 +537,7 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
       return;
 
    // Retrieve title properties
-   E_getWeaponTitleProps(weaponsec, tprop, def);
+   tprop = E_getWeaponTitleProps(weaponsec, def);
 
    // inheritance -- not in deltas
    if(def)
