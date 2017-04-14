@@ -75,6 +75,9 @@
 
 #define ITEM_WPN_TRACKER      "tracker"
 
+// DECORATE state block
+#define ITEM_WPN_STATES        "states"
+
 #define ITEM_WPN_INHERITS     "inherits"
 
 // WeaponInfo Delta Keywords
@@ -108,6 +111,7 @@ cfg_opt_t wpninfo_tprops[] =
    CFG_INT(ITEM_WPN_HAPTICTIME,   0,        CFGF_NONE), \
    CFG_STR(ITEM_WPN_UPSOUND,      "none",   CFGF_NONE), \
    CFG_STR(ITEM_WPN_TRACKER,      "",       CFGF_NONE), \
+   CFG_STR(ITEM_WPN_STATES,        0,       CFGF_NONE), \
    CFG_END()
 
 cfg_opt_t edf_wpninfo_opts[] =
@@ -199,6 +203,10 @@ weaponinfo_t *E_WeaponForName(const char *name)
 #undef  IS_SET
 #define IS_SET(name) ((def && !inherits) || cfg_size(weaponsec, (name)) > 0)
 
+//
+// Process a single weaponinfo
+// TODO: Deltas, inheritance
+//
 static void E_processWeaponInfo(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
 {
    bool inherits = false;
@@ -306,6 +314,9 @@ static void E_processWeaponInfo(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
    e_WeaponNameHash.addObject(*weaponinfo);
 }
 
+//
+// Process a single weapon cycle, done after processing all weaponinfos
+//
 static void E_processWeaponCycle(cfg_t *weapon)
 {
    const char *tempstr = cfg_title(weapon);
@@ -316,6 +327,9 @@ static void E_processWeaponCycle(cfg_t *weapon)
       weaponinfo->prevInCycle = E_WeaponForName(tempstr);
 }
 
+//
+// Process all weapons!
+//
 void E_ProcessWeapons(cfg_t *cfg)
 {
    E_EDFLogPuts("\t* Processing weaponinfo data\n");
@@ -443,6 +457,11 @@ bool E_PlayerOwnsWeaponForSlot(player_t *player, int slot)
    return E_PlayerOwnsWeapon(player, E_WeaponForSlot(slot));
 }
 
+//
+// Checks if a player owns a weapon in the provided slot, useful for things like the
+// Doom weapon-number widget
+// TODO: Consider global "weaponslots" variable
+//
 bool E_PlayerOwnsWeaponInSlot(player_t *player, int slot)
 {
    if(!player->pclass->weaponslots[slot])
