@@ -161,7 +161,7 @@ static void P_BringUpWeapon(player_t *player)
       player->pendingweaponnew = player->readyweaponnew;
    
    weaponinfo_t *pendingweapon;
-   if((pendingweapon = P_GetPendingWeapon(player)))
+   if((pendingweapon = player->pendingweaponnew))
    {
       // haleyjd 06/28/13: weapon upsound
       if(pendingweapon->upsound)
@@ -454,53 +454,22 @@ void P_DropWeapon(player_t *player)
 //
 
 //
-// P_GetReadyWeapon
-//
-// haleyjd 09/13/07: 
-// Retrieves a pointer to the proper weaponinfo_t structure for the 
-// readyweapon index stored in the player.
-//
-// WEAPON_TODO: Will need to change as system evolves.
-// PCLASS_FIXME: weapons
-//
-/*weaponinfo_t *P_GetReadyWeapon(player_t *player)
-{
-   return &(weaponinfo[player->readyweapon]);
-}*/
-
-//
-// P_GetPendingWeapon
-//
-// haleyjd 06/28/13:
-// Retrieves a pointer to the proper weaponinfo_t structure for the
-// pendingweapon index stored in the player.
-//
-// WEAPON_TODO: Will need to change as system evolves.
-// PCLASS_FIXME: weapons
-//
-weaponinfo_t *P_GetPendingWeapon(player_t *player)
-{
-   return 
-      (player->pendingweaponnew != nullptr) ? player->pendingweaponnew : nullptr;
-}
-
-//
 // P_GetPlayerWeapon
 //
 // haleyjd 09/16/07:
-// Gets weapon at given index for the given player.
+// Gets weapon at given slot for the given player.
 // 
 // WEAPON_TODO: must consider the global weaponslots
 //
-weaponinfo_t *P_GetPlayerWeapon(player_t *player, int index)
+weaponinfo_t *P_GetPlayerWeapon(player_t *player, int slot)
 {
-   if(!player->pclass->weaponslots[index])
+   if(!player->pclass->weaponslots[slot])
       return nullptr;
 
-   weaponinfo_t *ret = player->pclass->weaponslots[index]->weapon;
+   weaponinfo_t *ret = player->pclass->weaponslots[slot]->weapon;
    bool hit = false;
 
-   DLListItem<weaponslot_t> *weaponslot = &player->pclass->weaponslots[index]->links;
+   DLListItem<weaponslot_t> *weaponslot = &player->pclass->weaponslots[slot]->links;
    for(int i = 0; weaponslot; i++, weaponslot = weaponslot->dllNext)
    {
       // If the weapon in the slot is the current weapon,
