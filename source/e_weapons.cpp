@@ -379,6 +379,27 @@ static int  *weapon_pstack = nullptr;
 static int   weapon_pindex = 0;
 
 //
+// Makes sure the weapon type being inherited from has not already
+// been inherited during the current inheritance chain. Returns
+// false if the check fails, and true if it succeeds.
+//
+static bool E_CheckWeaponInherit(int pnum)
+{
+   for(int i = 0; i < NUMWEAPONTYPES; i++)
+   {
+      // circular inheritance
+      if(weapon_pstack[i] == pnum)
+         return false;
+
+      // found end of list
+      if(weapon_pstack[i] == -1)
+         break;
+   }
+
+   return true;
+}
+
+//
 // Adds a type number to the inheritance stack.
 //
 static void E_AddWeaponToPStack(int num)
@@ -404,6 +425,94 @@ static void E_ResetWeaponPStack()
    weapon_pindex = 0;
 }
 
+//
+// Copies one weaponinfo into another.
+//
+static void E_CopyWeapon(int num, int pnum)
+{
+   weaponinfo_t *this_mi;
+   DLListItem<weaponinfo_t> idlinks, namelinks;
+   const char *name;
+   MetaTable  *meta;
+   int         id;
+   int         generation;
+   itemeffect_t  *ammo;
+   weaponinfo_t *nextInCycle, *prevInCycle;
+
+   this_mi = weaponinfo[num];
+
+   // must save the following fields in the destination thing:
+   idlinks = this_mi->idlinks;
+   namelinks = this_mi->namelinks;
+   name = this_mi->name;
+   meta = this_mi->meta;
+   id = this_mi->id;
+   generation = this_mi->generation;
+   ammo = this_mi->ammo;
+   nextInCycle = this_mi->nextInCycle;
+   prevInCycle = this_mi->prevInCycle;
+
+   // copy from source to destination
+   memcpy(this_mi, weaponinfo[pnum], sizeof(weaponinfo_t));
+
+   // normalize special fields?
+   // FIXME: IDK
+
+   // copy metatable
+   meta->copyTableFrom(weaponinfo[pnum]->meta);
+   //ammo->copyTableFrom(weaponinfo[pnum]->ammo);
+
+   // restore metatable pointer
+   this_mi->meta = meta;
+
+   // must restore name and dehacked num data
+   this_mi->namelinks = namelinks;
+   this_mi->idlinks = idlinks;
+   this_mi->name = name;
+   this_mi->id = id;
+   this_mi->generation = generation;
+   this_mi->nextInCycle = nextInCycle;
+   this_mi->prevInCycle = prevInCycle;
+
+   // other fields not inherited:
+
+   // force tracker of inheriting type to nullptr
+   this_mi->tracker = nullptr;
+}
+
+
+static void E_getWeaponTitleProps(cfg_t *weaponsec, const char *tprop, bool def)
+{
+   cfg_t *titleprops;
+
+   if(def && cfg_size(weaponsec, "#title") > 0 &&
+      (titleprops = cfg_gettitleprops(weaponsec)))
+      tprop = cfg_getstr(titleprops, ITEM_WPN_TITLE_SUPER);
+   else
+      tprop = nullptr;
+}
+
+//
+// Get the weaponinfo index for the thing's superclass weapontype.
+//
+static int E_resolveParentWeapon(cfg_t *thingsec, const char *tprop)
+{
+   int pnum = -1;
+
+   // check title props first
+   if(tprop)
+   {
+      // "Weapon" is currently a dummy value and means it is just a plain 
+      // thing not inheriting from anything else. Maybe in the future it
+      // could designate specialized native subclasses of Weapon as well?
+      if(strcasecmp(tprop, "Weapon"))
+         pnum = E_GetWeaponNumForName(tprop);
+   }
+   else // resolve parent thingtype through legacy "inherits" field
+      pnum = E_GetWeaponNumForName(cfg_getstr(thingsec, ITEM_WPN_INHERITS));
+
+   return pnum;
+}
 
 #undef  IS_SET
 #define IS_SET(name) ((def && !inherits) || cfg_size(weaponsec, (name)) > 0)
@@ -414,20 +523,78 @@ static void E_ResetWeaponPStack()
 //
 static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
 {
-   bool inherits = false;
-
-   const char *tempstr;
+   double tempfloat;
    int tempint;
+   const char *tempstr;
+   bool inherits = false;
+   bool cflags   = false;
+   const char *tprop = nullptr; // Shut up warnings about possibly being uninit'd
 
-   weaponinfo[i]->id = i;
+   // if weaponsec is null, we are in the situation of inheriting from a thing
+   // that was processed in a previous EDF generation, so no processing is
+   // required; return immediately.
+   if(!weaponsec)
+      return;
+
+   // Retrieve title properties
+   E_getWeaponTitleProps(weaponsec, tprop, def);
+
+   // inheritance -- not in deltas
+   if(def)
+   {
+      int pnum = -1;
+
+      // if this weapon is already processed via recursion due to
+      // inheritance, don't process it again
+      if(weapon_hitlist[i])
+         return;
+
+      if(tprop || cfg_size(weaponsec, ITEM_WPN_INHERITS) > 0)
+         pnum = E_resolveParentWeapon(weaponsec, tprop);
+
+      if(pnum >= 0)
+      {
+         cfg_t *parent_tngsec;
+         int pnum = E_resolveParentWeapon(weaponsec, tprop); // TODO: Remove this line?
+
+         // check against cyclic inheritance
+         if(!E_CheckWeaponInherit(pnum))
+         {
+            E_EDFLoggedErr(2,
+               "E_processWeapon: cyclic inheritance detected in weaponinfo '%s'\n",
+               weaponinfo[i]->name);
+         }
+
+         // add to inheritance stack
+         E_AddWeaponToPStack(pnum);
+
+         // process parent recursively
+         // must use cfg_gettsec; note can return null
+         parent_tngsec = cfg_gettsec(pcfg, EDF_SEC_WEAPONINFO, weaponinfo[pnum]->name);
+         E_processWeapon(pnum, parent_tngsec, pcfg, true);
+
+         // copy parent to this thing
+         E_CopyWeapon(i, pnum);
+
+         // keep track of parent explicitly
+         weaponinfo[i]->parent = weaponinfo[pnum];
+
+         // we inherit, so treat defaults as no value
+         inherits = true;
+      }
+   }
 
    tempstr = cfg_title(weaponsec);
-   weaponinfo[i]->name = estrdup(tempstr);
-
-   if((tempstr = cfg_getstr(weaponsec, ITEM_WPN_NEXTINCYCLE)))
+   if(IS_SET(ITEM_WPN_NEXTINCYCLE))
+   {
+      tempstr = cfg_getstr(weaponsec, ITEM_WPN_NEXTINCYCLE);
       weaponinfo[i]->nextInCycle = E_WeaponForName(tempstr);
-   if((tempstr = cfg_getstr(weaponsec, ITEM_WPN_PREVINCYCLE)))
+   }
+   if(IS_SET(ITEM_WPN_PREVINCYCLE))
+   {
+      tempstr = cfg_getstr(weaponsec, ITEM_WPN_PREVINCYCLE);
       weaponinfo[i]->prevInCycle = E_WeaponForName(tempstr);
+   }
 
    if(IS_SET(ITEM_WPN_TRACKER))
    {

@@ -201,6 +201,7 @@ bool P_WeaponHasAmmo(player_t *player, weaponinfo_t *weapon)
 //
 // haleyjd 05/31/14: Rewritten to use next and previous in cycle pointers
 // in weaponinfo_t, for friendliness with future dynamic weapons system.
+// WEAPON_FIXME: Doesn't work as intended
 //
 int P_NextWeapon(player_t *player)
 {
@@ -223,6 +224,7 @@ int P_NextWeapon(player_t *player)
 // P_PrevWeapon
 //
 // haleyjd 03/06/09: Like the above.
+// WEAPON_FIXME: Doesn't work as intended
 //
 int P_PrevWeapon(player_t *player)
 {
