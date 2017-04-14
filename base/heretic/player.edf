@@ -11,11 +11,6 @@
 //
 weaponinfo Staff
 {
-  upstate      S_PUNCHUP
-  downstate    S_PUNCHDOWN
-  readystate   S_PUNCH
-  attackstate  S_PUNCH1
-
   nextincycle  Gauntlets
   previncycle  BFG9000
 
@@ -29,11 +24,6 @@ weaponinfo Staff
 weaponinfo GoldWand
 {
   ammotype     AmmoWandCrystal
-  upstate      S_PISTOLUP
-  downstate    S_PISTOLDOWN
-  readystate   S_PISTOL
-  attackstate  S_PISTOL1
-  flashstate   S_PISTOLFLASH
   ammouse      1
 
   nextincycle  Crossbow
@@ -51,11 +41,6 @@ weaponinfo GoldWand
 weaponinfo Crossbow
 {
   ammotype     AmmoEtherealArrow
-  upstate      S_SGUNUP
-  downstate    S_SGUNDOWN
-  readystate   S_SGUN
-  attackstate  S_SGUN1
-  flashstate   S_SGUNFLASH1
   ammouse      1
 
   nextincycle  Blaster
@@ -73,11 +58,6 @@ weaponinfo Crossbow
 weaponinfo Blaster
 {
   ammotype     AmmoClawOrb
-  upstate      S_CHAINUP
-  downstate    S_CHAINDOWN
-  readystate   S_CHAIN
-  attackstate  S_CHAIN1
-  flashstate   S_CHAINFLASH1
   ammouse      1
 
   nextincycle  SkullRod
@@ -95,11 +75,6 @@ weaponinfo Blaster
 weaponinfo SkullRod
 {
   ammotype     AmmoRune
-  upstate      S_MISSILEUP
-  downstate    S_MISSILEDOWN
-  readystate   S_MISSILE
-  attackstate  S_MISSILE1
-  flashstate   S_MISSILEFLASH1
   ammouse      1
 
   nextincycle  PhoenixRod
@@ -117,11 +92,6 @@ weaponinfo SkullRod
 weaponinfo PhoenixRod
 {
   ammotype     AmmoFlameOrb
-  upstate      S_PLASMAUP
-  downstate    S_PLASMADOWN
-  readystate   S_PLASMA
-  attackstate  S_PLASMA1
-  flashstate   S_PLASMAFLASH1
   ammouse      1
 
   nextincycle  Mace
@@ -139,11 +109,6 @@ weaponinfo PhoenixRod
 weaponinfo Mace
 {
   ammotype     AmmoMaceSphere
-  upstate      S_BFGUP
-  downstate    S_BFGDOWN
-  readystate   S_BFG
-  attackstate  S_BFG1
-  flashstate   S_BFGFLASH1
   ammouse      40
 
   nextincycle  Staff
@@ -160,11 +125,6 @@ weaponinfo Mace
 
 weaponinfo Gauntlets
 {
-  upstate      S_SAWUP
-  downstate    S_SAWDOWN
-  readystate   S_SAW
-  attackstate  S_SAW1
-
   nextincycle  GoldWand
   previncycle  Fist
 
