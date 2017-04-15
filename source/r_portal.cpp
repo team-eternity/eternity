@@ -771,6 +771,31 @@ static void R_RenderPlanePortal(pwindow_t *window)
    if(window->maxx < window->minx)
       return;
 
+   fixed_t lastx = viewx;
+   fixed_t lasty = viewy;
+   fixed_t lastz = viewz;
+   float lastxf = view.x;
+   float lastyf = view.y;
+   float lastzf = view.z;
+   angle_t lastangle = viewangle;
+   float lastanglef = view.angle;
+
+   viewx = window->vx;
+   viewy = window->vy;
+   viewz = window->vz;
+   view.x = M_FixedToFloat(viewx);
+   view.y = M_FixedToFloat(viewy);
+   view.z = M_FixedToFloat(viewz);
+   if(window->vangle != viewangle)
+   {
+      viewangle = window->vangle;
+      viewsin = finesine[viewangle >> ANGLETOFINESHIFT];
+      viewcos = finecosine[viewangle >> ANGLETOFINESHIFT];
+      view.angle = (ANG90 - viewangle) * PI / ANG180;
+      view.sin = sinf(view.angle);
+      view.cos = cosf(view.angle);
+   }
+
    // haleyjd 01/05/08: flat angle
    angle = *portal->data.plane.baseangle + *portal->data.plane.angle;
 
@@ -797,6 +822,19 @@ static void R_RenderPlanePortal(pwindow_t *window)
    if(window->head == window && window->poverlay)
       R_PushPost(false, window);
       
+   viewx = lastx;
+   viewy = lasty;
+   viewz = lastz;
+   viewangle = lastangle;
+   viewsin = finesine[viewangle >> ANGLETOFINESHIFT];
+   viewcos = finecosine[viewangle >> ANGLETOFINESHIFT];
+   view.x = lastxf;
+   view.y = lastyf;
+   view.z = lastzf;
+   view.angle = lastanglef;
+   view.sin = (float)sin(view.angle);
+   view.cos = (float)cos(view.angle);
+
    if(window->child)
       R_RenderPlanePortal(window->child);
 }
