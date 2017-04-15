@@ -2079,6 +2079,17 @@ bool R_IsSkyLikePortalCeiling(const sector_t &sector)
 }
 
 //
+// True if floor is a basic portal without overlay
+//
+bool R_IsSkyLikePortalFloor(const sector_t &sector)
+{
+   return sector.f_portal && !(sector.f_pflags & (PF_DISABLED | PF_NOPASS)) &&
+      (!(sector.f_pflags & PS_OVERLAY) || !(sector.f_pflags & PO_OPACITYMASK)) &&
+      (sector.f_portal->type == R_SKYBOX || sector.f_portal->type == R_HORIZON ||
+         sector.f_portal->type == R_PLANE);
+}
+
+//
 // True if line is a basic portal
 //
 bool R_IsSkyLikePortalWall(const line_t &line)
