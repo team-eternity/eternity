@@ -440,7 +440,7 @@ void  P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown, bool
 void  P_SpawnUnknownThings();
 Mobj *P_SpawnMapThing(mapthing_t *mt);
 bool  P_CheckMissileSpawn(Mobj *);  // killough 8/2/98
-void  P_ExplodeMissile(Mobj *);     // killough
+void  P_ExplodeMissile(Mobj *, const sector_t *topedgesec);     // killough
 
 //
 // Blood spawning

@@ -389,7 +389,7 @@ bool P_SetMobjStateNF(Mobj *mobj, statenum_t state)
 //
 // P_ExplodeMissile
 //
-void P_ExplodeMissile(Mobj *mo)
+void P_ExplodeMissile(Mobj *mo, const sector_t *topedgesec)
 {
    // haleyjd 08/02/04: EXPLOCOUNT flag
    if(mo->flags3 & MF3_EXPLOCOUNT)
@@ -409,6 +409,13 @@ void P_ExplodeMissile(Mobj *mo)
          mo->z >= ceilingsector->ceilingheight - P_ThingInfoHeight(mo->info))
       {
          mo->removeThinker(); // don't explode on the actual sky itself
+         return;
+      }
+      if(topedgesec && demo_version >= 342 && (topedgesec->intflags & SIF_SKY ||
+         R_IsSkyLikePortalCeiling(*topedgesec)) && 
+         mo->z >= topedgesec->ceilingheight - P_ThingInfoHeight(mo->info))
+      {
+         mo->removeThinker(); // don't explode on the edge
          return;
       }
    }
@@ -617,7 +624,8 @@ void P_XYMovement(Mobj* mo)
                }
             }
 
-            P_ExplodeMissile(mo);
+            P_ExplodeMissile(mo, clip.ceilingline ? clip.ceilingline->backsector :
+               nullptr);
          }
          else // whatever else it is, it is now standing still in (x,y)
          {
@@ -898,7 +906,8 @@ static void P_ZMovement(Mobj* mo)
          }
          else
          {
-            P_ExplodeMissile(mo);
+            P_ExplodeMissile(mo, 
+               clip.ceilingline ? clip.ceilingline->backsector : nullptr);
          }
       }
 
@@ -994,7 +1003,7 @@ floater:
       if(!((mo->flags ^ MF_MISSILE) & (MF_MISSILE | MF_NOCLIP)))
       {
          if(!(mo->flags3 & MF3_FLOORMISSILE)) // haleyjd
-            P_ExplodeMissile(mo);
+            P_ExplodeMissile(mo, nullptr);
          return;
       }
    }
@@ -1037,7 +1046,8 @@ floater:
 
       if(!((mo->flags ^ MF_MISSILE) & (MF_MISSILE | MF_NOCLIP)))
       {
-         P_ExplodeMissile (mo);
+         P_ExplodeMissile (mo, 
+            clip.ceilingline ? clip.ceilingline->backsector : nullptr);
          return;
       }
    }
@@ -2776,7 +2786,7 @@ bool P_CheckMissileSpawn(Mobj* th)
    // killough 3/15/98: no dropoff (really = don't care for missiles)
    if(!P_TryMove(th, th->x, th->y, false))
    {
-      P_ExplodeMissile(th);
+      P_ExplodeMissile(th, nullptr);
       ok = false;
    }
 
