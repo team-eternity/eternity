@@ -765,9 +765,9 @@ void R_StoreWallRange(const int start, const int stop)
       segclip.top += clipx1 * segclip.topstep;
       segclip.bottom += clipx1 * segclip.bottomstep;
 
-      if(segclip.toptex)
+      if(segclip.toptex || seg.t_window)
          segclip.high += clipx1 * segclip.highstep;
-      if(segclip.bottomtex)
+      if(segclip.bottomtex || seg.b_window)
          segclip.low += clipx1 * segclip.lowstep;
    }
    if(clipx2)
@@ -778,9 +778,9 @@ void R_StoreWallRange(const int start, const int stop)
       segclip.top2 -= clipx2 * segclip.topstep;
       segclip.bottom2 -= clipx2 * segclip.bottomstep;
 
-      if(segclip.toptex)
+      if(segclip.toptex || seg.t_window)
          segclip.high2 -= clipx2 * segclip.highstep;
-      if(segclip.bottomtex)
+      if(segclip.bottomtex || seg.b_window)
          segclip.low2 -= clipx2 * segclip.lowstep;
    }
 
@@ -797,9 +797,9 @@ void R_StoreWallRange(const int start, const int stop)
       segclip.topstep = (segclip.top2 - segclip.top) * pstep;
       segclip.bottomstep = (segclip.bottom2 - segclip.bottom) * pstep;
 
-      if(segclip.toptex)
+      if(segclip.toptex || seg.t_window)
          segclip.highstep = (segclip.high2 - segclip.high) * pstep;
-      if(segclip.bottomtex)
+      if(segclip.bottomtex || seg.b_window)
          segclip.lowstep = (segclip.low2 - segclip.low) * pstep;
    }
 
