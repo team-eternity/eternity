@@ -190,12 +190,7 @@ static void R_ClearPortalWindow(pwindow_t *window, bool noplanes)
       if(!window->poverlay)
          window->poverlay = R_NewOverlaySet();
       else
-      {
          R_ClearPlaneHash(window->poverlay);
-#ifdef RANGECHECK
-         I_Error("Non-null window overlay set\n");
-#endif
-      }
    }
 }
 
@@ -1480,11 +1475,6 @@ void R_RenderPortals()
 
       if(windowhead->maxx >= windowhead->minx)
          windowhead->func(windowhead);
-      else if(windowhead->poverlay)
-      {
-         R_FreeOverlaySet(windowhead->poverlay);
-         windowhead->poverlay = nullptr;
-      }
 
       portalrender.active = false;
       portalrender.w = NULL;
