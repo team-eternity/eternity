@@ -2413,9 +2413,9 @@ static void R_Subsector(int num)
    // ioanch: reject all sectors fully above or below a sector portal.
    if(portalrender.active && portalrender.w->portal->type != R_SKYBOX &&
       ((portalrender.w->type == pw_ceiling &&
-        seg.frontsec->ceilingheight < portalrender.w->planez) ||
+        seg.frontsec->ceilingheight < portalrender.w->planez + viewz - portalrender.w->vz) ||
        (portalrender.w->type == pw_floor &&
-        seg.frontsec->floorheight > portalrender.w->planez)))
+        seg.frontsec->floorheight > portalrender.w->planez + viewz - portalrender.w->vz)))
    {
       return;
    }
