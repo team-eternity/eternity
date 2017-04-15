@@ -403,10 +403,10 @@ void P_ExplodeMissile(Mobj *mo)
    // haleyjd: an attempt at fixing explosions on skies (works!)
    if(demo_version >= 329)
    {
-      if((mo->subsector->sector->intflags & SIF_SKY ||
-          R_IsSkyLikePortalCeiling(*mo->subsector->sector)) &&
-         mo->z >= mo->subsector->sector->ceilingheight -
-         P_ThingInfoHeight(mo->info))
+      const sector_t *ceilingsector = P_ExtremeSectorAtPoint(mo, true);
+      if((ceilingsector->intflags & SIF_SKY || 
+         R_IsSkyLikePortalCeiling(*ceilingsector)) &&
+         mo->z >= ceilingsector->ceilingheight - P_ThingInfoHeight(mo->info))
       {
          mo->removeThinker(); // don't explode on the actual sky itself
          return;
