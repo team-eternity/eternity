@@ -33,12 +33,15 @@
 
 #include "Confuse/confuse.h"
 #include "doomdef.h"
+#include "e_dstate.h"
 #include "e_edf.h"
 #include "e_hash.h"
 #include "e_lib.h"
+#include "e_metastate.h"
 #include "e_mod.h"
 #include "e_sound.h"
 #include "e_states.h"
+#include "e_things.h" // TODO: Move E_SplitTypeAndState to e_states and remove this include?
 #include "metaapi.h"
 
 #include "d_dehtbl.h"
@@ -80,6 +83,8 @@ static int edf_weapon_generation = 1;
 
 #define ITEM_WPN_TRACKER      "tracker"
 
+#define ITEM_WPN_FIRSTDECSTATE "firstdecoratestate"
+
 // DECORATE state block
 #define ITEM_WPN_STATES        "states"
 
@@ -116,6 +121,7 @@ cfg_opt_t wpninfo_tprops[] =
    CFG_INT(ITEM_WPN_HAPTICTIME,   0,        CFGF_NONE), \
    CFG_STR(ITEM_WPN_UPSOUND,      "none",   CFGF_NONE), \
    CFG_STR(ITEM_WPN_TRACKER,      "",       CFGF_NONE), \
+   CFG_STR(ITEM_WPN_FIRSTDECSTATE, nullptr, CFGF_NONE), \
    CFG_STR(ITEM_WPN_STATES,        0,       CFGF_NONE), \
    CFG_END()
 
@@ -236,6 +242,277 @@ int E_GetWeaponNumForName(const char *name)
 // 
 // Processing Functions
 //
+
+// Warning: likely to get lost as there's no module for metastates currently!
+//IMPLEMENT_RTTI_TYPE(MetaState)
+
+//
+// Adds a state to the mobjinfo metatable.
+//
+static void E_AddMetaState(weaponinfo_t *wi, state_t *state, const char *name)
+{
+   wi->meta->addObject(new MetaState(name, state));
+}
+
+static const char *nativeWepStateLabels[] =
+{
+   "Select",   // upstate
+   "Deselect", // downstate
+   "Ready",    // readystate
+   "Fire",     // atkstate
+   "Flash",    // flashstate
+};
+
+enum wepstatetypes_e
+{
+   WSTATE_SELECT,
+   WSTATE_DESELECT,
+   WSTATE_READY,
+   WSTATE_FIRE,
+   WSTATE_FLASH
+};
+
+#define NUMNATIVEWSTATES earrlen(nativeWepStateLabels)
+
+//
+// Gets a state that is stored inside an weaponinfo metatable.
+// Returns null if no such object exists.
+//
+static MetaState *E_GetMetaState(weaponinfo_t *wi, const char *name)
+{
+   return wi->meta->getObjectKeyAndTypeEx<MetaState>(name);
+}
+
+//
+// Returns a pointer to an weaponinfo's native state field if the given name
+// is a match for that field's corresponding DECORATE label. Returns null
+// if the name is not a match for a native state field.
+//
+int *E_GetNativeWepStateLoc(weaponinfo_t *wi, const char *label)
+{
+   int nativenum = E_StrToNumLinear(nativeWepStateLabels, NUMNATIVEWSTATES, label);
+   int *ret = nullptr;
+
+   switch(nativenum)
+   {
+   case WSTATE_SELECT:   ret = &wi->upstate;    break;
+   case WSTATE_DESELECT: ret = &wi->downstate;  break;
+   case WSTATE_READY:    ret = &wi->readystate; break;
+   case WSTATE_FIRE:     ret = &wi->atkstate;   break;
+   case WSTATE_FLASH:    ret = &wi->flashstate; break;
+   default:
+      break;
+   }
+
+   return ret;
+}
+
+//
+// Retrieves any state for an weaponinfo, either native or metastate.
+// Returns null if no such state can be found. Note that the null state is
+// not considered a valid state.
+//
+state_t *E_GetStateForWeaponInfo(weaponinfo_t *wi, const char *label)
+{
+   MetaState *ms;
+   state_t *ret = nullptr;
+   int *nativefield = nullptr;
+
+   // check metastates
+   if((ms = E_GetMetaState(wi, label)))
+      ret = ms->state;
+   else if((nativefield = E_GetNativeWepStateLoc(wi, label)))
+   {
+      // only if not S_NULL
+      if(*nativefield != NullStateNum)
+         ret = states[*nativefield];
+   }
+
+   return ret;
+}
+
+//
+// Returns an weaponinfo_t * if the given weaponinfo inherits from the given type 
+// by name. Returns null otherwise. Self-identity is *not* considered 
+// inheritance.
+//
+weaponinfo_t *E_IsWeaponInfoDescendantOf(weaponinfo_t *wi, const char *type)
+{
+   weaponinfo_t *curwi = wi->parent;
+   int targettype = E_WeaponNumForName(type);
+
+   while(curwi)
+   {
+      if(curwi->id == targettype)
+         break; // found it
+
+                // walk up the inheritance tree
+      curwi = curwi->parent;
+   }
+
+   return curwi;
+}
+
+//
+// Deal with unresolved goto entries in the DECORATE state object.
+//
+static void E_processDecorateWepGotos(weaponinfo_t *wi, edecstateout_t *dso)
+{
+   int i;
+
+   for(i = 0; i < dso->numgotos; ++i)
+   {
+      weaponinfo_t *type = nullptr;
+      state_t *state;
+      statenum_t statenum;
+      char *statename = nullptr;
+
+      // see if the label contains a colon, and if so, it may be an
+      // access to an inherited state
+      char *colon = strchr(dso->gotos[i].label, ':');
+
+      if(colon)
+      {
+         char *typestr = nullptr;
+
+         E_SplitTypeAndState(dso->gotos[i].label, &typestr, &statename);
+
+         if(!(typestr && statename))
+         {
+            // error, set to null state
+            *(dso->gotos[i].nextstate) = NullStateNum;
+            continue;
+         }
+
+         // if "super" this means find the state in the parent type;
+         // otherwise, check if the indicated type inherits from this one
+         if(!strcasecmp(typestr, "super") && wi->parent)
+            type = wi->parent;
+         else
+            type = E_IsWeaponInfoDescendantOf(wi, typestr);
+      }
+      else
+      {
+         // otherwise this is a name to resolve within the scope of the local
+         // thingtype - it may be a state acquired through inheritance, for
+         // example, and is thus not defined within the thingtype's state block.
+         type = wi;
+         statename = dso->gotos[i].label;
+      }
+
+      if(!type)
+      {
+         // error; set to null state and continue
+         *(dso->gotos[i].nextstate) = NullStateNum;
+         continue;
+      }
+
+      // find the state in the proper type
+      if(!(state = E_GetStateForWeaponInfo(type, statename)))
+      {
+         // error; set to null state and continue
+         *(dso->gotos[i].nextstate) = NullStateNum;
+         continue;
+      }
+
+      statenum = state->index + dso->gotos[i].offset;
+
+      if(statenum < 0 || statenum >= NUMSTATES)
+      {
+         // error; set to null state and continue
+         *(dso->gotos[i].nextstate) = NullStateNum;
+         continue;
+      }
+
+      // resolve the goto
+      *(dso->gotos[i].nextstate) = statenum;
+   }
+}
+
+//
+// Add all labeled states from a DECORATE state block to the given weaponinfo.
+//
+static void E_processDecorateWepStates(weaponinfo_t *wi, edecstateout_t *dso)
+{
+   int i;
+
+   for(i = 0; i < dso->numstates; ++i)
+   {
+      int *nativefield;
+
+      // first see if this is a native state
+      if((nativefield = E_GetNativeWepStateLoc(wi, dso->states[i].label)))
+         *nativefield = dso->states[i].state->index;
+      else
+      {
+         MetaState *msnode;
+
+         // there is not a matching native field, so add the state as a 
+         // metastate
+         if((msnode = E_GetMetaState(wi, dso->states[i].label)))
+            msnode->state = dso->states[i].state;
+         else
+            E_AddMetaState(wi, dso->states[i].state, dso->states[i].label);
+      }
+   }
+}
+
+
+//
+// Processes the DECORATE state list in a weapon
+//
+static void E_ProcessDecorateWepStateList(weaponinfo_t *wi, const char *str,
+                                       const char *firststate, bool recursive)
+{
+   edecstateout_t *dso;
+
+   if(!(dso = E_ParseDecorateStates(str, firststate)))
+   {
+      E_EDFLoggedWarning(2, "Warning: couldn't attach DECORATE states to weapon '%s'.\n",
+                         wi->name);
+      return;
+   }
+
+   // first deal with any gotos that still need resolution
+   if(dso->numgotos)
+      E_processDecorateWepGotos(wi, dso);
+
+   // add all labeled states from the block to the weaponinfo
+   if(dso->numstates && !recursive)
+      E_processDecorateWepStates(wi, dso);
+
+
+   // free the DSO object
+   E_FreeDSO(dso);
+}
+
+//
+// Process DECORATE-format states
+//
+static void E_ProcessDecorateWepStatesRecursive(cfg_t *weaponsec, int wnum, bool recursive)
+{
+   cfg_t *displaced;
+
+   // 01/02/12: Process displaced sections recursively first.
+   if((displaced = cfg_displaced(weaponsec)))
+      E_ProcessDecorateWepStatesRecursive(displaced, wnum, true);
+
+   // haleyjd 06/22/10: Process DECORATE state block
+   if(cfg_size(weaponsec, ITEM_WPN_STATES) > 0)
+   {
+      // 01/01/12: allow use of pre-existing reserved states; they must be
+      // defined consecutively in EDF and should be flagged +decorate in order
+      // for values inside them to be overridden by the DECORATE state block.
+      // If this isn't being done, firststate will be null.
+      const char *firststate = cfg_getstr(weaponsec, ITEM_WPN_FIRSTDECSTATE);
+      const char *tempstr = cfg_getstr(weaponsec, ITEM_WPN_STATES);
+
+      // recursion should process states only if firststate is valid
+      if(!recursive || firststate)
+         E_ProcessDecorateWepStateList(weaponinfo[wnum], tempstr, firststate, recursive);
+   }
+
+}
 
 //
 // Function to reallocate the weaponinfo array safely.
@@ -515,8 +792,7 @@ static int E_resolveParentWeapon(cfg_t *thingsec, const char *tprop)
 #define IS_SET(name) ((def && !inherits) || cfg_size(weaponsec, (name)) > 0)
 
 //
-// Process a single weaponinfo
-// TODO: Deltas
+// Process a single weaponinfo, or weapondelta
 //
 static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
 {
@@ -602,7 +878,7 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
       else // A weaponsec is worthless without its tracker
          E_EDFLoggedErr(2, "Tracker \"%s\" in weaponinfo[i] \"%s\" is undefined\n", tempeffectname, tempstr);
    }
-   else if(def)
+   else if(def) // Don't check tracker, since it was already checked in initial definition
       E_EDFLoggedErr(2, "No tracker defined for weaponsec \"%s\"\n", tempstr);
 
    if(IS_SET(ITEM_WPN_AMMO))
@@ -680,6 +956,9 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
       if(tempsfx)
          weaponinfo[i]->upsound = E_EDFSoundForName(tempstr)->dehackednum;
    }
+
+   // Process DECORATE state block
+   E_ProcessDecorateWepStatesRecursive(weaponsec, i, false);
 }
 
 //
