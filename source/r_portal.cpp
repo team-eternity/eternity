@@ -2078,5 +2078,16 @@ bool R_IsSkyLikePortalCeiling(const sector_t &sector)
     sector.c_portal->type == R_PLANE);
 }
 
+//
+// True if line is a basic portal
+//
+bool R_IsSkyLikePortalWall(const line_t &line)
+{
+   // Just use the same flags, even if they may not be available from UDMF
+   return line.portal && !(line.pflags & (PF_DISABLED | PF_NOPASS)) && 
+      (line.portal->type == R_SKYBOX || line.portal->type == R_HORIZON || 
+         line.portal->type == R_PLANE);
+}
+
 // EOF
 

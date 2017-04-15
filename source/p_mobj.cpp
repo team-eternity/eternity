@@ -624,6 +624,15 @@ void P_XYMovement(Mobj* mo)
                }
             }
 
+            if(demo_version >= 342 && clip.blockline &&
+               (!clip.blockline->backsector ||
+                  clip.blockline->extflags & EX_ML_BLOCKALL) && 
+               R_IsSkyLikePortalWall(*clip.blockline))
+            {
+               mo->removeThinker();
+               return;
+            }
+
             P_ExplodeMissile(mo, clip.ceilingline ? clip.ceilingline->backsector :
                nullptr);
          }
