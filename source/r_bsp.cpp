@@ -48,6 +48,10 @@
 #include "v_alloc.h"
 #include "v_misc.h"
 
+// Microscopic distance to move rejectable segs from portal lines to avoid point
+// on line overlaps.
+static const float kPortalSegRejectionFudge = 1.f / 256;
+
 drawseg_t *ds_p;
 
 // killough 4/7/98: indicates doors closed wrt automap bugfix:
@@ -1681,8 +1685,8 @@ static bool R_allowBehindDivline(const dlnormal_t &dln, const seg_t *renderSeg)
    rend.dy = renderSeg->v2->y - rend.y;
 
    // HACK: pull render-seg to me as a slack to avoid on-line points
-   rend.x += M_FloatToFixed(dln.nx / 256.f);
-   rend.y += M_FloatToFixed(dln.ny / 256.f);
+   rend.x += M_FloatToFixed(dln.nx * kPortalSegRejectionFudge);
+   rend.y += M_FloatToFixed(dln.ny * kPortalSegRejectionFudge);
 
    const divline_t &dl = dln.dl;
 
@@ -1707,17 +1711,140 @@ static bool R_allowBehindDivline(const dlnormal_t &dln, const seg_t *renderSeg)
 }
 
 //
-// Checks seg against seg
+// Picks the two bounding box lines pointed towards the viewer.
 //
-bool R_AllowBehindSectorPortal(const fixed_t bbox[4], fixed_t x, fixed_t y)
+bool R_PickNearestBoxLines(const fixed_t bbox[4], dlnormal_t &dl1, dlnormal_t &dl2)
 {
-   divline_t dl;
-   dl.x = x;
-   dl.y = y;
-   dl.dx = 8 * viewsin; // just define the direction
-   dl.dy = -8 * viewcos;
-   // Return okay if any part is on the correct side
-   return P_BoxOnDivlineSide(bbox, dl) != 1;
+   dl2.dl.x = D_MAXINT;
+   if(viewx < bbox[BOXLEFT])
+   {
+      if(viewy < bbox[BOXBOTTOM])
+      {
+         dl1.dl.x = bbox[BOXLEFT];
+         dl1.dl.y = bbox[BOXTOP];
+         dl1.dl.dx = 0;
+         dl1.dl.dy = bbox[BOXBOTTOM] - bbox[BOXTOP];
+         dl1.nx = -1;
+         dl1.ny = 0;
+
+         dl2.dl.x = bbox[BOXLEFT];
+         dl2.dl.y = bbox[BOXBOTTOM];
+         dl2.dl.dx = bbox[BOXRIGHT] - bbox[BOXLEFT];
+         dl2.dl.dy = 0;
+         dl2.nx = 0;
+         dl2.ny = -1;
+      }
+      else if(viewy > bbox[BOXTOP])
+      {
+         // The divlines MUST be left to right relative to view.
+         dl1.dl.x = bbox[BOXRIGHT];
+         dl1.dl.y = bbox[BOXTOP];
+         dl1.dl.dx = bbox[BOXLEFT] - bbox[BOXRIGHT];
+         dl1.dl.dy = 0;
+         dl1.nx = 0;
+         dl1.ny = 1;
+
+         dl2.dl.x = bbox[BOXLEFT];
+         dl2.dl.y = bbox[BOXTOP];
+         dl2.dl.dx = 0;
+         dl2.dl.dy = bbox[BOXBOTTOM] - bbox[BOXTOP];
+         dl2.nx = -1;
+         dl2.ny = 0;
+      }
+      else
+      {
+         dl1.dl.x = bbox[BOXLEFT];
+         dl1.dl.y = bbox[BOXTOP];
+         dl1.dl.dx = 0;
+         dl1.dl.dy = bbox[BOXBOTTOM] - bbox[BOXTOP];
+         dl1.nx = -1;
+         dl1.ny = 0;
+      }
+   }
+   else if(viewx <= bbox[BOXRIGHT])
+   {
+      if(viewy < bbox[BOXBOTTOM])
+      {
+         dl1.dl.x = bbox[BOXLEFT];
+         dl1.dl.y = bbox[BOXBOTTOM];
+         dl1.dl.dx = bbox[BOXRIGHT] - bbox[BOXLEFT];
+         dl1.dl.dy = 0;
+         dl1.nx = 0;
+         dl1.ny = -1;
+      }
+      else if(viewy <= bbox[BOXTOP])
+         return false;   // if actor is below portal, just render everything
+      else
+      {
+         dl1.dl.x = bbox[BOXRIGHT];
+         dl1.dl.y = bbox[BOXTOP];
+         dl1.dl.dx = bbox[BOXLEFT] - bbox[BOXRIGHT];
+         dl1.dl.dy = 0;
+         dl1.nx = 0;
+         dl1.ny = 1;
+      }
+   }
+   else
+   {
+      if(viewy < bbox[BOXBOTTOM])
+      {
+         dl1.dl.x = bbox[BOXLEFT];
+         dl1.dl.y = bbox[BOXBOTTOM];
+         dl1.dl.dx = bbox[BOXRIGHT] - bbox[BOXLEFT];
+         dl1.dl.dy = 0;
+         dl1.nx = 0;
+         dl1.ny = -1;
+
+         dl2.dl.x = bbox[BOXRIGHT];
+         dl2.dl.y = bbox[BOXBOTTOM];
+         dl2.dl.dx = 0;
+         dl2.dl.dy = bbox[BOXTOP] - bbox[BOXBOTTOM];
+         dl2.nx = 1;
+         dl2.ny = 0;
+      }
+      else if(viewy > bbox[BOXTOP])
+      {
+         dl1.dl.x = bbox[BOXRIGHT];
+         dl1.dl.y = bbox[BOXBOTTOM];
+         dl1.dl.dx = 0;
+         dl1.dl.dy = bbox[BOXTOP] - bbox[BOXBOTTOM];
+         dl1.nx = 1;
+         dl1.ny = 0;
+
+         dl2.dl.x = bbox[BOXRIGHT];
+         dl2.dl.y = bbox[BOXTOP];
+         dl2.dl.dx = bbox[BOXLEFT] - bbox[BOXRIGHT];
+         dl2.dl.dy = 0;
+         dl2.nx = 0;
+         dl2.ny = 1;
+      }
+      else
+      {
+         dl1.dl.x = bbox[BOXRIGHT];
+         dl1.dl.y = bbox[BOXBOTTOM];
+         dl1.dl.dx = 0;
+         dl1.dl.dy = bbox[BOXTOP] - bbox[BOXBOTTOM];
+         dl1.nx = 1;
+         dl1.ny = 0;
+      }
+   }
+
+   return true;
+}
+
+//
+// Check seg against barrier bbox
+//
+static bool R_allowBehindSectorPortal(const fixed_t bbox[4], const seg_t &tryseg)
+{
+   dlnormal_t dl1;
+   dlnormal_t dl2;
+   
+   if(!R_PickNearestBoxLines(bbox, dl1, dl2))
+      return true;
+
+   return R_allowBehindDivline(dl1, &tryseg) && 
+      (dl2.dl.x == D_MAXINT || R_allowBehindDivline(dl2, &tryseg));
 }
 
 //
@@ -1752,13 +1879,8 @@ static void R_AddLine(seg_t *line, bool dynasegs)
       }
       else
       {
-         if(!R_AllowBehindSectorPortal(portalrender.w->barrier.bbox,
-            line->v1->x, line->v1->y) &&
-            !R_AllowBehindSectorPortal(portalrender.w->barrier.bbox,
-               line->v2->x, line->v2->y))
-         {
+         if(!R_allowBehindSectorPortal(portalrender.w->barrier.bbox, *line))
             return;
-         }
       }
    }
    // SoM: one of the byproducts of the portal height enforcement: The top 
