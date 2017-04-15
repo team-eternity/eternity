@@ -2271,9 +2271,9 @@ static void R_AddLine(seg_t *line, bool dynasegs)
       seg.top += clipx * seg.topstep;
       seg.bottom += clipx * seg.bottomstep;
 
-      if(seg.toptex)
+      if(seg.toptex || seg.t_window)
          seg.high += clipx * seg.highstep;
-      if(seg.bottomtex)
+      if(seg.bottomtex || seg.b_window)
          seg.low += clipx * seg.lowstep;
 
       x1 = floorx1 = 0;
@@ -2289,9 +2289,9 @@ static void R_AddLine(seg_t *line, bool dynasegs)
       seg.top2 -= clipx * seg.topstep;
       seg.bottom2 -= clipx * seg.bottomstep;
 
-      if(seg.toptex)
+      if(seg.toptex || seg.t_window)
          seg.high2 -= clipx * seg.highstep;
-      if(seg.bottomtex)
+      if(seg.bottomtex || seg.b_window)
          seg.low2 -= clipx * seg.lowstep;
 
       x2 = floorx2 = (view.width - 1.0f);
