@@ -2067,5 +2067,16 @@ void R_ApplyPortal(line_t &line, int portal)
          }
 }
 
+//
+// True if ceiling is a basic portal without overlay
+//
+bool R_IsSkyLikePortalCeiling(const sector_t &sector)
+{
+   return sector.c_portal && !(sector.c_pflags & (PF_DISABLED | PF_NOPASS)) &&
+   (!(sector.c_pflags & PS_OVERLAY) || !(sector.c_pflags & PO_OPACITYMASK)) &&
+   (sector.c_portal->type == R_SKYBOX || sector.c_portal->type == R_HORIZON ||
+    sector.c_portal->type == R_PLANE);
+}
+
 // EOF
 
