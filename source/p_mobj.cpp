@@ -889,7 +889,10 @@ static void P_ZMovement(Mobj* mo)
          if(clip.ceilingline &&
             clip.ceilingline->backsector &&
             (mo->z > clip.ceilingline->backsector->ceilingheight) &&
-            clip.ceilingline->backsector->intflags & SIF_SKY)
+            (clip.ceilingline->backsector->intflags & SIF_SKY ||
+            (demo_version >= 342 &&
+               clip.ceilingline->extflags & EX_ML_UPPERPORTAL &&
+               R_IsSkyLikePortalCeiling(*clip.ceilingline->backsector))))
          {
             mo->removeThinker();  // don't explode on skies
          }
