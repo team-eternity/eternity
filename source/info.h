@@ -293,6 +293,8 @@ enum
 
   MT_HPLAYERSKULL = 399,
 
+  MT_HGWANDPUFF1 = 428,
+
 // Start Eternity TC New Things
 
   MT_FOGPATCHS = 228,

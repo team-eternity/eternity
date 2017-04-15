@@ -12,13 +12,31 @@
 weaponinfo Staff
 {
   nextincycle  Gauntlets
-  previncycle  BFG9000
+  previncycle  Mace
 
   flags        FLEEMELEE|NOHITGHOSTS|SILENCER
   //mod          ""
   recoil       10
 
   tracker      WeaponStaff
+
+  states
+  @"
+  Ready:
+    STFF A 1 A_WeaponReady
+    loop
+  Deselect:
+    STFF A 1 A_Lower
+    loop
+  Select:
+    STFF A 1 A_Raise
+    loop
+  Fire:
+    STFF B 6
+    STFF C 8
+    STFF B 8 A_ReFire
+    goto ready
+  "@
 }
 
 weaponinfo GoldWand
@@ -36,6 +54,25 @@ weaponinfo GoldWand
   haptictime   1
 
   tracker      WeaponGoldWand
+
+  states
+  @"
+  Ready:
+    GWND A 1 A_WeaponReady
+    loop
+  Deselect:
+    GWND A 1 A_Lower
+    loop
+  Select:
+    GWND A 1 A_Raise
+    loop
+  Fire:
+    GWND B 3 
+    GWND C 5 A_FireGoldWandPL1
+    GWND D 3
+    GWND D 0 A_ReFire
+    goto Ready
+  "@
 }
 
 weaponinfo Crossbow

@@ -1440,6 +1440,9 @@ void A_FlameSnd(actionargs_t *actionargs);
 void A_ClearSkin(actionargs_t *);
 void A_PhoenixPuff(actionargs_t *);
 
+// MaxW 2017/04/15: Heretic weapon pointers
+void A_FireGoldWandPL1(actionargs_t *);
+
 // haleyjd 10/04/08: Hexen pointers
 #if 0
 void A_SetInvulnerable(Mobj *mo);
@@ -1764,6 +1767,9 @@ deh_bexptr deh_bexptrs[] =
    POINTER(FlameSnd),
    POINTER(ClearSkin),
    POINTER(PhoenixPuff),
+
+   // MaxW 2017/04/15: Heretic weapon pointers
+   POINTER(FireGoldWandPL1),
 
    // haleyjd 10/04/08: Hexen pointers
 #if 0

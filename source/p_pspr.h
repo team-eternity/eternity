@@ -86,10 +86,12 @@ int P_PrevWeapon(player_t *player);
 
 weaponinfo_t *P_SwitchWeapon(player_t *player);
 bool P_CheckAmmo(player_t *player);
+void P_SubtractAmmo(player_t *player, int compat_amt);
 void P_SetupPsprites(player_t *curplayer);
 void P_MovePsprites(player_t *curplayer);
 void P_DropWeapon(player_t *player);
 
+extern fixed_t bulletslope;
 void P_BulletSlope(Mobj *mo);
 
 weaponinfo_t *P_GetPlayerWeapon(player_t *player, int index);

@@ -2449,7 +2449,10 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
    // haleyjd 08/05/04: use new function
    z += P_SubRandom(pr_spawnpuff) << 10;
 
-   th = P_SpawnMobj(x, y, z, E_SafeThingType(MT_PUFF));
+   if(trace.puff)
+      th = P_SpawnMobj(x, y, z, trace.puff->index);
+   else
+      th = P_SpawnMobj(x, y, z, E_SafeThingType(MT_PUFF));
    th->momz = FRACUNIT;
    th->tics -= P_Random(pr_spawnpuff) & 3;
 

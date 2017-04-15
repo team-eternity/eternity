@@ -243,6 +243,7 @@ int E_GetWeaponNumForName(const char *name)
 // Processing Functions
 //
 
+// TODO: I dunno, something about the below comment
 // Warning: likely to get lost as there's no module for metastates currently!
 //IMPLEMENT_RTTI_TYPE(MetaState)
 

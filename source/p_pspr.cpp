@@ -1071,7 +1071,7 @@ void A_FirePlasma(actionargs_t *actionargs)
    P_SpawnPlayerMissile(mo, E_SafeThingType(MT_PLASMA));
 }
 
-static fixed_t bulletslope;
+fixed_t bulletslope;
 
 //
 // P_BulletSlope
