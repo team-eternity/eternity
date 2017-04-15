@@ -1679,6 +1679,7 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
    E_ProcessSoundDeltas(cfg, true); // see e_sound.cpp
    E_ProcessStateDeltas(cfg);       // see e_states.cpp
    E_ProcessThingDeltas(cfg);       // see e_things.cpp
+   E_ProcessWeaponDeltas(cfg);      // see e_weapons.cpp
 
    // 07/19/12: game properties
    E_ProcessGameProperties(cfg);    // see e_gameprops.cpp

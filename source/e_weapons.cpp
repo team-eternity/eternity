@@ -602,7 +602,7 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
       else // A weaponsec is worthless without its tracker
          E_EDFLoggedErr(2, "Tracker \"%s\" in weaponinfo[i] \"%s\" is undefined\n", tempeffectname, tempstr);
    }
-   else
+   else if(def)
       E_EDFLoggedErr(2, "No tracker defined for weaponsec \"%s\"\n", tempstr);
 
    if(IS_SET(ITEM_WPN_AMMO))
@@ -748,8 +748,20 @@ void E_ProcessWeaponDeltas(cfg_t *cfg)
 
    for(unsigned int i = 0; i < numDeltas; i++)
    {
+      const char *name;
+      int weaponNum;
       cfg_t *deltasec = cfg_getnsec(cfg, EDF_SEC_WPNDELTA, i);
-      E_processWeapon(i, deltasec, cfg, false);
+      // get thingtype to edit
+      if(!cfg_size(deltasec, ITEM_DELTA_NAME))
+         E_EDFLoggedErr(2, "E_ProcessWeaponDeltas: weapondelta requires name field\n");
+
+      name = cfg_getstr(deltasec, ITEM_DELTA_NAME);
+      weaponNum = E_WeaponNumForName(name);
+
+      E_processWeapon(weaponNum, deltasec, cfg, false);
+
+      E_EDFLogPrintf("\t\tApplied thingdelta #%d to %s(#%d)\n",
+                     i, weaponinfo[weaponNum]->name, weaponNum);
    }
 }
 
