@@ -174,6 +174,7 @@ struct skyplanedata_t
    int16_t *lightlevel;
    fixed_t *xoff, *yoff;
    float   *baseangle, *angle; // haleyjd 01/05/08: angles
+   const float *xscale, *yscale;
 };
 
 
@@ -232,7 +233,7 @@ portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic,
 
 portal_t *R_GetPlanePortal(int *pic, fixed_t *delta, int16_t *lightlevel, 
                            fixed_t *xoff, fixed_t *yoff, float *baseangle,
-                           float *angle);
+                           float *angle, const float *xscale, const float *yscale);
 
 void R_MovePortalOverlayToWindow(bool isceiling);
 void R_ClearPortals();

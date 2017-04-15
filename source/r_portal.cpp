@@ -703,12 +703,14 @@ portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic,
 portal_t *R_GetPlanePortal(int *pic, fixed_t *delta, 
                            int16_t *lightlevel, 
                            fixed_t *xoff, fixed_t *yoff,
-                           float *baseangle, float *angle)
+                           float *baseangle, float *angle, const float *xscale,
+                           const float *yscale)
 {
    portal_t *rover, *ret;
    edefstructvar(skyplanedata_t, skyplane);
 
-   if(!pic || !delta || !lightlevel || !xoff || !yoff || !baseangle || !angle)
+   if(!pic || !delta || !lightlevel || !xoff || !yoff || !baseangle || !angle ||
+      !xscale || !yscale)
       return NULL;
       
    skyplane.pic        = pic;
@@ -717,7 +719,9 @@ portal_t *R_GetPlanePortal(int *pic, fixed_t *delta,
    skyplane.xoff       = xoff;
    skyplane.yoff       = yoff;
    skyplane.baseangle  = baseangle; // haleyjd 01/05/08: flat angles
-   skyplane.angle      = angle;    
+   skyplane.angle      = angle;
+   skyplane.xscale = xscale;
+   skyplane.yscale = yscale;
 
    for(rover = portals; rover; rover = rover->next)
    {
@@ -804,8 +808,8 @@ static void R_RenderPlanePortal(pwindow_t *window)
                         *portal->data.plane.lightlevel, 
                         *portal->data.plane.xoff, 
                         *portal->data.plane.yoff,
-                         1.0,
-                            1.0,
+                        *portal->data.plane.xscale,
+                        *portal->data.plane.yscale,
                         angle, NULL, 0, 255, NULL);
 
    vplane = R_CheckPlane(vplane, window->minx, window->maxx);
@@ -1865,7 +1869,8 @@ void R_DefinePortal(const line_t &line)
    case portaltype_plane:
       portal = R_GetPlanePortal(&sector->ceilingpic, &sector->ceilingheight,
          &sector->lightlevel, &sector->ceiling_xoffs, &sector->ceiling_yoffs,
-         &sector->ceilingbaseangle, &sector->ceilingangle);
+         &sector->ceilingbaseangle, &sector->ceilingangle, 
+         &sector->ceiling_xscale, &sector->ceiling_yscale);
       break;
    case portaltype_horizon:
       portal = R_GetHorizonPortal(&sector->floorpic, &sector->ceilingpic,
