@@ -2084,9 +2084,11 @@ bool R_IsSkyLikePortalCeiling(const sector_t &sector)
 bool R_IsSkyLikePortalWall(const line_t &line)
 {
    // Just use the same flags, even if they may not be available from UDMF
+   // BLOCKALL lines count as solid to everything, so they will just explode
+   // stuff.
    return line.portal && !(line.pflags & (PF_DISABLED | PF_NOPASS)) && 
-      (line.portal->type == R_SKYBOX || line.portal->type == R_HORIZON || 
-         line.portal->type == R_PLANE);
+      !(line.extflags & EX_ML_BLOCKALL) && (line.portal->type == R_SKYBOX || 
+         line.portal->type == R_HORIZON || line.portal->type == R_PLANE);
 }
 
 // EOF
