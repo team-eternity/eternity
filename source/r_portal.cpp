@@ -646,7 +646,9 @@ portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic,
                              fixed_t *floorxoff, fixed_t *flooryoff, 
                              fixed_t *ceilingxoff, fixed_t *ceilingyoff,
                              float *floorbaseangle, float *floorangle,
-                             float *ceilingbaseangle, float *ceilingangle)
+                             float *ceilingbaseangle, float *ceilingangle,
+                             const float *floorxscale, const float *flooryscale,
+                             const float *ceilingxscale, const float *ceilingyscale)
 {
    portal_t *rover, *ret;
    edefstructvar(horizondata_t, horizon);
@@ -654,7 +656,8 @@ portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic,
    if(!floorpic || !ceilingpic || !floorz || !ceilingz || 
       !floorlight || !ceilinglight || !floorxoff || !flooryoff || 
       !ceilingxoff || !ceilingyoff || !floorbaseangle || !floorangle ||
-      !ceilingbaseangle || !ceilingangle)
+      !ceilingbaseangle || !ceilingangle || !floorxscale || !flooryscale ||
+      !ceilingxscale || !ceilingyscale)
       return NULL;
 
    horizon.ceilinglight     = ceilinglight;
@@ -671,6 +674,10 @@ portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic,
    horizon.floorangle       = floorangle;
    horizon.ceilingbaseangle = ceilingbaseangle;
    horizon.ceilingangle     = ceilingangle;
+   horizon.floorxscale = floorxscale;
+   horizon.flooryscale = flooryscale;
+   horizon.ceilingxscale = ceilingxscale;
+   horizon.ceilingyscale = ceilingyscale;
 
    for(rover = portals; rover; rover = rover->next)
    {
@@ -849,7 +856,8 @@ static void R_RenderHorizonPortal(pwindow_t *window)
                           *portal->data.horizon.ceilinglight, 
                           *portal->data.horizon.ceilingxoff, 
                           *portal->data.horizon.ceilingyoff,
-                          1.0, 1.0,
+                          *portal->data.horizon.ceilingxscale, 
+                          *portal->data.horizon.ceilingyscale,
                           ceilingangle, NULL, 0, 255, NULL);
 
    // FIXME: Replace the 1.0s?
@@ -858,7 +866,8 @@ static void R_RenderHorizonPortal(pwindow_t *window)
                              *portal->data.horizon.floorlight, 
                              *portal->data.horizon.floorxoff, 
                              *portal->data.horizon.flooryoff,
-                             1.0, 1.0,
+                             *portal->data.horizon.floorxscale,
+                             *portal->data.horizon.flooryscale,
                              floorangle, NULL, 0, 255, NULL);
 
    topplane = R_CheckPlane(topplane, window->minx, window->maxx);
@@ -1826,7 +1835,9 @@ void R_DefinePortal(const line_t &line)
          &sector->lightlevel, &sector->floor_xoffs, &sector->floor_yoffs,
          &sector->ceiling_xoffs, &sector->ceiling_yoffs,
          &sector->floorbaseangle, &sector->floorangle,
-         &sector->ceilingbaseangle, &sector->ceilingangle);
+         &sector->ceilingbaseangle, &sector->ceilingangle,
+         &sector->floor_xscale, &sector->floor_yscale, &sector->ceiling_xscale,
+         &sector->ceiling_yscale);
       break;
    case portaltype_skybox:
       skycam = sector->thinglist;
