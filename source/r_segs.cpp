@@ -154,7 +154,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
       column.texmid = column.texmid - viewz;
    }
 
-   column.texmid += segclip.line->sidedef->rowoffset;
+   column.texmid += segclip.line->sidedef->rowoffset - ds->deltaz;
    
    // SoM 10/19/02: deep water colormap fixes
    //if (fixedcolormap)
@@ -841,6 +841,7 @@ void R_StoreWallRange(const int start, const int stop)
    ds_p->dist2    = (ds_p->dist1 = segclip.dist) + segclip.diststep * (segclip.x2 - segclip.x1);
    ds_p->diststep = segclip.diststep;
    ds_p->colormap = scalelight;
+   ds_p->deltaz = 0; // init with 0
    
    if(segclip.clipsolid)
       R_CloseDSP();
@@ -880,6 +881,8 @@ void R_StoreWallRange(const int start, const int stop)
          xlen = segclip.x2 - segclip.x1 + 1;
 
          ds_p->maskedtexturecol = lastopening - segclip.x1;
+         if(portalrender.active && portalrender.w->portal->type != R_SKYBOX)
+            ds_p->deltaz = viewz - portalrender.w->vz;
          
          mtc = lastopening;
 
