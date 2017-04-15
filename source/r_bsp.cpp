@@ -1253,7 +1253,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
          seg.line->linedef->extflags & EX_ML_UPPERPORTAL;
 
    bool toohigh = havetportal && portalrender.w &&
-   portalrender.w->type == pw_floor &&
+   portalrender.w->type == pw_floor && portalrender.w->portal->type != R_SKYBOX &&
    portalrender.w->planez + viewz - portalrender.w->vz <= seg.backsec->ceilingheight;
 
    if(!toohigh && !havetportal && heightchange && 
@@ -1353,7 +1353,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    bool havebportal = seg.backsec && seg.backsec->f_portal &&
          seg.line->linedef->extflags & EX_ML_LOWERPORTAL;
    bool toolow = havebportal && portalrender.w &&
-   portalrender.w->type == pw_ceiling &&
+   portalrender.w->type == pw_ceiling && portalrender.w->portal->type != R_SKYBOX &&
    portalrender.w->planez + viewz - portalrender.w->vz >= seg.backsec->floorheight;
 
    // SoM: Get this from the actual sector because R_FakeFlat can mess with heights.
@@ -1517,7 +1517,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    bool havetportal = seg.backsec && seg.backsec->c_portal &&
          seg.line->linedef->extflags & EX_ML_UPPERPORTAL;
    bool toohigh = havetportal && portalrender.w &&
-   portalrender.w->type == pw_floor &&
+   portalrender.w->type == pw_floor && portalrender.w->portal->type != R_SKYBOX &&
    portalrender.w->planez + viewz - portalrender.w->vz <= seg.backsec->ceilingheight;
 
    if(!toohigh && !havetportal &&
@@ -1624,7 +1624,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    bool havebportal = seg.backsec && seg.backsec->f_portal &&
          seg.line->linedef->extflags & EX_ML_LOWERPORTAL;
    bool toolow = havebportal && portalrender.w &&
-   portalrender.w->type == pw_ceiling &&
+   portalrender.w->type == pw_ceiling && portalrender.w->portal->type != R_SKYBOX &&
    portalrender.w->planez + viewz - portalrender.w->vz >= seg.backsec->floorheight;
 
    // SoM: Get this from the actual sector because R_FakeFlat can mess with heights.
