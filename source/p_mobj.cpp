@@ -597,7 +597,10 @@ void P_XYMovement(Mobj* mo)
             // explode a missile
 
             if(clip.ceilingline && clip.ceilingline->backsector &&
-               clip.ceilingline->backsector->intflags & SIF_SKY)
+               (clip.ceilingline->backsector->intflags & SIF_SKY || 
+               (demo_version >= 342 && 
+                  clip.ceilingline->extflags & EX_ML_UPPERPORTAL &&
+                  R_IsSkyLikePortalCeiling(*clip.ceilingline->backsector))))
             {
                if (demo_compatibility ||  // killough
                   mo->z > clip.ceilingline->backsector->ceilingheight)
