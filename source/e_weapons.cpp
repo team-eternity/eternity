@@ -436,7 +436,6 @@ static void E_CopyWeapon(int num, int pnum)
    MetaTable  *meta;
    int         id;
    int         generation;
-   itemeffect_t  *ammo;
    weaponinfo_t *nextInCycle, *prevInCycle;
 
    this_mi = weaponinfo[num];
@@ -448,7 +447,6 @@ static void E_CopyWeapon(int num, int pnum)
    meta = this_mi->meta;
    id = this_mi->id;
    generation = this_mi->generation;
-   ammo = this_mi->ammo;
    nextInCycle = this_mi->nextInCycle;
    prevInCycle = this_mi->prevInCycle;
 
@@ -470,7 +468,6 @@ static void E_CopyWeapon(int num, int pnum)
    this_mi->name = name;
    this_mi->id = id;
    this_mi->generation = generation;
-   this_mi->ammo = ammo; // YES, THIS POINTER ASSIGNMENT IS INTENTIONAL
    this_mi->nextInCycle = nextInCycle;
    this_mi->prevInCycle = prevInCycle;
 
@@ -519,7 +516,7 @@ static int E_resolveParentWeapon(cfg_t *thingsec, const char *tprop)
 
 //
 // Process a single weaponinfo
-// TODO: Deltas, inheritance
+// TODO: Deltas
 //
 static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
 {
