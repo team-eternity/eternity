@@ -358,14 +358,14 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
       }
 
       if(demo_version >= 342 && li->backsector &&
-         (li->extflags & EX_ML_UPPERPORTAL &&
+         ((li->extflags & EX_ML_UPPERPORTAL &&
             li->backsector->ceilingheight < li->frontsector->ceilingheight &&
             li->backsector->ceilingheight < z &&
             R_IsSkyLikePortalCeiling(*li->backsector)) ||
             (li->extflags & EX_ML_LOWERPORTAL &&
                li->backsector->floorheight > li->frontsector->floorheight &&
                li->backsector->floorheight > z &&
-               R_IsSkyLikePortalFloor(*li->backsector)))
+               R_IsSkyLikePortalFloor(*li->backsector))))
       {
          return false;
       }
