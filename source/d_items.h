@@ -61,6 +61,7 @@ struct weaponinfo_t
    int          readystate;
    int          atkstate;
    int          flashstate;
+   int          holdstate;    // MaxW 2017/04/16: state jumped too if fire is held
    int          ammopershot;  // haleyjd 08/10/02: ammo per shot field
 
    // haleyjd 05/31/14: more dynamic weapons work

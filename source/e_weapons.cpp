@@ -262,6 +262,7 @@ static const char *nativeWepStateLabels[] =
    "Ready",    // readystate
    "Fire",     // atkstate
    "Flash",    // flashstate
+   "Hold",     // holdstate
 };
 
 enum wepstatetypes_e
@@ -270,7 +271,8 @@ enum wepstatetypes_e
    WSTATE_DESELECT,
    WSTATE_READY,
    WSTATE_FIRE,
-   WSTATE_FLASH
+   WSTATE_FLASH,
+   WSTATE_HOLD
 };
 
 #define NUMNATIVEWSTATES earrlen(nativeWepStateLabels)
@@ -301,6 +303,7 @@ int *E_GetNativeWepStateLoc(weaponinfo_t *wi, const char *label)
    case WSTATE_READY:    ret = &wi->readystate; break;
    case WSTATE_FIRE:     ret = &wi->atkstate;   break;
    case WSTATE_FLASH:    ret = &wi->flashstate; break;
+   case WSTATE_HOLD:     ret = &wi->holdstate;  break;
    default:
       break;
    }

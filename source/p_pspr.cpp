@@ -629,6 +629,9 @@ void A_ReFire(actionargs_t *actionargs)
    {
       player->refire++;
       P_FireWeapon(player);
+      const int holdstate = player->readyweaponnew->holdstate;
+      if(holdstate)
+         P_SetPsprite(player, ps_weapon, holdstate);
    }
    else
    {
