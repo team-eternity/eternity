@@ -296,6 +296,7 @@ enum
    // Heretic weapon projectiles
   MT_HORNRODFX1 = 425,
   MT_GOLDWANDPUFF1 = 428,
+  MT_PHOENIXFX1    = 430,
 
 // Start Eternity TC New Things
 

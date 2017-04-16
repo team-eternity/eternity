@@ -40,6 +40,10 @@
 
 #include "p_map.h"
 
+
+// TODO: Add a define for E_ThingNumForDEHNum(foo) for when it's only needed once
+// per-function? Shouldn't matter due to constant folding in release config anyways.
+
 void A_FireGoldWandPL1(actionargs_t *actionargs)
 {
    Mobj     *mo = actionargs->actor;
@@ -74,6 +78,22 @@ void A_FireSkullRodPL1(actionargs_t *actionargs)
    {
       P_SetMobjState(mo, mo->state->nextstate);
    }
+}
+
+void A_FirePhoenixPL1(actionargs_t *actionargs)
+{
+   player_t *player = actionargs->actor->player;
+   angle_t angle;
+
+   P_SubtractAmmo(player, 1);
+   const int tnum = E_ThingNumForDEHNum(MT_PHOENIXFX1);
+   P_SpawnPlayerMissile(player->mo, tnum);
+   // TODO: This is from Choco, why is it commented out?
+   //P_SpawnPlayerMissile(player->mo, MT_MNTRFX2);
+   angle = player->mo->angle + ANG180;
+   angle >>= ANGLETOFINESHIFT;
+   player->mo->momx += FixedMul(4 * FRACUNIT, finecosine[angle]);
+   player->mo->momy += FixedMul(4 * FRACUNIT, finesine[angle]);
 }
 
 // EOF
