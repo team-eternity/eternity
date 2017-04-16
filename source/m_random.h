@@ -223,7 +223,9 @@ typedef enum {
   pr_rogueblood,  // Strife blood spawning
   pr_drawblood,   // Missile blood-drawing chance
   pr_hexenteleport,  // ioanch 20160329: used by Hexen teleporters
+  // TODO: Reorder the below before final merge
   pr_goldwand,    // A_FireGoldWandPL1
+  pr_skullrod,    // A_FireSkullRodPL1
 
   NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;

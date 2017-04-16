@@ -179,7 +179,7 @@ weaponinfo SkullRod
     HROD A 1 A_Raise
     loop
   Fire:
-    HROD AB 4
+    HROD AB 4 A_FireSkullRodPL1
     HROD B 0 A_ReFire
     goto Ready
   "@

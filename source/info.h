@@ -293,7 +293,9 @@ enum
 
   MT_HPLAYERSKULL = 399,
 
-  MT_HGWANDPUFF1 = 428,
+   // Heretic weapon projectiles
+  MT_HORNRODFX1 = 425,
+  MT_GOLDWANDPUFF1 = 428,
 
 // Start Eternity TC New Things
 

@@ -52,10 +52,28 @@ void A_FireGoldWandPL1(actionargs_t *actionargs)
    if(player->refire)
       angle += P_SubRandom(pr_goldwand) << 18;
 
-   const int tnum = E_ThingNumForDEHNum(MT_HGWANDPUFF1);
+   const int tnum = E_ThingNumForDEHNum(MT_GOLDWANDPUFF1);
    mobjinfo_t  *puff = mobjinfo[tnum];
    P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage, puff);
    S_StartSound(player->mo, sfx_gldhit);
+}
+
+void A_FireSkullRodPL1(actionargs_t *actionargs)
+{
+   player_t *player = actionargs->actor->player;
+   Mobj *mo;
+
+   if(!P_CheckAmmo(player))
+      return;
+
+   P_SubtractAmmo(player, 1);
+   const int tnum = E_ThingNumForDEHNum(MT_HORNRODFX1);
+   mo = P_SpawnPlayerMissile(player->mo, tnum);
+   // Randomize the first frame
+   if(mo && P_Random(pr_skullrod) > 128)
+   {
+      P_SetMobjState(mo, mo->state->nextstate);
+   }
 }
 
 // EOF

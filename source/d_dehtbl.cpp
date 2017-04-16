@@ -1442,6 +1442,7 @@ void A_PhoenixPuff(actionargs_t *);
 
 // MaxW 2017/04/15: Heretic weapon pointers
 void A_FireGoldWandPL1(actionargs_t *);
+void A_FireSkullRodPL1(actionargs_t *);
 
 // haleyjd 10/04/08: Hexen pointers
 #if 0
@@ -1770,6 +1771,7 @@ deh_bexptr deh_bexptrs[] =
 
    // MaxW 2017/04/15: Heretic weapon pointers
    POINTER(FireGoldWandPL1),
+   POINTER(FireSkullRodPL1),
 
    // haleyjd 10/04/08: Hexen pointers
 #if 0
