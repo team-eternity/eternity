@@ -50,6 +50,14 @@ enum
    BSPEC_E5M8    = 0x00000080,
 };
 
+// Sector colormap override
+enum
+{
+   INFO_SECMAP_NORMAL,
+   INFO_SECMAP_BOOM,
+   INFO_SECMAP_SMMU
+};
+
 // levelaction structures
 struct levelaction_t
 {
@@ -112,6 +120,7 @@ struct LevelInfo_t
    const char *outdoorFog;    // outdoor fogmap -- 03/04/07
    bool useFullBright;        // use fullbright on this map?
    bool unevenLight;          // use uneven wall lighting?
+   int sectorColormaps;       // whether to override Boom or SMMU colormaps
 
    // sky stuff
    const char *skyName;       // normal sky name (F_SKY1 or top of double)

@@ -41,6 +41,7 @@
 #include "p_user.h"
 #include "p_partcl.h"
 #include "polyobj.h"
+#include "s_musinfo.h"
 #include "s_sndseq.h"
 
 int leveltime;
@@ -237,6 +238,7 @@ void Thinker::RunThinkers(void)
       else
          currentthinker->Think();
    }
+   S_MusInfoUpdate();
 }
 
 //

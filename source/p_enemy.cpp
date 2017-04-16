@@ -45,6 +45,7 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "ev_specials.h"
 #include "g_game.h"
 #include "m_bbox.h"
 #include "m_random.h"
@@ -372,14 +373,25 @@ static bool P_IsOnLift(const Mobj *actor)
    {
       for(int l = -1; (l = P_FindLineFromLineArg0(&line, l)) >= 0;)
       {
-         switch(lines[l].special)
+         // FIXME: I'm still keeping the old code because I don't know of any MBF
+         // demos which can verify all of this. If you're confident you found one,
+         // feel free to remove this block.
+         if(demo_version <= 203)
          {
-         case  10: case  14: case  15: case  20: case  21: case  22:
-         case  47: case  53: case  62: case  66: case  67: case  68:
-         case  87: case  88: case  95: case 120: case 121: case 122:
-         case 123: case 143: case 162: case 163: case 181: case 182:
-         case 144: case 148: case 149: case 211: case 227: case 228:
-         case 231: case 232: case 235: case 236:
+            switch(lines[l].special)
+            {
+            case  10: case  14: case  15: case  20: case  21: case  22:
+            case  47: case  53: case  62: case  66: case  67: case  68:
+            case  87: case  88: case  95: case 120: case 121: case 122:
+            case 123: case 143: case 162: case 163: case 181: case 182:
+            case 144: case 148: case 149: case 211: case 227: case 228:
+            case 231: case 232: case 235: case 236:
+               return true;
+            }
+         }
+         else if(EV_CompositeActionFlags(EV_ActionForSpecial(lines[l].special)) &
+            EV_ISMBFLIFT)
+         {
             return true;
          }
       }

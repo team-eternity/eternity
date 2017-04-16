@@ -802,6 +802,7 @@
     <ClCompile Include="..\source\p_portalcross.cpp" />
     <ClCompile Include="..\source\sdl\i_sdltimer.cpp" />
     <ClCompile Include="..\source\s_formats.cpp" />
+    <ClCompile Include="..\source\s_musinfo.cpp" />
     <ClCompile Include="..\source\s_reverb.cpp" />
     <ClCompile Include="..\source\v_image.cpp" />
     <ClCompile Include="..\Source\wi_stuff.cpp">
@@ -2125,6 +2126,7 @@
     <ClInclude Include="..\source\r_textur.h" />
     <ClInclude Include="..\source\sdl\i_sdltimer.h" />
     <ClInclude Include="..\source\s_formats.h" />
+    <ClInclude Include="..\source\s_musinfo.h" />
     <ClInclude Include="..\source\s_reverb.h" />
     <ClInclude Include="..\source\v_image.h" />
     <ClInclude Include="..\Source\wi_stuff.h" />

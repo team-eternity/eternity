@@ -126,6 +126,10 @@ is in, as opposed to where the x and y args are.
 Add a 4th arg to A_Scratch, which designates means-of-death. This is achieved
 by referring to the key (string), or the "num" property (int).
 
+-------------------------------------------------------------------------------
+2017/03/26
+Added solutions and folders for Visual Studio 2017.
+
 ================================================================================
 EOF
 ================================================================================

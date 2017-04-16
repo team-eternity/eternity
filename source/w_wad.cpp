@@ -1148,7 +1148,7 @@ void WadDirectory::coalesceMarkedResources()
 
    // scan the entire wad directory; save off lumps that belong in each
    // namespace
-   for(ns = lumpinfo_t::ns_sprites; ns < lumpinfo_t::ns_max; ns++)
+   for(ns = lumpinfo_t::ns_MIN_LOCAL; ns < lumpinfo_t::ns_max; ns++)
    {
       for(int lumpnum = 0; lumpnum < numlumps; lumpnum++)
          namespaces[ns].checkLump(lumpinfo[lumpnum]);

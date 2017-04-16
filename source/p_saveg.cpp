@@ -56,6 +56,7 @@
 #include "r_draw.h"
 #include "r_main.h"
 #include "r_state.h"
+#include "s_musinfo.h"
 #include "s_sndseq.h"
 #include "st_stuff.h"
 #include "v_misc.h"
@@ -616,6 +617,9 @@ static void P_ArchiveWorld(SaveArchive &arc)
 
    // haleyjd 08/30/09: save state of lightning engine
    arc << NextLightningFlash << LightningFlash << LevelSky << LevelTempSky;
+
+   // ioanch: musinfo stuff
+   S_MusInfoArchive(arc);
 }
 
 //
@@ -811,23 +815,24 @@ static void P_ArchiveMap(SaveArchive &arc)
 {
    arc << automapactive << followplayer << automap_grid << markpointnum;
 
-   if(markpointnum)
+   if(arc.isSaving())
    {
-      if(arc.isSaving())
-      {
+      if(markpointnum)
          for(int i = 0; i < markpointnum; i++)
             arc << markpoints[i].x << markpoints[i].y;
-      }
-      else
-      {
-         if(automapactive)
-            AM_Start();
+   }
+   else
+   {
+      if(automapactive)
+         AM_Start();
 
+      if(markpointnum)
+      {
          while(markpointnum >= markpointnum_max)
          {
             markpointnum_max = markpointnum_max ? markpointnum_max * 2 : 16;
-            markpoints = erealloc(mpoint_t *, markpoints, 
-                                  sizeof *markpoints * markpointnum_max);
+            markpoints = erealloc(mpoint_t *, markpoints,
+               sizeof *markpoints * markpointnum_max);
          }
 
          for(int i = 0; i < markpointnum; i++)

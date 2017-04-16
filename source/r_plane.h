@@ -127,6 +127,10 @@ extern cb_plane_t plane;
 
 extern cb_slopespan_t slopespan;
 
+planehash_t *R_NewOverlaySet();
+void R_FreeOverlaySet(planehash_t *set);
+void R_MapInitOverlaySets();
+
 #endif
 
 //----------------------------------------------------------------------------

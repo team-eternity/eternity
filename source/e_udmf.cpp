@@ -187,17 +187,17 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          if(us.colormaptop.strCaseCmp(DEFAULT_default))
          {
             ss->topmap    = R_ColormapNumForName(us.colormaptop.constPtr());
-            setupSettings.setSectorFlag(i, UDMF_SECTOR_INIT_COLORMAPPED);
+            setupSettings.setSectorFlag(i, UDMF_SECTOR_INIT_COLOR_TOP);
          }
          if(us.colormapmid.strCaseCmp(DEFAULT_default))
          {
             ss->midmap    = R_ColormapNumForName(us.colormapmid.constPtr());
-            setupSettings.setSectorFlag(i, UDMF_SECTOR_INIT_COLORMAPPED);
+            setupSettings.setSectorFlag(i, UDMF_SECTOR_INIT_COLOR_MIDDLE);
          }
          if(us.colormapbottom.strCaseCmp(DEFAULT_default))
          {
             ss->bottommap = R_ColormapNumForName(us.colormapbottom.constPtr());
-            setupSettings.setSectorFlag(i, UDMF_SECTOR_INIT_COLORMAPPED);
+            setupSettings.setSectorFlag(i, UDMF_SECTOR_INIT_COLOR_BOTTOM);
          }
 
          // Portal fields

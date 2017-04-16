@@ -1629,13 +1629,20 @@ void E_LoadSectorExt(line_t *line, UDMFSetupSettings &setupSettings)
 
    // colormaps
    if(edsector->topmap >= 0)
-      sector->topmap    = edsector->topmap;
+   {
+      sector->topmap = edsector->topmap;
+      setupSettings.setSectorFlag(sector - sectors, UDMF_SECTOR_INIT_COLOR_TOP);
+   }
    if(edsector->midmap >= 0)
-      sector->midmap    = edsector->midmap;
+   {
+      sector->midmap = edsector->midmap;
+      setupSettings.setSectorFlag(sector - sectors, UDMF_SECTOR_INIT_COLOR_MIDDLE);
+   }
    if(edsector->bottommap >= 0)
+   {
       sector->bottommap = edsector->bottommap;
-   if(edsector->topmap >= 0 || edsector->midmap >= 0 || edsector->bottommap >= 0)
-      setupSettings.setSectorFlag(sector - sectors, UDMF_SECTOR_INIT_COLORMAPPED);
+      setupSettings.setSectorFlag(sector - sectors, UDMF_SECTOR_INIT_COLOR_BOTTOM);
+   }
 
    // terrain overrides
    sector->floorterrain   = edsector->floorterrain;
