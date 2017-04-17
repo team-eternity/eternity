@@ -89,7 +89,7 @@ weaponinfo GoldWand
     GWND D 0 A_ReFire
     goto Ready
   "@
-}/
+}*/
 
 weaponinfo Crossbow
 {

@@ -116,9 +116,9 @@ void A_FireGoldWandPL2(actionargs_t *actionargs)
 
 void A_FireCrossbowPL1(actionargs_t *actionargs)
 {
-   Mobj *pmo = actionargs->actor;
+   Mobj     *pmo    = actionargs->actor;
    player_t *player = pmo->player;
-   const int tnum = E_ThingNumForDEHNum(MT_CRBOWFX3);
+   const int tnum   = E_ThingNumForDEHNum(MT_CRBOWFX3);
 
    P_SubtractAmmo(player, 1);
    P_SpawnPlayerMissile(pmo, E_ThingNumForDEHNum(MT_CRBOWFX1));
@@ -129,7 +129,7 @@ void A_FireCrossbowPL1(actionargs_t *actionargs)
 void A_FireSkullRodPL1(actionargs_t *actionargs)
 {
    player_t *player = actionargs->actor->player;
-   Mobj *mo;
+   Mobj     *mo;
 
    if(!P_CheckAmmo(player))
       return;
@@ -145,7 +145,7 @@ void A_FireSkullRodPL1(actionargs_t *actionargs)
 void A_FirePhoenixPL1(actionargs_t *actionargs)
 {
    player_t *player = actionargs->actor->player;
-   angle_t angle;
+   angle_t   angle;
 
    P_SubtractAmmo(player, 1);
    const int tnum = E_ThingNumForDEHNum(MT_PHOENIXFX1);
@@ -161,9 +161,9 @@ void A_FirePhoenixPL1(actionargs_t *actionargs)
 void A_FireBlasterPL1(actionargs_t *actionargs)
 {
    player_t *player = actionargs->actor->player;
-   Mobj *mo = player->mo;
-   angle_t angle;
-   int damage;
+   Mobj     *mo     = player->mo;
+   angle_t   angle;
+   int       damage;
 
 
    S_StartSound(mo, sfx_gldhit);
