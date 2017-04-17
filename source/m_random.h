@@ -225,6 +225,7 @@ typedef enum {
   pr_hexenteleport,  // ioanch 20160329: used by Hexen teleporters
   // TODO: Reorder the below before final merge
   pr_goldwand,    // A_FireGoldWandPL1
+  pr_goldwand2,   // A_FireGoldWandPL2
   pr_skullrod,    // A_FireSkullRodPL1
   pr_blaster,     // A_FireBlasterPL1
   pr_staff,       // A_StaffAttackPL1

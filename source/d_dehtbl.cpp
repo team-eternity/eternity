@@ -1443,6 +1443,7 @@ void A_PhoenixPuff(actionargs_t *);
 // MaxW 2017/04/15: Heretic weapon pointers
 void A_StaffAttackPL1(actionargs_t *);
 void A_FireGoldWandPL1(actionargs_t *);
+void A_FireGoldWandPL2(actionargs_t *);
 void A_FireSkullRodPL1(actionargs_t *);
 void A_FirePhoenixPL1(actionargs_t *);
 void A_FireBlasterPL1(actionargs_t *);
@@ -1776,6 +1777,7 @@ deh_bexptr deh_bexptrs[] =
    // MaxW 2017/04/15: Heretic weapon pointers
    POINTER(StaffAttackPL1),
    POINTER(FireGoldWandPL1),
+   POINTER(FireGoldWandPL2),
    POINTER(FireSkullRodPL1),
    POINTER(FirePhoenixPL1),
    POINTER(FireBlasterPL1),

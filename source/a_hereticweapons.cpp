@@ -49,9 +49,9 @@
 void A_StaffAttackPL1(actionargs_t *actionargs)
 {
    player_t *player = actionargs->actor->player;
-   int damage = 5 + (P_Random(pr_staff) & 15);
-   angle_t angle = player->mo->angle + (P_SubRandom(pr_staffangle) << 18);
-   fixed_t slope = P_AimLineAttack(player->mo, angle, MELEERANGE, 0);
+   int       damage = 5 + (P_Random(pr_staff) & 15);
+   angle_t   angle  = player->mo->angle + (P_SubRandom(pr_staffangle) << 18);
+   fixed_t   slope  =  P_AimLineAttack(player->mo, angle, MELEERANGE, 0);
 
    const int tnum = E_ThingNumForDEHNum(MT_STAFFPUFF);
    mobjinfo_t *puff = mobjinfo[tnum];
@@ -69,9 +69,9 @@ void A_StaffAttackPL1(actionargs_t *actionargs)
 
 void A_FireGoldWandPL1(actionargs_t *actionargs)
 {
-   Mobj     *mo = actionargs->actor;
+   Mobj     *mo     = actionargs->actor;
    player_t *player = mo->player;
-   angle_t   angle = mo->angle;
+   angle_t   angle  = mo->angle;
    const int damage = 7 + (P_Random(pr_goldwand) & 7);;
 
    P_SubtractAmmo(player, 1);
@@ -82,6 +82,35 @@ void A_FireGoldWandPL1(actionargs_t *actionargs)
    const int tnum = E_ThingNumForDEHNum(MT_GOLDWANDPUFF1);
    mobjinfo_t  *puff = mobjinfo[tnum];
    P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage, puff);
+   S_StartSound(player->mo, sfx_gldhit);
+}
+
+void A_FireGoldWandPL2(actionargs_t *actionargs)
+{
+   Mobj     *mo     = actionargs->actor;
+   player_t *player = mo->player;
+   fixed_t momz, z = mo->z + 32 * FRACUNIT;
+   int i;
+   angle_t angle;
+   int damage;
+
+   mo = player->mo;
+   P_SubtractAmmo(player, -1);
+   P_BulletSlope(mo);
+   const int tnum = E_ThingNumForDEHNum(MT_GOLDWANDFX2);
+   mobjinfo_t *fx = mobjinfo[tnum];
+   momz = FixedMul(fx->speed, bulletslope);
+   P_SpawnMissileAngle(mo, tnum, mo->angle - (ANG45 / 8), momz, z);
+   P_SpawnMissileAngle(mo, tnum, mo->angle + (ANG45 / 8), momz, z);
+   angle = mo->angle - (ANG45 / 8);
+   for(i = 0; i < 5; i++)
+   {
+      const int pnum = E_ThingNumForDEHNum(MT_GOLDWANDPUFF2);
+      mobjinfo_t  *puff = mobjinfo[pnum];
+      damage = 1 + (P_Random(pr_goldwand2) & 7);
+      P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage, puff);
+      angle += ((ANG45 / 8) * 2) / 4;
+   }
    S_StartSound(player->mo, sfx_gldhit);
 }
 
