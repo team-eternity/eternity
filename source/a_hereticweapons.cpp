@@ -36,14 +36,36 @@
 #include "e_things.h"
 #include "m_random.h"
 #include "p_mobj.h"
-#include "tables.h"
+#include "r_main.h"
 #include "s_sound.h"
+#include "tables.h"
 
 #include "p_map.h"
 
 
 // TODO: Add a define for E_ThingNumForDEHNum(foo) for when it's only needed once
 // per-function? Shouldn't matter due to constant folding in release config anyways.
+
+void A_StaffAttackPL1(actionargs_t *actionargs)
+{
+   player_t *player = actionargs->actor->player;
+   int damage = 5 + (P_Random(pr_staff) & 15);
+   angle_t angle = player->mo->angle + (P_SubRandom(pr_staffangle) << 18);
+   fixed_t slope = P_AimLineAttack(player->mo, angle, MELEERANGE, 0);
+
+   const int tnum = E_ThingNumForDEHNum(MT_STAFFPUFF);
+   mobjinfo_t *puff = mobjinfo[tnum];
+
+   P_LineAttack(player->mo, angle, MELEERANGE, slope, damage, puff);
+   if(clip.linetarget)
+   {
+      //S_StartSound(player->mo, sfx_stfhit);
+      // turn to face target
+      player->mo->angle = R_PointToAngle2(player->mo->x,
+                                          player->mo->y, clip.linetarget->x,
+                                          clip.linetarget->y);
+   }
+}
 
 void A_FireGoldWandPL1(actionargs_t *actionargs)
 {
@@ -67,9 +89,7 @@ void A_FireCrossbowPL1(actionargs_t *actionargs)
 {
    Mobj *pmo = actionargs->actor;
    player_t *player = pmo->player;
-   fixed_t momz, slope = 0, z = pmo->z + DEFAULTMISSILEZ;
    const int tnum = E_ThingNumForDEHNum(MT_CRBOWFX3);
-   momz = FixedMul(mobjinfo[tnum]->speed, slope);
 
    P_SubtractAmmo(player, 1);
    P_SpawnPlayerMissile(pmo, E_ThingNumForDEHNum(MT_CRBOWFX1));

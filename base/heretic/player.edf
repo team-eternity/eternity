@@ -33,7 +33,7 @@ weaponinfo Staff
     loop
   Fire:
     STFF B 6
-    STFF C 8
+    STFF C 8 A_StaffAttackPL1
     STFF B 8 A_ReFire
     goto ready
   "@

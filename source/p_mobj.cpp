@@ -2460,8 +2460,9 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
       th->tics = 1;
 
    // don't make punches spark on the wall
+   // FIXME: Make this if statement a bit more robust, wrt !trace.puff
 
-   if(trace.attackrange == MELEERANGE)
+   if(!trace.puff && trace.attackrange == MELEERANGE)
       P_SetMobjState(th, E_SafeState(S_PUFF3));
 
    // haleyjd: for demo sync etc we still need to do the above, so
@@ -2978,7 +2979,6 @@ Mobj *P_SpawnMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t angle)
 {
    fixed_t z, slope = 0;
    angle_t an = angle;
-
 
    int mask = demo_version < 203 ? 0 : MF_FRIEND;
    slope = P_AimLineAttack(source, an, 16 * 64 * FRACUNIT, mask);
