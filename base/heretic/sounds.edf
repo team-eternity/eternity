@@ -855,9 +855,17 @@ sound ht_artiuse
 {
   lump          "artiuse"
   priority      78
+  dehackednum   405
   pitchvariance Heretic
 }
 
+sound ht_blssht
+{
+  lump          "blssht"  
+  priority      64
+  dehackednum   406
+  pitchvariance Heretic
+}
 
 // Environmental Sound Defaults
 // These are altered by the game engine to point to sounds specifed by MapInfo.

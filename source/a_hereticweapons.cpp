@@ -96,5 +96,28 @@ void A_FirePhoenixPL1(actionargs_t *actionargs)
    player->mo->momy += FixedMul(4 * FRACUNIT, finesine[angle]);
 }
 
+void A_FireBlasterPL1(actionargs_t *actionargs)
+{
+   player_t *player = actionargs->actor->player;
+   Mobj *mo = player->mo;
+   angle_t angle;
+   int damage;
+
+
+   S_StartSound(mo, sfx_gldhit);
+   P_SubtractAmmo(player, 1);
+   P_BulletSlope(mo);
+   damage = (1 + (P_Random(pr_blaster) & 7)) * 4;
+   angle = mo->angle;
+   if(player->refire)
+   {
+      angle += P_SubRandom(pr_blaster) << 18;
+   }
+   const int tnum = E_ThingNumForDEHNum(MT_BLASTERPUFF1);
+   mobjinfo_t  *puff = mobjinfo[tnum];
+   P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage, puff);
+   S_StartSound(player->mo, sfx_blssht);
+}
+
 // EOF
 

@@ -226,6 +226,7 @@ typedef enum {
   // TODO: Reorder the below before final merge
   pr_goldwand,    // A_FireGoldWandPL1
   pr_skullrod,    // A_FireSkullRodPL1
+  pr_blaster,     // A_FireBlasterPL1
 
   NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;

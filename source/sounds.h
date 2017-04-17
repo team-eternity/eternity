@@ -509,7 +509,9 @@ typedef enum {
   sfx_hphosht,
   sfx_hwpnup,
   sfx_hrespawn,
-  sfx_artiup
+  sfx_artiup,
+  sfx_artiuse,
+  sfx_blssht
 
   // haleyjd 11/05/03: NUMSFX is a variable now
   // NUMSFX

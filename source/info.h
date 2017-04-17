@@ -294,6 +294,7 @@ enum
   MT_HPLAYERSKULL = 399,
 
    // Heretic weapon projectiles
+  MT_BLASTERPUFF1 = 423,
   MT_HORNRODFX1 = 425,
   MT_GOLDWANDPUFF1 = 428,
   MT_PHOENIXFX1    = 430,

@@ -1444,6 +1444,7 @@ void A_PhoenixPuff(actionargs_t *);
 void A_FireGoldWandPL1(actionargs_t *);
 void A_FireSkullRodPL1(actionargs_t *);
 void A_FirePhoenixPL1(actionargs_t *);
+void A_FireBlasterPL1(actionargs_t *);
 
 // haleyjd 10/04/08: Hexen pointers
 #if 0
@@ -1774,6 +1775,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(FireGoldWandPL1),
    POINTER(FireSkullRodPL1),
    POINTER(FirePhoenixPL1),
+   POINTER(FireBlasterPL1),
 
    // haleyjd 10/04/08: Hexen pointers
 #if 0
