@@ -103,7 +103,7 @@ weaponinfo Crossbow
     CRBW A 1 A_Raise
     loop
   Fire:
-    CRBW D 6
+    CRBW D 6 A_FireCrossbowPL1
     CRBW EFGH 3
     CRBW AB 4
     CRBW C 5 A_ReFire

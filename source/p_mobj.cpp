@@ -2971,6 +2971,52 @@ Mobj *P_SpawnMissileAngle(Mobj *source, mobjtype_t type,
 }
 
 //
+// Tries to aim at a nearby monster, but with angle parameter
+// Code lifted from P_SPMAngle in Chocolate Heretic, p_mobj.c
+//
+Mobj *P_SpawnMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t angle)
+{
+   fixed_t z, slope = 0;
+   angle_t an = angle;
+
+
+   int mask = demo_version < 203 ? 0 : MF_FRIEND;
+   slope = P_AimLineAttack(source, an, 16 * 64 * FRACUNIT, mask);
+   if(!clip.linetarget)
+   {
+      an += 1 << 26;
+      slope = P_AimLineAttack(source, an, 16 * 64 * FRACUNIT, mask);
+      if(!clip.linetarget)
+      {
+         an -= 2 << 26;
+         slope = P_AimLineAttack(source, an, 16 * 64 * FRACUNIT, mask);
+      }
+      if(!clip.linetarget)
+      {
+         an = angle;
+         slope = P_PlayerPitchSlope(source->player);
+      }
+   }
+
+   z = source->z + 4*8*FRACUNIT - source->floorclip;
+
+
+   missileinfo_t missileinfo;
+
+   memset(&missileinfo, 0, sizeof(missileinfo));
+
+   missileinfo.source = source;
+   missileinfo.type   = type;
+   missileinfo.z      = z;
+   missileinfo.angle  = an;
+   missileinfo.momz   = FixedMul(mobjinfo[type]->speed, slope);
+   missileinfo.flags  = (missileinfo_t::USEANGLE | missileinfo_t::NOFUZZ);
+
+   return P_SpawnMissileEx(missileinfo);
+}
+
+
+//
 // P_SpawnMissileWithDest
 //
 // haleyjd 08/07/11: Ugly hack to solve a problem Lee created in A_Mushroom.

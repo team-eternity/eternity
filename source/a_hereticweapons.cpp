@@ -31,6 +31,7 @@
 
 #include "a_args.h"
 #include "d_player.h"
+#include "doomstat.h"
 //#include "e_sound.h"
 #include "e_things.h"
 #include "m_random.h"
@@ -62,6 +63,20 @@ void A_FireGoldWandPL1(actionargs_t *actionargs)
    S_StartSound(player->mo, sfx_gldhit);
 }
 
+void A_FireCrossbowPL1(actionargs_t *actionargs)
+{
+   Mobj *pmo = actionargs->actor;
+   player_t *player = pmo->player;
+   fixed_t momz, slope = 0, z = pmo->z + DEFAULTMISSILEZ;
+   const int tnum = E_ThingNumForDEHNum(MT_CRBOWFX3);
+   momz = FixedMul(mobjinfo[tnum]->speed, slope);
+
+   P_SubtractAmmo(player, 1);
+   P_SpawnPlayerMissile(pmo, E_ThingNumForDEHNum(MT_CRBOWFX1));
+   P_SpawnMissileAngleHeretic(pmo, tnum, pmo->angle - (ANG45 / 10));
+   P_SpawnMissileAngleHeretic(pmo, tnum, pmo->angle + (ANG45 / 10));
+}
+
 void A_FireSkullRodPL1(actionargs_t *actionargs)
 {
    player_t *player = actionargs->actor->player;
@@ -75,9 +90,7 @@ void A_FireSkullRodPL1(actionargs_t *actionargs)
    mo = P_SpawnPlayerMissile(player->mo, tnum);
    // Randomize the first frame
    if(mo && P_Random(pr_skullrod) > 128)
-   {
       P_SetMobjState(mo, mo->state->nextstate);
-   }
 }
 
 void A_FirePhoenixPL1(actionargs_t *actionargs)
