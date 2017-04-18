@@ -32,16 +32,19 @@
 #include "a_args.h"
 #include "d_player.h"
 #include "doomstat.h"
+#include "e_args.h"
 //#include "e_sound.h"
 #include "e_things.h"
 #include "m_random.h"
 #include "p_mobj.h"
+#include "p_inter.h"
 #include "r_main.h"
 #include "s_sound.h"
 #include "tables.h"
 
 #include "p_map.h"
 
+#define WEAPONTOP    (FRACUNIT*32)
 
 // TODO: Add a define for E_ThingNumForDEHNum(foo) for when it's only needed once
 // per-function? Shouldn't matter due to constant folding in release config anyways.
@@ -179,6 +182,97 @@ void A_FireBlasterPL1(actionargs_t *actionargs)
    mobjinfo_t  *puff = mobjinfo[tnum];
    P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage, puff);
    S_StartSound(player->mo, sfx_blssht);
+}
+
+void A_GauntletAttack(actionargs_t *actionargs)
+{
+   angle_t angle;
+   int damage;
+   int slope;
+   int randVal;
+   fixed_t dist;
+   arglist_t *args = actionargs->args;
+   player_t *player = actionargs->actor->player;
+   pspdef_t *psp = actionargs->pspr;
+   int pnum;
+   mobjinfo_t  *puff;
+
+   if(!psp)
+      return;
+
+   int powered = E_ArgAsInt(args, 0, 0);
+
+   psp->sx = ((P_Random(pr_gauntlets) & 3) - 2) * FRACUNIT;
+   psp->sy = WEAPONTOP + (P_Random(pr_gauntlets) & 3) * FRACUNIT;
+   angle = player->mo->angle;
+   if(powered)
+   {
+      damage = (1 + (P_Random(pr_gauntlets) & 7))* 2;
+      dist = 4 * MELEERANGE;
+      angle += P_SubRandom(pr_gauntletsangle) << 17;
+      pnum = E_ThingNumForDEHNum(MT_GAUNTLETPUFF2);
+   }
+   else
+   {
+      damage = (1 + (P_Random(pr_gauntlets) & 7)) * 2;
+      dist = MELEERANGE + 1;
+      angle += P_SubRandom(pr_gauntletsangle) << 18;
+      pnum = E_ThingNumForDEHNum(MT_GAUNTLETPUFF1);
+   }
+   puff = mobjinfo[pnum];
+   slope = P_AimLineAttack(player->mo, angle, dist, 0);
+   P_LineAttack(player->mo, angle, dist, slope, damage, puff);
+   if(!clip.linetarget)
+   {
+      if(P_Random(pr_gauntlets) > 64) // TODO: Maybe don't use pr_gauntlets?
+      {
+         player->extralight = !player->extralight;
+      }
+      S_StartSound(player->mo, sfx_gntful);
+      return;
+   }
+   randVal = P_Random(pr_gauntlets); // TODO: Maybe don't use pr_gauntlets?
+   if(randVal < 64)
+   {
+      player->extralight = 0;
+   }
+   else if(randVal < 160)
+   {
+      player->extralight = 1;
+   }
+   else
+   {
+      player->extralight = 2;
+   }
+   if(powered)
+   {
+      // FIXME: This needs to do damage vamp
+      //P_GiveBody(player, damage >> 1);
+      S_StartSound(player->mo, sfx_gntpow);
+   }
+   else
+   {
+      S_StartSound(player->mo, sfx_gnthit);
+   }
+   // turn to face target
+   angle = R_PointToAngle2(player->mo->x, player->mo->y,
+                           clip.linetarget->x, clip.linetarget->y);
+
+   if(angle - player->mo->angle > ANG180)
+   {
+      if(angle - player->mo->angle < -ANG90 / 20)
+         player->mo->angle = angle + ANG90 / 21;
+      else
+         player->mo->angle -= ANG90 / 20;
+   }
+   else
+   {
+      if(angle - player->mo->angle > ANG90 / 20)
+         player->mo->angle = angle - ANG90 / 21;
+      else
+         player->mo->angle += ANG90 / 20;
+   }
+   player->mo->flags |= MF_JUSTATTACKED;
 }
 
 // EOF

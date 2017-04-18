@@ -426,7 +426,7 @@ static void P_FireWeapon(player_t *player)
    weapon = player->readyweaponnew;
 
    P_SetMobjState(player->mo, player->mo->info->missilestate);
-   newstate = weapon->atkstate;
+   newstate = player->refire && weapon->holdstate ? weapon->holdstate : weapon->atkstate;
    P_SetPsprite(player, ps_weapon, newstate);
 
    // haleyjd 04/06/03: silencer powerup
@@ -629,9 +629,6 @@ void A_ReFire(actionargs_t *actionargs)
    {
       player->refire++;
       P_FireWeapon(player);
-      const int holdstate = player->readyweaponnew->holdstate;
-      if(holdstate)
-         P_SetPsprite(player, ps_weapon, holdstate);
    }
    else
    {

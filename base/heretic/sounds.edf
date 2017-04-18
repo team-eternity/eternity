@@ -875,6 +875,46 @@ sound ht_bowsht
   pitchvariance Heretic
 }
 
+sound ht_gntful
+{
+  lump          "gntful"
+  priority      64
+  dehackednum   408
+  pitchvariance Heretic
+}
+
+sound ht_gnthit
+{
+  lump          "gnthit"
+  priority      64
+  dehackednum   409
+  pitchvariance Heretic
+}
+
+sound ht_gntpow
+{
+  lump          "gntpow"
+  priority      64
+  dehackednum   410
+  pitchvariance Heretic
+}
+
+sound ht_gntact
+{
+  lump          "gntact"
+  priority      64
+  dehackednum   411
+  pitchvariance Heretic
+}
+
+sound ht_gntuse
+{
+  lump          "gntuse"
+  priority      64
+  dehackednum   412
+  pitchvariance Heretic
+}
+
 // Environmental Sound Defaults
 // These are altered by the game engine to point to sounds specifed by MapInfo.
 // Use these names in sound sequences to refer to the MapInfo-defined defaults.
