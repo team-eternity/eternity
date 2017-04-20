@@ -915,6 +915,14 @@ sound ht_gntuse
   pitchvariance Heretic
 }
 
+sound ht_stfcrk
+{
+  lump          "stfcrk"
+  priority      64
+  dehackednum   412
+  pitchvariance Heretic
+}
+
 // Environmental Sound Defaults
 // These are altered by the game engine to point to sounds specifed by MapInfo.
 // Use these names in sound sequences to refer to the MapInfo-defined defaults.

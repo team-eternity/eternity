@@ -566,8 +566,13 @@ void A_WeaponReady(actionargs_t *actionargs)
       P_SetMobjState(mo, mo->info->spawnstate);
    }
 
+   // Play sound if the readyweapon has a sound to play and the current
+   // state is the ready state, and do it only 50% of the time if the
+   // according flag is set.
    if(player->readyweaponnew->readysound &&
-      psp->state->dehnum == player->readyweaponnew->readystate)
+      psp->state->index == player->readyweaponnew->readystate &&
+      (!(player->readyweaponnew->flags & WPF_READYSNDHALF)
+      || P_Random(pr_readysound) < 128))
       S_StartSound(player->mo, player->readyweaponnew->readysound);
 
    if(E_WeaponIsCurrent(player, WEAPNAME_CHAINSAW) &&

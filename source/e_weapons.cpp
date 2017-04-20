@@ -171,6 +171,7 @@ static dehflags_t e_weaponFlags[] =
    { "FLEEMELEE",    WPF_FLEEMELEE    },
    { "ALWAYSRECOIL", WPF_ALWAYSRECOIL },
    { "HAPTICRECOIL", WPF_HAPTICRECOIL },
+   { "READYSNDHALF", WPF_READYSNDHALF },
    { NULL,           0                }
 };
 
