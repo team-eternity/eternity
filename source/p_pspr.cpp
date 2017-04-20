@@ -557,7 +557,7 @@ void A_WeaponReady(actionargs_t *actionargs)
    if(!(psp = actionargs->pspr))
       return;
 
-   // WEAPON_FIXME: chainsaw particulars (idle sound)
+   // WEAPON_FIXME: chainsaw particulars (haptic feedback)
 
    // get out of attack state
    if(mo->state == states[mo->info->missilestate] || 
@@ -566,10 +566,13 @@ void A_WeaponReady(actionargs_t *actionargs)
       P_SetMobjState(mo, mo->info->spawnstate);
    }
 
+   if(player->readyweaponnew->readysound &&
+      psp->state->dehnum == player->readyweaponnew->readystate)
+      S_StartSound(player->mo, player->readyweaponnew->readysound);
+
    if(E_WeaponIsCurrent(player, WEAPNAME_CHAINSAW) &&
       psp->state == states[E_SafeState(S_SAW)])
    {
-      S_StartSound(player->mo, sfx_sawidl);
       if(player == &players[consoleplayer])
          I_StartHaptic(HALHapticInterface::EFFECT_CONSTANT, 3, 108);
    }

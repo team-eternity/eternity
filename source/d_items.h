@@ -75,6 +75,7 @@ struct weaponinfo_t
    int          hapticrecoil; // haptic recoil strength, from 1 to 10
    int          haptictime;   // haptic recoil duration, from 1 to 10
    int          upsound;      // sound made when weapon is being brought up
+   int          readysound;   // sound made when weapon is ready
 
    itemeffect_t *tracker;     // tracker artifact for weapon
 

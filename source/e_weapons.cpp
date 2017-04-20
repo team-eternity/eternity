@@ -80,6 +80,7 @@ static int edf_weapon_generation = 1;
 #define ITEM_WPN_HAPTICRECOIL "hapticrecoil"
 #define ITEM_WPN_HAPTICTIME   "haptictime"
 #define ITEM_WPN_UPSOUND      "upsound"
+#define ITEM_WPN_READYSOUND   "readysound"
 
 #define ITEM_WPN_TRACKER      "tracker"
 
@@ -120,6 +121,7 @@ cfg_opt_t wpninfo_tprops[] =
    CFG_INT(ITEM_WPN_HAPTICRECOIL, 0,        CFGF_NONE), \
    CFG_INT(ITEM_WPN_HAPTICTIME,   0,        CFGF_NONE), \
    CFG_STR(ITEM_WPN_UPSOUND,      "none",   CFGF_NONE), \
+   CFG_STR(ITEM_WPN_READYSOUND,   "none",    CFGF_NONE), \
    CFG_STR(ITEM_WPN_TRACKER,      "",       CFGF_NONE), \
    CFG_STR(ITEM_WPN_FIRSTDECSTATE, nullptr, CFGF_NONE), \
    CFG_STR(ITEM_WPN_STATES,        0,       CFGF_NONE), \
@@ -958,7 +960,15 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_UPSOUND);
       sfxinfo_t *tempsfx = E_EDFSoundForName(tempstr);
       if(tempsfx)
-         weaponinfo[i]->upsound = E_EDFSoundForName(tempstr)->dehackednum;
+         weaponinfo[i]->upsound = tempsfx->dehackednum;
+   }
+
+   if(IS_SET(ITEM_WPN_READYSOUND))
+   {
+      tempstr = cfg_getstr(weaponsec, ITEM_WPN_READYSOUND);
+      sfxinfo_t *tempsfx = E_EDFSoundForName(tempstr);
+      if(tempsfx)
+         weaponinfo[i]->readysound = tempsfx->dehackednum;
    }
 
    // Process DECORATE state block

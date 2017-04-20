@@ -171,6 +171,7 @@ weaponinfo Chainsaw
   flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCER
   mod          Chainsaw
   upsound      sawup
+  readysound   sawidl
 
   tracker      WeaponChainsaw
 }
