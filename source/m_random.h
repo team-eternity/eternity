@@ -232,6 +232,7 @@ typedef enum {
   pr_staffangle,
   pr_gauntlets,   // A_GauntletAttack
   pr_gauntletsangle,
+  pr_boltspark,   // A_BoltSpark
 
   NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;

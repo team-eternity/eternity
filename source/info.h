@@ -306,6 +306,7 @@ enum
   MT_CRBOWFX1 = 434,
   MT_CRBOWFX2,
   MT_CRBOWFX3,
+  MT_CRBOWFX4,
 
 // Start Eternity TC New Things
 

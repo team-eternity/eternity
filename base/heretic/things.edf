@@ -3080,9 +3080,18 @@ thingtype CrossbowFX1 : Mobj, -1, 434
   "@
 }
 
-thingtype CrossbowFX2 : Mobj, -1, 435
+thingtype CrossbowFX2 : CrossbowFX1, -1, 435
 {
-  
+  compatname CrossboxFX1
+  speed      32.0
+  damage     6
+
+  states
+  @"
+  Spawn:
+    FX03 B 1 bright A_BoltSpark
+    loop
+  "@
 }
 
 thingtype CrossbowFX3 : Mobj, -1, 436
@@ -3103,6 +3112,18 @@ thingtype CrossbowFX3 : Mobj, -1, 436
     loop
   Death:
     FX03 CDE 8 bright
+    stop
+  "@
+}
+
+thingtype CrossbowFX4 : Mobj, -1, 437
+{
+  compatname CrossbowFX4
+  cflags NOBLOCKMAP|LOGRAV
+
+  states @"
+  Spawn:
+    FX03 FG 8 bright
     stop
   "@
 }
