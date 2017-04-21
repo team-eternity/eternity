@@ -45,7 +45,7 @@ weaponinfo Staff
   flags        FLEEMELEE|NOHITGHOSTS|SILENCER|READYSNDHALF
   // TODO: ADDFLAGS
 
-  tracker      
+  tracker
 
   states
   @"
@@ -153,6 +153,25 @@ weaponinfo Crossbow
     goto Ready
   "@
 }
+
+/*weaponinfo CrossbowPowered : Crossbow
+{
+  tracker
+
+  states
+  @"
+  Fire:
+    CRBW D 5 A_FireCrossbowPL2
+    CRBW E 3
+    CRBW F 2
+    CRBW G 3
+    CRBW H 2
+    CRBW A 3
+    CRBW B 3
+    CRBW C 4 A_ReFire
+    goto Ready
+  "@
+}*/
 
 weaponinfo Blaster
 {

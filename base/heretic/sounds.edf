@@ -869,7 +869,7 @@ sound ht_blssht
 
 sound ht_bowsht
 {
-  lump          "ht_bowsht"
+  lump          "bowsht"
   priority      64
   dehackednum   407
   pitchvariance Heretic

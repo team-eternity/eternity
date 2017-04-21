@@ -94,7 +94,7 @@ void A_FireGoldWandPL1(actionargs_t *actionargs)
    angle_t   angle  = mo->angle;
    const int damage = 7 + (P_Random(pr_goldwand) & 7);;
 
-   P_SubtractAmmo(player, 1);
+   P_SubtractAmmo(player, -1);
    P_BulletSlope(mo);
    if(player->refire)
       angle += P_SubRandom(pr_goldwand) << 18;
@@ -146,10 +146,25 @@ void A_FireCrossbowPL1(actionargs_t *actionargs)
    player_t *player = pmo->player;
    const int tnum   = E_SafeThingType(MT_CRBOWFX3);
 
-   P_SubtractAmmo(player, 1);
+   P_SubtractAmmo(player, -1);
    P_SpawnPlayerMissile(pmo, E_SafeThingType(MT_CRBOWFX1));
    P_SpawnMissileAngleHeretic(pmo, tnum, pmo->angle - (ANG45 / 10));
    P_SpawnMissileAngleHeretic(pmo, tnum, pmo->angle + (ANG45 / 10));
+}
+
+void A_FireCrossbowPL2(actionargs_t *actionargs)
+{
+   Mobj     *pmo    = actionargs->actor;
+   player_t *player = pmo->player;
+   const int tnum2  = E_SafeThingType(MT_CRBOWFX2);
+   const int tnum3  = E_SafeThingType(MT_CRBOWFX3);
+
+   P_SubtractAmmo(player, -1);
+   P_SpawnPlayerMissile(pmo, tnum2);
+   P_SpawnMissileAngleHeretic(pmo, tnum2, pmo->angle - (ANG45 / 10));
+   P_SpawnMissileAngleHeretic(pmo, tnum2, pmo->angle + (ANG45 / 10));
+   P_SpawnMissileAngleHeretic(pmo, tnum3, pmo->angle - (ANG45 / 5));
+   P_SpawnMissileAngleHeretic(pmo, tnum3, pmo->angle + (ANG45 / 5));
 }
 
 void A_BoltSpark(actionargs_t *actionargs)
@@ -172,7 +187,7 @@ void A_FireSkullRodPL1(actionargs_t *actionargs)
    if(!P_CheckAmmo(player))
       return;
 
-   P_SubtractAmmo(player, 1);
+   P_SubtractAmmo(player, -1);
    const int tnum = E_SafeThingType(MT_HORNRODFX1);
    Mobj     *mo   = P_SpawnPlayerMissile(player->mo, tnum);
    // Randomize the first frame
@@ -186,7 +201,7 @@ void A_FirePhoenixPL1(actionargs_t *actionargs)
    const int tnum   = E_SafeThingType(MT_PHOENIXFX1);
    angle_t   angle;
 
-   P_SubtractAmmo(player, 1);
+   P_SubtractAmmo(player, -1);
    P_SpawnPlayerMissile(player->mo, tnum);
    // TODO: This is from Choco, why is it commented out?
    //P_SpawnPlayerMissile(player->mo, MT_MNTRFX2);
@@ -205,7 +220,7 @@ void A_FireBlasterPL1(actionargs_t *actionargs)
 
 
    S_StartSound(mo, sfx_gldhit);
-   P_SubtractAmmo(player, 1);
+   P_SubtractAmmo(player, -1);
    P_BulletSlope(mo);
    damage = (1 + (P_Random(pr_blaster) & 7)) * 4;
    angle  = mo->angle;
