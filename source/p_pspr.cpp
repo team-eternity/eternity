@@ -214,8 +214,8 @@ int P_NextWeapon(player_t *player)
       newweapon = newweapon->nextInCycle;
       ammototry = P_WeaponHasAmmo(player, newweapon);
    }
-   while((!E_PlayerOwnsWeaponForSlot(player, newweapon->id) || !ammototry) &&
-         newweapon != currentweapon);
+   while((!E_PlayerOwnsWeapon(player, newweapon) || !ammototry) &&
+         newweapon->id != currentweapon->id);
 
    return newweapon != currentweapon ? newweapon->id : wp_nochange;
 }
@@ -237,8 +237,8 @@ int P_PrevWeapon(player_t *player)
       newweapon = newweapon->prevInCycle;
       ammototry = P_WeaponHasAmmo(player, newweapon);
    }
-   while((!E_PlayerOwnsWeaponForSlot(player, newweapon->id) || !ammototry) &&
-         newweapon != currentweapon);
+   while((!E_PlayerOwnsWeapon(player, newweapon) || !ammototry) &&
+         newweapon->id != currentweapon->id);
 
    return newweapon != currentweapon ? newweapon->id : wp_nochange;
 }
