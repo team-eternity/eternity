@@ -949,6 +949,24 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
       }
    }
 
+   // process addflags and remflags modifiers
+
+   if(cfg_size(weaponsec, ITEM_WPN_ADDFLAGS) > 0)
+   {      
+      tempstr = cfg_getstr(weaponsec, ITEM_WPN_ADDFLAGS);
+
+      unsigned int results = E_ParseFlags(tempstr, &e_weaponFlagSet);
+      weaponinfo[i]->flags |= results;
+   }
+
+   if(cfg_size(weaponsec, ITEM_WPN_REMFLAGS) > 0)
+   {
+      tempstr = cfg_getstr(weaponsec, ITEM_WPN_REMFLAGS);
+
+      unsigned int results = E_ParseFlags(tempstr, &e_weaponFlagSet);
+      weaponinfo[i]->flags &= ~results;
+   }
+
    if(IS_SET(ITEM_WPN_RECOIL))
       weaponinfo[i]->recoil = cfg_getint(weaponsec, ITEM_WPN_RECOIL);
    if(IS_SET(ITEM_WPN_HAPTICRECOIL))

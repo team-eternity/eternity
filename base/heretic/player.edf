@@ -42,8 +42,7 @@ weaponinfo Staff
 /*weaponinfo StaffPowered : Staff
 {
   readysound   ht_stfcrk
-  flags        FLEEMELEE|NOHITGHOSTS|SILENCER|READYSNDHALF
-  // TODO: ADDFLAGS
+  addflags     READYSNDHALF
 
   tracker
 
