@@ -295,6 +295,7 @@ enum
 
    // Heretic weapon-associated things (not actual weapons)
   MT_STAFFPUFF = 416,
+  MT_STAFFPUFF2,
   MT_GAUNTLETPUFF1 = 419,
   MT_GAUNTLETPUFF2,
   MT_BLASTERPUFF1 = 423,

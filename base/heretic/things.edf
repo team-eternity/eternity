@@ -3001,6 +3001,80 @@ thingtype HereticPhoenixFX1 : Mobj, -1, 430
   "@
 }
 
+thingtype CrossbowFX1 : Mobj, -1, 434
+{
+  compatname CrossbowFX1
+  speed      30.0
+  radius     11.0
+  height     8.0
+  damage     10
+  seesound   ht_bowsht
+  deathsound ht_hrnhit
+  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOTELEPORT|NORANDOMIZE|DRAWSBLOOD
+  
+  //firstdecoratestate S_CRBOWFX1_1
+  states
+  @"
+  Spawn:
+    FX03 B 1 bright
+    loop
+  Death:
+    FX03 HIJ 8 bright
+    stop
+  "@
+}
+
+thingtype CrossbowFX2 : CrossbowFX1, -1, 435
+{
+  compatname CrossboxFX1
+  speed      32.0
+  damage     6
+
+
+  //firstdecoratestate S_CRBOWFX2_1
+  states
+  @"
+  Spawn:
+    FX03 B 1 bright A_BoltSpark
+    loop
+  "@
+}
+
+thingtype CrossbowFX3 : Mobj, -1, 436
+{
+  compatname CrossbowFX3
+  speed      32.0
+  radius     11.0
+  height     8.0
+  damage     6
+  deathsound ht_hrnhit
+  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|WINDTHRUST|THRUGHOST|NOTELEPORT|NORANDOMIZE|DRAWSBLOOD
+  
+  //firstdecoratestate S_CRBOWFX3_1
+  states
+  @"
+  Spawn:
+    FX03 A 1 bright
+    loop
+  Death:
+    FX03 CDE 8 bright
+    stop
+  "@
+}
+
+thingtype CrossbowFX4 : Mobj, -1, 437
+{
+  compatname CrossbowFX4
+  cflags NOBLOCKMAP|LOGRAV
+
+  //firstdecoratestate S_CRBOWFX4_1
+  states @"
+  Spawn:
+    FX03 FG 8 bright
+    stop
+  "@
+}
+
 //
 // Fire Mace
 //
@@ -3053,77 +3127,6 @@ thingtype HereticBloodSplatter : Mobj, -1, 433
     stop
   Death:
     BLOD A 6
-    stop
-  "@
-}
-
-thingtype CrossbowFX1 : Mobj, -1, 434
-{
-  compatname CrossbowFX1
-  speed      30.0
-  radius     11.0
-  height     8.0
-  damage     10
-  seesound   ht_bowsht
-  deathsound ht_hrnhit
-  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOTELEPORT|NORANDOMIZE|DRAWSBLOOD
-  
-  //firstdecoratestate S_HRODFX1_1
-  states
-  @"
-  Spawn:
-    FX03 B 1 bright
-    loop
-  Death:
-    FX03 HIJ 8 bright
-    stop
-  "@
-}
-
-thingtype CrossbowFX2 : CrossbowFX1, -1, 435
-{
-  compatname CrossboxFX1
-  speed      32.0
-  damage     6
-
-  states
-  @"
-  Spawn:
-    FX03 B 1 bright A_BoltSpark
-    loop
-  "@
-}
-
-thingtype CrossbowFX3 : Mobj, -1, 436
-{
-  compatname CrossbowFX3
-  speed      32.0
-  radius     11.0
-  height     8.0
-  damage     6
-  deathsound ht_hrnhit
-  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|WINDTHRUST|THRUGHOST|NOTELEPORT|NORANDOMIZE|DRAWSBLOOD
-  
-  //firstdecoratestate S_HRODFX1_1
-  states
-  @"
-  Spawn:
-    FX03 A 1 bright
-    loop
-  Death:
-    FX03 CDE 8 bright
-    stop
-  "@
-}
-
-thingtype CrossbowFX4 : Mobj, -1, 437
-{
-  compatname CrossbowFX4
-  cflags NOBLOCKMAP|LOGRAV
-
-  states @"
-  Spawn:
-    FX03 FG 8 bright
     stop
   "@
 }

@@ -66,6 +66,27 @@ void A_StaffAttackPL1(actionargs_t *actionargs)
    }
 }
 
+void A_StaffAttackPL2(actionargs_t *actionargs)
+{
+   player_t *player = actionargs->actor->player;
+   int       damage = 18 + (P_Random(pr_staff2) & 63);
+   angle_t   angle = player->mo->angle + (P_SubRandom(pr_staffangle) << 18);
+   fixed_t   slope = P_AimLineAttack(player->mo, angle, MELEERANGE, 0);
+
+   const int   tnum = E_SafeThingType(MT_STAFFPUFF2);
+   mobjinfo_t *puff = mobjinfo[tnum];
+
+   P_LineAttack(player->mo, angle, MELEERANGE, slope, damage, puff);
+   if(clip.linetarget)
+   {
+      //S_StartSound(player->mo, sfx_stfhit);
+      // turn to face target
+      player->mo->angle = R_PointToAngle2(player->mo->x,
+                                          player->mo->y, clip.linetarget->x,
+                                          clip.linetarget->y);
+   }
+}
+
 void A_FireGoldWandPL1(actionargs_t *actionargs)
 {
    Mobj     *mo     = actionargs->actor;

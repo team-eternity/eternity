@@ -468,32 +468,27 @@ weaponinfo_t *P_GetPlayerWeapon(player_t *player, int slot)
    if(!player->pclass->weaponslots[slot])
       return nullptr;
 
-   weaponinfo_t *ret = player->pclass->weaponslots[slot]->weapon;
    bool hit = false;
+   DLListItem<weaponslot_t> *weaponslot, *baseslot;
+   baseslot = weaponslot = &player->pclass->weaponslots[slot]->links;
 
-   DLListItem<weaponslot_t> *weaponslot = &player->pclass->weaponslots[slot]->links;
-   for(int i = 0; weaponslot; i++, weaponslot = weaponslot->dllNext)
+   while(!hit && weaponslot->dllNext)
    {
-      // If the weapon in the slot is the current weapon,
-      // then the next weapon is what we want to swap to.
-      if(weaponslot->dllObject->weapon->id == player->readyweaponnew->id &&
-         weaponslot->dllNext)
-      {
+      if(weaponslot->dllObject->weapon->id == player->readyweaponnew->id)
          hit = true;
-         ret = weaponslot->dllNext->dllObject->weapon;
-      }
-
-      // Otherwise, if it's the first weapon the player owns and we haven't
-      // already found a weapon
-      if(!hit && E_PlayerOwnsWeapon(player, weaponslot->dllObject->weapon))
-      {
-         hit = true;
-         ret = weaponslot->dllObject->weapon;
-      }
+      else
+         weaponslot = weaponslot->dllNext;
    }
-   // Either the current weapon is the last in the slot, or we didn't find it,
-   // so return the first weapon.
-   return ret;
+
+   if(!weaponslot->dllNext)
+      weaponslot = baseslot;
+   else
+      weaponslot = weaponslot->dllNext;
+
+   while(!E_PlayerOwnsWeapon(player, weaponslot->dllObject->weapon) && weaponslot)
+      weaponslot = weaponslot->dllNext;
+
+   return weaponslot ? weaponslot->dllObject->weapon : nullptr;
 }
 
 //

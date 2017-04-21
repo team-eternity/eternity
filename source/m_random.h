@@ -229,6 +229,7 @@ typedef enum {
   pr_skullrod,    // A_FireSkullRodPL1
   pr_blaster,     // A_FireBlasterPL1
   pr_staff,       // A_StaffAttackPL1
+  pr_staff2,      // A_StaffAttackPL2
   pr_staffangle,
   pr_gauntlets,   // A_GauntletAttack
   pr_gauntletsangle,

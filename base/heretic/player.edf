@@ -39,6 +39,33 @@ weaponinfo Staff
   "@
 }
 
+/*weaponinfo StaffPowered : Staff
+{
+  readysound   ht_stfcrk
+  flags        FLEEMELEE|NOHITGHOSTS|SILENCER|READYSNDHALF
+  // TODO: ADDFLAGS
+
+  tracker      
+
+  states
+  @"
+  Ready:
+    STFF DEF 4 A_WeaponReady
+    loop
+  Deselect:
+    STFF D 1 A_Lower
+    loop
+  Select:
+    STFF D 1 A_Raise
+    loop
+  Fire:
+    STFF G 6
+    STFF H 8 A_StaffAttackPL2
+    STFF G 8 A_ReFire
+    goto Ready
+  "@
+}*/
+
 weaponinfo GoldWand
 {
   ammotype     AmmoWandCrystal
