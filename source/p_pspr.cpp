@@ -485,7 +485,7 @@ weaponinfo_t *P_GetPlayerWeapon(player_t *player, int slot)
    else
       weaponslot = weaponslot->dllNext;
 
-   while(!E_PlayerOwnsWeapon(player, weaponslot->dllObject->weapon) && weaponslot)
+   while(weaponslot && !E_PlayerOwnsWeapon(player, weaponslot->dllObject->weapon))
       weaponslot = weaponslot->dllNext;
 
    return weaponslot ? weaponslot->dllObject->weapon : nullptr;

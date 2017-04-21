@@ -1146,7 +1146,7 @@ bool E_WeaponIsCurrentNum(player_t *player, const int num)
 //
 bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon)
 {
-   return E_GetItemOwnedAmount(player, weapon->tracker);
+   return weapon ? E_GetItemOwnedAmount(player, weapon->tracker) : false;
 }
 
 //
