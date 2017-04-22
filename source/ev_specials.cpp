@@ -1256,6 +1256,40 @@ static ev_action_t *EV_ActionForInstance(ev_instance_t &instance)
    return EV_ActionForSpecial(instance.special);
 }
 
+//
+// Lookup the number to use in the local map's bindings for a special number
+// provided in ACS.
+//
+int EV_ActionForACSAction(int acsActionNum)
+{
+   switch(LevelInfo.mapFormat)
+   {
+   case LEVEL_FORMAT_UDMF_ETERNITY:
+   case LEVEL_FORMAT_HEXEN:
+      // The numbers already match in these formats.
+      return acsActionNum;
+   default:
+      // Find the UDMF binding for this action number, and then return its
+      // ExtraData equivalent if it has one. Otherwise, zero is returned.
+      {
+         // initialize the cross-table pointers
+         EV_InitUDMFToExtraDataLookup();
+
+         ev_binding_t *pBind;
+         if((pBind = EV_UDMFEternityBindingForSpecial(acsActionNum)))
+         {
+            if(pBind->pEDBinding)
+               return pBind->pEDBinding->actionNumber;
+            else
+               return 0;
+         }
+      }
+      break;
+   }
+
+   return 0;
+}
+
 //=============================================================================
 //
 // Lockdef ID Lookups
