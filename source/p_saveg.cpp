@@ -476,14 +476,14 @@ static void P_ArchivePlayers(SaveArchive &arc)
              << p.viewheight   << p.deltaviewheight << p.bob
              << p.pitch        << p.momx            << p.momy
              << p.health       << p.armorpoints     << p.armorfactor
-             << p.armordivisor << p.totalfrags
-             << p.readyweapon  << p.pendingweapon   << p.extralight
+             << p.armordivisor << p.totalfrags      << p.extralight
              << p.cheats       << p.refire          << p.killcount
              << p.itemcount    << p.secretcount     << p.didsecret
              << p.damagecount  << p.bonuscount      << p.fixedcolormap
              << p.colormap     << p.quake           << p.jumptime
              << p.inv_ptr;
 
+         // WEAPON_FIXME: Accommodate the new readyweapon and pendingweapon
          int inventorySize;
          if(arc.isSaving())
          {
@@ -504,8 +504,8 @@ static void P_ArchivePlayers(SaveArchive &arc)
          for(j = 0; j < MAXPLAYERS; j++)
             arc << p.frags[j];
 
-         for(j = 0; j < NUMWEAPONS; j++)
-            arc << p.weaponowned[j];
+         //for(j = 0; j < NUMWEAPONS; j++)
+         //   arc << p.weaponowned[j];
 
          for(j = 0; j < NUMWEAPONS; j++)
          {

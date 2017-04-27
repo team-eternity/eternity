@@ -179,7 +179,7 @@ void A_JumpIfNoAmmo(actionargs_t *actionargs)
    {
       player_t *p     = actionargs->actor->player;
       int statenum    = E_ArgAsStateNumNI(actionargs->args, 0, NULL);
-      weaponinfo_t *w = P_GetReadyWeapon(p);
+      weaponinfo_t *w = p->readyweaponnew;
       int ammo;
 
       // validate state
@@ -351,7 +351,7 @@ static const char *kwds_channel_old[] =
    "chan_body",   // 4 },
 };
 
-static argkeywd_t channelkwdsold = { kwds_channel_old, NUMSCHANNELS };
+static argkeywd_t channelkwdsold = { kwds_channel_old, earrlen(kwds_channel_old) };
 
 static const char *kwds_attn_old[] =
 {
@@ -374,7 +374,7 @@ static const char *kwds_channel_new[] =
    "body",   // 4
 };
 
-static argkeywd_t channelkwdsnew = { kwds_channel_new, NUMSCHANNELS };
+static argkeywd_t channelkwdsnew = { kwds_channel_new, earrlen(kwds_channel_new) };
 
 static const char *kwds_attn_new[] =
 {

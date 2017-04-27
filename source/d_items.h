@@ -30,22 +30,24 @@
 #include "m_dllist.h"
 
 class MetaTable;
+typedef MetaTable itemeffect_t;
 
 //
 // haleyjd 09/11/07: weapon flags
 //
-enum
+enum wepflags_e: unsigned int
 {
-   WPF_NOTHRUST      = 0x00000001u, // doesn't thrust Mobj's
-   WPF_NOHITGHOSTS   = 0x00000002u, // tracer-based weapon can't hit ghosts
-   WPF_NOTSHAREWARE  = 0x00000004u, // not in shareware gamemodes
-   WPF_ENABLEAPS     = 0x00000008u, // enables ammo-per-shot field
-   WPF_SILENCER      = 0x00000010u, // weapon supports silencer powerup
-   WPF_SILENT        = 0x00000020u, // weapon is always silent
-   WPF_NOAUTOFIRE    = 0x00000040u, // weapon won't autofire in A_WeaponReady
-   WPF_FLEEMELEE     = 0x00000080u, // monsters consider it a melee weapon
-   WPF_ALWAYSRECOIL  = 0x00000100u, // weapon always has recoil
-   WPF_HAPTICRECOIL  = 0x00000200u, // use recoil-style haptic effect
+   WPF_NOTHRUST      = 0x00000001, // doesn't thrust Mobj's
+   WPF_NOHITGHOSTS   = 0x00000002, // tracer-based weapon can't hit ghosts
+   WPF_NOTSHAREWARE  = 0x00000004, // not in shareware gamemodes
+   WPF_ENABLEAPS     = 0x00000008, // enables ammo-per-shot field
+   WPF_SILENCER      = 0x00000010, // weapon supports silencer powerup
+   WPF_SILENT        = 0x00000020, // weapon is always silent
+   WPF_NOAUTOFIRE    = 0x00000040, // weapon won't autofire in A_WeaponReady
+   WPF_FLEEMELEE     = 0x00000080, // monsters consider it a melee weapon
+   WPF_ALWAYSRECOIL  = 0x00000100, // weapon always has recoil
+   WPF_HAPTICRECOIL  = 0x00000200, // use recoil-style haptic effect
+   WPF_READYSNDHALF  = 0x00000400, // readysound has 50% chance to play
 };
 
 // Weapon info: sprite frames, ammunition use.
@@ -60,6 +62,7 @@ struct weaponinfo_t
    int          readystate;
    int          atkstate;
    int          flashstate;
+   int          holdstate;    // MaxW 2017/04/16: state jumped to if fire is held
    int          ammopershot;  // haleyjd 08/10/02: ammo per shot field
 
    // haleyjd 05/31/14: more dynamic weapons work
@@ -73,6 +76,9 @@ struct weaponinfo_t
    int          hapticrecoil; // haptic recoil strength, from 1 to 10
    int          haptictime;   // haptic recoil duration, from 1 to 10
    int          upsound;      // sound made when weapon is being brought up
+   int          readysound;   // sound made when weapon is ready
+
+   itemeffect_t *tracker;     // tracker artifact for weapon
 
    // TODO: move to EDF weapon pickup definitions
    int          dmstayammo;   // amount of ammo given on pickup in DM when weapons stay
@@ -83,9 +89,15 @@ struct weaponinfo_t
    // EDF hashing
    DLListItem<weaponinfo_t> idlinks;   // hash by id
    DLListItem<weaponinfo_t> namelinks; // hash by name
+
+   int   generation;   // EDF generation number
+
+   MetaTable *meta; // metatable
+
+   weaponinfo_t *parent; // inheritance chain for DECORATE-like semantics where required
 };
 
-extern weaponinfo_t weaponinfo[NUMWEAPONS];
+//extern weaponinfo_t weaponinfo[NUMWEAPONS];
 
 // haleyjd: temporary hack
 void D_InitWeaponInfo();

@@ -27,7 +27,6 @@ playerclass DoomMarine
    weaponslot 8 { weapons : Chainsaw }
    weaponslot 9 { weapons : SuperShotgun }
 
-   // INVENTORY_TODO: reborn weapons
    rebornitem AmmoClip, 50
    rebornitem WeaponFist, 1
    rebornitem WeaponPistol, 1
@@ -46,8 +45,16 @@ playerclass Corvus
    defaultskin    corvus
    thingtype      HereticPlayer
    altattackstate S_HPLAY_ATK2
-   
-   // INVENTORY_TODO: reborn items
+
+   weaponslot 1 { weapons : Staff, Gauntlets }
+   weaponslot 2 { weapons : GoldWand }
+   weaponslot 3 { weapons : Crossbow }
+   weaponslot 4 { weapons : Blaster }
+   weaponslot 5 { weapons : SkullRod }
+   weaponslot 6 { weapons : PhoenixRod }
+   weaponslot 7 { weapons : Mace }
+   weaponslot 8 { weapons : Gauntlets }
+
    rebornitem AmmoWandCrystal, 50
    rebornitem WeaponStaff, 1
    rebornitem WeaponGoldWand, 1

@@ -22,6 +22,8 @@ weaponinfo Fist
   flags        FLEEMELEE|NOHITGHOSTS|SILENCER
   mod          Fist
   recoil       10
+
+  tracker      WeaponFist
 }
 
 weaponinfo Pistol
@@ -42,6 +44,8 @@ weaponinfo Pistol
   recoil       10
   hapticrecoil 1
   haptictime   1
+
+  tracker      WeaponPistol
 }
 
 weaponinfo Shotgun
@@ -62,6 +66,8 @@ weaponinfo Shotgun
   recoil       30
   hapticrecoil 3
   haptictime   3
+
+  tracker      WeaponShotgun
 }
 
 weaponinfo Chaingun
@@ -82,6 +88,8 @@ weaponinfo Chaingun
   recoil       10
   hapticrecoil 1
   haptictime   1
+
+  tracker      WeaponChaingun
 }
 
 weaponinfo MissileLauncher
@@ -102,6 +110,8 @@ weaponinfo MissileLauncher
   recoil       100
   hapticrecoil 6
   haptictime   8
+
+  tracker      WeaponMissileLauncher
 }
 
 weaponinfo PlasmaRifle
@@ -122,6 +132,8 @@ weaponinfo PlasmaRifle
   recoil       20
   hapticrecoil 2
   haptictime   1
+
+  tracker      WeaponPlasmaRifle
 }
 
 weaponinfo BFG9000
@@ -142,6 +154,8 @@ weaponinfo BFG9000
   recoil       20
   hapticrecoil 2
   haptictime   1
+
+  tracker      WeaponBFG9000
 }
 
 weaponinfo Chainsaw
@@ -157,6 +171,9 @@ weaponinfo Chainsaw
   flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCER
   mod          Chainsaw
   upsound      sawup
+  readysound   sawidl
+
+  tracker      WeaponChainsaw
 }
 
 weaponinfo SuperShotgun
@@ -177,6 +194,8 @@ weaponinfo SuperShotgun
   recoil       80
   hapticrecoil 5
   haptictime   5
+
+  tracker      WeaponSuperShotgun
 }
 
 
@@ -233,7 +252,7 @@ artifact WeaponChaingun
   artifacttype Weapon
 }
 
-artifact MissileLauncher
+artifact WeaponMissileLauncher
 {
   amount         1
   maxamount      1
@@ -245,7 +264,7 @@ artifact MissileLauncher
   artifacttype Weapon
 }
 
-artifact PlasmaRifle
+artifact WeaponPlasmaRifle
 {
   amount         1
   maxamount      1
@@ -257,7 +276,7 @@ artifact PlasmaRifle
   artifacttype Weapon
 }
 
-artifact BFG9000
+artifact WeaponBFG9000
 {
   amount         1
   maxamount      1
@@ -317,7 +336,7 @@ weapongiver Shotgun
 weapongiver Chaingun
 {
   weapon WeaponChaingun
-  ammogiven AmmoClip, 20, 10, 50, 10
+  ammogiven AmmoClip, 20, 10, 50, 20
 }
 
 weapongiver MissileLauncher

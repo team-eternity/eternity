@@ -33,6 +33,18 @@
 
 struct weaponinfo_t;
 
+// Hard-coded names for specially treated weapons (needed in DeHackEd, etc.)
+// INVENTORY_TODO: many may become unneeded when P_TouchSpecialThing is finished
+#define WEAPNAME_FIST     "Fist"
+#define WEAPNAME_PISTOL   "Pistol"
+#define WEAPNAME_SHOTGUN  "Shotgun"
+#define WEAPNAME_CHAINGUN "Chaingun"
+#define WEAPNAME_MISSILE  "MissileLauncher"
+#define WEAPNAME_PLASMA   "PlasmaRifle"
+#define WEAPNAME_BFG9000  "BFG9000"
+#define WEAPNAME_CHAINSAW "Chainsaw"
+#define WEAPNAME_SSG      "SuperShotgun"
+
 #ifdef NEED_EDF_DEFINITIONS
 
 // Section Names
@@ -46,17 +58,40 @@ extern cfg_opt_t edf_wdelta_opts[];
 #endif
 
 // Structures
+struct cfg_t;
 struct weaponslot_t
 {
    weaponinfo_t *weapon;           // weapon in the slot
    DLListItem<weaponslot_t> links; // link to next weapon in the same slot
 };
 
+#define NUMWEAPONSLOTS 16
+
+extern weaponslot_t *weaponslots[NUMWEAPONSLOTS];
+
 // Global Functions
 weaponinfo_t *E_WeaponForID(int id);
 weaponinfo_t *E_WeaponForName(const char *name);
 
-void E_ProcessWeapons(cfg_t *cfg);
+// FIXME: Reorder to be cleaner
+void E_CollectWeapons(cfg_t *cfg);
+
+
+
+weaponinfo_t *E_WeaponForSlot(int slot);
+int E_SlotForWeapon(weaponinfo_t *weapon);
+
+void E_ProcessWeaponInfo(cfg_t *cfg);
+void E_ProcessWeaponDeltas(cfg_t *cfg);
+
+bool E_WeaponIsCurrent(const player_t *player, const char *name);
+bool E_WeaponIsCurrentNum(player_t *player, const int num);
+bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon);
+bool E_PlayerOwnsWeaponForSlot(player_t *player, int slot);
+bool E_PlayerOwnsWeaponInSlot(player_t *player, int slot);
+
+void E_GiveAllWeapons(player_t *player);
+void E_GiveAllClassWeapons(player_t *player);
 
 #endif
 

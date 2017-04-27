@@ -41,6 +41,7 @@
 #include "d_event.h"
 #include "d_mod.h"
 #include "e_inventory.h"
+#include "e_weapons.h"
 #include "g_game.h"
 #include "m_random.h"
 #include "p_enemy.h"
@@ -156,11 +157,11 @@ static void P_BringUpWeapon(player_t *player)
 {
    statenum_t newstate;
    
-   if(player->pendingweapon == wp_nochange)
-      player->pendingweapon = player->readyweapon;
+   if(player->pendingweaponnew == nullptr)
+      player->pendingweaponnew = player->readyweaponnew;
    
    weaponinfo_t *pendingweapon;
-   if((pendingweapon = P_GetPendingWeapon(player)))
+   if((pendingweapon = player->pendingweaponnew))
    {
       // haleyjd 06/28/13: weapon upsound
       if(pendingweapon->upsound)
@@ -168,7 +169,7 @@ static void P_BringUpWeapon(player_t *player)
   
       newstate = pendingweapon->upstate;
   
-      player->pendingweapon = wp_nochange;
+      player->pendingweaponnew = nullptr;
    
       // killough 12/98: prevent pistol from starting visibly at bottom of screen:
       player->psprites[ps_weapon].sy = demo_version >= 203 ? 
@@ -200,11 +201,12 @@ bool P_WeaponHasAmmo(player_t *player, weaponinfo_t *weapon)
 //
 // haleyjd 05/31/14: Rewritten to use next and previous in cycle pointers
 // in weaponinfo_t, for friendliness with future dynamic weapons system.
+// WEAPON_FIXME: Doesn't work as intended
 //
 int P_NextWeapon(player_t *player)
 {
-   weaponinfo_t *currentweapon = P_GetReadyWeapon(player);
-   weaponinfo_t *newweapon     = currentweapon;
+   weaponinfo_t *currentweapon = player->readyweaponnew;
+   weaponinfo_t *newweapon     = player->readyweaponnew;
    bool          ammototry;
 
    do
@@ -212,8 +214,8 @@ int P_NextWeapon(player_t *player)
       newweapon = newweapon->nextInCycle;
       ammototry = P_WeaponHasAmmo(player, newweapon);
    }
-   while((!player->weaponowned[newweapon->id] || !ammototry) &&
-         newweapon != currentweapon);
+   while((!E_PlayerOwnsWeapon(player, newweapon) || !ammototry) &&
+         newweapon->id != currentweapon->id);
 
    return newweapon != currentweapon ? newweapon->id : wp_nochange;
 }
@@ -222,10 +224,11 @@ int P_NextWeapon(player_t *player)
 // P_PrevWeapon
 //
 // haleyjd 03/06/09: Like the above.
+// WEAPON_FIXME: Doesn't work as intended
 //
 int P_PrevWeapon(player_t *player)
 {
-   weaponinfo_t *currentweapon = P_GetReadyWeapon(player);
+   weaponinfo_t *currentweapon = player->readyweaponnew;
    weaponinfo_t *newweapon     = currentweapon;
    bool          ammototry;
 
@@ -234,8 +237,8 @@ int P_PrevWeapon(player_t *player)
       newweapon = newweapon->prevInCycle;
       ammototry = P_WeaponHasAmmo(player, newweapon);
    }
-   while((!player->weaponowned[newweapon->id] || !ammototry) &&
-         newweapon != currentweapon);
+   while((!E_PlayerOwnsWeapon(player, newweapon) || !ammototry) &&
+         newweapon->id != currentweapon->id);
 
    return newweapon != currentweapon ? newweapon->id : wp_nochange;
 }
@@ -265,11 +268,11 @@ static int weapon_preferences[NUMWEAPONS+1] =
 // this won't matter, because the raised weapon has no ammo anyway. When called
 // from G_BuildTiccmd you want to toggle to a different weapon regardless.
 //
-weapontype_t P_SwitchWeapon(player_t *player)
+weaponinfo_t *P_SwitchWeapon(player_t *player)
 {
    int *prefer = weapon_preferences; // killough 3/22/98
-   weapontype_t currentweapon = player->readyweapon;
-   weapontype_t newweapon = currentweapon;
+   weaponinfo_t *currentweapon = player->readyweaponnew;
+   weaponinfo_t *newweapon = currentweapon;
    int i = NUMWEAPONS + 1;   // killough 5/2/98   
 
    // killough 2/8/98: follow preferences and fix BFG/SSG bugs
@@ -296,42 +299,42 @@ weapontype_t P_SwitchWeapon(player_t *player)
          if(!player->powers[pw_strength])  // allow chainsaw override
             break;
       case 0:
-         newweapon = wp_fist;
+         newweapon = E_WeaponForName(WEAPNAME_FIST);
          break;
       case 2:
          if(clips)
-            newweapon = wp_pistol;
+            newweapon = E_WeaponForName(WEAPNAME_PISTOL);
          break;
       case 3:
-         if(player->weaponowned[wp_shotgun] && shells)
-            newweapon = wp_shotgun;
+         if(E_PlayerOwnsWeaponForSlot(player, wp_shotgun) && shells)
+            newweapon = E_WeaponForName(WEAPNAME_SHOTGUN);
          break;
       case 4:
-         if(player->weaponowned[wp_chaingun] && clips)
-            newweapon = wp_chaingun;
+         if(E_PlayerOwnsWeaponForSlot(player, wp_chaingun) && clips)
+            newweapon = E_WeaponForName(WEAPNAME_CHAINGUN);
          break;
       case 5:
-         if(player->weaponowned[wp_missile] && rockets)
-            newweapon = wp_missile;
+         if(E_PlayerOwnsWeaponForSlot(player, wp_missile) && rockets)
+            newweapon = E_WeaponForName(WEAPNAME_MISSILE);
          break;
       case 6:
-         if(player->weaponowned[wp_plasma] && cells && GameModeInfo->id != shareware)
-            newweapon = wp_plasma;
+         if(E_PlayerOwnsWeaponForSlot(player, wp_plasma) && cells && GameModeInfo->id != shareware)
+            newweapon = E_WeaponForName(WEAPNAME_PLASMA);
          break;
       case 7:
-         if(player->weaponowned[wp_bfg] && GameModeInfo->id != shareware &&
+         if(E_PlayerOwnsWeaponForSlot(player, wp_bfg) && GameModeInfo->id != shareware &&
             cells >= (demo_compatibility ? 41 : 40))
-            newweapon = wp_bfg;
+            newweapon = E_WeaponForName(WEAPNAME_BFG9000);
          break;
       case 8:
-         if(player->weaponowned[wp_chainsaw])
-            newweapon = wp_chainsaw;
+         if(E_PlayerOwnsWeaponForSlot(player, wp_chainsaw))
+            newweapon = E_WeaponForName(WEAPNAME_CHAINSAW);
          break;
       case 9:
-         if(player->weaponowned[wp_supershotgun] && 
+         if(E_PlayerOwnsWeaponForSlot(player, wp_supershotgun) &&
             enable_ssg &&
             shells >= (demo_compatibility ? 3 : 2))
-            newweapon = wp_supershotgun;
+            newweapon = E_WeaponForName(WEAPNAME_SSG);
          break;
       }
    }
@@ -369,7 +372,7 @@ int P_WeaponPreferred(int w1, int w2)
 bool P_CheckAmmo(player_t *player)
 {
    // Return if current ammunition sufficient.
-   if(P_WeaponHasAmmo(player, P_GetReadyWeapon(player)))
+   if(P_WeaponHasAmmo(player, player->readyweaponnew))
       return true;
    
    // Out of ammo, pick a weapon to change to.
@@ -381,9 +384,9 @@ bool P_CheckAmmo(player_t *player)
    
    if(demo_compatibility)
    {
-      player->pendingweapon = P_SwitchWeapon(player);      // phares
+      player->pendingweaponnew = P_SwitchWeapon(player);      // phares
       // Now set appropriate weapon overlay.
-      P_SetPsprite(player,ps_weapon,weaponinfo[player->readyweapon].downstate);
+      P_SetPsprite(player,ps_weapon,player->readyweaponnew->downstate);
    }
      
    return false;
@@ -398,7 +401,7 @@ bool P_CheckAmmo(player_t *player)
 //
 void P_SubtractAmmo(player_t *player, int compat_amt)
 {
-   weaponinfo_t *weapon = P_GetReadyWeapon(player);
+   weaponinfo_t *weapon = player->readyweaponnew;
 
    if(player->cheats & CF_INFAMMO || !weapon->ammo)
       return;
@@ -420,10 +423,10 @@ static void P_FireWeapon(player_t *player)
    if(!P_CheckAmmo(player))
       return;
 
-   weapon = P_GetReadyWeapon(player);
+   weapon = player->readyweaponnew;
 
    P_SetMobjState(player->mo, player->mo->info->missilestate);
-   newstate = weapon->atkstate;
+   newstate = player->refire && weapon->holdstate ? weapon->holdstate : weapon->atkstate;
    P_SetPsprite(player, ps_weapon, newstate);
 
    // haleyjd 04/06/03: silencer powerup
@@ -442,7 +445,7 @@ static void P_FireWeapon(player_t *player)
 //
 void P_DropWeapon(player_t *player)
 {
-   P_SetPsprite(player, ps_weapon, weaponinfo[player->readyweapon].downstate);
+   P_SetPsprite(player, ps_weapon, player->readyweaponnew->downstate);
 }
 
 //=============================================================================
@@ -453,50 +456,39 @@ void P_DropWeapon(player_t *player)
 //
 
 //
-// P_GetReadyWeapon
-//
-// haleyjd 09/13/07: 
-// Retrieves a pointer to the proper weaponinfo_t structure for the 
-// readyweapon index stored in the player.
-//
-// WEAPON_TODO: Will need to change as system evolves.
-// PCLASS_FIXME: weapons
-//
-weaponinfo_t *P_GetReadyWeapon(player_t *player)
-{
-   return &(weaponinfo[player->readyweapon]);
-}
-
-//
-// P_GetPendingWeapon
-//
-// haleyjd 06/28/13:
-// Retrieves a pointer to the proper weaponinfo_t structure for the
-// pendingweapon index stored in the player.
-//
-// WEAPON_TODO: Will need to change as system evolves.
-// PCLASS_FIXME: weapons
-//
-weaponinfo_t *P_GetPendingWeapon(player_t *player)
-{
-   return 
-      (player->pendingweapon >= 0 && player->pendingweapon < NUMWEAPONS) ? 
-       &(weaponinfo[player->pendingweapon]) : NULL;
-}
-
-//
 // P_GetPlayerWeapon
 //
 // haleyjd 09/16/07:
-// Gets weapon at given index for the given player.
+// Gets weapon at given slot for the given player.
 // 
-// WEAPON_TODO: must redirect through playerclass lookup
-// PCLASS_FIXME: weapons
+// WEAPON_TODO: must consider the global weaponslots
 //
-weaponinfo_t *P_GetPlayerWeapon(player_t *player, int index)
+weaponinfo_t *P_GetPlayerWeapon(player_t *player, int slot)
 {
-   // currently there is only one linear weaponinfo
-   return &weaponinfo[index];
+   if(!player->pclass->weaponslots[slot])
+      return nullptr;
+
+   bool hit = false;
+   DLListItem<weaponslot_t> *weaponslot, *baseslot;
+   baseslot = weaponslot = &player->pclass->weaponslots[slot]->links;
+
+   while(!hit && weaponslot->dllNext)
+   {
+      if(weaponslot->dllObject->weapon->id == player->readyweaponnew->id)
+         hit = true;
+      else
+         weaponslot = weaponslot->dllNext;
+   }
+
+   if(!weaponslot->dllNext)
+      weaponslot = baseslot;
+   else
+      weaponslot = weaponslot->dllNext;
+
+   while(weaponslot && !E_PlayerOwnsWeapon(player, weaponslot->dllObject->weapon))
+      weaponslot = weaponslot->dllNext;
+
+   return weaponslot ? weaponslot->dllObject->weapon : nullptr;
 }
 
 //
@@ -512,7 +504,7 @@ static void P_WeaponSoundInfo(Mobj *mo, sfxinfo_t *sound)
    params.setNormalDefaults(mo);
 
    if(mo->player && mo->player->powers[pw_silencer] &&
-      P_GetReadyWeapon(mo->player)->flags & WPF_SILENCER)
+      mo->player->readyweaponnew->flags & WPF_SILENCER)
       params.volumeScale = WEAPON_VOLUME_SILENCED;
 
    S_StartSfxInfo(params);
@@ -528,7 +520,7 @@ static void P_WeaponSound(Mobj *mo, int sfx_id)
    int volume = 127;
 
    if(mo->player && mo->player->powers[pw_silencer] &&
-      P_GetReadyWeapon(mo->player)->flags & WPF_SILENCER)
+      mo->player->readyweaponnew->flags & WPF_SILENCER)
       volume = WEAPON_VOLUME_SILENCED;
 
    S_StartSoundAtVolume(mo, sfx_id, volume, ATTN_NORMAL, CHAN_AUTO);
@@ -560,7 +552,7 @@ void A_WeaponReady(actionargs_t *actionargs)
    if(!(psp = actionargs->pspr))
       return;
 
-   // WEAPON_FIXME: chainsaw particulars (idle sound)
+   // WEAPON_FIXME: chainsaw particulars (haptic feedback)
 
    // get out of attack state
    if(mo->state == states[mo->info->missilestate] || 
@@ -569,10 +561,18 @@ void A_WeaponReady(actionargs_t *actionargs)
       P_SetMobjState(mo, mo->info->spawnstate);
    }
 
-   if(player->readyweapon == wp_chainsaw && 
+   // Play sound if the readyweapon has a sound to play and the current
+   // state is the ready state, and do it only 50% of the time if the
+   // according flag is set.
+   if(player->readyweaponnew->readysound &&
+      psp->state->index == player->readyweaponnew->readystate &&
+      (!(player->readyweaponnew->flags & WPF_READYSNDHALF)
+      || P_Random(pr_readysound) < 128))
+      S_StartSound(player->mo, player->readyweaponnew->readysound);
+
+   if(E_WeaponIsCurrent(player, WEAPNAME_CHAINSAW) &&
       psp->state == states[E_SafeState(S_SAW)])
    {
-      S_StartSound(player->mo, sfx_sawidl);
       if(player == &players[consoleplayer])
          I_StartHaptic(HALHapticInterface::EFFECT_CONSTANT, 3, 108);
    }
@@ -580,10 +580,10 @@ void A_WeaponReady(actionargs_t *actionargs)
    // check for change
    //  if player is dead, put the weapon away
    
-   if(player->pendingweapon != wp_nochange || !player->health)
+   if(player->pendingweaponnew != nullptr || !player->health)
    {
       // change weapon (pending weapon should already be validated)
-      statenum_t newstate = weaponinfo[player->readyweapon].downstate;
+      statenum_t newstate = player->readyweaponnew->downstate;
       P_SetPsprite(player, ps_weapon, newstate);
       return;
    }
@@ -594,7 +594,7 @@ void A_WeaponReady(actionargs_t *actionargs)
    if(player->cmd.buttons & BT_ATTACK)
    {
       if(!player->attackdown || 
-         !(P_GetReadyWeapon(player)->flags & WPF_NOAUTOFIRE))
+         !(player->readyweaponnew->flags & WPF_NOAUTOFIRE))
       {
          player->attackdown = true;
          P_FireWeapon(player);
@@ -628,7 +628,7 @@ void A_ReFire(actionargs_t *actionargs)
    //  (if a weaponchange is pending, let it go through instead)
    
    if((player->cmd.buttons & BT_ATTACK)
-      && player->pendingweapon == wp_nochange && player->health)
+      && player->pendingweaponnew == nullptr && player->health)
    {
       player->refire++;
       P_FireWeapon(player);
@@ -659,7 +659,7 @@ void A_CheckReload(actionargs_t *actionargs)
    if(!P_CheckAmmo(player) && demo_version >= 331)
    {
       P_SetPsprite(player, ps_weapon,
-                   weaponinfo[player->readyweapon].downstate);
+                   player->readyweaponnew->downstate);
    }
 }
 
@@ -703,8 +703,8 @@ void A_Lower(actionargs_t *actionargs)
    }
 
    // haleyjd 03/28/10: do not assume pendingweapon is valid
-   if(player->pendingweapon < NUMWEAPONS)
-      player->readyweapon = player->pendingweapon;
+   if(player->pendingweaponnew != nullptr)
+      player->readyweaponnew = player->pendingweaponnew;
 
    P_BringUpWeapon(player);
 }
@@ -736,7 +736,7 @@ void A_Raise(actionargs_t *actionargs)
    // The weapon has been raised all the way,
    //  so change to the ready state.
    
-   newstate = weaponinfo[player->readyweapon].readystate;
+   newstate = player->readyweaponnew->readystate;
    
    P_SetPsprite(player, ps_weapon, newstate);
 }
@@ -748,7 +748,7 @@ void A_Raise(actionargs_t *actionargs)
 //
 void P_WeaponRecoil(player_t *player)
 {
-   weaponinfo_t *readyweapon = P_GetReadyWeapon(player);
+   weaponinfo_t *readyweapon = player->readyweaponnew;
 
    // killough 3/27/98: prevent recoil in no-clipping mode
    if(!(player->mo->flags & MF_NOCLIP))
@@ -779,7 +779,7 @@ void P_WeaponRecoil(player_t *player)
 static void A_FireSomething(player_t* player, int adder)
 {
    P_SetPsprite(player, ps_flash,
-      weaponinfo[player->readyweapon].flashstate+adder);
+      player->readyweaponnew->flashstate+adder);
    
    P_WeaponRecoil(player);
 }
@@ -985,10 +985,10 @@ void A_FireOldBFG(actionargs_t *actionargs)
 
    if(weapon_recoil && !(mo->flags & MF_NOCLIP))
       P_Thrust(player, ANG180 + mo->angle, 0,
-               512*weaponinfo[wp_plasma].recoil);
+               512*E_WeaponForName(WEAPNAME_PLASMA)->recoil);
 
    // WEAPON_FIXME: ammopershot for classic BFG
-   auto weapon   = P_GetReadyWeapon(player);
+   auto weapon   = player->readyweaponnew;
    auto ammoType = weapon->ammo;   
    if(ammoType && !(player->cheats & CF_INFAMMO))
       E_RemoveInventoryItem(player, ammoType, 1);
@@ -1074,7 +1074,7 @@ void A_FirePlasma(actionargs_t *actionargs)
    P_SpawnPlayerMissile(mo, E_SafeThingType(MT_PLASMA));
 }
 
-static fixed_t bulletslope;
+fixed_t bulletslope;
 
 //
 // P_BulletSlope
@@ -1239,7 +1239,7 @@ void A_FireCGun(actionargs_t *actionargs)
 
    P_WeaponSound(mo, sfx_chgun);
 
-   if(!P_WeaponHasAmmo(player, P_GetReadyWeapon(player)))
+   if(!P_WeaponHasAmmo(player, player->readyweaponnew))
       return;
    
    P_SetMobjState(mo, player->pclass->altattack);
@@ -1547,7 +1547,7 @@ void P_SetupPsprites(player_t *player)
       player->psprites[i].state = NULL;
    
    // spawn the gun
-   player->pendingweapon = player->readyweapon;
+   player->pendingweaponnew = player->readyweaponnew;
    P_BringUpWeapon(player);
 }
 
@@ -1653,7 +1653,7 @@ void A_FireCustomBullets(actionargs_t *actionargs)
    if(flashint >= 0 && flashstate != NullStateNum)
       P_SetPsprite(player, ps_flash, flashstate);
    else if(flashint == 0) // zero means default behavior
-      P_SetPsprite(player, ps_flash, P_GetReadyWeapon(player)->flashstate);
+      P_SetPsprite(player, ps_flash, player->readyweaponnew->flashstate);
 
    P_WeaponRecoil(player);
 

@@ -36,6 +36,7 @@
 #include "e_inventory.h"
 #include "e_player.h"
 #include "e_states.h"
+#include "e_weapons.h"
 #include "g_game.h"
 #include "hu_stuff.h"
 #include "metaapi.h"
@@ -749,32 +750,31 @@ void P_PlayerThink(player_t *player)
          //e6y
          newweapon = (cmd->buttons & BT_WEAPONMASK_OLD)>>BT_WEAPONSHIFT;
 
-         if(newweapon == wp_fist && player->weaponowned[wp_chainsaw] &&
-            (player->readyweapon != wp_chainsaw ||
+         if(newweapon == wp_fist && E_PlayerOwnsWeapon(player, E_WeaponForSlot(wp_chainsaw)) &&
+            (!E_WeaponIsCurrent(player, WEAPNAME_CHAINSAW) ||
              !player->powers[pw_strength]))
             newweapon = wp_chainsaw;
          if(enable_ssg &&
             newweapon == wp_shotgun &&
-            player->weaponowned[wp_supershotgun] &&
-            player->readyweapon != wp_supershotgun)
+            E_PlayerOwnsWeaponForSlot(player, wp_supershotgun) &&
+            !E_WeaponIsCurrent(player, WEAPNAME_SSG))
             newweapon = wp_supershotgun;
       }
 
       // killough 2/8/98, 3/22/98 -- end of weapon selection changes
 
-      // WEAPON_FIXME: setting pendingweapon
 
-      if(player->weaponowned[newweapon] && newweapon != player->readyweapon)
+      // Do not go to plasma or BFG in shareware, even if cheated.
+      // haleyjd 06/28/13: generalized for EDF weapon system
+      weaponinfo_t *pendingweapon = P_GetPlayerWeapon(player, newweapon);
+      if(E_PlayerOwnsWeapon(player, pendingweapon) &&
+         pendingweapon->id != player->readyweaponnew->id)   
       {
-         // Do not go to plasma or BFG in shareware, even if cheated.
-         // haleyjd 06/28/13: generalized for EDF weapon system
-         weaponinfo_t *pendingweapon = P_GetPlayerWeapon(player, newweapon);
-         
          if(pendingweapon && 
             !(GameModeInfo->flags & GIF_SHAREWARE && 
               pendingweapon->flags & WPF_NOTSHAREWARE))
          {
-            player->pendingweapon = newweapon;
+            player->pendingweaponnew = pendingweapon;
          }
       }
    }

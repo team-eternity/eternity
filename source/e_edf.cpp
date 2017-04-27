@@ -253,6 +253,7 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_FRMDELTA,    edf_fdelta_opts,   EDF_NSEC_FLAGS),
    CFG_SEC(EDF_SEC_TNGDELTA,    edf_tdelta_opts,   EDF_NSEC_FLAGS),
    CFG_SEC(EDF_SEC_SDELTA,      edf_sdelta_opts,   EDF_NSEC_FLAGS),
+   CFG_SEC(EDF_SEC_WPNDELTA,    edf_wdelta_opts,   EDF_NSEC_FLAGS),
    CFG_INT(ITEM_D2TITLETICS,    0,                 CFGF_NONE),
    CFG_INT(ITEM_INTERPAUSE,     0,                 CFGF_NONE),
    CFG_INT(ITEM_INTERFADE,     -1,                 CFGF_NONE),
@@ -1231,6 +1232,12 @@ static void E_ProcessStatesAndThings(cfg_t *cfg)
    E_ProcessThings(cfg);
 }
 
+static void E_ProcessWeapons(cfg_t *cfg)
+{
+   E_CollectWeapons(cfg);   // see e_weapons.cpp
+   E_ProcessWeaponInfo(cfg);
+}
+
 //
 // E_ProcessPlayerData
 //
@@ -1672,6 +1679,7 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
    E_ProcessSoundDeltas(cfg, true); // see e_sound.cpp
    E_ProcessStateDeltas(cfg);       // see e_states.cpp
    E_ProcessThingDeltas(cfg);       // see e_things.cpp
+   E_ProcessWeaponDeltas(cfg);      // see e_weapons.cpp
 
    // 07/19/12: game properties
    E_ProcessGameProperties(cfg);    // see e_gameprops.cpp

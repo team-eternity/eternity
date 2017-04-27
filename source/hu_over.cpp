@@ -37,6 +37,7 @@
 #include "doomstat.h"
 #include "e_fonts.h"
 #include "e_inventory.h"
+#include "e_weapons.h"
 #include "g_game.h"
 #include "hu_frags.h"
 #include "hu_over.h"
@@ -121,33 +122,33 @@ enum
 #define hu_player (players[displayplayer])
 
 // Get the player's ammo for the given weapon, or 0 if am_noammo
-static int wc_pammo(int w)
+static int wc_pammo(weaponinfo_t *w)
 {
-   return E_GetItemOwnedAmount(&hu_player, weaponinfo[w].ammo);
+   return E_GetItemOwnedAmount(&hu_player, w->ammo);
 }
 
 // Determine if the player has enough ammo for one shot with the given weapon
-static bool wc_noammo(int w)
+static bool wc_noammo(weaponinfo_t *w)
 {
    bool outofammo = false;
-   itemeffect_t *ammo = weaponinfo[w].ammo;
+   itemeffect_t *ammo = w->ammo;
 
    // no-ammo weapons are always considered to have ammo
    if(ammo)
    {
       int amount = E_GetItemOwnedAmount(&hu_player, ammo);
       if(amount)
-         outofammo = (amount < weaponinfo[w].ammopershot);
+         outofammo = (amount < w->ammopershot);
    }
 
    return outofammo;
 }
 
 // Get the player's maxammo for the given weapon, or 0 if am_noammo
-static int wc_mammo(int w)
+static int wc_mammo(weaponinfo_t *w)
 {
    int amount = 0;
-   itemeffect_t *ammo = weaponinfo[w].ammo;
+   itemeffect_t *ammo = w->ammo;
 
    if(ammo)
       amount = E_GetMaxAmountForArtifact(&hu_player, ammo);
@@ -156,7 +157,7 @@ static int wc_mammo(int w)
 }
 
 // Determine the color to use for the given weapon's number and ammo bar/count
-static char weapcolor(int w)
+static char weapcolor(weaponinfo_t *w)
 {
    int  maxammo = wc_mammo(w);
    bool noammo  = wc_noammo(w);
@@ -171,10 +172,10 @@ static char weapcolor(int w)
 }
 
 // Get the amount of ammo the displayplayer has left in his/her readyweapon
-#define playerammo    wc_pammo(hu_player.readyweapon)
+#define playerammo    wc_pammo(hu_player.readyweaponnew)
 
 // Get the maximum amount the player could have for his/her readyweapon
-#define playermaxammo wc_mammo(hu_player.readyweapon)
+#define playermaxammo wc_mammo(hu_player.readyweaponnew)
 
 //
 // setol
@@ -388,7 +389,7 @@ static void HU_drawAmmo(int x, int y)
    HU_WriteText(HUDCOLOR "Ammo", x, y);
    x += GAP;
    
-   fontcolor = weapcolor(hu_player.readyweapon);
+   fontcolor = weapcolor(hu_player.readyweaponnew);
    
    tempstr << static_cast<char>(fontcolor);
    
@@ -420,10 +421,10 @@ static void HU_drawWeapons(int x, int y)
   
    for(int i = 0; i < NUMWEAPONS; i++)
    {
-      if(hu_player.weaponowned[i])
+      if(E_PlayerOwnsWeaponForSlot(&hu_player, i))
       {
          // got it
-         fontcolor = weapcolor(i);
+         fontcolor = weapcolor(E_WeaponForSlot(i));
          tempstr << static_cast<char>(fontcolor) << (i + 1) << ' ';
       }
    }

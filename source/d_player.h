@@ -47,6 +47,7 @@
 
 struct playerclass_t;
 struct skin_t;
+struct weaponslot_t;
 
 // Inventory item ID is just an integer. The inventory item type can be looked
 // up using this.
@@ -150,10 +151,12 @@ struct player_t
    int            frags[MAXPLAYERS];
    int            totalfrags;
    
-   weapontype_t   readyweapon;
-   weapontype_t   pendingweapon; // Is wp_nochange if not changing.
+   weaponinfo_t  *readyweaponnew;
+   weaponinfo_t  *pendingweaponnew; // Is nullptr if not changing.
 
-   int            weaponowned[NUMWEAPONS];
+   weaponslot_t  *readyweaponnslot;
+   weaponslot_t  *pendingweaponslot; // Is nullptr if not changing.
+
    int            weaponctrs[NUMWEAPONS][3]; // haleyjd 03/31/06
 
    int            extralight;    // So gun flashes light up areas.

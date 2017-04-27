@@ -963,6 +963,9 @@
     <ClCompile Include="..\source\p_portalcross.cpp">
       <Filter>Source Files\P_\P_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\a_hereticweapons.cpp">
+      <Filter>Source Files\A_\A_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">

@@ -46,6 +46,7 @@
 #include "e_inventory.h"
 #include "e_player.h"
 #include "e_states.h"
+#include "e_weapons.h"
 #include "g_game.h"
 #include "metaapi.h"
 #include "m_argv.h"
@@ -245,7 +246,9 @@ static void cheat_mus(const void *arg)
 static void cheat_choppers(const void *arg)
 {
    // WEAPON_FIXME: choppers cheat
-   plyr->weaponowned[wp_chainsaw] = true;
+   weaponinfo_t *chainsaw = E_WeaponForName(WEAPNAME_CHAINSAW);
+   if(!E_PlayerOwnsWeapon(plyr, chainsaw))
+      E_GiveInventoryItem(plyr, chainsaw->tracker, 1);
    doom_printf("%s", DEH_String("STSTR_CHOPPERS")); // Ty 03/27/98 - externalized
 }
 
@@ -279,10 +282,21 @@ static void cheat_one(const void *arg)
       cheat_pw(&pwsil);
 }
 
+static const char *cheatWeapons[NUMWEAPONS] =
+{
+   WEAPNAME_FIST,
+   WEAPNAME_PISTOL,
+   WEAPNAME_SHOTGUN,
+   WEAPNAME_CHAINGUN,
+   WEAPNAME_MISSILE,
+   WEAPNAME_PLASMA,
+   WEAPNAME_BFG9000,
+   WEAPNAME_CHAINSAW,
+   WEAPNAME_SSG
+};
+
 static void cheat_fa(const void *arg)
 {
-   int i;
-   
    if(!E_PlayerHasBackpack(plyr))
       E_GiveBackpack(plyr);
    
@@ -296,13 +310,7 @@ static void cheat_fa(const void *arg)
 
    // WEAPON_FIXME: IDFA cheat
    
-   // You can't own weapons that aren't in the game - phares 02/27/98
-   for(i = 0; i < NUMWEAPONS; i++)
-   {
-      if(!(((i == wp_plasma || i == wp_bfg) && GameModeInfo->id == shareware) ||
-         (i == wp_supershotgun && !enable_ssg)))
-         plyr->weaponowned[i] = true;
-   }
+   E_GiveAllClassWeapons(plyr);
 
    // give full ammo
    E_GiveAllAmmo(plyr, GAA_MAXAMOUNT);
@@ -583,15 +591,20 @@ static void cheat_weapx(const void *arg)
    {
       if(w >= 0 && w < NUMWEAPONS)
       {
-         if((plyr->weaponowned[w] = !plyr->weaponowned[w]))
+         weaponinfo_t *weapon = E_WeaponForName(cheatWeapons[w]);
+         if(!E_PlayerOwnsWeapon(plyr, weapon))
+         {
+            E_GiveInventoryItem(plyr, weapon->tracker, 1);
             doom_printf("Weapon Added");  // Ty 03/27/98 - *not* externalized
+         }
          else 
          {
-            weapontype_t P_SwitchWeapon(player_t *player);
+            weaponinfo_t *P_SwitchWeapon(player_t *player);
             
+            E_RemoveInventoryItem(plyr, weapon->tracker, 1);
             doom_printf("Weapon Removed"); // Ty 03/27/98 - *not* externalized
-            if(w == plyr->readyweapon)     // maybe switch if weapon removed
-               plyr->pendingweapon = P_SwitchWeapon(plyr);
+            if(E_WeaponIsCurrentNum(plyr, w))     // maybe switch if weapon removed
+               plyr->pendingweaponnew = P_SwitchWeapon(plyr);
          }
       }
    }
@@ -1059,6 +1072,12 @@ CONSOLE_NETCMD(nuke, cf_server|cf_level, netcmd_nuke)
    // killough 3/22/98: make more intelligent about plural
    // Ty 03/27/98 - string(s) *not* externalized
    doom_printf("%d Monster%s Killed", kills,  (kills == 1) ? "" : "s");
+}
+
+// WEAPON_FIXME: This is a temporary measure, remove as soon as isn't required
+CONSOLE_COMMAND(GIVEARSENAL, cf_server|cf_level)
+{
+   cheat_fa("");
 }
 
 //----------------------------------------------------------------------------

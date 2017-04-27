@@ -1440,6 +1440,19 @@ void A_FlameSnd(actionargs_t *actionargs);
 void A_ClearSkin(actionargs_t *);
 void A_PhoenixPuff(actionargs_t *);
 
+// MaxW 2017/04/15: Heretic weapon pointers
+void A_StaffAttackPL1(actionargs_t *);
+void A_StaffAttackPL2(actionargs_t *);
+void A_FireGoldWandPL1(actionargs_t *);
+void A_FireGoldWandPL2(actionargs_t *);
+void A_FireCrossbowPL1(actionargs_t *);
+void A_FireCrossbowPL2(actionargs_t *);
+void A_BoltSpark(actionargs_t *);
+void A_FireBlasterPL1(actionargs_t *);
+void A_FireSkullRodPL1(actionargs_t *);
+void A_FirePhoenixPL1(actionargs_t *);
+void A_GauntletAttack(actionargs_t *);
+
 // haleyjd 10/04/08: Hexen pointers
 #if 0
 void A_SetInvulnerable(Mobj *mo);
@@ -1764,6 +1777,19 @@ deh_bexptr deh_bexptrs[] =
    POINTER(FlameSnd),
    POINTER(ClearSkin),
    POINTER(PhoenixPuff),
+
+   // MaxW 2017/04/15: Heretic weapon pointers
+   POINTER(StaffAttackPL1),
+   POINTER(StaffAttackPL2),
+   POINTER(FireGoldWandPL1),
+   POINTER(FireGoldWandPL2),
+   POINTER(FireCrossbowPL1),
+   POINTER(FireCrossbowPL2),
+   POINTER(BoltSpark),
+   POINTER(FireBlasterPL1),
+   POINTER(FireSkullRodPL1),
+   POINTER(FirePhoenixPL1),
+   POINTER(GauntletAttack),
 
    // haleyjd 10/04/08: Hexen pointers
 #if 0

@@ -44,6 +44,7 @@
 #include "e_mod.h"
 #include "e_states.h"
 #include "e_things.h"
+#include "e_weapons.h"
 #include "ev_specials.h"
 #include "g_dmflag.h"
 #include "g_game.h"
@@ -118,31 +119,31 @@ bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
    // INVENTORY_TODO: hardcoded behaviors for now...
    if(!strcasecmp(ammo->getKey(), "AmmoClip"))
    {
-      if(player->readyweapon == wp_fist)
+      if(E_WeaponIsCurrent(player, WEAPNAME_FIST))
       {
-         if(player->weaponowned[wp_chaingun])
-            player->pendingweapon = wp_chaingun;
+         if(E_PlayerOwnsWeaponForSlot(player, wp_chaingun)) // FIXME: Make this not-a-hack
+            player->pendingweaponnew = E_WeaponForSlot(wp_chaingun);
          else
-            player->pendingweapon = wp_pistol;
+            player->pendingweaponnew = E_WeaponForSlot(wp_pistol);
       }
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoShell"))
    {
-      if(player->readyweapon == wp_fist || player->readyweapon == wp_pistol)
-         if(player->weaponowned[wp_shotgun])
-            player->pendingweapon = wp_shotgun;
+      if(E_WeaponIsCurrent(player, WEAPNAME_FIST) || E_WeaponIsCurrent(player, WEAPNAME_PISTOL))
+         if(E_PlayerOwnsWeaponForSlot(player, wp_shotgun)) // FIXME: Make this not-a-hack
+            player->pendingweaponnew = E_WeaponForSlot(wp_shotgun);
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoCell"))
    {
-      if(player->readyweapon == wp_fist || player->readyweapon == wp_pistol)
-         if(player->weaponowned[wp_plasma])
-            player->pendingweapon = wp_plasma;
+      if(E_WeaponIsCurrent(player, WEAPNAME_FIST) || E_WeaponIsCurrent(player, WEAPNAME_PISTOL))
+         if(E_PlayerOwnsWeaponForSlot(player, wp_plasma)) // FIXME: Make this not-a-hack
+            player->pendingweaponnew = E_WeaponForSlot(wp_plasma);
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoMissile"))
    {
-      if(player->readyweapon == wp_fist)
-         if(player->weaponowned[wp_missile])
-            player->pendingweapon = wp_missile;
+      if(E_WeaponIsCurrent(player, WEAPNAME_FIST))
+         if(E_PlayerOwnsWeaponForSlot(player, wp_missile)) // FIXME: Make this not-a-hack
+            player->pendingweaponnew = E_WeaponForSlot(wp_missile);
    }
 
    return true;
@@ -211,23 +212,24 @@ static void P_consumeSpecial(player_t *activator, Mobj *special)
 //
 // The weapon name may have a MF_DROPPED flag ored in.
 //
-static bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped,
+static bool P_GiveWeapon(player_t *player, weaponinfo_t *wp, bool dropped,
    Mobj *special)
 {
    bool gaveweapon = false;
-   weaponinfo_t *wp = &weaponinfo[weapon];
+   int slot = E_SlotForWeapon(wp);
+   itemeffect_t *tracker = wp->tracker;
 
    if((dmflags & DM_WEAPONSTAY) && !dropped)
    {
       // leave placed weapons forever on net games
-      if(player->weaponowned[weapon])
+      if(E_PlayerOwnsWeapon(player, wp))
          return false;
 
       player->bonuscount += BONUSADD;
-      player->weaponowned[weapon] = true;
+      E_GiveInventoryItem(player, wp->tracker, 1); // TODO: Change 3rd value
       P_GiveAmmo(player, wp->ammo, (GameType == gt_dm) ? wp->dmstayammo : wp->coopstayammo);
       
-      player->pendingweapon = weapon;
+      player->pendingweaponnew = wp;
       S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
       P_consumeSpecial(player, special); // need to handle it here
       return false;
@@ -238,10 +240,10 @@ static bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped,
    bool gaveammo = (wp->ammo ? P_GiveAmmo(player, wp->ammo, amount) : false);
    
    // haleyjd 10/4/11: de-Killoughized
-   if(!player->weaponowned[weapon])
+   if(!E_PlayerOwnsWeapon(player, wp))
    {
-      player->pendingweapon = weapon;
-      player->weaponowned[weapon] = 1;
+      player->pendingweaponnew = wp;
+      E_GiveInventoryItem(player, wp->tracker, 1); // TODO: Change 3rd value
       gaveweapon = true;
    }
 
@@ -839,9 +841,9 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       if(!P_GivePowerForItem(player, effect))
          return;
       message = DEH_String("GOTBERSERK"); // Ty 03/22/98 - externalized
-      if(player->readyweapon != wp_fist)
+      if(!E_WeaponIsCurrent(player, WEAPNAME_FIST))
          // sf: removed beta
-         player->pendingweapon = wp_fist;
+         player->pendingweaponnew = E_WeaponForSlot(wp_fist);
       sound = sfx_getpow;
       break;
 
@@ -949,7 +951,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       // WEAPON_FIXME: Weapon collection
       // weapons
    case PFX_BFG:
-      if(!P_GiveWeapon(player, wp_bfg, false, special))
+      if(!P_GiveWeapon(player, E_WeaponForName(WEAPNAME_BFG9000), false, special))
          return;
       // FIXME: externalize all BFG pickup strings
       message = bfgtype==0 ? DEH_String("GOTBFG9000") // sf
@@ -962,42 +964,42 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       break;
 
    case PFX_CHAINGUN:
-      if(!P_GiveWeapon(player, wp_chaingun, dropped, special))
+      if(!P_GiveWeapon(player, E_WeaponForName(WEAPNAME_CHAINGUN), dropped, special))
          return;
       message = DEH_String("GOTCHAINGUN"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 
    case PFX_CHAINSAW:
-      if(!P_GiveWeapon(player, wp_chainsaw, false, special))
+      if(!P_GiveWeapon(player, E_WeaponForName(WEAPNAME_CHAINSAW), false, special))
          return;
       message = DEH_String("GOTCHAINSAW"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 
    case PFX_LAUNCHER:
-      if(!P_GiveWeapon(player, wp_missile, false, special))
+      if(!P_GiveWeapon(player, E_WeaponForName(WEAPNAME_MISSILE), false, special))
          return;
       message = DEH_String("GOTLAUNCHER"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 
    case PFX_PLASMA:
-      if(!P_GiveWeapon(player, wp_plasma, false, special))
+      if(!P_GiveWeapon(player, E_WeaponForName(WEAPNAME_PLASMA), false, special))
          return;
       message = DEH_String("GOTPLASMA"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 
    case PFX_SHOTGUN:
-      if(!P_GiveWeapon(player, wp_shotgun, dropped, special))
+      if(!P_GiveWeapon(player, E_WeaponForName(WEAPNAME_SHOTGUN), dropped, special))
          return;
       message = DEH_String("GOTSHOTGUN"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 
    case PFX_SSG:
-      if(!P_GiveWeapon(player, wp_supershotgun, dropped, special))
+      if(!P_GiveWeapon(player, E_WeaponForName(WEAPNAME_SSG), dropped, special))
          return;
       message = DEH_String("GOTSHOTGUN2"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
@@ -1750,7 +1752,7 @@ static int P_AdjustDamageType(Mobj *source, Mobj *inflictor, int mod)
       // players
       if(source->player && mod == MOD_PLAYERMISC)
       {
-         weaponinfo_t *weapon = P_GetReadyWeapon(source->player);
+         weaponinfo_t *weapon = source->player->readyweaponnew;
 
          // redirect based on weapon mod
          newmod = weapon->mod;
@@ -1861,7 +1863,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
 
    if(inflictor && !(target->flags & MF_NOCLIP) &&
       (!source || !source->player ||
-       !(P_GetReadyWeapon(source->player)->flags & WPF_NOTHRUST)) &&
+       !(source->player->readyweaponnew->flags & WPF_NOTHRUST)) &&
       !(inflictor->flags3 & MF3_NODMGTHRUST)) // haleyjd 11/14/02
    {
       // haleyjd: thrust factor differs for Heretic
