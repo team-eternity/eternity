@@ -60,7 +60,6 @@ static int edf_weapon_generation = 1;
 // Weapon Keywords
 // TODO: Currently in order of weaponinfo_t, reorder
 
-//#define ITEM_WPN_NAME         "name"
 #define ITEM_WPN_AMMO         "ammotype"
 #define ITEM_WPN_UPSTATE      "upstate"
 #define ITEM_WPN_DOWNSTATE    "downstate"
@@ -215,8 +214,8 @@ weaponinfo_t *E_WeaponForName(const char *name)
 }
 
 //
-// Returns a thing type index given its name. Returns -1
-// if a thing type is not found.
+// Returns a weapon type index given its name. Returns -1
+// if a weapon type is not found.
 //
 int E_WeaponNumForName(const char *name)
 {
@@ -230,14 +229,14 @@ int E_WeaponNumForName(const char *name)
 }
 
 //
-// As above, but causes a fatal error if the thing type isn't found.
+// As above, but causes a fatal error if the weapon type isn't found.
 //
 int E_GetWeaponNumForName(const char *name)
 {
    int weaponnum = E_WeaponNumForName(name);
 
    if(weaponnum == -1)
-      I_Error("E_GetThingNumForName: bad thing type %s\n", name);
+      I_Error("E_GetWeaponNumForName: bad weapon type %s\n", name);
 
    return weaponnum;
 }
@@ -401,8 +400,8 @@ static void E_processDecorateWepGotos(weaponinfo_t *wi, edecstateout_t *dso)
       else
       {
          // otherwise this is a name to resolve within the scope of the local
-         // thingtype - it may be a state acquired through inheritance, for
-         // example, and is thus not defined within the thingtype's state block.
+         // weaponinfo - it may be a state acquired through inheritance, for
+         // example, and is thus not defined within the weaponinfo's state block.
          type = wi;
          statename = dso->gotos[i].label;
       }
@@ -608,10 +607,10 @@ void E_CollectWeapons(cfg_t *cfg)
       cfg_t *titleprops = nullptr;
 
       // This is a new weaponinfo, whether or not one already exists by this name
-      // in the hash table. For subsequent addition of EDF weapontypes at runtime,
+      // in the hash table. For subsequent addition of EDF weaponinfo at runtime,
       // the hash table semantics of "find newest first" take care of overriding,
       // while not breaking objects that depend on the original definition of
-      // the weapontype for inheritance purposes.
+      // the weaponinfo for inheritance purposes.
       weaponinfo_t *wi = weaponinfo[curnewweapon++];
 
       // initialize name
@@ -655,7 +654,7 @@ void E_CollectWeapons(cfg_t *cfg)
    }
 }
 
-// weapon_hitlist: keeps track of what thingtypes are initialized
+// weapon_hitlist: keeps track of what weaponinfo are initialized
 static byte *weapon_hitlist = nullptr;
 
 // weapon_pstack: used by recursive E_ProcessWeapon to track inheritance
@@ -698,7 +697,7 @@ static void E_AddWeaponToPStack(int num)
 }
 
 //
-// Resets the weapontype inheritance stack, setting all the pstack
+// Resets the weaponinfo inheritance stack, setting all the pstack
 // values to -1, and setting pindex back to zero.
 //
 static void E_ResetWeaponPStack()
@@ -724,7 +723,7 @@ static void E_CopyWeapon(int num, int pnum)
 
    this_mi = weaponinfo[num];
 
-   // must save the following fields in the destination thing:
+   // must save the following fields in the destination weapon:
    idlinks = this_mi->idlinks;
    namelinks = this_mi->namelinks;
    name = this_mi->name;
@@ -774,9 +773,9 @@ static const char *E_getWeaponTitleProps(cfg_t *weaponsec, bool def)
 }
 
 //
-// Get the weaponinfo index for the thing's superclass weapontype.
+// Get the weaponinfo index for the weapon's superclass weaponinfo.
 //
-static int E_resolveParentWeapon(cfg_t *thingsec, const char *tprop)
+static int E_resolveParentWeapon(cfg_t *weaponsec, const char *tprop)
 {
    int pnum = -1;
 
@@ -784,13 +783,13 @@ static int E_resolveParentWeapon(cfg_t *thingsec, const char *tprop)
    if(tprop)
    {
       // "Weapon" is currently a dummy value and means it is just a plain 
-      // thing not inheriting from anything else. Maybe in the future it
+      // weapon not inheriting from anyweapon else. Maybe in the future it
       // could designate specialized native subclasses of Weapon as well?
       if(strcasecmp(tprop, "Weapon"))
          pnum = E_GetWeaponNumForName(tprop);
    }
-   else // resolve parent thingtype through legacy "inherits" field
-      pnum = E_GetWeaponNumForName(cfg_getstr(thingsec, ITEM_WPN_INHERITS));
+   else // resolve parent weaponinfo through legacy "inherits" field
+      pnum = E_GetWeaponNumForName(cfg_getstr(weaponsec, ITEM_WPN_INHERITS));
 
    return pnum;
 }
@@ -810,7 +809,7 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
    bool cflags   = false;
    const char *tprop;
 
-   // if weaponsec is null, we are in the situation of inheriting from a thing
+   // if weaponsec is null, we are in the situation of inheriting from a weapon
    // that was processed in a previous EDF generation, so no processing is
    // required; return immediately.
    if(!weaponsec)
@@ -853,7 +852,7 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
          parent_tngsec = cfg_gettsec(pcfg, EDF_SEC_WEAPONINFO, weaponinfo[pnum]->name);
          E_processWeapon(pnum, parent_tngsec, pcfg, true);
 
-         // copy parent to this thing
+         // copy parent to this weapon
          E_CopyWeapon(i, pnum);
 
          // keep track of parent explicitly
@@ -934,7 +933,7 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
    else
       weaponinfo[i]->mod = 0; // MOD_UNKNOWN
 
-   // 02/19/04: process combined flags first
+   // process combined flags first
    if(IS_SET(ITEM_WPN_FLAGS))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_FLAGS);
@@ -1040,7 +1039,7 @@ void E_ProcessWeaponInfo(cfg_t *cfg)
 
       E_processWeapon(weaponnum, weaponsec, cfg, true);
 
-      E_EDFLogPrintf("\t\tFinished thingtype %s (#%d)\n",
+      E_EDFLogPrintf("\t\tFinished weaponinfo %s (#%d)\n",
          weaponinfo[weaponnum]->name, weaponnum);
    }
 
@@ -1063,7 +1062,7 @@ void E_ProcessWeaponDeltas(cfg_t *cfg)
       const char *name;
       int weaponNum;
       cfg_t *deltasec = cfg_getnsec(cfg, EDF_SEC_WPNDELTA, i);
-      // get thingtype to edit
+      // get weaponinfo to edit
       if(!cfg_size(deltasec, ITEM_DELTA_NAME))
          E_EDFLoggedErr(2, "E_ProcessWeaponDeltas: weapondelta requires name field\n");
 
@@ -1072,7 +1071,7 @@ void E_ProcessWeaponDeltas(cfg_t *cfg)
 
       E_processWeapon(weaponNum, deltasec, cfg, false);
 
-      E_EDFLogPrintf("\t\tApplied thingdelta #%d to %s(#%d)\n",
+      E_EDFLogPrintf("\t\tApplied weapondelta #%d to %s(#%d)\n",
                      i, weaponinfo[weaponNum]->name, weaponNum);
    }
 }
