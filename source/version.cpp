@@ -40,7 +40,7 @@ const char version_name[] = "Heimdal";
 
 // haleyjd: caption for SDL window
 #ifdef _SDL_VER
-const char ee_wmCaption[] = "Eternity Engine v3.42.01 \"Heimdal\"";
+const char ee_wmCaption[] = "Eternity Engine v3.42.02 \"Heimdal\"";
 #endif
             
 // haleyjd: Eternity release history
