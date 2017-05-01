@@ -348,6 +348,32 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\source\am_svg.cpp" />
+    <ClCompile Include="..\source\autodoom\b_analysis.cpp" />
+    <ClCompile Include="..\source\autodoom\b_ape.cpp" />
+    <ClCompile Include="..\source\autodoom\b_botmap.cpp" />
+    <ClCompile Include="..\source\autodoom\b_botmaptemp.cpp" />
+    <ClCompile Include="..\source\autodoom\b_compression.cpp" />
+    <ClCompile Include="..\source\autodoom\b_glbsp.cpp" />
+    <ClCompile Include="..\source\autodoom\b_intset.cpp" />
+    <ClCompile Include="..\source\autodoom\b_itemlearn.cpp" />
+    <ClCompile Include="..\source\autodoom\b_lineeffect.cpp" />
+    <ClCompile Include="..\source\autodoom\b_msector.cpp" />
+    <ClCompile Include="..\source\autodoom\b_path.cpp" />
+    <ClCompile Include="..\source\autodoom\b_statistics.cpp" />
+    <ClCompile Include="..\source\autodoom\b_think.cpp" />
+    <ClCompile Include="..\source\autodoom\b_trace.cpp" />
+    <ClCompile Include="..\source\autodoom\b_util.cpp" />
+    <ClCompile Include="..\source\autodoom\glbsp\analyze.c" />
+    <ClCompile Include="..\source\autodoom\glbsp\blockmap.c" />
+    <ClCompile Include="..\source\autodoom\glbsp\glbsp.c" />
+    <ClCompile Include="..\source\autodoom\glbsp\level.c" />
+    <ClCompile Include="..\source\autodoom\glbsp\node.c" />
+    <ClCompile Include="..\source\autodoom\glbsp\reject.c" />
+    <ClCompile Include="..\source\autodoom\glbsp\seg.c" />
+    <ClCompile Include="..\source\autodoom\glbsp\system.c" />
+    <ClCompile Include="..\source\autodoom\glbsp\util.c" />
+    <ClCompile Include="..\source\autodoom\glbsp\wad.c" />
     <ClCompile Include="..\source\cam_aim.cpp" />
     <ClCompile Include="..\source\cam_common.cpp" />
     <ClCompile Include="..\source\cam_shoot.cpp" />
@@ -2041,6 +2067,33 @@
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h" />
     <ClInclude Include="..\Source\am_map.h" />
+    <ClInclude Include="..\source\am_svg.h" />
+    <ClInclude Include="..\source\autodoom\b_analysis.h" />
+    <ClInclude Include="..\source\autodoom\b_ape.h" />
+    <ClInclude Include="..\source\autodoom\b_botmap.h" />
+    <ClInclude Include="..\source\autodoom\b_botmaptemp.h" />
+    <ClInclude Include="..\source\autodoom\b_compression.h" />
+    <ClInclude Include="..\source\autodoom\b_glbsp.h" />
+    <ClInclude Include="..\source\autodoom\b_intset.h" />
+    <ClInclude Include="..\source\autodoom\b_itemlearn.h" />
+    <ClInclude Include="..\source\autodoom\b_lineeffect.h" />
+    <ClInclude Include="..\source\autodoom\b_msector.h" />
+    <ClInclude Include="..\source\autodoom\b_path.h" />
+    <ClInclude Include="..\source\autodoom\b_statistics.h" />
+    <ClInclude Include="..\source\autodoom\b_think.h" />
+    <ClInclude Include="..\source\autodoom\b_trace.h" />
+    <ClInclude Include="..\source\autodoom\b_util.h" />
+    <ClInclude Include="..\source\autodoom\glbsp\analyze.h" />
+    <ClInclude Include="..\source\autodoom\glbsp\blockmap.h" />
+    <ClInclude Include="..\source\autodoom\glbsp\glbsp.h" />
+    <ClInclude Include="..\source\autodoom\glbsp\level.h" />
+    <ClInclude Include="..\source\autodoom\glbsp\node.h" />
+    <ClInclude Include="..\source\autodoom\glbsp\reject.h" />
+    <ClInclude Include="..\source\autodoom\glbsp\seg.h" />
+    <ClInclude Include="..\source\autodoom\glbsp\structs.h" />
+    <ClInclude Include="..\source\autodoom\glbsp\system.h" />
+    <ClInclude Include="..\source\autodoom\glbsp\util.h" />
+    <ClInclude Include="..\source\autodoom\glbsp\wad.h" />
     <ClInclude Include="..\source\a_args.h" />
     <ClInclude Include="..\source\cam_common.h" />
     <ClInclude Include="..\source\c_batch.h" />
