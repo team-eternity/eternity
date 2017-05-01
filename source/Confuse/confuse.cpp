@@ -1476,6 +1476,9 @@ int cfg_parse(cfg_t *cfg, const char *filename)
 //
 int cfg_parselump(cfg_t *cfg, const char *lumpname, int lumpnum)
 {
+   if(!wGlobalDir.getLumpInfo()[lumpnum]->size)
+      return CFG_SUCCESS;  // just quit as if nothing happened
+
    DWFILE dwfile; // haleyjd
 
    dwfile.openLump(lumpnum);

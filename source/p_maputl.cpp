@@ -339,7 +339,7 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
       backfz = clip.openbacksector->floorheight;
    }
 
-   if(linedef->extflags & EX_ML_UPPERPORTAL)
+   if(linedef->extflags & EX_ML_UPPERPORTAL && clip.openbacksector->c_pflags & PS_PASSABLE)
       clip.opentop = frontceilz;
    else if(frontceilz < backceilz)
       clip.opentop = frontceilz;
@@ -347,7 +347,7 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
       clip.opentop = backceilz;
 
    // ioanch 20160114: don't change floorpic if portaldetect is on
-   if(linedef->extflags & EX_ML_LOWERPORTAL)
+   if(linedef->extflags & EX_ML_LOWERPORTAL && clip.openbacksector->f_pflags & PS_PASSABLE)
    {
       clip.openbottom = frontfloorz;
       clip.lowfloor = frontfloorz;

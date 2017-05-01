@@ -71,6 +71,8 @@
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_partcl.h"
+#include "p_portal.h"
+#include "p_portalcross.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "r_defs.h"
@@ -378,7 +380,7 @@ void P_ParticleThinker(void)
 {
    int i;
    particle_t *particle, *prev;
-   sector_t *psec;
+   const sector_t *psec;
    fixed_t floorheight;
    
    i = activeParticles;
@@ -413,9 +415,20 @@ void P_ParticleThinker(void)
          }
       }
 
-      // update and link to new position
-      particle->x += particle->velx;
-      particle->y += particle->vely;
+      // Check for wall portals
+      if(gMapHasLinePortals && particle->velx | particle->vely)
+      {
+         v2fixed_t destination = P_LinePortalCrossing(particle->x, particle->y, 
+            particle->velx, particle->vely);
+         particle->x = destination.x;
+         particle->y = destination.y;
+      }
+      else
+      {
+         // update and link to new position
+         particle->x += particle->velx;
+         particle->y += particle->vely;
+      }
       particle->z += particle->velz;
       P_SetParticlePosition(particle);
 
@@ -443,7 +456,7 @@ void P_ParticleThinker(void)
       // floor clipping
       if(particle->z < floorheight && psec->f_pflags & PS_PASSABLE)
       {
-         linkdata_t *ldata = R_FPLink(psec);
+         const linkdata_t *ldata = R_FPLink(psec);
 
          P_UnsetParticlePosition(particle);
          particle->x += ldata->deltax;
@@ -468,6 +481,16 @@ void P_ParticleThinker(void)
             if(particle->styleflags & PS_SPLASH)
                E_PtclTerrainHit(particle);
          }
+      }
+      else if(particle->z > psec->ceilingheight && psec->c_pflags & PS_PASSABLE)
+      {
+         const linkdata_t *ldata = R_CPLink(psec);
+
+         P_UnsetParticlePosition(particle);
+         particle->x += ldata->deltax;
+         particle->y += ldata->deltay;
+         particle->z += ldata->deltaz;
+         P_SetParticlePosition(particle);
       }
       
       prev = particle;

@@ -656,6 +656,7 @@ struct planehash_t
 {
    int          chaincount;
    visplane_t   **chains;
+   planehash_t  *next;  // if this planehash is part of a reusable list
 };
 
 #endif

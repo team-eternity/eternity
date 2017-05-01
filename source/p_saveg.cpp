@@ -57,6 +57,7 @@
 #include "r_draw.h"
 #include "r_main.h"
 #include "r_state.h"
+#include "s_musinfo.h"
 #include "s_sndseq.h"
 #include "st_stuff.h"
 #include "v_misc.h"
@@ -617,6 +618,9 @@ static void P_ArchiveWorld(SaveArchive &arc)
 
    // haleyjd 08/30/09: save state of lightning engine
    arc << NextLightningFlash << LightningFlash << LevelSky << LevelTempSky;
+
+   // ioanch: musinfo stuff
+   S_MusInfoArchive(arc);
 }
 
 //

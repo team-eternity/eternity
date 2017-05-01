@@ -55,6 +55,8 @@ struct drawseg_t
    float *maskedtexturecol;
 
    byte silhouette;                      // 0=none, 1=bottom, 2=top, 3=both
+
+   fixed_t deltaz;   // z offset if seen behind anchored portals
 };
 
 #endif

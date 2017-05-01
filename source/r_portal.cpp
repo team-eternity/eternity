@@ -95,10 +95,9 @@ static pwindow_t *unusedhead = NULL, *windowhead = NULL, *windowlast = NULL;
 //
 VALLOCATION(portals)
 {
+   planehash_t *hash;
    for(portal_t *p = portals; p; p = p->next)
    {
-      planehash_t *hash;
-
       // clear portal overlay visplane hash tables
       if((hash = p->poverlay))
       {
@@ -118,6 +117,9 @@ VALLOCATION(portals)
       while(child)
       {
          next = child->child;
+         if((hash = child->poverlay))
+            for(int i = 0; i < hash->chaincount; ++i)
+               hash->chains[i] = nullptr;
          efree(child->top);
          efree(child);
          child = next;
@@ -125,6 +127,9 @@ VALLOCATION(portals)
 
       // free this window
       next = rover->next;
+      if((hash = rover->poverlay))
+         for(int i = 0; i < hash->chaincount; ++i)
+            hash->chains[i] = nullptr;
       efree(rover->top);
       efree(rover);
       rover = next;
@@ -135,6 +140,9 @@ VALLOCATION(portals)
    while(rover)
    {
       pwindow_t *next = rover->next;
+      if((hash = rover->poverlay))
+         for(int i = 0; i < hash->chaincount; ++i)
+            hash->chains[i] = nullptr;
       efree(rover->top);
       efree(rover);
       rover = next;
@@ -157,7 +165,7 @@ static void R_RenderPortalNOP(pwindow_t *window)
 
 static void R_SetPortalFunction(pwindow_t *window);
 
-static void R_ClearPortalWindow(pwindow_t *window)
+static void R_ClearPortalWindow(pwindow_t *window, bool noplanes)
 {
    window->maxx = 0;
    window->minx = viewwindow.width - 1;
@@ -177,9 +185,16 @@ static void R_ClearPortalWindow(pwindow_t *window)
    window->vx = window->vy = window->vz = 0;
    window->vangle = 0;
    memset(&window->barrier, 0, sizeof(window->barrier));
+   if(!noplanes)
+   {
+      if(!window->poverlay)
+         window->poverlay = R_NewOverlaySet();
+      else
+         R_ClearPlaneHash(window->poverlay);
+   }
 }
 
-static pwindow_t *newPortalWindow()
+static pwindow_t *newPortalWindow(bool noplanes = false)
 {
    pwindow_t *ret;
 
@@ -197,7 +212,7 @@ static pwindow_t *newPortalWindow()
       ret->bottom = buf + video.width;
    }
 
-   R_ClearPortalWindow(ret);
+   R_ClearPortalWindow(ret, noplanes);
    
    return ret;
 }
@@ -320,7 +335,7 @@ static void R_CreateChildWindow(pwindow_t *parent)
       I_Error("R_CreateChildWindow: child portal displaced\n");
 #endif
 
-   auto child = newPortalWindow();
+   auto child = newPortalWindow(true);
 
    parent->child   = child;
    child->head     = parent->head;
@@ -631,7 +646,9 @@ portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic,
                              fixed_t *floorxoff, fixed_t *flooryoff, 
                              fixed_t *ceilingxoff, fixed_t *ceilingyoff,
                              float *floorbaseangle, float *floorangle,
-                             float *ceilingbaseangle, float *ceilingangle)
+                             float *ceilingbaseangle, float *ceilingangle,
+                             const float *floorxscale, const float *flooryscale,
+                             const float *ceilingxscale, const float *ceilingyscale)
 {
    portal_t *rover, *ret;
    edefstructvar(horizondata_t, horizon);
@@ -639,7 +656,8 @@ portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic,
    if(!floorpic || !ceilingpic || !floorz || !ceilingz || 
       !floorlight || !ceilinglight || !floorxoff || !flooryoff || 
       !ceilingxoff || !ceilingyoff || !floorbaseangle || !floorangle ||
-      !ceilingbaseangle || !ceilingangle)
+      !ceilingbaseangle || !ceilingangle || !floorxscale || !flooryscale ||
+      !ceilingxscale || !ceilingyscale)
       return NULL;
 
    horizon.ceilinglight     = ceilinglight;
@@ -656,6 +674,10 @@ portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic,
    horizon.floorangle       = floorangle;
    horizon.ceilingbaseangle = ceilingbaseangle;
    horizon.ceilingangle     = ceilingangle;
+   horizon.floorxscale = floorxscale;
+   horizon.flooryscale = flooryscale;
+   horizon.ceilingxscale = ceilingxscale;
+   horizon.ceilingyscale = ceilingyscale;
 
    for(rover = portals; rover; rover = rover->next)
    {
@@ -681,12 +703,14 @@ portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic,
 portal_t *R_GetPlanePortal(int *pic, fixed_t *delta, 
                            int16_t *lightlevel, 
                            fixed_t *xoff, fixed_t *yoff,
-                           float *baseangle, float *angle)
+                           float *baseangle, float *angle, const float *xscale,
+                           const float *yscale)
 {
    portal_t *rover, *ret;
    edefstructvar(skyplanedata_t, skyplane);
 
-   if(!pic || !delta || !lightlevel || !xoff || !yoff || !baseangle || !angle)
+   if(!pic || !delta || !lightlevel || !xoff || !yoff || !baseangle || !angle ||
+      !xscale || !yscale)
       return NULL;
       
    skyplane.pic        = pic;
@@ -695,7 +719,9 @@ portal_t *R_GetPlanePortal(int *pic, fixed_t *delta,
    skyplane.xoff       = xoff;
    skyplane.yoff       = yoff;
    skyplane.baseangle  = baseangle; // haleyjd 01/05/08: flat angles
-   skyplane.angle      = angle;    
+   skyplane.angle      = angle;
+   skyplane.xscale = xscale;
+   skyplane.yscale = yscale;
 
    for(rover = portals; rover; rover = rover->next)
    {
@@ -723,6 +749,7 @@ void R_InitPortals()
 {
    portals = last = NULL;
    windowhead = unusedhead = windowlast = NULL;
+   R_MapInitOverlaySets();
 
    gPortals.clear(); // clear the portal list
 }
@@ -748,6 +775,31 @@ static void R_RenderPlanePortal(pwindow_t *window)
    if(window->maxx < window->minx)
       return;
 
+   fixed_t lastx = viewx;
+   fixed_t lasty = viewy;
+   fixed_t lastz = viewz;
+   float lastxf = view.x;
+   float lastyf = view.y;
+   float lastzf = view.z;
+   angle_t lastangle = viewangle;
+   float lastanglef = view.angle;
+
+   viewx = window->vx;
+   viewy = window->vy;
+   viewz = window->vz;
+   view.x = M_FixedToFloat(viewx);
+   view.y = M_FixedToFloat(viewy);
+   view.z = M_FixedToFloat(viewz);
+   if(window->vangle != viewangle)
+   {
+      viewangle = window->vangle;
+      viewsin = finesine[viewangle >> ANGLETOFINESHIFT];
+      viewcos = finecosine[viewangle >> ANGLETOFINESHIFT];
+      view.angle = (ANG90 - viewangle) * PI / ANG180;
+      view.sin = sinf(view.angle);
+      view.cos = cosf(view.angle);
+   }
+
    // haleyjd 01/05/08: flat angle
    angle = *portal->data.plane.baseangle + *portal->data.plane.angle;
 
@@ -756,8 +808,8 @@ static void R_RenderPlanePortal(pwindow_t *window)
                         *portal->data.plane.lightlevel, 
                         *portal->data.plane.xoff, 
                         *portal->data.plane.yoff,
-                         1.0,
-                            1.0,
+                        *portal->data.plane.xscale,
+                        *portal->data.plane.yscale,
                         angle, NULL, 0, 255, NULL);
 
    vplane = R_CheckPlane(vplane, window->minx, window->maxx);
@@ -771,9 +823,22 @@ static void R_RenderPlanePortal(pwindow_t *window)
       }
    }
 
-   if(window->head == window && window->portal->poverlay)
-      R_PushPost(false, window->portal->poverlay);
+   if(window->head == window && window->poverlay)
+      R_PushPost(false, window);
       
+   viewx = lastx;
+   viewy = lasty;
+   viewz = lastz;
+   viewangle = lastangle;
+   viewsin = finesine[viewangle >> ANGLETOFINESHIFT];
+   viewcos = finecosine[viewangle >> ANGLETOFINESHIFT];
+   view.x = lastxf;
+   view.y = lastyf;
+   view.z = lastzf;
+   view.angle = lastanglef;
+   view.sin = (float)sin(view.angle);
+   view.cos = (float)cos(view.angle);
+
    if(window->child)
       R_RenderPlanePortal(window->child);
 }
@@ -795,6 +860,31 @@ static void R_RenderHorizonPortal(pwindow_t *window)
    if(window->maxx < window->minx)
       return;
 
+   lastx  = viewx; 
+   lasty  = viewy; 
+   lastz  = viewz;
+   lastxf = view.x;
+   lastyf = view.y;
+   lastzf = view.z;
+   angle_t lastangle = viewangle;
+   float lastanglef = view.angle;
+
+   viewx = window->vx;   
+   viewy = window->vy;   
+   viewz = window->vz;   
+   view.x = M_FixedToFloat(viewx);
+   view.y = M_FixedToFloat(viewy);
+   view.z = M_FixedToFloat(viewz);
+   if(window->vangle != viewangle)
+   {
+      viewangle = window->vangle;
+      viewsin = finesine[viewangle >> ANGLETOFINESHIFT];
+      viewcos = finecosine[viewangle >> ANGLETOFINESHIFT];
+      view.angle = (ANG90 - viewangle) * PI / ANG180;
+      view.sin = sinf(view.angle);
+      view.cos = cosf(view.angle);
+   }
+
    // haleyjd 01/05/08: angles
    floorangle = *portal->data.horizon.floorbaseangle + 
                 *portal->data.horizon.floorangle;
@@ -808,7 +898,8 @@ static void R_RenderHorizonPortal(pwindow_t *window)
                           *portal->data.horizon.ceilinglight, 
                           *portal->data.horizon.ceilingxoff, 
                           *portal->data.horizon.ceilingyoff,
-                          1.0, 1.0,
+                          *portal->data.horizon.ceilingxscale, 
+                          *portal->data.horizon.ceilingyscale,
                           ceilingangle, NULL, 0, 255, NULL);
 
    // FIXME: Replace the 1.0s?
@@ -817,7 +908,8 @@ static void R_RenderHorizonPortal(pwindow_t *window)
                              *portal->data.horizon.floorlight, 
                              *portal->data.horizon.floorxoff, 
                              *portal->data.horizon.flooryoff,
-                             1.0, 1.0,
+                             *portal->data.horizon.floorxscale,
+                             *portal->data.horizon.flooryscale,
                              floorangle, NULL, 0, 255, NULL);
 
    topplane = R_CheckPlane(topplane, window->minx, window->maxx);
@@ -848,32 +940,24 @@ static void R_RenderHorizonPortal(pwindow_t *window)
       }
    }
 
-   lastx  = viewx; 
-   lasty  = viewy; 
-   lastz  = viewz;
-   lastxf = view.x;
-   lastyf = view.y;
-   lastzf = view.z;
-
-   viewx = window->vx;   
-   viewy = window->vy;   
-   viewz = window->vz;   
-   view.x = M_FixedToFloat(viewx);
-   view.y = M_FixedToFloat(viewy);
-   view.z = M_FixedToFloat(viewz);
-
-   if(window->head == window && window->portal->poverlay)
-      R_PushPost(false, window->portal->poverlay);
+   if(window->head == window && window->poverlay)
+      R_PushPost(false, window);
       
-   if(window->child)
-      R_RenderHorizonPortal(window->child);
-
    viewx  = lastx; 
    viewy  = lasty; 
    viewz  = lastz;
+   viewangle = lastangle;
+   viewsin = finesine[viewangle >> ANGLETOFINESHIFT];
+   viewcos = finecosine[viewangle >> ANGLETOFINESHIFT];
    view.x = lastxf;
    view.y = lastyf;
    view.z = lastzf;
+   view.angle = lastanglef;
+   view.sin = (float)sin(view.angle);
+   view.cos = (float)cos(view.angle);
+
+   if(window->child)
+      R_RenderHorizonPortal(window->child);
 }
 
 //=============================================================================
@@ -958,7 +1042,7 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
    R_RenderBSPNode(numnodes - 1);
    
    // Only push the overlay if this is the head window
-   R_PushPost(true, window->head == window ? window->portal->poverlay : NULL);
+   R_PushPost(true, window->head == window ? window : NULL);
 
    floorclip   = floorcliparray;
    ceilingclip = ceilingcliparray;
@@ -1080,6 +1164,8 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
       R_ShowTainted(window);         
 
       portal->tainted++;
+      C_Printf(FC_ERROR "Refused to draw portal (line=%i) (t=%d)\n",
+         portal->data.anchor.maker, portal->tainted);
       return;
    } 
 
@@ -1136,6 +1222,8 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    view.z = static_cast<float>(vz);
 
    viewangle = window->vangle + static_cast<angle_t>(tr.angle * ANG180 / PI);
+   viewsin = finesine[viewangle >> ANGLETOFINESHIFT];
+   viewcos = finecosine[viewangle >> ANGLETOFINESHIFT];
    view.angle = (ANG90 - viewangle) * PI / ANG180;
    view.sin = sinf(view.angle);
    view.cos = cosf(view.angle);
@@ -1144,7 +1232,7 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    R_RenderBSPNode(numnodes - 1);
 
    // Only push the overlay if this is the head window
-   R_PushPost(true, window->head == window ? window->portal->poverlay : NULL);
+   R_PushPost(true, window->head == window ? window : NULL);
 
    floorclip = floorcliparray;
    ceilingclip = ceilingcliparray;
@@ -1153,6 +1241,8 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    viewy  = lasty;
    viewz  = lastz;
    viewangle = lastangle;
+   viewsin = finesine[viewangle >> ANGLETOFINESHIFT];
+   viewcos = finecosine[viewangle >> ANGLETOFINESHIFT];
    view.x = lastxf;
    view.y = lastyf;
    view.z = lastzf;
@@ -1168,7 +1258,9 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
 static void R_RenderLinkedPortal(pwindow_t *window)
 {
    fixed_t lastx, lasty, lastz;
+   angle_t lastangle;
    float   lastxf, lastyf, lastzf;
+   float   lastanglef;
    portal_t *portal = window->portal;
 
    if(portal->type != R_LINKED || window->maxx < window->minx)
@@ -1180,6 +1272,8 @@ static void R_RenderLinkedPortal(pwindow_t *window)
       R_ShowTainted(window);         
 
       portal->tainted++;
+      C_Printf(FC_ERROR "Refused to draw portal (line=%i) (t=%d)\n",
+         portal->data.anchor.maker, portal->tainted);
       return;
    } 
 
@@ -1223,6 +1317,8 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    lastxf = view.x;
    lastyf = view.y;
    lastzf = view.z;
+   lastangle = viewangle;
+   lastanglef = view.angle;
 
    // SoM 3/10/2005: Use the coordinates stored in the portal struct
    viewx  = window->vx + portal->data.link.deltax;
@@ -1232,11 +1328,21 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    view.y = M_FixedToFloat(viewy);
    view.z = M_FixedToFloat(viewz);
 
+   if(window->vangle != viewangle)
+   {
+      viewangle = window->vangle;
+      viewsin = finesine[viewangle >> ANGLETOFINESHIFT];
+      viewcos = finecosine[viewangle >> ANGLETOFINESHIFT];
+      view.angle = (ANG90 - viewangle) * PI / ANG180;
+      view.sin = sinf(view.angle);
+      view.cos = cosf(view.angle);
+   }
+
    R_IncrementFrameid();
    R_RenderBSPNode(numnodes - 1);
 
    // Only push the overlay if this is the head window
-   R_PushPost(true, window->head == window ? window->portal->poverlay : NULL);
+   R_PushPost(true, window->head == window ? window : NULL);
 
    floorclip = floorcliparray;
    ceilingclip = ceilingcliparray;
@@ -1244,9 +1350,15 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    viewx  = lastx;
    viewy  = lasty;
    viewz  = lastz;
+   viewangle = lastangle;
+   viewsin = finesine[viewangle >> ANGLETOFINESHIFT];
+   viewcos = finecosine[viewangle >> ANGLETOFINESHIFT];
    view.x = lastxf;
    view.y = lastyf;
    view.z = lastzf;
+   view.angle = lastanglef;
+   view.sin = (float)sin(view.angle);
+   view.cos = (float)cos(view.angle);
 
    if(window->child)
       R_RenderLinkedPortal(window->child);
@@ -1323,7 +1435,7 @@ pwindow_t *R_GetFloorPortalWindow(portal_t *portal, fixed_t planez)
       // being able to share a single window set.
       // ioanch: also added plane checks
       if(rover->portal == portal && rover->type == pw_floor &&
-         rover->planez == planez && !rover->up)
+         rover->planez == planez)
       {
          return rover;
       }
@@ -1334,7 +1446,6 @@ pwindow_t *R_GetFloorPortalWindow(portal_t *portal, fixed_t planez)
    // not found, so make it
    pwindow_t *window = R_NewPortalWindow(portal, NULL, pw_floor);
    window->planez = planez;
-   window->up = false;
    M_ClearBox(window->barrier.bbox);
 
    return window;
@@ -1347,7 +1458,7 @@ pwindow_t *R_GetCeilingPortalWindow(portal_t *portal, fixed_t planez)
    while(rover)
    {
       if(rover->portal == portal && rover->type == pw_ceiling &&
-         rover->planez == planez && rover->up)
+         rover->planez == planez)
       {
          return rover;
       }
@@ -1358,7 +1469,6 @@ pwindow_t *R_GetCeilingPortalWindow(portal_t *portal, fixed_t planez)
    // not found, so make it
    pwindow_t *window = R_NewPortalWindow(portal, NULL, pw_ceiling);
    window->planez = planez;
-   window->up = true;
    M_ClearBox(window->barrier.bbox);
 
    return window;
@@ -1379,6 +1489,24 @@ pwindow_t *R_GetLinePortalWindow(portal_t *portal, line_t *line)
 
    // not found, so make it
    return R_NewPortalWindow(portal, line, pw_line);
+}
+
+//
+// Moves portal overlay to window, clearing data from portal.
+//
+void R_MovePortalOverlayToWindow(bool isceiling)
+{
+//   const portal_t *portal = isceiling ? seg.c_portal : seg.f_portal;
+   pwindow_t *window = isceiling ? seg.c_window : seg.f_window;
+   visplane_t *&plane = isceiling ? seg.ceilingplane : seg.floorplane;
+   if(plane)
+   {
+      plane = R_FindPlane(plane->height, plane->picnum, plane->lightlevel,
+         plane->xoffs, plane->yoffs, plane->xscale, plane->yscale, plane->angle,
+         plane->pslope, plane->bflags, plane->opacity, window->head->poverlay);
+   }
+//   if(portal)
+//      R_ClearPlaneHash(portal->poverlay);
 }
 
 //
@@ -1411,7 +1539,7 @@ void R_RenderPortals()
       portalrender.active = true;
       portalrender.w = windowhead;
       portalrender.segClipFunc = windowhead->clipfunc;
-      portalrender.overlay = windowhead->portal->poverlay;
+//      portalrender.overlay = windowhead->portal->poverlay;
 
       if(windowhead->maxx >= windowhead->minx)
          windowhead->func(windowhead);
@@ -1419,7 +1547,7 @@ void R_RenderPortals()
       portalrender.active = false;
       portalrender.w = NULL;
       portalrender.segClipFunc = NULL;
-      portalrender.overlay = NULL;
+//      portalrender.overlay = NULL;
 
       // free the window structs
       w = windowhead->child;
@@ -1741,7 +1869,8 @@ void R_DefinePortal(const line_t &line)
    case portaltype_plane:
       portal = R_GetPlanePortal(&sector->ceilingpic, &sector->ceilingheight,
          &sector->lightlevel, &sector->ceiling_xoffs, &sector->ceiling_yoffs,
-         &sector->ceilingbaseangle, &sector->ceilingangle);
+         &sector->ceilingbaseangle, &sector->ceilingangle, 
+         &sector->ceiling_xscale, &sector->ceiling_yscale);
       break;
    case portaltype_horizon:
       portal = R_GetHorizonPortal(&sector->floorpic, &sector->ceilingpic,
@@ -1749,7 +1878,9 @@ void R_DefinePortal(const line_t &line)
          &sector->lightlevel, &sector->floor_xoffs, &sector->floor_yoffs,
          &sector->ceiling_xoffs, &sector->ceiling_yoffs,
          &sector->floorbaseangle, &sector->floorangle,
-         &sector->ceilingbaseangle, &sector->ceilingangle);
+         &sector->ceilingbaseangle, &sector->ceilingangle,
+         &sector->floor_xscale, &sector->floor_yscale, &sector->ceiling_xscale,
+         &sector->ceiling_yscale);
       break;
    case portaltype_skybox:
       skycam = sector->thinglist;
@@ -1897,7 +2028,8 @@ static void R_findPairPortalLines(line_t &line)
          offset = *(blockmap + offset);
          const int *list = blockmaplump + offset;
 
-         ++list;
+         if(skipblstart)
+            ++list;
          for(; *list != -1; ++list)
          {
             if(*list >= numlines || *list < 0)
@@ -1933,6 +2065,41 @@ void R_ApplyPortal(line_t &line, int portal)
                R_findPairPortalLines(line);
             return;
          }
+}
+
+//
+// True if ceiling is a basic portal without overlay
+//
+bool R_IsSkyLikePortalCeiling(const sector_t &sector)
+{
+   return sector.c_portal && !(sector.c_pflags & (PF_DISABLED | PF_NOPASS)) &&
+   (!(sector.c_pflags & PS_OVERLAY) || !(sector.c_pflags & PO_OPACITYMASK)) &&
+   (sector.c_portal->type == R_SKYBOX || sector.c_portal->type == R_HORIZON ||
+    sector.c_portal->type == R_PLANE);
+}
+
+//
+// True if floor is a basic portal without overlay
+//
+bool R_IsSkyLikePortalFloor(const sector_t &sector)
+{
+   return sector.f_portal && !(sector.f_pflags & (PF_DISABLED | PF_NOPASS)) &&
+      (!(sector.f_pflags & PS_OVERLAY) || !(sector.f_pflags & PO_OPACITYMASK)) &&
+      (sector.f_portal->type == R_SKYBOX || sector.f_portal->type == R_HORIZON ||
+         sector.f_portal->type == R_PLANE);
+}
+
+//
+// True if line is a basic portal
+//
+bool R_IsSkyLikePortalWall(const line_t &line)
+{
+   // Just use the same flags, even if they may not be available from UDMF
+   // BLOCKALL lines count as solid to everything, so they will just explode
+   // stuff.
+   return line.portal && !(line.pflags & (PF_DISABLED | PF_NOPASS)) && 
+      !(line.extflags & EX_ML_BLOCKALL) && (line.portal->type == R_SKYBOX || 
+         line.portal->type == R_HORIZON || line.portal->type == R_PLANE);
 }
 
 // EOF

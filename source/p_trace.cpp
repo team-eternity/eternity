@@ -456,8 +456,11 @@ static bool PTR_ShootTraverse(intercept_t *in)
                                      trace.aimslope);
             
             // SoM: don't check for portals here anymore
-            if(R_IsSkyFlat(sidesector->floorpic))
+            if(R_IsSkyFlat(sidesector->floorpic) ||
+               R_IsSkyLikePortalFloor(*sidesector))
+            {
                return false;
+            }
 
             if(demo_version < 333)
             {
@@ -479,8 +482,11 @@ static bool PTR_ShootTraverse(intercept_t *in)
          else if(z > sidesector->ceilingheight)
          {
             fixed_t pfrac = FixedDiv(sidesector->ceilingheight - trace.z, trace.aimslope);
-            if(sidesector->intflags & SIF_SKY) // SoM
+            if(sidesector->intflags & SIF_SKY ||
+               R_IsSkyLikePortalCeiling(*sidesector)) // SoM
+            {
                return false;
+            }
             
             if(demo_version < 333)
             {
@@ -521,8 +527,26 @@ static bool PTR_ShootTraverse(intercept_t *in)
          }
       }
 
+      if(demo_version >= 342 && li->backsector &&
+         ((li->extflags & EX_ML_UPPERPORTAL &&
+            li->backsector->ceilingheight < li->frontsector->ceilingheight &&
+            li->backsector->ceilingheight < z &&
+            R_IsSkyLikePortalCeiling(*li->backsector)) ||
+            (li->extflags & EX_ML_LOWERPORTAL &&
+               li->backsector->floorheight > li->frontsector->floorheight &&
+               li->backsector->floorheight > z &&
+               R_IsSkyLikePortalFloor(*li->backsector))))
+      {
+         return false;
+      }
+
       // don't shoot portal lines
-      if(!hitplane && li->portal)
+      if(demo_version >= 342)
+      {
+         if(!hitplane && !li->backsector && R_IsSkyLikePortalWall(*li))
+            return false;
+      }
+      else if(!hitplane && li->portal)
          return false;
 
       // Spawn bullet puffs.

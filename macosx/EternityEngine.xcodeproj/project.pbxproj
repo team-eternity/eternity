@@ -13,6 +13,7 @@
 		4F015B781875988900ADB3F4 /* libc++abi.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F015B741875988900ADB3F4 /* libc++abi.dylib */; };
 		4F0EB7C41973253B00A067F7 /* b_trace.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F0EB7C21973253B00A067F7 /* b_trace.cpp */; };
 		4F12D7471A1F460E00C71230 /* b_statistics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F12D7451A1F460E00C71230 /* b_statistics.cpp */; };
+		4F21BAF51E9C05C10040B4DF /* s_musinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F21BAF31E9C05C10040B4DF /* s_musinfo.cpp */; };
 		4F2F32AC1867100100EED7DE /* e_reverbs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F2F32A21867100100EED7DE /* e_reverbs.cpp */; };
 		4F2F32AE1867100100EED7DE /* s_reverb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F2F32A71867100100EED7DE /* s_reverb.cpp */; };
 		4F2F32B01867100100EED7DE /* v_image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F2F32A91867100100EED7DE /* v_image.cpp */; };
@@ -360,6 +361,8 @@
 		4F0EB7C31973253B00A067F7 /* b_trace.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = b_trace.h; sourceTree = "<group>"; };
 		4F12D7451A1F460E00C71230 /* b_statistics.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = b_statistics.cpp; sourceTree = "<group>"; };
 		4F12D7461A1F460E00C71230 /* b_statistics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = b_statistics.h; sourceTree = "<group>"; };
+		4F21BAF31E9C05C10040B4DF /* s_musinfo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = s_musinfo.cpp; path = ../source/s_musinfo.cpp; sourceTree = "<group>"; };
+		4F21BAF41E9C05C10040B4DF /* s_musinfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = s_musinfo.h; path = ../source/s_musinfo.h; sourceTree = "<group>"; };
 		4F2F32A21867100100EED7DE /* e_reverbs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = e_reverbs.cpp; path = ../source/e_reverbs.cpp; sourceTree = "<group>"; };
 		4F2F32A31867100100EED7DE /* e_reverbs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = e_reverbs.h; path = ../source/e_reverbs.h; sourceTree = "<group>"; };
 		4F2F32A41867100100EED7DE /* m_binary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = m_binary.h; path = ../source/m_binary.h; sourceTree = "<group>"; };
@@ -1850,8 +1853,10 @@
 		FACACB5F1652F2B50091AF2E /* S_ */ = {
 			isa = PBXGroup;
 			children = (
-				4F015B0A1870E8E900ADB3F4 /* s_formats.cpp */,
-				4F015B0B1870E8E900ADB3F4 /* s_formats.h */,
+				4F015B0E1870EA5900ADB3F4 /* s_formats.cpp */,
+				4F015B0F1870EA5900ADB3F4 /* s_formats.h */,
+				4F21BAF31E9C05C10040B4DF /* s_musinfo.cpp */,
+				4F21BAF41E9C05C10040B4DF /* s_musinfo.h */,
 				4F2F32A71867100100EED7DE /* s_reverb.cpp */,
 				4F2F32A81867100100EED7DE /* s_reverb.h */,
 				FABF5D43158BF42800C49E93 /* s_sndseq.cpp */,
@@ -2383,6 +2388,7 @@
 				4F5F38F7182D9AC00027813A /* mn_misc.cpp in Sources */,
 				4F36247D18A567CD00B94FA1 /* xl_mapinfo.cpp in Sources */,
 				4F5F38F8182D9AC00027813A /* mn_skinv.cpp in Sources */,
+				4F21BAF51E9C05C10040B4DF /* s_musinfo.cpp in Sources */,
 				4F5F38F9182D9AC00027813A /* p_anim.cpp in Sources */,
 				4FC0A93F1E1E2ABC006CEC45 /* cam_common.cpp in Sources */,
 				4FC0A9361E1E2A50006CEC45 /* Thread.cpp in Sources */,

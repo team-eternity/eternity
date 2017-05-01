@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
@@ -1047,6 +1047,9 @@
     <ClCompile Include="..\source\autodoom\b_ape.cpp">
       <Filter>Source Files\autodoom</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\s_musinfo.cpp">
+      <Filter>Source Files\S_\S_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1879,6 +1882,9 @@
     </ClInclude>
     <ClInclude Include="..\source\autodoom\b_ape.h">
       <Filter>Source Files\autodoom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\s_musinfo.h">
+      <Filter>Source Files\S_\S_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1248,12 +1248,12 @@ static void P_SetupHeightTransfer(int linenum, int secnum,
 
       // transfer colormaps to affected sectors instead of getting them from
       // the heightsec during the rendering process
-      if(!setupSettings.sectorIsFlagged(s, UDMF_SECTOR_INIT_COLORMAPPED))
-      {
+      if(!setupSettings.sectorIsFlagged(s, UDMF_SECTOR_INIT_COLOR_TOP))
          sectors[s].topmap    = heightsec->topmap;
+      if(!setupSettings.sectorIsFlagged(s, UDMF_SECTOR_INIT_COLOR_MIDDLE))
          sectors[s].midmap    = heightsec->midmap;
+      if(!setupSettings.sectorIsFlagged(s, UDMF_SECTOR_INIT_COLOR_BOTTOM))
          sectors[s].bottommap = heightsec->bottommap;
-      }
    }
 }
 
@@ -3029,7 +3029,8 @@ static void P_SpawnPortal(line_t *line, int staticFn)
                                 &sector->ceiling_xoffs, 
                                 &sector->ceiling_yoffs,
                                 &sector->ceilingbaseangle,
-                                &sector->ceilingangle);
+                                &sector->ceilingangle, &sector->ceiling_xscale,
+                                &sector->ceiling_yscale);
       break;
 
    case portal_horizon:
@@ -3039,7 +3040,9 @@ static void P_SpawnPortal(line_t *line, int staticFn)
                                   &sector->floor_xoffs, &sector->floor_yoffs,
                                   &sector->ceiling_xoffs, &sector->ceiling_yoffs,
                                   &sector->floorbaseangle, &sector->floorangle,
-                                  &sector->ceilingbaseangle, &sector->ceilingangle);
+                                  &sector->ceilingbaseangle, &sector->ceilingangle,
+                                  &sector->floor_xscale, &sector->floor_yscale, 
+                                  &sector->ceiling_xscale, &sector->ceiling_yscale);
       // TODO: line portal
       if(effects == portal_lineonly)
       {
