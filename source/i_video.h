@@ -85,7 +85,7 @@ extern int   i_softbitdepth;
 extern bool  i_letterbox;
 
 // Driver enumeration
-enum
+enum halvdr_e
 {
    VDR_SDLSOFT,
    VDR_SDLGL2D,
