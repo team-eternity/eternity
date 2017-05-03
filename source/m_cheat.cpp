@@ -604,7 +604,7 @@ static void cheat_weapx(const void *arg)
             E_RemoveInventoryItem(plyr, weapon->tracker, 1);
             doom_printf("Weapon Removed"); // Ty 03/27/98 - *not* externalized
             if(E_WeaponIsCurrentNum(plyr, w))     // maybe switch if weapon removed
-               plyr->pendingweaponnew = P_SwitchWeapon(plyr);
+               plyr->pendingweapon = P_SwitchWeapon(plyr);
          }
       }
    }

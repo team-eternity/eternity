@@ -122,28 +122,28 @@ bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
       if(E_WeaponIsCurrent(player, WEAPNAME_FIST))
       {
          if(E_PlayerOwnsWeaponForSlot(player, wp_chaingun)) // FIXME: Make this not-a-hack
-            player->pendingweaponnew = E_WeaponForSlot(wp_chaingun);
+            player->pendingweapon = E_WeaponForSlot(wp_chaingun);
          else
-            player->pendingweaponnew = E_WeaponForSlot(wp_pistol);
+            player->pendingweapon = E_WeaponForSlot(wp_pistol);
       }
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoShell"))
    {
       if(E_WeaponIsCurrent(player, WEAPNAME_FIST) || E_WeaponIsCurrent(player, WEAPNAME_PISTOL))
          if(E_PlayerOwnsWeaponForSlot(player, wp_shotgun)) // FIXME: Make this not-a-hack
-            player->pendingweaponnew = E_WeaponForSlot(wp_shotgun);
+            player->pendingweapon = E_WeaponForSlot(wp_shotgun);
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoCell"))
    {
       if(E_WeaponIsCurrent(player, WEAPNAME_FIST) || E_WeaponIsCurrent(player, WEAPNAME_PISTOL))
          if(E_PlayerOwnsWeaponForSlot(player, wp_plasma)) // FIXME: Make this not-a-hack
-            player->pendingweaponnew = E_WeaponForSlot(wp_plasma);
+            player->pendingweapon = E_WeaponForSlot(wp_plasma);
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoMissile"))
    {
       if(E_WeaponIsCurrent(player, WEAPNAME_FIST))
          if(E_PlayerOwnsWeaponForSlot(player, wp_missile)) // FIXME: Make this not-a-hack
-            player->pendingweaponnew = E_WeaponForSlot(wp_missile);
+            player->pendingweapon = E_WeaponForSlot(wp_missile);
    }
 
    return true;
@@ -216,7 +216,6 @@ static bool P_GiveWeapon(player_t *player, weaponinfo_t *wp, bool dropped,
    Mobj *special)
 {
    bool gaveweapon = false;
-   int slot = E_SlotForWeapon(wp);
    itemeffect_t *tracker = wp->tracker;
 
    if((dmflags & DM_WEAPONSTAY) && !dropped)
@@ -229,7 +228,7 @@ static bool P_GiveWeapon(player_t *player, weaponinfo_t *wp, bool dropped,
       E_GiveInventoryItem(player, wp->tracker, 1); // TODO: Change 3rd value
       P_GiveAmmo(player, wp->ammo, (GameType == gt_dm) ? wp->dmstayammo : wp->coopstayammo);
       
-      player->pendingweaponnew = wp;
+      player->pendingweapon = wp;
       S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
       P_consumeSpecial(player, special); // need to handle it here
       return false;
@@ -242,7 +241,7 @@ static bool P_GiveWeapon(player_t *player, weaponinfo_t *wp, bool dropped,
    // haleyjd 10/4/11: de-Killoughized
    if(!E_PlayerOwnsWeapon(player, wp))
    {
-      player->pendingweaponnew = wp;
+      player->pendingweapon = wp;
       E_GiveInventoryItem(player, wp->tracker, 1); // TODO: Change 3rd value
       gaveweapon = true;
    }
@@ -843,7 +842,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       message = DEH_String("GOTBERSERK"); // Ty 03/22/98 - externalized
       if(!E_WeaponIsCurrent(player, WEAPNAME_FIST))
          // sf: removed beta
-         player->pendingweaponnew = E_WeaponForSlot(wp_fist);
+         player->pendingweapon = E_WeaponForSlot(wp_fist);
       sound = sfx_getpow;
       break;
 
@@ -1752,7 +1751,7 @@ static int P_AdjustDamageType(Mobj *source, Mobj *inflictor, int mod)
       // players
       if(source->player && mod == MOD_PLAYERMISC)
       {
-         weaponinfo_t *weapon = source->player->readyweaponnew;
+         weaponinfo_t *weapon = source->player->readyweapon;
 
          // redirect based on weapon mod
          newmod = weapon->mod;
@@ -1863,7 +1862,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
 
    if(inflictor && !(target->flags & MF_NOCLIP) &&
       (!source || !source->player ||
-       !(source->player->readyweaponnew->flags & WPF_NOTHRUST)) &&
+       !(source->player->readyweapon->flags & WPF_NOTHRUST)) &&
       !(inflictor->flags3 & MF3_NODMGTHRUST)) // haleyjd 11/14/02
    {
       // haleyjd: thrust factor differs for Heretic

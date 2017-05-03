@@ -172,10 +172,10 @@ static char weapcolor(weaponinfo_t *w)
 }
 
 // Get the amount of ammo the displayplayer has left in his/her readyweapon
-#define playerammo    wc_pammo(hu_player.readyweaponnew)
+#define playerammo    wc_pammo(hu_player.readyweapon)
 
 // Get the maximum amount the player could have for his/her readyweapon
-#define playermaxammo wc_mammo(hu_player.readyweaponnew)
+#define playermaxammo wc_mammo(hu_player.readyweapon)
 
 //
 // setol
@@ -389,7 +389,7 @@ static void HU_drawAmmo(int x, int y)
    HU_WriteText(HUDCOLOR "Ammo", x, y);
    x += GAP;
    
-   fontcolor = weapcolor(hu_player.readyweaponnew);
+   fontcolor = weapcolor(hu_player.readyweapon);
    
    tempstr << static_cast<char>(fontcolor);
    

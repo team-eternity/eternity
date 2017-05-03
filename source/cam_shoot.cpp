@@ -369,7 +369,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          return true;
 
       if(th->flags3 & MF3_GHOST && context.thing->player
-         && context.thing->player->readyweaponnew->flags & WPF_NOHITGHOSTS)
+         && context.thing->player->readyweapon->flags & WPF_NOHITGHOSTS)
       {
          return true;
       }

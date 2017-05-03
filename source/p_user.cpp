@@ -768,13 +768,13 @@ void P_PlayerThink(player_t *player)
       // haleyjd 06/28/13: generalized for EDF weapon system
       weaponinfo_t *pendingweapon = P_GetPlayerWeapon(player, newweapon);
       if(E_PlayerOwnsWeapon(player, pendingweapon) &&
-         pendingweapon->id != player->readyweaponnew->id)   
+         pendingweapon->id != player->readyweapon->id)   
       {
          if(pendingweapon && 
             !(GameModeInfo->flags & GIF_SHAREWARE && 
               pendingweapon->flags & WPF_NOTSHAREWARE))
          {
-            player->pendingweaponnew = pendingweapon;
+            player->pendingweapon = pendingweapon;
          }
       }
    }

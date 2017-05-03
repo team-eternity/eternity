@@ -713,7 +713,7 @@ static void E_ResetWeaponPStack()
 //
 static void E_CopyWeapon(int num, int pnum)
 {
-   weaponinfo_t *this_mi;
+   weaponinfo_t *this_wi;
    DLListItem<weaponinfo_t> idlinks, namelinks;
    const char *name;
    MetaTable  *meta;
@@ -721,20 +721,20 @@ static void E_CopyWeapon(int num, int pnum)
    int         generation;
    weaponinfo_t *nextInCycle, *prevInCycle;
 
-   this_mi = weaponinfo[num];
+   this_wi = weaponinfo[num];
 
    // must save the following fields in the destination weapon:
-   idlinks = this_mi->idlinks;
-   namelinks = this_mi->namelinks;
-   name = this_mi->name;
-   meta = this_mi->meta;
-   id = this_mi->id;
-   generation = this_mi->generation;
-   nextInCycle = this_mi->nextInCycle;
-   prevInCycle = this_mi->prevInCycle;
+   idlinks = this_wi->idlinks;
+   namelinks = this_wi->namelinks;
+   name = this_wi->name;
+   meta = this_wi->meta;
+   id = this_wi->id;
+   generation = this_wi->generation;
+   nextInCycle = this_wi->nextInCycle;
+   prevInCycle = this_wi->prevInCycle;
 
    // copy from source to destination
-   memcpy(this_mi, weaponinfo[pnum], sizeof(weaponinfo_t));
+   memcpy(this_wi, weaponinfo[pnum], sizeof(weaponinfo_t));
 
    // normalize special fields?
    // FIXME: IDK
@@ -743,21 +743,21 @@ static void E_CopyWeapon(int num, int pnum)
    meta->copyTableFrom(weaponinfo[pnum]->meta);
 
    // restore metatable pointer
-   this_mi->meta = meta;
+   this_wi->meta = meta;
 
    // must restore name and dehacked num data
-   this_mi->namelinks = namelinks;
-   this_mi->idlinks = idlinks;
-   this_mi->name = name;
-   this_mi->id = id;
-   this_mi->generation = generation;
-   this_mi->nextInCycle = nextInCycle;
-   this_mi->prevInCycle = prevInCycle;
+   this_wi->namelinks = namelinks;
+   this_wi->idlinks = idlinks;
+   this_wi->name = name;
+   this_wi->id = id;
+   this_wi->generation = generation;
+   this_wi->nextInCycle = nextInCycle;
+   this_wi->prevInCycle = prevInCycle;
 
    // other fields not inherited:
 
    // force tracker of inheriting type to nullptr
-   this_mi->tracker = nullptr;
+   this_wi->tracker = nullptr;
 }
 
 
@@ -863,7 +863,6 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
       }
    }
 
-   tempstr = cfg_title(weaponsec);
    if(IS_SET(ITEM_WPN_NEXTINCYCLE))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_NEXTINCYCLE);
@@ -875,17 +874,20 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
       weaponinfo[i]->prevInCycle = E_WeaponForName(tempstr);
    }
 
-   if(IS_SET(ITEM_WPN_TRACKER))
+   // TODO: Autogenerate instead
+   if(cfg_size(weaponsec, ITEM_WPN_TRACKER) > 0)
    {
       const char *tempeffectname = cfg_getstr(weaponsec, ITEM_WPN_TRACKER);
-      itemeffect_t *tempeffect;
-      if((tempeffect = E_ItemEffectForName(tempeffectname)))
+      itemeffect_t *tempeffect = E_ItemEffectForName(tempeffectname);
+      if(tempeffect)
          weaponinfo[i]->tracker = tempeffect;
-      else // A weaponsec is worthless without its tracker
-         E_EDFLoggedErr(2, "Tracker \"%s\" in weaponinfo[i] \"%s\" is undefined\n", tempeffectname, tempstr);
+      else // An invalid tracker isn't useful
+      {
+         tempstr = cfg_title(weaponsec);
+         E_EDFLoggedErr(2, "Tracker \"%s\" in weaponinfo[i] \"%s\" "
+                        "is undefined\n", tempeffectname, tempstr);
+      }
    }
-   else if(def) // Don't check tracker, since it was already checked in initial definition
-      E_EDFLoggedErr(2, "No tracker defined for weaponsec \"%s\"\n", tempstr);
 
    if(IS_SET(ITEM_WPN_AMMO))
    {
@@ -1112,7 +1114,8 @@ weaponinfo_t *E_WeaponForSlot(int slot)
 }
 
 //
-// TODO: This should also hopefully become worthless at some point
+// Try not to call this function, it's bad and terrible.
+// Get a slot number for a given weaponinfo. DOOM-ONLY.
 //
 int E_SlotForWeapon(weaponinfo_t *weapon)
 {
@@ -1146,16 +1149,16 @@ bool E_WeaponIsCurrent(const player_t *player, const char *name)
    weaponinfo_t *weapon = E_WeaponForName(name);
    if(!weapon)
       return false;
-   return player->readyweaponnew->id == weapon->id;
+   return player->readyweapon->id == weapon->id;
 }
 
 //
 // Check if the weaponsec in the slotnum is currently equipped
-// TODO: This should also become redundant
+// DON'T CALL THIS IN NEW CODE, IT EXISTS SOLELY FOR COMPAT.
 //
 bool E_WeaponIsCurrentNum(player_t *player, const int num)
 {
-   return player->readyweaponnew->id == E_WeaponForSlot(num)->id;
+   return player->readyweapon->id == E_WeaponForSlot(num)->id;
 }
 
 //

@@ -650,8 +650,7 @@ static const char *st_AmmoForNum[NUMAMMO] =
 static void ST_updateWidgets()
 {
    // update ready weapon ammo
-   w_ready.data  = E_SlotForWeapon(plyr->readyweaponnew);
-   auto weapon   = plyr->readyweaponnew;
+   auto weapon   = plyr->readyweapon;
    auto ammoType = weapon->ammo;
 
    w_ready.num = ammoType ? E_GetItemOwnedAmount(plyr, ammoType) : 1994;
@@ -950,7 +949,7 @@ static void ST_DoomFSDrawer()
    ST_updateWidgets();
 
    // ammo
-   itemeffect_t *ammo = E_WeaponForSlot(w_ready.data)->ammo;
+   itemeffect_t *ammo = plyr->readyweapon->ammo;
    if(ammo)
    {
       int num = E_StrToNumLinear(st_AmmoForNum, NUMAMMO, ammo->getKey());
@@ -1237,9 +1236,6 @@ static void ST_createWidgets()
                  0, 0,
                  &st_statusbaron,
                  ST_AMMOWIDTH );
-
-   // the last weapon type
-   w_ready.data = E_SlotForWeapon(plyr->readyweaponnew);
 
    // health percentage
    STlib_initPercent(&w_health,

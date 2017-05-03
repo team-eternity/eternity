@@ -44,7 +44,6 @@ typedef struct st_number_s
    int       max;    // max value
    bool     *on;     // pointer to bool stating whether to update number
    patch_t **p;      // list of patches for 0-9
-   int       data;   // user data
 } st_number_t;
 
 //

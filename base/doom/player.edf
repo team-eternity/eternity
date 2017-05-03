@@ -24,6 +24,8 @@ weaponinfo Fist
   recoil       10
 
   tracker      WeaponFist
+
+  //firstdecoratestate S_PUNCH
 }
 
 weaponinfo Pistol
@@ -46,6 +48,8 @@ weaponinfo Pistol
   haptictime   1
 
   tracker      WeaponPistol
+
+  //firstdecoratestate S_PISTOL
 }
 
 weaponinfo Shotgun
@@ -68,6 +72,8 @@ weaponinfo Shotgun
   haptictime   3
 
   tracker      WeaponShotgun
+
+  //firstdecoratestate S_SGUN
 }
 
 weaponinfo Chaingun
@@ -90,6 +96,8 @@ weaponinfo Chaingun
   haptictime   1
 
   tracker      WeaponChaingun
+
+  //firstdecoratestate S_CHAIN
 }
 
 weaponinfo MissileLauncher
@@ -112,6 +120,8 @@ weaponinfo MissileLauncher
   haptictime   8
 
   tracker      WeaponMissileLauncher
+
+  //firstdecoratestate S_MISSILE
 }
 
 weaponinfo PlasmaRifle
@@ -134,6 +144,8 @@ weaponinfo PlasmaRifle
   haptictime   1
 
   tracker      WeaponPlasmaRifle
+
+  //firstdecoratestate S_PLASMA
 }
 
 weaponinfo BFG9000
@@ -156,6 +168,8 @@ weaponinfo BFG9000
   haptictime   1
 
   tracker      WeaponBFG9000
+
+  //firstdecoratestate S_BFG
 }
 
 weaponinfo Chainsaw
@@ -174,6 +188,8 @@ weaponinfo Chainsaw
   readysound   sawidl
 
   tracker      WeaponChainsaw
+
+  //firstdecoratestate S_SAW
 }
 
 weaponinfo SuperShotgun
@@ -196,6 +212,8 @@ weaponinfo SuperShotgun
   haptictime   5
 
   tracker      WeaponSuperShotgun
+
+  //firstdecoratestate S_DSGUN
 }
 
 

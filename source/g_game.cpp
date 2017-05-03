@@ -1385,7 +1385,7 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
       else
          cmd->fly = 0;
       
-      if(full_demo_version >= make_full_version(342, 1))
+      if(full_demo_version >= make_full_version(342, 2))
       {
          cmd->itemID =   *demo_p++;
          cmd->itemID |= (*demo_p++) << 8;
@@ -1449,7 +1449,7 @@ static void G_WriteDemoTiccmd(ticcmd_t *cmd)
    if(full_demo_version >= make_full_version(340, 23))
       demo_p[i++] = cmd->fly;
 
-   if(full_demo_version >= make_full_version(342, 1))
+   if(full_demo_version >= make_full_version(342, 2))
    {
       demo_p[i++] =  cmd->itemID & 0xff;
       demo_p[i] = (cmd->itemID >> 8) & 0xff;
@@ -2257,11 +2257,10 @@ void G_PlayerReborn(int player)
    }
 
    // FIXME: De hard-code this
-   p->pendingweaponnew = E_WeaponForSlot(wp_pistol);
    if(GameModeInfo->type == Game_Heretic)
-      p->readyweaponnew = E_WeaponForName("GoldWand");
+      p->readyweapon = E_WeaponForName("GoldWand");
    else
-      p->readyweaponnew = E_WeaponForName(WEAPNAME_PISTOL);
+      p->readyweapon = E_WeaponForName(WEAPNAME_PISTOL);
 }
 
 void P_SpawnPlayer(mapthing_t *mthing);

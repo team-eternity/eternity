@@ -151,8 +151,8 @@ struct player_t
    int            frags[MAXPLAYERS];
    int            totalfrags;
    
-   weaponinfo_t  *readyweaponnew;
-   weaponinfo_t  *pendingweaponnew; // Is nullptr if not changing.
+   weaponinfo_t  *readyweapon;
+   weaponinfo_t  *pendingweapon; // Is nullptr if not changing.
 
    weaponslot_t  *readyweaponnslot;
    weaponslot_t  *pendingweaponslot; // Is nullptr if not changing.

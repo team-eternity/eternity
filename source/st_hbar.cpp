@@ -465,7 +465,7 @@ static void ST_drawStatBar()
 
    // TODO: ammo icon stuff
    // draw ammo amount
-   itemeffect_t *ammo = plyr->readyweaponnew->ammo;
+   itemeffect_t *ammo = plyr->readyweapon->ammo;
    if(ammo)
    {
       V_DrawPatch(108, 161, &subscreen43,

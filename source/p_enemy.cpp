@@ -913,7 +913,7 @@ void P_NewChaseDir(Mobj *actor)
                   !(actor->flags2 & MF2_NOSTRAFE) &&
                   ((target->info->missilestate == NullStateNum && dist < MELEERANGE*2) ||
                    (target->player && dist < MELEERANGE*3 &&
-                    target->player->readyweaponnew->flags & WPF_FLEEMELEE)))
+                    target->player->readyweapon->flags & WPF_FLEEMELEE)))
                {
                   // Back away from melee attacker
                   actor->strafecount = P_Random(pr_enemystrafe) & 15;

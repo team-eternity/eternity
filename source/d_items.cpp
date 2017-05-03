@@ -40,21 +40,6 @@
 // shotgun. This may need to change a bit when dynamic weapons are finished.
 bool enable_ssg = false;
 
-// INVENTORY_FIXME: temporary default ammo type names for each weapon;
-// eventually to be specified via EDF
-static const char *d_ammoTypesForWeapons[NUMWEAPONS] =
-{
-   NULL,          // fist
-   "AmmoClip",    // pistol
-   "AmmoShell",   // shotgun
-   "AmmoClip",    // chaingun
-   "AmmoMissile", // rocket launcher
-   "AmmoCell",    // plasma gun
-   "AmmoCell",    // BFG
-   NULL,          // chainsaw
-   "AmmoShell"    // SSG
-};
-
 //
 // haleyjd 07/25/03: temporary hack to resolve weapon states
 // until EDF weapon support is in place

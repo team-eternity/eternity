@@ -1184,7 +1184,7 @@ void A_CheckReloadEx(actionargs_t *actionargs)
    if(!(pspr = actionargs->pspr))
       return;
 
-   w = player->readyweaponnew;
+   w = player->readyweapon;
    if(!w->ammo) // no-ammo weapon?
       return;
 
