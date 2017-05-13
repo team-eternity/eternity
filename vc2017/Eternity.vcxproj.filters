@@ -1721,6 +1721,9 @@
     <ClInclude Include="..\source\s_musinfo.h">
       <Filter>Source Files\S_\S_ Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\m_bitset.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\ee.ico">

@@ -2116,6 +2116,7 @@
     <ClInclude Include="..\source\metaspawn.h" />
     <ClInclude Include="..\source\mn_items.h" />
     <ClInclude Include="..\source\m_binary.h" />
+    <ClInclude Include="..\source\m_bitset.h" />
     <ClInclude Include="..\source\m_compare.h" />
     <ClInclude Include="..\source\m_ctype.h" />
     <ClInclude Include="..\source\m_utils.h" />
