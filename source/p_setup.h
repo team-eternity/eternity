@@ -31,6 +31,7 @@
 #include "m_fixed.h"  // for fixed_t
 
 class  Mobj;
+struct portal_t;
 struct seg_t;
 
 // haleyjd 10/03/05: let P_CheckLevel determine the map format
