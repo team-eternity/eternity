@@ -23,10 +23,8 @@
 #define CAM_COMMON_H_
 
 #include "m_collection.h"
+#include "m_utils.h"
 #include "p_maputl.h"
-
-#define VALID_ALLOC(set, n) ((set) = ecalloc(byte *, 1, (((n) + 7) & ~7) / 8))
-#define VALID_FREE(set) efree(set)
 
 //
 // PathTraverser setup

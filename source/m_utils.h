@@ -24,6 +24,11 @@
 
 #include "doomtype.h"
 
+#define VALID_ALLOC(set, n) ((set) = ecalloc(byte *, 1, (((n) + 7) & ~7) / 8))
+#define VALID_FREE(set) efree(set)
+#define VALID_ISSET(set, i) ((set)[(i) >> 3] & (1 << ((i) & 7)))
+#define VALID_SET(set, i) ((set)[(i) >> 3] |= 1 << ((i) & 7))
+
 // File IO utilities
 
 bool  M_WriteFile(const char *name, void *source, size_t length);
