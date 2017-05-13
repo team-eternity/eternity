@@ -176,6 +176,7 @@ Mobj    **blocklinks;             // for thing chains
 byte     *portalmap;              // haleyjd: for portals
 // ioanch 20160106: more detailed info (list of groups for each block)
 int     **gBlockGroups; 
+portal_t ***gBlockPortals;
 
 bool      skipblstart;            // MaxW: Skip initial blocklist short
 
@@ -2420,6 +2421,8 @@ void P_LoadBlockMap(int lump)
    // ioanch: what portals are in what blocks
    gBlockGroups = ecalloctag(decltype(gBlockGroups), sizeof(*gBlockGroups), 
                              bmapwidth * bmapheight, PU_LEVEL, nullptr);
+   gBlockPortals = ecalloctag(decltype(gBlockPortals), sizeof(*gBlockPortals),
+       bmapwidth * bmapheight, PU_LEVEL, nullptr);
 }
 
 

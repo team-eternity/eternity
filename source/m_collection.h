@@ -148,6 +148,18 @@ public:
       return ptrArray[index];
    }
 
+   //
+   // Looks through the collection if it contains an object.
+   // Linear complexity.
+   //
+   bool contains(const T &object) const
+   {
+      for(const T &a : *this)
+         if(a == object)
+            return true;
+      return false;
+   }
+
    // STL-compatible iterator semantics
    typedef T *iterator;
 

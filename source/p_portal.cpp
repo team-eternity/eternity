@@ -531,6 +531,7 @@ static void P_GlobalPortalStateCheck()
 static void P_buildPortalMap()
 {
    PODCollection<int> curGroups; // ioanch 20160106: keep list of current groups
+   PODCollection<const portal_t *> curPortals;
    size_t pcount = P_PortalGroupCount();
    gGroupVisit = ecalloctag(bool *, sizeof(bool), pcount, PU_LEVEL, nullptr);
    // ioanch 20160227: prepare other groups too
@@ -560,6 +561,7 @@ static void P_buildPortalMap()
          
          curGroups.makeEmpty();
          memset(gGroupVisit, 0, pcount);
+         curPortals.makeEmpty();
 
          writeOfs = offset = y * bmapwidth + x;
          offset = *(blockmap + offset);
@@ -582,12 +584,16 @@ static void P_buildPortalMap()
             {
                portalmap[writeOfs] |= PMF_CEILING;
                curGroups.add(sector->c_portal->data.link.toid);
+               if(!curPortals.contains(sector->c_portal))
+                  curPortals.add(sector->c_portal);
                gMapHasSectorPortals = true;
             }
             if(sector->f_pflags & PS_PASSABLE)
             {
                portalmap[writeOfs] |= PMF_FLOOR;
                curGroups.add(sector->f_portal->data.link.toid);
+               if(!curPortals.contains(sector->f_portal))
+                  curPortals.add(sector->f_portal);
                gMapHasSectorPortals = true;
             }
          }
@@ -598,35 +604,45 @@ static void P_buildPortalMap()
             {
                portalmap[writeOfs] |= PMF_LINE;
                addPortal(li.portal->data.link.toid);
+               if(!curPortals.contains(li.portal))
+                  curPortals.add(li.portal);
                gMapHasLinePortals = true;
             }
             if(li.frontsector->c_pflags & PS_PASSABLE)
             {
                portalmap[writeOfs] |= PMF_CEILING;
                addPortal(li.frontsector->c_portal->data.link.toid);
+               if(!curPortals.contains(li.frontsector->c_portal))
+                  curPortals.add(li.frontsector->c_portal);
                gMapHasSectorPortals = true;
             }
             if(li.backsector && li.backsector->c_pflags & PS_PASSABLE)
             {
                portalmap[writeOfs] |= PMF_CEILING;
                addPortal(li.backsector->c_portal->data.link.toid);
+               if(!curPortals.contains(li.backsector->c_portal))
+                  curPortals.add(li.backsector->c_portal);
                gMapHasSectorPortals = true;
             }
             if(li.frontsector->f_pflags & PS_PASSABLE)
             {
                portalmap[writeOfs] |= PMF_FLOOR;
                addPortal(li.frontsector->f_portal->data.link.toid);
+               if(!curPortals.contains(li.frontsector->f_portal))
+                  curPortals.add(li.frontsector->f_portal);
                gMapHasSectorPortals = true;
             }
             if(li.backsector && li.backsector->f_pflags & PS_PASSABLE)
             {
                portalmap[writeOfs] |= PMF_FLOOR;
                addPortal(li.backsector->f_portal->data.link.toid);
+               if(!curPortals.contains(li.backsector->c_portal))
+                  curPortals.add(li.backsector->c_portal);
                gMapHasSectorPortals = true;
             }
          }
-         if(gBlockGroups[writeOfs])
-            I_Error("P_buildPortalMap: non-null gBlockGroups entry!");
+         if(gBlockGroups[writeOfs] || gBlockPortals[writeOfs])
+            I_Error("P_buildPortalMap: non-null gBlockGroups or gBlockPortals entry!");
          
          size_t curSize = curGroups.getLength();
          gBlockGroups[writeOfs] = emalloctag(int *, 
@@ -638,6 +654,16 @@ static void P_buildPortalMap()
             memcpy(gBlockGroups[writeOfs] + 1, &curGroups[0], 
                curSize * sizeof(int));
          }
+
+         curSize = curPortals.getLength();
+         gBlockPortals[writeOfs] = emalloctag(portal_t **, 
+            (curSize + 1) * sizeof(portal_t *), PU_LEVEL, nullptr);
+         if(curSize)
+         {
+            memcpy(gBlockPortals[writeOfs], &curPortals[0],
+               curSize * sizeof(portal_t *));
+         }
+         gBlockPortals[writeOfs][curSize] = nullptr;   // sentinel
       }
    }
 
