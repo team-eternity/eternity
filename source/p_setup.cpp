@@ -176,7 +176,7 @@ Mobj    **blocklinks;             // for thing chains
 byte     *portalmap;              // haleyjd: for portals
 // ioanch 20160106: more detailed info (list of groups for each block)
 int     **gBlockGroups; 
-portal_t ***gBlockPortals;
+const portal_t ***gBlockPortals;
 
 bool      skipblstart;            // MaxW: Skip initial blocklist short
 

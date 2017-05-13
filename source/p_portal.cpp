@@ -656,7 +656,7 @@ static void P_buildPortalMap()
          }
 
          curSize = curPortals.getLength();
-         gBlockPortals[writeOfs] = emalloctag(portal_t **, 
+         gBlockPortals[writeOfs] = emalloctag(const portal_t **, 
             (curSize + 1) * sizeof(portal_t *), PU_LEVEL, nullptr);
          if(curSize)
          {

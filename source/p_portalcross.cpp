@@ -30,6 +30,7 @@
 #include "doomstat.h"
 #include "i_system.h"
 #include "m_bbox.h"
+#include "m_bitset.h"
 #include "p_maputl.h"
 #include "p_portal.h"
 #include "p_portalcross.h"
@@ -260,8 +261,7 @@ inline static bool P_simpleBlockWalker(const fixed_t bbox[4], bool xfirst, void 
 // whatever is behind portals
 //
 bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
-                              void *data,
-                              bool (*func)(int x, int y, int groupid, void *data))
+   void *data, bool(*func)(int x, int y, int groupid, void *data))
 {
    int gcount = P_PortalGroupCount();
    if(gcount <= 1 || groupid == R_NOGROUP ||
@@ -270,26 +270,58 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
       return P_simpleBlockWalker(bbox, xfirst, data, func);
    }
 
-   // OPTIMIZE: if needed, use some global store instead of malloc
-   bool *accessedgroupids = ecalloc(bool *, gcount, sizeof(*accessedgroupids));
-   accessedgroupids[groupid] = true;
-   int *groupqueue = ecalloc(int *, gcount, sizeof(*groupqueue));
-   int queuehead = 0;
-   int queueback = 0;
+   BitSet blockVisit(bmapwidth * bmapheight);
 
-   // initialize link with zero link because we're visiting the current area.
-   // groupid has already been set in the parameter
-   const linkoffset_t *link = &zerolink;
-
-   fixed_t movedBBox[4] = { bbox[0], bbox[1], bbox[2], bbox[3] };
-
-   do
+   struct posportal_t
    {
-      movedBBox[BOXLEFT] += link->x;
-      movedBBox[BOXRIGHT] += link->x;
-      movedBBox[BOXBOTTOM] += link->y;
-      movedBBox[BOXTOP] += link->y;
-      // set the blocks to be visited
+      v2fixed_t offset;
+      const portal_t *portal;
+   };
+
+   v2fixed_t curoffset = { 0, 0 };
+   PODCollection<posportal_t> portalQueue;
+   int queuehead = 0;
+
+   auto operate = [&blockVisit, &curoffset, data, func, &groupid, &portalQueue](int x, int y) -> bool {
+      int block = y * bmapwidth + x;
+      if(blockVisit.isset(block))
+         return true;
+      blockVisit.set(block);
+      const portal_t **portals = gBlockPortals[block];
+      for(const portal_t **portal = portals; *portal; ++portal)
+      {
+         if((*portal)->data.link.fromid == groupid)
+         {
+            posportal_t &pp = portalQueue.addNew();
+            pp.offset = curoffset;
+            pp.portal = *portal;
+         }
+      }
+      // Also check for polyobjects
+      for(const DLListItem<polymaplink_t> *plink
+         = polyblocklinks[y * bmapwidth + x]; plink; plink = plink->dllNext)
+      {
+         const polyobj_t *po = (*plink)->po;
+         for(size_t i = 0; i < po->numPortals; ++i)
+         {
+            if(po->portals[i]->type != R_LINKED)
+               continue;
+            if(po->portals[i]->data.link.fromid == groupid)
+            {
+               posportal_t &pp = portalQueue.addNew();
+               pp.offset = curoffset;
+               pp.portal = po->portals[i];
+            }
+         }
+      }
+      return func(x, y, groupid, data);
+   };
+
+   fixed_t movedBBox[4];
+   memcpy(movedBBox, bbox, 4 * sizeof(fixed_t));
+
+   for(;;)
+   {
       int xl = (movedBBox[BOXLEFT] - bmaporgx) >> MAPBLOCKSHIFT;
       int xh = (movedBBox[BOXRIGHT] - bmaporgx) >> MAPBLOCKSHIFT;
       int yl = (movedBBox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
@@ -304,53 +336,6 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
       if(yh >= bmapheight)
          yh = bmapheight - 1;
 
-      // Define a function to use in the 'for' blocks
-      auto operate = [accessedgroupids, groupqueue, &queueback, func,
-                      &groupid, data, gcount] (int x, int y) -> bool
-      {
-         // Check for portals
-         const int *block = gBlockGroups[y * bmapwidth + x];
-         for(int i = 1; i <= block[0]; ++i)
-         {
-#ifdef RANGECHECK
-            if(block[i] < 0 || block[i] >= gcount)
-               I_Error("P_TransPortalBlockWalker: i (%d) out of range (count %d)", block[i], gcount);
-#endif
-            // Add to queue and visitlist
-            if(!accessedgroupids[block[i]])
-            {
-               accessedgroupids[block[i]] = true;
-               groupqueue[queueback++] = block[i];
-            }
-         }
-
-         // Also check for polyobjects
-         for(const DLListItem<polymaplink_t> *plink
-             = polyblocklinks[y * bmapwidth + x]; plink; plink = plink->dllNext)
-         {
-            const polyobj_t *po = (*plink)->po;
-            for(size_t i = 0; i < po->numPortals; ++i)
-            {
-               if(po->portals[i]->type != R_LINKED)
-                  continue;
-               int groupid = po->portals[i]->data.link.toid;
-               // TODO: use the portal itself, not the group ID
-               if(!accessedgroupids[groupid])
-               {
-                  accessedgroupids[groupid] = true;
-                  groupqueue[queueback++] = groupid;
-               }
-            }
-         }
-
-         // now call the function
-         if(!func(x, y, groupid, data))
-         {
-            // make it possible to escape by func returning false
-            return false;
-         }
-         return true;
-      };
 
       int x, y;
       if(xfirst)
@@ -358,47 +343,29 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
          for(x = xl; x <= xh; ++x)
             for(y = yl; y <= yh; ++y)
                if(!operate(x, y))
-               {
-                  efree(groupqueue);
-                  efree(accessedgroupids);
                   return false;
-               }
       }
       else
          for(y = yl; y <= yh; ++y)
             for(x = xl; x <= xh; ++x)
                if(!operate(x, y))
-               {
-                  efree(groupqueue);
-                  efree(accessedgroupids);
                   return false;
-               }
 
-
-      // look at queue
-      link = &zerolink;
-      if(queuehead < queueback)
+      if((size_t)queuehead < portalQueue.getLength())
       {
-         do
-         {
-            link = P_GetLinkOffset(groupid, groupqueue[queuehead]);
-            ++queuehead;
-
-            // make sure to reject trivial (zero) links
-         } while(!link->x && !link->y && queuehead < queueback);
-
-         // if a valid link has been found, also update current groupid
-         if(link->x || link->y)
-            groupid = groupqueue[queuehead - 1];
+         const posportal_t &pp = portalQueue[queuehead++];
+         const linkdata_t &ldata = pp.portal->data.link;
+         groupid = ldata.toid;
+         curoffset.x = pp.offset.x + ldata.deltax;
+         curoffset.y = pp.offset.y + ldata.deltay;
+         movedBBox[BOXLEFT] = bbox[BOXLEFT] + curoffset.x;
+         movedBBox[BOXBOTTOM] = bbox[BOXBOTTOM] + curoffset.y;
+         movedBBox[BOXRIGHT] = bbox[BOXRIGHT] + curoffset.x;
+         movedBBox[BOXTOP] = bbox[BOXTOP] + curoffset.y;
+         continue;
       }
-
-      // if a valid link has been found (and groupid updated) continue
-   } while(link->x || link->y);
-
-   // we now have the list of accessedgroupids
-   
-   efree(groupqueue);
-   efree(accessedgroupids);
+      break;
+   }
    return true;
 }
 
