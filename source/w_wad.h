@@ -93,7 +93,8 @@ struct lumpinfo_t
    enum 
    {
       ns_global,
-      ns_sprites,
+      ns_MIN_LOCAL,
+      ns_sprites = ns_MIN_LOCAL, // we need a "min" reference for iteration.
       ns_flats,
       ns_colormaps,
       ns_translations,

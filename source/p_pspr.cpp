@@ -1730,7 +1730,7 @@ void A_FirePlayerMissile(actionargs_t *actionargs)
    seek     = !!E_ArgAsKwd(args, 1, &seekkwds, 0);
 
    // validate thingtype
-   if(thingnum < 0 || thingnum == -1)
+   if(thingnum < 0/* || thingnum == -1*/)
       return;
 
    // decrement ammo if appropriate

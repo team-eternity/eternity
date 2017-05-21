@@ -34,7 +34,7 @@
 #include "p_chase.h"
 #include "p_maputl.h"
 #include "p_map.h"
-#include "p_portal.h"
+#include "p_portalcross.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "p_user.h"

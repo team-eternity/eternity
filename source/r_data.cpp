@@ -76,7 +76,7 @@ fixed_t     *spritewidth, *spriteoffset, *spritetopoffset;
 // SoM: used by cardboard
 float       *spriteheight;
 // ioanch: portal sprite copying cache info
-sprvertspan_t **r_sprvertspan;
+spritespan_t **r_spritespan;
 
 //
 // R_InitSpriteLumps
@@ -129,39 +129,48 @@ void R_InitSpriteLumps(void)
 //
 void R_InitSpriteProjSpan()
 {
-   r_sprvertspan = emalloctag(decltype(r_sprvertspan),
-                              numsprites * sizeof(*r_sprvertspan), PU_RENDERER,
+   r_spritespan = emalloctag(decltype(r_spritespan),
+                              numsprites * sizeof(*r_spritespan), PU_RENDERER,
                               nullptr);
    for(int i = 0; i < numsprites; ++i)
    {
       const spritedef_t &sprite = sprites[i];
-      r_sprvertspan[i] = emalloctag(sprvertspan_t *,
-                                    sprite.numframes * sizeof(**r_sprvertspan),
+      r_spritespan[i] = emalloctag(spritespan_t *,
+                                    sprite.numframes * sizeof(**r_spritespan),
                                     PU_RENDERER, nullptr);
       for(int j = 0; j < sprite.numframes; ++j)
       {
          const spriteframe_t &frame = sprite.spriteframes[j];
-         sprvertspan_t &span = r_sprvertspan[i][j];
+         spritespan_t &span = r_spritespan[i][j];
          if(frame.rotate)
          {
             span.bottom = FLT_MAX;
             span.top = -FLT_MAX;
+            span.side = 0;
             for(int16_t lump : frame.lump)
             {
                float height = spriteheight[lump];
-               auto yofs = static_cast<float>(spritetopoffset[lump] >> FRACBITS);
+               auto yofs = M_FixedToFloat(spritetopoffset[lump]);
+               float side = M_FixedToFloat(emax(spritewidth[lump] -
+                                                spriteoffset[lump],
+                                                spriteoffset[lump]));
 
                if(yofs - height < span.bottom)
                   span.bottom = yofs - height;
                if(yofs > span.top)
                   span.top = yofs;
+               if(side > span.side)
+                  span.side = side;
             }
          }
          else
          {
             int16_t lump = frame.lump[0];
-            span.top = static_cast<float>(spritetopoffset[lump] >> FRACBITS);
+            span.top = M_FixedToFloat(spritetopoffset[lump]);
             span.bottom = span.top - spriteheight[lump];
+            span.side = M_FixedToFloat(emax(spritewidth[lump] -
+                                            spriteoffset[lump],
+                                            spriteoffset[lump]));
          }
       }
    }

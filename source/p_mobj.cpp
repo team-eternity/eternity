@@ -45,6 +45,7 @@
 #include "hu_stuff.h"
 #include "info.h"
 #include "in_lude.h"
+#include "m_bbox.h"
 #include "m_collection.h"
 #include "m_random.h"
 #include "p_chase.h"
@@ -56,6 +57,7 @@
 #include "p_map3d.h"
 #include "p_partcl.h"
 #include "p_portal.h"
+#include "p_portalcross.h"
 #include "p_saveg.h"
 #include "p_sector.h"
 #include "p_skin.h"
@@ -68,10 +70,15 @@
 #include "r_portal.h"
 #include "r_state.h"
 #include "sounds.h"
+#include "s_musinfo.h"
 #include "s_sound.h"
 #include "st_stuff.h"
 #include "v_misc.h"
 #include "v_video.h"
+
+// Local constants (ioanch)
+// Bounding box distance to avoid and get away from edge portals
+static const fixed_t AVOID_EDGE_PORTAL_RANGE = FRACUNIT >> 8;
 
 void P_FallingDamage(player_t *);
 
@@ -382,7 +389,7 @@ bool P_SetMobjStateNF(Mobj *mobj, statenum_t state)
 //
 // P_ExplodeMissile
 //
-void P_ExplodeMissile(Mobj *mo)
+void P_ExplodeMissile(Mobj *mo, const sector_t *topedgesec)
 {
    // haleyjd 08/02/04: EXPLOCOUNT flag
    if(mo->flags3 & MF3_EXPLOCOUNT)
@@ -396,10 +403,19 @@ void P_ExplodeMissile(Mobj *mo)
    // haleyjd: an attempt at fixing explosions on skies (works!)
    if(demo_version >= 329)
    {
-      if(mo->subsector->sector->intflags & SIF_SKY &&
-         mo->z >= mo->subsector->sector->ceilingheight - P_ThingInfoHeight(mo->info))
+      const sector_t *ceilingsector = P_ExtremeSectorAtPoint(mo, true);
+      if((ceilingsector->intflags & SIF_SKY || 
+         R_IsSkyLikePortalCeiling(*ceilingsector)) &&
+         mo->z >= ceilingsector->ceilingheight - P_ThingInfoHeight(mo->info))
       {
          mo->removeThinker(); // don't explode on the actual sky itself
+         return;
+      }
+      if(topedgesec && demo_version >= 342 && (topedgesec->intflags & SIF_SKY ||
+         R_IsSkyLikePortalCeiling(*topedgesec)) && 
+         mo->z >= topedgesec->ceilingheight - P_ThingInfoHeight(mo->info))
+      {
+         mo->removeThinker(); // don't explode on the edge
          return;
       }
    }
@@ -541,8 +557,11 @@ void P_XYMovement(Mobj* mo)
                mo->momx = mo->momy = 0;
             }
          }
-         else if(mo->flags3 & MF3_SLIDE) // haleyjd: SLIDE flag
+         else if(demo_version <= 203 ? !!player : !!(mo->flags3 & MF3_SLIDE)) // haleyjd: SLIDE flag
          {
+            // Checking against "player" is still needed for MBF and lower demo
+            // compatibility. Relevant for respawned players' old corpses.
+            // Safe to use, since old demos don't have MF3_SLIDE.
             P_SlideMove(mo); // try to slide along it
          }
          else if(mo->flags & MF_MISSILE)
@@ -585,7 +604,10 @@ void P_XYMovement(Mobj* mo)
             // explode a missile
 
             if(clip.ceilingline && clip.ceilingline->backsector &&
-               clip.ceilingline->backsector->intflags & SIF_SKY)
+               (clip.ceilingline->backsector->intflags & SIF_SKY || 
+               (demo_version >= 342 && 
+                  clip.ceilingline->extflags & EX_ML_UPPERPORTAL &&
+                  R_IsSkyLikePortalCeiling(*clip.ceilingline->backsector))))
             {
                if (demo_compatibility ||  // killough
                   mo->z > clip.ceilingline->backsector->ceilingheight)
@@ -602,7 +624,16 @@ void P_XYMovement(Mobj* mo)
                }
             }
 
-            P_ExplodeMissile(mo);
+            if(demo_version >= 342 && clip.blockline && 
+               !clip.blockline->backsector && 
+               R_IsSkyLikePortalWall(*clip.blockline))
+            {
+               mo->removeThinker();
+               return;
+            }
+
+            P_ExplodeMissile(mo, clip.ceilingline ? clip.ceilingline->backsector :
+               nullptr);
          }
          else // whatever else it is, it is now standing still in (x,y)
          {
@@ -874,13 +905,17 @@ static void P_ZMovement(Mobj* mo)
          if(clip.ceilingline &&
             clip.ceilingline->backsector &&
             (mo->z > clip.ceilingline->backsector->ceilingheight) &&
-            clip.ceilingline->backsector->intflags & SIF_SKY)
+            (clip.ceilingline->backsector->intflags & SIF_SKY ||
+            (demo_version >= 342 &&
+               clip.ceilingline->extflags & EX_ML_UPPERPORTAL &&
+               R_IsSkyLikePortalCeiling(*clip.ceilingline->backsector))))
          {
             mo->removeThinker();  // don't explode on skies
          }
          else
          {
-            P_ExplodeMissile(mo);
+            P_ExplodeMissile(mo, 
+               clip.ceilingline ? clip.ceilingline->backsector : nullptr);
          }
       }
 
@@ -976,7 +1011,7 @@ floater:
       if(!((mo->flags ^ MF_MISSILE) & (MF_MISSILE | MF_NOCLIP)))
       {
          if(!(mo->flags3 & MF3_FLOORMISSILE)) // haleyjd
-            P_ExplodeMissile(mo);
+            P_ExplodeMissile(mo, nullptr);
          return;
       }
    }
@@ -1019,7 +1054,8 @@ floater:
 
       if(!((mo->flags ^ MF_MISSILE) & (MF_MISSILE | MF_NOCLIP)))
       {
-         P_ExplodeMissile (mo);
+         P_ExplodeMissile (mo, 
+            clip.ceilingline ? clip.ceilingline->backsector : nullptr);
          return;
       }
    }
@@ -1121,6 +1157,53 @@ void P_NightmareRespawn(Mobj* mobj)
 }
 
 //
+// Moves the mobj away from a local portal line when it's about to sink into the
+// sector portal. Hack needed to prevent wall portal / edge portal margin bug.
+//
+// The mobj is already assumed to be sunk into the sector portal.
+//
+static void P_avoidPortalEdges(Mobj &mobj, bool isceiling)
+{
+   const sector_t &sector = *mobj.subsector->sector;
+   unsigned flag = isceiling ? EX_ML_UPPERPORTAL : EX_ML_LOWERPORTAL;
+
+   fixed_t box[4];
+
+   v2fixed_t displace = { mobj.x, mobj.y };   // displacement. If not 0, it will move.
+   box[BOXLEFT] = displace.x - AVOID_EDGE_PORTAL_RANGE;
+   box[BOXBOTTOM] = displace.y - AVOID_EDGE_PORTAL_RANGE;
+   box[BOXRIGHT] = displace.x + AVOID_EDGE_PORTAL_RANGE;
+   box[BOXTOP] = displace.y + AVOID_EDGE_PORTAL_RANGE;
+
+   for(int i = 0; i < sector.linecount; ++i)
+   {
+      const line_t &line = *sector.lines[i];
+
+      // line must be an edge portal with its back towards the sector.
+      // The thing's centre must be very close to the line
+      if(line.frontsector == &sector || !(line.extflags & flag) ||
+         !P_BoxesIntersect(box, line.bbox) || P_BoxOnLineSide(box, &line) != -1)
+      {
+         continue;
+      }
+
+      // Got one. Add to the vector
+      angle_t angle = P_PointToAngle(0, 0, line.dx, line.dy) + ANG90;
+      unsigned fine = angle >> ANGLETOFINESHIFT;
+      displace.x += FixedMul(AVOID_EDGE_PORTAL_RANGE, finecosine[fine]);
+      displace.y += FixedMul(AVOID_EDGE_PORTAL_RANGE, finesine[fine]);
+
+      // Now move the box
+      box[BOXLEFT] = displace.x - AVOID_EDGE_PORTAL_RANGE;
+      box[BOXBOTTOM] = displace.y - AVOID_EDGE_PORTAL_RANGE;
+      box[BOXRIGHT] = displace.x + AVOID_EDGE_PORTAL_RANGE;
+      box[BOXTOP] = displace.y + AVOID_EDGE_PORTAL_RANGE;
+   }
+   if(displace.x != mobj.x || displace.y != mobj.y)
+      P_TryMove(&mobj, displace.x, displace.y, 1);
+}
+
+//
 // Check for passing through an interactive portal plane.
 //
 static bool P_CheckPortalTeleport(Mobj *mobj)
@@ -1146,6 +1229,7 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
       // ioanch 20160109: link offset outside
       if(passheight < ldata->planez)
       {
+         P_avoidPortalEdges(*mobj, false);
          EV_PortalTeleport(mobj, ldata->deltax, ldata->deltay, ldata->deltaz,
                            ldata->fromid, ldata->toid);
          ret = true;
@@ -1169,6 +1253,7 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
       // ioanch 20160109: link offset outside
       if(passheight >= ldata->planez)
       {
+         P_avoidPortalEdges(*mobj, true);
          EV_PortalTeleport(mobj, ldata->deltax, ldata->deltay, ldata->deltaz,
                            ldata->fromid, ldata->toid);
          ret = true;
@@ -1205,18 +1290,20 @@ IMPLEMENT_THINKER_TYPE(Mobj)
 inline static void P_checkMobjProjections(Mobj &mobj)
 {
    uint32_t spritecomp = mobj.sprite << 16 | (mobj.frame & 0xffff);
-   if(gMapHasSectorPortals && (mobj.z != mobj.sprojlast.pos.z ||
-                               mobj.x != mobj.sprojlast.pos.x ||
-                               mobj.y != mobj.sprojlast.pos.y ||
-                               spritecomp != mobj.sprojlast.sprite ||
-                               mobj.yscale != mobj.sprojlast.yscale))
+   bool xychanged = mobj.x != mobj.sprojlast.pos.x ||
+   mobj.y != mobj.sprojlast.pos.y || mobj.xscale != mobj.sprojlast.xscale;
+   if(useportalgroups && (mobj.z != mobj.sprojlast.pos.z || xychanged ||
+                          spritecomp != mobj.sprojlast.sprite ||
+                          mobj.yscale != mobj.sprojlast.yscale))
    {
-      R_CheckMobjProjections(&mobj);
+      bool checklines = gMapHasLinePortals && xychanged;
+      R_CheckMobjProjections(&mobj, checklines);
       mobj.sprojlast.pos.x = mobj.x;
       mobj.sprojlast.pos.y = mobj.y;
       mobj.sprojlast.pos.z = mobj.z;
       mobj.sprojlast.sprite = spritecomp;
       mobj.sprojlast.yscale = mobj.yscale;
+      mobj.sprojlast.xscale = mobj.xscale;
    }
 }
 
@@ -1225,6 +1312,12 @@ inline static void P_checkMobjProjections(Mobj &mobj)
 //
 void Mobj::Think()
 {
+   if(intflags & MIF_MUSICCHANGER)
+   {
+      S_MusInfoThink(*this);
+      return;
+   }
+
    int oldwaterstate, waterstate = 0;
    fixed_t lz;
 
@@ -2367,7 +2460,10 @@ spawnit:
 
    // haleyjd: set music number for first 64 types
    if(mthing->type >= 14101 && mthing->type <= 14164)
+   {
+      mobj->intflags |= MIF_MUSICCHANGER;
       mobj->args[0] = mthing->type - 14100;
+   }
 
    mobj->backupPosition();
 
@@ -2698,7 +2794,7 @@ bool P_CheckMissileSpawn(Mobj* th)
    // killough 3/15/98: no dropoff (really = don't care for missiles)
    if(!P_TryMove(th, th->x, th->y, false))
    {
-      P_ExplodeMissile(th);
+      P_ExplodeMissile(th, nullptr);
       ok = false;
    }
 

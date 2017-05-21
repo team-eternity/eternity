@@ -72,8 +72,8 @@ protected:
 public:
    // Constructors/Destructor
    MetaObject();
-   MetaObject(size_t keyIndex);
-   MetaObject(const char *pKey);
+   explicit MetaObject(size_t keyIndex);
+   explicit MetaObject(const char *pKey);
    MetaObject(const MetaObject &other)
       : Super(), links(), typelinks(), key(other.key),
         type(NULL), keyIdx(other.keyIdx)
@@ -340,7 +340,7 @@ private:
 
 public:
    MetaTable();
-   MetaTable(const char *name);
+   explicit MetaTable(const char *name);
    MetaTable(const MetaTable &other);
    virtual ~MetaTable();
 
@@ -487,7 +487,7 @@ protected:
    bool   haveIndex;
 
 public:
-   MetaKeyIndex(const char *pKey) : key(pKey), keyIndex(0), haveIndex(false) 
+   explicit MetaKeyIndex(const char *pKey) : key(pKey), keyIndex(0), haveIndex(false) 
    {
    }
 

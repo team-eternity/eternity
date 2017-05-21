@@ -208,6 +208,9 @@ bool PathTraverser::checkLine(size_t linenum)
 
    VALID_SET(validlines, linenum);
 
+   if(def.flags & CAM_REQUIRELINEPORTALS && !(ld->pflags & PS_PASSABLE))
+      return true;
+
    s1 = P_PointOnDivlineSide(ld->v1->x, ld->v1->y, &trace);
    s2 = P_PointOnDivlineSide(ld->v2->x, ld->v2->y, &trace);
    if(s1 == s2)
@@ -553,13 +556,18 @@ void lineopening_t::calculate(const line_t *linedef)
    const sector_t *front = linedef->frontsector;
    const sector_t *back = linedef->backsector;
 
+   const sector_t *beyond = linedef->intflags & MLI_POLYPORTALLINE &&
+      linedef->beyondportalline ? linedef->beyondportalline->frontsector : nullptr;
+   if(beyond)
+      back = beyond;
+
    // no need to apply the portal hack (1024 units) here fortunately
-   if(linedef->extflags & EX_ML_UPPERPORTAL)
+   if(linedef->extflags & EX_ML_UPPERPORTAL && back->c_pflags & PS_PASSABLE)
       opentop = front->ceilingheight;
    else
       opentop = emin(front->ceilingheight, back->ceilingheight);
 
-   if(linedef->extflags & EX_ML_LOWERPORTAL)
+   if(linedef->extflags & EX_ML_LOWERPORTAL && back->f_pflags & PS_PASSABLE)
       openbottom = front->floorheight;
    else
       openbottom = emax(front->floorheight, back->floorheight);

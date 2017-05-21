@@ -769,7 +769,7 @@ byte *V_PatchToLinear(patch_t *patch, bool flipped, byte fillcolor,
             }
             while(--count);
          }
-         column = (column_t *)(source + 1); // killough 2/21/98 even faster
+         column = reinterpret_cast<const column_t *>(source + 1); // killough 2/21/98 even faster
       }
    }
 
@@ -807,7 +807,7 @@ patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize,
    
    byte *out = ecalloctag(byte *, 1, total_size, tag, user);
 
-   p = (patch_t *)out;
+   p = reinterpret_cast<patch_t *>(out);
 
    // set basic header information
    p->width      = w;
@@ -828,7 +828,7 @@ patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize,
       columnofs[x] = int(dest - out);
 
       // set basic column properties
-      c = (column_t *)dest;
+      c = reinterpret_cast<column_t *>(dest);
       c->length   = h;
       c->topdelta = 0;
 
@@ -857,11 +857,11 @@ patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize,
 //
 // Get the size of a patch to be created from a linear
 //
-size_t V_transPatchSizeForLinear(byte *linear, int w, int h, int color_key)
+size_t V_transPatchSizeForLinear(const byte *linear, int w, int h, int color_key)
 {
    size_t ret;
    int      x, y;
-   byte     *src;
+   const byte     *src;
 
    // Basic header info
    ret = 4 * sizeof(int16_t);
@@ -910,21 +910,22 @@ size_t V_transPatchSizeForLinear(byte *linear, int w, int h, int color_key)
 //
 // converts a linear graphic to a patch with transparency
 //
-patch_t *V_LinearToTransPatch(byte *linear, int w, int h, size_t *memsize,
+patch_t *V_LinearToTransPatch(const byte *linear, int w, int h, size_t *memsize,
                               int color_key, int tag, void **user)
 {
    int      x, y;
    patch_t  *p;
    column_t *c;
    int      *columnofs;
-   byte     *src, *dest;
+   const byte *src;
+   byte     *dest;
 
    // Oversize now, and shrink later.
    size_t total_size = V_transPatchSizeForLinear(linear, w, h, color_key);
 
    byte *out = ecalloctag(byte *, 1, total_size, tag, user);
 
-   p = (patch_t *)out;
+   p = reinterpret_cast<patch_t *>(out);
 
    // set basic header information
    p->width = w;
@@ -959,7 +960,7 @@ patch_t *V_LinearToTransPatch(byte *linear, int w, int h, size_t *memsize,
             else
                firstspan = false;
 
-            c = (column_t *)dest;
+            c = reinterpret_cast<column_t *>(dest);
             c->length = 0;
             c->topdelta = y;
             dest += sizeof(column_t) + 1;
@@ -978,7 +979,7 @@ patch_t *V_LinearToTransPatch(byte *linear, int w, int h, size_t *memsize,
       // add a blank first span if need be
       if(firstspan)
       {
-         c = (column_t *)dest;
+         c = reinterpret_cast<column_t *>(dest);
          c->length = 0;
          c->topdelta = 0;
          dest += sizeof(column_t) + 1;

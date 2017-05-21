@@ -713,7 +713,7 @@ static fixed_t HI_dmFaceTLLevel(int playernum)
 //
 static void HI_drawDMStats(void)
 {
-   int i, j;
+   int i;
    int xpos, ypos, kpos;
    const char *killers = HIS_KILLERS;
 
@@ -791,7 +791,7 @@ static void HI_drawDMStats(void)
 
             kpos = 86;
 
-            for(j = 0; j < MAXPLAYERS; ++j)
+            for(int j = 0; j < MAXPLAYERS; ++j)
             {
                if(HI_playerInGame(j))
                {

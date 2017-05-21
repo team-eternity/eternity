@@ -191,7 +191,7 @@ public:
    }
    
    // Parameterized constructor
-   PODCollection(size_t initSize) : BaseCollection<T>()
+   explicit PODCollection(size_t initSize) : BaseCollection<T>()
    {
       this->baseResize(initSize);
    }
@@ -363,7 +363,7 @@ public:
    }
    
    // Parameterized constructor
-   Collection(size_t initSize) : BaseCollection<T>(), prototype(nullptr)
+   explicit Collection(size_t initSize) : BaseCollection<T>(), prototype(nullptr)
    {
       this->baseResize(initSize);
    }

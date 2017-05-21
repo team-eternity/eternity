@@ -26,9 +26,11 @@
 #ifndef R_THINGS_H__
 #define R_THINGS_H__
 
+struct line_t;
 struct sector_t;
 struct particle_t;
 struct planehash_t;
+struct pwindow_t;
 
 // Constant arrays used for psprite clipping and initializing clipping.
 
@@ -59,7 +61,7 @@ struct poststack_t
    maskedrange_t *masked;
 };
 
-void R_PushPost(bool pushmasked, planehash_t *overlay);
+void R_PushPost(bool pushmasked, pwindow_t *window);
 
 // SoM: Cardboard
 void R_SetMaskedSilhouette(const float *top, const float *bottom);
@@ -98,17 +100,18 @@ extern cb_maskedcolumn_t maskedcolumn;
 //
 struct spriteprojnode_t
 {
-   v3fixed_t delta;                       // portal accumulated delta (do not
-                                          // link offsets)
    Mobj *mobj;                            // source mobj
    const sector_t *sector;                // sector where this appears
+   v3fixed_t delta;                       // portal accumulated delta (do not
+                                          // link offsets)
+   const line_t *portalline;              // portal line (if applicable)
    DLListItem<spriteprojnode_t> mobjlink; // vertical link (links separate layers)
    DLListItem<spriteprojnode_t> sectlink; // horizontal link (links separate mobjs)
    DLListItem<spriteprojnode_t> freelink; // free list link (for recycling)
 };
 
 void R_RemoveMobjProjections(Mobj *mobj);
-void R_CheckMobjProjections(Mobj *mobj);
+void R_CheckMobjProjections(Mobj *mobj, bool checklines);
 
 ///////////////////////////////////////////////////////////////////////////////
 

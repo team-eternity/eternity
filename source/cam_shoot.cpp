@@ -83,7 +83,6 @@ void ShootContext::lineAttack(Mobj *source, angle_t angle, fixed_t distance,
    fixed_t slope, int damage, const State *state)
 {
    ShootContext context(source, angle, distance, slope, damage, state);
-   angle >>= ANGLETOFINESHIFT;
    fixed_t x2 = context.state.x + (distance >> FRACBITS) * context.cos;
    fixed_t y2 = context.state.y + (distance >> FRACBITS) * context.sin;
 
@@ -313,8 +312,11 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
             fixed_t pfrac = FixedDiv(sidesector->floorheight
                - context.state.z, context.aimslope);
 
-            if(R_IsSkyFlat(sidesector->floorpic))
+            if(R_IsSkyFlat(sidesector->floorpic) ||
+               R_IsSkyLikePortalFloor(*sidesector))
+            {
                return false;
+            }
 
             x = trace.x + FixedMul(context.cos, pfrac);
             y = trace.y + FixedMul(context.sin, pfrac);
@@ -327,8 +329,11 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          {
             fixed_t pfrac = FixedDiv(sidesector->ceilingheight
                - context.state.z, context.aimslope);
-            if(sidesector->intflags & SIF_SKY)
+            if(sidesector->intflags & SIF_SKY ||
+               R_IsSkyLikePortalCeiling(*sidesector))
+            {
                return false;
+            }
             x = trace.x + FixedMul(context.cos, pfrac);
             y = trace.y + FixedMul(context.sin, pfrac);
             z = sidesector->ceilingheight;
@@ -352,9 +357,21 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          }
       }
 
-      // ioanch 20160102: this doesn't make sense
-      //      if(!hitplane && li->portal)
-      //         return false;
+      if(demo_version >= 342 && li->backsector &&
+         ((li->extflags & EX_ML_UPPERPORTAL &&
+            li->backsector->ceilingheight < li->frontsector->ceilingheight &&
+            li->backsector->ceilingheight < z &&
+            R_IsSkyLikePortalCeiling(*li->backsector)) ||
+            (li->extflags & EX_ML_LOWERPORTAL &&
+               li->backsector->floorheight > li->frontsector->floorheight &&
+               li->backsector->floorheight > z &&
+               R_IsSkyLikePortalFloor(*li->backsector))))
+      {
+         return false;
+      }
+
+      if(!hitplane && !li->backsector && R_IsSkyLikePortalWall(*li))
+         return false;
 
       P_SpawnPuff(x, y, z, P_PointToAngle(0, 0, li->dx, li->dy) - ANG90,
          updown, true);

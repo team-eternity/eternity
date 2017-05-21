@@ -58,7 +58,7 @@ public:
    static const size_t basesize;
 
    // Constructors / Destructor
-   qstring(size_t startSize = 0) 
+   explicit qstring(size_t startSize = 0) 
       : ZoneObject(), index(0), size(16)
    {
       buffer = local;

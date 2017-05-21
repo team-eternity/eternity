@@ -63,6 +63,7 @@ int R_DoorClosed();   // killough 1/17/98
 
 // killough 4/13/98: fake floors/ceilings for deep water / fake ceilings:
 sector_t *R_FakeFlat(sector_t *, sector_t *, int *, int *, bool);
+bool R_PickNearestBoxLines(const fixed_t bbox[4], dlnormal_t &dl1, dlnormal_t &dl2);
 
 extern int detaillevel;
 

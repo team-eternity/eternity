@@ -377,7 +377,7 @@ static int E_ParseTypeField(const char *value)
    long num;
    int  i;
    char prefix[16];
-   const char *colonloc, *strval;
+   const char *colonloc;
    char *numpos = NULL;
 
    num = strtol(value, &numpos, 0);
@@ -388,6 +388,7 @@ static int E_ParseTypeField(const char *value)
    // If has a colon, or is otherwise not just a number...
    if(colonloc || (numpos && *numpos != '\0'))
    {
+      const char *strval;
       if(colonloc) // allow a thing: prefix for compatibility
          strval = colonloc + 1;
       else
@@ -448,7 +449,7 @@ static void E_ProcessEDThings(cfg_t *cfg)
       return;
 
    // allocate the mapthing_t structures
-   EDThings = (mapthing_t *)(Z_Malloc(numEDMapThings * sizeof(mapthing_t), PU_LEVEL, NULL));
+   EDThings = estructalloctag(mapthing_t, numEDMapThings, PU_LEVEL);
 
    // initialize the hash chains
    for(i = 0; i < NUMMTCHAINS; ++i)
@@ -1132,8 +1133,7 @@ static void E_ProcessEDLines(cfg_t *cfg)
       return;
 
    // allocate the maplinedefext_t structures
-   EDLines = (maplinedefext_t *)(Z_Malloc(numEDLines * sizeof(maplinedefext_t),
-                                          PU_LEVEL, NULL));
+   EDLines = estructalloctag(maplinedefext_t, numEDLines, PU_LEVEL);
 
    // initialize the hash chains
    for(i = 0; i < NUMLDCHAINS; ++i)
@@ -1629,13 +1629,20 @@ void E_LoadSectorExt(line_t *line, UDMFSetupSettings &setupSettings)
 
    // colormaps
    if(edsector->topmap >= 0)
-      sector->topmap    = edsector->topmap;
+   {
+      sector->topmap = edsector->topmap;
+      setupSettings.setSectorFlag(sector - sectors, UDMF_SECTOR_INIT_COLOR_TOP);
+   }
    if(edsector->midmap >= 0)
-      sector->midmap    = edsector->midmap;
+   {
+      sector->midmap = edsector->midmap;
+      setupSettings.setSectorFlag(sector - sectors, UDMF_SECTOR_INIT_COLOR_MIDDLE);
+   }
    if(edsector->bottommap >= 0)
+   {
       sector->bottommap = edsector->bottommap;
-   if(edsector->topmap >= 0 || edsector->midmap >= 0 || edsector->bottommap >= 0)
-      setupSettings.setSectorFlag(sector - sectors, UDMF_SECTOR_INIT_COLORMAPPED);
+      setupSettings.setSectorFlag(sector - sectors, UDMF_SECTOR_INIT_COLOR_BOTTOM);
+   }
 
    // terrain overrides
    sector->floorterrain   = edsector->floorterrain;

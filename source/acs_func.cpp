@@ -44,6 +44,7 @@
 #include "e_mod.h"
 #include "e_states.h"
 #include "e_things.h"
+#include "ev_specials.h"
 #include "g_game.h"
 #include "hu_stuff.h"
 #include "m_random.h"
@@ -779,7 +780,7 @@ bool ACS_CF_GetLineY(ACS_CF_ARGS)
       angle_t angle = P_PointToAngle(line->v1->x, line->v1->y, line->v2->x, line->v2->y);
       angle -= ANG90;
       unsigned fineangle = angle >> ANGLETOFINESHIFT;
-      result += FixedMul(finecosine[fineangle], linedist);
+      result += FixedMul(finesine[fineangle], linedist);
    }
    thread->dataStk.push(result);
    return false;
@@ -1675,7 +1676,7 @@ bool ACS_CF_SetLineSpec(ACS_CF_ARGS)
 
    while((l = P_FindLine(tag, &linenum)) != NULL)
    {
-      l->special = spec;
+      l->special = EV_ActionForACSAction(spec);
       for(int i = NUMLINEARGS; i--;)
          l->args[i] = argV[i + 2];
    }
@@ -1826,7 +1827,7 @@ bool ACS_CF_SetThingPos(ACS_CF_ARGS)
    fixed_t  z    = argV[3];
    bool     fog  = argV[4] ? true : false;
    uint32_t res  = 0;
-   Mobj    *mo, *fogmo;
+   Mobj    *mo;
 
    if((mo = P_FindMobjFromTID(tid, nullptr, info->mo)))
    {
@@ -1861,7 +1862,7 @@ bool ACS_CF_SetThingPos(ACS_CF_ARGS)
          if(fog)
          {
             // Teleport fog at source...
-            fogmo = P_SpawnMobj(oldx, oldy, oldz + GameModeInfo->teleFogHeight,
+            Mobj *fogmo = P_SpawnMobj(oldx, oldy, oldz + GameModeInfo->teleFogHeight,
                                 E_SafeThingName(GameModeInfo->teleFogType));
             S_StartSound(fogmo, GameModeInfo->teleSound);
 

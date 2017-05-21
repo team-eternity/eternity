@@ -27,8 +27,7 @@
 #ifndef P_PORTAL_H__
 #define P_PORTAL_H__
 
-#include "m_vector.h"
-#include "r_defs.h"
+#include "m_collection.h"
 
 struct polyobj_s;
 
@@ -47,9 +46,6 @@ extern const polyobj_s **gGroupPolyobject; // ioanch 20160227
 #define R_NOGROUP -1
 #endif
 
-struct line_t;
-struct linkdata_t;
-struct linkoffset_t;
 struct portal_t;
 struct sector_t;
 
@@ -187,84 +183,41 @@ void P_SetCPortalBehavior(sector_t *sec, int newbehavior);
 //
 void P_SetLPortalBehavior(line_t *line, int newbehavior);
 
-//
-// P_LinePortalCrossing
-//
-// ioanch 20160106: function to trace one or more paths through potential line
-// portals. Needed because some objects are spawned at given offsets from
-// others, and there's no other way to detect line portal change.
-//
-v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
-                               int *group = nullptr, bool *passed = nullptr);
-
-template <typename T> 
-inline static v2fixed_t P_LinePortalCrossing(T &&u, fixed_t dx, fixed_t dy, 
-                                             int *group = nullptr)
-{
-   return P_LinePortalCrossing(u.x, u.y, dx, dy, group);
-}
-
-template <typename T, typename U> 
-inline static v2fixed_t P_LinePortalCrossing(T &&u, U &&dv, int *group = nullptr)
-{
-   return P_LinePortalCrossing(u.x, u.y, dv.x, dv.y, group);
-}
-
-//
-// P_ExtremeSectorAtPoint
-// ioanch 20160107
-//
-sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling, 
-                                 sector_t *preCalcSector = nullptr);
-
-inline static sector_t *P_ExtremeSectorAtPoint(const Mobj *mo, bool ceiling)
-{
-   return P_ExtremeSectorAtPoint(mo->x, mo->y, ceiling, mo->subsector->sector);
-}
-
-//
-// P_TransPortalBlockWalker
-// ioanch 20160107
-//
-bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
-                              void *data, 
-                              bool (*func)(int x, int y, int groupid, void *data));
-
-// variant with generic callable
-template <typename C> inline static
-bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
-                              C &&callable)
-{
-   return P_TransPortalBlockWalker(bbox, groupid, xfirst, &callable, 
-      [](int x, int y, int groupid, void *data)
-   {
-      auto c = static_cast<C *>(data);
-      return (*c)(x, y, groupid);
-   });
-}
-
-//
-//P_SectorTouchesThing
-// ioanch 20160115
-//
-bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj);
-
-// ioanch 20160222
-sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
-                                        int cgroupid, int tgroupid,
-                                        sector_t *csector, fixed_t midzhint);
-inline static sector_t *P_ThingReachesGroupVertically(const Mobj *mo,
-                                                      int groupid,
-                                                      fixed_t midzhint)
-{
-   return P_PointReachesGroupVertically(mo->x, mo->y, mo->z + mo->height / 2,
-      mo->groupid, groupid, mo->subsector->sector, midzhint);
-}
-
 void P_MoveLinkedPortal(portal_t *portal, fixed_t dx, fixed_t dy,
                         bool movebehind);
 
 bool P_BlockHasLinkedPortals(int index, bool includesectors);
+
+//==============================================================================
+//
+// More portal blockmap stuff (besides portalmap and gBlockGroups from p_setup)
+//
+
+//
+// Line portal blockmap: stores just the portal linedefs on the blockmap
+//
+class LinePortalBlockmap
+{
+public:
+   LinePortalBlockmap() : mValidcount(0), mValids(nullptr)
+   {
+   }
+
+   void mapInit();
+   void newSession()
+   {
+      ++mValidcount;
+   }
+   bool iterator(int x, int y, void *data,
+                 bool (*func)(const line_t &, void *data)) const;
+
+private:
+   Collection<PODCollection<const line_t *>> mMap;
+   int mValidcount;
+   int *mValids;
+};
+
+extern LinePortalBlockmap pLPortalMap;
 
 #endif
 

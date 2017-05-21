@@ -861,17 +861,16 @@ int E_ColorStrCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
 //
 const char *E_ExtractPrefix(const char *value, char *prefixbuf, int buflen)
 {
-   int i;
-   const char *colonloc, *rover, *strval;
+   const char *colonloc;
 
    // look for a colon ending a possible prefix
    colonloc = strchr(value, ':');
 
    if(colonloc)
    {
-      strval = colonloc + 1;
-      rover = value;
-      i = 0;
+      const char *strval = colonloc + 1;
+      const char *rover = value;
+      int i = 0;
       
       // 01/10/09: initialize buffer
       memset(prefixbuf, 0, buflen);

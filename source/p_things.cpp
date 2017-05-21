@@ -244,9 +244,9 @@ int EV_ThingDeactivate(int tid)
 //
 int EV_ThingChangeTID(Mobj *actor, int oldtid, int newtid)
 {
-   Mobj   *mo     = nullptr;
+   Mobj   *mo;
    Mobj   *next   = nullptr;
-   bool    found  = false;
+   bool    found;
 
    mo    = P_FindMobjFromTID(oldtid, nullptr, actor);
    found = mo != nullptr;
@@ -455,6 +455,9 @@ int EV_ThingRemove(int tid)
       removed = mobj;
       mobj = P_FindMobjFromTID(tid, mobj, nullptr);
 
+      // clean up as best as we can
+      removed->health = 0;
+      removed->flags &= ~MF_SHOOTABLE;
       removed->removeThinker();
 
       rtn = 1;
