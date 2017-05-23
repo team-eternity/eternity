@@ -483,7 +483,7 @@ bool P_GivePowerForItem(player_t *player, itemeffect_t *power)
    powerTracker = E_ItemEffectForName(powerStr);
    if((trackerArtifact = E_InventorySlotForItem(player, powerTracker)))
    {
-      if(!powerTracker->getInt("power.overridesself", 0))
+      if(!power->getInt("overridesself", 0))
       {
          if(trackerArtifact->amount >= powerTracker->getInt("maxamount", 1))
             return false;

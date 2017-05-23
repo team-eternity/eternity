@@ -172,7 +172,7 @@ MetaTable *E_GetItemEffects()
 #define KEY_MAXAMOUNT      "maxamount"
 #define KEY_MAXSAVEAMOUNT  "maxsaveamount"
 #define KEY_PERMANENT      "permanent"
-#define KEY_OVERRIDESSELF  "power.overridesself"
+#define KEY_OVERRIDESSELF  "overridesself"
 #define KEY_SAVEAMOUNT     "saveamount"
 #define KEY_SAVEDIVISOR    "savedivisor"
 #define KEY_SAVEFACTOR     "savefactor"
@@ -246,8 +246,10 @@ cfg_opt_t edf_powerfx_opts[] =
    CFG_INT(KEY_DURATION,  -1, CFGF_NONE), // length of time to last
    CFG_STR(KEY_TYPE,      "", CFGF_NONE), // name of powerup effect to give
 
-   CFG_FLAG(KEY_ADDITIVETIME, 0, CFGF_SIGNPREFIX), // if +, adds to current duration
-   CFG_FLAG(KEY_PERMANENT,    0, CFGF_SIGNPREFIX), // if +, lasts forever
+   CFG_FLAG(KEY_ADDITIVETIME,  0, CFGF_SIGNPREFIX), // if +, adds to current duration
+   CFG_FLAG(KEY_PERMANENT,     0, CFGF_SIGNPREFIX), // if +, lasts forever
+   CFG_FLAG(KEY_OVERRIDESSELF, 0, CFGF_SIGNPREFIX), // if +, getting the power again while still
+                                                    // under its influence is allowed (a la DOOM)
    // TODO: support HUBPOWER and PERSISTENTPOWER properties, etc.
 
    CFG_END()
@@ -318,10 +320,6 @@ cfg_opt_t edf_artifact_opts[] =
    // Ammo sub-type
    CFG_INT(KEY_BACKPACKAMOUNT, 0, CFGF_NONE),
    CFG_INT(KEY_BACKPACKMAXAMT, 0, CFGF_NONE),
-
-   // Power sub-type
-   CFG_FLAG(KEY_OVERRIDESSELF, 0, CFGF_SIGNPREFIX), // if +, getting the power again while still
-                                                    // under its influence is allowed (a la DOOM)
 
    CFG_END()
 };
