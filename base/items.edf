@@ -56,177 +56,104 @@ lockdef 228
 }
 
 //
-// Common powers, and cheat powers
+// Power Trackers
 //
+
 artifact PowerInvulnerable
 {
-  amount         1
-  maxamount      1
-  interhubamount 0
-
   +undroppable
-  -invbar
-  -keepdepleted
 
-  artifacttype   Power
+  artifacttype Power
 }
 
 artifact PowerStrength
 {
-  amount         1
-  maxamount      1
-  interhubamount 0
-
   +undroppable
-  -invbar
-  -keepdepleted
 
-  artifacttype   Power
+  artifacttype Power
 }
 
 artifact PowerPartialInvisibility
 {
-  amount         1
-  maxamount      1
-  interhubamount 0
-
   +undroppable
-  -invbar
-  -keepdepleted
 
-  artifacttype   Power
+  artifacttype Power
 }
 
 artifact PowerIronFeet
 {
-  amount         1
-  maxamount      1
-  interhubamount 0
-
   +undroppable
-  -invbar
-  -keepdepleted
 
-  artifacttype   Power
+  artifacttype Power
 }
 
 artifact PowerAllmap
 {
-  amount         1
-  maxamount      1
-  interhubamount 0
-
   +undroppable
-  -invbar
-  -keepdepleted
 
-  artifacttype   Power
+  artifacttype Power
 }
 
 artifact PowerLightAmp
 {
-  amount         1
-  maxamount      1
-  interhubamount 0
-
   +undroppable
-  -invbar
-  -keepdepleted
 
-  artifacttype   Power
+  artifacttype Power
 }
 
 artifact PowerTotalInvisibility
 {
-  amount         1
-  maxamount      1
-  interhubamount 0
-
   +undroppable
-  -invbar
-  -keepdepleted
 
-  artifacttype   Power
+  artifacttype Power
 }
 
 artifact PowerGhost
 {
-  amount         1
-  maxamount      1
-  interhubamount 0
-
   +undroppable
-  -invbar
-  -keepdepleted
 
-  artifacttype   Power
+  artifacttype Power
 }
 
 artifact PowerSilent
 {
-  amount         1
-  maxamount      1
-  interhubamount 0
-
   +undroppable
-  -invbar
-  -keepdepleted
 
-  artifacttype   Power
+  artifacttype Power
 }
 
 artifact PowerFlight
 {
-  amount         1
-  maxamount      1
-  interhubamount 0
-
   +undroppable
-  -invbar
-  -keepdepleted
 
-  artifacttype   Power
+  artifacttype Power
 }
 
 artifact PowerTorch
 {
-  amount         1
-  maxamount      1
-  interhubamount 0
-
   +undroppable
-  -invbar
-  -keepdepleted
 
-  artifacttype   Power
+  artifacttype Power
 }
 
 // TODO: Implement these two in-engine
 artifact PowerWeaponLevel2
 {
-  amount         1
-  maxamount      1
-  interhubamount 0
-
   +undroppable
-  -invbar
-  -keepdepleted
 
-  artifacttype   Power
+  artifacttype Power
 }
 
 artifact PowerChicken
 {
-  amount         1
-  maxamount      1
-  interhubamount 0
-
   +undroppable
-  -invbar
-  -keepdepleted
 
-  artifacttype   Power
+  artifacttype Power
 }
+
+//
+// Cheat Powers
+//
 
 powereffect TotalInvisiSphere
 {
