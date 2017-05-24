@@ -618,7 +618,7 @@ void P_PlayerThink(player_t *player)
 
    cmd = &player->cmd;
 
-   if(cmd->itemID)
+   if(cmd->itemID && demo_version >= 343)
    {
       E_TryUseItem(player, cmd->itemID - 1); // ticcmd ID is off by one
    }
@@ -952,7 +952,7 @@ void P_PlayerStartFlight(player_t *player, bool thrustup)
       player->flyheight = 2 * FLIGHT_IMPULSE_AMT;
 
    itemeffect_t *powerTracker = E_ItemEffectForName(powerStrings[pw_flight]);
-   E_GiveInventoryItem(player, powerTracker, powerTracker->getInt("amount", 1));
+   E_GiveInventoryItem(player, powerTracker);
 
    // TODO: stop screaming if falling
 }

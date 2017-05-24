@@ -479,7 +479,6 @@ bool P_GivePowerForItem(player_t *player, itemeffect_t *power)
    if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) == NUMPOWERS)
       return false; // There's no power for the type provided
 
-   // FIXME: Adapt for new changes to MetaTable
    powerTracker = E_ItemEffectForName(powerStr);
    if((trackerArtifact = E_InventorySlotForItem(player, powerTracker)))
    {
@@ -499,7 +498,7 @@ bool P_GivePowerForItem(player_t *player, itemeffect_t *power)
       else
          duration = duration * TICRATE; // Duration is given in seconds
 
-      E_GiveInventoryItem(player, powerTracker, powerTracker->getInt("amount", 1));
+      E_GiveInventoryItem(player, powerTracker);
       return P_GivePower(player, powerNum, duration);
    }
 
@@ -1085,7 +1084,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       // that they don't get more than they should be allowed to have.
       if(E_GetItemOwnedAmount(player, effect) < E_GetMaxAmountForArtifact(player, effect))
       {
-         E_GiveInventoryItem(player, effect, effect->getInt("amount", 0));
+         E_GiveInventoryItem(player, effect);
          message = DEH_String("HITEMSHADOWSPHERE");
       }
       else
@@ -1101,7 +1100,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       // that they don't get more than they should be allowed to have.
       if(E_GetItemOwnedAmount(player, effect) < E_GetMaxAmountForArtifact(player, effect))
       {
-         E_GiveInventoryItem(player, effect, effect->getInt("amount", 0));
+         E_GiveInventoryItem(player, effect);
          message = DEH_String("HITEMQUARTZFLASK");
       }
       else
@@ -1115,7 +1114,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       effect = E_ItemEffectForName(ARTI_FLY);
       if(E_GetItemOwnedAmount(player, effect) < E_GetMaxAmountForArtifact(player, effect))
       {
-         E_GiveInventoryItem(player, effect, effect->getInt("amount", 0));
+         E_GiveInventoryItem(player, effect);
          message = DEH_String("HITEMWINGSOFWRATH");
       }
       else
@@ -1129,7 +1128,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       effect = E_ItemEffectForName(ARTI_INVULN);
       if(E_GetItemOwnedAmount(player, effect) < E_GetMaxAmountForArtifact(player, effect))
       {
-         E_GiveInventoryItem(player, effect, effect->getInt("amount", 0));
+         E_GiveInventoryItem(player, effect);
          message = DEH_String("HITEMRINGOFINVINCIBILITY");
       }
       else
@@ -1143,7 +1142,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       effect = E_ItemEffectForName(ARTI_TOMEOFPOWER);
       if(E_GetItemOwnedAmount(player, effect) < E_GetMaxAmountForArtifact(player, effect))
       {
-         E_GiveInventoryItem(player, effect, effect->getInt("amount", 0));
+         E_GiveInventoryItem(player, effect);
          message = DEH_String("HITEMTOMEOFPOWER");
       }
       else
@@ -1157,7 +1156,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       effect = E_ItemEffectForName(ARTI_EGG);
       if(E_GetItemOwnedAmount(player, effect) < E_GetMaxAmountForArtifact(player, effect))
       {
-         E_GiveInventoryItem(player, effect, effect->getInt("amount", 0));
+         E_GiveInventoryItem(player, effect);
          message = DEH_String("HITEMMORPHOVUM");
       }
       else
@@ -1171,7 +1170,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       effect = E_ItemEffectForName(ARTI_SUPERHEALTH);
       if(E_GetItemOwnedAmount(player, effect) < E_GetMaxAmountForArtifact(player, effect))
       {
-         E_GiveInventoryItem(player, effect, effect->getInt("amount", 0));
+         E_GiveInventoryItem(player, effect);
          message = DEH_String("HITEMMYSTICURN");
       }
       else
@@ -1185,7 +1184,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       effect = E_ItemEffectForName(ARTI_TORCH);      
       if(E_GetItemOwnedAmount(player, effect) < E_GetMaxAmountForArtifact(player, effect))
       {
-         E_GiveInventoryItem(player, effect, effect->getInt("amount", 0));
+         E_GiveInventoryItem(player, effect);
          message = DEH_String("HITEMTORCH");
       }
       else
@@ -1199,7 +1198,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       effect = E_ItemEffectForName(ARTI_TIMEBOMB);
       if(E_GetItemOwnedAmount(player, effect) < E_GetMaxAmountForArtifact(player, effect))
       {
-         E_GiveInventoryItem(player, effect, effect->getInt("amount", 0));
+         E_GiveInventoryItem(player, effect);
          message = DEH_String("HITEMTIMEBOMB");
       }
       else
@@ -1213,7 +1212,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       effect = E_ItemEffectForName(ARTI_TELEPORT);
       if(E_GetItemOwnedAmount(player, effect) < E_GetMaxAmountForArtifact(player, effect))
       {
-         E_GiveInventoryItem(player, effect, effect->getInt("amount", 0));
+         E_GiveInventoryItem(player, effect);
          message = DEH_String("HITEMTELEPORT");
       }
       else
@@ -1224,7 +1223,8 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       // Heretic Ammo items
    case PFX_GWNDWIMPY:
       // INVENTORY_FIXME: temp hard-coded
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("GoldWandAmmo"), dropped, special->dropamount))
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("GoldWandAmmo"),
+                           dropped, special->dropamount))
          return;
       message = DEH_String("HAMMOGOLDWAND1");
       sound = sfx_hitemup;
@@ -1232,7 +1232,8 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    
    case PFX_GWNDHEFTY:
       // INVENTORY_FIXME: temp hard-coded
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("GoldWandHefty"), dropped, special->dropamount))
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("GoldWandHefty"),
+                           dropped, special->dropamount))
          return;
       message = DEH_String("HAMMOGOLDWAND2");
       sound = sfx_hitemup;
@@ -1240,7 +1241,8 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    
    case PFX_MACEWIMPY:
       // INVENTORY_FIXME: temp hard-coded
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("MaceAmmo"), dropped, special->dropamount))
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("MaceAmmo"),
+                           dropped, special->dropamount))
          return;
       message = DEH_String("HAMMOMACE1");
       sound = sfx_hitemup;
@@ -1248,7 +1250,8 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    
    case PFX_MACEHEFTY:
       // INVENTORY_FIXME: temp hard-coded
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("MaceHefty"), dropped, special->dropamount))
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("MaceHefty"),
+                           dropped, special->dropamount))
          return;
       message = DEH_String("HAMMOMACE2");
       sound = sfx_hitemup;
@@ -1256,7 +1259,8 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    
    case PFX_CBOWWIMPY:
       // INVENTORY_FIXME: temp hard-coded
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("CrossbowAmmo"), dropped, special->dropamount))
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("CrossbowAmmo"),
+                           dropped, special->dropamount))
          return;
       message = DEH_String("HAMMOCROSSBOW1");
       sound = sfx_hitemup;
@@ -1264,7 +1268,8 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    
    case PFX_CBOWHEFTY:
       // INVENTORY_FIXME: temp hard-coded
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("CrossbowHefty"), dropped, special->dropamount))
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("CrossbowHefty"),
+                           dropped, special->dropamount))
          return;
       message = DEH_String("HAMMOCROSSBOW2");
       sound = sfx_hitemup;
@@ -1272,7 +1277,8 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    
    case PFX_BLSRWIMPY:
       // INVENTORY_FIXME: temp hard-coded
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("BlasterAmmo"), dropped, special->dropamount))
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("BlasterAmmo"),
+                           dropped, special->dropamount))
          return;
       message = DEH_String("HAMMOBLASTER1");
       sound = sfx_hitemup;
@@ -1280,7 +1286,8 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    
    case PFX_BLSRHEFTY:
       // INVENTORY_FIXME: temp hard-coded
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("BlasterHefty"), dropped, special->dropamount))
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("BlasterHefty"),
+                           dropped, special->dropamount))
          return;
       message = DEH_String("HAMMOBLASTER2");
       sound = sfx_hitemup;
@@ -1288,7 +1295,8 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    
    case PFX_PHRDWIMPY:
       // INVENTORY_FIXME: temp hard-coded
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("PhoenixRodHefty"), dropped, special->dropamount))
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("PhoenixRodHefty"),
+                           dropped, special->dropamount))
          return;
       message = DEH_String("HAMMOPHOENIXROD1");
       sound = sfx_hitemup;
@@ -1296,7 +1304,8 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    
    case PFX_PHRDHEFTY:
       // INVENTORY_FIXME: temp hard-coded
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("PhoenixRodHefty"), dropped, special->dropamount))
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("PhoenixRodHefty"),
+                           dropped, special->dropamount))
          return;
       message = DEH_String("HAMMOPHOENIXROD2");
       sound = sfx_hitemup;
@@ -1304,7 +1313,8 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    
    case PFX_SKRDWIMPY:
       // INVENTORY_FIXME: temp hard-coded
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("SkullRodAmmo"), dropped, special->dropamount))
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("SkullRodAmmo"),
+                           dropped, special->dropamount))
          return;
       message = DEH_String("HAMMOSKULLROD1");
       sound = sfx_hitemup;
@@ -1312,7 +1322,8 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    
    case PFX_SKRDHEFTY:
       // INVENTORY_FIXME: temp hard-coded
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("SkullRodHefty"), dropped, special->dropamount))
+      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("SkullRodHefty"),
+                           dropped, special->dropamount))
          return;
       message = DEH_String("HAMMOSKULLROD2");
       sound = sfx_hitemup;

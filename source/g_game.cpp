@@ -264,7 +264,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    forward = side = 0;
 
    cmd->itemID = 0; // Nothing to see here
-   if(gameactions[ka_inventory_use])
+   if(gameactions[ka_inventory_use] && demo_version >= 343)
    {
       // FIXME: Handle noartiskip
       if(invbarstate.inventory)
@@ -275,7 +275,8 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       }
       else if(usearti)
       {
-         cmd->itemID = p.inventory[p.inv_ptr].item + 1;
+         if(E_PlayerHasVisibleInvItem(&p))
+            cmd->itemID = p.inventory[p.inv_ptr].item + 1;
          usearti = false;
       }
       gameactions[ka_inventory_use] = false;
@@ -1384,7 +1385,7 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
       else
          cmd->fly = 0;
       
-      if(full_demo_version >= make_full_version(342, 1))
+      if(demo_version >= 343)
       {
          cmd->itemID =   *demo_p++;
          cmd->itemID |= (*demo_p++) << 8;
@@ -1448,7 +1449,7 @@ static void G_WriteDemoTiccmd(ticcmd_t *cmd)
    if(full_demo_version >= make_full_version(340, 23))
       demo_p[i++] = cmd->fly;
 
-   if(full_demo_version >= make_full_version(342, 1))
+   if(demo_version >= 343)
    {
       demo_p[i++] =  cmd->itemID & 0xff;
       demo_p[i] = (cmd->itemID >> 8) & 0xff;

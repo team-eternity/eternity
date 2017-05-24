@@ -1238,7 +1238,7 @@ bool E_MoveInventoryCursor(player_t *player, int amount, int &cursor)
 //
 // Says if a player possesses at least one item w/ +invbar
 //
-inline bool E_playerHasVisibleInvItem(player_t *player)
+bool E_PlayerHasVisibleInvItem(player_t *player)
 {
    int i = -1;
    return E_MoveInventoryCursor(player, 1, i);
@@ -1677,7 +1677,7 @@ bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact, int amount)
       return false;
 
    // Make sure the player's inv_ptr is updated if need be
-   if(!initslot && E_playerHasVisibleInvItem(player))
+   if(!initslot && E_PlayerHasVisibleInvItem(player))
    {
       if(artifact->getInt(keySortOrder, 0) <
          E_EffectForInventoryIndex(player, player->inv_ptr)->getInt(keySortOrder, 0))

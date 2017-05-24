@@ -224,6 +224,9 @@ int E_GetLockDefColor(int lockID);
 // Tries to move the inventory cursor 'amount' right.
 bool E_MoveInventoryCursor(player_t *player, int amount, int &cursor);
 
+// Says if a player possesses at least one item w/ +invbar
+bool E_PlayerHasVisibleInvItem(player_t *player);
+
 // Tries to use the currently selected item.
 void E_TryUseItem(player_t *player, inventoryitemid_t ID);
 
