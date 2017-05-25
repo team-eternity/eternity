@@ -1206,7 +1206,7 @@ static void P_avoidPortalEdges(Mobj &mobj, bool isceiling)
 //
 // Check for passing through an interactive portal plane.
 //
-static bool P_CheckPortalTeleport(Mobj *mobj)
+bool P_CheckPortalTeleport(Mobj *mobj)
 {
    bool ret = false;
 
@@ -1216,7 +1216,6 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
    if(sector->f_pflags & PS_PASSABLE)
    {
       fixed_t passheight;
-      const linkdata_t *ldata = R_FPLink(sector);
 
       if(mobj->player)
       {
@@ -1227,9 +1226,10 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
          passheight = mobj->z + (mobj->height >> 1);
 
       // ioanch 20160109: link offset outside
-      if(passheight < ldata->planez)
+      if(passheight < P_FloorPortalZ(*sector))
       {
          P_avoidPortalEdges(*mobj, false);
+         const linkdata_t *ldata = R_FPLink(sector);
          EV_PortalTeleport(mobj, ldata->deltax, ldata->deltay, ldata->deltaz,
                            ldata->fromid, ldata->toid);
          ret = true;
@@ -1240,7 +1240,6 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
    {
       // Calculate the height at which the mobj should pass through the portal
       fixed_t passheight;
-      linkdata_t *ldata = R_CPLink(sector);
 
       if(mobj->player)
       {
@@ -1251,9 +1250,10 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
          passheight = mobj->z + (mobj->height >> 1);
 
       // ioanch 20160109: link offset outside
-      if(passheight >= ldata->planez)
+      if(passheight >= P_CeilingPortalZ(*sector))
       {
          P_avoidPortalEdges(*mobj, true);
+         linkdata_t *ldata = R_CPLink(sector);
          EV_PortalTeleport(mobj, ldata->deltax, ldata->deltay, ldata->deltaz,
                            ldata->fromid, ldata->toid);
          ret = true;

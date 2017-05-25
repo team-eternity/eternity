@@ -441,6 +441,7 @@ void  P_SpawnUnknownThings();
 Mobj *P_SpawnMapThing(mapthing_t *mt);
 bool  P_CheckMissileSpawn(Mobj *);  // killough 8/2/98
 void  P_ExplodeMissile(Mobj *, const sector_t *topedgesec);     // killough
+bool P_CheckPortalTeleport(Mobj *mobj);
 
 //
 // Blood spawning

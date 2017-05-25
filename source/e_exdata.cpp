@@ -306,6 +306,7 @@ static dehflags_t sectorportalflags[] =
    { "OVERLAY",      PS_OVERLAY      },
    { "ADDITIVE",     PS_ADDITIVE     },
    { "USEGLOBALTEX", PS_USEGLOBALTEX },
+   { "ATTACHEDPORTAL", PF_ATTACHEDPORTAL },
    { NULL,           0               }
 };
 

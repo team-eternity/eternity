@@ -215,6 +215,7 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          else if(!us.portal_floor_overlaytype.strCaseCmp(RENDERSTYLE_add))
             ss->f_pflags |= PS_OBLENDFLAGS; // PS_OBLENDFLAGS is PS_OVERLAY | PS_ADDITIVE
          ss->f_pflags |= us.portal_floor_useglobaltex ? PS_USEGLOBALTEX : 0;
+         ss->f_pflags |= us.portal_floor_attached ? PF_ATTACHEDPORTAL : 0;
 
          // Ceilings
          balpha = us.alphaceiling >= 1.0 ? 255 : us.alphaceiling <= 0 ? 
@@ -230,6 +231,7 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          else if(!us.portal_ceil_overlaytype.strCaseCmp(RENDERSTYLE_add))
             ss->c_pflags |= PS_OBLENDFLAGS; // PS_OBLENDFLAGS is PS_OVERLAY | PS_ADDITIVE
          ss->c_pflags |= us.portal_ceil_useglobaltex ? PS_USEGLOBALTEX : 0;
+         ss->c_pflags |= us.portal_ceil_attached ? PF_ATTACHEDPORTAL : 0;
 
          ss->floor_xscale = static_cast<float>(us.xscalefloor);
          ss->floor_yscale = static_cast<float>(us.yscalefloor);
@@ -603,6 +605,7 @@ enum token_e
    t_polycross,
    t_portal,
    t_portalceiling,
+   t_portal_ceil_attached,
    t_portal_ceil_blocksound,
    t_portal_ceil_disabled,
    t_portal_ceil_nopass,
@@ -610,6 +613,7 @@ enum token_e
    t_portal_ceil_overlaytype,
    t_portal_ceil_useglobaltex,
    t_portalfloor,
+   t_portal_floor_attached,
    t_portal_floor_blocksound,
    t_portal_floor_disabled,
    t_portal_floor_nopass,
@@ -744,6 +748,7 @@ static keytoken_t gTokenList[] =
    TOKEN(polycross),
    TOKEN(portal),
    TOKEN(portalceiling),
+   TOKEN(portal_ceil_attached),
    TOKEN(portal_ceil_blocksound),
    TOKEN(portal_ceil_disabled),
    TOKEN(portal_ceil_nopass),
@@ -751,6 +756,7 @@ static keytoken_t gTokenList[] =
    TOKEN(portal_ceil_overlaytype),
    TOKEN(portal_ceil_useglobaltex),
    TOKEN(portalfloor),
+   TOKEN(portal_floor_attached),
    TOKEN(portal_floor_blocksound),
    TOKEN(portal_floor_disabled),
    TOKEN(portal_floor_nopass),
@@ -1092,6 +1098,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                      READ_BOOL(sector, portal_floor_nopass);
                      READ_BOOL(sector, portal_floor_norender);
                      READ_BOOL(sector, portal_floor_useglobaltex);
+                     READ_BOOL(sector, portal_floor_attached);
 
                      READ_STRING(sector, portal_ceil_overlaytype);
                      READ_NUMBER(sector, alphaceiling);
@@ -1100,6 +1107,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                      READ_BOOL(sector, portal_ceil_nopass);
                      READ_BOOL(sector, portal_ceil_norender);
                      READ_BOOL(sector, portal_ceil_useglobaltex);
+                     READ_BOOL(sector, portal_ceil_attached);
 
                      READ_NUMBER(sector, portalceiling);
                      READ_NUMBER(sector, portalfloor);

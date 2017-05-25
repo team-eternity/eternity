@@ -846,6 +846,9 @@ static bool P_AdjustFloorCeil(Mobj *thing, bool midtex)
    
    thing->flags3 = oldfl3;
 
+   if(demo_version >= 342)
+      P_CheckPortalTeleport(thing);
+
    return isgood;
 }
 

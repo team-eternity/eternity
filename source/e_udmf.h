@@ -376,6 +376,7 @@ private:
       bool         portal_ceil_blocksound;
       bool         portal_ceil_useglobaltex;
       qstring      portal_ceil_overlaytype; // OVERLAY and ADDITIVE consolidated into a single property
+      bool         portal_ceil_attached;
       double       alphaceiling;
 
       // ED's portalflags.floor, and overlayalpha.floor
@@ -385,6 +386,7 @@ private:
       bool         portal_floor_blocksound;
       bool         portal_floor_useglobaltex;
       qstring      portal_floor_overlaytype; // OVERLAY and ADDITIVE consolidated into a single property
+      bool         portal_floor_attached;
       double       alphafloor;
 
       int          portalceiling;   // floor portal id
