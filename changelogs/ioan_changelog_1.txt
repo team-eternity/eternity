@@ -4,6 +4,16 @@ Changes by Ioan Chera since Eternity Engine v3.42.02 "Heimdal"
 Dates are in dd.mm.yyyy format. Most recent update is first.
 
 --------------------------------------------------------------------------------
+26.05.2017
+
+FEATURE: linked portals can now move together with the sector surfaces. Use the
+         UDMF portal_ceil_attached or portal_floor_attached boolean sector
+         properties for this, or the ExtraData ATTACHEDPORTAL portalflag.
+
+         Added because of proposed scenarios in mods, such as vertically moving
+         platforms.
+
+--------------------------------------------------------------------------------
 14.05.2017
 
 BUGFIX: comp_planeshoot was wrongly preventing gunfire specials from being
