@@ -417,7 +417,7 @@ static bool P_giveHereticArti(player_t *player, itemeffect_t *arti)
 // Rewritten by Lee Killough
 // MaxW 2016/07/22: duration introduced as a paramter
 //
-bool P_GivePower(player_t *player, int power, int duration)
+static bool P_givePower(player_t *player, int power, int duration, bool additiveTime)
 {
    switch(power)
    {
@@ -449,10 +449,10 @@ bool P_GivePower(player_t *player, int power, int duration)
       break;
    }
 
-   // TODO: Figure out if this if is redundant
-   // Unless player has infinite duration cheat, set duration (killough)   
+   // Unless player has infinite duration cheat, set duration (killough)
+   // Also add time if the powereffect has additivetime set to true (MaxW)
    if(player->powers[power] >= 0)
-      player->powers[power] = duration;
+      player->powers[power] = additiveTime ? players->powers[power] + duration : duration;
 
    return true;
 }
@@ -485,6 +485,7 @@ bool P_GivePowerForItem(player_t *player, itemeffect_t *power)
    itemeffect_t *powerTracker;
    inventoryslot_t *trackerArtifact; // Pointer to the player's tracker for
                                      // the power to potentially be granted.
+   bool additiveTime = false;
    
    powerStr = power->getString("type", "");
    if(!powerStr || !strcmp(powerStr, ""))
@@ -506,13 +507,16 @@ bool P_GivePowerForItem(player_t *player, itemeffect_t *power)
    if(player->powers[powerNum] >= 0)
    {
       int duration = power->getInt("duration", 0);
-      if(power->getInt("persistentpower", 0))
-         duration = 1;
+      if(power->getInt("permanent", 0))
+         duration = -1;
       else
+      {
          duration = duration * TICRATE; // Duration is given in seconds
+         additiveTime = power->getInt("additivetime", 0) ? true : false;
+      }
 
       E_GiveInventoryItem(player, powerTracker);
-      return P_GivePower(player, powerNum, duration);
+      return P_givePower(player, powerNum, duration, additiveTime);
    }
 
    return true;   

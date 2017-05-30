@@ -402,8 +402,8 @@ powereffect Berserk
   duration 1
   type     PowerStrength
 
+  // Not permanent, because that sets duration to -1, and this counts up
   +overridesself
-  +permanent
 }
 
 powereffect BlurSphere
