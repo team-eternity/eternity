@@ -248,6 +248,18 @@ void P_SaveSectorPositions()
    }
 }
 
+//
+// Saves but for a single sector.
+//
+void P_SaveSectorPosition(const sector_t &sec)
+{
+   auto &si = sectorinterps[&sec - sectors];
+   si.prevfloorheight = sec.floorheight;
+   si.prevfloorheightf = sec.floorheightf;
+   si.prevceilingheight = sec.ceilingheight;
+   si.prevceilingheightf = sec.ceilingheightf;
+}
+
 //=============================================================================
 //
 // Sound Environment Zones
