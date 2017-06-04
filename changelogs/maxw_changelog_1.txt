@@ -130,6 +130,20 @@ by referring to the key (string), or the "num" property (int).
 2017/03/26
 Added solutions and folders for Visual Studio 2017.
 
+-------------------------------------------------------------------------------
+2017/04/22
+Allowed UDMF->ExtraData special lookup to work, for SetLineSpecial.
+
+-------------------------------------------------------------------------------
+2017/05/21
+Fixed Thing_Remove not cleaning up properly. Thing_Remove'd stuff would still
+be targeted by monsters even after removal.
+
+-------------------------------------------------------------------------------
+2017/06/04
+Added sector scroller UDMF properties, and fixed ACS scroll speeds. Also fixed
+overriding that the ACS specials do.
+
 ================================================================================
 EOF
 ================================================================================

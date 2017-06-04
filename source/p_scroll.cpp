@@ -221,30 +221,22 @@ void ScrollThinker::RemoveAllScrollers()
 //
 bool EV_stopFlatScrollerBySecnum(int type, int secnum)
 {
-   bool flickback = false;
    if(!scrollers)
       return false;
 
    // search the scrolled sectors
    for(scrollerlist_t *sl = scrollers; sl; sl = sl->next)
    {
-      if(flickback == true)
-      {
-         sl = *sl->prev;
-         flickback = false;
-      }
       ScrollThinker *scroller = sl->scroller;
 
       if(scroller->affectee == secnum && scroller->type == type)
       {
-         if(!((sl = sl->next)))
-            break; 
-
-         flickback = true;
          scroller->removeScroller();
+         return true; // Return, since a sector will only have a single scroller of one type
       }
    }
 
+   // TODO: Return false instead? IDK, I don't even remember coding this function. (MaxW)
    return true;
 }
 

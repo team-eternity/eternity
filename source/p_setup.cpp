@@ -59,6 +59,7 @@
 #include "p_mobjcol.h"
 #include "p_partcl.h"
 #include "p_portal.h"
+#include "p_scroll.h"
 #include "p_setup.h"
 #include "p_skin.h"
 #include "p_slopes.h"
@@ -3248,6 +3249,8 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    // to allow texture names to be used in special linedefs
 
    level_error = NULL; // reset
+
+   ScrollThinker::RemoveAllScrollers();
 
    // IOANCH 20151206: load UDMF
    UDMFParser udmf;  // prepare UDMF processor
