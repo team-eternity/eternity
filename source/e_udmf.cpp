@@ -30,11 +30,13 @@
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "e_hash.h"
+#include "e_lib.h"
 #include "e_mod.h"
 #include "e_sound.h"
 #include "e_ttypes.h"
 #include "e_udmf.h"
 #include "m_compare.h"
+#include "p_scroll.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "r_data.h"
@@ -51,6 +53,14 @@ static const char DEFAULT_flat[] = "@flat";
 
 static const char RENDERSTYLE_translucent[] = "translucent";
 static const char RENDERSTYLE_add[] = "add";
+
+static const char *udmfscrolltypes[NUMSCROLLTYPES] =
+{
+   "none",
+   "visual",
+   "physical",
+   "both"
+};
 
 //
 // Initializes the internal structure with the sector count
@@ -120,6 +130,16 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
             (E_NormalizeFlatAngle(us.rotationfloor) *  PI / 180.0f);
          ss->ceilingbaseangle = static_cast<float>
             (E_NormalizeFlatAngle(us.rotationceiling) *  PI / 180.0f);
+
+         int scrolltype = E_StrToNumLinear(udmfscrolltypes, NUMSCROLLTYPES,
+                                           us.scroll_floor_type.constPtr());
+         if(scrolltype != NUMSCROLLTYPES && (us.scroll_floor_x || us.scroll_floor_y))
+            P_SpawnFloorUDMF(i, scrolltype, us.scroll_floor_x, us.scroll_floor_y);
+
+         scrolltype = E_StrToNumLinear(udmfscrolltypes, NUMSCROLLTYPES,
+                                       us.scroll_ceil_type.constPtr());
+         if(scrolltype != NUMSCROLLTYPES && (us.scroll_ceil_x || us.scroll_ceil_y))
+            P_SpawnCeilingUDMF(i, scrolltype, us.scroll_ceil_x, us.scroll_ceil_y);
 
          // Flags
          ss->flags |= us.secret ? SECF_SECRET : 0;
@@ -628,6 +648,12 @@ enum token_e
    t_repeatspecial,
    t_rotationceiling,
    t_rotationfloor,
+   t_scroll_ceil_x,
+   t_scroll_ceil_y,
+   t_scroll_ceil_type,
+   t_scroll_floor_x,
+   t_scroll_floor_y,
+   t_scroll_floor_type,
    t_secret,
    t_sector,
    t_sideback,
@@ -771,6 +797,12 @@ static keytoken_t gTokenList[] =
    TOKEN(repeatspecial),
    TOKEN(rotationceiling),
    TOKEN(rotationfloor),
+   TOKEN(scroll_ceil_x),
+   TOKEN(scroll_ceil_y),
+   TOKEN(scroll_ceil_type),
+   TOKEN(scroll_floor_x),
+   TOKEN(scroll_floor_y),
+   TOKEN(scroll_floor_type),
    TOKEN(secret),
    TOKEN(sector),
    TOKEN(sideback),
@@ -1060,6 +1092,14 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                      READ_NUMBER(sector, yscalefloor);
                      READ_NUMBER(sector, rotationfloor);
                      READ_NUMBER(sector, rotationceiling);
+
+                     READ_NUMBER(sector, scroll_ceil_x);
+                     READ_NUMBER(sector, scroll_ceil_y);
+                     READ_STRING(sector, scroll_ceil_type);
+
+                     READ_NUMBER(sector, scroll_floor_x);
+                     READ_NUMBER(sector, scroll_floor_y);
+                     READ_STRING(sector, scroll_floor_type);
 
                      READ_BOOL(sector, secret);
                      READ_NUMBER(sector, friction);
