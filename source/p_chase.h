@@ -77,6 +77,10 @@ void P_ChaseEnd();
 void P_ResetChasecam();
 
 void P_WalkTicker();
+void P_WalkStart();
+void P_WalkEnd();
+void P_ResetWalkcam();
+
 
 void P_LocateFollowCam(Mobj *target, fixed_t &destX, fixed_t &destY);
 void P_SetFollowCam(fixed_t x, fixed_t y, Mobj *target);

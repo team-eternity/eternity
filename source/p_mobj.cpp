@@ -2135,7 +2135,10 @@ void P_SpawnPlayer(mapthing_t* mthing)
 
    // sf: wake up chasecam
    if(mthing->type - 1 == displayplayer)
+   {
       P_ResetChasecam();
+      P_ResetWalkcam();
+   }
 }
 
 static PODCollection<mapthing_t> UnknownThings;

@@ -3457,6 +3457,8 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    // haleyjd: keep the chasecam on between levels
    if(camera == &chasecam)
       P_ResetChasecam();
+   else if(camera == &walkcamera)
+      P_ResetWalkcam();
    else
       camera = NULL;        // camera off
 
