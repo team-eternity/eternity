@@ -385,6 +385,9 @@ void P_WalkTicker()
 
 static void P_ResetWalkcam()
 {
+   if(gamestate != GS_LEVEL)
+      return; // only in level
+
    sector_t *sec;
    // ioanch 20151218: fixed point mapthing coordinates
    walkcamera.x      = playerstarts[0].x;
