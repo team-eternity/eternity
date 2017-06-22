@@ -1194,6 +1194,13 @@ static void E_processPickupItems(cfg_t *cfg)
 
 //=============================================================================
 //
+// Powers
+//
+//
+//
+
+//=============================================================================
+//
 // Inventory Items
 //
 // Inventory items represent a holdable item that can take up a slot in an 
@@ -1249,7 +1256,7 @@ bool E_PlayerHasVisibleInvItem(player_t *player)
 //
 // Gets the effect type of an item.
 //
-itemeffecttype_t E_getItemEffectType(itemeffect_t *fx)
+static itemeffecttype_t E_getItemEffectType(itemeffect_t *fx)
 {
    return static_cast<itemeffecttype_t>(fx->getInt(keyClass, 0));
 }

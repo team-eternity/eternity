@@ -177,9 +177,8 @@ powereffect CheatStrength
   type     PowerStrength
 
   +overridesself
-
-  +permanent
 }
+
 powereffect CheatInvisibility
 {
   duration 60
