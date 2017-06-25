@@ -4,6 +4,12 @@ Changes by Ioan Chera since Eternity Engine v3.42.02 "Heimdal"
 Dates are in dd.mm.yyyy format. Most recent update is first.
 
 --------------------------------------------------------------------------------
+25.06.2017
+
+BUGFIX: fixed a crash happening at map startup when linked portals had an error
+        and the map also had polyobject linked portals.
+
+--------------------------------------------------------------------------------
 26.05.2017
 
 FEATURE: linked portals can now move together with the sector surfaces. Use the
