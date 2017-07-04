@@ -4,6 +4,14 @@ Changes by Ioan Chera since Eternity Engine v3.42.02 "Heimdal"
 Dates are in dd.mm.yyyy format. Most recent update is first.
 
 --------------------------------------------------------------------------------
+04.07.2017
+
+BUGFIX: linked portals were getting overflows when they were crossing a line of
+        constant X or constant Y of +/-16384, because of the average calculation
+        not being safe for int32. This caused portal maps to fail and act
+        strangely unless they were moved around in the editor, but not too much.
+
+--------------------------------------------------------------------------------
 25.06.2017
 
 BUGFIX: fixed a crash happening at map startup when linked portals had an error
