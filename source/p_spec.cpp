@@ -2984,7 +2984,8 @@ static void P_SpawnPortal(line_t *line, int staticFn)
                                 &sector->ceiling_xoffs, 
                                 &sector->ceiling_yoffs,
                                 &sector->ceilingbaseangle,
-                                &sector->ceilingangle);
+                                &sector->ceilingangle, &sector->ceiling_xscale,
+                                &sector->ceiling_yscale);
       break;
 
    case portal_horizon:
@@ -2994,7 +2995,9 @@ static void P_SpawnPortal(line_t *line, int staticFn)
                                   &sector->floor_xoffs, &sector->floor_yoffs,
                                   &sector->ceiling_xoffs, &sector->ceiling_yoffs,
                                   &sector->floorbaseangle, &sector->floorangle,
-                                  &sector->ceilingbaseangle, &sector->ceilingangle);
+                                  &sector->ceilingbaseangle, &sector->ceilingangle,
+                                  &sector->floor_xscale, &sector->floor_yscale, 
+                                  &sector->ceiling_xscale, &sector->ceiling_yscale);
       // TODO: line portal
       if(effects == portal_lineonly)
       {

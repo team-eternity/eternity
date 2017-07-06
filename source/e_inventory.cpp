@@ -173,7 +173,7 @@ MetaTable *E_GetItemEffects()
 #define KEY_MAXAMOUNT      "maxamount"
 #define KEY_MAXSAVEAMOUNT  "maxsaveamount"
 #define KEY_PERMANENT      "permanent"
-#define KEY_OVERRIDESSELF  "power.overridesself"
+#define KEY_OVERRIDESSELF  "overridesself"
 #define KEY_SAVEAMOUNT     "saveamount"
 #define KEY_SAVEDIVISOR    "savedivisor"
 #define KEY_SAVEFACTOR     "savefactor"
@@ -247,8 +247,10 @@ cfg_opt_t edf_powerfx_opts[] =
    CFG_INT(KEY_DURATION,  -1, CFGF_NONE), // length of time to last
    CFG_STR(KEY_TYPE,      "", CFGF_NONE), // name of powerup effect to give
 
-   CFG_FLAG(KEY_ADDITIVETIME, 0, CFGF_SIGNPREFIX), // if +, adds to current duration
-   CFG_FLAG(KEY_PERMANENT,    0, CFGF_SIGNPREFIX), // if +, lasts forever
+   CFG_FLAG(KEY_ADDITIVETIME,  0, CFGF_SIGNPREFIX), // if +, adds to current duration
+   CFG_FLAG(KEY_PERMANENT,     0, CFGF_SIGNPREFIX), // if +, lasts forever
+   CFG_FLAG(KEY_OVERRIDESSELF, 0, CFGF_SIGNPREFIX), // if +, getting the power again while still
+                                                    // under its influence is allowed (a la DOOM)
    // TODO: support HUBPOWER and PERSISTENTPOWER properties, etc.
 
    CFG_END()
@@ -327,10 +329,6 @@ cfg_opt_t edf_artifact_opts[] =
    // Ammo sub-type
    CFG_INT(KEY_BACKPACKAMOUNT, 0, CFGF_NONE),
    CFG_INT(KEY_BACKPACKMAXAMT, 0, CFGF_NONE),
-
-   // Power sub-type
-   CFG_FLAG(KEY_OVERRIDESSELF, 0, CFGF_SIGNPREFIX), // if +, getting the power again while still
-                                                    // under its influence is allowed (a la DOOM)
 
    CFG_END()
 };
@@ -1205,6 +1203,13 @@ static void E_processPickupItems(cfg_t *cfg)
 
 //=============================================================================
 //
+// Powers
+//
+//
+//
+
+//=============================================================================
+//
 // Inventory Items
 //
 // Inventory items represent a holdable item that can take up a slot in an 
@@ -1249,7 +1254,7 @@ bool E_MoveInventoryCursor(player_t *player, int amount, int &cursor)
 //
 // Says if a player possesses at least one item w/ +invbar
 //
-inline bool E_playerHasVisibleInvItem(player_t *player)
+bool E_PlayerHasVisibleInvItem(player_t *player)
 {
    int i = -1;
    return E_MoveInventoryCursor(player, 1, i);
@@ -1260,7 +1265,7 @@ inline bool E_playerHasVisibleInvItem(player_t *player)
 //
 // Gets the effect type of an item.
 //
-itemeffecttype_t E_getItemEffectType(itemeffect_t *fx)
+static itemeffecttype_t E_getItemEffectType(itemeffect_t *fx)
 {
    return static_cast<itemeffecttype_t>(fx->getInt(keyClass, 0));
 }
@@ -1688,7 +1693,7 @@ bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact, int amount)
       return false;
 
    // Make sure the player's inv_ptr is updated if need be
-   if(!initslot && E_playerHasVisibleInvItem(player))
+   if(!initslot && E_PlayerHasVisibleInvItem(player))
    {
       if(artifact->getInt(keySortOrder, 0) <
          E_EffectForInventoryIndex(player, player->inv_ptr)->getInt(keySortOrder, 0))

@@ -8,230 +8,9 @@
 
 includeifenabled("doom/items.edf", "DOOM");
 
-// Do NOT change these artifact definitions. Doing so WILL break demo compat.
-// Feel free to override these definitions for mods, but bear that in mind.
-
-ifgametype("DOOM")
-
-artifact PowerInvulnerable
-{
-  amount         1
-  maxamount      1
-  interhubamount 0
-
-  +undroppable
-  -invbar
-  -keepdepleted
-
-  artifacttype   Power
-
-  +power.overridesself
-}
-
-artifact PowerStrength
-{
-  amount         1
-  maxamount      1
-  interhubamount 0
-
-  +undroppable
-  -invbar
-  -keepdepleted
-
-  artifacttype   Power
-
-  +power.overridesself
-}
-
-artifact PowerPartialInvisibility
-{
-  amount         1
-  maxamount      1
-  interhubamount 0
-
-  +undroppable
-  -invbar
-  -keepdepleted
-
-  artifacttype   Power
-
-  +power.overridesself
-}
-
-artifact PowerIronFeet
-{
-  amount         1
-  maxamount      1
-  interhubamount 0
-
-  +undroppable
-  -invbar
-  -keepdepleted
-
-  artifacttype   Power
-
-  +power.overridesself
-}
-
-artifact PowerAllmap
-{
-  amount         1
-  maxamount      1
-  interhubamount 0
-
-  +undroppable
-  -invbar
-  -keepdepleted
-
-  artifacttype   Power
-
-  +power.overridesself
-}
-
-artifact PowerLightAmp
-{
-  amount         1
-  maxamount      1
-  interhubamount 0
-
-  +undroppable
-  -invbar
-  -keepdepleted
-
-  artifacttype   Power
-
-  +power.overridesself
-}
-
-artifact PowerFlight
-{
-  amount         1
-  maxamount      1
-  interhubamount 0
-
-  +undroppable
-  -invbar
-  -keepdepleted
-
-  artifacttype   Power
-
-  +power.overridesself
-}
-
-endif()
-
 // Heretic Items --------------------------------------------------------------
 
 includeifenabled("heretic/items.edf", "HERETIC");
-
-ifgametype("HERETIC")
-
-artifact PowerGhost
-{
-  amount         1
-  maxamount      1
-  interhubamount 0
-
-  +undroppable
-  -invbar
-  -keepdepleted
-
-  artifacttype   Power
-
-  -power.overridesself
-}
-
-artifact PowerFlight
-{
-  amount         1
-  maxamount      1
-  interhubamount 0
-
-  +undroppable
-  -invbar
-  -keepdepleted
-
-  artifacttype   Power
-
-  -power.overridesself
-}
-
-artifact PowerInvulnerable
-{
-  amount         1
-  maxamount      1
-  interhubamount 0
-
-  +undroppable
-  -invbar
-  -keepdepleted
-
-  artifacttype   Power
-
-  -power.overridesself
-}
-
-artifact PowerWeaponLevel2
-{
-  amount         1
-  maxamount      1
-  interhubamount 0
-
-  +undroppable
-  -invbar
-  -keepdepleted
-
-  artifacttype   Power
-
-  -power.overridesself
-}
-
-artifact PowerChicken
-{
-  amount         1
-  maxamount      1
-  interhubamount 0
-
-  +undroppable
-  -invbar
-  -keepdepleted
-
-  artifacttype   Power
-
-  -power.overridesself
-}
-
-artifact PowerTorch
-{
-  amount         1
-  maxamount      1
-  interhubamount 0
-
-  +undroppable
-  -invbar
-  -keepdepleted
-
-  artifacttype   Power
-
-  -power.overridesself
-}
-
-artifact PowerAllmap
-{
-  amount         1
-  maxamount      1
-  interhubamount 0
-
-  +undroppable
-  -invbar
-  -keepdepleted
-
-  artifacttype   Power
-
-  -power.overridesself
-}
-
-endif()
 
 // Shared Items ---------------------------------------------------------------
 
@@ -277,48 +56,119 @@ lockdef 228
 }
 
 //
-// Common powers, and cheat powers
+// Power Trackers
 //
+
+artifact PowerInvulnerable
+{
+  +undroppable
+
+  artifacttype Power
+}
+
+artifact PowerStrength
+{
+  +undroppable
+
+  artifacttype Power
+}
+
+artifact PowerPartialInvisibility
+{
+  +undroppable
+
+  artifacttype Power
+}
+
+artifact PowerIronFeet
+{
+  +undroppable
+
+  artifacttype Power
+}
+
+artifact PowerAllmap
+{
+  +undroppable
+
+  artifacttype Power
+}
+
+artifact PowerLightAmp
+{
+  +undroppable
+
+  artifacttype Power
+}
+
 artifact PowerTotalInvisibility
 {
-  amount         1
-  maxamount      1
-  interhubamount 0
-
   +undroppable
-  -invbar
-  -keepdepleted
 
-  artifacttype   Power
+  artifacttype Power
+}
 
-  +power.overridesself
+artifact PowerGhost
+{
+  +undroppable
+
+  artifacttype Power
 }
 
 artifact PowerSilent
 {
-  amount         1
-  maxamount      1
-  interhubamount 0
-
   +undroppable
-  -invbar
-  -keepdepleted
 
-  artifacttype   Power
-
-  +power.overridesself
+  artifacttype Power
 }
+
+artifact PowerFlight
+{
+  +undroppable
+
+  artifacttype Power
+}
+
+artifact PowerTorch
+{
+  +undroppable
+
+  artifacttype Power
+}
+
+// TODO: Implement these two in-engine
+artifact PowerWeaponLevel2
+{
+  +undroppable
+
+  artifacttype Power
+}
+
+artifact PowerChicken
+{
+  +undroppable
+
+  artifacttype Power
+}
+
+//
+// Cheat Powers
+//
 
 powereffect TotalInvisiSphere
 {
   duration 60
   type     PowerTotalInvisibility
+
+  +overridesself
 }
 
 powereffect CheatInvulnerable
 {
   duration 30
   type     PowerInvulnerable
+
+  +overridesself
 }
 
 powereffect CheatStrength
@@ -326,18 +176,23 @@ powereffect CheatStrength
   duration 1
   type     PowerStrength
 
-  +permanent
+  +overridesself
 }
+
 powereffect CheatInvisibility
 {
   duration 60
   type     PowerPartialInvisibility
+
+  +overridesself
 }
 
 powereffect CheatIronFeet
 {
   duration 60
   type     PowerIronFeet
+
+  +overridesself
 }
 
 powereffect CheatAllmap
@@ -345,6 +200,7 @@ powereffect CheatAllmap
   duration 1
   type     PowerAllmap
 
+  +overridesself
   +permanent
 }
 
@@ -352,18 +208,24 @@ powereffect CheatInfrared
 {
   duration 120
   type     PowerLightAmp
+
+  +overridesself
 }
 
 powereffect CheatTotalInvisibility
 {
   duration 60
   type     PowerTotalInvisibility
+
+  +overridesself
 }
 
 powereffect CheatGhost
 {
   duration 60
   type     PowerGhost
+
+  +overridesself
 }
 
 powereffect CheatSilent
@@ -371,18 +233,23 @@ powereffect CheatSilent
   duration 1
   type     PowerSilent
 
-    +permanent
+  +overridesself
+  +permanent
 }
 
 powereffect CheatFlight
 {
   duration 60
   type     PowerFlight
+
+  +overridesself
 }
 
 powereffect CheatTorch
 {
    duration 120
    type     PowerTorch
+
+   +overridesself
 }
 

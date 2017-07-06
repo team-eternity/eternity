@@ -27,10 +27,10 @@
 #include "version.h"
 
 // sf: made int from define
-int version = 342;
+int version = 343;
 
 // haleyjd: subversion -- range from 0 to 255
-unsigned char subversion = 1;
+unsigned char subversion = 0;
 
 const char version_date[] = __DATE__;
 const char version_time[] = __TIME__; // haleyjd
@@ -40,7 +40,7 @@ const char version_name[] = "Heimdal";
 
 // haleyjd: caption for SDL window
 #ifdef _SDL_VER
-const char ee_wmCaption[] = "Eternity Engine v3.42.01 \"Heimdal\"";
+const char ee_wmCaption[] = "Eternity Engine v3.43.00 \"Heimdal\"";
 #endif
             
 // haleyjd: Eternity release history
@@ -78,6 +78,7 @@ const char ee_wmCaption[] = "Eternity Engine v3.42.01 \"Heimdal\"";
 // 3.40.30 'Alfheim'   -- 11/04/12
 // 3.40.37 'Gungnir'   -- 05/27/13
 // 3.40.46 'Bifrost'   -- 01/19/14
+// 3.42.02 'Heimdal'   -- 05/07/17
 
 // auxilliary releases
 // Caverns of Darkness -- 3.29 dev beta 5 joel-2 04/24/02

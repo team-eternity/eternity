@@ -70,6 +70,7 @@
 #include "r_portal.h"
 #include "r_state.h"
 #include "sounds.h"
+#include "s_musinfo.h"
 #include "s_sound.h"
 #include "st_stuff.h"
 #include "v_misc.h"
@@ -388,7 +389,7 @@ bool P_SetMobjStateNF(Mobj *mobj, statenum_t state)
 //
 // P_ExplodeMissile
 //
-void P_ExplodeMissile(Mobj *mo)
+void P_ExplodeMissile(Mobj *mo, const sector_t *topedgesec)
 {
    // haleyjd 08/02/04: EXPLOCOUNT flag
    if(mo->flags3 & MF3_EXPLOCOUNT)
@@ -402,10 +403,19 @@ void P_ExplodeMissile(Mobj *mo)
    // haleyjd: an attempt at fixing explosions on skies (works!)
    if(demo_version >= 329)
    {
-      if(mo->subsector->sector->intflags & SIF_SKY &&
-         mo->z >= mo->subsector->sector->ceilingheight - P_ThingInfoHeight(mo->info))
+      const sector_t *ceilingsector = P_ExtremeSectorAtPoint(mo, true);
+      if((ceilingsector->intflags & SIF_SKY || 
+         R_IsSkyLikePortalCeiling(*ceilingsector)) &&
+         mo->z >= ceilingsector->ceilingheight - P_ThingInfoHeight(mo->info))
       {
          mo->removeThinker(); // don't explode on the actual sky itself
+         return;
+      }
+      if(topedgesec && demo_version >= 342 && (topedgesec->intflags & SIF_SKY ||
+         R_IsSkyLikePortalCeiling(*topedgesec)) && 
+         mo->z >= topedgesec->ceilingheight - P_ThingInfoHeight(mo->info))
+      {
+         mo->removeThinker(); // don't explode on the edge
          return;
       }
    }
@@ -594,7 +604,10 @@ void P_XYMovement(Mobj* mo)
             // explode a missile
 
             if(clip.ceilingline && clip.ceilingline->backsector &&
-               clip.ceilingline->backsector->intflags & SIF_SKY)
+               (clip.ceilingline->backsector->intflags & SIF_SKY || 
+               (demo_version >= 342 && 
+                  clip.ceilingline->extflags & EX_ML_UPPERPORTAL &&
+                  R_IsSkyLikePortalCeiling(*clip.ceilingline->backsector))))
             {
                if (demo_compatibility ||  // killough
                   mo->z > clip.ceilingline->backsector->ceilingheight)
@@ -611,7 +624,16 @@ void P_XYMovement(Mobj* mo)
                }
             }
 
-            P_ExplodeMissile(mo);
+            if(demo_version >= 342 && clip.blockline && 
+               !clip.blockline->backsector && 
+               R_IsSkyLikePortalWall(*clip.blockline))
+            {
+               mo->removeThinker();
+               return;
+            }
+
+            P_ExplodeMissile(mo, clip.ceilingline ? clip.ceilingline->backsector :
+               nullptr);
          }
          else // whatever else it is, it is now standing still in (x,y)
          {
@@ -883,13 +905,17 @@ static void P_ZMovement(Mobj* mo)
          if(clip.ceilingline &&
             clip.ceilingline->backsector &&
             (mo->z > clip.ceilingline->backsector->ceilingheight) &&
-            clip.ceilingline->backsector->intflags & SIF_SKY)
+            (clip.ceilingline->backsector->intflags & SIF_SKY ||
+            (demo_version >= 342 &&
+               clip.ceilingline->extflags & EX_ML_UPPERPORTAL &&
+               R_IsSkyLikePortalCeiling(*clip.ceilingline->backsector))))
          {
             mo->removeThinker();  // don't explode on skies
          }
          else
          {
-            P_ExplodeMissile(mo);
+            P_ExplodeMissile(mo, 
+               clip.ceilingline ? clip.ceilingline->backsector : nullptr);
          }
       }
 
@@ -985,7 +1011,7 @@ floater:
       if(!((mo->flags ^ MF_MISSILE) & (MF_MISSILE | MF_NOCLIP)))
       {
          if(!(mo->flags3 & MF3_FLOORMISSILE)) // haleyjd
-            P_ExplodeMissile(mo);
+            P_ExplodeMissile(mo, nullptr);
          return;
       }
    }
@@ -1028,7 +1054,8 @@ floater:
 
       if(!((mo->flags ^ MF_MISSILE) & (MF_MISSILE | MF_NOCLIP)))
       {
-         P_ExplodeMissile (mo);
+         P_ExplodeMissile (mo, 
+            clip.ceilingline ? clip.ceilingline->backsector : nullptr);
          return;
       }
    }
@@ -1285,6 +1312,12 @@ inline static void P_checkMobjProjections(Mobj &mobj)
 //
 void Mobj::Think()
 {
+   if(intflags & MIF_MUSICCHANGER)
+   {
+      S_MusInfoThink(*this);
+      return;
+   }
+
    int oldwaterstate, waterstate = 0;
    fixed_t lz;
 
@@ -2427,7 +2460,10 @@ spawnit:
 
    // haleyjd: set music number for first 64 types
    if(mthing->type >= 14101 && mthing->type <= 14164)
+   {
+      mobj->intflags |= MIF_MUSICCHANGER;
       mobj->args[0] = mthing->type - 14100;
+   }
 
    mobj->backupPosition();
 
@@ -2762,7 +2798,7 @@ bool P_CheckMissileSpawn(Mobj* th)
    // killough 3/15/98: no dropoff (really = don't care for missiles)
    if(!P_TryMove(th, th->x, th->y, false))
    {
-      P_ExplodeMissile(th);
+      P_ExplodeMissile(th, nullptr);
       ok = false;
    }
 

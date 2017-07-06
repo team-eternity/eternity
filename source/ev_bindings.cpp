@@ -1805,5 +1805,63 @@ ev_binding_t ACSBindings[] =
 
 const size_t ACSBindingsLen = earrlen(ACSBindings);
 
+//=============================================================================
+//
+// UDMF-to-ExtraData Reverse Special Lookups
+//
+// For ACS we sometimes need to walk backwards from a UDMF-compatible special
+// number to a special number in the DOOM/ExtraData binding set.
+//
+//=============================================================================
+
+//
+// Initialize the UDMF-to-ExtraData binding pointers
+//
+void EV_InitUDMFToExtraDataLookup()
+{
+   static bool isInit = false;
+
+   if(isInit)
+      return;
+   isInit = true;
+
+   // do the Hexen binding table first
+   for(size_t i = 0; i < HexenBindingsLen; i++)
+   {
+      ev_binding_t &hexenBind = HexenBindings[i];
+
+      // try to find the same action in the DOOM bindings table
+      for(size_t j = 0; j < DOOMBindingsLen; j++)
+      {
+         ev_binding_t &doomBind = DOOMBindings[j];
+
+         if(doomBind.action == hexenBind.action)
+         {
+            hexenBind.pEDBinding = &doomBind;
+            break;
+         }
+      }
+   }
+
+   // also do the UDMF table
+   for(size_t i = 0; i < UDMFEternityBindingsLen; i++)
+   {
+      ev_binding_t &udmfBind = UDMFEternityBindings[i];
+
+      for(size_t j = 0; j < DOOMBindingsLen; j++)
+      {
+         ev_binding_t &doomBind = DOOMBindings[j];
+
+         if(doomBind.action == udmfBind.action)
+         {
+            udmfBind.pEDBinding = &doomBind;
+            break;
+         }
+      }
+   }
+}
+
+
+
 // EOF
 

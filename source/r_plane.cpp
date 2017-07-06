@@ -70,7 +70,10 @@ visplane_t *floorplane, *ceilingplane;
 // SoM: New visplane hash
 // This is the main hash object used by the normal scene.
 static visplane_t *mainchains[MAINHASHCHAINS];   // killough
-static planehash_t  mainhash = { MAINHASHCHAINS,  mainchains };
+static planehash_t  mainhash = { MAINHASHCHAINS,  mainchains, nullptr };
+
+// Free list of overlay portals. Used by portal windows and the post-BSP stack.
+static planehash_t *r_overlayfreesets;
 
 //
 // VALLOCATION(mainhash)
@@ -507,6 +510,7 @@ planehash_t *R_NewPlaneHash(int chaincount)
    ret = (planehash_t *)(Z_Malloc(sizeof(planehash_t), PU_LEVEL, NULL));
    ret->chaincount = chaincount;
    ret->chains = (visplane_t **)(Z_Malloc(sizeof(visplane_t *) * chaincount, PU_LEVEL, NULL));
+   ret->next = nullptr;
    
    for(i = 0; i < chaincount; i++)
       ret->chains[i] = NULL;
@@ -1177,6 +1181,46 @@ void R_DrawPlanes(planehash_t *table)
       for(pl = table->chains[i]; pl; pl = pl->next)
          do_draw_plane(pl);
    }
+}
+
+VALLOCATION(overlaySets)
+{
+   for(planehash_t *set = r_overlayfreesets; set; set = set->next)
+      memset(set->chains, 0, set->chaincount * sizeof(*set->chains));
+}
+
+//
+// Gets a free portal overlay plane set
+//
+planehash_t *R_NewOverlaySet()
+{
+   planehash_t *set;
+   if(!r_overlayfreesets)
+   {
+      set = R_NewPlaneHash(32);
+      return set;
+   }
+   set = r_overlayfreesets;
+   r_overlayfreesets = r_overlayfreesets->next;
+   R_ClearPlaneHash(set);
+   return set;
+}
+
+//
+// Puts the overlay set in the free list
+//
+void R_FreeOverlaySet(planehash_t *set)
+{
+   set->next = r_overlayfreesets;
+   r_overlayfreesets = set;
+}
+
+//
+// Called from P_SetupLevel, considering that overlay sets are PU_LEVEL
+//
+void R_MapInitOverlaySets()
+{
+   r_overlayfreesets = nullptr;
 }
 
 //----------------------------------------------------------------------------

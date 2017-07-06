@@ -30,6 +30,7 @@ struct line_t;
 struct sector_t;
 struct particle_t;
 struct planehash_t;
+struct pwindow_t;
 
 // Constant arrays used for psprite clipping and initializing clipping.
 
@@ -60,7 +61,7 @@ struct poststack_t
    maskedrange_t *masked;
 };
 
-void R_PushPost(bool pushmasked, planehash_t *overlay);
+void R_PushPost(bool pushmasked, pwindow_t *window);
 
 // SoM: Cardboard
 void R_SetMaskedSilhouette(const float *top, const float *bottom);

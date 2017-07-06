@@ -596,6 +596,13 @@ inline static bool P_SectorIsSpecial(const sector_t *sector)
    return (sector->special || sector->flags || sector->damage);
 }
 
+inline static void P_removePowerTracker(player_t *player, powertype_t power)
+{
+   itemeffect_t *effect;
+   effect = E_ItemEffectForName(powerStrings[power]);
+   E_RemoveInventoryItem(player, effect, 1);
+}
+
 //
 // P_PlayerThink
 //
@@ -619,7 +626,7 @@ void P_PlayerThink(player_t *player)
 
    cmd = &player->cmd;
 
-   if(cmd->itemID)
+   if(cmd->itemID && demo_version >= 343)
    {
       E_TryUseItem(player, cmd->itemID - 1); // ticcmd ID is off by one
    }
@@ -798,8 +805,6 @@ void P_PlayerThink(player_t *player)
 
    // Counters, time dependent power ups.
 
-   itemeffect_t *effect = nullptr;
-
    // Strength counts up to diminish fade.
 
    if(player->powers[pw_strength])
@@ -810,10 +815,7 @@ void P_PlayerThink(player_t *player)
    if(player->powers[pw_invulnerability] > 0) // killough
    {
       if(!--player->powers[pw_invulnerability])
-      {         
-         effect = E_ItemEffectForName(powerStrings[pw_invulnerability]);
-         E_RemoveInventoryItem(player, effect, 1);
-      }
+         P_removePowerTracker(player, pw_invulnerability);
    }
 
    if(player->powers[pw_invisibility] > 0)
@@ -821,43 +823,36 @@ void P_PlayerThink(player_t *player)
       if(!--player->powers[pw_invisibility])
       {
          player->mo->flags &= ~MF_SHADOW;
-         effect = E_ItemEffectForName(powerStrings[pw_invisibility]);
-         E_RemoveInventoryItem(player, effect, 1);
+         P_removePowerTracker(player, pw_invisibility);
       }
    }
 
    if(player->powers[pw_infrared] > 0)        // killough
    {
       if(!--player->powers[pw_infrared])
-      {
-         effect = E_ItemEffectForName(powerStrings[pw_infrared]);
-         E_RemoveInventoryItem(player, effect, 1);
-      }
+         P_removePowerTracker(player, pw_infrared);
    }
 
    // haleyjd: torch
    if(player->powers[pw_torch] > 0)
    {
       if(!--player->powers[pw_torch])
-      {
-         effect = E_ItemEffectForName(powerStrings[pw_torch]);
-         E_RemoveInventoryItem(player, effect, 1);
-      }
+         P_removePowerTracker(player, pw_torch);
    }
 
    if(player->powers[pw_ironfeet] > 0)        // killough
    {
       if(!--player->powers[pw_ironfeet])
-      {
-         effect = E_ItemEffectForName(powerStrings[pw_ironfeet]);
-         E_RemoveInventoryItem(player, effect, 1);
-      }
+         P_removePowerTracker(player, pw_ironfeet);
    }
 
    if(player->powers[pw_ghost] > 0)        // haleyjd
    {
       if(!--player->powers[pw_ghost])
+      {
          player->mo->flags3 &= ~MF3_GHOST;
+         P_removePowerTracker(player, pw_ghost);
+      }
    }
 
    if(player->powers[pw_totalinvis] > 0) // haleyjd
@@ -866,8 +861,7 @@ void P_PlayerThink(player_t *player)
       {
          player->mo->flags2 &= ~MF2_DONTDRAW;
          player->mo->flags4 &= ~MF4_TOTALINVISIBLE;
-         effect = E_ItemEffectForName(powerStrings[pw_totalinvis]);
-         E_RemoveInventoryItem(player, effect, 1);
+         P_removePowerTracker(player, pw_totalinvis);
       }
    }
 
@@ -952,7 +946,7 @@ void P_PlayerStartFlight(player_t *player, bool thrustup)
       player->flyheight = 2 * FLIGHT_IMPULSE_AMT;
 
    itemeffect_t *powerTracker = E_ItemEffectForName(powerStrings[pw_flight]);
-   E_GiveInventoryItem(player, powerTracker, powerTracker->getInt("amount", 1));
+   E_GiveInventoryItem(player, powerTracker);
 
    // TODO: stop screaming if falling
 }
@@ -970,8 +964,7 @@ void P_PlayerStopFlight(player_t *player)
    player->mo->flags4 &= ~MF4_FLY;
    player->mo->flags  &= ~MF_NOGRAVITY;
 
-   itemeffect_t *effect = E_ItemEffectForName(powerStrings[pw_infrared]);
-   E_RemoveInventoryItem(player, effect, 1);
+   P_removePowerTracker(player, pw_infrared);
 }
 
 #if 0

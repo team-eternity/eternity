@@ -1633,13 +1633,15 @@ inline static bool AM_differentFloor(const line_t &line)
 {
    return line.frontsector->floorheight > line.backsector->floorheight ||
    (line.frontsector->floorheight < line.backsector->floorheight &&
-    !(line.extflags & EX_ML_LOWERPORTAL));
+    (!(line.extflags & EX_ML_LOWERPORTAL) || 
+       !(line.backsector->f_pflags & PS_PASSABLE)));
 }
 inline static bool AM_differentCeiling(const line_t &line)
 {
    return line.frontsector->ceilingheight < line.backsector->ceilingheight ||
    (line.frontsector->ceilingheight > line.backsector->ceilingheight &&
-    !(line.extflags & EX_ML_UPPERPORTAL));
+    (!(line.extflags & EX_ML_UPPERPORTAL) ||
+       !(line.backsector->c_pflags & PS_PASSABLE)));
 }
 
 inline static bool AM_dontDraw(const line_t &line)

@@ -328,6 +328,7 @@ powereffect SuperMap
   duration 1
   type     PowerAllmap
 
+  -overridesself
   +permanent
 }
 
@@ -335,30 +336,40 @@ powereffect Shadowsphere
 {
   duration 60
   type     PowerGhost
+
+  -overridesself
 }
 
 powereffect WingsOfWrath
 {
   duration 60
   type     PowerFlight
+
+  -overridesself
 }
 
 powereffect RingOfInvincibility
 {
   duration 30
-  type     PowerInvulnerable  
+  type     PowerInvulnerable
+
+  -overridesself
 }
 
 powereffect TomeOfPower
 {
   duration 30
   type     PowerWeaponLevel2
+
+  -overridesself
 }
 
 powereffect Torch
 {
   duration 120
   type     PowerTorch
+
+  -overridesself
 }
 
 //=============================================================================

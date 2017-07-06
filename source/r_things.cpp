@@ -539,7 +539,7 @@ void R_ClearSprites()
 //
 // Pushes a new element on the post-BSP stack. 
 //
-void R_PushPost(bool pushmasked, planehash_t *overlay)
+void R_PushPost(bool pushmasked, pwindow_t *window)
 {
    poststack_t *post;
    
@@ -550,8 +550,14 @@ void R_PushPost(bool pushmasked, planehash_t *overlay)
    }
    
    post = pstack + pstacksize;
-   
-   post->overlay = overlay;
+
+   if(window)
+   {
+      post->overlay = window->poverlay;
+      window->poverlay = nullptr;   // clear reference
+   }
+   else
+      post->overlay = nullptr;
 
    if(pushmasked)
    {
@@ -875,10 +881,16 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
       {
          return;
       }
-      if(!portalrender.w->line && 
-         !R_AllowBehindSectorPortal(barrier.bbox, spritepos.x, spritepos.y))
+      if(!portalrender.w->line)
       {
-         return;
+         dlnormal_t dl1, dl2;
+         if(R_PickNearestBoxLines(barrier.bbox, dl1, dl2) &&
+            (P_PointOnDivlineSide(spritepos.x, spritepos.y, &dl1.dl) == 0 ||
+               (dl2.dl.x != D_MAXINT && 
+                  P_PointOnDivlineSide(spritepos.x, spritepos.y, &dl2.dl) == 0)))
+         {
+            return;
+         }
       }
    }
 
@@ -1786,6 +1798,7 @@ void R_DrawPostBSP()
             r_column_engine->ResetBuffer();
             
          R_DrawPlanes(pstack[pstacksize].overlay);
+         R_FreeOverlaySet(pstack[pstacksize].overlay);
       }
    }
 

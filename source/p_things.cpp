@@ -455,6 +455,9 @@ int EV_ThingRemove(int tid)
       removed = mobj;
       mobj = P_FindMobjFromTID(tid, mobj, nullptr);
 
+      // clean up as best as we can
+      removed->health = 0;
+      removed->flags &= ~MF_SHOOTABLE;
       removed->removeThinker();
 
       rtn = 1;

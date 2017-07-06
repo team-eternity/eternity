@@ -44,6 +44,7 @@
 #include "e_mod.h"
 #include "e_states.h"
 #include "e_things.h"
+#include "ev_specials.h"
 #include "g_game.h"
 #include "hu_stuff.h"
 #include "m_random.h"
@@ -1675,7 +1676,7 @@ bool ACS_CF_SetLineSpec(ACS_CF_ARGS)
 
    while((l = P_FindLine(tag, &linenum)) != NULL)
    {
-      l->special = spec;
+      l->special = EV_ActionForACSAction(spec);
       for(int i = NUMLINEARGS; i--;)
          l->args[i] = argV[i + 2];
    }
