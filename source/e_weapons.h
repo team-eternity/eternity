@@ -72,6 +72,7 @@ extern weaponslot_t *weaponslots[NUMWEAPONSLOTS];
 // Global Functions
 weaponinfo_t *E_WeaponForID(int id);
 weaponinfo_t *E_WeaponForName(const char *name);
+weaponinfo_t *E_WeaponForForDEHNum(int dehnum);
 
 // FIXME: Reorder to be cleaner
 void E_CollectWeapons(cfg_t *cfg);

@@ -220,6 +220,16 @@ weaponinfo_t *E_WeaponForName(const char *name)
 }
 
 //
+// E_WeaponForName
+//
+// Obtain a weaponinfo_t structure by name.
+//
+weaponinfo_t *E_WeaponForForDEHNum(int dehnum)
+{
+   return e_WeaponDehHash.objectForKey(dehnum);
+}
+
+//
 // Returns a weapon type index given its name. Returns -1
 // if a weapon type is not found.
 //
