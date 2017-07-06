@@ -9,7 +9,7 @@
 //
 // Weapon Info
 //
-weaponinfo Fist
+weaponinfo Fist : Weapon, 0
 {
   upstate      S_PUNCHUP
   downstate    S_PUNCHDOWN
@@ -28,7 +28,7 @@ weaponinfo Fist
   //firstdecoratestate S_PUNCH
 }
 
-weaponinfo Pistol
+weaponinfo Pistol : Weapon, 1
 {
   ammotype     AmmoClip
   upstate      S_PISTOLUP
@@ -52,7 +52,7 @@ weaponinfo Pistol
   //firstdecoratestate S_PISTOL
 }
 
-weaponinfo Shotgun
+weaponinfo Shotgun : Weapon, 2
 {
   ammotype     AmmoShell
   upstate      S_SGUNUP
@@ -76,7 +76,7 @@ weaponinfo Shotgun
   //firstdecoratestate S_SGUN
 }
 
-weaponinfo Chaingun
+weaponinfo Chaingun : Weapon, 3
 {
   ammotype     AmmoClip
   upstate      S_CHAINUP
@@ -100,7 +100,7 @@ weaponinfo Chaingun
   //firstdecoratestate S_CHAIN
 }
 
-weaponinfo MissileLauncher
+weaponinfo MissileLauncher : Weapon, 4
 {
   ammotype     AmmoMissile
   upstate      S_MISSILEUP
@@ -124,7 +124,7 @@ weaponinfo MissileLauncher
   //firstdecoratestate S_MISSILE
 }
 
-weaponinfo PlasmaRifle
+weaponinfo PlasmaRifle : Weapon, 5
 {
   ammotype     AmmoCell
   upstate      S_PLASMAUP
@@ -148,7 +148,7 @@ weaponinfo PlasmaRifle
   //firstdecoratestate S_PLASMA
 }
 
-weaponinfo BFG9000
+weaponinfo BFG9000 : Weapon, 6
 {
   ammotype     AmmoCell
   upstate      S_BFGUP
@@ -172,7 +172,7 @@ weaponinfo BFG9000
   //firstdecoratestate S_BFG
 }
 
-weaponinfo Chainsaw
+weaponinfo Chainsaw : Weapon, 7
 {
   upstate      S_SAWUP
   downstate    S_SAWDOWN
@@ -192,7 +192,7 @@ weaponinfo Chainsaw
   //firstdecoratestate S_SAW
 }
 
-weaponinfo SuperShotgun
+weaponinfo SuperShotgun : Weapon, 8
 {
   ammotype     AmmoShell
   upstate      S_DSGUNUP
@@ -224,108 +224,63 @@ weaponinfo SuperShotgun
 
 artifact WeaponFist
 {
-  amount         1
-  maxamount      1
-  interhubamount 1
-
   +undroppable
-  -invbar
 
   artifacttype Weapon
 }
 
 artifact WeaponPistol
 {
-  amount         1
-  maxamount      1
-  interhubamount 1
-
   +undroppable
-  -invbar
 
   artifacttype Weapon
 }
 
 artifact WeaponShotgun
 {
-  amount         1
-  maxamount      1
-  interhubamount 1
-
   +undroppable
-  -invbar
 
   artifacttype Weapon
 }
 
 artifact WeaponChaingun
 {
-  amount         1
-  maxamount      1
-  interhubamount 1
-
   +undroppable
-  -invbar
 
   artifacttype Weapon
 }
 
 artifact WeaponMissileLauncher
 {
-  amount         1
-  maxamount      1
-  interhubamount 1
-
   +undroppable
-  -invbar
 
   artifacttype Weapon
 }
 
 artifact WeaponPlasmaRifle
 {
-  amount         1
-  maxamount      1
-  interhubamount 1
-
   +undroppable
-  -invbar
 
   artifacttype Weapon
 }
 
 artifact WeaponBFG9000
 {
-  amount         1
-  maxamount      1
-  interhubamount 1
-
   +undroppable
-  -invbar
 
   artifacttype Weapon
 }
 
 artifact WeaponChainsaw
 {
-  amount         1
-  maxamount      1
-  interhubamount 1
-
   +undroppable
-  -invbar
 
   artifacttype Weapon
 }
 
 artifact WeaponSuperShotgun
 {
-  amount         1
-  maxamount      1
-  interhubamount 1
-
   +undroppable
-  -invbar
 
   artifacttype Weapon
 }

@@ -387,96 +387,56 @@ weaponinfo Gauntlets
 
 artifact WeaponStaff
 {
-  amount         1
-  maxamount      1
-  interhubamount 1
-
   +undroppable
-  -invbar
 
   artifacttype Weapon
 }
 
 artifact WeaponGoldWand
 {
-  amount         1
-  maxamount      1
-  interhubamount 1
-
   +undroppable
-  -invbar
 
   artifacttype Weapon
 }
 
 artifact WeaponCrossbow
 {
-  amount         1
-  maxamount      1
-  interhubamount 1
-
   +undroppable
-  -invbar
 
   artifacttype Weapon
 }
 
 artifact WeaponBlaster
 {
-  amount         1
-  maxamount      1
-  interhubamount 1
-
   +undroppable
-  -invbar
 
   artifacttype Weapon
 }
 
 artifact WeaponSkullRod
 {
-  amount         1
-  maxamount      1
-  interhubamount 1
-
   +undroppable
-  -invbar
 
   artifacttype Weapon
 }
 
 artifact WeaponPhoenixRod
 {
-  amount         1
-  maxamount      1
-  interhubamount 1
-
   +undroppable
-  -invbar
 
   artifacttype Weapon
 }
 
 artifact WeaponMace
 {
-  amount         1
-  maxamount      1
-  interhubamount 1
-
   +undroppable
-  -invbar
 
   artifacttype Weapon
 }
 
 artifact WeaponGauntlets
 {
-  amount         1
-  maxamount      1
-  interhubamount 1
-
   +undroppable
-  -invbar
 
   artifacttype Weapon
 }

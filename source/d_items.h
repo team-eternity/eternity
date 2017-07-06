@@ -55,6 +55,7 @@ struct weaponinfo_t
 {
    weapontype_t id;           // haleyjd 06/28/13: weapontype id number
    const char  *name;         // haleyjd 06/29/13: name of weapon
+   int          dehnum;       // MaxW: 2017/07/06: DeHackEd number for fast access, comp.
 
    MetaTable   *ammo;         // haleyjd 08/05/13: ammo artifact type
    int          upstate;

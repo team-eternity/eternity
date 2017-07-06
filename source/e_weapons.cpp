@@ -95,10 +95,12 @@ static int edf_weapon_generation = 1;
 
 // Title properties 
 #define ITEM_WPN_TITLE_SUPER     "superclass" 
+#define ITEM_WPN_TITLE_DEHNUM    "dehackednum"
 
 cfg_opt_t wpninfo_tprops[] =
 {
    CFG_STR(ITEM_WPN_TITLE_SUPER,      0, CFGF_NONE),
+   CFG_INT(ITEM_WPN_TITLE_DEHNUM,    -1, CFGF_NONE),
    CFG_END()
 };
 
@@ -192,6 +194,10 @@ static
 static
    EHashTable<weaponinfo_t, ENCStringHashKey, &weaponinfo_t::name, &weaponinfo_t::namelinks>
    e_WeaponNameHash;
+
+static 
+   EHashTable<weaponinfo_t, EIntHashKey, &weaponinfo_t::id, &weaponinfo_t::idlinks> 
+   e_WeaponDehHash;
 
 //
 // E_WeaponForID
@@ -605,6 +611,7 @@ void E_CollectWeapons(cfg_t *cfg)
       cfg_t *weaponcfg  = cfg_getnsec(cfg, EDF_SEC_WEAPONINFO, i);
       const char *name  = cfg_title(weaponcfg);
       cfg_t *titleprops = nullptr;
+      int dehnum = -1;
 
       // This is a new weaponinfo, whether or not one already exists by this name
       // in the hash table. For subsequent addition of EDF weaponinfo at runtime,
@@ -620,18 +627,23 @@ void E_CollectWeapons(cfg_t *cfg)
       e_WeaponIDHash.addObject(wi);
       e_WeaponNameHash.addObject(wi);
 
-      // TODO: dehnum stuff maybe at some point?
-      /*// check for titleprops definition first
+      // check for titleprops definition first
       if(cfg_size(weaponcfg, "#title") > 0)
       {
          titleprops = cfg_gettitleprops(weaponcfg);
          if(titleprops)
-            dehnum = cfg_getint(titleprops, ITEM_WPN_TITLE_DEHNUM)
+            dehnum = cfg_getint(titleprops, ITEM_WPN_TITLE_DEHNUM);
       }
-
+      
+      /*
       // If undefined, check the legacy value inside the section
       if(dehnum == -1)
          dehnum = cfg_getint(weaponnum, ITEM_WPN_DEHNUM);*/
+
+         // process dehackednum and add thing to dehacked hash table,
+         // if appropriate
+      if((wi->dehnum = dehnum) >= 0)
+         e_WeaponDehHash.addObject(wi);
 
 
       // set generation
@@ -716,6 +728,7 @@ static void E_CopyWeapon(int num, int pnum)
    weaponinfo_t *this_wi;
    DLListItem<weaponinfo_t> idlinks, namelinks;
    const char *name;
+   int         dehnum;
    MetaTable  *meta;
    int         id;
    int         generation;
@@ -727,6 +740,7 @@ static void E_CopyWeapon(int num, int pnum)
    idlinks = this_wi->idlinks;
    namelinks = this_wi->namelinks;
    name = this_wi->name;
+   dehnum = this_wi->dehnum;
    meta = this_wi->meta;
    id = this_wi->id;
    generation = this_wi->generation;
@@ -746,11 +760,12 @@ static void E_CopyWeapon(int num, int pnum)
    this_wi->meta = meta;
 
    // must restore name and dehacked num data
-   this_wi->namelinks = namelinks;
-   this_wi->idlinks = idlinks;
-   this_wi->name = name;
-   this_wi->id = id;
-   this_wi->generation = generation;
+   this_wi->namelinks   = namelinks;
+   this_wi->idlinks     = idlinks;
+   this_wi->name        = name;
+   this_wi->dehnum      = dehnum;
+   this_wi->id          = id;
+   this_wi->generation  = generation;
    this_wi->nextInCycle = nextInCycle;
    this_wi->prevInCycle = prevInCycle;
 
@@ -760,33 +775,44 @@ static void E_CopyWeapon(int num, int pnum)
    this_wi->tracker = nullptr;
 }
 
+struct weapontitleprops_t
+{
+   const char *superclass;
+   int dehackednum;
+};
 
-static const char *E_getWeaponTitleProps(cfg_t *weaponsec, bool def)
+static void E_getWeaponTitleProps(cfg_t *weaponsec, weapontitleprops_t &props, bool def)
 {
    cfg_t *titleprops;
 
    if(def && cfg_size(weaponsec, "#title") > 0 &&
       (titleprops = cfg_gettitleprops(weaponsec)))
-      return cfg_getstr(titleprops, ITEM_WPN_TITLE_SUPER);
+   {
+      props.superclass  = cfg_getstr(titleprops, ITEM_WPN_TITLE_SUPER);
+      props.dehackednum = cfg_getint(titleprops, ITEM_WPN_TITLE_DEHNUM);
+   }
    else
-      return nullptr;
+   {
+      props.superclass  = nullptr;
+      props.dehackednum = -1;
+   }
 }
 
 //
 // Get the weaponinfo index for the weapon's superclass weaponinfo.
 //
-static int E_resolveParentWeapon(cfg_t *weaponsec, const char *tprop)
+static int E_resolveParentWeapon(cfg_t *weaponsec, const weapontitleprops_t &props)
 {
    int pnum = -1;
 
    // check title props first
-   if(tprop)
+   if(props.superclass)
    {
       // "Weapon" is currently a dummy value and means it is just a plain 
       // weapon not inheriting from anyweapon else. Maybe in the future it
       // could designate specialized native subclasses of Weapon as well?
-      if(strcasecmp(tprop, "Weapon"))
-         pnum = E_GetWeaponNumForName(tprop);
+      if(strcasecmp(props.superclass, "Weapon"))
+         pnum = E_GetWeaponNumForName(props.superclass);
    }
    else // resolve parent weaponinfo through legacy "inherits" field
       pnum = E_GetWeaponNumForName(cfg_getstr(weaponsec, ITEM_WPN_INHERITS));
@@ -807,7 +833,7 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
    const char *tempstr;
    bool inherits = false;
    bool cflags   = false;
-   const char *tprop;
+   weapontitleprops_t titleprops;
 
    // if weaponsec is null, we are in the situation of inheriting from a weapon
    // that was processed in a previous EDF generation, so no processing is
@@ -816,7 +842,7 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
       return;
 
    // Retrieve title properties
-   tprop = E_getWeaponTitleProps(weaponsec, def);
+   E_getWeaponTitleProps(weaponsec, titleprops, def);
 
    // inheritance -- not in deltas
    if(def)
@@ -828,13 +854,13 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
       if(weapon_hitlist[i])
          return;
 
-      if(tprop || cfg_size(weaponsec, ITEM_WPN_INHERITS) > 0)
-         pnum = E_resolveParentWeapon(weaponsec, tprop);
+      if(titleprops.superclass || cfg_size(weaponsec, ITEM_WPN_INHERITS) > 0)
+         pnum = E_resolveParentWeapon(weaponsec, titleprops);
 
       if(pnum >= 0)
       {
          cfg_t *parent_tngsec;
-         int pnum = E_resolveParentWeapon(weaponsec, tprop); // TODO: Remove this line?
+         int pnum = E_resolveParentWeapon(weaponsec, titleprops); // TODO: Remove this line?
 
          // check against cyclic inheritance
          if(!E_CheckWeaponInherit(pnum))
