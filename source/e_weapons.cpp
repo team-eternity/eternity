@@ -58,7 +58,9 @@ static int NUMWEAPONTYPES = 0;
 static int edf_weapon_generation = 1;
 
 // Weapon Keywords
-// TODO: Currently in order of weaponinfo_t, reorder
+// TODO: Reorder
+
+#define ITEM_WPN_DEHNUM       "dehackednum"
 
 #define ITEM_WPN_AMMO         "ammotype"
 #define ITEM_WPN_UPSTATE      "upstate"
@@ -105,6 +107,7 @@ cfg_opt_t wpninfo_tprops[] =
 };
 
 #define WEAPONINFO_FIELDS \
+   CFG_INT(ITEM_WPN_DEHNUM,       -1,       CFGF_NONE), \
    CFG_STR(ITEM_WPN_AMMO,         "",       CFGF_NONE), \
    CFG_STR(ITEM_WPN_UPSTATE,      "S_NULL", CFGF_NONE), \
    CFG_STR(ITEM_WPN_DOWNSTATE,    "S_NULL", CFGF_NONE), \
@@ -645,10 +648,10 @@ void E_CollectWeapons(cfg_t *cfg)
             dehnum = cfg_getint(titleprops, ITEM_WPN_TITLE_DEHNUM);
       }
       
-      /*
+      
       // If undefined, check the legacy value inside the section
       if(dehnum == -1)
-         dehnum = cfg_getint(weaponnum, ITEM_WPN_DEHNUM);*/
+         dehnum = cfg_getint(weaponcfg, ITEM_WPN_DEHNUM);
 
          // process dehackednum and add thing to dehacked hash table,
          // if appropriate
