@@ -122,28 +122,28 @@ bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
       if(E_WeaponIsCurrent(player, WEAPNAME_FIST))
       {
          if(E_PlayerOwnsWeaponForSlot(player, wp_chaingun)) // FIXME: Make this not-a-hack
-            player->pendingweapon = E_WeaponForSlot(wp_chaingun);
+            player->pendingweapon = E_WeaponForDehNum(wp_chaingun);
          else
-            player->pendingweapon = E_WeaponForSlot(wp_pistol);
+            player->pendingweapon = E_WeaponForDehNum(wp_pistol);
       }
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoShell"))
    {
       if(E_WeaponIsCurrent(player, WEAPNAME_FIST) || E_WeaponIsCurrent(player, WEAPNAME_PISTOL))
          if(E_PlayerOwnsWeaponForSlot(player, wp_shotgun)) // FIXME: Make this not-a-hack
-            player->pendingweapon = E_WeaponForSlot(wp_shotgun);
+            player->pendingweapon = E_WeaponForDehNum(wp_shotgun);
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoCell"))
    {
       if(E_WeaponIsCurrent(player, WEAPNAME_FIST) || E_WeaponIsCurrent(player, WEAPNAME_PISTOL))
          if(E_PlayerOwnsWeaponForSlot(player, wp_plasma)) // FIXME: Make this not-a-hack
-            player->pendingweapon = E_WeaponForSlot(wp_plasma);
+            player->pendingweapon = E_WeaponForDehNum(wp_plasma);
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoMissile"))
    {
       if(E_WeaponIsCurrent(player, WEAPNAME_FIST))
          if(E_PlayerOwnsWeaponForSlot(player, wp_missile)) // FIXME: Make this not-a-hack
-            player->pendingweapon = E_WeaponForSlot(wp_missile);
+            player->pendingweapon = E_WeaponForDehNum(wp_missile);
    }
 
    return true;
@@ -842,7 +842,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       message = DEH_String("GOTBERSERK"); // Ty 03/22/98 - externalized
       if(!E_WeaponIsCurrent(player, WEAPNAME_FIST))
          // sf: removed beta
-         player->pendingweapon = E_WeaponForSlot(wp_fist);
+         player->pendingweapon = E_WeaponForDehNum(wp_fist);
       sound = sfx_getpow;
       break;
 

@@ -224,7 +224,7 @@ weaponinfo_t *E_WeaponForName(const char *name)
 //
 // Obtain a weaponinfo_t structure by name.
 //
-weaponinfo_t *E_WeaponForForDEHNum(int dehnum)
+weaponinfo_t *E_WeaponForDehNum(int dehnum)
 {
    return e_WeaponDehHash.objectForKey(dehnum);
 }
