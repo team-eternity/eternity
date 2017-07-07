@@ -254,12 +254,13 @@ bool PacketSend(void)
          
          NETWRITESHORT(netbuffer->d.cmds[c].consistency);         
 
-         NETWRITEBYTEIF(netbuffer->d.cmds[c].chatchar, TCF_CHATCHAR);
-         NETWRITEBYTEIF(netbuffer->d.cmds[c].buttons,  TCF_BUTTONS);
-         NETWRITEBYTEIF(netbuffer->d.cmds[c].actions,  TCF_ACTIONS);
-         NETWRITESHORTIF(netbuffer->d.cmds[c].look,    TCF_LOOK);
-         NETWRITEBYTEIF(netbuffer->d.cmds[c].fly,      TCF_FLY);
-         NETWRITESHORTIF(netbuffer->d.cmds[c].itemID,  TCF_ITEMID);
+         NETWRITEBYTEIF(netbuffer->d.cmds[c].chatchar,  TCF_CHATCHAR);
+         NETWRITEBYTEIF(netbuffer->d.cmds[c].buttons,   TCF_BUTTONS);
+         NETWRITEBYTEIF(netbuffer->d.cmds[c].actions,   TCF_ACTIONS);
+         NETWRITESHORTIF(netbuffer->d.cmds[c].look,     TCF_LOOK);
+         NETWRITEBYTEIF(netbuffer->d.cmds[c].fly,       TCF_FLY);
+         NETWRITESHORTIF(netbuffer->d.cmds[c].itemID,   TCF_ITEMID);
+         NETWRITESHORTIF(netbuffer->d.cmds[c].weaponID, TCF_WEAPONID);
 
          // go back to ticstart and write in the flags
          ticend = rover;
