@@ -154,9 +154,6 @@ struct player_t
    weaponinfo_t  *readyweapon;
    weaponinfo_t  *pendingweapon; // Is nullptr if not changing.
 
-   weaponslot_t  *readyweaponnslot;
-   weaponslot_t  *pendingweaponslot; // Is nullptr if not changing.
-
    int            weaponctrs[NUMWEAPONS][3]; // haleyjd 03/31/06
 
    int            extralight;    // So gun flashes light up areas.

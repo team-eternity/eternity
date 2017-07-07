@@ -121,7 +121,7 @@ bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
    {
       if(E_WeaponIsCurrent(player, WEAPNAME_FIST))
       {
-         if(E_PlayerOwnsWeaponForSlot(player, wp_chaingun)) // FIXME: Make this not-a-hack
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_chaingun)) // FIXME: Make this not-a-hack
             player->pendingweapon = E_WeaponForDEHNum(wp_chaingun);
          else
             player->pendingweapon = E_WeaponForDEHNum(wp_pistol);
@@ -130,19 +130,19 @@ bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
    else if(!strcasecmp(ammo->getKey(), "AmmoShell"))
    {
       if(E_WeaponIsCurrent(player, WEAPNAME_FIST) || E_WeaponIsCurrent(player, WEAPNAME_PISTOL))
-         if(E_PlayerOwnsWeaponForSlot(player, wp_shotgun)) // FIXME: Make this not-a-hack
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_shotgun)) // FIXME: Make this not-a-hack
             player->pendingweapon = E_WeaponForDEHNum(wp_shotgun);
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoCell"))
    {
       if(E_WeaponIsCurrent(player, WEAPNAME_FIST) || E_WeaponIsCurrent(player, WEAPNAME_PISTOL))
-         if(E_PlayerOwnsWeaponForSlot(player, wp_plasma)) // FIXME: Make this not-a-hack
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_plasma)) // FIXME: Make this not-a-hack
             player->pendingweapon = E_WeaponForDEHNum(wp_plasma);
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoMissile"))
    {
       if(E_WeaponIsCurrent(player, WEAPNAME_FIST))
-         if(E_PlayerOwnsWeaponForSlot(player, wp_missile)) // FIXME: Make this not-a-hack
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_missile)) // FIXME: Make this not-a-hack
             player->pendingweapon = E_WeaponForDEHNum(wp_missile);
    }
 

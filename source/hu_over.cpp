@@ -421,10 +421,10 @@ static void HU_drawWeapons(int x, int y)
   
    for(int i = 0; i < NUMWEAPONS; i++)
    {
-      if(E_PlayerOwnsWeaponForSlot(&hu_player, i))
+      if(E_PlayerOwnsWeaponForDEHNum(&hu_player, i))
       {
          // got it
-         fontcolor = weapcolor(E_WeaponForSlot(i));
+         fontcolor = weapcolor(E_WeaponForDEHNum(i));
          tempstr << static_cast<char>(fontcolor) << (i + 1) << ' ';
       }
    }

@@ -1123,36 +1123,6 @@ void E_ProcessWeaponDeltas(cfg_t *cfg)
 //
 
 //
-// TODO: This should lose almost all applicability at some point
-//
-weaponinfo_t *E_WeaponForSlot(int slot)
-{
-   switch(slot)
-   {
-   case wp_fist:
-      return E_WeaponForName(WEAPNAME_FIST);
-   case wp_pistol:
-      return E_WeaponForName(WEAPNAME_PISTOL);
-   case wp_shotgun:
-      return E_WeaponForName(WEAPNAME_SHOTGUN);
-   case wp_chaingun:
-      return E_WeaponForName(WEAPNAME_CHAINGUN);
-   case wp_missile:
-      return E_WeaponForName(WEAPNAME_MISSILE);
-   case wp_plasma:
-      return E_WeaponForName(WEAPNAME_PLASMA);
-   case wp_bfg:
-      return E_WeaponForName(WEAPNAME_BFG9000);
-   case wp_chainsaw:
-      return E_WeaponForName(WEAPNAME_CHAINSAW);
-   case wp_supershotgun:
-      return E_WeaponForName(WEAPNAME_SSG);
-   default:
-      return nullptr;
-   }
-}
-
-//
 // Try not to call this function, it's bad and terrible.
 // Get a slot number for a given weaponinfo. DOOM-ONLY.
 //
@@ -1195,9 +1165,9 @@ bool E_WeaponIsCurrent(const player_t *player, const char *name)
 // Check if the weaponsec in the slotnum is currently equipped
 // DON'T CALL THIS IN NEW CODE, IT EXISTS SOLELY FOR COMPAT.
 //
-bool E_WeaponIsCurrentNum(player_t *player, const int num)
+bool E_WeaponIsCurrentDEHNum(player_t *player, const int dehnum)
 {
-   return player->readyweapon->id == E_WeaponForSlot(num)->id;
+   return player->readyweapon->id == E_WeaponForDEHNum(dehnum)->id;
 }
 
 //
@@ -1211,9 +1181,9 @@ bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon)
 //
 // TODO: Remove this?
 //
-bool E_PlayerOwnsWeaponForSlot(player_t *player, int slot)
+bool E_PlayerOwnsWeaponForDEHNum(player_t *player, int dehnum)
 {
-   return E_PlayerOwnsWeapon(player, E_WeaponForSlot(slot));
+   return E_PlayerOwnsWeapon(player, E_WeaponForDEHNum(dehnum));
 }
 
 //

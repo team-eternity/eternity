@@ -217,7 +217,10 @@ int P_NextWeapon(player_t *player)
    while((!E_PlayerOwnsWeapon(player, newweapon) || !ammototry) &&
          newweapon->id != currentweapon->id);
 
-   return newweapon != currentweapon ? newweapon->id : wp_nochange;
+   if(demo_version >= 344)
+      return newweapon != currentweapon ? newweapon->id : -1;
+   else
+      return newweapon != currentweapon ? newweapon->id : wp_nochange;
 }
 
 //
@@ -240,7 +243,10 @@ int P_PrevWeapon(player_t *player)
    while((!E_PlayerOwnsWeapon(player, newweapon) || !ammototry) &&
          newweapon->id != currentweapon->id);
 
-   return newweapon != currentweapon ? newweapon->id : wp_nochange;
+   if(demo_version >= 344)
+      return newweapon != currentweapon ? newweapon->id : -1;
+   else
+      return newweapon != currentweapon ? newweapon->id : wp_nochange;
 }
 
 // The first set is where the weapon preferences from             // killough,
@@ -259,6 +265,91 @@ static int weapon_preferences[NUMWEAPONS+1] =
 {
    6, 9, 4, 3, 2, 8, 5, 7, 1, 0
 };
+
+//
+// P_SwitchWeaponOld
+//
+// The old version of P_SwitchWeapon, needed for demo compat. Might not be
+// needed at some point in the future.
+// Checks current ammo levels and gives you the most preferred weapon with ammo.
+// It will not pick the currently raised weapon. When called from P_CheckAmmo 
+// this won't matter, because the raised weapon has no ammo anyway. When called
+// from G_BuildTiccmd you want to toggle to a different weapon regardless.
+//
+weapontype_t P_SwitchWeaponOld(player_t *player)
+{
+   int *prefer = weapon_preferences; // killough 3/22/98
+   weapontype_t currentweapon = E_SlotForWeapon(player->readyweapon);
+   weapontype_t newweapon = currentweapon;
+   int i = NUMWEAPONS + 1;   // killough 5/2/98   
+
+   // killough 2/8/98: follow preferences and fix BFG/SSG bugs
+
+   // haleyjd WEAPON_FIXME: makes assumptions about ammo per shot
+   // haleyjd WEAPON_FIXME: makes assumptions about ammotypes used by weapons!
+   // haleyjd WEAPON_FIXME: shareware-only must become EDF weapon property
+   // haleyjd WEAPON_FIXME: must support arbitrary weapons
+   // haleyjd WEAPON_FIXME: chainsaw/fist issues
+
+   // INVENTORY_FIXME: This is COMPLETE AND TOTAL bullshit. Hardcoded for now...
+   // How in the sweet fuck am I supposed to generalize this mess, AND remain
+   // backwardly compatible with DeHackEd bullshit??
+   int clips   = E_GetItemOwnedAmountName(player, "AmmoClip"); 
+   int shells  = E_GetItemOwnedAmountName(player, "AmmoShell");
+   int cells   = E_GetItemOwnedAmountName(player, "AmmoCell");
+   int rockets = E_GetItemOwnedAmountName(player, "AmmoMissile");
+
+   do
+   {
+      switch(*prefer++)
+      {
+      case 1:
+         if(!player->powers[pw_strength])  // allow chainsaw override
+            break;
+      case 0:
+         newweapon = wp_fist;
+         break;
+      case 2:
+         if(clips)
+            newweapon = wp_pistol;
+         break;
+      case 3:
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_shotgun) && shells)
+            newweapon = wp_shotgun;
+         break;
+      case 4:
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_chaingun) && clips)
+            newweapon = wp_chaingun;
+         break;
+      case 5:
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_missile) && rockets)
+            newweapon = wp_missile;
+         break;
+      case 6:
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_plasma) && cells && GameModeInfo->id != shareware)
+            newweapon = wp_plasma;
+         break;
+      case 7:
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_bfg) && GameModeInfo->id != shareware &&
+            cells >= (demo_compatibility ? 41 : 40))
+            newweapon = wp_bfg;
+         break;
+      case 8:
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_chainsaw))
+            newweapon = wp_chainsaw;
+         break;
+      case 9:
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_supershotgun) &&
+            enable_ssg &&
+            shells >= (demo_compatibility ? 3 : 2))
+            newweapon = wp_supershotgun;
+         break;
+      }
+   }
+   while(newweapon == currentweapon && --i);        // killough 5/2/98
+
+   return newweapon;
+}
 
 //
 // P_SwitchWeapon
@@ -306,32 +397,32 @@ weaponinfo_t *P_SwitchWeapon(player_t *player)
             newweapon = E_WeaponForName(WEAPNAME_PISTOL);
          break;
       case 3:
-         if(E_PlayerOwnsWeaponForSlot(player, wp_shotgun) && shells)
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_shotgun) && shells)
             newweapon = E_WeaponForName(WEAPNAME_SHOTGUN);
          break;
       case 4:
-         if(E_PlayerOwnsWeaponForSlot(player, wp_chaingun) && clips)
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_chaingun) && clips)
             newweapon = E_WeaponForName(WEAPNAME_CHAINGUN);
          break;
       case 5:
-         if(E_PlayerOwnsWeaponForSlot(player, wp_missile) && rockets)
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_missile) && rockets)
             newweapon = E_WeaponForName(WEAPNAME_MISSILE);
          break;
       case 6:
-         if(E_PlayerOwnsWeaponForSlot(player, wp_plasma) && cells && GameModeInfo->id != shareware)
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_plasma) && cells && GameModeInfo->id != shareware)
             newweapon = E_WeaponForName(WEAPNAME_PLASMA);
          break;
       case 7:
-         if(E_PlayerOwnsWeaponForSlot(player, wp_bfg) && GameModeInfo->id != shareware &&
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_bfg) && GameModeInfo->id != shareware &&
             cells >= (demo_compatibility ? 41 : 40))
             newweapon = E_WeaponForName(WEAPNAME_BFG9000);
          break;
       case 8:
-         if(E_PlayerOwnsWeaponForSlot(player, wp_chainsaw))
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_chainsaw))
             newweapon = E_WeaponForName(WEAPNAME_CHAINSAW);
          break;
       case 9:
-         if(E_PlayerOwnsWeaponForSlot(player, wp_supershotgun) &&
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_supershotgun) &&
             enable_ssg &&
             shells >= (demo_compatibility ? 3 : 2))
             newweapon = E_WeaponForName(WEAPNAME_SSG);

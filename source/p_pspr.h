@@ -84,6 +84,7 @@ void P_SetPsprite(player_t *player, int position, statenum_t stnum);
 int P_NextWeapon(player_t *player);
 int P_PrevWeapon(player_t *player);
 
+weapontype_t P_SwitchWeaponOld(player_t *player);
 weaponinfo_t *P_SwitchWeapon(player_t *player);
 bool P_CheckAmmo(player_t *player);
 void P_SubtractAmmo(player_t *player, int compat_amt);

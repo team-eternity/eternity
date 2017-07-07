@@ -191,7 +191,8 @@ enum
    TCF_ACTIONS     = 0x00000020,
    TCF_LOOK        = 0x00000040,
    TCF_FLY         = 0x00000080,
-   TCF_ITEMID      = 0x00000100
+   TCF_ITEMID      = 0x00000100,
+   TCF_WEAPONID    = 0x00000200
 };
 
 // DEBUG
@@ -392,6 +393,11 @@ bool PacketGet(void)
          if(ticcmdflags & TCF_ITEMID)
          {
             netbuffer->d.cmds[c].itemID = NetToHost16(rover);
+            rover += 2;
+         }
+         if(ticcmdflags & TCF_WEAPONID)
+         {
+            netbuffer->d.cmds[c].weaponID = NetToHost16(rover);
             rover += 2;
          }
       }

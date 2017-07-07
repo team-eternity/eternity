@@ -79,16 +79,15 @@ void E_CollectWeapons(cfg_t *cfg);
 
 
 
-weaponinfo_t *E_WeaponForSlot(int slot);
 int E_SlotForWeapon(weaponinfo_t *weapon);
 
 void E_ProcessWeaponInfo(cfg_t *cfg);
 void E_ProcessWeaponDeltas(cfg_t *cfg);
 
 bool E_WeaponIsCurrent(const player_t *player, const char *name);
-bool E_WeaponIsCurrentNum(player_t *player, const int num);
+bool E_WeaponIsCurrentDEHNum(player_t *player, const int num);
 bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon);
-bool E_PlayerOwnsWeaponForSlot(player_t *player, int slot);
+bool E_PlayerOwnsWeaponForDEHNum(player_t *player, int slot);
 bool E_PlayerOwnsWeaponInSlot(player_t *player, int slot);
 
 void E_GiveAllWeapons(player_t *player);
