@@ -757,7 +757,7 @@ void P_PlayerThink(player_t *player)
          //e6y
          newweapon = (cmd->buttons & BT_WEAPONMASK_OLD)>>BT_WEAPONSHIFT;
 
-         if(newweapon == wp_fist && E_PlayerOwnsWeapon(player, E_WeaponForDehNum(wp_chainsaw)) &&
+         if(newweapon == wp_fist && E_PlayerOwnsWeapon(player, E_WeaponForDEHNum(wp_chainsaw)) &&
             (!E_WeaponIsCurrent(player, WEAPNAME_CHAINSAW) ||
              !player->powers[pw_strength]))
             newweapon = wp_chainsaw;

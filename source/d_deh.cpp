@@ -1501,7 +1501,7 @@ void deh_procAmmo(DWFILE *fpin, char *line)
          // adjustment later to loop over all weapons defined via EDF
          for(int wp = 0; wp < NUMWEAPONS; wp++)
          {
-            weaponinfo_t &weapon = *E_WeaponForDehNum(wp);
+            weaponinfo_t &weapon = *E_WeaponForDEHNum(wp);
             if(weapon.ammo == ammotype)
             {
                weapon.dmstayammo   = value * 5;
@@ -1559,7 +1559,7 @@ void deh_procWeapon(DWFILE *fpin, char *line)
          continue;
       }
 
-      weaponinfo_t &weaponinfo = *E_WeaponForDehNum(indexnum);
+      weaponinfo_t &weaponinfo = *E_WeaponForDEHNum(indexnum);
       // haleyjd: resolution adjusted for EDF
       if(!strcasecmp(key, deh_weapon[0]))  // Ammo type
       {
