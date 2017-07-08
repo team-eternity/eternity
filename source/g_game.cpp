@@ -355,6 +355,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
    if(demo_version >= 344)
    {
+      if(gameactions[ka_attack_alt])
+         cmd->buttons |= BTN_ATTACK_ALT;
+
       newweapon = -1;
 
       if((players[consoleplayer].attackdown && !P_CheckAmmo(&players[consoleplayer]))

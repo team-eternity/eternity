@@ -378,10 +378,6 @@ weaponinfo_t *P_SwitchWeapon(player_t *player)
    // haleyjd WEAPON_FIXME: must support arbitrary weapons
    // haleyjd WEAPON_FIXME: chainsaw/fist issues
 
-   // INVENTORY_FIXME: This is COMPLETE AND TOTAL bullshit. Hardcoded for now...
-   // How in the sweet fuck am I supposed to generalize this mess, AND remain
-   // backwardly compatible with DeHackEd bullshit??
-
    do
    {
       switch(*prefer)
@@ -394,11 +390,9 @@ weaponinfo_t *P_SwitchWeapon(player_t *player)
          break;
       case 9:
       {
-         weaponinfo_t *wp = E_WeaponForDEHNum(wp_supershotgun);
-         if(E_PlayerOwnsWeapon(player, wp) &&
-            enable_ssg &&
-            (wp->ammo == nullptr || E_GetItemOwnedAmount(player, wp->ammo) > wp->ammopershot))
-            newweapon = E_WeaponForDEHNum(wp_supershotgun);
+         weaponinfo_t *ssg = E_WeaponForDEHNum(wp_supershotgun);
+         if(enable_ssg && E_PlayerOwnsWeapon(player, ssg) && P_WeaponHasAmmo(player, ssg))
+            newweapon = ssg;
          break;
       }
       default:
@@ -407,8 +401,7 @@ weaponinfo_t *P_SwitchWeapon(player_t *player)
       }
       prefer++;
    }
-
-   while(newweapon == currentweapon && --i);        // killough 5/2/98
+   while(newweapon->id == currentweapon->id && --i);        // killough 5/2/98
 
    return newweapon;
 }

@@ -70,6 +70,7 @@ enum keyaction_e
    ka_use,       
    ka_strafe,    
    ka_attack,    
+   ka_attack_alt,
    ka_flip,
    ka_speed,
    ka_jump,

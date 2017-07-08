@@ -738,9 +738,8 @@ void P_PlayerThink(player_t *player)
 
    if(demo_version >= 344)
    {
-      const weapontype_t newweapon = cmd->weaponID - 1;
-      if(newweapon >= 0)
-         player->pendingweapon = E_WeaponForID(newweapon);
+      if(cmd->weaponID)
+         player->pendingweapon = E_WeaponForID(cmd->weaponID - 1); // weaponID is off by one
    }
    else if(cmd->buttons & BT_CHANGE)
    {
