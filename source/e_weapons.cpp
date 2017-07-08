@@ -68,7 +68,14 @@ static int edf_weapon_generation = 1;
 #define ITEM_WPN_READYSTATE   "readystate"
 #define ITEM_WPN_ATKSTATE     "attackstate"
 #define ITEM_WPN_FLASHSTATE   "flashstate"
+#define ITEM_WPN_HOLDSTATE    "holdstate"
 #define ITEM_WPN_AMMOPERSHOT  "ammouse"
+
+#define ITEM_WPN_AMMO_ALT        "ammotype2"
+#define ITEM_WPN_ATKSTATE_ALT    "attackstate2"
+#define ITEM_WPN_FLASHSTATE_ALT  "flashstate2"
+#define ITEM_WPN_HOLDSTATE_ALT   "holdstate2"
+#define ITEM_WPN_AMMOPERSHOT_ALT "ammouse2"
 
 #define ITEM_WPN_NEXTINCYCLE  "nextincycle"
 #define ITEM_WPN_PREVINCYCLE  "previncycle"
@@ -114,7 +121,13 @@ cfg_opt_t wpninfo_tprops[] =
    CFG_STR(ITEM_WPN_READYSTATE,   "S_NULL", CFGF_NONE), \
    CFG_STR(ITEM_WPN_ATKSTATE,     "S_NULL", CFGF_NONE), \
    CFG_STR(ITEM_WPN_FLASHSTATE,   "S_NULL", CFGF_NONE), \
+   CFG_STR(ITEM_WPN_HOLDSTATE,    "S_NULL", CFGF_NONE), \
    CFG_INT(ITEM_WPN_AMMOPERSHOT,  0,        CFGF_NONE), \
+   CFG_STR(ITEM_WPN_AMMO_ALT,        "",       CFGF_NONE), \
+   CFG_STR(ITEM_WPN_ATKSTATE_ALT,    "S_NULL", CFGF_NONE), \
+   CFG_STR(ITEM_WPN_FLASHSTATE_ALT,  "S_NULL", CFGF_NONE), \
+   CFG_STR(ITEM_WPN_HOLDSTATE_ALT,   "S_NULL", CFGF_NONE), \
+   CFG_INT(ITEM_WPN_AMMOPERSHOT_ALT, 0,        CFGF_NONE), \
    CFG_STR(ITEM_WPN_NEXTINCYCLE,  "",       CFGF_NONE), \
    CFG_STR(ITEM_WPN_PREVINCYCLE,  "",       CFGF_NONE), \
    CFG_STR(ITEM_WPN_FLAGS,        "",       CFGF_NONE), \
@@ -169,6 +182,7 @@ static dehflags_t e_weaponFlags[] =
    { "NOTHRUST",     WPF_NOTHRUST     },
    { "NOHITGHOSTS",  WPF_NOHITGHOSTS  },
    { "NOTSHAREWARE", WPF_NOTSHAREWARE },
+   { "ENABLEAPS",    WPF_ENABLEAPS    },
    { "SILENCER",     WPF_SILENCER     },
    { "SILENT",       WPF_SILENT       },
    { "NOAUTOFIRE",   WPF_NOAUTOFIRE   },
@@ -284,6 +298,9 @@ static const char *nativeWepStateLabels[] =
    "Fire",     // atkstate
    "Flash",    // flashstate
    "Hold",     // holdstate
+   "AltFire",  // atkstate_alt
+   "AltFlash", // flashstate_alt
+   "AltHold",  // holdstate_alt
 };
 
 enum wepstatetypes_e
@@ -293,7 +310,10 @@ enum wepstatetypes_e
    WSTATE_READY,
    WSTATE_FIRE,
    WSTATE_FLASH,
-   WSTATE_HOLD
+   WSTATE_HOLD,
+   WSTATE_FIRE_ALT,
+   WSTATE_FLASH_ALT,
+   WSTATE_HOLD_ALT
 };
 
 #define NUMNATIVEWSTATES earrlen(nativeWepStateLabels)
@@ -319,12 +339,15 @@ int *E_GetNativeWepStateLoc(weaponinfo_t *wi, const char *label)
 
    switch(nativenum)
    {
-   case WSTATE_SELECT:   ret = &wi->upstate;    break;
-   case WSTATE_DESELECT: ret = &wi->downstate;  break;
-   case WSTATE_READY:    ret = &wi->readystate; break;
-   case WSTATE_FIRE:     ret = &wi->atkstate;   break;
-   case WSTATE_FLASH:    ret = &wi->flashstate; break;
-   case WSTATE_HOLD:     ret = &wi->holdstate;  break;
+   case WSTATE_SELECT:    ret = &wi->upstate;    break;
+   case WSTATE_DESELECT:  ret = &wi->downstate;  break;
+   case WSTATE_READY:     ret = &wi->readystate; break;
+   case WSTATE_FIRE:      ret = &wi->atkstate;   break;
+   case WSTATE_FLASH:     ret = &wi->flashstate; break;
+   case WSTATE_HOLD:      ret = &wi->holdstate;  break;
+   case WSTATE_FIRE_ALT:  ret = &wi->atkstate_alt;   break;
+   case WSTATE_FLASH_ALT: ret = &wi->flashstate_alt; break;
+   case WSTATE_HOLD_ALT:  ret = &wi->holdstate_alt;  break;
    default:
       break;
    }
@@ -928,6 +951,7 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
       }
    }
 
+   // Attack properties
    if(IS_SET(ITEM_WPN_AMMO))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_AMMO);
@@ -960,11 +984,41 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_FLASHSTATE);
       weaponinfo[i]->flashstate = E_GetStateNumForName(tempstr);
    }
-   else
-      weaponinfo[i]->flashstate = E_SafeState(S_NULL);
+   if(IS_SET(ITEM_WPN_HOLDSTATE))
+   {
+      tempstr = cfg_getstr(weaponsec, ITEM_WPN_HOLDSTATE);
+      weaponinfo[i]->holdstate = E_GetStateNumForName(tempstr);
+   }
 
    if(IS_SET(ITEM_WPN_AMMOPERSHOT))
       weaponinfo[i]->ammopershot = cfg_getint(weaponsec, ITEM_WPN_AMMOPERSHOT);
+
+
+   // Alt attack properties
+   if(IS_SET(ITEM_WPN_AMMO_ALT))
+   {
+      tempstr = cfg_getstr(weaponsec, ITEM_WPN_AMMO_ALT);
+      weaponinfo[i]->ammo_alt = E_ItemEffectForName(tempstr);
+   }
+
+   if(IS_SET(ITEM_WPN_ATKSTATE_ALT))
+   {
+      tempstr = cfg_getstr(weaponsec, ITEM_WPN_ATKSTATE_ALT);
+      weaponinfo[i]->atkstate_alt = E_GetStateNumForName(tempstr);
+   }
+   if(IS_SET(ITEM_WPN_FLASHSTATE_ALT))
+   {
+      tempstr = cfg_getstr(weaponsec, ITEM_WPN_FLASHSTATE_ALT);
+      weaponinfo[i]->flashstate_alt = E_GetStateNumForName(tempstr);
+   }
+   if(IS_SET(ITEM_WPN_HOLDSTATE_ALT))
+   {
+      tempstr = cfg_getstr(weaponsec, ITEM_WPN_HOLDSTATE_ALT);
+      weaponinfo[i]->holdstate_alt = E_GetStateNumForName(tempstr);
+   }
+
+   if(IS_SET(ITEM_WPN_AMMOPERSHOT_ALT))
+      weaponinfo[i]->ammopershot_alt = cfg_getint(weaponsec, ITEM_WPN_AMMOPERSHOT_ALT);
 
    if(IS_SET(ITEM_WPN_MOD))
    {

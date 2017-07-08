@@ -66,6 +66,12 @@ struct weaponinfo_t
    int          holdstate;    // MaxW 2017/04/16: state jumped to if fire is held
    int          ammopershot;  // haleyjd 08/10/02: ammo per shot field
 
+   MetaTable   *ammo_alt;         // Alt ammo artifact type
+   int          atkstate_alt;     // Alt attack state
+   int          flashstate_alt;   // Alt flash state
+   int          holdstate_alt;    // Alt hold state
+   int          ammopershot_alt;  // Alt ammo per shot
+
    // haleyjd 05/31/14: more dynamic weapons work
    weaponinfo_t *nextInCycle; // next weapon in cycle order
    weaponinfo_t *prevInCycle; // previous weapon in cycle order
