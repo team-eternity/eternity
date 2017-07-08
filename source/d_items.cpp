@@ -44,7 +44,6 @@ bool enable_ssg = false;
 // haleyjd 07/25/03: temporary hack to resolve weapon states
 // until EDF weapon support is in place
 // WEAPON_FIXME
-// INVENTORY_TODO: weapon init
 //
 void D_InitWeaponInfo()
 {

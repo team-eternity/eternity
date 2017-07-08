@@ -1123,39 +1123,11 @@ void E_ProcessWeaponDeltas(cfg_t *cfg)
 //
 
 //
-// Try not to call this function, it's bad and terrible.
-// Get a slot number for a given weaponinfo. DOOM-ONLY.
-//
-int E_SlotForWeapon(weaponinfo_t *weapon)
-{
-   if(!strcmp(weapon->name, WEAPNAME_FIST))
-      return wp_fist;
-   if(!strcmp(weapon->name, WEAPNAME_PISTOL))
-      return wp_pistol;
-   if(!strcmp(weapon->name, WEAPNAME_SHOTGUN))
-      return wp_shotgun;
-   if(!strcmp(weapon->name, WEAPNAME_CHAINGUN))
-      return wp_chaingun;
-   if(!strcmp(weapon->name, WEAPNAME_MISSILE))
-      return wp_missile;
-   if(!strcmp(weapon->name, WEAPNAME_PLASMA))
-      return wp_plasma;
-   if(!strcmp(weapon->name, WEAPNAME_BFG9000))
-      return wp_bfg;
-   if(!strcmp(weapon->name, WEAPNAME_CHAINSAW))
-      return wp_chainsaw;
-   if(!strcmp(weapon->name, WEAPNAME_SSG))
-      return wp_supershotgun;
-
-   return wp_nochange;
-}
-
-//
 // Check if the named weaponsec is currently equipped
 //
 bool E_WeaponIsCurrent(const player_t *player, const char *name)
 {
-   weaponinfo_t *weapon = E_WeaponForName(name);
+   const weaponinfo_t *weapon = E_WeaponForName(name);
    if(!weapon)
       return false;
    return player->readyweapon->id == weapon->id;
@@ -1167,7 +1139,10 @@ bool E_WeaponIsCurrent(const player_t *player, const char *name)
 //
 bool E_WeaponIsCurrentDEHNum(player_t *player, const int dehnum)
 {
-   return player->readyweapon->id == E_WeaponForDEHNum(dehnum)->id;
+   const weaponinfo_t *weapon = E_WeaponForDEHNum(dehnum);
+   if(!weapon)
+      return false;
+   return player->readyweapon->id == weapon->id;
 }
 
 //

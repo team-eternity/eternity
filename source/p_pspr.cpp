@@ -269,8 +269,7 @@ static int weapon_preferences[NUMWEAPONS+1] =
 //
 // P_SwitchWeaponOld
 //
-// The old version of P_SwitchWeapon, needed for demo compat. Might not be
-// needed at some point in the future.
+// The old version of P_SwitchWeapon, needed for demo compat.
 // Checks current ammo levels and gives you the most preferred weapon with ammo.
 // It will not pick the currently raised weapon. When called from P_CheckAmmo 
 // this won't matter, because the raised weapon has no ammo anyway. When called
@@ -279,7 +278,7 @@ static int weapon_preferences[NUMWEAPONS+1] =
 weapontype_t P_SwitchWeaponOld(player_t *player)
 {
    int *prefer = weapon_preferences; // killough 3/22/98
-   weapontype_t currentweapon = E_SlotForWeapon(player->readyweapon);
+   weapontype_t currentweapon = player->readyweapon->dehnum;
    weapontype_t newweapon = currentweapon;
    int i = NUMWEAPONS + 1;   // killough 5/2/98   
 
@@ -287,7 +286,6 @@ weapontype_t P_SwitchWeaponOld(player_t *player)
 
    // haleyjd WEAPON_FIXME: makes assumptions about ammo per shot
    // haleyjd WEAPON_FIXME: makes assumptions about ammotypes used by weapons!
-   // haleyjd WEAPON_FIXME: shareware-only must become EDF weapon property
    // haleyjd WEAPON_FIXME: must support arbitrary weapons
    // haleyjd WEAPON_FIXME: chainsaw/fist issues
 
@@ -355,80 +353,61 @@ weapontype_t P_SwitchWeaponOld(player_t *player)
 // P_SwitchWeapon
 //
 // Checks current ammo levels and gives you the most preferred weapon with ammo.
-// It will not pick the currently raised weapon. When called from P_CheckAmmo 
-// this won't matter, because the raised weapon has no ammo anyway. When called
-// from G_BuildTiccmd you want to toggle to a different weapon regardless.
+// It will not pick the currently raised weapon.
+// DO NOT CALL THIS FROM INSIDE A PRE-3.44 DEMO CHECK.
 //
 weaponinfo_t *P_SwitchWeapon(player_t *player)
 {
    int *prefer = weapon_preferences; // killough 3/22/98
    weaponinfo_t *currentweapon = player->readyweapon;
    weaponinfo_t *newweapon = currentweapon;
-   int i = NUMWEAPONS + 1;   // killough 5/2/98   
+   int i = NUMWEAPONS + 1;   // killough 5/2/98
+
+   const auto canSwitchTo = [player](int dehnum) {
+      weaponinfo_t *wp = E_WeaponForDEHNum(dehnum);
+
+      // Weapon is useable in current game mode, the player owns it,
+      // and has enough ammo to shoot (or the weapon doesn't need ammo)
+      return !(wp->flags & WPF_NOTSHAREWARE && GameModeInfo->id == shareware) &&
+             E_PlayerOwnsWeaponForDEHNum(player, dehnum) &&
+             P_WeaponHasAmmo(player, wp);
+   };
 
    // killough 2/8/98: follow preferences and fix BFG/SSG bugs
 
-   // haleyjd WEAPON_FIXME: makes assumptions about ammo per shot
-   // haleyjd WEAPON_FIXME: makes assumptions about ammotypes used by weapons!
-   // haleyjd WEAPON_FIXME: shareware-only must become EDF weapon property
    // haleyjd WEAPON_FIXME: must support arbitrary weapons
    // haleyjd WEAPON_FIXME: chainsaw/fist issues
 
    // INVENTORY_FIXME: This is COMPLETE AND TOTAL bullshit. Hardcoded for now...
    // How in the sweet fuck am I supposed to generalize this mess, AND remain
    // backwardly compatible with DeHackEd bullshit??
-   int clips   = E_GetItemOwnedAmountName(player, "AmmoClip"); 
-   int shells  = E_GetItemOwnedAmountName(player, "AmmoShell");
-   int cells   = E_GetItemOwnedAmountName(player, "AmmoCell");
-   int rockets = E_GetItemOwnedAmountName(player, "AmmoMissile");
 
    do
    {
-      switch(*prefer++)
+      switch(*prefer)
       {
       case 1:
          if(!player->powers[pw_strength])  // allow chainsaw override
             break;
       case 0:
-         newweapon = E_WeaponForName(WEAPNAME_FIST);
-         break;
-      case 2:
-         if(clips)
-            newweapon = E_WeaponForName(WEAPNAME_PISTOL);
-         break;
-      case 3:
-         if(E_PlayerOwnsWeaponForDEHNum(player, wp_shotgun) && shells)
-            newweapon = E_WeaponForName(WEAPNAME_SHOTGUN);
-         break;
-      case 4:
-         if(E_PlayerOwnsWeaponForDEHNum(player, wp_chaingun) && clips)
-            newweapon = E_WeaponForName(WEAPNAME_CHAINGUN);
-         break;
-      case 5:
-         if(E_PlayerOwnsWeaponForDEHNum(player, wp_missile) && rockets)
-            newweapon = E_WeaponForName(WEAPNAME_MISSILE);
-         break;
-      case 6:
-         if(E_PlayerOwnsWeaponForDEHNum(player, wp_plasma) && cells && GameModeInfo->id != shareware)
-            newweapon = E_WeaponForName(WEAPNAME_PLASMA);
-         break;
-      case 7:
-         if(E_PlayerOwnsWeaponForDEHNum(player, wp_bfg) && GameModeInfo->id != shareware &&
-            cells >= (demo_compatibility ? 41 : 40))
-            newweapon = E_WeaponForName(WEAPNAME_BFG9000);
-         break;
-      case 8:
-         if(E_PlayerOwnsWeaponForDEHNum(player, wp_chainsaw))
-            newweapon = E_WeaponForName(WEAPNAME_CHAINSAW);
+         newweapon = E_WeaponForDEHNum(wp_fist);
          break;
       case 9:
-         if(E_PlayerOwnsWeaponForDEHNum(player, wp_supershotgun) &&
+      {
+         weaponinfo_t *wp = E_WeaponForDEHNum(wp_supershotgun);
+         if(E_PlayerOwnsWeapon(player, wp) &&
             enable_ssg &&
-            shells >= (demo_compatibility ? 3 : 2))
-            newweapon = E_WeaponForName(WEAPNAME_SSG);
+            (wp->ammo == nullptr || E_GetItemOwnedAmount(player, wp->ammo) > wp->ammopershot))
+            newweapon = E_WeaponForDEHNum(wp_supershotgun);
          break;
       }
+      default:
+         if(canSwitchTo(*prefer - 1))
+            newweapon = E_WeaponForDEHNum(*prefer - 1);
+      }
+      prefer++;
    }
+
    while(newweapon == currentweapon && --i);        // killough 5/2/98
 
    return newweapon;
@@ -475,7 +454,7 @@ bool P_CheckAmmo(player_t *player)
    
    if(demo_compatibility)
    {
-      player->pendingweapon = P_SwitchWeapon(player);      // phares
+      player->pendingweapon = E_WeaponForDEHNum(P_SwitchWeaponOld(player));      // phares
       // Now set appropriate weapon overlay.
       P_SetPsprite(player,ps_weapon,player->readyweapon->downstate);
    }

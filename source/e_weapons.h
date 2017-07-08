@@ -79,8 +79,6 @@ void E_CollectWeapons(cfg_t *cfg);
 
 
 
-int E_SlotForWeapon(weaponinfo_t *weapon);
-
 void E_ProcessWeaponInfo(cfg_t *cfg);
 void E_ProcessWeaponDeltas(cfg_t *cfg);
 
