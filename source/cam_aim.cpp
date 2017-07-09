@@ -29,6 +29,7 @@
 #include "d_player.h"
 #include "e_exdata.h"
 #include "p_mobj.h"
+#include "p_portal.h"
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_pcheck.h"
@@ -144,7 +145,7 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
    {
       // ceiling portal (slope must be up)
       linehitz = state.cz + FixedMul(state.topslope, totalfrac);
-      fixed_t planez = R_CPLink(sector)->planez;
+      fixed_t planez = P_CeilingPortalZ(*sector);
       if(linehitz > planez)
       {
          // update cam.bottomslope to be the top of the sector wall
@@ -206,7 +207,7 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
       (newfromid = sector->f_portal->data.link.toid) != state.groupid)
    {
       linehitz = state.cz + FixedMul(state.bottomslope, totalfrac);
-      fixed_t planez = R_FPLink(sector)->planez;
+      fixed_t planez = P_FloorPortalZ(*sector);
       if(linehitz < planez)
       {
          newslope = FixedDiv(planez - state.cz, totalfrac);

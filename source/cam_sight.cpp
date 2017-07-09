@@ -395,7 +395,7 @@ bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
    {
       // ceiling portal (slope must be up)
       linehitz = sightzstart + FixedMul(state.topslope, totalfrac);
-      fixed_t planez = R_CPLink(sector)->planez;
+      fixed_t planez = P_CeilingPortalZ(*sector);
       if(linehitz > planez)
       {
          // update cam.bottomslope to be the top of the sector wall
@@ -447,7 +447,7 @@ bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
       (newfromid = sector->f_portal->data.link.toid) != params->cgroupid)
    {
       linehitz = sightzstart + FixedMul(state.bottomslope, totalfrac);
-      fixed_t planez = R_FPLink(sector)->planez;
+      fixed_t planez = P_FloorPortalZ(*sector);
       if(linehitz < planez)
       {
          newslope = FixedDiv(planez - sightzstart, totalfrac);

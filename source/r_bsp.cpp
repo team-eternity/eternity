@@ -659,7 +659,7 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
 
    if(sec->c_portal)
    {
-      if(sec->c_portal->type == R_LINKED)
+      if(sec->c_portal->type == R_LINKED && !(sec->c_pflags & PF_ATTACHEDPORTAL))
       {
          if(sec->ceilingheight < R_CPLink(sec)->planez)
          {
@@ -679,7 +679,7 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
    }
    if(sec->f_portal)
    {
-      if(sec->f_portal->type == R_LINKED)
+      if(sec->f_portal->type == R_LINKED && !(sec->f_pflags & PF_ATTACHEDPORTAL))
       {
          if(sec->floorheight > R_FPLink(sec)->planez)
          {
@@ -1916,9 +1916,9 @@ static void R_AddLine(seg_t *line, bool dynasegs)
       seg.frontsec->ceilingheight <= seg.frontsec->floorheight &&
       !(seg.frontsec->intflags & SIF_SKY) &&
       !((seg.frontsec->c_pflags & PS_PASSABLE && seg.frontsec->c_portal &&
-        viewz > R_CPLink(seg.frontsec)->planez) || 
+        viewz > P_CeilingPortalZ(*seg.frontsec)) ||
         (seg.frontsec->f_pflags & PS_PASSABLE && seg.frontsec->f_portal &&
-        viewz < R_FPLink(seg.frontsec)->planez)))
+        viewz < P_FloorPortalZ(*seg.frontsec))))
       return;
 
    // Reject empty two-sided lines used for line specials.

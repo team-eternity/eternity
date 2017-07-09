@@ -2005,9 +2005,10 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
    v3fixed_t delta = {0, 0, 0};
    int loopprot = 0;
    while(++loopprot < 32768 && sector && sector->f_pflags & PS_PASSABLE && 
-      (data = R_FPLink(sector))->planez > mobj->z + scaledbottom)
+      P_FloorPortalZ(*sector) > mobj->z + scaledbottom)
    {
       // always accept first sector
+      data = R_FPLink(sector);
       sector = R_addProjNode(mobj, data, delta, item, tail, nullptr);
    }
 
@@ -2015,9 +2016,10 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
    sector = mobj->subsector->sector;
    delta.x = delta.y = delta.z = 0;
    while(++loopprot < 32768 && sector && sector->c_pflags & PS_PASSABLE &&
-      (data = R_CPLink(sector))->planez < mobj->z + scaledtop)
+      P_CeilingPortalZ(*sector) < mobj->z + scaledtop)
    {
       // always accept first sector
+      data = R_CPLink(sector);
       sector = R_addProjNode(mobj, data, delta, item, tail, nullptr);
    }
 

@@ -30,11 +30,13 @@
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "e_hash.h"
+#include "e_lib.h"
 #include "e_mod.h"
 #include "e_sound.h"
 #include "e_ttypes.h"
 #include "e_udmf.h"
 #include "m_compare.h"
+#include "p_scroll.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "r_data.h"
@@ -51,6 +53,14 @@ static const char DEFAULT_flat[] = "@flat";
 
 static const char RENDERSTYLE_translucent[] = "translucent";
 static const char RENDERSTYLE_add[] = "add";
+
+static const char *udmfscrolltypes[NUMSCROLLTYPES] =
+{
+   "none",
+   "visual",
+   "physical",
+   "both"
+};
 
 //
 // Initializes the internal structure with the sector count
@@ -120,6 +130,16 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
             (E_NormalizeFlatAngle(us.rotationfloor) *  PI / 180.0f);
          ss->ceilingbaseangle = static_cast<float>
             (E_NormalizeFlatAngle(us.rotationceiling) *  PI / 180.0f);
+
+         int scrolltype = E_StrToNumLinear(udmfscrolltypes, NUMSCROLLTYPES,
+                                           us.scroll_floor_type.constPtr());
+         if(scrolltype != NUMSCROLLTYPES && (us.scroll_floor_x || us.scroll_floor_y))
+            P_SpawnFloorUDMF(i, scrolltype, us.scroll_floor_x, us.scroll_floor_y);
+
+         scrolltype = E_StrToNumLinear(udmfscrolltypes, NUMSCROLLTYPES,
+                                       us.scroll_ceil_type.constPtr());
+         if(scrolltype != NUMSCROLLTYPES && (us.scroll_ceil_x || us.scroll_ceil_y))
+            P_SpawnCeilingUDMF(i, scrolltype, us.scroll_ceil_x, us.scroll_ceil_y);
 
          // Flags
          ss->flags |= us.secret ? SECF_SECRET : 0;
@@ -215,6 +235,7 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          else if(!us.portal_floor_overlaytype.strCaseCmp(RENDERSTYLE_add))
             ss->f_pflags |= PS_OBLENDFLAGS; // PS_OBLENDFLAGS is PS_OVERLAY | PS_ADDITIVE
          ss->f_pflags |= us.portal_floor_useglobaltex ? PS_USEGLOBALTEX : 0;
+         ss->f_pflags |= us.portal_floor_attached ? PF_ATTACHEDPORTAL : 0;
 
          // Ceilings
          balpha = us.alphaceiling >= 1.0 ? 255 : us.alphaceiling <= 0 ? 
@@ -230,6 +251,7 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          else if(!us.portal_ceil_overlaytype.strCaseCmp(RENDERSTYLE_add))
             ss->c_pflags |= PS_OBLENDFLAGS; // PS_OBLENDFLAGS is PS_OVERLAY | PS_ADDITIVE
          ss->c_pflags |= us.portal_ceil_useglobaltex ? PS_USEGLOBALTEX : 0;
+         ss->c_pflags |= us.portal_ceil_attached ? PF_ATTACHEDPORTAL : 0;
 
          ss->floor_xscale = static_cast<float>(us.xscalefloor);
          ss->floor_yscale = static_cast<float>(us.yscalefloor);
@@ -603,6 +625,7 @@ enum token_e
    t_polycross,
    t_portal,
    t_portalceiling,
+   t_portal_ceil_attached,
    t_portal_ceil_blocksound,
    t_portal_ceil_disabled,
    t_portal_ceil_nopass,
@@ -610,6 +633,7 @@ enum token_e
    t_portal_ceil_overlaytype,
    t_portal_ceil_useglobaltex,
    t_portalfloor,
+   t_portal_floor_attached,
    t_portal_floor_blocksound,
    t_portal_floor_disabled,
    t_portal_floor_nopass,
@@ -624,6 +648,12 @@ enum token_e
    t_repeatspecial,
    t_rotationceiling,
    t_rotationfloor,
+   t_scroll_ceil_x,
+   t_scroll_ceil_y,
+   t_scroll_ceil_type,
+   t_scroll_floor_x,
+   t_scroll_floor_y,
+   t_scroll_floor_type,
    t_secret,
    t_sector,
    t_sideback,
@@ -744,6 +774,7 @@ static keytoken_t gTokenList[] =
    TOKEN(polycross),
    TOKEN(portal),
    TOKEN(portalceiling),
+   TOKEN(portal_ceil_attached),
    TOKEN(portal_ceil_blocksound),
    TOKEN(portal_ceil_disabled),
    TOKEN(portal_ceil_nopass),
@@ -751,6 +782,7 @@ static keytoken_t gTokenList[] =
    TOKEN(portal_ceil_overlaytype),
    TOKEN(portal_ceil_useglobaltex),
    TOKEN(portalfloor),
+   TOKEN(portal_floor_attached),
    TOKEN(portal_floor_blocksound),
    TOKEN(portal_floor_disabled),
    TOKEN(portal_floor_nopass),
@@ -765,6 +797,12 @@ static keytoken_t gTokenList[] =
    TOKEN(repeatspecial),
    TOKEN(rotationceiling),
    TOKEN(rotationfloor),
+   TOKEN(scroll_ceil_x),
+   TOKEN(scroll_ceil_y),
+   TOKEN(scroll_ceil_type),
+   TOKEN(scroll_floor_x),
+   TOKEN(scroll_floor_y),
+   TOKEN(scroll_floor_type),
    TOKEN(secret),
    TOKEN(sector),
    TOKEN(sideback),
@@ -1055,6 +1093,14 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                      READ_NUMBER(sector, rotationfloor);
                      READ_NUMBER(sector, rotationceiling);
 
+                     READ_NUMBER(sector, scroll_ceil_x);
+                     READ_NUMBER(sector, scroll_ceil_y);
+                     READ_STRING(sector, scroll_ceil_type);
+
+                     READ_NUMBER(sector, scroll_floor_x);
+                     READ_NUMBER(sector, scroll_floor_y);
+                     READ_STRING(sector, scroll_floor_type);
+
                      READ_BOOL(sector, secret);
                      READ_NUMBER(sector, friction);
 
@@ -1092,6 +1138,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                      READ_BOOL(sector, portal_floor_nopass);
                      READ_BOOL(sector, portal_floor_norender);
                      READ_BOOL(sector, portal_floor_useglobaltex);
+                     READ_BOOL(sector, portal_floor_attached);
 
                      READ_STRING(sector, portal_ceil_overlaytype);
                      READ_NUMBER(sector, alphaceiling);
@@ -1100,6 +1147,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                      READ_BOOL(sector, portal_ceil_nopass);
                      READ_BOOL(sector, portal_ceil_norender);
                      READ_BOOL(sector, portal_ceil_useglobaltex);
+                     READ_BOOL(sector, portal_ceil_attached);
 
                      READ_NUMBER(sector, portalceiling);
                      READ_NUMBER(sector, portalfloor);

@@ -29,6 +29,7 @@
 #include "e_exdata.h"
 #include "p_inter.h"
 #include "p_mobj.h"
+#include "p_portal.h"
 #include "p_pspr.h"
 #include "p_spec.h"
 #include "r_defs.h"
@@ -115,7 +116,7 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
    if(sidesector->c_pflags & PS_PASSABLE)
    {
       // ceiling portal
-      fixed_t planez = R_CPLink(sidesector)->planez;
+      fixed_t planez = P_CeilingPortalZ(*sidesector);
       if(z > planez)
       {
          pfrac = FixedDiv(planez - state.z, aimslope);
@@ -128,7 +129,7 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
    if(!portaldata && sidesector->f_pflags & PS_PASSABLE)
    {
       // floor portal
-      fixed_t planez = R_FPLink(sidesector)->planez;
+      fixed_t planez = P_FloorPortalZ(*sidesector);
       if(z < planez)
       {
          pfrac = FixedDiv(planez - state.z, aimslope);

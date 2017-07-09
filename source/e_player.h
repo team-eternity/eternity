@@ -37,11 +37,17 @@ struct skin_t;
 
 extern skin_t *edf_skins[NUMEDFSKINCHAINS];
 
+enum rebornitemflag_e
+{
+   RBIF_IGNORE = 0x01 // this reborn item has been canceled, ie., by DeHackEd
+};
+
 // default inventory items
 struct reborninventory_t
 {
-   char *itemname; // EDF itemeffect name
-   int   amount;   // amount of item to give when reborn
+   char         *itemname; // EDF itemeffect name
+   int           amount;   // amount of item to give when reborn
+   unsigned int  flags;    // special flags
 };
 
 //

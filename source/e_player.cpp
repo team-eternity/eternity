@@ -413,6 +413,7 @@ static void E_processRebornItem(cfg_t *item, playerclass_t *pc, unsigned int ind
 
    ri->itemname = estrdup(cfg_getstr(item, ITEM_REBORN_NAME));
    ri->amount   = cfg_getint(item, ITEM_REBORN_AMOUNT);
+   ri->flags    = 0;
 }
 
 //

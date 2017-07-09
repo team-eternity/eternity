@@ -676,6 +676,7 @@ void G_DoLoadLevel()
    gameaction = ga_nothing;
    displayplayer = consoleplayer;    // view the guy you are playing
    P_ResetChasecam();    // sf: because displayplayer changed
+   P_ResetChasecam();
    Z_CheckHeap();
 
    // clear cmd building stuff
@@ -2259,6 +2260,10 @@ void G_PlayerReborn(int player)
    // haleyjd 08/05/13: give reborn inventory
    for(unsigned int i = 0; i < playerclass->numrebornitems; i++)
    {
+      // ignore this item due to cancellation by, ie., DeHackEd?
+      if(playerclass->rebornitems[i].flags & RBIF_IGNORE)
+         continue;
+
       const char   *name   = playerclass->rebornitems[i].itemname;
       int           amount = playerclass->rebornitems[i].amount;
       itemeffect_t *effect = E_ItemEffectForName(name);

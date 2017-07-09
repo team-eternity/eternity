@@ -508,6 +508,9 @@ static void Polyobj_setCenterPt(polyobj_t *po);
 //
 static void Polyobj_collectPortals(polyobj_t *po)
 {
+   if(!useportalgroups)
+      return;  // if portals don't exist or were invalidated, skip this.
+
    // Collect them in an easy collection
    PODCollection<portal_t *> portals;
    bool hasLinked = false;
