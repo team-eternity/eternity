@@ -614,8 +614,8 @@ void TempBotMapPImpl::fillMSecRefs()
             if(visitedSet.count(&ln))  // was visited, so skip
                continue;
             visitedSet.insert(&ln);
-            fixed_t x = (ln.v1->x + ln.v2->x) >> 1;
-            fixed_t y = (ln.v1->y + ln.v2->y) >> 1;
+            fixed_t x = ln.v1->x / 2 + ln.v2->x / 2;
+            fixed_t y = ln.v1->y / 2 + ln.v2->y / 2;
             // This metasector is not part of it
             if(!ln.msecIndices[0].count(i) && !ln.msecIndices[1].count(i))
             {
@@ -1393,8 +1393,8 @@ void TempBotMap::obtainMetaSectors()
          if (!ln.msecIndices[i].size())   // No raw msec on this side of line
          {
             // just sector
-            const v2fixed_t mid = {(ln.v1->x + ln.v2->x) / 2,
-               (ln.v1->y + ln.v2->y) / 2};
+            const v2fixed_t mid = {ln.v1->x / 2 + ln.v2->x / 2,
+               ln.v1->y / 2 + ln.v2->y / 2};
             
             const angle_t ang = P_PointToAngle(ln.v1->x, ln.v1->y,
                                                ln.v2->x, ln.v2->y) +
