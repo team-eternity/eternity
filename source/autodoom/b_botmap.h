@@ -243,6 +243,15 @@ public:
    void getBoxTouchedBlocks(fixed_t top, fixed_t bottom,
                             fixed_t left, fixed_t right,
                             const std::function<void(int)> &func) const;
+   int getBlockCoords(fixed_t x, fixed_t y) const
+   {
+      return B_GetBlockCoords(x, y, bMapOrgX, bMapOrgY, bMapWidth,
+                              BOTMAPBLOCKSIZE);
+   }
+   int getBlockCoords(v2fixed_t v) const
+   {
+      return getBlockCoords(v.x, v.y);
+   }
    void unsetThingPosition(const Mobj *thing);
    void setThingPosition(const Mobj *thing);
    
