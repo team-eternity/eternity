@@ -96,6 +96,7 @@ struct weaponinfo_t
    // EDF hashing
    DLListItem<weaponinfo_t> idlinks;   // hash by id
    DLListItem<weaponinfo_t> namelinks; // hash by name
+   DLListItem<weaponinfo_t> dehlinks;  // hash by dehnum
 
    int   generation;   // EDF generation number
 

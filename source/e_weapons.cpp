@@ -213,7 +213,7 @@ static
    e_WeaponNameHash;
 
 static 
-   EHashTable<weaponinfo_t, EIntHashKey, &weaponinfo_t::id, &weaponinfo_t::idlinks> 
+   EHashTable<weaponinfo_t, EIntHashKey, &weaponinfo_t::dehnum, &weaponinfo_t::dehlinks>
    e_WeaponDehHash;
 
 //
@@ -510,7 +510,7 @@ static void E_processDecorateWepStates(weaponinfo_t *wi, edecstateout_t *dso)
 // Processes the DECORATE state list in a weapon
 //
 static void E_ProcessDecorateWepStateList(weaponinfo_t *wi, const char *str,
-                                       const char *firststate, bool recursive)
+                                          const char *firststate, bool recursive)
 {
    edecstateout_t *dso;
 
@@ -676,8 +676,8 @@ void E_CollectWeapons(cfg_t *cfg)
       if(dehnum == -1)
          dehnum = cfg_getint(weaponcfg, ITEM_WPN_DEHNUM);
 
-         // process dehackednum and add thing to dehacked hash table,
-         // if appropriate
+      // process dehackednum and add thing to dehacked hash table,
+      // if appropriate
       if((wi->dehnum = dehnum) >= 0)
          e_WeaponDehHash.addObject(wi);
 
@@ -762,7 +762,7 @@ static void E_ResetWeaponPStack()
 static void E_CopyWeapon(int num, int pnum)
 {
    weaponinfo_t *this_wi;
-   DLListItem<weaponinfo_t> idlinks, namelinks;
+   DLListItem<weaponinfo_t> idlinks, namelinks, dehlinks;
    const char *name;
    int         dehnum;
    MetaTable  *meta;
@@ -775,6 +775,7 @@ static void E_CopyWeapon(int num, int pnum)
    // must save the following fields in the destination weapon:
    idlinks = this_wi->idlinks;
    namelinks = this_wi->namelinks;
+   dehlinks = this_wi->dehlinks;
    name = this_wi->name;
    dehnum = this_wi->dehnum;
    meta = this_wi->meta;
@@ -796,6 +797,7 @@ static void E_CopyWeapon(int num, int pnum)
    this_wi->meta = meta;
 
    // must restore name and dehacked num data
+   this_wi->dehlinks    = dehlinks;
    this_wi->namelinks   = namelinks;
    this_wi->idlinks     = idlinks;
    this_wi->name        = name;

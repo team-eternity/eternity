@@ -9,6 +9,117 @@
 // by name and DeHackEd number, which can't be assigned via DECORATE states.
 //
 
+// DOOM Player Weapon Frames ---------------------------------------------------
+
+// S_LIGHTDONE: Returns light level to normal after a gun flash
+frame S_LIGHTDONE { +decorate; dehackednum = 1 }
+
+// Fist frames
+frame S_PUNCH     { +decorate; dehackednum = 2 }
+frame S_PUNCHDOWN { +decorate; dehackednum = 3 }
+frame S_PUNCHUP   { +decorate; dehackednum = 4 }
+frame S_PUNCH1    { +decorate; dehackednum = 5 }
+frame S_PUNCH2    { +decorate; dehackednum = 6 }
+frame S_PUNCH3    { +decorate; dehackednum = 7 }
+frame S_PUNCH4    { +decorate; dehackednum = 8 }
+frame S_PUNCH5    { +decorate; dehackednum = 9 }
+
+// Pistol frames
+frame S_PISTOL      { +decorate; dehackednum = 10 }
+frame S_PISTOLDOWN  { +decorate; dehackednum = 11 }
+frame S_PISTOLUP    { +decorate; dehackednum = 12 }
+frame S_PISTOL1     { +decorate; dehackednum = 13 }
+frame S_PISTOL2     { +decorate; dehackednum = 14 }
+frame S_PISTOL3     { +decorate; dehackednum = 15 }
+frame S_PISTOL4     { +decorate; dehackednum = 16 }
+frame S_PISTOLFLASH { +decorate; dehackednum = 17 }
+
+// Shotgun frames
+frame S_SGUN       { +decorate; dehackednum = 18 }
+frame S_SGUNDOWN   { +decorate; dehackednum = 19 }
+frame S_SGUNUP     { +decorate; dehackednum = 20 }
+frame S_SGUN1      { +decorate; dehackednum = 21 }
+frame S_SGUN2      { +decorate; dehackednum = 22 }
+frame S_SGUN3      { +decorate; dehackednum = 23 }
+frame S_SGUN4      { +decorate; dehackednum = 24 }
+frame S_SGUN5      { +decorate; dehackednum = 25 }
+frame S_SGUN6      { +decorate; dehackednum = 26 }
+frame S_SGUN7      { +decorate; dehackednum = 27 }
+frame S_SGUN8      { +decorate; dehackednum = 28 }
+frame S_SGUN9      { +decorate; dehackednum = 29 }
+frame S_SGUNFLASH1 { +decorate; dehackednum = 30 }
+frame S_SGUNFLASH2 { +decorate; dehackednum = 31 }
+
+// Super Shotgun frames
+frame S_DSGUN       { +decorate; dehackednum = 32 }
+frame S_DSGUNDOWN   { +decorate; dehackednum = 33 }
+frame S_DSGUNUP     { +decorate; dehackednum = 34 }
+frame S_DSGUN1      { +decorate; dehackednum = 35 }
+frame S_DSGUN2      { +decorate; dehackednum = 36 }
+frame S_DSGUN3      { +decorate; dehackednum = 37 }
+frame S_DSGUN4      { +decorate; dehackednum = 38 }
+frame S_DSGUN5      { +decorate; dehackednum = 39 }
+frame S_DSGUN6      { +decorate; dehackednum = 40 }
+frame S_DSGUN7      { +decorate; dehackednum = 41 }
+frame S_DSGUN8      { +decorate; dehackednum = 42 }
+frame S_DSGUN9      { +decorate; dehackednum = 43 }
+frame S_DSGUN10     { +decorate; dehackednum = 44 }
+frame S_DSNR1       { +decorate; dehackednum = 45 }
+frame S_DSNR2       { +decorate; dehackednum = 46 }
+frame S_DSGUNFLASH1 { +decorate; dehackednum = 47 }
+frame S_DSGUNFLASH2 { +decorate; dehackednum = 48 }
+
+// Chaingun frames
+frame S_CHAIN       { +decorate; dehackednum = 49 }
+frame S_CHAINDOWN   { +decorate; dehackednum = 50 }
+frame S_CHAINUP     { +decorate; dehackednum = 51 }
+frame S_CHAIN1      { +decorate; dehackednum = 52 }
+frame S_CHAIN2      { +decorate; dehackednum = 53 }
+frame S_CHAIN3      { +decorate; dehackednum = 54 }
+frame S_CHAINFLASH1 { +decorate; dehackednum = 55 }
+frame S_CHAINFLASH2 { +decorate; dehackednum = 56 }
+
+// Rocket Launcher frames
+frame S_MISSILE       { +decorate; dehackednum = 57 }
+frame S_MISSILEDOWN   { +decorate; dehackednum = 58 }
+frame S_MISSILEUP     { +decorate; dehackednum = 59 }
+frame S_MISSILE1      { +decorate; dehackednum = 60 }
+frame S_MISSILE2      { +decorate; dehackednum = 61 }
+frame S_MISSILE3      { +decorate; dehackednum = 62 }
+frame S_MISSILEFLASH1 { +decorate; dehackednum = 63 }
+frame S_MISSILEFLASH2 { +decorate; dehackednum = 64 }
+frame S_MISSILEFLASH3 { +decorate; dehackednum = 65 }
+frame S_MISSILEFLASH4 { +decorate; dehackednum = 66 }
+
+// Chainsaw frames
+frame S_SAW     { +decorate; dehackednum = 67 }
+frame S_SAWB    { +decorate; dehackednum = 68 }
+frame S_SAWDOWN { +decorate; dehackednum = 69 }
+frame S_SAWUP   { +decorate; dehackednum = 70 }
+frame S_SAW1    { +decorate; dehackednum = 71 }
+frame S_SAW2    { +decorate; dehackednum = 72 }
+frame S_SAW3    { +decorate; dehackednum = 73 }
+
+// Plasma Rifle frames
+frame S_PLASMA       { +decorate; dehackednum = 74 }
+frame S_PLASMADOWN   { +decorate; dehackednum = 75 }
+frame S_PLASMAUP     { +decorate; dehackednum = 76 }
+frame S_PLASMA1      { +decorate; dehackednum = 77 }
+frame S_PLASMA2      { +decorate; dehackednum = 78 }
+frame S_PLASMAFLASH1 { +decorate; dehackednum = 79 }
+frame S_PLASMAFLASH2 { +decorate; dehackednum = 80 }
+
+// BFG 9000 frames
+frame S_BFG       { +decorate; dehackednum = 81 }
+frame S_BFGDOWN   { +decorate; dehackednum = 82 }
+frame S_BFGUP     { +decorate; dehackednum = 83 }
+frame S_BFG1      { +decorate; dehackednum = 84 }
+frame S_BFG2      { +decorate; dehackednum = 85 }
+frame S_BFG3      { +decorate; dehackednum = 86 }
+frame S_BFG4      { +decorate; dehackednum = 87 }
+frame S_BFGFLASH1 { +decorate; dehackednum = 88 }
+frame S_BFGFLASH2 { +decorate; dehackednum = 89 }
+
 // DoomBlood frames
 frame S_BLOOD1 { +decorate; dehackednum 90 }
 frame S_BLOOD2 { +decorate; dehackednum 91 }
