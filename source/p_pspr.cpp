@@ -197,6 +197,23 @@ bool P_WeaponHasAmmo(player_t *player, weaponinfo_t *weapon)
 }
 
 //
+// P_WeaponHasAmmoAlt
+//
+// MaxW: 2017/07/10: Test if a player has alt ammo for a weapon
+//
+bool P_WeaponHasAmmoAlt(player_t *player, weaponinfo_t *weapon)
+{
+   itemeffect_t *ammoType = weapon->ammo_alt;
+
+   // a weapon without an ammotype has infinite ammo
+   if(!ammoType)
+      return true;
+
+   // otherwise, read the inventory slot
+   return (E_GetItemOwnedAmount(player, ammoType) >= weapon->ammopershot_alt);
+}
+
+//
 // P_NextWeapon
 //
 // haleyjd 05/31/14: Rewritten to use next and previous in cycle pointers
@@ -465,12 +482,27 @@ bool P_CheckAmmo(player_t *player)
 void P_SubtractAmmo(player_t *player, int compat_amt)
 {
    weaponinfo_t *weapon = player->readyweapon;
+   itemeffect_t *ammo;
+   int amount;
 
-   if(player->cheats & CF_INFAMMO || !weapon->ammo)
+   if(player->attackdown & AT_PRIMARY)
+   {
+      ammo = weapon->ammo;
+      amount = ((weapon->flags & WPF_ENABLEAPS) || compat_amt < 0) ? weapon->ammopershot :
+                                                                     compat_amt;
+   }
+   else
+   {
+      ammo = weapon->ammo_alt;
+      amount = ((weapon->flags & WPF_ENABLEAPS) || compat_amt < 0) ? weapon->ammopershot_alt :
+                                                                     compat_amt;
+   }
+
+   if(player->cheats & CF_INFAMMO || !ammo)
       return;
 
-   int amount = ((weapon->flags & WPF_ENABLEAPS) || compat_amt < 0) ? weapon->ammopershot : compat_amt;
-   E_RemoveInventoryItem(player, weapon->ammo, amount);
+   
+   E_RemoveInventoryItem(player, ammo, amount);
 }
 
 int lastshottic; // killough 3/22/98
@@ -499,6 +531,58 @@ static void P_FireWeapon(player_t *player)
       P_NoiseAlert(player->mo, player->mo);
 
    lastshottic = gametic;                       // killough 3/22/98
+}
+
+//
+// P_fireWeaponAlt.
+//
+static void P_fireWeaponAlt(player_t *player)
+{
+   statenum_t newstate;
+   weaponinfo_t *weapon = player->readyweapon;
+
+   if(!P_WeaponHasAmmoAlt(player, weapon) || !E_WeaponHasAltFire(weapon))
+      return;
+
+   P_SetMobjState(player->mo, player->mo->info->missilestate);
+   newstate = player->refire && weapon->holdstate_alt ? weapon->holdstate_alt :
+                                                        weapon->atkstate_alt;
+   P_SetPsprite(player, ps_weapon, newstate);
+
+   // haleyjd 04/06/03: silencer powerup
+   // haleyjd 09/14/07: per-weapon silencer, always silent support
+   if(!(weapon->flags & WPF_SILENCER && player->powers[pw_silencer]) &&
+      !(weapon->flags & WPF_SILENT))
+      P_NoiseAlert(player->mo, player->mo);
+
+   lastshottic = gametic;                       // killough 3/22/98
+}
+
+//
+// Try to fire a weapon if the user inputs that.
+// Returns true if a weapon is fired, and false otherwise.
+//
+static bool P_tryFireWeapon(player_t *player)
+{
+   if(player->cmd.buttons & BT_ATTACK &&
+      ((!(player->attackdown & AT_ALL)) || !(player->readyweapon->flags & WPF_NOAUTOFIRE)))
+   {
+      player->attackdown = AT_PRIMARY;
+      P_FireWeapon(player);
+      return true;
+   }
+   else if(player->cmd.buttons & BTN_ATTACK_ALT && E_WeaponHasAltFire(player->readyweapon) &&
+           (!(player->attackdown & AT_ALL) || !(player->readyweapon->flags & WPF_NOAUTOFIRE)))
+   {
+      player->attackdown = AT_SECONDARY;
+      P_fireWeaponAlt(player);
+      return true;
+   }
+   else
+   {
+      player->attackdown = AT_NONE;
+      return false;
+   }
 }
 
 //
@@ -652,9 +736,10 @@ void A_WeaponReady(actionargs_t *actionargs)
    }
 
    // check for fire
-   //  the missile launcher and bfg do not auto fire
-   
-   if(player->cmd.buttons & BT_ATTACK)
+   // certain weapons do not auto fire
+   if(demo_version >= 344 && P_tryFireWeapon(player))
+      return;
+   else if(player->cmd.buttons & BT_ATTACK)
    {
       if(!(player->attackdown & AT_PRIMARY) || 
          !(player->readyweapon->flags & WPF_NOAUTOFIRE))
@@ -674,6 +759,37 @@ void A_WeaponReady(actionargs_t *actionargs)
    psp->sy = WEAPONTOP + FixedMul(player->bob, finesine[angle]);
 }
 
+static void A_reFireNew(actionargs_t *actionargs)
+{
+   player_t *player = actionargs->actor->player;
+
+   if(!player)
+      return;
+
+   // check for fire
+   //  (if a weaponchange is pending, let it go through instead)
+
+   if((player->cmd.buttons & BT_ATTACK)
+      && player->pendingweapon == nullptr && player->health
+      && !(player->attackdown & AT_SECONDARY))
+   {
+      player->refire++;
+      P_FireWeapon(player);
+   }
+   else if(demo_version >= 344 && (player->cmd.buttons & BTN_ATTACK_ALT)
+      && player->pendingweapon == nullptr && player->health
+      && !(player->attackdown & AT_PRIMARY))
+   {
+      player->refire++;
+      P_fireWeaponAlt(player);
+   }
+   else
+   {
+      player->refire = 0;
+      P_CheckAmmo(player);
+   }
+}
+
 //
 // A_ReFire
 //
@@ -682,6 +798,12 @@ void A_WeaponReady(actionargs_t *actionargs)
 //
 void A_ReFire(actionargs_t *actionargs)
 {
+   if(demo_version >= 344)
+   {
+      A_reFireNew(actionargs);
+      return;
+   }
+
    player_t *player = actionargs->actor->player;
 
    if(!player)
@@ -841,8 +963,10 @@ void P_WeaponRecoil(player_t *player)
 //
 static void A_FireSomething(player_t* player, int adder)
 {
-   P_SetPsprite(player, ps_flash,
-      player->readyweapon->flashstate+adder);
+   if(demo_version >= 344 && player->attackdown & AT_SECONDARY)
+      P_SetPsprite(player, ps_flash, player->readyweapon->flashstate_alt);
+   else
+      P_SetPsprite(player, ps_flash, player->readyweapon->flashstate+adder);
    
    P_WeaponRecoil(player);
 }

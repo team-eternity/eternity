@@ -2286,7 +2286,7 @@ void G_PlayerReborn(int player)
    p->quake       = 0;                        // haleyjd 01/21/07
 
    p->usedown = true;         // don't do anything immediately
-   p->attackdown = AT_PRIMARY; // FIXME: Change this to AT_ALL
+   p->attackdown = AT_ALL;    // MaxW: 2017/07/10: Adapt for new attackdown
 
    // clear inventory unless otherwise indicated
    if(!(dmflags & DM_KEEPITEMS))

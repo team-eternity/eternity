@@ -1177,6 +1177,14 @@ void E_ProcessWeaponDeltas(cfg_t *cfg)
 //
 
 //
+// If it doesn't have an alt atkstate, it can't have an alt fire
+//
+bool E_WeaponHasAltFire(weaponinfo_t *wp)
+{
+   return wp->atkstate_alt != E_SafeState(S_NULL);
+}
+
+//
 // Check if the named weaponsec is currently equipped
 //
 bool E_WeaponIsCurrent(const player_t *player, const char *name)

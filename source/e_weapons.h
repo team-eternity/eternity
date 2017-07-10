@@ -82,6 +82,7 @@ void E_CollectWeapons(cfg_t *cfg);
 void E_ProcessWeaponInfo(cfg_t *cfg);
 void E_ProcessWeaponDeltas(cfg_t *cfg);
 
+bool E_WeaponHasAltFire(weaponinfo_t *weapon);
 bool E_WeaponIsCurrent(const player_t *player, const char *name);
 bool E_WeaponIsCurrentDEHNum(player_t *player, const int num);
 bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon);
