@@ -405,7 +405,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       //
       // killough 3/26/98, 4/2/98: fix autoswitch when no weapons are left
 
-      if((!demo_compatibility && players[consoleplayer].attackdown &&
+      if((!demo_compatibility && (players[consoleplayer].attackdown & AT_PRIMARY) &&
           !P_CheckAmmo(&players[consoleplayer])) || gameactions[ka_nextweapon])
       {
          newweapon = P_SwitchWeaponOld(&players[consoleplayer]); // phares
@@ -2285,7 +2285,8 @@ void G_PlayerReborn(int player)
    p->health      = p->pclass->initialhealth; // Ty 03/12/98 - use dehacked values
    p->quake       = 0;                        // haleyjd 01/21/07
 
-   p->usedown = p->attackdown = true;         // don't do anything immediately
+   p->usedown = true;         // don't do anything immediately
+   p->attackdown = AT_PRIMARY; // FIXME: Change this to AT_ALL
 
    // clear inventory unless otherwise indicated
    if(!(dmflags & DM_KEEPITEMS))

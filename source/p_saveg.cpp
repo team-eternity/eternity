@@ -526,7 +526,7 @@ static void P_ArchivePlayers(SaveArchive &arc)
             p.attacker    = nullptr;
             p.skin        = nullptr;
             p.pclass      = nullptr;
-            p.attackdown  = false; // sf
+            p.attackdown  = AT_NONE; // sf
             p.usedown     = false; // sf
             p.cmd.buttons = 0;     // sf
             p.prevviewz   = p.viewz;
