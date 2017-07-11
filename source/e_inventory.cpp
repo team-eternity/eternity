@@ -259,18 +259,18 @@ cfg_opt_t edf_powerfx_opts[] =
 // NOTE TO SELF: Ratio in DOOMs is 2N, N, 5N, N
 static cfg_opt_t ammogiven_opts[] =
 {
-   CFG_STR(KEY_TYPE,          "", CFGF_NONE), // type of ammo given
-   CFG_INT(KEY_AMMOGIVE,      0, CFGF_NONE),  // amount of ammo given normally
-   CFG_INT(KEY_AMMODROPPED,   0, CFGF_NONE),  // amount of ammo given when dropped
-   CFG_INT(KEY_AMMODMSTAY,    0, CFGF_NONE),  // amount of ammo given in DM w/weapons stay
-   CFG_INT(KEY_AMMOCOOPSTAY,  0, CFGF_NONE),  // amount of ammo given in coop w/weapon stay
+   CFG_STR(KEY_TYPE,         "", CFGF_NONE), // type of ammo given
+   CFG_INT(KEY_AMMOGIVE,      0, CFGF_NONE), // amount of ammo given normally
+   CFG_INT(KEY_AMMODROPPED,   0, CFGF_NONE), // amount of ammo given when dropped
+   CFG_INT(KEY_AMMODMSTAY,    0, CFGF_NONE), // amount of ammo given in DM w/weapons stay
+   CFG_INT(KEY_AMMOCOOPSTAY,  0, CFGF_NONE), // amount of ammo given in coop w/weapon stay
    CFG_END()
 };
 
 // Weapon Giver effect fields
 cfg_opt_t edf_weapgfx_opts[] =
 {
-   CFG_STR(KEY_WEAPON,       "", CFGF_NONE), // name of weapon to give
+   CFG_STR(KEY_WEAPON,                   "", CFGF_NONE),  // name of weapon to give
    CFG_MVPROP(KEY_AMMOGIVEN, ammogiven_opts, CFGF_MULTI), // type and quantities of ammos given
    CFG_END()
 };

@@ -207,7 +207,7 @@ static void P_consumeSpecial(player_t *activator, Mobj *special)
    }
 }
 
-//
+/*//
 // P_GiveWeapon
 //
 // The weapon name may have a MF_DROPPED flag ored in.
@@ -237,6 +237,67 @@ static bool P_GiveWeapon(player_t *player, weaponinfo_t *wp, bool dropped,
    // give one clip with a dropped weapon, two clips with a found weapon
    int  amount   = dropped ? wp->dropammo : wp->giveammo;
    bool gaveammo = (wp->ammo ? P_GiveAmmo(player, wp->ammo, amount) : false);
+   
+   // haleyjd 10/4/11: de-Killoughized
+   if(!E_PlayerOwnsWeapon(player, wp))
+   {
+      player->pendingweapon = wp;
+      E_GiveInventoryItem(player, wp->tracker, 1); // TODO: Change 3rd value
+      gaveweapon = true;
+   }
+
+   return gaveweapon || gaveammo;
+}*/
+
+
+//
+// P_GiveWeapon
+//
+// The weapon name may have a MF_DROPPED flag ored in.
+// TODO: Demo check?
+// TODO: Move to e_inventory.cpp
+//
+static bool P_GiveWeapon(player_t *player, itemeffect_t *giver, bool dropped,
+   Mobj *special)
+{
+   bool gaveweapon = false;
+
+   weaponinfo_t *wp        = E_WeaponForName(giver->getString("weapon", ""));
+   itemeffect_t *ammogiven = giver->getMetaTable("ammogiven", nullptr);
+   itemeffect_t *ammo      = nullptr;
+   int giveammo = 0, dropammo = 0;
+   if(ammogiven)
+   {
+      ammo     = E_ItemEffectForName(ammogiven->getString("type", ""));
+      giveammo = ammogiven->getInt("ammo.give", 0);
+      dropammo = ammogiven->getInt("ammo.dropped", 0);
+   }
+
+   if((dmflags & DM_WEAPONSTAY) && !dropped)
+   {
+      // leave placed weapons forever on net games
+      if(E_PlayerOwnsWeapon(player, wp))
+         return false;
+
+      player->bonuscount += BONUSADD;
+      E_GiveInventoryItem(player, wp->tracker, 1); // TODO: Change 3rd value
+      if(ammogiven)
+      {
+         const int dmstayammo   = ammogiven->getInt("ammo.dmstay", 0);
+         const int coopstayammo = ammogiven->getInt("ammo.coopstay", 0);
+         if((GameType == gt_dm && dmstayammo) || (GameType == gt_coop && coopstayammo))
+            P_GiveAmmo(player, ammo, (GameType == gt_dm) ? dmstayammo : coopstayammo);
+      }
+      
+      player->pendingweapon = wp;
+      S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
+      P_consumeSpecial(player, special); // need to handle it here
+      return false;
+   }
+
+   // give one clip with a dropped weapon, two clips with a found weapon
+   int  amount   = dropped ? dropammo : giveammo;
+   bool gaveammo = (ammo && amount ? P_GiveAmmo(player, wp->ammo, amount) : false);
    
    // haleyjd 10/4/11: de-Killoughized
    if(!E_PlayerOwnsWeapon(player, wp))
@@ -967,7 +1028,8 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       // WEAPON_FIXME: Weapon collection
       // weapons
    case PFX_BFG:
-      if(!P_GiveWeapon(player, E_WeaponForName(WEAPNAME_BFG9000), false, special))
+      effect = E_ItemEffectForName(WEAPNAME_BFG9000);
+      if(!P_GiveWeapon(player, effect, false, special))
          return;
       // FIXME: externalize all BFG pickup strings
       message = bfgtype==0 ? DEH_String("GOTBFG9000") // sf
@@ -980,42 +1042,48 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       break;
 
    case PFX_CHAINGUN:
-      if(!P_GiveWeapon(player, E_WeaponForName(WEAPNAME_CHAINGUN), dropped, special))
+      effect = E_ItemEffectForName(WEAPNAME_CHAINGUN);
+      if(!P_GiveWeapon(player, effect, dropped, special))
          return;
       message = DEH_String("GOTCHAINGUN"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 
    case PFX_CHAINSAW:
-      if(!P_GiveWeapon(player, E_WeaponForName(WEAPNAME_CHAINSAW), false, special))
+      effect = E_ItemEffectForName(WEAPNAME_CHAINSAW);
+      if(!P_GiveWeapon(player, effect, false, special))
          return;
       message = DEH_String("GOTCHAINSAW"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 
    case PFX_LAUNCHER:
-      if(!P_GiveWeapon(player, E_WeaponForName(WEAPNAME_MISSILE), false, special))
+      effect = E_ItemEffectForName(WEAPNAME_MISSILE);
+      if(!P_GiveWeapon(player, effect, false, special))
          return;
       message = DEH_String("GOTLAUNCHER"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 
    case PFX_PLASMA:
-      if(!P_GiveWeapon(player, E_WeaponForName(WEAPNAME_PLASMA), false, special))
+      effect = E_ItemEffectForName(WEAPNAME_PLASMA);
+      if(!P_GiveWeapon(player, effect, false, special))
          return;
       message = DEH_String("GOTPLASMA"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 
    case PFX_SHOTGUN:
-      if(!P_GiveWeapon(player, E_WeaponForName(WEAPNAME_SHOTGUN), dropped, special))
+      effect = E_ItemEffectForName(WEAPNAME_SHOTGUN);
+      if(!P_GiveWeapon(player, effect, dropped, special))
          return;
       message = DEH_String("GOTSHOTGUN"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 
    case PFX_SSG:
-      if(!P_GiveWeapon(player, E_WeaponForName(WEAPNAME_SSG), dropped, special))
+      effect = E_ItemEffectForName(WEAPNAME_SSG);
+      if(!P_GiveWeapon(player, effect, dropped, special))
          return;
       message = DEH_String("GOTSHOTGUN2"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;

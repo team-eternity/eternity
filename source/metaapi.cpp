@@ -1505,6 +1505,63 @@ const char *MetaTable::removeConstString(const char *key)
    return value;
 }
 
+void MetaTable::addMetaTable(size_t keyIndex, MetaTable *value)
+{
+   addObject(value);
+}
+
+MetaTable *MetaTable::getMetaTable(size_t keyIndex, MetaTable *defValue) const
+{
+   MetaTable *retval, *obj;
+
+   metaerrno = META_ERR_NOERR;
+
+   if(!(obj = getObjectKeyAndTypeEx<MetaTable>(keyIndex)))
+   {
+      metaerrno = META_ERR_NOSUCHOBJECT;
+      retval = defValue;
+   }
+   else
+      retval = obj;
+
+   return retval;
+}
+
+MetaTable *MetaTable::getMetaTable(const char *key, MetaTable *defValue) const
+{
+   MetaTable *retval, *obj;
+
+   metaerrno = META_ERR_NOERR;
+
+   if(!(obj = getObjectKeyAndTypeEx<MetaTable>(key)))
+   {
+      metaerrno = META_ERR_NOSUCHOBJECT;
+      retval = defValue;
+   }
+   else
+      retval = obj;
+
+   return retval;
+}
+
+
+void MetaTable::setMetaTable(size_t keyIndex, MetaTable *newValue)
+{
+   MetaTable *obj;
+
+   if(!(obj = getObjectKeyAndTypeEx<MetaTable>(keyIndex)))
+      addMetaTable(keyIndex, newValue);
+   else
+   {
+      
+   }
+}
+
+void MetaTable::setMetaTable(const char *key, MetaTable *newValue)
+{
+   setMetaTable(MetaKey(key).index, newValue);
+}
+
 //
 // Adds copies of all objects in the source table to the destination table.
 //

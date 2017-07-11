@@ -960,6 +960,48 @@ void E_MetaIntFromCfgFlag(MetaTable *meta, cfg_t *cfg, const char *prop)
    meta->setInt(prop, cfg_getflag(cfg, prop));
 }
 
+void E_MetaTableFromCfgMvprop(MetaTable *meta, cfg_t *cfg, const char *prop)
+{
+   int numprop = cfg_size(cfg, prop);
+
+   for(int i = 0; i < numprop; i++)
+   {
+      cfg_t *currcfg = cfg_getnmvprop(cfg, prop, i);
+
+      MetaTable *table = new MetaTable(prop);
+
+      for(auto opt = currcfg->opts; opt->type != CFGT_NONE; opt++)
+      {
+         if(cfg_size(currcfg, opt->name) == 0)
+            continue;
+
+         switch(opt->type)
+         {
+         case CFGT_INT:
+            E_MetaIntFromCfgInt(table, currcfg, opt->name);
+            break;
+         case CFGT_STR:
+            E_MetaStringFromCfgString(table, currcfg, opt->name);
+            break;
+         case CFGT_BOOL:
+            E_MetaIntFromCfgBool(table, currcfg, opt->name);
+            break;
+         case CFGT_FLAG:
+            E_MetaIntFromCfgFlag(table, currcfg, opt->name);
+            break;
+         case CFGT_MVPROP:
+            E_MetaTableFromCfgMvprop(table, currcfg, opt->name);
+            break;
+         default:
+            break;
+         }
+      }
+
+      meta->setMetaTable(prop, table);
+   }
+
+}
+
 //
 // E_MetaTableFromCfg
 //
@@ -994,6 +1036,9 @@ void E_MetaTableFromCfg(cfg_t *cfg, MetaTable *table, MetaTable *prototype)
          break;
       case CFGT_FLAG:
          E_MetaIntFromCfgFlag(table, cfg, opt->name);
+         break;
+      case CFGT_MVPROP:
+         E_MetaTableFromCfgMvprop(table, cfg, opt->name);
          break;
       default:
          break;
