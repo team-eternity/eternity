@@ -36,7 +36,6 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "b_intset.h"
 #include "b_msector.h"
 #include "b_util.h"
 #include "../e_rtti.h"
@@ -53,7 +52,7 @@
 #define BOTMAPBTOFRAC      (BOTMAPBLOCKSHIFT-FRACBITS)
 #define BOTMAPBMASK        (BOTMAPBLOCKSIZE-1)
 
-//typedef std::unordered_set<int> IntSet;
+typedef std::unordered_set<int> IntOSet;
 //typedef std::set<int> IntOSet;
 
 //

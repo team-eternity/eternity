@@ -32,13 +32,12 @@
 #include <unordered_set>
 #include <set>
 
-#include "b_intset.h"
 #include "b_msector.h"
 #include "../m_collection.h"
 #include "../m_dllist.h"
 #include "../m_fixed.h"
 
-//typedef std::unordered_set<int> IntSet;
+typedef std::unordered_set<int> IntOSet;
 //typedef std::set<int> IntOSet;
 
 class OutBuffer;

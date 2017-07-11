@@ -1644,7 +1644,6 @@ void TempBotMap::generateForRadius(fixed_t inradius)
    pimpl->getThingMSectors();
    B_MEASURE_CLOCK(getThingMSectors)
 
-   IntOSet::s_maxSize = static_cast<int>(pimpl->rawMSectors.getLength());
 
    B_NEW_CLOCK
    createBlockMap();	// the tempbotmap part, derived from BotMap
@@ -1657,8 +1656,6 @@ void TempBotMap::generateForRadius(fixed_t inradius)
    B_NEW_CLOCK
    pimpl->placeMSecLines();
    B_MEASURE_CLOCK(placeMSecLines)
-   
-   IntOSet::s_maxSize = botMap->bMapWidth * botMap->bMapHeight;
 
    B_NEW_CLOCK
    pimpl->fillMSecRefs();

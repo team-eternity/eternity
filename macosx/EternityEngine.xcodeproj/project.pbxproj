@@ -43,7 +43,6 @@
 		4F43B48F182D9F7A00730C02 /* system.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F43B46A182D9F7A00730C02 /* system.c */; };
 		4F43B491182D9F7A00730C02 /* util.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F43B46C182D9F7A00730C02 /* util.c */; };
 		4F43B493182D9F7A00730C02 /* wad.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F43B46E182D9F7A00730C02 /* wad.c */; };
-		4F43B497182EC27500730C02 /* b_intset.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F43B494182EC27500730C02 /* b_intset.cpp */; };
 		4F5F386D182D97A20027813A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F5F386C182D97A20027813A /* Foundation.framework */; };
 		4F5F3878182D98A30027813A /* a_common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5CB4158BF42800C49E93 /* a_common.cpp */; };
 		4F5F3879182D98A60027813A /* a_counters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5CB5158BF42800C49E93 /* a_counters.cpp */; };
@@ -426,8 +425,6 @@
 		4F43B46D182D9F7A00730C02 /* util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = util.h; sourceTree = "<group>"; };
 		4F43B46E182D9F7A00730C02 /* wad.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = wad.c; sourceTree = "<group>"; };
 		4F43B46F182D9F7A00730C02 /* wad.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wad.h; sourceTree = "<group>"; };
-		4F43B494182EC27500730C02 /* b_intset.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = b_intset.cpp; sourceTree = "<group>"; };
-		4F43B495182EC27500730C02 /* b_intset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = b_intset.h; sourceTree = "<group>"; };
 		4F50E3FE173770EC00878167 /* r_dynabsp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = r_dynabsp.cpp; path = ../source/r_dynabsp.cpp; sourceTree = "<group>"; };
 		4F50E3FF173770EC00878167 /* r_dynabsp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = r_dynabsp.h; path = ../source/r_dynabsp.h; sourceTree = "<group>"; };
 		4F579A4317BE860B0088B797 /* metaspawn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = metaspawn.h; path = ../source/metaspawn.h; sourceTree = "<group>"; };
@@ -1098,8 +1095,6 @@
 			children = (
 				4F8C88861E75DB2E006EE084 /* b_ape.cpp */,
 				4F8C88871E75DB2E006EE084 /* b_ape.h */,
-				4F43B494182EC27500730C02 /* b_intset.cpp */,
-				4F43B495182EC27500730C02 /* b_intset.h */,
 				4F43B44A182D9F7A00730C02 /* b_botmap.cpp */,
 				4F43B44B182D9F7A00730C02 /* b_botmap.h */,
 				4F43B44C182D9F7A00730C02 /* b_botmaptemp.cpp */,
@@ -2306,7 +2301,6 @@
 				4F5F3949182D9B0E0027813A /* txt_dropdown.c in Sources */,
 				4F5F394A182D9B0E0027813A /* txt_gui.c in Sources */,
 				4F5F394B182D9B0E0027813A /* txt_inputbox.c in Sources */,
-				4F43B497182EC27500730C02 /* b_intset.cpp in Sources */,
 				4F5F394C182D9B0E0027813A /* txt_io.c in Sources */,
 				4F5F394D182D9B0E0027813A /* txt_label.c in Sources */,
 				4F5F394E182D9B0E0027813A /* txt_radiobutton.c in Sources */,
