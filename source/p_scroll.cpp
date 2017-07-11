@@ -701,7 +701,7 @@ void P_SpawnScrollers()
 //
 void P_SpawnFloorUDMF(int s, int type, double scrollx, double scrolly)
 {
-   bool texture, carry;
+   bool texture = false, carry = false;
    
    switch(type)
    {
