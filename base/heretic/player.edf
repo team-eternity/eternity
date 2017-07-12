@@ -1,5 +1,5 @@
 //
-// EDF for Eternity Engine v3.40.50
+// EDF for Eternity Engine v3.44.00+
 //
 // Heretic Weapons
 //
@@ -448,46 +448,46 @@ artifact WeaponGauntlets
 
 weapongiver Staff
 {
-  weapon WeaponStaff
+  weapon Staff
 }
 
 weapongiver GoldWand
 {
-  weapon WeaponGoldWand
+  weapon GoldWand
 }
 
 weapongiver Crossbow
 {
-  weapon    WeaponCrossbow
+  weapon    Crossbow
   ammogiven AmmoEtherealArrow, 10
 }
 
 weapongiver Blaster
 {
-  weapon    WeaponBlaster
+  weapon    Blaster
   ammogiven AmmoClawOrb, 30
 }
 
 weapongiver SkullRod
 {
-  weapon    WeaponSkullRod
+  weapon    SkullRod
   ammogiven AmmoRune, 50
 }
 
 weapongiver PhoenixRod
 {
-  weapon    WeaponPhoenixRod
+  weapon    PhoenixRod
   ammogiven AmmoFlameOrb, 2
 }
 
 weapongiver Mace
 {
-  weapon    WeaponMace
+  weapon    Mace
   ammogiven AmmoMaceSphere, 50
 }
 
 weapongiver Gauntlets
 {
-  weapon WeaponGauntlets
+  weapon Gauntlets
 }
 

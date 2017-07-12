@@ -1159,20 +1159,23 @@ static void E_processPickupItems(cfg_t *cfg)
          continue;
       }
 
+      e_pickupfx_t &pfx = pickupfx[sprnum];
+
       // INVENTORY_FIXME: old names need to become a compat feature only;
       //   "effect" should start referring to an itemeffect_t.
       // find the proper pickup effect number (linear search)
       fxnum = E_StrToNumLinear(pickupnames, PFX_NUMFX, str);
       if(fxnum == PFX_NUMFX)
       {
-         E_EDFLoggedWarning(2, "Warning: invalid pickup effect: '%s'\n", str);
-         continue;
+         if(!((pfx.effect = E_ItemEffectForName(str))))
+         {
+            E_EDFLoggedWarning(2, "Warning: invalid pickup effect: '%s'\n", str);
+            continue;
+         }
       }
       
       E_EDFLogPrintf("\t\tSet sprite %s(#%d) to pickup effect %s(#%d)\n",
                      title, sprnum, str, fxnum);
-
-      e_pickupfx_t &pfx = pickupfx[sprnum];
 
       // INVENTORY_FIXME: replace with effect pointer
       pfx.tempeffect = fxnum;

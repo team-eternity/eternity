@@ -57,52 +57,6 @@ frame S_DOGS_RAISE4 { +decorate; dehackednum 996 }
 frame S_DOGS_RAISE5 { +decorate; dehackednum 997 }
 frame S_DOGS_RAISE6 { +decorate; dehackednum 998 }
 
-// Beta BFG firing frames -- avoid editing these or it'll probably break.
-// Warning: don't depend on these being available in Heretic.
-frame S_OLDBFG1  { cmp = "BFGG|*|*|10|BFGsound  |@next"; dehackednum = 999  }
-frame S_OLDBFG2  { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1000 }
-frame S_OLDBFG3  { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1001 }
-frame S_OLDBFG4  { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1002 }
-frame S_OLDBFG5  { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1003 }
-frame S_OLDBFG6  { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1004 }
-frame S_OLDBFG7  { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1005 }
-frame S_OLDBFG8  { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1006 }
-frame S_OLDBFG9  { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1007 }
-frame S_OLDBFG10 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1008 }
-frame S_OLDBFG11 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1009 }
-frame S_OLDBFG12 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1010 }
-frame S_OLDBFG13 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1011 }
-frame S_OLDBFG14 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1012 }
-frame S_OLDBFG15 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1013 }
-frame S_OLDBFG16 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1014 }
-frame S_OLDBFG17 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1015 }
-frame S_OLDBFG18 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1016 }
-frame S_OLDBFG19 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1017 }
-frame S_OLDBFG20 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1018 }
-frame S_OLDBFG21 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1019 }
-frame S_OLDBFG22 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1020 }
-frame S_OLDBFG23 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1021 }
-frame S_OLDBFG24 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1022 }
-frame S_OLDBFG25 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1023 }
-frame S_OLDBFG26 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1024 }
-frame S_OLDBFG27 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1025 }
-frame S_OLDBFG28 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1026 }
-frame S_OLDBFG29 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1027 }
-frame S_OLDBFG30 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1028 }
-frame S_OLDBFG31 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1029 }
-frame S_OLDBFG32 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1030 }
-frame S_OLDBFG33 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1031 }
-frame S_OLDBFG34 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1032 }
-frame S_OLDBFG35 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1033 }
-frame S_OLDBFG36 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1034 }
-frame S_OLDBFG37 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1035 }
-frame S_OLDBFG38 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1036 }
-frame S_OLDBFG39 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1037 }
-frame S_OLDBFG40 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1038 }
-frame S_OLDBFG41 { cmp = "BFGG|1|*| *|FireOldBFG|@next"; dehackednum = 1039 }
-frame S_OLDBFG42 { cmp = "BFGG|1|*| 0|Light0    |@next"; dehackednum = 1040 }
-frame S_OLDBFG43 { cmp = "BFGG|1|*|20|ReFire    |S_BFG"; dehackednum = 1041 }
-
 // Eternity Engine Frames ------------------------------------------------------
 
 // Unknown frame (used by Unknown placeholder thing type)

@@ -1158,6 +1158,51 @@ frame S_DETONATE   { cmp "MISL|B|T| 4|Scream  |@next"; dehackednum 969 }
 frame S_DETONATE2  { cmp "MISL|C|T| 6|Detonate|@next"; dehackednum 970 }
 frame S_DETONATE3  { cmp "MISL|D|T|10";                dehackednum 971 }
 
+// Beta BFG firing frames -- avoid editing these or it'll probably break.
+frame S_OLDBFG1  { +decorate; dehackednum = 999  }
+frame S_OLDBFG2  { +decorate; dehackednum = 1000 }
+frame S_OLDBFG3  { +decorate; dehackednum = 1001 }
+frame S_OLDBFG4  { +decorate; dehackednum = 1002 }
+frame S_OLDBFG5  { +decorate; dehackednum = 1003 }
+frame S_OLDBFG6  { +decorate; dehackednum = 1004 }
+frame S_OLDBFG7  { +decorate; dehackednum = 1005 }
+frame S_OLDBFG8  { +decorate; dehackednum = 1006 }
+frame S_OLDBFG9  { +decorate; dehackednum = 1007 }
+frame S_OLDBFG10 { +decorate; dehackednum = 1008 }
+frame S_OLDBFG11 { +decorate; dehackednum = 1009 }
+frame S_OLDBFG12 { +decorate; dehackednum = 1010 }
+frame S_OLDBFG13 { +decorate; dehackednum = 1011 }
+frame S_OLDBFG14 { +decorate; dehackednum = 1012 }
+frame S_OLDBFG15 { +decorate; dehackednum = 1013 }
+frame S_OLDBFG16 { +decorate; dehackednum = 1014 }
+frame S_OLDBFG17 { +decorate; dehackednum = 1015 }
+frame S_OLDBFG18 { +decorate; dehackednum = 1016 }
+frame S_OLDBFG19 { +decorate; dehackednum = 1017 }
+frame S_OLDBFG20 { +decorate; dehackednum = 1018 }
+frame S_OLDBFG21 { +decorate; dehackednum = 1019 }
+frame S_OLDBFG22 { +decorate; dehackednum = 1020 }
+frame S_OLDBFG23 { +decorate; dehackednum = 1021 }
+frame S_OLDBFG24 { +decorate; dehackednum = 1022 }
+frame S_OLDBFG25 { +decorate; dehackednum = 1023 }
+frame S_OLDBFG26 { +decorate; dehackednum = 1024 }
+frame S_OLDBFG27 { +decorate; dehackednum = 1025 }
+frame S_OLDBFG28 { +decorate; dehackednum = 1026 }
+frame S_OLDBFG29 { +decorate; dehackednum = 1027 }
+frame S_OLDBFG30 { +decorate; dehackednum = 1028 }
+frame S_OLDBFG31 { +decorate; dehackednum = 1029 }
+frame S_OLDBFG32 { +decorate; dehackednum = 1030 }
+frame S_OLDBFG33 { +decorate; dehackednum = 1031 }
+frame S_OLDBFG34 { +decorate; dehackednum = 1032 }
+frame S_OLDBFG35 { +decorate; dehackednum = 1033 }
+frame S_OLDBFG36 { +decorate; dehackednum = 1034 }
+frame S_OLDBFG37 { +decorate; dehackednum = 1035 }
+frame S_OLDBFG38 { +decorate; dehackednum = 1036 }
+frame S_OLDBFG39 { +decorate; dehackednum = 1037 }
+frame S_OLDBFG40 { +decorate; dehackednum = 1038 }
+frame S_OLDBFG41 { +decorate; dehackednum = 1039 }
+frame S_OLDBFG42 { +decorate; dehackednum = 1040 }
+frame S_OLDBFG43 { +decorate; dehackednum = 1041 }
+
 // Beta BFG plasma frames
 frame S_PLS1BALL   { cmp "PLS1|A|T|6|*|@next"; dehackednum 1042 }
 frame S_PLS1BALL2  { cmp "PLS1|B|T|6|*|@prev"; dehackednum 1043 }

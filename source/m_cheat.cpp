@@ -282,19 +282,6 @@ static void cheat_one(const void *arg)
       cheat_pw(&pwsil);
 }
 
-static const char *cheatWeapons[NUMWEAPONS] =
-{
-   WEAPNAME_FIST,
-   WEAPNAME_PISTOL,
-   WEAPNAME_SHOTGUN,
-   WEAPNAME_CHAINGUN,
-   WEAPNAME_MISSILE,
-   WEAPNAME_PLASMA,
-   WEAPNAME_BFG9000,
-   WEAPNAME_CHAINSAW,
-   WEAPNAME_SSG
-};
-
 static void cheat_fa(const void *arg)
 {
    if(!E_PlayerHasBackpack(plyr))
@@ -587,25 +574,22 @@ static void cheat_weapx(const void *arg)
 
    if(w == wp_fist)           // make '1' apply beserker strength toggle
       cheat_pw(&pwstr);
-   else
+   else if(w > wp_fist && w < NUMWEAPONS)
    {
-      if(w >= 0 && w < NUMWEAPONS)
+      weaponinfo_t *weapon = E_WeaponForDEHNum(w);
+      if(!E_PlayerOwnsWeapon(plyr, weapon))
       {
-         weaponinfo_t *weapon = E_WeaponForName(cheatWeapons[w]);
-         if(!E_PlayerOwnsWeapon(plyr, weapon))
-         {
-            E_GiveInventoryItem(plyr, weapon->tracker, 1);
-            doom_printf("Weapon Added");  // Ty 03/27/98 - *not* externalized
-         }
-         else 
-         {
-            weaponinfo_t *P_SwitchWeapon(player_t *player);
-            
-            E_RemoveInventoryItem(plyr, weapon->tracker, 1);
-            doom_printf("Weapon Removed"); // Ty 03/27/98 - *not* externalized
-            if(E_WeaponIsCurrentDEHNum(plyr, w))     // maybe switch if weapon removed
-               plyr->pendingweapon = P_SwitchWeapon(plyr);
-         }
+         E_GiveInventoryItem(plyr, weapon->tracker, 1);
+         doom_printf("Weapon Added");  // Ty 03/27/98 - *not* externalized
+      }
+      else 
+      {
+         weaponinfo_t *P_SwitchWeapon(player_t *player);
+         
+         E_RemoveInventoryItem(plyr, weapon->tracker, 1);
+         doom_printf("Weapon Removed"); // Ty 03/27/98 - *not* externalized
+         if(E_WeaponIsCurrentDEHNum(plyr, w))     // maybe switch if weapon removed
+            plyr->pendingweapon = P_SwitchWeapon(plyr);
       }
    }
 }

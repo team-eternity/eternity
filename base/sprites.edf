@@ -81,40 +81,7 @@ pickupitem SGN2 { effect PFX_SSG }
 
 endif()
 
-ifenabled(HERETIC)
-
-pickupitem AKYY { effect PFX_HGREENKEY }
-pickupitem BKYY { effect PFX_HBLUEKEY }
-pickupitem CKYY { effect PFX_HYELLOWKEY }
-pickupitem PTN1 { effect PFX_HPOTION }
-pickupitem SHLD { effect PFX_SILVERSHIELD }
-pickupitem SHD2 { effect PFX_ENCHANTEDSHIELD }
-pickupitem BAGH { effect PFX_BAGOFHOLDING }
-pickupitem SPMP { effect PFX_HMAP }
-pickupitem INVS { effect PFX_SHADOWSPHERE }
-pickupitem PTN2 { effect PFX_QUARTZFLASK  }
-pickupitem SOAR { effect PFX_WINGSOFWRATH }
-pickupitem INVU { effect PFX_RINGOFINVINCIBILITY }
-pickupitem PWBK { effect PFX_TOMEOFPOWER  }
-pickupitem EGGC { effect PFX_MORPHOVUM }
-pickupitem SPHL { effect PFX_MYSTICURN }
-pickupitem TRCH { effect PFX_ARTITORCH }
-pickupitem FBMB { effect PFX_TIMEBOMB  }
-pickupitem ATLP { effect PFX_TELEPORT  }
-pickupitem AMG1 { effect PFX_GWNDWIMPY }
-pickupitem AMG2 { effect PFX_GWNDHEFTY }
-pickupitem AMM1 { effect PFX_MACEWIMPY }
-pickupitem AMM2 { effect PFX_MACEHEFTY }
-pickupitem AMC1 { effect PFX_CBOWWIMPY }
-pickupitem AMC2 { effect PFX_CBOWHEFTY }
-pickupitem AMB1 { effect PFX_BLSRWIMPY }
-pickupitem AMB2 { effect PFX_BLSRHEFTY }
-pickupitem AMS1 { effect PFX_SKRDWIMPY }
-pickupitem AMS2 { effect PFX_SKRDHEFTY }
-pickupitem AMP1 { effect PFX_PHRDWIMPY }
-pickupitem AMP2 { effect PFX_PHRDHEFTY }
-
-endif()
+includeifenabled("heretic/sprites.edf", "HERETIC");
 
 pickupitem PNS2 { effect PFX_TOTALINVIS }
 

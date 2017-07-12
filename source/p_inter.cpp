@@ -689,6 +689,9 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
    case ITEMFX_POWER:
       pickedup = P_GivePowerForItem(player, effect);
       break;
+   case ITEMFX_WEAPONGIVER:
+      pickedup = P_GiveWeapon(player, effect, dropped, special);
+      break;
    case ITEMFX_ARTIFACT: // Artifacts - items which go into the inventory
       pickedup = E_GiveInventoryItem(player, effect);
       break;
@@ -707,6 +710,8 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
          if(special->flags & MF_COUNTITEM)
             player->itemcount++;
 
+         // Execute and zero thing special
+         P_consumeSpecial(player, special);
          // Check for item respawning style: DOOM, or Raven
          if(special->flags4 & MF4_RAVENRESPAWN)
             P_RavenRespawn(special);
@@ -743,6 +748,13 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
 //
 void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 {
+   // TODO: Remove this call and just make P_TouchSpecialThingNew the default
+   if(pickupfx[special->sprite].effect)
+   {
+      P_TouchSpecialThingNew(special, toucher);
+      return;
+   }
+
    player_t   *player;
    int        sound;
    const char *message = NULL;
