@@ -387,6 +387,7 @@ weaponinfo Gauntlets
 
 artifact WeaponStaff
 {
+  interhubamount 1
   +undroppable
 
   artifacttype Weapon
@@ -394,6 +395,7 @@ artifact WeaponStaff
 
 artifact WeaponGoldWand
 {
+  interhubamount 1
   +undroppable
 
   artifacttype Weapon
@@ -401,6 +403,7 @@ artifact WeaponGoldWand
 
 artifact WeaponCrossbow
 {
+  interhubamount 1
   +undroppable
 
   artifacttype Weapon
@@ -408,6 +411,7 @@ artifact WeaponCrossbow
 
 artifact WeaponBlaster
 {
+  interhubamount 1
   +undroppable
 
   artifacttype Weapon
@@ -415,6 +419,7 @@ artifact WeaponBlaster
 
 artifact WeaponSkullRod
 {
+  interhubamount 1
   +undroppable
 
   artifacttype Weapon
@@ -422,6 +427,7 @@ artifact WeaponSkullRod
 
 artifact WeaponPhoenixRod
 {
+  interhubamount 1
   +undroppable
 
   artifacttype Weapon
@@ -429,6 +435,7 @@ artifact WeaponPhoenixRod
 
 artifact WeaponMace
 {
+  interhubamount 1
   +undroppable
 
   artifacttype Weapon
@@ -436,6 +443,7 @@ artifact WeaponMace
 
 artifact WeaponGauntlets
 {
+  interhubamount 1
   +undroppable
 
   artifacttype Weapon

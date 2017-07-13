@@ -411,6 +411,7 @@ weaponinfo SuperShotgun : DoomWeapon, 8
 
 artifact WeaponFist
 {
+  interhubamount 1
   +undroppable
 
   artifacttype Weapon
@@ -418,6 +419,7 @@ artifact WeaponFist
 
 artifact WeaponPistol
 {
+  interhubamount 1
   +undroppable
 
   artifacttype Weapon
@@ -425,6 +427,7 @@ artifact WeaponPistol
 
 artifact WeaponShotgun
 {
+  interhubamount 1
   +undroppable
 
   artifacttype Weapon
@@ -432,6 +435,7 @@ artifact WeaponShotgun
 
 artifact WeaponChaingun
 {
+  interhubamount 1
   +undroppable
 
   artifacttype Weapon
@@ -439,6 +443,7 @@ artifact WeaponChaingun
 
 artifact WeaponMissileLauncher
 {
+  interhubamount 1
   +undroppable
 
   artifacttype Weapon
@@ -446,6 +451,7 @@ artifact WeaponMissileLauncher
 
 artifact WeaponPlasmaRifle
 {
+  interhubamount 1
   +undroppable
 
   artifacttype Weapon
@@ -453,6 +459,7 @@ artifact WeaponPlasmaRifle
 
 artifact WeaponBFG9000
 {
+  interhubamount 1
   +undroppable
 
   artifacttype Weapon
@@ -460,6 +467,7 @@ artifact WeaponBFG9000
 
 artifact WeaponChainsaw
 {
+  interhubamount 1
   +undroppable
 
   artifacttype Weapon
@@ -467,6 +475,7 @@ artifact WeaponChainsaw
 
 artifact WeaponSuperShotgun
 {
+  interhubamount 1
   +undroppable
 
   artifacttype Weapon
