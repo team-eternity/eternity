@@ -1005,22 +1005,54 @@ int E_TakeAllKeys(player_t *player)
 
 //=============================================================================
 //
+// Effect Hash Table
+//
+
+static EHashTable<e_pickupfx_t, ENCStringHashKey,
+                  &e_pickupfx_t::compatname, &e_pickupfx_t::cnamelinks> e_PickupCNameHash;
+
+//=============================================================================
+//
+// Effect Flags
+//
+
+static dehflags_t e_PickupFlags[] =
+{
+   { "ALWAYSPICKUP",    PFXF_ALWAYSPICKUP },
+   { "LEAVEINMULTI",    PFXF_LEAVEINMULTI },
+   { "NOSCREENFLASH",   PFXF_NOSCREENFLASH },
+   { "SILENTNOBENEFIT", PFXF_SILENTNOBENEFIT },
+   { NULL,           0 }
+};
+
+static dehflagset_t e_PickupFlagSet =
+{
+   e_PickupFlags, // flags
+   0              // mode
+};
+
+//=============================================================================
+//
 // Effect Bindings
 //
 // Effects can be bound to sprites.
 //
 
 // Sprite pick-up effects
+#define ITEM_PICKUP_CNAME    "pfxname"
 #define ITEM_PICKUP_FX       "effect"
 #define ITEM_PICKUP_MSG      "message"
 #define ITEM_PICKUP_SOUND    "sound"
+#define ITEM_PICKUP_FLAGS    "flags"
 
 // sprite-based pickup items
 cfg_opt_t edf_pickup_opts[] =
 {
+   CFG_STR(ITEM_PICKUP_CNAME, NULL,       CFGF_NONE),
    CFG_STR(ITEM_PICKUP_FX,    "PFX_NONE", CFGF_NONE),
    CFG_STR(ITEM_PICKUP_MSG,   NULL,       CFGF_NONE),
    CFG_STR(ITEM_PICKUP_SOUND, NULL,       CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_FLAGS, NULL,       CFGF_NONE),
 
    CFG_END()
 };
@@ -1078,16 +1110,6 @@ const char *pickupnames[PFX_NUMFX] =
    "PFX_ENCHANTEDSHIELD",
    "PFX_BAGOFHOLDING",
    "PFX_HMAP",
-   "PFX_SHADOWSPHERE",
-   "PFX_QUARTZFLASK",
-   "PFX_WINGSOFWRATH",
-   "PFX_RINGOFINVINCIBILITY",
-   "PFX_TOMEOFPOWER",
-   "PFX_MORPHOVUM",
-   "PFX_MYSTICURN",
-   "PFX_ARTITORCH",
-   "PFX_TIMEBOMB",
-   "PFX_TELEPORT",
    "PFX_GWNDWIMPY",
    "PFX_GWNDHEFTY",
    "PFX_MACEWIMPY",
@@ -1105,7 +1127,16 @@ const char *pickupnames[PFX_NUMFX] =
 
 // pickupfx lookup table used in P_TouchSpecialThing (is allocated
 // with size NUMSPRITES)
-e_pickupfx_t *pickupfx = NULL;
+e_pickupfx_t **pickupfx = NULL;
+
+//
+// Obtain a weaponinfo_t structure by name.
+//
+static e_pickupfx_t *e_PickupFXForCName(const char *cname)
+{
+   return e_PickupCNameHash.objectForKey(cname);
+}
+
 
 //
 // E_processPickupItems
@@ -1126,9 +1157,11 @@ static void E_processPickupItems(cfg_t *cfg)
    numnew = NUMSPRITES - oldnumsprites;
    if(numnew > 0)
    {
-      pickupfx = erealloc(e_pickupfx_t *, pickupfx, NUMSPRITES * sizeof(*pickupfx));
+      pickupfx = erealloc(e_pickupfx_t **, pickupfx, NUMSPRITES * sizeof(e_pickupfx_t *));
       for(i = oldnumsprites; i < NUMSPRITES; i++)
-         memset(&pickupfx[i], 0, sizeof(e_pickupfx_t));
+      {
+         pickupfx[i] = estructalloc(e_pickupfx_t, 1);
+      }
       oldnumsprites = NUMSPRITES;
    }
 
@@ -1159,28 +1192,39 @@ static void E_processPickupItems(cfg_t *cfg)
          continue;
       }
 
-      e_pickupfx_t &pfx = pickupfx[sprnum];
+      e_pickupfx_t &pfx = *pickupfx[sprnum];
 
-      // INVENTORY_FIXME: old names need to become a compat feature only;
-      //   "effect" should start referring to an itemeffect_t.
       // find the proper pickup effect number (linear search)
       fxnum = E_StrToNumLinear(pickupnames, PFX_NUMFX, str);
-      if(fxnum == PFX_NUMFX)
+      if(fxnum != PFX_NUMFX)
       {
-         if(!((pfx.effect = E_ItemEffectForName(str))))
+         e_pickupfx_t *sourcefx = e_PickupFXForCName(str);
+         if(sourcefx != nullptr)
          {
-            E_EDFLoggedWarning(2, "Warning: invalid pickup effect: '%s'\n", str);
-            continue;
+            efree(&pfx);
+            pickupfx[sprnum] = sourcefx;
          }
+         else // TODO: Remove this ASAP
+            pfx.tempeffect = fxnum;
+
+         continue;
+      }
+      else if(!((pfx.effect = E_ItemEffectForName(str))))
+      {
+         E_EDFLoggedWarning(2, "Warning: invalid pickup effect: '%s'\n", str);
+         continue;
       }
       
       E_EDFLogPrintf("\t\tSet sprite %s(#%d) to pickup effect %s(#%d)\n",
                      title, sprnum, str, fxnum);
 
-      // INVENTORY_FIXME: replace with effect pointer
-      pfx.tempeffect = fxnum;
-
       // free any strings that might have been previously set
+      if(pfx.compatname)
+      {
+         efree(pfx.compatname);
+         pfx.compatname = nullptr;
+         e_PickupCNameHash.removeObject(pfx);
+      }
       if(pfx.message)
       {
          efree(pfx.message);
@@ -1194,6 +1238,13 @@ static void E_processPickupItems(cfg_t *cfg)
 
       // process effect properties
 
+      // compatname
+      if((str = cfg_getstr(sec, ITEM_PICKUP_CNAME)))
+      {
+         pfx.compatname = estrdup(str);
+         e_PickupCNameHash.addObject(pfx);
+      }
+
       // message
       if((str = cfg_getstr(sec, ITEM_PICKUP_MSG)))
          pfx.message = estrdup(str);
@@ -1201,6 +1252,19 @@ static void E_processPickupItems(cfg_t *cfg)
       // sound
       if((str = cfg_getstr(sec, ITEM_PICKUP_SOUND)))
          pfx.sound = estrdup(str);
+
+      if((str = cfg_getstr(sec, ITEM_PICKUP_FLAGS)))
+      {
+         if(*str == '\0')
+         {
+            pfx.flags = 0;
+         }
+         else
+         {
+            unsigned int results = E_ParseFlags(str, &e_PickupFlagSet);
+            pfx.flags = results;
+         }
+      }
    }
 }
 
@@ -1689,6 +1753,10 @@ bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact, int amount)
          return false; // internal error, actually... shouldn't happen
       slot = &player->inventory[newSlot];
    }
+
+   // If we're already at max amount, return now.
+   if(slot->amount == maxAmount)
+      return false;
    
    // If must collect full amount, but it won't fit, return now.
    if(artifact->getInt(keyFullAmountOnly, 0) && 

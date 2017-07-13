@@ -77,6 +77,9 @@ static int edf_weapon_generation = 1;
 #define ITEM_WPN_HOLDSTATE_ALT   "holdstate2"
 #define ITEM_WPN_AMMOPERSHOT_ALT "ammouse2"
 
+#define ITEM_WPN_SELECTORDER  "selectionorder"
+#define ITEM_WPN_SISTERWEAPON "sisterweapon"
+
 #define ITEM_WPN_NEXTINCYCLE  "nextincycle"
 #define ITEM_WPN_PREVINCYCLE  "previncycle"
 
@@ -128,6 +131,8 @@ cfg_opt_t wpninfo_tprops[] =
    CFG_STR(ITEM_WPN_FLASHSTATE_ALT,  "S_NULL", CFGF_NONE), \
    CFG_STR(ITEM_WPN_HOLDSTATE_ALT,   "S_NULL", CFGF_NONE), \
    CFG_INT(ITEM_WPN_AMMOPERSHOT_ALT, 0,        CFGF_NONE), \
+   CFG_INT(ITEM_WPN_SELECTORDER,  -1,       CFGF_NONE), \
+   CFG_STR(ITEM_WPN_SISTERWEAPON, "",       CFGF_NONE), \
    CFG_STR(ITEM_WPN_NEXTINCYCLE,  "",       CFGF_NONE), \
    CFG_STR(ITEM_WPN_PREVINCYCLE,  "",       CFGF_NONE), \
    CFG_STR(ITEM_WPN_FLAGS,        "",       CFGF_NONE), \
@@ -872,6 +877,7 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
    bool inherits = false;
    bool cflags   = false;
    weapontitleprops_t titleprops;
+   weaponinfo_t &wp = *weaponinfo[i];
 
    // if weaponsec is null, we are in the situation of inheriting from a weapon
    // that was processed in a previous EDF generation, so no processing is
@@ -905,7 +911,7 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
          {
             E_EDFLoggedErr(2,
                "E_processWeapon: cyclic inheritance detected in weaponinfo '%s'\n",
-               weaponinfo[i]->name);
+               wp.name);
          }
 
          // add to inheritance stack
@@ -920,22 +926,31 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
          E_CopyWeapon(i, pnum);
 
          // keep track of parent explicitly
-         weaponinfo[i]->parent = weaponinfo[pnum];
+         wp.parent = weaponinfo[pnum];
 
          // we inherit, so treat defaults as no value
          inherits = true;
       }
    }
 
+   if(IS_SET(ITEM_WPN_SELECTORDER))
+   {
+      
+   }
+   if(IS_SET(ITEM_WPN_SISTERWEAPON))
+   {
+      
+   }
+
    if(IS_SET(ITEM_WPN_NEXTINCYCLE))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_NEXTINCYCLE);
-      weaponinfo[i]->nextInCycle = E_WeaponForName(tempstr);
+      wp.nextInCycle = E_WeaponForName(tempstr);
    }
    if(IS_SET(ITEM_WPN_PREVINCYCLE))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_PREVINCYCLE);
-      weaponinfo[i]->prevInCycle = E_WeaponForName(tempstr);
+      wp.prevInCycle = E_WeaponForName(tempstr);
    }
 
    // TODO: Autogenerate instead
@@ -944,7 +959,7 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
       const char *tempeffectname = cfg_getstr(weaponsec, ITEM_WPN_TRACKER);
       itemeffect_t *tempeffect = E_ItemEffectForName(tempeffectname);
       if(tempeffect)
-         weaponinfo[i]->tracker = tempeffect;
+         wp.tracker = tempeffect;
       else // An invalid tracker isn't useful
       {
          tempstr = cfg_title(weaponsec);
@@ -957,78 +972,78 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
    if(IS_SET(ITEM_WPN_AMMO))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_AMMO);
-      weaponinfo[i]->ammo = E_ItemEffectForName(tempstr);
+      wp.ammo = E_ItemEffectForName(tempstr);
    }
 
    if(IS_SET(ITEM_WPN_UPSTATE))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_UPSTATE);
-      weaponinfo[i]->upstate = E_GetStateNumForName(tempstr);
+      wp.upstate = E_GetStateNumForName(tempstr);
    }
 
    if(IS_SET(ITEM_WPN_DOWNSTATE))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_DOWNSTATE);
-      weaponinfo[i]->downstate = E_GetStateNumForName(tempstr);
+      wp.downstate = E_GetStateNumForName(tempstr);
    }
    if(IS_SET(ITEM_WPN_READYSTATE))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_READYSTATE);
-      weaponinfo[i]->readystate = E_GetStateNumForName(tempstr);
+      wp.readystate = E_GetStateNumForName(tempstr);
    }
    if(IS_SET(ITEM_WPN_ATKSTATE))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_ATKSTATE);
-      weaponinfo[i]->atkstate = E_GetStateNumForName(tempstr);
+      wp.atkstate = E_GetStateNumForName(tempstr);
    }
    if(IS_SET(ITEM_WPN_FLASHSTATE))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_FLASHSTATE);
-      weaponinfo[i]->flashstate = E_GetStateNumForName(tempstr);
+      wp.flashstate = E_GetStateNumForName(tempstr);
    }
    if(IS_SET(ITEM_WPN_HOLDSTATE))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_HOLDSTATE);
-      weaponinfo[i]->holdstate = E_GetStateNumForName(tempstr);
+      wp.holdstate = E_GetStateNumForName(tempstr);
    }
 
    if(IS_SET(ITEM_WPN_AMMOPERSHOT))
-      weaponinfo[i]->ammopershot = cfg_getint(weaponsec, ITEM_WPN_AMMOPERSHOT);
+      wp.ammopershot = cfg_getint(weaponsec, ITEM_WPN_AMMOPERSHOT);
 
 
    // Alt attack properties
    if(IS_SET(ITEM_WPN_AMMO_ALT))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_AMMO_ALT);
-      weaponinfo[i]->ammo_alt = E_ItemEffectForName(tempstr);
+      wp.ammo_alt = E_ItemEffectForName(tempstr);
    }
 
    if(IS_SET(ITEM_WPN_ATKSTATE_ALT))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_ATKSTATE_ALT);
-      weaponinfo[i]->atkstate_alt = E_GetStateNumForName(tempstr);
+      wp.atkstate_alt = E_GetStateNumForName(tempstr);
    }
    if(IS_SET(ITEM_WPN_FLASHSTATE_ALT))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_FLASHSTATE_ALT);
-      weaponinfo[i]->flashstate_alt = E_GetStateNumForName(tempstr);
+      wp.flashstate_alt = E_GetStateNumForName(tempstr);
    }
    if(IS_SET(ITEM_WPN_HOLDSTATE_ALT))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_HOLDSTATE_ALT);
-      weaponinfo[i]->holdstate_alt = E_GetStateNumForName(tempstr);
+      wp.holdstate_alt = E_GetStateNumForName(tempstr);
    }
 
    if(IS_SET(ITEM_WPN_AMMOPERSHOT_ALT))
-      weaponinfo[i]->ammopershot_alt = cfg_getint(weaponsec, ITEM_WPN_AMMOPERSHOT_ALT);
+      wp.ammopershot_alt = cfg_getint(weaponsec, ITEM_WPN_AMMOPERSHOT_ALT);
 
    if(IS_SET(ITEM_WPN_MOD))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_MOD);
-      weaponinfo[i]->mod = E_DamageTypeNumForName(tempstr);
+      wp.mod = E_DamageTypeNumForName(tempstr);
    }
    else
-      weaponinfo[i]->mod = 0; // MOD_UNKNOWN
+      wp.mod = 0; // MOD_UNKNOWN
 
    // process combined flags first
    if(IS_SET(ITEM_WPN_FLAGS))
@@ -1036,12 +1051,12 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_FLAGS);
       if(*tempstr == '\0')
       {
-         weaponinfo[i]->flags = 0;
+         wp.flags = 0;
       }
       else
       {
          unsigned int results = E_ParseFlags(tempstr, &e_weaponFlagSet);
-         weaponinfo[i]->flags = results;
+         wp.flags = results;
       }
    }
 
@@ -1052,7 +1067,7 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_ADDFLAGS);
 
       unsigned int results = E_ParseFlags(tempstr, &e_weaponFlagSet);
-      weaponinfo[i]->flags |= results;
+      wp.flags |= results;
    }
 
    if(cfg_size(weaponsec, ITEM_WPN_REMFLAGS) > 0)
@@ -1060,22 +1075,22 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_REMFLAGS);
 
       unsigned int results = E_ParseFlags(tempstr, &e_weaponFlagSet);
-      weaponinfo[i]->flags &= ~results;
+      wp.flags &= ~results;
    }
 
    if(IS_SET(ITEM_WPN_RECOIL))
-      weaponinfo[i]->recoil = cfg_getint(weaponsec, ITEM_WPN_RECOIL);
+      wp.recoil = cfg_getint(weaponsec, ITEM_WPN_RECOIL);
    if(IS_SET(ITEM_WPN_HAPTICRECOIL))
-      weaponinfo[i]->hapticrecoil = cfg_getint(weaponsec, ITEM_WPN_HAPTICRECOIL);
+      wp.hapticrecoil = cfg_getint(weaponsec, ITEM_WPN_HAPTICRECOIL);
    if(IS_SET(ITEM_WPN_HAPTICTIME))
-      weaponinfo[i]->haptictime = cfg_getint(weaponsec, ITEM_WPN_HAPTICTIME);
+      wp.haptictime = cfg_getint(weaponsec, ITEM_WPN_HAPTICTIME);
 
    if(IS_SET(ITEM_WPN_UPSOUND))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_UPSOUND);
       sfxinfo_t *tempsfx = E_EDFSoundForName(tempstr);
       if(tempsfx)
-         weaponinfo[i]->upsound = tempsfx->dehackednum;
+         wp.upsound = tempsfx->dehackednum;
    }
 
    if(IS_SET(ITEM_WPN_READYSOUND))
@@ -1083,24 +1098,11 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_READYSOUND);
       sfxinfo_t *tempsfx = E_EDFSoundForName(tempstr);
       if(tempsfx)
-         weaponinfo[i]->readysound = tempsfx->dehackednum;
+         wp.readysound = tempsfx->dehackednum;
    }
 
    // Process DECORATE state block
    E_ProcessDecorateWepStatesRecursive(weaponsec, i, false);
-}
-
-//
-// Process a single weapon cycle, done after processing all weaponinfos
-//
-static void E_processWeaponCycle(cfg_t *weapon)
-{
-   const char *tempstr = cfg_title(weapon);
-   weaponinfo_t *weaponinfo = E_WeaponForName(tempstr);
-   if((tempstr = cfg_getstr(weapon, ITEM_WPN_NEXTINCYCLE)))
-      weaponinfo->nextInCycle = E_WeaponForName(tempstr);
-   if((tempstr = cfg_getstr(weapon, ITEM_WPN_PREVINCYCLE)))
-      weaponinfo->prevInCycle = E_WeaponForName(tempstr);
 }
 
 //

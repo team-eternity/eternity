@@ -1,39 +1,249 @@
-pickupitem AKYY { effect PFX_HGREENKEY }
-pickupitem BKYY { effect PFX_HBLUEKEY }
-pickupitem CKYY { effect PFX_HYELLOWKEY }
-pickupitem PTN1 { effect PFX_HPOTION }
-pickupitem SHLD { effect PFX_SILVERSHIELD }
-pickupitem SHD2 { effect PFX_ENCHANTEDSHIELD }
+// Heretic Keys
+pickupitem AKYY
+{
+  effect  KeyGreen
+  message $HGOTGREENKEY
+  sound   ht_keyup
+  flags   LEAVEINMULTI
+
+  pfxname PFX_HGREENKEY
+}
+pickupitem BKYY
+{
+  effect  KeyBlue
+  message $HGOTBLUEKEY
+  sound   ht_keyup
+  flags   LEAVEINMULTI
+
+  pfxname PFX_HBLUEKEY
+}
+pickupitem CKYY
+{
+  effect  KeyYellow
+  message $HGOTYELLOWKEY
+  sound   ht_keyup
+  flags   LEAVEINMULTI
+
+  pfxname PFX_HYELLOWKEY
+}
+
+pickupitem PTN1
+{
+  effect  CrystalVial
+  message $HITEMHEALTH
+  sound   ht_itemup
+
+  pfxname PFX_HPOTION
+}
+pickupitem SHLD
+{
+  effect  SilverShield
+  message $HITEMSHIELD1
+  sound   ht_itemup
+
+  pfxname PFX_SILVERSHIELD
+}
+pickupitem SHD2
+{
+  effect  EnchantedShield
+  message $HITEMSHIELD2
+  sound   ht_itemup
+
+  pfxname PFX_ENCHANTEDSHIELD
+}
+// FIXME: This
 pickupitem BAGH { effect PFX_BAGOFHOLDING }
-pickupitem SPMP { effect PFX_HMAP }
-pickupitem INVS { effect PFX_SHADOWSPHERE }
-pickupitem PTN2 { effect PFX_QUARTZFLASK  }
-pickupitem SOAR { effect PFX_WINGSOFWRATH }
-pickupitem INVU { effect PFX_RINGOFINVINCIBILITY }
-pickupitem PWBK { effect PFX_TOMEOFPOWER  }
-pickupitem EGGC { effect PFX_MORPHOVUM }
-pickupitem SPHL { effect PFX_MYSTICURN }
-pickupitem TRCH { effect PFX_ARTITORCH }
-pickupitem FBMB { effect PFX_TIMEBOMB  }
-pickupitem ATLP { effect PFX_TELEPORT  }
-pickupitem AMG1 { effect PFX_GWNDWIMPY }
-pickupitem AMG2 { effect PFX_GWNDHEFTY }
-pickupitem AMM1 { effect PFX_MACEWIMPY }
-pickupitem AMM2 { effect PFX_MACEHEFTY }
-pickupitem AMC1 { effect PFX_CBOWWIMPY }
-pickupitem AMC2 { effect PFX_CBOWHEFTY }
-pickupitem AMB1 { effect PFX_BLSRWIMPY }
-pickupitem AMB2 { effect PFX_BLSRHEFTY }
-pickupitem AMS1 { effect PFX_SKRDWIMPY }
-pickupitem AMS2 { effect PFX_SKRDHEFTY }
-pickupitem AMP1 { effect PFX_PHRDWIMPY }
-pickupitem AMP2 { effect PFX_PHRDHEFTY }
+/*pickupitem BAGH
+{
+  effect  
+  message $HITEMBAGOFHOLDING
+  sound   ht_itemup
+
+  pfxname PFX_BAGOFHOLDING
+}*/
+pickupitem SPMP
+{
+  effect  SuperMap
+  message $HITEMSUPERMAP
+  sound   ht_itemup
+
+  pfxname PFX_HMAP
+}
+pickupitem INVS
+{
+  effect  ArtiInvisibility
+  message $HITEMSHADOWSPHERE
+  sound   ht_artiup
+  //flags   
+}
+pickupitem PTN2
+{
+  effect  ArtiHealth
+  message $HITEMQUARTZFLASK
+  sound   ht_artiup
+  //flags   
+}
+pickupitem SOAR
+{
+  effect  ArtiFly
+  message $HITEMWINGSOFWRATH
+  sound   ht_artiup
+  //flags   
+}
+pickupitem INVU
+{
+  effect  ArtiInvulnerability
+  message $HITEMRINGOFINVINCIBILITY
+  sound   ht_artiup
+  //flags   
+}
+pickupitem PWBK
+{
+  effect  ArtiTomeOfPower
+  message $HITEMTOMEOFPOWER
+  sound   ht_artiup
+  //flags   
+}
+pickupitem EGGC
+{
+  effect  ArtiEgg
+  message $HITEMMORPHOVUM
+  sound   ht_artiup
+  //flags   
+}
+pickupitem SPHL
+{
+  effect  ArtiSuperHealth
+  message $HITEMMYSTICURN
+  sound   ht_artiup
+  //flags   
+}
+pickupitem TRCH
+{
+  effect  ArtiTorch
+  message $HITEMTORCH
+  sound   ht_artiup
+  //flags   
+}
+pickupitem FBMB
+{
+  effect  ArtiTimeBomb
+  message $HITEMTIMEBOMB
+  sound   ht_artiup
+  //flags   
+}
+pickupitem ATLP
+{
+  effect  ArtiTeleport
+  message $HITEMTELEPORT
+  sound   ht_artiup
+  //flags   
+}
+
+pickupitem AMG1
+{
+  effect  GoldWandAmmo
+  message $HAMMOGOLDWAND1
+  sound   ht_itemup
+
+  pfxname PFX_GWNDWIMPY
+}
+pickupitem AMG2
+{
+  effect  GoldWandHefty
+  message $HAMMOGOLDWAND2
+  sound   ht_itemup
+
+  pfxname PFX_GWNDHEFTY
+}
+pickupitem AMM1
+{
+  effect  MaceAmmo
+  message $HAMMOMACE1
+  sound   ht_itemup
+
+  pfxname PFX_MACEWIMPY
+}
+pickupitem AMM2
+{
+  effect  MaceHefty
+  message $HAMMOMACE2
+  sound   ht_itemup
+
+  pfxname PFX_MACEHEFTY
+}
+pickupitem AMC1
+{
+  effect  CrossbowAmmo
+  message $HAMMOCROSSBOW1
+  sound   ht_itemup
+
+  pfxname PFX_CBOWWIMPY
+}
+pickupitem AMC2
+{
+  effect  CrossbowHefty
+  message $HAMMOCROSSBOW2
+  sound   ht_itemup
+
+  pfxname PFX_CBOWHEFTY
+}
+pickupitem AMB1
+{
+  effect  BlasterAmmo
+  message $HAMMOBLASTER1
+  sound   ht_itemup
+
+  pfxname PFX_BLSRWIMPY
+}
+pickupitem AMB2
+{
+  effect  BlasterHefty
+  message $HAMMOBLASTER2
+  sound   ht_itemup
+
+  pfxname PFX_BLSRHEFTY
+}
+pickupitem AMS1
+{
+  effect  SkullRodAmmo
+  message $HAMMOSKULLROD1
+  sound   ht_itemup
+
+  pfxname PFX_PHRDWIMPY
+}
+pickupitem AMS2
+{
+  effect  SkullRodHefty
+  message $HAMMOSKULLROD2
+  sound   ht_itemup
+
+  pfxname PFX_PHRDHEFTY
+}
+pickupitem AMP1
+{
+  effect  PhoenixRodAmmo
+  message $HAMMOPHOENIXROD1
+  sound   ht_itemup
+
+  pfxname PFX_SKRDWIMPY
+}
+pickupitem AMP2
+{
+  effect  PhoenixRodHefty
+  message $HAMMOPHOENIXROD2
+  sound   ht_itemup
+
+  pfxname PFX_SKRDHEFTY
+}
+
+// Heretic Weapons
 
 pickupitem WBOW
 {
-  effect Crossbow
+  effect  Crossbow
   message "$HWEAPONCROSSBOW"
-  sound ht_wpnup
+  sound   ht_wpnup
 }
 
 pickupitem WBLS
@@ -45,30 +255,30 @@ pickupitem WBLS
 
 pickupitem WSKL
 {
-  effect SkullRod
+  effect  SkullRod
   message "$HWEAPONSKULLROD"
-  sound ht_wpnup
+  sound   ht_wpnup
 }
 
 pickupitem WPHX
 {
-  effect PhoenixRod
+  effect  PhoenixRod
   message "$HWEAPONPHOENIX"
-  sound ht_wpnup
+  sound   ht_wpnup
 }
 
 pickupitem WMCE
 {
-  effect Mace
+  effect  Mace
   message "$HWEAPONMACE"
-  sound ht_wpnup
+  sound   ht_wpnup
 }
 
 pickupitem WGNT
 {
-  effect Gauntlets
+  effect  Gauntlets
   message "$HWEAPONGAUNTLETS"
-  sound ht_wpnup
+  sound   ht_wpnup
 }
 
 

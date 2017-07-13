@@ -1527,6 +1527,9 @@ MetaTable *MetaTable::getMetaTable(size_t keyIndex, MetaTable *defValue) const
    return retval;
 }
 
+//
+// TODO: Make getNMetaTable for indexed MetaTable getting
+//
 MetaTable *MetaTable::getMetaTable(const char *key, MetaTable *defValue) const
 {
    MetaTable *retval, *obj;
@@ -1544,19 +1547,22 @@ MetaTable *MetaTable::getMetaTable(const char *key, MetaTable *defValue) const
    return retval;
 }
 
-
+//
+// TODO: "Additive" bool for CFGF_MULTI mvprops
+//
 void MetaTable::setMetaTable(size_t keyIndex, MetaTable *newValue)
 {
-   MetaTable *obj;
-
-   if(!(obj = getObjectKeyAndTypeEx<MetaTable>(keyIndex)))
+   if(!getObjectKeyAndTypeEx<MetaTable>(keyIndex))
       addMetaTable(keyIndex, newValue);
    else
    {
-      
+      // FIXME: Can we insert multiple values for a single index?
    }
 }
 
+//
+// TODO: "Additive" bool for CFGF_MULTI mvprops
+//
 void MetaTable::setMetaTable(const char *key, MetaTable *newValue)
 {
    setMetaTable(MetaKey(key).index, newValue);

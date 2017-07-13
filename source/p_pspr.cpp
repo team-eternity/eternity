@@ -385,9 +385,8 @@ weaponinfo_t *P_SwitchWeapon(player_t *player)
 
       // Weapon is useable in current game mode, the player owns it,
       // and has enough ammo to shoot (or the weapon doesn't need ammo)
-      return !(wp->flags & WPF_NOTSHAREWARE && GameModeInfo->id == shareware) &&
-             E_PlayerOwnsWeaponForDEHNum(player, dehnum) &&
-             P_WeaponHasAmmo(player, wp);
+      return wp && !(wp->flags & WPF_NOTSHAREWARE && GameModeInfo->id == shareware) &&
+             E_PlayerOwnsWeaponForDEHNum(player, dehnum) && P_WeaponHasAmmo(player, wp);
    };
 
    // killough 2/8/98: follow preferences and fix BFG/SSG bugs

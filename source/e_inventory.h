@@ -99,16 +99,6 @@ typedef int artitype_t;
 #define ARTI_KEYGREEN     "KeyGreen"
 #define ARTI_KEYYELLOW    "KeyYellow"
 #define ARTI_KEYBLUE      "KeyBlue"
-#define ARTI_INVISIBILITY "ArtiInvisibility"
-#define ARTI_HEALTH       "ArtiHealth"
-#define ARTI_FLY          "ArtiFly"
-#define ARTI_INVULN       "ArtiInvulnerability"
-#define ARTI_TOMEOFPOWER  "ArtiTomeOfPower"
-#define ARTI_EGG          "ArtiEgg"
-#define ARTI_SUPERHEALTH  "ArtiSuperHealth"
-#define ARTI_TORCH        "ArtiTorch"
-#define ARTI_TIMEBOMB     "ArtiTimeBomb"
-#define ARTI_TELEPORT     "ArtiTeleport"
 
 // Hard-coded names for the (currently) 11 specially treated powers in powertype_t.
 // These are listed in ascending order of enumeration, as opposed to alphabetical.
@@ -153,7 +143,7 @@ typedef MetaTable itemeffect_t;
 // Effect Bindings
 //
 
-enum pickupflags_e
+enum pickupflags_e : unsigned int
 {
    PFXF_ALWAYSPICKUP    = 0x00000001, // item is picked up even if not useful
    PFXF_LEAVEINMULTI    = 0x00000002, // item is left in multiplayer games
@@ -163,16 +153,20 @@ enum pickupflags_e
 
 struct e_pickupfx_t
 {
-   itemeffect_t *effect;  // item given, if any
-   char         *message; // message, if any
-   char         *sound;   // sound, if any
-   unsigned int  flags;   // pickup flags
+   char         *compatname; // compat name, if any
+   itemeffect_t *effect;     // item given, if any
+   char         *message;    // message, if any
+   char         *sound;      // sound, if any
+   unsigned int  flags;      // pickup flags
 
    int tempeffect;        // INVENTORY_FIXME: temporary transitional field
+
+   // EDF Hashing
+   DLListItem<e_pickupfx_t> cnamelinks; // hash by compat name
 };
 
 // INVENTORY_TODO: alter as needed
-extern e_pickupfx_t *pickupfx;
+extern e_pickupfx_t **pickupfx;
 
 //
 // Functions
