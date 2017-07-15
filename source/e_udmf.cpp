@@ -1530,14 +1530,14 @@ bool UDMFParser::next(Token &token)
       if(mData[mPos] == '/' && mPos + 1 < size && mData[mPos + 1] == '*')
       {
          addPos(2);
-         while(mPos + 1 < size && mData[mPos] != '*' && mData[mPos + 1] != '/')
+         while(mPos + 1 < size && (mData[mPos] != '*' || mData[mPos + 1] != '/'))
             addPos(1);
          if(mPos + 1 >= size)
          {
             addPos(1);
             return false;
          }
-         if(mData[mPos] == '*' && mData[mPos] == '/')
+         if(mData[mPos] == '*' && mData[mPos + 1] == '/')
             addPos(2);
          if(mPos == size)
             return false;

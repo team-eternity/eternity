@@ -4,6 +4,12 @@ Changes by Ioan Chera since Eternity Engine v3.42.02 "Heimdal"
 Dates are in dd.mm.yyyy format. Most recent update is first.
 
 --------------------------------------------------------------------------------
+15.07.2017
+
+BUGFIX: multiline UDMF comments were pretty much broken. It was lucky that the
+        editors don't generate such comments.
+
+--------------------------------------------------------------------------------
 04.07.2017
 
 BUGFIX: linked portals were getting overflows when they were crossing a line of
