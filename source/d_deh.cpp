@@ -1497,6 +1497,7 @@ void deh_procAmmo(DWFILE *fpin, char *line)
          if(ammotype)
             ammotype->setInt("ammo.backpackamount", value);
 
+         // TODO: This could probably do with being more robust
          for(int wp = 0; wp < NUMWEAPONS; wp++)
          {
             weaponinfo_t *weapon = E_WeaponForDEHNum(wp);

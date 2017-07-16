@@ -1,0 +1,335 @@
+//
+// EDF for Eternity Engine v3.44.00
+//
+// Pickup item definitions for Doom gamemodes.
+//
+
+// Doom Armor
+pickupitem ARM1
+{
+  effect  GreenArmor
+  message $GOTARMOR
+  sound   itemup
+
+  pfxname PFX_GREENARMOR
+}
+pickupitem ARM2
+{
+  effect  BlueArmor
+  message $GOTMEGA
+  sound   itemup
+
+  pfxname PFX_BLUEARMOR
+}
+
+// Doom Bonuses
+pickupitem BON1
+{
+  effect  HealthBonus
+  message $GOTHTHBONUS
+  sound   itemup
+  flags   ALWAYSPICKUP
+
+  pfxname PFX_POTION
+}
+pickupitem BON2
+{
+  effect  ArmorBonus
+  message $GOTARMBONUS
+  sound   itemup
+  flags   ALWAYSPICKUP
+
+  pfxname PFX_ARMORBONUS
+}
+pickupitem SOUL
+{
+  effect  Soulsphere
+  message $GOTSUPER
+  sound   getpow
+  flags   ALWAYSPICKUP
+
+  pfxname PFX_SOULSPHERE
+}
+// FIXME: This gives two effects for a single pickupitem in P_TouchSpecialThing
+/*pickupitem MEGA
+{
+  effect  
+  message $GOTMSPHERE
+  sound   getpow
+  flags   ALWAYSPICKUP
+
+  pfxname PFX_MEGASPHERE
+}*/
+pickupitem MEGA { effect PFX_MEGASPHERE }
+
+// Doom Keys
+pickupitem BKEY
+{
+  effect  BlueCard
+  message $GOTBLUECARD
+  sound   itemup
+  flags   ALWAYSPICKUP|LEAVEINMULTI
+
+  pfxname PFX_BLUEKEY
+}
+pickupitem YKEY
+{
+  effect  YellowCard
+  message $GOTYELWCARD
+  sound   itemup
+  flags   ALWAYSPICKUP|LEAVEINMULTI
+
+  pfxname PFX_YELLOWKEY
+}
+pickupitem RKEY
+{
+  effect  RedCard
+  message $GOTREDCARD
+  sound   itemup
+  flags   ALWAYSPICKUP|LEAVEINMULTI
+
+  pfxname PFX_REDKEY
+}
+pickupitem BSKU
+{
+  effect  BlueSkull
+  message $GOTBLUESKUL
+  sound   itemup
+  flags   ALWAYSPICKUP|LEAVEINMULTI
+
+  pfxname PFX_BLUESKULL
+}
+pickupitem YSKU
+{
+  effect  YellowSkull
+  message $GOTYELWSKUL
+  sound   itemup
+  flags   ALWAYSPICKUP|LEAVEINMULTI
+
+  pfxname PFX_YELLOWSKULL
+}
+pickupitem RSKU
+{
+  effect  RedSkull
+  message $GOTREDSKULL
+  sound   itemup
+  flags   ALWAYSPICKUP|LEAVEINMULTI
+
+  pfxname PFX_REDSKULL
+}
+
+// Doom Heals
+pickupitem STIM
+{
+  effect  Stimpack
+  message $GOTSTIM
+  sound   itemup
+
+  pfxname PFX_STIMPACK
+}
+pickupitem MEDI
+{
+  effect  Medikit
+  message $GOTMEDIKIT
+  sound   itemup
+
+  pfxname PFX_MEDIKIT
+}
+
+// Doom Powerups
+pickupitem PINV
+{
+  effect  InvulnerabilitySphere
+  message $GOTINVUL
+  sound   getpow
+  flags   ALWAYSPICKUP
+
+  pfxname PFX_INVULNSPHERE
+}
+// FIXME: This gives two effects for a single pickupitem in P_TouchSpecialThing
+/*pickupitem PSTR
+{
+  effect  
+  message $GOTBERSERK
+  sound   getpow
+
+  pfxname PFX_BERZERKBOX
+}*/
+pickupitem PSTR { effect PFX_BERZERKBOX }
+pickupitem PINS
+{
+  effect  BlurSphere
+  message $GOTINVIS
+  sound   getpow
+  flags   ALWAYSPICKUP
+
+  pfxname PFX_INVISISPHERE
+}
+pickupitem SUIT
+{
+  effect  RadSuit
+  message $GOTSUIT
+  sound   getpow
+  flags   ALWAYSPICKUP
+
+  pfxname PFX_RADSUIT
+}
+pickupitem PMAP
+{
+  effect  Allmap
+  message $GOTMAP
+  sound   getpow
+  flags   ALWAYSPICKUP
+
+  pfxname PFX_ALLMAP
+}
+pickupitem PVIS
+{
+  effect  Infrared
+  message $GOTVISOR
+  sound   getpow
+  flags   ALWAYSPICKUP
+
+  pfxname PFX_LIGHTAMP
+}
+
+// Doom Ammo + Backpack
+pickupitem CLIP
+{
+  effect  Clip
+  message $GOTCLIP
+  sound   itemup
+
+  pfxname PFX_CLIP
+}
+pickupitem AMMO
+{
+  effect  ClipBox
+  message $GOTCLIPBOX
+  sound   itemup
+
+  pfxname PFX_CLIPBOX
+}
+pickupitem ROCK
+{
+  effect  RocketAmmo
+  message $GOTROCKET
+  sound   itemup
+
+  pfxname PFX_ROCKET
+}
+pickupitem BROK
+{
+  effect  RocketBox
+  message $GOTROCKBOX
+  sound   itemup
+
+  pfxname PFX_ROCKETBOX
+}
+pickupitem CELL
+{
+  effect  Cell
+  message $GOTCELL
+  sound   itemup
+
+  pfxname PFX_CELL
+}
+pickupitem CELP
+{
+  effect  CellPack
+  message $GOTCELLBOX
+  sound   itemup
+
+  pfxname PFX_CELLPACK
+}
+pickupitem SHEL
+{
+  effect  Shell
+  message $GOTSHELLS
+  sound   itemup
+
+  pfxname PFX_SHELL
+}
+pickupitem SBOX
+{
+  effect  ShellBox
+  message $GOTSHELLBOX
+  sound   itemup
+
+  pfxname PFX_SHELLBOX
+}
+// FIXME: Backpacks
+/*
+pickupitem BPAK
+{
+  effect  
+  message $GOTBACKPACK
+  sound   
+  flags   
+
+  pfxname PFX_BACKPACK
+}*/
+pickupitem BPAK { effect PFX_BACKPACK }
+// FIXME: The fuck am I supposed to do about these messages?
+/*pickupitem BFUG
+{
+  effect  BFG9000
+  message $
+  sound   wpnup
+
+  pfxname PFX_BFG
+}*/
+
+// Doom Weapons
+
+pickupitem BFUG { effect PFX_BFG }
+pickupitem MGUN
+{
+  effect  Chaingun
+  message $GOTCHAINGUN
+  sound   wpnup
+
+  pfxname PFX_CHAINGUN
+}
+pickupitem CSAW
+{
+  effect  Chainsaw
+  message $GOTCHAINSAW
+  sound   wpnup
+
+  pfxname PFX_CHAINSAW
+}
+pickupitem LAUN
+{
+  effect  MissileLauncher
+  message $GOTLAUNCHER
+  sound   wpnup
+
+  pfxname PFX_LAUNCHER
+}
+pickupitem PLAS
+{
+  effect  PlasmaRifle
+  message $GOTPLASMA
+  sound   wpnup
+
+  pfxname PFX_PLASMA
+}
+pickupitem SHOT
+{
+  effect  Shotgun
+  message $GOTSHOTGUN
+  sound   wpnup
+
+  pfxname PFX_SHOTGUN
+}
+pickupitem SGN2
+{
+  effect  SuperShotgun
+  message $GOTSHOTGUN
+  sound   wpnup
+
+  pfxname PFX_SSG
+}
+
+

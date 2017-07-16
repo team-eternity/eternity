@@ -1,3 +1,9 @@
+//
+// EDF for Eternity Engine v3.44.00
+//
+// Pickup item definitions for Heretic gamemode.
+//
+
 // Heretic Keys
 pickupitem AKYY
 {
@@ -51,7 +57,7 @@ pickupitem SHD2
 
   pfxname PFX_ENCHANTEDSHIELD
 }
-// FIXME: This
+// FIXME: Backpacks
 pickupitem BAGH { effect PFX_BAGOFHOLDING }
 /*pickupitem BAGH
 {

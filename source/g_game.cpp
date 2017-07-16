@@ -441,16 +441,16 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       
          if(!demo_compatibility && doom_weapon_toggles)
          {
-            const player_t *player = &players[consoleplayer];
+            player_t *player = &players[consoleplayer];
 
             // only select chainsaw from '1' if it's owned, it's
             // not already in use, and the player prefers it or
             // the fist is already in use, or the player does not
             // have the berserker strength.
 
-            /*if(newweapon==wp_fist && E_PlayerOwnsWeaponForDEHNum(player, wp_chainsaw) &&
-               !E_WeaponIsCurrent(player, WEAPNAME_CHAINSAW) &&
-               (E_WeaponIsCurrent(player, WEAPNAME_FIST) ||
+            if(newweapon==wp_fist && E_PlayerOwnsWeaponForDEHNum(player, wp_chainsaw) &&
+               !E_WeaponIsCurrentDEHNum(player, wp_chainsaw) &&
+               (E_WeaponIsCurrentDEHNum(player, wp_fist) ||
                 !player->powers[pw_strength] ||
                 P_WeaponPreferred(wp_chainsaw, wp_fist)))
             {
@@ -465,12 +465,12 @@ void G_BuildTiccmd(ticcmd_t *cmd)
             if(newweapon == wp_shotgun && enable_ssg &&
                E_PlayerOwnsWeaponForDEHNum(player, wp_supershotgun) &&
                (!E_PlayerOwnsWeaponForDEHNum(player, wp_shotgun) ||
-                E_WeaponIsCurrent(player, WEAPNAME_SHOTGUN) ||
-                !(E_WeaponIsCurrent(player, WEAPNAME_SSG) &&
+                E_WeaponIsCurrentDEHNum(player, wp_shotgun) ||
+                !(E_WeaponIsCurrentDEHNum(player, wp_supershotgun) &&
                  P_WeaponPreferred(wp_supershotgun, wp_shotgun))))
             {
                newweapon = wp_supershotgun;
-            }*/
+            }
          }
          // killough 2/8/98, 3/22/98 -- end of weapon selection changes
       }

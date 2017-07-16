@@ -791,43 +791,6 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    // INVENTORY_FIXME: apply pickupfx[].effect instead!
    switch(pickupfx[special->sprite]->tempeffect)
    {
-      // armor
-   case PFX_GREENARMOR:
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_GREENARMOR)))
-         return;
-      message = DEH_String("GOTARMOR"); // Ty 03/22/98 - externalized
-      break;
-
-   case PFX_BLUEARMOR:
-      if(!P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_BLUEARMOR)))
-         return;
-      message = DEH_String("GOTMEGA"); // Ty 03/22/98 - externalized
-      break;
-
-      // bonus items
-   case PFX_POTION:
-      // INVENTORY_TODO: hardcoded for now
-      P_GiveBody(player, E_ItemEffectForName(ITEMNAME_HEALTHBONUS));
-      message = DEH_String("GOTHTHBONUS"); // Ty 03/22/98 - externalized
-      break;
-
-   case PFX_ARMORBONUS:
-      // INVENTORY_TODO: hardcoded for now
-      P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_ARMORBONUS));
-      message = DEH_String("GOTARMBONUS"); // Ty 03/22/98 - externalized
-      break;
-
-      // sf: removed beta items
-      
-   case PFX_SOULSPHERE:
-      // INVENTORY_TODO: hardcoded for now
-      P_GiveBody(player, E_ItemEffectForName(ITEMNAME_SOULSPHERE));
-      message = DEH_String("GOTSUPER"); // Ty 03/22/98 - externalized
-      sound = sfx_getpow;
-
-      break;
-
    case PFX_MEGASPHERE:
       if(demo_version < 335 && GameModeInfo->id != commercial)
          return;
@@ -838,91 +801,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       sound = sfx_getpow;
       break;
 
-      // cards
-      // leave cards for everyone
-   case PFX_BLUEKEY:
-      // INVENTORY_TODO: hardcoded for now
-      effect = E_ItemEffectForName(ARTI_BLUECARD);
-      if(!E_GetItemOwnedAmount(player, effect))
-         message = DEH_String("GOTBLUECARD"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, effect, special);
-      removeobj = pickup_fx = (GameType == gt_single);
-      break;
-
-   case PFX_YELLOWKEY:
-      // INVENTORY_TODO: hardcoded for now
-      effect = E_ItemEffectForName(ARTI_YELLOWCARD);
-      if(!E_GetItemOwnedAmount(player, effect))
-         message = DEH_String("GOTYELWCARD"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, effect, special);
-      removeobj = pickup_fx = (GameType == gt_single);
-      break;
-
-   case PFX_REDKEY:
-      // INVENTORY_TODO: hardcoded for now
-      effect = E_ItemEffectForName(ARTI_REDCARD);
-      if(!E_GetItemOwnedAmount(player, effect))
-         message = DEH_String("GOTREDCARD"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, effect, special);
-      removeobj = pickup_fx = (GameType == gt_single);
-      break;
-      
-   case PFX_BLUESKULL:
-      // INVENTORY_TODO: hardcoded for now
-      effect = E_ItemEffectForName(ARTI_BLUESKULL);
-      if(!E_GetItemOwnedAmount(player, effect))
-         message = DEH_String("GOTBLUESKUL"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, effect, special);
-      removeobj = pickup_fx = (GameType == gt_single);
-      break;
-      
-   case PFX_YELLOWSKULL:
-      // INVENTORY_TODO: hardcoded for now
-      effect = E_ItemEffectForName(ARTI_YELLOWSKULL);
-      if(!E_GetItemOwnedAmount(player, effect))
-         message = DEH_String("GOTYELWSKUL"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, effect, special);
-      removeobj = pickup_fx = (GameType == gt_single);
-      break;
-
-   case PFX_REDSKULL:
-      // INVENTORY_TODO: hardcoded for now
-      effect = E_ItemEffectForName(ARTI_REDSKULL);
-      if(!E_GetItemOwnedAmount(player, effect))
-         message = DEH_String("GOTREDSKULL"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, effect, special);
-      removeobj = pickup_fx = (GameType == gt_single);
-      break;
-
-   // medikits, heals
-   case PFX_STIMPACK:
-      // INVENTORY_FIXME: temp hard-coded
-      if(!P_GiveBody(player, E_ItemEffectForName(ITEMNAME_STIMPACK)))
-         return;
-      message = DEH_String("GOTSTIM"); // Ty 03/22/98 - externalized
-      break;
-      
-   case PFX_MEDIKIT:
-      // INVENTORY_TODO: hardcoded for now
-      effect = E_ItemEffectForName(ITEMNAME_MEDIKIT);
-      if(!P_GiveBody(player, effect))
-         return;
-      // sf: fix medineed 
-      // (check for below 25, but medikit gives 25, so always > 25)
-      message = DEH_String(player->health < 50 ? "GOTMEDINEED" : "GOTMEDIKIT");
-      break;
-
-
       // power ups
-   case PFX_INVULNSPHERE:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName(ITEMNAME_INVULNSPHERE);
-      if(!P_GivePowerForItem(player, effect))
-         return;
-      message = DEH_String("GOTINVUL"); // Ty 03/22/98 - externalized
-      sound = sfx_getpow;
-      break;
-
       // WEAPON_FIXME: berserk changes to fist
    case PFX_BERZERKBOX:
       // INVENTORY_FIXME: temp hard-coded
@@ -934,98 +813,6 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
          // sf: removed beta
          player->pendingweapon = E_WeaponForDEHNum(wp_fist);
       sound = sfx_getpow;
-      break;
-
-   case PFX_INVISISPHERE:
-      effect = E_ItemEffectForName(ITEMNAME_INVISISPHERE);
-      if(!P_GivePowerForItem(player, effect))
-         return;
-      message = DEH_String("GOTINVIS"); // Ty 03/22/98 - externalized
-      sound = sfx_getpow;
-      break;
-
-   case PFX_RADSUIT:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName(ITEMNAME_RADIATIONSUIT);
-      if(!P_GivePowerForItem(player, effect))
-         return;
-      message = DEH_String("GOTSUIT"); // Ty 03/22/98 - externalized
-      sound = sfx_getpow;
-      break;
-
-   case PFX_ALLMAP:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName(ITEMNAME_COMPUTERMAP);
-      if(!P_GivePowerForItem(player, effect))
-         return;
-      message = DEH_String("GOTMAP"); // Ty 03/22/98 - externalized
-      sound = sfx_getpow;
-      break;
-
-   case PFX_LIGHTAMP:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName(ITEMNAME_LIGHTAMPVISOR);
-      if(!P_GivePowerForItem(player, effect))
-         return;
-      sound = sfx_getpow;
-      message = DEH_String("GOTVISOR"); // Ty 03/22/98 - externalized
-      break;
-
-      // ammo
-   case PFX_CLIP:
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("Clip"), dropped, special->dropamount))
-         return;
-      message = DEH_String("GOTCLIP"); // Ty 03/22/98 - externalized
-      break;
-
-   case PFX_CLIPBOX:
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("ClipBox"), false, 0))
-         return;
-      message = DEH_String("GOTCLIPBOX"); // Ty 03/22/98 - externalized
-      break;
-
-   case PFX_ROCKET:
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("RocketAmmo"), false, 0))
-         return;
-      message = DEH_String("GOTROCKET"); // Ty 03/22/98 - externalized
-      break;
-
-   case PFX_ROCKETBOX:
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("RocketBox"), false, 0))
-         return;
-      message = DEH_String("GOTROCKBOX"); // Ty 03/22/98 - externalized
-      break;
-
-   case PFX_CELL:
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("Cell"), false, 0))
-         return;
-      message = DEH_String("GOTCELL"); // Ty 03/22/98 - externalized
-      break;
-
-   case PFX_CELLPACK:
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("CellPack"), false, 0))
-         return;
-      message = DEH_String("GOTCELLBOX"); // Ty 03/22/98 - externalized
-      break;
-      
-   case PFX_SHELL:
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("Shell"), false, 0))
-         return;
-      message = DEH_String("GOTSHELLS"); // Ty 03/22/98 - externalized
-      break;
-      
-   case PFX_SHELLBOX:
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("ShellBox"), false, 0))
-         return;
-      message = DEH_String("GOTSHELLBOX"); // Ty 03/22/98 - externalized
       break;
 
    case PFX_BACKPACK:
@@ -1050,54 +837,6 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
                 : bfgtype==3 ? "You got the Bouncing BFG!"
                 : bfgtype==4 ? "You got the Plasma Burst BFG!"
                 : "You got some kind of BFG";
-      sound = sfx_wpnup;
-      break;
-
-   case PFX_CHAINGUN:
-      effect = E_ItemEffectForName(WEAPNAME_CHAINGUN);
-      if(!P_GiveWeapon(player, effect, dropped, special))
-         return;
-      message = DEH_String("GOTCHAINGUN"); // Ty 03/22/98 - externalized
-      sound = sfx_wpnup;
-      break;
-
-   case PFX_CHAINSAW:
-      effect = E_ItemEffectForName(WEAPNAME_CHAINSAW);
-      if(!P_GiveWeapon(player, effect, false, special))
-         return;
-      message = DEH_String("GOTCHAINSAW"); // Ty 03/22/98 - externalized
-      sound = sfx_wpnup;
-      break;
-
-   case PFX_LAUNCHER:
-      effect = E_ItemEffectForName(WEAPNAME_MISSILE);
-      if(!P_GiveWeapon(player, effect, false, special))
-         return;
-      message = DEH_String("GOTLAUNCHER"); // Ty 03/22/98 - externalized
-      sound = sfx_wpnup;
-      break;
-
-   case PFX_PLASMA:
-      effect = E_ItemEffectForName(WEAPNAME_PLASMA);
-      if(!P_GiveWeapon(player, effect, false, special))
-         return;
-      message = DEH_String("GOTPLASMA"); // Ty 03/22/98 - externalized
-      sound = sfx_wpnup;
-      break;
-
-   case PFX_SHOTGUN:
-      effect = E_ItemEffectForName(WEAPNAME_SHOTGUN);
-      if(!P_GiveWeapon(player, effect, dropped, special))
-         return;
-      message = DEH_String("GOTSHOTGUN"); // Ty 03/22/98 - externalized
-      sound = sfx_wpnup;
-      break;
-
-   case PFX_SSG:
-      effect = E_ItemEffectForName(WEAPNAME_SSG);
-      if(!P_GiveWeapon(player, effect, dropped, special))
-         return;
-      message = DEH_String("GOTSHOTGUN2"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 

@@ -12,6 +12,7 @@
 //    As with all strings, quotations are not required when the string contains
 //    no whitespace or special characters (which sprite names should not).
 
+// TODO: Move this to doom/sprites.edf? Check with Quasar
 ifenabled(DOOM)
 
 // Doom Sprites
@@ -40,46 +41,7 @@ spritenames += { TNT1, DOGS, PLS1, PLS2, UNKN, SPSH, SLDG, LVAS, EERV }
 //    Sprite-based pickup items are currently limited to one per sprite.
 //    Pickup items may be defined anywhere, and order is unimportant.
 
-ifenabled(DOOM)
-
-pickupitem ARM1 { effect PFX_GREENARMOR }
-pickupitem ARM2 { effect PFX_BLUEARMOR }
-pickupitem BON1 { effect PFX_POTION }
-pickupitem BON2 { effect PFX_ARMORBONUS }
-pickupitem SOUL { effect PFX_SOULSPHERE }
-pickupitem MEGA { effect PFX_MEGASPHERE }
-pickupitem BKEY { effect PFX_BLUEKEY }
-pickupitem YKEY { effect PFX_YELLOWKEY }
-pickupitem RKEY { effect PFX_REDKEY }
-pickupitem BSKU { effect PFX_BLUESKULL }
-pickupitem YSKU { effect PFX_YELLOWSKULL }
-pickupitem RSKU { effect PFX_REDSKULL }
-pickupitem STIM { effect PFX_STIMPACK }
-pickupitem MEDI { effect PFX_MEDIKIT }
-pickupitem PINV { effect PFX_INVULNSPHERE }
-pickupitem PSTR { effect PFX_BERZERKBOX }
-pickupitem PINS { effect PFX_INVISISPHERE }
-pickupitem SUIT { effect PFX_RADSUIT }
-pickupitem PMAP { effect PFX_ALLMAP }
-pickupitem PVIS { effect PFX_LIGHTAMP }
-pickupitem CLIP { effect PFX_CLIP }
-pickupitem AMMO { effect PFX_CLIPBOX }
-pickupitem ROCK { effect PFX_ROCKET }
-pickupitem BROK { effect PFX_ROCKETBOX }
-pickupitem CELL { effect PFX_CELL }
-pickupitem CELP { effect PFX_CELLPACK }
-pickupitem SHEL { effect PFX_SHELL }
-pickupitem SBOX { effect PFX_SHELLBOX }
-pickupitem BPAK { effect PFX_BACKPACK }
-pickupitem BFUG { effect PFX_BFG }
-pickupitem MGUN { effect PFX_CHAINGUN }
-pickupitem CSAW { effect PFX_CHAINSAW }
-pickupitem LAUN { effect PFX_LAUNCHER }
-pickupitem PLAS { effect PFX_PLASMA }
-pickupitem SHOT { effect PFX_SHOTGUN }
-pickupitem SGN2 { effect PFX_SSG }
-
-endif()
+includeifenabled("doom/sprites.edf", "DOOM");
 
 includeifenabled("heretic/sprites.edf", "HERETIC");
 
