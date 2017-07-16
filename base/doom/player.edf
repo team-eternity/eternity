@@ -494,6 +494,7 @@ weapongiver Fist
 weapongiver Pistol
 {
   weapon WeaponPistol
+  ammogiven AmmoClip, 20, 10, 50, 20
 }
 
 weapongiver Shotgun

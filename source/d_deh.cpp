@@ -1497,17 +1497,24 @@ void deh_procAmmo(DWFILE *fpin, char *line)
          if(ammotype)
             ammotype->setInt("ammo.backpackamount", value);
 
-         // INVENTORY_TODO / INVENTORY_FIXME: weapon modifications will need 
-         // adjustment later to loop over all weapons defined via EDF
          for(int wp = 0; wp < NUMWEAPONS; wp++)
          {
-            weaponinfo_t &weapon = *E_WeaponForDEHNum(wp);
-            if(weapon.ammo == ammotype)
+            weaponinfo_t *weapon = E_WeaponForDEHNum(wp);
+            if(weapon == nullptr)
+               continue;
+            itemeffect_t *giver = E_ItemEffectForName(weapon->name);
+            itemeffect_t *given = giver->getMetaTable("ammogiven", nullptr);
+            if(given == nullptr)
+               continue;
+            const char *ammostr = given->getString("type", nullptr);
+            if(ammostr == nullptr)
+               continue;
+            if(E_ItemEffectForName(ammostr) == ammotype)
             {
-               weapon.dmstayammo   = value * 5;
-               weapon.coopstayammo = value * 2;
-               weapon.giveammo     = value * 2;
-               weapon.dropammo     = value;
+               given->setInt("ammo.dmstay",   value * 5);
+               given->setInt("ammo.coopstay", value * 2);
+               given->setInt("ammo.give",     value * 2);
+               given->setInt("ammo.dropped",  value);
             }
          }
       }

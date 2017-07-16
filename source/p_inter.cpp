@@ -946,7 +946,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 
    case PFX_RADSUIT:
       // INVENTORY_FIXME: temp hard-coded
-      effect = effect = E_ItemEffectForName(ITEMNAME_RADIATIONSUIT);
+      effect = E_ItemEffectForName(ITEMNAME_RADIATIONSUIT);
       if(!P_GivePowerForItem(player, effect))
          return;
       message = DEH_String("GOTSUIT"); // Ty 03/22/98 - externalized
