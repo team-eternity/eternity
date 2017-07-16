@@ -5,6 +5,23 @@
 // skins, player classes, and weapons.
 //
 
+// The Base Weapon Class
+
+weaponinfo Weapon
+{
+  states
+  @"
+  LightDone:
+    TNT1 A 0 A_Light0
+    stop
+  "@
+}
+
+//=============================================================================
+//
+// Game Includes and Playerclass Definition
+//
+
 includeifenabled("doom/player.edf", "DOOM");
 
 ifenabled(DOOM)

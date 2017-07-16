@@ -1,10 +1,10 @@
 //
-// EDF for Eternity Engine v3.44.00
+// EDF for Eternity Engine v3.44.00+
 //
 // Pickup item definitions for Heretic gamemode.
 //
 
-// Heretic Keys
+// Keys
 pickupitem AKYY
 {
   effect  KeyGreen
@@ -243,7 +243,7 @@ pickupitem AMP2
   pfxname PFX_SKRDHEFTY
 }
 
-// Heretic Weapons
+// Weapons
 
 pickupitem WBOW
 {

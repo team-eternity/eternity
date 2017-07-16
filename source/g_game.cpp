@@ -2286,7 +2286,9 @@ void G_PlayerReborn(int player)
    p->quake       = 0;                        // haleyjd 01/21/07
 
    p->usedown = true;         // don't do anything immediately
-   p->attackdown = AT_ALL;    // MaxW: 2017/07/10: Adapt for new attackdown
+
+   // MaxW: 2017/07/10: Adapt for new attackdown
+   p->attackdown = demo_version >= 344 ? AT_ALL : AT_PRIMARY;
 
    // clear inventory unless otherwise indicated
    if(!(dmflags & DM_KEEPITEMS))

@@ -445,19 +445,6 @@ static void P_GiveCard(player_t *player, itemeffect_t *card, Mobj *special)
    P_consumeSpecial(player, special);
 }
 
-//
-// Give the player an artifact, Heretic style (don't if full on arti)
-// TODO: Export this behaviour to a pickupitem flag, must be done
-// before P_TouchSpecialThingNew is made default.
-//
-static bool P_giveHereticArti(player_t *player, itemeffect_t *arti)
-{
-   if(E_GetItemOwnedAmount(player, arti) >= E_GetMaxAmountForArtifact(player, arti))
-      return false;
-
-   return E_GiveInventoryItem(player, arti);
-}
-
 /*
   pw_invulnerability,
   pw_strength,
@@ -633,7 +620,6 @@ static void P_RavenRespawn(Mobj *special)
 //
 // INVENTORY_FIXME / INVENTORY_TODO: This will become P_TouchSpecialThing
 // when it is finished, replacing the below.
-// Additionally, see comment above P_giveHereticArti.
 //
 void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
 {

@@ -850,13 +850,7 @@ static int E_resolveParentWeapon(cfg_t *weaponsec, const weapontitleprops_t &pro
 
    // check title props first
    if(props.superclass)
-   {
-      // "Weapon" is currently a dummy value and means it is just a plain 
-      // weapon not inheriting from anyweapon else. Maybe in the future it
-      // could designate specialized native subclasses of Weapon as well?
-      if(strcasecmp(props.superclass, "Weapon"))
-         pnum = E_GetWeaponNumForName(props.superclass);
-   }
+      pnum = E_GetWeaponNumForName(props.superclass);
    else // resolve parent weaponinfo through legacy "inherits" field
       pnum = E_GetWeaponNumForName(cfg_getstr(weaponsec, ITEM_WPN_INHERITS));
 

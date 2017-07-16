@@ -237,7 +237,7 @@ int P_NextWeapon(player_t *player)
    if(demo_version >= 344)
       return newweapon != currentweapon ? newweapon->id : -1;
    else
-      return newweapon != currentweapon ? newweapon->id : wp_nochange;
+      return newweapon != currentweapon ? newweapon->dehnum : wp_nochange;
 }
 
 //
@@ -263,7 +263,7 @@ int P_PrevWeapon(player_t *player)
    if(demo_version >= 344)
       return newweapon != currentweapon ? newweapon->id : -1;
    else
-      return newweapon != currentweapon ? newweapon->id : wp_nochange;
+      return newweapon != currentweapon ? newweapon->dehnum : wp_nochange;
 }
 
 // The first set is where the weapon preferences from             // killough,
@@ -301,14 +301,6 @@ weapontype_t P_SwitchWeaponOld(player_t *player)
 
    // killough 2/8/98: follow preferences and fix BFG/SSG bugs
 
-   // haleyjd WEAPON_FIXME: makes assumptions about ammo per shot
-   // haleyjd WEAPON_FIXME: makes assumptions about ammotypes used by weapons!
-   // haleyjd WEAPON_FIXME: must support arbitrary weapons
-   // haleyjd WEAPON_FIXME: chainsaw/fist issues
-
-   // INVENTORY_FIXME: This is COMPLETE AND TOTAL bullshit. Hardcoded for now...
-   // How in the sweet fuck am I supposed to generalize this mess, AND remain
-   // backwardly compatible with DeHackEd bullshit??
    int clips   = E_GetItemOwnedAmountName(player, "AmmoClip"); 
    int shells  = E_GetItemOwnedAmountName(player, "AmmoShell");
    int cells   = E_GetItemOwnedAmountName(player, "AmmoCell");

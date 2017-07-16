@@ -775,10 +775,9 @@ void P_PlayerThink(player_t *player)
 
       // killough 2/8/98, 3/22/98 -- end of weapon selection changes
 
-
       // Do not go to plasma or BFG in shareware, even if cheated.
       // haleyjd 06/28/13: generalized for EDF weapon system
-      weaponinfo_t *pendingweapon = P_GetPlayerWeapon(player, newweapon);
+      weaponinfo_t *pendingweapon = E_WeaponForDEHNum(newweapon);
       if(E_PlayerOwnsWeapon(player, pendingweapon) &&
          pendingweapon->id != player->readyweapon->id)   
       {
