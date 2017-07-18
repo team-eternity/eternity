@@ -144,6 +144,11 @@ be targeted by monsters even after removal.
 Added sector scroller UDMF properties, and fixed ACS scroll speeds. Also fixed
 overriding that the ACS specials do.
 
+-------------------------------------------------------------------------------
+2017/07/18
+Tall and transparent PNGs are now supported, though the transparency could do
+with being mask-based, instead of just using a "this is transparent" index.
+
 ================================================================================
 EOF
 ================================================================================

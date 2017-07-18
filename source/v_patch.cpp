@@ -885,7 +885,8 @@ public:
 
 
 //
-// converts a linear graphic to a patch with transparency
+// Converts a linear graphic to a patch with transparency.
+// Mostly straight from psxwadgen, which is mostly straight from SLADE.
 //
 patch_t *V_LinearToTransPatch(const byte *linear, int width, int height, size_t *memsize,
                               int color_key, int tag, void **user)
