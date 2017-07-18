@@ -1676,13 +1676,24 @@ inline static const bool tooclose(fixed_t n1, fixed_t n2)
 //
 // Checks if a line is behind a portal-generated divline (barrier)
 //
-static bool R_allowBehindDivline(const dlnormal_t &dln, const seg_t *renderSeg)
+static bool R_allowBehindDivline(const dlnormal_t &dln, const seg_t *renderSeg,
+                                 bool reverse = false)
 {
    divline_t rend;
-   rend.x = renderSeg->v1->x;
-   rend.y = renderSeg->v1->y;
-   rend.dx = renderSeg->v2->x - rend.x;
-   rend.dy = renderSeg->v2->y - rend.y;
+   if(!reverse)
+   {
+      rend.x = renderSeg->v1->x;
+      rend.y = renderSeg->v1->y;
+      rend.dx = renderSeg->v2->x - rend.x;
+      rend.dy = renderSeg->v2->y - rend.y;
+   }
+   else  // this may be needed sometimes
+   {
+      rend.x = renderSeg->v2->x;
+      rend.y = renderSeg->v2->y;
+      rend.dx = renderSeg->v1->x - rend.x;
+      rend.dy = renderSeg->v1->y - rend.y;
+   }
 
    // HACK: pull render-seg to me as a slack to avoid on-line points
    rend.x += M_FloatToFixed(dln.nx * kPortalSegRejectionFudge);
@@ -1713,7 +1724,8 @@ static bool R_allowBehindDivline(const dlnormal_t &dln, const seg_t *renderSeg)
 //
 // Picks the two bounding box lines pointed towards the viewer.
 //
-bool R_PickNearestBoxLines(const fixed_t bbox[4], dlnormal_t &dl1, dlnormal_t &dl2)
+bool R_PickNearestBoxLines(const fixed_t bbox[4], dlnormal_t &dl1,
+                           dlnormal_t &dl2, slopetype_t *slope)
 {
    dl2.dl.x = D_MAXINT;
    if(viewx < bbox[BOXLEFT])
@@ -1733,6 +1745,9 @@ bool R_PickNearestBoxLines(const fixed_t bbox[4], dlnormal_t &dl1, dlnormal_t &d
          dl2.dl.dy = 0;
          dl2.nx = 0;
          dl2.ny = -1;
+
+         if(slope)
+            *slope = ST_POSITIVE;
       }
       else if(viewy > bbox[BOXTOP])
       {
@@ -1750,6 +1765,9 @@ bool R_PickNearestBoxLines(const fixed_t bbox[4], dlnormal_t &dl1, dlnormal_t &d
          dl2.dl.dy = bbox[BOXBOTTOM] - bbox[BOXTOP];
          dl2.nx = -1;
          dl2.ny = 0;
+
+         if(slope)
+            *slope = ST_NEGATIVE;
       }
       else
       {
@@ -1759,6 +1777,9 @@ bool R_PickNearestBoxLines(const fixed_t bbox[4], dlnormal_t &dl1, dlnormal_t &d
          dl1.dl.dy = bbox[BOXBOTTOM] - bbox[BOXTOP];
          dl1.nx = -1;
          dl1.ny = 0;
+
+         if(slope)
+            *slope = ST_VERTICAL;
       }
    }
    else if(viewx <= bbox[BOXRIGHT])
@@ -1771,6 +1792,7 @@ bool R_PickNearestBoxLines(const fixed_t bbox[4], dlnormal_t &dl1, dlnormal_t &d
          dl1.dl.dy = 0;
          dl1.nx = 0;
          dl1.ny = -1;
+
       }
       else if(viewy <= bbox[BOXTOP])
          return false;   // if actor is below portal, just render everything
@@ -1783,6 +1805,9 @@ bool R_PickNearestBoxLines(const fixed_t bbox[4], dlnormal_t &dl1, dlnormal_t &d
          dl1.nx = 0;
          dl1.ny = 1;
       }
+
+      if(slope)
+         *slope = ST_HORIZONTAL;
    }
    else
    {
@@ -1801,6 +1826,9 @@ bool R_PickNearestBoxLines(const fixed_t bbox[4], dlnormal_t &dl1, dlnormal_t &d
          dl2.dl.dy = bbox[BOXTOP] - bbox[BOXBOTTOM];
          dl2.nx = 1;
          dl2.ny = 0;
+
+         if(slope)
+            *slope = ST_NEGATIVE;
       }
       else if(viewy > bbox[BOXTOP])
       {
@@ -1817,6 +1845,9 @@ bool R_PickNearestBoxLines(const fixed_t bbox[4], dlnormal_t &dl1, dlnormal_t &d
          dl2.dl.dy = 0;
          dl2.nx = 0;
          dl2.ny = 1;
+
+         if(slope)
+            *slope = ST_POSITIVE;
       }
       else
       {
@@ -1826,6 +1857,9 @@ bool R_PickNearestBoxLines(const fixed_t bbox[4], dlnormal_t &dl1, dlnormal_t &d
          dl1.dl.dy = bbox[BOXTOP] - bbox[BOXBOTTOM];
          dl1.nx = 1;
          dl1.ny = 0;
+
+         if(slope)
+            *slope = ST_VERTICAL;
       }
    }
 
@@ -1839,12 +1873,42 @@ static bool R_allowBehindSectorPortal(const fixed_t bbox[4], const seg_t &tryseg
 {
    dlnormal_t dl1;
    dlnormal_t dl2;
-   
-   if(!R_PickNearestBoxLines(bbox, dl1, dl2))
+
+   slopetype_t slope, lnslope = tryseg.linedef->slopetype;
+   if(!R_PickNearestBoxLines(bbox, dl1, dl2, &slope))
       return true;
 
-   return R_allowBehindDivline(dl1, &tryseg) && 
-      (dl2.dl.x == D_MAXINT || R_allowBehindDivline(dl2, &tryseg));
+   if(slope == ST_VERTICAL || slope == ST_HORIZONTAL)
+      return R_allowBehindDivline(dl1, &tryseg);
+
+   // Slanted
+   if(slope != lnslope)
+   {
+      return R_allowBehindDivline(dl1, &tryseg) &&
+      R_allowBehindDivline(dl2, &tryseg);
+   }
+
+   // Pointed to the corner
+   bool revfirst = slope == ST_POSITIVE ?
+   !!(tryseg.v1->x < tryseg.v2->x ^ dl1.dl.x == bbox[BOXRIGHT]) :
+   !!(tryseg.v1->x < tryseg.v2->x ^ dl1.dl.x == bbox[BOXLEFT]);
+
+   // truth table:
+   // Positive slope
+   // v1--->v2     top right   =>  revfirst
+   //  false          false           false
+   //  false           true           true
+   //   true          false           true
+   //   true           true           false
+   // Negative slope
+   // v1--->v2     top left   =>  revfirst
+   //  false          false           false
+   //  false           true           true
+   //   true          false           true
+   //   true           true           false
+
+   return R_allowBehindDivline(dl1, &tryseg, revfirst) &&
+      R_allowBehindDivline(dl2, &tryseg, !revfirst);
 }
 
 //
