@@ -147,7 +147,7 @@
       <AdditionalManifestFiles>res/DeclareDPIAware.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
     </Manifest>
     <PreBuildEvent>
-      <Command>../midiproc/genmidiproc$(Platform).bat</Command>
+      <Command>../midiproc/autogenmidiproc.bat $(Platform)</Command>
       <Message>Generate appropriate midiproc files</Message>
     </PreBuildEvent>
   </ItemDefinitionGroup>
@@ -206,7 +206,7 @@
       <AdditionalManifestFiles>res/DeclareDPIAware.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
     </Manifest>
     <PreBuildEvent>
-      <Command>../midiproc/genmidiproc$(Platform).bat</Command>
+      <Command>../midiproc/autogenmidiproc.bat $(Platform)</Command>
       <Message>Generate appropriate midiproc files</Message>
     </PreBuildEvent>
   </ItemDefinitionGroup>
@@ -258,7 +258,7 @@
       <AdditionalManifestFiles>res/DeclareDPIAware.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
     </Manifest>
     <PreBuildEvent>
-      <Command>../midiproc/genmidiproc$(Platform).bat</Command>
+      <Command>../midiproc/autogenmidiproc.bat $(Platform)</Command>
       <Message>Generate appropriate midiproc files</Message>
     </PreBuildEvent>
   </ItemDefinitionGroup>
@@ -308,7 +308,7 @@
       <AdditionalManifestFiles>res/DeclareDPIAware.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
     </Manifest>
     <PreBuildEvent>
-      <Command>../midiproc/genmidiproc$(Platform).bat</Command>
+      <Command>../midiproc/autogenmidiproc.bat $(Platform)</Command>
       <Message>Generate appropriate midiproc files</Message>
     </PreBuildEvent>
   </ItemDefinitionGroup>
