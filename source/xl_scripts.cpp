@@ -111,6 +111,14 @@ void XLTokenizer::doStateScan()
    }
 }
 
+//
+// True if it's alphanumeric or _
+//
+inline static bool XL_isIdentifierChar(char c)
+{
+   return ectype::isAlnum(c) || c == '_';
+}
+
 // Scanning inside a token
 void XLTokenizer::doStateInToken() 
 {
@@ -144,6 +152,14 @@ void XLTokenizer::doStateInToken()
       else if(c == '/' && input[idx+1] == '/' && (flags & TF_SLASHCOMMENTS))
       {
          // double slashes may conditionally be supported as comments
+         --idx;
+         state = STATE_DONE;
+         break;
+      }
+      else if(flags & TF_OPERATORS && !token.empty() &&
+              XL_isIdentifierChar(c) != XL_isIdentifierChar(token[0]))
+      {
+         // operators and identifiers are separate
          --idx;
          state = STATE_DONE;
          break;

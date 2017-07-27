@@ -289,6 +289,7 @@
 		4F5F399F182D9C1C0027813A /* libsmpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF6B1753482C00E70FEC /* libsmpeg.a */; };
 		4F68CE8D1963D88100E7B8BE /* ev_sectors.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F68CE8B1963D88100E7B8BE /* ev_sectors.cpp */; };
 		4F7ADA181E0C623900E34F5F /* m_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F7ADA161E0C623900E34F5F /* m_utils.cpp */; };
+		4F917D781F29243500131BE5 /* xl_umapinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F917D771F29243500131BE5 /* xl_umapinfo.cpp */; };
 		4FAAD5941E583113001D7263 /* p_portalcross.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FAAD5931E583113001D7263 /* p_portalcross.cpp */; };
 		4FB5F0051CCB5A0D00EFF2D9 /* p_portalclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FB5F0031CCB5A0D00EFF2D9 /* p_portalclip.cpp */; };
 		4FC0A9271E1E2A50006CEC45 /* Action.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FC0A8FB1E1E2A50006CEC45 /* Action.cpp */; };
@@ -378,6 +379,7 @@
 		4F7BB78C175797640079E263 /* i_directory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = i_directory.cpp; path = ../source/hal/i_directory.cpp; sourceTree = "<group>"; };
 		4F7BB78D175797640079E263 /* i_directory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = i_directory.h; path = ../source/hal/i_directory.h; sourceTree = "<group>"; };
 		4F8B42E816C1101000765638 /* zutil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = zutil.c; path = ../zlib/zutil.c; sourceTree = "<group>"; };
+		4F917D771F29243500131BE5 /* xl_umapinfo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = xl_umapinfo.cpp; path = ../source/xl_umapinfo.cpp; sourceTree = "<group>"; };
 		4F98954F16C10FB1005D78C0 /* trees.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = trees.c; path = ../zlib/trees.c; sourceTree = "<group>"; };
 		4F9A249216D95878002BE852 /* t_plane.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = t_plane.cpp; path = ../source/t_plane.cpp; sourceTree = "<group>"; };
 		4F9A249316D95878002BE852 /* t_plane.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = t_plane.h; path = ../source/t_plane.h; sourceTree = "<group>"; };
@@ -1902,6 +1904,7 @@
 				FABF5D57158BF42800C49E93 /* xl_scripts.cpp */,
 				4F36247818A567CD00B94FA1 /* xl_sndinfo.cpp */,
 				4F36247918A567CD00B94FA1 /* xl_sndinfo.h */,
+				4F917D771F29243500131BE5 /* xl_umapinfo.cpp */,
 			);
 			name = XL_;
 			sourceTree = "<group>";
@@ -2247,6 +2250,7 @@
 				4F5F3911182D9AC00027813A /* p_scroll.cpp in Sources */,
 				4F5F3912182D9AC00027813A /* p_sector.cpp in Sources */,
 				4FC0A9341E1E2A50006CEC45 /* Script.cpp in Sources */,
+				4F917D781F29243500131BE5 /* xl_umapinfo.cpp in Sources */,
 				4F5F3913182D9AC00027813A /* p_setup.cpp in Sources */,
 				4F5F3914182D9AC00027813A /* p_sight.cpp in Sources */,
 				4F5F3915182D9AC00027813A /* p_skin.cpp in Sources */,
