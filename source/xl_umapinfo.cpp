@@ -24,7 +24,7 @@
 
 #include "z_zone.h"
 
-#include "metaapi.h"
+#include "metaqstring.h"
 #include "w_wad.h"
 #include "xl_scripts.h"
 
@@ -82,11 +82,12 @@ class XLUMapInfoParser final : public XLParser
    qstring key;         // key string
    qstring value;       // value string
 
-   // TODO: doToken and onEOF
    bool doToken(XLTokenizer &token) override;
    void startLump() override;
    void initTokenizer(XLTokenizer &tokenizer) override;
    void onEOF(bool early) override;
+
+   void addValue(const qstring &key, const qstring &value);
 
 public:
    XLUMapInfoParser() : XLParser("UMAPINFO"), state(STATE_EXPECTMAP),
@@ -212,7 +213,7 @@ bool XLUMapInfoParser::doStatePostValue(XLTokenizer &tokenizer)
       result = doStateExpectKey(tokenizer);
    }
 
-   curInfo->setString(savedkey.constPtr(), value.constPtr());
+   addValue(savedkey, value);
    return result;
 }
 
@@ -250,7 +251,21 @@ void XLUMapInfoParser::initTokenizer(XLTokenizer &tokenizer)
 void XLUMapInfoParser::onEOF(bool early)
 {
    if(state == STATE_POSTVALUE && curInfo && !key.empty() && !value.empty())
-      curInfo->setString(key.constPtr(), value.constPtr());
+      addValue(key, value);
+}
+
+//
+// Adds a value for a key
+//
+void XLUMapInfoParser::addValue(const qstring &key, const qstring &value)
+{
+   if(!curInfo)
+      return;
+   auto mms = curInfo->getObjectKeyAndTypeEx<MetaMultiString>(key.constPtr());
+   if(!mms)
+      curInfo->addObject(new MetaMultiString(key.constPtr(), value));
+   else
+      mms->value.add(value);
 }
 
 //
