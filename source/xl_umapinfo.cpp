@@ -25,6 +25,7 @@
 #include "z_zone.h"
 
 #include "metaapi.h"
+#include "w_wad.h"
 #include "xl_scripts.h"
 
 // UMAPINFO entry maintenance
@@ -82,8 +83,10 @@ class XLUMapInfoParser final : public XLParser
    qstring value;       // value string
 
    // TODO: doToken and onEOF
+   bool doToken(XLTokenizer &token) override;
    void startLump() override;
    void initTokenizer(XLTokenizer &tokenizer) override;
+   void onEOF(bool early) override;
 
 public:
    XLUMapInfoParser() : XLParser("UMAPINFO"), state(STATE_EXPECTMAP),
@@ -196,17 +199,29 @@ bool XLUMapInfoParser::doStatePostValue(XLTokenizer &tokenizer)
       state = STATE_EXPECTVALUE;
       return true;
    }
+   bool result = false;
+   qstring savedkey = key;
    if(tokenizer.getToken() == "}")
    {
       state = STATE_EXPECTMAP;
-      return true;
+      result = true;
    }
-   if(tokenizer.getTokenType() == XLTokenizer::TOKEN_STRING)
+   else if(tokenizer.getTokenType() == XLTokenizer::TOKEN_STRING)
    {
       // Otherwise it's a new key
-      return doStateExpectKey(tokenizer);
+      result = doStateExpectKey(tokenizer);
    }
-   return false;
+
+   curInfo->setString(savedkey.constPtr(), value.constPtr());
+   return result;
+}
+
+//
+// Does a token
+//
+bool XLUMapInfoParser::doToken(XLTokenizer &token)
+{
+   return (this->*States[state])(token);
 }
 
 //
@@ -225,7 +240,34 @@ void XLUMapInfoParser::startLump()
 //
 void XLUMapInfoParser::initTokenizer(XLTokenizer &tokenizer)
 {
-   tokenizer.setTokenFlags(XLTokenizer::TF_OPERATORS);
+   tokenizer.setTokenFlags(XLTokenizer::TF_OPERATORS |
+                           XLTokenizer::TF_ESCAPESTRINGS);
+}
+
+//
+// On end of file
+//
+void XLUMapInfoParser::onEOF(bool early)
+{
+   if(state == STATE_POSTVALUE && curInfo && !key.empty() && !value.empty())
+      curInfo->setString(key.constPtr(), value.constPtr());
+}
+
+//
+// Gets the metatable from a UMAPINFO level
+//
+MetaTable *XL_UMapInfoForMapName(const char *mapname)
+{
+   return umapInfoTable.getObjectKeyAndTypeEx<MetaTable>(mapname);
+}
+
+//
+// Parses the UMAPINFO lump
+//
+void XL_ParseUMapInfo()
+{
+   XLUMapInfoParser parser;
+   parser.parseAll(wGlobalDir);
 }
 
 // EOF

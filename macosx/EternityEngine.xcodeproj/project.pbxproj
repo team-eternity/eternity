@@ -380,6 +380,7 @@
 		4F7BB78D175797640079E263 /* i_directory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = i_directory.h; path = ../source/hal/i_directory.h; sourceTree = "<group>"; };
 		4F8B42E816C1101000765638 /* zutil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = zutil.c; path = ../zlib/zutil.c; sourceTree = "<group>"; };
 		4F917D771F29243500131BE5 /* xl_umapinfo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = xl_umapinfo.cpp; path = ../source/xl_umapinfo.cpp; sourceTree = "<group>"; };
+		4F917D791F2A5FD600131BE5 /* xl_umapinfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = xl_umapinfo.h; path = ../source/xl_umapinfo.h; sourceTree = "<group>"; };
 		4F98954F16C10FB1005D78C0 /* trees.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = trees.c; path = ../zlib/trees.c; sourceTree = "<group>"; };
 		4F9A249216D95878002BE852 /* t_plane.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = t_plane.cpp; path = ../source/t_plane.cpp; sourceTree = "<group>"; };
 		4F9A249316D95878002BE852 /* t_plane.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = t_plane.h; path = ../source/t_plane.h; sourceTree = "<group>"; };
@@ -1905,6 +1906,7 @@
 				4F36247818A567CD00B94FA1 /* xl_sndinfo.cpp */,
 				4F36247918A567CD00B94FA1 /* xl_sndinfo.h */,
 				4F917D771F29243500131BE5 /* xl_umapinfo.cpp */,
+				4F917D791F2A5FD600131BE5 /* xl_umapinfo.h */,
 			);
 			name = XL_;
 			sourceTree = "<group>";

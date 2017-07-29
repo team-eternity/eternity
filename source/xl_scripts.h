@@ -77,6 +77,7 @@ public:
       TF_HASHCOMMENTS  = 0x00000004, // supports comments starting with # signs
       TF_SLASHCOMMENTS = 0x00000008, // supports double-slash comments
       TF_OPERATORS     = 0x00000010, // C-style identifiers, no space operators
+      TF_ESCAPESTRINGS = 0x00000020, // Add support for escaping strings
    };
 
 protected:

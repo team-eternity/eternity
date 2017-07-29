@@ -39,6 +39,7 @@
 #include "xl_mapinfo.h"
 #include "xl_musinfo.h"
 #include "xl_scripts.h"
+#include "xl_umapinfo.h"
 
 //=============================================================================
 //
@@ -190,6 +191,9 @@ void XLTokenizer::doStateInBrackets()
 // Reading out a quoted string token
 void XLTokenizer::doStateQuoted()
 {
+   char c;
+   int i;
+
    switch(input[idx])
    {
    case '"':  // end of quoted string
@@ -198,6 +202,94 @@ void XLTokenizer::doStateQuoted()
    case '\0': // end of input (technically, this is malformed)
       --idx;
       state = STATE_DONE;
+      break;
+   case '\\':
+      if(!(flags & TF_ESCAPESTRINGS))
+      {
+         token += input[idx];
+         break;
+      }
+      // Increase IDX, check against '\0' for guarding.
+      if(input[++idx] == '\0')
+      {
+         --idx;
+         state = STATE_DONE;
+         break;
+      }
+      switch(input[idx])   // these correspond to the C escape sequences
+      {
+         case 'a':
+            token += '\a';
+            break;
+         case 'b':
+            token += '\b';
+            break;
+         case 'f':
+            token += '\f';
+            break;
+         case 'n':
+            token += '\n';
+            break;
+         case 't':
+            token += '\t';
+            break;
+         case 'r':
+            token += '\r';
+            break;
+         case 'v':
+            token += '\v';
+            break;
+         case '?':
+            token += '\?';
+            break;
+         case '\n':  // for escaping newlines
+            break;
+         case 'x':
+         case 'X':
+            c = 0;
+            for(i = 0; i < 2; ++i)
+            {
+               idx++;
+               if(input[idx] >= '0' && input[idx] <= '9')
+                  c = (c << 4) + input[idx] - '0';
+               else if(input[idx] >= 'a' && input[idx] <= 'f')
+                  c = (c << 4) + 10 + input[idx] - 'a';
+               else if(input[idx] >= 'A' && input[idx] <= 'F')
+                  c = (c << 4) + 10 + input[idx] - 'A';
+               else
+               {
+                  idx--;
+                  break;
+               }
+            }
+            token += c;
+            break;
+         case '0':
+         case '1':
+         case '2':
+         case '3':
+         case '4':
+         case '5':
+         case '6':
+         case '7':
+            c = input[idx] - '0';
+            for(i = 0; i < 2; ++i)
+            {
+               idx++;
+               if(input[idx] >= '0' && input[idx] <= '7')
+                  c = (c << 3) + input[idx] - '0';
+               else
+               {
+                  idx--;
+                  break;
+               }
+            }
+            token += c;
+            break;
+         default:
+            token += input[idx];
+            break;
+      }
       break;
    default:
       token += input[idx];
@@ -381,6 +473,7 @@ void XL_ParseHexenScripts()
    XL_ParseEMapInfo(); // Eternity: EMAPINFO
    XL_ParseMapInfo();  // Hexen:    MAPINFO
    XL_ParseMusInfo();  // Risen3D:  MUSINFO
+   XL_ParseUMapInfo();  // Universal MAPINFO new format
 }
 
 // EOF
