@@ -1911,7 +1911,14 @@ static void P_processUMapInfo(MetaTable *info)
          applyTo(LevelInfo.interPic);  // NOTE: enterpic not used here
       else if(!strcasecmp(key, "partime"))
          LevelInfo.partime = value.toInt();
-
+      else if(!strcasecmp(key, "endgame"))
+      {
+         if(!value.strCaseCmp("false"))
+            LevelInfo.killFinale = true;
+         // ???
+//         else
+//            forcefinale = true;
+      }
    }
 }
 
