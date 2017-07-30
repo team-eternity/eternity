@@ -125,6 +125,7 @@ static wbstartstruct_t hi_wbs;
 
 // graphic patches
 static patch_t *hi_interpic;
+static patch_t *hi_exitpic;
 static patch_t *hi_in_x;
 static patch_t *hi_in_yah;
 
@@ -157,6 +158,13 @@ static void HI_loadData(void)
 
    // load interpic
    hi_interpic = NULL;
+   hi_exitpic = nullptr;
+
+   if(estrnonempty(hi_wbs.li_lastexitpic))
+   {
+      hi_exitpic = PatchLoader::CacheName(wGlobalDir, hi_wbs.li_lastexitpic,
+                                          PU_STATIC);
+   }
 
    if(gameepisode <= 3)
    {
@@ -311,6 +319,8 @@ static void HI_Stop(void)
 {
    if(hi_interpic)
       Z_ChangeTag(hi_interpic, PU_CACHE);
+   if(hi_exitpic)
+      Z_ChangeTag(hi_exitpic, PU_CACHE);
 
    Z_ChangeTag(hi_in_x, PU_CACHE);
    Z_ChangeTag(hi_in_yah, PU_CACHE);
@@ -926,7 +936,11 @@ static void HI_DrawBackground(void)
    else
    {
       // TODO: externalize flat name
-      V_DrawBackground("FLOOR16", &subscreen43);
+
+      if(estrnonempty(hi_wbs.li_lastexitpic))
+         V_DrawPatch(0, 0, &subscreen43, hi_exitpic);
+      else
+         V_DrawBackground("FLOOR16", &subscreen43);
    }
 }
 
