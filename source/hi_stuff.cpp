@@ -166,7 +166,12 @@ static void HI_loadData(void)
                                           PU_STATIC);
    }
 
-   if(gameepisode <= 3)
+   if(estrnonempty(hi_wbs.li_nextenterpic))
+   {
+      hi_interpic = PatchLoader::CacheName(wGlobalDir, hi_wbs.li_nextenterpic,
+                                           PU_STATIC);
+   }
+   else if(gameepisode <= 3)
    {
       sprintf(mapname, "MAPE%d", gameepisode);
       hi_interpic = PatchLoader::CacheName(wGlobalDir, mapname, PU_STATIC);
@@ -385,10 +390,15 @@ static void HI_drawGoing()
 {
    int i, previous;
 
-   if(gameepisode > 3)
+   if(gameepisode > 3 && estrempty(hi_wbs.li_nextenterpic))
       return;
  
    HI_drawNewLevelName(10);
+
+   // don't proceed by drawing the location indicators if using "enterpic".
+   // Keep them for a more advanced scripting.
+   if(estrnonempty(hi_wbs.li_nextenterpic))
+      return;
    
    previous = hi_wbs.last;
 
@@ -438,10 +448,13 @@ static void HI_drawLeaving(void)
    int lastlevel, thislevel;
    bool drawsecret;
 
-   if(gameepisode > 3)
+   if(gameepisode > 3 && estrempty(hi_wbs.li_nextenterpic))
       return;
 
    HI_drawOldLevelName(3);
+
+   if(estrnonempty(hi_wbs.li_nextenterpic))
+      return;
 
    if(hi_wbs.last == 8)
    {
@@ -626,7 +639,7 @@ static void HI_drawSingleStats(void)
          statstage = 4;
       }
 
-      if(gameepisode < 4)
+      if(gameepisode < 4 || estrnonempty(hi_wbs.li_nextenterpic))
       {         
          int time, hours, minutes, seconds;
          
@@ -866,7 +879,8 @@ static void HI_Ticker(void)
    {
       interstate++;
       
-      if(gameepisode > 3 && interstate > INTR_STATS)
+      if(gameepisode > 3 && interstate > INTR_STATS &&
+         estrempty(hi_wbs.li_nextenterpic))
       {
          // extended episodes have no map screens
          interstate = INTR_WAITING;
@@ -875,10 +889,15 @@ static void HI_Ticker(void)
       switch(interstate)
       {
       case INTR_STATS:
-         statetime = intertime + ((gameepisode > 3) ? 1200 : 300);
+         statetime = intertime + ((gameepisode > 3 &&
+                                   estrempty(hi_wbs.li_nextenterpic)) ? 1200 :
+                                  300);
          break;
       case INTR_LEAVING:
-         statetime = intertime + 200;
+         if(estrnonempty(hi_wbs.li_nextenterpic))
+            statetime = intertime + 35;
+         else
+            statetime = intertime + 200;
          HI_DrawBackground();             // change the background
          break;
       case INTR_GOING:
@@ -902,7 +921,8 @@ static void HI_Ticker(void)
       {
          intertime = 150;
       }
-      else if(interstate < INTR_GOING && gameepisode < 4)
+      else if(interstate < INTR_GOING && (gameepisode < 4 ||
+                                          estrnonempty(hi_wbs.li_nextenterpic)))
       {
          interstate = INTR_GOING;
          HI_DrawBackground(); // force a background change
@@ -929,10 +949,10 @@ static void HI_Ticker(void)
 //
 static void HI_DrawBackground(void)
 {
-   if(interstate > INTR_STATS && hi_interpic)
-   {
+   int comparestate = estrnonempty(hi_wbs.li_nextenterpic) ? INTR_GOING :
+   INTR_STATS + 1;
+   if(interstate >= comparestate && hi_interpic)
       V_DrawPatch(0, 0, &subscreen43, hi_interpic);
-   }
    else
    {
       // TODO: externalize flat name
