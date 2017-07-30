@@ -1909,6 +1909,8 @@ static void P_processUMapInfo(MetaTable *info)
          applyTo(LevelInfo.musicName);
       else if(!strcasecmp(key, "exitpic"))
          applyTo(LevelInfo.interPic);  // NOTE: enterpic not used here
+      else if(!strcasecmp(key, "partime"))
+         LevelInfo.partime = value.toInt();
 
    }
 }
