@@ -587,11 +587,15 @@ static void WI_drawOnLnode(int n, patch_t *c[], int numpatches)
 // Args:    none
 // Returns: void
 //
-static void WI_initAnimatedBack()
+static void WI_initAnimatedBack(bool entering)
 {
    int   i;
    anim_t* a;
 
+   if(wbs->li_lastexitpic && *wbs->li_lastexitpic)
+      return;
+   if(wbs->li_nextenterpic && *wbs->li_nextenterpic && entering)
+      return;
    if(GameModeInfo->id == commercial)  // no animation for DOOM2
       return;
 
@@ -633,6 +637,10 @@ static void WI_updateAnimatedBack()
    int     i;
    anim_t *a;
 
+   if(wbs->li_lastexitpic && *wbs->li_lastexitpic)
+      return;
+   if(wbs->li_nextenterpic && *wbs->li_nextenterpic && state != StatCount)
+      return;
    if(GameModeInfo->id == commercial)
       return;
 
@@ -692,6 +700,10 @@ static void WI_drawAnimatedBack()
    int     i;
    anim_t *a;
 
+   if(wbs->li_lastexitpic && *wbs->li_lastexitpic)
+      return;
+   if(wbs->li_nextenterpic && *wbs->li_nextenterpic && state != StatCount)
+      return;
    if(GameModeInfo->id == commercial) //jff 4/25/98 Someone forgot commercial an enum
       return;
 
@@ -954,7 +966,7 @@ static void WI_initShowNextLoc()
    acceleratestage = 0;
    cnt = SHOWNEXTLOCDELAY * TICRATE;
    
-   WI_initAnimatedBack();
+   WI_initAnimatedBack(true);
 }
 
 
@@ -988,7 +1000,14 @@ static void WI_drawShowNextLoc()
    IN_slamBackground();
    
    // draw animated background
-   WI_drawAnimatedBack(); 
+   WI_drawAnimatedBack();
+
+   if(estrnonempty(wbs->li_lastexitpic) ||
+      (estrnonempty(wbs->li_nextenterpic) && state != StatCount))
+   {
+      WI_drawEL();
+      return;
+   }
 
    if(GameModeInfo->id != commercial)
    {
@@ -1093,7 +1112,7 @@ static void WI_initDeathmatchStats()
          dm_totals[i] = 0;
       }
    }
-   WI_initAnimatedBack();
+   WI_initAnimatedBack(false);
 }
 
 
@@ -1198,8 +1217,10 @@ static void WI_updateDeathmatchStats()
       {   
          S_StartInterfaceSound(sfx_slop);
 
-         if(GameModeInfo->id == commercial)
+         if(GameModeInfo->id == commercial && estrempty(wbs->li_nextenterpic))
+         {
             WI_initNoState();
+         }
          else
             WI_initShowNextLoc();
       }
@@ -1348,7 +1369,7 @@ static void WI_initNetgameStats()
    
    dofrags = !!dofrags; // set to true or false - did we have frags?
    
-   WI_initAnimatedBack();
+   WI_initAnimatedBack(false);
 }
 
 
@@ -1512,7 +1533,7 @@ static void WI_updateNetgameStats()
       if(acceleratestage)
       {
          S_StartInterfaceSound(sfx_sgcock);
-         if(GameModeInfo->id == commercial)
+         if(GameModeInfo->id == commercial && estrempty(wbs->li_nextenterpic))
             WI_initNoState();
          else
             WI_initShowNextLoc();
@@ -1615,7 +1636,7 @@ static void WI_initStats()
    cnt_time = cnt_par = -1;
    cnt_pause = TICRATE;
 
-   WI_initAnimatedBack();
+   WI_initAnimatedBack(false);
 }
 
 // ====================================================================
@@ -1735,7 +1756,7 @@ static void WI_updateStats()
       {
          S_StartInterfaceSound(sfx_sgcock);
          
-         if(GameModeInfo->id == commercial)
+         if(GameModeInfo->id == commercial && estrempty(wbs->li_nextenterpic))
             WI_initNoState();
          else
             WI_initShowNextLoc();
@@ -1868,11 +1889,21 @@ static void WI_OverlayBackground()
 static void WI_DrawBackground()
 {
    char  name[9];  // limited to 8 characters
-  
-   if(GameModeInfo->id == commercial || (GameModeInfo->id == retail && wbs->epsd == 3))
+
+   if(state != StatCount && estrnonempty(wbs->li_nextenterpic))
+      strncpy(name, wbs->li_nextenterpic, sizeof(name));
+   else if(estrnonempty(wbs->li_lastexitpic) ||
+      GameModeInfo->id == commercial || (GameModeInfo->id == retail &&
+                                         wbs->epsd == 3))
+   {
+      // Use LevelInfo's interpic here: it handles cases where li_lastexitpic IS
+      // empty. By the help of logic, the intermapinfo_t last exitpic must be
+      // equivalent to currently exited level's interPic.
       strcpy(name, LevelInfo.interPic);
-   else 
+   }
+   else
       sprintf(name, "WIMAP%d", wbs->epsd);
+   name[sizeof(name) - 1] = 0;
 
    // background
    V_DrawFSBackground(&subscreen43, wGlobalDir.checkNumForName(name));

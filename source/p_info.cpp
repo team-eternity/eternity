@@ -1907,7 +1907,9 @@ static void P_processUMapInfo(MetaTable *info)
          applyTo(LevelInfo.skyName);
       else if(!strcasecmp(key, "music"))
          applyTo(LevelInfo.musicName);
-      // TODO: exitpic and enterpic
+      else if(!strcasecmp(key, "exitpic"))
+         applyTo(LevelInfo.interPic);  // NOTE: enterpic not used here
+
    }
 }
 

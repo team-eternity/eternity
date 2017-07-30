@@ -235,6 +235,8 @@ struct wbstartstruct_t
   const char *li_nextlevelname;
   const char *li_lastlevelpic;
   const char *li_nextlevelpic;
+  const char *li_lastexitpic;
+  const char *li_nextenterpic;
 
   int         maxkills;
   int         maxitems;

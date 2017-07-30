@@ -308,6 +308,10 @@ void XL_BuildInterUMapInfo()
       mms = level->getObjectKeyAndTypeEx<MetaMultiString>("enterpic");
       if(mms && !mms->value.isEmpty())
          info.enterpic = mms->value[0].constPtr();
+
+      mms = level->getObjectKeyAndTypeEx<MetaMultiString>("exitpic");
+      if(mms && !mms->value.isEmpty())
+         info.exitpic = mms->value[0].constPtr();
    }
 }
 

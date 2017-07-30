@@ -418,6 +418,10 @@ void XL_BuildInterEMapInfo()
          info.levelpic = str;
 
       // TODO: enterpic not implemented yet
+
+      str = level->getString("interpic", "");
+      if(*str)
+         info.exitpic = str;
    }
 }
 

@@ -1545,6 +1545,14 @@ static void G_setupMapInfoWMInfo(levelkind_t kind)
 
    wminfo.li_lastlevelpic = LevelInfo.levelPic;
    wminfo.li_nextlevelpic = next.levelpic;
+
+   const intermapinfo_t &last = IN_GetMapInfo(gamemapname);
+
+   // NOTE: just for exit-pic, do NOT use LevelInfo.interPic! We need to tell if
+   // it was set explicitly in map-info by the author, and intermapinfo_t is
+   // certain to be populated directly from XL_ metatables.
+   wminfo.li_lastexitpic = last.exitpic;
+   wminfo.li_nextenterpic = next.enterpic;
 }
 
 //
