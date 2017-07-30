@@ -1359,6 +1359,7 @@ static void P_ClearLevelVars()
    LevelInfo.levelType = GameModeInfo->levelType;
 
    LevelInfo.levelPic        = NULL;
+   LevelInfo.interLevelName  = nullptr;
    LevelInfo.nextLevelPic    = NULL;
    LevelInfo.nextSecretPic   = NULL;
    LevelInfo.creator         = "unknown";
