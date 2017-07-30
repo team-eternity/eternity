@@ -192,9 +192,20 @@ static void HI_loadData(void)
       edf_string_t *str;
 
       // set current map
-      psnprintf(nameBuffer, 24, "_IN_NAME_%s", gamemapname);
-      if((str = E_StringForName(nameBuffer)))
-         mapName = str->string;
+      if(hi_wbs.li_lastlevelname && *hi_wbs.li_lastlevelname)
+         mapName = hi_wbs.li_lastlevelname;
+      else
+      {
+         psnprintf(nameBuffer, 24, "_IN_NAME_%s", gamemapname);
+         if((str = E_StringForName(nameBuffer)))
+            mapName = str->string;
+      }
+
+      if(hi_wbs.li_nextlevelname && *hi_wbs.li_nextlevelname)
+      {
+         nextMapName = hi_wbs.li_nextlevelname;
+         return;
+      }
 
       // are we going to a secret level?
       basename = hi_wbs.gotosecret ? LevelInfo.nextSecret : LevelInfo.nextLevel;
