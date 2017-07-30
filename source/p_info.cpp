@@ -70,7 +70,7 @@
 #include "m_qstr.h"
 #include "m_qstrkeys.h"
 #include "m_utils.h"
-#include "metaapi.h"
+#include "metaqstring.h"
 #include "p_info.h"
 #include "p_mobj.h"
 #include "p_setup.h"
@@ -81,6 +81,7 @@
 #include "w_wad.h"
 #include "xl_emapinfo.h"
 #include "xl_mapinfo.h"
+#include "xl_umapinfo.h"
 
 extern char gamemapname[9];
 
@@ -1570,6 +1571,7 @@ static levelvar_t levelvars[]=
    LI_BOOLNF("fullbright",         useFullBright),
    LI_INTEGR("gravity",            gravity),
    LI_STRING("inter-backdrop",     backDrop),
+   LI_STRING("inter-levelname",    interLevelName),
    LI_STRING("intermusic",         interMusic),
    LI_STRING("interpic",           interPic),
    LI_STRING("intertext",          interTextLump),
@@ -1874,6 +1876,40 @@ static void P_processEMapInfo(MetaTable *info)
    }
 }
 
+//
+// Process UMAPINFO obtained data.
+//
+static void P_processUMapInfo(MetaTable *info)
+{
+   MetaMultiString *mms = nullptr;
+   while((mms = info->getNextTypeEx(mms)))
+   {
+      if(mms->value.isEmpty())
+         continue;
+      const char *key = mms->getKey();
+      const qstring &value = mms->value[0];
+      auto applyTo = [&](const char *&info) {
+         info = value.duplicate(PU_LEVEL);
+      };
+      if(!strcasecmp(key, "levelname"))
+      {
+         applyTo(LevelInfo.levelName);
+         applyTo(LevelInfo.interLevelName);  // apply to both
+      }
+      else if(!strcasecmp(key, "levelpic"))
+         applyTo(LevelInfo.levelPic);
+      else if(!strcasecmp(key, "next"))
+         applyTo(LevelInfo.nextLevel);
+      else if(!strcasecmp(key, "nextsecret"))
+         applyTo(LevelInfo.nextSecret);
+      else if(!strcasecmp(key, "skytexture"))
+         applyTo(LevelInfo.skyName);
+      else if(!strcasecmp(key, "music"))
+         applyTo(LevelInfo.musicName);
+      // TODO: exitpic and enterpic
+   }
+}
+
 //=============================================================================
 //
 // LevelInfo External Interface
@@ -1917,6 +1953,12 @@ void P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname)
    }
 
    foundEEMapInfo = false;
+
+   if((info = XL_UMapInfoForMapName(dir->getLumpName(lumpnum))))
+   {
+      P_processUMapInfo(info);
+      // Don't give it higher priority over Hexen MAPINFO
+   }
    
    // process any global EMAPINFO data
    if((info = XL_EMapInfoForMapName(dir->getLumpName(lumpnum))))

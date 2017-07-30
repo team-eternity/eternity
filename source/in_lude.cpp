@@ -35,6 +35,7 @@
 #include "doomdef.h"
 #include "doomstat.h"
 #include "e_fonts.h"
+#include "e_hash.h"
 #include "e_things.h" 
 #include "g_game.h"
 #include "in_lude.h"
@@ -79,6 +80,12 @@ MobjCollection camerathings;
 
 // chosen camera
 Mobj *wi_camera;
+
+//
+// Intermission map info
+//
+static EHashTable<intermapinfo_t, ENCStringHashKey,
+&intermapinfo_t::lumpname, &intermapinfo_t::link> in_mapinfo;
 
 //
 // IN_AddCameras
@@ -284,6 +291,20 @@ void IN_Start(wbstartstruct_t *wbstartstruct)
    InterFuncs = GameModeInfo->interfuncs;
 
    InterFuncs->Start(wbstartstruct);
+}
+
+//
+// Gets the map info based on lump name. If none is there, then create and
+// return it.
+//
+intermapinfo_t &IN_GetMapInfo(const char *lumpname)
+{
+   intermapinfo_t *info = in_mapinfo.objectForKey(lumpname);
+   if(!info)
+      info = estructalloc(intermapinfo_t, 1);
+   info->lumpname = estrdup(lumpname);
+   in_mapinfo.addObject(info);
+   return *info;
 }
 
 // EOF

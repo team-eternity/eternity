@@ -24,6 +24,7 @@
 
 #include "z_zone.h"
 
+#include "in_lude.h"
 #include "metaqstring.h"
 #include "w_wad.h"
 #include "xl_scripts.h"
@@ -202,6 +203,7 @@ bool XLUMapInfoParser::doStatePostValue(XLTokenizer &tokenizer)
    }
    bool result = false;
    qstring savedkey = key;
+   qstring savedval = value;
    if(tokenizer.getToken() == "}")
    {
       state = STATE_EXPECTMAP;
@@ -213,7 +215,7 @@ bool XLUMapInfoParser::doStatePostValue(XLTokenizer &tokenizer)
       result = doStateExpectKey(tokenizer);
    }
 
-   addValue(savedkey, value);
+   addValue(savedkey, savedval);
    return result;
 }
 
@@ -283,6 +285,30 @@ void XL_ParseUMapInfo()
 {
    XLUMapInfoParser parser;
    parser.parseAll(wGlobalDir);
+}
+
+//
+// Builds the intermission information from UMAPINFO
+//
+void XL_BuildInterUMapInfo()
+{
+   MetaTable *level = nullptr;
+   while((level = umapInfoTable.getNextTypeEx(level)))
+   {
+      intermapinfo_t &info = IN_GetMapInfo(level->getKey());
+
+      auto mms = level->getObjectKeyAndTypeEx<MetaMultiString>("levelname");
+      if(mms && !mms->value.isEmpty())
+         info.levelname = mms->value[0].constPtr();
+
+      mms = level->getObjectKeyAndTypeEx<MetaMultiString>("levelpic");
+      if(mms && !mms->value.isEmpty())
+         info.levelpic = mms->value[0].constPtr();
+
+      mms = level->getObjectKeyAndTypeEx<MetaMultiString>("enterpic");
+      if(mms && !mms->value.isEmpty())
+         info.enterpic = mms->value[0].constPtr();
+   }
 }
 
 // EOF

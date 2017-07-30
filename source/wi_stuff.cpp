@@ -427,8 +427,8 @@ static void WI_drawLF()
    // haleyjd 03/27/05: added string functionality
    // haleyjd 06/17/06: only the needed patch is now cached
 
-   if(LevelInfo.levelPic)
-      patch = PatchLoader::CacheName(wGlobalDir, LevelInfo.levelPic, PU_STATIC);
+   if(wbs->li_lastlevelpic)
+      patch = PatchLoader::CacheName(wGlobalDir, wbs->li_lastlevelpic, PU_STATIC);
    else
       patch = wi_lname_this;
 
@@ -488,6 +488,13 @@ static void WI_drawEL()
    else if(LevelInfo.nextLevelPic)
    {
       patch = PatchLoader::CacheName(wGlobalDir, LevelInfo.nextLevelPic, PU_STATIC);
+      loadedInfoPatch = true;
+   }
+
+   if(!patch && wbs->li_nextlevelpic && *wbs->li_nextlevelpic)
+   {
+      patch = PatchLoader::CacheName(wGlobalDir, wbs->li_nextlevelpic,
+                                     PU_STATIC);
       loadedInfoPatch = true;
    }
 
@@ -2118,62 +2125,80 @@ static void WI_initVariables(wbstartstruct_t *wbstartstruct)
    mapName     = NULL;
    nextMapName = NULL;
 
+   // NOTE: in UMAPINFO, level-pic has priority
+   if((!wbs->li_lastlevelpic || !*wbs->li_lastlevelpic) &&
+      wbs->li_lastlevelname && *wbs->li_lastlevelname)
+   {
+      mapName = wbs->li_lastlevelname;
+   }
+   if((!wbs->li_nextlevelpic || !*wbs->li_nextlevelpic) &&
+      wbs->li_nextlevelname && *wbs->li_nextlevelname)
+   {
+      nextMapName = wbs->li_nextlevelname;
+   }
+
    if(LevelInfo.useEDFInterName || inmanageddir)
    {
       char nameBuffer[24];
       const char *basename;
 
       // set current map
-      if(inmanageddir == MD_MASTERLEVELS)
+      if(!mapName)
       {
-         // haleyjd 08/31/12: In Master Levels mode, synthesize one here.
-         qstring buffer;
-         qstring lvname;
+         if(inmanageddir == MD_MASTERLEVELS)
+         {
+            // haleyjd 08/31/12: In Master Levels mode, synthesize one here.
+            qstring buffer;
+            qstring lvname;
 
-         lvname << FC_ABSCENTER << FC_GOLD << LevelInfo.levelName;
+            lvname << FC_ABSCENTER << FC_GOLD << LevelInfo.levelName;
 
-         V_FontFitTextToRect(in_bigfont, lvname, 0, 0, 320, 200);
+            V_FontFitTextToRect(in_bigfont, lvname, 0, 0, 320, 200);
 
-         buffer << "{EE_MLEV_" << lvname << "}";
-         mapName = E_CreateString(lvname.constPtr(), buffer.constPtr(), -1)->string;
-      }
-      else
-      {
-         edf_string_t *str;
-         psnprintf(nameBuffer, sizeof(nameBuffer), "_IN_NAME_%s", gamemapname);
-         if((str = E_StringForName(nameBuffer)))
-            mapName = str->string;
+            buffer << "{EE_MLEV_" << lvname << "}";
+            mapName = E_CreateString(lvname.constPtr(), buffer.constPtr(), -1)->string;
+         }
+         else
+         {
+            edf_string_t *str;
+            psnprintf(nameBuffer, sizeof(nameBuffer), "_IN_NAME_%s", gamemapname);
+            if((str = E_StringForName(nameBuffer)))
+               mapName = str->string;
+         }
       }
 
       // are we going to a secret level?
-      basename = wbs->gotosecret ? LevelInfo.nextSecret : LevelInfo.nextLevel;
-
-      // set next map
-      if(*basename)
+      if(!nextMapName)
       {
-         edf_string_t *str;
-         psnprintf(nameBuffer, 24, "_IN_NAME_%s", basename);
+         basename = wbs->gotosecret ? LevelInfo.nextSecret : LevelInfo.nextLevel;
 
-         if((str = E_StringForName(nameBuffer)))
-            nextMapName = str->string;
-      }
-      else
-      {
-         // try ExMy and MAPxy defaults for normally-named maps
-         if(isExMy(gamemapname))
+         // set next map
+         if(*basename)
          {
             edf_string_t *str;
-            psnprintf(nameBuffer, 24, "_IN_NAME_E%01dM%01d", 
-                      wbs->epsd + 1, wbs->next + 1);
+            psnprintf(nameBuffer, 24, "_IN_NAME_%s", basename);
+
             if((str = E_StringForName(nameBuffer)))
                nextMapName = str->string;
          }
-         else if(isMAPxy(gamemapname))
+         else
          {
-            edf_string_t *str;
-            psnprintf(nameBuffer, 24, "_IN_NAME_MAP%02d", wbs->next + 1);
-            if((str = E_StringForName(nameBuffer)))
-               nextMapName = str->string;
+            // try ExMy and MAPxy defaults for normally-named maps
+            if(isExMy(gamemapname))
+            {
+               edf_string_t *str;
+               psnprintf(nameBuffer, 24, "_IN_NAME_E%01dM%01d",
+                         wbs->epsd + 1, wbs->next + 1);
+               if((str = E_StringForName(nameBuffer)))
+                  nextMapName = str->string;
+            }
+            else if(isMAPxy(gamemapname))
+            {
+               edf_string_t *str;
+               psnprintf(nameBuffer, 24, "_IN_NAME_MAP%02d", wbs->next + 1);
+               if((str = E_StringForName(nameBuffer)))
+                  nextMapName = str->string;
+            }
          }
       }
    }

@@ -458,6 +458,20 @@ void XLParser::parseNew(WadDirectory &dir)
       parseLump(dir, dir.getLumpInfo()[lumpnum], true);
 }
 
+//
+// Builds the intermission-needed set of mapinfos from the available XL lumps
+//
+static void XL_buildInterMapInfo()
+{
+   // First, visit UMAPINFO
+   XL_BuildInterUMapInfo();
+   // Then, override with EMAPINFO
+   XL_BuildInterEMapInfo();
+
+   // FIXME: MAPINFO is meant only for Hexen, which doesn't have Doom-style in-
+   // termission anyway. But maybe we should use its fields.
+}
+
 //=============================================================================
 // 
 // External Interface
@@ -474,6 +488,8 @@ void XL_ParseHexenScripts()
    XL_ParseMapInfo();  // Hexen:    MAPINFO
    XL_ParseMusInfo();  // Risen3D:  MUSINFO
    XL_ParseUMapInfo();  // Universal MAPINFO new format
+
+   XL_buildInterMapInfo();
 }
 
 // EOF

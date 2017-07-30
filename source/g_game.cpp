@@ -1511,6 +1511,41 @@ static bool G_doFinale()
    return true;
 }
 
+//
+// Kind of next level: the secret or the overt one.
+//
+enum levelkind_t
+{
+   lk_overt,
+   lk_secret
+};
+
+//
+// Gets the name of the next level, either from map-info or explicit next
+//
+static const char *G_getNextLevelName(levelkind_t kind, int map)
+{
+   const char *nextName = kind == lk_secret ? LevelInfo.nextSecret :
+   LevelInfo.nextLevel;
+   if(!wminfo.nextexplicit && nextName && *nextName)
+      return nextName;
+   return G_GetNameForMap(gameepisode, map);
+}
+
+//
+// Setups the MapInfo/LevelInfo fields of wminfo
+//
+static void G_setupMapInfoWMInfo(levelkind_t kind)
+{
+   const intermapinfo_t &next =
+   IN_GetMapInfo(G_getNextLevelName(kind, wminfo.next + 1));
+
+   wminfo.li_lastlevelname = LevelInfo.interLevelName;  // just reference it
+   wminfo.li_nextlevelname = next.levelname;
+
+   wminfo.li_lastlevelpic = LevelInfo.levelPic;
+   wminfo.li_nextlevelpic = next.levelpic;
+}
 
 //
 // G_DoCompleted
@@ -1621,6 +1656,8 @@ static void G_DoCompleted()
    
    if(statcopy)
       memcpy(statcopy, &wminfo, sizeof(wminfo));
+
+   G_setupMapInfoWMInfo(secretexit ? lk_secret : lk_overt);
    
    IN_Start(&wminfo);
 }
@@ -1648,19 +1685,11 @@ static void G_DoWorldDone()
    
    // haleyjd: customizable secret exits
    if(secretexit)
-   {
-      if(!wminfo.nextexplicit && *LevelInfo.nextSecret)
-         G_SetGameMapName(LevelInfo.nextSecret);
-      else
-         G_SetGameMapName(G_GetNameForMap(gameepisode, gamemap));
-   }
+      G_SetGameMapName(G_getNextLevelName(lk_secret, gamemap));
    else
    {
       // haleyjd 12/14/01: don't use nextlevel for secret exits here either!
-      if(!wminfo.nextexplicit && *LevelInfo.nextLevel)
-         G_SetGameMapName(LevelInfo.nextLevel);
-      else
-         G_SetGameMapName(G_GetNameForMap(gameepisode, gamemap));
+      G_SetGameMapName(G_getNextLevelName(lk_overt, gamemap));
    }
 
    // haleyjd 10/24/10: if in Master Levels mode, see if the next map exists

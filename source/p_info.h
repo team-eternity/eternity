@@ -92,6 +92,7 @@ struct LevelInfo_t
    const char *interTextSLump;  // lump for secret exit finale
    const char *backDrop;        // pic used during text finale
    const char *interMusic;      // text finale music
+   const char *interLevelName;  // intermission level name literal text
    const char *levelPic;        // intermission level name graphics lump
    const char *nextLevelPic;    // level name lump for NEXT level 06/17/06
    const char *nextSecretPic;   // level name lump for SECRET level 06/17/06
