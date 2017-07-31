@@ -4,6 +4,13 @@ Changes by Ioan Chera since Eternity Engine v3.42.02 "Heimdal"
 Dates are in dd.mm.yyyy format. Most recent update is first.
 
 --------------------------------------------------------------------------------
+31.07.2017
+
+BUGFIX: Demos recorded with MBF or less compatibility level in ports such as
+        PrBoom+ now ignore EMAPINFO when loaded in Eternity. This fixes some E1
+        Valiant megawad demos from the Doomed Speed Demo Archive.
+
+--------------------------------------------------------------------------------
 30.07.2017
 
 FEATURE: new EMAPINFO field, inter-levelname. The only way so far to set the in-
