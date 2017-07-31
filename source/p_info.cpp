@@ -1966,31 +1966,35 @@ void P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname)
 
    foundEEMapInfo = false;
 
-   if((info = XL_UMapInfoForMapName(dir->getLumpName(lumpnum))))
+   if(demo_version > 203)  // do NOT read any MapInfo in MBF or less
    {
-      P_processUMapInfo(info);
-      // Don't give it higher priority over Hexen MAPINFO
-   }
-   
-   // process any global EMAPINFO data
-   if((info = XL_EMapInfoForMapName(dir->getLumpName(lumpnum))))
-   {
-      P_processEMapInfo(info);
-      foundEEMapInfo = true;
+      // FIXME: this may need finer compatibility check if it materializes
+      if((info = XL_UMapInfoForMapName(dir->getLumpName(lumpnum))))
+      {
+         P_processUMapInfo(info);
+         // Don't give it higher priority over Hexen MAPINFO
+      }
+
+      // process any global EMAPINFO data
+      if((info = XL_EMapInfoForMapName(dir->getLumpName(lumpnum))))
+      {
+         P_processEMapInfo(info);
+         foundEEMapInfo = true;
+      }
+
+      // additively process any SMMU header information for compatibility
+      if((info = XL_ParseLevelInfo(dir, lumpnum)))
+      {
+         P_processEMapInfo(info);
+         foundEEMapInfo = true;
+      }
+
+      // haleyjd 01/26/14: if no EE map information was specified for this map,
+      // defer to any defined Hexen MAPINFO data now.
+      if(!foundEEMapInfo)
+         P_applyHexenMapInfo();
    }
 
-   // additively process any SMMU header information for compatibility
-   if((info = XL_ParseLevelInfo(dir, lumpnum)))
-   {
-      P_processEMapInfo(info);
-      foundEEMapInfo = true;
-   }
-
-   // haleyjd 01/26/14: if no EE map information was specified for this map,
-   // defer to any defined Hexen MAPINFO data now.
-   if(!foundEEMapInfo)
-      P_applyHexenMapInfo();
-   
    // haleyjd: call post-processing routines
    P_LoadInterTextLumps();
    P_SetSky2Texture();
