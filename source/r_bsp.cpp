@@ -1890,8 +1890,8 @@ static bool R_allowBehindSectorPortal(const fixed_t bbox[4], const seg_t &tryseg
 
    // Pointed to the corner
    bool revfirst = slope == ST_POSITIVE ?
-   !!(tryseg.v1->x < tryseg.v2->x ^ dl1.dl.x == bbox[BOXRIGHT]) :
-   !!(tryseg.v1->x < tryseg.v2->x ^ dl1.dl.x == bbox[BOXLEFT]);
+   !!((tryseg.v1->x < tryseg.v2->x) ^ (dl1.dl.x == bbox[BOXRIGHT])) :
+   !!((tryseg.v1->x < tryseg.v2->x) ^ (dl1.dl.x == bbox[BOXLEFT]));
 
    // truth table:
    // Positive slope
