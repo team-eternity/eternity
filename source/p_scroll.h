@@ -77,6 +77,18 @@ void P_SpawnScrollers();
 void P_SpawnFloorParam(const line_t *l, bool acs);
 void P_SpawnCeilingParam(const line_t *l, bool acs);
 
+enum udmfscrolltype_e : int
+{
+   SCROLLTYPE_NONE,
+   SCROLLTYPE_TEXTURE,
+   SCROLLTYPE_CARRY,
+   SCROLLTYPE_BOTH,
+   NUMSCROLLTYPES
+};
+
+void P_SpawnFloorUDMF(int s, int type, double scrollx, double scrolly);
+void P_SpawnCeilingUDMF(int s, int type, double scrollx, double scrolly);
+
 #endif
 
 // EOF

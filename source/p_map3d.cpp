@@ -43,6 +43,7 @@
 #include "z_zone.h"
 
 #include "d_gi.h"
+#include "d_main.h"
 #include "d_mod.h"
 #include "doomstat.h"
 #include "e_states.h"
@@ -55,6 +56,7 @@
 #include "p_portal.h"
 #include "p_portalclip.h"  // ioanch 20160115
 #include "p_portalcross.h"
+#include "p_sector.h"
 #include "p_setup.h"
 #include "r_main.h"
 #include "r_pcheck.h"
@@ -845,6 +847,24 @@ static bool P_AdjustFloorCeil(Mobj *thing, bool midtex)
    thing->dropoffz   = clip.dropoffz; // killough 11/98: remember dropoffs
    
    thing->flags3 = oldfl3;
+
+   // no sector linear interpolation tic
+   // Use this to prevent all subsequent movement from interpolating if one just
+   // triggered a portal teleport
+   static int noseclerptic = INT_MIN;
+
+   // Teleport thngs in the way if this is a portal sector. If targeted thing
+   // is the displayplayer, prevent interpolation.
+   if(noseclerptic == gametic || (demo_version >= 342 &&
+      P_CheckPortalTeleport(thing) && !camera &&
+      thing == players[displayplayer].mo))
+   {
+      // Prevent interpolation both for moving sector and player's destination 
+      // sector.
+      P_SaveSectorPosition(*movesec);
+      P_SaveSectorPosition(*thing->subsector->sector);
+      noseclerptic = gametic;
+   }
 
    return isgood;
 }

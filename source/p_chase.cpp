@@ -383,8 +383,11 @@ void P_WalkTicker()
       walkcamera.z = minheight;
 }
 
-static void P_ResetWalkcam()
+void P_ResetWalkcam()
 {
+   if(gamestate != GS_LEVEL)
+      return; // only in level
+
    sector_t *sec;
    // ioanch 20151218: fixed point mapthing coordinates
    walkcamera.x      = playerstarts[0].x;
@@ -404,17 +407,25 @@ VARIABLE_BOOLEAN(walkcam_active, NULL,    onoff);
 CONSOLE_VARIABLE(walkcam, walkcam_active, cf_notnet)
 {
    if(!Console.argc)
-      walkcam_active = !walkcam_active;
-   else
-      walkcam_active = Console.argv[0]->toInt();
+      return;
 
-   if(walkcam_active)
-   {
-      camera = &walkcamera;
-      P_ResetWalkcam();
-   }
+   if(Console.argv[0]->toInt())
+      P_WalkStart();
    else
-      camera = NULL;
+      P_WalkEnd();
+}
+
+void P_WalkStart()
+{
+   walkcam_active = true;
+   camera = &walkcamera;
+   P_ResetWalkcam();
+}
+
+void P_WalkEnd()
+{
+   walkcam_active = false;
+   camera = NULL;
 }
 
 //==============================================================================

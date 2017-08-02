@@ -62,6 +62,22 @@ void IN_Drawer(void);
 void IN_DrawBackground(void);
 void IN_Start(wbstartstruct_t *wbstartstruct);
 
+//
+// Extended level info needed for intermission
+//
+struct intermapinfo_t
+{
+   const char *lumpname;   // this works as key too
+   DLListItem<intermapinfo_t> link;
+
+   const char *levelname;  // the level name in the automap
+   const char *levelpic;   // the level pic in the intermission
+   const char *enterpic;   // intermission background picture for entrance
+   const char *exitpic;    // intermission exit picture
+};
+
+intermapinfo_t &IN_GetMapInfo(const char *lumpname);
+
 #endif
 
 // EOF

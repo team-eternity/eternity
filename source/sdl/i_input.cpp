@@ -119,8 +119,8 @@ bool MouseShouldBeGrabbed()
       (paused && !walkcam_active))
       return false;
 
-   // only grab mouse when playing levels (but not demos)
-   return (gamestate == GS_LEVEL) && !demoplayback;
+   // only grab mouse when playing levels (but not demos (if walkcam isn't active))
+   return (gamestate == GS_LEVEL) && (!demoplayback || walkcam_active);
 }
 
 //

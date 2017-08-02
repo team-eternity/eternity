@@ -370,7 +370,7 @@ static bool P_Shoot2SLine(line_t *li, int side, fixed_t dist)
    if((floorsame   || FixedDiv(clip.openbottom - trace.z , dist) <= trace.aimslope) &&
       (ceilingsame || FixedDiv(clip.opentop - trace.z , dist) >= trace.aimslope))
    {
-      if(li->special && !comp[comp_planeshoot])
+      if(li->special)
          P_ShootSpecialLine(trace.thing, li, side);
       
       return true; // shot continues
