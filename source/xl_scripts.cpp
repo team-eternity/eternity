@@ -487,7 +487,9 @@ void XL_ParseHexenScripts()
    XL_ParseEMapInfo(); // Eternity: EMAPINFO
    XL_ParseMapInfo();  // Hexen:    MAPINFO
    XL_ParseMusInfo();  // Risen3D:  MUSINFO
-   XL_ParseUMapInfo();  // Universal MAPINFO new format
+
+   // FIXME: do this when it's time, not now yet.
+// XL_ParseUMapInfo();  // Universal MAPINFO new format
 
    XL_buildInterMapInfo();
 }
