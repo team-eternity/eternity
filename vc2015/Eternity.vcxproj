@@ -1768,6 +1768,7 @@
     <ClCompile Include="..\source\xl_mapinfo.cpp" />
     <ClCompile Include="..\source\xl_musinfo.cpp" />
     <ClCompile Include="..\source\xl_sndinfo.cpp" />
+    <ClCompile Include="..\source\xl_umapinfo.cpp" />
     <ClCompile Include="..\source\z_native.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -2232,6 +2233,7 @@
     <ClInclude Include="..\source\xl_mapinfo.h" />
     <ClInclude Include="..\source\xl_musinfo.h" />
     <ClInclude Include="..\source\xl_sndinfo.h" />
+    <ClInclude Include="..\source\xl_umapinfo.h" />
     <ClInclude Include="..\source\z_auto.h" />
     <ClInclude Include="..\Source\z_zone.h" />
     <ClInclude Include="..\source\autopalette.h" />
