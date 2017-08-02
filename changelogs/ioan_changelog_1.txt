@@ -23,6 +23,11 @@ FEATURE: new EMAPINFO field, inter-levelname. The only way so far to set the in-
          fore reading EMAPINFO).
 
 --------------------------------------------------------------------------------
+19.07.2017
+
+BUGFIX: fixed seg rejection problems with anchored portals.
+
+--------------------------------------------------------------------------------
 15.07.2017
 
 BUGFIX: multiline UDMF comments were pretty much broken. It was lucky that the
