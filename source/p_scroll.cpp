@@ -225,18 +225,17 @@ bool EV_stopFlatScrollerBySecnum(int type, int secnum)
       return false;
 
    // search the scrolled sectors
-   for(scrollerlist_t *sl = scrollers; sl; sl = sl->next)
+   scrollerlist_t *sl = scrollers, *prev = nullptr;
+   while(sl)
    {
       ScrollThinker *scroller = sl->scroller;
-
+      sl = sl->next; // MUST do this here or bad things happen
       if(scroller->affectee == secnum && scroller->type == type)
       {
          scroller->removeScroller();
-         return true; // Return, since a sector will only have a single scroller of one type
       }
    }
 
-   // TODO: Return false instead? IDK, I don't even remember coding this function. (MaxW)
    return true;
 }
 

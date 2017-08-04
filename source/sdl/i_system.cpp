@@ -141,6 +141,10 @@ static int error_exitcode;
 
 #define IFNOTFATAL(a) if(error_exitcode < I_ERRORLEVEL_FATAL) a
 
+// MaxW: If we wanna exit fast, skip ENDOOM stuff regardless of player setting,
+// but we DON'T wanna overwrite the user's showendoom setting in their cfg
+static bool speedyexit = false;
+
 //
 // I_Quit
 //
@@ -157,7 +161,7 @@ void I_Quit(void)
    // sf : rearrange this so the errmsg doesn't get messed up
    if(error_exitcode >= I_ERRORLEVEL_MESSAGE)
       puts(errmsg);   // killough 8/8/98
-   else
+   else if(!speedyexit) // MaxW: The user didn't Alt+F4
       I_EndDoom();
 
    // SoM: 7/5/2002: Why I didn't remember this in the first place I'll never know.
@@ -181,6 +185,16 @@ void I_Quit(void)
       getch();
    }
 #endif
+}
+
+//
+// MaxW: 2017/08/04: Exit quickly and cleanly (skip ENDOOM display)
+//
+void I_QuitFast()
+{
+   puts("Eternity quit quickly.");
+   speedyexit = true;
+   exit(0);
 }
 
 //

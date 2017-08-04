@@ -584,6 +584,34 @@ static void I_GetEvent()
          d_event.type = ev_keydown;
          d_event.data1 = I_TranslateKey(ev.key.keysym.sym);
 
+#if (EE_CURRENT_PLATFORM != EE_PLATFORM_MACOSX)
+         // This #if block is adapted from PRBoom+
+         // TODO: A fullscreen toggle would be nice, but geom string might need setting.
+         // See PRBoom+'s I_GetEvent for a cross-platform implementation of how to get that input.
+         if(ev.key.keysym.mod & KMOD_LALT)
+         {
+            // Prevent executing action on Alt-Tab
+            if(ev.key.keysym.sym == SDLK_TAB)
+               break;
+            // Immediately exit on Alt+F4 ("Boss Key")
+            else if(ev.key.keysym.sym == SDLK_F4)
+            {
+               I_QuitFast();
+               break;
+            }
+         }
+#else
+         // Also provide macOS option
+         if(ev.key.keysym.mod & KMOD_LMETA)
+         {
+            if(ev.key.keysym.sym == SDLK_q)
+            {
+               I_QuitFast();
+               break;
+            }
+         }
+#endif
+
 #if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS)
          // Capslock on Windows alternates between key down and key up
          // events. When we get a keydown, we need to defer a keyup event.
