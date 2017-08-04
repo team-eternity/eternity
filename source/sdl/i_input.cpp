@@ -584,10 +584,10 @@ static void I_GetEvent()
          d_event.type = ev_keydown;
          d_event.data1 = I_TranslateKey(ev.key.keysym.sym);
 
-// This #if block is adapted from PRBoom+
-// TODO: A fullscreen toggle would be nice, but geom string might need setting.
-// See PRBoom+'s I_GetEvent for a cross-platform implementation of how to get that input.
 #if (EE_CURRENT_PLATFORM != EE_PLATFORM_MACOSX)
+         // This #if block is adapted from PRBoom+
+         // TODO: A fullscreen toggle would be nice, but geom string might need setting.
+         // See PRBoom+'s I_GetEvent for a cross-platform implementation of how to get that input.
          if(ev.key.keysym.mod & KMOD_LALT)
          {
             // Prevent executing action on Alt-Tab

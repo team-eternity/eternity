@@ -149,6 +149,13 @@ overriding that the ACS specials do.
 Tall and transparent PNGs are now supported, though the transparency could do
 with being mask-based, instead of just using a "this is transparent" index.
 
+-------------------------------------------------------------------------------
+2017/08/04
+ALT+F4 now exits the program in a quick and clean fashion. Thanks to anotak for
+bringing this up.
+
+Fixed ACS scrollers again.
+
 ================================================================================
 EOF
 ================================================================================
