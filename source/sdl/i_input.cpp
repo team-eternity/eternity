@@ -600,6 +600,16 @@ static void I_GetEvent()
                break;
             }
          }
+#else
+         // Also provide macOS option
+         if(ev.key.keysym.mod & KMOD_LMETA)
+         {
+            if(ev.key.keysym.sym == SDLK_q)
+            {
+               I_QuitFast();
+               break;
+            }
+         }
 #endif
 
 #if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS)

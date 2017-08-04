@@ -192,6 +192,7 @@ void I_Quit(void)
 //
 void I_QuitFast()
 {
+   puts("Eternity quit quickly.");
    speedyexit = true;
    exit(0);
 }
