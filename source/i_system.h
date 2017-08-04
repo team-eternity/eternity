@@ -67,6 +67,10 @@ ticcmd_t* I_BaseTiccmd();
 
 void I_Quit();
 
+// MaxW: 2017/08/04: Quit cleanly, ignore ENDOOM
+
+void I_QuitFast();
+
 // haleyjd 05/21/10: error codes for I_FatalError
 enum
 {
