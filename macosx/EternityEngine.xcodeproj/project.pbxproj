@@ -8,8 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		4F015B111870EA5900ADB3F4 /* s_formats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F015B0E1870EA5900ADB3F4 /* s_formats.cpp */; };
-		4F015B761875988900ADB3F4 /* libc++.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F015B731875988900ADB3F4 /* libc++.1.dylib */; };
-		4F015B781875988900ADB3F4 /* libc++abi.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F015B741875988900ADB3F4 /* libc++abi.dylib */; };
 		4F21BAF51E9C05C10040B4DF /* s_musinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F21BAF31E9C05C10040B4DF /* s_musinfo.cpp */; };
 		4F2F32AC1867100100EED7DE /* e_reverbs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F2F32A21867100100EED7DE /* e_reverbs.cpp */; };
 		4F2F32AE1867100100EED7DE /* s_reverb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F2F32A71867100100EED7DE /* s_reverb.cpp */; };
@@ -274,30 +272,9 @@
 		4F68CE8D1963D88100E7B8BE /* ev_sectors.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F68CE8B1963D88100E7B8BE /* ev_sectors.cpp */; };
 		4F7ADA181E0C623900E34F5F /* m_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F7ADA161E0C623900E34F5F /* m_utils.cpp */; };
 		4F917D781F29243500131BE5 /* xl_umapinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F917D771F29243500131BE5 /* xl_umapinfo.cpp */; };
-		4F950DFF1F35ADBA000D9DC5 /* libSDL2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F950DFB1F35AC75000D9DC5 /* libSDL2.a */; };
-		4F950E011F35ADD5000D9DC5 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F950E001F35ADD5000D9DC5 /* CoreAudio.framework */; };
-		4F950E031F35ADDE000D9DC5 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F950E021F35ADDE000D9DC5 /* AudioToolbox.framework */; };
-		4F950E051F35ADE7000D9DC5 /* ForceFeedback.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F950E041F35ADE7000D9DC5 /* ForceFeedback.framework */; };
-		4F950E071F35ADEF000D9DC5 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F950E061F35ADEF000D9DC5 /* CoreVideo.framework */; };
-		4F950E091F35ADF7000D9DC5 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F950E081F35ADF7000D9DC5 /* Carbon.framework */; };
-		4F950E0B1F35ADFE000D9DC5 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F950E0A1F35ADFE000D9DC5 /* IOKit.framework */; };
-		4F950E0D1F35AE08000D9DC5 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F950E0C1F35AE08000D9DC5 /* AppKit.framework */; };
-		4F950E0F1F35AE10000D9DC5 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F950E0E1F35AE10000D9DC5 /* CoreFoundation.framework */; };
-		4F950E111F35AE18000D9DC5 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F950E101F35AE18000D9DC5 /* CoreGraphics.framework */; };
-		4F950E131F35AE21000D9DC5 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F950E121F35AE21000D9DC5 /* CoreServices.framework */; };
-		4F950E151F35AE2A000D9DC5 /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F950E141F35AE2A000D9DC5 /* libiconv.tbd */; };
-		4F950E161F35AED6000D9DC5 /* libogg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF6F1753485800E70FEC /* libogg.a */; };
-		4F950E171F35AED6000D9DC5 /* libvorbis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF701753485800E70FEC /* libvorbis.a */; };
-		4F950E181F35AED6000D9DC5 /* libvorbisfile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF711753485800E70FEC /* libvorbisfile.a */; };
-		4F950E191F35AED6000D9DC5 /* libFLAC.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF691753482C00E70FEC /* libFLAC.a */; };
-		4F950E1A1F35AED6000D9DC5 /* libmikmod.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF6A1753482C00E70FEC /* libmikmod.a */; };
-		4F950E1C1F35AEE5000D9DC5 /* libsmpeg2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F950E1B1F35AEE5000D9DC5 /* libsmpeg2.a */; };
-		4F950E1D1F35B25C000D9DC5 /* libSDL2_mixer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F950DF91F35AC75000D9DC5 /* libSDL2_mixer.a */; };
-		4F950E1E1F35B25F000D9DC5 /* libSDL2_net.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F950DFA1F35AC75000D9DC5 /* libSDL2_net.a */; };
-		4F950E201F35B274000D9DC5 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F950E1F1F35B274000D9DC5 /* OpenGL.framework */; };
-		4F950E211F35B27D000D9DC5 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAF6A06C1691A0D2009EBD3C /* Cocoa.framework */; };
-		4F950E221F35B288000D9DC5 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F5F386C182D97A20027813A /* Foundation.framework */; };
-		4F950E241F35B2A4000D9DC5 /* AudioUnit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F950E231F35B2A4000D9DC5 /* AudioUnit.framework */; };
+		4F950E351F35C84B000D9DC5 /* SDL2_mixer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F950E321F35C84B000D9DC5 /* SDL2_mixer.framework */; };
+		4F950E361F35C84B000D9DC5 /* SDL2_net.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F950E331F35C84B000D9DC5 /* SDL2_net.framework */; };
+		4F950E371F35C84B000D9DC5 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F950E341F35C84B000D9DC5 /* SDL2.framework */; };
 		4FAAD5941E583113001D7263 /* p_portalcross.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FAAD5931E583113001D7263 /* p_portalcross.cpp */; };
 		4FB5F0051CCB5A0D00EFF2D9 /* p_portalclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FB5F0031CCB5A0D00EFF2D9 /* p_portalclip.cpp */; };
 		4FC0A9271E1E2A50006CEC45 /* Action.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FC0A8FB1E1E2A50006CEC45 /* Action.cpp */; };
@@ -330,8 +307,6 @@
 		256AC3F00F4B6AF500CF3369 /* EternityLaunch_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EternityLaunch_Prefix.pch; sourceTree = "<group>"; };
 		4F015B0E1870EA5900ADB3F4 /* s_formats.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = s_formats.cpp; path = ../source/s_formats.cpp; sourceTree = "<group>"; };
 		4F015B0F1870EA5900ADB3F4 /* s_formats.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = s_formats.h; path = ../source/s_formats.h; sourceTree = "<group>"; };
-		4F015B731875988900ADB3F4 /* libc++.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libc++.1.dylib"; path = "libc++/libc++.1.dylib"; sourceTree = "<group>"; };
-		4F015B741875988900ADB3F4 /* libc++abi.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libc++abi.dylib"; path = "libc++/libc++abi.dylib"; sourceTree = "<group>"; };
 		4F0165DC178375EF00D04FAE /* e_weapons.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = e_weapons.cpp; path = ../source/e_weapons.cpp; sourceTree = "<group>"; };
 		4F0165DD178375EF00D04FAE /* e_weapons.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = e_weapons.h; path = ../source/e_weapons.h; sourceTree = "<group>"; };
 		4F0A2C7416ED36E500400F41 /* i_gamepads.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = i_gamepads.cpp; path = ../source/hal/i_gamepads.cpp; sourceTree = "<group>"; };
@@ -372,7 +347,6 @@
 		4F5F3864182D97860027813A /* mn_items.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mn_items.cpp; path = ../source/mn_items.cpp; sourceTree = "<group>"; };
 		4F5F3865182D97860027813A /* mn_items.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mn_items.h; path = ../source/mn_items.h; sourceTree = "<group>"; };
 		4F5F386B182D97A10027813A /* eternity */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = eternity; sourceTree = BUILT_PRODUCTS_DIR; };
-		4F5F386C182D97A20027813A /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		4F5F3872182D97A20027813A /* eternity-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "eternity-Prefix.pch"; sourceTree = "<group>"; };
 		4F68CE8B1963D88100E7B8BE /* ev_sectors.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ev_sectors.cpp; path = ../source/ev_sectors.cpp; sourceTree = "<group>"; };
 		4F68CE8C1963D88100E7B8BE /* ev_sectors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ev_sectors.h; path = ../source/ev_sectors.h; sourceTree = "<group>"; };
@@ -389,23 +363,9 @@
 		4F8B42E816C1101000765638 /* zutil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = zutil.c; path = ../zlib/zutil.c; sourceTree = "<group>"; };
 		4F917D771F29243500131BE5 /* xl_umapinfo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = xl_umapinfo.cpp; path = ../source/xl_umapinfo.cpp; sourceTree = "<group>"; };
 		4F917D791F2A5FD600131BE5 /* xl_umapinfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = xl_umapinfo.h; path = ../source/xl_umapinfo.h; sourceTree = "<group>"; };
-		4F950DF91F35AC75000D9DC5 /* libSDL2_mixer.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libSDL2_mixer.a; path = staticlib/libSDL2_mixer.a; sourceTree = "<group>"; };
-		4F950DFA1F35AC75000D9DC5 /* libSDL2_net.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libSDL2_net.a; path = staticlib/libSDL2_net.a; sourceTree = "<group>"; };
-		4F950DFB1F35AC75000D9DC5 /* libSDL2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libSDL2.a; path = staticlib/libSDL2.a; sourceTree = "<group>"; };
-		4F950E001F35ADD5000D9DC5 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
-		4F950E021F35ADDE000D9DC5 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
-		4F950E041F35ADE7000D9DC5 /* ForceFeedback.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ForceFeedback.framework; path = System/Library/Frameworks/ForceFeedback.framework; sourceTree = SDKROOT; };
-		4F950E061F35ADEF000D9DC5 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
-		4F950E081F35ADF7000D9DC5 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
-		4F950E0A1F35ADFE000D9DC5 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
-		4F950E0C1F35AE08000D9DC5 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
-		4F950E0E1F35AE10000D9DC5 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
-		4F950E101F35AE18000D9DC5 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
-		4F950E121F35AE21000D9DC5 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
-		4F950E141F35AE2A000D9DC5 /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
-		4F950E1B1F35AEE5000D9DC5 /* libsmpeg2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsmpeg2.a; path = staticlib/libsmpeg2.a; sourceTree = "<group>"; };
-		4F950E1F1F35B274000D9DC5 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
-		4F950E231F35B2A4000D9DC5 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = System/Library/Frameworks/AudioUnit.framework; sourceTree = SDKROOT; };
+		4F950E321F35C84B000D9DC5 /* SDL2_mixer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2_mixer.framework; sourceTree = "<group>"; };
+		4F950E331F35C84B000D9DC5 /* SDL2_net.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2_net.framework; sourceTree = "<group>"; };
+		4F950E341F35C84B000D9DC5 /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2.framework; sourceTree = "<group>"; };
 		4F98954F16C10FB1005D78C0 /* trees.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = trees.c; path = ../zlib/trees.c; sourceTree = "<group>"; };
 		4F9A249216D95878002BE852 /* t_plane.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = t_plane.cpp; path = ../source/t_plane.cpp; sourceTree = "<group>"; };
 		4F9A249316D95878002BE852 /* t_plane.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = t_plane.h; path = ../source/t_plane.h; sourceTree = "<group>"; };
@@ -471,11 +431,6 @@
 		4FFD27341796990400E4E5B1 /* a_args.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = a_args.h; path = ../source/a_args.h; sourceTree = "<group>"; };
 		4FFD27351796990400E4E5B1 /* p_henemy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_henemy.cpp; path = ../source/p_henemy.cpp; sourceTree = "<group>"; };
 		4FFD27371796990400E4E5B1 /* w_iterator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = w_iterator.h; path = ../source/w_iterator.h; sourceTree = "<group>"; };
-		4FFFDF691753482C00E70FEC /* libFLAC.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libFLAC.a; path = staticlib/libFLAC.a; sourceTree = "<group>"; };
-		4FFFDF6A1753482C00E70FEC /* libmikmod.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmikmod.a; path = staticlib/libmikmod.a; sourceTree = "<group>"; };
-		4FFFDF6F1753485800E70FEC /* libogg.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libogg.a; path = staticlib/libogg.a; sourceTree = "<group>"; };
-		4FFFDF701753485800E70FEC /* libvorbis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libvorbis.a; path = staticlib/libvorbis.a; sourceTree = "<group>"; };
-		4FFFDF711753485800E70FEC /* libvorbisfile.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libvorbisfile.a; path = staticlib/libvorbisfile.a; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* EternityEngine-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "EternityEngine-Info.plist"; sourceTree = "<group>"; };
 		FA16D39E15E01B82002318D1 /* d_files.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = d_files.cpp; path = ../source/d_files.cpp; sourceTree = SOURCE_ROOT; };
 		FA16D3BC15E01E96002318D1 /* a_common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = a_common.h; path = ../source/a_common.h; sourceTree = SOURCE_ROOT; };
@@ -936,7 +891,6 @@
 		FAE0EB371696BA10007E84F2 /* Eternity.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = Eternity.icns; sourceTree = "<group>"; };
 		FAEB990516666A65004B0CD1 /* ev_specials.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ev_specials.cpp; path = ../source/ev_specials.cpp; sourceTree = "<group>"; };
 		FAEB990616666A65004B0CD1 /* ev_specials.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ev_specials.h; path = ../source/ev_specials.h; sourceTree = "<group>"; };
-		FAF6A06C1691A0D2009EBD3C /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -944,32 +898,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4F950E241F35B2A4000D9DC5 /* AudioUnit.framework in Frameworks */,
-				4F950E221F35B288000D9DC5 /* Foundation.framework in Frameworks */,
-				4F950E211F35B27D000D9DC5 /* Cocoa.framework in Frameworks */,
-				4F950E201F35B274000D9DC5 /* OpenGL.framework in Frameworks */,
-				4F950E151F35AE2A000D9DC5 /* libiconv.tbd in Frameworks */,
-				4F950E131F35AE21000D9DC5 /* CoreServices.framework in Frameworks */,
-				4F950E111F35AE18000D9DC5 /* CoreGraphics.framework in Frameworks */,
-				4F950E0F1F35AE10000D9DC5 /* CoreFoundation.framework in Frameworks */,
-				4F950E0D1F35AE08000D9DC5 /* AppKit.framework in Frameworks */,
-				4F950E0B1F35ADFE000D9DC5 /* IOKit.framework in Frameworks */,
-				4F950E091F35ADF7000D9DC5 /* Carbon.framework in Frameworks */,
-				4F950E071F35ADEF000D9DC5 /* CoreVideo.framework in Frameworks */,
-				4F950E051F35ADE7000D9DC5 /* ForceFeedback.framework in Frameworks */,
-				4F950E031F35ADDE000D9DC5 /* AudioToolbox.framework in Frameworks */,
-				4F950E011F35ADD5000D9DC5 /* CoreAudio.framework in Frameworks */,
-				4F015B781875988900ADB3F4 /* libc++abi.dylib in Frameworks */,
-				4F015B761875988900ADB3F4 /* libc++.1.dylib in Frameworks */,
-				4F950E161F35AED6000D9DC5 /* libogg.a in Frameworks */,
-				4F950E171F35AED6000D9DC5 /* libvorbis.a in Frameworks */,
-				4F950E181F35AED6000D9DC5 /* libvorbisfile.a in Frameworks */,
-				4F950E191F35AED6000D9DC5 /* libFLAC.a in Frameworks */,
-				4F950E1A1F35AED6000D9DC5 /* libmikmod.a in Frameworks */,
-				4F950DFF1F35ADBA000D9DC5 /* libSDL2.a in Frameworks */,
-				4F950E1D1F35B25C000D9DC5 /* libSDL2_mixer.a in Frameworks */,
-				4F950E1E1F35B25F000D9DC5 /* libSDL2_net.a in Frameworks */,
-				4F950E1C1F35AEE5000D9DC5 /* libsmpeg2.a in Frameworks */,
+				4F950E371F35C84B000D9DC5 /* SDL2.framework in Frameworks */,
+				4F950E351F35C84B000D9DC5 /* SDL2_mixer.framework in Frameworks */,
+				4F950E361F35C84B000D9DC5 /* SDL2_net.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1014,8 +945,9 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				4F015B731875988900ADB3F4 /* libc++.1.dylib */,
-				4F015B741875988900ADB3F4 /* libc++abi.dylib */,
+				4F950E321F35C84B000D9DC5 /* SDL2_mixer.framework */,
+				4F950E331F35C84B000D9DC5 /* SDL2_net.framework */,
+				4F950E341F35C84B000D9DC5 /* SDL2.framework */,
 				FAE0EB371696BA10007E84F2 /* Eternity.icns */,
 				8D1107310486CEB800E47090 /* EternityEngine-Info.plist */,
 				089C165CFE840E0CC02AAC07 /* InfoPlist.strings */,
@@ -1027,23 +959,6 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				4F950E231F35B2A4000D9DC5 /* AudioUnit.framework */,
-				4F950E1F1F35B274000D9DC5 /* OpenGL.framework */,
-				4F950E141F35AE2A000D9DC5 /* libiconv.tbd */,
-				4F950E121F35AE21000D9DC5 /* CoreServices.framework */,
-				4F950E101F35AE18000D9DC5 /* CoreGraphics.framework */,
-				4F950E0E1F35AE10000D9DC5 /* CoreFoundation.framework */,
-				4F950E0C1F35AE08000D9DC5 /* AppKit.framework */,
-				4F950E0A1F35ADFE000D9DC5 /* IOKit.framework */,
-				4F950E081F35ADF7000D9DC5 /* Carbon.framework */,
-				4F950E061F35ADEF000D9DC5 /* CoreVideo.framework */,
-				4F950E041F35ADE7000D9DC5 /* ForceFeedback.framework */,
-				4F950E021F35ADDE000D9DC5 /* AudioToolbox.framework */,
-				4F950E001F35ADD5000D9DC5 /* CoreAudio.framework */,
-				4FFFDF7B1753487900E70FEC /* Linked Frameworks */,
-				4FD651AF16B8032900F9BE74 /* Static Libraries */,
-				FAF6A06C1691A0D2009EBD3C /* Cocoa.framework */,
-				4F5F386C182D97A20027813A /* Foundation.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -1123,29 +1038,6 @@
 			);
 			name = ACSVM;
 			sourceTree = SOURCE_ROOT;
-		};
-		4FD651AF16B8032900F9BE74 /* Static Libraries */ = {
-			isa = PBXGroup;
-			children = (
-				4F950E1B1F35AEE5000D9DC5 /* libsmpeg2.a */,
-				4F950DF91F35AC75000D9DC5 /* libSDL2_mixer.a */,
-				4F950DFA1F35AC75000D9DC5 /* libSDL2_net.a */,
-				4F950DFB1F35AC75000D9DC5 /* libSDL2.a */,
-				4FFFDF6F1753485800E70FEC /* libogg.a */,
-				4FFFDF701753485800E70FEC /* libvorbis.a */,
-				4FFFDF711753485800E70FEC /* libvorbisfile.a */,
-				4FFFDF691753482C00E70FEC /* libFLAC.a */,
-				4FFFDF6A1753482C00E70FEC /* libmikmod.a */,
-			);
-			name = "Static Libraries";
-			sourceTree = "<group>";
-		};
-		4FFFDF7B1753487900E70FEC /* Linked Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = "Linked Frameworks";
-			sourceTree = "<group>";
 		};
 		FA1F5705158BC2FD006F8063 /* Main */ = {
 			isa = PBXGroup;
@@ -2401,6 +2293,10 @@
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
@@ -2429,8 +2325,6 @@
 					"$(inherited)",
 					staticlib,
 					"libc++",
-					/opt/local/lib,
-					"$(PROJECT_DIR)/staticlib",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
@@ -2452,6 +2346,10 @@
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -2473,8 +2371,6 @@
 					"$(inherited)",
 					staticlib,
 					"libc++",
-					/opt/local/lib,
-					"$(PROJECT_DIR)/staticlib",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
@@ -2500,7 +2396,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				FRAMEWORK_SEARCH_PATHS = /Library/Frameworks;
+				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_VERSION = "";
@@ -2513,8 +2409,10 @@
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					../libpng,
-					/opt/local/include/SDL2,
+					"SDL2.framework/Headers/**",
 					../acsvm,
+					"SDL2_mixer.framework/Headers/**",
+					"SDL2_net.framework/Headers/**",
 				);
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				LLVM_LTO = NO;
@@ -2541,7 +2439,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				FRAMEWORK_SEARCH_PATHS = /Library/Frameworks;
+				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_VERSION = "";
@@ -2554,8 +2452,10 @@
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					../libpng,
-					/opt/local/include/SDL2,
+					"SDL2.framework/Headers/**",
 					../acsvm,
+					"SDL2_mixer.framework/Headers/**",
+					"SDL2_net.framework/Headers/**",
 				);
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				LLVM_LTO = YES;
