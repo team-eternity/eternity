@@ -673,7 +673,7 @@ void G_DoLoadLevel()
    gameaction = ga_nothing;
    displayplayer = consoleplayer;    // view the guy you are playing
    P_ResetChasecam();    // sf: because displayplayer changed
-   P_ResetChasecam();
+   P_ResetWalkcam();
    Z_CheckHeap();
 
    // clear cmd building stuff

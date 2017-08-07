@@ -225,15 +225,13 @@ bool EV_stopFlatScrollerBySecnum(int type, int secnum)
       return false;
 
    // search the scrolled sectors
-   scrollerlist_t *sl = scrollers, *prev = nullptr;
+   scrollerlist_t *sl = scrollers;
    while(sl)
    {
       ScrollThinker *scroller = sl->scroller;
       sl = sl->next; // MUST do this here or bad things happen
       if(scroller->affectee == secnum && scroller->type == type)
-      {
          scroller->removeScroller();
-      }
    }
 
    return true;
