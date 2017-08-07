@@ -8,6 +8,13 @@ Since v3.42.03 "Heimdal" release 2
 ==================================
 
 --------------------------------------------------------------------------------
+07.08.2017
+
+BUGFIX: The Heretic AUTOPAGE background wasn't moving along with the map. Fixed.
+        Now it moves at the same speed, without the displacement from vanilla
+        Heretic.
+
+--------------------------------------------------------------------------------
 06.08.2017
 
 BUGFIX: Fixed case sensitive parsing of DECORATE state "stop" keyword, causing
