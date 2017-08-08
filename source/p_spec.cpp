@@ -1274,8 +1274,6 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
    
    PlatThinker::RemoveAllActivePlats(); // killough
 
-   ScrollThinker::RemoveAllScrollers();
-
    // clear buttons (haleyjd 10/16/05: button stuff -> p_switch.c)
    P_ClearButtons();
 

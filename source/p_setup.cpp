@@ -59,6 +59,7 @@
 #include "p_mobjcol.h"
 #include "p_partcl.h"
 #include "p_portal.h"
+#include "p_scroll.h"
 #include "p_setup.h"
 #include "p_skin.h"
 #include "p_slopes.h"
@@ -3249,6 +3250,8 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    level_error = NULL; // reset
 
+   ScrollThinker::RemoveAllScrollers();
+
    // IOANCH 20151206: load UDMF
    UDMFParser udmf;  // prepare UDMF processor
    UDMFSetupSettings setupSettings;
@@ -3454,6 +3457,8 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    // haleyjd: keep the chasecam on between levels
    if(camera == &chasecam)
       P_ResetChasecam();
+   else if(camera == &walkcamera)
+      P_ResetWalkcam();
    else
       camera = NULL;        // camera off
 

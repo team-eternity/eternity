@@ -949,7 +949,7 @@ static void doKeyword(pstate_t *ps)
       // if the keyword is "stop" and the previous buffered object is a label, 
       // this is a "kill state"
       if(DSP.neweststate && DSP.neweststate->type == BUF_LABEL &&
-         *ps->tokenbuffer == "stop")
+         !ps->tokenbuffer->strCaseCmp("stop"))
          DSP.numstops++;
 
       // make a keyword object

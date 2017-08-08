@@ -1842,7 +1842,11 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
             for(unsigned int i = 0; i < pc->numrebornitems; i++)
             {
                if(!strcasecmp(pc->rebornitems[i].itemname, "AmmoClip"))
+               {
                   pc->rebornitems[i].amount = value;
+                  if(!value)
+                     pc->rebornitems[i].flags |= RBIF_IGNORE;
+               }
             }
          }
       }

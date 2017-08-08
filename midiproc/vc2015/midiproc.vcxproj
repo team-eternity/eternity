@@ -101,9 +101,7 @@
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
     <PreBuildEvent>
-      <Command>cd ..
-genmidiproc$(Platform).bat
-cd vc2015</Command>
+      <Command>../autogenmidiproc.bat $(Platform)</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -125,9 +123,7 @@ cd vc2015</Command>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
     <PreBuildEvent>
-      <Command>cd ..
-genmidiproc$(Platform).bat
-cd vc2015</Command>
+      <Command>../autogenmidiproc.bat $(Platform)</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -151,9 +147,7 @@ cd vc2015</Command>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PreBuildEvent>
-      <Command>cd ..
-genmidiproc$(Platform).bat
-cd vc2015</Command>
+      <Command>../autogenmidiproc.bat $(Platform)</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -177,9 +171,7 @@ cd vc2015</Command>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
     <PreBuildEvent>
-      <Command>cd ..
-genmidiproc$(Platform).bat
-cd vc2015</Command>
+      <Command>../autogenmidiproc.bat $(Platform)</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

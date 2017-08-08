@@ -488,8 +488,9 @@ static void R_CalculateDeltas(int markerlinenum, int anchorlinenum,
    const line_t *m = lines + markerlinenum;
    const line_t *a = lines + anchorlinenum;
 
-   *dx = ((m->v1->x + m->v2->x) / 2) - ((a->v1->x + a->v2->x) / 2);
-   *dy = ((m->v1->y + m->v2->y) / 2) - ((a->v1->y + a->v2->y) / 2);
+   // Because of overflows, we should divide each term instead of accumulating them
+   *dx = (m->v1->x / 2 + m->v2->x / 2) - (a->v1->x / 2 + a->v2->x / 2);
+   *dy = (m->v1->y / 2 + m->v2->y / 2) - (a->v1->y / 2 + a->v2->y / 2);
    *dz = 0; /// ???
 }
 

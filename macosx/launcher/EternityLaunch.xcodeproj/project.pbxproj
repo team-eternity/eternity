@@ -341,10 +341,6 @@
 				GCC_PREFIX_HEADER = EternityLaunch_Prefix.pch;
 				INFOPLIST_FILE = "EternityLaunch-Info.plist";
 				INSTALL_PATH = /Applications;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"/Users/ioan/dezvoltare/cross/eternity/macosx/libc++",
-				);
 				MACH_O_TYPE = mh_execute;
 				PRODUCT_BUNDLE_IDENTIFIER = "net.mancubus.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "Eternity Engine";
@@ -368,10 +364,6 @@
 					"CMAKE_INTDIR=\"Release\"",
 				);
 				INSTALL_PATH = /Applications;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"/Users/ioan/dezvoltare/cross/eternity/macosx/libc++",
-				);
 				MACH_O_TYPE = mh_execute;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = "net.mancubus.${PRODUCT_NAME:rfc1034identifier}";

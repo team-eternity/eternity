@@ -966,6 +966,9 @@
     <ClCompile Include="..\source\s_musinfo.cpp">
       <Filter>Source Files\S_\S_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\xl_umapinfo.cpp">
+      <Filter>Source Files\XL_\XL_ Source</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\a_hereticweapons.cpp">
       <Filter>Source Files\A_\A_ Source</Filter>
     </ClCompile>
@@ -1723,6 +1726,9 @@
     </ClInclude>
     <ClInclude Include="..\source\s_musinfo.h">
       <Filter>Source Files\S_\S_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\xl_umapinfo.h">
+      <Filter>Source Files\XL_\XL_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

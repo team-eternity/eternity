@@ -60,8 +60,6 @@ typedef enum
    PF_NOPASS             = 0x004,
    // Portal does not allow recursive sound to pass through
    PF_BLOCKSOUND         = 0x008,
-   // Mask for the flags portion
-   PF_FLAGMASK           = PF_DISABLED | PF_NORENDER | PF_NOPASS | PF_BLOCKSOUND,
    
    // -- Overlay flags --
    // Only used per-surface and indicate various overlay options for the portal
@@ -87,8 +85,16 @@ typedef enum
    PS_PASSSOUND          = 0x200,
    // Mask for state flags
    PS_STATEMASK          = PS_VISIBLE | PS_PASSABLE | PS_PASSSOUND,
-   
-   // -- Opactiy -- 
+
+   // More flags added along...
+   PF_ATTACHEDPORTAL     = 0x400,
+
+   // Mask for the flags portion
+   PF_FLAGMASK           = PF_DISABLED | PF_NORENDER | PF_NOPASS | PF_BLOCKSOUND
+   | PF_ATTACHEDPORTAL,
+
+
+   // -- Opactiy --
    // The left-most 8 bits are reserved for the opacity value of the portal overlay
    PO_OPACITYSHIFT       = 24,
    PO_OPACITYMASK        = 0xFF000000,

@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2017 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,19 +18,20 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+// Purpose: UMAPINFO lump, invented by Graf Zahl for cross-port support
+// Authors: Ioan Chera
 //
-// DESCRIPTION:
-//
-//   MetaQString adapter class for storage of qstrings as metatable properties.
-//
-//-----------------------------------------------------------------------------
 
-#include "metaqstring.h"
+#ifndef XL_UMAPINFO_H_
+#define XL_UMAPINFO_H_
 
-// Bothersome statics. Blah, I say.
-IMPLEMENT_RTTI_TYPE(MetaQString)
-IMPLEMENT_RTTI_TYPE(MetaMultiString)
+class MetaTable;
+
+MetaTable *XL_UMapInfoForMapName(const char *mapname);
+void XL_ParseUMapInfo();
+void XL_BuildInterUMapInfo();
+
+#endif
 
 // EOF
 
