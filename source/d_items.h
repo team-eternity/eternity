@@ -48,6 +48,7 @@ enum wepflags_e: unsigned int
    WPF_ALWAYSRECOIL  = 0x00000100, // weapon always has recoil
    WPF_HAPTICRECOIL  = 0x00000200, // use recoil-style haptic effect
    WPF_READYSNDHALF  = 0x00000400, // readysound has 50% chance to play
+   WPF_AUTOSWITCHFROM = 0x00000800, // switches away if ammo for a wep w/o this is picked up
 };
 
 // Weapon info: sprite frames, ammunition use.

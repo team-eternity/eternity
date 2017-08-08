@@ -184,17 +184,18 @@ weaponslot_t *weaponslots[NUMWEAPONSLOTS];
 
 static dehflags_t e_weaponFlags[] =
 {
-   { "NOTHRUST",     WPF_NOTHRUST     },
-   { "NOHITGHOSTS",  WPF_NOHITGHOSTS  },
-   { "NOTSHAREWARE", WPF_NOTSHAREWARE },
-   { "ENABLEAPS",    WPF_ENABLEAPS    },
-   { "SILENCER",     WPF_SILENCER     },
-   { "SILENT",       WPF_SILENT       },
-   { "NOAUTOFIRE",   WPF_NOAUTOFIRE   },
-   { "FLEEMELEE",    WPF_FLEEMELEE    },
-   { "ALWAYSRECOIL", WPF_ALWAYSRECOIL },
-   { "HAPTICRECOIL", WPF_HAPTICRECOIL },
-   { "READYSNDHALF", WPF_READYSNDHALF },
+   { "NOTHRUST",       WPF_NOTHRUST       },
+   { "NOHITGHOSTS",    WPF_NOHITGHOSTS    },
+   { "NOTSHAREWARE",   WPF_NOTSHAREWARE   },
+   { "ENABLEAPS",      WPF_ENABLEAPS      },
+   { "SILENCER",       WPF_SILENCER       },
+   { "SILENT",         WPF_SILENT         },
+   { "NOAUTOFIRE",     WPF_NOAUTOFIRE     },
+   { "FLEEMELEE",      WPF_FLEEMELEE      },
+   { "ALWAYSRECOIL",   WPF_ALWAYSRECOIL   },
+   { "HAPTICRECOIL",   WPF_HAPTICRECOIL   },
+   { "READYSNDHALF",   WPF_READYSNDHALF   },
+   { "AUTOSWITCHFROM", WPF_AUTOSWITCHFROM },
    { NULL,           0                }
 };
 

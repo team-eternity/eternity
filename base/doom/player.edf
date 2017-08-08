@@ -27,7 +27,7 @@ weaponinfo Fist : DoomWeapon, 0
   nextincycle  Chainsaw
   previncycle  BFG9000
 
-  flags        FLEEMELEE|NOHITGHOSTS|SILENCER
+  flags        FLEEMELEE|NOHITGHOSTS|SILENCER|AUTOSWITCHFROM
   mod          Fist
   recoil       10
 
@@ -63,7 +63,7 @@ weaponinfo Pistol : DoomWeapon, 1
   nextincycle  Shotgun
   previncycle  Chainsaw
 
-  flags        SILENCER|HAPTICRECOIL
+  flags        SILENCER|HAPTICRECOIL|AUTOSWITCHFROM
   mod          Pistol
   recoil       10
   hapticrecoil 1
@@ -90,7 +90,7 @@ weaponinfo Pistol : DoomWeapon, 1
     PISG B 5 A_ReFire
     goto Ready
   Flash:
-    PISF A 7 Bright A_Light1
+    PISF A 7 bright A_Light1
     goto LightDone
   "@
 }
@@ -133,8 +133,8 @@ weaponinfo Shotgun : DoomWeapon, 2
     SHTG A 7 A_ReFire
     goto Ready
   Flash:
-    SHTF A 4 Bright A_Light1
-    SHTF B 3 Bright A_Light2
+    SHTF A 4 bright A_Light1
+    SHTF B 3 bright A_Light2
     goto LightDone
   "@
 }
@@ -173,8 +173,8 @@ weaponinfo Chaingun : DoomWeapon, 3
     CHGG B 0 A_ReFire
     goto Ready
   Flash:
-    CHGF A 5 Bright A_Light1
-    CHGF B 5 Bright A_Light2
+    CHGF A 5 bright A_Light1
+    CHGF B 5 bright A_Light2
     goto LightDone
   "@
 }
@@ -214,9 +214,9 @@ weaponinfo MissileLauncher : DoomWeapon, 4
     MISG B 0 A_ReFire
     goto Ready
   Flash:
-    MISF A 3 Bright A_Light1
-    MISF B 4 Bright
-    MISF CD 4 Bright A_Light2
+    MISF A 3 bright A_Light1
+    MISF B 4 bright
+    MISF CD 4 bright A_Light2
     goto LightDone
   "@
 }
@@ -255,8 +255,8 @@ weaponinfo PlasmaRifle : DoomWeapon, 5
     PLSG B 20 A_ReFire
     goto Ready
   Flash:
-    PLSF A 4 Bright A_Light1
-    PLSF B 4 Bright A_Light1
+    PLSF A 4 bright A_Light1
+    PLSF B 4 bright A_Light1
     goto LightDone
   "@
 }
@@ -297,8 +297,8 @@ weaponinfo BFG9000 : DoomWeapon, 6
     BFGG B 20 A_ReFire
     goto Ready
   Flash:
-    BFGF A 11 Bright A_Light1
-    BFGF B 6 Bright A_Light2
+    BFGF A 11 bright A_Light1
+    BFGF B 6 bright A_Light2
     goto LightDone
   "@
 }
@@ -397,8 +397,8 @@ weaponinfo SuperShotgun : DoomWeapon, 8
     SHT2 A 3
     goto Deselect
   Flash:
-    SHT2 I 4 Bright A_Light1
-    SHT2 J 3 Bright A_Light2
+    SHT2 I 4 bright A_Light1
+    SHT2 J 3 bright A_Light2
     goto LightDone
   "@
 }

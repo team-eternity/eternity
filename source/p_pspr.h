@@ -39,8 +39,10 @@
 // Basic data types.
 // Needs fixed point, and BAM angles.
 #include "m_fixed.h"
+#include "tables.h"
 
 struct player_t;
+struct sfxinfo_t;
 
 //
 // Frame flags:
@@ -81,6 +83,8 @@ extern int action_from_pspr;                     // haleyjd 05/21/08
 void P_SetPspritePtr(player_t *player, pspdef_t *psp, statenum_t stnum);
 void P_SetPsprite(player_t *player, int position, statenum_t stnum);
 
+bool P_WeaponHasAmmo(player_t *player, weaponinfo_t *weapon);
+
 int P_NextWeapon(player_t *player);
 int P_PrevWeapon(player_t *player);
 
@@ -97,7 +101,15 @@ void P_BulletSlope(Mobj *mo);
 
 weaponinfo_t *P_GetPlayerWeapon(player_t *player, int index);
 
+void P_WeaponSoundInfo(Mobj *mo, sfxinfo_t *sound);
+void P_WeaponSound(Mobj *mo, int sfx_id);
+
 void P_WeaponRecoil(player_t *player);
+
+void A_ReFire(actionargs_t *actionargs);
+void A_FireSomething(player_t* player, int adder);
+
+fixed_t P_DoAutoAim(Mobj *mo, angle_t angle, fixed_t distance);
 
 #endif
 

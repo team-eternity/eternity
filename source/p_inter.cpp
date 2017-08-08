@@ -117,6 +117,8 @@ bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
    
    // WEAPON_FIXME: ammo reception behaviors
    // INVENTORY_TODO: hardcoded behaviors for now...
+   // if(demo_version >= 344 && player->readyweapon->flags & WPF_AUTOSWITCHFROM)
+   //    E/P_SwitchToTheAppropriateWeaponForTheAmmoGivenToThePlayer(player, ammo, amount);
    if(!strcasecmp(ammo->getKey(), "AmmoClip"))
    {
       if(E_WeaponIsCurrent(player, WEAPNAME_FIST))

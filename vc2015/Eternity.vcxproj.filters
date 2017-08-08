@@ -969,6 +969,12 @@
     <ClCompile Include="..\source\xl_umapinfo.cpp">
       <Filter>Source Files\XL_\XL_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\a_weaponsheretic.cpp">
+      <Filter>Source Files\A_\A_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\a_weaponsdoom.cpp">
+      <Filter>Source Files\A_\A_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">

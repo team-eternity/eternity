@@ -372,7 +372,7 @@ weaponinfo Gauntlets
     GAUN J 4 A_PlaySoundEX(ht_gntuse, idle)
     GAUN K 4
   Hold:
-    GAUN LMN 4 Bright A_GauntletAttack(1)
+    GAUN LMN 4 bright A_GauntletAttack(1)
     GAUN K 4 A_ReFire
     GAUN J 4 A_Light0
     goto Ready
