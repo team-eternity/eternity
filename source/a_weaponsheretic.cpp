@@ -15,9 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-// Additional terms and conditions compatible with the GPLv3 apply. See the
-// file COPYING-EE for details.
-//
 //----------------------------------------------------------------------------
 //
 // Purpose: Heretic weapon action functions
@@ -30,13 +27,13 @@
 #include "z_zone.h"
 
 #include "a_args.h"
-#include "d_player.h"
 #include "doomstat.h"
+#include "d_player.h"
 #include "e_args.h"
 #include "e_things.h"
+#include "e_ttypes.h"
 #include "m_random.h"
 #include "p_mobj.h"
-#include "p_inter.h"
 #include "r_main.h"
 #include "s_sound.h"
 #include "tables.h"
@@ -103,7 +100,7 @@ void A_FireGoldWandPL1(actionargs_t *actionargs)
    mobjinfo_t  *puff = mobjinfo[tnum];
 
    P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage, puff);
-   S_StartSound(player->mo, sfx_gldhit);
+   P_WeaponSound(mo, sfx_gldhit);
 }
 
 void A_FireGoldWandPL2(actionargs_t *actionargs)
@@ -137,7 +134,166 @@ void A_FireGoldWandPL2(actionargs_t *actionargs)
       angle += ((ANG45 / 8) * 2) / 4;
    }
 
-   S_StartSound(player->mo, sfx_gldhit);
+   P_WeaponSound(mo, sfx_gldhit);
+}
+
+void A_FireMacePL1B(actionargs_t *actionargs)
+{
+   player_t *player = actionargs->actor->player;
+   Mobj     *pmo    = player->mo;
+   Mobj     *ball;
+   angle_t   angle;
+
+   if(!P_CheckAmmo(player))
+      return;
+
+   P_SubtractAmmo(player, -1);
+   pmo = player->mo;
+
+   // In vanilla this is bugged: 
+   // Original code here looks like: the footclip check turns into:
+   //   (pmo->flags2 & 1)
+   // due to C operator precedence and a lack of parens/brackets.
+   const fixed_t z = comp[comp_terrain] || !(pmo->flags2 & MF2_FOOTCLIP) ?
+                     pmo->z + 28 * FRACUNIT : pmo->z + 28 * FRACUNIT - pmo->floorclip ;
+   ball = P_SpawnMobj(pmo->x, pmo->y, z, E_SafeThingType(MT_MACEFX2));
+
+   const int   tnum = E_SafeThingType(MT_MACEFX2);
+   mobjinfo_t *fx = mobjinfo[tnum];
+
+   const fixed_t slope = P_PlayerPitchSlope(player);
+   ball->momz = FixedMul(fx->speed, slope) + (2 * FRACUNIT);
+   angle = pmo->angle;
+   ball->target = pmo;
+   ball->angle = angle;
+   ball->z += 2 * slope;
+   angle >>= ANGLETOFINESHIFT;
+   ball->momx = (pmo->momx >> 1) + FixedMul(ball->info->speed, finecosine[angle]);
+   ball->momy = (pmo->momy >> 1) + FixedMul(ball->info->speed, finesine[angle]);
+
+   S_StartSound(ball, sfx_lobsht);
+   P_CheckMissileSpawn(ball);
+}
+
+void A_FireMacePL1(actionargs_t *actionargs)
+{
+   player_t *player = actionargs->actor->player;
+   pspdef_t *psp = actionargs->pspr;
+   Mobj     *ball;
+
+   if(!psp)
+      return;
+
+   if(P_Random(pr_firemace) < 28)
+   {
+      A_FireMacePL1B(actionargs);
+      return;
+   }
+   if(!P_CheckAmmo(player))
+      return;
+   
+   const int tnum = E_SafeThingType(MT_MACEFX1);
+
+   P_SubtractAmmo(player, -1);
+   psp->sx = ((P_Random(pr_firemace) & 3) - 2) * FRACUNIT;
+   psp->sy = WEAPONTOP + (P_Random(pr_firemace) & 3) * FRACUNIT;
+   ball = P_SpawnMissileAngleHeretic(player->mo, tnum, player->mo->angle
+                                     + (((P_Random(pr_firemace) & 7) - 4) << 24));
+   if(ball)
+      ball->counters[0] = 16;    // tics till dropoff
+}
+
+void A_MacePL1Check(actionargs_t *actionargs)
+{
+   Mobj   *ball = actionargs->actor;
+   angle_t angle;
+
+   if(ball->counters[0] == 0)
+      return;
+   ball->counters[0] -= 4;
+   if(ball->counters[0] > 0)
+      return;
+   ball->counters[0] = 0;
+   ball->flags2 |= MF2_LOGRAV;
+   angle = ball->angle >> ANGLETOFINESHIFT;
+   ball->momx = FixedMul(7 * FRACUNIT, finecosine[angle]);
+   ball->momy = FixedMul(7 * FRACUNIT, finesine[angle]);
+   ball->momz -= ball->momz >> 1;
+}
+
+#define MAGIC_JUNK 1234
+void A_MaceBallImpact(actionargs_t *actionargs)
+{
+   Mobj   *ball = actionargs->actor;
+   if((ball->z <= ball->floorz) && E_HitFloor(ball))
+   {                           // Landed in some sort of liquid
+      ball->removeThinker();
+      return;
+   }
+   if((ball->health != MAGIC_JUNK) && (ball->z <= ball->floorz)
+      && ball->momz)
+   {                           // Bounce
+      ball->health = MAGIC_JUNK;
+      ball->momz = (ball->momz * 192) >> 8;
+      ball->flags4 &= ~MF4_HERETICBOUNCES;
+      P_SetMobjState(ball, ball->info->spawnstate);
+      S_StartSound(ball, sfx_bounce);
+   }
+   else
+   {                           // Explode
+      ball->flags |= MF_NOGRAVITY;
+      ball->flags2 &= ~MF2_LOGRAV;
+      S_StartSound(ball, sfx_lobhit);
+   }
+}
+
+void A_MaceBallImpact2(actionargs_t *actionargs)
+{
+   Mobj     *ball = actionargs->actor;
+   Mobj     *tiny;
+   angle_t   angle;
+   const int tnum = E_SafeThingType(MT_MACEFX3);
+
+   if((ball->z <= ball->floorz) && E_HitFloor(ball))
+   {                           // Landed in some sort of liquid
+      ball->removeThinker();
+      return;
+   }
+   if((ball->z != ball->floorz) || (ball->momz < 2 * FRACUNIT))
+   {                           // Explode
+      ball->momx = ball->momy = ball->momz = 0;
+      ball->flags |= MF_NOGRAVITY;
+      ball->flags2 &= ~(MF2_LOGRAV | MF4_HERETICBOUNCES);
+   }
+   else
+   {                           // Bounce
+      ball->momz = (ball->momz * 192) >> 8;
+      P_SetMobjState(ball, ball->info->spawnstate);
+
+      tiny = P_SpawnMobj(ball->x, ball->y, ball->z, tnum);
+      angle = ball->angle + ANG90;
+      tiny->target = ball->target;
+      tiny->angle = angle;
+      angle >>= ANGLETOFINESHIFT;
+      tiny->momx = (ball->momx >> 1) + FixedMul(ball->momz - FRACUNIT,
+         finecosine[angle]);
+      tiny->momy = (ball->momy >> 1) + FixedMul(ball->momz - FRACUNIT,
+         finesine[angle]);
+      tiny->momz = ball->momz;
+      P_CheckMissileSpawn(tiny);
+
+      tiny = P_SpawnMobj(ball->x, ball->y, ball->z, tnum);
+      angle = ball->angle - ANG90;
+      tiny->target = ball->target;
+      tiny->angle = angle;
+      angle >>= ANGLETOFINESHIFT;
+      tiny->momx = (ball->momx >> 1) + FixedMul(ball->momz - FRACUNIT,
+         finecosine[angle]);
+      tiny->momy = (ball->momy >> 1) + FixedMul(ball->momz - FRACUNIT,
+         finesine[angle]);
+      tiny->momz = ball->momz;
+      P_CheckMissileSpawn(tiny);
+   }
 }
 
 void A_FireCrossbowPL1(actionargs_t *actionargs)
@@ -188,7 +344,7 @@ void A_FireBlasterPL1(actionargs_t *actionargs)
    int       damage;
 
 
-   S_StartSound(mo, sfx_gldhit);
+   P_WeaponSound(mo, sfx_gldhit);
    P_SubtractAmmo(player, -1);
    P_BulletSlope(mo);
    damage = (1 + (P_Random(pr_blaster) & 7)) * 4;
@@ -200,7 +356,7 @@ void A_FireBlasterPL1(actionargs_t *actionargs)
    mobjinfo_t  *puff = mobjinfo[tnum];
 
    P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage, puff);
-   S_StartSound(player->mo, sfx_blssht);
+   P_WeaponSound(mo, sfx_blssht);
 }
 
 void A_FireSkullRodPL1(actionargs_t *actionargs)
@@ -238,6 +394,7 @@ void A_GauntletAttack(actionargs_t *actionargs)
 {
    arglist_t  *args   = actionargs->args;
    player_t   *player = actionargs->actor->player;
+   Mobj       *mo     = player->mo;
    pspdef_t   *psp    = actionargs->pspr;
    fixed_t     dist;
    angle_t     angle;
@@ -276,7 +433,7 @@ void A_GauntletAttack(actionargs_t *actionargs)
    {
       if(P_Random(pr_gauntlets) > 64) // TODO: Maybe don't use pr_gauntlets?
          player->extralight = !player->extralight;
-      S_StartSound(player->mo, sfx_gntful);
+      P_WeaponSound(mo, sfx_gntful);
       return;
    }
 
@@ -292,10 +449,10 @@ void A_GauntletAttack(actionargs_t *actionargs)
    {
       // FIXME: This needs to do damage vamp
       //P_GiveBody(player, damage >> 1);
-      S_StartSound(player->mo, sfx_gntpow);
+      P_WeaponSound(mo, sfx_gntpow);
    }
    else
-      S_StartSound(player->mo, sfx_gnthit);
+      P_WeaponSound(mo, sfx_gnthit);
 
    // turn to face target
    angle = R_PointToAngle2(player->mo->x, player->mo->y,

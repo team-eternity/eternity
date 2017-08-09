@@ -3075,6 +3075,75 @@ thingtype CrossbowFX4 : Mobj, -1, 437
   "@
 }
 
+thingtype MaceShotProto
+{
+  cflags NOBLOCKMAP|MISSILE|DROPOFF|HERETICBOUNCES|THRUGHOST|NOTELEPORT
+
+  //firstdecoratestate S_MACEFX1_1
+  states @"
+  Death:
+    FX02 F 4 bright A_MaceBallImpact
+    FX02 GHIJ 4 bright
+    stop
+  "@
+}
+
+thingtype MaceFX1 : MaceShotProto, -1, 438
+{
+  compatname MaceFX1
+  speed      20.0
+  radius     8.0
+  height     6.0
+  damage     2
+  seesound   ht_lobsht
+  addflags   NOGRAVITY
+
+  //firstdecoratestate S_MACEFX1_1
+  states @"
+  Spawn:
+    FX02 AB 4 A_MacePL1Check
+    loop
+  "@
+}
+
+thingtype MaceFX2 : MaceShotProto, -1, 439
+{
+  compatname MaceFX2
+  speed      10.0
+  radius     11.0
+  height     8.0
+  damage     6
+  addflags   LOGRAV
+
+  //firstdecoratestate S_MACEFX2_1
+  states @"
+  Spawn:
+    FX02 CD 4
+    loop
+  Death:
+    FX02 F 4 A_MaceBallImpact2
+    FX02 GHIJ 4 bright
+  "@
+}
+
+thingtype MaceFX3 : MaceShotProto, -1, 440
+{
+  compatname MaceFX3
+  speed      7.0
+  radius     4.0
+  height     6.0
+  damage     2
+  addflags   LOGRAV
+
+  //firstdecoratestate S_MACEFX2_1
+  states @"
+  Spawn:
+    FX02 AB 4
+    loop
+  "@
+}
+
+
 //
 // Fire Mace
 //

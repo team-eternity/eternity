@@ -797,6 +797,13 @@ void P_PlayerHitFloor(Mobj *mo, bool onthing)
    }
 }
 
+
+static void P_floorHereticBounceMissile(Mobj * mo)
+{
+   mo->momz = -mo->momz;
+   P_SetMobjState(mo, mobjinfo[mo->type]->deathstate);
+}
+
 //
 // P_ZMovement
 //
@@ -978,7 +985,7 @@ floater:
       if(correct_lost_soul_bounce && (mo->flags & MF_SKULLFLY))
          mo->momz = -mo->momz; // the skull slammed into something
 
-      if((moving_down = (mo->momz < 0)))
+      if((moving_down = (mo->momz < 0)) && !(mo->flags4 & MF4_HERETICBOUNCES))
       {
          // killough 11/98: touchy objects explode on impact
          if(mo->flags & MF_TOUCHY && mo->intflags & MIF_ARMED &&
@@ -1010,8 +1017,16 @@ floater:
 
       if(!((mo->flags ^ MF_MISSILE) & (MF_MISSILE | MF_NOCLIP)))
       {
-         if(!(mo->flags3 & MF3_FLOORMISSILE)) // haleyjd
+         if(mo->flags4 & MF4_HERETICBOUNCES) // MaxW
+         {
+            P_floorHereticBounceMissile(mo);
+            return;
+         }
+         else if(!(mo->flags3 & MF3_FLOORMISSILE)) // haleyjd
+         {
             P_ExplodeMissile(mo, nullptr);
+            return;
+         }
          return;
       }
    }

@@ -285,7 +285,7 @@ weaponinfo PhoenixRod
 weaponinfo Mace
 {
   ammotype     AmmoMaceSphere
-  ammouse      40
+  ammouse      1
 
   nextincycle  Staff
   previncycle  PhoenixRod
@@ -312,7 +312,7 @@ weaponinfo Mace
   Fire:
     MACE B 4
   Hold:
-    MACE CDEF 3
+    MACE CDEF 3 A_FireMacePL1
     MACE C 4 A_ReFire
     MACE DEFB 4
     goto Ready

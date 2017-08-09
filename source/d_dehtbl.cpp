@@ -1458,6 +1458,10 @@ void A_StaffAttackPL1(actionargs_t *);
 void A_StaffAttackPL2(actionargs_t *);
 void A_FireGoldWandPL1(actionargs_t *);
 void A_FireGoldWandPL2(actionargs_t *);
+void A_FireMacePL1(actionargs_t *);
+void A_MacePL1Check(actionargs_t *);
+void A_MaceBallImpact(actionargs_t *);
+void A_MaceBallImpact2(actionargs_t *);
 void A_FireCrossbowPL1(actionargs_t *);
 void A_FireCrossbowPL2(actionargs_t *);
 void A_BoltSpark(actionargs_t *);
@@ -1796,6 +1800,10 @@ deh_bexptr deh_bexptrs[] =
    POINTER(StaffAttackPL2),
    POINTER(FireGoldWandPL1),
    POINTER(FireGoldWandPL2),
+   POINTER(FireMacePL1),
+   POINTER(MacePL1Check),
+   POINTER(MaceBallImpact),
+   POINTER(MaceBallImpact2),
    POINTER(FireCrossbowPL1),
    POINTER(FireCrossbowPL2),
    POINTER(BoltSpark),

@@ -21,9 +21,6 @@
 //----------------------------------------------------------------------------
 //
 // Purpose: Doom weapon action functions
-// Some code is derived from Chocolate Doom, by Simon Howard, used under
-// terms of the GPLv3.
-//
 // Authors: Max Waine
 //
 
@@ -36,7 +33,6 @@
 #include "doomstat.h"
 #include "d_gi.h"
 #include "d_mod.h"
-#include "e_args.h"
 #include "e_player.h"
 #include "e_states.h"
 #include "e_things.h"
@@ -48,9 +44,7 @@
 #include "p_maputl.h"
 #include "p_skin.h"
 #include "p_user.h"
-#include "r_main.h"
 #include "s_sound.h"
-#include "tables.h"
 
 #include "p_map.h"
 

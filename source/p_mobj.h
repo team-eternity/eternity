@@ -701,6 +701,7 @@ enum mobjflags4_e : unsigned int
    MF4_TOTALINVISIBLE = 0x00020000, // Thing is invisible to monsters
    MF4_DRAWSBLOOD     = 0x00040000, // For missiles, spawn blood when hitting bleeding things
    MF4_SPACPUSHWALL   = 0x00080000, // thing can activate push walls
+   MF4_HERETICBOUNCES = 0x00100000, // thing bounces à la Heretic
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh

@@ -308,6 +308,9 @@ enum
   MT_CRBOWFX2,
   MT_CRBOWFX3,
   MT_CRBOWFX4,
+  MT_MACEFX1,
+  MT_MACEFX2,
+  MT_MACEFX3,
 
 // Start Eternity TC New Things
 

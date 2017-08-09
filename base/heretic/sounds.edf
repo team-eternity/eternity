@@ -919,7 +919,23 @@ sound ht_stfcrk
 {
   lump          "stfcrk"
   priority      64
-  dehackednum   412
+  dehackednum   413
+  pitchvariance Heretic
+}
+
+sound ht_lobsht
+{
+  lump          "lobsht"
+  priority      64
+  dehackednum   414
+  pitchvariance Heretic
+}
+
+sound ht_bounce
+{
+  lump          "bounce"
+  priority      64
+  dehackednum   415
   pitchvariance Heretic
 }
 
