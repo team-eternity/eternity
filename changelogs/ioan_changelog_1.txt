@@ -1,7 +1,34 @@
-==============================================================
-Changes by Ioan Chera since Eternity Engine v3.42.02 "Heimdal"
-==============================================================
+========================================
+Changes by Ioan Chera in Eternity Engine
+========================================
 Dates are in dd.mm.yyyy format. Most recent update is first.
+
+==================================
+Since v3.42.03 "Heimdal" release 2
+==================================
+
+--------------------------------------------------------------------------------
+09.08.2017
+
+FEATURE: -vanilla is now stored in savegames, which means that you can now
+         preserve vanilla-compatible campaigns.
+
+--------------------------------------------------------------------------------
+07.08.2017
+
+BUGFIX: The Heretic AUTOPAGE background wasn't moving along with the map. Fixed.
+        Now it moves at the same speed, without the displacement from vanilla
+        Heretic.
+
+--------------------------------------------------------------------------------
+06.08.2017
+
+BUGFIX: Fixed case sensitive parsing of DECORATE state "stop" keyword, causing
+        Eternity to crash if it was expressed in other ways, such as "Stop".
+
+========================
+Since v3.42.02 "Heimdal"
+========================
 
 --------------------------------------------------------------------------------
 31.07.2017
