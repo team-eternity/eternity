@@ -256,60 +256,70 @@ static bool P_GiveWeapon(player_t *player, weaponinfo_t *wp, bool dropped,
 // P_GiveWeapon
 //
 // The weapon name may have a MF_DROPPED flag ored in.
-// TODO: Demo check?
-// TODO: Move to e_inventory.cpp
+// TODO: Demo check, back up old version which takes wp->dehnum?
+// TODO: Move to e_inventory.cpp?
 //
 static bool P_GiveWeapon(player_t *player, itemeffect_t *giver, bool dropped,
    Mobj *special)
 {
-   bool gaveweapon = false;
+   bool gaveweapon = false, gaveammo = false, dmstay = false, firsttime = true;
 
    weaponinfo_t *wp        = E_WeaponForName(giver->getString("weapon", ""));
-   itemeffect_t *ammogiven = giver->getMetaTable("ammogiven", nullptr);
-   itemeffect_t *ammo      = nullptr;
-   int giveammo = 0, dropammo = 0;
-   if(ammogiven)
+   itemeffect_t *ammogiven = nullptr;
+   while((ammogiven = giver->getNextTypeEx(ammogiven)))
    {
-      ammo     = E_ItemEffectForName(ammogiven->getString("type", ""));
-      giveammo = ammogiven->getInt("ammo.give", 0);
-      dropammo = ammogiven->getInt("ammo.dropped", 0);
-   }
-
-   if((dmflags & DM_WEAPONSTAY) && !dropped)
-   {
-      // leave placed weapons forever on net games
-      if(E_PlayerOwnsWeapon(player, wp))
-         return false;
-
-      player->bonuscount += BONUSADD;
-      E_GiveInventoryItem(player, wp->tracker, 1); // TODO: Change 3rd value
+      itemeffect_t *ammo = nullptr;
+      int giveammo = 0, dropammo = 0;
       if(ammogiven)
       {
-         const int dmstayammo   = ammogiven->getInt("ammo.dmstay", 0);
-         const int coopstayammo = ammogiven->getInt("ammo.coopstay", 0);
-         if((GameType == gt_dm && dmstayammo) || (GameType == gt_coop && coopstayammo))
-            P_GiveAmmo(player, ammo, (GameType == gt_dm) ? dmstayammo : coopstayammo);
+         ammo = E_ItemEffectForName(ammogiven->getString("type", ""));
+         giveammo = ammogiven->getInt("ammo.give", 0);
+         dropammo = ammogiven->getInt("ammo.dropped", 0);
       }
-      
-      player->pendingweapon = wp;
-      S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
-      P_consumeSpecial(player, special); // need to handle it here
-      return false;
+
+      if((dmflags & DM_WEAPONSTAY) && !dropped)
+      {
+         // leave placed weapons forever on net games
+         if(E_PlayerOwnsWeapon(player, wp))
+            return false;
+
+         if(ammogiven)
+         {
+            const int dmstayammo = ammogiven->getInt("ammo.dmstay", 0);
+            const int coopstayammo = ammogiven->getInt("ammo.coopstay", 0);
+            if((GameType == gt_dm && dmstayammo) || (GameType == gt_coop && coopstayammo))
+               P_GiveAmmo(player, ammo, (GameType == gt_dm) ? dmstayammo : coopstayammo);
+         }
+
+         if(firsttime)
+         {
+            player->bonuscount += BONUSADD;
+            E_GiveInventoryItem(player, wp->tracker, 1); // TODO: Change 3rd value?
+            player->pendingweapon = wp;
+            S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
+            P_consumeSpecial(player, special); // need to handle it here
+            dmstay = true;
+         }
+      }
+      else
+      {
+         // give one clip with a dropped weapon, two clips with a found weapon
+         const int  amount = dropped ? dropammo : giveammo;
+         gaveammo |= (ammo && amount ? P_GiveAmmo(player, ammo, amount) : false);
+
+         // haleyjd 10/4/11: de-Killoughized
+         if(firsttime && !E_PlayerOwnsWeapon(player, wp))
+         {
+            player->pendingweapon = wp;
+            E_GiveInventoryItem(player, wp->tracker, 1); // TODO: Change 3rd value
+            gaveweapon = true;
+            firsttime = false;
+         }
+      }
    }
 
-   // give one clip with a dropped weapon, two clips with a found weapon
-   int  amount   = dropped ? dropammo : giveammo;
-   bool gaveammo = (ammo && amount ? P_GiveAmmo(player, wp->ammo, amount) : false);
-   
-   // haleyjd 10/4/11: de-Killoughized
-   if(!E_PlayerOwnsWeapon(player, wp))
-   {
-      player->pendingweapon = wp;
-      E_GiveInventoryItem(player, wp->tracker, 1); // TODO: Change 3rd value
-      gaveweapon = true;
-   }
-
-   return gaveweapon || gaveammo;
+   // Multiplayer always returns fal
+   return !dmstay && (gaveweapon || gaveammo);
 }
 
 //

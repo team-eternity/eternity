@@ -465,8 +465,8 @@ public:
    void       addMetaTable(size_t keyIndex, MetaTable *value);
    MetaTable *getMetaTable(size_t keyIndex, MetaTable *defValue) const;
    MetaTable *getMetaTable(const char *key, MetaTable *defValue) const;
-   void       setMetaTable(size_t keyIndex, MetaTable *value);
-   void       setMetaTable(const char *key, MetaTable *value);
+   void       setMetaTable(size_t keyIndex, MetaTable *value, bool allowmulti);
+   void       setMetaTable(const char *key, MetaTable *value, bool allowmulti);
 
    // Copy routine - clones the entire MetaTable
    void copyTableTo(MetaTable *dest) const;

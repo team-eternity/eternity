@@ -960,7 +960,7 @@ void E_MetaIntFromCfgFlag(MetaTable *meta, cfg_t *cfg, const char *prop)
    meta->setInt(prop, cfg_getflag(cfg, prop));
 }
 
-void E_MetaTableFromCfgMvprop(MetaTable *meta, cfg_t *cfg, const char *prop)
+void E_MetaTableFromCfgMvprop(MetaTable *meta, cfg_t *cfg, const char *prop, bool allowmulti)
 {
    int numprop = cfg_size(cfg, prop);
 
@@ -990,14 +990,14 @@ void E_MetaTableFromCfgMvprop(MetaTable *meta, cfg_t *cfg, const char *prop)
             E_MetaIntFromCfgFlag(table, currcfg, opt->name);
             break;
          case CFGT_MVPROP:
-            E_MetaTableFromCfgMvprop(table, currcfg, opt->name);
+            E_MetaTableFromCfgMvprop(table, currcfg, opt->name, opt->flags & CFGF_MULTI);
             break;
          default:
             break;
          }
       }
 
-      meta->setMetaTable(prop, table);
+      meta->setMetaTable(prop, table, allowmulti);
    }
 
 }
@@ -1038,7 +1038,7 @@ void E_MetaTableFromCfg(cfg_t *cfg, MetaTable *table, MetaTable *prototype)
          E_MetaIntFromCfgFlag(table, cfg, opt->name);
          break;
       case CFGT_MVPROP:
-         E_MetaTableFromCfgMvprop(table, cfg, opt->name);
+         E_MetaTableFromCfgMvprop(table, cfg, opt->name, opt->flags & CFGF_MULTI);
          break;
       default:
          break;

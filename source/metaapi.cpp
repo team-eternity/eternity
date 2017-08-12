@@ -1548,24 +1548,25 @@ MetaTable *MetaTable::getMetaTable(const char *key, MetaTable *defValue) const
 }
 
 //
-// TODO: "Additive" bool for CFGF_MULTI mvprops
+// If the metatable already contains a metatable of the given name, it will
+// be edited to have the provided value. Otherwise, a new metatable will be
+// added to the table with that value. 
 //
-void MetaTable::setMetaTable(size_t keyIndex, MetaTable *newValue)
+void MetaTable::setMetaTable(size_t keyIndex, MetaTable *newValue, bool allowmulti)
 {
-   if(!getObjectKeyAndTypeEx<MetaTable>(keyIndex))
+   MetaTable *obj = getObjectKeyAndTypeEx<MetaTable>(keyIndex);
+   if(!obj || allowmulti)
       addMetaTable(keyIndex, newValue);
-   else
-   {
-      // FIXME: Can we insert multiple values for a single index?
-   }
+   //else   FIXME: This. Set pImpl or something?
+   //   obj->setValue(newValue);
 }
 
 //
-// TODO: "Additive" bool for CFGF_MULTI mvprops
+// See above
 //
-void MetaTable::setMetaTable(const char *key, MetaTable *newValue)
+void MetaTable::setMetaTable(const char *key, MetaTable *newValue, bool allowmulti)
 {
-   setMetaTable(MetaKey(key).index, newValue);
+   setMetaTable(MetaKey(key).index, newValue, allowmulti);
 }
 
 //
