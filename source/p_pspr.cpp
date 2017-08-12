@@ -476,6 +476,8 @@ void P_SubtractAmmo(player_t *player, int compat_amt)
    itemeffect_t *ammo;
    int amount;
 
+   // FIXME: Needs to fire the wimpy version's amount of ammo if in deathmatch, or at least
+   // do it for Heretic.
    if(player->attackdown & AT_PRIMARY)
    {
       ammo = weapon->ammo;

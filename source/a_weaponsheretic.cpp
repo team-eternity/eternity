@@ -48,10 +48,10 @@
 
 void A_StaffAttackPL1(actionargs_t *actionargs)
 {
-   Mobj     *mo     = actionargs->actor;
-   int       damage = 5 + (P_Random(pr_staff) & 15);
-   angle_t   angle  = mo->angle + (P_SubRandom(pr_staffangle) * PO2(18));
-   fixed_t   slope  =  P_AimLineAttack(mo, angle, MELEERANGE, 0);
+   Mobj    *mo     = actionargs->actor;
+   int      damage = 5 + (P_Random(pr_staff) & 15);
+   angle_t  angle  = mo->angle + (P_SubRandom(pr_staffangle) * PO2(18));
+   fixed_t  slope  =  P_AimLineAttack(mo, angle, MELEERANGE, 0);
 
    const int   tnum = E_SafeThingType(MT_STAFFPUFF);
    mobjinfo_t *puff = mobjinfo[tnum];
@@ -67,10 +67,10 @@ void A_StaffAttackPL1(actionargs_t *actionargs)
 
 void A_StaffAttackPL2(actionargs_t *actionargs)
 {
-   Mobj     *mo = actionargs->actor;
-   int       damage = 18 + (P_Random(pr_staff2) & 63);
-   angle_t   angle = mo->angle + (P_SubRandom(pr_staffangle) * PO2(18));
-   fixed_t   slope = P_AimLineAttack(mo, angle, MELEERANGE, 0);
+   Mobj    *mo = actionargs->actor;
+   int      damage = 18 + (P_Random(pr_staff2) & 63);
+   angle_t  angle = mo->angle + (P_SubRandom(pr_staffangle) * PO2(18));
+   fixed_t  slope = P_AimLineAttack(mo, angle, MELEERANGE, 0);
 
    const int   tnum = E_SafeThingType(MT_STAFFPUFF2);
    mobjinfo_t *puff = mobjinfo[tnum];
@@ -168,12 +168,12 @@ void A_FireMacePL1B(actionargs_t *actionargs)
    const fixed_t slope = P_PlayerPitchSlope(player);
    ball->momz = FixedMul(fx->speed, slope) + (2 * FRACUNIT);
    angle = pmo->angle;
-   ball->target = pmo;
+   P_SetTarget(&ball->target, pmo);
    ball->angle = angle;
    ball->z += 2 * slope;
    angle >>= ANGLETOFINESHIFT;
-   ball->momx = (pmo->momx  / 2) + FixedMul(ball->info->speed, finecosine[angle]);
-   ball->momy = (pmo->momy / 2) + FixedMul(ball->info->speed, finesine[angle]);
+   ball->momx = (pmo->momx  / PO2(1)) + FixedMul(ball->info->speed, finecosine[angle]);
+   ball->momy = (pmo->momy / PO2(1)) + FixedMul(ball->info->speed, finesine[angle]);
 
    S_StartSound(ball, sfx_lobsht);
    P_CheckMissileSpawn(ball);
@@ -223,7 +223,7 @@ void A_MacePL1Check(actionargs_t *actionargs)
    angle = ball->angle >> ANGLETOFINESHIFT;
    ball->momx = FixedMul(7 * FRACUNIT, finecosine[angle]);
    ball->momy = FixedMul(7 * FRACUNIT, finesine[angle]);
-   ball->momz -= ball->momz / 2;
+   ball->momz -= ball->momz / PO2(1);
 }
 
 #define MAGIC_JUNK 1234
@@ -239,7 +239,7 @@ void A_MaceBallImpact(actionargs_t *actionargs)
       && ball->momz)
    {                           // Bounce
       ball->health = MAGIC_JUNK;
-      ball->momz = (ball->momz * 192) / 256;
+      ball->momz = (ball->momz * 192) / PO2(8);
       ball->flags4 &= ~MF4_HERETICBOUNCES;
       P_SetMobjState(ball, ball->info->spawnstate);
       S_StartSound(ball, sfx_bounce);
@@ -272,7 +272,7 @@ void A_MaceBallImpact2(actionargs_t *actionargs)
    }
    else
    {                           // Bounce
-      ball->momz = ball->momz * 192 / 256;
+      ball->momz = ball->momz * 192 / PO2(8);
       P_SetMobjState(ball, ball->info->spawnstate);
 
       for(int horizontalmultiplier = -1; horizontalmultiplier <= 1; horizontalmultiplier += 2)
@@ -282,11 +282,108 @@ void A_MaceBallImpact2(actionargs_t *actionargs)
          P_SetTarget(&tiny->target, ball->target);
          tiny->angle = angle;
          angle >>= ANGLETOFINESHIFT;
-         tiny->momx = (ball->momx / 2) + FixedMul(ball->momz - FRACUNIT, finecosine[angle]);
-         tiny->momy = (ball->momy / 2) + FixedMul(ball->momz - FRACUNIT, finesine[angle]);
+         tiny->momx = (ball->momx / PO2(1)) + FixedMul(ball->momz - FRACUNIT, finecosine[angle]);
+         tiny->momy = (ball->momy / PO2(1)) + FixedMul(ball->momz - FRACUNIT, finesine[angle]);
          tiny->momz = ball->momz;
          P_CheckMissileSpawn(tiny);
       }
+   }
+}
+
+void A_FireMacePL2(actionargs_t *actionargs)
+{
+   player_t *player = actionargs->actor->player;
+   Mobj     *mo;
+   const int tnum = E_SafeThingType(MT_MACEFX4);
+
+   if(!player)
+      return;
+
+   //player->ammo[am_mace] -= deathmatch ? USE_MACE_AMMO_1 : USE_MACE_AMMO_2;
+   // FIXME: This needs to do the above behaviour:
+   // to wit, fire the wimpy version's amount of ammo if in deathmatch
+   P_SubtractAmmo(player, -1);
+   mo = P_SpawnPlayerMissile(player->mo, tnum);
+   if(mo)
+   {
+      mobjinfo_t *fx = mobjinfo[tnum];
+      const fixed_t slope = P_PlayerPitchSlope(player);
+
+      mo->momx += player->mo->momx;
+      mo->momy += player->mo->momy;
+      mo->momz = FixedMul(fx->speed, slope) + (2 * FRACUNIT);
+      if(clip.linetarget)
+         P_SetTarget(&mo->tracer, clip.linetarget);
+   }
+   S_StartSound(player->mo, sfx_lobsht);
+}
+
+void A_DeathBallImpact(actionargs_t *actionargs)
+{
+   int      i;
+   Mobj    *target, *ball = actionargs->actor;
+   angle_t  angle;
+   bool     newAngle;
+
+   if((ball->z <= ball->floorz) && E_HitFloor(ball))
+   {
+      // Landed in some sort of liquid
+      ball->removeThinker();
+      return;
+   }
+   if((ball->z <= ball->floorz) && ball->momz)
+   {
+      // Bounce
+      newAngle = false;
+      target = ball->tracer;
+      if(target)
+      {
+         if(!(target->flags & MF_SHOOTABLE))
+         {
+            // Target died
+            P_ClearTarget(ball->tracer);
+         }
+         else
+         {
+            // Seek
+            angle = R_PointToAngle2(ball->x, ball->y, target->x, target->y);
+            newAngle = true;
+         }
+      }
+      else
+      {
+         // Find new target
+         angle = 0;
+         for(i = 0; i < 16; i++)
+         {
+            P_AimLineAttack(ball, angle, 10 * 64 * FRACUNIT, 0);
+            if(clip.linetarget && ball->target != clip.linetarget)
+            {
+               P_SetTarget(&ball->tracer, clip.linetarget);
+               angle = R_PointToAngle2(ball->x, ball->y,
+                                       clip.linetarget->x, clip.linetarget->y);
+               newAngle = true;
+               break;
+            }
+            angle += ANG45 / 2;
+         }
+      }
+      if(newAngle)
+      {
+         ball->angle = angle;
+         angle >>= ANGLETOFINESHIFT;
+         ball->momx = FixedMul(ball->info->speed, finecosine[angle]);
+         ball->momy = FixedMul(ball->info->speed, finesine[angle]);
+      }
+      P_SetMobjState(ball, ball->info->spawnstate);
+      S_StartSound(ball, sfx_hpstop);
+   }
+   else
+   {
+      // Explode
+      ball->flags |= MF_NOGRAVITY;
+      ball->flags2 &= ~MF2_LOGRAV;
+      S_StartSound(ball, sfx_phohit);
    }
 }
 

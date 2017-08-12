@@ -69,7 +69,7 @@ playerclass Corvus
    weaponslot 4 { weapons : Blaster }
    weaponslot 5 { weapons : SkullRod }
    weaponslot 6 { weapons : PhoenixRod }
-   weaponslot 7 { weapons : Mace }
+   weaponslot 7 { weapons : MacePowered }
    weaponslot 8 { weapons : Gauntlets }
 
    rebornitem AmmoWandCrystal, 50

@@ -35,7 +35,7 @@ typedef MetaTable itemeffect_t;
 //
 // haleyjd 09/11/07: weapon flags
 //
-enum wepflags_e: unsigned int
+enum wepflags_e : unsigned int
 {
    WPF_NOTHRUST      = 0x00000001, // doesn't thrust Mobj's
    WPF_NOHITGHOSTS   = 0x00000002, // tracer-based weapon can't hit ghosts

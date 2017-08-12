@@ -319,6 +319,25 @@ weaponinfo Mace
   "@
 }
 
+/*weaponinfo MacePowered : Mace
+{
+  ammouse      5
+
+  // TODO: Figure out what to do with trackers for tomed weapons
+  tracker      
+
+  states
+  @"
+  Fire:
+  Hold:
+    MACE B 4
+    MACE D 4 A_FireMacePL2
+    MACE C 4
+    MACE A 8 A_ReFire
+    goto Ready
+  "@
+}*/
+
 weaponinfo Gauntlets
 {
   nextincycle  GoldWand

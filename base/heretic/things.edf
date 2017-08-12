@@ -3143,6 +3143,27 @@ thingtype MaceFX3 : MaceShotProto, -1, 440
   "@
 }
 
+thingtype MaceFX4 : MaceShotProto, -1, 441
+{
+  compatname MaceFX4
+  speed      7.0
+  radius     8.0
+  height     6.0
+  damage     18
+  remflags   NOTELEPORT
+  addflags   LOGRAV|TELESTOMP
+
+  states @"
+  Spawn:
+    FX02 E 99
+    loop
+  Death:
+    FX02 C 4 A_DeathBallImpact
+    FX02 GHIJ 4 Bright
+    stop
+  "@
+}
+
 
 //
 // Fire Mace
