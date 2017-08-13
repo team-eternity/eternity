@@ -266,7 +266,7 @@ static bool P_GiveWeapon(player_t *player, itemeffect_t *giver, bool dropped,
 
    weaponinfo_t *wp        = E_WeaponForName(giver->getString("weapon", ""));
    itemeffect_t *ammogiven = nullptr;
-   while((ammogiven = giver->getNextKeyAndTypeEx(ammogiven, "ammogiven")))
+   while(firsttime || (ammogiven = giver->getNextKeyAndTypeEx(ammogiven, "ammogiven")))
    {
       itemeffect_t *ammo = nullptr;
       int giveammo = 0, dropammo = 0;
@@ -294,11 +294,12 @@ static bool P_GiveWeapon(player_t *player, itemeffect_t *giver, bool dropped,
          if(firsttime)
          {
             player->bonuscount += BONUSADD;
-            E_GiveInventoryItem(player, wp->tracker, 1); // TODO: Change 3rd value?
+            E_GiveInventoryItem(player, wp->tracker);
             player->pendingweapon = wp;
             S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
             P_consumeSpecial(player, special); // need to handle it here
             dmstay = true;
+            firsttime = false;
          }
       }
       else
@@ -308,11 +309,14 @@ static bool P_GiveWeapon(player_t *player, itemeffect_t *giver, bool dropped,
          gaveammo |= (ammo && amount ? P_GiveAmmo(player, ammo, amount) : false);
 
          // haleyjd 10/4/11: de-Killoughized
-         if(firsttime && !E_PlayerOwnsWeapon(player, wp))
+         if(firsttime)
          {
-            player->pendingweapon = wp;
-            E_GiveInventoryItem(player, wp->tracker, 1); // TODO: Change 3rd value
-            gaveweapon = true;
+            if(!E_PlayerOwnsWeapon(player, wp))
+            {
+               player->pendingweapon = wp;
+               E_GiveInventoryItem(player, wp->tracker);
+               gaveweapon = true;
+            }
             firsttime = false;
          }
       }
