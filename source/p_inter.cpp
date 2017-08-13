@@ -266,7 +266,7 @@ static bool P_GiveWeapon(player_t *player, itemeffect_t *giver, bool dropped,
 
    weaponinfo_t *wp        = E_WeaponForName(giver->getString("weapon", ""));
    itemeffect_t *ammogiven = nullptr;
-   while((ammogiven = giver->getNextTypeEx(ammogiven)))
+   while((ammogiven = giver->getNextKeyAndTypeEx(ammogiven, "ammogiven")))
    {
       itemeffect_t *ammo = nullptr;
       int giveammo = 0, dropammo = 0;

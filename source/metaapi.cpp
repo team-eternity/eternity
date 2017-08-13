@@ -1528,7 +1528,10 @@ MetaTable *MetaTable::getMetaTable(size_t keyIndex, MetaTable *defValue) const
 }
 
 //
-// TODO: Make getNMetaTable for indexed MetaTable getting
+// Get a MetaTable pointer from the MetaTable *hornfx*. If the requested
+// property does not exist as a MetaTable, the value provided by the defValue
+// parameter will be returned, and metaerrno will be set to META_ERR_NOSUCHOBJECT.
+// Otherwise, the MetaTable pointer is returned and metaerrno is META_ERR_NOERR.
 //
 MetaTable *MetaTable::getMetaTable(const char *key, MetaTable *defValue) const
 {
@@ -1549,16 +1552,21 @@ MetaTable *MetaTable::getMetaTable(const char *key, MetaTable *defValue) const
 
 //
 // If the metatable already contains a metatable of the given name, it will
-// be edited to have the provided value. Otherwise, a new metatable will be
-// added to the table with that value. 
+// be edited to have the provided value if the MVPROP isn't CFGF_MULTI.
+// Otherwise, a new metatable will be added to the table with that value. 
 //
 void MetaTable::setMetaTable(size_t keyIndex, MetaTable *newValue, bool allowmulti)
 {
    MetaTable *obj = getObjectKeyAndTypeEx<MetaTable>(keyIndex);
-   if(!obj || allowmulti)
-      addMetaTable(keyIndex, newValue);
-   //else   FIXME: This. Set pImpl or something?
-   //   obj->setValue(newValue);
+   // FIXME: Is it possible for this to run?
+   if(obj && !allowmulti)
+   {
+      // FIXME: Should obj be deleted? Is this even correct?
+      pImpl->keyhash.removeObject(obj);
+      pImpl->typehash.removeObject(obj);
+   }   
+
+   addMetaTable(keyIndex, newValue);
 }
 
 //
