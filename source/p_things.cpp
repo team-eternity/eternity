@@ -142,7 +142,7 @@ int EV_ThingSpawn(const int *args, bool fog)
       newMobj = P_SpawnMobj(mobj->x, mobj->y, z, moType);
       
       if(!P_CheckPositionExt(newMobj, newMobj->x, newMobj->y, newMobj->z)) // Didn't fit?
-         newMobj->removeThinker();
+         newMobj->remove();
       else
       {
          newMobj->angle = angle;
@@ -458,7 +458,7 @@ int EV_ThingRemove(int tid)
       // clean up as best as we can
       removed->health = 0;
       removed->flags &= ~MF_SHOOTABLE;
-      removed->removeThinker();
+      removed->remove();
 
       rtn = 1;
    }
@@ -513,7 +513,7 @@ void LevelActionThinker::Think()
    // Execute special
    ev_action_t *action = EV_HexenActionForSpecial(special);
    if(action && EV_ActivateAction(action, args, thePlayer->mo))
-      removeThinker();
+      remove();
 }
 
 //

@@ -130,7 +130,7 @@ void IN_StartCamera()
          // even kill it!) even tho it has been removed from the level. I make
          // it unshootable first so they lose interest.
          players[i].mo->flags &= ~MF_SHOOTABLE;
-         players[i].mo->removeThinker();
+         players[i].mo->remove();
       }
 #endif
             

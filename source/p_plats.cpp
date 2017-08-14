@@ -643,7 +643,7 @@ bool EV_StopPlatByTag(int tag, bool removeThinker)
          {
             plat->sector->floordata = nullptr;
             S_StopSectorSequence(plat->sector, SEQ_ORIGIN_SECTOR_F);
-            plat->removeThinker();
+            plat->remove();
          }
       }
    }
@@ -680,7 +680,7 @@ void PlatThinker::addActivePlat()
 void PlatThinker::removeActivePlat()
 {
    sector->floordata = NULL; //jff 2/23/98 multiple thinkers
-   removeThinker();
+   remove();
    if((*list->prev = list->next))
       list->next->prev = list->prev;
    efree(list);

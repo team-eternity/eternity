@@ -190,7 +190,7 @@ void FloorMoveThinker::Think()
       }
       
       sector->floordata = NULL; //jff 2/22/98
-      this->removeThinker(); //remove this floor from list of movers
+      this->remove(); //remove this floor from list of movers
 
       //jff 2/26/98 implement stair retrigger lockout while still building
       // note this only applies to the retriggerable generalized stairs
@@ -312,7 +312,7 @@ void ElevatorThinker::Think()
       S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_F);
       sector->floordata = NULL;     //jff 2/22/98
       sector->ceilingdata = NULL;   //jff 2/22/98
-      this->removeThinker();               // remove elevator from actives
+      this->remove();               // remove elevator from actives
       
       // make floor stop sound
       // haleyjd: handled through sound sequences
@@ -354,7 +354,7 @@ void PillarThinker::Think()
       S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_F);
       sector->floordata = NULL;
       sector->ceilingdata = NULL;      
-      this->removeThinker();
+      this->remove();
    }
 }
 
@@ -397,7 +397,7 @@ int EV_FloorCrushStop(const line_t *line, int tag)
          rtn = 1;
          fmt->sector->floordata = nullptr;
          S_StopSectorSequence(fmt->sector, SEQ_ORIGIN_SECTOR_F);
-         fmt->removeThinker();
+         fmt->remove();
       }
    }
    return rtn;
@@ -1442,7 +1442,7 @@ void FloorWaggleThinker::Think()
             destheight >= sector->floorheight ? plat_down : plat_up);
 
          sector->floordata = NULL;
-         removeThinker();
+         remove();
          return;
       }
       break;
