@@ -299,11 +299,13 @@ void IN_Start(wbstartstruct_t *wbstartstruct)
 //
 intermapinfo_t &IN_GetMapInfo(const char *lumpname)
 {
-   intermapinfo_t *info = in_mapinfo.objectForKey(lumpname);
-   if(!info)
+   intermapinfo_t *info;
+   if(!(info = in_mapinfo.objectForKey(lumpname)))
+   {
       info = estructalloc(intermapinfo_t, 1);
-   info->lumpname = estrdup(lumpname);
-   in_mapinfo.addObject(info);
+      info->lumpname = estrdup(lumpname);
+      in_mapinfo.addObject(info);
+   }
    return *info;
 }
 
