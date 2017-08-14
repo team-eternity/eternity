@@ -1077,7 +1077,7 @@ void A_ThingSummon(actionargs_t *actionargs)
          A_Die(&dieaction);
          break;
       case 1:
-         newmobj->removeThinker();
+         newmobj->remove();
          break;
       }
       return;
@@ -1108,7 +1108,7 @@ void A_ThingSummon(actionargs_t *actionargs)
          A_Die(&dieaction);
          break;
       case 1:
-         newmobj->removeThinker();
+         newmobj->remove();
          break;
       }
       return;
@@ -1154,7 +1154,7 @@ void A_KillChildren(actionargs_t *actionargs)
             A_Die(&dieaction);
             break;
          case 1:
-            mo->removeThinker();
+            mo->remove();
             break;
          }
       }

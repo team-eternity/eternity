@@ -2383,7 +2383,7 @@ static void G_queuePlayerCorpse(Mobj *mo)
       if(bodyque[index] != NULL)
       {
          bodyque[index]->intflags &= ~MIF_PLYRCORPSE;
-         bodyque[index]->removeThinker();
+         bodyque[index]->remove();
       }
       
       mo->intflags |= MIF_PLYRCORPSE;
@@ -2391,7 +2391,7 @@ static void G_queuePlayerCorpse(Mobj *mo)
       bodyqueslot = (bodyqueslot + 1) % queuesize;
    }
    else if(!bodyquesize)
-      mo->removeThinker();   
+      mo->remove();   
 }
 
 //
@@ -2879,6 +2879,7 @@ void G_ReloadDefaults()
    compatibility = false;     // killough 10/98: replaced by comp[] vector
    memcpy(comp, default_comp, sizeof comp);
    
+   vanilla_mode = false;
    demo_version = version;       // killough 7/19/98: use this version's id
    demo_subversion = subversion; // haleyjd 06/17/01
    
@@ -3393,6 +3394,8 @@ void G_SetOldDemoOptions()
 {
    int i;
 
+   vanilla_mode = true;
+
    // support -longtics when recording vanilla format demos
    longtics_demo = (M_CheckParm("-longtics") != 0);
 
@@ -3527,6 +3530,7 @@ void G_BeginRecording()
    // killough 2/22/98: save compatibility flag in new demos
    *demo_p++ = compatibility;       // killough 2/22/98
    
+   vanilla_mode = false;
    demo_version = version;       // killough 7/19/98: use this version's id
    demo_subversion = subversion; // haleyjd 06/17/01
    

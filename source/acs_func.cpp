@@ -2101,7 +2101,7 @@ static Mobj *ACS_spawn(mobjtype_t type, fixed_t x, fixed_t y, fixed_t z,
       {
          // And if not, unmake the Mobj.
          mo->state = NULL;
-         mo->removeThinker();
+         mo->remove();
          return NULL;
       }
 

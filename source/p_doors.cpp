@@ -181,7 +181,7 @@ void VerticalDoorThinker::Think()
          case blazeClose:
          case paramCloseIn:      // haleyjd 03/01/05
             sector->ceilingdata = NULL;  //jff 2/22/98
-            this->removeThinker();  // unlink and free
+            this->remove();  // unlink and free
             // killough 4/15/98: remove double-closing sound of blazing doors
             // haleyjd 10/06/06: behavior is determined via sound sequence now
             break;
@@ -244,7 +244,7 @@ void VerticalDoorThinker::Think()
          case doorOpen:
             S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_C);
             sector->ceilingdata = NULL; //jff 2/22/98
-            this->removeThinker(); // unlink and free
+            this->remove(); // unlink and free
             break;
             
          default:

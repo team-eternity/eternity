@@ -232,7 +232,7 @@ void A_MaceBallImpact(actionargs_t *actionargs)
    Mobj *ball = actionargs->actor;
    if((ball->z <= ball->floorz) && E_HitFloor(ball))
    {                           // Landed in some sort of liquid
-      ball->removeThinker();
+      ball->remove();
       return;
    }
    if((ball->health != MAGIC_JUNK) && (ball->z <= ball->floorz)
@@ -261,7 +261,7 @@ void A_MaceBallImpact2(actionargs_t *actionargs)
 
    if((ball->z <= ball->floorz) && E_HitFloor(ball))
    {                           // Landed in some sort of liquid
-      ball->removeThinker();
+      ball->remove();
       return;
    }
    if((ball->z != ball->floorz) || (ball->momz < 2 * FRACUNIT))
@@ -328,7 +328,7 @@ void A_DeathBallImpact(actionargs_t *actionargs)
    if((ball->z <= ball->floorz) && E_HitFloor(ball))
    {
       // Landed in some sort of liquid
-      ball->removeThinker();
+      ball->remove();
       return;
    }
    if((ball->z <= ball->floorz) && ball->momz)

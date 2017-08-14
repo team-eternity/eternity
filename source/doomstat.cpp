@@ -41,6 +41,7 @@ bool in_textmode = true;        // game in graphics mode yet?
 
 // compatibility with old engines (monster behavior, metrics, etc.)
 int compatibility, default_compatibility;          // killough 1/31/98
+bool vanilla_mode;   // ioanch: store -vanilla in a global flag
 
 int comp[COMP_TOTAL], default_comp[COMP_TOTAL];    // killough 10/98
 

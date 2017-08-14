@@ -8,6 +8,12 @@ Since v3.42.03 "Heimdal" release 2
 ==================================
 
 --------------------------------------------------------------------------------
+09.08.2017
+
+FEATURE: -vanilla is now stored in savegames, which means that you can now
+         preserve vanilla-compatible campaigns.
+
+--------------------------------------------------------------------------------
 07.08.2017
 
 BUGFIX: The Heretic AUTOPAGE background wasn't moving along with the map. Fixed.

@@ -159,7 +159,7 @@ public:
 
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual void removeThinker();
+   virtual void remove();
    
    // Data Members
    fixed_t x, y, z;
@@ -220,7 +220,7 @@ public:
    // Virtual methods (overridables)
    // Inherited from Thinker:
    virtual void updateThinker();
-   virtual void removeThinker();
+   virtual void remove();
    virtual void serialize(SaveArchive &arc);
    virtual void deSwizzle();
 
@@ -403,7 +403,7 @@ protected:
 
 public:
    MobjFadeThinker() : Super(), target(NULL), swizzled_target(0) {}
-   virtual void removeThinker();
+   virtual void remove();
    virtual void serialize(SaveArchive &arc);
    virtual void deSwizzle();
 

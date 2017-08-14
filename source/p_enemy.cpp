@@ -1860,7 +1860,7 @@ CONSOLE_COMMAND(give, cf_notnet|cf_level)
 
       // if it wasn't picked up, remove it
       if(!mo->isRemoved())
-         mo->removeThinker();
+         mo->remove();
    }
 }
 
@@ -1930,7 +1930,7 @@ CONSOLE_COMMAND(banish, cf_notnet|cf_level)
    P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, 0);
 
    if(clip.linetarget)
-      clip.linetarget->removeThinker();
+      clip.linetarget->remove();
 }
 
 CONSOLE_COMMAND(vilehit, cf_notnet|cf_level)

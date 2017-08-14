@@ -41,6 +41,7 @@
 #include "e_player.h"
 #include "g_dmflag.h"
 #include "g_game.h"
+#include "m_argv.h"
 #include "m_buffer.h"
 #include "m_random.h"
 #include "p_maputl.h"
@@ -694,7 +695,7 @@ static void P_RemoveAllThinkers()
       Thinker *next = th->next;
 
       if(th->isInstanceOf(RTTI(Mobj)))
-         th->removeThinker();
+         th->remove();
       else
          delete th;
       
@@ -1189,6 +1190,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
       int tempskill = (int)gameskill;
       
       arc << compatibility << tempskill << inmanageddir;
+      arc << vanilla_mode;
    
       // sf: use string rather than episode, map
       for(i = 0; i < 8; i++)
@@ -1348,10 +1350,20 @@ void P_LoadGame(const char *filename)
       arc << compatibility << tempskill << inmanageddir;
 
       gameskill = (skill_t)tempskill;
-      
-      demo_version    = version;    // killough 7/19/98: use this version's id
-      demo_subversion = subversion; // haleyjd 06/17/01   
   
+      arc << vanilla_mode;  // -vanilla setting
+      if(vanilla_mode)      // use UDoom version (no point for longtics now).
+      {
+         // All the other settings (save longtics) are stored in the save
+         demo_version = 109;
+         demo_subversion = 0;
+      }
+      else
+      {
+         demo_version    = version;    // killough 7/19/98: use this version's id
+         demo_subversion = subversion; // haleyjd 06/17/01
+      }
+
       // sf: use string rather than episode, map
       for(i = 0; i < 8; i++)
       {

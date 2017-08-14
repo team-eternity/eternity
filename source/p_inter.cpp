@@ -267,7 +267,7 @@ static bool P_GiveWeapon(player_t *player, itemeffect_t *giver, bool dropped, Mo
    {
       doom_printf(FC_ERROR "Invalid weaopninfo given in weapongiver: '%s'\a\n",
                   giver->getKey());
-      special->removeThinker();
+      special->remove();
       return false;
    }
 
@@ -283,14 +283,14 @@ static bool P_GiveWeapon(player_t *player, itemeffect_t *giver, bool dropped, Mo
          {
             doom_printf(FC_ERROR "Invalid ammo type given in weapongiver: '%s'\a\n",
                         giver->getKey());
-            special->removeThinker();
+            special->remove();
             return false;
          }
          else if((giveammo = ammogiven->getInt("ammo.give", -1)) < 0)
          {
             doom_printf(FC_ERROR "Negative/unspecified ammo amount given for weapongiver: "
                         "'%s', ammo: '%s'\a\n", giver->getKey(), ammo->getKey());
-            special->removeThinker();
+            special->remove();
             return false;
          }
          // Congrats, the user didn't screw up defining their ammogiven
@@ -622,7 +622,7 @@ static void P_RavenRespawn(Mobj *special)
    bool willrespawn = ((dmflags & DM_ITEMRESPAWN) == DM_ITEMRESPAWN);
 
    // Remove special status. Note this exempts the object from the DOOM-style
-   // item respawning code in Mobj::removeThinker.
+   // item respawning code in Mobj::remove.
    special->flags &= ~MF_SPECIAL;
 
    // Super items only respawn if so specified
@@ -651,7 +651,7 @@ static void P_RavenRespawn(Mobj *special)
       if(remove)
          P_SetMobjState(special, remove->index);
       else
-         special->removeThinker();
+         special->remove();
    }
 }
 
@@ -742,7 +742,7 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
          if(special->flags4 & MF4_RAVENRESPAWN)
             P_RavenRespawn(special);
          else
-            special->removeThinker();
+            special->remove();
       }
 
       // if picked up for benefit, or not silent when picked up without, do
@@ -910,7 +910,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       if(special->flags4 & MF4_RAVENRESPAWN)
          P_RavenRespawn(special);
       else
-         special->removeThinker();
+         special->remove();
    }
 
    // haleyjd 07/08/05: inverted condition
