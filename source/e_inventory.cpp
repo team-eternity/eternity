@@ -260,10 +260,10 @@ cfg_opt_t edf_powerfx_opts[] =
 static cfg_opt_t ammogiven_opts[] =
 {
    CFG_STR(KEY_TYPE,         "", CFGF_NONE), // type of ammo given
-   CFG_INT(KEY_AMMOGIVE,      0, CFGF_NONE), // amount of ammo given normally
-   CFG_INT(KEY_AMMODROPPED,   0, CFGF_NONE), // amount of ammo given when dropped
-   CFG_INT(KEY_AMMODMSTAY,    0, CFGF_NONE), // amount of ammo given in DM w/weapons stay
-   CFG_INT(KEY_AMMOCOOPSTAY,  0, CFGF_NONE), // amount of ammo given in coop w/weapon stay
+   CFG_INT(KEY_AMMOGIVE,     -1, CFGF_NONE), // amount of ammo given normally
+   CFG_INT(KEY_AMMODROPPED,  -1, CFGF_NONE), // amount of ammo given when dropped
+   CFG_INT(KEY_AMMODMSTAY,   -1, CFGF_NONE), // amount of ammo given in DM w/weapons stay
+   CFG_INT(KEY_AMMOCOOPSTAY, -1, CFGF_NONE), // amount of ammo given in coop w/weapon stay
    CFG_END()
 };
 

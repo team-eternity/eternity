@@ -259,22 +259,48 @@ static bool P_GiveWeapon(player_t *player, weaponinfo_t *wp, bool dropped,
 // TODO: Demo check, back up old version which takes wp->dehnum?
 // TODO: Move to e_inventory.cpp?
 //
-static bool P_GiveWeapon(player_t *player, itemeffect_t *giver, bool dropped,
-   Mobj *special)
+static bool P_GiveWeapon(player_t *player, itemeffect_t *giver, bool dropped, Mobj *special)
 {
-   bool gaveweapon = false, gaveammo = false, dmstay = false, firsttime = true;
+   bool gaveweapon = false, gaveammo = false, dmstay = false, firsttime = true, error = false;
+   weaponinfo_t *wp = E_WeaponForName(giver->getString("weapon", ""));
+   if(!wp)
+   {
+      doom_printf(FC_ERROR "Invalid weaopninfo given in weapongiver: '%s'\a\n",
+                  giver->getKey());
+      special->removeThinker();
+      return false;
+   }
 
-   weaponinfo_t *wp        = E_WeaponForName(giver->getString("weapon", ""));
    itemeffect_t *ammogiven = nullptr;
    while(firsttime || (ammogiven = giver->getNextKeyAndTypeEx(ammogiven, "ammogiven")))
    {
       itemeffect_t *ammo = nullptr;
-      int giveammo = 0, dropammo = 0;
+      int giveammo = 0, dropammo = 0, dmstayammo = 0, coopstayammo = 0;
+
       if(ammogiven)
       {
-         ammo = E_ItemEffectForName(ammogiven->getString("type", ""));
-         giveammo = ammogiven->getInt("ammo.give", 0);
-         dropammo = ammogiven->getInt("ammo.dropped", 0);
+         if(!(ammo = E_ItemEffectForName(ammogiven->getString("type", ""))))
+         {
+            doom_printf(FC_ERROR "Invalid ammo type given in weapongiver: '%s'\a\n",
+                        giver->getKey());
+            special->removeThinker();
+            return false;
+         }
+         else if((giveammo = ammogiven->getInt("ammo.give", -1)) < 0)
+         {
+            doom_printf(FC_ERROR "Negative/unspecified ammo amount given for weapongiver: "
+                        "'%s', ammo: '%s'\a\n", giver->getKey(), ammo->getKey());
+            special->removeThinker();
+            return false;
+         }
+         // Congrats, the user didn't screw up defining their ammogiven
+         // TODO: Automate Doom-style ratios with a flag?
+         if((dropammo = ammogiven->getInt("ammo.dropped", -1)) < 0)
+            dropammo = giveammo;
+         if((dmstayammo = ammogiven->getInt("ammo.dmstay", -1)) < 0)
+            dmstayammo = giveammo;
+         if((coopstayammo = ammogiven->getInt("ammo.coopstay", -1)) < 0)
+            coopstayammo = giveammo;
       }
 
       if((dmflags & DM_WEAPONSTAY) && !dropped)
@@ -285,8 +311,6 @@ static bool P_GiveWeapon(player_t *player, itemeffect_t *giver, bool dropped,
 
          if(ammogiven)
          {
-            const int dmstayammo = ammogiven->getInt("ammo.dmstay", 0);
-            const int coopstayammo = ammogiven->getInt("ammo.coopstay", 0);
             if((GameType == gt_dm && dmstayammo) || (GameType == gt_coop && coopstayammo))
                P_GiveAmmo(player, ammo, (GameType == gt_dm) ? dmstayammo : coopstayammo);
          }
@@ -322,8 +346,8 @@ static bool P_GiveWeapon(player_t *player, itemeffect_t *giver, bool dropped,
       }
    }
 
-   // Multiplayer always returns fal
-   return !dmstay && (gaveweapon || gaveammo);
+   // Deathmatch w/ weapons stay always returns false, as does there being an error
+   return !error && !dmstay && (gaveweapon || gaveammo);
 }
 
 //

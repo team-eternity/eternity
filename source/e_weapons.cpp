@@ -1215,7 +1215,7 @@ bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon)
 }
 
 //
-// TODO: Remove this?
+// Convenience function to check if a player owns the weapon specific by dehnum
 //
 bool E_PlayerOwnsWeaponForDEHNum(player_t *player, int dehnum)
 {
