@@ -11,8 +11,9 @@
 //
 weaponinfo Staff
 {
-  nextincycle  Gauntlets
-  previncycle  Mace
+  selectionorder 8000
+  nextincycle    Gauntlets
+  previncycle    Mace
 
   flags        FLEEMELEE|NOHITGHOSTS|SILENCER
   //mod          ""
@@ -70,8 +71,9 @@ weaponinfo GoldWand
   ammotype     AmmoWandCrystal
   ammouse      1
 
-  nextincycle  Crossbow
-  previncycle  Gauntlets
+  selectionorder 5000
+  nextincycle    Crossbow
+  previncycle    Gauntlets
 
   flags        SILENCER|HAPTICRECOIL
   //mod          ""
@@ -122,8 +124,9 @@ weaponinfo Crossbow
   ammotype     AmmoEtherealArrow
   ammouse      1
 
-  nextincycle  Blaster
-  previncycle  GoldWand
+  selectionorder 3000
+  nextincycle    Blaster
+  previncycle    GoldWand
 
   flags        SILENCER|HAPTICRECOIL
   //mod          ""
@@ -177,8 +180,9 @@ weaponinfo Blaster
   ammotype     AmmoClawOrb
   ammouse      1
 
-  nextincycle  SkullRod
-  previncycle  Crossbow
+  selectionorder 2000
+  nextincycle    SkullRod
+  previncycle    Crossbow
 
   flags        SILENCER|HAPTICRECOIL
   //mod          ""
@@ -217,8 +221,9 @@ weaponinfo SkullRod
   ammotype     AmmoRune
   ammouse      1
 
-  nextincycle  PhoenixRod
-  previncycle  Blaster
+  selectionorder 1000
+  nextincycle    PhoenixRod
+  previncycle    Blaster
 
   flags        NOAUTOFIRE|SILENCER|HAPTICRECOIL
   //mod          ""
@@ -251,8 +256,9 @@ weaponinfo PhoenixRod
   ammotype     AmmoFlameOrb
   ammouse      1
 
-  nextincycle  Mace
-  previncycle  SkullRod
+  selectionorder 7000
+  nextincycle    Mace
+  previncycle    SkullRod
 
   flags        SILENCER|HAPTICRECOIL|NOTSHAREWARE
   //mod          ""
@@ -287,8 +293,9 @@ weaponinfo Mace
   ammotype     AmmoMaceSphere
   ammouse      1
 
-  nextincycle  Staff
-  previncycle  PhoenixRod
+  selectionorder 4000
+  nextincycle    Staff
+  previncycle    PhoenixRod
 
   flags        SILENCER|HAPTICRECOIL|NOTSHAREWARE
   //mod          ""
@@ -340,8 +347,9 @@ weaponinfo Mace
 
 weaponinfo Gauntlets
 {
-  nextincycle  GoldWand
-  previncycle  Staff
+  selectionorder 6000
+  nextincycle    GoldWand
+  previncycle    Staff
 
   flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCER
   //mod          ""

@@ -362,7 +362,16 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
       if((players[consoleplayer].attackdown && !P_CheckAmmo(&players[consoleplayer]))
          || gameactions[ka_nextweapon])
-         newweapon = P_SwitchWeapon(&players[consoleplayer])->id; // phares
+      {
+         weaponinfo_t *temp = E_FindBestWeapon(&players[consoleplayer]);
+         if(temp == nullptr)
+         {
+            players[consoleplayer].attackdown = AT_NONE;
+            newweapon = -1;
+         }
+         else
+            newweapon = temp->id; // phares
+      }
 
       for(int i = ka_weapon1; i <= ka_weapon9; i++)
       {

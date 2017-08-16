@@ -359,62 +359,6 @@ weapontype_t P_SwitchWeaponOld(player_t *player)
 }
 
 //
-// P_SwitchWeapon
-//
-// Checks current ammo levels and gives you the most preferred weapon with ammo.
-// It will not pick the currently raised weapon.
-// DO NOT CALL THIS FROM INSIDE A PRE-3.44 DEMO CHECK.
-//
-weaponinfo_t *P_SwitchWeapon(player_t *player)
-{
-   int *prefer = weapon_preferences; // killough 3/22/98
-   weaponinfo_t *currentweapon = player->readyweapon;
-   weaponinfo_t *newweapon = currentweapon;
-   int i = NUMWEAPONS + 1;   // killough 5/2/98
-
-   const auto canSwitchTo = [player](int dehnum) {
-      weaponinfo_t *wp = E_WeaponForDEHNum(dehnum);
-
-      // Weapon is useable in current game mode, the player owns it,
-      // and has enough ammo to shoot (or the weapon doesn't need ammo)
-      return wp && !(wp->flags & WPF_NOTSHAREWARE && GameModeInfo->id == shareware) &&
-             E_PlayerOwnsWeaponForDEHNum(player, dehnum) && P_WeaponHasAmmo(player, wp);
-   };
-
-   // killough 2/8/98: follow preferences and fix BFG/SSG bugs
-
-   // haleyjd WEAPON_FIXME: must support arbitrary weapons
-   // haleyjd WEAPON_FIXME: chainsaw/fist issues
-
-   do
-   {
-      switch(*prefer)
-      {
-      case 1:
-         if(!player->powers[pw_strength])  // allow chainsaw override
-            break;
-      case 0:
-         newweapon = E_WeaponForDEHNum(wp_fist);
-         break;
-      case 9:
-      {
-         weaponinfo_t *ssg = E_WeaponForDEHNum(wp_supershotgun);
-         if(enable_ssg && E_PlayerOwnsWeapon(player, ssg) && P_WeaponHasAmmo(player, ssg))
-            newweapon = ssg;
-         break;
-      }
-      default:
-         if(canSwitchTo(*prefer - 1))
-            newweapon = E_WeaponForDEHNum(*prefer - 1);
-      }
-      prefer++;
-   }
-   while(newweapon->id == currentweapon->id && --i);        // killough 5/2/98
-
-   return newweapon;
-}
-
-//
 // P_WeaponPreferred
 //
 // killough 5/2/98: whether consoleplayer prefers weapon w1 over weapon w2.

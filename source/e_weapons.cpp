@@ -43,6 +43,7 @@
 #include "e_states.h"
 #include "e_things.h" // TODO: Move E_SplitTypeAndState to e_states and remove this include?
 #include "metaapi.h"
+#include "m_compare.h"
 
 #include "d_dehtbl.h"
 #include "d_items.h"
@@ -176,6 +177,18 @@ cfg_opt_t edf_wdelta_opts[] =
 // weapons in the slot is determined by their relative priorities.
 //
 weaponslot_t *weaponslots[NUMWEAPONSLOTS];
+
+// The structure that provides the basis for the AVL tree used for
+// checking selection order. It's used due to its speed of access
+// over red-black trees, at the cost of slower mutation times.
+static struct selectordernode_t
+{
+   int sortorder; // Lower number, higher priority
+   weaponinfo_t *weapon;
+
+   selectordernode_t *left, *right;
+} *rootselectordernode = nullptr;
+
 
 //=============================================================================
 //
@@ -858,6 +871,193 @@ static int E_resolveParentWeapon(cfg_t *weaponsec, const weapontitleprops_t &pro
    return pnum;
 }
 
+static int E_selectOrderNodeHeight(selectordernode_t *node)
+{
+   int lheight, rheight;
+
+   lheight = node->left ? E_selectOrderNodeHeight(node->left) : 0;
+   rheight = node->right ? E_selectOrderNodeHeight(node->right) : 0;
+
+   return emax(lheight, rheight) + 1;
+
+}
+
+static int E_selectOrderNodeBalanceFactor(selectordernode_t *node)
+{
+   int bf = 0;
+
+   if(node->left)
+      bf += E_selectOrderNodeHeight(node->left);
+   if(node->right)
+      bf -= E_selectOrderNodeHeight(node->right);
+
+   return bf;
+}
+
+//
+// Rotate node to the left twice
+//
+static selectordernode_t *E_rotateSelectOrderNodeLeftLeft(selectordernode_t *node)
+{
+   selectordernode_t *a = node;
+   selectordernode_t *b = a->left;
+
+  /*     a          b
+   *    / \        / \
+   *   b   3  ->  1    a
+   *  / \    GOTO     / \
+   * 1   2           2   3 */
+   a->left = b->right;
+   b->right = a;
+
+   return b;
+}
+
+//
+// Double rotate node (left then right)
+//
+static selectordernode_t *E_rotateSelectOrderNodeLeftRight(selectordernode_t *node)
+{
+   selectordernode_t *a = node;
+   selectordernode_t *b = a->left;
+   selectordernode_t *c = b->right;
+
+   // Remember, these are variables, so c->sortorder < a->sortorder
+   /*     a             c
+    *    / \           / \
+    *   b   d  ->    b     a
+    *  / \    GOTO  / \   / \
+    * 1   c        1   2 3   d
+    *    / \
+    *   2   3                  */
+   a->left = c->right;
+   b->right = c->left;
+   c->left = b;
+   c->right = a;
+
+   return c;
+}
+
+//
+// Rotate node right twice
+//
+static selectordernode_t *E_rotateSelectOrderNodeRightLeft(selectordernode_t *node)
+{
+   selectordernode_t *a = node;
+   selectordernode_t *b = a->right;
+   selectordernode_t *c = b->left;
+
+   // This is the opposite of E_rotateSelectOrderNodeLeftRight
+   a->right = c->left;
+   b->left = c->right;
+   c->right = b;
+   c->left = a;
+
+   return c;
+}
+
+//
+// Double rotate node (right then left)
+//
+static selectordernode_t *E_rotateSelectOrderNodeRightRight(selectordernode_t *node)
+{
+   selectordernode_t *a = node;
+   selectordernode_t *b = a->right;
+
+   // This is the opposite of E_rotateSelectOrderNodeLeftLeft
+   a->right = b->left;
+   b->left = a;
+
+   return b;
+}
+
+static selectordernode_t *E_balanceSelectOrderNode(selectordernode_t *node)
+{
+   // Balance existent children
+   if(node->left)
+      node->left = E_balanceSelectOrderNode(node->left);
+   if(node->right)
+      node->right = E_balanceSelectOrderNode(node->right);
+
+   int bf = E_selectOrderNodeBalanceFactor(node);
+   if(bf > 1)
+   {
+      // Left is too heavy
+      if(E_selectOrderNodeBalanceFactor(node->left) <= -1)
+         return E_rotateSelectOrderNodeLeftRight(node);
+      else
+         return E_rotateSelectOrderNodeLeftLeft(node);
+   }
+   else if(bf < -1)
+   {
+      // Right is too heavy
+      if(E_selectOrderNodeBalanceFactor(node->right) >= 1)
+         return E_rotateSelectOrderNodeRightLeft(node);
+      else
+         return E_rotateSelectOrderNodeRightRight(node);
+   }
+   else
+      return node;
+}
+
+static void E_insertSelectOrderNode(int sortorder, weaponinfo_t *wp, bool modify)
+{
+   selectordernode_t *toinsert, *next, *prev;
+   prev = next = nullptr;
+   toinsert = estructalloc(selectordernode_t, 1);
+   toinsert->weapon = wp;
+   toinsert->sortorder = sortorder;
+
+   if(rootselectordernode == nullptr)
+      rootselectordernode = toinsert;
+   else
+   {
+      for(next = rootselectordernode; next != nullptr;)
+      {
+         prev = next;
+         if(sortorder < next->sortorder)
+            next = next->left;
+         else if(sortorder > next->sortorder)
+            next = next->right;
+         else // FIXME: This triggers due to inheritance. That needs sorting out.
+         {
+            /*E_EDFLoggedWarning(2, "E_insertWeaponPriorityNode: weaponinfo %s has sortorder"
+                                    "equal to that of weaponinfo %s",
+                                 wp->name, currnode->weapon->name);*/
+            efree(toinsert);
+            return; // Ahh bugger
+         }
+      }
+      if(sortorder > prev->sortorder)
+         prev->right = toinsert;
+      if(sortorder < prev->sortorder)
+         prev->left = toinsert;
+   }
+   rootselectordernode = E_balanceSelectOrderNode(rootselectordernode);
+}
+
+//
+// Perform an in-order traversal of the select order tree
+// to try and find the best weapon the player can fire.
+//
+weaponinfo_t *E_FindBestWeapon(player_t *player, selectordernode_t *node)
+{
+   weaponinfo_t *ret = nullptr;
+   if(node == nullptr)
+      node = rootselectordernode;
+
+   if(node->left && (ret = E_FindBestWeapon(player, node->left)))
+      return ret;
+   if(E_PlayerOwnsWeapon(player, node->weapon) && P_WeaponHasAmmo(player, node->weapon))
+      return node->weapon;
+   if(node->right && (ret = E_FindBestWeapon(player, node->right)))
+      return ret;
+
+   // The player doesn't have a weapon that they've ammo for in this sub-tree
+   return nullptr;
+}
+
+
 #undef  IS_SET
 #define IS_SET(name) ((def && !inherits) || cfg_size(weaponsec, (name)) > 0)
 
@@ -930,7 +1130,10 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
 
    if(IS_SET(ITEM_WPN_SELECTORDER))
    {
-      
+      if((tempint = cfg_getint(weaponsec, ITEM_WPN_SELECTORDER)) >= 0)
+      {
+         E_insertSelectOrderNode(tempint, &wp, !def);
+      }
    }
    if(IS_SET(ITEM_WPN_SISTERWEAPON))
    {

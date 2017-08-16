@@ -584,12 +584,10 @@ static void cheat_weapx(const void *arg)
       }
       else 
       {
-         weaponinfo_t *P_SwitchWeapon(player_t *player);
-         
          E_RemoveInventoryItem(plyr, weapon->tracker, 1);
          doom_printf("Weapon Removed"); // Ty 03/27/98 - *not* externalized
          if(E_WeaponIsCurrentDEHNum(plyr, w))     // maybe switch if weapon removed
-            plyr->pendingweapon = P_SwitchWeapon(plyr);
+            plyr->pendingweapon = E_FindBestWeapon(plyr); // FIXME: Safety check needed
       }
    }
 }
