@@ -1387,7 +1387,7 @@ void PolyRotateThinker::Think()
             po->thinker = NULL;
             po->thrust = FRACUNIT;
          }
-         this->removeThinker();
+         this->remove();
 
          // TODO: notify scripts
          S_StopPolySequence(po);
@@ -1469,7 +1469,7 @@ void PolyMoveThinker::Think()
             po->thinker = NULL;
             po->thrust = FRACUNIT;
          }
-         this->removeThinker();
+         this->remove();
 
          // TODO: notify scripts
          S_StopPolySequence(po);
@@ -1570,7 +1570,7 @@ void PolySlideDoorThinker::Think()
                po->thinker = NULL;
                po->thrust = FRACUNIT;
             }
-            this->removeThinker();
+            this->remove();
             // TODO: notify scripts
          }
          S_StopPolySequence(po);
@@ -1682,7 +1682,7 @@ void PolySwingDoorThinker::Think()
                po->thinker = NULL;
                po->thrust = FRACUNIT;
             }
-            this->removeThinker();
+            this->remove();
             // TODO: notify scripts
          }
          S_StopPolySequence(po);
@@ -1922,7 +1922,7 @@ int EV_DoPolyObjStop(int polyObjNum)
    // don't remove thinker if there is no thinker, but do successfully activate
    if(po->thinker)
    {
-      po->thinker->removeThinker();
+      po->thinker->remove();
       po->thinker = nullptr;
       S_StopPolySequence(po);
    }

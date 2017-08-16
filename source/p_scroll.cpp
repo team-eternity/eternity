@@ -195,7 +195,7 @@ void ScrollThinker::addScroller()
 //
 void ScrollThinker::removeScroller()
 {
-   removeThinker();
+   remove();
    if((*list->prev = list->next))
       list->next->prev = list->prev;
    efree(list);

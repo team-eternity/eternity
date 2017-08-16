@@ -687,7 +687,7 @@ static void P_RemoveAllThinkers()
       Thinker *next = th->next;
 
       if(th->isInstanceOf(RTTI(Mobj)))
-         th->removeThinker();
+         th->remove();
       else
          delete th;
       

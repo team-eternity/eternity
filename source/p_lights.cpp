@@ -346,7 +346,7 @@ void LightFadeThinker::Think()
    if(done)
    {
       if(this->type == fade_once)
-         this->removeThinker();
+         this->remove();
       else
       {
          // reverse glow direction
