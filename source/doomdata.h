@@ -179,7 +179,8 @@ enum
    MLI_DYNASEGLINE = 0x01, // Consider only via dynasegs for rendering, etc.
    MLI_FLOORPORTALCOPIED = 0x02, // ioanch 20160219: for type 385
    MLI_CEILINGPORTALCOPIED = 0x04, // ioanch 20160219: for type 385
-   MLI_POLYPORTALLINE = 0x08, // polyobject portal single-sided line
+   MLI_1SPORTALLINE = 0x08,   // wall portal from a single-sided line
+   MLI_MOVINGPORTAL = 0x10,   // line is on a moving portal
 };
 
 // Sector definition, from editing.

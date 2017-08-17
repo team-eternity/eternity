@@ -8,6 +8,12 @@ Since v3.42.03 "Heimdal" release 2
 ==================================
 
 --------------------------------------------------------------------------------
+17.08.2017
+
+WORKAROUND: Removed sprite projections from moving wall portals for the time
+            being. The phantom sprites were trailing behind, ruining the view.
+
+--------------------------------------------------------------------------------
 16.08.2017
 
 BUGFIX: The sector portal seg rejector still had issues. Added easy checks when

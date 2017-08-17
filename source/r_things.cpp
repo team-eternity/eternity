@@ -1934,7 +1934,8 @@ static bool RIT_checkMobjProjection(const line_t &line, void *vdata)
       line.bbox[BOXRIGHT] <= mpi.bbox[BOXLEFT] ||
       line.bbox[BOXTOP] <= mpi.bbox[BOXBOTTOM] ||
       P_PointOnLineSide(mpi.mobj->x, mpi.mobj->y, &line) == 1 ||
-      P_BoxOnLineSide(mpi.bbox, &line) != -1)
+      P_BoxOnLineSide(mpi.bbox, &line) != -1 ||
+      line.intflags & MLI_MOVINGPORTAL)
    {
       return true;
    }

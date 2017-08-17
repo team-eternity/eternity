@@ -2967,7 +2967,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       line->sidenum[1] = line->sidenum[0];
       line->flags &= ~ML_BLOCKING;
       line->flags |= ML_TWOSIDED;
-      line->intflags |= MLI_POLYPORTALLINE;
+      line->intflags |= MLI_1SPORTALLINE;
    };
 
    bool otherIsEdge = false;
