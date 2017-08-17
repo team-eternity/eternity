@@ -897,7 +897,7 @@ static int E_selectOrderNodeBalanceFactor(selectordernode_t *node)
 //
 // Rotate node to the left twice
 //
-static selectordernode_t *E_rotateSelectOrderNodeLeftLeft(selectordernode_t *node)
+static void E_rotateSelectOrderNodeLeftLeft(selectordernode_t *&node)
 {
    selectordernode_t *a = node;
    selectordernode_t *b = a->left;
@@ -910,13 +910,13 @@ static selectordernode_t *E_rotateSelectOrderNodeLeftLeft(selectordernode_t *nod
    a->left = b->right;
    b->right = a;
 
-   return b;
+   node = b;
 }
 
 //
 // Double rotate node (left then right)
 //
-static selectordernode_t *E_rotateSelectOrderNodeLeftRight(selectordernode_t *node)
+static void E_rotateSelectOrderNodeLeftRight(selectordernode_t *&node)
 {
    selectordernode_t *a = node;
    selectordernode_t *b = a->left;
@@ -935,13 +935,13 @@ static selectordernode_t *E_rotateSelectOrderNodeLeftRight(selectordernode_t *no
    c->left = b;
    c->right = a;
 
-   return c;
+   node = c;
 }
 
 //
 // Rotate node right twice
 //
-static selectordernode_t *E_rotateSelectOrderNodeRightLeft(selectordernode_t *node)
+static void E_rotateSelectOrderNodeRightLeft(selectordernode_t *&node)
 {
    selectordernode_t *a = node;
    selectordernode_t *b = a->right;
@@ -953,13 +953,13 @@ static selectordernode_t *E_rotateSelectOrderNodeRightLeft(selectordernode_t *no
    c->right = b;
    c->left = a;
 
-   return c;
+   node = c;
 }
 
 //
 // Double rotate node (right then left)
 //
-static selectordernode_t *E_rotateSelectOrderNodeRightRight(selectordernode_t *node)
+static void E_rotateSelectOrderNodeRightRight(selectordernode_t *&node)
 {
    selectordernode_t *a = node;
    selectordernode_t *b = a->right;
@@ -968,36 +968,34 @@ static selectordernode_t *E_rotateSelectOrderNodeRightRight(selectordernode_t *n
    a->right = b->left;
    b->left = a;
 
-   return b;
+   node = b;
 }
 
-static selectordernode_t *E_balanceSelectOrderNode(selectordernode_t *node)
+static void E_balanceSelectOrderNode(selectordernode_t *&node)
 {
    // Balance existent children
    if(node->left)
-      node->left = E_balanceSelectOrderNode(node->left);
+      E_balanceSelectOrderNode(node->left);
    if(node->right)
-      node->right = E_balanceSelectOrderNode(node->right);
+      E_balanceSelectOrderNode(node->right);
 
    int bf = E_selectOrderNodeBalanceFactor(node);
    if(bf > 1)
    {
       // Left is too heavy
       if(E_selectOrderNodeBalanceFactor(node->left) <= -1)
-         return E_rotateSelectOrderNodeLeftRight(node);
+         E_rotateSelectOrderNodeLeftRight(node);
       else
-         return E_rotateSelectOrderNodeLeftLeft(node);
+         E_rotateSelectOrderNodeLeftLeft(node);
    }
    else if(bf < -1)
    {
       // Right is too heavy
       if(E_selectOrderNodeBalanceFactor(node->right) >= 1)
-         return E_rotateSelectOrderNodeRightLeft(node);
+         E_rotateSelectOrderNodeRightLeft(node);
       else
-         return E_rotateSelectOrderNodeRightRight(node);
+         E_rotateSelectOrderNodeRightRight(node);
    }
-   else
-      return node;
 }
 
 static void E_insertSelectOrderNode(int sortorder, weaponinfo_t *wp, bool modify)
@@ -1033,7 +1031,7 @@ static void E_insertSelectOrderNode(int sortorder, weaponinfo_t *wp, bool modify
       if(sortorder < prev->sortorder)
          prev->left = toinsert;
    }
-   rootselectordernode = E_balanceSelectOrderNode(rootselectordernode);
+   E_balanceSelectOrderNode(rootselectordernode);
 }
 
 //

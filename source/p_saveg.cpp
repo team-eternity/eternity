@@ -39,6 +39,7 @@
 #include "e_edf.h"
 #include "e_inventory.h"
 #include "e_player.h"
+#include "e_weapons.h"
 #include "g_dmflag.h"
 #include "g_game.h"
 #include "m_argv.h"
@@ -485,18 +486,30 @@ static void P_ArchivePlayers(SaveArchive &arc)
              << p.colormap     << p.quake           << p.jumptime
              << p.inv_ptr;
 
-         // WEAPON_FIXME: Accommodate the new readyweapon and pendingweapon
          int inventorySize;
          if(arc.isSaving())
          {
             inventorySize = E_GetInventoryAllocSize();
             arc << inventorySize;
+            arc.writeLString(p.readyweapon->name);
+            if(p.pendingweapon)
+               arc.writeLString(p.pendingweapon->name);
+            else
+               arc.writeLString("");
          }
          else
          {
+            char *className = nullptr;
+            size_t len;
             arc << inventorySize;
             if(inventorySize != E_GetInventoryAllocSize())
                I_Error("P_ArchivePlayers: inventory size mismatch\n");
+            arc.archiveLString(className, len);
+            if(!(p.readyweapon = E_WeaponForName(className)))
+               I_Error("P_ArchivePlayers: readyweapon %s not found\n", className);
+            arc.archiveLString(className, len);
+            if(!estrempty(className) && !(p.pendingweapon = E_WeaponForName(className)))
+               I_Error("P_ArchivePlayers: pendingweapon %s not found\n", className);               
          }
          P_ArchiveArray<inventoryslot_t>(arc, p.inventory, inventorySize);
 
@@ -505,9 +518,6 @@ static void P_ArchivePlayers(SaveArchive &arc)
 
          for(j = 0; j < MAXPLAYERS; j++)
             arc << p.frags[j];
-
-         //for(j = 0; j < NUMWEAPONS; j++)
-         //   arc << p.weaponowned[j];
 
          for(j = 0; j < NUMWEAPONS; j++)
          {
