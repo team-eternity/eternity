@@ -1733,6 +1733,9 @@
     <ClInclude Include="..\source\xl_umapinfo.h">
       <Filter>Source Files\XL_\XL_ Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\m_avltree.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\ee.ico">

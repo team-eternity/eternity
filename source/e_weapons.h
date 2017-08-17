@@ -32,7 +32,6 @@
 #include "m_dllist.h"
 
 struct weaponinfo_t;
-struct selectordernode_t;
 
 // Hard-coded names for specially treated weapons (needed in DeHackEd, etc.)
 // INVENTORY_TODO: many may become unneeded when P_TouchSpecialThing is finished
@@ -78,7 +77,7 @@ weaponinfo_t *E_WeaponForDEHNum(int dehnum);
 // FIXME: Reorder to be cleaner
 void E_CollectWeapons(cfg_t *cfg);
 
-weaponinfo_t *E_FindBestWeapon(player_t *player, selectordernode_t *node = nullptr);
+weaponinfo_t *E_FindBestWeapon(player_t *player);
 
 void E_ProcessWeaponInfo(cfg_t *cfg);
 void E_ProcessWeaponDeltas(cfg_t *cfg);
