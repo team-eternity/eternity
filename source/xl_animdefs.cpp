@@ -25,52 +25,11 @@
 #include "z_zone.h"
 #include "m_collection.h"
 #include "w_wad.h"
+#include "xl_animdefs.h"
 #include "xl_scripts.h"
 
-//
-// Animation type (for a definition)
-//
-enum xlanimtype_t
-{
-   xlanim_flat,   // flat animation
-   xlanim_texture // texture animation
-};
-
-//
-// Picture definition
-//
-struct xlpicdef_t
-{
-   int offset;          // the name of the picture. Will be looked up later.
-   bool isRandom;       // the branch of the union below
-   union
-   {
-      int tics;         // if not random, exact tics
-      struct
-      {
-         int ticsmin;   // if random, minimum tics
-         int ticsmax;   // if random, maximum tics
-      };
-   };
-};
-
-//
-// Hexen specific definition
-//
-struct XLAnimDef : public ZoneObject
-{
-   xlanimtype_t type;   // flat or texture
-   qstring picname;     // name of start pic
-   int index;           // start pic index
-   int count;           // number of pic defs
-
-   XLAnimDef() : type(), index(), count()
-   {
-   }
-};
-
-static Collection<XLAnimDef> xldefs;
-static PODCollection<xlpicdef_t> xlpics;
+Collection<XLAnimDef> xldefs;
+PODCollection<xlpicdef_t> xlpics;
 
 //
 // ANIMDEFS parser
