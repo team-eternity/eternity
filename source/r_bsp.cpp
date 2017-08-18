@@ -1871,6 +1871,19 @@ bool R_PickNearestBoxLines(const fixed_t bbox[4], dlnormal_t &dl1,
 //
 static bool R_allowBehindSectorPortal(const fixed_t bbox[4], const seg_t &tryseg)
 {
+   divline_t segdl;
+   segdl.x = tryseg.v1->x;
+   segdl.y = tryseg.v1->y;
+   segdl.dx = tryseg.v2->x - segdl.x;
+   segdl.dy = tryseg.v2->y - segdl.y;
+
+   int boxside = P_BoxOnDivlineSide(bbox, segdl);
+
+   if(boxside == 0)
+      return true;
+   if(boxside == 1)
+      return false;
+
    dlnormal_t dl1;
    dlnormal_t dl2;
 
@@ -1890,8 +1903,8 @@ static bool R_allowBehindSectorPortal(const fixed_t bbox[4], const seg_t &tryseg
 
    // Pointed to the corner
    bool revfirst = slope == ST_POSITIVE ?
-   !!((tryseg.v1->x < tryseg.v2->x) ^ (dl1.dl.x == bbox[BOXRIGHT])) :
-   !!((tryseg.v1->x < tryseg.v2->x) ^ (dl1.dl.x == bbox[BOXLEFT]));
+   !!((segdl.dx > 0) ^ (dl1.dl.x == bbox[BOXRIGHT])) :
+   !!((segdl.dx > 0) ^ (dl1.dl.x == bbox[BOXLEFT]));
 
    // truth table:
    // Positive slope
@@ -2211,7 +2224,7 @@ static void R_AddLine(seg_t *line, bool dynasegs)
    seg.f_portalignore = seg.c_portalignore = false;
 
    // ioanch 20160312: also treat polyobject portal lines as 1-sided
-   const sector_t *beyond = seg.line->linedef->intflags & MLI_POLYPORTALLINE && 
+   const sector_t *beyond = seg.line->linedef->intflags & MLI_1SPORTALLINE && 
       seg.line->linedef->beyondportalline ? 
       seg.line->linedef->beyondportalline->frontsector : nullptr;
    if(!seg.backsec || beyond) 
