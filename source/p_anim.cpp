@@ -61,8 +61,8 @@ struct hframedef_t
 {
    int index;
    int tics;
-   int ticsbase;
-   int ticsmod;   // just use all the space
+   int ticsmin;
+   int ticsmax;   // just use all the space
 };
 
 //
@@ -121,8 +121,8 @@ void P_InitHexenAnims()
             hfd.tics = xfd.tics;
          else
          {
-            hfd.ticsbase = xfd.ticsmin;
-            hfd.ticsmod = xfd.ticsmax - hfd.ticsbase;
+            hfd.ticsmin = xfd.ticsmin;
+            hfd.ticsmax = xfd.ticsmax;
          }
       }
       had.endFrameDef = static_cast<int>(FrameDefs.getLength()) - 1;
@@ -138,6 +138,23 @@ void P_InitHexenAnims()
 //
 void P_AnimateSurfaces()
 {
+   for(hanimdef_t &had : AnimDefs)
+   {
+      if(!--had.tics)
+      {
+         if(had.currentFrameDef == had.endFrameDef)
+            had.currentFrameDef = had.startFrameDef;
+         else
+            ++had.currentFrameDef;
+         const hframedef_t &hfd = FrameDefs[had.currentFrameDef];
+         if(hfd.ticsmin || hfd.ticsmax)
+            had.tics = M_RangeRandomEx(hfd.ticsmin, hfd.ticsmax);
+         else
+            had.tics = hfd.tics;
+         texturetranslation[had.index] = hfd.index;
+      }
+   }
+
    // update sky scroll offsets
    //   haleyjd: stored as regular ints in the mapinfo so we need 
    //   to transform these to fixed point values :)
