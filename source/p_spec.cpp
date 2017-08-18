@@ -85,6 +85,7 @@
 #include "v_misc.h"
 #include "v_video.h"
 #include "w_wad.h"
+#include "xl_animdefs.h"
 
 //
 // Animating textures and planes
@@ -143,6 +144,75 @@ static void P_spawnDeferredParamPortal(line_t *line, int staticFn);
 static void P_SpawnPortal(line_t *, int);
 
 //
+// Adds a pic-anim for the given anim-def
+//
+static void P_addPicAnim(const animdef_t &animdef)
+{
+   int p;
+   int flags = TF_ANIMATED;
+
+   // 1/11/98 killough -- removed limit by array-doubling
+   if(lastanim >= anims + maxanims)
+   {
+      size_t newmax = maxanims ? maxanims*2 : MAXANIMS;
+      anims = erealloc(anim_t *, anims, newmax*sizeof(*anims)); // killough
+      lastanim = anims + maxanims;
+      maxanims = newmax;
+   }
+
+   if(animdef.istexture)
+   {
+      // different episode ?
+      if(R_CheckForWall(animdef.startname) == -1 ||
+         R_CheckForWall(animdef.endname) == -1)
+         return;
+
+      lastanim->picnum = R_FindWall(animdef.endname);
+      lastanim->basepic = R_FindWall(animdef.startname);
+   }
+   else
+   {
+      if(R_CheckForFlat(animdef.startname) == -1 ||
+         R_CheckForFlat(animdef.endname) == -1)
+         return;
+
+      lastanim->picnum = R_FindFlat(animdef.endname);
+      lastanim->basepic = R_FindFlat(animdef.startname);
+   }
+
+   lastanim->istexture = !!animdef.istexture;
+   lastanim->numpics = lastanim->picnum - lastanim->basepic + 1;
+   lastanim->speed = SwapLong(animdef.speed); // killough 5/5/98: add LONG()
+
+   // SoM: just to make sure
+   if(lastanim->numpics <= 0)
+      return;
+
+   // sf: include support for swirly water hack
+   if(lastanim->speed < 65536 && lastanim->numpics != 1)
+   {
+      if(lastanim->numpics < 2)
+      {
+         I_Error("P_InitPicAnims: bad cycle from %s to %s\n",
+                 animdef.startname,
+                 animdef.endname);
+      }
+   }
+   else
+   {
+      // SoM: it's swirly water
+      flags |= TF_SWIRLY;
+   }
+
+   // SoM: add flags
+   for(p = lastanim->basepic; p <= lastanim->picnum; p++)
+      textures[p]->flags |= flags;
+
+   lastanim++;
+
+}
+
+//
 // P_InitPicAnims
 //
 // Load the table of animation definitions, checking for existence of
@@ -165,80 +235,34 @@ static void P_SpawnPortal(line_t *, int);
 //
 void P_InitPicAnims(void)
 {
-   int         i, p;
    animdef_t   *animdefs; //jff 3/23/98 pointer to animation lump
-   int         flags;
    
    //  Init animation
    //jff 3/23/98 read from predefined or wad lump instead of table
    animdefs = static_cast<animdef_t *>(wGlobalDir.cacheLumpName("ANIMATED", PU_STATIC));
 
    lastanim = anims;
-   for(i = 0; animdefs[i].istexture != 0xff; i++)
-   {
-      flags = TF_ANIMATED;
-      
-      // 1/11/98 killough -- removed limit by array-doubling
-      if(lastanim >= anims + maxanims)
-      {
-         size_t newmax = maxanims ? maxanims*2 : MAXANIMS;
-         anims = erealloc(anim_t *, anims, newmax*sizeof(*anims)); // killough
-         lastanim = anims + maxanims;
-         maxanims = newmax;
-      }
-
-      if(animdefs[i].istexture)
-      {
-         // different episode ?
-         if(R_CheckForWall(animdefs[i].startname) == -1 ||
-            R_CheckForWall(animdefs[i].endname) == -1)
-            continue;
-         
-         lastanim->picnum = R_FindWall(animdefs[i].endname);
-         lastanim->basepic = R_FindWall(animdefs[i].startname);
-      }
-      else
-      {
-         if(R_CheckForFlat(animdefs[i].startname) == -1 ||
-            R_CheckForFlat(animdefs[i].endname) == -1)
-            continue;
-         
-         lastanim->picnum = R_FindFlat(animdefs[i].endname);
-         lastanim->basepic = R_FindFlat(animdefs[i].startname);
-      }
-      
-      lastanim->istexture = !!animdefs[i].istexture;
-      lastanim->numpics = lastanim->picnum - lastanim->basepic + 1;
-      lastanim->speed = SwapLong(animdefs[i].speed); // killough 5/5/98: add LONG()
-
-      // SoM: just to make sure
-      if(lastanim->numpics <= 0)
-         continue;
-
-      // sf: include support for swirly water hack
-      if(lastanim->speed < 65536 && lastanim->numpics != 1)
-      {
-         if(lastanim->numpics < 2)
-         {
-            I_Error("P_InitPicAnims: bad cycle from %s to %s\n",
-                     animdefs[i].startname,
-                     animdefs[i].endname);
-         }
-      }
-      else
-      {
-         // SoM: it's swirly water
-         flags |= TF_SWIRLY;
-      }
-      
-      // SoM: add flags
-      for(p = lastanim->basepic; p <= lastanim->picnum; p++)
-         textures[p]->flags |= flags;
-
-      lastanim++;
-   }
-
+   for(int i = 0; animdefs[i].istexture != 0xff; i++)
+      P_addPicAnim(animdefs[i]);
    Z_ChangeTag(animdefs, PU_CACHE); //jff 3/23/98 allow table to be freed
+
+   // Now also look in ANIMDEFS lump
+   for(const XLAnimDef &xad : xldefs)
+   {
+      if(xad.rangename.empty())
+         continue;
+      edefstructvar(animdef_t, ad);
+      ad.istexture = xad.type == xlanim_texture;
+
+      xad.rangename.copyInto(ad.endname, earrlen(ad.endname));
+      ad.endname[earrlen(ad.endname) - 1] = 0;
+
+      xad.picname.copyInto(ad.startname, earrlen(ad.startname));
+      ad.startname[earrlen(ad.startname) - 1] = 0;
+
+      ad.speed = xad.rangetics;
+      P_addPicAnim(ad);
+   }
 }
 
 //=============================================================================
