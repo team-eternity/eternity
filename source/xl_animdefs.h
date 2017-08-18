@@ -65,6 +65,9 @@ struct XLAnimDef : public ZoneObject
    int index;           // start pic index
    int count;           // number of pic defs
 
+   qstring rangename;   // for RANGE entries
+   int rangetics;       // for RANGE entries
+
    XLAnimDef() : type(), index(), count()
    {
    }

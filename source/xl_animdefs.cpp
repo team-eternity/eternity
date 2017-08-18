@@ -49,6 +49,9 @@ class XLAnimDefsParser final : public XLParser
       STATE_EXPECTPICOP,   // before "pic" operator ("tics" or "rand")
       STATE_EXPECTDUR,     // expect duration after "tics" or "rand"
       STATE_EXPECTDUR2,    // second duration, if after rand.
+      STATE_EXPECTRANGENAME,
+      STATE_EXPECTRANGETICSOP,
+      STATE_EXPECTRANGEDUR,
    };
 
    bool doStateExpectItem(XLTokenizer &);
@@ -57,6 +60,9 @@ class XLAnimDefsParser final : public XLParser
    bool doStateExpectPicOp(XLTokenizer &);
    bool doStateExpectDur(XLTokenizer &);
    bool doStateExpectDur2(XLTokenizer &);
+   bool doStateExpectRangeName(XLTokenizer &);
+   bool doStateExpectRangeTicsOp(XLTokenizer &);
+   bool doStateExpectRangeDur(XLTokenizer &);
 
    int state;  // current state
    Collection<XLAnimDef> defs;
@@ -87,6 +93,9 @@ bool (XLAnimDefsParser::* XLAnimDefsParser::States[])(XLTokenizer &) =
    &XLAnimDefsParser::doStateExpectPicOp,
    &XLAnimDefsParser::doStateExpectDur,
    &XLAnimDefsParser::doStateExpectDur2,
+   &XLAnimDefsParser::doStateExpectRangeName,
+   &XLAnimDefsParser::doStateExpectRangeTicsOp,
+   &XLAnimDefsParser::doStateExpectRangeDur,
 };
 
 //
@@ -122,6 +131,13 @@ bool XLAnimDefsParser::doStateExpectItem(XLTokenizer &token)
       state = STATE_EXPECTPICNUM;
       curpic = &pics.addNew();
       ++curdef->count;
+      return true;
+   }
+   if(!str.strCaseCmp("range"))
+   {
+      if(!curdef)
+         return false;
+      state = STATE_EXPECTRANGENAME;
       return true;
    }
    return false;
@@ -215,6 +231,41 @@ bool XLAnimDefsParser::doStateExpectDur2(XLTokenizer &token)
    state = STATE_EXPECTITEM;
    return true;
 }
+
+//
+// Expect range name
+//
+bool XLAnimDefsParser::doStateExpectRangeName(XLTokenizer &token)
+{
+   curdef->rangename = token.getToken();
+   state = STATE_EXPECTRANGETICSOP;
+   return true;
+}
+
+//
+// Expect "Tics"
+//
+bool XLAnimDefsParser::doStateExpectRangeTicsOp(XLTokenizer &token)
+{
+   if(token.getToken().strCaseCmp("tics"))
+      return false;
+   state = STATE_EXPECTRANGEDUR;
+   return true;
+}
+
+//
+// Expect range duration
+//
+bool XLAnimDefsParser::doStateExpectRangeDur(XLTokenizer &token)
+{
+   int tics;
+   if(!XL_mustBeInt(token, tics))
+      return false;
+   curdef->rangetics = tics;
+   state = STATE_EXPECTITEM;
+   return true;
+}
+
 
 //
 // Parse next token. Goes into one of the pointed functions.
