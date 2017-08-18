@@ -177,7 +177,7 @@ bool XLAnimDefsParser::doStateExpectPicOp(XLTokenizer &token)
    }
    if(!str.strCaseCmp("rand"))
    {
-      curpic->isRandom = false;
+      curpic->isRandom = true;
       state = STATE_EXPECTDUR;
       return true;
    }
@@ -252,7 +252,7 @@ void XLAnimDefsParser::onEOF(bool early)
    if(!early && state == STATE_EXPECTITEM)
    {
       xldefs.assign(defs);
-      xlpics.assign(xlpics);
+      xlpics.assign(pics);
       // TODO: display an error on failure
    }
 }
