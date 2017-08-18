@@ -8,6 +8,11 @@ Since v3.42.03 "Heimdal" release 2
 ==================================
 
 --------------------------------------------------------------------------------
+18.08.2017
+
+FEATURE: Hexen's vanilla ANIMDEFS lump is now supported.
+
+--------------------------------------------------------------------------------
 17.08.2017
 
 WORKAROUND: Removed sprite projections from moving wall portals for the time
