@@ -73,6 +73,7 @@ struct weaponinfo_t
    int          holdstate_alt;    // Alt hold state
    int          ammopershot_alt;  // Alt ammo per shot
 
+   int           sortorder;   // sort order (lower is higher priority)
    // haleyjd 05/31/14: more dynamic weapons work
    weaponinfo_t *nextInCycle; // next weapon in cycle order
    weaponinfo_t *prevInCycle; // previous weapon in cycle order

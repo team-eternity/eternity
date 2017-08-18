@@ -108,7 +108,109 @@ public:
       balance(root);
    }
 
+   //
+   // Delete the node with the provided key, then rebalance the tree
+   //
+   bool deleteNode(T key)
+   {
+      avlnode_t *prev = nullptr, *node = root;
+      bool found = false, onleft = false;
+
+      while(!found)
+      {
+         if(key < node->key)
+         {
+            // Key is smaller than node's key, let's go left
+            prev = node;
+            if(!(node = node->left))
+               return false; // Not found
+            onleft = true;
+         }
+         else if(key > node->key)
+         {
+            // Key is bigger than node's key, let's go right
+            prev = node;
+            if(!(node = node->right))
+               return false; // Not found
+            onleft = false;
+         }
+         else if(key == node->key)
+         {
+            // We found the node
+            found = true;
+
+            if((node->left == nullptr) || (node->right == nullptr))
+            {
+               // Either the found node with key has no child or one child.
+               // Both share the same logic, just using different values.
+               avlnode_t *toset;
+               if(!node->left && !node->right)
+                  toset = nullptr; // No children
+               else
+                  toset = node->left != nullptr ? node->left : node->right; // One child
+
+               if(prev)
+               {
+                  if(onleft)
+                     prev->left = toset;
+                  else
+                     prev->right = toset;
+               }
+               else
+                  root = toset;
+
+               efree(node);
+            }
+            else
+            {
+               avlnode_t *minnode, *minparent;
+               // Two child nodes
+               if(onleft || !prev)
+               {
+                  minnode = minimumNode(node, &minparent);
+                  prev->left = minnode;
+               }
+               else
+               {
+                  minnode = minimumNode(node, &minparent);
+                  prev->right = minnode;
+               }
+
+               // TODO: Is this correct?
+               if(minparent != nullptr)
+                  minparent->left = nullptr;
+
+               minnode->left = node->left;
+               minnode->right = node->right;
+
+               efree(node);
+            }
+         }
+      }
+
+      balance(root);
+      return true;
+   }
+
 protected:
+   //
+   // Get the node to replace the deleted node, as well as its parent
+   //
+   static avlnode_t *minimumNode(avlnode_t *node, avlnode_t **parent)
+   {
+      avlnode_t *curr = node;
+      *parent = nullptr;
+
+      while(curr->left)
+      {
+         if(parent != nullptr)
+            *parent = curr;
+         curr = curr->left;
+      }
+
+      return curr;
+   }
+
    //
    // Get the height of a given tree/sub-tree
    //
@@ -125,7 +227,7 @@ protected:
    //
    // Get the balance factor of a given tree/sub-tree
    //
-   static int balanceFactor(avlnode_t *node)
+   inline static int balanceFactor(avlnode_t *node)
    {
       int bf = 0;
 
@@ -137,7 +239,7 @@ protected:
       return bf;
    }
 
-   static void rotateNodeLeftLeft(avlnode_t *&node)
+   inline static void rotateNodeLeftLeft(avlnode_t *&node)
    {
       avlnode_t *a = node;
       avlnode_t *b = a->left;
@@ -153,7 +255,7 @@ protected:
       node = b;
    }
 
-   static void rotateNodeLeftRight(avlnode_t *&node)
+   inline static void rotateNodeLeftRight(avlnode_t *&node)
    {
       avlnode_t *a = node;
       avlnode_t *b = a->left;
@@ -175,7 +277,7 @@ protected:
       node = c;
    }
 
-   static void rotateNodeRightLeft(avlnode_t *&node)
+   inline static void rotateNodeRightLeft(avlnode_t *&node)
    {
       avlnode_t *a = node;
       avlnode_t *b = a->right;
@@ -190,7 +292,7 @@ protected:
       node = c;
    }
 
-   static void rotateNodeRightRight(avlnode_t *&node)
+   inline static void rotateNodeRightRight(avlnode_t *&node)
    {
       avlnode_t *a = node;
       avlnode_t *b = a->right;

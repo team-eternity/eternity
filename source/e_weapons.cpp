@@ -870,6 +870,9 @@ static int E_resolveParentWeapon(cfg_t *weaponsec, const weapontitleprops_t &pro
 
 static void E_insertSelectOrderNode(int sortorder, weaponinfo_t *wp, bool modify)
 {
+   if(modify)
+      selectordertree->deleteNode(wp->sortorder);
+
    if(selectordertree == nullptr)
       selectordertree = new AVLTree<int, weaponinfo_t>(sortorder, wp);
    else
@@ -980,6 +983,7 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
       if((tempint = cfg_getint(weaponsec, ITEM_WPN_SELECTORDER)) >= 0)
       {
          E_insertSelectOrderNode(tempint, &wp, !def);
+         wp.sortorder = tempint;
       }
    }
    if(IS_SET(ITEM_WPN_SISTERWEAPON))
