@@ -70,6 +70,7 @@ class XLAnimDefsParser final : public XLParser
 
    XLAnimDef *curdef;
    xlpicdef_t *curpic;
+   bool inwarp2;
 
    bool doToken(XLTokenizer &token) override;
    void startLump() override;
@@ -77,7 +78,7 @@ class XLAnimDefsParser final : public XLParser
    void onEOF(bool early) override;
 public:
    XLAnimDefsParser() : XLParser("ANIMDEFS"), state(STATE_EXPECTITEM), curdef(),
-   curpic()
+   curpic(), inwarp2()
    {
    }
 };
@@ -112,6 +113,8 @@ bool XLAnimDefsParser::doStateExpectItem(XLTokenizer &token)
       defs.add(def);
       curdef = &defs[defs.getLength() - 1];
       state = STATE_EXPECTDEFNAME;
+      if(inwarp2)
+         curdef->rangetics = 65536;
       return true;
    }
    if(!str.strCaseCmp("texture"))
@@ -122,11 +125,13 @@ bool XLAnimDefsParser::doStateExpectItem(XLTokenizer &token)
       defs.add(def);
       curdef = &defs[defs.getLength() - 1];
       state = STATE_EXPECTDEFNAME;
+      if(inwarp2)
+         curdef->rangetics = 65536;
       return true;
    }
    if(!str.strCaseCmp("pic"))
    {
-      if(!curdef)
+      if(!curdef || inwarp2)
          return false;  // must have a flat or texture animation prepared
       state = STATE_EXPECTPICNUM;
       curpic = &pics.addNew();
@@ -135,9 +140,17 @@ bool XLAnimDefsParser::doStateExpectItem(XLTokenizer &token)
    }
    if(!str.strCaseCmp("range"))
    {
-      if(!curdef)
+      if(!curdef || inwarp2)
          return false;
       state = STATE_EXPECTRANGENAME;
+      return true;
+   }
+   if(!str.strCaseCmp("warp2"))
+   {
+      if(inwarp2)
+         return false;
+      inwarp2 = true;
+      state = STATE_EXPECTITEM;
       return true;
    }
    return false;
@@ -150,6 +163,11 @@ bool XLAnimDefsParser::doStateExpectDefName(XLTokenizer &token)
 {
    curdef->picname = token.getToken();
    state = STATE_EXPECTITEM;
+   if(inwarp2)
+   {
+      inwarp2 = false;
+      curdef->rangename = curdef->picname;
+   }
    return true;
 }
 
@@ -285,6 +303,7 @@ void XLAnimDefsParser::startLump()
    pics.assign(xlpics);
    curdef = nullptr;
    curpic = nullptr;
+   inwarp2 = false;
 }
 
 //
