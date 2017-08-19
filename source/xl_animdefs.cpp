@@ -30,19 +30,7 @@
 
 Collection<XLAnimDef> xldefs;
 PODCollection<xlpicdef_t> xlpics;
-
-//
-// Switch definition
-//
-class XLSwitchDef : public ZoneObject
-{
-public:
-   qstring name;
-   qstring onname;
-   qstring sound;
-};
-
-static Collection<XLSwitchDef> xlswitches;
+Collection<XLSwitchDef> xlswitches;
 
 //
 // ANIMDEFS parser
