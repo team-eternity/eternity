@@ -184,6 +184,12 @@ static void P_addPicAnim(const animdef_t &animdef)
    lastanim->numpics = lastanim->picnum - lastanim->basepic + 1;
    lastanim->speed = SwapLong(animdef.speed); // killough 5/5/98: add LONG()
 
+   if(!lastanim->speed)
+   {
+      I_Error("P_InitPicAnims: illegal speed 0 for animation %s to %s\n",
+              animdef.startname, animdef.endname);
+   }
+
    // SoM: just to make sure
    if(lastanim->numpics <= 0)
       return;
@@ -260,7 +266,7 @@ void P_InitPicAnims(void)
       xad.picname.copyInto(ad.startname, earrlen(ad.startname));
       ad.startname[earrlen(ad.startname) - 1] = 0;
 
-      ad.speed = xad.rangetics;
+      ad.speed = SwapLong(xad.rangetics);
       P_addPicAnim(ad);
    }
 }
