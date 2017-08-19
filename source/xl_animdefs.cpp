@@ -421,10 +421,11 @@ void XLAnimDefsParser::initTokenizer(XLTokenizer &tokenizer)
 //
 void XLAnimDefsParser::onEOF(bool early)
 {
-   if(!early && state == STATE_EXPECTITEM)
+   if(!early)
    {
       xldefs.assign(defs);
       xlpics.assign(pics);
+      xlswitches.assign(switches);
       // TODO: display an error on failure
    }
 }
