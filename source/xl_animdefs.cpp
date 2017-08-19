@@ -70,7 +70,7 @@ class XLAnimDefsParser final : public XLParser
 
    XLAnimDef *curdef;
    xlpicdef_t *curpic;
-   bool inwarp2;
+   bool inwarp;
 
    bool doToken(XLTokenizer &token) override;
    void startLump() override;
@@ -78,7 +78,7 @@ class XLAnimDefsParser final : public XLParser
    void onEOF(bool early) override;
 public:
    XLAnimDefsParser() : XLParser("ANIMDEFS"), state(STATE_EXPECTITEM), curdef(),
-   curpic(), inwarp2()
+   curpic(), inwarp()
    {
    }
 };
@@ -113,7 +113,7 @@ bool XLAnimDefsParser::doStateExpectItem(XLTokenizer &token)
       defs.add(def);
       curdef = &defs[defs.getLength() - 1];
       state = STATE_EXPECTDEFNAME;
-      if(inwarp2)
+      if(inwarp)
          curdef->rangetics = 65536;
       return true;
    }
@@ -125,13 +125,13 @@ bool XLAnimDefsParser::doStateExpectItem(XLTokenizer &token)
       defs.add(def);
       curdef = &defs[defs.getLength() - 1];
       state = STATE_EXPECTDEFNAME;
-      if(inwarp2)
+      if(inwarp)
          curdef->rangetics = 65536;
       return true;
    }
    if(!str.strCaseCmp("pic"))
    {
-      if(!curdef || inwarp2)
+      if(!curdef || inwarp)
          return false;  // must have a flat or texture animation prepared
       state = STATE_EXPECTPICNUM;
       curpic = &pics.addNew();
@@ -140,16 +140,16 @@ bool XLAnimDefsParser::doStateExpectItem(XLTokenizer &token)
    }
    if(!str.strCaseCmp("range"))
    {
-      if(!curdef || inwarp2)
+      if(!curdef || inwarp)
          return false;
       state = STATE_EXPECTRANGENAME;
       return true;
    }
-   if(!str.strCaseCmp("warp2"))
+   if(!str.strCaseCmp("warp"))
    {
-      if(inwarp2)
+      if(inwarp)
          return false;
-      inwarp2 = true;
+      inwarp = true;
       state = STATE_EXPECTITEM;
       return true;
    }
@@ -163,9 +163,9 @@ bool XLAnimDefsParser::doStateExpectDefName(XLTokenizer &token)
 {
    curdef->picname = token.getToken();
    state = STATE_EXPECTITEM;
-   if(inwarp2)
+   if(inwarp)
    {
-      inwarp2 = false;
+      inwarp = false;
       curdef->rangename = curdef->picname;
    }
    return true;
@@ -303,7 +303,7 @@ void XLAnimDefsParser::startLump()
    pics.assign(xlpics);
    curdef = nullptr;
    curpic = nullptr;
-   inwarp2 = false;
+   inwarp = false;
 }
 
 //
