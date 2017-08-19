@@ -65,6 +65,8 @@ class XLAnimDefsParser final : public XLParser
       SWSTATE_TICS,  // only to be able to parse ZDoom stuff with "tics 0"
       SWSTATE_TICSVAL,
       SWSTATE_SOUNDNAME,
+      SWSTATE_OFFATTRIBNAME,
+      SWSTATE_OFFSOUNDNAME,
    };
 
    bool doStateExpectItem(XLTokenizer &);
@@ -89,13 +91,16 @@ class XLAnimDefsParser final : public XLParser
    XLSwitchDef *curswitch;
    bool inwarp;
 
+   int linenum;
+   qstring errmsg;
+
    bool doToken(XLTokenizer &token) override;
    void startLump() override;
    void initTokenizer(XLTokenizer &tokenizer) override;
    void onEOF(bool early) override;
 public:
    XLAnimDefsParser() : XLParser("ANIMDEFS"), state(STATE_EXPECTITEM),
-   swstate(), curdef(), curpic(), curswitch(), inwarp()
+   swstate(), curdef(), curpic(), curswitch(), inwarp(), linenum(1)
    {
    }
 };
@@ -129,6 +134,7 @@ bool XLAnimDefsParser::doStateExpectItem(XLTokenizer &token)
       def.type = xlanim_flat;
       def.index = pics.getLength();
       defs.add(def);
+      curswitch = nullptr;
       curdef = &defs[defs.getLength() - 1];
       state = STATE_EXPECTDEFNAME;
       if(inwarp)
@@ -141,6 +147,7 @@ bool XLAnimDefsParser::doStateExpectItem(XLTokenizer &token)
       def.type = xlanim_texture;
       def.index = pics.getLength();
       defs.add(def);
+      curswitch = nullptr;
       curdef = &defs[defs.getLength() - 1];
       state = STATE_EXPECTDEFNAME;
       if(inwarp)
@@ -150,7 +157,10 @@ bool XLAnimDefsParser::doStateExpectItem(XLTokenizer &token)
    if(!str.strCaseCmp("pic"))
    {
       if(!curdef || inwarp)
+      {
+         errmsg = "PIC must follow a TEXTURE or FLAT, and not allowed for WARP.";
          return false;  // must have a flat or texture animation prepared
+      }
       state = STATE_EXPECTPICNUM;
       curpic = &pics.addNew();
       ++curdef->count;
@@ -159,14 +169,20 @@ bool XLAnimDefsParser::doStateExpectItem(XLTokenizer &token)
    if(!str.strCaseCmp("range"))
    {
       if(!curdef || inwarp)
+      {
+         errmsg = "RANGE must follow a TEXTURE or FLAT, and not allowed for WARP.";
          return false;
+      }
       state = STATE_EXPECTRANGENAME;
       return true;
    }
    if(!str.strCaseCmp("warp"))
    {
       if(inwarp)
+      {
+         errmsg = "WARP cannot be nested.";
          return false;
+      }
       inwarp = true;
       state = STATE_EXPECTITEM;
       return true;
@@ -174,13 +190,18 @@ bool XLAnimDefsParser::doStateExpectItem(XLTokenizer &token)
    if(!str.strCaseCmp("switch"))
    {
       if(inwarp)
+      {
+         errmsg = "SWITCH not allowed for WARP.";
          return false;
+      }
+      curdef = nullptr; // nullify it now
       state = STATE_EXPECTSWITCH;
       swstate = SWSTATE_SWITCHNAME;
       switches.add(XLSwitchDef());
       curswitch = &switches[switches.getLength() - 1];
       return true;
    }
+   errmsg.Printf(256, "Illegal item '%s'.", str.constPtr());
    return false;
 }
 
@@ -219,7 +240,10 @@ bool XLAnimDefsParser::doStateExpectPicNum(XLTokenizer &token)
 {
    int index;
    if(!XL_mustBeInt(token, index))
+   {
+      errmsg = "PIC must have a number.";
       return false;
+   }
    curpic->offset = static_cast<int>(index);
    state = STATE_EXPECTPICOP;
    return true;
@@ -243,6 +267,7 @@ bool XLAnimDefsParser::doStateExpectPicOp(XLTokenizer &token)
       state = STATE_EXPECTDUR;
       return true;
    }
+   errmsg = "Expected TICS or RAND after PIC index.";
    return false;
 }
 
@@ -253,7 +278,10 @@ bool XLAnimDefsParser::doStateExpectDur(XLTokenizer &token)
 {
    int tics;
    if(!XL_mustBeInt(token, tics))
+   {
+      errmsg = "Expected number after TICS or RAND.";
       return false;
+   }
    if(!curpic->isRandom)
    {
       curpic->tics = tics;
@@ -272,7 +300,10 @@ bool XLAnimDefsParser::doStateExpectDur2(XLTokenizer &token)
 {
    int tics;
    if(!XL_mustBeInt(token, tics))
+   {
+      errmsg = "Expected two numbers after RAND.";
       return false;
+   }
    curpic->ticsmax = tics;
    state = STATE_EXPECTITEM;
    return true;
@@ -294,7 +325,10 @@ bool XLAnimDefsParser::doStateExpectRangeName(XLTokenizer &token)
 bool XLAnimDefsParser::doStateExpectRangeTicsOp(XLTokenizer &token)
 {
    if(token.getToken().strCaseCmp("tics"))
+   {
+      errmsg = "Expected TICS in RANGE section.";
       return false;
+   }
    state = STATE_EXPECTRANGEDUR;
    return true;
 }
@@ -306,7 +340,10 @@ bool XLAnimDefsParser::doStateExpectRangeDur(XLTokenizer &token)
 {
    int tics;
    if(!XL_mustBeInt(token, tics))
+   {
+      errmsg = "Expected number after TICS.";
       return false;
+   }
    curdef->rangetics = tics;
    state = STATE_EXPECTITEM;
    return true;
@@ -326,7 +363,10 @@ bool XLAnimDefsParser::doStateExpectSwitch(XLTokenizer &token)
       case SWSTATE_SWITCHDIR:
          // Currently "off" is reserved
          if(!token.getToken().strCaseCmp("off"))
-            return false;
+         {
+            swstate = SWSTATE_OFFATTRIBNAME;
+            break;
+         }
          swstate = SWSTATE_ATTRIBNAME;
          // Different from "on"? Jump directly to attribname.
          if(token.getToken().strCaseCmp("on"))
@@ -338,6 +378,24 @@ bool XLAnimDefsParser::doStateExpectSwitch(XLTokenizer &token)
             swstate = SWSTATE_ONNAME;
          else if(!token.getToken().strCaseCmp("sound"))
             swstate = SWSTATE_SOUNDNAME;
+         else if(!token.getToken().strCaseCmp("off"))
+            swstate = SWSTATE_OFFATTRIBNAME;
+         else if(!token.getToken().strCaseCmp("on"))
+            break;   // keep loking
+         else
+         {
+            state = STATE_EXPECTITEM;
+            swstate = 0;
+            return doToken(token);
+         }
+         break;
+      case SWSTATE_OFFATTRIBNAME:
+         if(!token.getToken().strCaseCmp("sound"))
+            swstate = SWSTATE_OFFSOUNDNAME;
+         else if(!token.getToken().strCaseCmp("on"))
+            swstate = SWSTATE_ATTRIBNAME;
+         else if(!token.getToken().strCaseCmp("off"))
+            break;   // keep looking
          else
          {
             state = STATE_EXPECTITEM;
@@ -367,7 +425,12 @@ bool XLAnimDefsParser::doStateExpectSwitch(XLTokenizer &token)
          curswitch->sound = token.getToken();
          swstate = SWSTATE_ATTRIBNAME;
          break;
+      case SWSTATE_OFFSOUNDNAME:
+         curswitch->offsound = token.getToken();
+         swstate = SWSTATE_OFFATTRIBNAME;
+         break;
       default:
+         errmsg = "Illegal switch state.";
          return false;
    }
    return true;
@@ -378,6 +441,11 @@ bool XLAnimDefsParser::doStateExpectSwitch(XLTokenizer &token)
 //
 bool XLAnimDefsParser::doToken(XLTokenizer &token)
 {
+   if(token.getTokenType() == XLTokenizer::TOKEN_LINEBREAK)
+   {
+      linenum++;
+      return true;
+   }
    return (this->*States[state])(token);
 }
 
@@ -394,6 +462,7 @@ void XLAnimDefsParser::startLump()
    curpic = nullptr;
    curswitch = nullptr;
    inwarp = false;
+   linenum = 1;
 }
 
 //
@@ -401,7 +470,7 @@ void XLAnimDefsParser::startLump()
 //
 void XLAnimDefsParser::initTokenizer(XLTokenizer &tokenizer)
 {
-   tokenizer.setTokenFlags(XLTokenizer::TF_DEFAULT);
+   tokenizer.setTokenFlags(XLTokenizer::TF_LINEBREAKS);
 }
 
 //
@@ -415,6 +484,11 @@ void XLAnimDefsParser::onEOF(bool early)
       xlpics.assign(pics);
       xlswitches.assign(switches);
       // TODO: display an error on failure
+
+   }
+   else
+   {
+      I_Error("ANIMDEFS error at line %d: %s\n", linenum, errmsg.constPtr());
    }
 }
 

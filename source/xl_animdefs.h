@@ -82,6 +82,7 @@ public:
    qstring name;
    qstring onname;
    qstring sound;
+   qstring offsound;
 };
 
 extern Collection<XLAnimDef> xldefs;

@@ -57,6 +57,7 @@ static int max_numswitches;                       // killough
 static int numswitches;                           // killough
 
 static Collection<qstring> switchsounds;
+static Collection<qstring> offswitchsounds;
 
 button_t *buttonlist     = NULL; // haleyjd 04/16/08: made dynamic
 int      numbuttonsalloc = 0;    // haleyjd 04/16/08: number allocated
@@ -125,6 +126,7 @@ void P_InitSwitchList(void)
          switchlist[index++] =
             R_FindWall(alphSwitchList[i].name2);
          switchsounds.add(qstring());  // empty means default
+         offswitchsounds.add(qstring());
       }
    }
 
@@ -141,6 +143,7 @@ void P_InitSwitchList(void)
       switchlist[index++] = R_FindWall(xsd.name.constPtr());
       switchlist[index++] = R_FindWall(xsd.onname.constPtr());
       switchsounds.add(xsd.sound);
+      offswitchsounds.add(xsd.offsound.empty() ? xsd.sound : xsd.offsound);
    }
 
    numswitches = index / 2;
@@ -278,7 +281,7 @@ void P_RunButtons()
                   break;
                }
 
-               const char *sound = switchsounds[button->switchindex].constPtr();
+               const char *sound = offswitchsounds[button->switchindex].constPtr();
                if(!*sound)
                   sound = "EE_SwitchOn";
                S_StartSoundName(&line->soundorg, sound);
