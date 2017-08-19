@@ -2313,11 +2313,15 @@ void G_PlayerReborn(int player)
    inventory    = p->inventory;  // haleyjd: inventory
    inv_ptr      = p->inv_ptr;
   
+   delete p->weaponctrs;
+
    memset(p, 0, sizeof(*p));
 
    memcpy(p->frags, frags, sizeof(p->frags));
    strcpy(p->name, playername);
    
+   p->weaponctrs = new WeaponCounterTree();
+
    p->killcount   = killcount;
    p->itemcount   = itemcount;
    p->secretcount = secretcount;

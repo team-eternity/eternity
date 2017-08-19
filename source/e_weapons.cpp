@@ -185,8 +185,6 @@ weaponslot_t *weaponslots[NUMWEAPONSLOTS];
 static AVLTree<int, weaponinfo_t> *selectordertree = nullptr;
 using selectordernode_t = AVLTree<int, weaponinfo_t>::avlnode_t;
 
-
-
 //=============================================================================
 //
 // Weapon Flags

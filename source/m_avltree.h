@@ -73,15 +73,21 @@ public:
    }
 
    //
+   // Destructor. Delete the tree if there is one
+   //
+   virtual ~AVLTree() { deleteTree(root, deleteobjects); }
+
+   //
    // Insert a new node with a providede key and object into the tree
    //
-   void insert(T key, U *object)
+   avlnode_t *insert(T key, U *object)
    {
       avlnode_t *toinsert, *next, *prev;
       prev = next = nullptr;
       toinsert = estructalloc(avlnode_t, 1); // avlnode_t is POD, due to the assertion T and U are
       toinsert->key = key;
       toinsert->object = object;
+      toinsert->left = toinsert->right = nullptr;
 
       if(root == nullptr)
          root = toinsert;
@@ -97,7 +103,7 @@ public:
             else // FIXME: This triggers due to inheritance. That needs sorting out.
             {
                efree(toinsert);
-               return; // Ahh bugger
+               return nullptr; // Ahh bugger
             }
          }
          if(key > prev->key)
@@ -106,6 +112,8 @@ public:
             prev->left = toinsert;
       }
       balance(root);
+
+      return toinsert;
    }
 
    //
@@ -192,7 +200,26 @@ public:
       return true;
    }
 
+   //
+   // Return a node with a given key, or nullptr if not found
+   //
+   avlnode_t *find(T key) const
+   {
+      for(avlnode_t *node = root; node != nullptr;)
+      {
+         if(key == node->key)
+            return node;
+         else if(key < node->key)
+            node = node->left;
+         else if(key > node->key)
+            node = node->right;
+      }
+      return nullptr; // Not found
+   }
+
 protected:
+   bool deleteobjects = false;
+
    //
    // Get the node to replace the deleted node, as well as its parent
    //
@@ -331,6 +358,25 @@ protected:
             rotateNodeRightLeft(root);
          else
             rotateNodeRightRight(root);
+      }
+   }
+
+private:
+   //
+   // Hack down an avltree by doing post-order deletion,
+   // deleting objects if needed
+   //
+   static void deleteTree(avlnode_t *root, bool deleteobjs)
+   {
+      if(root)
+      {
+         if(root->left)
+            deleteTree(root->left, deleteobjs);
+         if(root->right)
+            deleteTree(root->right, deleteobjs);
+         if(deleteobjs)
+            efree(root->object, deleteobjs);
+         efree(root);
       }
    }
 };

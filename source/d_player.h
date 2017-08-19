@@ -49,6 +49,8 @@ struct playerclass_t;
 struct skin_t;
 struct weaponslot_t;
 
+class WeaponCounterTree;
+
 // Inventory item ID is just an integer. The inventory item type can be looked
 // up using this.
 typedef int inventoryitemid_t;
@@ -164,7 +166,8 @@ struct player_t
    weaponinfo_t  *readyweapon;
    weaponinfo_t  *pendingweapon; // Is nullptr if not changing.
 
-   int            weaponctrs[NUMWEAPONS][3]; // haleyjd 03/31/06
+   // MaxW: 2017/08/19: Changed from `int foo[NUMWEAPONS][3]`
+   WeaponCounterTree *weaponctrs; // haleyjd 03/31/06
 
    int            extralight;    // So gun flashes light up areas.
    

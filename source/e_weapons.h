@@ -29,6 +29,7 @@
 #ifndef E_WEAPONS_H__
 #define E_WEAPONS_H__
 
+#include "m_avltree.h"
 #include "m_dllist.h"
 
 struct weaponinfo_t;
@@ -91,6 +92,87 @@ bool E_PlayerOwnsWeaponInSlot(player_t *player, int slot);
 
 void E_GiveAllWeapons(player_t *player);
 void E_GiveAllClassWeapons(player_t *player);
+
+
+#define NUMWEAPCOUNTERS 3
+using WeaponCounter = int[NUMWEAPCOUNTERS];
+using WeaponCounterTreeBase = AVLTree<int, WeaponCounter>;
+using WeaponCounterNode = WeaponCounterTreeBase::avlnode_t;
+//
+// Tree of weapon counters
+//
+class WeaponCounterTree : public WeaponCounterTreeBase
+{
+public:
+   WeaponCounterTree() :
+      WeaponCounterTreeBase()
+   {      
+      deleteobjects = true;
+   }
+
+   ~WeaponCounterTree() { }
+   
+   //
+   // Set the indexed counter for the player's currently equipped weapon to value
+   //
+   void setCounter(player_t *player, int index, int value)
+   {
+      WeaponCounter &counters = getCounters(player->readyweapon->id);
+      counters[index] = value;
+   }
+
+   //
+   // Get counters for a given weapon.
+   // If the counters don't exist then create them
+   //
+   WeaponCounter &getCounters(int weaponid)
+   {
+      WeaponCounterNode *ctrnode;
+      if((ctrnode = find(weaponid)))
+         return *ctrnode->object;
+      else
+      {
+         WeaponCounter &counters = *estructalloc(WeaponCounter, 1);
+         memset(counters, 0, NUMWEAPCOUNTERS);
+         insert(weaponid, &counters);
+         return counters;
+
+      }
+   }
+
+   //
+   // Get the index weapon counter
+   //
+   int *getIndexedCounter(int weaponid, int index)
+   {
+      WeaponCounter &counter = getCounters(weaponid);
+      return &counter[index];
+   }
+
+   //
+   // Get counter pointer for the player's currently equipped weapon
+   //
+   static int *getIndexedCounterForPlayer(player_t *player, int index)
+   {
+      return player->weaponctrs->getIndexedCounter(player->readyweapon->id, index);
+   }
+
+private:
+   //
+   // Delete objects
+   //
+   static void deleteObjects(avlnode_t *node)
+   {
+      if(node)
+      {
+         if(node->left)
+            deleteObjects(node->left);
+         if(node->right)
+            deleteObjects(node->right);
+         efree(node->object);
+      }
+   }
+};
 
 #endif
 
