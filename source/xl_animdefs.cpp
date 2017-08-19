@@ -32,6 +32,19 @@ Collection<XLAnimDef> xldefs;
 PODCollection<xlpicdef_t> xlpics;
 
 //
+// Switch definition
+//
+class XLSwitchDef : public ZoneObject
+{
+public:
+   qstring name;
+   qstring onname;
+   qstring sound;
+};
+
+static Collection<XLSwitchDef> xlswitches;
+
+//
 // ANIMDEFS parser
 //
 class XLAnimDefsParser final : public XLParser
@@ -52,6 +65,18 @@ class XLAnimDefsParser final : public XLParser
       STATE_EXPECTRANGENAME,
       STATE_EXPECTRANGETICSOP,
       STATE_EXPECTRANGEDUR,
+      STATE_EXPECTSWITCH,  // switch state. Use a separate set of states here.
+   };
+
+   enum
+   {
+      SWSTATE_SWITCHNAME,
+      SWSTATE_SWITCHDIR,
+      SWSTATE_ATTRIBNAME,
+      SWSTATE_ONNAME,
+      SWSTATE_TICS,  // only to be able to parse ZDoom stuff with "tics 0"
+      SWSTATE_TICSVAL,
+      SWSTATE_SOUNDNAME,
    };
 
    bool doStateExpectItem(XLTokenizer &);
@@ -63,13 +88,17 @@ class XLAnimDefsParser final : public XLParser
    bool doStateExpectRangeName(XLTokenizer &);
    bool doStateExpectRangeTicsOp(XLTokenizer &);
    bool doStateExpectRangeDur(XLTokenizer &);
+   bool doStateExpectSwitch(XLTokenizer &);
 
    int state;  // current state
+   int swstate;   // switch state
    Collection<XLAnimDef> defs;
    PODCollection<xlpicdef_t> pics;
+   Collection<XLSwitchDef> switches;
 
    XLAnimDef *curdef;
    xlpicdef_t *curpic;
+   XLSwitchDef *curswitch;
    bool inwarp;
 
    bool doToken(XLTokenizer &token) override;
@@ -77,8 +106,8 @@ class XLAnimDefsParser final : public XLParser
    void initTokenizer(XLTokenizer &tokenizer) override;
    void onEOF(bool early) override;
 public:
-   XLAnimDefsParser() : XLParser("ANIMDEFS"), state(STATE_EXPECTITEM), curdef(),
-   curpic(), inwarp()
+   XLAnimDefsParser() : XLParser("ANIMDEFS"), state(STATE_EXPECTITEM),
+   swstate(), curdef(), curpic(), curswitch(), inwarp()
    {
    }
 };
@@ -97,6 +126,7 @@ bool (XLAnimDefsParser::* XLAnimDefsParser::States[])(XLTokenizer &) =
    &XLAnimDefsParser::doStateExpectRangeName,
    &XLAnimDefsParser::doStateExpectRangeTicsOp,
    &XLAnimDefsParser::doStateExpectRangeDur,
+   &XLAnimDefsParser::doStateExpectSwitch,
 };
 
 //
@@ -151,6 +181,16 @@ bool XLAnimDefsParser::doStateExpectItem(XLTokenizer &token)
          return false;
       inwarp = true;
       state = STATE_EXPECTITEM;
+      return true;
+   }
+   if(!str.strCaseCmp("switch"))
+   {
+      if(inwarp)
+         return false;
+      state = STATE_EXPECTSWITCH;
+      swstate = SWSTATE_SWITCHNAME;
+      switches.add(XLSwitchDef());
+      curswitch = &switches[switches.getLength() - 1];
       return true;
    }
    return false;
@@ -284,6 +324,66 @@ bool XLAnimDefsParser::doStateExpectRangeDur(XLTokenizer &token)
    return true;
 }
 
+//
+// Within a switch block
+//
+bool XLAnimDefsParser::doStateExpectSwitch(XLTokenizer &token)
+{
+   switch(swstate)
+   {
+      case SWSTATE_SWITCHNAME:
+         curswitch->name = token.getToken();
+         swstate = SWSTATE_SWITCHDIR;
+         break;
+      case SWSTATE_SWITCHDIR:
+         // Currently "off" is reserved
+         if(!token.getToken().strCaseCmp("off"))
+            return false;
+         swstate = SWSTATE_ATTRIBNAME;
+         // Different from "on"? Jump directly to attribname.
+         if(token.getToken().strCaseCmp("on"))
+            return doToken(token);
+         break;
+      case SWSTATE_ATTRIBNAME:
+         // Currently only "pic" is supported
+         if(!token.getToken().strCaseCmp("pic"))
+            swstate = SWSTATE_ONNAME;
+         else if(!token.getToken().strCaseCmp("sound"))
+            swstate = SWSTATE_SOUNDNAME;
+         else
+         {
+            state = STATE_EXPECTITEM;
+            swstate = 0;
+            return doToken(token);
+         }
+         break;
+      case SWSTATE_ONNAME:
+         curswitch->onname = token.getToken();
+         swstate = SWSTATE_TICS;
+         break;
+         // These are just for syntax validation
+      case SWSTATE_TICS:
+         // Currently tics are not supported are are optional.
+         if(token.getToken().strCaseCmp("tics"))
+         {
+            // If it's not "tics", act like normal
+            swstate = SWSTATE_ATTRIBNAME;
+            return doToken(token);
+         }
+         swstate = SWSTATE_TICSVAL;
+         break;
+      case SWSTATE_TICSVAL:
+         swstate = SWSTATE_ATTRIBNAME;
+         break;
+      case SWSTATE_SOUNDNAME:
+         curswitch->sound = token.getToken();
+         swstate = SWSTATE_ATTRIBNAME;
+         break;
+      default:
+         return false;
+   }
+   return true;
+}
 
 //
 // Parse next token. Goes into one of the pointed functions.
@@ -299,10 +399,12 @@ bool XLAnimDefsParser::doToken(XLTokenizer &token)
 void XLAnimDefsParser::startLump()
 {
    state = STATE_EXPECTITEM;
+   swstate = 0;
    defs.assign(xldefs);
    pics.assign(xlpics);
    curdef = nullptr;
    curpic = nullptr;
+   curswitch = nullptr;
    inwarp = false;
 }
 
