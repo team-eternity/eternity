@@ -291,6 +291,7 @@
 		4F7ADA181E0C623900E34F5F /* m_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F7ADA161E0C623900E34F5F /* m_utils.cpp */; };
 		4F917D781F29243500131BE5 /* xl_umapinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F917D771F29243500131BE5 /* xl_umapinfo.cpp */; };
 		4F950FDF1F3CDAB4000D9DC5 /* xl_animdefs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F950FDE1F3CDAB4000D9DC5 /* xl_animdefs.cpp */; };
+		4F950FE21F4989A7000D9DC5 /* e_switch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F950FE11F4989A7000D9DC5 /* e_switch.cpp */; };
 		4FAAD5941E583113001D7263 /* p_portalcross.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FAAD5931E583113001D7263 /* p_portalcross.cpp */; };
 		4FB5F0051CCB5A0D00EFF2D9 /* p_portalclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FB5F0031CCB5A0D00EFF2D9 /* p_portalclip.cpp */; };
 		4FC0A9271E1E2A50006CEC45 /* Action.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FC0A8FB1E1E2A50006CEC45 /* Action.cpp */; };
@@ -384,6 +385,8 @@
 		4F917D791F2A5FD600131BE5 /* xl_umapinfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = xl_umapinfo.h; path = ../source/xl_umapinfo.h; sourceTree = "<group>"; };
 		4F950FDD1F3CDA67000D9DC5 /* xl_animdefs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = xl_animdefs.h; path = ../source/xl_animdefs.h; sourceTree = "<group>"; };
 		4F950FDE1F3CDAB4000D9DC5 /* xl_animdefs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = xl_animdefs.cpp; path = ../source/xl_animdefs.cpp; sourceTree = "<group>"; };
+		4F950FE01F498975000D9DC5 /* e_switch.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = e_switch.h; path = ../source/e_switch.h; sourceTree = "<group>"; };
+		4F950FE11F4989A7000D9DC5 /* e_switch.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = e_switch.cpp; path = ../source/e_switch.cpp; sourceTree = "<group>"; };
 		4F98954F16C10FB1005D78C0 /* trees.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = trees.c; path = ../zlib/trees.c; sourceTree = "<group>"; };
 		4F9A249216D95878002BE852 /* t_plane.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = t_plane.cpp; path = ../source/t_plane.cpp; sourceTree = "<group>"; };
 		4F9A249316D95878002BE852 /* t_plane.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = t_plane.h; path = ../source/t_plane.h; sourceTree = "<group>"; };
@@ -1445,6 +1448,8 @@
 				FA16D3ED15E01E96002318D1 /* e_states.h */,
 				FABF5CE6158BF42800C49E93 /* e_string.cpp */,
 				FA16D3EE15E01E96002318D1 /* e_string.h */,
+				4F950FE11F4989A7000D9DC5 /* e_switch.cpp */,
+				4F950FE01F498975000D9DC5 /* e_switch.h */,
 				FABF5CE7158BF42800C49E93 /* e_things.cpp */,
 				FA16D3EF15E01E96002318D1 /* e_things.h */,
 				FABF5CE8158BF42800C49E93 /* e_ttypes.cpp */,
@@ -2090,6 +2095,7 @@
 				4F5F3963182D9B820027813A /* v_video.cpp in Sources */,
 				4F5F3964182D9B820027813A /* w_formats.cpp in Sources */,
 				4F36248118A567CD00B94FA1 /* xl_sndinfo.cpp in Sources */,
+				4F950FE21F4989A7000D9DC5 /* e_switch.cpp in Sources */,
 				4F5F3965182D9B820027813A /* w_hacks.cpp in Sources */,
 				4F5F3966182D9B820027813A /* w_levels.cpp in Sources */,
 				4F5F3967182D9B820027813A /* w_wad.cpp in Sources */,

@@ -30,6 +30,7 @@
 #include "d_io.h"
 #include "doomstat.h"
 #include "e_exdata.h"
+#include "e_switch.h"
 #include "ev_specials.h"
 #include "g_game.h"
 #include "m_collection.h"
@@ -128,6 +129,22 @@ void P_InitSwitchList(void)
          switchsounds.add(qstring());  // empty means default
          offswitchsounds.add(qstring());
       }
+   }
+
+   // Now read the EDF switches. They must have priority over ANIMDEFS switches.
+   for(const ESwitchDef *esd : eswitches)
+   {
+      if(esd->offpic.empty() || esd->onpic.empty() || esd->episode > episode)
+         continue;
+      if(index + 1 >= max_numswitches)
+      {
+         max_numswitches = max_numswitches ? max_numswitches * 2 : 8;
+         switchlist = erealloc(int *, switchlist, sizeof(*switchlist) * max_numswitches);
+      }
+      switchlist[index++] = R_FindWall(esd->offpic.constPtr());
+      switchlist[index++] = R_FindWall(esd->onpic.constPtr());
+      switchsounds.add(esd->onsound);
+      offswitchsounds.add(esd->offsound.empty() ? esd->onsound : esd->offsound);
    }
 
    // Now also read the ANIMDEFS
@@ -281,7 +298,9 @@ void P_RunButtons()
                   break;
                }
 
-               const char *sound = offswitchsounds[button->switchindex].constPtr();
+               int idx = button->switchindex;
+               const char *sound =
+               (idx % 2 ? switchsounds : offswitchsounds)[idx / 2].constPtr();
                if(!*sound)
                   sound = "EE_SwitchOn";
                S_StartSoundName(&line->soundorg, sound);
@@ -351,7 +370,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
          continue;
 
       // Check if the switch has a dedicated sound ("none" can silence it)
-      sound = switchsounds[i / 2].constPtr();
+      sound = (i % 2 ? offswitchsounds : switchsounds)[i / 2].constPtr();
       if(!*sound)
          sound = defsound;
 
@@ -360,7 +379,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
          sides[sidenum].toptexture = switchlist[i^1]; // chg texture
          
          P_StartButton(sidenum, line, sector, top, switchlist[i], BUTTONTIME,
-                       !!useAgain, sound, i / 2); // start timer
+                       !!useAgain, sound, i); // start timer
          
          return;
       }
@@ -369,7 +388,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
          sides[sidenum].midtexture = switchlist[i^1]; // chg texture
          
          P_StartButton(sidenum, line, sector, middle, switchlist[i], BUTTONTIME,
-                       !!useAgain, sound, i / 2); // start timer
+                       !!useAgain, sound, i); // start timer
          
          return;
       }
@@ -378,7 +397,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
          sides[sidenum].bottomtexture = switchlist[i^1]; //chg texture
          
          P_StartButton(sidenum, line, sector, bottom, switchlist[i], BUTTONTIME,
-                       !!useAgain, sound, i / 2); // start timer
+                       !!useAgain, sound, i); // start timer
          
          return;
       }
