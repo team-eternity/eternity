@@ -1765,6 +1765,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\source\w_zip.cpp" />
+    <ClCompile Include="..\source\xl_animdefs.cpp" />
     <ClCompile Include="..\source\xl_emapinfo.cpp" />
     <ClCompile Include="..\source\xl_mapinfo.cpp" />
     <ClCompile Include="..\source\xl_musinfo.cpp" />
@@ -2230,6 +2231,7 @@
     <ClInclude Include="..\source\w_levels.h" />
     <ClInclude Include="..\Source\w_wad.h" />
     <ClInclude Include="..\source\w_zip.h" />
+    <ClInclude Include="..\source\xl_animdefs.h" />
     <ClInclude Include="..\source\xl_emapinfo.h" />
     <ClInclude Include="..\source\xl_mapinfo.h" />
     <ClInclude Include="..\source\xl_musinfo.h" />
