@@ -1475,16 +1475,10 @@
     <ClInclude Include="..\Source\info.h">
       <Filter>Source Files\Misc\Misc Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\Win32\inttypes.h">
-      <Filter>Source Files\Misc\Misc Headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\Source\psnprntf.h">
       <Filter>Source Files\Misc\Misc Headers</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
-      <Filter>Source Files\Misc\Misc Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\Win32\stdint.h">
       <Filter>Source Files\Misc\Misc Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\tables.h">
