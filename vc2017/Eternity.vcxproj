@@ -2241,10 +2241,8 @@
     <ClInclude Include="..\Source\z_zone.h" />
     <ClInclude Include="..\source\autopalette.h" />
     <ClInclude Include="..\Source\info.h" />
-    <ClInclude Include="..\source\Win32\inttypes.h" />
     <ClInclude Include="..\Source\psnprntf.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="..\source\Win32\stdint.h" />
     <ClInclude Include="..\Source\tables.h" />
     <ClInclude Include="..\Source\version.h" />
     <ClInclude Include="..\source\textscreen\textscreen.h" />
