@@ -359,9 +359,11 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
    defsound = "EE_SwitchOn"; // haleyjd
    
    // EXIT SWITCH?
-   // FIXME: should apply to all exits? Go through special binding system
-   if(line->special == 11)
+   if(EV_CompositeActionFlags(EV_ActionForSpecial(line->special)) &
+      EV_ISMAPPEDEXIT)
+   {
       defsound = "EE_SwitchEx"; // haleyjd
+   }
 
    for(i = 0; i < numswitches * 2; ++i)
    {
