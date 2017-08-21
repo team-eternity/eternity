@@ -8,6 +8,23 @@ Since v3.42.03 "Heimdal" release 2
 ==================================
 
 --------------------------------------------------------------------------------
+18.08.2017
+
+FEATURE: Hexen's vanilla ANIMDEFS lump is now supported.
+
+--------------------------------------------------------------------------------
+17.08.2017
+
+WORKAROUND: Removed sprite projections from moving wall portals for the time
+            being. The phantom sprites were trailing behind, ruining the view.
+
+--------------------------------------------------------------------------------
+16.08.2017
+
+BUGFIX: The sector portal seg rejector still had issues. Added easy checks when
+        the bounding box is entirely in front or at the back of the checked seg.
+
+--------------------------------------------------------------------------------
 09.08.2017
 
 FEATURE: -vanilla is now stored in savegames, which means that you can now

@@ -969,6 +969,9 @@
     <ClCompile Include="..\source\xl_umapinfo.cpp">
       <Filter>Source Files\XL_\XL_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\xl_animdefs.cpp">
+      <Filter>Source Files\XL_\XL_ Source</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\a_weaponsheretic.cpp">
       <Filter>Source Files\A_\A_ Source</Filter>
     </ClCompile>
@@ -1478,16 +1481,10 @@
     <ClInclude Include="..\Source\info.h">
       <Filter>Source Files\Misc\Misc Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\Win32\inttypes.h">
-      <Filter>Source Files\Misc\Misc Headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\Source\psnprntf.h">
       <Filter>Source Files\Misc\Misc Headers</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
-      <Filter>Source Files\Misc\Misc Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\Win32\stdint.h">
       <Filter>Source Files\Misc\Misc Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\tables.h">
@@ -1731,6 +1728,9 @@
       <Filter>Source Files\S_\S_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\source\xl_umapinfo.h">
+      <Filter>Source Files\XL_\XL_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\xl_animdefs.h">
       <Filter>Source Files\XL_\XL_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\source\m_avltree.h">

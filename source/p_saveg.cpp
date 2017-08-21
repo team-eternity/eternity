@@ -608,7 +608,7 @@ static void P_ArchiveWorld(SaveArchive &arc)
       int j;
 
       arc << li->flags << li->special << li->tag
-         << li->args[0] << li->args[1] << li->args[2] << li->args[3] << li->args[4];
+          << li->args[0] << li->args[1] << li->args[2] << li->args[3] << li->args[4];
 
       for(j = 0; j < 2; j++)
       {
@@ -1208,17 +1208,15 @@ void P_SaveCurrentLevel(char *filename, char *description)
 
       if((fn = W_GetManagedDirFN(g_dir))) // returns null if g_dir == &w_GlobalDir
       {
-         int len = 0;
-
          // save length of managed directory filename string and
          // managed directory filename string
-         arc.writeLString(fn, len);
+         arc.writeLString(fn);
       }
       else
       {
          // just save 0; there is no name to save
-         int len = 0;
-         arc << len;
+         size_t len = 0;
+         arc.archiveSize(len);
       }
   
       // killough 3/16/98, 12/98: store lump name checksum
@@ -1317,7 +1315,6 @@ void P_LoadGame(const char *filename)
    int i;
    char vcheck[VERSIONSIZE], vread[VERSIONSIZE];
    //uint64_t checksum, rchecksum;
-   int len;
    InBuffer loadfile;
    SaveArchive arc(&loadfile);
 
@@ -1386,7 +1383,8 @@ void P_LoadGame(const char *filename)
       // directory, we need to restore the managed directory to g_dir when loading
       // the game here. When this is the case, the file name of the managed directory
       // has been saved into the save game.
-      arc << len;
+      size_t len;
+      arc.archiveSize(len);
 
       if(len)
       {
@@ -1394,7 +1392,7 @@ void P_LoadGame(const char *filename)
 
          // read a name of len bytes 
          char *fn = ecalloc(char *, 1, len);
-         arc.archiveCString(fn, (size_t)len);
+         arc.archiveCString(fn, len);
 
          // Try to get an existing managed wad first. If none such exists, try
          // adding it now. If that doesn't work, the normal error message appears

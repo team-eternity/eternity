@@ -556,7 +556,7 @@ void lineopening_t::calculate(const line_t *linedef)
    const sector_t *front = linedef->frontsector;
    const sector_t *back = linedef->backsector;
 
-   const sector_t *beyond = linedef->intflags & MLI_POLYPORTALLINE &&
+   const sector_t *beyond = linedef->intflags & MLI_1SPORTALLINE &&
       linedef->beyondportalline ? linedef->beyondportalline->frontsector : nullptr;
    if(beyond)
       back = beyond;
