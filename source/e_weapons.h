@@ -69,10 +69,11 @@ weaponinfo_t *E_WeaponForDEHNum(int dehnum);
 // FIXME: Reorder to be cleaner
 void E_CollectWeapons(cfg_t *cfg);
 
-weaponinfo_t *E_FindBestWeapon(player_t *player);
-
 void E_ProcessWeaponInfo(cfg_t *cfg);
 void E_ProcessWeaponDeltas(cfg_t *cfg);
+
+weaponinfo_t *E_FindBestWeapon(player_t *player);
+weaponinfo_t *E_FindBestWeaponUsingAmmo(player_t *player, itemeffect_t *ammo);
 
 bool E_WeaponHasAltFire(weaponinfo_t *weapon);
 bool E_WeaponIsCurrent(const player_t *player, const char *name);

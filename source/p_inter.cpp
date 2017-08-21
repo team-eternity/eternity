@@ -115,11 +115,10 @@ bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
    // We were down to zero, so select a new weapon.
    // Preferences are not user selectable.
    
-   // WEAPON_FIXME: ammo reception behaviors
-   // INVENTORY_TODO: hardcoded behaviors for now...
-   // if(demo_version >= 344 && player->readyweapon->flags & WPF_AUTOSWITCHFROM)
-   //    E/P_SwitchToTheAppropriateWeaponForTheAmmoGivenToThePlayer(player, ammo, amount);
-   if(!strcasecmp(ammo->getKey(), "AmmoClip"))
+   // If the player is doing a new demo and the weapon should be switched from, try to do so
+   if(demo_version >= 344 && player->readyweapon->flags & WPF_AUTOSWITCHFROM)
+      player->pendingweapon = E_FindBestWeaponUsingAmmo(player, ammo);
+   else if(!strcasecmp(ammo->getKey(), "AmmoClip"))
    {
       if(E_WeaponIsCurrentDEHNum(player, wp_fist))
       {

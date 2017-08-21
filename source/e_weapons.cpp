@@ -877,35 +877,6 @@ static void E_insertSelectOrderNode(int sortorder, weaponinfo_t *wp, bool modify
       selectordertree->insert(sortorder, wp);
 }
 
-//
-// Perform an in-order traversal of the select order tree
-// to try and find the best weapon the player can fire.
-//
-static weaponinfo_t *E_findBestWeapon(player_t *player, selectordernode_t *node)
-{
-   weaponinfo_t *ret = nullptr;
-   if(node == nullptr)
-      return nullptr; // This *really* shouldn't happen
-
-   if(node->left && (ret = E_findBestWeapon(player, node->left)))
-      return ret;
-   if(E_PlayerOwnsWeapon(player, node->object) && P_WeaponHasAmmo(player, node->object))
-      return node->object;
-   if(node->right && (ret = E_findBestWeapon(player, node->right)))
-      return ret;
-
-   // The player doesn't have a weapon that they've ammo for in this sub-tree
-   return nullptr;
-}
-
-//
-// Call E_findBestWeapon with a value of selectordertree->root
-//
-weaponinfo_t *E_FindBestWeapon(player_t *player)
-{
-   return E_findBestWeapon(player, selectordertree->root);
-}
-
 #undef  IS_SET
 #define IS_SET(name) ((def && !inherits) || cfg_size(weaponsec, (name)) > 0)
 
@@ -1220,6 +1191,72 @@ void E_ProcessWeaponDeltas(cfg_t *cfg)
       E_EDFLogPrintf("\t\tApplied weapondelta #%d to %s(#%d)\n",
                      i, weaponinfo[weaponNum]->name, weaponNum);
    }
+}
+
+//=============================================================================
+//
+// Weapon Selection Order Functions
+//
+
+//
+// Perform an in-order traversal of the select order tree
+// to try and find the best weapon the player can fire.
+//
+static weaponinfo_t *E_findBestWeapon(player_t *player, selectordernode_t *node)
+{
+   weaponinfo_t *ret = nullptr;
+   if(node == nullptr)
+      return nullptr; // This *really* shouldn't happen
+
+   if(node->left && (ret = E_findBestWeapon(player, node->left)))
+      return ret;
+   if(E_PlayerOwnsWeapon(player, node->object) && P_WeaponHasAmmo(player, node->object))
+      return node->object;
+   if(node->right && (ret = E_findBestWeapon(player, node->right)))
+      return ret;
+
+   // The player doesn't have a weapon that they've ammo for in this sub-tree
+   return nullptr;
+}
+
+//
+// Initial function to call the function that recursively finds the
+// best weapon the player owns that they have the ammo to fire
+//
+weaponinfo_t *E_FindBestWeapon(player_t *player)
+{
+   return E_findBestWeapon(player, selectordertree->root);
+}
+
+//
+// Perform an in-order traversal of the select order tree
+// to try and find the best weapon the player can fire.
+//
+static weaponinfo_t *E_findBestWeaponUsingAmmo(player_t *player, itemeffect_t *ammo,
+                                               selectordernode_t *node)
+{
+   weaponinfo_t *ret = nullptr, *temp = node->object;
+   if(node == nullptr)
+      return nullptr; // This *really* shouldn't happen
+
+   if(node->left && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->left)))
+      return ret;
+   if(E_PlayerOwnsWeapon(player, temp) && !strcasecmp(temp->ammo->getKey(), ammo->getKey()))
+      return temp;
+   if(node->right && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->right)))
+      return ret;
+
+   // The player doesn't have a weapon that they've ammo for in this sub-tree
+   return nullptr;
+}
+
+//
+// Initial function to call the function that recursively finds the
+// best weapon the player owns that has the provided primary ammo
+//
+weaponinfo_t *E_FindBestWeaponUsingAmmo(player_t *player, itemeffect_t *ammo)
+{
+   return E_findBestWeaponUsingAmmo(player, ammo, selectordertree->root);
 }
 
 //=============================================================================
