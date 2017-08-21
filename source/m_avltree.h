@@ -217,6 +217,25 @@ public:
       return nullptr; // Not found
    }
 
+   //
+   // Get the number of nodes in the tree
+   //
+   int numNodes(avlnode_t *node = nullptr) const
+   {
+      if(node == nullptr && root)
+         node = root;
+      else
+         return 0;
+
+      int ret = 0;
+      if(node->left != nullptr)
+         ret += numNodes(node->left);
+      if(node->right != nullptr)
+         ret += numNodes(node->right);
+
+      return ret + 1;
+   }
+
 protected:
    bool deleteobjects = false;
 

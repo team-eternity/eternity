@@ -461,6 +461,55 @@ static void P_ArchivePSprite(SaveArchive &arc, pspdef_t &pspr)
 }
 
 //
+// Recursively save weapon counters
+//
+static void P_saveWeaponCounters(SaveArchive &arc, WeaponCounterNode *node)
+{
+   if(arc.isSaving())
+   {
+      if(node->left)
+         P_saveWeaponCounters(arc, node->left);
+      if(node->right)
+         P_saveWeaponCounters(arc, node->right);
+      arc.writeLString(E_WeaponForID(node->key)->name);
+      for(int i = 0; i < NUMWEAPCOUNTERS; i++)
+         arc << (*node->object)[i];
+   }
+}
+
+//
+// Load all the weapon counters if there are any
+// TODO: This function is kinda ugly, probably could be rewritten
+//
+static void P_loadWeaponCounters(SaveArchive &arc, player_t &p)
+{
+   int numCounters;
+
+   delete p.weaponctrs;
+   p.weaponctrs = new WeaponCounterTree();
+   arc << numCounters;
+   if(numCounters)
+   {
+      WeaponCounter *weaponCounters = estructalloc(WeaponCounter, numCounters);
+      for(int j = 0; j < numCounters; j++)
+      {
+         size_t len;
+         char *className = nullptr;
+
+         arc.archiveLString(className, len);
+         weaponinfo_t *wp = E_WeaponForName(className);
+         // FIXME: This English is probably wrong
+         if(!wp)
+            I_Error("P_ArchivePlayers: weapon with counters, '%s', not found\n", className);
+         WeaponCounter &wc = weaponCounters[j];
+         for(int k = 0; k < NUMWEAPCOUNTERS; k++)
+            arc << wc[k];
+         p.weaponctrs->insert(wp->id, &wc);
+      }
+   }
+}
+
+//
 // P_ArchivePlayers
 //
 static void P_ArchivePlayers(SaveArchive &arc)
@@ -486,7 +535,7 @@ static void P_ArchivePlayers(SaveArchive &arc)
              << p.colormap     << p.quake           << p.jumptime
              << p.inv_ptr;
 
-         int inventorySize;
+         int inventorySize, numCounters;
          if(arc.isSaving())
          {
             inventorySize = E_GetInventoryAllocSize();
@@ -496,6 +545,11 @@ static void P_ArchivePlayers(SaveArchive &arc)
                arc.writeLString(p.pendingweapon->name);
             else
                arc.writeLString("");
+
+            numCounters = p.weaponctrs->numNodes();
+            arc << numCounters;
+            if(numCounters)
+               P_saveWeaponCounters(arc, p.weaponctrs->root); // Recursively save
          }
          else
          {
@@ -504,12 +558,15 @@ static void P_ArchivePlayers(SaveArchive &arc)
             arc << inventorySize;
             if(inventorySize != E_GetInventoryAllocSize())
                I_Error("P_ArchivePlayers: inventory size mismatch\n");
+
             arc.archiveLString(className, len);
             if(!(p.readyweapon = E_WeaponForName(className)))
-               I_Error("P_ArchivePlayers: readyweapon %s not found\n", className);
+               I_Error("P_ArchivePlayers: readyweapon, '%s', not found\n", className);
             arc.archiveLString(className, len);
-            if(!estrempty(className) && !(p.pendingweapon = E_WeaponForName(className)))
-               I_Error("P_ArchivePlayers: pendingweapon %s not found\n", className);               
+            if(estrnonempty(className) && !(p.pendingweapon = E_WeaponForName(className)))
+               I_Error("P_ArchivePlayers: pendingweapon, '%s', not found\n", className);      
+            
+            P_loadWeaponCounters(arc, p);
          }
          P_ArchiveArray<inventoryslot_t>(arc, p.inventory, inventorySize);
 

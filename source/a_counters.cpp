@@ -771,7 +771,6 @@ void A_WeaponCtrJump(actionargs_t *actionargs)
       case 1:
       case 2:
          value = *player->weaponctrs->getIndexedCounterForPlayer(player, value);
-         //value = player->weaponctrs[player->readyweapon][value];
          break;
       default:
          return; // invalid counter number
