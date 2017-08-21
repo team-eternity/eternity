@@ -654,7 +654,7 @@ void A_WeaponReady(actionargs_t *actionargs)
       || P_Random(pr_readysound) < 128))
       S_StartSound(player->mo, player->readyweapon->readysound);
 
-   if(E_WeaponIsCurrent(player, WEAPNAME_CHAINSAW) &&
+   if(E_WeaponIsCurrentDEHNum(player, wp_chainsaw) &&
       psp->state == states[E_SafeState(S_SAW)])
    {
       if(player == &players[consoleplayer])

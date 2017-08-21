@@ -385,17 +385,17 @@ private:
    // Hack down an avltree by doing post-order deletion,
    // deleting objects if needed
    //
-   static void deleteTree(avlnode_t *root, bool deleteobjs)
+   static void deleteTree(avlnode_t *node, bool deleteobjs)
    {
-      if(root)
+      if(node)
       {
-         if(root->left)
-            deleteTree(root->left, deleteobjs);
-         if(root->right)
-            deleteTree(root->right, deleteobjs);
+         if(node->left)
+            deleteTree(node->left, deleteobjs);
+         if(node->right)
+            deleteTree(node->right, deleteobjs);
          if(deleteobjs)
-            efree(root->object, deleteobjs);
-         efree(root);
+            efree(node->object);
+         efree(node);
       }
    }
 };

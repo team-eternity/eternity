@@ -313,6 +313,10 @@ weaponinfo BFG9000 : DoomWeapon, 6
 // MBF Old-BFG
 weaponinfo OldBFG : BFG9000
 {
+  ammouse      1  // Only one ammo used per shot
+
+  recoil       20 // Uses plasma's recoil
+
   firstdecoratestate S_OLDBFG1
   states
   @"

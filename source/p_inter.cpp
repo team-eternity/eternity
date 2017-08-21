@@ -121,9 +121,9 @@ bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
    //    E/P_SwitchToTheAppropriateWeaponForTheAmmoGivenToThePlayer(player, ammo, amount);
    if(!strcasecmp(ammo->getKey(), "AmmoClip"))
    {
-      if(E_WeaponIsCurrent(player, WEAPNAME_FIST))
+      if(E_WeaponIsCurrentDEHNum(player, wp_fist))
       {
-         if(E_PlayerOwnsWeaponForDEHNum(player, wp_chaingun)) // FIXME: Make this not-a-hack
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_chaingun))
             player->pendingweapon = E_WeaponForDEHNum(wp_chaingun);
          else
             player->pendingweapon = E_WeaponForDEHNum(wp_pistol);
@@ -131,20 +131,20 @@ bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoShell"))
    {
-      if(E_WeaponIsCurrent(player, WEAPNAME_FIST) || E_WeaponIsCurrent(player, WEAPNAME_PISTOL))
-         if(E_PlayerOwnsWeaponForDEHNum(player, wp_shotgun)) // FIXME: Make this not-a-hack
+      if(E_WeaponIsCurrentDEHNum(player, wp_fist) || E_WeaponIsCurrentDEHNum(player, wp_pistol))
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_shotgun))
             player->pendingweapon = E_WeaponForDEHNum(wp_shotgun);
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoCell"))
    {
-      if(E_WeaponIsCurrent(player, WEAPNAME_FIST) || E_WeaponIsCurrent(player, WEAPNAME_PISTOL))
-         if(E_PlayerOwnsWeaponForDEHNum(player, wp_plasma)) // FIXME: Make this not-a-hack
+      if(E_WeaponIsCurrentDEHNum(player, wp_fist) || E_WeaponIsCurrentDEHNum(player, wp_pistol))
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_plasma))
             player->pendingweapon = E_WeaponForDEHNum(wp_plasma);
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoMissile"))
    {
-      if(E_WeaponIsCurrent(player, WEAPNAME_FIST))
-         if(E_PlayerOwnsWeaponForDEHNum(player, wp_missile)) // FIXME: Make this not-a-hack
+      if(E_WeaponIsCurrentDEHNum(player, wp_fist))
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_missile))
             player->pendingweapon = E_WeaponForDEHNum(wp_missile);
    }
 
@@ -835,7 +835,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       if(!P_GivePowerForItem(player, effect))
          return;
       message = DEH_String("GOTBERSERK"); // Ty 03/22/98 - externalized
-      if(!E_WeaponIsCurrent(player, WEAPNAME_FIST))
+      if(!E_WeaponIsCurrentDEHNum(player, wp_fist))
          // sf: removed beta
          player->pendingweapon = E_WeaponForDEHNum(wp_fist);
       sound = sfx_getpow;
@@ -850,7 +850,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       message = DEH_String("GOTBACKPACK"); // Ty 03/22/98 - externalized
       break;
 
-      // WEAPON_FIXME: Weapon collection
+      // WEAPON_FIXME: BFG collection
       // weapons
    case PFX_BFG:
       effect = E_ItemEffectForName(WEAPNAME_BFG9000);

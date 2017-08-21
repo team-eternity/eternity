@@ -2361,11 +2361,7 @@ void G_PlayerReborn(int player)
          E_GiveInventoryItem(p, effect, amount);
    }
 
-   // FIXME: De hard-code this
-   if(GameModeInfo->type == Game_Heretic)
-      p->readyweapon = E_WeaponForName("GoldWand");
-   else
-      p->readyweapon = E_WeaponForName(WEAPNAME_PISTOL);
+   p->readyweapon = E_FindBestWeapon(p);
 }
 
 void P_SpawnPlayer(mapthing_t *mthing);

@@ -34,17 +34,8 @@
 
 struct weaponinfo_t;
 
-// Hard-coded names for specially treated weapons (needed in DeHackEd, etc.)
-// INVENTORY_TODO: many may become unneeded when P_TouchSpecialThing is finished
-#define WEAPNAME_FIST     "Fist"
-#define WEAPNAME_PISTOL   "Pistol"
-#define WEAPNAME_SHOTGUN  "Shotgun"
-#define WEAPNAME_CHAINGUN "Chaingun"
-#define WEAPNAME_MISSILE  "MissileLauncher"
-#define WEAPNAME_PLASMA   "PlasmaRifle"
+// Hard-coded name for the BFG900, which is needed in old P_TouchSpecialThing
 #define WEAPNAME_BFG9000  "BFG9000"
-#define WEAPNAME_CHAINSAW "Chainsaw"
-#define WEAPNAME_SSG      "SuperShotgun"
 
 #ifdef NEED_EDF_DEFINITIONS
 

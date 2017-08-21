@@ -500,7 +500,7 @@ static void P_loadWeaponCounters(SaveArchive &arc, player_t &p)
          weaponinfo_t *wp = E_WeaponForName(className);
          // FIXME: This English is probably wrong
          if(!wp)
-            I_Error("P_ArchivePlayers: weapon with counters, '%s', not found\n", className);
+            I_Error("P_loadWeaponCounters weapon '%s' not found\n", className);
          WeaponCounter &wc = weaponCounters[j];
          for(int k = 0; k < NUMWEAPCOUNTERS; k++)
             arc << wc[k];
@@ -540,7 +540,10 @@ static void P_ArchivePlayers(SaveArchive &arc)
          {
             inventorySize = E_GetInventoryAllocSize();
             arc << inventorySize;
-            arc.writeLString(p.readyweapon->name);
+            if(p.readyweapon)
+               arc.writeLString(p.readyweapon->name);
+            else
+               arc.writeLString("");
             if(p.pendingweapon)
                arc.writeLString(p.pendingweapon->name);
             else
@@ -560,11 +563,11 @@ static void P_ArchivePlayers(SaveArchive &arc)
                I_Error("P_ArchivePlayers: inventory size mismatch\n");
 
             arc.archiveLString(className, len);
-            if(!(p.readyweapon = E_WeaponForName(className)))
-               I_Error("P_ArchivePlayers: readyweapon, '%s', not found\n", className);
+            if(estrnonempty(className) && !(p.readyweapon = E_WeaponForName(className)))
+               I_Error("P_ArchivePlayers: readyweapon '%s' not found\n", className);
             arc.archiveLString(className, len);
             if(estrnonempty(className) && !(p.pendingweapon = E_WeaponForName(className)))
-               I_Error("P_ArchivePlayers: pendingweapon, '%s', not found\n", className);      
+               I_Error("P_ArchivePlayers: pendingweapon '%s' not found\n", className);      
             
             P_loadWeaponCounters(arc, p);
          }

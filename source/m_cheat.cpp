@@ -245,8 +245,9 @@ static void cheat_mus(const void *arg)
 // 'choppers' invulnerability & chainsaw
 static void cheat_choppers(const void *arg)
 {
-   // WEAPON_FIXME: choppers cheat
-   weaponinfo_t *chainsaw = E_WeaponForName(WEAPNAME_CHAINSAW);
+   weaponinfo_t *chainsaw = E_WeaponForDEHNum(wp_chainsaw);
+   if(!chainsaw)
+      return; // For whatever reason, the chainsaw isn't defined
    if(!E_PlayerOwnsWeapon(plyr, chainsaw))
       E_GiveInventoryItem(plyr, chainsaw->tracker, 1);
    doom_printf("%s", DEH_String("STSTR_CHOPPERS")); // Ty 03/27/98 - externalized

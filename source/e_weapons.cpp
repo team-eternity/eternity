@@ -899,7 +899,7 @@ static weaponinfo_t *E_findBestWeapon(player_t *player, selectordernode_t *node)
 }
 
 //
-// Call E_findBestWeapon with a value of nullptr
+// Call E_findBestWeapon with a value of selectordertree->root
 //
 weaponinfo_t *E_FindBestWeapon(player_t *player)
 {

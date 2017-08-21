@@ -203,11 +203,8 @@ void A_FireOldBFG(actionargs_t *actionargs)
    if(demo_version > 300)
       P_SetMobjState(mo, player->pclass->altattack);
    
-   // WEAPON_FIXME: recoil for classic BFG
-
    if(weapon_recoil && !(mo->flags & MF_NOCLIP))
-      P_Thrust(player, ANG180 + mo->angle, 0,
-               512*E_WeaponForName(WEAPNAME_PLASMA)->recoil);
+      P_Thrust(player, ANG180 + mo->angle, 0, 512*player->readyweapon->recoil);
 
    // WEAPON_FIXME: ammopershot for classic BFG
    auto weapon   = player->readyweapon;
