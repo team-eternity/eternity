@@ -37,7 +37,7 @@ static void TXT_WindowActionSizeCalc(TXT_UNCAST_ARG(action))
 
     // Minimum width is the string length + two spaces for padding
 
-    action->widget.w = strlen(action->label) + strlen(buf) + 1;
+    action->widget.w = (unsigned)(strlen(action->label) + strlen(buf) + 1);
     action->widget.h = 1;
 }
 

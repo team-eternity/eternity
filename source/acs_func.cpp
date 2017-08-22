@@ -1113,7 +1113,7 @@ uint32_t ACS_GetThingProp(Mobj *mo, uint32_t prop)
    case ACS_TP_MomY:         return mo->momy;
    case ACS_TP_MomZ:         return mo->momz;
    case ACS_TP_Pitch:        return mo->player ? mo->player->pitch >> 16 : 0;
-   case ACS_TP_PlayerNumber: return mo->player ? mo->player - players : -1;
+   case ACS_TP_PlayerNumber: return mo->player ? eindex(mo->player - players) : -1;
    case ACS_TP_SigilPieces:  return 0;
    case ACS_TP_TID:          return mo->tid;
    case ACS_TP_Type:         return ~ACSenv.getString(mo->info->name)->idx;

@@ -57,7 +57,7 @@ static unsigned int IntWidth(int val)
 
     sprintf(buf, "%i", val);
 
-    return strlen(buf);
+    return (unsigned)strlen(buf);
 }
 
 static unsigned int FloatWidth(float val, float step)
@@ -175,7 +175,7 @@ static void TXT_SpinControlDrawer(TXT_UNCAST_ARG(spincontrol), int selected)
     
     i = 0;
 
-    padding = spincontrol->widget.w - strlen(spincontrol->buffer) - 4;
+    padding = (unsigned)(spincontrol->widget.w - strlen(spincontrol->buffer) - 4);
 
     while (i < padding)
     {

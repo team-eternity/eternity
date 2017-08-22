@@ -157,7 +157,7 @@ void P_InitSkins(void)
       if(!skins[i]->edfskin)
       {
          *currentsprite   = skins[i]->spritename;
-         skins[i]->sprite = currentsprite - spritelist;
+         skins[i]->sprite = static_cast<spritenum_t>(currentsprite - spritelist);
          currentsprite++;
       }
       P_ResolveSkinSounds(skins[i]); // haleyjd 10/17/05: resolve sounds
@@ -219,7 +219,7 @@ static void P_AddSkin(skin_t *newskin)
 
 static void P_AddSpriteLumps(const char *named)
 {
-   int i, n = strlen(named);
+   int i, n = static_cast<int>(strlen(named));
    int numlumps = wGlobalDir.getNumLumps();
    lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
    
