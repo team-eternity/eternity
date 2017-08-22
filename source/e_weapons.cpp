@@ -837,8 +837,7 @@ static void E_getWeaponTitleProps(cfg_t *weaponsec, weapontitleprops_t &props, b
 {
    cfg_t *titleprops;
 
-   if(def && cfg_size(weaponsec, "#title") > 0 &&
-      (titleprops = cfg_gettitleprops(weaponsec)))
+   if(def && cfg_size(weaponsec, "#title") > 0 && (titleprops = cfg_gettitleprops(weaponsec)))
    {
       props.superclass  = cfg_getstr(titleprops, ITEM_WPN_TITLE_SUPER);
       props.dehackednum = cfg_getint(titleprops, ITEM_WPN_TITLE_DEHNUM);
@@ -1241,7 +1240,8 @@ static weaponinfo_t *E_findBestWeaponUsingAmmo(player_t *player, itemeffect_t *a
 
    if(node->left && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->left)))
       return ret;
-   if(E_PlayerOwnsWeapon(player, temp) && !strcasecmp(temp->ammo->getKey(), ammo->getKey()))
+   if(E_PlayerOwnsWeapon(player, temp) && !strcasecmp(temp->ammo->getKey(), ammo->getKey()) &&
+      P_WeaponHasAmmo(player, temp))
       return temp;
    if(node->right && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->right)))
       return ret;

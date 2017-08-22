@@ -35,6 +35,14 @@ includeifenabled("heretic/sprites.edf", "HERETIC");
 // Eternity Engine Sprites -- Always defined
 spritenames += { TNT1, DOGS, PLS1, PLS2, UNKN, SPSH, SLDG, LVAS, EERV }
 
-pickupitem PNS2 { effect PFX_TOTALINVIS }
+pickupitem PNS2
+{
+  effect  TotalInvisiSphere
+  message "Total Invisibility!"
+  sound   getpow
+  flags   ALWAYSPICKUP
+
+  pfxname PFX_TOTALINVIS
+}
 
 
