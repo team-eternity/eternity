@@ -296,7 +296,7 @@ static void EV_SectorHticScrollEastLavaDamage(sector_t *sector)
    sector->hticPushForce = 2048*28;
    
    // scrolls to the east:
-   Add_Scroller(ScrollThinker::sc_floor, (-FRACUNIT/2) * 8, 0, -1, sector - sectors, 0);
+   Add_Scroller(ScrollThinker::sc_floor, (-FRACUNIT/2) * 8, 0, -1, eindex(sector - sectors), 0);
 }
 
 //
@@ -376,7 +376,7 @@ static void EV_setupHereticPusher(sector_t *sector, angle_t angle, int type, int
 static void EV_setupHereticScroller(sector_t *sector, int force)
 {
    Add_Scroller(ScrollThinker::sc_floor, (-FRACUNIT/2) << force,
-                0, -1, sector-sectors, 0);
+                0, -1, eindex(sector-sectors), 0);
 }
 
 //

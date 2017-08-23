@@ -939,7 +939,7 @@ static void P_ArchiveSndSeq(SaveArchive &arc, SndSeq_t *seq)
    arc.archiveCString(seq->sequence->name, 33);
 
    // twizzle command pointer
-   twizzle = seq->cmdPtr - seq->sequence->commands;
+   twizzle = static_cast<unsigned>(seq->cmdPtr - seq->sequence->commands);
    arc << twizzle;
 
    // save origin type

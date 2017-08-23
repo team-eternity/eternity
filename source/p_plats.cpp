@@ -443,7 +443,7 @@ bool EV_DoParamPlat(const line_t *line, const int *args, paramplattype_e type)
       if(!line || !line->backsector)
          return false;
       sec    = line->backsector;
-      secnum = sec - sectors;
+      secnum = eindex(sec - sectors);
       manual = true;
       goto manual_plat;
    }

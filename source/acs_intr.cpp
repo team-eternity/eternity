@@ -466,8 +466,8 @@ void ACSEnvironment::loadModule(ACSVM::Module *module)
 
    // Fetch lump data. Use PU_LEVEL so the lump data does not get unexpectedly
    // purged as a result of further allocations.
-   data = (byte *)moduleDir->cacheLumpNum(module->name.i, PU_LEVEL);
-   size = moduleDir->lumpLength(module->name.i);
+   data = (byte *)moduleDir->cacheLumpNum(static_cast<int>(module->name.i), PU_LEVEL);
+   size = moduleDir->lumpLength(static_cast<int>(module->name.i));
 
    try
    {
@@ -518,12 +518,12 @@ void ACSThread::loadState(std::istream &in)
 {
    ACSVM::Thread::loadState(in);
 
-   info.mo = static_cast<Mobj *>(P_ThinkerForNum(ACSVM::ReadVLN<size_t>(in)));
+   info.mo = static_cast<Mobj *>(P_ThinkerForNum(static_cast<unsigned>(ACSVM::ReadVLN<size_t>(in))));
 
    size_t linenum = ACSVM::ReadVLN<size_t>(in);
    info.line = linenum ? &lines[linenum - 1] : nullptr;
 
-   info.side = ACSVM::ReadVLN<size_t>(in);
+   info.side = static_cast<int>(ACSVM::ReadVLN<size_t>(in));
 }
 
 //

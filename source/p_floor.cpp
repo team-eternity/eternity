@@ -628,7 +628,7 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
 
          //jff 5/23/98 use model subroutine to unify fixes and handling
          sec = P_FindModelFloorSector(floor->floordestheight,
-                                      sec-sectors);
+                                      eindex(sec-sectors));
          if(sec)
          {
             floor->texture = sec->floorpic;
@@ -857,14 +857,14 @@ int EV_BuildStairs(const line_t *line, stair_e type)
                if(!((sec->lines[i])->flags & ML_TWOSIDED))
                   continue;
 
-               newsecnum = tsec-sectors;
+               newsecnum = eindex(tsec-sectors);
                
                if(secnum != newsecnum)
                   continue;
                
                tsec = (sec->lines[i])->backsector;
                if(!tsec) continue;     //jff 5/7/98 if no backside, continue
-               newsecnum = tsec - sectors;
+               newsecnum = eindex(tsec - sectors);
 
                // if sector's floor is different texture, look for another
                if(tsec->floorpic != texture)
@@ -1018,7 +1018,7 @@ int EV_DoParamDonut(const line_t *line, int tag, bool havespac,
    {
       if(!line || !(s1 = line->backsector))
          return rtn;
-      secnum = s1 - sectors;
+      secnum = eindex(s1 - sectors);
       manual = true;
       goto manual_donut;
    }
@@ -1233,7 +1233,7 @@ int EV_PillarBuild(const line_t *line, const pillardata_t *pd)
    {
       if(!line || !(sector = line->backsector))
          return returnval;
-      sectornum = sector - sectors;
+      sectornum = eindex(sector - sectors);
       manual = true;
       goto manual_pillar;
    }
@@ -1322,7 +1322,7 @@ int EV_PillarOpen(const line_t *line, const pillardata_t *pd)
    {
       if(!line || !(sector = line->backsector))
          return returnval;
-      sectornum = sector - sectors;
+      sectornum = eindex(sector - sectors);
       manual = true;
       goto manual_pillar;
    }
@@ -1496,7 +1496,7 @@ int EV_StartFloorWaggle(const line_t *line, int tag, int height, int speed,
    {
       if(!line || !(sector = line->backsector))
          return retCode;
-      sectorIndex = sector - sectors;
+      sectorIndex = eindex(sector - sectors);
       manual = true;
       goto manual_waggle;
    }
