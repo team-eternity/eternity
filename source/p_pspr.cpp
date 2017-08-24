@@ -650,8 +650,7 @@ void A_WeaponReady(actionargs_t *actionargs)
    // according flag is set.
    if(player->readyweapon->readysound &&
       psp->state->index == player->readyweapon->readystate &&
-      (!(player->readyweapon->flags & WPF_READYSNDHALF)
-      || P_Random(pr_readysound) < 128))
+      (!(player->readyweapon->flags & WPF_READYSNDHALF) || P_Random(pr_readysound) < 128))
       S_StartSound(player->mo, player->readyweapon->readysound);
 
    if(E_WeaponIsCurrentDEHNum(player, wp_chainsaw) &&

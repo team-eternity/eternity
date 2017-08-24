@@ -1290,9 +1290,7 @@ bool E_WeaponIsCurrent(const player_t *player, const char *name)
 bool E_WeaponIsCurrentDEHNum(player_t *player, const int dehnum)
 {
    const weaponinfo_t *weapon = E_WeaponForDEHNum(dehnum);
-   if(!weapon)
-      return false;
-   return player->readyweapon->id == weapon->id;
+   return weapon ? player->readyweapon->id == weapon->id : false;
 }
 
 //

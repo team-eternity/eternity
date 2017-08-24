@@ -491,19 +491,18 @@ static void P_loadWeaponCounters(SaveArchive &arc, player_t &p)
    if(numCounters)
    {
       WeaponCounter *weaponCounters = estructalloc(WeaponCounter, numCounters);
-      for(int j = 0; j < numCounters; j++)
+      for(int i = 0; i < numCounters; i++)
       {
          size_t len;
          char *className = nullptr;
 
          arc.archiveLString(className, len);
          weaponinfo_t *wp = E_WeaponForName(className);
-         // FIXME: This English is probably wrong
          if(!wp)
-            I_Error("P_loadWeaponCounters weapon '%s' not found\n", className);
-         WeaponCounter &wc = weaponCounters[j];
-         for(int k = 0; k < NUMWEAPCOUNTERS; k++)
-            arc << wc[k];
+            I_Error("P_loadWeaponCounters: weapon '%s' not found\n", className);
+         WeaponCounter &wc = weaponCounters[i];
+         for(int j = 0; j < NUMWEAPCOUNTERS; j++)
+            arc << wc[j];
          p.weaponctrs->insert(wp->id, &wc);
       }
    }

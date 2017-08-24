@@ -43,6 +43,7 @@
 //
 #define ST_HBARHEIGHT 42
 #define plyr (&players[displayplayer])
+#define hbst (hbarstate[displayplayer])
 
 //
 // Static variables
@@ -55,6 +56,11 @@ static patch_t *PatchINVLFGEM1;
 static patch_t *PatchINVLFGEM2;
 static patch_t *PatchINVRTGEM1;
 static patch_t *PatchINVRTGEM2;
+static patch_t *PatchBLACKSQ;
+
+// important patch numbers
+static int spinbooklump;
+static int spinflylump;
 
 // current state variables
 static int chainhealth;        // current position of the gem
@@ -69,7 +75,7 @@ static invbarstate_t hbarstate[MAXPLAYERS];
 //
 static invbarstate_t &ST_GetInvBarState()
 {
-   return hbarstate[consoleplayer];
+   return hbst;
 }
 
 //
@@ -139,10 +145,12 @@ static void ST_HticInit()
       smallinvnums[i] = PatchLoader::CacheName(wGlobalDir, lumpname, PU_STATIC);
    }
 
+   // load various cached patches
    PatchINVLFGEM1 = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEML1"), PU_STATIC);
    PatchINVLFGEM2 = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEML2"), PU_STATIC);
    PatchINVRTGEM1 = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEMR1"), PU_STATIC);
    PatchINVRTGEM2 = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEMR2"), PU_STATIC);
+   PatchBLACKSQ   = PatchLoader::CacheName(wGlobalDir, DEH_String("BLACKSQ"),  PU_STATIC);
 
    // haleyjd 10/09/05: load key graphics for HUD
    for(i = 0; i < NUMCARDS+3; ++i)  //jff 2/23/98 show both keys too
@@ -155,7 +163,11 @@ static void ST_HticInit()
       keys[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
 
-   // Initialise the inventory bar states.
+   // load important numbers needed when some arithmetic is done with them
+   spinbooklump = W_GetNumForName(DEH_String("SPINBK0"));
+   spinflylump  = W_GetNumForName(DEH_String("SPFLY0"));
+
+   // initialise the inventory bar states
    for(int i = 0; i < MAXPLAYERS; i++)
       hbarstate[i] = { false, 0, 0 };
 }
@@ -394,6 +406,7 @@ static void ST_drawStatBar()
    patch_t *statbar;
    const char *patch;
    itemeffect_t *artifact;
+   static int prevleveltime = 0;
 
    // update the status bar patch for the appropriate game mode
    switch(GameType)
@@ -408,19 +421,19 @@ static void ST_drawStatBar()
 
    V_DrawPatch(34, 160, &subscreen43, statbar);
 
-   // FIXME: Make this wait for the next tic, instead of iterating every frame.
    // ArtifactFlash, it's a gas! Gas! Gas!
-   if(hbarstate[displayplayer].ArtifactFlash)
+   if(hbst.ArtifactFlash)
    {
-      V_DrawPatch(180, 161, &subscreen43,
-         PatchLoader::CacheName(wGlobalDir, "BLACKSQ", PU_CACHE));
+      V_DrawPatch(180, 161, &subscreen43, PatchBLACKSQ);
 
-      temp = W_GetNumForName(DEH_String("useartia")) + hbarstate[displayplayer].ArtifactFlash - 1;
+      temp = W_GetNumForName(DEH_String("useartia")) + hbst.ArtifactFlash - 1;
 
-      V_DrawPatch(182, 161, &subscreen43,
-         PatchLoader::CacheNum(wGlobalDir, temp, PU_CACHE));
-      // MaxW: Choco Heretic does stuff that I'm not sure how to translate to EE.
-      hbarstate[displayplayer].ArtifactFlash--;
+      V_DrawPatch(182, 161, &subscreen43, PatchLoader::CacheNum(wGlobalDir, temp, PU_CACHE));
+      if(leveltime != prevleveltime)
+      {
+         hbst.ArtifactFlash--;
+         prevleveltime = leveltime;
+      }
    }
    // It's safety checks all the way down!
    else if(plyr->inventory[plyr->inv_ptr].amount)
@@ -428,10 +441,11 @@ static void ST_drawStatBar()
       if((artifact = E_EffectForInventoryIndex(plyr, plyr->inv_ptr)))
       {
          patch = artifact->getString("icon", "");
-         if(strcmp(patch, "") && artifact->getInt("invbar", 0))
+         if(estrnonempty(patch) && artifact->getInt("invbar", 0))
          {
             V_DrawPatch(179, 160, &subscreen43,
-               PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE, lumpinfo_t::ns_sprites));
+                        PatchLoader::CacheName(wGlobalDir, patch,
+                                               PU_CACHE, lumpinfo_t::ns_sprites));
             ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact), 209, 182);
          }
       }
@@ -463,18 +477,16 @@ static void ST_drawStatBar()
    if(E_GetItemOwnedAmountName(plyr, ARTI_KEYBLUE) > 0)
       V_DrawPatch(153, 180, &subscreen43, PatchLoader::CacheName(wGlobalDir, "BKEYICON", PU_CACHE));
 
-   // TODO: ammo icon stuff
    // draw ammo amount
    itemeffect_t *ammo = plyr->readyweapon->ammo;
    if(ammo)
    {
-      V_DrawPatch(108, 161, &subscreen43,
-         PatchLoader::CacheName(wGlobalDir, "BLACKSQ", PU_CACHE));
+      V_DrawPatch(108, 161, &subscreen43, PatchBLACKSQ);
       patch = ammo->getString("icon", "");
-      if(strcmp(patch, ""))
+      if(estrnonempty(patch))
       {
          V_DrawPatch(111, 172, &subscreen43,
-            PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE));
+                     PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE));
       }
       ST_drawInvNum(E_GetItemOwnedAmount(plyr, ammo), 136, 162);
    }
@@ -484,7 +496,7 @@ static void ST_drawInvBar()
 {
    itemeffect_t *artifact;
    const char *patch;
-   int leftoffs = hbarstate[displayplayer].inv_ptr >= 7 ? hbarstate[displayplayer].inv_ptr - 6 : 0;
+   int leftoffs = hbst.inv_ptr >= 7 ? hbst.inv_ptr - 6 : 0;
 
    V_DrawPatch(34, 160, &subscreen43, PatchLoader::CacheName(wGlobalDir, "INVBAR", PU_CACHE));
 
@@ -500,10 +512,11 @@ static void ST_drawInvBar()
          if((artifact = E_EffectForInventoryIndex(plyr, i + leftoffs)))
          {
             patch = artifact->getString("icon", "");
-            if(strcmp(patch, ""))
+            if(estrnonempty(patch))
             {
                V_DrawPatch(50 + i * 31, 160, &subscreen43,
-                  PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE, lumpinfo_t::ns_sprites));
+                           PatchLoader::CacheName(wGlobalDir, patch,
+                                                  PU_CACHE, lumpinfo_t::ns_sprites));
                ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact), 77 + i * 31, 182);
             }
          }
@@ -511,20 +524,71 @@ static void ST_drawInvBar()
    }
 
    if(leftoffs)
-   {
-      V_DrawPatch(38, 159, &subscreen43,
-         !(leveltime & 4) ? PatchINVLFGEM1 : PatchINVLFGEM2);
-   }
+      V_DrawPatch(38, 159, &subscreen43, !(leveltime & 4) ? PatchINVLFGEM1 : PatchINVLFGEM2);
    int temp = i + leftoffs - 1;
    if(i == 7 && E_MoveInventoryCursor(plyr, 1, temp))
+      V_DrawPatch(269, 159, &subscreen43, !(leveltime & 4) ? PatchINVRTGEM1 : PatchINVRTGEM2);
+
+   V_DrawPatch(50 + (hbst.inv_ptr - leftoffs) * 31, 189, &subscreen43,
+               PatchLoader::CacheName(wGlobalDir, "SELECTBO", PU_CACHE));
+}
+
+//
+// Draw spinning powerups
+//
+static void ST_drawPowerUps()
+{
+   static bool hitCenterFrame = false;
+   // Display the little rotating wings of wrath
+   if(plyr->powers[pw_flight])
    {
-      V_DrawPatch(269, 159, &subscreen43,
-         !(leveltime & 4) ? PatchINVRTGEM1 : PatchINVRTGEM2);
+      // Blink the wings when the player is almost out
+      if(plyr->powers[pw_flight] > (4 * 32) || !(plyr->powers[pw_flight] & 16))
+      {
+         int frame = (leveltime / 3) & 15;
+         if(plyr->mo->flags4 & MF4_FLY)
+         {
+            if(hitCenterFrame && (frame != 15 && frame != 0))
+            {
+               V_DrawPatch(20, 17, &vbscreen,
+                           PatchLoader::CacheNum(wGlobalDir, spinflylump + 15, PU_CACHE));
+            }
+            else
+            {
+               V_DrawPatch(20, 17, &vbscreen,
+                           PatchLoader::CacheNum(wGlobalDir, spinflylump + frame, PU_CACHE));
+               hitCenterFrame = false;
+            }
+         }
+         else
+         {
+            if(!hitCenterFrame && (frame != 15 && frame != 0))
+            {
+               V_DrawPatch(20, 17, &vbscreen,
+                           PatchLoader::CacheNum(wGlobalDir, spinflylump + frame, PU_CACHE));
+               hitCenterFrame = false;
+            }
+            else
+            {
+               V_DrawPatch(20, 17, &vbscreen,
+                           PatchLoader::CacheNum(wGlobalDir, spinflylump + 15, PU_CACHE));
+               hitCenterFrame = true;
+            }
+         }
+      }
    }
 
-   V_DrawPatch(50 + (hbarstate[displayplayer].inv_ptr - leftoffs)* 31, 189, &subscreen43,
-     PatchLoader::CacheName(wGlobalDir, "SELECTBO", PU_CACHE));
+   if(plyr->powers[pw_weaponlevel2])
+   {
+      if(plyr->powers[pw_weaponlevel2] > (4 * 32) || !(plyr->powers[pw_weaponlevel2] & 16))
+      {
+         int frame = (leveltime / 3) & 15;
+         V_DrawPatch(300, 17, &vbscreen,
+                     PatchLoader::CacheNum(wGlobalDir, spinbooklump + frame, PU_CACHE));
+      }
+   }
 }
+
 //
 // ST_HticDrawer
 //
@@ -534,8 +598,9 @@ static void ST_HticDrawer()
 {
    ST_drawBackground();
    ST_drawLifeChain();
+   ST_drawPowerUps();
 
-   if(hbarstate[displayplayer].inventory)
+   if(hbst.inventory)
       ST_drawInvBar();
    else
       ST_drawStatBar();

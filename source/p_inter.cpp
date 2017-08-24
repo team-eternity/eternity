@@ -578,7 +578,7 @@ bool P_GivePowerForItem(player_t *player, itemeffect_t *power)
    bool additiveTime = false;
    
    powerStr = power->getString("type", "");
-   if(!powerStr || !strcmp(powerStr, ""))
+   if(estrempty(powerStr))
       return false; // There hasn't been a designated power type
    if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) == NUMPOWERS)
       return false; // There's no power for the type provided

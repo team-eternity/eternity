@@ -198,6 +198,9 @@ static MetaKeyIndex keyKeepDepleted  (KEY_KEEPDEPLETED  );
 static MetaKeyIndex keyMaxAmount     (KEY_MAXAMOUNT     );
 static MetaKeyIndex keyBackpackMaxAmt(KEY_BACKPACKMAXAMT);
 static MetaKeyIndex keySortOrder     (KEY_SORTORDER     );
+static MetaKeyIndex keyInvBar        (KEY_INVBAR        );
+static MetaKeyIndex keyUseEffect     (KEY_USEEFFECT     );
+static MetaKeyIndex keyUseSound      (KEY_USESOUND      );
 
 // Keys for specially treated artifact types
 static MetaKeyIndex keyBackpackItem  (ARTI_BACKPACKITEM );
@@ -1355,7 +1358,6 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID)
          itemeffect_t *effect = E_ItemEffectForName(artifact->getString(KEY_USEEFFECT, ""));
          bool shiftinvleft = false;
          bool success = false;
-         const char *sound;
 
          if(!effect)
             return;
@@ -1380,11 +1382,12 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID)
 
          if(success)
          {
+            const char *sound;
             if(E_RemoveInventoryItem(player, artifact, 1) == INV_REMOVEDSLOT)
                shiftinvleft = true;
 
             sound = artifact->getString(KEY_USESOUND, "");
-            if(strcmp(sound, ""))
+            if(estrnonempty(sound))
                S_StartSoundName(player->mo, sound);
 
             invbarstate.ArtifactFlash = 5;
@@ -1430,9 +1433,9 @@ static void E_allocateInventoryItemIDs()
       if(fxtype == ITEMFX_ARTIFACT)
       {
          // If the current item's sort order is the largest thus far and is visible
-         if(item->getInt(KEY_SORTORDER, 0) > e_maxvisiblesortorder
-            && item->getInt(KEY_INVBAR, 0))
-            e_maxvisiblesortorder = item->getInt(KEY_SORTORDER, 0);
+         if(item->getInt(keySortOrder, 0) > e_maxvisiblesortorder
+            && item->getInt(keyInvBar, 0))
+            e_maxvisiblesortorder = item->getInt(keySortOrder, 0);
 
          // add it to the table
          e_InventoryItemsByID.add(item);
@@ -1461,7 +1464,7 @@ static void E_allocateSortOrders()
       if(fxtype == ITEMFX_ARTIFACT)
       {
          // If the current isn't visible
-         if(!item->getInt(KEY_INVBAR, 0))
+         if(!item->getInt(keyInvBar, 0))
             item->setInt(keySortOrder, e_maxvisiblesortorder + 1);
 
       }
