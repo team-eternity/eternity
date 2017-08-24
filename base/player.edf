@@ -17,6 +17,25 @@ weaponinfo Weapon
   "@
 }
 
+weaponinfo Unknown
+{
+  states
+  @"
+  Ready:
+    TNT1 A 1 A_WeaponReady
+    loop
+  Deselect:
+    TNT1 A 1 A_Lower
+    loop
+  Select:
+    TNT1 A 1 A_Raise
+    loop
+  Fire:
+    TNT1 A 1
+    goto Ready
+  "@
+}
+
 //=============================================================================
 //
 // Game Includes and Playerclass Definition

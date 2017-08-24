@@ -59,6 +59,10 @@ static int NUMWEAPONTYPES = 0;
 // track generations
 static int edf_weapon_generation = 1;
 
+// The "Unknown" weapon info, which is required, has its type
+// number resolved in E_CollectWeaponinfo
+int UnknownWeaponInfo;
+
 // Weapon Keywords
 // TODO: Reorder
 
@@ -708,9 +712,9 @@ void E_CollectWeapons(cfg_t *cfg)
          E_EDFLoggedErr(2, "E_CollectWeapons: no weaponinfo defined.\n");
 
       // TODO: verify the existance of the Unknown weapon type?
-      /*UnknownWeaponInfo = E_WeaponNumForName("Unknown");
+      UnknownWeaponInfo = E_WeaponNumForName("Unknown");
       if(UnknownWeaponInfo < 0)
-         E_EDFLoggedErr(2, "E_CollectWeapons: 'Unknown' weaponinfo must be defined.\n");*/
+         E_EDFLoggedErr(2, "E_CollectWeapons: 'Unknown' weaponinfo must be defined.\n");
 
       firsttime = false;
    }

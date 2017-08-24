@@ -2361,7 +2361,8 @@ void G_PlayerReborn(int player)
          E_GiveInventoryItem(p, effect, amount);
    }
 
-   p->readyweapon = E_FindBestWeapon(p);
+   if(!(p->readyweapon = E_FindBestWeapon(p)))
+      p->readyweapon = E_WeaponForID(UnknownWeaponInfo);
 }
 
 void P_SpawnPlayer(mapthing_t *mthing);

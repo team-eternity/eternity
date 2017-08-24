@@ -34,6 +34,9 @@
 
 struct weaponinfo_t;
 
+// Global Data
+extern int UnknownWeaponInfo;
+
 // Hard-coded name for the BFG900, which is needed in old P_TouchSpecialThing
 #define WEAPNAME_BFG9000  "BFG9000"
 

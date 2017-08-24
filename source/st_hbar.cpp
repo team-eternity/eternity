@@ -548,6 +548,7 @@ static void ST_drawPowerUps()
          int frame = (leveltime / 3) & 15;
          if(plyr->mo->flags4 & MF4_FLY)
          {
+            patch_t *patch;
             if(hitCenterFrame && (frame != 15 && frame != 0))
             {
                V_DrawPatch(20, 17, &vbscreen,
@@ -562,6 +563,7 @@ static void ST_drawPowerUps()
          }
          else
          {
+            // FIXME: Why would this code trigger?
             if(!hitCenterFrame && (frame != 15 && frame != 0))
             {
                V_DrawPatch(20, 17, &vbscreen,
