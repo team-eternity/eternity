@@ -1505,9 +1505,20 @@ const char *MetaTable::removeConstString(const char *key)
    return value;
 }
 
+//
+// Add a nested MetaTable to the MetaTable
+//
 void MetaTable::addMetaTable(size_t keyIndex, MetaTable *value)
 {
    addObject(value);
+}
+
+//
+// See above
+//
+void MetaTable::addMetaTable(const char *key, MetaTable *newValue)
+{
+   addMetaTable(MetaKey(key).index, newValue);
 }
 
 MetaTable *MetaTable::getMetaTable(size_t keyIndex, MetaTable *defValue) const
@@ -1555,11 +1566,11 @@ MetaTable *MetaTable::getMetaTable(const char *key, MetaTable *defValue) const
 // be edited to have the provided value if the MVPROP isn't CFGF_MULTI.
 // Otherwise, a new metatable will be added to the table with that value. 
 //
-void MetaTable::setMetaTable(size_t keyIndex, MetaTable *newValue, bool allowmulti)
+void MetaTable::setMetaTable(size_t keyIndex, MetaTable *newValue)
 {
    MetaTable *obj = getObjectKeyAndTypeEx<MetaTable>(keyIndex);
    // FIXME: Is it possible for this to run?
-   if(obj && !allowmulti)
+   if(obj)
    {
       // FIXME: Should obj be deleted? Is this even correct?
       pImpl->keyhash.removeObject(obj);
@@ -1572,9 +1583,9 @@ void MetaTable::setMetaTable(size_t keyIndex, MetaTable *newValue, bool allowmul
 //
 // See above
 //
-void MetaTable::setMetaTable(const char *key, MetaTable *newValue, bool allowmulti)
+void MetaTable::setMetaTable(const char *key, MetaTable *newValue)
 {
-   setMetaTable(MetaKey(key).index, newValue, allowmulti);
+   setMetaTable(MetaKey(key).index, newValue);
 }
 
 //

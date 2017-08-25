@@ -997,7 +997,10 @@ void E_MetaTableFromCfgMvprop(MetaTable *meta, cfg_t *cfg, const char *prop, boo
          }
       }
 
-      meta->setMetaTable(prop, table, allowmulti);
+      if(allowmulti)
+         meta->addMetaTable(prop, table);
+      else
+         meta->setMetaTable(prop, table);
    }
 
 }

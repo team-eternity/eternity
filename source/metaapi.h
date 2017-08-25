@@ -463,10 +463,11 @@ public:
 
    // Nested MetaTable
    void       addMetaTable(size_t keyIndex, MetaTable *value);
+   void       addMetaTable(const char *key, MetaTable *newValue);
    MetaTable *getMetaTable(size_t keyIndex, MetaTable *defValue) const;
    MetaTable *getMetaTable(const char *key, MetaTable *defValue) const;
-   void       setMetaTable(size_t keyIndex, MetaTable *value, bool allowmulti);
-   void       setMetaTable(const char *key, MetaTable *value, bool allowmulti);
+   void       setMetaTable(size_t keyIndex, MetaTable *value);
+   void       setMetaTable(const char *key, MetaTable *value);
 
    // Copy routine - clones the entire MetaTable
    void copyTableTo(MetaTable *dest) const;

@@ -136,7 +136,6 @@ artifact PowerTorch
   artifacttype Power
 }
 
-// TODO: Implement these two in-engine
 artifact PowerWeaponLevel2
 {
   +undroppable
@@ -144,6 +143,7 @@ artifact PowerWeaponLevel2
   artifacttype Power
 }
 
+// TODO: Implement this in-engine
 artifact PowerChicken
 {
   +undroppable
