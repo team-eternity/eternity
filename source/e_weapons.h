@@ -127,11 +127,10 @@ public:
          return *ctrnode->object;
       else
       {
+         // We didn't find the counter we want, so make a new one
          WeaponCounter &counters = *estructalloc(WeaponCounter, 1);
-         memset(counters, 0, NUMWEAPCOUNTERS);
          insert(weaponid, &counters);
          return counters;
-
       }
    }
 

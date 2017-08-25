@@ -33,6 +33,7 @@
 
 #include "Confuse/confuse.h"
 #include "doomdef.h"
+#include "d_mod.h"
 #include "e_dstate.h"
 #include "e_edf.h"
 #include "e_hash.h"
@@ -186,8 +187,9 @@ weaponslot_t *weaponslots[NUMWEAPONSLOTS];
 // The structure that provides the basis for the AVL tree used for
 // checking selection order. It's used due to its speed of access
 // over red-black trees, at the cost of slower mutation times.
-static AVLTree<int, weaponinfo_t> *selectordertree = nullptr;
-using selectordernode_t = AVLTree<int, weaponinfo_t>::avlnode_t;
+using selectordertree_t = AVLTree<int, weaponinfo_t>;
+using selectordernode_t = selectordertree_t::avlnode_t;
+static selectordertree_t *selectordertree = nullptr;
 
 //=============================================================================
 //
@@ -875,7 +877,7 @@ static void E_insertSelectOrderNode(int sortorder, weaponinfo_t *wp, bool modify
       selectordertree->deleteNode(wp->sortorder);
 
    if(selectordertree == nullptr)
-      selectordertree = new AVLTree<int, weaponinfo_t>(sortorder, wp);
+      selectordertree = new selectordertree_t(sortorder, wp);
    else
       selectordertree->insert(sortorder, wp);
 }
@@ -921,14 +923,13 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
       if(pnum >= 0)
       {
          cfg_t *parent_tngsec;
-         int pnum = E_resolveParentWeapon(weaponsec, titleprops); // TODO: Remove this line?
+         int pnum = E_resolveParentWeapon(weaponsec, titleprops); // Why is this line here?
 
          // check against cyclic inheritance
          if(!E_CheckWeaponInherit(pnum))
          {
-            E_EDFLoggedErr(2,
-               "E_processWeapon: cyclic inheritance detected in weaponinfo '%s'\n",
-               wp.name);
+            E_EDFLoggedErr(2, "E_processWeapon: cyclic inheritance "
+                               "detected in weaponinfo '%s'\n", wp.name);
          }
 
          // add to inheritance stack
@@ -1001,7 +1002,6 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_UPSTATE);
       wp.upstate = E_GetStateNumForName(tempstr);
    }
-
    if(IS_SET(ITEM_WPN_DOWNSTATE))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_DOWNSTATE);
@@ -1064,16 +1064,14 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
       wp.mod = E_DamageTypeNumForName(tempstr);
    }
    else
-      wp.mod = 0; // MOD_UNKNOWN
+      wp.mod = MOD_UNKNOWN;
 
    // process combined flags first
    if(IS_SET(ITEM_WPN_FLAGS))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_FLAGS);
-      if(*tempstr == '\0')
-      {
+      if(estrempty(tempstr))
          wp.flags = 0;
-      }
       else
       {
          unsigned int results = E_ParseFlags(tempstr, &e_weaponFlagSet);

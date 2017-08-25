@@ -850,6 +850,12 @@ void P_PlayerThink(player_t *player)
          P_removePowerTracker(player, pw_ironfeet);
    }
 
+   if(player->powers[pw_weaponlevel2] > 0)        // killough
+   {
+      if(!--player->powers[pw_weaponlevel2])
+         P_removePowerTracker(player, pw_weaponlevel2);
+   }
+
    if(player->powers[pw_ghost] > 0)        // haleyjd
    {
       if(!--player->powers[pw_ghost])

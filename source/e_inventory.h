@@ -113,6 +113,7 @@ typedef int artitype_t;
 #define POWER_SILENT       "PowerSilent"            // pw_silencer
 #define POWER_FLIGHT       "PowerFlight"            // pw_flight
 #define POWER_TORCH        "PowerTorch"             // pw_torch (Fullbright w/ flicker)
+#define POWER_WEAPONLEVEL2 "PowerWeaponLevel2"      // pw_weaponlevel2
 
 extern const char *powerStrings[NUMPOWERS];
 

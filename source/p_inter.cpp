@@ -559,7 +559,8 @@ const char *powerStrings[NUMPOWERS] =
    POWER_GHOST,
    POWER_SILENT,
    POWER_FLIGHT,
-   POWER_TORCH
+   POWER_TORCH,
+   POWER_WEAPONLEVEL2
 };
 
 
