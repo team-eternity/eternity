@@ -155,11 +155,11 @@ void A_FireMacePL1B(actionargs_t *actionargs)
    P_SubtractAmmo(player, -1);
 
    // In vanilla this is bugged: 
-   // Original code here looks like: the footclip check turns into:
+   // The footclip check turns into:
    //   (pmo->flags2 & 1)
    // due to C operator precedence and a lack of parens/brackets.
    const fixed_t z = comp[comp_terrain] || !(pmo->flags2 & MF2_FOOTCLIP) ?
-                     pmo->z + 28 * FRACUNIT : pmo->z + 28 * FRACUNIT - pmo->floorclip ;
+                     pmo->z + 28 * FRACUNIT : pmo->z + (28 * FRACUNIT) - pmo->floorclip ;
    ball = P_SpawnMobj(pmo->x, pmo->y, z, E_SafeThingType(MT_MACEFX2));
 
    const int   tnum = E_SafeThingType(MT_MACEFX2);
@@ -587,7 +587,7 @@ void A_GauntletAttack(actionargs_t *actionargs)
 // This is effectively an Eternity version of P_ArtiTele from Heretic,
 // which is what runs when a Chaos Device is used.
 //
-void A_ArtiTele(actionargs_t *actionargs)
+void A_HticArtiTele(actionargs_t *actionargs)
 {
    int i;
    fixed_t destX, destY;
@@ -610,6 +610,24 @@ void A_ArtiTele(actionargs_t *actionargs)
    fog = P_SpawnMobj(destX, destY, mo->z + (32 * FRACUNIT), E_SafeThingType(MT_HTFOG));
    S_StartSound(fog, sfx_htelept);
    S_StartSound(nullptr, sfx_hwpnup);
+}
+
+//
+// Use action for Timebomb of the Ancients
+void A_HticSpawnFireBomb(actionargs_t *actionargs)
+{
+   Mobj *mo = actionargs->actor, *bomb;
+   angle_t angle = mo->angle >> ANGLETOFINESHIFT;
+   // In vanilla this is bugged:
+   // The footclip check turns into:
+   //   (mo->flags2 & 1)
+   // due to C operator precedence and a lack of parens/brackets.
+   const fixed_t z = comp[comp_terrain] || !(mo->flags2 & MF2_FOOTCLIP) ?
+                     mo->z: mo->z - (15 * FRACUNIT);
+   bomb = P_SpawnMobj(mo->x + (24 * finecosine[angle]),
+                      mo->y + (24 * finesine[angle]),
+                      z, E_SafeThingType(MT_HFIREBOMB));
+   P_SetTarget(&bomb->target, mo->target);
 }
 
 // EOF

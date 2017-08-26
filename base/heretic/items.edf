@@ -514,7 +514,7 @@ artifact ArtiTimeBomb
   sortorder      40
   icon           ARTIFBMB
   usesound       ht_artiuse
-  useeffect      SpawnTimeBomb
+  useaction      A_HTicSpawnFireBomb
 
   +invbar
 
@@ -530,7 +530,7 @@ artifact ArtiTeleport
   sortorder      80
   icon           ARTIATLP
   usesound       ht_artiuse
-  useaction      ArtiTele
+  useaction      A_HTicArtiTele
 
   +invbar
 

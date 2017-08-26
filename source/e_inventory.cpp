@@ -1396,7 +1396,7 @@ static useaction_t *E_useActionForArtifactName(const char *name)
 //
 // Create and add a new useaction_t, then return a pointer it
 //
-static useaction_t *E_addUseAction(player_t *player, itemeffect_t *artifact)
+static useaction_t *E_addUseAction(itemeffect_t *artifact)
 {
    useaction_t *toadd = estructalloc(useaction_t, 1);
    arglist_t *args = estructalloc(arglist_t, 1);
@@ -1410,9 +1410,7 @@ static useaction_t *E_addUseAction(player_t *player, itemeffect_t *artifact)
 
    toadd->artifactname = artifact->getKey(); // FIXME: This is safe, right?
    toadd->actiontype = actionargs_t::ARTIFACT;
-   toadd->actor = player->mo;
    toadd->args = args;
-   toadd->pspr = player->psprites;
    e_UseActionHash.addObject(toadd);
    return toadd;
 }
@@ -1462,10 +1460,11 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID)
          deh_bexptr *ptr = D_GetBexPtr(useactionstr);
          if(ptr)
          {
+            // Try and get the cached useaction, and if we fail, make one
             useaction_t *useaction = E_useActionForArtifactName(artifact->getKey());
             if(useaction == nullptr)
             {
-               if((useaction = E_addUseAction(player, artifact)) == nullptr)
+               if((useaction = E_addUseAction(artifact)) == nullptr)
                {
                   doom_printf("Too many args specified in useaction for artifact '%s'\a\n",
                               artifact->getKey());
@@ -1473,6 +1472,7 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID)
             }
             if(useaction != nullptr)
             {
+               // We ALWAYS update the actor and psprite
                useaction->actor = player->mo;
                useaction->pspr = player->psprites;
                ptr->cptr(useaction);

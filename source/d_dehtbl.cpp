@@ -1473,7 +1473,8 @@ void A_FirePhoenixPL1(actionargs_t *);
 void A_GauntletAttack(actionargs_t *);
 
 // MaxW 2017/08/26: Heretic artifact use pointers
-void A_ArtiTele(actionargs_t *);
+void A_HticArtiTele(actionargs_t *);
+void A_HticSpawnFireBomb(actionargs_t *);
 
 // haleyjd 10/04/08: Hexen pointers
 #if 0
@@ -1820,7 +1821,8 @@ deh_bexptr deh_bexptrs[] =
    POINTER(GauntletAttack),
 
    // MaxW 2017/08/26: Heretic artifact use pointers
-   POINTER(ArtiTele),
+   POINTER(HticArtiTele),
+   POINTER(HticSpawnFireBomb),
 
    // haleyjd 10/04/08: Hexen pointers
 #if 0
