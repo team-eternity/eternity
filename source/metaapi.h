@@ -448,6 +448,7 @@ public:
 
    // Managed strings
    void        addString(const char *key, const char *value);
+   const char *getString(size_t  keyIndex, const char *defValue) const;
    const char *getString(const char *key, const char *defValue) const;
    void        setString(const char *key, const char *newValue);
    char       *removeString(const char *key);

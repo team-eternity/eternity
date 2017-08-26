@@ -237,6 +237,8 @@ typedef enum {
   pr_readysound,  // Used for weapons that have a 50% of making a ready sound
   pr_firemace,    // A_FireMacePL1
 
+  pr_hereticartiteleport, // A_ArtiTele
+
   NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;
 

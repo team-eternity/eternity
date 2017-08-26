@@ -1472,6 +1472,9 @@ void A_FireSkullRodPL1(actionargs_t *);
 void A_FirePhoenixPL1(actionargs_t *);
 void A_GauntletAttack(actionargs_t *);
 
+// MaxW 2017/08/26: Heretic artifact use pointers
+void A_ArtiTele(actionargs_t *);
+
 // haleyjd 10/04/08: Hexen pointers
 #if 0
 void A_SetInvulnerable(Mobj *mo);
@@ -1815,6 +1818,9 @@ deh_bexptr deh_bexptrs[] =
    POINTER(FireSkullRodPL1),
    POINTER(FirePhoenixPL1),
    POINTER(GauntletAttack),
+
+   // MaxW 2017/08/26: Heretic artifact use pointers
+   POINTER(ArtiTele),
 
    // haleyjd 10/04/08: Hexen pointers
 #if 0

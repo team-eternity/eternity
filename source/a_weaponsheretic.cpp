@@ -578,5 +578,39 @@ void A_GauntletAttack(actionargs_t *actionargs)
    mo->flags |= MF_JUSTATTACKED;
 }
 
+//=============================================================================
+//
+// New Eternity Heretic artifact codepointers
+//
+
+//
+// This is effectively an Eternity version of P_ArtiTele from Heretic,
+// which is what runs when a Chaos Device is used.
+//
+void A_ArtiTele(actionargs_t *actionargs)
+{
+   int i;
+   fixed_t destX, destY;
+   angle_t destAngle;
+   Mobj *mo = actionargs->actor, *fog;
+   player_t *player = mo->player;
+
+   if(!player)
+      return;
+
+   i = deathmatch ? P_Random(pr_hereticartiteleport) % (deathmatch_p - deathmatchstarts) : 0;
+   destX = deathmatchstarts[i].x;
+   destY = deathmatchstarts[i].y;
+   destAngle = ANG45 * (deathmatchstarts[i].angle / 45);
+
+   // FIXME: This doesn't set angle, and teleporting like
+   // this should be exported to some external function.
+   P_TeleportMove(mo, destX, destY, false);
+   player->prevviewz = player->viewz;
+   fog = P_SpawnMobj(destX, destY, mo->z + (32 * FRACUNIT), E_SafeThingType(MT_HTFOG));
+   S_StartSound(fog, sfx_htelept);
+   S_StartSound(nullptr, sfx_hwpnup);
+}
+
 // EOF
 

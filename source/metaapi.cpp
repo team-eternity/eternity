@@ -1293,21 +1293,21 @@ void MetaTable::addString(const char *key, const char *value)
 // MetaTable::getString
 //
 // Get a string from the metatable. This routine returns the value
-// rather than a pointer to a metastring_t. If an object of the requested
-// name doesn't exist in the table, defvalue is returned and metaerrno is set
+// rather than a pointer to a metastring_t. If an object with the requested
+// index doesn't exist in the table, defvalue is returned and metaerrno is set
 // to indicate the problem.
 //
 // Use of this routine only returns the first such value in the table.
 // This routine is meant for singleton fields.
 //
-const char *MetaTable::getString(const char *key, const char *defValue) const
+const char *MetaTable::getString(size_t keyIndex, const char *defValue) const
 {
    const char *retval;
    const MetaString *obj;
 
    metaerrno = META_ERR_NOERR;
 
-   if(!(obj = getObjectKeyAndTypeEx<MetaString>(key)))
+   if(!(obj = getObjectKeyAndTypeEx<MetaString>(keyIndex)))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
       retval = defValue;
@@ -1316,6 +1316,14 @@ const char *MetaTable::getString(const char *key, const char *defValue) const
       retval = obj->value;
 
    return retval;
+}
+
+//
+// Overload for raw key strings.
+//
+const char *MetaTable::getString(const char *key, const char *defValue) const
+{
+   return getString(MetaKey(key).index, defValue);
 }
 
 //
@@ -1514,13 +1522,19 @@ void MetaTable::addMetaTable(size_t keyIndex, MetaTable *value)
 }
 
 //
-// See above
+// Overload for raw key strings.
 //
 void MetaTable::addMetaTable(const char *key, MetaTable *newValue)
 {
    addMetaTable(MetaKey(key).index, newValue);
 }
 
+//
+// Get a MetaTable pointer from the MetaTable *hornfx*. If the requested
+// property does not exist as a MetaTable, the value provided by the defValue
+// parameter will be returned, and metaerrno will be set to META_ERR_NOSUCHOBJECT.
+// Otherwise, the MetaTable pointer is returned and metaerrno is META_ERR_NOERR.
+//
 MetaTable *MetaTable::getMetaTable(size_t keyIndex, MetaTable *defValue) const
 {
    MetaTable *retval, *obj;
@@ -1539,10 +1553,7 @@ MetaTable *MetaTable::getMetaTable(size_t keyIndex, MetaTable *defValue) const
 }
 
 //
-// Get a MetaTable pointer from the MetaTable *hornfx*. If the requested
-// property does not exist as a MetaTable, the value provided by the defValue
-// parameter will be returned, and metaerrno will be set to META_ERR_NOSUCHOBJECT.
-// Otherwise, the MetaTable pointer is returned and metaerrno is META_ERR_NOERR.
+// Overload for raw key strings.
 //
 MetaTable *MetaTable::getMetaTable(const char *key, MetaTable *defValue) const
 {
@@ -1581,7 +1592,7 @@ void MetaTable::setMetaTable(size_t keyIndex, MetaTable *newValue)
 }
 
 //
-// See above
+// Overload for raw key strings.
 //
 void MetaTable::setMetaTable(const char *key, MetaTable *newValue)
 {

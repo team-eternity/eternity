@@ -204,7 +204,9 @@ static MetaKeyIndex keyBackpackMaxAmt(KEY_BACKPACKMAXAMT);
 static MetaKeyIndex keySortOrder     (KEY_SORTORDER     );
 static MetaKeyIndex keyInvBar        (KEY_INVBAR        );
 static MetaKeyIndex keyUseEffect     (KEY_USEEFFECT     );
+static MetaKeyIndex keyUseAction     (KEY_USEACTION     );
 static MetaKeyIndex keyUseSound      (KEY_USESOUND      );
+static MetaKeyIndex keyArgs          (KEY_ARGS          );
 
 // Keys for specially treated artifact types
 static MetaKeyIndex keyBackpackItem  (ARTI_BACKPACKITEM );
@@ -312,7 +314,7 @@ static int E_artiTypeCB(cfg_t *cfg, cfg_opt_t *opt, const char *value, void *res
 }
 
 //
-// Callback function for the new function-valued string option used to 
+// Callback function for the function-valued string option used to 
 // specify state action functions. This is called during parsing, not 
 // processing, and thus we do not look up/resolve anything at this point.
 // We are only interested in populating the cfg's args values with the 
@@ -1400,7 +1402,7 @@ static useaction_t *E_addUseAction(player_t *player, itemeffect_t *artifact)
    arglist_t *args = estructalloc(arglist_t, 1);
 
    MetaString *ms = nullptr;
-   while((ms = artifact->getNextKeyAndTypeEx(ms, KEY_ARGS)))
+   while((ms = artifact->getNextKeyAndTypeEx(ms, keyArgs)))
    {
       if(!E_AddArgToList(args, ms->getValue()))
          return nullptr;
@@ -1433,7 +1435,7 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID)
          bool shiftinvleft = false;
          bool success = false;
 
-         const char *useeffectstr = artifact->getString(KEY_USEEFFECT, "");
+         const char *useeffectstr = artifact->getString(keyUseEffect, "");
          itemeffect_t *effect = E_ItemEffectForName(useeffectstr);
          if(effect)
          {
@@ -1456,7 +1458,7 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID)
             }
          }
 
-         const char *useactionstr = artifact->getString(KEY_USEACTION, "");
+         const char *useactionstr = artifact->getString(keyUseAction, "");
          deh_bexptr *ptr = D_GetBexPtr(useactionstr);
          if(ptr)
          {
@@ -1471,6 +1473,8 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID)
             }
             if(useaction != nullptr)
             {
+               useaction->actor = player->mo;
+               useaction->pspr = player->psprites;
                ptr->cptr(useaction);
                success = true;
             }
@@ -1488,7 +1492,7 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID)
             if(E_RemoveInventoryItem(player, artifact, 1) == INV_REMOVEDSLOT)
                shiftinvleft = true;
 
-            sound = artifact->getString(KEY_USESOUND, "");
+            sound = artifact->getString(keyUseSound, "");
             if(estrnonempty(sound))
                S_StartSoundName(player->mo, sound);
 

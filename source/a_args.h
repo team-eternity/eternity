@@ -41,7 +41,7 @@ struct actionargs_t
    {
       MOBJFRAME,   // invoked from P_SetMobjState
       WEAPONFRAME, // invoked from P_SetPsprite
-      ARTIFACT     // invoked from P_tryUseItem
+      ARTIFACT     // invoked from E_TryUseItem
    } actiontype;
 
    Mobj      *actor; // Actor for either type of invocation; use mo->player when needed
