@@ -684,7 +684,7 @@ static void C_AdjustLineBreaks(char *str)
 
    count = lastspace = 0;
 
-   len = strlen(str);
+   len = static_cast<int>(strlen(str));
 
    for(i = 0; i < len; ++i)
    {
@@ -815,7 +815,7 @@ void C_DumpMessages(qstring *filename)
    {
       // strip color codes from strings
       memset(tmpmessage, 0, LINELENGTH);
-      len = strlen(messages[i]);
+      len = static_cast<int>(strlen(messages[i]));
 
       C_StripColorChars((unsigned char *)messages[i], tmpmessage, len);
 
@@ -873,7 +873,7 @@ static void C_AppendToLog(const char *text)
       const unsigned char *src = (const unsigned char *)text;
 
       memset(tmpmessage, 0, 1024);
-      len = strlen(text);
+      len = static_cast<int>(strlen(text));
 
       C_StripColorChars(src, tmpmessage, len);
 

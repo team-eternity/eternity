@@ -557,7 +557,7 @@ int E_SpriteFrameCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
    {
       char *endptr;
 
-      *(int *)result = strtol(value, &endptr, 0);
+      *(int *)result = static_cast<int>(strtol(value, &endptr, 0));
       
       if(*endptr != '\0')
       {
@@ -677,7 +677,7 @@ int E_TranslucCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
       int pctvalue;
       
       // get the percentage value (base 10 only)
-      pctvalue = strtol(value, &endptr, 10);
+      pctvalue = static_cast<int>(strtol(value, &endptr, 10));
 
       // strtol should stop at the percentage sign
       if(endptr != pctloc)
@@ -749,7 +749,7 @@ int E_TranslucCB2(cfg_t *cfg, cfg_opt_t *opt, const char *value,
       int pctvalue;
       
       // get the percentage value (base 10 only)
-      pctvalue = strtol(value, &endptr, 10);
+      pctvalue = static_cast<int>(strtol(value, &endptr, 10));
 
       // strtol should stop at the percentage sign
       if(endptr != pctloc)

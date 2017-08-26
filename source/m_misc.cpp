@@ -1006,7 +1006,7 @@ static void M_setDefaultValueString(default_t *dp, void *value, bool wad)
 // Read a string option and set it
 static bool M_readDefaultString(default_t *dp, char *src, bool wad)
 {
-   int len = strlen(src) - 1;
+   int len = static_cast<int>(strlen(src) - 1);
 
    while(ectype::isSpace(src[len]))
       len--;

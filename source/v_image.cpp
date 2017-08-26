@@ -368,7 +368,7 @@ void VImageManager::determineLinearDimensions(void *data, size_t size,
          if(!(size % 320)) // covers fullscreen gfx and Heretic AUTOPAGE
          {
             w = 320;
-            h = size / 320;
+            h = static_cast<int>(size / 320);
          }
          else
             V_linearOptimalSize(size, w, h);

@@ -455,6 +455,7 @@ void P_DeathThink(player_t *player)
    // and Hexen.
    if(!E_IsPlayerClassThingType(player->mo->type))
    {
+      player->prevpitch = player->pitch;
       if(player->mo->z <= player->mo->floorz && player->pitch > -ANGLE_1 * 15)
          player->pitch -= 2*ANGLE_1/3;
    }

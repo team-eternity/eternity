@@ -286,7 +286,7 @@ bool PathTraverser::blockLinesIterator(int x, int y)
    while(plink)
    {
       polyobj_t *po = (*plink)->po;
-      int polynum = po - PolyObjects;
+      int polynum = eindex(po - PolyObjects);
 
       // if polyobj hasn't been checked
       if(!VALID_ISSET(validpolys, polynum))
@@ -295,7 +295,7 @@ bool PathTraverser::blockLinesIterator(int x, int y)
 
          for(int i = 0; i < po->numLines; ++i)
          {
-            int linenum = po->lines[i] - lines;
+            int linenum = eindex(po->lines[i] - lines);
 
             if(VALID_ISSET(validlines, linenum))
                continue; // line has already been checked
