@@ -35,7 +35,7 @@
 struct weaponinfo_t;
 
 // Global Data
-extern int UnknownWeaponInfo;
+extern weapontype_t UnknownWeaponInfo;
 
 // Hard-coded name for the BFG900, which is needed in old P_TouchSpecialThing
 #define WEAPNAME_BFG9000  "BFG9000"
@@ -65,7 +65,7 @@ struct weaponslot_t
 extern weaponslot_t *weaponslots[NUMWEAPONSLOTS];
 
 // Global Functions
-weaponinfo_t *E_WeaponForID(int id);
+weaponinfo_t *E_WeaponForID(weapontype_t id);
 weaponinfo_t *E_WeaponForName(const char *name);
 weaponinfo_t *E_WeaponForDEHNum(int dehnum);
 

@@ -67,7 +67,8 @@ static void P_dropToFloor(Mobj *thing, player_t *player)
 }
 
 //
-// It's P_Teleport from Heretic, but adapted to Eternity
+// P_Teleport from Heretic, but made to be more generic and Eternity-ready
+// FIXME: This should be made more generic, so that other stuff can benefit from it
 //
 bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle)
 {

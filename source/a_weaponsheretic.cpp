@@ -603,7 +603,6 @@ void A_HticArtiTele(actionargs_t *actionargs)
       destAngle = ANG45 * (playerstarts[0].angle / 45);
    }
 
-   // TODO: Should this be exported to some external function?
    P_HereticTeleport(mo, destX, destY, destAngle);
    S_StartSound(nullptr, sfx_hwpnup);
 }

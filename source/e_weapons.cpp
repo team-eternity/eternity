@@ -62,7 +62,7 @@ static int edf_weapon_generation = 1;
 
 // The "Unknown" weapon info, which is required, has its type
 // number resolved in E_CollectWeaponinfo
-int UnknownWeaponInfo;
+weapontype_t UnknownWeaponInfo;
 
 // Weapon Keywords
 // TODO: Reorder
@@ -241,7 +241,7 @@ static
 //
 // Obtain a weaponinfo_t structure for its ID number.
 //
-weaponinfo_t *E_WeaponForID(int id)
+weaponinfo_t *E_WeaponForID(weapontype_t id)
 {
    return e_WeaponIDHash.objectForKey(id);
 }
@@ -270,10 +270,10 @@ weaponinfo_t *E_WeaponForDEHNum(int dehnum)
 // Returns a weapon type index given its name. Returns -1
 // if a weapon type is not found.
 //
-int E_WeaponNumForName(const char *name)
+static weapontype_t E_weaponNumForName(const char *name)
 {
    weaponinfo_t *info = nullptr;
-   int ret = -1;
+   weapontype_t ret = -1;
 
    if((info = e_WeaponNameHash.objectForKey(name)))
       ret = info->id;
@@ -284,9 +284,9 @@ int E_WeaponNumForName(const char *name)
 //
 // As above, but causes a fatal error if the weapon type isn't found.
 //
-int E_GetWeaponNumForName(const char *name)
+static weapontype_t E_getWeaponNumForName(const char *name)
 {
-   int weaponnum = E_WeaponNumForName(name);
+   weapontype_t weaponnum = E_weaponNumForName(name);
 
    if(weaponnum == -1)
       I_Error("E_GetWeaponNumForName: bad weapon type %s\n", name);
@@ -407,7 +407,7 @@ state_t *E_GetStateForWeaponInfo(weaponinfo_t *wi, const char *label)
 weaponinfo_t *E_IsWeaponInfoDescendantOf(weaponinfo_t *wi, const char *type)
 {
    weaponinfo_t *curwi = wi->parent;
-   int targettype = E_WeaponNumForName(type);
+   weapontype_t targettype = E_weaponNumForName(type);
 
    while(curwi)
    {
@@ -624,7 +624,7 @@ static void E_ReallocWeapons(int numnewweapons)
 //
 void E_CollectWeapons(cfg_t *cfg)
 {
-   unsigned int i;
+   weapontype_t i;
    unsigned int numweapons;        // number of weaponinfo defined by the cfg
    unsigned int curnewweapon = 0;  // index of current new weaponinfo being used
    weaponinfo_t *newWeapon = nullptr;
@@ -650,7 +650,7 @@ void E_CollectWeapons(cfg_t *cfg)
       // set pointers in weaponinfo[] to the proper structures;
       // also set self-referential index member, and allocate a
       // metatable.
-      for(i = firstnewweapon; i < unsigned int(NUMWEAPONTYPES); i++)
+      for(i = firstnewweapon; i < weapontype_t(NUMWEAPONTYPES); i++)
       {
          weaponinfo[i] = &newWeapon[i - firstnewweapon];
          weaponinfo[i]->id = i;
@@ -714,7 +714,7 @@ void E_CollectWeapons(cfg_t *cfg)
          E_EDFLoggedErr(2, "E_CollectWeapons: no weaponinfo defined.\n");
 
       // TODO: verify the existance of the Unknown weapon type?
-      UnknownWeaponInfo = E_WeaponNumForName("Unknown");
+      UnknownWeaponInfo = E_weaponNumForName("Unknown");
       if(UnknownWeaponInfo < 0)
          E_EDFLoggedErr(2, "E_CollectWeapons: 'Unknown' weaponinfo must be defined.\n");
 
@@ -753,7 +753,7 @@ static bool E_CheckWeaponInherit(int pnum)
 //
 // Adds a type number to the inheritance stack.
 //
-static void E_AddWeaponToPStack(int num)
+static void E_AddWeaponToPStack(weapontype_t num)
 {
    // Overflow shouldn't happen since it would require cyclic
    // inheritance as well, but I'll guard against it anyways.
@@ -779,15 +779,15 @@ static void E_ResetWeaponPStack()
 //
 // Copies one weaponinfo into another.
 //
-static void E_CopyWeapon(int num, int pnum)
+static void E_CopyWeapon(weapontype_t num, weapontype_t pnum)
 {
    weaponinfo_t *this_wi;
    DLListItem<weaponinfo_t> idlinks, namelinks, dehlinks;
-   const char *name;
-   int         dehnum;
-   MetaTable  *meta;
-   int         id;
-   int         generation;
+   const char  *name;
+   int          dehnum;
+   MetaTable   *meta;
+   weapontype_t id;
+   int          generation;
    weaponinfo_t *nextInCycle, *prevInCycle;
 
    this_wi = weaponinfo[num];
@@ -858,15 +858,15 @@ static void E_getWeaponTitleProps(cfg_t *weaponsec, weapontitleprops_t &props, b
 //
 // Get the weaponinfo index for the weapon's superclass weaponinfo.
 //
-static int E_resolveParentWeapon(cfg_t *weaponsec, const weapontitleprops_t &props)
+static weapontype_t E_resolveParentWeapon(cfg_t *weaponsec, const weapontitleprops_t &props)
 {
-   int pnum = -1;
+   weapontype_t pnum = -1;
 
    // check title props first
    if(props.superclass)
-      pnum = E_GetWeaponNumForName(props.superclass);
+      pnum = E_getWeaponNumForName(props.superclass);
    else // resolve parent weaponinfo through legacy "inherits" field
-      pnum = E_GetWeaponNumForName(cfg_getstr(weaponsec, ITEM_WPN_INHERITS));
+      pnum = E_getWeaponNumForName(cfg_getstr(weaponsec, ITEM_WPN_INHERITS));
 
    return pnum;
 }
@@ -888,7 +888,7 @@ static void E_insertSelectOrderNode(int sortorder, weaponinfo_t *wp, bool modify
 //
 // Process a single weaponinfo, or weapondelta
 //
-static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
+static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
 {
    double tempfloat;
    int tempint;
@@ -923,7 +923,7 @@ static void E_processWeapon(int i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
       if(pnum >= 0)
       {
          cfg_t *parent_tngsec;
-         int pnum = E_resolveParentWeapon(weaponsec, titleprops); // Why is this line here?
+         weapontype_t pnum = E_resolveParentWeapon(weaponsec, titleprops); // Why's this here?
 
          // check against cyclic inheritance
          if(!E_CheckWeaponInherit(pnum))
@@ -1137,7 +1137,7 @@ void E_ProcessWeaponInfo(cfg_t *cfg)
    weapon_hitlist = ecalloc(byte *, NUMWEAPONTYPES, sizeof(byte));
    weapon_pstack  = ecalloc(int *, NUMWEAPONTYPES, sizeof(int));
 
-   for(unsigned int i = 0; i < unsigned int(NUMWEAPONTYPES); i++)
+   for(weapontype_t i = 0; i < NUMWEAPONTYPES; i++)
    {
       if(weaponinfo[i]->generation != edf_weapon_generation)
          weapon_hitlist[i] = 1;
@@ -1147,7 +1147,7 @@ void E_ProcessWeaponInfo(cfg_t *cfg)
    {
       cfg_t *weaponsec = cfg_getnsec(cfg, EDF_SEC_WEAPONINFO, i);
       const char *name = cfg_title(weaponsec);
-      int weaponnum = E_WeaponNumForName(name);
+      weapontype_t weaponnum = E_weaponNumForName(name);
 
       // reset the inheritance stack
       E_ResetWeaponPStack();
@@ -1158,7 +1158,7 @@ void E_ProcessWeaponInfo(cfg_t *cfg)
       E_processWeapon(weaponnum, weaponsec, cfg, true);
 
       E_EDFLogPrintf("\t\tFinished weaponinfo %s (#%d)\n",
-         weaponinfo[weaponnum]->name, weaponnum);
+                     weaponinfo[weaponnum]->name, weaponnum);
    }
 
    // free tables
@@ -1178,14 +1178,14 @@ void E_ProcessWeaponDeltas(cfg_t *cfg)
    for(unsigned int i = 0; i < numDeltas; i++)
    {
       const char *name;
-      int weaponNum;
+      weapontype_t weaponNum;
       cfg_t *deltasec = cfg_getnsec(cfg, EDF_SEC_WPNDELTA, i);
       // get weaponinfo to edit
       if(!cfg_size(deltasec, ITEM_DELTA_NAME))
          E_EDFLoggedErr(2, "E_ProcessWeaponDeltas: weapondelta requires name field\n");
 
       name = cfg_getstr(deltasec, ITEM_DELTA_NAME);
-      weaponNum = E_WeaponNumForName(name);
+      weaponNum = E_weaponNumForName(name);
 
       E_processWeapon(weaponNum, deltasec, cfg, false);
 
@@ -1337,11 +1337,11 @@ bool E_PlayerOwnsWeaponInSlot(player_t *player, int slot)
 void E_GiveAllWeapons(player_t *player)
 {
    weaponinfo_t *weapon;
-   int i = 0;
+   weapontype_t i = 0;
    while((weapon = E_WeaponForID(i++)))
    {
       if(!E_PlayerOwnsWeapon(player, weapon))
-         E_GiveInventoryItem(player, weapon->tracker, 1);
+         E_GiveInventoryItem(player, weapon->tracker);
    }
 }
 
@@ -1360,7 +1360,7 @@ void E_GiveAllClassWeapons(player_t *player)
       while(weaponslot)
       {
          if(!E_PlayerOwnsWeapon(player, weaponslot->dllObject->weapon))
-            E_GiveInventoryItem(player, weaponslot->dllObject->weapon->tracker, 1);
+            E_GiveInventoryItem(player, weaponslot->dllObject->weapon->tracker);
          weaponslot = weaponslot->dllNext;
       }
    }
