@@ -34,6 +34,7 @@
 #include "e_ttypes.h"
 #include "m_random.h"
 #include "p_mobj.h"
+#include "p_spec.h"
 #include "r_main.h"
 #include "s_sound.h"
 #include "tables.h"
@@ -154,19 +155,14 @@ void A_FireMacePL1B(actionargs_t *actionargs)
 
    P_SubtractAmmo(player, -1);
 
-   // In vanilla this is bugged: 
-   // The footclip check turns into:
-   //   (pmo->flags2 & 1)
-   // due to C operator precedence and a lack of parens/brackets.
-   const fixed_t z = comp[comp_terrain] || !(pmo->flags2 & MF2_FOOTCLIP) ?
-                     pmo->z + 28 * FRACUNIT : pmo->z + (28 * FRACUNIT) - pmo->floorclip ;
-   ball = P_SpawnMobj(pmo->x, pmo->y, z, E_SafeThingType(MT_MACEFX2));
-
    const int   tnum = E_SafeThingType(MT_MACEFX2);
+
+   ball = P_SpawnMobj(pmo->x, pmo->y, pmo->z + (28 * FRACUNIT) - pmo->floorclip, tnum);
+
    mobjinfo_t *fx = mobjinfo[tnum];
 
    const fixed_t slope = P_PlayerPitchSlope(player);
-   ball->momz = FixedMul(fx->speed, slope) + (2 * FRACUNIT);
+   ball->momz = FixedMul(ball->info->speed, slope) + (2 * FRACUNIT);
    angle = pmo->angle;
    P_SetTarget(&ball->target, pmo);
    ball->angle = angle;
@@ -608,11 +604,7 @@ void A_HticArtiTele(actionargs_t *actionargs)
    }
 
    // TODO: Should this be exported to some external function?
-   // Also it doesn't teleport the player on to the floor
-   P_TeleportMove(mo, destX, destY, false);
-   mo->prevpos.angle = mo->angle = destAngle;
-   fog = P_SpawnMobj(destX, destY, mo->z + (32 * FRACUNIT), E_SafeThingType(MT_HTFOG));
-   S_StartSound(fog, sfx_htelept);
+   P_HereticTeleport(mo, destX, destY, destAngle);
    S_StartSound(nullptr, sfx_hwpnup);
 }
 
@@ -626,8 +618,8 @@ void A_HticSpawnFireBomb(actionargs_t *actionargs)
    // The footclip check turns into:
    //   (mo->flags2 & 1)
    // due to C operator precedence and a lack of parens/brackets.
-   const fixed_t z = comp[comp_terrain] || !(mo->flags2 & MF2_FOOTCLIP) ?
-                     mo->z: mo->z - (15 * FRACUNIT);
+   const fixed_t z = comp[comp_terrain] || !((mo->flags2 & MF2_FOOTCLIP) && E_HitFloor(mo)) ?
+                     mo->z : mo->z - (15 * FRACUNIT);
    bomb = P_SpawnMobj(mo->x + (24 * finecosine[angle]),
                       mo->y + (24 * finesine[angle]),
                       z, E_SafeThingType(MT_HFIREBOMB));
