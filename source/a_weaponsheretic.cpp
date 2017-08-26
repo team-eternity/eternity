@@ -589,24 +589,28 @@ void A_GauntletAttack(actionargs_t *actionargs)
 //
 void A_HticArtiTele(actionargs_t *actionargs)
 {
-   int i;
    fixed_t destX, destY;
    angle_t destAngle;
    Mobj *mo = actionargs->actor, *fog;
-   player_t *player = mo->player;
 
-   if(!player)
-      return;
+   if(deathmatch)
+   {
+      const int i = P_Random(pr_hereticartiteleport) % (deathmatch_p - deathmatchstarts);
+      destX = deathmatchstarts[i].x;
+      destY = deathmatchstarts[i].y;
+      destAngle = ANG45 * (deathmatchstarts[i].angle / 45);
+   }
+   else
+   {
+      destX = playerstarts[0].x;
+      destY = playerstarts[0].y;
+      destAngle = ANG45 * (playerstarts[0].angle / 45);
+   }
 
-   i = deathmatch ? P_Random(pr_hereticartiteleport) % (deathmatch_p - deathmatchstarts) : 0;
-   destX = deathmatchstarts[i].x;
-   destY = deathmatchstarts[i].y;
-   destAngle = ANG45 * (deathmatchstarts[i].angle / 45);
-
-   // FIXME: This doesn't set angle, and teleporting like
-   // this should be exported to some external function.
+   // TODO: Should this be exported to some external function?
+   // Also it doesn't teleport the player on to the floor
    P_TeleportMove(mo, destX, destY, false);
-   player->prevviewz = player->viewz;
+   mo->prevpos.angle = mo->angle = destAngle;
    fog = P_SpawnMobj(destX, destY, mo->z + (32 * FRACUNIT), E_SafeThingType(MT_HTFOG));
    S_StartSound(fog, sfx_htelept);
    S_StartSound(nullptr, sfx_hwpnup);
