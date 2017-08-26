@@ -40,12 +40,14 @@
 #include "e_sprite.h"
 
 #include "autopalette.h"
+#include "a_args.h"
 #include "am_map.h"
 #include "c_runcmd.h"
 #include "d_dehtbl.h"
 #include "d_gi.h"
 #include "d_player.h"
 #include "doomstat.h"
+#include "e_args.h"
 #include "g_game.h"
 #include "info.h"
 #include "m_collection.h"
@@ -150,6 +152,7 @@ MetaTable *E_GetItemEffects()
 #define KEY_AMMO           "ammo"
 #define KEY_AMMOGIVEN      "ammogiven"
 #define KEY_AMOUNT         "amount"
+#define KEY_ARGS           "args"
 #define KEY_ARTIFACTTYPE   "artifacttype"
 #define KEY_BACKPACKAMOUNT "ammo.backpackamount"
 #define KEY_BACKPACKMAXAMT "ammo.backpackmaxamount"
@@ -181,6 +184,7 @@ MetaTable *E_GetItemEffects()
 #define KEY_SORTORDER      "sortorder"
 #define KEY_TYPE           "type"
 #define KEY_UNDROPPABLE    "undroppable"
+#define KEY_USEACTION      "useaction"
 #define KEY_USEEFFECT      "useeffect"
 #define KEY_USESOUND       "usesound"
 #define KEY_WEAPON         "weapon"
@@ -307,6 +311,23 @@ static int E_artiTypeCB(cfg_t *cfg, cfg_opt_t *opt, const char *value, void *res
    return 0;
 }
 
+//
+// Callback function for the new function-valued string option used to 
+// specify state action functions. This is called during parsing, not 
+// processing, and thus we do not look up/resolve anything at this point.
+// We are only interested in populating the cfg's args values with the 
+// strings passed to this callback as parameters. The value of the option has
+// already been set to the name of the codepointer by the libConfuse framework.
+//
+static int E_actionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
+{
+   if(argc > 0)
+      cfg_setlistptr(cfg, KEY_ARGS, argc, static_cast<const void *>(argv));
+
+   return 0; // everything is good
+}
+
+
 // Artifact fields
 cfg_opt_t edf_artifact_opts[] =
 {
@@ -324,6 +345,9 @@ cfg_opt_t edf_artifact_opts[] =
    CFG_FLAG(KEY_FULLAMOUNTONLY, 0, CFGF_SIGNPREFIX), // if +, pick up for full amount only
 
    CFG_INT_CB(KEY_ARTIFACTTYPE, ARTI_NORMAL, CFGF_NONE, E_artiTypeCB), // artifact sub-type
+
+   CFG_STRFUNC(KEY_USEACTION,  "NULL",                  E_actionFuncCB), // action function
+   CFG_STR(KEY_ARGS,                0,       CFGF_LIST),
 
    // Sub-Type Specific Fields
    // These only have meaning if the value of artifacttype is the expected value.
@@ -1340,6 +1364,57 @@ static itemeffecttype_t E_getItemEffectType(itemeffect_t *fx)
    return static_cast<itemeffecttype_t>(fx->getInt(keyClass, 0));
 }
 
+
+//
+// An extended actionargs_t, that allows for hashing
+//
+struct useaction_t : actionargs_t
+{
+   const char *artifactname; // The key that's used in hashing
+
+   DLListItem<useaction_t> links; // Hash by name
+};
+
+//=============================================================================
+//
+// Artifact Action Hash Table
+//
+
+static EHashTable<useaction_t, ENCStringHashKey,
+                  &useaction_t::artifactname, &useaction_t::links> e_UseActionHash;
+
+//
+// Obtain a useaction_t structure by name.
+//
+static useaction_t *E_useActionForArtifactName(const char *name)
+{
+   return e_UseActionHash.objectForKey(name);
+}
+
+//
+// Create and add a new useaction_t, then return a pointer it
+//
+static useaction_t *E_addUseAction(player_t *player, itemeffect_t *artifact)
+{
+   useaction_t *toadd = estructalloc(useaction_t, 1);
+   arglist_t *args = estructalloc(arglist_t, 1);
+
+   MetaString *ms = nullptr;
+   while((ms = artifact->getNextKeyAndTypeEx(ms, KEY_ARGS)))
+   {
+      if(!E_AddArgToList(args, ms->getValue()))
+         return nullptr;
+   }
+
+   toadd->artifactname = artifact->getKey(); // FIXME: This is safe, right?
+   toadd->actiontype = actionargs_t::ARTIFACT;
+   toadd->actor = player->mo;
+   toadd->args = args;
+   toadd->pspr = player->psprites;
+   e_UseActionHash.addObject(toadd);
+   return toadd;
+}
+
 //
 // E_TryUseItem
 //
@@ -1355,30 +1430,57 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID)
    {
       if(artifact->getInt(keyArtifactType, -1) == ARTI_NORMAL)
       {
-         itemeffect_t *effect = E_ItemEffectForName(artifact->getString(KEY_USEEFFECT, ""));
          bool shiftinvleft = false;
          bool success = false;
 
-         if(!effect)
-            return;
-
-         switch(E_getItemEffectType(effect))
+         const char *useeffectstr = artifact->getString(KEY_USEEFFECT, "");
+         itemeffect_t *effect = E_ItemEffectForName(useeffectstr);
+         if(effect)
          {
-         case ITEMFX_HEALTH:
-            success = P_GiveBody(player, effect);
-            break;
-         case ITEMFX_ARMOR:
-            success = P_GiveArmor(player, effect);
-            break;
-         case ITEMFX_AMMO:
-            success = P_GiveAmmoPickup(player, effect, false, 0);
-            break;
-         case ITEMFX_POWER:
-            success = P_GivePowerForItem(player, effect);
-            break;
-         default:
-            return;
+            switch(E_getItemEffectType(effect))
+            {
+            case ITEMFX_HEALTH:
+               success = P_GiveBody(player, effect);
+               break;
+            case ITEMFX_ARMOR:
+               success = P_GiveArmor(player, effect);
+               break;
+            case ITEMFX_AMMO:
+               success = P_GiveAmmoPickup(player, effect, false, 0);
+               break;
+            case ITEMFX_POWER:
+               success = P_GivePowerForItem(player, effect);
+               break;
+            default:
+               return;
+            }
          }
+
+         const char *useactionstr = artifact->getString(KEY_USEACTION, "");
+         deh_bexptr *ptr = D_GetBexPtr(useactionstr);
+         if(ptr)
+         {
+            useaction_t *useaction = E_useActionForArtifactName(artifact->getKey());
+            if(useaction == nullptr)
+            {
+               if((useaction = E_addUseAction(player, artifact)) == nullptr)
+               {
+                  doom_printf("Too many args specified in useaction for artifact '%s'\a\n",
+                              artifact->getKey());
+               }
+            }
+            if(useaction != nullptr)
+            {
+               ptr->cptr(useaction);
+               success = true;
+            }
+         }
+         else if(estrnonempty(useactionstr))
+         {
+            doom_printf("Codepointer '%s' not found in useaction for artifact '%s'\a\n",
+                        useactionstr, artifact->getKey());
+         }
+
 
          if(success)
          {
