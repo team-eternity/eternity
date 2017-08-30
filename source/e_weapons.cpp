@@ -1236,14 +1236,19 @@ weaponinfo_t *E_FindBestWeapon(player_t *player)
 static weaponinfo_t *E_findBestWeaponUsingAmmo(player_t *player, itemeffect_t *ammo,
                                                selectordernode_t *node)
 {
+   bool correctammo;
    weaponinfo_t *ret = nullptr, *temp = node->object;
    if(node == nullptr)
       return nullptr; // This *really* shouldn't happen
 
+   if(temp->ammo && ammo)
+      correctammo = !strcasecmp(temp->ammo->getKey(), ammo->getKey());
+   else
+      correctammo = temp->ammo == nullptr && ammo == nullptr;
+
    if(node->left && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->left)))
       return ret;
-   if(E_PlayerOwnsWeapon(player, temp) && !strcasecmp(temp->ammo->getKey(), ammo->getKey()) &&
-      P_WeaponHasAmmo(player, temp))
+   if(E_PlayerOwnsWeapon(player, temp) && correctammo && P_WeaponHasAmmo(player, temp))
       return temp;
    if(node->right && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->right)))
       return ret;
