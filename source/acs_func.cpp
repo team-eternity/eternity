@@ -226,6 +226,100 @@ bool ACS_CF_ATan2(ACS_CF_ARGS)
 }
 
 //
+// void GiveInventory(str itemname, int amount)
+//
+bool ACS_CF_AddInventory(ACS_CF_ARGS)
+{
+   auto info = &static_cast<ACSThread *>(thread)->info;
+   char const *itemname = thread->scopeMap->getString(argV[0])->str;
+   int amount = argV[1];
+   itemeffect_t *item = E_ItemEffectForName(itemname);
+
+   if(!item)
+   {
+      doom_printf("ACS_CF_AddInventory: Inventory item '%s' not found\a\n", itemname);
+      return false;
+   }
+
+   if(info->mo)
+   {
+      // FIXME: Needs to be adapted for when Mobjs get inventory if they get inventory
+      if(info->mo->player)
+         E_GiveInventoryItem(info->mo->player, item, amount);
+   }
+   else
+   {
+      for(int pnum = 0; pnum != MAXPLAYERS; ++pnum)
+      {
+         if(playeringame[pnum])
+            E_GiveInventoryItem(&players[pnum], item, amount);
+      }
+   }
+   return false;
+}
+
+//
+// void TakeInventory(str itemname, int amount)
+// FIXME: If a weapon is taken, it doesn't autoswitch
+//
+bool ACS_CF_SubInventory(ACS_CF_ARGS)
+{
+   auto info = &static_cast<ACSThread *>(thread)->info;
+   char const *itemname = thread->scopeMap->getString(argV[0])->str;
+   int amount = argV[1];
+   itemeffect_t *item = E_ItemEffectForName(itemname);
+
+   if(!item)
+   {
+      doom_printf("ACS_CF_SubInventory: Inventory item '%s' not found\a\n", itemname);
+      return false;
+   }
+
+   if(info->mo)
+   {
+      // FIXME: Needs to be adapted for when Mobjs get inventory if they get inventory
+      if(info->mo->player)
+         E_RemoveInventoryItem(info->mo->player, item, amount);
+   }
+   else
+   {
+      for(int pnum = 0; pnum != MAXPLAYERS; ++pnum)
+      {
+         if(playeringame[pnum])
+            E_RemoveInventoryItem(&players[pnum], item, amount);
+      }
+   }
+   return false;
+}
+
+//
+// int CheckInventory(str itemname)
+//
+bool ACS_CF_GetInventory(ACS_CF_ARGS)
+{
+   auto info = &static_cast<ACSThread *>(thread)->info;
+   char const *itemname = thread->scopeMap->getString(argV[0])->str;
+   itemeffect_t *item = E_ItemEffectForName(itemname);
+
+   // We could use E_GetItemOwnedAmountName but let's inform the player if stuff's broke
+   if(!item)
+   {
+      doom_printf("ACS_CF_GetInventory: Inventory item '%s' not found\a\n", itemname);
+      thread->dataStk.push(0);
+      return false;
+   }
+
+   if(!info->mo || !info->mo->player)
+   {
+      thread->dataStk.push(0);
+      return false;
+   }
+
+   thread->dataStk.push(E_GetItemOwnedAmount(info->mo->player, item));
+   return false;
+}
+
+//
 // ACS_CF_ChangeCeil
 //
 // void ChangeCeiling(int tag, str tex);

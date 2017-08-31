@@ -296,7 +296,7 @@ static void cheat_fa(const void *arg)
       plyr->armordivisor = armor->getInt("savedivisor", 3);
    }
 
-   // WEAPON_FIXME: IDFA cheat
+   // WEAPON_FIXME? IDFA cheat
    
    E_GiveAllClassWeapons(plyr);
 
