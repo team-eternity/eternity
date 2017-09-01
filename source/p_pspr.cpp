@@ -636,8 +636,7 @@ void A_WeaponReady(actionargs_t *actionargs)
    if(!(psp = actionargs->pspr))
       return;
 
-   // If the player doesn't own their weapon, and their weapon isn't the Unknown weapon, switch
-   if(!E_PlayerOwnsWeapon(player, player->readyweapon) &&
+   if(!player->pendingweapon && !E_PlayerOwnsWeapon(player, player->readyweapon) &&
       player->readyweapon->id != UnknownWeaponInfo)
       player->pendingweapon = E_FindBestWeapon(player);
 

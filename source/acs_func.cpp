@@ -63,6 +63,9 @@
 #include "v_misc.h"
 #include "doomstat.h"
 
+#include "e_weapons.h"
+
+
 #include "ACSVM/Scope.hpp"
 #include "ACSVM/Thread.hpp"
 
@@ -225,8 +228,10 @@ bool ACS_CF_ATan2(ACS_CF_ARGS)
    return false;
 }
 
+/* FIXME: ZDoom's poxy "inventory" "system" means that you can't just give an item,
+ * a weapon would also give its attached ammo. Goddamnit.
 //
-// void GiveInventory(str itemname, int amount)
+// void GiveInventory(str itemname, int amount);
 //
 bool ACS_CF_AddInventory(ACS_CF_ARGS)
 {
@@ -256,68 +261,7 @@ bool ACS_CF_AddInventory(ACS_CF_ARGS)
       }
    }
    return false;
-}
-
-//
-// void TakeInventory(str itemname, int amount)
-// FIXME: If a weapon is taken, it doesn't autoswitch
-//
-bool ACS_CF_SubInventory(ACS_CF_ARGS)
-{
-   auto info = &static_cast<ACSThread *>(thread)->info;
-   char const *itemname = thread->scopeMap->getString(argV[0])->str;
-   int amount = argV[1];
-   itemeffect_t *item = E_ItemEffectForName(itemname);
-
-   if(!item)
-   {
-      doom_printf("ACS_CF_SubInventory: Inventory item '%s' not found\a\n", itemname);
-      return false;
-   }
-
-   if(info->mo)
-   {
-      // FIXME: Needs to be adapted for when Mobjs get inventory if they get inventory
-      if(info->mo->player)
-         E_RemoveInventoryItem(info->mo->player, item, amount);
-   }
-   else
-   {
-      for(int pnum = 0; pnum != MAXPLAYERS; ++pnum)
-      {
-         if(playeringame[pnum])
-            E_RemoveInventoryItem(&players[pnum], item, amount);
-      }
-   }
-   return false;
-}
-
-//
-// int CheckInventory(str itemname)
-//
-bool ACS_CF_GetInventory(ACS_CF_ARGS)
-{
-   auto info = &static_cast<ACSThread *>(thread)->info;
-   char const *itemname = thread->scopeMap->getString(argV[0])->str;
-   itemeffect_t *item = E_ItemEffectForName(itemname);
-
-   // We could use E_GetItemOwnedAmountName but let's inform the player if stuff's broke
-   if(!item)
-   {
-      doom_printf("ACS_CF_GetInventory: Inventory item '%s' not found\a\n", itemname);
-      thread->dataStk.push(0);
-      return false;
-   }
-
-   if(!info->mo || !info->mo->player)
-   {
-      thread->dataStk.push(0);
-      return false;
-   }
-
-   thread->dataStk.push(E_GetItemOwnedAmount(info->mo->player, item));
-   return false;
-}
+}*/
 
 //
 // ACS_CF_ChangeCeil
@@ -367,6 +311,34 @@ bool ACS_CF_CheckSight(ACS_CF_ARGS)
    }
 
    thread->dataStk.push(0);
+   return false;
+}
+
+//
+// bool CheckWeapon(str weapname);
+//
+bool ACS_CF_CheckWeapon(ACS_CF_ARGS)
+{
+   auto info = &static_cast<ACSThread *>(thread)->info;
+   char const *weapname = thread->scopeMap->getString(argV[0])->str;
+   bool success = false;
+
+   weaponinfo_t *wp = E_WeaponForName(weapname);
+   if(!wp)
+   {
+      doom_printf("ACS_CF_CheckWeapon: Weapon '%s' not found\a\n", weapname);
+      thread->dataStk.push(false);
+      return false;
+   }
+
+   if(info->mo && info->mo->player && E_PlayerOwnsWeapon(info->mo->player, wp) &&
+      info->mo->player->readyweapon->id == wp->id)
+   {
+         thread->dataStk.push(true);
+         return true;
+   }
+
+   thread->dataStk.push(false);
    return false;
 }
 
@@ -727,6 +699,34 @@ bool ACS_CF_GetCVarStr(ACS_CF_ARGS)
    thread->dataStk.push(~ACSenv.getString(C_VariableValue(var))->idx);
    return false;
 }
+
+//
+// int CheckInventory(str itemname);
+//
+bool ACS_CF_GetInventory(ACS_CF_ARGS)
+{
+   auto info = &static_cast<ACSThread *>(thread)->info;
+   char const *itemname = thread->scopeMap->getString(argV[0])->str;
+   itemeffect_t *item = E_ItemEffectForName(itemname);
+
+   // We could use E_GetItemOwnedAmountName but let's inform the player if stuff's broke
+   if(!item)
+   {
+      doom_printf("ACS_CF_GetInventory: Inventory item '%s' not found\a\n", itemname);
+      thread->dataStk.push(0);
+      return false;
+   }
+
+   if(!info->mo || !info->mo->player)
+   {
+      thread->dataStk.push(0);
+      return false;
+   }
+
+   thread->dataStk.push(E_GetItemOwnedAmount(info->mo->player, item));
+   return false;
+}
+
 
 //
 // ACS_GetLevelProp
@@ -2141,6 +2141,36 @@ bool ACS_CF_SetThingState(ACS_CF_ARGS)
 }
 
 //
+// bool SetWeapon(str weapname);
+//
+bool ACS_CF_SetWeapon(ACS_CF_ARGS)
+{
+   auto info = &static_cast<ACSThread *>(thread)->info;
+   char const *weapname = thread->scopeMap->getString(argV[0])->str;
+   bool success = false;
+   
+   weaponinfo_t *wp = E_WeaponForName(weapname);
+   if(!wp)
+   {
+      doom_printf("ACS_CF_SetWeapon: Weapon '%s' not found\a\n", weapname);
+      thread->dataStk.push(false);
+      return false;
+   }
+
+   if(info->mo && info->mo->player)
+   {
+      if(E_PlayerOwnsWeapon(info->mo->player, wp))
+      {
+         info->mo->player->pendingweapon = wp;
+         success = true;
+      }
+   }
+
+   thread->dataStk.push(success);
+   return false;
+}
+
+//
 // ACS_CF_Sin
 //
 // fixed Sin(fixed x);
@@ -2426,6 +2456,40 @@ bool ACS_CF_StopSound(ACS_CF_ARGS)
    thread->dataStk.push(0);
    return false;
 }
+
+//
+// void TakeInventory(str itemname, int amount);
+//
+bool ACS_CF_SubInventory(ACS_CF_ARGS)
+{
+   auto info = &static_cast<ACSThread *>(thread)->info;
+   char const *itemname = thread->scopeMap->getString(argV[0])->str;
+   int amount = argV[1];
+   itemeffect_t *item = E_ItemEffectForName(itemname);
+
+   if(!item)
+   {
+      doom_printf("ACS_CF_SubInventory: Inventory item '%s' not found\a\n", itemname);
+      return false;
+   }
+
+   if(info->mo)
+   {
+      // FIXME: Needs to be adapted for when Mobjs get inventory if they get inventory
+      if(info->mo->player)
+         E_RemoveInventoryItem(info->mo->player, item, amount);
+   }
+   else
+   {
+      for(int pnum = 0; pnum != MAXPLAYERS; ++pnum)
+      {
+         if(playeringame[pnum])
+            E_RemoveInventoryItem(&players[pnum], item, amount);
+      }
+   }
+   return false;
+}
+
 
 //
 // ACS_thingCount
