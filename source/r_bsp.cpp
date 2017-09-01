@@ -1435,9 +1435,20 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    lowermissing = (seg.frontsec->floorheight < seg.backsec->floorheight &&
                    seg.side->bottomtexture == 0);
 
+   bool portaltouch = portalrender.active &&
+   ((portalrender.w->type == pw_floor && (portalrender.w->planez ==
+                                          seg.backsec->floorheight ||
+                                          portalrender.w->planez ==
+                                          seg.frontsec->floorheight)) ||
+    (portalrender.w->type == pw_ceiling && (portalrender.w->planez ==
+                                            seg.backsec->ceilingheight ||
+                                            portalrender.w->planez ==
+                                            seg.frontsec->ceilingheight)));
+
    // New clipsolid code will emulate the old doom behavior and still manages to 
    // keep valid closed door cases handled.
-   seg.clipsolid = ((seg.backsec->floorheight != seg.frontsec->floorheight ||
+   seg.clipsolid = !portaltouch && ((seg.backsec->floorheight !=
+                                     seg.frontsec->floorheight ||
        seg.backsec->ceilingheight != seg.frontsec->ceilingheight) &&
        (seg.backsec->floorheight >= seg.frontsec->ceilingheight ||
         seg.backsec->ceilingheight <= seg.frontsec->floorheight ||
