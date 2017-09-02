@@ -336,7 +336,7 @@ ACSEnvironment::ACSEnvironment() :
    addFuncDataACS0( 62, addCallFunc(ACS_CF_StopSound));
    // 63-67: ACSVM internal funcs.
  //addFuncDataACS0( 68, addCallFunc(ACS_CF_GetThingType));
- //addFuncDataACS0( 69, addCallFunc(ACS_CF_GetWeapon));
+   addFuncDataACS0( 69, addCallFunc(ACS_CF_GetWeapon));
  //addFuncDataACS0( 70, addCallFunc(ACS_CF_SoundVolume));
    addFuncDataACS0( 71, addCallFunc(ACS_CF_PlayThingSound));
  //addFuncDataACS0( 72, addCallFunc(ACS_CF_SpawnDecal));

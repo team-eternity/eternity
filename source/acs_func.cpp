@@ -718,12 +718,9 @@ bool ACS_CF_GetInventory(ACS_CF_ARGS)
    }
 
    if(!info->mo || !info->mo->player)
-   {
       thread->dataStk.push(0);
-      return false;
-   }
-
-   thread->dataStk.push(E_GetItemOwnedAmount(info->mo->player, item));
+   else
+      thread->dataStk.push(E_GetItemOwnedAmount(info->mo->player, item));
    return false;
 }
 
@@ -1264,6 +1261,19 @@ bool ACS_CF_GetThingY(ACS_CF_ARGS)
 bool ACS_CF_GetThingZ(ACS_CF_ARGS)
 {
    return ACS_GetThingProp(static_cast<ACSThread *>(thread), argV[0], ACS_TP_Z);
+}
+
+//
+// str GetWeapon(void);
+//
+bool ACS_CF_GetWeapon(ACS_CF_ARGS)
+{
+   auto info = &static_cast<ACSThread *>(thread)->info;
+   if(info->mo && info->mo->player)
+      thread->dataStk.push(~ACSenv.getString(info->mo->player->readyweapon->name)->idx);
+   else
+      thread->dataStk.push(0);
+   return false;
 }
 
 //
