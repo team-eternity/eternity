@@ -33,6 +33,7 @@
 #include "r_defs.h"
 #include "r_state.h"
 #include "r_sky.h"
+#include "m_collection.h"
 #include "m_random.h"
 #include "p_setup.h"
 #include "s_sound.h"
@@ -40,13 +41,95 @@
 #include "p_anim.h"
 #include "p_info.h"
 #include "a_small.h"
+#include "xl_animdefs.h"
 
 int NextLightningFlash;
 int LightningFlash;
 int LevelSky;
 int LevelTempSky;
 
+enum
+{
+   ANIM_FLAT = 0,
+   ANIM_TEXTURE = 1,
+};
+
+//
+// Hexen style frame definition
+//
+struct hframedef_t
+{
+   int index;
+   int tics;
+   int ticsmin;
+   int ticsmax;   // just use all the space
+};
+
+//
+// Hexen style animation definition
+//
+struct hanimdef_t
+{
+   int type;
+   int index;
+   int tics;
+   int currentFrameDef;
+   int startFrameDef;
+   int endFrameDef;
+};
+
+static PODCollection<hanimdef_t> AnimDefs;
+static PODCollection<hframedef_t> FrameDefs;
+
 static void P_LightningFlash();
+
+//
+// Initializes Hexen animations
+//
+void P_InitHexenAnims()
+{
+   for(const XLAnimDef &xad: xldefs)
+   {
+      // Validate count
+      if(xad.count < 2)
+         continue;   // must be at least 2
+
+      hanimdef_t &had = AnimDefs.addNew();
+      had.type = xad.type == xlanim_flat ? ANIM_FLAT : ANIM_TEXTURE;
+      if(had.type == ANIM_FLAT)
+      {
+         if(R_CheckForFlat(xad.picname.constPtr()) == -1)
+            continue;
+         had.index = R_FindFlat(xad.picname.constPtr());
+      }
+      else
+      {
+         if(R_CheckForWall(xad.picname.constPtr()) == -1)
+            continue;
+         had.index = R_FindWall(xad.picname.constPtr());
+      }
+      had.startFrameDef = static_cast<int>(FrameDefs.getLength());
+
+      for(int i = xad.index; i < xad.index + xad.count; ++i)
+      {
+         const xlpicdef_t &xfd = xlpics[i];
+         hframedef_t &hfd = FrameDefs.addNew();
+         hfd.index = had.index + xfd.offset - 1;
+         if(hfd.index < 0 || hfd.index >= texturecount)
+            hfd.index = 0; // prevent overflow
+         if(!xfd.isRandom)
+            hfd.tics = xfd.tics;
+         else
+         {
+            hfd.ticsmin = xfd.ticsmin;
+            hfd.ticsmax = xfd.ticsmax;
+         }
+      }
+      had.endFrameDef = static_cast<int>(FrameDefs.getLength()) - 1;
+      had.currentFrameDef = had.endFrameDef;
+      had.tics = 1;
+   }
+}
 
 //
 // P_AnimateSurfaces
@@ -55,6 +138,23 @@ static void P_LightningFlash();
 //
 void P_AnimateSurfaces()
 {
+   for(hanimdef_t &had : AnimDefs)
+   {
+      if(!--had.tics)
+      {
+         if(had.currentFrameDef == had.endFrameDef)
+            had.currentFrameDef = had.startFrameDef;
+         else
+            ++had.currentFrameDef;
+         const hframedef_t &hfd = FrameDefs[had.currentFrameDef];
+         if(hfd.ticsmin || hfd.ticsmax)
+            had.tics = M_RangeRandomEx(hfd.ticsmin, hfd.ticsmax);
+         else
+            had.tics = hfd.tics;
+         texturetranslation[had.index] = hfd.index;
+      }
+   }
+
    // update sky scroll offsets
    //   haleyjd: stored as regular ints in the mapinfo so we need 
    //   to transform these to fixed point values :)

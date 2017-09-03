@@ -195,7 +195,7 @@ void ScrollThinker::addScroller()
 //
 void ScrollThinker::removeScroller()
 {
-   removeThinker();
+   remove();
    if((*list->prev = list->next))
       list->next->prev = list->prev;
    efree(list);
@@ -347,7 +347,7 @@ static void P_getScrollParams(const line_t *l, fixed_t &dx, fixed_t &dy,
    if(bits & ev_Scroll_Bit_Accel)
       accel = 1;
    if(bits & (ev_Scroll_Bit_Accel | ev_Scroll_Bit_Displace))
-      control = sides[*l->sidenum].sector - sectors;
+      control = eindex(sides[*l->sidenum].sector - sectors);
 }
 
 //
@@ -372,7 +372,7 @@ static void P_spawnCeilingScroller(int staticFn, const line_t *l)
       accel = 1;
    if(staticFn == EV_STATIC_SCROLL_ACCEL_CEILING ||
       staticFn == EV_STATIC_SCROLL_DISPLACE_CEILING)
-      control = sides[*l->sidenum].sector - sectors;
+      control = eindex(sides[*l->sidenum].sector - sectors);
 
    for(int s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0;)
       Add_Scroller(ScrollThinker::sc_ceiling, -dx, dy, control, s, accel);
@@ -419,7 +419,7 @@ static void P_spawnFloorScroller(int staticFn, const line_t *l, bool acs = false
          accel = 1;
       if(staticFn == EV_STATIC_SCROLL_ACCEL_FLOOR ||
          staticFn == EV_STATIC_SCROLL_DISPLACE_FLOOR)
-         control = sides[*l->sidenum].sector - sectors;
+         control = eindex(sides[*l->sidenum].sector - sectors);
    }
 
    for(int s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0;)
@@ -456,7 +456,7 @@ static void P_spawnFloorCarrier(int staticFn, const line_t *l, bool acs = false)
          accel = 1;
       if(staticFn == EV_STATIC_CARRY_ACCEL_FLOOR ||
          staticFn == EV_STATIC_CARRY_DISPLACE_FLOOR)
-         control = sides[*l->sidenum].sector - sectors;
+         control = eindex(sides[*l->sidenum].sector - sectors);
    }
 
    for(int s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0;)
@@ -490,7 +490,7 @@ static void P_spawnFloorScrollAndCarry(int staticFn, const line_t *l, bool acs =
          accel = 1;
       if(staticFn == EV_STATIC_SCROLL_CARRY_ACCEL_FLOOR ||
          staticFn == EV_STATIC_SCROLL_CARRY_DISPLACE_FLOOR)
-         control = sides[*l->sidenum].sector - sectors;
+         control = eindex(sides[*l->sidenum].sector - sectors);
    }
 
    for(s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0; )
@@ -548,7 +548,7 @@ static void P_spawnDynamicWallScroller(int staticFn, line_t *l, int linenum)
       if(bits & ev_Scroll_Bit_Accel)
          accel = 1;
       if(bits & (ev_Scroll_Bit_Accel | ev_Scroll_Bit_Displace))
-         control = sides[*l->sidenum].sector - sectors;
+         control = eindex(sides[*l->sidenum].sector - sectors);
    }
    else
    {
@@ -556,7 +556,7 @@ static void P_spawnDynamicWallScroller(int staticFn, line_t *l, int linenum)
          accel = 1;
       if(staticFn == EV_STATIC_SCROLL_ACCEL_WALL ||
          staticFn == EV_STATIC_SCROLL_DISPLACE_WALL)
-         control = sides[*l->sidenum].sector - sectors;
+         control = eindex(sides[*l->sidenum].sector - sectors);
    }
 
    // killough 3/1/98: scroll wall according to linedef

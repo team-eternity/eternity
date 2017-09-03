@@ -2258,7 +2258,7 @@ static void G_queuePlayerCorpse(Mobj *mo)
       if(bodyque[index] != NULL)
       {
          bodyque[index]->intflags &= ~MIF_PLYRCORPSE;
-         bodyque[index]->removeThinker();
+         bodyque[index]->remove();
       }
       
       mo->intflags |= MIF_PLYRCORPSE;
@@ -2266,7 +2266,7 @@ static void G_queuePlayerCorpse(Mobj *mo)
       bodyqueslot = (bodyqueslot + 1) % queuesize;
    }
    else if(!bodyquesize)
-      mo->removeThinker();   
+      mo->remove();   
 }
 
 //

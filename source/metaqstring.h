@@ -75,27 +75,34 @@ public:
 class MetaMultiString : public MetaObject
 {
    DECLARE_RTTI_TYPE(MetaMultiString, MetaObject)
+
 public:
    Collection<qstring> value;
-   MetaMultiString()
+
+   MetaMultiString() : Super()
    {
    }
+
    explicit MetaMultiString(const char *key) : Super(key)
    {
    }
+
    MetaMultiString(const char *key, const qstring &initValue) : Super(key)
    {
       value.add(initValue);
    }
+
    MetaMultiString(const char *key, const char *ccvalue) : Super(key)
    {
       value.add(qstring(ccvalue));
    }
-   MetaMultiString(const MetaMultiString &other) : Super(other),
-   value(other.value)
+
+   MetaMultiString(const MetaMultiString &other) : Super(other), value(other.value)
    {
    }
+
    MetaObject *clone() const { return new MetaMultiString(*this); }
+
    const char *toString() const
    {
       return key;

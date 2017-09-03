@@ -516,11 +516,14 @@ static void Polyobj_collectPortals(polyobj_t *po)
    bool hasLinked = false;
    for(int i = 0; i < po->numLines; ++i)
    {
-      portal_t *portal = po->lines[i]->portal;
+      line_t &line = *po->lines[i];
+      portal_t *portal = line.portal;
       if(!portal || !R_portalIsAnchored(portal))
-      {
          continue;
-      }
+
+      line.intflags |= MLI_MOVINGPORTAL;
+      if(line.beyondportalline)
+         line.beyondportalline->intflags |= MLI_MOVINGPORTAL;
 
       for(portal_t *prevPortal : portals)
       {
@@ -528,7 +531,7 @@ static void Polyobj_collectPortals(polyobj_t *po)
             goto nextLine;
       }
 
-      if(po->lines[i]->pflags & PS_PASSABLE)
+      if(line.pflags & PS_PASSABLE)
          hasLinked = true;
 
       portals.add(portal);
@@ -1387,7 +1390,7 @@ void PolyRotateThinker::Think()
             po->thinker = NULL;
             po->thrust = FRACUNIT;
          }
-         this->removeThinker();
+         this->remove();
 
          // TODO: notify scripts
          S_StopPolySequence(po);
@@ -1469,7 +1472,7 @@ void PolyMoveThinker::Think()
             po->thinker = NULL;
             po->thrust = FRACUNIT;
          }
-         this->removeThinker();
+         this->remove();
 
          // TODO: notify scripts
          S_StopPolySequence(po);
@@ -1570,7 +1573,7 @@ void PolySlideDoorThinker::Think()
                po->thinker = NULL;
                po->thrust = FRACUNIT;
             }
-            this->removeThinker();
+            this->remove();
             // TODO: notify scripts
          }
          S_StopPolySequence(po);
@@ -1682,7 +1685,7 @@ void PolySwingDoorThinker::Think()
                po->thinker = NULL;
                po->thrust = FRACUNIT;
             }
-            this->removeThinker();
+            this->remove();
             // TODO: notify scripts
          }
          S_StopPolySequence(po);
@@ -1922,7 +1925,7 @@ int EV_DoPolyObjStop(int polyObjNum)
    // don't remove thinker if there is no thinker, but do successfully activate
    if(po->thinker)
    {
-      po->thinker->removeThinker();
+      po->thinker->remove();
       po->thinker = nullptr;
       S_StopPolySequence(po);
    }

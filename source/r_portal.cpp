@@ -1668,10 +1668,10 @@ portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,
 //
 static void R_pairPortalLines(line_t &line, line_t &pline)
 {
-   line.beyondportalline = &pline;  // used with MLI_POLYPORTALLINE
+   line.beyondportalline = &pline;  // used with MLI_1SPORTALLINE
    if(!line.backsector)
    {
-      line.intflags |= MLI_POLYPORTALLINE;   // for rendering
+      line.intflags |= MLI_1SPORTALLINE;   // for rendering
       if(line.portal && line.portal->type == R_LINKED)
       {
          // MAKE IT PASSABLE

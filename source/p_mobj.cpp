@@ -142,16 +142,16 @@ void PointThinker::serialize(SaveArchive &arc)
 }
 
 //
-// PointThinker::removeThinker
+// PointThinker::remove
 //
 // Stop any sounds related to this PointThinker instance, and then invoke the
 // parent implementation.
 //
-void PointThinker::removeThinker()
+void PointThinker::remove()
 {
    // stop any playing sound
    S_StopSound(this, CHAN_ALL);
-   Super::removeThinker();
+   Super::remove();
 }
 
 //=============================================================================
@@ -293,7 +293,7 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
       if(state == NullStateNum)
       {
          mobj->state = NULL;
-         mobj->removeThinker();
+         mobj->remove();
          ret = false;
          break;                 // killough 4/9/98
       }
@@ -365,7 +365,7 @@ bool P_SetMobjStateNF(Mobj *mobj, statenum_t state)
    {
       // remove mobj
       mobj->state = NULL;
-      mobj->removeThinker();
+      mobj->remove();
       return false;
    }
 
@@ -408,14 +408,14 @@ void P_ExplodeMissile(Mobj *mo, const sector_t *topedgesec)
          R_IsSkyLikePortalCeiling(*ceilingsector)) &&
          mo->z >= ceilingsector->ceilingheight - P_ThingInfoHeight(mo->info))
       {
-         mo->removeThinker(); // don't explode on the actual sky itself
+         mo->remove(); // don't explode on the actual sky itself
          return;
       }
       if(topedgesec && demo_version >= 342 && (topedgesec->intflags & SIF_SKY ||
          R_IsSkyLikePortalCeiling(*topedgesec)) && 
          mo->z >= topedgesec->ceilingheight - P_ThingInfoHeight(mo->info))
       {
-         mo->removeThinker(); // don't explode on the edge
+         mo->remove(); // don't explode on the edge
          return;
       }
    }
@@ -619,7 +619,7 @@ void P_XYMovement(Mobj* mo)
                   // this fix is for "sky hack walls" only apparently --
                   // see P_ExplodeMissile for my real sky fix
 
-                  mo->removeThinker();
+                  mo->remove();
                   return;
                }
             }
@@ -628,7 +628,7 @@ void P_XYMovement(Mobj* mo)
                !clip.blockline->backsector && 
                R_IsSkyLikePortalWall(*clip.blockline))
             {
-               mo->removeThinker();
+               mo->remove();
                return;
             }
 
@@ -865,7 +865,7 @@ static void P_ZMovement(Mobj* mo)
             {
                if(mo->flags & MF_MISSILE)
                {
-                  mo->removeThinker();      // missiles don't bounce off skies
+                  mo->remove();      // missiles don't bounce off skies
                   if(demo_version >= 331)
                      return; // haleyjd: return here for below fix
                }
@@ -910,7 +910,7 @@ static void P_ZMovement(Mobj* mo)
                clip.ceilingline->extflags & EX_ML_UPPERPORTAL &&
                R_IsSkyLikePortalCeiling(*clip.ceilingline->backsector))))
          {
-            mo->removeThinker();  // don't explode on skies
+            mo->remove();  // don't explode on skies
          }
          else
          {
@@ -1153,7 +1153,7 @@ void P_NightmareRespawn(Mobj* mobj)
    mo->reactiontime = 18;
 
    // remove the old monster,
-   mobj->removeThinker();
+   mobj->remove();
 }
 
 //
@@ -1516,7 +1516,7 @@ void Mobj::Think()
       { 
          // check for nightmare respawn
          if(flags2 & MF2_REMOVEDEAD)
-            this->removeThinker();
+            this->remove();
          else
             P_NightmareRespawn(this);
       }
@@ -1569,7 +1569,7 @@ void Mobj::serialize(SaveArchive &arc)
       << gear                                              // Lee's torque
       // Appearance
       << colour                                            // Translations
-      << translucency << alphavelocity                     // Alpha blending
+      << translucency << tranmap << alphavelocity          // Alpha blending
       << xscale << yscale                                  // Scaling
       // Inventory related fields
       << dropamount
@@ -1586,7 +1586,7 @@ void Mobj::serialize(SaveArchive &arc)
 
       // Basic serializable pointers (state, player)
       arc << state->index;
-      temp = player ? player - players + 1 : 0;
+      temp = static_cast<unsigned>(player ? player - players + 1 : 0);
       arc << temp;
 
       // Pointers to other mobjs
@@ -1787,6 +1787,7 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 
    // haleyjd: zdoom-style translucency level
    mobj->translucency  = info->translucency;
+   mobj->tranmap = info->tranmap;
    
    if(info->alphavelocity != 0) // 5/23/08
       P_StartMobjFade(mobj, info->alphavelocity);
@@ -1913,7 +1914,7 @@ int iquehead, iquetail;
 //
 // P_RemoveMobj
 //
-void Mobj::removeThinker()
+void Mobj::remove()
 {
    bool respawnitem = false;
 
@@ -1983,7 +1984,7 @@ void Mobj::removeThinker()
    }
 
    // remove from thinker list
-   Super::removeThinker();
+   Super::remove();
 }
 
 //
@@ -3327,15 +3328,15 @@ void MobjFadeThinker::setTarget(Mobj *pTarget)
 }
 
 //
-// MobjFadeThinker::removeThinker
+// MobjFadeThinker::remove
 //
-// Virtual method, overrides Thinker::removeThinker.
+// Virtual method, overrides Thinker::remove.
 // Clear the counted reference to the parent Mobj before removing self.
 //
-void MobjFadeThinker::removeThinker()
+void MobjFadeThinker::remove()
 {
    P_SetTarget<Mobj>(&target, NULL); // clear reference to parent Mobj
-   Super::removeThinker();           // call parent implementation
+   Super::remove();           // call parent implementation
 }
 
 //
@@ -3348,7 +3349,7 @@ void MobjFadeThinker::Think()
    // If target is being removed, or won't fade, remove self.
    if(target->isRemoved() || !target->alphavelocity)
    {
-      removeThinker();
+      remove();
       return;
    }
 
@@ -3360,7 +3361,7 @@ void MobjFadeThinker::Think()
       if(target->flags3 & MF3_CYCLEALPHA)
          target->alphavelocity = -target->alphavelocity;
       else
-         removeThinker(); // done.
+         remove(); // done.
    }
    else if(target->translucency > FRACUNIT)
    {
@@ -3368,7 +3369,7 @@ void MobjFadeThinker::Think()
       if(target->flags3 & MF3_CYCLEALPHA)
          target->alphavelocity = -target->alphavelocity;
       else
-         removeThinker(); // done.
+         remove(); // done.
    }
 }
 

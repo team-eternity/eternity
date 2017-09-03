@@ -470,7 +470,7 @@ static void D_DiskMetaData()
    if(!(slash = strrchr(wad.name, '\\')))
       return;
 
-   slen = slash - wad.name;
+   slen = eindex(slash - wad.name);
    ++slen;
    name.copy(wad.name, slen);
    name.concat("metadata.txt");

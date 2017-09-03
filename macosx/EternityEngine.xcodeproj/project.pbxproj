@@ -290,6 +290,7 @@
 		4F68CE8D1963D88100E7B8BE /* ev_sectors.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F68CE8B1963D88100E7B8BE /* ev_sectors.cpp */; };
 		4F7ADA181E0C623900E34F5F /* m_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F7ADA161E0C623900E34F5F /* m_utils.cpp */; };
 		4F917D781F29243500131BE5 /* xl_umapinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F917D771F29243500131BE5 /* xl_umapinfo.cpp */; };
+		4F950FDF1F3CDAB4000D9DC5 /* xl_animdefs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F950FDE1F3CDAB4000D9DC5 /* xl_animdefs.cpp */; };
 		4FAAD5941E583113001D7263 /* p_portalcross.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FAAD5931E583113001D7263 /* p_portalcross.cpp */; };
 		4FB5F0051CCB5A0D00EFF2D9 /* p_portalclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FB5F0031CCB5A0D00EFF2D9 /* p_portalclip.cpp */; };
 		4FC0A9271E1E2A50006CEC45 /* Action.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FC0A8FB1E1E2A50006CEC45 /* Action.cpp */; };
@@ -381,6 +382,8 @@
 		4F8B42E816C1101000765638 /* zutil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = zutil.c; path = ../zlib/zutil.c; sourceTree = "<group>"; };
 		4F917D771F29243500131BE5 /* xl_umapinfo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = xl_umapinfo.cpp; path = ../source/xl_umapinfo.cpp; sourceTree = "<group>"; };
 		4F917D791F2A5FD600131BE5 /* xl_umapinfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = xl_umapinfo.h; path = ../source/xl_umapinfo.h; sourceTree = "<group>"; };
+		4F950FDD1F3CDA67000D9DC5 /* xl_animdefs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = xl_animdefs.h; path = ../source/xl_animdefs.h; sourceTree = "<group>"; };
+		4F950FDE1F3CDAB4000D9DC5 /* xl_animdefs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = xl_animdefs.cpp; path = ../source/xl_animdefs.cpp; sourceTree = "<group>"; };
 		4F98954F16C10FB1005D78C0 /* trees.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = trees.c; path = ../zlib/trees.c; sourceTree = "<group>"; };
 		4F9A249216D95878002BE852 /* t_plane.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = t_plane.cpp; path = ../source/t_plane.cpp; sourceTree = "<group>"; };
 		4F9A249316D95878002BE852 /* t_plane.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = t_plane.h; path = ../source/t_plane.h; sourceTree = "<group>"; };
@@ -1895,6 +1898,8 @@
 		FACACB7D165300D20091AF2E /* XL_ */ = {
 			isa = PBXGroup;
 			children = (
+				4F950FDE1F3CDAB4000D9DC5 /* xl_animdefs.cpp */,
+				4F950FDD1F3CDA67000D9DC5 /* xl_animdefs.h */,
 				4F36247218A567CD00B94FA1 /* xl_emapinfo.cpp */,
 				4F36247318A567CD00B94FA1 /* xl_emapinfo.h */,
 				4F36247418A567CD00B94FA1 /* xl_mapinfo.cpp */,
@@ -2015,7 +2020,7 @@
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0800;
+				LastUpgradeCheck = 0830;
 			};
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "EternityEngine" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -2068,6 +2073,7 @@
 				4F5F3984182D9B9A0027813A /* pngmem.c in Sources */,
 				4F5F3985182D9B9A0027813A /* pngwio.c in Sources */,
 				4F5F3986182D9B9A0027813A /* pngwrite.c in Sources */,
+				4F950FDF1F3CDAB4000D9DC5 /* xl_animdefs.cpp in Sources */,
 				4F5F3987182D9B9A0027813A /* pngwtran.c in Sources */,
 				4F5F3988182D9B9A0027813A /* pngwutil.c in Sources */,
 				4F5F3958182D9B820027813A /* doomdef.cpp in Sources */,
@@ -2468,6 +2474,7 @@
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_VERSION = "";
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
@@ -2512,6 +2519,7 @@
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_VERSION = "";
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
