@@ -274,6 +274,7 @@ public:
    mobjinfo_t *info;   // mobjinfo[mobj->type]
 
    int colour; // sf: the sprite colour
+   int tranmap;   // the translucency map
 
    // INVENTORY_FIXME: eliminate union
    union

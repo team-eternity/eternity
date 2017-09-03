@@ -167,6 +167,7 @@ struct vissprite_t
   int heightsec;
 
   uint16_t translucency; // haleyjd: zdoom-style translucency
+  int tranmaplump;
 
   fixed_t footclip; // haleyjd: foot clipping
 
@@ -732,7 +733,12 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
    
    column.translevel = vis->translucency;
    column.translevel += 1;
-   if(vis->drawstyle == VS_DRAWSTYLE_SUB)
+   if(vis->tranmaplump >= 0)
+   {
+      tranmap = static_cast<byte *>(wGlobalDir.cacheLumpNum(vis->tranmaplump,
+                                                            PU_CACHE));
+   }
+   else if(vis->drawstyle == VS_DRAWSTYLE_SUB)
       tranmap = main_submap;
    else
       tranmap = main_tranmap; // killough 4/11/98   
@@ -1048,6 +1054,7 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
 
    // haleyjd 09/01/02
    vis->translucency = uint16_t(thing->translucency - 1);
+   vis->tranmaplump = -1;
 
    // haleyjd 11/14/02: ghost flag
    if(thing->flags3 & MF3_GHOST && vis->translucency == FRACUNIT - 1)
@@ -1085,8 +1092,13 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
    if(thing->flags & MF_SHADOW)
       vis->drawstyle = VS_DRAWSTYLE_SHADOW;
    else if(general_translucency)
-   {   
-      if(thing->flags3 & MF3_TLSTYLEADD)
+   {
+      if(thing->tranmap >= 0)
+      {
+         vis->drawstyle = VS_DRAWSTYLE_TRANMAP;
+         vis->tranmaplump = thing->tranmap;
+      }
+      else if(thing->flags3 & MF3_TLSTYLEADD)
          vis->drawstyle = VS_DRAWSTYLE_ADD;
       else if(thing->flags4 & MF4_TLSTYLESUB)
          vis->drawstyle = VS_DRAWSTYLE_SUB;
@@ -2256,6 +2268,7 @@ static void R_ProjectParticle(particle_t *particle)
    vis->colour = particle->color;
    vis->patch = -1;
    vis->translucency = static_cast<uint16_t>(particle->trans - 1);
+   vis->tranmaplump = -1;
    // Cardboard
    vis->dist = idist;
    vis->xstep = 1.0f / xscale;
