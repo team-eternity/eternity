@@ -1253,6 +1253,7 @@ static void R_DrawPSprite(pspdef_t *psp)
    vis->x2           = x2 >= view.width ? viewwindow.width - 1 : (int)x2;
    vis->colour       = 0;      // sf: default colourmap
    vis->translucency = FRACUNIT - 1; // haleyjd: default zdoom trans.
+   vis->tranmaplump  = -1;
    vis->footclip     = 0; // haleyjd
    vis->scale        = view.pspriteyscale;
    vis->ytop         = (view.height * 0.5f) - (M_FixedToFloat(vis->texturemid) * vis->scale);
