@@ -5,27 +5,27 @@
 //
 
 // Keys
-pickupitem AKYY
+pickupeffect HereticGreenKey
 {
-  effect  KeyGreen
+  effects KeyGreen
   message $HGOTGREENKEY
   sound   ht_keyup
   flags   LEAVEINMULTI
 
   pfxname PFX_HGREENKEY
 }
-pickupitem BKYY
+pickupeffect HereticBlueKey
 {
-  effect  KeyBlue
+  effects KeyBlue
   message $HGOTBLUEKEY
   sound   ht_keyup
   flags   LEAVEINMULTI
 
   pfxname PFX_HBLUEKEY
 }
-pickupitem CKYY
+pickupeffect HereticYellowKey
 {
-  effect  KeyYellow
+  effects KeyYellow
   message $HGOTYELLOWKEY
   sound   ht_keyup
   flags   LEAVEINMULTI
@@ -33,210 +33,209 @@ pickupitem CKYY
   pfxname PFX_HYELLOWKEY
 }
 
-pickupitem PTN1
+pickupeffect CrystalVial
 {
-  effect  CrystalVial
+  effects CrystalVial
   message $HITEMHEALTH
   sound   ht_itemup
 
   pfxname PFX_HPOTION
 }
-pickupitem SHLD
+pickupeffect SilverShield
 {
-  effect  SilverShield
+  effects SilverShield
   message $HITEMSHIELD1
   sound   ht_itemup
 
   pfxname PFX_SILVERSHIELD
 }
-pickupitem SHD2
+pickupeffect EnchantedShield
 {
-  effect  EnchantedShield
+  effects EnchantedShield
   message $HITEMSHIELD2
   sound   ht_itemup
 
   pfxname PFX_ENCHANTEDSHIELD
 }
 // FIXME: Backpacks
-pickupitem BAGH { effect PFX_BAGOFHOLDING }
-/*pickupitem BAGH
+/*pickupeffect BagOfHolding
 {
-  effect  
+  effects 
   message $HITEMBAGOFHOLDING
   sound   ht_itemup
 
   pfxname PFX_BAGOFHOLDING
 }*/
-pickupitem SPMP
+pickupeffect MapScroll
 {
-  effect  SuperMap
+  effects SuperMap
   message $HITEMSUPERMAP
   sound   ht_itemup
 
   pfxname PFX_HMAP
 }
-pickupitem INVS
+pickupeffect HArtiInvisibility
 {
-  effect  ArtiInvisibility
+  effects ArtiInvisibility
   message $HITEMSHADOWSPHERE
   sound   ht_artiup
   //flags   
 }
-pickupitem PTN2
+pickupeffect HArtiQuartzFlask
 {
-  effect  ArtiHealth
+  effects ArtiHealth
   message $HITEMQUARTZFLASK
   sound   ht_artiup
   //flags   
 }
-pickupitem SOAR
+pickupeffect HArtiFly
 {
-  effect  ArtiFly
+  effects ArtiFly
   message $HITEMWINGSOFWRATH
   sound   ht_artiup
   //flags   
 }
-pickupitem INVU
+pickupeffect HArtiInvulnerability
 {
-  effect  ArtiInvulnerability
+  effects ArtiInvulnerability
   message $HITEMRINGOFINVINCIBILITY
   sound   ht_artiup
   //flags   
 }
-pickupitem PWBK
+pickupeffect HArtiTomeOfPower
 {
-  effect  ArtiTomeOfPower
+  effects ArtiTomeOfPower
   message $HITEMTOMEOFPOWER
   sound   ht_artiup
   //flags   
 }
-pickupitem EGGC
+pickupeffect HArtiEgg
 {
-  effect  ArtiEgg
+  effects ArtiEgg
   message $HITEMMORPHOVUM
   sound   ht_artiup
   //flags   
 }
-pickupitem SPHL
+pickupeffect HArtiSuperHeal
 {
-  effect  ArtiSuperHealth
+  effects ArtiSuperHealth
   message $HITEMMYSTICURN
   sound   ht_artiup
   //flags   
 }
-pickupitem TRCH
+pickupeffect HArtiTorch
 {
-  effect  ArtiTorch
+  effects ArtiTorch
   message $HITEMTORCH
   sound   ht_artiup
   //flags   
 }
-pickupitem FBMB
+pickupeffect HArtiFireBomb
 {
-  effect  ArtiTimeBomb
+  effects ArtiTimeBomb
   message $HITEMTIMEBOMB
   sound   ht_artiup
   //flags   
 }
-pickupitem ATLP
+pickupeffect HArtiTeleport
 {
-  effect  ArtiTeleport
+  effects ArtiTeleport
   message $HITEMTELEPORT
   sound   ht_artiup
   //flags   
 }
 
-pickupitem AMG1
+pickupeffect HAmmoWandWimpy
 {
-  effect  GoldWandAmmo
+  effects GoldWandAmmo
   message $HAMMOGOLDWAND1
   sound   ht_itemup
 
   pfxname PFX_GWNDWIMPY
 }
-pickupitem AMG2
+pickupeffect HAmmoWandHefty
 {
-  effect  GoldWandHefty
+  effects GoldWandHefty
   message $HAMMOGOLDWAND2
   sound   ht_itemup
 
   pfxname PFX_GWNDHEFTY
 }
-pickupitem AMM1
+pickupeffect HAmmoMaceWimpy
 {
-  effect  MaceAmmo
+  effects MaceAmmo
   message $HAMMOMACE1
   sound   ht_itemup
 
   pfxname PFX_MACEWIMPY
 }
-pickupitem AMM2
+pickupeffect HAmmoMaceHefty
 {
-  effect  MaceHefty
+  effects MaceHefty
   message $HAMMOMACE2
   sound   ht_itemup
 
   pfxname PFX_MACEHEFTY
 }
-pickupitem AMC1
+pickupeffect HAmmoCBowWimpy
 {
-  effect  CrossbowAmmo
+  effects CrossbowAmmo
   message $HAMMOCROSSBOW1
   sound   ht_itemup
 
   pfxname PFX_CBOWWIMPY
 }
-pickupitem AMC2
+pickupeffect HAmmoCBowHefty
 {
-  effect  CrossbowHefty
+  effects CrossbowHefty
   message $HAMMOCROSSBOW2
   sound   ht_itemup
 
   pfxname PFX_CBOWHEFTY
 }
-pickupitem AMB1
+pickupeffect HAmmoBlasterWimpy
 {
-  effect  BlasterAmmo
+  effects BlasterAmmo
   message $HAMMOBLASTER1
   sound   ht_itemup
 
   pfxname PFX_BLSRWIMPY
 }
-pickupitem AMB2
+pickupeffect HAmmoBlasterHefty
 {
-  effect  BlasterHefty
+  effects BlasterHefty
   message $HAMMOBLASTER2
   sound   ht_itemup
 
   pfxname PFX_BLSRHEFTY
 }
-pickupitem AMS1
+pickupeffect HAmmoSkullWimpy
 {
-  effect  SkullRodAmmo
+  effects SkullRodAmmo
   message $HAMMOSKULLROD1
   sound   ht_itemup
 
   pfxname PFX_PHRDWIMPY
 }
-pickupitem AMS2
+pickupeffect HAmmoSkullHefty
 {
-  effect  SkullRodHefty
+  effects SkullRodHefty
   message $HAMMOSKULLROD2
   sound   ht_itemup
 
   pfxname PFX_PHRDHEFTY
 }
-pickupitem AMP1
+pickupeffect HAmmoPhoenixWimpy
 {
-  effect  PhoenixRodAmmo
+  effects PhoenixRodAmmo
   message $HAMMOPHOENIXROD1
   sound   ht_itemup
 
   pfxname PFX_SKRDWIMPY
 }
-pickupitem AMP2
+pickupeffect HAmmoPhoenixHefty
 {
-  effect  PhoenixRodHefty
+  effects PhoenixRodHefty
   message $HAMMOPHOENIXROD2
   sound   ht_itemup
 
@@ -245,46 +244,67 @@ pickupitem AMP2
 
 // Weapons
 
-pickupitem WBOW
+pickupeffect HWeaponCrossbow
 {
-  effect  Crossbow
+  effects Crossbow
   message "$HWEAPONCROSSBOW"
   sound   ht_wpnup
 }
 
-pickupitem WBLS
+pickupeffect HWeaponBlaster
 {
-  effect Blaster
+  effects Blaster
   message "$HWEAPONBLASTER"
-  sound ht_wpnup
+  sound   ht_wpnup
 }
 
-pickupitem WSKL
+pickupeffect HWeaponSkullRod
 {
-  effect  SkullRod
+  effects SkullRod
   message "$HWEAPONSKULLROD"
   sound   ht_wpnup
 }
 
-pickupitem WPHX
+pickupeffect HWeaponPhoenixRod
 {
-  effect  PhoenixRod
+  effects PhoenixRod
   message "$HWEAPONPHOENIX"
   sound   ht_wpnup
 }
 
-pickupitem WMCE
+pickupeffect HWeaponFireMace
 {
-  effect  Mace
+  effects Mace
   message "$HWEAPONMACE"
   sound   ht_wpnup
 }
 
-pickupitem WGNT
+pickupeffect HWeaponGauntlets
 {
-  effect  Gauntlets
+  effects Gauntlets
   message "$HWEAPONGAUNTLETS"
   sound   ht_wpnup
 }
 
+
+pickupitem AKYY { effect PFX_HGREENKEY }
+pickupitem BKYY { effect PFX_HBLUEKEY }
+pickupitem CKYY { effect PFX_HYELLOWKEY }
+pickupitem PTN1 { effect PFX_HPOTION }
+pickupitem SHLD { effect PFX_SILVERSHIELD }
+pickupitem SHD2 { effect PFX_ENCHANTEDSHIELD }
+pickupitem BAGH { effect PFX_BAGOFHOLDING }
+pickupitem SPMP { effect PFX_HMAP }
+pickupitem AMG1 { effect PFX_GWNDWIMPY }
+pickupitem AMG2 { effect PFX_GWNDHEFTY }
+pickupitem AMM1 { effect PFX_MACEWIMPY }
+pickupitem AMM2 { effect PFX_MACEHEFTY }
+pickupitem AMC1 { effect PFX_CBOWWIMPY }
+pickupitem AMC2 { effect PFX_CBOWHEFTY }
+pickupitem AMB1 { effect PFX_BLSRWIMPY }
+pickupitem AMB2 { effect PFX_BLSRHEFTY }
+pickupitem AMS1 { effect PFX_SKRDWIMPY }
+pickupitem AMS2 { effect PFX_SKRDHEFTY }
+pickupitem AMP1 { effect PFX_PHRDWIMPY }
+pickupitem AMP2 { effect PFX_PHRDHEFTY }
 

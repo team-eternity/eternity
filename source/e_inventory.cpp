@@ -1038,7 +1038,13 @@ int E_TakeAllKeys(player_t *player)
 //
 
 static EHashTable<e_pickupfx_t, ENCStringHashKey,
+                  &e_pickupfx_t::name, &e_pickupfx_t::namelinks> e_PickupNameHash;
+
+static EHashTable<e_pickupfx_t, ENCStringHashKey,
                   &e_pickupfx_t::compatname, &e_pickupfx_t::cnamelinks> e_PickupCNameHash;
+
+static EHashTable<e_pickupitem_t, EIntHashKey,
+                  &e_pickupitem_t::sprnum, &e_pickupitem_t::sprnumlinks> e_PickupSprNumHash;
 
 //=============================================================================
 //
@@ -1051,6 +1057,7 @@ static dehflags_t e_PickupFlags[] =
    { "LEAVEINMULTI",    PFXF_LEAVEINMULTI },
    { "NOSCREENFLASH",   PFXF_NOSCREENFLASH },
    { "SILENTNOBENEFIT", PFXF_SILENTNOBENEFIT },
+   { "COMMERCIALONLY",  PXFX_COMMERCIALONLY },
    { NULL,           0 }
 };
 
@@ -1064,24 +1071,35 @@ static dehflagset_t e_PickupFlagSet =
 //
 // Effect Bindings
 //
-// Effects can be bound to sprites.
+// Effects can be bound to sprites, or Mobjs.
 //
 
-// Sprite pick-up effects
+// Pick-up effects
 #define ITEM_PICKUP_CNAME    "pfxname"
 #define ITEM_PICKUP_FX       "effect"
+#define ITEM_PICKUP_EFFECTS  "effects"
 #define ITEM_PICKUP_MSG      "message"
 #define ITEM_PICKUP_SOUND    "sound"
 #define ITEM_PICKUP_FLAGS    "flags"
 
 // sprite-based pickup items
-cfg_opt_t edf_pickup_opts[] =
+cfg_opt_t edf_pkupitem_opts[] =
 {
-   CFG_STR(ITEM_PICKUP_CNAME, NULL,       CFGF_NONE),
    CFG_STR(ITEM_PICKUP_FX,    "PFX_NONE", CFGF_NONE),
    CFG_STR(ITEM_PICKUP_MSG,   NULL,       CFGF_NONE),
    CFG_STR(ITEM_PICKUP_SOUND, NULL,       CFGF_NONE),
-   CFG_STR(ITEM_PICKUP_FLAGS, NULL,       CFGF_NONE),
+
+   CFG_END()
+};
+
+// standalone pickup effects
+cfg_opt_t edf_pkupfx_opts[] =
+{
+   CFG_STR(ITEM_PICKUP_CNAME,   NULL,       CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_EFFECTS, 0,          CFGF_LIST),
+   CFG_STR(ITEM_PICKUP_MSG,     NULL,       CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_SOUND,   NULL,       CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_FLAGS,   NULL,       CFGF_NONE),
 
    CFG_END()
 };
@@ -1154,16 +1172,28 @@ const char *pickupnames[PFX_NUMFX] =
    "PFX_TOTALINVIS",
 };
 
-// pickupfx lookup table used in P_TouchSpecialThing (is allocated
-// with size NUMSPRITES)
-e_pickupfx_t **pickupfx = NULL;
+//
+// Obtain a e_pickupfx_t structure by name.
+//
+e_pickupfx_t *E_PickupFXForName(const char *name)
+{
+   return e_PickupNameHash.objectForKey(name);
+}
 
 //
-// Obtain a weaponinfo_t structure by name.
+// Obtain a e_pickupfx_t structure by compat name.
 //
 static e_pickupfx_t *e_PickupFXForCName(const char *cname)
 {
    return e_PickupCNameHash.objectForKey(cname);
+}
+
+//
+// Obtain a e_pickupitem_t structure by sprite num.
+//
+e_pickupitem_t *E_PickupItemForSprNum(spritenum_t sprnum)
+{
+   return e_PickupSprNumHash.objectForKey(sprnum);
 }
 
 
@@ -1176,37 +1206,23 @@ static e_pickupfx_t *e_PickupFXForCName(const char *cname)
 //
 static void E_processPickupItems(cfg_t *cfg)
 {
-   static int oldnumsprites;
-   int i, numnew, numpickups;
+   int i, numpickups;
 
    E_EDFLogPuts("\t* Processing pickup items\n");
 
-   // allocate and initialize pickup effects array
-   // haleyjd 11/21/11: allow multiple runs
-   numnew = NUMSPRITES - oldnumsprites;
-   if(numnew > 0)
-   {
-      pickupfx = erealloc(e_pickupfx_t **, pickupfx, NUMSPRITES * sizeof(e_pickupfx_t *));
-      for(i = oldnumsprites; i < NUMSPRITES; i++)
-      {
-         pickupfx[i] = estructalloc(e_pickupfx_t, 1);
-      }
-      oldnumsprites = NUMSPRITES;
-   }
-
    // sanity check
-   if(!pickupfx)
-      E_EDFLoggedErr(2, "E_ProcessItems: no sprites defined!?\n");
-   
+   //if(!pickupfx)
+   //   E_EDFLoggedErr(2, "E_ProcessItems: no sprites defined!?\n");
+
    // load pickupfx
-   numpickups = cfg_size(cfg, EDF_SEC_PICKUPFX);
+   numpickups = cfg_size(cfg, EDF_SEC_PKUPITEM);
    E_EDFLogPrintf("\t\t%d pickup item(s) defined\n", numpickups);
    for(i = 0; i < numpickups; ++i)
    {
       int fxnum, sprnum;
-      cfg_t *sec = cfg_getnsec(cfg, EDF_SEC_PICKUPFX, i);
+      cfg_t *sec = cfg_getnsec(cfg, EDF_SEC_PKUPITEM, i);
       const char *title = cfg_title(sec);
-      const char *str   = cfg_getstr(sec, ITEM_PICKUP_FX);
+      const char *str = cfg_getstr(sec, ITEM_PICKUP_FX);
 
       // validate the sprite name given in the section title and
       // resolve to a sprite number (hashed)
@@ -1221,79 +1237,155 @@ static void E_processPickupItems(cfg_t *cfg)
          continue;
       }
 
-      e_pickupfx_t &pfx = *pickupfx[sprnum];
-
+      // INVENTORY_FIXME: old names need to become a compat feature only;
+      //   "effect" should start referring to an itemeffect_t.
       // find the proper pickup effect number (linear search)
       fxnum = E_StrToNumLinear(pickupnames, PFX_NUMFX, str);
-      if(fxnum != PFX_NUMFX)
+      if(fxnum == PFX_NUMFX)
       {
-         e_pickupfx_t *sourcefx = e_PickupFXForCName(str);
-         if(sourcefx != nullptr)
-         {
-            efree(&pfx);
-            pickupfx[sprnum] = sourcefx;
-         }
-         else // TODO: Remove this ASAP
-            pfx.tempeffect = fxnum;
+         E_EDFLoggedWarning(2, "Warning: invalid pickup item: '%s'\n", str);
+         continue;
+      }
 
-         continue;
-      }
-      else if(!((pfx.effect = E_ItemEffectForName(str))))
-      {
-         E_EDFLoggedWarning(2, "Warning: invalid pickup effect: '%s'\n", str);
-         continue;
-      }
-      
-      E_EDFLogPrintf("\t\tSet sprite %s(#%d) to pickup effect %s(#%d)\n",
+      E_EDFLogPrintf("\t\tSet sprite %s(#%d) to pickup item %s(#%d)\n",
                      title, sprnum, str, fxnum);
 
+      e_pickupitem_t *pfx = [sprnum]() {
+                               e_pickupitem_t *temp = E_PickupItemForSprNum(sprnum);
+                               return temp ? temp : estructalloc(e_pickupitem_t, 1);
+                            }();
+         
+      pfx->sprnum = sprnum;
+      e_PickupSprNumHash.addObject(pfx);
+
+      // INVENTORY_FIXME: replace with effect pointer
+      pfx->tempeffect = fxnum;
+      pfx->pickupfx = e_PickupFXForCName(str);
+
       // free any strings that might have been previously set
-      if(pfx.compatname)
+      if(pfx->message)
       {
-         efree(pfx.compatname);
-         pfx.compatname = nullptr;
-         e_PickupCNameHash.removeObject(pfx);
+         efree(pfx->message);
+         pfx->message = nullptr;
       }
-      if(pfx.message)
+      if(pfx->sound)
       {
-         efree(pfx.message);
-         pfx.message = NULL;
-      }
-      if(pfx.sound)
-      {
-         efree(pfx.sound);
-         pfx.sound = NULL;
+         efree(pfx->sound);
+         pfx->sound = nullptr;
       }
 
       // process effect properties
 
-      // compatname
-      if((str = cfg_getstr(sec, ITEM_PICKUP_CNAME)))
-      {
-         pfx.compatname = estrdup(str);
-         e_PickupCNameHash.addObject(pfx);
-      }
-
       // message
       if((str = cfg_getstr(sec, ITEM_PICKUP_MSG)))
-         pfx.message = estrdup(str);
+         pfx->message = estrdup(str);
 
       // sound
       if((str = cfg_getstr(sec, ITEM_PICKUP_SOUND)))
-         pfx.sound = estrdup(str);
+         pfx->sound = estrdup(str);
+   }
+}
 
-      if((str = cfg_getstr(sec, ITEM_PICKUP_FLAGS)))
+static void E_processPickupEffect(cfg_t *sec)
+{
+   const char *title = cfg_title(sec);
+   const char *str;
+   e_pickupfx_t *pfx = [title]() {
+                          e_pickupfx_t *temp = E_PickupFXForName(title);
+                          return temp ? temp : estructalloc(e_pickupfx_t, 1);
+                       }();
+
+   if(!pfx->name)
+   {
+      pfx->name = estrdup(title);
+      e_PickupNameHash.addObject(pfx);
+   }
+
+   if(pfx->effects)
+   {
+      efree(pfx->effects);
+      pfx->effects = nullptr;
+   }
+   if(pfx->compatname)
+   {
+      e_PickupCNameHash.removeObject(pfx);
+      efree(pfx->compatname);
+      pfx->compatname = nullptr;
+   }
+   if(pfx->message)
+   {
+      efree(pfx->message);
+      pfx->message = nullptr;
+   }
+   if(pfx->sound)
+   {
+      efree(pfx->sound);
+      pfx->sound = nullptr;
+   }
+
+   if((pfx->numEffects = cfg_size(sec, ITEM_PICKUP_EFFECTS)))
+   {
+      pfx->effects = ecalloc(itemeffect_t **, 1, sizeof(itemeffect_t **));
+      for(int i = 0; i < pfx->numEffects; i++)
       {
-         if(*str == '\0')
+         str = cfg_getnstr(sec, ITEM_PICKUP_EFFECTS, i);
+         if(!(pfx->effects[i] = E_ItemEffectForName(str)))
          {
-            pfx.flags = 0;
-         }
-         else
-         {
-            unsigned int results = E_ParseFlags(str, &e_PickupFlagSet);
-            pfx.flags = results;
+            E_EDFLoggedWarning(2, "Warning: invalid pickup effect: '%s'\n", str);
+            return;
          }
       }
+   }
+
+   // compatname
+   if((str = cfg_getstr(sec, ITEM_PICKUP_CNAME)))
+   {
+      pfx->compatname = estrdup(str);
+      e_PickupCNameHash.addObject(pfx);
+   }
+
+   // message
+   if((str = cfg_getstr(sec, ITEM_PICKUP_MSG)))
+      pfx->message = estrdup(str);
+
+   // sound
+   if((str = cfg_getstr(sec, ITEM_PICKUP_SOUND)))
+      pfx->sound = estrdup(str);
+
+   if((str = cfg_getstr(sec, ITEM_PICKUP_FLAGS)))
+   {
+      if(*str == '\0')
+         pfx->flags = PXFX_NONE;
+      else
+      {
+         unsigned int results = E_ParseFlags(str, &e_PickupFlagSet);
+         pfx->flags = pickupflags_e(results);
+      }
+   }
+}
+
+static void E_processPickupEffects(cfg_t *cfg)
+{
+   int i, numpickups;
+
+   E_EDFLogPuts("\t* Processing pickup items\n");
+
+   // sanity check
+   //if(!pickupfx)
+   //   E_EDFLoggedErr(2, "E_ProcessItems: no sprites defined!?\n");
+
+   // load pickupfx
+   numpickups = cfg_size(cfg, EDF_SEC_PICKUPFX);
+   E_EDFLogPrintf("\t\t%d pickup item(s) defined\n", numpickups);
+   for(i = 0; i < numpickups; ++i)
+   {
+      cfg_t *sec = cfg_getnsec(cfg, EDF_SEC_PICKUPFX, i);
+      const char *title = cfg_title(sec);
+
+      E_EDFLogPrintf("\t\Created pickup effect %s\n", title);
+
+      // process effect properties
+      E_processPickupEffect(sec);
    }
 }
 
@@ -2052,6 +2144,9 @@ void E_ProcessInventory(cfg_t *cfg)
    // collect special artifact type definitions
    E_collectAmmoTypes();
    E_collectKeyItems();
+
+   // process pickup effect bindings
+   E_processPickupEffects(cfg);
 
    // process pickup item bindings
    E_processPickupItems(cfg);

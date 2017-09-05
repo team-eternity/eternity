@@ -146,28 +146,43 @@ typedef MetaTable itemeffect_t;
 
 enum pickupflags_e : unsigned int
 {
+   PXFX_NONE            = 0x00000000,
    PFXF_ALWAYSPICKUP    = 0x00000001, // item is picked up even if not useful
    PFXF_LEAVEINMULTI    = 0x00000002, // item is left in multiplayer games
    PFXF_NOSCREENFLASH   = 0x00000004, // does not cause bonuscount increment
    PFXF_SILENTNOBENEFIT = 0x00000008, // no pickup effects if picked up without benefit
+   PXFX_COMMERCIALONLY  = 0x00000010, // can only be picked up in commercial gamemodes
 };
 
+// Modern pickup effects 
 struct e_pickupfx_t
 {
-   char         *compatname; // compat name, if any
-   itemeffect_t *effect;     // item given, if any
-   char         *message;    // message, if any
-   char         *sound;      // sound, if any
-   unsigned int  flags;      // pickup flags
+   char          *name;       // name
+   char          *compatname; // compat name, if any
+   unsigned int   numEffects; // number of effects
+   itemeffect_t **effects;    // item given, if any
+   char          *message;    // message, if any
+   char          *sound;      // sound, if any
+   pickupflags_e flags;       // pickup flags
+
+   // EDF Hashing
+   DLListItem<e_pickupfx_t> namelinks; // hash by name
+   DLListItem<e_pickupfx_t> cnamelinks; // hash by compat name
+};
+
+// Dusty old pickup items
+struct e_pickupitem_t
+{
+   spritenum_t   sprnum;   // sprite number
+   e_pickupfx_t *pickupfx; // item given, if any
+   char          *message; // message, if any
+   char          *sound;   // sound, if any
 
    int tempeffect;        // INVENTORY_FIXME: temporary transitional field
 
    // EDF Hashing
-   DLListItem<e_pickupfx_t> cnamelinks; // hash by compat name
+   DLListItem<e_pickupitem_t> sprnumlinks; // hash by sprite num
 };
-
-// INVENTORY_TODO: alter as needed
-extern e_pickupfx_t **pickupfx;
 
 //
 // Functions
@@ -264,6 +279,9 @@ int E_GetItemOwnedAmountName(player_t *player, const char *name);
 // Place an item into a player's inventory. 
 bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact, int amount = -1);
 
+e_pickupfx_t *E_PickupFXForName(const char *name);
+e_pickupitem_t *E_PickupItemForSprNum(spritenum_t sprnum);
+
 // return value enumeration for E_RemoveInventoryItem
 enum itemremoved_e
 {
@@ -298,7 +316,8 @@ int E_GetInventoryAllocSize();
 #define EDF_SEC_POWERFX  "powereffect"
 #define EDF_SEC_WEAPGFX  "weapongiver"
 #define EDF_SEC_ARTIFACT "artifact"
-#define EDF_SEC_PICKUPFX "pickupitem"
+#define EDF_SEC_PKUPITEM "pickupitem"
+#define EDF_SEC_PICKUPFX "pickupeffect"
 #define EDF_SEC_LOCKDEF  "lockdef"
 
 // Section Defs
@@ -308,7 +327,8 @@ extern cfg_opt_t edf_ammofx_opts[];
 extern cfg_opt_t edf_powerfx_opts[];
 extern cfg_opt_t edf_weapgfx_opts[];
 extern cfg_opt_t edf_artifact_opts[];
-extern cfg_opt_t edf_pickup_opts[];
+extern cfg_opt_t edf_pkupitem_opts[];
+extern cfg_opt_t edf_pkupfx_opts[];
 extern cfg_opt_t edf_lockdef_opts[];
 
 // Functions

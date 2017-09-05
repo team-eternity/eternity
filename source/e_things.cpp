@@ -206,6 +206,9 @@ int UnknownThingType;
 #define ITEM_TNG_BB_ACTION   "action"
 #define ITEM_TNG_BB_BEHAVIOR "behavior"
 
+// Pickup Property
+#define ITEM_TNG_PICKUPEFFECT "pickupeffect"
+
 //
 // Field-Specific Data
 //
@@ -561,6 +564,7 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_BLOODIMPACT,     "",            CFGF_NONE                ), \
    CFG_STR(ITEM_TNG_BLOODRIP,        "",            CFGF_NONE                ), \
    CFG_STR(ITEM_TNG_BLOODCRUSH,      "",            CFGF_NONE                ), \
+   CFG_STR(ITEM_TNG_PICKUPEFFECT,    "",            CFGF_NONE                ), \
    CFG_END()
 
 cfg_opt_t edf_thing_opts[] =
@@ -2817,6 +2821,26 @@ void E_ProcessThings(cfg_t *cfg)
    ++edf_thing_generation;
 }
 
+void E_ProcessThingPickups(cfg_t *cfg)
+{
+   unsigned int i, numthings = cfg_size(cfg, EDF_SEC_THING);;
+   for(i = 0; i < numthings; i++)
+   {
+      cfg_t *thingsec = cfg_getnsec(cfg, EDF_SEC_THING, i);
+      const char *name = cfg_title(thingsec);
+      int thingnum = E_ThingNumForName(name);
+      if(cfg_size(thingsec, ITEM_TNG_PICKUPEFFECT))
+      {
+         const char *tempstr = cfg_getstr(thingsec, ITEM_TNG_PICKUPEFFECT);
+         if(!(mobjinfo[thingnum]->pickupfx = E_PickupFXForName(tempstr)))
+         {
+            E_EDFLoggedWarning(2, "Invalid pickupeffect '%s' in thingtype '%s'\n",
+                               tempstr, name);
+         }
+      }
+   }
+}
+
 //
 // Does processing for thingdelta sections, which allow cascading
 // editing of existing things. The thingdelta shares most of its
@@ -2845,6 +2869,15 @@ void E_ProcessThingDeltas(cfg_t *cfg)
       tempstr = cfg_getstr(deltasec, ITEM_DELTA_NAME);
       mobjType = E_GetThingNumForName(tempstr);
 
+      if(cfg_size(deltasec, ITEM_TNG_PICKUPEFFECT))
+      {
+         const char *tempstr = cfg_getstr(deltasec, ITEM_TNG_PICKUPEFFECT);
+         if(!(mobjinfo[mobjType]->pickupfx = E_PickupFXForName(tempstr)))
+         {
+            E_EDFLoggedWarning(2, "Invalid pickupeffect '%s' in thingtype '%s'\n",
+                               tempstr, tempstr);
+         }
+      }
       E_ProcessThing(mobjType, deltasec, cfg, false);
 
       E_EDFLogPrintf("\t\tApplied thingdelta #%d to %s(#%d)\n",

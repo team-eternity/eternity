@@ -35,9 +35,9 @@ includeifenabled("heretic/sprites.edf", "HERETIC");
 // Eternity Engine Sprites -- Always defined
 spritenames += { TNT1, DOGS, PLS1, PLS2, UNKN, SPSH, SLDG, LVAS, EERV }
 
-pickupitem PNS2
+pickupeffect ETCTotalInvisiSphere
 {
-  effect  TotalInvisiSphere
+  effects TotalInvisiSphere
   message "Total Invisibility!"
   sound   getpow
   flags   ALWAYSPICKUP

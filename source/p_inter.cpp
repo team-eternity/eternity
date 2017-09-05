@@ -667,9 +667,10 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
 {
    player_t     *player;
    e_pickupfx_t *pickup;
-   itemeffect_t *effect;
-   bool          pickedup = false;
-   bool          dropped  = false;
+   e_pickupitem_t *pickupitem;
+   bool          pickedup  = false;
+   bool          dropped   = false;
+   bool          hadeffect = false;
    const char   *message  = NULL;
    const char   *sound    = NULL;
 
@@ -690,42 +691,68 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
    if(special->sprite < 0 || special->sprite >= NUMSPRITES)
       return;
 
-   pickup = pickupfx[special->sprite];
-   effect = pickup->effect;
+   if(special->info->pickupfx)
+      pickup = special->info->pickupfx;
+   else if((pickupitem = E_PickupItemForSprNum(special->sprite)))
+   {
+      pickup = pickupitem->pickupfx;
+      message = pickupitem->message;
+      sound = pickupitem->sound;
+   }
+   else
+      return;
 
-   if(!effect)
+   if(pickup->flags & PXFX_COMMERCIALONLY &&
+      (demo_version < 335 && GameModeInfo->id != commercial))
+      return;
+
+   if(!message)
+      message = pickup->message;
+   if(!sound)
+      sound = pickup->sound;
+
+   if(pickup->numEffects == 0)
       return;
 
    // set defaults
-   message = pickup->message;
-   sound   = pickup->sound;
    dropped = ((special->flags & MF_DROPPED) == MF_DROPPED);
 
-   switch(effect->getInt("class", ITEMFX_NONE))
+
+   for(int i = 0; i < pickup->numEffects; i++)
    {
-   case ITEMFX_HEALTH:   // Health - heal up the player automatically
-      pickedup = P_GiveBody(player, effect);
-      if(pickedup && player->health < effect->getInt("amount", 0) * 2)
-         message = effect->getString("lowmessage", message);
-      break;
-   case ITEMFX_ARMOR:    // Armor - give the player some armor
-      pickedup = P_GiveArmor(player, effect);
-      break;
-   case ITEMFX_AMMO:     // Ammo - give the player some ammo
-      pickedup = P_GiveAmmoPickup(player, effect, dropped, special->dropamount);
-      break;
-   case ITEMFX_POWER:
-      pickedup = P_GivePowerForItem(player, effect);
-      break;
-   case ITEMFX_WEAPONGIVER:
-      pickedup = P_GiveWeapon(player, effect, dropped, special);
-      break;
-   case ITEMFX_ARTIFACT: // Artifacts - items which go into the inventory
-      pickedup = E_GiveInventoryItem(player, effect);
-      break;
-   default:
-      return;
+      itemeffect_t *effect = pickup->effects[i];
+      if(!effect)
+         continue;
+      hadeffect = true;
+      switch(effect->getInt("class", ITEMFX_NONE))
+      {
+      case ITEMFX_HEALTH:   // Health - heal up the player automatically
+         pickedup |= P_GiveBody(player, effect);
+         if(pickedup && player->health < effect->getInt("amount", 0) * 2)
+            message = effect->getString("lowmessage", message);
+         break;
+      case ITEMFX_ARMOR:    // Armor - give the player some armor
+         pickedup |= P_GiveArmor(player, effect);
+         break;
+      case ITEMFX_AMMO:     // Ammo - give the player some ammo
+         pickedup |= P_GiveAmmoPickup(player, effect, dropped, special->dropamount);
+         break;
+      case ITEMFX_POWER:
+         pickedup |= P_GivePowerForItem(player, effect);
+         break;
+      case ITEMFX_WEAPONGIVER:
+         pickedup |= P_GiveWeapon(player, effect, dropped, special);
+         break;
+      case ITEMFX_ARTIFACT: // Artifacts - items which go into the inventory
+         pickedup |= E_GiveInventoryItem(player, effect);
+         break;
+      default:
+         break;
+      }
    }
+
+   if(!hadeffect)
+      return;
 
    // perform post-processing if the item was collected beneficially, or if the
    // pickup is flagged to always be picked up even without benefit.
@@ -776,8 +803,14 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
 //
 void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 {
+   e_pickupitem_t *pickupitem = E_PickupItemForSprNum(special->sprite);
    // TODO: Make P_TouchSpecialThingNew the default
-   if(pickupfx[special->sprite]->effect)
+   if(special->info->pickupfx)
+   {
+      P_TouchSpecialThingNew(special, toucher);
+      return;
+   }
+   else if(pickupitem->pickupfx)
    {
       P_TouchSpecialThingNew(special, toucher);
       return;
@@ -815,20 +848,13 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 
    dropped = ((special->flags & MF_DROPPED) == MF_DROPPED);
 
+   if(!pickupitem)
+      return;
+
    // Identify by sprite.
    // INVENTORY_FIXME: apply pickupfx[].effect instead!
-   switch(pickupfx[special->sprite]->tempeffect)
+   switch(pickupitem->tempeffect)
    {
-   case PFX_MEGASPHERE:
-      if(demo_version < 335 && GameModeInfo->id != commercial)
-         return;
-      // INVENTORY_TODO: hardcoded for now
-      P_GiveBody(player, E_ItemEffectForName(ITEMNAME_MEGASPHERE));
-      P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_BLUEARMOR));
-      message = DEH_String("GOTMSPHERE"); // Ty 03/22/98 - externalized
-      sound = sfx_getpow;
-      break;
-
       // power ups
       // WEAPON_FIXME: berserk changes to fist
    case PFX_BERZERKBOX:
@@ -881,15 +907,6 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       sound = sfx_hitemup;
       break;
    
-      // start new Eternity power-ups
-   case PFX_TOTALINVIS:
-      effect = E_ItemEffectForName(ITEMNAME_TOTALINVISI);
-      if(!P_GivePowerForItem(player, effect))
-         return;
-      message = "Total Invisibility!";
-      sound = sfx_getpow;
-      break;
-
    default:
       // I_Error("P_SpecialThing: Unknown gettable thing");
       return;      // killough 12/98: suppress error message

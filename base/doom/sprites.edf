@@ -21,17 +21,17 @@ spritenames
 }
 
 // Armor
-pickupitem ARM1
+pickupeffect GreenArmor
 {
-  effect  GreenArmor
+  effects GreenArmor
   message $GOTARMOR
   sound   itemup
 
   pfxname PFX_GREENARMOR
 }
-pickupitem ARM2
+pickupeffect BlueArmor
 {
-  effect  BlueArmor
+  effects BlueArmor
   message $GOTMEGA
   sound   itemup
 
@@ -39,94 +39,92 @@ pickupitem ARM2
 }
 
 // Bonuses
-pickupitem BON1
+pickupeffect HealthBonus
 {
-  effect  HealthBonus
+  effects HealthBonus
   message $GOTHTHBONUS
   sound   itemup
   flags   ALWAYSPICKUP
 
   pfxname PFX_POTION
 }
-pickupitem BON2
+pickupeffect ArmorBonus
 {
-  effect  ArmorBonus
+  effects ArmorBonus
   message $GOTARMBONUS
   sound   itemup
   flags   ALWAYSPICKUP
 
   pfxname PFX_ARMORBONUS
 }
-pickupitem SOUL
+pickupeffect SoulSphere
 {
-  effect  Soulsphere
+  effects Soulsphere
   message $GOTSUPER
   sound   getpow
   flags   ALWAYSPICKUP
 
   pfxname PFX_SOULSPHERE
 }
-// FIXME: This gives two effects for a single pickupitem in P_TouchSpecialThing
-/*pickupitem MEGA
+pickupeffect MegaSphere
 {
-  effect  
+  effects MegasphereHealth, BlueArmor
   message $GOTMSPHERE
   sound   getpow
-  flags   ALWAYSPICKUP
+  flags   ALWAYSPICKUP|COMMERCIALONLY
 
   pfxname PFX_MEGASPHERE
-}*/
-pickupitem MEGA { effect PFX_MEGASPHERE }
+}
 
 // Keys
-pickupitem BKEY
+pickupeffect DoomBlueCard
 {
-  effect  BlueCard
+  effects BlueCard
   message $GOTBLUECARD
   sound   itemup
   flags   ALWAYSPICKUP|LEAVEINMULTI
 
   pfxname PFX_BLUEKEY
 }
-pickupitem YKEY
+pickupeffect DoomYellowCard
 {
-  effect  YellowCard
+  effects YellowCard
   message $GOTYELWCARD
   sound   itemup
   flags   ALWAYSPICKUP|LEAVEINMULTI
 
   pfxname PFX_YELLOWKEY
 }
-pickupitem RKEY
+pickupeffect DoomRedCard
 {
-  effect  RedCard
+  effects RedCard
   message $GOTREDCARD
   sound   itemup
   flags   ALWAYSPICKUP|LEAVEINMULTI
 
   pfxname PFX_REDKEY
 }
-pickupitem BSKU
+pickupeffect DoomBlueSkull
 {
-  effect  BlueSkull
+  effects BlueSkull
   message $GOTBLUESKUL
   sound   itemup
   flags   ALWAYSPICKUP|LEAVEINMULTI
 
   pfxname PFX_BLUESKULL
 }
-pickupitem YSKU
+pickupeffect DoomYellowSkull
 {
-  effect  YellowSkull
+  effects YellowSkull
   message $GOTYELWSKUL
   sound   itemup
   flags   ALWAYSPICKUP|LEAVEINMULTI
 
   pfxname PFX_YELLOWSKULL
 }
-pickupitem RSKU
+pickupeffect DoomRedSkull
 {
-  effect  RedSkull
+  effects RedSkull
   message $GOTREDSKULL
   sound   itemup
   flags   ALWAYSPICKUP|LEAVEINMULTI
@@ -135,17 +133,17 @@ pickupitem RSKU
 }
 
 // Heals
-pickupitem STIM
+pickupeffect StimPack
 {
-  effect  Stimpack
+  effects Stimpack
   message $GOTSTIM
   sound   itemup
 
   pfxname PFX_STIMPACK
 }
-pickupitem MEDI
+pickupeffect MediKit
 {
-  effect  Medikit
+  effects Medikit
   message $GOTMEDIKIT
   sound   itemup
 
@@ -153,55 +151,55 @@ pickupitem MEDI
 }
 
 // Powerups
-pickupitem PINV
+pickupeffect InvulnSphere
 {
-  effect  InvulnerabilitySphere
+  effects InvulnerabilitySphere
   message $GOTINVUL
   sound   getpow
   flags   ALWAYSPICKUP
 
   pfxname PFX_INVULNSPHERE
 }
-// FIXME: This gives two effects for a single pickupitem in P_TouchSpecialThing
-/*pickupitem PSTR
+// FIXME: This switches to fist in P_TouchSpecialThing
+/*pickupeffect BerzerkBox
 {
-  effect  
+  effects Berserk,
   message $GOTBERSERK
   sound   getpow
 
   pfxname PFX_BERZERKBOX
+  // BerserkHealth
 }*/
-pickupitem PSTR { effect PFX_BERZERKBOX }
-pickupitem PINS
+pickupeffect InvisiSphere
 {
-  effect  BlurSphere
+  effects BlurSphere
   message $GOTINVIS
   sound   getpow
   flags   ALWAYSPICKUP
 
   pfxname PFX_INVISISPHERE
 }
-pickupitem SUIT
+pickupeffect RadiationSuit
 {
-  effect  RadSuit
+  effects RadSuit
   message $GOTSUIT
   sound   getpow
   flags   ALWAYSPICKUP
 
   pfxname PFX_RADSUIT
 }
-pickupitem PMAP
+pickupeffect ComputerMap
 {
-  effect  Allmap
+  effects Allmap
   message $GOTMAP
   sound   getpow
   flags   ALWAYSPICKUP
 
   pfxname PFX_ALLMAP
 }
-pickupitem PVIS
+pickupeffect LightAmpVisor
 {
-  effect  Infrared
+  effects Infrared
   message $GOTVISOR
   sound   getpow
   flags   ALWAYSPICKUP
@@ -210,65 +208,65 @@ pickupitem PVIS
 }
 
 // Ammo + Backpack
-pickupitem CLIP
+pickupeffect AmmoClip
 {
-  effect  Clip
+  effects Clip
   message $GOTCLIP
   sound   itemup
 
   pfxname PFX_CLIP
 }
-pickupitem AMMO
+pickupeffect AmmoBulletBox
 {
-  effect  ClipBox
+  effects ClipBox
   message $GOTCLIPBOX
   sound   itemup
 
   pfxname PFX_CLIPBOX
 }
-pickupitem ROCK
+pickupeffect AmmoRocket
 {
-  effect  RocketAmmo
+  effects RocketAmmo
   message $GOTROCKET
   sound   itemup
 
   pfxname PFX_ROCKET
 }
-pickupitem BROK
+pickupeffect AmmoRocketBox
 {
-  effect  RocketBox
+  effects RocketBox
   message $GOTROCKBOX
   sound   itemup
 
   pfxname PFX_ROCKETBOX
 }
-pickupitem CELL
+pickupeffect AmmoCell
 {
-  effect  Cell
+  effects Cell
   message $GOTCELL
   sound   itemup
 
   pfxname PFX_CELL
 }
-pickupitem CELP
+pickupeffect AmmoCellPack
 {
-  effect  CellPack
+  effects CellPack
   message $GOTCELLBOX
   sound   itemup
 
   pfxname PFX_CELLPACK
 }
-pickupitem SHEL
+pickupeffect AmmoShells
 {
-  effect  Shell
+  effects Shell
   message $GOTSHELLS
   sound   itemup
 
   pfxname PFX_SHELL
 }
-pickupitem SBOX
+pickupeffect AmmoShellBox
 {
-  effect  ShellBox
+  effects ShellBox
   message $GOTSHELLBOX
   sound   itemup
 
@@ -276,76 +274,109 @@ pickupitem SBOX
 }
 // FIXME: Backpacks
 /*
-pickupitem BPAK
+pickupeffect Backpack
 {
-  effect  
+  effects 
   message $GOTBACKPACK
   sound   
   flags   
 
   pfxname PFX_BACKPACK
 }*/
-pickupitem BPAK { effect PFX_BACKPACK }
+
+// Weapons
 // FIXME: The fuck am I supposed to do about these messages?
-/*pickupitem BFUG
+/*pickupeffect WeaponBFG
 {
-  effect  BFG9000
+  effects BFG9000
   message $
   sound   wpnup
 
   pfxname PFX_BFG
 }*/
-
-// Weapons
-
-pickupitem BFUG { effect PFX_BFG }
-pickupitem MGUN
+pickupeffect WeaponChaingun
 {
-  effect  Chaingun
+  effects Chaingun
   message $GOTCHAINGUN
   sound   wpnup
 
   pfxname PFX_CHAINGUN
 }
-pickupitem CSAW
+pickupeffect WeaponChainsaw
 {
-  effect  Chainsaw
+  effects Chainsaw
   message $GOTCHAINSAW
   sound   wpnup
 
   pfxname PFX_CHAINSAW
 }
-pickupitem LAUN
+pickupeffect WeaponRocketLauncher
 {
-  effect  MissileLauncher
+  effects MissileLauncher
   message $GOTLAUNCHER
   sound   wpnup
 
   pfxname PFX_LAUNCHER
 }
-pickupitem PLAS
+pickupeffect WeaponPlasmaGun
 {
-  effect  PlasmaRifle
+  effects PlasmaRifle
   message $GOTPLASMA
   sound   wpnup
 
   pfxname PFX_PLASMA
 }
-pickupitem SHOT
+pickupeffect WeaponShotgun
 {
-  effect  Shotgun
+  effects Shotgun
   message $GOTSHOTGUN
   sound   wpnup
 
   pfxname PFX_SHOTGUN
 }
-pickupitem SGN2
+pickupeffect WeaponSSG
 {
-  effect  SuperShotgun
+  effects SuperShotgun
   message $GOTSHOTGUN
   sound   wpnup
 
   pfxname PFX_SSG
 }
 
+pickupitem ARM1 { effect PFX_GREENARMOR }
+pickupitem ARM2 { effect PFX_BLUEARMOR }
+pickupitem BON1 { effect PFX_POTION }
+pickupitem BON2 { effect PFX_ARMORBONUS }
+pickupitem SOUL { effect PFX_SOULSPHERE }
+pickupitem MEGA { effect PFX_MEGASPHERE; }
+pickupitem BKEY { effect PFX_BLUEKEY }
+pickupitem YKEY { effect PFX_YELLOWKEY }
+pickupitem RKEY { effect PFX_REDKEY }
+pickupitem BSKU { effect PFX_BLUESKULL }
+pickupitem YSKU { effect PFX_YELLOWSKULL }
+pickupitem RSKU { effect PFX_REDSKULL }
+pickupitem STIM { effect PFX_STIMPACK }
+pickupitem MEDI { effect PFX_MEDIKIT }
+pickupitem PINV { effect PFX_INVULNSPHERE }
+pickupitem PSTR { effect PFX_BERZERKBOX }
+pickupitem PINS { effect PFX_INVISISPHERE }
+pickupitem SUIT { effect PFX_RADSUIT }
+pickupitem PMAP { effect PFX_ALLMAP }
+pickupitem PVIS { effect PFX_LIGHTAMP }
+pickupitem CLIP { effect PFX_CLIP }
+pickupitem AMMO { effect PFX_CLIPBOX }
+pickupitem ROCK { effect PFX_ROCKET }
+pickupitem BROK { effect PFX_ROCKETBOX }
+pickupitem CELL { effect PFX_CELL }
+pickupitem CELP { effect PFX_CELLPACK }
+pickupitem SHEL { effect PFX_SHELL }
+pickupitem SBOX { effect PFX_SHELLBOX }
+pickupitem BPAK { effect PFX_BACKPACK }
+pickupitem BFUG { effect PFX_BFG }
+pickupitem MGUN { effect PFX_CHAINGUN }
+pickupitem CSAW { effect PFX_CHAINSAW }
+pickupitem LAUN { effect PFX_LAUNCHER }
+pickupitem PLAS { effect PFX_PLASMA }
+pickupitem SHOT { effect PFX_SHOTGUN }
+pickupitem SGN2 { effect PFX_SSG }
 
