@@ -914,7 +914,7 @@ static bool Polyobj_clipThings(polyobj_t *po, line_t *line,
                         mo->x += vec->x;
                         mo->y += vec->y;
                      }
-                     if(!P_TryMove(mo, pos.x, pos.y, false))
+                     if(!P_TryMove(mo, pos.x, pos.y, true))
                      {
                         mo->x = pos.x;
                         mo->y = pos.y;
