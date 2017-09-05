@@ -99,7 +99,7 @@ bool XLAnimDefsParser::doStateExpectItem(XLTokenizer &token)
    {
       XLAnimDef def;
       def.type = xlanim_flat;
-      def.index = pics.getLength();
+      def.index = static_cast<int>(pics.getLength());
       defs.add(def);
       curdef = &defs[defs.getLength() - 1];
       state = STATE_EXPECTDEFNAME;
@@ -109,7 +109,7 @@ bool XLAnimDefsParser::doStateExpectItem(XLTokenizer &token)
    {
       XLAnimDef def;
       def.type = xlanim_texture;
-      def.index = pics.getLength();
+      def.index = static_cast<int>(pics.getLength());
       defs.add(def);
       curdef = &defs[defs.getLength() - 1];
       state = STATE_EXPECTDEFNAME;
