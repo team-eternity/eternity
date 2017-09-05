@@ -911,8 +911,8 @@ static bool Polyobj_clipThings(polyobj_t *po, line_t *line,
                      v2fixed_t pos = { mo->x, mo->y };
                      if(vec)
                      {
-                        mo->x += vec->x;
-                        mo->y += vec->y;
+                        mo->x += FixedMul(vec->x, 72090);   // FRACUNIT * 1.1
+                        mo->y += FixedMul(vec->y, 72090);
                      }
                      if(!P_TryMove(mo, pos.x, pos.y, true))
                      {

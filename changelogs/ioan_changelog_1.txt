@@ -8,6 +8,13 @@ Since v3.42.03 "Heimdal" release 2
 ==================================
 
 --------------------------------------------------------------------------------
+05.09.2017
+
+BUGFIX: Fixed a problem with polyobject portals failing to capture things,
+        especially those placed at their spawn point. Now they also capture
+        things if they have moving pits.
+
+--------------------------------------------------------------------------------
 03.09.2017
 
 FEATURE: Added EDF thingtype tranmap. Works like the Boom linedef special.
