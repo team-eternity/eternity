@@ -14,6 +14,7 @@
 
 #include "BinaryIO.hpp"
 
+#include <cctype>
 #include <cstdio>
 
 
