@@ -894,9 +894,16 @@ void ACS_Archive(SaveArchive &arc)
       std::istream  str{&buf};
       ACSVM::Serial in {str};
 
-      in.loadHead();
-      ACSenv.loadState(in);
-      in.loadTail();
+      try
+      {
+         in.loadHead();
+         ACSenv.loadState(in);
+         in.loadTail();
+      }
+      catch(ACSVM::SerialError const &e)
+      {
+         I_Error("ACS_Archive: %s\n", e.what());
+      }
    }
    else if(arc.isSaving())
    {
