@@ -227,6 +227,7 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_FRAME,       edf_frame_opts,    EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_FRAMEBLOCK,  edf_fblock_opts,   EDF_NSEC_FLAGS),
    CFG_SEC(EDF_SEC_THING,       edf_thing_opts,    EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_THINGGROUP,  edf_tgroup_opts,   EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_SKIN,        edf_skin_opts,     EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_HEALTHFX,    edf_healthfx_opts, EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_ARMORFX,     edf_armorfx_opts,  EDF_TSEC_FLAGS),
@@ -1227,6 +1228,9 @@ static void E_ProcessStatesAndThings(cfg_t *cfg)
 
    // process things: see e_things.c
    E_ProcessThings(cfg);
+
+   // process thing groups
+   E_ProcessThingGroups(cfg);
 }
 
 //

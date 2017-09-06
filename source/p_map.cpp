@@ -38,7 +38,6 @@
 #include "m_bbox.h"
 #include "m_compare.h"
 #include "m_random.h"
-#include "metaapi.h"
 #include "p_info.h"
 #include "p_inter.h"
 #include "p_mobj.h"
@@ -884,19 +883,6 @@ int P_MissileBlockHeight(Mobj *mo)
 }
 
 //
-// True if two monsters are allied projectile-wise (like barons and knights in
-// Doom ][)
-//
-bool P_ProjectileAllies(const mobjinfo_t &mi1, const mobjinfo_t &mi2)
-{
-   const char *all1 = mi1.meta->getString(THING_META_PRJALLIANCE, nullptr);
-   if(!all1)
-      return false;
-   const char *all2 = mi2.meta->getString(THING_META_PRJALLIANCE, nullptr);
-   return all2 && !strcasecmp(all1, all2);
-}
-
-//
 // PIT_CheckThing
 // 
 static bool PIT_CheckThing(Mobj *thing) // killough 3/26/98: make static
@@ -968,7 +954,8 @@ static bool PIT_CheckThing(Mobj *thing) // killough 3/26/98: make static
          return true;    // underneath
 
       if(clip.thing->target &&
-         (clip.thing->target->type == thing->type || P_ProjectileAllies(*clip.thing->info, *thing->info)))
+         (clip.thing->target->type == thing->type ||
+          E_ProjectileAllies(clip.thing->target->type, thing->type)))
       {
          if(thing == clip.thing->target)
             return true;                // Don't hit same species as originator.

@@ -44,10 +44,12 @@ extern int UnknownThingType;
 // Section Names
 #define EDF_SEC_THING    "thingtype"
 #define EDF_SEC_TNGDELTA "thingdelta"
+#define EDF_SEC_THINGGROUP "thinggroup"
 
 // Section Options
 extern cfg_opt_t edf_thing_opts[];
 extern cfg_opt_t edf_tdelta_opts[];
+extern cfg_opt_t edf_tgroup_opts[];
 
 #endif
 
@@ -60,6 +62,7 @@ void E_CollectThings(cfg_t *cfg);
 void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def);
 void E_ProcessThings(cfg_t *cfg);
 void E_ProcessThingDeltas(cfg_t *cfg);
+void E_ProcessThingGroups(cfg_t *cfg);
 bool E_AutoAllocThingDEHNum(int thingnum);
 void E_SetThingDefaultSprites(void);
 #endif
@@ -85,10 +88,12 @@ int     *E_GetNativeStateLoc(mobjinfo_t *mi, const char *label);
 state_t *E_GetStateForMobjInfo(mobjinfo_t *mi, const char *label);
 state_t *E_GetStateForMobj(Mobj *mo, const char *label);
 
+// Thing groups
+bool E_ProjectileAllies(int t1, int t2);
+
 // ioanch 20160220: metastate key names used throughout the code. They also
 // work as DECORATE state label names.
 #define METASTATE_HEAL "Heal"
-#define THING_META_PRJALLIANCE "prjalliance"
 
 // blood types
 enum bloodtype_e : int

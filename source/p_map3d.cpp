@@ -305,10 +305,6 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
    fixed_t topz;      // haleyjd: from zdoom
    fixed_t blockdist;
 
-   // EDF FIXME: haleyjd 07/13/03: these may be temporary fixes
-   int bruiserType = E_ThingNumForDEHNum(MT_BRUISER); 
-   int knightType  = E_ThingNumForDEHNum(MT_KNIGHT);
-
    // killough 11/98: add touchy things
    if(!(thing->flags & (MF_SOLID|MF_SPECIAL|MF_SHOOTABLE|MF_TOUCHY)))
       return true;
@@ -438,8 +434,7 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
 
       if(clip.thing->target &&
          (clip.thing->target->type == thing->type ||
-          (clip.thing->target->type == knightType && thing->type == bruiserType)||
-          (clip.thing->target->type == bruiserType && thing->type == knightType)))
+          E_ProjectileAllies(clip.thing->target->type, thing->type)))
       {
          if(thing == clip.thing->target)
             return true;                // Don't hit same species as originator.

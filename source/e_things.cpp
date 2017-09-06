@@ -49,6 +49,7 @@
 #include "info.h"
 #include "m_cheat.h"
 #include "m_qstr.h"
+#include "m_qstrkeys.h"
 #include "metaapi.h"
 #include "metaspawn.h"
 #include "p_inter.h"
@@ -137,7 +138,6 @@ int UnknownThingType;
 #define ITEM_TNG_MOD          "mod"
 #define ITEM_TNG_OBIT1        "obituary_normal"
 #define ITEM_TNG_OBIT2        "obituary_melee"
-#define ITEM_TNG_PRJALLIANCE  "projectilealliance"
 
 // Pain/Death Properties
 #define ITEM_TNG_BLOODCOLOR   "bloodcolor"
@@ -207,6 +207,12 @@ int UnknownThingType;
 
 #define ITEM_TNG_BB_ACTION   "action"
 #define ITEM_TNG_BB_BEHAVIOR "behavior"
+
+//
+// Thing groups
+//
+#define ITEM_TGROUP_KIND "kind"
+#define ITEM_TGROUP_TYPES "types"
 
 //
 // Field-Specific Data
@@ -526,7 +532,6 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_INT(ITEM_TNG_TOPDAMAGE,       0,             CFGF_NONE), \
    CFG_INT(ITEM_TNG_TOPDMGMASK,      0,             CFGF_NONE), \
    CFG_STR(ITEM_TNG_MOD,             "Unknown",     CFGF_NONE), \
-   CFG_STR(ITEM_TNG_PRJALLIANCE,     "NONE",        CFGF_NONE), \
    CFG_STR(ITEM_TNG_OBIT1,           "NONE",        CFGF_NONE), \
    CFG_STR(ITEM_TNG_OBIT2,           "NONE",        CFGF_NONE), \
    CFG_INT(ITEM_TNG_BLOODCOLOR,      0,             CFGF_NONE), \
@@ -581,6 +586,73 @@ cfg_opt_t edf_tdelta_opts[] =
    THINGTYPE_FIELDS
 };
 
+
+//==============================================================================
+//
+// Thinggroup flags
+//
+enum
+{
+   TGF_PROJECTILEALLIES = 1,  // things in group are immune to their projectiles
+};
+
+static dehflags_t tgroup_kinds[] =
+{
+   { "PROJECTILEALLIES", TGF_PROJECTILEALLIES },
+   { nullptr,            0                    }
+};
+
+//
+// Thinggroup kinds
+//
+static dehflagset_t tgroup_kindset =
+{
+   tgroup_kinds,  // flaglist
+   0              // mode
+};
+
+//
+// Thinggroup options
+//
+cfg_opt_t edf_tgroup_opts[] =
+{
+   CFG_STR(ITEM_TGROUP_KIND, "", CFGF_NONE),
+   CFG_STR(ITEM_TGROUP_TYPES, 0, CFGF_LIST),
+   CFG_END()
+};
+
+//
+// The thing group
+//
+class ThingGroup : public ZoneObject
+{
+public:
+   explicit ThingGroup(const char *inname) : name(inname), link(), kind()
+   {
+   }
+
+   qstring name;
+   DLListItem<ThingGroup> link;
+
+   unsigned kind;
+   PODCollection<int> types;
+};
+
+//
+// A projectile alliance definition
+//
+struct projectilealliance_t
+{
+   union
+   {
+      int types[2];
+      int64_t key;
+   };
+   DLListItem<projectilealliance_t> link;
+};
+
+//==============================================================================
+
 //
 // Thing Type Hash Lookup Functions
 //
@@ -604,6 +676,13 @@ static EHashTable<mobjinfo_t, ENCStringHashKey,
 // hash by DeHackEd number
 static EHashTable<mobjinfo_t, EIntHashKey,
                   &mobjinfo_t::dehnum, &mobjinfo_t::numlinks> thing_dehhash(NUMTHINGCHAINS);
+
+// Thing group
+static EHashTable<ThingGroup, ENCQStrHashKey,
+                  &ThingGroup::name, &ThingGroup::link> thinggroup_namehash(53);
+
+static EHashTable<projectilealliance_t, EInt64HashKey,
+     &projectilealliance_t::key, &projectilealliance_t::link> prjalliances(NUMTHINGCHAINS);
 
 //
 // As with states, things need to store their DeHackEd number now.
@@ -2634,16 +2713,6 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       mobjinfo[i]->mod = mod->num; // mobjinfo stores the numeric key
    }
 
-   // Process projectile alliance
-   if(IS_SET(ITEM_TNG_PRJALLIANCE))
-   {
-      tempstr = cfg_getstr(thingsec, ITEM_TNG_PRJALLIANCE);
-      if(!strcasecmp(tempstr, "none"))
-         mobjinfo[i]->meta->removeStringNR(THING_META_PRJALLIANCE);
-      else
-         mobjinfo[i]->meta->setString(THING_META_PRJALLIANCE, tempstr);
-   }
-
    // 07/13/03: process obituaries
    if(IS_SET(ITEM_TNG_OBIT1))
    {
@@ -2856,6 +2925,99 @@ void E_ProcessThings(cfg_t *cfg)
 
    // increment generation count
    ++edf_thing_generation;
+}
+
+//
+// Process thing group definitions
+//
+void E_ProcessThingGroups(cfg_t *cfg)
+{
+   unsigned numgroups = cfg_size(cfg, EDF_SEC_THINGGROUP);
+   ThingGroup *group;
+   for(unsigned i = 0; i < numgroups; ++i)
+   {
+      cfg_t *gsec = cfg_getnsec(cfg, EDF_SEC_THINGGROUP, i);
+      const char *name = cfg_title(gsec);
+
+      group = thinggroup_namehash.objectForKey(name);
+      if(!group)
+      {
+         E_EDFLogPrintf("\t\tCreating thing group '%s'\n", name);
+         group = new ThingGroup(name);
+         thinggroup_namehash.addObject(group);
+      }
+      else
+         E_EDFLogPrintf("\t\tModifying thing group '%s'\n", name);
+
+      const char *tempstr = cfg_getstr(gsec, ITEM_TGROUP_KIND);
+      if(estrnonempty(tempstr))
+         group->kind = E_ParseFlags(tempstr, &tgroup_kindset);
+
+      unsigned numtypes = cfg_size(gsec, ITEM_TGROUP_TYPES);
+      if(numtypes)
+      {
+         group->types.clear();
+         for(unsigned i = 0; i < numtypes; ++i)
+         {
+            tempstr = cfg_getnstr(gsec, ITEM_TGROUP_TYPES, i);
+            int type = E_ThingNumForName(tempstr);
+            if(type != -1)
+               group->types.add(type);
+            else
+            {
+               E_EDFLoggedWarning(2, "Warning: unknown type '%s' for group '%s'\n",
+                                  tempstr, name);
+            }
+         }
+      }
+   }
+
+   // Now process them
+   projectilealliance_t *proj;
+   while((proj = prjalliances.tableIterator((projectilealliance_t*)nullptr)))
+   {
+      prjalliances.removeObject(proj);
+      efree(proj);
+   }
+
+   group = nullptr;
+   while((group = thinggroup_namehash.tableIterator(group)))
+   {
+      // Currently only this is supported
+      if(!(group->kind & TGF_PROJECTILEALLIES))
+         continue;
+      // Setup relation
+      for(int &entry : group->types)
+      {
+         for(int &other : group->types)
+         {
+            if(other <= entry)
+               continue;
+            int64_t key = (int64_t)entry | (int64_t)other << 32;
+            proj = prjalliances.objectForKey(key);
+            if(proj)
+               continue;
+            proj = estructalloc(projectilealliance_t, 1);
+            proj->types[0] = entry;
+            proj->types[1] = other;
+            prjalliances.addObject(proj);
+         }
+      }
+   }
+}
+
+//
+// Returns that two monsters are allies
+//
+bool E_ProjectileAllies(mobjtype_t t1, mobjtype_t t2)
+{
+   if(t2 < t1)
+   {
+      mobjtype_t aux = t1;
+      t1 = t2;
+      t2 = aux;
+   }
+   return !!prjalliances.objectForKey((int64_t)t1 | (int64_t)t2 << 32);
 }
 
 //
