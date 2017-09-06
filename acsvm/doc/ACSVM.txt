@@ -212,27 +212,26 @@ Synopsis:
 
     bool hasActiveThread() const;
 
-    virtual void loadState(std::istream &in);
+    virtual void loadState(Serial &in);
 
     virtual void printArray(PrintBuf &buf, Array const &array, Word index,
       Word limit);
 
     virtual void printKill(Thread *thread, Word type, Word data);
 
-    virtual ModuleName readModuleName(std::istream &in) const;
+    virtual ModuleName readModuleName(Serial &in) const;
 
-    String *readString(std::istream &in) const;
+    String *readString(Serial &in) const;
 
     virtual void refStrings();
 
     virtual void resetStrings();
 
-    virtual void saveState(std::ostream &out) const;
+    virtual void saveState(Serial &out) const;
 
-    virtual void writeModuleName(std::ostream &out,
-      ModuleName const &name) const;
+    virtual void writeModuleName(Serial &out, ModuleName const &name) const;
 
-    void writeString(std::ostream &out, String const *in) const;
+    void writeString(Serial &out, String const *in) const;
 
     StringTable stringTable;
 
@@ -503,7 +502,7 @@ ACSVM::Environment::loadState
 -----------------------------------------------------------
 
 Synopsis:
-  virtual void loadState(std::istream &in);
+  virtual void loadState(Serial &in);
 
 Description:
   Restores the environment state from a previously serialized instance. If in
@@ -546,7 +545,7 @@ ACSVM::Environment::readModuleName
 -----------------------------------------------------------
 
 Synopsis:
-  virtual ModuleName readModuleName(std::istream &in) const;
+  virtual ModuleName readModuleName(Serial &in) const;
 
 Description:
   Called to read a ModuleName from a serialized environment.
@@ -561,7 +560,7 @@ ACSVM::Environment::readString
 -----------------------------------------------------------
 
 Synopsis:
-  String *readString(std::istream &in) const;
+  String *readString(Serial &in) const;
 
 Description:
   Reads a String by index from a serialized Environment. If the written String
@@ -601,7 +600,7 @@ ACSVM::Environment::saveState
 -----------------------------------------------------------
 
 Synopsis:
-  virtual void saveState(std::ostream &out) const;
+  virtual void saveState(Serial &out) const;
 
 Description:
   Serializes the environment state, which can be restored with a call to
@@ -612,7 +611,7 @@ ACSVM::Environment::writeModuleName
 -----------------------------------------------------------
 
 Synopsis:
-  virtual void writeModuleName(std::ostream &out,
+  virtual void writeModuleName(Serial &out,
     ModuleName const &name) const;
 
 Description:
@@ -625,7 +624,7 @@ ACSVM::Environment::writeString
 -----------------------------------------------------------
 
 Synopsis:
-  void writeString(std::ostream &out, String const *in) const;
+  void writeString(Serial &out, String const *in) const;
 
 Description:
   Writes a String by index. If in is null, a null pointer will be returned by
@@ -841,11 +840,13 @@ Synopsis:
 
     bool isScriptActive(Script *script);
 
+   void loadState(Serial &in);
+
     void lockStrings() const;
 
     void reset();
 
-    void saveState(std::ostream &out) const;
+    void saveState(Serial &out) const;
 
     bool scriptPause(Script *script);
     bool scriptPause(ScriptName name, ScopeID scope);

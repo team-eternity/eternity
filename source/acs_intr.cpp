@@ -63,6 +63,7 @@
 #include "ACSVM/Module.hpp"
 #include "ACSVM/Scope.hpp"
 #include "ACSVM/Script.hpp"
+#include "ACSVM/Serial.hpp"
 
 
 //
@@ -484,7 +485,7 @@ void ACSEnvironment::loadModule(ACSVM::Module *module)
 //
 // ACSEnvironment::loadState
 //
-void ACSEnvironment::loadState(std::istream &in)
+void ACSEnvironment::loadState(ACSVM::Serial &in)
 {
    ACSVM::Environment::loadState(in);
 
@@ -496,7 +497,7 @@ void ACSEnvironment::loadState(std::istream &in)
 //
 // ACSEnvironment::readModuleName
 //
-ACSVM::ModuleName ACSEnvironment::readModuleName(std::istream &in) const
+ACSVM::ModuleName ACSEnvironment::readModuleName(ACSVM::Serial &in) const
 {
    auto name = ACSVM::Environment::readModuleName(in);
    name.p = dir;
@@ -514,7 +515,7 @@ void ACSEnvironment::refStrings()
 //
 // ACSThread::loadState
 //
-void ACSThread::loadState(std::istream &in)
+void ACSThread::loadState(ACSVM::Serial &in)
 {
    ACSVM::Thread::loadState(in);
 
@@ -529,7 +530,7 @@ void ACSThread::loadState(std::istream &in)
 //
 // ACSThread::saveState
 //
-void ACSThread::saveState(std::ostream &out) const
+void ACSThread::saveState(ACSVM::Serial &out) const
 {
    ACSVM::Thread::saveState(out);
 
@@ -889,17 +890,26 @@ void ACS_Archive(SaveArchive &arc)
 {
    if(arc.isLoading())
    {
-      ACSBuffer    buf{arc.getLoadFile()};
-      std::istream in {&buf};
+      ACSBuffer     buf{arc.getLoadFile()};
+      std::istream  str{&buf};
+      ACSVM::Serial in {str};
 
+      in.loadHead();
       ACSenv.loadState(in);
+      in.loadTail();
    }
    else if(arc.isSaving())
    {
-      ACSBuffer    buf{arc.getSaveFile()};
-      std::ostream out{&buf};
+      ACSBuffer     buf{arc.getSaveFile()};
+      std::ostream  str{&buf};
+      ACSVM::Serial out{str};
 
+      // Enable debug signatures.
+      out.signs = true;
+
+      out.saveHead();
       ACSenv.saveState(out);
+      out.saveTail();
    }
 }
 
