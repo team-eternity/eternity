@@ -88,6 +88,7 @@ state_t *E_GetStateForMobj(Mobj *mo, const char *label);
 // ioanch 20160220: metastate key names used throughout the code. They also
 // work as DECORATE state label names.
 #define METASTATE_HEAL "Heal"
+#define THING_META_PRJALLIANCE "prjalliance"
 
 // blood types
 enum bloodtype_e : int

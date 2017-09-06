@@ -729,6 +729,7 @@ thingtype BaronOfHell
   mass        1000
   activesound dmact
   cflags      SOLID|SHOOTABLE|COUNTKILL|E1M8BOSS|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  projectilealliance Bruiser
   obituary_normal "was burned by a baron"
   obituary_melee  "was ripped open by a baron"
   acs_spawndata
@@ -814,6 +815,7 @@ thingtype HellKnight
   mass        1000
   activesound dmact
   cflags      SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  projectilealliance Bruiser
   obituary_normal "bows before a hell knight"
   obituary_melee  "was ripped open by a hell knight"
   acs_spawndata

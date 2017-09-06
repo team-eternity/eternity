@@ -137,6 +137,7 @@ int UnknownThingType;
 #define ITEM_TNG_MOD          "mod"
 #define ITEM_TNG_OBIT1        "obituary_normal"
 #define ITEM_TNG_OBIT2        "obituary_melee"
+#define ITEM_TNG_PRJALLIANCE  "projectilealliance"
 
 // Pain/Death Properties
 #define ITEM_TNG_BLOODCOLOR   "bloodcolor"
@@ -525,6 +526,7 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_INT(ITEM_TNG_TOPDAMAGE,       0,             CFGF_NONE), \
    CFG_INT(ITEM_TNG_TOPDMGMASK,      0,             CFGF_NONE), \
    CFG_STR(ITEM_TNG_MOD,             "Unknown",     CFGF_NONE), \
+   CFG_STR(ITEM_TNG_PRJALLIANCE,     "NONE",        CFGF_NONE), \
    CFG_STR(ITEM_TNG_OBIT1,           "NONE",        CFGF_NONE), \
    CFG_STR(ITEM_TNG_OBIT2,           "NONE",        CFGF_NONE), \
    CFG_INT(ITEM_TNG_BLOODCOLOR,      0,             CFGF_NONE), \
@@ -2630,6 +2632,16 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
          mod = E_DamageTypeForName(tempstr); // it is a name
 
       mobjinfo[i]->mod = mod->num; // mobjinfo stores the numeric key
+   }
+
+   // Process projectile alliance
+   if(IS_SET(ITEM_TNG_PRJALLIANCE))
+   {
+      tempstr = cfg_getstr(thingsec, ITEM_TNG_PRJALLIANCE);
+      if(!strcasecmp(tempstr, "none"))
+         mobjinfo[i]->meta->removeStringNR(THING_META_PRJALLIANCE);
+      else
+         mobjinfo[i]->meta->setString(THING_META_PRJALLIANCE, tempstr);
    }
 
    // 07/13/03: process obituaries
