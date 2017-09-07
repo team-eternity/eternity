@@ -114,7 +114,7 @@ namespace ACSVM
       // Returns true if any contained scope is active and has an active thread.
       bool hasActiveThread() const;
 
-      virtual void loadState(std::istream &in);
+      virtual void loadState(Serial &in);
 
       // Prints an array to a print buffer. Default behavior is PrintArrayChar.
       virtual void printArray(PrintBuf &buf, Array const &array, Word index, Word limit);
@@ -124,28 +124,28 @@ namespace ACSVM
       virtual void printKill(Thread *thread, Word type, Word data);
 
       // Deserializes a ModuleName. Default behavior is to load s and i.
-      virtual ModuleName readModuleName(std::istream &in) const;
+      virtual ModuleName readModuleName(Serial &in) const;
 
-      Script *readScript(std::istream &in) const;
-      ScriptAction *readScriptAction(std::istream &in) const;
-      void readScriptActions(std::istream &in, ListLink<ScriptAction> &out) const;
-      ScriptName readScriptName(std::istream &in) const;
-      String *readString(std::istream &in) const;
+      Script *readScript(Serial &in) const;
+      ScriptAction *readScriptAction(Serial &in) const;
+      void readScriptActions(Serial &in, ListLink<ScriptAction> &out) const;
+      ScriptName readScriptName(Serial &in) const;
+      String *readString(Serial &in) const;
 
       virtual void refStrings();
 
       virtual void resetStrings();
 
-      virtual void saveState(std::ostream &out) const;
+      virtual void saveState(Serial &out) const;
 
       // Serializes a ModuleName. Default behavior is to save s and i.
-      virtual void writeModuleName(std::ostream &out, ModuleName const &name) const;
+      virtual void writeModuleName(Serial &out, ModuleName const &name) const;
 
-      void writeScript(std::ostream &out, Script *in) const;
-      void writeScriptAction(std::ostream &out, ScriptAction const *in) const;
-      void writeScriptActions(std::ostream &out, ListLink<ScriptAction> const &in) const;
-      void writeScriptName(std::ostream &out, ScriptName const &in) const;
-      void writeString(std::ostream &out, String const *in) const;
+      void writeScript(Serial &out, Script *in) const;
+      void writeScriptAction(Serial &out, ScriptAction const *in) const;
+      void writeScriptActions(Serial &out, ListLink<ScriptAction> const &in) const;
+      void writeScriptName(Serial &out, ScriptName const &in) const;
+      void writeString(Serial &out, String const *in) const;
 
       StringTable stringTable;
 
@@ -185,15 +185,15 @@ namespace ACSVM
    private:
       struct PrivData;
 
-      void loadFunctions(std::istream &in);
-      void loadGlobalScopes(std::istream &in);
-      void loadScriptActions(std::istream &in);
-      void loadStringTable(std::istream &in);
+      void loadFunctions(Serial &in);
+      void loadGlobalScopes(Serial &in);
+      void loadScriptActions(Serial &in);
+      void loadStringTable(Serial &in);
 
-      void saveFunctions(std::ostream &out) const;
-      void saveGlobalScopes(std::ostream &out) const;
-      void saveScriptActions(std::ostream &out) const;
-      void saveStringTable(std::ostream &out) const;
+      void saveFunctions(Serial &out) const;
+      void saveGlobalScopes(Serial &out) const;
+      void saveScriptActions(Serial &out) const;
+      void saveStringTable(Serial &out) const;
 
       PrivData *pd;
    };
