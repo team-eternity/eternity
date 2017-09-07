@@ -508,16 +508,22 @@ static void Polyobj_setCenterPt(polyobj_t *po);
 //
 static void Polyobj_collectPortals(polyobj_t *po)
 {
+   if(!useportalgroups)
+      return;  // if portals don't exist or were invalidated, skip this.
+
    // Collect them in an easy collection
    PODCollection<portal_t *> portals;
    bool hasLinked = false;
    for(int i = 0; i < po->numLines; ++i)
    {
-      portal_t *portal = po->lines[i]->portal;
+      line_t &line = *po->lines[i];
+      portal_t *portal = line.portal;
       if(!portal || !R_portalIsAnchored(portal))
-      {
          continue;
-      }
+
+      line.intflags |= MLI_MOVINGPORTAL;
+      if(line.beyondportalline)
+         line.beyondportalline->intflags |= MLI_MOVINGPORTAL;
 
       for(portal_t *prevPortal : portals)
       {
@@ -525,7 +531,7 @@ static void Polyobj_collectPortals(polyobj_t *po)
             goto nextLine;
       }
 
-      if(po->lines[i]->pflags & PS_PASSABLE)
+      if(line.pflags & PS_PASSABLE)
          hasLinked = true;
 
       portals.add(portal);
@@ -905,10 +911,10 @@ static bool Polyobj_clipThings(polyobj_t *po, line_t *line,
                      v2fixed_t pos = { mo->x, mo->y };
                      if(vec)
                      {
-                        mo->x += vec->x;
-                        mo->y += vec->y;
+                        mo->x += FixedMul(vec->x, 72090);   // FRACUNIT * 1.1
+                        mo->y += FixedMul(vec->y, 72090);
                      }
-                     if(!P_TryMove(mo, pos.x, pos.y, false))
+                     if(!P_TryMove(mo, pos.x, pos.y, true))
                      {
                         mo->x = pos.x;
                         mo->y = pos.y;
@@ -1384,7 +1390,7 @@ void PolyRotateThinker::Think()
             po->thinker = NULL;
             po->thrust = FRACUNIT;
          }
-         this->removeThinker();
+         this->remove();
 
          // TODO: notify scripts
          S_StopPolySequence(po);
@@ -1466,7 +1472,7 @@ void PolyMoveThinker::Think()
             po->thinker = NULL;
             po->thrust = FRACUNIT;
          }
-         this->removeThinker();
+         this->remove();
 
          // TODO: notify scripts
          S_StopPolySequence(po);
@@ -1567,7 +1573,7 @@ void PolySlideDoorThinker::Think()
                po->thinker = NULL;
                po->thrust = FRACUNIT;
             }
-            this->removeThinker();
+            this->remove();
             // TODO: notify scripts
          }
          S_StopPolySequence(po);
@@ -1679,7 +1685,7 @@ void PolySwingDoorThinker::Think()
                po->thinker = NULL;
                po->thrust = FRACUNIT;
             }
-            this->removeThinker();
+            this->remove();
             // TODO: notify scripts
          }
          S_StopPolySequence(po);
@@ -1919,7 +1925,7 @@ int EV_DoPolyObjStop(int polyObjNum)
    // don't remove thinker if there is no thinker, but do successfully activate
    if(po->thinker)
    {
-      po->thinker->removeThinker();
+      po->thinker->remove();
       po->thinker = nullptr;
       S_StopPolySequence(po);
    }

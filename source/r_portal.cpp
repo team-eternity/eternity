@@ -488,8 +488,9 @@ static void R_CalculateDeltas(int markerlinenum, int anchorlinenum,
    const line_t *m = lines + markerlinenum;
    const line_t *a = lines + anchorlinenum;
 
-   *dx = ((m->v1->x + m->v2->x) / 2) - ((a->v1->x + a->v2->x) / 2);
-   *dy = ((m->v1->y + m->v2->y) / 2) - ((a->v1->y + a->v2->y) / 2);
+   // Because of overflows, we should divide each term instead of accumulating them
+   *dx = (m->v1->x / 2 + m->v2->x / 2) - (a->v1->x / 2 + a->v2->x / 2);
+   *dy = (m->v1->y / 2 + m->v2->y / 2) - (a->v1->y / 2 + a->v2->y / 2);
    *dz = 0; /// ???
 }
 
@@ -1667,10 +1668,10 @@ portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,
 //
 static void R_pairPortalLines(line_t &line, line_t &pline)
 {
-   line.beyondportalline = &pline;  // used with MLI_POLYPORTALLINE
+   line.beyondportalline = &pline;  // used with MLI_1SPORTALLINE
    if(!line.backsector)
    {
-      line.intflags |= MLI_POLYPORTALLINE;   // for rendering
+      line.intflags |= MLI_1SPORTALLINE;   // for rendering
       if(line.portal && line.portal->type == R_LINKED)
       {
          // MAKE IT PASSABLE

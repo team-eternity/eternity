@@ -113,23 +113,23 @@ const char *const i_videohelpstr =
 // Driver table
 static haldriveritem_t halVideoDriverTable[VDR_MAXDRIVERS] =
 {
-   // SDL Software Driver
-   {
-      VDR_SDLSOFT,
-      "SDL Software",
-#ifdef _SDL_VER
-      &i_sdlvideodriver
-#else
-      NULL
-#endif
-   },
-
    // SDL GL2D Driver
    {
       VDR_SDLGL2D,
       "SDL GL2D",
 #if defined(_SDL_VER) && defined(EE_FEATURE_OPENGL)
       &i_sdlgl2dvideodriver
+#else
+      NULL
+#endif
+   },
+
+   // SDL Software Driver
+   {
+      VDR_SDLSOFT,
+      "SDL Software",
+#ifdef _SDL_VER
+      &i_sdlvideodriver
 #else
       NULL
 #endif
@@ -144,6 +144,20 @@ static haldriveritem_t halVideoDriverTable[VDR_MAXDRIVERS] =
 };
 
 //
+// Find the currently selected video driver by ID
+//
+static haldriveritem_t *I_FindHALVDRByID(int id)
+{
+   for(unsigned int i = 0; i < VDR_MAXDRIVERS; i++)
+   {
+      if(halVideoDriverTable[i].id == id && halVideoDriverTable[i].driver)
+         return &halVideoDriverTable[i];
+   }
+
+   return nullptr;
+}
+
+//
 // I_DefaultVideoDriver
 //
 // Chooses the default video driver based on user specifications, or on preset
@@ -151,7 +165,7 @@ static haldriveritem_t halVideoDriverTable[VDR_MAXDRIVERS] =
 //
 static haldriveritem_t *I_DefaultVideoDriver()
 {
-   haldriveritem_t *item = NULL;
+   haldriveritem_t *item;
 
    // ioanch 20160424: demo test with no drawing allowed
    if(M_CheckParm("-nodraw") && M_CheckParm("-demolog"))
@@ -159,12 +173,11 @@ static haldriveritem_t *I_DefaultVideoDriver()
       i_videodriverid = VDR_NONE;
    }
 
-   if(i_videodriverid < 0 || i_videodriverid >= VDR_MAXDRIVERS ||
-      halVideoDriverTable[i_videodriverid].driver == NULL)
+   if(!(item = I_FindHALVDRByID(i_videodriverid)))
    {
       // Default or plain invalid setting, or unsupported driver on current
       // compile. Find the lowest-numbered valid driver and use it.
-      for(int i = 0; i < VDR_MAXDRIVERS; i++)
+      for(unsigned int i = 0; i < VDR_MAXDRIVERS; i++)
       {
          if(halVideoDriverTable[i].driver)
          {
@@ -177,8 +190,6 @@ static haldriveritem_t *I_DefaultVideoDriver()
       if(!item)
         I_Error("I_DefaultVideoDriver: no valid drivers for this platform!\n");
    }
-   else
-      item = &halVideoDriverTable[i_videodriverid];
 
    return item;
 }

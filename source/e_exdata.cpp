@@ -306,6 +306,7 @@ static dehflags_t sectorportalflags[] =
    { "OVERLAY",      PS_OVERLAY      },
    { "ADDITIVE",     PS_ADDITIVE     },
    { "USEGLOBALTEX", PS_USEGLOBALTEX },
+   { "ATTACHEDPORTAL", PF_ATTACHEDPORTAL },
    { NULL,           0               }
 };
 
@@ -338,7 +339,7 @@ static cfg_opt_t ed_opts[] =
 static void E_ParseArg(const char *str, int *dest)
 {
    // currently only integers are supported
-   *dest = strtol(str, NULL, 0);
+   *dest = static_cast<int>(strtol(str, NULL, 0));
 }
 
 //=============================================================================
@@ -1058,7 +1059,7 @@ static int E_LineSpecCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
    int  num;
    char *endptr;
 
-   num = strtol(value, &endptr, 0);
+   num = static_cast<int>(strtol(value, &endptr, 0));
 
    // check if value is a number or not
    if(*endptr != '\0')
@@ -1631,17 +1632,17 @@ void E_LoadSectorExt(line_t *line, UDMFSetupSettings &setupSettings)
    if(edsector->topmap >= 0)
    {
       sector->topmap = edsector->topmap;
-      setupSettings.setSectorFlag(sector - sectors, UDMF_SECTOR_INIT_COLOR_TOP);
+      setupSettings.setSectorFlag(eindex(sector - sectors), UDMF_SECTOR_INIT_COLOR_TOP);
    }
    if(edsector->midmap >= 0)
    {
       sector->midmap = edsector->midmap;
-      setupSettings.setSectorFlag(sector - sectors, UDMF_SECTOR_INIT_COLOR_MIDDLE);
+      setupSettings.setSectorFlag(eindex(sector - sectors), UDMF_SECTOR_INIT_COLOR_MIDDLE);
    }
    if(edsector->bottommap >= 0)
    {
       sector->bottommap = edsector->bottommap;
-      setupSettings.setSectorFlag(sector - sectors, UDMF_SECTOR_INIT_COLOR_BOTTOM);
+      setupSettings.setSectorFlag(eindex(sector - sectors), UDMF_SECTOR_INIT_COLOR_BOTTOM);
    }
 
    // terrain overrides

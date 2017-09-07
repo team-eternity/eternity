@@ -123,7 +123,7 @@ v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
 
    // number should be as large as possible to prevent accidental exits on valid
    // hyperdetailed maps, but low enough to release the game on time.
-   int recprotection = 32768;
+   int recprotection = SECTOR_PORTAL_LOOP_PROTECTION;
 
    do
    {
@@ -171,7 +171,7 @@ sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling,
    auto pflags = ceiling ? &sector_t::c_pflags : &sector_t::f_pflags;
    auto portal = ceiling ? &sector_t::c_portal : &sector_t::f_portal;
 
-   int loopprotection = 32768;
+   int loopprotection = SECTOR_PORTAL_LOOP_PROTECTION;
 
    while(sector->*pflags & PS_PASSABLE && loopprotection--)
    {
@@ -179,8 +179,10 @@ sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling,
 
       // Also quit early if the planez is obscured by a dynamic horizontal plane
       // or if deltax and deltay are somehow zero
-      if((ceiling ? sector->ceilingheight < link.planez
-          :   sector->floorheight > link.planez) ||
+      if((ceiling ? !(sector->c_pflags & PF_ATTACHEDPORTAL) &&
+          sector->ceilingheight < link.planez
+          : !(sector->f_pflags & PF_ATTACHEDPORTAL) &&
+          sector->floorheight > link.planez) ||
          (!link.deltax && !link.deltay))
       {
          return sector;
@@ -414,16 +416,10 @@ bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj)
    fixed_t topz = mobj->z + mobj->height;
    if(topz < sector->floorheight || mobj->z > sector->ceilingheight)
       return false;
-   if(sector->f_pflags & PS_PASSABLE &&
-      topz < sector->f_portal->data.link.planez)
-   {
+   if(sector->f_pflags & PS_PASSABLE && topz < P_FloorPortalZ(*sector))
       return false;
-   }
-   if(sector->c_pflags & PS_PASSABLE &&
-      mobj->z > sector->c_portal->data.link.planez)
-   {
+   if(sector->c_pflags & PS_PASSABLE && mobj->z > P_CeilingPortalZ(*sector))
       return false;
-   }
    return true;
 }
 

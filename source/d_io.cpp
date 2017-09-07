@@ -64,7 +64,7 @@ char *DWFILE::getStr(char *buf, size_t n)
 {
    // If this is a real file, return regular fgets
    if(type == DWF_FILE)
-      return fgets(buf, n, (FILE *)inp);
+      return fgets(buf, static_cast<int>(n), (FILE *)inp);
    
    // If no more characters
    if(!n || size <= 0 || !*inp)

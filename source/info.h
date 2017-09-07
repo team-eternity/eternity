@@ -366,6 +366,7 @@ struct mobjinfo_t
                         //  resurrection.  Zero means it won't come
                         //  back to life.
    int translucency;    // haleyjd 09/01/02: zdoom-style translucency
+   int tranmap;         // ioanch  20170903: Boom-style translucency map
    int bloodcolor;      // haleyjd 05/08/03: particle blood color
    unsigned int particlefx; // haleyjd 07/13/03: particle effects
    int mod;             // haleyjd 07/13/03: method of death

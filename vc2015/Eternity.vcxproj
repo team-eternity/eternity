@@ -52,19 +52,15 @@
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
@@ -150,7 +146,7 @@
       <AdditionalManifestFiles>res/DeclareDPIAware.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
     </Manifest>
     <PreBuildEvent>
-      <Command>../midiproc/genmidiproc$(Platform).bat</Command>
+      <Command>../midiproc/autogenmidiproc.bat $(Platform)</Command>
       <Message>Generate appropriate midiproc files</Message>
     </PreBuildEvent>
   </ItemDefinitionGroup>
@@ -209,7 +205,7 @@
       <AdditionalManifestFiles>res/DeclareDPIAware.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
     </Manifest>
     <PreBuildEvent>
-      <Command>../midiproc/genmidiproc$(Platform).bat</Command>
+      <Command>../midiproc/autogenmidiproc.bat $(Platform)</Command>
       <Message>Generate appropriate midiproc files</Message>
     </PreBuildEvent>
   </ItemDefinitionGroup>
@@ -261,7 +257,7 @@
       <AdditionalManifestFiles>res/DeclareDPIAware.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
     </Manifest>
     <PreBuildEvent>
-      <Command>../midiproc/genmidiproc$(Platform).bat</Command>
+      <Command>../midiproc/autogenmidiproc.bat $(Platform)</Command>
       <Message>Generate appropriate midiproc files</Message>
     </PreBuildEvent>
   </ItemDefinitionGroup>
@@ -311,7 +307,7 @@
       <AdditionalManifestFiles>res/DeclareDPIAware.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
     </Manifest>
     <PreBuildEvent>
-      <Command>../midiproc/genmidiproc$(Platform).bat</Command>
+      <Command>../midiproc/autogenmidiproc.bat $(Platform)</Command>
       <Message>Generate appropriate midiproc files</Message>
     </PreBuildEvent>
   </ItemDefinitionGroup>
@@ -1768,10 +1764,12 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\source\w_zip.cpp" />
+    <ClCompile Include="..\source\xl_animdefs.cpp" />
     <ClCompile Include="..\source\xl_emapinfo.cpp" />
     <ClCompile Include="..\source\xl_mapinfo.cpp" />
     <ClCompile Include="..\source\xl_musinfo.cpp" />
     <ClCompile Include="..\source\xl_sndinfo.cpp" />
+    <ClCompile Include="..\source\xl_umapinfo.cpp" />
     <ClCompile Include="..\source\z_native.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -2232,18 +2230,18 @@
     <ClInclude Include="..\source\w_levels.h" />
     <ClInclude Include="..\Source\w_wad.h" />
     <ClInclude Include="..\source\w_zip.h" />
+    <ClInclude Include="..\source\xl_animdefs.h" />
     <ClInclude Include="..\source\xl_emapinfo.h" />
     <ClInclude Include="..\source\xl_mapinfo.h" />
     <ClInclude Include="..\source\xl_musinfo.h" />
     <ClInclude Include="..\source\xl_sndinfo.h" />
+    <ClInclude Include="..\source\xl_umapinfo.h" />
     <ClInclude Include="..\source\z_auto.h" />
     <ClInclude Include="..\Source\z_zone.h" />
     <ClInclude Include="..\source\autopalette.h" />
     <ClInclude Include="..\Source\info.h" />
-    <ClInclude Include="..\source\Win32\inttypes.h" />
     <ClInclude Include="..\Source\psnprntf.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="..\source\Win32\stdint.h" />
     <ClInclude Include="..\Source\tables.h" />
     <ClInclude Include="..\Source\version.h" />
     <ClInclude Include="..\source\textscreen\textscreen.h" />

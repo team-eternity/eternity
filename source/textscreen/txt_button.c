@@ -32,7 +32,7 @@ static void TXT_ButtonSizeCalc(TXT_UNCAST_ARG(button))
 {
     TXT_CAST_ARG(txt_button_t, button);
 
-    button->widget.w = strlen(button->label);
+    button->widget.w = (unsigned)strlen(button->label);
     button->widget.h = 1;
 }
 
@@ -54,7 +54,7 @@ static void TXT_ButtonDrawer(TXT_UNCAST_ARG(button), int selected)
 
     TXT_DrawString(button->label);
     
-    for (i=strlen(button->label); i < w; ++i)
+    for (i=(int)strlen(button->label); i < w; ++i)
     {
         TXT_DrawString(" ");
     }

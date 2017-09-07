@@ -93,7 +93,7 @@ public:
 
    // Virtual methods (overridables)
    virtual void updateThinker();
-   virtual void removeThinker();
+   virtual void remove();
 
    // Serialization
    // When using serialize, always call your parent implementation!

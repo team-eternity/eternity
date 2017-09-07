@@ -1832,7 +1832,11 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
             for(unsigned int i = 0; i < pc->numrebornitems; i++)
             {
                if(!strcasecmp(pc->rebornitems[i].itemname, "AmmoClip"))
+               {
                   pc->rebornitems[i].amount = value;
+                  if(!value)
+                     pc->rebornitems[i].flags |= RBIF_IGNORE;
+               }
             }
          }
       }
@@ -2380,7 +2384,7 @@ void deh_procBexSounds(DWFILE *fpin, char *line)
       // do it
       memset(candidate, 0, 9);
       strncpy(candidate, ptr_lstrip(strval), 9);
-      len = strlen(candidate);
+      len = static_cast<int>(strlen(candidate));
       if(len < 1 || len > 8)
       {
          deh_LogPrintf("Bad length for sound name '%s'\n", candidate);
@@ -2436,7 +2440,7 @@ void deh_procBexMusic(DWFILE *fpin, char *line)
       // do it
       memset(candidate, 0, 7);
       strncpy(candidate, ptr_lstrip(strval), 6);
-      len = strlen(candidate);
+      len = static_cast<int>(strlen(candidate));
       if(len < 1 || len > 6)
       {
          deh_LogPrintf("Bad length for music name '%s'\n", candidate);
@@ -2572,7 +2576,7 @@ bool deh_GetData(char *s, char *k, int *l, char **strval)
          okrc = false; 
 
       // we've incremented t
-      val = strtol(t, NULL, 0);  // killough 8/9/98: allow hex or octal input
+      val = static_cast<int>(strtol(t, NULL, 0));  // killough 8/9/98: allow hex or octal input
    }
 
    // go put the results in the passed pointers

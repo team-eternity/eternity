@@ -63,6 +63,7 @@
 #include "ACSVM/Module.hpp"
 #include "ACSVM/Scope.hpp"
 #include "ACSVM/Script.hpp"
+#include "ACSVM/Serial.hpp"
 
 
 //
@@ -466,8 +467,8 @@ void ACSEnvironment::loadModule(ACSVM::Module *module)
 
    // Fetch lump data. Use PU_LEVEL so the lump data does not get unexpectedly
    // purged as a result of further allocations.
-   data = (byte *)moduleDir->cacheLumpNum(module->name.i, PU_LEVEL);
-   size = moduleDir->lumpLength(module->name.i);
+   data = (byte *)moduleDir->cacheLumpNum(static_cast<int>(module->name.i), PU_LEVEL);
+   size = moduleDir->lumpLength(static_cast<int>(module->name.i));
 
    try
    {
@@ -484,7 +485,7 @@ void ACSEnvironment::loadModule(ACSVM::Module *module)
 //
 // ACSEnvironment::loadState
 //
-void ACSEnvironment::loadState(std::istream &in)
+void ACSEnvironment::loadState(ACSVM::Serial &in)
 {
    ACSVM::Environment::loadState(in);
 
@@ -496,7 +497,7 @@ void ACSEnvironment::loadState(std::istream &in)
 //
 // ACSEnvironment::readModuleName
 //
-ACSVM::ModuleName ACSEnvironment::readModuleName(std::istream &in) const
+ACSVM::ModuleName ACSEnvironment::readModuleName(ACSVM::Serial &in) const
 {
    auto name = ACSVM::Environment::readModuleName(in);
    name.p = dir;
@@ -514,22 +515,22 @@ void ACSEnvironment::refStrings()
 //
 // ACSThread::loadState
 //
-void ACSThread::loadState(std::istream &in)
+void ACSThread::loadState(ACSVM::Serial &in)
 {
    ACSVM::Thread::loadState(in);
 
-   info.mo = static_cast<Mobj *>(P_ThinkerForNum(ACSVM::ReadVLN<size_t>(in)));
+   info.mo = static_cast<Mobj *>(P_ThinkerForNum(static_cast<unsigned>(ACSVM::ReadVLN<size_t>(in))));
 
    size_t linenum = ACSVM::ReadVLN<size_t>(in);
    info.line = linenum ? &lines[linenum - 1] : nullptr;
 
-   info.side = ACSVM::ReadVLN<size_t>(in);
+   info.side = static_cast<int>(ACSVM::ReadVLN<size_t>(in));
 }
 
 //
 // ACSThread::saveState
 //
-void ACSThread::saveState(std::ostream &out) const
+void ACSThread::saveState(ACSVM::Serial &out) const
 {
    ACSVM::Thread::saveState(out);
 
@@ -889,17 +890,33 @@ void ACS_Archive(SaveArchive &arc)
 {
    if(arc.isLoading())
    {
-      ACSBuffer    buf{arc.getLoadFile()};
-      std::istream in {&buf};
+      ACSBuffer     buf{arc.getLoadFile()};
+      std::istream  str{&buf};
+      ACSVM::Serial in {str};
 
-      ACSenv.loadState(in);
+      try
+      {
+         in.loadHead();
+         ACSenv.loadState(in);
+         in.loadTail();
+      }
+      catch(ACSVM::SerialError const &e)
+      {
+         I_Error("ACS_Archive: %s\n", e.what());
+      }
    }
    else if(arc.isSaving())
    {
-      ACSBuffer    buf{arc.getSaveFile()};
-      std::ostream out{&buf};
+      ACSBuffer     buf{arc.getSaveFile()};
+      std::ostream  str{&buf};
+      ACSVM::Serial out{str};
 
+      // Enable debug signatures.
+      out.signs = true;
+
+      out.saveHead();
       ACSenv.saveState(out);
+      out.saveTail();
    }
 }
 

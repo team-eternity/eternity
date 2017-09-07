@@ -195,7 +195,7 @@ void ScrollThinker::addScroller()
 //
 void ScrollThinker::removeScroller()
 {
-   removeThinker();
+   remove();
    if((*list->prev = list->next))
       list->next->prev = list->prev;
    efree(list);
@@ -221,28 +221,17 @@ void ScrollThinker::RemoveAllScrollers()
 //
 bool EV_stopFlatScrollerBySecnum(int type, int secnum)
 {
-   bool flickback = false;
    if(!scrollers)
       return false;
 
    // search the scrolled sectors
-   for(scrollerlist_t *sl = scrollers; sl; sl = sl->next)
+   scrollerlist_t *sl = scrollers;
+   while(sl)
    {
-      if(flickback == true)
-      {
-         sl = *sl->prev;
-         flickback = false;
-      }
       ScrollThinker *scroller = sl->scroller;
-
+      sl = sl->next; // MUST do this here or bad things happen
       if(scroller->affectee == secnum && scroller->type == type)
-      {
-         if(!((sl = sl->next)))
-            break; 
-
-         flickback = true;
          scroller->removeScroller();
-      }
    }
 
    return true;
@@ -323,6 +312,9 @@ static void Add_WallScroller(int64_t dx, int64_t dy, const line_t *l,
 // (This is so scrolling floors and objects on them can move at same speed.)
 #define CARRYFACTOR ((fixed_t)(FRACUNIT*.09375))
 
+// This makes it so certain values are approx 1 unit per second
+#define ZDSCROLLFACTOR 10
+
 // killough 3/7/98: Types 245-249 are same as 250-254 except that the
 // first side's sector's heights cause scrolling when they change, and
 // this linedef controls the direction and speed of the scrolling. The
@@ -349,13 +341,13 @@ static void P_getScrollParams(const line_t *l, fixed_t &dx, fixed_t &dy,
    {
       // For some reason ACS Scroll_Floor and Scroll_Ceiling have different
       // meaning for dx/dy if they're called from ACS. This is a ZDoom thing.
-      dx = (l->args[ev_Scroll_Arg_X] << FRACBITS) >> SCROLL_SHIFT;
-      dy = (l->args[ev_Scroll_Arg_Y] << FRACBITS) >> SCROLL_SHIFT;
+      dx = ((l->args[ev_Scroll_Arg_X] * ZDSCROLLFACTOR) << FRACBITS) >> SCROLL_SHIFT;
+      dy = ((l->args[ev_Scroll_Arg_Y] * ZDSCROLLFACTOR) << FRACBITS) >> SCROLL_SHIFT;
    }
    if(bits & ev_Scroll_Bit_Accel)
       accel = 1;
    if(bits & (ev_Scroll_Bit_Accel | ev_Scroll_Bit_Displace))
-      control = sides[*l->sidenum].sector - sectors;
+      control = eindex(sides[*l->sidenum].sector - sectors);
 }
 
 //
@@ -380,7 +372,7 @@ static void P_spawnCeilingScroller(int staticFn, const line_t *l)
       accel = 1;
    if(staticFn == EV_STATIC_SCROLL_ACCEL_CEILING ||
       staticFn == EV_STATIC_SCROLL_DISPLACE_CEILING)
-      control = sides[*l->sidenum].sector - sectors;
+      control = eindex(sides[*l->sidenum].sector - sectors);
 
    for(int s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0;)
       Add_Scroller(ScrollThinker::sc_ceiling, -dx, dy, control, s, accel);
@@ -427,7 +419,7 @@ static void P_spawnFloorScroller(int staticFn, const line_t *l, bool acs = false
          accel = 1;
       if(staticFn == EV_STATIC_SCROLL_ACCEL_FLOOR ||
          staticFn == EV_STATIC_SCROLL_DISPLACE_FLOOR)
-         control = sides[*l->sidenum].sector - sectors;
+         control = eindex(sides[*l->sidenum].sector - sectors);
    }
 
    for(int s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0;)
@@ -464,7 +456,7 @@ static void P_spawnFloorCarrier(int staticFn, const line_t *l, bool acs = false)
          accel = 1;
       if(staticFn == EV_STATIC_CARRY_ACCEL_FLOOR ||
          staticFn == EV_STATIC_CARRY_DISPLACE_FLOOR)
-         control = sides[*l->sidenum].sector - sectors;
+         control = eindex(sides[*l->sidenum].sector - sectors);
    }
 
    for(int s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0;)
@@ -498,7 +490,7 @@ static void P_spawnFloorScrollAndCarry(int staticFn, const line_t *l, bool acs =
          accel = 1;
       if(staticFn == EV_STATIC_SCROLL_CARRY_ACCEL_FLOOR ||
          staticFn == EV_STATIC_SCROLL_CARRY_DISPLACE_FLOOR)
-         control = sides[*l->sidenum].sector - sectors;
+         control = eindex(sides[*l->sidenum].sector - sectors);
    }
 
    for(s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0; )
@@ -556,7 +548,7 @@ static void P_spawnDynamicWallScroller(int staticFn, line_t *l, int linenum)
       if(bits & ev_Scroll_Bit_Accel)
          accel = 1;
       if(bits & (ev_Scroll_Bit_Accel | ev_Scroll_Bit_Displace))
-         control = sides[*l->sidenum].sector - sectors;
+         control = eindex(sides[*l->sidenum].sector - sectors);
    }
    else
    {
@@ -564,7 +556,7 @@ static void P_spawnDynamicWallScroller(int staticFn, line_t *l, int linenum)
          accel = 1;
       if(staticFn == EV_STATIC_SCROLL_ACCEL_WALL ||
          staticFn == EV_STATIC_SCROLL_DISPLACE_WALL)
-         control = sides[*l->sidenum].sector - sectors;
+         control = eindex(sides[*l->sidenum].sector - sectors);
    }
 
    // killough 3/1/98: scroll wall according to linedef
@@ -698,6 +690,77 @@ void P_SpawnScrollers()
       default:
          break; // not a function handled here
       }
+   }
+}
+
+//
+// Spawn a floor scroller based on UDMF properties
+//
+void P_SpawnFloorUDMF(int s, int type, double scrollx, double scrolly)
+{
+   bool texture = false, carry = false;
+   
+   switch(type)
+   {
+   case SCROLLTYPE_TEXTURE:
+      texture = true;
+      break;
+   case SCROLLTYPE_CARRY:
+      carry = true;
+      break;
+   case SCROLLTYPE_BOTH:
+      texture = carry = true;
+      break;
+   default:
+      return;
+   }
+
+   fixed_t dx = M_DoubleToFixed(scrollx * ZDSCROLLFACTOR) >> SCROLL_SHIFT;
+   fixed_t dy = M_DoubleToFixed(scrolly * ZDSCROLLFACTOR) >> SCROLL_SHIFT;
+   if(texture)
+      Add_Scroller(ScrollThinker::sc_floor, -dx, dy, -1, s, false, false);
+   if(carry)
+   {
+      dx = FixedMul(dx, CARRYFACTOR);
+      dy = FixedMul(dy, CARRYFACTOR);
+      Add_Scroller(ScrollThinker::sc_carry, dx, dy, -1, s, false, false);
+   }
+}
+
+//
+// Spawn a ceiling scroller based on UDMF properties
+//
+void P_SpawnCeilingUDMF(int s, int type, double scrollx, double scrolly)
+{
+   bool texture, carry;
+
+   switch(type)
+   {
+   case SCROLLTYPE_TEXTURE:
+      texture = true;
+      carry = false;
+      break;
+   case SCROLLTYPE_CARRY:
+      carry = true;
+      texture = false;
+      break;
+   case SCROLLTYPE_BOTH:
+      texture = carry = true;
+      break;
+   default:
+      return;
+   }
+
+   fixed_t dx = M_DoubleToFixed(scrollx * ZDSCROLLFACTOR) >> SCROLL_SHIFT;
+   fixed_t dy = M_DoubleToFixed(scrolly * ZDSCROLLFACTOR) >> SCROLL_SHIFT;
+   if(texture)
+      Add_Scroller(ScrollThinker::sc_ceiling, -dx, dy, -1, s, false, false);
+   if(carry)
+   {
+      C_Printf(FC_ERROR "Carrying ceiling scrollers will be added later\a\n");
+      dx = FixedMul(dx, CARRYFACTOR);
+      dy = FixedMul(dy, CARRYFACTOR);
+      Add_Scroller(ScrollThinker::sc_carry_ceiling, dx, dy, -1, s, false, false);
    }
 }
 

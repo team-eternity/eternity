@@ -186,7 +186,7 @@ void Thinker::removeDelayed()
 // set the function to P_RemoveThinkerDelayed(), so that later, it will be
 // removed automatically as part of the thinker process.
 //
-void Thinker::removeThinker()
+void Thinker::remove()
 {
    removed = true;
    

@@ -31,6 +31,7 @@
 
 // Bothersome statics. Blah, I say.
 IMPLEMENT_RTTI_TYPE(MetaQString)
+IMPLEMENT_RTTI_TYPE(MetaMultiString)
 
 // EOF
 

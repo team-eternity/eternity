@@ -369,7 +369,7 @@ static int P_AddLinkOffset(int startgroup, int targetgroup,
 //
 static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
 {
-   int i = sec - sectors;
+   int i = eindex(sec - sectors);
 
    if(!portal || !sec)
       return true;
@@ -761,7 +761,7 @@ void P_LinkRejectTable()
       list = groups[i]->seclist;
       for(s = 0; list[s]; s++)
       {
-         int sectorindex1 = list[s] - sectors;
+         int sectorindex1 = eindex(list[s] - sectors);
 
          for(p = 0; p < groupcount; p++)
          {
@@ -771,7 +771,7 @@ void P_LinkRejectTable()
             list2 = groups[p]->seclist;
             for(q = 0; list2[q]; q++)
             {
-               int sectorindex2 = list2[q] - sectors;
+               int sectorindex2 = eindex(list2[q] - sectors);
                int pnum = (sectorindex1 * numsectors) + sectorindex2;
 
                rejectmatrix[pnum>>3] &= ~(1 << (pnum&7));
@@ -928,7 +928,8 @@ void P_CheckCPortalState(sector_t *sec)
       return;
    }
    
-   obscured = (sec->c_portal->type == R_LINKED && 
+   obscured = (sec->c_portal->type == R_LINKED &&
+               !(sec->c_pflags & PF_ATTACHEDPORTAL) &&
                sec->ceilingheight < sec->c_portal->data.link.planez);
                
    sec->c_pflags = P_GetPortalState(sec->c_portal, sec->c_pflags, obscured);
@@ -944,7 +945,8 @@ void P_CheckFPortalState(sector_t *sec)
       return;
    }
 
-   obscured = (sec->f_portal->type == R_LINKED && 
+   obscured = (sec->f_portal->type == R_LINKED &&
+               !(sec->f_pflags & PF_ATTACHEDPORTAL) &&
                sec->floorheight > sec->f_portal->data.link.planez);
                
    sec->f_pflags = P_GetPortalState(sec->f_portal, sec->f_pflags, obscured);
@@ -1075,6 +1077,25 @@ void P_MoveLinkedPortal(portal_t *portal, fixed_t dx, fixed_t dy, bool movebehin
          link->y += dy;
       }
    }
+}
+
+//
+// Returns ceiling portal Z, which depends on whether planez is used or not.
+// Assumes linked portal exists and is active.
+//
+fixed_t P_CeilingPortalZ(const sector_t &sector)
+{
+   return sector.c_pflags & PF_ATTACHEDPORTAL ? sector.ceilingheight :
+   sector.c_portal->data.link.planez;
+}
+
+//
+// Same but for floors
+//
+fixed_t P_FloorPortalZ(const sector_t &sector)
+{
+   return sector.f_pflags & PF_ATTACHEDPORTAL ? sector.floorheight :
+   sector.f_portal->data.link.planez;
 }
 
 //
