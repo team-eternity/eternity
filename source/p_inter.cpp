@@ -537,6 +537,8 @@ static bool P_givePower(player_t *player, int power, int duration, bool additive
          return false;
       P_PlayerStartFlight(player, true);
       break;
+   case pw_weaponlevel2:
+      break;
    }
 
    // Unless player has infinite duration cheat, set duration (killough)
@@ -885,11 +887,11 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       if(!P_GiveWeapon(player, effect, false, special))
          return;
       // FIXME: externalize all BFG pickup strings
-      message = bfgtype==0 ? DEH_String("GOTBFG9000") // sf
-                : bfgtype==1 ? "You got the BFG 2704!"
-                : bfgtype==2 ? "You got the BFG 11K!"
-                : bfgtype==3 ? "You got the Bouncing BFG!"
-                : bfgtype==4 ? "You got the Plasma Burst BFG!"
+      message = bfgtype == bfg_normal ? DEH_String("GOTBFG9000") // sf
+                : bfgtype == bfg_classic ? "You got the BFG 2704!"
+                : bfgtype == bfg_11k ? "You got the BFG 11K!"
+                : bfgtype == bfg_bouncing ? "You got the Bouncing BFG!"
+                : bfgtype == bfg_burst ? "You got the Plasma Burst BFG!"
                 : "You got some kind of BFG";
       sound = sfx_wpnup;
       break;
