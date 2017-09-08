@@ -1569,7 +1569,7 @@ void Mobj::serialize(SaveArchive &arc)
       << gear                                              // Lee's torque
       // Appearance
       << colour                                            // Translations
-      << translucency << alphavelocity                     // Alpha blending
+      << translucency << tranmap << alphavelocity          // Alpha blending
       << xscale << yscale                                  // Scaling
       // Inventory related fields
       << dropamount
@@ -1787,6 +1787,7 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 
    // haleyjd: zdoom-style translucency level
    mobj->translucency  = info->translucency;
+   mobj->tranmap = info->tranmap;
    
    if(info->alphavelocity != 0) // 5/23/08
       P_StartMobjFade(mobj, info->alphavelocity);

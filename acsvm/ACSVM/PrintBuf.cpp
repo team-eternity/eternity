@@ -82,7 +82,7 @@ namespace ACSVM
    //
    char *PrintBuf::getLoadBuf(std::size_t countFull, std::size_t count)
    {
-      if(static_cast<std::size_t>(bufEnd - bufPtr) <= countFull)
+      if(static_cast<std::size_t>(bufEnd - buffer) <= countFull)
       {
          char *bufNew;
          if(!(bufNew = static_cast<char *>(std::realloc(buffer, countFull + 1))))
@@ -92,8 +92,8 @@ namespace ACSVM
          bufEnd = buffer + countFull + 1;
       }
 
-      bufBeg = bufEnd - count;
       bufPtr = buffer + countFull;
+      bufBeg = bufPtr - count;
 
       return buffer;
    }

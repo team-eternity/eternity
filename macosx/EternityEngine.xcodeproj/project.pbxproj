@@ -289,6 +289,9 @@
 		4F5F399F182D9C1C0027813A /* libsmpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFFDF6B1753482C00E70FEC /* libsmpeg.a */; };
 		4F68CE8D1963D88100E7B8BE /* ev_sectors.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F68CE8B1963D88100E7B8BE /* ev_sectors.cpp */; };
 		4F7ADA181E0C623900E34F5F /* m_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F7ADA161E0C623900E34F5F /* m_utils.cpp */; };
+		4F914A111F61163C00968197 /* BinaryIO.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F914A101F61163C00968197 /* BinaryIO.cpp */; };
+		4F914A131F61164E00968197 /* Error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F914A121F61164E00968197 /* Error.cpp */; };
+		4F914A171F61166F00968197 /* Serial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F914A151F61166F00968197 /* Serial.cpp */; };
 		4F917D781F29243500131BE5 /* xl_umapinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F917D771F29243500131BE5 /* xl_umapinfo.cpp */; };
 		4F950FDF1F3CDAB4000D9DC5 /* xl_animdefs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F950FDE1F3CDAB4000D9DC5 /* xl_animdefs.cpp */; };
 		4F950FE21F4989A7000D9DC5 /* e_switch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F950FE11F4989A7000D9DC5 /* e_switch.cpp */; };
@@ -381,6 +384,11 @@
 		4F7BB78C175797640079E263 /* i_directory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = i_directory.cpp; path = ../source/hal/i_directory.cpp; sourceTree = "<group>"; };
 		4F7BB78D175797640079E263 /* i_directory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = i_directory.h; path = ../source/hal/i_directory.h; sourceTree = "<group>"; };
 		4F8B42E816C1101000765638 /* zutil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = zutil.c; path = ../zlib/zutil.c; sourceTree = "<group>"; };
+		4F914A101F61163C00968197 /* BinaryIO.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BinaryIO.cpp; path = ../acsvm/ACSVM/BinaryIO.cpp; sourceTree = "<group>"; };
+		4F914A121F61164E00968197 /* Error.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Error.cpp; path = ../acsvm/ACSVM/Error.cpp; sourceTree = "<group>"; };
+		4F914A141F61165B00968197 /* ID.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = ID.hpp; path = ../acsvm/ACSVM/ID.hpp; sourceTree = "<group>"; };
+		4F914A151F61166F00968197 /* Serial.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Serial.cpp; path = ../acsvm/ACSVM/Serial.cpp; sourceTree = "<group>"; };
+		4F914A161F61166F00968197 /* Serial.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Serial.hpp; path = ../acsvm/ACSVM/Serial.hpp; sourceTree = "<group>"; };
 		4F917D771F29243500131BE5 /* xl_umapinfo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = xl_umapinfo.cpp; path = ../source/xl_umapinfo.cpp; sourceTree = "<group>"; };
 		4F917D791F2A5FD600131BE5 /* xl_umapinfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = xl_umapinfo.h; path = ../source/xl_umapinfo.h; sourceTree = "<group>"; };
 		4F950FDD1F3CDA67000D9DC5 /* xl_animdefs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = xl_animdefs.h; path = ../source/xl_animdefs.h; sourceTree = "<group>"; };
@@ -1050,6 +1058,7 @@
 				4FC0A8FC1E1E2A50006CEC45 /* Action.hpp */,
 				4FC0A8FD1E1E2A50006CEC45 /* Array.cpp */,
 				4FC0A8FE1E1E2A50006CEC45 /* Array.hpp */,
+				4F914A101F61163C00968197 /* BinaryIO.cpp */,
 				4FC0A8FF1E1E2A50006CEC45 /* BinaryIO.hpp */,
 				4FC0A9001E1E2A50006CEC45 /* CallFunc.cpp */,
 				4FC0A9011E1E2A50006CEC45 /* CallFunc.hpp */,
@@ -1059,11 +1068,13 @@
 				4FC0A9051E1E2A50006CEC45 /* CodeList.hpp */,
 				4FC0A9061E1E2A50006CEC45 /* Environment.cpp */,
 				4FC0A9071E1E2A50006CEC45 /* Environment.hpp */,
+				4F914A121F61164E00968197 /* Error.cpp */,
 				4FC0A9081E1E2A50006CEC45 /* Error.hpp */,
 				4FC0A9091E1E2A50006CEC45 /* Function.cpp */,
 				4FC0A90A1E1E2A50006CEC45 /* Function.hpp */,
 				4FC0A90B1E1E2A50006CEC45 /* HashMap.hpp */,
 				4FC0A90C1E1E2A50006CEC45 /* HashMapFixed.hpp */,
+				4F914A141F61165B00968197 /* ID.hpp */,
 				4FC0A90D1E1E2A50006CEC45 /* Init.cpp */,
 				4FC0A90E1E1E2A50006CEC45 /* Init.hpp */,
 				4FC0A90F1E1E2A50006CEC45 /* Jump.cpp */,
@@ -1079,6 +1090,8 @@
 				4FC0A9191E1E2A50006CEC45 /* Scope.hpp */,
 				4FC0A91A1E1E2A50006CEC45 /* Script.cpp */,
 				4FC0A91B1E1E2A50006CEC45 /* Script.hpp */,
+				4F914A151F61166F00968197 /* Serial.cpp */,
+				4F914A161F61166F00968197 /* Serial.hpp */,
 				4FC0A91C1E1E2A50006CEC45 /* Stack.hpp */,
 				4FC0A91D1E1E2A50006CEC45 /* Store.hpp */,
 				4FC0A91E1E1E2A50006CEC45 /* String.cpp */,
@@ -2103,6 +2116,7 @@
 				4F5F3969182D9B820027813A /* xl_scripts.cpp in Sources */,
 				4FAAD5941E583113001D7263 /* p_portalcross.cpp in Sources */,
 				4F5F396A182D9B820027813A /* z_native.cpp in Sources */,
+				4F914A171F61166F00968197 /* Serial.cpp in Sources */,
 				4F5F396B182D9B820027813A /* dsp.cpp in Sources */,
 				4F5F396C182D9B820027813A /* SNES_SPC_misc.cpp in Sources */,
 				4F5F396D182D9B820027813A /* SNES_SPC_state.cpp in Sources */,
@@ -2241,6 +2255,7 @@
 				4F5F38FD182D9AC00027813A /* p_doors.cpp in Sources */,
 				4F5F38FE182D9AC00027813A /* p_enemy.cpp in Sources */,
 				4F5F38FF182D9AC00027813A /* p_floor.cpp in Sources */,
+				4F914A111F61163C00968197 /* BinaryIO.cpp in Sources */,
 				4F5F3900182D9AC00027813A /* p_genlin.cpp in Sources */,
 				4F5F3901182D9AC00027813A /* p_henemy.cpp in Sources */,
 				4F5F3902182D9AC00027813A /* p_hubs.cpp in Sources */,
@@ -2280,6 +2295,7 @@
 				4F5F391E182D9AC00027813A /* p_xenemy.cpp in Sources */,
 				4F68CE8D1963D88100E7B8BE /* ev_sectors.cpp in Sources */,
 				4F5F391F182D9AC00027813A /* polyobj.cpp in Sources */,
+				4F914A131F61164E00968197 /* Error.cpp in Sources */,
 				4F5F389A182D99090027813A /* e_args.cpp in Sources */,
 				4FC0A92C1E1E2A50006CEC45 /* Function.cpp in Sources */,
 				4F5F389C182D99090027813A /* e_cmd.cpp in Sources */,

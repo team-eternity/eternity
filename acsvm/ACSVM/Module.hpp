@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2017 David Hill
 //
 // See COPYING for license information.
 //
@@ -13,6 +13,7 @@
 #ifndef ACSVM__Module_H__
 #define ACSVM__Module_H__
 
+#include "ID.hpp"
 #include "List.hpp"
 #include "Vector.hpp"
 
@@ -101,18 +102,6 @@ namespace ACSVM
       bool isACS0;
       bool loaded;
 
-
-      static constexpr std::uint32_t ChunkID(char c0, char c1, char c2, char c3)
-      {
-         return
-            (static_cast<std::uint32_t>(c0) <<  0) |
-            (static_cast<std::uint32_t>(c1) <<  8) |
-            (static_cast<std::uint32_t>(c2) << 16) |
-            (static_cast<std::uint32_t>(c3) << 24);
-      }
-
-      static constexpr std::uint32_t ChunkID(char const (&s)[5])
-         {return ChunkID(s[0], s[1], s[2], s[3]);}
 
       static std::pair<
          std::unique_ptr<Byte[]> /*data*/,
