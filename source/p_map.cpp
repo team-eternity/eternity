@@ -258,13 +258,19 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
    // floorheight that have different frictions, use the lowest
    // friction value (muddy has precedence over icy).
 
+   bool onfloor = mo->z <= mo->floorz || (P_Use3DClipping() && mo->intflags & MIF_ONMOBJ);
+
    if(mo->flags4 & MF4_FLY)
    {
       friction = FRICTION_FLY;
    }
-   else if(!(mo->flags & (MF_NOCLIP|MF_NOGRAVITY)) 
-      && (demo_version >= 203 || (mo->player && !compatibility)) &&
-      variable_friction)
+   else if(LevelInfo.airControl && !onfloor)
+   {
+      friction = LevelInfo.airFriction;
+   }   
+   else if(!(mo->flags & (MF_NOCLIP|MF_NOGRAVITY)) && 
+           (demo_version >= 203 || (mo->player && !compatibility)) &&
+           variable_friction)
    {
       for (m = mo->touching_sectorlist; m; m = m->m_tnext)
       {

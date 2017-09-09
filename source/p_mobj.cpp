@@ -662,8 +662,10 @@ void P_XYMovement(Mobj* mo)
    // no friction when airborne
    // haleyjd: OVER_UNDER
    // 06/5/12: flying players
+   // 2017/09/09: players with air control
    if(mo->z > mo->floorz && !(mo->flags4 & MF4_FLY) &&
-      (!P_Use3DClipping() || !(mo->intflags & MIF_ONMOBJ)))
+      (!P_Use3DClipping() || !(mo->intflags & MIF_ONMOBJ)) &&
+      !(LevelInfo.airControl && mo->player))
       return;
 
    // killough 8/11/98: add bouncers

@@ -363,6 +363,7 @@ ACSEnvironment::ACSEnvironment() :
 
    addFuncDataACS0(300, addCallFunc(ACS_CF_GetLineX));
    addFuncDataACS0(301, addCallFunc(ACS_CF_GetLineY));
+   addFuncDataACS0(302, addCallFunc(ACS_CF_SetAirFriction));
 }
 
 //

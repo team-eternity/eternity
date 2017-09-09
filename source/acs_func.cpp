@@ -1586,6 +1586,15 @@ bool ACS_CF_SetAirControl(ACS_CF_ARGS)
 }
 
 //
+// void SetAirFriction(fixed amount);
+//
+bool ACS_CF_SetAirFriction(ACS_CF_ARGS)
+{
+   LevelInfo.airFriction = argV[0];
+   return false;
+}
+
+//
 // ACS_CF_SetGravity
 //
 // void SetGravity(fixed gravity);

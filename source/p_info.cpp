@@ -1401,7 +1401,7 @@ static void P_ClearLevelVars()
 
    // air control
    LevelInfo.airControl = comp[comp_aircontrol] ? 0 : FRACUNIT >> 8;
-   LevelInfo.airFriction = 0;
+   LevelInfo.airFriction = FRACUNIT;
 
    // haleyjd: construct defaults
    P_InfoDefaultLevelName();
