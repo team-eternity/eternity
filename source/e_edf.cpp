@@ -1658,6 +1658,10 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
    // process TerrainTypes
    E_ProcessTerrainTypes(cfg);
 
+   // process switches and animations
+   E_ProcessSwitches(cfg);
+   E_ProcessAnimations(cfg);
+
    // process dynamic menus
    MN_ProcessMenus(cfg);
 
@@ -1677,8 +1681,6 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
 
    // post-processing routines
    E_SetThingDefaultSprites();
-
-   E_ProcessSwitches(cfg);
 }
 
 //
