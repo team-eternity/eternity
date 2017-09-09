@@ -1937,6 +1937,11 @@ static int E_TranMapCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
                        void *result)
 {
    int *target = static_cast<int *>(result);
+   if(!strcasecmp(value, "none"))   // accept none
+   {
+      *target = -1;
+      return 0;
+   }
 
    // try lump name
    int trnum = W_CheckNumForName(value);
