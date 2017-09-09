@@ -40,7 +40,7 @@ struct cfg_t;
 class ESwitchDef : public ZoneObject
 {
 public:
-   ESwitchDef() : episode()
+   ESwitchDef() : episode(), link()
    {
    }
 

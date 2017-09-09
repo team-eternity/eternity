@@ -62,6 +62,7 @@ static void E_processSwitch(cfg_t *cfg)
 {
    const char *title = cfg_title(cfg);
    ESwitchDef *def = e_switch_namehash.objectForKey(title);
+   bool modified = !!def;
    if(!def)
    {
       def = new ESwitchDef;
@@ -72,10 +73,19 @@ static void E_processSwitch(cfg_t *cfg)
    }
    else
       E_EDFLogPrintf("\t\tModified switch %s\n", title);
-   def->onpic = cfg_getstr(cfg, ITEM_SWITCH_ONPIC);
-   def->onsound = cfg_getstr(cfg, ITEM_SWITCH_ONSOUND);
-   def->offsound = cfg_getstr(cfg, ITEM_SWITCH_OFFSOUND);
-   def->episode = cfg_getint(cfg, ITEM_SWITCH_GAMEINDEX);
+
+   auto isset = [modified, cfg](const char *field) {
+      return !modified || cfg_size(cfg, field) > 0;
+   };
+
+   if(isset(ITEM_SWITCH_ONPIC))
+      def->onpic = cfg_getstr(cfg, ITEM_SWITCH_ONPIC);
+   if(isset(ITEM_SWITCH_ONSOUND))
+      def->onsound = cfg_getstr(cfg, ITEM_SWITCH_ONSOUND);
+   if(isset(ITEM_SWITCH_OFFSOUND))
+      def->offsound = cfg_getstr(cfg, ITEM_SWITCH_OFFSOUND);
+   if(isset(ITEM_SWITCH_GAMEINDEX))
+      def->episode = cfg_getint(cfg, ITEM_SWITCH_GAMEINDEX);
 }
 
 //
