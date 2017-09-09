@@ -128,12 +128,10 @@ void E_AddSwitchDef(const ESwitchDef &extdef)
    if(def)
       return;
 
-   def = new ESwitchDef;
-   *def = extdef;
+   def = new ESwitchDef(extdef);
    e_switch_namehash.addObject(def);
    eswitches.add(def);
    E_EDFLogPrintf("\t\tDefined switch %s from ANIMDEFS\n", title);
-   return;
 }
 
 //

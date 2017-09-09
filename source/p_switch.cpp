@@ -49,8 +49,6 @@
 // need wad iterators
 #include "w_iterator.h"
 
-#include "xl_animdefs.h"
-
 // killough 2/8/98: Remove switch limit
 
 static int *switchlist;                           // killough
