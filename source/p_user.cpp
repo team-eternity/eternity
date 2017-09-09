@@ -324,7 +324,7 @@ void P_MovePlayer(player_t* player)
    if((!demo_compatibility && demo_version < 203) || 
       (cmd->forwardmove | cmd->sidemove)) // killough 10/98
    {
-      if (onground || mo->flags & MF_BOUNCES) // killough 8/9/98
+      if(onground || mo->flags & MF_BOUNCES) // killough 8/9/98
       {
          int friction, movefactor = P_GetMoveFactor(mo, &friction);
 
@@ -341,13 +341,13 @@ void P_MovePlayer(player_t* player)
          if(!(mo->flags4 & MF4_FLY) || !pitchedflight)
             pitch = 0;
 
-         if (cmd->forwardmove)
+         if(cmd->forwardmove)
          {
             P_Bob(player, mo->angle, pitch, cmd->forwardmove*bobfactor);
             P_Thrust(player, mo->angle, pitch, cmd->forwardmove*movefactor);
          }
          
-         if (cmd->sidemove)
+         if(cmd->sidemove)
          {
             P_Bob(player, mo->angle-ANG90, 0, cmd->sidemove*bobfactor);
             P_Thrust(player, mo->angle-ANG90, 0, cmd->sidemove*movefactor);
@@ -357,15 +357,13 @@ void P_MovePlayer(player_t* player)
       {
          // Do not move player 
          if(cmd->forwardmove)
-         {
             P_Thrust(player, mo->angle, 0, FRACUNIT >> 8);
-         }
 
          // TODO: disable this part in Strife
-         if(cmd->sidemove)
-         {
-            P_Thrust(player, mo->angle, 0, FRACUNIT >> 8);
-         }
+         if(cmd->sidemove > 0)
+            P_Thrust(player, mo->angle-ANG90, 0, FRACUNIT >> 8);
+         else if(cmd->sidemove < 0)
+            P_Thrust(player, mo->angle+ANG90, 0, FRACUNIT >> 8);
       }
 
       if(mo->state == states[mo->info->spawnstate])
