@@ -1399,6 +1399,10 @@ static void P_ClearLevelVars()
    // gameplay
    LevelInfo.disableJump = false;
 
+   // air control
+   LevelInfo.airControl = comp[comp_aircontrol] ? 0 : FRACUNIT >> 8;
+   LevelInfo.airFriction = 0;
+
    // haleyjd: construct defaults
    P_InfoDefaultLevelName();
    P_InfoDefaultSoundNames();
@@ -1536,6 +1540,9 @@ struct levelvar_t
 #define LI_INTEGR(name, field) \
    { IVT_INT, name, &(LevelInfo . field), nullptr, false }
 
+#define LI_DOUBLE(name, field) \
+   { IVT_DOUBLE, name, &(LevelInfo . field), nullptr, false }
+
 #define LI_BOOLNF(name, field) \
    { IVT_BOOLEAN, name, &(LevelInfo . field), nullptr, false }
 
@@ -1552,6 +1559,8 @@ static levelvar_t levelvars[]=
 {
    LI_BOOLNF("acsopendelay",       acsOpenDelay),
    LI_STRING("acsscript",          acsScriptLump),
+   LI_INTEGR("aircontrol",         airControl),
+   LI_INTEGR("airfriction",        airFriction),
    LI_BOOLNF("allowexittags",      allowExitTags),
    LI_BOOLNF("allowsecrettags",    allowSecretTags),
    LI_STRING("altskyname",         altSkyName),

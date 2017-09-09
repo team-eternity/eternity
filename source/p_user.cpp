@@ -353,14 +353,26 @@ void P_MovePlayer(player_t* player)
             P_Thrust(player, mo->angle-ANG90, 0, cmd->sidemove*movefactor);
          }
       }
-      else if(!comp[comp_aircontrol])  // Do not move player unless aircontrol
+      else if(LevelInfo.airControl)  // Do not move player unless aircontrol
       {
+         int friction, movefactor = P_GetMoveFactor(mo, &friction);
+
+         movefactor = FixedMul(movefactor, LevelInfo.airControl);
+
+         if(cmd->forwardmove)
+            P_Thrust(player, mo->angle, 0, cmd->forwardmove*movefactor);
+
+         if(cmd->sidemove)
+            P_Thrust(player, mo->angle - ANG90, 0, cmd->sidemove*movefactor);
+
+         /*
          if(cmd->forwardmove)
             P_Thrust(player, mo->angle, 0, FRACUNIT >> 8);
 
          // TODO: disable this part in Strife
          if(cmd->sidemove)
             P_Thrust(player, mo->angle, 0, FRACUNIT >> 8);
+         }*/
 
          // NOTE: This movement behaviour is like in Hexen, and the sidemove
          // case will also have to be removed in the Strife game mode, so we

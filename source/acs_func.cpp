@@ -1577,6 +1577,15 @@ bool ACS_CF_SetActivatorToTarget(ACS_CF_ARGS)
 }
 
 //
+// void SetAirControl(fixed amount);
+//
+bool ACS_CF_SetAirControl(ACS_CF_ARGS)
+{
+   LevelInfo.airControl = argV[0];
+   return false;
+}
+
+//
 // ACS_CF_SetGravity
 //
 // void SetGravity(fixed gravity);

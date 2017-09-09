@@ -154,8 +154,8 @@ ACSEnvironment::ACSEnvironment() :
    // 136-137: ACSVM internal codes.
    addCodeDataACS0(138, {"",        1, addCallFunc(ACS_CF_SetGravity)});
    addCodeDataACS0(139, {"W",       0, addCallFunc(ACS_CF_SetGravity)});
- //addCodeDataACS0(140, {"",        1, addCallFunc(ACS_CF_SetAirControl)});
- //addCodeDataACS0(141, {"W",       0, addCallFunc(ACS_CF_SetAirControl)});
+   addCodeDataACS0(140, {"",        1, addCallFunc(ACS_CF_SetAirControl)});
+   addCodeDataACS0(141, {"W",       0, addCallFunc(ACS_CF_SetAirControl)});
  //addCodeDataACS0(142, {"",        0, addCallFunc(ACS_CF_ClrInventory)});
  //addCodeDataACS0(143, {"",        2, addCallFunc(ACS_CF_AddInventory)});
  //addCodeDataACS0(144, {"WSW",     0, addCallFunc(ACS_CF_AddInventory)});
