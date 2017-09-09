@@ -56,6 +56,18 @@ static EHashTable<ESwitchDef, ENCQStrHashKey,
 &ESwitchDef::offpic, &ESwitchDef::link> e_switch_namehash(NUMSWITCHCHAINS);
 
 //
+// Resets a switch definition. Doesn't touch lists.
+//
+void ESwitchDef::reset()
+{
+   offpic.clear();
+   onpic.clear();
+   onsound.clear();
+   offsound.clear();
+   episode = 0;
+}
+
+//
 // Process an individual switch
 //
 static void E_processSwitch(cfg_t *cfg)
@@ -100,6 +112,28 @@ void E_ProcessSwitches(cfg_t *cfg)
 
    for(unsigned i = 0; i < numswitches; ++i)
       E_processSwitch(cfg_getnsec(cfg, EDF_SEC_SWITCH, i));
+}
+
+//
+// Adds a switch defined externally
+//
+void E_AddSwitchDef(const ESwitchDef &extdef)
+{
+   if(extdef.offpic.empty())
+      return;
+   const char *title = extdef.offpic.constPtr();
+   ESwitchDef *def = e_switch_namehash.objectForKey(title);
+
+   // NOTE: by external means, switches can't be modified. EDF takes priority.
+   if(def)
+      return;
+
+   def = new ESwitchDef;
+   *def = extdef;
+   e_switch_namehash.addObject(def);
+   eswitches.add(def);
+   E_EDFLogPrintf("\t\tDefined switch %s from ANIMDEFS\n", title);
+   return;
 }
 
 //

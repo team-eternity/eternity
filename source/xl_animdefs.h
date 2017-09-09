@@ -73,21 +73,8 @@ struct XLAnimDef : public ZoneObject
    }
 };
 
-//
-// Switch definition
-//
-class XLSwitchDef : public ZoneObject
-{
-public:
-   qstring name;
-   qstring onname;
-   qstring sound;
-   qstring offsound;
-};
-
 extern Collection<XLAnimDef> xldefs;
 extern PODCollection<xlpicdef_t> xlpics;
-extern Collection<XLSwitchDef> xlswitches;
 
 void XL_ParseAnimDefs();
 

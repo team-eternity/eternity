@@ -23,6 +23,7 @@
 //
 
 #include "z_zone.h"
+#include "e_switch.h"
 #include "m_collection.h"
 #include "w_wad.h"
 #include "xl_animdefs.h"
@@ -30,7 +31,6 @@
 
 Collection<XLAnimDef> xldefs;
 PODCollection<xlpicdef_t> xlpics;
-Collection<XLSwitchDef> xlswitches;
 
 //
 // ANIMDEFS parser
@@ -67,6 +67,9 @@ class XLAnimDefsParser final : public XLParser
       SWSTATE_SOUNDNAME,
       SWSTATE_OFFATTRIBNAME,
       SWSTATE_OFFSOUNDNAME,
+      SWSTATE_OFFNAME,
+      SWSTATE_OFFTICS,
+      SWSTATE_OFFTICSVAL,
    };
 
    bool doStateExpectItem(XLTokenizer &);
@@ -80,16 +83,20 @@ class XLAnimDefsParser final : public XLParser
    bool doStateExpectRangeDur(XLTokenizer &);
    bool doStateExpectSwitch(XLTokenizer &);
 
+   bool doStateReset(XLTokenizer &token);
+   void addSwitchToEDF() const;
+
    int state;  // current state
-   int swstate;   // switch state
+   int substate;
    Collection<XLAnimDef> defs;
    PODCollection<xlpicdef_t> pics;
-   Collection<XLSwitchDef> switches;
 
    XLAnimDef *curdef;
    xlpicdef_t *curpic;
-   XLSwitchDef *curswitch;
    bool inwarp;
+   ESwitchDef curswitch;
+   bool switchinvalid;  // only for parsing and validation
+   int switchtics;      // same
 
    int linenum;
    qstring errmsg;
@@ -100,7 +107,8 @@ class XLAnimDefsParser final : public XLParser
    void onEOF(bool early) override;
 public:
    XLAnimDefsParser() : XLParser("ANIMDEFS"), state(STATE_EXPECTITEM),
-   swstate(), curdef(), curpic(), curswitch(), inwarp(), linenum(1)
+   substate(), curdef(), curpic(), curswitch(), switchinvalid(), switchtics(),
+   linenum(1)
    {
    }
 };
@@ -134,7 +142,6 @@ bool XLAnimDefsParser::doStateExpectItem(XLTokenizer &token)
       def.type = xlanim_flat;
       def.index = static_cast<int>(pics.getLength());
       defs.add(def);
-      curswitch = nullptr;
       curdef = &defs[defs.getLength() - 1];
       state = STATE_EXPECTDEFNAME;
       if(inwarp)
@@ -147,7 +154,6 @@ bool XLAnimDefsParser::doStateExpectItem(XLTokenizer &token)
       def.type = xlanim_texture;
       def.index = static_cast<int>(pics.getLength());
       defs.add(def);
-      curswitch = nullptr;
       curdef = &defs[defs.getLength() - 1];
       state = STATE_EXPECTDEFNAME;
       if(inwarp)
@@ -195,10 +201,13 @@ bool XLAnimDefsParser::doStateExpectItem(XLTokenizer &token)
          return false;
       }
       curdef = nullptr; // nullify it now
+      curswitch.reset();
+      curswitch.episode = -1; // mark it as non-changing
+      switchinvalid = false;
+      switchtics = 0;
+
       state = STATE_EXPECTSWITCH;
-      swstate = SWSTATE_SWITCHNAME;
-      switches.add(XLSwitchDef());
-      curswitch = &switches[switches.getLength() - 1];
+      substate = SWSTATE_SWITCHNAME;
       return true;
    }
    errmsg.Printf(256, "Illegal item '%s'.", str.constPtr());
@@ -354,86 +363,109 @@ bool XLAnimDefsParser::doStateExpectRangeDur(XLTokenizer &token)
 //
 bool XLAnimDefsParser::doStateExpectSwitch(XLTokenizer &token)
 {
-   switch(swstate)
+   switch(substate)
    {
       case SWSTATE_SWITCHNAME:
-         curswitch->name = token.getToken();
-         swstate = SWSTATE_SWITCHDIR;
+         curswitch.offpic = token.getToken();
+         substate = SWSTATE_SWITCHDIR;
          break;
       case SWSTATE_SWITCHDIR:
-         // Currently "off" is reserved
-         if(!token.getToken().strCaseCmp("off"))
-         {
-            swstate = SWSTATE_OFFATTRIBNAME;
-            break;
-         }
-         swstate = SWSTATE_ATTRIBNAME;
-         // Different from "on"? Jump directly to attribname.
-         if(token.getToken().strCaseCmp("on"))
-            return doToken(token);
+         if(!token.getToken().strCaseCmp("on"))
+            substate = SWSTATE_ATTRIBNAME;
+         else if(!token.getToken().strCaseCmp("off"))
+            substate = SWSTATE_OFFATTRIBNAME;
+         else
+            return doStateReset(token);
          break;
       case SWSTATE_ATTRIBNAME:
-         // Currently only "pic" is supported
          if(!token.getToken().strCaseCmp("pic"))
-            swstate = SWSTATE_ONNAME;
+            substate = SWSTATE_ONNAME;
          else if(!token.getToken().strCaseCmp("sound"))
-            swstate = SWSTATE_SOUNDNAME;
-         else if(!token.getToken().strCaseCmp("off"))
-            swstate = SWSTATE_OFFATTRIBNAME;
-         else if(!token.getToken().strCaseCmp("on"))
-            break;   // keep loking
+            substate = SWSTATE_SOUNDNAME;
          else
          {
-            state = STATE_EXPECTITEM;
-            swstate = 0;
-            return doToken(token);
-         }
-         break;
-      case SWSTATE_OFFATTRIBNAME:
-         if(!token.getToken().strCaseCmp("sound"))
-            swstate = SWSTATE_OFFSOUNDNAME;
-         else if(!token.getToken().strCaseCmp("on"))
-            swstate = SWSTATE_ATTRIBNAME;
-         else if(!token.getToken().strCaseCmp("off"))
-            break;   // keep looking
-         else
-         {
-            state = STATE_EXPECTITEM;
-            swstate = 0;
+            substate = SWSTATE_SWITCHDIR;
             return doToken(token);
          }
          break;
       case SWSTATE_ONNAME:
-         curswitch->onname = token.getToken();
-         swstate = SWSTATE_TICS;
+         if(!curswitch.onpic.empty() && switchtics > 0)
+            switchinvalid = true; // animations not yet supported
+         else
+            curswitch.onpic = token.getToken();
+         substate = SWSTATE_TICS;
          break;
-         // These are just for syntax validation
       case SWSTATE_TICS:
-         // Currently tics are not supported are are optional.
-         if(token.getToken().strCaseCmp("tics"))
-         {
-            // If it's not "tics", act like normal
-            swstate = SWSTATE_ATTRIBNAME;
-            return doToken(token);
-         }
-         swstate = SWSTATE_TICSVAL;
+         if(!token.getToken().strCaseCmp("tics"))
+            substate = SWSTATE_TICSVAL;
+         else
+            return doStateReset(token);
          break;
       case SWSTATE_TICSVAL:
-         swstate = SWSTATE_ATTRIBNAME;
+         substate = SWSTATE_ATTRIBNAME;
+         switchtics = static_cast<int>(strtol(token.getToken().constPtr(),
+                                              nullptr, 0));
          break;
       case SWSTATE_SOUNDNAME:
-         curswitch->sound = token.getToken();
-         swstate = SWSTATE_ATTRIBNAME;
+         curswitch.onsound = token.getToken();
+         substate = SWSTATE_ATTRIBNAME;
+         break;
+      case SWSTATE_OFFATTRIBNAME:
+         if(!token.getToken().strCaseCmp("pic"))
+            substate = SWSTATE_OFFNAME;
+         else if(!token.getToken().strCaseCmp("sound"))
+            substate = SWSTATE_OFFSOUNDNAME;
+         else
+         {
+            substate = SWSTATE_SWITCHDIR;
+            return doToken(token);
+         }
+         break;
+      case SWSTATE_OFFNAME:
+         // Off name must currently match the switch name
+         if(token.getToken().strCaseCmp(curswitch.offpic.constPtr()))
+            switchinvalid = true;
+         substate = SWSTATE_OFFTICS;
+         break;
+      case SWSTATE_OFFTICS:
+         if(!token.getToken().strCaseCmp("tics"))
+            substate = SWSTATE_OFFTICSVAL;
+         else
+            return doStateReset(token);
+         break;
+      case SWSTATE_OFFTICSVAL:
+         substate = SWSTATE_OFFATTRIBNAME;
          break;
       case SWSTATE_OFFSOUNDNAME:
-         curswitch->offsound = token.getToken();
-         swstate = SWSTATE_OFFATTRIBNAME;
+         curswitch.offsound = token.getToken();
+         substate = SWSTATE_OFFATTRIBNAME;
          break;
       default:
          errmsg = "Illegal switch state.";
          return false;
    }
    return true;
+}
+
+//
+// Resets the state and handles the token as a new top object
+//
+bool XLAnimDefsParser::doStateReset(XLTokenizer &token)
+{
+   substate = 0;
+   if(state == STATE_EXPECTSWITCH)
+      addSwitchToEDF();
+   state = STATE_EXPECTITEM;
+   return doToken(token);
+}
+
+//
+// Add switch to EDF if current state is switch
+//
+void XLAnimDefsParser::addSwitchToEDF() const
+{
+   if(!switchinvalid)
+      E_AddSwitchDef(curswitch);
 }
 
 //
@@ -455,13 +487,15 @@ bool XLAnimDefsParser::doToken(XLTokenizer &token)
 void XLAnimDefsParser::startLump()
 {
    state = STATE_EXPECTITEM;
-   swstate = 0;
+   substate = 0;
    defs.assign(xldefs);
    pics.assign(xlpics);
    curdef = nullptr;
    curpic = nullptr;
-   curswitch = nullptr;
    inwarp = false;
+   curswitch.reset();
+   switchinvalid = false;
+   switchtics = 0;
    linenum = 1;
 }
 
@@ -482,14 +516,13 @@ void XLAnimDefsParser::onEOF(bool early)
    {
       xldefs.assign(defs);
       xlpics.assign(pics);
-      xlswitches.assign(switches);
-      // TODO: display an error on failure
-
    }
    else
    {
       I_Error("ANIMDEFS error at line %d: %s\n", linenum, errmsg.constPtr());
    }
+   if(state == STATE_EXPECTSWITCH)
+      addSwitchToEDF();
 }
 
 //

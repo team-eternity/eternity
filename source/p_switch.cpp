@@ -131,7 +131,7 @@ void P_InitSwitchList(void)
       }
    }
 
-   // Now read the EDF switches. They must have priority over ANIMDEFS switches.
+   // Now read the EDF/ANIMDEFS switches.
    for(const ESwitchDef *esd : eswitches)
    {
       if(esd->offpic.empty() || esd->onpic.empty() || esd->episode > episode)
@@ -145,22 +145,6 @@ void P_InitSwitchList(void)
       switchlist[index++] = R_FindWall(esd->onpic.constPtr());
       switchsounds.add(esd->onsound);
       offswitchsounds.add(esd->offsound.empty() ? esd->onsound : esd->offsound);
-   }
-
-   // Now also read the ANIMDEFS
-   for(const XLSwitchDef &xsd : xlswitches)
-   {
-      if(xsd.name.empty() || xsd.onname.empty())
-         continue;   // skip invalid definitions
-      if(index + 1 >= max_numswitches)
-      {
-         max_numswitches = max_numswitches ? max_numswitches * 2 : 8;
-         switchlist = erealloc(int *, switchlist, sizeof(*switchlist) * max_numswitches);
-      }
-      switchlist[index++] = R_FindWall(xsd.name.constPtr());
-      switchlist[index++] = R_FindWall(xsd.onname.constPtr());
-      switchsounds.add(xsd.sound);
-      offswitchsounds.add(xsd.offsound.empty() ? xsd.sound : xsd.offsound);
    }
 
    numswitches = index / 2;

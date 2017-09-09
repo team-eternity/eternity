@@ -44,6 +44,11 @@ public:
    {
    }
 
+   //
+   // Call reset on an unlinked definition
+   //
+   void reset();
+
    qstring offpic;
    qstring onpic;
    qstring onsound;
@@ -56,6 +61,7 @@ extern cfg_opt_t edf_switch_opts[];
 extern PODCollection<ESwitchDef *> eswitches;
 
 void E_ProcessSwitches(cfg_t *cfg);
+void E_AddSwitchDef(const ESwitchDef &def);
 const ESwitchDef *E_SwitchForName(const char *name);
 
 #endif
