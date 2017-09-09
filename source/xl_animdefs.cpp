@@ -23,14 +23,12 @@
 //
 
 #include "z_zone.h"
+#include "e_anim.h"
 #include "e_switch.h"
 #include "m_collection.h"
+#include "r_ripple.h"
 #include "w_wad.h"
-#include "xl_animdefs.h"
 #include "xl_scripts.h"
-
-Collection<XLAnimDef> xldefs;
-PODCollection<xlpicdef_t> xlpics;
 
 //
 // ANIMDEFS parser
@@ -45,15 +43,29 @@ class XLAnimDefsParser final : public XLParser
    enum
    {
       STATE_EXPECTITEM,    // before "flat", "texture" or "pic"
-      STATE_EXPECTDEFNAME, // before initial pic name
-      STATE_EXPECTPICNUM,  // before "pic" number
-      STATE_EXPECTPICOP,   // before "pic" operator ("tics" or "rand")
-      STATE_EXPECTDUR,     // expect duration after "tics" or "rand"
-      STATE_EXPECTDUR2,    // second duration, if after rand.
-      STATE_EXPECTRANGENAME,
-      STATE_EXPECTRANGETICSOP,
-      STATE_EXPECTRANGEDUR,
+      STATE_EXPECTANIMATION,  // animation state
+      STATE_EXPECTWARP,    // warp
       STATE_EXPECTSWITCH,  // switch state. Use a separate set of states here.
+   };
+
+   enum
+   {
+      ANSTATE_NAME,           // animation name
+      ANSTATE_CLAUSE,         // clause: pic or range
+      ANSTATE_PICID,          // pic offset or name
+      ANSTATE_PICOP,          // pic tics or rand
+      ANSTATE_PICTICS,        // pic tics count
+      ANSTATE_PICRANDMIN,     // pic random minimum
+      ANSTATE_PICRANDMAX,     // pic random maximum
+      ANSTATE_RANGENAME,      // range name
+      ANSTATE_RANGEOP,        // range tics
+      ANSTATE_RANGETICS,      // range tics count
+   };
+
+   enum
+   {
+      WASTATE_TYPE,        // flat or texture
+      WASTATE_NAME,        // texture name
    };
 
    enum
@@ -73,14 +85,8 @@ class XLAnimDefsParser final : public XLParser
    };
 
    bool doStateExpectItem(XLTokenizer &);
-   bool doStateExpectDefName(XLTokenizer &);
-   bool doStateExpectPicNum(XLTokenizer &);
-   bool doStateExpectPicOp(XLTokenizer &);
-   bool doStateExpectDur(XLTokenizer &);
-   bool doStateExpectDur2(XLTokenizer &);
-   bool doStateExpectRangeName(XLTokenizer &);
-   bool doStateExpectRangeTicsOp(XLTokenizer &);
-   bool doStateExpectRangeDur(XLTokenizer &);
+   bool doStateExpectAnimation(XLTokenizer &);
+   bool doStateExpectWarp(XLTokenizer &);
    bool doStateExpectSwitch(XLTokenizer &);
 
    bool doStateReset(XLTokenizer &token);
@@ -88,12 +94,9 @@ class XLAnimDefsParser final : public XLParser
 
    int state;  // current state
    int substate;
-   Collection<XLAnimDef> defs;
-   PODCollection<xlpicdef_t> pics;
 
-   XLAnimDef *curdef;
-   xlpicdef_t *curpic;
-   bool inwarp;
+   EAnimDef curdef;
+   EAnimDef::Pic curpic;
    ESwitchDef curswitch;
    bool switchinvalid;  // only for parsing and validation
    int switchtics;      // same
@@ -119,14 +122,8 @@ public:
 bool (XLAnimDefsParser::* XLAnimDefsParser::States[])(XLTokenizer &) =
 {
    &XLAnimDefsParser::doStateExpectItem,
-   &XLAnimDefsParser::doStateExpectDefName,
-   &XLAnimDefsParser::doStateExpectPicNum,
-   &XLAnimDefsParser::doStateExpectPicOp,
-   &XLAnimDefsParser::doStateExpectDur,
-   &XLAnimDefsParser::doStateExpectDur2,
-   &XLAnimDefsParser::doStateExpectRangeName,
-   &XLAnimDefsParser::doStateExpectRangeTicsOp,
-   &XLAnimDefsParser::doStateExpectRangeDur,
+   &XLAnimDefsParser::doStateExpectAnimation,
+   &XLAnimDefsParser::doStateExpectWarp,
    &XLAnimDefsParser::doStateExpectSwitch,
 };
 
@@ -138,69 +135,28 @@ bool XLAnimDefsParser::doStateExpectItem(XLTokenizer &token)
    const qstring &str = token.getToken();
    if(!str.strCaseCmp("flat"))
    {
-      XLAnimDef def;
-      def.type = xlanim_flat;
-      def.index = static_cast<int>(pics.getLength());
-      defs.add(def);
-      curdef = &defs[defs.getLength() - 1];
-      state = STATE_EXPECTDEFNAME;
-      if(inwarp)
-         curdef->rangetics = 65536;
+      curdef.reset(EAnimDef::type_flat);
+      state = STATE_EXPECTANIMATION;
+      substate = ANSTATE_NAME;
       return true;
    }
    if(!str.strCaseCmp("texture"))
    {
-      XLAnimDef def;
-      def.type = xlanim_texture;
-      def.index = static_cast<int>(pics.getLength());
-      defs.add(def);
-      curdef = &defs[defs.getLength() - 1];
-      state = STATE_EXPECTDEFNAME;
-      if(inwarp)
-         curdef->rangetics = 65536;
+      curdef.reset(EAnimDef::type_wall);
+      state = STATE_EXPECTANIMATION;
+      substate = ANSTATE_NAME;
       return true;
    }
-   if(!str.strCaseCmp("pic"))
+   if(!str.strCaseCmp("warp") || !str.strCaseCmp("warp2"))
    {
-      if(!curdef || inwarp)
-      {
-         errmsg = "PIC must follow a TEXTURE or FLAT, and not allowed for WARP.";
-         return false;  // must have a flat or texture animation prepared
-      }
-      state = STATE_EXPECTPICNUM;
-      curpic = &pics.addNew();
-      ++curdef->count;
-      return true;
-   }
-   if(!str.strCaseCmp("range"))
-   {
-      if(!curdef || inwarp)
-      {
-         errmsg = "RANGE must follow a TEXTURE or FLAT, and not allowed for WARP.";
-         return false;
-      }
-      state = STATE_EXPECTRANGENAME;
-      return true;
-   }
-   if(!str.strCaseCmp("warp"))
-   {
-      if(inwarp)
-      {
-         errmsg = "WARP cannot be nested.";
-         return false;
-      }
-      inwarp = true;
-      state = STATE_EXPECTITEM;
+      curdef.reset();
+      curdef.flags |= EAnimDef::SWIRL;
+      state = STATE_EXPECTWARP;
+      substate = WASTATE_TYPE;
       return true;
    }
    if(!str.strCaseCmp("switch"))
    {
-      if(inwarp)
-      {
-         errmsg = "SWITCH not allowed for WARP.";
-         return false;
-      }
-      curdef = nullptr; // nullify it now
       curswitch.reset();
       curswitch.episode = -1; // mark it as non-changing
       switchinvalid = false;
@@ -209,22 +165,6 @@ bool XLAnimDefsParser::doStateExpectItem(XLTokenizer &token)
       state = STATE_EXPECTSWITCH;
       substate = SWSTATE_SWITCHNAME;
       return true;
-   }
-   errmsg.Printf(256, "Illegal item '%s'.", str.constPtr());
-   return false;
-}
-
-//
-// Expect an animation's first pic name
-//
-bool XLAnimDefsParser::doStateExpectDefName(XLTokenizer &token)
-{
-   curdef->picname = token.getToken();
-   state = STATE_EXPECTITEM;
-   if(inwarp)
-   {
-      inwarp = false;
-      curdef->rangename = curdef->picname;
    }
    return true;
 }
@@ -243,120 +183,129 @@ static bool XL_mustBeInt(XLTokenizer &token, int &result)
 }
 
 //
-// Expect a pic index
+// Within a flat or texture block
 //
-bool XLAnimDefsParser::doStateExpectPicNum(XLTokenizer &token)
+bool XLAnimDefsParser::doStateExpectAnimation(XLTokenizer &token)
 {
-   int index;
-   if(!XL_mustBeInt(token, index))
+   const qstring &tok = token.getToken();
+   int toknum;
+   switch(substate)
    {
-      errmsg = "PIC must have a number.";
-      return false;
+      case ANSTATE_NAME:
+         curdef.startpic = token.getToken();
+         substate = ANSTATE_CLAUSE;
+         break;
+      case ANSTATE_CLAUSE:
+         if(!tok.strCaseCmp("pic"))
+         {
+            curpic.reset();
+            substate = ANSTATE_PICID;
+         }
+         else if(!tok.strCaseCmp("range"))
+            substate = ANSTATE_RANGENAME;
+         else
+            return doStateReset(token);
+         break;
+      case ANSTATE_PICID:
+         if(XL_mustBeInt(token, toknum))
+            curpic.offset = toknum;
+         else
+            curpic.name = tok;
+         substate = ANSTATE_PICOP;
+         break;
+      case ANSTATE_PICOP:
+         if(!tok.strCaseCmp("tics"))
+            substate = ANSTATE_PICTICS;
+         else if(!tok.strCaseCmp("rand"))
+            substate = ANSTATE_PICRANDMIN;
+         else
+            return doStateReset(token);
+         break;
+      case ANSTATE_PICTICS:
+         if(XL_mustBeInt(token, toknum))
+         {
+            curpic.ticsmin = toknum;
+            curdef.pics.add(curpic);
+            substate = ANSTATE_CLAUSE;
+         }
+         else
+            return doStateReset(token);
+         break;
+      case ANSTATE_PICRANDMIN:
+         if(XL_mustBeInt(token, toknum))
+         {
+            curpic.ticsmin = toknum;
+            substate = ANSTATE_PICRANDMAX;
+         }
+         else
+            return doStateReset(token);
+         break;
+      case ANSTATE_PICRANDMAX:
+         if(XL_mustBeInt(token, toknum))
+         {
+            curpic.ticsmax = toknum;
+            curdef.pics.add(curpic);
+            substate = ANSTATE_CLAUSE;
+         }
+         else
+            return doStateReset(token);
+         break;
+      case ANSTATE_RANGENAME:
+         curdef.endpic = tok;
+         substate = ANSTATE_RANGEOP;
+         break;
+      case ANSTATE_RANGEOP:
+         // TODO: add "rand" support
+         if(!tok.strCaseCmp("tics"))
+            substate = ANSTATE_RANGETICS;
+         else
+            return doStateReset(token);
+         break;
+      case ANSTATE_RANGETICS:
+         if(XL_mustBeInt(token, toknum))
+         {
+            curdef.tics = toknum;
+            substate = ANSTATE_CLAUSE;
+         }
+         else
+            return doStateReset(token);
+         break;
+      default:
+         return false;
    }
-   curpic->offset = static_cast<int>(index);
-   state = STATE_EXPECTPICOP;
    return true;
 }
 
 //
-// Expect tics or rand
+// Expect warp
 //
-bool XLAnimDefsParser::doStateExpectPicOp(XLTokenizer &token)
+bool XLAnimDefsParser::doStateExpectWarp(XLTokenizer &token)
 {
-   const qstring &str = token.getToken();
-   if(!str.strCaseCmp("tics"))
+   const qstring &tok = token.getToken();
+   switch(substate)
    {
-      curpic->isRandom = false;
-      state = STATE_EXPECTDUR;
-      return true;
+      case WASTATE_TYPE:
+         if(!tok.strCaseCmp("texture"))
+            curdef.type = EAnimDef::type_wall;
+         else if(!tok.strCaseCmp("flat"))
+            curdef.type = EAnimDef::type_flat;
+         else
+            return doStateReset(token);
+         substate = WASTATE_NAME;
+         break;
+      case WASTATE_NAME:
+         curdef.startpic = tok;
+         substate = 0;
+         curdef.endpic = curdef.startpic;
+         E_AddAnimation(curdef);
+         state = STATE_EXPECTITEM;
+         break;
+      default:
+         return false;
    }
-   if(!str.strCaseCmp("rand"))
-   {
-      curpic->isRandom = true;
-      state = STATE_EXPECTDUR;
-      return true;
-   }
-   errmsg = "Expected TICS or RAND after PIC index.";
-   return false;
-}
-
-//
-// Expect duration
-//
-bool XLAnimDefsParser::doStateExpectDur(XLTokenizer &token)
-{
-   int tics;
-   if(!XL_mustBeInt(token, tics))
-   {
-      errmsg = "Expected number after TICS or RAND.";
-      return false;
-   }
-   if(!curpic->isRandom)
-   {
-      curpic->tics = tics;
-      state = STATE_EXPECTITEM;
-      return true;
-   }
-   curpic->ticsmin = tics;
-   state = STATE_EXPECTDUR2;
    return true;
 }
 
-//
-// Expect second duration for rand
-//
-bool XLAnimDefsParser::doStateExpectDur2(XLTokenizer &token)
-{
-   int tics;
-   if(!XL_mustBeInt(token, tics))
-   {
-      errmsg = "Expected two numbers after RAND.";
-      return false;
-   }
-   curpic->ticsmax = tics;
-   state = STATE_EXPECTITEM;
-   return true;
-}
-
-//
-// Expect range name
-//
-bool XLAnimDefsParser::doStateExpectRangeName(XLTokenizer &token)
-{
-   curdef->rangename = token.getToken();
-   state = STATE_EXPECTRANGETICSOP;
-   return true;
-}
-
-//
-// Expect "Tics"
-//
-bool XLAnimDefsParser::doStateExpectRangeTicsOp(XLTokenizer &token)
-{
-   if(token.getToken().strCaseCmp("tics"))
-   {
-      errmsg = "Expected TICS in RANGE section.";
-      return false;
-   }
-   state = STATE_EXPECTRANGEDUR;
-   return true;
-}
-
-//
-// Expect range duration
-//
-bool XLAnimDefsParser::doStateExpectRangeDur(XLTokenizer &token)
-{
-   int tics;
-   if(!XL_mustBeInt(token, tics))
-   {
-      errmsg = "Expected number after TICS.";
-      return false;
-   }
-   curdef->rangetics = tics;
-   state = STATE_EXPECTITEM;
-   return true;
-}
 
 //
 // Within a switch block
@@ -455,6 +404,8 @@ bool XLAnimDefsParser::doStateReset(XLTokenizer &token)
    substate = 0;
    if(state == STATE_EXPECTSWITCH)
       addSwitchToEDF();
+   if(state == STATE_EXPECTANIMATION)
+      E_AddAnimation(curdef);
    state = STATE_EXPECTITEM;
    return doToken(token);
 }
@@ -488,11 +439,8 @@ void XLAnimDefsParser::startLump()
 {
    state = STATE_EXPECTITEM;
    substate = 0;
-   defs.assign(xldefs);
-   pics.assign(xlpics);
-   curdef = nullptr;
-   curpic = nullptr;
-   inwarp = false;
+   curdef.reset();
+   curpic.reset();
    curswitch.reset();
    switchinvalid = false;
    switchtics = 0;
@@ -512,17 +460,10 @@ void XLAnimDefsParser::initTokenizer(XLTokenizer &tokenizer)
 //
 void XLAnimDefsParser::onEOF(bool early)
 {
-   if(!early)
-   {
-      xldefs.assign(defs);
-      xlpics.assign(pics);
-   }
-   else
-   {
-      I_Error("ANIMDEFS error at line %d: %s\n", linenum, errmsg.constPtr());
-   }
    if(state == STATE_EXPECTSWITCH)
       addSwitchToEDF();
+   else if(state == STATE_EXPECTANIMATION)
+      E_AddAnimation(curdef);
 }
 
 //

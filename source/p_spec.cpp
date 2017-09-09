@@ -44,6 +44,7 @@
 #include "d_gi.h"
 #include "d_mod.h"
 #include "doomstat.h"
+#include "e_anim.h"
 #include "e_exdata.h"
 #include "e_states.h"
 #include "e_things.h"
@@ -85,7 +86,6 @@
 #include "v_misc.h"
 #include "v_video.h"
 #include "w_wad.h"
-#include "xl_animdefs.h"
 
 //
 // Animating textures and planes
@@ -195,7 +195,7 @@ static void P_addPicAnim(const animdef_t &animdef)
       return;
 
    // sf: include support for swirly water hack
-   if(lastanim->speed < 65536 && lastanim->numpics != 1)
+   if(lastanim->speed < SWIRL_TICS && lastanim->numpics != 1)
    {
       if(lastanim->numpics < 2)
       {
@@ -252,21 +252,25 @@ void P_InitPicAnims(void)
       P_addPicAnim(animdefs[i]);
    Z_ChangeTag(animdefs, PU_CACHE); //jff 3/23/98 allow table to be freed
 
-   // Now also look in ANIMDEFS lump
-   for(const XLAnimDef &xad : xldefs)
+   for(const EAnimDef *ead : eanimations)
    {
-      if(xad.rangename.empty())
+      // only process doom-style ones. Also prevent sending illegal definitions
+      // if possible.
+      if(ead->endpic.empty() || !ead->tics)
          continue;
       edefstructvar(animdef_t, ad);
-      ad.istexture = xad.type == xlanim_texture;
+      ad.istexture = ead->type == EAnimDef::type_wall;
 
-      xad.rangename.copyInto(ad.endname, earrlen(ad.endname));
+      ead->endpic.copyInto(ad.endname, earrlen(ad.endname));
       ad.endname[earrlen(ad.endname) - 1] = 0;
 
-      xad.picname.copyInto(ad.startname, earrlen(ad.startname));
+      ead->startpic.copyInto(ad.startname, earrlen(ad.startname));
       ad.startname[earrlen(ad.startname) - 1] = 0;
 
-      ad.speed = SwapLong(xad.rangetics);
+      if(ead->flags & EAnimDef::SWIRL)
+         ad.speed = SwapLong(SWIRL_TICS);
+      else
+         ad.speed = SwapLong(ead->tics);
       P_addPicAnim(ad);
    }
 }

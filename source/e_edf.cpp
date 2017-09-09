@@ -99,6 +99,7 @@
 #include "e_lib.h"
 #include "e_edf.h"
 
+#include "e_anim.h"
 #include "e_args.h"
 #include "e_fonts.h"
 #include "e_gameprops.h"
@@ -247,6 +248,7 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_STRING,      edf_string_opts,   EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_GAMEPROPS,   edf_game_opts,     EDF_NSEC_FLAGS),
    CFG_SEC(EDF_SEC_SWITCH,      edf_switch_opts,   EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_ANIMATION,   edf_anim_opts,     EDF_NSEC_FLAGS),
    CFG_STR(SEC_CASTORDER,       0,                 CFGF_LIST),
    CFG_STR(SEC_BOSSTYPES,       0,                 CFGF_LIST),
    CFG_INT(SEC_BOSSPROBS,       0,                 CFGF_LIST), // schepe
