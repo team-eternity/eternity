@@ -29,6 +29,7 @@
 #include "e_hash.h"
 #include "e_lib.h"
 #include "m_qstrkeys.h"
+#include "r_ripple.h"
 
 #define ITEM_ANIM_FLAT "flat"
 #define ITEM_ANIM_WALL "wall"
@@ -210,6 +211,8 @@ void E_processAnimation(cfg_t *cfg)
             newpic.ticsmin = cfg_getint(pic, ITEM_PIC_TICS);
             newpic.ticsmax = 0;  // less than min means fixed time
          }
+         else  // otherwise get the base definition if available
+            newpic.ticsmin = cfg_getint(cfg, ITEM_PIC_TICS);
          newpic.flags = E_ParseFlags(cfg_getstr(pic, ITEM_PIC_FLAGS),
                                      &anim_flagset);
       }
@@ -221,8 +224,9 @@ void E_processAnimation(cfg_t *cfg)
       // clear hexen definition if we see doom-style replacement
       def->pics.clear();
       def->endpic = cfg_getstr(cfg, ITEM_ANIM_ENDPIC);
-      def->tics = cfg_getint(cfg, ITEM_ANIM_TICS);
    }
+   if(cfg_size(cfg, ITEM_ANIM_TICS))
+      def->tics = cfg_getint(cfg, ITEM_ANIM_TICS);
 }
 
 //
@@ -257,6 +261,19 @@ void E_AddAnimation(const EAnimDef &extdef)
    e_anim_namehash.addObject(def);
    eanimations.add(def);
       E_EDFLogPrintf("\t\tDefined animation %s from ANIMDEFS\n", title);
+}
+
+//
+// Returns true if given startpic is for a Hexen animation
+//
+bool E_IsHexenAnimation(const char *startpic, EAnimDef::type_t type)
+{
+   const EAnimDef *def = nullptr;
+   do
+   {
+      def = e_anim_namehash.objectForKey(startpic);
+   }while(def && def->type != type);
+   return def && def->pics.getLength() >= 1;
 }
 
 // EOF

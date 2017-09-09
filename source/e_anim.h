@@ -98,6 +98,8 @@ extern PODCollection<EAnimDef *> eanimations;
 void E_ProcessAnimations(cfg_t *cfg);
 void E_AddAnimation(const EAnimDef &def);
 
+bool E_IsHexenAnimation(const char *startpic, EAnimDef::type_t type);
+
 #endif
 
 // EOF

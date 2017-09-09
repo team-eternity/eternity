@@ -91,7 +91,7 @@ void P_InitHexenAnims()
 {
    for(const EAnimDef *ead : eanimations)
    {
-      if(ead->pics.getLength() < 2)
+      if(ead->pics.getLength() < 1)
          continue;
       hanimdef_t &had = AnimDefs.addNew();
       had.type = ead->type == EAnimDef::type_flat ? ANIM_FLAT : ANIM_TEXTURE;
@@ -124,11 +124,19 @@ void P_InitHexenAnims()
          else
             hfd.index = eclamp(had.index + pic.offset - 1, 0, texturecount - 1);
          if(pic.ticsmax <= pic.ticsmin)
+         {
             hfd.tics = pic.ticsmin;
+            if(hfd.tics <= 0)
+               hfd.tics = 1;
+         }
          else
          {
             hfd.ticsmin = pic.ticsmin;
             hfd.ticsmax = pic.ticsmax;
+            if(hfd.ticsmin <= 0)
+               hfd.ticsmin = 1;  // zero or negative is illegal
+            if(hfd.ticsmax < hfd.ticsmin)
+               hfd.ticsmax = hfd.ticsmin;
          }
          if(hfd.index != texturecount - 1)
          {
