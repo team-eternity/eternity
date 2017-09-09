@@ -353,17 +353,23 @@ void P_MovePlayer(player_t* player)
             P_Thrust(player, mo->angle-ANG90, 0, cmd->sidemove*movefactor);
          }
       }
-      else if(!comp[comp_aircontrol])
+      else if(!comp[comp_aircontrol])  // Do not move player unless aircontrol
       {
-         // Do not move player 
          if(cmd->forwardmove)
             P_Thrust(player, mo->angle, 0, FRACUNIT >> 8);
 
          // TODO: disable this part in Strife
-         if(cmd->sidemove > 0)
-            P_Thrust(player, mo->angle-ANG90, 0, FRACUNIT >> 8);
-         else if(cmd->sidemove < 0)
-            P_Thrust(player, mo->angle+ANG90, 0, FRACUNIT >> 8);
+         if(cmd->sidemove)
+            P_Thrust(player, mo->angle, 0, FRACUNIT >> 8);
+
+         // NOTE: This movement behaviour is like in Hexen, and the sidemove
+         // case will also have to be removed in the Strife game mode, so we
+         // have accurate gameplay when attempting to jump on high objects.
+
+         // When we add user-settable air control in EMAPINFO or playerclass
+         // properties however, the P_Thrust vector will have to be as user
+         // expects: change velocity according to direction, no longer having
+         // to emulate these old games' behaviours.
       }
 
       if(mo->state == states[mo->info->spawnstate])
