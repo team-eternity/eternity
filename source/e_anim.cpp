@@ -39,6 +39,7 @@
 
 #define ITEM_ANIM_PIC "pic"
 
+#define ITEM_PIC_NAME "name"
 #define ITEM_PIC_TICS "tics"
 #define ITEM_PIC_RAND "random"
 #define ITEM_PIC_FLAGS "flags"
@@ -63,6 +64,7 @@ static cfg_opt_t edf_random_opts[] =
 //
 static cfg_opt_t edf_picentry_opts[] =
 {
+   CFG_STR(ITEM_PIC_NAME, "", CFGF_NONE),
    CFG_INT(ITEM_PIC_TICS, 0, CFGF_NONE),
    CFG_MVPROP(ITEM_PIC_RAND, edf_random_opts, CFGF_NOCASE),
    CFG_STR(ITEM_PIC_FLAGS, "", CFGF_NONE),
@@ -79,7 +81,7 @@ cfg_opt_t edf_anim_opts[] =
    CFG_STR(ITEM_ANIM_ENDPIC, "", CFGF_NONE),
    CFG_INT(ITEM_ANIM_TICS, 0, CFGF_NONE),
    CFG_STR(ITEM_ANIM_FLAGS, "", CFGF_NONE),
-   CFG_SEC(ITEM_ANIM_PIC, edf_picentry_opts, CFGF_TITLE|CFGF_MULTI|CFGF_NOCASE),
+   CFG_SEC(ITEM_ANIM_PIC, edf_picentry_opts, CFGF_MULTI|CFGF_NOCASE),
    CFG_END()
 };
 
@@ -183,7 +185,7 @@ void E_processAnimation(cfg_t *cfg)
       for(unsigned i = 0; i < seqsize; ++i)
       {
          cfg_t *pic = cfg_getnsec(cfg, ITEM_ANIM_PIC, i);
-         const char *picname = cfg_title(pic);
+         const char *picname = cfg_getstr(pic, ITEM_PIC_NAME);
          if(estrempty(picname))
          {
             E_EDFLoggedWarning(2, "Invalid pic in animation %s\n", firstpic);
