@@ -62,6 +62,35 @@ button_t *buttonlist     = NULL; // haleyjd 04/16/08: made dynamic
 int      numbuttonsalloc = 0;    // haleyjd 04/16/08: number allocated
 
 //
+// Being given an EDF switch, check if we have SWITCHES entries which can be
+// replaced by it, instead of adding something new
+//
+static bool P_replaceSwitchWithEDF(const ESwitchDef &esd)
+{
+   int pic = R_FindWall(esd.offpic.constPtr());
+   for(int i = 0; i < numswitches; ++i)
+   {
+      if(switchlist[2 * i] == pic)
+      {
+         // Got one.
+         if(!esd.onpic.empty())
+            switchlist[2 * i + 1] = R_FindWall(esd.onpic.constPtr());
+
+         // only replace if set
+         if(!esd.onsound.empty())
+            switchsounds[i] = esd.onsound;
+
+         if(!esd.offsound.empty())
+            offswitchsounds[i] = esd.offsound;
+         else if(!esd.onsound.empty() && offswitchsounds[i].empty())
+            offswitchsounds[i] = esd.onsound;   // only if original had nothing
+         return true;
+      }
+   }
+   return false;
+}
+
+//
 // P_InitSwitchList()
 //
 // Only called at game initialization in order to list the set of switches
@@ -111,6 +140,16 @@ void P_InitSwitchList(void)
 
    for(int i = 0; ; i++)
    {
+      // Check for a deleting EDF definition
+      const ESwitchDef *esd = E_SwitchForName(alphSwitchList[i].name1);
+      if(esd && (esd->offpic.empty() || esd->emptyDef() ||
+                 esd->episode > episode))
+      {
+         // skip it now, because it's too hard to retroactively delete when we
+         // scan EDF below
+         continue;
+      }
+
       if(index + 1 >= max_numswitches)
       {
          max_numswitches = max_numswitches ? max_numswitches * 2 : 8;
@@ -129,11 +168,18 @@ void P_InitSwitchList(void)
       }
    }
 
+   // update now so we can scan the list while adding EDF
+   numswitches = index / 2;
+
    // Now read the EDF/ANIMDEFS switches.
    for(const ESwitchDef *esd : eswitches)
    {
-      if(esd->offpic.empty() || esd->onpic.empty() || esd->episode > episode)
+      if(esd->offpic.empty() || esd->emptyDef() || esd->episode > episode ||
+         P_replaceSwitchWithEDF(*esd))
+      {
          continue;
+      }
+
       if(index + 1 >= max_numswitches)
       {
          max_numswitches = max_numswitches ? max_numswitches * 2 : 8;

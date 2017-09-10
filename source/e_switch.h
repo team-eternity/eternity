@@ -48,6 +48,10 @@ public:
    // Call reset on an unlinked definition
    //
    void reset();
+   bool emptyDef() const
+   {
+      return onpic.empty() && onsound.empty() && offsound.empty();
+   }
 
    qstring offpic;
    qstring onpic;
