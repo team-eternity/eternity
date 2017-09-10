@@ -82,7 +82,9 @@ public:
          valid = true;
    }
 
-   // TODO: Add deleted copy constructor and operator = when VC2012 is out of the picture
+   // Disallow copying
+   AutoRegKey(const AutoRegKey &) = delete;
+   AutoRegKey &operator = (const AutoRegKey &) = delete;
 
    // Destructor. Close the key handle, if it is valid.
    ~AutoRegKey()
