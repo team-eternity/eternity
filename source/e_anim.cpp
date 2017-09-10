@@ -33,7 +33,7 @@
 
 #define ITEM_ANIM_FLAT "flat"
 #define ITEM_ANIM_WALL "wall"
-#define ITEM_ANIM_ENDPIC "endpic"
+#define ITEM_ANIM_ENDPIC "lastpic"
 #define ITEM_ANIM_TICS "tics"
 #define ITEM_ANIM_FLAGS "flags"
 
