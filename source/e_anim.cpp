@@ -79,7 +79,7 @@ cfg_opt_t edf_anim_opts[] =
    CFG_STR(ITEM_ANIM_FLAT, "", CFGF_NONE),
    CFG_STR(ITEM_ANIM_WALL, "", CFGF_NONE),
    CFG_STR(ITEM_ANIM_ENDPIC, "", CFGF_NONE),
-   CFG_INT(ITEM_ANIM_TICS, 0, CFGF_NONE),
+   CFG_INT(ITEM_ANIM_TICS, 8, CFGF_NONE),
    CFG_STR(ITEM_ANIM_FLAGS, "", CFGF_NONE),
    CFG_SEC(ITEM_ANIM_PIC, edf_picentry_opts, CFGF_MULTI|CFGF_NOCASE),
    CFG_END()
@@ -227,7 +227,7 @@ void E_processAnimation(cfg_t *cfg)
       def->pics.clear();
       def->endpic = cfg_getstr(cfg, ITEM_ANIM_ENDPIC);
    }
-   if(cfg_size(cfg, ITEM_ANIM_TICS))
+   if(!modified || cfg_size(cfg, ITEM_ANIM_TICS) >= 1)
       def->tics = cfg_getint(cfg, ITEM_ANIM_TICS);
 }
 
