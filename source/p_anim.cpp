@@ -64,6 +64,7 @@ struct hframedef_t
    int tics;
    int ticsmin;
    int ticsmax;   // just use all the space
+   bool swirls;
 };
 
 //
@@ -138,10 +139,10 @@ void P_InitHexenAnims()
             if(hfd.ticsmax < hfd.ticsmin)
                hfd.ticsmax = hfd.ticsmin;
          }
+         hfd.swirls = !!((pic.flags | ead->flags) & EAnimDef::SWIRL);
          if(hfd.index != texturecount - 1)
          {
-            textures[hfd.index]->flags |= TF_ANIMATED |
-            ((pic.flags | ead->flags) & EAnimDef::SWIRL ? TF_SWIRLY : 0);
+            textures[hfd.index]->flags |= TF_ANIMATED;
          }
       }
       had.endFrameDef = static_cast<int>(FrameDefs.getLength()) - 1;
@@ -171,6 +172,13 @@ void P_AnimateSurfaces()
          else
             had.tics = hfd.tics;
          texturetranslation[had.index] = hfd.index;
+
+         // Set TF_SWIRLY on the *source* texture index. This gives fine control
+         // over one's sequence without affecting unrelated surfaces.
+         if(hfd.swirls)
+            textures[had.index]->flags |= TF_SWIRLY;
+         else
+            textures[had.index]->flags &= ~TF_SWIRLY;
       }
    }
 
