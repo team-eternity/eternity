@@ -31,7 +31,7 @@
 
 #define ITEM_SWITCH_ONPIC "on"
 #define ITEM_SWITCH_ONSOUND "sound"
-#define ITEM_SWITCH_OFFSOUND "backsound"
+#define ITEM_SWITCH_OFFSOUND "offsound"
 #define ITEM_SWITCH_GAMEINDEX "gameindex"
 
 #define NUMSWITCHCHAINS 67
