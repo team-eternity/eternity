@@ -84,7 +84,7 @@ byte *R_DistortedFlat(int texnum)
    static int lastsize;
 
    int i;
-   int leveltic = gametic;
+   int leveltic = leveltime;
    texture_t *tex = R_CacheTexture(texnum);
 
    // NOTE: these are transposed because of the swirling formula
@@ -99,13 +99,13 @@ byte *R_DistortedFlat(int texnum)
       distortedflat = erealloc(byte *, distortedflat, offsetSize * sizeof(*distortedflat));
    }
    // Already swirled this one?
-   if(gametic == swirltic && lasttex == texnum)
+   if(leveltime == swirltic && lasttex == texnum)
       return distortedflat;
       
    lasttex = texnum;
 
    // built this tic?
-   if(gametic != swirltic || cursize != lastsize)
+   if(leveltime != swirltic || cursize != lastsize)
    {
       int x, y;
       
@@ -135,7 +135,7 @@ byte *R_DistortedFlat(int texnum)
          }
       }
       
-      swirltic = gametic;
+      swirltic = leveltime;
       lastsize = cursize;
    }
    
