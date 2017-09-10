@@ -296,7 +296,6 @@ bool XLAnimDefsParser::doStateExpectWarp(XLTokenizer &token)
       case WASTATE_NAME:
          curdef.startpic = tok;
          substate = 0;
-         curdef.endpic = curdef.startpic;
          E_AddAnimation(curdef);
          state = STATE_EXPECTITEM;
          break;
