@@ -144,7 +144,8 @@
       <OutputFile>.\Release/Eternity.bsc</OutputFile>
     </Bscmake>
     <Manifest>
-      <AdditionalManifestFiles>res/DeclareDPIAware.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <AdditionalManifestFiles>%(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <EnableDpiAwareness>true</EnableDpiAwareness>
     </Manifest>
     <PreBuildEvent>
       <Command>../midiproc/autogenmidiproc.bat $(Platform)</Command>
@@ -203,7 +204,8 @@
       <OutputFile>.\x64/Release/Eternity.bsc</OutputFile>
     </Bscmake>
     <Manifest>
-      <AdditionalManifestFiles>res/DeclareDPIAware.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <AdditionalManifestFiles>%(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <EnableDpiAwareness>true</EnableDpiAwareness>
     </Manifest>
     <PreBuildEvent>
       <Command>../midiproc/autogenmidiproc.bat $(Platform)</Command>
@@ -255,7 +257,8 @@
       <OutputFile>.\Debug/Eternity.bsc</OutputFile>
     </Bscmake>
     <Manifest>
-      <AdditionalManifestFiles>res/DeclareDPIAware.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <AdditionalManifestFiles>%(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <EnableDpiAwareness>true</EnableDpiAwareness>
     </Manifest>
     <PreBuildEvent>
       <Command>../midiproc/autogenmidiproc.bat $(Platform)</Command>
@@ -305,7 +308,8 @@
       <OutputFile>.\x64/Debug/Eternity.bsc</OutputFile>
     </Bscmake>
     <Manifest>
-      <AdditionalManifestFiles>res/DeclareDPIAware.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <AdditionalManifestFiles>%(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <EnableDpiAwareness>true</EnableDpiAwareness>
     </Manifest>
     <PreBuildEvent>
       <Command>../midiproc/autogenmidiproc.bat $(Platform)</Command>
