@@ -93,8 +93,11 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Midl>
       <TypeLibraryName>.\Release/Eternity.tlb</TypeLibraryName>
-      <HeaderFileName>
-      </HeaderFileName>
+      <HeaderFileName>..\midiproc\midiproc.h</HeaderFileName>
+      <GenerateStublessProxies>true</GenerateStublessProxies>
+      <ApplicationConfigurationMode>true</ApplicationConfigurationMode>
+      <OutputDirectory>..\midiproc\</OutputDirectory>
+      <StructMemberAlignment>8</StructMemberAlignment>
     </Midl>
     <ClCompile>
       <AdditionalOptions>/MP %(AdditionalOptions)</AdditionalOptions>
@@ -147,15 +150,20 @@
       <EnableDpiAwareness>true</EnableDpiAwareness>
     </Manifest>
     <PreBuildEvent>
-      <Command>../midiproc/autogenmidiproc.bat $(Platform)</Command>
-      <Message>Generate appropriate midiproc files</Message>
+      <Command>
+      </Command>
+      <Message>
+      </Message>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Midl>
       <TypeLibraryName>.\Release/Eternity.tlb</TypeLibraryName>
-      <HeaderFileName>
-      </HeaderFileName>
+      <HeaderFileName>..\midiproc\midiproc.h</HeaderFileName>
+      <GenerateStublessProxies>true</GenerateStublessProxies>
+      <ApplicationConfigurationMode>true</ApplicationConfigurationMode>
+      <OutputDirectory>..\midiproc\</OutputDirectory>
+      <StructMemberAlignment>8</StructMemberAlignment>
     </Midl>
     <ClCompile>
       <AdditionalOptions>/MP %(AdditionalOptions)</AdditionalOptions>
@@ -207,15 +215,20 @@
       <EnableDpiAwareness>true</EnableDpiAwareness>
     </Manifest>
     <PreBuildEvent>
-      <Command>../midiproc/autogenmidiproc.bat $(Platform)</Command>
-      <Message>Generate appropriate midiproc files</Message>
+      <Command>
+      </Command>
+      <Message>
+      </Message>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Midl>
       <TypeLibraryName>.\Debug/Eternity.tlb</TypeLibraryName>
-      <HeaderFileName>
-      </HeaderFileName>
+      <HeaderFileName>..\midiproc\midiproc.h</HeaderFileName>
+      <GenerateStublessProxies>true</GenerateStublessProxies>
+      <ApplicationConfigurationMode>true</ApplicationConfigurationMode>
+      <OutputDirectory>..\midiproc\</OutputDirectory>
+      <StructMemberAlignment>8</StructMemberAlignment>
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
@@ -260,15 +273,20 @@
       <EnableDpiAwareness>true</EnableDpiAwareness>
     </Manifest>
     <PreBuildEvent>
-      <Command>../midiproc/autogenmidiproc.bat $(Platform)</Command>
-      <Message>Generate appropriate midiproc files</Message>
+      <Command>
+      </Command>
+      <Message>
+      </Message>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Midl>
       <TypeLibraryName>.\Debug/Eternity.tlb</TypeLibraryName>
-      <HeaderFileName>
-      </HeaderFileName>
+      <HeaderFileName>..\midiproc\midiproc.h</HeaderFileName>
+      <GenerateStublessProxies>true</GenerateStublessProxies>
+      <ApplicationConfigurationMode>true</ApplicationConfigurationMode>
+      <OutputDirectory>..\midiproc\</OutputDirectory>
+      <StructMemberAlignment>8</StructMemberAlignment>
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
@@ -311,8 +329,10 @@
       <EnableDpiAwareness>true</EnableDpiAwareness>
     </Manifest>
     <PreBuildEvent>
-      <Command>../midiproc/autogenmidiproc.bat $(Platform)</Command>
-      <Message>Generate appropriate midiproc files</Message>
+      <Command>
+      </Command>
+      <Message>
+      </Message>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -2311,6 +2331,18 @@
       <Project>{ea0188e0-1f4e-490d-bd2c-c85d12b0f1e2}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="..\midiproc\midiproc.idl">
+      <GenerateStublessProxies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</GenerateStublessProxies>
+      <GenerateStublessProxies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</GenerateStublessProxies>
+      <GenerateStublessProxies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</GenerateStublessProxies>
+      <GenerateStublessProxies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateStublessProxies>
+      <ApplicationConfigurationMode Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ApplicationConfigurationMode>
+      <ApplicationConfigurationMode Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ApplicationConfigurationMode>
+      <ApplicationConfigurationMode Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ApplicationConfigurationMode>
+      <ApplicationConfigurationMode Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ApplicationConfigurationMode>
+    </Midl>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
