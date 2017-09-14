@@ -70,7 +70,7 @@ int mousepresent;
 
 int keyboard_installed = 0;
 extern int autorun;          // Autorun state
-static SDLMod oldmod; // SoM 3/20/2002: save old modifier key state
+static SDL_Keymod oldmod; // SoM 3/20/2002: save old modifier key state
 
 //
 // I_Shutdown
@@ -90,16 +90,22 @@ extern bool unicodeinput;
 //
 // I_InitKeyboard
 //
+// FIXME: Is this redundant with the advent of SDL2?
+//
 void I_InitKeyboard()
 {   
    keyboard_installed = 1;
 
+   // FIXME: SDL_EnableUNICODE was removed
+   // we should probably just assume unicodeinput is true
    if(unicodeinput)
-      SDL_EnableUNICODE(1);
+      ; //SDL_EnableUNICODE(1);
 
+   // FIXME: SDL_EnableKeyRepeat was removed
+   // There is SDL_KeyboardEvent.repeat though!
    // haleyjd 05/10/11: moved here from video module
    // enable key repeat
-   SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY/2, SDL_DEFAULT_REPEAT_INTERVAL*4);
+   //SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY/2, SDL_DEFAULT_REPEAT_INTERVAL*4);
 }
 
 //
@@ -351,7 +357,7 @@ void I_EndDoom()
       return;
    
    // Make sure the new window has the right title and icon
-   SDL_WM_SetCaption("Thanks for using the Eternity Engine!", NULL);
+   TXT_SetWindowTitle("Thanks for using the Eternity Engine!");
    
    // Write the data to the screen memory   
    screendata = TXT_GetScreenData();
