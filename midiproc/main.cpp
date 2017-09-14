@@ -89,7 +89,7 @@ static void RegisterSong(void *data, size_t size)
       UnregisterSong();
 
    rw    = SDL_RWFromMem(data, size);
-   music = Mix_LoadMUS_RW(rw);
+   music = Mix_LoadMUS_RW(rw, true);
 }
 
 //
