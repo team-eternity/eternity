@@ -104,7 +104,7 @@ IMPLEMENT_RTTI_TYPE(SDLGamePad)
 SDLGamePad::SDLGamePad(int idx) 
    : Super(), sdlIndex(idx)
 {
-   name << "SDL " << SDL_JoystickName(sdlIndex);
+   name << "SDL " << SDL_JoystickNameForIndex(sdlIndex);
    num = i_sdlGamePadDriver.getBaseDeviceNum() + sdlIndex;
 }
 
