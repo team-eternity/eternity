@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2017 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -181,74 +181,96 @@ void UpdateFocus()
 //
 // For SDL, translates from SDL keysyms to DOOM key values.
 //
-static int I_TranslateKey(int sym)
+static int I_TranslateKey(SDL_Keysym *sym)
 {
    int rc = 0;
+   int scancode = sym->scancode;
 
-   switch(sym)
+   // This is Chocolote Doom's code for I_TranslateKey
+   //switch(scancode)
+   //{
+   //case SDL_SCANCODE_LCTRL:
+   //case SDL_SCANCODE_RCTRL:
+   //   return KEYD_RCTRL;
+   //case SDL_SCANCODE_LSHIFT:
+   //case SDL_SCANCODE_RSHIFT:
+   //   return KEYD_RSHIFT;
+   //case SDL_SCANCODE_LALT:
+   //   return KEYD_LALT;
+   //case SDL_SCANCODE_RALT:
+   //   return KEYD_RALT;
+   //default:
+   //   if(scancode >= 0 && scancode < earrlen(scancode_translate_table))
+   //      return scancode_translate_table[scancode];
+   //   else
+   //      return 0;
+   //}
+
+   switch(sym->scancode)
    {
-   case SDLK_LEFT:        rc = KEYD_LEFTARROW;  break;
-   case SDLK_RIGHT:       rc = KEYD_RIGHTARROW; break;
-   case SDLK_DOWN:        rc = KEYD_DOWNARROW;  break;
-   case SDLK_UP:          rc = KEYD_UPARROW;    break;
-   case SDLK_ESCAPE:      rc = KEYD_ESCAPE;     break;
-   case SDLK_RETURN:      rc = KEYD_ENTER;      break;
-   case SDLK_TAB:         rc = KEYD_TAB;        break;
-   case SDLK_F1:          rc = KEYD_F1;         break;
-   case SDLK_F2:          rc = KEYD_F2;         break;
-   case SDLK_F3:          rc = KEYD_F3;         break;
-   case SDLK_F4:          rc = KEYD_F4;         break;
-   case SDLK_F5:          rc = KEYD_F5;         break;
-   case SDLK_F6:          rc = KEYD_F6;         break;
-   case SDLK_F7:          rc = KEYD_F7;         break;
-   case SDLK_F8:          rc = KEYD_F8;         break;
-   case SDLK_F9:          rc = KEYD_F9;         break;
-   case SDLK_F10:         rc = KEYD_F10;        break;
-   case SDLK_F11:         rc = KEYD_F11;        break;
-   case SDLK_F12:         rc = KEYD_F12;        break;
-   case SDLK_BACKSPACE:   rc = KEYD_BACKSPACE;  break;
-   case SDLK_PAUSE:       rc = KEYD_PAUSE;      break;
-   case SDLK_EQUALS:      rc = KEYD_EQUALS;     break;
-   case SDLK_MINUS:       rc = KEYD_MINUS;      break;
+   case SDL_SCANCODE_LEFT:         rc = KEYD_LEFTARROW;  break;
+   case SDL_SCANCODE_RIGHT:        rc = KEYD_RIGHTARROW; break;
+   case SDL_SCANCODE_DOWN:         rc = KEYD_DOWNARROW;  break;
+   case SDL_SCANCODE_UP:           rc = KEYD_UPARROW;    break;
+   case SDL_SCANCODE_ESCAPE:       rc = KEYD_ESCAPE;     break;
+   case SDL_SCANCODE_RETURN:       rc = KEYD_ENTER;      break;
+   case SDL_SCANCODE_TAB:          rc = KEYD_TAB;        break;
+   case SDL_SCANCODE_F1:           rc = KEYD_F1;         break;
+   case SDL_SCANCODE_F2:           rc = KEYD_F2;         break;
+   case SDL_SCANCODE_F3:           rc = KEYD_F3;         break;
+   case SDL_SCANCODE_F4:           rc = KEYD_F4;         break;
+   case SDL_SCANCODE_F5:           rc = KEYD_F5;         break;
+   case SDL_SCANCODE_F6:           rc = KEYD_F6;         break;
+   case SDL_SCANCODE_F7:           rc = KEYD_F7;         break;
+   case SDL_SCANCODE_F8:           rc = KEYD_F8;         break;
+   case SDL_SCANCODE_F9:           rc = KEYD_F9;         break;
+   case SDL_SCANCODE_F10:          rc = KEYD_F10;        break;
+   case SDL_SCANCODE_F11:          rc = KEYD_F11;        break;
+   case SDL_SCANCODE_F12:          rc = KEYD_F12;        break;
+   case SDL_SCANCODE_BACKSPACE:    rc = KEYD_BACKSPACE;  break;
+   case SDL_SCANCODE_PAUSE:        rc = KEYD_PAUSE;      break;
+   case SDL_SCANCODE_EQUALS:       rc = KEYD_EQUALS;     break;
+   case SDL_SCANCODE_MINUS:        rc = KEYD_MINUS;      break;
 
-   case SDLK_KP0:         rc = KEYD_KP0;        break;
-   case SDLK_KP1:         rc = KEYD_KP1;        break;
-   case SDLK_KP2:         rc = KEYD_KP2;        break;
-   case SDLK_KP3:         rc = KEYD_KP3;        break;
-   case SDLK_KP4:         rc = KEYD_KP4;        break;
-   case SDLK_KP5:         rc = KEYD_KP5;        break;
-   case SDLK_KP6:         rc = KEYD_KP6;        break;
-   case SDLK_KP7:         rc = KEYD_KP7;        break;
-   case SDLK_KP8:         rc = KEYD_KP8;        break;
-   case SDLK_KP9:         rc = KEYD_KP9;        break;
-   case SDLK_KP_PERIOD:   rc = KEYD_KPPERIOD;   break;
-   case SDLK_KP_DIVIDE:   rc = KEYD_KPDIVIDE;   break;
-   case SDLK_KP_MULTIPLY: rc = KEYD_KPMULTIPLY; break;
-   case SDLK_KP_MINUS:    rc = KEYD_KPMINUS;    break;
-   case SDLK_KP_PLUS:     rc = KEYD_KPPLUS;     break;
-   case SDLK_KP_ENTER:    rc = KEYD_KPENTER;    break;
-   case SDLK_KP_EQUALS:   rc = KEYD_KPEQUALS;   break;
+   case SDL_SCANCODE_KP_0:         rc = KEYD_KP0;        break;
+   case SDL_SCANCODE_KP_1:         rc = KEYD_KP1;        break;
+   case SDL_SCANCODE_KP_2:         rc = KEYD_KP2;        break;
+   case SDL_SCANCODE_KP_3:         rc = KEYD_KP3;        break;
+   case SDL_SCANCODE_KP_4:         rc = KEYD_KP4;        break;
+   case SDL_SCANCODE_KP_5:         rc = KEYD_KP5;        break;
+   case SDL_SCANCODE_KP_6:         rc = KEYD_KP6;        break;
+   case SDL_SCANCODE_KP_7:         rc = KEYD_KP7;        break;
+   case SDL_SCANCODE_KP_8:         rc = KEYD_KP8;        break;
+   case SDL_SCANCODE_KP_9:         rc = KEYD_KP9;        break;
+   case SDL_SCANCODE_KP_PERIOD:    rc = KEYD_KPPERIOD;   break;
+   case SDL_SCANCODE_KP_DIVIDE:    rc = KEYD_KPDIVIDE;   break;
+   case SDL_SCANCODE_KP_MULTIPLY:  rc = KEYD_KPMULTIPLY; break;
+   case SDL_SCANCODE_KP_MINUS:     rc = KEYD_KPMINUS;    break;
+   case SDL_SCANCODE_KP_PLUS:      rc = KEYD_KPPLUS;     break;
+   case SDL_SCANCODE_KP_ENTER:     rc = KEYD_KPENTER;    break;
+   case SDL_SCANCODE_KP_EQUALS:    rc = KEYD_KPEQUALS;   break;
 
-   case SDLK_NUMLOCK:     rc = KEYD_NUMLOCK;    break;
-   case SDLK_SCROLLOCK:   rc = KEYD_SCROLLLOCK; break;
-   case SDLK_CAPSLOCK:    rc = KEYD_CAPSLOCK;   break;
-   case SDLK_LSHIFT:
-   case SDLK_RSHIFT:      rc = KEYD_RSHIFT;     break;
-   case SDLK_LCTRL:
-   case SDLK_RCTRL:       rc = KEYD_RCTRL;      break;
+   case SDL_SCANCODE_NUMLOCKCLEAR: rc = KEYD_NUMLOCK;    break;
+   case SDL_SCANCODE_SCROLLLOCK:   rc = KEYD_SCROLLLOCK; break;
+   case SDL_SCANCODE_CAPSLOCK:     rc = KEYD_CAPSLOCK;   break;
+   case SDL_SCANCODE_LSHIFT:
+   case SDL_SCANCODE_RSHIFT:       rc = KEYD_RSHIFT;     break;
+   case SDL_SCANCODE_LCTRL:
+   case SDL_SCANCODE_RCTRL:        rc = KEYD_RCTRL;      break;
 
-   case SDLK_LALT:
-   case SDLK_RALT:
-   case SDLK_LMETA:
-   case SDLK_RMETA:       rc = KEYD_RALT;       break;
-   case SDLK_PAGEUP:      rc = KEYD_PAGEUP;     break;
-   case SDLK_PAGEDOWN:    rc = KEYD_PAGEDOWN;   break;
-   case SDLK_HOME:        rc = KEYD_HOME;       break;
-   case SDLK_END:         rc = KEYD_END;        break;
-   case SDLK_INSERT:      rc = KEYD_INSERT;     break;
-   case SDLK_DELETE:      rc = KEYD_DEL;        break;
+   case SDL_SCANCODE_LALT:
+   case SDL_SCANCODE_RALT:
+   case SDL_SCANCODE_LGUI:
+   case SDL_SCANCODE_RGUI:        rc = KEYD_RALT;        break;
+   case SDL_SCANCODE_PAGEUP:      rc = KEYD_PAGEUP;      break;
+   case SDL_SCANCODE_PAGEDOWN:    rc = KEYD_PAGEDOWN;    break;
+   case SDL_SCANCODE_HOME:        rc = KEYD_HOME;        break;
+   case SDL_SCANCODE_END:         rc = KEYD_END;         break;
+   case SDL_SCANCODE_INSERT:      rc = KEYD_INSERT;      break;
+   case SDL_SCANCODE_DELETE:      rc = KEYD_DEL;         break;
    default:
-      rc = sym;
+      // FIXME: Is this correct?
+      rc = sym->sym;
       break;
    }
    return rc;

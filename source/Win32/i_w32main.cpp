@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2017 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -90,15 +90,16 @@ void I_DisableSysMenu()
 {
    if(disable_sysmenu)
    {
+      SDL_Window *window; // FIXME: This needs to be assigned a value from *somewhere*
       SDL_SysWMinfo info;
       
       SDL_VERSION(&info.version); // this is important!
       
-      if(SDL_GetWMInfo(&info))
+      if(SDL_GetWindowWMInfo(window, &info))
       {
-         LONG window_style = GetWindowLongPtr(info.window, GWL_STYLE);
+         LONG window_style = GetWindowLongPtr(info.info.win.window, GWL_STYLE);
          window_style &= ~WS_SYSMENU;
-         SetWindowLongPtr(info.window, GWL_STYLE, window_style);
+         SetWindowLongPtr(info.info.win.window, GWL_STYLE, window_style);
       }
    }
 }
