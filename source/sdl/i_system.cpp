@@ -68,7 +68,6 @@ ticcmd_t *I_BaseTiccmd()
 
 int mousepresent;
 
-int keyboard_installed = 0;
 extern int autorun;          // Autorun state
 static SDL_Keymod oldmod; // SoM 3/20/2002: save old modifier key state
 
@@ -83,29 +82,6 @@ void I_Shutdown()
    
    // haleyjd 04/15/02: shutdown joystick
    I_ShutdownGamePads();
-}
-
-extern bool unicodeinput;
-
-//
-// I_InitKeyboard
-//
-// FIXME: Is this redundant with the advent of SDL2?
-//
-void I_InitKeyboard()
-{   
-   keyboard_installed = 1;
-
-   // FIXME: SDL_EnableUNICODE was removed
-   // we should probably just assume unicodeinput is true
-   if(unicodeinput)
-      ; //SDL_EnableUNICODE(1);
-
-   // FIXME: SDL_EnableKeyRepeat was removed
-   // There is SDL_KeyboardEvent.repeat though!
-   // haleyjd 05/10/11: moved here from video module
-   // enable key repeat
-   //SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY/2, SDL_DEFAULT_REPEAT_INTERVAL*4);
 }
 
 //

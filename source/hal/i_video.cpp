@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2017 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -168,7 +168,6 @@ extern int  grabmouse;
 extern int  usemouse;   // killough 10/98
 extern bool fullscreen;
 
-void I_InitKeyboard();
 void I_InitMouse();
 
 //=============================================================================
@@ -507,9 +506,6 @@ void I_InitGraphics()
    // haleyjd: not a good idea for SDL :(
    // if(nodrawers) // killough 3/2/98: possibly avoid gfx mode
    //    return;
-
-   // init keyboard
-   I_InitKeyboard();
 
    // haleyjd 05/10/11: init mouse
    I_InitMouse();

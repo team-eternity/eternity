@@ -252,10 +252,8 @@ static void I_Pick_DrawBG()
 //
 static void I_Pick_DrawIWADPic(int pic)
 {
-   bool locked = false;
-   byte   *src;
-   byte   *pal;
-   Uint32 *dest;
+   byte *src;
+   byte *pal;
    int x, y;
 
    if(!iwadpics[pic] || !pals[pic])
