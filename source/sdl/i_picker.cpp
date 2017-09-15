@@ -264,7 +264,7 @@ static void I_Pick_DrawIWADPic(int pic)
 
    for(y = 19; y < 240 + 19; ++y)
    {
-      for(x = 202; x < 502; ++x)
+      for(x = 202; x < 522; ++x)
       {
          Uint32 color;
          byte r, g, b;
