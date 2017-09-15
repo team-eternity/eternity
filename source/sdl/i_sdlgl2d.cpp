@@ -53,9 +53,9 @@
 // WM-related stuff (see i_input.c)
 //
 
-void UpdateGrab(void);
+void UpdateGrab(SDL_Window *window);
 bool MouseShouldBeGrabbed(void);
-void UpdateFocus(void);
+void UpdateFocus(SDL_Window *window);
 
 //=============================================================================
 //
@@ -64,6 +64,8 @@ void UpdateFocus(void);
 
 // Temporary screen surface; this is what the game will draw itself into.
 static SDL_Surface *screen; 
+
+static SDL_GLContext context;
 
 // 32-bit converted palette for translation of the screen to 32-bit pixel data.
 static Uint32 RGB8to32[256];
@@ -175,7 +177,7 @@ void SDLGL2DVideoDriver::DrawPixels(void *buffer, unsigned int destwidth)
 void SDLGL2DVideoDriver::FinishUpdate()
 {
    // haleyjd 10/08/05: from Chocolate DOOM:
-   UpdateGrab();
+   UpdateGrab(window);
 
    // Don't update the screen if the window isn't visible.
    // Not doing this breaks under Windows when we alt-tab away 
@@ -345,7 +347,7 @@ void SDLGL2DVideoDriver::ShutdownGraphics()
 void SDLGL2DVideoDriver::ShutdownGraphicsPartway()
 {   
    // haleyjd 06/21/06: use UpdateGrab here, not release
-   UpdateGrab();
+   UpdateGrab(window);
 
    // Code to allow changing resolutions in OpenGL.
    // Must shutdown everything.
@@ -469,7 +471,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    int     v_w            = 640;
    int     v_h            = 480;
    int     flags_window   = SDL_WINDOW_OPENGL;
-   int     flags_renderer = SDL_RENDERER_TARGETTEXTURE;
+   int     flags_renderer = SDL_RENDERER_ACCELERATED|SDL_RENDERER_TARGETTEXTURE;
    GLvoid *tempbuffer     = NULL;
    GLint   texformat      = GL_RGBA8;
    GLint   texfiltertype  = GL_LINEAR;
@@ -528,11 +530,17 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    SDL_GL_SetSwapInterval(wantvsync ? 1 : 0); // OMG vsync!
 
    if(!(window = SDL_CreateWindow(ee_wmCaption, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                                  v_w, v_h, flags_window)))
-      I_FatalError(I_ERR_KILL, "Couldn't create OpenGL window %dx%dx\n", v_w, v_h);
+      v_w, v_h, flags_window)))
+   {
+      I_FatalError(I_ERR_KILL, "Couldn't create OpenGL window %dx%dx\n"
+                               "SDL Error: %s\n", v_w, v_h, SDL_GetError());
+   }
 
-  if(!(renderer = SDL_CreateRenderer(window, -1, flags_renderer)))
-     I_FatalError(I_ERR_KILL, "Couldn't create OpenGL renderer\n");
+   if(!(context = SDL_GL_CreateContext(window)))
+   {
+      I_FatalError(I_ERR_KILL, "Couldn't create OopenGL context\n"
+                               "SDL Error: %s\n", SDL_GetError());
+   }
 
    Uint32 format;
    if(colordepth == 32)
@@ -542,7 +550,8 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    else
       format = SDL_PIXELFORMAT_RGB555;
 
-   if(!(screen = SDL_CreateRGBSurfaceWithFormat(0, v_w, v_h, colordepth, format)))
+   // FIXME: I wanna use SDL_CreateRGBSurfaceWithFormat but it's not linking for some reason
+   if(!(screen = SDL_CreateRGBSurface(0, v_w, v_h, colordepth, 0, 0, 0, 0)))
       I_FatalError(I_ERR_KILL, "Couldn't set RGB surface with colordepth %d\n", colordepth);
 
    // Try loading the ARB PBO extension
@@ -601,8 +610,8 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
       pglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
    }
 
-   UpdateFocus();
-   UpdateGrab();
+   UpdateFocus(window);
+   UpdateGrab(window);
 
    // Init Cardboard video metrics
    video.width     = v_w;

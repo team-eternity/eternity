@@ -170,6 +170,11 @@ extern bool fullscreen;
 
 void I_InitMouse();
 
+void I_StartTic()
+{
+   I_StartTicInWindow(i_video_driver->GetWindow());
+}
+
 //=============================================================================
 //
 // Graphics Code

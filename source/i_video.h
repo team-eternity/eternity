@@ -29,7 +29,7 @@
 #include "doomtype.h"
 
 struct SDL_Window;
-struct SDL_Renderer;
+//struct SDL_Renderer;
 
 //
 // Video Driver Base Class
@@ -40,7 +40,7 @@ class HALVideoDriver
 {
 protected:
    SDL_Window *window;
-   SDL_Renderer *renderer;
+   //SDL_Renderer *renderer;
 
    virtual void SetPrimaryBuffer()        = 0;
    virtual void UnsetPrimaryBuffer()      = 0;
@@ -59,6 +59,7 @@ public:
    }
 };
 
+void I_StartTic();
 
 // Called by D_DoomMain,
 // determines the hardware configuration

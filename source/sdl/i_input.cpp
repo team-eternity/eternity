@@ -70,7 +70,7 @@ bool MouseShouldBeGrabbed();
 //
 // haleyjd 10/08/05: from Chocolate DOOM
 //
-void UpdateGrab()
+void UpdateGrab(SDL_Window *window)
 {
    static bool currently_grabbed = false;
    bool grab;
@@ -79,14 +79,28 @@ void UpdateGrab()
 
    if(grab && !currently_grabbed)
    {
-      SDL_ShowCursor(SDL_DISABLE);
-      SDL_WM_GrabInput(SDL_GRAB_ON);
+      // When the cursor is hidden, grab the input.
+      // Relative mode implicitly hides the cursor.
+      SDL_SetRelativeMouseMode(SDL_TRUE);
+      SDL_GetRelativeMouseState(nullptr, nullptr);
    }
-
-   if(!grab && currently_grabbed)
+   else if(!grab && currently_grabbed)
    {
-      SDL_ShowCursor(SDL_ENABLE);
-      SDL_WM_GrabInput(SDL_GRAB_OFF);
+      int window_w, window_h;
+
+      SDL_SetRelativeMouseMode(SDL_FALSE);
+      // FIXME: Are two of these calls necessary?
+      SDL_GetRelativeMouseState(nullptr, nullptr);
+
+      // When releasing the mouse from grab, warp the mouse cursor to
+      // the bottom-right of the screen. This is a minimally distracting
+      // place for it to appear - we may only have released the grab
+      // because we're at an end of level intermission screen, for
+      // example.
+
+      SDL_GetWindowSize(window, &window_w, &window_h);
+      SDL_WarpMouseInWindow(window, window_w - 16, window_h - 16);
+      SDL_GetRelativeMouseState(nullptr, nullptr);
    }
 
    currently_grabbed = grab;
@@ -133,42 +147,17 @@ bool MouseShouldBeGrabbed()
 // is removed if we lose focus (such as a popup window appearing),
 // and we dont move the mouse around if we aren't focused either.
 //
-void UpdateFocus()
+void UpdateFocus(SDL_Window *window)
 {
-   Uint8 state;
-   SDL_Event  event;
-   static bool currently_focused = false;
+   Uint32 state;
 
    SDL_PumpEvents();
 
-   state = SDL_GetAppState();
+   state = window ? SDL_GetWindowFlags(window) : 0;
+   screenvisible = ((state & SDL_WINDOW_SHOWN) && !(state & SDL_WINDOW_MINIMIZED));
 
-   // We should have input (keyboard) focus and be visible
-   // (not minimised)
-   window_focused = (state & SDL_APPINPUTFOCUS) && (state & SDL_APPACTIVE);
-
-   // Stop haptic effects if the window loses focus
-   if(!window_focused)
-      I_ClearHaptics();
-
-   // Should the screen be grabbed?
-   screenvisible = (state & SDL_APPACTIVE) != 0;
-
-   // [CG] Handle focus changes, this is all necessary to avoid repeat events.
-   if(currently_focused != window_focused)
-   {
-      if(window_focused)
-      {
-         while(SDL_PollEvent(&event)) {}
-         SDL_EnableKeyRepeat(
-            SDL_DEFAULT_REPEAT_DELAY / 2, SDL_DEFAULT_REPEAT_INTERVAL * 4
-         );
-      }
-      else
-         SDL_EnableKeyRepeat(0, 0);
-      G_ClearKeyStates();
-      currently_focused = window_focused;
-   }
+   window_focused = (screenvisible &&
+                     ((state & (SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_MOUSE_FOCUS)) != 0));
 }
 
 //=============================================================================
@@ -413,16 +402,16 @@ static double CustomAccelerateMouse(int val)
 // haleyjd 10/23/08: from Choco-Doom:
 // Warp the mouse back to the middle of the screen
 //
-static void CenterMouse()
+static void CenterMouse(SDL_Window *window)
 {
    // Warp the the screen center
 
-   SDL_WarpMouse((Uint16)(video.width / 2), (Uint16)(video.height / 2));
+   SDL_WarpMouseInWindow(window, int(video.width / 2), int(video.height / 2));
 
    // Clear any relative movement caused by warping
 
    SDL_PumpEvents();
-   SDL_GetRelativeMouseState(NULL, NULL);
+   SDL_GetRelativeMouseState(nullptr, nullptr);
 }
 
 //
@@ -435,7 +424,7 @@ static void CenterMouse()
 // This is to combine all mouse movement for a tic into one mouse
 // motion event.
 //
-static void I_ReadMouse()
+static void I_ReadMouse(SDL_Window *window)
 {
    int x, y;
    event_t ev;
@@ -470,7 +459,7 @@ static void I_ReadMouse()
    }
 
    if(MouseShouldBeGrabbed())
-      CenterMouse();
+      CenterMouse(window);
 }
 
 //
@@ -575,7 +564,7 @@ static void I_RunDeferredEvents()
    }
 }
 
-static void I_GetEvent()
+static void I_GetEvent(SDL_Window *window)
 {
    SDL_Event  ev;
    int        sendmouseevent = 0;
@@ -586,8 +575,8 @@ static void I_GetEvent()
 
    // [CG] 01/31/2012: Ensure we have the latest info about focus and mouse
    //                  grabbing.
-   UpdateFocus();
-   UpdateGrab();
+   UpdateFocus(window);
+   UpdateGrab(window);
 
    while(SDL_PollEvent(&ev))
    {
@@ -604,7 +593,8 @@ static void I_GetEvent()
       {
       case SDL_KEYDOWN:
          d_event.type = ev_keydown;
-         d_event.data1 = I_TranslateKey(ev.key.keysym.sym);
+         // FIXME: Choco has no call here
+         d_event.data1 = I_TranslateKey(&ev.key.keysym);
 
 #if (EE_CURRENT_PLATFORM != EE_PLATFORM_MACOSX)
          // This #if block is adapted from PRBoom+
@@ -645,18 +635,19 @@ static void I_GetEvent()
             I_AddDeferredEvent(tempevent, gametic + 1);
          }
 #endif
-         if(unicodeinput &&
-            ev.key.keysym.unicode > 31 && ev.key.keysym.unicode < 127)
-            d_event.character = (char)(ev.key.keysym.unicode);
-         else
-            d_event.character = 0;
+         // FIXME: SDL_TEXTINPUT handling
+         //if(unicodeinput &&
+         //   ev.key.keysym.unicode > 31 && ev.key.keysym.unicode < 127)
+         //   d_event.character = (char)(ev.key.keysym.unicode);
+         //else
+         //   d_event.character = 0;
 
          D_PostEvent(&d_event);
          break;
 
       case SDL_KEYUP:
          d_event.type = ev_keyup;
-         d_event.data1 = I_TranslateKey(ev.key.keysym.sym);
+         d_event.data1 = I_TranslateKey(&ev.key.keysym);
 
 #if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS)
          // When we get a keyup for capslock, we need to change it into a 
@@ -722,33 +713,41 @@ static void I_GetEvent()
             buttons |= 2;
             d_event.data1 = KEYD_MOUSE2;
             break;
-         case SDL_BUTTON_WHEELUP:
-            d_event.data1 = KEYD_MWHEELUP;
-            // WHEELUP sends a button up event immediately. That won't work;
-            // we need an input latency gap of at least one gametic.
-            tempevent.type  = ev_keyup;
-            tempevent.data1 = KEYD_MWHEELUP;
-            I_AddDeferredEvent(tempevent, gametic + 1);
-            break;
-         case SDL_BUTTON_WHEELDOWN:
-            d_event.data1 = KEYD_MWHEELDOWN;
-            // ditto, as above.
-            tempevent.type  = ev_keyup;
-            tempevent.data1 = KEYD_MWHEELDOWN;
-            I_AddDeferredEvent(tempevent, gametic + 1);
-            break;
-#if SDL_VERSION_ATLEAST(1, 2, 14)
          case SDL_BUTTON_X1:
             d_event.data1 = KEYD_MOUSE4;
             break;
          case SDL_BUTTON_X2:
             d_event.data1 = KEYD_MOUSE5;
             break;
-#endif
          }
 
          D_PostEvent(&d_event);
          break;
+
+      case SDL_MOUSEWHEEL:
+         if(!usemouse)
+            continue;
+         d_event.type = ev_keydown;
+
+        if(ev.wheel.y == 1)
+        {
+            d_event.data1 = KEYD_MWHEELUP;
+            // WHEELUP sends a button up event immediately. That won't work;
+            // we need an input latency gap of at least one gametic.
+            tempevent.type = ev_keyup;
+            tempevent.data1 = KEYD_MWHEELUP;
+            I_AddDeferredEvent(tempevent, gametic + 1);
+            break;
+        }
+        else if(ev.wheel.y == -1)
+        {
+           d_event.data1 = KEYD_MWHEELDOWN;
+           // ditto, as above.
+           tempevent.type = ev_keyup;
+           tempevent.data1 = KEYD_MWHEELDOWN;
+           I_AddDeferredEvent(tempevent, gametic + 1);
+           break;
+        }
 
       case SDL_MOUSEBUTTONUP:
          if(!usemouse)
@@ -774,22 +773,12 @@ static void I_GetEvent()
             buttons &= ~2;
             d_event.data1 = KEYD_MOUSE2;
             break;
-         case SDL_BUTTON_WHEELUP:
-            // Ignore actual wheelup key up events, because they occur
-            // immediately, and we need a delay of at least 1 tic for the
-            // action to be visible to the game engine.
-            break;
-         case SDL_BUTTON_WHEELDOWN:
-            // As above.
-            break;
-#if SDL_VERSION_ATLEAST(1, 2, 14)
          case SDL_BUTTON_X1:
             d_event.data1 = KEYD_MOUSE4;
             break;
          case SDL_BUTTON_X2:
             d_event.data1 = KEYD_MOUSE5;
             break;
-#endif
          }
 
          if(d_event.data1)
@@ -800,12 +789,12 @@ static void I_GetEvent()
          MN_QuitDoom();
          break;
 
-      case SDL_ACTIVEEVENT:
+      case SDL_WINDOWEVENT:
          // haleyjd 10/08/05: from Chocolate DOOM:
          // need to update our focus state
          // 2/14/2011: Update mouse grabbing as well (thanks Catoptromancy)
-         UpdateFocus();
-         UpdateGrab();
+         UpdateFocus(window);
+         UpdateGrab(window);
          break;
 
       default:
@@ -827,16 +816,16 @@ static void I_GetEvent()
 }
 
 //
-// I_StartTic
+// I_StartTicInWindow
 //
-void I_StartTic()
+void I_StartTicInWindow(SDL_Window *window)
 {
    I_RunDeferredEvents();
-   I_GetEvent();
+   I_GetEvent(window);
    I_UpdateHaptics();
 
    if(usemouse && ((mouseAccel_type == 2) || (mouseAccel_type == 3)))
-      I_ReadMouse();
+      I_ReadMouse(window);
 }
 
 // EOF
