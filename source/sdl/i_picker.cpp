@@ -35,7 +35,8 @@
 #include "../v_png.h"
 #include "../w_wad.h"
 
-static SDL_Surface  *pickscreen;    // SDL screen surface
+static SDL_Window   *pickwindow;    // SDL window
+static SDL_Renderer *pickrenderer;  // SDL renderer
 static WadDirectory  pickwad;       // private directory for startup.wad
 static int           currentiwad;   // currently selected IWAD
 static bool         *haveIWADArray; // valid IWADs, passed here from d_main.c
@@ -207,21 +208,8 @@ static void I_Pick_FreeImages(void)
 //
 static void I_Pick_ClearScreen()
 {
-   static bool firsttime = true;
-   static Uint32 color;
-   SDL_Rect dstrect;
-
-   if(firsttime)
-   {
-      firsttime = false;
-      color = SDL_MapRGB(pickscreen->format, 0, 0, 0);
-   }
-
-   dstrect.x = dstrect.y = 0;
-   dstrect.w = 540;
-   dstrect.h = 380;
-
-   SDL_FillRect(pickscreen, &dstrect, color);
+   SDL_SetRenderDrawColor(pickrenderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+   SDL_RenderClear(pickrenderer);
 }
 
 //
@@ -230,11 +218,9 @@ static void I_Pick_ClearScreen()
 // Blits the 24-bit linear RGB background picture to the picker screen.
 // Yes, the graphic is pretty large.
 //
-static void I_Pick_DrawBG(void)
+static void I_Pick_DrawBG()
 {
-   bool locked = false;
-   byte   *src;
-   Uint32 *dest;
+   byte *src;
    int x, y;
 
    if(!bgframe)
@@ -242,35 +228,19 @@ static void I_Pick_DrawBG(void)
    
    src = bgframe;
 
-   if(SDL_MUSTLOCK(pickscreen))
-   {
-      if(SDL_LockSurface(pickscreen) < 0)
-         return;
-      locked = true;
-   }
-
    for(y = 0; y < 380; ++y)
    {
-      dest = (Uint32 *)((byte *)pickscreen->pixels + y * pickscreen->pitch);
-
       for(x = 0; x < 540; ++x)
       {
-         Uint32 color;
          byte r, g, b;
          r = *src++;
          g = *src++;
          b = *src++;
 
-         color = ((Uint32)r << pickscreen->format->Rshift) |
-                 ((Uint32)g << pickscreen->format->Gshift) |
-                 ((Uint32)b << pickscreen->format->Bshift);
-
-         *dest++ = color;
+         SDL_SetRenderDrawColor(pickrenderer, r, g, b, SDL_ALPHA_OPAQUE);
+         SDL_RenderDrawPoint(pickrenderer, x, y);
       }
    }
-
-   if(locked)
-      SDL_UnlockSurface(pickscreen);
 }
 
 //
@@ -294,19 +264,9 @@ static void I_Pick_DrawIWADPic(int pic)
    src = iwadpics[pic];
    pal = pals[pic];
 
-   if(SDL_MUSTLOCK(pickscreen))
-   {
-      if(SDL_LockSurface(pickscreen) < 0)
-         return;
-      locked = true;
-   }
-   
    for(y = 19; y < 240 + 19; ++y)
    {
-      dest = (Uint32 *)((byte *)pickscreen->pixels + y * pickscreen->pitch +
-                         202 * pickscreen->format->BytesPerPixel);
-
-      for(x = 0; x < 320; ++x)
+      for(x = 202; x < 502; ++x)
       {
          Uint32 color;
          byte r, g, b;
@@ -317,16 +277,10 @@ static void I_Pick_DrawIWADPic(int pic)
          g = pal[color * 3 + 1];
          b = pal[color * 3 + 2];
 
-         color = ((Uint32)r << pickscreen->format->Rshift) |
-                 ((Uint32)g << pickscreen->format->Gshift) |
-                 ((Uint32)b << pickscreen->format->Bshift);
-
-         *dest++ = color;
+         SDL_SetRenderDrawColor(pickrenderer, r, g, b, SDL_ALPHA_OPAQUE);
+         SDL_RenderDrawPoint(pickrenderer, x, y);
       }
    }
-   
-   if(locked)
-      SDL_UnlockSurface(pickscreen);
 }
 
 //
@@ -343,7 +297,7 @@ static void I_Pick_Drawer(void)
 
    I_Pick_DrawIWADPic(currentiwad);
 
-   SDL_UpdateRect(pickscreen, 0, 0, 0, 0);
+   SDL_RenderPresent(pickrenderer);
 }
 
 //=============================================================================
@@ -369,7 +323,7 @@ static void I_Pick_DoLeft(void)
    }
    while(!haveIWADArray[currentiwad] && currentiwad != startwad);
    
-   SDL_WM_SetCaption(titles[currentiwad], titles[currentiwad]);
+   SDL_SetWindowTitle(pickwindow, titles[currentiwad]);
 }
 
 //
@@ -390,7 +344,7 @@ static void I_Pick_DoRight(void)
    }
    while(!haveIWADArray[currentiwad] && currentiwad != startwad);
    
-   SDL_WM_SetCaption(titles[currentiwad], titles[currentiwad]);
+   SDL_SetWindowTitle(pickwindow, titles[currentiwad]);
 }
 
 //
@@ -583,8 +537,14 @@ int I_Pick_DoPicker(bool haveIWADs[], int startchoice)
 
    pickvideoinit = true;
 
-   // open the screen
-   if(!(pickscreen = SDL_SetVideoMode(540, 380, 32, SDL_SWSURFACE)))
+   // create the window
+   if(!(pickwindow = SDL_CreateWindow(nullptr,
+                                     SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                                     540, 380, 0)))
+      return -1;
+
+   // create the renderer
+   if(!(pickrenderer = SDL_CreateRenderer(pickwindow, -1, SDL_RENDERER_SOFTWARE)))
       return -1;
 
    // open startup.wad (private to this module)
@@ -622,7 +582,7 @@ int I_Pick_DoPicker(bool haveIWADs[], int startchoice)
    }
 
    // set window title to currently selected game
-   SDL_WM_SetCaption(titles[currentiwad], titles[currentiwad]);
+   SDL_SetWindowTitle(pickwindow, titles[currentiwad]);
 
    // run the program
    I_Pick_MainLoop();
