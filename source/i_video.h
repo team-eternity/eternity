@@ -28,6 +28,9 @@
 
 #include "doomtype.h"
 
+struct SDL_Window;
+struct SDL_Renderer;
+
 //
 // Video Driver Base Class
 //
@@ -36,6 +39,9 @@
 class HALVideoDriver
 {
 protected:
+   SDL_Window *window;
+   SDL_Renderer *renderer;
+
    virtual void SetPrimaryBuffer()        = 0;
    virtual void UnsetPrimaryBuffer()      = 0;
 
@@ -46,6 +52,11 @@ public:
    virtual void ShutdownGraphics()        = 0;
    virtual void ShutdownGraphicsPartway() = 0;
    virtual bool InitGraphicsMode()        = 0;
+
+   SDL_Window *GetWindow() const
+   {
+      return window;
+   }
 };
 
 

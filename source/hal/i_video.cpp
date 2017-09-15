@@ -401,7 +401,7 @@ void I_CheckVideoCmds(int *w, int *h, bool *fs, bool *vs, bool *hw, bool *wf)
 }
 
 #ifdef _MSC_VER
-extern void I_DisableSysMenu();
+extern void I_DisableSysMenu(SDL_Window *window);
 #endif
 
 //
@@ -429,7 +429,7 @@ static bool I_InitGraphicsMode()
 
 #ifdef _MSC_VER
       // Win32 specific hacks
-      I_DisableSysMenu();
+      I_DisableSysMenu(i_video_driver->GetWindow());
 #endif
 
       V_Init();                 // initialize high-level video

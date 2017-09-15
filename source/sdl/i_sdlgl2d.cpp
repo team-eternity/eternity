@@ -62,9 +62,6 @@ void UpdateFocus(void);
 // Static Data
 //
 
-// Surface returned from SDL_SetVideoMode; not really useful for anything.
-static SDL_Surface *surface;
-
 // Temporary screen surface; this is what the game will draw itself into.
 static SDL_Surface *screen; 
 
@@ -183,7 +180,7 @@ void SDLGL2DVideoDriver::FinishUpdate()
    // Don't update the screen if the window isn't visible.
    // Not doing this breaks under Windows when we alt-tab away 
    // while fullscreen.   
-   if(!(SDL_GetAppState() & SDL_APPACTIVE))
+   if(!(SDL_GetWindowFlags(window) & SDL_WINDOW_SHOWN))
       return;
 
    if(!use_arb_pbo)
@@ -242,7 +239,7 @@ void SDLGL2DVideoDriver::FinishUpdate()
    glDrawElements(GL_TRIANGLES, 3*2, GL_UNSIGNED_BYTE, screenVtxOrder);
 
    // push the frame
-   SDL_GL_SwapBuffers();
+   SDL_GL_SwapWindow(window);
 }
 
 //
@@ -471,7 +468,8 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    bool    wantframe      = true;
    int     v_w            = 640;
    int     v_h            = 480;
-   int     flags          = SDL_OPENGL;
+   int     flags_window   = SDL_WINDOW_OPENGL;
+   int     flags_renderer = SDL_RENDERER_TARGETTEXTURE;
    GLvoid *tempbuffer     = NULL;
    GLint   texformat      = GL_RGBA8;
    GLint   texfiltertype  = GL_LINEAR;
@@ -499,6 +497,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    if(cfg_gl_filter_type >= 0 && cfg_gl_filter_type < CFG_GL_NUMFILTERS)
       texfiltertype = textureFilterParams[cfg_gl_filter_type];
 
+   // FIXME: Do we need to flags_renderer |= SDL_RENDERER_PRESENTVSYNC?
    // haleyjd 04/11/03: "vsync" or page-flipping support
    if(use_vsync)
       wantvsync = true;
@@ -513,10 +512,10 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
                     &wantframe);
 
    if(wantfullscreen)
-      flags |= SDL_FULLSCREEN;
+      flags_window |= SDL_WINDOW_FULLSCREEN;
    
    if(!wantframe)
-      flags |= SDL_NOFRAME;
+      flags_window |= SDL_WINDOW_BORDERLESS;
    
    // Set GL attributes through SDL
    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -524,14 +523,27 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, colordepth >= 24 ? 8 : 5);
    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,  colordepth >= 24 ? 8 : 5);
    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, colordepth == 32 ? 8 : 0);
-   SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, wantvsync ? 1 : 0); // OMG vsync!
 
-   // Set GL video mode
-   if(!(surface = SDL_SetVideoMode(v_w, v_h, colordepth, flags)))
-   {
-      I_FatalError(I_ERR_KILL, "Couldn't set OpenGL video mode %dx%dx%d\n", 
-                   v_w, v_h, colordepth);
-   }
+   // Set swap interval through SDL
+   SDL_GL_SetSwapInterval(wantvsync ? 1 : 0); // OMG vsync!
+
+   if(!(window = SDL_CreateWindow(ee_wmCaption, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                                  v_w, v_h, flags_window)))
+      I_FatalError(I_ERR_KILL, "Couldn't create OpenGL window %dx%dx\n", v_w, v_h);
+
+  if(!(renderer = SDL_CreateRenderer(window, -1, flags_renderer)))
+     I_FatalError(I_ERR_KILL, "Couldn't create OpenGL renderer\n");
+
+   Uint32 format;
+   if(colordepth == 32)
+      format = SDL_PIXELFORMAT_RGBA32;
+   else if(colordepth == 24)
+      format = SDL_PIXELFORMAT_RGB24;
+   else
+      format = SDL_PIXELFORMAT_RGB555;
+
+   if(!(screen = SDL_CreateRGBSurfaceWithFormat(0, v_w, v_h, colordepth, format)))
+      I_FatalError(I_ERR_KILL, "Couldn't set RGB surface with colordepth %d\n", colordepth);
 
    // Try loading the ARB PBO extension
    LoadPBOExtension();
@@ -589,7 +601,6 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
       pglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
    }
 
-   SDL_WM_SetCaption(ee_wmCaption, ee_wmCaption);
    UpdateFocus();
    UpdateGrab();
 

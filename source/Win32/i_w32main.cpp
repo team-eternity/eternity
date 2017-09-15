@@ -86,11 +86,10 @@ int main(int argc, char **argv)
 // option, the default control scheme for DOOM becomes broken in windowed
 // mode under the default SDL setup.
 //
-void I_DisableSysMenu()
+void I_DisableSysMenu(SDL_Window *window)
 {
    if(disable_sysmenu)
    {
-      SDL_Window *window; // FIXME: This needs to be assigned a value from *somewhere*
       SDL_SysWMinfo info;
       
       SDL_VERSION(&info.version); // this is important!
