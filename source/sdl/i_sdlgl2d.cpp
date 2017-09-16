@@ -65,7 +65,7 @@ void UpdateFocus(SDL_Window *window);
 // Temporary screen surface; this is what the game will draw itself into.
 static SDL_Surface *screen; 
 
-static SDL_GLContext context;
+static SDL_GLContext glcontext;
 
 // 32-bit converted palette for translation of the screen to 32-bit pixel data.
 static Uint32 RGB8to32[256];
@@ -379,6 +379,10 @@ void SDLGL2DVideoDriver::ShutdownGraphicsPartway()
    // Clear the remembered texture binding
    GL_ClearBoundTexture();
 
+   // Destroy the GL context
+   SDL_GL_DeleteContext(glcontext);
+   glcontext = nullptr;
+
    // Destroy the window
    SDL_DestroyWindow(window);
    window = nullptr;
@@ -541,7 +545,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
                                "SDL Error: %s\n", v_w, v_h, SDL_GetError());
    }
 
-   if(!(context = SDL_GL_CreateContext(window)))
+   if(!(glcontext = SDL_GL_CreateContext(window)))
    {
       I_FatalError(I_ERR_KILL, "Couldn't create OopenGL context\n"
                                "SDL Error: %s\n", SDL_GetError());
