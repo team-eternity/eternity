@@ -14,29 +14,15 @@
 // GNU General Public License for more details.
 //
 
-#ifndef TEXTSCREEN_H
-#define TEXTSCREEN_H
+#ifndef TXT_UTF8_H
+#define TXT_UTF8_H
 
-#include "doomkeys.h"
-#include "txt_main.h"
+#include <stdarg.h>
 
-#include "txt_button.h"
-#include "txt_checkbox.h"
-#include "txt_conditional.h"
-#include "txt_desktop.h"
-#include "txt_dropdown.h"
-#include "txt_fileselect.h"
-#include "txt_inputbox.h"
-#include "txt_label.h"
-#include "txt_radiobutton.h"
-#include "txt_scrollpane.h"
-#include "txt_separator.h"
-#include "txt_spinctrl.h"
-#include "txt_strut.h"
-#include "txt_table.h"
-#include "txt_widget.h"
-#include "txt_window_action.h"
-#include "txt_window.h"
+char *TXT_EncodeUTF8(char *p, unsigned int c);
+unsigned int TXT_DecodeUTF8(const char **ptr);
+unsigned int TXT_UTF8_Strlen(const char *s);
+char *TXT_UTF8_SkipChars(const char *s, unsigned int n);
 
-#endif /* #ifndef TEXTSCREEN_H */
+#endif /* #ifndef TXT_UTF8_H */
 
