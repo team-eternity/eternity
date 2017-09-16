@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2017 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -470,7 +470,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    bool    wantframe      = true;
    int     v_w            = 640;
    int     v_h            = 480;
-   int     flags_window   = SDL_WINDOW_OPENGL;
+   int     window_flags   = SDL_WINDOW_OPENGL;
    int     flags_renderer = SDL_RENDERER_ACCELERATED|SDL_RENDERER_TARGETTEXTURE;
    GLvoid *tempbuffer     = NULL;
    GLint   texformat      = GL_RGBA8;
@@ -514,10 +514,10 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
                     &wantframe);
 
    if(wantfullscreen)
-      flags_window |= SDL_WINDOW_FULLSCREEN;
+      window_flags |= SDL_WINDOW_FULLSCREEN;
    
    if(!wantframe)
-      flags_window |= SDL_WINDOW_BORDERLESS;
+      window_flags |= SDL_WINDOW_BORDERLESS;
    
    // Set GL attributes through SDL
    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -529,8 +529,9 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    // Set swap interval through SDL
    SDL_GL_SetSwapInterval(wantvsync ? 1 : 0); // OMG vsync!
 
-   if(!(window = SDL_CreateWindow(ee_wmCaption, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-      v_w, v_h, flags_window)))
+   if(!(window = SDL_CreateWindow(ee_wmCaption,
+                                  SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                  v_w, v_h, window_flags)))
    {
       I_FatalError(I_ERR_KILL, "Couldn't create OpenGL window %dx%dx\n"
                                "SDL Error: %s\n", v_w, v_h, SDL_GetError());
