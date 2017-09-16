@@ -378,6 +378,10 @@ void SDLGL2DVideoDriver::ShutdownGraphicsPartway()
 
    // Clear the remembered texture binding
    GL_ClearBoundTexture();
+
+   // Destroy the window
+   SDL_DestroyWindow(window);
+   window = nullptr;
 }
 
 // WARNING: SDL_GL_GetProcAddress is non-portable!

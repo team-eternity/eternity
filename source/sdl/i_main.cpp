@@ -70,39 +70,14 @@ int SDLIsInit;
 
 int main(int argc, char **argv)
 {
-   static char env_vidwinpos[] = "SDL_VIDEO_WINDOW_POS=center";
-   static char env_vidcenter[] = "SDL_VIDEO_CENTERED=1";
-
    myargc = argc;
    myargv = argv;
-
-   // Set SDL video centering
-   putenv(env_vidwinpos);
-   putenv(env_vidcenter);
    
-   // SoM: From CHOCODOOM Thank you fraggle!!
-#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
-   // Allow -gdi as a shortcut for using the windib driver.
-   
-   //!
-   // @category video 
-   // @platform windows
-   //
-   // Use the Windows GDI driver instead of DirectX.
-   //
-      
-   // SoM: the gdi interface is much faster for windowed modes which are more
-   // commonly used. Thus, GDI is default.
-   if(M_CheckParm("-directx"))
-      putenv("SDL_VIDEODRIVER=directx");
-   else if(M_CheckParm("-gdi") || getenv("SDL_VIDEODRIVER") == NULL)
-      putenv("SDL_VIDEODRIVER=windib");
-#endif
-
+   // MaxW: 2017/09/16: Now prints the error on failure
    // haleyjd 04/15/02: added check for failure
    if(SDL_Init(INIT_FLAGS) == -1)
    {
-      puts("Failed to initialize SDL library.\n");
+      printf("Failed to initialize SDL library: %s\n", SDL_GetError());
       return -1;
    }
 
