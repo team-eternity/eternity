@@ -616,7 +616,7 @@ static void I_GetEvent(SDL_Window *window)
          // Also provide macOS option
          if(ev.key.keysym.mod & KMOD_LGUI)
          {
-            if(ev.key.keysym.sym == SDL_SCANCODE_Q)
+            if(ev.key.keysym.scancode == SDL_SCANCODE_Q)
             {
                I_QuitFast();
                break;
