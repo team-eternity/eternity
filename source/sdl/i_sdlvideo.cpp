@@ -48,17 +48,17 @@ extern int  grabmouse;
 extern int  usemouse;   // killough 10/98
 extern bool fullscreen;
 
-void UpdateGrab();
+void UpdateGrab(SDL_Window *window);
 bool MouseShouldBeGrabbed();
-void UpdateFocus();
+void UpdateFocus(SDL_Window *window);
 
 //=============================================================================
 //
 // Graphics Code
 //
 
-static SDL_Surface *sdlscreen;
 static SDL_Surface *primary_surface;
+static SDL_Renderer *renderer;
 static SDL_Rect    *destrect;
 
 // used when rendering to a subregion, such as for letterboxing
@@ -85,32 +85,39 @@ static bool crossbitdepth;
 void SDLVideoDriver::FinishUpdate()
 {
    // haleyjd 10/08/05: from Chocolate DOOM:
-   UpdateGrab();
+   UpdateGrab(window);
 
    // Don't update the screen if the window isn't visible.
    // Not doing this breaks under Windows when we alt-tab away 
    // while fullscreen.   
-   if(!(SDL_GetAppState() & SDL_APPACTIVE))
+   if(!(SDL_GetWindowFlags(window) & SDL_WINDOW_SHOWN))
       return;
 
    if(setpalette)
    {
       if(!crossbitdepth)
-         SDL_SetPalette(sdlscreen, SDL_LOGPAL|SDL_PHYSPAL, colors, 0, 256);
+      {
+         SDL_SetPaletteColors(SDL_GetWindowSurface(window)->format->palette,
+                             colors, 0, 256);
+      }
 
       if(primary_surface)
-         SDL_SetPalette(primary_surface, SDL_LOGPAL|SDL_PHYSPAL, colors, 0, 256);
+         SDL_SetPaletteColors(primary_surface->format->palette, colors, 0, 256);
 
       setpalette = false;
    }
 
    // haleyjd 11/12/09: blit *after* palette set improves behavior.
    if(primary_surface)
-      SDL_BlitSurface(primary_surface, NULL, sdlscreen, destrect);
+   {
+      SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, primary_surface);
+      SDL_RenderCopy(renderer, texture, nullptr, destrect);
+      SDL_DestroyTexture(texture);
+   }
 
    // haleyjd 11/12/09: ALWAYS update. Causes problems with some video surface
    // types otherwise.
-   SDL_Flip(sdlscreen);
+   SDL_RenderPresent(renderer);
 }
 
 //
@@ -133,7 +140,7 @@ void SDLVideoDriver::ReadScreen(byte *scr)
 //
 // haleyjd 11/12/09: make sure surface palettes are set at startup.
 //
-static void I_SDLSetPaletteDirect(byte *palette)
+static void I_SDLSetPaletteDirect(SDL_Window *window, byte *palette)
 {
    for(int i = 0; i < 256; i++)
    {
@@ -142,11 +149,14 @@ static void I_SDLSetPaletteDirect(byte *palette)
       colors[i].b = gammatable[usegamma][(basepal[i].b = *palette++)];
    }
 
-   if(sdlscreen && !crossbitdepth)
-      SDL_SetPalette(sdlscreen, SDL_LOGPAL|SDL_PHYSPAL, colors, 0, 256);
+   if(window && !crossbitdepth)
+   {
+      SDL_SetPaletteColors(SDL_GetWindowSurface(window)->format->palette,
+         colors, 0, 256);
+   }
 
    if(primary_surface)
-      SDL_SetPalette(primary_surface, SDL_LOGPAL|SDL_PHYSPAL, colors, 0, 256);
+      SDL_SetPaletteColors(primary_surface->format->palette, colors, 0, 256);
 }
 
 //
@@ -205,7 +215,7 @@ void SDLVideoDriver::SetPrimaryBuffer()
 {
    int bump = (video.width == 512 || video.width == 1024) ? 4 : 0;
 
-   if(sdlscreen)
+   if(window)
    {
       primary_surface = 
          SDL_CreateRGBSurface(SDL_SWSURFACE, video.width + bump, video.height,
@@ -228,8 +238,11 @@ void SDLVideoDriver::SetPrimaryBuffer()
 void SDLVideoDriver::ShutdownGraphicsPartway()
 {
    // haleyjd 06/21/06: use UpdateGrab here, not release
-   UpdateGrab();
-   sdlscreen = NULL;
+   UpdateGrab(window);
+   SDL_DestroyWindow(window);
+   window = nullptr;
+   SDL_DestroyRenderer(renderer);
+   renderer = nullptr;
    UnsetPrimaryBuffer();
 }
 
@@ -259,10 +272,11 @@ extern bool setsizeneeded;
 bool SDLVideoDriver::InitGraphicsMode()
 {
    // haleyjd 06/19/11: remember characteristics of last successful modeset
-   static int fallback_w     = 640;
-   static int fallback_h     = 480;
-   static int fallback_bd    =   8;
-   static int fallback_flags = SDL_SWSURFACE;
+   static int fallback_w       = 640;
+   static int fallback_h       = 480;
+   static int fallback_bd      =   8;
+   static int fallback_w_flags = SDL_WINDOW_ALLOW_HIGHDPI;
+   static int fallback_r_flags = SDL_RENDERER_SOFTWARE;
 
    bool wantfullscreen = false;
    bool wantvsync      = false;
@@ -271,7 +285,8 @@ bool SDLVideoDriver::InitGraphicsMode()
    int  v_w            = 640;
    int  v_h            = 480;
    int  v_bd           = 8;
-   int  flags          = SDL_SWSURFACE;
+   int  window_flags   = SDL_WINDOW_ALLOW_HIGHDPI;
+   int  renderer_flags = SDL_RENDERER_TARGETTEXTURE;
 
    // haleyjd 12/03/07: cross-bit-depth support
    if(M_CheckParm("-8in32"))
@@ -306,25 +321,34 @@ bool SDLVideoDriver::InitGraphicsMode()
    I_CheckVideoCmds(&v_w, &v_h, &wantfullscreen, &wantvsync, &wanthardware,
                     &wantframe);
 
+   // FIXME: Wat do about SDL_HWSURFACE
    if(wanthardware)
-      flags = SDL_HWSURFACE;
+      SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "1"); // FIXME: Is this right?
+   else
+      renderer_flags = SDL_RENDERER_SOFTWARE;
 
+   // FIXME: Wat do about SDL_HWSURFACE
    if(wantvsync)
-      flags = SDL_HWSURFACE | SDL_DOUBLEBUF;
+      renderer_flags |= SDL_RENDERER_PRESENTVSYNC;
 
    if(wantfullscreen)
-      flags |= SDL_FULLSCREEN;
+   {
+      SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "1");
+      window_flags |= SDL_WINDOW_FULLSCREEN;
+   }
 
    // haleyjd 10/27/09
    if(!wantframe)
-      flags |= SDL_NOFRAME;
+      window_flags |= SDL_WINDOW_BORDERLESS;
      
-   if(!SDL_VideoModeOK(v_w, v_h, v_bd, flags) ||
-      !(sdlscreen = SDL_SetVideoMode(v_w, v_h, v_bd, flags)))
+   if(!(window = SDL_CreateWindow(ee_wmCaption,
+                                  SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                  v_w, v_h, window_flags)))
    {
       // try 320x200w safety mode
-      if(!SDL_VideoModeOK(fallback_w, fallback_h, fallback_bd, fallback_flags) ||
-         !(sdlscreen = SDL_SetVideoMode(fallback_w, fallback_h, fallback_bd, fallback_flags)))
+      if(!(window = SDL_CreateWindow(ee_wmCaption,
+                                     SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                     fallback_w, fallback_h, fallback_w_flags)))
       {
          I_FatalError(I_ERR_KILL,
                       "I_SDLInitGraphicsMode: couldn't set mode %dx%dx%d;\n"
@@ -335,30 +359,39 @@ bool SDLVideoDriver::InitGraphicsMode()
       }
 
       // reset these for below population of video struct
-      v_w   = fallback_w;
-      v_h   = fallback_h;
-      v_bd  = fallback_bd;
-      flags = fallback_flags;
+      v_w          = fallback_w;
+      v_h          = fallback_h;
+      v_bd         = fallback_bd;
+      window_flags = fallback_w_flags;
+   }
+
+   if(!(renderer = SDL_CreateRenderer(window, -1, renderer_flags)))
+   {
+      if(!(renderer = SDL_CreateRenderer(window, -1, fallback_r_flags)))
+      {
+         I_FatalError(I_ERR_KILL, "Renderer creation explod: %s\n", SDL_GetError());
+      }
+
+      fallback_r_flags = renderer_flags;
    }
 
    // Record successful mode set for use as a fallback mode
    fallback_w     = v_w;
    fallback_h     = v_h;
    fallback_bd    = v_bd;
-   fallback_flags = flags;
+   fallback_w_flags = window_flags;
+   fallback_r_flags = renderer_flags;
 
    // haleyjd 10/09/05: keep track of fullscreen state
-   fullscreen = (sdlscreen->flags & SDL_FULLSCREEN) == SDL_FULLSCREEN;
+   fullscreen = (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN) == SDL_WINDOW_FULLSCREEN;
 
    // haleyjd 12/03/07: if the video surface is not high-color, we
    // disable cross-bit-depth drawing for efficiency
-   if(sdlscreen->format->BitsPerPixel == 8)
+   if(SDL_GetWindowSurface(window)->format->BitsPerPixel == 8)
       crossbitdepth = false;
 
-   SDL_WM_SetCaption(ee_wmCaption, ee_wmCaption);
-
-   UpdateFocus();
-   UpdateGrab();
+   UpdateFocus(window);
+   UpdateGrab(window);
 
    // check for letterboxing
    if(I_VideoShouldLetterbox(v_w, v_h))
@@ -388,7 +421,7 @@ bool SDLVideoDriver::InitGraphicsMode()
    SetPrimaryBuffer();
    
    // haleyjd 11/12/09: set surface palettes immediately
-   I_SDLSetPaletteDirect((byte *)wGlobalDir.cacheLumpName("PLAYPAL", PU_CACHE));
+   I_SDLSetPaletteDirect(window, (byte *)wGlobalDir.cacheLumpName("PLAYPAL", PU_CACHE));
 
    return false;
 }
