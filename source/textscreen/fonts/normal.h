@@ -1,5 +1,3 @@
-// Emacs style mode select   -*- C -*-
-//-----------------------------------------------------------------------------
 /* Font data generated from normal.bmp; do not edit.
    Please see textscreen/fonts/README for copyright
    information. */

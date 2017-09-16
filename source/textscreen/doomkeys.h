@@ -1,5 +1,3 @@
-// Emacs style mode select   -*- C -*-
-//-----------------------------------------------------------------------------
 //
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
