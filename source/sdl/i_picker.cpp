@@ -461,22 +461,22 @@ static void I_Pick_MainLoop(void)
             I_Pick_MouseEvent(&ev, &doloop);
             break;
          case SDL_KEYDOWN:
-            switch(ev.key.keysym.sym)
+            switch(ev.key.keysym.scancode)
             {
-            case SDLK_ESCAPE:  
+            case SDL_SCANCODE_ESCAPE:
                I_Pick_DoAbort();
                break;
-            case SDLK_BACKSPACE:
+            case SDL_SCANCODE_BACKSPACE:
                doloop = false;
                currentiwad = -1; // erase selection
                break;
-            case SDLK_RETURN:
+            case SDL_SCANCODE_RETURN:
                doloop = false;
                break;
-            case SDLK_RIGHT:
+            case SDL_SCANCODE_RIGHT:
                I_Pick_DoRight();
                break;
-            case SDLK_LEFT:
+            case SDL_SCANCODE_LEFT:
                I_Pick_DoLeft();
                break;
             default:
@@ -509,6 +509,10 @@ static void I_Pick_Shutdown(void)
 {
    I_Pick_FreeWad();
    I_Pick_FreeImages();
+
+   // the window needs to be destroyed
+   if(pickvideoinit)
+      SDL_DestroyWindow(pickwindow);
 
 //   haleyjd: I hate SDL.
 //   if(pickvideoinit)

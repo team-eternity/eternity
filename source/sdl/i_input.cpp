@@ -603,10 +603,10 @@ static void I_GetEvent(SDL_Window *window)
          if(ev.key.keysym.mod & KMOD_LALT)
          {
             // Prevent executing action on Alt-Tab
-            if(ev.key.keysym.sym == SDLK_TAB)
+            if(ev.key.keysym.scancode == SDL_SCANCODE_TAB)
                break;
             // Immediately exit on Alt+F4 ("Boss Key")
-            else if(ev.key.keysym.sym == SDLK_F4)
+            else if(ev.key.keysym.scancode == SDL_SCANCODE_F4)
             {
                I_QuitFast();
                break;
@@ -614,9 +614,9 @@ static void I_GetEvent(SDL_Window *window)
          }
 #else
          // Also provide macOS option
-         if(ev.key.keysym.mod & KMOD_LMETA)
+         if(ev.key.keysym.mod & KMOD_LGUI)
          {
-            if(ev.key.keysym.sym == SDLK_q)
+            if(ev.key.keysym.sym == SDL_SCANCODE_Q)
             {
                I_QuitFast();
                break;
