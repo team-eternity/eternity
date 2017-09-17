@@ -35,6 +35,7 @@
 
 #include "e_lib.h"
 #include "w_wad.h"
+#include "xl_animdefs.h"
 #include "xl_emapinfo.h"
 #include "xl_mapinfo.h"
 #include "xl_musinfo.h"
@@ -487,6 +488,7 @@ void XL_ParseHexenScripts()
    XL_ParseEMapInfo(); // Eternity: EMAPINFO
    XL_ParseMapInfo();  // Hexen:    MAPINFO
    XL_ParseMusInfo();  // Risen3D:  MUSINFO
+   XL_ParseAnimDefs();  // Hexen: ANIMDEFS
 
    // FIXME: do this when it's time, not now yet.
 // XL_ParseUMapInfo();  // Universal MAPINFO new format

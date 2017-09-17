@@ -1300,14 +1300,14 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
          // killough 3/7/98:
          // support for drawn heights coming from different sector
       case EV_STATIC_TRANSFER_HEIGHTS:
-         sec = sides[*lines[i].sidenum].sector-sectors;
+         sec = eindex(sides[*lines[i].sidenum].sector-sectors);
          P_SetupHeightTransfer(i, sec, setupSettings); // haleyjd 03/04/07
          break;
 
          // killough 3/16/98: Add support for setting
          // floor lighting independently (e.g. lava)
       case EV_STATIC_LIGHT_TRANSFER_FLOOR:
-         sec = sides[*lines[i].sidenum].sector-sectors;
+         sec = eindex(sides[*lines[i].sidenum].sector-sectors);
          for(s = -1; (s = P_FindSectorFromLineArg0(lines+i,s)) >= 0;)
             sectors[s].floorlightsec = sec;
          break;
@@ -1315,7 +1315,7 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
          // killough 4/11/98: Add support for setting
          // ceiling lighting independently
       case EV_STATIC_LIGHT_TRANSFER_CEILING:
-         sec = sides[*lines[i].sidenum].sector-sectors;
+         sec = eindex(sides[*lines[i].sidenum].sector-sectors);
          for(s = -1; (s = P_FindSectorFromLineArg0(lines+i,s)) >= 0;)
             sectors[s].ceilinglightsec = sec;
          break;
@@ -1821,7 +1821,7 @@ void P_SetLineID(line_t *line, int id)
       int chain = (unsigned int)line->tag % (unsigned int)numlines; // Hash func
    
       line->nexttag = lines[chain].firsttag;   // Prepend linedef to chain
-      lines[chain].firsttag = line - lines;
+      lines[chain].firsttag = eindex(line - lines);
    }
 }
 
@@ -2027,7 +2027,7 @@ static void P_addLineToAttachList(const line_t *line, int *&attached,
          attached = erealloc(int *, attached, sizeof(int) * maxattach);
       }
 
-      attached[numattach++] = line - lines;
+      attached[numattach++] = eindex(line - lines);
    }
 
    // SoM 12/8/02: Don't attach the backsector.
@@ -2175,8 +2175,8 @@ void P_AttachLines(const line_t *cline, bool ceiling)
    numattach = 0;
    for(start = 0; start < alistsize; ++start)
    {
-      int front = lines[alist[start]].frontsector - sectors;
-      int back  = lines[alist[start]].backsector - sectors;
+      int front = eindex(lines[alist[start]].frontsector - sectors);
+      int back  = eindex(lines[alist[start]].backsector - sectors);
 
       // Check the frontsector for uniqueness in the list.
       for(i = 0; i < numattach; ++i)
@@ -2410,7 +2410,7 @@ static void P_attachSectors(UDMFSetupSettings &settings)
          efree(sectors[i].f_asurfaces);
          sectors[i].f_asurfaces = estructalloctag(attachedsurface_t, 
             floornew.getLength(), PU_LEVEL);
-         sectors[i].f_asurfacecount = floornew.getLength();
+         sectors[i].f_asurfacecount = static_cast<int>(floornew.getLength());
          memcpy(sectors[i].f_asurfaces, &floornew[0], 
             sectors[i].f_asurfacecount * sizeof(attachedsurface_t));
       }
@@ -2419,7 +2419,7 @@ static void P_attachSectors(UDMFSetupSettings &settings)
          efree(sectors[i].c_asurfaces);
          sectors[i].c_asurfaces = estructalloctag(attachedsurface_t,
             ceilingnew.getLength(), PU_LEVEL);
-         sectors[i].c_asurfacecount = ceilingnew.getLength();
+         sectors[i].c_asurfacecount = static_cast<int>(ceilingnew.getLength());
          memcpy(sectors[i].c_asurfaces, &ceilingnew[0],
             sectors[i].c_asurfacecount * sizeof(attachedsurface_t));
       }
@@ -2967,7 +2967,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       line->sidenum[1] = line->sidenum[0];
       line->flags &= ~ML_BLOCKING;
       line->flags |= ML_TWOSIDED;
-      line->intflags |= MLI_POLYPORTALLINE;
+      line->intflags |= MLI_1SPORTALLINE;
    };
 
    bool otherIsEdge = false;
@@ -3055,7 +3055,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       }
 
       // Doom format doesn't allow rotating portals
-      portal = R_GetAnchoredPortal(line - lines, s, false, false, 0);
+      portal = R_GetAnchoredPortal(eindex(line - lines), s, false, false, 0);
       break;
 
    case portal_twoway:
@@ -3100,13 +3100,13 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       if(effects == portal_lineonly)
       {
          // special case for line portals
-         portal = R_GetTwoWayPortal(s, line - lines, false, false, 0);
+         portal = R_GetTwoWayPortal(s, eindex(line - lines), false, false, 0);
          line->beyondportalline = &lines[s];
          P_SetPortal(sector, line, portal, portal_lineonly);
          return;
       }
 
-      portal = R_GetTwoWayPortal(line - lines, s, false, false, 0);
+      portal = R_GetTwoWayPortal(eindex(line - lines), s, false, false, 0);
       break;
 
    case portal_linked:
@@ -3215,7 +3215,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       if(staticFn == EV_STATIC_PORTAL_LINE_PARAM_COMPAT &&
          line->args[ev_LinePortal_Arg_Type] != ev_LinePortal_Type_EEClassic)
       {
-         portal = R_GetLinkedPortal(s, line - lines, planez, toid, fromid);
+         portal = R_GetLinkedPortal(s, eindex(line - lines), planez, toid, fromid);
          line->beyondportalline = &lines[s];
          P_SetPortal(sector, line, portal, portal_lineonly);
 
@@ -3245,13 +3245,13 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       {
          if (!otherIsEdge)
          {
-            portal = R_GetLinkedPortal(line - lines, s, planez, fromid, toid);
+            portal = R_GetLinkedPortal(eindex(line - lines), s, planez, fromid, toid);
             lines[s].beyondportalline = line;
             P_SetPortal(lines[s].frontsector, lines + s, portal, portal_lineonly);
          }
          
          // ioanch 20160226: add partner portals
-         portal_t *portal2 = R_GetLinkedPortal(s, line - lines, planez, toid, fromid);
+         portal_t *portal2 = R_GetLinkedPortal(s, eindex(line - lines), planez, toid, fromid);
          line->beyondportalline = &lines[s];
          P_SetPortal(sector, line, portal2, portal_lineonly);
 
@@ -3270,7 +3270,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          return;
       }
       else  // prepare it for sector portal
-         portal = R_GetLinkedPortal(line - lines, s, planez, fromid, toid);
+         portal = R_GetLinkedPortal(eindex(line - lines), s, planez, fromid, toid);
       break;
 
    default:

@@ -324,7 +324,7 @@ void P_MovePlayer(player_t* player)
    if((!demo_compatibility && demo_version < 203) || 
       (cmd->forwardmove | cmd->sidemove)) // killough 10/98
    {
-      if (onground || mo->flags & MF_BOUNCES) // killough 8/9/98
+      if(onground || mo->flags & MF_BOUNCES) // killough 8/9/98
       {
          int friction, movefactor = P_GetMoveFactor(mo, &friction);
 
@@ -341,31 +341,35 @@ void P_MovePlayer(player_t* player)
          if(!(mo->flags4 & MF4_FLY) || !pitchedflight)
             pitch = 0;
 
-         if (cmd->forwardmove)
+         if(cmd->forwardmove)
          {
             P_Bob(player, mo->angle, pitch, cmd->forwardmove*bobfactor);
             P_Thrust(player, mo->angle, pitch, cmd->forwardmove*movefactor);
          }
          
-         if (cmd->sidemove)
+         if(cmd->sidemove)
          {
             P_Bob(player, mo->angle-ANG90, 0, cmd->sidemove*bobfactor);
             P_Thrust(player, mo->angle-ANG90, 0, cmd->sidemove*movefactor);
          }
       }
-      else if(!comp[comp_aircontrol])
+      else if(!comp[comp_aircontrol])  // Do not move player unless aircontrol
       {
-         // Do not move player 
          if(cmd->forwardmove)
-         {
             P_Thrust(player, mo->angle, 0, FRACUNIT >> 8);
-         }
 
          // TODO: disable this part in Strife
          if(cmd->sidemove)
-         {
             P_Thrust(player, mo->angle, 0, FRACUNIT >> 8);
-         }
+
+         // NOTE: This movement behaviour is like in Hexen, and the sidemove
+         // case will also have to be removed in the Strife game mode, so we
+         // have accurate gameplay when attempting to jump on high objects.
+
+         // When we add user-settable air control in EMAPINFO or playerclass
+         // properties however, the P_Thrust vector will have to be as user
+         // expects: change velocity according to direction, no longer having
+         // to emulate these old games' behaviours.
       }
 
       if(mo->state == states[mo->info->spawnstate])
@@ -452,6 +456,7 @@ void P_DeathThink(player_t *player)
    // and Hexen.
    if(!E_IsPlayerClassThingType(player->mo->type))
    {
+      player->prevpitch = player->pitch;
       if(player->mo->z <= player->mo->floorz && player->pitch > -ANGLE_1 * 15)
          player->pitch -= 2*ANGLE_1/3;
    }

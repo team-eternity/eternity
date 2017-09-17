@@ -168,6 +168,9 @@ void  Z_SysFree(void *p);
 #define estrnonempty(str) ((str) && *(str))
 #define estrempty(str)    (!estrnonempty((str)))
 
+// Difference between two pointers, to avoid spelling static_cast<int> every time
+#define eindex static_cast<int>
+
 // Doom-style printf
 void doom_printf(const char *, ...) __attribute__((format(printf,1,2)));
 

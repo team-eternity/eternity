@@ -158,6 +158,7 @@ int UnknownThingType;
 
 // Graphic Properites
 #define ITEM_TNG_TRANSLUC     "translucency"
+#define ITEM_TNG_TRANMAP      "tranmap"
 #define ITEM_TNG_COLOR        "translation"
 #define ITEM_TNG_SKINSPRITE   "skinsprite"
 #define ITEM_TNG_DEFSPRITE    "defaultsprite"
@@ -477,6 +478,7 @@ static cfg_opt_t bloodbeh_opts[] =
 
 // translation value-parsing callback
 static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
+static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
 
 #define THINGTYPE_FIELDS \
    CFG_INT(ITEM_TNG_DOOMEDNUM,       -1,            CFGF_NONE), \
@@ -552,6 +554,7 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_INT_CB(ITEM_TNG_FASTSPEED,    0,             CFGF_NONE, E_IntOrFixedCB), \
    CFG_INT_CB(ITEM_TNG_TRANSLUC,     65536,         CFGF_NONE, E_TranslucCB  ), \
    CFG_INT_CB(ITEM_TNG_COLOR,        0,             CFGF_NONE, E_ColorCB     ), \
+   CFG_INT_CB(ITEM_TNG_TRANMAP,     -1,             CFGF_NONE, E_TranMapCB   ), \
    CFG_MVPROP(ITEM_TNG_DAMAGEFACTOR, dmgf_opts,     CFGF_MULTI|CFGF_NOCASE   ), \
    CFG_MVPROP(ITEM_TNG_DROPITEM,     dropitem_opts, CFGF_MULTI|CFGF_NOCASE   ), \
    CFG_MVPROP(ITEM_TNG_COLSPAWN,     colspawn_opts, CFGF_NOCASE              ), \
@@ -1822,7 +1825,7 @@ static int E_ColorCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
    int num;
    char *endptr;
 
-   num = strtol(value, &endptr, 0);
+   num = static_cast<int>(strtol(value, &endptr, 0));
 
    // try lump name
    if(*endptr != '\0')
@@ -1842,6 +1845,33 @@ static int E_ColorCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
    {
       *(int *)result = num % TRANSLATIONCOLOURS;
    }
+
+   return 0;
+}
+
+//
+// Translucency map support
+//
+static int E_TranMapCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
+                       void *result)
+{
+   int *target = static_cast<int *>(result);
+   if(!strcasecmp(value, "none"))   // accept none
+   {
+      *target = -1;
+      return 0;
+   }
+
+   // try lump name
+   int trnum = W_CheckNumForName(value);
+   if(trnum < 0 || W_LumpLength(trnum) != 65536)
+   {
+      // Do not error out from this
+      E_EDFLoggedWarning(2, "Bad translucency lump '%s'\n", value);
+      *target = -1;
+      return 0;
+   }
+   *target = trnum;
 
    return 0;
 }
@@ -2405,6 +2435,10 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    if(IS_SET(ITEM_TNG_TRANSLUC))
       mobjinfo[i]->translucency = cfg_getint(thingsec, ITEM_TNG_TRANSLUC);
 
+   // process translucency map
+   if(IS_SET(ITEM_TNG_TRANMAP))
+      mobjinfo[i]->tranmap = cfg_getint(thingsec, ITEM_TNG_TRANMAP);
+
    // process bloodcolor
    if(IS_SET(ITEM_TNG_BLOODCOLOR))
       mobjinfo[i]->bloodcolor = cfg_getint(thingsec, ITEM_TNG_BLOODCOLOR);
@@ -2593,7 +2627,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       char *endpos = nullptr;
       tempstr = cfg_getstr(thingsec, ITEM_TNG_MOD);
 
-      tempint = strtol(tempstr, &endpos, 0);
+      tempint = static_cast<int>(strtol(tempstr, &endpos, 0));
       
       if(endpos && *endpos == '\0')
          mod = E_DamageTypeForNum(tempint);  // it is a number

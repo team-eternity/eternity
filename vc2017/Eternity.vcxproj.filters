@@ -915,6 +915,9 @@
     <ClCompile Include="..\source\xl_umapinfo.cpp">
       <Filter>Source Files\XL_\XL_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\xl_animdefs.cpp">
+      <Filter>Source Files\XL_\XL_ Source</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\textscreen\txt_button.c">
       <Filter>Source Files\TXT_\TXT Source</Filter>
     </ClCompile>
@@ -1481,16 +1484,10 @@
     <ClInclude Include="..\Source\info.h">
       <Filter>Source Files\Misc\Misc Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\Win32\inttypes.h">
-      <Filter>Source Files\Misc\Misc Headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\Source\psnprntf.h">
       <Filter>Source Files\Misc\Misc Headers</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
-      <Filter>Source Files\Misc\Misc Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\Win32\stdint.h">
       <Filter>Source Files\Misc\Misc Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\tables.h">
@@ -1673,6 +1670,9 @@
     <ClInclude Include="..\source\xl_umapinfo.h">
       <Filter>Source Files\XL_\XL_ Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\xl_animdefs.h">
+      <Filter>Source Files\XL_\XL_ Headers</Filter>
+    </ClInclude>
     <ClInclude Include="..\source\textscreen\textscreen.h">
       <Filter>Source Files\TXT_\TXT Headers</Filter>
     </ClInclude>
@@ -1750,5 +1750,10 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Eternity.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="..\midiproc\midiproc.idl">
+      <Filter>Resource Files</Filter>
+    </Midl>
   </ItemGroup>
 </Project>

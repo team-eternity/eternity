@@ -599,7 +599,7 @@ static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
          tempstr = cfg_getnstr(sec, ITEM_FILTER_CHARS, i);
 
          if(strlen(tempstr) > 1)
-            tempnum = strtol(tempstr, &pos, 0);
+            tempnum = static_cast<int>(strtol(tempstr, &pos, 0));
 
          if(pos && *pos == '\0')
             f->chars[i] = tempnum;
@@ -614,7 +614,7 @@ static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
       tempstr = cfg_getstr(sec, ITEM_FILTER_START);
       
       if(strlen(tempstr) > 1)
-         tempnum = strtol(tempstr, &pos, 0);
+         tempnum = static_cast<int>(strtol(tempstr, &pos, 0));
 
       if(pos && *pos == '\0') // is it a number?
          f->start = tempnum;
@@ -625,7 +625,7 @@ static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
       tempstr = cfg_getstr(sec, ITEM_FILTER_END);
       
       if(strlen(tempstr) > 1)
-         tempnum = strtol(tempstr, &pos, 0);
+         tempnum = static_cast<int>(strtol(tempstr, &pos, 0));
 
       if(pos && *pos == '\0') // is it a number?
          f->end = tempnum;
@@ -794,7 +794,7 @@ static void E_ProcessFont(cfg_t *sec)
       tempstr = cfg_getstr(sec, ITEM_FONT_START);
 
       if(strlen(tempstr) > 1)
-         tempnum = strtol(tempstr, &pos, 0);
+         tempnum = static_cast<int>(strtol(tempstr, &pos, 0));
 
       if(pos && *pos == '\0') // it is a number?
          font->start = tempnum; 
@@ -809,7 +809,7 @@ static void E_ProcessFont(cfg_t *sec)
       tempstr = cfg_getstr(sec, ITEM_FONT_END);
 
       if(strlen(tempstr) > 1)
-         tempnum = strtol(tempstr, &pos, 0);
+         tempnum = static_cast<int>(strtol(tempstr, &pos, 0));
 
       if(pos && *pos == '\0') // is it a number?
          font->end = tempnum;

@@ -250,7 +250,7 @@ void TXT_DrawCodePageString(const char *s)
         }
     }
 
-    TXT_GotoXY(x + strlen(s), y);
+    TXT_GotoXY((int)(x + strlen(s)), y);
 }
 
 static void PutUnicodeChar(unsigned int c)

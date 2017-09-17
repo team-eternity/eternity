@@ -53,7 +53,7 @@ static unsigned int IntWidth(int val)
 
     TXT_snprintf(buf, sizeof(buf), "%i", val);
 
-    return strlen(buf);
+    return (unsigned)strlen(buf);
 }
 
 static unsigned int FloatWidth(float val, float step)

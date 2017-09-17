@@ -102,8 +102,16 @@
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
     <PreBuildEvent>
-      <Command>../autogenmidiproc.bat $(Platform)</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
+    <Midl>
+      <OutputDirectory>..\</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <GenerateStublessProxies>true</GenerateStublessProxies>
+      <ApplicationConfigurationMode>true</ApplicationConfigurationMode>
+      <StructMemberAlignment>8</StructMemberAlignment>
+    </Midl>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -124,8 +132,16 @@
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
     <PreBuildEvent>
-      <Command>../autogenmidiproc.bat $(Platform)</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
+    <Midl>
+      <OutputDirectory>..\</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <GenerateStublessProxies>true</GenerateStublessProxies>
+      <ApplicationConfigurationMode>true</ApplicationConfigurationMode>
+      <StructMemberAlignment>8</StructMemberAlignment>
+    </Midl>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -148,8 +164,16 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PreBuildEvent>
-      <Command>../autogenmidiproc.bat $(Platform)</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
+    <Midl>
+      <OutputDirectory>..\</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <GenerateStublessProxies>true</GenerateStublessProxies>
+      <ApplicationConfigurationMode>true</ApplicationConfigurationMode>
+      <StructMemberAlignment>8</StructMemberAlignment>
+    </Midl>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -172,8 +196,18 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
     <PreBuildEvent>
-      <Command>../autogenmidiproc.bat $(Platform)</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
+    <Midl />
+    <Midl />
+    <Midl>
+      <OutputDirectory>..\</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <GenerateStublessProxies>true</GenerateStublessProxies>
+      <ApplicationConfigurationMode>true</ApplicationConfigurationMode>
+      <StructMemberAlignment>8</StructMemberAlignment>
+    </Midl>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\main.cpp" />
@@ -181,6 +215,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\midiproc.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="..\midiproc.idl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
