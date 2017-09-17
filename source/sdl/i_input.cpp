@@ -569,9 +569,9 @@ static void I_GetEvent(SDL_Window *window)
    SDL_Event  ev;
    int        sendmouseevent = 0;
    int        buttons        = 0;
-   event_t    d_event        = { ev_keydown, 0, 0, 0, '\0' };
-   event_t    mouseevent     = { ev_mouse,   0, 0, 0, '\0' };
-   event_t    tempevent      = { ev_keydown, 0, 0, 0, '\0' }; 
+   event_t    d_event        = { ev_keydown, 0, 0, 0, '\0', false };
+   event_t    mouseevent     = { ev_mouse,   0, 0, 0, '\0', false };
+   event_t    tempevent      = { ev_keydown, 0, 0, 0, '\0', false };
 
    // [CG] 01/31/2012: Ensure we have the latest info about focus and mouse
    //                  grabbing.
@@ -593,6 +593,7 @@ static void I_GetEvent(SDL_Window *window)
       {
       case SDL_KEYDOWN:
          d_event.type = ev_keydown;
+         d_event.repeat = ev.key.repeat;
          // FIXME: Choco has no call here
          d_event.data1 = I_TranslateKey(&ev.key.keysym);
 

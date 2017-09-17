@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2017 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -329,13 +329,13 @@ bool SDLVideoDriver::InitGraphicsMode()
 
    // FIXME: Wat do about SDL_HWSURFACE
    if(wantvsync)
-      renderer_flags |= SDL_RENDERER_PRESENTVSYNC;
-
-   if(wantfullscreen)
    {
       SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "1");
-      window_flags |= SDL_WINDOW_FULLSCREEN;
+      renderer_flags |= SDL_RENDERER_PRESENTVSYNC;
    }
+
+   if(wantfullscreen)
+      window_flags |= SDL_WINDOW_FULLSCREEN;
 
    // haleyjd 10/27/09
    if(!wantframe)

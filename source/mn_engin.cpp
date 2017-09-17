@@ -1,7 +1,7 @@
 // Emacs style mode select -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2017 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -41,6 +41,7 @@
 #include "e_fonts.h"
 #include "g_bind.h"    // haleyjd: dynamic key bindings
 #include "g_game.h"
+#include "hal/i_timer.h"
 #include "hu_over.h"
 #include "i_video.h"
 #include "m_collection.h"
@@ -787,6 +788,7 @@ bool MN_Responder(event_t *ev)
    static bool ctrldown = false;
    static bool shiftdown = false;
    static bool altdown = false;
+   static unsigned lastacceptedtime = 0;
 
    memset(tempstr, 0, sizeof(tempstr));
 
@@ -809,6 +811,15 @@ bool MN_Responder(event_t *ev)
    // menu doesn't want keyup events
    if(ev->type == ev_keyup)
       return false;
+
+   if(ev->repeat)
+   {
+      const unsigned int currtime = i_haltimer.GetTicks();
+      // only accept repeated input every 120 ms
+      if(currtime < lastacceptedtime + 120)
+         return false;
+      lastacceptedtime = currtime;
+   }
 
    // are we displaying a widget?
    if(current_menuwidget)
