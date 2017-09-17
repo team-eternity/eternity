@@ -625,6 +625,7 @@ static void I_GetEvent(SDL_Window *window)
          }
 #endif
 
+         // SDL_FIXME: Should this #if be removed? Seems to act the same regardless...
 #if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS)
          // Capslock on Windows alternates between key down and key up
          // events. When we get a keydown, we need to defer a keyup event.
@@ -650,18 +651,6 @@ static void I_GetEvent(SDL_Window *window)
          d_event.type = ev_keyup;
          d_event.data1 = I_TranslateKey(&ev.key.keysym);
 
-#if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS)
-         // When we get a keyup for capslock, we need to change it into a 
-         // keydown, and then enqueue a keyup to happen later.
-         if(d_event.data1 == KEYD_CAPSLOCK)
-         {
-            d_event.type = ev_keydown;
-
-            tempevent.type  = ev_keyup;
-            tempevent.data1 = KEYD_CAPSLOCK;
-            I_AddDeferredEvent(tempevent, gametic + 1);
-         }
-#endif
          D_PostEvent(&d_event);
          break;
 
