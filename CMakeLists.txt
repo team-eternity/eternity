@@ -285,27 +285,27 @@ ENDIF (NOT HAVE_STDINT_H)
 ######################### Find Needed Libs #####################################
 FIND_PACKAGE (OpenGL)
 
-FIND_PACKAGE (SDL REQUIRED)
-INCLUDE_DIRECTORIES (${SDL_INCLUDE_DIR})
+FIND_PACKAGE (SDL2 REQUIRED)
+INCLUDE_DIRECTORIES (${SDL2_INCLUDE_DIR})
 
-FIND_PACKAGE (SDL_mixer REQUIRED)
-INCLUDE_DIRECTORIES (${SDLMIXER_INCLUDE_DIR})
+FIND_PACKAGE (SDL2_mixer REQUIRED)
+INCLUDE_DIRECTORIES (${SDL2MIXER_INCLUDE_DIR})
 
-FIND_PACKAGE (SDL_net REQUIRED)
-INCLUDE_DIRECTORIES (${SDLNET_INCLUDE_DIR})
+FIND_PACKAGE (SDL2_net REQUIRED)
+INCLUDE_DIRECTORIES (${SDLN2ET_INCLUDE_DIR})
 
 ## FIXME: This is an inelegant hack to find, and grab all needed
-## .dll support files on windows. It works by looking for SDL.dll
+## .dll support files on windows. It works by looking for SDL2.dll
 ## then taking every .dll file found in that directory from your SDK.
 ## This ensures you get sdl and all of it's needed .dll files, but may
 ## also grab unneeded .dll files.
 IF (WIN32)
-       FIND_PATH (SDL_SUPPORT_LIBS_DIR SDL.dll
+       FIND_PATH (SDL2_SUPPORT_LIBS_DIR SDL2.dll
                HINTS
-               $ENV{SDLDIR}
+               $ENV{SDL2DIR}
                PATH_SUFFIXES lib64 lib
                PATHS)
-       FILE (GLOB SDL_SUPPORT_LIBS ${SDL_SUPPORT_LIBS_DIR}/*.dll)
+       FILE (GLOB SDL2_SUPPORT_LIBS ${SDL2_SUPPORT_LIBS_DIR}/*.dll)
 ENDIF (WIN32)
 ################################################################################
 ######################### Set Build Targets   ##################################
@@ -330,7 +330,7 @@ ENDIF (WIN32 AND MSVC)
 ## FIXME: This is a continuation of the Windows SDL inelegant hack. This does
 ## the actual installation of those support libraries.
 IF (WIN32)
-        INSTALL (PROGRAMS ${SDL_SUPPORT_LIBS}
+        INSTALL (PROGRAMS ${SDL2_SUPPORT_LIBS}
                 DESTINATION ${LIB_DIR})
 ENDIF (WIN32)
 
