@@ -458,7 +458,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    bool    wantframe      = true;
    int     v_w            = 640;
    int     v_h            = 480;
-   int     window_flags   = SDL_WINDOW_OPENGL;
+   int     window_flags   = SDL_WINDOW_OPENGL| SDL_WINDOW_ALLOW_HIGHDPI;
    int     flags_renderer = SDL_RENDERER_ACCELERATED|SDL_RENDERER_TARGETTEXTURE;
    GLvoid *tempbuffer     = NULL;
    GLint   texformat      = GL_RGBA8;

@@ -276,7 +276,7 @@ bool SDLVideoDriver::InitGraphicsMode()
    static int fallback_h       = 480;
    static int fallback_bd      =   8;
    static int fallback_w_flags = SDL_WINDOW_ALLOW_HIGHDPI;
-   static int fallback_r_flags = SDL_RENDERER_SOFTWARE;
+   static int fallback_r_flags = SDL_RENDERER_SOFTWARE|SDL_RENDERER_TARGETTEXTURE;
 
    bool wantfullscreen = false;
    bool wantvsync      = false;
@@ -286,7 +286,7 @@ bool SDLVideoDriver::InitGraphicsMode()
    int  v_h            = 480;
    int  v_bd           = 8;
    int  window_flags   = SDL_WINDOW_ALLOW_HIGHDPI;
-   int  renderer_flags = SDL_RENDERER_TARGETTEXTURE;
+   int  renderer_flags = SDL_RENDERER_SOFTWARE|SDL_RENDERER_TARGETTEXTURE;
 
    // haleyjd 12/03/07: cross-bit-depth support
    if(M_CheckParm("-8in32"))
