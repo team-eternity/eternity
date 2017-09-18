@@ -89,7 +89,7 @@ void UpdateGrab(SDL_Window *window)
       int window_w, window_h;
 
       SDL_SetRelativeMouseMode(SDL_FALSE);
-      // FIXME: Are two of these calls necessary?
+      // SDL_FIXME: Are two of these calls necessary?
       SDL_GetRelativeMouseState(nullptr, nullptr);
 
       // When releasing the mouse from grab, warp the mouse cursor to
@@ -258,7 +258,7 @@ static int I_TranslateKey(SDL_Keysym *sym)
    case SDL_SCANCODE_INSERT:      rc = KEYD_INSERT;      break;
    case SDL_SCANCODE_DELETE:      rc = KEYD_DEL;         break;
    default:
-      // FIXME: Is this correct?
+      // SDL_FIXME: Is this correct?
       rc = sym->sym;
       break;
    }
@@ -594,7 +594,7 @@ static void I_GetEvent(SDL_Window *window)
       case SDL_KEYDOWN:
          d_event.type = ev_keydown;
          d_event.repeat = ev.key.repeat;
-         // FIXME: Choco has no call here
+         // SDL_FIXME: Choco has no call here?
          d_event.data1 = I_TranslateKey(&ev.key.keysym);
 
 #if (EE_CURRENT_PLATFORM != EE_PLATFORM_MACOSX)
@@ -625,7 +625,8 @@ static void I_GetEvent(SDL_Window *window)
          }
 #endif
 
-         // SDL_FIXME: Should this #if be removed? Seems to act the same regardless...
+         // SDL_FIXME: Should this #if and the block therein be removed?
+         // Seems to act the same regardless of if it's there or not...
 #if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS)
          // Capslock on Windows alternates between key down and key up
          // events. When we get a keydown, we need to defer a keyup event.
@@ -637,7 +638,7 @@ static void I_GetEvent(SDL_Window *window)
             I_AddDeferredEvent(tempevent, gametic + 1);
          }
 #endif
-         // FIXME: SDL_TEXTINPUT handling
+         // SDL_FIXME: SDL_TEXTINPUT handling
          //if(unicodeinput &&
          //   ev.key.keysym.unicode > 31 && ev.key.keysym.unicode < 127)
          //   d_event.character = (char)(ev.key.keysym.unicode);

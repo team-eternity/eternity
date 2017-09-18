@@ -321,16 +321,19 @@ bool SDLVideoDriver::InitGraphicsMode()
    I_CheckVideoCmds(&v_w, &v_h, &wantfullscreen, &wantvsync, &wanthardware,
                     &wantframe);
 
-   // FIXME: Wat do about SDL_HWSURFACE
+   // SDL_FIXME: Wat do about SDL_HWSURFACE
    if(wanthardware)
-      SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "1"); // FIXME: Is this right?
+      SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "1"); // SDL_FIXME: Is this right?
    else
-      renderer_flags = SDL_RENDERER_SOFTWARE;
+   {
+      SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "0"); // SDL_FIXME: Is this right?
+      renderer_flags = SDL_RENDERER_SOFTWARE; // SDL_FIXME: Is this right?
+   }
 
-   // FIXME: Wat do about SDL_HWSURFACE
+   // SDL_FIXME: Wat do about SDL_HWSURFACE
    if(wantvsync)
    {
-      SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "1");
+      SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "1"); // SDL_FIXME: Is this right?
       renderer_flags |= SDL_RENDERER_PRESENTVSYNC;
    }
 

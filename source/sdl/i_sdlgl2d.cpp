@@ -483,7 +483,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    if(cfg_gl_filter_type >= 0 && cfg_gl_filter_type < CFG_GL_NUMFILTERS)
       texfiltertype = textureFilterParams[cfg_gl_filter_type];
 
-   // FIXME: Do we need to flags_renderer |= SDL_RENDERER_PRESENTVSYNC?
+   // SDLFIXME: Do we need to flags_renderer |= SDL_RENDERER_PRESENTVSYNC?
    // haleyjd 04/11/03: "vsync" or page-flipping support
    if(use_vsync)
       wantvsync = true;
@@ -535,7 +535,8 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    else
       format = SDL_PIXELFORMAT_RGB555;
 
-   // FIXME: I wanna use SDL_CreateRGBSurfaceWithFormat but it's not linking for some reason
+   // SDL_FIXME: I wanna use SDL_CreateRGBSurfaceWithFormat but it's not linking for some reason
+   // https://discourse.libsdl.org/t/sdl-creatergbsurfacewithformat-missing-from-vc-library/22098
    if(!(screen = SDL_CreateRGBSurface(0, v_w, v_h, colordepth, 0, 0, 0, 0)))
       I_FatalError(I_ERR_KILL, "Couldn't set RGB surface with colordepth %d\n", colordepth);
 

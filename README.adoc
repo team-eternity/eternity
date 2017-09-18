@@ -164,9 +164,9 @@ already set up Visual Studio.
 
 . Acquire the following libraries:
 +
- SDL-1.2
- SDL_mixer-1.2
- SDL_net-1.2
+ SDL-2.0
+ SDL_mixer-2.0
+ SDL_net-2.0
 
 . Extract them to a folder of your choosing, eg. `C:\Libs`.
 
@@ -181,11 +181,11 @@ Do this for both if you plan on building both.
 
 . Under the 'User Macros' section, click 'Add Macro'.
 
-. Enter `SDL1_2` for the name, and the directory you extracted SDL1.2 to as the value, eg. `C:\Libs\SDL-1.2.15`.
+. Enter `SDL2_0` for the name, and the directory you extracted SDL1.2 to as the value, eg. `C:\Libs\SDL2-2.0.5`.
 
 . Tick 'Set this macro as an environment variable in the build environment' and click OK.
 
-. Repeat the above 2 steps for `SDLMIXER1_2` (C:\Libs\SDL_mixer-1.2.12) and `SDLNET1_2` (C:\Libs\SDL_net-1.2.8).
+. Repeat the above 2 steps for `SDLMIXER2_0` (C:\Libs\SDL2_mixer-2.0.1) and `SDLNET2_0` (C:\Libs\SDL2_net-2.0.1).
 
 . Click OK to close the property pages window.
 
