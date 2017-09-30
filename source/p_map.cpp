@@ -2639,7 +2639,7 @@ static msecnode_t *P_GetSecnode(void)
    msecnode_t *node;
    
    return headsecnode ?
-   static_cast<void>(node = headsecnode), static_cast<void>(headsecnode = node->m_snext), node :
+   void(node = headsecnode), void(headsecnode = node->m_snext), node :
       (msecnode_t *)(Z_Malloc(sizeof *node, PU_LEVEL, NULL)); 
 }
 

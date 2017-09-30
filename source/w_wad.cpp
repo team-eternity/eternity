@@ -1196,13 +1196,13 @@ unsigned int WadDirectory::LumpNameHash(const char *s)
    using namespace ectype;
    unsigned int hash;
 
-   (void) ((static_cast<void>(hash =        toUpper(s[0])), s[1]) &&
-           (static_cast<void>(hash = hash*3+toUpper(s[1])), s[2]) &&
-           (static_cast<void>(hash = hash*2+toUpper(s[2])), s[3]) &&
-           (static_cast<void>(hash = hash*2+toUpper(s[3])), s[4]) &&
-           (static_cast<void>(hash = hash*2+toUpper(s[4])), s[5]) &&
-           (static_cast<void>(hash = hash*2+toUpper(s[5])), s[6]) &&
-           (static_cast<void>(hash = hash*2+toUpper(s[6])),
+   (void) ((void(hash =        toUpper(s[0])), s[1]) &&
+           (void(hash = hash*3+toUpper(s[1])), s[2]) &&
+           (void(hash = hash*2+toUpper(s[2])), s[3]) &&
+           (void(hash = hash*2+toUpper(s[3])), s[4]) &&
+           (void(hash = hash*2+toUpper(s[4])), s[5]) &&
+           (void(hash = hash*2+toUpper(s[5])), s[6]) &&
+           (void(hash = hash*2+toUpper(s[6])),
             hash = hash*2+toUpper(s[7]))
            );
    return hash;
