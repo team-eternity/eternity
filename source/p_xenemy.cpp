@@ -57,7 +57,7 @@ void QuakeThinker::Think()
    // quake is finished?
    if(this->duration == 0)
    {
-      this->removeThinker();
+      this->remove();
       return;
    }
 

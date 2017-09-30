@@ -80,6 +80,7 @@ extern bool modifiedgame;
 
 // compatibility with old engines (monster behavior, metrics, etc.)
 extern int compatibility, default_compatibility;          // killough 1/31/98
+extern bool vanilla_mode;  // ioanch
 
 extern int demo_version;           // killough 7/19/98: Version of demo
 extern int demo_subversion;

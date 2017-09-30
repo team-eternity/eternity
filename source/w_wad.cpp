@@ -936,7 +936,8 @@ bool WadDirectory::addDirectoryAsArchive(openwad_t &openData,
       std::sort(paths.begin(), paths.end());
 
       // we now have the files neatly ordered
-      lumpinfo_t *lump_p = reAllocLumpInfo(paths.getLength(), startlump);
+      lumpinfo_t *lump_p = reAllocLumpInfo(static_cast<int>(paths.getLength()),
+                                           startlump);
 
       for(int i = startlump; i < numlumps; i++, lump_p++)
       {

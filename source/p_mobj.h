@@ -159,7 +159,7 @@ public:
 
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual void removeThinker();
+   virtual void remove();
    
    // Data Members
    fixed_t x, y, z;
@@ -220,7 +220,7 @@ public:
    // Virtual methods (overridables)
    // Inherited from Thinker:
    virtual void updateThinker();
-   virtual void removeThinker();
+   virtual void remove();
    virtual void serialize(SaveArchive &arc);
    virtual void deSwizzle();
 
@@ -281,6 +281,7 @@ public:
    mobjinfo_t *info;   // mobjinfo[mobj->type]
 
    int colour; // sf: the sprite colour
+   int tranmap;   // the translucency map
 
    // INVENTORY_FIXME: eliminate union
    union
@@ -410,7 +411,7 @@ protected:
 
 public:
    MobjFadeThinker() : Super(), target(NULL), swizzled_target(0) {}
-   virtual void removeThinker();
+   virtual void remove();
    virtual void serialize(SaveArchive &arc);
    virtual void deSwizzle();
 

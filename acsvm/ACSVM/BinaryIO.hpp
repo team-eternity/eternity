@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2017 David Hill
 //
 // See COPYING for license information.
 //
@@ -29,11 +29,13 @@ namespace ACSVM
    std::uint_fast8_t  ReadLE1(Byte const *data);
    std::uint_fast16_t ReadLE2(Byte const *data);
    std::uint_fast32_t ReadLE4(Byte const *data);
+   std::uint_fast32_t ReadLE4(std::istream &in);
 
    template<typename T>
    T ReadVLN(std::istream &in);
 
    void WriteLE4(Byte *out, std::uint_fast32_t in);
+   void WriteLE4(std::ostream &out, std::uint_fast32_t in);
 
    template<typename T>
    void WriteVLN(std::ostream &out, T in);

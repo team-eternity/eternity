@@ -123,7 +123,7 @@ v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
 
    // number should be as large as possible to prevent accidental exits on valid
    // hyperdetailed maps, but low enough to release the game on time.
-   int recprotection = 32768;
+   int recprotection = SECTOR_PORTAL_LOOP_PROTECTION;
 
    do
    {
@@ -171,7 +171,7 @@ sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling,
    auto pflags = ceiling ? &sector_t::c_pflags : &sector_t::f_pflags;
    auto portal = ceiling ? &sector_t::c_portal : &sector_t::f_portal;
 
-   int loopprotection = 32768;
+   int loopprotection = SECTOR_PORTAL_LOOP_PROTECTION;
 
    while(sector->*pflags & PS_PASSABLE && loopprotection--)
    {

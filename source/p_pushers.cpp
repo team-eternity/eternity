@@ -519,7 +519,7 @@ void P_SpawnPushers()
                   if(thing->type == PushType || thing->type == PullType)
                   {
                      Add_Pusher(PushThinker::p_push, x_mag, y_mag, thing,
-                                thing->subsector->sector - sectors);
+                                eindex(thing->subsector->sector - sectors));
                   }
                }
             }

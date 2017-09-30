@@ -635,7 +635,7 @@ static void E_AssignMiscBexptr(int *target, deh_bexptr *dp, const char *name)
    
    // get the index of this deh_bexptr in the master
    // deh_bexptrs array, and store it in the arg field
-   *target = static_cast<int>(dp - deh_bexptrs);
+   *target = eindex(dp - deh_bexptrs);
 }
 
 //

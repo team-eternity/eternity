@@ -144,6 +144,39 @@ be targeted by monsters even after removal.
 Added sector scroller UDMF properties, and fixed ACS scroll speeds. Also fixed
 overriding that the ACS specials do.
 
+-------------------------------------------------------------------------------
+2017/07/18
+Tall and transparent PNGs are now supported, though the transparency could do
+with being mask-based, instead of just using a "this is transparent" index.
+
+-------------------------------------------------------------------------------
+2017/08/04
+ALT+F4 now exits the program in a quick and clean fashion. Thanks to anotak for
+bringing this up.
+
+Fixed ACS scrollers again.
+
+-------------------------------------------------------------------------------
+2017/08/26
+The player view no longer vibrates once their decapitated head hits the floor,
+if they have interpolation on.
+
+-------------------------------------------------------------------------------
+2017/08/27
+Console aliases for idk and idfa have been added: "givearsenal" and "givekeys"
+respectively.
+
+-------------------------------------------------------------------------------
+2017/09/06
+Fixed UDMF damageinterval having a default of 0 when it should be 32.
+
+-------------------------------------------------------------------------------
+2017/09/12
+Building with Visual Studio no longer includes any batch files. Both Eternity
+and midiproc both use the "MIDL" section in project properties.
+
+Removed the ability to pick internal texture format.
+
 ================================================================================
 EOF
 ================================================================================

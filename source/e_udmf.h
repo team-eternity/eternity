@@ -402,7 +402,7 @@ private:
       int          portalfloor;     // floor portal id
 
       USector() : xscalefloor(1.0), yscalefloor(1.0), xscaleceiling(1.0), yscaleceiling(1.0),
-         scroll_ceil_type("none"), scroll_floor_type("none"), friction(-1),
+         scroll_ceil_type("none"), scroll_floor_type("none"), friction(-1), damageinterval(32),
          damagetype("Unknown"), floorterrain("@flat"), ceilingterrain("@flat"),
          colormaptop("@default"), colormapmid("@default"), colormapbottom("@default"),
          portal_ceil_overlaytype("none"), alphaceiling(1.0),

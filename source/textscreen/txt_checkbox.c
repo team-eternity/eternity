@@ -34,7 +34,7 @@ static void TXT_CheckBoxSizeCalc(TXT_UNCAST_ARG(checkbox))
 
     // Minimum width is the string length + two spaces for padding
 
-    checkbox->widget.w = (unsigned)strlen(checkbox->label) + 6;
+    checkbox->widget.w = (unsigned)(strlen(checkbox->label) + 6);
     checkbox->widget.h = 1;
 }
 

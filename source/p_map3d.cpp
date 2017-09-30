@@ -1038,7 +1038,7 @@ static void P_DoCrunch(Mobj *thing)
    // crunch dropped items
    if(thing->flags & MF_DROPPED)
    {
-      thing->removeThinker();
+      thing->remove();
       return;
    }
 

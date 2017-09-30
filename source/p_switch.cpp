@@ -184,7 +184,7 @@ static void P_StartButton(int sidenum, line_t *line, sector_t *sector,
 
    button = P_FindFreeButton();
    
-   button->line     = static_cast<int>(line - lines);
+   button->line     = eindex(line - lines);
    button->side     = sidenum;
    button->where    = w;
    button->btexture = texture;

@@ -222,7 +222,7 @@ static void TXT_DropdownListDrawer(TXT_UNCAST_ARG(list), int selected)
 
     TXT_DrawString(str);
 
-    for (i=(int)strlen(str); i<list->widget.w; ++i)
+    for (i=(unsigned)strlen(str); i<list->widget.w; ++i)
     {
         TXT_DrawString(" ");
     }

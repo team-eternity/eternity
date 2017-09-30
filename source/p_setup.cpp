@@ -3606,6 +3606,7 @@ void P_Init()
    P_InitParticleEffects();  // haleyjd 09/30/01
    P_InitSwitchList();
    P_InitPicAnims();
+   P_InitHexenAnims();
    R_InitSprites(spritelist);
    P_InitHubs();
    E_InitTerrainTypes();     // haleyjd 07/03/99

@@ -410,7 +410,7 @@ void P_ParticleThinker(void)
             else
                activeParticles = i;
             particle->next = inactiveParticles;
-            inactiveParticles = static_cast<int>(particle - Particles);
+            inactiveParticles = eindex(particle - Particles);
             continue;
          }
       }
@@ -505,12 +505,12 @@ void P_RunEffects(void)
    if(camera)
    {
       subsector_t *ss = R_PointInSubsector(camera->x, camera->y);
-      snum = static_cast<int>((ss->sector - sectors) * numsectors);
+      snum = eindex(ss->sector - sectors) * numsectors;
    }
    else
    {
       subsector_t *ss = players[displayplayer].mo->subsector;
-      snum = static_cast<int>((ss->sector - sectors) * numsectors);
+      snum = eindex(ss->sector - sectors) * numsectors;
    }
 
    while((th = th->next) != &thinkercap)
@@ -518,7 +518,7 @@ void P_RunEffects(void)
       Mobj *mobj;
       if((mobj = thinker_cast<Mobj *>(th)))
       {
-         int rnum = static_cast<int>(snum + (mobj->subsector->sector - sectors));
+         int rnum = snum + eindex(mobj->subsector->sector - sectors);
          if(mobj->effects)
          {
             // run only if possibly visible

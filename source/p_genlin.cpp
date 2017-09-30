@@ -87,7 +87,7 @@ int EV_DoParamFloor(const line_t *line, int tag, const floordata_t *fd)
    {
       if(!line || !(sec = line->backsector))
          return rtn;
-      secnum = static_cast<int>(sec - sectors);
+      secnum = eindex(sec - sectors);
       manual = true;
       goto manual_floor;
    }
@@ -393,7 +393,7 @@ int EV_DoParamCeiling(const line_t *line, int tag, const ceilingdata_t *cd)
    {
       if(!line || !(sec = line->backsector))
          return rtn;
-      secnum = static_cast<int>(sec - sectors);
+      secnum = eindex(sec - sectors);
       manual = true;
       goto manual_ceiling;
    }
@@ -721,7 +721,7 @@ int EV_DoGenLift(const line_t *line)
    {
       if (!(sec = line->backsector))
          return rtn;
-      secnum = static_cast<int>(sec - sectors);
+      secnum = eindex(sec - sectors);
       manual = true;
       goto manual_lift;
    }
@@ -866,7 +866,7 @@ int EV_DoParamStairs(const line_t *line, int tag, const stairdata_t *sd)
    {
       if(!line || !(sec = line->backsector))
          return rtn;
-      secnum = static_cast<int>(sec - sectors);
+      secnum = eindex(sec - sectors);
       manual = true;
       goto manual_stair;
    }
@@ -979,14 +979,14 @@ manual_stair:
                continue;
             
             tsec = (sec->lines[i])->frontsector;
-            newsecnum = static_cast<int>(tsec-sectors);
-            
+            newsecnum = eindex(tsec-sectors);
+
             if(secnum != newsecnum)
                continue;
             
             tsec = (sec->lines[i])->backsector;
-            newsecnum = static_cast<int>(tsec - sectors);
-            
+            newsecnum = eindex(tsec - sectors);
+
             if(!(sd->flags & SDF_IGNORETEXTURES) && tsec->floorpic != texture)
                continue;
 
@@ -1126,7 +1126,7 @@ int EV_DoParamCrusher(const line_t *line, int tag, const crusherdata_t *cd)
    {
       if(!(sec = line->backsector))
          return rtn;
-      secnum = static_cast<int>(sec-sectors);
+      secnum = eindex(sec-sectors);
       manual = true;
       goto manual_crusher;
    }
@@ -1332,7 +1332,7 @@ int EV_DoParamDoor(const line_t *line, int tag, const doordata_t *dd)
    {
       if(!line || !(sec = line->backsector))
          return rtn;
-      secnum = static_cast<int>(sec - sectors);
+      secnum = eindex(sec - sectors);
       manual = true;
       goto manual_door;
    }

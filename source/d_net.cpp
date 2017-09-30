@@ -219,7 +219,7 @@ static void GetPackets()
                tflash->flags2 |= MF2_DONTDRAW;
                P_DisconnectEffect(players[netconsole].mo);
             }
-            players[netconsole].mo->removeThinker();
+            players[netconsole].mo->remove();
          }
          if(demorecording)
             G_CheckDemoStatus();

@@ -369,7 +369,7 @@ static int P_AddLinkOffset(int startgroup, int targetgroup,
 //
 static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
 {
-   int i = static_cast<int>(sec - sectors);
+   int i = eindex(sec - sectors);
 
    if(!portal || !sec)
       return true;
@@ -761,7 +761,7 @@ void P_LinkRejectTable()
       list = groups[i]->seclist;
       for(s = 0; list[s]; s++)
       {
-         int sectorindex1 = static_cast<int>(list[s] - sectors);
+         int sectorindex1 = eindex(list[s] - sectors);
 
          for(p = 0; p < groupcount; p++)
          {
@@ -771,7 +771,7 @@ void P_LinkRejectTable()
             list2 = groups[p]->seclist;
             for(q = 0; list2[q]; q++)
             {
-               int sectorindex2 = static_cast<int>(list2[q] - sectors);
+               int sectorindex2 = eindex(list2[q] - sectors);
                int pnum = (sectorindex1 * numsectors) + sectorindex2;
 
                rejectmatrix[pnum>>3] &= ~(1 << (pnum&7));

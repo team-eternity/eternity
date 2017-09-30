@@ -660,7 +660,7 @@ void A_GenWizard(actionargs_t *actionargs)
       (mo->z < P_ExtremeSectorAtPoint(mo, false)->floorheight))
    {
       // doesn't fit, so remove it immediately
-      mo->removeThinker();
+      mo->remove();
       return;
    }
 
@@ -674,7 +674,7 @@ void A_GenWizard(actionargs_t *actionargs)
    if(!P_TryMove(mo, mo->x, mo->y, false))
    {
       // can't move, remove it immediately
-      mo->removeThinker();
+      mo->remove();
       return;
    }
 
@@ -909,7 +909,7 @@ void A_MakePod(actionargs_t *actionargs)
    mo = P_SpawnMobj(x, y, ONFLOORZ, E_SafeThingType(MT_POD));
    if(!P_CheckPosition(mo, x, y))
    {
-      mo->removeThinker();
+      mo->remove();
       return;
    }
    

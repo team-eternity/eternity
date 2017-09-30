@@ -230,10 +230,6 @@ static default_t sysdefaults[] =
    DEFAULT_INT("gl_colordepth", &cfg_gl_colordepth, NULL, 32, 16, 32, default_t::wad_no,
                "GL backend screen bitdepth (16, 24, or 32)"),
 
-   DEFAULT_INT("gl_texture_format", &cfg_gl_texture_format, NULL, CFG_GL_RGBA8, 
-               0, CFG_GL_NUMTEXFORMATS-1, default_t::wad_no, 
-               "GL2D internal texture format"),
-
    DEFAULT_INT("gl_filter_type", &cfg_gl_filter_type, NULL, CFG_GL_LINEAR,
                0, CFG_GL_NUMFILTERS-1, default_t::wad_no, 
                "GL2D texture filtering type (0 = GL_LINEAR, 1 = GL_NEAREST)"),

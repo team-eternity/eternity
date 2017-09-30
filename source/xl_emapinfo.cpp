@@ -31,6 +31,7 @@
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "e_lib.h"
+#include "in_lude.h"
 #include "m_qstr.h"
 #include "metaapi.h"
 #include "v_misc.h"
@@ -396,6 +397,32 @@ MetaTable *XL_ParseLevelInfo(WadDirectory *dir, int lumpnum)
    parser.parseLump(*dir, dir->getLumpInfo()[lumpnum], false);
 
    return parser.getCurrentInfo();
+}
+
+//
+// Builds the intermission info from EMAPINFO
+//
+void XL_BuildInterEMapInfo()
+{
+   MetaTable *level = nullptr;
+   while((level = emapInfoTable.getNextTypeEx(level)))
+   {
+      intermapinfo_t &info = IN_GetMapInfo(level->getKey());
+
+      auto str = level->getString("inter-levelname", "");
+      if(*str)
+         info.levelname = str;
+
+      str = level->getString("levelpic", "");
+      if(*str)
+         info.levelpic = str;
+
+      // TODO: enterpic not implemented yet
+
+      str = level->getString("interpic", "");
+      if(*str)
+         info.exitpic = str;
+   }
 }
 
 //=============================================================================

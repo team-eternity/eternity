@@ -262,7 +262,7 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
    }
    clip.openfrontsector = linedef->frontsector;
    clip.openbacksector  = linedef->backsector;
-   sector_t *beyond = linedef->intflags & MLI_POLYPORTALLINE &&
+   sector_t *beyond = linedef->intflags & MLI_1SPORTALLINE &&
       linedef->beyondportalline ?
       linedef->beyondportalline->frontsector : nullptr;
    if(beyond)

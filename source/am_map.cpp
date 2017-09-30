@@ -247,6 +247,9 @@ static double ftom_zoommul; // how far the window zooms each tic (fb coords)
 static double m_x,  m_y;    // LL x,y window location on the map (map coords)
 static double m_x2, m_y2;   // UR x,y window location on the map (map coords)
 
+// coordinates of backdrop. Separate from m_x and m_y because of zooming.
+static double backdrop_fx, backdrop_fy;
+
 //
 // width/height of window on map (map coords)
 //
@@ -1040,6 +1043,9 @@ void AM_Ticker()
       return;
    
    amclock++;
+
+   double oldmx = m_x + m_w / 2;
+   double oldmy = m_y + m_h / 2;
    
    if(followplayer)
       AM_doFollowPlayer();
@@ -1051,6 +1057,9 @@ void AM_Ticker()
    // Change x,y location
    if(m_paninc.x != 0.0 || m_paninc.y != 0.0)
       AM_changeWindowLoc();
+
+   backdrop_fx += MTOF(m_x + m_w / 2 - oldmx);
+   backdrop_fy += MTOF(m_y + m_h / 2 - oldmy);
 }
 
 
@@ -1074,10 +1083,36 @@ static void AM_clearFB(int color)
    // haleyjd 12/22/02: backdrop support
    if(am_usebackdrop && am_backdrop)
    {
+      // Must put round() or floor() because of stupid C (int) truncating, which
+      // merely cuts off whatever's after the decimal, instead of rounding
+      // *DOWN*.
+      int offx = static_cast<int>(round(-backdrop_fx / M_FixedToDouble(video.xscale)));
+      int offy = static_cast<int>(round(backdrop_fy / M_FixedToDouble(video.yscale)));
+
+      int screenheight = (f_h << FRACBITS) / video.yscale;
+
+      // Now get the coordinates of the four tiles
+      offx -= SCREENWIDTH * (offx / SCREENWIDTH);
+      offy -= screenheight * (offy / screenheight);
+
+      // Fix for stupid C division rules (same thing as above) when first
+      // operand is negative.
+      if(offx > 0)
+         offx -= SCREENWIDTH;
+      if(offy > 0)
+         offy -= screenheight;
+
       // SoM 2-4-04: ANYRES
-      V_DrawBlock(0, 0, &vbscreen, 
-                  SCREENWIDTH, (f_h << FRACBITS) / video.yscale, 
+      V_DrawBlock(offx, offy, &vbscreen, SCREENWIDTH, screenheight,
                   am_backdrop);
+      V_DrawBlock(offx + SCREENWIDTH, offy, &vbscreen, SCREENWIDTH,
+                  screenheight, am_backdrop);
+      V_DrawBlock(offx, offy + screenheight, &vbscreen, SCREENWIDTH,
+                  screenheight, am_backdrop);
+      V_DrawBlock(offx + SCREENWIDTH, offy + screenheight, &vbscreen,
+                  SCREENWIDTH, screenheight, am_backdrop);
+
+//      V_DrawBlock(0, 0, &vbscreen, SCREENWIDTH, screenheight, am_backdrop);
    }
    else
       V_ColorBlock(&vbscreen, (unsigned char)color, 0, 0, f_w, f_h);
