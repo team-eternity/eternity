@@ -178,7 +178,10 @@ v2fixed_t B_ProjectionOnLine_f(fixed_t x, fixed_t y, fixed_t x1, fixed_t y1,
 //
 void B_GetMapBounds(fixed_t &minx, fixed_t &miny, fixed_t &maxx, fixed_t &maxy)
 {
-   minx = D_MAXINT, miny = D_MAXINT, maxx = D_MININT, maxy = D_MININT;
+   minx = D_MAXINT;
+   miny = D_MAXINT;
+   maxx = D_MININT;
+   maxy = D_MININT;
    
    // First find limits of map
    

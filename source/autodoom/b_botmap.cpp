@@ -118,9 +118,15 @@ void BotMap::getTouchedBlocks(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
       
       // Move in either the x or y direction to the next block
       if(diff < 0)
-         diff += ady, b += dx;
+      {
+         diff += ady;
+         b += dx;
+      }
       else
-         diff -= adx, b += dy;
+      {
+         diff -= adx;
+         b += dy;
+      }
    }
 }
 

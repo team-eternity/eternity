@@ -34,7 +34,7 @@ extern "C"
 {
 #endif
    
-	void B_GLBSP_Start();
+	void B_GLBSP_Start(void);
 
    int B_GLBSP_GetNextVertex(double *coordx, double *coordy);
    
