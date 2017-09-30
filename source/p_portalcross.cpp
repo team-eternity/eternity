@@ -478,7 +478,8 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
    {
       sector = csector;
       groupid = cgroupid;
-      x = cx, y = cy;
+      x = cx;
+      y = cy;
 
       while(sector->*pflags[i] & PS_PASSABLE)
       {

@@ -626,7 +626,10 @@ void P_SetThingPosition(Mobj *thing)
          *link = thing;
       }
       else        // thing is off the map
-         thing->bnext = NULL, thing->bprev = NULL;
+      {
+         thing->bnext = NULL;
+         thing->bprev = NULL;
+      }
    }
 }
 
