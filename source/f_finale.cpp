@@ -182,7 +182,7 @@ static float Get_TextSpeed()
    return 
       (float)(midstage ? NEWTEXTSPEED : 
               (midstage=acceleratestage) ? 
-               acceleratestage=0, NEWTEXTSPEED : TEXTSPEED);
+              static_cast<void>(acceleratestage=0), NEWTEXTSPEED : TEXTSPEED);
 }
 
 

@@ -751,20 +751,35 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
    planehash_t *table = pl->table;
    
    if(start < pl->minx)
-      intrl   = pl->minx, unionl = start;
+   {
+      intrl   = pl->minx;
+      unionl = start;
+   }
    else
-      unionl  = pl->minx,  intrl = start;
+   {
+      unionl  = pl->minx;
+      intrl = start;
+   }
    
    if(stop  > pl->maxx)
-      intrh   = pl->maxx, unionh = stop;
+   {
+      intrh   = pl->maxx;
+      unionh = stop;
+   }
    else
-      unionh  = pl->maxx, intrh  = stop;
+   {
+      unionh  = pl->maxx;
+      intrh  = stop;
+   }
 
    for(x = intrl; x <= intrh && pl->top[x] == 0x7FFFFFFF; ++x)
       ;
 
    if(x > intrh)
-      pl->minx = unionl, pl->maxx = unionh;
+   {
+      pl->minx = unionl;
+      pl->maxx = unionh;
+   }
    else
    {
       unsigned hash = visplane_hash(pl->picnum, pl->lightlevel, pl->height, table->chaincount);

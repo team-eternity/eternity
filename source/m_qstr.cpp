@@ -926,7 +926,7 @@ size_t qstring::findLastOf(char c) const
          break;
       }
    }
-   while((rover == buffer) ? false : (--rover, true));
+   while((rover == buffer) ? false : (static_cast<void>(--rover), true));
 
    return found ? rover - buffer : npos;
 }
