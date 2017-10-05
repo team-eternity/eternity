@@ -237,7 +237,11 @@ static int S_AdjustSoundParams(camera_t *listener, const PointThinker *source,
    ady = D_abs((listener->y >> FRACBITS) - (sy >> FRACBITS));
    
    if(ady > adx)
-      dist = adx, adx = ady, ady = dist;
+   {
+      dist = adx;
+      adx = ady;
+      ady = dist;
+   }
 
    dist = adx ? FixedDiv(adx, finesine[(tantoangle_acc[FixedDiv(ady,adx) >> DBITS]
                                         + ANG90) >> ANGLETOFINESHIFT]) : 0;   

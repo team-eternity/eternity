@@ -880,7 +880,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
       return false;
    }
 
-   // Set namespace (we'll think later about checking it
+   // Set namespace (we'll think later about checking it)
    if(!mValue.text.strCaseCmp("eternity"))
       mNamespace = namespace_Eternity;
    else if(!mValue.text.strCaseCmp("heretic"))

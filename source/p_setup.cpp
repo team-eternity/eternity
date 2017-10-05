@@ -2206,10 +2206,16 @@ static void P_CreateBlockMap()
                break;
 
             // Move in either the x or y direction to the next block
-            if(diff < 0) 
-               diff += ady, b += dx;
+            if(diff < 0)
+            {
+               diff += ady;
+               b += dx;
+            }
             else
-               diff -= adx, b += dy;
+            {
+               diff -= adx;
+               b += dy;
+            }
          }
       }
 

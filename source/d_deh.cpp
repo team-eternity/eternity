@@ -2215,7 +2215,10 @@ bool deh_procStringSub(char *key, char *lookfor, char *newstring)
    for(s=t=copyNewStr; *s; ++s, ++t)
    {
       if (*s == '\\' && (s[1] == 'n' || s[1] == 'N')) //found one
-         ++s, *t = '\n';  // skip one extra for second character
+      {
+         ++s;
+         *t = '\n';  // skip one extra for second character
+      }
       else
          *t = *s;
    }
@@ -2487,7 +2490,13 @@ static char *dehReformatStr(char *string)
    while(*s)
    {
       if(*s == '\n')
-         ++s, *t++ = '\\', *t++ = 'n', *t++ = '\\', *t++='\n'; 
+      {
+         ++s;
+         *t++ = '\\';
+         *t++ = 'n';
+         *t++ = '\\';
+         *t++='\n';
+      }
       else
          *t++ = *s++;
    }

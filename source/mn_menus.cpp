@@ -2205,7 +2205,6 @@ static menuitem_t mn_vidadv_items[] =
    { it_info,     "OpenGL"},
    { it_variable, "GL color depth",           "gl_colordepth"      },
    { it_toggle,   "Texture filtering",        "gl_filter_type"     },
-   { it_toggle,   "Texture format",           "gl_texture_format"  },
    { it_toggle,   "Use extensions",           "gl_use_extensions"  },
    { it_toggle,   "Use ARB pixelbuffers",     "gl_arb_pixelbuffer" },
    { it_end }

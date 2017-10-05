@@ -1748,4 +1748,9 @@
   <ItemGroup>
     <ResourceCompile Include="Eternity.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <Midl Include="..\midiproc\midiproc.idl">
+      <Filter>Resource Files</Filter>
+    </Midl>
+  </ItemGroup>
 </Project>
