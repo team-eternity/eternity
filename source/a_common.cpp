@@ -444,7 +444,7 @@ void A_RandomWalk(actionargs_t *actionargs)
       // try a completely random direction
       tdir = P_Random(pr_rndwnewdir) & 7;
       if(tdir != turnaround && 
-         (actor->movedir = tdir, P_Move(actor, 0)))
+         (void(actor->movedir = tdir), P_Move(actor, 0)))
       {
          checkdirs[tdir] = 1;
          dirfound = true;
@@ -462,7 +462,7 @@ void A_RandomWalk(actionargs_t *actionargs)
                   continue;
                
                if(tdir != turnaround && 
-                  (actor->movedir = tdir, P_Move(actor, 0)))
+                  (void(actor->movedir = tdir), P_Move(actor, 0)))
                {
                   dirfound = true;
                   break;
@@ -478,7 +478,7 @@ void A_RandomWalk(actionargs_t *actionargs)
                   continue;
                
                if(tdir != turnaround && 
-                  (actor->movedir = tdir, P_Move(actor, 0)))
+                  (void(actor->movedir = tdir), P_Move(actor, 0)))
                {
                   dirfound = true;
                   break;

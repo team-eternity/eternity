@@ -287,7 +287,8 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
               mo->z <= sectors[sec->heightsec].floorheight &&
               demo_version >= 203)))
          {
-            friction = sec->friction, movefactor = sec->movefactor;
+            friction = sec->friction;
+            movefactor = sec->movefactor;
          }
       }
    }
@@ -1820,7 +1821,12 @@ static bool PIT_ApplyTorque(line_t *ld, polyobj_s *po)
          dist = FixedMul(x,x) + FixedMul(y,y);
 
          while(dist > FRACUNIT*4 && mo->gear < MAXGEAR)
-            ++mo->gear, x >>= 1, y >>= 1, dist >>= 1;
+         {
+            ++mo->gear;
+            x >>= 1;
+            y >>= 1;
+            dist >>= 1;
+         }
          
          mo->momx -= x;
          mo->momy += y;
@@ -2164,14 +2170,26 @@ void P_SlideMove(Mobj *mo)
       // trace along the three leading corners
       
       if(mo->momx > 0)
-         leadx = mo->x + mo->radius, trailx = mo->x - mo->radius;
+      {
+         leadx = mo->x + mo->radius;
+         trailx = mo->x - mo->radius;
+      }
       else
-         leadx = mo->x - mo->radius, trailx = mo->x + mo->radius;
+      {
+         leadx = mo->x - mo->radius;
+         trailx = mo->x + mo->radius;
+      }
 
       if(mo->momy > 0)
-         leady = mo->y + mo->radius, traily = mo->y - mo->radius;
+      {
+         leady = mo->y + mo->radius;
+         traily = mo->y - mo->radius;
+      }
       else
-         leady = mo->y - mo->radius, traily = mo->y + mo->radius;
+      {
+         leady = mo->y - mo->radius;
+         traily = mo->y + mo->radius;
+      }
 
       bestslidefrac = FRACUNIT+1;
       
@@ -2628,7 +2646,7 @@ static msecnode_t *P_GetSecnode(void)
    msecnode_t *node;
    
    return headsecnode ?
-      node = headsecnode, headsecnode = node->m_snext, node :
+   void(node = headsecnode), void(headsecnode = node->m_snext), node :
       (msecnode_t *)(Z_Malloc(sizeof *node, PU_LEVEL, NULL)); 
 }
 
