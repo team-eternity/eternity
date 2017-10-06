@@ -662,11 +662,13 @@ void P_XYMovement(Mobj* mo)
    // no friction when airborne
    // haleyjd: OVER_UNDER
    // 06/5/12: flying players
-   // 2017/09/09: players with air control
+   // 2017/09/09: players when air friction is active
    if(mo->z > mo->floorz && !(mo->flags4 & MF4_FLY) &&
       (!P_Use3DClipping() || !(mo->intflags & MIF_ONMOBJ)) &&
-      !(LevelInfo.airControl && mo->player))
+      (!mo->player || LevelInfo.airFriction == FRACUNIT))
+   {
       return;
+   }
 
    // killough 8/11/98: add bouncers
    // killough 9/15/98: add objects falling off ledges
@@ -738,8 +740,11 @@ void P_XYMovement(Mobj* mo)
       {
          fixed_t friction = P_GetFriction(mo, NULL);
 
-         mo->momx = FixedMul(mo->momx, friction);
-         mo->momy = FixedMul(mo->momy, friction);
+         if(friction != FRACUNIT)
+         {
+            mo->momx = FixedMul(mo->momx, friction);
+            mo->momy = FixedMul(mo->momy, friction);
+         }
 
          // killough 10/98: Always decrease player bobbing by ORIG_FRICTION.
          // This prevents problems with bobbing on ice, where it was not being

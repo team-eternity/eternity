@@ -264,7 +264,7 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
    {
       friction = FRICTION_FLY;
    }
-   else if(mo->player && (LevelInfo.airControl || LevelInfo.airFriction) && !onfloor)
+   else if(mo->player && LevelInfo.airFriction && !onfloor)
    {
       // Air friction only affects players
       friction = LevelInfo.airFriction;
