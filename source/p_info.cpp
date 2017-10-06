@@ -1400,7 +1400,8 @@ static void P_ClearLevelVars()
    LevelInfo.disableJump = false;
 
    // air control
-   LevelInfo.airControl = comp[comp_aircontrol] ? 0 : FRACUNIT >> 8;
+   // compatibility setting may override this. To completely disable it, use -1
+   LevelInfo.airControl = 0;
    LevelInfo.airFriction = FRACUNIT;
 
    // haleyjd: construct defaults

@@ -353,8 +353,15 @@ void P_MovePlayer(player_t* player)
             P_Thrust(player, mo->angle-ANG90, 0, cmd->sidemove*movefactor);
          }
       }
-      else if(LevelInfo.airControl)  // Do not move player unless aircontrol
+      else if(LevelInfo.airControl > 0 || LevelInfo.airControl < -1)
       {
+         // Do not move player unless aircontrol
+         // -1 has a special meaning that totally disables air control, even
+         // if the compatibility flag is unset.
+
+         // This is a new EMAPINFO property and doesn't emulate Hexen and
+         // Strife. For those, look below.
+
          int friction, movefactor = P_GetMoveFactor(mo, &friction);
 
          movefactor = FixedMul(movefactor, LevelInfo.airControl);
@@ -365,6 +372,18 @@ void P_MovePlayer(player_t* player)
          // TODO: disable this part in Strife
          if(cmd->sidemove)
             P_Thrust(player, mo->angle - ANG90, 0, cmd->sidemove*movefactor);
+      }
+      else if(LevelInfo.airControl == 0 && !comp[comp_aircontrol])
+      {
+         // Apply legacy Hexen/Strife primitive air control if air control is 0
+         // (default) and the compatibility setting is "NO".
+
+         if(cmd->forwardmove)
+            P_Thrust(player, mo->angle, 0, FRACUNIT >> 8);
+
+         // TODO: disable this in Strife
+         if(cmd->sidemove)
+            P_Thrust(player, mo->angle, 0, FRACUNIT >> 8);
       }
 
       if(mo->state == states[mo->info->spawnstate])
