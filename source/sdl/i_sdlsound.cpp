@@ -763,6 +763,7 @@ static Uint32 I_SDLTestSoundBufferSize()
    want.samples  = audio_buffers;
    want.callback = I_SDLDummyCallback;
 
+   // SDL_FIXME: SDL_OpenAudio is legacy, consider SDL_OpenAudioDevice
    if(SDL_OpenAudio(&want, &have) >= 0)
    {
       ret = have.size;

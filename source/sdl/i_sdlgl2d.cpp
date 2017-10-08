@@ -527,18 +527,20 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
                                "SDL Error: %s\n", SDL_GetError());
    }
 
+   // SDL_FIXME: There should probably be a better solution than this check.
    Uint32 format;
    if(colordepth == 32)
       format = SDL_PIXELFORMAT_RGBA32;
    else if(colordepth == 24)
       format = SDL_PIXELFORMAT_RGB24;
-   else
+   else // 16
       format = SDL_PIXELFORMAT_RGB555;
 
-   // SDL_FIXME: I wanna use SDL_CreateRGBSurfaceWithFormat but it's not linking for some reason
-   // https://discourse.libsdl.org/t/sdl-creatergbsurfacewithformat-missing-from-vc-library/22098
-   if(!(screen = SDL_CreateRGBSurface(0, v_w, v_h, colordepth, 0, 0, 0, 0)))
-      I_FatalError(I_ERR_KILL, "Couldn't set RGB surface with colordepth %d\n", colordepth);
+   if(!(screen = SDL_CreateRGBSurfaceWithFormat(0, v_w, v_h, colordepth, format)))
+   {
+      I_FatalError(I_ERR_KILL, "Couldn't set RGB surface with colordepth %d, format %s\n",
+                   colordepth, SDL_GetPixelFormatName(format));
+   }
 
    // Try loading the ARB PBO extension
    LoadPBOExtension();
