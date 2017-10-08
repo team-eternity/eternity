@@ -72,6 +72,11 @@ int main(int argc, char **argv)
 {
    myargc = argc;
    myargv = argv;
+
+   // SDL_FIXME: This might become unnecessary at some point.
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
+   SDL_setenv("SDL_AUDIODRIVER", "directsound", true);
+#endif
    
    // MaxW: 2017/09/16: Now prints the error on failure
    // haleyjd 04/15/02: added check for failure
