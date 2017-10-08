@@ -893,10 +893,41 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
       mNamespace = namespace_Doom;
    else
    {
-      mError = "Unsupported namespace '";
-      mError << mValue.text;
-      mError << "'";
-      return false;
+      // ano - read over the file looking for `ee_compat="true"`
+      qstring ns_text = mValue.text;
+      bool ee_compat_found = false;
+      while ((result = readItem()) != result_Eof)
+      {
+         if (result == result_Error)
+         {
+            mError = "UDMF error while checking unsupported namespace `";
+            mError << ns_text;
+            mError << "'";
+            return false;
+         }
+
+         if (result == result_Assignment
+            && !mInBlock
+            && mKey.strCaseCmp("ee_compat") == 0
+            && mValue.type == Token::type_Keyword
+            && ectype::toUpper(mValue.text[0]) == 'T')
+         {
+            ee_compat_found = true;
+            break; // while ((result = readItem()) != result_Eof)
+         }
+      } // while
+
+      reset();
+
+      if (!ee_compat_found)
+      {
+         mError = "Unsupported namespace '";
+         mError << ns_text;
+         mError << "'";
+         return false;
+      }
+
+      mNamespace = namespace_Eternity;
    }
 
    // Gamestuff. Must be null when out of block and only one be set when in
@@ -1311,6 +1342,14 @@ int UDMFParser::getMapFormat() const
 void UDMFParser::setData(const char *data, size_t size)
 {
    mData.copy(data, size);
+	reset();
+}
+
+//
+// resets variables to defaults
+//
+void UDMFParser::reset()
+{
    mPos = 0;
    mLine = 1;
    mColumn = 1;

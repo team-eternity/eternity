@@ -432,6 +432,7 @@ private:
    };
 
    void setData(const char *data, size_t size);
+   void reset();
 
    void readFixed(fixed_t &target) const;
    void requireFixed(fixed_t &target, bool &flagtarget) const;
