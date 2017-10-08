@@ -909,7 +909,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
          if (result == result_Assignment
             && !mInBlock
             && mKey.strCaseCmp("ee_compat") == 0
-            && mValue.type == Token::type_String
+            && mValue.type == Token::type_Keyword
             && ectype::toUpper(mValue.text[0]) == 'T')
          {
             ee_compat_found = true;
