@@ -855,6 +855,52 @@ static void registerAllKeys()
 }
 
 //
+// Looks for "ee_compat = true;" in the TEXTMAP in order to accept unknown name-
+// spaces as Eternity-compatible. Useful to support arbitrary namespaces which
+// look like Eternity but weren't made only for it. The resulting behaviour
+// is like Eternity. Thanks to anotak for this feature.
+//
+bool UDMFParser::checkForCompatibilityFlag(const char *nstext)
+{
+   // ano - read over the file looking for `ee_compat="true"`
+   readresult_e result;
+   bool eecompatfound = false;
+   while((result = readItem()) != result_Eof)
+   {
+      if(result == result_Error)
+      {
+         mError = "UDMF error while checking unsupported namespace '";
+         mError << nstext;
+         mError << "'";
+         return false;
+      }
+
+      if(result == result_Assignment && 
+         !mInBlock && 
+         mKey.strCaseCmp("ee_compat") == 0 && 
+         mValue.type == Token::type_Keyword && 
+         ectype::toUpper(mValue.text[0]) == 'T')
+      {
+         eecompatfound = true;
+         break; // while ((result = readItem()) != result_Eof)
+      }
+   } // while
+
+   reset(); // make sure to reset the cursor after we find the field
+
+   if(!eecompatfound)
+   {
+      mError = "Unsupported namespace '";
+      mError << nstext;
+      mError << "'";
+      return false;
+   }
+
+   mNamespace = namespace_Eternity;
+   return true;
+}
+
+//
 // Tries to parse a UDMF TEXTMAP document. If it fails, it returns false and
 // you can check the error message with error()
 //
@@ -880,7 +926,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
       return false;
    }
 
-   // Set namespace (we'll think later about checking it)
+   // Set namespace
    if(!mValue.text.strCaseCmp("eternity"))
       mNamespace = namespace_Eternity;
    else if(!mValue.text.strCaseCmp("heretic"))
@@ -891,44 +937,8 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
       mNamespace = namespace_Strife;
    else if(!mValue.text.strCaseCmp("doom"))
       mNamespace = namespace_Doom;
-   else
-   {
-      // ano - read over the file looking for `ee_compat="true"`
-      qstring ns_text = mValue.text;
-      bool ee_compat_found = false;
-      while ((result = readItem()) != result_Eof)
-      {
-         if (result == result_Error)
-         {
-            mError = "UDMF error while checking unsupported namespace `";
-            mError << ns_text;
-            mError << "'";
-            return false;
-         }
-
-         if (result == result_Assignment
-            && !mInBlock
-            && mKey.strCaseCmp("ee_compat") == 0
-            && mValue.type == Token::type_Keyword
-            && ectype::toUpper(mValue.text[0]) == 'T')
-         {
-            ee_compat_found = true;
-            break; // while ((result = readItem()) != result_Eof)
-         }
-      } // while
-
-      reset();
-
-      if (!ee_compat_found)
-      {
-         mError = "Unsupported namespace '";
-         mError << ns_text;
-         mError << "'";
-         return false;
-      }
-
-      mNamespace = namespace_Eternity;
-   }
+   else if(!checkForCompatibilityFlag(mValue.text.constPtr()))
+      return false;
 
    // Gamestuff. Must be null when out of block and only one be set when in
    // block
@@ -1342,11 +1352,11 @@ int UDMFParser::getMapFormat() const
 void UDMFParser::setData(const char *data, size_t size)
 {
    mData.copy(data, size);
-	reset();
+   reset();
 }
 
 //
-// resets variables to defaults
+// Resets variables to defaults
 //
 void UDMFParser::reset()
 {
