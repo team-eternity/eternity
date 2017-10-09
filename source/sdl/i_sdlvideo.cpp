@@ -1,6 +1,5 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
+// The Eternity Engine
 // Copyright (C) 2017 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -16,13 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+// Purpose: SDL-specific graphics code
+// Authors: James Haley, Max Waine
 //
-// DESCRIPTION:
-//   
-//   SDL-specific graphics code.
-//
-//-----------------------------------------------------------------------------
 
 #include "SDL.h"
 
@@ -57,9 +52,9 @@ void UpdateFocus(SDL_Window *window);
 // Graphics Code
 //
 
-static SDL_Surface *primary_surface;
+static SDL_Surface  *primary_surface;
 static SDL_Renderer *renderer;
-static SDL_Rect    *destrect;
+static SDL_Rect     *destrect;
 
 // used when rendering to a subregion, such as for letterboxing
 static SDL_Rect staticDestRect;
@@ -162,7 +157,7 @@ static void I_SDLSetPaletteDirect(SDL_Window *window, byte *palette)
 //
 // SDLVideoDriver::SetPalette
 //
-// Set the palette, or, if palette is NULL, update the current palette to use 
+// Set the palette, or, if palette is nullptr, update the current palette to use 
 // the current gamma setting.
 //
 void SDLVideoDriver::SetPalette(byte *palette)
@@ -200,9 +195,9 @@ void SDLVideoDriver::UnsetPrimaryBuffer()
    if(primary_surface)
    {
       SDL_FreeSurface(primary_surface);
-      primary_surface = NULL;
+      primary_surface = nullptr;
    }
-   video.screens[0] = NULL;
+   video.screens[0] = nullptr;
 }
 
 //
@@ -218,12 +213,11 @@ void SDLVideoDriver::SetPrimaryBuffer()
    if(window)
    {
       primary_surface = 
-         SDL_CreateRGBSurface(SDL_SWSURFACE, video.width + bump, video.height,
-                              8, 0, 0, 0, 0);
+         SDL_CreateRGBSurface(0, video.width + bump, video.height, 8, 0, 0, 0, 0);
       if(!primary_surface)
          I_Error("SDLVideoDriver::SetPrimaryBuffer: failed to create screen temp buffer\n");
 
-      video.screens[0] = (byte *)primary_surface->pixels;
+      video.screens[0] = static_cast<byte *>(primary_surface->pixels);
       video.pitch = primary_surface->pitch;
    }
 }
@@ -368,6 +362,7 @@ bool SDLVideoDriver::InitGraphicsMode()
       window_flags = fallback_w_flags;
    }
 
+   // SDL_FIXME: SDL_CreateSoftwareRenderer?
    if(!(renderer = SDL_CreateRenderer(window, -1, renderer_flags)))
    {
       if(!(renderer = SDL_CreateRenderer(window, -1, fallback_r_flags)))
@@ -414,7 +409,7 @@ bool SDLVideoDriver::InitGraphicsMode()
    {
       video.width  = v_w;
       video.height = v_h;
-      destrect     = NULL;
+      destrect     = nullptr;
    }
 
    video.bitdepth  = 8;
@@ -424,7 +419,8 @@ bool SDLVideoDriver::InitGraphicsMode()
    SetPrimaryBuffer();
    
    // haleyjd 11/12/09: set surface palettes immediately
-   I_SDLSetPaletteDirect(window, (byte *)wGlobalDir.cacheLumpName("PLAYPAL", PU_CACHE));
+   I_SDLSetPaletteDirect(window, static_cast<byte *>(wGlobalDir.cacheLumpName("PLAYPAL",
+                                                                              PU_CACHE)));
 
    return false;
 }

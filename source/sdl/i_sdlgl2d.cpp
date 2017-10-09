@@ -1,6 +1,5 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
+// The Eternity Engine
 // Copyright (C) 2017 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -16,13 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+// Purpose: SDL-specific GL 2D-in-3D video code
+// Authors: James Haley, Max Waine
 //
-// DESCRIPTION:
-//   
-//   SDL-specific GL 2D-in-3D video code
-//
-//-----------------------------------------------------------------------------
 
 #ifdef EE_FEATURE_OPENGL
 
@@ -54,7 +49,7 @@
 //
 
 void UpdateGrab(SDL_Window *window);
-bool MouseShouldBeGrabbed(void);
+bool MouseShouldBeGrabbed();
 void UpdateFocus(SDL_Window *window);
 
 //=============================================================================
@@ -94,12 +89,12 @@ static bool   use_arb_pbo; // If true, use ARB pixel buffer object extension
 static GLuint pboIDs[2];   // IDs of pixel buffer objects
 
 // PBO extension function pointers
-static PFNGLGENBUFFERSARBPROC    pglGenBuffersARB    = NULL;
-static PFNGLDELETEBUFFERSARBPROC pglDeleteBuffersARB = NULL;
-static PFNGLBINDBUFFERARBPROC    pglBindBufferARB    = NULL;
-static PFNGLBUFFERDATAARBPROC    pglBufferDataARB    = NULL;
-static PFNGLMAPBUFFERARBPROC     pglMapBufferARB     = NULL;
-static PFNGLUNMAPBUFFERARBPROC   pglUnmapBufferARB   = NULL;
+static PFNGLGENBUFFERSARBPROC    pglGenBuffersARB    = nullptr;
+static PFNGLDELETEBUFFERSARBPROC pglDeleteBuffersARB = nullptr;
+static PFNGLBINDBUFFERARBPROC    pglBindBufferARB    = nullptr;
+static PFNGLBUFFERDATAARBPROC    pglBufferDataARB    = nullptr;
+static PFNGLMAPBUFFERARBPROC     pglMapBufferARB     = nullptr;
+static PFNGLUNMAPBUFFERARBPROC   pglUnmapBufferARB   = nullptr;
 
 // Data for vertex binding
 static GLfloat screenVertices[4*2];
@@ -155,11 +150,11 @@ static void GL2D_setupVertexArray(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
 //
 void SDLGL2DVideoDriver::DrawPixels(void *buffer, unsigned int destwidth)
 {
-   Uint32 *fb = (Uint32 *)buffer;
+   Uint32 *fb = static_cast<Uint32 *>(buffer);
 
    for(int y = 0; y < screen->h; y++)
    {
-      byte   *src  = (byte *)screen->pixels + y * screen->pitch;
+      byte   *src  = static_cast<byte *>(screen->pixels) + y * screen->pitch;
       Uint32 *dest = fb + y * destwidth;
 
       for(int x = 0; x < screen->w - bump; x++)
@@ -188,15 +183,15 @@ void SDLGL2DVideoDriver::FinishUpdate()
    if(!use_arb_pbo)
    {
       // Convert the game's 8-bit output to the 32-bit texture buffer
-      DrawPixels(framebuffer, (unsigned int)video.width);
+      DrawPixels(framebuffer, static_cast<unsigned int>(video.width));
 
       // bind the framebuffer texture if necessary
       GL_BindTextureIfNeeded(textureid);
 
       // update the texture data
       glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 
-                      (GLsizei)video.width, (GLsizei)video.height, 
-                      GL_BGRA, GL_UNSIGNED_BYTE, (GLvoid *)framebuffer);
+                      static_cast<GLsizei>(video.width), static_cast<GLsizei>(video.height),
+                      GL_BGRA, GL_UNSIGNED_BYTE, static_cast<GLvoid *>(framebuffer));
    }
    else
    {
@@ -215,8 +210,9 @@ void SDLGL2DVideoDriver::FinishUpdate()
       pglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, pboIDs[pboindex]);
 
       // copy primary PBO to texture, using offset
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, (GLsizei)framebuffer_umax,
-                   (GLsizei)framebuffer_vmax, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(framebuffer_umax),
+                   static_cast<GLsizei>(framebuffer_vmax), 0, GL_BGRA, GL_UNSIGNED_BYTE,
+                   nullptr);
 
       // bind the secondary PBO
       pglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, pboIDs[nextindex]);
@@ -252,14 +248,14 @@ void SDLGL2DVideoDriver::ReadScreen(byte *scr)
    if(bump == 0 && screen->pitch == screen->w)
    {
       // full block blit
-      memcpy(scr, (byte *)screen->pixels, video.width * video.height);
+      memcpy(scr, static_cast<byte *>(screen->pixels), video.width * video.height);
    }
    else
    {
       // must copy one row at a time
       for(int y = 0; y < screen->h; y++)
       {
-         byte *src  = (byte *)screen->pixels + y * screen->pitch;
+         byte *src  = static_cast<byte *>(screen->pixels) + y * screen->pitch;
          byte *dest = scr + y * video.width;
 
          memcpy(dest, src, screen->w - bump);
@@ -285,10 +281,10 @@ void SDLGL2DVideoDriver::SetPalette(byte *pal)
    for(int i = 0; i < 256; i++)
    {
       RGB8to32[i] =
-         ((Uint32)0xff << 24) |
-         ((Uint32)(gammatable[usegamma][*(temppal + 0)]) << 16) |
-         ((Uint32)(gammatable[usegamma][*(temppal + 1)]) <<  8) |
-         ((Uint32)(gammatable[usegamma][*(temppal + 2)]) <<  0);
+         (static_cast<Uint32>(0xff) << 24) |
+         (static_cast<Uint32>(gammatable[usegamma][*(temppal + 0)]) << 16) |
+         (static_cast<Uint32>(gammatable[usegamma][*(temppal + 1)]) <<  8) |
+         (static_cast<Uint32>(gammatable[usegamma][*(temppal + 2)]) <<  0);
       
       temppal += 3;
    }
@@ -313,7 +309,7 @@ void SDLGL2DVideoDriver::SetPrimaryBuffer()
       I_Error("SDLGL2DVideoDriver::SetPrimaryBuffer: failed to create screen temp buffer\n");
 
    // Point screens[0] to 8-bit temp buffer
-   video.screens[0] = (byte *)(screen->pixels);
+   video.screens[0] = static_cast<byte *>(screen->pixels);
    video.pitch      = screen->pitch;
 }
 
@@ -325,9 +321,9 @@ void SDLGL2DVideoDriver::UnsetPrimaryBuffer()
    if(screen)
    {
       SDL_FreeSurface(screen);
-      screen = NULL;
+      screen = nullptr;
    }
-   video.screens[0] = NULL;
+   video.screens[0] = nullptr;
 }
 
 //
@@ -405,9 +401,9 @@ void SDLGL2DVideoDriver::LoadPBOExtension()
 {
    static bool firsttime = true;
    bool extension_ok = true;
-   const char *extensions = (const char *)glGetString(GL_EXTENSIONS);
+   const char *extensions = reinterpret_cast<const char *>(glGetString(GL_EXTENSIONS));
    bool want_arb_pbo = (cfg_gl_use_extensions && cfg_gl_arb_pixelbuffer);
-   bool have_arb_pbo = (strstr(extensions, "GL_ARB_pixel_buffer_object") != NULL);
+   bool have_arb_pbo = (strstr(extensions, "GL_ARB_pixel_buffer_object") != nullptr);
 
    // * Extensions must be enabled in general
    // * GL ARB PBO extension must be specifically enabled
@@ -460,7 +456,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    int     v_h            = 480;
    int     window_flags   = SDL_WINDOW_OPENGL| SDL_WINDOW_ALLOW_HIGHDPI;
    int     flags_renderer = SDL_RENDERER_ACCELERATED|SDL_RENDERER_TARGETTEXTURE;
-   GLvoid *tempbuffer     = NULL;
+   GLvoid *tempbuffer     = nullptr;
    GLint   texformat      = GL_RGBA8;
    GLint   texfiltertype  = GL_LINEAR;
 
@@ -549,20 +545,21 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    glEnable(GL_TEXTURE_2D);
 
    // Set viewport
-   glViewport(0, 0, (GLsizei)v_w, (GLsizei)v_h);
+   glViewport(0, 0, static_cast<GLsizei>(v_w), static_cast<GLsizei>(v_h));
 
    // Set ortho projection
    GL_SetOrthoMode(v_w, v_h);
    
    // Calculate framebuffer texture sizes
-   framebuffer_umax = GL_MakeTextureDimension((unsigned int)v_w);
-   framebuffer_vmax = GL_MakeTextureDimension((unsigned int)v_h);
+   framebuffer_umax = GL_MakeTextureDimension(static_cast<unsigned int>(v_w));
+   framebuffer_vmax = GL_MakeTextureDimension(static_cast<unsigned int>(v_h));
 
    // calculate right- and bottom-side texture coordinates
-   texcoord_smax = (GLfloat)v_w / framebuffer_umax;
-   texcoord_tmax = (GLfloat)v_h / framebuffer_vmax;
+   texcoord_smax = static_cast<GLfloat>(v_w) / framebuffer_umax;
+   texcoord_tmax = static_cast<GLfloat>(v_h) / framebuffer_vmax;
 
-   GL2D_setupVertexArray(0.0f, 0.0f, (float)v_w, (float)v_h, texcoord_smax, texcoord_tmax);
+   GL2D_setupVertexArray(0.0f, 0.0f, static_cast<float>(v_w), static_cast<float>(v_h),
+                         texcoord_smax, texcoord_tmax);
 
    // Create texture
    glGenTextures(1, &textureid);
@@ -579,8 +576,8 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
-   glTexImage2D(GL_TEXTURE_2D, 0, texformat, (GLsizei)framebuffer_umax, 
-                (GLsizei)framebuffer_vmax, 0, GL_BGRA, GL_UNSIGNED_BYTE, 
+   glTexImage2D(GL_TEXTURE_2D, 0, texformat, static_cast<GLsizei>(framebuffer_umax),
+                static_cast<GLsizei>(framebuffer_vmax), 0, GL_BGRA, GL_UNSIGNED_BYTE, 
                 tempbuffer);
    efree(tempbuffer);
 
@@ -591,9 +588,9 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    {
       pglGenBuffersARB(2, pboIDs);
       pglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, pboIDs[0]);
-      pglBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB, texturesize, 0, GL_STREAM_DRAW_ARB);
+      pglBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB, texturesize, nullptr, GL_STREAM_DRAW_ARB);
       pglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, pboIDs[1]);
-      pglBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB, texturesize, 0, GL_STREAM_DRAW_ARB);
+      pglBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB, texturesize, nullptr, GL_STREAM_DRAW_ARB);
       pglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
    }
 
@@ -610,7 +607,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    SetPrimaryBuffer();
 
    // Set initial palette
-   SetPalette((byte *)wGlobalDir.cacheLumpName("PLAYPAL", PU_CACHE));
+   SetPalette(static_cast<byte *>(wGlobalDir.cacheLumpName("PLAYPAL", PU_CACHE)));
 
    return false;
 }
