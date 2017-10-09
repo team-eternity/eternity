@@ -90,12 +90,6 @@ void SDLVideoDriver::FinishUpdate()
 
    if(setpalette)
    {
-      if(!crossbitdepth)
-      {
-         SDL_SetPaletteColors(SDL_GetWindowSurface(window)->format->palette,
-                             colors, 0, 256);
-      }
-
       if(primary_surface)
          SDL_SetPaletteColors(primary_surface->format->palette, colors, 0, 256);
 
@@ -142,12 +136,6 @@ static void I_SDLSetPaletteDirect(SDL_Window *window, byte *palette)
       colors[i].r = gammatable[usegamma][(basepal[i].r = *palette++)];
       colors[i].g = gammatable[usegamma][(basepal[i].g = *palette++)];
       colors[i].b = gammatable[usegamma][(basepal[i].b = *palette++)];
-   }
-
-   if(window && !crossbitdepth)
-   {
-      SDL_SetPaletteColors(SDL_GetWindowSurface(window)->format->palette,
-         colors, 0, 256);
    }
 
    if(primary_surface)
