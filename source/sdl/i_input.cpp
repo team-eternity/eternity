@@ -638,12 +638,10 @@ static void I_GetEvent(SDL_Window *window)
             I_AddDeferredEvent(tempevent, gametic + 1);
          }
 #endif
-         // SDL_FIXME: SDL_TEXTINPUT handling
-         //if(unicodeinput &&
-         //   ev.key.keysym.unicode > 31 && ev.key.keysym.unicode < 127)
-         //   d_event.character = (char)(ev.key.keysym.unicode);
-         //else
-         //   d_event.character = 0;
+         if(unicodeinput && ev.key.keysym.sym > 31 && ev.key.keysym.sym < 127)
+            d_event.character = ev.key.keysym.sym;
+         else
+            d_event.character = 0;
 
          D_PostEvent(&d_event);
          break;
