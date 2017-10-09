@@ -302,10 +302,8 @@ void SDLGL2DVideoDriver::SetPrimaryBuffer()
       bump = 0;
 
    // Create screen surface for the high-level code to render the game into
-   screen = SDL_CreateRGBSurface(SDL_SWSURFACE, video.width + bump, video.height,
-                                 8, 0, 0, 0, 0);
-
-   if(!screen)
+   if(!(screen = SDL_CreateRGBSurfaceWithFormat(0, video.width + bump, video.height,
+                                                8, SDL_PIXELFORMAT_INDEX8)))
       I_Error("SDLGL2DVideoDriver::SetPrimaryBuffer: failed to create screen temp buffer\n");
 
    // Point screens[0] to 8-bit temp buffer
@@ -519,11 +517,12 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
 
    if(!(glcontext = SDL_GL_CreateContext(window)))
    {
-      I_FatalError(I_ERR_KILL, "Couldn't create OopenGL context\n"
+      I_FatalError(I_ERR_KILL, "Couldn't create OpenGL context\n"
                                "SDL Error: %s\n", SDL_GetError());
    }
 
-   // SDL_FIXME: There should probably be a better solution than this check.
+   // SDL_FIXME: Is there no way to turn this if-elseif-else into a single statement
+   // (not using ternary operator)?
    Uint32 format;
    if(colordepth == 32)
       format = SDL_PIXELFORMAT_RGBA32;

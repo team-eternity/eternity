@@ -212,8 +212,8 @@ void SDLVideoDriver::SetPrimaryBuffer()
 
    if(window)
    {
-      primary_surface = 
-         SDL_CreateRGBSurface(0, video.width + bump, video.height, 8, 0, 0, 0, 0);
+      primary_surface = SDL_CreateRGBSurfaceWithFormat(0, video.width + bump, video.height,
+                                                       8, SDL_PIXELFORMAT_INDEX8);
       if(!primary_surface)
          I_Error("SDLVideoDriver::SetPrimaryBuffer: failed to create screen temp buffer\n");
 
