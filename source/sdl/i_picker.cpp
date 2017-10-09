@@ -1,6 +1,5 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
+// The Eternity Engine
 // Copyright (C) 2017 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -16,12 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+// Purpose: Startup IWAD picker
+// Authors: James Haley, Max Waine
 //
-// DESCRIPTION:
-//      Startup IWAD picker.
-//
-//-----------------------------------------------------------------------------
 
 #include "SDL.h"
 
@@ -540,9 +536,8 @@ int I_Pick_DoPicker(bool haveIWADs[], int startchoice)
    pickvideoinit = true;
 
    // create the window
-   if(!(pickwindow = SDL_CreateWindow(nullptr,
-                                     SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                                     540, 380, 0)))
+   if(!(pickwindow = SDL_CreateWindow(nullptr, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                      540, 380, 0)))
       return -1;
 
    // create the renderer
