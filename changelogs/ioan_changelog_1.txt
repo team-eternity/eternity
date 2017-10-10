@@ -8,6 +8,12 @@ Since v3.42.03 "Heimdal" release 2
 ==================================
 
 --------------------------------------------------------------------------------
+06.10.2017
+
+FEATURE: Added EDF animation and switch definitions. Added ANIMDEFS support --
+         a subset with what Eternity supports.
+
+--------------------------------------------------------------------------------
 06.09.2017
 
 BUGFIX: Fixed looping problems in non-conventional linked portal maps, where

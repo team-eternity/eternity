@@ -47,6 +47,7 @@
 #include "d_gi.h"
 #include "d_mod.h"
 #include "doomstat.h"
+#include "e_anim.h"
 #include "e_exdata.h"
 #include "e_states.h"
 #include "e_things.h"
@@ -146,6 +147,156 @@ static void P_spawnDeferredParamPortal(line_t *line, int staticFn);
 static void P_SpawnPortal(line_t *, int);
 
 //
+// Adds a pic-anim for the given anim-def
+//
+static void P_addPicAnim(const animdef_t &animdef)
+{
+   int p;
+   int flags = TF_ANIMATED;
+
+   // 1/11/98 killough -- removed limit by array-doubling
+   if(lastanim >= anims + maxanims)
+   {
+      size_t newmax = maxanims ? maxanims*2 : MAXANIMS;
+      anims = erealloc(anim_t *, anims, newmax*sizeof(*anims)); // killough
+      lastanim = anims + maxanims;
+      maxanims = newmax;
+   }
+
+   if(animdef.istexture)
+   {
+      // different episode ?
+      if(R_CheckForWall(animdef.startname) == -1 ||
+         R_CheckForWall(animdef.endname) == -1)
+         return;
+
+      lastanim->picnum = R_FindWall(animdef.endname);
+      lastanim->basepic = R_FindWall(animdef.startname);
+   }
+   else
+   {
+      if(R_CheckForFlat(animdef.startname) == -1 ||
+         R_CheckForFlat(animdef.endname) == -1)
+         return;
+
+      lastanim->picnum = R_FindFlat(animdef.endname);
+      lastanim->basepic = R_FindFlat(animdef.startname);
+   }
+
+   lastanim->istexture = !!animdef.istexture;
+   lastanim->numpics = lastanim->picnum - lastanim->basepic + 1;
+   lastanim->speed = SwapLong(animdef.speed); // killough 5/5/98: add LONG()
+
+   if(!lastanim->speed)
+   {
+      I_Error("P_InitPicAnims: illegal speed 0 for animation %s to %s\n",
+              animdef.startname, animdef.endname);
+   }
+
+   // SoM: just to make sure
+   if(lastanim->numpics <= 0)
+      return;
+
+   // sf: include support for swirly water hack
+   if(lastanim->speed < SWIRL_TICS && lastanim->numpics != 1)
+   {
+      if(lastanim->numpics < 2)
+      {
+         I_Error("P_InitPicAnims: bad cycle from %s to %s\n",
+                 animdef.startname,
+                 animdef.endname);
+      }
+   }
+   else
+   {
+      // SoM: it's swirly water
+      flags |= TF_SWIRLY;
+   }
+
+   // SoM: add flags
+   for(p = lastanim->basepic; p <= lastanim->picnum; p++)
+      textures[p]->flags |= flags;
+
+   lastanim++;
+}
+
+//
+// Applies an EDF animation, possibly replacing one classic onoe
+//
+static void P_applyEDFAnim(const EAnimDef &ead)
+{
+   int startpic, endpic;
+   bool endgiven = false;
+   int (*checkfunc)(const char *);
+   int (*findfunc)(const char *);
+   if(ead.type == EAnimDef::type_wall)
+   {
+      if((checkfunc = R_CheckForWall)(ead.startpic.constPtr()) == -1)
+         return;
+
+      startpic = (findfunc =R_FindWall)(ead.startpic.constPtr());
+   }
+   else
+   {
+      if((checkfunc = R_CheckForFlat)(ead.startpic.constPtr()) == -1)
+         return;
+
+      startpic = (findfunc = R_FindFlat)(ead.startpic.constPtr());
+   }
+   endgiven = checkfunc(ead.endpic.constPtr()) != -1;
+   endpic = findfunc(ead.endpic.constPtr());
+   if(endgiven && endpic - startpic + 1 <= 0)
+      return;  // another invalid case
+   anim_t *anim;
+   for(anim = anims; anim != lastanim; ++anim)
+   {
+      if(anim->basepic == startpic &&
+         anim->istexture == (ead.type == EAnimDef::type_wall))
+      {
+         break;
+      }
+   }
+   if(anim == lastanim)
+   {
+      // no already-made found. Now really check the end-given
+      if(!(ead.flags & EAnimDef::SWIRL) && (!endgiven || ead.tics <= 0))
+         return;
+
+      if(lastanim >= anims + maxanims)
+      {
+         size_t newmax = maxanims ? maxanims*2 : MAXANIMS;
+         anims = erealloc(anim_t *, anims, newmax*sizeof(*anims)); // killough
+         lastanim = anims + maxanims;
+         maxanims = newmax;
+      }
+      anim = lastanim++;
+   }
+   else if(!endgiven)
+   {
+      endpic = anim->picnum;
+      if(endpic - startpic + 1 <= 0)
+         return;
+      endgiven = true;
+   }
+   anim->picnum = !endgiven ? startpic : endpic;
+   anim->basepic = startpic;
+   anim->istexture = ead.type == EAnimDef::type_wall;
+   anim->numpics = anim->picnum - anim->basepic + 1;
+   if(ead.tics > 0)
+      anim->speed = ead.tics;
+   else if(ead.flags & EAnimDef::SWIRL)
+      anim->speed = SWIRL_TICS;
+   for(int p = anim->basepic; p <= anim->picnum; p++)
+   {
+      textures[p]->flags |= TF_ANIMATED;
+      if(ead.flags & EAnimDef::SWIRL)
+         textures[p]->flags |= TF_SWIRLY;
+      else
+         textures[p]->flags &= ~TF_SWIRLY;
+   }
+}
+
+//
 // P_InitPicAnims
 //
 // Load the table of animation definitions, checking for existence of
@@ -168,80 +319,34 @@ static void P_SpawnPortal(line_t *, int);
 //
 void P_InitPicAnims(void)
 {
-   int         i, p;
    animdef_t   *animdefs; //jff 3/23/98 pointer to animation lump
-   int         flags;
    
    //  Init animation
    //jff 3/23/98 read from predefined or wad lump instead of table
    animdefs = static_cast<animdef_t *>(wGlobalDir.cacheLumpName("ANIMATED", PU_STATIC));
 
    lastanim = anims;
-   for(i = 0; animdefs[i].istexture != 0xff; i++)
+   for(int i = 0; animdefs[i].istexture != 0xff; i++)
    {
-      flags = TF_ANIMATED;
-      
-      // 1/11/98 killough -- removed limit by array-doubling
-      if(lastanim >= anims + maxanims)
+      if(E_IsHexenAnimation(animdefs[i].startname,
+                            animdefs[i].istexture ? EAnimDef::type_wall :
+                            EAnimDef::type_flat))
       {
-         size_t newmax = maxanims ? maxanims*2 : MAXANIMS;
-         anims = erealloc(anim_t *, anims, newmax*sizeof(*anims)); // killough
-         lastanim = anims + maxanims;
-         maxanims = newmax;
-      }
-
-      if(animdefs[i].istexture)
-      {
-         // different episode ?
-         if(R_CheckForWall(animdefs[i].startname) == -1 ||
-            R_CheckForWall(animdefs[i].endname) == -1)
-            continue;
-         
-         lastanim->picnum = R_FindWall(animdefs[i].endname);
-         lastanim->basepic = R_FindWall(animdefs[i].startname);
-      }
-      else
-      {
-         if(R_CheckForFlat(animdefs[i].startname) == -1 ||
-            R_CheckForFlat(animdefs[i].endname) == -1)
-            continue;
-         
-         lastanim->picnum = R_FindFlat(animdefs[i].endname);
-         lastanim->basepic = R_FindFlat(animdefs[i].startname);
-      }
-      
-      lastanim->istexture = !!animdefs[i].istexture;
-      lastanim->numpics = lastanim->picnum - lastanim->basepic + 1;
-      lastanim->speed = SwapLong(animdefs[i].speed); // killough 5/5/98: add LONG()
-
-      // SoM: just to make sure
-      if(lastanim->numpics <= 0)
+         // Allow Hexen-style animations (initialized later) to override this
          continue;
-
-      // sf: include support for swirly water hack
-      if(lastanim->speed < 65536 && lastanim->numpics != 1)
-      {
-         if(lastanim->numpics < 2)
-         {
-            I_Error("P_InitPicAnims: bad cycle from %s to %s\n",
-                     animdefs[i].startname,
-                     animdefs[i].endname);
-         }
       }
-      else
-      {
-         // SoM: it's swirly water
-         flags |= TF_SWIRLY;
-      }
-      
-      // SoM: add flags
-      for(p = lastanim->basepic; p <= lastanim->picnum; p++)
-         textures[p]->flags |= flags;
-
-      lastanim++;
+      P_addPicAnim(animdefs[i]);
    }
-
    Z_ChangeTag(animdefs, PU_CACHE); //jff 3/23/98 allow table to be freed
+
+   for(const EAnimDef *ead : eanimations)
+   {
+      // only process doom-style ones. Also prevent sending illegal definitions
+      // if possible.
+      if(ead->pics.getLength() >= 1)
+         continue;
+      P_applyEDFAnim(*ead);
+   }
 }
 
 //=============================================================================
@@ -1205,8 +1310,11 @@ void P_UpdateSpecials()
    {
       for(int i = anim->basepic; i < anim->basepic + anim->numpics; i++)
       {
-         if((i >= flatstart && i < flatstop && r_swirl) || anim->speed > 65535 || anim->numpics == 1)
+         if((i >= flatstart && i < flatstop && r_swirl) ||
+            anim->speed >= SWIRL_TICS || anim->numpics == 1)
+         {
             texturetranslation[i] = i;
+         }
          else
          {
             pic = anim->basepic + 

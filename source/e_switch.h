@@ -18,14 +18,55 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: ANIMDEFS lump, from Hexen. Replaces ANIMATED.
+// Purpose: EDF switch definitions
 // Authors: Ioan Chera
 //
 
-#ifndef XL_ANIMDEFS_H_
-#define XL_ANIMDEFS_H_
+#ifndef E_SWITCH_H_
+#define E_SWITCH_H_
 
-void XL_ParseAnimDefs();
+#include "Confuse/confuse.h"
+#include "m_collection.h"
+#include "m_dllist.h"
+#include "m_qstr.h"
+
+#define EDF_SEC_SWITCH "switch"
+
+struct cfg_t;
+
+//
+// EDF switch definition
+//
+class ESwitchDef : public ZoneObject
+{
+public:
+   ESwitchDef() : episode(), link()
+   {
+   }
+
+   //
+   // Call reset on an unlinked definition
+   //
+   void reset();
+   bool emptyDef() const
+   {
+      return onpic.empty() && onsound.empty() && offsound.empty();
+   }
+
+   qstring offpic;
+   qstring onpic;
+   qstring onsound;
+   qstring offsound;
+   int episode;
+   DLListItem<ESwitchDef> link;
+};
+
+extern cfg_opt_t edf_switch_opts[];
+extern PODCollection<ESwitchDef *> eswitches;
+
+void E_ProcessSwitches(cfg_t *cfg);
+void E_AddSwitchDef(const ESwitchDef &def);
+const ESwitchDef *E_SwitchForName(const char *name);
 
 #endif
 

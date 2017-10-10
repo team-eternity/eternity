@@ -1396,7 +1396,7 @@ static void G_WriteDemoTiccmd(ticcmd_t *cmd)
    if(full_demo_version >= make_full_version(340, 23))
       demo_p[i] = cmd->fly;
    
-   if(position + 16 > maxdemosize)   // killough 8/23/98
+   if(position + sizeof(ticcmd_t) + sizeof(uint32_t) > maxdemosize)   // killough 8/23/98
    {
       // no more space
       maxdemosize += 128*1024;   // add another 128K  -- killough

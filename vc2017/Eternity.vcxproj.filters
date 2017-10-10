@@ -1056,6 +1056,12 @@
     <ClCompile Include="..\source\xl_animdefs.cpp">
       <Filter>Source Files\XL_\XL_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\e_anim.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\e_switch.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1891,6 +1897,12 @@
     </ClInclude>
     <ClInclude Include="..\source\xl_animdefs.h">
       <Filter>Source Files\XL_\XL_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\e_anim.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\e_switch.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -317,7 +317,9 @@
 		4F914A131F61164E00968197 /* Error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F914A121F61164E00968197 /* Error.cpp */; };
 		4F914A171F61166F00968197 /* Serial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F914A151F61166F00968197 /* Serial.cpp */; };
 		4F917D781F29243500131BE5 /* xl_umapinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F917D771F29243500131BE5 /* xl_umapinfo.cpp */; };
+		4F920FF01F642143008F105C /* e_anim.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F920FEF1F642143008F105C /* e_anim.cpp */; };
 		4F950FDF1F3CDAB4000D9DC5 /* xl_animdefs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F950FDE1F3CDAB4000D9DC5 /* xl_animdefs.cpp */; };
+		4F950FE21F4989A7000D9DC5 /* e_switch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F950FE11F4989A7000D9DC5 /* e_switch.cpp */; };
 		4FAAD5941E583113001D7263 /* p_portalcross.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FAAD5931E583113001D7263 /* p_portalcross.cpp */; };
 		4FAC15D41BFDA06B003FA3A4 /* b_compression.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FAC15D21BFDA06B003FA3A4 /* b_compression.cpp */; };
 		4FC0A9271E1E2A50006CEC45 /* Action.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FC0A8FB1E1E2A50006CEC45 /* Action.cpp */; };
@@ -463,8 +465,12 @@
 		4F914A161F61166F00968197 /* Serial.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Serial.hpp; path = ../acsvm/ACSVM/Serial.hpp; sourceTree = "<group>"; };
 		4F917D771F29243500131BE5 /* xl_umapinfo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = xl_umapinfo.cpp; path = ../source/xl_umapinfo.cpp; sourceTree = "<group>"; };
 		4F917D791F2A5FD600131BE5 /* xl_umapinfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = xl_umapinfo.h; path = ../source/xl_umapinfo.h; sourceTree = "<group>"; };
+		4F920FEE1F641F7A008F105C /* e_anim.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = e_anim.h; path = ../source/e_anim.h; sourceTree = "<group>"; };
+		4F920FEF1F642143008F105C /* e_anim.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = e_anim.cpp; path = ../source/e_anim.cpp; sourceTree = "<group>"; };
 		4F950FDD1F3CDA67000D9DC5 /* xl_animdefs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = xl_animdefs.h; path = ../source/xl_animdefs.h; sourceTree = "<group>"; };
 		4F950FDE1F3CDAB4000D9DC5 /* xl_animdefs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = xl_animdefs.cpp; path = ../source/xl_animdefs.cpp; sourceTree = "<group>"; };
+		4F950FE01F498975000D9DC5 /* e_switch.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = e_switch.h; path = ../source/e_switch.h; sourceTree = "<group>"; };
+		4F950FE11F4989A7000D9DC5 /* e_switch.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = e_switch.cpp; path = ../source/e_switch.cpp; sourceTree = "<group>"; };
 		4F98954F16C10FB1005D78C0 /* trees.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = trees.c; path = ../zlib/trees.c; sourceTree = "<group>"; };
 		4F9A249216D95878002BE852 /* t_plane.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = t_plane.cpp; path = ../source/t_plane.cpp; sourceTree = "<group>"; };
 		4F9A249316D95878002BE852 /* t_plane.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = t_plane.h; path = ../source/t_plane.h; sourceTree = "<group>"; };
@@ -1570,6 +1576,8 @@
 		FACACB391652802D0091AF2E /* E_ */ = {
 			isa = PBXGroup;
 			children = (
+				4F920FEF1F642143008F105C /* e_anim.cpp */,
+				4F920FEE1F641F7A008F105C /* e_anim.h */,
 				4F2F32A21867100100EED7DE /* e_reverbs.cpp */,
 				4F2F32A31867100100EED7DE /* e_reverbs.h */,
 				FABF5CD7158BF42800C49E93 /* e_args.cpp */,
@@ -1607,6 +1615,8 @@
 				FA16D3ED15E01E96002318D1 /* e_states.h */,
 				FABF5CE6158BF42800C49E93 /* e_string.cpp */,
 				FA16D3EE15E01E96002318D1 /* e_string.h */,
+				4F950FE11F4989A7000D9DC5 /* e_switch.cpp */,
+				4F950FE01F498975000D9DC5 /* e_switch.h */,
 				FABF5CE7158BF42800C49E93 /* e_things.cpp */,
 				FA16D3EF15E01E96002318D1 /* e_things.h */,
 				FABF5CE8158BF42800C49E93 /* e_ttypes.cpp */,
@@ -2260,6 +2270,7 @@
 				4F5F3964182D9B820027813A /* w_formats.cpp in Sources */,
 				4FE91CD91970399A00FB6336 /* b_lineeffect.cpp in Sources */,
 				4F36248118A567CD00B94FA1 /* xl_sndinfo.cpp in Sources */,
+				4F950FE21F4989A7000D9DC5 /* e_switch.cpp in Sources */,
 				4F5F3965182D9B820027813A /* w_hacks.cpp in Sources */,
 				4F5F3966182D9B820027813A /* w_levels.cpp in Sources */,
 				4F5F3967182D9B820027813A /* w_wad.cpp in Sources */,
@@ -2415,6 +2426,7 @@
 				4F43B473182D9F7A00730C02 /* b_botmaptemp.cpp in Sources */,
 				4F5F38FB182D9AC00027813A /* p_chase.cpp in Sources */,
 				4F43B483182D9F7A00730C02 /* blockmap.c in Sources */,
+				4F920FF01F642143008F105C /* e_anim.cpp in Sources */,
 				4F5F38FC182D9AC00027813A /* p_cmd.cpp in Sources */,
 				4F5F38FD182D9AC00027813A /* p_doors.cpp in Sources */,
 				4F5F38FE182D9AC00027813A /* p_enemy.cpp in Sources */,

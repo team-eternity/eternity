@@ -1128,7 +1128,8 @@ void P_ArchiveButtons(SaveArchive &arc)
    {
       arc << buttonlist[i].btexture << buttonlist[i].btimer
           << buttonlist[i].dopopout << buttonlist[i].line
-          << buttonlist[i].side     << buttonlist[i].where;
+          << buttonlist[i].side     << buttonlist[i].where
+          << buttonlist[i].switchindex;
    }
 }
 

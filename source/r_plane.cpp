@@ -1064,11 +1064,13 @@ static void do_draw_plane(visplane_t *pl)
       int picnum = texturetranslation[pl->picnum];
 
       // haleyjd 05/19/06: rewritten to avoid crashes
-      if((r_swirl && textures[pl->picnum]->flags & TF_ANIMATED)
+      // ioanch: apply swirly if original (pl->picnum) has the flag. This is so
+      // Hexen animations can control only their own sequence swirling.
+      if((r_swirl && textures[picnum]->flags & TF_ANIMATED)
          || textures[pl->picnum]->flags & TF_SWIRLY)
       {
-         plane.source = R_DistortedFlat(pl->picnum);
-         tex = plane.tex = textures[pl->picnum];
+         plane.source = R_DistortedFlat(picnum);
+         tex = plane.tex = textures[picnum];
       }
       else
       {
