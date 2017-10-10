@@ -705,6 +705,7 @@ static void I_GetEvent(SDL_Window *window)
          D_PostEvent(&d_event);
          break;
 
+         // SDL_FIXME: Mouse input handling
       case SDL_MOUSEWHEEL:
          if(!usemouse)
             continue;
@@ -713,6 +714,7 @@ static void I_GetEvent(SDL_Window *window)
         if(ev.wheel.y == 1)
         {
             d_event.data1 = KEYD_MWHEELUP;
+            D_PostEvent(&d_event);
             // WHEELUP sends a button up event immediately. That won't work;
             // we need an input latency gap of at least one gametic.
             tempevent.type = ev_keyup;
@@ -723,6 +725,7 @@ static void I_GetEvent(SDL_Window *window)
         else if(ev.wheel.y == -1)
         {
            d_event.data1 = KEYD_MWHEELDOWN;
+           D_PostEvent(&d_event);
            // ditto, as above.
            tempevent.type = ev_keyup;
            tempevent.data1 = KEYD_MWHEELDOWN;
