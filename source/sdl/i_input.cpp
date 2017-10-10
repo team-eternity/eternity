@@ -705,15 +705,15 @@ static void I_GetEvent(SDL_Window *window)
          D_PostEvent(&d_event);
          break;
 
-         // SDL_FIXME: Mouse input handling
+      // SDL_FIXME: Mouse input handling
       case SDL_MOUSEWHEEL:
          if(!usemouse)
             continue;
          d_event.type = ev_keydown;
 
          // SDL_TODO: Allow y to correspond to # of weps scrolled through?
-        if(ev.wheel.y >= 0)
-        {
+         if(ev.wheel.y >= 0)
+         {
             d_event.data1 = KEYD_MWHEELUP;
             D_PostEvent(&d_event);
             // WHEELUP sends a button up event immediately. That won't work;
@@ -722,17 +722,17 @@ static void I_GetEvent(SDL_Window *window)
             tempevent.data1 = KEYD_MWHEELUP;
             I_AddDeferredEvent(tempevent, gametic + 1);
             break;
-        }
-        else if(ev.wheel.y <= 0)
-        {
-           d_event.data1 = KEYD_MWHEELDOWN;
-           D_PostEvent(&d_event);
-           // ditto, as above.
-           tempevent.type = ev_keyup;
-           tempevent.data1 = KEYD_MWHEELDOWN;
-           I_AddDeferredEvent(tempevent, gametic + 1);
-           break;
-        }
+         }
+         else if(ev.wheel.y <= 0)
+         {
+            d_event.data1 = KEYD_MWHEELDOWN;
+            D_PostEvent(&d_event);
+            // ditto, as above.
+            tempevent.type = ev_keyup;
+            tempevent.data1 = KEYD_MWHEELDOWN;
+            I_AddDeferredEvent(tempevent, gametic + 1);
+            break;
+         }
 
       case SDL_MOUSEBUTTONUP:
          if(!usemouse)
