@@ -1,6 +1,5 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
+// The Eternity Engine
 // Copyright (C) 2017 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -16,13 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+// Purpose: Keyboard, mouse, and joystick code
+// Authors: James Haley, Max Waine
 //
-// DESCRIPTION:
-//
-//   keyboard, mouse, and joystick code.
-//
-//-----------------------------------------------------------------------------
 
 #include "SDL.h"
 
@@ -89,7 +84,6 @@ void UpdateGrab(SDL_Window *window)
       int window_w, window_h;
 
       SDL_SetRelativeMouseMode(SDL_FALSE);
-      // SDL_FIXME: Are two of these calls necessary?
       SDL_GetRelativeMouseState(nullptr, nullptr);
 
       // When releasing the mouse from grab, warp the mouse cursor to
@@ -258,7 +252,6 @@ static int I_TranslateKey(SDL_Keysym *sym)
    case SDL_SCANCODE_INSERT:      rc = KEYD_INSERT;      break;
    case SDL_SCANCODE_DELETE:      rc = KEYD_DEL;         break;
    default:
-      // SDL_FIXME: Is this correct?
       rc = sym->sym;
       break;
    }
@@ -594,7 +587,6 @@ static void I_GetEvent(SDL_Window *window)
       case SDL_KEYDOWN:
          d_event.type = ev_keydown;
          d_event.repeat = ev.key.repeat;
-         // SDL_FIXME: Choco has no call here?
          d_event.data1 = I_TranslateKey(&ev.key.keysym);
 
 #if (EE_CURRENT_PLATFORM != EE_PLATFORM_MACOSX)

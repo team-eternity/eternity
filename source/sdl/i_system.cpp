@@ -1,5 +1,3 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
 // Copyright (C) 2017 James Haley, Max Waine, et al.
 //
@@ -16,14 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+// Purpose: General-purpose system-specific routines, including timer
+//  installation, keyboard, mouse, and joystick code.
 //
-// DESCRIPTION:
+// Authors: James Haley, Max Waine
 //
-//   General-purpose system-specific routines, including timer
-//   installation, keyboard, mouse, and joystick code.
-//
-//-----------------------------------------------------------------------------
 
 #ifdef _MSC_VER
 #include <conio.h>

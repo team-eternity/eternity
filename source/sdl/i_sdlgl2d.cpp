@@ -521,8 +521,6 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
                                "SDL Error: %s\n", SDL_GetError());
    }
 
-   // SDL_FIXME: Is there no way to turn this if-elseif-else into a single statement
-   // (not using ternary operator)?
    Uint32 format;
    if(colordepth == 32)
       format = SDL_PIXELFORMAT_RGBA32;

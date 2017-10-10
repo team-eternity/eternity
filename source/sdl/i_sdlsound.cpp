@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright(C) 2013 James Haley, Stephen McGranahan, Julian Aubourg, et al.
+// The Eternity Engine
+// Copyright (C) 2017 James Haley, Stephen McGranahan, Julian Aubourg, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+// Purpose: SDL sound system interface
+// Authors: James Haley, Stephen McGranahan, Julian Aubourg
 //
-// DESCRIPTION:
-//      SDL sound system interface
-//
-//-----------------------------------------------------------------------------
 
 #include "SDL.h"
 #include "SDL_audio.h"
@@ -763,7 +759,6 @@ static Uint32 I_SDLTestSoundBufferSize()
    want.samples  = audio_buffers;
    want.callback = I_SDLDummyCallback;
 
-   // SDL_FIXME: SDL_OpenAudio is legacy, consider SDL_OpenAudioDevice.
    if(SDL_OpenAudio(&want, &have) >= 0)
    {
       ret = have.size;

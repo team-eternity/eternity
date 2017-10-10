@@ -307,10 +307,7 @@ bool SDLVideoDriver::InitGraphicsMode()
    if(wanthardware)
       SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "1"); // SDL_FIXME: Is this right?
    else
-   {
       SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "0"); // SDL_FIXME: Is this right?
-      renderer_flags = SDL_RENDERER_SOFTWARE; // SDL_FIXME: Is this right?
-   }
 
    // SDL_FIXME: Wat do about SDL_HWSURFACE
    if(wantvsync)
@@ -350,7 +347,6 @@ bool SDLVideoDriver::InitGraphicsMode()
       window_flags = fallback_w_flags;
    }
 
-   // SDL_FIXME: SDL_CreateSoftwareRenderer?
    if(!(renderer = SDL_CreateRenderer(window, -1, renderer_flags)))
    {
       if(!(renderer = SDL_CreateRenderer(window, -1, fallback_r_flags)))
