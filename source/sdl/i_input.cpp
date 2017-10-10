@@ -711,7 +711,8 @@ static void I_GetEvent(SDL_Window *window)
             continue;
          d_event.type = ev_keydown;
 
-        if(ev.wheel.y == 1)
+         // SDL_TODO: Allow y to correspond to # of weps scrolled through?
+        if(ev.wheel.y >= 0)
         {
             d_event.data1 = KEYD_MWHEELUP;
             D_PostEvent(&d_event);
@@ -722,7 +723,7 @@ static void I_GetEvent(SDL_Window *window)
             I_AddDeferredEvent(tempevent, gametic + 1);
             break;
         }
-        else if(ev.wheel.y == -1)
+        else if(ev.wheel.y <= 0)
         {
            d_event.data1 = KEYD_MWHEELDOWN;
            D_PostEvent(&d_event);
