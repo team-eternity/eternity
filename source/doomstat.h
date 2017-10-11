@@ -54,8 +54,7 @@ typedef enum
 
 enum acceltype_e : int
 {
-   ACCELTYPE_MIN = 0,
-   ACCELTYPE_NONE = ACCELTYPE_MIN,
+   ACCELTYPE_NONE,
    ACCELTYPE_LINEAR,
    ACCELTYPE_CHOCO,
    ACCELTYPE_CUSTOM,

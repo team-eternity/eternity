@@ -275,7 +275,7 @@ default_t defaults[] =
 
    // SoM
    DEFAULT_INT("mouse_accel", &mouseAccel_type, NULL,
-               ACCELTYPE_NONE, ACCELTYPE_MIN, ACCELTYPE_MAX, default_t::wad_no,
+               ACCELTYPE_NONE, ACCELTYPE_NONE, ACCELTYPE_MAX, default_t::wad_no,
                "0 for no mouse accel, 1 for linear, 2 for choco-doom, 3 for custom"),
 
    // [CG] 01/20/12

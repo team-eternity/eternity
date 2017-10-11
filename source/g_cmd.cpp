@@ -445,7 +445,7 @@ CONSOLE_VARIABLE(smooth_turning, smooth_turning, 0) {}
 int default_mouse_accel_type = ACCELTYPE_NONE;
 const char *accel_options[]={ "off", "linear", "choco", "custom" };
 VARIABLE_INT(mouseAccel_type, &default_mouse_accel_type,
-             ACCELTYPE_MIN, ACCELTYPE_MAX, accel_options);
+             ACCELTYPE_NONE, ACCELTYPE_MAX, accel_options);
 CONSOLE_VARIABLE(mouse_accel_type, mouseAccel_type, ACCELTYPE_NONE) {}
 
 // [CG] 01/20/12: Custom mouse acceleration (threshold & value).

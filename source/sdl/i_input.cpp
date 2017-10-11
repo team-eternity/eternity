@@ -632,6 +632,7 @@ static void I_GetEvent(SDL_Window *window)
             I_AddDeferredEvent(tempevent, gametic + 1);
          }
 #endif
+         // SDL_FIXME: The shift stuff seems a tad hacky
          if(unicodeinput && ev.key.keysym.sym > 31 && ev.key.keysym.sym < 127)
          {
             d_event.character = ev.key.keysym.mod & (KMOD_LSHIFT | KMOD_RSHIFT) ?
