@@ -346,7 +346,7 @@ void I_StartFrame()
 //
 
 extern void MN_QuitDoom();
-extern int mouseAccel_type;
+extern acceltype_e mouseAccel_type;
 extern int mouseAccel_threshold;
 extern double mouseAccel_value;
 
@@ -435,14 +435,14 @@ static void I_ReadMouse(SDL_Window *window)
    {
       ev.type = ev_mouse;
       ev.data1 = SDL_MOUSEMOTION;
-      if(mouseAccel_type == 2)
+      if(mouseAccel_type == ACCELTYPE_CHOCO)
       {
          // SoM: So the values that go to Eternity should be 16.16 fixed
          //      point...
          ev.data2 =  AccelerateMouse(x);
          ev.data3 = -AccelerateMouse(y);
       }
-      else if(mouseAccel_type == 3) // [CG] 01/20/12 Custom acceleration
+      else if(mouseAccel_type == ACCELTYPE_CUSTOM) // [CG] 01/20/12 Custom acceleration
       {
          ev.data2 =  CustomAccelerateMouse(x);
          ev.data3 = -CustomAccelerateMouse(y);
@@ -646,7 +646,8 @@ static void I_GetEvent(SDL_Window *window)
          break;
 
       case SDL_MOUSEMOTION:
-         if(!usemouse || ((mouseAccel_type == 2) || mouseAccel_type == 3))
+         if(!usemouse || ((mouseAccel_type == ACCELTYPE_CHOCO) ||
+                          (mouseAccel_type == ACCELTYPE_CUSTOM)))
             continue;
 
          // haleyjd 06/14/10: no mouse motion at startup.
@@ -655,12 +656,12 @@ static void I_GetEvent(SDL_Window *window)
 
          // SoM 1-20-04 Ok, use xrel/yrel for mouse movement because most
          // people like it the most.
-         if(mouseAccel_type == 0)
+         if(mouseAccel_type == ACCELTYPE_NONE)
          {
             mouseevent.data2 += ev.motion.xrel;
             mouseevent.data3 -= ev.motion.yrel;
          }
-         else if(mouseAccel_type == 1)
+         else if(mouseAccel_type == ACCELTYPE_LINEAR)
          {
             // Simple linear acceleration
             // Evaluates to 1.25 * x. So Why don't I just do that? .... shut up
@@ -809,7 +810,8 @@ void I_StartTicInWindow(SDL_Window *window)
    I_GetEvent(window);
    I_UpdateHaptics();
 
-   if(usemouse && ((mouseAccel_type == 2) || (mouseAccel_type == 3)))
+   if(usemouse && ((mouseAccel_type == ACCELTYPE_CHOCO) ||
+                   (mouseAccel_type == ACCELTYPE_CUSTOM)))
       I_ReadMouse(window);
 }
 

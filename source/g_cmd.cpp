@@ -442,10 +442,11 @@ VARIABLE_BOOLEAN(smooth_turning, NULL,          onoff);
 CONSOLE_VARIABLE(smooth_turning, smooth_turning, 0) {}
 
 // SoM: mouse accel
-int default_mouse_accel_type = 0;
+int default_mouse_accel_type = ACCELTYPE_NONE;
 const char *accel_options[]={ "off", "linear", "choco", "custom" };
-VARIABLE_INT(mouseAccel_type, &default_mouse_accel_type, 0, 3, accel_options);
-CONSOLE_VARIABLE(mouse_accel_type, mouseAccel_type, 0) {}
+VARIABLE_INT(mouseAccel_type, &default_mouse_accel_type,
+             ACCELTYPE_MIN, ACCELTYPE_MAX, accel_options);
+CONSOLE_VARIABLE(mouse_accel_type, mouseAccel_type, ACCELTYPE_NONE) {}
 
 // [CG] 01/20/12: Custom mouse acceleration (threshold & value).
 int default_mouse_accel_threshold = 10;

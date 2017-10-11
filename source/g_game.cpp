@@ -153,7 +153,7 @@ bool            mouseSensitivity_vanilla; // [CG] 01/20/12
 int             invert_mouse = false;
 int             invert_padlook = false;
 int             animscreenshot = 0;       // animated screenshots
-int             mouseAccel_type = 0;
+acceltype_e     mouseAccel_type = ACCELTYPE_NONE;
 int             mouseAccel_threshold = 10; // [CG] 01/20/12
 double          mouseAccel_value = 2.0;    // [CG] 01/20/12
 

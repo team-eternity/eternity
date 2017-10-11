@@ -52,6 +52,16 @@ typedef enum
   bfg_burst,    // haleyjd
 } bfg_t;
 
+enum acceltype_e : int
+{
+   ACCELTYPE_MIN = 0,
+   ACCELTYPE_NONE = ACCELTYPE_MIN,
+   ACCELTYPE_LINEAR,
+   ACCELTYPE_CHOCO,
+   ACCELTYPE_CUSTOM,
+   ACCELTYPE_MAX = ACCELTYPE_CUSTOM
+};
+
 extern int use_doom_config;
 
 // ------------------------
@@ -315,7 +325,7 @@ extern  double          mouseSensitivity_vert;
 extern  bool            mouseSensitivity_vanilla; // [CG] 01/20/12
 
 // SoM: 
-extern  int             mouseAccel_type;
+extern  acceltype_e     mouseAccel_type;
 
 // [CG] 01/20/12
 extern  int             mouseAccel_threshold;

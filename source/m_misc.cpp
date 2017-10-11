@@ -274,7 +274,8 @@ default_t defaults[] =
                "adjust vertical (y) mouse sensitivity"),
 
    // SoM
-   DEFAULT_INT("mouse_accel", &mouseAccel_type, NULL, 0, 0, 3, default_t::wad_no,
+   DEFAULT_INT("mouse_accel", &mouseAccel_type, NULL,
+               ACCELTYPE_NONE, ACCELTYPE_MIN, ACCELTYPE_MAX, default_t::wad_no,
                "0 for no mouse accel, 1 for linear, 2 for choco-doom, 3 for custom"),
 
    // [CG] 01/20/12
