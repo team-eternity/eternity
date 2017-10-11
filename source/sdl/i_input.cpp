@@ -38,6 +38,8 @@
 #include "../v_misc.h"
 #include "../v_video.h"
 
+extern const char *shiftxform;
+
 // Grab the mouse? (int type for config code)
 int         grabmouse;
 extern int  usemouse;   // killough 10/98
@@ -631,7 +633,10 @@ static void I_GetEvent(SDL_Window *window)
          }
 #endif
          if(unicodeinput && ev.key.keysym.sym > 31 && ev.key.keysym.sym < 127)
-            d_event.character = ev.key.keysym.sym;
+         {
+            d_event.character = ev.key.keysym.mod & (KMOD_LSHIFT | KMOD_RSHIFT) ?
+                                shiftxform[ev.key.keysym.sym] : ev.key.keysym.sym;
+         }
          else
             d_event.character = 0;
 
