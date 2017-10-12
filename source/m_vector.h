@@ -42,7 +42,10 @@ struct v2fixed_t
    template<typename T>
    bool operator == (T &&other) const { return x == other.x && 
                                                y == other.y; }
-   
+   template<typename T>
+   bool operator != (T &&other) const { return x != other.x ||
+      y != other.y; }
+
    template<typename T>
    v2fixed_t &operator += (T &&other) { x += other.x; 
                                         y += other.y; return *this; }
