@@ -197,7 +197,7 @@ void SDLGL2DVideoDriver::FinishUpdate()
    {
       static int pboindex  = 0;
       int        nextindex = 0;
-      GLvoid    *ptr       = NULL;
+      GLvoid    *ptr       = nullptr;
 
       // use the two pixel buffers in a rotation
       pboindex  = (pboindex + 1) % 2;
@@ -218,7 +218,7 @@ void SDLGL2DVideoDriver::FinishUpdate()
       pglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, pboIDs[nextindex]);
 
       // map the PBO into client memory in such a way as to avoid stalls
-      pglBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB, texturesize, 0, GL_STREAM_DRAW_ARB);
+      pglBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB, texturesize, nullptr, GL_STREAM_DRAW_ARB);
 
       if((ptr = pglMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, GL_WRITE_ONLY_ARB)))
       {
@@ -364,7 +364,7 @@ void SDLGL2DVideoDriver::ShutdownGraphicsPartway()
    if(framebuffer)
    {
       efree(framebuffer);
-      framebuffer = NULL;
+      framebuffer = nullptr;
    }
 
    // Destroy the "primary buffer" screen surface
@@ -388,7 +388,7 @@ void SDLGL2DVideoDriver::ShutdownGraphicsPartway()
 
 #define GETPROC(ptr, name, type) \
    ptr = (type)SDL_GL_GetProcAddress(name); \
-   extension_ok = (extension_ok && ptr != NULL)
+   extension_ok = (extension_ok && ptr != nullptr)
 
 //
 // SDLGL2DVideoDriver::LoadPBOExtension

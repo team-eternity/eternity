@@ -29,7 +29,6 @@
 #include "../i_system.h"
 #include "../m_argv.h"
 #include "../v_misc.h"
-#include "../v_patchfmt.h"
 #include "../v_video.h"
 #include "../version.h"
 #include "../w_wad.h"
@@ -303,16 +302,14 @@ bool SDLVideoDriver::InitGraphicsMode()
    I_CheckVideoCmds(&v_w, &v_h, &wantfullscreen, &wantvsync, &wanthardware,
                     &wantframe);
 
-   // SDL_FIXME: Wat do about SDL_HWSURFACE
    if(wanthardware)
-      SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "1"); // SDL_FIXME: Is this right?
+      SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "1");
    else
-      SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "0"); // SDL_FIXME: Is this right?
+      SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "0");
 
-   // SDL_FIXME: Wat do about SDL_HWSURFACE
    if(wantvsync)
    {
-      SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "1"); // SDL_FIXME: Is this right?
+      SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "1");
       renderer_flags |= SDL_RENDERER_PRESENTVSYNC;
    }
 

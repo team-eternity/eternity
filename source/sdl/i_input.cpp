@@ -53,8 +53,6 @@ bool fullscreen;
 // haleyjd 10/25/09
 bool unicodeinput;
 
-void I_InitKeyboard();      // i_system.c
-
 bool MouseShouldBeGrabbed();
 
 //=============================================================================
@@ -171,7 +169,7 @@ static int I_TranslateKey(SDL_Keysym *sym)
    int rc = 0;
    int scancode = sym->scancode;
 
-   // This is Chocolote Doom's code for I_TranslateKey
+   // This is similar to Chocolote Doom's code for I_TranslateKey
    //switch(scancode)
    //{
    //case SDL_SCANCODE_LCTRL:
@@ -619,19 +617,8 @@ static void I_GetEvent(SDL_Window *window)
          }
 #endif
 
-         // SDL_FIXME: Should this #if and the block therein be removed?
-         // Seems to act the same regardless of if it's there or not...
-#if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS)
-         // Capslock on Windows alternates between key down and key up
-         // events. When we get a keydown, we need to defer a keyup event.
-         if(d_event.data1 == KEYD_CAPSLOCK)
-         {
-            // oPS I HITTED TEH CAPDLOCK!
-            tempevent.type  = ev_keyup;
-            tempevent.data1 = KEYD_CAPSLOCK;
-            I_AddDeferredEvent(tempevent, gametic + 1);
-         }
-#endif
+         // MaxW: 2017/10/12: Removed deffered event adding for caps lock
+
          // SDL_FIXME: The shift stuff seems a tad hacky
          if(unicodeinput && ev.key.keysym.sym > 31 && ev.key.keysym.sym < 127)
          {

@@ -457,7 +457,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
    // strafe double click
 
-   if(mouseb_dblc1 >= 0 && mousebuttons[mouseb_dblc1] != dclickstate2 && dclicktime2 > 1 )
+   if(mouseb_dblc1 >= 0 && mousebuttons[mouseb_dblc1] != dclickstate2 && dclicktime2 > 1)
    {
       dclickstate2 = mousebuttons[mouseb_dblc1];
 
