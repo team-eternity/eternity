@@ -70,7 +70,7 @@ want to change the generator with a special command, for example:
 ----
 cmake .. -G "Unix Makefiles"
 cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=C:\sdk\x64 -G "NMake Makefiles"
-cmake .. -DCMAKE_BUILD_TYPE=MinSizRel -G "Visual Studio 9 2008 Win64"
+cmake .. -DCMAKE_BUILD_TYPE=MinSizRel -G "Visual Studio 15 2017 Win64"
 ----
 
 . Run your build tool. On Unix, you probably want to just run +make+.
@@ -164,9 +164,9 @@ already set up Visual Studio.
 
 . Acquire the following libraries:
 +
- SDL-2.0
- SDL_mixer-2.0
- SDL_net-2.0
+ SDL-2.0.6
+ SDL2_mixer-2.0.1
+ SDL2_net-2.0.1
 
 . Extract them to a folder of your choosing, eg. `C:\Libs`.
 
@@ -181,7 +181,7 @@ Do this for both if you plan on building both.
 
 . Under the 'User Macros' section, click 'Add Macro'.
 
-. Enter `SDL2_0` for the name, and the directory you extracted SDL1.2 to as the value, eg. `C:\Libs\SDL2-2.0.5`.
+. Enter `SDL2_0` for the name, and the directory you extracted SDL2.0 to as the value, eg. `C:\Libs\SDL2-2.0.6`.
 
 . Tick 'Set this macro as an environment variable in the build environment' and click OK.
 
