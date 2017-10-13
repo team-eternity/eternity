@@ -19,7 +19,6 @@
 		4F3EC9C51C1C12D400AA43C2 /* e_udmf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F3EC9C31C1C12D400AA43C2 /* e_udmf.cpp */; };
 		4F42A5CC188B336600E6CACD /* i_timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F42A5C9188B336600E6CACD /* i_timer.cpp */; };
 		4F42A5D0188B338600E6CACD /* i_sdltimer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F42A5CD188B338600E6CACD /* i_sdltimer.cpp */; };
-		4F43B448182D9D5800730C02 /* SDLMain.m in Sources */ = {isa = PBXBuildFile; fileRef = FA601C6616961D9A00046D2D /* SDLMain.m */; };
 		4F5F3878182D98A30027813A /* a_common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5CB4158BF42800C49E93 /* a_common.cpp */; };
 		4F5F3879182D98A60027813A /* a_counters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5CB5158BF42800C49E93 /* a_counters.cpp */; };
 		4F5F387A182D98E10027813A /* a_decorate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5CB6158BF42800C49E93 /* a_decorate.cpp */; };
@@ -280,12 +279,10 @@
 		4F950E371F35C84B000D9DC5 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F950E341F35C84B000D9DC5 /* SDL2.framework */; };
 		4F950FDF1F3CDAB4000D9DC5 /* xl_animdefs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F950FDE1F3CDAB4000D9DC5 /* xl_animdefs.cpp */; };
 		4FAAD5941E583113001D7263 /* p_portalcross.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FAAD5931E583113001D7263 /* p_portalcross.cpp */; };
-		4FAD058C1F915635003790C5 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FAD058B1F915635003790C5 /* Carbon.framework */; };
-		4FAD058E1F915642003790C5 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FAD058D1F915642003790C5 /* AppKit.framework */; };
-		4FAD05901F915653003790C5 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FAD058F1F915653003790C5 /* OpenGL.framework */; };
 		4FAD05981F91567E003790C5 /* txt_conditional.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD05911F91567D003790C5 /* txt_conditional.c */; };
 		4FAD05991F91567E003790C5 /* txt_fileselect.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD05951F91567E003790C5 /* txt_fileselect.c */; };
 		4FAD059A1F91567E003790C5 /* txt_utf8.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD05971F91567E003790C5 /* txt_utf8.c */; };
+		4FAD059B1F9163A6003790C5 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FAD058F1F915653003790C5 /* OpenGL.framework */; };
 		4FB5F0051CCB5A0D00EFF2D9 /* p_portalclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FB5F0031CCB5A0D00EFF2D9 /* p_portalclip.cpp */; };
 		4FC0A9271E1E2A50006CEC45 /* Action.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FC0A8FB1E1E2A50006CEC45 /* Action.cpp */; };
 		4FC0A9281E1E2A50006CEC45 /* Array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FC0A8FD1E1E2A50006CEC45 /* Array.cpp */; };
@@ -677,8 +674,6 @@
 		FA1F577B158BC552006F8063 /* zlib.h */ = {isa = PBXFileReference; fileEncoding = 7; lastKnownFileType = sourcecode.c.h; name = zlib.h; path = ../zlib/zlib.h; sourceTree = SOURCE_ROOT; };
 		FA1F577D158BC552006F8063 /* zutil.h */ = {isa = PBXFileReference; fileEncoding = 7; lastKnownFileType = sourcecode.c.h; name = zutil.h; path = ../zlib/zutil.h; sourceTree = SOURCE_ROOT; };
 		FA31940C15B9FC84001F82B9 /* e_gameprops.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = e_gameprops.cpp; path = ../source/e_gameprops.cpp; sourceTree = SOURCE_ROOT; };
-		FA601C6516961D9A00046D2D /* SDLMain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SDLMain.h; path = ../source/sdl/macosx/SDLMain.h; sourceTree = "<group>"; };
-		FA601C6616961D9A00046D2D /* SDLMain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SDLMain.m; path = ../source/sdl/macosx/SDLMain.m; sourceTree = "<group>"; };
 		FA88984C1628C4DA0025048A /* z_auto.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = z_auto.h; path = ../source/z_auto.h; sourceTree = SOURCE_ROOT; };
 		FA88984D1628C5170025048A /* autopalette.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = autopalette.h; path = ../source/autopalette.h; sourceTree = SOURCE_ROOT; };
 		FA88994E162984C20025048A /* i_platform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = i_platform.cpp; path = ../source/hal/i_platform.cpp; sourceTree = SOURCE_ROOT; };
@@ -924,9 +919,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4FAD05901F915653003790C5 /* OpenGL.framework in Frameworks */,
-				4FAD058E1F915642003790C5 /* AppKit.framework in Frameworks */,
-				4FAD058C1F915635003790C5 /* Carbon.framework in Frameworks */,
+				4FAD059B1F9163A6003790C5 /* OpenGL.framework in Frameworks */,
 				4F950E371F35C84B000D9DC5 /* SDL2.framework in Frameworks */,
 				4F950E351F35C84B000D9DC5 /* SDL2_mixer.framework in Frameworks */,
 				4F950E361F35C84B000D9DC5 /* SDL2_net.framework in Frameworks */,
@@ -1079,8 +1072,6 @@
 		FA1F5705158BC2FD006F8063 /* Main */ = {
 			isa = PBXGroup;
 			children = (
-				FA601C6516961D9A00046D2D /* SDLMain.h */,
-				FA601C6616961D9A00046D2D /* SDLMain.m */,
 				256AC3F00F4B6AF500CF3369 /* EternityLaunch_Prefix.pch */,
 			);
 			name = Main;
@@ -2305,7 +2296,6 @@
 				4F5F3899182D98E20027813A /* d_net.cpp in Sources */,
 				4FC0A9351E1E2A50006CEC45 /* String.cpp in Sources */,
 				4F5F3878182D98A30027813A /* a_common.cpp in Sources */,
-				4F43B448182D9D5800730C02 /* SDLMain.m in Sources */,
 				4F5F3879182D98A60027813A /* a_counters.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
