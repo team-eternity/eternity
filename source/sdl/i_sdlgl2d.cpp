@@ -542,7 +542,17 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    glEnable(GL_TEXTURE_2D);
 
    // Set viewport
-   glViewport(0, 0, static_cast<GLsizei>(v_w), static_cast<GLsizei>(v_h));
+   // This is necessary for high-DPI displays (tested so far on macOS).
+   int drawableW = 0;
+   int drawableH = 0;
+   SDL_GL_GetDrawableSize(window, &drawableW, &drawableH);
+   if(!drawableW || !drawableH)
+   {
+      // If the function somehow fails, reset to v_w and v_h
+      drawableW = v_w;
+      drawableH = v_h;
+   }
+   glViewport(0, 0, static_cast<GLsizei>(drawableW), static_cast<GLsizei>(drawableH));
 
    // Set ortho projection
    GL_SetOrthoMode(v_w, v_h);
