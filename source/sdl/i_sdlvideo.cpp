@@ -314,7 +314,7 @@ bool SDLVideoDriver::InitGraphicsMode()
    }
 
    if(wantfullscreen)
-      window_flags |= SDL_WINDOW_FULLSCREEN;
+      window_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 
    // haleyjd 10/27/09
    if(!wantframe)
@@ -362,7 +362,7 @@ bool SDLVideoDriver::InitGraphicsMode()
    fallback_r_flags = renderer_flags;
 
    // haleyjd 10/09/05: keep track of fullscreen state
-   fullscreen = (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN) == SDL_WINDOW_FULLSCREEN;
+   fullscreen = (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN_DESKTOP;
 
    // haleyjd 12/03/07: if the video surface is not high-color, we
    // disable cross-bit-depth drawing for efficiency

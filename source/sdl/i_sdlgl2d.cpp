@@ -492,7 +492,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
                     &wantframe);
 
    if(wantfullscreen)
-      window_flags |= SDL_WINDOW_FULLSCREEN;
+      window_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
    
    if(!wantframe)
       window_flags |= SDL_WINDOW_BORDERLESS;
