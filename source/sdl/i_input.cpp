@@ -699,7 +699,6 @@ static void I_GetEvent(SDL_Window *window)
          D_PostEvent(&d_event);
          break;
 
-      // SDL_FIXME: Mouse input handling
       case SDL_MOUSEWHEEL:
          if(!usemouse)
             continue;

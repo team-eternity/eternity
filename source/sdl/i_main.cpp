@@ -38,8 +38,7 @@
 
 // haleyjd 07/23/09:
 // For Visual Studio only, in release mode, rename this function to common_main
-// and use the main defined in i_w32main.c, which contains an exception handler 
-// to replace the useless SDL parachute.
+// and use the main defined in i_w32main.c, which contains an exception handler.
 #if (EE_CURRENT_COMPILER == EE_COMPILER_MSVC) && !defined(_DEBUG)
 #define main common_main
 #endif
@@ -48,15 +47,10 @@
 
 // SoM 3/11/2002: Disable the parachute for debugging.
 // haleyjd 07/06/04: changed to a macro to eliminate local variable
+// MaxW: 2017/10/14: SDL_INIT_NOPARACHUTE got removed
 // note: sound init is handled separately in i_sound.c
 
-#define BASE_INIT_FLAGS (SDL_INIT_VIDEO | SDL_INIT_JOYSTICK)
-
-#if (EE_CURRENT_COMPILER == EE_COMPILER_MSVC) || defined(_DEBUG)
-#define INIT_FLAGS (BASE_INIT_FLAGS | SDL_INIT_NOPARACHUTE)
-#else
-#define INIT_FLAGS BASE_INIT_FLAGS
-#endif
+#define INIT_FLAGS (SDL_INIT_VIDEO | SDL_INIT_JOYSTICK)
 
 #ifdef _DEBUG
 static void VerifySDLVersions();
