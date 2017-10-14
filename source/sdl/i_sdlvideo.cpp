@@ -52,6 +52,8 @@ void UpdateFocus(SDL_Window *window);
 //
 
 static SDL_Surface  *primary_surface;
+static SDL_Surface  *rgba_surface;
+static SDL_Texture  *sdltexture; // the texture to use for rendering
 static SDL_Renderer *renderer;
 static SDL_Rect     *destrect;
 
@@ -98,9 +100,10 @@ void SDLVideoDriver::FinishUpdate()
    // haleyjd 11/12/09: blit *after* palette set improves behavior.
    if(primary_surface)
    {
-      SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, primary_surface);
-      SDL_RenderCopy(renderer, texture, nullptr, destrect);
-      SDL_DestroyTexture(texture);
+      // Don't bother checking for errors. It should just cancel itself in that case.
+      SDL_BlitSurface(primary_surface, nullptr, rgba_surface, nullptr);
+      SDL_UpdateTexture(sdltexture, nullptr, rgba_surface->pixels, rgba_surface->pitch);
+      SDL_RenderCopy(renderer, sdltexture, nullptr, destrect);
    }
 
    // haleyjd 11/12/09: ALWAYS update. Causes problems with some video surface
@@ -179,6 +182,16 @@ void SDLVideoDriver::SetPalette(byte *palette)
 //
 void SDLVideoDriver::UnsetPrimaryBuffer()
 {
+   if(sdltexture) // this may have already been deleted, but make sure.
+   {
+      SDL_DestroyTexture(sdltexture);
+      sdltexture = nullptr;
+   }
+   if(rgba_surface)
+   {
+      SDL_FreeSurface(rgba_surface);
+      rgba_surface = nullptr;
+   }
    if(primary_surface)
    {
       SDL_FreeSurface(primary_surface);
@@ -204,6 +217,25 @@ void SDLVideoDriver::SetPrimaryBuffer()
       if(!primary_surface)
          I_Error("SDLVideoDriver::SetPrimaryBuffer: failed to create screen temp buffer\n");
 
+      Uint32 pixelformat = SDL_GetWindowPixelFormat(window);
+      if(pixelformat == SDL_PIXELFORMAT_UNKNOWN)
+         pixelformat = SDL_PIXELFORMAT_ABGR8888;
+
+      rgba_surface = SDL_CreateRGBSurfaceWithFormat(0, video.width + bump, video.height, 32, pixelformat);
+      if(!rgba_surface)
+      {
+         I_Error("SDLVideoDriver::SetPrimaryBuffer: failed to create true-colour buffer: %s\n",
+                 SDL_GetError());
+      }
+      sdltexture = SDL_CreateTexture(renderer, pixelformat,
+                                     SDL_TEXTUREACCESS_STREAMING,
+                                     video.width + bump, video.height);
+      if(!sdltexture)
+      {
+         I_Error("SDLVideoDriver::SetPrimaryBuffer: failed to create rendering texture: %s\n",
+                 SDL_GetError());
+      }
+
       video.screens[0] = static_cast<byte *>(primary_surface->pixels);
       video.pitch = primary_surface->pitch;
    }
@@ -220,6 +252,11 @@ void SDLVideoDriver::ShutdownGraphicsPartway()
 {
    // haleyjd 06/21/06: use UpdateGrab here, not release
    UpdateGrab(window);
+   if(sdltexture)
+   {
+      SDL_DestroyTexture(sdltexture);
+      sdltexture = nullptr;
+   }
    SDL_DestroyWindow(window);
    window = nullptr;
    SDL_DestroyRenderer(renderer);
