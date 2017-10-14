@@ -294,7 +294,8 @@ bool SDLVideoDriver::InitGraphicsMode()
    static int fallback_h       = 480;
    static int fallback_bd      =   8;
    static int fallback_w_flags = SDL_WINDOW_ALLOW_HIGHDPI;
-   static int fallback_r_flags = SDL_RENDERER_SOFTWARE|SDL_RENDERER_TARGETTEXTURE;
+   // SDL_RENDERER_SOFTWARE causes failures in creating renderer
+   static int fallback_r_flags = SDL_RENDERER_TARGETTEXTURE;
 
    bool wantfullscreen = false;
    bool wantvsync      = false;
@@ -304,7 +305,8 @@ bool SDLVideoDriver::InitGraphicsMode()
    int  v_h            = 480;
    int  v_bd           = 8;
    int  window_flags   = SDL_WINDOW_ALLOW_HIGHDPI;
-   int  renderer_flags = SDL_RENDERER_SOFTWARE|SDL_RENDERER_TARGETTEXTURE;
+   // SDL_RENDERER_SOFTWARE causes failures in creating renderer
+   int  renderer_flags = SDL_RENDERER_TARGETTEXTURE;
 
    // haleyjd 12/03/07: cross-bit-depth support
    if(M_CheckParm("-8in32"))
@@ -366,8 +368,9 @@ bool SDLVideoDriver::InitGraphicsMode()
                                      SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                      fallback_w, fallback_h, fallback_w_flags)))
       {
+         // SDL_TODO: Trim fat from this error message
          I_FatalError(I_ERR_KILL,
-                      "I_SDLInitGraphicsMode: couldn't set mode %dx%dx%d;\n"
+                      "I_SDLInitGraphicsMode: couldn't create window for mode %dx%dx%d;\n"
                       "   Also failed to restore fallback mode %dx%dx%d.\n"
                       "   Check your SDL video driver settings.\n",
                       v_w, v_h, v_bd,
@@ -385,7 +388,13 @@ bool SDLVideoDriver::InitGraphicsMode()
    {
       if(!(renderer = SDL_CreateRenderer(window, -1, fallback_r_flags)))
       {
-         I_FatalError(I_ERR_KILL, "Renderer creation explod: %s\n", SDL_GetError());
+         // SDL_TODO: Trim fat from this error message
+         I_FatalError(I_ERR_KILL,
+                      "I_SDLInitGraphicsMode: couldn't create renderer for mode %dx%dx%d;\n"
+                      "   Also failed to restore fallback mode %dx%dx%d.\n"
+                      "   Check your SDL video driver settings.\n",
+                      v_w, v_h, v_bd,
+                      fallback_w, fallback_h, fallback_bd);
       }
 
       fallback_r_flags = renderer_flags;
