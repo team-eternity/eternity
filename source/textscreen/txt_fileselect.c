@@ -89,7 +89,7 @@ static char *ExecReadOutput(char **argv)
             completed = 1;
         }
 
-        bytes = read(pipefd[0], buf, sizeof(buf));
+        bytes = (int)read(pipefd[0], buf, sizeof(buf));
 
         if (bytes < 0)
         {
