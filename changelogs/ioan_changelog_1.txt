@@ -8,6 +8,13 @@ Since v3.42.03 "Heimdal" release 2
 ==================================
 
 --------------------------------------------------------------------------------
+15.10.2017
+
+FEATURE: Added a "Show Eternity Log" menu option in the macOS start-up dialog
+         box. Something like this was long overdue and necessary to read any
+         load-time warning that occurred without Eternity quitting with error.
+
+--------------------------------------------------------------------------------
 10.10.2017
 
 BUGFIX: Hopefully fixed an insidious optimization bug (that only occurs in

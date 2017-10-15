@@ -458,6 +458,14 @@ BOOL tryCreateDir(NSString* basePath, NSString* name, NSWindow* window)
 }
 
 //
+// Access the console
+//
+-(IBAction)showConsole:(id)sender
+{
+   [console makeVisible];
+}
+
+//
 // accessOldDocs:
 //
 -(IBAction)accessOldDocs:(id)sender
