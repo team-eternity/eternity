@@ -193,6 +193,7 @@ public:
    bool loadSidedefs2();
    bool loadThings();
 
+   bool checkForCompatibilityFlag(const char *nstext);
    bool parse(WadDirectory &setupwad, int lump);
 
    qstring error() const;
@@ -432,6 +433,7 @@ private:
    };
 
    void setData(const char *data, size_t size);
+   void reset();
 
    void readFixed(fixed_t &target) const;
    void requireFixed(fixed_t &target, bool &flagtarget) const;

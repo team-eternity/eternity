@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
@@ -981,6 +981,12 @@
     <ClCompile Include="..\source\textscreen\txt_window_action.c">
       <Filter>Source Files\TXT_\TXT Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\e_switch.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\e_anim.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1741,6 +1747,12 @@
     </ClInclude>
     <ClInclude Include="..\source\textscreen\txt_window_action.h">
       <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\e_switch.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\e_anim.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

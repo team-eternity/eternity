@@ -1645,7 +1645,10 @@ void M_LoadDefaultFile(defaultfile_t *df)
                if(skipblanks)      // If we are skipping blanks, skip line
                   continue;
                else            // Skip multiple blanks, but remember this one
-                  skipblanks = 1, p = "\n";
+               {
+                  skipblanks = 1;
+                  p = "\n";
+               }
             }
          }
       }

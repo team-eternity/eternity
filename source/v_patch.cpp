@@ -716,7 +716,11 @@ byte *V_PatchToLinear(patch_t *patch, bool flipped, byte fillcolor,
    memset(buffer, fillcolor, w * h);
   
    if(!flipped)
-      col = 0, colstop = w, colstep = 1;
+   {
+      col = 0;
+      colstop = w;
+      colstep = 1;
+   }
 
    desttop = buffer;
       
