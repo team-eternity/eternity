@@ -30,6 +30,8 @@
 #include "doomdef.h"
 #include "p_maputl.h"
 
+#define SECTOR_PORTAL_LOOP_PROTECTION 128
+
 struct line_t;
 class  Mobj;
 struct planehash_t;

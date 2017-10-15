@@ -193,6 +193,7 @@ public:
    bool loadSidedefs2();
    bool loadThings();
 
+   bool checkForCompatibilityFlag(const char *nstext);
    bool parse(WadDirectory &setupwad, int lump);
 
    qstring error() const;
@@ -402,7 +403,7 @@ private:
       int          portalfloor;     // floor portal id
 
       USector() : xscalefloor(1.0), yscalefloor(1.0), xscaleceiling(1.0), yscaleceiling(1.0),
-         scroll_ceil_type("none"), scroll_floor_type("none"), friction(-1),
+         scroll_ceil_type("none"), scroll_floor_type("none"), friction(-1), damageinterval(32),
          damagetype("Unknown"), floorterrain("@flat"), ceilingterrain("@flat"),
          colormaptop("@default"), colormapmid("@default"), colormapbottom("@default"),
          portal_ceil_overlaytype("none"), alphaceiling(1.0),
@@ -432,6 +433,7 @@ private:
    };
 
    void setData(const char *data, size_t size);
+   void reset();
 
    void readFixed(fixed_t &target) const;
    void requireFixed(fixed_t &target, bool &flagtarget) const;

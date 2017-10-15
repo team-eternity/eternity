@@ -8,6 +8,58 @@ Since v3.42.03 "Heimdal" release 2
 ==================================
 
 --------------------------------------------------------------------------------
+15.10.2017
+
+FEATURE: Added a "Show Eternity Log" menu option in the macOS start-up dialog
+         box. Something like this was long overdue and necessary to read any
+         load-time warning that occurred without Eternity quitting with error.
+
+--------------------------------------------------------------------------------
+10.10.2017
+
+BUGFIX: Hopefully fixed an insidious optimization bug (that only occurs in
+        release builds) that would make realloc() lock up Eternity if new fields
+        are added to ticcmd_t (very likely to happen when inventory is added)
+        and a demo is recorded. First sign of error was right in the code,
+        because the Boom team didn't bother to properly put sizeof(), putting a
+        hard-coded number instead. But even after replacing that with sizeof(),
+        followed by a small margin, the game would still lock up! So to be safe,
+        I doubled that buffer size.
+        
+        Problem is that I don't know why that happens; what could be optimized...
+
+--------------------------------------------------------------------------------
+08.10.2017
+
+FEATURE: Added "ee_compat = true" global field in UDMF. This makes Eternity
+         treat any other namespace the same as "eternity", and may be used by
+         editors to save UDMF wads with features common Eternity and other ports
+         (like GZDoom).
+         
+         Thanks to anotak for implementing and submitting it.
+
+--------------------------------------------------------------------------------
+06.10.2017
+
+FEATURE: Added EDF animation and switch definitions. Added ANIMDEFS support --
+         a subset with what Eternity supports.
+
+--------------------------------------------------------------------------------
+06.09.2017
+
+BUGFIX: Fixed looping problems in non-conventional linked portal maps, where
+        autoaim would lock up the game because the sector portals were spotted
+        outside the intended sector, and sprite projections would slow down to
+        a crawl because the loop protection was too big (so I reduced that).
+
+--------------------------------------------------------------------------------
+05.09.2017
+
+BUGFIX: Fixed a problem with polyobject portals failing to capture things,
+        especially those placed at their spawn point. Now they also capture
+        things if they have moving pits.
+
+--------------------------------------------------------------------------------
 03.09.2017
 
 FEATURE: Added EDF thingtype tranmap. Works like the Boom linedef special.

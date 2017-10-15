@@ -1371,7 +1371,7 @@ static void msort(vissprite_t **s, vissprite_t **t, int n)
       msort(s2, t, n2);
       
       while((*s1)->dist > (*s2)->dist ?
-            (*d++ = *s1++, --n1) : (*d++ = *s2++, --n2));
+            (void(*d++ = *s1++), --n1) : (void(*d++ = *s2++), --n2));
 
       if(n2)
          bcopyp(d, s2, n2);
@@ -2018,8 +2018,9 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
 
    v3fixed_t delta = {0, 0, 0};
    int loopprot = 0;
-   while(++loopprot < 32768 && sector && sector->f_pflags & PS_PASSABLE && 
-      P_FloorPortalZ(*sector) > mobj->z + scaledbottom)
+   while(++loopprot < SECTOR_PORTAL_LOOP_PROTECTION && sector &&
+         sector->f_pflags & PS_PASSABLE &&
+         P_FloorPortalZ(*sector) > mobj->z + scaledbottom)
    {
       // always accept first sector
       data = R_FPLink(sector);
@@ -2029,8 +2030,9 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
    // restart from mobj's group
    sector = mobj->subsector->sector;
    delta.x = delta.y = delta.z = 0;
-   while(++loopprot < 32768 && sector && sector->c_pflags & PS_PASSABLE &&
-      P_CeilingPortalZ(*sector) < mobj->z + scaledtop)
+   while(++loopprot < SECTOR_PORTAL_LOOP_PROTECTION && sector &&
+         sector->c_pflags & PS_PASSABLE &&
+         P_CeilingPortalZ(*sector) < mobj->z + scaledtop)
    {
       // always accept first sector
       data = R_CPLink(sector);
