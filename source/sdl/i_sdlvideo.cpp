@@ -131,7 +131,7 @@ void SDLVideoDriver::ReadScreen(byte *scr)
 //
 // haleyjd 11/12/09: make sure surface palettes are set at startup.
 //
-static void I_SDLSetPaletteDirect(SDL_Window *window, byte *palette)
+static void I_SDLSetPaletteDirect(byte *palette)
 {
    for(int i = 0; i < 256; i++)
    {
@@ -221,7 +221,8 @@ void SDLVideoDriver::SetPrimaryBuffer()
       if(pixelformat == SDL_PIXELFORMAT_UNKNOWN)
          pixelformat = SDL_PIXELFORMAT_ABGR8888;
 
-      rgba_surface = SDL_CreateRGBSurfaceWithFormat(0, video.width + bump, video.height, 32, pixelformat);
+      rgba_surface = SDL_CreateRGBSurfaceWithFormat(0, video.width + bump, video.height,
+                                                    32, pixelformat);
       if(!rgba_surface)
       {
          I_Error("SDLVideoDriver::SetPrimaryBuffer: failed to create true-colour buffer: %s\n",
@@ -308,6 +309,7 @@ bool SDLVideoDriver::InitGraphicsMode()
    // SDL_RENDERER_SOFTWARE causes failures in creating renderer
    int  renderer_flags = SDL_RENDERER_TARGETTEXTURE;
 
+   // SDL_FIXME: The bitdepth settings do nothing
    // haleyjd 12/03/07: cross-bit-depth support
    if(M_CheckParm("-8in32"))
      v_bd = 32;
@@ -370,11 +372,10 @@ bool SDLVideoDriver::InitGraphicsMode()
       {
          // SDL_TODO: Trim fat from this error message
          I_FatalError(I_ERR_KILL,
-                      "I_SDLInitGraphicsMode: couldn't create window for mode %dx%dx%d;\n"
-                      "   Also failed to restore fallback mode %dx%dx%d.\n"
+                      "I_SDLInitGraphicsMode: couldn't create window for mode %dx%d;\n"
+                      "   Also failed to restore fallback mode %dx%d.\n"
                       "   Check your SDL video driver settings.\n",
-                      v_w, v_h, v_bd,
-                      fallback_w, fallback_h, fallback_bd);
+                      v_w, v_h, fallback_w, fallback_h);
       }
 
       // reset these for below population of video struct
@@ -390,11 +391,10 @@ bool SDLVideoDriver::InitGraphicsMode()
       {
          // SDL_TODO: Trim fat from this error message
          I_FatalError(I_ERR_KILL,
-                      "I_SDLInitGraphicsMode: couldn't create renderer for mode %dx%dx%d;\n"
-                      "   Also failed to restore fallback mode %dx%dx%d.\n"
+                      "I_SDLInitGraphicsMode: couldn't create renderer for mode %dx%d;\n"
+                      "   Also failed to restore fallback mode %dx%d.\n"
                       "   Check your SDL video driver settings.\n",
-                      v_w, v_h, v_bd,
-                      fallback_w, fallback_h, fallback_bd);
+                      v_w, v_h, fallback_w, fallback_h);
       }
 
       fallback_r_flags = renderer_flags;
@@ -408,7 +408,7 @@ bool SDLVideoDriver::InitGraphicsMode()
    fallback_r_flags = renderer_flags;
 
    // haleyjd 10/09/05: keep track of fullscreen state
-   fullscreen = (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN_DESKTOP;
+   fullscreen = !!(SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP);
 
    // haleyjd 12/03/07: if the video surface is not high-color, we
    // disable cross-bit-depth drawing for efficiency
@@ -446,8 +446,7 @@ bool SDLVideoDriver::InitGraphicsMode()
    SetPrimaryBuffer();
    
    // haleyjd 11/12/09: set surface palettes immediately
-   I_SDLSetPaletteDirect(window, static_cast<byte *>(wGlobalDir.cacheLumpName("PLAYPAL",
-                                                                              PU_CACHE)));
+   I_SDLSetPaletteDirect(static_cast<byte *>(wGlobalDir.cacheLumpName("PLAYPAL", PU_CACHE)));
 
    return false;
 }
