@@ -412,7 +412,9 @@ bool SDLVideoDriver::InitGraphicsMode()
 
    // haleyjd 12/03/07: if the video surface is not high-color, we
    // disable cross-bit-depth drawing for efficiency
-   if(SDL_GetWindowSurface(window)->format->BitsPerPixel == 8)
+   SDL_Surface *surf = SDL_GetWindowSurface(window);
+   // surf may be null!
+   if(surf && surf->format->BitsPerPixel == 8)
       crossbitdepth = false;
 
    UpdateFocus(window);
