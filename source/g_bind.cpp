@@ -239,6 +239,7 @@ struct keyname_t
    { KEYD_END,        "end"        },
    { KEYD_PAGEUP,     "pgup"       },
    { KEYD_PAGEDOWN,   "pgdn"       },
+   { KEYD_PRINTSCREEN, "printscreen" },
    { KEYD_SCROLLLOCK, "scrolllock" },
    { KEYD_SPACEBAR,   "space"      },
    { KEYD_NUMLOCK,    "numlock"    },

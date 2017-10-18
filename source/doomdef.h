@@ -270,6 +270,7 @@ enum keycode_e
    KEYD_F8,
    KEYD_F9,
    KEYD_F10,
+   KEYD_PRINTSCREEN,
    KEYD_NUMLOCK,
    KEYD_SCROLLLOCK,
    KEYD_HOME,
