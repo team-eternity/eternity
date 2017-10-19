@@ -1316,10 +1316,8 @@ static bool HU_ChatRespond(event_t *ev)
       return true;
    }
 
-   if(ev->character)
-      ch = ev->character;
-   else if(ev->data1 > 31 && ev->data1 < 127)
-      ch = shiftdown ? shiftxform[ev->data1] : ev->data1; // shifted?
+   if(ev->type == ev_text)
+      ch = ev->data1;
    
    if(ch > 31 && ch < 127)
    {

@@ -760,9 +760,8 @@ bool G_Responder(event_t* ev)
       if(!walkcam_active) // if so, we need to go on below
       {
          if(gamestate == GS_DEMOSCREEN && !(paused & 2) && 
-            !automapactive &&
-            (ev->type == ev_keydown ||
-             (ev->type == ev_mouse && ev->data1)))
+            !consoleactive && !automapactive &&
+            (ev->type == ev_keydown || (ev->type == ev_mouse && ev->data1)))
          {
             // popup menu
             MN_StartControlPanel();

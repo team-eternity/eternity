@@ -247,6 +247,10 @@ enum keycode_e
 
    KEYD_BACKSPACE      = 0x7f,
 
+   // FIXME: The values for these two might need adjusting
+   KEYD_NONUSBACKSLASH = 0x80,
+   KEYD_NONUSHASH,
+
    KEYD_RCTRL          = 0x9d,
 
    KEYD_LEFTARROW      = 0xac,

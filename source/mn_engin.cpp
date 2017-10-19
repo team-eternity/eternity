@@ -866,10 +866,8 @@ bool MN_Responder(event_t *ev)
       
       // only care about valid characters
       // dont allow too many characters on one command line
-      if(ev->character)
-         ich = (unsigned char)(ev->character);
-      else if(ectype::isPrint(ev->data1))
-         ich = shiftdown ? shiftxform[ev->data1] : ev->data1; // shifted?
+      if(ev->type == ev_text)
+         ich = static_cast<unsigned char>(ev->data1);
 
       size_t maxlen = 20u;
       switch(var->type)
@@ -1106,11 +1104,9 @@ bool MN_Responder(event_t *ev)
 
    // search for matching item in menu
 
-   if(ev->character)
-      ch = ectype::toLower(ev->character);
-   else
-      ch = ectype::toLower(ev->data1);
-   
+   if(ev->type == ev_text)
+      ch = ev->data1;
+
    if(ev->type == ev_keydown && ectype::isLower(ch))
    {  
       // sf: experimented with various algorithms for this

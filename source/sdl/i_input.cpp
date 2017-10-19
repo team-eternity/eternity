@@ -171,7 +171,7 @@ void UpdateFocus(SDL_Window *window)
     '6', '7', '8', '9', '0',                                                                 \
     KEYD_ENTER, KEYD_ESCAPE, KEYD_BACKSPACE, KEYD_TAB, ' ',                    /* 40-49 */   \
     KEYD_MINUS, KEYD_EQUALS, '[', ']', '\\',                                                 \
-    0,   ';', '\'', KEYD_ACCGRAVE, ',',                                        /* 50-59 */   \
+    KEYD_NONUSHASH,   ';', '\'', KEYD_ACCGRAVE, ',',                           /* 50-59 */   \
     '.', '/', KEYD_CAPSLOCK, KEYD_F1, KEYD_F2,                                               \
     KEYD_F3, KEYD_F4, KEYD_F5, KEYD_F6, KEYD_F7,                               /* 60-69 */   \
     KEYD_F8, KEYD_F9, KEYD_F10, KEYD_F11, KEYD_F12,                                          \
@@ -182,7 +182,7 @@ void UpdateFocus(SDL_Window *window)
     KEYD_KPMULTIPLY, KEYD_KPMINUS, KEYD_KPPLUS, KEYD_KPENTER, KEYD_KP1,                      \
     KEYD_KP2, KEYD_KP3, KEYD_KP4, KEYD_KP5, KEYD_KP6,                          /* 90-99 */   \
     KEYD_KP7, KEYD_KP8, KEYD_KP9, KEYD_KP0, KEYD_KPPERIOD,                                   \
-    '\\', 0, 0, KEYD_KPEQUALS,                                                 /* 100-103 */ \
+    KEYD_NONUSBACKSLASH, 0, 0, KEYD_KPEQUALS,                                  /* 100-103 */ \
 }
 
 static const int scancode_translate_table[] = SCANCODE_TO_KEYS_ARRAY;
@@ -523,9 +523,9 @@ static void I_GetEvent(SDL_Window *window)
    SDL_Event  ev;
    int        sendmouseevent = 0;
    int        buttons        = 0;
-   event_t    d_event        = { ev_keydown, 0, 0, 0, '\0', false };
-   event_t    mouseevent     = { ev_mouse,   0, 0, 0, '\0', false };
-   event_t    tempevent      = { ev_keydown, 0, 0, 0, '\0', false };
+   event_t    d_event        = { ev_keydown, 0, 0, 0, false };
+   event_t    mouseevent     = { ev_mouse,   0, 0, 0, false };
+   event_t    tempevent      = { ev_keydown, 0, 0, 0, false };
 
    // [CG] 01/31/2012: Ensure we have the latest info about focus and mouse
    //                  grabbing.
@@ -545,6 +545,17 @@ static void I_GetEvent(SDL_Window *window)
 
       switch(ev.type)
       {
+      case SDL_TEXTINPUT:
+         for(unsigned int i = 0; i < SDL_strlen(ev.text.text); i++)
+         {
+            const char currchar = ev.text.text[i];
+            if(currchar > 31 && currchar < 127)
+            {
+               event_t temp = { ev_text, currchar, 0, 0, !!ev.key.repeat };
+               D_PostEvent(&temp);
+            }
+         }
+         break;
       case SDL_KEYDOWN:
          d_event.type = ev_keydown;
          d_event.repeat = ev.key.repeat;
@@ -580,14 +591,7 @@ static void I_GetEvent(SDL_Window *window)
 
          // MaxW: 2017/10/12: Removed deffered event adding for caps lock
 
-         // SDL_FIXME: The shift stuff seems a tad hacky
-         if(unicodeinput && ev.key.keysym.sym > 31 && ev.key.keysym.sym < 127)
-         {
-            d_event.character = ev.key.keysym.mod & (KMOD_LSHIFT | KMOD_RSHIFT) ?
-                                shiftxform[ev.key.keysym.sym] : ev.key.keysym.sym;
-         }
-         else
-            d_event.character = 0;
+         // MaxW: 2017/10/18: Removed character input
 
          D_PostEvent(&d_event);
          break;

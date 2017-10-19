@@ -321,7 +321,7 @@ bool C_Responder(event_t *ev)
    }
   
    // only interested in keypresses
-   if(ev->type != ev_keydown)
+   if(ev->type != ev_keydown && ev->type != ev_text)
       return false;
   
    //////////////////////////////////
@@ -424,10 +424,8 @@ bool C_Responder(event_t *ev)
    }
     
    // none of these, probably just a normal character
-   if(ev->character)
-      ch = ev->character;
-   else if(ev->data1 > 31 && ev->data1 < 127)
-      ch = (shiftdown ? shiftxform[ev->data1] : ev->data1); // shifted?
+   if(ev->type == ev_text)
+      ch = ev->data1;
 
    // only care about valid characters
    if(ch > 31 && ch < 127)

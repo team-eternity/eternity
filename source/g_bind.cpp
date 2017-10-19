@@ -228,6 +228,8 @@ struct keyname_t
    { KEYD_F11,        "f11"        },
    { KEYD_F12,        "f12"        },
    { KEYD_BACKSPACE,  "backspace"  },
+   { KEYD_NONUSBACKSLASH, "iso key 1" },
+   { KEYD_NONUSHASH,  "iso key 2"  },
    { KEYD_PAUSE,      "pause"      },
    { KEYD_MINUS,      "-"          },
    { KEYD_RSHIFT,     "shift"      },
