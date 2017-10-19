@@ -50,9 +50,6 @@ bool screenvisible;
 bool window_focused;
 bool fullscreen;
 
-// haleyjd 10/25/09
-bool unicodeinput;
-
 bool MouseShouldBeGrabbed();
 
 //=============================================================================
@@ -549,7 +546,7 @@ static void I_GetEvent(SDL_Window *window)
          for(unsigned int i = 0; i < SDL_strlen(ev.text.text); i++)
          {
             const char currchar = ev.text.text[i];
-            if(currchar > 31 && currchar < 127)
+            if(ectype::isPrint(currchar))
             {
                event_t temp = { ev_text, currchar, 0, 0, !!ev.key.repeat };
                D_PostEvent(&temp);

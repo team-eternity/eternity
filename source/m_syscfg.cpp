@@ -56,7 +56,6 @@ extern int iwad_choice;        // haleyjd 03/19/10
 extern int waitAtExit;
 extern int grabmouse;
 extern int use_vsync;
-extern bool unicodeinput;
 extern int audio_buffers;
 #endif
 
@@ -244,9 +243,6 @@ static default_t sysdefaults[] =
                 "1 to enable force feedback through gamepads where supported"),
 
 #ifdef _SDL_VER
-   DEFAULT_BOOL("unicodeinput", &unicodeinput, NULL, true, default_t::wad_no,
-                "1 to use SDL Unicode input mapping (0 = DOS-like behavior)"),
-
    DEFAULT_INT("wait_at_exit", &waitAtExit, NULL, 0, 0, 1, default_t::wad_no,
                "Always wait for input at exit"),
    
