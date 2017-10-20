@@ -243,7 +243,7 @@ static default_t sysdefaults[] =
                 "1 to enable force feedback through gamepads where supported"),
 
 #ifdef _SDL_VER
-   DEFAULT_INT("displaynum", &displaynum, NULL, 0, 0, 100, default_t::wad_no,
+   DEFAULT_INT("displaynum", &displaynum, NULL, 0, 0, UL, default_t::wad_no,
          "Display number that the window appears on"),
 
    DEFAULT_INT("wait_at_exit", &waitAtExit, NULL, 0, 0, 1, default_t::wad_no,

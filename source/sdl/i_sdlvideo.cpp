@@ -30,6 +30,7 @@
 #include "../d_main.h"
 #include "../i_system.h"
 #include "../m_argv.h"
+#include "../m_misc.h"
 #include "../v_misc.h"
 #include "../v_video.h"
 #include "../version.h"
@@ -426,9 +427,9 @@ bool SDLVideoDriver::InitGraphicsMode()
 
    // haleyjd 12/03/07: if the video surface is not high-color, we
    // disable cross-bit-depth drawing for efficiency
-   SDL_Surface *surf = SDL_GetWindowSurface(window);
-   // surf may be null!
-   if(surf && surf->format->BitsPerPixel == 8)
+   const SDL_Surface const *windowsurface = SDL_GetWindowSurface(window);
+   // window surface may be null
+   if(windowsurface && windowsurface->format->BitsPerPixel == 8)
       crossbitdepth = false;
 
    UpdateFocus(window);
@@ -475,7 +476,7 @@ CONSOLE_COMMAND(maxdisplaynum, 0)
    C_Printf("%d", SDL_GetNumVideoDisplays() - 1);
 }
 
-VARIABLE_INT(displaynum, 0, 0, 100, nullptr);
+VARIABLE_INT(displaynum, 0, 0, UL, nullptr);
 CONSOLE_VARIABLE(displaynum, displaynum, 0)
 {
    const int numdisplays = SDL_GetNumVideoDisplays();
