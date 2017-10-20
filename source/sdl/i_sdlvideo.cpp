@@ -73,7 +73,7 @@ extern char *i_default_videomode;
 extern char *i_videomode;
 
 // MaxW: 2017/10/20: display number
-int i_displaynum = 0;
+int displaynum = 0;
 
 // haleyjd 12/03/07: 8-on-32 graphics support
 static bool crossbitdepth;
@@ -368,10 +368,10 @@ bool SDLVideoDriver::InitGraphicsMode()
    if(!wantframe)
       window_flags |= SDL_WINDOW_BORDERLESS;
      
-   if(i_displaynum < SDL_GetNumVideoDisplays())
-      v_displaynum = i_displaynum;
+   if(displaynum < SDL_GetNumVideoDisplays())
+      v_displaynum = displaynum;
    else
-      i_displaynum = 0;
+      displaynum = 0;
 
    if(!(window = SDL_CreateWindow(ee_wmCaption,
                                   SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
@@ -470,16 +470,21 @@ bool SDLVideoDriver::InitGraphicsMode()
 // The one and only global instance of the SDL video driver.
 SDLVideoDriver i_sdlvideodriver;
 
-VARIABLE_INT(i_displaynum, 0, 0, 100, nullptr);
-CONSOLE_VARIABLE(i_displaynum, i_displaynum, 0)
+CONSOLE_COMMAND(maxdisplaynum, 0)
+{
+   C_Printf("%d", SDL_GetNumVideoDisplays() - 1);
+}
+
+VARIABLE_INT(displaynum, 0, 0, 100, nullptr);
+CONSOLE_VARIABLE(displaynum, displaynum, 0)
 {
    const int numdisplays = SDL_GetNumVideoDisplays();
-   // i_displaynum is an index, so == numdisplays is 1 too high
-   if(i_displaynum >= numdisplays)
+   // displaynum is an index, so == numdisplays is 1 too high
+   if(displaynum >= numdisplays)
    {
-      C_Printf(FC_ERROR "Warning: i_displaynum's current maximum is %d, resetting to 0",
+      C_Printf(FC_ERROR "Warning: displaynum's current maximum is %d, resetting to 0",
                numdisplays - 1);
-      i_displaynum = 0;
+      displaynum = 0;
    }
 }
 

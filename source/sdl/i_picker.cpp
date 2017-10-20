@@ -37,7 +37,7 @@ static WadDirectory  pickwad;       // private directory for startup.wad
 static int           currentiwad;   // currently selected IWAD
 static bool         *haveIWADArray; // valid IWADs, passed here from d_main.c
 
-extern int           i_displaynum;  // What number display to place windows on
+extern int           displaynum;  // What number display to place windows on
 
 // name of title screen lumps in startup.wad
 static const char *iwadPicNames[NUMPICKIWADS] =
@@ -539,10 +539,10 @@ int I_Pick_DoPicker(bool haveIWADs[], int startchoice)
 
    pickvideoinit = true;
 
-   if(i_displaynum < SDL_GetNumVideoDisplays())
-      v_displaynum = i_displaynum;
+   if(displaynum < SDL_GetNumVideoDisplays())
+      v_displaynum = displaynum;
    else
-      i_displaynum = 0;
+      displaynum = 0;
 
    // create the window
    if(!(pickwindow = SDL_CreateWindow(nullptr,

@@ -95,7 +95,7 @@ extern char *i_default_videomode;
 extern int   i_videodriverid;
 extern int   i_softbitdepth;
 extern bool  i_letterbox;
-extern int   i_displaynum;
+extern int   displaynum;
 
 // Driver enumeration
 enum halvdr_e

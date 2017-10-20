@@ -508,10 +508,10 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    // Set swap interval through SDL
    SDL_GL_SetSwapInterval(wantvsync ? 1 : 0); // OMG vsync!
 
-   if(i_displaynum < SDL_GetNumVideoDisplays())
-      v_displaynum = i_displaynum;
+   if(displaynum < SDL_GetNumVideoDisplays())
+      v_displaynum = displaynum;
    else
-      i_displaynum = 0;
+      displaynum = 0;
 
    if(!(window = SDL_CreateWindow(ee_wmCaption,
                                   SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
