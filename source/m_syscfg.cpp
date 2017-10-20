@@ -205,6 +205,9 @@ static default_t sysdefaults[] =
    DEFAULT_INT("i_softbitdepth", &i_softbitdepth, NULL, 8, 8, 32, default_t::wad_no,
                "Software backend screen bitdepth (8, 16, 24, or 32)"),
 
+   DEFAULT_INT("i_displaynum", &i_displaynum, NULL, 0, 0, MAXALLOWEDDISPLAY, default_t::wad_no,
+               "Display number that the window appears on"),
+
    DEFAULT_STR("i_videomode", &i_default_videomode, &i_videomode, "640x480w", default_t::wad_no,
                "Description of video mode parameters (WWWWxHHHH[flags])"),
 

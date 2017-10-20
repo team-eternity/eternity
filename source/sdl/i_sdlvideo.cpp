@@ -51,6 +51,8 @@ void UpdateFocus(SDL_Window *window);
 // Graphics Code
 //
 
+const int MAXALLOWEDDISPLAY = SDL_GetNumVideoDisplays() - 1;
+
 static SDL_Surface  *primary_surface;
 static SDL_Surface  *rgba_surface;
 static SDL_Texture  *sdltexture; // the texture to use for rendering
@@ -69,6 +71,8 @@ static bool setpalette = false;
 // haleyjd 07/15/09
 extern char *i_default_videomode;
 extern char *i_videomode;
+
+extern int i_displaynum;
 
 // haleyjd 12/03/07: 8-on-32 graphics support
 static bool crossbitdepth;
@@ -212,6 +216,7 @@ void SDLVideoDriver::SetPrimaryBuffer()
 
    if(window)
    {
+      // SDL_FIXME: This won't be sufficient once a truecolour renderer is implemented
       primary_surface = SDL_CreateRGBSurfaceWithFormat(0, video.width + bump, video.height,
                                                        8, SDL_PIXELFORMAT_INDEX8);
       if(!primary_surface)
@@ -219,7 +224,7 @@ void SDLVideoDriver::SetPrimaryBuffer()
 
       Uint32 pixelformat = SDL_GetWindowPixelFormat(window);
       if(pixelformat == SDL_PIXELFORMAT_UNKNOWN)
-         pixelformat = SDL_PIXELFORMAT_ABGR8888;
+         pixelformat = SDL_PIXELFORMAT_RGBA32;
 
       rgba_surface = SDL_CreateRGBSurfaceWithFormat(0, video.width + bump, video.height,
                                                     32, pixelformat);
@@ -305,6 +310,7 @@ bool SDLVideoDriver::InitGraphicsMode()
    int  v_w            = 640;
    int  v_h            = 480;
    int  v_bd           = 8;
+   int  v_displaynum   = 0;
    int  window_flags   = SDL_WINDOW_ALLOW_HIGHDPI;
    // SDL_RENDERER_SOFTWARE causes failures in creating renderer
    int  renderer_flags = SDL_RENDERER_TARGETTEXTURE;
@@ -361,6 +367,9 @@ bool SDLVideoDriver::InitGraphicsMode()
    if(!wantframe)
       window_flags |= SDL_WINDOW_BORDERLESS;
      
+   if(i_displaynum <  SDL_GetNumVideoDisplays())
+      v_displaynum = i_displaynum;
+
    if(!(window = SDL_CreateWindow(ee_wmCaption,
                                   SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                   v_w, v_h, window_flags)))

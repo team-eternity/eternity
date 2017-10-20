@@ -452,6 +452,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    bool    wantframe      = true;
    int     v_w            = 640;
    int     v_h            = 480;
+   int     v_displaynum   = 0;
    int     window_flags   = SDL_WINDOW_OPENGL| SDL_WINDOW_ALLOW_HIGHDPI;
    int     flags_renderer = SDL_RENDERER_ACCELERATED|SDL_RENDERER_TARGETTEXTURE;
    GLvoid *tempbuffer     = nullptr;
@@ -507,8 +508,12 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    // Set swap interval through SDL
    SDL_GL_SetSwapInterval(wantvsync ? 1 : 0); // OMG vsync!
 
+   if(i_displaynum <  SDL_GetNumVideoDisplays())
+      v_displaynum = i_displaynum;
+
    if(!(window = SDL_CreateWindow(ee_wmCaption,
-                                  SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                  SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
+                                  SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
                                   v_w, v_h, window_flags)))
    {
       I_FatalError(I_ERR_KILL, "Couldn't create OpenGL window %dx%dx\n"

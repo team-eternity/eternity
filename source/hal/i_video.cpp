@@ -195,6 +195,9 @@ int i_softbitdepth;
 // haleyjd 03/30/14: support for letterboxing narrow resolutions
 bool i_letterbox;
 
+// MaxW: 2017/10/20: display number
+int i_displaynum = 0;
+
 //
 // I_FinishUpdate
 //
@@ -621,6 +624,10 @@ CONSOLE_VARIABLE(i_letterbox, i_letterbox, cf_buffered)
 {
    I_SetMode();
 }
+
+
+VARIABLE_INT(i_displaynum, 0, 0, MAXALLOWEDDISPLAY, nullptr);
+CONSOLE_VARIABLE(i_displaynum, i_displaynum, 0) {}
 
 // EOF
 
