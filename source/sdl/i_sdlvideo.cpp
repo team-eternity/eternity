@@ -25,6 +25,8 @@
 
 #include "i_sdlvideo.h"
 
+#include "../c_io.h"
+#include "../c_runcmd.h"
 #include "../d_main.h"
 #include "../i_system.h"
 #include "../m_argv.h"
@@ -51,8 +53,6 @@ void UpdateFocus(SDL_Window *window);
 // Graphics Code
 //
 
-const int MAXALLOWEDDISPLAY = SDL_GetNumVideoDisplays() - 1;
-
 static SDL_Surface  *primary_surface;
 static SDL_Surface  *rgba_surface;
 static SDL_Texture  *sdltexture; // the texture to use for rendering
@@ -72,7 +72,8 @@ static bool setpalette = false;
 extern char *i_default_videomode;
 extern char *i_videomode;
 
-extern int i_displaynum;
+// MaxW: 2017/10/20: display number
+int i_displaynum = 0;
 
 // haleyjd 12/03/07: 8-on-32 graphics support
 static bool crossbitdepth;
@@ -367,16 +368,20 @@ bool SDLVideoDriver::InitGraphicsMode()
    if(!wantframe)
       window_flags |= SDL_WINDOW_BORDERLESS;
      
-   if(i_displaynum <  SDL_GetNumVideoDisplays())
+   if(i_displaynum < SDL_GetNumVideoDisplays())
       v_displaynum = i_displaynum;
+   else
+      i_displaynum = 0;
 
    if(!(window = SDL_CreateWindow(ee_wmCaption,
-                                  SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                  SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
+                                  SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
                                   v_w, v_h, window_flags)))
    {
       // try 320x200w safety mode
       if(!(window = SDL_CreateWindow(ee_wmCaption,
-                                     SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                     SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
+                                     SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
                                      fallback_w, fallback_h, fallback_w_flags)))
       {
          // SDL_TODO: Trim fat from this error message
@@ -464,6 +469,20 @@ bool SDLVideoDriver::InitGraphicsMode()
 
 // The one and only global instance of the SDL video driver.
 SDLVideoDriver i_sdlvideodriver;
+
+VARIABLE_INT(i_displaynum, 0, 0, 100, nullptr);
+CONSOLE_VARIABLE(i_displaynum, i_displaynum, 0)
+{
+   const int numdisplays = SDL_GetNumVideoDisplays();
+   // i_displaynum is an index, so == numdisplays is 1 too high
+   if(i_displaynum >= numdisplays)
+   {
+      C_Printf(FC_ERROR "Warning: i_displaynum's current maximum is %d, resetting to 0",
+               numdisplays - 1);
+      i_displaynum = 0;
+   }
+}
+
 
 // EOF
 
