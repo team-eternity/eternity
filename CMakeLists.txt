@@ -20,6 +20,9 @@
 ######################### CMake Configuration ##################################
 PROJECT ("Eternity Engine" C CXX)
 CMAKE_MINIMUM_REQUIRED (VERSION 2.6)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
+
 IF (COMMAND cmake_policy)
         CMAKE_POLICY (SET CMP0003 NEW)
 ENDIF (COMMAND cmake_policy)
@@ -289,10 +292,10 @@ FIND_PACKAGE (SDL2 REQUIRED)
 INCLUDE_DIRECTORIES (${SDL2_INCLUDE_DIR})
 
 FIND_PACKAGE (SDL2_mixer REQUIRED)
-INCLUDE_DIRECTORIES (${SDL2MIXER_INCLUDE_DIR})
+INCLUDE_DIRECTORIES (${SDL2_MIXER_INCLUDE_DIR})
 
 FIND_PACKAGE (SDL2_net REQUIRED)
-INCLUDE_DIRECTORIES (${SDLN2ET_INCLUDE_DIR})
+INCLUDE_DIRECTORIES (${SDL2_NET_INCLUDE_DIR})
 
 ## FIXME: This is an inelegant hack to find, and grab all needed
 ## .dll support files on windows. It works by looking for SDL2.dll

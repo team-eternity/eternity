@@ -40,7 +40,7 @@ const char version_name[] = "Voluspa";
 
 // haleyjd: caption for SDL window
 #ifdef _SDL_VER
-const char ee_wmCaption[] = "Eternity Engine v3.43.00 \"Voluspa\"";
+const char ee_wmCaption[] = u8"Eternity Engine v3.43.00 \"Völuspá\"";
 #endif
             
 // haleyjd: Eternity release history
