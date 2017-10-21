@@ -36,11 +36,11 @@ const char version_date[] = __DATE__;
 const char version_time[] = __TIME__; // haleyjd
 
 // sf: version name -- at the suggestion of mystican
-const char version_name[] = u8"Völuspá";
+const char version_name[] = "Voluspa";
 
 // haleyjd: caption for SDL window
 #ifdef _SDL_VER
-const char ee_wmCaption[] = u8"Eternity Engine v3.43.00 \"Völuspá\"";
+const char ee_wmCaption[] = "Eternity Engine v3.43.00 \"Voluspa\"";
 #endif
             
 // haleyjd: Eternity release history
