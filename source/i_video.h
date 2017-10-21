@@ -39,9 +39,6 @@ struct SDL_Window;
 class HALVideoDriver
 {
 protected:
-   SDL_Window *window;
-   //SDL_Renderer *renderer;
-
    virtual void SetPrimaryBuffer()        = 0;
    virtual void UnsetPrimaryBuffer()      = 0;
 
@@ -53,10 +50,7 @@ public:
    virtual void ShutdownGraphicsPartway() = 0;
    virtual bool InitGraphicsMode()        = 0;
 
-   SDL_Window *GetWindow() const
-   {
-      return window;
-   }
+   SDL_Window *window;
 };
 
 void I_StartTic();

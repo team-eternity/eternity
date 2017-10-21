@@ -179,18 +179,18 @@ static void I_Pick_FreeImages(void)
    if(bgframe)
    {
       efree(bgframe);
-      bgframe = NULL;
+      bgframe = nullptr;
    }
 
    for(int i = 0; i < NUMPICKIWADS; i++)
    {
       if(iwadpics[i])
          efree(iwadpics[i]);
-      iwadpics[i] = NULL;
+      iwadpics[i] = nullptr;
 
       if(pals[i])
          efree(pals[i]);
-      pals[i] = NULL;
+      pals[i] = nullptr;
    }
 }
 

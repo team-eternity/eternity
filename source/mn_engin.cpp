@@ -783,7 +783,6 @@ bool MN_Responder(event_t *ev)
 {
    // haleyjd 04/29/02: these need to be unsigned
    unsigned char tempstr[128];
-   unsigned char ch;
    int *menuSounds = GameModeInfo->menuSounds; // haleyjd
    static bool ctrldown = false;
    static bool shiftdown = false;
@@ -884,7 +883,7 @@ bool MN_Responder(event_t *ev)
       if(ectype::isPrint(ich) && input_buffer.length() < maxlen)
          input_buffer += static_cast<char>(ich);
 
-      return true;
+      return true; // eat key
    }
 
    if(devparm && ev->data1 == key_help)
@@ -1103,10 +1102,7 @@ bool MN_Responder(event_t *ev)
 
    // search for matching item in menu
 
-   if(ev->type == ev_text)
-      ch = ev->data1;
-
-   if(ev->type == ev_keydown && ectype::isLower(ch))
+   if(ev->type == ev_text && ectype::isLower(ev->data1))
    {  
       // sf: experimented with various algorithms for this
       //     this one seems to work as it should
@@ -1122,7 +1118,7 @@ bool MN_Responder(event_t *ev)
          // ignore unselectables
          if(!is_a_gap(&current_menu->menuitems[n])) 
          {
-            if(ectype::toLower(current_menu->menuitems[n].description[0]) == ch)
+            if(ectype::toLower(current_menu->menuitems[n].description[0]) == ev->data1)
             {
                // found a matching item!
                current_menu->selected = n;

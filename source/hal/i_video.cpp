@@ -172,7 +172,7 @@ void I_InitMouse();
 
 void I_StartTic()
 {
-   I_StartTicInWindow(i_video_driver->GetWindow());
+   I_StartTicInWindow(i_video_driver->window);
 }
 
 //=============================================================================
@@ -434,7 +434,7 @@ static bool I_InitGraphicsMode()
 
 #ifdef _MSC_VER
       // Win32 specific hacks
-      I_DisableSysMenu(i_video_driver->GetWindow());
+      I_DisableSysMenu(i_video_driver->window);
 #endif
 
       V_Init();                 // initialize high-level video

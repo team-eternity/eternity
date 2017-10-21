@@ -38,8 +38,6 @@
 #include "../v_misc.h"
 #include "../v_video.h"
 
-extern const char *shiftxform;
-
 // Grab the mouse? (int type for config code)
 int         grabmouse;
 extern int  usemouse;   // killough 10/98
@@ -548,8 +546,8 @@ static void I_GetEvent(SDL_Window *window)
             const char currchar = ev.text.text[i];
             if(ectype::isPrint(currchar))
             {
-               event_t temp = { ev_text, currchar, 0, 0, !!ev.key.repeat };
-               D_PostEvent(&temp);
+               event_t textevent = { ev_text, currchar, 0, 0, !!ev.key.repeat };
+               D_PostEvent(&textevent);
             }
          }
          break;

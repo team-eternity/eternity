@@ -277,9 +277,8 @@ enum keycode_e
    KEYD_PRINTSCREEN,
    KEYD_NUMLOCK,
    KEYD_SCROLLLOCK,
-   KEYD_HOME,
-   
-   KEYD_PAGEUP         = 0xc9,
+   KEYD_HOME,   
+   KEYD_PAGEUP,
    KEYD_END            = 0xcf,
    KEYD_PAGEDOWN       = 0xd1,
    KEYD_INSERT         = 0xd2,

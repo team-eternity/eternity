@@ -454,7 +454,6 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    int     v_h            = 480;
    int     v_displaynum   = 0;
    int     window_flags   = SDL_WINDOW_OPENGL| SDL_WINDOW_ALLOW_HIGHDPI;
-   int     flags_renderer = SDL_RENDERER_ACCELERATED|SDL_RENDERER_TARGETTEXTURE;
    GLvoid *tempbuffer     = nullptr;
    GLint   texformat      = GL_RGBA8;
    GLint   texfiltertype  = GL_LINEAR;
@@ -478,7 +477,6 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    if(cfg_gl_filter_type >= 0 && cfg_gl_filter_type < CFG_GL_NUMFILTERS)
       texfiltertype = textureFilterParams[cfg_gl_filter_type];
 
-   // SDLFIXME: Do we need to flags_renderer |= SDL_RENDERER_PRESENTVSYNC?
    // haleyjd 04/11/03: "vsync" or page-flipping support
    if(use_vsync)
       wantvsync = true;

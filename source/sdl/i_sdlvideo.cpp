@@ -480,7 +480,7 @@ VARIABLE_INT(displaynum, NULL, 0, UL, nullptr);
 CONSOLE_VARIABLE(displaynum, displaynum, 0)
 {
    const int numdisplays = SDL_GetNumVideoDisplays();
-   // displaynum is an index, so == numdisplays is 1 too high
+   // displaynum is an index, so displaynum == numdisplays is 1 too high
    if(displaynum >= numdisplays)
    {
       C_Printf(FC_ERROR "Warning: displaynum's current maximum is %d, resetting to 0",
