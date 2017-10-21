@@ -831,9 +831,6 @@ bool MN_Responder(event_t *ev)
    // are we inputting a new value into a variable?
    if(ev->type == ev_keydown && input_command)
    {
-      unsigned char ich = 0;
-      variable_t *var = input_command->variable;
-      
       if(action == ka_menu_toggle) // cancel input
          input_command = NULL;      
       else if(action == ka_menu_confirm)
@@ -862,13 +859,15 @@ bool MN_Responder(event_t *ev)
          return true; // eat key
       }
 
-      // probably just a normal character
-      
-      // only care about valid characters
-      // dont allow too many characters on one command line
-      if(ev->type == ev_text)
-         ich = static_cast<unsigned char>(ev->data1);
+      return true;
+   }
+   else if(ev->type == ev_text && input_command)
+   {
+      // just a normal character
+      variable_t *var = input_command->variable;
+      const unsigned char ich = static_cast<unsigned char>(ev->data1);
 
+      // dont allow too many characters on one command line
       size_t maxlen = 20u;
       switch(var->type)
       {
@@ -884,9 +883,9 @@ bool MN_Responder(event_t *ev)
       }
       if(ectype::isPrint(ich) && input_buffer.length() < maxlen)
          input_buffer += static_cast<char>(ich);
-      
+
       return true;
-   } 
+   }
 
    if(devparm && ev->data1 == key_help)
    {

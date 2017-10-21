@@ -476,7 +476,7 @@ CONSOLE_COMMAND(maxdisplaynum, 0)
    C_Printf("%d", SDL_GetNumVideoDisplays() - 1);
 }
 
-VARIABLE_INT(displaynum, 0, 0, UL, nullptr);
+VARIABLE_INT(displaynum, NULL, 0, UL, nullptr);
 CONSOLE_VARIABLE(displaynum, displaynum, 0)
 {
    const int numdisplays = SDL_GetNumVideoDisplays();
@@ -487,6 +487,8 @@ CONSOLE_VARIABLE(displaynum, displaynum, 0)
                numdisplays - 1);
       displaynum = 0;
    }
+
+   I_SetMode();
 }
 
 

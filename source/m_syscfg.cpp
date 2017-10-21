@@ -244,7 +244,7 @@ static default_t sysdefaults[] =
 
 #ifdef _SDL_VER
    DEFAULT_INT("displaynum", &displaynum, NULL, 0, 0, UL, default_t::wad_no,
-         "Display number that the window appears on"),
+               "Display number that the window appears on"),
 
    DEFAULT_INT("wait_at_exit", &waitAtExit, NULL, 0, 0, 1, default_t::wad_no,
                "Always wait for input at exit"),

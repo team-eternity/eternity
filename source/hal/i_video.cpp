@@ -60,7 +60,7 @@
 // Video Driver Object Pointer
 //
 
-HALVideoDriver *i_video_driver = NULL;
+HALVideoDriver *i_video_driver = nullptr;
 
 //=============================================================================
 //
