@@ -2200,7 +2200,6 @@ static menuitem_t mn_vidadv_items[] =
    { it_gap },
    { it_info,     "Advanced"},
    { it_toggle,   "Video driver",             "i_videodriverid"    },
-   { it_variable, "Software bitdepth",        "i_softbitdepth"     },
    { it_gap },
    { it_info,     "OpenGL"},
    { it_variable, "GL color depth",           "gl_colordepth"      },

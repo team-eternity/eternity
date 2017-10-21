@@ -202,9 +202,6 @@ static default_t sysdefaults[] =
    DEFAULT_INT("i_videodriverid", &i_videodriverid, NULL, -1, -1, VDR_MAXDRIVERS-1, 
                default_t::wad_no, i_videohelpstr),
 
-   DEFAULT_INT("i_softbitdepth", &i_softbitdepth, NULL, 8, 8, 32, default_t::wad_no,
-               "Software backend screen bitdepth (8, 16, 24, or 32)"),
-
    DEFAULT_STR("i_videomode", &i_default_videomode, &i_videomode, "640x480w", default_t::wad_no,
                "Description of video mode parameters (WWWWxHHHH[flags])"),
 

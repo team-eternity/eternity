@@ -189,9 +189,6 @@ bool in_graphics_mode;
 char *i_default_videomode;
 char *i_videomode;
 
-// haleyjd 06/17/11: software-mode bitdepth setting (for better -8in32)
-int i_softbitdepth;
-
 // haleyjd 03/30/14: support for letterboxing narrow resolutions
 bool i_letterbox;
 
@@ -612,9 +609,6 @@ static const char *i_videodrivernames[] =
 
 VARIABLE_INT(i_videodriverid, NULL, -1, VDR_MAXDRIVERS-1, i_videodrivernames);
 CONSOLE_VARIABLE(i_videodriverid, i_videodriverid, 0) {}
-
-VARIABLE_INT(i_softbitdepth, NULL, 8, 32, NULL);
-CONSOLE_VARIABLE(i_softbitdepth, i_softbitdepth, 0) {}
 
 VARIABLE_TOGGLE(i_letterbox, NULL, yesno);
 CONSOLE_VARIABLE(i_letterbox, i_letterbox, cf_buffered)

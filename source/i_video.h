@@ -87,7 +87,6 @@ void I_SetMode();
 extern char *i_videomode;
 extern char *i_default_videomode;
 extern int   i_videodriverid;
-extern int   i_softbitdepth;
 extern bool  i_letterbox;
 extern int   displaynum;
 

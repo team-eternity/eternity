@@ -76,9 +76,6 @@ extern char *i_videomode;
 // MaxW: 2017/10/20: display number
 int displaynum = 0;
 
-// haleyjd 12/03/07: 8-on-32 graphics support
-static bool crossbitdepth;
-
 //
 // SDLVideoDriver::FinishUpdate
 //
@@ -300,7 +297,6 @@ bool SDLVideoDriver::InitGraphicsMode()
    // haleyjd 06/19/11: remember characteristics of last successful modeset
    static int fallback_w       = 640;
    static int fallback_h       = 480;
-   static int fallback_bd      =   8;
    static int fallback_w_flags = SDL_WINDOW_ALLOW_HIGHDPI;
    // SDL_RENDERER_SOFTWARE causes failures in creating renderer
    static int fallback_r_flags = SDL_RENDERER_TARGETTEXTURE;
@@ -311,32 +307,10 @@ bool SDLVideoDriver::InitGraphicsMode()
    bool wantframe      = true;
    int  v_w            = 640;
    int  v_h            = 480;
-   int  v_bd           = 8;
    int  v_displaynum   = 0;
    int  window_flags   = SDL_WINDOW_ALLOW_HIGHDPI;
    // SDL_RENDERER_SOFTWARE causes failures in creating renderer
    int  renderer_flags = SDL_RENDERER_TARGETTEXTURE;
-
-   // SDL_FIXME: The bitdepth settings do nothing
-   // haleyjd 12/03/07: cross-bit-depth support
-   if(M_CheckParm("-8in32"))
-     v_bd = 32;
-   else if(i_softbitdepth > 8)
-   {
-      switch(i_softbitdepth)
-      {
-      case 16: // Valid screen bitdepth settings
-      case 24:
-      case 32:
-         v_bd = i_softbitdepth;
-         break;
-      default:
-         break;
-      }
-   }
-
-   if(v_bd != 8)
-      crossbitdepth = true;
 
    // haleyjd 04/11/03: "vsync" or page-flipping support
    if(use_vsync)
@@ -396,7 +370,6 @@ bool SDLVideoDriver::InitGraphicsMode()
       // reset these for below population of video struct
       v_w          = fallback_w;
       v_h          = fallback_h;
-      v_bd         = fallback_bd;
       window_flags = fallback_w_flags;
    }
 
@@ -418,19 +391,11 @@ bool SDLVideoDriver::InitGraphicsMode()
    // Record successful mode set for use as a fallback mode
    fallback_w     = v_w;
    fallback_h     = v_h;
-   fallback_bd    = v_bd;
    fallback_w_flags = window_flags;
    fallback_r_flags = renderer_flags;
 
    // haleyjd 10/09/05: keep track of fullscreen state
    fullscreen = !!(SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP);
-
-   // haleyjd 12/03/07: if the video surface is not high-color, we
-   // disable cross-bit-depth drawing for efficiency
-   const SDL_Surface const *windowsurface = SDL_GetWindowSurface(window);
-   // window surface may be null
-   if(windowsurface && windowsurface->format->BitsPerPixel == 8)
-      crossbitdepth = false;
 
    UpdateFocus(window);
    UpdateGrab(window);
