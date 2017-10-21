@@ -265,7 +265,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    forward = side = 0;
 
    cmd->itemID = 0; // Nothing to see here
-   if(gameactions[ka_inventory_use] && demo_version >= 343)
+   if(gameactions[ka_inventory_use] && demo_version >= 349)
    {
       // FIXME: Handle noartiskip
       if(invbarstate.inventory)
@@ -353,7 +353,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       cmd->buttons |= BT_USE;
 
 
-   if(demo_version >= 344)
+   if(demo_version >= 350)
    {
       if(gameactions[ka_attack_alt])
          cmd->buttons |= BTN_ATTACK_ALT;
@@ -1428,7 +1428,7 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
       else
          cmd->fly = 0;
       
-      if(demo_version >= 343)
+      if(demo_version >= 349)
       {
          cmd->itemID  =  *demo_p++;
          cmd->itemID |= (*demo_p++) << 8;
@@ -1436,7 +1436,7 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
       else
          cmd->itemID = 0;
 
-      if(demo_version >= 344)
+      if(demo_version >= 350)
       {
          cmd->weaponID  =  *demo_p++;
          cmd->weaponID |= (*demo_p++) << 8;
@@ -1500,13 +1500,13 @@ static void G_WriteDemoTiccmd(ticcmd_t *cmd)
    if(full_demo_version >= make_full_version(340, 23))
       demo_p[i++] = cmd->fly;
 
-   if(demo_version >= 343)
+   if(demo_version >= 349)
    {
       demo_p[i++] =  cmd->itemID & 0xff;
       demo_p[i++] = (cmd->itemID >> 8) & 0xff;
    }
    
-   if(demo_version >= 344)
+   if(demo_version >= 350)
    {
       demo_p[i++] =  cmd->weaponID & 0xff;
       demo_p[i]   = (cmd->weaponID >> 8) & 0xff;
@@ -2339,7 +2339,7 @@ void G_PlayerReborn(int player)
    p->usedown = true;         // don't do anything immediately
 
    // MaxW: 2017/07/10: Adapt for new attackdown
-   p->attackdown = demo_version >= 344 ? AT_ALL : AT_PRIMARY;
+   p->attackdown = demo_version >= 350 ? AT_ALL : AT_PRIMARY;
 
    // clear inventory unless otherwise indicated
    if(!(dmflags & DM_KEEPITEMS))

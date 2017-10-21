@@ -234,7 +234,7 @@ int P_NextWeapon(player_t *player)
    while((!E_PlayerOwnsWeapon(player, newweapon) || !ammototry) &&
          newweapon->id != currentweapon->id);
 
-   if(demo_version >= 344)
+   if(demo_version >= 350)
       return newweapon != currentweapon ? newweapon->id : -1;
    else
       return newweapon != currentweapon ? newweapon->dehnum : wp_nochange;
@@ -260,7 +260,7 @@ int P_PrevWeapon(player_t *player)
    while((!E_PlayerOwnsWeapon(player, newweapon) || !ammototry) &&
          newweapon->id != currentweapon->id);
 
-   if(demo_version >= 344)
+   if(demo_version >= 350)
       return newweapon != currentweapon ? newweapon->id : -1;
    else
       return newweapon != currentweapon ? newweapon->dehnum : wp_nochange;
@@ -677,7 +677,7 @@ void A_WeaponReady(actionargs_t *actionargs)
 
    // check for fire
    // certain weapons do not auto fire
-   if(demo_version >= 344 && P_tryFireWeapon(player))
+   if(demo_version >= 350 && P_tryFireWeapon(player))
       return;
    else if(player->cmd.buttons & BT_ATTACK)
    {
@@ -716,7 +716,7 @@ static void A_reFireNew(actionargs_t *actionargs)
       player->refire++;
       P_FireWeapon(player);
    }
-   else if(demo_version >= 344 && (player->cmd.buttons & BTN_ATTACK_ALT)
+   else if(demo_version >= 350 && (player->cmd.buttons & BTN_ATTACK_ALT)
       && player->pendingweapon == nullptr && player->health
       && !(player->attackdown & AT_PRIMARY))
    {
@@ -738,7 +738,7 @@ static void A_reFireNew(actionargs_t *actionargs)
 //
 void A_ReFire(actionargs_t *actionargs)
 {
-   if(demo_version >= 344)
+   if(demo_version >= 350)
    {
       A_reFireNew(actionargs);
       return;
@@ -903,7 +903,7 @@ void P_WeaponRecoil(player_t *player)
 //
 void A_FireSomething(player_t* player, int adder)
 {
-   if(demo_version >= 344 && player->attackdown & AT_SECONDARY)
+   if(demo_version >= 350 && player->attackdown & AT_SECONDARY)
       P_SetPsprite(player, ps_flash, player->readyweapon->flashstate_alt);
    else
       P_SetPsprite(player, ps_flash, player->readyweapon->flashstate+adder);

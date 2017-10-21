@@ -117,7 +117,7 @@ bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
    
    // If the player is doing a demo w/ EDF-weapons and the weapon should be switched from,
    // try to do so, otherwise do the legacy ammo switch
-   if(demo_version >= 344 &&
+   if(demo_version >= 350 &&
       (!player->readyweapon || (player->readyweapon->flags & WPF_AUTOSWITCHFROM)))
       player->pendingweapon = E_FindBestWeaponUsingAmmo(player, ammo);
    else if(!strcasecmp(ammo->getKey(), "AmmoClip"))

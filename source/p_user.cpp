@@ -627,7 +627,7 @@ void P_PlayerThink(player_t *player)
 
    cmd = &player->cmd;
 
-   if(cmd->itemID && demo_version >= 343)
+   if(cmd->itemID && demo_version >= 349)
    {
       E_TryUseItem(player, cmd->itemID - 1); // ticcmd ID is off by one
    }
@@ -737,7 +737,7 @@ void P_PlayerThink(player_t *player)
    if(cmd->buttons & BT_SPECIAL)
       cmd->buttons = 0;
 
-   if(demo_version >= 344)
+   if(demo_version >= 350)
    {
       if(cmd->weaponID)
          player->pendingweapon = E_WeaponForID(cmd->weaponID - 1); // weaponID is off by one

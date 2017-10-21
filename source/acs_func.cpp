@@ -912,8 +912,8 @@ bool ACS_CF_GetPlayerInput(ACS_CF_ARGS)
       if(player->cmd.actions & AC_JUMP)
          result |= BUTTON_JUMP;
 
-      // BTN: Top 5 bits of cmd.buttons that are used for weapon switching prior to v3.44
-      if(demo_version >= 344)
+      // BTN: Top 5 bits of cmd.buttons that are used for weapon switching prior to v3.50
+      if(demo_version >= 350)
       {
          if(player->cmd.buttons & BTN_ATTACK_ALT)
             result |= BUTTON_ALTATTACK;
