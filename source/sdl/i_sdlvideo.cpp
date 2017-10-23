@@ -436,6 +436,10 @@ bool SDLVideoDriver::InitGraphicsMode()
 // The one and only global instance of the SDL video driver.
 SDLVideoDriver i_sdlvideodriver;
 
+/************************
+CONSOLE COMMANDS
+************************/
+
 CONSOLE_COMMAND(maxdisplaynum, 0)
 {
    C_Printf("%d", SDL_GetNumVideoDisplays() - 1);

@@ -62,12 +62,12 @@ int main(int argc, char **argv)
 {
    myargc = argc;
    myargv = argv;
-
-   // SDL_FIXME: This might become unnecessary at some point.
-#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
-   SDL_setenv("SDL_AUDIODRIVER", "directsound", true);
-#endif
    
+   // SDL_FIXME: If this is removed then all sound effects are pitched too high
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS 
+   SDL_setenv("SDL_AUDIODRIVER", "directsound", true);
+#endif 
+
    // MaxW: 2017/09/16: Now prints the error on failure
    // haleyjd 04/15/02: added check for failure
    if(SDL_Init(INIT_FLAGS) == -1)
@@ -115,8 +115,8 @@ static void VerifySDLVersions()
    // must update these when SDL is updated.
    static SDL_version ex_vers[3] = 
    {
-      { 2, 0, 6 }, // SDL
-      { 2, 0, 1 }, // SDL_mixer
+      { 2, 0, 7 }, // SDL
+      { 2, 0, 2 }, // SDL_mixer
       { 2, 0, 1 }, // SDL_net
    };
 
