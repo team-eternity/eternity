@@ -434,7 +434,7 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
 
       if(clip.thing->target &&
          (clip.thing->target->type == thing->type ||
-          E_ProjectileAllies(clip.thing->target->type, thing->type)))
+          E_ThingPairValid(clip.thing->target->type, thing->type, TGF_PROJECTILEALLIANCE)))
       {
          if(thing == clip.thing->target)
             return true;                // Don't hit same species as originator.

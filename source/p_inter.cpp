@@ -1541,7 +1541,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    emod_t *emod;
    player_t *player;
    bool justhit = false;  // killough 11/98
-   bool bossignore;       // haleyjd
+   bool speciesignore;       // haleyjd
    
    // killough 8/31/98: allow bouncers to take damage
    if(!(target->flags & (MF_SHOOTABLE | MF_BOUNCES)))
@@ -1809,18 +1809,18 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    // killough 9/9/98: cleaned up, made more consistent:
    // haleyjd 11/24/02: added MF3_DMGIGNORED and MF3_BOSSIGNORE flags
 
-   // EDF_FIXME: replace BOSSIGNORE with generalized infighting controls.
-   // BOSSIGNORE flag will be made obsolete.
+   // BOSSIGNORE flag is deprecated, use thinggroup with DAMAGEIGNORE instead
 
    // haleyjd: set bossignore
    if(source && (source->type != target->type) &&
-      (source->flags3 & target->flags3 & MF3_BOSSIGNORE))
+      (source->flags3 & target->flags3 & MF3_BOSSIGNORE || 
+         E_ThingPairValid(source->type, target->type, TGF_DAMAGEIGNORE)))
    {
       // ignore if friendliness matches
-      bossignore = !((source->flags ^ target->flags) & MF_FRIEND);
+      speciesignore = !((source->flags ^ target->flags) & MF_FRIEND);
    }
    else
-      bossignore = false;
+      speciesignore = false;
 
    // Set target based on the following criteria:
    // * Damage is sourced and source is not self.
@@ -1833,7 +1833,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    
    if(source && source != target                                     // source checks
       && !(source->flags3 & MF3_DMGIGNORED)                          // not ignored?
-      && !bossignore                                                 // EDF_FIXME!
+      && !speciesignore                                              // species not fighting
       && (!target->threshold || (target->flags3 & MF3_NOTHRESHOLD))  // threshold?
       && ((source->flags ^ target->flags) & MF_FRIEND ||             // friendliness?
            monster_infighting || demo_version < 203)

@@ -588,18 +588,12 @@ cfg_opt_t edf_tdelta_opts[] =
 
 
 //==============================================================================
-//
-// Thinggroup flags
-//
-enum
-{
-   TGF_PROJECTILEALLIES = 1,  // things in group are immune to their projectiles
-};
 
 static dehflags_t tgroup_kinds[] =
 {
-   { "PROJECTILEALLIANCE", TGF_PROJECTILEALLIES },
-   { nullptr,              0                    }
+   { "PROJECTILEALLIANCE", TGF_PROJECTILEALLIANCE },
+   { "DAMAGEIGNORE",       TGF_DAMAGEIGNORE       },
+   { nullptr,              0                      }
 };
 
 //
@@ -627,28 +621,29 @@ cfg_opt_t edf_tgroup_opts[] =
 class ThingGroup : public ZoneObject
 {
 public:
-   explicit ThingGroup(const char *inname) : name(inname), link(), kind()
+   explicit ThingGroup(const char *inname) : name(inname), link(), flags()
    {
    }
 
    qstring name;
    DLListItem<ThingGroup> link;
 
-   unsigned kind;
+   unsigned flags;
    PODCollection<int> types;
 };
 
 //
 // A projectile alliance definition
 //
-struct projectilealliance_t
+struct thinggrouppair_t
 {
    union
    {
       int types[2];
       int64_t key;
    };
-   DLListItem<projectilealliance_t> link;
+   DLListItem<thinggrouppair_t> link;
+   unsigned flags;   // use flags from ThingGroup
 };
 
 //==============================================================================
@@ -681,8 +676,8 @@ static EHashTable<mobjinfo_t, EIntHashKey,
 static EHashTable<ThingGroup, ENCQStrHashKey,
                   &ThingGroup::name, &ThingGroup::link> thinggroup_namehash(53);
 
-static EHashTable<projectilealliance_t, EInt64HashKey,
-     &projectilealliance_t::key, &projectilealliance_t::link> prjalliances(NUMTHINGCHAINS);
+static EHashTable<thinggrouppair_t, EInt64HashKey,
+     &thinggrouppair_t::key, &thinggrouppair_t::link> thinggrouppairs(NUMTHINGCHAINS);
 
 //
 // As with states, things need to store their DeHackEd number now.
@@ -2956,7 +2951,7 @@ void E_ProcessThingGroups(cfg_t *cfg)
 
       const char *tempstr = cfg_getstr(gsec, ITEM_TGROUP_KIND);
       if(estrnonempty(tempstr))
-         group->kind = E_ParseFlags(tempstr, &tgroup_kindset);
+         group->flags = E_ParseFlags(tempstr, &tgroup_kindset);
 
       unsigned numtypes = cfg_size(gsec, ITEM_TGROUP_TYPES);
       if(numtypes)
@@ -2978,18 +2973,19 @@ void E_ProcessThingGroups(cfg_t *cfg)
    }
 
    // Now process them
-   projectilealliance_t *proj;
-   while((proj = prjalliances.tableIterator((projectilealliance_t*)nullptr)))
+   thinggrouppair_t *proj;
+   while((proj = thinggrouppairs.tableIterator((thinggrouppair_t*)nullptr)))
    {
-      prjalliances.removeObject(proj);
+      thinggrouppairs.removeObject(proj);
       efree(proj);
    }
 
    group = nullptr;
+   static const unsigned operationalFlags = TGF_PROJECTILEALLIANCE | TGF_DAMAGEIGNORE;
    while((group = thinggroup_namehash.tableIterator(group)))
    {
-      // Currently only this is supported
-      if(!(group->kind & TGF_PROJECTILEALLIES))
+      // Currently only these are supported
+      if(!(group->flags & operationalFlags))
          continue;
       // Setup relation
       for(int entry : group->types)
@@ -2999,13 +2995,15 @@ void E_ProcessThingGroups(cfg_t *cfg)
             if(other <= entry)
                continue;
             int64_t key = (int64_t)entry | (int64_t)other << 32;
-            proj = prjalliances.objectForKey(key);
-            if(proj)
-               continue;
-            proj = estructalloc(projectilealliance_t, 1);
-            proj->types[0] = entry;
-            proj->types[1] = other;
-            prjalliances.addObject(proj);
+            proj = thinggrouppairs.objectForKey(key);
+            if (!proj)
+            {
+               proj = estructalloc(thinggrouppair_t, 1);
+               proj->types[0] = entry;
+               proj->types[1] = other;
+               thinggrouppairs.addObject(proj);
+            }
+            proj->flags |= group->flags & operationalFlags;
          }
       }
    }
@@ -3014,7 +3012,7 @@ void E_ProcessThingGroups(cfg_t *cfg)
 //
 // Returns that two monsters are allies
 //
-bool E_ProjectileAllies(mobjtype_t t1, mobjtype_t t2)
+bool E_ThingPairValid(mobjtype_t t1, mobjtype_t t2, unsigned flags)
 {
    if(t2 < t1)
    {
@@ -3022,7 +3020,8 @@ bool E_ProjectileAllies(mobjtype_t t1, mobjtype_t t2)
       t1 = t2;
       t2 = aux;
    }
-   return !!prjalliances.objectForKey((int64_t)t1 | (int64_t)t2 << 32);
+   const thinggrouppair_t *pair = thinggrouppairs.objectForKey((int64_t)t1 | (int64_t)t2 << 32);
+   return pair && pair->flags & flags;
 }
 
 //

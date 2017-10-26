@@ -53,6 +53,15 @@ extern cfg_opt_t edf_tgroup_opts[];
 
 #endif
 
+//
+// Thinggroup flags
+//
+enum
+{
+   TGF_PROJECTILEALLIANCE = 1,   // things in group are immune to their projectiles
+   TGF_DAMAGEIGNORE = 2,         // things in group don't react to being damaged
+};
+
 // Global Functions
 
 // For EDF Only:
@@ -89,7 +98,7 @@ state_t *E_GetStateForMobjInfo(mobjinfo_t *mi, const char *label);
 state_t *E_GetStateForMobj(Mobj *mo, const char *label);
 
 // Thing groups
-bool E_ProjectileAllies(int t1, int t2);
+bool E_ThingPairValid(int t1, int t2, unsigned flags);
 
 // ioanch 20160220: metastate key names used throughout the code. They also
 // work as DECORATE state label names.
