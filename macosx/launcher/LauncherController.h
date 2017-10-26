@@ -125,6 +125,7 @@
 -(IBAction)showUserInFinder:(id)sender;
 -(IBAction)showFileInFinder:(id)sender;
 -(IBAction)accessBaseFolder:(id)sender;
+-(IBAction)showConsole:(id)sender;
 
 -(IBAction)makeCheckboxUndo:(id)sender;
 

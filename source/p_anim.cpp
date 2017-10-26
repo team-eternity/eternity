@@ -29,11 +29,13 @@
 
 #include "z_zone.h"
 #include "doomstat.h"
+#include "e_anim.h"
 #include "r_data.h"
 #include "r_defs.h"
 #include "r_state.h"
 #include "r_sky.h"
 #include "m_collection.h"
+#include "m_compare.h"
 #include "m_random.h"
 #include "p_setup.h"
 #include "s_sound.h"
@@ -41,7 +43,6 @@
 #include "p_anim.h"
 #include "p_info.h"
 #include "a_small.h"
-#include "xl_animdefs.h"
 
 int NextLightningFlash;
 int LightningFlash;
@@ -63,6 +64,7 @@ struct hframedef_t
    int tics;
    int ticsmin;
    int ticsmax;   // just use all the space
+   bool swirls;
 };
 
 //
@@ -88,41 +90,59 @@ static void P_LightningFlash();
 //
 void P_InitHexenAnims()
 {
-   for(const XLAnimDef &xad: xldefs)
+   for(const EAnimDef *ead : eanimations)
    {
-      // Validate count
-      if(xad.count < 2)
-         continue;   // must be at least 2
-
+      if(ead->pics.getLength() < 1)
+         continue;
       hanimdef_t &had = AnimDefs.addNew();
-      had.type = xad.type == xlanim_flat ? ANIM_FLAT : ANIM_TEXTURE;
+      had.type = ead->type == EAnimDef::type_flat ? ANIM_FLAT : ANIM_TEXTURE;
+      int (*texlookup)(const char *);
       if(had.type == ANIM_FLAT)
       {
-         if(R_CheckForFlat(xad.picname.constPtr()) == -1)
+         if(R_CheckForFlat(ead->startpic.constPtr()) == -1)
+         {
+            AnimDefs.pop();
             continue;
-         had.index = R_FindFlat(xad.picname.constPtr());
+         }
+         had.index = (texlookup = R_FindFlat)(ead->startpic.constPtr());
       }
       else
       {
-         if(R_CheckForWall(xad.picname.constPtr()) == -1)
+         if(R_CheckForWall(ead->startpic.constPtr()) == -1)
+         {
+            AnimDefs.pop();
             continue;
-         had.index = R_FindWall(xad.picname.constPtr());
+         }
+         had.index = (texlookup = R_FindWall)(ead->startpic.constPtr());
       }
       had.startFrameDef = static_cast<int>(FrameDefs.getLength());
 
-      for(int i = xad.index; i < xad.index + xad.count; ++i)
+      for(EAnimDef::Pic &pic : ead->pics)
       {
-         const xlpicdef_t &xfd = xlpics[i];
          hframedef_t &hfd = FrameDefs.addNew();
-         hfd.index = had.index + xfd.offset - 1;
-         if(hfd.index < 0 || hfd.index >= texturecount)
-            hfd.index = 0; // prevent overflow
-         if(!xfd.isRandom)
-            hfd.tics = xfd.tics;
+         if(!pic.name.empty())
+            hfd.index = texlookup(pic.name.constPtr());
+         else
+            hfd.index = eclamp(had.index + pic.offset - 1, 0, texturecount - 1);
+         if(pic.ticsmax <= pic.ticsmin)
+         {
+            hfd.tics = pic.ticsmin;
+            if(hfd.tics <= 0)
+               hfd.tics = 1;
+         }
          else
          {
-            hfd.ticsmin = xfd.ticsmin;
-            hfd.ticsmax = xfd.ticsmax;
+            hfd.ticsmin = pic.ticsmin;
+            hfd.ticsmax = pic.ticsmax;
+            if(hfd.ticsmin <= 0)
+               hfd.ticsmin = 1;  // zero or negative is illegal
+            if(hfd.ticsmax < hfd.ticsmin)
+               hfd.ticsmax = hfd.ticsmin;
+         }
+         hfd.swirls = !!((pic.flags | ead->flags) & EAnimDef::SWIRL);
+         if(hfd.index != texturecount - 1)
+         {
+            textures[hfd.index]->flags |= TF_ANIMATED;
          }
       }
       had.endFrameDef = static_cast<int>(FrameDefs.getLength()) - 1;
@@ -152,6 +172,13 @@ void P_AnimateSurfaces()
          else
             had.tics = hfd.tics;
          texturetranslation[had.index] = hfd.index;
+
+         // Set TF_SWIRLY on the *source* texture index. This gives fine control
+         // over one's sequence without affecting unrelated surfaces.
+         if(hfd.swirls)
+            textures[had.index]->flags |= TF_SWIRLY;
+         else
+            textures[had.index]->flags &= ~TF_SWIRLY;
       }
    }
 

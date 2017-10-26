@@ -381,7 +381,10 @@ void R_InitTranMap(bool force)
             {
                if((err = tot[color] - pal[0][color]*r
                   - pal[1][color]*g - pal[2][color]*b) < best)
-                  best = err, *tp = color;
+               {
+                  best = err;
+                  *tp = color;
+               }
             }
             while(--color >= 0);
          }
@@ -490,7 +493,10 @@ void R_InitSubMap(bool force)
             {
                if((err = tot[color] - pal[0][color]*r
                   - pal[1][color]*g - pal[2][color]*b) < best)
-                  best = err, *tp = color;
+               {
+                  best = err;
+                  *tp = color;
+               }
             }
             while(--color >= 0);
          }

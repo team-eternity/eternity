@@ -151,7 +151,8 @@ void ScrollThinker::Think()
             (!(thing->flags & MF_NOGRAVITY || thing->z > height) ||
              thing->z < waterheight))
          {
-            thing->momx += dx, thing->momy += dy;
+            thing->momx += dx;
+            thing->momy += dy;
          }
       }
       break;
@@ -296,7 +297,11 @@ static void Add_WallScroller(int64_t dx, int64_t dy, const line_t *l,
 {
    fixed_t x = D_abs(l->dx), y = D_abs(l->dy), d;
    if(y > x)
-      d = x, x = y, y = d;
+   {
+      d = x;
+      x = y;
+      y = d;
+   }
    d = FixedDiv(x,
       finesine[(tantoangle[FixedDiv(y,x)>>DBITS]+ANG90) >> ANGLETOFINESHIFT]);
 
