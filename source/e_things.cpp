@@ -211,7 +211,7 @@ int UnknownThingType;
 //
 // Thing groups
 //
-#define ITEM_TGROUP_KIND "kind"
+#define ITEM_TGROUP_KIND "flags"
 #define ITEM_TGROUP_TYPES "types"
 
 //
@@ -598,8 +598,8 @@ enum
 
 static dehflags_t tgroup_kinds[] =
 {
-   { "PROJECTILEALLIES", TGF_PROJECTILEALLIES },
-   { nullptr,            0                    }
+   { "PROJECTILEALLIANCE", TGF_PROJECTILEALLIES },
+   { nullptr,              0                    }
 };
 
 //
@@ -2992,9 +2992,9 @@ void E_ProcessThingGroups(cfg_t *cfg)
       if(!(group->kind & TGF_PROJECTILEALLIES))
          continue;
       // Setup relation
-      for(int &entry : group->types)
+      for(int entry : group->types)
       {
-         for(int &other : group->types)
+         for(int other : group->types)
          {
             if(other <= entry)
                continue;

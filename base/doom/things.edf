@@ -3507,7 +3507,7 @@ thingtype EEBetaLostSoul : LostSoul, 9037, 161
 
 thinggroup Bruiser
 {
-  kind PROJECTILEALLIES
+  flags PROJECTILEALLIANCE
   types { BaronOfHell, HellKnight }
 }
 
