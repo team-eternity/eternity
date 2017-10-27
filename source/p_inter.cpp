@@ -1229,6 +1229,7 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
 
       target->flags  &= ~MF_SOLID;
       P_PlayerStopFlight(target->player);  // haleyjd: stop flying
+      target->player->prevpitch = target->player->pitch; // MaxW: Stop interpolation jittering
       target->player->playerstate = PST_DEAD;
       P_DropWeapon(target->player);
 
