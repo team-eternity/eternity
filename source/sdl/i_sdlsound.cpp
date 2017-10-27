@@ -808,7 +808,7 @@ static int I_SDLInitSound()
    // haleyjd 10/02/08: this must be done as early as possible.
    I_SetChannels();
 
-   Mix_SetPostMix(I_SDLUpdateSoundCB, NULL);
+   Mix_SetPostMix(I_SDLUpdateSoundCB, nullptr);
    printf("Configured audio device with %d samples/slice.\n", audio_buffers);
 
    return 1;

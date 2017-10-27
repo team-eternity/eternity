@@ -468,12 +468,15 @@ static void I_Pick_MainLoop(void)
                doloop = false;
                currentiwad = -1; // erase selection
                break;
+            case SDL_SCANCODE_KP_ENTER:
             case SDL_SCANCODE_RETURN:
                doloop = false;
                break;
+            case SDL_SCANCODE_KP_6:
             case SDL_SCANCODE_RIGHT:
                I_Pick_DoRight();
                break;
+            case SDL_SCANCODE_KP_4:
             case SDL_SCANCODE_LEFT:
                I_Pick_DoLeft();
                break;

@@ -63,10 +63,10 @@ int main(int argc, char **argv)
    myargc = argc;
    myargv = argv;
    
-   // SDL_FIXME: If this is removed then all sound effects are pitched too high
-#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS 
-   SDL_setenv("SDL_AUDIODRIVER", "directsound", true);
-#endif 
+   // SDL_FIXME: If this is removed then all sound effects are pitched too high. Why?
+#if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS) && defined(_SDL_VER)
+   SDL_setenv("SDL_AUDIODRIVER", "winmm", true);
+#endif
 
    // MaxW: 2017/09/16: Now prints the error on failure
    // haleyjd 04/15/02: added check for failure
