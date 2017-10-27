@@ -1233,7 +1233,7 @@ static void E_ProcessStatesAndThings(cfg_t *cfg)
    // process things: see e_things.c
    E_ProcessThings(cfg);
 
-   // process thing groups
+   // process thing groups. Needs to be after things.
    E_ProcessThingGroups(cfg);
 }
 

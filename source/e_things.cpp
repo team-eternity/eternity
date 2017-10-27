@@ -58,6 +58,7 @@
 #include "r_defs.h"
 #include "r_draw.h"
 #include "w_wad.h"
+#include "z_auto.h"
 
 // 11/06/11: track generations
 static int edf_thing_generation = 1; 
@@ -211,7 +212,7 @@ int UnknownThingType;
 //
 // Thing groups
 //
-#define ITEM_TGROUP_KIND "flags"
+#define ITEM_TGROUP_FLAGS "flags"
 #define ITEM_TGROUP_TYPES "types"
 
 //
@@ -593,6 +594,7 @@ static dehflags_t tgroup_kinds[] =
 {
    { "PROJECTILEALLIANCE", TGF_PROJECTILEALLIANCE },
    { "DAMAGEIGNORE",       TGF_DAMAGEIGNORE       },
+   { "INHERITED",          TGF_INHERITED          },
    { nullptr,              0                      }
 };
 
@@ -610,7 +612,7 @@ static dehflagset_t tgroup_kindset =
 //
 cfg_opt_t edf_tgroup_opts[] =
 {
-   CFG_STR(ITEM_TGROUP_KIND, "", CFGF_NONE),
+   CFG_STR(ITEM_TGROUP_FLAGS, "", CFGF_NONE),
    CFG_STR(ITEM_TGROUP_TYPES, 0, CFGF_LIST),
    CFG_END()
 };
@@ -1303,7 +1305,7 @@ static void E_ProcessDamageTypeStates(cfg_t *cfg, const char *name,
 // by name. Returns null otherwise. Self-identity is *not* considered 
 // inheritance.
 //
-mobjinfo_t *E_IsMobjInfoDescendantOf(mobjinfo_t *mi, const char *type)
+static mobjinfo_t *E_IsMobjInfoDescendantOf(mobjinfo_t *mi, const char *type)
 {
    mobjinfo_t *curmi = mi->parent;
    int targettype = E_ThingNumForName(type);
@@ -2928,12 +2930,28 @@ void E_ProcessThings(cfg_t *cfg)
 }
 
 //
+// True if mobjtype low is a descendant of high.
+//
+static bool E_mobjTypeIsDescendantOf(mobjtype_t low, mobjtype_t high)
+{
+   for(const mobjinfo_t *info = mobjinfo[low]; info; info = info->parent)
+      if(info->index == high)
+         return true;
+   return false;
+}
+
+//
 // Process thing group definitions
 //
 void E_ProcessThingGroups(cfg_t *cfg)
 {
    unsigned numgroups = cfg_size(cfg, EDF_SEC_THINGGROUP);
    ThingGroup *group;
+
+   // Have a visited list
+   ZAutoBuffer zvisited(NUMMOBJTYPES, true);
+   bool *visited = zvisited.getAs<bool *>();
+
    for(unsigned i = 0; i < numgroups; ++i)
    {
       cfg_t *gsec = cfg_getnsec(cfg, EDF_SEC_THINGGROUP, i);
@@ -2949,21 +2967,36 @@ void E_ProcessThingGroups(cfg_t *cfg)
       else
          E_EDFLogPrintf("\t\tModifying thing group '%s'\n", name);
 
-      const char *tempstr = cfg_getstr(gsec, ITEM_TGROUP_KIND);
+      const char *tempstr = cfg_getstr(gsec, ITEM_TGROUP_FLAGS);
       if(estrnonempty(tempstr))
          group->flags = E_ParseFlags(tempstr, &tgroup_kindset);
 
       unsigned numtypes = cfg_size(gsec, ITEM_TGROUP_TYPES);
       if(numtypes)
       {
-         group->types.clear();
-         for(unsigned i = 0; i < numtypes; ++i)
+         group->types.clear();   // clear it even if thinggroup redefined.
+         for(unsigned j = 0; j < numtypes; ++j)
          {
-            tempstr = cfg_getnstr(gsec, ITEM_TGROUP_TYPES, i);
+            tempstr = cfg_getnstr(gsec, ITEM_TGROUP_TYPES, j);
             int type = E_ThingNumForName(tempstr);
-            if(type != -1)
+            if(type != -1 && !visited[type])
+            {
+               visited[type] = true;
                group->types.add(type);
-            else
+               if(group->flags & TGF_INHERITED)
+               {
+                  // Also check children
+                  for(int k = 0; k < NUMMOBJTYPES; ++k)
+                  {
+                     if(visited[k] || !E_mobjTypeIsDescendantOf(k, type))
+                        continue;
+
+                     visited[k] = true;
+                     group->types.add(k);
+                  }
+               }
+            }
+            else if(!visited[type]) // don't scream if visited
             {
                E_EDFLoggedWarning(2, "Warning: unknown type '%s' for group '%s'\n",
                                   tempstr, name);
