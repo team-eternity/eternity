@@ -1610,6 +1610,10 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       MetaTable *meta = target->info->meta;
       int df = meta->getInt(emod->dfKeyIndex, FRACUNIT);
 
+      // Special case: D_MININT is absolute immunity.
+      if(df == D_MININT)
+         return;
+
       // Only apply if not FRACUNIT, due to the chance this might alter
       // the compatibility characteristics of extreme DEH/BEX damage.
       if(df != FRACUNIT)

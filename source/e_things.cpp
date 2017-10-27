@@ -446,11 +446,14 @@ static cfg_opt_t acs_data[] =
    CFG_END()
 };
 
+static int E_damageFactorCB(cfg_t *cfg, cfg_opt_t *opt, const char *value, 
+   void *result);
+
 // damage factor multi-value property options
 static cfg_opt_t dmgf_opts[] =
 {
    CFG_STR(  ITEM_TNG_DMGF_MODNAME, "Unknown", CFGF_NONE),
-   CFG_FLOAT(ITEM_TNG_DMGF_FACTOR,  0.0,       CFGF_NONE),
+   CFG_FLOAT_CB(ITEM_TNG_DMGF_FACTOR, 0.0, CFGF_NONE, E_damageFactorCB),
    CFG_END()
 };
 
@@ -1553,7 +1556,8 @@ static void E_ProcessDamageFactors(mobjinfo_t *info, cfg_t *cfg)
       if(mod->num != 0)
       {
          double df  = cfg_getfloat(sec, ITEM_TNG_DMGF_FACTOR);
-         int    dfi = static_cast<int>(M_DoubleToFixed(df));
+         // D_MININT is a special case which makes monster totally ignore damage
+         int    dfi = df == D_MININT ? D_MININT : static_cast<int>(M_DoubleToFixed(df));
 
          info->meta->setInt(E_ModFieldName("damagefactor", mod), dfi);
       }
@@ -1951,6 +1955,18 @@ static int E_TranMapCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
    }
    *target = trnum;
 
+   return 0;
+}
+
+//
+// Damagefactor value callback
+//
+static int E_damageFactorCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
+   void *result)
+{
+   double *target = static_cast<double *>(result);
+   // D_MININT means immune. Even floating-point is marked with D_MININT.
+   *target = !strcasecmp(value, "immune") ? D_MININT : strtod(value, nullptr);
    return 0;
 }
 
