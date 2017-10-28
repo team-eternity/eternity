@@ -432,18 +432,12 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
       if(clip.thing->z + clip.thing->height < thing->z)
          return true;    // underneath
 
-      if(clip.thing->target &&
-         (clip.thing->target->type == thing->type ||
-          E_ThingPairValid(clip.thing->target->type, thing->type, TGF_PROJECTILEALLIANCE)))
+      if(clip.thing->target)
       {
          if(thing == clip.thing->target)
-            return true;                // Don't hit same species as originator.
-
-         // Also support the monsters of same species killing each other with
-         // projetiles.
-         if(!(thing->flags4 & MF4_HARMSPECIESMISSILE) || clip.thing->target->type != thing->type)
-            if(!(thing->player))      // Explode, but do no damage.
-               return false;               // Let players missile other players.
+            return true;   // Don't hit originator.
+         if(!P_AllowMissileDamage(*clip.thing->target, *thing))
+            return false;
       }
 
       // haleyjd 10/15/08: rippers

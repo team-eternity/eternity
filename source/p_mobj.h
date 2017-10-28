@@ -703,6 +703,7 @@ enum mobjflags4_e : unsigned int
    MF4_SPACPUSHWALL   = 0x00080000, // thing can activate push walls
    MF4_NOSPECIESINFIGHT = 0x00100000,  // no infighting in this species, but still damage
    MF4_HARMSPECIESMISSILE = 0x00200000,   // harmed even by projectiles of same species
+   MF4_FRIENDFOEMISSILE = 0x00400000,  // friends and foes of same species hurt each other
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh
