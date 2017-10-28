@@ -336,6 +336,7 @@ dehflags_t deh_mobjflags[] =
   {"DRAWSBLOOD",       0x00040000, 3}, // missile draws blood
   {"SPACPUSHWALL",     0x00080000, 3}, // thing can activate push walls
   {"NOSPECIESINFIGHT", 0x00100000, 3}, // no infighting in this species, but still damage
+  {"HARMSPECIESMISSILE", 0x00200000, 3},  // harmed even by projectiles of same species
 
   { NULL,              0 }             // NULL terminator
 };

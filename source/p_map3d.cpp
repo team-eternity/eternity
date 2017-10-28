@@ -438,8 +438,12 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
       {
          if(thing == clip.thing->target)
             return true;                // Don't hit same species as originator.
-         else if(!(thing->player))      // Explode, but do no damage.
-            return false;               // Let players missile other players.
+
+         // Also support the monsters of same species killing each other with
+         // projetiles.
+         if(!(thing->flags4 & MF4_HARMSPECIESMISSILE) || clip.thing->target->type != thing->type)
+            if(!(thing->player))      // Explode, but do no damage.
+               return false;               // Let players missile other players.
       }
 
       // haleyjd 10/15/08: rippers
