@@ -1817,9 +1817,10 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    // BOSSIGNORE flag is deprecated, use thinggroup with DAMAGEIGNORE instead
 
    // haleyjd: set bossignore
-   if(source && (source->type != target->type) &&
-      (source->flags3 & target->flags3 & MF3_BOSSIGNORE || 
-         E_ThingPairValid(source->type, target->type, TGF_DAMAGEIGNORE)))
+   if(source && ((source->type != target->type &&
+                  (source->flags3 & target->flags3 & MF3_BOSSIGNORE ||
+                   E_ThingPairValid(source->type, target->type, TGF_DAMAGEIGNORE))) ||
+                 (source->type == target->type && source->flags4 & MF4_NOSPECIESINFIGHT)))
    {
       // ignore if friendliness matches
       speciesignore = !((source->flags ^ target->flags) & MF_FRIEND);
