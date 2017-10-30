@@ -8,6 +8,12 @@ Since v3.42.03 "Heimdal" release 2
 ==================================
 
 --------------------------------------------------------------------------------
+30.10.2017
+
+FEATURE: Added FRIENDFOEMISSILE thing type flag, which will make projectiles
+         shot by friends harm enemies of the same species, and viceversa.
+
+--------------------------------------------------------------------------------
 28.10.2017
 
 FEATURE: Monster infighting can now be customized. Several EDF features have
