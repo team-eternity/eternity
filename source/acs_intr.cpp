@@ -878,7 +878,7 @@ protected:
       // Read single byte from source.
       if(!in || in->read(buf, 1) != 1) return EOF;
       setg(buf, buf, buf + 1);
-      return buf[0];
+      return static_cast<unsigned char>(buf[0]);
    }
 
    char buf[1];
