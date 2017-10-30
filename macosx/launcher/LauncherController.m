@@ -104,7 +104,7 @@ static BOOL calledAppMainline = FALSE;
 #define CREATE_ALERT_BOX(NAME, BUTTON1, BUTTON2, MESSAGE, INFORMATIVE, STYLE) \
              (NAME) = [[NSAlert alloc] init]; \
             [(NAME) addButtonWithTitle:(BUTTON1)]; \
-if(BUTTON2) [(NAME) addButtonWithTitle:(BUTTON2)]; \
+if(BUTTON2 != nil) [(NAME) addButtonWithTitle:(BUTTON2)]; \
             [(NAME) setMessageText:    (MESSAGE)]; \
             [(NAME) setInformativeText:(INFORMATIVE)]; \
             [(NAME) setAlertStyle:     (STYLE)]
@@ -455,6 +455,14 @@ BOOL tryCreateDir(NSString* basePath, NSString* name, NSWindow* window)
 -(IBAction)accessBaseFolder:(id)sender
 {
 	[[NSWorkspace sharedWorkspace] openFile:basePath withApplication:@"Finder"];
+}
+
+//
+// Access the console
+//
+-(IBAction)showConsole:(id)sender
+{
+   [console makeVisible];
 }
 
 //

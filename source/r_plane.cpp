@@ -751,20 +751,35 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
    planehash_t *table = pl->table;
    
    if(start < pl->minx)
-      intrl   = pl->minx, unionl = start;
+   {
+      intrl   = pl->minx;
+      unionl = start;
+   }
    else
-      unionl  = pl->minx,  intrl = start;
+   {
+      unionl  = pl->minx;
+      intrl = start;
+   }
    
    if(stop  > pl->maxx)
-      intrh   = pl->maxx, unionh = stop;
+   {
+      intrh   = pl->maxx;
+      unionh = stop;
+   }
    else
-      unionh  = pl->maxx, intrh  = stop;
+   {
+      unionh  = pl->maxx;
+      intrh  = stop;
+   }
 
    for(x = intrl; x <= intrh && pl->top[x] == 0x7FFFFFFF; ++x)
       ;
 
    if(x > intrh)
-      pl->minx = unionl, pl->maxx = unionh;
+   {
+      pl->minx = unionl;
+      pl->maxx = unionh;
+   }
    else
    {
       unsigned hash = visplane_hash(pl->picnum, pl->lightlevel, pl->height, table->chaincount);
@@ -1049,11 +1064,13 @@ static void do_draw_plane(visplane_t *pl)
       int picnum = texturetranslation[pl->picnum];
 
       // haleyjd 05/19/06: rewritten to avoid crashes
-      if((r_swirl && textures[pl->picnum]->flags & TF_ANIMATED)
+      // ioanch: apply swirly if original (pl->picnum) has the flag. This is so
+      // Hexen animations can control only their own sequence swirling.
+      if((r_swirl && textures[picnum]->flags & TF_ANIMATED)
          || textures[pl->picnum]->flags & TF_SWIRLY)
       {
-         plane.source = R_DistortedFlat(pl->picnum);
-         tex = plane.tex = textures[pl->picnum];
+         plane.source = R_DistortedFlat(picnum);
+         tex = plane.tex = textures[picnum];
       }
       else
       {
