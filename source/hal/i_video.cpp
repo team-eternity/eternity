@@ -247,7 +247,7 @@ enum
 // This is now the primary way in which Eternity stores its video mode setting.
 //
 void I_ParseGeom(const char *geom, int *w, int *h, bool *fs, bool *vs, bool *hw,
-                 bool *wf)
+                 bool *wf, bool *wr)
 {
    const char *c = geom;
    int state = STATE_WIDTH;
@@ -321,6 +321,9 @@ void I_ParseGeom(const char *geom, int *w, int *h, bool *fs, bool *vs, bool *hw,
          case 'n': // noframe
             *wf = false;
             break;
+         case 'r': // real fullscreen
+            *wr = true;
+            break;
          default:
             break;
          }
@@ -360,7 +363,7 @@ void I_ParseGeom(const char *geom, int *w, int *h, bool *fs, bool *vs, bool *hw,
 // runtime want to use the precise settings specified through the UI
 // instead.
 //
-void I_CheckVideoCmds(int *w, int *h, bool *fs, bool *vs, bool *hw, bool *wf)
+void I_CheckVideoCmds(int *w, int *h, bool *fs, bool *vs, bool *hw, bool *wf, bool *wr)
 {
    static bool firsttime = true;
    int p;
@@ -370,7 +373,7 @@ void I_CheckVideoCmds(int *w, int *h, bool *fs, bool *vs, bool *hw, bool *wf)
       firsttime = false;
 
       if((p = M_CheckParm("-geom")) && p < myargc - 1)
-         I_ParseGeom(myargv[p + 1], w, h, fs, vs, hw, wf);
+         I_ParseGeom(myargv[p + 1], w, h, fs, vs, hw, wf, wr);
 
       if((p = M_CheckParm("-vwidth")) && p < myargc - 1 &&
          (p = atoi(myargv[p + 1])) >= 320 && p <= MAX_SCREENWIDTH)

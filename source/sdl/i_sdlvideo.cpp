@@ -302,6 +302,7 @@ bool SDLVideoDriver::InitGraphicsMode()
    static int fallback_r_flags = SDL_RENDERER_TARGETTEXTURE;
 
    bool wantfullscreen = false;
+   bool watrealfs      = false;
    bool wantvsync      = false;
    bool wanthardware   = false;
    bool wantframe      = true;
@@ -318,12 +319,12 @@ bool SDLVideoDriver::InitGraphicsMode()
 
    // haleyjd 07/15/09: set defaults using geom string from configuration file
    I_ParseGeom(i_videomode, &v_w, &v_h, &wantfullscreen, &wantvsync, 
-               &wanthardware, &wantframe);
+               &wanthardware, &wantframe, &watrealfs);
    
    // haleyjd 06/21/06: allow complete command line overrides but only
    // on initial video mode set (setting from menu doesn't support this)
    I_CheckVideoCmds(&v_w, &v_h, &wantfullscreen, &wantvsync, &wanthardware,
-                    &wantframe);
+                    &wantframe, &watrealfs);
 
    if(wanthardware)
       SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "1");
@@ -336,9 +337,10 @@ bool SDLVideoDriver::InitGraphicsMode()
       renderer_flags |= SDL_RENDERER_PRESENTVSYNC;
    }
 
-   if(wantfullscreen)
+   if(wantfullscreen && !watrealfs)
       window_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
-
+   else if(wantfullscreen) // && watrealfs
+      window_flags |= SDL_WINDOW_FULLSCREEN;
    // haleyjd 10/27/09
    if(!wantframe)
       window_flags |= SDL_WINDOW_BORDERLESS;

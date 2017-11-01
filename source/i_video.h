@@ -69,9 +69,9 @@ void I_FinishUpdate();
 
 void I_ReadScreen(byte *scr);
 
-void I_CheckVideoCmds(int *w, int *h, bool *fs, bool *vs, bool *hw, bool *wf);
+void I_CheckVideoCmds(int *w, int *h, bool *fs, bool *vs, bool *hw, bool *wf, bool *wr);
 void I_ParseGeom(const char *geom, int *w, int *h, bool *fs, bool *vs, bool *hw,
-                 bool *wf);
+                 bool *wf, bool *wr);
 
 // letterboxing utilities
 bool I_VideoShouldLetterbox(int w, int h);

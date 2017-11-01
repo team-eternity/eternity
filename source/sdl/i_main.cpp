@@ -64,7 +64,7 @@ int main(int argc, char **argv)
    myargv = argv;
    
    // SDL_FIXME: If this is removed then all sound effects are pitched too high. Why?
-#if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS) && defined(_SDL_VER)
+#if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS)
    SDL_setenv("SDL_AUDIODRIVER", "winmm", true);
 #endif
 
