@@ -447,7 +447,7 @@ static GLint textureFilterParams[CFG_GL_NUMFILTERS] =
 bool SDLGL2DVideoDriver::InitGraphicsMode()
 {
    bool    wantfullscreen = false;
-   bool    watrealfs      = false;
+   bool    wantdesktopfs  = false;
    bool    wantvsync      = false;
    bool    wanthardware   = false; // Not used - this is always "hardware".
    bool    wantframe      = true;
@@ -484,16 +484,16 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    
    // set defaults using geom string from configuration file
    I_ParseGeom(i_videomode, &v_w, &v_h, &wantfullscreen, &wantvsync, 
-               &wanthardware, &wantframe, &watrealfs);
+               &wanthardware, &wantframe, &wantdesktopfs);
    
    // haleyjd 06/21/06: allow complete command line overrides but only
    // on initial video mode set (setting from menu doesn't support this)
    I_CheckVideoCmds(&v_w, &v_h, &wantfullscreen, &wantvsync, &wanthardware,
-                    &wantframe, &watrealfs);
+                    &wantframe, &wantdesktopfs);
 
-   if(wantfullscreen && !watrealfs)
+   if(wantfullscreen && wantdesktopfs)
       window_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
-   else if(wantfullscreen) // && watrealfs
+   else if(wantfullscreen) // && !wantdesktopfs
       window_flags |= SDL_WINDOW_FULLSCREEN;
    
    if(!wantframe)
