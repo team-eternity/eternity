@@ -341,10 +341,11 @@ bool SDLVideoDriver::InitGraphicsMode()
       window_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
    else if(wantfullscreen) // && !wantdesktopfs
       window_flags |= SDL_WINDOW_FULLSCREEN;
+
    // haleyjd 10/27/09
    if(!wantframe)
       window_flags |= SDL_WINDOW_BORDERLESS;
-     
+
    if(displaynum < SDL_GetNumVideoDisplays())
       v_displaynum = displaynum;
    else
@@ -447,12 +448,16 @@ CONSOLE_COMMAND(maxdisplaynum, 0)
    C_Printf("%d", SDL_GetNumVideoDisplays() - 1);
 }
 
-VARIABLE_INT(displaynum, NULL, 0, UL, nullptr);
+VARIABLE_INT(displaynum, NULL, -1, UL, nullptr);
 CONSOLE_VARIABLE(displaynum, displaynum, 0)
 {
    const int numdisplays = SDL_GetNumVideoDisplays();
-   // displaynum is an index, so displaynum == numdisplays is 1 too high
-   if(displaynum >= numdisplays)
+
+   if(displaynum == -1)
+      displaynum = numdisplays - 1; // allow scrolling left from 0 to maxdisplaynum
+   else if(displaynum == numdisplays)
+      displaynum = 0; // allow scrolling right from maxdisplaynum to 0
+   else if(displaynum > numdisplays)
    {
       C_Printf(FC_ERROR "Warning: displaynum's current maximum is %d, resetting to 0",
                numdisplays - 1);

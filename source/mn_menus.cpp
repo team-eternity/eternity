@@ -2032,6 +2032,7 @@ static menuitem_t mn_video_items[] =
    {it_variable,     "Video mode",              "i_videomode"          },
    {it_toggle,       "Favorite aspect ratio",   "mn_favaspectratio"    },
    {it_toggle,       "Favorite screen mode",    "mn_favscreentype"     },
+   {it_toggle,       "Display number",          "displaynum"           },
    {it_toggle,       "Vertical sync",           "v_retrace"            },
    {it_slider,       "Gamma correction",        "gamma"                },   
    {it_gap},
