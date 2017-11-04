@@ -454,7 +454,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    int     v_w            = 640;
    int     v_h            = 480;
    int     v_displaynum   = 0;
-   int     window_flags   = SDL_WINDOW_OPENGL| SDL_WINDOW_ALLOW_HIGHDPI;
+   int     window_flags   = SDL_WINDOW_OPENGL|SDL_WINDOW_ALLOW_HIGHDPI;
    GLvoid *tempbuffer     = nullptr;
    GLint   texformat      = GL_RGBA8;
    GLint   texfiltertype  = GL_LINEAR;

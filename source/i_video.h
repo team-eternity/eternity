@@ -62,6 +62,8 @@ void I_StartTic();
 void I_InitGraphics();
 void I_ShutdownGraphics();
 
+void I_ToggleFullscreen();
+
 // Takes full 8 bit values.
 void I_SetPalette(byte *palette);
 

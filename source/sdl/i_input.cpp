@@ -32,6 +32,7 @@
 #include "../doomdef.h"
 #include "../doomstat.h"
 #include "../g_bind.h"
+#include "../i_video.h"
 #include "../m_argv.h"
 #include "../m_dllist.h"
 #include "../p_chase.h"
@@ -571,15 +572,28 @@ static void I_GetEvent(SDL_Window *window)
                I_QuitFast();
                break;
             }
+            else if(ev.key.keysym.scancode == SDL_SCANCODE_RETURN)
+            {
+               I_ToggleFullscreen();
+               break;
+            }
          }
 #else
          // Also provide macOS option
-         if(ev.key.keysym.mod & KMOD_LGUI)
+         if(ev.key.keysym.mod & KMOD_GUI)
          {
             if(ev.key.keysym.scancode == SDL_SCANCODE_Q)
             {
                I_QuitFast();
                break;
+            }
+            else if(ev.key.keysym.mod & KMOD_CTRL)
+            {
+               if(ev.key.keysym.scancode & SDL_SCANCODE_F)
+               {
+                  I_ToggleFullscreen();
+                  break;
+               }
             }
          }
 #endif
