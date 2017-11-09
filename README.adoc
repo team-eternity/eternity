@@ -28,9 +28,9 @@ for editors and players alike, including:
 
 * http://www.libpng.org/pub/png/[PNG] support
 
-* Aided with http://libsdl.org/[SDL], Eternity is very portable and
+* Aided with http://libsdl.org/[SDL 2], Eternity is very portable and
   runs on a large range of operating systems: Windows (confirmed as
-  low as NT 3.51/95, and all the way through Windows 8.1), Linux, Mac
+  low as XP, and all the way through Windows 10), Linux, Mac
   OS X, FreeBSD, OpenBSD, and more.
 
 * Heretic, Hexen, and Strife support in-progress.
@@ -164,8 +164,8 @@ already set up Visual Studio.
 
 . Acquire the following libraries:
 +
- SDL-2.0.6
- SDL2_mixer-2.0.1
+ SDL-2.0.7
+ SDL2_mixer-2.0.2
  SDL2_net-2.0.1
 
 . Extract them to a folder of your choosing, eg. `C:\Libs`.
@@ -181,11 +181,11 @@ Do this for both if you plan on building both.
 
 . Under the 'User Macros' section, click 'Add Macro'.
 
-. Enter `SDL2_0` for the name, and the directory you extracted SDL2.0 to as the value, eg. `C:\Libs\SDL2-2.0.6`.
+. Enter `SDL2_0` for the name, and the directory you extracted SDL2.0 to as the value, eg. `C:\Libs\SDL2-2.0.7`.
 
 . Tick 'Set this macro as an environment variable in the build environment' and click OK.
 
-. Repeat the above 2 steps for `SDLMIXER2_0` (C:\Libs\SDL2_mixer-2.0.1) and `SDLNET2_0` (C:\Libs\SDL2_net-2.0.1).
+. Repeat the above 2 steps for `SDLMIXER2_0` (C:\Libs\SDL2_mixer-2.0.2) and `SDLNET2_0` (C:\Libs\SDL2_net-2.0.1).
 
 . Click OK to close the property pages window.
 
@@ -195,4 +195,5 @@ Do this for both if you plan on building both.
 
 . Select 'Build -> Build Solution' and Eternity will begin compilation. If successful, you will find it in `vc201x\Debug` or `vc201x\Release`.
 
-. Place the dependencies required (the 3 appropriate SDL dlls) in this folder, as well as the folder `base\` from the repository root.
+. Place the dependencies required (the dlls present in the 3 arch-appropriate SDL lib folders) in this folder,
+as well as the folder `base\` from the repository root.
