@@ -62,8 +62,6 @@ void I_StartTic();
 void I_InitGraphics();
 void I_ShutdownGraphics();
 
-void I_ToggleFullscreen();
-
 // Takes full 8 bit values.
 void I_SetPalette(byte *palette);
 
@@ -79,6 +77,8 @@ void I_ParseGeom(const char *geom, int *w, int *h, bool *fs, bool *vs, bool *hw,
 bool I_VideoShouldLetterbox(int w, int h);
 int  I_VideoLetterboxHeight(int w);
 int  I_VideoLetterboxOffset(int h, int hl);
+
+void I_ToggleFullscreen();
 
 extern int use_vsync;  // killough 2/8/98: controls whether vsync is called
 

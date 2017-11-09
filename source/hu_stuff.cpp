@@ -1269,7 +1269,7 @@ static bool HU_ChatRespond(event_t *ev)
    if(action == ka_frags)
       hu_showfrags = (ev->type == ev_keydown);
 
-   if(ev->type != ev_keydown)
+   if(ev->type != ev_keydown && ev->type != ev_text)
       return false;
 
    if(!chat_active)
@@ -1316,10 +1316,13 @@ static bool HU_ChatRespond(event_t *ev)
       return true;
    }
 
+   if(ev->type == ev_keydown && ectype::isPrint(ev->data1))
+      return true; // eat keydown inputs that have text equivalent
+
    if(ev->type == ev_text)
       ch = ev->data1;
    
-   if(ch > 31 && ch < 127)
+   if(ectype::isPrint(ch))
    {
       psnprintf(chatinput, sizeof(chatinput), "%s%c", chatinput, ch);
       return true;

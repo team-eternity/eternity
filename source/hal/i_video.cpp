@@ -228,38 +228,6 @@ void I_ShutdownGraphics()
    }
 }
 
-//
-// Used to avoid multiple usages of "togglefullscreen" literal, scans better.
-//
-void I_ToggleFullscreen()
-{
-   C_RunTextCmd("togglefullscreen");
-}
-
-CONSOLE_COMMAND(togglefullscreen, cf_buffered)
-{
-   qstring qgeom = qstring(i_videomode).toLower();
-   const char *lastf = qgeom.strRChr('f'), *lastw = qgeom.strRChr('w');
-
-   // Alter the geom string as needed.
-   // NOTE: No shortcuts. Relational operators w/ nullptr as an operand is unspecified.
-   if(!lastf && !lastw)
-      qgeom.Putc('f'); // Currently implicitly windowed, make fullscreen.
-   if((lastf && !lastw) || (lastf > lastw))
-      qgeom.replace("f", 'w');
-   else if((lastw && !lastf) || (lastw > lastf))
-      qgeom.replace("w", 'f');
-
-   efree(i_videomode);
-   i_videomode = qgeom.duplicate();
-
-   I_SetMode();
-
-   if(i_default_videomode)
-      efree(i_default_videomode);
-   i_default_videomode = estrdup(i_videomode);
-}
-
 #define BADVID "video mode not supported"
 
 extern bool setsizeneeded;
@@ -605,9 +573,41 @@ int I_VideoLetterboxOffset(int h, int hl)
    return ((h - hl) / 2);
 }
 
+//
+// Used to avoid multiple usages of "togglefullscreen" literal, scans better.
+//
+void I_ToggleFullscreen()
+{
+   C_RunTextCmd("togglefullscreen");
+}
+
 /************************
         CONSOLE COMMANDS
  ************************/
+
+CONSOLE_COMMAND(togglefullscreen, cf_buffered)
+{
+   qstring qgeom = qstring(i_videomode).toLower();
+   const char *lastf = qgeom.strRChr('f'), *lastw = qgeom.strRChr('w');
+
+   // Alter the geom string as needed.
+   // NOTE: No shortcuts. Relational operators w/ nullptr as an operand is unspecified.
+   if(!lastf && !lastw)
+      qgeom.Putc('f'); // Currently implicitly windowed, make fullscreen.
+   if((lastf && !lastw) || (lastf > lastw))
+      qgeom.replace("f", 'w');
+   else if((lastw && !lastf) || (lastw > lastf))
+      qgeom.replace("w", 'f');
+
+   efree(i_videomode);
+   i_videomode = qgeom.duplicate();
+
+   I_SetMode();
+
+   if(i_default_videomode)
+      efree(i_default_videomode);
+   i_default_videomode = estrdup(i_videomode);
+}
 
 VARIABLE_BOOLEAN(use_vsync, NULL,  yesno);
 

@@ -558,8 +558,7 @@ static void I_GetEvent(SDL_Window *window)
          d_event.data1 = I_TranslateKey(&ev.key.keysym);
 
 #if (EE_CURRENT_PLATFORM != EE_PLATFORM_MACOSX)
-         // This #if block is adapted from PRBoom+
-         // TODO: A fullscreen toggle would be nice, but geom string might need setting.
+         // This quick exit code is adapted from PRBoom+
          // See PRBoom+'s I_GetEvent for a cross-platform implementation of how to get that input.
          if(ev.key.keysym.mod & KMOD_LALT)
          {
@@ -579,7 +578,7 @@ static void I_GetEvent(SDL_Window *window)
             }
          }
 #else
-         // Also provide macOS option
+         // Also provide macOS option for quick exit and fullscreen toggle
          if(ev.key.keysym.mod & KMOD_GUI)
          {
             if(ev.key.keysym.scancode == SDL_SCANCODE_Q)
