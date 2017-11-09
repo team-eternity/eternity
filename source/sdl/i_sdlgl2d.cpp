@@ -519,7 +519,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
                                   SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
                                   v_w, v_h, window_flags)))
    {
-      I_FatalError(I_ERR_KILL, "Couldn't create OpenGL window %dx%dx\n"
+      I_FatalError(I_ERR_KILL, "Couldn't create OpenGL window %dx%d\n"
                                "SDL Error: %s\n", v_w, v_h, SDL_GetError());
    }
 

@@ -1259,6 +1259,7 @@ static bool HU_ChatRespond(event_t *ev)
 {
    char ch = 0;
    static bool shiftdown;
+   static bool discardinput = false;
 
    // haleyjd 06/11/08: get HUD actions
    int action = G_KeyResponder(ev, kac_hud);
@@ -1278,9 +1279,17 @@ static bool HU_ChatRespond(event_t *ev)
       {       
          chat_active = true; // activate chat
          chatinput[0] = 0;   // empty input string
+         if(ectype::isPrint(ev->data1))
+            discardinput = true; // avoid activation key also appearing in input string
          return true;
       }
       return false;
+   }
+
+   if(ev->type == ev_text && discardinput)
+   {
+      discardinput = false;
+      return true;
    }
   
    if(altdown && ev->type == ev_keydown &&
