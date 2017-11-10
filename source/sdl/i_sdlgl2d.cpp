@@ -498,6 +498,15 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    
    if(!wantframe)
       window_flags |= SDL_WINDOW_BORDERLESS;
+
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
+   // Do not use classic fullscreen on macOS
+   if(window_flags & SDL_WINDOW_FULLSCREEN)
+   {
+      window_flags = (window_flags & ~SDL_WINDOW_FULLSCREEN) |
+      SDL_WINDOW_FULLSCREEN_DESKTOP;
+   }
+#endif
    
    // Set GL attributes through SDL
    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);

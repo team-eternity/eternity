@@ -342,6 +342,15 @@ bool SDLVideoDriver::InitGraphicsMode()
    else if(wantfullscreen) // && !wantdesktopfs
       window_flags |= SDL_WINDOW_FULLSCREEN;
 
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
+   // Do not use classic fullscreen on macOS
+   if(window_flags & SDL_WINDOW_FULLSCREEN)
+   {
+      window_flags = (window_flags & ~SDL_WINDOW_FULLSCREEN) |
+      SDL_WINDOW_FULLSCREEN_DESKTOP;
+   }
+#endif
+
    // haleyjd 10/27/09
    if(!wantframe)
       window_flags |= SDL_WINDOW_BORDERLESS;
