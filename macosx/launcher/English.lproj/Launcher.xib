@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16C67" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="13196" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="13196"/>
         <capability name="box content view" minToolsVersion="7.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -395,6 +395,12 @@
                                     <action selector="accessBaseFolder:" target="-2" id="1253"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Show Eternity Log" id="6dF-Pt-yb1">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="showConsole:" target="-2" id="IRL-Js-hxI"/>
+                                </connections>
+                            </menuItem>
                         </items>
                     </menu>
                 </menuItem>
@@ -465,7 +471,7 @@ DQ
                             <action selector="launchGame:" target="-2" id="537"/>
                         </connections>
                     </button>
-                    <textField verticalHuggingPriority="750" id="613">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="613">
                         <rect key="frame" x="47" y="117" width="384" height="22"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
                         <string key="toolTip">Type here other parameters not included in the user interface. You can click on the question mark button to visit the wiki page on available parameters.</string>
@@ -478,7 +484,7 @@ DQ
                             <outlet property="delegate" destination="984" id="986"/>
                         </connections>
                     </textField>
-                    <textField verticalHuggingPriority="750" id="615">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="615">
                         <rect key="frame" x="44" y="143" width="119" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Other Parameters:" id="616">
@@ -604,7 +610,7 @@ RSP — response files</string>
                                     <rect key="frame" x="10" y="33" width="289" height="174"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <textField verticalHuggingPriority="750" id="594">
+                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="594">
                                             <rect key="frame" x="102" y="149" width="106" height="22"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <string key="toolTip">Select the level where to go on startup. For Doom 1, type episode (1-4) and level number (1-9). For Doom 2, type level number (1-32).</string>
@@ -617,7 +623,7 @@ RSP — response files</string>
                                                 <outlet property="delegate" destination="984" id="1473"/>
                                             </connections>
                                         </textField>
-                                        <textField toolTip="Skill level to start on, from 1 to 5." verticalHuggingPriority="750" id="598">
+                                        <textField toolTip="Skill level to start on, from 1 to 5." verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="598">
                                             <rect key="frame" x="102" y="117" width="106" height="22"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Start Normally" drawsBackground="YES" id="599">
@@ -662,7 +668,7 @@ RSP — response files</string>
                                                 <action selector="makeCheckboxUndo:" target="-2" id="1460"/>
                                             </connections>
                                         </button>
-                                        <textField verticalHuggingPriority="750" id="650">
+                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="650">
                                             <rect key="frame" x="35" y="122" width="65" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" enabled="NO" sendsActionOnEndEditing="YES" title="Difficulty:" id="651">
@@ -671,7 +677,7 @@ RSP — response files</string>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField toolTip="The filename of the demo to record." verticalHuggingPriority="750" alphaValue="0.50000000000000011" id="706">
+                                        <textField toolTip="The filename of the demo to record." verticalHuggingPriority="750" alphaValue="0.50000000000000011" allowsCharacterPickerTouchBarItem="YES" id="706">
                                             <rect key="frame" x="17" y="5" width="255" height="22"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" lineBreakMode="truncatingHead" selectable="YES" allowsUndo="NO" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="left" placeholderString="No Demo Recording" drawsBackground="YES" id="707">
@@ -716,7 +722,7 @@ RSP — response files</string>
                                                 <action selector="makeCheckboxUndo:" target="-2" id="1461"/>
                                             </connections>
                                         </button>
-                                        <textField verticalHuggingPriority="750" id="757">
+                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="757">
                                             <rect key="frame" x="7" y="151" width="93" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Warp to Level:" id="758">
@@ -725,7 +731,7 @@ RSP — response files</string>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField verticalHuggingPriority="750" id="800">
+                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="800">
                                             <rect key="frame" x="14" y="35" width="93" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Record Demo:" id="801">
@@ -742,7 +748,7 @@ RSP — response files</string>
                                     <rect key="frame" x="10" y="33" width="289" height="174"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <subviews>
-                                        <textField toolTip="The filename of the demo to play back." verticalHuggingPriority="750" alphaValue="0.50000000000000011" id="728">
+                                        <textField toolTip="The filename of the demo to play back." verticalHuggingPriority="750" alphaValue="0.50000000000000011" allowsCharacterPickerTouchBarItem="YES" id="728">
                                             <rect key="frame" x="17" y="117" width="255" height="22"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" lineBreakMode="truncatingHead" selectable="YES" allowsUndo="NO" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="left" placeholderString="No Demo to Play" drawsBackground="YES" id="731">
@@ -776,7 +782,7 @@ RSP — response files</string>
                                                 <action selector="clearPlayDemo:" target="-2" id="847"/>
                                             </connections>
                                         </button>
-                                        <textField verticalHuggingPriority="750" id="802">
+                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="802">
                                             <rect key="frame" x="14" y="151" width="75" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Play Demo:" id="803">
@@ -856,7 +862,7 @@ RSP — response files</string>
                                                 </menu>
                                             </popUpButtonCell>
                                         </popUpButton>
-                                        <textField verticalHuggingPriority="750" id="747">
+                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="747">
                                             <rect key="frame" x="17" y="154" width="79" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Game Type:" id="748">
@@ -865,7 +871,7 @@ RSP — response files</string>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField verticalHuggingPriority="750" id="749">
+                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="749">
                                             <rect key="frame" x="24" y="126" width="72" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Frag Limit:" id="750">
@@ -874,7 +880,7 @@ RSP — response files</string>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField toolTip="Maximum number of frags per level a player can have before the level automatically exists." verticalHuggingPriority="750" id="751">
+                                        <textField toolTip="Maximum number of frags per level a player can have before the level automatically exists." verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="751">
                                             <rect key="frame" x="101" y="124" width="47" height="22"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Inf." drawsBackground="YES" id="752">
@@ -886,7 +892,7 @@ RSP — response files</string>
                                                 <outlet property="delegate" destination="984" id="1475"/>
                                             </connections>
                                         </textField>
-                                        <textField verticalHuggingPriority="750" id="753">
+                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="753">
                                             <rect key="frame" x="20" y="96" width="76" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Time Limit:" id="756">
@@ -895,7 +901,7 @@ RSP — response files</string>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField toolTip="Time before level automatically exits — useful for deathmatch." verticalHuggingPriority="750" id="754">
+                                        <textField toolTip="Time before level automatically exits — useful for deathmatch." verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="754">
                                             <rect key="frame" x="101" y="94" width="47" height="22"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Inf." drawsBackground="YES" id="755">
@@ -907,7 +913,7 @@ RSP — response files</string>
                                                 <outlet property="delegate" destination="984" id="1476"/>
                                             </connections>
                                         </textField>
-                                        <textField verticalHuggingPriority="750" id="761">
+                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="761">
                                             <rect key="frame" x="173" y="126" width="46" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Turbo:" id="764">
@@ -916,7 +922,7 @@ RSP — response files</string>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField toolTip="Percentage of player speed, considered cheating in single player or cooperative, intended for deathmatch play." verticalHuggingPriority="750" id="762">
+                                        <textField toolTip="Percentage of player speed, considered cheating in single player or cooperative, intended for deathmatch play." verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="762">
                                             <rect key="frame" x="224" y="124" width="47" height="22"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="100" drawsBackground="YES" id="763">
@@ -928,7 +934,7 @@ RSP — response files</string>
                                                 <outlet property="delegate" destination="984" id="1477"/>
                                             </connections>
                                         </textField>
-                                        <textField verticalHuggingPriority="750" id="765">
+                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="765">
                                             <rect key="frame" x="153" y="96" width="66" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="DM Flags:" id="768">
@@ -937,7 +943,7 @@ RSP — response files</string>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField toolTip="Deathmatch flags." verticalHuggingPriority="750" id="766">
+                                        <textField toolTip="Deathmatch flags." verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="766">
                                             <rect key="frame" x="224" y="94" width="47" height="22"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="767">
@@ -949,7 +955,7 @@ RSP — response files</string>
                                                 <outlet property="delegate" destination="984" id="1478"/>
                                             </connections>
                                         </textField>
-                                        <textField verticalHuggingPriority="750" id="773">
+                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="773">
                                             <rect key="frame" x="16" y="41" width="80" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Connection:" id="774">
@@ -958,7 +964,7 @@ RSP — response files</string>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField verticalHuggingPriority="750" id="775">
+                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="775">
                                             <rect key="frame" x="101" y="41" width="171" height="47"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" sendsActionOnEndEditing="YES" borderStyle="border" title="Type your node number (1-4) and the IP addresses of the other players." id="776">
@@ -967,7 +973,7 @@ RSP — response files</string>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField toolTip="Connection setup." verticalHuggingPriority="750" id="777">
+                                        <textField toolTip="Connection setup." verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="777">
                                             <rect key="frame" x="17" y="11" width="263" height="22"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" heightSizable="YES"/>
                                             <textFieldCell key="cell" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="--Set Up Multiplayer Here--" drawsBackground="YES" id="778">
@@ -995,7 +1001,7 @@ RSP — response files</string>
                             </tabViewItem>
                         </tabViewItems>
                     </tabView>
-                    <textField verticalHuggingPriority="750" id="708">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="708">
                         <rect key="frame" x="17" y="344" width="113" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Main Game WAD:" id="716">
@@ -1072,7 +1078,7 @@ RSP — response files</string>
                             <rect key="frame" x="1" y="1" width="410" height="80"/>
                             <autoresizingMask key="autoresizingMask"/>
                             <subviews>
-                                <textView editable="NO" importsGraphics="NO" richText="NO" allowsNonContiguousLayout="YES" id="1240">
+                                <textView editable="NO" importsGraphics="NO" richText="NO" verticallyResizable="YES" allowsNonContiguousLayout="YES" id="1240">
                                     <rect key="frame" x="0.0" y="0.0" width="410" height="80"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>

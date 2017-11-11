@@ -65,6 +65,8 @@ extern bool donut_emulation;    // haleyjd 10/16/09
 // killough 3/15/98: add fourth argument to P_TryMove
 bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff);
 
+bool P_AllowMissileDamage(const Mobj &shooter, const Mobj &target);
+
 bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y);
 
 bool PIT_CheckLine(line_t *ld, polyobj_s *po);  // ioanch: used in the code

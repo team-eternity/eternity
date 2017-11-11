@@ -521,8 +521,8 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
       tempsec->ceilingheight = s->ceilingheight;
 
       // killough 11/98: prevent sudden light changes from non-water sectors:
-      if(underwater && (tempsec->floorheight   = sec->floorheight,
-                        tempsec->ceilingheight = s->floorheight-1, !back))
+      if(underwater && (void(tempsec->floorheight   = sec->floorheight),
+                        void(tempsec->ceilingheight = s->floorheight-1), !back))
       {
          // SoM: kill any ceiling portals that may try to render
          tempsec->c_portal = NULL;
@@ -1435,9 +1435,20 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    lowermissing = (seg.frontsec->floorheight < seg.backsec->floorheight &&
                    seg.side->bottomtexture == 0);
 
+   bool portaltouch = portalrender.active &&
+   ((portalrender.w->type == pw_floor && (portalrender.w->planez ==
+                                          seg.backsec->floorheight ||
+                                          portalrender.w->planez ==
+                                          seg.frontsec->floorheight)) ||
+    (portalrender.w->type == pw_ceiling && (portalrender.w->planez ==
+                                            seg.backsec->ceilingheight ||
+                                            portalrender.w->planez ==
+                                            seg.frontsec->ceilingheight)));
+
    // New clipsolid code will emulate the old doom behavior and still manages to 
    // keep valid closed door cases handled.
-   seg.clipsolid = ((seg.backsec->floorheight != seg.frontsec->floorheight ||
+   seg.clipsolid = !portaltouch && ((seg.backsec->floorheight !=
+                                     seg.frontsec->floorheight ||
        seg.backsec->ceilingheight != seg.frontsec->ceilingheight) &&
        (seg.backsec->floorheight >= seg.frontsec->ceilingheight ||
         seg.backsec->ceilingheight <= seg.frontsec->floorheight ||

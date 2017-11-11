@@ -686,6 +686,7 @@ typedef struct button_s
    int      btexture;
    int      btimer;
    bool     dopopout;
+   int switchindex;  // for sounds
 } button_t;
 
 // haleyjd 04/17/08: made buttonlist/numbuttonsalloc external for savegames

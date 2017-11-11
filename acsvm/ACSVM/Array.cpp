@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2017 David Hill
 //
 // See COPYING for license information.
 //
@@ -14,6 +14,7 @@
 
 #include "BinaryIO.hpp"
 #include "Environment.hpp"
+#include "Serial.hpp"
 
 
 //----------------------------------------------------------------------------|
@@ -167,9 +168,11 @@ namespace ACSVM
    //
    // Array::loadState
    //
-   void Array::loadState(std::istream &in)
+   void Array::loadState(Serial &in)
    {
+      in.readSign(Signature::Array);
       ReadData(in, data);
+      in.readSign(~Signature::Array);
    }
 
    //
@@ -191,9 +194,11 @@ namespace ACSVM
    //
    // Array::saveState
    //
-   void Array::saveState(std::ostream &out) const
+   void Array::saveState(Serial &out) const
    {
+      out.writeSign(Signature::Array);
       WriteData(out, data);
+      out.writeSign(~Signature::Array);
    }
 
    //

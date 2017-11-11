@@ -728,18 +728,22 @@ static void P_DoNewChaseDir(Mobj *actor, fixed_t deltax, fixed_t deltay)
 
    // try other directions
    if(P_Random(pr_newchase) > 200 || D_abs(deltay)>abs(deltax))
-      tdir = xdir, xdir = ydir, ydir = tdir;
+   {
+      tdir = xdir;
+      xdir = ydir;
+      ydir = tdir;
+   }
 
    if((xdir == turnaround ? xdir = DI_NODIR : xdir) != DI_NODIR &&
-      (actor->movedir = xdir, P_TryWalk(actor)))
+      (void(actor->movedir = xdir), P_TryWalk(actor)))
       return;         // either moved forward or attacked
 
    if((ydir == turnaround ? ydir = DI_NODIR : ydir) != DI_NODIR &&
-      (actor->movedir = ydir, P_TryWalk(actor)))
+      (void(actor->movedir = ydir), P_TryWalk(actor)))
       return;
 
    // there is no direct path to the player, so pick another direction.
-   if(olddir != DI_NODIR && (actor->movedir = olddir, P_TryWalk(actor)))
+   if(olddir != DI_NODIR && (void(actor->movedir = olddir), P_TryWalk(actor)))
       return;
 
    // randomly determine direction of search
@@ -748,7 +752,7 @@ static void P_DoNewChaseDir(Mobj *actor, fixed_t deltax, fixed_t deltay)
       for(tdir = DI_EAST; tdir <= DI_SOUTHEAST; tdir++)
       {
          if(tdir != turnaround &&
-            (actor->movedir = tdir, P_TryWalk(actor)))
+            (void(actor->movedir = tdir), P_TryWalk(actor)))
             return;
       }
    }
@@ -757,7 +761,7 @@ static void P_DoNewChaseDir(Mobj *actor, fixed_t deltax, fixed_t deltay)
       for (tdir = DI_SOUTHEAST; tdir != DI_EAST-1; tdir--)
       {
          if(tdir != turnaround &&
-            (actor->movedir = tdir, P_TryWalk(actor)))
+            (void(actor->movedir = tdir), P_TryWalk(actor)))
             return;
       }
    }
@@ -900,7 +904,8 @@ void P_NewChaseDir(Mobj *actor)
             distfriend << FRACBITS > dist && 
             !P_IsOnLift(target) && !P_IsUnderDamage(actor))
          {
-            deltax = -deltax, deltay = -deltay;
+            deltax = -deltax;
+            deltay = -deltay;
          }
          else
          {
@@ -917,7 +922,8 @@ void P_NewChaseDir(Mobj *actor)
                {
                   // Back away from melee attacker
                   actor->strafecount = P_Random(pr_enemystrafe) & 15;
-                  deltax = -deltax, deltay = -deltay;
+                  deltax = -deltax;
+                  deltay = -deltay;
                }
             }
          }

@@ -336,7 +336,10 @@ dehflags_t deh_mobjflags[] =
   {"TOTALINVISIBLE",   0x00020000, 3}, // thing is totally invisible to monsters
   {"DRAWSBLOOD",       0x00040000, 3}, // missile draws blood
   {"SPACPUSHWALL",     0x00080000, 3}, // thing can activate push walls
-  {"HERETICBOUNCES",   0x00100000, 3}, // Heretic-like bounces
+  {"NOSPECIESINFIGHT", 0x00100000, 3}, // no infighting in this species, but still damage
+  {"HARMSPECIESMISSILE", 0x00200000, 3},  // harmed even by projectiles of same species
+  {"FRIENDFOEMISSILE", 0x00400000, 3},   // friends and foes of same species hurt each other
+  {"HERETICBOUNCES",   0x00800000, 3}, // Heretic-like bounces
 
   { NULL,              0 }             // NULL terminator
 };
@@ -2227,7 +2230,10 @@ bool deh_procStringSub(char *key, char *lookfor, char *newstring)
    for(s=t=copyNewStr; *s; ++s, ++t)
    {
       if (*s == '\\' && (s[1] == 'n' || s[1] == 'N')) //found one
-         ++s, *t = '\n';  // skip one extra for second character
+      {
+         ++s;
+         *t = '\n';  // skip one extra for second character
+      }
       else
          *t = *s;
    }
@@ -2499,7 +2505,13 @@ static char *dehReformatStr(char *string)
    while(*s)
    {
       if(*s == '\n')
-         ++s, *t++ = '\\', *t++ = 'n', *t++ = '\\', *t++='\n'; 
+      {
+         ++s;
+         *t++ = '\\';
+         *t++ = 'n';
+         *t++ = '\\';
+         *t++='\n';
+      }
       else
          *t++ = *s++;
    }

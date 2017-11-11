@@ -1459,7 +1459,10 @@ void Mobj::Think()
       if(shouldApplyTorque())
          P_ApplyTorque(this);                // Apply torque
       else
-         intflags &= ~MIF_FALLING, gear = 0; // Reset torque
+      {
+         intflags &= ~MIF_FALLING;
+         gear = 0; // Reset torque
+      }
    }
 
    // check if we are passing an interactive portal plane
@@ -1584,7 +1587,7 @@ void Mobj::serialize(SaveArchive &arc)
       << gear                                              // Lee's torque
       // Appearance
       << colour                                            // Translations
-      << translucency << alphavelocity                     // Alpha blending
+      << translucency << tranmap << alphavelocity          // Alpha blending
       << xscale << yscale                                  // Scaling
       // Inventory related fields
       << dropamount
@@ -1802,6 +1805,7 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 
    // haleyjd: zdoom-style translucency level
    mobj->translucency  = info->translucency;
+   mobj->tranmap = info->tranmap;
    
    if(info->alphavelocity != 0) // 5/23/08
       P_StartMobjFade(mobj, info->alphavelocity);
@@ -2974,7 +2978,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type)
             slope = P_PlayerPitchSlope(source->player);
          }
       }
-      while(mask && (mask=0, !clip.linetarget));  // killough 8/2/98
+      while(mask && (void(mask=0), !clip.linetarget));  // killough 8/2/98
    }
    else
    {

@@ -151,13 +151,15 @@ bool MN_PopupResponder(event_t *ev, int action)
    int *menuSounds = GameModeInfo->menuSounds;
    char ch;
    
-   if(ev->type != ev_keydown)
+   if(ev->type != ev_keydown && ev->type != ev_text)
       return false;
 
-   if(ev->character)
-      ch = ectype::toLower(ev->character);
-   else
+   if(ev->type == ev_text)
+      ch = ectype::toLower(ev->data1);
+   else if(!ectype::isPrint(ev->data1))
       ch = ev->data1;
+   else
+      return false;
    
    switch(popup_message_type)
    {

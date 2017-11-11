@@ -992,7 +992,7 @@ void P_BulletSlope(Mobj *mo)
       if(!clip.linetarget)
          bulletslope = P_AimLineAttack(mo, an -= 2<<26, 16*64*FRACUNIT, mask);
    }
-   while (mask && (mask=0, !clip.linetarget));  // killough 8/2/98
+   while (mask && (void(mask=0), !clip.linetarget));  // killough 8/2/98
 }
 
 void A_Light0(actionargs_t *actionargs)

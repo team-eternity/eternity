@@ -207,9 +207,9 @@ public:
 
    virtual void loadModule(ACSVM::Module *module);
 
-   virtual void loadState(std::istream &in);
+   virtual void loadState(ACSVM::Serial &in);
 
-   virtual ACSVM::ModuleName readModuleName(std::istream &in) const;
+   virtual ACSVM::ModuleName readModuleName(ACSVM::Serial &in) const;
 
    virtual void refStrings();
 
@@ -272,9 +272,9 @@ public:
 
    virtual ACSVM::ThreadInfo const *getInfo() const {return &info;}
 
-   virtual void loadState(std::istream &in);
+   virtual void loadState(ACSVM::Serial &in);
 
-   virtual void saveState(std::ostream &out) const;
+   virtual void saveState(ACSVM::Serial &out) const;
 
    virtual void start(ACSVM::Script *script, ACSVM::MapScope *map,
       const ACSVM::ThreadInfo *info, const ACSVM::Word *argV, ACSVM::Word argC);

@@ -167,6 +167,7 @@ struct vissprite_t
   int heightsec;
 
   uint16_t translucency; // haleyjd: zdoom-style translucency
+  int tranmaplump;
 
   fixed_t footclip; // haleyjd: foot clipping
 
@@ -732,7 +733,12 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
    
    column.translevel = vis->translucency;
    column.translevel += 1;
-   if(vis->drawstyle == VS_DRAWSTYLE_SUB)
+   if(vis->tranmaplump >= 0)
+   {
+      tranmap = static_cast<byte *>(wGlobalDir.cacheLumpNum(vis->tranmaplump,
+                                                            PU_CACHE));
+   }
+   else if(vis->drawstyle == VS_DRAWSTYLE_SUB)
       tranmap = main_submap;
    else
       tranmap = main_tranmap; // killough 4/11/98   
@@ -1048,6 +1054,7 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
 
    // haleyjd 09/01/02
    vis->translucency = uint16_t(thing->translucency - 1);
+   vis->tranmaplump = -1;
 
    // haleyjd 11/14/02: ghost flag
    if(thing->flags3 & MF3_GHOST && vis->translucency == FRACUNIT - 1)
@@ -1085,8 +1092,13 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
    if(thing->flags & MF_SHADOW)
       vis->drawstyle = VS_DRAWSTYLE_SHADOW;
    else if(general_translucency)
-   {   
-      if(thing->flags3 & MF3_TLSTYLEADD)
+   {
+      if(thing->tranmap >= 0)
+      {
+         vis->drawstyle = VS_DRAWSTYLE_TRANMAP;
+         vis->tranmaplump = thing->tranmap;
+      }
+      else if(thing->flags3 & MF3_TLSTYLEADD)
          vis->drawstyle = VS_DRAWSTYLE_ADD;
       else if(thing->flags4 & MF4_TLSTYLESUB)
          vis->drawstyle = VS_DRAWSTYLE_SUB;
@@ -1241,6 +1253,7 @@ static void R_DrawPSprite(pspdef_t *psp)
    vis->x2           = x2 >= view.width ? viewwindow.width - 1 : (int)x2;
    vis->colour       = 0;      // sf: default colourmap
    vis->translucency = FRACUNIT - 1; // haleyjd: default zdoom trans.
+   vis->tranmaplump  = -1;
    vis->footclip     = 0; // haleyjd
    vis->scale        = view.pspriteyscale;
    vis->ytop         = (view.height * 0.5f) - (M_FixedToFloat(vis->texturemid) * vis->scale);
@@ -1358,7 +1371,7 @@ static void msort(vissprite_t **s, vissprite_t **t, int n)
       msort(s2, t, n2);
       
       while((*s1)->dist > (*s2)->dist ?
-            (*d++ = *s1++, --n1) : (*d++ = *s2++, --n2));
+            (void(*d++ = *s1++), --n1) : (void(*d++ = *s2++), --n2));
 
       if(n2)
          bcopyp(d, s2, n2);
@@ -2005,8 +2018,9 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
 
    v3fixed_t delta = {0, 0, 0};
    int loopprot = 0;
-   while(++loopprot < 32768 && sector && sector->f_pflags & PS_PASSABLE && 
-      P_FloorPortalZ(*sector) > mobj->z + scaledbottom)
+   while(++loopprot < SECTOR_PORTAL_LOOP_PROTECTION && sector &&
+         sector->f_pflags & PS_PASSABLE &&
+         P_FloorPortalZ(*sector) > mobj->z + scaledbottom)
    {
       // always accept first sector
       data = R_FPLink(sector);
@@ -2016,8 +2030,9 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
    // restart from mobj's group
    sector = mobj->subsector->sector;
    delta.x = delta.y = delta.z = 0;
-   while(++loopprot < 32768 && sector && sector->c_pflags & PS_PASSABLE &&
-      P_CeilingPortalZ(*sector) < mobj->z + scaledtop)
+   while(++loopprot < SECTOR_PORTAL_LOOP_PROTECTION && sector &&
+         sector->c_pflags & PS_PASSABLE &&
+         P_CeilingPortalZ(*sector) < mobj->z + scaledtop)
    {
       // always accept first sector
       data = R_CPLink(sector);
@@ -2256,6 +2271,7 @@ static void R_ProjectParticle(particle_t *particle)
    vis->colour = particle->color;
    vis->patch = -1;
    vis->translucency = static_cast<uint16_t>(particle->trans - 1);
+   vis->tranmaplump = -1;
    // Cardboard
    vis->dist = idist;
    vis->xstep = 1.0f / xscale;

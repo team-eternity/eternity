@@ -274,6 +274,7 @@ public:
    mobjinfo_t *info;   // mobjinfo[mobj->type]
 
    int colour; // sf: the sprite colour
+   int tranmap;   // the translucency map
 
    // INVENTORY_FIXME: eliminate union
    union
@@ -701,7 +702,10 @@ enum mobjflags4_e : unsigned int
    MF4_TOTALINVISIBLE = 0x00020000, // Thing is invisible to monsters
    MF4_DRAWSBLOOD     = 0x00040000, // For missiles, spawn blood when hitting bleeding things
    MF4_SPACPUSHWALL   = 0x00080000, // thing can activate push walls
-   MF4_HERETICBOUNCES = 0x00100000, // thing bounces à la Heretic
+   MF4_NOSPECIESINFIGHT = 0x00100000,  // no infighting in this species, but still damage
+   MF4_HARMSPECIESMISSILE = 0x00200000,   // harmed even by projectiles of same species
+   MF4_FRIENDFOEMISSILE = 0x00400000,  // friends and foes of same species hurt each other
+   MF4_HERETICBOUNCES = 0x00800000, // thing bounces Ã  la Heretic
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh

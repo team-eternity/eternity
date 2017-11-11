@@ -280,7 +280,8 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
               mo->z <= sectors[sec->heightsec].floorheight &&
               demo_version >= 203)))
          {
-            friction = sec->friction, movefactor = sec->movefactor;
+            friction = sec->friction;
+            movefactor = sec->movefactor;
          }
       }
    }
@@ -883,15 +884,24 @@ int P_MissileBlockHeight(Mobj *mo)
 }
 
 //
+// True if missile damage should be allowed
+//
+bool P_AllowMissileDamage(const Mobj &shooter, const Mobj &target)
+{
+   return target.player || (shooter.type == target.type &&
+                            (shooter.flags4 & MF4_HARMSPECIESMISSILE ||
+                             (shooter.flags4 & MF4_FRIENDFOEMISSILE &&
+                              (shooter.flags ^ target.flags) & MF_FRIEND))) ||
+   (shooter.type != target.type &&
+    !E_ThingPairValid(shooter.type, target.type, TGF_PROJECTILEALLIANCE));
+}
+
+//
 // PIT_CheckThing
 // 
 static bool PIT_CheckThing(Mobj *thing) // killough 3/26/98: make static
 {
    fixed_t blockdist;
-
-   // EDF FIXME: haleyjd 07/13/03: these may be temporary fixes
-   int bruiserType = E_ThingNumForDEHNum(MT_BRUISER); 
-   int knightType  = E_ThingNumForDEHNum(MT_KNIGHT); 
 
    // killough 11/98: add touchy things
    if(!(thing->flags & (MF_SOLID|MF_SPECIAL|MF_SHOOTABLE|MF_TOUCHY)))
@@ -957,15 +967,12 @@ static bool PIT_CheckThing(Mobj *thing) // killough 3/26/98: make static
       if(clip.thing->z + clip.thing->height < thing->z)
          return true;    // underneath
 
-      if(clip.thing->target &&
-         (clip.thing->target->type == thing->type ||
-          (clip.thing->target->type == knightType && thing->type == bruiserType)||
-          (clip.thing->target->type == bruiserType && thing->type == knightType)))
+      if(clip.thing->target)
       {
          if(thing == clip.thing->target)
-            return true;                // Don't hit same species as originator.
-         else if(!(thing->player))      // Explode, but do no damage.
-            return false;               // Let players missile other players.
+            return true;   // Don't hit originator.
+         if(!P_AllowMissileDamage(*clip.thing->target, *thing))
+            return false;
       }
       
       // haleyjd 10/15/08: rippers
@@ -1813,7 +1820,12 @@ static bool PIT_ApplyTorque(line_t *ld, polyobj_s *po)
          dist = FixedMul(x,x) + FixedMul(y,y);
 
          while(dist > FRACUNIT*4 && mo->gear < MAXGEAR)
-            ++mo->gear, x >>= 1, y >>= 1, dist >>= 1;
+         {
+            ++mo->gear;
+            x >>= 1;
+            y >>= 1;
+            dist >>= 1;
+         }
          
          mo->momx -= x;
          mo->momy += y;
@@ -2157,14 +2169,26 @@ void P_SlideMove(Mobj *mo)
       // trace along the three leading corners
       
       if(mo->momx > 0)
-         leadx = mo->x + mo->radius, trailx = mo->x - mo->radius;
+      {
+         leadx = mo->x + mo->radius;
+         trailx = mo->x - mo->radius;
+      }
       else
-         leadx = mo->x - mo->radius, trailx = mo->x + mo->radius;
+      {
+         leadx = mo->x - mo->radius;
+         trailx = mo->x + mo->radius;
+      }
 
       if(mo->momy > 0)
-         leady = mo->y + mo->radius, traily = mo->y - mo->radius;
+      {
+         leady = mo->y + mo->radius;
+         traily = mo->y - mo->radius;
+      }
       else
-         leady = mo->y - mo->radius, traily = mo->y + mo->radius;
+      {
+         leady = mo->y - mo->radius;
+         traily = mo->y + mo->radius;
+      }
 
       bestslidefrac = FRACUNIT+1;
       
@@ -2621,7 +2645,7 @@ static msecnode_t *P_GetSecnode(void)
    msecnode_t *node;
    
    return headsecnode ?
-      node = headsecnode, headsecnode = node->m_snext, node :
+   void(node = headsecnode), void(headsecnode = node->m_snext), node :
       (msecnode_t *)(Z_Malloc(sizeof *node, PU_LEVEL, NULL)); 
 }
 

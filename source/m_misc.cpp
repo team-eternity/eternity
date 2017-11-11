@@ -274,7 +274,8 @@ default_t defaults[] =
                "adjust vertical (y) mouse sensitivity"),
 
    // SoM
-   DEFAULT_INT("mouse_accel", &mouseAccel_type, NULL, 0, 0, 3, default_t::wad_no,
+   DEFAULT_INT("mouse_accel", &mouseAccel_type, NULL,
+               ACCELTYPE_NONE, ACCELTYPE_NONE, ACCELTYPE_MAX, default_t::wad_no,
                "0 for no mouse accel, 1 for linear, 2 for choco-doom, 3 for custom"),
 
    // [CG] 01/20/12
@@ -1644,7 +1645,10 @@ void M_LoadDefaultFile(defaultfile_t *df)
                if(skipblanks)      // If we are skipping blanks, skip line
                   continue;
                else            // Skip multiple blanks, but remember this one
-                  skipblanks = 1, p = "\n";
+               {
+                  skipblanks = 1;
+                  p = "\n";
+               }
             }
          }
       }

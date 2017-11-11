@@ -49,6 +49,7 @@
 #include "info.h"
 #include "m_cheat.h"
 #include "m_qstr.h"
+#include "m_qstrkeys.h"
 #include "metaapi.h"
 #include "metaspawn.h"
 #include "p_inter.h"
@@ -57,6 +58,7 @@
 #include "r_defs.h"
 #include "r_draw.h"
 #include "w_wad.h"
+#include "z_auto.h"
 
 // 11/06/11: track generations
 static int edf_thing_generation = 1; 
@@ -158,6 +160,7 @@ int UnknownThingType;
 
 // Graphic Properites
 #define ITEM_TNG_TRANSLUC     "translucency"
+#define ITEM_TNG_TRANMAP      "tranmap"
 #define ITEM_TNG_COLOR        "translation"
 #define ITEM_TNG_SKINSPRITE   "skinsprite"
 #define ITEM_TNG_DEFSPRITE    "defaultsprite"
@@ -208,6 +211,12 @@ int UnknownThingType;
 
 // Pickup Property
 #define ITEM_TNG_PICKUPEFFECT "pickupeffect"
+
+//
+// Thing groups
+//
+#define ITEM_TGROUP_FLAGS "flags"
+#define ITEM_TGROUP_TYPES "types"
 
 //
 // Field-Specific Data
@@ -440,11 +449,14 @@ static cfg_opt_t acs_data[] =
    CFG_END()
 };
 
+static int E_damageFactorCB(cfg_t *cfg, cfg_opt_t *opt, const char *value, 
+   void *result);
+
 // damage factor multi-value property options
 static cfg_opt_t dmgf_opts[] =
 {
    CFG_STR(  ITEM_TNG_DMGF_MODNAME, "Unknown", CFGF_NONE),
-   CFG_FLOAT(ITEM_TNG_DMGF_FACTOR,  0.0,       CFGF_NONE),
+   CFG_FLOAT_CB(ITEM_TNG_DMGF_FACTOR, 0.0, CFGF_NONE, E_damageFactorCB),
    CFG_END()
 };
 
@@ -480,6 +492,7 @@ static cfg_opt_t bloodbeh_opts[] =
 
 // translation value-parsing callback
 static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
+static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
 
 #define THINGTYPE_FIELDS \
    CFG_INT(ITEM_TNG_DOOMEDNUM,       -1,            CFGF_NONE), \
@@ -555,6 +568,7 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_INT_CB(ITEM_TNG_FASTSPEED,    0,             CFGF_NONE, E_IntOrFixedCB), \
    CFG_INT_CB(ITEM_TNG_TRANSLUC,     65536,         CFGF_NONE, E_TranslucCB  ), \
    CFG_INT_CB(ITEM_TNG_COLOR,        0,             CFGF_NONE, E_ColorCB     ), \
+   CFG_INT_CB(ITEM_TNG_TRANMAP,     -1,             CFGF_NONE, E_TranMapCB   ), \
    CFG_MVPROP(ITEM_TNG_DAMAGEFACTOR, dmgf_opts,     CFGF_MULTI|CFGF_NOCASE   ), \
    CFG_MVPROP(ITEM_TNG_DROPITEM,     dropitem_opts, CFGF_MULTI|CFGF_NOCASE   ), \
    CFG_MVPROP(ITEM_TNG_COLSPAWN,     colspawn_opts, CFGF_NOCASE              ), \
@@ -580,6 +594,69 @@ cfg_opt_t edf_tdelta_opts[] =
    THINGTYPE_FIELDS
 };
 
+
+//==============================================================================
+
+static dehflags_t tgroup_kinds[] =
+{
+   { "PROJECTILEALLIANCE", TGF_PROJECTILEALLIANCE },
+   { "DAMAGEIGNORE",       TGF_DAMAGEIGNORE       },
+   { "INHERITED",          TGF_INHERITED          },
+   { nullptr,              0                      }
+};
+
+//
+// Thinggroup kinds
+//
+static dehflagset_t tgroup_kindset =
+{
+   tgroup_kinds,  // flaglist
+   0              // mode
+};
+
+//
+// Thinggroup options
+//
+cfg_opt_t edf_tgroup_opts[] =
+{
+   CFG_STR(ITEM_TGROUP_FLAGS, "", CFGF_NONE),
+   CFG_STR(ITEM_TGROUP_TYPES, 0, CFGF_LIST),
+   CFG_END()
+};
+
+//
+// The thing group
+//
+class ThingGroup : public ZoneObject
+{
+public:
+   explicit ThingGroup(const char *inname) : name(inname), link(), flags()
+   {
+   }
+
+   qstring name;
+   DLListItem<ThingGroup> link;
+
+   unsigned flags;
+   PODCollection<int> types;
+};
+
+//
+// A projectile alliance definition
+//
+struct thinggrouppair_t
+{
+   union
+   {
+      int types[2];
+      int64_t key;
+   };
+   DLListItem<thinggrouppair_t> link;
+   unsigned flags;   // use flags from ThingGroup
+};
+
+//==============================================================================
+
 //
 // Thing Type Hash Lookup Functions
 //
@@ -603,6 +680,13 @@ static EHashTable<mobjinfo_t, ENCStringHashKey,
 // hash by DeHackEd number
 static EHashTable<mobjinfo_t, EIntHashKey,
                   &mobjinfo_t::dehnum, &mobjinfo_t::numlinks> thing_dehhash(NUMTHINGCHAINS);
+
+// Thing group
+static EHashTable<ThingGroup, ENCQStrHashKey,
+                  &ThingGroup::name, &ThingGroup::link> thinggroup_namehash(53);
+
+static EHashTable<thinggrouppair_t, EInt64HashKey,
+     &thinggrouppair_t::key, &thinggrouppair_t::link> thinggrouppairs(NUMTHINGCHAINS);
 
 //
 // As with states, things need to store their DeHackEd number now.
@@ -1228,7 +1312,7 @@ static void E_ProcessDamageTypeStates(cfg_t *cfg, const char *name,
 // by name. Returns null otherwise. Self-identity is *not* considered 
 // inheritance.
 //
-mobjinfo_t *E_IsMobjInfoDescendantOf(mobjinfo_t *mi, const char *type)
+static mobjinfo_t *E_IsMobjInfoDescendantOf(mobjinfo_t *mi, const char *type)
 {
    mobjinfo_t *curmi = mi->parent;
    int targettype = E_ThingNumForName(type);
@@ -1476,7 +1560,8 @@ static void E_ProcessDamageFactors(mobjinfo_t *info, cfg_t *cfg)
       if(mod->num != 0)
       {
          double df  = cfg_getfloat(sec, ITEM_TNG_DMGF_FACTOR);
-         int    dfi = static_cast<int>(M_DoubleToFixed(df));
+         // D_MININT is a special case which makes monster totally ignore damage
+         int    dfi = df == D_MININT ? D_MININT : static_cast<int>(M_DoubleToFixed(df));
 
          info->meta->setInt(E_ModFieldName("damagefactor", mod), dfi);
       }
@@ -1847,6 +1932,45 @@ static int E_ColorCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
       *(int *)result = num % TRANSLATIONCOLOURS;
    }
 
+   return 0;
+}
+
+//
+// Translucency map support
+//
+static int E_TranMapCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
+                       void *result)
+{
+   int *target = static_cast<int *>(result);
+   if(!strcasecmp(value, "none"))   // accept none
+   {
+      *target = -1;
+      return 0;
+   }
+
+   // try lump name
+   int trnum = W_CheckNumForName(value);
+   if(trnum < 0 || W_LumpLength(trnum) != 65536)
+   {
+      // Do not error out from this
+      E_EDFLoggedWarning(2, "Bad translucency lump '%s'\n", value);
+      *target = -1;
+      return 0;
+   }
+   *target = trnum;
+
+   return 0;
+}
+
+//
+// Damagefactor value callback
+//
+static int E_damageFactorCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
+   void *result)
+{
+   double *target = static_cast<double *>(result);
+   // D_MININT means immune. Even floating-point is marked with D_MININT.
+   *target = !strcasecmp(value, "immune") ? D_MININT : strtod(value, nullptr);
    return 0;
 }
 
@@ -2409,6 +2533,10 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    if(IS_SET(ITEM_TNG_TRANSLUC))
       mobjinfo[i]->translucency = cfg_getint(thingsec, ITEM_TNG_TRANSLUC);
 
+   // process translucency map
+   if(IS_SET(ITEM_TNG_TRANMAP))
+      mobjinfo[i]->tranmap = cfg_getint(thingsec, ITEM_TNG_TRANMAP);
+
    // process bloodcolor
    if(IS_SET(ITEM_TNG_BLOODCOLOR))
       mobjinfo[i]->bloodcolor = cfg_getint(thingsec, ITEM_TNG_BLOODCOLOR);
@@ -2819,6 +2947,134 @@ void E_ProcessThings(cfg_t *cfg)
 
    // increment generation count
    ++edf_thing_generation;
+}
+
+//
+// True if mobjtype low is a descendant of high.
+//
+static bool E_mobjTypeIsDescendantOf(mobjtype_t low, mobjtype_t high)
+{
+   for(const mobjinfo_t *info = mobjinfo[low]; info; info = info->parent)
+      if(info->index == high)
+         return true;
+   return false;
+}
+
+//
+// Process thing group definitions
+//
+void E_ProcessThingGroups(cfg_t *cfg)
+{
+   unsigned numgroups = cfg_size(cfg, EDF_SEC_THINGGROUP);
+   ThingGroup *group;
+
+   // Have a visited list
+   ZAutoBuffer zvisited(NUMMOBJTYPES, true);
+   bool *visited = zvisited.getAs<bool *>();
+
+   for(unsigned i = 0; i < numgroups; ++i)
+   {
+      cfg_t *gsec = cfg_getnsec(cfg, EDF_SEC_THINGGROUP, i);
+      const char *name = cfg_title(gsec);
+
+      group = thinggroup_namehash.objectForKey(name);
+      if(!group)
+      {
+         E_EDFLogPrintf("\t\tCreating thing group '%s'\n", name);
+         group = new ThingGroup(name);
+         thinggroup_namehash.addObject(group);
+      }
+      else
+         E_EDFLogPrintf("\t\tModifying thing group '%s'\n", name);
+
+      const char *tempstr = cfg_getstr(gsec, ITEM_TGROUP_FLAGS);
+      if(estrnonempty(tempstr))
+         group->flags = E_ParseFlags(tempstr, &tgroup_kindset);
+
+      unsigned numtypes = cfg_size(gsec, ITEM_TGROUP_TYPES);
+      if(numtypes)
+      {
+         group->types.clear();   // clear it even if thinggroup redefined.
+         for(unsigned j = 0; j < numtypes; ++j)
+         {
+            tempstr = cfg_getnstr(gsec, ITEM_TGROUP_TYPES, j);
+            int type = E_ThingNumForName(tempstr);
+            if(type != -1 && !visited[type])
+            {
+               visited[type] = true;
+               group->types.add(type);
+               if(group->flags & TGF_INHERITED)
+               {
+                  // Also check children
+                  for(int k = 0; k < NUMMOBJTYPES; ++k)
+                  {
+                     if(visited[k] || !E_mobjTypeIsDescendantOf(k, type))
+                        continue;
+
+                     visited[k] = true;
+                     group->types.add(k);
+                  }
+               }
+            }
+            else if(!visited[type]) // don't scream if visited
+            {
+               E_EDFLoggedWarning(2, "Warning: unknown type '%s' for group '%s'\n",
+                                  tempstr, name);
+            }
+         }
+      }
+   }
+
+   // Now process them
+   thinggrouppair_t *proj;
+   while((proj = thinggrouppairs.tableIterator((thinggrouppair_t*)nullptr)))
+   {
+      thinggrouppairs.removeObject(proj);
+      efree(proj);
+   }
+
+   group = nullptr;
+   static const unsigned operationalFlags = TGF_PROJECTILEALLIANCE | TGF_DAMAGEIGNORE;
+   while((group = thinggroup_namehash.tableIterator(group)))
+   {
+      // Currently only these are supported
+      if(!(group->flags & operationalFlags))
+         continue;
+      // Setup relation
+      for(int entry : group->types)
+      {
+         for(int other : group->types)
+         {
+            if(other <= entry)
+               continue;
+            int64_t key = (int64_t)entry | (int64_t)other << 32;
+            proj = thinggrouppairs.objectForKey(key);
+            if (!proj)
+            {
+               proj = estructalloc(thinggrouppair_t, 1);
+               proj->types[0] = entry;
+               proj->types[1] = other;
+               thinggrouppairs.addObject(proj);
+            }
+            proj->flags |= group->flags & operationalFlags;
+         }
+      }
+   }
+}
+
+//
+// Returns that two monsters are allies
+//
+bool E_ThingPairValid(mobjtype_t t1, mobjtype_t t2, unsigned flags)
+{
+   if(t2 < t1)
+   {
+      mobjtype_t aux = t1;
+      t1 = t2;
+      t2 = aux;
+   }
+   const thinggrouppair_t *pair = thinggrouppairs.objectForKey((int64_t)t1 | (int64_t)t2 << 32);
+   return pair && pair->flags & flags;
 }
 
 //

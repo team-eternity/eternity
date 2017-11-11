@@ -99,6 +99,7 @@
 #include "e_lib.h"
 #include "e_edf.h"
 
+#include "e_anim.h"
 #include "e_args.h"
 #include "e_fonts.h"
 #include "e_gameprops.h"
@@ -110,6 +111,7 @@
 #include "e_sprite.h"
 #include "e_states.h"
 #include "e_string.h"
+#include "e_switch.h"
 #include "e_things.h"
 #include "e_ttypes.h"
 #include "e_weapons.h"
@@ -229,6 +231,7 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_FRAME,       edf_frame_opts,    EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_FRAMEBLOCK,  edf_fblock_opts,   EDF_NSEC_FLAGS),
    CFG_SEC(EDF_SEC_THING,       edf_thing_opts,    EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_THINGGROUP,  edf_tgroup_opts,   EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_SKIN,        edf_skin_opts,     EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_HEALTHFX,    edf_healthfx_opts, EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_ARMORFX,     edf_armorfx_opts,  EDF_TSEC_FLAGS),
@@ -247,6 +250,8 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_FONT,        edf_font_opts,     EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_STRING,      edf_string_opts,   EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_GAMEPROPS,   edf_game_opts,     EDF_NSEC_FLAGS),
+   CFG_SEC(EDF_SEC_SWITCH,      edf_switch_opts,   EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_ANIMATION,   edf_anim_opts,     EDF_NSEC_FLAGS),
    CFG_SEC(EDF_SEC_WEAPONINFO,  edf_wpninfo_opts,  EDF_TSEC_FLAGS),
    CFG_STR(SEC_CASTORDER,       0,                 CFGF_LIST),
    CFG_STR(SEC_BOSSTYPES,       0,                 CFGF_LIST),
@@ -1231,6 +1236,9 @@ static void E_ProcessStatesAndThings(cfg_t *cfg)
 
    // process things: see e_things.c
    E_ProcessThings(cfg);
+
+   // process thing groups. Needs to be after things.
+   E_ProcessThingGroups(cfg);
 }
 
 static void E_ProcessWeapons(cfg_t *cfg)
@@ -1666,6 +1674,10 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
 
    // process TerrainTypes
    E_ProcessTerrainTypes(cfg);
+
+   // process switches and animations
+   E_ProcessSwitches(cfg);
+   E_ProcessAnimations(cfg);
 
    // process dynamic menus
    MN_ProcessMenus(cfg);

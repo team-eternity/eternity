@@ -8,6 +8,155 @@ Since v3.42.03 "Heimdal" release 2
 ==================================
 
 --------------------------------------------------------------------------------
+30.10.2017
+
+FEATURE: Added FRIENDFOEMISSILE thing type flag, which will make projectiles
+         shot by friends harm enemies of the same species, and viceversa.
+
+--------------------------------------------------------------------------------
+28.10.2017
+
+FEATURE: Monster infighting can now be customized. Several EDF features have
+         been added. Make sure to update the "base" folder now. If a development
+         build has no "base" folder, it's broken! "Doom/things.edf" has been
+         updated with a new entry.
+
+         1. First feature is the new "thinggroup" EDF block. It has the following
+         structure (as usual, replace all <> enclosed text with your text):
+
+         thinggroup <name>
+         {
+           flags <flags>
+           types { <thingtype1>, <thingtype2>, ... }
+         }
+
+         A group has a list of thingtype mnemonics in "types". The "flags" are
+         the following:
+
+         * PROJECTILEALLIANCE: monsters in the list won't harm each other with
+           their projectiles. This generalizes the Doom 2 baron of hell / hell
+           knight alliance. They may still be harmed by other kinds of damage
+           (explosions, bullets etc.) and react to it. To prevent that kind of
+           damage, use "damagefactor <x>, immune" on thingtype (see new feature
+           below).
+
+         * DAMAGEIGNORE: monsters in the list may be damaged by each other, but
+           will not infight as a result. This generalizes the deprecated
+           BOSSIGNORE thingtype flag. It will NOT prevent monsters from infighting
+           others of the SAME species; for that, use a new thingtype
+           flag (see below).
+
+         * INHERITED: only has meaning if any of the other flags above is set.
+           It makes it so any thingtypes inheriting the ones from the list are
+           also included in the group. By default they don't inherit.
+
+         Note: they don't have to be monsters specifically, any thingtype will do.
+
+         Currently the "name" is merely descriptive but must be unique per
+         thinggroup.
+
+         Example: the following EDF makes imps and cacodemons immune to each
+         other's attacks:
+
+           thinggroup ClassicDevils	// name can be anything but must be unique
+           {
+             flags ProjectileAlliance
+             types { DoomImp, Cacodemon }
+           }
+           // EXAMPLE END
+
+         2. New thingtype "damagefactor" attribute: "immune". Unlike
+         "damagefactor <X>, 0", this one also prevents pain, thrusting and
+         retaliation. Useful to prevent friendly fire and infighting for arbitrary
+         damage types (means of death / MODs) between monsters.
+
+         Example: this makes zombiemen immune to their own attacks:
+
+           thingdelta
+           {
+             name Zombieman
+
+             mod ZombiemanMOD      // their default MOD is "unknown"; it needs to
+                                   // be set to a custom one.
+             damagefactor ZombiemanMOD, immune
+           }
+
+           // MOD definition (use a number that doesn't conflict with the stock
+           // ones):
+           damagetype ZombiemanMOD { num 100 }
+           // EXAMPLE END
+
+         3. New thingtype flags:
+
+         * NOSPECIESINFIGHT: this one prevents monsters of the same species from
+           hating each other, even if they harm each other with friendly fire.
+           This flag is needed because the aforementioned thinggroup
+           DAMAGEIGNORE flag only has effect between monsters of different
+           species (that is a limitation inherited from the deprecated EDF
+           BOSSIGNORE thingtype flag).
+
+         * HARMSPECIESMISSILE: this one allows monsters of the same species to
+           be affected by each other's projectiles, overriding the default
+           immunity from classic Doom.
+
+--------------------------------------------------------------------------------
+15.10.2017
+
+FEATURE: Added a "Show Eternity Log" menu option in the macOS start-up dialog
+         box. Something like this was long overdue and necessary to read any
+         load-time warning that occurred without Eternity quitting with error.
+
+--------------------------------------------------------------------------------
+10.10.2017
+
+BUGFIX: Hopefully fixed an insidious optimization bug (that only occurs in
+        release builds) that would make realloc() lock up Eternity if new fields
+        are added to ticcmd_t (very likely to happen when inventory is added)
+        and a demo is recorded. First sign of error was right in the code,
+        because the Boom team didn't bother to properly put sizeof(), putting a
+        hard-coded number instead. But even after replacing that with sizeof(),
+        followed by a small margin, the game would still lock up! So to be safe,
+        I doubled that buffer size.
+        
+        Problem is that I don't know why that happens; what could be optimized...
+
+--------------------------------------------------------------------------------
+08.10.2017
+
+FEATURE: Added "ee_compat = true" global field in UDMF. This makes Eternity
+         treat any other namespace the same as "eternity", and may be used by
+         editors to save UDMF wads with features common Eternity and other ports
+         (like GZDoom).
+         
+         Thanks to anotak for implementing and submitting it.
+
+--------------------------------------------------------------------------------
+06.10.2017
+
+FEATURE: Added EDF animation and switch definitions. Added ANIMDEFS support --
+         a subset with what Eternity supports.
+
+--------------------------------------------------------------------------------
+06.09.2017
+
+BUGFIX: Fixed looping problems in non-conventional linked portal maps, where
+        autoaim would lock up the game because the sector portals were spotted
+        outside the intended sector, and sprite projections would slow down to
+        a crawl because the loop protection was too big (so I reduced that).
+
+--------------------------------------------------------------------------------
+05.09.2017
+
+BUGFIX: Fixed a problem with polyobject portals failing to capture things,
+        especially those placed at their spawn point. Now they also capture
+        things if they have moving pits.
+
+--------------------------------------------------------------------------------
+03.09.2017
+
+FEATURE: Added EDF thingtype tranmap. Works like the Boom linedef special.
+
+--------------------------------------------------------------------------------
 18.08.2017
 
 FEATURE: Hexen's vanilla ANIMDEFS lump is now supported.

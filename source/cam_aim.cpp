@@ -175,7 +175,8 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
 
          }
 
-         if(partialfrac + 1 > 0) // don't allow if it's going back
+         // don't allow if it's going back
+         if(partialfrac + 1 > 0 && R_PointInSubsector(x, y)->sector == sector)
          {
             fixed_t outSlope;
             Mobj *outTarget = nullptr;
@@ -229,7 +230,7 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
             y = trace.y + FixedMul(partialfrac + 1, trace.dy);
          }
 
-         if(partialfrac + 1 > 0)
+         if(partialfrac + 1 > 0 && R_PointInSubsector(x, y)->sector == sector)
          {
             fixed_t outSlope;
             Mobj *outTarget = nullptr;

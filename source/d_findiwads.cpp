@@ -82,7 +82,9 @@ public:
          valid = true;
    }
 
-   // TODO: Add deleted copy constructor and operator = when VC2012 is out of the picture
+   // Disallow copying
+   AutoRegKey(const AutoRegKey &) = delete;
+   AutoRegKey &operator = (const AutoRegKey &) = delete;
 
    // Destructor. Close the key handle, if it is valid.
    ~AutoRegKey()
@@ -212,6 +214,7 @@ enum gogkeys_e
    GOG_KEY_ULTIMATE,
    GOG_KEY_DOOM2,
    GOG_KEY_FINAL,
+   GOG_KEY_DOOM3BFG,
    GOG_KEY_MAX
 };
 
@@ -239,6 +242,13 @@ static registry_value_t gogInstallValues[GOG_KEY_MAX+1] =
       "PATH"
    },
 
+   // Doom 3: BFG install
+   {
+     HKEY_LOCAL_MACHINE,
+     SOFTWARE_KEY "\\GOG.com\\Games\\1135892318",
+     "PATH"
+   },
+
    // terminating entry
    { nullptr, nullptr, nullptr }
 };
@@ -250,6 +260,7 @@ static const char *gogInstallSubDirs[] =
    "doom2",
    "TNT",
    "Plutonia",
+   "base\\wads",
 };
 
 // Master Levels from GOG.com. These are installed with Doom II
