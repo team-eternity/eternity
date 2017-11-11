@@ -25,6 +25,9 @@
 #include "SDL.h"
 #include "SDL_opengl.h"
 
+// HAL header
+#include "../hal/i_platform.h"
+
 // DOOM headers
 #include "../z_zone.h"
 #include "../d_main.h"

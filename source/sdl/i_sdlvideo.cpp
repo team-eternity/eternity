@@ -21,6 +21,8 @@
 
 #include "SDL.h"
 
+#include "../hal/i_platform.h"
+
 #include "../z_zone.h"  /* memory allocation wrappers -- killough */
 
 #include "i_sdlvideo.h"
