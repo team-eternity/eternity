@@ -188,6 +188,9 @@ Merged in SDL2 branch. Changes I can remember:
  • A new console command "maxdisplaynum" has been added (guess what it does).
  • -directx and -gdi are gone.
 
+Also whilst I was at it I added a fullscreen toggle,
+bound to Alt+Enter on non-Apple, Cmd+f on Apple).
+
 ================================================================================
 EOF
 ================================================================================
