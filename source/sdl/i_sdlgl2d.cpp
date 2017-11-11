@@ -493,24 +493,10 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    // on initial video mode set (setting from menu doesn't support this)
    I_CheckVideoCmds(&v_w, &v_h, &wantfullscreen, &wantvsync, &wanthardware,
                     &wantframe, &wantdesktopfs);
-
-   if(wantfullscreen && wantdesktopfs)
-      window_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
-   else if(wantfullscreen) // && !wantdesktopfs
-      window_flags |= SDL_WINDOW_FULLSCREEN;
    
    if(!wantframe)
       window_flags |= SDL_WINDOW_BORDERLESS;
 
-#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
-   // Do not use classic fullscreen on macOS
-   if(window_flags & SDL_WINDOW_FULLSCREEN)
-   {
-      window_flags = (window_flags & ~SDL_WINDOW_FULLSCREEN) |
-      SDL_WINDOW_FULLSCREEN_DESKTOP;
-   }
-#endif
-   
    // Set GL attributes through SDL
    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
    SDL_GL_SetAttribute(SDL_GL_RED_SIZE,   colordepth >= 24 ? 8 : 5);
@@ -534,6 +520,18 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
       I_FatalError(I_ERR_KILL, "Couldn't create OpenGL window %dx%d\n"
                                "SDL Error: %s\n", v_w, v_h, SDL_GetError());
    }
+
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
+   // this and the below #else block are done here as monitor video mode isn't
+   // set when SDL_WINDOW_FULLSCREEN (sans desktop) is ORed in during window creation
+   if(wantfullscreen)
+      SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+#else
+   if(wantfullscreen && wantdesktopfs)
+      SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+   else if(wantfullscreen) // && !wantdesktopfs
+      SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
+#endif
 
    if(!(glcontext = SDL_GL_CreateContext(window)))
    {

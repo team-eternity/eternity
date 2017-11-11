@@ -264,10 +264,10 @@ void SDLVideoDriver::ShutdownGraphicsPartway()
       SDL_DestroyTexture(sdltexture);
       sdltexture = nullptr;
    }
-   SDL_DestroyWindow(window);
-   window = nullptr;
    SDL_DestroyRenderer(renderer);
    renderer = nullptr;
+   SDL_DestroyWindow(window);
+   window = nullptr;
    UnsetPrimaryBuffer();
 }
 
@@ -339,20 +339,6 @@ bool SDLVideoDriver::InitGraphicsMode()
       renderer_flags |= SDL_RENDERER_PRESENTVSYNC;
    }
 
-   if(wantfullscreen && wantdesktopfs)
-      window_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
-   else if(wantfullscreen) // && !wantdesktopfs
-      window_flags |= SDL_WINDOW_FULLSCREEN;
-
-#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
-   // Do not use classic fullscreen on macOS
-   if(window_flags & SDL_WINDOW_FULLSCREEN)
-   {
-      window_flags = (window_flags & ~SDL_WINDOW_FULLSCREEN) |
-      SDL_WINDOW_FULLSCREEN_DESKTOP;
-   }
-#endif
-
    // haleyjd 10/27/09
    if(!wantframe)
       window_flags |= SDL_WINDOW_BORDERLESS;
@@ -386,6 +372,18 @@ bool SDLVideoDriver::InitGraphicsMode()
       v_h          = fallback_h;
       window_flags = fallback_w_flags;
    }
+
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
+   // this and the below #else block are done here as monitor video mode isn't
+   // set when SDL_WINDOW_FULLSCREEN (sans desktop) is ORed in during window creation
+   if(wantfullscreen)
+      SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+#else
+   if(wantfullscreen && wantdesktopfs)
+      SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+   else if(wantfullscreen) // && !wantdesktopfs
+      SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
+#endif
 
    if(!(renderer = SDL_CreateRenderer(window, -1, renderer_flags)))
    {
