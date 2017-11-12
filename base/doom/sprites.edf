@@ -163,7 +163,7 @@ pickupeffect InvulnSphere
 // FIXME: This switches to fist in P_TouchSpecialThing
 /*pickupeffect BerzerkBox
 {
-  effects Berserk,
+  effects Berserk, BerserkHealth
   message $GOTBERSERK
   sound   getpow
 

@@ -150,7 +150,7 @@ cfg_opt_t wpninfo_tprops[] =
    CFG_INT(ITEM_WPN_HAPTICRECOIL, 0,        CFGF_NONE), \
    CFG_INT(ITEM_WPN_HAPTICTIME,   0,        CFGF_NONE), \
    CFG_STR(ITEM_WPN_UPSOUND,      "none",   CFGF_NONE), \
-   CFG_STR(ITEM_WPN_READYSOUND,   "none",    CFGF_NONE), \
+   CFG_STR(ITEM_WPN_READYSOUND,   "none",   CFGF_NONE), \
    CFG_STR(ITEM_WPN_TRACKER,      "",       CFGF_NONE), \
    CFG_STR(ITEM_WPN_FIRSTDECSTATE, nullptr, CFGF_NONE), \
    CFG_STR(ITEM_WPN_STATES,        0,       CFGF_NONE), \
@@ -890,11 +890,9 @@ static void E_insertSelectOrderNode(int sortorder, weaponinfo_t *wp, bool modify
 //
 static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
 {
-   double tempfloat;
    int tempint;
    const char *tempstr;
    bool inherits = false;
-   bool cflags   = false;
    weapontitleprops_t titleprops;
    weaponinfo_t &wp = *weaponinfo[i];
 

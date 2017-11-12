@@ -697,9 +697,9 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
       pickup = special->info->pickupfx;
    else if((pickupitem = E_PickupItemForSprNum(special->sprite)))
    {
-      pickup = pickupitem->pickupfx;
+      pickup  = pickupitem->pickupfx;
       message = pickupitem->message;
-      sound = pickupitem->sound;
+      sound   = pickupitem->sound;
    }
    else
       return;
@@ -720,7 +720,7 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
    dropped = ((special->flags & MF_DROPPED) == MF_DROPPED);
 
 
-   for(int i = 0; i < pickup->numEffects; i++)
+   for(unsigned int i = 0; i < pickup->numEffects; i++)
    {
       itemeffect_t *effect = pickup->effects[i];
       if(!effect)
@@ -812,7 +812,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       P_TouchSpecialThingNew(special, toucher);
       return;
    }
-   else if(pickupitem->pickupfx)
+   else if(pickupitem && pickupitem->pickupfx)
    {
       P_TouchSpecialThingNew(special, toucher);
       return;
@@ -887,11 +887,11 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       if(!P_GiveWeapon(player, effect, false, special))
          return;
       // FIXME: externalize all BFG pickup strings
-      message = bfgtype == bfg_normal ? DEH_String("GOTBFG9000") // sf
-                : bfgtype == bfg_classic ? "You got the BFG 2704!"
-                : bfgtype == bfg_11k ? "You got the BFG 11K!"
+      message = bfgtype == bfg_normal     ? DEH_String("GOTBFG9000") // sf
+                : bfgtype == bfg_classic  ? "You got the BFG 2704!"
+                : bfgtype == bfg_11k      ? "You got the BFG 11K!"
                 : bfgtype == bfg_bouncing ? "You got the Bouncing BFG!"
-                : bfgtype == bfg_burst ? "You got the Plasma Burst BFG!"
+                : bfgtype == bfg_burst    ? "You got the Plasma Burst BFG!"
                 : "You got some kind of BFG";
       sound = sfx_wpnup;
       break;
