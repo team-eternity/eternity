@@ -1518,7 +1518,7 @@ static void D_identifyIWAD()
       // haleyjd 08/20/07: improved error message for n00bs
       I_Error("\nIWAD not found!\n"
               "To specify an IWAD, try one of the following:\n"
-              "* Configure IWAD file paths in base/system.cfg\n"
+              "* Configure IWAD file paths in user/system.cfg\n"
               "* Use -iwad\n"
               "* Set the DOOMWADDIR or DOOMWADPATH environment variables.\n"
               "* Place an IWAD in the working directory.\n"
