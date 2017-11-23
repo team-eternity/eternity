@@ -317,7 +317,7 @@ extern double mouseAccel_value;
 // the values exceed the value of mouse_threshold, they are multiplied
 // by mouse_acceleration to increase the speed.
 
-float mouse_acceleration = 2.0;
+float mouse_acceleration = 2.0f;
 int   mouse_threshold = 10;
 
 //
@@ -394,8 +394,7 @@ static void I_ReadMouse(SDL_Window *window)
       ev.data1 = SDL_MOUSEMOTION;
       if(mouseAccel_type == ACCELTYPE_CHOCO)
       {
-         // SoM: So the values that go to Eternity should be 16.16 fixed
-         //      point...
+         // SoM: So the values that go to Eternity should be 16.16 fixed point...
          ev.data2 =  AccelerateMouse(x);
          ev.data3 = -AccelerateMouse(y);
       }
@@ -415,8 +414,7 @@ static void I_ReadMouse(SDL_Window *window)
 //
 // I_InitMouse
 //
-// Once upon a time this function existed in vanilla DOOM, and now here it is
-// again.
+// Once upon a time this function existed in vanilla DOOM, and now here it is again.
 // haleyjd 05/10/11: Moved -grabmouse check here from the video subsystem.
 //
 void I_InitMouse()
@@ -523,8 +521,7 @@ static void I_GetEvent(SDL_Window *window)
    event_t    mouseevent     = { ev_mouse,   0, 0, 0, false };
    event_t    tempevent      = { ev_keydown, 0, 0, 0, false };
 
-   // [CG] 01/31/2012: Ensure we have the latest info about focus and mouse
-   //                  grabbing.
+   // [CG] 01/31/2012: Ensure we have the latest info about focus and mouse grabbing.
    UpdateFocus(window);
    UpdateGrab(window);
 
@@ -594,10 +591,8 @@ static void I_GetEvent(SDL_Window *window)
          }
 #endif
 
-         // MaxW: 2017/10/12: Removed deffered event adding for caps lock
-
+         // MaxW: 2017/10/12: Removed deferred event adding for caps lock
          // MaxW: 2017/10/18: Removed character input
-
          D_PostEvent(&d_event);
          break;
 
