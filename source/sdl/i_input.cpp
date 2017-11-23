@@ -554,7 +554,7 @@ static void I_GetEvent(SDL_Window *window)
          break;
       case SDL_KEYDOWN:
          d_event.type = ev_keydown;
-         d_event.repeat = ev.key.repeat;
+         d_event.repeat = !!ev.key.repeat;
          d_event.data1 = I_TranslateKey(&ev.key.keysym);
 
 #if (EE_CURRENT_PLATFORM != EE_PLATFORM_MACOSX)
