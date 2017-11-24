@@ -306,7 +306,7 @@ void SDLGL2DVideoDriver::SetPrimaryBuffer()
 
    // Create screen surface for the high-level code to render the game into
    if(!(screen = SDL_CreateRGBSurfaceWithFormat(0, video.width + bump, video.height,
-                                                8, SDL_PIXELFORMAT_INDEX8)))
+                                                0, SDL_PIXELFORMAT_INDEX8)))
       I_Error("SDLGL2DVideoDriver::SetPrimaryBuffer: failed to create screen temp buffer\n");
 
    // Point screens[0] to 8-bit temp buffer
@@ -459,7 +459,6 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    int     v_displaynum   = 0;
    int     window_flags   = SDL_WINDOW_OPENGL|SDL_WINDOW_ALLOW_HIGHDPI;
    GLvoid *tempbuffer     = nullptr;
-   GLint   texformat      = GL_RGBA8;
    GLint   texfiltertype  = GL_LINEAR;
 
    // Get video commands and geometry settings
@@ -547,7 +546,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    else // 16
       format = SDL_PIXELFORMAT_RGB555;
 
-   if(!(screen = SDL_CreateRGBSurfaceWithFormat(0, v_w, v_h, colordepth, format)))
+   if(!(screen = SDL_CreateRGBSurfaceWithFormat(0, v_w, v_h, 0, format)))
    {
       I_FatalError(I_ERR_KILL, "Couldn't set RGB surface with colordepth %d, format %s\n",
                    colordepth, SDL_GetPixelFormatName(format));
@@ -601,7 +600,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
-   glTexImage2D(GL_TEXTURE_2D, 0, texformat, static_cast<GLsizei>(framebuffer_umax),
+   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(framebuffer_umax),
                 static_cast<GLsizei>(framebuffer_vmax), 0, GL_BGRA, GL_UNSIGNED_BYTE, 
                 tempbuffer);
    efree(tempbuffer);

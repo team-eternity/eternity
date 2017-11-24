@@ -219,7 +219,7 @@ void SDLVideoDriver::SetPrimaryBuffer()
    {
       // SDL_FIXME: This won't be sufficient once a truecolour renderer is implemented
       primary_surface = SDL_CreateRGBSurfaceWithFormat(0, video.width + bump, video.height,
-                                                       8, SDL_PIXELFORMAT_INDEX8);
+                                                       0, SDL_PIXELFORMAT_INDEX8);
       if(!primary_surface)
          I_Error("SDLVideoDriver::SetPrimaryBuffer: failed to create screen temp buffer\n");
 
@@ -228,7 +228,7 @@ void SDLVideoDriver::SetPrimaryBuffer()
          pixelformat = SDL_PIXELFORMAT_RGBA32;
 
       rgba_surface = SDL_CreateRGBSurfaceWithFormat(0, video.width + bump, video.height,
-                                                    32, pixelformat);
+                                                    0, pixelformat);
       if(!rgba_surface)
       {
          I_Error("SDLVideoDriver::SetPrimaryBuffer: failed to create true-colour buffer: %s\n",

@@ -2082,7 +2082,7 @@ void MN_VideoModeDrawer()
    patch = PatchLoader::CacheNum(wGlobalDir, lump + firstspritelump, PU_CACHE);
    
    // approximately center box on "translucency" item in menu
-   y = menu_video.menuitems[13].y - 5;
+   y = menu_video.menuitems[14].y - 5;
    V_DrawBox(270, y, 20, 20);
    V_DrawPatchTL(282, y + 12, &subscreen43, patch, NULL, FTRANLEVEL);
 }
