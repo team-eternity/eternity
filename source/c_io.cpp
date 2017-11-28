@@ -436,6 +436,9 @@ bool C_Responder(event_t *ev)
       C_updateInputPoint();   // reset scrolling
       return true;
    }
+
+   if(ev->type == ev_keydown)
+      return true;
    
    return false;   // dont care about this event
 }
