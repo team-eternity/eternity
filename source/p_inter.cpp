@@ -691,8 +691,7 @@ static inline const char *P_getSpecialMessage(Mobj *special, const char *def)
 void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 {
    player_t       *player;
-   e_pickupfx_t   *pickup;
-   e_pickupitem_t *pickupitem, *temp;
+   e_pickupfx_t   *pickup, *temp;
    bool            pickedup  = false;
    bool            dropped   = false;
    bool            hadeffect = false;
@@ -718,12 +717,8 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 
    if(special->info->pickupfx)
       pickup = special->info->pickupfx;
-   else if((pickupitem = E_PickupItemForSprNum(special->sprite)))
-   {
-      pickup  = pickupitem->pickupfx;
-      message = P_getSpecialMessage(special, pickupitem->message);
-      sound   = pickupitem->sound;
-   }
+   else if((temp = E_PickupFXForSprNum(special->sprite)))
+      pickup = temp;
    else
       return;
 

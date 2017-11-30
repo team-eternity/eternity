@@ -159,7 +159,8 @@ enum pickupflags_e : unsigned int
 struct e_pickupfx_t
 {
    char          *name;         // name
-   char          *compatname  ; // compat name, if any
+   char          *compatname;   // compat name, if any
+   spritenum_t    sprnum;       // sprite number, -1 if not set
    unsigned int   numEffects;   // number of effects
    itemeffect_t **effects;      // item given, if any
    weaponinfo_t  *changeweapon; // weapon to change to, if any
@@ -168,22 +169,9 @@ struct e_pickupfx_t
    pickupflags_e flags;         // pickup flags
 
    // EDF Hashing
-   DLListItem<e_pickupfx_t> namelinks; // hash by name
-   DLListItem<e_pickupfx_t> cnamelinks; // hash by compat name
-};
-
-// Dusty old pickup items
-struct e_pickupitem_t
-{
-   spritenum_t   sprnum;   // sprite number
-   e_pickupfx_t *pickupfx; // item given, if any
-   char          *message; // message, if any
-   char          *sound;   // sound, if any
-
-   int tempeffect;        // INVENTORY_FIXME: temporary transitional field
-
-   // EDF Hashing
-   DLListItem<e_pickupitem_t> sprnumlinks; // hash by sprite num
+   DLListItem<e_pickupfx_t> namelinks;   // hash by name
+   DLListItem<e_pickupfx_t> cnamelinks;  // hash by compat name
+   DLListItem<e_pickupfx_t> sprnumlinks; // hash by sprite num
 };
 
 //
@@ -282,7 +270,7 @@ int E_GetItemOwnedAmountName(player_t *player, const char *name);
 bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact, int amount = -1);
 
 e_pickupfx_t *E_PickupFXForName(const char *name);
-e_pickupitem_t *E_PickupItemForSprNum(spritenum_t sprnum);
+e_pickupfx_t *E_PickupFXForSprNum(spritenum_t sprnum);
 
 pickupflags_e E_PickupFlagsForStr(const char *flagstr);
 

@@ -27,6 +27,7 @@ pickupeffect GreenArmor
   message $GOTARMOR
   sound   itemup
 
+  sprite  ARM1
   pfxname PFX_GREENARMOR
 }
 pickupeffect BlueArmor
@@ -35,6 +36,7 @@ pickupeffect BlueArmor
   message $GOTMEGA
   sound   itemup
 
+  sprite  ARM2
   pfxname PFX_BLUEARMOR
 }
 
@@ -42,6 +44,7 @@ pickupeffect BlueArmor
 pickupeffect HealthBonus
 {
   effects HealthBonus
+  sprite  BON1
   message $GOTHTHBONUS
   sound   itemup
   flags   ALWAYSPICKUP
@@ -55,6 +58,7 @@ pickupeffect ArmorBonus
   sound   itemup
   flags   ALWAYSPICKUP
 
+  sprite  BON2
   pfxname PFX_ARMORBONUS
 }
 pickupeffect SoulSphere
@@ -64,6 +68,7 @@ pickupeffect SoulSphere
   sound   getpow
   flags   ALWAYSPICKUP
 
+  sprite  SOUL
   pfxname PFX_SOULSPHERE
 }
 pickupeffect MegaSphere
@@ -73,6 +78,7 @@ pickupeffect MegaSphere
   sound   getpow
   flags   ALWAYSPICKUP|COMMERCIALONLY
 
+  sprite  MEGA
   pfxname PFX_MEGASPHERE
 }
 
@@ -84,6 +90,7 @@ pickupeffect DoomBlueCard
   sound   itemup
   flags   ALWAYSPICKUP|LEAVEINMULTI
 
+  sprite  BKEY
   pfxname PFX_BLUEKEY
 }
 pickupeffect DoomYellowCard
@@ -93,6 +100,7 @@ pickupeffect DoomYellowCard
   sound   itemup
   flags   ALWAYSPICKUP|LEAVEINMULTI
 
+  sprite  YKEY
   pfxname PFX_YELLOWKEY
 }
 pickupeffect DoomRedCard
@@ -102,6 +110,7 @@ pickupeffect DoomRedCard
   sound   itemup
   flags   ALWAYSPICKUP|LEAVEINMULTI
 
+  sprite  RKEY
   pfxname PFX_REDKEY
 }
 pickupeffect DoomBlueSkull
@@ -111,6 +120,7 @@ pickupeffect DoomBlueSkull
   sound   itemup
   flags   ALWAYSPICKUP|LEAVEINMULTI
 
+  sprite  BSKU
   pfxname PFX_BLUESKULL
 }
 pickupeffect DoomYellowSkull
@@ -120,6 +130,7 @@ pickupeffect DoomYellowSkull
   sound   itemup
   flags   ALWAYSPICKUP|LEAVEINMULTI
 
+  sprite  YSKU
   pfxname PFX_YELLOWSKULL
 }
 pickupeffect DoomRedSkull
@@ -129,6 +140,7 @@ pickupeffect DoomRedSkull
   sound   itemup
   flags   ALWAYSPICKUP|LEAVEINMULTI
 
+  sprite  RSKU
   pfxname PFX_REDSKULL
 }
 
@@ -139,6 +151,7 @@ pickupeffect StimPack
   message $GOTSTIM
   sound   itemup
 
+  sprite  STIM
   pfxname PFX_STIMPACK
 }
 pickupeffect MediKit
@@ -147,6 +160,7 @@ pickupeffect MediKit
   message $GOTMEDIKIT
   sound   itemup
 
+  sprite  MEDI
   pfxname PFX_MEDIKIT
 }
 
@@ -158,6 +172,7 @@ pickupeffect InvulnSphere
   sound   getpow
   flags   ALWAYSPICKUP
 
+  sprite  PINV
   pfxname PFX_INVULNSPHERE
 }
 pickupeffect BerzerkBox
@@ -167,6 +182,7 @@ pickupeffect BerzerkBox
   message      $GOTBERSERK
   sound        getpow
 
+  sprite  PSTR
   pfxname PFX_BERZERKBOX
 }
 pickupeffect InvisiSphere
@@ -176,6 +192,7 @@ pickupeffect InvisiSphere
   sound   getpow
   flags   ALWAYSPICKUP
 
+  sprite  PINS
   pfxname PFX_INVISISPHERE
 }
 pickupeffect RadiationSuit
@@ -185,6 +202,7 @@ pickupeffect RadiationSuit
   sound   getpow
   flags   ALWAYSPICKUP
 
+  sprite  SUIT
   pfxname PFX_RADSUIT
 }
 pickupeffect ComputerMap
@@ -194,6 +212,7 @@ pickupeffect ComputerMap
   sound   getpow
   flags   ALWAYSPICKUP
 
+  sprite  PMAP
   pfxname PFX_ALLMAP
 }
 pickupeffect LightAmpVisor
@@ -203,6 +222,7 @@ pickupeffect LightAmpVisor
   sound   getpow
   flags   ALWAYSPICKUP
 
+  sprite  PVIS
   pfxname PFX_LIGHTAMP
 }
 
@@ -213,6 +233,7 @@ pickupeffect AmmoClip
   message $GOTCLIP
   sound   itemup
 
+  sprite  CLIP
   pfxname PFX_CLIP
 }
 pickupeffect AmmoBulletBox
@@ -221,6 +242,7 @@ pickupeffect AmmoBulletBox
   message $GOTCLIPBOX
   sound   itemup
 
+  sprite  AMMO
   pfxname PFX_CLIPBOX
 }
 pickupeffect AmmoRocket
@@ -229,6 +251,7 @@ pickupeffect AmmoRocket
   message $GOTROCKET
   sound   itemup
 
+  sprite  ROCK
   pfxname PFX_ROCKET
 }
 pickupeffect AmmoRocketBox
@@ -237,6 +260,7 @@ pickupeffect AmmoRocketBox
   message $GOTROCKBOX
   sound   itemup
 
+  sprite  BROK
   pfxname PFX_ROCKETBOX
 }
 pickupeffect AmmoCell
@@ -245,6 +269,7 @@ pickupeffect AmmoCell
   message $GOTCELL
   sound   itemup
 
+  sprite  CELL
   pfxname PFX_CELL
 }
 pickupeffect AmmoCellPack
@@ -253,6 +278,7 @@ pickupeffect AmmoCellPack
   message $GOTCELLBOX
   sound   itemup
 
+  sprite  CELP
   pfxname PFX_CELLPACK
 }
 pickupeffect AmmoShells
@@ -261,6 +287,7 @@ pickupeffect AmmoShells
   message $GOTSHELLS
   sound   itemup
 
+  sprite  SHEL
   pfxname PFX_SHELL
 }
 pickupeffect AmmoShellBox
@@ -269,6 +296,7 @@ pickupeffect AmmoShellBox
   message $GOTSHELLBOX
   sound   itemup
 
+  sprite  SBOX
   pfxname PFX_SHELLBOX
 }
 
@@ -279,6 +307,7 @@ pickupeffect Backpack
   sound   itemup
   flags   ALWAYSPICKUP|GIVESBACKPACKAMMO
 
+  sprite  BPAK
   pfxname PFX_BACKPACK
 }
 
@@ -289,6 +318,7 @@ pickupeffect WeaponBFG
   message $GOTBFG9000
   sound   wpnup
 
+  sprite  BFUG
   pfxname PFX_BFG
 }
 pickupeffect WeaponChaingun
@@ -297,6 +327,7 @@ pickupeffect WeaponChaingun
   message $GOTCHAINGUN
   sound   wpnup
 
+  sprite  MGUN
   pfxname PFX_CHAINGUN
 }
 pickupeffect WeaponChainsaw
@@ -305,6 +336,7 @@ pickupeffect WeaponChainsaw
   message $GOTCHAINSAW
   sound   wpnup
 
+  sprite  CSAW
   pfxname PFX_CHAINSAW
 }
 pickupeffect WeaponRocketLauncher
@@ -313,6 +345,7 @@ pickupeffect WeaponRocketLauncher
   message $GOTLAUNCHER
   sound   wpnup
 
+  sprite  LAUN
   pfxname PFX_LAUNCHER
 }
 pickupeffect WeaponPlasmaGun
@@ -321,6 +354,7 @@ pickupeffect WeaponPlasmaGun
   message $GOTPLASMA
   sound   wpnup
 
+  sprite  PLAS
   pfxname PFX_PLASMA
 }
 pickupeffect WeaponShotgun
@@ -329,6 +363,7 @@ pickupeffect WeaponShotgun
   message $GOTSHOTGUN
   sound   wpnup
 
+  sprite  SHOT
   pfxname PFX_SHOTGUN
 }
 pickupeffect WeaponSSG
@@ -337,43 +372,7 @@ pickupeffect WeaponSSG
   message $GOTSHOTGUN
   sound   wpnup
 
+  sprite  SGN2
   pfxname PFX_SSG
 }
-
-pickupitem ARM1 { effect PFX_GREENARMOR }
-pickupitem ARM2 { effect PFX_BLUEARMOR }
-pickupitem BON1 { effect PFX_POTION }
-pickupitem BON2 { effect PFX_ARMORBONUS }
-pickupitem SOUL { effect PFX_SOULSPHERE }
-pickupitem MEGA { effect PFX_MEGASPHERE; }
-pickupitem BKEY { effect PFX_BLUEKEY }
-pickupitem YKEY { effect PFX_YELLOWKEY }
-pickupitem RKEY { effect PFX_REDKEY }
-pickupitem BSKU { effect PFX_BLUESKULL }
-pickupitem YSKU { effect PFX_YELLOWSKULL }
-pickupitem RSKU { effect PFX_REDSKULL }
-pickupitem STIM { effect PFX_STIMPACK }
-pickupitem MEDI { effect PFX_MEDIKIT }
-pickupitem PINV { effect PFX_INVULNSPHERE }
-pickupitem PSTR { effect PFX_BERZERKBOX }
-pickupitem PINS { effect PFX_INVISISPHERE }
-pickupitem SUIT { effect PFX_RADSUIT }
-pickupitem PMAP { effect PFX_ALLMAP }
-pickupitem PVIS { effect PFX_LIGHTAMP }
-pickupitem CLIP { effect PFX_CLIP }
-pickupitem AMMO { effect PFX_CLIPBOX }
-pickupitem ROCK { effect PFX_ROCKET }
-pickupitem BROK { effect PFX_ROCKETBOX }
-pickupitem CELL { effect PFX_CELL }
-pickupitem CELP { effect PFX_CELLPACK }
-pickupitem SHEL { effect PFX_SHELL }
-pickupitem SBOX { effect PFX_SHELLBOX }
-pickupitem BPAK { effect PFX_BACKPACK }
-pickupitem BFUG { effect PFX_BFG }
-pickupitem MGUN { effect PFX_CHAINGUN }
-pickupitem CSAW { effect PFX_CHAINSAW }
-pickupitem LAUN { effect PFX_LAUNCHER }
-pickupitem PLAS { effect PFX_PLASMA }
-pickupitem SHOT { effect PFX_SHOTGUN }
-pickupitem SGN2 { effect PFX_SSG }
 

@@ -1044,8 +1044,8 @@ static EHashTable<e_pickupfx_t, ENCStringHashKey,
 static EHashTable<e_pickupfx_t, ENCStringHashKey,
                   &e_pickupfx_t::compatname, &e_pickupfx_t::cnamelinks> e_PickupCNameHash;
 
-static EHashTable<e_pickupitem_t, EIntHashKey,
-                  &e_pickupitem_t::sprnum, &e_pickupitem_t::sprnumlinks> e_PickupSprNumHash;
+static EHashTable<e_pickupfx_t, EIntHashKey,
+                  &e_pickupfx_t::sprnum, &e_pickupfx_t::sprnumlinks> e_PickupSprNumHash;
 
 //=============================================================================
 //
@@ -1078,6 +1078,7 @@ static dehflagset_t e_PickupFlagSet =
 
 // Pick-up effects
 #define ITEM_PICKUP_CNAME     "pfxname"
+#define ITEM_PICKUP_SPRITE    "sprite"
 #define ITEM_PICKUP_FX        "effect"
 #define ITEM_PICKUP_EFFECTS   "effects"
 #define ITEM_PICKUP_CHANGEWPN "changeweapon"
@@ -1099,6 +1100,7 @@ cfg_opt_t edf_pkupitem_opts[] =
 cfg_opt_t edf_pkupfx_opts[] =
 {
    CFG_STR(ITEM_PICKUP_CNAME,     NULL, CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_SPRITE,    NULL, CFGF_NONE),
    CFG_STR(ITEM_PICKUP_EFFECTS,   0,    CFGF_LIST),
    CFG_STR(ITEM_PICKUP_CHANGEWPN, "",   CFGF_NONE),
    CFG_STR(ITEM_PICKUP_MSG,       NULL, CFGF_NONE),
@@ -1109,72 +1111,6 @@ cfg_opt_t edf_pkupfx_opts[] =
 };
 
 // pickup variables
-
-// pickup effect names (these are currently searched linearly)
-// matching enum values are defined in e_edf.h
-
-// INVENTORY_FIXME: make this a "compatibility name" for the effect
-const char *pickupnames[PFX_NUMFX] =
-{
-   "PFX_NONE",
-   "PFX_GREENARMOR",
-   "PFX_BLUEARMOR",
-   "PFX_POTION",
-   "PFX_ARMORBONUS",
-   "PFX_SOULSPHERE",
-   "PFX_MEGASPHERE",
-   "PFX_BLUEKEY",
-   "PFX_YELLOWKEY",
-   "PFX_REDKEY",
-   "PFX_BLUESKULL",
-   "PFX_YELLOWSKULL",
-   "PFX_REDSKULL",
-   "PFX_STIMPACK",
-   "PFX_MEDIKIT",
-   "PFX_INVULNSPHERE",
-   "PFX_BERZERKBOX",
-   "PFX_INVISISPHERE",
-   "PFX_RADSUIT",
-   "PFX_ALLMAP",
-   "PFX_LIGHTAMP",
-   "PFX_CLIP",
-   "PFX_CLIPBOX",
-   "PFX_ROCKET",
-   "PFX_ROCKETBOX",
-   "PFX_CELL",
-   "PFX_CELLPACK",
-   "PFX_SHELL",
-   "PFX_SHELLBOX",
-   "PFX_BACKPACK",
-   "PFX_BFG",
-   "PFX_CHAINGUN",
-   "PFX_CHAINSAW",
-   "PFX_LAUNCHER",
-   "PFX_PLASMA",
-   "PFX_SHOTGUN",
-   "PFX_SSG",
-   "PFX_HGREENKEY",
-   "PFX_HBLUEKEY",
-   "PFX_HYELLOWKEY",
-   "PFX_HPOTION",
-   "PFX_SILVERSHIELD",
-   "PFX_ENCHANTEDSHIELD",
-   "PFX_BAGOFHOLDING",
-   "PFX_HMAP",
-   "PFX_GWNDWIMPY",
-   "PFX_GWNDHEFTY",
-   "PFX_MACEWIMPY",
-   "PFX_MACEHEFTY",
-   "PFX_CBOWWIMPY",
-   "PFX_CBOWHEFTY",
-   "PFX_BLSRWIMPY",
-   "PFX_BLSRHEFTY",
-   "PFX_PHRDWIMPY",
-   "PFX_PHRDHEFTY",
-   "PFX_SKRDWIMPY",
-   "PFX_SKRDHEFTY",
-   "PFX_TOTALINVIS",
-};
 
 //
 // Obtain a e_pickupfx_t structure by name.
@@ -1193,9 +1129,9 @@ static e_pickupfx_t *e_PickupFXForCName(const char *cname)
 }
 
 //
-// Obtain a e_pickupitem_t structure by sprite num.
+// Obtain a e_pickupfx_t structure by sprite num.
 //
-e_pickupitem_t *E_PickupItemForSprNum(spritenum_t sprnum)
+e_pickupfx_t *E_PickupFXForSprNum(spritenum_t sprnum)
 {
    return e_PickupSprNumHash.objectForKey(sprnum);
 }
@@ -1204,9 +1140,7 @@ e_pickupitem_t *E_PickupItemForSprNum(spritenum_t sprnum)
 //
 // E_processPickupItems
 //
-// Allocates the pickupfx array used in P_TouchSpecialThing, and loads all 
-// pickupitem definitions, using the sprite hash table to resolve what sprite
-// owns the specified effect.
+// Process a pickupitem, overwriting the contents of a pickupeffect.
 //
 static void E_processPickupItems(cfg_t *cfg)
 {
@@ -1223,7 +1157,7 @@ static void E_processPickupItems(cfg_t *cfg)
    E_EDFLogPrintf("\t\t%d pickup item(s) defined\n", numpickups);
    for(i = 0; i < numpickups; ++i)
    {
-      int fxnum, sprnum;
+      int sprnum;
       cfg_t *sec = cfg_getnsec(cfg, EDF_SEC_PKUPITEM, i);
       const char *title = cfg_title(sec);
       const char *str = cfg_getstr(sec, ITEM_PICKUP_FX);
@@ -1235,35 +1169,21 @@ static void E_processPickupItems(cfg_t *cfg)
       if(sprnum == -1)
       {
          // haleyjd 05/31/06: downgraded to warning, substitute blanksprite
-         E_EDFLoggedWarning(2,
-            "Warning: invalid sprite mnemonic for pickup item: '%s'\n",
-            title);
+         E_EDFLoggedWarning(2, "Warning: invalid sprite mnemonic for pickup item: '%s'\n",
+                           title);
          continue;
       }
 
-      // INVENTORY_FIXME: old names need to become a compat feature only;
-      //   "effect" should start referring to an itemeffect_t.
-      // find the proper pickup effect number (linear search)
-      fxnum = E_StrToNumLinear(pickupnames, PFX_NUMFX, str);
-      if(fxnum == PFX_NUMFX)
-      {
-         E_EDFLoggedWarning(2, "Warning: invalid pickup item: '%s'\n", str);
-         continue;
-      }
-
-      E_EDFLogPrintf("\t\tSet sprite %s(#%d) to pickup item %s(#%d)\n",
-                     title, sprnum, str, fxnum);
-
-      e_pickupitem_t *pfx = E_PickupItemForSprNum(sprnum);
+      e_pickupfx_t *pfx = e_PickupFXForCName(str);
       if(pfx == nullptr)
-         pfx = estructalloc(e_pickupitem_t, 1);
+      {
+         E_EDFLoggedWarning(2, "Warning: invalid effect '%s' for pickup item : '%s'\n",
+                            str, title);
+         continue;
+      }
          
       pfx->sprnum = sprnum;
       e_PickupSprNumHash.addObject(pfx);
-
-      // INVENTORY_FIXME: replace with effect pointer
-      pfx->tempeffect = fxnum;
-      pfx->pickupfx = e_PickupFXForCName(str);
 
       // free any strings that might have been previously set
       if(pfx->message)
@@ -1333,6 +1253,11 @@ static void E_processPickupEffect(cfg_t *sec)
       efree(pfx->compatname);
       pfx->compatname = nullptr;
    }
+   if(pfx->sprnum != -1)
+   {
+      pfx->sprnum = -1;
+      e_PickupSprNumHash.removeObject(pfx);
+   }
    if(pfx->message)
    {
       efree(pfx->message);
@@ -1373,6 +1298,20 @@ static void E_processPickupEffect(cfg_t *sec)
       pfx->compatname = estrdup(str);
       e_PickupCNameHash.addObject(pfx);
    }
+
+   if((str = cfg_getstr(sec, ITEM_PICKUP_SPRITE)))
+   {
+      pfx->sprnum = E_SpriteNumForName(str);
+      if(pfx->sprnum == -1)
+      {
+         E_EDFLoggedWarning(2, "Warning: invalid sprite '%s' for pickup effect '%s'\n",
+                            str, title);
+      }
+      else
+         e_PickupSprNumHash.addObject(pfx);
+   }
+   else
+      pfx->sprnum = -1;
 
    // message
    if((str = cfg_getstr(sec, ITEM_PICKUP_MSG)))
