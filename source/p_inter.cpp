@@ -183,18 +183,22 @@ bool P_GiveAmmoPickup(player_t *player, itemeffect_t *pickup, bool dropped, int 
 // ioanch 20151225: this calls P_GiveAmmo for each ammo type, using the backpack
 // amount metatable value. It needs to work this way to have all side effects
 // of the called function (double baby/nightmare ammo, weapon switching).
+// Returns true if any ammo is given.
 //
-static void P_giveBackpackAmmo(player_t *player)
+static bool P_giveBackpackAmmo(player_t *player)
 {
    static MetaKeyIndex keyBackpackAmount("ammo.backpackamount");
 
+   bool given = false;
    size_t numAmmo = E_GetNumAmmoTypes();
    for(size_t i = 0; i < numAmmo; ++i)
    {
       auto ammoType = E_AmmoTypeForIndex(i);
       int giveamount = ammoType->getInt(keyBackpackAmount, 0);
-      P_GiveAmmo(player, ammoType, giveamount);
+      given |= P_GiveAmmo(player, ammoType, giveamount);
    }
+
+   return given;
 }
 
 //
@@ -660,21 +664,40 @@ static void P_RavenRespawn(Mobj *special)
 }
 
 //
-// P_TouchSpecialThingNew
+// Get the special message for the given pickup.
+// Basically exists to sort out the awful BFG message hack.
 //
-// INVENTORY_FIXME / INVENTORY_TODO: This will become P_TouchSpecialThing
-// when it is finished, replacing the below.
-//
-void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
+static inline const char *P_getSpecialMessage(Mobj *special, const char *def)
 {
-   player_t     *player;
-   e_pickupfx_t *pickup;
-   e_pickupitem_t *pickupitem;
-   bool          pickedup  = false;
-   bool          dropped   = false;
-   bool          hadeffect = false;
-   const char   *message  = NULL;
-   const char   *sound    = NULL;
+   if(!strcasecmp(special->info->name, "WeaponBFG"))
+   {
+      switch(bfgtype)
+      {
+      case bfg_normal:   return "$GOTBFG9000";
+      case bfg_classic:  return "You got the BFG 2704!";
+      case bfg_11k:      return "You got the BFG 11K!";
+      case bfg_bouncing: return "You got the Bouncing BFG!";
+      case bfg_burst:    return "You got the Plasma Burst BFG!";
+      default:           return "You got some kind of BFG";
+      }
+   }
+   else
+      return def;
+}
+
+//
+// P_TouchSpecialThing
+//
+void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
+{
+   player_t       *player;
+   e_pickupfx_t   *pickup;
+   e_pickupitem_t *pickupitem, *temp;
+   bool            pickedup  = false;
+   bool            dropped   = false;
+   bool            hadeffect = false;
+   const char     *message   = nullptr;
+   const char     *sound     = nullptr;
 
    fixed_t delta = special->z - toucher->z;
    if(delta > toucher->height || delta < -8*FRACUNIT)
@@ -698,7 +721,7 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
    else if((pickupitem = E_PickupItemForSprNum(special->sprite)))
    {
       pickup  = pickupitem->pickupfx;
-      message = pickupitem->message;
+      message = P_getSpecialMessage(special, pickupitem->message);
       sound   = pickupitem->sound;
    }
    else
@@ -709,7 +732,7 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
       return;
 
    if(!message)
-      message = pickup->message;
+      message = P_getSpecialMessage(special, pickup->message);
    if(!sound)
       sound = pickup->sound;
 
@@ -756,10 +779,19 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
    if(!hadeffect)
       return;
 
+   if(pickup->flags & PFXF_GIVESBACKPACKAMMO)
+      pickedup |= P_giveBackpackAmmo(player);
+
    // perform post-processing if the item was collected beneficially, or if the
    // pickup is flagged to always be picked up even without benefit.
    if(pickedup || (pickup->flags & PFXF_ALWAYSPICKUP))
    {
+      // Set pendingweapon if need be
+      if(pickup->changeweapon != nullptr &&
+         player->readyweapon->id != pickup->changeweapon->id &&
+         E_PlayerOwnsWeapon(player, pickup->changeweapon))
+         player->pendingweapon = pickup->changeweapon;
+
       // Remove the object, provided it doesn't stay in multiplayer games
       if(GameType == gt_single || !(pickup->flags & PFXF_LEAVEINMULTI))
       {
@@ -797,148 +829,6 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
          if(!(pickup->flags & PFXF_NOSCREENFLASH))
             player->bonuscount += BONUSADD;
       }
-   }
-}
-
-//
-// P_TouchSpecialThing
-//
-void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
-{
-   e_pickupitem_t *pickupitem = E_PickupItemForSprNum(special->sprite);
-   // TODO: Make P_TouchSpecialThingNew the default
-   if(special->info->pickupfx)
-   {
-      P_TouchSpecialThingNew(special, toucher);
-      return;
-   }
-   else if(pickupitem && pickupitem->pickupfx)
-   {
-      P_TouchSpecialThingNew(special, toucher);
-      return;
-   }
-
-   player_t   *player;
-   int        sound;
-   const char *message = NULL;
-   bool       removeobj = true;
-   bool       pickup_fx = true; // haleyjd 04/14/03
-   bool       dropped   = false;
-   fixed_t    delta = special->z - toucher->z;
-   
-   // INVENTORY_TODO: transitional logic is in place below until this function
-   // can be fully converted to being based on itemeffects
-   itemeffect_t *effect = NULL;
-
-   if(delta > toucher->height || delta < -8*FRACUNIT)
-      return;        // out of reach
-
-   sound = sfx_itemup;
-
-   // haleyjd: don't crash if a monster gets here.
-   if(!(player = toucher->player))
-      return;
-   
-   // Dead thing touching.
-   // Can happen with a sliding player corpse.
-   if(toucher->health <= 0)
-      return;
-
-   // haleyjd 05/11/03: EDF pickups modifications
-   if(special->sprite < 0 || special->sprite >= NUMSPRITES)
-      return;
-
-   dropped = ((special->flags & MF_DROPPED) == MF_DROPPED);
-
-   if(!pickupitem)
-      return;
-
-   // Identify by sprite.
-   // INVENTORY_FIXME: apply pickupfx[].effect instead!
-   switch(pickupitem->tempeffect)
-   {
-      // power ups
-      // WEAPON_FIXME: berserk changes to fist
-   case PFX_BERZERKBOX:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName(ITEMNAME_BERZERKBOX);
-      if(!P_GivePowerForItem(player, effect))
-         return;
-      message = DEH_String("GOTBERSERK"); // Ty 03/22/98 - externalized
-      if(!E_WeaponIsCurrentDEHNum(player, wp_fist))
-         // sf: removed beta
-         player->pendingweapon = E_WeaponForDEHNum(wp_fist);
-      sound = sfx_getpow;
-      break;
-
-   case PFX_BACKPACK:
-      // INVENTORY_TODO: hardcoded for now
-      if(!E_PlayerHasBackpack(player))
-         E_GiveBackpack(player);
-      // ioanch 20151225: call from here to handle backpack ammo
-      P_giveBackpackAmmo(player);
-      message = DEH_String("GOTBACKPACK"); // Ty 03/22/98 - externalized
-      break;
-
-      // WEAPON_FIXME: BFG collection
-      // weapons
-   case PFX_BFG:
-      effect = E_ItemEffectForName(WEAPNAME_BFG9000);
-      if(!P_GiveWeapon(player, effect, false, special))
-         return;
-      // FIXME: externalize all BFG pickup strings
-      message = bfgtype == bfg_normal     ? DEH_String("GOTBFG9000") // sf
-                : bfgtype == bfg_classic  ? "You got the BFG 2704!"
-                : bfgtype == bfg_11k      ? "You got the BFG 11K!"
-                : bfgtype == bfg_bouncing ? "You got the Bouncing BFG!"
-                : bfgtype == bfg_burst    ? "You got the Plasma Burst BFG!"
-                : "You got some kind of BFG";
-      sound = sfx_wpnup;
-      break;
-
-      // haleyjd 10/10/02: Heretic powerups
-
-   case PFX_BAGOFHOLDING: // bag of holding
-      // HTIC_TODO: bag of holding effects
-      // INVENTORY_TODO: hardcoded for now
-      if(!E_PlayerHasBackpack(player))
-         E_GiveBackpack(player);
-      // ioanch 20151225: call from here to handle backpack ammo
-      P_giveBackpackAmmo(player);
-      message = DEH_String("HITEMBAGOFHOLDING");
-      sound = sfx_hitemup;
-      break;
-   
-   default:
-      // I_Error("P_SpecialThing: Unknown gettable thing");
-      return;      // killough 12/98: suppress error message
-   }
-
-   // sf: display message using player_printf
-   if(message)
-      player_printf(player, "%s", message);
-
-   // haleyjd 07/08/05: rearranged to avoid removing before
-   // checking for COUNTITEM flag.
-   if(special->flags & MF_COUNTITEM)
-      player->itemcount++;
-
-   if(removeobj)
-   {
-      // this will cover all disappearing items. Non-disappearing ones have
-      // their own special cases.
-      P_consumeSpecial(player, special);
-      if(special->flags4 & MF4_RAVENRESPAWN)
-         P_RavenRespawn(special);
-      else
-         special->remove();
-   }
-
-   // haleyjd 07/08/05: inverted condition
-   if(pickup_fx)
-   {
-      player->bonuscount += BONUSADD;
-      S_StartSound(player->mo, sound);   // killough 4/25/98, 12/98
    }
 }
 

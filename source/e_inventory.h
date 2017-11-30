@@ -146,24 +146,26 @@ typedef MetaTable itemeffect_t;
 
 enum pickupflags_e : unsigned int
 {
-   PXFX_NONE            = 0x00000000,
-   PFXF_ALWAYSPICKUP    = 0x00000001, // item is picked up even if not useful
-   PFXF_LEAVEINMULTI    = 0x00000002, // item is left in multiplayer games
-   PFXF_NOSCREENFLASH   = 0x00000004, // does not cause bonuscount increment
-   PFXF_SILENTNOBENEFIT = 0x00000008, // no pickup effects if picked up without benefit
-   PXFX_COMMERCIALONLY  = 0x00000010, // can only be picked up in commercial gamemodes
+   PXFX_NONE              = 0x00000000,
+   PFXF_ALWAYSPICKUP      = 0x00000001, // item is picked up even if not useful
+   PFXF_LEAVEINMULTI      = 0x00000002, // item is left in multiplayer games
+   PFXF_NOSCREENFLASH     = 0x00000004, // does not cause bonuscount increment
+   PFXF_SILENTNOBENEFIT   = 0x00000008, // no pickup effects if picked up without benefit
+   PXFX_COMMERCIALONLY    = 0x00000010, // can only be picked up in commercial gamemodes
+   PFXF_GIVESBACKPACKAMMO = 0x00000020, // gives backpack ammo
 };
 
 // Modern pickup effects 
 struct e_pickupfx_t
 {
-   char          *name;       // name
-   char          *compatname; // compat name, if any
-   unsigned int   numEffects; // number of effects
-   itemeffect_t **effects;    // item given, if any
-   char          *message;    // message, if any
-   char          *sound;      // sound, if any
-   pickupflags_e flags;       // pickup flags
+   char          *name;         // name
+   char          *compatname  ; // compat name, if any
+   unsigned int   numEffects;   // number of effects
+   itemeffect_t **effects;      // item given, if any
+   weaponinfo_t  *changeweapon; // weapon to change to, if any
+   char          *message;      // message, if any
+   char          *sound;        // sound, if any
+   pickupflags_e flags;         // pickup flags
 
    // EDF Hashing
    DLListItem<e_pickupfx_t> namelinks; // hash by name
@@ -282,6 +284,8 @@ bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact, int amount = 
 e_pickupfx_t *E_PickupFXForName(const char *name);
 e_pickupitem_t *E_PickupItemForSprNum(spritenum_t sprnum);
 
+pickupflags_e E_PickupFlagsForStr(const char *flagstr);
+
 // return value enumeration for E_RemoveInventoryItem
 enum itemremoved_e
 {
@@ -332,6 +336,7 @@ extern cfg_opt_t edf_pkupfx_opts[];
 extern cfg_opt_t edf_lockdef_opts[];
 
 // Functions
+void E_ProcessPickups(cfg_t *cfg);
 void E_ProcessInventory(cfg_t *cfg);
 
 #endif

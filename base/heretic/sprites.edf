@@ -57,15 +57,17 @@ pickupeffect EnchantedShield
 
   pfxname PFX_ENCHANTEDSHIELD
 }
-// FIXME: Backpacks
-/*pickupeffect BagOfHolding
+
+pickupeffect BagOfHolding
 {
-  effects 
+  effects BackpackItem
   message $HITEMBAGOFHOLDING
   sound   ht_itemup
+  flags   ALWAYSPICKUP|GIVESBACKPACKAMMO
 
   pfxname PFX_BAGOFHOLDING
-}*/
+}
+
 pickupeffect MapScroll
 {
   effects SuperMap

@@ -48,6 +48,7 @@
 #include "d_player.h"
 #include "doomstat.h"
 #include "e_args.h"
+#include "e_weapons.h"
 #include "g_game.h"
 #include "info.h"
 #include "m_collection.h"
@@ -1053,11 +1054,12 @@ static EHashTable<e_pickupitem_t, EIntHashKey,
 
 static dehflags_t e_PickupFlags[] =
 {
-   { "ALWAYSPICKUP",    PFXF_ALWAYSPICKUP },
-   { "LEAVEINMULTI",    PFXF_LEAVEINMULTI },
-   { "NOSCREENFLASH",   PFXF_NOSCREENFLASH },
-   { "SILENTNOBENEFIT", PFXF_SILENTNOBENEFIT },
-   { "COMMERCIALONLY",  PXFX_COMMERCIALONLY },
+   { "ALWAYSPICKUP",      PFXF_ALWAYSPICKUP      },
+   { "LEAVEINMULTI",      PFXF_LEAVEINMULTI      },
+   { "NOSCREENFLASH",     PFXF_NOSCREENFLASH     },
+   { "SILENTNOBENEFIT",   PFXF_SILENTNOBENEFIT   },
+   { "COMMERCIALONLY",    PXFX_COMMERCIALONLY    },
+   { "GIVESBACKPACKAMMO", PFXF_GIVESBACKPACKAMMO },
    { NULL,           0 }
 };
 
@@ -1075,12 +1077,13 @@ static dehflagset_t e_PickupFlagSet =
 //
 
 // Pick-up effects
-#define ITEM_PICKUP_CNAME    "pfxname"
-#define ITEM_PICKUP_FX       "effect"
-#define ITEM_PICKUP_EFFECTS  "effects"
-#define ITEM_PICKUP_MSG      "message"
-#define ITEM_PICKUP_SOUND    "sound"
-#define ITEM_PICKUP_FLAGS    "flags"
+#define ITEM_PICKUP_CNAME     "pfxname"
+#define ITEM_PICKUP_FX        "effect"
+#define ITEM_PICKUP_EFFECTS   "effects"
+#define ITEM_PICKUP_CHANGEWPN "changeweapon"
+#define ITEM_PICKUP_MSG       "message"
+#define ITEM_PICKUP_SOUND     "sound"
+#define ITEM_PICKUP_FLAGS     "flags"
 
 // sprite-based pickup items
 cfg_opt_t edf_pkupitem_opts[] =
@@ -1095,11 +1098,12 @@ cfg_opt_t edf_pkupitem_opts[] =
 // standalone pickup effects
 cfg_opt_t edf_pkupfx_opts[] =
 {
-   CFG_STR(ITEM_PICKUP_CNAME,   NULL,       CFGF_NONE),
-   CFG_STR(ITEM_PICKUP_EFFECTS, 0,          CFGF_LIST),
-   CFG_STR(ITEM_PICKUP_MSG,     NULL,       CFGF_NONE),
-   CFG_STR(ITEM_PICKUP_SOUND,   NULL,       CFGF_NONE),
-   CFG_STR(ITEM_PICKUP_FLAGS,   NULL,       CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_CNAME,     NULL, CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_EFFECTS,   0,    CFGF_LIST),
+   CFG_STR(ITEM_PICKUP_CHANGEWPN, "",   CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_MSG,       NULL, CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_SOUND,     NULL, CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_FLAGS,     NULL, CFGF_NONE),
 
    CFG_END()
 };
@@ -1250,10 +1254,9 @@ static void E_processPickupItems(cfg_t *cfg)
       E_EDFLogPrintf("\t\tSet sprite %s(#%d) to pickup item %s(#%d)\n",
                      title, sprnum, str, fxnum);
 
-      e_pickupitem_t *pfx = [sprnum]() {
-                               e_pickupitem_t *temp = E_PickupItemForSprNum(sprnum);
-                               return temp ? temp : estructalloc(e_pickupitem_t, 1);
-                            }();
+      e_pickupitem_t *pfx = E_PickupItemForSprNum(sprnum);
+      if(pfx == nullptr)
+         pfx = estructalloc(e_pickupitem_t, 1);
          
       pfx->sprnum = sprnum;
       e_PickupSprNumHash.addObject(pfx);
@@ -1286,14 +1289,30 @@ static void E_processPickupItems(cfg_t *cfg)
    }
 }
 
+//
+// Parse the given string's pickup flags
+//
+pickupflags_e E_PickupFlagsForStr(const char *flagstr)
+{
+   if(*flagstr == '\0')
+      return PXFX_NONE;
+   else
+   {
+      unsigned int results = E_ParseFlags(flagstr, &e_PickupFlagSet);
+      return static_cast<pickupflags_e>(results);
+   }
+}
+
+//
+// Process a single modern pickup effect.
+//
 static void E_processPickupEffect(cfg_t *sec)
 {
    const char *title = cfg_title(sec);
    const char *str;
-   e_pickupfx_t *pfx = [title]() {
-                          e_pickupfx_t *temp = E_PickupFXForName(title);
-                          return temp ? temp : estructalloc(e_pickupfx_t, 1);
-                       }();
+   e_pickupfx_t *pfx = E_PickupFXForName(title);
+   if(pfx == nullptr)
+      pfx = estructalloc(e_pickupfx_t, 1);
 
    if(!pfx->name)
    {
@@ -1306,6 +1325,8 @@ static void E_processPickupEffect(cfg_t *sec)
       efree(pfx->effects);
       pfx->effects = nullptr;
    }
+   if(pfx->changeweapon)
+      pfx->changeweapon = nullptr;
    if(pfx->compatname)
    {
       e_PickupCNameHash.removeObject(pfx);
@@ -1337,6 +1358,15 @@ static void E_processPickupEffect(cfg_t *sec)
       }
    }
 
+   if((str = cfg_getstr(sec, ITEM_PICKUP_CHANGEWPN)))
+   {
+      if(estrnonempty(str) && !(pfx->changeweapon = E_WeaponForName(str)))
+      {
+         E_EDFLoggedWarning(2, "Warning: invalid changeweapon '%s' for pickup effect '%s'\n",
+                            str, title);
+      }
+   }
+
    // compatname
    if((str = cfg_getstr(sec, ITEM_PICKUP_CNAME)))
    {
@@ -1353,17 +1383,12 @@ static void E_processPickupEffect(cfg_t *sec)
       pfx->sound = estrdup(str);
 
    if((str = cfg_getstr(sec, ITEM_PICKUP_FLAGS)))
-   {
-      if(*str == '\0')
-         pfx->flags = PXFX_NONE;
-      else
-      {
-         unsigned int results = E_ParseFlags(str, &e_PickupFlagSet);
-         pfx->flags = pickupflags_e(results);
-      }
-   }
+      pfx->flags = E_PickupFlagsForStr(str);
 }
 
+//
+// Process all the modern pickup effects, done after most other processing.
+//
 static void E_processPickupEffects(cfg_t *cfg)
 {
    int i, numpickups;
@@ -2123,6 +2148,18 @@ int E_GetInventoryAllocSize()
 //
 
 //
+// Process pickups that aren't embedded in things
+//
+void E_ProcessPickups(cfg_t *cfg)
+{
+   // process pickup effect bindings
+   E_processPickupEffects(cfg);
+
+   // process pickup item bindings
+   E_processPickupItems(cfg);
+}
+
+//
 // E_ProcessInventory
 //
 // Main global function for performing all inventory-related EDF processing.
@@ -2144,12 +2181,6 @@ void E_ProcessInventory(cfg_t *cfg)
    // collect special artifact type definitions
    E_collectAmmoTypes();
    E_collectKeyItems();
-
-   // process pickup effect bindings
-   E_processPickupEffects(cfg);
-
-   // process pickup item bindings
-   E_processPickupItems(cfg);
 
    // process lockdefs
    E_processLockDefs(cfg);

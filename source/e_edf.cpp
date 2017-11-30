@@ -1688,6 +1688,8 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
    // process misc vars (made dynamic 11/21/11)
    E_ProcessMiscVars(cfg);
 
+   // post main-processing
+   E_ProcessPickups(cfg);
    E_ProcessThingPickups(cfg);
 
    // 08/30/03: apply deltas

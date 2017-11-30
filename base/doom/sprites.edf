@@ -160,16 +160,15 @@ pickupeffect InvulnSphere
 
   pfxname PFX_INVULNSPHERE
 }
-// FIXME: This switches to fist in P_TouchSpecialThing
-/*pickupeffect BerzerkBox
+pickupeffect BerzerkBox
 {
-  effects Berserk, BerserkHealth
-  message $GOTBERSERK
-  sound   getpow
+  effects      Berserk, BerserkHealth
+  changeweapon Fist
+  message      $GOTBERSERK
+  sound        getpow
 
   pfxname PFX_BERZERKBOX
-  // BerserkHealth
-}*/
+}
 pickupeffect InvisiSphere
 {
   effects BlurSphere
@@ -272,28 +271,26 @@ pickupeffect AmmoShellBox
 
   pfxname PFX_SHELLBOX
 }
-// FIXME: Backpacks
-/*
+
 pickupeffect Backpack
 {
-  effects 
+  effects BackpackItem
   message $GOTBACKPACK
-  sound   
-  flags   
+  sound   itemup
+  flags   ALWAYSPICKUP|GIVESBACKPACKAMMO
 
   pfxname PFX_BACKPACK
-}*/
+}
 
 // Weapons
-// FIXME: The fuck am I supposed to do about these messages?
-/*pickupeffect WeaponBFG
+pickupeffect WeaponBFG
 {
   effects BFG9000
-  message $
+  message $GOTBFG9000
   sound   wpnup
 
   pfxname PFX_BFG
-}*/
+}
 pickupeffect WeaponChaingun
 {
   effects Chaingun
