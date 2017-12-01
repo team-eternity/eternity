@@ -2532,8 +2532,6 @@ thingtype HArtiInvisibility : HereticArtifact, 7075, 400
   compatname   ArtiInvisibility
   addflags     COUNTITEM|FLOATBOB|SUPERITEM
   translucency 26624
-
-  pickupeffect HArtiInvisibility
   
   firstdecoratestate S_ARTI_INVS1
   states
@@ -2549,8 +2547,6 @@ thingtype HArtiQuartzFlask : HereticArtifact, 7082, 401
   compatname ArtiHealth
   addflags   COUNTITEM|FLOATBOB
 
-  pickupeffect HArtiQuartzFlask
-  
   firstdecoratestate S_ARTI_PTN2_1
   states
   @"
@@ -2565,8 +2561,6 @@ thingtype HArtiFly : HereticArtifact, 7083, 402
   compatname ArtiFly
   addflags   COUNTITEM|FLOATBOB
 
-  pickupeffect HArtiFly
-  
   firstdecoratestate S_ARTI_SOAR1
   states
   @"
@@ -2581,8 +2575,6 @@ thingtype HArtiInvulnerability : HereticArtifact, 7084, 403
   compatname ArtiInvulnerability
   addflags   COUNTITEM|FLOATBOB|SUPERITEM
 
-  pickupeffect HArtiInvulnerability
-  
   firstdecoratestate S_ARTI_INVU1
   states
   @"
@@ -2597,8 +2589,6 @@ thingtype HArtiTomeOfPower : HereticArtifact, 7086, 404
   compatname ArtiTomeOfPower
   addflags   COUNTITEM|FLOATBOB
 
-  pickupeffect HArtiTomeOfPower
-  
   firstdecoratestate S_ARTI_PWBK1
   states
   @"
@@ -2613,8 +2603,6 @@ thingtype HArtiEgg : HereticArtifact, 7030, 405
   compatname ArtiEgg
   addflags   COUNTITEM|FLOATBOB
 
-  pickupeffect HArtiEgg
-  
   firstdecoratestate S_ARTI_EGGC1
   states
   @"
@@ -2629,8 +2617,6 @@ thingtype HArtiSuperHeal : HereticArtifact, 7032, 406
   compatname ArtiSuperHealth
   addflags   COUNTITEM|FLOATBOB|NOTSHAREWARE
 
-  pickupeffect HArtiSuperHeal
-  
   firstdecoratestate S_ARTI_SPHL1
   states
   @"
@@ -2645,8 +2631,6 @@ thingtype HArtiTorch : HereticArtifact, 7033, 407
   compatname ArtiTorch
   addflags   COUNTITEM|FLOATBOB
 
-  pickupeffect HArtiTorch
-  
   firstdecoratestate S_ARTI_TRCH1
   states
   @"
@@ -2661,8 +2645,6 @@ thingtype HArtiFireBomb : HereticArtifact, 7034, 408
   compatname ArtiTimeBomb
   addflags   COUNTITEM|FLOATBOB
 
-  pickupeffect HArtiFireBomb
-  
   firstdecoratestate S_ARTI_FBMB1
   states
   @"
@@ -2696,8 +2678,6 @@ thingtype HArtiTeleport : HereticArtifact, 7036, 410
   compatname ArtiTeleport
   addflags   COUNTITEM|FLOATBOB|NOTSHAREWARE
 
-  pickupeffect HArtiTeleport
-  
   firstdecoratestate S_ARTI_ATLP1
   states
   @"
@@ -2713,8 +2693,6 @@ thingtype HWeaponGauntlets : HereticPickup, 7205, 411
 {
   compatname Gauntlets
 
-  pickupeffect HWeaponGauntlets
-  
   firstdecoratestate S_WGNT
   states
   @"
@@ -2727,8 +2705,6 @@ thingtype HWeaponGauntlets : HereticPickup, 7205, 411
 thingtype HWeaponBlaster : HereticPickup, 7053, 412
 {
   compatname Blaster
-
-  pickupeffect HWeaponBlaster
 
   firstdecoratestate S_BLSR
   states
@@ -2744,8 +2720,6 @@ thingtype HWeaponSkullRod : HereticPickup, 7204, 413
   compatname SkullRod
   addflags   NOTSHAREWARE
 
-  pickupeffect HWeaponSkullRod
-  
   firstdecoratestate S_WSKL
   states
   @"
@@ -2760,8 +2734,6 @@ thingtype HWeaponPhoenixRod : HereticPickup, 7203, 414
   compatname PhoenixRod
   addflags   NOTSHAREWARE
 
-  pickupeffect HWeaponPhoenixRod
-  
   firstdecoratestate S_WPHX
   states
   @"
@@ -2774,8 +2746,6 @@ thingtype HWeaponPhoenixRod : HereticPickup, 7203, 414
 thingtype HWeaponCrossbow : HereticPickup, 7201, 415
 {
   compatname Crossbow
-
-  pickupeffect HWeaponCrossbow
 
   firstdecoratestate S_WBOW
   states
@@ -3222,8 +3192,6 @@ thingtype HWeaponFireMace : HereticPickup, -1, 432
   compatname    Mace
   itemrespawnat HereticMaceSpot
 
-  pickupeffect HWeaponFireMace
-  
   firstdecoratestate S_WMCE
   states
   @"

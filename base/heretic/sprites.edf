@@ -12,6 +12,7 @@ pickupeffect HereticGreenKey
   sound   ht_keyup
   flags   LEAVEINMULTI
 
+  sprite  AKYY
   pfxname PFX_HGREENKEY
 }
 pickupeffect HereticBlueKey
@@ -21,6 +22,7 @@ pickupeffect HereticBlueKey
   sound   ht_keyup
   flags   LEAVEINMULTI
 
+  sprite  BKYY
   pfxname PFX_HBLUEKEY
 }
 pickupeffect HereticYellowKey
@@ -30,6 +32,7 @@ pickupeffect HereticYellowKey
   sound   ht_keyup
   flags   LEAVEINMULTI
 
+  sprite  CKYY
   pfxname PFX_HYELLOWKEY
 }
 
@@ -39,6 +42,7 @@ pickupeffect CrystalVial
   message $HITEMHEALTH
   sound   ht_itemup
 
+  sprite  PTN1
   pfxname PFX_HPOTION
 }
 pickupeffect SilverShield
@@ -47,6 +51,7 @@ pickupeffect SilverShield
   message $HITEMSHIELD1
   sound   ht_itemup
 
+  sprite  SHLD
   pfxname PFX_SILVERSHIELD
 }
 pickupeffect EnchantedShield
@@ -55,6 +60,7 @@ pickupeffect EnchantedShield
   message $HITEMSHIELD2
   sound   ht_itemup
 
+  sprite  SHD2
   pfxname PFX_ENCHANTEDSHIELD
 }
 
@@ -65,6 +71,7 @@ pickupeffect BagOfHolding
   sound   ht_itemup
   flags   ALWAYSPICKUP|GIVESBACKPACKAMMO
 
+  sprite  BAGH
   pfxname PFX_BAGOFHOLDING
 }
 
@@ -74,6 +81,7 @@ pickupeffect MapScroll
   message $HITEMSUPERMAP
   sound   ht_itemup
 
+  sprite  SPMP
   pfxname PFX_HMAP
 }
 pickupeffect HArtiInvisibility
@@ -82,6 +90,8 @@ pickupeffect HArtiInvisibility
   message $HITEMSHADOWSPHERE
   sound   ht_artiup
   //flags   
+
+  sprite INVS
 }
 pickupeffect HArtiQuartzFlask
 {
@@ -89,6 +99,8 @@ pickupeffect HArtiQuartzFlask
   message $HITEMQUARTZFLASK
   sound   ht_artiup
   //flags   
+
+  sprite HArtiQuartzFlask
 }
 pickupeffect HArtiFly
 {
@@ -96,6 +108,8 @@ pickupeffect HArtiFly
   message $HITEMWINGSOFWRATH
   sound   ht_artiup
   //flags   
+
+  sprite SOAR
 }
 pickupeffect HArtiInvulnerability
 {
@@ -103,6 +117,8 @@ pickupeffect HArtiInvulnerability
   message $HITEMRINGOFINVINCIBILITY
   sound   ht_artiup
   //flags   
+
+  sprite INVU
 }
 pickupeffect HArtiTomeOfPower
 {
@@ -110,6 +126,8 @@ pickupeffect HArtiTomeOfPower
   message $HITEMTOMEOFPOWER
   sound   ht_artiup
   //flags   
+
+  sprite PWBK
 }
 pickupeffect HArtiEgg
 {
@@ -117,6 +135,8 @@ pickupeffect HArtiEgg
   message $HITEMMORPHOVUM
   sound   ht_artiup
   //flags   
+
+  sprite EGGC
 }
 pickupeffect HArtiSuperHeal
 {
@@ -124,6 +144,8 @@ pickupeffect HArtiSuperHeal
   message $HITEMMYSTICURN
   sound   ht_artiup
   //flags   
+
+  sprite SPHL
 }
 pickupeffect HArtiTorch
 {
@@ -131,13 +153,17 @@ pickupeffect HArtiTorch
   message $HITEMTORCH
   sound   ht_artiup
   //flags   
+
+  sprite TRCH
 }
 pickupeffect HArtiFireBomb
 {
   effects ArtiTimeBomb
   message $HITEMTIMEBOMB
   sound   ht_artiup
-  //flags   
+  //flags  
+
+  sprite FBMB 
 }
 pickupeffect HArtiTeleport
 {
@@ -145,6 +171,8 @@ pickupeffect HArtiTeleport
   message $HITEMTELEPORT
   sound   ht_artiup
   //flags   
+
+  sprite ATLP
 }
 
 pickupeffect HAmmoWandWimpy
@@ -153,6 +181,7 @@ pickupeffect HAmmoWandWimpy
   message $HAMMOGOLDWAND1
   sound   ht_itemup
 
+  sprite  AMG1
   pfxname PFX_GWNDWIMPY
 }
 pickupeffect HAmmoWandHefty
@@ -161,6 +190,7 @@ pickupeffect HAmmoWandHefty
   message $HAMMOGOLDWAND2
   sound   ht_itemup
 
+  sprite  AMG2
   pfxname PFX_GWNDHEFTY
 }
 pickupeffect HAmmoMaceWimpy
@@ -169,6 +199,7 @@ pickupeffect HAmmoMaceWimpy
   message $HAMMOMACE1
   sound   ht_itemup
 
+  sprite  AMM1
   pfxname PFX_MACEWIMPY
 }
 pickupeffect HAmmoMaceHefty
@@ -177,6 +208,7 @@ pickupeffect HAmmoMaceHefty
   message $HAMMOMACE2
   sound   ht_itemup
 
+  sprite  AMM2
   pfxname PFX_MACEHEFTY
 }
 pickupeffect HAmmoCBowWimpy
@@ -185,6 +217,7 @@ pickupeffect HAmmoCBowWimpy
   message $HAMMOCROSSBOW1
   sound   ht_itemup
 
+  sprite  AMC1
   pfxname PFX_CBOWWIMPY
 }
 pickupeffect HAmmoCBowHefty
@@ -193,6 +226,7 @@ pickupeffect HAmmoCBowHefty
   message $HAMMOCROSSBOW2
   sound   ht_itemup
 
+  sprite  AMC2
   pfxname PFX_CBOWHEFTY
 }
 pickupeffect HAmmoBlasterWimpy
@@ -201,6 +235,7 @@ pickupeffect HAmmoBlasterWimpy
   message $HAMMOBLASTER1
   sound   ht_itemup
 
+  sprite  AMB1
   pfxname PFX_BLSRWIMPY
 }
 pickupeffect HAmmoBlasterHefty
@@ -209,6 +244,7 @@ pickupeffect HAmmoBlasterHefty
   message $HAMMOBLASTER2
   sound   ht_itemup
 
+  sprite  AMB2
   pfxname PFX_BLSRHEFTY
 }
 pickupeffect HAmmoSkullWimpy
@@ -217,6 +253,7 @@ pickupeffect HAmmoSkullWimpy
   message $HAMMOSKULLROD1
   sound   ht_itemup
 
+  sprite  AMP1
   pfxname PFX_PHRDWIMPY
 }
 pickupeffect HAmmoSkullHefty
@@ -225,6 +262,7 @@ pickupeffect HAmmoSkullHefty
   message $HAMMOSKULLROD2
   sound   ht_itemup
 
+  sprite  AMP2
   pfxname PFX_PHRDHEFTY
 }
 pickupeffect HAmmoPhoenixWimpy
@@ -233,6 +271,7 @@ pickupeffect HAmmoPhoenixWimpy
   message $HAMMOPHOENIXROD1
   sound   ht_itemup
 
+  sprite  AMS1
   pfxname PFX_SKRDWIMPY
 }
 pickupeffect HAmmoPhoenixHefty
@@ -241,6 +280,7 @@ pickupeffect HAmmoPhoenixHefty
   message $HAMMOPHOENIXROD2
   sound   ht_itemup
 
+  sprite  AMS2
   pfxname PFX_SKRDHEFTY
 }
 
@@ -251,6 +291,8 @@ pickupeffect HWeaponCrossbow
   effects Crossbow
   message "$HWEAPONCROSSBOW"
   sound   ht_wpnup
+
+  sprite WBOW
 }
 
 pickupeffect HWeaponBlaster
@@ -258,6 +300,8 @@ pickupeffect HWeaponBlaster
   effects Blaster
   message "$HWEAPONBLASTER"
   sound   ht_wpnup
+
+  sprite WBLS
 }
 
 pickupeffect HWeaponSkullRod
@@ -265,6 +309,8 @@ pickupeffect HWeaponSkullRod
   effects SkullRod
   message "$HWEAPONSKULLROD"
   sound   ht_wpnup
+
+  sprite WSKL
 }
 
 pickupeffect HWeaponPhoenixRod
@@ -272,6 +318,8 @@ pickupeffect HWeaponPhoenixRod
   effects PhoenixRod
   message "$HWEAPONPHOENIX"
   sound   ht_wpnup
+
+  sprite WPHX
 }
 
 pickupeffect HWeaponFireMace
@@ -279,6 +327,8 @@ pickupeffect HWeaponFireMace
   effects Mace
   message "$HWEAPONMACE"
   sound   ht_wpnup
+
+  sprite WMCE
 }
 
 pickupeffect HWeaponGauntlets
@@ -286,27 +336,7 @@ pickupeffect HWeaponGauntlets
   effects Gauntlets
   message "$HWEAPONGAUNTLETS"
   sound   ht_wpnup
+
+  sprite WGNT
 }
-
-
-pickupitem AKYY { effect PFX_HGREENKEY }
-pickupitem BKYY { effect PFX_HBLUEKEY }
-pickupitem CKYY { effect PFX_HYELLOWKEY }
-pickupitem PTN1 { effect PFX_HPOTION }
-pickupitem SHLD { effect PFX_SILVERSHIELD }
-pickupitem SHD2 { effect PFX_ENCHANTEDSHIELD }
-pickupitem BAGH { effect PFX_BAGOFHOLDING }
-pickupitem SPMP { effect PFX_HMAP }
-pickupitem AMG1 { effect PFX_GWNDWIMPY }
-pickupitem AMG2 { effect PFX_GWNDHEFTY }
-pickupitem AMM1 { effect PFX_MACEWIMPY }
-pickupitem AMM2 { effect PFX_MACEHEFTY }
-pickupitem AMC1 { effect PFX_CBOWWIMPY }
-pickupitem AMC2 { effect PFX_CBOWHEFTY }
-pickupitem AMB1 { effect PFX_BLSRWIMPY }
-pickupitem AMB2 { effect PFX_BLSRHEFTY }
-pickupitem AMS1 { effect PFX_SKRDWIMPY }
-pickupitem AMS2 { effect PFX_SKRDHEFTY }
-pickupitem AMP1 { effect PFX_PHRDWIMPY }
-pickupitem AMP2 { effect PFX_PHRDHEFTY }
 
