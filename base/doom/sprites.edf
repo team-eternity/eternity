@@ -314,7 +314,7 @@ pickupeffect Backpack
 // Weapons
 pickupeffect WeaponBFG
 {
-  effects BFG9000
+  effects GiverBFG9000
   message $GOTBFG9000
   sound   wpnup
 
@@ -323,7 +323,7 @@ pickupeffect WeaponBFG
 }
 pickupeffect WeaponChaingun
 {
-  effects Chaingun
+  effects GiverChaingun
   message $GOTCHAINGUN
   sound   wpnup
 
@@ -332,7 +332,7 @@ pickupeffect WeaponChaingun
 }
 pickupeffect WeaponChainsaw
 {
-  effects Chainsaw
+  effects GiverChainsaw
   message $GOTCHAINSAW
   sound   wpnup
 
@@ -341,7 +341,7 @@ pickupeffect WeaponChainsaw
 }
 pickupeffect WeaponRocketLauncher
 {
-  effects MissileLauncher
+  effects GiverMissileLauncher
   message $GOTLAUNCHER
   sound   wpnup
 
@@ -350,7 +350,7 @@ pickupeffect WeaponRocketLauncher
 }
 pickupeffect WeaponPlasmaGun
 {
-  effects PlasmaRifle
+  effects GiverPlasmaRifle
   message $GOTPLASMA
   sound   wpnup
 
@@ -359,7 +359,7 @@ pickupeffect WeaponPlasmaGun
 }
 pickupeffect WeaponShotgun
 {
-  effects Shotgun
+  effects GiverShotgun
   message $GOTSHOTGUN
   sound   wpnup
 
@@ -368,7 +368,7 @@ pickupeffect WeaponShotgun
 }
 pickupeffect WeaponSSG
 {
-  effects SuperShotgun
+  effects GiverSuperShotgun
   message $GOTSHOTGUN
   sound   wpnup
 

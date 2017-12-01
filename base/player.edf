@@ -64,8 +64,8 @@ playerclass DoomMarine
    weaponslot 9 { weapons : SuperShotgun }
 
    rebornitem AmmoClip, 50
-   rebornitem WeaponFist
-   rebornitem WeaponPistol
+   rebornitem Fist
+   rebornitem Pistol
 }
 
 endif()
@@ -92,8 +92,8 @@ playerclass Corvus
    weaponslot 8 { weapons : Gauntlets }
 
    rebornitem AmmoWandCrystal, 50
-   rebornitem WeaponStaff
-   rebornitem WeaponGoldWand
+   rebornitem Staff
+   rebornitem GoldWand
 }
 
 endif()

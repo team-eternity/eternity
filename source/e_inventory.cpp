@@ -113,6 +113,12 @@ static itemeffect_t *E_addItemEffect(cfg_t *cfg)
    itemeffect_t *table;
    const char   *name = cfg_title(cfg);
 
+   if(E_WeaponForName(name) != nullptr)
+   {
+      E_EDFLoggedErr(2, "E_addItemEffect: User-defined item effect '%s'"
+                         "has the same identifier as a weaponinfo:", name);
+   }
+
    if(!(table = E_ItemEffectForName(name)))
       e_effectsTable.addObject((table = new itemeffect_t(name)));
 
@@ -400,6 +406,26 @@ static void E_processItemEffects(cfg_t *cfg)
 
          E_EDFLogPrintf("\t\t* Processed item '%s'\n", newEffect->getKey());
       }
+   }
+}
+
+static void E_generateWeaponTrackers()
+{
+   itemeffect_t *trackerTemplate = E_ItemEffectForName("_WeaponTrackerTemplate");
+   if(trackerTemplate == nullptr)
+   {
+      // For some weird, weird, weird, weird reason, the template wasn't found.
+      E_EDFLoggedErr(2, "E_generateWeaponTrackers: Weapon tracker template "
+                        "artifact (_WeaponTrackerTemplate) not found.\n");
+   }
+
+   for(int i = 0; i < NUMWEAPONTYPES; i++)
+   {
+      weaponinfo_t *currWeapon = E_WeaponForID(i);
+      itemeffect_t *currTracker = new itemeffect_t(currWeapon->name);
+      e_effectsTable.addObject(currTracker);
+      trackerTemplate->copyTableTo(currTracker);
+      currWeapon->tracker = currTracker;
    }
 }
 
@@ -1280,6 +1306,12 @@ static void E_processPickupEffect(cfg_t *sec)
             E_EDFLoggedWarning(2, "Warning: invalid pickup effect: '%s'\n", str);
             return;
          }
+         else if(pfx->effects[i]->getInt(keyArtifactType, NUMARTITYPES) == ARTI_WEAPON)
+         {
+            // This should never happen, but whatever.
+            E_EDFLoggedWarning(2, "Warning: pickup effect '%s' refers to "
+                                  "weapon tracker: '%s'\n", title, str);
+         }
       }
    }
 
@@ -2107,6 +2139,9 @@ void E_ProcessInventory(cfg_t *cfg)
 {
    // process item effects
    E_processItemEffects(cfg);
+
+   // generate weapon trackers (item effects)
+   E_generateWeaponTrackers();
 
    // allocate inventory item IDs
    E_allocateInventoryItemIDs();

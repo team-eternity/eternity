@@ -32,8 +32,6 @@ weaponinfo Fist : DoomWeapon, 0
   mod          Fist
   recoil       10
 
-  tracker      WeaponFist
-
   firstdecoratestate S_PUNCH
   states
   @"
@@ -70,8 +68,6 @@ weaponinfo Pistol : DoomWeapon, 1
   recoil       10
   hapticrecoil 1
   haptictime   1
-
-  tracker      WeaponPistol
 
   firstdecoratestate S_PISTOL
   states
@@ -111,8 +107,6 @@ weaponinfo Shotgun : DoomWeapon, 2
   recoil       30
   hapticrecoil 3
   haptictime   3
-
-  tracker      WeaponShotgun
 
   firstdecoratestate S_SGUN
   states
@@ -157,8 +151,6 @@ weaponinfo Chaingun : DoomWeapon, 3
   hapticrecoil 1
   haptictime   1
 
-  tracker      WeaponChaingun
-
   firstdecoratestate S_CHAIN
 
   states
@@ -197,8 +189,6 @@ weaponinfo MissileLauncher : DoomWeapon, 4
   recoil       100
   hapticrecoil 6
   haptictime   8
-
-  tracker      WeaponMissileLauncher
 
   firstdecoratestate S_MISSILE
 
@@ -241,8 +231,6 @@ weaponinfo PlasmaRifle : DoomWeapon, 5
   hapticrecoil 2
   haptictime   1
 
-  tracker      WeaponPlasmaRifle
-
   firstdecoratestate S_PLASMA
 
   states
@@ -281,8 +269,6 @@ weaponinfo BFG9000 : DoomWeapon, 6
   recoil       20
   hapticrecoil 2
   haptictime   1
-
-  tracker      WeaponBFG9000
 
   firstdecoratestate S_BFG
 
@@ -340,8 +326,6 @@ weaponinfo Chainsaw : DoomWeapon, 7
   upsound      sawup
   readysound   sawidl
 
-  tracker      WeaponChainsaw
-
   firstdecoratestate S_SAW
 
   states
@@ -376,8 +360,6 @@ weaponinfo SuperShotgun : DoomWeapon, 8
   recoil       80
   hapticrecoil 5
   haptictime   5
-
-  tracker      WeaponSuperShotgun
 
   firstdecoratestate S_DSGUN
 
@@ -419,133 +401,56 @@ weaponinfo SuperShotgun : DoomWeapon, 8
 
 //=============================================================================
 //
-// Weapon Trackers
-//
-
-artifact WeaponFist
-{
-  interhubamount 1
-  +undroppable
-
-  artifacttype Weapon
-}
-
-artifact WeaponPistol
-{
-  interhubamount 1
-  +undroppable
-
-  artifacttype Weapon
-}
-
-artifact WeaponShotgun
-{
-  interhubamount 1
-  +undroppable
-
-  artifacttype Weapon
-}
-
-artifact WeaponChaingun
-{
-  interhubamount 1
-  +undroppable
-
-  artifacttype Weapon
-}
-
-artifact WeaponMissileLauncher
-{
-  interhubamount 1
-  +undroppable
-
-  artifacttype Weapon
-}
-
-artifact WeaponPlasmaRifle
-{
-  interhubamount 1
-  +undroppable
-
-  artifacttype Weapon
-}
-
-artifact WeaponBFG9000
-{
-  interhubamount 1
-  +undroppable
-
-  artifacttype Weapon
-}
-
-artifact WeaponChainsaw
-{
-  interhubamount 1
-  +undroppable
-
-  artifacttype Weapon
-}
-
-artifact WeaponSuperShotgun
-{
-  interhubamount 1
-  +undroppable
-
-  artifacttype Weapon
-}
-
-//=============================================================================
-//
 // Weapon Givers
 //
 
-weapongiver Fist
+weapongiver GiverFist
 {
   weapon Fist
 }
 
-weapongiver Pistol
+weapongiver GiverPistol
 {
-  weapon WeaponPistol
+  weapon Pistol
   ammogiven AmmoClip, 20, 10, 50, 20
 }
 
-weapongiver Shotgun
+weapongiver GiverShotgun
 {
   weapon Shotgun
   ammogiven AmmoShell, 8, 4, 20, 8
 }
 
-weapongiver Chaingun
+weapongiver GiverChaingun
 {
   weapon Chaingun
   ammogiven AmmoClip, 20, 10, 50, 20
 }
 
-weapongiver MissileLauncher
+weapongiver GiverMissileLauncher
 {
   weapon MissileLauncher
   ammogiven AmmoMissile, 2, 1, 5, 2
 }
 
-weapongiver PlasmaRifle
+weapongiver GiverPlasmaRifle
 {
   weapon PlasmaRifle
   ammogiven AmmoCell, 40, 20, 100, 40
 }
 
-weapongiver BFG9000
+weapongiver GiverBFG9000
 {
   weapon BFG9000
   ammogiven AmmoCell, 40, 20, 100, 40
 }
 
-weapongiver Chainsaw
+weapongiver GiverChainsaw
 {
   weapon Chainsaw
 }
 
-weapongiver SuperShotgun
+weapongiver GiverSuperShotgun
 {
   weapon SuperShotgun
   ammogiven AmmoShell, 8, 4, 20, 8

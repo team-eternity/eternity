@@ -19,8 +19,6 @@ weaponinfo Staff
   //mod          ""
   recoil       10
 
-  tracker      WeaponStaff
-
   states
   @"
   Ready:
@@ -44,8 +42,6 @@ weaponinfo Staff
 {
   readysound   ht_stfcrk
   addflags     READYSNDHALF
-
-  tracker
 
   states
   @"
@@ -81,8 +77,6 @@ weaponinfo GoldWand
   hapticrecoil 1
   haptictime   1
 
-  tracker      WeaponGoldWand
-
   states
   @"
   Ready:
@@ -106,8 +100,6 @@ weaponinfo GoldWand
 /*weaponinfo GoldWandPowered : GoldWand
 {
   // TODO: Figure out what to do with trackers for tomed weapons
-  tracker
-
   states
   @"
   Fire:
@@ -134,8 +126,6 @@ weaponinfo Crossbow
   hapticrecoil 3
   haptictime   3
 
-  tracker      WeaponCrossbow
-
   states
   @"
   Ready:
@@ -158,8 +148,6 @@ weaponinfo Crossbow
 
 /*weaponinfo CrossbowPowered : Crossbow
 {
-  tracker
-
   states
   @"
   Fire:
@@ -189,8 +177,6 @@ weaponinfo Blaster
   recoil       10
   hapticrecoil 1
   haptictime   1
-
-  tracker      WeaponBlaster
 
   states
   @"
@@ -231,8 +217,6 @@ weaponinfo SkullRod
   hapticrecoil 6
   haptictime   8
 
-  tracker      WeaponSkullRod
-
   states
   @"
   Ready:
@@ -265,8 +249,6 @@ weaponinfo PhoenixRod
   recoil       20
   hapticrecoil 2
   haptictime   1
-
-  tracker      WeaponPhoenixRod
 
   states
   @"
@@ -303,8 +285,6 @@ weaponinfo Mace
   hapticrecoil 2
   haptictime   1
 
-  tracker      WeaponMace
-
   states
   @"
   Ready:
@@ -331,8 +311,6 @@ weaponinfo Mace
   ammouse      5
 
   // TODO: Figure out what to do with trackers for tomed weapons
-  tracker      
-
   states
   @"
   Fire:
@@ -354,8 +332,6 @@ weaponinfo Gauntlets
   flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCER
   //mod          ""
   upsound      ht_gntact
-
-  tracker      WeaponGauntlets
 
   states
   @"
@@ -382,8 +358,6 @@ weaponinfo Gauntlets
 /*weaponinfo GauntletsPowered : Gauntlets
 {
   // TODO: Figure out what to do with trackers for tomed weapons
-  tracker
-
   states
   @"
   Ready:
@@ -481,47 +455,47 @@ artifact WeaponGauntlets
 // Weapon Givers
 //
 
-weapongiver Staff
+weapongiver GiverStaff
 {
   weapon Staff
 }
 
-weapongiver GoldWand
+weapongiver GiverGoldWand
 {
   weapon GoldWand
 }
 
-weapongiver Crossbow
+weapongiver GiverCrossbow
 {
   weapon    Crossbow
   ammogiven AmmoEtherealArrow, 10
 }
 
-weapongiver Blaster
+weapongiver GiverBlaster
 {
   weapon    Blaster
   ammogiven AmmoClawOrb, 30
 }
 
-weapongiver SkullRod
+weapongiver GiverSkullRod
 {
   weapon    SkullRod
   ammogiven AmmoRune, 50
 }
 
-weapongiver PhoenixRod
+weapongiver GiverPhoenixRod
 {
   weapon    PhoenixRod
   ammogiven AmmoFlameOrb, 2
 }
 
-weapongiver Mace
+weapongiver GiverMace
 {
   weapon    Mace
   ammogiven AmmoMaceSphere, 50
 }
 
-weapongiver Gauntlets
+weapongiver GiverGauntlets
 {
   weapon Gauntlets
 }

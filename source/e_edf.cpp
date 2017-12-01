@@ -1243,7 +1243,6 @@ static void E_ProcessStatesAndThings(cfg_t *cfg)
 
 static void E_ProcessWeapons(cfg_t *cfg)
 {
-   E_CollectWeapons(cfg);   // see e_weapons.cpp
    E_ProcessWeaponInfo(cfg);
 }
 
@@ -1656,6 +1655,8 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
  
    // process sprite-related variables (made dynamic 11/21/11)
    E_ProcessSpriteVars(cfg);
+
+   E_CollectWeapons(cfg);   // see e_weapons.cpp
 
    // process inventory
    E_ProcessInventory(cfg);

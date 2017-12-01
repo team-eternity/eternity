@@ -55,7 +55,7 @@
 #include "e_player.h" // DO NOT MOVE. COMPILE FAILS IF MOVED BEFORE p_inter.h INCLUDE
 
 static weaponinfo_t **weaponinfo = nullptr;
-static int NUMWEAPONTYPES = 0;
+int NUMWEAPONTYPES = 0;
 
 // track generations
 static int edf_weapon_generation = 1;
@@ -151,7 +151,6 @@ cfg_opt_t wpninfo_tprops[] =
    CFG_INT(ITEM_WPN_HAPTICTIME,   0,        CFGF_NONE), \
    CFG_STR(ITEM_WPN_UPSOUND,      "none",   CFGF_NONE), \
    CFG_STR(ITEM_WPN_READYSOUND,   "none",   CFGF_NONE), \
-   CFG_STR(ITEM_WPN_TRACKER,      "",       CFGF_NONE), \
    CFG_STR(ITEM_WPN_FIRSTDECSTATE, nullptr, CFGF_NONE), \
    CFG_STR(ITEM_WPN_STATES,        0,       CFGF_NONE), \
    CFG_END()
@@ -789,6 +788,7 @@ static void E_CopyWeapon(weapontype_t num, weapontype_t pnum)
    weapontype_t id;
    int          generation;
    weaponinfo_t *nextInCycle, *prevInCycle;
+   itemeffect_t *tracker;
 
    this_wi = weaponinfo[num];
 
@@ -803,6 +803,7 @@ static void E_CopyWeapon(weapontype_t num, weapontype_t pnum)
    generation = this_wi->generation;
    nextInCycle = this_wi->nextInCycle;
    prevInCycle = this_wi->prevInCycle;
+   tracker = this_wi->tracker;
 
    // copy from source to destination
    memcpy(this_wi, weaponinfo[pnum], sizeof(weaponinfo_t));
@@ -830,7 +831,7 @@ static void E_CopyWeapon(weapontype_t num, weapontype_t pnum)
    // other fields not inherited:
 
    // force tracker of inheriting type to nullptr
-   this_wi->tracker = nullptr;
+   this_wi->tracker = tracker;
 }
 
 struct weapontitleprops_t
@@ -973,7 +974,7 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
       wp.prevInCycle = E_WeaponForName(tempstr);
    }
 
-   // TODO: Autogenerate instead
+   /*// TODO: Autogenerate instead
    if(cfg_size(weaponsec, ITEM_WPN_TRACKER) > 0)
    {
       const char *tempeffectname = cfg_getstr(weaponsec, ITEM_WPN_TRACKER);
@@ -986,7 +987,7 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
          E_EDFLoggedErr(2, "Tracker \"%s\" in weaponinfo[i] \"%s\" "
                         "is undefined\n", tempeffectname, tempstr);
       }
-   }
+   }*/
 
    // Attack properties
    if(IS_SET(ITEM_WPN_AMMO))
