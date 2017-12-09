@@ -2510,7 +2510,7 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
    if(trace.puff)
       th = P_SpawnMobj(x, y, z, trace.puff->index);
    else
-      th = P_SpawnMobj(x, y, z, E_SafeThingType(MT_PUFF));
+      th = P_SpawnMobj(x, y, z, E_GetThingNumForName(GameModeInfo->puffType));
    th->momz = FRACUNIT;
    th->tics -= P_Random(pr_spawnpuff) & 3;
 

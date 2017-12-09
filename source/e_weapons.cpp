@@ -100,8 +100,6 @@ weapontype_t UnknownWeaponInfo;
 #define ITEM_WPN_UPSOUND      "upsound"
 #define ITEM_WPN_READYSOUND   "readysound"
 
-#define ITEM_WPN_TRACKER      "tracker"
-
 #define ITEM_WPN_FIRSTDECSTATE "firstdecoratestate"
 
 // DECORATE state block
@@ -690,7 +688,6 @@ void E_CollectWeapons(cfg_t *cfg)
             dehnum = cfg_getint(titleprops, ITEM_WPN_TITLE_DEHNUM);
       }
       
-      
       // If undefined, check the legacy value inside the section
       if(dehnum == -1)
          dehnum = cfg_getint(weaponcfg, ITEM_WPN_DEHNUM);
@@ -782,28 +779,28 @@ static void E_CopyWeapon(weapontype_t num, weapontype_t pnum)
 {
    weaponinfo_t *this_wi;
    DLListItem<weaponinfo_t> idlinks, namelinks, dehlinks;
-   const char  *name;
-   int          dehnum;
-   MetaTable   *meta;
-   weapontype_t id;
-   int          generation;
+   const char   *name;
+   int           dehnum;
+   MetaTable    *meta;
+   weapontype_t  id;
+   int           generation;
    weaponinfo_t *nextInCycle, *prevInCycle;
    itemeffect_t *tracker;
 
    this_wi = weaponinfo[num];
 
    // must save the following fields in the destination weapon:
-   idlinks = this_wi->idlinks;
-   namelinks = this_wi->namelinks;
-   dehlinks = this_wi->dehlinks;
-   name = this_wi->name;
-   dehnum = this_wi->dehnum;
-   meta = this_wi->meta;
-   id = this_wi->id;
-   generation = this_wi->generation;
+   idlinks     = this_wi->idlinks;
+   namelinks   = this_wi->namelinks;
+   dehlinks    = this_wi->dehlinks;
+   name        = this_wi->name;
+   dehnum      = this_wi->dehnum;
+   meta        = this_wi->meta;
+   id          = this_wi->id;
+   generation  = this_wi->generation;
    nextInCycle = this_wi->nextInCycle;
    prevInCycle = this_wi->prevInCycle;
-   tracker = this_wi->tracker;
+   tracker     = this_wi->tracker;
 
    // copy from source to destination
    memcpy(this_wi, weaponinfo[pnum], sizeof(weaponinfo_t));
@@ -828,9 +825,8 @@ static void E_CopyWeapon(weapontype_t num, weapontype_t pnum)
    this_wi->nextInCycle = nextInCycle;
    this_wi->prevInCycle = prevInCycle;
 
-   // other fields not inherited:
-
-   // force tracker of inheriting type to nullptr
+   // tracker inheritance is weird
+   //if(!(this_wi->flags & WPF_[TomedVersionOfWeapon]))
    this_wi->tracker = tracker;
 }
 
@@ -973,21 +969,6 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_PREVINCYCLE);
       wp.prevInCycle = E_WeaponForName(tempstr);
    }
-
-   /*// TODO: Autogenerate instead
-   if(cfg_size(weaponsec, ITEM_WPN_TRACKER) > 0)
-   {
-      const char *tempeffectname = cfg_getstr(weaponsec, ITEM_WPN_TRACKER);
-      itemeffect_t *tempeffect = E_ItemEffectForName(tempeffectname);
-      if(tempeffect)
-         wp.tracker = tempeffect;
-      else // An invalid tracker isn't useful
-      {
-         tempstr = cfg_title(weaponsec);
-         E_EDFLoggedErr(2, "Tracker \"%s\" in weaponinfo[i] \"%s\" "
-                        "is undefined\n", tempeffectname, tempstr);
-      }
-   }*/
 
    // Attack properties
    if(IS_SET(ITEM_WPN_AMMO))
@@ -1284,9 +1265,7 @@ bool E_WeaponHasAltFire(weaponinfo_t *wp)
 bool E_WeaponIsCurrent(const player_t *player, const char *name)
 {
    const weaponinfo_t *weapon = E_WeaponForName(name);
-   if(!weapon)
-      return false;
-   return player->readyweapon->id == weapon->id;
+   return weapon ? player->readyweapon->id == weapon->id : false;
 }
 
 //

@@ -511,7 +511,7 @@ void A_GauntletAttack(actionargs_t *actionargs)
 
    if(powered)
    {
-      damage = (1 + (P_Random(pr_gauntlets) & 7))* 2;
+      damage = (1 + (P_Random(pr_gauntlets) & 7)) * 2;
       dist = 4 * MELEERANGE;
       angle += P_SubRandom(pr_gauntletsangle) * PO2(17);
       tnum = E_SafeThingType(MT_GAUNTLETPUFF2);
@@ -587,7 +587,7 @@ void A_HticArtiTele(actionargs_t *actionargs)
 {
    fixed_t destX, destY;
    angle_t destAngle;
-   Mobj *mo = actionargs->actor, *fog;
+   Mobj *mo = actionargs->actor;
 
    if(deathmatch)
    {
