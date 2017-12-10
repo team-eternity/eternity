@@ -979,7 +979,7 @@ void P_PlayerStopFlight(player_t *player)
    player->mo->flags4 &= ~MF4_FLY;
    player->mo->flags  &= ~MF_NOGRAVITY;
 
-   P_removePowerTracker(player, pw_infrared);
+   P_removePowerTracker(player, pw_flight);
 }
 
 #if 0
