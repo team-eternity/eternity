@@ -125,9 +125,6 @@ You will then obtain a valid .app package.
 
 Building with Homebrew (OS X Mavericks and up)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-NOTE: this may be outdated if Eternity uses SDL2.
-
 The benefit of Homebrew compilation is that you don't need to "install"
 Eternity like a standard Mac application. However, this will require some
 extra work. You will also need to run Eternity as you would in Unix.
@@ -140,18 +137,19 @@ using an older cmake release folder, you will need to create a new one.
 * You will need the following libraries:
 +
  cmake
- sdl
- sdl_mixer
- sdl_net
+ sdl2
+ sdl2_mixer
+ sdl2_net
  libogg
  libvorbis
  flac
  libmpeg2
- libmikmod
+ libmodplug
 
 * Follow the cmake instructions.
 +
  cmake .. -DCMAKE_BUILD_TYPE=Release
+ make
 
 Building with Visual Studio (2015 and up)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
