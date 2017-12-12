@@ -1,7 +1,5 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2017 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,14 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+// Purpose: General-purpose system-specific routines, including timer
+//  installation, keyboard, mouse, and joystick code.
 //
-// DESCRIPTION:
+// Authors: James Haley, Max Waine
 //
-//   General-purpose system-specific routines, including timer
-//   installation, keyboard, mouse, and joystick code.
-//
-//-----------------------------------------------------------------------------
 
 #ifdef _MSC_VER
 #include <conio.h>
@@ -68,9 +63,8 @@ ticcmd_t *I_BaseTiccmd()
 
 int mousepresent;
 
-int keyboard_installed = 0;
 extern int autorun;          // Autorun state
-static SDLMod oldmod; // SoM 3/20/2002: save old modifier key state
+static SDL_Keymod oldmod; // SoM 3/20/2002: save old modifier key state
 
 //
 // I_Shutdown
@@ -83,23 +77,6 @@ void I_Shutdown()
    
    // haleyjd 04/15/02: shutdown joystick
    I_ShutdownGamePads();
-}
-
-extern bool unicodeinput;
-
-//
-// I_InitKeyboard
-//
-void I_InitKeyboard()
-{   
-   keyboard_installed = 1;
-
-   if(unicodeinput)
-      SDL_EnableUNICODE(1);
-
-   // haleyjd 05/10/11: moved here from video module
-   // enable key repeat
-   SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY/2, SDL_DEFAULT_REPEAT_INTERVAL*4);
 }
 
 //
@@ -353,7 +330,7 @@ void I_EndDoom()
       return;
    
    // Make sure the new window has the right title and icon
-   SDL_WM_SetCaption("Thanks for using the Eternity Engine!", NULL);
+   TXT_SetWindowTitle("Thanks for using the Eternity Engine!");
    
    // Write the data to the screen memory   
    screendata = TXT_GetScreenData();
