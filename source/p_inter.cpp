@@ -44,6 +44,7 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "ev_specials.h"
+#include "g_demolog.h"
 #include "g_dmflag.h"
 #include "g_game.h"
 #include "hu_frags.h"

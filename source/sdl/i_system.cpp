@@ -41,6 +41,7 @@
 #include "../doomstat.h"
 #include "../m_misc.h"
 #include "../m_syscfg.h"
+#include "../g_demolog.h"
 #include "../g_game.h"
 #include "../w_wad.h"
 #include "../v_video.h"

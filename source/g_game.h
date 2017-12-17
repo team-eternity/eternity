@@ -79,13 +79,6 @@ void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed); // haleyjd
 uint64_t G_Signature(WadDirectory *dir);
 void G_DoPlayDemo();
 
-// ioanch 20160313: demo testing
-void G_DemoLogInit(const char *path);
-void G_DemoLog(const char *format, ...);
-void G_DemoLogStats();
-bool G_DemoLogEnabled();
-void G_DemoLogSetExited(bool value);
-
 void R_InitPortals();
 
 int G_TotalKilledMonsters();

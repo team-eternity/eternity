@@ -42,6 +42,7 @@
 #include "e_ttypes.h"
 #include "e_udmf.h"  // IOANCH 20151206: UDMF
 #include "ev_specials.h"
+#include "g_demolog.h"
 #include "g_game.h"
 #include "hu_frags.h"
 #include "hu_stuff.h"
