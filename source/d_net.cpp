@@ -830,9 +830,11 @@ void TryRunTics()
       for(int i = 0; i < realtics; i++)   // run tics
       {
          // all independent tickers here
-         MN_Ticker();
+         if(i_videodriverid != VDR_NONE)
+            MN_Ticker();
          C_Ticker();
-         V_FPSTicker();
+         if(i_videodriverid != VDR_NONE)
+            V_FPSTicker();
       }
 
       // run the game tickers
