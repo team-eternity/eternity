@@ -207,7 +207,8 @@ void I_InitMouse();
 
 void I_StartTic()
 {
-   I_StartTicInWindow(i_video_driver->window);
+   if(i_videodriverid != VDR_NONE)
+      I_StartTicInWindow(i_video_driver->window);
 }
 
 //=============================================================================
