@@ -830,10 +830,13 @@ void TryRunTics()
       for(int i = 0; i < realtics; i++)   // run tics
       {
          // all independent tickers here
-         if(i_videodriverid != VDR_NONE)
+         // ioanch: skip some tickers during windowless fast demos. It has been
+         // noticed by profiling that these functions add significant time with-
+         // out being gameplay relevant.
+         if(!D_noWindow() || !fastdemo)
             MN_Ticker();
          C_Ticker();
-         if(i_videodriverid != VDR_NONE)
+         if(!D_noWindow() || !fastdemo)
             V_FPSTicker();
       }
 

@@ -64,28 +64,6 @@ HALVideoDriver *i_video_driver = nullptr;
 
 //=============================================================================
 //
-// ioanch 20160424: "None" video driver: for batch demo testing
-//
-
-class NoneVideoDriver : public HALVideoDriver
-{
-protected:
-   virtual void SetPrimaryBuffer() {}
-   virtual void UnsetPrimaryBuffer() {}
-
-public:
-   virtual void FinishUpdate() {}
-   virtual void ReadScreen(byte *scr) {}
-   virtual void SetPalette(byte *pal) {}
-   virtual void ShutdownGraphics() {}
-   virtual void ShutdownGraphicsPartway() {}
-   virtual bool InitGraphicsMode() {return false;}
-};
-
-static NoneVideoDriver i_nonedriver;
-
-//=============================================================================
-//
 // Video Driver Table
 //
 
@@ -133,13 +111,6 @@ static haldriveritem_t halVideoDriverTable[VDR_MAXDRIVERS] =
 #else
       NULL
 #endif
-   },
-
-   // ioanch 20160424: demo testing
-   {
-      VDR_NONE,
-      "None",
-      &i_nonedriver
    }
 };
 
@@ -166,12 +137,6 @@ static haldriveritem_t *I_FindHALVDRByID(int id)
 static haldriveritem_t *I_DefaultVideoDriver()
 {
    haldriveritem_t *item;
-
-   // ioanch 20160424: demo test with no drawing allowed
-   if(M_CheckParm("-nodraw") && M_CheckParm("-demolog"))
-   {
-      i_videodriverid = VDR_NONE;
-   }
 
    if(!(item = I_FindHALVDRByID(i_videodriverid)))
    {
@@ -207,7 +172,7 @@ void I_InitMouse();
 
 void I_StartTic()
 {
-   if(i_videodriverid != VDR_NONE)
+   if(!D_noWindow())
       I_StartTicInWindow(i_video_driver->window);
 }
 
@@ -461,6 +426,9 @@ static bool I_InitGraphicsMode()
    if(!i_videomode)
       i_videomode = estrdup(i_default_videomode);
 
+   if(D_noWindow())
+      return false;
+
    // A false return value from HALVideoDriver::InitGraphicsMode means that no
    // errors have occured and we should continue with initialization.
    if(!(result = i_video_driver->InitGraphicsMode()))
@@ -470,7 +438,7 @@ static bool I_InitGraphicsMode()
 
 #ifdef _MSC_VER
       // Win32 specific hacks
-      if(i_videodriverid != VDR_NONE)
+      if(!D_noWindow())
          I_DisableSysMenu(i_video_driver->window);
 #endif
 
