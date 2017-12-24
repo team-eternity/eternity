@@ -1,26 +1,19 @@
-// Emacs style mode select   -*- C -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright(C) 2005,2006 Simon Howard
+// Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see http://www.gnu.org/licenses/
-//
-//-----------------------------------------------------------------------------
 //
 // Text mode I/O functions, similar to C stdio
 //
-//-----------------------------------------------------------------------------
 
 #include <stdlib.h>
 #include <string.h>
@@ -28,47 +21,9 @@
 #include "txt_io.h"
 #include "txt_main.h"
 
-static struct 
-{
-    txt_color_t color;
-    char *name;
-} colors[] = {
-    {TXT_COLOR_BLACK,           "black"},
-    {TXT_COLOR_BLUE,            "blue"},
-    {TXT_COLOR_GREEN,           "green"},
-    {TXT_COLOR_CYAN,            "cyan"},
-    {TXT_COLOR_RED,             "red"},
-    {TXT_COLOR_MAGENTA,         "magenta"},
-    {TXT_COLOR_BROWN,           "brown"},
-    {TXT_COLOR_GREY,            "grey"},
-    {TXT_COLOR_DARK_GREY,       "darkgrey"},
-    {TXT_COLOR_BRIGHT_BLUE,     "brightblue"},
-    {TXT_COLOR_BRIGHT_GREEN,    "brightgreen"},
-    {TXT_COLOR_BRIGHT_CYAN,     "brightcyan"},
-    {TXT_COLOR_BRIGHT_RED,      "brightred"},
-    {TXT_COLOR_BRIGHT_MAGENTA,  "brightmagenta"},
-    {TXT_COLOR_YELLOW,          "yellow"},
-    {TXT_COLOR_BRIGHT_WHITE,    "brightwhite"},
-};
-
 static int cur_x = 0, cur_y = 0;
 static txt_color_t fgcolor = TXT_COLOR_GREY;
 static txt_color_t bgcolor = TXT_COLOR_BLACK;
-
-static int GetColorForName(char *s)
-{
-    size_t i;
-
-    for (i=0; i<sizeof(colors) / sizeof(*colors); ++i)
-    {
-        if (!strcmp(s, colors[i].name))
-        {
-            return colors[i].color;
-        }
-    }
-
-    return -1;
-}
 
 static void NewLine(unsigned char *screendata)
 {
@@ -84,8 +39,8 @@ static void NewLine(unsigned char *screendata)
 
         cur_y = TXT_SCREEN_H - 1;
 
-        memcpy(screendata, screendata + TXT_SCREEN_W * 2,
-               TXT_SCREEN_W * 2 * (TXT_SCREEN_H -1));
+        memmove(screendata, screendata + TXT_SCREEN_W * 2,
+                TXT_SCREEN_W * 2 * (TXT_SCREEN_H -1));
 
         // Clear the bottom line
 
@@ -99,12 +54,34 @@ static void NewLine(unsigned char *screendata)
     }
 }
 
-static void PutChar(unsigned char *screendata, int c)
+static void PutSymbol(unsigned char *screendata, int c)
 {
     unsigned char *p;
-   
+
     p = screendata + cur_y * TXT_SCREEN_W * 2 +  cur_x * 2;
 
+    // Add a new character to the buffer
+
+    p[0] = c;
+    p[1] = fgcolor | (bgcolor << 4);
+
+    ++cur_x;
+
+    if (cur_x >= TXT_SCREEN_W)
+    {
+        NewLine(screendata);
+    }
+}
+
+// "Blind" version of TXT_PutChar() below which doesn't do any interpretation
+// of control signals. Just write a particular symbol to the screen buffer.
+void TXT_PutSymbol(int c)
+{
+    PutSymbol(TXT_GetScreenData(), c);
+}
+
+static void PutChar(unsigned char *screendata, int c)
+{
     switch (c)
     {
         case '\n':
@@ -119,94 +96,26 @@ static void PutChar(unsigned char *screendata, int c)
             break;
 
         default:
-
-            // Add a new character to the buffer
-
-            p[0] = c;
-            p[1] = fgcolor | (bgcolor << 4);
-
-            ++cur_x;
-
-            if (cur_x >= TXT_SCREEN_W) 
-            {
-                NewLine(screendata);
-            }
-
+            PutSymbol(screendata, c);
             break;
     }
 }
 
 void TXT_PutChar(int c)
 {
-    unsigned char *screen;
-
-    screen = TXT_GetScreenData();
-
-    PutChar(screen, c);
+    PutChar(TXT_GetScreenData(), c);
 }
 
-void TXT_Puts(char *s)
+void TXT_Puts(const char *s)
 {
-    int previous_color = TXT_COLOR_BLACK;
     unsigned char *screen;
-    char *p;
-    char colorname_buf[20];
-    char *ending;
-    int col;
+    const char *p;
 
     screen = TXT_GetScreenData();
 
     for (p=s; *p != '\0'; ++p)
     {
-        if (*p == '<')
-        {
-            ++p;
-
-            if (*p == '<')
-            {
-                PutChar(screen, '<');
-            }
-            else
-            {
-                ending = strchr(p, '>');
-
-                if (ending == NULL)
-                {
-                    return;
-                }
-
-                strncpy(colorname_buf, p, 19);
-                colorname_buf[ending-p] = '\0';
-
-                if (!strcmp(colorname_buf, "/"))
-                {
-                    // End of color block
-
-                    col = previous_color;
-                }
-                else
-                {
-                    col = GetColorForName(colorname_buf);
-
-                    if (col < 0)
-                    {
-                        return;
-                    }
-
-                    // Save the color for the ending marker
-
-                    previous_color = fgcolor;
-                }
-
-                TXT_FGColor(col);
-                
-                p = ending;
-            }
-        }
-        else
-        {
-            PutChar(screen, *p);
-        }
+        PutChar(screen, *p);
     }
 
     PutChar(screen, '\n');
@@ -234,6 +143,18 @@ void TXT_BGColor(int color, int blinking)
     bgcolor = color;
     if (blinking)
         bgcolor |= TXT_COLOR_BLINKING;
+}
+
+void TXT_SaveColors(txt_saved_colors_t *save)
+{
+    save->bgcolor = bgcolor;
+    save->fgcolor = fgcolor;
+}
+
+void TXT_RestoreColors(txt_saved_colors_t *save)
+{
+    bgcolor = save->bgcolor;
+    fgcolor = save->fgcolor;
 }
 
 void TXT_ClearScreen(void)

@@ -337,7 +337,8 @@ dehflags_t deh_mobjflags[] =
   {"SPACPUSHWALL",     0x00080000, 3}, // thing can activate push walls
   {"NOSPECIESINFIGHT", 0x00100000, 3}, // no infighting in this species, but still damage
   {"HARMSPECIESMISSILE", 0x00200000, 3},  // harmed even by projectiles of same species
-  {"FRIENDFOEMISSILE", 0x00400000, 3},   // friends and foes of same species hurt each other
+  {"FRIENDFOEMISSILE", 0x00400000, 3}, // friends and foes of same species hurt each other
+  {"BLOODLESSIMPACT",  0x00800000, 3}, // doesn't draw blood when it hits or rips a thing
 
   { NULL,              0 }             // NULL terminator
 };

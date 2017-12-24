@@ -2702,6 +2702,9 @@ BloodSpawner::BloodSpawner(Mobj *crushtarget, int pdamage)
 //
 void BloodSpawner::spawn(bloodaction_e action) const
 {
+   if(inflictor && inflictor->flags4 & MF4_BLOODLESSIMPACT)
+      return;
+
    mobjtype_t type = E_BloodTypeForThing(target, action);
    if(type < 0)
       return;

@@ -29,6 +29,7 @@
 #include "d_keywds.h"
 
 struct ticcmd_t;
+struct SDL_Window;
 
 // Called by DoomMain.
 void I_Init();
@@ -50,7 +51,7 @@ void I_StartFrame();
 // Quick syncronous operations are performed here.
 // Can call D_PostEvent.
 
-void I_StartTic();
+void I_StartTicInWindow(SDL_Window *window);
 
 // Asynchronous interrupt functions should maintain private queues
 // that are read by the synchronous functions
