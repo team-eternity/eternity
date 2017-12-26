@@ -44,8 +44,14 @@ extern bool clrespawnparm; // checkparm of -respawn
 extern bool clfastparm;    // checkparm of -fast
 //jff end of external declaration of command line playmode
 
+extern bool nodrawers;
 extern bool nosfxparm;
 extern bool nomusicparm;
+
+inline static bool D_noWindow()
+{
+   return nodrawers && nosfxparm && nomusicparm;
+}
 
 extern int use_startmap;
 

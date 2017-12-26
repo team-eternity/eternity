@@ -54,6 +54,7 @@
 #include "f_finale.h"
 #include "f_wipe.h"
 #include "g_bind.h"
+#include "g_demolog.h"
 #include "g_dmflag.h"
 #include "g_game.h"
 #include "in_lude.h"
@@ -1407,6 +1408,8 @@ bool scriptSecret = false;
 
 void G_ExitLevel(int destmap)
 {
+   G_DemoLog("Exit normal\n");
+   G_DemoLogSetExited(true);
    g_destmap  = destmap;
    secretexit = scriptSecret = false;
    gameaction = ga_completed;
@@ -1421,6 +1424,8 @@ void G_ExitLevel(int destmap)
 //
 void G_SecretExitLevel(int destmap)
 {
+   G_DemoLog("Exit secret\n");
+   G_DemoLogSetExited(true);
    secretexit = !(GameModeInfo->flags & GIF_WOLFHACK) || haswolflevels || scriptSecret;
    g_destmap  = destmap;
    gameaction = ga_completed;
@@ -3674,6 +3679,8 @@ void G_CoolViewPoint()
    // pick a random number of seconds until changing the viewpoint
    cooldemo_tics = (6 + M_Random() % 4) * TICRATE;
 }
+
+//==============================================================================
 
 //
 // Counts the total kills, items, secrets or whatever
