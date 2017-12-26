@@ -548,9 +548,7 @@ static bool MN_FileResponder(event_t *ev, int action)
 
    // search for matching item in file list
 
-   if(ev->character)
-      ch = ectype::toLower(ev->character);
-   else
+   if(ev->type == ev_text)
       ch = ectype::toLower(ev->data1);
 
    if(ectype::isGraph(ch))

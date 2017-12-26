@@ -74,7 +74,7 @@ static void R_DrawLines(void)
 // Generates a distorted flat from a normal one using a two-dimensional
 // sine wave pattern.
 //
-byte *R_DistortedFlat(int texnum)
+byte *R_DistortedFlat(int texnum, bool usegametic)
 {
    static int lasttex = -1;
    static int swirltic = -1;
@@ -84,7 +84,8 @@ byte *R_DistortedFlat(int texnum)
    static int lastsize;
 
    int i;
-   int leveltic = leveltime;
+   int reftime = usegametic ? gametic : leveltime;
+   int leveltic = reftime;
    texture_t *tex = R_CacheTexture(texnum);
 
    // NOTE: these are transposed because of the swirling formula
@@ -99,13 +100,13 @@ byte *R_DistortedFlat(int texnum)
       distortedflat = erealloc(byte *, distortedflat, offsetSize * sizeof(*distortedflat));
    }
    // Already swirled this one?
-   if(leveltime == swirltic && lasttex == texnum)
+   if(reftime == swirltic && lasttex == texnum)
       return distortedflat;
       
    lasttex = texnum;
 
    // built this tic?
-   if(leveltime != swirltic || cursize != lastsize)
+   if(reftime != swirltic || cursize != lastsize)
    {
       int x, y;
       
@@ -135,7 +136,7 @@ byte *R_DistortedFlat(int texnum)
          }
       }
       
-      swirltic = leveltime;
+      swirltic = reftime;
       lastsize = cursize;
    }
    

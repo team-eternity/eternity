@@ -156,7 +156,7 @@ bool            mouseSensitivity_vanilla; // [CG] 01/20/12
 int             invert_mouse = false;
 int             invert_padlook = false;
 int             animscreenshot = 0;       // animated screenshots
-int             mouseAccel_type = 0;
+acceltype_e     mouseAccel_type = ACCELTYPE_NONE;
 int             mouseAccel_threshold = 10; // [CG] 01/20/12
 double          mouseAccel_value = 2.0;    // [CG] 01/20/12
 
@@ -460,7 +460,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
    // strafe double click
 
-   if(mouseb_dblc1 >= 0 && mousebuttons[mouseb_dblc1] != dclickstate2 && dclicktime2 > 1 )
+   if(mouseb_dblc1 >= 0 && mousebuttons[mouseb_dblc1] != dclickstate2 && dclicktime2 > 1)
    {
       dclickstate2 = mousebuttons[mouseb_dblc1];
 
@@ -763,9 +763,8 @@ bool G_Responder(event_t* ev)
       if(!walkcam_active) // if so, we need to go on below
       {
          if(gamestate == GS_DEMOSCREEN && !(paused & 2) && 
-            !automapactive &&
-            (ev->type == ev_keydown ||
-             (ev->type == ev_mouse && ev->data1)))
+            !consoleactive && !automapactive &&
+            (ev->type == ev_keydown || (ev->type == ev_mouse && ev->data1)))
          {
             // popup menu
             MN_StartControlPanel();

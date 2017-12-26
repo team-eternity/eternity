@@ -111,7 +111,7 @@ FILE (GLOB AUTODOOM_GLBSP_SOURCES autodoom/glbsp/*.c)
 ADD_EXECUTABLE (eternity ${ARCH_SPECIFIC_SOURCES} ${ETERNITY_SOURCES} ${CONFUSE_SOURCES}
                 ${TEXTSCREEN_SOURCES} ${HAL_SOURCES} ${GL_SOURCES} ${SDL_SOURCES} ${AUTODOOM_SOURCES} ${AUTODOOM_GLBSP_SOURCES})
 
-target_link_libraries(eternity ${SDL_LIBRARY} ${SDLMIXER_LIBRARY} ${SDLNET_LIBRARY} acsvm png15_static snes_spc)
+target_link_libraries(eternity ${SDL2_LIBRARY} ${SDL2_MIXER_LIBRARY} ${SDL2_NET_LIBRARY} acsvm png15_static snes_spc)
 
 if(OPENGL_LIBRARY)
    target_link_libraries(eternity ${OPENGL_LIBRARY})
@@ -119,6 +119,8 @@ endif()
 
 if(MSVC)
    target_link_libraries(eternity rpcrt4)
+   
+   target_compile_options(eternity PUBLIC "/utf-8")
 endif()
 
 INSTALL (TARGETS eternity

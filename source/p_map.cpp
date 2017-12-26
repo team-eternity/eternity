@@ -895,15 +895,24 @@ int P_MissileBlockHeight(Mobj *mo)
 }
 
 //
+// True if missile damage should be allowed
+//
+bool P_AllowMissileDamage(const Mobj &shooter, const Mobj &target)
+{
+   return target.player || (shooter.type == target.type &&
+                            (shooter.flags4 & MF4_HARMSPECIESMISSILE ||
+                             (shooter.flags4 & MF4_FRIENDFOEMISSILE &&
+                              (shooter.flags ^ target.flags) & MF_FRIEND))) ||
+   (shooter.type != target.type &&
+    !E_ThingPairValid(shooter.type, target.type, TGF_PROJECTILEALLIANCE));
+}
+
+//
 // PIT_CheckThing
 // 
 static bool PIT_CheckThing(Mobj *thing) // killough 3/26/98: make static
 {
    fixed_t blockdist;
-
-   // EDF FIXME: haleyjd 07/13/03: these may be temporary fixes
-   int bruiserType = E_ThingNumForDEHNum(MT_BRUISER); 
-   int knightType  = E_ThingNumForDEHNum(MT_KNIGHT); 
 
    // killough 11/98: add touchy things
    if(!(thing->flags & (MF_SOLID|MF_SPECIAL|MF_SHOOTABLE|MF_TOUCHY)))
@@ -969,15 +978,12 @@ static bool PIT_CheckThing(Mobj *thing) // killough 3/26/98: make static
       if(clip.thing->z + clip.thing->height < thing->z)
          return true;    // underneath
 
-      if(clip.thing->target &&
-         (clip.thing->target->type == thing->type ||
-          (clip.thing->target->type == knightType && thing->type == bruiserType)||
-          (clip.thing->target->type == bruiserType && thing->type == knightType)))
+      if(clip.thing->target)
       {
          if(thing == clip.thing->target)
-            return true;                // Don't hit same species as originator.
-         else if(!(thing->player))      // Explode, but do no damage.
-            return false;               // Let players missile other players.
+            return true;   // Don't hit originator.
+         if(!P_AllowMissileDamage(*clip.thing->target, *thing))
+            return false;
       }
       
       // haleyjd 10/15/08: rippers

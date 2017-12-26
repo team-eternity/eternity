@@ -27,7 +27,7 @@ enum
    SWIRL_TICS = 65536   // the amount to set in definition lumps
 };
 
-byte *R_DistortedFlat(int flatnum);
+byte *R_DistortedFlat(int flatnum, bool usegametic = false);
 extern int r_swirl;
 
 #endif

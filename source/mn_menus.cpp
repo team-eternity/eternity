@@ -2032,6 +2032,7 @@ static menuitem_t mn_video_items[] =
    {it_variable,     "Video mode",              "i_videomode"          },
    {it_toggle,       "Favorite aspect ratio",   "mn_favaspectratio"    },
    {it_toggle,       "Favorite screen mode",    "mn_favscreentype"     },
+   {it_toggle,       "Display number",          "displaynum"           },
    {it_toggle,       "Vertical sync",           "v_retrace"            },
    {it_slider,       "Gamma correction",        "gamma"                },   
    {it_gap},
@@ -2081,7 +2082,7 @@ void MN_VideoModeDrawer()
    patch = PatchLoader::CacheNum(wGlobalDir, lump + firstspritelump, PU_CACHE);
    
    // approximately center box on "translucency" item in menu
-   y = menu_video.menuitems[13].y - 5;
+   y = menu_video.menuitems[14].y - 5;
    V_DrawBox(270, y, 20, 20);
    V_DrawPatchTL(282, y + 12, &subscreen43, patch, NULL, FTRANLEVEL);
 }
@@ -2200,7 +2201,6 @@ static menuitem_t mn_vidadv_items[] =
    { it_gap },
    { it_info,     "Advanced"},
    { it_toggle,   "Video driver",             "i_videodriverid"    },
-   { it_variable, "Software bitdepth",        "i_softbitdepth"     },
    { it_gap },
    { it_info,     "OpenGL"},
    { it_variable, "GL color depth",           "gl_colordepth"      },

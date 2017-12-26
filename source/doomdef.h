@@ -247,6 +247,10 @@ enum keycode_e
 
    KEYD_BACKSPACE      = 0x7f,
 
+   // FIXME: The values for these two might need adjusting
+   KEYD_NONUSBACKSLASH = 0x80,
+   KEYD_NONUSHASH,
+
    KEYD_RCTRL          = 0x9d,
 
    KEYD_LEFTARROW      = 0xac,
@@ -270,11 +274,11 @@ enum keycode_e
    KEYD_F8,
    KEYD_F9,
    KEYD_F10,
+   KEYD_PRINTSCREEN,
    KEYD_NUMLOCK,
    KEYD_SCROLLLOCK,
-   KEYD_HOME,
-   
-   KEYD_PAGEUP         = 0xc9,
+   KEYD_HOME,   
+   KEYD_PAGEUP,
    KEYD_END            = 0xcf,
    KEYD_PAGEDOWN       = 0xd1,
    KEYD_INSERT         = 0xd2,
