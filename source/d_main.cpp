@@ -1766,6 +1766,15 @@ static void D_DoomInit()
    // haleyjd 08/29/08
    C_Printf(FC_GREEN "Dedicated to the memory of our friend\n"
             "Jason 'Amaster' Masihdas 12 Oct 1981 - 14 Jun 2007\n");
+#elif defined(KATE_MEMORIAL)
+   // MaxW: 2017/12/27
+   // Note: FC_CUSTOM1 is temporarily pink/purple
+   C_Printf(FC_CUSTOM1 "Dedicated to team member\n"
+            "and our dear friend:\n"
+            "Kaitlyn Anne Fox\n"
+            "(withheld) - 19 Dec 2017\n"
+            "May her spirit and memory\n"
+            "live on into Eternity\n");
 #endif
 
    // haleyjd: if we didn't do textmode startup, these didn't show up

@@ -20,7 +20,7 @@
 
 # General flags.
 
-add_definitions(-DR_LINKEDPORTALS -D_SDL_VER -D_CONSOLE -DHAVE_SPCLIB)
+add_definitions(-DR_LINKEDPORTALS -D_SDL_VER -D_CONSOLE -DHAVE_SPCLIB -DKATE_MEMORIAL)
 
 # Library search flags.
 
