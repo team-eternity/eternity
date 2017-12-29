@@ -44,6 +44,7 @@
 #include "e_mod.h"
 #include "e_states.h"
 #include "e_things.h"
+#include "e_weapons.h"
 #include "ev_specials.h"
 #include "g_demolog.h"
 #include "g_dmflag.h"
@@ -181,17 +182,20 @@ bool P_GiveAmmoPickup(player_t *player, itemeffect_t *pickup, bool dropped, int 
 // amount metatable value. It needs to work this way to have all side effects
 // of the called function (double baby/nightmare ammo, weapon switching).
 //
-static void P_giveBackpackAmmo(player_t *player)
+static bool P_giveBackpackAmmo(player_t *player)
 {
    static MetaKeyIndex keyBackpackAmount("ammo.backpackamount");
 
+   bool given = false;
    size_t numAmmo = E_GetNumAmmoTypes();
    for(size_t i = 0; i < numAmmo; ++i)
    {
       auto ammoType = E_AmmoTypeForIndex(i);
       int giveamount = ammoType->getInt(keyBackpackAmount, 0);
-      P_GiveAmmo(player, ammoType, giveamount);
+      given |= P_GiveAmmo(player, ammoType, giveamount);
    }
+
+   return given;
 }
 
 //
@@ -213,7 +217,7 @@ static void P_consumeSpecial(player_t *activator, Mobj *special)
 // The weapon name may have a MF_DROPPED flag ored in.
 //
 static bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped,
-   Mobj *special)
+                         Mobj *special)
 {
    bool gaveweapon = false;
    weaponinfo_t *wp = &weaponinfo[weapon];
@@ -382,19 +386,6 @@ static void P_GiveCard(player_t *player, itemeffect_t *card, Mobj *special)
    // Make sure to consume its special if the player needed it, even if it
    // may or may not be removed later.
    P_consumeSpecial(player, special);
-}
-
-//
-// Give the player an artifact, Heretic style (don't if full on arti)
-// TODO: Export this behaviour to a pickupitem flag, must be done
-// before P_TouchSpecialThingNew is made default.
-//
-static bool P_giveHereticArti(player_t *player, itemeffect_t *arti)
-{
-   if(E_GetItemOwnedAmount(player, arti) >= E_GetMaxAmountForArtifact(player, arti))
-      return false;
-
-   return E_GiveInventoryItem(player, arti);
 }
 
 /*
@@ -581,27 +572,45 @@ static void P_RavenRespawn(Mobj *special)
 }
 
 //
-// P_TouchSpecialThingNew
+// Get the special message for the given pickup.
+// Basically exists to sort out the awful BFG message hack.
 //
-// INVENTORY_FIXME / INVENTORY_TODO: This will become P_TouchSpecialThing
-// when it is finished, replacing the below.
-// Additionally, see comment above P_giveHereticArti.
-//
-void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
+static inline const char *P_getSpecialMessage(Mobj *special, const char *def)
 {
-   player_t     *player;
-   e_pickupfx_t *pickup;
-   itemeffect_t *effect;
-   bool          pickedup = false;
-   bool          dropped  = false;
-   const char   *message  = NULL;
-   const char   *sound    = NULL;
+   if(!strcasecmp(special->info->name, "WeaponBFG"))
+   {
+      switch(bfgtype)
+      {
+      case bfg_normal:   return "$GOTBFG9000";
+      case bfg_classic:  return "You got the BFG 2704!";
+      case bfg_11k:      return "You got the BFG 11K!";
+      case bfg_bouncing: return "You got the Bouncing BFG!";
+      case bfg_burst:    return "You got the Plasma Burst BFG!";
+      default:           return "You got some kind of BFG";
+      }
+   }
+   else
+      return def;
+}
+
+//
+// P_TouchSpecialThing
+//
+void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
+{
+   player_t       *player;
+   e_pickupfx_t   *pickup, *temp;
+   bool            pickedup = false;
+   bool            dropped = false;
+   bool            hadeffect = false;
+   const char     *message = nullptr;
+   const char     *sound = nullptr;
 
    fixed_t delta = special->z - toucher->z;
-   if(delta > toucher->height || delta < -8*FRACUNIT)
+   if(delta > toucher->height || delta < -8 * FRACUNIT)
       return; // out of reach
 
-   // haleyjd: don't crash if a monster gets here.
+              // haleyjd: don't crash if a monster gets here.
    if(!(player = toucher->player))
       return;
 
@@ -614,44 +623,82 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
    if(special->sprite < 0 || special->sprite >= NUMSPRITES)
       return;
 
-   pickup = &pickupfx[special->sprite];
-   effect = pickup->effect;
+   //if(special->info->pickupfx)
+   //   pickup = special->info->pickupfx;
+   //else
+   if((temp = E_PickupFXForSprNum(special->sprite)))
+      pickup = temp;
+   else
+      return;
 
-   if(!effect)
+   if(pickup->flags & PXFX_COMMERCIALONLY &&
+      (demo_version < 335 && GameModeInfo->id != commercial))
+      return;
+
+   if(!message)
+      message = P_getSpecialMessage(special, pickup->message);
+   if(!sound)
+      sound = pickup->sound;
+
+   if(pickup->numEffects == 0)
       return;
 
    // set defaults
-   message = pickup->message;
-   sound   = pickup->sound;
    dropped = ((special->flags & MF_DROPPED) == MF_DROPPED);
 
-   switch(effect->getInt("class", ITEMFX_NONE))
+
+   for(unsigned int i = 0; i < pickup->numEffects; i++)
    {
-   case ITEMFX_HEALTH:   // Health - heal up the player automatically
-      pickedup = P_GiveBody(player, effect);
-      if(pickedup && player->health < effect->getInt("amount", 0) * 2)
-         message = effect->getString("lowmessage", message);
-      break;
-   case ITEMFX_ARMOR:    // Armor - give the player some armor
-      pickedup = P_GiveArmor(player, effect);
-      break;
-   case ITEMFX_AMMO:     // Ammo - give the player some ammo
-      pickedup = P_GiveAmmoPickup(player, effect, dropped, special->dropamount);
-      break;
-   case ITEMFX_POWER:
-      pickedup = P_GivePowerForItem(player, effect);
-      break;
-   case ITEMFX_ARTIFACT: // Artifacts - items which go into the inventory
-      pickedup = E_GiveInventoryItem(player, effect);
-      break;
-   default:
-      return;
+      itemeffect_t *effect = pickup->effects[i];
+      if(!effect)
+         continue;
+      hadeffect = true;
+      switch(effect->getInt("class", ITEMFX_NONE))
+      {
+      case ITEMFX_HEALTH:   // Health - heal up the player automatically
+         pickedup |= P_GiveBody(player, effect);
+         if(pickedup && player->health < effect->getInt("amount", 0) * 2)
+            message = effect->getString("lowmessage", message);
+         break;
+      case ITEMFX_ARMOR:    // Armor - give the player some armor
+         pickedup |= P_GiveArmor(player, effect);
+         break;
+      case ITEMFX_AMMO:     // Ammo - give the player some ammo
+         pickedup |= P_GiveAmmoPickup(player, effect, dropped, special->dropamount);
+         break;
+      case ITEMFX_POWER:
+         pickedup |= P_GivePowerForItem(player, effect);
+         break;
+      case ITEMFX_WEAPONGIVER:
+         // EDF_FEATURES_FIXME: This hack
+         pickedup |= P_GiveWeapon(player,
+                                  E_WeaponForName(effect->getString("weapon", ""))->id,
+                                  dropped, special);
+         break;
+      case ITEMFX_ARTIFACT: // Artifacts - items which go into the inventory
+         pickedup |= E_GiveInventoryItem(player, effect);
+         break;
+      default:
+         break;
+      }
    }
+
+   if(!hadeffect)
+      return;
+
+   if(pickup->flags & PFXF_GIVESBACKPACKAMMO)
+      pickedup |= P_giveBackpackAmmo(player);
 
    // perform post-processing if the item was collected beneficially, or if the
    // pickup is flagged to always be picked up even without benefit.
    if(pickedup || (pickup->flags & PFXF_ALWAYSPICKUP))
    {
+      // Set pendingweapon if need be
+      if(pickup->changeweapon != nullptr &&
+         player->readyweapon != pickup->changeweapon->id &&
+         E_PlayerOwnsWeapon(player, pickup->changeweapon))
+         player->pendingweapon = pickup->changeweapon->id;
+
       // Remove the object, provided it doesn't stay in multiplayer games
       if(GameType == gt_single || !(pickup->flags & PFXF_LEAVEINMULTI))
       {
@@ -659,6 +706,8 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
          if(special->flags & MF_COUNTITEM)
             player->itemcount++;
 
+         // Execute and zero thing special
+         P_consumeSpecial(player, special);
          // Check for item respawning style: DOOM, or Raven
          if(special->flags4 & MF4_RAVENRESPAWN)
             P_RavenRespawn(special);
@@ -687,668 +736,6 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
          if(!(pickup->flags & PFXF_NOSCREENFLASH))
             player->bonuscount += BONUSADD;
       }
-   }
-}
-
-//
-// P_TouchSpecialThing
-//
-void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
-{
-   player_t   *player;
-   int        sound;
-   const char *message = NULL;
-   bool       removeobj = true;
-   bool       pickup_fx = true; // haleyjd 04/14/03
-   bool       dropped   = false;
-   fixed_t    delta = special->z - toucher->z;
-   
-   // INVENTORY_TODO: transitional logic is in place below until this function
-   // can be fully converted to being based on itemeffects
-   itemeffect_t *effect = NULL;
-
-   if(delta > toucher->height || delta < -8*FRACUNIT)
-      return;        // out of reach
-
-   sound = sfx_itemup;
-
-   // haleyjd: don't crash if a monster gets here.
-   if(!(player = toucher->player))
-      return;
-   
-   // Dead thing touching.
-   // Can happen with a sliding player corpse.
-   if(toucher->health <= 0)
-      return;
-
-   // haleyjd 05/11/03: EDF pickups modifications
-   if(special->sprite < 0 || special->sprite >= NUMSPRITES)
-      return;
-
-   dropped = ((special->flags & MF_DROPPED) == MF_DROPPED);
-
-   // Identify by sprite.
-   // INVENTORY_FIXME: apply pickupfx[].effect instead!
-   switch(pickupfx[special->sprite].tempeffect)
-   {
-      // armor
-   case PFX_GREENARMOR:
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_GREENARMOR)))
-         return;
-      message = DEH_String("GOTARMOR"); // Ty 03/22/98 - externalized
-      break;
-
-   case PFX_BLUEARMOR:
-      if(!P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_BLUEARMOR)))
-         return;
-      message = DEH_String("GOTMEGA"); // Ty 03/22/98 - externalized
-      break;
-
-      // bonus items
-   case PFX_POTION:
-      // INVENTORY_TODO: hardcoded for now
-      P_GiveBody(player, E_ItemEffectForName(ITEMNAME_HEALTHBONUS));
-      message = DEH_String("GOTHTHBONUS"); // Ty 03/22/98 - externalized
-      break;
-
-   case PFX_ARMORBONUS:
-      // INVENTORY_TODO: hardcoded for now
-      P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_ARMORBONUS));
-      message = DEH_String("GOTARMBONUS"); // Ty 03/22/98 - externalized
-      break;
-
-      // sf: removed beta items
-      
-   case PFX_SOULSPHERE:
-      // INVENTORY_TODO: hardcoded for now
-      P_GiveBody(player, E_ItemEffectForName(ITEMNAME_SOULSPHERE));
-      message = DEH_String("GOTSUPER"); // Ty 03/22/98 - externalized
-      sound = sfx_getpow;
-
-      break;
-
-   case PFX_MEGASPHERE:
-      if(demo_version < 335 && GameModeInfo->id != commercial)
-         return;
-      // INVENTORY_TODO: hardcoded for now
-      P_GiveBody(player, E_ItemEffectForName(ITEMNAME_MEGASPHERE));
-      P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_BLUEARMOR));
-      message = DEH_String("GOTMSPHERE"); // Ty 03/22/98 - externalized
-      sound = sfx_getpow;
-      break;
-
-      // cards
-      // leave cards for everyone
-   case PFX_BLUEKEY:
-      // INVENTORY_TODO: hardcoded for now
-      effect = E_ItemEffectForName(ARTI_BLUECARD);
-      if(!E_GetItemOwnedAmount(player, effect))
-         message = DEH_String("GOTBLUECARD"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, effect, special);
-      removeobj = pickup_fx = (GameType == gt_single);
-      break;
-
-   case PFX_YELLOWKEY:
-      // INVENTORY_TODO: hardcoded for now
-      effect = E_ItemEffectForName(ARTI_YELLOWCARD);
-      if(!E_GetItemOwnedAmount(player, effect))
-         message = DEH_String("GOTYELWCARD"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, effect, special);
-      removeobj = pickup_fx = (GameType == gt_single);
-      break;
-
-   case PFX_REDKEY:
-      // INVENTORY_TODO: hardcoded for now
-      effect = E_ItemEffectForName(ARTI_REDCARD);
-      if(!E_GetItemOwnedAmount(player, effect))
-         message = DEH_String("GOTREDCARD"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, effect, special);
-      removeobj = pickup_fx = (GameType == gt_single);
-      break;
-      
-   case PFX_BLUESKULL:
-      // INVENTORY_TODO: hardcoded for now
-      effect = E_ItemEffectForName(ARTI_BLUESKULL);
-      if(!E_GetItemOwnedAmount(player, effect))
-         message = DEH_String("GOTBLUESKUL"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, effect, special);
-      removeobj = pickup_fx = (GameType == gt_single);
-      break;
-      
-   case PFX_YELLOWSKULL:
-      // INVENTORY_TODO: hardcoded for now
-      effect = E_ItemEffectForName(ARTI_YELLOWSKULL);
-      if(!E_GetItemOwnedAmount(player, effect))
-         message = DEH_String("GOTYELWSKUL"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, effect, special);
-      removeobj = pickup_fx = (GameType == gt_single);
-      break;
-
-   case PFX_REDSKULL:
-      // INVENTORY_TODO: hardcoded for now
-      effect = E_ItemEffectForName(ARTI_REDSKULL);
-      if(!E_GetItemOwnedAmount(player, effect))
-         message = DEH_String("GOTREDSKULL"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, effect, special);
-      removeobj = pickup_fx = (GameType == gt_single);
-      break;
-
-   // medikits, heals
-   case PFX_STIMPACK:
-      // INVENTORY_FIXME: temp hard-coded
-      if(!P_GiveBody(player, E_ItemEffectForName(ITEMNAME_STIMPACK)))
-         return;
-      message = DEH_String("GOTSTIM"); // Ty 03/22/98 - externalized
-      break;
-      
-   case PFX_MEDIKIT:
-      // INVENTORY_TODO: hardcoded for now
-      effect = E_ItemEffectForName(ITEMNAME_MEDIKIT);
-      if(!P_GiveBody(player, effect))
-         return;
-      // sf: fix medineed 
-      // (check for below 25, but medikit gives 25, so always > 25)
-      message = DEH_String(player->health < 50 ? "GOTMEDINEED" : "GOTMEDIKIT");
-      break;
-
-
-      // power ups
-   case PFX_INVULNSPHERE:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName(ITEMNAME_INVULNSPHERE);
-      if(!P_GivePowerForItem(player, effect))
-         return;
-      message = DEH_String("GOTINVUL"); // Ty 03/22/98 - externalized
-      sound = sfx_getpow;
-      break;
-
-      // WEAPON_FIXME: berserk changes to fist
-   case PFX_BERZERKBOX:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName(ITEMNAME_BERZERKBOX);
-      if(!P_GivePowerForItem(player, effect))         return;
-      message = DEH_String("GOTBERSERK"); // Ty 03/22/98 - externalized
-      if(player->readyweapon != wp_fist)
-         // sf: removed beta
-         player->pendingweapon = wp_fist;
-      sound = sfx_getpow;
-      break;
-
-   case PFX_INVISISPHERE:
-      effect = E_ItemEffectForName(ITEMNAME_INVISISPHERE);
-      if(!P_GivePowerForItem(player, effect))
-         return;
-      message = DEH_String("GOTINVIS"); // Ty 03/22/98 - externalized
-      sound = sfx_getpow;
-      break;
-
-   case PFX_RADSUIT:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = effect = E_ItemEffectForName(ITEMNAME_RADIATIONSUIT);
-      if(!P_GivePowerForItem(player, effect))         return;
-      message = DEH_String("GOTSUIT"); // Ty 03/22/98 - externalized
-      sound = sfx_getpow;
-      break;
-
-   case PFX_ALLMAP:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName(ITEMNAME_COMPUTERMAP);
-      if(!P_GivePowerForItem(player, effect))
-         return;
-      message = DEH_String("GOTMAP"); // Ty 03/22/98 - externalized
-      sound = sfx_getpow;
-      break;
-
-   case PFX_LIGHTAMP:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName(ITEMNAME_LIGHTAMPVISOR);
-      if(!P_GivePowerForItem(player, effect))
-         return;
-      sound = sfx_getpow;
-      message = DEH_String("GOTVISOR"); // Ty 03/22/98 - externalized
-      break;
-
-      // ammo
-   case PFX_CLIP:
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("Clip"), dropped, special->dropamount))
-         return;
-      message = DEH_String("GOTCLIP"); // Ty 03/22/98 - externalized
-      break;
-
-   case PFX_CLIPBOX:
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("ClipBox"), false, 0))
-         return;
-      message = DEH_String("GOTCLIPBOX"); // Ty 03/22/98 - externalized
-      break;
-
-   case PFX_ROCKET:
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("RocketAmmo"), false, 0))
-         return;
-      message = DEH_String("GOTROCKET"); // Ty 03/22/98 - externalized
-      break;
-
-   case PFX_ROCKETBOX:
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("RocketBox"), false, 0))
-         return;
-      message = DEH_String("GOTROCKBOX"); // Ty 03/22/98 - externalized
-      break;
-
-   case PFX_CELL:
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("Cell"), false, 0))
-         return;
-      message = DEH_String("GOTCELL"); // Ty 03/22/98 - externalized
-      break;
-
-   case PFX_CELLPACK:
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("CellPack"), false, 0))
-         return;
-      message = DEH_String("GOTCELLBOX"); // Ty 03/22/98 - externalized
-      break;
-      
-   case PFX_SHELL:
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("Shell"), false, 0))
-         return;
-      message = DEH_String("GOTSHELLS"); // Ty 03/22/98 - externalized
-      break;
-      
-   case PFX_SHELLBOX:
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("ShellBox"), false, 0))
-         return;
-      message = DEH_String("GOTSHELLBOX"); // Ty 03/22/98 - externalized
-      break;
-
-   case PFX_BACKPACK:
-      // INVENTORY_TODO: hardcoded for now
-      if(!E_PlayerHasBackpack(player))
-         E_GiveBackpack(player);
-      // ioanch 20151225: call from here to handle backpack ammo
-      P_giveBackpackAmmo(player);
-      message = DEH_String("GOTBACKPACK"); // Ty 03/22/98 - externalized
-      break;
-
-      // WEAPON_FIXME: Weapon collection
-      // weapons
-   case PFX_BFG:
-      if(!P_GiveWeapon(player, wp_bfg, false, special))
-         return;
-      // FIXME: externalize all BFG pickup strings
-      message = bfgtype==0 ? DEH_String("GOTBFG9000") // sf
-                : bfgtype==1 ? "You got the BFG 2704!"
-                : bfgtype==2 ? "You got the BFG 11K!"
-                : bfgtype==3 ? "You got the Bouncing BFG!"
-                : bfgtype==4 ? "You got the Plasma Burst BFG!"
-                : "You got some kind of BFG";
-      sound = sfx_wpnup;
-      break;
-
-   case PFX_CHAINGUN:
-      if(!P_GiveWeapon(player, wp_chaingun, dropped, special))
-         return;
-      message = DEH_String("GOTCHAINGUN"); // Ty 03/22/98 - externalized
-      sound = sfx_wpnup;
-      break;
-
-   case PFX_CHAINSAW:
-      if(!P_GiveWeapon(player, wp_chainsaw, false, special))
-         return;
-      message = DEH_String("GOTCHAINSAW"); // Ty 03/22/98 - externalized
-      sound = sfx_wpnup;
-      break;
-
-   case PFX_LAUNCHER:
-      if(!P_GiveWeapon(player, wp_missile, false, special))
-         return;
-      message = DEH_String("GOTLAUNCHER"); // Ty 03/22/98 - externalized
-      sound = sfx_wpnup;
-      break;
-
-   case PFX_PLASMA:
-      if(!P_GiveWeapon(player, wp_plasma, false, special))
-         return;
-      message = DEH_String("GOTPLASMA"); // Ty 03/22/98 - externalized
-      sound = sfx_wpnup;
-      break;
-
-   case PFX_SHOTGUN:
-      if(!P_GiveWeapon(player, wp_shotgun, dropped, special))
-         return;
-      message = DEH_String("GOTSHOTGUN"); // Ty 03/22/98 - externalized
-      sound = sfx_wpnup;
-      break;
-
-   case PFX_SSG:
-      if(!P_GiveWeapon(player, wp_supershotgun, dropped, special))
-         return;
-      message = DEH_String("GOTSHOTGUN2"); // Ty 03/22/98 - externalized
-      sound = sfx_wpnup;
-      break;
-
-      // haleyjd 10/10/02: Heretic powerups
-
-   case PFX_HGREENKEY: // green key
-      // INVENTORY_TODO: hardcoded for now
-      effect = E_ItemEffectForName(ARTI_KEYGREEN);
-      if(!E_GetItemOwnedAmount(player, effect))
-         message = DEH_String("HGOTGREENKEY");
-      P_GiveCard(player, effect, special);
-      removeobj = pickup_fx = (GameType == gt_single);
-      sound = sfx_keyup;
-      break;
-
-   case PFX_HBLUEKEY: // blue key
-      // INVENTORY_TODO: hardcoded for now
-      effect = E_ItemEffectForName(ARTI_KEYBLUE);
-      if(!E_GetItemOwnedAmount(player, effect))
-         message = DEH_String("HGOTBLUEKEY");
-      P_GiveCard(player, effect, special);
-      removeobj = pickup_fx = (GameType == gt_single);
-      sound = sfx_keyup;
-      break;
-
-   case PFX_HYELLOWKEY: // yellow key
-      // INVENTORY_TODO: hardcoded for now
-      effect = E_ItemEffectForName(ARTI_KEYYELLOW);
-      if(!E_GetItemOwnedAmount(player, effect))
-         message = DEH_String("HGOTYELLOWKEY");
-      P_GiveCard(player, effect, special);
-      removeobj = pickup_fx = (GameType == gt_single);
-      sound = sfx_keyup;
-      break;
-
-   case PFX_HPOTION: // heretic potion
-      if(!P_GiveBody(player, E_ItemEffectForName("CrystalVial")))
-         return;
-      message = DEH_String("HITEMHEALTH");
-      sound = sfx_hitemup;
-      break;
-
-   case PFX_SILVERSHIELD: // heretic shield 1
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_SILVERSHIELD)))
-         return;
-      message = DEH_String("HITEMSHIELD1");
-      sound = sfx_hitemup;
-      break;
-
-   case PFX_ENCHANTEDSHIELD: // heretic shield 2
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_ENCHANTEDSHLD)))
-         return;
-      message = DEH_String("HITEMSHIELD2");
-      sound = sfx_hitemup;
-      break;
-
-   case PFX_BAGOFHOLDING: // bag of holding
-      // HTIC_TODO: bag of holding effects
-      // INVENTORY_TODO: hardcoded for now
-      if(!E_PlayerHasBackpack(player))
-         E_GiveBackpack(player);
-      // ioanch 20151225: call from here to handle backpack ammo
-      P_giveBackpackAmmo(player);
-      message = DEH_String("HITEMBAGOFHOLDING");
-      sound = sfx_hitemup;
-      break;
-
-   case PFX_HMAP: // map scroll
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName(ITEMNAME_MAPSCROLL);
-      if(!P_GivePowerForItem(player, effect))
-         return;
-      message = DEH_String("HITEMSUPERMAP");
-      sound = sfx_hitemup;
-      break;
-   
-   case PFX_SHADOWSPHERE:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName(ARTI_INVISIBILITY);
-      // The player can have up to (by default) 16 of a Heretic artifact, so make sure
-      // that they don't get more than they should be allowed to have.
-      if(!P_giveHereticArti(player, effect))
-         return;
-      message = DEH_String("HITEMSHADOWSPHERE");
-      sound = sfx_artiup;
-      break;
-
-   case PFX_QUARTZFLASK:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName(ARTI_HEALTH);
-      // The player can have up to (by default) 16 of a Heretic artifact, so make sure
-      // that they don't get more than they should be allowed to have.
-      if(!P_giveHereticArti(player, effect))
-         return;
-      message = DEH_String("HITEMQUARTZFLASK");
-      sound = sfx_artiup;
-      break;
-
-   case PFX_WINGSOFWRATH:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName(ARTI_FLY);
-      if(!P_giveHereticArti(player, effect))
-         return;
-      message = DEH_String("HITEMWINGSOFWRATH");
-      sound = sfx_artiup;
-      break;
-
-   case PFX_RINGOFINVINCIBILITY:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName(ARTI_INVULN);
-      if(!P_giveHereticArti(player, effect))
-         return;
-      message = DEH_String("HITEMRINGOFINVINCIBILITY");
-      sound = sfx_artiup;
-      break;
-
-   case PFX_TOMEOFPOWER:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName(ARTI_TOMEOFPOWER);
-      if(!P_giveHereticArti(player, effect))
-         return;
-      message = DEH_String("HITEMTOMEOFPOWER");
-      sound = sfx_artiup;
-      break;
-
-   case PFX_MORPHOVUM:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName(ARTI_EGG);
-      if(!P_giveHereticArti(player, effect))
-         return;
-      message = DEH_String("HITEMMORPHOVUM");
-      sound = sfx_artiup;
-      break;
-
-   case PFX_MYSTICURN:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName(ARTI_SUPERHEALTH);
-      if(!P_giveHereticArti(player, effect))
-         return;
-      message = DEH_String("HITEMMYSTICURN");
-      sound = sfx_artiup;
-      break;
-
-   case PFX_ARTITORCH:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName(ARTI_TORCH);      
-      if(!P_giveHereticArti(player, effect))
-         return;
-      message = DEH_String("HITEMTORCH");
-      sound = sfx_artiup;
-      break;
-
-   case PFX_TIMEBOMB:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName(ARTI_TIMEBOMB);
-      if(!P_giveHereticArti(player, effect))
-         return;
-      message = DEH_String("HITEMTIMEBOMB");
-      sound = sfx_artiup;
-      break;
-
-   case PFX_TELEPORT:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName(ARTI_TELEPORT);
-      if(!P_giveHereticArti(player, effect))
-         return;
-      message = DEH_String("HITEMTELEPORT");
-      sound = sfx_artiup;
-      break;
-
-      // Heretic Ammo items
-   case PFX_GWNDWIMPY:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName("GoldWandAmmo");
-      if(!P_GiveAmmoPickup(player, effect, dropped, special->dropamount))
-         return;
-      message = DEH_String("HAMMOGOLDWAND1");
-      sound = sfx_hitemup;
-      break;
-   
-   case PFX_GWNDHEFTY:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName("GoldWandHefty");
-      if(!P_GiveAmmoPickup(player, effect, dropped, special->dropamount))
-         return;
-      message = DEH_String("HAMMOGOLDWAND2");
-      sound = sfx_hitemup;
-      break;
-   
-   case PFX_MACEWIMPY:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName("MaceAmmo");
-      if(!P_GiveAmmoPickup(player, effect, dropped, special->dropamount))
-         return;
-      message = DEH_String("HAMMOMACE1");
-      sound = sfx_hitemup;
-      break;
-   
-   case PFX_MACEHEFTY:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName("MaceHefty");
-      if(!P_GiveAmmoPickup(player, effect, dropped, special->dropamount))
-         return;
-      message = DEH_String("HAMMOMACE2");
-      sound = sfx_hitemup;
-      break;
-   
-   case PFX_CBOWWIMPY:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName("CrossbowAmmo");
-      if(!P_GiveAmmoPickup(player, effect, dropped, special->dropamount))
-         return;
-      message = DEH_String("HAMMOCROSSBOW1");
-      sound = sfx_hitemup;
-      break;
-   
-   case PFX_CBOWHEFTY:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName("CrossbowHefty");
-      if(!P_GiveAmmoPickup(player, effect, dropped, special->dropamount))
-         return;
-      message = DEH_String("HAMMOCROSSBOW2");
-      sound = sfx_hitemup;
-      break;
-   
-   case PFX_BLSRWIMPY:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName("BlasterAmmo");
-      if(!P_GiveAmmoPickup(player, effect, dropped, special->dropamount))
-         return;
-      message = DEH_String("HAMMOBLASTER1");
-      sound = sfx_hitemup;
-      break;
-   
-   case PFX_BLSRHEFTY:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName("BlasterHefty");
-      if(!P_GiveAmmoPickup(player, effect, dropped, special->dropamount))
-         return;
-      message = DEH_String("HAMMOBLASTER2");
-      sound = sfx_hitemup;
-      break;
-   
-   case PFX_PHRDWIMPY:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName("PhoenixRodAmmo");
-      if(!P_GiveAmmoPickup(player, effect, dropped, special->dropamount))
-         return;
-      message = DEH_String("HAMMOPHOENIXROD1");
-      sound = sfx_hitemup;
-      break;
-   
-   case PFX_PHRDHEFTY:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName("PhoenixRodHefty");
-      if(!P_GiveAmmoPickup(player, effect, dropped, special->dropamount))
-         return;
-      message = DEH_String("HAMMOPHOENIXROD2");
-      sound = sfx_hitemup;
-      break;
-   
-   case PFX_SKRDWIMPY:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName("SkullRodAmmo");
-      if(!P_GiveAmmoPickup(player, effect, dropped, special->dropamount))
-         return;
-      message = DEH_String("HAMMOSKULLROD1");
-      sound = sfx_hitemup;
-      break;
-   
-   case PFX_SKRDHEFTY:
-      // INVENTORY_FIXME: temp hard-coded
-      effect = E_ItemEffectForName("SkullRodHefty");
-      if(!P_GiveAmmoPickup(player, effect, dropped, special->dropamount))
-         return;
-      message = DEH_String("HAMMOSKULLROD2");
-      sound = sfx_hitemup;
-      break;
-
-      // start new Eternity power-ups
-   case PFX_TOTALINVIS:
-      effect = E_ItemEffectForName(ITEMNAME_TOTALINVISI);
-      if(!P_GivePowerForItem(player, effect))
-         return;
-      message = "Total Invisibility!";
-      sound = sfx_getpow;
-      break;
-
-   default:
-      // I_Error("P_SpecialThing: Unknown gettable thing");
-      return;      // killough 12/98: suppress error message
-   }
-
-   // sf: display message using player_printf
-   if(message)
-      player_printf(player, "%s", message);
-
-   // haleyjd 07/08/05: rearranged to avoid removing before
-   // checking for COUNTITEM flag.
-   if(special->flags & MF_COUNTITEM)
-      player->itemcount++;
-
-   if(removeobj)
-   {
-      // this will cover all disappearing items. Non-disappearing ones have
-      // their own special cases.
-      P_consumeSpecial(player, special);
-      if(special->flags4 & MF4_RAVENRESPAWN)
-         P_RavenRespawn(special);
-      else
-         special->remove();
-   }
-
-   // haleyjd 07/08/05: inverted condition
-   if(pickup_fx)
-   {
-      player->bonuscount += BONUSADD;
-      S_StartSound(player->mo, sound);   // killough 4/25/98, 12/98
    }
 }
 

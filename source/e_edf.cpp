@@ -219,7 +219,8 @@ static cfg_opt_t edf_opts[] =
    CFG_STR(SEC_SPRITE,          0,                 CFGF_LIST),
    CFG_STR(ITEM_PLAYERSPRITE,   "PLAY",            CFGF_NONE),
    CFG_STR(ITEM_BLANKSPRITE,    "TNT1",            CFGF_NONE),
-   CFG_SEC(EDF_SEC_PICKUPFX,    edf_pickup_opts,   EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_SPRPKUP,     edf_sprpkup_opts,  EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_PICKUPFX,    edf_pkupfx_opts,   EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_SOUND,       edf_sound_opts,    EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_AMBIENCE,    edf_ambience_opts, EDF_NSEC_FLAGS),
    CFG_SEC(EDF_SEC_SNDSEQ,      edf_sndseq_opts,   EDF_TSEC_FLAGS),
@@ -1674,6 +1675,9 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
 
    // process misc vars (made dynamic 11/21/11)
    E_ProcessMiscVars(cfg);
+
+   // post main-processing
+   E_ProcessPickups(cfg);
 
    // 08/30/03: apply deltas
    E_ProcessSoundDeltas(cfg, true); // see e_sound.cpp

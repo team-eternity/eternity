@@ -46,6 +46,7 @@
 #include "doomstat.h"
 #include "e_edf.h"
 #include "e_fonts.h"
+#include "e_weapons.h"
 #include "g_gfs.h"
 #include "i_system.h"
 #include "m_argv.h"
@@ -490,6 +491,8 @@ void D_LoadEDF(gfs_t *gfs)
          }
       }
    }
+
+   E_AddHardCodedWeaponsToHash();
 
    E_ProcessEDF(edfname);
 

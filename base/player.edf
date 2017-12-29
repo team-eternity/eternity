@@ -5,6 +5,8 @@
 // skins, player classes, and weapons.
 //
 
+includeifenabled("doom/player.edf", "DOOM");
+
 ifenabled(DOOM)
 
 skin marine {}
@@ -20,6 +22,8 @@ playerclass DoomMarine
 }
 
 endif()
+
+includeifenabled("heretic/player.edf", "HERETIC");
 
 ifenabled(HERETIC)
 

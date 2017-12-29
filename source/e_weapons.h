@@ -55,6 +55,10 @@ extern weaponslot_t *weaponslots[NUMWEAPONSLOTS];
 weaponinfo_t *E_WeaponForID(int id);
 weaponinfo_t *E_WeaponForName(const char *name);
 
+bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon);
+// TEMP
+void E_AddHardCodedWeaponsToHash();
+
 #endif
 
 // EOF

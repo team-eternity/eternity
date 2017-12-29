@@ -55,3 +55,15 @@ lockdef 228
    remotemessage: "Any key will activate this object";
 }
 
+//
+// Global Powers
+//
+
+powereffect TotalInvisiSphere
+{
+  duration 60
+  type     PowerTotalInvisibility
+
+  +overridesself
+}
+

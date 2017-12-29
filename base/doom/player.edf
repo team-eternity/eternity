@@ -1,0 +1,63 @@
+//
+// EDF for Eternity Engine v3.49.00+
+//
+// DOOM Weapons
+//
+
+//=============================================================================
+//
+// Weapon Givers
+//
+
+weapongiver GiverFist
+{
+  weapon Fist
+}
+
+weapongiver GiverPistol
+{
+  weapon Pistol
+  ammogiven AmmoClip, 20, 10, 50, 20
+}
+
+weapongiver GiverShotgun
+{
+  weapon Shotgun
+  ammogiven AmmoShell, 8, 4, 20, 8
+}
+
+weapongiver GiverChaingun
+{
+  weapon Chaingun
+  ammogiven AmmoClip, 20, 10, 50, 20
+}
+
+weapongiver GiverMissileLauncher
+{
+  weapon MissileLauncher
+  ammogiven AmmoMissile, 2, 1, 5, 2
+}
+
+weapongiver GiverPlasmaRifle
+{
+  weapon PlasmaRifle
+  ammogiven AmmoCell, 40, 20, 100, 40
+}
+
+weapongiver GiverBFG9000
+{
+  weapon BFG9000
+  ammogiven AmmoCell, 40, 20, 100, 40
+}
+
+weapongiver GiverChainsaw
+{
+  weapon Chainsaw
+}
+
+weapongiver GiverSuperShotgun
+{
+  weapon SuperShotgun
+  ammogiven AmmoShell, 8, 4, 20, 8
+}
+

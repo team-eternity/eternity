@@ -32,6 +32,7 @@
 #include "d_mod.h"
 #include "e_inventory.h"
 #include "e_states.h"
+#include "e_weapons.h"
 #include "sounds.h"
 #include "w_wad.h"
 

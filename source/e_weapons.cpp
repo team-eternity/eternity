@@ -32,6 +32,7 @@
 #include "i_system.h"
 
 #include "Confuse/confuse.h"
+#include "d_player.h"
 #include "e_edf.h"
 #include "e_hash.h"
 #include "e_lib.h"
@@ -39,6 +40,66 @@
 
 #include "d_dehtbl.h"
 #include "d_items.h"
+
+//static weaponinfo_t **weaponinfo = nullptr;
+int NUMWEAPONTYPES = 0;
+
+// track generations
+static int edf_weapon_generation = 1;
+
+// The "Unknown" weapon info, which is required, has its type
+// number resolved in E_CollectWeaponinfo
+weapontype_t UnknownWeaponInfo;
+
+// Weapon Keywords
+// TODO: Reorder
+#define ITEM_WPN_DEHNUM       "dehackednum"
+
+#define ITEM_WPN_AMMO         "ammotype"
+#define ITEM_WPN_UPSTATE      "upstate"
+#define ITEM_WPN_DOWNSTATE    "downstate"
+#define ITEM_WPN_READYSTATE   "readystate"
+#define ITEM_WPN_ATKSTATE     "attackstate"
+#define ITEM_WPN_FLASHSTATE   "flashstate"
+#define ITEM_WPN_HOLDSTATE    "holdstate"
+#define ITEM_WPN_AMMOPERSHOT  "ammouse"
+
+#define ITEM_WPN_AMMO_ALT        "ammotype2"
+#define ITEM_WPN_ATKSTATE_ALT    "attackstate2"
+#define ITEM_WPN_FLASHSTATE_ALT  "flashstate2"
+#define ITEM_WPN_HOLDSTATE_ALT   "holdstate2"
+#define ITEM_WPN_AMMOPERSHOT_ALT "ammouse2"
+
+#define ITEM_WPN_SELECTORDER  "selectionorder"
+#define ITEM_WPN_SISTERWEAPON "sisterweapon"
+
+#define ITEM_WPN_NEXTINCYCLE  "nextincycle"
+#define ITEM_WPN_PREVINCYCLE  "previncycle"
+
+#define ITEM_WPN_FLAGS        "flags"
+#define ITEM_WPN_ADDFLAGS     "addflags"
+#define ITEM_WPN_REMFLAGS     "remflags"
+#define ITEM_WPN_MOD          "mod"
+#define ITEM_WPN_RECOIL       "recoil"
+#define ITEM_WPN_HAPTICRECOIL "hapticrecoil"
+#define ITEM_WPN_HAPTICTIME   "haptictime"
+#define ITEM_WPN_UPSOUND      "upsound"
+#define ITEM_WPN_READYSOUND   "readysound"
+
+#define ITEM_WPN_FIRSTDECSTATE "firstdecoratestate"
+
+// DECORATE state block
+#define ITEM_WPN_STATES        "states"
+
+#define ITEM_WPN_INHERITS     "inherits"
+
+// WeaponInfo Delta Keywords
+#define ITEM_DELTA_NAME "name"
+
+// Title properties 
+#define ITEM_WPN_TITLE_SUPER     "superclass" 
+#define ITEM_WPN_TITLE_DEHNUM    "dehackednum"
+
 
 //=============================================================================
 //
@@ -111,6 +172,23 @@ weaponinfo_t *E_WeaponForID(int id)
 weaponinfo_t *E_WeaponForName(const char *name)
 {
    return e_WeaponNameHash.objectForKey(name);
+}
+
+//
+// Convenience function to check if a player owns a weapon
+//
+bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon)
+{
+   return player->weaponowned[weapon->id];
+}
+
+void E_AddHardCodedWeaponsToHash()
+{
+   for(int i = 0; i < NUMWEAPONS; i++)
+   {
+      e_WeaponIDHash.addObject(weaponinfo[i]);
+      e_WeaponNameHash.addObject(weaponinfo[i]);
+   }
 }
 
 // EOF

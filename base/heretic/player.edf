@@ -1,0 +1,56 @@
+//
+// EDF for Eternity Engine v3.49.00+
+//
+// Heretic Weapons
+//
+
+//=============================================================================
+//
+// Weapon Givers
+//
+
+weapongiver GiverStaff
+{
+  weapon Staff
+}
+
+weapongiver GiverGoldWand
+{
+  weapon GoldWand
+}
+
+weapongiver GiverCrossbow
+{
+  weapon    Crossbow
+  ammogiven AmmoEtherealArrow, 10
+}
+
+weapongiver GiverBlaster
+{
+  weapon    Blaster
+  ammogiven AmmoClawOrb, 30
+}
+
+weapongiver GiverSkullRod
+{
+  weapon    SkullRod
+  ammogiven AmmoRune, 50
+}
+
+weapongiver GiverPhoenixRod
+{
+  weapon    PhoenixRod
+  ammogiven AmmoFlameOrb, 2
+}
+
+weapongiver GiverMace
+{
+  weapon    Mace
+  ammogiven AmmoMaceSphere, 50
+}
+
+weapongiver GiverGauntlets
+{
+  weapon Gauntlets
+}
+

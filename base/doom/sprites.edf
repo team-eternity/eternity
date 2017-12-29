@@ -1,0 +1,378 @@
+//
+// EDF for Eternity Engine v3.49.00+
+//
+// Pickup item definitions for Doom gamemodes.
+//
+
+// Sprites
+spritenames
+{
+  TROO, SHTG, PUNG, PISG, PISF, SHTF, SHT2, CHGG, CHGF, MISG, MISF, SAWG, PLSG,
+  PLSF, BFGG, BFGF, BLUD, PUFF, BAL1, BAL2, PLSS, PLSE, MISL, BFS1, BFE1, BFE2,
+  TFOG, IFOG, PLAY, POSS, SPOS, VILE, FIRE, FATB, FBXP, SKEL, MANF, FATT, CPOS,
+  SARG, HEAD, BAL7, BOSS, BOS2, SKUL, SPID, BSPI, APLS, APBX, CYBR, PAIN, SSWV, 
+  KEEN, BBRN, BOSF, ARM1, ARM2, BAR1, BEXP, FCAN, BON1, BON2, BKEY, RKEY, YKEY,
+  BSKU, RSKU, YSKU, STIM, MEDI, SOUL, PINV, PSTR, PINS, MEGA, SUIT, PMAP, PVIS,
+  CLIP, AMMO, ROCK, BROK, CELL, CELP, SHEL, SBOX, BPAK, BFUG, MGUN, CSAW, LAUN,
+  PLAS, SHOT, SGN2, COLU, SMT2, GOR1, POL2, POL5, POL4, POL3, POL1, POL6, GOR2,
+  GOR3, GOR4, GOR5, SMIT, COL1, COL2, COL3, COL4, CAND, CBRA, COL6, TRE1, TRE2,
+  ELEC, CEYE, FSKU, COL5, TBLU, TGRN, TRED, SMBT, SMGT, SMRT, HDB1, HDB2, HDB3,
+  HDB4, HDB5, HDB6, POB1, POB2, BRS1, TLMP, TLP2
+}
+
+// Armor
+pickupeffect GreenArmor
+{
+  effects GreenArmor
+  message $GOTARMOR
+  sound   itemup
+
+  sprite  ARM1
+  pfxname PFX_GREENARMOR
+}
+pickupeffect BlueArmor
+{
+  effects BlueArmor
+  message $GOTMEGA
+  sound   itemup
+
+  sprite  ARM2
+  pfxname PFX_BLUEARMOR
+}
+
+// Bonuses
+pickupeffect HealthBonus
+{
+  effects HealthBonus
+  sprite  BON1
+  message $GOTHTHBONUS
+  sound   itemup
+  flags   ALWAYSPICKUP
+
+  pfxname PFX_POTION
+}
+pickupeffect ArmorBonus
+{
+  effects ArmorBonus
+  message $GOTARMBONUS
+  sound   itemup
+  flags   ALWAYSPICKUP
+
+  sprite  BON2
+  pfxname PFX_ARMORBONUS
+}
+pickupeffect SoulSphere
+{
+  effects Soulsphere
+  message $GOTSUPER
+  sound   getpow
+  flags   ALWAYSPICKUP
+
+  sprite  SOUL
+  pfxname PFX_SOULSPHERE
+}
+pickupeffect MegaSphere
+{
+  effects MegasphereHealth, BlueArmor
+  message $GOTMSPHERE
+  sound   getpow
+  flags   ALWAYSPICKUP|COMMERCIALONLY
+
+  sprite  MEGA
+  pfxname PFX_MEGASPHERE
+}
+
+// Keys
+pickupeffect DoomBlueCard
+{
+  effects BlueCard
+  message $GOTBLUECARD
+  sound   itemup
+  flags   ALWAYSPICKUP|LEAVEINMULTI
+
+  sprite  BKEY
+  pfxname PFX_BLUEKEY
+}
+pickupeffect DoomYellowCard
+{
+  effects YellowCard
+  message $GOTYELWCARD
+  sound   itemup
+  flags   ALWAYSPICKUP|LEAVEINMULTI
+
+  sprite  YKEY
+  pfxname PFX_YELLOWKEY
+}
+pickupeffect DoomRedCard
+{
+  effects RedCard
+  message $GOTREDCARD
+  sound   itemup
+  flags   ALWAYSPICKUP|LEAVEINMULTI
+
+  sprite  RKEY
+  pfxname PFX_REDKEY
+}
+pickupeffect DoomBlueSkull
+{
+  effects BlueSkull
+  message $GOTBLUESKUL
+  sound   itemup
+  flags   ALWAYSPICKUP|LEAVEINMULTI
+
+  sprite  BSKU
+  pfxname PFX_BLUESKULL
+}
+pickupeffect DoomYellowSkull
+{
+  effects YellowSkull
+  message $GOTYELWSKUL
+  sound   itemup
+  flags   ALWAYSPICKUP|LEAVEINMULTI
+
+  sprite  YSKU
+  pfxname PFX_YELLOWSKULL
+}
+pickupeffect DoomRedSkull
+{
+  effects RedSkull
+  message $GOTREDSKULL
+  sound   itemup
+  flags   ALWAYSPICKUP|LEAVEINMULTI
+
+  sprite  RSKU
+  pfxname PFX_REDSKULL
+}
+
+// Heals
+pickupeffect StimPack
+{
+  effects Stimpack
+  message $GOTSTIM
+  sound   itemup
+
+  sprite  STIM
+  pfxname PFX_STIMPACK
+}
+pickupeffect MediKit
+{
+  effects Medikit
+  message $GOTMEDIKIT
+  sound   itemup
+
+  sprite  MEDI
+  pfxname PFX_MEDIKIT
+}
+
+// Powerups
+pickupeffect InvulnSphere
+{
+  effects InvulnerabilitySphere
+  message $GOTINVUL
+  sound   getpow
+  flags   ALWAYSPICKUP
+
+  sprite  PINV
+  pfxname PFX_INVULNSPHERE
+}
+pickupeffect BerzerkBox
+{
+  effects      Berserk, BerserkHealth
+  changeweapon Fist
+  message      $GOTBERSERK
+  sound        getpow
+
+  sprite  PSTR
+  pfxname PFX_BERZERKBOX
+}
+pickupeffect InvisiSphere
+{
+  effects BlurSphere
+  message $GOTINVIS
+  sound   getpow
+  flags   ALWAYSPICKUP
+
+  sprite  PINS
+  pfxname PFX_INVISISPHERE
+}
+pickupeffect RadiationSuit
+{
+  effects RadSuit
+  message $GOTSUIT
+  sound   getpow
+  flags   ALWAYSPICKUP
+
+  sprite  SUIT
+  pfxname PFX_RADSUIT
+}
+pickupeffect ComputerMap
+{
+  effects Allmap
+  message $GOTMAP
+  sound   getpow
+  flags   ALWAYSPICKUP
+
+  sprite  PMAP
+  pfxname PFX_ALLMAP
+}
+pickupeffect LightAmpVisor
+{
+  effects Infrared
+  message $GOTVISOR
+  sound   getpow
+  flags   ALWAYSPICKUP
+
+  sprite  PVIS
+  pfxname PFX_LIGHTAMP
+}
+
+// Ammo + Backpack
+pickupeffect AmmoClip
+{
+  effects Clip
+  message $GOTCLIP
+  sound   itemup
+
+  sprite  CLIP
+  pfxname PFX_CLIP
+}
+pickupeffect AmmoBulletBox
+{
+  effects ClipBox
+  message $GOTCLIPBOX
+  sound   itemup
+
+  sprite  AMMO
+  pfxname PFX_CLIPBOX
+}
+pickupeffect AmmoRocket
+{
+  effects RocketAmmo
+  message $GOTROCKET
+  sound   itemup
+
+  sprite  ROCK
+  pfxname PFX_ROCKET
+}
+pickupeffect AmmoRocketBox
+{
+  effects RocketBox
+  message $GOTROCKBOX
+  sound   itemup
+
+  sprite  BROK
+  pfxname PFX_ROCKETBOX
+}
+pickupeffect AmmoCell
+{
+  effects Cell
+  message $GOTCELL
+  sound   itemup
+
+  sprite  CELL
+  pfxname PFX_CELL
+}
+pickupeffect AmmoCellPack
+{
+  effects CellPack
+  message $GOTCELLBOX
+  sound   itemup
+
+  sprite  CELP
+  pfxname PFX_CELLPACK
+}
+pickupeffect AmmoShells
+{
+  effects Shell
+  message $GOTSHELLS
+  sound   itemup
+
+  sprite  SHEL
+  pfxname PFX_SHELL
+}
+pickupeffect AmmoShellBox
+{
+  effects ShellBox
+  message $GOTSHELLBOX
+  sound   itemup
+
+  sprite  SBOX
+  pfxname PFX_SHELLBOX
+}
+
+pickupeffect Backpack
+{
+  effects BackpackItem
+  message $GOTBACKPACK
+  sound   itemup
+  flags   ALWAYSPICKUP|GIVESBACKPACKAMMO
+
+  sprite  BPAK
+  pfxname PFX_BACKPACK
+}
+
+// Weapons
+pickupeffect WeaponBFG
+{
+  effects GiverBFG9000
+  message $GOTBFG9000
+  sound   wpnup
+
+  sprite  BFUG
+  pfxname PFX_BFG
+}
+pickupeffect WeaponChaingun
+{
+  effects GiverChaingun
+  message $GOTCHAINGUN
+  sound   wpnup
+
+  sprite  MGUN
+  pfxname PFX_CHAINGUN
+}
+pickupeffect WeaponChainsaw
+{
+  effects GiverChainsaw
+  message $GOTCHAINSAW
+  sound   wpnup
+
+  sprite  CSAW
+  pfxname PFX_CHAINSAW
+}
+pickupeffect WeaponRocketLauncher
+{
+  effects GiverMissileLauncher
+  message $GOTLAUNCHER
+  sound   wpnup
+
+  sprite  LAUN
+  pfxname PFX_LAUNCHER
+}
+pickupeffect WeaponPlasmaGun
+{
+  effects GiverPlasmaRifle
+  message $GOTPLASMA
+  sound   wpnup
+
+  sprite  PLAS
+  pfxname PFX_PLASMA
+}
+pickupeffect WeaponShotgun
+{
+  effects GiverShotgun
+  message $GOTSHOTGUN
+  sound   wpnup
+
+  sprite  SHOT
+  pfxname PFX_SHOTGUN
+}
+pickupeffect WeaponSSG
+{
+  effects GiverSuperShotgun
+  message $GOTSHOTGUN
+  sound   wpnup
+
+  sprite  SGN2
+  pfxname PFX_SSG
+}
+
