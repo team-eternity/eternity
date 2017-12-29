@@ -190,7 +190,8 @@ enum
    TCF_BUTTONS     = 0x00000010,
    TCF_ACTIONS     = 0x00000020,
    TCF_LOOK        = 0x00000040,
-   TCF_FLY         = 0x00000080
+   TCF_FLY         = 0x00000080,
+   TCF_ITEMID      = 0x00000100
 };
 
 // DEBUG
@@ -257,6 +258,7 @@ bool PacketSend(void)
          NETWRITEBYTEIF(netbuffer->d.cmds[c].actions,  TCF_ACTIONS);
          NETWRITESHORTIF(netbuffer->d.cmds[c].look,    TCF_LOOK);
          NETWRITEBYTEIF(netbuffer->d.cmds[c].fly,      TCF_FLY);
+         NETWRITESHORTIF(netbuffer->d.cmds[c].itemID,  TCF_ITEMID);
 
          // go back to ticstart and write in the flags
          ticend = rover;
@@ -387,6 +389,11 @@ bool PacketGet(void)
          }
          if(ticcmdflags & TCF_FLY)
             netbuffer->d.cmds[c].fly = *rover++;
+         if(ticcmdflags & TCF_ITEMID)
+         {
+            netbuffer->d.cmds[c].itemID = NetToHost16(rover);
+            rover += 2;
+         }
       }
    }
    else

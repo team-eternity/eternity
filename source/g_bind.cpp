@@ -169,6 +169,13 @@ keyaction_t keyactions[NUMKEYACTIONS] =
    { "console_up",        kac_console, at_variable },
    { "console_down",      kac_console, at_variable },
    { "console_backspace", kac_console, at_variable },
+
+   // Inventory Actions
+
+   { "inventory_left",     kac_game,    at_variable },
+   { "inventory_right",    kac_game,    at_variable },
+   { "inventory_use",      kac_game,    at_variable },
+   { "inventory_drop",     kac_game,    at_variable },
 };
 
 // Console Bindings

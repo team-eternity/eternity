@@ -221,6 +221,9 @@ void G_CoolViewPoint();
 
 static bool gameactions[NUMKEYACTIONS];
 
+int inventoryTics;
+bool usearti = true;
+
 //
 // G_BuildTiccmd
 //
@@ -246,6 +249,8 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    ticcmd_t *base;
    double tmousex, tmousey;     // local mousex, mousey
    playerclass_t *pc = players[consoleplayer].pclass;
+   invbarstate_t &invbarstate = players[consoleplayer].invbarstate;
+   player_t &p = players[consoleplayer]; // used to pretty-up code
 
    base = I_BaseTiccmd();    // empty, or external driver
    memcpy(cmd, base, sizeof(*cmd));
@@ -258,6 +263,25 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       speed = gameactions[ka_speed];
 
    forward = side = 0;
+
+   cmd->itemID = 0; // Nothing to see here
+   if(gameactions[ka_inventory_use] && demo_version >= 349)
+   {
+      // FIXME: Handle noartiskip?
+      if(invbarstate.inventory)
+      {
+         p.inv_ptr = invbarstate.inv_ptr;
+         invbarstate.inventory = false;
+         usearti = false;
+      }
+      else if(usearti)
+      {
+         if(E_PlayerHasVisibleInvItem(&p))
+            cmd->itemID = p.inventory[p.inv_ptr].item + 1;
+         usearti = false;
+      }
+      gameactions[ka_inventory_use] = false;
+   }
 
    // use two stage accelerative turning on the keyboard and joystick
    if(gameactions[ka_right] || gameactions[ka_left])
@@ -717,6 +741,7 @@ void G_DoLoadLevel()
 bool G_Responder(event_t* ev)
 {
    int action;
+   invbarstate_t &invbarstate = players[consoleplayer].invbarstate;
 
    // killough 9/29/98: reformatted
    if(gamestate == GS_LEVEL && 
@@ -729,6 +754,14 @@ bool G_Responder(event_t* ev)
 
    if(G_KeyResponder(ev, kac_cmd))
       return true;
+
+   // This code is like Heretic's (to an extent). If the key is up and is the
+   // inventory key (and the player isn't dead) then use the current artifact.
+   if(ev->type == ev_keyup && G_KeyResponder(ev, kac_game) == ka_inventory_use
+      && players[consoleplayer].playerstate != PST_DEAD)
+   {
+      usearti = true;
+   }
 
    // any other key pops up menu if in demos
    //
@@ -793,6 +826,29 @@ bool G_Responder(event_t* ev)
       {
          gameactions[ka_autorun] = 0;
          autorun = !autorun;
+      }
+
+      if(gameactions[ka_inventory_left])
+      {
+         inventoryTics = 5 * TICRATE;
+         if(!invbarstate.inventory)
+         {
+            invbarstate.inventory = true;
+            break;
+         }
+         E_MoveInventoryCursor(&players[consoleplayer], -1, invbarstate.inv_ptr);
+         return true;
+      }
+      if(gameactions[ka_inventory_right])
+      {
+         inventoryTics = 5 * TICRATE;
+         if(!invbarstate.inventory)
+         {
+            invbarstate.inventory = true;
+            break;
+         }
+         E_MoveInventoryCursor(&players[consoleplayer], 1, invbarstate.inv_ptr);
+         return true;
       }
 
       return true;    // eat key down events
@@ -1329,6 +1385,14 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
          cmd->fly = *demo_p++;
       else
          cmd->fly = 0;
+
+      if(demo_version >= 349)
+      {
+         cmd->itemID =   *demo_p++;
+         cmd->itemID |= (*demo_p++) << 8;
+      }
+      else
+         cmd->itemID = 0;
       
       // killough 3/26/98, 10/98: Ignore savegames in demos 
       if(demoplayback && 
@@ -1384,8 +1448,14 @@ static void G_WriteDemoTiccmd(ticcmd_t *cmd)
    }
 
    if(full_demo_version >= make_full_version(340, 23))
-      demo_p[i] = cmd->fly;
+      demo_p[i++] = cmd->fly;
    
+   if(demo_version >= 349)
+   {
+      demo_p[i++] =  cmd->itemID & 0xff;
+      demo_p[i] = (cmd->itemID >> 8) & 0xff;
+   }
+
    // NOTE: the distance is *double* that of (ticcmd_t + trailer) because on
    // Release builds, if ticcmd_t becomes larger, just using the simple value
    // would lock up the program when calling realloc!
@@ -2106,6 +2176,14 @@ void G_Ticker()
       }
    }
 
+   // turn inventory off after a certain amount of time
+   invbarstate_t &invbarstate = players[consoleplayer].invbarstate;
+   if(invbarstate.inventory && !(--inventoryTics))
+   {
+      players[consoleplayer].inv_ptr = invbarstate.inv_ptr;
+      invbarstate.inventory = false;
+   }
+
    // do main actions
    
    // killough 9/29/98: split up switch statement
@@ -2168,6 +2246,7 @@ void G_PlayerReborn(int player)
    skin_t *playerskin;
    playerclass_t *playerclass;
    inventory_t inventory;
+   inventoryindex_t inv_ptr;
 
    p = &players[player];
 
@@ -2183,6 +2262,7 @@ void G_PlayerReborn(int player)
    playerskin   = p->skin;
    playerclass  = p->pclass;     // haleyjd: playerclass
    inventory    = p->inventory;  // haleyjd: inventory
+   inv_ptr      = p->inv_ptr;
   
    memset(p, 0, sizeof(*p));
 
@@ -2198,6 +2278,7 @@ void G_PlayerReborn(int player)
    p->skin        = playerskin;
    p->pclass      = playerclass;              // haleyjd: playerclass
    p->inventory   = inventory;                // haleyjd: inventory
+   p->inv_ptr     = inv_ptr;
    p->playerstate = PST_LIVE;
    p->health      = p->pclass->initialhealth; // Ty 03/12/98 - use dehacked values
    p->quake       = 0;                        // haleyjd 01/21/07

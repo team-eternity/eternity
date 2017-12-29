@@ -33,6 +33,7 @@
 #include "doomstat.h"
 #include "d_event.h"
 #include "d_gi.h"
+#include "e_inventory.h"
 #include "e_player.h"
 #include "e_states.h"
 #include "g_game.h"
@@ -462,7 +463,12 @@ void P_DeathThink(player_t *player)
    }
       
    if(player->cmd.buttons & BT_USE)
+   {
+      if(player == &players[consoleplayer])
+         player->invbarstate.inv_ptr = 0;
+
       player->playerstate = PST_REBORN;
+   }
 }
 
 //
@@ -613,6 +619,10 @@ void P_PlayerThink(player_t *player)
    // chain saw run forward
 
    cmd = &player->cmd;
+
+   if(cmd->itemID && demo_version >= 349)
+      E_TryUseItem(player, cmd->itemID - 1); // ticcmd ID is off by one
+
    if(player->mo->flags & MF_JUSTATTACKED)
    {
       cmd->angleturn = 0;

@@ -27,9 +27,11 @@
 #include "z_zone.h"
 #include "i_system.h"
 #include "doomstat.h"
+#include "d_dehtbl.h"
 #include "e_inventory.h"
 #include "m_random.h"
 #include "m_swap.h"
+#include "metaapi.h"
 #include "p_mobj.h"
 #include "v_patchfmt.h"
 #include "v_video.h"
@@ -47,11 +49,45 @@
 //
 
 // cached patches
-static patch_t *invnums[10];   // inventory numbers
+static patch_t *invnums[10];      // inventory numbers
+static patch_t *smallinvnums[10]; // small inventory numbers
+static patch_t *PatchINVLFGEM1;
+static patch_t *PatchINVLFGEM2;
+static patch_t *PatchINVRTGEM1;
+static patch_t *PatchINVRTGEM2;
 
 // current state variables
 static int chainhealth;        // current position of the gem
 static int chainwiggle;        // small randomized addend for chain y coord.
+
+//
+// ST_drawSmallNumber
+//
+// Draws a small (at most) 5 digit number. It is RIGHT aligned for x and y.
+// x is expected to be 8 more than its equivalent Heretic calls.
+//
+static void ST_drawSmallNumber(int val, int x, int y)
+{   
+   if(val > 1)
+   {
+      patch_t *patch;
+      char buf[6];
+
+      // If you want more than 99,999 of something then you probably
+      // know enough about coding to change this hard limit.
+      if(val > 99999)
+         val = 99999;
+      sprintf(buf, "%d", val);
+      x -= 4 * (strlen(buf));
+      for(char *rover = buf; *rover; rover++)
+      {
+         int i = *rover - '0';
+         patch = smallinvnums[i];
+         V_DrawPatch(x, y, &subscreen43, patch);
+         x += 4;
+      }
+   }
+}
 
 //
 // ST_HticInit
@@ -75,6 +111,22 @@ static void ST_HticInit()
       invnums[i] = PatchLoader::CacheName(wGlobalDir, lumpname, PU_STATIC);
    }
 
+   // load small inventory numbers
+   for(i = 0; i < 10; ++i)
+   {
+      char lumpname[9];
+
+      memset(lumpname, 0, 9);
+      sprintf(lumpname, "SMALLIN%d", i);
+
+      smallinvnums[i] = PatchLoader::CacheName(wGlobalDir, lumpname, PU_STATIC);
+   }
+
+   PatchINVLFGEM1 = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEML1"), PU_STATIC);
+   PatchINVLFGEM2 = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEML2"), PU_STATIC);
+   PatchINVRTGEM1 = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEMR1"), PU_STATIC);
+   PatchINVRTGEM2 = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEMR2"), PU_STATIC);
+
    // haleyjd 10/09/05: load key graphics for HUD
    for(i = 0; i < NUMCARDS+3; ++i)  //jff 2/23/98 show both keys too
    {
@@ -85,6 +137,11 @@ static void ST_HticInit()
       efree(keys[i]);
       keys[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
+
+   // EDF_FEATURES_FIXME: This should be moved elsewhere probably.
+   // Initialise the inventory bar states.
+   for(int i = 0; i < MAXPLAYERS; i++)
+      players[i].invbarstate = { false, 0, 0 };
 }
 
 //
@@ -319,6 +376,9 @@ static void ST_drawStatBar()
 {
    int temp;
    patch_t *statbar;
+   const char *patch;
+   itemeffect_t *artifact;
+   invbarstate_t &invbarstate = players[displayplayer].invbarstate;
 
    // update the status bar patch for the appropriate game mode
    switch(GameType)
@@ -332,6 +392,35 @@ static void ST_drawStatBar()
    }
 
    V_DrawPatch(34, 160, &subscreen43, statbar);
+
+   // FIXME: Make this wait for the next tic, instead of iterating every frame.
+   // ArtifactFlash, it's a gas! Gas! Gas!
+   if(invbarstate.ArtifactFlash)
+   {
+      V_DrawPatch(180, 161, &subscreen43,
+         PatchLoader::CacheName(wGlobalDir, "BLACKSQ", PU_CACHE));
+
+      temp = W_GetNumForName(DEH_String("useartia")) + invbarstate.ArtifactFlash - 1;
+
+      V_DrawPatch(182, 161, &subscreen43,
+         PatchLoader::CacheNum(wGlobalDir, temp, PU_CACHE));
+      // MaxW: Choco Heretic does stuff that I'm not sure how to translate to EE.
+      invbarstate.ArtifactFlash--;
+   }
+   // It's safety checks all the way down!
+   else if(plyr->inventory[plyr->inv_ptr].amount)
+   {
+      if((artifact = E_EffectForInventoryIndex(plyr, plyr->inv_ptr)))
+      {
+         patch = artifact->getString("icon", "");
+         if(strcmp(patch, "") && artifact->getInt("invbar", 0))
+         {
+            V_DrawPatch(179, 160, &subscreen43,
+               PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE, lumpinfo_t::ns_sprites));
+            ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact), 209, 182);
+         }
+      }
+   }
 
    // TODO: inventory stuff
 
@@ -365,7 +454,62 @@ static void ST_drawStatBar()
    // draw ammo amount
    itemeffect_t *ammo = P_GetReadyWeapon(plyr)->ammo;
    if(ammo)
+   {
+      V_DrawPatch(108, 161, &subscreen43,
+                  PatchLoader::CacheName(wGlobalDir, "BLACKSQ", PU_CACHE));
+      patch = ammo->getString("icon", nullptr);
+      if(estrnonempty(patch))
+      {
+         V_DrawPatch(111, 172, &subscreen43,
+                     PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE));
+      }
       ST_drawInvNum(E_GetItemOwnedAmount(plyr, ammo), 136, 162);
+   }
+}
+
+static void ST_drawInvBar()
+{
+   itemeffect_t *artifact;
+   const char *patch;
+   invbarstate_t &invbarstate = players[displayplayer].invbarstate;
+   int leftoffs = invbarstate.inv_ptr >= 7 ? invbarstate.inv_ptr - 6 : 0;
+
+   V_DrawPatch(34, 160, &subscreen43, PatchLoader::CacheName(wGlobalDir, "INVBAR", PU_CACHE));
+
+   int i = -1;
+   // E_MoveInventoryCursor returns false when it hits the boundary of the visible inventory,
+   // so it's a useful iterator here.
+   while(E_MoveInventoryCursor(plyr, 1, i) && i < 7)
+   {
+      // Safety check that the player has an inventory item, then that the effect exists
+      // for the selected item, then that there is an associated patch for that effect.
+      if(plyr->inventory[i + leftoffs].amount > 0)
+      {
+         if((artifact = E_EffectForInventoryIndex(plyr, i + leftoffs)))
+         {
+            patch = artifact->getString("icon", "");
+            if(strcmp(patch, ""))
+            {
+               V_DrawPatch(50 + i * 31, 160, &subscreen43,
+                           PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE,
+                                                  lumpinfo_t::ns_sprites));
+               ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact), 77 + i * 31, 182);
+            }
+         }
+      }
+   }
+
+   if(leftoffs)
+      V_DrawPatch(38, 159, &subscreen43, !(leveltime & 4) ? PatchINVLFGEM1 : PatchINVLFGEM2);
+   int temp = i + leftoffs - 1;
+   if(i == 7 && E_MoveInventoryCursor(plyr, 1, temp))
+   {
+      V_DrawPatch(269, 159, &subscreen43,
+         !(leveltime & 4) ? PatchINVRTGEM1 : PatchINVRTGEM2);
+   }
+
+   V_DrawPatch(50 + (invbarstate.inv_ptr - leftoffs) * 31, 189, &subscreen43,
+               PatchLoader::CacheName(wGlobalDir, "SELECTBO", PU_CACHE));
 }
 
 //
@@ -380,7 +524,10 @@ static void ST_HticDrawer()
 
    // TODO: choose whether to draw statbar or inventory bar here
    // based on whether the inventory is active
-   ST_drawStatBar();
+   if(players[displayplayer].invbarstate.inventory)
+      ST_drawInvBar();
+   else
+      ST_drawStatBar();
 }
 
 //

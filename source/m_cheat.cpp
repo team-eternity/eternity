@@ -340,7 +340,7 @@ static void cheat_pw(const void *arg)
       plyr->powers[pw] = pw!=pw_strength && pw!=pw_allmap && pw!=pw_silencer;  // killough
    else
    {
-      P_GivePower(plyr, pw);
+      P_GivePower(plyr, pw, 1, false);
       if(pw != pw_strength && !comp[comp_infcheat])
          plyr->powers[pw] = -1;      // infinite duration -- killough
    }

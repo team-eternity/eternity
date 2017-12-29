@@ -106,6 +106,15 @@ typedef enum
   CF_IMMORTAL         = 0x10,
 } cheat_t;
 
+
+// TODO: Maybe re-add curpos
+// The problem is adapting code to handle variable lengths of inventory bars.
+struct invbarstate_t {
+   bool inventory;  // inventory is currently being viewed?
+   int inv_ptr;
+   int ArtifactFlash;
+};
+
 // These defines are in degrees:
 #define MAXPITCHUP   32
 #define MAXPITCHDOWN 32
@@ -191,7 +200,9 @@ struct player_t
 
    // Inventory
    inventory_t    inventory;     // haleyjd 07/06/13: player's inventory
-   
+   inventoryindex_t inv_ptr;     // MaxW: 2017/12/28: Player's currently selected item
+   invbarstate_t   invbarstate;  // MaxW: 2017/12/28: player's inventory bar state
+
    // Player name
    char           name[20];
 };
