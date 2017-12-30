@@ -159,8 +159,8 @@ struct player_t
    int            frags[MAXPLAYERS];
    int            totalfrags;
    
-   weapontype_t   readyweapon;
-   weapontype_t   pendingweapon; // Is wp_nochange if not changing.
+   weaponinfo_t  *readyweapon;
+   weaponinfo_t  *pendingweapon; // Is nullptr if not changing.
 
    int            weaponowned[NUMWEAPONS];
    int            weaponctrs[NUMWEAPONS][3]; // haleyjd 03/31/06

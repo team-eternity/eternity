@@ -226,7 +226,7 @@ static bool P_shootThing(intercept_t *in)
    // haleyjd: don't let players use melee attacks on ghosts
    if((th->flags3 & MF3_GHOST) && 
       trace.thing->player &&
-      P_GetReadyWeapon(trace.thing->player)->flags & WPF_NOHITGHOSTS)
+      trace.thing->player->readyweapon->flags & WPF_NOHITGHOSTS)
       return true;
 
    // check angles to see if the thing can be aimed at

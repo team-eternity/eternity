@@ -61,6 +61,7 @@ weaponinfo_t weaponinfo[NUMWEAPONS] =
     // fist
     wp_fist,
     "Fist",
+    wp_fist,
     NULL,
     S_PUNCHUP,
     S_PUNCHDOWN,
@@ -78,6 +79,7 @@ weaponinfo_t weaponinfo[NUMWEAPONS] =
     // pistol
     wp_pistol,
     "Pistol",
+    wp_pistol,
     NULL,
     S_PISTOLUP,
     S_PISTOLDOWN,
@@ -98,6 +100,7 @@ weaponinfo_t weaponinfo[NUMWEAPONS] =
     // shotgun
     wp_shotgun,
     "Shotgun",
+    wp_shotgun,
     NULL,
     S_SGUNUP,
     S_SGUNDOWN,
@@ -118,6 +121,7 @@ weaponinfo_t weaponinfo[NUMWEAPONS] =
     // chaingun
     wp_chaingun,
     "Chaingun",
+    wp_chaingun,
     NULL,
     S_CHAINUP,
     S_CHAINDOWN,
@@ -138,6 +142,7 @@ weaponinfo_t weaponinfo[NUMWEAPONS] =
     // missile launcher
     wp_missile,
     "MissileLauncher",
+    wp_missile,
     NULL,
     S_MISSILEUP,
     S_MISSILEDOWN,
@@ -158,6 +163,7 @@ weaponinfo_t weaponinfo[NUMWEAPONS] =
     // plasma rifle
     wp_plasma,
     "PlasmaRifle",
+    wp_plasma,
     NULL,
     S_PLASMAUP,
     S_PLASMADOWN,
@@ -178,6 +184,7 @@ weaponinfo_t weaponinfo[NUMWEAPONS] =
     // bfg 9000
     wp_bfg,
     "BFG9000",
+    wp_bfg,
     NULL,
     S_BFGUP,
     S_BFGDOWN,
@@ -198,6 +205,7 @@ weaponinfo_t weaponinfo[NUMWEAPONS] =
     // chainsaw
     wp_chainsaw,
     "Chainsaw",
+    wp_chainsaw,
     NULL,
     S_SAWUP,
     S_SAWDOWN,
@@ -217,6 +225,7 @@ weaponinfo_t weaponinfo[NUMWEAPONS] =
     // super shotgun
     wp_supershotgun,
     "SuperShotgun",
+    wp_supershotgun,
     NULL,
     S_DSGUNUP,
     S_DSGUNDOWN,

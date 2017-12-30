@@ -179,7 +179,7 @@ void A_JumpIfNoAmmo(actionargs_t *actionargs)
    {
       player_t *p     = actionargs->actor->player;
       int statenum    = E_ArgAsStateNumNI(actionargs->args, 0, NULL);
-      weaponinfo_t *w = P_GetReadyWeapon(p);
+      weaponinfo_t *w = p->readyweapon;
       int ammo;
 
       // validate state

@@ -51,6 +51,7 @@
 #include "e_player.h"
 #include "e_states.h"
 #include "e_things.h"
+#include "e_weapons.h"
 #include "f_finale.h"
 #include "f_wipe.h"
 #include "g_bind.h"
@@ -377,7 +378,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    if((!demo_compatibility && players[consoleplayer].attackdown &&
        !P_CheckAmmo(&players[consoleplayer])) || gameactions[ka_nextweapon])
    {
-      newweapon = P_SwitchWeapon(&players[consoleplayer]); // phares
+      newweapon = P_SwitchWeaponOld(&players[consoleplayer]); // phares
    }
    else
    {                                 // phares 02/26/98: Added gamemode checks
@@ -410,16 +411,16 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       
       if(!demo_compatibility && doom_weapon_toggles)
       {
-         const player_t *player = &players[consoleplayer];
+         player_t *player = &players[consoleplayer];
 
          // only select chainsaw from '1' if it's owned, it's
          // not already in use, and the player prefers it or
          // the fist is already in use, or the player does not
          // have the berserker strength.
 
-         if(newweapon==wp_fist && player->weaponowned[wp_chainsaw] &&
-            player->readyweapon!=wp_chainsaw &&
-            (player->readyweapon==wp_fist ||
+         if(newweapon==wp_fist && E_PlayerOwnsWeaponForDEHNum(player, wp_chainsaw) &&
+            !E_WeaponIsCurrentDEHNum(player, wp_chainsaw) &&
+            (E_WeaponIsCurrentDEHNum(player, wp_fist) ||
              !player->powers[pw_strength] ||
              P_WeaponPreferred(wp_chainsaw, wp_fist)))
          {
@@ -432,10 +433,10 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          // player prefers it.
 
          if(newweapon == wp_shotgun && enable_ssg &&
-            player->weaponowned[wp_supershotgun] &&
-            (!player->weaponowned[wp_shotgun] ||
-             player->readyweapon == wp_shotgun ||
-             (player->readyweapon != wp_supershotgun &&
+            E_PlayerOwnsWeaponForDEHNum(player, wp_supershotgun) &&
+            (!E_PlayerOwnsWeaponForDEHNum(player, wp_shotgun) ||
+             E_WeaponIsCurrentDEHNum(player, wp_shotgun) ||
+             !(E_WeaponIsCurrentDEHNum(player, wp_supershotgun) &&
               P_WeaponPreferred(wp_supershotgun, wp_shotgun))))
          {
             newweapon = wp_supershotgun;
@@ -2306,7 +2307,7 @@ void G_PlayerReborn(int player)
    }
 
    // INVENTORY_TODO: reborn weapons
-   p->readyweapon = p->pendingweapon = wp_pistol;
+   p->readyweapon = p->pendingweapon = E_WeaponForDEHNum(wp_pistol);
 
    // INVENTORY_TODO: eliminate?
    // sf: different weapons owned

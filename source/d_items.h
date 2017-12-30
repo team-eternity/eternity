@@ -53,6 +53,7 @@ struct weaponinfo_t
 {
    weapontype_t id;           // haleyjd 06/28/13: weapontype id number
    const char  *name;         // haleyjd 06/29/13: name of weapon
+   int          dehnum;       // MaxW: 2017/12/30: DeHackEd number for fast access & compat.
 
    MetaTable   *ammo;         // haleyjd 08/05/13: ammo artifact type
    int          upstate;
@@ -83,6 +84,7 @@ struct weaponinfo_t
    // EDF hashing
    DLListItem<weaponinfo_t> idlinks;   // hash by id
    DLListItem<weaponinfo_t> namelinks; // hash by name
+   DLListItem<weaponinfo_t> dehlinks;  // hash by dehnum
 };
 
 extern weaponinfo_t weaponinfo[NUMWEAPONS];

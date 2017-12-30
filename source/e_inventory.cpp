@@ -1325,7 +1325,7 @@ static void E_processPickupEffects(cfg_t *cfg)
       cfg_t *sec = cfg_getnsec(cfg, EDF_SEC_PICKUPFX, i);
       const char *title = cfg_title(sec);
 
-      E_EDFLogPrintf("\t\Created pickup effect %s\n", title);
+      E_EDFLogPrintf("\tCreated pickup effect %s\n", title);
 
       // process effect properties
       E_processPickupEffect(sec);

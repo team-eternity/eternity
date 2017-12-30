@@ -120,31 +120,31 @@ bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
    // INVENTORY_TODO: hardcoded behaviors for now...
    if(!strcasecmp(ammo->getKey(), "AmmoClip"))
    {
-      if(player->readyweapon == wp_fist)
+      if(E_WeaponIsCurrentDEHNum(player, wp_fist))
       {
-         if(player->weaponowned[wp_chaingun])
-            player->pendingweapon = wp_chaingun;
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_chaingun))
+            player->pendingweapon = E_WeaponForDEHNum(wp_chaingun);
          else
-            player->pendingweapon = wp_pistol;
+            player->pendingweapon = E_WeaponForDEHNum(wp_pistol);
       }
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoShell"))
    {
-      if(player->readyweapon == wp_fist || player->readyweapon == wp_pistol)
-         if(player->weaponowned[wp_shotgun])
-            player->pendingweapon = wp_shotgun;
+      if(E_WeaponIsCurrentDEHNum(player, wp_fist) || E_WeaponIsCurrentDEHNum(player, wp_pistol))
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_shotgun))
+            player->pendingweapon = E_WeaponForDEHNum(wp_shotgun);
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoCell"))
    {
-      if(player->readyweapon == wp_fist || player->readyweapon == wp_pistol)
-         if(player->weaponowned[wp_plasma])
-            player->pendingweapon = wp_plasma;
+      if(E_WeaponIsCurrentDEHNum(player, wp_fist) || E_WeaponIsCurrentDEHNum(player, wp_pistol))
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_plasma))
+            player->pendingweapon = E_WeaponForDEHNum(wp_plasma);
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoMissile"))
    {
-      if(player->readyweapon == wp_fist)
-         if(player->weaponowned[wp_missile])
-            player->pendingweapon = wp_missile;
+      if(E_WeaponIsCurrentDEHNum(player, wp_fist))
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_missile))
+            player->pendingweapon = E_WeaponForDEHNum(wp_missile);
    }
 
    return true;
@@ -232,7 +232,8 @@ static bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped,
       player->weaponowned[weapon] = true;
       P_GiveAmmo(player, wp->ammo, (GameType == gt_dm) ? wp->dmstayammo : wp->coopstayammo);
       
-      player->pendingweapon = weapon;
+      // WEAPON_FIXME
+      player->pendingweapon = E_WeaponForDEHNum(weapon);
       S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
       P_consumeSpecial(player, special); // need to handle it here
       return false;
@@ -245,7 +246,8 @@ static bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped,
    // haleyjd 10/4/11: de-Killoughized
    if(!player->weaponowned[weapon])
    {
-      player->pendingweapon = weapon;
+      // WEAPON_FIXME
+      player->pendingweapon = E_WeaponForDEHNum(weapon);
       player->weaponowned[weapon] = 1;
       gaveweapon = true;
    }
@@ -695,9 +697,9 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    {
       // Set pendingweapon if need be
       if(pickup->changeweapon != nullptr &&
-         player->readyweapon != pickup->changeweapon->id &&
+         player->readyweapon->id != pickup->changeweapon->id &&
          E_PlayerOwnsWeapon(player, pickup->changeweapon))
-         player->pendingweapon = pickup->changeweapon->id;
+         player->pendingweapon = pickup->changeweapon;
 
       // Remove the object, provided it doesn't stay in multiplayer games
       if(GameType == gt_single || !(pickup->flags & PFXF_LEAVEINMULTI))
@@ -1136,7 +1138,7 @@ static int P_AdjustDamageType(Mobj *source, Mobj *inflictor, int mod)
       // players
       if(source->player && mod == MOD_PLAYERMISC)
       {
-         weaponinfo_t *weapon = P_GetReadyWeapon(source->player);
+         weaponinfo_t *weapon = source->player->readyweapon;
 
          // redirect based on weapon mod
          newmod = weapon->mod;
@@ -1251,7 +1253,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
 
    if(inflictor && !(target->flags & MF_NOCLIP) &&
       (!source || !source->player ||
-       !(P_GetReadyWeapon(source->player)->flags & WPF_NOTHRUST)) &&
+       !(source->player->readyweapon->flags & WPF_NOTHRUST)) &&
       !(inflictor->flags3 & MF3_NODMGTHRUST)) // haleyjd 11/14/02
    {
       // haleyjd: thrust factor differs for Heretic

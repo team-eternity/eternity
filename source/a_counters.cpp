@@ -748,7 +748,8 @@ void A_WeaponCtrJump(actionargs_t *actionargs)
    case 0:
    case 1:
    case 2:
-      counter = &(player->weaponctrs[player->readyweapon][cnum]); break;
+      // COUNTER_FIXME
+      //counter = &(player->weaponctrs[player->readyweapon][cnum]); break;
    default:
       return;
    }
@@ -768,7 +769,8 @@ void A_WeaponCtrJump(actionargs_t *actionargs)
       case 0:
       case 1:
       case 2:
-         value = player->weaponctrs[player->readyweapon][value];
+         // COUNTER_FIXME
+         //value = player->weaponctrs[player->readyweapon][value];
          break;
       default:
          return; // invalid counter number
@@ -841,7 +843,8 @@ void A_WeaponCtrSwitch(actionargs_t *actionargs)
    case 0:
    case 1:
    case 2:
-      counter = &(player->weaponctrs[player->readyweapon][cnum]); 
+      // COUNTER_FIXME
+      //counter = &(player->weaponctrs[player->readyweapon][cnum]); 
       break;
    default:
       return;
@@ -923,7 +926,8 @@ void A_WeaponSetCtr(actionargs_t *actionargs)
    case 0:
    case 1:
    case 2:
-      counter = &(player->weaponctrs[player->readyweapon][cnum]); break;
+      // COUNTER_FIXME
+      //counter = &(player->weaponctrs[player->readyweapon][cnum]); break;
    default:
       return;
    }
@@ -1035,7 +1039,8 @@ void A_WeaponCtrOp(actionargs_t *actionargs)
    case 0:
    case 1:
    case 2:
-      c_oper1 = &(player->weaponctrs[player->readyweapon][c_oper1_num]);
+      // COUNTER_FIXME
+      //c_oper1 = &(player->weaponctrs[player->readyweapon][c_oper1_num]);
       break;
    default:
       return;
@@ -1046,7 +1051,8 @@ void A_WeaponCtrOp(actionargs_t *actionargs)
    case 0:
    case 1:
    case 2:
-      c_oper2 = &(player->weaponctrs[player->readyweapon][c_oper2_num]);
+      // COUNTER_FIXME
+      //c_oper2 = &(player->weaponctrs[player->readyweapon][c_oper2_num]);
       break;
    default:
       return;
@@ -1057,7 +1063,8 @@ void A_WeaponCtrOp(actionargs_t *actionargs)
    case 0:
    case 1:
    case 2:
-      c_dest = &(player->weaponctrs[player->readyweapon][c_dest_num]); break;
+      // COUNTER_FIXME
+      //c_dest = &(player->weaponctrs[player->readyweapon][c_dest_num]); break;
    default:
       return;
    }
@@ -1138,7 +1145,8 @@ void A_WeaponCopyCtr(actionargs_t *actionargs)
    case 0:
    case 1:
    case 2:
-      src = &(player->weaponctrs[player->readyweapon][cnum1]); break;
+      // COUNTER_FIXME
+      //src = &(player->weaponctrs[player->readyweapon][cnum1]); break;
    default:
       return;
    }
@@ -1148,7 +1156,8 @@ void A_WeaponCopyCtr(actionargs_t *actionargs)
    case 0:
    case 1:
    case 2:
-      dest = &(player->weaponctrs[player->readyweapon][cnum2]); break;
+      // COUNTER_FIXME
+      //dest = &(player->weaponctrs[player->readyweapon][cnum2]); break;
    default:
       return;
    }
@@ -1184,7 +1193,7 @@ void A_CheckReloadEx(actionargs_t *actionargs)
    if(!(pspr = actionargs->pspr))
       return;
 
-   w = P_GetReadyWeapon(player);
+   w = player->readyweapon;
    if(!w->ammo) // no-ammo weapon?
       return;
 
@@ -1217,7 +1226,8 @@ void A_CheckReloadEx(actionargs_t *actionargs)
       case 0:
       case 1:
       case 2:
-         value = player->weaponctrs[player->readyweapon][value];
+         // COUNTER_FIXME
+         //value = player->weaponctrs[player->readyweapon][value];
          break;
       default:
          return; // invalid counter number

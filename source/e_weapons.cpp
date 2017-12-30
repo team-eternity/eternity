@@ -154,8 +154,10 @@ static
    EHashTable<weaponinfo_t, ENCStringHashKey, &weaponinfo_t::name, &weaponinfo_t::namelinks>
    e_WeaponNameHash;
 
-//
-// E_WeaponForID
+static 
+   EHashTable<weaponinfo_t, EIntHashKey, &weaponinfo_t::dehnum, &weaponinfo_t::dehlinks>
+   e_WeaponDehHash;
+
 //
 // Obtain a weaponinfo_t structure for its ID number.
 //
@@ -165,13 +167,29 @@ weaponinfo_t *E_WeaponForID(int id)
 }
 
 //
-// E_WeaponForName
-//
 // Obtain a weaponinfo_t structure by name.
 //
 weaponinfo_t *E_WeaponForName(const char *name)
 {
    return e_WeaponNameHash.objectForKey(name);
+}
+
+//
+// Obtain a weaponinfo_t structure by name.
+//
+weaponinfo_t *E_WeaponForDEHNum(int dehnum)
+{
+   return e_WeaponDehHash.objectForKey(dehnum);
+}
+
+//
+// Check if the weaponsec in the slotnum is currently equipped
+// DON'T CALL THIS IN NEW CODE, IT EXISTS SOLELY FOR COMPAT.
+//
+bool E_WeaponIsCurrentDEHNum(player_t *player, const int dehnum)
+{
+   const weaponinfo_t *weapon = E_WeaponForDEHNum(dehnum);
+   return weapon ? player->readyweapon->id == weapon->id : false;
 }
 
 //
@@ -182,12 +200,24 @@ bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon)
    return player->weaponowned[weapon->id];
 }
 
+//
+// Convenience function to check if a player owns the weapon specific by dehnum
+//
+bool E_PlayerOwnsWeaponForDEHNum(player_t *player, int dehnum)
+{
+   return E_PlayerOwnsWeapon(player, E_WeaponForDEHNum(dehnum));
+}
+
+//
+// EXTREME HACKS
+//
 void E_AddHardCodedWeaponsToHash()
 {
    for(int i = 0; i < NUMWEAPONS; i++)
    {
       e_WeaponIDHash.addObject(weaponinfo[i]);
       e_WeaponNameHash.addObject(weaponinfo[i]);
+      e_WeaponDehHash.addObject(weaponinfo[i]);
    }
 }
 

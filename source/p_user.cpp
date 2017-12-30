@@ -36,6 +36,7 @@
 #include "e_inventory.h"
 #include "e_player.h"
 #include "e_states.h"
+#include "e_weapons.h"
 #include "g_game.h"
 #include "hu_stuff.h"
 #include "m_random.h"
@@ -750,13 +751,13 @@ void P_PlayerThink(player_t *player)
          newweapon = (cmd->buttons & BT_WEAPONMASK_OLD)>>BT_WEAPONSHIFT;
 
          if(newweapon == wp_fist && player->weaponowned[wp_chainsaw] &&
-            (player->readyweapon != wp_chainsaw ||
+            (!E_WeaponIsCurrentDEHNum(player, wp_chainsaw) ||
              !player->powers[pw_strength]))
             newweapon = wp_chainsaw;
          if(enable_ssg &&
             newweapon == wp_shotgun &&
             player->weaponowned[wp_supershotgun] &&
-            player->readyweapon != wp_supershotgun)
+            !E_WeaponIsCurrentDEHNum(player, wp_supershotgun))
             newweapon = wp_supershotgun;
       }
 
@@ -764,7 +765,9 @@ void P_PlayerThink(player_t *player)
 
       // WEAPON_FIXME: setting pendingweapon
 
-      if(player->weaponowned[newweapon] && newweapon != player->readyweapon)
+      weaponinfo_t *pendingweapon = E_WeaponForDEHNum(newweapon);
+      if(E_PlayerOwnsWeapon(player, pendingweapon) &&
+         pendingweapon->id != player->readyweapon->id)
       {
          // Do not go to plasma or BFG in shareware, even if cheated.
          // haleyjd 06/28/13: generalized for EDF weapon system
@@ -774,7 +777,7 @@ void P_PlayerThink(player_t *player)
             !(GameModeInfo->flags & GIF_SHAREWARE && 
               pendingweapon->flags & WPF_NOTSHAREWARE))
          {
-            player->pendingweapon = newweapon;
+            player->pendingweapon = pendingweapon;
          }
       }
    }

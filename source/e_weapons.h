@@ -54,8 +54,13 @@ extern weaponslot_t *weaponslots[NUMWEAPONSLOTS];
 // Global Functions
 weaponinfo_t *E_WeaponForID(int id);
 weaponinfo_t *E_WeaponForName(const char *name);
+weaponinfo_t *E_WeaponForDEHNum(int dehnum);
+
+bool E_WeaponIsCurrentDEHNum(player_t *player, const int dehnum);
 
 bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon);
+bool E_PlayerOwnsWeaponForDEHNum(player_t *player, int dehnum);
+
 // TEMP
 void E_AddHardCodedWeaponsToHash();
 

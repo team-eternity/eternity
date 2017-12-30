@@ -479,7 +479,8 @@ static void P_ArchivePlayers(SaveArchive &arc)
              << p.pitch        << p.momx            << p.momy
              << p.health       << p.armorpoints     << p.armorfactor
              << p.armordivisor << p.totalfrags
-             << p.readyweapon  << p.pendingweapon   << p.extralight
+             << p.readyweapon->dehnum               << p.pendingweapon->dehnum
+             << p.extralight
              << p.cheats       << p.refire          << p.killcount
              << p.itemcount    << p.secretcount     << p.didsecret
              << p.damagecount  << p.bonuscount      << p.fixedcolormap
