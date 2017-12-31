@@ -212,47 +212,168 @@ static void P_consumeSpecial(player_t *activator, Mobj *special)
 }
 
 //
-// P_GiveWeapon
+// Compat P_giveWeapon, to stop demos catching on fire for some reason
 //
-// The weapon name may have a MF_DROPPED flag ored in.
-//
-static bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped,
-                         Mobj *special)
+static bool P_giveWeaponCompat(player_t *player, itemeffect_t *giver, bool dropped, Mobj *special)
 {
    bool gaveweapon = false;
-   weaponinfo_t *wp = &weaponinfo[weapon];
+   weaponinfo_t *wp = E_WeaponForName(giver->getString("weapon", ""));
+   itemeffect_t *ammogiven = nullptr;
+   itemeffect_t *ammo = nullptr;
+   ammogiven = giver->getNextKeyAndTypeEx(ammogiven, "ammogiven");
+
+   int giveammo, dropammo, dmstayammo, coopstayammo;
+   if(ammogiven)
+   {
+      ammo = E_ItemEffectForName(ammogiven->getString("type", ""));
+      giveammo = ammogiven->getInt("ammo.give", -1);
+      if((dropammo = ammogiven->getInt("ammo.dropped", -1)) < 0)
+         dropammo = giveammo;
+      if((dmstayammo = ammogiven->getInt("ammo.dmstay", -1)) < 0)
+         dmstayammo = giveammo;
+      if((coopstayammo = ammogiven->getInt("ammo.coopstay", -1)) < 0)
+         coopstayammo = giveammo;
+   }
+   else
+   {
+      ammo = nullptr;
+      giveammo = dropammo = dmstayammo = coopstayammo = 0;
+   }
 
    if((dmflags & DM_WEAPONSTAY) && !dropped)
    {
       // leave placed weapons forever on net games
-      if(player->weaponowned[weapon])
+      if(E_PlayerOwnsWeapon(player, wp))
          return false;
 
       player->bonuscount += BONUSADD;
-      player->weaponowned[weapon] = true;
-      P_GiveAmmo(player, wp->ammo, (GameType == gt_dm) ? wp->dmstayammo : wp->coopstayammo);
-      
       // WEAPON_FIXME
-      player->pendingweapon = E_WeaponForDEHNum(weapon);
+      player->weaponowned[wp->dehnum] = true;
+      P_GiveAmmo(player, ammo, (GameType == gt_dm) ? dmstayammo : coopstayammo);
+
+      player->pendingweapon = wp;
       S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
       P_consumeSpecial(player, special); // need to handle it here
       return false;
    }
 
    // give one clip with a dropped weapon, two clips with a found weapon
-   int  amount   = dropped ? wp->dropammo : wp->giveammo;
-   bool gaveammo = (wp->ammo ? P_GiveAmmo(player, wp->ammo, amount) : false);
-   
+   int  amount = dropped ? dropammo : giveammo;
+   bool gaveammo = (ammo ? P_GiveAmmo(player, ammo, amount) : false);
+
    // haleyjd 10/4/11: de-Killoughized
-   if(!player->weaponowned[weapon])
+   if(!player->weaponowned[wp->dehnum])
    {
-      // WEAPON_FIXME
-      player->pendingweapon = E_WeaponForDEHNum(weapon);
-      player->weaponowned[weapon] = 1;
+      player->pendingweapon = wp;
+      player->weaponowned[wp->dehnum] = 1;
       gaveweapon = true;
    }
 
    return gaveweapon || gaveammo;
+}
+
+//
+// The weapon name may have a MF_DROPPED flag ored in.
+//
+static bool P_giveWeapon(player_t *player, itemeffect_t *giver, bool dropped, Mobj *special)
+{
+   if(demo_version < 349 && GameModeInfo->type == Game_DOOM)
+      return P_giveWeaponCompat(player, giver, dropped, special);
+
+   bool gaveweapon = false, gaveammo = false, dmstay = false, firsttime = true;
+   weaponinfo_t *wp = E_WeaponForName(giver->getString("weapon", ""));
+   if(!wp)
+   {
+      doom_printf(FC_ERROR "Invalid weaopninfo given in weapongiver: '%s'\a\n",
+                  giver->getKey());
+      special->remove();
+      return false;
+   }
+
+   itemeffect_t *ammogiven = nullptr;
+   while(firsttime || (ammogiven = giver->getNextKeyAndTypeEx(ammogiven, "ammogiven")))
+   {
+      itemeffect_t *ammo = nullptr;
+      int giveammo = 0, dropammo = 0, dmstayammo = 0, coopstayammo = 0;
+
+      if(ammogiven)
+      {
+         if(!(ammo = E_ItemEffectForName(ammogiven->getString("type", ""))))
+         {
+            doom_printf(FC_ERROR "Invalid ammo type given in weapongiver: '%s'\a\n",
+                        giver->getKey());
+            special->remove();
+            return false;
+         }
+         else if((giveammo = ammogiven->getInt("ammo.give", -1)) < 0)
+         {
+            doom_printf(FC_ERROR "Negative/unspecified ammo amount given for weapongiver: "
+                        "'%s', ammo: '%s'\a\n", giver->getKey(), ammo->getKey());
+            special->remove();
+            return false;
+         }
+         // Congrats, the user didn't screw up defining their ammogiven
+         // TODO: Automate Doom-style ratios with a flag?
+         if((dropammo = ammogiven->getInt("ammo.dropped", -1)) < 0)
+            dropammo = giveammo;
+         if((dmstayammo = ammogiven->getInt("ammo.dmstay", -1)) < 0)
+            dmstayammo = giveammo;
+         if((coopstayammo = ammogiven->getInt("ammo.coopstay", -1)) < 0)
+            coopstayammo = giveammo;
+      }
+
+      if((dmflags & DM_WEAPONSTAY) && !dropped)
+      {
+         // leave placed weapons forever on net games
+         if(E_PlayerOwnsWeapon(player, wp))
+            return false;
+
+         if(ammogiven)
+         {
+            if((GameType == gt_dm && dmstayammo) || (GameType == gt_coop && coopstayammo))
+            {
+               gaveammo |= P_GiveAmmo(player, ammo,
+                                      (GameType == gt_dm) ? dmstayammo : coopstayammo);
+            }
+         }
+
+         if(firsttime)
+         {
+            player->bonuscount += BONUSADD;
+            // WEAPON_FIXME
+            //E_GiveInventoryItem(player, wp->tracker);
+            player->weaponowned[wp->dehnum] = true;
+            player->pendingweapon = wp;
+            S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
+            P_consumeSpecial(player, special); // need to handle it here
+            dmstay = true;
+            firsttime = false;
+         }
+      }
+      else
+      {
+         // give one clip with a dropped weapon, two clips with a found weapon
+         const int  amount = dropped ? dropammo : giveammo;
+         gaveammo |= (ammo && amount ? P_GiveAmmo(player, ammo, amount) : false);
+
+         // haleyjd 10/4/11: de-Killoughized
+         if(firsttime)
+         {
+            if(!E_PlayerOwnsWeapon(player, wp))
+            {
+               player->pendingweapon = wp;
+               // WEAPON_FIXME
+               //E_GiveInventoryItem(player, wp->tracker);
+               player->weaponowned[wp->dehnum] = true;
+               gaveweapon = true;
+            }
+            firsttime = false;
+         }
+      }
+   }
+
+   // Deathmatch w/ weapons stay always returns false
+   return !dmstay && (gaveweapon || gaveammo);
 }
 
 //
@@ -673,9 +794,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
          break;
       case ITEMFX_WEAPONGIVER:
          // EDF_FEATURES_FIXME: This hack
-         pickedup |= P_GiveWeapon(player,
-                                  E_WeaponForName(effect->getString("weapon", ""))->id,
-                                  dropped, special);
+         pickedup |= P_giveWeapon(player, effect, dropped, special);
          break;
       case ITEMFX_ARTIFACT: // Artifacts - items which go into the inventory
          pickedup |= E_GiveInventoryItem(player, effect);

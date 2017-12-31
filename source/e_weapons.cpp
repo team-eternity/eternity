@@ -197,7 +197,7 @@ bool E_WeaponIsCurrentDEHNum(player_t *player, const int dehnum)
 //
 bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon)
 {
-   return player->weaponowned[weapon->id];
+   return player->weaponowned[weapon->dehnum];
 }
 
 //

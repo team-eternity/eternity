@@ -75,12 +75,6 @@ struct weaponinfo_t
    int          haptictime;   // haptic recoil duration, from 1 to 10
    int          upsound;      // sound made when weapon is being brought up
 
-   // TODO: move to EDF weapon pickup definitions
-   int          dmstayammo;   // amount of ammo given on pickup in DM when weapons stay
-   int          coopstayammo; // amount of ammo given on pickup in coop when weapons stay
-   int          giveammo;     // normal amount of ammo to give
-   int          dropammo;     // amount of ammo given when dropped
-
    // EDF hashing
    DLListItem<weaponinfo_t> idlinks;   // hash by id
    DLListItem<weaponinfo_t> namelinks; // hash by name

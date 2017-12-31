@@ -448,6 +448,7 @@ public:
 
    // Managed strings
    void        addString(const char *key, const char *value);
+   const char *getString(size_t  keyIndex, const char *defValue) const;
    const char *getString(const char *key, const char *defValue) const;
    void        setString(const char *key, const char *newValue);
    char       *removeString(const char *key);
@@ -460,6 +461,14 @@ public:
    void        setConstString(size_t keyIndex, const char *newValue);
    void        setConstString(const char *key, const char *newValue);
    const char *removeConstString(const char *key);
+
+   // Nested MetaTable
+   void       addMetaTable(size_t keyIndex, MetaTable *value);
+   void       addMetaTable(const char *key, MetaTable *newValue);
+   MetaTable *getMetaTable(size_t keyIndex, MetaTable *defValue) const;
+   MetaTable *getMetaTable(const char *key, MetaTable *defValue) const;
+   void       setMetaTable(size_t keyIndex, MetaTable *value);
+   void       setMetaTable(const char *key, MetaTable *value);
 
    // Copy routine - clones the entire MetaTable
    void copyTableTo(MetaTable *dest) const;

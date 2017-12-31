@@ -94,7 +94,6 @@ weaponinfo_t weaponinfo[NUMWEAPONS] =
     10,
     1, 1,
     0,
-    50, 20, 20, 10
   },  
   {
     // shotgun
@@ -115,7 +114,6 @@ weaponinfo_t weaponinfo[NUMWEAPONS] =
     30,
     3, 3,
     0,
-    20, 8, 8, 4
   },
   {
     // chaingun
@@ -136,7 +134,6 @@ weaponinfo_t weaponinfo[NUMWEAPONS] =
     10,
     1, 1,
     0,
-    50, 20, 20, 10
   },
   {
     // missile launcher
@@ -157,7 +154,6 @@ weaponinfo_t weaponinfo[NUMWEAPONS] =
     100,
     6, 8,
     0,
-    5, 2, 2, 1
   },
   {
     // plasma rifle
@@ -178,7 +174,6 @@ weaponinfo_t weaponinfo[NUMWEAPONS] =
     20,
     2, 1,
     0,
-    100, 40, 40, 20
   },
   {
     // bfg 9000
@@ -199,7 +194,6 @@ weaponinfo_t weaponinfo[NUMWEAPONS] =
     100,
     10, 10,
     0,
-    100, 40, 40, 20
   },
   {
     // chainsaw
@@ -240,7 +234,6 @@ weaponinfo_t weaponinfo[NUMWEAPONS] =
     80,
     5, 5,
     0,
-    20, 8, 8, 4
   },  
 };
 
