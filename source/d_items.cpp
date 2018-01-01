@@ -33,6 +33,7 @@
 #include "e_inventory.h"
 #include "e_states.h"
 #include "e_weapons.h"
+#include "i_system.h"
 #include "sounds.h"
 #include "w_wad.h"
 
@@ -55,7 +56,7 @@ bool enable_ssg = false;
 //  haleyjd 08/10/02: added ammopershot field to allow customized
 //   ammo usage for any weapon via DeHackEd
 //
-weaponinfo_t weaponinfo[NUMWEAPONS] =
+/*weaponinfo_t weaponinfo[NUMWEAPONS] =
 {
   {
     // fist
@@ -250,7 +251,7 @@ static const char *d_ammoTypesForWeapons[NUMWEAPONS] =
    "AmmoCell",    // BFG
    NULL,          // chainsaw
    "AmmoShell"    // SSG
-};
+};*/
 
 //
 // haleyjd 07/25/03: temporary hack to resolve weapon states
@@ -260,7 +261,7 @@ static const char *d_ammoTypesForWeapons[NUMWEAPONS] =
 //
 void D_InitWeaponInfo()
 {
-   int i;
+   /*int i;
 
    for(i = 0; i < NUMWEAPONS; ++i)
    {
@@ -272,12 +273,50 @@ void D_InitWeaponInfo()
 
       if(d_ammoTypesForWeapons[i])
          weaponinfo[i].ammo = E_ItemEffectForName(d_ammoTypesForWeapons[i]);
-   }
+   }*/
 
    // haleyjd 11/28/08: SSG enable
    if(GameModeInfo->type == Game_DOOM && 
       W_CheckNumForNameNS("SHT2A0", lumpinfo_t::ns_sprites) > 0)
       enable_ssg = true;
+
+   /*for(i = 0; i < NUMWEAPONS; ++i)
+   {
+      weaponinfo_t *wp1, *wp2;
+      wp1 = &weaponinfo[i];
+      wp2 = E_WeaponForDEHNum(i);
+
+      if(strcmp(wp1->name, wp2->name))
+         I_Error("name\n");
+      if(wp1->upstate != wp2->upstate)
+         I_Error("upstate\n");
+      if(wp1->downstate != wp2->downstate)
+         I_Error("downstate\n");
+      if(wp1->readystate != wp2->readystate)
+         I_Error("readystate\n");
+      if(wp1->atkstate != wp2->atkstate)
+         I_Error("atkstate\n");
+      if(wp1->flashstate != wp2->flashstate)
+         I_Error("flashstate\n");
+      if(wp1->ammopershot != wp2->ammopershot)
+         I_Error("ammopershot\n");
+      if(strcmp(wp1->nextInCycle->name, wp2->nextInCycle->name))
+         I_Error("nextInCycle\n");
+      if(strcmp(wp1->prevInCycle->name, wp2->prevInCycle->name))
+         I_Error("prevInCycle\n");
+      if(wp1->flags != wp2->flags)
+         I_Error("flags\n");
+      if(wp1->mod != wp2->mod)
+         I_Error("mod\n");
+      if(wp1->recoil != wp2->recoil)
+         I_Error("recoil\n");
+      if(wp1->hapticrecoil != wp2->hapticrecoil)
+         I_Error("hapticrecoil\n");
+      if(wp1->haptictime != wp2->haptictime)
+         I_Error("haptictime\n");
+      if(wp1->upsound != wp2->upsound)
+         I_Error("upsound\n");
+   }*/
 }
 
 //----------------------------------------------------------------------------

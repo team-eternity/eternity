@@ -37,6 +37,7 @@
 #include "doomstat.h"
 #include "e_fonts.h"
 #include "e_inventory.h"
+#include "e_weapons.h"
 #include "g_game.h"
 #include "hu_frags.h"
 #include "hu_over.h"
@@ -423,7 +424,7 @@ static void HU_drawWeapons(int x, int y)
       if(hu_player.weaponowned[i])
       {
          // got it
-         fontcolor = weapcolor(&weaponinfo[i]);
+         fontcolor = weapcolor(E_WeaponForDEHNum(i));
          tempstr << static_cast<char>(fontcolor) << (i + 1) << ' ';
       }
    }

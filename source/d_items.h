@@ -34,18 +34,20 @@ class MetaTable;
 //
 // haleyjd 09/11/07: weapon flags
 //
-enum
+enum wepflags_e : unsigned int
 {
-   WPF_NOTHRUST      = 0x00000001u, // doesn't thrust Mobj's
-   WPF_NOHITGHOSTS   = 0x00000002u, // tracer-based weapon can't hit ghosts
-   WPF_NOTSHAREWARE  = 0x00000004u, // not in shareware gamemodes
-   WPF_ENABLEAPS     = 0x00000008u, // enables ammo-per-shot field
-   WPF_SILENCER      = 0x00000010u, // weapon supports silencer powerup
-   WPF_SILENT        = 0x00000020u, // weapon is always silent
-   WPF_NOAUTOFIRE    = 0x00000040u, // weapon won't autofire in A_WeaponReady
-   WPF_FLEEMELEE     = 0x00000080u, // monsters consider it a melee weapon
-   WPF_ALWAYSRECOIL  = 0x00000100u, // weapon always has recoil
-   WPF_HAPTICRECOIL  = 0x00000200u, // use recoil-style haptic effect
+   WPF_NOTHRUST       = 0x00000001, // doesn't thrust Mobj's
+   WPF_NOHITGHOSTS    = 0x00000002, // tracer-based weapon can't hit ghosts
+   WPF_NOTSHAREWARE   = 0x00000004, // not in shareware gamemodes
+   WPF_ENABLEAPS      = 0x00000008, // enables ammo-per-shot field
+   WPF_SILENCER       = 0x00000010, // weapon supports silencer powerup
+   WPF_SILENT         = 0x00000020, // weapon is always silent
+   WPF_NOAUTOFIRE     = 0x00000040, // weapon won't autofire in A_WeaponReady
+   WPF_FLEEMELEE      = 0x00000080, // monsters consider it a melee weapon
+   WPF_ALWAYSRECOIL   = 0x00000100, // weapon always has recoil
+   WPF_HAPTICRECOIL   = 0x00000200, // use recoil-style haptic effect
+   WPF_READYSNDHALF   = 0x00000400, // readysound has 50% chance to play
+   WPF_AUTOSWITCHFROM = 0x00000800, // switches away if ammo for a wep w/o this is picked up
 };
 
 // Weapon info: sprite frames, ammunition use.
@@ -79,9 +81,9 @@ struct weaponinfo_t
    DLListItem<weaponinfo_t> idlinks;   // hash by id
    DLListItem<weaponinfo_t> namelinks; // hash by name
    DLListItem<weaponinfo_t> dehlinks;  // hash by dehnum
-};
 
-extern weaponinfo_t weaponinfo[NUMWEAPONS];
+   int   generation;   // EDF generation number
+};
 
 // haleyjd: temporary hack
 void D_InitWeaponInfo();

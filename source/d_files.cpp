@@ -492,8 +492,6 @@ void D_LoadEDF(gfs_t *gfs)
       }
    }
 
-   E_AddHardCodedWeaponsToHash();
-
    E_ProcessEDF(edfname);
 
    // haleyjd FIXME: temporary hacks

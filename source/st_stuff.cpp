@@ -925,7 +925,7 @@ static void ST_DoomFSDrawer()
    ST_updateWidgets();
 
    // ammo
-   itemeffect_t *ammo = weaponinfo[w_ready.data].ammo;
+   itemeffect_t *ammo = plyr->readyweapon->ammo;
    if(ammo)
    {
       int num = E_StrToNumLinear(st_AmmoForNum, NUMAMMO, ammo->getKey());

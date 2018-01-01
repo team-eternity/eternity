@@ -32,11 +32,16 @@
 #include "m_dllist.h"
 
 struct weaponinfo_t;
+struct cfg_t;
 
 #ifdef NEED_EDF_DEFINITIONS
 
 // Section Names
 #define EDF_SEC_WEAPONINFO "weaponinfo"
+
+// Section Options
+extern cfg_opt_t edf_wpninfo_opts[];
+extern cfg_opt_t edf_wdelta_opts[];
 
 #endif
 
@@ -61,8 +66,10 @@ bool E_WeaponIsCurrentDEHNum(player_t *player, const int dehnum);
 bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon);
 bool E_PlayerOwnsWeaponForDEHNum(player_t *player, int dehnum);
 
-// TEMP
-void E_AddHardCodedWeaponsToHash();
+
+void E_CollectWeapons(cfg_t *cfg);
+
+void E_ProcessWeaponInfo(cfg_t *cfg);
 
 #endif
 
