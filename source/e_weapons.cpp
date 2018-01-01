@@ -371,6 +371,10 @@ static const char *nativeWepStateLabels[] =
    "Ready",    // readystate
    "Fire",     // atkstate
    "Flash",    // flashstate
+   "Hold",     // holdstate
+   "AltFire",  // atkstate_alt
+   "AltFlash", // flashstate_alt
+   "AltHold",  // holdstate_alt
 };
 
 enum wepstatetypes_e
@@ -380,6 +384,10 @@ enum wepstatetypes_e
    WSTATE_READY,
    WSTATE_FIRE,
    WSTATE_FLASH,
+   WSTATE_HOLD,
+   WSTATE_FIRE_ALT,
+   WSTATE_FLASH_ALT,
+   WSTATE_HOLD_ALT
 };
 
 #define NUMNATIVEWSTATES earrlen(nativeWepStateLabels)
@@ -410,6 +418,10 @@ int *E_GetNativeWepStateLoc(weaponinfo_t *wi, const char *label)
    case WSTATE_READY:     ret = &wi->readystate; break;
    case WSTATE_FIRE:      ret = &wi->atkstate;   break;
    case WSTATE_FLASH:     ret = &wi->flashstate; break;
+   case WSTATE_HOLD:      ret = &wi->holdstate;  break;
+   case WSTATE_FIRE_ALT:  ret = &wi->atkstate_alt;   break;
+   case WSTATE_FLASH_ALT: ret = &wi->flashstate_alt; break;
+   case WSTATE_HOLD_ALT:  ret = &wi->holdstate_alt;  break;
    default:
       break;
    }
@@ -982,11 +994,11 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
 
    if(IS_SET(ITEM_WPN_SELECTORDER))
    {
-      /*if((tempint = cfg_getint(weaponsec, ITEM_WPN_SELECTORDER)) >= 0)
+      if((tempint = cfg_getint(weaponsec, ITEM_WPN_SELECTORDER)) >= 0)
       {
-         E_insertSelectOrderNode(tempint, &wp, !def);
+         //E_insertSelectOrderNode(tempint, &wp, !def);
          wp.sortorder = tempint;
-      }*/
+      }
    }
    if(IS_SET(ITEM_WPN_SISTERWEAPON))
    {
@@ -1012,15 +1024,15 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
       wp.atkstate = E_GetStateNumForName(cfg_getstr(weaponsec, ITEM_WPN_ATKSTATE));
    if(IS_SET(ITEM_WPN_FLASHSTATE))
       wp.flashstate = E_GetStateNumForName(cfg_getstr(weaponsec, ITEM_WPN_FLASHSTATE));
-   //if(IS_SET(ITEM_WPN_HOLDSTATE))
-   //   wp.holdstate = E_GetStateNumForName(cfg_getstr(weaponsec, ITEM_WPN_HOLDSTATE));
+   if(IS_SET(ITEM_WPN_HOLDSTATE))
+      wp.holdstate = E_GetStateNumForName(cfg_getstr(weaponsec, ITEM_WPN_HOLDSTATE));
 
    if(IS_SET(ITEM_WPN_AMMOPERSHOT))
       wp.ammopershot = cfg_getint(weaponsec, ITEM_WPN_AMMOPERSHOT);
 
 
    // Alt attack properties
-   /*if(IS_SET(ITEM_WPN_AMMO_ALT))
+   if(IS_SET(ITEM_WPN_AMMO_ALT))
       wp.ammo_alt = E_ItemEffectForName(cfg_getstr(weaponsec, ITEM_WPN_AMMO_ALT));
 
    if(IS_SET(ITEM_WPN_ATKSTATE_ALT))
@@ -1031,7 +1043,7 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
       wp.holdstate_alt = E_GetStateNumForName(cfg_getstr(weaponsec, ITEM_WPN_HOLDSTATE_ALT));
 
    if(IS_SET(ITEM_WPN_AMMOPERSHOT_ALT))
-      wp.ammopershot_alt = cfg_getint(weaponsec, ITEM_WPN_AMMOPERSHOT_ALT);*/
+      wp.ammopershot_alt = cfg_getint(weaponsec, ITEM_WPN_AMMOPERSHOT_ALT);
 
    if(IS_SET(ITEM_WPN_MOD))
    {
@@ -1087,13 +1099,13 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
          wp.upsound = tempsfx->dehackednum;
    }
 
-   /*if(IS_SET(ITEM_WPN_READYSOUND))
+   if(IS_SET(ITEM_WPN_READYSOUND))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_READYSOUND);
       sfxinfo_t *tempsfx = E_EDFSoundForName(tempstr);
       if(tempsfx)
          wp.readysound = tempsfx->dehackednum;
-   }*/
+   }
 
    // Process DECORATE state block
    E_ProcessDecorateWepStatesRecursive(weaponsec, i, false);

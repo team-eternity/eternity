@@ -63,8 +63,16 @@ struct weaponinfo_t
    int          readystate;
    int          atkstate;
    int          flashstate;
+   int          holdstate;    // MaxW 2018/01/01: state jumped to if fire is held
    int          ammopershot;  // haleyjd 08/10/02: ammo per shot field
 
+   MetaTable   *ammo_alt;         // Alt ammo artifact type
+   int          atkstate_alt;     // Alt attack state
+   int          flashstate_alt;   // Alt flash state
+   int          holdstate_alt;    // Alt hold state
+   int          ammopershot_alt;  // Alt ammo per shot
+
+   int           sortorder;   // sort order (lower is higher priority)
    // haleyjd 05/31/14: more dynamic weapons work
    weaponinfo_t *nextInCycle; // next weapon in cycle order
    weaponinfo_t *prevInCycle; // previous weapon in cycle order
@@ -76,6 +84,7 @@ struct weaponinfo_t
    int          hapticrecoil; // haptic recoil strength, from 1 to 10
    int          haptictime;   // haptic recoil duration, from 1 to 10
    int          upsound;      // sound made when weapon is being brought up
+   int          readysound;   // sound made when weapon is ready
 
    itemeffect_t *tracker;     // tracker artifact for weapon
 

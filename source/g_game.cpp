@@ -2307,7 +2307,10 @@ void G_PlayerReborn(int player)
    }
 
    // INVENTORY_TODO: reborn weapons
-   p->readyweapon = p->pendingweapon = E_WeaponForDEHNum(wp_pistol);
+   if(GameModeInfo->type == Game_DOOM)
+      p->readyweapon = p->pendingweapon = E_WeaponForDEHNum(wp_pistol);
+   else if(GameModeInfo->type == Game_Heretic)
+      p->readyweapon = p->pendingweapon = E_WeaponForName("GoldWand");
 }
 
 void P_SpawnPlayer(mapthing_t *mthing);
