@@ -38,6 +38,7 @@ struct cfg_t;
 
 // Section Names
 #define EDF_SEC_WEAPONINFO "weaponinfo"
+#define EDF_SEC_WPNDELTA   "weapondelta"
 
 // Section Options
 extern cfg_opt_t edf_wpninfo_opts[];
@@ -70,6 +71,7 @@ bool E_PlayerOwnsWeaponForDEHNum(player_t *player, int dehnum);
 void E_CollectWeapons(cfg_t *cfg);
 
 void E_ProcessWeaponInfo(cfg_t *cfg);
+void E_ProcessWeaponDeltas(cfg_t *cfg);
 
 #endif
 

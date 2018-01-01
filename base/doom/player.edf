@@ -11,14 +11,13 @@
 
 weaponinfo DoomWeapon
 {
-  /*firstdecoratestate S_LIGHTDONE
-
+  firstdecoratestate S_LIGHTDONE
   states
   @"
   LightDone:
     SHTG E 0 A_Light0
     stop
-  "@*/
+  "@
 }
 
 weaponinfo Fist : DoomWeapon, 0
@@ -32,12 +31,7 @@ weaponinfo Fist : DoomWeapon, 0
   mod          Fist
   recoil       10
 
-  upstate     S_PUNCHUP
-  downstate   S_PUNCHDOWN
-  readystate  S_PUNCH
-  attackstate S_PUNCH1
-
-  /*firstdecoratestate S_PUNCH
+  firstdecoratestate S_PUNCH
   states
   @"
   Ready:
@@ -56,7 +50,7 @@ weaponinfo Fist : DoomWeapon, 0
     PUNG C 4
     PUNG B 5 A_ReFire
     goto Ready
-  "@*/
+  "@
 }
 
 weaponinfo Pistol : DoomWeapon, 1
@@ -75,13 +69,7 @@ weaponinfo Pistol : DoomWeapon, 1
   hapticrecoil 1
   haptictime   1
 
-  upstate     S_PISTOLUP
-  downstate   S_PISTOLDOWN
-  readystate  S_PISTOL
-  attackstate S_PISTOL1
-  flashstate  S_PISTOLFLASH
-
-  /*firstdecoratestate S_PISTOL
+  firstdecoratestate S_PISTOL
   states
   @"
   Ready:
@@ -102,7 +90,7 @@ weaponinfo Pistol : DoomWeapon, 1
   Flash:
     PISF A 7 bright A_Light1
     goto LightDone
-  "@*/
+  "@
 }
 
 weaponinfo Shotgun : DoomWeapon, 2
@@ -120,13 +108,7 @@ weaponinfo Shotgun : DoomWeapon, 2
   hapticrecoil 3
   haptictime   3
 
-  upstate     S_SGUNUP
-  downstate   S_SGUNDOWN
-  readystate  S_SGUN
-  attackstate S_SGUN1
-  flashstate  S_SGUNFLASH1
-
-  /*firstdecoratestate S_SGUN
+  firstdecoratestate S_SGUN
   states
   @"
   Ready:
@@ -151,7 +133,7 @@ weaponinfo Shotgun : DoomWeapon, 2
     SHTF A 4 bright A_Light1
     SHTF B 3 bright A_Light2
     goto LightDone
-  "@*/
+  "@
 }
 
 weaponinfo Chaingun : DoomWeapon, 3
@@ -169,13 +151,7 @@ weaponinfo Chaingun : DoomWeapon, 3
   hapticrecoil 1
   haptictime   1
 
-  upstate     S_CHAINUP
-  downstate   S_CHAINDOWN
-  readystate  S_CHAIN
-  attackstate S_CHAIN1
-  flashstate  S_CHAINFLASH1
-
-  /*firstdecoratestate S_CHAIN
+  firstdecoratestate S_CHAIN
   states
   @"
   Ready:
@@ -195,7 +171,7 @@ weaponinfo Chaingun : DoomWeapon, 3
     CHGF A 5 bright A_Light1
     CHGF B 5 bright A_Light2
     goto LightDone
-  "@*/
+  "@
 }
 
 weaponinfo MissileLauncher : DoomWeapon, 4
@@ -213,14 +189,7 @@ weaponinfo MissileLauncher : DoomWeapon, 4
   hapticrecoil 6
   haptictime   8
 
-  upstate     S_MISSILEUP
-  downstate   S_MISSILEDOWN
-  readystate  S_MISSILE
-  attackstate S_MISSILE1
-  flashstate  S_MISSILEFLASH1
-
-  /*firstdecoratestate S_MISSILE
-
+  firstdecoratestate S_MISSILE
   states
   @"
   Ready:
@@ -242,7 +211,7 @@ weaponinfo MissileLauncher : DoomWeapon, 4
     MISF B 4 bright
     MISF CD 4 bright A_Light2
     goto LightDone
-  "@*/
+  "@
 }
 
 weaponinfo PlasmaRifle : DoomWeapon, 5
@@ -260,14 +229,7 @@ weaponinfo PlasmaRifle : DoomWeapon, 5
   hapticrecoil 2
   haptictime   1
 
-  upstate     S_PLASMAUP
-  downstate   S_PLASMADOWN
-  readystate  S_PLASMA
-  attackstate S_PLASMA1
-  flashstate  S_PLASMAFLASH1
-
-  /*firstdecoratestate S_PLASMA
-
+  firstdecoratestate S_PLASMA
   states
   @"
   Ready:
@@ -287,7 +249,7 @@ weaponinfo PlasmaRifle : DoomWeapon, 5
     PLSF A 4 bright A_Light1
     PLSF B 4 bright A_Light1
     goto LightDone
-  "@*/
+  "@
 }
 
 weaponinfo BFG9000 : DoomWeapon, 6
@@ -305,14 +267,7 @@ weaponinfo BFG9000 : DoomWeapon, 6
   hapticrecoil 10
   haptictime   10
 
-  upstate     S_BFGUP
-  downstate   S_BFGDOWN
-  readystate  S_BFG
-  attackstate S_BFG1
-  flashstate  S_BFGFLASH1
-
-  /*firstdecoratestate S_BFG
-
+  firstdecoratestate S_BFG
   states
   @"
   Ready:
@@ -334,11 +289,11 @@ weaponinfo BFG9000 : DoomWeapon, 6
     BFGF A 11 bright A_Light1
     BFGF B 6 bright A_Light2
     goto LightDone
-  "@*/
+  "@
 }
 
 // MBF Old-BFG
-/*weaponinfo OldBFG : BFG9000
+weaponinfo OldBFG : BFG9000
 {
   ammouse      1  // Only one ammo used per shot
 
@@ -354,7 +309,7 @@ weaponinfo BFG9000 : DoomWeapon, 6
     BFGG B 20 A_ReFire
     goto Ready
   "@
-}*/
+}
 
 weaponinfo Chainsaw : DoomWeapon, 7
 {
@@ -367,13 +322,7 @@ weaponinfo Chainsaw : DoomWeapon, 7
   upsound      sawup
   readysound   sawidl
 
-  upstate     S_SAWUP
-  downstate   S_SAWDOWN
-  readystate  S_SAW
-  attackstate S_SAW1
-
-  /*firstdecoratestate S_SAW
-
+  firstdecoratestate S_SAW
   states
   @"
   Ready:
@@ -389,7 +338,7 @@ weaponinfo Chainsaw : DoomWeapon, 7
     SAWG AB 4 A_Saw
     SAWG B 0 A_ReFire
     goto Ready
-  "@*/
+  "@
 }
 
 weaponinfo SuperShotgun : DoomWeapon, 8
@@ -407,14 +356,7 @@ weaponinfo SuperShotgun : DoomWeapon, 8
   hapticrecoil 5
   haptictime   5
 
-  upstate     S_DSGUNUP
-  downstate   S_DSGUNDOWN
-  readystate  S_DSGUN
-  attackstate S_DSGUN1
-  flashstate  S_DSGUNFLASH1
-
-  /*firstdecoratestate S_DSGUN
-
+  firstdecoratestate S_DSGUN
   states
   @"
   Ready:
@@ -447,7 +389,7 @@ weaponinfo SuperShotgun : DoomWeapon, 8
     SHT2 I 4 bright A_Light1
     SHT2 J 3 bright A_Light2
     goto LightDone
-  "@*/
+  "@
 }
 
 //=============================================================================

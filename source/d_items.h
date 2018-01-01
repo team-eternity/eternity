@@ -29,7 +29,7 @@
 #include "doomdef.h"
 #include "m_dllist.h"
 
-class MetaTable;
+using itemeffect_t = class MetaTable;
 
 //
 // haleyjd 09/11/07: weapon flags
@@ -77,12 +77,18 @@ struct weaponinfo_t
    int          haptictime;   // haptic recoil duration, from 1 to 10
    int          upsound;      // sound made when weapon is being brought up
 
+   itemeffect_t *tracker;     // tracker artifact for weapon
+
    // EDF hashing
    DLListItem<weaponinfo_t> idlinks;   // hash by id
    DLListItem<weaponinfo_t> namelinks; // hash by name
    DLListItem<weaponinfo_t> dehlinks;  // hash by dehnum
 
    int   generation;   // EDF generation number
+
+   MetaTable *meta; // metatable
+
+   weaponinfo_t *parent; // inheritance chain for DECORATE-like semantics where required
 };
 
 // haleyjd: temporary hack

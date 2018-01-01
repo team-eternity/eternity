@@ -9,6 +9,115 @@
 // by name and DeHackEd number, which can't be assigned via DECORATE states.
 //
 
+// S_LIGHTDONE: Returns light level to normal after a gun flash
+frame S_LIGHTDONE { +decorate; dehackednum = 1 }
+
+// Fist frames
+frame S_PUNCH     { +decorate; dehackednum = 2 }
+frame S_PUNCHDOWN { +decorate; dehackednum = 3 }
+frame S_PUNCHUP   { +decorate; dehackednum = 4 }
+frame S_PUNCH1    { +decorate; dehackednum = 5 }
+frame S_PUNCH2    { +decorate; dehackednum = 6 }
+frame S_PUNCH3    { +decorate; dehackednum = 7 }
+frame S_PUNCH4    { +decorate; dehackednum = 8 }
+frame S_PUNCH5    { +decorate; dehackednum = 9 }
+
+// Pistol frames
+frame S_PISTOL      { +decorate; dehackednum = 10 }
+frame S_PISTOLDOWN  { +decorate; dehackednum = 11 }
+frame S_PISTOLUP    { +decorate; dehackednum = 12 }
+frame S_PISTOL1     { +decorate; dehackednum = 13 }
+frame S_PISTOL2     { +decorate; dehackednum = 14 }
+frame S_PISTOL3     { +decorate; dehackednum = 15 }
+frame S_PISTOL4     { +decorate; dehackednum = 16 }
+frame S_PISTOLFLASH { +decorate; dehackednum = 17 }
+
+// Shotgun frames
+frame S_SGUN       { +decorate; dehackednum = 18 }
+frame S_SGUNDOWN   { +decorate; dehackednum = 19 }
+frame S_SGUNUP     { +decorate; dehackednum = 20 }
+frame S_SGUN1      { +decorate; dehackednum = 21 }
+frame S_SGUN2      { +decorate; dehackednum = 22 }
+frame S_SGUN3      { +decorate; dehackednum = 23 }
+frame S_SGUN4      { +decorate; dehackednum = 24 }
+frame S_SGUN5      { +decorate; dehackednum = 25 }
+frame S_SGUN6      { +decorate; dehackednum = 26 }
+frame S_SGUN7      { +decorate; dehackednum = 27 }
+frame S_SGUN8      { +decorate; dehackednum = 28 }
+frame S_SGUN9      { +decorate; dehackednum = 29 }
+frame S_SGUNFLASH1 { +decorate; dehackednum = 30 }
+frame S_SGUNFLASH2 { +decorate; dehackednum = 31 }
+
+// Super Shotgun frames
+frame S_DSGUN       { +decorate; dehackednum = 32 }
+frame S_DSGUNDOWN   { +decorate; dehackednum = 33 }
+frame S_DSGUNUP     { +decorate; dehackednum = 34 }
+frame S_DSGUN1      { +decorate; dehackednum = 35 }
+frame S_DSGUN2      { +decorate; dehackednum = 36 }
+frame S_DSGUN3      { +decorate; dehackednum = 37 }
+frame S_DSGUN4      { +decorate; dehackednum = 38 }
+frame S_DSGUN5      { +decorate; dehackednum = 39 }
+frame S_DSGUN6      { +decorate; dehackednum = 40 }
+frame S_DSGUN7      { +decorate; dehackednum = 41 }
+frame S_DSGUN8      { +decorate; dehackednum = 42 }
+frame S_DSGUN9      { +decorate; dehackednum = 43 }
+frame S_DSGUN10     { +decorate; dehackednum = 44 }
+frame S_DSNR1       { +decorate; dehackednum = 45 }
+frame S_DSNR2       { +decorate; dehackednum = 46 }
+frame S_DSGUNFLASH1 { +decorate; dehackednum = 47 }
+frame S_DSGUNFLASH2 { +decorate; dehackednum = 48 }
+
+// Chaingun frames
+frame S_CHAIN       { +decorate; dehackednum = 49 }
+frame S_CHAINDOWN   { +decorate; dehackednum = 50 }
+frame S_CHAINUP     { +decorate; dehackednum = 51 }
+frame S_CHAIN1      { +decorate; dehackednum = 52 }
+frame S_CHAIN2      { +decorate; dehackednum = 53 }
+frame S_CHAIN3      { +decorate; dehackednum = 54 }
+frame S_CHAINFLASH1 { +decorate; dehackednum = 55 }
+frame S_CHAINFLASH2 { +decorate; dehackednum = 56 }
+
+// Rocket Launcher frames
+frame S_MISSILE       { +decorate; dehackednum = 57 }
+frame S_MISSILEDOWN   { +decorate; dehackednum = 58 }
+frame S_MISSILEUP     { +decorate; dehackednum = 59 }
+frame S_MISSILE1      { +decorate; dehackednum = 60 }
+frame S_MISSILE2      { +decorate; dehackednum = 61 }
+frame S_MISSILE3      { +decorate; dehackednum = 62 }
+frame S_MISSILEFLASH1 { +decorate; dehackednum = 63 }
+frame S_MISSILEFLASH2 { +decorate; dehackednum = 64 }
+frame S_MISSILEFLASH3 { +decorate; dehackednum = 65 }
+frame S_MISSILEFLASH4 { +decorate; dehackednum = 66 }
+
+// Chainsaw frames
+frame S_SAW     { +decorate; dehackednum = 67 }
+frame S_SAWB    { +decorate; dehackednum = 68 }
+frame S_SAWDOWN { +decorate; dehackednum = 69 }
+frame S_SAWUP   { +decorate; dehackednum = 70 }
+frame S_SAW1    { +decorate; dehackednum = 71 }
+frame S_SAW2    { +decorate; dehackednum = 72 }
+frame S_SAW3    { +decorate; dehackednum = 73 }
+
+// Plasma Rifle frames
+frame S_PLASMA       { +decorate; dehackednum = 74 }
+frame S_PLASMADOWN   { +decorate; dehackednum = 75 }
+frame S_PLASMAUP     { +decorate; dehackednum = 76 }
+frame S_PLASMA1      { +decorate; dehackednum = 77 }
+frame S_PLASMA2      { +decorate; dehackednum = 78 }
+frame S_PLASMAFLASH1 { +decorate; dehackednum = 79 }
+frame S_PLASMAFLASH2 { +decorate; dehackednum = 80 }
+
+// BFG 9000 frames
+frame S_BFG       { +decorate; dehackednum = 81 }
+frame S_BFGDOWN   { +decorate; dehackednum = 82 }
+frame S_BFGUP     { +decorate; dehackednum = 83 }
+frame S_BFG1      { +decorate; dehackednum = 84 }
+frame S_BFG2      { +decorate; dehackednum = 85 }
+frame S_BFG3      { +decorate; dehackednum = 86 }
+frame S_BFG4      { +decorate; dehackednum = 87 }
+frame S_BFGFLASH1 { +decorate; dehackednum = 88 }
+frame S_BFGFLASH2 { +decorate; dehackednum = 89 }
+
 // DoomBlood frames
 frame S_BLOOD1 { +decorate; dehackednum 90 }
 frame S_BLOOD2 { +decorate; dehackednum 91 }
@@ -1046,6 +1155,51 @@ frame S_GRENADE    { cmp "MISL|A|T|1000|Die|@this"; dehackednum 968 }
 frame S_DETONATE   { cmp "MISL|B|T| 4|Scream  |@next"; dehackednum 969 }
 frame S_DETONATE2  { cmp "MISL|C|T| 6|Detonate|@next"; dehackednum 970 }
 frame S_DETONATE3  { cmp "MISL|D|T|10";                dehackednum 971 }
+
+// Beta BFG firing frames -- avoid editing these or it'll probably break.
+frame S_OLDBFG1  { +decorate; dehackednum = 999  }
+frame S_OLDBFG2  { +decorate; dehackednum = 1000 }
+frame S_OLDBFG3  { +decorate; dehackednum = 1001 }
+frame S_OLDBFG4  { +decorate; dehackednum = 1002 }
+frame S_OLDBFG5  { +decorate; dehackednum = 1003 }
+frame S_OLDBFG6  { +decorate; dehackednum = 1004 }
+frame S_OLDBFG7  { +decorate; dehackednum = 1005 }
+frame S_OLDBFG8  { +decorate; dehackednum = 1006 }
+frame S_OLDBFG9  { +decorate; dehackednum = 1007 }
+frame S_OLDBFG10 { +decorate; dehackednum = 1008 }
+frame S_OLDBFG11 { +decorate; dehackednum = 1009 }
+frame S_OLDBFG12 { +decorate; dehackednum = 1010 }
+frame S_OLDBFG13 { +decorate; dehackednum = 1011 }
+frame S_OLDBFG14 { +decorate; dehackednum = 1012 }
+frame S_OLDBFG15 { +decorate; dehackednum = 1013 }
+frame S_OLDBFG16 { +decorate; dehackednum = 1014 }
+frame S_OLDBFG17 { +decorate; dehackednum = 1015 }
+frame S_OLDBFG18 { +decorate; dehackednum = 1016 }
+frame S_OLDBFG19 { +decorate; dehackednum = 1017 }
+frame S_OLDBFG20 { +decorate; dehackednum = 1018 }
+frame S_OLDBFG21 { +decorate; dehackednum = 1019 }
+frame S_OLDBFG22 { +decorate; dehackednum = 1020 }
+frame S_OLDBFG23 { +decorate; dehackednum = 1021 }
+frame S_OLDBFG24 { +decorate; dehackednum = 1022 }
+frame S_OLDBFG25 { +decorate; dehackednum = 1023 }
+frame S_OLDBFG26 { +decorate; dehackednum = 1024 }
+frame S_OLDBFG27 { +decorate; dehackednum = 1025 }
+frame S_OLDBFG28 { +decorate; dehackednum = 1026 }
+frame S_OLDBFG29 { +decorate; dehackednum = 1027 }
+frame S_OLDBFG30 { +decorate; dehackednum = 1028 }
+frame S_OLDBFG31 { +decorate; dehackednum = 1029 }
+frame S_OLDBFG32 { +decorate; dehackednum = 1030 }
+frame S_OLDBFG33 { +decorate; dehackednum = 1031 }
+frame S_OLDBFG34 { +decorate; dehackednum = 1032 }
+frame S_OLDBFG35 { +decorate; dehackednum = 1033 }
+frame S_OLDBFG36 { +decorate; dehackednum = 1034 }
+frame S_OLDBFG37 { +decorate; dehackednum = 1035 }
+frame S_OLDBFG38 { +decorate; dehackednum = 1036 }
+frame S_OLDBFG39 { +decorate; dehackednum = 1037 }
+frame S_OLDBFG40 { +decorate; dehackednum = 1038 }
+frame S_OLDBFG41 { +decorate; dehackednum = 1039 }
+frame S_OLDBFG42 { +decorate; dehackednum = 1040 }
+frame S_OLDBFG43 { +decorate; dehackednum = 1041 }
 
 // Beta BFG plasma frames
 frame S_PLS1BALL   { cmp "PLS1|A|T|6|*|@next"; dehackednum 1042 }
