@@ -32,8 +32,10 @@
 
 // macros
 #define NUMEDFSKINCHAINS 17
+#define NUMWEAPONSLOTS   16
 
 struct skin_t;
+struct weaponslot_t;
 
 extern skin_t *edf_skins[NUMEDFSKINCHAINS];
 
@@ -73,6 +75,10 @@ struct playerclass_t
    // reborn inventory
    unsigned int       numrebornitems;
    reborninventory_t *rebornitems;
+
+   // weaponslots
+   weaponslot_t *weaponslots[NUMWEAPONSLOTS];
+   bool          hasslots;
 
    // hashing data
    char mnemonic[129];

@@ -463,10 +463,45 @@ void P_DropWeapon(player_t *player)
 // WEAPON_TODO: must redirect through playerclass lookup
 // PCLASS_FIXME: weapons
 //
-weaponinfo_t *P_GetPlayerWeapon(player_t *player, int index)
+weaponinfo_t *P_GetPlayerWeapon(player_t *player, int slot)
 {
-   // currently there is only one linear weaponinfo
-   return &weaponinfo[index];
+   if(demo_version < 349 && GameModeInfo->type == Game_DOOM)
+      return E_WeaponForDEHNum(slot);
+
+   if(!player->pclass->weaponslots[slot])
+      return nullptr;
+
+   // Backup demo compat code, in case something goes *really*
+   // wrong with the DeHackEd num check.
+   /*if(demo_version < 349 && GameModeInfo->type == Game_DOOM)
+   {
+      DLListItem<weaponslot_t> *weaponslot = &player->pclass->weaponslots[slot]->links;
+      while(weaponslot->dllNext)
+         weaponslot = weaponslot->dllNext;
+      return weaponslot->dllObject->weapon;
+   }*/
+
+   bool hit = false;
+   DLListItem<weaponslot_t> *weaponslot, *baseslot;
+   baseslot = weaponslot = &player->pclass->weaponslots[slot]->links;
+
+   while(!hit && weaponslot->dllNext)
+   {
+      if(weaponslot->dllObject->weapon->id == player->readyweapon->id)
+         hit = true;
+      else
+         weaponslot = weaponslot->dllNext;
+   }
+
+   if(!weaponslot->dllNext)
+      weaponslot = baseslot;
+   else
+      weaponslot = weaponslot->dllNext;
+
+   while(weaponslot && !E_PlayerOwnsWeapon(player, weaponslot->dllObject->weapon))
+      weaponslot = weaponslot->dllNext;
+
+   return weaponslot ? weaponslot->dllObject->weapon : nullptr;
 }
 
 //

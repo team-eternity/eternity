@@ -92,7 +92,7 @@ void P_DropWeapon(player_t *player);
 
 void P_BulletSlope(Mobj *mo);
 
-weaponinfo_t *P_GetPlayerWeapon(player_t *player, int index);
+weaponinfo_t *P_GetPlayerWeapon(player_t *player, int slot);
 
 void P_WeaponRecoil(player_t *player);
 
