@@ -55,6 +55,7 @@
 #include "f_finale.h"
 #include "f_wipe.h"
 #include "g_bind.h"
+#include "g_demolog.h"
 #include "g_dmflag.h"
 #include "g_game.h"
 #include "g_gfs.h"
@@ -1413,6 +1414,10 @@ static void D_DoomInit()
       }
    }
 
+   // ioanch 20160313: demo testing
+   if((p = M_CheckParm("-demolog")) && p < myargc - 1)
+      G_DemoLogInit(myargv[p + 1]);
+
    // haleyjd 01/17/11: allow -play also
    const char *playdemoparms[] = { "-playdemo", "-play", NULL };
 
@@ -1761,6 +1766,15 @@ static void D_DoomInit()
    // haleyjd 08/29/08
    C_Printf(FC_GREEN "Dedicated to the memory of our friend\n"
             "Jason 'Amaster' Masihdas 12 Oct 1981 - 14 Jun 2007\n");
+#elif defined(KATE_MEMORIAL)
+   // MaxW: 2017/12/27
+   // Note: FC_CUSTOM1 is temporarily pink/purple
+   C_Printf(FC_CUSTOM1 "Dedicated to team member\n"
+            "and our dear friend:\n"
+            "Kaitlyn Anne Fox\n"
+            "(withheld) - 19 Dec 2017\n"
+            "May her spirit and memory\n"
+            "live on into Eternity\n");
 #endif
 
    // haleyjd: if we didn't do textmode startup, these didn't show up
