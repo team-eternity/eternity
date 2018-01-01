@@ -34,6 +34,12 @@
 struct weaponinfo_t;
 struct cfg_t;
 
+// Global Data
+
+extern int NUMWEAPONTYPES;
+
+extern weapontype_t UnknownWeaponInfo;
+
 #ifdef NEED_EDF_DEFINITIONS
 
 // Section Names
@@ -66,6 +72,13 @@ bool E_WeaponIsCurrentDEHNum(player_t *player, const int dehnum);
 
 bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon);
 bool E_PlayerOwnsWeaponForDEHNum(player_t *player, int dehnum);
+bool E_PlayerOwnsWeaponInSlot(player_t *player, int slot);
+
+void E_GiveWeapon(player_t *player, weaponinfo_t *weapon);
+
+void E_GiveAllClassWeapons(player_t *player);
+
+
 
 
 void E_CollectWeapons(cfg_t *cfg);

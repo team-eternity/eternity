@@ -247,8 +247,7 @@ static bool P_giveWeaponCompat(player_t *player, itemeffect_t *giver, bool dropp
          return false;
 
       player->bonuscount += BONUSADD;
-      // WEAPON_FIXME
-      player->weaponowned[wp->dehnum] = true;
+      E_GiveWeapon(player, wp);
       P_GiveAmmo(player, ammo, (GameType == gt_dm) ? dmstayammo : coopstayammo);
 
       player->pendingweapon = wp;
@@ -262,10 +261,10 @@ static bool P_giveWeaponCompat(player_t *player, itemeffect_t *giver, bool dropp
    bool gaveammo = (ammo ? P_GiveAmmo(player, ammo, amount) : false);
 
    // haleyjd 10/4/11: de-Killoughized
-   if(!player->weaponowned[wp->dehnum])
+   if(!E_PlayerOwnsWeapon(player, wp))
    {
       player->pendingweapon = wp;
-      player->weaponowned[wp->dehnum] = 1;
+      E_GiveWeapon(player, wp);
       gaveweapon = true;
    }
 
@@ -277,7 +276,7 @@ static bool P_giveWeaponCompat(player_t *player, itemeffect_t *giver, bool dropp
 //
 static bool P_giveWeapon(player_t *player, itemeffect_t *giver, bool dropped, Mobj *special)
 {
-   if(demo_version < 349 && GameModeInfo->type == Game_DOOM)
+   if(demo_version < 349)
       return P_giveWeaponCompat(player, giver, dropped, special);
 
    bool gaveweapon = false, gaveammo = false, dmstay = false, firsttime = true;
@@ -340,9 +339,7 @@ static bool P_giveWeapon(player_t *player, itemeffect_t *giver, bool dropped, Mo
          if(firsttime)
          {
             player->bonuscount += BONUSADD;
-            // WEAPON_FIXME
-            //E_GiveInventoryItem(player, wp->tracker);
-            player->weaponowned[wp->dehnum] = true;
+            E_GiveWeapon(player, wp);
             player->pendingweapon = wp;
             S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
             P_consumeSpecial(player, special); // need to handle it here
@@ -362,9 +359,7 @@ static bool P_giveWeapon(player_t *player, itemeffect_t *giver, bool dropped, Mo
             if(!E_PlayerOwnsWeapon(player, wp))
             {
                player->pendingweapon = wp;
-               // WEAPON_FIXME
-               //E_GiveInventoryItem(player, wp->tracker);
-               player->weaponowned[wp->dehnum] = true;
+               E_GiveWeapon(player, wp);
                gaveweapon = true;
             }
             firsttime = false;
@@ -793,7 +788,6 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
          pickedup |= P_GivePowerForItem(player, effect);
          break;
       case ITEMFX_WEAPONGIVER:
-         // EDF_FEATURES_FIXME: This hack
          pickedup |= P_giveWeapon(player, effect, dropped, special);
          break;
       case ITEMFX_ARTIFACT: // Artifacts - items which go into the inventory

@@ -245,8 +245,10 @@ static void cheat_mus(const void *arg)
 // 'choppers' invulnerability & chainsaw
 static void cheat_choppers(const void *arg)
 {
-   // WEAPON_FIXME: choppers cheat
-   plyr->weaponowned[wp_chainsaw] = true;
+   weaponinfo_t *chainsaw = E_WeaponForDEHNum(wp_chainsaw);
+   if(!chainsaw)
+      return; // For whatever reason, the chainsaw isn't defined
+   E_GiveWeapon(plyr, chainsaw);
    doom_printf("%s", DEH_String("STSTR_CHOPPERS")); // Ty 03/27/98 - externalized
 }
 
@@ -295,15 +297,7 @@ static void cheat_fa(const void *arg)
       plyr->armordivisor = armor->getInt("savedivisor", 3);
    }
 
-   // WEAPON_FIXME: IDFA cheat
-   
-   // You can't own weapons that aren't in the game - phares 02/27/98
-   for(i = 0; i < NUMWEAPONS; i++)
-   {
-      if(!(((i == wp_plasma || i == wp_bfg) && GameModeInfo->id == shareware) ||
-         (i == wp_supershotgun && !enable_ssg)))
-         plyr->weaponowned[i] = true;
-   }
+   E_GiveAllClassWeapons(plyr);
 
    // give full ammo
    E_GiveAllAmmo(plyr, GAA_MAXAMOUNT);
@@ -566,20 +560,18 @@ static void cheat_weapx(const void *arg)
 
    if(w == wp_fist)           // make '1' apply beserker strength toggle
       cheat_pw(&pwstr);
-   else
+   else if(w > wp_fist && w < NUMWEAPONS)
    {
-      if(w >= 0 && w < NUMWEAPONS)
+      weaponinfo_t *weapon = E_WeaponForDEHNum(w);
+      if(!E_PlayerOwnsWeapon(plyr, weapon))
       {
-         if((plyr->weaponowned[w] = !plyr->weaponowned[w]))
-            doom_printf("Weapon Added");  // Ty 03/27/98 - *not* externalized
-         else 
-         {
-            weapontype_t P_SwitchWeaponOld(player_t *player);
-            
-            doom_printf("Weapon Removed"); // Ty 03/27/98 - *not* externalized
-            if(w == plyr->readyweapon->dehnum)     // maybe switch if weapon removed
-               plyr->pendingweapon = E_WeaponForDEHNum(P_SwitchWeaponOld(plyr));
-         }
+         E_GiveInventoryItem(plyr, weapon->tracker, 1);
+         doom_printf("Weapon Added");  // Ty 03/27/98 - *not* externalized
+      }
+      else
+      {
+         E_RemoveInventoryItem(plyr, weapon->tracker, 1);
+         doom_printf("Weapon Removed"); // Ty 03/27/98 - *not* externalized
       }
    }
 }

@@ -65,6 +65,8 @@ playerclass DoomMarine
    
    // INVENTORY_TODO: reborn weapons
    rebornitem AmmoClip, 50
+   rebornitem Fist
+   rebornitem Pistol
 }
 
 endif()
@@ -91,6 +93,9 @@ playerclass Corvus
    weaponslot 8 { weapons : Gauntlets }*/
    
    // INVENTORY_TODO: reborn items
+   rebornitem AmmoWandCrystal, 50
+   //rebornitem Staff
+   //rebornitem GoldWand
 }
 
 endif()

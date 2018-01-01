@@ -373,6 +373,26 @@ static void E_processItemEffects(cfg_t *cfg)
    }
 }
 
+static void E_generateWeaponTrackers()
+{
+   itemeffect_t *trackerTemplate = E_ItemEffectForName("_WeaponTrackerTemplate");
+   if(trackerTemplate == nullptr)
+   {
+      // For some weird, weird, weird, weird reason, the template wasn't found.
+      E_EDFLoggedErr(2, "E_generateWeaponTrackers: Weapon tracker template "
+                        "artifact (_WeaponTrackerTemplate) not found.\n");
+   }
+
+   for(int i = 0; i < NUMWEAPONTYPES; i++)
+   {
+      weaponinfo_t *currWeapon = E_WeaponForID(i);
+      itemeffect_t *currTracker = new itemeffect_t(currWeapon->name);
+      e_effectsTable.addObject(currTracker);
+      trackerTemplate->copyTableTo(currTracker);
+      currWeapon->tracker = currTracker;
+   }
+}
+
 //=============================================================================
 //
 // Ammo Types
@@ -1996,6 +2016,9 @@ void E_ProcessInventory(cfg_t *cfg)
 {
    // process item effects
    E_processItemEffects(cfg);
+
+   // generate weapon trackers (item effects)
+   E_generateWeaponTrackers();
 
    // allocate inventory item IDs
    E_allocateInventoryItemIDs();

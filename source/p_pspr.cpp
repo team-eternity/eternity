@@ -205,7 +205,7 @@ bool P_WeaponHasAmmo(player_t *player, weaponinfo_t *weapon)
 int P_NextWeapon(player_t *player)
 {
    weaponinfo_t *currentweapon = player->readyweapon;
-   weaponinfo_t *newweapon     = currentweapon;
+   weaponinfo_t *newweapon     = player->readyweapon;
    bool          ammototry;
 
    do
@@ -213,10 +213,13 @@ int P_NextWeapon(player_t *player)
       newweapon = newweapon->nextInCycle;
       ammototry = P_WeaponHasAmmo(player, newweapon);
    }
-   while((!player->weaponowned[newweapon->id] || !ammototry) &&
-         newweapon != currentweapon);
+   while((!E_PlayerOwnsWeapon(player, newweapon) || !ammototry) &&
+         newweapon->id != currentweapon->id);
 
-   return newweapon != currentweapon ? newweapon->id : wp_nochange;
+   if(demo_version >= 350)
+      return newweapon != currentweapon ? newweapon->id : -1;
+   else
+      return newweapon != currentweapon ? newweapon->dehnum : wp_nochange;
 }
 
 //
@@ -235,10 +238,13 @@ int P_PrevWeapon(player_t *player)
       newweapon = newweapon->prevInCycle;
       ammototry = P_WeaponHasAmmo(player, newweapon);
    }
-   while((!player->weaponowned[newweapon->id] || !ammototry) &&
-         newweapon != currentweapon);
+   while((!E_PlayerOwnsWeapon(player, newweapon) || !ammototry) &&
+         newweapon->id != currentweapon->id);
 
-   return newweapon != currentweapon ? newweapon->id : wp_nochange;
+   if(demo_version >= 350)
+      return newweapon != currentweapon ? newweapon->id : -1;
+   else
+      return newweapon != currentweapon ? newweapon->dehnum : wp_nochange;
 }
 
 // The first set is where the weapon preferences from             // killough,
@@ -304,32 +310,33 @@ weapontype_t P_SwitchWeaponOld(player_t *player)
             newweapon = wp_pistol;
          break;
       case 3:
-         if(player->weaponowned[wp_shotgun] && shells)
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_shotgun) && shells)
             newweapon = wp_shotgun;
          break;
       case 4:
-         if(player->weaponowned[wp_chaingun] && clips)
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_chaingun) && clips)
             newweapon = wp_chaingun;
          break;
       case 5:
-         if(player->weaponowned[wp_missile] && rockets)
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_missile) && rockets)
             newweapon = wp_missile;
          break;
       case 6:
-         if(player->weaponowned[wp_plasma] && cells && GameModeInfo->id != shareware)
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_plasma) && cells &&
+            GameModeInfo->id != shareware)
             newweapon = wp_plasma;
          break;
       case 7:
-         if(player->weaponowned[wp_bfg] && GameModeInfo->id != shareware &&
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_bfg) && GameModeInfo->id != shareware &&
             cells >= (demo_compatibility ? 41 : 40))
             newweapon = wp_bfg;
          break;
       case 8:
-         if(player->weaponowned[wp_chainsaw])
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_chainsaw))
             newweapon = wp_chainsaw;
          break;
       case 9:
-         if(player->weaponowned[wp_supershotgun] && 
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_supershotgun) &&
             enable_ssg &&
             shells >= (demo_compatibility ? 3 : 2))
             newweapon = wp_supershotgun;

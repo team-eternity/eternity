@@ -508,9 +508,6 @@ static void P_ArchivePlayers(SaveArchive &arc)
             arc << p.frags[j];
 
          for(j = 0; j < NUMWEAPONS; j++)
-            arc << p.weaponowned[j];
-
-         for(j = 0; j < NUMWEAPONS; j++)
          {
             for(int k = 0; k < 3; k++)
                arc << p.weaponctrs[j][k];

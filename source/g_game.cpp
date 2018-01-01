@@ -2308,15 +2308,6 @@ void G_PlayerReborn(int player)
 
    // INVENTORY_TODO: reborn weapons
    p->readyweapon = p->pendingweapon = E_WeaponForDEHNum(wp_pistol);
-
-   // INVENTORY_TODO: eliminate?
-   // sf: different weapons owned
-   memcpy(p->weaponowned, default_weaponowned, sizeof(p->weaponowned));
-   
-   // WEAPON_FIXME: always owned weapons
-   // PCLASS_FIXME: always owned weapons
-   p->weaponowned[wp_fist] = true;     // always fist and pistol
-   p->weaponowned[wp_pistol] = true;
 }
 
 void P_SpawnPlayer(mapthing_t *mthing);

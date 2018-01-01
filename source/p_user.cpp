@@ -750,13 +750,13 @@ void P_PlayerThink(player_t *player)
          //e6y
          newweapon = (cmd->buttons & BT_WEAPONMASK_OLD)>>BT_WEAPONSHIFT;
 
-         if(newweapon == wp_fist && player->weaponowned[wp_chainsaw] &&
+         if(newweapon == wp_fist && E_PlayerOwnsWeaponForDEHNum(player, wp_chainsaw) &&
             (!E_WeaponIsCurrentDEHNum(player, wp_chainsaw) ||
              !player->powers[pw_strength]))
             newweapon = wp_chainsaw;
          if(enable_ssg &&
             newweapon == wp_shotgun &&
-            player->weaponowned[wp_supershotgun] &&
+            E_PlayerOwnsWeaponForDEHNum(player, wp_supershotgun) &&
             !E_WeaponIsCurrentDEHNum(player, wp_supershotgun))
             newweapon = wp_supershotgun;
       }

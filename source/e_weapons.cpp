@@ -41,6 +41,7 @@
 #include "e_lib.h"
 #include "e_metastate.h"
 #include "e_mod.h"
+#include "e_player.h"
 #include "e_sound.h"
 #include "e_states.h"
 #include "e_things.h" // TODO: Move E_SplitTypeAndState and remove this include?
@@ -288,7 +289,7 @@ bool E_WeaponIsCurrentDEHNum(player_t *player, const int dehnum)
 //
 bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon)
 {
-   return player->weaponowned[weapon->dehnum];
+   return weapon ? E_GetItemOwnedAmount(player, weapon->tracker) : false;
 }
 
 //
@@ -297,6 +298,53 @@ bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon)
 bool E_PlayerOwnsWeaponForDEHNum(player_t *player, int dehnum)
 {
    return E_PlayerOwnsWeapon(player, E_WeaponForDEHNum(dehnum));
+}
+
+//
+// Checks if a player owns a weapon in the provided slot, useful for things like the
+// Doom weapon-number widget
+// TODO: Consider global "weaponslots" variable
+//
+bool E_PlayerOwnsWeaponInSlot(player_t *player, int slot)
+{
+   if(!player->pclass->weaponslots[slot])
+      return false;
+
+   DLListItem<weaponslot_t> *weaponslot = &player->pclass->weaponslots[slot]->links;
+   while(weaponslot)
+   {
+      if(E_PlayerOwnsWeapon(player, weaponslot->dllObject->weapon))
+         return true;
+      weaponslot = weaponslot->dllNext;
+   }
+   return false;
+}
+
+void E_GiveWeapon(player_t *player, weaponinfo_t *weapon)
+{
+   if(!E_PlayerOwnsWeapon(player, weapon))
+      E_GiveInventoryItem(player, weapon->tracker, 1);
+}
+
+//
+// Give the player all class weapons
+// TODO: Consider the global "weaponslots" variable
+//
+void E_GiveAllClassWeapons(player_t *player)
+{
+   for(int i = 0; i < NUMWEAPONSLOTS; i++)
+   {
+      if(!player->pclass->weaponslots[i])
+         continue;
+
+      DLListItem<weaponslot_t> *weaponslot = &player->pclass->weaponslots[i]->links;
+      while(weaponslot)
+      {
+         if(!E_PlayerOwnsWeapon(player, weaponslot->dllObject->weapon))
+            E_GiveInventoryItem(player, weaponslot->dllObject->weapon->tracker);
+         weaponslot = weaponslot->dllNext;
+      }
+   }
 }
 
 //=============================================================================
