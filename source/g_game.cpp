@@ -1203,7 +1203,9 @@ void G_DoPlayDemo(void)
       }
       else
       {
-         GameType = (netgame ? gt_coop : gt_single);
+         // Support -solo-net for demos previously recorded so, at vanilla
+         // compatibility.
+         GameType = (netgame || M_CheckParm("-solo-net") ? gt_coop : gt_single);
          G_SetDefaultDMFlags(0, false);
       }
    }
