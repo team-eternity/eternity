@@ -734,10 +734,9 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    if(special->sprite < 0 || special->sprite >= NUMSPRITES)
       return;
 
-   //if(special->info->pickupfx)
-   //   pickup = special->info->pickupfx;
-   //else
-   if((temp = E_PickupFXForSprNum(special->sprite)))
+   if(special->info->pickupfx)
+      pickup = special->info->pickupfx;
+   else if((temp = E_PickupFXForSprNum(special->sprite)))
       pickup = temp;
    else
       return;

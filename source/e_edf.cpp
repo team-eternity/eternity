@@ -1687,6 +1687,7 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
 
    // post main-processing
    E_ProcessPickups(cfg);
+   E_ProcessThingPickups(cfg);
 
    // 08/30/03: apply deltas
    E_ProcessSoundDeltas(cfg, true); // see e_sound.cpp
