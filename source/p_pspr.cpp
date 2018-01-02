@@ -216,7 +216,7 @@ int P_NextWeapon(player_t *player)
    while((!E_PlayerOwnsWeapon(player, newweapon) || !ammototry) &&
          newweapon->id != currentweapon->id);
 
-   if(demo_version >= 350)
+   if(demo_version >= 349)
       return newweapon != currentweapon ? newweapon->id : -1;
    else
       return newweapon != currentweapon ? newweapon->dehnum : wp_nochange;
@@ -241,7 +241,7 @@ int P_PrevWeapon(player_t *player)
    while((!E_PlayerOwnsWeapon(player, newweapon) || !ammototry) &&
          newweapon->id != currentweapon->id);
 
-   if(demo_version >= 350)
+   if(demo_version >= 349)
       return newweapon != currentweapon ? newweapon->id : -1;
    else
       return newweapon != currentweapon ? newweapon->dehnum : wp_nochange;
@@ -516,7 +516,7 @@ weaponinfo_t *P_GetPlayerWeapon(player_t *player, int slot)
 //
 // Plays a sound originating from the player's weapon by sfxinfo_t *
 //
-static void P_WeaponSoundInfo(Mobj *mo, sfxinfo_t *sound)
+void P_WeaponSoundInfo(Mobj *mo, sfxinfo_t *sound)
 {
    soundparams_t params;
    
@@ -535,7 +535,7 @@ static void P_WeaponSoundInfo(Mobj *mo, sfxinfo_t *sound)
 //
 // Plays a sound originating from the player's weapon
 //
-static void P_WeaponSound(Mobj *mo, int sfx_id)
+void P_WeaponSound(Mobj *mo, int sfx_id)
 {
    int volume = 127;
 
@@ -1085,7 +1085,7 @@ void A_FirePlasma(actionargs_t *actionargs)
    P_SpawnPlayerMissile(mo, E_SafeThingType(MT_PLASMA));
 }
 
-static fixed_t bulletslope;
+fixed_t bulletslope;
 
 //
 // P_BulletSlope

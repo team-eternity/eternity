@@ -400,7 +400,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
       cmd->weaponID = newweapon + 1;
    }
-   else // Þe olde wæpon switch
+   else // Ãže olde wÃ¦pon switch
    {
       // phares:
       // Toggle between the top 2 favorite weapons.

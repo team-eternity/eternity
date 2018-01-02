@@ -797,6 +797,12 @@ void P_PlayerHitFloor(Mobj *mo, bool onthing)
    }
 }
 
+static void P_floorHereticBounceMissile(Mobj * mo)
+{
+   mo->momz = -mo->momz;
+   P_SetMobjState(mo, mobjinfo[mo->type]->deathstate);
+}
+
 //
 // P_ZMovement
 //
@@ -978,7 +984,7 @@ floater:
       if(correct_lost_soul_bounce && (mo->flags & MF_SKULLFLY))
          mo->momz = -mo->momz; // the skull slammed into something
 
-      if((moving_down = (mo->momz < 0)))
+      if((moving_down = (mo->momz < 0)) && !(mo->flags4 & MF4_HERETICBOUNCES))
       {
          // killough 11/98: touchy objects explode on impact
          if(mo->flags & MF_TOUCHY && mo->intflags & MIF_ARMED &&
@@ -1010,8 +1016,16 @@ floater:
 
       if(!((mo->flags ^ MF_MISSILE) & (MF_MISSILE | MF_NOCLIP)))
       {
-         if(!(mo->flags3 & MF3_FLOORMISSILE)) // haleyjd
+         if(mo->flags4 & MF4_HERETICBOUNCES) // MaxW
+         {
+            P_floorHereticBounceMissile(mo);
+            return;
+         }
+         else if(!(mo->flags3 & MF3_FLOORMISSILE)) // haleyjd
+         {
             P_ExplodeMissile(mo, nullptr);
+            return;
+         }
          return;
       }
    }
@@ -2492,6 +2506,9 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
    // haleyjd 08/05/04: use new function
    z += P_SubRandom(pr_spawnpuff) << 10;
 
+   if(trace.puff)
+      th = P_SpawnMobj(x, y, z, trace.puff->index);
+
    th = P_SpawnMobj(x, y, z, E_SafeThingType(MT_PUFF));
    th->momz = FRACUNIT;
    th->tics -= P_Random(pr_spawnpuff) & 3;
@@ -2501,7 +2518,7 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
 
    // don't make punches spark on the wall
 
-   if(trace.attackrange == MELEERANGE)
+   if(!trace.puff && trace.attackrange == MELEERANGE)
       P_SetMobjState(th, E_SafeState(S_PUFF3));
 
    // haleyjd: for demo sync etc we still need to do the above, so
@@ -3008,6 +3025,50 @@ Mobj *P_SpawnMissileAngle(Mobj *source, mobjtype_t type,
    missileinfo.z      = z;
    missileinfo.angle  = angle;
    missileinfo.momz   = momz;
+   missileinfo.flags  = (missileinfo_t::USEANGLE | missileinfo_t::NOFUZZ);
+
+   return P_SpawnMissileEx(missileinfo);
+}
+
+//
+// Tries to aim at a nearby monster, but with angle parameter
+// Code lifted from P_SPMAngle in Chocolate Heretic, p_mobj.c
+//
+Mobj *P_SpawnMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t angle)
+{
+   fixed_t z, slope = 0;
+   angle_t an = angle;
+
+   int mask = demo_version < 203 ? 0 : MF_FRIEND;
+   slope = P_AimLineAttack(source, an, 16 * 64 * FRACUNIT, mask);
+   if(!clip.linetarget)
+   {
+      an += 1 << 26;
+      slope = P_AimLineAttack(source, an, 16 * 64 * FRACUNIT, mask);
+      if(!clip.linetarget)
+      {
+         an -= 2 << 26;
+         slope = P_AimLineAttack(source, an, 16 * 64 * FRACUNIT, mask);
+      }
+      if(!clip.linetarget)
+      {
+         an = angle;
+         slope = P_PlayerPitchSlope(source->player);
+      }
+   }
+
+   z = source->z + (4 * 8 * FRACUNIT) - source->floorclip;
+
+
+   missileinfo_t missileinfo;
+
+   memset(&missileinfo, 0, sizeof(missileinfo));
+
+   missileinfo.source = source;
+   missileinfo.type   = type;
+   missileinfo.z      = z;
+   missileinfo.angle  = an;
+   missileinfo.momz   = FixedMul(mobjinfo[type]->speed, slope);
    missileinfo.flags  = (missileinfo_t::USEANGLE | missileinfo_t::NOFUZZ);
 
    return P_SpawnMissileEx(missileinfo);

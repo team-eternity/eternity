@@ -176,6 +176,13 @@ template<typename T> void P_SetTarget(T **mop, T *targ)
       targ->addReference();
 }
 
+template<typename T> void P_ClearTarget(T *&mop)
+{
+   if(mop)             // If there was a target already, decrease its refcount
+      mop->delReference();
+   mop = nullptr;
+}
+
 // killough 8/29/98: threads of thinkers, for more efficient searches
 typedef enum 
 {
