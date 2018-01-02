@@ -853,6 +853,9 @@ void P_PlayerThink(player_t *player)
          P_PlayerStopFlight(player);
    }
 
+   if(player->powers[pw_weaponlevel2] > 0) // MaxW: 2018/01/02
+      player->powers[pw_weaponlevel2]--;
+
    if(player->damagecount)
       player->damagecount--;
 

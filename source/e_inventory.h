@@ -100,16 +100,6 @@ typedef int artitype_t;
 #define ARTI_KEYGREEN     "KeyGreen"
 #define ARTI_KEYYELLOW    "KeyYellow"
 #define ARTI_KEYBLUE      "KeyBlue"
-#define ARTI_INVISIBILITY "ArtiInvisibility"
-#define ARTI_HEALTH       "ArtiHealth"
-#define ARTI_FLY          "ArtiFly"
-#define ARTI_INVULN       "ArtiInvulnerability"
-#define ARTI_TOMEOFPOWER  "ArtiTomeOfPower"
-#define ARTI_EGG          "ArtiEgg"
-#define ARTI_SUPERHEALTH  "ArtiSuperHealth"
-#define ARTI_TORCH        "ArtiTorch"
-#define ARTI_TIMEBOMB     "ArtiTimeBomb"
-#define ARTI_TELEPORT     "ArtiTeleport"
 
 // Hard-coded names for the (currently) 11 specially treated powers in powertype_t.
 // These are listed in ascending order of enumeration, as opposed to alphabetical.
@@ -124,6 +114,7 @@ typedef int artitype_t;
 #define POWER_SILENT       "PowerSilent"            // pw_silencer
 #define POWER_FLIGHT       "PowerFlight"            // pw_flight
 #define POWER_TORCH        "PowerTorch"             // pw_torch (Fullbright w/ flicker)
+#define POWER_WEAPONLEVEL2 "PowerWeaponLevel2"      // pw_weaponlevel2
 
 extern const char *powerStrings[NUMPOWERS];
 

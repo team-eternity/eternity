@@ -571,6 +571,8 @@ bool P_GivePower(player_t *player, int power, int duration, bool additiveTime)
          return false;
       P_PlayerStartFlight(player, true);
       break;
+   case pw_weaponlevel2:
+      break;
    }
 
    // Unless player has infinite duration cheat, set duration (killough)   
@@ -592,7 +594,8 @@ const char *powerStrings[NUMPOWERS] =
    POWER_GHOST,
    POWER_SILENT,
    POWER_FLIGHT,
-   POWER_TORCH
+   POWER_TORCH,
+   POWER_WEAPONLEVEL2
 };
 
 
@@ -605,9 +608,6 @@ bool P_GivePowerForItem(player_t *player, itemeffect_t *power)
 {
    int powerNum;
    const char *powerStr;
-   itemeffect_t *powerTracker;
-   inventoryslot_t *trackerArtifact; // Pointer to the player's tracker for
-                                     // the power to potentially be granted.
    bool additiveTime = false;
    
    powerStr = power->getString("type", "");
@@ -616,15 +616,9 @@ bool P_GivePowerForItem(player_t *player, itemeffect_t *power)
    if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) == NUMPOWERS)
       return false; // There's no power for the type provided
 
-   powerTracker = E_ItemEffectForName(powerStr);
-   if((trackerArtifact = E_InventorySlotForItem(player, powerTracker)))
-   {
-      if(!power->getInt("overridesself", 0))
-      {
-         if(trackerArtifact->amount >= powerTracker->getInt("maxamount", 1))
-            return false;
-      }
-   }
+   // EDF_FEATURES_FIXME: Strength counts up. Also should additivetime imply overridesself?
+   if(!power->getInt("overridesself", 0) && player->powers[powerNum] >  4 * 32)
+      return false;
 
    // Unless player has infinite duration cheat, set duration (MaxW stolen from killough)   
    if(player->powers[powerNum] >= 0)
@@ -638,7 +632,6 @@ bool P_GivePowerForItem(player_t *player, itemeffect_t *power)
          additiveTime = power->getInt("additivetime", 0) ? true : false;
       }
 
-      E_GiveInventoryItem(player, powerTracker);
       return P_GivePower(player, powerNum, duration, additiveTime);
    }
 
