@@ -1231,7 +1231,7 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
       target->flags  &= ~MF_SOLID;
       P_PlayerStopFlight(target->player);  // haleyjd: stop flying
       
-      G_DemoLog("death player %d ",
+      G_DemoLog("%d\tdeath player %d ", gametic,
          (int)(target->player - players) + 1);
       G_DemoLogStats();
       G_DemoLog("\n");
