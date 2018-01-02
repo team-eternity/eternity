@@ -153,8 +153,7 @@ public:
    //
    static int *getIndexedCounterForPlayer(player_t *player, int index)
    {
-      return nullptr;
-      //return player->weaponctrs->getIndexedCounter(player->readyweapon->id, index);
+      return player->weaponctrs->getIndexedCounter(player->readyweapon->id, index);
    }
 
 private:
