@@ -130,7 +130,8 @@ void FloorMoveThinker::Think()
    }
    
    // move the floor
-   res = T_MoveFloorInDirection(sector, speed, floordestheight, crush, direction);
+   res = T_MoveFloorInDirection(sector, speed, floordestheight, crush, direction,
+                                emulateStairCrush);
 
    // sf: added silentmove
    // haleyjd: moving sound handled by sound sequences now
@@ -298,7 +299,7 @@ void ElevatorThinker::Think()
    else // up
    {
       //jff 4/7/98 reverse order of ceiling/floor
-      res = T_MoveFloorUp(sector, speed, floordestheight, -1);
+      res = T_MoveFloorUp(sector, speed, floordestheight, -1, false);
 
       if(res == ok || res == pastdest) // jff 4/7/98 don't move ceiling if blocked
          T_MoveCeilingUp(sector, speed, ceilingdestheight, -1); 
@@ -346,7 +347,7 @@ void PillarThinker::Think()
 {
    result_e resf, resc;
    
-   resf = T_MoveFloorInDirection  (sector, floorSpeed,   floordest,   crush,  direction);
+   resf = T_MoveFloorInDirection  (sector, floorSpeed,   floordest,   crush,  direction, false);
    resc = T_MoveCeilingInDirection(sector, ceilingSpeed, ceilingdest, crush, -direction);
    
    if(resf == pastdest && resc == pastdest)
@@ -815,6 +816,10 @@ int EV_BuildStairs(const line_t *line, stair_e type)
          floor->sector = sec;
          floor->type = buildStair;   //jff 3/31/98 do not leave uninited
 
+         // ioanch: vanilla Doom stairs crushing behaviour is undefined! But in
+         // practice the behaviour is similar to Hexen crushers because of how
+         // the undefined values are set. But it's really depending on chance.
+
          // set up the speed and stepsize according to the stairs type
          switch(type)
          {
@@ -822,14 +827,22 @@ int EV_BuildStairs(const line_t *line, stair_e type)
          case build8:
             speed = FLOORSPEED/4;
             stairsize = 8*FRACUNIT;
+
             if(!demo_compatibility)
                floor->crush = -1; //jff 2/27/98 fix uninitialized crush field
+            else
+            {
+               floor->crush = 10;
+               floor->emulateStairCrush = true;
+            }
             break;
          case turbo16:
             speed = FLOORSPEED*4;
             stairsize = 16*FRACUNIT;
-            if(!demo_compatibility)
-               floor->crush = 10;  //jff 2/27/98 fix uninitialized crush field
+            // ioanch: also allow crushing if demo_compatibility is true
+            floor->crush = 10;  //jff 2/27/98 fix uninitialized crush field
+            if(demo_compatibility)
+               floor->emulateStairCrush = true;
             break;
          }
 
@@ -902,6 +915,11 @@ int EV_BuildStairs(const line_t *line, stair_e type)
                //jff 2/27/98 fix uninitialized crush field
                if(!demo_compatibility)
                   floor->crush = (type == build8 ? -1 : 10);
+               else
+               {
+                  floor->crush = 10;
+                  floor->emulateStairCrush = true;
+               }
                P_FloorSequence(floor->sector);
                ok = 1;
                break;
@@ -1439,7 +1457,7 @@ void FloorWaggleThinker::Think()
          dist       = originalHeight - sector->floorheight;
          
          T_MoveFloorInDirection(sector, abs(dist), destheight, 8,
-            destheight >= sector->floorheight ? plat_down : plat_up);
+            destheight >= sector->floorheight ? plat_down : plat_up, false);
 
          sector->floordata = NULL;
          remove();
@@ -1464,7 +1482,7 @@ void FloorWaggleThinker::Think()
    dist = destheight - sector->floorheight;
 
    T_MoveFloorInDirection(sector, abs(dist), destheight, 8,
-      destheight >= sector->floorheight ? plat_up : plat_down);
+      destheight >= sector->floorheight ? plat_up : plat_down, false);
 }
 
 //
