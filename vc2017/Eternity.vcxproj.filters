@@ -1760,6 +1760,9 @@
     <ClInclude Include="..\source\g_demolog.h">
       <Filter>Source Files\G_\G_ Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\m_avltree.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\ee.ico">

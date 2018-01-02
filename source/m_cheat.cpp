@@ -565,7 +565,7 @@ static void cheat_weapx(const void *arg)
       weaponinfo_t *weapon = E_WeaponForDEHNum(w);
       if(!E_PlayerOwnsWeapon(plyr, weapon))
       {
-         E_GiveInventoryItem(plyr, weapon->tracker, 1);
+         E_GiveWeapon(plyr, weapon);
          doom_printf("Weapon Added");  // Ty 03/27/98 - *not* externalized
       }
       else

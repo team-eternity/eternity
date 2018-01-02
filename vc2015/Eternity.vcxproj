@@ -1987,6 +1987,7 @@
     <ClInclude Include="..\Source\in_lude.h" />
     <ClInclude Include="..\source\metaspawn.h" />
     <ClInclude Include="..\source\mn_items.h" />
+    <ClInclude Include="..\source\m_avltree.h" />
     <ClInclude Include="..\source\m_binary.h" />
     <ClInclude Include="..\source\m_compare.h" />
     <ClInclude Include="..\source\m_ctype.h" />

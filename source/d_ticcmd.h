@@ -70,6 +70,7 @@ struct ticcmd_t
    byte    buttons;
    byte    actions;
    uint16_t itemID;     // MaxW: ID of used inventory item (+ 1)
+   uint16_t weaponID;   // MaxW: ID of weapon to be made pending (+ 1)
 };
 
 #if defined(_MSC_VER) || defined(__GNUC__)

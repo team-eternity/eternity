@@ -29,6 +29,7 @@
 #ifndef E_WEAPONS_H__
 #define E_WEAPONS_H__
 
+#include "m_avltree.h"
 #include "m_dllist.h"
 
 struct weaponinfo_t;
@@ -68,11 +69,17 @@ weaponinfo_t *E_WeaponForID(int id);
 weaponinfo_t *E_WeaponForName(const char *name);
 weaponinfo_t *E_WeaponForDEHNum(int dehnum);
 
+weaponinfo_t *E_FindBestWeapon(player_t *player);
+weaponinfo_t *E_FindBestWeaponUsingAmmo(player_t *player, itemeffect_t *ammo);
+
 bool E_WeaponIsCurrentDEHNum(player_t *player, const int dehnum);
 
 bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon);
 bool E_PlayerOwnsWeaponForDEHNum(player_t *player, int dehnum);
 bool E_PlayerOwnsWeaponInSlot(player_t *player, int slot);
+
+
+bool E_WeaponHasAltFire(weaponinfo_t *wp);
 
 void E_GiveWeapon(player_t *player, weaponinfo_t *weapon);
 
@@ -85,6 +92,87 @@ void E_CollectWeapons(cfg_t *cfg);
 
 void E_ProcessWeaponInfo(cfg_t *cfg);
 void E_ProcessWeaponDeltas(cfg_t *cfg);
+
+
+#define NUMWEAPCOUNTERS 3
+using WeaponCounter = int[NUMWEAPCOUNTERS];
+using WeaponCounterTreeBase = AVLTree<int, WeaponCounter>;
+using WeaponCounterNode = WeaponCounterTreeBase::avlnode_t;
+//
+// Tree of weapon counters
+//
+class WeaponCounterTree : public WeaponCounterTreeBase
+{
+public:
+   WeaponCounterTree() :
+      WeaponCounterTreeBase()
+   {      
+      deleteobjects = true;
+   }
+
+   ~WeaponCounterTree() { }
+   
+   //
+   // Set the indexed counter for the player's currently equipped weapon to value
+   //
+   void setCounter(player_t *player, int index, int value)
+   {
+      WeaponCounter &counters = getCounters(player->readyweapon->id);
+      counters[index] = value;
+   }
+
+   //
+   // Get counters for a given weapon.
+   // If the counters don't exist then create them
+   //
+   WeaponCounter &getCounters(int weaponid)
+   {
+      WeaponCounterNode *ctrnode;
+      if((ctrnode = find(weaponid)))
+         return *ctrnode->object;
+      else
+      {
+         // We didn't find the counter we want, so make a new one
+         WeaponCounter &counters = *estructalloc(WeaponCounter, 1);
+         insert(weaponid, &counters);
+         return counters;
+      }
+   }
+
+   //
+   // Get the index weapon counter
+   //
+   int *getIndexedCounter(int weaponid, int index)
+   {
+      WeaponCounter &counter = getCounters(weaponid);
+      return &counter[index];
+   }
+
+   //
+   // Get counter pointer for the player's currently equipped weapon
+   //
+   static int *getIndexedCounterForPlayer(player_t *player, int index)
+   {
+      return nullptr;
+      //return player->weaponctrs->getIndexedCounter(player->readyweapon->id, index);
+   }
+
+private:
+   //
+   // Delete objects
+   //
+   static void deleteObjects(avlnode_t *node)
+   {
+      if(node)
+      {
+         if(node->left)
+            deleteObjects(node->left);
+         if(node->right)
+            deleteObjects(node->right);
+         efree(node->object);
+      }
+   }
+};
 
 #endif
 

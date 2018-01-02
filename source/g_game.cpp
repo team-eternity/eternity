@@ -353,108 +353,148 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    if(gameactions[ka_use])
       cmd->buttons |= BT_USE;
 
-   // phares:
-   // Toggle between the top 2 favorite weapons.
-   // If not currently aiming one of these, switch to
-   // the favorite. Only switch if you possess the weapon.
-   
-   // killough 3/22/98:
-   //
-   // Perform automatic weapons switch here rather than in p_pspr.c,
-   // except in demo_compatibility mode.
-   //
-   // killough 3/26/98, 4/2/98: fix autoswitch when no weapons are left
-
-   //
-   // NETCODE_FIXME -- WEAPON_FIXME -- G_BuildTiccmd
-   //
-   // In order to later support dynamic weapons, the way weapon
-   // changes are handled is going to have to be different from
-   // either of the old systems. Packing weapon changes into the ticcmd
-   // isn't going to be sufficient any more, there's not enough space
-   // to support more than 16 weapons.
-   //
- 
-   if((!demo_compatibility && players[consoleplayer].attackdown &&
-       !P_CheckAmmo(&players[consoleplayer])) || gameactions[ka_nextweapon])
+   if(demo_version >= 349)
    {
-      newweapon = P_SwitchWeaponOld(&players[consoleplayer]); // phares
-   }
-   else
-   {                                 // phares 02/26/98: Added gamemode checks
-      newweapon =
-        gameactions[ka_weapon1] ? wp_fist :    // killough 5/2/98: reformatted
-        gameactions[ka_weapon2] ? wp_pistol :
-        gameactions[ka_weapon3] ? wp_shotgun :
-        gameactions[ka_weapon4] ? wp_chaingun :
-        gameactions[ka_weapon5] ? wp_missile :
-        gameactions[ka_weapon6] && GameModeInfo->id != shareware ? wp_plasma :
-        gameactions[ka_weapon7] && GameModeInfo->id != shareware ? wp_bfg :
-        gameactions[ka_weapon8] ? wp_chainsaw :
-        (!demo_compatibility && gameactions[ka_weapon9] &&  // MaxW: Adopted from PRBoom
-        enable_ssg) ? wp_supershotgun :
-        wp_nochange;
+      if(gameactions[ka_attack_alt])
+         cmd->buttons |= BTN_ATTACK_ALT;
 
-      // killough 3/22/98: For network and demo consistency with the
-      // new weapons preferences, we must do the weapons switches here
-      // instead of in p_user.c. But for old demos we must do it in
-      // p_user.c according to the old rules. Therefore demo_compatibility
-      // determines where the weapons switch is made.
+      newweapon = -1;
 
-      // killough 2/8/98:
-      // Allow user to switch to fist even if they have chainsaw.
-      // Switch to fist or chainsaw based on preferences.
-      // Switch to shotgun or SSG based on preferences.
-      //
-      // killough 10/98: make SG/SSG and Fist/Chainsaw
-      // weapon toggles optional
-      
-      if(!demo_compatibility && doom_weapon_toggles)
+      if((players[consoleplayer].attackdown && !P_CheckAmmo(&players[consoleplayer]))
+         || gameactions[ka_nextweapon])
       {
-         player_t *player = &players[consoleplayer];
-
-         // only select chainsaw from '1' if it's owned, it's
-         // not already in use, and the player prefers it or
-         // the fist is already in use, or the player does not
-         // have the berserker strength.
-
-         if(newweapon==wp_fist && E_PlayerOwnsWeaponForDEHNum(player, wp_chainsaw) &&
-            !E_WeaponIsCurrentDEHNum(player, wp_chainsaw) &&
-            (E_WeaponIsCurrentDEHNum(player, wp_fist) ||
-             !player->powers[pw_strength] ||
-             P_WeaponPreferred(wp_chainsaw, wp_fist)))
+         weaponinfo_t *temp = E_FindBestWeapon(&players[consoleplayer]);
+         if(temp == nullptr)
          {
-            newweapon = wp_chainsaw;
+            players[consoleplayer].attackdown = false;
+            newweapon = -1;
          }
+         else
+            newweapon = temp->id; // phares
+      }
 
-         // Select SSG from '3' only if it's owned and the player
-         // does not have a shotgun, or if the shotgun is already
-         // in use, or if the SSG is not already in use and the
-         // player prefers it.
-
-         if(newweapon == wp_shotgun && enable_ssg &&
-            E_PlayerOwnsWeaponForDEHNum(player, wp_supershotgun) &&
-            (!E_PlayerOwnsWeaponForDEHNum(player, wp_shotgun) ||
-             E_WeaponIsCurrentDEHNum(player, wp_shotgun) ||
-             !(E_WeaponIsCurrentDEHNum(player, wp_supershotgun) &&
-              P_WeaponPreferred(wp_supershotgun, wp_shotgun))))
+      for(int i = ka_weapon1; i <= ka_weapon9; i++)
+      {
+         if(gameactions[i])
          {
-            newweapon = wp_supershotgun;
+            weaponinfo_t *weapon = P_GetPlayerWeapon(&players[consoleplayer], i - ka_weapon1);
+            if(weapon)
+            {
+               newweapon = weapon->id;
+               break;
+            }
          }
       }
-      // killough 2/8/98, 3/22/98 -- end of weapon selection changes
+
+      //next / prev weapon actions
+      if(gameactions[ka_weaponup])
+         newweapon = P_NextWeapon(&players[consoleplayer]);
+      else if(gameactions[ka_weapondown])
+         newweapon = P_PrevWeapon(&players[consoleplayer]);
+
+      if(players[consoleplayer].readyweapon)
+      {
+         if(players[consoleplayer].readyweapon->id == newweapon)
+            newweapon = -1;
+      }
+
+      cmd->weaponID = newweapon + 1;
    }
-
-   // haleyjd 03/06/09: next/prev weapon actions
-   if(gameactions[ka_weaponup])
-      newweapon = P_NextWeapon(&players[consoleplayer]);
-   else if(gameactions[ka_weapondown])
-      newweapon = P_PrevWeapon(&players[consoleplayer]);
-
-   if(newweapon != wp_nochange)
+   else // Þe olde wæpon switch
    {
-      cmd->buttons |= BT_CHANGE;
-      cmd->buttons |= newweapon << BT_WEAPONSHIFT;
+      // phares:
+      // Toggle between the top 2 favorite weapons.
+      // If not currently aiming one of these, switch to
+      // the favorite. Only switch if you possess the weapon.
+
+      // killough 3/22/98:
+      //
+      // Perform automatic weapons switch here rather than in p_pspr.c,
+      // except in demo_compatibility mode.
+      //
+      // killough 3/26/98, 4/2/98: fix autoswitch when no weapons are left
+
+      if((!demo_compatibility && (players[consoleplayer].attackdown) &&
+          !P_CheckAmmo(&players[consoleplayer])) || gameactions[ka_nextweapon])
+      {
+         newweapon = P_SwitchWeaponOld(&players[consoleplayer]); // phares
+      }
+      else
+      {                                 // phares 02/26/98: Added gamemode checks
+         newweapon =
+           gameactions[ka_weapon1] ? wp_fist :    // killough 5/2/98: reformatted
+           gameactions[ka_weapon2] ? wp_pistol :
+           gameactions[ka_weapon3] ? wp_shotgun :
+           gameactions[ka_weapon4] ? wp_chaingun :
+           gameactions[ka_weapon5] ? wp_missile :
+           gameactions[ka_weapon6] && GameModeInfo->id != shareware ? wp_plasma :
+           gameactions[ka_weapon7] && GameModeInfo->id != shareware ? wp_bfg :
+           gameactions[ka_weapon8] ? wp_chainsaw :
+           (!demo_compatibility && gameactions[ka_weapon9] &&  // MaxW: Adopted from PRBoom
+           enable_ssg) ? wp_supershotgun :
+           wp_nochange;
+
+         // killough 3/22/98: For network and demo consistency with the
+         // new weapons preferences, we must do the weapons switches here
+         // instead of in p_user.c. But for old demos we must do it in
+         // p_user.c according to the old rules. Therefore demo_compatibility
+         // determines where the weapons switch is made.
+
+         // killough 2/8/98:
+         // Allow user to switch to fist even if they have chainsaw.
+         // Switch to fist or chainsaw based on preferences.
+         // Switch to shotgun or SSG based on preferences.
+         //
+         // killough 10/98: make SG/SSG and Fist/Chainsaw
+         // weapon toggles optional
+      
+         if(!demo_compatibility && doom_weapon_toggles)
+         {
+            player_t *player = &players[consoleplayer];
+
+            // only select chainsaw from '1' if it's owned, it's
+            // not already in use, and the player prefers it or
+            // the fist is already in use, or the player does not
+            // have the berserker strength.
+
+            if(newweapon==wp_fist && E_PlayerOwnsWeaponForDEHNum(player, wp_chainsaw) &&
+               !E_WeaponIsCurrentDEHNum(player, wp_chainsaw) &&
+               (E_WeaponIsCurrentDEHNum(player, wp_fist) ||
+                !player->powers[pw_strength] ||
+                P_WeaponPreferred(wp_chainsaw, wp_fist)))
+            {
+               newweapon = wp_chainsaw;
+            }
+
+            // Select SSG from '3' only if it's owned and the player
+            // does not have a shotgun, or if the shotgun is already
+            // in use, or if the SSG is not already in use and the
+            // player prefers it.
+
+            if(newweapon == wp_shotgun && enable_ssg &&
+               E_PlayerOwnsWeaponForDEHNum(player, wp_supershotgun) &&
+               (!E_PlayerOwnsWeaponForDEHNum(player, wp_shotgun) ||
+                E_WeaponIsCurrentDEHNum(player, wp_shotgun) ||
+                !(E_WeaponIsCurrentDEHNum(player, wp_supershotgun) &&
+                 P_WeaponPreferred(wp_supershotgun, wp_shotgun))))
+            {
+               newweapon = wp_supershotgun;
+            }
+         }
+         // killough 2/8/98, 3/22/98 -- end of weapon selection changes
+      }
+
+      // haleyjd 03/06/09: next/prev weapon actions
+      if(gameactions[ka_weaponup])
+         newweapon = P_NextWeapon(&players[consoleplayer]);
+      else if(gameactions[ka_weapondown])
+         newweapon = P_PrevWeapon(&players[consoleplayer]);
+
+      if(newweapon != wp_nochange)
+      {
+         cmd->buttons |= BT_CHANGE;
+         cmd->buttons |= newweapon << BT_WEAPONSHIFT;
+      }
    }
 
    // mouse
@@ -1391,10 +1431,15 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
       {
          cmd->itemID =   *demo_p++;
          cmd->itemID |= (*demo_p++) << 8;
+         cmd->weaponID = *demo_p++;
+         cmd->weaponID |= (*demo_p++) << 8;
       }
       else
+      {
          cmd->itemID = 0;
-      
+         cmd->weaponID = 0;
+      }
+
       // killough 3/26/98, 10/98: Ignore savegames in demos 
       if(demoplayback && 
          cmd->buttons & BT_SPECIAL && cmd->buttons & BTS_SAVEGAME)
@@ -1454,7 +1499,9 @@ static void G_WriteDemoTiccmd(ticcmd_t *cmd)
    if(demo_version >= 349)
    {
       demo_p[i++] =  cmd->itemID & 0xff;
-      demo_p[i] = (cmd->itemID >> 8) & 0xff;
+      demo_p[i++] = (cmd->itemID >> 8) & 0xff;
+      demo_p[i++] = cmd->weaponID & 0xff;
+      demo_p[i] = (cmd->weaponID >> 8) & 0xff;
    }
 
    // NOTE: the distance is *double* that of (ticcmd_t + trailer) because on
@@ -2284,7 +2331,10 @@ void G_PlayerReborn(int player)
    p->health      = p->pclass->initialhealth; // Ty 03/12/98 - use dehacked values
    p->quake       = 0;                        // haleyjd 01/21/07
 
-   p->usedown = p->attackdown = true;         // don't do anything immediately
+   p->usedown = p->attackdown = true; // don't do anything immediately
+
+   // MaxW: 2018/12/01: Adapt for new attackdown
+   // p->attackdown = demo_version >= 349 ? AT_ALL : AT_PRIMARY;
 
    // clear inventory unless otherwise indicated
    if(!(dmflags & DM_KEEPITEMS))

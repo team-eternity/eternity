@@ -81,6 +81,8 @@ extern int action_from_pspr;                     // haleyjd 05/21/08
 void P_SetPspritePtr(player_t *player, pspdef_t *psp, statenum_t stnum);
 void P_SetPsprite(player_t *player, int position, statenum_t stnum);
 
+bool P_WeaponHasAmmo(player_t *player, weaponinfo_t *weapon);
+
 int P_NextWeapon(player_t *player);
 int P_PrevWeapon(player_t *player);
 

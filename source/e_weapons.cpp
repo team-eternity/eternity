@@ -47,6 +47,7 @@
 #include "e_things.h" // TODO: Move E_SplitTypeAndState and remove this include?
 #include "e_weapons.h"
 #include "metaapi.h"
+#include "m_avltree.h"
 
 #include "d_dehtbl.h"
 #include "d_items.h"
@@ -176,6 +177,13 @@ cfg_opt_t edf_wdelta_opts[] =
 // weapons in the slot is determined by their relative priorities.
 //
 weaponslot_t *weaponslots[NUMWEAPONSLOTS];
+
+// The structure that provides the basis for the AVL tree used for
+// checking selection order. It's used due to its speed of access
+// over red-black trees, at the cost of slower mutation times.
+using selectordertree_t = AVLTree<int, weaponinfo_t>;
+using selectordernode_t = selectordertree_t::avlnode_t;
+static selectordertree_t *selectordertree = nullptr;
 
 //=============================================================================
 //
@@ -320,6 +328,14 @@ bool E_PlayerOwnsWeaponInSlot(player_t *player, int slot)
    return false;
 }
 
+//
+// If it doesn't have an alt atkstate, it can't have an alt fire
+//
+bool E_WeaponHasAltFire(weaponinfo_t *wp)
+{
+   return wp->atkstate_alt != E_SafeState(S_NULL);
+}
+
 void E_GiveWeapon(player_t *player, weaponinfo_t *weapon)
 {
    if(!E_PlayerOwnsWeapon(player, weapon))
@@ -340,11 +356,82 @@ void E_GiveAllClassWeapons(player_t *player)
       DLListItem<weaponslot_t> *weaponslot = &player->pclass->weaponslots[i]->links;
       while(weaponslot)
       {
-         if(!E_PlayerOwnsWeapon(player, weaponslot->dllObject->weapon))
-            E_GiveInventoryItem(player, weaponslot->dllObject->weapon->tracker);
+         E_GiveWeapon(player, weaponslot->dllObject->weapon);
          weaponslot = weaponslot->dllNext;
       }
    }
+}
+
+//=============================================================================
+//
+// Weapon Selection Order Functions
+//
+
+//
+// Perform an in-order traversal of the select order tree
+// to try and find the best weapon the player can fire.
+//
+static weaponinfo_t *E_findBestWeapon(player_t *player, selectordernode_t *node)
+{
+   weaponinfo_t *ret = nullptr;
+   if(node == nullptr)
+      return nullptr; // This *really* shouldn't happen
+
+   if(node->left && (ret = E_findBestWeapon(player, node->left)))
+      return ret;
+   if(E_PlayerOwnsWeapon(player, node->object) && P_WeaponHasAmmo(player, node->object))
+      return node->object;
+   if(node->right && (ret = E_findBestWeapon(player, node->right)))
+      return ret;
+
+   // The player doesn't have a weapon that they've ammo for in this sub-tree
+   return nullptr;
+}
+
+//
+// Initial function to call the function that recursively finds the
+// best weapon the player owns that they have the ammo to fire
+//
+weaponinfo_t *E_FindBestWeapon(player_t *player)
+{
+   return E_findBestWeapon(player, selectordertree->root);
+}
+
+//
+// Perform an in-order traversal of the select order tree
+// to try and find the best weapon the player can fire.
+//
+static weaponinfo_t *E_findBestWeaponUsingAmmo(player_t *player, itemeffect_t *ammo,
+                                               selectordernode_t *node)
+{
+   bool correctammo;
+   weaponinfo_t *ret = nullptr, *temp = node->object;
+   if(node == nullptr)
+      return nullptr; // This *really* shouldn't happen
+
+   if(temp->ammo && ammo)
+      correctammo = !strcasecmp(temp->ammo->getKey(), ammo->getKey());
+   else
+      correctammo = temp->ammo == nullptr && ammo == nullptr;
+
+   if(node->left && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->left)))
+      return ret;
+   if(E_PlayerOwnsWeapon(player, temp) && correctammo && P_WeaponHasAmmo(player, temp))
+      return temp;
+   if(node->right && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->right)))
+      return ret;
+
+   // The player doesn't have a weapon that they've ammo for in this sub-tree
+   return nullptr;
+}
+
+//
+// Initial function to call the function that recursively finds the
+// best weapon the player owns that has the provided primary ammo
+//
+weaponinfo_t *E_FindBestWeaponUsingAmmo(player_t *player, itemeffect_t *ammo)
+{
+   return E_findBestWeaponUsingAmmo(player, ammo, selectordertree->root);
 }
 
 //=============================================================================
@@ -925,6 +1012,17 @@ static weapontype_t E_resolveParentWeapon(cfg_t *weaponsec, const weapontitlepro
    return pnum;
 }
 
+static void E_insertSelectOrderNode(int sortorder, weaponinfo_t *wp, bool modify)
+{
+   if(modify)
+      selectordertree->deleteNode(wp->sortorder);
+
+   if(selectordertree == nullptr)
+      selectordertree = new selectordertree_t(sortorder, wp);
+   else
+      selectordertree->insert(sortorder, wp);
+}
+
 #undef  IS_SET
 #define IS_SET(name) ((def && !inherits) || cfg_size(weaponsec, (name)) > 0)
 
@@ -996,7 +1094,7 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
    {
       if((tempint = cfg_getint(weaponsec, ITEM_WPN_SELECTORDER)) >= 0)
       {
-         //E_insertSelectOrderNode(tempint, &wp, !def);
+         E_insertSelectOrderNode(tempint, &wp, !def);
          wp.sortorder = tempint;
       }
    }

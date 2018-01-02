@@ -729,7 +729,12 @@ void P_PlayerThink(player_t *player)
    if(cmd->buttons & BT_SPECIAL)
       cmd->buttons = 0;
 
-   if(cmd->buttons & BT_CHANGE)
+   if(demo_version >= 349)
+   {
+      if(cmd->weaponID)
+         player->pendingweapon = E_WeaponForID(cmd->weaponID - 1); // weaponID is off by one
+   }
+   else if(cmd->buttons & BT_CHANGE)
    {
       // The actual changing of the weapon is done
       //  when the weapon psprite can do it

@@ -98,6 +98,7 @@ keyaction_t keyactions[NUMKEYACTIONS] =
    { "use",               kac_game,    at_variable },
    { "strafe",            kac_game,    at_variable },
    { "attack",            kac_game,    at_variable },
+   { "altattack",         kac_game,    at_variable },
    { "flip",              kac_game,    at_variable },
    { "speed",             kac_game,    at_variable },
    { "jump",              kac_game,    at_variable }, // -- joek 12/22/07

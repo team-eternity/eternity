@@ -191,7 +191,8 @@ enum
    TCF_ACTIONS     = 0x00000020,
    TCF_LOOK        = 0x00000040,
    TCF_FLY         = 0x00000080,
-   TCF_ITEMID      = 0x00000100
+   TCF_ITEMID      = 0x00000100,
+   TCF_WEAPONID    = 0x00000200
 };
 
 // DEBUG
@@ -253,12 +254,13 @@ bool PacketSend(void)
          
          NETWRITESHORT(netbuffer->d.cmds[c].consistency);         
 
-         NETWRITEBYTEIF(netbuffer->d.cmds[c].chatchar, TCF_CHATCHAR);
-         NETWRITEBYTEIF(netbuffer->d.cmds[c].buttons,  TCF_BUTTONS);
-         NETWRITEBYTEIF(netbuffer->d.cmds[c].actions,  TCF_ACTIONS);
-         NETWRITESHORTIF(netbuffer->d.cmds[c].look,    TCF_LOOK);
-         NETWRITEBYTEIF(netbuffer->d.cmds[c].fly,      TCF_FLY);
-         NETWRITESHORTIF(netbuffer->d.cmds[c].itemID,  TCF_ITEMID);
+         NETWRITEBYTEIF(netbuffer->d.cmds[c].chatchar,  TCF_CHATCHAR);
+         NETWRITEBYTEIF(netbuffer->d.cmds[c].buttons,   TCF_BUTTONS);
+         NETWRITEBYTEIF(netbuffer->d.cmds[c].actions,   TCF_ACTIONS);
+         NETWRITESHORTIF(netbuffer->d.cmds[c].look,     TCF_LOOK);
+         NETWRITEBYTEIF(netbuffer->d.cmds[c].fly,       TCF_FLY);
+         NETWRITESHORTIF(netbuffer->d.cmds[c].itemID,   TCF_ITEMID);
+         NETWRITESHORTIF(netbuffer->d.cmds[c].weaponID, TCF_WEAPONID);
 
          // go back to ticstart and write in the flags
          ticend = rover;
@@ -392,6 +394,11 @@ bool PacketGet(void)
          if(ticcmdflags & TCF_ITEMID)
          {
             netbuffer->d.cmds[c].itemID = NetToHost16(rover);
+            rover += 2;
+         }
+         if(ticcmdflags & TCF_WEAPONID)
+         {
+            netbuffer->d.cmds[c].weaponID = NetToHost16(rover);
             rover += 2;
          }
       }
