@@ -572,7 +572,10 @@ void A_WeaponReady(actionargs_t *actionargs)
    if(!(psp = actionargs->pspr))
       return;
 
-   // WEAPON_FIXME: chainsaw particulars (idle sound)
+   // EDF_FEATURES_FIXME: Demo guard this as well?
+   if(!player->pendingweapon && !E_PlayerOwnsWeapon(player, player->readyweapon) &&
+      player->readyweapon->id != UnknownWeaponInfo)
+      player->pendingweapon = E_FindBestWeapon(player);
 
    // get out of attack state
    if(mo->state == states[mo->info->missilestate] || 
