@@ -1440,7 +1440,7 @@ void A_FlameSnd(actionargs_t *actionargs);
 void A_ClearSkin(actionargs_t *);
 void A_PhoenixPuff(actionargs_t *);
 
-// MaxW 2018/02/01: Heretic weapon pointers
+// MaxW: 2018/01/02: Heretic weapon pointers
 void A_StaffAttackPL1(actionargs_t *);
 void A_StaffAttackPL2(actionargs_t *);
 void A_FireGoldWandPL1(actionargs_t *);
@@ -1459,7 +1459,7 @@ void A_FireSkullRodPL1(actionargs_t *);
 void A_FirePhoenixPL1(actionargs_t *);
 void A_GauntletAttack(actionargs_t *);
 
-// MaxW 2018/02/01: Heretic artifact use pointers
+// MaxW: 2018/01/02: Heretic artifact use pointers
 void A_HticArtiTele(actionargs_t *);
 void A_HticSpawnFireBomb(actionargs_t *);
 
@@ -1788,7 +1788,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(ClearSkin),
    POINTER(PhoenixPuff),
 
-   // MaxW 2018/02/01: Heretic weapon pointers
+   // MaxW: 2018/01/02: Heretic weapon pointers
    POINTER(StaffAttackPL1),
    POINTER(StaffAttackPL2),
    POINTER(FireGoldWandPL1),
@@ -1807,7 +1807,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(FirePhoenixPL1),
    POINTER(GauntletAttack),
 
-   // MaxW 2018/02/01: Heretic artifact use pointers
+   // MaxW: 2018/01/02: Heretic artifact use pointers
    POINTER(HticArtiTele),
    POINTER(HticSpawnFireBomb),
 

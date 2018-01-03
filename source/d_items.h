@@ -63,7 +63,7 @@ struct weaponinfo_t
    int          readystate;
    int          atkstate;
    int          flashstate;
-   int          holdstate;    // MaxW 2018/01/01: state jumped to if fire is held
+   int          holdstate;    // MaxW: 2018/01/01: state jumped to if fire is held
    int          ammopershot;  // haleyjd 08/10/02: ammo per shot field
 
    MetaTable   *ammo_alt;         // Alt ammo artifact type
