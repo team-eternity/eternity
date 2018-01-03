@@ -258,7 +258,7 @@ weaponinfo_t *E_WeaponForDEHNum(int dehnum)
 // Returns a weapon type index given its name. Returns -1
 // if a weapon type is not found.
 //
-static weapontype_t E_weaponNumForName(const char *name)
+weapontype_t E_WeaponNumForName(const char *name)
 {
    weaponinfo_t *info = nullptr;
    weapontype_t ret = -1;
@@ -274,7 +274,7 @@ static weapontype_t E_weaponNumForName(const char *name)
 //
 static weapontype_t E_getWeaponNumForName(const char *name)
 {
-   weapontype_t weaponnum = E_weaponNumForName(name);
+   weapontype_t weaponnum = E_WeaponNumForName(name);
 
    if(weaponnum == -1)
       I_Error("E_GetWeaponNumForName: bad weapon type %s\n", name);
@@ -548,7 +548,7 @@ state_t *E_GetStateForWeaponInfo(weaponinfo_t *wi, const char *label)
 weaponinfo_t *E_IsWeaponInfoDescendantOf(weaponinfo_t *wi, const char *type)
 {
    weaponinfo_t *curwi = wi->parent;
-   weapontype_t targettype = E_weaponNumForName(type);
+   weapontype_t targettype = E_WeaponNumForName(type);
 
    while(curwi)
    {
@@ -854,7 +854,7 @@ void E_CollectWeapons(cfg_t *cfg)
          E_EDFLoggedErr(2, "E_CollectWeapons: no weaponinfo defined.\n");
 
       // Verify existence of the Unknown weapon type
-      UnknownWeaponInfo = E_weaponNumForName("Unknown");
+      UnknownWeaponInfo = E_WeaponNumForName("Unknown");
       if(UnknownWeaponInfo < 0)
          E_EDFLoggedErr(2, "E_CollectWeapons: 'Unknown' weaponinfo must be defined.\n");
 
@@ -1232,7 +1232,7 @@ void E_ProcessWeaponInfo(cfg_t *cfg)
    {
       cfg_t *weaponsec = cfg_getnsec(cfg, EDF_SEC_WEAPONINFO, i);
       const char *name = cfg_title(weaponsec);
-      weapontype_t weaponnum = E_weaponNumForName(name);
+      weapontype_t weaponnum = E_WeaponNumForName(name);
 
       // reset the inheritance stack
       E_ResetWeaponPStack();
@@ -1270,7 +1270,7 @@ void E_ProcessWeaponDeltas(cfg_t *cfg)
          E_EDFLoggedErr(2, "E_ProcessWeaponDeltas: weapondelta requires name field\n");
 
       name = cfg_getstr(deltasec, ITEM_DELTA_NAME);
-      weaponNum = E_weaponNumForName(name);
+      weaponNum = E_WeaponNumForName(name);
 
       E_processWeapon(weaponNum, deltasec, cfg, false);
 

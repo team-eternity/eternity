@@ -38,6 +38,7 @@ struct edf_string_t;
 struct emod_t;
 class  Mobj;
 struct mobjinfo_t;
+struct player_t;
 struct sfxinfo_t;
 struct state_t;
 
@@ -108,6 +109,7 @@ double        E_ArgAsDouble(arglist_t *al, int index, double defvalue);
 int           E_ArgAsThingNum(arglist_t *al, int index);
 int           E_ArgAsThingNumG0(arglist_t *al, int index);
 state_t      *E_ArgAsStateLabel(Mobj *mo, arglist_t *al, int index);
+state_t      *E_ArgAsStateLabelWpn(player_t *player, arglist_t *al, int index);
 int           E_ArgAsStateNum(arglist_t *al, int index, Mobj *mo);
 int           E_ArgAsStateNumNI(arglist_t *al, int index, Mobj *mo);
 int           E_ArgAsStateNumG0(arglist_t *al, int index, Mobj *mo);

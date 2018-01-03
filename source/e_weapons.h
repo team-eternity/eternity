@@ -68,6 +68,7 @@ extern weaponslot_t *weaponslots[NUMWEAPONSLOTS];
 weaponinfo_t *E_WeaponForID(int id);
 weaponinfo_t *E_WeaponForName(const char *name);
 weaponinfo_t *E_WeaponForDEHNum(int dehnum);
+weapontype_t E_WeaponNumForName(const char *name);
 
 weaponinfo_t *E_FindBestWeapon(player_t *player);
 weaponinfo_t *E_FindBestWeaponUsingAmmo(player_t *player, itemeffect_t *ammo);
@@ -78,14 +79,13 @@ bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon);
 bool E_PlayerOwnsWeaponForDEHNum(player_t *player, int dehnum);
 bool E_PlayerOwnsWeaponInSlot(player_t *player, int slot);
 
+state_t *E_GetStateForWeaponInfo(weaponinfo_t *wi, const char *label);
 
 bool E_WeaponHasAltFire(weaponinfo_t *wp);
 
 void E_GiveWeapon(player_t *player, weaponinfo_t *weapon);
 
 void E_GiveAllClassWeapons(player_t *player);
-
-
 
 
 void E_CollectWeapons(cfg_t *cfg);

@@ -802,6 +802,104 @@ void A_WeaponCtrJump(actionargs_t *actionargs)
 }
 
 //
+// Parameterized codepointer for branching based on comparisons
+// against a weapon's counter values.
+//
+// args[0] : offset || state label
+// args[1] : comparison type
+// args[2] : immediate value OR counter number
+// args[3] : counter # to use
+// args[4] : psprite to affect (weapon or flash)
+//
+void A_WeaponCtrJumpEx(actionargs_t *actionargs)
+{
+   bool branch = false;
+   int checktype, cnum, psprnum;
+   int value, *counter;
+   player_t  *player;
+   pspdef_t  *pspr;
+   state_t *state;
+   Mobj *mo = actionargs->actor;
+   arglist_t *args = actionargs->args;
+
+   if(!(player = actionargs->actor->player))
+      return;
+
+   if(!(pspr = actionargs->pspr))
+      return;
+
+   state     = E_ArgAsStateLabelWpn(player, args, 0);
+   checktype = E_ArgAsKwd(args, 1, &weapctrkwds, 0);
+   value     = E_ArgAsInt(args, 2, 0);
+   cnum      = E_ArgAsInt(args, 3, 0);
+   psprnum   = E_ArgAsKwd(args, 4, &psprkwds, 0);
+   
+   // validate state
+   if(!state)
+      return;
+
+   // validate psprite number
+   if(psprnum < 0 || psprnum >= NUMPSPRITES)
+      return;
+
+   switch(cnum)
+   {
+   case 0:
+   case 1:
+   case 2:
+      counter = player->weaponctrs->getIndexedCounterForPlayer(player, cnum);
+      break;
+   default:
+      return;
+   }
+
+   // 08/02/04:
+   // support getting check value from a counter
+   // if checktype is greater than the last immediate operator,
+   // then the comparison value is actually a counter number
+
+   if(checktype >= CPC_NUMIMMEDIATE)
+   {
+      // turn it into the corresponding immediate operation
+      checktype -= CPC_NUMIMMEDIATE;
+
+      switch(value)
+      {
+      case 0:
+      case 1:
+      case 2:
+         value = *player->weaponctrs->getIndexedCounterForPlayer(player, value);
+         break;
+      default:
+         return; // invalid counter number
+      }
+   }
+
+   switch(checktype)
+   {
+   case CPC_LESS:
+      branch = (*counter < value); break;
+   case CPC_LESSOREQUAL:
+      branch = (*counter <= value); break;
+   case CPC_GREATER:
+      branch = (*counter > value); break;
+   case CPC_GREATEROREQUAL:
+      branch = (*counter >= value); break;
+   case CPC_EQUAL:
+      branch = (*counter == value); break;
+   case CPC_NOTEQUAL:
+      branch = (*counter != value); break;
+   case CPC_BITWISEAND:
+      branch = !!(*counter & value); break;
+   default:
+      break;
+   }
+
+   if(branch)
+      P_SetPsprite(player, psprnum, state->index);
+}
+
+//
 // A_WeaponCtrSwitch
 //
 // This powerful codepointer can branch to one of N states

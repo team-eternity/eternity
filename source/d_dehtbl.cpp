@@ -1350,6 +1350,7 @@ void A_TargetJump(actionargs_t *);
 void A_ThingSummon(actionargs_t *);
 void A_KillChildren(actionargs_t *);
 void A_WeaponCtrJump(actionargs_t *);
+void A_WeaponCtrJumpEx(actionargs_t *);
 void A_WeaponCtrSwitch(actionargs_t *);
 void A_WeaponSetCtr(actionargs_t *);
 void A_WeaponCopyCtr(actionargs_t *);
@@ -1694,6 +1695,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(ThingSummon),
    POINTER(KillChildren),
    POINTER(WeaponCtrJump),
+   POINTER(WeaponCtrJumpEx),
    POINTER(WeaponCtrSwitch),
    POINTER(WeaponSetCtr),
    POINTER(WeaponCopyCtr),

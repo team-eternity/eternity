@@ -63,7 +63,6 @@ playerclass DoomMarine
    weaponslot 8 { weapons : Chainsaw }
    weaponslot 9 { weapons : SuperShotgun }
    
-   // INVENTORY_TODO: reborn weapons
    rebornitem AmmoClip, 50
    rebornitem Fist
    rebornitem Pistol
@@ -92,7 +91,6 @@ playerclass Corvus
    weaponslot 7 { weapons : Mace }
    weaponslot 8 { weapons : Gauntlets }
    
-   // INVENTORY_TODO: reborn items
    rebornitem AmmoWandCrystal, 50
    rebornitem Staff
    rebornitem GoldWand
