@@ -121,6 +121,16 @@ struct invbarstate_t {
 #define MAXPITCHUP   32
 #define MAXPITCHDOWN 32
 
+enum attacktype_e : unsigned int
+{
+   AT_NONE = 0,
+   AT_PRIMARY = 1,
+   AT_SECONDARY = 2,
+   AT_UNKNOWN = 4,
+
+   AT_ALL = (AT_PRIMARY + AT_SECONDARY),
+};
+
 //
 // Extended player object info: player_t
 //
@@ -169,7 +179,7 @@ struct player_t
 
    int            extralight;    // So gun flashes light up areas.
    
-   int            attackdown; // True if button down last tic.
+   attacktype_e   attackdown; // True if button down last tic.
    int            usedown;
 
    int            cheats;      // Bit flags, for cheats and debug.

@@ -3347,6 +3347,7 @@ static menuitem_t mn_movekeys_items[] =
    {it_binding,      "180 degree turn", "flip"},
    {it_binding,      "Use",             "use"},
    {it_binding,      "Attack/fire",     "attack"},
+   {it_binding,      "Alt-attack/fire", "altattack"},
    {it_binding,      "Toggle autorun",  "autorun"},
    {it_end}
 };

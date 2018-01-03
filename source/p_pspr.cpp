@@ -608,16 +608,16 @@ void A_WeaponReady(actionargs_t *actionargs)
    
    if(player->cmd.buttons & BT_ATTACK)
    {
-      if(!player->attackdown || 
+      if(!(player->attackdown & AT_PRIMARY) ||
          !(player->readyweapon->flags & WPF_NOAUTOFIRE))
       {
-         player->attackdown = true;
+         player->attackdown = AT_PRIMARY;
          P_FireWeapon(player);
          return;
       }
    }
    else
-      player->attackdown = false;
+      player->attackdown = AT_NONE;
 
    // bob the weapon based on movement speed
    int angle = (128*leveltime) & FINEMASK;

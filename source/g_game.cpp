@@ -366,7 +366,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          weaponinfo_t *temp = E_FindBestWeapon(&players[consoleplayer]);
          if(temp == nullptr)
          {
-            players[consoleplayer].attackdown = false;
+            players[consoleplayer].attackdown = AT_NONE;
             newweapon = -1;
          }
          else
@@ -414,7 +414,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       //
       // killough 3/26/98, 4/2/98: fix autoswitch when no weapons are left
 
-      if((!demo_compatibility && (players[consoleplayer].attackdown) &&
+      if((!demo_compatibility && (players[consoleplayer].attackdown & AT_PRIMARY) &&
           !P_CheckAmmo(&players[consoleplayer])) || gameactions[ka_nextweapon])
       {
          newweapon = P_SwitchWeaponOld(&players[consoleplayer]); // phares
@@ -2335,10 +2335,10 @@ void G_PlayerReborn(int player)
    p->health      = p->pclass->initialhealth; // Ty 03/12/98 - use dehacked values
    p->quake       = 0;                        // haleyjd 01/21/07
 
-   p->usedown = p->attackdown = true; // don't do anything immediately
+   p->usedown = true; // don't do anything immediately
 
-   // MaxW: 2018/12/01: Adapt for new attackdown
-   // p->attackdown = demo_version >= 349 ? AT_ALL : AT_PRIMARY;
+   // MaxW: 2018/01/03: Adapt for new attackdown
+   p->attackdown = demo_version >= 349 ? AT_ALL : AT_PRIMARY;
 
    // clear inventory unless otherwise indicated
    if(!(dmflags & DM_KEEPITEMS))
