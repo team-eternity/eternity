@@ -353,6 +353,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    if(gameactions[ka_use])
       cmd->buttons |= BT_USE;
 
+   // only put BTN codes in here
    if(demo_version >= 349)
    {
       if(gameactions[ka_attack_alt])
