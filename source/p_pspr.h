@@ -39,6 +39,7 @@
 // Basic data types.
 // Needs fixed point, and BAM angles.
 #include "m_fixed.h"
+#include "tables.h"
 
 struct player_t;
 struct sfxinfo_t;
@@ -53,6 +54,12 @@ struct sfxinfo_t;
 
 // haleyjd 09/16/07: silencer weapon volume reduction
 #define WEAPON_VOLUME_SILENCED 50
+
+// Defines needed for weapon codepointers
+#define LOWERSPEED   (FRACUNIT*6)
+#define RAISESPEED   (FRACUNIT*6)
+#define WEAPONBOTTOM (FRACUNIT*128)
+#define WEAPONTOP    (FRACUNIT*32)
 
 //
 // Overlay psprites are scaled shapes
@@ -103,6 +110,11 @@ void P_WeaponSoundInfo(Mobj *mo, sfxinfo_t *sound);
 void P_WeaponSound(Mobj *mo, int sfx_id);
 
 void P_WeaponRecoil(player_t *player);
+
+void A_ReFire(actionargs_t *actionargs);
+void A_FireSomething(player_t* player, int adder);
+
+fixed_t P_DoAutoAim(Mobj *mo, angle_t angle, fixed_t distance);
 
 #endif
 

@@ -41,8 +41,6 @@
 
 #include "p_map.h"
 
-#define WEAPONTOP    (FRACUNIT*32)
-
 // FIXME: This will probably be defined elsewhere at some point
 #undef PO2
 #define PO2(x) (1 << x)

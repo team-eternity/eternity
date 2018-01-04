@@ -371,6 +371,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\source\a_weaponsdoom.cpp" />
     <ClCompile Include="..\source\a_weaponsheretic.cpp" />
     <ClCompile Include="..\source\cam_aim.cpp" />
     <ClCompile Include="..\source\cam_common.cpp" />
