@@ -26,8 +26,7 @@ weaponinfo Fist : DoomWeapon, 0
   nextincycle    Chainsaw
   previncycle    BFG9000
 
-  flags        FLEEMELEE|NOHITGHOSTS|SILENCER
-  // AUTOSWITCHFROM
+  flags        FLEEMELEE|NOHITGHOSTS|SILENCER|AUTOSWITCHFROM
   mod          Fist
   recoil       10
 
@@ -62,8 +61,7 @@ weaponinfo Pistol : DoomWeapon, 1
   nextincycle    Shotgun
   previncycle    Chainsaw
 
-  flags        SILENCER|HAPTICRECOIL
-  // AUTOSWITCHFROM
+  flags        SILENCER|HAPTICRECOIL|AUTOSWITCHFROM
   mod          Pistol
   recoil       10
   hapticrecoil 1
