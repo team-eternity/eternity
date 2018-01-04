@@ -260,12 +260,7 @@ int P_PrevWeapon(player_t *player)
 // in DOOM2 to bring up the weapon, i.e. 6 = plasma gun. These    //    |
 // are NOT the wp_* constants.                                    //    V
 
-// WEAPON_FIXME: retained for now as a hard-coded array. When EDF weapons are 
-// complete, the preference order of weapons will be a modder-determined factor,
-// or in other words, part of the game logic like it originally was meant to be,
-// and not an end-user setting. It's impractical to maintain N preference 
-// settings for an ever-constantly changing number of weapons, and for multiple
-// potential sets of weapons, one per player class.
+// Exists for ye olde compat
 
 static int weapon_preferences[NUMWEAPONS+1] =
 {
@@ -287,17 +282,6 @@ weapontype_t P_SwitchWeaponOld(player_t *player)
    weapontype_t newweapon = currentweapon;
    int i = NUMWEAPONS + 1;   // killough 5/2/98   
 
-   // killough 2/8/98: follow preferences and fix BFG/SSG bugs
-
-   // haleyjd WEAPON_FIXME: makes assumptions about ammo per shot
-   // haleyjd WEAPON_FIXME: makes assumptions about ammotypes used by weapons!
-   // haleyjd WEAPON_FIXME: shareware-only must become EDF weapon property
-   // haleyjd WEAPON_FIXME: must support arbitrary weapons
-   // haleyjd WEAPON_FIXME: chainsaw/fist issues
-
-   // INVENTORY_FIXME: This is COMPLETE AND TOTAL bullshit. Hardcoded for now...
-   // How in the sweet fuck am I supposed to generalize this mess, AND remain
-   // backwardly compatible with DeHackEd bullshit??
    int clips   = E_GetItemOwnedAmountName(player, "AmmoClip"); 
    int shells  = E_GetItemOwnedAmountName(player, "AmmoShell");
    int cells   = E_GetItemOwnedAmountName(player, "AmmoCell");
@@ -544,8 +528,6 @@ void P_DropWeapon(player_t *player)
 // haleyjd 09/16/07:
 // Gets weapon at given index for the given player.
 // 
-// WEAPON_TODO: must redirect through playerclass lookup
-// PCLASS_FIXME: weapons
 //
 weaponinfo_t *P_GetPlayerWeapon(player_t *player, int slot)
 {
@@ -1128,7 +1110,7 @@ void A_FireCustomBullets(actionargs_t *actionargs)
    dmgmod     = E_ArgAsInt(args, 4, 0);
    
    flashint   = E_ArgAsInt(args, 5, 0);
-   flashstate = E_ArgAsStateNum(args, 5, NULL);
+   flashstate = E_ArgAsStateNum(args, 5, NULL, player);
 
    if(!accurate)
       accurate = 1;
@@ -1413,7 +1395,7 @@ void A_PlayerThunk(actionargs_t *actionargs)
 
    cptrnum   =   E_ArgAsBexptr(args, 0);
    face      = !!E_ArgAsKwd(args, 1, &facekwds, 0);
-   statenum  =   E_ArgAsStateNumG0(args, 2, NULL);
+   statenum  =   E_ArgAsStateNumG0(args, 2, NULL, player);
    settarget = !!E_ArgAsKwd(args, 3, &targetkwds, 0);
    useammo   = !!E_ArgAsKwd(args, 4, &ammokwds, 0);
 

@@ -407,14 +407,14 @@ state_t *E_GetWpnJumpInfo(weaponinfo_t *wi, const char *arg)
       return E_GetStateForWeaponInfo(wi, arg);
 
    // Check for super::, which is an explicit reference to the parent type;
-   // Otherwise, treat the left side as a thingtype EDF class name.
+   // Otherwise, treat the left side as a weaponinfo EDF class name.
    if(!strcasecmp(type, "super") && wi->parent)
       wi = wi->parent;
    else
    {
       int weapontype = E_WeaponNumForName(type);
       
-      // non-existent thingtype is an error, no jump will happen
+      // non-existent weaponinfo is an error, no jump will happen
       if(weapontype == -1)
          return nullptr;
       else
@@ -490,7 +490,7 @@ state_t *E_ArgAsStateLabelWpn(player_t *player, arglist_t *al, int index)
 // The evaluated value will be cached so that it can be returned on subsequent
 // calls. If the arg does not exist, the null state is returned instead.
 //
-int E_ArgAsStateNum(arglist_t *al, int index, Mobj *mo)
+int E_ArgAsStateNum(arglist_t *al, int index, Mobj *mo, player_t *player)
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
@@ -529,6 +529,8 @@ int E_ArgAsStateNum(arglist_t *al, int index, Mobj *mo)
             state_t *state;
             if(mo && (state = E_ArgAsStateLabel(mo, al, index)))
                return state->index;
+            else if(player && (state = E_ArgAsStateLabelWpn(player, al, index)))
+               return state->index;
             else
             {
                // whatever it is, we dunno of it.
@@ -555,7 +557,7 @@ int E_ArgAsStateNum(arglist_t *al, int index, Mobj *mo)
 //
 // NI == No Invalid, because invalid states are not converted to the null state.
 //
-int E_ArgAsStateNumNI(arglist_t *al, int index, Mobj *mo)
+int E_ArgAsStateNumNI(arglist_t *al, int index, Mobj *mo, player_t *player)
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
@@ -594,6 +596,8 @@ int E_ArgAsStateNumNI(arglist_t *al, int index, Mobj *mo)
             state_t *state;
             if(mo && (state = E_ArgAsStateLabel(mo, al, index)))
                return state->index;
+            else if(player && (state = E_ArgAsStateLabelWpn(player, al, index)))
+               return state->index;
             else
             {
                // whatever it is, we dunno of it.
@@ -618,7 +622,7 @@ int E_ArgAsStateNumNI(arglist_t *al, int index, Mobj *mo)
 // equal to zero.
 // G0 == "greater than or equal to zero"
 //
-int E_ArgAsStateNumG0(arglist_t *al, int index, Mobj *mo)
+int E_ArgAsStateNumG0(arglist_t *al, int index, Mobj *mo, player_t *player)
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
@@ -656,6 +660,8 @@ int E_ArgAsStateNumG0(arglist_t *al, int index, Mobj *mo)
             // resolution is "virtual" (ie relative to the calling thingtype).
             state_t *state;
             if(mo && (state = E_ArgAsStateLabel(mo, al, index)))
+               return state->index;
+            else if(player && (state = E_ArgAsStateLabelWpn(player, al, index)))
                return state->index;
             else
             {

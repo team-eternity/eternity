@@ -154,7 +154,7 @@ void A_HealthJump(actionargs_t *actionargs)
    bool branch = false;   
    int statenum, checktype, checkhealth;
 
-   statenum    = E_ArgAsStateNumNI(args, 0, mo);
+   statenum    = E_ArgAsStateNumNI(args, 0, mo, nullptr);
    checktype   = E_ArgAsKwd(args, 1, &cpckwds, 0);
    checkhealth = E_ArgAsInt(args, 2, 0);
 
@@ -221,7 +221,7 @@ void A_CounterJump(actionargs_t *actionargs)
    int statenum, checktype, value, cnum;
    int *counter;
 
-   statenum  = E_ArgAsStateNumNI(args, 0, mo);
+   statenum  = E_ArgAsStateNumNI(args, 0, mo, nullptr);
    checktype = E_ArgAsKwd(args, 1, &cpckwds, 0);
    value     = E_ArgAsInt(args, 2, 0);
    cnum      = E_ArgAsInt(args, 3, 0);
@@ -365,7 +365,7 @@ void A_CounterSwitch(actionargs_t *actionargs)
    int *counter;
 
    cnum       = E_ArgAsInt       (args, 0,  0);
-   startstate = E_ArgAsStateNumNI(args, 1, mo);
+   startstate = E_ArgAsStateNumNI(args, 1, mo, nullptr);
    numstates  = E_ArgAsInt       (args, 2,  0) - 1;
 
    // get counter
@@ -730,7 +730,7 @@ void A_WeaponCtrJump(actionargs_t *actionargs)
    if(!(pspr = actionargs->pspr))
       return;
 
-   statenum  = E_ArgAsStateNumNI(args, 0, NULL);
+   statenum  = E_ArgAsStateNumNI(args, 0, nullptr, player);
    checktype = E_ArgAsKwd(args, 1, &weapctrkwds, 0);
    value     = E_ArgAsInt(args, 2, 0);
    cnum      = E_ArgAsInt(args, 3, 0);
@@ -927,7 +927,7 @@ void A_WeaponCtrSwitch(actionargs_t *actionargs)
       return;
 
    cnum       = E_ArgAsInt(args, 0, 0);
-   startstate = E_ArgAsStateNumNI(args, 1, NULL);
+   startstate = E_ArgAsStateNumNI(args, 1, nullptr, player);
    numstates  = E_ArgAsInt(args, 2, 0) - 1;
    psprnum    = E_ArgAsKwd(args, 3, &psprkwds, 0);
 
@@ -1292,7 +1292,7 @@ void A_CheckReloadEx(actionargs_t *actionargs)
       return;
 
    ammo      = E_GetItemOwnedAmount(player, w->ammo);
-   statenum  = E_ArgAsStateNumNI(args, 0, NULL);
+   statenum  = E_ArgAsStateNumNI(args, 0, nullptr, player);
    checktype = E_ArgAsKwd(args, 1, &weapctrkwds, 0);
    value     = E_ArgAsInt(args, 2, 0);
    psprnum   = E_ArgAsKwd(args, 3, &psprkwds, 0);   
