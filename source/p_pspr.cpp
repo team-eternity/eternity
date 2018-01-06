@@ -88,7 +88,7 @@ void P_SetPspritePtr(player_t *player, pspdef_t *psp, statenum_t stnum)
       if(!stnum)
       {
          // object removed itself
-         psp->state = NULL;
+         psp->state = nullptr;
          break;
       }
 
@@ -1022,7 +1022,7 @@ void P_SetupPsprites(player_t *player)
    
    // remove all psprites
    for(i = 0; i < NUMPSPRITES; ++i)
-      player->psprites[i].state = NULL;
+      player->psprites[i].state = nullptr;
    
    // spawn the gun
    player->pendingweapon = player->readyweapon;
@@ -1059,7 +1059,20 @@ void P_MovePsprites(player_t *player)
 //
 //===============================
 
-static const char *kwds_A_FireCustomBullets[] =
+enum custombulletaccuracy_e : uint8_t
+{
+   CBA_NONE,
+   CBA_ALWAYS,
+   CBA_FIRST,
+   CBA_NEVER,
+   CBA_SSG,
+   CBA_MONSTER,
+   CBA_CUSTOM,
+
+   NUMCUSTOMBULLETACCURACIES
+};
+
+static const char *kwds_A_FireCustomBullets[NUMCUSTOMBULLETACCURACIES] =
 {
    "{DUMMY}",           // 0
    "always",            // 1
@@ -1067,6 +1080,7 @@ static const char *kwds_A_FireCustomBullets[] =
    "never",             // 3
    "ssg",               // 4
    "monster",           // 5
+   "custom",            // 6
 };
 
 static argkeywd_t fcbkwds =
@@ -1086,16 +1100,20 @@ static argkeywd_t fcbkwds =
 // args[3] : damage factor of bullets
 // args[4] : damage modulus of bullets
 // args[5] : if not zero, set specific flash state; if < 0, don't change it.
+// args[6] : horizontal spread angle if args[1] is "custom"
+// args[7] : vertical spread angle if args[1] is "custom"
 //
 void A_FireCustomBullets(actionargs_t *actionargs)
 {
    Mobj      *mo   = actionargs->actor;
    arglist_t *args = actionargs->args;
-   int i, accurate, numbullets, damage, dmgmod;
+   int i, numbullets, damage, dmgmod;
    int flashint, flashstate;
+   int horizontal, vertical;
    sfxinfo_t *sfx;
    player_t *player;
    pspdef_t *psp;
+   custombulletaccuracy_e accurate;
 
    if(!(player = mo->player))
       return;
@@ -1104,16 +1122,19 @@ void A_FireCustomBullets(actionargs_t *actionargs)
       return;
 
    sfx        = E_ArgAsSound(args, 0);
-   accurate   = E_ArgAsKwd(args, 1, &fcbkwds, 0);
+   accurate   = static_cast<custombulletaccuracy_e>(E_ArgAsKwd(args, 1, &fcbkwds, CBA_NONE));
    numbullets = E_ArgAsInt(args, 2, 0);
    damage     = E_ArgAsInt(args, 3, 0);
    dmgmod     = E_ArgAsInt(args, 4, 0);
    
    flashint   = E_ArgAsInt(args, 5, 0);
-   flashstate = E_ArgAsStateNum(args, 5, NULL, player);
+   flashstate = E_ArgAsStateNum(args, 5, nullptr, player);
 
-   if(!accurate)
-      accurate = 1;
+   horizontal = E_ArgAsInt(args, 6, 0);
+   vertical   = E_ArgAsInt(args, 7, 0);
+
+   if(accurate == CBA_NONE)
+      accurate = CBA_ALWAYS;
 
    if(dmgmod < 1)
       dmgmod = 1;
@@ -1144,20 +1165,30 @@ void A_FireCustomBullets(actionargs_t *actionargs)
       angle_t angle = mo->angle;
       fixed_t slope = bulletslope; // haleyjd 01/03/07: bug fix
       
-      if(accurate <= 3 || accurate == 5)
+      if(accurate == CBA_CUSTOM)
+      {
+         angle += (P_RangeRandomEx(pr_custommisfire, -ANGLE_1, ANGLE_1) / 2) * horizontal;
+         const angle_t pitch = (P_RangeRandomEx(pr_custommisfire, -ANGLE_1, ANGLE_1) / 2) *
+                               vertical;
+         // convert pitch to the same "unit" as slope, then add it on
+         slope += finetangent[(ANG90 - pitch) >> ANGLETOFINESHIFT];
+
+         P_LineAttack(mo, angle, MISSILERANGE, slope, dmg);
+      }
+      else if(accurate <= CBA_NEVER || accurate == CBA_MONSTER)
       {
          // if never accurate, monster accurate, or accurate only on 
          // refire and player is refiring, add some to the angle
-         if(accurate == 3 || accurate == 5 || 
-            (accurate == 2 && player->refire))
+         if(accurate == CBA_NEVER || accurate == CBA_MONSTER ||
+            (accurate == CBA_FIRST && player->refire))
          {
-            int aimshift = ((accurate == 5) ? 20 : 18);
+            int aimshift = ((accurate == CBA_MONSTER) ? 20 : 18);
             angle += P_SubRandom(pr_custommisfire) << aimshift;
          }
 
          P_LineAttack(mo, angle, MISSILERANGE, slope, dmg);
       }
-      else if(accurate == 4) // ssg spread
+      else if(accurate == CBA_SSG) // ssg spread
       {
          angle += P_SubRandom(pr_custommisfire) << 19;
          slope += P_SubRandom(pr_custommisfire) << 5;
@@ -1381,7 +1412,7 @@ void A_PlayerThunk(actionargs_t *actionargs)
    bool useammo;
    int cptrnum, statenum;
    state_t *oldstate = 0;
-   Mobj *oldtarget = NULL, *localtarget = NULL;
+   Mobj *oldtarget = nullptr, *localtarget = nullptr;
    Mobj *mo = actionargs->actor;
    player_t  *player;
    pspdef_t  *psp;
@@ -1395,7 +1426,7 @@ void A_PlayerThunk(actionargs_t *actionargs)
 
    cptrnum   =   E_ArgAsBexptr(args, 0);
    face      = !!E_ArgAsKwd(args, 1, &facekwds, 0);
-   statenum  =   E_ArgAsStateNumG0(args, 2, NULL, player);
+   statenum  =   E_ArgAsStateNumG0(args, 2, nullptr, player);
    settarget = !!E_ArgAsKwd(args, 3, &targetkwds, 0);
    useammo   = !!E_ArgAsKwd(args, 4, &ammokwds, 0);
 

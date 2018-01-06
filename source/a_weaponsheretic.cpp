@@ -220,9 +220,10 @@ void A_MacePL1Check(actionargs_t *actionargs)
    ball->momz -= ball->momz / PO2(1);
 }
 
-#define MAGIC_JUNK 1234
 void A_MaceBallImpact(actionargs_t *actionargs)
 {
+   constexpr int MAGIC_JUNK = 1234;
+
    Mobj *ball = actionargs->actor;
    if((ball->z <= ball->floorz) && E_HitFloor(ball))
    {                           // Landed in some sort of liquid
