@@ -186,8 +186,17 @@ void A_FireOldBFG(actionargs_t *actionargs)
    int type2 = E_SafeThingType(MT_PLASMA2);
    int type;
    player_t *player = mo->player;
+   weaponinfo_t *wp;
 
    if(!player)
+      return;
+
+   // FIXME: This is ugly and bad, but I can't figure out how to
+   // dynamically have the player switch different versions of the BFG
+   wp = player->readyweapon->dehnum == wp_bfg && bfgtype == bfg_classic ?
+                                       E_WeaponForName("OldBFG") : player->readyweapon;
+
+   if(!wp)
       return;
 
    type = type1;
@@ -201,13 +210,12 @@ void A_FireOldBFG(actionargs_t *actionargs)
    // WEAPON_FIXME: recoil for classic BFG
 
    if(weapon_recoil && !(mo->flags & MF_NOCLIP))
-      P_Thrust(player, ANG180 + mo->angle, 0, 512*E_WeaponForDEHNum(wp_plasma)->recoil);
+      P_Thrust(player, ANG180 + mo->angle, 0, 512 * wp->recoil);
 
-   // WEAPON_FIXME: ammopershot for classic BFG
    auto weapon   = player->readyweapon;
    auto ammoType = weapon->ammo;   
    if(ammoType && !(player->cheats & CF_INFAMMO))
-      E_RemoveInventoryItem(player, ammoType, 1);
+      E_RemoveInventoryItem(player, ammoType, wp->ammopershot);
 
    if(LevelInfo.useFullBright) // haleyjd
       player->extralight = 2;
