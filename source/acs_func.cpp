@@ -41,6 +41,7 @@
 #include "e_args.h"
 #include "e_exdata.h"
 #include "e_hash.h"
+#include "e_inventory.h"
 #include "e_mod.h"
 #include "e_states.h"
 #include "e_things.h"
@@ -631,6 +632,30 @@ bool ACS_CF_GetCVarStr(ACS_CF_ARGS)
    }
 
    thread->dataStk.push(~ACSenv.getString(C_VariableValue(var))->idx);
+   return false;
+}
+
+//
+// int CheckInventory(str itemname);
+//
+bool ACS_CF_GetInventory(ACS_CF_ARGS)
+{
+   auto info = &static_cast<ACSThread *>(thread)->info;
+   char const *itemname = thread->scopeMap->getString(argV[0])->str;
+   itemeffect_t *item = E_ItemEffectForName(itemname);
+
+   // We could use E_GetItemOwnedAmountName but let's inform the player if stuff's broke
+   if(!item)
+   {
+      doom_printf("ACS_CF_GetInventory: Inventory item '%s' not found\a\n", itemname);
+      thread->dataStk.push(0);
+      return false;
+   }
+
+   if(!info->mo || !info->mo->player)
+      thread->dataStk.push(0);
+   else
+      thread->dataStk.push(E_GetItemOwnedAmount(info->mo->player, item));
    return false;
 }
 
@@ -2323,6 +2348,39 @@ bool ACS_CF_StopSound(ACS_CF_ARGS)
       S_StopSound(mo, chan);
 
    thread->dataStk.push(0);
+   return false;
+}
+
+//
+// void TakeInventory(str itemname, int amount);
+//
+bool ACS_CF_SubInventory(ACS_CF_ARGS)
+{
+   auto info = &static_cast<ACSThread *>(thread)->info;
+   char const *itemname = thread->scopeMap->getString(argV[0])->str;
+   int amount = argV[1];
+   itemeffect_t *item = E_ItemEffectForName(itemname);
+
+   if(!item)
+   {
+      doom_printf("ACS_CF_SubInventory: Inventory item '%s' not found\a\n", itemname);
+      return false;
+   }
+
+   if(info->mo)
+   {
+      // FIXME: Needs to be adapted for when Mobjs get inventory if they get inventory
+      if(info->mo->player)
+         E_RemoveInventoryItem(info->mo->player, item, amount);
+   }
+   else
+   {
+      for(int pnum = 0; pnum != MAXPLAYERS; ++pnum)
+      {
+         if(playeringame[pnum])
+            E_RemoveInventoryItem(&players[pnum], item, amount);
+      }
+   }
    return false;
 }
 
