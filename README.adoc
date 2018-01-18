@@ -35,8 +35,6 @@ for editors and players alike, including:
 
 * Heretic, Hexen, and Strife support in-progress.
 
-* Includes the Kate monster.
-
 For more on its features, check out the
 http://eternity.youfailit.net/index.php?title=Main_Page[Eternity
 Engine Wiki].
