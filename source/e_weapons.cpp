@@ -204,6 +204,7 @@ static dehflags_t e_weaponFlags[] =
    { "HAPTICRECOIL",   WPF_HAPTICRECOIL   },
    { "READYSNDHALF",   WPF_READYSNDHALF   },
    { "AUTOSWITCHFROM", WPF_AUTOSWITCHFROM },
+   { "POWERED_UP",     WPF_POWEREDUP      },
    { NULL,             0                  }
 };
 
@@ -360,6 +361,14 @@ void E_GiveAllClassWeapons(player_t *player)
          weaponslot = weaponslot->dllNext;
       }
    }
+}
+
+//
+// Returns whether or not a weapon is the powered (tomed) version of another weapon
+//
+bool E_IsPoweredVariant(weaponinfo_t *wp)
+{
+   return wp && wp->flags & WPF_POWEREDUP && wp->sisterWeapon;
 }
 
 //=============================================================================
@@ -1098,9 +1107,14 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
          wp.sortorder = tempint;
       }
    }
-   if(IS_SET(ITEM_WPN_SISTERWEAPON))
+   if(cfg_size(weaponsec, ITEM_WPN_SISTERWEAPON) > 0)
    {
-      
+      tempstr = cfg_getstr(weaponsec, ITEM_WPN_SISTERWEAPON);
+      if(!(wp.sisterWeapon = E_WeaponForName(tempstr)))
+      {
+         E_EDFLoggedErr(2, "E_processWeapon: invalid sisterweapon '%s' defined "
+                           "in weaponinfo '%s'\n", tempstr, wp.name);
+      }
    }
 
    if(IS_SET(ITEM_WPN_NEXTINCYCLE))
@@ -1180,6 +1194,24 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
 
       unsigned int results = E_ParseFlags(tempstr, &e_weaponFlagSet);
       wp.flags &= ~results;
+   }
+
+   if(wp.flags & WPF_POWEREDUP)
+   {
+      if(wp.sisterWeapon == nullptr)
+      {
+         E_EDFLoggedErr(2, "E_processWeapon: weaponinfo '%s' has flag 'POWERED_UP', "
+                           "but lacks a required sisterweapon\n", wp.name);
+      }
+      else if(wp.sisterWeapon->flags & WPF_POWEREDUP)
+      {
+         E_EDFLoggedErr(2, "E_processWeapon: weaponinfo '%s' has flag 'POWERED_UP', "
+                           "when its sisterweapon also has this flag\n", wp.name);
+      }
+
+      E_RemoveItemEffect(wp.tracker);
+      delete wp.tracker;
+      wp.tracker = wp.sisterWeapon->tracker;
    }
 
    if(IS_SET(ITEM_WPN_RECOIL))

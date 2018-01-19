@@ -48,6 +48,7 @@ enum wepflags_e : unsigned int
    WPF_HAPTICRECOIL   = 0x00000200, // use recoil-style haptic effect
    WPF_READYSNDHALF   = 0x00000400, // readysound has 50% chance to play
    WPF_AUTOSWITCHFROM = 0x00000800, // switches away if ammo for a wep w/o this is picked up
+   WPF_POWEREDUP      = 0x00001000, // powered up weapon (tomed weapons in Heretic)
 };
 
 // Weapon info: sprite frames, ammunition use.
@@ -76,6 +77,8 @@ struct weaponinfo_t
    // haleyjd 05/31/14: more dynamic weapons work
    weaponinfo_t *nextInCycle; // next weapon in cycle order
    weaponinfo_t *prevInCycle; // previous weapon in cycle order
+
+   weaponinfo_t *sisterWeapon; // sister weapon (e.g.: tomed variant, Strife-style "alt-fire")
 
    // haleyjd 09/11/07: new fields in prep. for dynamic weapons
    unsigned int flags;

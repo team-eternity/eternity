@@ -16,6 +16,8 @@ weaponinfo Staff
   nextincycle    Gauntlets
   previncycle    Mace
 
+  sisterweapon StaffPowered
+
   flags        FLEEMELEE|NOHITGHOSTS|SILENCER
   //mod          ""
   recoil       10
@@ -39,10 +41,12 @@ weaponinfo Staff
   "@
 }
 
-/*weaponinfo StaffPowered : Staff
+weaponinfo StaffPowered : Staff
 {
+  sisterweapon Staff
+
   readysound   ht_stfcrk
-  addflags     READYSNDHALF
+  addflags     READYSNDHALF|POWERED_UP
 
   states
   @"
@@ -61,7 +65,7 @@ weaponinfo Staff
     STFF G 8 A_ReFire
     goto Ready
   "@
-}*/
+}
 
 weaponinfo GoldWand
 {
@@ -71,6 +75,8 @@ weaponinfo GoldWand
   selectionorder 5000
   nextincycle    Crossbow
   previncycle    Gauntlets
+
+  sisterweapon GoldWandPowered
 
   flags        SILENCER|HAPTICRECOIL
   //mod          ""
@@ -98,9 +104,12 @@ weaponinfo GoldWand
   "@
 }
 
-/*weaponinfo GoldWandPowered : GoldWand
+weaponinfo GoldWandPowered : GoldWand
 {
-  // TODO: Figure out what to do with trackers for tomed weapons
+  sisterweapon GoldWand
+
+  addflags POWERED_UP
+
   states
   @"
   Fire:
@@ -110,7 +119,7 @@ weaponinfo GoldWand
     GWND D 0 A_ReFire
     goto Ready
   "@
-}*/
+}
 
 weaponinfo Crossbow
 {
@@ -120,6 +129,8 @@ weaponinfo Crossbow
   selectionorder 3000
   nextincycle    Blaster
   previncycle    GoldWand
+
+  sisterweapon   CrossbowPowered
 
   flags        SILENCER|HAPTICRECOIL
   //mod          ""
@@ -147,8 +158,12 @@ weaponinfo Crossbow
   "@
 }
 
-/*weaponinfo CrossbowPowered : Crossbow
+weaponinfo CrossbowPowered : Crossbow
 {
+  sisterweapon Crossbow
+
+  addflags POWERED_UP
+
   states
   @"
   Fire:
@@ -162,7 +177,7 @@ weaponinfo Crossbow
     CRBW C 4 A_ReFire
     goto Ready
   "@
-}*/
+}
 
 weaponinfo Blaster
 {
@@ -280,6 +295,8 @@ weaponinfo Mace
   nextincycle    Staff
   previncycle    PhoenixRod
 
+  sisterweapon MacePowered
+
   flags        SILENCER|HAPTICRECOIL|NOTSHAREWARE
   //mod          ""
   recoil       20
@@ -307,11 +324,14 @@ weaponinfo Mace
   "@
 }
 
-/*weaponinfo MacePowered : Mace
+weaponinfo MacePowered : Mace
 {
   ammouse      5
 
-  // TODO: Figure out what to do with trackers for tomed weapons
+  sisterweapon Mace
+
+  addflags POWERED_UP
+
   states
   @"
   Fire:
@@ -322,13 +342,15 @@ weaponinfo Mace
     MACE A 8 A_ReFire
     goto Ready
   "@
-}*/
+}
 
 weaponinfo Gauntlets
 {
   selectionorder 6000
   nextincycle    GoldWand
   previncycle    Staff
+
+  sisterweapon GauntletsPowered
 
   flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCER
   //mod          ""
@@ -356,9 +378,12 @@ weaponinfo Gauntlets
   "@
 }
 
-/*weaponinfo GauntletsPowered : Gauntlets
+weaponinfo GauntletsPowered : Gauntlets
 {
-  // TODO: Figure out what to do with trackers for tomed weapons
+  sisterweapon Gauntlets
+
+  addflags POWERED_UP
+
   states
   @"
   Ready:
@@ -379,7 +404,7 @@ weaponinfo Gauntlets
     GAUN J 4 A_Light0
     goto Ready
   "@
-}*/
+}
 
 
 //=============================================================================

@@ -120,6 +120,14 @@ static itemeffect_t *E_addItemEffect(cfg_t *cfg)
 }
 
 //
+// Remove an item effect from the table.
+//
+void E_RemoveItemEffect(itemeffect_t *effect)
+{
+   e_effectsTable.removeObject(effect);
+}
+
+//
 // E_ItemEffectForName
 //
 // Find an item effect by name.

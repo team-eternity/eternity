@@ -158,6 +158,9 @@ struct e_pickupfx_t
 // Get an item effect type number by name
 itemeffecttype_t E_EffectTypeForName(const char *name);
 
+// Remove an item effect from the table.
+void E_RemoveItemEffect(itemeffect_t *effect);
+
 // Find an item effect by name
 itemeffect_t *E_ItemEffectForName(const char *name);
 

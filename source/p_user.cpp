@@ -732,7 +732,14 @@ void P_PlayerThink(player_t *player)
    if(demo_version >= 349)
    {
       if(cmd->weaponID)
-         player->pendingweapon = E_WeaponForID(cmd->weaponID - 1); // weaponID is off by one
+      {
+         weaponinfo_t *wp = E_WeaponForID(cmd->weaponID - 1); // weaponID is off by one
+         weaponinfo_t *sister = wp->sisterWeapon;
+         if(player->powers[pw_weaponlevel2] && sister && sister->flags & WPF_POWEREDUP)
+            player->pendingweapon = sister;
+         else
+            player->pendingweapon = wp;
+      }
    }
    else if(cmd->buttons & BT_CHANGE)
    {
@@ -854,7 +861,19 @@ void P_PlayerThink(player_t *player)
    }
 
    if(player->powers[pw_weaponlevel2] > 0) // MaxW: 2018/01/02
-      player->powers[pw_weaponlevel2]--;
+   {
+      if(!--player->powers[pw_weaponlevel2])
+      {
+         if(E_IsPoweredVariant(player->readyweapon))
+         {
+            // Note: sisterWeapon is guaranteed to != nullptr elsewhere
+            weaponinfo_t *unpowered = player->readyweapon->sisterWeapon;
+            if(unpowered->readystate != player->readyweapon->readystate)
+               P_SetPsprite(player, ps_weapon, unpowered->readystate);
+            player->readyweapon = unpowered;
+         }
+      }
+   }
 
    if(player->damagecount)
       player->damagecount--;

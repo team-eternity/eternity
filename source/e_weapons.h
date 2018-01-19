@@ -87,6 +87,7 @@ void E_GiveWeapon(player_t *player, weaponinfo_t *weapon);
 
 void E_GiveAllClassWeapons(player_t *player);
 
+bool E_IsPoweredVariant(weaponinfo_t *wp);
 
 void E_CollectWeapons(cfg_t *cfg);
 

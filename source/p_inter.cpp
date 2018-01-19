@@ -575,6 +575,16 @@ bool P_GivePower(player_t *player, int power, int duration, bool additiveTime)
       P_PlayerStartFlight(player, true);
       break;
    case pw_weaponlevel2:
+      if(!E_IsPoweredVariant(player->readyweapon))
+      {
+         weaponinfo_t *sister = player->readyweapon->sisterWeapon;
+         if(sister && sister->flags & WPF_POWEREDUP)
+         {
+            if(sister->readystate != player->readyweapon->readystate)
+               P_SetPsprite(player, ps_weapon, sister->readystate);
+            player->readyweapon = sister;
+         }
+      }
       break;
    }
 
