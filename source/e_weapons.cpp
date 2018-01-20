@@ -205,6 +205,7 @@ static dehflags_t e_weaponFlags[] =
    { "READYSNDHALF",   WPF_READYSNDHALF   },
    { "AUTOSWITCHFROM", WPF_AUTOSWITCHFROM },
    { "POWERED_UP",     WPF_POWEREDUP      },
+   { "FORCETOREADY",   WPF_FORCETOREADY   },
    { NULL,             0                  }
 };
 
@@ -368,7 +369,8 @@ void E_GiveAllClassWeapons(player_t *player)
 //
 bool E_IsPoweredVariant(weaponinfo_t *wp)
 {
-   return wp && wp->flags & WPF_POWEREDUP && wp->sisterWeapon;
+   // wp->sisterWeapon is guaranteed to be != nullptr elsewhere
+   return wp && wp->flags & WPF_POWEREDUP;
 }
 
 //=============================================================================

@@ -236,6 +236,7 @@ typedef enum {
   pr_boltspark,   // A_BoltSpark
   pr_readysound,  // Used for weapons that have a 50% of making a ready sound
   pr_firemace,    // A_FireMacePL1
+  pr_phoenixrod2, // A_FirePhoenixPL2
 
   pr_hereticartiteleport, // A_ArtiTele
 

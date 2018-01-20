@@ -227,7 +227,7 @@ weaponinfo SkullRod
   nextincycle    PhoenixRod
   previncycle    Blaster
 
-  flags        NOAUTOFIRE|SILENCER|HAPTICRECOIL
+  flags        SILENCER|HAPTICRECOIL
   //mod          ""
   recoil       100
   hapticrecoil 6
@@ -260,7 +260,9 @@ weaponinfo PhoenixRod
   nextincycle    Mace
   previncycle    SkullRod
 
-  flags        SILENCER|HAPTICRECOIL|NOTSHAREWARE
+  sisterweapon PhoenixRodPowered
+
+  flags        NOAUTOFIRE|SILENCER|HAPTICRECOIL|NOTSHAREWARE|FORCETOREADY
   //mod          ""
   recoil       20
   hapticrecoil 2
@@ -282,6 +284,25 @@ weaponinfo PhoenixRod
     PHNX C 7 A_FirePhoenixPL1
     PHNX DB 4
     PHNX B 0 A_ReFire
+    goto Ready
+  "@
+}
+
+weaponinfo PhoenixRodPowered : PhoenixRod
+{
+  sisterweapon PhoenixRod
+
+  addflags POWERED_UP|FLEEMELEE
+
+  states
+  @"
+  Fire:
+    PHNX B 3 A_InitPhoenixPL2
+  Hold:
+    PHNX C 1 A_FirePhoenixPL2
+    PHNX B 4 A_ReFire
+  Powerdown:
+    PHNX B 4 A_ShutdownPhoenixPL2
     goto Ready
   "@
 }

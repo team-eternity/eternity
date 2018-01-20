@@ -321,6 +321,7 @@ enum
   MT_MACEFX2,
   MT_MACEFX3,
   MT_MACEFX4,
+  MT_PHOENIXFX2,
 
 // Start Eternity TC New Things
 

@@ -3001,6 +3001,32 @@ thingtype HereticPhoenixFX1 : Mobj, -1, 430
   "@
 }
 
+thingtype HereticPhoenixFX2 : Mobj, -1, 442
+{
+  compatname PhoenixFX2
+  speed      10.0
+  radius     6.0
+  height     8.0
+  damage     2
+  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOTELEPORT|FIREDAMAGE
+
+  //firstdecoratestate S_PHOENIXFX2_1
+  states
+  @"
+  Spawn:
+    FX09 ABABA 2 Bright
+    FX09 B 2 Bright A_FlameEnd
+    FX09 CDEF 2 Bright
+    stop
+  Death:
+    FX09 G 3 Bright
+    FX09 H 3 Bright A_FloatPuff
+    FX09 I 4 Bright
+    FX09 JK 5 Bright
+    stop
+  "@
+}
+
 thingtype CrossbowFX1 : Mobj, -1, 434
 {
   compatname CrossbowFX1

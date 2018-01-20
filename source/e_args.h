@@ -41,6 +41,7 @@ struct mobjinfo_t;
 struct player_t;
 struct sfxinfo_t;
 struct state_t;
+struct weaponinfo_t;
 
 // 16 arguments ought to be enough for anybody.
 #define EMAXARGS 16
@@ -121,6 +122,7 @@ emod_t       *E_ArgAsDamageType(arglist_t *al, int index, int defvalue);
 int           E_ArgAsKwd(arglist_t *al, int index, argkeywd_t *kw, int defvalue);
 
 state_t      *E_GetJumpInfo(mobjinfo_t *mi, const char *arg);
+state_t      *E_GetWpnJumpInfo(weaponinfo_t *wi, const char *arg);
 
 #endif
 

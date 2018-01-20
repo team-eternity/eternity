@@ -32,12 +32,14 @@
 #include "e_args.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "e_weapons.h"
 #include "m_random.h"
 #include "p_mobj.h"
 #include "p_spec.h"
 #include "r_main.h"
 #include "s_sound.h"
 #include "tables.h"
+#include "v_misc.h"
 
 #include "p_map.h"
 
@@ -486,6 +488,79 @@ void A_FirePhoenixPL1(actionargs_t *actionargs)
    angle >>= ANGLETOFINESHIFT;
    mo->momx += FixedMul(4 * FRACUNIT, finecosine[angle]);
    mo->momy += FixedMul(4 * FRACUNIT, finesine[angle]);
+}
+
+void A_InitPhoenixPL2(actionargs_t *actionargs)
+{
+   constexpr int FLAME_THROWER_TICS = 10 * 35;
+   Mobj          *mo = actionargs->actor;
+   player_t      *player = mo->player;
+
+   if(!player)
+      return;
+   
+   player->weaponctrs->setCounter(player, 0, FLAME_THROWER_TICS);
+}
+
+void A_FirePhoenixPL2(actionargs_t *actionargs)
+{
+   Mobj     *mo;
+   Mobj     *pmo = actionargs->actor;
+   player_t *player = pmo->player;
+   angle_t   angle;
+   fixed_t   x, y, z;
+
+   if(!player)
+      return;
+
+   int &flamecount = *player->weaponctrs->getIndexedCounterForPlayer(player, 0);
+   const fixed_t slope = P_PlayerPitchSlope(player);
+
+   if(--flamecount == 0)
+   { // Out of flame
+      //P_SetPsprite(player, ps_weapon, player->psprites[ps_weapon].state->nextstate);
+      state_t *state = E_GetWpnJumpInfo(player->readyweapon, "Powerdown");
+      if(state != nullptr)
+      {
+         P_SetPsprite(player, ps_weapon, state->index);
+         player->refire = 0;
+      }
+      else
+         doom_printf(FC_ERROR "A_FirePhoenixPL2: Calling weapon '%s' has no DECORATE "
+                     "'Powerdown' state\a\n", player->readyweapon->name);
+      return;
+   }
+   pmo = player->mo;
+   angle = pmo->angle;
+   x = pmo->x + (P_SubRandom(pr_phoenixrod2) * PO2(9));
+   y = pmo->y + (P_SubRandom(pr_phoenixrod2) * PO2(9));
+   // REASONING: In Choco, slope = ((player->lookdir) << FRACBITS) / 173 + (FRACUNIT / 10)
+   // In EE, slope = P_PlayerPitchSlope, so you can sub slope in to remove the lookdir from:
+   // z = pmo->z + 26 * FRACUNIT + ((player->lookdir) << FRACBITS) / 173;
+   // Also, the -= flooclip can be put on the line
+   z = pmo->z + 26 * FRACUNIT + slope - (FRACUNIT / 10) - pmo->floorclip;
+   mo = P_SpawnMobj(x, y, z, E_SafeThingType(MT_PHOENIXFX2));
+   mo->target = pmo;
+   mo->angle = angle;
+   mo->momx = pmo->momx + FixedMul(mo->info->speed,
+      finecosine[angle >> ANGLETOFINESHIFT]);
+   mo->momy = pmo->momy + FixedMul(mo->info->speed,
+      finesine[angle >> ANGLETOFINESHIFT]);
+   mo->momz = FixedMul(mo->info->speed, slope);
+   if(!player->refire || !(leveltime % 38))
+   {
+      S_StartSound(player->mo, sfx_phopow);
+   }
+   P_CheckMissileSpawn(mo);
+
+}
+
+void A_ShutdownPhoenixPL2(actionargs_t *actionargs)
+{
+   player_t *player = actionargs->actor->player;
+   if(!player)
+      return;
+   P_SubtractAmmo(player, -1);
 }
 
 void A_GauntletAttack(actionargs_t *actionargs)

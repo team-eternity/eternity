@@ -1889,5 +1889,15 @@ void A_PhoenixPuff(actionargs_t *actionargs)
    puff->momy = FixedMul(13 * FRACUNIT / 10, finesine[angle]);
 }
 
+void A_FlameEnd(actionargs_t *actionargs)
+{
+   actionargs->actor->momz += static_cast<fixed_t>(1.5 * FRACUNIT);
+}
+
+void A_FloatPuff(actionargs_t *actionargs)
+{
+   actionargs->actor->momz += static_cast<fixed_t>(1.8 * FRACUNIT);
+}
+
 // EOF
 

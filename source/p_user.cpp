@@ -864,12 +864,17 @@ void P_PlayerThink(player_t *player)
    {
       if(!--player->powers[pw_weaponlevel2])
       {
+         // switch back to normal weapon if need be
          if(E_IsPoweredVariant(player->readyweapon))
          {
             // Note: sisterWeapon is guaranteed to != nullptr elsewhere
             weaponinfo_t *unpowered = player->readyweapon->sisterWeapon;
-            if(unpowered->readystate != player->readyweapon->readystate)
+            if(unpowered->readystate != player->readyweapon->readystate ||
+               unpowered->flags & WPF_FORCETOREADY)
+            {
                P_SetPsprite(player, ps_weapon, unpowered->readystate);
+               player->refire = 0;
+            }
             player->readyweapon = unpowered;
          }
       }

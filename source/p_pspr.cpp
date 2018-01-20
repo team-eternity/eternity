@@ -484,25 +484,28 @@ static void P_fireWeaponAlt(player_t *player)
 //
 static bool P_tryFireWeapon(player_t *player)
 {
-   if(player->cmd.buttons & BT_ATTACK &&
-      ((!(player->attackdown & AT_ALL)) || !(player->readyweapon->flags & WPF_NOAUTOFIRE)))
+   if(player->cmd.buttons & BT_ATTACK)
    {
-      player->attackdown = AT_PRIMARY;
-      P_FireWeapon(player);
-      return true;
+      if(!(player->attackdown & AT_ALL) || !(player->readyweapon->flags & WPF_NOAUTOFIRE))
+      {
+         player->attackdown = AT_PRIMARY;
+         P_FireWeapon(player);
+         return true;
+      }
    }
-   else if(player->cmd.buttons & BTN_ATTACK_ALT && E_WeaponHasAltFire(player->readyweapon) &&
-           (!(player->attackdown & AT_ALL) || !(player->readyweapon->flags & WPF_NOAUTOFIRE)))
+   else if(player->cmd.buttons & BTN_ATTACK_ALT && E_WeaponHasAltFire(player->readyweapon))
    {
-      player->attackdown = AT_SECONDARY;
-      P_fireWeaponAlt(player);
-      return true;
+      if(!(player->attackdown & AT_ALL) || !(player->readyweapon->flags & WPF_NOAUTOFIRE))
+      {
+         player->attackdown = AT_SECONDARY;
+         P_fireWeaponAlt(player);
+         return true;
+      }
    }
    else
-   {
       player->attackdown = AT_NONE;
-      return false;
-   }
+
+   return false;
 }
 
 //

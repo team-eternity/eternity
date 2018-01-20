@@ -939,6 +939,14 @@ sound ht_bounce
   pitchvariance Heretic
 }
 
+sound ht_phopow
+{
+  lump          "phopow"
+  priority      64
+  dehackednum   416
+  pitchvariance Heretic
+}
+
 
 // Environmental Sound Defaults
 // These are altered by the game engine to point to sounds specifed by MapInfo.
