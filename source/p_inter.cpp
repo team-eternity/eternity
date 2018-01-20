@@ -521,6 +521,7 @@ static void P_GiveCard(player_t *player, itemeffect_t *card, Mobj *special)
   pw_silencer,    // haleyjd: silencer
   pw_flight,      // haleyjd: flight
   pw_torch,       // haleyjd: infrared w/flicker
+  pw_weaponlevel2 // MaxW: power up weapons (e.g.: tome of power)
   NUMPOWERS
 */
 

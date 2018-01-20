@@ -480,8 +480,8 @@ void A_FirePhoenixPL1(actionargs_t *actionargs)
 
    P_SubtractAmmo(player, -1);
    P_SpawnPlayerMissile(mo, tnum);
-   // TODO: This is from Choco, why is it commented out?
-   //P_SpawnPlayerMissile(player->mo, MT_MNTRFX2);
+   // Commented out fire-trail functionality
+   //P_SpawnPlayerMissile(player->mo, E_SafeThingType(MT_MNTRFX2));
    angle = mo->angle + ANG180;
    angle >>= ANGLETOFINESHIFT;
    mo->momx += FixedMul(4 * FRACUNIT, finecosine[angle]);

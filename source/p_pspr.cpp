@@ -403,7 +403,7 @@ void P_SubtractAmmo(player_t *player, int compat_amt)
    itemeffect_t *ammo;
    int amount;
 
-   // SDL_FEATURES_FIXME: Needs to fire the wimpy version's amount of ammo if in deathmatch, or at least
+   // EDF_FEATURES_FIXME: Needs to fire the wimpy version's amount of ammo if in deathmatch, or at least
    // do it for Heretic.
    if(demo_version >= 349 && (player->attackdown & AT_SECONDARY))
    {
