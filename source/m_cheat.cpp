@@ -60,6 +60,7 @@
 #include "sounds.h"
 #include "w_levels.h"
 #include "w_wad.h"
+#include "dhticstr.h"
 
 #define plyr (&players[consoleplayer])     /* the console player */
 
@@ -101,6 +102,9 @@ static void cheat_htickill(const void *);
 static void cheat_hticnoclip(const void *);
 static void cheat_hticwarp(const void *);
 static void cheat_hticbehold(const void *);
+static void cheat_hticgimme0(const void *);
+static void cheat_hticgimme1(const void *);
+static void cheat_hticgimme2(const void *);
 
 // Shared cheats
 static void cheat_pw(const void *);
@@ -190,6 +194,9 @@ cheat_s cheat[CHEAT_NUMCHEATS] =
    { "ravpowerf", Game_Heretic, not_sync, cheat_pw,          pw_flight          },
    { "ravpowerr", Game_Heretic, not_sync, cheat_pw,          pw_ironfeet        },
    { "ravpower",  Game_Heretic, not_sync, cheat_hticbehold,  0                  },
+   { "gimme",     Game_Heretic, not_sync, cheat_hticgimme0,  0                  },
+   { "gimme",     Game_Heretic, not_sync, cheat_hticgimme1, -1                  },
+   { "gimme",     Game_Heretic, not_sync, cheat_hticgimme2, -2                  },
 
    // Shared Cheats
    { "comp",     -1, not_sync, cheat_comp,     0             }, // phares
@@ -733,6 +740,90 @@ static void cheat_hticiddqd(const void *arg)
 static void cheat_hticbehold(const void *arg)
 {
    player_printf(plyr, "inVuln, Ghost, Allmap, Torch, Fly or Rad");
+}
+
+//
+// Adapted CheatArtifact1Func from Choco Heretic
+// Initial stage of the gimme cheat (0 params)
+//
+static void cheat_hticgimme0(const void *)
+{
+   player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS1));
+}
+
+//
+// CheatArtifact2Func from Choco Heretic
+// Second stage of the gimme cheat (1 unused param)
+//
+static void cheat_hticgimme1(const void *)
+{
+   player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS2));
+}
+
+static constexpr char const *hartiNames[] =
+{
+   "ArtiInvulnerability",
+   "ArtiInvisibility",
+   "ArtiHealth",
+   "ArtiSuperHealth",
+   "ArtiTomeOfPower",
+   "ArtiTorch",
+   "ArtiTimeBomb",
+   "ArtiEgg",
+   "ArtiFly",
+   "ArtiTeleport"
+
+};
+
+static constexpr int numHArtifacts = earrlen(hartiNames);
+
+//
+// CheatArtifact3Func from Choco Heretic
+// Final stage of the gimme cheat (2 params)
+//
+static void cheat_hticgimme2(const void *arg)
+{
+   const char *args = static_cast<const char *>(arg);
+   int i;
+   int j;
+   int type;
+   int count;
+
+   type = args[0] - 'a';
+   count = args[1] - '0';
+   if(type == 25 && count == 0)
+   {                           // All artifacts
+      for(i = 0; i < numHArtifacts; i++)
+      {
+         itemeffect_t *artifact = E_ItemEffectForName(hartiNames[i]);
+         if(artifact == nullptr)
+            continue;
+         if((GameModeInfo->flags & GIF_SHAREWARE) && artifact->getInt("noshareware", 0))
+            continue;
+         E_GiveInventoryItem(plyr, artifact, E_GetMaxAmountForArtifact(plyr, artifact));
+      }
+      player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS3));
+   }
+   else if(type > 0 && type < numHArtifacts && count > 0 && count < 10)
+   {
+      itemeffect_t *artifact = E_ItemEffectForName(hartiNames[type]);
+      if(artifact == nullptr)
+      {
+         return;
+      }
+      if((GameModeInfo->flags & GIF_SHAREWARE) && artifact->getInt("noshareware", 0))
+      {
+         player_printf(plyr, DEH_String(TXT_CHEATARTIFACTSFAIL));
+         return;
+      }
+      E_GiveInventoryItem(plyr, artifact, count);
+      player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS3));
+   }
+   else
+   {                           // Bad input
+      player_printf(plyr, DEH_String(TXT_CHEATARTIFACTSFAIL));
+   }
+
 }
 
 //-----------------------------------------------------------------------------

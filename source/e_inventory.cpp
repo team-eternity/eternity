@@ -182,8 +182,9 @@ MetaTable *E_GetItemEffects()
 #define KEY_LOWMESSAGE     "lowmessage"
 #define KEY_MAXAMOUNT      "maxamount"
 #define KEY_MAXSAVEAMOUNT  "maxsaveamount"
-#define KEY_PERMANENT      "permanent"
+#define KEY_NOSHAREWARE    "noshareware"
 #define KEY_OVERRIDESSELF  "overridesself"
+#define KEY_PERMANENT      "permanent"
 #define KEY_SAVEAMOUNT     "saveamount"
 #define KEY_SAVEDIVISOR    "savedivisor"
 #define KEY_SAVEFACTOR     "savefactor"
@@ -352,6 +353,7 @@ cfg_opt_t edf_artifact_opts[] =
    CFG_FLAG(KEY_INVBAR,         0, CFGF_SIGNPREFIX), // if +, appears in inventory bar
    CFG_FLAG(KEY_KEEPDEPLETED,   0, CFGF_SIGNPREFIX), // if +, remains in inventory if amount is 0
    CFG_FLAG(KEY_FULLAMOUNTONLY, 0, CFGF_SIGNPREFIX), // if +, pick up for full amount only
+   CFG_FLAG(KEY_NOSHAREWARE,    0, CFGF_SIGNPREFIX), // if +, non-shareware
 
    CFG_INT_CB(KEY_ARTIFACTTYPE, ARTI_NORMAL, CFGF_NONE, E_artiTypeCB), // artifact sub-type
 

@@ -484,6 +484,7 @@ artifact ArtiSuperHealth
   useeffect      MysticUrn
 
   +invbar
+  +noshareware
 
   artifacttype   Normal
 }
@@ -532,6 +533,7 @@ artifact ArtiTeleport
   useaction      A_HTicArtiTele
 
   +invbar
+  +noshareware
 
   artifacttype   Normal
 }
