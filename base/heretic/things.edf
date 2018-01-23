@@ -3008,7 +3008,7 @@ thingtype HereticPhoenixFX2 : Mobj, -1, 442
   radius     6.0
   height     8.0
   damage     2
-  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOTELEPORT|FIREDAMAGE
+  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOSPLASH|NOTELEPORT|FIREDAMAGE
 
   //firstdecoratestate S_PHOENIXFX2_1
   states
