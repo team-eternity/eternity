@@ -445,6 +445,14 @@ weaponinfo_t *E_FindBestWeaponUsingAmmo(player_t *player, itemeffect_t *ammo)
    return E_findBestWeaponUsingAmmo(player, ammo, selectordertree->root);
 }
 
+//
+// Gets a pointer to the counter at a given index for a given player's readyweapon
+//
+int *E_GetIndexedWepCtrForPlayer(player_t *player, int index)
+{
+   return player->weaponctrs->getIndexedCounterForPlayer(player, index);
+}
+
 //=============================================================================
 //
 // Weapon Processing

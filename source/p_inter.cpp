@@ -286,7 +286,7 @@ static bool P_giveWeapon(player_t *player, itemeffect_t *giver, bool dropped, Mo
    weaponinfo_t *wp = E_WeaponForName(giver->getString("weapon", ""));
    if(!wp)
    {
-      doom_printf(FC_ERROR "Invalid weaopninfo given in weapongiver: '%s'\a\n",
+      doom_printf(FC_ERROR "Invalid weaponinfo given in weapongiver: '%s'\a\n",
                   giver->getKey());
       special->remove();
       return false;

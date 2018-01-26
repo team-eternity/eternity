@@ -749,7 +749,7 @@ void A_WeaponCtrJump(actionargs_t *actionargs)
    case 0:
    case 1:
    case 2:
-      counter = player->weaponctrs->getIndexedCounterForPlayer(player, cnum);
+      counter = E_GetIndexedWepCtrForPlayer(player, cnum);
       break;
    default:
       return;
@@ -770,7 +770,7 @@ void A_WeaponCtrJump(actionargs_t *actionargs)
       case 0:
       case 1:
       case 2:
-         value = *player->weaponctrs->getIndexedCounterForPlayer(player, value);
+         value = *E_GetIndexedWepCtrForPlayer(player, value);
          break;
       default:
          return; // invalid counter number
@@ -847,7 +847,7 @@ void A_WeaponCtrJumpEx(actionargs_t *actionargs)
    case 0:
    case 1:
    case 2:
-      counter = player->weaponctrs->getIndexedCounterForPlayer(player, cnum);
+      counter = E_GetIndexedWepCtrForPlayer(player, cnum);
       break;
    default:
       return;
@@ -868,7 +868,7 @@ void A_WeaponCtrJumpEx(actionargs_t *actionargs)
       case 0:
       case 1:
       case 2:
-         value = *player->weaponctrs->getIndexedCounterForPlayer(player, value);
+         value = *E_GetIndexedWepCtrForPlayer(player, value);
          break;
       default:
          return; // invalid counter number
@@ -941,7 +941,7 @@ void A_WeaponCtrSwitch(actionargs_t *actionargs)
    case 0:
    case 1:
    case 2:
-      counter = player->weaponctrs->getIndexedCounterForPlayer(player, cnum);
+      counter = E_GetIndexedWepCtrForPlayer(player, cnum);
       break;
    default:
       return;
@@ -1023,7 +1023,7 @@ void A_WeaponSetCtr(actionargs_t *actionargs)
    case 0:
    case 1:
    case 2:
-      counter = player->weaponctrs->getIndexedCounterForPlayer(player, cnum);
+      counter = E_GetIndexedWepCtrForPlayer(player, cnum);
       break;
    default:
       return;
@@ -1136,7 +1136,7 @@ void A_WeaponCtrOp(actionargs_t *actionargs)
    case 0:
    case 1:
    case 2:
-      c_oper1 = player->weaponctrs->getIndexedCounterForPlayer(player, c_oper1_num);
+      c_oper1 = E_GetIndexedWepCtrForPlayer(player, c_oper1_num);
       break;
    default:
       return;
@@ -1147,7 +1147,7 @@ void A_WeaponCtrOp(actionargs_t *actionargs)
    case 0:
    case 1:
    case 2:
-      c_oper2 = player->weaponctrs->getIndexedCounterForPlayer(player, c_oper2_num);
+      c_oper2 = E_GetIndexedWepCtrForPlayer(player, c_oper2_num);
       break;
    default:
       return;
@@ -1158,7 +1158,7 @@ void A_WeaponCtrOp(actionargs_t *actionargs)
    case 0:
    case 1:
    case 2:
-      c_dest = player->weaponctrs->getIndexedCounterForPlayer(player, c_dest_num);
+      c_dest = E_GetIndexedWepCtrForPlayer(player, c_dest_num);
       break;
    default:
       return;
@@ -1240,7 +1240,7 @@ void A_WeaponCopyCtr(actionargs_t *actionargs)
    case 0:
    case 1:
    case 2:
-      src = player->weaponctrs->getIndexedCounterForPlayer(player, cnum1);
+      src = E_GetIndexedWepCtrForPlayer(player, cnum1);
       break;
    default:
       return;
@@ -1251,7 +1251,7 @@ void A_WeaponCopyCtr(actionargs_t *actionargs)
    case 0:
    case 1:
    case 2:
-      dest = player->weaponctrs->getIndexedCounterForPlayer(player, cnum2);
+      dest = E_GetIndexedWepCtrForPlayer(player, cnum2);
    default:
       return;
    }
@@ -1320,7 +1320,7 @@ void A_CheckReloadEx(actionargs_t *actionargs)
       case 0:
       case 1:
       case 2:
-         value = *player->weaponctrs->getIndexedCounterForPlayer(player, value);
+         value = *E_GetIndexedWepCtrForPlayer(player, value);
          break;
       default:
          return; // invalid counter number

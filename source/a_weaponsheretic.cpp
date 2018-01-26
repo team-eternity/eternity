@@ -513,7 +513,7 @@ void A_FirePhoenixPL2(actionargs_t *actionargs)
    if(!player)
       return;
 
-   int &flamecount = *player->weaponctrs->getIndexedCounterForPlayer(player, 0);
+   int &flamecount = *E_GetIndexedWepCtrForPlayer(player, 0);
    const fixed_t slope = P_PlayerPitchSlope(player);
 
    if(--flamecount == 0)
@@ -526,8 +526,10 @@ void A_FirePhoenixPL2(actionargs_t *actionargs)
          player->refire = 0;
       }
       else
+      {
          doom_printf(FC_ERROR "A_FirePhoenixPL2: Calling weapon '%s' has no DECORATE "
                      "'Powerdown' state\a\n", player->readyweapon->name);
+      }
       return;
    }
    pmo = player->mo;
@@ -542,17 +544,14 @@ void A_FirePhoenixPL2(actionargs_t *actionargs)
    mo = P_SpawnMobj(x, y, z, E_SafeThingType(MT_PHOENIXFX2));
    mo->target = pmo;
    mo->angle = angle;
-   mo->momx = pmo->momx + FixedMul(mo->info->speed,
-      finecosine[angle >> ANGLETOFINESHIFT]);
-   mo->momy = pmo->momy + FixedMul(mo->info->speed,
-      finesine[angle >> ANGLETOFINESHIFT]);
+   mo->momx = pmo->momx + FixedMul(mo->info->speed, finecosine[angle >> ANGLETOFINESHIFT]);
+   mo->momy = pmo->momy + FixedMul(mo->info->speed, finesine[angle >> ANGLETOFINESHIFT]);
    mo->momz = FixedMul(mo->info->speed, slope);
    if(!player->refire || !(leveltime % 38))
    {
       S_StartSound(player->mo, sfx_phopow);
    }
    P_CheckMissileSpawn(mo);
-
 }
 
 void A_ShutdownPhoenixPL2(actionargs_t *actionargs)
