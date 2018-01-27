@@ -586,8 +586,6 @@ static void ST_HticDrawer()
    ST_drawLifeChain();
    ST_drawPowerUps();
 
-   // TODO: choose whether to draw statbar or inventory bar here
-   // based on whether the inventory is active
    if(players[displayplayer].invbarstate.inventory)
       ST_drawInvBar();
    else

@@ -782,8 +782,11 @@ void A_CheckReload(actionargs_t *actionargs)
 //
 void A_Lower(actionargs_t *actionargs)
 {
-   player_t *player;
-   pspdef_t *psp;
+   player_t  *player;
+   pspdef_t  *psp;
+   arglist_t *args = actionargs->args;
+   // WEAPON_FIXME: LOWERSPEED property of EDF weapons?
+   const int  lowerspeed = FRACUNIT * E_ArgAsInt(args, 1, LOWERSPEED);
 
    if(!(player = actionargs->actor->player))
       return;
@@ -791,8 +794,7 @@ void A_Lower(actionargs_t *actionargs)
    if(!(psp = actionargs->pspr))
       return;
 
-   // WEAPON_FIXME: LOWERSPEED property of EDF weapons?
-   psp->sy += LOWERSPEED;
+   psp->sy += lowerspeed;
    
    // Is already down.
    if(psp->sy < WEAPONBOTTOM)
@@ -827,18 +829,19 @@ void A_Lower(actionargs_t *actionargs)
 void A_Raise(actionargs_t *actionargs)
 {
    statenum_t newstate;
-   player_t *player;
-   pspdef_t *psp;
+   player_t  *player;
+   pspdef_t  *psp;
+   arglist_t *args = actionargs->args;
+   // WEAPON_FIXME: RAISESPEED property of EDF weapons?
+   const int  raisespeed = FRACUNIT * E_ArgAsInt(args, 1, RAISESPEED);
 
    if(!(player = actionargs->actor->player))
       return;
 
    if(!(psp = actionargs->pspr))
       return;
-
-   // WEAPON_FIXME: RAISESPEED property of EDF weapons?
    
-   psp->sy -= RAISESPEED;
+   psp->sy -= raisespeed;
    
    if(psp->sy > WEAPONTOP)
       return;

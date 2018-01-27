@@ -18,7 +18,7 @@
 //----------------------------------------------------------------------------
 //
 // Purpose: Heretic weapon action functions
-// Some code is derived from Chocolate Doom, by Simon Howard, used under
+// Almost all code is derived from Chocolate Doom, by Simon Howard, used under
 // terms of the GPLv3.
 //
 // Authors: Max Waine
