@@ -1559,10 +1559,12 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID)
             if(useaction != nullptr)
             {
                // We ALWAYS update the actor and psprite
+               player->attackdown = static_cast<attacktype_e>(player->attackdown | AT_ITEM);
                useaction->actor = player->mo;
                useaction->pspr = player->psprites;
                ptr->cptr(useaction);
                success = true;
+               player->attackdown = static_cast<attacktype_e>(player->attackdown & ~AT_ITEM);
             }
          }
          else if(estrnonempty(useactionstr))

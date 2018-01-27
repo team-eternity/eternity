@@ -123,10 +123,11 @@ struct invbarstate_t {
 
 enum attacktype_e : unsigned int
 {
-   AT_NONE = 0,
-   AT_PRIMARY = 1,
+   AT_NONE      = 0,
+   AT_PRIMARY   = 1,
    AT_SECONDARY = 2,
-   AT_UNKNOWN = 4,
+   AT_ITEM      = 4, // temporarily ORed in, indicates not to subtract ammo
+   AT_UNKNOWN   = 8,
 
    AT_ALL = (AT_PRIMARY + AT_SECONDARY),
 };

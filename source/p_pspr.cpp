@@ -405,7 +405,9 @@ void P_SubtractAmmo(player_t *player, int compat_amt)
 
    // EDF_FEATURES_FIXME: Needs to fire the wimpy version's amount of ammo if in deathmatch, or at least
    // do it for Heretic.
-   if(demo_version >= 349 && (player->attackdown & AT_SECONDARY))
+   if(demo_version >= 349 && (player->attackdown & AT_ITEM))
+      return;
+   else if(demo_version >= 349 && (player->attackdown & AT_SECONDARY))
    {
       ammo = weapon->ammo_alt;
       amount = ((weapon->flags & WPF_ENABLEAPS) || compat_amt < 0) ? weapon->ammopershot_alt :
@@ -782,11 +784,11 @@ void A_CheckReload(actionargs_t *actionargs)
 //
 void A_Lower(actionargs_t *actionargs)
 {
-   player_t  *player;
-   pspdef_t  *psp;
-   arglist_t *args = actionargs->args;
-   // WEAPON_FIXME: LOWERSPEED property of EDF weapons?
-   const int  lowerspeed = FRACUNIT * E_ArgAsInt(args, 1, LOWERSPEED);
+   player_t     *player;
+   pspdef_t     *psp;
+   arglist_t    *args = actionargs->args;
+   // WEAPON_FIXME: Default LOWERSPEED property of EDF weapons?
+   const fixed_t lowerspeed = FRACUNIT * E_ArgAsInt(args, 1, LOWERSPEED);
 
    if(!(player = actionargs->actor->player))
       return;
@@ -828,12 +830,12 @@ void A_Lower(actionargs_t *actionargs)
 //
 void A_Raise(actionargs_t *actionargs)
 {
-   statenum_t newstate;
-   player_t  *player;
-   pspdef_t  *psp;
-   arglist_t *args = actionargs->args;
-   // WEAPON_FIXME: RAISESPEED property of EDF weapons?
-   const int  raisespeed = FRACUNIT * E_ArgAsInt(args, 1, RAISESPEED);
+   statenum_t    newstate;
+   player_t     *player;
+   pspdef_t     *psp;
+   arglist_t    *args = actionargs->args;
+   // WEAPON_FIXME: Default RAISESPEED property of EDF weapons?
+   const fixed_t raisespeed = FRACUNIT * E_ArgAsInt(args, 1, RAISESPEED);
 
    if(!(player = actionargs->actor->player))
       return;
