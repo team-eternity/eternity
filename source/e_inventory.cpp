@@ -1304,7 +1304,7 @@ static void E_processPickupEffect(cfg_t *sec)
    if((pfx->numEffects = cfg_size(sec, ITEM_PICKUP_EFFECTS)))
    {
       pfx->effects = ecalloc(itemeffect_t **, 1, sizeof(itemeffect_t **));
-      for(int i = 0; i < pfx->numEffects; i++)
+      for(unsigned int i = 0; i < pfx->numEffects; i++)
       {
          str = cfg_getnstr(sec, ITEM_PICKUP_EFFECTS, i);
          if(!(pfx->effects[i] = E_ItemEffectForName(str)))

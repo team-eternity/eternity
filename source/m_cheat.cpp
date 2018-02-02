@@ -291,8 +291,6 @@ static void cheat_one(const void *arg)
 
 static void cheat_fa(const void *arg)
 {
-   int i;
-   
    if(!E_PlayerHasBackpack(plyr))
       E_GiveBackpack(plyr);
    
@@ -785,7 +783,6 @@ static void cheat_hticgimme2(const void *arg)
 {
    const char *args = static_cast<const char *>(arg);
    int i;
-   int j;
    int type;
    int count;
 

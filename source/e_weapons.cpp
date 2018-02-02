@@ -745,7 +745,7 @@ static void E_ProcessDecorateWepStatesRecursive(cfg_t *weaponsec, int wnum, bool
 //
 // Function to reallocate the weaponinfo array safely.
 //
-static void E_ReallocWeapons(int numnewweapons)
+static void E_ReallocWeapons(unsigned int numnewweapons)
 {
    static int numweaponsalloc = 0;
 
@@ -805,7 +805,7 @@ void E_CollectWeapons(cfg_t *cfg)
       // add space to the weaponinfo array
       curnewweapon = firstnewweapon = NUMWEAPONTYPES;
 
-      E_ReallocWeapons(int(numweapons));
+      E_ReallocWeapons(numweapons);
 
       // set pointers in weaponinfo[] to the proper structures;
       // also set self-referential index member, and allocate a
@@ -1312,7 +1312,7 @@ void E_ProcessWeaponDeltas(cfg_t *cfg)
          E_EDFLoggedErr(2, "E_ProcessWeaponDeltas: weapondelta requires name field\n");
 
       name = cfg_getstr(deltasec, ITEM_DELTA_NAME);
-      weaponNum = E_WeaponNumForName(name);
+      weaponNum = E_getWeaponNumForName(name);
 
       E_processWeapon(weaponNum, deltasec, cfg, false);
 

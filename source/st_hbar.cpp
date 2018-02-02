@@ -532,7 +532,6 @@ static void ST_drawPowerUps()
          int frame = (leveltime / 3) & 15;
          if(plyr->mo->flags4 & MF4_FLY)
          {
-            patch_t *patch;
             if(hitCenterFrame && (frame != 15 && frame != 0))
             {
                V_DrawPatch(20, 17, &vbscreen,
@@ -568,7 +567,7 @@ static void ST_drawPowerUps()
    {
       if(plyr->powers[pw_weaponlevel2] > (4 * 32) || !(plyr->powers[pw_weaponlevel2] & 16))
       {
-         int frame = (leveltime / 3) & 15;
+         const int frame = (leveltime / 3) & 15;
          V_DrawPatch(300, 17, &vbscreen,
                      PatchLoader::CacheNum(wGlobalDir, spinbooklump + frame, PU_CACHE));
       }

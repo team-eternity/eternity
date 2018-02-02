@@ -120,6 +120,8 @@ cfg_opt_t edf_skin_opts[] =
 
 #define ITEM_WPNSLOT_WPNS "weapons"
 
+#define ITEM_DELTA_NAME "name"
+
 static cfg_opt_t edf_wpnslot_opts[] =
 {
    CFG_STR(ITEM_WPNSLOT_WPNS, 0, CFGF_LIST),
@@ -133,33 +135,42 @@ static cfg_opt_t edf_reborn_opts[] =
    CFG_END()
 };
 
+#define PLAYERCLASS_FIELDS \
+   CFG_STR(ITEM_PCLASS_DEFAULTSKIN,   NULL, CFGF_NONE),  \
+   CFG_STR(ITEM_PCLASS_THINGTYPE,     NULL, CFGF_NONE),  \
+   CFG_STR(ITEM_PCLASS_ALTATTACK,     NULL, CFGF_NONE),  \
+   CFG_INT(ITEM_PCLASS_INITIALHEALTH, 100,  CFGF_NONE),  \
+                                                         \
+   /* speeds */                                          \
+   CFG_INT(ITEM_PCLASS_SPEEDWALK,      0x19, CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDRUN,       0x32, CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDSTRAFE,    0x18, CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDSTRAFERUN, 0x28, CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDTURN,       640, CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDTURNFAST,  1280, CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDTURNSLOW,   320, CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDLOOKSLOW,   450, CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDLOOKFAST,   512, CFGF_NONE), \
+                                                         \
+   CFG_BOOL(ITEM_PCLASS_DEFAULT, false, CFGF_NONE),      \
+                                                         \
+   /* reborn inventory items */                          \
+   CFG_MVPROP(ITEM_PCLASS_REBORNITEM, edf_reborn_opts, CFGF_MULTI|CFGF_NOCASE), \
+                                                                                \
+    /* weapon slots */                                                          \
+   CFG_SEC(ITEM_PCLASS_WEAPONSLOT,   edf_wpnslot_opts, CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE), \
+                                                                                               \
+   CFG_END()
+
 cfg_opt_t edf_pclass_opts[] =
 {
-   CFG_STR(ITEM_PCLASS_DEFAULTSKIN,   NULL, CFGF_NONE),
-   CFG_STR(ITEM_PCLASS_THINGTYPE,     NULL, CFGF_NONE),
-   CFG_STR(ITEM_PCLASS_ALTATTACK,     NULL, CFGF_NONE),
-   CFG_INT(ITEM_PCLASS_INITIALHEALTH, 100,  CFGF_NONE),
+   PLAYERCLASS_FIELDS
+};
 
-   // speeds
-   CFG_INT(ITEM_PCLASS_SPEEDWALK,      0x19, CFGF_NONE),
-   CFG_INT(ITEM_PCLASS_SPEEDRUN,       0x32, CFGF_NONE),
-   CFG_INT(ITEM_PCLASS_SPEEDSTRAFE,    0x18, CFGF_NONE),
-   CFG_INT(ITEM_PCLASS_SPEEDSTRAFERUN, 0x28, CFGF_NONE),
-   CFG_INT(ITEM_PCLASS_SPEEDTURN,       640, CFGF_NONE),
-   CFG_INT(ITEM_PCLASS_SPEEDTURNFAST,  1280, CFGF_NONE),
-   CFG_INT(ITEM_PCLASS_SPEEDTURNSLOW,   320, CFGF_NONE),
-   CFG_INT(ITEM_PCLASS_SPEEDLOOKSLOW,   450, CFGF_NONE),
-   CFG_INT(ITEM_PCLASS_SPEEDLOOKFAST,   512, CFGF_NONE),
-
-   CFG_BOOL(ITEM_PCLASS_DEFAULT, false, CFGF_NONE),
-
-   // reborn inventory items
-   CFG_MVPROP(ITEM_PCLASS_REBORNITEM, edf_reborn_opts, CFGF_MULTI|CFGF_NOCASE),
-
-   // weapon slots
-   CFG_SEC(ITEM_PCLASS_WEAPONSLOT,   edf_wpnslot_opts, CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-
-   CFG_END()
+cfg_opt_t edf_pdelta_opts[] =
+{
+   CFG_STR(ITEM_DELTA_NAME, 0, CFGF_NONE),
+   PLAYERCLASS_FIELDS
 };
 
 //==============================================================================
@@ -433,21 +444,21 @@ static void E_processRebornItem(cfg_t *item, playerclass_t *pc, unsigned int ind
 //
 // Free a player class's default weapon slots when recreating it.
 //
-static void E_freeWeaponSlots(playerclass_t *pc)
+static void E_freeWeaponSlot(playerclass_t *pc, int slot)
 {
-   for(int i = 0; i < NUMWEAPONSLOTS; i++)
+   //for(int i = 0; i < NUMWEAPONSLOTS; i++)
    {
       weaponslot_t *wepslot;
 
       // Delete any existing weapon slot
-      if((wepslot = pc->weaponslots[i]))
+      if((wepslot = pc->weaponslots[slot]))
       {
          DLListItem<weaponslot_t> *prevslot, *currslot = wepslot->links.dllNext;
          while(currslot)
          {
             prevslot = currslot;
             currslot = currslot->dllNext;
-            efree(prevslot);
+            prevslot->remove();
          }
          efree(wepslot);
       }
@@ -463,6 +474,7 @@ static void E_processWeaponSlot(cfg_t *slot, playerclass_t *pc)
    const int slotindex = titlestr.toInt() - 1;
    const int numweapons = cfg_size(slot, ITEM_WPNSLOT_WPNS);
 
+
    if(slotindex > NUMWEAPONSLOTS - 1 || slotindex < 0)
    {
       E_EDFLoggedErr(2, "E_processWeaponSlot: Slot number %d in playerclass '%s' "
@@ -470,6 +482,8 @@ static void E_processWeaponSlot(cfg_t *slot, playerclass_t *pc)
                      slotindex + 1, pc->mnemonic, NUMWEAPONSLOTS);
       return;
    }
+
+   E_freeWeaponSlot(pc, slotindex);
 
    DLListItem<weaponslot_t> **slotlist = ecalloc(DLListItem<weaponslot_t> **, 1,
                                                  sizeof(DLListItem<weaponslot_t> *));
@@ -491,18 +505,32 @@ static void E_processWeaponSlot(cfg_t *slot, playerclass_t *pc)
 }
 
 //
-// E_ProcessPlayerClass
+// E_processPlayerClass
 //
 // Processes a single EDF player class section.
 //
-static void E_ProcessPlayerClass(cfg_t *pcsec)
+static void E_processPlayerClass(cfg_t *pcsec, bool delta)
 {
    const char *tempstr;
    playerclass_t *pc;
    bool def;
 
-   // get mnemonic from section title
-   tempstr = cfg_title(pcsec);
+   if(!delta)
+   {
+      // get mnemonic from section title
+      tempstr = cfg_title(pcsec);
+   }
+   else if(cfg_size(pcsec, ITEM_DELTA_NAME))
+   {
+      if(!(tempstr = cfg_getstr(pcsec, ITEM_DELTA_NAME)))
+      {
+         // get mnemonic from the "name" option
+         E_EDFLoggedErr(2, "E_processPlayerClass: playerclass name '%s' not found\n", tempstr);
+      }
+   }
+   else
+      E_EDFLoggedErr(2, "E_ProcessWeaponDeltas: playerdelta requires name field\n");
+   
 
    if(!(pc = E_PlayerClassForName(tempstr)))
    {
@@ -646,7 +674,6 @@ static void E_ProcessPlayerClass(cfg_t *pcsec)
    if((numweaponslots = cfg_size(pcsec, ITEM_PCLASS_WEAPONSLOT)) > 0)
    {
       pc->hasslots = true;
-      E_freeWeaponSlots(pc);
 
       for(int i = numweaponslots; i --> 0;)
          E_processWeaponSlot(cfg_getnsec(pcsec, ITEM_PCLASS_WEAPONSLOT, i), pc);
@@ -670,7 +697,27 @@ void E_ProcessPlayerClasses(cfg_t *cfg)
                   "\t\t%d class(es) defined\n", count);
 
    for(i = 0; i < count; ++i)
-      E_ProcessPlayerClass(cfg_getnsec(cfg, EDF_SEC_PCLASS, i));
+      E_processPlayerClass(cfg_getnsec(cfg, EDF_SEC_PCLASS, i), false);
+
+   E_VerifyDefaultPlayerClass();
+}
+
+//
+// E_ProcessPlayerClasses
+//
+// Processes all EDF player classes.
+//
+void E_ProcessPlayerDeltas(cfg_t *cfg)
+{
+   unsigned int count, i;
+
+   count = cfg_size(cfg, EDF_SEC_PDELTA);
+
+   E_EDFLogPrintf("\t* Processing player deltas\n"
+                  "\t\t%d delta(s) defined\n", count);
+
+   for(i = 0; i < count; ++i)
+      E_processPlayerClass(cfg_getnsec(cfg, EDF_SEC_PDELTA, i), true);
 
    E_VerifyDefaultPlayerClass();
 }

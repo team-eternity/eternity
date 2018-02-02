@@ -99,10 +99,13 @@ void E_ApplyTurbo(int ts);
 extern cfg_opt_t edf_skin_opts[];
 
 #define EDF_SEC_PCLASS "playerclass"
+#define EDF_SEC_PDELTA "playerdelta"
 extern cfg_opt_t edf_pclass_opts[];
+extern cfg_opt_t edf_pdelta_opts[];
 
 void E_ProcessSkins(cfg_t *cfg);
 void E_ProcessPlayerClasses(cfg_t *cfg);
+void E_ProcessPlayerDeltas(cfg_t *cfg);
 
 #endif // NEED_EDF_DEFINITIONS
 

@@ -1942,7 +1942,7 @@ static inline void E_processThingPickupEffect(mobjinfo_t &mi, cfg_t *thingsec)
       if((pfx.numEffects = cfg_size(pfx_cfg, ITEM_TNG_PFX_EFFECTS)))
       {
          pfx.effects = ecalloc(itemeffect_t **, 1, sizeof(itemeffect_t **));
-         for(int i = 0; i < pfx.numEffects; i++)
+         for(unsigned int i = 0; i < pfx.numEffects; i++)
          {
             str = cfg_getnstr(pfx_cfg, ITEM_TNG_PFX_EFFECTS, i);
             if(!(pfx.effects[i] = E_ItemEffectForName(str)))
