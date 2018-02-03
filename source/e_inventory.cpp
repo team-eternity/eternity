@@ -1178,10 +1178,6 @@ static void E_processPickupItems(cfg_t *cfg)
 
    E_EDFLogPuts("\t* Processing pickup items\n");
 
-   // sanity check
-   //if(!pickupfx)
-   //   E_EDFLoggedErr(2, "E_ProcessItems: no sprites defined!?\n");
-
    // load pickupfx
    numpickups = cfg_size(cfg, EDF_SEC_SPRPKUP);
    E_EDFLogPrintf("\t\t%d pickup item(s) defined\n", numpickups);

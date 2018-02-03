@@ -450,7 +450,7 @@ weaponinfo_t *E_FindBestWeaponUsingAmmo(player_t *player, itemeffect_t *ammo)
 //
 int *E_GetIndexedWepCtrForPlayer(player_t *player, int index)
 {
-   return player->weaponctrs->getIndexedCounterForPlayer(player, index);
+   return WeaponCounterTree::getIndexedCounterForPlayer(player, index);
 }
 
 //=============================================================================

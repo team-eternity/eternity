@@ -354,7 +354,7 @@ static bool P_giveWeapon(player_t *player, itemeffect_t *giver, bool dropped, Mo
       {
          // give one clip with a dropped weapon, two clips with a found weapon
          const int  amount = dropped ? dropammo : giveammo;
-         gaveammo |= (ammo && amount ? P_GiveAmmo(player, ammo, amount) : false);
+         gaveammo |= (ammo && (amount ? P_GiveAmmo(player, ammo, amount) : false));
 
          // haleyjd 10/4/11: de-Killoughized
          if(firsttime)
@@ -532,21 +532,6 @@ static void P_GiveCard(player_t *player, itemeffect_t *card, Mobj *special)
 //
 bool P_GivePower(player_t *player, int power, int duration, bool additiveTime)
 {
-   static const int tics[NUMPOWERS] = 
-   {
-      INVULNTICS,
-      1,          // strength 
-      INVISTICS,
-      IRONTICS, 
-      1,          // allmap 
-      INFRATICS,
-      INVISTICS,  // haleyjd: totalinvis
-      INVISTICS,  // haleyjd: ghost 
-      1,          // haleyjd: silencer 
-      FLIGHTTICS, // haleyjd: flight
-      INFRATICS,  // haleyjd: torch
-   };
-
    switch(power)
    {
    case pw_invisibility:
@@ -763,10 +748,8 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       (demo_version < 335 && GameModeInfo->id != commercial))
       return;
 
-   if(!message)
-      message = P_getSpecialMessage(special, pickup->message);
-   if(!sound)
-      sound = pickup->sound;
+   message = P_getSpecialMessage(special, pickup->message);
+   sound   = pickup->sound;
 
    if(pickup->numEffects == 0)
       return;
