@@ -517,7 +517,8 @@ void A_FirePhoenixPL2(actionargs_t *actionargs)
    const fixed_t slope = P_PlayerPitchSlope(player);
 
    if(--flamecount == 0)
-   { // Out of flame
+   {
+      // Out of flame
       //P_SetPsprite(player, ps_weapon, player->psprites[ps_weapon].state->nextstate);
       state_t *state = E_GetWpnJumpInfo(player->readyweapon, "Powerdown");
       if(state != nullptr)
@@ -548,9 +549,7 @@ void A_FirePhoenixPL2(actionargs_t *actionargs)
    mo->momy = pmo->momy + FixedMul(mo->info->speed, finesine[angle >> ANGLETOFINESHIFT]);
    mo->momz = FixedMul(mo->info->speed, slope);
    if(!player->refire || !(leveltime % 38))
-   {
       S_StartSound(player->mo, sfx_phopow);
-   }
    P_CheckMissileSpawn(mo);
 }
 

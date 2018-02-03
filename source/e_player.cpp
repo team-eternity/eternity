@@ -118,13 +118,15 @@ cfg_opt_t edf_skin_opts[] =
 #define ITEM_REBORN_NAME   "name"
 #define ITEM_REBORN_AMOUNT "amount"
 
-#define ITEM_WPNSLOT_WPNS "weapons"
+#define ITEM_WPNSLOT_WPNS  "weapons"
+#define ITEM_WPNSLOT_CLEAR "clear"
 
 #define ITEM_DELTA_NAME "name"
 
 static cfg_opt_t edf_wpnslot_opts[] =
 {
-   CFG_STR(ITEM_WPNSLOT_WPNS, 0, CFGF_LIST),
+   CFG_STR(ITEM_WPNSLOT_WPNS,   0, CFGF_LIST),
+   CFG_FLAG(ITEM_WPNSLOT_CLEAR, 0, CFGF_NONE),
    CFG_END()
 };
 
@@ -446,22 +448,20 @@ static void E_processRebornItem(cfg_t *item, playerclass_t *pc, unsigned int ind
 //
 static void E_freeWeaponSlot(playerclass_t *pc, int slot)
 {
-   //for(int i = 0; i < NUMWEAPONSLOTS; i++)
-   {
-      weaponslot_t *wepslot;
+   weaponslot_t *wepslot;
 
-      // Delete any existing weapon slot
-      if((wepslot = pc->weaponslots[slot]))
+   // Delete any existing weapon slot
+   if((wepslot = pc->weaponslots[slot]))
+   {
+      DLListItem<weaponslot_t> *prevslot, *currslot = wepslot->links.dllNext;
+      while(currslot)
       {
-         DLListItem<weaponslot_t> *prevslot, *currslot = wepslot->links.dllNext;
-         while(currslot)
-         {
-            prevslot = currslot;
-            currslot = currslot->dllNext;
-            prevslot->remove();
-         }
-         efree(wepslot);
+         prevslot = currslot;
+         currslot = currslot->dllNext;
+         prevslot->remove();
       }
+      efree(wepslot);
+      pc->weaponslots[slot] = nullptr;
    }
 }
 
@@ -484,6 +484,20 @@ static void E_processWeaponSlot(cfg_t *slot, playerclass_t *pc)
    }
 
    E_freeWeaponSlot(pc, slotindex);
+
+   if(cfg_size(slot, ITEM_WPNSLOT_CLEAR) > 0)
+   {
+      // No more processing, since the slot has been cleared.
+      // Warn the player if they also defined weapons.
+      if(numweapons > 0)
+      {
+         E_EDFLoggedWarning(2, "E_processWeaponSlot: 'clear' found in weaponslot definition "
+                               "that contains weapons in playerclass '%s', slot %d; "
+                               "'clear' option overrides\n",
+                            pc->mnemonic, slotindex + 1);
+      }
+      return;
+   }
 
    DLListItem<weaponslot_t> **slotlist = ecalloc(DLListItem<weaponslot_t> **, 1,
                                                  sizeof(DLListItem<weaponslot_t> *));

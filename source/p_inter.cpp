@@ -541,9 +541,6 @@ bool P_GivePower(player_t *player, int power, int duration, bool additiveTime)
       if(player->powers[pw_allmap])
          return false;
       break;
-   case pw_strength:
-      P_GiveBody(player, E_ItemEffectForName(ITEMNAME_BERSERKHEALTH));
-      break;
    case pw_totalinvis:   // haleyjd: total invisibility
       player->mo->flags2 |= MF2_DONTDRAW;
       player->mo->flags4 |= MF4_TOTALINVISIBLE;
