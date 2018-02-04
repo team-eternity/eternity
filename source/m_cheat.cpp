@@ -293,7 +293,7 @@ static void cheat_fa(const void *arg)
 {
    if(!E_PlayerHasBackpack(plyr))
       E_GiveBackpack(plyr);
-   
+
    itemeffect_t *armor = E_ItemEffectForName(ITEMNAME_IDFAARMOR);
    if(armor)
    {

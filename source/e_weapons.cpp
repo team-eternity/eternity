@@ -1,7 +1,5 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2018 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,12 +17,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 //
-// DESCRIPTION:  
-//   Dynamic Weapons System
+// Purpose: Dynamic Weapons System
+// Authors: James Haley, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #define NEED_EDF_DEFINITIONS
 
@@ -107,14 +104,14 @@ weapontype_t UnknownWeaponInfo;
 // WeaponInfo Delta Keywords
 #define ITEM_DELTA_NAME "name"
 
-// Title properties 
-#define ITEM_WPN_TITLE_SUPER     "superclass" 
+// Title properties
+#define ITEM_WPN_TITLE_SUPER     "superclass"
 #define ITEM_WPN_TITLE_DEHNUM    "dehackednum"
 
 cfg_opt_t wpninfo_tprops[] =
 {
-   CFG_STR(ITEM_WPN_TITLE_SUPER,      0, CFGF_NONE),
-   CFG_INT(ITEM_WPN_TITLE_DEHNUM,    -1, CFGF_NONE),
+   CFG_STR(ITEM_WPN_TITLE_SUPER,      nullptr, CFGF_NONE),
+   CFG_INT(ITEM_WPN_TITLE_DEHNUM,    -1,       CFGF_NONE),
    CFG_END()
 };
 
@@ -152,14 +149,14 @@ cfg_opt_t wpninfo_tprops[] =
 
 cfg_opt_t edf_wpninfo_opts[] =
 {
-   CFG_TPROPS(wpninfo_tprops,       CFGF_NOCASE),
-   CFG_STR(ITEM_WPN_INHERITS,  0, CFGF_NONE),
+   CFG_TPROPS(wpninfo_tprops,           CFGF_NOCASE),
+   CFG_STR(ITEM_WPN_INHERITS,  nullptr, CFGF_NONE  ),
    WEAPONINFO_FIELDS
 };
 
 cfg_opt_t edf_wdelta_opts[] =
 {
-   CFG_STR(ITEM_DELTA_NAME, 0, CFGF_NONE),
+   CFG_STR(ITEM_DELTA_NAME, nullptr, CFGF_NONE),
    WEAPONINFO_FIELDS
 };
 
@@ -172,7 +169,7 @@ cfg_opt_t edf_wdelta_opts[] =
 // Weapon Slots
 //
 // There are up to 16 possible slots for weapons to stack in, but any number
-// of weapons can stack in each slot. The correlation to the weapon action 
+// of weapons can stack in each slot. The correlation to the weapon action
 // binding used to cycle through weapons in that slot is direct. The order of
 // weapons in the slot is determined by their relative priorities.
 //
@@ -206,7 +203,7 @@ static dehflags_t e_weaponFlags[] =
    { "AUTOSWITCHFROM", WPF_AUTOSWITCHFROM },
    { "POWERED_UP",     WPF_POWEREDUP      },
    { "FORCETOREADY",   WPF_FORCETOREADY   },
-   { NULL,             0                  }
+   { nullptr,          0                  }
 };
 
 static dehflagset_t e_weaponFlagSet =
@@ -220,15 +217,15 @@ static dehflagset_t e_weaponFlagSet =
 // Weapon Hash Tables
 //
 
-static 
-   EHashTable<weaponinfo_t, EIntHashKey, &weaponinfo_t::id, &weaponinfo_t::idlinks> 
+static
+   EHashTable<weaponinfo_t, EIntHashKey, &weaponinfo_t::id, &weaponinfo_t::idlinks>
    e_WeaponIDHash;
 
 static
    EHashTable<weaponinfo_t, ENCStringHashKey, &weaponinfo_t::name, &weaponinfo_t::namelinks>
    e_WeaponNameHash;
 
-static 
+static
    EHashTable<weaponinfo_t, EIntHashKey, &weaponinfo_t::dehnum, &weaponinfo_t::dehlinks>
    e_WeaponDehHash;
 
@@ -350,12 +347,12 @@ void E_GiveWeapon(player_t *player, weaponinfo_t *weapon)
 //
 void E_GiveAllClassWeapons(player_t *player)
 {
-   for(int i = 0; i < NUMWEAPONSLOTS; i++)
+   for(auto &currslot : player->pclass->weaponslots)
    {
-      if(!player->pclass->weaponslots[i])
+      if(!currslot)
          continue;
 
-      DLListItem<weaponslot_t> *weaponslot = &player->pclass->weaponslots[i]->links;
+      DLListItem<weaponslot_t> *weaponslot = &currslot->links;
       while(weaponslot)
       {
          E_GiveWeapon(player, weaponslot->dllObject->weapon);
@@ -560,8 +557,8 @@ state_t *E_GetStateForWeaponInfo(weaponinfo_t *wi, const char *label)
 }
 
 //
-// Returns an weaponinfo_t * if the given weaponinfo inherits from the given type 
-// by name. Returns null otherwise. Self-identity is *not* considered 
+// Returns an weaponinfo_t * if the given weaponinfo inherits from the given type
+// by name. Returns null otherwise. Self-identity is *not* considered
 // inheritance.
 //
 weaponinfo_t *E_IsWeaponInfoDescendantOf(weaponinfo_t *wi, const char *type)
@@ -675,7 +672,7 @@ static void E_processDecorateWepStates(weaponinfo_t *wi, edecstateout_t *dso)
       {
          MetaState *msnode;
 
-         // there is not a matching native field, so add the state as a 
+         // there is not a matching native field, so add the state as a
          // metastate
          if((msnode = E_GetMetaState(wi, dso->states[i].label)))
             msnode->state = dso->states[i].state;
@@ -779,7 +776,7 @@ static void E_ReallocWeapons(unsigned int numnewweapons)
 }
 
 //
-// Pre-creates and hashes by name the weaponinfo, for purpose 
+// Pre-creates and hashes by name the weaponinfo, for purpose
 // of mutual and forward references.
 //
 void E_CollectWeapons(cfg_t *cfg)
@@ -790,7 +787,7 @@ void E_CollectWeapons(cfg_t *cfg)
    weaponinfo_t *newWeapon = nullptr;
    static bool firsttime = true;
 
-   // get number of weaponinfos defined by the cfg
+   // get number of weaponinfo defined by the cfg
    numweapons = cfg_size(cfg, EDF_SEC_WEAPONINFO);
 
    // echo counts
@@ -850,7 +847,7 @@ void E_CollectWeapons(cfg_t *cfg)
          if(titleprops)
             dehnum = cfg_getint(titleprops, ITEM_WPN_TITLE_DEHNUM);
       }
-      
+
       // If undefined, check the legacy value inside the section
       if(dehnum == -1)
          dehnum = cfg_getint(weaponcfg, ITEM_WPN_DEHNUM);
@@ -1191,7 +1188,7 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
    // process addflags and remflags modifiers
 
    if(cfg_size(weaponsec, ITEM_WPN_ADDFLAGS) > 0)
-   {      
+   {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_ADDFLAGS);
 
       unsigned int results = E_ParseFlags(tempstr, &e_weaponFlagSet);

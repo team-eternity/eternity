@@ -1,7 +1,5 @@
-// Emacs style mode select -*- C++ -*-
-//----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2018 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,11 +19,9 @@
 //
 //----------------------------------------------------------------------------
 //
-// EDF Player Class Module
+// Purpose: EDF Player Class Module
+// Authors: James Haley, Max Waine
 //
-// By James Haley
-//
-//----------------------------------------------------------------------------
 
 #define NEED_EDF_DEFINITIONS
 
@@ -448,10 +444,10 @@ static void E_processRebornItem(cfg_t *item, playerclass_t *pc, unsigned int ind
 //
 static void E_freeWeaponSlot(playerclass_t *pc, int slot)
 {
-   weaponslot_t *wepslot;
+   weaponslot_t *&wepslot = pc->weaponslots[slot];
 
    // Delete any existing weapon slot
-   if((wepslot = pc->weaponslots[slot]))
+   if(wepslot != nullptr)
    {
       DLListItem<weaponslot_t> *prevslot, *currslot = wepslot->links.dllNext;
       while(currslot)
@@ -461,7 +457,7 @@ static void E_freeWeaponSlot(playerclass_t *pc, int slot)
          prevslot->remove();
       }
       efree(wepslot);
-      pc->weaponslots[slot] = nullptr;
+      wepslot = nullptr;
    }
 }
 

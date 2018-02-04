@@ -40,8 +40,8 @@
 template<typename T, typename U>
 class AVLTree
 {
-   static_assert(std::is_pod<T>::value, "Node key's type must be POD");
-   static_assert(std::is_pod<U>::value, "Node object's type must be POD");
+   static_assert(std::is_standard_layout_v<T>, "Node key's type must be standard layout");
+   static_assert(std::is_standard_layout_v<U>, "Node object's type must be standard layout");
 
 public:
    //
@@ -78,7 +78,7 @@ public:
    virtual ~AVLTree() { deleteTree(root, deleteobjects); }
 
    //
-   // Insert a new node with a providede key and object into the tree
+   // Insert a new node with a provided key and object into the tree
    //
    avlnode_t *insert(T key, U *object)
    {

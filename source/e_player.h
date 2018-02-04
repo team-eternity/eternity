@@ -1,7 +1,5 @@
-// Emacs style mode select -*- C++ -*-
-//----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2018 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,11 +19,9 @@
 //
 //----------------------------------------------------------------------------
 //
-// EDF Player Class Module
+// Purpose: EDF Player Class Module
+// Authors: James Haley, Max Waine
 //
-// By James Haley
-//
-//----------------------------------------------------------------------------
 
 #ifndef E_PLAYER_H__
 #define E_PLAYER_H__

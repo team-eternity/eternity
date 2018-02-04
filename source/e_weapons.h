@@ -1,7 +1,5 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2018 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,12 +17,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 //
-// DESCRIPTION:  
-//   Dynamic Weapons System
+// Purpose: Dynamic Weapons System
+// Authors: James Haley, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef E_WEAPONS_H__
 #define E_WEAPONS_H__
@@ -108,12 +105,12 @@ class WeaponCounterTree : public WeaponCounterTreeBase
 public:
    WeaponCounterTree() :
       WeaponCounterTreeBase()
-   {      
+   {
       deleteobjects = true;
    }
 
    ~WeaponCounterTree() { }
-   
+
    //
    // Set the indexed counter for the player's currently equipped weapon to value
    //

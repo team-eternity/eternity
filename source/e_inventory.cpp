@@ -1,7 +1,5 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2018 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,12 +17,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 //
-// DESCRIPTION:  
-//   Inventory
+// Purpose: Inventory
+// Authors: James Haley, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #define NEED_EDF_DEFINITIONS
 
