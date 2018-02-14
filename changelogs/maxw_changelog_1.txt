@@ -193,7 +193,7 @@ bound to Alt+Enter on non-Apple, Cmd+f on Apple).
 
 -------------------------------------------------------------------------------
 2018/01/31
-Changed GL extensions and pixelbuffers to be on by default .
+Changed GL extensions and pixelbuffers to be on by default.
 
 -------------------------------------------------------------------------------
 2018/02/05
@@ -209,6 +209,11 @@ Fix EV_ThingSpawn not assigning tid of spawned mobj.
 2018/02/10
 Fixed lumps in the HI_ markers overriding regular textures. This means that
 wads like Bloody Steel don't have invisible menu options.
+
+-------------------------------------------------------------------------------
+2018/02/14
+Added a "restartmap" command. It's basically the same as using the "map"
+command but to the same level.
 
 ================================================================================
 EOF
