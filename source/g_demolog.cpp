@@ -34,7 +34,7 @@ static bool demoLogLevelExited;
 static void G_demoLogAtExit()
 {
    if(demoLogFile && !demoLogLevelExited)
-      fprintf(demoLogFile, "%d\tQuit without exiting level\n");
+      fprintf(demoLogFile, "%d\tQuit without exiting level\n", gametic);
 }
 
 //
