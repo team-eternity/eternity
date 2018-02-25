@@ -8,6 +8,41 @@ Since v3.42.03 "Heimdal" release 2
 ==================================
 
 --------------------------------------------------------------------------------
+25.02.2018
+
+FEATURE: comp_zombie, comp_infcheat, comp_vile, comp_skull, comp_god and 
+         comp_skymap are now "YES" by default, because they're either more
+         useful in common megawads, or are related to cheating.
+
+BUGFIX: PNAMES is now properly bounds-checked, instead of tolerating buffer
+        overflows.
+
+        Also fixed various macOS compilation issues or situations detected by
+        the compiler used there.
+
+--------------------------------------------------------------------------------
+02.01.2018
+
+BUGFIX: various demo playback fixes, including proper -solo-net playback or
+        better crushing stair emulation (which can't be 100% done however, due
+        to undefined behaviour in vanilla Doom).
+
+--------------------------------------------------------------------------------
+23.12.2017
+
+FEATURE: the demo-test facility is now available in official builds. Made major
+         fixes before merging it to master.
+
+--------------------------------------------------------------------------------
+10.11.2017
+
+BUGFIX: fixed fullscreen mode on macOS to always use the SDL-desktop mode,
+        because true fullscreen is pretty broken and doesn't abide by the human
+        interface design guidelines, which require allowing the user to switch
+        out of the game using mission control. Also changed the Cmd+Ctrl+F full-
+        screen command with Cmd+F, because ctrl can be bound to player actions.
+
+--------------------------------------------------------------------------------
 30.10.2017
 
 FEATURE: Added FRIENDFOEMISSILE thing type flag, which will make projectiles
