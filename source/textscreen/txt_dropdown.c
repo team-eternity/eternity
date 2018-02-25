@@ -115,7 +115,7 @@ static int SelectorMouseListener(txt_window_t *window, int x, int y, int b,
 
     win = (txt_widget_t *) window;
 
-    if (x < win->x || x > win->x + win->w || y < win->y || y > win->y + win->h)
+    if (x < win->x || x > win->x + (int)win->w || y < win->y || y > win->y + (int)win->h)
     {
         TXT_CloseWindow(window);
         return 1;
