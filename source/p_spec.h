@@ -1111,6 +1111,12 @@ public:
    int stepRaiseTime;   // haleyjd 10/13/05: delayed stairs
    int delayTime;       
    int delayTimer;
+
+   // ioanch: emulate vanilla Doom undefined crushing behaviour
+   // This emulates a vanilla crush value which is non-0, non-1 boolean value,
+   // so some (== true) checks would fail. Needed for some Cyberdreams demos.
+   // Only use it in demo_compatibility.
+   bool emulateStairCrush;
 };
 
 // Floor data flags

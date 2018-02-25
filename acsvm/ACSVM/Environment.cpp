@@ -147,7 +147,7 @@ namespace ACSVM
    Word Environment::addCallFunc(CallFunc func)
    {
       pd->tableCallFunc.push_back(func);
-      return pd->tableCallFunc.size() - 1;
+      return static_cast<Word>(pd->tableCallFunc.size() - 1);
    }
 
    //
@@ -199,7 +199,7 @@ namespace ACSVM
       {
          Vector<Word> argTmp{argV, argC};
          for(auto &arg : argTmp) arg &= 0xFF;
-         return callSpecImpl(thread, spec, argTmp.data(), argTmp.size());
+         return callSpecImpl(thread, spec, argTmp.data(), static_cast<Word>(argTmp.size()));
       }
       else
          return callSpecImpl(thread, spec, argV, argC);
@@ -661,7 +661,7 @@ namespace ACSVM
    String *Environment::readString(Serial &in) const
    {
       if(auto idx = ReadVLN<std::size_t>(in))
-         return &stringTable[idx - 1];
+         return &stringTable[static_cast<Word>(idx - 1)];
       else
          return nullptr;
    }

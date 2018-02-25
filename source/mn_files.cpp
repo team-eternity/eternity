@@ -466,7 +466,7 @@ static void MN_doExitFileWidget()
 //
 static bool MN_FileResponder(event_t *ev, int action)
 {
-   unsigned char ch;
+   unsigned char ch = 0;
 
    if(action == ka_menu_up || action == ka_menu_left)
    {

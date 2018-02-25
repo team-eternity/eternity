@@ -1039,6 +1039,7 @@ static nsdata_t wadNameSpaces[lumpinfo_t::ns_max] =
    { "TX_START", "TX_END", lumpinfo_t::ns_textures     },
    { NULL,       NULL,     lumpinfo_t::ns_graphics     },
    { NULL,       NULL,     lumpinfo_t::ns_sounds       },
+   { "HI_START", "HI_END", lumpinfo_t::ns_hires        }, // TODO: Implement
 };
 
 //
@@ -1100,7 +1101,7 @@ public:
          switch(nsdata->li_namespace)
          {
          case lumpinfo_t::ns_sprites:
-            // sf 10/26/99: ignore sprite lumps smaller than 8 bytes (the 
+            // sf 10/26/99: ignore sprite lumps smaller than 8 bytes (the
             // smallest possible) in size -- this was used by some dmadds
             // wads as an 'empty' graphics resource
             if(lump->size > 8)
@@ -1110,6 +1111,10 @@ public:
             // SoM: Ignore marker lumps inside F_START and F_END
             if(lump->size > 0)
                addLump(lump);
+            break;
+         case lumpinfo_t::ns_hires:
+            // MaxW: Ignore these, as they're to be implemented later and cause issues otherwise
+            lump->li_namespace = nsdata->li_namespace;
             break;
          default:
             addLump(lump);

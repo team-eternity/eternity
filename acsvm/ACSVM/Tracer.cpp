@@ -374,7 +374,7 @@ namespace ACSVM
          }
 
          // Record jump target.
-         codeIndex[iter] = codeItr - module->codeV.data();
+         codeIndex[iter] = static_cast<Word>(codeItr - module->codeV.data());
 
          // Read op.
          Word                opCode;

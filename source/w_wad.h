@@ -104,6 +104,7 @@ struct lumpinfo_t
       ns_textures,
       ns_graphics,
       ns_sounds,
+      ns_hires,
       ns_max           // keep this last.
    };
    int li_namespace;

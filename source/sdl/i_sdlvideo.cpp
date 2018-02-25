@@ -320,24 +320,24 @@ bool SDLVideoDriver::InitGraphicsMode()
       wantvsync = true;
 
    // haleyjd 07/15/09: set defaults using geom string from configuration file
-   I_ParseGeom(i_videomode, &v_w, &v_h, &wantfullscreen, &wantvsync, 
+   I_ParseGeom(i_videomode, &v_w, &v_h, &wantfullscreen, &wantvsync,
                &wanthardware, &wantframe, &wantdesktopfs);
-   
+
    // haleyjd 06/21/06: allow complete command line overrides but only
    // on initial video mode set (setting from menu doesn't support this)
    I_CheckVideoCmds(&v_w, &v_h, &wantfullscreen, &wantvsync, &wanthardware,
                     &wantframe, &wantdesktopfs);
 
-   if(wanthardware)
-      SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "1");
-   else
-      SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "0");
-
+   // Wanting vsync forces framebuffer acceleration on
    if(wantvsync)
    {
       SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "1");
       renderer_flags |= SDL_RENDERER_PRESENTVSYNC;
    }
+   else if(wanthardware)
+      SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "1");
+   else
+      SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "0");
 
    // haleyjd 10/27/09
    if(!wantframe)
@@ -438,7 +438,7 @@ bool SDLVideoDriver::InitGraphicsMode()
 
    UnsetPrimaryBuffer();
    SetPrimaryBuffer();
-   
+
    // haleyjd 11/12/09: set surface palettes immediately
    I_SDLSetPaletteDirect(static_cast<byte *>(wGlobalDir.cacheLumpName("PLAYPAL", PU_CACHE)));
 

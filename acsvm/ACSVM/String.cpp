@@ -48,7 +48,7 @@ namespace ACSVM
    // String constructor
    //
    String::String(StringData const &data, Word idx_) :
-      StringData{data}, lock{0}, idx{idx_}, len0(std::strlen(str)), link{this}
+      StringData{data}, lock{0}, idx{idx_}, len0(static_cast<const Word>(std::strlen(str))), link{this}
    {
    }
 
@@ -171,7 +171,7 @@ namespace ACSVM
             throw std::bad_alloc();
          #endif
 
-         idx = pd->stringByIdx.size();
+         idx = static_cast<Word>(pd->stringByIdx.size());
          pd->stringByIdx.emplace_back(strNone);
          strV = pd->stringByIdx.data();
          strC = pd->stringByIdx.size();
@@ -261,7 +261,7 @@ namespace ACSVM
       {
          if(in.get())
          {
-            String *str = String::Read(in, idx);
+            String *str = String::Read(in, static_cast<Word>(idx));
             str->lock = ReadVLN<std::size_t>(in);
             pd->stringByIdx[idx] = str;
             pd->stringByData.insert(str);

@@ -209,7 +209,7 @@ namespace ACSVM
    static inline void OpFunc_DivX(Word &lop, Word rop)
    {
       if(rop)
-         lop = (SDWord(SWord(lop)) << 16) / SWord(rop);
+         lop = static_cast<Word>((SDWord(SWord(lop)) << 16) / SWord(rop));
       else
          lop = 0;
    }
