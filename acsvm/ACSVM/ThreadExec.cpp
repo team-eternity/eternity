@@ -243,7 +243,7 @@ namespace ACSVM
    //
    static inline void OpFunc_MulX(Word &lop, Word rop)
    {
-      lop = DWord(SDWord(SWord(lop)) * SWord(rop)) >> 16;
+      lop = static_cast<Word>(DWord(SDWord(SWord(lop)) * SWord(rop)) >> 16);
    }
 
    //
