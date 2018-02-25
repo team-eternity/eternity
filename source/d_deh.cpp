@@ -2147,7 +2147,7 @@ void deh_procStrings(DWFILE *fpin, char *line)
       while(strlen(holdstring) + strlen(inbuffer) > maxstrlen) // Ty03/29/98 - fix stupid error
       {
          // killough 11/98: allocate enough the first time
-         maxstrlen += strlen(holdstring) + strlen(inbuffer) - maxstrlen;
+         maxstrlen += static_cast<unsigned>(strlen(holdstring) + strlen(inbuffer) - maxstrlen);
          
          deh_LogPrintf("* Increased buffer from to %d for buffer size %d\n",
                        maxstrlen, (int)strlen(inbuffer));

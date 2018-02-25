@@ -96,7 +96,7 @@ void I_DisableSysMenu(SDL_Window *window)
       
       if(SDL_GetWindowWMInfo(window, &info))
       {
-         LONG window_style = GetWindowLongPtr(info.info.win.window, GWL_STYLE);
+         LONG_PTR window_style = GetWindowLongPtr(info.info.win.window, GWL_STYLE);
          window_style &= ~WS_SYSMENU;
          SetWindowLongPtr(info.info.win.window, GWL_STYLE, window_style);
       }
