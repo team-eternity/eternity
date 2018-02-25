@@ -577,7 +577,7 @@ png_set_iCCP(png_structp png_ptr, png_infop info_ptr,
    if (png_ptr == NULL || info_ptr == NULL || name == NULL || profile == NULL)
       return;
 
-   length = png_strlen(name)+1;
+   length = (png_uint_32)(png_strlen(name)+1);
    new_iccp_name = (png_charp)png_malloc_warn(png_ptr, length);
 
    if (new_iccp_name == NULL)
@@ -918,7 +918,7 @@ png_set_sPLT(png_structp png_ptr,
       png_const_sPLT_tp from = entries + i;
       png_uint_32 length;
 
-      length = png_strlen(from->name) + 1;
+      length = (png_uint_32)(png_strlen(from->name) + 1);
       to->name = (png_charp)png_malloc_warn(png_ptr, (png_size_t)length);
 
       if (to->name == NULL)

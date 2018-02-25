@@ -954,7 +954,7 @@ int TXT_vsnprintf(char *buf, size_t buf_len, const char *s, va_list args)
     if (result < 0 || result >= buf_len)
     {
         buf[buf_len - 1] = '\0';
-        result = buf_len - 1;
+        result = (int)(buf_len - 1);
     }
 
     return result;

@@ -160,7 +160,7 @@ namespace ACSVM
 
       auto &init = arrInitV[idx];
       for(std::size_t iter = 4; iter != size; iter += 4)
-         init.setVal(iter / 4 - 1, ReadLE4(data + iter));
+         init.setVal(static_cast<Word>(iter / 4 - 1), ReadLE4(data + iter));
 
       return false;
    }
@@ -246,9 +246,9 @@ namespace ACSVM
       {
          switch(data[iter])
          {
-         case 0: init.setTag(iter - 5, InitTag::Integer);  break;
-         case 1: init.setTag(iter - 5, InitTag::String);   break;
-         case 2: init.setTag(iter - 5, InitTag::Function); break;
+         case 0: init.setTag(static_cast<Word>(iter - 5), InitTag::Integer);  break;
+         case 1: init.setTag(static_cast<Word>(iter - 5), InitTag::String);   break;
+         case 2: init.setTag(static_cast<Word>(iter - 5), InitTag::Function); break;
          }
       }
 
