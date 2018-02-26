@@ -93,7 +93,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Midl>
-      <TypeLibraryName>.\Release/Eternity.tlb</TypeLibraryName>
+      <TypeLibraryName>.\$(Configuration)/Eternity.tlb</TypeLibraryName>
       <HeaderFileName>..\midiproc\midiproc.h</HeaderFileName>
       <OutputDirectory>..\midiproc\</OutputDirectory>
       <GenerateStublessProxies>true</GenerateStublessProxies>
@@ -159,7 +159,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Midl>
-      <TypeLibraryName>.\Release/Eternity.tlb</TypeLibraryName>
+      <TypeLibraryName>.\$(Configuration)/Eternity.tlb</TypeLibraryName>
       <HeaderFileName>..\midiproc\midiproc.h</HeaderFileName>
       <OutputDirectory>..\midiproc\</OutputDirectory>
       <GenerateStublessProxies>true</GenerateStublessProxies>
@@ -224,7 +224,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Midl>
-      <TypeLibraryName>.\Debug/Eternity.tlb</TypeLibraryName>
+      <TypeLibraryName>.\$(Configuration)/Eternity.tlb</TypeLibraryName>
       <HeaderFileName>..\midiproc\midiproc.h</HeaderFileName>
       <OutputDirectory>..\midiproc\</OutputDirectory>
       <GenerateStublessProxies>true</GenerateStublessProxies>
@@ -283,7 +283,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Midl>
-      <TypeLibraryName>.\Debug/Eternity.tlb</TypeLibraryName>
+      <TypeLibraryName>.\$(Configuration)/Eternity.tlb</TypeLibraryName>
       <HeaderFileName>..\midiproc\midiproc.h</HeaderFileName>
       <OutputDirectory>..\midiproc\</OutputDirectory>
       <GenerateStublessProxies>true</GenerateStublessProxies>
