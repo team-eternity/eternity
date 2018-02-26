@@ -2962,7 +2962,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type)
             slope = P_PlayerPitchSlope(source->player);
          }
       }
-      while(mask && (void(mask=0), !clip.linetarget));  // killough 8/2/98
+      while(mask && (mask=0, !clip.linetarget));  // killough 8/2/98
    }
    else
    {

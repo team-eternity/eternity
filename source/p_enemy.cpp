@@ -735,15 +735,15 @@ static void P_DoNewChaseDir(Mobj *actor, fixed_t deltax, fixed_t deltay)
    }
 
    if((xdir == turnaround ? xdir = DI_NODIR : xdir) != DI_NODIR &&
-      (void(actor->movedir = xdir), P_TryWalk(actor)))
+      (actor->movedir = xdir, P_TryWalk(actor)))
       return;         // either moved forward or attacked
 
    if((ydir == turnaround ? ydir = DI_NODIR : ydir) != DI_NODIR &&
-      (void(actor->movedir = ydir), P_TryWalk(actor)))
+      (actor->movedir = ydir, P_TryWalk(actor)))
       return;
 
    // there is no direct path to the player, so pick another direction.
-   if(olddir != DI_NODIR && (void(actor->movedir = olddir), P_TryWalk(actor)))
+   if(olddir != DI_NODIR && (actor->movedir = olddir, P_TryWalk(actor)))
       return;
 
    // randomly determine direction of search
@@ -752,7 +752,7 @@ static void P_DoNewChaseDir(Mobj *actor, fixed_t deltax, fixed_t deltay)
       for(tdir = DI_EAST; tdir <= DI_SOUTHEAST; tdir++)
       {
          if(tdir != turnaround &&
-            (void(actor->movedir = tdir), P_TryWalk(actor)))
+            (actor->movedir = tdir, P_TryWalk(actor)))
             return;
       }
    }
@@ -761,7 +761,7 @@ static void P_DoNewChaseDir(Mobj *actor, fixed_t deltax, fixed_t deltay)
       for (tdir = DI_SOUTHEAST; tdir != DI_EAST-1; tdir--)
       {
          if(tdir != turnaround &&
-            (void(actor->movedir = tdir), P_TryWalk(actor)))
+            (actor->movedir = tdir, P_TryWalk(actor)))
             return;
       }
    }
