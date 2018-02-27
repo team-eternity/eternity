@@ -28,22 +28,16 @@
 //
 //-----------------------------------------------------------------------------
 
-#include <fstream>
-#include <unordered_map>
 #include "../z_zone.h"
 
-#include "b_analysis.h"
 #include "b_botmap.h"
 #include "b_botmaptemp.h"
 #include "b_compression.h"
 #include "b_glbsp.h"
-#include "b_msector.h"
-#include "b_util.h"
 #include "../c_io.h"
 #include "../d_files.h"
 #include "../doomstat.h"
 #include "../e_player.h"
-#include "../ev_specials.h"
 #include "../m_bbox.h"
 #include "../m_buffer.h"
 #include "../m_hash.h"
