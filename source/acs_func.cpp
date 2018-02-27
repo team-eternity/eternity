@@ -1590,6 +1590,7 @@ bool ACS_CF_SetAirControl(ACS_CF_ARGS)
 //
 bool ACS_CF_SetAirFriction(ACS_CF_ARGS)
 {
+   thread->dataStk.push(0);
    LevelInfo.airFriction = argV[0];
    return false;
 }
