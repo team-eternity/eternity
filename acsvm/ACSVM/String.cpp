@@ -269,7 +269,7 @@ namespace ACSVM
          else
          {
             pd->stringByIdx[idx] = strNone;
-            pd->freeIdx.emplace_back(idx);
+            pd->freeIdx.emplace_back(static_cast<Word>(idx));
          }
       }
    }

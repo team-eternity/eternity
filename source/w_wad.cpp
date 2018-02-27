@@ -1201,13 +1201,13 @@ unsigned int WadDirectory::LumpNameHash(const char *s)
    using namespace ectype;
    unsigned int hash;
 
-   (void) ((void(hash =        toUpper(s[0])), s[1]) &&
-           (void(hash = hash*3+toUpper(s[1])), s[2]) &&
-           (void(hash = hash*2+toUpper(s[2])), s[3]) &&
-           (void(hash = hash*2+toUpper(s[3])), s[4]) &&
-           (void(hash = hash*2+toUpper(s[4])), s[5]) &&
-           (void(hash = hash*2+toUpper(s[5])), s[6]) &&
-           (void(hash = hash*2+toUpper(s[6])),
+   (void) ((hash =        toUpper(s[0]), s[1]) &&
+           (hash = hash*3+toUpper(s[1]), s[2]) &&
+           (hash = hash*2+toUpper(s[2]), s[3]) &&
+           (hash = hash*2+toUpper(s[3]), s[4]) &&
+           (hash = hash*2+toUpper(s[4]), s[5]) &&
+           (hash = hash*2+toUpper(s[5]), s[6]) &&
+           (hash = hash*2+toUpper(s[6]),
             hash = hash*2+toUpper(s[7]))
            );
    return hash;
@@ -1835,7 +1835,7 @@ static size_t W_DirectReadLump(lumpinfo_t *l, void *dest)
    directlump_t &direct = l->direct;
 
    // killough 10/98: Add flashing disk indicator
-   fseek(direct.file, direct.position, SEEK_SET);
+   fseek(direct.file, static_cast<long>(direct.position), SEEK_SET);
    ret = fread(dest, 1, size, direct.file);
 
    return ret;

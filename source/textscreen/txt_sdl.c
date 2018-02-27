@@ -264,8 +264,8 @@ int TXT_Init(void)
         int render_w, render_h;
 
         if (SDL_GetRendererOutputSize(renderer, &render_w, &render_h) == 0
-         && render_w >= TXT_SCREEN_W * large_font.w
-         && render_h >= TXT_SCREEN_H * large_font.h)
+         && render_w >= TXT_SCREEN_W * (int)large_font.w
+         && render_h >= TXT_SCREEN_H * (int)large_font.h)
         {
             font = &large_font;
             // Note that we deliberately do not update screen_image_{w,h}
@@ -951,7 +951,7 @@ int TXT_vsnprintf(char *buf, size_t buf_len, const char *s, va_list args)
 
     // If truncated, change the final char in the buffer to a \0.
     // A negative result indicates a truncated buffer on Windows.
-    if (result < 0 || result >= buf_len)
+    if (result < 0 || (size_t)result >= buf_len)
     {
         buf[buf_len - 1] = '\0';
         result = (int)(buf_len - 1);

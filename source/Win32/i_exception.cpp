@@ -270,11 +270,11 @@ static const TCHAR *PhraseForException(DWORD code)
 static void PrintHeader(void)
 {
    TCHAR *crashModuleFn = _T("Unknown");
-   MEMORY_BASIC_INFORMATION memoryInfo;
    
    ZeroMemory(crashModulePath, sizeof(crashModulePath));
 
 #ifdef _M_IX86
+   MEMORY_BASIC_INFORMATION memoryInfo;
    // Use VirtualQuery to retrieve the allocation base associated with the
    // process's code address.
    if(VirtualQuery((void *)contextRecord->Eip, &memoryInfo, sizeof(memoryInfo)))

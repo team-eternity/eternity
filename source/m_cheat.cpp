@@ -1033,7 +1033,7 @@ static int M_NukeMonsters()
          }
       }
    }
-   while(!killcount && mask ? void(mask = 0), 1 : 0);  // killough 7/20/98
+   while(!killcount && mask ? mask = 0, 1 : 0);  // killough 7/20/98
 
    return killcount;
 }

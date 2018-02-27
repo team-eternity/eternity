@@ -2650,9 +2650,9 @@ void P_FreeSecNodeList(void)
 static msecnode_t *P_GetSecnode(void)
 {
    msecnode_t *node;
-   
+
    return headsecnode ?
-   void(node = headsecnode), void(headsecnode = node->m_snext), node :
+   node = headsecnode, headsecnode = node->m_snext, node :
       (msecnode_t *)(Z_Malloc(sizeof *node, PU_LEVEL, NULL)); 
 }
 
