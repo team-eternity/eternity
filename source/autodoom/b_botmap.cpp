@@ -38,6 +38,7 @@
 #include "../d_files.h"
 #include "../doomstat.h"
 #include "../e_player.h"
+#include "../ev_specials.h"
 #include "../m_bbox.h"
 #include "../m_buffer.h"
 #include "../m_hash.h"
