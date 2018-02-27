@@ -629,7 +629,7 @@ static void P_ArchiveWorld(SaveArchive &arc)
 //
 static void P_ArchiveLevelInfo(SaveArchive &arc)
 {
-   arc << LevelInfo.airControl << LevelInfo.airFriction;
+   arc << LevelInfo.airControl << LevelInfo.airFriction << LevelInfo.gravity;
 }
 
 //
