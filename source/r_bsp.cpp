@@ -521,8 +521,8 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
       tempsec->ceilingheight = s->ceilingheight;
 
       // killough 11/98: prevent sudden light changes from non-water sectors:
-      if(underwater && (void(tempsec->floorheight   = sec->floorheight),
-                        void(tempsec->ceilingheight = s->floorheight-1), !back))
+      if(underwater && (tempsec->floorheight   = sec->floorheight,
+                        tempsec->ceilingheight = s->floorheight-1, !back))
       {
          // SoM: kill any ceiling portals that may try to render
          tempsec->c_portal = NULL;

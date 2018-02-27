@@ -401,15 +401,15 @@ struct val_str_t
 
 static const val_str_t val_programmers[] =
 {
-   { "James Haley", nullptr, "David Hill" },
-   { "Ioan Chera", nullptr, "Max Waine" },
-   { nullptr, FC_ABSCENTER "Stephen McGranahan\n", nullptr },
+   { "James Haley", nullptr,     "David Hill"                  },
+   { "Ioan Chera",  nullptr,     "Max Waine"                   },
+   { nullptr,       FC_ABSCENTER "Stephen McGranahan", nullptr },
    { nullptr, nullptr, nullptr }
 };
 
 static const val_str_t val_basedon[] =
 {
-   {nullptr, FC_ABSCENTER FC_HI "SMMU" FC_NORMAL " by Simon Howard", nullptr},
+   { nullptr, FC_ABSCENTER FC_HI "SMMU" FC_NORMAL " by Simon Howard", nullptr },
    { nullptr, nullptr, nullptr }
 };
 
@@ -420,9 +420,9 @@ static const val_str_t val_graphics[] = {
 
 static const val_str_t val_thanks[] =
 {
-   { "Joe Kennedy", nullptr, "Julian Aubourg" },
-   { "Joel Murdoch", nullptr, "Anders Astrand" },
-   { nullptr, FC_ABSCENTER "SargeBaldy", nullptr },
+   { "Joe Kennedy",  nullptr, "Julian Aubourg"   },
+   { "Joel Murdoch", nullptr, "Anders Astrand"   },
+   { "SargeBaldy",   nullptr, "Kaitlyn Anne Fox" },
    { nullptr, nullptr, nullptr }
 };
 

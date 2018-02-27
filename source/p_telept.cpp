@@ -393,7 +393,7 @@ int EV_SilentLineTeleport(const line_t *line, int lineid, int side, Mobj *thing,
          // Get the angle between the two linedefs, for rotating
          // orientation and momentum. Rotate 180 degrees, and flip
          // the position across the exit linedef, if reversed.
-         angle_t angle = (reverse ? void(pos = FRACUNIT-pos), 0 : ANG180) +
+         angle_t angle = (reverse ? pos = FRACUNIT-pos, 0 : ANG180) +
             P_PointToAngle(0, 0, l->dx, l->dy) -
             P_PointToAngle(0, 0, line->dx, line->dy);
 

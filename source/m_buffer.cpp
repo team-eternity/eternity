@@ -409,7 +409,7 @@ size_t InBuffer::read(void *dest, size_t size)
 //
 int InBuffer::skip(size_t skipAmt)
 {
-   int r = fseek(f, skipAmt, SEEK_CUR);
+   int r = fseek(f, static_cast<long>(skipAmt), SEEK_CUR);
    if(throwing && r)
       throw BufferedIOException(strerror(errno));
    return r;

@@ -48,6 +48,7 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "ev_specials.h"
+#include "g_demolog.h"
 #include "g_dmflag.h"
 #include "g_game.h"
 #include "hu_frags.h"
@@ -1244,6 +1245,12 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
 
       target->flags  &= ~MF_SOLID;
       P_PlayerStopFlight(target->player);  // haleyjd: stop flying
+      
+      G_DemoLog("%d\tdeath player %d ", gametic,
+         (int)(target->player - players) + 1);
+      G_DemoLogStats();
+      G_DemoLog("\n");
+      
       target->player->prevpitch = target->player->pitch; // MaxW: Stop interpolation jittering
       target->player->playerstate = PST_DEAD;
       P_DropWeapon(target->player);

@@ -70,7 +70,13 @@ int main(int argc, char **argv)
 
    // MaxW: 2017/09/16: Now prints the error on failure
    // haleyjd 04/15/02: added check for failure
-   if(SDL_Init(INIT_FLAGS) == -1)
+   // ioanch: avoid loading SDL_VIDEO if -nodraw and -nosound are combined.
+   // FIXME: code duplication; the global booleans aren't assigned yet.
+   Uint32 initflags = (M_CheckParm("-nodraw") &&
+                       (M_CheckParm("-nosound") || (M_CheckParm("-nosfx") &&
+                                                    M_CheckParm("-nomusic")))) ?
+   SDL_INIT_JOYSTICK : SDL_INIT_VIDEO | SDL_INIT_JOYSTICK;
+   if(SDL_Init(initflags) == -1)
    {
       printf("Failed to initialize SDL library: %s\n", SDL_GetError());
       return -1;

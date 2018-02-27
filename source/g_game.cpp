@@ -56,6 +56,7 @@
 #include "f_finale.h"
 #include "f_wipe.h"
 #include "g_bind.h"
+#include "g_demolog.h"
 #include "g_dmflag.h"
 #include "g_game.h"
 #include "in_lude.h"
@@ -1205,7 +1206,9 @@ void G_DoPlayDemo(void)
       }
       else
       {
-         GameType = (netgame ? gt_coop : gt_single);
+         // Support -solo-net for demos previously recorded so, at vanilla
+         // compatibility.
+         GameType = (netgame || M_CheckParm("-solo-net") ? gt_coop : gt_single);
          G_SetDefaultDMFlags(0, false);
       }
    }
@@ -1417,6 +1420,11 @@ bool scriptSecret = false;
 
 void G_ExitLevel(int destmap)
 {
+   // double tabs to be easily visible against deaths
+   G_DemoLog("%d\tExit normal\t\t", gametic);
+   G_DemoLogStats();
+   G_DemoLog("\n");
+   G_DemoLogSetExited(true);
    g_destmap  = destmap;
    secretexit = scriptSecret = false;
    gameaction = ga_completed;
@@ -1431,6 +1439,10 @@ void G_ExitLevel(int destmap)
 //
 void G_SecretExitLevel(int destmap)
 {
+   G_DemoLog("%d\tExit secret\t\t", gametic);
+   G_DemoLogStats();
+   G_DemoLog("\n");
+   G_DemoLogSetExited(true);
    secretexit = !(GameModeInfo->flags & GIF_WOLFHACK) || haswolflevels || scriptSecret;
    g_destmap  = destmap;
    gameaction = ga_completed;
@@ -3105,7 +3117,7 @@ void G_InitNew(skill_t skill, char *name)
 
    // haleyjd 06/16/04: set g_dir to d_dir if it is valid, or else restore it
    // to the default value.
-   g_dir = d_dir ? d_dir : (void(inmanageddir = MD_NONE), &wGlobalDir);
+   g_dir = d_dir ? d_dir : (inmanageddir = MD_NONE, &wGlobalDir);
    d_dir = NULL;
    
    G_DoLoadLevel();
@@ -3784,6 +3796,7 @@ bool G_RealNetGame()
    return netgame && !demoplayback && !netbot;
 }
 
+//==============================================================================
 //
 // Counts the total kills, items, secrets or whatever
 //

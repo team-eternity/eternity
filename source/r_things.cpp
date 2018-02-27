@@ -1371,7 +1371,7 @@ static void msort(vissprite_t **s, vissprite_t **t, int n)
       msort(s2, t, n2);
       
       while((*s1)->dist > (*s2)->dist ?
-            (void(*d++ = *s1++), --n1) : (void(*d++ = *s2++), --n2));
+            (*d++ = *s1++, --n1) : (*d++ = *s2++, --n2));
 
       if(n2)
          bcopyp(d, s2, n2);

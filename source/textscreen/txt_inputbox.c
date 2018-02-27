@@ -145,7 +145,7 @@ static void TXT_InputBoxDrawer(TXT_UNCAST_ARG(inputbox))
 
     // If string size exceeds the widget's width, show only the end.
 
-    if (TXT_UTF8_Strlen(inputbox->buffer) > w - 1)
+    if ((int)TXT_UTF8_Strlen(inputbox->buffer) > w - 1)
     {
         TXT_DrawCodePageString("\xae");
         TXT_DrawString(

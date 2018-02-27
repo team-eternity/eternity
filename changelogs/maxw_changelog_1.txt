@@ -191,6 +191,30 @@ Merged in SDL2 branch. Changes I can remember:
 Also whilst I was at it I added a fullscreen toggle,
 bound to Alt+Enter on non-Apple, Cmd+f on Apple).
 
+-------------------------------------------------------------------------------
+2018/01/31
+Changed GL extensions and pixelbuffers to be on by default.
+
+-------------------------------------------------------------------------------
+2018/02/05
+Fixed hitscan impact not activating lines that only have impact activation in
+UDMF. This means that players always activate them now (with impact), as do
+monsters with SPAC.
+
+-------------------------------------------------------------------------------
+2018/02/07
+Fix EV_ThingSpawn not assigning tid of spawned mobj.
+
+-------------------------------------------------------------------------------
+2018/02/10
+Fixed lumps in the HI_ markers overriding regular textures. This means that
+wads like Bloody Steel don't have invisible menu options.
+
+-------------------------------------------------------------------------------
+2018/02/14
+Added a "restartmap" command. It's basically the same as using the "map"
+command but to the same level.
+
 ================================================================================
 EOF
 ================================================================================

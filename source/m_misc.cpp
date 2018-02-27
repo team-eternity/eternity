@@ -349,10 +349,10 @@ default_t defaults[] =
    // killough 10/98: compatibility vector:
 
    DEFAULT_INT("comp_zombie", &default_comp[comp_zombie], &comp[comp_zombie], 
-               0, 0, 1, default_t::wad_yes, "Zombie players can exit levels"),
+               1, 0, 1, default_t::wad_yes, "Zombie players can exit levels"),
 
    DEFAULT_INT("comp_infcheat", &default_comp[comp_infcheat], &comp[comp_infcheat],
-               0, 0, 1, default_t::wad_yes, "Powerup cheats are not infinite duration"),
+               1, 0, 1, default_t::wad_yes, "Powerup cheats are not infinite duration"),
 
    DEFAULT_INT("comp_stairs", &default_comp[comp_stairs], &comp[comp_stairs],
                1, 0, 1, default_t::wad_yes, "Build stairs exactly the same way that Doom does"),
@@ -376,13 +376,13 @@ default_t defaults[] =
                0, 0, 1, default_t::wad_yes, "Monsters don't give up pursuit of targets"),
 
    DEFAULT_INT("comp_vile", &default_comp[comp_vile], &comp[comp_vile],
-               0, 0, 1, default_t::wad_yes, "Arch-Vile resurrects invincible ghosts"),
+               1, 0, 1, default_t::wad_yes, "Arch-Vile resurrects invincible ghosts"),
 
    DEFAULT_INT("comp_pain", &default_comp[comp_pain], &comp[comp_pain],
                0, 0, 1, default_t::wad_yes, "Pain Elemental limited to 20 lost souls"),
 
    DEFAULT_INT("comp_skull", &default_comp[comp_skull], &comp[comp_skull],
-               0, 0, 1, default_t::wad_yes, "Lost souls get stuck behind walls"),
+               1, 0, 1, default_t::wad_yes, "Lost souls get stuck behind walls"),
 
    DEFAULT_INT("comp_blazing", &default_comp[comp_blazing], &comp[comp_blazing],
                0, 0, 1, default_t::wad_yes, "Blazing doors make double closing sounds"),
@@ -391,10 +391,10 @@ default_t defaults[] =
                0, 0, 1, default_t::wad_yes, "Tagged doors don't trigger special lighting"),
 
    DEFAULT_INT("comp_god", &default_comp[comp_god], &comp[comp_god],
-               0, 0, 1, default_t::wad_yes, "God mode isn't absolute"),
+               1, 0, 1, default_t::wad_yes, "God mode isn't absolute"),
 
    DEFAULT_INT("comp_skymap", &default_comp[comp_skymap], &comp[comp_skymap],
-               0, 0, 1, default_t::wad_yes, "Sky is unaffected by invulnerability"),
+               1, 0, 1, default_t::wad_yes, "Sky is unaffected by invulnerability"),
 
    DEFAULT_INT("comp_floors", &default_comp[comp_floors], &comp[comp_floors],
                0, 0, 1, default_t::wad_yes, "Use exactly Doom's floor motion behavior"),
