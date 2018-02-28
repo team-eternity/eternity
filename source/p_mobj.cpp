@@ -665,7 +665,7 @@ void P_XYMovement(Mobj* mo)
    // 2017/09/09: players when air friction is active
    if(mo->z > mo->floorz && !(mo->flags4 & MF4_FLY) &&
       (!P_Use3DClipping() || !(mo->intflags & MIF_ONMOBJ)) &&
-      (!mo->player || LevelInfo.airFriction == FRACUNIT))
+      (!mo->player || LevelInfo.airFriction == 0))
    {
       return;
    }

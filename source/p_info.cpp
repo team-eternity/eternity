@@ -1402,7 +1402,7 @@ static void P_ClearLevelVars()
    // air control
    // compatibility setting may override this. To completely disable it, use -1
    LevelInfo.airControl = 0;
-   LevelInfo.airFriction = FRACUNIT;
+   LevelInfo.airFriction = 0;
 
    // haleyjd: construct defaults
    P_InfoDefaultLevelName();
