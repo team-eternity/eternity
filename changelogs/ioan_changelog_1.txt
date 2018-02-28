@@ -8,6 +8,31 @@ Since v3.42.03 "Heimdal" release 2
 ==================================
 
 --------------------------------------------------------------------------------
+28.02.2018
+
+FEATURE: configurable air control and friction. This is so the player can move
+         in mid-air better than what's possible under Hexen or Strife.
+
+         It's set in EMAPINFO by setting the "aircontrol" and "airfriction"
+         properties.
+
+         AirControl defaults to 0, which is like in Doom or Hexen,
+         depending on whether the comp_aircontrol flag is set. Full control is
+         set by 65536.
+
+         AirFriction was added by Altazimuth because it's useful
+         if air control is high enough, to prevent the player from reaching
+         extreme velocity. Default value is 0, like in the normal game. Maximum
+         value is 65535.
+
+         Also added two ACS functions for this: SetAirControl(fixed) and 
+         SetAirFriction(fixed), the latter which is an external function, desig-
+         nated by index 302.
+
+BUGFIX: Gravity is now stored in save games, as well as air control and
+        friction.
+
+--------------------------------------------------------------------------------
 25.02.2018
 
 FEATURE: comp_zombie, comp_infcheat, comp_vile, comp_skull, comp_god and 
