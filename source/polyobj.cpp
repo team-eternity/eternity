@@ -1294,6 +1294,9 @@ void Polyobj_InitLevel(void)
          Polyobj_spawnPolyObj(i, qitem->mo, qitem->mo->spawnpoint.angle);
       }
 
+      // Used to get portal clusters when moving polyobjects.
+      P_MarkPortalClusters();
+
       // move polyobjects to spawn points
       for(i = 0; i < numAnchors; ++i)
       {

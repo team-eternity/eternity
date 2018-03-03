@@ -612,6 +612,14 @@ portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum,
 }
 
 //
+// Returns the portal head, as a const pointer.
+//
+const portal_t *R_GetPortalHead()
+{
+   return portals;
+}
+
+//
 // R_GetSkyBoxPortal
 //
 // Either finds a portal for the provided camera object, or creates

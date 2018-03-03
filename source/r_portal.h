@@ -223,6 +223,8 @@ inline static bool R_portalIsAnchored(const portal_t *portal)
       portal->type == R_LINKED;
 }
 
+const portal_t *R_GetPortalHead();
+
 portal_t *R_GetSkyBoxPortal(Mobj *camera);
 portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum,
    bool allowrotate, bool flipped, fixed_t zoffset);

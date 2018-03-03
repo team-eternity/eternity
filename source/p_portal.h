@@ -96,6 +96,7 @@ void P_GatherSectors(sector_t *from, int groupid);
 // the level have been created.
 //
 bool P_BuildLinkTable();
+void P_MarkPortalClusters();
 
 //
 // P_LinkRejectTable

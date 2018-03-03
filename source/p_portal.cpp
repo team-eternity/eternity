@@ -68,6 +68,8 @@ static pgroup_t **groups = NULL;
 static int      groupcount = 0;
 static int      grouplimit = 0;
 
+static int *clusters;   // the portal clusters, used when portals move with polys.
+
 // This flag is a big deal. Heh, if this is true a whole lot of code will 
 // operate differently. This flag is cleared on P_PortalInit and is ONLY to be
 // set true by P_BuildLinkTable.
@@ -746,6 +748,94 @@ bool P_BuildLinkTable()
    return true;
 }
 
+enum
+{
+   conn_yes = 1,         // groups connected
+   conn_polycoupled = 2, // groups are coupled by originating from a same polyobject
+};
+
+//
+// Flood-fill the clusters matrix
+//
+static void P_floodFillCluster(const uint8_t *connections, int sourcegroup, 
+   int groupid, int *row, int clusterid)
+{
+   row[groupid] = clusterid;
+   for(int i = 0; i < groupcount; ++i)
+   {
+      if(i == sourcegroup || i == groupid || connections[sourcegroup * groupcount + i] & conn_polycoupled)
+         continue;
+      if(connections[groupid * groupcount + i] & conn_yes && row[i] == -1)
+         P_floodFillCluster(connections, sourcegroup, i, row, clusterid);
+   }
+}
+
+//
+// Marks all clusters of portal groups relative to polyobject vessel groups.
+// Needed to have correctly moving polyobjects in relation to separate portals.
+//
+void P_MarkPortalClusters()
+{
+   if(!useportalgroups)
+      return;
+
+   // FIXME: handle case when groupcount skyrockets
+   int matrixsize = groupcount * groupcount;
+   int *clusters = emalloc(int *, matrixsize * sizeof(int));
+   memset(clusters, -1, matrixsize * sizeof(int));
+   uint8_t *connections = ecalloc(uint8_t *, matrixsize, sizeof(uint8_t));
+
+   for(const portal_t *portal = R_GetPortalHead(); portal; portal = portal->next)
+   {
+      if(portal->type != R_LINKED)
+         continue;
+      // First mark the connections
+      connections[portal->data.link.fromid * groupcount + portal->data.link.toid] |= conn_yes;
+   }
+
+   // Now check the polyobject-coupled groups
+   for(int i = 0; i < numPolyObjects; ++i)
+   {
+      const polyobj_t &poly = PolyObjects[i];
+      for(int j = 0; j < poly.numLines - 1; ++j)
+      {
+         const line_t &line = *poly.lines[j];
+         if(!(line.pflags & PS_PASSABLE))
+            continue;
+         int ingroup0 = line.portal->data.link.toid;
+         for(int k = j + 1; k < poly.numLines; ++k)
+         {
+            const line_t &line = *poly.lines[k];
+            if(!(line.pflags & PS_PASSABLE))
+               continue;
+            int ingroup1 = line.portal->data.link.toid;
+            if(ingroup1 != ingroup0)
+            {
+               connections[ingroup0 * groupcount + ingroup1] |= conn_polycoupled;
+               connections[ingroup1 * groupcount + ingroup0] |= conn_polycoupled;
+            }
+         }
+      }
+   }
+
+   // Now we have the connections. Mark the clusters
+   for(int i = 0; i < groupcount; ++i)
+   {
+      int clusterid = 0;
+      for(int j = 0; j < groupcount; ++j)
+      {
+         if(i == j || connections[i * groupcount + j] & conn_polycoupled)
+            continue;
+         if(connections[i * groupcount + j] & conn_yes && clusters[i * groupcount + j] == -1)
+            P_floodFillCluster(connections, i, j, clusters + i * groupcount, clusterid++);
+      }
+   }
+
+   efree(connections);
+   ::clusters = clusters;
+   Z_ChangeTag(::clusters, PU_LEVEL);
+}
+
 //
 // P_LinkRejectTable
 //
@@ -1048,7 +1138,6 @@ void P_SetLPortalBehavior(line_t *line, int newbehavior)
 // P_MoveLinkedPortal
 //
 // ioanch 20160226: moves the offset of a linked portal
-// TODO: do the same for anchored portals
 //
 void P_MoveLinkedPortal(portal_t *portal, fixed_t dx, fixed_t dy, bool movebehind)
 {
