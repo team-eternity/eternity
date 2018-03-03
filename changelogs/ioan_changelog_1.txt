@@ -8,6 +8,11 @@ Since v3.42.03 "Heimdal" release 2
 ==================================
 
 --------------------------------------------------------------------------------
+03.03.2018
+
+FEATURE: Polyobjects now accept clusters of portals inside them.
+
+--------------------------------------------------------------------------------
 28.02.2018
 
 FEATURE: configurable air control and friction. This is so the player can move
