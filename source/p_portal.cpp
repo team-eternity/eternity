@@ -1135,35 +1135,35 @@ void P_SetLPortalBehavior(line_t *line, int newbehavior)
 }
 
 //
-// P_MoveLinkedPortal
+// Moves a polyobject portal cluster, updating link offsets.
 //
-// ioanch 20160226: moves the offset of a linked portal
-//
-void P_MoveLinkedPortal(portal_t *portal, fixed_t dx, fixed_t dy, bool movebehind)
+void P_MoveGroupCluster(int outgroup, int ingroup, bool *groupvisit, fixed_t dx,
+   fixed_t dy)
 {
-   linkdata_t &data = portal->data.link;
-   data.deltax += dx;
-   data.deltay += dy;
-   linkoffset_t *link;
+   const int *row = clusters + ingroup * groupcount;
    for(int i = 0; i < groupcount; ++i)
    {
-      if(movebehind)
+      if(groupvisit[i])
+         continue;
+      if(i != ingroup && (row[i] == -1 || row[i] == row[outgroup]))
+         continue;
+      groupvisit[i] = true;
+      for(int j = 0; j < groupcount; ++j)
       {
-         // the group behind appears to be moving in relation to the others
-         link = P_GetLinkOffset(i, data.toid);
-         if(link == &zerolink)
+         if(row[j] != row[outgroup])
             continue;
-         link->x += dx;
-         link->y += dy;
-      }
-      else
-      {
-         // the group in front of the portal appears to be moving
-         link = P_GetLinkOffset(data.fromid, i);
-         if(link == &zerolink)
-            continue;
-         link->x += dx;
-         link->y += dy;
+         linkoffset_t *link = P_GetLinkOffset(j, i);
+         if(link != &zerolink)
+         {
+            link->x -= dx;
+            link->y -= dy;
+         }
+         link = P_GetLinkOffset(i, j);
+         if(link != &zerolink)
+         {
+            link->x += dx;
+            link->y += dy;
+         }
       }
    }
 }

@@ -184,8 +184,8 @@ void P_SetCPortalBehavior(sector_t *sec, int newbehavior);
 //
 void P_SetLPortalBehavior(line_t *line, int newbehavior);
 
-void P_MoveLinkedPortal(portal_t *portal, fixed_t dx, fixed_t dy,
-                        bool movebehind);
+void P_MoveGroupCluster(int outgroup, int ingroup, bool *groupvisit, fixed_t dx,
+                        fixed_t dy);
 
 fixed_t P_CeilingPortalZ(const sector_t &sector);
 fixed_t P_FloorPortalZ(const sector_t &sector);
