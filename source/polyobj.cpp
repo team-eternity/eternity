@@ -577,8 +577,8 @@ static void Polyobj_movePortals(const polyobj_t *po, fixed_t dx, fixed_t dy,
             partner->data.link.deltay += dy;
          }
          // mark the group as being moved by the portal or not.
-         gGroupPolyobject[ldata.toid] = cancel ? nullptr : po;
-         P_MoveGroupCluster(ldata.fromid, ldata.toid, groupvisit, dx, dy);
+         P_MoveGroupCluster(ldata.fromid, ldata.toid, groupvisit, dx, dy, 
+            cancel ? nullptr : po);
       }
       else if(portal->type == R_ANCHORED || portal->type == R_TWOWAY)
       {
