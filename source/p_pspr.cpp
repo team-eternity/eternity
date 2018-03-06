@@ -902,7 +902,7 @@ void A_Saw(actionargs_t *actionargs)
 
    if(angle - mo->angle > ANG180)
    {
-      if(angle - mo->angle < -ANG90/20)
+      if(angle - mo->angle < static_cast<angle_t>(-ANG90/20))
          mo->angle = angle + ANG90/21;
       else
          mo->angle -= ANG90/20;
@@ -1844,7 +1844,7 @@ void A_CustomPlayerMelee(actionargs_t *actionargs)
    {
       if(angle - mo->angle > ANG180)
       {
-         if(angle - mo->angle < -ANG90/20)
+         if(angle - mo->angle < static_cast<angle_t>(-ANG90/20))
             mo->angle = angle + ANG90/21;
          else
             mo->angle -= ANG90/20;

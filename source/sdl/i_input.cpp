@@ -208,7 +208,7 @@ static int I_TranslateKey(SDL_Keysym *sym)
    case SDL_SCANCODE_RGUI:
       return KEYD_RALT;
    default:
-      if(scancode >= 0 && scancode < earrlen(scancode_translate_table))
+      if(scancode >= 0 && scancode < static_cast<int>(earrlen(scancode_translate_table)))
          return scancode_translate_table[scancode];
       else
          return 0;
