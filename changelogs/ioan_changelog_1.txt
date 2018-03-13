@@ -8,6 +8,13 @@ Since v3.42.03 "Heimdal" release 2
 ==================================
 
 --------------------------------------------------------------------------------
+12.03.2018
+
+BUGFIX: Fixed sky hack linedefs from showing up when any of the sectors has a
+        heightsec (Boom transfer-heights target) different from the other. This
+        problem reportedly doesn't occur other Boom-based ports.
+
+--------------------------------------------------------------------------------
 03.03.2018
 
 FEATURE: Polyobjects now accept clusters of portals inside them.
