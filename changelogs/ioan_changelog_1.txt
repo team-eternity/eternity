@@ -8,6 +8,14 @@ Since v3.42.03 "Heimdal" release 2
 ==================================
 
 --------------------------------------------------------------------------------
+14.03.2018
+
+BUGFIX: Fixed an oversight where the ExtraData-assigned specials weren't
+        assigned to the front sidedef's "special" entry, which is a shortcut
+        made by Lee Killough to store information about translucent walls or
+        colourmaps.
+
+--------------------------------------------------------------------------------
 12.03.2018
 
 BUGFIX: Fixed sky hack linedefs from showing up when any of the sectors has a
