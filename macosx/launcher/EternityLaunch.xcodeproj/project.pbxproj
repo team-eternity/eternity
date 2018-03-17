@@ -16,6 +16,9 @@
 		4F2F32BB1867111400EED7DE /* base in Resources */ = {isa = PBXBuildFile; fileRef = FA82164B1647128900FF998A /* base */; };
 		4F2F32BC1867111400EED7DE /* docs in Resources */ = {isa = PBXBuildFile; fileRef = FA8216761647128900FF998A /* docs */; };
 		4F2F32BD1867111400EED7DE /* user in Resources */ = {isa = PBXBuildFile; fileRef = FA8216871647128900FF998A /* user */; };
+		4F5076B7205DCC81000226F6 /* SDL2_mixer.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4F5076AC205DB8DE000226F6 /* SDL2_mixer.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		4F5076B8205DCC81000226F6 /* SDL2_net.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4F5076AA205DB8DE000226F6 /* SDL2_net.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		4F5076B9205DCC81000226F6 /* SDL2.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4F5076AB205DB8DE000226F6 /* SDL2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		4F9E46C81EC7576E00F9C6B3 /* eternity in Resources */ = {isa = PBXBuildFile; fileRef = 4F9E46C71EC7576E00F9C6B3 /* eternity */; };
 		4FD651B916B8183500F9BE74 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAF6A06C1691A0D2009EBD3C /* Cocoa.framework */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
@@ -32,6 +35,21 @@
 		FABF6000158C8F6300C49E93 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = FABF5FFF158C8F6300C49E93 /* Credits.rtf */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		4F5076B6205DCC79000226F6 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				4F5076B7205DCC81000226F6 /* SDL2_mixer.framework in CopyFiles */,
+				4F5076B8205DCC81000226F6 /* SDL2_net.framework in CopyFiles */,
+				4F5076B9205DCC81000226F6 /* SDL2.framework in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		256AC3F00F4B6AF500CF3369 /* EternityLaunch_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EternityLaunch_Prefix.pch; sourceTree = "<group>"; };
@@ -42,6 +60,9 @@
 		4F015B8F1877613100ADB3F4 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/About.xib; sourceTree = "<group>"; };
 		4F015B941877636F00ADB3F4 /* ELAboutController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ELAboutController.h; sourceTree = "<group>"; };
 		4F015B951877636F00ADB3F4 /* ELAboutController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ELAboutController.m; sourceTree = "<group>"; };
+		4F5076AA205DB8DE000226F6 /* SDL2_net.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2_net.framework; path = ../SDL2_net.framework; sourceTree = "<group>"; };
+		4F5076AB205DB8DE000226F6 /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../SDL2.framework; sourceTree = "<group>"; };
+		4F5076AC205DB8DE000226F6 /* SDL2_mixer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2_mixer.framework; path = ../SDL2_mixer.framework; sourceTree = "<group>"; };
 		4F9E46C71EC7576E00F9C6B3 /* eternity */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = eternity; path = ../builds/eternity; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* EternityLaunch-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "EternityLaunch-Info.plist"; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* Eternity Engine.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Eternity Engine.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -112,6 +133,9 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				4F5076AC205DB8DE000226F6 /* SDL2_mixer.framework */,
+				4F5076AA205DB8DE000226F6 /* SDL2_net.framework */,
+				4F5076AB205DB8DE000226F6 /* SDL2.framework */,
 				4F9E46C71EC7576E00F9C6B3 /* eternity */,
 				4F015B8A18775CB100ADB3F4 /* AUTHORS */,
 				4F015B8B18775CB100ADB3F4 /* COPYING */,
@@ -180,6 +204,7 @@
 				8D1107290486CEB800E47090 /* Resources */,
 				8D11072C0486CEB800E47090 /* Sources */,
 				8D11072E0486CEB800E47090 /* Frameworks */,
+				4F5076B6205DCC79000226F6 /* CopyFiles */,
 			);
 			buildRules = (
 			);
