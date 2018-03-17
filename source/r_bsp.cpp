@@ -929,7 +929,7 @@ void R_ClipSegToLPortal(void)
       return; 
 
    // This can actually happen with slopes!
-   if(!seg.floorplane && !seg.ceilingplane)
+   if(!seg.floorplane && !seg.ceilingplane && !seg.f_window && !seg.c_window)
    {
       float top, top2, topstep, bottom, bottom2, bottomstep;
 
@@ -976,7 +976,7 @@ void R_ClipSegToLPortal(void)
             R_ClipPassWallSegment(startx, i - 1);
       }
    }
-   else if(!seg.floorplane)
+   else if(!seg.floorplane && !seg.f_window)
    {
       // If the seg has no floor plane, the camera is most likely below it,
       // so rejection is carried out as if the seg is being viewed through
@@ -1012,7 +1012,7 @@ void R_ClipSegToLPortal(void)
             R_ClipPassWallSegment(startx, i - 1);
       }
    }
-   else if(!seg.ceilingplane)
+   else if(!seg.ceilingplane && !seg.c_window)
    {
       // If the seg has no floor plane, the camera is most likely above it,
       // so rejection is carried out as if the seg is being viewed through
