@@ -44,6 +44,7 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "ev_specials.h"
+#include "g_demolog.h"
 #include "g_dmflag.h"
 #include "g_game.h"
 #include "hu_frags.h"
@@ -1229,6 +1230,13 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
 
       target->flags  &= ~MF_SOLID;
       P_PlayerStopFlight(target->player);  // haleyjd: stop flying
+      
+      G_DemoLog("%d\tdeath player %d ", gametic,
+         (int)(target->player - players) + 1);
+      G_DemoLogStats();
+      G_DemoLog("\n");
+      
+      target->player->prevpitch = target->player->pitch; // MaxW: Stop interpolation jittering
       target->player->playerstate = PST_DEAD;
       P_DropWeapon(target->player);
 
@@ -1541,7 +1549,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    emod_t *emod;
    player_t *player;
    bool justhit = false;  // killough 11/98
-   bool bossignore;       // haleyjd
+   bool speciesignore;       // haleyjd
    
    // killough 8/31/98: allow bouncers to take damage
    if(!(target->flags & (MF_SHOOTABLE | MF_BOUNCES)))
@@ -1609,6 +1617,10 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    {
       MetaTable *meta = target->info->meta;
       int df = meta->getInt(emod->dfKeyIndex, FRACUNIT);
+
+      // Special case: D_MININT is absolute immunity.
+      if(df == D_MININT)
+         return;
 
       // Only apply if not FRACUNIT, due to the chance this might alter
       // the compatibility characteristics of extreme DEH/BEX damage.
@@ -1809,18 +1821,19 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    // killough 9/9/98: cleaned up, made more consistent:
    // haleyjd 11/24/02: added MF3_DMGIGNORED and MF3_BOSSIGNORE flags
 
-   // EDF_FIXME: replace BOSSIGNORE with generalized infighting controls.
-   // BOSSIGNORE flag will be made obsolete.
+   // BOSSIGNORE flag is deprecated, use thinggroup with DAMAGEIGNORE instead
 
    // haleyjd: set bossignore
-   if(source && (source->type != target->type) &&
-      (source->flags3 & target->flags3 & MF3_BOSSIGNORE))
+   if(source && ((source->type != target->type &&
+                  (source->flags3 & target->flags3 & MF3_BOSSIGNORE ||
+                   E_ThingPairValid(source->type, target->type, TGF_DAMAGEIGNORE))) ||
+                 (source->type == target->type && source->flags4 & MF4_NOSPECIESINFIGHT)))
    {
       // ignore if friendliness matches
-      bossignore = !((source->flags ^ target->flags) & MF_FRIEND);
+      speciesignore = !((source->flags ^ target->flags) & MF_FRIEND);
    }
    else
-      bossignore = false;
+      speciesignore = false;
 
    // Set target based on the following criteria:
    // * Damage is sourced and source is not self.
@@ -1833,7 +1846,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    
    if(source && source != target                                     // source checks
       && !(source->flags3 & MF3_DMGIGNORED)                          // not ignored?
-      && !bossignore                                                 // EDF_FIXME!
+      && !speciesignore                                              // species not fighting
       && (!target->threshold || (target->flags3 & MF3_NOTHRESHOLD))  // threshold?
       && ((source->flags ^ target->flags) & MF_FRIEND ||             // friendliness?
            monster_infighting || demo_version < 203)

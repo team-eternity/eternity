@@ -1,20 +1,15 @@
-// Emacs style mode select   -*- C -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright(C) 2006 Simon Howard
+// Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 
 #include <stdlib.h>
@@ -27,9 +22,10 @@
 #include "txt_gui.h"
 #include "txt_io.h"
 #include "txt_main.h"
+#include "txt_utf8.h"
 #include "txt_window.h"
 
-typedef struct callback_data_s
+typedef struct
 {
     txt_window_t *window;
     txt_dropdown_list_t *list;
@@ -47,14 +43,29 @@ static int ValidSelection(txt_dropdown_list_t *list)
 
 static int SelectorWindowY(txt_dropdown_list_t *list)
 {
+    int result;
+
     if (ValidSelection(list))
     {
-        return list->widget.y - 1 - *list->variable;
+        result = list->widget.y - 1 - *list->variable;
     }
     else
     {
-        return list->widget.y - 1 - (list->num_values / 2);
+        result = list->widget.y - 1 - (list->num_values / 2);
     }
+
+    // Keep dropdown inside the screen.
+
+    if (result < 1)
+    {
+        result = 1;
+    }
+    else if (result + list->num_values > (TXT_SCREEN_H - 3))
+    {
+        result = TXT_SCREEN_H - list->num_values - 3;
+    }
+
+    return result;
 }
 
 // Called when a button in the selector window is pressed
@@ -89,6 +100,22 @@ static void FreeCallbackData(TXT_UNCAST_ARG(list),
 static int SelectorWindowListener(txt_window_t *window, int key, void *user_data)
 {
     if (key == KEY_ESCAPE)
+    {
+        TXT_CloseWindow(window);
+        return 1;
+    }
+
+    return 0;
+}
+
+static int SelectorMouseListener(txt_window_t *window, int x, int y, int b,
+                                 void *unused)
+{
+    txt_widget_t *win;
+
+    win = (txt_widget_t *) window;
+
+    if (x < win->x || x > win->x + (int)win->w || y < win->y || y > win->y + (int)win->h)
     {
         TXT_CloseWindow(window);
         return 1;
@@ -156,6 +183,7 @@ static void OpenSelectorWindow(txt_dropdown_list_t *list)
     // Catch presses of escape in this window and close it.
 
     TXT_SetKeyListener(window, SelectorWindowListener, NULL);
+    TXT_SetMouseListener(window, SelectorMouseListener, NULL);
 }
 
 static int DropdownListWidth(txt_dropdown_list_t *list)
@@ -169,7 +197,7 @@ static int DropdownListWidth(txt_dropdown_list_t *list)
 
     for (i=0; i<list->num_values; ++i)
     {
-        int w = (int)strlen(list->values[i]);
+        int w = TXT_UTF8_Strlen(list->values[i]);
         if (w > result) 
         {
             result = w;
@@ -187,24 +215,15 @@ static void TXT_DropdownListSizeCalc(TXT_UNCAST_ARG(list))
     list->widget.h = 1;
 }
 
-static void TXT_DropdownListDrawer(TXT_UNCAST_ARG(list), int selected)
+static void TXT_DropdownListDrawer(TXT_UNCAST_ARG(list))
 {
     TXT_CAST_ARG(txt_dropdown_list_t, list);
     unsigned int i;
-    char *str;
+    const char *str;
 
     // Set bg/fg text colors.
 
-    if (selected) 
-    {
-        TXT_BGColor(TXT_COLOR_GREY, 0);
-    }
-    else
-    {
-        TXT_BGColor(TXT_COLOR_BLUE, 0);
-    }
-
-    TXT_FGColor(TXT_COLOR_BRIGHT_WHITE);
+    TXT_SetWidgetBG(list);
 
     // Select a string to draw from the list, if the current value is
     // in range.  Otherwise fall back to a default.
@@ -222,7 +241,7 @@ static void TXT_DropdownListDrawer(TXT_UNCAST_ARG(list), int selected)
 
     TXT_DrawString(str);
 
-    for (i=(unsigned)strlen(str); i<list->widget.w; ++i)
+    for (i = TXT_UTF8_Strlen(str); i < list->widget.w; ++i)
     {
         TXT_DrawString(" ");
     }
@@ -260,6 +279,7 @@ static void TXT_DropdownListMousePress(TXT_UNCAST_ARG(list),
 
 txt_widget_class_t txt_dropdown_list_class =
 {
+    TXT_AlwaysSelectable,
     TXT_DropdownListSizeCalc,
     TXT_DropdownListDrawer,
     TXT_DropdownListKeyPress,

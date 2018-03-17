@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2017 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,13 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+// Purpose: Keyboard, mouse, and joystick code
+// Authors: James Haley, Max Waine
 //
-// DESCRIPTION:
-//
-//   keyboard, mouse, and joystick code.
-//
-//-----------------------------------------------------------------------------
 
 #include "SDL.h"
 
@@ -37,6 +32,7 @@
 #include "../doomdef.h"
 #include "../doomstat.h"
 #include "../g_bind.h"
+#include "../i_video.h"
 #include "../m_argv.h"
 #include "../m_dllist.h"
 #include "../p_chase.h"
@@ -53,11 +49,6 @@ bool screenvisible;
 bool window_focused;
 bool fullscreen;
 
-// haleyjd 10/25/09
-bool unicodeinput;
-
-void I_InitKeyboard();      // i_system.c
-
 bool MouseShouldBeGrabbed();
 
 //=============================================================================
@@ -70,7 +61,7 @@ bool MouseShouldBeGrabbed();
 //
 // haleyjd 10/08/05: from Chocolate DOOM
 //
-void UpdateGrab()
+void UpdateGrab(SDL_Window *window)
 {
    static bool currently_grabbed = false;
    bool grab;
@@ -79,14 +70,27 @@ void UpdateGrab()
 
    if(grab && !currently_grabbed)
    {
-      SDL_ShowCursor(SDL_DISABLE);
-      SDL_WM_GrabInput(SDL_GRAB_ON);
+      // When the cursor is hidden, grab the input.
+      // Relative mode implicitly hides the cursor.
+      SDL_SetRelativeMouseMode(SDL_TRUE);
+      SDL_GetRelativeMouseState(nullptr, nullptr);
    }
-
-   if(!grab && currently_grabbed)
+   else if(!grab && currently_grabbed)
    {
-      SDL_ShowCursor(SDL_ENABLE);
-      SDL_WM_GrabInput(SDL_GRAB_OFF);
+      int window_w, window_h;
+
+      SDL_SetRelativeMouseMode(SDL_FALSE);
+      SDL_GetRelativeMouseState(nullptr, nullptr);
+
+      // When releasing the mouse from grab, warp the mouse cursor to
+      // the bottom-right of the screen. This is a minimally distracting
+      // place for it to appear - we may only have released the grab
+      // because we're at an end of level intermission screen, for
+      // example.
+
+      SDL_GetWindowSize(window, &window_w, &window_h);
+      SDL_WarpMouseInWindow(window, window_w - 16, window_h - 16);
+      SDL_GetRelativeMouseState(nullptr, nullptr);
    }
 
    currently_grabbed = grab;
@@ -133,42 +137,17 @@ bool MouseShouldBeGrabbed()
 // is removed if we lose focus (such as a popup window appearing),
 // and we dont move the mouse around if we aren't focused either.
 //
-void UpdateFocus()
+void UpdateFocus(SDL_Window *window)
 {
-   Uint8 state;
-   SDL_Event  event;
-   static bool currently_focused = false;
+   Uint32 state;
 
    SDL_PumpEvents();
 
-   state = SDL_GetAppState();
+   state = window ? SDL_GetWindowFlags(window) : 0;
+   screenvisible = ((state & SDL_WINDOW_SHOWN) && !(state & SDL_WINDOW_MINIMIZED));
 
-   // We should have input (keyboard) focus and be visible
-   // (not minimised)
-   window_focused = (state & SDL_APPINPUTFOCUS) && (state & SDL_APPACTIVE);
-
-   // Stop haptic effects if the window loses focus
-   if(!window_focused)
-      I_ClearHaptics();
-
-   // Should the screen be grabbed?
-   screenvisible = (state & SDL_APPACTIVE) != 0;
-
-   // [CG] Handle focus changes, this is all necessary to avoid repeat events.
-   if(currently_focused != window_focused)
-   {
-      if(window_focused)
-      {
-         while(SDL_PollEvent(&event)) {}
-         SDL_EnableKeyRepeat(
-            SDL_DEFAULT_REPEAT_DELAY / 2, SDL_DEFAULT_REPEAT_INTERVAL * 4
-         );
-      }
-      else
-         SDL_EnableKeyRepeat(0, 0);
-      G_ClearKeyStates();
-      currently_focused = window_focused;
-   }
+   window_focused = (screenvisible &&
+                     ((state & (SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_MOUSE_FOCUS)) != 0));
 }
 
 //=============================================================================
@@ -176,82 +155,64 @@ void UpdateFocus()
 // Keyboard
 //
 
+// Adapted for Eternity, based on Chocolate Doom
+#define SCANCODE_TO_KEYS_ARRAY {                                                             \
+    0,   0,   0,   0,   'a',                                                   /* 0-9 */     \
+    'b', 'c', 'd', 'e', 'f',                                                                 \
+    'g', 'h', 'i', 'j', 'k',                                                   /* 10-19 */   \
+    'l', 'm', 'n', 'o', 'p',                                                                 \
+    'q', 'r', 's', 't', 'u',                                                   /* 20-29 */   \
+    'v', 'w', 'x', 'y', 'z',                                                                 \
+    '1', '2', '3', '4', '5',                                                   /* 30-39 */   \
+    '6', '7', '8', '9', '0',                                                                 \
+    KEYD_ENTER, KEYD_ESCAPE, KEYD_BACKSPACE, KEYD_TAB, ' ',                    /* 40-49 */   \
+    KEYD_MINUS, KEYD_EQUALS, '[', ']', '\\',                                                 \
+    KEYD_NONUSHASH,   ';', '\'', KEYD_ACCGRAVE, ',',                           /* 50-59 */   \
+    '.', '/', KEYD_CAPSLOCK, KEYD_F1, KEYD_F2,                                               \
+    KEYD_F3, KEYD_F4, KEYD_F5, KEYD_F6, KEYD_F7,                               /* 60-69 */   \
+    KEYD_F8, KEYD_F9, KEYD_F10, KEYD_F11, KEYD_F12,                                          \
+    KEYD_PRINTSCREEN, KEYD_SCROLLLOCK, KEYD_PAUSE, KEYD_INSERT, KEYD_HOME,     /* 70-79 */   \
+    KEYD_PAGEUP, KEYD_DEL, KEYD_END, KEYD_PAGEDOWN, KEYD_RIGHTARROW,                         \
+    KEYD_LEFTARROW, KEYD_DOWNARROW, KEYD_UPARROW,                              /* 80-89 */   \
+    KEYD_NUMLOCK, KEYD_KPDIVIDE,                                                             \
+    KEYD_KPMULTIPLY, KEYD_KPMINUS, KEYD_KPPLUS, KEYD_KPENTER, KEYD_KP1,                      \
+    KEYD_KP2, KEYD_KP3, KEYD_KP4, KEYD_KP5, KEYD_KP6,                          /* 90-99 */   \
+    KEYD_KP7, KEYD_KP8, KEYD_KP9, KEYD_KP0, KEYD_KPPERIOD,                                   \
+    KEYD_NONUSBACKSLASH, 0, 0, KEYD_KPEQUALS,                                  /* 100-103 */ \
+}
+
+static const int scancode_translate_table[] = SCANCODE_TO_KEYS_ARRAY;
+
 //
 // I_TranslateKey
 //
 // For SDL, translates from SDL keysyms to DOOM key values.
 //
-static int I_TranslateKey(int sym)
+static int I_TranslateKey(SDL_Keysym *sym)
 {
-   int rc = 0;
+   const int scancode = sym->scancode;
 
-   switch(sym)
+   // This approach is taken from Chocolate Doom's TranslateKey
+   switch(scancode)
    {
-   case SDLK_LEFT:        rc = KEYD_LEFTARROW;  break;
-   case SDLK_RIGHT:       rc = KEYD_RIGHTARROW; break;
-   case SDLK_DOWN:        rc = KEYD_DOWNARROW;  break;
-   case SDLK_UP:          rc = KEYD_UPARROW;    break;
-   case SDLK_ESCAPE:      rc = KEYD_ESCAPE;     break;
-   case SDLK_RETURN:      rc = KEYD_ENTER;      break;
-   case SDLK_TAB:         rc = KEYD_TAB;        break;
-   case SDLK_F1:          rc = KEYD_F1;         break;
-   case SDLK_F2:          rc = KEYD_F2;         break;
-   case SDLK_F3:          rc = KEYD_F3;         break;
-   case SDLK_F4:          rc = KEYD_F4;         break;
-   case SDLK_F5:          rc = KEYD_F5;         break;
-   case SDLK_F6:          rc = KEYD_F6;         break;
-   case SDLK_F7:          rc = KEYD_F7;         break;
-   case SDLK_F8:          rc = KEYD_F8;         break;
-   case SDLK_F9:          rc = KEYD_F9;         break;
-   case SDLK_F10:         rc = KEYD_F10;        break;
-   case SDLK_F11:         rc = KEYD_F11;        break;
-   case SDLK_F12:         rc = KEYD_F12;        break;
-   case SDLK_BACKSPACE:   rc = KEYD_BACKSPACE;  break;
-   case SDLK_PAUSE:       rc = KEYD_PAUSE;      break;
-   case SDLK_EQUALS:      rc = KEYD_EQUALS;     break;
-   case SDLK_MINUS:       rc = KEYD_MINUS;      break;
-
-   case SDLK_KP0:         rc = KEYD_KP0;        break;
-   case SDLK_KP1:         rc = KEYD_KP1;        break;
-   case SDLK_KP2:         rc = KEYD_KP2;        break;
-   case SDLK_KP3:         rc = KEYD_KP3;        break;
-   case SDLK_KP4:         rc = KEYD_KP4;        break;
-   case SDLK_KP5:         rc = KEYD_KP5;        break;
-   case SDLK_KP6:         rc = KEYD_KP6;        break;
-   case SDLK_KP7:         rc = KEYD_KP7;        break;
-   case SDLK_KP8:         rc = KEYD_KP8;        break;
-   case SDLK_KP9:         rc = KEYD_KP9;        break;
-   case SDLK_KP_PERIOD:   rc = KEYD_KPPERIOD;   break;
-   case SDLK_KP_DIVIDE:   rc = KEYD_KPDIVIDE;   break;
-   case SDLK_KP_MULTIPLY: rc = KEYD_KPMULTIPLY; break;
-   case SDLK_KP_MINUS:    rc = KEYD_KPMINUS;    break;
-   case SDLK_KP_PLUS:     rc = KEYD_KPPLUS;     break;
-   case SDLK_KP_ENTER:    rc = KEYD_KPENTER;    break;
-   case SDLK_KP_EQUALS:   rc = KEYD_KPEQUALS;   break;
-
-   case SDLK_NUMLOCK:     rc = KEYD_NUMLOCK;    break;
-   case SDLK_SCROLLOCK:   rc = KEYD_SCROLLLOCK; break;
-   case SDLK_CAPSLOCK:    rc = KEYD_CAPSLOCK;   break;
-   case SDLK_LSHIFT:
-   case SDLK_RSHIFT:      rc = KEYD_RSHIFT;     break;
-   case SDLK_LCTRL:
-   case SDLK_RCTRL:       rc = KEYD_RCTRL;      break;
-
-   case SDLK_LALT:
-   case SDLK_RALT:
-   case SDLK_LMETA:
-   case SDLK_RMETA:       rc = KEYD_RALT;       break;
-   case SDLK_PAGEUP:      rc = KEYD_PAGEUP;     break;
-   case SDLK_PAGEDOWN:    rc = KEYD_PAGEDOWN;   break;
-   case SDLK_HOME:        rc = KEYD_HOME;       break;
-   case SDLK_END:         rc = KEYD_END;        break;
-   case SDLK_INSERT:      rc = KEYD_INSERT;     break;
-   case SDLK_DELETE:      rc = KEYD_DEL;        break;
+   case SDL_SCANCODE_LCTRL:
+   case SDL_SCANCODE_RCTRL:
+      return KEYD_RCTRL;
+   case SDL_SCANCODE_LSHIFT:
+   case SDL_SCANCODE_RSHIFT:
+      return KEYD_RSHIFT;
+   case SDL_SCANCODE_LALT:
+   case SDL_SCANCODE_LGUI:
+      return KEYD_LALT;
+   case SDL_SCANCODE_RALT:
+   case SDL_SCANCODE_RGUI:
+      return KEYD_RALT;
    default:
-      rc = sym;
-      break;
+      if(scancode >= 0 && scancode < static_cast<int>(earrlen(scancode_translate_table)))
+         return scancode_translate_table[scancode];
+      else
+         return 0;
    }
-   return rc;
 }
 
 int I_ScanCode2DoomCode(int a)
@@ -342,7 +303,7 @@ void I_StartFrame()
 //
 
 extern void MN_QuitDoom();
-extern int mouseAccel_type;
+extern acceltype_e mouseAccel_type;
 extern int mouseAccel_threshold;
 extern double mouseAccel_value;
 
@@ -391,16 +352,16 @@ static double CustomAccelerateMouse(int val)
 // haleyjd 10/23/08: from Choco-Doom:
 // Warp the mouse back to the middle of the screen
 //
-static void CenterMouse()
+static void CenterMouse(SDL_Window *window)
 {
    // Warp the the screen center
 
-   SDL_WarpMouse((Uint16)(video.width / 2), (Uint16)(video.height / 2));
+   SDL_WarpMouseInWindow(window, int(video.width / 2), int(video.height / 2));
 
    // Clear any relative movement caused by warping
 
    SDL_PumpEvents();
-   SDL_GetRelativeMouseState(NULL, NULL);
+   SDL_GetRelativeMouseState(nullptr, nullptr);
 }
 
 //
@@ -413,7 +374,7 @@ static void CenterMouse()
 // This is to combine all mouse movement for a tic into one mouse
 // motion event.
 //
-static void I_ReadMouse()
+static void I_ReadMouse(SDL_Window *window)
 {
    int x, y;
    event_t ev;
@@ -431,14 +392,14 @@ static void I_ReadMouse()
    {
       ev.type = ev_mouse;
       ev.data1 = SDL_MOUSEMOTION;
-      if(mouseAccel_type == 2)
+      if(mouseAccel_type == ACCELTYPE_CHOCO)
       {
          // SoM: So the values that go to Eternity should be 16.16 fixed
          //      point...
          ev.data2 =  AccelerateMouse(x);
          ev.data3 = -AccelerateMouse(y);
       }
-      else if(mouseAccel_type == 3) // [CG] 01/20/12 Custom acceleration
+      else if(mouseAccel_type == ACCELTYPE_CUSTOM) // [CG] 01/20/12 Custom acceleration
       {
          ev.data2 =  CustomAccelerateMouse(x);
          ev.data3 = -CustomAccelerateMouse(y);
@@ -448,7 +409,7 @@ static void I_ReadMouse()
    }
 
    if(MouseShouldBeGrabbed())
-      CenterMouse();
+      CenterMouse(window);
 }
 
 //
@@ -553,19 +514,19 @@ static void I_RunDeferredEvents()
    }
 }
 
-static void I_GetEvent()
+static void I_GetEvent(SDL_Window *window)
 {
    SDL_Event  ev;
    int        sendmouseevent = 0;
    int        buttons        = 0;
-   event_t    d_event        = { ev_keydown, 0, 0, 0, '\0' };
-   event_t    mouseevent     = { ev_mouse,   0, 0, 0, '\0' };
-   event_t    tempevent      = { ev_keydown, 0, 0, 0, '\0' }; 
+   event_t    d_event        = { ev_keydown, 0, 0, 0, false };
+   event_t    mouseevent     = { ev_mouse,   0, 0, 0, false };
+   event_t    tempevent      = { ev_keydown, 0, 0, 0, false };
 
    // [CG] 01/31/2012: Ensure we have the latest info about focus and mouse
    //                  grabbing.
-   UpdateFocus();
-   UpdateGrab();
+   UpdateFocus(window);
+   UpdateGrab(window);
 
    while(SDL_PollEvent(&ev))
    {
@@ -580,79 +541,76 @@ static void I_GetEvent()
 
       switch(ev.type)
       {
+      case SDL_TEXTINPUT:
+         for(unsigned int i = 0; i < SDL_strlen(ev.text.text); i++)
+         {
+            const char currchar = ev.text.text[i];
+            if(ectype::isPrint(currchar))
+            {
+               event_t textevent = { ev_text, currchar, 0, 0, !!ev.key.repeat };
+               D_PostEvent(&textevent);
+            }
+         }
+         break;
       case SDL_KEYDOWN:
          d_event.type = ev_keydown;
-         d_event.data1 = I_TranslateKey(ev.key.keysym.sym);
+         d_event.repeat = ev.key.repeat;
+         d_event.data1 = I_TranslateKey(&ev.key.keysym);
 
 #if (EE_CURRENT_PLATFORM != EE_PLATFORM_MACOSX)
-         // This #if block is adapted from PRBoom+
-         // TODO: A fullscreen toggle would be nice, but geom string might need setting.
+         // This quick exit code is adapted from PRBoom+
          // See PRBoom+'s I_GetEvent for a cross-platform implementation of how to get that input.
          if(ev.key.keysym.mod & KMOD_LALT)
          {
             // Prevent executing action on Alt-Tab
-            if(ev.key.keysym.sym == SDLK_TAB)
+            if(ev.key.keysym.scancode == SDL_SCANCODE_TAB)
                break;
             // Immediately exit on Alt+F4 ("Boss Key")
-            else if(ev.key.keysym.sym == SDLK_F4)
+            else if(ev.key.keysym.scancode == SDL_SCANCODE_F4)
             {
                I_QuitFast();
                break;
             }
+            else if(ev.key.keysym.scancode == SDL_SCANCODE_RETURN)
+            {
+               I_ToggleFullscreen();
+               break;
+            }
          }
 #else
-         // Also provide macOS option
-         if(ev.key.keysym.mod & KMOD_LMETA)
+         // Also provide macOS option for quick exit and fullscreen toggle
+         if(ev.key.keysym.mod & KMOD_GUI)
          {
-            if(ev.key.keysym.sym == SDLK_q)
+            if(ev.key.keysym.scancode == SDL_SCANCODE_Q)
             {
                I_QuitFast();
+               break;
+            }
+            else if(ev.key.keysym.scancode & SDL_SCANCODE_F)
+            {
+               I_ToggleFullscreen();
                break;
             }
          }
 #endif
 
-#if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS)
-         // Capslock on Windows alternates between key down and key up
-         // events. When we get a keydown, we need to defer a keyup event.
-         if(d_event.data1 == KEYD_CAPSLOCK)
-         {
-            // oPS I HITTED TEH CAPDLOCK!
-            tempevent.type  = ev_keyup;
-            tempevent.data1 = KEYD_CAPSLOCK;
-            I_AddDeferredEvent(tempevent, gametic + 1);
-         }
-#endif
-         if(unicodeinput &&
-            ev.key.keysym.unicode > 31 && ev.key.keysym.unicode < 127)
-            d_event.character = (char)(ev.key.keysym.unicode);
-         else
-            d_event.character = 0;
+         // MaxW: 2017/10/12: Removed deffered event adding for caps lock
+
+         // MaxW: 2017/10/18: Removed character input
 
          D_PostEvent(&d_event);
          break;
 
       case SDL_KEYUP:
          d_event.type = ev_keyup;
-         d_event.data1 = I_TranslateKey(ev.key.keysym.sym);
+         d_event.data1 = I_TranslateKey(&ev.key.keysym);
 
-#if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS)
-         // When we get a keyup for capslock, we need to change it into a 
-         // keydown, and then enqueue a keyup to happen later.
-         if(d_event.data1 == KEYD_CAPSLOCK)
-         {
-            d_event.type = ev_keydown;
-
-            tempevent.type  = ev_keyup;
-            tempevent.data1 = KEYD_CAPSLOCK;
-            I_AddDeferredEvent(tempevent, gametic + 1);
-         }
-#endif
          D_PostEvent(&d_event);
          break;
 
       case SDL_MOUSEMOTION:
-         if(!usemouse || ((mouseAccel_type == 2) || mouseAccel_type == 3))
+         if(!usemouse || ((mouseAccel_type == ACCELTYPE_CHOCO) ||
+                          (mouseAccel_type == ACCELTYPE_CUSTOM)))
             continue;
 
          // haleyjd 06/14/10: no mouse motion at startup.
@@ -661,12 +619,12 @@ static void I_GetEvent()
 
          // SoM 1-20-04 Ok, use xrel/yrel for mouse movement because most
          // people like it the most.
-         if(mouseAccel_type == 0)
+         if(mouseAccel_type == ACCELTYPE_NONE)
          {
             mouseevent.data2 += ev.motion.xrel;
             mouseevent.data3 -= ev.motion.yrel;
          }
-         else if(mouseAccel_type == 1)
+         else if(mouseAccel_type == ACCELTYPE_LINEAR)
          {
             // Simple linear acceleration
             // Evaluates to 1.25 * x. So Why don't I just do that? .... shut up
@@ -700,33 +658,44 @@ static void I_GetEvent()
             buttons |= 2;
             d_event.data1 = KEYD_MOUSE2;
             break;
-         case SDL_BUTTON_WHEELUP:
-            d_event.data1 = KEYD_MWHEELUP;
-            // WHEELUP sends a button up event immediately. That won't work;
-            // we need an input latency gap of at least one gametic.
-            tempevent.type  = ev_keyup;
-            tempevent.data1 = KEYD_MWHEELUP;
-            I_AddDeferredEvent(tempevent, gametic + 1);
-            break;
-         case SDL_BUTTON_WHEELDOWN:
-            d_event.data1 = KEYD_MWHEELDOWN;
-            // ditto, as above.
-            tempevent.type  = ev_keyup;
-            tempevent.data1 = KEYD_MWHEELDOWN;
-            I_AddDeferredEvent(tempevent, gametic + 1);
-            break;
-#if SDL_VERSION_ATLEAST(1, 2, 14)
          case SDL_BUTTON_X1:
             d_event.data1 = KEYD_MOUSE4;
             break;
          case SDL_BUTTON_X2:
             d_event.data1 = KEYD_MOUSE5;
             break;
-#endif
          }
 
          D_PostEvent(&d_event);
          break;
+
+      case SDL_MOUSEWHEEL:
+         if(!usemouse)
+            continue;
+         d_event.type = ev_keydown;
+
+         // SDL_TODO: Allow y to correspond to # of weps scrolled through?
+         if(ev.wheel.y > 0)
+         {
+            d_event.data1 = KEYD_MWHEELUP;
+            D_PostEvent(&d_event);
+            // WHEELUP sends a button up event immediately. That won't work;
+            // we need an input latency gap of at least one gametic.
+            tempevent.type = ev_keyup;
+            tempevent.data1 = KEYD_MWHEELUP;
+            I_AddDeferredEvent(tempevent, gametic + 1);
+            break;
+         }
+         else if(ev.wheel.y < 0)
+         {
+            d_event.data1 = KEYD_MWHEELDOWN;
+            D_PostEvent(&d_event);
+            // ditto, as above.
+            tempevent.type = ev_keyup;
+            tempevent.data1 = KEYD_MWHEELDOWN;
+            I_AddDeferredEvent(tempevent, gametic + 1);
+            break;
+         }
 
       case SDL_MOUSEBUTTONUP:
          if(!usemouse)
@@ -752,22 +721,12 @@ static void I_GetEvent()
             buttons &= ~2;
             d_event.data1 = KEYD_MOUSE2;
             break;
-         case SDL_BUTTON_WHEELUP:
-            // Ignore actual wheelup key up events, because they occur
-            // immediately, and we need a delay of at least 1 tic for the
-            // action to be visible to the game engine.
-            break;
-         case SDL_BUTTON_WHEELDOWN:
-            // As above.
-            break;
-#if SDL_VERSION_ATLEAST(1, 2, 14)
          case SDL_BUTTON_X1:
             d_event.data1 = KEYD_MOUSE4;
             break;
          case SDL_BUTTON_X2:
             d_event.data1 = KEYD_MOUSE5;
             break;
-#endif
          }
 
          if(d_event.data1)
@@ -778,12 +737,12 @@ static void I_GetEvent()
          MN_QuitDoom();
          break;
 
-      case SDL_ACTIVEEVENT:
+      case SDL_WINDOWEVENT:
          // haleyjd 10/08/05: from Chocolate DOOM:
          // need to update our focus state
          // 2/14/2011: Update mouse grabbing as well (thanks Catoptromancy)
-         UpdateFocus();
-         UpdateGrab();
+         UpdateFocus(window);
+         UpdateGrab(window);
          break;
 
       default:
@@ -805,16 +764,17 @@ static void I_GetEvent()
 }
 
 //
-// I_StartTic
+// I_StartTicInWindow
 //
-void I_StartTic()
+void I_StartTicInWindow(SDL_Window *window)
 {
    I_RunDeferredEvents();
-   I_GetEvent();
+   I_GetEvent(window);
    I_UpdateHaptics();
 
-   if(usemouse && ((mouseAccel_type == 2) || (mouseAccel_type == 3)))
-      I_ReadMouse();
+   if(usemouse && ((mouseAccel_type == ACCELTYPE_CHOCO) ||
+                   (mouseAccel_type == ACCELTYPE_CUSTOM)))
+      I_ReadMouse(window);
 }
 
 // EOF

@@ -58,7 +58,7 @@
 // line specials, I don't face the issue of running out of line
 // flags anytime soon. This provides another full word for
 // future expansion.
-enum
+enum extmlflags_e : unsigned int
 {
    EX_ML_CROSS        = 0x00000001, // crossable
    EX_ML_USE          = 0x00000002, // usable

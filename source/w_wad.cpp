@@ -1039,6 +1039,7 @@ static nsdata_t wadNameSpaces[lumpinfo_t::ns_max] =
    { "TX_START", "TX_END", lumpinfo_t::ns_textures     },
    { NULL,       NULL,     lumpinfo_t::ns_graphics     },
    { NULL,       NULL,     lumpinfo_t::ns_sounds       },
+   { "HI_START", "HI_END", lumpinfo_t::ns_hires        }, // TODO: Implement
 };
 
 //
@@ -1100,7 +1101,7 @@ public:
          switch(nsdata->li_namespace)
          {
          case lumpinfo_t::ns_sprites:
-            // sf 10/26/99: ignore sprite lumps smaller than 8 bytes (the 
+            // sf 10/26/99: ignore sprite lumps smaller than 8 bytes (the
             // smallest possible) in size -- this was used by some dmadds
             // wads as an 'empty' graphics resource
             if(lump->size > 8)
@@ -1110,6 +1111,10 @@ public:
             // SoM: Ignore marker lumps inside F_START and F_END
             if(lump->size > 0)
                addLump(lump);
+            break;
+         case lumpinfo_t::ns_hires:
+            // MaxW: Ignore these, as they're to be implemented later and cause issues otherwise
+            lump->li_namespace = nsdata->li_namespace;
             break;
          default:
             addLump(lump);
@@ -1196,13 +1201,13 @@ unsigned int WadDirectory::LumpNameHash(const char *s)
    using namespace ectype;
    unsigned int hash;
 
-   (void) ((void(hash =        toUpper(s[0])), s[1]) &&
-           (void(hash = hash*3+toUpper(s[1])), s[2]) &&
-           (void(hash = hash*2+toUpper(s[2])), s[3]) &&
-           (void(hash = hash*2+toUpper(s[3])), s[4]) &&
-           (void(hash = hash*2+toUpper(s[4])), s[5]) &&
-           (void(hash = hash*2+toUpper(s[5])), s[6]) &&
-           (void(hash = hash*2+toUpper(s[6])),
+   (void) ((hash =        toUpper(s[0]), s[1]) &&
+           (hash = hash*3+toUpper(s[1]), s[2]) &&
+           (hash = hash*2+toUpper(s[2]), s[3]) &&
+           (hash = hash*2+toUpper(s[3]), s[4]) &&
+           (hash = hash*2+toUpper(s[4]), s[5]) &&
+           (hash = hash*2+toUpper(s[5]), s[6]) &&
+           (hash = hash*2+toUpper(s[6]),
             hash = hash*2+toUpper(s[7]))
            );
    return hash;
@@ -1830,7 +1835,7 @@ static size_t W_DirectReadLump(lumpinfo_t *l, void *dest)
    directlump_t &direct = l->direct;
 
    // killough 10/98: Add flashing disk indicator
-   fseek(direct.file, direct.position, SEEK_SET);
+   fseek(direct.file, static_cast<long>(direct.position), SEEK_SET);
    ret = fread(dest, 1, size, direct.file);
 
    return ret;

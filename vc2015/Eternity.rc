@@ -61,8 +61,8 @@ IDI_ICON1               ICON                    ".\\res\\ee.ico"
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 3,42,3,5456
- PRODUCTVERSION 3,42,3,5456
+ FILEVERSION 4,0,0,0
+ PRODUCTVERSION 4,0,0,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -79,12 +79,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Team Eternity"
             VALUE "FileDescription", "The Eternity Engine"
-            VALUE "FileVersion", "3.42.3.5456"
+            VALUE "FileVersion", "4.0.0.0"
             VALUE "InternalName", "Eternity"
             VALUE "LegalCopyright", "Copyright © 2017 Team Eternity"
             VALUE "OriginalFilename", "Eternity.exe"
             VALUE "ProductName", "The Eternity Engine"
-            VALUE "ProductVersion", "3.42.3.5456"
+            VALUE "ProductVersion", "4.0.0.0"
         END
     END
     BLOCK "VarFileInfo"

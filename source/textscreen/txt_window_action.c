@@ -1,24 +1,20 @@
-// Emacs style mode select   -*- C -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright(C) 2006 Simon Howard
+// Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see http://www.gnu.org/licenses/
-//
 
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "doomkeys.h"
 
@@ -26,6 +22,7 @@
 #include "txt_gui.h"
 #include "txt_io.h"
 #include "txt_main.h"
+#include "txt_utf8.h"
 #include "txt_window.h"
 
 static void TXT_WindowActionSizeCalc(TXT_UNCAST_ARG(action))
@@ -33,27 +30,37 @@ static void TXT_WindowActionSizeCalc(TXT_UNCAST_ARG(action))
     TXT_CAST_ARG(txt_window_action_t, action);
     char buf[10];
 
-    TXT_GetKeyDescription(action->key, buf);
+    TXT_GetKeyDescription(action->key, buf, sizeof(buf));
 
-    // Minimum width is the string length + two spaces for padding
+    // Width is label length, plus key description length, plus '='
+    // and two surrounding spaces.
 
-    action->widget.w = (unsigned)(strlen(action->label) + strlen(buf) + 1);
+    action->widget.w = TXT_UTF8_Strlen(action->label)
+                     + TXT_UTF8_Strlen(buf) + 3;
     action->widget.h = 1;
 }
 
-static void TXT_WindowActionDrawer(TXT_UNCAST_ARG(action), int selected)
+static void TXT_WindowActionDrawer(TXT_UNCAST_ARG(action))
 {
     TXT_CAST_ARG(txt_window_action_t, action);
     char buf[10];
 
-    TXT_GetKeyDescription(action->key, buf);
+    TXT_GetKeyDescription(action->key, buf, sizeof(buf));
 
+    if (TXT_HoveringOverWidget(action))
+    {
+        TXT_BGColor(TXT_COLOR_BLACK, 0);
+    }
+
+    TXT_DrawString(" ");
     TXT_FGColor(TXT_COLOR_BRIGHT_GREEN);
     TXT_DrawString(buf);
     TXT_FGColor(TXT_COLOR_BRIGHT_CYAN);
     TXT_DrawString("=");
+
     TXT_FGColor(TXT_COLOR_BRIGHT_WHITE);
     TXT_DrawString(action->label);
+    TXT_DrawString(" ");
 }
 
 static void TXT_WindowActionDestructor(TXT_UNCAST_ARG(action))
@@ -67,7 +74,7 @@ static int TXT_WindowActionKeyPress(TXT_UNCAST_ARG(action), int key)
 {
     TXT_CAST_ARG(txt_window_action_t, action);
 
-    if (key == action->key)
+    if (tolower(key) == tolower(action->key))
     {
         TXT_EmitSignal(action, "pressed");
         return 1;
@@ -91,6 +98,7 @@ static void TXT_WindowActionMousePress(TXT_UNCAST_ARG(action),
 
 txt_widget_class_t txt_window_action_class =
 {
+    TXT_AlwaysSelectable,
     TXT_WindowActionSizeCalc,
     TXT_WindowActionDrawer,
     TXT_WindowActionKeyPress,
@@ -99,7 +107,7 @@ txt_widget_class_t txt_window_action_class =
     NULL,
 };
 
-txt_window_action_t *TXT_NewWindowAction(int key, char *label)
+txt_window_action_t *TXT_NewWindowAction(int key, const char *label)
 {
     txt_window_action_t *action;
 

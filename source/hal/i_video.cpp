@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2017 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@
 // Video Driver Object Pointer
 //
 
-HALVideoDriver *i_video_driver = NULL;
+HALVideoDriver *i_video_driver = nullptr;
 
 //=============================================================================
 //
@@ -111,7 +111,7 @@ static haldriveritem_t halVideoDriverTable[VDR_MAXDRIVERS] =
 #else
       NULL
 #endif
-   },
+   }
 };
 
 //
@@ -168,8 +168,13 @@ extern int  grabmouse;
 extern int  usemouse;   // killough 10/98
 extern bool fullscreen;
 
-void I_InitKeyboard();
 void I_InitMouse();
+
+void I_StartTic()
+{
+   if(!D_noWindow())
+      I_StartTicInWindow(i_video_driver->window);
+}
 
 //=============================================================================
 //
@@ -184,9 +189,6 @@ bool in_graphics_mode;
 // haleyjd 07/15/09
 char *i_default_videomode;
 char *i_videomode;
-
-// haleyjd 06/17/11: software-mode bitdepth setting (for better -8in32)
-int i_softbitdepth;
 
 // haleyjd 03/30/14: support for letterboxing narrow resolutions
 bool i_letterbox;
@@ -246,7 +248,7 @@ enum
 // This is now the primary way in which Eternity stores its video mode setting.
 //
 void I_ParseGeom(const char *geom, int *w, int *h, bool *fs, bool *vs, bool *hw,
-                 bool *wf)
+                 bool *wf, bool *dfs)
 {
    const char *c = geom;
    int state = STATE_WIDTH;
@@ -320,6 +322,9 @@ void I_ParseGeom(const char *geom, int *w, int *h, bool *fs, bool *vs, bool *hw,
          case 'n': // noframe
             *wf = false;
             break;
+         case 'd': // fullscreen desktop
+            *dfs = true;
+            break;
          default:
             break;
          }
@@ -359,7 +364,7 @@ void I_ParseGeom(const char *geom, int *w, int *h, bool *fs, bool *vs, bool *hw,
 // runtime want to use the precise settings specified through the UI
 // instead.
 //
-void I_CheckVideoCmds(int *w, int *h, bool *fs, bool *vs, bool *hw, bool *wf)
+void I_CheckVideoCmds(int *w, int *h, bool *fs, bool *vs, bool *hw, bool *wf, bool *dfs)
 {
    static bool firsttime = true;
    int p;
@@ -369,7 +374,7 @@ void I_CheckVideoCmds(int *w, int *h, bool *fs, bool *vs, bool *hw, bool *wf)
       firsttime = false;
 
       if((p = M_CheckParm("-geom")) && p < myargc - 1)
-         I_ParseGeom(myargv[p + 1], w, h, fs, vs, hw, wf);
+         I_ParseGeom(myargv[p + 1], w, h, fs, vs, hw, wf, dfs);
 
       if((p = M_CheckParm("-vwidth")) && p < myargc - 1 &&
          (p = atoi(myargv[p + 1])) >= 320 && p <= MAX_SCREENWIDTH)
@@ -402,7 +407,7 @@ void I_CheckVideoCmds(int *w, int *h, bool *fs, bool *vs, bool *hw, bool *wf)
 }
 
 #ifdef _MSC_VER
-extern void I_DisableSysMenu();
+extern void I_DisableSysMenu(SDL_Window *window);
 #endif
 
 //
@@ -421,6 +426,9 @@ static bool I_InitGraphicsMode()
    if(!i_videomode)
       i_videomode = estrdup(i_default_videomode);
 
+   if(D_noWindow())
+      return false;
+
    // A false return value from HALVideoDriver::InitGraphicsMode means that no
    // errors have occured and we should continue with initialization.
    if(!(result = i_video_driver->InitGraphicsMode()))
@@ -430,7 +438,8 @@ static bool I_InitGraphicsMode()
 
 #ifdef _MSC_VER
       // Win32 specific hacks
-      I_DisableSysMenu();
+      if(!D_noWindow())
+         I_DisableSysMenu(i_video_driver->window);
 #endif
 
       V_Init();                 // initialize high-level video
@@ -508,9 +517,6 @@ void I_InitGraphics()
    // if(nodrawers) // killough 3/2/98: possibly avoid gfx mode
    //    return;
 
-   // init keyboard
-   I_InitKeyboard();
-
    // haleyjd 05/10/11: init mouse
    I_InitMouse();
 
@@ -572,9 +578,41 @@ int I_VideoLetterboxOffset(int h, int hl)
    return ((h - hl) / 2);
 }
 
+//
+// Used to avoid multiple usages of "togglefullscreen" literal, scans better.
+//
+void I_ToggleFullscreen()
+{
+   C_RunTextCmd("togglefullscreen");
+}
+
 /************************
         CONSOLE COMMANDS
  ************************/
+
+CONSOLE_COMMAND(togglefullscreen, cf_buffered)
+{
+   qstring qgeom = qstring(i_videomode).toLower();
+   const char *lastf = qgeom.strRChr('f'), *lastw = qgeom.strRChr('w');
+
+   // Alter the geom string as needed.
+   // NOTE: No shortcuts. Relational operators w/ nullptr as an operand is unspecified.
+   if(!lastf && !lastw)
+      qgeom.Putc('f'); // Currently implicitly windowed, make fullscreen.
+   if((lastf && !lastw) || (lastf > lastw))
+      qgeom.replace("f", 'w');
+   else if((lastw && !lastf) || (lastw > lastf))
+      qgeom.replace("w", 'f');
+
+   efree(i_videomode);
+   i_videomode = qgeom.duplicate();
+
+   I_SetMode();
+
+   if(i_default_videomode)
+      efree(i_default_videomode);
+   i_default_videomode = estrdup(i_videomode);
+}
 
 VARIABLE_BOOLEAN(use_vsync, NULL,  yesno);
 
@@ -611,9 +649,6 @@ static const char *i_videodrivernames[] =
 
 VARIABLE_INT(i_videodriverid, NULL, -1, VDR_MAXDRIVERS-1, i_videodrivernames);
 CONSOLE_VARIABLE(i_videodriverid, i_videodriverid, 0) {}
-
-VARIABLE_INT(i_softbitdepth, NULL, 8, 32, NULL);
-CONSOLE_VARIABLE(i_softbitdepth, i_softbitdepth, 0) {}
 
 VARIABLE_TOGGLE(i_letterbox, NULL, yesno);
 CONSOLE_VARIABLE(i_letterbox, i_letterbox, cf_buffered)

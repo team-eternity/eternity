@@ -151,13 +151,15 @@ bool MN_PopupResponder(event_t *ev, int action)
    int *menuSounds = GameModeInfo->menuSounds;
    char ch;
    
-   if(ev->type != ev_keydown)
+   if(ev->type != ev_keydown && ev->type != ev_text)
       return false;
 
-   if(ev->character)
-      ch = ectype::toLower(ev->character);
-   else
+   if(ev->type == ev_text)
+      ch = ectype::toLower(ev->data1);
+   else if(!ectype::isPrint(ev->data1))
       ch = ev->data1;
+   else
+      return false;
    
    switch(popup_message_type)
    {
@@ -399,15 +401,15 @@ struct val_str_t
 
 static const val_str_t val_programmers[] =
 {
-   { "James Haley", nullptr, "David Hill" },
-   { "Ioan Chera", nullptr, "Max Waine" },
-   { nullptr, FC_ABSCENTER "Stephen McGranahan\n", nullptr },
+   { "James Haley", nullptr,     "David Hill"                  },
+   { "Ioan Chera",  nullptr,     "Max Waine"                   },
+   { nullptr,       FC_ABSCENTER "Stephen McGranahan", nullptr },
    { nullptr, nullptr, nullptr }
 };
 
 static const val_str_t val_basedon[] =
 {
-   {nullptr, FC_ABSCENTER FC_HI "SMMU" FC_NORMAL " by Simon Howard", nullptr},
+   { nullptr, FC_ABSCENTER FC_HI "SMMU" FC_NORMAL " by Simon Howard", nullptr },
    { nullptr, nullptr, nullptr }
 };
 
@@ -418,9 +420,9 @@ static const val_str_t val_graphics[] = {
 
 static const val_str_t val_thanks[] =
 {
-   { "Joe Kennedy", nullptr, "Julian Aubourg" },
-   { "Joel Murdoch", nullptr, "Anders Astrand" },
-   { nullptr, FC_ABSCENTER "SargeBaldy", nullptr },
+   { "Joe Kennedy",  nullptr, "Julian Aubourg"   },
+   { "Joel Murdoch", nullptr, "Anders Astrand"   },
+   { "SargeBaldy",   nullptr, "Kaitlyn Anne Fox" },
    { nullptr, nullptr, nullptr }
 };
 

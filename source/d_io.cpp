@@ -78,8 +78,7 @@ char *DWFILE::getStr(char *buf, size_t n)
    else
    {  // copy buffer
       char *p = buf;
-      while(n > 1 && *inp && size &&
-            (void(n--), void(size--), *p++ = *inp++) != '\n')
+      while(n > 1 && *inp && size && (n--, size--, *p++ = *inp++) != '\n')
          ;
       *p = 0;
    }
@@ -105,7 +104,7 @@ int DWFILE::atEof() const
 int DWFILE::getChar()
 {
    return (type == DWF_FILE) ? 
-   fgetc((FILE *)inp) : size > 0 ? void(size--), *inp++ : EOF;
+   fgetc((FILE *)inp) : size > 0 ? size--, *inp++ : EOF;
 }
 
 //
@@ -120,7 +119,7 @@ int DWFILE::getChar()
 int DWFILE::unGetChar(int c)
 {
    return (type == DWF_FILE) ? 
-   ungetc(c, (FILE *)inp) : size < origsize ? void(size++), *(--inp) : EOF;
+   ungetc(c, (FILE *)inp) : size < origsize ? size++, *(--inp) : EOF;
 }
 
 //

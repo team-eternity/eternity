@@ -744,60 +744,6 @@
     <ClCompile Include="..\Source\version.cpp">
       <Filter>Source Files\Misc\Misc Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\textscreen\txt_button.c">
-      <Filter>Source Files\TXT_\TXT Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\textscreen\txt_checkbox.c">
-      <Filter>Source Files\TXT_\TXT Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\textscreen\txt_desktop.c">
-      <Filter>Source Files\TXT_\TXT Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\textscreen\txt_dropdown.c">
-      <Filter>Source Files\TXT_\TXT Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\textscreen\txt_gui.c">
-      <Filter>Source Files\TXT_\TXT Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\textscreen\txt_inputbox.c">
-      <Filter>Source Files\TXT_\TXT Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\textscreen\txt_io.c">
-      <Filter>Source Files\TXT_\TXT Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\textscreen\txt_label.c">
-      <Filter>Source Files\TXT_\TXT Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\textscreen\txt_radiobutton.c">
-      <Filter>Source Files\TXT_\TXT Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\textscreen\txt_scrollpane.c">
-      <Filter>Source Files\TXT_\TXT Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\textscreen\txt_sdl.c">
-      <Filter>Source Files\TXT_\TXT Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\textscreen\txt_separator.c">
-      <Filter>Source Files\TXT_\TXT Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\textscreen\txt_spinctrl.c">
-      <Filter>Source Files\TXT_\TXT Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\textscreen\txt_strut.c">
-      <Filter>Source Files\TXT_\TXT Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\textscreen\txt_table.c">
-      <Filter>Source Files\TXT_\TXT Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\textscreen\txt_widget.c">
-      <Filter>Source Files\TXT_\TXT Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\textscreen\txt_window.c">
-      <Filter>Source Files\TXT_\TXT Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\textscreen\txt_window_action.c">
-      <Filter>Source Files\TXT_\TXT Source</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\a_common.cpp">
       <Filter>Source Files\A_\A_ Source</Filter>
     </ClCompile>
@@ -972,11 +918,77 @@
     <ClCompile Include="..\source\xl_animdefs.cpp">
       <Filter>Source Files\XL_\XL_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_button.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_checkbox.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_conditional.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_desktop.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_dropdown.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_fileselect.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_gui.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_inputbox.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_io.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_label.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_radiobutton.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_scrollpane.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_sdl.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_separator.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_spinctrl.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_strut.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_table.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_utf8.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_widget.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_window.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\textscreen\txt_window_action.c">
+      <Filter>Source Files\TXT_\TXT Source</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\e_switch.cpp">
       <Filter>Source Files\E_\E_ Source</Filter>
     </ClCompile>
     <ClCompile Include="..\source\e_anim.cpp">
       <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\g_demolog.cpp">
+      <Filter>Source Files\G_\G_ Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1493,69 +1505,6 @@
     <ClInclude Include="..\Source\version.h">
       <Filter>Source Files\Misc\Misc Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\textscreen\textscreen.h">
-      <Filter>Source Files\TXT_\TXT Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\textscreen\txt_button.h">
-      <Filter>Source Files\TXT_\TXT Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\textscreen\txt_checkbox.h">
-      <Filter>Source Files\TXT_\TXT Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\textscreen\txt_desktop.h">
-      <Filter>Source Files\TXT_\TXT Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\textscreen\txt_dropdown.h">
-      <Filter>Source Files\TXT_\TXT Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\textscreen\txt_font.h">
-      <Filter>Source Files\TXT_\TXT Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\textscreen\txt_gui.h">
-      <Filter>Source Files\TXT_\TXT Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\textscreen\txt_inputbox.h">
-      <Filter>Source Files\TXT_\TXT Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\textscreen\txt_io.h">
-      <Filter>Source Files\TXT_\TXT Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\textscreen\txt_label.h">
-      <Filter>Source Files\TXT_\TXT Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\textscreen\txt_main.h">
-      <Filter>Source Files\TXT_\TXT Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\textscreen\txt_radiobutton.h">
-      <Filter>Source Files\TXT_\TXT Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\textscreen\txt_scrollpane.h">
-      <Filter>Source Files\TXT_\TXT Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\textscreen\txt_sdl.h">
-      <Filter>Source Files\TXT_\TXT Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\textscreen\txt_separator.h">
-      <Filter>Source Files\TXT_\TXT Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\textscreen\txt_spinctrl.h">
-      <Filter>Source Files\TXT_\TXT Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\textscreen\txt_strut.h">
-      <Filter>Source Files\TXT_\TXT Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\textscreen\txt_table.h">
-      <Filter>Source Files\TXT_\TXT Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\textscreen\txt_widget.h">
-      <Filter>Source Files\TXT_\TXT Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\textscreen\txt_window.h">
-      <Filter>Source Files\TXT_\TXT Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\textscreen\txt_window_action.h">
-      <Filter>Source Files\TXT_\TXT Headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\a_common.h">
       <Filter>Source Files\A_\A_ Headers</Filter>
     </ClInclude>
@@ -1733,11 +1682,83 @@
     <ClInclude Include="..\source\xl_animdefs.h">
       <Filter>Source Files\XL_\XL_ Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\textscreen\textscreen.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_button.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_checkbox.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_conditional.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_desktop.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_dropdown.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_fileselect.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_gui.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_inputbox.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_io.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_label.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_main.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_radiobutton.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_scrollpane.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_sdl.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_separator.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_spinctrl.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_strut.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_table.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_utf8.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_widget.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_window.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\textscreen\txt_window_action.h">
+      <Filter>Source Files\TXT_\TXT Headers</Filter>
+    </ClInclude>
     <ClInclude Include="..\source\e_switch.h">
       <Filter>Source Files\E_\E_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\source\e_anim.h">
       <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\g_demolog.h">
+      <Filter>Source Files\G_\G_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

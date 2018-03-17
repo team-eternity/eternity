@@ -1535,6 +1535,9 @@ void E_LoadLineDefExt(line_t *line, bool applySpecial)
    {
       // apply standard fields to the line
       line->special = edline->stdfields.special;
+      // also update side "special"
+      if(line->sidenum[0] != -1 && line->special)
+         sides[*line->sidenum].special = line->special;
       line->args[0] = edline->stdfields.tag;
    }
 

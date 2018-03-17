@@ -79,6 +79,26 @@ public:
 };
 
 //
+// For two integers
+//
+class EInt64HashKey
+{
+public:
+   typedef int64_t basic_type;
+   typedef int64_t param_type;
+
+   static unsigned HashCode(int64_t input)
+   {
+      return static_cast<unsigned>(input ^ (input >> 32));
+   }
+
+   static bool Compare(int64_t first, int64_t second)
+   {
+      return first == second;
+   }
+};
+
+//
 // POD case sensitive string key
 //
 class EStringHashKey

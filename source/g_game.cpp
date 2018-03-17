@@ -54,6 +54,7 @@
 #include "f_finale.h"
 #include "f_wipe.h"
 #include "g_bind.h"
+#include "g_demolog.h"
 #include "g_dmflag.h"
 #include "g_game.h"
 #include "in_lude.h"
@@ -153,7 +154,7 @@ bool            mouseSensitivity_vanilla; // [CG] 01/20/12
 int             invert_mouse = false;
 int             invert_padlook = false;
 int             animscreenshot = 0;       // animated screenshots
-int             mouseAccel_type = 0;
+acceltype_e     mouseAccel_type = ACCELTYPE_NONE;
 int             mouseAccel_threshold = 10; // [CG] 01/20/12
 double          mouseAccel_value = 2.0;    // [CG] 01/20/12
 
@@ -457,7 +458,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
    // strafe double click
 
-   if(mouseb_dblc1 >= 0 && mousebuttons[mouseb_dblc1] != dclickstate2 && dclicktime2 > 1 )
+   if(mouseb_dblc1 >= 0 && mousebuttons[mouseb_dblc1] != dclickstate2 && dclicktime2 > 1)
    {
       dclickstate2 = mousebuttons[mouseb_dblc1];
 
@@ -760,9 +761,8 @@ bool G_Responder(event_t* ev)
       if(!walkcam_active) // if so, we need to go on below
       {
          if(gamestate == GS_DEMOSCREEN && !(paused & 2) && 
-            !automapactive &&
-            (ev->type == ev_keydown ||
-             (ev->type == ev_mouse && ev->data1)))
+            !consoleactive && !automapactive &&
+            (ev->type == ev_keydown || (ev->type == ev_mouse && ev->data1)))
          {
             // popup menu
             MN_StartControlPanel();
@@ -1203,7 +1203,9 @@ void G_DoPlayDemo(void)
       }
       else
       {
-         GameType = (netgame ? gt_coop : gt_single);
+         // Support -solo-net for demos previously recorded so, at vanilla
+         // compatibility.
+         GameType = (netgame || M_CheckParm("-solo-net") ? gt_coop : gt_single);
          G_SetDefaultDMFlags(0, false);
       }
    }
@@ -1408,6 +1410,11 @@ bool scriptSecret = false;
 
 void G_ExitLevel(int destmap)
 {
+   // double tabs to be easily visible against deaths
+   G_DemoLog("%d\tExit normal\t\t", gametic);
+   G_DemoLogStats();
+   G_DemoLog("\n");
+   G_DemoLogSetExited(true);
    g_destmap  = destmap;
    secretexit = scriptSecret = false;
    gameaction = ga_completed;
@@ -1422,6 +1429,10 @@ void G_ExitLevel(int destmap)
 //
 void G_SecretExitLevel(int destmap)
 {
+   G_DemoLog("%d\tExit secret\t\t", gametic);
+   G_DemoLogStats();
+   G_DemoLog("\n");
+   G_DemoLogSetExited(true);
    secretexit = !(GameModeInfo->flags & GIF_WOLFHACK) || haswolflevels || scriptSecret;
    g_destmap  = destmap;
    gameaction = ga_completed;
@@ -3002,7 +3013,7 @@ void G_InitNew(skill_t skill, char *name)
 
    // haleyjd 06/16/04: set g_dir to d_dir if it is valid, or else restore it
    // to the default value.
-   g_dir = d_dir ? d_dir : (void(inmanageddir = MD_NONE), &wGlobalDir);
+   g_dir = d_dir ? d_dir : (inmanageddir = MD_NONE, &wGlobalDir);
    d_dir = NULL;
    
    G_DoLoadLevel();
@@ -3675,6 +3686,8 @@ void G_CoolViewPoint()
    // pick a random number of seconds until changing the viewpoint
    cooldemo_tics = (6 + M_Random() % 4) * TICRATE;
 }
+
+//==============================================================================
 
 //
 // Counts the total kills, items, secrets or whatever

@@ -1259,17 +1259,19 @@ static bool HU_ChatRespond(event_t *ev)
 {
    char ch = 0;
    static bool shiftdown;
+   static bool discardinput = false;
 
    // haleyjd 06/11/08: get HUD actions
    int action = G_KeyResponder(ev, kac_hud);
    
    if(ev->data1 == KEYD_RSHIFT) 
       shiftdown = (ev->type == ev_keydown);
+   (void)shiftdown;
 
    if(action == ka_frags)
       hu_showfrags = (ev->type == ev_keydown);
 
-   if(ev->type != ev_keydown)
+   if(ev->type != ev_keydown && ev->type != ev_text)
       return false;
 
    if(!chat_active)
@@ -1278,9 +1280,17 @@ static bool HU_ChatRespond(event_t *ev)
       {       
          chat_active = true; // activate chat
          chatinput[0] = 0;   // empty input string
+         if(ectype::isPrint(ev->data1))
+            discardinput = true; // avoid activation key also appearing in input string
          return true;
       }
       return false;
+   }
+
+   if(ev->type == ev_text && discardinput)
+   {
+      discardinput = false;
+      return true;
    }
   
    if(altdown && ev->type == ev_keydown &&
@@ -1316,12 +1326,13 @@ static bool HU_ChatRespond(event_t *ev)
       return true;
    }
 
-   if(ev->character)
-      ch = ev->character;
-   else if(ev->data1 > 31 && ev->data1 < 127)
-      ch = shiftdown ? shiftxform[ev->data1] : ev->data1; // shifted?
+   if(ev->type == ev_keydown && ectype::isPrint(ev->data1))
+      return true; // eat keydown inputs that have text equivalent
+
+   if(ev->type == ev_text)
+      ch = ev->data1;
    
-   if(ch > 31 && ch < 127)
+   if(ectype::isPrint(ch))
    {
       psnprintf(chatinput, sizeof(chatinput), "%s%c", chatinput, ch);
       return true;

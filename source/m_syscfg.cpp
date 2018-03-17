@@ -56,7 +56,6 @@ extern int iwad_choice;        // haleyjd 03/19/10
 extern int waitAtExit;
 extern int grabmouse;
 extern int use_vsync;
-extern bool unicodeinput;
 extern int audio_buffers;
 #endif
 
@@ -203,9 +202,6 @@ static default_t sysdefaults[] =
    DEFAULT_INT("i_videodriverid", &i_videodriverid, NULL, -1, -1, VDR_MAXDRIVERS-1, 
                default_t::wad_no, i_videohelpstr),
 
-   DEFAULT_INT("i_softbitdepth", &i_softbitdepth, NULL, 8, 8, 32, default_t::wad_no,
-               "Software backend screen bitdepth (8, 16, 24, or 32)"),
-
    DEFAULT_STR("i_videomode", &i_default_videomode, &i_videomode, "640x480w", default_t::wad_no,
                "Description of video mode parameters (WWWWxHHHH[flags])"),
 
@@ -221,10 +217,10 @@ static default_t sysdefaults[] =
    DEFAULT_INT("mn_favscreentype", &mn_favscreentype, NULL, 0, 0, MN_NUMSCREENTYPES-1,
                default_t::wad_no, "Favorite screen type for selection in menus"),
 
-   DEFAULT_BOOL("gl_use_extensions", &cfg_gl_use_extensions, NULL, false, default_t::wad_no,
+   DEFAULT_BOOL("gl_use_extensions", &cfg_gl_use_extensions, NULL, true, default_t::wad_no,
                 "1 to enable use of GL extensions in general"),
 
-   DEFAULT_BOOL("gl_arb_pixelbuffer", &cfg_gl_arb_pixelbuffer, NULL, false, default_t::wad_no,
+   DEFAULT_BOOL("gl_arb_pixelbuffer", &cfg_gl_arb_pixelbuffer, NULL, true, default_t::wad_no,
                 "1 to enable use of GL ARB pixelbuffer object extension"),
 
    DEFAULT_INT("gl_colordepth", &cfg_gl_colordepth, NULL, 32, 16, 32, default_t::wad_no,
@@ -244,8 +240,8 @@ static default_t sysdefaults[] =
                 "1 to enable force feedback through gamepads where supported"),
 
 #ifdef _SDL_VER
-   DEFAULT_BOOL("unicodeinput", &unicodeinput, NULL, true, default_t::wad_no,
-                "1 to use SDL Unicode input mapping (0 = DOS-like behavior)"),
+   DEFAULT_INT("displaynum", &displaynum, NULL, 0, 0, UL, default_t::wad_no,
+               "Display number that the window appears on"),
 
    DEFAULT_INT("wait_at_exit", &waitAtExit, NULL, 0, 0, 1, default_t::wad_no,
                "Always wait for input at exit"),

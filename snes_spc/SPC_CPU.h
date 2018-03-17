@@ -93,7 +93,7 @@
 #else
 #define PUSH16( data )\
 {\
-	int addr = (sp -= 2) - ram;\
+	int addr = (int)((sp -= 2) - ram);\
 	if ( addr > 0x100 )\
 	{\
 		SET_LE16( sp, data );\
@@ -248,7 +248,7 @@ loop:
 		BRANCH( (uint8_t) nz )
 	
 	case 0x3F:{// CALL
-		int old_addr = GET_PC() + 2;
+		int old_addr = static_cast<int>(GET_PC() + 2);
 		SET_PC( READ_PC16( pc ) );
 		PUSH16( old_addr );
 		goto loop;
@@ -262,7 +262,7 @@ loop:
 		}
 		#else
 		{
-			int addr = sp - ram;
+			int addr = static_cast<int>(sp - ram);
 			SET_PC( GET_LE16( sp ) );
 			sp += 2;
 			if ( addr < 0x1FF )
@@ -480,7 +480,7 @@ loop:
 		goto loop;
 	
 	case 0x9D: // MOV X,SP
-		x = nz = GET_SP();
+		x = nz = static_cast<int>(GET_SP());
 		goto loop;
 	
 	case 0xBD: // MOV SP,X
@@ -964,7 +964,7 @@ loop:
 	
 	case 0x0F:{// BRK
 		int temp;
-		int ret_addr = GET_PC();
+		int ret_addr = static_cast<int>(GET_PC());
 		SUSPICIOUS_OPCODE( "BRK" );
 		SET_PC( READ_PROG16( 0xFFDE ) ); // vector address verified
 		PUSH16( ret_addr );
@@ -975,7 +975,7 @@ loop:
 	}
 	
 	case 0x4F:{// PCALL offset
-		int ret_addr = GET_PC() + 1;
+		int ret_addr = static_cast<int>(GET_PC() + 1);
 		SET_PC( 0xFF00 | data );
 		PUSH16( ret_addr );
 		goto loop;
@@ -997,7 +997,7 @@ loop:
 	case 0xD1:
 	case 0xE1:
 	case 0xF1: {
-		int ret_addr = GET_PC();
+		int ret_addr = static_cast<int>(GET_PC());
 		SET_PC( READ_PROG16( 0xFFDE - (opcode >> 3) ) );
 		PUSH16( ret_addr );
 		goto loop;
@@ -1185,7 +1185,7 @@ loop:
 	
 	case 0xFF:{// STOP
 		// handle PC wrap-around
-		unsigned addr = GET_PC() - 1;
+		unsigned addr = static_cast<unsigned>(GET_PC() - 1);
 		if ( addr >= 0x10000 )
 		{
 			addr &= 0xFFFF;

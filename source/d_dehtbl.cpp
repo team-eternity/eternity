@@ -2073,7 +2073,7 @@ static void D_BEXPtrHashInit()
 {
    int i;
 
-   for(i = 0; i < NUMCPTRCHAINS; i++)
+   for(i = 0; i < static_cast<int>(NUMCPTRCHAINS); i++)
       bexcpchains[i] = -1;
 
    for(i = 0; i < num_bexptrs; i++)

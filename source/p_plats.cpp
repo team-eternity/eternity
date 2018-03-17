@@ -88,7 +88,7 @@ void PlatThinker::Think()
    switch(status)
    {
    case up: // plat moving up
-      res = T_MoveFloorUp(sector, speed, high, crush);
+      res = T_MoveFloorUp(sector, speed, high, crush, false);
                                         
       // if a pure raise type, make the plat moving sound
       // haleyjd: now handled through sound sequences

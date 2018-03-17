@@ -515,7 +515,7 @@ void V_DrawBackground(const char *patchname, VBuffer *back_dest)
    back_dest->TileBlock64(back_dest, src);
 }
 
-byte *R_DistortedFlat(int);
+byte *R_DistortedFlat(int, bool);
 
 //
 // V_DrawDistortedBackground
@@ -525,7 +525,7 @@ byte *R_DistortedFlat(int);
 //
 void V_DrawDistortedBackground(const char *patchname, VBuffer *back_dest)
 {
-   byte *src = R_DistortedFlat(R_FindFlat(patchname));
+   byte *src = R_DistortedFlat(R_FindFlat(patchname), true);
    
    back_dest->TileBlock64(back_dest, src);
 }

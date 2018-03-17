@@ -32,13 +32,14 @@
 //
 
 // Input event types.
-typedef enum
+enum evtype_t : int
 {
   ev_keydown,
   ev_keyup,
   ev_mouse,
-  ev_joystick
-} evtype_t;
+  ev_joystick,
+  ev_text
+};
 
 // Event structure.
 struct event_t
@@ -47,7 +48,7 @@ struct event_t
   int       data1;     // keys / mouse/joystick buttons
   double    data2;     // mouse/joystick x move
   double    data3;     // mouse/joystick y move
-  char      character; // actual character input when supported
+  bool      repeat;    // true if this input is a repeat
 };
  
 typedef enum

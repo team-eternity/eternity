@@ -177,6 +177,44 @@ and midiproc both use the "MIDL" section in project properties.
 
 Removed the ability to pick internal texture format.
 
+-------------------------------------------------------------------------------
+2017/11/10
+Merged in SDL2 branch. Changes I can remember:
+ • Moved to SDL 2.0.7, SDL_mixer 2.0.2, and SDL_net 2.0.1
+ • "unicodeinput" is gone. All text input is UTF-8.
+ • -8in32 and the software bitdepth setting are gone.
+ • A new console variable "displaynum" exists, and lets you set what display
+   the window is created on when you run Eternity.
+ • A new console command "maxdisplaynum" has been added (guess what it does).
+ • -directx and -gdi are gone.
+
+Also whilst I was at it I added a fullscreen toggle,
+bound to Alt+Enter on non-Apple, Cmd+f on Apple).
+
+-------------------------------------------------------------------------------
+2018/01/31
+Changed GL extensions and pixelbuffers to be on by default.
+
+-------------------------------------------------------------------------------
+2018/02/05
+Fixed hitscan impact not activating lines that only have impact activation in
+UDMF. This means that players always activate them now (with impact), as do
+monsters with SPAC.
+
+-------------------------------------------------------------------------------
+2018/02/07
+Fix EV_ThingSpawn not assigning tid of spawned mobj.
+
+-------------------------------------------------------------------------------
+2018/02/10
+Fixed lumps in the HI_ markers overriding regular textures. This means that
+wads like Bloody Steel don't have invisible menu options.
+
+-------------------------------------------------------------------------------
+2018/02/14
+Added a "restartmap" command. It's basically the same as using the "map"
+command but to the same level.
+
 ================================================================================
 EOF
 ================================================================================

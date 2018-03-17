@@ -353,23 +353,37 @@ void P_MovePlayer(player_t* player)
             P_Thrust(player, mo->angle-ANG90, 0, cmd->sidemove*movefactor);
          }
       }
-      else if(!comp[comp_aircontrol])  // Do not move player unless aircontrol
+      else if(LevelInfo.airControl > 0 || LevelInfo.airControl < -1)
       {
+         // Do not move player unless aircontrol
+         // -1 has a special meaning that totally disables air control, even
+         // if the compatibility flag is unset.
+
+         // This is a new EMAPINFO property and doesn't emulate Hexen and
+         // Strife. For those, look below.
+
+         int friction, movefactor = P_GetMoveFactor(mo, &friction);
+
+         movefactor = FixedMul(movefactor, LevelInfo.airControl);
+
          if(cmd->forwardmove)
-            P_Thrust(player, mo->angle, 0, FRACUNIT >> 8);
+            P_Thrust(player, mo->angle, 0, cmd->forwardmove*movefactor);
 
          // TODO: disable this part in Strife
          if(cmd->sidemove)
+            P_Thrust(player, mo->angle - ANG90, 0, cmd->sidemove*movefactor);
+      }
+      else if(LevelInfo.airControl == 0 && !comp[comp_aircontrol])
+      {
+         // Apply legacy Hexen/Strife primitive air control if air control is 0
+         // (default) and the compatibility setting is "NO".
+
+         if(cmd->forwardmove)
             P_Thrust(player, mo->angle, 0, FRACUNIT >> 8);
 
-         // NOTE: This movement behaviour is like in Hexen, and the sidemove
-         // case will also have to be removed in the Strife game mode, so we
-         // have accurate gameplay when attempting to jump on high objects.
-
-         // When we add user-settable air control in EMAPINFO or playerclass
-         // properties however, the P_Thrust vector will have to be as user
-         // expects: change velocity according to direction, no longer having
-         // to emulate these old games' behaviours.
+         // TODO: disable this in Strife
+         if(cmd->sidemove)
+            P_Thrust(player, mo->angle, 0, FRACUNIT >> 8);
       }
 
       if(mo->state == states[mo->info->spawnstate])

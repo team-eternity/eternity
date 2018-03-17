@@ -1,7 +1,5 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright(C) 2012 James Haley
+// Copyright(C) 2017 James Haley, Max Waine, et al.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -89,7 +87,7 @@ static void RegisterSong(void *data, size_t size)
       UnregisterSong();
 
    rw    = SDL_RWFromMem(data, size);
-   music = Mix_LoadMUS_RW(rw);
+   music = Mix_LoadMUS_RW(rw, true);
 }
 
 //
@@ -374,6 +372,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
    // Initialize SDL
    if(!InitSDL())
       return -1;
+
+   SDL_setenv("SDL_AUDIODRIVER", "winmm", true);
 
    // Initialize RPC Server
    if(!MidiRPC_InitServer())

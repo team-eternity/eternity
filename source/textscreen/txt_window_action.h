@@ -1,24 +1,35 @@
-// Emacs style mode select   -*- C -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright(C) 2006 Simon Howard
+// Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see http://www.gnu.org/licenses/
-//
 
 #ifndef TXT_WINDOW_ACTION_H
 #define TXT_WINDOW_ACTION_H
+
+/**
+ * @file txt_window_action.h
+ *
+ * Window action widget.
+ */
+
+/**
+ * Window action widget.
+ *
+ * A window action is attached to a window and corresponds to a
+ * keyboard shortcut that is active within that window.  When the
+ * key is pressed, the action is triggered.
+ *
+ * When a window action is triggered, the "pressed" signal is emitted.
+ */
 
 typedef struct txt_window_action_s txt_window_action_t;
 
@@ -32,17 +43,45 @@ struct txt_window_action_s
     int key;
 };
 
-txt_window_action_t *TXT_NewWindowAction(int key, char *label);
+/**
+ * Create a new window action.
+ *
+ * @param key           The keyboard key that triggers this action.
+ * @param label         Label to display for this action in the tray
+ *                      at the bottom of the window (UTF-8 format).
+ * @return              Pointer to the new window action widget.
+ */
 
-// Creates an "escape" button that closes the window
+txt_window_action_t *TXT_NewWindowAction(int key, const char *label);
+
+/**
+ * Create a new window action that closes the window when the
+ * escape key is pressed.  The label "Close" is used.
+ *
+ * @param window        The window to close.
+ * @return              Pointer to the new window action widget.
+ */
 
 txt_window_action_t *TXT_NewWindowEscapeAction(txt_window_t *window);
 
-// Same as above, but the button is named "abort"
+/**
+ * Create a new window action that closes the window when the
+ * escape key is pressed.  The label "Abort" is used.
+ *
+ * @param window        The window to close.
+ * @return              Pointer to the new window action widget.
+ */
 
 txt_window_action_t *TXT_NewWindowAbortAction(txt_window_t *window);
 
-// Accept button that does nothing
+/**
+ * Create a new "select" window action.  This does not really do
+ * anything, but reminds the user that "enter" can be pressed to
+ * activate the currently-selected widget.
+ *
+ * @param window        The window.
+ * @return              Pointer to the new window action widget.
+ */
 
 txt_window_action_t *TXT_NewWindowSelectAction(txt_window_t *window);
 

@@ -154,8 +154,8 @@ ACSEnvironment::ACSEnvironment() :
    // 136-137: ACSVM internal codes.
    addCodeDataACS0(138, {"",        1, addCallFunc(ACS_CF_SetGravity)});
    addCodeDataACS0(139, {"W",       0, addCallFunc(ACS_CF_SetGravity)});
- //addCodeDataACS0(140, {"",        1, addCallFunc(ACS_CF_SetAirControl)});
- //addCodeDataACS0(141, {"W",       0, addCallFunc(ACS_CF_SetAirControl)});
+   addCodeDataACS0(140, {"",        1, addCallFunc(ACS_CF_SetAirControl)});
+   addCodeDataACS0(141, {"W",       0, addCallFunc(ACS_CF_SetAirControl)});
  //addCodeDataACS0(142, {"",        0, addCallFunc(ACS_CF_ClrInventory)});
  //addCodeDataACS0(143, {"",        2, addCallFunc(ACS_CF_AddInventory)});
  //addCodeDataACS0(144, {"WSW",     0, addCallFunc(ACS_CF_AddInventory)});
@@ -363,6 +363,7 @@ ACSEnvironment::ACSEnvironment() :
 
    addFuncDataACS0(300, addCallFunc(ACS_CF_GetLineX));
    addFuncDataACS0(301, addCallFunc(ACS_CF_GetLineY));
+   addFuncDataACS0(302, addCallFunc(ACS_CF_SetAirFriction));
 }
 
 //
@@ -877,7 +878,7 @@ protected:
       // Read single byte from source.
       if(!in || in->read(buf, 1) != 1) return EOF;
       setg(buf, buf, buf + 1);
-      return buf[0];
+      return static_cast<unsigned char>(buf[0]);
    }
 
    char buf[1];

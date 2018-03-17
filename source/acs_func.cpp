@@ -329,10 +329,10 @@ bool ACS_ChkThingProp(Mobj *mo, uint32_t var, uint32_t val)
 
    switch(var)
    {
-   case ACS_TP_Health:       return mo->health == val;
-   case ACS_TP_Speed:        return mo->info->speed == val;
-   case ACS_TP_Damage:       return mo->damage == val;
-   case ACS_TP_Alpha:        return mo->translucency == val;
+   case ACS_TP_Health:       return static_cast<uint32_t>(mo->health) == val;
+   case ACS_TP_Speed:        return static_cast<uint32_t>(mo->info->speed) == val;
+   case ACS_TP_Damage:       return static_cast<uint32_t>(mo->damage) == val;
+   case ACS_TP_Alpha:        return static_cast<uint32_t>(mo->translucency) == val;
    case ACS_TP_RenderStyle:  return false;
    case ACS_TP_SeeSound:     return false;
    case ACS_TP_AttackSound:  return false;
@@ -345,7 +345,7 @@ bool ACS_ChkThingProp(Mobj *mo, uint32_t var, uint32_t val)
    case ACS_TP_ChaseGoal:    return false;
    case ACS_TP_Frightened:   return false;
    case ACS_TP_Friendly:     return !!(mo->flags & MF_FRIEND) == !!val;
-   case ACS_TP_SpawnHealth:  return mo->getModifiedSpawnHealth() == val;
+   case ACS_TP_SpawnHealth:  return static_cast<uint32_t>(mo->getModifiedSpawnHealth()) == val;
    case ACS_TP_Dropped:      return !!(mo->flags & MF_DROPPED) == !!val;
    case ACS_TP_NoTarget:     return false;
    case ACS_TP_Species:      return false;
@@ -357,49 +357,52 @@ bool ACS_ChkThingProp(Mobj *mo, uint32_t var, uint32_t val)
    case ACS_TP_TargetTID:    return mo->target ? mo->target->tid == val : false;
    case ACS_TP_TracerTID:    return mo->tracer ? mo->tracer->tid == val : false;
    case ACS_TP_WaterLevel:   return false;
-   case ACS_TP_ScaleX:       return M_FloatToFixed(mo->xscale) == val;
-   case ACS_TP_ScaleY:       return M_FloatToFixed(mo->yscale) == val;
+   case ACS_TP_ScaleX:       return static_cast<uint32_t>(M_FloatToFixed(mo->xscale)) == val;
+   case ACS_TP_ScaleY:       return static_cast<uint32_t>(M_FloatToFixed(mo->yscale)) == val;
    case ACS_TP_Dormant:      return !!(mo->flags2 & MF2_DORMANT) == !!val;
-   case ACS_TP_Mass:         return mo->info->mass == val;
+   case ACS_TP_Mass:         return static_cast<uint32_t>(mo->info->mass) == val;
    case ACS_TP_Accuracy:     return false;
    case ACS_TP_Stamina:      return false;
-   case ACS_TP_Height:       return mo->height == val;
-   case ACS_TP_Radius:       return mo->radius == val;
-   case ACS_TP_ReactionTime: return mo->reactiontime == val;
+   case ACS_TP_Height:       return static_cast<uint32_t>(mo->height) == val;
+   case ACS_TP_Radius:       return static_cast<uint32_t>(mo->radius) == val;
+   case ACS_TP_ReactionTime: return static_cast<uint32_t>(mo->reactiontime) == val;
    case ACS_TP_MeleeRange:   return MELEERANGE == val;
    case ACS_TP_ViewHeight:   return false;
    case ACS_TP_AttackZOff:   return false;
    case ACS_TP_StencilColor: return false;
    case ACS_TP_Friction:     return false;
    case ACS_TP_DamageMult:   return false;
-   case ACS_TP_Counter0:     return mo->counters[0] == val;
-   case ACS_TP_Counter1:     return mo->counters[1] == val;
-   case ACS_TP_Counter2:     return mo->counters[2] == val;
-   case ACS_TP_Counter3:     return mo->counters[3] == val;
-   case ACS_TP_Counter4:     return mo->counters[4] == val;
-   case ACS_TP_Counter5:     return mo->counters[5] == val;
-   case ACS_TP_Counter6:     return mo->counters[6] == val;
-   case ACS_TP_Counter7:     return mo->counters[7] == val;
+   case ACS_TP_Counter0:     return static_cast<uint32_t>(mo->counters[0]) == val;
+   case ACS_TP_Counter1:     return static_cast<uint32_t>(mo->counters[1]) == val;
+   case ACS_TP_Counter2:     return static_cast<uint32_t>(mo->counters[2]) == val;
+   case ACS_TP_Counter3:     return static_cast<uint32_t>(mo->counters[3]) == val;
+   case ACS_TP_Counter4:     return static_cast<uint32_t>(mo->counters[4]) == val;
+   case ACS_TP_Counter5:     return static_cast<uint32_t>(mo->counters[5]) == val;
+   case ACS_TP_Counter6:     return static_cast<uint32_t>(mo->counters[6]) == val;
+   case ACS_TP_Counter7:     return static_cast<uint32_t>(mo->counters[7]) == val;
 
    case ACS_TP_Angle:        return mo->angle >> 16 == (uint32_t)val;
-   case ACS_TP_Armor:        return mo->player ? mo->player->armorpoints == val : false;
+   case ACS_TP_Armor:        return mo->player ?
+                                    static_cast<uint32_t>(mo->player->armorpoints) == val : false;
    case ACS_TP_CeilTex:      return mo->subsector->sector->ceilingpic == R_FindWall(ACSenv.getString(val)->str);
-   case ACS_TP_CeilZ:        return mo->ceilingz == val;
+   case ACS_TP_CeilZ:        return static_cast<uint32_t>(mo->ceilingz) == val;
    case ACS_TP_FloorTex:     return mo->subsector->sector->floorpic == R_FindWall(ACSenv.getString(val)->str);
-   case ACS_TP_FloorZ:       return mo->floorz == val;
-   case ACS_TP_Frags:        return mo->player ? mo->player->totalfrags == val : false;
-   case ACS_TP_LightLevel:   return mo->subsector->sector->lightlevel == val;
-   case ACS_TP_MomX:         return mo->momx == val;
-   case ACS_TP_MomY:         return mo->momy == val;
-   case ACS_TP_MomZ:         return mo->momz == val;
-   case ACS_TP_Pitch:        return mo->player ? mo->player->pitch >> 16 == val : false;
+   case ACS_TP_FloorZ:       return static_cast<uint32_t>(mo->floorz) == val;
+   case ACS_TP_Frags:        return mo->player ?
+                                    static_cast<uint32_t>(mo->player->totalfrags) == val : false;
+   case ACS_TP_LightLevel:   return static_cast<uint32_t>(mo->subsector->sector->lightlevel) == val;
+   case ACS_TP_MomX:         return static_cast<uint32_t>(mo->momx) == val;
+   case ACS_TP_MomY:         return static_cast<uint32_t>(mo->momy) == val;
+   case ACS_TP_MomZ:         return static_cast<uint32_t>(mo->momz) == val;
+   case ACS_TP_Pitch:        return mo->player ?
+                                    static_cast<uint32_t>(mo->player->pitch >> 16) == val : false;
    case ACS_TP_PlayerNumber: return mo->player ? mo->player - players == val : false;
    case ACS_TP_SigilPieces:  return false;
    case ACS_TP_TID:          return mo->tid == val;
    case ACS_TP_Type:         return mo->type == E_ThingNumForCompatName(ACSenv.getString(val)->str);
-   case ACS_TP_X:            return mo->x == val;
-   case ACS_TP_Y:            return mo->y == val;
-   case ACS_TP_Z:            return mo->z == val;
+   case ACS_TP_X:            return static_cast<uint32_t>(mo->x) == val;
+   case ACS_TP_Y:            return static_cast<uint32_t>(mo->y) == val;
+   case ACS_TP_Z:            return static_cast<uint32_t>(mo->z) == val;
 
    default: return false;
    }
@@ -1573,6 +1576,25 @@ bool ACS_CF_SetActivatorToTarget(ACS_CF_ARGS)
    else
       thread->dataStk.push(0);
 
+   return false;
+}
+
+//
+// void SetAirControl(fixed amount);
+//
+bool ACS_CF_SetAirControl(ACS_CF_ARGS)
+{
+   LevelInfo.airControl = argV[0];
+   return false;
+}
+
+//
+// void SetAirFriction(fixed amount);
+//
+bool ACS_CF_SetAirFriction(ACS_CF_ARGS)
+{
+   thread->dataStk.push(0);
+   LevelInfo.airFriction = argV[0];
    return false;
 }
 

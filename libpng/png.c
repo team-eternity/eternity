@@ -107,7 +107,7 @@ png_zfree(voidpf png_ptr, voidpf ptr)
 void /* PRIVATE */
 png_reset_crc(png_structp png_ptr)
 {
-   png_ptr->crc = crc32(0, Z_NULL, 0);
+   png_ptr->crc = (png_uint_32)crc32(0, Z_NULL, 0);
 }
 
 /* Calculate the CRC over a section of data.  We can only pass as
@@ -134,7 +134,7 @@ png_calculate_crc(png_structp png_ptr, png_const_bytep ptr, png_size_t length)
    }
 
    if (need_crc)
-      png_ptr->crc = crc32(png_ptr->crc, ptr, (uInt)length);
+      png_ptr->crc = (png_uint_32)crc32(png_ptr->crc, ptr, (uInt)length);
 }
 
 /* Check a user supplied version number, called from both read and write

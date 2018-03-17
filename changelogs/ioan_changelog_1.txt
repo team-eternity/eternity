@@ -8,6 +8,178 @@ Since v3.42.03 "Heimdal" release 2
 ==================================
 
 --------------------------------------------------------------------------------
+14.03.2018
+
+BUGFIX: Fixed an oversight where the ExtraData-assigned specials weren't
+        assigned to the front sidedef's "special" entry, which is a shortcut
+        made by Lee Killough to store information about translucent walls or
+        colourmaps.
+
+--------------------------------------------------------------------------------
+12.03.2018
+
+BUGFIX: Fixed sky hack linedefs from showing up when any of the sectors has a
+        heightsec (Boom transfer-heights target) different from the other. This
+        problem reportedly doesn't occur other Boom-based ports.
+
+--------------------------------------------------------------------------------
+03.03.2018
+
+FEATURE: Polyobjects now accept clusters of portals inside them.
+
+--------------------------------------------------------------------------------
+28.02.2018
+
+FEATURE: configurable air control and friction. This is so the player can move
+         in mid-air better than what's possible under Hexen or Strife.
+
+         It's set in EMAPINFO by setting the "aircontrol" and "airfriction"
+         properties.
+
+         AirControl defaults to 0, which is like in Doom or Hexen,
+         depending on whether the comp_aircontrol flag is set. Full control is
+         set by 65536.
+
+         AirFriction was added by Altazimuth because it's useful
+         if air control is high enough, to prevent the player from reaching
+         extreme velocity. Default value is 0, like in the normal game. Maximum
+         value is 65535.
+
+         Also added two ACS functions for this: SetAirControl(fixed) and 
+         SetAirFriction(fixed), the latter which is an external function, desig-
+         nated by index 302.
+
+BUGFIX: Gravity is now stored in save games, as well as air control and
+        friction.
+
+--------------------------------------------------------------------------------
+25.02.2018
+
+FEATURE: comp_zombie, comp_infcheat, comp_vile, comp_skull, comp_god and 
+         comp_skymap are now "YES" by default, because they're either more
+         useful in common megawads, or are related to cheating.
+
+BUGFIX: PNAMES is now properly bounds-checked, instead of tolerating buffer
+        overflows.
+
+        Also fixed various macOS compilation issues or situations detected by
+        the compiler used there.
+
+--------------------------------------------------------------------------------
+02.01.2018
+
+BUGFIX: various demo playback fixes, including proper -solo-net playback or
+        better crushing stair emulation (which can't be 100% done however, due
+        to undefined behaviour in vanilla Doom).
+
+--------------------------------------------------------------------------------
+23.12.2017
+
+FEATURE: the demo-test facility is now available in official builds. Made major
+         fixes before merging it to master.
+
+--------------------------------------------------------------------------------
+10.11.2017
+
+BUGFIX: fixed fullscreen mode on macOS to always use the SDL-desktop mode,
+        because true fullscreen is pretty broken and doesn't abide by the human
+        interface design guidelines, which require allowing the user to switch
+        out of the game using mission control. Also changed the Cmd+Ctrl+F full-
+        screen command with Cmd+F, because ctrl can be bound to player actions.
+
+--------------------------------------------------------------------------------
+30.10.2017
+
+FEATURE: Added FRIENDFOEMISSILE thing type flag, which will make projectiles
+         shot by friends harm enemies of the same species, and viceversa.
+
+--------------------------------------------------------------------------------
+28.10.2017
+
+FEATURE: Monster infighting can now be customized. Several EDF features have
+         been added. Make sure to update the "base" folder now. If a development
+         build has no "base" folder, it's broken! "Doom/things.edf" has been
+         updated with a new entry.
+
+         1. First feature is the new "thinggroup" EDF block. It has the following
+         structure (as usual, replace all <> enclosed text with your text):
+
+         thinggroup <name>
+         {
+           flags <flags>
+           types { <thingtype1>, <thingtype2>, ... }
+         }
+
+         A group has a list of thingtype mnemonics in "types". The "flags" are
+         the following:
+
+         * PROJECTILEALLIANCE: monsters in the list won't harm each other with
+           their projectiles. This generalizes the Doom 2 baron of hell / hell
+           knight alliance. They may still be harmed by other kinds of damage
+           (explosions, bullets etc.) and react to it. To prevent that kind of
+           damage, use "damagefactor <x>, immune" on thingtype (see new feature
+           below).
+
+         * DAMAGEIGNORE: monsters in the list may be damaged by each other, but
+           will not infight as a result. This generalizes the deprecated
+           BOSSIGNORE thingtype flag. It will NOT prevent monsters from infighting
+           others of the SAME species; for that, use a new thingtype
+           flag (see below).
+
+         * INHERITED: only has meaning if any of the other flags above is set.
+           It makes it so any thingtypes inheriting the ones from the list are
+           also included in the group. By default they don't inherit.
+
+         Note: they don't have to be monsters specifically, any thingtype will do.
+
+         Currently the "name" is merely descriptive but must be unique per
+         thinggroup.
+
+         Example: the following EDF makes imps and cacodemons immune to each
+         other's attacks:
+
+           thinggroup ClassicDevils	// name can be anything but must be unique
+           {
+             flags ProjectileAlliance
+             types { DoomImp, Cacodemon }
+           }
+           // EXAMPLE END
+
+         2. New thingtype "damagefactor" attribute: "immune". Unlike
+         "damagefactor <X>, 0", this one also prevents pain, thrusting and
+         retaliation. Useful to prevent friendly fire and infighting for arbitrary
+         damage types (means of death / MODs) between monsters.
+
+         Example: this makes zombiemen immune to their own attacks:
+
+           thingdelta
+           {
+             name Zombieman
+
+             mod ZombiemanMOD      // their default MOD is "unknown"; it needs to
+                                   // be set to a custom one.
+             damagefactor ZombiemanMOD, immune
+           }
+
+           // MOD definition (use a number that doesn't conflict with the stock
+           // ones):
+           damagetype ZombiemanMOD { num 100 }
+           // EXAMPLE END
+
+         3. New thingtype flags:
+
+         * NOSPECIESINFIGHT: this one prevents monsters of the same species from
+           hating each other, even if they harm each other with friendly fire.
+           This flag is needed because the aforementioned thinggroup
+           DAMAGEIGNORE flag only has effect between monsters of different
+           species (that is a limitation inherited from the deprecated EDF
+           BOSSIGNORE thingtype flag).
+
+         * HARMSPECIESMISSILE: this one allows monsters of the same species to
+           be affected by each other's projectiles, overriding the default
+           immunity from classic Doom.
+
+--------------------------------------------------------------------------------
 15.10.2017
 
 FEATURE: Added a "Show Eternity Log" menu option in the macOS start-up dialog

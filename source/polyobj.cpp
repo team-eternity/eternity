@@ -560,18 +560,25 @@ static void Polyobj_collectPortals(polyobj_t *po)
 static void Polyobj_movePortals(const polyobj_t *po, fixed_t dx, fixed_t dy,
                                bool cancel)
 {
+   bool *groupvisit = useportalgroups ? 
+      ecalloc(bool *, P_PortalGroupCount(), sizeof(bool)) : nullptr;
    for(size_t i = 0; i < po->numPortals; ++i)
    {
       portal_t *portal = po->portals[i];
       if(portal->type == R_LINKED)
       {
-         P_MoveLinkedPortal(portal, -dx, -dy, true);
-         const linkdata_t &ldata = portal->data.link;
+         linkdata_t &ldata = portal->data.link;
+         ldata.deltax -= dx;
+         ldata.deltay -= dy;
          portal_t *partner = ldata.polyportalpartner;
          if(partner)
-            P_MoveLinkedPortal(partner, dx, dy, false);
+         {
+            partner->data.link.deltax += dx;
+            partner->data.link.deltay += dy;
+         }
          // mark the group as being moved by the portal or not.
-         gGroupPolyobject[ldata.toid] = cancel ? nullptr : po;
+         P_MoveGroupCluster(ldata.fromid, ldata.toid, groupvisit, dx, dy, 
+            cancel ? nullptr : po);
       }
       else if(portal->type == R_ANCHORED || portal->type == R_TWOWAY)
       {
@@ -590,6 +597,7 @@ static void Polyobj_movePortals(const polyobj_t *po, fixed_t dx, fixed_t dy,
          // no physical effects.
       }
    }
+   efree(groupvisit);
 }
 
 //
@@ -1293,6 +1301,9 @@ void Polyobj_InitLevel(void)
          
          Polyobj_spawnPolyObj(i, qitem->mo, qitem->mo->spawnpoint.angle);
       }
+
+      // Used to get portal clusters when moving polyobjects.
+      P_MarkPortalClusters();
 
       // move polyobjects to spawn points
       for(i = 0; i < numAnchors; ++i)
