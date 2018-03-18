@@ -52,21 +52,7 @@ linkoffset_t **linktable = NULL;
 // linktable and is returned by P_GetLinkOffset for invalid inputs
 linkoffset_t zerolink = {0, 0, 0};
 
-// The group list is allocated PU_STATIC because it isn't level specific, however,
-// each element is allocated PU_LEVEL. P_InitPortals clears the list and sets the 
-// count back to 0
-typedef struct 
-{
-   // List of sectors contained in the group
-   sector_t **seclist;
-   
-   // Size of the list
-   int listsize;
-} pgroup_t;
-
-static pgroup_t **groups = NULL;
 static int      groupcount = 0;
-static int      grouplimit = 0;
 
 static int *clusters;   // the portal clusters, used when portals move with polys.
 
@@ -96,12 +82,9 @@ int P_PortalGroupCount()
 // Called before map processing. Simply inits some module variables
 void P_InitPortals(void)
 {
-   int i;
    linktable = NULL;
 
    groupcount = 0;
-   for(i = 0; i < grouplimit; ++i)
-      groups[i] = NULL;
 
    useportalgroups = false;
 }
@@ -147,23 +130,11 @@ void R_SetSectorGroupID(sector_t *sector, int groupid)
 int P_CreatePortalGroup(sector_t *from)
 {
    int       groupid = groupcount;
-   pgroup_t  *group;
    
    if(from->groupid != R_NOGROUP)
       return from->groupid;
       
-   if(groupcount == grouplimit)
-   {
-      grouplimit = grouplimit ? (grouplimit << 1) : 8;
-      groups = erealloc(pgroup_t **, groups, sizeof(pgroup_t **) * grouplimit);
-   }
    groupcount++;   
-   
-   
-   group = groups[groupid] = (pgroup_t *)(Z_Malloc(sizeof(pgroup_t), PU_LEVEL, 0));
-      
-   group->seclist = NULL;
-   group->listsize = 0;
   
    P_GatherSectors(from, groupid);
    return groupid;
@@ -184,7 +155,6 @@ void P_GatherSectors(sector_t *from, int groupid)
    static int        listmax = 0;
 
    sector_t  *sec2;
-   pgroup_t  *group;
    line_t    *line;
    int       count = 0;
    int       i, sec, p;
@@ -195,8 +165,6 @@ void P_GatherSectors(sector_t *from, int groupid)
       // would translate to EE itself doing something wrong.
       I_Error("P_GatherSectors: groupid invalid!");
    }
-
-   group = groups[groupid];
    
    // Sector already has a group
    if(from->groupid != R_NOGROUP)
@@ -251,13 +219,6 @@ void P_GatherSectors(sector_t *from, int groupid)
          }
       }
    }
-
-   // Ok, so expand the group list
-   group->seclist = erealloc(sector_t **, group->seclist, 
-                             sizeof(sector_t *) * (group->listsize + count));
-   
-   memcpy(group->seclist + group->listsize, list, count * sizeof(sector_t *));
-   group->listsize += count;
 }
 
 //
@@ -834,41 +795,6 @@ void P_MarkPortalClusters()
    efree(connections);
    ::clusters = clusters;
    Z_ChangeTag(::clusters, PU_LEVEL);
-}
-
-//
-// P_LinkRejectTable
-//
-// Currently just clears each group for every other group.
-//
-void P_LinkRejectTable()
-{
-   int i, s, p, q;
-   sector_t **list, **list2;
-
-   for(i = 0; i < groupcount; i++)
-   {
-      list = groups[i]->seclist;
-      for(s = 0; list[s]; s++)
-      {
-         int sectorindex1 = eindex(list[s] - sectors);
-
-         for(p = 0; p < groupcount; p++)
-         {
-            if(i == p)
-               continue;
-            
-            list2 = groups[p]->seclist;
-            for(q = 0; list2[q]; q++)
-            {
-               int sectorindex2 = eindex(list2[q] - sectors);
-               int pnum = (sectorindex1 * numsectors) + sectorindex2;
-
-               rejectmatrix[pnum>>3] &= ~(1 << (pnum&7));
-            } // q
-         } // p
-      } // s
-   } // i
 }
 
 //

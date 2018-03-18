@@ -98,12 +98,6 @@ void P_GatherSectors(sector_t *from, int groupid);
 bool P_BuildLinkTable();
 void P_MarkPortalClusters();
 
-//
-// P_LinkRejectTable
-// Currently just clears each group for every other group.
-//
-void P_LinkRejectTable();
-
 void P_InitPortals();
 
 bool EV_PortalTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
