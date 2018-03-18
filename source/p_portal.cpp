@@ -29,6 +29,7 @@
 #include "c_io.h"
 #include "doomstat.h"
 #include "e_exdata.h"
+#include "ev_specials.h"
 #include "m_collection.h"  // ioanch 20160106
 #include "p_chase.h"
 #include "polyobj.h"
@@ -39,6 +40,16 @@
 #include "r_portal.h"
 #include "r_state.h"
 #include "v_misc.h"
+
+//
+// Polyobject-generated sector couple. Needed before P_GatherSectors is called
+// due to potential polyobject portals
+//
+struct polycouple_t
+{
+   sector_t *sectors[2];   // the two linked sectors.
+   int polyid;
+};
 
 // SoM: Linked portals
 // This list is allocated PU_LEVEL and is nullified in P_InitPortals. When the 
@@ -67,6 +78,51 @@ bool gMapHasLinePortals;   // ioanch 20160131: needed for P_UseLines
 bool *gGroupVisit;
 // ioanch 20160227: each group may have a polyobject owner
 const polyobj_t **gGroupPolyobject;
+
+static PODCollection<polycouple_t> gPolyCouples;
+
+//
+// Adds a unique new poly couple set.
+//
+static void P_addPolyCouple(int polyid, sector_t &sector1, sector_t &sector2)
+{
+   // Check if already present
+   sector_t &firstsector = &sector1 < &sector2 ? sector1 : sector2;
+   sector_t &secondsector = &sector1 > &sector2 ? sector1 : sector2;
+   const polycouple_t *couple;
+   for(couple = gPolyCouples.begin(); couple != gPolyCouples.end(); ++couple)
+      if(couple->sectors[0] == &firstsector && couple->sectors[1] == &secondsector)
+         break;
+   if(couple != gPolyCouples.end())
+      return;
+   gPolyCouples.add(polycouple_t{ &firstsector, &secondsector, polyid });
+}
+
+//
+// Checks if a poly couple with polyid was already added
+//
+static bool P_isPolyCoupleAdded(int polyid, const sector_t &sector)
+{
+   for(const polycouple_t &couple : gPolyCouples)
+      if(couple.polyid == polyid || couple.sectors[0] == &sector || couple.sectors[1] == &sector)
+         return true;
+   return false;
+}
+
+//
+// Checks if this sector has a partner.
+//
+static sector_t *P_findCouplePartner(const sector_t &sector)
+{
+   for(const polycouple_t &couple : gPolyCouples)
+   {
+      if(couple.sectors[0] == &sector)
+         return couple.sectors[1];
+      if(couple.sectors[1] == &sector)
+         return couple.sectors[0];
+   }
+   return false;
+}
 
 //
 // P_PortalGroupCount
@@ -149,7 +205,7 @@ int P_CreatePortalGroup(sector_t *from)
 // until every attached sector has been added to the list, thus defining a 
 // closed subspace of the map.
 //
-void P_GatherSectors(sector_t *from, int groupid)
+void P_GatherSectors(sector_t *from, const int groupid)
 {
    static sector_t   **list = NULL;
    static int        listmax = 0;
@@ -157,7 +213,7 @@ void P_GatherSectors(sector_t *from, int groupid)
    sector_t  *sec2;
    line_t    *line;
    int       count = 0;
-   int       i, sec, p;
+   int       i, sec;
    
    if(groupid < 0 || groupid >= groupcount)
    {
@@ -179,6 +235,21 @@ void P_GatherSectors(sector_t *from, int groupid)
 
    R_SetSectorGroupID(from, groupid);
    list[count++] = from;
+
+   auto visit = [&count, groupid](sector_t *sec2) {
+      int p;
+      for(p = 0; p < count; ++p)
+      {
+         if(sec2 == list[p])
+            break;
+      }
+      // if we didn't find the sector in the list, add it
+      if(p == count)
+      {
+         list[count++] = sec2;
+         R_SetSectorGroupID(sec2, groupid);
+      }
+   };
    
    for(sec = 0; sec < count; ++sec)
    {
@@ -189,35 +260,15 @@ void P_GatherSectors(sector_t *from, int groupid)
          // add any sectors to the list which aren't already there.
          line = from->lines[i];
          if((sec2 = line->frontsector))
-         {
-            for(p = 0; p < count; ++p)
-            {
-               if(sec2 == list[p])
-                  break;
-            }
-            // if we didn't find the sector in the list, add it
-            if(p == count)
-            {
-               list[count++] = sec2;
-               R_SetSectorGroupID(sec2, groupid);
-            }
-         }
+            visit(sec2);
 
          if((sec2 = line->backsector))
-         {
-            for(p = 0; p < count; ++p)
-            {
-               if(sec2 == list[p])
-                  break;
-            }
-            // if we didn't find the sector in the list, add it
-            if(p == count)
-            {
-               list[count++] = sec2;
-               R_SetSectorGroupID(sec2, groupid);
-            }
-         }
+            visit(sec2);
       }
+
+      // Now check coupled sectors
+      if((sec2 = P_findCouplePartner(*from)))
+         visit(sec2);
    }
 }
 
@@ -605,6 +656,45 @@ static void P_buildPortalMap()
    }
 
    pLPortalMap.mapInit();
+}
+
+//
+// Finds sectors coupled with polyobject boxes. Necessary if you want polyobjects
+// with portals drawn in disconnected boxes.
+//
+void P_FindPolyobjectSectorCouples()
+{
+   static auto findMobj = [](int polyid) -> const Mobj * {
+      for(Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
+      {
+         const Mobj *mo;
+         if((mo = thinker_cast<Mobj *>(th)) && mo->spawnpoint.angle == polyid &&
+            Polyobj_IsSpawnSpot(*mo))
+         {
+            return mo;
+         }
+      }
+      return nullptr;
+   };
+
+   for(int i = 0; i < numlines; ++i)
+   {
+      const line_t &line = lines[i];
+      int type = EV_StaticInitForSpecial(line.special);
+      const Mobj *spot;
+      if(type == EV_STATIC_POLYOBJ_START_LINE ||
+         type == EV_STATIC_POLYOBJ_EXPLICIT_LINE)
+      {
+         if(P_isPolyCoupleAdded(line.args[0], *line.frontsector))
+            continue;
+         spot = findMobj(line.args[0]);
+      }
+      else
+         continue;
+      // Replace the group ID now.
+      if(spot)
+         P_addPolyCouple(line.args[0], *spot->subsector->sector, *line.frontsector);
+   }
 }
 
 //

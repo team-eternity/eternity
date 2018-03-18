@@ -1396,6 +1396,8 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
    
    P_SpawnPushers();   // phares 3/20/98: New pusher model using linedefs
 
+   P_FindPolyobjectSectorCouples();
+
    for(int i = 0; i < numlines; i++)
    {
       line_t *line = &lines[i];

@@ -90,6 +90,8 @@ int P_CreatePortalGroup(sector_t *from);
 //
 void P_GatherSectors(sector_t *from, int groupid);
 
+void P_FindPolyobjectSectorCouples();  // called in P_SpawnSpecials
+
 //
 // R_BuildLinkTable
 // Builds the link table. This should only be called after all the portals for

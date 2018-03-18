@@ -258,6 +258,7 @@ typedef struct polydoordata_s
 //
 
 polyobj_t *Polyobj_GetForNum(int id);
+bool Polyobj_IsSpawnSpot(const Mobj &mo);
 void Polyobj_InitLevel(void);
 void Polyobj_MoveOnLoad(polyobj_t *po, angle_t angle, fixed_t x, fixed_t y);
 

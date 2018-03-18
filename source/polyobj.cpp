@@ -1230,6 +1230,16 @@ typedef struct mobjqitem_s
 } mobjqitem_t;
 
 //
+// Check if mobj is a polyobject spawn spot
+//
+bool Polyobj_IsSpawnSpot(const Mobj &mo)
+{
+   return mo.info->doomednum == POLYOBJ_SPAWN_DOOMEDNUM ||
+      mo.info->doomednum == POLYOBJ_SPAWNCRUSH_DOOMEDNUM ||
+      mo.info->doomednum == POLYOBJ_SPAWNDAMAGE_DOOMEDNUM;
+}
+
+//
 // Polyobj_InitLevel
 //
 // Called at the beginning of each map after all other line and thing
@@ -1260,9 +1270,7 @@ void Polyobj_InitLevel(void)
       Mobj *mo;
       if((mo = thinker_cast<Mobj *>(th)))
       {
-         if(mo->info->doomednum == POLYOBJ_SPAWN_DOOMEDNUM ||
-            mo->info->doomednum == POLYOBJ_SPAWNCRUSH_DOOMEDNUM ||
-            mo->info->doomednum == POLYOBJ_SPAWNDAMAGE_DOOMEDNUM)
+         if(Polyobj_IsSpawnSpot(*mo))
          {
             ++numPolyObjects;
             
