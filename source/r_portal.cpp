@@ -499,40 +499,12 @@ static void R_calculateTransform(int markerlinenum, int anchorlinenum,
                                  bool flipped, fixed_t zoffset)
 {
    // TODO: define Z offset
-   const line_t *m = lines + markerlinenum;
-   const line_t *a = lines + anchorlinenum;
+   transf->targetline = lines + markerlinenum;
+   transf->sourceline = lines + anchorlinenum;
+   transf->flipped = flipped;
+   transf->zoffset = zoffset;
 
-   // origin point
-   double mx = (m->v1->fx + m->v2->fx) / 2;
-   double my = (m->v1->fy + m->v2->fy) / 2;
-   double ax = (a->v1->fx + a->v2->fx) / 2;
-   double ay = (a->v1->fy + a->v2->fy) / 2;
-
-   // angle delta between the normals behind the linedefs
-   // TODO: add support for flipped anchors (line portals)
-   double rot, cosval, sinval;
-   if(allowrotate)
-   {
-      rot = atan2(flipped ? m->ny : -m->ny, flipped ? m->nx : -m->nx) - atan2(-a->ny, -a->nx);
-      cosval = cos(rot);
-      sinval = sin(rot);
-   }
-   else
-   {
-      rot = 0;
-      cosval = 1;
-      sinval = 0;
-   }
-   
-   transf->rot[0][0] = cosval;
-   transf->rot[0][1] = -sinval;
-   transf->rot[1][0] = sinval;
-   transf->rot[1][1] = cosval;
-   transf->move.x = -ax * cosval + ay * sinval + mx;
-   transf->move.y = -ax * sinval - ay * cosval + my;
-   transf->move.z = M_FixedToDouble(zoffset);
-
-   transf->angle = rot;
+   transf->updateFromLines(allowrotate);
 }
 
 //
@@ -1618,6 +1590,42 @@ void portaltransform_t::applyTo(float &x, float &y, bool nomove) const
    }
    x = static_cast<float>(vx);
    y = static_cast<float>(vy);
+}
+void portaltransform_t::updateFromLines(bool allowrotate)
+{
+   // origin point
+   double mx = (targetline->v1->fx + targetline->v2->fx) / 2;
+   double my = (targetline->v1->fy + targetline->v2->fy) / 2;
+   double ax = (sourceline->v1->fx + sourceline->v2->fx) / 2;
+   double ay = (sourceline->v1->fy + sourceline->v2->fy) / 2;
+
+   // angle delta between the normals behind the linedefs
+   // TODO: add support for flipped anchors (line portals)
+   double arot, cosval, sinval;
+   if(allowrotate)
+   {
+      arot = atan2(flipped ? targetline->ny : -targetline->ny, 
+         flipped ? targetline->nx : -targetline->nx) - 
+         atan2(-sourceline->ny, -sourceline->nx);
+      cosval = cos(arot);
+      sinval = sin(arot);
+   }
+   else
+   {
+      arot = 0;
+      cosval = 1;
+      sinval = 0;
+   }
+
+   rot[0][0] = cosval;
+   rot[0][1] = -sinval;
+   rot[1][0] = sinval;
+   rot[1][1] = cosval;
+   move.x = -ax * cosval + ay * sinval + mx;
+   move.y = -ax * sinval - ay * cosval + my;
+   move.z = M_FixedToDouble(zoffset);
+
+   angle = arot;
 }
 
 //=============================================================================

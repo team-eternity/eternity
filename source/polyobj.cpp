@@ -46,6 +46,7 @@
 #include "p_portal.h"
 #include "p_saveg.h"
 #include "p_setup.h"
+#include "p_slopes.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "polyobj.h"
@@ -599,6 +600,25 @@ static void Polyobj_movePortals(const polyobj_t *po, fixed_t dx, fixed_t dy,
 }
 
 //
+// Rotates the portals from the poly.
+//
+static void Polyobj_rotatePortals(const polyobj_t &po)
+{
+   for(size_t i = 0; i < po.numPortals; ++i)
+   {
+      portal_t *portal = po.portals[i];
+      if(portal->type != R_ANCHORED && portal->type != R_TWOWAY)
+         continue;
+      anchordata_t &adata = portal->data.anchor;
+      adata.transform.updateFromLines(true);
+
+      portal_t *partner = adata.polyportalpartner;
+      if(partner)
+         partner->data.anchor.transform.updateFromLines(true);
+   }
+}
+
+//
 // Polyobj_moveToSpawnSpot
 //
 // Translates the polyobject's vertices with respect to the difference between
@@ -1119,6 +1139,10 @@ static void Polyobj_rotateLine(line_t *ld)
    // 04/19/09: reposition sound origin
    ld->soundorg.x = v1->x + ld->dx / 2;
    ld->soundorg.y = v1->y + ld->dy / 2;
+
+   // Also update the normals if necessary
+   if(ld->portal && R_portalIsAnchored(ld->portal))
+      P_MakeLineNormal(ld);
 }
 
 //
@@ -1186,6 +1210,8 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
       if(!onload)
          Polyobj_crossLines(po, oldcentre);
       R_AttachPolyObject(po);
+
+      Polyobj_rotatePortals(*po);
    }
 
    return !hitthing;
