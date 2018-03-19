@@ -1788,11 +1788,9 @@ void R_SpawnQuickLinePortal(line_t &line)
 
    P_SetPortal(line.frontsector, &line, portals[0], portal_lineonly);
    P_SetPortal(otherline->frontsector, otherline, portals[1], portal_lineonly);
-   if(linked)
-   {
-      R_pairPortalLines(line, *otherline);
-      R_pairPortalLines(*otherline, line);
-   }
+
+   R_pairPortalLines(line, *otherline);
+   R_pairPortalLines(*otherline, line);
 
    // Now delete the special
    line.special = 0;
