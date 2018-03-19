@@ -582,8 +582,6 @@ static void Polyobj_movePortals(const polyobj_t *po, fixed_t dx, fixed_t dy,
       }
       else if(portal->type == R_ANCHORED || portal->type == R_TWOWAY)
       {
-         // FIXME: no partnership for R_TWOWAY. Maybe there should be one.
-         // TODO: this partnership. But only when we have a line-only special.
          anchordata_t &adata = portal->data.anchor;
          adata.transform.move.x -= M_FixedToDouble(dx);
          adata.transform.move.y -= M_FixedToDouble(dy);
