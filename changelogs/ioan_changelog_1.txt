@@ -3,6 +3,19 @@ Changes by Ioan Chera in Eternity Engine
 ========================================
 Dates are in dd.mm.yyyy format. Most recent update is first.
 
+========================
+Since v4.00.00 "Völuspá"
+========================
+
+--------------------------------------------------------------------------------
+19.03.2018
+
+FEATURE: Polyobjects with portals no longer require their origin box to be
+         connected to sectors from the spawn spot's layer.
+         
+         Did this by marking the box sector as a "neighbour" of the spawn spot
+         sector, for the P_GatherSector function.
+
 ==================================
 Since v3.42.03 "Heimdal" release 2
 ==================================
