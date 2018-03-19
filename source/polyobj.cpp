@@ -663,6 +663,14 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
       Polyobj_vecSub2(&(po->origVerts[i]), po->vertices[i], &sspot);
    }
 
+   // Update sound origins
+   for(i = 0; i < po->numLines; ++i)
+   {
+      line_t &line = *po->lines[i];
+      line.soundorg.x = line.v1->x + line.dx / 2;
+      line.soundorg.y = line.v1->y + line.dy / 2;
+   }
+
    Polyobj_setCenterPt(po);
    R_AttachPolyObject(po);
 }
