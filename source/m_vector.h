@@ -60,6 +60,11 @@ struct v3float_t
    float x, y, z;
 };
 
+struct v2double_t
+{
+   double x, y;
+};
+
 struct v3double_t
 {
    double x, y, z;
