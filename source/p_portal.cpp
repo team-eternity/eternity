@@ -664,6 +664,9 @@ static void P_buildPortalMap()
 //
 void P_FindPolyobjectSectorCouples()
 {
+   // first, empty it
+   gPolyCouples.clear();
+
    static auto findMobj = [](int polyid) -> const Mobj * {
       for(Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
       {
