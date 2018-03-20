@@ -1068,18 +1068,18 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
 // http://www.inversereality.org/tutorials/graphics%20programming/2dtransformations.html
 // It is, of course, just a vector-matrix multiplication.
 //
-inline static void Polyobj_rotatePoint(vertex_t *v, const vertex_t *c, int ang)
+inline static void Polyobj_rotatePoint(vertex_t &v, v2fixed_t c, int ang)
 {
-   vertex_t tmp = *v;
+   const v2fixed_t tmp = { v.x, v.y };
 
-   v->x = FixedMul(tmp.x, finecosine[ang]) - FixedMul(tmp.y,   finesine[ang]);
-   v->y = FixedMul(tmp.x,   finesine[ang]) + FixedMul(tmp.y, finecosine[ang]);
+   v.x = FixedMul(tmp.x, finecosine[ang]) - FixedMul(tmp.y,   finesine[ang]);
+   v.y = FixedMul(tmp.x,   finesine[ang]) + FixedMul(tmp.y, finecosine[ang]);
 
-   v->x += c->x;
-   v->y += c->y;
+   v.x += c.x;
+   v.y += c.y;
 
-   v->fx = M_FixedToFloat(v->x);
-   v->fy = M_FixedToFloat(v->y);
+   v.fx = M_FixedToFloat(v.x);
+   v.fy = M_FixedToFloat(v.y);
 }
 
 //
@@ -1143,7 +1143,7 @@ static void Polyobj_rotateLine(line_t *ld)
 static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
 {
    int i, angle;
-   vertex_t origin;
+   v2fixed_t origin;
    bool hitthing = false;
 
    // don't move bad polyobjects
@@ -1164,7 +1164,7 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
       // use original pts to rotate to new position
       *(po->vertices[i]) = po->origVerts[i];
 
-      Polyobj_rotatePoint(po->vertices[i], &origin, angle);
+      Polyobj_rotatePoint(*po->vertices[i], origin, angle);
    }
 
    // rotate lines
