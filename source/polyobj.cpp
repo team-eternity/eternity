@@ -553,13 +553,10 @@ static void Polyobj_collectPortals(polyobj_t *po)
 }
 
 //
-// Polyobj_movePortals
-//
 // ioanch 20160226: moves the portals from the polyobject
 // The 'cancel' argument sets whether to keep or remove the reference
 //
-static void Polyobj_movePortals(const polyobj_t *po, fixed_t dx, fixed_t dy,
-                               bool cancel)
+static void Polyobj_moveLinkedPortals(const polyobj_t *po, fixed_t dx, fixed_t dy, bool cancel)
 {
    bool *groupvisit = useportalgroups ? 
       ecalloc(bool *, P_PortalGroupCount(), sizeof(bool)) : nullptr;
@@ -581,20 +578,6 @@ static void Polyobj_movePortals(const polyobj_t *po, fixed_t dx, fixed_t dy,
          P_MoveGroupCluster(ldata.fromid, ldata.toid, groupvisit, dx, dy, 
             cancel ? nullptr : po);
       }
-      else if(portal->type == R_ANCHORED || portal->type == R_TWOWAY)
-      {
-         anchordata_t &adata = portal->data.anchor;
-         adata.transform.move.x -= M_FixedToDouble(dx);
-         adata.transform.move.y -= M_FixedToDouble(dy);
-
-         portal_t *partner = adata.polyportalpartner;
-         if(partner)
-         {
-            partner->data.anchor.transform.move.x += M_FixedToDouble(dx);
-            partner->data.anchor.transform.move.y += M_FixedToDouble(dy);
-         }
-         // no physical effects.
-      }
    }
    efree(groupvisit);
 }
@@ -602,7 +585,7 @@ static void Polyobj_movePortals(const polyobj_t *po, fixed_t dx, fixed_t dy,
 //
 // Rotates the portals from the poly.
 //
-static void Polyobj_rotatePortals(const polyobj_t &po)
+static void Polyobj_updateAnchoredPortals(const polyobj_t &po)
 {
    for(size_t i = 0; i < po.numPortals; ++i)
    {
@@ -671,7 +654,7 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
 
    // ioanch 20160226: update portal position
    Polyobj_collectPortals(po);
-   Polyobj_movePortals(po, -dist.x, -dist.y, false);
+   Polyobj_moveLinkedPortals(po, -dist.x, -dist.y, false);
 
    // translate vertices and record original coordinates relative to spawn spot
    for(i = 0; i < po->numVertices; ++i)
@@ -691,6 +674,8 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
 
    Polyobj_setCenterPt(po);
    R_AttachPolyObject(po);
+
+   Polyobj_updateAnchoredPortals(*po); // finally update the anchored portals.
 }
 
 static void Polyobj_setCenterPt(polyobj_t *po)
@@ -1015,7 +1000,7 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
       return false;
 
    // ioanch 20160226: update portal position
-   Polyobj_movePortals(po, x, y, false);
+   Polyobj_moveLinkedPortals(po, x, y, false);
 
    // translate vertices
    for(i = 0; i < po->numVertices; ++i)
@@ -1042,7 +1027,10 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
          Polyobj_bboxSub(po->lines[i]->bbox, &vec);      
 
       // ioanch 20160226: update portal position
-      Polyobj_movePortals(po, -x, -y, true);
+      // CAREFUL: do not replace this and the previous call to a single call,
+      // because there's a lot of stuff going on in Polyobj_clipThings (e.g. things eaten by
+      // portals). Heavy testing needs to be done if you do so.
+      Polyobj_moveLinkedPortals(po, -x, -y, true);
    }
    else
    {
@@ -1065,6 +1053,8 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
       if(!onload)
          Polyobj_crossLines(po, oldcentre);
       R_AttachPolyObject(po);
+
+      Polyobj_updateAnchoredPortals(*po);
    }
 
    return !hitthing;
@@ -1211,7 +1201,7 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
          Polyobj_crossLines(po, oldcentre);
       R_AttachPolyObject(po);
 
-      Polyobj_rotatePortals(*po);
+      Polyobj_updateAnchoredPortals(*po);
    }
 
    return !hitthing;
