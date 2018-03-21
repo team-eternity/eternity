@@ -38,7 +38,7 @@
 
 // Basic data types.
 // Needs fixed point, and BAM angles.
-#include "m_fixed.h"
+#include "m_vector.h"
 
 struct player_t;
 
@@ -70,9 +70,16 @@ struct pspdef_t
 {
   state_t *state;       // a NULL state means not active
   int     tics;
+  v2fixed_t prevpos;
   fixed_t sx;
   fixed_t sy;
   int trans;
+
+  void backupPosition()
+  {
+     prevpos.x = sx;
+     prevpos.y = sy;
+  }
 };
 
 int P_WeaponPreferred(int w1, int w2);

@@ -823,6 +823,20 @@ static void R_interpolateThingPosition(const Mobj *thing, spritepos_t &pos)
    }
 }
 
+static void R_interpolatePSpritePosition(const pspdef_t &pspr, v2fixed_t &pos)
+{
+   if(view.lerp == FRACUNIT)
+   {
+      pos.x = pspr.sx;
+      pos.y = pspr.sy;
+   }
+   else
+   {
+      pos.x = lerpCoord(view.lerp, pspr.prevpos.x, pspr.sx);
+      pos.y = lerpCoord(view.lerp, pspr.prevpos.y, pspr.sy);
+   }
+}
+
 //
 // R_ProjectSprite
 //
@@ -1216,7 +1230,10 @@ static void R_DrawPSprite(pspdef_t *psp)
    flip = !!(sprframe->flip[0] ^ lefthanded);
    
    // calculate edges of the shape
-   tx  = M_FixedToFloat(psp->sx) - 160.0f;
+   v2fixed_t pspos;
+   R_interpolatePSpritePosition(*psp, pspos);
+
+   tx  = M_FixedToFloat(pspos.x) - 160.0f;
    tx -= M_FixedToFloat(spriteoffset[lump]);
 
       // haleyjd
@@ -1247,7 +1264,7 @@ static void R_DrawPSprite(pspdef_t *psp)
    
    // killough 12/98: fix psprite positioning problem
    vis->texturemid = (BASEYCENTER<<FRACBITS) /* + FRACUNIT/2 */ -
-                      (psp->sy - spritetopoffset[lump]);
+                      (pspos.y - spritetopoffset[lump]);
 
    vis->x1           = x1 < 0.0f ? 0 : (int)x1;
    vis->x2           = x2 >= view.width ? viewwindow.width - 1 : (int)x2;

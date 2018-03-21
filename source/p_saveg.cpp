@@ -457,6 +457,7 @@ static void P_ArchivePSprite(SaveArchive &arc, pspdef_t &pspr)
          pspr.state = states[statenum];
       else
          pspr.state = nullptr;
+      pspr.backupPosition();
    }
 }
 

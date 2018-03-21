@@ -1564,6 +1564,9 @@ void P_MovePsprites(player_t *player)
    // a null state means not active
    // drop tic count and possibly change state
    // a -1 tic count never changes
+
+   player->psprites[ps_weapon].backupPosition();
+   player->psprites[ps_flash].backupPosition();
    
    for(i = 0; i < NUMPSPRITES; ++i, ++psp)
    {
