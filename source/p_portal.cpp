@@ -95,7 +95,7 @@ static void P_addPolyCouple(int polyid, sector_t &sector1, sector_t &sector2)
          break;
    if(couple != gPolyCouples.end())
       return;
-   gPolyCouples.add(polycouple_t{ &firstsector, &secondsector, polyid });
+   gPolyCouples.add(polycouple_t{ { &firstsector, &secondsector }, polyid });
 }
 
 //
@@ -121,7 +121,7 @@ static sector_t *P_findCouplePartner(const sector_t &sector)
       if(couple.sectors[1] == &sector)
          return couple.sectors[0];
    }
-   return false;
+   return nullptr;
 }
 
 //
