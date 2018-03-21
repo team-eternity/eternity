@@ -8,6 +8,11 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+21.03.2018
+
+IMPROVEMENT: Weapon sprite motion is now interpolated (smooth).
+
+--------------------------------------------------------------------------------
 19.03.2018
 
 FEATURE: Polyobjects with portals no longer require their origin box to be
