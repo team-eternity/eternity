@@ -230,7 +230,7 @@ prune: ; // early exit and skip past the tests above
 // Calculate the point of intersection of two lines
 //
 static void R_computeIntersection(dynaseg_t *part, dynaseg_t *seg,
-                                  double &outx, double &outy)
+                                  double &outx, double &outy, v2float_t *fbackup = nullptr)
 {
    double a2, b2, l2, w, d;
    double dx, dy, dx2, dy2;
@@ -247,6 +247,8 @@ static void R_computeIntersection(dynaseg_t *part, dynaseg_t *seg,
       // feh.
       outx = seg->psx;
       outy = seg->psy;
+      if(fbackup)
+         *fbackup = seg->seg.v1->fbackup;
       return;
    }
 
@@ -259,11 +261,28 @@ static void R_computeIntersection(dynaseg_t *part, dynaseg_t *seg,
       w = (dx * (seg->psy - part->psy) + dy * (part->psx - seg->psx)) / d;
       outx = seg->psx + (a2 * w);
       outy = seg->psy + (b2 * w);
+      if(fbackup)
+      {
+         double bdx = part->seg.v2->fbackup.x - part->seg.v1->fbackup.x;
+         double bdy = part->seg.v2->fbackup.y - part->seg.v1->fbackup.y;
+         double bdx2 = seg->seg.v2->fbackup.x - seg->seg.v1->fbackup.x;
+         double bdy2 = seg->seg.v2->fbackup.y - seg->seg.v1->fbackup.y;
+         double bl2 = sqrt(bdx2 * bdx2 + bdy2 * bdy2);
+         double ba2 = bdx2 / bl2;
+         double bb2 = bdy2 / bl2;
+         double bd = bdy * ba2 - bdx * bb2;
+         double bw = (bdx * (seg->seg.v1->fbackup.y - part->seg.v1->fbackup.y) +
+            bdy * (part->seg.v1->fbackup.x - seg->seg.v1->fbackup.x)) / bd;
+         fbackup->x = static_cast<float>(seg->seg.v1->fbackup.x + ba2 * bw);
+         fbackup->y = static_cast<float>(seg->seg.v1->fbackup.y + bb2 * bw);
+      }
    }
    else
    {
       outx = seg->psx;
       outy = seg->psy;
+      if(fbackup)
+         *fbackup = seg->seg.v1->fbackup;
    }
 }
 
@@ -399,16 +418,20 @@ static void R_divideSegs(rpolynode_t *rpn, dseglist_t *ts,
       if(val == SPLIT_SR_EL || val == SPLIT_SL_ER)
       {
          double x, y;
+         v2float_t fbackup;
 
          // seg is split by the partition
-         R_computeIntersection(best, seg, x, y);
+         R_computeIntersection(best, seg, x, y, &fbackup);
 
          // create a new vertex at the intersection point
          vertex_t *nv = R_GetFreeDynaVertex();
          nv->fx = static_cast<float>(x);
          nv->fy = static_cast<float>(y);
+         nv->fbackup = fbackup;
          nv->x  = M_DoubleToFixed(x);
          nv->y  = M_DoubleToFixed(y);
+         nv->backup.x = M_DoubleToFixed(nv->fbackup.x);
+         nv->backup.y = M_DoubleToFixed(nv->fbackup.y);
 
          // create a new dynaseg from nv to v2
          dynaseg_t *nds = R_CreateDynaSeg(seg, nv, seg->seg.v2);

@@ -74,6 +74,17 @@ struct vertex_t
 
    struct vertex_t *dynanext;
    int refcount;
+
+   v2fixed_t backup;
+   v2float_t fbackup;
+
+   void backupPosition()
+   {
+      backup.x = x;
+      backup.y = y;
+      fbackup.x = fx;
+      fbackup.y = fy;
+   }
 };
 
 // SoM: for attaching surfaces (floors and ceilings) to each other

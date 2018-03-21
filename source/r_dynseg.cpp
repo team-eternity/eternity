@@ -291,7 +291,7 @@ dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, vertex_t *v1, vertex_t *v2)
 //
 // Finds the point where a node line crosses a seg.
 //
-static bool R_IntersectPoint(seg_t *lseg, node_t *node, float *x, float *y)
+static bool R_IntersectPoint(seg_t *lseg, node_t *node, vertex_t &nv)
 {
    // get the fnode for the node
    fnode_t *bsp = &fnodes[node - nodes];
@@ -299,6 +299,11 @@ static bool R_IntersectPoint(seg_t *lseg, node_t *node, float *x, float *y)
    double a1 = lseg->v2->fy - lseg->v1->fy;
    double b1 = lseg->v1->fx - lseg->v2->fx;
    double c1 = lseg->v2->fx * lseg->v1->fy - lseg->v1->fx * lseg->v2->fy;
+
+   v2float_t fbackup[2] = { lseg->v1->fbackup, lseg->v2->fbackup };
+   double ba1 = fbackup[1].y - fbackup[0].y;
+   double bb1 = fbackup[0].x - fbackup[1].x;
+   double bc1 = fbackup[1].x * fbackup[0].y - fbackup[0].x * fbackup[1].y;
    
    // haleyjd 05/13/09: massive optimization
    double a2 = -bsp->a;
@@ -306,6 +311,7 @@ static bool R_IntersectPoint(seg_t *lseg, node_t *node, float *x, float *y)
    double c2 = -bsp->c;
 
    double d = a1 * b2 - a2 * b1;
+   double bd = ba1 * b2 - a2 * bb1;
 
    // lines are parallel?? shouldn't be.
    // FIXME: could this occur due to roundoff error in R_PointOnSide? 
@@ -315,8 +321,15 @@ static bool R_IntersectPoint(seg_t *lseg, node_t *node, float *x, float *y)
    if(d == 0.0) 
       return false;
 
-   *x = (float)((b1 * c2 - b2 * c1) / d);
-   *y = (float)((a2 * c1 - a1 * c2) / d);
+   nv.fx = static_cast<float>((b1 * c2 - b2 * c1) / d);
+   nv.fy = static_cast<float>((a2 * c1 - a1 * c2) / d);
+   nv.fbackup.x = static_cast<float>((bb1 * c2 - b2 * bc1) / bd);
+   nv.fbackup.y = static_cast<float>((a2 * bc1 - ba1 * c2) / bd);
+   // also set fixed-point coordinates
+   nv.x = M_FloatToFixed(nv.fx);
+   nv.y = M_FloatToFixed(nv.fy);
+   nv.backup.x = M_FloatToFixed(nv.fbackup.x);
+   nv.backup.y = M_FloatToFixed(nv.fbackup.y);
 
    return true;
 }
@@ -391,12 +404,8 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
          dynaseg_t *nds;
          vertex_t  *nv = R_GetFreeDynaVertex();
 
-         if(R_IntersectPoint(lseg, bsp, &nv->fx, &nv->fy))
+         if(R_IntersectPoint(lseg, bsp, *nv))
          {
-            // also set fixed-point coordinates
-            nv->x = M_FloatToFixed(nv->fx);
-            nv->y = M_FloatToFixed(nv->fy);
-
             // ioanch 20160722: fix the polyobject visual clipping bug (more needed)
             M_AddToBox(bsp->bbox[0], nv->x, nv->y);
             M_AddToBox(bsp->bbox[1], nv->x, nv->y);

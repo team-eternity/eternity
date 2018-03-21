@@ -660,7 +660,7 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
    for(i = 0; i < po->numVertices; ++i)
    {
       Polyobj_vecSub(po->vertices[i], &dist);
-
+      po->vertices[i]->backupPosition();
       Polyobj_vecSub2(&(po->origVerts[i]), po->vertices[i], &sspot);
    }
 
@@ -1004,7 +1004,13 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
 
    // translate vertices
    for(i = 0; i < po->numVertices; ++i)
+   {
+      if(!onload)
+         po->vertices[i]->backupPosition();
       Polyobj_vecAdd(po->vertices[i], &vec);
+      if(onload)
+         po->vertices[i]->backupPosition();
+   }
 
    // translate each line
    for(i = 0; i < po->numLines; ++i)
@@ -1162,9 +1168,13 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
       po->tmpVerts[i] = *(po->vertices[i]);
 
       // use original pts to rotate to new position
+      v2fixed_t backup = { po->vertices[i]->x, po->vertices[i]->y };
+      v2float_t fbackup = { po->vertices[i]->fx, po->vertices[i]->fy };
       *(po->vertices[i]) = po->origVerts[i];
 
       Polyobj_rotatePoint(*po->vertices[i], origin, angle);
+      po->vertices[i]->backup = backup;
+      po->vertices[i]->fbackup = fbackup;
    }
 
    // rotate lines
