@@ -47,7 +47,7 @@ static dynaseg_t *dynaSegFreeList;
 //
 // dynaseg vertex free list
 //
-static vertex_t *dynaVertexFreeList;
+static dynavertex_t *dynaVertexFreeList;
 
 //
 // rpolyobj_t freelist
@@ -91,18 +91,18 @@ static void R_AddDynaSubsec(subsector_t *ss, polyobj_t *po)
 //
 // Gets a vertex from the free list or allocates a new one.
 //
-vertex_t *R_GetFreeDynaVertex()
+dynavertex_t *R_GetFreeDynaVertex()
 {
-   vertex_t *ret = NULL;
+   dynavertex_t *ret = NULL;
 
    if(dynaVertexFreeList)
    {
       ret = dynaVertexFreeList;
       dynaVertexFreeList = dynaVertexFreeList->dynanext;
-      memset(ret, 0, sizeof(vertex_t));
+      memset(ret, 0, sizeof(dynavertex_t));
    }
    else
-      ret = estructalloc(vertex_t, 1);
+      ret = estructalloc(dynavertex_t, 1);
 
    return ret;
 }
@@ -112,12 +112,12 @@ vertex_t *R_GetFreeDynaVertex()
 //
 // Puts a dynamic vertex onto the free list, if its refcount becomes zero.
 //
-void R_FreeDynaVertex(vertex_t **vtx)
+void R_FreeDynaVertex(dynavertex_t **vtx)
 {
    if(!*vtx)
       return;
 
-   vertex_t *v = *vtx;
+   dynavertex_t *v = *vtx;
 
    if(v->refcount > 0)
    {
@@ -141,7 +141,7 @@ void R_FreeDynaVertex(vertex_t **vtx)
 // *target already points to a vertex, that vertex WILL be freed if its ref
 // count reaches zero.
 //
-void R_SetDynaVertexRef(vertex_t **target, vertex_t *vtx)
+void R_SetDynaVertexRef(dynavertex_t **target, dynavertex_t *vtx)
 {
    if(*target)
       R_FreeDynaVertex(target);
@@ -267,7 +267,7 @@ void R_DynaSegOffset(seg_t *lseg, line_t *line, int side)
 //
 // Gets a new dynaseg and initializes it with all needed information.
 //
-dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, vertex_t *v1, vertex_t *v2)
+dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, dynavertex_t *v1, dynavertex_t *v2)
 {
    dynaseg_t *ret = R_GetFreeDynaSeg();
 
@@ -277,8 +277,8 @@ dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, vertex_t *v1, vertex_t *v2)
    ret->seg.sidedef = proto->seg.sidedef;
 
    // vertices
-   R_SetDynaVertexRef(&(ret->seg.v1), v1);
-   R_SetDynaVertexRef(&(ret->seg.v2), v2);
+   R_SetDynaVertexRef(&ret->seg.dyv1, v1);
+   R_SetDynaVertexRef(&ret->seg.dyv2, v2);
 
    // calculate texture offset
    R_DynaSegOffset(&ret->seg, proto->seg.linedef, 0);
@@ -291,7 +291,7 @@ dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, vertex_t *v1, vertex_t *v2)
 //
 // Finds the point where a node line crosses a seg.
 //
-static bool R_IntersectPoint(seg_t *lseg, node_t *node, vertex_t &nv)
+static bool R_IntersectPoint(seg_t *lseg, node_t *node, dynavertex_t &nv)
 {
    // get the fnode for the node
    fnode_t *bsp = &fnodes[node - nodes];
@@ -300,7 +300,11 @@ static bool R_IntersectPoint(seg_t *lseg, node_t *node, vertex_t &nv)
    double b1 = lseg->v1->fx - lseg->v2->fx;
    double c1 = lseg->v2->fx * lseg->v1->fy - lseg->v1->fx * lseg->v2->fy;
 
-   v2float_t fbackup[2] = { lseg->v1->fbackup, lseg->v2->fbackup };
+   v2float_t fbackup[2] = 
+   { 
+      lseg->dyv1->fbackup, 
+      lseg->dyv2->fbackup 
+   };
    double ba1 = fbackup[1].y - fbackup[0].y;
    double bb1 = fbackup[0].x - fbackup[1].x;
    double bc1 = fbackup[1].x * fbackup[0].y - fbackup[0].x * fbackup[1].y;
@@ -402,7 +406,7 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
       {
          // the partition line crosses this seg, so we must split it.
          dynaseg_t *nds;
-         vertex_t  *nv = R_GetFreeDynaVertex();
+         dynavertex_t  *nv = R_GetFreeDynaVertex();
 
          if(R_IntersectPoint(lseg, bsp, *nv))
          {
@@ -411,10 +415,10 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
             M_AddToBox(bsp->bbox[1], nv->x, nv->y);
 
             // create new dynaseg from nv to seg->v2
-            nds = R_CreateDynaSeg(dseg, nv, lseg->v2);
+            nds = R_CreateDynaSeg(dseg, nv, lseg->dyv2);
 
             // alter current seg to run from seg->v1 to nv
-            R_SetDynaVertexRef(&lseg->v2, nv);
+            R_SetDynaVertexRef(&lseg->dyv2, nv);
 
             // recurse to split v2 side
             R_SplitLine(nds, bsp->children[side_v2]);
@@ -506,14 +510,22 @@ void R_AttachPolyObject(polyobj_t *poly)
       idseg->seg.linedef = line;
       idseg->seg.sidedef = &sides[line->sidenum[0]];
       
-      vertex_t *v1 = R_GetFreeDynaVertex();
-      vertex_t *v2 = R_GetFreeDynaVertex();
+      dynavertex_t *v1 = R_GetFreeDynaVertex();
+      dynavertex_t *v2 = R_GetFreeDynaVertex();
 
-      *v1 = *(line->v1);
-      *v2 = *(line->v2);
+      *static_cast<vertex_t *>(v1) = *line->v1;
+      v1->backup.x = poly->tmpVerts[line->v1->polyindex].x;
+      v1->backup.y = poly->tmpVerts[line->v1->polyindex].y;
+      v1->fbackup.x = poly->tmpVerts[line->v1->polyindex].fx;
+      v1->fbackup.y = poly->tmpVerts[line->v1->polyindex].fy;
+      *static_cast<vertex_t *>(v2) = *line->v2;
+      v2->backup.x = poly->tmpVerts[line->v2->polyindex].x;
+      v2->backup.y = poly->tmpVerts[line->v2->polyindex].y;
+      v2->fbackup.x = poly->tmpVerts[line->v2->polyindex].fx;
+      v2->fbackup.y = poly->tmpVerts[line->v2->polyindex].fy;
 
-      R_SetDynaVertexRef(&(idseg->seg.v1), v1);
-      R_SetDynaVertexRef(&(idseg->seg.v2), v2);
+      R_SetDynaVertexRef(&idseg->seg.dyv1, v1);
+      R_SetDynaVertexRef(&idseg->seg.dyv2, v2);
 
       // Split seg into BSP tree to generate more dynasegs;
       // The dynasegs are stored in the subsectors in which they finally end up.
@@ -572,8 +584,8 @@ void R_DetachPolyObject(polyobj_t *poly)
                dynaseg_t *nextds = ds->subnext;
                
                // free dynamic vertices
-               R_FreeDynaVertex(&(ds->seg.v1));
-               R_FreeDynaVertex(&(ds->seg.v2));
+               R_FreeDynaVertex(&ds->seg.dyv1);
+               R_FreeDynaVertex(&ds->seg.dyv2);
                
                // put this dynaseg on the free list
                R_FreeDynaSeg(ds);

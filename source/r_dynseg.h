@@ -76,10 +76,18 @@ struct rpolyobj_t
    rpolyobj_t *freenext; // next on freelist
 };
 
-vertex_t  *R_GetFreeDynaVertex();
-void       R_FreeDynaVertex(vertex_t **vtx);
-void       R_SetDynaVertexRef(vertex_t **target, vertex_t *vtx);
-dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, vertex_t *v1, vertex_t *v2);
+struct dynavertex_t : vertex_t
+{
+   struct dynavertex_t *dynanext;
+   int refcount;
+   v2fixed_t backup;
+   v2float_t fbackup;
+};
+
+dynavertex_t  *R_GetFreeDynaVertex();
+void       R_FreeDynaVertex(dynavertex_t **vtx);
+void       R_SetDynaVertexRef(dynavertex_t **target, dynavertex_t *vtx);
+dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, dynavertex_t *v1, dynavertex_t *v2);
 void       R_FreeDynaSeg(dynaseg_t *dseg);
 
 void R_AttachPolyObject(polyobj_t *poly);

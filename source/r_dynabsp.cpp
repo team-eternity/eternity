@@ -242,13 +242,18 @@ static void R_computeIntersection(dynaseg_t *part, dynaseg_t *seg,
 
    l2 = sqrt(dx2*dx2 + dy2*dy2);
 
+   const dynavertex_t *const segv1 = seg->seg.dyv1;
+   const dynavertex_t *const segv2 = seg->seg.dyv2;
+   const dynavertex_t *const partv1 = part->seg.dyv1;
+   const dynavertex_t *const partv2 = part->seg.dyv2;
+
    if(l2 == 0.0)
    {
       // feh.
       outx = seg->psx;
       outy = seg->psy;
       if(fbackup)
-         *fbackup = seg->seg.v1->fbackup;
+         *fbackup = segv1->fbackup;
       return;
    }
 
@@ -263,18 +268,18 @@ static void R_computeIntersection(dynaseg_t *part, dynaseg_t *seg,
       outy = seg->psy + (b2 * w);
       if(fbackup)
       {
-         double bdx = part->seg.v2->fbackup.x - part->seg.v1->fbackup.x;
-         double bdy = part->seg.v2->fbackup.y - part->seg.v1->fbackup.y;
-         double bdx2 = seg->seg.v2->fbackup.x - seg->seg.v1->fbackup.x;
-         double bdy2 = seg->seg.v2->fbackup.y - seg->seg.v1->fbackup.y;
+         double bdx = partv2->fbackup.x - partv1->fbackup.x;
+         double bdy = partv2->fbackup.y - partv1->fbackup.y;
+         double bdx2 = segv2->fbackup.x - segv1->fbackup.x;
+         double bdy2 = segv2->fbackup.y - segv1->fbackup.y;
          double bl2 = sqrt(bdx2 * bdx2 + bdy2 * bdy2);
          double ba2 = bdx2 / bl2;
          double bb2 = bdy2 / bl2;
          double bd = bdy * ba2 - bdx * bb2;
-         double bw = (bdx * (seg->seg.v1->fbackup.y - part->seg.v1->fbackup.y) +
-            bdy * (part->seg.v1->fbackup.x - seg->seg.v1->fbackup.x)) / bd;
-         fbackup->x = static_cast<float>(seg->seg.v1->fbackup.x + ba2 * bw);
-         fbackup->y = static_cast<float>(seg->seg.v1->fbackup.y + bb2 * bw);
+         double bw = (bdx * (segv1->fbackup.y - partv1->fbackup.y) +
+            bdy * (partv1->fbackup.x - segv1->fbackup.x)) / bd;
+         fbackup->x = static_cast<float>(segv1->fbackup.x + ba2 * bw);
+         fbackup->y = static_cast<float>(segv1->fbackup.y + bb2 * bw);
       }
    }
    else
@@ -282,7 +287,7 @@ static void R_computeIntersection(dynaseg_t *part, dynaseg_t *seg,
       outx = seg->psx;
       outy = seg->psy;
       if(fbackup)
-         *fbackup = seg->seg.v1->fbackup;
+         *fbackup = segv1->fbackup;
    }
 }
 
@@ -424,7 +429,7 @@ static void R_divideSegs(rpolynode_t *rpn, dseglist_t *ts,
          R_computeIntersection(best, seg, x, y, &fbackup);
 
          // create a new vertex at the intersection point
-         vertex_t *nv = R_GetFreeDynaVertex();
+         dynavertex_t *nv = R_GetFreeDynaVertex();
          nv->fx = static_cast<float>(x);
          nv->fy = static_cast<float>(y);
          nv->fbackup = fbackup;
@@ -434,14 +439,14 @@ static void R_divideSegs(rpolynode_t *rpn, dseglist_t *ts,
          nv->backup.y = M_DoubleToFixed(nv->fbackup.y);
 
          // create a new dynaseg from nv to v2
-         dynaseg_t *nds = R_CreateDynaSeg(seg, nv, seg->seg.v2);
+         dynaseg_t *nds = R_CreateDynaSeg(seg, nv, seg->seg.dyv2);
          R_setupDSForBSP(*nds);
          nds->seg.frontsector = seg->seg.frontsector;
          nds->seg.backsector  = seg->seg.backsector;
          nds->seg.len         = static_cast<float>(nds->len);
 
          // modify original seg to run from v1 to nv
-         R_SetDynaVertexRef(&(seg->seg.v2), nv);
+         R_SetDynaVertexRef(&seg->seg.dyv2, nv);
          R_setupDSForBSP(*seg);
 
          // add the new seg to the current node's ownership list,
@@ -589,8 +594,8 @@ static void R_returnOwnedList(rpolynode_t *node)
       dynaseg_t  *ds   = *dsl;
 
       // free dynamic vertices
-      R_FreeDynaVertex(&(ds->seg.v1));
-      R_FreeDynaVertex(&(ds->seg.v2));
+      R_FreeDynaVertex(&ds->seg.dyv1);
+      R_FreeDynaVertex(&ds->seg.dyv2);
 
       R_FreeDynaSeg(ds);
 

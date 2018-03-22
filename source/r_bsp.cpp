@@ -2534,7 +2534,7 @@ static bool R_CheckBBox(fixed_t *bspcoord) // killough 1/28/98: static
 //
 // Interpolate a rendering view point based on the player's location.
 //
-static void R_interpolateVertex(vertex_t &v, v2fixed_t &org, v2float_t &forg)
+static void R_interpolateVertex(dynavertex_t &v, v2fixed_t &org, v2float_t &forg)
 {
    org.x = v.x;
    org.y = v.y;
@@ -2567,8 +2567,8 @@ static void R_RenderPolyNode(rpolynode_t *node)
       v2fixed_t org[2];
       v2float_t forg[2];
       seg_t *seg = &node->partition->seg;
-      R_interpolateVertex(*seg->v1, org[0], forg[0]);
-      R_interpolateVertex(*seg->v2, org[1], forg[1]);
+      R_interpolateVertex(*seg->dyv1, org[0], forg[0]);
+      R_interpolateVertex(*seg->dyv2, org[1], forg[1]);
       R_AddLine(seg, true);
       seg->v1->x = org[0].x;
       seg->v1->y = org[0].y;
