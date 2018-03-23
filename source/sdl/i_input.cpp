@@ -586,7 +586,7 @@ static void I_GetEvent(SDL_Window *window)
                I_QuitFast();
                break;
             }
-            else if(ev.key.keysym.scancode & SDL_SCANCODE_F)
+            else if(ev.key.keysym.scancode == SDL_SCANCODE_F)
             {
                I_ToggleFullscreen();
                break;
