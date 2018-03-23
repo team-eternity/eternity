@@ -29,6 +29,7 @@
 #include "z_zone.h"
 #include "i_system.h"
 #include "m_bbox.h"
+#include "m_collection.h"
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_dynseg.h"
@@ -53,6 +54,11 @@ static dynavertex_t *dynaVertexFreeList;
 // rpolyobj_t freelist
 //
 static rpolyobj_t *freePolyFragments;
+
+//
+// Dynavertices added this tic.
+//
+static PODCollection<dynavertex_t *> gTicDynavertices;
 
 //
 // R_AddDynaSubsec
@@ -104,6 +110,7 @@ dynavertex_t *R_GetFreeDynaVertex()
    else
       ret = estructalloc(dynavertex_t, 1);
 
+   gTicDynavertices.add(ret);
    return ret;
 }
 
@@ -131,6 +138,22 @@ void R_FreeDynaVertex(dynavertex_t **vtx)
    }
 
    *vtx = NULL;
+}
+
+//
+// Stores the positions of the relevant dynavertices at the beginning of tic.
+// Called at the same moment sector heights are backed up.
+//
+void R_SaveDynasegPositions()
+{
+   for(dynavertex_t *vertex : gTicDynavertices)
+   {
+      vertex->backup.x = vertex->x;
+      vertex->backup.y = vertex->y;
+      vertex->fbackup.x = vertex->fx;
+      vertex->fbackup.y = vertex->fy;
+   }
+   gTicDynavertices.makeEmpty();
 }
 
 //

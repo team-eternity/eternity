@@ -90,6 +90,8 @@ void       R_SetDynaVertexRef(dynavertex_t **target, dynavertex_t *vtx);
 dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, dynavertex_t *v1, dynavertex_t *v2);
 void       R_FreeDynaSeg(dynaseg_t *dseg);
 
+void R_SaveDynasegPositions();
+
 void R_AttachPolyObject(polyobj_t *poly);
 void R_DetachPolyObject(polyobj_t *poly);
 void R_ClearDynaSegs();
