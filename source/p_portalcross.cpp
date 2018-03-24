@@ -311,18 +311,14 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
                       &groupid, data, gcount] (int x, int y) -> bool
       {
          // Check for portals
-         const int *block = gBlockGroups[y * bmapwidth + x];
-         for(int i = 1; i <= block[0]; ++i)
+         const portallist_t &block = gBlockGroups[y * bmapwidth + x];
+         for(int i = 0; i < block.count; ++i)
          {
-#ifdef RANGECHECK
-            if(block[i] < 0 || block[i] >= gcount)
-               I_Error("P_TransPortalBlockWalker: i (%d) out of range (count %d)", block[i], gcount);
-#endif
             // Add to queue and visitlist
-            if(!accessedgroupids[block[i]])
+            if(!accessedgroupids[block.links[i]->toid])
             {
-               accessedgroupids[block[i]] = true;
-               groupqueue[queueback++] = block[i];
+               accessedgroupids[block.links[i]->toid] = true;
+               groupqueue[queueback++] = block.links[i]->toid;
             }
          }
 

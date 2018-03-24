@@ -60,6 +60,7 @@ void P_InitThingLists();
 
 // IOANCH 20151210: made these global so they can be accessed from e_udmf
 struct line_t;
+struct linkdata_t;
 struct mapthing_t;
 struct sector_t;
 struct side_t;
@@ -73,6 +74,11 @@ bool P_CheckThingDoomBan(int16_t type);
 void P_ConvertHereticThing(mapthing_t *mthing);
 void P_ConvertDoomExtendedSpawnNum(mapthing_t *mthing);
 
+struct portallist_t
+{
+   int count;
+   const linkdata_t **links;
+};
 
 extern byte     *rejectmatrix;   // for fast sight rejection
 
@@ -85,7 +91,7 @@ extern fixed_t  bmaporgx;
 extern fixed_t  bmaporgy;        // origin of block map
 extern Mobj   **blocklinks;      // for thing chains
 extern byte    *portalmap;       // haleyjd: for fast linked portal checks
-extern int    **gBlockGroups;    // ioanch 20160106: for each block, prt. groups
+extern portallist_t *gBlockGroups;    // ioanch 20160106: for each block, prt. groups
 extern bool     skipblstart;     // MaxW: Skip initial blocklist short
 
 // haleyjd 05/17/13: portalmap flags

@@ -531,7 +531,7 @@ static void P_GlobalPortalStateCheck()
 //
 static void P_buildPortalMap()
 {
-   PODCollection<int> curGroups; // ioanch 20160106: keep list of current groups
+   PODCollection<const linkdata_t *> curGroups; // ioanch 20160106: keep list of current groups
    size_t pcount = P_PortalGroupCount();
    gGroupVisit = ecalloctag(bool *, sizeof(bool), pcount, PU_LEVEL, nullptr);
    // ioanch 20160227: prepare other groups too
@@ -542,12 +542,12 @@ static void P_buildPortalMap()
    gMapHasSectorPortals = false; // init with false
    gMapHasLinePortals = false;
    
-   auto addPortal = [&curGroups](int groupid)
+   auto addPortal = [&curGroups](const linkdata_t &ldata)
    {
-      if(!gGroupVisit[groupid])
+      if(!gGroupVisit[ldata.toid])
       {
-         gGroupVisit[groupid] = true;
-         curGroups.add(groupid);
+         gGroupVisit[ldata.toid] = true;
+         curGroups.add(&ldata);
       }
    };
    
@@ -582,13 +582,13 @@ static void P_buildPortalMap()
             if(sector->c_pflags & PS_PASSABLE)
             {
                portalmap[writeOfs] |= PMF_CEILING;
-               curGroups.add(sector->c_portal->data.link.toid);
+               curGroups.add(&sector->c_portal->data.link);
                gMapHasSectorPortals = true;
             }
             if(sector->f_pflags & PS_PASSABLE)
             {
                portalmap[writeOfs] |= PMF_FLOOR;
-               curGroups.add(sector->f_portal->data.link.toid);
+               curGroups.add(&sector->f_portal->data.link);
                gMapHasSectorPortals = true;
             }
          }
@@ -598,46 +598,46 @@ static void P_buildPortalMap()
             if(li.pflags & PS_PASSABLE)
             {
                portalmap[writeOfs] |= PMF_LINE;
-               addPortal(li.portal->data.link.toid);
+               addPortal(li.portal->data.link);
                gMapHasLinePortals = true;
             }
             if(li.frontsector->c_pflags & PS_PASSABLE)
             {
                portalmap[writeOfs] |= PMF_CEILING;
-               addPortal(li.frontsector->c_portal->data.link.toid);
+               addPortal(li.frontsector->c_portal->data.link);
                gMapHasSectorPortals = true;
             }
             if(li.backsector && li.backsector->c_pflags & PS_PASSABLE)
             {
                portalmap[writeOfs] |= PMF_CEILING;
-               addPortal(li.backsector->c_portal->data.link.toid);
+               addPortal(li.backsector->c_portal->data.link);
                gMapHasSectorPortals = true;
             }
             if(li.frontsector->f_pflags & PS_PASSABLE)
             {
                portalmap[writeOfs] |= PMF_FLOOR;
-               addPortal(li.frontsector->f_portal->data.link.toid);
+               addPortal(li.frontsector->f_portal->data.link);
                gMapHasSectorPortals = true;
             }
             if(li.backsector && li.backsector->f_pflags & PS_PASSABLE)
             {
                portalmap[writeOfs] |= PMF_FLOOR;
-               addPortal(li.backsector->f_portal->data.link.toid);
+               addPortal(li.backsector->f_portal->data.link);
                gMapHasSectorPortals = true;
             }
          }
-         if(gBlockGroups[writeOfs])
+         if(gBlockGroups[writeOfs].links)
             I_Error("P_buildPortalMap: non-null gBlockGroups entry!");
          
          size_t curSize = curGroups.getLength();
-         gBlockGroups[writeOfs] = emalloctag(int *, 
-            (curSize + 1) * sizeof(int), PU_LEVEL, nullptr);
-         gBlockGroups[writeOfs][0] = static_cast<int>(curSize);
+         gBlockGroups[writeOfs].links = emalloctag(const linkdata_t **, 
+            curSize * sizeof(linkdata_t *), PU_LEVEL, nullptr);
+         gBlockGroups[writeOfs].count = static_cast<int>(curSize);
          // just copy...
          if(curSize)
          {
-            memcpy(gBlockGroups[writeOfs] + 1, &curGroups[0], 
-               curSize * sizeof(int));
+            memcpy(gBlockGroups[writeOfs].links, &curGroups[0], 
+               curSize * sizeof(const linkdata_t *));
          }
       }
    }
