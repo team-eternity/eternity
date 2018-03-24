@@ -320,6 +320,7 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
                accessedgroupids[block.links[i]->toid] = true;
                groupqueue[queueback++] = block.links[i]->toid;
             }
+            P_FitLinkOffsetsToPortal(*block.links[i]);
          }
 
          // Also check for polyobjects

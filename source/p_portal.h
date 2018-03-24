@@ -46,6 +46,7 @@ extern const polyobj_s **gGroupPolyobject; // ioanch 20160227
 #define R_NOGROUP -1
 #endif
 
+struct linkdata_t;
 struct portal_t;
 struct sector_t;
 
@@ -108,6 +109,8 @@ void P_LinePortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
                              int fromid, int toid);
 
 void R_SetSectorGroupID(sector_t *sector, int groupid);
+
+void P_FitLinkOffsetsToPortal(const linkdata_t &ldata);
 
 //
 // P_CheckCPortalState
