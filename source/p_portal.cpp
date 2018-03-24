@@ -436,20 +436,6 @@ static bool P_CheckLinkedPortal(portal_t *const portal, sector_t *sec)
       if(ret)
          return false;
    }
-   else
-   {
-      // Check for consistency
-      if(link->x != portal->data.link.deltax ||
-         link->y != portal->data.link.deltay ||
-         link->z != portal->data.link.deltaz)
-      {
-         C_Printf(FC_ERROR "P_BuildLinkTable: sector %i in group %i contains "
-                  "inconsistent reference to group %i.\n"
-                  "Linked portals are disabled.\a\n", 
-                  i, sec->groupid, portal->data.link.toid);
-         return false;
-      }
-   }
 
    return true;
 }
