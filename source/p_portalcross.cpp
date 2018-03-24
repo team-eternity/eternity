@@ -311,7 +311,7 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
                       &groupid, data, gcount] (int x, int y) -> bool
       {
          // Check for portals
-         const portallist_t &block = gBlockGroups[y * bmapwidth + x];
+         const portalblock_t &block = gBlockGroups[y * bmapwidth + x];
          for(int i = 0; i < block.count; ++i)
          {
             // Add to queue and visitlist
