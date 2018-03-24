@@ -381,7 +381,7 @@ static int P_AddLinkOffset(int startgroup, int targetgroup,
 //
 // This function performs various consistency and validation checks.
 //
-static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
+static bool P_CheckLinkedPortal(portal_t *const portal, sector_t *sec)
 {
    int i = eindex(sec - sectors);
 
@@ -390,7 +390,8 @@ static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
    if(portal->type != R_LINKED)
       return true;
 
-   if(portal->data.link.toid == sec->groupid)
+   const linkdata_t &ldata = portal->data.link;
+   if(ldata.toid == sec->groupid)
    {
       C_Printf(FC_ERROR "P_BuildLinkTable: sector %i portal references the "
                "portal group to which it belongs.\n"
@@ -398,10 +399,10 @@ static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
       return false;
    }
 
-   if(portal->data.link.fromid < 0 || 
-      portal->data.link.fromid >= groupcount ||
-      portal->data.link.toid < 0 || 
-      portal->data.link.toid >= groupcount)
+   if(ldata.fromid < 0 || 
+      ldata.fromid >= groupcount ||
+      ldata.toid < 0 || 
+      ldata.toid >= groupcount)
    {
       C_Printf(FC_ERROR "P_BuildLinkTable: sector %i portal has a groupid out "
                "of range.\nLinked portals are disabled.\a\n", i);
@@ -416,22 +417,22 @@ static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
       return false;
    }
    
-   if(sec->groupid != portal->data.link.fromid)
+   if(sec->groupid != ldata.fromid)
    {
       C_Printf(FC_ERROR "P_BuildLinkTable: sector %i does not belong to the "
                "the portal's fromid\nLinked portals are disabled.\a\n", i);
       return false;
    }
 
-   auto link = linktable[sec->groupid * groupcount + portal->data.link.toid];
+   auto link = linktable[sec->groupid * groupcount + ldata.toid];
 
    // We've found a linked portal so add the entry to the table
    if(!link)
    {
-      int ret = P_AddLinkOffset(sec->groupid, portal->data.link.toid,
-                                portal->data.link.deltax, 
-                                portal->data.link.deltay, 
-                                portal->data.link.deltaz);
+      int ret = P_AddLinkOffset(sec->groupid, ldata.toid,
+                                ldata.deltax, 
+                                ldata.deltay, 
+                                ldata.deltaz);
       if(ret)
          return false;
    }
