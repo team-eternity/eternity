@@ -509,37 +509,10 @@ void P_FitLinkOffsetsToPortal(const linkdata_t &ldata)
                        ldata.deltaz - offset->z };
    if(!shift.x && !shift.y && !shift.z)
       return;
-   /*
+   
    bool *groupvisit = ecalloc(bool *, sizeof(bool), groupcount);
-   P_MoveGroupCluster(ldata.fromid, ldata.toid, groupvisit, shift.x, shift.y, nullptr);
+   P_MoveGroupCluster(ldata.fromid, ldata.toid, groupvisit, -shift.x, -shift.y, nullptr);
    efree(groupvisit);
-   */
-
-   for(int i = 0; i < groupcount; ++i)
-   {
-      if(i == ldata.fromid)
-         continue;
-      offset = P_GetLinkOffset(ldata.fromid, i);
-      offset->x += shift.x;
-      offset->y += shift.y;
-      offset->z += shift.z;
-      offset = P_GetLinkOffset(i, ldata.fromid);
-      offset->x -= shift.x;
-      offset->y -= shift.y;
-      offset->z -= shift.z;
-   }
-   /*
-   printf("\n%d.\n", gametic);
-   for(int i = 0; i < groupcount; ++i)
-   {
-      for(int j = 0; j < groupcount; ++j)
-      {
-         offset = P_GetLinkOffset(i, j);
-         printf("(%g %g) ", offset->x / 65536., offset->y / 65536.);
-      }
-      puts("");
-   }
-   */
 }
 
 static void P_GlobalPortalStateCheck()

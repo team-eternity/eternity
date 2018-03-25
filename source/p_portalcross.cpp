@@ -359,7 +359,7 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
             accessedgroupids[entry.ldata->toid] = true;
             portalqueue[queueback++] = &entry;
             
-            // TODO: Add P_FitLinkOffsetsToPortal(*block.links[i]); again
+            P_FitLinkOffsetsToPortal(*entry.ldata);
          }
 
          // now call the function

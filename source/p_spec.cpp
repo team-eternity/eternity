@@ -1558,6 +1558,8 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
 
    // haleyjd 02/20/06: spawn polyobjects
    Polyobj_InitLevel();
+   if(!numPolyObjects)
+      P_MarkPortalClusters();
 
    // haleyjd 06/18/14: spawn level actions
    P_SpawnLevelActions();
