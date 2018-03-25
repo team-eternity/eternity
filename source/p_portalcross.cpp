@@ -32,6 +32,7 @@
 #include "m_bbox.h"
 #include "p_maputl.h"
 #include "p_portal.h"
+#include "p_portalblockmap.h"
 #include "p_portalcross.h"
 #include "p_setup.h"
 #include "polyobj.h"
@@ -275,7 +276,7 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
    // OPTIMIZE: if needed, use some global store instead of malloc
    bool *accessedgroupids = ecalloc(bool *, gcount, sizeof(*accessedgroupids));
    accessedgroupids[groupid] = true;
-   int *groupqueue = ecalloc(int *, gcount, sizeof(*groupqueue));
+   auto portalqueue = ecalloc(const portalblockentry_t **, gcount, sizeof(portalblockentry_t *));
    int queuehead = 0;
    int queueback = 0;
 
@@ -307,39 +308,25 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
          yh = bmapheight - 1;
 
       // Define a function to use in the 'for' blocks
-      auto operate = [accessedgroupids, groupqueue, &queueback, func,
+      auto operate = [accessedgroupids, portalqueue, &queueback, func,
                       &groupid, data, gcount] (int x, int y) -> bool
       {
          // Check for portals
-         const portalblock_t &block = gBlockGroups[y * bmapwidth + x];
-         for(int i = 0; i < block.count; ++i)
+         const PODCollection<portalblockentry_t> &block = gPortalBlockmap[y * bmapwidth + x];
+         for(const portalblockentry_t &entry : block)
          {
-            // Add to queue and visitlist
-            if(!accessedgroupids[block.links[i]->toid])
+            if(accessedgroupids[entry.ldata->toid])
+               continue;
+            if(entry.type == portalblocktype_e::sector &&
+               ((!entry.isceiling && !(entry.sector->f_pflags & PS_PASSABLE)) ||
+                ( entry.isceiling && !(entry.sector->c_pflags & PS_PASSABLE)) ))
             {
-               accessedgroupids[block.links[i]->toid] = true;
-               groupqueue[queueback++] = block.links[i]->toid;
+               continue;   // be careful to skip concealed portals.
             }
-            P_FitLinkOffsetsToPortal(*block.links[i]);
-         }
-
-         // Also check for polyobjects
-         for(const DLListItem<polymaplink_t> *plink
-             = polyblocklinks[y * bmapwidth + x]; plink; plink = plink->dllNext)
-         {
-            const polyobj_t *po = (*plink)->po;
-            for(size_t i = 0; i < po->numPortals; ++i)
-            {
-               if(po->portals[i]->type != R_LINKED)
-                  continue;
-               int groupid = po->portals[i]->data.link.toid;
-               // TODO: use the portal itself, not the group ID
-               if(!accessedgroupids[groupid])
-               {
-                  accessedgroupids[groupid] = true;
-                  groupqueue[queueback++] = groupid;
-               }
-            }
+            accessedgroupids[entry.ldata->toid] = true;
+            portalqueue[queueback++] = &entry;
+            
+            // TODO: Add P_FitLinkOffsetsToPortal(*block.links[i]); again
          }
 
          // now call the function
@@ -358,7 +345,7 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
             for(y = yl; y <= yh; ++y)
                if(!operate(x, y))
                {
-                  efree(groupqueue);
+                  efree(portalqueue);
                   efree(accessedgroupids);
                   return false;
                }
@@ -368,7 +355,7 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
             for(x = xl; x <= xh; ++x)
                if(!operate(x, y))
                {
-                  efree(groupqueue);
+                  efree(portalqueue);
                   efree(accessedgroupids);
                   return false;
                }
@@ -380,7 +367,7 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
       {
          do
          {
-            link = P_GetLinkOffset(groupid, groupqueue[queuehead]);
+            link = P_GetLinkOffset(groupid, portalqueue[queuehead]->ldata->toid);
             ++queuehead;
 
             // make sure to reject trivial (zero) links
@@ -388,7 +375,7 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
 
          // if a valid link has been found, also update current groupid
          if(link->x || link->y)
-            groupid = groupqueue[queuehead - 1];
+            groupid = portalqueue[queuehead - 1]->ldata->toid;
       }
 
       // if a valid link has been found (and groupid updated) continue
@@ -396,7 +383,7 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
 
    // we now have the list of accessedgroupids
    
-   efree(groupqueue);
+   efree(portalqueue);
    efree(accessedgroupids);
    return true;
 }
