@@ -626,13 +626,13 @@ static void P_buildPortalMap()
                ::bmaporgx + (x << MAPBLOCKSHIFT) + (MAPBLOCKSHIFT / 2),
                ::bmaporgy + (y << MAPBLOCKSHIFT) + (MAPBLOCKSHIFT / 2))->sector;
 
-            if(sector->c_pflags & PS_PASSABLE)
+            if(sector->c_portal && sector->c_portal->type == R_LINKED)
             {
                portalmap[writeOfs] |= PMF_CEILING;
                curGroups.add(&sector->c_portal->data.link);
                gMapHasSectorPortals = true;
             }
-            if(sector->f_pflags & PS_PASSABLE)
+            if(sector->f_portal && sector->f_portal->type == R_LINKED)
             {
                portalmap[writeOfs] |= PMF_FLOOR;
                curGroups.add(&sector->f_portal->data.link);
@@ -648,25 +648,25 @@ static void P_buildPortalMap()
                addPortal(li.portal->data.link);
                gMapHasLinePortals = true;
             }
-            if(li.frontsector->c_pflags & PS_PASSABLE)
+            if(li.frontsector->c_portal && li.frontsector->c_portal->type == R_LINKED)
             {
                portalmap[writeOfs] |= PMF_CEILING;
                addPortal(li.frontsector->c_portal->data.link);
                gMapHasSectorPortals = true;
             }
-            if(li.backsector && li.backsector->c_pflags & PS_PASSABLE)
+            if(li.backsector && li.backsector->c_portal && li.backsector->c_portal->type == R_LINKED)
             {
                portalmap[writeOfs] |= PMF_CEILING;
                addPortal(li.backsector->c_portal->data.link);
                gMapHasSectorPortals = true;
             }
-            if(li.frontsector->f_pflags & PS_PASSABLE)
+            if(li.frontsector->f_portal && li.frontsector->f_portal->type == R_LINKED)
             {
                portalmap[writeOfs] |= PMF_FLOOR;
                addPortal(li.frontsector->f_portal->data.link);
                gMapHasSectorPortals = true;
             }
-            if(li.backsector && li.backsector->f_pflags & PS_PASSABLE)
+            if(li.backsector && li.backsector->f_portal && li.backsector->f_portal->type == R_LINKED)
             {
                portalmap[writeOfs] |= PMF_FLOOR;
                addPortal(li.backsector->f_portal->data.link);
