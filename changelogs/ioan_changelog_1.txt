@@ -8,6 +8,17 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+26.03.2018
+
+FEATURE: Incosistent linked portals between separate sector islands are now
+         supported! This means you can now place "wormholes" in the map without
+         getting errors! The link offsets are updated dynamically in order to 
+         provide a gameplay as good as possible.
+         
+         There is still a restriction left: do not place portals between two
+         areas already interconnected by sectors. That would still error out.
+
+--------------------------------------------------------------------------------
 23.03.2018
 
 IMPROVEMENT: Polyobject movement is now interpolated, though moving portals not
