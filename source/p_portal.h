@@ -72,6 +72,14 @@ enum
    paramPortal_linked = 6,
 };
 
+//
+// Portal map block. Lists portals present in some block.
+//
+struct portalblock_t
+{
+   int count;
+   const linkdata_t **links;
+};
 
 //
 // P_PortalGroupCount

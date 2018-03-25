@@ -62,6 +62,7 @@ void P_InitThingLists();
 struct line_t;
 struct linkdata_t;
 struct mapthing_t;
+struct portalblock_t;
 struct sector_t;
 struct side_t;
 void P_SetupLevelError(const char *msg, const char *levelname);
@@ -73,12 +74,6 @@ void P_SetupSidedefTextures(side_t &sd, const char *bottomTexture,
 bool P_CheckThingDoomBan(int16_t type);
 void P_ConvertHereticThing(mapthing_t *mthing);
 void P_ConvertDoomExtendedSpawnNum(mapthing_t *mthing);
-
-struct portalblock_t
-{
-   int count;
-   const linkdata_t **links;
-};
 
 extern byte     *rejectmatrix;   // for fast sight rejection
 
