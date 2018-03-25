@@ -38,6 +38,7 @@
 #include "polyobj.h"
 #include "r_main.h"
 #include "r_portal.h"
+#include "r_state.h"
 
 //==============================================================================
 //
@@ -256,6 +257,35 @@ inline static bool P_simpleBlockWalker(const fixed_t bbox[4], bool xfirst, void 
 }
 
 //
+// Checks if a portal blockmap entry touches a box
+//
+static bool P_boxTouchesBlockPortal(const portalblockentry_t &entry, const fixed_t bbox[4])
+{
+   auto checkline = [bbox](const line_t &line) {
+      if(!M_BoxesTouch(line.bbox, bbox))
+         return false;
+      return P_BoxOnLineSide(bbox, &line) == -1;
+   };
+
+   if(entry.type == portalblocktype_e::line)
+      return checkline(*entry.line);
+   // Sector
+   // Quick check for location
+   const sector_t &sector = *entry.sector;
+   if(!M_BoxesTouch(pSectorBoxes[&sector - sectors].box, bbox))
+      return false;
+   if(R_PointInSubsector(bbox[BOXLEFT] / 2 + bbox[BOXRIGHT] / 2,
+      bbox[BOXBOTTOM] / 2 + bbox[BOXTOP] / 2)->sector == &sector)
+   {
+      return true;
+   }
+   for(int i = 0; i < sector.linecount; ++i)
+      if(checkline(*sector.lines[i]))
+         return true;
+   return false;
+}
+
+//
 // P_TransPortalBlockWalker
 //
 // ioanch 20160107
@@ -309,7 +339,7 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
 
       // Define a function to use in the 'for' blocks
       auto operate = [accessedgroupids, portalqueue, &queueback, func,
-                      &groupid, data, gcount] (int x, int y) -> bool
+                      &groupid, data, gcount, movedBBox] (int x, int y) -> bool
       {
          // Check for portals
          const PODCollection<portalblockentry_t> &block = gPortalBlockmap[y * bmapwidth + x];
@@ -323,6 +353,9 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
             {
                continue;   // be careful to skip concealed portals.
             }
+            if(!P_boxTouchesBlockPortal(entry, movedBBox))
+               continue;
+
             accessedgroupids[entry.ldata->toid] = true;
             portalqueue[queueback++] = &entry;
             
