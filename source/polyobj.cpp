@@ -44,6 +44,7 @@
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_portal.h"
+#include "p_portalblockmap.h"
 #include "p_saveg.h"
 #include "p_setup.h"
 #include "p_slopes.h"
@@ -671,6 +672,12 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
       line_t &line = *po->lines[i];
       line.soundorg.x = line.v1->x + line.dx / 2;
       line.soundorg.y = line.v1->y + line.dy / 2;
+
+      if(line.portal && line.portal->type == R_LINKED)
+      {
+         gPortalBlockmap.unlinkLine(line);
+         gPortalBlockmap.linkLine(line);
+      }
    }
 
    Polyobj_setCenterPt(po);
@@ -1015,7 +1022,16 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
 
    // translate each line
    for(i = 0; i < po->numLines; ++i)
+   {
       Polyobj_bboxAdd(po->lines[i]->bbox, &vec);
+
+      // This must be here because things may collide.
+      if(po->lines[i]->portal && po->lines[i]->portal->type == R_LINKED)
+      {
+         gPortalBlockmap.unlinkLine(*po->lines[i]);
+         gPortalBlockmap.linkLine(*po->lines[i]);
+      }
+   }
 
    // check for blocking things (yes, it needs to be done separately)
    // ioanch 20160302: do NOT collide and get back if onload = true.
@@ -1031,7 +1047,14 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
       
       // reset lines that have been moved
       for(i = 0; i < po->numLines; ++i)
-         Polyobj_bboxSub(po->lines[i]->bbox, &vec);      
+      {
+         Polyobj_bboxSub(po->lines[i]->bbox, &vec);
+         if(po->lines[i]->portal && po->lines[i]->portal->type == R_LINKED)
+         {
+            gPortalBlockmap.unlinkLine(*po->lines[i]);
+            gPortalBlockmap.linkLine(*po->lines[i]);
+         }
+      }
 
       // ioanch 20160226: update portal position
       // CAREFUL: do not replace this and the previous call to a single call,
@@ -1178,7 +1201,14 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
 
    // rotate lines
    for(i = 0; i < po->numLines; ++i)
+   {
       Polyobj_rotateLine(po->lines[i]);
+      if(po->lines[i]->portal && po->lines[i]->portal->type == R_LINKED)
+      {
+         gPortalBlockmap.unlinkLine(*po->lines[i]);
+         gPortalBlockmap.linkLine(*po->lines[i]);
+      }
+   }
 
    // check for blocking things
    // ioanch 20160302: do NOT collide if onload = true.
@@ -1194,7 +1224,14 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
 
       // reset lines
       for(i = 0; i < po->numLines; ++i)
+      {
          Polyobj_rotateLine(po->lines[i]);
+         if(po->lines[i]->portal && po->lines[i]->portal->type == R_LINKED)
+         {
+            gPortalBlockmap.unlinkLine(*po->lines[i]);
+            gPortalBlockmap.linkLine(*po->lines[i]);
+         }
+      }
    }
    else
    {
