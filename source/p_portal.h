@@ -207,12 +207,13 @@ bool P_BlockHasLinkedPortals(int index, bool includesectors);
 //
 
 //
-// Line portal blockmap: stores just the portal linedefs on the blockmap
+// Line portal blockmap: stores just the portal linedefs on the blockmap.
+// Only used by rendering facilities (e.g. sprite projections) right now.
 //
-class LinePortalBlockmap
+class LinePortalRenderBlockmap
 {
 public:
-   LinePortalBlockmap() : mValidcount(0), mValids(nullptr)
+   LinePortalRenderBlockmap() : mValidcount(0), mValids(nullptr)
    {
    }
 
@@ -230,7 +231,7 @@ private:
    int *mValids;
 };
 
-extern LinePortalBlockmap pLPortalMap;
+extern LinePortalRenderBlockmap pLPortalMap;
 
 #endif
 

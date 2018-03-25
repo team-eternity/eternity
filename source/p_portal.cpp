@@ -1272,12 +1272,12 @@ bool P_BlockHasLinkedPortals(int index, bool includesectors)
 //
 // More portal blockmap stuff (besides portalmap and gBlockGroups from p_setup)
 //
-LinePortalBlockmap pLPortalMap;
+LinePortalRenderBlockmap pLPortalMap;
 
 //
 // Initialization per map. Makes PU_LEVEL allocations
 //
-void LinePortalBlockmap::mapInit()
+void LinePortalRenderBlockmap::mapInit()
 {
    mMap.clear();
    int numblocks = bmapwidth * bmapheight;
@@ -1324,7 +1324,7 @@ void LinePortalBlockmap::mapInit()
 //
 // Does the iteration
 //
-bool LinePortalBlockmap::iterator(int x, int y, void *data,
+bool LinePortalRenderBlockmap::iterator(int x, int y, void *data,
                                   bool (*func)(const line_t &, void *data)) const
 {
    if(x < 0 || x >= bmapwidth || y < 0 || y >= bmapheight)
