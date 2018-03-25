@@ -34,6 +34,7 @@
 #include "p_chase.h"
 #include "polyobj.h"
 #include "p_portal.h"
+#include "p_portalblockmap.h"
 #include "p_setup.h"
 #include "p_user.h"
 #include "r_main.h"
@@ -690,6 +691,7 @@ static void P_buildPortalMap()
    }
 
    pLPortalMap.mapInit();
+   gPortalBlockmap.mapInit();
 }
 
 //
