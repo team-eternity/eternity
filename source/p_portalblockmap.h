@@ -73,6 +73,11 @@ public:
    void unlinkLine(const line_t &line);
    void linkLine(const line_t &line);
 
+   const PODCollection<portalblockentry_t> &operator[](int index) const
+   {
+      return mBlocks[index];
+   }
+
 private:
    //
    // Line reference in blockmap
