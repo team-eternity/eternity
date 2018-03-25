@@ -64,8 +64,8 @@ void PortalBlockmap::mapInit()
       const sector_t &sector = *R_PointInSubsector(
          bmaporgx + i % bmapwidth * MAPBLOCKSIZE + MAPBLOCKSIZE / 2,
          bmaporgy + i / bmapwidth * MAPBLOCKSIZE + MAPBLOCKSIZE / 2)->sector;
-      checkLinkSector(sector, sector.f_portal, i);
-      checkLinkSector(sector, sector.c_portal, i);
+      checkLinkSector(sector, sector.f_portal, false, i);
+      checkLinkSector(sector, sector.c_portal, true, i);
    }
    mInitializing = false;
 }
@@ -151,12 +151,12 @@ void PortalBlockmap::linkLine(const line_t &line)
 
       if(mInitializing)
       {
-         checkLinkSector(*line.frontsector, line.frontsector->f_portal, b);
-         checkLinkSector(*line.frontsector, line.frontsector->c_portal, b);
+         checkLinkSector(*line.frontsector, line.frontsector->f_portal, false, b);
+         checkLinkSector(*line.frontsector, line.frontsector->c_portal, true, b);
          if(line.backsector)
          {
-            checkLinkSector(*line.backsector, line.backsector->f_portal, b);
-            checkLinkSector(*line.backsector, line.backsector->c_portal, b);
+            checkLinkSector(*line.backsector, line.backsector->f_portal, false, b);
+            checkLinkSector(*line.backsector, line.backsector->c_portal, true, b);
          }
       }
 
@@ -183,7 +183,8 @@ void PortalBlockmap::linkLine(const line_t &line)
 // Not optimized for gametime.
 // Sector NOT assumed to have a linked portals or unadded.
 //
-void PortalBlockmap::checkLinkSector(const sector_t &sector, const portal_t *portal, int mapindex)
+void PortalBlockmap::checkLinkSector(const sector_t &sector, const portal_t *portal, bool isceiling,
+   int mapindex)
 {
    if(!portal || portal->type != R_LINKED)
       return;
@@ -199,6 +200,7 @@ void PortalBlockmap::checkLinkSector(const sector_t &sector, const portal_t *por
    entry.ldata = &portal->data.link;
    entry.type = portalblocktype_e::sector;
    entry.sector = &sector;
+   entry.isceiling = isceiling;
 
    double debugx = M_FixedToDouble(mapindex % bmapwidth * MAPBLOCKSIZE + bmaporgx);
    double debugy = M_FixedToDouble(mapindex / bmapwidth * MAPBLOCKSIZE + bmaporgy);

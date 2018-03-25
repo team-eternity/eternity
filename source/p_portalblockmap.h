@@ -55,7 +55,11 @@ struct portalblockentry_t
          const line_t *line;  // source line. Unique per block.
          int linerefindex;    // index of this entry in the lineref array.
       };
-      const sector_t *sector; // source sector. Pair sector/ldata unique per block.
+      struct
+      {
+         const sector_t *sector; // source sector. Pair sector/ldata unique per block.
+         bool isceiling;      // true if ceiling, not floor.
+      };
    };   
 };
 
@@ -88,7 +92,8 @@ private:
    // Set to true during initialization
    bool mInitializing;
 
-   void checkLinkSector(const sector_t &sector, const portal_t *portal, int mapindex);
+   void checkLinkSector(const sector_t &sector, const portal_t *portal, bool isceiling, 
+      int mapindex);
 };
 
 extern PortalBlockmap gPortalBlockmap;
