@@ -1012,15 +1012,17 @@ void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z)
 {
    if(followplayer || !map_point_coordinates)
    {
-      x = mo->x;
-      y = mo->y;
-      z = mo->z;
+      const linkoffset_t &link = *P_GetLinkOffset(mo->groupid, 0);
+      x = mo->x + link.x;
+      y = mo->y + link.y;
+      z = mo->z + link.z;
    }
    else
    {
-      x = M_DoubleToFixed(m_x + m_w / 2);
-      y = M_DoubleToFixed(m_y + m_h / 2);
-      z = R_PointInSubsector(x, y)->sector->floorheight;
+      const linkoffset_t &link = *P_GetLinkOffset(plr->mo->groupid, 0);
+      x = M_DoubleToFixed(m_x + m_w / 2) + link.x;
+      y = M_DoubleToFixed(m_y + m_h / 2) + link.y;
+      z = R_PointInSubsector(x, y)->sector->floorheight + link.z;
    }
 }
 
