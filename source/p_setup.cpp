@@ -2268,6 +2268,8 @@ static void P_CreateBlockMap()
          efree(bmap);    // Free uncompressed blockmap
       }
    }
+
+   skipblstart = true;
 }
 
 static const char *bmaperrormsg;
