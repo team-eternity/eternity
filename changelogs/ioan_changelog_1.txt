@@ -17,6 +17,10 @@ FEATURE: Incosistent linked portals between separate sector islands are now
          
          There is still a restriction left: do not place portals between two
          areas already interconnected by sectors. That would still error out.
+         
+BUGFIX: Concealed sector portals were previously missed by the blockmap, 
+        resulting in buggy behaviour when clipping against things inside some
+        through-portal elevators.
 
 --------------------------------------------------------------------------------
 23.03.2018
