@@ -201,9 +201,6 @@ void PortalBlockmap::checkLinkSector(const sector_t &sector, const portal_t *por
    entry.type = portalblocktype_e::sector;
    entry.sector = &sector;
    entry.isceiling = isceiling;
-
-   double debugx = M_FixedToDouble(mapindex % bmapwidth * MAPBLOCKSIZE + bmaporgx);
-   double debugy = M_FixedToDouble(mapindex / bmapwidth * MAPBLOCKSIZE + bmaporgy);
 }
 
 // EOF
