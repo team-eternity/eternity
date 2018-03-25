@@ -81,6 +81,8 @@ struct portalblock_t
    const linkdata_t **links;
 };
 
+extern portalblock_t *gBlockGroups;    // ioanch 20160106: for each block, prt. groups
+
 //
 // P_PortalGroupCount
 //

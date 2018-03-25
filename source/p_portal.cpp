@@ -81,6 +81,9 @@ const polyobj_t **gGroupPolyobject;
 
 static PODCollection<polycouple_t> gPolyCouples;
 
+// ioanch 20160106: more detailed info (list of groups for each block)
+portalblock_t *gBlockGroups;
+
 //
 // Adds a unique new poly couple set.
 //

@@ -86,7 +86,6 @@ extern fixed_t  bmaporgx;
 extern fixed_t  bmaporgy;        // origin of block map
 extern Mobj   **blocklinks;      // for thing chains
 extern byte    *portalmap;       // haleyjd: for fast linked portal checks
-extern portalblock_t *gBlockGroups;    // ioanch 20160106: for each block, prt. groups
 extern bool     skipblstart;     // MaxW: Skip initial blocklist short
 
 // haleyjd 05/17/13: portalmap flags
