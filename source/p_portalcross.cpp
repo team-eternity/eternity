@@ -339,7 +339,7 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
 
       // Define a function to use in the 'for' blocks
       auto operate = [accessedgroupids, portalqueue, &queueback, func,
-                      &groupid, data, gcount, movedBBox] (int x, int y) -> bool
+                      &groupid, data, gcount, &movedBBox] (int x, int y) -> bool
       {
          // Check for portals
          const PODCollection<portalblockentry_t> &block = gPortalBlockmap[y * bmapwidth + x];
