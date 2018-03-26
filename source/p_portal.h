@@ -190,38 +190,6 @@ fixed_t P_FloorPortalZ(const sector_t &sector);
 
 bool P_BlockHasLinkedPortals(int index, bool includesectors);
 
-//==============================================================================
-//
-// More portal blockmap stuff (besides portalmap from p_setup)
-//
-
-//
-// Line portal blockmap: stores just the portal linedefs on the blockmap.
-// Only used by rendering facilities (e.g. sprite projections) right now.
-//
-class LinePortalRenderBlockmap
-{
-public:
-   LinePortalRenderBlockmap() : mValidcount(0), mValids(nullptr)
-   {
-   }
-
-   void mapInit();
-   void newSession()
-   {
-      ++mValidcount;
-   }
-   bool iterator(int x, int y, void *data,
-                 bool (*func)(const line_t &, void *data)) const;
-
-private:
-   Collection<PODCollection<const line_t *>> mMap;
-   int mValidcount;
-   int *mValids;
-};
-
-extern LinePortalRenderBlockmap pLPortalMap;
-
 #endif
 
 // EOF

@@ -24,6 +24,7 @@
 
 #include "z_zone.h"
 #include "doomstat.h"
+#include "e_exdata.h"
 #include "p_maputl.h"
 #include "p_portalblockmap.h"
 #include "p_setup.h"
@@ -33,6 +34,7 @@
 #include "r_state.h"
 
 PortalBlockmap gPortalBlockmap;
+LinePortalRenderBlockmap pLPortalMap;
 
 //
 // Initializes the portal blockmap at level start, when map blocks are set.
@@ -201,6 +203,74 @@ void PortalBlockmap::checkLinkSector(const sector_t &sector, const portal_t *por
    entry.type = portalblocktype_e::sector;
    entry.sector = &sector;
    entry.isceiling = isceiling;
+}
+
+//
+// Initialization per map. Makes PU_LEVEL allocations
+//
+void LinePortalRenderBlockmap::mapInit()
+{
+   mMap.clear();
+   int numblocks = bmapwidth * bmapheight;
+   for(int i = 0; i < numblocks; ++i)
+   {
+      int offset = blockmap[i];
+      const int *list = blockmaplump + offset;
+      // MaxW: 2016/02/02: if before 3.42 always skip, skip if all blocklists start w/ 0
+      // killough 2/22/98: demo_compatibility check
+      // skip 0 starting delimiter -- phares
+      if((!demo_compatibility && demo_version < 342) ||
+         (demo_version >= 342 && skipblstart))
+      {
+         list++;
+      }
+
+      PODCollection<const line_t *> coll;
+
+      for(; *list != -1; ++list)
+      {
+         if(*list >= numlines)
+            continue;
+         const line_t &line = lines[*list];
+         if(line.backsector &&
+            (line.pflags & PS_PASSABLE ||
+            (line.extflags & EX_ML_LOWERPORTAL &&
+               line.backsector->f_portal &&
+               line.backsector->f_portal->type == R_LINKED) ||
+               (line.extflags & EX_ML_UPPERPORTAL &&
+                  line.backsector->c_portal &&
+                  line.backsector->c_portal->type == R_LINKED)))
+         {
+            coll.add(&line);
+         }
+      }
+
+      mMap.add(coll);
+   }
+
+   mValids = ecalloctag(decltype(mValids), numlines, sizeof(*mValids), PU_LEVEL,
+      nullptr);
+}
+
+//
+// Does the iteration
+//
+bool LinePortalRenderBlockmap::iterator(int x, int y, void *data,
+   bool(*func)(const line_t &, void *data)) const
+{
+   if(x < 0 || x >= bmapwidth || y < 0 || y >= bmapheight)
+      return true;
+   int i = y * bmapwidth + x;
+   const PODCollection<const line_t *> coll = mMap[i];
+   for(const line_t *line : coll)
+   {
+      if(mValids[line - lines] == mValidcount)
+         continue;
+      mValids[line - lines] = mValidcount;
+      if(!func(*line, data))
+         return false;
+   }
+   return true;
 }
 
 // EOF

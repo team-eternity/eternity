@@ -101,7 +101,33 @@ private:
       int mapindex);
 };
 
+//
+// Line portal blockmap: stores just the portal linedefs on the blockmap.
+// Only used by rendering facilities (e.g. sprite projections) right now.
+//
+class LinePortalRenderBlockmap
+{
+public:
+   LinePortalRenderBlockmap() : mValidcount(0), mValids(nullptr)
+   {
+   }
+
+   void mapInit();
+   void newSession()
+   {
+      ++mValidcount;
+   }
+   bool iterator(int x, int y, void *data,
+      bool(*func)(const line_t &, void *data)) const;
+
+private:
+   Collection<PODCollection<const line_t *>> mMap;
+   int mValidcount;
+   int *mValids;
+};
+
 extern PortalBlockmap gPortalBlockmap;
+extern LinePortalRenderBlockmap pLPortalMap;
 
 #endif
 
