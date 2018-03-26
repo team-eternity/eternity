@@ -22,8 +22,8 @@
 // Authors: Ioan Chera
 //
 
-#ifndef P_PORTALCROSS_H_
-#define P_PORTALCROSS_H_
+#ifndef P_PORTALBLOCKMAP_H_
+#define P_PORTALBLOCKMAP_H_
 
 #include "m_collection.h"
 
