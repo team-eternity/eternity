@@ -73,17 +73,6 @@ enum
 };
 
 //
-// Portal map block. Lists portals present in some block.
-//
-struct portalblock_t
-{
-   int count;
-   const linkdata_t **links;
-};
-
-extern portalblock_t *gBlockGroups;    // ioanch 20160106: for each block, prt. groups
-
-//
 // P_PortalGroupCount
 //
 int P_PortalGroupCount();
@@ -203,7 +192,7 @@ bool P_BlockHasLinkedPortals(int index, bool includesectors);
 
 //==============================================================================
 //
-// More portal blockmap stuff (besides portalmap and gBlockGroups from p_setup)
+// More portal blockmap stuff (besides portalmap from p_setup)
 //
 
 //

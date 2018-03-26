@@ -62,7 +62,6 @@ void P_InitThingLists();
 struct line_t;
 struct linkdata_t;
 struct mapthing_t;
-struct portalblock_t;
 struct sector_t;
 struct side_t;
 void P_SetupLevelError(const char *msg, const char *levelname);
