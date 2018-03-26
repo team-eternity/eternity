@@ -1152,11 +1152,14 @@ void P_MoveGroupCluster(int outgroup, int ingroup, bool *groupvisit, fixed_t dx,
             link->x -= dx;
             link->y -= dy;
          }
-         link = P_GetLinkOffset(i, j);
-         if(link != &zerolink)
+         
+         // Make sure the backlink is aligned.
+         linkoffset_t *backlink = P_GetLinkOffset(i, j);
+         if(backlink != &zerolink)
          {
-            link->x += dx;
-            link->y += dy;
+            backlink->x = -link->x;
+            backlink->y = -link->y;
+            backlink->z = -link->z;
          }
       }
    }
