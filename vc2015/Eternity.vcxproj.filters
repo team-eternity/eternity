@@ -990,6 +990,9 @@
     <ClCompile Include="..\source\g_demolog.cpp">
       <Filter>Source Files\G_\G_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\p_portalblockmap.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1759,6 +1762,9 @@
     </ClInclude>
     <ClInclude Include="..\source\g_demolog.h">
       <Filter>Source Files\G_\G_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\p_portalblockmap.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
