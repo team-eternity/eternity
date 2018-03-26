@@ -126,6 +126,8 @@ private:
    int *mValids;
 };
 
+bool P_BlockHasLinkedPortals(int index, bool includesectors);
+
 extern PortalBlockmap gPortalBlockmap;
 extern LinePortalRenderBlockmap pLPortalMap;
 

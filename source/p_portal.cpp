@@ -1185,31 +1185,5 @@ fixed_t P_FloorPortalZ(const sector_t &sector)
    sector.f_portal->data.link.planez;
 }
 
-//
-// P_BlockHasLinkedPortalLines
-//
-// ioanch 20160228: return true if block has portalmap 1 or a polyportal
-// It's coarse
-//
-bool P_BlockHasLinkedPortals(int index, bool includesectors)
-{
-   // safe for overflow
-   if(index < 0 || index >= bmapheight * bmapwidth)
-      return false;
-   if(portalmap[index] & (PMF_LINE |
-      (includesectors ? PMF_FLOOR | PMF_CEILING : 0)))
-   {
-      return true;
-   }
-   
-   for(const DLListItem<polymaplink_t> *plink = polyblocklinks[index]; plink;
-      plink = plink->dllNext)
-   {
-      if((*plink)->po->hasLinkedPortals)
-         return true;
-   }
-   return false;
-}
-
 // EOF
 

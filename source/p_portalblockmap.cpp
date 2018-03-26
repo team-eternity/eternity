@@ -28,6 +28,7 @@
 #include "p_maputl.h"
 #include "p_portalblockmap.h"
 #include "p_setup.h"
+#include "polyobj.h"
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_portal.h"
@@ -271,6 +272,33 @@ bool LinePortalRenderBlockmap::iterator(int x, int y, void *data,
          return false;
    }
    return true;
+}
+
+
+//
+// P_BlockHasLinkedPortalLines
+//
+// ioanch 20160228: return true if block has portalmap 1 or a polyportal
+// It's coarse
+//
+bool P_BlockHasLinkedPortals(int index, bool includesectors)
+{
+   // safe for overflow
+   if(index < 0 || index >= bmapheight * bmapwidth)
+      return false;
+   if(portalmap[index] & (PMF_LINE |
+      (includesectors ? PMF_FLOOR | PMF_CEILING : 0)))
+   {
+      return true;
+   }
+
+   for(const DLListItem<polymaplink_t> *plink = polyblocklinks[index]; plink;
+      plink = plink->dllNext)
+   {
+      if((*plink)->po->hasLinkedPortals)
+         return true;
+   }
+   return false;
 }
 
 // EOF

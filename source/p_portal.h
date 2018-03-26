@@ -188,8 +188,6 @@ void P_MoveGroupCluster(int outgroup, int ingroup, bool *groupvisit, fixed_t dx,
 fixed_t P_CeilingPortalZ(const sector_t &sector);
 fixed_t P_FloorPortalZ(const sector_t &sector);
 
-bool P_BlockHasLinkedPortals(int index, bool includesectors);
-
 #endif
 
 // EOF
