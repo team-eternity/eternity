@@ -508,7 +508,7 @@ void P_FitLinkOffsetsToPortal(const linkdata_t &ldata)
       return;
    
    bool *groupvisit = ecalloc(bool *, sizeof(bool), groupcount);
-   P_MoveGroupCluster(ldata.fromid, ldata.toid, groupvisit, -shift.x, -shift.y, nullptr);
+   P_MoveGroupCluster(ldata.fromid, ldata.toid, groupvisit, -shift.x, -shift.y, false, nullptr);
    efree(groupvisit);
 }
 
@@ -1130,7 +1130,7 @@ void P_SetLPortalBehavior(line_t *line, int newbehavior)
 // Moves a polyobject portal cluster, updating link offsets.
 //
 void P_MoveGroupCluster(int outgroup, int ingroup, bool *groupvisit, fixed_t dx,
-   fixed_t dy, const polyobj_s *po)
+   fixed_t dy, bool setpolyref, const polyobj_s *po)
 {
    const int *row = clusters + ingroup * groupcount;
    for(int i = 0; i < groupcount; ++i)
@@ -1140,7 +1140,8 @@ void P_MoveGroupCluster(int outgroup, int ingroup, bool *groupvisit, fixed_t dx,
       if(i != ingroup && (row[i] == -1 || row[i] == row[outgroup]))
          continue;
       groupvisit[i] = true;
-      gGroupPolyobject[i] = po;
+      if(setpolyref)
+         gGroupPolyobject[i] = po;
 
       for(int j = 0; j < groupcount; ++j)
       {

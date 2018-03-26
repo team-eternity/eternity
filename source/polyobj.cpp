@@ -577,7 +577,7 @@ static void Polyobj_moveLinkedPortals(const polyobj_t *po, fixed_t dx, fixed_t d
             partner->data.link.deltay += dy;
          }
          // mark the group as being moved by the portal or not.
-         P_MoveGroupCluster(ldata.fromid, ldata.toid, groupvisit, dx, dy, 
+         P_MoveGroupCluster(ldata.fromid, ldata.toid, groupvisit, dx, dy, true,
             cancel ? nullptr : po);
       }
    }
