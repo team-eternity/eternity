@@ -2606,6 +2606,18 @@ DEFINE_ACTION(EV_ActionPolyobjMoveTimes8)
 }
 
 //
+// Implements Polyobj_MoveToSpot(po, speed, target)
+// * ExtraData: 496
+// * Hexen: 86
+//
+DEFINE_ACTION(EV_ActionPolyobjMoveToSpot)
+{
+   INIT_STRUCT(polymovedata_t, pmd);
+   // TODO
+   return 0;
+}
+
+//
 // EV_ActionPolyobjORMove
 //
 // Implements Polyobj_OR_Move(id, speed, angle, distance)
