@@ -164,6 +164,26 @@ public:
    unsigned int angle; // angle along which to move
 };
 
+//
+// This is like above, but with a movement vector instead of angle. Needed because we don't have
+// an accurate fixed-point square root function.
+//
+class PolyMoveXYThinker final : public Thinker
+{
+   DECLARE_THINKER_TYPE(PolyMoveXYThinker, Thinker)
+
+protected:
+   void Think() override;
+
+public:
+   void serialize(SaveArchive &arc) override;
+
+   int polyObjNum;
+   fixed_t speed;       // velocity absolute (cached)
+   v2fixed_t velocity;  // velocity to move
+   v2fixed_t distance;  // distance to travel (absolute X and absolute Y)
+};
+
 class PolySlideDoorThinker final : public Thinker
 {
    DECLARE_THINKER_TYPE(PolySlideDoorThinker, Thinker)

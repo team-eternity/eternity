@@ -38,6 +38,7 @@
 #include "ev_specials.h"
 #include "g_game.h"
 #include "m_bbox.h"
+#include "m_compare.h"
 #include "m_collection.h"
 #include "m_queue.h"
 #include "p_inter.h"
@@ -1588,6 +1589,64 @@ void PolyMoveThinker::serialize(SaveArchive &arc)
       Polyobj_GetForNum(polyObjNum)->thinker = this;
 }
 
+IMPLEMENT_THINKER_TYPE(PolyMoveXYThinker)
+
+//
+// Thinker stuff
+//
+void PolyMoveXYThinker::Think()
+{
+   polyobj_t *po = Polyobj_GetForNum(this->polyObjNum);
+
+#ifdef RANGECHECK
+   if(!po)
+      I_Error("T_PolyObjRotate: thinker has invalid id %d\n", this->polyObjNum);
+#endif
+
+   if(!po->thinker)
+   {
+      po->thinker = this;
+      po->thrust = eclamp(D_abs(speed) >> 3, FRACUNIT, 4 * FRACUNIT);
+   }
+
+   if(Polyobj_moveXY(po, velocity.x, velocity.y))
+   {
+      v2fixed_t avel = velocity.abs();
+      distance -= avel;
+      if(distance.x <= 0 || distance.y <= 0)
+      {
+         if(po->thinker == this)
+         {
+            po->thinker = nullptr;
+            po->thrust = FRACUNIT;
+         }
+         remove();
+
+         S_StopPolySequence(po);
+      }
+      else
+      {
+         if(distance.x < avel.x)
+            velocity.x = velocity.x < 0 ? -distance.x : distance.x;
+         if(distance.y < avel.y)
+            velocity.y = velocity.y < 0 ? -distance.y : distance.y;
+      }
+   }
+}
+
+//
+// Saves/loads a polyobject thinker of movement XY
+//
+void PolyMoveXYThinker::serialize(SaveArchive &arc)
+{
+   Super::serialize(arc);
+
+   arc << polyObjNum << speed << velocity << distance;
+
+   // ioanch 20160310: fix the thinker reference
+   if(arc.isLoading())
+      Polyobj_GetForNum(polyObjNum)->thinker = this;
+}
 
 IMPLEMENT_THINKER_TYPE(PolySlideDoorThinker)
 
