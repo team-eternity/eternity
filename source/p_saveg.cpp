@@ -367,6 +367,13 @@ SaveArchive &SaveArchive::operator << (inventoryslot_t &slot)
    return *this;
 }
 
+// Serializes a vector
+SaveArchive &SaveArchive::operator << (v2fixed_t &vec)
+{
+   *this << vec.x << vec.y;
+   return *this;
+}
+
 //=============================================================================
 //
 // Thinker Enumeration
