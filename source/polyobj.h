@@ -126,7 +126,7 @@ struct polymaplink_t
 
 class SaveArchive;
 
-class PolyRotateThinker : public Thinker
+class PolyRotateThinker final : public Thinker
 {
    DECLARE_THINKER_TYPE(PolyRotateThinker, Thinker)
 
@@ -144,7 +144,7 @@ public:
    bool hasBeenPositive;  // MaxW: 20160106: flag to differentiate angles of >=180 from < 0
 };
 
-class PolyMoveThinker : public Thinker
+class PolyMoveThinker final : public Thinker
 {
    DECLARE_THINKER_TYPE(PolyMoveThinker, Thinker)
 
@@ -164,7 +164,7 @@ public:
    unsigned int angle; // angle along which to move
 };
 
-class PolySlideDoorThinker : public Thinker
+class PolySlideDoorThinker final : public Thinker
 {
    DECLARE_THINKER_TYPE(PolySlideDoorThinker, Thinker)
 
@@ -191,7 +191,7 @@ public:
    bool closing;           // if true, is closing
 };
 
-class PolySwingDoorThinker : public Thinker
+class PolySwingDoorThinker final : public Thinker
 {
    DECLARE_THINKER_TYPE(PolySwingDoorThinker, Thinker)
 
