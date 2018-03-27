@@ -274,6 +274,23 @@ typedef struct polydoordata_s
 } polydoordata_t;
 
 //
+// Polyobj_[OR]_MoveTo[Spot] data
+//
+struct polymoveto_t
+{
+   int polyObjNum;   // poly id
+   int speed;        // speed
+   bool targetMobj;  // true if target is a tid, false if absolute coordinates
+   union
+   {
+      int tid;       // target tid
+      v2fixed_t pos; // or coordinates
+   };
+   bool overRide;    // whether it can override
+   Mobj *activator;  // activator if TID == 0
+};
+
+//
 // Functions
 //
 
@@ -286,6 +303,7 @@ int EV_DoPolyDoor(const polydoordata_t *);
 int EV_DoPolyObjMove(const polymovedata_t *);
 int EV_DoPolyObjRotate(const polyrotdata_t *);
 int EV_DoPolyObjStop(int polyObjNum);
+int EV_DoPolyObjMoveToSpot(const polymoveto_t &);
 
 //
 // External Variables
