@@ -262,9 +262,9 @@ bool Polyobj_IsSpawnSpot(const Mobj &mo);
 void Polyobj_InitLevel(void);
 void Polyobj_MoveOnLoad(polyobj_t *po, angle_t angle, fixed_t x, fixed_t y);
 
-int EV_DoPolyDoor(polydoordata_t *);
-int EV_DoPolyObjMove(polymovedata_t *);
-int EV_DoPolyObjRotate(polyrotdata_t *);
+int EV_DoPolyDoor(const polydoordata_t *);
+int EV_DoPolyObjMove(const polymovedata_t *);
+int EV_DoPolyObjRotate(const polyrotdata_t *);
 int EV_DoPolyObjStop(int polyObjNum);
 
 //

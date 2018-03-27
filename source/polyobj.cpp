@@ -1814,7 +1814,7 @@ void PolySwingDoorThinker::serialize(SaveArchive &arc)
 
 // Linedef Handlers
 
-int EV_DoPolyObjRotate(polyrotdata_t *prdata)
+int EV_DoPolyObjRotate(const polyrotdata_t *prdata)
 {
    polyobj_t *po;
    PolyRotateThinker *th;
@@ -1911,7 +1911,7 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
    return 1;
 }
 
-int EV_DoPolyObjMove(polymovedata_t *pmdata)
+int EV_DoPolyObjMove(const polymovedata_t *pmdata)
 {
    polyobj_t *po;
    PolyMoveThinker *th;
@@ -2020,7 +2020,7 @@ int EV_DoPolyObjStop(int polyObjNum)
    return 1;
 }
 
-static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
+static void Polyobj_doSlideDoor(polyobj_t *po, const polydoordata_t *doordata)
 {
    PolySlideDoorThinker *th;
    unsigned int angtemp, angadd = ANG180;
@@ -2099,7 +2099,7 @@ static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
    }
 }
 
-static void Polyobj_doSwingDoor(polyobj_t *po, polydoordata_t *doordata)
+static void Polyobj_doSwingDoor(polyobj_t *po, const polydoordata_t *doordata)
 {
    PolySwingDoorThinker *th;
    int diracc = -1;
@@ -2171,7 +2171,7 @@ static void Polyobj_doSwingDoor(polyobj_t *po, polydoordata_t *doordata)
    }
 }
 
-int EV_DoPolyDoor(polydoordata_t *doordata)
+int EV_DoPolyDoor(const polydoordata_t *doordata)
 {
    polyobj_t *po;
 
