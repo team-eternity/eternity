@@ -2612,9 +2612,14 @@ DEFINE_ACTION(EV_ActionPolyobjMoveTimes8)
 //
 DEFINE_ACTION(EV_ActionPolyobjMoveToSpot)
 {
-   INIT_STRUCT(polymovedata_t, pmd);
-   // TODO
-   return 0;
+   INIT_STRUCT(polymoveto_t, pmd);
+   pmd.polyObjNum = instance->args[0];
+   pmd.speed = instance->args[1] * FRACUNIT / 8;
+   pmd.targetMobj = true;
+   pmd.tid = instance->args[2];
+   pmd.overRide = false;
+   pmd.activator = instance->actor;
+   return EV_DoPolyObjMoveToSpot(pmd);
 }
 
 //
