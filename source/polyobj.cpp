@@ -1613,7 +1613,7 @@ void PolyMoveXYThinker::Think()
    {
       v2fixed_t avel = velocity.abs();
       distance -= avel;
-      if(distance.x <= 0 || distance.y <= 0)
+      if(distance.x <= 0 && distance.y <= 0)
       {
          if(po->thinker == this)
          {
@@ -1626,10 +1626,14 @@ void PolyMoveXYThinker::Think()
       }
       else
       {
-         if(distance.x < avel.x)
+         if(distance.x > 0 && distance.x < avel.x)
             velocity.x = velocity.x < 0 ? -distance.x : distance.x;
-         if(distance.y < avel.y)
+         else if(distance.x <= 0)
+            velocity.x = 0;
+         if(distance.y > 0 && distance.y < avel.y)
             velocity.y = velocity.y < 0 ? -distance.y : distance.y;
+         else if(distance.y <= 0)
+            velocity.y = 0;
       }
    }
 }
