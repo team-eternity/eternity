@@ -532,7 +532,6 @@ void P_DropWeapon(player_t *player)
 //
 // haleyjd 09/16/07:
 // Gets weapon at given index for the given player.
-// 
 //
 weaponinfo_t *P_GetPlayerWeapon(player_t *player, int slot)
 {
@@ -554,23 +553,44 @@ weaponinfo_t *P_GetPlayerWeapon(player_t *player, int slot)
 
    bool hit = false;
    DLListItem<weaponslot_t> *weaponslot, *baseslot;
-   baseslot = weaponslot = &player->pclass->weaponslots[slot]->links;
+   baseslot = &player->pclass->weaponslots[slot]->links;
 
-   while(!hit && weaponslot->dllNext)
+   // Try finding the player's currently-equipped weapon.
+   do
    {
-      if(weaponslot->dllObject->weapon->id == player->readyweapon->id)
+      if(baseslot->dllObject->weapon->id == player->readyweapon->id)
+      {
          hit = true;
+         break;
+      }
       else
-         weaponslot = weaponslot->dllNext;
+         baseslot = baseslot->dllNext;
+   } while(baseslot != nullptr);
+
+   // Reset starting point if we couldn't find player's weapon in this slot.
+   if(baseslot == nullptr)
+      baseslot = &player->pclass->weaponslots[slot]->links;
+
+   weaponslot = baseslot;
+
+   // If we found the player's readyweapon in the current slot, or the player
+   // doesn't own the first weapon in the slot, we'll need to iterate through.
+   if(hit || !E_PlayerOwnsWeapon(player, weaponslot->dllObject->weapon))
+   {
+      // The next weapon we find that the player owns is what we're looking for.
+      do
+      {
+         // Start from the bottom of the slot if we get to the top.
+         if((weaponslot = weaponslot->dllNext) == nullptr)
+            weaponslot = &player->pclass->weaponslots[slot]->links;
+
+      } while(weaponslot != baseslot &&
+              !E_PlayerOwnsWeapon(player, weaponslot->dllObject->weapon));
+
+      // If the player doesn't own weaponslot, don't allow the weapon to change.
+      if(!E_PlayerOwnsWeapon(player, weaponslot->dllObject->weapon))
+         weaponslot = nullptr;
    }
-
-   if(!weaponslot->dllNext)
-      weaponslot = baseslot;
-   else
-      weaponslot = weaponslot->dllNext;
-
-   while(weaponslot && !E_PlayerOwnsWeapon(player, weaponslot->dllObject->weapon))
-      weaponslot = weaponslot->dllNext;
 
    return weaponslot ? weaponslot->dllObject->weapon : nullptr;
 }
