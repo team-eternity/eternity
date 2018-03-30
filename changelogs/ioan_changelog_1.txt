@@ -8,6 +8,12 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+30.03.2018
+
+BUGFIX: Fixed the weird texture glitches happening with multiple polyobjects in 
+        a sector, some stationary and some moving.
+
+--------------------------------------------------------------------------------
 26.03.2018
 
 FEATURE: Incosistent linked portals between separate sector islands are now
