@@ -40,12 +40,15 @@ struct dynaseg_t
 {
    seg_t seg; // a dynaseg is a seg, after all ;)
 
+   dynavertex_t *originalv2;  // reference to original v2 before a split
+
    dynaseg_t *subnext;         // next dynaseg in fragment
    dynaseg_t *freenext;        // next dynaseg on freelist
    struct polyobj_s *polyobj;  // polyobject
 
    DLListItem<dynaseg_t> bsplink;   // link for BSP chains
    DLListItem<dynaseg_t> ownerlink; // link for owning node chain
+   DLListItem<dynaseg_t> alterlink; // link for non-dynaBSP segs changed by dynaBSP
 
    // properties needed for efficiency in the BSP builder
    double psx, psy, pex, pey; // end points
