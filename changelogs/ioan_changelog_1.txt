@@ -10,7 +10,8 @@ Since v4.00.00 "Völuspá"
 --------------------------------------------------------------------------------
 30.03.2018
 
-FEATURE: Added Polyobj_MoveToSpot, based on the GZDoom extension.
+FEATURE: Added Polyobj_MoveTo and Polyobj_MoveToSpot, based on the GZDoom
+         extensions.
 
 BUGFIX: Fixed the weird texture glitches happening with multiple polyobjects in 
         a sector, some stationary and some moving.
