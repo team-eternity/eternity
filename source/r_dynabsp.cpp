@@ -448,6 +448,7 @@ static void R_divideSegs(rpolynode_t *rpn, dseglist_t *ts,
          // modify original seg to run from v1 to nv
          R_SetDynaVertexRef(&seg->seg.dyv2, nv);
          R_setupDSForBSP(*seg);
+         seg->seg.len = static_cast<float>(seg->len);
 
          // add the new seg to the current node's ownership list,
          // so it can get freed later
