@@ -2606,6 +2606,24 @@ DEFINE_ACTION(EV_ActionPolyobjMoveTimes8)
 }
 
 //
+// Implements Polyobj_MoveTo(po, speed, pos_x, pos_y)
+// * ExtraData: 497
+// * Hexen: 88
+//
+DEFINE_ACTION(EV_ActionPolyobjMoveTo)
+{
+   INIT_STRUCT(polymoveto_t, pmd);
+   pmd.polyObjNum = instance->args[0];
+   pmd.speed = instance->args[1] * FRACUNIT / 8;
+   pmd.targetMobj = false;
+   pmd.pos.x = instance->args[2] * FRACUNIT;
+   pmd.pos.y = instance->args[3] * FRACUNIT;
+   pmd.overRide = false;
+   pmd.activator = nullptr;   // absolute XY destination won't use activator, unlike spot TID
+   return EV_DoPolyObjMoveToSpot(pmd);
+}
+
+//
 // Implements Polyobj_MoveToSpot(po, speed, target)
 // * ExtraData: 496
 // * Hexen: 86

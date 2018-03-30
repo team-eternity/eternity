@@ -190,6 +190,7 @@ DECLARE_ACTION(EV_ActionPolyobjDoorSlide);
 DECLARE_ACTION(EV_ActionPolyobjDoorSwing);
 DECLARE_ACTION(EV_ActionPolyobjMove);
 DECLARE_ACTION(EV_ActionPolyobjMoveTimes8);
+DECLARE_ACTION(EV_ActionPolyobjMoveTo);
 DECLARE_ACTION(EV_ActionPolyobjMoveToSpot);
 DECLARE_ACTION(EV_ActionPolyobjORMove);
 DECLARE_ACTION(EV_ActionPolyobjORMoveTimes8);

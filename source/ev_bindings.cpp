@@ -1071,6 +1071,7 @@ PARAMLINE(PolyobjDoorSlide);
 PARAMLINE(PolyobjDoorSwing);
 PARAMLINE(PolyobjMove);
 PARAMLINE(PolyobjMoveTimes8);
+PARAMLINE(PolyobjMoveTo);
 PARAMLINE(PolyobjMoveToSpot);
 PARAMLINE(PolyobjORMove);
 PARAMLINE(PolyobjORMoveTimes8);
@@ -1560,6 +1561,7 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(494, ParamStairsBuildUpDoomCrush,         "Stairs_BuildUpDoomCrush")
    LINESPECNAMED(495, ParamSectorChangeSound,              "Sector_ChangeSound")
    LINESPECNAMED(496, PolyobjMoveToSpot,                   "Polyobj_MoveToSpot")
+   LINESPECNAMED(497, PolyobjMoveTo,                       "Polyobj_MoveTo")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1677,6 +1679,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(85,  ACSLockedExecuteDoor,                "ACS_LockedExecuteDoor")
    LINESPECNAMED(86,  PolyobjMoveToSpot,                   "Polyobj_MoveToSpot")
    LINESPECNAMED(87,  PolyobjStop,                         "Polyobj_Stop")
+   LINESPECNAMED(88,  PolyobjMoveTo,                       "Polyobj_MoveTo")
    LINESPECNAMED(90,  PolyobjORRotateLeft,                 "Polyobj_OR_RotateLeft")
    LINESPECNAMED(91,  PolyobjORRotateRight,                "Polyobj_OR_RotateRight")
    LINESPECNAMED(92,  PolyobjORMove,                       "Polyobj_OR_Move")
