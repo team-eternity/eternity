@@ -33,6 +33,7 @@ struct rpolynode_t
    dynaseg_t   *partition;   // partition dynaseg
    rpolynode_t *children[2]; // child node lists (0=right, 1=left)
    dseglink_t  *owned;       // owned segs created by partition splits
+   dseglink_t  *altered;     // polyobject-owned segs altered by partitions.
 };
 
 struct rpolybsp_t

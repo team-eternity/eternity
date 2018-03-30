@@ -32,6 +32,7 @@
 #include "z_zone.h"
 
 #include "i_system.h"
+#include "p_setup.h"
 #include "r_dynabsp.h"
 
 //=============================================================================
@@ -447,6 +448,7 @@ static void R_divideSegs(rpolynode_t *rpn, dseglist_t *ts,
          nds->seg.len         = static_cast<float>(nds->len);
 
          // modify original seg to run from v1 to nv
+         R_SetDynaVertexRef(&seg->originalv2, seg->seg.dyv2);
          R_SetDynaVertexRef(&seg->seg.dyv2, nv);
          R_setupDSForBSP(*seg);
          seg->seg.len = static_cast<float>(seg->len);
@@ -454,6 +456,8 @@ static void R_divideSegs(rpolynode_t *rpn, dseglist_t *ts,
          // add the new seg to the current node's ownership list,
          // so it can get freed later
          nds->ownerlink.insert(nds, &rpn->owned);
+
+         seg->alterlink.insert(seg, &rpn->altered);
 
          // classify left or right
          if(val == SPLIT_SR_EL)
@@ -601,6 +605,19 @@ static void R_returnOwnedList(rpolynode_t *node)
 
       R_FreeDynaSeg(ds);
 
+      dsl = next;
+   }
+
+   // Now also fix altered polyobject dynasegs
+   dsl = node->altered;
+   while(dsl)
+   {
+      dseglink_t *next = dsl->dllNext;
+      dynaseg_t *ds = dsl->dllObject;
+      R_SetDynaVertexRef(&ds->seg.dyv2, ds->originalv2);
+      R_FreeDynaVertex(&ds->originalv2);
+      P_CalcSegLength(&ds->seg);
+      dsl->remove();
       dsl = next;
    }
 }
