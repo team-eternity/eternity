@@ -448,7 +448,9 @@ static void R_divideSegs(rpolynode_t *rpn, dseglist_t *ts,
          nds->seg.len         = static_cast<float>(nds->len);
 
          // modify original seg to run from v1 to nv
-         R_SetDynaVertexRef(&seg->originalv2, seg->seg.dyv2);
+         bool notmarked = !seg->originalv2;
+         if(notmarked)   // only if not already marked!
+            R_SetDynaVertexRef(&seg->originalv2, seg->seg.dyv2);
          R_SetDynaVertexRef(&seg->seg.dyv2, nv);
          R_setupDSForBSP(*seg);
          seg->seg.len = static_cast<float>(seg->len);
@@ -457,7 +459,8 @@ static void R_divideSegs(rpolynode_t *rpn, dseglist_t *ts,
          // so it can get freed later
          nds->ownerlink.insert(nds, &rpn->owned);
 
-         seg->alterlink.insert(seg, &rpn->altered);
+         if(notmarked)
+            seg->alterlink.insert(seg, &rpn->altered);
 
          // classify left or right
          if(val == SPLIT_SR_EL)
