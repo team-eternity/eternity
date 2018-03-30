@@ -193,6 +193,7 @@ DECLARE_ACTION(EV_ActionPolyobjMoveTimes8);
 DECLARE_ACTION(EV_ActionPolyobjMoveTo);
 DECLARE_ACTION(EV_ActionPolyobjMoveToSpot);
 DECLARE_ACTION(EV_ActionPolyobjORMove);
+DECLARE_ACTION(EV_ActionPolyobjORMoveTo);
 DECLARE_ACTION(EV_ActionPolyobjORMoveTimes8);
 DECLARE_ACTION(EV_ActionPolyobjRotateRight);
 DECLARE_ACTION(EV_ActionPolyobjORRotateRight);

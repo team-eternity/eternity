@@ -1075,6 +1075,7 @@ PARAMLINE(PolyobjMoveTo);
 PARAMLINE(PolyobjMoveToSpot);
 PARAMLINE(PolyobjORMove);
 PARAMLINE(PolyobjORMoveTimes8);
+PARAMLINE(PolyobjORMoveTo);
 PARAMLINE(PolyobjRotateRight);
 PARAMLINE(PolyobjORRotateRight);
 PARAMLINE(PolyobjRotateLeft);
@@ -1562,6 +1563,7 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(495, ParamSectorChangeSound,              "Sector_ChangeSound")
    LINESPECNAMED(496, PolyobjMoveToSpot,                   "Polyobj_MoveToSpot")
    LINESPECNAMED(497, PolyobjMoveTo,                       "Polyobj_MoveTo")
+   LINESPECNAMED(498, PolyobjORMoveTo,                     "Polyobj_OR_MoveTo")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1680,6 +1682,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(86,  PolyobjMoveToSpot,                   "Polyobj_MoveToSpot")
    LINESPECNAMED(87,  PolyobjStop,                         "Polyobj_Stop")
    LINESPECNAMED(88,  PolyobjMoveTo,                       "Polyobj_MoveTo")
+   LINESPECNAMED(89,  PolyobjORMoveTo,                     "Polyobj_OR_MoveTo")
    LINESPECNAMED(90,  PolyobjORRotateLeft,                 "Polyobj_OR_RotateLeft")
    LINESPECNAMED(91,  PolyobjORRotateRight,                "Polyobj_OR_RotateRight")
    LINESPECNAMED(92,  PolyobjORMove,                       "Polyobj_OR_Move")
