@@ -38,6 +38,7 @@
 #include "ev_specials.h"
 #include "g_game.h"
 #include "m_bbox.h"
+#include "m_compare.h"
 #include "m_collection.h"
 #include "m_queue.h"
 #include "p_inter.h"
@@ -1588,6 +1589,68 @@ void PolyMoveThinker::serialize(SaveArchive &arc)
       Polyobj_GetForNum(polyObjNum)->thinker = this;
 }
 
+IMPLEMENT_THINKER_TYPE(PolyMoveXYThinker)
+
+//
+// Thinker stuff
+//
+void PolyMoveXYThinker::Think()
+{
+   polyobj_t *po = Polyobj_GetForNum(this->polyObjNum);
+
+#ifdef RANGECHECK
+   if(!po)
+      I_Error("T_PolyObjRotate: thinker has invalid id %d\n", this->polyObjNum);
+#endif
+
+   if(!po->thinker)
+   {
+      po->thinker = this;
+      po->thrust = eclamp(D_abs(speed) >> 3, FRACUNIT, 4 * FRACUNIT);
+   }
+
+   if(Polyobj_moveXY(po, velocity.x, velocity.y))
+   {
+      v2fixed_t avel = velocity.abs();
+      distance -= avel;
+      if(distance.x <= 0 && distance.y <= 0)
+      {
+         if(po->thinker == this)
+         {
+            po->thinker = nullptr;
+            po->thrust = FRACUNIT;
+         }
+         remove();
+
+         S_StopPolySequence(po);
+      }
+      else
+      {
+         if(distance.x > 0 && distance.x < avel.x)
+            velocity.x = velocity.x < 0 ? -distance.x : distance.x;
+         else if(distance.x <= 0)
+            velocity.x = 0;
+         if(distance.y > 0 && distance.y < avel.y)
+            velocity.y = velocity.y < 0 ? -distance.y : distance.y;
+         else if(distance.y <= 0)
+            velocity.y = 0;
+      }
+   }
+}
+
+//
+// Saves/loads a polyobject thinker of movement XY
+//
+void PolyMoveXYThinker::serialize(SaveArchive &arc)
+{
+   Super::serialize(arc);
+
+   arc << polyObjNum << speed << velocity << distance;
+
+   // ioanch 20160310: fix the thinker reference
+   if(arc.isLoading())
+      Polyobj_GetForNum(polyObjNum)->thinker = this;
+}
 
 IMPLEMENT_THINKER_TYPE(PolySlideDoorThinker)
 
@@ -2013,6 +2076,75 @@ int EV_DoPolyObjStop(int polyObjNum)
       po->thinker->remove();
       po->thinker = nullptr;
       S_StopPolySequence(po);
+   }
+
+   return 1;
+}
+
+//
+// Polyobj_MoveTo or Polyobj_MoveToSpot.
+//
+int EV_DoPolyObjMoveToSpot(const polymoveto_t &pmdata)
+{
+   polyobj_t *po;
+   if(!(po = Polyobj_GetForNum(pmdata.polyObjNum)))
+   {
+      doom_printf(FC_ERROR "EV_DoPolyObjMoveToSpot: bad polyobj %d", pmdata.polyObjNum);
+      return 0;
+   }
+   if(po->flags & POF_ISBAD || (po->thinker && !pmdata.overRide))
+      return 0;
+   
+
+   v2fixed_t distance;
+   if(pmdata.targetMobj)
+   {
+      const Mobj *mobj = P_FindMobjFromTID(pmdata.tid, nullptr, pmdata.activator);
+      if(!mobj)
+         return 0;
+      distance.x = mobj->x;
+      distance.y = mobj->y;
+   }
+   else
+      distance = pmdata.pos;
+
+   auto th = new PolyMoveXYThinker;
+   th->addThinker();
+   po->thinker = th;
+
+   distance -= po->spawnSpot;
+
+   th->polyObjNum = pmdata.polyObjNum;
+   th->distance = distance.abs();
+   th->speed = pmdata.speed;
+
+   Polyobj_componentSpeed(th->speed, 
+      P_PointToAngle(0, 0, distance.x, distance.y) >> ANGLETOFINESHIFT, &th->velocity.x, 
+      &th->velocity.y);
+
+   po->thrust = eclamp(D_abs(th->speed) >> 3, FRACUNIT, 4 * FRACUNIT);
+
+   S_StartPolySequence(po);
+
+   unsigned mirrorfineangle = P_PointToAngle(0, 0, -distance.x, -distance.y) >> ANGLETOFINESHIFT;
+   while((po = Polyobj_GetMirror(po)))
+   {
+      if(po->flags & POF_ISBAD || (po->thinker && !pmdata.overRide))
+         break;
+
+      th = new PolyMoveXYThinker;
+      th->addThinker();
+      po->thinker = th;
+
+      th->polyObjNum = po->id;
+      th->distance = distance.abs();  // mirror vector
+      th->speed = pmdata.speed;
+
+      Polyobj_componentSpeed(th->speed, mirrorfineangle, &th->velocity.x, &th->velocity.y);
+
+      po->thrust = eclamp(D_abs(th->speed) >> 3, FRACUNIT, 4 * FRACUNIT);
+
+      S_StartPolySequence(po);
    }
 
    return 1;
