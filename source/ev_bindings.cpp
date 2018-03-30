@@ -1076,6 +1076,7 @@ PARAMLINE(PolyobjMoveToSpot);
 PARAMLINE(PolyobjORMove);
 PARAMLINE(PolyobjORMoveTimes8);
 PARAMLINE(PolyobjORMoveTo);
+PARAMLINE(PolyobjORMoveToSpot);
 PARAMLINE(PolyobjRotateRight);
 PARAMLINE(PolyobjORRotateRight);
 PARAMLINE(PolyobjRotateLeft);
@@ -1564,6 +1565,7 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(496, PolyobjMoveToSpot,                   "Polyobj_MoveToSpot")
    LINESPECNAMED(497, PolyobjMoveTo,                       "Polyobj_MoveTo")
    LINESPECNAMED(498, PolyobjORMoveTo,                     "Polyobj_OR_MoveTo")
+   LINESPECNAMED(499, PolyobjORMoveToSpot,                 "Polyobj_OR_MoveToSpot")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1657,6 +1659,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(45,  ParamCeilingCrushRaiseAndStay,       "Ceiling_CrushRaiseAndStay")
    LINESPECNAMED(46,  ParamFloorCrushStop,                 "Floor_CrushStop")
    LINESPECNAMED(47,  ParamCeilingMoveToValue,             "Ceiling_MoveToValue")
+   LINESPECNAMED(59,  PolyobjORMoveToSpot,                 "Polyobj_OR_MoveToSpot")
    LINESPECNAMED(60,  ParamPlatPerpetualRaise,             "Plat_PerpetualRaise")
    LINESPECNAMED(61,  ParamPlatStop,                       "Plat_Stop")
    LINESPECNAMED(62,  ParamPlatDWUS,                       "Plat_DownWaitUpStay")

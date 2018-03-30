@@ -2698,6 +2698,23 @@ DEFINE_ACTION(EV_ActionPolyobjORMoveTo)
 }
 
 //
+// Implements Polyobj_OR_MoveToSpot(po, speed, target)
+// * ExtraData: 499
+// * Hexen: 59
+//
+DEFINE_ACTION(EV_ActionPolyobjORMoveToSpot)
+{
+   INIT_STRUCT(polymoveto_t, pmd);
+   pmd.polyObjNum = instance->args[0];
+   pmd.speed = instance->args[1] * (FRACUNIT / 8);
+   pmd.targetMobj = true;
+   pmd.tid = instance->args[2];
+   pmd.overRide = true;
+   pmd.activator = instance->actor;
+   return EV_DoPolyObjMoveToSpot(pmd);
+}
+
+//
 // EV_ActionPolyobjRotateRight
 //
 // Implements Polyobj_RotateRight(id, speed, distance)
