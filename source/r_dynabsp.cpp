@@ -253,8 +253,8 @@ static void R_computeIntersection(dynaseg_t *part, dynaseg_t *seg,
       outy = seg->psy;
       if(fbackup)
       {
-         fbackup->x = outx;
-         fbackup->y = outy;
+         fbackup->x = static_cast<float>(outx);
+         fbackup->y = static_cast<float>(outy);
       }
       return;
    }
