@@ -244,8 +244,6 @@ static void R_computeIntersection(dynaseg_t *part, dynaseg_t *seg,
 
    const dynavertex_t *const segv1 = seg->seg.dyv1;
    const dynavertex_t *const segv2 = seg->seg.dyv2;
-   const dynavertex_t *const partv1 = part->seg.dyv1;
-   const dynavertex_t *const partv2 = part->seg.dyv2;
 
    if(l2 == 0.0)
    {
@@ -253,7 +251,10 @@ static void R_computeIntersection(dynaseg_t *part, dynaseg_t *seg,
       outx = seg->psx;
       outy = seg->psy;
       if(fbackup)
-         *fbackup = segv1->fbackup;
+      {
+         fbackup->x = outx;
+         fbackup->y = outy;
+      }
       return;
    }
 
@@ -268,16 +269,16 @@ static void R_computeIntersection(dynaseg_t *part, dynaseg_t *seg,
       outy = seg->psy + (b2 * w);
       if(fbackup)
       {
-         double bdx = partv2->fbackup.x - partv1->fbackup.x;
-         double bdy = partv2->fbackup.y - partv1->fbackup.y;
+         // For interpolation, only use the backup positions of the seg to be split, not of the
+         // partition seg.
          double bdx2 = segv2->fbackup.x - segv1->fbackup.x;
          double bdy2 = segv2->fbackup.y - segv1->fbackup.y;
          double bl2 = sqrt(bdx2 * bdx2 + bdy2 * bdy2);
          double ba2 = bdx2 / bl2;
          double bb2 = bdy2 / bl2;
-         double bd = bdy * ba2 - bdx * bb2;
-         double bw = (bdx * (segv1->fbackup.y - partv1->fbackup.y) +
-            bdy * (partv1->fbackup.x - segv1->fbackup.x)) / bd;
+         double bd = dy * ba2 - dx * bb2;
+         double bw = (dx * (segv1->fbackup.y - part->psy) +
+            dy * (part->psx - segv1->fbackup.x)) / bd;
          fbackup->x = static_cast<float>(segv1->fbackup.x + ba2 * bw);
          fbackup->y = static_cast<float>(segv1->fbackup.y + bb2 * bw);
       }
