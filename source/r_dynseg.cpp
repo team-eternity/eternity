@@ -30,6 +30,7 @@
 #include "i_system.h"
 #include "m_bbox.h"
 #include "m_collection.h"
+#include "p_maputl.h"
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_dynseg.h"
@@ -378,6 +379,69 @@ inline static double R_PartitionDistance(double x, double y, const fnode_t *node
 #define DS_EPSILON 0.3125
 
 //
+// Checks the subsector for any wall segs which should cut or totally remove dseg.
+// Necessary to avoid polyobject bleeding. Returns true if entire dynaseg is gone.
+//
+static bool R_cutByWallSegs(dynaseg_t &dseg, const subsector_t &ss)
+{
+   // The dynaseg must be in front of all wall segs. Otherwise, it's considered
+   // hidden behind walls.
+   seg_t &lseg = dseg.seg;
+   dseg.psx = dseg.seg.v1->fx;
+   dseg.psy = dseg.seg.v1->fy;
+   dseg.pex = dseg.seg.v2->fx;
+   dseg.pey = dseg.seg.v2->fy;
+
+   // Fast access to delta x, delta y
+   dseg.pdx = dseg.pex - dseg.psx;
+   dseg.pdy = dseg.pey - dseg.psy;
+   for(int i = 0; i < ss.numlines; ++i)
+   {
+      const seg_t &wall = segs[ss.firstline + i];
+      const vertex_t &v1 = *wall.v1;
+      const vertex_t &v2 = *wall.v2;
+      const divline_t walldl = { v1.x, v1.y, v2.x - v1.x, v2.y - v1.y };
+      int side_v1 = P_PointOnDivlineSide(lseg.v1->x, lseg.v1->y, &walldl);
+      int side_v2 = P_PointOnDivlineSide(lseg.v2->x, lseg.v2->y, &walldl);
+      if(side_v1 == 0 && side_v2 == 0)
+         continue;   // this one is fine.
+      if(side_v1 == 1 && side_v2 == 1)
+         return true;  // totally occluded by one
+      // Now check if the wall is really intersecting in its middle
+      int wall_v1side = R_PointOnDynaSegSide(&dseg, v1.fx, v1.fy);
+      int wall_v2side = R_PointOnDynaSegSide(&dseg, v2.fx, v2.fy);
+      if(wall_v1side == wall_v2side)
+         continue;   // not used.
+      // We have a real intersection: cut it now.
+      dynaseg_t part;   // this shall be the wall
+      part.psx = wall.v1->fx;
+      part.psy = wall.v1->fy;
+      part.pex = wall.v2->fx;
+      part.pey = wall.v2->fy;
+      double vx, vy;
+      v2float_t backup;
+      R_ComputeIntersection(&part, &dseg, vx, vy, &backup);
+      dynavertex_t *nv = R_GetFreeDynaVertex();
+      nv->fx = static_cast<float>(vx);
+      nv->fy = static_cast<float>(vy);
+      nv->fbackup = backup;
+      nv->x = M_DoubleToFixed(vx);
+      nv->y = M_DoubleToFixed(vy);
+      nv->backup.x = M_FloatToFixed(nv->fbackup.x);
+      nv->backup.y = M_FloatToFixed(nv->fbackup.y);
+      if(side_v1 == 0)
+         R_SetDynaVertexRef(&lseg.dyv2, nv);
+      else
+      {
+         R_SetDynaVertexRef(&lseg.dyv1, nv);
+         R_DynaSegOffset(&lseg, lseg.linedef, 0);  // also need to update this
+      }
+      return false;   // we found the one wall seg which intersects here.
+   }
+   return false;   // all are in front. So return.
+}
+
+//
 // R_SplitLine
 //
 // Given a single dynaseg representing the full length of a linedef, generates a
@@ -471,6 +535,14 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
    if(num >= numsubsectors)
       I_Error("R_SplitLine: ss %d with numss = %d\n", num, numsubsectors);
 #endif
+
+   // First, cut it off by any wall segs
+   if(R_cutByWallSegs(*dseg, subsectors[num]))
+   {
+      // If it's occluded by everything, cancel it.
+      R_FreeDynaSeg(dseg);
+      return;
+   }
 
    // see if this subsector already has an rpolyobj_t for this polyobject
    // if it does not, then one will be created.
