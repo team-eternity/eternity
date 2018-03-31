@@ -382,7 +382,7 @@ inline static double R_PartitionDistance(double x, double y, const fnode_t *node
 // Checks the subsector for any wall segs which should cut or totally remove dseg.
 // Necessary to avoid polyobject bleeding. Returns true if entire dynaseg is gone.
 //
-static bool R_cutByWallSegs(dynaseg_t &dseg, const subsector_t &ss)
+static bool R_cutByWallSegs(dynaseg_t &dseg, dynaseg_t *backdseg, const subsector_t &ss)
 {
    // The dynaseg must be in front of all wall segs. Otherwise, it's considered
    // hidden behind walls.
@@ -425,11 +425,20 @@ static bool R_cutByWallSegs(dynaseg_t &dseg, const subsector_t &ss)
       nv->backup.x = M_FloatToFixed(nv->fbackup.x);
       nv->backup.y = M_FloatToFixed(nv->fbackup.y);
       if(side_v1 == 0)
+      {
          R_SetDynaVertexRef(&lseg.dyv2, nv);
+         if(backdseg)
+         {
+            R_SetDynaVertexRef(&backdseg->seg.dyv1, nv);
+            R_DynaSegOffset(&backdseg->seg, backdseg->seg.linedef, 1);
+         }
+      }
       else
       {
          R_SetDynaVertexRef(&lseg.dyv1, nv);
          R_DynaSegOffset(&lseg, lseg.linedef, 0);  // also need to update this
+         if(backdseg)
+            R_SetDynaVertexRef(&backdseg->seg.dyv2, nv);
       }
       // Keep looking for other intersectors
    }
@@ -543,7 +552,7 @@ static void R_SplitLine(dynaseg_t *dseg, dynaseg_t *backdseg, int bspnum)
 #endif
 
    // First, cut it off by any wall segs
-   if(R_cutByWallSegs(*dseg, subsectors[num]))
+   if(R_cutByWallSegs(*dseg, backdseg, subsectors[num]))
    {
       // If it's occluded by everything, cancel it.
       R_FreeDynaSeg(dseg);
