@@ -39,6 +39,7 @@
 struct dynaseg_t
 {
    seg_t seg; // a dynaseg is a seg, after all ;)
+   bool backside; // true if it's for the backside
 
    dynavertex_t *originalv2;  // reference to original v2 before a split
 

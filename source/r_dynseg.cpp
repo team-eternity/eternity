@@ -300,13 +300,14 @@ dynaseg_t *R_CreateDynaSeg(const dynaseg_t *proto, dynavertex_t *v1, dynavertex_
    ret->polyobj     = proto->polyobj;
    ret->seg.linedef = proto->seg.linedef;
    ret->seg.sidedef = proto->seg.sidedef;
+   ret->backside = proto->backside;
 
    // vertices
    R_SetDynaVertexRef(&ret->seg.dyv1, v1);
    R_SetDynaVertexRef(&ret->seg.dyv2, v2);
 
    // calculate texture offset
-   R_DynaSegOffset(&ret->seg, proto->seg.linedef, 0);
+   R_DynaSegOffset(&ret->seg, proto->seg.linedef, ret->backside ? 1 : 0);
 
    return ret;
 }
@@ -651,6 +652,7 @@ void R_AttachPolyObject(polyobj_t *poly)
       {
          // create backside dynaseg now
          backdseg = R_GetFreeDynaSeg();
+         backdseg->backside = true;
          backdseg->polyobj = poly;
          backdseg->seg.linedef = line;
          backdseg->seg.sidedef = &sides[line->sidenum[1]];
