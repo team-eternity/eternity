@@ -685,7 +685,10 @@ void R_DetachPolyObject(polyobj_t *poly)
    
    // no dynaseg-containing subsecs?
    if(!poly->dynaSubsecs || !poly->numDSS)
+   {
+      poly->flags &= ~POF_ATTACHED;
       return;
+   }
 
    // iterate over stored subsector pointers
    for(i = 0; i < poly->numDSS; ++i)
