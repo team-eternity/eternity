@@ -158,8 +158,8 @@ public:
    PointThinker() : Super(), x(0), y(0), z(0), groupid(0) {}
 
    // Methods
-   virtual void serialize(SaveArchive &arc);
-   virtual void remove();
+   virtual void serialize(SaveArchive &arc) override;
+   virtual void remove() override;
    
    // Data Members
    fixed_t x, y, z;
@@ -212,17 +212,17 @@ protected:
    deswizzle_info *dsInfo; // valid only during deserialization
 
    // Methods
-   void Think();
+   void Think() override;
 
    bool shouldApplyTorque();
 
 public:   
    // Virtual methods (overridables)
    // Inherited from Thinker:
-   virtual void updateThinker();
-   virtual void remove();
-   virtual void serialize(SaveArchive &arc);
-   virtual void deSwizzle();
+   virtual void updateThinker() override;
+   virtual void remove() override;
+   virtual void serialize(SaveArchive &arc) override;
+   virtual void deSwizzle() override;
 
    // Methods
    void backupPosition();
@@ -400,13 +400,13 @@ protected:
    Mobj *target;
    unsigned int swizzled_target; // for serialization
 
-   virtual void Think();
+   virtual void Think() override;
 
 public:
    MobjFadeThinker() : Super(), target(NULL), swizzled_target(0) {}
-   virtual void remove();
-   virtual void serialize(SaveArchive &arc);
-   virtual void deSwizzle();
+   virtual void remove() override;
+   virtual void serialize(SaveArchive &arc) override;
+   virtual void deSwizzle() override;
 
    Mobj *getTarget() const { return target; }
    void setTarget(Mobj *pTarget);

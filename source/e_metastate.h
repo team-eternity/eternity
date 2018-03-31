@@ -64,10 +64,10 @@ public:
    }
 
    // Clone - virtual copy constructor
-   virtual MetaObject *clone() const { return new MetaState(*this); }
+   virtual MetaObject *clone() const override { return new MetaState(*this); }
 
    // toString - virtual method for nice display of metastate properties.
-   virtual const char *toString() const { return state->name; }
+   virtual const char *toString() const override { return state->name; }
 };
 
 //
@@ -106,10 +106,10 @@ public:
    }
 
    // Clone - virtual copy constructor
-   virtual MetaObject *clone() const { return new MetaDropItem(*this); }
+   virtual MetaObject *clone() const override { return new MetaDropItem(*this); }
 
    // toString - virtual method for nice display of metastate properties.
-   virtual const char *toString() const { return item.constPtr(); }
+   virtual const char *toString() const override { return item.constPtr(); }
 };
 
 enum bloodaction_e : int;
@@ -146,10 +146,10 @@ public:
    }
 
    // Clone - virtual copy constructor
-   virtual MetaObject *clone() const { return new MetaBloodBehavior(*this); }
+   virtual MetaObject *clone() const override { return new MetaBloodBehavior(*this); }
 
    // toString - virtual method for nice display of metastate properties.
-   virtual const char *toString() const 
+   virtual const char *toString() const override
    { 
       return "MetaBloodBehavior"; // TODO
    }

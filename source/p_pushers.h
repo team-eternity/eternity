@@ -39,11 +39,11 @@ class PushThinker : public Thinker
    DECLARE_THINKER_TYPE(PushThinker, Thinker)
 
 protected:
-   void Think();
+   void Think() override;
 
 public:
    // Methods
-   virtual void serialize(SaveArchive &arc);
+   virtual void serialize(SaveArchive &arc) override;
    
    // Data Members
    enum

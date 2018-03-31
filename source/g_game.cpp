@@ -2843,8 +2843,8 @@ public:
    }
 
    // Virtual Methods
-   virtual MetaObject *clone() const { return new MetaSpeedSet(*this); }
-   virtual const char *toString() const
+   virtual MetaObject *clone() const override { return new MetaSpeedSet(*this); }
+   virtual const char *toString() const override
    {
       static char buf[128];
       int ns = normalSpeed;

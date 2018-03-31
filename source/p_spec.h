@@ -645,7 +645,7 @@ public:
    SectorThinker() : Thinker(), sector(NULL) {}
 
    // Methods
-   virtual void serialize(SaveArchive &arc);
+   virtual void serialize(SaveArchive &arc) override;
    virtual bool reTriggerVerticalDoor(bool player) { return false; }
 
    // Data Members
@@ -697,11 +697,11 @@ class FireFlickerThinker : public SectorThinker
    DECLARE_THINKER_TYPE(FireFlickerThinker, SectorThinker)
 
 protected:
-   void Think();
+   void Think() override;
 
 public:
    // Methods
-   virtual void serialize(SaveArchive &arc);
+   virtual void serialize(SaveArchive &arc) override;
    
    // Data Members
    int count;
@@ -714,12 +714,12 @@ class LightFlashThinker : public SectorThinker
    DECLARE_THINKER_TYPE(LightFlashThinker, SectorThinker)
 
 protected:
-   void Think();
+   void Think() override;
 
 public:
    // Methods
-   virtual void serialize(SaveArchive &arc);
-   virtual bool reTriggerVerticalDoor(bool player);
+   virtual void serialize(SaveArchive &arc) override;
+   virtual bool reTriggerVerticalDoor(bool player) override;
    
    // Data Members
    int count;
@@ -734,12 +734,12 @@ class StrobeThinker : public SectorThinker
    DECLARE_THINKER_TYPE(StrobeThinker, SectorThinker)
 
 protected:
-   void Think();
+   void Think() override;
 
 public:
    // Methods
-   virtual void serialize(SaveArchive &arc);
-   virtual bool reTriggerVerticalDoor(bool player);
+   virtual void serialize(SaveArchive &arc) override;
+   virtual bool reTriggerVerticalDoor(bool player) override;
 
    // Data Members
    int count;
@@ -754,11 +754,11 @@ class GlowThinker : public SectorThinker
    DECLARE_THINKER_TYPE(GlowThinker, SectorThinker)
 
 protected:
-   void Think();
+   void Think() override;
 
 public:
    // Methods
-   virtual void serialize(SaveArchive &arc);
+   virtual void serialize(SaveArchive &arc) override;
    
    // Data Members
    int     minlight;
@@ -772,11 +772,11 @@ class SlowGlowThinker : public SectorThinker
    DECLARE_THINKER_TYPE(SlowGlowThinker, SectorThinker)
 
 protected:
-   void Think();
+   void Think() override;
 
 public:
    // Methods
-   virtual void serialize(SaveArchive &arc);
+   virtual void serialize(SaveArchive &arc) override;
    
    // Data Members
    int     minlight;
@@ -793,11 +793,11 @@ class LightFadeThinker : public SectorThinker
    DECLARE_THINKER_TYPE(LightFadeThinker, SectorThinker)
 
 protected:
-   void Think();
+   void Think() override;
 
 public:
    // Methods
-   virtual void serialize(SaveArchive &arc);
+   virtual void serialize(SaveArchive &arc) override;
    
    // Data Members
    fixed_t lightlevel;
@@ -814,7 +814,7 @@ class PhasedLightThinker : public SectorThinker
    DECLARE_THINKER_TYPE(PhasedLightThinker, SectorThinker)
 
 protected:
-   void Think();
+   void Think() override;
 
    // Data members
    int base;
@@ -822,7 +822,7 @@ protected:
 
 public:
    // Methods
-   virtual void serialize(SaveArchive &arc);
+   virtual void serialize(SaveArchive &arc) override;
 
    // Statics
    static void Spawn(sector_t *sector, int base, int index);
@@ -855,14 +855,14 @@ public:
    } rnctype_e;
 
 protected:
-   void Think();
+   void Think() override;
 
-   virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOOR; }
+   virtual attachpoint_e getAttachPoint() const override { return ATTACH_FLOOR; }
 
 public:
    // Overridden Methods
-   virtual void serialize(SaveArchive &arc);
-   virtual bool reTriggerVerticalDoor(bool player);
+   virtual void serialize(SaveArchive &arc) override;
+   virtual bool reTriggerVerticalDoor(bool player) override;
 
    // Methods
    void addActivePlat();
@@ -902,14 +902,14 @@ class VerticalDoorThinker : public SectorThinker
    DECLARE_THINKER_TYPE(VerticalDoorThinker, SectorThinker)
 
 protected:
-   void Think();
+   void Think() override;
 
-   virtual attachpoint_e getAttachPoint() const { return ATTACH_CEILING; }
+   virtual attachpoint_e getAttachPoint() const override { return ATTACH_CEILING; }
 
 public:
    // Methods
-   virtual void serialize(SaveArchive &arc);
-   virtual bool reTriggerVerticalDoor(bool player);
+   virtual void serialize(SaveArchive &arc) override;
+   virtual bool reTriggerVerticalDoor(bool player) override;
 
    // Data Members
    int type;
@@ -975,9 +975,9 @@ class CeilingThinker : public SectorThinker
    DECLARE_THINKER_TYPE(CeilingThinker, SectorThinker)
 
 protected:
-   void Think();
+   void Think() override;
 
-   virtual attachpoint_e getAttachPoint() const { return ATTACH_CEILING; }
+   virtual attachpoint_e getAttachPoint() const override { return ATTACH_CEILING; }
 
 public:
 
@@ -991,8 +991,8 @@ public:
    };
 
    // Methods
-   virtual void serialize(SaveArchive &arc);
-   virtual bool reTriggerVerticalDoor(bool player);
+   virtual void serialize(SaveArchive &arc) override;
+   virtual bool reTriggerVerticalDoor(bool player) override;
 
    // Data Members
    int type;
@@ -1085,14 +1085,14 @@ class FloorMoveThinker : public SectorThinker
    DECLARE_THINKER_TYPE(FloorMoveThinker, SectorThinker)
 
 protected:
-   void Think();
+   void Think() override;
 
-   virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOOR; }
+   virtual attachpoint_e getAttachPoint() const override { return ATTACH_FLOOR; }
 
 public:
    // Methods
-   virtual void serialize(SaveArchive &arc);
-   virtual bool reTriggerVerticalDoor(bool player);
+   virtual void serialize(SaveArchive &arc) override;
+   virtual bool reTriggerVerticalDoor(bool player) override;
 
    // Data Members
    int type;
@@ -1184,13 +1184,13 @@ class ElevatorThinker : public SectorThinker
    DECLARE_THINKER_TYPE(ElevatorThinker, SectorThinker)
 
 protected:
-   void Think();
+   void Think() override;
 
-   virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOORCEILING; }
+   virtual attachpoint_e getAttachPoint() const override { return ATTACH_FLOORCEILING; }
 
 public:
    // Methods
-   virtual void serialize(SaveArchive &arc);
+   virtual void serialize(SaveArchive &arc) override;
    
    // Data Members
    int type;
@@ -1206,13 +1206,13 @@ class PillarThinker : public SectorThinker
    DECLARE_THINKER_TYPE(PillarThinker, SectorThinker)
 
 protected:
-   void Think();
+   void Think() override;
 
-   virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOORCEILING; }
+   virtual attachpoint_e getAttachPoint() const override { return ATTACH_FLOORCEILING; }
 
 public:
    // Methods
-   virtual void serialize(SaveArchive &arc);
+   virtual void serialize(SaveArchive &arc) override;
    
    // Data Members
    int ceilingSpeed;
@@ -1240,13 +1240,13 @@ class FloorWaggleThinker : public SectorThinker
    DECLARE_THINKER_TYPE(FloorWaggleThinker, SectorThinker)
 
 protected:
-   void Think();
+   void Think() override;
 
-   virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOOR; }
+   virtual attachpoint_e getAttachPoint() const override { return ATTACH_FLOOR; }
 
 public:
    // Methods
-   virtual void serialize(SaveArchive &arc);
+   virtual void serialize(SaveArchive &arc) override;
    
    // Data Members
    fixed_t originalHeight;
@@ -1269,11 +1269,11 @@ class FrictionThinker : public Thinker
    DECLARE_THINKER_TYPE(FrictionThinker, Thinker)
 
 protected:
-   void Think();
+   void Think() override;
 
 public:
    // Methods
-   virtual void serialize(SaveArchive &arc);
+   virtual void serialize(SaveArchive &arc) override;
    
    // Data Members
    int friction;      // friction value (E800 = normal)

@@ -139,8 +139,8 @@ public:
    }
 
    // Virtual Methods
-   virtual MetaObject *clone()    const { return new MetaInteger(*this); }
-   virtual const char *toString() const; 
+   virtual MetaObject *clone()    const override { return new MetaInteger(*this); }
+   virtual const char *toString() const override;
 
    // Accessors
    int getValue() const { return value; }
@@ -173,8 +173,8 @@ public:
    }
 
    // Virtual Methods
-   virtual MetaObject *clone()    const { return new MetaDouble(*this); }
-   virtual const char *toString() const;
+   virtual MetaObject *clone()    const override { return new MetaDouble(*this); }
+   virtual const char *toString() const override;
 
    // Accessors
    double getValue() const { return value; }
@@ -214,8 +214,8 @@ public:
    }
 
    // Virtual Methods
-   virtual MetaObject *clone()    const { return new MetaString(*this); }
-   virtual const char *toString() const { return value; }
+   virtual MetaObject *clone()    const override { return new MetaString(*this); }
+   virtual const char *toString() const override { return value; }
 
    // Accessors
    const char *getValue() const { return value; }
@@ -270,8 +270,8 @@ public:
    MetaVariant(const MetaVariant &other);
 
    // Virtual Methods
-   virtual MetaObject *clone() const { return new MetaVariant(*this); }
-   virtual void setValue(const char *s, char **ret = NULL);
+   virtual MetaObject *clone() const override { return new MetaVariant(*this); }
+   virtual void setValue(const char *s, char **ret = NULL) override;
 
    // Accessors
    int    getInt();
@@ -312,8 +312,8 @@ public:
    virtual ~MetaConstString() {}
 
    // Virtual Methods
-   virtual MetaObject *clone()    const { return new MetaConstString(*this); }
-   virtual const char *toString() const { return value; }
+   virtual MetaObject *clone()    const override { return new MetaConstString(*this); }
+   virtual const char *toString() const override { return value; }
 
    // Accessors
    const char *getValue() const { return value; }
@@ -345,8 +345,8 @@ public:
    virtual ~MetaTable();
 
    // MetaObject overrides
-   virtual MetaObject *clone() const;
-   virtual const char *toString() const;
+   virtual MetaObject *clone() const override;
+   virtual const char *toString() const override;
 
    // EHashTable API exposures
    float        getLoadFactor() const; // returns load factor of the key hash table

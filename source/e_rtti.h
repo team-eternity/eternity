@@ -255,7 +255,7 @@ public:                                               \
       ctor                                            \
    };                                                 \
    static Type StaticType;                            \
-   virtual const Type *getDynamicType() const         \
+   virtual const Type *getDynamicType() const override\
    {                                                  \
       return &StaticType;                             \
    }                                                  \

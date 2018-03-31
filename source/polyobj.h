@@ -131,11 +131,11 @@ class PolyRotateThinker final : public Thinker
    DECLARE_THINKER_TYPE(PolyRotateThinker, Thinker)
 
 protected:
-   void Think();
+   void Think() override;
 
 public:
    // Methods
-   virtual void serialize(SaveArchive &arc);
+   virtual void serialize(SaveArchive &arc) override;
    
    // Data Members
    int polyObjNum;    // numeric id of polyobject (avoid C pointers here)
@@ -149,11 +149,11 @@ class PolyMoveThinker final : public Thinker
    DECLARE_THINKER_TYPE(PolyMoveThinker, Thinker)
 
 protected:
-   void Think();
+   void Think() override;
 
 public:
    // Methods
-   virtual void serialize(SaveArchive &arc);
+   virtual void serialize(SaveArchive &arc) override;
    
    // Data Members
    int polyObjNum;     // numeric id of polyobject
@@ -189,11 +189,11 @@ class PolySlideDoorThinker final : public Thinker
    DECLARE_THINKER_TYPE(PolySlideDoorThinker, Thinker)
 
 protected:
-   void Think();
+   void Think() override;
 
 public:
    // Methods
-   virtual void serialize(SaveArchive &arc);
+   virtual void serialize(SaveArchive &arc) override;
    
    // Data Members
    int polyObjNum;         // numeric id of affected polyobject
@@ -216,11 +216,11 @@ class PolySwingDoorThinker final : public Thinker
    DECLARE_THINKER_TYPE(PolySwingDoorThinker, Thinker)
 
 protected:
-   void Think();
+   void Think() override;
 
 public:
    // Methods
-   virtual void serialize(SaveArchive &arc);
+   virtual void serialize(SaveArchive &arc) override;
    
    // Data Members
    int polyObjNum;        // numeric id of affected polyobject
