@@ -437,8 +437,8 @@ static void R_divideSegs(rpolynode_t *rpn, dseglist_t *ts,
          nv->fbackup = fbackup;
          nv->x  = M_DoubleToFixed(x);
          nv->y  = M_DoubleToFixed(y);
-         nv->backup.x = M_DoubleToFixed(nv->fbackup.x);
-         nv->backup.y = M_DoubleToFixed(nv->fbackup.y);
+         nv->backup.x = M_FloatToFixed(nv->fbackup.x);
+         nv->backup.y = M_FloatToFixed(nv->fbackup.y);
 
          // create a new dynaseg from nv to v2
          dynaseg_t *nds = R_CreateDynaSeg(seg, nv, seg->seg.dyv2);
