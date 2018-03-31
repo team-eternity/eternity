@@ -446,8 +446,9 @@ static bool R_cutByWallSegs(dynaseg_t &dseg, const subsector_t &ss)
 //
 // Given a single dynaseg representing the full length of a linedef, generates a
 // set of dynasegs by recursively splitting the line through the BSP tree.
+// Also does the same for a back dynaseg for 2-sided lines.
 //
-static void R_SplitLine(dynaseg_t *dseg, int bspnum)
+static void R_SplitLine(dynaseg_t *dseg, dynaseg_t *backdseg, int bspnum)
 {
    while(!(bspnum & NF_SUBSECTOR))
    {
@@ -508,8 +509,18 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
             // alter current seg to run from seg->v1 to nv
             R_SetDynaVertexRef(&lseg->dyv2, nv);
 
+            dynaseg_t *backnds;
+            if(backdseg)
+            {
+               backnds = R_CreateDynaSeg(backdseg, backdseg->seg.dyv1, nv);
+               R_SetDynaVertexRef(&backdseg->seg.dyv1, nv);
+               R_DynaSegOffset(&backdseg->seg, backdseg->seg.linedef, 1);
+            }
+            else
+               backnds = nullptr;
+
             // recurse to split v2 side
-            R_SplitLine(nds, bsp->children[side_v2]);
+            R_SplitLine(nds, backnds, bsp->children[side_v2]);
          }
          else
          {
@@ -541,6 +552,8 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
    {
       // If it's occluded by everything, cancel it.
       R_FreeDynaSeg(dseg);
+      if(backdseg)
+         R_FreeDynaSeg(backdseg);
       return;
    }
 
@@ -560,18 +573,24 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
    }
    else
       fragment->dynaSegs = dseg;
+   dseg->subnext = backdseg;
 
    // 05/13/09: calculate seg length for SoM
    P_CalcSegLength(&dseg->seg);
+   if(backdseg)
+      backdseg->seg.len = dseg->seg.len;
 
    // 07/15/09: rendering consistency - set frontsector/backsector here
    dseg->seg.frontsector = subsectors[num].sector;
 
-   // 10/30/09: only set backsector if line is 2S (it really shouldn't be...)
+   // 10/30/09: only set backsector if line is 2S
    if(dseg->seg.linedef->backsector)
       dseg->seg.backsector = subsectors[num].sector;
    else
       dseg->seg.backsector = NULL;
+
+   if(backdseg)
+      backdseg->seg.frontsector = backdseg->seg.backsector = subsectors[num].sector;
 
    // add the subsector if it hasn't been added already
    R_AddDynaSubsec(&subsectors[num], dseg->polyobj);
@@ -623,9 +642,23 @@ void R_AttachPolyObject(polyobj_t *poly)
       R_SetDynaVertexRef(&idseg->seg.dyv1, v1);
       R_SetDynaVertexRef(&idseg->seg.dyv2, v2);
 
+      dynaseg_t *backdseg;
+      if(line->sidenum[1] != -1)
+      {
+         // create backside dynaseg now
+         backdseg = R_GetFreeDynaSeg();
+         backdseg->polyobj = poly;
+         backdseg->seg.linedef = line;
+         backdseg->seg.sidedef = &sides[line->sidenum[1]];
+         R_SetDynaVertexRef(&backdseg->seg.dyv1, v2);
+         R_SetDynaVertexRef(&backdseg->seg.dyv2, v1);
+      }
+      else
+         backdseg = nullptr;
+
       // Split seg into BSP tree to generate more dynasegs;
       // The dynasegs are stored in the subsectors in which they finally end up.
-      R_SplitLine(idseg, numnodes - 1);
+      R_SplitLine(idseg, backdseg, numnodes - 1);
    }
 
    poly->flags |= POF_ATTACHED;
