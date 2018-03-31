@@ -13,6 +13,9 @@ Since v4.00.00 "Völuspá"
 IMPROVEMENT: Polyobjects are now properly cut off by 1-sided walls, instead of
              their graphics "bleeding" through them when outside the playable
              area.
+             
+BUGFIX: 2-sided polyobjects now show correctly in Eternity. The back side was
+        hidden, which was a regression from vanilla Hexen's polyobjects.
 
 --------------------------------------------------------------------------------
 30.03.2018
