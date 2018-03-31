@@ -56,6 +56,9 @@ static inline int R_PointOnDynaSegSide(const dynaseg_t *ds, float x, float y)
    return ((ds->pdx * (y - ds->psy)) >= (ds->pdy * (x - ds->psx)));
 }
 
+void R_ComputeIntersection(const dynaseg_t *part, const dynaseg_t *seg, double &outx, double &outy,
+   v2float_t *fbackup = nullptr);
+
 #endif
 
 // EOF

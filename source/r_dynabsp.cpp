@@ -226,12 +226,10 @@ prune: ; // early exit and skip past the tests above
 //
 
 //
-// R_computeIntersection 
-//
 // Calculate the point of intersection of two lines
 //
-static void R_computeIntersection(dynaseg_t *part, dynaseg_t *seg,
-                                  double &outx, double &outy, v2float_t *fbackup = nullptr)
+void R_ComputeIntersection(const dynaseg_t *part, const dynaseg_t *seg, double &outx, double &outy, 
+   v2float_t *fbackup)
 {
    double a2, b2, l2, w, d;
    double dx, dy, dx2, dy2;
@@ -337,7 +335,7 @@ static int R_classifyDynaSeg(const dynaseg_t *part, const dynaseg_t *seg, double
       double x = 0.0, y = 0.0;
 
       // line is split
-      R_computeIntersection(part, seg, x, y);
+      R_ComputeIntersection(part, seg, x, y);
 
       // find distance from line start to split point
       dx2 = seg->psx - x;
@@ -428,7 +426,7 @@ static void R_divideSegs(rpolynode_t *rpn, dseglist_t *ts,
          v2float_t fbackup;
 
          // seg is split by the partition
-         R_computeIntersection(best, seg, x, y, &fbackup);
+         R_ComputeIntersection(best, seg, x, y, &fbackup);
 
          // create a new vertex at the intersection point
          dynavertex_t *nv = R_GetFreeDynaVertex();
