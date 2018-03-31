@@ -407,11 +407,6 @@ static bool R_cutByWallSegs(dynaseg_t &dseg, const subsector_t &ss)
          continue;   // this one is fine.
       if(side_v1 == 1 && side_v2 == 1)
          return true;  // totally occluded by one
-      // Now check if the wall is really intersecting in its middle
-      int wall_v1side = R_PointOnDynaSegSide(&dseg, v1.fx, v1.fy);
-      int wall_v2side = R_PointOnDynaSegSide(&dseg, v2.fx, v2.fy);
-      if(wall_v1side == wall_v2side)
-         continue;   // not used.
       // We have a real intersection: cut it now.
       dynaseg_t part;   // this shall be the wall
       part.psx = wall.v1->fx;
@@ -436,7 +431,7 @@ static bool R_cutByWallSegs(dynaseg_t &dseg, const subsector_t &ss)
          R_SetDynaVertexRef(&lseg.dyv1, nv);
          R_DynaSegOffset(&lseg, lseg.linedef, 0);  // also need to update this
       }
-      return false;   // we found the one wall seg which intersects here.
+      // Keep looking for other intersectors
    }
    return false;   // all are in front. So return.
 }
