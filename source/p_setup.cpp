@@ -83,7 +83,7 @@
 #include "z_auto.h"
 
 extern const char *level_error;
-extern void R_DynaSegOffset(seg_t *lseg, line_t *line, int side);
+extern void R_DynaSegOffset(seg_t *lseg, const line_t *line, int side);
 
 //
 // Miscellaneous constants

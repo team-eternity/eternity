@@ -90,7 +90,7 @@ struct dynavertex_t : vertex_t
 dynavertex_t  *R_GetFreeDynaVertex();
 void       R_FreeDynaVertex(dynavertex_t **vtx);
 void       R_SetDynaVertexRef(dynavertex_t **target, dynavertex_t *vtx);
-dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, dynavertex_t *v1, dynavertex_t *v2);
+dynaseg_t *R_CreateDynaSeg(const dynaseg_t *proto, dynavertex_t *v1, dynavertex_t *v2);
 void       R_FreeDynaSeg(dynaseg_t *dseg);
 
 void R_SaveDynasegPositions();

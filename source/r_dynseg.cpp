@@ -278,7 +278,7 @@ static rpolyobj_t *R_FindFragment(subsector_t *ss, polyobj_t *po)
 // haleyjd 06/14/10: made global for map loading in p_setup.c and added
 //                   side parameter.
 //
-void R_DynaSegOffset(seg_t *lseg, line_t *line, int side)
+void R_DynaSegOffset(seg_t *lseg, const line_t *line, int side)
 {
    double dx = (side ? line->v2->fx : line->v1->fx) - lseg->v1->fx;
    double dy = (side ? line->v2->fy : line->v1->fy) - lseg->v1->fy;
@@ -291,7 +291,7 @@ void R_DynaSegOffset(seg_t *lseg, line_t *line, int side)
 //
 // Gets a new dynaseg and initializes it with all needed information.
 //
-dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, dynavertex_t *v1, dynavertex_t *v2)
+dynaseg_t *R_CreateDynaSeg(const dynaseg_t *proto, dynavertex_t *v1, dynavertex_t *v2)
 {
    dynaseg_t *ret = R_GetFreeDynaSeg();
 
@@ -315,7 +315,7 @@ dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, dynavertex_t *v1, dynavertex_t *v2)
 //
 // Finds the point where a node line crosses a seg.
 //
-static bool R_IntersectPoint(seg_t *lseg, node_t *node, dynavertex_t &nv)
+static bool R_IntersectPoint(const seg_t *lseg, const node_t *node, dynavertex_t &nv)
 {
    // get the fnode for the node
    fnode_t *bsp = &fnodes[node - nodes];
@@ -370,7 +370,7 @@ static bool R_IntersectPoint(seg_t *lseg, node_t *node, dynavertex_t &nv)
 // from the partition line. If the distance is too small, we may decide to
 // change our idea of sidedness.
 //
-inline static double R_PartitionDistance(double x, double y, fnode_t *node)
+inline static double R_PartitionDistance(double x, double y, const fnode_t *node)
 {
    return fabs((node->a * x + node->b * y + node->c) / node->len);
 }
@@ -388,7 +388,7 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
    while(!(bspnum & NF_SUBSECTOR))
    {
       node_t  *bsp   = &nodes[bspnum];
-      fnode_t *fnode = &fnodes[bspnum];
+      const fnode_t *fnode = &fnodes[bspnum];
       seg_t   *lseg  = &dseg->seg;
 
       // test vertices against node line

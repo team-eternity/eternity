@@ -319,7 +319,7 @@ enum
 //
 // The seg is either left, right, or on the partition line.
 //
-static int R_classifyDynaSeg(dynaseg_t *part, dynaseg_t *seg, double pdx, double pdy)
+static int R_classifyDynaSeg(const dynaseg_t *part, const dynaseg_t *seg, double pdx, double pdy)
 {
    double dx2, dy2, dx3, dy3, a, b;
 
