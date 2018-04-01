@@ -27,7 +27,7 @@
 #include "version.h"
 
 // sf: made int from define
-int version = 400;
+int version = 401;
 
 // haleyjd: subversion -- range from 0 to 255
 unsigned char subversion = 0;
@@ -40,7 +40,7 @@ const char version_name[] = "Voluspa";
 
 // haleyjd: caption for SDL window
 #ifdef _SDL_VER
-const char ee_wmCaption[] = u8"Eternity Engine v4.00.00 \"Völuspá\"";
+const char ee_wmCaption[] = u8"Eternity Engine v4.01.00 \"Völuspá\"";
 #endif
 
 // haleyjd: Eternity release history
