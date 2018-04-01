@@ -776,10 +776,12 @@ static menuitem_t mn_wadiwad2_items[] =
    {it_title,    "Wad Options",         NULL,                     "M_WADOPT"},
    {it_gap},
    {it_info,     "IWAD Paths - Raven",  NULL,                     NULL, MENUITEM_CENTERED },
-   {it_gap}, 
+   {it_gap},
    {it_variable, "Heretic (SW):",       "iwad_heretic_shareware", NULL, MENUITEM_LALIGNED },
    {it_variable, "Heretic (Reg):",      "iwad_heretic",           NULL, MENUITEM_LALIGNED },
    {it_variable, "Heretic SoSR:",       "iwad_heretic_sosr",      NULL, MENUITEM_LALIGNED },
+   {it_gap},
+   {it_variable, "Hexen (Com):",        "iwad_hexen",             NULL, MENUITEM_LALIGNED },
    {it_end}
 };
 

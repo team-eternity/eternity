@@ -780,6 +780,7 @@ char *gi_path_hacx;
 char *gi_path_hticsw;
 char *gi_path_hticreg;
 char *gi_path_sosr;
+char *gi_path_hexen;
 char *gi_path_fdoom;
 char *gi_path_fdoomu;
 char *gi_path_freedm;

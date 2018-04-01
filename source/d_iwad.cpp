@@ -551,6 +551,7 @@ static char **iwadVarForNum[NUMPICKIWADS] =
    &gi_path_tnt,    &gi_path_plut,                      // Final Doom
    &gi_path_hacx,                                       // HACX
    &gi_path_hticsw, &gi_path_hticreg,  &gi_path_sosr,   // Heretic
+   &gi_path_hexen,                                      // Hexen
    &gi_path_fdoom,  &gi_path_fdoomu,   &gi_path_freedm, // Freedoom
 };
 
@@ -639,6 +640,7 @@ static iwadpathmatch_t iwadMatchers[] =
    { MATCH_GAME, "plutonia",  { &gi_path_plut,     NULL,              NULL            } },
    { MATCH_GAME, "hacx",      { &gi_path_hacx,     NULL,              NULL            } },
    { MATCH_GAME, "heretic",   { &gi_path_sosr,     &gi_path_hticreg,  &gi_path_hticsw } },
+   { MATCH_GAME, "hexen",     { &gi_path_hexen,    NULL,              NULL,           } },
 
    // -iwad matches 
    { MATCH_IWAD, "doom2f",    { &gi_path_doom2,    &gi_path_bfgdoom2, &gi_path_fdoom  } },
@@ -651,11 +653,12 @@ static iwadpathmatch_t iwadMatchers[] =
    { MATCH_IWAD, "hacx",      { &gi_path_hacx,     NULL,              NULL            } },
    { MATCH_IWAD, "heretic1",  { &gi_path_hticsw,   NULL,              NULL            } },
    { MATCH_IWAD, "heretic",   { &gi_path_sosr,     &gi_path_hticreg,  NULL            } },
+   { MATCH_IWAD, "hexen",     { &gi_path_hexen,    NULL,              NULL,           } },
    { MATCH_IWAD, "freedoom2", { &gi_path_fdoom,    NULL,              NULL            } },
    { MATCH_IWAD, "freedoom1", { &gi_path_fdoomu,   NULL,              NULL            } },
    { MATCH_IWAD, "freedm",    { &gi_path_freedm,   NULL,              NULL            } },
    { MATCH_IWAD, "bfgdoom2",  { &gi_path_bfgdoom2, NULL,              NULL,           } },
-   
+
    // Terminating entry
    { MATCH_NONE, NULL,        { NULL,              NULL,              NULL            } }
 };

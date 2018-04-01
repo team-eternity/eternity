@@ -78,6 +78,7 @@ extern int disable_sysmenu;
 #define ITEM_IWAD_HERETIC_SW    "iwad_heretic_shareware"
 #define ITEM_IWAD_HERETIC       "iwad_heretic"
 #define ITEM_IWAD_HERETIC_SOSR  "iwad_heretic_sosr"
+#define ITEM_IWAD_HEXEN         "iwad_hexen"
 #define ITEM_IWAD_FREEDOOM      "iwad_freedoom"
 #define ITEM_IWAD_FREEDOOMU     "iwad_freedoomu"
 #define ITEM_IWAD_FREEDM        "iwad_freedm"
@@ -131,6 +132,9 @@ static default_t sysdefaults[] =
 
    DEFAULT_STR(ITEM_IWAD_HERETIC_SOSR, &gi_path_sosr, NULL, "", default_t::wad_no,
                "IWAD path for Heretic: Shadow of the Serpent Riders"),
+
+   DEFAULT_STR(ITEM_IWAD_HEXEN, &gi_path_hexen, NULL, "", default_t::wad_no,
+               "IWAD path for Hexen Commercial"),
 
    DEFAULT_STR(ITEM_IWAD_FREEDOOM, &gi_path_fdoom, NULL, "", default_t::wad_no,
                "IWAD path for Freedoom (Doom 2 gamemission)"),

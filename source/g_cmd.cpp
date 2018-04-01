@@ -512,6 +512,7 @@ VARIABLE_STRING(gi_path_sosr,     NULL, UL);
 VARIABLE_STRING(gi_path_fdoom,    NULL, UL);
 VARIABLE_STRING(gi_path_fdoomu,   NULL, UL);
 VARIABLE_STRING(gi_path_freedm,   NULL, UL);
+VARIABLE_STRING(gi_path_hexen,    NULL, UL);
 
 VARIABLE_STRING(w_masterlevelsdirname, NULL, UL);
 VARIABLE_STRING(w_norestpath,          NULL, UL);
@@ -588,6 +589,12 @@ CONSOLE_VARIABLE(iwad_heretic_sosr,      gi_path_sosr,     cf_allowblank)
 {
    G_TestIWADPath(gi_path_sosr);
 }
+
+CONSOLE_VARIABLE(iwad_hexen, gi_path_hexen, cf_allowblank)
+{
+   G_TestIWADPath(gi_path_hexen);
+}
+
 
 CONSOLE_VARIABLE(iwad_freedoom,          gi_path_fdoom,    cf_allowblank)
 {
