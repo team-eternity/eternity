@@ -867,7 +867,12 @@ static void Polyobj_pushThing(polyobj_t *po, const line_t *line, Mobj *mo)
    fixed_t momx, momy;
    
    // calculate angle of line and subtract 90 degrees to get normal
-   lineangle = P_PointToAngle(0, 0, line->dx, line->dy) - ANG90;
+   // For 3dmidtex polyobjects, use a simplified angle that just pushes object
+   // away from line. Needed because polyobjects
+   if(line->flags & ML_3DMIDTEX && line->flags & ML_TWOSIDED)
+      lineangle = P_PointToAngle(po->centerPt.x, po->centerPt.y, mo->x, mo->y);
+   else
+      lineangle = P_PointToAngle(0, 0, line->dx, line->dy) - ANG90;
    lineangle >>= ANGLETOFINESHIFT;
    momx = FixedMul(po->thrust, finecosine[lineangle]);
    momy = FixedMul(po->thrust, finesine[lineangle]);
@@ -936,7 +941,8 @@ static bool Polyobj_clipThings(polyobj_t *po, const line_t *line,
 
             // ioanch 20160226: in case of portal lines, just make sure
             // the mobj budges a bit just to detect the specline
-            if(line->pflags & PS_PASSABLE)
+            if(line->pflags & PS_PASSABLE || (line->flags & ML_3DMIDTEX &&
+                                              line->flags & ML_TWOSIDED))
             {
                // HACK
                v2fixed_t pos = { mo->x, mo->y };
