@@ -228,6 +228,14 @@ public:
    void backupPosition();
    void copyPosition(const Mobj *other);
    int getModifiedSpawnHealth() const;
+
+   //
+   // Used in P_TryMove and related places to check that it's on 3dmidtex
+   //
+   inline bool on3dmidtex() const
+   {
+      return passfloorz == floorz && passfloorz != secfloorz && z == floorz;
+   }
    
    // Data members
 

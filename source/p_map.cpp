@@ -1439,9 +1439,8 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    // the thing is at its floorz, then it is on a 3DMidTex line.
    // Complicated. x_x
 
-   on3dmidtex = (thing->passfloorz == thing->floorz &&
-                 thing->passfloorz != thing->secfloorz &&
-                 thing->z == thing->floorz);
+   // ioanch: keep the global abuse
+   on3dmidtex = thing->on3dmidtex();
    
    clip.felldown = clip.floatok = false;               // killough 11/98
 
