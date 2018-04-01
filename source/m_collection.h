@@ -279,6 +279,14 @@ public:
       ++this->length;
    }
 
+   void addUnique(const T &newItem)
+   {
+      for(size_t i = 0; i < this->length; ++i)
+         if(this->ptrArray[i] == newItem)
+            return;
+      this->add(newItem);
+   }
+
    //
    // Adds a new zero-initialized item to the end of the collection.
    //
