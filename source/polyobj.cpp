@@ -867,12 +867,15 @@ static void Polyobj_pushThing(polyobj_t *po, const line_t *line, Mobj *mo)
    fixed_t momx, momy;
    
    // calculate angle of line and subtract 90 degrees to get normal
-   // For 3dmidtex polyobjects, use a simplified angle that just pushes object
-   // away from line. Needed because polyobjects
-   if(line->flags & ML_3DMIDTEX && line->flags & ML_TWOSIDED)
-      lineangle = P_PointToAngle(po->centerPt.x, po->centerPt.y, mo->x, mo->y);
-   else
-      lineangle = P_PointToAngle(0, 0, line->dx, line->dy) - ANG90;
+   lineangle = P_PointToAngle(0, 0, line->dx, line->dy) - ANG90;
+   // also require 3DMIDTEX because standard Hexen behaviour is to stick you
+   // against the backside.
+   if(line->flags & ML_TWOSIDED && line->flags & ML_3DMIDTEX &&
+      P_PointOnLineSide(mo->x, mo->y, line))
+   {
+      lineangle += ANG180; // make sure the object is pushed out.
+   }
+
    lineangle >>= ANGLETOFINESHIFT;
    momx = FixedMul(po->thrust, finecosine[lineangle]);
    momy = FixedMul(po->thrust, finesine[lineangle]);
