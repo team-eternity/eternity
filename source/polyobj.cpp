@@ -918,49 +918,51 @@ static bool Polyobj_clipThings(polyobj_t *po, line_t *line,
    {
       for(x = linebox[BOXLEFT]; x <= linebox[BOXRIGHT]; ++x)
       {
-         if(!(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
+         if(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight)
+            continue;
+         Mobj *mo = blocklinks[y * bmapwidth + x];
+
+         // haleyjd 08/14/10: use modification-safe traversal
+         while(mo)
          {
-            Mobj *mo = blocklinks[y * bmapwidth + x];
+            Mobj *next = mo->bnext;
 
-            // haleyjd 08/14/10: use modification-safe traversal
-            while(mo)
+            // always push players even if not solid
+            if((!(mo->flags & MF_SOLID) && !mo->player) || Polyobj_untouched(line, mo))
             {
-               Mobj *next = mo->bnext;
-
-               // always push players even if not solid
-               if(((mo->flags & MF_SOLID) || mo->player) && 
-                  !Polyobj_untouched(line, mo))
-               {
-                  // ioanch 20160226: in case of portal lines, just make sure
-                  // the mobj budges a bit just to detect the specline
-                  if(line->pflags & PS_PASSABLE)
-                  {
-                     // HACK
-                     v2fixed_t pos = { mo->x, mo->y };
-                     if(vec)
-                     {
-                        mo->x += FixedMul(vec->x, 72090);   // FRACUNIT * 1.1
-                        mo->y += FixedMul(vec->y, 72090);
-                     }
-                     if(!P_TryMove(mo, pos.x, pos.y, true))
-                     {
-                        mo->x = pos.x;
-                        mo->y = pos.y;
-                        // FIXME: this one needs checking after i figure out
-                        // portalmap
-                        Polyobj_pushThing(po, line, mo);
-                        hitthing = true;
-                     }
-                  }
-                  else
-                  {
-                     Polyobj_pushThing(po, line, mo);
-                     hitthing = true;
-                  }
-               }
-               mo = next; // demo compatibility is not a factor here
+               mo = next;
+               continue;
             }
-         } // end if
+
+            // ioanch 20160226: in case of portal lines, just make sure
+            // the mobj budges a bit just to detect the specline
+            if(line->pflags & PS_PASSABLE)
+            {
+               // HACK
+               v2fixed_t pos = { mo->x, mo->y };
+               if(vec)
+               {
+                  mo->x += FixedMul(vec->x, 72090);   // FRACUNIT * 1.1
+                  mo->y += FixedMul(vec->y, 72090);
+               }
+               if(!P_TryMove(mo, pos.x, pos.y, true))
+               {
+                  mo->x = pos.x;
+                  mo->y = pos.y;
+                  // FIXME: this one needs checking after i figure out
+                  // portalmap
+                  Polyobj_pushThing(po, line, mo);
+                  hitthing = true;
+               }
+            }
+            else
+            {
+               Polyobj_pushThing(po, line, mo);
+               hitthing = true;
+            }
+
+            mo = next; // demo compatibility is not a factor here
+         }
       } // end for(x)
    } // end for(y)
 
