@@ -110,6 +110,7 @@ bool P_BoxesIntersect(const fixed_t bbox1[4], const fixed_t bbox2[4]);
 int P_BoxOnDivlineSide(const fixed_t *tmbox, const divline_t &dl);
 
 //SoM 9/2/02: added mo parameter for 3dside clipping
+fixed_t P_3DLineTop(const line_t &line);
 // ioanch 20150113: added optional portal detection
 void    P_LineOpening (const line_t *linedef, const Mobj *mo,
                        bool portaldetect = false, uint32_t *lineclipflags = nullptr);

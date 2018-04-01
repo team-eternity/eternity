@@ -235,6 +235,26 @@ fixed_t P_InterceptVector(const divline_t *v2, const divline_t *v1)
 }
 
 //
+// Returns the top part of a 3dmidtex line. Assumes it has backsector and
+// ML_3DMIDTEX.
+//
+fixed_t P_3DLineTop(const line_t &line)
+{
+   const side_t &side = sides[line.sidenum[0]];
+   if(line.flags & ML_DONTPEGBOTTOM)
+   {
+      fixed_t frontfz = line.frontsector->floorheight;
+      fixed_t backfz = line.backsector->floorheight;
+      fixed_t obot = frontfz > backfz ? frontfz : backfz;
+      return side.rowoffset + obot + textures[side.midtexture]->heightfrac;
+   }
+   fixed_t frontcz = line.frontsector->ceilingheight;
+   fixed_t backcz = line.backsector->ceilingheight;
+   fixed_t otop = frontcz < backcz ? frontcz : backcz;
+   return otop + side.rowoffset;
+}
+
+//
 // P_LineOpening
 //
 // Sets opentop and openbottom to the window
