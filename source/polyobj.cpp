@@ -909,7 +909,7 @@ static void Polyobj_pushThing(polyobj_t *po, const line_t *line, Mobj *mo)
 // Returns true if something was hit.
 //
 static bool Polyobj_clipThings(polyobj_t *po, const line_t *line,
-   const vertex_t *vec = nullptr)
+   const vertex_t *vec = nullptr, PODCollection<Mobj *> *carry = nullptr)
 {
    bool hitthing = false;
    fixed_t linebox[4];
@@ -962,6 +962,11 @@ static bool Polyobj_clipThings(polyobj_t *po, const line_t *line,
                   // portalmap
                   Polyobj_pushThing(po, line, mo);
                   hitthing = true;
+               }
+               else if(carry && mo->on3dmidtex() && line->backsector &&
+                       line->flags & ML_3DMIDTEX && mo->z == P_3DLineTop(*line))
+               {
+                  carry->addUnique(mo);
                }
             }
             else
@@ -1047,9 +1052,10 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
 
    // check for blocking things (yes, it needs to be done separately)
    // ioanch 20160302: do NOT collide and get back if onload = true.
+   PODCollection<Mobj *> carry;
    if(!onload)
       for(i = 0; i < po->numLines; ++i)
-         hitthing |= Polyobj_clipThings(po, po->lines[i], &vec);
+         hitthing |= Polyobj_clipThings(po, po->lines[i], &vec, &carry);
 
    if(hitthing)
    {
@@ -1097,6 +1103,9 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
       R_AttachPolyObject(po);
 
       Polyobj_updateAnchoredPortals(*po);
+
+      for(Mobj *mo : carry)
+         P_TryMove(mo, mo->x + x, mo->y + y, 1);
    }
 
    return !hitthing;
@@ -1222,9 +1231,10 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
 
    // check for blocking things
    // ioanch 20160302: do NOT collide if onload = true.
+   PODCollection<Mobj *> carry;
    if(!onload)
       for(i = 0; i < po->numLines; ++i)
-         hitthing |= Polyobj_clipThings(po, po->lines[i]);
+         hitthing |= Polyobj_clipThings(po, po->lines[i], nullptr, &carry);
 
    if(hitthing)
    {
@@ -1258,6 +1268,23 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
       R_AttachPolyObject(po);
 
       Polyobj_updateAnchoredPortals(*po);
+
+      for(Mobj *mo : carry)
+      {
+         mo->angle += delta;  // update angle
+
+         const v2fixed_t tmp = { mo->x - origin.x, mo->y - origin.y };
+         v2fixed_t newpos;
+
+         unsigned ang = delta >> ANGLETOFINESHIFT;
+
+         newpos.x = FixedMul(tmp.x, finecosine[ang]) -
+                    FixedMul(tmp.y, finesine[ang]) + origin.x;
+         newpos.y = FixedMul(tmp.x, finesine[ang]) +
+                    FixedMul(tmp.y, finecosine[ang]) + origin.y;
+
+         P_TryMove(mo, newpos.x, newpos.y, 1);
+      }
    }
 
    return !hitthing;
