@@ -687,6 +687,16 @@ void P_CollectSpechits(line_t *ld)
 }
 
 //
+// Checks if a line has SPAC_PUSH and triggers it if so.
+//
+static void P_checkForPushSpecial(line_t &line, int side, Mobj &mo)
+{
+   if(line.special && mo.flags4 & MF4_SPACPUSHWALL)
+      P_PushSpecialLine(mo, line, side);
+   // TODO: also support projectile impact.
+}
+
+//
 // PIT_CheckLine
 //
 // Adjusts tmfloorz and tmceilingz as lines are contacted
@@ -717,15 +727,25 @@ bool PIT_CheckLine(line_t *ld, polyobj_s *po)
    if(!ld->backsector || (ld->extflags & EX_ML_BLOCKALL)) // one sided line
    {
       clip.blockline = ld;
-      return clip.unstuck && !untouched(ld) &&
+      bool result = clip.unstuck && !untouched(ld) &&
          FixedMul(clip.x-clip.thing->x,ld->dy) > FixedMul(clip.y-clip.thing->y,ld->dx);
+      if(!result)
+         P_checkForPushSpecial(*ld, 0, *clip.thing);
+      return result;
    }
 
    // killough 8/10/98: allow bouncing objects to pass through as missiles
    if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
    {
       if(ld->flags & ML_BLOCKING)           // explicitly blocking everything
-         return clip.unstuck && !untouched(ld);  // killough 8/1/98: allow escape
+      {
+         bool result = clip.unstuck && !untouched(ld);  // killough 8/1/98: allow escape
+         if(!result)
+            P_checkForPushSpecial(*ld, 0, *clip.thing);
+         // TODO: add the other push special checks.
+         // TODO: add for P_Map3D and P_PortalClip CPP files.
+         return result;
+      }
 
       // killough 8/9/98: monster-blockers don't affect friends
       // SoM 9/7/02: block monsters standing on 3dmidtex only
