@@ -317,13 +317,13 @@ bool E_PlayerOwnsWeaponInSlot(player_t *player, int slot)
    if(!player->pclass->weaponslots[slot])
       return false;
 
-   DLListItem<weaponslot_t> *weaponslot = &player->pclass->weaponslots[slot]->links;
-   while(weaponslot)
+   BDListItem<weaponslot_t> *weaponslot = E_FirstInSlot(player->pclass->weaponslots[slot]);
+   do
    {
-      if(E_PlayerOwnsWeapon(player, weaponslot->dllObject->weapon))
+      if(E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon))
          return true;
-      weaponslot = weaponslot->dllNext;
-   }
+      weaponslot = weaponslot->bdNext;
+   } while(!weaponslot->isDummy());
    return false;
 }
 
@@ -352,12 +352,12 @@ void E_GiveAllClassWeapons(player_t *player)
       if(!currslot)
          continue;
 
-      DLListItem<weaponslot_t> *weaponslot = &currslot->links;
-      while(weaponslot)
+      BDListItem<weaponslot_t> *weaponslot = E_FirstInSlot(currslot);
+      do
       {
-         E_GiveWeapon(player, weaponslot->dllObject->weapon);
-         weaponslot = weaponslot->dllNext;
-      }
+         E_GiveWeapon(player, weaponslot->bdObject->weapon);
+         weaponslot = weaponslot->bdNext;
+      } while(!weaponslot->isDummy());
    }
 }
 
@@ -370,6 +370,14 @@ bool E_IsPoweredVariant(weaponinfo_t *wp)
    return wp && wp->flags & WPF_POWEREDUP;
 }
 
+BDListItem<weaponslot_t> *E_FirstInSlot(weaponslot_t *dummyslot)
+{
+   // This should NEVER happen
+   if(dummyslot->links.bdNext->isDummy())
+      I_Error("E_FirstInSlot: No weapon is first in slot (report to Altazimuth)\n");
+
+   return dummyslot->links.bdNext;
+}
 //=============================================================================
 //
 // Weapon Selection Order Functions

@@ -545,54 +545,56 @@ weaponinfo_t *P_GetPlayerWeapon(player_t *player, int slot)
    // wrong with the DeHackEd num check.
    /*if(demo_version < 349 && GameModeInfo->type == Game_DOOM)
    {
-      DLListItem<weaponslot_t> *weaponslot = &player->pclass->weaponslots[slot]->links;
-      while(weaponslot->dllNext)
+      DLListItem<weaponslot_t> *weaponslot = E_FirstInSlot(player->pclass->weaponslots[slot]);
+      while(!weaponslot->dllNext->isDummy())
          weaponslot = weaponslot->dllNext;
       return weaponslot->dllObject->weapon;
    }*/
 
    bool hit = false;
-   DLListItem<weaponslot_t> *weaponslot, *baseslot;
-   baseslot = &player->pclass->weaponslots[slot]->links;
+   BDListItem<weaponslot_t> *weaponslot, *baseslot;
+   // This initial call assures us that baseslot->bdNext is valid.
+   baseslot = E_FirstInSlot(player->pclass->weaponslots[slot]);
 
    // Try finding the player's currently-equipped weapon.
-   do
+   while(!baseslot->isDummy())
    {
-      if(baseslot->dllObject->weapon->id == player->readyweapon->id)
+      if(baseslot->bdObject->weapon->id == player->readyweapon->id)
       {
          hit = true;
          break;
       }
       else
-         baseslot = baseslot->dllNext;
-   } while(baseslot != nullptr);
+         baseslot = baseslot->bdNext;
+   }
 
    // Reset starting point if we couldn't find player's weapon in this slot.
-   if(baseslot == nullptr)
-      baseslot = &player->pclass->weaponslots[slot]->links;
+   if(baseslot->isDummy())
+      baseslot = baseslot->bdNext;
 
    weaponslot = baseslot;
 
    // If we found the player's readyweapon in the current slot, or the player
    // doesn't own the first weapon in the slot, we'll need to iterate through.
-   if(hit || !E_PlayerOwnsWeapon(player, weaponslot->dllObject->weapon))
+   if(hit || !E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon))
    {
       // The next weapon we find that the player owns is what we're looking for.
       do
       {
-         // Start from the bottom of the slot if we get to the top.
-         if((weaponslot = weaponslot->dllNext) == nullptr)
-            weaponslot = &player->pclass->weaponslots[slot]->links;
+         weaponslot = weaponslot->bdNext;
+         // Start from the start the list if we get to the end.
+         if(weaponslot->isDummy())
+            weaponslot = weaponslot->bdNext;
 
       } while(weaponslot != baseslot &&
-              !E_PlayerOwnsWeapon(player, weaponslot->dllObject->weapon));
+              !E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon));
 
-      // If the player doesn't own weaponslot, don't allow the weapon to change.
-      if(!E_PlayerOwnsWeapon(player, weaponslot->dllObject->weapon))
+      // If the player doesn't own weaponslot's weapon, don't allow the change.
+      if(!E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon))
          weaponslot = nullptr;
    }
 
-   return weaponslot ? weaponslot->dllObject->weapon : nullptr;
+   return weaponslot ? weaponslot->bdObject->weapon : nullptr;
 }
 
 //

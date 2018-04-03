@@ -27,7 +27,7 @@
 #define E_WEAPONS_H__
 
 #include "m_avltree.h"
-#include "m_dllist.h"
+#include "m_bdlist.h"
 
 struct weaponinfo_t;
 struct cfg_t;
@@ -54,7 +54,7 @@ extern cfg_opt_t edf_wdelta_opts[];
 struct weaponslot_t
 {
    weaponinfo_t *weapon;           // weapon in the slot
-   DLListItem<weaponslot_t> links; // link to next weapon in the same slot
+   BDListItem<weaponslot_t> links; // link to next weapon in the same slot
 };
 
 #define NUMWEAPONSLOTS 16
@@ -86,6 +86,8 @@ void E_GiveWeapon(player_t *player, weaponinfo_t *weapon);
 void E_GiveAllClassWeapons(player_t *player);
 
 bool E_IsPoweredVariant(weaponinfo_t *wp);
+
+BDListItem<weaponslot_t> *E_FirstInSlot(weaponslot_t *dummyslot);
 
 void E_CollectWeapons(cfg_t *cfg);
 

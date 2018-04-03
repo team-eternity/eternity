@@ -444,21 +444,20 @@ static void E_processRebornItem(cfg_t *item, playerclass_t *pc, unsigned int ind
 //
 static void E_freeWeaponSlot(playerclass_t *pc, int slot)
 {
-   weaponslot_t *&wepslot = pc->weaponslots[slot];
+   /*weaponslot_t *&wepslot = pc->weaponslots[slot];
 
    // Delete any existing weapon slot
    if(wepslot != nullptr)
    {
-      DLListItem<weaponslot_t> *prevslot, *currslot = wepslot->links.dllNext;
+      BDListItem<weaponslot_t> *prevslot, *currslot = wepslot->links.bdNext;
       while(currslot)
       {
          prevslot = currslot;
-         currslot = currslot->dllNext;
-         prevslot->remove();
+         currslot->remove(&currslot);
       }
       efree(wepslot);
       wepslot = nullptr;
-   }
+   }*/
 }
 
 //
@@ -495,23 +494,25 @@ static void E_processWeaponSlot(cfg_t *slot, playerclass_t *pc)
       return;
    }
 
-   DLListItem<weaponslot_t> **slotlist = ecalloc(DLListItem<weaponslot_t> **, 1,
-                                                 sizeof(DLListItem<weaponslot_t> *));
-   weaponslot_t *curslot = nullptr;
-   for(int i = 0; i < numweapons; i++)
+   weaponslot_t             *initslot = estructalloc(weaponslot_t, 1);
+   BDListItem<weaponslot_t> &slotlist = initslot->links;
+   BDListItem<weaponslot_t>::Init(slotlist);
+   slotlist.bdObject = initslot;
+   for(int i = numweapons; i --> 0;)
    {
-      const char *weaponname = cfg_getnstr(slot, ITEM_WPNSLOT_WPNS, i);
-      weaponinfo_t *weapon = E_WeaponForName(weaponname);
+      const char   *weaponname = cfg_getnstr(slot, ITEM_WPNSLOT_WPNS, i);
+      weaponinfo_t *weapon     = E_WeaponForName(weaponname);
       if(weapon)
       {
-         curslot = estructalloc(weaponslot_t, 1);
-         curslot->weapon = weapon;
+         weaponslot_t *curslot = estructalloc(weaponslot_t, 1);
+         curslot->links.bdData = numweapons - (i + 1);
+         curslot->weapon       = weapon;
          curslot->links.insert(curslot, slotlist);
       }
       else
          E_EDFLoggedErr(2, "E_processWeaponSlot: Weapon \"%s\" not found\n", weaponname);
    }
-   pc->weaponslots[slotindex] = curslot;
+   pc->weaponslots[slotindex] = initslot;
 }
 
 //
