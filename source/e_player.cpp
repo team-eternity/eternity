@@ -494,6 +494,7 @@ static void E_processWeaponSlot(cfg_t *slot, playerclass_t *pc)
       return;
    }
 
+   bool *weaponinslot = ecalloc(bool *, NUMWEAPONTYPES, sizeof(bool));
    weaponslot_t             *initslot = estructalloc(weaponslot_t, 1);
    BDListItem<weaponslot_t> &slotlist = initslot->links;
    BDListItem<weaponslot_t>::Init(slotlist);
@@ -504,6 +505,13 @@ static void E_processWeaponSlot(cfg_t *slot, playerclass_t *pc)
       weaponinfo_t *weapon     = E_WeaponForName(weaponname);
       if(weapon)
       {
+         if(weaponinslot[weapon->id])
+         {
+            E_EDFLoggedErr(2, "E_processWeaponSlot: Weapon \"%s\" detected multiple times "
+                              "in slot %d\n", weaponname, i + 1);
+         }
+         else
+            weaponinslot[weapon->id] = true;
          weaponslot_t *curslot = estructalloc(weaponslot_t, 1);
          curslot->links.bdData = numweapons - (i + 1);
          curslot->weapon       = weapon;
@@ -512,6 +520,7 @@ static void E_processWeaponSlot(cfg_t *slot, playerclass_t *pc)
       else
          E_EDFLoggedErr(2, "E_processWeaponSlot: Weapon \"%s\" not found\n", weaponname);
    }
+   efree(weaponinslot);
    pc->weaponslots[slotindex] = initslot;
 }
 
