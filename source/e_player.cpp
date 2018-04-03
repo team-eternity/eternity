@@ -444,20 +444,20 @@ static void E_processRebornItem(cfg_t *item, playerclass_t *pc, unsigned int ind
 //
 static void E_freeWeaponSlot(playerclass_t *pc, int slot)
 {
-   /*weaponslot_t *&wepslot = pc->weaponslots[slot];
+   weaponslot_t *&wepslot = pc->weaponslots[slot];
 
    // Delete any existing weapon slot
    if(wepslot != nullptr)
    {
       BDListItem<weaponslot_t> *prevslot, *currslot = wepslot->links.bdNext;
-      while(currslot)
+      do
       {
          prevslot = currslot;
          currslot->remove(&currslot);
-      }
-      efree(wepslot);
+         efree(prevslot->bdObject);
+      } while(prevslot != currslot);
       wepslot = nullptr;
-   }*/
+   }
 }
 
 //

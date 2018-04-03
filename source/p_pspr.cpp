@@ -553,7 +553,8 @@ weaponinfo_t *P_GetPlayerWeapon(player_t *player, int slot)
 
    bool hit = false;
    BDListItem<weaponslot_t> *weaponslot, *baseslot;
-   // This initial call assures us that baseslot->bdNext is valid.
+   // This initial call assures us that
+   // player->pclass->weaponslots[slot]->bdNext is valid.
    baseslot = E_FirstInSlot(player->pclass->weaponslots[slot]);
 
    // Try finding the player's currently-equipped weapon.
