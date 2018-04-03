@@ -1424,11 +1424,7 @@ static bool EV_checkSpac(ev_action_t *action, ev_instance_t *instance)
 
       // check player / monster / missile / push enable flags
       if(thing->player)                    // treat as player?
-      {
          flags |= EX_ML_PLAYER;
-         if(instance->spac == SPAC_IMPACT)
-            flags |= EX_ML_MISSILE;
-      }
       if(thing->flags3 & MF3_SPACMISSILE)  // treat as missile?
          flags |= EX_ML_MISSILE;
       if(thing->flags3 & MF3_SPACMONSTER)  // treat as monster?
@@ -1442,9 +1438,6 @@ static bool EV_checkSpac(ev_action_t *action, ev_instance_t *instance)
             return false;
 
          flags |= EX_ML_MONSTER;
-
-         if(instance->spac == SPAC_IMPACT)
-            flags |= EX_ML_MISSILE;
       }
       if(thing->flags4 & MF4_SPACPUSHWALL) // treat as a wall pusher?
       {
