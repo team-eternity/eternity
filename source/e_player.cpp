@@ -512,6 +512,7 @@ static void E_processWeaponSlot(cfg_t *slot, playerclass_t *pc)
          }
          else
             weaponinslot[weapon->id] = true;
+
          weaponslot_t *curslot = estructalloc(weaponslot_t, 1);
          curslot->links.bdData = numweapons - (i + 1);
          curslot->weapon       = weapon;

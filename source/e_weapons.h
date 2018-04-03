@@ -156,22 +156,6 @@ public:
    {
       return player->weaponctrs->getIndexedCounter(player->readyweapon->id, index);
    }
-
-private:
-   //
-   // Delete objects
-   //
-   static void deleteObjects(avlnode_t *node)
-   {
-      if(node)
-      {
-         if(node->left)
-            deleteObjects(node->left);
-         if(node->right)
-            deleteObjects(node->right);
-         efree(node->object);
-      }
-   }
 };
 
 #endif

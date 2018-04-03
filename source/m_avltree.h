@@ -84,7 +84,7 @@ public:
    {
       avlnode_t *toinsert, *next, *prev;
       prev = next = nullptr;
-      toinsert = estructalloc(avlnode_t, 1); // avlnode_t is POD, due to the assertion T and U are
+      toinsert = estructalloc(avlnode_t, 1); 
       toinsert->key = key;
       toinsert->object = object;
       toinsert->left = toinsert->right = nullptr;
@@ -227,13 +227,13 @@ public:
       else
          return 0;
 
-      int ret = 0;
+      int ret = 1;
       if(node->left != nullptr)
          ret += numNodes(node->left);
       if(node->right != nullptr)
          ret += numNodes(node->right);
 
-      return ret + 1;
+      return ret;
    }
 
 protected:
@@ -285,7 +285,7 @@ protected:
       return bf;
    }
 
-   inline static void rotateNodeLeftLeft(avlnode_t *&node)
+   inline static void rotateNodeRight(avlnode_t *&node)
    {
       avlnode_t *a = node;
       avlnode_t *b = a->left;
@@ -338,12 +338,12 @@ protected:
       node = c;
    }
 
-   inline static void rotateNodeRightRight(avlnode_t *&node)
+   inline static void rotateNodeLeft(avlnode_t *&node)
    {
       avlnode_t *a = node;
       avlnode_t *b = a->right;
 
-      // This is the opposite of rotateNodeLeftLeft
+      // This is the opposite of rotateNodeRight
       a->right = b->left;
       b->left = a;
 
@@ -368,7 +368,7 @@ protected:
          if(balanceFactor(root->left) <= -1)
             rotateNodeLeftRight(root);
          else
-            rotateNodeLeftLeft(root);
+            rotateNodeRight(root);
       }
       else if(bf < -1)
       {
@@ -376,13 +376,13 @@ protected:
          if(balanceFactor(root->right) >= 1)
             rotateNodeRightLeft(root);
          else
-            rotateNodeRightRight(root);
+            rotateNodeLeft(root);
       }
    }
 
 private:
    //
-   // Hack down an avltree by doing post-order deletion,
+   // Hack down an AVLTree by doing post-order deletion,
    // deleting objects if needed
    //
    static void deleteTree(avlnode_t *node, bool deleteobjs)
