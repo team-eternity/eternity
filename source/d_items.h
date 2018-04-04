@@ -28,6 +28,7 @@
 
 #include "doomdef.h"
 #include "m_dllist.h"
+#include "m_fixed.h"
 
 using itemeffect_t = class MetaTable;
 
@@ -73,6 +74,9 @@ struct weaponinfo_t
    int          flashstate_alt;   // Alt flash state
    int          holdstate_alt;    // Alt hold state
    int          ammopershot_alt;  // Alt ammo per shot
+
+   int           defaultslotindex;
+   fixed_t       defaultslotrank;
 
    int           sortorder;   // sort order (lower is higher priority)
    // haleyjd 05/31/14: more dynamic weapons work

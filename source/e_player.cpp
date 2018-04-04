@@ -765,6 +765,111 @@ void E_VerifyDefaultPlayerClass()
 }
 
 //
+// Recursively populate a weapon slot with data from a WeaponSlotTree
+//
+static int E_populateWeaponSlot(BDListItem<weaponslot_t> &slotlist, WeaponSlotNode *node)
+{
+   unsigned int ret = 0;
+   if(node->left)
+      ret += E_populateWeaponSlot(slotlist, node->left);
+
+   weaponslot_t *curslot = estructalloc(weaponslot_t, 1);
+   curslot->links.bdData = ret;
+   curslot->weapon = node->object;
+   curslot->links.insert(curslot, slotlist);
+   ret++;
+
+   if(node->right)
+      ret += E_populateWeaponSlot(slotlist, node->right);
+
+   return ret;
+}
+
+//
+// Creates a weapon slot from a given tree, then assigns it to the appropriate pclass slot
+//
+static inline void E_createWeaponSlotFromTree(playerclass_t *pc, int slotindex, WeaponSlotTree *slottree)
+{
+   weaponslot_t *initslot = estructalloc(weaponslot_t, 1);
+   BDListItem<weaponslot_t> &slotlist = initslot->links;
+   BDListItem<weaponslot_t>::Init(slotlist);
+   slotlist.bdObject = initslot;
+
+   E_populateWeaponSlot(slotlist, slottree->root);
+   pc->weaponslots[slotindex] = initslot;
+}
+
+//
+// Recursively place all weapons from the global slot tree into the playerclass weaponslot (in-order traversal)
+//
+static void E_AddGlobalWeaponsToSlot(WeaponSlotTree *slot, WeaponSlotNode *node, bool *weaponinslot)
+{
+   if(node == nullptr)
+      return;
+   if(slot == nullptr)
+      slot = new WeaponSlotTree();
+
+   if(node->left)
+      E_AddGlobalWeaponsToSlot(slot, node->left, weaponinslot);
+   if(weaponinslot[node->object->id] == false)
+   {
+      slot->insert(node->object->defaultslotrank, node->object);
+      weaponinslot[node->object->id] = true; // Not necessary, but for safety purposes
+   }
+   if(node->right)
+      E_AddGlobalWeaponsToSlot(slot, node->right, weaponinslot);
+}
+
+
+//
+// Process weapon slots for the last time
+//
+void E_ProcessFinalWeaponSlots()
+{
+   for(int i = 0; i < NUMEDFPCLASSCHAINS; ++i)
+   {
+      playerclass_t *chain = edf_player_classes[i];
+
+      while(chain)
+      {
+         for(int i = NUMWEAPONSLOTS; i--> 0;)
+         {
+            bool *weaponinslot = ecalloc(bool *, NUMWEAPONTYPES, sizeof(bool));
+            WeaponSlotTree *pclassslottree = nullptr;
+            if(chain->weaponslots[i] != nullptr)
+            {
+               pclassslottree = new WeaponSlotTree();
+               auto *slotiterator = E_FirstInSlot(chain->weaponslots[i]);
+               int weaponnum = 1;
+
+               while(!slotiterator->isDummy())
+               {
+                  pclassslottree->insert(weaponnum << FRACBITS, slotiterator->bdObject->weapon);
+                  weaponinslot[slotiterator->bdObject->weapon->id] = true;
+
+                  weaponnum++;
+                  slotiterator = slotiterator->bdNext;
+               }
+            }
+
+            if(weaponslots[i])
+               E_AddGlobalWeaponsToSlot(pclassslottree, weaponslots[i]->root, weaponinslot);
+
+            if(pclassslottree != nullptr)
+            {
+               E_freeWeaponSlot(chain, i);
+               E_createWeaponSlotFromTree(chain, i, pclassslottree);
+               delete pclassslottree;
+            }
+            efree(weaponinslot);
+         }
+
+         chain = chain->next;
+      }
+   }
+}
+
+//
 // E_IsPlayerClassThingType
 //
 // Checks all extant player classes to see if any stakes a claim on the

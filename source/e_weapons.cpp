@@ -81,6 +81,9 @@ weapontype_t UnknownWeaponInfo;
 #define ITEM_WPN_SELECTORDER  "selectionorder"
 #define ITEM_WPN_SISTERWEAPON "sisterweapon"
 
+#define ITEM_WPN_SLOTNUM      "slotnumber"
+#define ITEM_WPN_SLOTRANK     "slotselectionorder"
+
 #define ITEM_WPN_NEXTINCYCLE  "nextincycle"
 #define ITEM_WPN_PREVINCYCLE  "previncycle"
 
@@ -131,6 +134,8 @@ cfg_opt_t wpninfo_tprops[] =
    CFG_STR(ITEM_WPN_HOLDSTATE_ALT,   "S_NULL", CFGF_NONE), \
    CFG_INT(ITEM_WPN_AMMOPERSHOT_ALT, 0,        CFGF_NONE), \
    CFG_INT(ITEM_WPN_SELECTORDER,  -1,       CFGF_NONE), \
+   CFG_INT(ITEM_WPN_SLOTNUM,      -1,       CFGF_NONE), \
+   CFG_FLOAT(ITEM_WPN_SLOTRANK,   -1.0,     CFGF_NONE), \
    CFG_STR(ITEM_WPN_SISTERWEAPON, "",       CFGF_NONE), \
    CFG_STR(ITEM_WPN_NEXTINCYCLE,  "",       CFGF_NONE), \
    CFG_STR(ITEM_WPN_PREVINCYCLE,  "",       CFGF_NONE), \
@@ -173,7 +178,7 @@ cfg_opt_t edf_wdelta_opts[] =
 // binding used to cycle through weapons in that slot is direct. The order of
 // weapons in the slot is determined by their relative priorities.
 //
-weaponslot_t *weaponslots[NUMWEAPONSLOTS];
+WeaponSlotTree *weaponslots[NUMWEAPONSLOTS];
 
 // The structure that provides the basis for the AVL tree used for
 // checking selection order. It's used due to its speed of access
@@ -377,6 +382,15 @@ BDListItem<weaponslot_t> *E_FirstInSlot(weaponslot_t *dummyslot)
       I_Error("E_FirstInSlot: No weapon is first in slot (report to Altazimuth)\n");
 
    return dummyslot->links.bdNext;
+}
+
+BDListItem<weaponslot_t> *E_LastInSlot(weaponslot_t *dummyslot)
+{
+   // This should NEVER happen
+   if(dummyslot->links.bdPrev->isDummy())
+      I_Error("E_LastInSlot: No weapon is first in slot (report to Altazimuth)\n");
+
+   return dummyslot->links.bdPrev;
 }
 //=============================================================================
 //
@@ -1047,6 +1061,17 @@ static void E_insertSelectOrderNode(int sortorder, weaponinfo_t *wp, bool modify
       selectordertree->insert(sortorder, wp);
 }
 
+static void E_insertWeaponSlotNode(int slotindex, fixed_t slotrank, weaponinfo_t *wp, bool modify)
+{
+   if(modify)
+      weaponslots[wp->defaultslotindex]->deleteNode(wp->defaultslotrank);
+
+   if(weaponslots[slotindex] == nullptr)
+      weaponslots[slotindex] = new WeaponSlotTree(slotrank, wp);
+   else
+      weaponslots[slotindex]->insert(slotrank, wp);
+}
+
 #undef  IS_SET
 #define IS_SET(name) ((def && !inherits) || cfg_size(weaponsec, (name)) > 0)
 
@@ -1057,6 +1082,7 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
 {
    int tempint;
    const char *tempstr;
+   double tempfloat;
    bool inherits = false;
    weapontitleprops_t titleprops;
    weaponinfo_t &wp = *weaponinfo[i];
@@ -1130,6 +1156,39 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
          E_EDFLoggedErr(2, "E_processWeapon: invalid sisterweapon '%s' defined "
                            "in weaponinfo '%s'\n", tempstr, wp.name);
       }
+   }
+
+   if(cfg_size(weaponsec, ITEM_WPN_SLOTNUM) > 0)
+   {
+      tempint = cfg_getint(weaponsec, ITEM_WPN_SLOTNUM) - 1;
+      if(tempint < 0 || tempint > 15)
+      {
+         E_EDFLoggedWarning(2, "E_processWeapon:");
+      }
+      else if(cfg_size(weaponsec, ITEM_WPN_SLOTRANK) > 0)
+      {
+         tempfloat = cfg_getfloat(weaponsec, ITEM_WPN_SLOTRANK);
+         // Make sure tempfloat is within the bounds of a fixed_t
+         if(tempfloat > M_FixedToDouble(0x7FFFFFFF) || tempfloat < 0.0)
+         {
+            E_EDFLoggedWarning(2, "E_processWeapon:");
+         }
+         else
+         {
+            fixed_t tempfixed = M_DoubleToFixed(tempfloat);
+            E_insertWeaponSlotNode(tempint, tempfixed, &wp, !def);
+            wp.defaultslotindex = tempint;
+            wp.defaultslotrank = tempfixed;
+         }
+      }
+      else
+      {
+         E_EDFLoggedWarning(2, "E_processWeapon:");
+      }
+   }
+   else if(cfg_size(weaponsec, ITEM_WPN_SLOTRANK) > 0)
+   {
+      E_EDFLoggedWarning(2, "E_processWeapon:");
    }
 
    if(IS_SET(ITEM_WPN_NEXTINCYCLE))

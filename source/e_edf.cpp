@@ -1702,6 +1702,7 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
 
    // post-processing routines
    E_SetThingDefaultSprites();
+   E_ProcessFinalWeaponSlots();
 }
 
 //

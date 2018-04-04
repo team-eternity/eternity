@@ -103,6 +103,8 @@ void E_ProcessSkins(cfg_t *cfg);
 void E_ProcessPlayerClasses(cfg_t *cfg);
 void E_ProcessPlayerDeltas(cfg_t *cfg);
 
+void E_ProcessFinalWeaponSlots();
+
 #endif // NEED_EDF_DEFINITIONS
 
 #endif

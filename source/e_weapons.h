@@ -32,6 +32,9 @@
 struct weaponinfo_t;
 struct cfg_t;
 
+using WeaponSlotTree = AVLTree<fixed_t, weaponinfo_t>;
+using WeaponSlotNode = WeaponSlotTree::avlnode_t;
+
 // Global Data
 
 extern int NUMWEAPONTYPES;
@@ -59,7 +62,7 @@ struct weaponslot_t
 
 #define NUMWEAPONSLOTS 16
 
-extern weaponslot_t *weaponslots[NUMWEAPONSLOTS];
+extern WeaponSlotTree *weaponslots[NUMWEAPONSLOTS];
 
 // Global Functions
 weaponinfo_t *E_WeaponForID(int id);
@@ -88,12 +91,35 @@ void E_GiveAllClassWeapons(player_t *player);
 bool E_IsPoweredVariant(weaponinfo_t *wp);
 
 BDListItem<weaponslot_t> *E_FirstInSlot(weaponslot_t *dummyslot);
+BDListItem<weaponslot_t> *E_LastInSlot(weaponslot_t *dummyslot);
 
 void E_CollectWeapons(cfg_t *cfg);
 
 void E_ProcessWeaponInfo(cfg_t *cfg);
 void E_ProcessWeaponDeltas(cfg_t *cfg);
 
+
+/*//
+// Tree that represents a single weapon slot
+//
+class WeaponSlotTree : public WeaponSlotTreeBase
+{
+public:
+   WeaponSlotTree() :
+      WeaponSlotTreeBase()
+   {
+   }
+
+   //
+   // Parameterised constructor
+   //
+   WeaponSlotTree(fixed_t key, weaponinfo_t *object)
+      : WeaponSlotTreeBase(key, object)
+   {
+   }
+
+   ~WeaponSlotTree() { }
+};*/
 
 #define NUMWEAPCOUNTERS 3
 using WeaponCounter = int[NUMWEAPCOUNTERS];
