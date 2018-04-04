@@ -182,8 +182,9 @@ static void P_blockingLineDifferentLevel(line_t *ld, polyobj_t *po, fixed_t thin
       clip.passceilz = clip.ceilingz;
 
    // We need now to collect spechits for push activation.
-   if(clip.thing->groupid == ld->frontsector->groupid || 
-      (linetop > thingz && linebottom < thingtopz && !(ld->pflags & PS_PASSABLE)))
+   if(full_demo_version >= make_full_version(401, 0) && 
+      (clip.thing->groupid == ld->frontsector->groupid || 
+      (linetop > thingz && linebottom < thingtopz && !(ld->pflags & PS_PASSABLE))))
    {
       P_CollectSpechits(ld);
    }

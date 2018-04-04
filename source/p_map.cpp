@@ -1435,7 +1435,7 @@ typedef bool (*dropoff_func_t)(Mobj *, int);
 //
 static void P_RunPushSpechits(Mobj &thing)
 {
-   if(full_demo_version < make_full_version(401, 0) && thing.flags & (MF_TELEPORT | MF_NOCLIP))
+   if(full_demo_version < make_full_version(401, 0) || thing.flags & (MF_TELEPORT | MF_NOCLIP))
       return;
    int numSpecHitTemp = clip.numspechit;
    while(numSpecHitTemp > 0)
