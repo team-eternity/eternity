@@ -57,6 +57,7 @@ extern cfg_opt_t edf_wdelta_opts[];
 struct weaponslot_t
 {
    weaponinfo_t *weapon;           // weapon in the slot
+   uint8_t       slotindex;        // index of the slot
    BDListItem<weaponslot_t> links; // link to next weapon in the same slot
 };
 

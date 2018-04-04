@@ -47,6 +47,7 @@
 
 struct playerclass_t;
 struct skin_t;
+struct weaponslot_t;
 
 class WeaponCounterTree;
 
@@ -174,6 +175,9 @@ struct player_t
    
    weaponinfo_t  *readyweapon;
    weaponinfo_t  *pendingweapon; // Is nullptr if not changing.
+
+   weaponslot_t  *readyweaponslot;
+   weaponslot_t  *pendingweaponslot; // Is nullptr if not changing.
 
    // MaxW: 2018/01/02: Changed from `int weaponctrs[NUMWEAPONS][3]`
    WeaponCounterTree *weaponctrs; // haleyjd 03/31/06

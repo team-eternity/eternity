@@ -767,12 +767,13 @@ void E_VerifyDefaultPlayerClass()
 //
 // Recursively populate a weapon slot with data from a WeaponSlotTree
 //
-static void E_populateWeaponSlot(BDListItem<weaponslot_t> &slotlist, WeaponSlotNode *node, int &data)
+static void E_populateWeaponSlot(BDListItem<weaponslot_t> &slotlist, WeaponSlotNode *node, unsigned int &data)
 {
    if(node->left)
       E_populateWeaponSlot(slotlist, node->left, data);
 
    weaponslot_t *curslot = estructalloc(weaponslot_t, 1);
+   curslot->slotindex = slotlist.bdObject->slotindex;
    curslot->links.bdData = data;
    curslot->weapon = node->object;
    curslot->links.insert(curslot, slotlist);
@@ -788,11 +789,12 @@ static void E_populateWeaponSlot(BDListItem<weaponslot_t> &slotlist, WeaponSlotN
 static inline void E_createWeaponSlotFromTree(playerclass_t *pc, int slotindex, WeaponSlotTree *slottree)
 {
    weaponslot_t *initslot = estructalloc(weaponslot_t, 1);
+   initslot->slotindex = slotindex;
    BDListItem<weaponslot_t> &slotlist = initslot->links;
    BDListItem<weaponslot_t>::Init(slotlist);
    slotlist.bdObject = initslot;
 
-   int temp = 0;
+   unsigned int temp = 0;
    E_populateWeaponSlot(slotlist, slottree->root, temp);
    pc->weaponslots[slotindex] = initslot;
 }
