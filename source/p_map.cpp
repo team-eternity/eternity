@@ -1431,6 +1431,22 @@ static bool P_CheckDropOffEE(Mobj *thing, int dropoff)
 typedef bool (*dropoff_func_t)(Mobj *, int);
 
 //
+// Runs the spechit push specials
+//
+static void P_RunPushSpechits(Mobj &thing)
+{
+   if(full_demo_version < make_full_version(401, 0) && thing.flags & (MF_TELEPORT | MF_NOCLIP))
+      return;
+   int numSpecHitTemp = clip.numspechit;
+   while(numSpecHitTemp > 0)
+   {
+      numSpecHitTemp--;
+      line_t &line = *clip.spechit[numSpecHitTemp];
+      P_PushSpecialLine(thing, line, P_PointOnLineSide(thing.x, thing.y, &line));
+   }
+}
+
+//
 // P_TryMove
 //
 // Attempt to move to a new position,
@@ -1524,7 +1540,10 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       {
          // Solid wall or thing
          if(!clip.BlockingMobj || clip.BlockingMobj->player || !thing->player)
+         {
+            P_RunPushSpechits(*thing);
             return false;
+         }
          else
          {
             // haleyjd: yikes...
@@ -1541,6 +1560,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
                (clip.ceilingz - (clip.BlockingMobj->z + clip.BlockingMobj->height) 
                  < thing->height))
             {
+               P_RunPushSpechits(*thing);
                return false;
             }
             
@@ -1550,18 +1570,25 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             if(clip.BlockingMobj->flags & MF_TOUCHY)
             {
                if(clip.BlockingMobj->health <= 0)
+               {
+                  P_RunPushSpechits(*thing);
                   return false;
+               }
             }
          }
          if(!(clip.thing->flags3 & MF3_PASSMOBJ))
          {
             thing->z = oldz;
+            P_RunPushSpechits(*thing);
             return false;
          }
       }
    }
    else if(!P_CheckPosition(thing, x, y))
+   {
+      P_RunPushSpechits(*thing);
       return false;   // solid wall or thing
+   }
 
    if(!(thing->flags & MF_NOCLIP))
    {
@@ -1574,13 +1601,21 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       // haleyjd: OVER_UNDER: broke up impossible-to-understand predicate
 
       if(clip.ceilingz - clip.floorz < thing->height) // doesn't fit
+      {
+         if(!ret)
+            P_RunPushSpechits(*thing);
          return ret;
+      }
          
       // mobj must lower to fit
       clip.floatok = true;
       if(!(thing->flags & MF_TELEPORT) && !(thing->flags4 & MF4_FLY) &&
          clip.ceilingz - thing->z < thing->height)
-         return ret;          
+      {
+         if(!ret)
+            P_RunPushSpechits(*thing);
+         return ret;
+      }
 
       // haleyjd 06/05/12: flying players - move up or down the lower/upper areas
       // of lines that are contacted when the player presses into them
@@ -1590,6 +1625,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          {
             thing->momz = -8*FRACUNIT;
             thing->intflags |= MIF_CLEARMOMZ;
+            P_RunPushSpechits(*thing);
             return false;
          }
          else if(thing->z < clip.floorz && 
@@ -1597,6 +1633,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          {
             thing->momz = 8*FRACUNIT;
             thing->intflags |= MIF_CLEARMOMZ;
+            P_RunPushSpechits(*thing);
             return false;
          }
       }
@@ -1605,7 +1642,11 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       {
          // too big a step up
          if(clip.floorz - thing->z > STEPSIZE)
+         {
+            if(!ret)
+               P_RunPushSpechits(*thing);
             return ret;
+         }
          else if(P_Use3DClipping() && thing->z < clip.floorz)
          { 
             // haleyjd: OVER_UNDER:
@@ -1616,7 +1657,10 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             good = P_TestMobjZ(thing);
             thing->z = savedz;
             if(!good)
+            {
+               P_RunPushSpechits(*thing);
                return false;
+            }
          }
       }
       
@@ -1631,6 +1675,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       else                                   // EE
          dropofffunc = P_CheckDropOffEE;
 
+      // ioanch: no P_RunPushSpechits on dropoff blocking.
       if(!dropofffunc(thing, dropoff))
          return false; // don't stand over a dropoff
 
@@ -1638,6 +1683,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          !(thing->flags & (MF_MISSILE|MF_NOGRAVITY)) &&
          !sentient(thing) && clip.floorz - thing->z > 16*FRACUNIT)
       {
+         P_RunPushSpechits(*thing);
          return false; // too big a step up for bouncers under gravity
       }
 
@@ -1645,6 +1691,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       if(thing->intflags & MIF_FALLING && clip.floorz - thing->z >
          FixedMul(thing->momx,thing->momx)+FixedMul(thing->momy,thing->momy))
       {
+         // ioanch: don't push in this case, as the force is presumably too low.
          return false;
       }
 
@@ -1655,6 +1702,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
           clip.floorz - thing->z != 0))
       {
          // thing must stay within its current floor type
+         // ioanch: don't push
          return false;
       }
    }
