@@ -687,16 +687,6 @@ void P_CollectSpechits(line_t *ld)
 }
 
 //
-// Checks if a line has SPAC_PUSH and triggers it if so.
-//
-static void P_checkForPushSpecial(line_t &line, int side, Mobj &mo)
-{
-   if(line.special && mo.flags4 & MF4_SPACPUSHWALL)
-      P_PushSpecialLine(mo, line, side);
-   // TODO: also support projectile impact.
-}
-
-//
 // PIT_CheckLine
 //
 // Adjusts tmfloorz and tmceilingz as lines are contacted
@@ -729,8 +719,8 @@ bool PIT_CheckLine(line_t *ld, polyobj_s *po)
       clip.blockline = ld;
       bool result = clip.unstuck && !untouched(ld) &&
          FixedMul(clip.x-clip.thing->x,ld->dy) > FixedMul(clip.y-clip.thing->y,ld->dx);
-      if(!result)
-         P_checkForPushSpecial(*ld, 0, *clip.thing);
+      if(!result && ld->special)
+         P_PushSpecialLine(*clip.thing, *ld, 0);
       return result;
    }
 
@@ -740,8 +730,10 @@ bool PIT_CheckLine(line_t *ld, polyobj_s *po)
       if(ld->flags & ML_BLOCKING)           // explicitly blocking everything
       {
          bool result = clip.unstuck && !untouched(ld);  // killough 8/1/98: allow escape
-         if(!result)
-            P_checkForPushSpecial(*ld, 0, *clip.thing);
+
+         // Keep side 0 even when hitting from backside
+         if(!result && ld->special)
+            P_PushSpecialLine(*clip.thing, *ld, 0);
          // TODO: add the other push special checks.
          // TODO: add for P_Map3D and P_PortalClip CPP files.
          return result;
