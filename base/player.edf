@@ -53,9 +53,9 @@ playerclass DoomMarine
    thingtype      DoomPlayer
    altattackstate S_PLAY_ATK2
 
-   weaponslot 1 { weapons : Fist, Chainsaw }
+   weaponslot 1 { weapons : Chainsaw, Fist }
    weaponslot 2 { weapons : Pistol }
-   weaponslot 3 { weapons : Shotgun, SuperShotgun }
+   weaponslot 3 { weapons : SuperShotgun, Shotgun }
    weaponslot 4 { weapons : Chaingun }
    weaponslot 5 { weapons : MissileLauncher }
    weaponslot 6 { weapons : PlasmaRifle }
@@ -82,7 +82,7 @@ playerclass Corvus
    thingtype      HereticPlayer
    altattackstate S_HPLAY_ATK2
 
-   weaponslot 1 { weapons : Staff, Gauntlets }
+   weaponslot 1 { weapons : Gauntlets, Staff }
    weaponslot 2 { weapons : GoldWand }
    weaponslot 3 { weapons : Crossbow }
    weaponslot 4 { weapons : Blaster }

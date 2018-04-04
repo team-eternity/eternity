@@ -499,7 +499,7 @@ static void E_processWeaponSlot(cfg_t *slot, playerclass_t *pc)
    BDListItem<weaponslot_t> &slotlist = initslot->links;
    BDListItem<weaponslot_t>::Init(slotlist);
    slotlist.bdObject = initslot;
-   for(int i = numweapons; i --> 0;)
+   for(int i = 0; i < numweapons; i++)
    {
       const char   *weaponname = cfg_getnstr(slot, ITEM_WPNSLOT_WPNS, i);
       weaponinfo_t *weapon     = E_WeaponForName(weaponname);
@@ -514,7 +514,7 @@ static void E_processWeaponSlot(cfg_t *slot, playerclass_t *pc)
             weaponinslot[weapon->id] = true;
 
          weaponslot_t *curslot = estructalloc(weaponslot_t, 1);
-         curslot->links.bdData = numweapons - (i + 1);
+         curslot->links.bdData = i + 1;
          curslot->weapon       = weapon;
          curslot->links.insert(curslot, slotlist);
       }
@@ -842,7 +842,7 @@ void E_ProcessFinalWeaponSlots()
 
                while(!slotiterator->isDummy())
                {
-                  pclassslottree->insert(weaponnum << FRACBITS, slotiterator->bdObject->weapon);
+                  pclassslottree->insert(slotiterator->bdData << FRACBITS, slotiterator->bdObject->weapon);
                   weaponinslot[slotiterator->bdObject->weapon->id] = true;
 
                   weaponnum++;
