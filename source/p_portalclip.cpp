@@ -35,6 +35,7 @@
 #include "p_portal.h"
 #include "p_portalclip.h"
 #include "p_portalcross.h"
+#include "p_spec.h"
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_portal.h"
@@ -136,7 +137,8 @@ static void P_addPortalHitLine(line_t *ld, polyobj_t *po)
 //
 // ioanch 20160112: Call this if there's a blocking line at a different level
 //
-static void P_blockingLineDifferentLevel(line_t *ld, polyobj_t *po, fixed_t thingmid, 
+static void P_blockingLineDifferentLevel(line_t *ld, polyobj_t *po, fixed_t thingz, 
+                                         fixed_t thingmid, fixed_t thingtopz,
                                          fixed_t linebottom, fixed_t linetop)
 {
    fixed_t linemid = linetop / 2 + linebottom / 2;
@@ -179,6 +181,12 @@ static void P_blockingLineDifferentLevel(line_t *ld, polyobj_t *po, fixed_t thin
    if(!moveup && clip.ceilingz < clip.passceilz)
       clip.passceilz = clip.ceilingz;
 
+   // We need now to collect spechits for push activation.
+   if(clip.thing->groupid == ld->frontsector->groupid || 
+      (linetop > thingz && linebottom < thingtopz && !(ld->pflags & PS_PASSABLE)))
+   {
+      P_CollectSpechits(ld);
+   }
 }
 
 //
@@ -296,16 +304,24 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
       if(!ld->backsector || (ld->extflags & EX_ML_BLOCKALL)) // one sided line
       {
          clip.blockline = ld;
-         return clip.unstuck && !untouchedViaOffset(ld, link) &&
-            FixedMul(clip.x-clip.thing->x,ld->dy) > 
-            FixedMul(clip.y-clip.thing->y,ld->dx);
+         bool result = clip.unstuck && !untouchedViaOffset(ld, link) &&
+            FixedMul(clip.x - clip.thing->x, ld->dy) >
+            FixedMul(clip.y - clip.thing->y, ld->dx);
+         if(!result)
+            P_PushSpecialLine(*clip.thing, *ld, 0);
+         return result;
       }
 
       // killough 8/10/98: allow bouncing objects to pass through as missiles
       if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
       {
          if(ld->flags & ML_BLOCKING)           // explicitly blocking everything
-            return clip.unstuck && !untouchedViaOffset(ld, link);  
+         {
+            bool result = clip.unstuck && !untouchedViaOffset(ld, link);
+            if(!result)
+               P_PushSpecialLine(*clip.thing, *ld, 0);
+            return result;
+         }
          // killough 8/1/98: allow escape
 
          // killough 8/9/98: monster-blockers don't affect friends
@@ -322,21 +338,21 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
       // same conditions as above
       if(!ld->backsector || (ld->extflags & EX_ML_BLOCKALL))
       {
-         P_blockingLineDifferentLevel(ld, po, thingmid, linebottom, linetop);
+         P_blockingLineDifferentLevel(ld, po, thingz, thingmid, thingtopz, linebottom, linetop);
          return true;
       }
       if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
       {
          if(ld->flags & ML_BLOCKING)           // explicitly blocking everything
          {
-            P_blockingLineDifferentLevel(ld, po, thingmid, linebottom, linetop);
+            P_blockingLineDifferentLevel(ld, po, thingz, thingmid, thingtopz, linebottom, linetop);
             return true;
          }
          if(!(clip.thing->flags & MF_FRIEND || clip.thing->player) && 
             ld->flags & ML_BLOCKMONSTERS && 
             !(ld->flags & ML_3DMIDTEX))
          {
-            P_blockingLineDifferentLevel(ld, po, thingmid, linebottom, linetop);
+            P_blockingLineDifferentLevel(ld, po, thingz, thingmid, thingtopz, linebottom, linetop);
             return true;
          }
       }
