@@ -315,7 +315,6 @@ bool E_PlayerOwnsWeaponForDEHNum(player_t *player, int dehnum)
 //
 // Checks if a player owns a weapon in the provided slot, useful for things like the
 // Doom weapon-number widget
-// TODO: Consider global "weaponslots" variable
 //
 bool E_PlayerOwnsWeaponInSlot(player_t *player, int slot)
 {
@@ -1052,24 +1051,28 @@ static weapontype_t E_resolveParentWeapon(cfg_t *weaponsec, const weapontitlepro
 
 static void E_insertSelectOrderNode(int sortorder, weaponinfo_t *wp, bool modify)
 {
-   if(modify)
+   if(modify && (wp->intflags & WIF_HASSORTORDER))
       selectordertree->deleteNode(wp->sortorder);
 
    if(selectordertree == nullptr)
       selectordertree = new selectordertree_t(sortorder, wp);
    else
       selectordertree->insert(sortorder, wp);
+
+   wp->intflags |= WIF_HASSORTORDER;
 }
 
 static void E_insertWeaponSlotNode(int slotindex, fixed_t slotrank, weaponinfo_t *wp, bool modify)
 {
-   if(modify)
+   if(modify && (wp->intflags & WIF_INGLOBALSLOT))
       weaponslots[wp->defaultslotindex]->deleteNode(wp->defaultslotrank);
 
    if(weaponslots[slotindex] == nullptr)
       weaponslots[slotindex] = new WeaponSlotTree(slotrank, wp);
    else
       weaponslots[slotindex]->insert(slotrank, wp);
+
+   wp->intflags |= WIF_INGLOBALSLOT;
 }
 
 #undef  IS_SET
@@ -1161,9 +1164,10 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
    if(cfg_size(weaponsec, ITEM_WPN_SLOTNUM) > 0)
    {
       tempint = cfg_getint(weaponsec, ITEM_WPN_SLOTNUM) - 1;
-      if(tempint < 0 || tempint > 15)
+      if(tempint < 0 || tempint > NUMWEAPONSLOTS)
       {
-         E_EDFLoggedWarning(2, "E_processWeapon:");
+         E_EDFLoggedWarning(2, "E_processWeapon: invalid slotnumber in weaponinfo '%s'\n",
+                            wp.name);
       }
       else if(cfg_size(weaponsec, ITEM_WPN_SLOTRANK) > 0)
       {
@@ -1171,7 +1175,8 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
          // Make sure tempfloat is within the bounds of a fixed_t
          if(tempfloat > M_FixedToDouble(0x7FFFFFFF) || tempfloat < 0.0)
          {
-            E_EDFLoggedWarning(2, "E_processWeapon:");
+            E_EDFLoggedWarning(2, "E_processWeapon: invalid slotselectionorder %f in "
+                                  "weaponinfo '%s'\n", tempfloat, wp.name);
          }
          else
          {
@@ -1183,12 +1188,14 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
       }
       else
       {
-         E_EDFLoggedWarning(2, "E_processWeapon:");
+         E_EDFLoggedWarning(2, "E_processWeapon: no slotselectionorder defined for weapon with "
+                               "slotnumber in weaponinfo '%s'\n", wp.name);
       }
    }
    else if(cfg_size(weaponsec, ITEM_WPN_SLOTRANK) > 0)
    {
-      E_EDFLoggedWarning(2, "E_processWeapon:");
+      E_EDFLoggedWarning(2, "E_processWeapon: slotselectionorder defined for weapon with no "
+                            "slotnumber in weaponinfo '%s'\n", wp.name);
    }
 
    if(IS_SET(ITEM_WPN_NEXTINCYCLE))

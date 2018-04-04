@@ -53,6 +53,15 @@ enum wepflags_e : unsigned int
    WPF_FORCETOREADY   = 0x00002000, // force to readystate on receiving/losing pw_weaponlevel2
 };
 
+//
+// MaxW: 2018/04/04: internal weapon flags
+//
+enum wepinternalflags_e : uint8_t
+{
+   WIF_HASSORTORDER = 0x01, // has had a sort order assigned to it
+   WIF_INGLOBALSLOT = 0x02, // has been placed in the global weaponslots
+};
+
 // Weapon info: sprite frames, ammunition use.
 struct weaponinfo_t
 {
@@ -87,6 +96,7 @@ struct weaponinfo_t
 
    // haleyjd 09/11/07: new fields in prep. for dynamic weapons
    unsigned int flags;
+   uint8_t      intflags;
    int          mod;
    int          recoil;
    int          hapticrecoil; // haptic recoil strength, from 1 to 10
