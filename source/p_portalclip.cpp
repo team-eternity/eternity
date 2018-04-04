@@ -254,9 +254,9 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
    // clip.opensecceil
    // clip.touch3dside
 
-   fixed_t thingtopz = clip.thing->z + clip.thing->height;
-   fixed_t thingz = clip.thing->z;
-   fixed_t thingmid = thingz / 2 + thingtopz / 2;
+   const fixed_t thingtopz = clip.thing->z + clip.thing->height;
+   const fixed_t thingz = clip.thing->z;
+   const fixed_t thingmid = thingz / 2 + thingtopz / 2;
 
    // ioanch 20160121: possibility to postpone floorz, ceilz if it's from a
    // different group, to portalhits array
