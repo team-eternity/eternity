@@ -1252,6 +1252,7 @@ void A_WeaponCopyCtr(actionargs_t *actionargs)
    case 1:
    case 2:
       dest = E_GetIndexedWepCtrForPlayer(player, cnum2);
+      break;
    default:
       return;
    }
