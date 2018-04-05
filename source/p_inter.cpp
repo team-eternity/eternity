@@ -122,7 +122,8 @@ bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
       (!player->readyweapon || (player->readyweapon->flags & WPF_AUTOSWITCHFROM)))
    {
       player->pendingweapon = E_FindBestWeaponUsingAmmo(player, ammo);
-      player->pendingweaponslot = E_FindFirstWeaponSlot(player, player->pendingweapon);
+      if(player->pendingweapon)
+         player->pendingweaponslot = E_FindFirstWeaponSlot(player, player->pendingweapon);
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoClip"))
    {
