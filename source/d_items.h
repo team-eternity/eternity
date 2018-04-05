@@ -41,7 +41,7 @@ enum wepflags_e : unsigned int
    WPF_NOHITGHOSTS    = 0x00000002, // tracer-based weapon can't hit ghosts
    WPF_NOTSHAREWARE   = 0x00000004, // not in shareware gamemodes
    WPF_DISABLEAPS     = 0x00000008, // disables ammo-per-shot field
-   WPF_SILENCER       = 0x00000010, // weapon supports silencer powerup
+   WPF_SILENCEABLE    = 0x00000010, // weapon supports silencer powerup
    WPF_SILENT         = 0x00000020, // weapon is always silent
    WPF_NOAUTOFIRE     = 0x00000040, // weapon won't autofire in A_WeaponReady
    WPF_FLEEMELEE      = 0x00000080, // monsters consider it a melee weapon
