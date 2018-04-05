@@ -284,7 +284,7 @@ int P_PrevWeapon(player_t *player, uint8_t *slotindex)
       {
          const int slotindex = newweaponlink->bdObject->slotindex;
          for(int i = slotindex == 0 ? NUMWEAPONSLOTS - 1 : slotindex - 1; i  != slotindex;
-             i = i == 0 ? NUMWEAPONSLOTS - 1 : slotindex - 1)
+             i = i == 0 ? NUMWEAPONSLOTS - 1 : i - 1)
          {
             if(player->pclass->weaponslots[i] != nullptr)
             {
