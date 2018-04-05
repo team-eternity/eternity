@@ -246,7 +246,7 @@ int P_NextWeapon(player_t *player, uint8_t *slotindex)
    while((!E_PlayerOwnsWeapon(player, newweapon) || !ammototry) &&
          newweapon->id != currentweapon->id);
 
-   if(demo_version >= 349)
+   if(demo_version >= 401)
    {
       if(newweapon != currentweapon)
       {
@@ -300,7 +300,7 @@ int P_PrevWeapon(player_t *player, uint8_t *slotindex)
    while((!E_PlayerOwnsWeapon(player, newweapon) || !ammototry) &&
          newweapon->id != currentweapon->id);
 
-   if(demo_version >= 349)
+   if(demo_version >= 401)
    {
       if(slotindex != nullptr)
          *slotindex = newweaponlink->bdObject->slotindex;
@@ -460,9 +460,9 @@ void P_SubtractAmmo(player_t *player, int compat_amt)
 
    // EDF_FEATURES_FIXME: Needs to fire the wimpy version's amount of ammo if in deathmatch, or at least
    // do it for Heretic.
-   if(demo_version >= 349 && (player->attackdown & AT_ITEM))
+   if(demo_version >= 401 && (player->attackdown & AT_ITEM))
       return;
-   else if(demo_version >= 349 && (player->attackdown & AT_SECONDARY))
+   else if(demo_version >= 401 && (player->attackdown & AT_SECONDARY))
    {
       ammo = weapon->ammo_alt;
       amount = ((weapon->flags & WPF_ENABLEAPS) || compat_amt < 0) ? weapon->ammopershot_alt :
@@ -590,7 +590,7 @@ void P_DropWeapon(player_t *player)
 //
 weaponinfo_t *P_GetPlayerWeapon(player_t *player, int slot)
 {
-   if(demo_version < 349 && GameModeInfo->type == Game_DOOM)
+   if(demo_version < 401 && GameModeInfo->type == Game_DOOM)
       return E_WeaponForDEHNum(slot);
 
    if(!player->pclass->weaponslots[slot])
@@ -598,7 +598,7 @@ weaponinfo_t *P_GetPlayerWeapon(player_t *player, int slot)
 
    // Backup demo compat code, in case something goes *really*
    // wrong with the DeHackEd num check.
-   /*if(demo_version < 349 && GameModeInfo->type == Game_DOOM)
+   /*if(demo_version < 401 && GameModeInfo->type == Game_DOOM)
    {
       DLListItem<weaponslot_t> *weaponslot = E_FirstInSlot(player->pclass->weaponslots[slot]);
       while(!weaponslot->dllNext->isDummy())
@@ -750,7 +750,7 @@ void A_WeaponReady(actionargs_t *actionargs)
 
    // check for fire
    // certain weapons do not auto fire
-   if(demo_version >= 349 && P_tryFireWeapon(player))
+   if(demo_version >= 401 && P_tryFireWeapon(player))
       return;
    else if(player->cmd.buttons & BT_ATTACK)
    {
@@ -811,7 +811,7 @@ static void A_reFireNew(actionargs_t *actionargs)
 //
 void A_ReFire(actionargs_t *actionargs)
 {
-   if(demo_version >= 349)
+   if(demo_version >= 401)
    {
       A_reFireNew(actionargs);
       return;
@@ -979,7 +979,7 @@ void P_WeaponRecoil(player_t *player)
 //
 void A_FireSomething(player_t* player, int adder)
 {
-   if(demo_version >= 349 && player->attackdown & AT_SECONDARY)
+   if(demo_version >= 401 && player->attackdown & AT_SECONDARY)
       P_SetPsprite(player, ps_flash, player->readyweapon->flashstate_alt);
    else
       P_SetPsprite(player, ps_flash, player->readyweapon->flashstate+adder);

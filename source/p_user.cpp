@@ -635,7 +635,7 @@ void P_PlayerThink(player_t *player)
 
    cmd = &player->cmd;
 
-   if(cmd->itemID && demo_version >= 349)
+   if(cmd->itemID && demo_version >= 401)
       E_TryUseItem(player, cmd->itemID - 1); // ticcmd ID is off by one
 
    if(player->mo->flags & MF_JUSTATTACKED)
@@ -743,7 +743,7 @@ void P_PlayerThink(player_t *player)
    if(cmd->buttons & BT_SPECIAL)
       cmd->buttons = 0;
 
-   if(demo_version >= 349)
+   if(demo_version >= 401)
    {
       if(cmd->weaponID)
       {

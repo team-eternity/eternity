@@ -118,7 +118,7 @@ bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
    
    // If the player is doing a demo w/ EDF-weapons and the weapon should be switched from,
    // try to do so, otherwise do the legacy ammo switch
-   if(demo_version >= 349 &&
+   if(demo_version >= 401 &&
       (!player->readyweapon || (player->readyweapon->flags & WPF_AUTOSWITCHFROM)))
    {
       player->pendingweapon = E_FindBestWeaponUsingAmmo(player, ammo);
@@ -284,7 +284,7 @@ static bool P_giveWeaponCompat(player_t *player, itemeffect_t *giver, bool dropp
 //
 static bool P_giveWeapon(player_t *player, itemeffect_t *giver, bool dropped, Mobj *special)
 {
-   if(demo_version < 349)
+   if(demo_version < 401)
       return P_giveWeaponCompat(player, giver, dropped, special);
 
    bool gaveweapon = false, gaveammo = false, dmstay = false, firsttime = true;
