@@ -287,7 +287,7 @@ weaponinfo PhoenixRodPowered : PhoenixRod
   Fire:
     PHNX B 3 A_InitPhoenixPL2
   Hold:
-    PHNX C 1 A_FirePhoenixPL2
+    PHNX C 1 bright A_FirePhoenixPL2
     PHNX B 4 A_ReFire
   Powerdown:
     PHNX B 4 A_ShutdownPhoenixPL2

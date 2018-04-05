@@ -3147,7 +3147,7 @@ thingtype MaceFX2 : MaceShotProto, -1, 439
     FX02 CD 4
     loop
   Death:
-    FX02 F 4 A_MaceBallImpact2
+    FX02 F 4 bright A_MaceBallImpact2
     FX02 GHIJ 4 bright
   "@
 }
@@ -3184,7 +3184,7 @@ thingtype MaceFX4 : MaceShotProto, -1, 441
     FX02 E 99
     loop
   Death:
-    FX02 C 4 A_DeathBallImpact
+    FX02 C 4 Bright A_DeathBallImpact
     FX02 GHIJ 4 Bright
     stop
   "@
