@@ -13,8 +13,6 @@
 weaponinfo Staff
 {
   selectionorder 8000
-  nextincycle    Gauntlets
-  previncycle    Mace
 
   sisterweapon StaffPowered
 
@@ -73,8 +71,6 @@ weaponinfo GoldWand
   ammouse      1
 
   selectionorder 5000
-  nextincycle    Crossbow
-  previncycle    Gauntlets
 
   sisterweapon GoldWandPowered
 
@@ -127,8 +123,6 @@ weaponinfo Crossbow
   ammouse      1
 
   selectionorder 3000
-  nextincycle    Blaster
-  previncycle    GoldWand
 
   sisterweapon   CrossbowPowered
 
@@ -185,8 +179,6 @@ weaponinfo Blaster
   ammouse      1
 
   selectionorder 2000
-  nextincycle    SkullRod
-  previncycle    Crossbow
 
   flags        SILENCER|HAPTICRECOIL
   //mod          ""
@@ -224,8 +216,6 @@ weaponinfo SkullRod
   ammouse      1
 
   selectionorder 1000
-  nextincycle    PhoenixRod
-  previncycle    Blaster
 
   flags        SILENCER|HAPTICRECOIL
   //mod          ""
@@ -257,8 +247,6 @@ weaponinfo PhoenixRod
   ammouse      1
 
   selectionorder 7000
-  nextincycle    Mace
-  previncycle    SkullRod
 
   sisterweapon PhoenixRodPowered
 
@@ -313,8 +301,6 @@ weaponinfo Mace
   ammouse      1
 
   selectionorder 4000
-  nextincycle    Staff
-  previncycle    PhoenixRod
 
   sisterweapon MacePowered
 
@@ -368,8 +354,6 @@ weaponinfo MacePowered : Mace
 weaponinfo Gauntlets
 {
   selectionorder 6000
-  nextincycle    GoldWand
-  previncycle    Staff
 
   sisterweapon GauntletsPowered
 

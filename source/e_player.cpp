@@ -802,7 +802,7 @@ static inline void E_createWeaponSlotFromTree(playerclass_t *pc, int slotindex, 
 //
 // Recursively place all weapons from the global slot tree into the playerclass weaponslot (in-order traversal)
 //
-static void E_AddGlobalWeaponsToSlot(WeaponSlotTree *slot, WeaponSlotNode *node, bool *weaponinslot)
+static void E_addGlobalWeaponsToSlot(WeaponSlotTree *slot, WeaponSlotNode *node, bool *weaponinslot)
 {
    if(node == nullptr)
       return;
@@ -810,14 +810,14 @@ static void E_AddGlobalWeaponsToSlot(WeaponSlotTree *slot, WeaponSlotNode *node,
       slot = new WeaponSlotTree();
 
    if(node->left)
-      E_AddGlobalWeaponsToSlot(slot, node->left, weaponinslot);
+      E_addGlobalWeaponsToSlot(slot, node->left, weaponinslot);
    if(weaponinslot[node->object->id] == false)
    {
       slot->insert(node->object->defaultslotrank, node->object);
       weaponinslot[node->object->id] = true; // Not necessary, but for safety purposes
    }
    if(node->right)
-      E_AddGlobalWeaponsToSlot(slot, node->right, weaponinslot);
+      E_addGlobalWeaponsToSlot(slot, node->right, weaponinslot);
 }
 
 
@@ -853,7 +853,7 @@ void E_ProcessFinalWeaponSlots()
             }
 
             if(weaponslots[i])
-               E_AddGlobalWeaponsToSlot(pclassslottree, weaponslots[i]->root, weaponinslot);
+               E_addGlobalWeaponsToSlot(pclassslottree, weaponslots[i]->root, weaponinslot);
 
             if(pclassslottree != nullptr)
             {

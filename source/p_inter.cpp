@@ -120,7 +120,10 @@ bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
    // try to do so, otherwise do the legacy ammo switch
    if(demo_version >= 349 &&
       (!player->readyweapon || (player->readyweapon->flags & WPF_AUTOSWITCHFROM)))
+   {
       player->pendingweapon = E_FindBestWeaponUsingAmmo(player, ammo);
+      player->pendingweaponslot = E_FindFirstWeaponSlot(player, player->pendingweapon);
+   }
    else if(!strcasecmp(ammo->getKey(), "AmmoClip"))
    {
       if(E_WeaponIsCurrentDEHNum(player, wp_fist))
@@ -254,6 +257,7 @@ static bool P_giveWeaponCompat(player_t *player, itemeffect_t *giver, bool dropp
       P_GiveAmmo(player, ammo, (GameType == gt_dm) ? dmstayammo : coopstayammo);
 
       player->pendingweapon = wp;
+      player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
       S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
       P_consumeSpecial(player, special); // need to handle it here
       return false;
@@ -267,6 +271,7 @@ static bool P_giveWeaponCompat(player_t *player, itemeffect_t *giver, bool dropp
    if(!E_PlayerOwnsWeapon(player, wp))
    {
       player->pendingweapon = wp;
+      player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
       E_GiveWeapon(player, wp);
       gaveweapon = true;
    }
@@ -344,6 +349,7 @@ static bool P_giveWeapon(player_t *player, itemeffect_t *giver, bool dropped, Mo
             player->bonuscount += BONUSADD;
             E_GiveWeapon(player, wp);
             player->pendingweapon = wp;
+            player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
             S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
             P_consumeSpecial(player, special); // need to handle it here
             dmstay = true;
@@ -362,6 +368,7 @@ static bool P_giveWeapon(player_t *player, itemeffect_t *giver, bool dropped, Mo
             if(!E_PlayerOwnsWeapon(player, wp))
             {
                player->pendingweapon = wp;
+               player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
                E_GiveWeapon(player, wp);
                gaveweapon = true;
             }
@@ -802,7 +809,10 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       if(pickup->changeweapon != nullptr &&
          player->readyweapon->id != pickup->changeweapon->id &&
          E_PlayerOwnsWeapon(player, pickup->changeweapon))
+      {
          player->pendingweapon = pickup->changeweapon;
+         player->pendingweaponslot = E_FindFirstWeaponSlot(player, player->pendingweapon);
+      }
 
       // Remove the object, provided it doesn't stay in multiplayer games
       if(GameType == gt_single || !(pickup->flags & PFXF_LEAVEINMULTI))

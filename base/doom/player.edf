@@ -23,8 +23,6 @@ weaponinfo DoomWeapon
 weaponinfo Fist : DoomWeapon, 0
 {
   selectionorder 9000
-  nextincycle    Chainsaw
-  previncycle    BFG9000
 
   flags        FLEEMELEE|NOHITGHOSTS|SILENCER|AUTOSWITCHFROM
   mod          Fist
@@ -58,8 +56,6 @@ weaponinfo Pistol : DoomWeapon, 1
   ammouse      1
 
   selectionorder 8000
-  nextincycle    Shotgun
-  previncycle    Chainsaw
 
   flags        SILENCER|HAPTICRECOIL|AUTOSWITCHFROM
   mod          Pistol
@@ -97,8 +93,6 @@ weaponinfo Shotgun : DoomWeapon, 2
   ammouse      1
 
   selectionorder 4000
-  nextincycle    SuperShotgun
-  previncycle    Pistol
 
   flags        SILENCER|HAPTICRECOIL
   mod          Shotgun
@@ -140,8 +134,6 @@ weaponinfo Chaingun : DoomWeapon, 3
   ammouse      1
 
   selectionorder 3000
-  nextincycle    MissileLauncher
-  previncycle    SuperShotgun
 
   flags        SILENCER|HAPTICRECOIL
   mod          Chaingun
@@ -178,8 +170,6 @@ weaponinfo MissileLauncher : DoomWeapon, 4
   ammouse      1
 
   selectionorder 7000
-  nextincycle    PlasmaRifle
-  previncycle    Chaingun
 
   flags        NOAUTOFIRE|SILENCER|HAPTICRECOIL
   //mod          ""
@@ -218,8 +208,6 @@ weaponinfo PlasmaRifle : DoomWeapon, 5
   ammouse      1
 
   selectionorder 1000
-  nextincycle    BFG9000
-  previncycle    MissileLauncher
 
   flags        SILENCER|HAPTICRECOIL|NOTSHAREWARE
   //mod          ""
@@ -256,8 +244,6 @@ weaponinfo BFG9000 : DoomWeapon, 6
   ammouse      40
 
   selectionorder 5000
-  nextincycle    Fist
-  previncycle    PlasmaRifle
 
   flags        NOAUTOFIRE|SILENCER|HAPTICRECOIL|NOTSHAREWARE
   //mod          ""
@@ -312,8 +298,6 @@ weaponinfo OldBFG : BFG9000
 weaponinfo Chainsaw : DoomWeapon, 7
 {
   selectionorder 6000
-  nextincycle    Pistol
-  previncycle    Fist
 
   flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCER
   mod          Chainsaw
@@ -345,8 +329,6 @@ weaponinfo SuperShotgun : DoomWeapon, 8
   ammouse      2
 
   selectionorder 2000
-  nextincycle    Chaingun
-  previncycle    Shotgun
 
   flags        SILENCER|HAPTICRECOIL
   mod          SShotgun

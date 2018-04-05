@@ -94,6 +94,9 @@ bool E_IsPoweredVariant(weaponinfo_t *wp);
 BDListItem<weaponslot_t> *E_FirstInSlot(weaponslot_t *dummyslot);
 BDListItem<weaponslot_t> *E_LastInSlot(weaponslot_t *dummyslot);
 
+weaponslot_t *E_FindEntryForWeaponInSlot(player_t *player, weaponinfo_t *wp, int slot);
+weaponslot_t *E_FindFirstWeaponSlot(player_t *player, weaponinfo_t *wp);
+
 void E_CollectWeapons(cfg_t *cfg);
 
 void E_ProcessWeaponInfo(cfg_t *cfg);

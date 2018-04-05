@@ -91,8 +91,8 @@ void P_SetPsprite(player_t *player, int position, statenum_t stnum);
 
 bool P_WeaponHasAmmo(player_t *player, weaponinfo_t *weapon);
 
-int P_NextWeapon(player_t *player);
-int P_PrevWeapon(player_t *player);
+int P_NextWeapon(player_t *player, uint8_t *slotindex = nullptr);
+int P_PrevWeapon(player_t *player, uint8_t *slotindex = nullptr);
 
 weapontype_t P_SwitchWeaponOld(player_t *player);
 bool P_CheckAmmo(player_t *player);

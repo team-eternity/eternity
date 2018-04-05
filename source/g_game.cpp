@@ -371,7 +371,10 @@ void G_BuildTiccmd(ticcmd_t *cmd)
             newweapon = -1;
          }
          else
+         {
             newweapon = temp->id; // phares
+            cmd->slotIndex = E_FindFirstWeaponSlot(&players[consoleplayer], temp)->slotindex;
+         }
       }
 
       for(int i = ka_weapon1; i <= ka_weapon9; i++)
@@ -381,7 +384,10 @@ void G_BuildTiccmd(ticcmd_t *cmd)
             weaponinfo_t *weapon = P_GetPlayerWeapon(&players[consoleplayer], i - ka_weapon1);
             if(weapon)
             {
+               const auto slot = E_FindEntryForWeaponInSlot(&players[consoleplayer],
+                                                            weapon, i - ka_weapon1);
                newweapon = weapon->id;
+               cmd->slotIndex = slot->slotindex;
                break;
             }
          }
@@ -389,9 +395,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
       //next / prev weapon actions
       if(gameactions[ka_weaponup])
-         newweapon = P_NextWeapon(&players[consoleplayer]);
+         newweapon = P_NextWeapon(&players[consoleplayer], &cmd->slotIndex);
       else if(gameactions[ka_weapondown])
-         newweapon = P_PrevWeapon(&players[consoleplayer]);
+         newweapon = P_PrevWeapon(&players[consoleplayer], &cmd->slotIndex);
 
       if(players[consoleplayer].readyweapon)
       {
@@ -1434,11 +1440,13 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
          cmd->itemID |= (*demo_p++) << 8;
          cmd->weaponID = *demo_p++;
          cmd->weaponID |= (*demo_p++) << 8;
+         cmd->slotIndex = *demo_p++;
       }
       else
       {
          cmd->itemID = 0;
          cmd->weaponID = 0;
+         cmd->slotIndex = 0;
       }
 
       // killough 3/26/98, 10/98: Ignore savegames in demos 
@@ -1502,7 +1510,8 @@ static void G_WriteDemoTiccmd(ticcmd_t *cmd)
       demo_p[i++] =  cmd->itemID & 0xff;
       demo_p[i++] = (cmd->itemID >> 8) & 0xff;
       demo_p[i++] = cmd->weaponID & 0xff;
-      demo_p[i] = (cmd->weaponID >> 8) & 0xff;
+      demo_p[i++] = (cmd->weaponID >> 8) & 0xff;
+      demo_p[i] = cmd->slotIndex;
    }
 
    // NOTE: the distance is *double* that of (ticcmd_t + trailer) because on
@@ -2363,6 +2372,8 @@ void G_PlayerReborn(int player)
 
    if(!(p->readyweapon = E_FindBestWeapon(p)))
       p->readyweapon = E_WeaponForID(UnknownWeaponInfo);
+   else
+      p->readyweaponslot = E_FindFirstWeaponSlot(p, p->readyweapon);
 }
 
 void P_SpawnPlayer(mapthing_t *mthing);

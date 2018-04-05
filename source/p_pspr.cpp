@@ -151,7 +151,10 @@ static void P_BringUpWeapon(player_t *player)
    statenum_t newstate;
    
    if(player->pendingweapon == nullptr)
+   {
       player->pendingweapon = player->readyweapon;
+      player->pendingweaponslot = player->readyweaponslot;
+   }
    
    weaponinfo_t *pendingweapon;
    if((pendingweapon = player->pendingweapon))
@@ -163,6 +166,7 @@ static void P_BringUpWeapon(player_t *player)
       newstate = pendingweapon->upstate;
   
       player->pendingweapon = nullptr;
+      player->pendingweaponslot = nullptr;
    
       // killough 12/98: prevent pistol from starting visibly at bottom of screen:
       player->psprites[ps_weapon].sy = demo_version >= 203 ? 
@@ -210,22 +214,51 @@ bool P_WeaponHasAmmoAlt(player_t *player, weaponinfo_t *weapon)
 // haleyjd 05/31/14: Rewritten to use next and previous in cycle pointers
 // in weaponinfo_t, for friendliness with future dynamic weapons system.
 //
-int P_NextWeapon(player_t *player)
+int P_NextWeapon(player_t *player, uint8_t *slotindex)
 {
-   weaponinfo_t *currentweapon = player->readyweapon;
-   weaponinfo_t *newweapon     = player->readyweapon;
+   weaponinfo_t             *currentweapon = player->readyweapon;
+   weaponinfo_t             *newweapon     = player->readyweapon;
+   weaponslot_t             *newweaponslot = player->readyweaponslot;
+   BDListItem<weaponslot_t> *newweaponlink = &newweaponslot->links;
    bool          ammototry;
 
    do
    {
-      newweapon = newweapon->nextInCycle;
+      newweaponlink = newweaponlink->bdPrev;
+      newweapon = newweaponlink->bdObject->weapon;
+      if(newweaponlink->isDummy())
+      {
+         const int slotindex = newweaponlink->bdObject->slotindex;
+         for(int i = (slotindex + 1) % NUMWEAPONSLOTS; i  != slotindex;
+             i = (i + 1) % NUMWEAPONSLOTS)
+         {
+            if(player->pclass->weaponslots[i] != nullptr)
+            {
+               newweaponlink = E_LastInSlot(player->pclass->weaponslots[i]);
+               newweapon = newweaponlink->bdObject->weapon;
+               break;
+            }
+         }
+
+      }
       ammototry = P_WeaponHasAmmo(player, newweapon);
    }
    while((!E_PlayerOwnsWeapon(player, newweapon) || !ammototry) &&
          newweapon->id != currentweapon->id);
 
    if(demo_version >= 349)
-      return newweapon != currentweapon ? newweapon->id : -1;
+   {
+      if(newweapon != currentweapon)
+      {
+         *slotindex = newweaponlink->bdObject->slotindex;
+         return newweapon->id;
+      }
+      else
+      {
+         *slotindex = -1;
+         return -1;
+      }
+   }
    else
       return newweapon != currentweapon ? newweapon->dehnum : wp_nochange;
 }
@@ -235,22 +268,44 @@ int P_NextWeapon(player_t *player)
 //
 // haleyjd 03/06/09: Like the above.
 //
-int P_PrevWeapon(player_t *player)
+int P_PrevWeapon(player_t *player, uint8_t *slotindex)
 {
-   weaponinfo_t *currentweapon = player->readyweapon;
-   weaponinfo_t *newweapon     = currentweapon;
+   weaponinfo_t             *currentweapon = player->readyweapon;
+   weaponinfo_t             *newweapon     = player->readyweapon;
+   weaponslot_t             *newweaponslot = player->readyweaponslot;
+   BDListItem<weaponslot_t> *newweaponlink = &newweaponslot->links;
    bool          ammototry;
 
    do
    {
-      newweapon = newweapon->prevInCycle;
+      newweaponlink = newweaponlink->bdNext;
+      newweapon = newweaponlink->bdObject->weapon;
+      if(newweaponlink->isDummy())
+      {
+         const int slotindex = newweaponlink->bdObject->slotindex;
+         for(int i = slotindex == 0 ? NUMWEAPONSLOTS - 1 : slotindex - 1; i  != slotindex;
+             i = i == 0 ? NUMWEAPONSLOTS - 1 : slotindex - 1)
+         {
+            if(player->pclass->weaponslots[i] != nullptr)
+            {
+               newweaponlink = E_FirstInSlot(player->pclass->weaponslots[i]);
+               newweapon = newweaponlink->bdObject->weapon;
+               break;
+            }
+         }
+
+      }
       ammototry = P_WeaponHasAmmo(player, newweapon);
    }
    while((!E_PlayerOwnsWeapon(player, newweapon) || !ammototry) &&
          newweapon->id != currentweapon->id);
 
    if(demo_version >= 349)
+   {
+      if(slotindex != nullptr)
+         *slotindex = newweaponlink->bdObject->slotindex;
       return newweapon != currentweapon ? newweapon->id : -1;
+   }
    else
       return newweapon != currentweapon ? newweapon->dehnum : wp_nochange;
 }
@@ -662,7 +717,10 @@ void A_WeaponReady(actionargs_t *actionargs)
    // EDF_FEATURES_FIXME: Demo guard this as well?
    if(!player->pendingweapon && !E_PlayerOwnsWeapon(player, player->readyweapon) &&
       player->readyweapon->id != UnknownWeaponInfo)
+   {
       player->pendingweapon = E_FindBestWeapon(player);
+      player->pendingweaponslot = E_FindFirstWeaponSlot(player, player->pendingweapon);
+   }
 
    // get out of attack state
    if(mo->state == states[mo->info->missilestate] || 
@@ -843,7 +901,10 @@ void A_Lower(actionargs_t *actionargs)
 
    // haleyjd 03/28/10: do not assume pendingweapon is valid
    if(player->pendingweapon != nullptr)
+   {
       player->readyweapon = player->pendingweapon;
+      player->readyweaponslot = player->pendingweaponslot;
+   }
 
    P_BringUpWeapon(player);
 }
@@ -1057,6 +1118,7 @@ void P_SetupPsprites(player_t *player)
    
    // spawn the gun
    player->pendingweapon = player->readyweapon;
+   player->pendingweaponslot = player->readyweaponslot;
    P_BringUpWeapon(player);
 }
 

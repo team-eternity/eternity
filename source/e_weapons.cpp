@@ -84,9 +84,6 @@ weapontype_t UnknownWeaponInfo;
 #define ITEM_WPN_SLOTNUM      "slotnumber"
 #define ITEM_WPN_SLOTRANK     "slotselectionorder"
 
-#define ITEM_WPN_NEXTINCYCLE  "nextincycle"
-#define ITEM_WPN_PREVINCYCLE  "previncycle"
-
 #define ITEM_WPN_FLAGS        "flags"
 #define ITEM_WPN_ADDFLAGS     "addflags"
 #define ITEM_WPN_REMFLAGS     "remflags"
@@ -137,8 +134,6 @@ cfg_opt_t wpninfo_tprops[] =
    CFG_INT(ITEM_WPN_SLOTNUM,      -1,       CFGF_NONE), \
    CFG_FLOAT(ITEM_WPN_SLOTRANK,   -1.0,     CFGF_NONE), \
    CFG_STR(ITEM_WPN_SISTERWEAPON, "",       CFGF_NONE), \
-   CFG_STR(ITEM_WPN_NEXTINCYCLE,  "",       CFGF_NONE), \
-   CFG_STR(ITEM_WPN_PREVINCYCLE,  "",       CFGF_NONE), \
    CFG_STR(ITEM_WPN_FLAGS,        "",       CFGF_NONE), \
    CFG_STR(ITEM_WPN_ADDFLAGS,     "",       CFGF_NONE), \
    CFG_STR(ITEM_WPN_REMFLAGS,     "",       CFGF_NONE), \
@@ -374,6 +369,9 @@ bool E_IsPoweredVariant(weaponinfo_t *wp)
    return wp && wp->flags & WPF_POWEREDUP;
 }
 
+//
+// Gets the first weapon in the given slot
+//
 BDListItem<weaponslot_t> *E_FirstInSlot(weaponslot_t *dummyslot)
 {
    // This should NEVER happen
@@ -383,6 +381,9 @@ BDListItem<weaponslot_t> *E_FirstInSlot(weaponslot_t *dummyslot)
    return dummyslot->links.bdNext;
 }
 
+//
+// Gets the last weapon in the slot
+//
 BDListItem<weaponslot_t> *E_LastInSlot(weaponslot_t *dummyslot)
 {
    // This should NEVER happen
@@ -391,6 +392,42 @@ BDListItem<weaponslot_t> *E_LastInSlot(weaponslot_t *dummyslot)
 
    return dummyslot->links.bdPrev;
 }
+
+//
+// Looks for the given weapon  in an indexed slot
+//
+weaponslot_t *E_FindEntryForWeaponInSlot(player_t *player, weaponinfo_t *wp, int slot)
+{
+   auto baseslot = E_FirstInSlot(player->pclass->weaponslots[slot]);
+
+   // Try finding the player's currently-equipped weapon.
+   while(!baseslot->isDummy())
+   {
+      if(baseslot->bdObject->weapon->id == wp->id)
+      {
+         return baseslot->bdObject;
+      }
+      else
+         baseslot = baseslot->bdNext;
+   }
+   return nullptr;
+}
+
+//
+// Finds the first instance of a weapon in a player's weaponslots
+//
+weaponslot_t *E_FindFirstWeaponSlot(player_t *player, weaponinfo_t *wp)
+{
+   for(int i = 0; i < NUMWEAPONSLOTS; i++)
+   {
+      weaponslot_t *ret;
+      if((ret = E_FindEntryForWeaponInSlot(player, wp, i)) != nullptr)
+         return ret;
+   }
+   return nullptr;
+}
+
+
 //=============================================================================
 //
 // Weapon Selection Order Functions
@@ -965,7 +1002,6 @@ static void E_CopyWeapon(weapontype_t num, weapontype_t pnum)
    MetaTable    *meta;
    weapontype_t  id;
    int           generation;
-   weaponinfo_t *nextInCycle, *prevInCycle;
    itemeffect_t *tracker;
 
    this_wi = weaponinfo[num];
@@ -979,8 +1015,6 @@ static void E_CopyWeapon(weapontype_t num, weapontype_t pnum)
    meta        = this_wi->meta;
    id          = this_wi->id;
    generation  = this_wi->generation;
-   nextInCycle = this_wi->nextInCycle;
-   prevInCycle = this_wi->prevInCycle;
    tracker     = this_wi->tracker;
 
    // copy from source to destination
@@ -1003,8 +1037,6 @@ static void E_CopyWeapon(weapontype_t num, weapontype_t pnum)
    this_wi->dehnum      = dehnum;
    this_wi->id          = id;
    this_wi->generation  = generation;
-   this_wi->nextInCycle = nextInCycle;
-   this_wi->prevInCycle = prevInCycle;
 
    // tracker inheritance is weird
    //if(!(this_wi->flags & WPF_[TomedVersionOfWeapon]))
@@ -1197,11 +1229,6 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
       E_EDFLoggedWarning(2, "E_processWeapon: slotselectionorder defined for weapon with no "
                             "slotnumber in weaponinfo '%s'\n", wp.name);
    }
-
-   if(IS_SET(ITEM_WPN_NEXTINCYCLE))
-      wp.nextInCycle = E_WeaponForName(cfg_getstr(weaponsec, ITEM_WPN_NEXTINCYCLE));
-   if(IS_SET(ITEM_WPN_PREVINCYCLE))
-      wp.prevInCycle = E_WeaponForName(cfg_getstr(weaponsec, ITEM_WPN_PREVINCYCLE));
 
    // Attack properties
    if(IS_SET(ITEM_WPN_AMMO))

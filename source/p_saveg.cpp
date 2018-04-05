@@ -537,7 +537,7 @@ static void P_ArchivePlayers(SaveArchive &arc)
          int inventorySize;
          if(arc.isSaving())
          {
-            int numCounters;
+            int numCounters, slotIndex;
 
             inventorySize = E_GetInventoryAllocSize();
             arc << inventorySize;
@@ -552,6 +552,11 @@ static void P_ArchivePlayers(SaveArchive &arc)
             else
                arc.writeLString("");
 
+            slotIndex = p.readyweaponslot != nullptr ? p.readyweaponslot->slotindex : 0;
+            arc << slotIndex;
+            slotIndex = p.pendingweaponslot != nullptr ? p.readyweaponslot->slotindex : 0;
+            arc << slotIndex;
+
             // Save numcounters, then counters if there's a need to
             numCounters = p.weaponctrs->numNodes();
             arc << numCounters;
@@ -560,6 +565,7 @@ static void P_ArchivePlayers(SaveArchive &arc)
          }
          else
          {
+            int slotIndex;
             char *className = nullptr;
             size_t len;
 
@@ -574,6 +580,11 @@ static void P_ArchivePlayers(SaveArchive &arc)
             arc.archiveLString(className, len);
             if(estrnonempty(className) && !(p.pendingweapon = E_WeaponForName(className)))
                I_Error("P_ArchivePlayers: pendingweapon '%s' not found\n", className);
+
+            arc << slotIndex;
+            p.readyweaponslot = E_FindEntryForWeaponInSlot(&p, p.readyweapon, slotIndex);
+            arc << slotIndex;
+            p.pendingweaponslot = E_FindEntryForWeaponInSlot(&p, p.pendingweapon, slotIndex);
 
             // Load counters if there's a need to
             P_loadWeaponCounters(arc, p);
