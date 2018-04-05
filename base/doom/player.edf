@@ -24,7 +24,7 @@ weaponinfo Fist : DoomWeapon, 0
 {
   selectionorder 9000
 
-  flags        FLEEMELEE|NOHITGHOSTS|SILENCER|AUTOSWITCHFROM
+  flags        FLEEMELEE|NOHITGHOSTS|SILENCER|DISABLEAPS|AUTOSWITCHFROM
   mod          Fist
   recoil       10
 
@@ -57,7 +57,7 @@ weaponinfo Pistol : DoomWeapon, 1
 
   selectionorder 8000
 
-  flags        SILENCER|HAPTICRECOIL|AUTOSWITCHFROM
+  flags        SILENCER|DISABLEAPS|HAPTICRECOIL|AUTOSWITCHFROM
   mod          Pistol
   recoil       10
   hapticrecoil 1
@@ -94,7 +94,7 @@ weaponinfo Shotgun : DoomWeapon, 2
 
   selectionorder 4000
 
-  flags        SILENCER|HAPTICRECOIL
+  flags        SILENCER|DISABLEAPS|HAPTICRECOIL
   mod          Shotgun
   recoil       30
   hapticrecoil 3
@@ -135,7 +135,7 @@ weaponinfo Chaingun : DoomWeapon, 3
 
   selectionorder 3000
 
-  flags        SILENCER|HAPTICRECOIL
+  flags        SILENCER|DISABLEAPS|HAPTICRECOIL
   mod          Chaingun
   recoil       10
   hapticrecoil 1
@@ -171,7 +171,7 @@ weaponinfo MissileLauncher : DoomWeapon, 4
 
   selectionorder 7000
 
-  flags        NOAUTOFIRE|SILENCER|HAPTICRECOIL
+  flags        NOAUTOFIRE|DISABLEAPS|SILENCER|HAPTICRECOIL
   //mod          ""
   recoil       100
   hapticrecoil 6
@@ -209,7 +209,7 @@ weaponinfo PlasmaRifle : DoomWeapon, 5
 
   selectionorder 1000
 
-  flags        SILENCER|HAPTICRECOIL|NOTSHAREWARE
+  flags        SILENCER|DISABLEAPS|HAPTICRECOIL|NOTSHAREWARE
   //mod          ""
   recoil       20
   hapticrecoil 2
@@ -245,7 +245,7 @@ weaponinfo BFG9000 : DoomWeapon, 6
 
   selectionorder 5000
 
-  flags        NOAUTOFIRE|SILENCER|HAPTICRECOIL|NOTSHAREWARE
+  flags        NOAUTOFIRE|SILENCER|DISABLEAPS|HAPTICRECOIL|NOTSHAREWARE
   //mod          ""
   recoil       100
   hapticrecoil 10
@@ -299,7 +299,7 @@ weaponinfo Chainsaw : DoomWeapon, 7
 {
   selectionorder 6000
 
-  flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCER
+  flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCER|DISABLEAPS
   mod          Chainsaw
   upsound      sawup
   readysound   sawidl
@@ -330,7 +330,7 @@ weaponinfo SuperShotgun : DoomWeapon, 8
 
   selectionorder 2000
 
-  flags        SILENCER|HAPTICRECOIL
+  flags        SILENCER|HAPTICRECOIL|DISABLEAPS
   mod          SShotgun
   recoil       80
   hapticrecoil 5

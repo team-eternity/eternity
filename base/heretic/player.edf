@@ -16,7 +16,7 @@ weaponinfo Staff
 
   sisterweapon StaffPowered
 
-  flags        FLEEMELEE|NOHITGHOSTS|SILENCER
+  flags        FLEEMELEE|NOHITGHOSTS|SILENCER|DISABLEAPS
   //mod          ""
   recoil       10
 
@@ -74,7 +74,7 @@ weaponinfo GoldWand
 
   sisterweapon GoldWandPowered
 
-  flags        SILENCER|HAPTICRECOIL
+  flags        SILENCER|DISABLEAPS|HAPTICRECOIL
   //mod          ""
   recoil       10
   hapticrecoil 1
@@ -126,7 +126,7 @@ weaponinfo Crossbow
 
   sisterweapon   CrossbowPowered
 
-  flags        SILENCER|HAPTICRECOIL
+  flags        SILENCER|DISABLEAPS|HAPTICRECOIL
   //mod          ""
   recoil       30
   hapticrecoil 3
@@ -180,7 +180,7 @@ weaponinfo Blaster
 
   selectionorder 2000
 
-  flags        SILENCER|HAPTICRECOIL
+  flags        SILENCER|DISABLEAPS|HAPTICRECOIL
   //mod          ""
   recoil       10
   hapticrecoil 1
@@ -217,7 +217,7 @@ weaponinfo SkullRod
 
   selectionorder 1000
 
-  flags        SILENCER|HAPTICRECOIL
+  flags        SILENCER|DISABLEAPS|HAPTICRECOIL
   //mod          ""
   recoil       100
   hapticrecoil 6
@@ -250,7 +250,7 @@ weaponinfo PhoenixRod
 
   sisterweapon PhoenixRodPowered
 
-  flags        NOAUTOFIRE|SILENCER|HAPTICRECOIL|NOTSHAREWARE|FORCETOREADY
+  flags        NOAUTOFIRE|SILENCER|DISABLEAPS|HAPTICRECOIL|NOTSHAREWARE|FORCETOREADY
   //mod          ""
   recoil       20
   hapticrecoil 2
@@ -304,7 +304,7 @@ weaponinfo Mace
 
   sisterweapon MacePowered
 
-  flags        SILENCER|HAPTICRECOIL|NOTSHAREWARE
+  flags        SILENCER|DISABLEAPS|HAPTICRECOIL|NOTSHAREWARE
   //mod          ""
   recoil       20
   hapticrecoil 2
@@ -357,7 +357,7 @@ weaponinfo Gauntlets
 
   sisterweapon GauntletsPowered
 
-  flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCER
+  flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCER|DISABLEAPS
   //mod          ""
   upsound      ht_gntact
 

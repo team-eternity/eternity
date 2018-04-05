@@ -465,14 +465,14 @@ void P_SubtractAmmo(player_t *player, int compat_amt)
    else if(demo_version >= 401 && (player->attackdown & AT_SECONDARY))
    {
       ammo = weapon->ammo_alt;
-      amount = ((weapon->flags & WPF_ENABLEAPS) || compat_amt < 0) ? weapon->ammopershot_alt :
-                                                                     compat_amt;
+      amount = (!(weapon->flags & WPF_DISABLEAPS) || compat_amt < 0) ? weapon->ammopershot_alt :
+                                                                       compat_amt;
    }
    else
    {
       ammo = weapon->ammo;
-      amount = ((weapon->flags & WPF_ENABLEAPS) || compat_amt < 0) ? weapon->ammopershot :
-                                                                     compat_amt;
+      amount = (!(weapon->flags & WPF_DISABLEAPS) || compat_amt < 0) ? weapon->ammopershot :
+                                                                       compat_amt;
    }
 
    if(player->cheats & CF_INFAMMO || !ammo)

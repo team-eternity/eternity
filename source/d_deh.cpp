@@ -1608,7 +1608,7 @@ void deh_procWeapon(DWFILE *fpin, char *line)
       {
          weaponinfo.ammopershot = value;
          // enable ammo per shot value usage for this weapon
-         weaponinfo.flags |= WPF_ENABLEAPS;
+         weaponinfo.flags &= ~WPF_DISABLEAPS;
       }
       else
          deh_LogPrintf("Invalid weapon string index for '%s'\n", key);
