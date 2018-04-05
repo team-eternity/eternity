@@ -233,6 +233,8 @@ weaponinfo PlasmaRifle : DoomWeapon, 5
     goto Ready
   Flash:
     PLSF A 4 bright A_Light1
+    goto LightDone
+  Flash2:
     PLSF B 4 bright A_Light1
     goto LightDone
   "@
@@ -367,7 +369,7 @@ weaponinfo SuperShotgun : DoomWeapon, 8
     goto Deselect
   Flash:
     SHT2 I 4 bright A_Light1
-    SHT2 J 3 bright A_Light2
+    SHT2 J 4 bright A_Light2
     goto LightDone
   "@
 }
