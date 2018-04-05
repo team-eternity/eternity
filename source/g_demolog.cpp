@@ -50,14 +50,11 @@ void G_DemoLogInit(const char *path)
       return;
    }
    // write date and time
-   // EDF_FEATURES_TODO: Remove this ifdef (not the contents) when done
-#ifdef REMOVE_THIS_IFDEF_AFTER_MERGING
    char buffer[81];
    time_t now = time(nullptr);
    struct tm *info = localtime(&now);
    strftime(buffer, 81, "%Y-%m-%d %H:%M:%S %Z", info);
    fprintf(demoLogFile, "%s\n", buffer);
-#endif
    // write arguments into it
    for(int i = 1; i < myargc; ++i)
       fprintf(demoLogFile, "%s ", myargv[i]);
