@@ -483,16 +483,16 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    // haleyjd 04/11/03: "vsync" or page-flipping support
    if(use_vsync)
       wantvsync = true;
-   
+
    // set defaults using geom string from configuration file
-   I_ParseGeom(i_videomode, &v_w, &v_h, &wantfullscreen, &wantvsync, 
+   I_ParseGeom(i_videomode, &v_w, &v_h, &wantfullscreen, &wantvsync,
                &wanthardware, &wantframe, &wantdesktopfs);
-   
+
    // haleyjd 06/21/06: allow complete command line overrides but only
    // on initial video mode set (setting from menu doesn't support this)
    I_CheckVideoCmds(&v_w, &v_h, &wantfullscreen, &wantvsync, &wanthardware,
                     &wantframe, &wantdesktopfs);
-   
+
    if(!wantframe)
       window_flags |= SDL_WINDOW_BORDERLESS;
 
@@ -502,9 +502,6 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, colordepth >= 24 ? 8 : 5);
    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,  colordepth >= 24 ? 8 : 5);
    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, colordepth == 32 ? 8 : 0);
-
-   // Set swap interval through SDL
-   SDL_GL_SetSwapInterval(wantvsync ? 1 : 0); // OMG vsync!
 
    if(displaynum < SDL_GetNumVideoDisplays())
       v_displaynum = displaynum;
@@ -537,6 +534,9 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
       I_FatalError(I_ERR_KILL, "Couldn't create OpenGL context\n"
                                "SDL Error: %s\n", SDL_GetError());
    }
+
+   // Set swap interval through SDL (must be done after context is created)
+   SDL_GL_SetSwapInterval(wantvsync ? 1 : 0); // OMG vsync!
 
    Uint32 format;
    if(colordepth == 32)
@@ -573,7 +573,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
 
    // Set ortho projection
    GL_SetOrthoMode(v_w, v_h);
-   
+
    // Calculate framebuffer texture sizes
    framebuffer_umax = GL_MakeTextureDimension(static_cast<unsigned int>(v_w));
    framebuffer_vmax = GL_MakeTextureDimension(static_cast<unsigned int>(v_h));
@@ -592,11 +592,11 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    texturesize = framebuffer_umax * framebuffer_vmax * 4;
    tempbuffer = ecalloc(GLvoid *, framebuffer_umax * 4, framebuffer_vmax);
    GL_BindTextureAndRemember(textureid);
-   
+
    // villsa 05/29/11: set filtering otherwise texture won't render
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, texfiltertype); 
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, texfiltertype);   
-   
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, texfiltertype);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, texfiltertype);
+
    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 

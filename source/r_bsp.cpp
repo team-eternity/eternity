@@ -521,8 +521,8 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
       tempsec->ceilingheight = s->ceilingheight;
 
       // killough 11/98: prevent sudden light changes from non-water sectors:
-      if(underwater && (void(tempsec->floorheight   = sec->floorheight),
-                        void(tempsec->ceilingheight = s->floorheight-1), !back))
+      if(underwater && (tempsec->floorheight   = sec->floorheight,
+                        tempsec->ceilingheight = s->floorheight-1, !back))
       {
          // SoM: kill any ceiling portals that may try to render
          tempsec->c_portal = NULL;
@@ -929,7 +929,7 @@ void R_ClipSegToLPortal(void)
       return; 
 
    // This can actually happen with slopes!
-   if(!seg.floorplane && !seg.ceilingplane)
+   if(!seg.floorplane && !seg.ceilingplane && !seg.f_window && !seg.c_window)
    {
       float top, top2, topstep, bottom, bottom2, bottomstep;
 
@@ -976,7 +976,7 @@ void R_ClipSegToLPortal(void)
             R_ClipPassWallSegment(startx, i - 1);
       }
    }
-   else if(!seg.floorplane)
+   else if(!seg.floorplane && !seg.f_window)
    {
       // If the seg has no floor plane, the camera is most likely below it,
       // so rejection is carried out as if the seg is being viewed through
@@ -1012,7 +1012,7 @@ void R_ClipSegToLPortal(void)
             R_ClipPassWallSegment(startx, i - 1);
       }
    }
-   else if(!seg.ceilingplane)
+   else if(!seg.ceilingplane && !seg.c_window)
    {
       // If the seg has no floor plane, the camera is most likely above it,
       // so rejection is carried out as if the seg is being viewed through
@@ -1091,6 +1091,8 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
                         float lclip1, float lclip2)
 {
    bool mark, markblend; // haleyjd
+   // ioanch: needed to prevent transfer_heights from affecting sky hacks.
+   bool marktheight, blocktheight;
    bool heightchange;
    float texhigh, texlow;
    side_t *side = seg.side;
@@ -1108,10 +1110,10 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    // ioanch 20160130: be sure to check for portal line too!
    mark = (seg.frontsec->lightlevel != seg.backsec->lightlevel ||
            seg.line->linedef->portal ||
-           seg.frontsec->heightsec != seg.backsec->heightsec ||
            seg.frontsec->midmap != seg.backsec->midmap ||
            (seg.line->sidedef->midtexture &&
             (seg.line->linedef->extflags & EX_ML_CLIPMIDTEX)));
+   marktheight = seg.frontsec->heightsec != seg.backsec->heightsec;
 
    t = (int)seg.top;
    t2 = (int)seg.top2;
@@ -1191,7 +1193,11 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
       seg.top2 = seg.high2;
       seg.topstep = seg.highstep;
       t = h; t2 = h2;
+
+      blocktheight = true;
    }
+   else
+      blocktheight = false;
 
 
    // -- Ceilings -- 
@@ -1230,7 +1236,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
       seg.c_window   = NULL;
 
    if(seg.ceilingplane && 
-       (mark || seg.clipsolid || heightchange ||
+       (mark || (marktheight && !blocktheight) || seg.clipsolid || heightchange ||
         seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
         seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
         seg.frontsec->ceiling_xscale != seg.backsec->ceiling_xscale ||
@@ -1312,7 +1318,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
       seg.f_window = NULL;
 
    if(seg.floorplane && 
-      (mark || seg.clipsolid || heightchange ||
+      (mark || marktheight || seg.clipsolid || heightchange ||
        seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
        seg.frontsec->floor_yoffs != seg.backsec->floor_yoffs ||
        seg.frontsec->floor_xscale != seg.backsec->floor_xscale ||
@@ -1398,6 +1404,8 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
                         float texbottom)
 {
    bool mark, markblend; // haleyjd
+   // ioanch: needed to prevent transfer_heights from affecting sky hacks.
+   bool marktheight, blocktheight;
    bool uppermissing, lowermissing;
    float texhigh, texlow;
    side_t *side = seg.side;
@@ -1414,10 +1422,10 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    // ioanch 20160130: be sure to check for portal line too!
    mark = (seg.frontsec->lightlevel != seg.backsec->lightlevel ||
            seg.line->linedef->portal ||
-           seg.frontsec->heightsec != seg.backsec->heightsec ||
            seg.frontsec->midmap != seg.backsec->midmap ||
            (seg.line->sidedef->midtexture && 
             (seg.line->linedef->extflags & EX_ML_CLIPMIDTEX)));
+   marktheight = seg.frontsec->heightsec != seg.backsec->heightsec;
 
    frontc = seg.frontsec->ceilingheight;
    backc  = seg.backsec->ceilingheight;
@@ -1472,7 +1480,10 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
       seg.topstep = seg.highstep;
       frontc = backc;
       //uppermissing = false;
+      blocktheight = true; // apply the hack of ignoring sector
    }
+   else
+      blocktheight = false;
 
    seg.markflags = 0;
    
@@ -1480,7 +1491,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
             && seg.backsec->c_portal != NULL 
             && (seg.frontsec->c_pflags & PS_BLENDFLAGS) != (seg.backsec->c_pflags & PS_BLENDFLAGS);
                
-   if(mark || seg.clipsolid || frontc != backc || 
+   if(mark || (marktheight && !blocktheight) || seg.clipsolid || frontc != backc || 
       seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
       seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
       seg.frontsec->ceiling_xscale != seg.backsec->ceiling_xscale ||
@@ -1560,7 +1571,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
             && seg.backsec->f_portal != NULL 
             && (seg.frontsec->f_pflags & PS_BLENDFLAGS) != (seg.backsec->f_pflags & PS_BLENDFLAGS);
              
-   if(mark || seg.clipsolid ||  
+   if(mark || marktheight || seg.clipsolid ||  
       seg.frontsec->floorheight != seg.backsec->floorheight ||
       seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
       seg.frontsec->floor_yoffs != seg.backsec->floor_yoffs ||
@@ -2519,6 +2530,26 @@ static bool R_CheckBBox(fixed_t *bspcoord) // killough 1/28/98: static
 }
 
 //
+// R_interpolateViewPoint
+//
+// Interpolate a rendering view point based on the player's location.
+//
+static void R_interpolateVertex(dynavertex_t &v, v2fixed_t &org, v2float_t &forg)
+{
+   org.x = v.x;
+   org.y = v.y;
+   forg.x = v.fx;
+   forg.y = v.fy;
+   if(view.lerp != FRACUNIT)
+   {
+      v.x = lerpCoord(view.lerp, v.backup.x, v.x);
+      v.y = lerpCoord(view.lerp, v.backup.y, v.y);
+      v.fx = M_FixedToFloat(v.x);
+      v.fy = M_FixedToFloat(v.y);
+   }
+}
+
+//
 // R_RenderPolyNode
 //
 // Recurse through a polynode mini-BSP
@@ -2533,7 +2564,20 @@ static void R_RenderPolyNode(rpolynode_t *node)
       R_RenderPolyNode(node->children[side]);
 
       // render partition seg
-      R_AddLine(&(node->partition->seg), true);
+      v2fixed_t org[2];
+      v2float_t forg[2];
+      seg_t *seg = &node->partition->seg;
+      R_interpolateVertex(*seg->dyv1, org[0], forg[0]);
+      R_interpolateVertex(*seg->dyv2, org[1], forg[1]);
+      R_AddLine(seg, true);
+      seg->v1->x = org[0].x;
+      seg->v1->y = org[0].y;
+      seg->v2->x = org[1].x;
+      seg->v2->y = org[1].y;
+      seg->v1->fx = forg[0].x;
+      seg->v1->fy = forg[0].y;
+      seg->v2->fx = forg[1].x;
+      seg->v2->fy = forg[1].y;
 
       // continue to render backspace
       node = node->children[side^1];

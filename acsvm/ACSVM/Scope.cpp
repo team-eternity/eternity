@@ -976,7 +976,7 @@ namespace ACSVM
       else
       {
          thread = env->getFreeThread();
-         thread->start(script, this, info.info, info.argV, info.argC);
+         thread->start(script, this, info.info, info.argV, static_cast<Word>(info.argC));
          if(info.func) info.func(thread);
          if(info.funcc) info.funcc(thread);
          return true;
@@ -1007,7 +1007,7 @@ namespace ACSVM
    {
       Thread *thread = env->getFreeThread();
 
-      thread->start(script, this, info.info, info.argV, info.argC);
+      thread->start(script, this, info.info, info.argV, static_cast<Word>(info.argC));
       if(info.func) info.func(thread);
       if(info.funcc) info.funcc(thread);
       return true;
@@ -1037,7 +1037,7 @@ namespace ACSVM
    {
       Thread *thread = env->getFreeThread();
 
-      thread->start(script, this, info.info, info.argV, info.argC);
+      thread->start(script, this, info.info, info.argV, static_cast<Word>(info.argC));
       if(info.func) info.func(thread);
       if(info.funcc) info.funcc(thread);
       thread->exec();

@@ -161,7 +161,8 @@ result_e T_MoveFloorDown(sector_t *sector, fixed_t speed, fixed_t dest, int crus
 //
 // Handle a floor plane moving upward.
 //
-result_e T_MoveFloorUp(sector_t *sector, fixed_t speed, fixed_t dest, int crush)
+result_e T_MoveFloorUp(sector_t *sector, fixed_t speed, fixed_t dest, int crush,
+                       bool emulateStairCrush)
 {
    fixed_t destheight;
    fixed_t lastpos;
@@ -250,7 +251,7 @@ result_e T_MoveFloorUp(sector_t *sector, fixed_t speed, fixed_t dest, int crush)
          // to return crushed here even when crush is positive
          if(demo_version < 203 || comp[comp_floors]) // killough 10/98
          {
-            if(crush > 0) //jff 1/25/98 fix floor crusher
+            if(crush > 0 && !emulateStairCrush) //jff 1/25/98 fix floor crusher
                return crushed;
          }
          P_SetFloorHeight(sector, lastpos);
@@ -475,12 +476,12 @@ result_e T_MoveCeilingUp(sector_t *sector, fixed_t speed, fixed_t dest, int crus
 // floor movement direction.
 //
 result_e T_MoveFloorInDirection(sector_t *sector, fixed_t speed, fixed_t dest, 
-                                int crush, int direction)
+                                int crush, int direction, bool emulateStairCrush)
 {
    switch(direction)
    {
    case plat_up:
-      return T_MoveFloorUp(sector, speed, dest, crush);
+      return T_MoveFloorUp(sector, speed, dest, crush, emulateStairCrush);
    case plat_down:
       return T_MoveFloorDown(sector, speed, dest, crush);
    default:

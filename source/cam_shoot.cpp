@@ -157,6 +157,8 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
       y += portaldata->deltay;
       z += portaldata->deltaz;
 
+      P_FitLinkOffsetsToPortal(*portaldata);
+
       State newstate(state);
       newstate.groupid = newfromid;
       newstate.origindist += dist;
@@ -272,6 +274,8 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
             x += data.deltax;
             y += data.deltay;
             z += data.deltaz;  // why not
+
+            P_FitLinkOffsetsToPortal(data);
 
             State newstate(context.state);
             newstate.groupid = newfromid;

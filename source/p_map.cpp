@@ -46,6 +46,7 @@
 #include "p_map3d.h"
 #include "p_partcl.h"
 #include "p_portal.h"
+#include "p_portalblockmap.h"
 #include "p_portalcross.h"
 #include "p_setup.h"
 #include "p_skin.h"
@@ -94,12 +95,19 @@ void P_PushClipStack(void)
       int     msh = unusedclip->spechit_max;
       line_t **sh = unusedclip->spechit;
 
+      // ioanch: same with portalhit
+      int mph = unusedclip->portalhit_max;
+      doom_mapinter_t::linepoly_t *ph = unusedclip->portalhit;
+
       newclip    = unusedclip;
       unusedclip = unusedclip->prev;
       memset(newclip, 0, sizeof(*newclip));
 
       newclip->spechit_max = msh;
       newclip->spechit     = sh;
+
+      newclip->portalhit_max = mph;
+      newclip->portalhit = ph;
    }
 
    newclip->prev = pClip;
@@ -258,13 +266,20 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
    // floorheight that have different frictions, use the lowest
    // friction value (muddy has precedence over icy).
 
+   bool onfloor = mo->z <= mo->floorz || (P_Use3DClipping() && mo->intflags & MIF_ONMOBJ);
+
    if(mo->flags4 & MF4_FLY)
    {
       friction = FRICTION_FLY;
    }
-   else if(!(mo->flags & (MF_NOCLIP|MF_NOGRAVITY)) 
-      && (demo_version >= 203 || (mo->player && !compatibility)) &&
-      variable_friction)
+   else if(mo->player && LevelInfo.airFriction < FRACUNIT && !onfloor)
+   {
+      // Air friction only affects players
+      friction = FRACUNIT - LevelInfo.airFriction;
+   }   
+   else if(!(mo->flags & (MF_NOCLIP|MF_NOGRAVITY)) && 
+           (demo_version >= 203 || (mo->player && !compatibility)) &&
+           variable_friction)
    {
       for (m = mo->touching_sectorlist; m; m = m->m_tnext)
       {
@@ -2643,9 +2658,9 @@ void P_FreeSecNodeList(void)
 static msecnode_t *P_GetSecnode(void)
 {
    msecnode_t *node;
-   
+
    return headsecnode ?
-   void(node = headsecnode), void(headsecnode = node->m_snext), node :
+   node = headsecnode, headsecnode = node->m_snext, node :
       (msecnode_t *)(Z_Malloc(sizeof *node, PU_LEVEL, NULL)); 
 }
 

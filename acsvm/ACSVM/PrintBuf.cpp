@@ -104,7 +104,7 @@ namespace ACSVM
    void PrintBuf::push()
    {
       reserve(4);
-      WriteLE4(reinterpret_cast<Byte *>(bufPtr), bufPtr - bufBeg);
+      WriteLE4(reinterpret_cast<Byte *>(bufPtr), static_cast<std::uint_fast32_t>(bufPtr - bufBeg));
       bufBeg = bufPtr += 4;
    }
 

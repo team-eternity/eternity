@@ -45,6 +45,7 @@
 #include "m_argv.h"
 #include "m_buffer.h"
 #include "m_random.h"
+#include "p_info.h"
 #include "p_maputl.h"
 #include "p_spec.h"
 #include "p_tick.h"
@@ -367,6 +368,13 @@ SaveArchive &SaveArchive::operator << (inventoryslot_t &slot)
    return *this;
 }
 
+// Serializes a vector
+SaveArchive &SaveArchive::operator << (v2fixed_t &vec)
+{
+   *this << vec.x << vec.y;
+   return *this;
+}
+
 //=============================================================================
 //
 // Thinker Enumeration
@@ -457,6 +465,7 @@ static void P_ArchivePSprite(SaveArchive &arc, pspdef_t &pspr)
          pspr.state = states[statenum];
       else
          pspr.state = nullptr;
+      pspr.backupPosition();
    }
 }
 
@@ -707,6 +716,14 @@ static void P_ArchiveWorld(SaveArchive &arc)
 
    // ioanch: musinfo stuff
    S_MusInfoArchive(arc);
+}
+
+//
+// Dynamically alterable EMAPINFO stuff
+//
+static void P_ArchiveLevelInfo(SaveArchive &arc)
+{
+   arc << LevelInfo.airControl << LevelInfo.airFriction << LevelInfo.gravity;
 }
 
 //
@@ -1343,6 +1360,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
 
       P_ArchivePlayers(arc);
       P_ArchiveWorld(arc);
+      P_ArchiveLevelInfo(arc);
       P_ArchivePolyObjects(arc); // haleyjd 03/27/06
       P_ArchiveThinkers(arc);
       P_ArchiveRNG(arc);    // killough 1/18/98: save RNG information
@@ -1560,6 +1578,7 @@ void P_LoadGame(const char *filename)
       // dearchive all the modifications
       P_ArchivePlayers(arc);
       P_ArchiveWorld(arc);
+      P_ArchiveLevelInfo(arc);
       P_ArchivePolyObjects(arc);    // haleyjd 03/27/06
       P_ArchiveThinkers(arc);
       P_ArchiveRNG(arc);            // killough 1/18/98: load RNG information

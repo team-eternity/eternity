@@ -360,7 +360,7 @@ bool UDMFParser::loadLinedefs(UDMFSetupSettings &setupSettings)
          if(uld.monsteruse)
             ld->extflags |= EX_ML_MONSTER | EX_ML_USE;
          if(uld.impact)
-            ld->extflags |= EX_ML_MISSILE | EX_ML_IMPACT;
+            ld->extflags |= EX_ML_PLAYER | EX_ML_IMPACT;
          if(uld.playerpush)
             ld->extflags |= EX_ML_PLAYER | EX_ML_PUSH;
          if(uld.monsterpush)

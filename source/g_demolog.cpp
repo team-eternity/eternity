@@ -34,7 +34,7 @@ static bool demoLogLevelExited;
 static void G_demoLogAtExit()
 {
    if(demoLogFile && !demoLogLevelExited)
-      fprintf(demoLogFile, "Quit without exiting level\n");
+      fprintf(demoLogFile, "%d\tQuit without exiting level\n", gametic);
 }
 
 //
@@ -49,12 +49,8 @@ void G_DemoLogInit(const char *path)
       usermsg("G_DemoLogInit: failed opening '%s'\n", path);
       return;
    }
-   // write date and time
-   char buffer[81];
-   time_t now = time(nullptr);
-   struct tm *info = localtime(&now);
-   strftime(buffer, 81, "%Y-%m-%d %H:%M:%S %Z", info);
-   fprintf(demoLogFile, "%s\n", buffer);
+   // Start with a newline for easy delimiting
+   fprintf(demoLogFile, "\n");
    // write arguments into it
    for(int i = 1; i < myargc; ++i)
       fprintf(demoLogFile, "%s ", myargv[i]);

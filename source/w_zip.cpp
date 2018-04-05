@@ -707,7 +707,7 @@ void ZipLump::setAddress(InBuffer &fin)
       I_Error("ZipLump::setAddress: could not skip local name for '%s'\n", name);
 
    // calculate total length of the local file header and advance offset
-   offset += (ZIP_LOCAL_FILE_SIZE + skipSize);
+   offset += static_cast<long>(ZIP_LOCAL_FILE_SIZE + skipSize);
 
    // clear LF_CALCOFFSET flag
    flags &= ~ZipFile::LF_CALCOFFSET;

@@ -160,7 +160,7 @@ namespace ACSVM
 
       auto &init = arrInitV[idx];
       for(std::size_t iter = 4; iter != size; iter += 4)
-         init.setVal(iter / 4 - 1, ReadLE4(data + iter));
+         init.setVal(static_cast<Word>(iter / 4 - 1), ReadLE4(data + iter));
 
       return false;
    }
@@ -246,9 +246,9 @@ namespace ACSVM
       {
          switch(data[iter])
          {
-         case 0: init.setTag(iter - 5, InitTag::Integer);  break;
-         case 1: init.setTag(iter - 5, InitTag::String);   break;
-         case 2: init.setTag(iter - 5, InitTag::Function); break;
+         case 0: init.setTag(static_cast<Word>(iter - 5), InitTag::Integer);  break;
+         case 1: init.setTag(static_cast<Word>(iter - 5), InitTag::String);   break;
+         case 2: init.setTag(static_cast<Word>(iter - 5), InitTag::Function); break;
          }
       }
 
@@ -268,7 +268,7 @@ namespace ACSVM
       std::size_t arrC = (size - 2) / 4;
 
       if(idx < functionV.size() && functionV[idx])
-         functionV[idx]->locArrC = arrC;
+         functionV[idx]->locArrC = static_cast<Word>(arrC);
 
       return false;
    }
@@ -300,7 +300,7 @@ namespace ACSVM
       std::size_t iter = 0;
       for(Function *&func : functionV)
       {
-         Word idx     = iter / 8;
+         Word idx     = static_cast<Word>(iter / 8);
          Word argC    = ReadLE1(data + iter); iter += 1;
          Word locRegC = ReadLE1(data + iter); iter += 1;
          Word flags   = ReadLE2(data + iter); iter += 2;
@@ -443,7 +443,7 @@ namespace ACSVM
       if(size % 4 || size < 4) throw ReadError("bad MINI size");
 
       Word idx  = ReadLE4(data);
-      Word regC = idx + size / 4 - 1;
+      Word regC = static_cast<Word>(idx + size / 4 - 1);
 
       if(regC > regInitV.size())
          regInitV.realloc(regC);
@@ -490,7 +490,7 @@ namespace ACSVM
       if(nameInt & 0x8000) nameInt |= 0xFFFF0000;
 
       for(Script &scr : scriptV)
-         if(scr.name.i == nameInt) scr.locArrC = arrC;
+         if(scr.name.i == nameInt) scr.locArrC = static_cast<Word>(arrC);
 
       return false;
    }
@@ -832,7 +832,7 @@ namespace ACSVM
       std::size_t             /*size*/>
    Module::DecryptStringACSE(Byte const *data, std::size_t size, std::size_t iter)
    {
-      Word const key = iter * 157135;
+      Word const key = static_cast<const Word>(iter * 157135);
 
       // Calculate length. Start at 1 for null terminator.
       std::size_t len = 1;

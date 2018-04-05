@@ -32,11 +32,13 @@
 #include "m_bbox.h"
 #include "p_maputl.h"
 #include "p_portal.h"
+#include "p_portalblockmap.h"
 #include "p_portalcross.h"
 #include "p_setup.h"
 #include "polyobj.h"
 #include "r_main.h"
 #include "r_portal.h"
+#include "r_state.h"
 
 //==============================================================================
 //
@@ -255,6 +257,35 @@ inline static bool P_simpleBlockWalker(const fixed_t bbox[4], bool xfirst, void 
 }
 
 //
+// Checks if a portal blockmap entry touches a box
+//
+static bool P_boxTouchesBlockPortal(const portalblockentry_t &entry, const fixed_t bbox[4])
+{
+   auto checkline = [bbox](const line_t &line) {
+      if(!M_BoxesTouch(line.bbox, bbox))
+         return false;
+      return P_BoxOnLineSide(bbox, &line) == -1;
+   };
+
+   if(entry.type == portalblocktype_e::line)
+      return checkline(*entry.line);
+   // Sector
+   // Quick check for location
+   const sector_t &sector = *entry.sector;
+   if(!M_BoxesTouch(pSectorBoxes[&sector - sectors].box, bbox))
+      return false;
+   if(R_PointInSubsector(bbox[BOXLEFT] / 2 + bbox[BOXRIGHT] / 2,
+      bbox[BOXBOTTOM] / 2 + bbox[BOXTOP] / 2)->sector == &sector)
+   {
+      return true;
+   }
+   for(int i = 0; i < sector.linecount; ++i)
+      if(checkline(*sector.lines[i]))
+         return true;
+   return false;
+}
+
+//
 // P_TransPortalBlockWalker
 //
 // ioanch 20160107
@@ -275,7 +306,7 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
    // OPTIMIZE: if needed, use some global store instead of malloc
    bool *accessedgroupids = ecalloc(bool *, gcount, sizeof(*accessedgroupids));
    accessedgroupids[groupid] = true;
-   int *groupqueue = ecalloc(int *, gcount, sizeof(*groupqueue));
+   auto portalqueue = ecalloc(const portalblockentry_t **, gcount, sizeof(portalblockentry_t *));
    int queuehead = 0;
    int queueback = 0;
 
@@ -307,42 +338,28 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
          yh = bmapheight - 1;
 
       // Define a function to use in the 'for' blocks
-      auto operate = [accessedgroupids, groupqueue, &queueback, func,
-                      &groupid, data, gcount] (int x, int y) -> bool
+      auto operate = [accessedgroupids, portalqueue, &queueback, func,
+                      &groupid, data, gcount, &movedBBox] (int x, int y) -> bool
       {
          // Check for portals
-         const int *block = gBlockGroups[y * bmapwidth + x];
-         for(int i = 1; i <= block[0]; ++i)
+         const PODCollection<portalblockentry_t> &block = gPortalBlockmap[y * bmapwidth + x];
+         for(const portalblockentry_t &entry : block)
          {
-#ifdef RANGECHECK
-            if(block[i] < 0 || block[i] >= gcount)
-               I_Error("P_TransPortalBlockWalker: i (%d) out of range (count %d)", block[i], gcount);
-#endif
-            // Add to queue and visitlist
-            if(!accessedgroupids[block[i]])
+            if(accessedgroupids[entry.ldata->toid])
+               continue;
+            if(entry.type == portalblocktype_e::sector &&
+               ((!entry.isceiling && !(entry.sector->f_pflags & PS_PASSABLE)) ||
+                ( entry.isceiling && !(entry.sector->c_pflags & PS_PASSABLE)) ))
             {
-               accessedgroupids[block[i]] = true;
-               groupqueue[queueback++] = block[i];
+               continue;   // be careful to skip concealed portals.
             }
-         }
+            if(!P_boxTouchesBlockPortal(entry, movedBBox))
+               continue;
 
-         // Also check for polyobjects
-         for(const DLListItem<polymaplink_t> *plink
-             = polyblocklinks[y * bmapwidth + x]; plink; plink = plink->dllNext)
-         {
-            const polyobj_t *po = (*plink)->po;
-            for(size_t i = 0; i < po->numPortals; ++i)
-            {
-               if(po->portals[i]->type != R_LINKED)
-                  continue;
-               int groupid = po->portals[i]->data.link.toid;
-               // TODO: use the portal itself, not the group ID
-               if(!accessedgroupids[groupid])
-               {
-                  accessedgroupids[groupid] = true;
-                  groupqueue[queueback++] = groupid;
-               }
-            }
+            accessedgroupids[entry.ldata->toid] = true;
+            portalqueue[queueback++] = &entry;
+            
+            P_FitLinkOffsetsToPortal(*entry.ldata);
          }
 
          // now call the function
@@ -361,7 +378,7 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
             for(y = yl; y <= yh; ++y)
                if(!operate(x, y))
                {
-                  efree(groupqueue);
+                  efree(portalqueue);
                   efree(accessedgroupids);
                   return false;
                }
@@ -371,7 +388,7 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
             for(x = xl; x <= xh; ++x)
                if(!operate(x, y))
                {
-                  efree(groupqueue);
+                  efree(portalqueue);
                   efree(accessedgroupids);
                   return false;
                }
@@ -383,7 +400,7 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
       {
          do
          {
-            link = P_GetLinkOffset(groupid, groupqueue[queuehead]);
+            link = P_GetLinkOffset(groupid, portalqueue[queuehead]->ldata->toid);
             ++queuehead;
 
             // make sure to reject trivial (zero) links
@@ -391,7 +408,7 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
 
          // if a valid link has been found, also update current groupid
          if(link->x || link->y)
-            groupid = groupqueue[queuehead - 1];
+            groupid = portalqueue[queuehead - 1]->ldata->toid;
       }
 
       // if a valid link has been found (and groupid updated) continue
@@ -399,7 +416,7 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
 
    // we now have the list of accessedgroupids
    
-   efree(groupqueue);
+   efree(portalqueue);
    efree(accessedgroupids);
    return true;
 }

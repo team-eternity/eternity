@@ -332,7 +332,7 @@ void VImageManager::determineLinearDimensions(void *data, size_t size,
    {
       for(int i = 5; i <= 32; i++)
       {
-         if(i * i * 128 == size)
+         if(static_cast<size_t>(i * i * 128) == size)
          {
             w = i * 16;
             h = i * 8;

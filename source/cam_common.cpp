@@ -62,6 +62,7 @@
 #include "m_compare.h"
 #include "p_maputl.h"
 #include "p_portal.h"
+#include "p_portalblockmap.h"
 #include "p_setup.h"
 #include "polyobj.h"
 #include "r_portal.h"

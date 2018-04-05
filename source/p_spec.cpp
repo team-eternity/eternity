@@ -1396,6 +1396,8 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
    
    P_SpawnPushers();   // phares 3/20/98: New pusher model using linedefs
 
+   P_FindPolyobjectSectorCouples();
+
    for(int i = 0; i < numlines; i++)
    {
       line_t *line = &lines[i];
@@ -1556,6 +1558,8 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
 
    // haleyjd 02/20/06: spawn polyobjects
    Polyobj_InitLevel();
+   if(!numPolyObjects)
+      P_MarkPortalClusters();
 
    // haleyjd 06/18/14: spawn level actions
    P_SpawnLevelActions();

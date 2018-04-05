@@ -395,6 +395,13 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
       C_Printf(FC_ERROR "%s not found or is not a valid map\n", Console.argv[0]->constPtr());
 }
 
+// restart map (shorthand for doing the map command to the same level)
+
+CONSOLE_NETCMD(restartmap, cf_server, netcmd_restartmap)
+{
+   G_DeferedInitNew(gameskill, gamemapname);
+}
+
         // player name
 VARIABLE_STRING(default_name, NULL,             20);
 CONSOLE_NETVAR(name, default_name, cf_handlerset, netcmd_name)

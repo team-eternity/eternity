@@ -179,10 +179,10 @@ bool F_Responder(event_t *event)
 //
 static float Get_TextSpeed()
 {
-   return 
+   return
       (float)(midstage ? NEWTEXTSPEED : 
               (midstage=acceleratestage) ? 
-              void(acceleratestage=0), NEWTEXTSPEED : TEXTSPEED);
+              acceleratestage=0, NEWTEXTSPEED : TEXTSPEED);
 }
 
 

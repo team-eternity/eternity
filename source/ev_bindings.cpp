@@ -1071,8 +1071,12 @@ PARAMLINE(PolyobjDoorSlide);
 PARAMLINE(PolyobjDoorSwing);
 PARAMLINE(PolyobjMove);
 PARAMLINE(PolyobjMoveTimes8);
+PARAMLINE(PolyobjMoveTo);
+PARAMLINE(PolyobjMoveToSpot);
 PARAMLINE(PolyobjORMove);
 PARAMLINE(PolyobjORMoveTimes8);
+PARAMLINE(PolyobjORMoveTo);
+PARAMLINE(PolyobjORMoveToSpot);
 PARAMLINE(PolyobjRotateRight);
 PARAMLINE(PolyobjORRotateRight);
 PARAMLINE(PolyobjRotateLeft);
@@ -1558,6 +1562,10 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(490, ACSLockedExecuteDoor,                "ACS_LockedExecuteDoor")
    LINESPECNAMED(494, ParamStairsBuildUpDoomCrush,         "Stairs_BuildUpDoomCrush")
    LINESPECNAMED(495, ParamSectorChangeSound,              "Sector_ChangeSound")
+   LINESPECNAMED(496, PolyobjMoveToSpot,                   "Polyobj_MoveToSpot")
+   LINESPECNAMED(497, PolyobjMoveTo,                       "Polyobj_MoveTo")
+   LINESPECNAMED(498, PolyobjORMoveTo,                     "Polyobj_OR_MoveTo")
+   LINESPECNAMED(499, PolyobjORMoveToSpot,                 "Polyobj_OR_MoveToSpot")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1651,6 +1659,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(45,  ParamCeilingCrushRaiseAndStay,       "Ceiling_CrushRaiseAndStay")
    LINESPECNAMED(46,  ParamFloorCrushStop,                 "Floor_CrushStop")
    LINESPECNAMED(47,  ParamCeilingMoveToValue,             "Ceiling_MoveToValue")
+   LINESPECNAMED(59,  PolyobjORMoveToSpot,                 "Polyobj_OR_MoveToSpot")
    LINESPECNAMED(60,  ParamPlatPerpetualRaise,             "Plat_PerpetualRaise")
    LINESPECNAMED(61,  ParamPlatStop,                       "Plat_Stop")
    LINESPECNAMED(62,  ParamPlatDWUS,                       "Plat_DownWaitUpStay")
@@ -1673,7 +1682,10 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(83,  ACSLockedExecute,                    "ACS_LockedExecute")
    LINESPECNAMED(84,  ACSExecuteWithResult,                "ACS_ExecuteWithResult")
    LINESPECNAMED(85,  ACSLockedExecuteDoor,                "ACS_LockedExecuteDoor")
+   LINESPECNAMED(86,  PolyobjMoveToSpot,                   "Polyobj_MoveToSpot")
    LINESPECNAMED(87,  PolyobjStop,                         "Polyobj_Stop")
+   LINESPECNAMED(88,  PolyobjMoveTo,                       "Polyobj_MoveTo")
+   LINESPECNAMED(89,  PolyobjORMoveTo,                     "Polyobj_OR_MoveTo")
    LINESPECNAMED(90,  PolyobjORRotateLeft,                 "Polyobj_OR_RotateLeft")
    LINESPECNAMED(91,  PolyobjORRotateRight,                "Polyobj_OR_RotateRight")
    LINESPECNAMED(92,  PolyobjORMove,                       "Polyobj_OR_Move")

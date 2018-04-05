@@ -208,7 +208,7 @@ static int I_TranslateKey(SDL_Keysym *sym)
    case SDL_SCANCODE_RGUI:
       return KEYD_RALT;
    default:
-      if(scancode >= 0 && scancode < earrlen(scancode_translate_table))
+      if(scancode >= 0 && scancode < static_cast<int>(earrlen(scancode_translate_table)))
          return scancode_translate_table[scancode];
       else
          return 0;
@@ -586,7 +586,7 @@ static void I_GetEvent(SDL_Window *window)
                I_QuitFast();
                break;
             }
-            else if(ev.key.keysym.scancode & SDL_SCANCODE_F)
+            else if(ev.key.keysym.scancode == SDL_SCANCODE_F)
             {
                I_ToggleFullscreen();
                break;

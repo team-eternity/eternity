@@ -1405,9 +1405,9 @@ static bool EV_checkSpac(ev_action_t *action, ev_instance_t *instance)
    }
    else // activation ability is determined by the linedef's flags
    {
-      Mobj   *thing = instance->actor;
-      line_t *line  = instance->line;
-      int     flags = 0;
+      Mobj        *thing = instance->actor;
+      line_t      *line  = instance->line;
+      unsigned int flags = 0;
 
       REQUIRE_LINE(line);
 
@@ -1421,7 +1421,7 @@ static bool EV_checkSpac(ev_action_t *action, ev_instance_t *instance)
             (line->extflags & flags) == flags;
       }
       REQUIRE_ACTOR(thing);
-      
+
       // check player / monster / missile / push enable flags
       if(thing->player)                    // treat as player?
          flags |= EX_ML_PLAYER;
@@ -1507,7 +1507,7 @@ static int EV_ActivateSpecial(ev_action_t *action, ev_instance_t *instance)
 // special.
 //
 bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing,
-   polyobj_t *poly, int spac)
+                                    polyobj_t *poly, int spac)
 {
    ev_action_t *action;
    INIT_STRUCT(ev_instance_t, instance);
@@ -1569,7 +1569,7 @@ bool EV_ActivateSpecialNum(int special, int *args, Mobj *thing)
 // Activate a special for ACS.
 //
 int EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *thing,
-   polyobj_t *poly)
+                          polyobj_t *poly)
 {
    ev_action_t *action;
    INIT_STRUCT(ev_instance_t, instance);

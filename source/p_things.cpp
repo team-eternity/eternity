@@ -112,50 +112,52 @@ int EV_ThingProjectile(const int *args, bool gravity)
 //
 int EV_ThingSpawn(const int *args, bool fog)
 {
-   int tid;
+   int tid, newtid;
    angle_t angle;
    Mobj *mobj = NULL, *newMobj, *fogMobj;
    mobjtype_t moType;
    mobjinfo_t *mi;
    bool success = false;
    fixed_t z;
-   
+
    tid = args[0];
-   
+
    if(args[1] >= 0 && args[1] < ACS_NUM_THINGTYPES)
       moType = ACS_thingtypes[args[1]];
    else
       moType = UnknownThingType;
 
    mi = mobjinfo[moType];
-   
-   // Don't spawn monsters if -nomonsters 
+
+   // Don't spawn monsters if -nomonsters
    if(nomonsters && (mi->flags & MF_COUNTKILL || mi->flags3 & MF3_KILLABLE))
       return false;
 
    angle = (angle_t)args[2] << 24;
-   
+   newtid = args[3];
+
    while((mobj = P_FindMobjFromTID(tid, mobj, NULL)))
    {
       z = mobj->z;
 
       newMobj = P_SpawnMobj(mobj->x, mobj->y, z, moType);
-      
+
       if(!P_CheckPositionExt(newMobj, newMobj->x, newMobj->y, newMobj->z)) // Didn't fit?
          newMobj->remove();
       else
       {
+         if(newtid)
+            P_AddThingTID(newMobj, newtid);
          newMobj->angle = angle;
 
          if(fog)
          {
-            fogMobj = 
-               P_SpawnMobj(mobj->x, mobj->y,
-                           mobj->z + GameModeInfo->teleFogHeight, 
-                           E_SafeThingName(GameModeInfo->teleFogType));
+            fogMobj = P_SpawnMobj(mobj->x, mobj->y,
+                                  mobj->z + GameModeInfo->teleFogHeight,
+                                  E_SafeThingName(GameModeInfo->teleFogType));
             S_StartSound(fogMobj, GameModeInfo->teleSound);
          }
-         
+
          // don't item-respawn
          newMobj->flags3 |= MF3_NOITEMRESP;
 
@@ -166,7 +168,7 @@ int EV_ThingSpawn(const int *args, bool fog)
    return success;
 }
 
-// 
+//
 // EV_ThingActivate
 //
 // Implements Thing_Activate(tid)

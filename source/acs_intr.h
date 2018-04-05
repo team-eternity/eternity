@@ -388,6 +388,8 @@ bool ACS_CF_SectorDamage(ACS_CF_ARGS);
 bool ACS_CF_SectorSound(ACS_CF_ARGS);
 bool ACS_CF_SetActivator(ACS_CF_ARGS);
 bool ACS_CF_SetActivatorToTarget(ACS_CF_ARGS);
+bool ACS_CF_SetAirControl(ACS_CF_ARGS);
+bool ACS_CF_SetAirFriction(ACS_CF_ARGS);
 bool ACS_CF_SetGravity(ACS_CF_ARGS);
 bool ACS_CF_SetLineBlock(ACS_CF_ARGS);
 bool ACS_CF_SetLineBlockMon(ACS_CF_ARGS);

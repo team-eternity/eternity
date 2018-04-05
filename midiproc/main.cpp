@@ -373,6 +373,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
    if(!InitSDL())
       return -1;
 
+   SDL_setenv("SDL_AUDIODRIVER", "winmm", true);
+
    // Initialize RPC Server
    if(!MidiRPC_InitServer())
       return -1;

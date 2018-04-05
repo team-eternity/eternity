@@ -38,6 +38,7 @@ struct spectransfer_t;
 struct mapthing_t;
 struct sector_t;
 struct line_t;
+struct v2fixed_t;
 
 class SaveArchive
 {
@@ -87,6 +88,7 @@ public:
    SaveArchive &operator << (spectransfer_t  &st);
    SaveArchive &operator << (mapthing_t      &mt);
    SaveArchive &operator << (inventoryslot_t &slot);
+   SaveArchive &operator << (v2fixed_t &vec);
 };
 
 // Global template functions for SaveArchive

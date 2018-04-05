@@ -29,16 +29,28 @@
 #include "c_io.h"
 #include "doomstat.h"
 #include "e_exdata.h"
+#include "ev_specials.h"
 #include "m_collection.h"  // ioanch 20160106
 #include "p_chase.h"
 #include "polyobj.h"
 #include "p_portal.h"
+#include "p_portalblockmap.h"
 #include "p_setup.h"
 #include "p_user.h"
 #include "r_main.h"
 #include "r_portal.h"
 #include "r_state.h"
 #include "v_misc.h"
+
+//
+// Polyobject-generated sector couple. Needed before P_GatherSectors is called
+// due to potential polyobject portals
+//
+struct polycouple_t
+{
+   sector_t *sectors[2];   // the two linked sectors.
+   int polyid;
+};
 
 // SoM: Linked portals
 // This list is allocated PU_LEVEL and is nullified in P_InitPortals. When the 
@@ -52,21 +64,9 @@ linkoffset_t **linktable = NULL;
 // linktable and is returned by P_GetLinkOffset for invalid inputs
 linkoffset_t zerolink = {0, 0, 0};
 
-// The group list is allocated PU_STATIC because it isn't level specific, however,
-// each element is allocated PU_LEVEL. P_InitPortals clears the list and sets the 
-// count back to 0
-typedef struct 
-{
-   // List of sectors contained in the group
-   sector_t **seclist;
-   
-   // Size of the list
-   int listsize;
-} pgroup_t;
-
-static pgroup_t **groups = NULL;
 static int      groupcount = 0;
-static int      grouplimit = 0;
+
+static int *clusters;   // the portal clusters, used when portals move with polys.
 
 // This flag is a big deal. Heh, if this is true a whole lot of code will 
 // operate differently. This flag is cleared on P_PortalInit and is ONLY to be
@@ -79,6 +79,51 @@ bool gMapHasLinePortals;   // ioanch 20160131: needed for P_UseLines
 bool *gGroupVisit;
 // ioanch 20160227: each group may have a polyobject owner
 const polyobj_t **gGroupPolyobject;
+
+static PODCollection<polycouple_t> gPolyCouples;
+
+//
+// Adds a unique new poly couple set.
+//
+static void P_addPolyCouple(int polyid, sector_t &sector1, sector_t &sector2)
+{
+   // Check if already present
+   sector_t &firstsector = &sector1 < &sector2 ? sector1 : sector2;
+   sector_t &secondsector = &sector1 > &sector2 ? sector1 : sector2;
+   const polycouple_t *couple;
+   for(couple = gPolyCouples.begin(); couple != gPolyCouples.end(); ++couple)
+      if(couple->sectors[0] == &firstsector && couple->sectors[1] == &secondsector)
+         break;
+   if(couple != gPolyCouples.end())
+      return;
+   gPolyCouples.add(polycouple_t{ { &firstsector, &secondsector }, polyid });
+}
+
+//
+// Checks if a poly couple with polyid was already added
+//
+static bool P_isPolyCoupleAdded(int polyid, const sector_t &sector)
+{
+   for(const polycouple_t &couple : gPolyCouples)
+      if(couple.polyid == polyid || couple.sectors[0] == &sector || couple.sectors[1] == &sector)
+         return true;
+   return false;
+}
+
+//
+// Checks if this sector has a partner.
+//
+static sector_t *P_findCouplePartner(const sector_t &sector)
+{
+   for(const polycouple_t &couple : gPolyCouples)
+   {
+      if(couple.sectors[0] == &sector)
+         return couple.sectors[1];
+      if(couple.sectors[1] == &sector)
+         return couple.sectors[0];
+   }
+   return nullptr;
+}
 
 //
 // P_PortalGroupCount
@@ -94,12 +139,9 @@ int P_PortalGroupCount()
 // Called before map processing. Simply inits some module variables
 void P_InitPortals(void)
 {
-   int i;
    linktable = NULL;
 
    groupcount = 0;
-   for(i = 0; i < grouplimit; ++i)
-      groups[i] = NULL;
 
    useportalgroups = false;
 }
@@ -145,23 +187,11 @@ void R_SetSectorGroupID(sector_t *sector, int groupid)
 int P_CreatePortalGroup(sector_t *from)
 {
    int       groupid = groupcount;
-   pgroup_t  *group;
    
    if(from->groupid != R_NOGROUP)
       return from->groupid;
       
-   if(groupcount == grouplimit)
-   {
-      grouplimit = grouplimit ? (grouplimit << 1) : 8;
-      groups = erealloc(pgroup_t **, groups, sizeof(pgroup_t **) * grouplimit);
-   }
    groupcount++;   
-   
-   
-   group = groups[groupid] = (pgroup_t *)(Z_Malloc(sizeof(pgroup_t), PU_LEVEL, 0));
-      
-   group->seclist = NULL;
-   group->listsize = 0;
   
    P_GatherSectors(from, groupid);
    return groupid;
@@ -176,16 +206,15 @@ int P_CreatePortalGroup(sector_t *from)
 // until every attached sector has been added to the list, thus defining a 
 // closed subspace of the map.
 //
-void P_GatherSectors(sector_t *from, int groupid)
+void P_GatherSectors(sector_t *from, const int groupid)
 {
    static sector_t   **list = NULL;
    static int        listmax = 0;
 
    sector_t  *sec2;
-   pgroup_t  *group;
    line_t    *line;
    int       count = 0;
-   int       i, sec, p;
+   int       i, sec;
    
    if(groupid < 0 || groupid >= groupcount)
    {
@@ -193,8 +222,6 @@ void P_GatherSectors(sector_t *from, int groupid)
       // would translate to EE itself doing something wrong.
       I_Error("P_GatherSectors: groupid invalid!");
    }
-
-   group = groups[groupid];
    
    // Sector already has a group
    if(from->groupid != R_NOGROUP)
@@ -209,6 +236,21 @@ void P_GatherSectors(sector_t *from, int groupid)
 
    R_SetSectorGroupID(from, groupid);
    list[count++] = from;
+
+   auto visit = [&count, groupid](sector_t *sec2) {
+      int p;
+      for(p = 0; p < count; ++p)
+      {
+         if(sec2 == list[p])
+            break;
+      }
+      // if we didn't find the sector in the list, add it
+      if(p == count)
+      {
+         list[count++] = sec2;
+         R_SetSectorGroupID(sec2, groupid);
+      }
+   };
    
    for(sec = 0; sec < count; ++sec)
    {
@@ -219,43 +261,16 @@ void P_GatherSectors(sector_t *from, int groupid)
          // add any sectors to the list which aren't already there.
          line = from->lines[i];
          if((sec2 = line->frontsector))
-         {
-            for(p = 0; p < count; ++p)
-            {
-               if(sec2 == list[p])
-                  break;
-            }
-            // if we didn't find the sector in the list, add it
-            if(p == count)
-            {
-               list[count++] = sec2;
-               R_SetSectorGroupID(sec2, groupid);
-            }
-         }
+            visit(sec2);
 
          if((sec2 = line->backsector))
-         {
-            for(p = 0; p < count; ++p)
-            {
-               if(sec2 == list[p])
-                  break;
-            }
-            // if we didn't find the sector in the list, add it
-            if(p == count)
-            {
-               list[count++] = sec2;
-               R_SetSectorGroupID(sec2, groupid);
-            }
-         }
+            visit(sec2);
       }
-   }
 
-   // Ok, so expand the group list
-   group->seclist = erealloc(sector_t **, group->seclist, 
-                             sizeof(sector_t *) * (group->listsize + count));
-   
-   memcpy(group->seclist + group->listsize, list, count * sizeof(sector_t *));
-   group->listsize += count;
+      // Now check coupled sectors
+      if((sec2 = P_findCouplePartner(*from)))
+         visit(sec2);
+   }
 }
 
 //
@@ -367,7 +382,7 @@ static int P_AddLinkOffset(int startgroup, int targetgroup,
 //
 // This function performs various consistency and validation checks.
 //
-static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
+static bool P_CheckLinkedPortal(portal_t *const portal, sector_t *sec)
 {
    int i = eindex(sec - sectors);
 
@@ -376,7 +391,8 @@ static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
    if(portal->type != R_LINKED)
       return true;
 
-   if(portal->data.link.toid == sec->groupid)
+   const linkdata_t &ldata = portal->data.link;
+   if(ldata.toid == sec->groupid)
    {
       C_Printf(FC_ERROR "P_BuildLinkTable: sector %i portal references the "
                "portal group to which it belongs.\n"
@@ -384,10 +400,10 @@ static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
       return false;
    }
 
-   if(portal->data.link.fromid < 0 || 
-      portal->data.link.fromid >= groupcount ||
-      portal->data.link.toid < 0 || 
-      portal->data.link.toid >= groupcount)
+   if(ldata.fromid < 0 || 
+      ldata.fromid >= groupcount ||
+      ldata.toid < 0 || 
+      ldata.toid >= groupcount)
    {
       C_Printf(FC_ERROR "P_BuildLinkTable: sector %i portal has a groupid out "
                "of range.\nLinked portals are disabled.\a\n", i);
@@ -402,38 +418,24 @@ static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
       return false;
    }
    
-   if(sec->groupid != portal->data.link.fromid)
+   if(sec->groupid != ldata.fromid)
    {
       C_Printf(FC_ERROR "P_BuildLinkTable: sector %i does not belong to the "
                "the portal's fromid\nLinked portals are disabled.\a\n", i);
       return false;
    }
 
-   auto link = linktable[sec->groupid * groupcount + portal->data.link.toid];
+   auto link = linktable[sec->groupid * groupcount + ldata.toid];
 
    // We've found a linked portal so add the entry to the table
    if(!link)
    {
-      int ret = P_AddLinkOffset(sec->groupid, portal->data.link.toid,
-                                portal->data.link.deltax, 
-                                portal->data.link.deltay, 
-                                portal->data.link.deltaz);
+      int ret = P_AddLinkOffset(sec->groupid, ldata.toid,
+                                ldata.deltax, 
+                                ldata.deltay, 
+                                ldata.deltaz);
       if(ret)
          return false;
-   }
-   else
-   {
-      // Check for consistency
-      if(link->x != portal->data.link.deltax ||
-         link->y != portal->data.link.deltay ||
-         link->z != portal->data.link.deltaz)
-      {
-         C_Printf(FC_ERROR "P_BuildLinkTable: sector %i in group %i contains "
-                  "inconsistent reference to group %i.\n"
-                  "Linked portals are disabled.\a\n", 
-                  i, sec->groupid, portal->data.link.toid);
-         return false;
-      }
    }
 
    return true;
@@ -493,6 +495,23 @@ static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
    }
 }
 
+//
+// Fit the link offset to a portal
+//
+void P_FitLinkOffsetsToPortal(const linkdata_t &ldata)
+{
+   linkoffset_t *offset = P_GetLinkOffset(ldata.fromid, ldata.toid);
+   // Move the "fromid" group because the crossing actor is now in "toid".
+   v3fixed_t shift = { ldata.deltax - offset->x, ldata.deltay - offset->y, 
+                       ldata.deltaz - offset->z };
+   if(!shift.x && !shift.y && !shift.z)
+      return;
+   
+   bool *groupvisit = ecalloc(bool *, sizeof(bool), groupcount);
+   P_MoveGroupCluster(ldata.fromid, ldata.toid, groupvisit, -shift.x, -shift.y, false, nullptr);
+   efree(groupvisit);
+}
+
 static void P_GlobalPortalStateCheck()
 {
    sector_t *sec;
@@ -530,7 +549,6 @@ static void P_GlobalPortalStateCheck()
 //
 static void P_buildPortalMap()
 {
-   PODCollection<int> curGroups; // ioanch 20160106: keep list of current groups
    size_t pcount = P_PortalGroupCount();
    gGroupVisit = ecalloctag(bool *, sizeof(bool), pcount, PU_LEVEL, nullptr);
    // ioanch 20160227: prepare other groups too
@@ -541,15 +559,6 @@ static void P_buildPortalMap()
    gMapHasSectorPortals = false; // init with false
    gMapHasLinePortals = false;
    
-   auto addPortal = [&curGroups](int groupid)
-   {
-      if(!gGroupVisit[groupid])
-      {
-         gGroupVisit[groupid] = true;
-         curGroups.add(groupid);
-      }
-   };
-   
    int writeOfs;
    for(int y = 0; y < bmapheight; y++)
    {
@@ -558,9 +567,6 @@ static void P_buildPortalMap()
          int offset;
          int *list;
          
-         curGroups.makeEmpty();
-         memset(gGroupVisit, 0, pcount);
-
          writeOfs = offset = y * bmapwidth + x;
          offset = *(blockmap + offset);
          list = blockmaplump + offset;
@@ -578,16 +584,14 @@ static void P_buildPortalMap()
                ::bmaporgx + (x << MAPBLOCKSHIFT) + (MAPBLOCKSHIFT / 2),
                ::bmaporgy + (y << MAPBLOCKSHIFT) + (MAPBLOCKSHIFT / 2))->sector;
 
-            if(sector->c_pflags & PS_PASSABLE)
+            if(sector->c_portal && sector->c_portal->type == R_LINKED)
             {
                portalmap[writeOfs] |= PMF_CEILING;
-               curGroups.add(sector->c_portal->data.link.toid);
                gMapHasSectorPortals = true;
             }
-            if(sector->f_pflags & PS_PASSABLE)
+            if(sector->f_portal && sector->f_portal->type == R_LINKED)
             {
                portalmap[writeOfs] |= PMF_FLOOR;
-               curGroups.add(sector->f_portal->data.link.toid);
                gMapHasSectorPortals = true;
             }
          }
@@ -597,51 +601,76 @@ static void P_buildPortalMap()
             if(li.pflags & PS_PASSABLE)
             {
                portalmap[writeOfs] |= PMF_LINE;
-               addPortal(li.portal->data.link.toid);
                gMapHasLinePortals = true;
             }
-            if(li.frontsector->c_pflags & PS_PASSABLE)
+            if(li.frontsector->c_portal && li.frontsector->c_portal->type == R_LINKED)
             {
                portalmap[writeOfs] |= PMF_CEILING;
-               addPortal(li.frontsector->c_portal->data.link.toid);
                gMapHasSectorPortals = true;
             }
-            if(li.backsector && li.backsector->c_pflags & PS_PASSABLE)
+            if(li.backsector && li.backsector->c_portal && li.backsector->c_portal->type == R_LINKED)
             {
                portalmap[writeOfs] |= PMF_CEILING;
-               addPortal(li.backsector->c_portal->data.link.toid);
                gMapHasSectorPortals = true;
             }
-            if(li.frontsector->f_pflags & PS_PASSABLE)
+            if(li.frontsector->f_portal && li.frontsector->f_portal->type == R_LINKED)
             {
                portalmap[writeOfs] |= PMF_FLOOR;
-               addPortal(li.frontsector->f_portal->data.link.toid);
                gMapHasSectorPortals = true;
             }
-            if(li.backsector && li.backsector->f_pflags & PS_PASSABLE)
+            if(li.backsector && li.backsector->f_portal && li.backsector->f_portal->type == R_LINKED)
             {
                portalmap[writeOfs] |= PMF_FLOOR;
-               addPortal(li.backsector->f_portal->data.link.toid);
                gMapHasSectorPortals = true;
             }
-         }
-         if(gBlockGroups[writeOfs])
-            I_Error("P_buildPortalMap: non-null gBlockGroups entry!");
-         
-         size_t curSize = curGroups.getLength();
-         gBlockGroups[writeOfs] = emalloctag(int *, 
-            (curSize + 1) * sizeof(int), PU_LEVEL, nullptr);
-         gBlockGroups[writeOfs][0] = static_cast<int>(curSize);
-         // just copy...
-         if(curSize)
-         {
-            memcpy(gBlockGroups[writeOfs] + 1, &curGroups[0], 
-               curSize * sizeof(int));
          }
       }
    }
 
    pLPortalMap.mapInit();
+   gPortalBlockmap.mapInit();
+}
+
+//
+// Finds sectors coupled with polyobject boxes. Necessary if you want polyobjects
+// with portals drawn in disconnected boxes.
+//
+void P_FindPolyobjectSectorCouples()
+{
+   // first, empty it
+   gPolyCouples.clear();
+
+   static auto findMobj = [](int polyid) -> const Mobj * {
+      for(Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
+      {
+         const Mobj *mo;
+         if((mo = thinker_cast<Mobj *>(th)) && mo->spawnpoint.angle == polyid &&
+            Polyobj_IsSpawnSpot(*mo))
+         {
+            return mo;
+         }
+      }
+      return nullptr;
+   };
+
+   for(int i = 0; i < numlines; ++i)
+   {
+      const line_t &line = lines[i];
+      int type = EV_StaticInitForSpecial(line.special);
+      const Mobj *spot;
+      if(type == EV_STATIC_POLYOBJ_START_LINE ||
+         type == EV_STATIC_POLYOBJ_EXPLICIT_LINE)
+      {
+         if(P_isPolyCoupleAdded(line.args[0], *line.frontsector))
+            continue;
+         spot = findMobj(line.args[0]);
+      }
+      else
+         continue;
+      // Replace the group ID now.
+      if(spot)
+         P_addPolyCouple(line.args[0], *spot->subsector->sector, *line.frontsector);
+   }
 }
 
 //
@@ -746,39 +775,92 @@ bool P_BuildLinkTable()
    return true;
 }
 
-//
-// P_LinkRejectTable
-//
-// Currently just clears each group for every other group.
-//
-void P_LinkRejectTable()
+enum
 {
-   int i, s, p, q;
-   sector_t **list, **list2;
+   conn_yes = 1,         // groups connected
+   conn_polycoupled = 2, // groups are coupled by originating from a same polyobject
+};
 
-   for(i = 0; i < groupcount; i++)
+//
+// Flood-fill the clusters matrix
+//
+static void P_floodFillCluster(const uint8_t *connections, int sourcegroup, 
+   int groupid, int *row, int clusterid)
+{
+   row[groupid] = clusterid;
+   for(int i = 0; i < groupcount; ++i)
    {
-      list = groups[i]->seclist;
-      for(s = 0; list[s]; s++)
+      if(i == sourcegroup || i == groupid || connections[sourcegroup * groupcount + i] & conn_polycoupled)
+         continue;
+      if(connections[groupid * groupcount + i] & conn_yes && row[i] == -1)
+         P_floodFillCluster(connections, sourcegroup, i, row, clusterid);
+   }
+}
+
+//
+// Marks all clusters of portal groups relative to polyobject vessel groups.
+// Needed to have correctly moving polyobjects in relation to separate portals.
+//
+void P_MarkPortalClusters()
+{
+   if(!useportalgroups)
+      return;
+
+   // FIXME: handle case when groupcount skyrockets
+   int matrixsize = groupcount * groupcount;
+   int *clusters = emalloc(int *, matrixsize * sizeof(int));
+   memset(clusters, -1, matrixsize * sizeof(int));
+   uint8_t *connections = ecalloc(uint8_t *, matrixsize, sizeof(uint8_t));
+
+   for(const portal_t *portal = R_GetPortalHead(); portal; portal = portal->next)
+   {
+      if(portal->type != R_LINKED)
+         continue;
+      // First mark the connections
+      connections[portal->data.link.fromid * groupcount + portal->data.link.toid] |= conn_yes;
+   }
+
+   // Now check the polyobject-coupled groups
+   for(int i = 0; i < numPolyObjects; ++i)
+   {
+      const polyobj_t &poly = PolyObjects[i];
+      for(int j = 0; j < poly.numLines - 1; ++j)
       {
-         int sectorindex1 = eindex(list[s] - sectors);
-
-         for(p = 0; p < groupcount; p++)
+         const line_t &line = *poly.lines[j];
+         if(!(line.pflags & PS_PASSABLE))
+            continue;
+         int ingroup0 = line.portal->data.link.toid;
+         for(int k = j + 1; k < poly.numLines; ++k)
          {
-            if(i == p)
+            const line_t &line = *poly.lines[k];
+            if(!(line.pflags & PS_PASSABLE))
                continue;
-            
-            list2 = groups[p]->seclist;
-            for(q = 0; list2[q]; q++)
+            int ingroup1 = line.portal->data.link.toid;
+            if(ingroup1 != ingroup0)
             {
-               int sectorindex2 = eindex(list2[q] - sectors);
-               int pnum = (sectorindex1 * numsectors) + sectorindex2;
+               connections[ingroup0 * groupcount + ingroup1] |= conn_polycoupled;
+               connections[ingroup1 * groupcount + ingroup0] |= conn_polycoupled;
+            }
+         }
+      }
+   }
 
-               rejectmatrix[pnum>>3] &= ~(1 << (pnum&7));
-            } // q
-         } // p
-      } // s
-   } // i
+   // Now we have the connections. Mark the clusters
+   for(int i = 0; i < groupcount; ++i)
+   {
+      int clusterid = 0;
+      for(int j = 0; j < groupcount; ++j)
+      {
+         if(i == j || connections[i * groupcount + j] & conn_polycoupled)
+            continue;
+         if(connections[i * groupcount + j] & conn_yes && clusters[i * groupcount + j] == -1)
+            P_floodFillCluster(connections, i, j, clusters + i * groupcount, clusterid++);
+      }
+   }
+
+   efree(connections);
+   ::clusters = clusters;
+   Z_ChangeTag(::clusters, PU_LEVEL);
 }
 
 //
@@ -1045,36 +1127,41 @@ void P_SetLPortalBehavior(line_t *line, int newbehavior)
 }
 
 //
-// P_MoveLinkedPortal
+// Moves a polyobject portal cluster, updating link offsets.
 //
-// ioanch 20160226: moves the offset of a linked portal
-// TODO: do the same for anchored portals
-//
-void P_MoveLinkedPortal(portal_t *portal, fixed_t dx, fixed_t dy, bool movebehind)
+void P_MoveGroupCluster(int outgroup, int ingroup, bool *groupvisit, fixed_t dx,
+   fixed_t dy, bool setpolyref, const polyobj_s *po)
 {
-   linkdata_t &data = portal->data.link;
-   data.deltax += dx;
-   data.deltay += dy;
-   linkoffset_t *link;
+   const int *row = clusters + ingroup * groupcount;
    for(int i = 0; i < groupcount; ++i)
    {
-      if(movebehind)
+      if(groupvisit[i])
+         continue;
+      if(i != ingroup && (row[i] == -1 || row[i] == row[outgroup]))
+         continue;
+      groupvisit[i] = true;
+      if(setpolyref)
+         gGroupPolyobject[i] = po;
+
+      for(int j = 0; j < groupcount; ++j)
       {
-         // the group behind appears to be moving in relation to the others
-         link = P_GetLinkOffset(i, data.toid);
-         if(link == &zerolink)
+         if(row[j] != row[outgroup])
             continue;
-         link->x += dx;
-         link->y += dy;
-      }
-      else
-      {
-         // the group in front of the portal appears to be moving
-         link = P_GetLinkOffset(data.fromid, i);
-         if(link == &zerolink)
-            continue;
-         link->x += dx;
-         link->y += dy;
+         linkoffset_t *link = P_GetLinkOffset(j, i);
+         if(link != &zerolink)
+         {
+            link->x -= dx;
+            link->y -= dy;
+         }
+         
+         // Make sure the backlink is aligned.
+         linkoffset_t *backlink = P_GetLinkOffset(i, j);
+         if(backlink != &zerolink)
+         {
+            backlink->x = -link->x;
+            backlink->y = -link->y;
+            backlink->z = -link->z;
+         }
       }
    }
 }
@@ -1096,106 +1183,6 @@ fixed_t P_FloorPortalZ(const sector_t &sector)
 {
    return sector.f_pflags & PF_ATTACHEDPORTAL ? sector.floorheight :
    sector.f_portal->data.link.planez;
-}
-
-//
-// P_BlockHasLinkedPortalLines
-//
-// ioanch 20160228: return true if block has portalmap 1 or a polyportal
-// It's coarse
-//
-bool P_BlockHasLinkedPortals(int index, bool includesectors)
-{
-   // safe for overflow
-   if(index < 0 || index >= bmapheight * bmapwidth)
-      return false;
-   if(portalmap[index] & (PMF_LINE |
-      (includesectors ? PMF_FLOOR | PMF_CEILING : 0)))
-   {
-      return true;
-   }
-   
-   for(const DLListItem<polymaplink_t> *plink = polyblocklinks[index]; plink;
-      plink = plink->dllNext)
-   {
-      if((*plink)->po->hasLinkedPortals)
-         return true;
-   }
-   return false;
-}
-
-//==============================================================================
-//
-// More portal blockmap stuff (besides portalmap and gBlockGroups from p_setup)
-//
-LinePortalBlockmap pLPortalMap;
-
-//
-// Initialization per map. Makes PU_LEVEL allocations
-//
-void LinePortalBlockmap::mapInit()
-{
-   mMap.clear();
-   int numblocks = bmapwidth * bmapheight;
-   for(int i = 0; i < numblocks; ++i)
-   {
-      int offset = blockmap[i];
-      const int *list = blockmaplump + offset;
-      // MaxW: 2016/02/02: if before 3.42 always skip, skip if all blocklists start w/ 0
-      // killough 2/22/98: demo_compatibility check
-      // skip 0 starting delimiter -- phares
-      if((!demo_compatibility && demo_version < 342) ||
-         (demo_version >= 342 && skipblstart))
-      {
-         list++;
-      }
-
-      PODCollection<const line_t *> coll;
-
-      for(; *list != -1; ++list)
-      {
-         if(*list >= numlines)
-            continue;
-         const line_t &line = lines[*list];
-         if(line.backsector &&
-            (line.pflags & PS_PASSABLE ||
-             (line.extflags & EX_ML_LOWERPORTAL &&
-              line.backsector->f_portal &&
-              line.backsector->f_portal->type == R_LINKED) ||
-             (line.extflags & EX_ML_UPPERPORTAL &&
-              line.backsector->c_portal &&
-              line.backsector->c_portal->type == R_LINKED)))
-         {
-            coll.add(&line);
-         }
-      }
-
-      mMap.add(coll);
-   }
-
-   mValids = ecalloctag(decltype(mValids), numlines, sizeof(*mValids), PU_LEVEL,
-                        nullptr);
-}
-
-//
-// Does the iteration
-//
-bool LinePortalBlockmap::iterator(int x, int y, void *data,
-                                  bool (*func)(const line_t &, void *data)) const
-{
-   if(x < 0 || x >= bmapwidth || y < 0 || y >= bmapheight)
-      return true;
-   int i = y * bmapwidth + x;
-   const PODCollection<const line_t *> coll = mMap[i];
-   for(const line_t *line : coll)
-   {
-      if(mValids[line - lines] == mValidcount)
-         continue;
-      mValids[line - lines] = mValidcount;
-      if(!func(*line, data))
-         return false;
-   }
-   return true;
 }
 
 // EOF

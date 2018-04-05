@@ -83,7 +83,7 @@
 #include "z_auto.h"
 
 extern const char *level_error;
-extern void R_DynaSegOffset(seg_t *lseg, line_t *line, int side);
+extern void R_DynaSegOffset(seg_t *lseg, const line_t *line, int side);
 
 //
 // Miscellaneous constants
@@ -176,8 +176,6 @@ fixed_t   bmaporgx, bmaporgy;     // origin of block map
 Mobj    **blocklinks;             // for thing chains
 
 byte     *portalmap;              // haleyjd: for portals
-// ioanch 20160106: more detailed info (list of groups for each block)
-int     **gBlockGroups; 
 
 bool      skipblstart;            // MaxW: Skip initial blocklist short
 
@@ -2270,6 +2268,8 @@ static void P_CreateBlockMap()
          efree(bmap);    // Free uncompressed blockmap
       }
    }
+
+   skipblstart = true;
 }
 
 static const char *bmaperrormsg;
@@ -2425,9 +2425,6 @@ void P_LoadBlockMap(int lump)
    // haleyjd 05/17/13: setup portalmap
    count = sizeof(*portalmap) * bmapwidth * bmapheight;
    portalmap = ecalloctag(byte *, 1, count, PU_LEVEL, NULL);
-   // ioanch: what portals are in what blocks
-   gBlockGroups = ecalloctag(decltype(gBlockGroups), sizeof(*gBlockGroups), 
-                             bmapwidth * bmapheight, PU_LEVEL, nullptr);
 }
 
 
@@ -3206,7 +3203,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    lumpinfo_t **lumpinfo;
    int lumpnum, acslumpnum = -1;
 
-   G_DemoLog("Setup %s\n", mapname);
+   G_DemoLog("%d\tSetup %s\n", gametic, mapname);
    G_DemoLogSetExited(false);
 
    // haleyjd 07/28/10: we are no longer in GS_LEVEL during the execution of

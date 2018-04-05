@@ -154,11 +154,11 @@ static void TXT_ScrollPaneSizeCalc(TXT_UNCAST_ARG(scrollpane))
 
     if (scrollpane->child != NULL)
     {
-        if (scrollpane->child->w < scrollpane->w)
+        if ((int)scrollpane->child->w < scrollpane->w)
         {
             scrollpane->child->w = scrollpane->w;
         }
-        if (scrollpane->child->h < scrollpane->h)
+        if ((int)scrollpane->child->h < scrollpane->h)
         {
             scrollpane->child->h = scrollpane->h;
         }
