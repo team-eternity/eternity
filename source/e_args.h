@@ -38,8 +38,10 @@ struct edf_string_t;
 struct emod_t;
 class  Mobj;
 struct mobjinfo_t;
+struct player_t;
 struct sfxinfo_t;
 struct state_t;
+struct weaponinfo_t;
 
 // 16 arguments ought to be enough for anybody.
 #define EMAXARGS 16
@@ -108,9 +110,10 @@ double        E_ArgAsDouble(arglist_t *al, int index, double defvalue);
 int           E_ArgAsThingNum(arglist_t *al, int index);
 int           E_ArgAsThingNumG0(arglist_t *al, int index);
 state_t      *E_ArgAsStateLabel(Mobj *mo, arglist_t *al, int index);
-int           E_ArgAsStateNum(arglist_t *al, int index, Mobj *mo);
-int           E_ArgAsStateNumNI(arglist_t *al, int index, Mobj *mo);
-int           E_ArgAsStateNumG0(arglist_t *al, int index, Mobj *mo);
+state_t      *E_ArgAsStateLabelWpn(player_t *player, arglist_t *al, int index);
+int           E_ArgAsStateNum(arglist_t *al, int index, Mobj *mo, player_t *player);
+int           E_ArgAsStateNumNI(arglist_t *al, int index, Mobj *mo, player_t *player);
+int           E_ArgAsStateNumG0(arglist_t *al, int index, Mobj *mo, player_t *player);
 unsigned int *E_ArgAsThingFlags(arglist_t *al, int index);
 sfxinfo_t    *E_ArgAsSound(arglist_t *al, int index);
 int           E_ArgAsBexptr(arglist_t *al, int index);
@@ -119,6 +122,7 @@ emod_t       *E_ArgAsDamageType(arglist_t *al, int index, int defvalue);
 int           E_ArgAsKwd(arglist_t *al, int index, argkeywd_t *kw, int defvalue);
 
 state_t      *E_GetJumpInfo(mobjinfo_t *mi, const char *arg);
+state_t      *E_GetWpnJumpInfo(weaponinfo_t *wi, const char *arg);
 
 #endif
 

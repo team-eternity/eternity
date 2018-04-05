@@ -33,6 +33,9 @@
 // Required for: Thinker
 #include "p_tick.h"
 
+// Required for: angle_t
+#include "tables.h"
+
 struct line_t;
 class  Mobj;
 struct player_t;
@@ -1393,6 +1396,7 @@ struct teleparms_t
    teleangle_e teleangle;
 };
 
+bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle);
 
 int EV_Teleport(int tag, int side, Mobj *thing);
 

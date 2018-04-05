@@ -81,7 +81,7 @@ BEGIN
             VALUE "FileDescription", "The Eternity Engine"
             VALUE "FileVersion", "4.1.0.0"
             VALUE "InternalName", "Eternity"
-            VALUE "LegalCopyright", "Copyright © 2017 Team Eternity"
+            VALUE "LegalCopyright", "Copyright ï¿½ 2017 Team Eternity"
             VALUE "OriginalFilename", "Eternity.exe"
             VALUE "ProductName", "The Eternity Engine"
             VALUE "ProductVersion", "4.1.0.0"

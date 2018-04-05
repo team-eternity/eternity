@@ -70,6 +70,7 @@ enum keyaction_e
    ka_use,       
    ka_strafe,    
    ka_attack,    
+   ka_attack_alt,
    ka_flip,
    ka_speed,
    ka_jump,
@@ -126,6 +127,10 @@ enum keyaction_e
    ka_console_up,
    ka_console_down,
    ka_console_backspace,
+   ka_inventory_left,
+   ka_inventory_right,
+   ka_inventory_use,
+   ka_inventory_drop,
    NUMKEYACTIONS
 };
 

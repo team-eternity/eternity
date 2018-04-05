@@ -919,9 +919,12 @@ void E_ReplaceString(char *&dest, char *newvalue)
 // Adds a MetaString property to the passed-in table with the same name and
 // value as the cfg_t string property.
 //
-void E_MetaStringFromCfgString(MetaTable *meta, cfg_t *cfg, const char *prop)
+void E_MetaStringFromCfgString(MetaTable *meta, cfg_t *cfg, const char *prop, int n, bool list)
 {
-   meta->setString(prop, cfg_getstr(cfg, prop));
+   if(list)
+      meta->addString(prop, cfg_getnstr(cfg, prop, n));
+   else
+      meta->setString(prop, cfg_getstr(cfg, prop));
 }
 
 //
@@ -931,9 +934,12 @@ void E_MetaStringFromCfgString(MetaTable *meta, cfg_t *cfg, const char *prop)
 // Adds a MetaInteger property to the passed-in table with the same name
 // and value as the cfg_t integer property.
 //
-void E_MetaIntFromCfgInt(MetaTable *meta, cfg_t *cfg, const char *prop)
+void E_MetaIntFromCfgInt(MetaTable *meta, cfg_t *cfg, const char *prop, int n, bool list)
 {
-   meta->setInt(prop, cfg_getint(cfg, prop));
+   if(list && meta->getObjectKeyAndTypeEx<MetaInteger>(prop))
+      meta->addInt(prop, cfg_getnint(cfg, prop, n));
+   else
+      meta->setInt(prop, cfg_getint(cfg, prop));
 }
 
 //
@@ -943,9 +949,12 @@ void E_MetaIntFromCfgInt(MetaTable *meta, cfg_t *cfg, const char *prop)
 // Adds a MetaInteger property to the passed-in table with the same name
 // and value as the cfg_t bool property.
 //
-void E_MetaIntFromCfgBool(MetaTable *meta, cfg_t *cfg, const char *prop)
+void E_MetaIntFromCfgBool(MetaTable *meta, cfg_t *cfg, const char *prop, int n, bool list)
 {
-   meta->setInt(prop, cfg_getbool(cfg, prop));
+   if(list && meta->getObjectKeyAndTypeEx<MetaInteger>(prop))
+      meta->addInt(prop, cfg_getnbool(cfg, prop, n));
+   else
+      meta->setInt(prop, cfg_getbool(cfg, prop));
 }
 
 //
@@ -955,9 +964,64 @@ void E_MetaIntFromCfgBool(MetaTable *meta, cfg_t *cfg, const char *prop)
 // Adds a MetaInteger property to the passed-in table with the same name
 // and value as the cfg_t flag property.
 //
-void E_MetaIntFromCfgFlag(MetaTable *meta, cfg_t *cfg, const char *prop)
+void E_MetaIntFromCfgFlag(MetaTable *meta, cfg_t *cfg, const char *prop, int n, bool list)
 {
-   meta->setInt(prop, cfg_getflag(cfg, prop));
+   if(list && meta->getObjectKeyAndTypeEx<MetaInteger>(prop))
+      meta->addInt(prop, cfg_getnflag(cfg, prop, n));
+   else
+      meta->setInt(prop, cfg_getflag(cfg, prop));
+}
+
+void E_MetaTableFromCfgMvprop(MetaTable *meta, cfg_t *cfg, const char *prop, bool allowmulti)
+{
+   int numprop = cfg_size(cfg, prop);
+
+   for(int i = 0; i < numprop; i++)
+   {
+      cfg_t *currcfg = cfg_getnmvprop(cfg, prop, i);
+
+      MetaTable *table = new MetaTable(prop);
+
+      for(auto opt = currcfg->opts; opt->type != CFGT_NONE; opt++)
+      {
+         int n = cfg_size(currcfg, opt->name);
+         if(n == 0)
+            continue;
+         bool list = opt->flags & CFGF_LIST;
+         if(!list)
+            n = 1;
+
+         for(int j = 0; j < n; j++)
+         {
+            switch(opt->type)
+            {
+            case CFGT_INT:
+               E_MetaIntFromCfgInt(table, currcfg, opt->name, j, list);
+               break;
+            case CFGT_STR:
+               E_MetaStringFromCfgString(table, currcfg, opt->name, j, list);
+               break;
+            case CFGT_BOOL:
+               E_MetaIntFromCfgBool(table, currcfg, opt->name, j, list);
+               break;
+            case CFGT_FLAG:
+               E_MetaIntFromCfgFlag(table, currcfg, opt->name, j, list);
+               break;
+            case CFGT_MVPROP:
+               E_MetaTableFromCfgMvprop(table, currcfg, opt->name, opt->flags & CFGF_MULTI);
+               break;
+            default:
+               break;
+            }
+         }
+      }
+
+      if(allowmulti)
+         meta->addMetaTable(prop, table);
+      else
+         meta->setMetaTable(prop, table);
+   }
+
 }
 
 //
@@ -978,25 +1042,38 @@ void E_MetaTableFromCfg(cfg_t *cfg, MetaTable *table, MetaTable *prototype)
 
    for(auto opt = cfg->opts; opt->type != CFGT_NONE; opt++)
    {
-      if(cfg_size(cfg, opt->name) == 0)
+      int n = cfg_size(cfg, opt->name);
+      if(n == 0)
          continue;
+      bool list = opt->flags & CFGF_LIST;
+      if(!list)
+         n = 1;
 
-      switch(opt->type)
+      for(int i = n; i --> 0;)
       {
-      case CFGT_INT:
-         E_MetaIntFromCfgInt(table, cfg, opt->name);
-         break;
-      case CFGT_STR:
-         E_MetaStringFromCfgString(table, cfg, opt->name);
-         break;
-      case CFGT_BOOL:
-         E_MetaIntFromCfgBool(table, cfg, opt->name);
-         break;
-      case CFGT_FLAG:
-         E_MetaIntFromCfgFlag(table, cfg, opt->name);
-         break;
-      default:
-         break;
+         switch(opt->type)
+         {
+         case CFGT_INT:
+            E_MetaIntFromCfgInt(table, cfg, opt->name, i, list);
+            break;
+         case CFGT_STR:
+            E_MetaStringFromCfgString(table, cfg, opt->name, i, list);
+            break;
+         case CFGT_BOOL:
+            E_MetaIntFromCfgBool(table, cfg, opt->name, i, list);
+            break;
+         case CFGT_FLAG:
+            E_MetaIntFromCfgFlag(table, cfg, opt->name, i, list);
+            break;
+         case CFGT_STRFUNC:
+            E_MetaStringFromCfgString(table, cfg, opt->name, i, list);
+            break;
+         case CFGT_MVPROP:
+            E_MetaTableFromCfgMvprop(table, cfg, opt->name, opt->flags & CFGF_MULTI);
+            break;
+         default:
+            break;
+         }
       }
    }
 }

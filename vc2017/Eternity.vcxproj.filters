@@ -993,6 +993,12 @@
     <ClCompile Include="..\source\p_portalblockmap.cpp">
       <Filter>Source Files\P_\P_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\a_weaponsheretic.cpp">
+      <Filter>Source Files\A_\A_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\a_weaponsdoom.cpp">
+      <Filter>Source Files\A_\A_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1765,6 +1771,9 @@
     </ClInclude>
     <ClInclude Include="..\source\p_portalblockmap.h">
       <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\m_avltree.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

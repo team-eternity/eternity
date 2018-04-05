@@ -3306,7 +3306,7 @@ static const char *mn_binding_contentnames[] =
 extern menu_t menu_movekeys;
 extern menu_t menu_advkeys;
 extern menu_t menu_weaponbindings;
-extern menu_t menu_envbindings;
+extern menu_t menu_envinvbindings;
 extern menu_t menu_funcbindings;
 extern menu_t menu_menukeys;
 extern menu_t menu_automapkeys;
@@ -3317,7 +3317,7 @@ static menu_t *mn_binding_contentpages[] =
    &menu_movekeys,
    &menu_advkeys,
    &menu_weaponbindings,
-   &menu_envbindings,
+   &menu_envinvbindings,
    &menu_funcbindings,
    &menu_menukeys,
    &menu_automapkeys,
@@ -3347,6 +3347,7 @@ static menuitem_t mn_movekeys_items[] =
    {it_binding,      "180 degree turn", "flip"},
    {it_binding,      "Use",             "use"},
    {it_binding,      "Attack/fire",     "attack"},
+   {it_binding,      "Alt-attack/fire", "altattack"},
    {it_binding,      "Toggle autorun",  "autorun"},
    {it_end}
 };
@@ -3436,7 +3437,7 @@ menu_t menu_weaponbindings =
 {
    mn_weaponbindings_items,
    &menu_advkeys,           // previous page
-   &menu_envbindings,       // next page
+   &menu_envinvbindings,       // next page
    &menu_movekeys,          // rootpage
    150, 15,                 // x,y offsets
    4,
@@ -3458,7 +3459,7 @@ CONSOLE_COMMAND(mn_weaponkeys, 0)
 
 // haleyjd 06/24/02: added quicksave/load
 
-static menuitem_t mn_envbindings_items[] =
+static menuitem_t mn_envinvbindings_items[] =
 {
    {it_title,   "Key Bindings", NULL, "M_KEYBND"},
    {it_gap},
@@ -3470,12 +3471,19 @@ static menuitem_t mn_envbindings_items[] =
    {it_binding, "Spectate prev",        "spectate_prev"},
    {it_binding, "Spectate next",        "spectate_next"},
    {it_binding, "Spectate self",        "spectate_self"},
+   {it_gap},
+   {it_info,    "Inventory Bindings", NULL, NULL, MENUITEM_CENTERED},
+   {it_gap},
+   {it_binding, "Inventory left",  "inventory_left"},
+   {it_binding, "Inventory right", "inventory_right"},
+   {it_binding, "Use inventory",   "inventory_use"},
+   {it_binding, "Drop inventory",  "inventory_drop"},
    {it_end}
 };
 
-menu_t menu_envbindings =
+menu_t menu_envinvbindings =
 {
-   mn_envbindings_items,
+   mn_envinvbindings_items,
    &menu_weaponbindings,    // previous page
    &menu_funcbindings,      // next page
    &menu_movekeys,          // rootpage
@@ -3489,7 +3497,7 @@ menu_t menu_envbindings =
 
 CONSOLE_COMMAND(mn_envkeys, 0)
 {
-   MN_StartMenu(&menu_envbindings);
+   MN_StartMenu(&menu_envinvbindings);
 }
 
 //------------------------------------------------------------------------
@@ -3519,7 +3527,7 @@ static menuitem_t mn_function_items[] =
 menu_t menu_funcbindings =
 {
    mn_function_items,
-   &menu_envbindings,       // previous page
+   &menu_envinvbindings,       // previous page
    &menu_menukeys,          // next page
    &menu_movekeys,          // rootpage
    150, 15,                 // x,y offsets

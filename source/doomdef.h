@@ -213,6 +213,7 @@ typedef enum {
   pw_silencer,    // haleyjd: silencer
   pw_flight,      // haleyjd: flight
   pw_torch,       // haleyjd: infrared w/flicker
+  pw_weaponlevel2, //  MaxW: powered-up weapons (tome of power)
   NUMPOWERS
 } powertype_t;
 

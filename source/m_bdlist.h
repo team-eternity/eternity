@@ -90,6 +90,11 @@ public:
 
       (lnext->bdPrev = this->bdPrev)->bdNext = lnext;
    }
+
+   inline bool isDummy()
+   {
+      return this->bdData == BDLISTMAGIC;
+   }
 };
 
 #undef BDLISTMAGIC

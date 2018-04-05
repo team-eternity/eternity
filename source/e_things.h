@@ -71,6 +71,7 @@ enum
 void E_CollectThings(cfg_t *cfg);
 void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def);
 void E_ProcessThings(cfg_t *cfg);
+void E_ProcessThingPickups(cfg_t *cfg);
 void E_ProcessThingDeltas(cfg_t *cfg);
 void E_ProcessThingGroups(cfg_t *cfg);
 bool E_AutoAllocThingDEHNum(int thingnum);
