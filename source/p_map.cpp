@@ -95,12 +95,19 @@ void P_PushClipStack(void)
       int     msh = unusedclip->spechit_max;
       line_t **sh = unusedclip->spechit;
 
+      // ioanch: same with portalhit
+      int mph = unusedclip->portalhit_max;
+      doom_mapinter_t::linepoly_t *ph = unusedclip->portalhit;
+
       newclip    = unusedclip;
       unusedclip = unusedclip->prev;
       memset(newclip, 0, sizeof(*newclip));
 
       newclip->spechit_max = msh;
       newclip->spechit     = sh;
+
+      newclip->portalhit_max = mph;
+      newclip->portalhit = ph;
    }
 
    newclip->prev = pClip;
