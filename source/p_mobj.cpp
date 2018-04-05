@@ -3001,7 +3001,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type)
    th = P_SpawnMobj(x, y, z, type);
 
    if(source->player && source->player->powers[pw_silencer] &&
-      source->player->readyweapon->flags & WPF_SILENCER)
+      source->player->readyweapon->flags & WPF_SILENCEABLE)
    {
       S_StartSoundAtVolume(th, th->info->seesound, WEAPON_VOLUME_SILENCED, 
                            ATTN_NORMAL, CHAN_AUTO);

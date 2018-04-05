@@ -503,7 +503,7 @@ static void P_FireWeapon(player_t *player)
 
    // haleyjd 04/06/03: silencer powerup
    // haleyjd 09/14/07: per-weapon silencer, always silent support
-   if(!(weapon->flags & WPF_SILENCER && player->powers[pw_silencer]) &&
+   if(!(weapon->flags & WPF_SILENCEABLE && player->powers[pw_silencer]) &&
       !(weapon->flags & WPF_SILENT)) 
       P_NoiseAlert(player->mo, player->mo);
 
@@ -528,7 +528,7 @@ static void P_fireWeaponAlt(player_t *player)
 
    // haleyjd 04/06/03: silencer powerup
    // haleyjd 09/14/07: per-weapon silencer, always silent support
-   if(!(weapon->flags & WPF_SILENCER && player->powers[pw_silencer]) &&
+   if(!(weapon->flags & WPF_SILENCEABLE && player->powers[pw_silencer]) &&
       !(weapon->flags & WPF_SILENT))
       P_NoiseAlert(player->mo, player->mo);
 
@@ -666,7 +666,7 @@ void P_WeaponSoundInfo(Mobj *mo, sfxinfo_t *sound)
    params.setNormalDefaults(mo);
 
    if(mo->player && mo->player->powers[pw_silencer] &&
-      mo->player->readyweapon->flags & WPF_SILENCER)
+      mo->player->readyweapon->flags & WPF_SILENCEABLE)
       params.volumeScale = WEAPON_VOLUME_SILENCED;
 
    S_StartSfxInfo(params);
@@ -682,7 +682,7 @@ void P_WeaponSound(Mobj *mo, int sfx_id)
    int volume = 127;
 
    if(mo->player && mo->player->powers[pw_silencer] &&
-      mo->player->readyweapon->flags & WPF_SILENCER)
+      mo->player->readyweapon->flags & WPF_SILENCEABLE)
       volume = WEAPON_VOLUME_SILENCED;
 
    S_StartSoundAtVolume(mo, sfx_id, volume, ATTN_NORMAL, CHAN_AUTO);

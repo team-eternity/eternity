@@ -193,7 +193,7 @@ static dehflags_t e_weaponFlags[] =
    { "NOHITGHOSTS",    WPF_NOHITGHOSTS    },
    { "NOTSHAREWARE",   WPF_NOTSHAREWARE   },
    { "DISABLEAPS",     WPF_DISABLEAPS     },
-   { "SILENCEABLE",       WPF_SILENCEABLE },
+   { "SILENCEABLE",    WPF_SILENCEABLE    },
    { "SILENT",         WPF_SILENT         },
    { "NOAUTOFIRE",     WPF_NOAUTOFIRE     },
    { "FLEEMELEE",      WPF_FLEEMELEE      },
