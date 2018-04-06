@@ -1106,7 +1106,7 @@ void P_ShootSpecialLine(Mobj *thing, line_t *line, int side)
 }
 
 //
-// Triggers a line using the SPAC_PUSH special. Mobj would to support pushing
+// Triggers a line using the SPAC_PUSH special. Mobj would need to support pushing
 //
 void P_PushSpecialLine(Mobj &thing, line_t &line, int side)
 {
