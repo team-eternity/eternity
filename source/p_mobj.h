@@ -456,7 +456,7 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
 bool  P_SetMobjState(Mobj *mobj, statenum_t state);
 void  P_MobjThinker(Mobj *mobj);
 void  P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown,
-                  bool ptcl, const puffinfo_t *puff = nullptr, bool hit = false);
+                  bool ptcl, const puffinfo_t *puff = nullptr);
 void  P_SpawnUnknownThings();
 Mobj *P_SpawnMapThing(mapthing_t *mt);
 bool  P_CheckMissileSpawn(Mobj *);  // killough 8/2/98

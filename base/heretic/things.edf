@@ -2879,9 +2879,8 @@ thingtype HereticBlasterPuff1 : Mobj, -1, 423
 
 thingtype HereticBlasterPuff2 : Mobj, -1, 424
 {
-  compatname  BlasterSmoke
-  cflags      NOBLOCKMAP|NOGRAVITY
-  attacksound ht_blshit
+  compatname BlasterSmoke
+  cflags     NOBLOCKMAP|NOGRAVITY
 
   firstdecoratestate S_BLASTERPUFF2_1
   states
