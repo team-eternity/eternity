@@ -1455,7 +1455,9 @@ static void P_RunPushSpechits(Mobj &thing, PODCollection<line_t *> &pushhit)
    while(!pushhit.isEmpty())
    {
       line_t &line = *pushhit.pop();
-      P_PushSpecialLine(thing, line, P_PointOnLineSide(thing.x, thing.y, &line));
+      const linkoffset_t *link = P_GetLinkOffset(thing.groupid, line.frontsector->groupid);
+      P_PushSpecialLine(thing, line, P_PointOnLineSide(thing.x + link->x, thing.y + link->y, 
+         &line));
    }
 }
 
