@@ -34,6 +34,7 @@
 #include "e_ttypes.h"
 #include "e_weapons.h"
 #include "m_random.h"
+#include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_spec.h"
 #include "r_main.h"
@@ -52,7 +53,7 @@ void A_StaffAttackPL1(actionargs_t *actionargs)
    Mobj    *mo     = actionargs->actor;
    int      damage = 5 + (P_Random(pr_staff) & 15);
    angle_t  angle  = mo->angle + (P_SubRandom(pr_staffangle) * PO2(18));
-   fixed_t  slope  =  P_AimLineAttack(mo, angle, MELEERANGE, 0);
+   fixed_t  slope  = P_DoAutoAim(mo, angle, MELEERANGE);
 
    const int   tnum = E_SafeThingType(MT_STAFFPUFF);
    mobjinfo_t *puff = mobjinfo[tnum];
@@ -62,7 +63,7 @@ void A_StaffAttackPL1(actionargs_t *actionargs)
    {
       //S_StartSound(player->mo, sfx_stfhit);
       // turn to face target
-      mo->angle = R_PointToAngle2(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
+      mo->angle = P_PointToAngle(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
    }
 }
 
