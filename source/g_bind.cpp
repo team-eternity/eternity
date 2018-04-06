@@ -98,6 +98,7 @@ keyaction_t keyactions[NUMKEYACTIONS] =
    { "use",               kac_game,    at_variable },
    { "strafe",            kac_game,    at_variable },
    { "attack",            kac_game,    at_variable },
+   { "altattack",         kac_game,    at_variable },
    { "flip",              kac_game,    at_variable },
    { "speed",             kac_game,    at_variable },
    { "jump",              kac_game,    at_variable }, // -- joek 12/22/07
@@ -169,6 +170,13 @@ keyaction_t keyactions[NUMKEYACTIONS] =
    { "console_up",        kac_console, at_variable },
    { "console_down",      kac_console, at_variable },
    { "console_backspace", kac_console, at_variable },
+
+   // Inventory Actions
+
+   { "inventory_left",     kac_game,    at_variable },
+   { "inventory_right",    kac_game,    at_variable },
+   { "inventory_use",      kac_game,    at_variable },
+   { "inventory_drop",     kac_game,    at_variable },
 };
 
 // Console Bindings

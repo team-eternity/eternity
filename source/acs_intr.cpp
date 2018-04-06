@@ -159,10 +159,10 @@ ACSEnvironment::ACSEnvironment() :
  //addCodeDataACS0(142, {"",        0, addCallFunc(ACS_CF_ClrInventory)});
  //addCodeDataACS0(143, {"",        2, addCallFunc(ACS_CF_AddInventory)});
  //addCodeDataACS0(144, {"WSW",     0, addCallFunc(ACS_CF_AddInventory)});
- //addCodeDataACS0(145, {"",        2, addCallFunc(ACS_CF_SubInventory)});
- //addCodeDataACS0(146, {"WSW",     0, addCallFunc(ACS_CF_SubInventory)});
- //addCodeDataACS0(147, {"",        1, addCallFunc(ACS_CF_GetInventory)});
- //addCodeDataACS0(148, {"WS",      0, addCallFunc(ACS_CF_GetInventory)});
+   addCodeDataACS0(145, {"",        2, addCallFunc(ACS_CF_SubInventory)});
+   addCodeDataACS0(146, {"WSW",     0, addCallFunc(ACS_CF_SubInventory)});
+   addCodeDataACS0(147, {"",        1, addCallFunc(ACS_CF_GetInventory)});
+   addCodeDataACS0(148, {"WS",      0, addCallFunc(ACS_CF_GetInventory)});
    addCodeDataACS0(149, {"",        6, addCallFunc(ACS_CF_SpawnPoint)});
    addCodeDataACS0(150, {"WSWWWWW", 0, addCallFunc(ACS_CF_SpawnPoint)});
    addCodeDataACS0(151, {"",        4, addCallFunc(ACS_CF_SpawnSpot)});

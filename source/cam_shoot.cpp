@@ -26,6 +26,7 @@
 
 #include "cam_common.h"
 #include "cam_sight.h"
+#include "d_player.h"
 #include "e_exdata.h"
 #include "p_inter.h"
 #include "p_mobj.h"
@@ -393,7 +394,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          return true;
 
       if(th->flags3 & MF3_GHOST && context.thing->player
-         && P_GetReadyWeapon(context.thing->player)->flags & WPF_NOHITGHOSTS)
+         && context.thing->player->readyweapon->flags & WPF_NOHITGHOSTS)
       {
          return true;
       }

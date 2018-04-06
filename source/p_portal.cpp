@@ -554,7 +554,6 @@ static void P_buildPortalMap()
    // ioanch 20160227: prepare other groups too
    gGroupPolyobject = ecalloctag(decltype(gGroupPolyobject),
       sizeof(*gGroupPolyobject), pcount, PU_LEVEL, nullptr);
-   pcount *= sizeof(bool);
 
    gMapHasSectorPortals = false; // init with false
    gMapHasLinePortals = false;

@@ -372,6 +372,8 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\source\a_weaponsdoom.cpp" />
+    <ClCompile Include="..\source\a_weaponsheretic.cpp" />
     <ClCompile Include="..\source\cam_aim.cpp" />
     <ClCompile Include="..\source\cam_common.cpp" />
     <ClCompile Include="..\source\cam_shoot.cpp" />
@@ -1989,6 +1991,7 @@
     <ClInclude Include="..\Source\in_lude.h" />
     <ClInclude Include="..\source\metaspawn.h" />
     <ClInclude Include="..\source\mn_items.h" />
+    <ClInclude Include="..\source\m_avltree.h" />
     <ClInclude Include="..\source\m_binary.h" />
     <ClInclude Include="..\source\m_compare.h" />
     <ClInclude Include="..\source\m_ctype.h" />

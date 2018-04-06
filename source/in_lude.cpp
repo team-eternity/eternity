@@ -190,12 +190,12 @@ void IN_checkForAccelerate()
       {
          if(player->cmd.buttons & BT_ATTACK)
          {
-            if(!player->attackdown)
+            if(!(player->attackdown & AT_PRIMARY))
                acceleratestage = 1;
-            player->attackdown = true;
+            player->attackdown = AT_PRIMARY;
          }
          else
-            player->attackdown = false;
+            player->attackdown = AT_NONE;
          
          if (player->cmd.buttons & BT_USE)
          {

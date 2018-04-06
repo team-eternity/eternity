@@ -109,30 +109,33 @@ byte *R_DistortedFlat(int texnum, bool usegametic)
    if(reftime != swirltic || cursize != lastsize)
    {
       int x, y;
-      
-      for(x = 0; x < w; ++x)
+
+      if(offset)  // just to silence the static analyzer
       {
-         for(y = 0; y < h; ++y)
+         for(x = 0; x < w; ++x)
          {
-            int x1, y1;
-            int sinvalue, sinvalue2;
-            
-            sinvalue = (y * SWIRLFACTOR + leveltic*SPEED*5 + 900) & 8191;
-            sinvalue2 = (x * SWIRLFACTOR2 + leveltic*SPEED*4 + 300) & 8191;
-            x1 = x + 128
-                 + ((finesine[sinvalue]*AMP) >> FRACBITS)
-                 + ((finesine[sinvalue2]*AMP2) >> FRACBITS);
+            for(y = 0; y < h; ++y)
+            {
+               int x1, y1;
+               int sinvalue, sinvalue2;
 
-            sinvalue = (x * SWIRLFACTOR + leveltic*SPEED*3 + 700) & 8191;
-            sinvalue2 = (y * SWIRLFACTOR2 + leveltic*SPEED*4 + 1200) & 8191;
-            y1 = y + 128
-                 + ((finesine[sinvalue]*AMP) >> FRACBITS)
-                 + ((finesine[sinvalue2]*AMP2) >> FRACBITS);
+               sinvalue = (y * SWIRLFACTOR + leveltic*SPEED*5 + 900) & 8191;
+               sinvalue2 = (x * SWIRLFACTOR2 + leveltic*SPEED*4 + 300) & 8191;
+               x1 = x + 128
+                    + ((finesine[sinvalue]*AMP) >> FRACBITS)
+                    + ((finesine[sinvalue2]*AMP2) >> FRACBITS);
 
-            x1 %= w;
-            y1 %= h;
-            
-            offset[(y*w) + x] = (y1*w) + x1;
+               sinvalue = (x * SWIRLFACTOR + leveltic*SPEED*3 + 700) & 8191;
+               sinvalue2 = (y * SWIRLFACTOR2 + leveltic*SPEED*4 + 1200) & 8191;
+               y1 = y + 128
+                    + ((finesine[sinvalue]*AMP) >> FRACBITS)
+                    + ((finesine[sinvalue2]*AMP2) >> FRACBITS);
+
+               x1 %= w;
+               y1 %= h;
+
+               offset[(y*w) + x] = (y1*w) + x1;
+            }
          }
       }
       
