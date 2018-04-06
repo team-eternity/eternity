@@ -249,16 +249,21 @@ static bool P_shootThing(intercept_t *in, const puffinfo_t *puff)
 
    // Spawn bullet puffs or blood spots, depending on target type
    // haleyjd: and status flags!
+   angle_t puffangle = P_PointToAngle(0, 0, trace.dl.dx, trace.dl.dy) - ANG180;
    if(th->flags & MF_NOBLOOD ||
       th->flags2 & (MF2_INVULNERABLE | MF2_DORMANT))
    {
-      P_SpawnPuff(x, y, z, 
-                  P_PointToAngle(0, 0, trace.dl.dx, trace.dl.dy) - ANG180,
-                  2, true, puff);
+      P_SpawnPuff(x, y, z, puffangle, 2, true, puff, true);
    }
    else
    {
-      BloodSpawner(th, x, y, z, trace.la_damage, trace.dl, trace.thing).spawn(BLOOD_SHOT);
+      // if we have a puff definition, it means it's like Heretic.
+      if(P_puffIsDefined(puff))
+         P_SpawnPuff(x, y, z, puffangle, 2, true, puff, true);
+
+      // If we have puff, only spawn blood 75% of the time.
+      if(!P_puffIsDefined(puff) || P_Random(pr_puffblood) < 192)
+         BloodSpawner(th, x, y, z, trace.la_damage, trace.dl, trace.thing).spawn(BLOOD_SHOT);
    }
 
    if(trace.la_damage)
