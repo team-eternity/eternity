@@ -167,8 +167,6 @@ void A_FireMacePL1B(actionargs_t *actionargs)
 
    ball = P_SpawnMobj(pmo->x, pmo->y, pmo->z + (28 * FRACUNIT) - pmo->floorclip, tnum);
 
-   mobjinfo_t *fx = mobjinfo[tnum];
-
    const fixed_t slope = P_PlayerPitchSlope(player);
    ball->momz = FixedMul(ball->info->speed, slope) + (2 * FRACUNIT);
    angle = pmo->angle;
