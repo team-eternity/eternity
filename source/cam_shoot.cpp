@@ -57,7 +57,7 @@ public:
    };
 
    static void lineAttack(Mobj *source, angle_t angle, fixed_t distance,
-      fixed_t slope, int damage, const State *state);
+      fixed_t slope, int damage, const State *state, const puffinfo_t *puff);
 private:
 
    bool checkShootFlatPortal(const sector_t *sector, fixed_t infrac) const;
@@ -67,7 +67,7 @@ private:
    static bool shootTraverse(const intercept_t *in, void *data,
       const divline_t &trace);
    ShootContext(Mobj *source, angle_t inangle, fixed_t distance, fixed_t slope,
-      int indamage, const State *instate);
+      int indamage, const State *instate, const puffinfo_t *inpuff);
 
    Mobj *thing;
    angle_t angle;
@@ -76,15 +76,16 @@ private:
    fixed_t aimslope;
    fixed_t cos, sin;
    State state;
+   const puffinfo_t *puff;
 };
 
 //
 // Caller
 //
 void ShootContext::lineAttack(Mobj *source, angle_t angle, fixed_t distance,
-   fixed_t slope, int damage, const State *state)
+   fixed_t slope, int damage, const State *state, const puffinfo_t *puff)
 {
-   ShootContext context(source, angle, distance, slope, damage, state);
+   ShootContext context(source, angle, distance, slope, damage, state, puff);
    fixed_t x2 = context.state.x + (distance >> FRACBITS) * context.cos;
    fixed_t y2 = context.state.y + (distance >> FRACBITS) * context.sin;
 
@@ -168,7 +169,7 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
       newstate.z = z;
       newstate.reclevel++;
 
-      lineAttack(thing, angle, remdist, aimslope, damage, &newstate);
+      lineAttack(thing, angle, remdist, aimslope, damage, &newstate, puff);
 
       return true;
    }
@@ -287,7 +288,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
             ++newstate.reclevel;
 
             lineAttack(context.thing, context.angle, remdist, context.aimslope,
-               context.damage, &newstate);
+               context.damage, &newstate, context.puff);
 
             return false;
          }
@@ -381,7 +382,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          return false;
 
       P_SpawnPuff(x, y, z, P_PointToAngle(0, 0, li->dx, li->dy) - ANG90,
-         updown, true);
+         updown, true, context.puff);
 
       return false;
    }
@@ -418,14 +419,16 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
       fixed_t z = context.state.z + FixedMul(context.aimslope, FixedMul(frac,
          context.attackrange));
 
+      angle_t puffangle = P_PointToAngle(0, 0, trace.dx, trace.dy) - ANG180;
       if(th->flags & MF_NOBLOOD || th->flags2 & (MF2_INVULNERABLE | MF2_DORMANT))
-      {
-         P_SpawnPuff(x, y, z, P_PointToAngle(0, 0, trace.dx, trace.dy)
-            - ANG180, 2, true);
-      }
+         P_SpawnPuff(x, y, z, puffangle, 2, true, context.puff, true);
       else
       {
-         BloodSpawner(th, x, y, z, context.damage, trace, context.thing).spawn(BLOOD_SHOT);
+         if(P_puffIsDefined(context.puff))
+            P_SpawnPuff(x, y, z, puffangle, 2, true, context.puff, true);
+
+         if(!P_puffIsDefined(context.puff) || P_Random(pr_puffbloodportal) < 192)
+            BloodSpawner(th, x, y, z, context.damage, trace, context.thing).spawn(BLOOD_SHOT);
       }
       if(context.damage)
       {
@@ -442,9 +445,9 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
 //
 ShootContext::ShootContext(Mobj *source, angle_t inangle, fixed_t distance,
    fixed_t slope, int indamage,
-   const State *instate) :
+   const State *instate, const puffinfo_t *inpuff) :
    thing(source), angle(inangle), damage(indamage), attackrange(distance),
-   aimslope(slope)
+   aimslope(slope), puff(inpuff)
 {
    inangle >>= ANGLETOFINESHIFT;
    cos = finecosine[inangle];
@@ -470,9 +473,9 @@ ShootContext::ShootContext(Mobj *source, angle_t inangle, fixed_t distance,
 // Portal-aware bullet attack
 //
 void CAM_LineAttack(Mobj *source, angle_t angle, fixed_t distance,
-   fixed_t slope, int damage)
+   fixed_t slope, int damage, const puffinfo_t *puff)
 {
-   ShootContext::lineAttack(source, angle, distance, slope, damage, nullptr);
+   ShootContext::lineAttack(source, angle, distance, slope, damage, nullptr, puff);
 }
 
 

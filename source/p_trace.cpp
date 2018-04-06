@@ -580,7 +580,7 @@ void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance,
    {
       trace.attackrange = distance; // this needs to be set because P_SpawnPuff
                                     // depends on it
-      CAM_LineAttack(t1, angle, distance, slope, damage);
+      CAM_LineAttack(t1, angle, distance, slope, damage, puff);
       return;
    }
 
