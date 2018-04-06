@@ -2506,17 +2506,20 @@ spawnit:
 // P_SpawnPuff
 //
 void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
-                 int updown, bool ptcl, const puffinfo_t *puff)
+                 int updown, bool ptcl, const puffinfo_t *puff, bool hit)
 {
    Mobj* th;
 
-   // haleyjd 08/05/04: use new function
-   z += P_SubRandom(pr_spawnpuff) << 10;
-
    if(P_puffIsDefined(puff))
    {
-      th = P_SpawnMobj(x, y, z, puff->info->index);
-      S_StartSound(th, puff->info->attacksound);
+      if(hit && puff->hitinfo)
+         th = P_SpawnMobj(x, y, z, puff->hitinfo->index);
+      else
+      {
+         z += P_SubRandom(pr_spawnpuff) << 10;
+         th = P_SpawnMobj(x, y, z, puff->info->index);
+      }
+      S_StartSound(th, th->info->attacksound);
       th->momz = puff->upspeed;
 
    }
@@ -2524,6 +2527,7 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
    {
       // DOOM typical.
 
+      z += P_SubRandom(pr_spawnpuff) << 10;
       th = P_SpawnMobj(x, y, z, E_SafeThingType(MT_PUFF));
 
       th->tics -= P_Random(pr_spawnpuff) & 3;
@@ -2535,16 +2539,18 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
       // don't make punches spark on the wall
       if(trace.attackrange == MELEERANGE)
          P_SetMobjState(th, E_SafeState(S_PUFF3));
-   }
 
-   // haleyjd: for demo sync etc we still need to do the above, so
-   // here we'll make the puff invisible and draw particles instead
-   if(ptcl && drawparticles && bulletpuff_particle &&
-      trace.attackrange != MELEERANGE)
-   {
-      if(bulletpuff_particle != 2)
-         th->translucency = 0;
-      P_SmokePuff(32, x, y, z, dir, updown);
+      // ioanch: only use particles for Doom puff.
+
+      // haleyjd: for demo sync etc we still need to do the above, so
+      // here we'll make the puff invisible and draw particles instead
+      if(ptcl && drawparticles && bulletpuff_particle &&
+         trace.attackrange != MELEERANGE)
+      {
+         if(bulletpuff_particle != 2)
+            th->translucency = 0;
+         P_SmokePuff(32, x, y, z, dir, updown);
+      }
    }
 }
 
