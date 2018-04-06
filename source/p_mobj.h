@@ -725,7 +725,7 @@ enum
    MIF_CRASHED     = 0x00000100, // haleyjd: thing has entered crashstate
    MIF_NOPTCLEVTS  = 0x00000200, // haleyjd: thing can't trigger particle events
    MIF_ISCHILD     = 0x00000400, // haleyjd: thing spawned as a child
-   MIF_NOTOUCH     = 0x00000800, // haleyjd: OVER_UNDER: don't blow up touchies
+   MIF_CHECKPOSEXT = 0x00000800, // haleyjd: OVER_UNDER: don't blow up touchies + no side effects
    MIF_ONMOBJ      = 0x00001000, // haleyjd: OVER_UNDER: is on another thing
    MIF_WIMPYDEATH  = 0x00002000, // haleyjd: for player, died wimpy (10 damage or less)
    MIF_CLEARMOMZ   = 0x00004000, // davidph: clear momz (and this flag) in P_MovePlayer

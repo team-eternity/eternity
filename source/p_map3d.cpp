@@ -376,7 +376,7 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
          return false;
 
       // haleyjd: touchies need to explode if being exactly touched
-      if(thing->flags & MF_TOUCHY && !(clip.thing->intflags & MIF_NOTOUCH))
+      if(thing->flags & MF_TOUCHY && !(clip.thing->intflags & MIF_CHECKPOSEXT))
       {
          if(clip.thing->z == topz || clip.thing->z + clip.thing->height == thing->z)
          {
@@ -398,7 +398,7 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
    // thing, and the touchy thing is not the sole one moving relative to fixed
    // surroundings such as walls, then the touchy thing dies immediately.
 
-   if(!(clip.thing->intflags & MIF_NOTOUCH)) // haleyjd: not when just testing
+   if(!(clip.thing->intflags & MIF_CHECKPOSEXT)) // haleyjd: not when just testing
       if(P_Touched(thing))
          return true;
 
@@ -783,11 +783,11 @@ bool P_CheckPositionExt(Mobj *mo, fixed_t x, fixed_t y, fixed_t z)
    // save the thing's flags, some flags must be removed to avoid side effects
    flags = mo->flags;
    mo->flags &= ~MF_PICKUP;
-   mo->intflags |= MIF_NOTOUCH; // haleyjd: don't blow up touchies!
+   mo->intflags |= MIF_CHECKPOSEXT; // haleyjd: don't blow up touchies!
 
    xygood = P_CheckPosition(mo, x, y);
    mo->flags = flags;
-   mo->intflags &= ~MIF_NOTOUCH;
+   mo->intflags &= ~MIF_CHECKPOSEXT;
 
    if(xygood)
    {
