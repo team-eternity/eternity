@@ -308,7 +308,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
          bool result = clip.unstuck && !untouchedViaOffset(ld, link) &&
             FixedMul(clip.x - clip.thing->x, ld->dy) >
             FixedMul(clip.y - clip.thing->y, ld->dx);
-         if(!result)
+         if(!result && ld->special && !(clip.thing->intflags & MIF_CHECKPOSEXT))
             P_PushSpecialLine(*clip.thing, *ld, 0);
          return result;
       }
@@ -319,7 +319,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
          if(ld->flags & ML_BLOCKING)           // explicitly blocking everything
          {
             bool result = clip.unstuck && !untouchedViaOffset(ld, link);
-            if(!result)
+            if(!result && ld->special && !(clip.thing->intflags & MIF_CHECKPOSEXT))
                P_PushSpecialLine(*clip.thing, *ld, 0);
             return result;
          }

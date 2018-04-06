@@ -726,7 +726,7 @@ bool PIT_CheckLine(line_t *ld, polyobj_s *po, void *context)
       clip.blockline = ld;
       bool result = clip.unstuck && !untouched(ld) &&
          FixedMul(clip.x-clip.thing->x,ld->dy) > FixedMul(clip.y-clip.thing->y,ld->dx);
-      if(!result && ld->special)
+      if(!result && ld->special && !(clip.thing->intflags & MIF_CHECKPOSEXT))
          P_PushSpecialLine(*clip.thing, *ld, 0);
       return result;
    }
@@ -739,7 +739,7 @@ bool PIT_CheckLine(line_t *ld, polyobj_s *po, void *context)
          bool result = clip.unstuck && !untouched(ld);  // killough 8/1/98: allow escape
 
          // Keep side 0 even when hitting from backside
-         if(!result && ld->special)
+         if(!result && ld->special && !(clip.thing->intflags & MIF_CHECKPOSEXT))
             P_PushSpecialLine(*clip.thing, *ld, 0);
          // TODO: add the other push special checks.
          // TODO: add for P_Map3D and P_PortalClip CPP files.
