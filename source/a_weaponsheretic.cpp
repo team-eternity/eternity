@@ -74,7 +74,7 @@ void A_StaffAttackPL2(actionargs_t *actionargs)
    Mobj    *mo = actionargs->actor;
    int      damage = 18 + (P_Random(pr_staff2) & 63);
    angle_t  angle = mo->angle + (P_SubRandom(pr_staffangle) * PO2(18));
-   fixed_t  slope = P_AimLineAttack(mo, angle, MELEERANGE, 0);
+   fixed_t  slope = P_DoAutoAim(mo, angle, MELEERANGE);
 
    const int   tnum = E_SafeThingType(MT_STAFFPUFF2);
    edefstructvar(puffinfo_t, puff);
@@ -86,7 +86,7 @@ void A_StaffAttackPL2(actionargs_t *actionargs)
    {
       //S_StartSound(player->mo, sfx_stfhit);
       // turn to face target
-      mo->angle = R_PointToAngle2(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
+      mo->angle = P_PointToAngle(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
    }
 }
 
@@ -605,11 +605,11 @@ void A_GauntletAttack(actionargs_t *actionargs)
       tnum = E_SafeThingType(MT_GAUNTLETPUFF1);
    }
 
-   slope = P_AimLineAttack(mo, angle, dist, 0);
    edefstructvar(puffinfo_t, puff);
    puff.info = mobjinfo[tnum];
    puff.upspeed = 4*FRACUNIT/5;
 
+   slope = P_DoAutoAim(mo, angle, dist);
    P_LineAttack(mo, angle, dist, slope, damage, &puff);
 
    if(!clip.linetarget)
@@ -638,7 +638,7 @@ void A_GauntletAttack(actionargs_t *actionargs)
       P_WeaponSound(mo, sfx_gnthit);
 
    // turn to face target
-   angle = R_PointToAngle2(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
+   angle = P_PointToAngle(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
 
    if(angle - mo->angle > ANG180)
    {
