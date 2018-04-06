@@ -2506,36 +2506,27 @@ spawnit:
 // P_SpawnPuff
 //
 void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
-                 int updown, bool ptcl, const puffinfo_t *puff)
+                 int updown, bool ptcl)
 {
    Mobj* th;
 
    // haleyjd 08/05/04: use new function
    z += P_SubRandom(pr_spawnpuff) << 10;
 
-   if(P_puffIsDefined(puff))
-   {
-      th = P_SpawnMobj(x, y, z, puff->info->index);
-      S_StartSound(th, puff->info->attacksound);
-      th->momz = puff->upspeed;
+   if(trace.puff)
+      th = P_SpawnMobj(x, y, z, trace.puff->index);
 
-   }
-   else
-   {
-      // DOOM typical.
+   th = P_SpawnMobj(x, y, z, E_SafeThingType(MT_PUFF));
+   th->momz = FRACUNIT;
+   th->tics -= P_Random(pr_spawnpuff) & 3;
 
-      th = P_SpawnMobj(x, y, z, E_SafeThingType(MT_PUFF));
+   if(th->tics < 1)
+      th->tics = 1;
 
-      th->tics -= P_Random(pr_spawnpuff) & 3;
-      if(th->tics < 1)
-         th->tics = 1;
+   // don't make punches spark on the wall
 
-      th->momz = FRACUNIT;
-
-      // don't make punches spark on the wall
-      if(trace.attackrange == MELEERANGE)
-         P_SetMobjState(th, E_SafeState(S_PUFF3));
-   }
+   if(!trace.puff && trace.attackrange == MELEERANGE)
+      P_SetMobjState(th, E_SafeState(S_PUFF3));
 
    // haleyjd: for demo sync etc we still need to do the above, so
    // here we'll make the puff invisible and draw particles instead

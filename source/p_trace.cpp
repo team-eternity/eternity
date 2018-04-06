@@ -53,7 +53,7 @@ linetracer_t trace;
 // Aiming
 //
 
-static bool PTR_AimTraverse(intercept_t *in, void *context)
+static bool PTR_AimTraverse(intercept_t *in)
 {
    fixed_t slope, dist;
 
@@ -213,7 +213,7 @@ fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, int mask)
 //
 // haleyjd: shared code for shooting an Mobj
 //
-static bool P_shootThing(intercept_t *in, const puffinfo_t *puff)
+static bool P_shootThing(intercept_t *in)
 {
    Mobj *th = in->d.thing;
 
@@ -254,7 +254,7 @@ static bool P_shootThing(intercept_t *in, const puffinfo_t *puff)
    {
       P_SpawnPuff(x, y, z, 
                   P_PointToAngle(0, 0, trace.dl.dx, trace.dl.dy) - ANG180,
-                  2, true, puff);
+                  2, true);
    }
    else
    {
@@ -276,7 +276,7 @@ static bool P_shootThing(intercept_t *in, const puffinfo_t *puff)
 //
 // Compatibility codepath for shot traversal.
 //
-static bool PTR_ShootTraverseVanilla(intercept_t *in, void *context)
+static bool PTR_ShootTraverseVanilla(intercept_t *in)
 {
    fixed_t x, y, z, frac;
  
@@ -330,14 +330,13 @@ static bool PTR_ShootTraverseVanilla(intercept_t *in, void *context)
       }
 
       // Spawn bullet puffs.
-      P_SpawnPuff(x, y, z, P_PointToAngle(0, 0, li->dx, li->dy) - ANG90, 2, true,
-                  static_cast<const puffinfo_t *>(context));
+      P_SpawnPuff(x, y, z, P_PointToAngle(0, 0, li->dx, li->dy) - ANG90, 2, true);
 
       // don't go any further
       return false;
    }
    else
-      return P_shootThing(in, static_cast<const puffinfo_t *>(context));
+      return P_shootThing(in);
 }
 
 //
@@ -418,7 +417,7 @@ static bool P_ShotCheck2SLine(intercept_t *in, line_t *li, int lineside)
 // floors and ceilings rather than along the line which they actually
 // intersected far below or above the ceiling.
 //
-static bool PTR_ShootTraverse(intercept_t *in, void *context)
+static bool PTR_ShootTraverse(intercept_t *in)
 {
    if(in->isaline)
    {
@@ -551,14 +550,15 @@ static bool PTR_ShootTraverse(intercept_t *in, void *context)
          return false;
 
       // Spawn bullet puffs.
-      P_SpawnPuff(x, y, z, P_PointToAngle(0, 0, li->dx, li->dy) - ANG90,
-                  updown, true, static_cast<const puffinfo_t *>(context));
+      P_SpawnPuff(x, y, z, 
+                  P_PointToAngle(0, 0, li->dx, li->dy) - ANG90,
+                  updown, true);
       
       // don't go any further     
       return false;
    }
    else
-      return P_shootThing(in, static_cast<const puffinfo_t *>(context));
+      return P_shootThing(in);
 }
 
 //
@@ -567,7 +567,7 @@ static bool PTR_ShootTraverse(intercept_t *in, void *context)
 // If damage == 0, it is just a test trace that will leave linetarget set.
 //
 void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance,
-                  fixed_t slope, int damage, puffinfo_t *puff)
+                  fixed_t slope, int damage, mobjinfo_t *puff)
 {
    // ioanch 20151231: use new portal code
    if(full_demo_version >= make_full_version(340, 47) &&
@@ -591,13 +591,14 @@ void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance,
    trace.z = t1->z - t1->floorclip + (t1->height>>1) + 8*FRACUNIT;
    trace.attackrange = distance;
    trace.aimslope = slope;
+   trace.puff = puff;
 
    if(demo_version < 329)
       trav = PTR_ShootTraverseVanilla;
    else
       trav = PTR_ShootTraverse;
 
-   P_PathTraverse(t1->x, t1->y, x2, y2, PT_ADDLINES|PT_ADDTHINGS, trav, puff);
+   P_PathTraverse(t1->x, t1->y, x2, y2, PT_ADDLINES|PT_ADDTHINGS, trav);
 }
 
 //=============================================================================
@@ -605,7 +606,7 @@ void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance,
 // Use Lines
 //
 
-static bool PTR_UseTraverse(intercept_t *in, void *context)
+static bool PTR_UseTraverse(intercept_t *in)
 {
    if(in->d.line->special)
    {
@@ -647,7 +648,7 @@ static bool PTR_UseTraverse(intercept_t *in, void *context)
 //
 // by Lee Killough
 //
-static bool PTR_NoWayTraverse(intercept_t *in, void *context)
+static bool PTR_NoWayTraverse(intercept_t *in)
 {
    line_t *ld = in->d.line; // This linedef
 
@@ -842,7 +843,7 @@ bool PIT_AddThingIntercepts(Mobj *thing)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-bool P_TraverseIntercepts(traverser_t func, fixed_t maxfrac, void *context)
+bool P_TraverseIntercepts(traverser_t func, fixed_t maxfrac)
 {
    intercept_t *in = nullptr;
    int count = static_cast<int>(intercept_p - intercepts);
@@ -858,7 +859,7 @@ bool P_TraverseIntercepts(traverser_t func, fixed_t maxfrac, void *context)
 
       if(in) // haleyjd: for safety
       {
-         if(!func(in, context))
+         if(!func(in))
             return false;           // don't bother going farther
          in->frac = D_MAXINT;
       }
@@ -877,7 +878,7 @@ bool P_TraverseIntercepts(traverser_t func, fixed_t maxfrac, void *context)
 // killough 5/3/98: reformatted, cleaned up
 //
 bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
-                    int flags, traverser_t trav, void *context)
+                    int flags, traverser_t trav)
 {
    fixed_t xt1, yt1;
    fixed_t xt2, yt2;
@@ -991,7 +992,7 @@ bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
    }
 
    // go through the sorted list
-   return P_TraverseIntercepts(trav, FRACUNIT, context);
+   return P_TraverseIntercepts(trav, FRACUNIT);
 }
 
 // EOF
