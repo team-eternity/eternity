@@ -671,7 +671,7 @@ static void SpechitOverrun(line_t *ld)
 //
 // ioanch: moved this here so it may be called from elsewhere too
 //
-void P_CollectSpechits(line_t *ld)
+void P_CollectSpechits(line_t *ld, PODCollection<line_t *> *pushhit)
 {
    // if contacted a special line, add it to the list
    // ioanch 20160121: check for PS_PASSABLE, to restrict just for linked portals
@@ -679,6 +679,8 @@ void P_CollectSpechits(line_t *ld)
    {
       if(ld->pflags & PS_PASSABLE)
          gGroupVisit[ld->portal->data.link.toid] = true;
+      else if(pushhit)  // don't attempt adding passable lines to pushables.
+         pushhit->add(ld);
       // 1/11/98 killough: remove limit on lines hit, by array doubling
       if(clip.numspechit >= clip.spechit_max)
       {
@@ -802,7 +804,7 @@ bool PIT_CheckLine(line_t *ld, polyobj_s *po, void *context)
       clip.passceilz = clip.ceilingz;
 
    // ioanch 20160113: moved to a special function
-   P_CollectSpechits(ld);
+   P_CollectSpechits(ld, static_cast<PODCollection<line_t *> *>(context));
    
    return true;
 }
@@ -1196,14 +1198,14 @@ bool Check_Sides(Mobj *actor, int x, int y)
 //  speciallines[]
 //  numspeciallines
 //
-bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y) 
+bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit) 
 {
    int xl, xh, yl, yh, bx, by;
    subsector_t *newsubsec;
 
    // haleyjd: OVER_UNDER
    if(P_Use3DClipping())
-      return P_CheckPosition3D(thing, x, y);
+      return P_CheckPosition3D(thing, x, y, pushhit);
    
    clip.thing = thing;
    
@@ -1279,7 +1281,7 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y)
    {
       for(by = yl; by <= yh; by++)
       {
-         if(!P_BlockLinesIterator(bx, by, PIT_CheckLine))
+         if(!P_BlockLinesIterator(bx, by, PIT_CheckLine, R_NOGROUP, pushhit))
             return false; // doesn't fit
       }
    }
@@ -1446,15 +1448,13 @@ typedef bool (*dropoff_func_t)(Mobj *, int);
 //
 // Runs the spechit push specials
 //
-static void P_RunPushSpechits(Mobj &thing)
+static void P_RunPushSpechits(Mobj &thing, PODCollection<line_t *> &pushhit)
 {
    if(full_demo_version < make_full_version(401, 0) || thing.flags & (MF_TELEPORT | MF_NOCLIP))
       return;
-   int numSpecHitTemp = clip.numspechit;
-   while(numSpecHitTemp > 0)
+   while(!pushhit.isEmpty())
    {
-      numSpecHitTemp--;
-      line_t &line = *clip.spechit[numSpecHitTemp];
+      line_t &line = *pushhit.pop();
       P_PushSpecialLine(thing, line, P_PointOnLineSide(thing.x, thing.y, &line));
    }
 }
@@ -1488,6 +1488,10 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 
    bool groupidchange = false, portalteleport = false;
    fixed_t prex, prey;
+
+   PODCollection<line_t *> pushhit;
+   PODCollection<line_t *> *pPushHit = full_demo_version >= make_full_version(401, 0) ? &pushhit : 
+      nullptr;
 
    // haleyjd: OVER_UNDER
    if(P_Use3DClipping())
@@ -1544,17 +1548,17 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       {
          oldgroupid = thing->groupid;
          thing->groupid = newgroupid;
-         check = P_CheckPosition3D(thing, x, y);
+         check = P_CheckPosition3D(thing, x, y, pPushHit);
          thing->groupid = oldgroupid;
       }
 
       if((groupidchange && !check)
-         || (!groupidchange && !P_CheckPosition3D(thing, x, y)))
+         || (!groupidchange && !P_CheckPosition3D(thing, x, y, pPushHit)))
       {
          // Solid wall or thing
          if(!clip.BlockingMobj || clip.BlockingMobj->player || !thing->player)
          {
-            P_RunPushSpechits(*thing);
+            P_RunPushSpechits(*thing, pushhit);
             return false;
          }
          else
@@ -1573,7 +1577,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
                (clip.ceilingz - (clip.BlockingMobj->z + clip.BlockingMobj->height) 
                  < thing->height))
             {
-               P_RunPushSpechits(*thing);
+               P_RunPushSpechits(*thing, pushhit);
                return false;
             }
             
@@ -1584,7 +1588,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             {
                if(clip.BlockingMobj->health <= 0)
                {
-                  P_RunPushSpechits(*thing);
+                  P_RunPushSpechits(*thing, pushhit);
                   return false;
                }
             }
@@ -1592,14 +1596,14 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          if(!(clip.thing->flags3 & MF3_PASSMOBJ))
          {
             thing->z = oldz;
-            P_RunPushSpechits(*thing);
+            P_RunPushSpechits(*thing, pushhit);
             return false;
          }
       }
    }
-   else if(!P_CheckPosition(thing, x, y))
+   else if(!P_CheckPosition(thing, x, y, pPushHit))
    {
-      P_RunPushSpechits(*thing);
+      P_RunPushSpechits(*thing, pushhit);
       return false;   // solid wall or thing
    }
 
@@ -1616,7 +1620,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       if(clip.ceilingz - clip.floorz < thing->height) // doesn't fit
       {
          if(!ret)
-            P_RunPushSpechits(*thing);
+            P_RunPushSpechits(*thing, pushhit);
          return ret;
       }
          
@@ -1626,7 +1630,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          clip.ceilingz - thing->z < thing->height)
       {
          if(!ret)
-            P_RunPushSpechits(*thing);
+            P_RunPushSpechits(*thing, pushhit);
          return ret;
       }
 
@@ -1638,7 +1642,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          {
             thing->momz = -8*FRACUNIT;
             thing->intflags |= MIF_CLEARMOMZ;
-            P_RunPushSpechits(*thing);
+            P_RunPushSpechits(*thing, pushhit);
             return false;
          }
          else if(thing->z < clip.floorz && 
@@ -1646,7 +1650,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          {
             thing->momz = 8*FRACUNIT;
             thing->intflags |= MIF_CLEARMOMZ;
-            P_RunPushSpechits(*thing);
+            P_RunPushSpechits(*thing, pushhit);
             return false;
          }
       }
@@ -1657,7 +1661,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          if(clip.floorz - thing->z > STEPSIZE)
          {
             if(!ret)
-               P_RunPushSpechits(*thing);
+               P_RunPushSpechits(*thing, pushhit);
             return ret;
          }
          else if(P_Use3DClipping() && thing->z < clip.floorz)
@@ -1671,7 +1675,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             thing->z = savedz;
             if(!good)
             {
-               P_RunPushSpechits(*thing);
+               P_RunPushSpechits(*thing, pushhit);
                return false;
             }
          }
@@ -1696,7 +1700,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          !(thing->flags & (MF_MISSILE|MF_NOGRAVITY)) &&
          !sentient(thing) && clip.floorz - thing->z > 16*FRACUNIT)
       {
-         P_RunPushSpechits(*thing);
+         P_RunPushSpechits(*thing, pushhit);
          return false; // too big a step up for bouncers under gravity
       }
 

@@ -139,7 +139,8 @@ static void P_addPortalHitLine(line_t *ld, polyobj_t *po)
 //
 static void P_blockingLineDifferentLevel(line_t *ld, polyobj_t *po, fixed_t thingz, 
                                          fixed_t thingmid, fixed_t thingtopz,
-                                         fixed_t linebottom, fixed_t linetop)
+                                         fixed_t linebottom, fixed_t linetop, 
+                                         PODCollection<line_t *> *pushhit)
 {
    fixed_t linemid = linetop / 2 + linebottom / 2;
    bool moveup = thingmid >= linemid;
@@ -182,11 +183,11 @@ static void P_blockingLineDifferentLevel(line_t *ld, polyobj_t *po, fixed_t thin
       clip.passceilz = clip.ceilingz;
 
    // We need now to collect spechits for push activation.
-   if(full_demo_version >= make_full_version(401, 0) && 
+   if(pushhit && full_demo_version >= make_full_version(401, 0) && 
       (clip.thing->groupid == ld->frontsector->groupid || 
       (linetop > thingz && linebottom < thingtopz && !(ld->pflags & PS_PASSABLE))))
    {
-      P_CollectSpechits(ld);
+      pushhit->add(ld);
    }
 }
 
@@ -299,6 +300,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
       }
    }
 
+   auto pushhit = static_cast<PODCollection<line_t *> *>(context);
    if(linebottom <= thingz && linetop >= thingtopz)
    {
       // classic Doom behaviour
@@ -345,21 +347,24 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
       // same conditions as above
       if(!ld->backsector || (ld->extflags & EX_ML_BLOCKALL))
       {
-         P_blockingLineDifferentLevel(ld, po, thingz, thingmid, thingtopz, linebottom, linetop);
+         P_blockingLineDifferentLevel(ld, po, thingz, thingmid, thingtopz, linebottom, linetop, 
+            pushhit);
          return true;
       }
       if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
       {
          if(ld->flags & ML_BLOCKING)           // explicitly blocking everything
          {
-            P_blockingLineDifferentLevel(ld, po, thingz, thingmid, thingtopz, linebottom, linetop);
+            P_blockingLineDifferentLevel(ld, po, thingz, thingmid, thingtopz, linebottom, linetop, 
+               pushhit);
             return true;
          }
          if(!(clip.thing->flags & MF_FRIEND || clip.thing->player) && 
             ld->flags & ML_BLOCKMONSTERS && 
             !(ld->flags & ML_3DMIDTEX))
          {
-            P_blockingLineDifferentLevel(ld, po, thingz, thingmid, thingtopz, linebottom, linetop);
+            P_blockingLineDifferentLevel(ld, po, thingz, thingmid, thingtopz, linebottom, linetop, 
+               pushhit);
             return true;
          }
       }
@@ -459,7 +464,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
    if(samegroupid || (linetop > thingz && linebottom < thingtopz && 
       !(ld->pflags & PS_PASSABLE)))
    {
-      P_CollectSpechits(ld);
+      P_CollectSpechits(ld, pushhit);
    }
 
    return true;
