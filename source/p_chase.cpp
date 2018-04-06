@@ -97,7 +97,7 @@ static int zi(int64_t dist, int64_t totaldist, int64_t ztarget, int64_t playerz)
 // set the chasecam target x and ys if you hit one
 // originally based on the shooting traverse function in p_maputl.c
 //
-static bool PTR_chaseTraverse(intercept_t *in)
+static bool PTR_chaseTraverse(intercept_t *in, void *context)
 {
    if(in->isaline)
    {

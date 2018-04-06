@@ -82,7 +82,6 @@ struct linetracer_t
    uint32_t    aimflagsmask; // killough 8/2/98: for more intelligent autoaiming
    fixed_t     sin;
    fixed_t     cos;
-   mobjinfo_t *puff;
 };
 
 struct intercept_t
@@ -96,7 +95,7 @@ struct intercept_t
   } d;
 };
 
-typedef bool (*traverser_t)(intercept_t *in);
+typedef bool (*traverser_t)(intercept_t *in, void *context);
 
 fixed_t P_AproxDistance(fixed_t dx, fixed_t dy);
 int     P_PointOnLineSide(fixed_t x, fixed_t y, const line_t *line);
@@ -126,7 +125,7 @@ inline static bool P_BlockThingsIterator(int x, int y, bool func(Mobj *))
 }
 bool ThingIsOnLine(const Mobj *t, const line_t *l);  // killough 3/15/98
 bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
-                    int flags, traverser_t trav);
+                    int flags, traverser_t trav, void *context = nullptr);
 
 angle_t P_PointToAngle(fixed_t xo, fixed_t yo, fixed_t x, fixed_t y);
 

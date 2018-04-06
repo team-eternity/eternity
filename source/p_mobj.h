@@ -433,11 +433,30 @@ enum bloodaction_e : int
    NUMBLOODACTIONS
 };
 
+//
+// Information used by P_SpawnPuff. Needed for Heretic behaviour.
+//
+struct puffinfo_t
+{
+   const mobjinfo_t *info;    // type of mobj (nullptr to use Doom puff).
+   const mobjinfo_t *hitinfo; // type of mobj to show on hit.
+   fixed_t upspeed;           // up movement speed (Heretic has many variants)
+};
+
+//
+// Quick check that the puff is well defined. Null mobjinfo means nothing.
+//
+inline static bool P_puffIsDefined(const puffinfo_t *puff)
+{
+   return puff && puff->info;
+}
+
 void  P_RespawnSpecials();
 Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
 bool  P_SetMobjState(Mobj *mobj, statenum_t state);
 void  P_MobjThinker(Mobj *mobj);
-void  P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown, bool ptcl);
+void  P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown,
+                  bool ptcl, const puffinfo_t *puff = nullptr);
 void  P_SpawnUnknownThings();
 Mobj *P_SpawnMapThing(mapthing_t *mt);
 bool  P_CheckMissileSpawn(Mobj *);  // killough 8/2/98

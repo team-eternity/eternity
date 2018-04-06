@@ -2090,7 +2090,7 @@ static void P_HitSlideLine(line_t *ld)
 //
 // PTR_SlideTraverse
 //
-static bool PTR_SlideTraverse(intercept_t *in)
+static bool PTR_SlideTraverse(intercept_t *in, void *context)
 {
    line_t *li;
    
