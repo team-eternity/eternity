@@ -308,8 +308,11 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
          bool result = clip.unstuck && !untouchedViaOffset(ld, link) &&
             FixedMul(clip.x - clip.thing->x, ld->dy) >
             FixedMul(clip.y - clip.thing->y, ld->dx);
-         if(!result && ld->special && !(clip.thing->intflags & MIF_CHECKPOSEXT))
+         if(!result && full_demo_version >= make_full_version(401, 0) && ld->special &&
+            !(clip.thing->intflags & MIF_CHECKPOSEXT))
+         {
             P_PushSpecialLine(*clip.thing, *ld, 0);
+         }
          return result;
       }
 
@@ -319,8 +322,11 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
          if(ld->flags & ML_BLOCKING)           // explicitly blocking everything
          {
             bool result = clip.unstuck && !untouchedViaOffset(ld, link);
-            if(!result && ld->special && !(clip.thing->intflags & MIF_CHECKPOSEXT))
+            if(!result && full_demo_version >= make_full_version(401, 0) && ld->special &&
+               !(clip.thing->intflags & MIF_CHECKPOSEXT))
+            {
                P_PushSpecialLine(*clip.thing, *ld, 0);
+            }
             return result;
          }
          // killough 8/1/98: allow escape
