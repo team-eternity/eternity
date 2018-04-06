@@ -271,7 +271,7 @@ static double old_m_w, old_m_h;
 static double old_m_x, old_m_y;
 
 // old location used by the Follower routine
-static mpoint_t f_oldloc;
+static v2fixed_t f_oldloc;
 
 // used by MTOF to scale from map-to-frame-buffer coords
 static double scale_mtof = INITSCALEMTOF;
@@ -969,8 +969,8 @@ static void AM_doFollowPlayer()
       m_y = FTOM(MTOF(M_FixedToDouble(plr->mo->y))) - m_h/2;
       m_x2 = m_x + m_w;
       m_y2 = m_y + m_h;
-      f_oldloc.x = M_FixedToDouble(plr->mo->x);
-      f_oldloc.y = M_FixedToDouble(plr->mo->y);
+      f_oldloc.x = plr->mo->x;
+      f_oldloc.y = plr->mo->y;
    }
 }
 
