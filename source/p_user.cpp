@@ -749,7 +749,7 @@ void P_PlayerThink(player_t *player)
       {
          weaponinfo_t *wp = E_WeaponForID(cmd->weaponID - 1); // weaponID is off by one
          weaponinfo_t *sister = wp->sisterWeapon;
-         if(player->powers[pw_weaponlevel2] && sister && sister->flags & WPF_POWEREDUP)
+         if(player->powers[pw_weaponlevel2] && E_IsPoweredVariant(sister))
             player->pendingweapon = sister;
          else
             player->pendingweapon = wp;
