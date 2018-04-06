@@ -204,7 +204,7 @@ void A_FireMacePL1(actionargs_t *actionargs)
    P_SubtractAmmo(player, -1);
    psp->sx = ((P_Random(pr_firemace) & 3) - 2) * FRACUNIT;
    psp->sy = WEAPONTOP + (P_Random(pr_firemace) & 3) * FRACUNIT;
-   ball = P_SpawnMissileAngleHeretic(mo, tnum, mo->angle +
+   ball = P_SpawnPlayerMissileAngleHeretic(mo, tnum, mo->angle +
                                                ((P_Random(pr_firemace) & 7) - 4) * PO2(24));
    if(ball)
       ball->counters[0] = 16;    // tics till dropoff
@@ -401,8 +401,8 @@ void A_FireCrossbowPL1(actionargs_t *actionargs)
 
    P_SubtractAmmo(player, -1);
    P_SpawnPlayerMissile(pmo, E_SafeThingType(MT_CRBOWFX1));
-   P_SpawnMissileAngleHeretic(pmo, tnum, pmo->angle - (ANG45 / 10));
-   P_SpawnMissileAngleHeretic(pmo, tnum, pmo->angle + (ANG45 / 10));
+   P_SpawnPlayerMissileAngleHeretic(pmo, tnum, pmo->angle - (ANG45 / 10));
+   P_SpawnPlayerMissileAngleHeretic(pmo, tnum, pmo->angle + (ANG45 / 10));
 }
 
 void A_FireCrossbowPL2(actionargs_t *actionargs)
@@ -417,10 +417,10 @@ void A_FireCrossbowPL2(actionargs_t *actionargs)
 
    P_SubtractAmmo(player, -1);
    P_SpawnPlayerMissile(pmo, tnum2);
-   P_SpawnMissileAngleHeretic(pmo, tnum2, pmo->angle - (ANG45 / 10));
-   P_SpawnMissileAngleHeretic(pmo, tnum2, pmo->angle + (ANG45 / 10));
-   P_SpawnMissileAngleHeretic(pmo, tnum3, pmo->angle - (ANG45 / 5));
-   P_SpawnMissileAngleHeretic(pmo, tnum3, pmo->angle + (ANG45 / 5));
+   P_SpawnPlayerMissileAngleHeretic(pmo, tnum2, pmo->angle - (ANG45 / 10));
+   P_SpawnPlayerMissileAngleHeretic(pmo, tnum2, pmo->angle + (ANG45 / 10));
+   P_SpawnPlayerMissileAngleHeretic(pmo, tnum3, pmo->angle - (ANG45 / 5));
+   P_SpawnPlayerMissileAngleHeretic(pmo, tnum3, pmo->angle + (ANG45 / 5));
 }
 
 void A_BoltSpark(actionargs_t *actionargs)

@@ -531,7 +531,7 @@ Mobj *P_SpawnMissileEx(const missileinfo_t &missileinfo);
 Mobj *P_SpawnMissile(Mobj *source, Mobj *dest, mobjtype_t type, fixed_t z);
 Mobj *P_SpawnPlayerMissile(Mobj *source, mobjtype_t type);
 Mobj *P_SpawnMissileAngle(Mobj *source, mobjtype_t type, angle_t angle, fixed_t momz, fixed_t z);
-Mobj *P_SpawnMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t angle);
+Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t angle);
 Mobj *P_SpawnMissileWithDest(Mobj* source, Mobj* dest, mobjtype_t type, fixed_t srcz, 
                              fixed_t destx, fixed_t desty, fixed_t destz);
 
