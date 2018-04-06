@@ -30,6 +30,7 @@
 #include "e_exdata.h"
 #include "m_bbox.h"
 #include "polyobj.h"
+#include "p_info.h"
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_portal.h"
@@ -313,7 +314,8 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
          if(!result && full_demo_version >= make_full_version(401, 0) && ld->special &&
             !(clip.thing->intflags & MIF_CHECKPOSEXT))
          {
-            P_PushSpecialLine(*clip.thing, *ld, 0);
+            P_PushSpecialLine(*clip.thing, *ld, P_LevelIsVanillaHexen() ? 0 :
+               P_PointOnLineSide(clip.thing->x, clip.thing->y, ld));
          }
          return result;
       }
@@ -327,7 +329,8 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
             if(!result && full_demo_version >= make_full_version(401, 0) && ld->special &&
                !(clip.thing->intflags & MIF_CHECKPOSEXT))
             {
-               P_PushSpecialLine(*clip.thing, *ld, 0);
+               P_PushSpecialLine(*clip.thing, *ld, P_LevelIsVanillaHexen() ? 0 :
+                  P_PointOnLineSide(clip.thing->x, clip.thing->y, ld));
             }
             return result;
          }

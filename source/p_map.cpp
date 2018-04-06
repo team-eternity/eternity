@@ -731,7 +731,8 @@ bool PIT_CheckLine(line_t *ld, polyobj_s *po, void *context)
       if(!result && full_demo_version >= make_full_version(401, 0) && ld->special &&
          !(clip.thing->intflags & MIF_CHECKPOSEXT))
       {
-         P_PushSpecialLine(*clip.thing, *ld, 0);
+         P_PushSpecialLine(*clip.thing, *ld, P_LevelIsVanillaHexen() ? 0 :
+            P_PointOnLineSide(clip.thing->x, clip.thing->y, ld));
       }
       return result;
    }
@@ -743,11 +744,12 @@ bool PIT_CheckLine(line_t *ld, polyobj_s *po, void *context)
       {
          bool result = clip.unstuck && !untouched(ld);  // killough 8/1/98: allow escape
 
-         // Keep side 0 even when hitting from backside
+         // When it's Hexen, keep side 0 even when hitting from backside
          if(!result && full_demo_version >= make_full_version(401, 0) && ld->special &&
             !(clip.thing->intflags & MIF_CHECKPOSEXT))
          {
-            P_PushSpecialLine(*clip.thing, *ld, 0);
+            P_PushSpecialLine(*clip.thing, *ld, P_LevelIsVanillaHexen() ? 0 :
+               P_PointOnLineSide(clip.thing->x, clip.thing->y, ld));
          }
          // TODO: add the other push special checks.
          // TODO: add for P_Map3D and P_PortalClip CPP files.
