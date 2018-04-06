@@ -253,7 +253,7 @@ pickupeffect HAmmoSkullWimpy
   message $HAMMOSKULLROD1
   sound   ht_itemup
 
-  sprite  AMP1
+  sprite  AMS1
   pfxname PFX_PHRDWIMPY
 }
 pickupeffect HAmmoSkullHefty
@@ -262,7 +262,7 @@ pickupeffect HAmmoSkullHefty
   message $HAMMOSKULLROD2
   sound   ht_itemup
 
-  sprite  AMP2
+  sprite  AMS2
   pfxname PFX_PHRDHEFTY
 }
 pickupeffect HAmmoPhoenixWimpy
@@ -271,7 +271,7 @@ pickupeffect HAmmoPhoenixWimpy
   message $HAMMOPHOENIXROD1
   sound   ht_itemup
 
-  sprite  AMS1
+  sprite  AMP1
   pfxname PFX_SKRDWIMPY
 }
 pickupeffect HAmmoPhoenixHefty
@@ -280,7 +280,7 @@ pickupeffect HAmmoPhoenixHefty
   message $HAMMOPHOENIXROD2
   sound   ht_itemup
 
-  sprite  AMS2
+  sprite  AMP2
   pfxname PFX_SKRDHEFTY
 }
 
