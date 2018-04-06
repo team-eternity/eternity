@@ -368,8 +368,11 @@ static bool P_giveWeapon(player_t *player, itemeffect_t *giver, bool dropped, Mo
          {
             if(!E_PlayerOwnsWeapon(player, wp))
             {
+               weaponinfo_t *sister = wp->sisterWeapon;
                player->pendingweapon = wp;
                player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
+               if(player->powers[pw_weaponlevel2] && E_IsPoweredVariant(sister))
+                  player->pendingweapon = sister;
                E_GiveWeapon(player, wp);
                gaveweapon = true;
             }
@@ -569,7 +572,7 @@ bool P_GivePower(player_t *player, int power, int duration, bool additiveTime)
       if(!E_IsPoweredVariant(player->readyweapon))
       {
          weaponinfo_t *sister = player->readyweapon->sisterWeapon;
-         if(sister && sister->flags & WPF_POWEREDUP)
+         if(E_IsPoweredVariant(sister))
          {
             if(sister->readystate != player->readyweapon->readystate ||
                sister->flags & WPF_FORCETOREADY)
