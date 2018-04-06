@@ -684,7 +684,8 @@ bool ThingIsOnLine(const Mobj *t, const line_t *l)
 // ioanch 20160111: added groupid
 // ioanch 20160114: enhanced the callback
 //
-bool P_BlockLinesIterator(int x, int y, bool func(line_t*, polyobj_t*), int groupid)
+bool P_BlockLinesIterator(int x, int y, bool func(line_t*, polyobj_t*, void *), int groupid,
+   void *context)
 {
    int        offset;
    const int  *list;     // killough 3/1/98: for removal of blockmap limit
@@ -711,7 +712,7 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*, polyobj_t*), int grou
             if(po->lines[i]->validcount == validcount) // line has been checked
                continue;
             po->lines[i]->validcount = validcount;
-            if(!func(po->lines[i], po))
+            if(!func(po->lines[i], po, context))
                return false;
          }
       }
@@ -750,7 +751,7 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*, polyobj_t*), int grou
       if(ld->validcount == validcount)
          continue;       // line has already been checked
       ld->validcount = validcount;
-      if(!func(ld, nullptr))
+      if(!func(ld, nullptr, context))
          return false;
    }
    return true;  // everything was checked

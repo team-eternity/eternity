@@ -69,7 +69,7 @@ bool P_AllowMissileDamage(const Mobj &shooter, const Mobj &target);
 
 bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y);
 
-bool PIT_CheckLine(line_t *ld, polyobj_s *po);  // ioanch: used in the code
+bool PIT_CheckLine(line_t *ld, polyobj_s *po, void *context);  // ioanch: used in the code
 
 void P_SlideMove(Mobj *mo);
 

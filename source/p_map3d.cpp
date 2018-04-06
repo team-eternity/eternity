@@ -755,7 +755,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
    {
       // they will not change the spechit list
       if(gGroupVisit[clip.portalhit[i].ld->frontsector->groupid])
-         if(!PIT_CheckLine3D(clip.portalhit[i].ld, clip.portalhit[i].po))
+         if(!PIT_CheckLine3D(clip.portalhit[i].ld, clip.portalhit[i].po, nullptr))
             return false;
    }
 

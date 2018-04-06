@@ -196,10 +196,10 @@ static void P_blockingLineDifferentLevel(line_t *ld, polyobj_t *po, fixed_t thin
 // ioanch 20160112: 3D (portal) version of PIT_CheckLine. If map has no portals,
 // fall back to PIT_CheckLine
 //
-bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
+bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
 {
    if(!useportalgroups || full_demo_version < make_full_version(340, 48))
-      return PIT_CheckLine(ld, po);
+      return PIT_CheckLine(ld, po, context);
 
    int linegroupid = ld->frontsector->groupid;
 

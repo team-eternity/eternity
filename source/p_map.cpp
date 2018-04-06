@@ -560,7 +560,7 @@ bool P_PortalTeleportMove(Mobj *thing, fixed_t x, fixed_t y)
 //
 // killough 11/98: reformatted
 
-static bool PIT_CrossLine(line_t *ld, polyobj_s *po)
+static bool PIT_CrossLine(line_t *ld, polyobj_s *po, void *context)
 {
    // SoM 9/7/02: wow a killoughism... * SoM is scared
    int flags = ML_TWOSIDED | ML_BLOCKING | ML_BLOCKMONSTERS;
@@ -698,7 +698,7 @@ void P_CollectSpechits(line_t *ld)
 //
 // Adjusts tmfloorz and tmceilingz as lines are contacted
 //
-bool PIT_CheckLine(line_t *ld, polyobj_s *po)
+bool PIT_CheckLine(line_t *ld, polyobj_s *po, void *context)
 {
    if(clip.bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   || 
       clip.bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  || 
@@ -1802,7 +1802,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 // If more than one linedef is contacted, the effects are cumulative,
 // so balancing is possible.
 //
-static bool PIT_ApplyTorque(line_t *ld, polyobj_s *po)
+static bool PIT_ApplyTorque(line_t *ld, polyobj_s *po, void *context)
 {
    // ioanch 20160116: portal aware
    const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid,
@@ -2852,7 +2852,7 @@ void P_DelSeclist(msecnode_t *node)
 // at this location, so don't bother with checking impassable or
 // blocking lines.
 //
-static bool PIT_GetSectors(line_t *ld, polyobj_s *po)
+static bool PIT_GetSectors(line_t *ld, polyobj_s *po, void *context)
 {
    // ioanch 20160115: portal aware
    fixed_t bbox[4];
