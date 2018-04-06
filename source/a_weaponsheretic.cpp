@@ -168,11 +168,13 @@ void A_FireMacePL1B(actionargs_t *actionargs)
    ball = P_SpawnMobj(pmo->x, pmo->y, pmo->z + (28 * FRACUNIT) - pmo->floorclip, tnum);
 
    const fixed_t slope = P_PlayerPitchSlope(player);
-   ball->momz = FixedMul(ball->info->speed, slope) + (2 * FRACUNIT);
+   // Use Heretic's weird formula.
+   ball->momz = 2 * FRACUNIT + slope * 173 / 32;
+
    angle = pmo->angle;
    P_SetTarget(&ball->target, pmo);
    ball->angle = angle;
-   ball->z += 2 * slope;
+   ball->z += slope * 173 / 16;
    angle >>= ANGLETOFINESHIFT;
    ball->momx = (pmo->momx  / PO2(1)) + FixedMul(ball->info->speed, finecosine[angle]);
    ball->momy = (pmo->momy / PO2(1)) + FixedMul(ball->info->speed, finesine[angle]);
