@@ -805,7 +805,7 @@ static void E_ReallocWeapons(unsigned int numnewweapons)
    static int numweaponsalloc = 0;
 
    // only realloc when needed
-   if(!numweaponsalloc || (NUMWEAPONTYPES < numweaponsalloc + numnewweapons))
+   if(!numweaponsalloc || (static_cast<unsigned>(NUMWEAPONTYPES) < numweaponsalloc + numnewweapons))
    {
       int i;
 
@@ -877,7 +877,7 @@ void E_CollectWeapons(cfg_t *cfg)
    E_EDFLogPuts("\t\tBuilding weapon hash tables\n");
 
    // cycle through the weaponinfo defined in the cfg
-   for(i = 0; i < numweapons; i++)
+   for(i = 0; static_cast<unsigned>(i) < numweapons; i++)
    {
       cfg_t *weaponcfg  = cfg_getnsec(cfg, EDF_SEC_WEAPONINFO, i);
       const char *name  = cfg_title(weaponcfg);
