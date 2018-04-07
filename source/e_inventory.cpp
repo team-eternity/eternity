@@ -151,6 +151,7 @@ MetaTable *E_GetItemEffects()
 //
 
 // metakey vocabulary
+#define KEY_ADDITIVE       "additive"
 #define KEY_ADDITIVETIME   "additivetime"
 #define KEY_ALWAYSPICKUP   "alwayspickup"
 #define KEY_AMMO           "ammo"
@@ -164,7 +165,6 @@ MetaTable *E_GetItemEffects()
 #define KEY_AMMODMSTAY     "ammo.dmstay"
 #define KEY_AMMODROPPED    "ammo.dropped"
 #define KEY_AMMOGIVE       "ammo.give"
-#define KEY_BONUS          "bonus"
 #define KEY_CLASS          "class"
 #define KEY_CLASSNAME      "classname"
 #define KEY_DROPAMOUNT     "dropamount"
@@ -186,6 +186,7 @@ MetaTable *E_GetItemEffects()
 #define KEY_SAVEDIVISOR    "savedivisor"
 #define KEY_SAVEFACTOR     "savefactor"
 #define KEY_SETHEALTH      "sethealth"
+#define KEY_SETABSORPTION  "setabsorption"
 #define KEY_SORTORDER      "sortorder"
 #define KEY_TYPE           "type"
 #define KEY_UNDROPPABLE    "undroppable"
@@ -232,13 +233,14 @@ cfg_opt_t edf_healthfx_opts[] =
 // Armor fields
 cfg_opt_t edf_armorfx_opts[] =
 {
-   CFG_INT(KEY_SAVEAMOUNT,    0,  CFGF_NONE), // amount of armor given
-   CFG_INT(KEY_SAVEFACTOR,    1,  CFGF_NONE), // numerator of save percentage
-   CFG_INT(KEY_SAVEDIVISOR,   3,  CFGF_NONE), // denominator of save percentage
-   CFG_INT(KEY_MAXSAVEAMOUNT, 0,  CFGF_NONE), // max save amount, for bonuses
+   CFG_INT(KEY_SAVEAMOUNT,     0,  CFGF_NONE), // amount of armor given
+   CFG_INT(KEY_SAVEFACTOR,     1,  CFGF_NONE), // numerator of save percentage
+   CFG_INT(KEY_SAVEDIVISOR,    3,  CFGF_NONE), // denominator of save percentage
+   CFG_INT(KEY_MAXSAVEAMOUNT,  0,  CFGF_NONE), // max save amount, for bonuses
    
-   CFG_FLAG(KEY_ALWAYSPICKUP, 0, CFGF_SIGNPREFIX), // if +, always pick up
-   CFG_FLAG(KEY_BONUS,        0, CFGF_SIGNPREFIX), // if +, is a bonus (adds to current armor type)
+   CFG_FLAG(KEY_ALWAYSPICKUP,  0, CFGF_SIGNPREFIX), // if +, always pick up
+   CFG_FLAG(KEY_ADDITIVE,      0, CFGF_SIGNPREFIX), // if +, adds to the current amount of armor
+   CFG_FLAG(KEY_SETABSORPTION, 0, CFGF_SIGNPREFIX), // if +, sets absorption values
 
    CFG_END()
 };

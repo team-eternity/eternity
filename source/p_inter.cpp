@@ -477,26 +477,20 @@ bool P_GiveArmor(player_t *player, itemeffect_t *effect)
    if(!(effect->getInt("alwayspickup", 0)) && player->armorpoints >= hits)
       return false; // don't pick up
 
-   // bonuses add to your armor and preserve your current absorption qualities;
-   // normal pickups set your armor and override any existing qualities
-   if(effect->getInt("bonus", 0))
+   if(effect->getInt("additive", 0))
    {
       int maxsaveamount = effect->getInt("maxsaveamount", 0);
       player->armorpoints += hits;
       if(player->armorpoints > maxsaveamount)
          player->armorpoints = maxsaveamount;
-
-      // bonuses only change the player's armor absorption quality if the player
-      // currently has no armor
-      if(!player->armorfactor)
-      {
-         player->armorfactor  = savefactor;
-         player->armordivisor = savedivisor;
-      }
    }
    else
+      player->armorpoints = hits;
+
+   // only set armour quality if the armour always sets it,
+   // or if the player had no armour prior to this pickup
+   if(!player->armorfactor || effect->getInt("setabsorption", 0))
    {
-      player->armorpoints  = hits;
       player->armorfactor  = savefactor;
       player->armordivisor = savedivisor;
    }
