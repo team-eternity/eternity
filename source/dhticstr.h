@@ -226,6 +226,12 @@
 #define HAMMOSKULLROD2      "GREATER RUNES"
 #define HAMMOPHOENIXROD1    "FLAME ORB"
 #define HAMMOPHOENIXROD2    "INFERNO ORB"
+#define HWPNMACE            "FIREMACE"
+#define HWPNCROSSBOW        "ETHEREAL CROSSBOW"
+#define HWPNBLASTER         "DRAGON CLAW"
+#define HWPNSKULLROD        "HELLSTAFF"
+#define HWPNPHOENIXROD      "PHOENIX ROD"
+#define HWPNGAUNTLETS       "GAUNTLETS OF THE NECROMANCER"
 
 // key messages
 #define HPD_GREENO "You need a green key to activate this object"
