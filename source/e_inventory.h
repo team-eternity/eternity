@@ -63,7 +63,6 @@ enum
 typedef int artitype_t;
 
 // Hard-coded names for specially treated items (needed in DeHackEd, etc.)
-// INVENTORY_TODO: many may become unneeded when P_TouchSpecialThing is finished
 #define ITEMNAME_BERSERKHEALTH "BerserkHealth" // The health
 #define ITEMNAME_HEALTHBONUS   "HealthBonus"
 #define ITEMNAME_MEDIKIT       "Medikit"
@@ -73,10 +72,8 @@ typedef int artitype_t;
 #define ITEMNAME_GREENARMOR    "GreenArmor"
 #define ITEMNAME_BLUEARMOR     "BlueArmor"
 #define ITEMNAME_IDFAARMOR     "IDFAArmor"
-#define ITEMNAME_ENCHANTEDSHLD "EnchantedShield"
 #define ITEMNAME_ARMORBONUS    "ArmorBonus"
-
-#define ITEMNAME_BERZERKBOX    "Berserk" // The power
+#define ITEMNAME_RAMBOARMOR    "RAMBOArmor"
 
 // Hard-coded names for specially treated artifact types
 #define ARTI_BACKPACKITEM "BackpackItem"
