@@ -467,12 +467,12 @@ static const char *s_HAMMOSKULLROD1 = HAMMOSKULLROD1;
 static const char *s_HAMMOSKULLROD2 = HAMMOSKULLROD2;
 static const char *s_HAMMOPHOENIXROD1 = HAMMOPHOENIXROD1;
 static const char *s_HAMMOPHOENIXROD2 = HAMMOPHOENIXROD2;
-static const char *s_HWPNMACE       = HWPNMACE;
-static const char *s_HWPNCROSSBOW   = HWPNCROSSBOW;
-static const char *s_HWPNBLASTER    = HWPNBLASTER;
-static const char *s_HWPNSKULLROD   = HWPNSKULLROD;
-static const char *s_HWPNPHOENIXROD = HWPNPHOENIXROD;
-static const char *s_HWPNGAUNTLETS  = HWPNGAUNTLETS;
+static const char *s_HWEAPONMACE       = HWEAPONMACE;
+static const char *s_HWEAPONCROSSBOW   = HWEAPONCROSSBOW;
+static const char *s_HWEAPONBLASTER    = HWEAPONBLASTER;
+static const char *s_HWEAPONSKULLROD   = HWEAPONSKULLROD;
+static const char *s_HWEAPONPHOENIXROD = HWEAPONPHOENIXROD;
+static const char *s_HWEAPONGAUNTLETS  = HWEAPONGAUNTLETS;
 static const char *s_TXT_CHEATGODON         = TXT_CHEATGODON;
 static const char *s_TXT_CHEATGODOFF        = TXT_CHEATGODOFF;
 static const char *s_TXT_CHEATNOCLIPON      = TXT_CHEATNOCLIPON;
@@ -948,12 +948,12 @@ dehstr_t deh_strlookup[] =
    { &s_HAMMOSKULLROD2,    "HAMMOSKULLROD2"    },
    { &s_HAMMOPHOENIXROD1,  "HAMMOPHOENIXROD1"  },
    { &s_HAMMOPHOENIXROD2,  "HAMMOPHOENIXROD2"  },
-   { &s_HWPNMACE,          "HWPNMACE"          },
-   { &s_HWPNCROSSBOW,      "HWPNCROSSBOW"      },
-   { &s_HWPNBLASTER,       "HWPNBLASTER"       },
-   { &s_HWPNSKULLROD,      "HWPNSKULLROD"      },
-   { &s_HWPNPHOENIXROD,    "HWPNPHOENIXROD"    },
-   { &s_HWPNGAUNTLETS,     "HWPNGAUNTLETS"     },
+   { &s_HWEAPONMACE,          "HWEAPONMACE"       },
+   { &s_HWEAPONCROSSBOW,      "HWEAPONCROSSBOW"   },
+   { &s_HWEAPONBLASTER,       "HWEAPONBLASTER"    },
+   { &s_HWEAPONSKULLROD,      "HWEAPONSKULLROD"   },
+   { &s_HWEAPONPHOENIXROD,    "HWEAPONPHOENIXROD" },
+   { &s_HWEAPONGAUNTLETS,     "HWEAPONGAUNTLETS"  },
    { &s_HPD_GREENO,        "HPD_GREENO"        },
    { &s_HPD_GREENK,        "HPD_GREENK"        },
    { &s_TXT_CHEATGODON,         "TXT_CHEATGODON"        },
