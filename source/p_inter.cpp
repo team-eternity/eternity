@@ -465,21 +465,23 @@ bool P_GiveArmor(player_t *player, itemeffect_t *effect)
    if(!effect)
       return false;
 
-   int hits        = effect->getInt("saveamount",  0);
-   int savefactor  = effect->getInt("savefactor",  1);
-   int savedivisor = effect->getInt("savedivisor", 3);
+   int  hits          =   effect->getInt("saveamount",    0);
+   int  savefactor    =   effect->getInt("savefactor",    1);
+   int  savedivisor   =   effect->getInt("savedivisor",   3);
+   int  maxsaveamount =   effect->getInt("maxsaveamount", 0);
+   bool additive      = !!effect->getInt("additive",      0);
 
    // check for validity
    if(!hits || !savefactor || !savedivisor)
       return false;
 
    // check if needed
-   if(!(effect->getInt("alwayspickup", 0)) && player->armorpoints >= hits)
+   if(!(effect->getInt("alwayspickup", 0)) &&
+      player->armorpoints >= (additive ? maxsaveamount : hits))
       return false; // don't pick up
 
-   if(effect->getInt("additive", 0))
+   if(additive)
    {
-      int maxsaveamount = effect->getInt("maxsaveamount", 0);
       player->armorpoints += hits;
       if(player->armorpoints > maxsaveamount)
          player->armorpoints = maxsaveamount;
