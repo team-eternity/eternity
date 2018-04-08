@@ -52,8 +52,9 @@ font ee_fshudsmallfont
    end         'Z'
    colorable   true
    uppercase   true
-   spacesize   7
+   spacesize   1
    tallestchar 6
+   defaultcolor tan
 
    filter { chars { '/' };                mask "NHUD_SLS"  }
    filter { start 'A'; end = 'Z';         mask "NHUD_%c"   }
@@ -62,7 +63,7 @@ font ee_fshudsmallfont
    colortables
    {
       brick:  "80=21,95=29"
-      //tan:    ""
+      tan:    @identity
       gray:   "80=104,95=109"
       green:  "80=114,95=118"
       //brown:  ""

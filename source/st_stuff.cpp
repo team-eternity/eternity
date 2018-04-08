@@ -940,7 +940,8 @@ static void ST_DoomFSDrawer()
                plyr->health <= health_green ? *FC_GREEN :
                                               *FC_BLUE;
    tempstr << static_cast<char>(fontcolor) << plyr->health;
-   V_FontWriteText(hud_fslarge, tempstr.constPtr(), 7 + nfs_health->width, SCREENHEIGHT - 24, &vbscreen);
+   V_FontWriteText(hud_fslarge, tempstr.constPtr(), 7 + nfs_health->width,
+                   SCREENHEIGHT - 24, &vbscreen);
 
 
    tempstr.clear();
@@ -961,9 +962,40 @@ static void ST_DoomFSDrawer()
    else
       fontcolor = *FC_BLUE;
    tempstr << static_cast<char>(fontcolor) << plyr->armorpoints;
-   V_FontWriteText(hud_fslarge, tempstr.constPtr(), 7 + nfs_health->width, SCREENHEIGHT - 12, &vbscreen);
-
+   V_FontWriteText(hud_fslarge, tempstr.constPtr(), 7 + nfs_health->width,
+                  SCREENHEIGHT - 12, &vbscreen);
    V_DrawPatch(40, SCREENHEIGHT - 22, &vbscreen, nfs_divider);
+
+   tempstr.clear();
+   tempstr << "ARMS  ";
+   //V_FontWriteText(hud_fssmall, "ARMS", 42, SCREENHEIGHT - 24, &vbscreen);
+   for(int i = 0; i < NUMWEAPONS; i++)
+   {
+      if(E_PlayerOwnsWeaponForDEHNum(plyr, i))
+      {
+         // got it
+         fontcolor = weapcolor(E_WeaponForDEHNum(i));
+         //tempstr << static_cast<char>(fontcolor) << (i + 1) << ' ';
+      }
+      else
+         fontcolor = *FC_GRAY;
+
+      tempstr << static_cast<char>(fontcolor) << i + 1 << ' ';
+   }
+   V_FontWriteText(hud_fssmall, tempstr.constPtr(), 42, SCREENHEIGHT - 24, &vbscreen);
+
+   V_FontWriteText(hud_fssmall, "AMMO", 42, SCREENHEIGHT - 16, &vbscreen);
+
+   V_FontWriteText(hud_fssmall, "KEYS", 42, SCREENHEIGHT - 8, &vbscreen);
+   for(int i = 0, x = 31; i < GameModeInfo->numHUDKeys; i++)
+   {
+      if(E_GetItemOwnedAmountName(plyr, GameModeInfo->cardNames[i]) > 0)
+      {
+         // got that key
+         V_DrawPatch(x, SCREENHEIGHT - 8, &subscreen43, keys[i]);
+         x += 9;
+      }
+   }
 
    /*
    // possibly update widget positions
