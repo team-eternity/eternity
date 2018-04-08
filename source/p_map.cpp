@@ -842,6 +842,7 @@ bool P_CheckPickUp(Mobj *thing)
       // IOANCH 20131007: pickup item bot control
 
       v2fixed_t coord = B_CoordXY(*thing);
+      P_TouchSpecialThing(thing, clip.thing); // can remove thing
 #warning Need to update this with the new pickup system
 #if 0
       bool nopick = P_TouchSpecialThing(thing, clip.thing); // can remove thing
