@@ -34,20 +34,24 @@
 #include "doomdef.h"
 #include "doomstat.h"
 #include "dstrings.h"
+#include "e_fonts.h"
 #include "e_inventory.h"
 #include "e_lib.h"
 #include "e_weapons.h"
 #include "hu_over.h"    // haleyjd
+#include "i_system.h"
 #include "i_video.h"
 #include "metaapi.h"
 #include "m_cheat.h"
 #include "m_random.h"
 #include "p_skin.h"
 #include "r_main.h"
+#include "r_patch.h"
 #include "s_sound.h"
 #include "sounds.h"
 #include "st_lib.h"
 #include "st_stuff.h"
+#include "v_font.h"
 #include "v_misc.h"
 #include "v_patchfmt.h"
 #include "v_video.h"
@@ -908,6 +912,16 @@ static void ST_DoomDrawer()
    ST_doRefresh();     // If just after ST_Start(), refresh all
 }
 
+static patch_t *nfs_armor;
+static patch_t *nfs_divider;
+static patch_t *nfs_health;
+
+char       *hud_fssmallname;
+char       *hud_fslargename;
+vfont_t    *hud_fssmall;
+vfont_t    *hud_fslarge;
+static bool st_fontsloaded = false;
+
 #define ST_ALPHA (st_fsalpha * FRACUNIT / 100)
 
 //
@@ -917,6 +931,41 @@ static void ST_DoomDrawer()
 //
 static void ST_DoomFSDrawer()
 {
+   qstring tempstr;
+   int fontcolor;
+
+   V_DrawPatch(3, SCREENHEIGHT - 24, &vbscreen, nfs_health);
+   fontcolor = plyr->health < health_red    ? *FC_RED   :
+               plyr->health < health_yellow ? *FC_GOLD  :
+               plyr->health <= health_green ? *FC_GREEN :
+                                              *FC_BLUE;
+   tempstr << static_cast<char>(fontcolor) << plyr->health;
+   V_FontWriteText(hud_fslarge, tempstr.constPtr(), 7 + nfs_health->width, SCREENHEIGHT - 24, &vbscreen);
+
+
+   tempstr.clear();
+   V_DrawPatch(3, SCREENHEIGHT - 12, &vbscreen, nfs_armor);
+   if(plyr->armorpoints < armor_red)
+      fontcolor = *FC_RED;
+   else if(plyr->armorpoints < armor_yellow)
+      fontcolor = *FC_GOLD;
+   else if(armor_byclass)
+   {
+      fixed_t armorclass = 0;
+      if(plyr->armordivisor)
+         armorclass = (plyr->armorfactor * FRACUNIT) / plyr->armordivisor;
+      fontcolor = (armorclass > FRACUNIT / 3 ? *FC_BLUE : *FC_GREEN);
+   }
+   else if(plyr->armorpoints <= armor_green)
+      fontcolor = *FC_GREEN;
+   else
+      fontcolor = *FC_BLUE;
+   tempstr << static_cast<char>(fontcolor) << plyr->armorpoints;
+   V_FontWriteText(hud_fslarge, tempstr.constPtr(), 7 + nfs_health->width, SCREENHEIGHT - 12, &vbscreen);
+
+   V_DrawPatch(40, SCREENHEIGHT - 22, &vbscreen, nfs_divider);
+
+   /*
    // possibly update widget positions
    ST_moveWidgets(true);
 
@@ -946,7 +995,7 @@ static void ST_DoomFSDrawer()
    }
 
    // draw common number widgets (always refresh since no background)
-   ST_drawCommonWidgets(ST_ALPHA);
+   ST_drawCommonWidgets(ST_ALPHA);*/
 }
 
 //
@@ -1091,6 +1140,10 @@ static void ST_loadGraphics()
       fs_ammo[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
 
+   nfs_armor   = PatchLoader::CacheName(wGlobalDir, "nhud_amr", PU_STATIC);
+   nfs_divider = PatchLoader::CacheName(wGlobalDir, "nhud_div", PU_STATIC);
+   nfs_health  = PatchLoader::CacheName(wGlobalDir, "nhud_hlt", PU_STATIC);
+
    ST_CacheFaces(default_faces, "STF");
 }
 
@@ -1135,9 +1188,21 @@ void ST_CacheFaces(patch_t **faces, const char *facename)
    faces[facenum]   = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
 }
 
+static void ST_loadFonts()
+{
+   if(!(hud_fssmall = E_FontForName(hud_fssmallname)))
+      I_Error("ST_loadFonts: bad EDF hu_font name %s\n", hud_fssmallname);
+
+   if(!(hud_fslarge = E_FontForName(hud_fslargename)))
+      I_Error("ST_loadFonts: bad EDF hu_font name %s\n", hud_fslarge);
+
+   st_fontsloaded = true;
+}
+
 static void ST_loadData()
 {
    ST_loadGraphics();
+   ST_loadFonts();
 }
 
 #if 0

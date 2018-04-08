@@ -46,6 +46,60 @@ font ee_hudfont
    }
 }
 
+font ee_fshudsmallfont
+{
+   start       '/'
+   end         'Z'
+   colorable   true
+   uppercase   true
+   spacesize   7
+   tallestchar 6
+
+   filter { chars { '/' };                mask "NHUD_SLS"  }
+   filter { start 'A'; end = 'Z';         mask "NHUD_%c"   }
+   filter { start '0'; end = '9';         mask "NHUD_DS%c" }
+
+   colortables
+   {
+      brick:  "80=21,95=29"
+      //tan:    ""
+      gray:   "80=104,95=109"
+      green:  "80=114,95=118"
+      //brown:  ""
+      gold:   "80=162,95=165"
+      red:    "80=179,95=181"
+      blue:   "80=195,95=198"
+      orange: "80=211,95=214"
+      yellow: "80=160,95=162"
+   }
+}
+
+font ee_fshudslargefont
+{
+   start       '0'
+   end         '9'
+   colorable   true
+   uppercase   true
+   spacesize   10
+   tallestchar 10
+
+   filter { start '0'; end = '9';         mask "NHUD_DL%c" }
+
+   colortables
+   {
+      brick:  "80=21,95=29"
+      //tan:    ""
+      gray:   "80=104,95=109"
+      green:  "80=114,95=118"
+      //brown:  ""
+      gold:   "80=162,95=165"
+      red:    "80=179,95=181"
+      blue:   "80=195,95=198"
+      orange: "80=211,95=214"
+      yellow: "80=160,95=162"
+   }
+}
+
 // Medium font - extracted from the Doom / Doom 2 CREDITS resource.
 // New characters by esselfortium and Quasar.
 font ee_midfont

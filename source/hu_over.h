@@ -22,6 +22,7 @@
 #define HU_OVER_H__
 
 struct vfont_t;
+struct weaponinfo_t;
 
 // heads up font
 void HU_LoadFont();
@@ -31,6 +32,16 @@ int  HU_StringHeight(const char *s);
 
 extern char    *hud_overfontname;
 extern vfont_t *hud_overfont;
+
+extern char    *hud_fssmallname;
+extern char    *hud_fslargename;
+extern vfont_t *hud_fssmall;
+extern vfont_t *hud_fslarge;
+
+int wc_pammo(weaponinfo_t *w);
+bool wc_noammo(weaponinfo_t *w);
+int wc_mammo(weaponinfo_t *w);
+char weapcolor(weaponinfo_t *w);
 
 // overlay interface
 void HU_OverlayDraw();

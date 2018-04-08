@@ -268,6 +268,8 @@ static cfg_opt_t edf_opts[] =
    CFG_STR(ITEM_MN_EPISODE,     NULL,              CFGF_NONE),
    CFG_STR(ITEM_FONT_HUD,       "ee_smallfont",    CFGF_NONE),
    CFG_STR(ITEM_FONT_HUDO,      "ee_hudfont",      CFGF_NONE),
+   CFG_STR(ITEM_FONT_HUDFSS,    "ee_fshudsmallfont", CFGF_NONE),
+   CFG_STR(ITEM_FONT_HUDFSL,    "ee_fshudslargefont", CFGF_NONE),
    CFG_STR(ITEM_FONT_MENU,      "ee_menufont",     CFGF_NONE),
    CFG_STR(ITEM_FONT_BMENU,     "ee_bigfont",      CFGF_NONE),
    CFG_STR(ITEM_FONT_NMENU,     "ee_smallfont",    CFGF_NONE),
