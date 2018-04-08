@@ -970,23 +970,27 @@ static void ST_DoomFSDrawer()
 
    tempstr.clear();
    tempstr << "ARMS  ";
-   //V_FontWriteText(hud_fssmall, "ARMS", 43, SCREENHEIGHT - 24, &vbscreen);
    for(int i = 0; i < NUMWEAPONS; i++)
    {
       if(E_PlayerOwnsWeaponForDEHNum(plyr, i))
       {
+         weaponinfo_t *weapon = E_WeaponForDEHNum(i);
          // got it
-         fontcolor = weapcolor(E_WeaponForDEHNum(i));
-         //tempstr << static_cast<char>(fontcolor) << (i + 1) << ' ';
+         if(weapon->ammo)
+            fontcolor = weapcolor(weapon);
+         else
+            fontcolor = *FC_TAN;
       }
       else
          fontcolor = *FC_GRAY;
 
       tempstr << static_cast<char>(fontcolor) << i + 1 << ' ';
    }
-   V_FontWriteText(hud_fssmall, tempstr.constPtr(), 43, SCREENHEIGHT - 24, &vbscreen);
+   V_FontWriteText(hud_fssmall, tempstr.constPtr(), 44, SCREENHEIGHT - 24, &vbscreen);
 
-   V_FontWriteText(hud_fssmall, "AMMO", 43, SCREENHEIGHT - 16, &vbscreen);
+   const int displayoffs = 44 + V_FontStringWidth(hud_fssmall, "AMMO") + 1;
+
+   V_FontWriteText(hud_fssmall, "AMMO", 44, SCREENHEIGHT - 16, &vbscreen);
    if(plyr->readyweapon->ammo != nullptr)
    {
       tempstr.clear();
@@ -995,53 +999,19 @@ static void ST_DoomFSDrawer()
       fontcolor = weapcolor(plyr->readyweapon);
       tempstr << static_cast<char>(fontcolor) << ammo << FC_TAN "/" <<
                  static_cast<char>(fontcolor) << maxammo;
-      V_FontWriteText(hud_fsmedium, tempstr.constPtr(),
-                      43 + V_FontStringWidth(hud_fssmall, "AMMO") + 1,
-                      SCREENHEIGHT - 16, &vbscreen);
+      V_FontWriteText(hud_fsmedium, tempstr.constPtr(), displayoffs, SCREENHEIGHT - 16, &vbscreen);
    }
 
-   V_FontWriteText(hud_fssmall, "KEYS", 43, SCREENHEIGHT - 8, &vbscreen);
-   for(int i = 0, x = 31; i < GameModeInfo->numHUDKeys; i++)
+   V_FontWriteText(hud_fssmall, "KEYS", 44, SCREENHEIGHT - 8, &vbscreen);
+   for(int i = 0, x = displayoffs; i < GameModeInfo->numHUDKeys; i++)
    {
       if(E_GetItemOwnedAmountName(plyr, GameModeInfo->cardNames[i]) > 0)
       {
          // got that key
-         V_DrawPatch(x, SCREENHEIGHT - 8, &subscreen43, keys[i]);
-         x += 9;
+         V_DrawPatch(x, SCREENHEIGHT - 8, &vbscreen, keys[i]);
+         x += 8;
       }
    }
-
-   /*
-   // possibly update widget positions
-   ST_moveWidgets(true);
-
-   // draw graphics
-
-   // health
-   V_DrawPatchTL(ST_FSGFX_X, 152, &subscreen43, fs_health, NULL, ST_ALPHA);
-   
-   // armor
-   fixed_t armorclass = 0;
-   if(plyr->armordivisor)
-      armorclass = (plyr->armorfactor * FRACUNIT) / plyr->armordivisor;
-   if(armorclass > FRACUNIT/3)
-      V_DrawPatchTL(ST_FSGFX_X, ST_FS_BY, &subscreen43, fs_armorb, NULL, ST_ALPHA);
-   else
-      V_DrawPatchTL(ST_FSGFX_X, ST_FS_BY, &subscreen43, fs_armorg, NULL, ST_ALPHA);
-
-   ST_updateWidgets();
-
-   // ammo
-   itemeffect_t *ammo = plyr->readyweapon->ammo;
-   if(ammo)
-   {
-      int num = E_StrToNumLinear(st_AmmoForNum, NUMAMMO, ammo->getKey());
-      if(num != NUMAMMO)
-         V_DrawPatchTL(256, ST_FS_BY, &subscreen43, fs_ammo[num], NULL, ST_ALPHA);
-   }
-
-   // draw common number widgets (always refresh since no background)
-   ST_drawCommonWidgets(ST_ALPHA);*/
 }
 
 //
