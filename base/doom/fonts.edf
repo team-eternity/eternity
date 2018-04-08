@@ -62,16 +62,13 @@ font ee_fshudsmallfont
 
    colortables
    {
-      brick:  "80=21,95=29"
-      tan:    @identity
       gray:   "80=104,95=109"
       green:  "80=114,95=118"
-      //brown:  ""
       gold:   "80=162,95=165"
       red:    "80=179,95=181"
       blue:   "80=195,95=198"
-      orange: "80=211,95=214"
       yellow: "80=160,95=162"
+      custom1: @identity
    }
 }
 
@@ -83,23 +80,20 @@ font ee_fshudmediumfont
    uppercase   true
    spacesize   1
    tallestchar 6
-   defaultcolor tan
+   defaultcolor FC_CUSTOM1
 
    filter { chars { '/' };                mask "NHUD_SLS"  }
    filter { start '0'; end = '9';         mask "NHUD_DM%c" }
 
    colortables
    {
-      brick:  "80=21,95=29"
-      tan:    @identity
       gray:   "80=104,95=109"
       green:  "80=114,95=118"
-      //brown:  ""
       gold:   "80=162,95=165"
       red:    "80=179,95=181"
       blue:   "80=195,95=198"
-      orange: "80=211,95=214"
       yellow: "80=160,95=162"
+      custom1: @identity
    }
 }
 
@@ -116,16 +110,13 @@ font ee_fshudslargefont
 
    colortables
    {
-      brick:  "80=21,95=29"
-      //tan:    ""
       gray:   "80=104,95=109"
       green:  "80=114,95=118"
-      //brown:  ""
       gold:   "80=162,95=165"
       red:    "80=179,95=181"
       blue:   "80=195,95=198"
-      orange: "80=211,95=214"
       yellow: "80=160,95=162"
+      custom1: @identity
    }
 }
 

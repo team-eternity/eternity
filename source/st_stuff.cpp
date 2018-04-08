@@ -962,7 +962,7 @@ static void ST_DoomFSDrawer()
       if(E_PlayerOwnsWeaponForDEHNum(plyr, i))
       {
          weaponinfo_t *weapon = E_WeaponForDEHNum(i);
-         fontcolor = weapon->ammo ? fontcolor = HU_WeapColor(weapon) : *FC_TAN;
+         fontcolor = weapon->ammo ? fontcolor = HU_WeapColor(weapon) : *FC_CUSTOM1;
       }
       else
          fontcolor = *FC_GRAY;
@@ -979,7 +979,7 @@ static void ST_DoomFSDrawer()
       const int ammo = HU_WC_PlayerAmmo(plyr->readyweapon);
       const int maxammo = HU_WC_MaxAmmo(plyr->readyweapon);
       fontcolor = HU_WeapColor(plyr->readyweapon);
-      tempstr << fontcolor << ammo << FC_TAN " / " << fontcolor << maxammo;
+      tempstr << fontcolor << ammo << FC_CUSTOM1 " / " << fontcolor << maxammo;
       V_FontWriteText(hud_fsmedium, tempstr.constPtr(), displayoffs, SCREENHEIGHT - 16, &vbscreen);
    }
 
