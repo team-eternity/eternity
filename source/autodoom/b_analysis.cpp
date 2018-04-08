@@ -270,44 +270,33 @@ static void B_getBranchingStateSeq(statenum_t sn,
    }
    else if(st.action == A_GenRefire)
    {
-#warning Need to update this for the new arg function
-#if 0
       if (E_ArgAsInt(st.args, 1, 0) > 0 ||
           (mo && mo->flags & MF_FRIEND || !mo && mi->flags & MF_FRIEND))
-         dests.add(E_ArgAsStateNum(st.args, 0, mo, pl));
-#endif
+         dests.add(E_ArgAsStateNum(st.args, 0, mo, nullptr));
    }
    else if(st.action == A_HealthJump &&
            (mo && mo->flags & MF_SHOOTABLE || !mo && mi->flags & MF_SHOOTABLE) &&
            !(mo && mo->flags2 & MF2_INVULNERABLE || !mo && mi->flags2 & MF2_INVULNERABLE))
    {
-#warning Need to update this for the new arg function
-#if 0
-      int statenum = E_ArgAsStateNumNI(st.args, 0, mo);
+      int statenum = E_ArgAsStateNumNI(st.args, 0, mo, nullptr);
       int checkhealth = E_ArgAsInt(st.args, 2, 0);
       
       if(statenum >= 0 && checkhealth < NUMMOBJCOUNTERS && checkhealth >= 0)
          dests.add(statenum);
-#endif
    }
    else if(st.action == A_CounterJump)
    {
-#warning Need to update this for the new arg function
-#if 0
       // TODO: check if cnum has been touched or will be touched in such a way
       // to reach comparison with value. Only then accept the jump possibility
-      int statenum  = E_ArgAsStateNumNI(st.args, 0, mo);
+      int statenum  = E_ArgAsStateNumNI(st.args, 0, mo, nullptr);
       int cnum      = E_ArgAsInt(st.args, 3, 0);
       if(statenum >= 0 && cnum >= 0 && cnum < NUMMOBJCOUNTERS)
          dests.add(statenum);
-#endif
    }
    else if(st.action == A_CounterSwitch)
    {
-#warning Need to update this for the new arg function
-#if 0
       int cnum       = E_ArgAsInt       (st.args, 0,  0);
-      int startstate = E_ArgAsStateNumNI(st.args, 1, mo);
+      int startstate = E_ArgAsStateNumNI(st.args, 1, mo, nullptr);
       int numstates  = E_ArgAsInt       (st.args, 2,  0) - 1;
 
       if (startstate >= 0 && startstate + numstates < NUMSTATES && cnum >= 0 &&
@@ -316,16 +305,12 @@ static void B_getBranchingStateSeq(statenum_t sn,
          for (int i = 0; i < numstates; ++i)
             dests.add(startstate + i);
       }
-#endif
    }
    else if(st.action == A_TargetJump)
    {
-#warning Need to update this for the new arg function
-#if 0
-      int statenum = E_ArgAsStateNumNI(st.args, 0, mo);
+      int statenum = E_ArgAsStateNumNI(st.args, 0, mo, nullptr);
       if(statenum >= 0)
          dests.add(statenum);
-#endif
    }
    else if(st.action == A_GenWizard)
    {
@@ -379,12 +364,9 @@ static void B_getBranchingStateSeq(statenum_t sn,
    }
    else if(st.action == A_JumpIfTargetInLOS || st.action == A_CheckPlayerDone)
    {
-#warning Need to update this for the new arg function
-#if 0
-      int statenum = E_ArgAsStateNumNI(st.args, 0, mo);
+      int statenum = E_ArgAsStateNumNI(st.args, 0, mo, nullptr);
       if(statenum >= 0)
          dests.add(statenum);
-#endif
    }
    else if(st.action == A_Jump)
    {
@@ -396,22 +378,16 @@ static void B_getBranchingStateSeq(statenum_t sn,
          state_t *state;
          for(int i = 0; i < st.args->numargs; ++i)
          {
-#warning Need to update this for the new arg function
-#if 0
             state = E_ArgAsStateLabel(mo, st.args, i);
             dests.add(state->index);
-#endif
          }
       }
    }
    else if(st.action == A_MissileAttack || st.action == A_MissileSpread)
    {
-#warning Need to update this for the new arg function
-#if 0
-      int statenum = E_ArgAsStateNumG0(st.args, 4, mo);
+      int statenum = E_ArgAsStateNumG0(st.args, 4, mo, nullptr);
       if(statenum >= 0 && statenum < NUMSTATES)
          dests.add(statenum);
-#endif
    }
    else if(st.action == A_SnakeAttack || st.action == A_SnakeAttack2)
    {

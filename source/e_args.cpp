@@ -490,7 +490,7 @@ state_t *E_ArgAsStateLabelWpn(player_t *player, arglist_t *al, int index)
 // The evaluated value will be cached so that it can be returned on subsequent
 // calls. If the arg does not exist, the null state is returned instead.
 //
-int E_ArgAsStateNum(arglist_t *al, int index, Mobj *mo, player_t *player)
+int E_ArgAsStateNum(arglist_t *al, int index, const Mobj *mo, player_t *player)
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
@@ -557,7 +557,7 @@ int E_ArgAsStateNum(arglist_t *al, int index, Mobj *mo, player_t *player)
 //
 // NI == No Invalid, because invalid states are not converted to the null state.
 //
-int E_ArgAsStateNumNI(arglist_t *al, int index, Mobj *mo, player_t *player)
+int E_ArgAsStateNumNI(arglist_t *al, int index, const Mobj *mo, player_t *player)
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
@@ -622,7 +622,7 @@ int E_ArgAsStateNumNI(arglist_t *al, int index, Mobj *mo, player_t *player)
 // equal to zero.
 // G0 == "greater than or equal to zero"
 //
-int E_ArgAsStateNumG0(arglist_t *al, int index, Mobj *mo, player_t *player)
+int E_ArgAsStateNumG0(arglist_t *al, int index, const Mobj *mo, player_t *player)
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
