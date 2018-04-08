@@ -917,8 +917,10 @@ static patch_t *nfs_divider;
 static patch_t *nfs_health;
 
 char       *hud_fssmallname;
+char       *hud_fsmediumname;
 char       *hud_fslargename;
 vfont_t    *hud_fssmall;
+vfont_t    *hud_fsmedium;
 vfont_t    *hud_fslarge;
 static bool st_fontsloaded = false;
 
@@ -968,7 +970,7 @@ static void ST_DoomFSDrawer()
 
    tempstr.clear();
    tempstr << "ARMS  ";
-   //V_FontWriteText(hud_fssmall, "ARMS", 42, SCREENHEIGHT - 24, &vbscreen);
+   //V_FontWriteText(hud_fssmall, "ARMS", 43, SCREENHEIGHT - 24, &vbscreen);
    for(int i = 0; i < NUMWEAPONS; i++)
    {
       if(E_PlayerOwnsWeaponForDEHNum(plyr, i))
@@ -982,11 +984,23 @@ static void ST_DoomFSDrawer()
 
       tempstr << static_cast<char>(fontcolor) << i + 1 << ' ';
    }
-   V_FontWriteText(hud_fssmall, tempstr.constPtr(), 42, SCREENHEIGHT - 24, &vbscreen);
+   V_FontWriteText(hud_fssmall, tempstr.constPtr(), 43, SCREENHEIGHT - 24, &vbscreen);
 
-   V_FontWriteText(hud_fssmall, "AMMO", 42, SCREENHEIGHT - 16, &vbscreen);
+   V_FontWriteText(hud_fssmall, "AMMO", 43, SCREENHEIGHT - 16, &vbscreen);
+   if(plyr->readyweapon->ammo != nullptr)
+   {
+      tempstr.clear();
+      int ammo = wc_pammo(plyr->readyweapon);
+      int maxammo = wc_mammo(plyr->readyweapon);
+      fontcolor = weapcolor(plyr->readyweapon);
+      tempstr << static_cast<char>(fontcolor) << ammo << FC_TAN "/" <<
+                 static_cast<char>(fontcolor) << maxammo;
+      V_FontWriteText(hud_fsmedium, tempstr.constPtr(),
+                      43 + V_FontStringWidth(hud_fssmall, "AMMO") + 1,
+                      SCREENHEIGHT - 16, &vbscreen);
+   }
 
-   V_FontWriteText(hud_fssmall, "KEYS", 42, SCREENHEIGHT - 8, &vbscreen);
+   V_FontWriteText(hud_fssmall, "KEYS", 43, SCREENHEIGHT - 8, &vbscreen);
    for(int i = 0, x = 31; i < GameModeInfo->numHUDKeys; i++)
    {
       if(E_GetItemOwnedAmountName(plyr, GameModeInfo->cardNames[i]) > 0)
@@ -1224,6 +1238,9 @@ static void ST_loadFonts()
 {
    if(!(hud_fssmall = E_FontForName(hud_fssmallname)))
       I_Error("ST_loadFonts: bad EDF hu_font name %s\n", hud_fssmallname);
+
+   if(!(hud_fsmedium = E_FontForName(hud_fsmediumname)))
+      I_Error("ST_loadFonts: bad EDF hu_font name %s\n", hud_fsmediumname);
 
    if(!(hud_fslarge = E_FontForName(hud_fslargename)))
       I_Error("ST_loadFonts: bad EDF hu_font name %s\n", hud_fslarge);

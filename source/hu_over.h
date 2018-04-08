@@ -34,8 +34,10 @@ extern char    *hud_overfontname;
 extern vfont_t *hud_overfont;
 
 extern char    *hud_fssmallname;
+extern char    *hud_fsmediumname;
 extern char    *hud_fslargename;
 extern vfont_t *hud_fssmall;
+extern vfont_t *hud_fsmedium;
 extern vfont_t *hud_fslarge;
 
 int wc_pammo(weaponinfo_t *w);

@@ -48,6 +48,7 @@ struct vfont_t;
 #define ITEM_FONT_CONS    "c_font"
 
 #define ITEM_FONT_HUDFSS  "hu_fssmallfont"
+#define ITEM_FONT_HUDFSM  "hu_fsmediumfont"
 #define ITEM_FONT_HUDFSL  "hu_fsslargefont"
 
 extern cfg_opt_t edf_font_opts[];
