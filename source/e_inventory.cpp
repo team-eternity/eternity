@@ -1888,7 +1888,7 @@ int E_GetMaxAmountForArtifact(player_t *player, const itemeffect_t *artifact)
 // If you do not need the inventory slot for any other purpose, you can lookup
 // the amount of an item owned in one step by using this function.
 //
-int E_GetItemOwnedAmount(player_t *player, itemeffect_t *artifact)
+int E_GetItemOwnedAmount(player_t *player, const itemeffect_t *artifact)
 {
    auto slot = E_InventorySlotForItem(player, artifact);
 

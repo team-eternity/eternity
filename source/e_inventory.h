@@ -235,7 +235,7 @@ bool E_RemoveBackpack(player_t *player);
 int E_GetMaxAmountForArtifact(player_t *player, const itemeffect_t *artifact);
 
 // Get amount of an item owned for a specific artifact type
-int E_GetItemOwnedAmount(player_t *player, itemeffect_t *artifact);
+int E_GetItemOwnedAmount(player_t *player, const itemeffect_t *artifact);
 
 // Get amount of an item owned by name
 int E_GetItemOwnedAmountName(player_t *player, const char *name);
