@@ -162,7 +162,7 @@ bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
 //
 // Give the player ammo from an ammoeffect pickup.
 //
-bool P_GiveAmmoPickup(player_t *player, itemeffect_t *pickup, bool dropped, int dropamount)
+bool P_GiveAmmoPickup(player_t *player, const itemeffect_t *pickup, bool dropped, int dropamount)
 {
    if(!pickup)
       return false;
@@ -221,7 +221,7 @@ static void P_consumeSpecial(player_t *activator, Mobj *special)
 //
 // Compat P_giveWeapon, to stop demos catching on fire for some reason
 //
-static bool P_giveWeaponCompat(player_t *player, itemeffect_t *giver, bool dropped, Mobj *special)
+static bool P_giveWeaponCompat(player_t *player, const itemeffect_t *giver, bool dropped, Mobj *special)
 {
    bool gaveweapon = false;
    weaponinfo_t *wp = E_WeaponForName(giver->getString("weapon", ""));
@@ -283,7 +283,7 @@ static bool P_giveWeaponCompat(player_t *player, itemeffect_t *giver, bool dropp
 //
 // The weapon name may have a MF_DROPPED flag ored in.
 //
-static bool P_giveWeapon(player_t *player, itemeffect_t *giver, bool dropped, Mobj *special)
+static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropped, Mobj *special)
 {
    if(demo_version < 401)
       return P_giveWeaponCompat(player, giver, dropped, special);
@@ -390,7 +390,7 @@ static bool P_giveWeapon(player_t *player, itemeffect_t *giver, bool dropped, Mo
 //
 // Returns false if the body isn't needed at all
 //
-bool P_GiveBody(player_t *player, itemeffect_t *effect)
+bool P_GiveBody(player_t *player, const itemeffect_t *effect)
 {
    if(!effect)
       return false;
@@ -460,7 +460,7 @@ bool EV_DoHealThing(Mobj *actor, int amount, int max)
 // Returns false if the armor is worse
 // than the current armor.
 //
-bool P_GiveArmor(player_t *player, itemeffect_t *effect)
+bool P_GiveArmor(player_t *player, const itemeffect_t *effect)
 {
    if(!effect)
       return false;
@@ -611,7 +611,7 @@ const char *powerStrings[NUMPOWERS] =
 //
 // Takes a powereffect and applies the power accordingly
 //
-bool P_GivePowerForItem(player_t *player, itemeffect_t *power)
+bool P_GivePowerForItem(player_t *player, const itemeffect_t *power)
 {
    int powerNum;
    const char *powerStr;
@@ -717,7 +717,7 @@ static inline const char *P_getSpecialMessage(Mobj *special, const char *def)
 void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 {
    player_t       *player;
-   e_pickupfx_t   *pickup, *temp;
+   const e_pickupfx_t *pickup, *temp;
    bool            pickedup = false;
    bool            dropped = false;
    bool            hadeffect = false;
@@ -764,7 +764,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 
    for(unsigned int i = 0; i < pickup->numEffects; i++)
    {
-      itemeffect_t *effect = pickup->effects[i];
+      const itemeffect_t *effect = pickup->effects[i];
       if(!effect)
          continue;
       hadeffect = true;

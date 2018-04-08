@@ -1725,7 +1725,7 @@ inventoryslot_t *E_InventorySlotForItemID(player_t *player, inventoryitemid_t id
 // if one exists. NULL is returned if the item is not in the player's 
 // inventory.
 //
-inventoryslot_t *E_InventorySlotForItem(player_t *player, itemeffect_t *effect)
+inventoryslot_t *E_InventorySlotForItem(player_t *player, const itemeffect_t *effect)
 {
    inventoryitemid_t id;
 
@@ -1860,7 +1860,7 @@ bool E_RemoveBackpack(player_t *player)
 // Get the max amount of an artifact that can be carried. There are some
 // special cases for different token subtypes of artifact.
 //
-int E_GetMaxAmountForArtifact(player_t *player, itemeffect_t *artifact)
+int E_GetMaxAmountForArtifact(player_t *player, const itemeffect_t *artifact)
 {
    if(!artifact)
       return 0;
@@ -1913,7 +1913,7 @@ int E_GetItemOwnedAmountName(player_t *player, const char *name)
 //
 // Place an artifact effect into the player's inventory, if it will fit.
 //
-bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact, int amount)
+bool E_GiveInventoryItem(player_t *player, const itemeffect_t *artifact, int amount)
 {
    if(!artifact)
       return false;
@@ -2008,7 +2008,7 @@ static void E_removeInventorySlot(player_t *player, inventoryslot_t *slot)
 // Remove some amount of a specific item from the player's inventory, if
 // possible. If amount is less than zero, then all of the item will be removed.
 //
-itemremoved_e E_RemoveInventoryItem(player_t *player, itemeffect_t *artifact, int amount)
+itemremoved_e E_RemoveInventoryItem(player_t *player, const itemeffect_t *artifact, int amount)
 {
    inventoryslot_t *slot = E_InventorySlotForItem(player, artifact);
 
