@@ -994,21 +994,24 @@ static void ST_DoomFSDrawer()
       }
    }
 
-   tempstr.clear();
-   tempstr << plyr->killcount << " / " << totalkills << "  " << "KILLS";
-   V_FontWriteText(hud_fssmall, tempstr.constPtr(),
-                   SCREENWIDTH - V_FontStringWidth(hud_fssmall, tempstr.constPtr()) - 3,
-                   SCREENHEIGHT - 24, &vbscreen);
-   tempstr.clear();
-   tempstr << plyr->itemcount << " / " << totalitems << "  " << "ITEMS";
-   V_FontWriteText(hud_fssmall, tempstr.constPtr(),
-                   SCREENWIDTH - V_FontStringWidth(hud_fssmall, tempstr.constPtr()) - 3,
-                   SCREENHEIGHT - 16, &vbscreen);
-   tempstr.clear();
-   tempstr << plyr->secretcount << " / " << totalsecret << "  " << "SCRTS";
-   V_FontWriteText(hud_fssmall, tempstr.constPtr(),
-                   SCREENWIDTH - V_FontStringWidth(hud_fssmall, tempstr.constPtr()) - 3,
-                   SCREENHEIGHT - 8, &vbscreen); 
+   if(!hud_hidestatus)
+   {
+      tempstr.clear();
+      tempstr << plyr->killcount << " / " << totalkills << "  " << "KILLS";
+      V_FontWriteText(hud_fssmall, tempstr.constPtr(),
+                      SCREENWIDTH - V_FontStringWidth(hud_fssmall, tempstr.constPtr()) - 3,
+                      SCREENHEIGHT - 24, &vbscreen);
+      tempstr.clear();
+      tempstr << plyr->itemcount << " / " << totalitems << "  " << "ITEMS";
+      V_FontWriteText(hud_fssmall, tempstr.constPtr(),
+                      SCREENWIDTH - V_FontStringWidth(hud_fssmall, tempstr.constPtr()) - 3,
+                      SCREENHEIGHT - 16, &vbscreen);
+      tempstr.clear();
+      tempstr << plyr->secretcount << " / " << totalsecret << "  " << "SCRTS";
+      V_FontWriteText(hud_fssmall, tempstr.constPtr(),
+                      SCREENWIDTH - V_FontStringWidth(hud_fssmall, tempstr.constPtr()) - 3,
+                      SCREENHEIGHT - 8, &vbscreen);
+   }
 }
 
 //
