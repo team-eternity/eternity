@@ -45,6 +45,9 @@ bool wc_noammo(weaponinfo_t *w);
 int wc_mammo(weaponinfo_t *w);
 char weapcolor(weaponinfo_t *w);
 
+char healthcolor();
+char armorcolor();
+
 // overlay interface
 void HU_OverlayDraw();
 void HU_ToggleHUD();

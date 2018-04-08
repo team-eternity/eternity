@@ -940,11 +940,7 @@ static void ST_DoomFSDrawer()
    int fontcolor;
 
    V_DrawPatch(3, SCREENHEIGHT - 24, &vbscreen, nfs_health);
-   fontcolor = plyr->health < health_red    ? *FC_RED   :
-               plyr->health < health_yellow ? *FC_GOLD  :
-               plyr->health <= health_green ? *FC_GREEN :
-                                              *FC_BLUE;
-   tempstr << static_cast<char>(fontcolor) << plyr->health;
+   tempstr << healthcolor() << plyr->health;
    V_FontWriteText(hud_fslarge, tempstr.constPtr(),
                    RJUSTIFY(hud_fslarge, tempstr, 3, 7 + nfs_health->width),
                    SCREENHEIGHT - 24, &vbscreen);
@@ -952,22 +948,7 @@ static void ST_DoomFSDrawer()
 
    tempstr.clear();
    V_DrawPatch(3, SCREENHEIGHT - 12, &vbscreen, nfs_armor);
-   if(plyr->armorpoints < armor_red)
-      fontcolor = *FC_RED;
-   else if(plyr->armorpoints < armor_yellow)
-      fontcolor = *FC_GOLD;
-   else if(armor_byclass)
-   {
-      fixed_t armorclass = 0;
-      if(plyr->armordivisor)
-         armorclass = (plyr->armorfactor * FRACUNIT) / plyr->armordivisor;
-      fontcolor = (armorclass > FRACUNIT / 3 ? *FC_BLUE : *FC_GREEN);
-   }
-   else if(plyr->armorpoints <= armor_green)
-      fontcolor = *FC_GREEN;
-   else
-      fontcolor = *FC_BLUE;
-   tempstr << static_cast<char>(fontcolor) << plyr->armorpoints;
+   tempstr << armorcolor() << plyr->armorpoints;
    V_FontWriteText(hud_fslarge, tempstr.constPtr(),
                    RJUSTIFY(hud_fslarge, tempstr, 3, 7 + nfs_armor->width),
                    SCREENHEIGHT - 12, &vbscreen);

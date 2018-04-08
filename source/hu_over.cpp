@@ -171,6 +171,35 @@ char weapcolor(weaponinfo_t *w)
        *FC_GREEN);
 }
 
+// Determine the color to use for a given player's health
+char healthcolor()
+{
+   return hu_player.health  < health_red    ? *FC_RED :
+          hu_player.health  < health_yellow ? *FC_GOLD :
+          hu_player.health <= health_green  ? *FC_GREEN :
+                                              *FC_BLUE;
+}
+
+// Determine the color to use for a given player's armor
+char armorcolor()
+{
+   if(hu_player.armorpoints < armor_red)
+      return *FC_RED;
+   else if(hu_player.armorpoints < armor_yellow)
+      return *FC_GOLD;
+   else if(armor_byclass)
+   {
+      fixed_t armorclass = 0;
+      if(hu_player.armordivisor)
+         armorclass = (hu_player.armorfactor * FRACUNIT) / hu_player.armordivisor;
+      return (armorclass > FRACUNIT / 3 ? *FC_BLUE : *FC_GREEN);
+   }
+   else if(hu_player.armorpoints <= armor_green)
+      return *FC_GREEN;
+   else
+      return *FC_BLUE;
+}
+
 // Get the amount of ammo the displayplayer has left in his/her readyweapon
 #define playerammo    wc_pammo(hu_player.readyweapon)
 
@@ -307,20 +336,12 @@ static void HU_textBar(qstring &s, int pct)
 static void HU_drawHealth(int x, int y)
 {
    qstring tempstr;
-   int fontcolor;
    
    HU_WriteText(HUDCOLOR "Health", x, y);
    x += GAP; // leave a gap between name and bar
-   
-   // decide on the colour first
-   fontcolor =
-      hu_player.health < health_red    ? *FC_RED   :
-      hu_player.health < health_yellow ? *FC_GOLD  :
-      hu_player.health <= health_green ? *FC_GREEN :
-      *FC_BLUE;
   
    //psnprintf(tempstr, sizeof(tempstr), "%c", fontcolor);
-   tempstr << static_cast<char>(fontcolor);
+   tempstr << healthcolor();
 
    // now make the actual bar
    HU_textBar(tempstr, hu_player.health);
@@ -341,30 +362,12 @@ static void HU_drawHealth(int x, int y)
 static void HU_drawArmor(int x, int y)
 {
    qstring tempstr;
-   int fontcolor;
 
    // title first
    HU_WriteText(HUDCOLOR "Armor", x, y);
    x += GAP; // leave a gap between name and bar
 
-   // decide on colour
-   if(hu_player.armorpoints < armor_red)
-      fontcolor = *FC_RED;
-   else if(hu_player.armorpoints < armor_yellow)
-      fontcolor = *FC_GOLD;
-   else if(armor_byclass)
-   {
-      fixed_t armorclass = 0;
-      if(hu_player.armordivisor)
-         armorclass = (hu_player.armorfactor * FRACUNIT) / hu_player.armordivisor;
-      fontcolor = (armorclass > FRACUNIT/3 ? *FC_BLUE : *FC_GREEN);
-   }
-   else if(hu_player.armorpoints <= armor_green)
-      fontcolor = *FC_GREEN;
-   else
-      fontcolor = *FC_BLUE;
-
-   tempstr << static_cast<char>(fontcolor);
+   tempstr << armorcolor();
 
    // make the bar
    HU_textBar(tempstr, hu_player.armorpoints);
