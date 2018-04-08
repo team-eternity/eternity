@@ -218,7 +218,8 @@ inventoryslot_t *E_InventorySlotForItemID(const player_t *player, inventoryitemi
 
 // Get the slot being used for a particular inventory item, by item pointer, if
 // one exists. Returns NULL if the item isn't in the player's inventory.
-inventoryslot_t *E_InventorySlotForItem(const player_t *player, const itemeffect_t *effect);
+inventoryslot_t *E_InventorySlotForItem(const player_t *player,
+                                        const itemeffect_t *effect);
 
 // Get the slot being used for a particular inventory item, by name, if one 
 // exists. Returns NULL if the item isn't in the player's inventory.
@@ -245,7 +246,7 @@ int E_GetItemOwnedAmount(const player_t *player, const itemeffect_t *artifact);
 int E_GetItemOwnedAmountName(const player_t *player, const char *name);
 
 // Place an item into a player's inventory. 
-bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact, int amount = -1);
+bool E_GiveInventoryItem(player_t *player, const itemeffect_t *artifact, int amount = -1);
 
 e_pickupfx_t *E_PickupFXForName(const char *name);
 e_pickupfx_t *E_PickupFXForSprNum(spritenum_t sprnum);
@@ -261,7 +262,7 @@ enum itemremoved_e
 };
 
 // Remove an item from a player's inventory.
-itemremoved_e E_RemoveInventoryItem(player_t *player, itemeffect_t *artifact, int amount);
+itemremoved_e E_RemoveInventoryItem(player_t *player, const itemeffect_t *artifact, int amount);
 
 // Call at the end of a hub, or a level that isn't part of a hub, to clear
 // out items that don't persist.

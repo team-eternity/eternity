@@ -233,7 +233,7 @@ cfg_opt_t edf_healthfx_opts[] =
 // Armor fields
 cfg_opt_t edf_armorfx_opts[] =
 {
-   CFG_INT(KEY_SAVEAMOUNT,     0,  CFGF_NONE), // amount of armor given
+   CFG_INT(KEY_SAVEAMOUNT,    -1,  CFGF_NONE), // amount of armor given
    CFG_INT(KEY_SAVEFACTOR,     1,  CFGF_NONE), // numerator of save percentage
    CFG_INT(KEY_SAVEDIVISOR,    3,  CFGF_NONE), // denominator of save percentage
    CFG_INT(KEY_MAXSAVEAMOUNT,  0,  CFGF_NONE), // max save amount, for bonuses
@@ -1728,7 +1728,8 @@ inventoryslot_t *E_InventorySlotForItemID(const player_t *player, inventoryitemi
 // if one exists. NULL is returned if the item is not in the player's 
 // inventory.
 //
-inventoryslot_t *E_InventorySlotForItem(const player_t *player, const itemeffect_t *effect)
+inventoryslot_t *E_InventorySlotForItem(const player_t *player,
+                                        const itemeffect_t *effect)
 {
    inventoryitemid_t id;
 
@@ -1917,7 +1918,7 @@ int E_GetItemOwnedAmountName(const player_t *player, const char *name)
 //
 // Place an artifact effect into the player's inventory, if it will fit.
 //
-bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact, int amount)
+bool E_GiveInventoryItem(player_t *player, const itemeffect_t *artifact, int amount)
 {
    if(!artifact)
       return false;
@@ -2027,7 +2028,7 @@ static void E_removeInventorySlot(player_t *player, inventoryslot_t *slot)
 // Remove some amount of a specific item from the player's inventory, if
 // possible. If amount is less than zero, then all of the item will be removed.
 //
-itemremoved_e E_RemoveInventoryItem(player_t *player, itemeffect_t *artifact, int amount)
+itemremoved_e E_RemoveInventoryItem(player_t *player, const itemeffect_t *artifact, int amount)
 {
    inventoryslot_t *slot = E_InventorySlotForItem(player, artifact);
 
