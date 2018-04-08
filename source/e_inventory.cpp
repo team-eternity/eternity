@@ -233,7 +233,7 @@ cfg_opt_t edf_healthfx_opts[] =
 // Armor fields
 cfg_opt_t edf_armorfx_opts[] =
 {
-   CFG_INT(KEY_SAVEAMOUNT,     0,  CFGF_NONE), // amount of armor given
+   CFG_INT(KEY_SAVEAMOUNT,    -1,  CFGF_NONE), // amount of armor given
    CFG_INT(KEY_SAVEFACTOR,     1,  CFGF_NONE), // numerator of save percentage
    CFG_INT(KEY_SAVEDIVISOR,    3,  CFGF_NONE), // denominator of save percentage
    CFG_INT(KEY_MAXSAVEAMOUNT,  0,  CFGF_NONE), // max save amount, for bonuses

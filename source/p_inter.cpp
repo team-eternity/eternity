@@ -465,19 +465,21 @@ bool P_GiveArmor(player_t *player, const itemeffect_t *effect)
    if(!effect)
       return false;
 
-   int  hits          =   effect->getInt("saveamount",    0);
+   int  hits          =   effect->getInt("saveamount",   -1);
    int  savefactor    =   effect->getInt("savefactor",    1);
    int  savedivisor   =   effect->getInt("savedivisor",   3);
    int  maxsaveamount =   effect->getInt("maxsaveamount", 0);
    bool additive      = !!effect->getInt("additive",      0);
+   bool setabsorption = !!effect->getInt("setabsorption", 0);
 
    // check for validity
-   if(!hits || !savefactor || !savedivisor)
+   if(hits < 0 || !savefactor || !savedivisor)
       return false;
 
    // check if needed
    if(!(effect->getInt("alwayspickup", 0)) &&
-      player->armorpoints >= (additive ? maxsaveamount : hits))
+      (player->armorpoints >= (additive ? maxsaveamount : hits) ||
+       hits == 0 && (!player->armorfactor || !setabsorption)))
       return false; // don't pick up
 
    if(additive)
@@ -491,7 +493,7 @@ bool P_GiveArmor(player_t *player, const itemeffect_t *effect)
 
    // only set armour quality if the armour always sets it,
    // or if the player had no armour prior to this pickup
-   if(!player->armorfactor || effect->getInt("setabsorption", 0))
+   if((!player->armorfactor || setabsorption))
    {
       player->armorfactor  = savefactor;
       player->armordivisor = savedivisor;
