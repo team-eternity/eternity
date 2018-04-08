@@ -479,8 +479,10 @@ bool P_GiveArmor(player_t *player, const itemeffect_t *effect)
    // check if needed
    if(!(effect->getInt("alwayspickup", 0)) &&
       (player->armorpoints >= (additive ? maxsaveamount : hits) ||
-       hits == 0 && (!player->armorfactor || !setabsorption)))
+       (hits == 0 && (!player->armorfactor || !setabsorption))))
+   {
       return false; // don't pick up
+   }
 
    if(additive)
    {
