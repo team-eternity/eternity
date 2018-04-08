@@ -936,9 +936,6 @@
     <ClCompile Include="..\source\autodoom\b_glbsp.cpp">
       <Filter>Source Files\AutoDoom</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\autodoom\b_intset.cpp">
-      <Filter>Source Files\AutoDoom</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\autodoom\b_itemlearn.cpp">
       <Filter>Source Files\AutoDoom</Filter>
     </ClCompile>
@@ -1785,9 +1782,6 @@
       <Filter>Source Files\AutoDoom</Filter>
     </ClInclude>
     <ClInclude Include="..\source\autodoom\b_glbsp.h">
-      <Filter>Source Files\AutoDoom</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\autodoom\b_intset.h">
       <Filter>Source Files\AutoDoom</Filter>
     </ClInclude>
     <ClInclude Include="..\source\autodoom\b_itemlearn.h">
