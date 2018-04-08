@@ -1,7 +1,5 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2018 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,12 +17,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 //
-// DESCRIPTION:  
-//   Inventory
+// Purpose: Inventory
+// Authors: James Haley, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef E_INVENTORY_H__
 #define E_INVENTORY_H__
@@ -34,6 +31,8 @@
 #include "d_player.h"
 
 class MetaTable;
+
+extern inventoryindex_t e_maxvisiblesortorder;
 
 // Effect Types
 enum
@@ -64,8 +63,7 @@ enum
 typedef int artitype_t;
 
 // Hard-coded names for specially treated items (needed in DeHackEd, etc.)
-// INVENTORY_TODO: many may become unneeded when P_TouchSpecialThing is finished
-#define ITEMNAME_BERSERKHEALTH "BerserkHealth"
+#define ITEMNAME_BERSERKHEALTH "BerserkHealth" // The health
 #define ITEMNAME_HEALTHBONUS   "HealthBonus"
 #define ITEMNAME_MEDIKIT       "Medikit"
 #define ITEMNAME_MEGASPHERE    "MegasphereHealth"
@@ -74,9 +72,8 @@ typedef int artitype_t;
 #define ITEMNAME_GREENARMOR    "GreenArmor"
 #define ITEMNAME_BLUEARMOR     "BlueArmor"
 #define ITEMNAME_IDFAARMOR     "IDFAArmor"
-#define ITEMNAME_SILVERSHIELD  "SilverShield"
-#define ITEMNAME_ENCHANTEDSHLD "EnchantedShield"
 #define ITEMNAME_ARMORBONUS    "ArmorBonus"
+#define ITEMNAME_RAMBOARMOR    "RAMBOArmor"
 
 // Hard-coded names for specially treated artifact types
 #define ARTI_BACKPACKITEM "BackpackItem"
@@ -90,6 +87,23 @@ typedef int artitype_t;
 #define ARTI_KEYYELLOW    "KeyYellow"
 #define ARTI_KEYBLUE      "KeyBlue"
 
+// Hard-coded names for the (currently) 11 specially treated powers in powertype_t.
+// These are listed in ascending order of enumeration, as opposed to alphabetical.
+#define POWER_INVULNERABLE "PowerInvulnerable"      // pw_invulnerability
+#define POWER_STRENGTH     "PowerStrength"          // pw_strength (Berserk)
+#define POWER_PARTIALINVIS "PowerPartialInvisibility" // pw_invisibility
+#define POWER_IRONFEET     "PowerIronFeet"          // pw_ironfeet (Env. protection)
+#define POWER_ALLMAP       "PowerAllmap"            // pw_allmap
+#define POWER_INFRARED     "PowerLightAmp"          // pw_infrared (Fullbright)
+#define POWER_TOTALINVIS   "PowerTotalInvisibility" // pw_totalinvis
+#define POWER_GHOST        "PowerGhost"             // pw_ghost
+#define POWER_SILENT       "PowerSilent"            // pw_silencer
+#define POWER_FLIGHT       "PowerFlight"            // pw_flight
+#define POWER_TORCH        "PowerTorch"             // pw_torch (Fullbright w/ flicker)
+#define POWER_WEAPONLEVEL2 "PowerWeaponLevel2"      // pw_weaponlevel2
+
+extern const char *powerStrings[NUMPOWERS];
+
 //
 // Item Effect
 // 
@@ -102,26 +116,34 @@ typedef MetaTable itemeffect_t;
 // Effect Bindings
 //
 
-enum pickupflags_e
+enum pickupflags_e : unsigned int
 {
-   PFXF_ALWAYSPICKUP    = 0x00000001, // item is picked up even if not useful
-   PFXF_LEAVEINMULTI    = 0x00000002, // item is left in multiplayer games
-   PFXF_NOSCREENFLASH   = 0x00000004, // does not cause bonuscount increment
-   PFXF_SILENTNOBENEFIT = 0x00000008, // no pickup effects if picked up without benefit
+   PXFX_NONE              = 0x00000000,
+   PFXF_ALWAYSPICKUP      = 0x00000001, // item is picked up even if not useful
+   PFXF_LEAVEINMULTI      = 0x00000002, // item is left in multiplayer games
+   PFXF_NOSCREENFLASH     = 0x00000004, // does not cause bonuscount increment
+   PFXF_SILENTNOBENEFIT   = 0x00000008, // no pickup effects if picked up without benefit
+   PXFX_COMMERCIALONLY    = 0x00000010, // can only be picked up in commercial gamemodes
+   PFXF_GIVESBACKPACKAMMO = 0x00000020, // gives backpack ammo
 };
 
 struct e_pickupfx_t
 {
-   itemeffect_t *effect;  // item given, if any
-   char         *message; // message, if any
-   char         *sound;   // sound, if any
-   unsigned int  flags;   // pickup flags
+   char          *name;         // name
+   char          *compatname;   // compat name, if any
+   spritenum_t    sprnum;       // sprite number, -1 if not set
+   unsigned int   numEffects;   // number of effects
+   itemeffect_t **effects;      // item given, if any
+   weaponinfo_t  *changeweapon; // weapon to change to, if any
+   char          *message;      // message, if any
+   char          *sound;        // sound, if any
+   pickupflags_e  flags;        // pickup flags
 
-   int tempeffect;        // INVENTORY_FIXME: temporary transitional field
+   // EDF Hashing
+   DLListItem<e_pickupfx_t> namelinks;   // hash by name
+   DLListItem<e_pickupfx_t> cnamelinks;  // hash by compat name
+   DLListItem<e_pickupfx_t> sprnumlinks; // hash by sprite num
 };
-
-// INVENTORY_TODO: alter as needed
-extern e_pickupfx_t *pickupfx;
 
 extern inventoryitemid_t e_maxitemid;   // IOANCH: no longer static
 
@@ -131,6 +153,9 @@ extern inventoryitemid_t e_maxitemid;   // IOANCH: no longer static
 
 // Get an item effect type number by name
 itemeffecttype_t E_EffectTypeForName(const char *name);
+
+// Remove an item effect from the table.
+void E_RemoveItemEffect(itemeffect_t *effect);
 
 // Find an item effect by name
 itemeffect_t *E_ItemEffectForName(const char *name);
@@ -171,6 +196,15 @@ bool E_PlayerCanUnlock(const player_t *player, int lockID, bool remote, bool mut
 
 // Get the automap color for a lockdef
 int E_GetLockDefColor(int lockID);
+
+// Tries to move the inventory cursor 'amount' right.
+bool E_MoveInventoryCursor(player_t *player, int amount, int &cursor);
+
+// Says if a player possesses at least one item w/ +invbar
+bool E_PlayerHasVisibleInvItem(player_t *player);
+
+// Tries to use the currently selected item.
+void E_TryUseItem(player_t *player, inventoryitemid_t ID);
 
 // Obtain an item effect definition for its inventory item ID
 itemeffect_t *E_EffectForInventoryItemID(inventoryitemid_t id);
@@ -213,6 +247,11 @@ int E_GetItemOwnedAmountName(const player_t *player, const char *name);
 // Place an item into a player's inventory. 
 bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact, int amount = -1);
 
+e_pickupfx_t *E_PickupFXForName(const char *name);
+e_pickupfx_t *E_PickupFXForSprNum(spritenum_t sprnum);
+
+pickupflags_e E_PickupFlagsForStr(const char *flagstr);
+
 // return value enumeration for E_RemoveInventoryItem
 enum itemremoved_e
 {
@@ -254,7 +293,8 @@ void E_GetInventoryItemDetails(const itemeffect_t *artifact,
 #define EDF_SEC_POWERFX  "powereffect"
 #define EDF_SEC_WEAPGFX  "weapongiver"
 #define EDF_SEC_ARTIFACT "artifact"
-#define EDF_SEC_PICKUPFX "pickupitem"
+#define EDF_SEC_SPRPKUP  "pickupitem"
+#define EDF_SEC_PICKUPFX "pickupeffect"
 #define EDF_SEC_LOCKDEF  "lockdef"
 
 // Section Defs
@@ -264,10 +304,12 @@ extern cfg_opt_t edf_ammofx_opts[];
 extern cfg_opt_t edf_powerfx_opts[];
 extern cfg_opt_t edf_weapgfx_opts[];
 extern cfg_opt_t edf_artifact_opts[];
-extern cfg_opt_t edf_pickup_opts[];
+extern cfg_opt_t edf_sprpkup_opts[];
+extern cfg_opt_t edf_pkupfx_opts[];
 extern cfg_opt_t edf_lockdef_opts[];
 
 // Functions
+void E_ProcessPickups(cfg_t *cfg);
 void E_ProcessInventory(cfg_t *cfg);
 
 #endif

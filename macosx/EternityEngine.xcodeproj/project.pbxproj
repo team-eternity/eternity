@@ -44,6 +44,9 @@
 		4F50769420459521000226F6 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F50769320459521000226F6 /* OpenGL.framework */; };
 		4F5076952045952B000226F6 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F00D1312042B9E100D775DF /* libz.tbd */; };
 		4F50769620459555000226F6 /* p_portalclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FB5F0031CCB5A0D00EFF2D9 /* p_portalclip.cpp */; };
+		4F5076C020754959000226F6 /* a_weaponsheretic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F5076BE20754958000226F6 /* a_weaponsheretic.cpp */; };
+		4F5076C120754959000226F6 /* a_weaponsdoom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F5076BF20754958000226F6 /* a_weaponsdoom.cpp */; };
+		4F5076BD2068B6AE000226F6 /* p_portalblockmap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F5076BB2068B6AE000226F6 /* p_portalblockmap.cpp */; };
 		4F5F3878182D98A30027813A /* a_common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5CB4158BF42800C49E93 /* a_common.cpp */; };
 		4F5F3879182D98A60027813A /* a_counters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5CB5158BF42800C49E93 /* a_counters.cpp */; };
 		4F5F387A182D98E10027813A /* a_decorate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5CB6158BF42800C49E93 /* a_decorate.cpp */; };
@@ -417,6 +420,10 @@
 		4F4515DC1FED801B0017EAD2 /* g_demolog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = g_demolog.cpp; path = ../source/g_demolog.cpp; sourceTree = "<group>"; };
 		4F5076912045951D000226F6 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		4F50769320459521000226F6 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		4F5076BE20754958000226F6 /* a_weaponsheretic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = a_weaponsheretic.cpp; path = ../source/a_weaponsheretic.cpp; sourceTree = "<group>"; };
+		4F5076BF20754958000226F6 /* a_weaponsdoom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = a_weaponsdoom.cpp; path = ../source/a_weaponsdoom.cpp; sourceTree = "<group>"; };
+		4F5076BB2068B6AE000226F6 /* p_portalblockmap.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_portalblockmap.cpp; path = ../source/p_portalblockmap.cpp; sourceTree = "<group>"; };
+		4F5076BC2068B6AE000226F6 /* p_portalblockmap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = p_portalblockmap.h; path = ../source/p_portalblockmap.h; sourceTree = "<group>"; };
 		4F50E3FE173770EC00878167 /* r_dynabsp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = r_dynabsp.cpp; path = ../source/r_dynabsp.cpp; sourceTree = "<group>"; };
 		4F50E3FF173770EC00878167 /* r_dynabsp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = r_dynabsp.h; path = ../source/r_dynabsp.h; sourceTree = "<group>"; };
 		4F579A4317BE860B0088B797 /* metaspawn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = metaspawn.h; path = ../source/metaspawn.h; sourceTree = "<group>"; };
@@ -1664,6 +1671,8 @@
 				FABF5D20158BF42800C49E93 /* p_plats.cpp */,
 				FABF5D21158BF42800C49E93 /* p_portal.cpp */,
 				FACACB571652F1170091AF2E /* p_portal.h */,
+				4F5076BB2068B6AE000226F6 /* p_portalblockmap.cpp */,
+				4F5076BC2068B6AE000226F6 /* p_portalblockmap.h */,
 				4FB5F0031CCB5A0D00EFF2D9 /* p_portalclip.cpp */,
 				4FB5F0041CCB5A0D00EFF2D9 /* p_portalclip.h */,
 				4FAAD5931E583113001D7263 /* p_portalcross.cpp */,
@@ -1944,6 +1953,8 @@
 				FABF5CB9158BF42800C49E93 /* a_general.cpp */,
 				FABF5CBA158BF42800C49E93 /* a_heretic.cpp */,
 				FABF5CBB158BF42800C49E93 /* a_hexen.cpp */,
+				4F5076BF20754958000226F6 /* a_weaponsdoom.cpp */,
+				4F5076BE20754958000226F6 /* a_weaponsheretic.cpp */,
 			);
 			name = A_;
 			sourceTree = "<group>";
@@ -2073,7 +2084,7 @@
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0920;
+				LastUpgradeCheck = 0930;
 			};
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "EternityEngine" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -2163,6 +2174,8 @@
 				4F5F3920182D9B0D0027813A /* r_dynabsp.cpp in Sources */,
 				4F5F3921182D9B0D0027813A /* r_bsp.cpp in Sources */,
 				4F43B47D182D9F7A00730C02 /* b_think.cpp in Sources */,
+				4F5076C020754959000226F6 /* a_weaponsheretic.cpp in Sources */,
+				4F5076BD2068B6AE000226F6 /* p_portalblockmap.cpp in Sources */,
 				4F5F3922182D9B0D0027813A /* r_data.cpp in Sources */,
 				4F5F3923182D9B0D0027813A /* r_draw.cpp in Sources */,
 				4F43B47F182D9F7A00730C02 /* b_util.cpp in Sources */,
@@ -2414,6 +2427,7 @@
 				4F5F3899182D98E20027813A /* d_net.cpp in Sources */,
 				4FC0A9351E1E2A50006CEC45 /* String.cpp in Sources */,
 				4F5F3878182D98A30027813A /* a_common.cpp in Sources */,
+				4F5076C120754959000226F6 /* a_weaponsdoom.cpp in Sources */,
 				4F5F3879182D98A60027813A /* a_counters.cpp in Sources */,
 				4F4F2D931FF2451E004A4A55 /* s_formats.cpp in Sources */,
 			);
@@ -2445,6 +2459,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
@@ -2497,6 +2512,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
@@ -2544,16 +2560,18 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
@@ -2596,16 +2614,18 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;

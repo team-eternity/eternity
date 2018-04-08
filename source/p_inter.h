@@ -29,12 +29,22 @@
 
 struct player_t;
 class  Mobj;
+class  MetaTable;
+typedef MetaTable itemeffect_t;
 
 // follow a player exlusively for 3 seconds
 #define BASETHRESHOLD   (100)
 
-bool P_GivePower(player_t *, int);
-bool P_TouchSpecialThing(Mobj *special, Mobj *toucher);  // IOANCH: bool
+bool P_GiveAmmoPickup(player_t *, itemeffect_t *, bool, int);
+bool P_GiveBody(player_t *, itemeffect_t *);
+bool P_GiveArmor(player_t *, itemeffect_t *);
+// MaxW 2016/07/23: P_GivePower is no longer required for external use;
+// previously it was used in m_cheats, but the CheatX powereffects mean
+// that P_GivePowerForItem can be used.
+bool P_GivePowerForItem(player_t *, itemeffect_t *);
+
+bool P_GivePower(player_t *player, int power, int duration, bool additiveTime);
+void P_TouchSpecialThing(Mobj *special, Mobj *toucher);
 void P_DamageMobj(Mobj *target,Mobj *inflictor,Mobj *source,int damage,int mod);
 void P_DropItems(Mobj *actor, bool tossitems);
 

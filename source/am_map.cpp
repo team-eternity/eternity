@@ -277,7 +277,7 @@ static double old_m_w, old_m_h;
 static double old_m_x, old_m_y;
 
 // old location used by the Follower routine
-static mpoint_t f_oldloc;
+static v2fixed_t f_oldloc;
 
 // used by MTOF to scale from map-to-frame-buffer coords
 static double scale_mtof = INITSCALEMTOF;
@@ -389,18 +389,8 @@ static void AM_restoreScaleAndLoc()
    }
    else
    {
-      if(mapportal_overlay && plr->mo->groupid > 0)
-      {
-         auto link = P_GetLinkOffset(plr->mo->groupid, 0);
-
-         m_x = M_FixedToDouble(plr->mo->x + link->x) - m_w/2;
-         m_y = M_FixedToDouble(plr->mo->y + link->y) - m_h/2;
-      }
-      else
-      {
-         m_x = M_FixedToDouble(plr->mo->x) - m_w/2;
-         m_y = M_FixedToDouble(plr->mo->y) - m_h/2;
-      }
+      m_x = M_FixedToDouble(plr->mo->x) - m_w/2;
+      m_y = M_FixedToDouble(plr->mo->y) - m_h/2;
    }
    m_x2 = m_x + m_w;
    m_y2 = m_y + m_h;
@@ -451,42 +441,45 @@ static void AM_findMinMaxBoundaries()
    // haleyjd: rewritten to work by line so as to have access to portal groups
    for(int i = 0; i < numlines; i++)
    {
-      double x1, x2, y1, y2;
-
-      x1 = lines[i].v1->fx;
-      y1 = lines[i].v1->fy;
-      x2 = lines[i].v2->fx;
-      y2 = lines[i].v2->fy;
-
-      if(mapportal_overlay && lines[i].frontsector->groupid > 0)
+      for(int groupid = 0; groupid < (mapportal_overlay ? P_PortalGroupCount() : 1); ++groupid)
       {
-         auto link = P_GetLinkOffset(lines[i].frontsector->groupid, 0);
+         double x1, x2, y1, y2;
 
-         x1 += M_FixedToDouble(link->x);
-         y1 += M_FixedToDouble(link->y);
-         x2 += M_FixedToDouble(link->x);
-         y2 += M_FixedToDouble(link->y);
+         x1 = lines[i].v1->fx;
+         y1 = lines[i].v1->fy;
+         x2 = lines[i].v2->fx;
+         y2 = lines[i].v2->fy;
+
+         if(mapportal_overlay && lines[i].frontsector->groupid != groupid)
+         {
+            auto link = P_GetLinkOffset(lines[i].frontsector->groupid, groupid);
+
+            x1 += M_FixedToDouble(link->x);
+            y1 += M_FixedToDouble(link->y);
+            x2 += M_FixedToDouble(link->x);
+            y2 += M_FixedToDouble(link->y);
+         }
+
+         if(x1 < min_x)
+            min_x = x1;
+         else if(x1 > max_x)
+            max_x = x1;
+
+         if(x2 < min_x)
+            min_x = x2;
+         else if(x2 > max_x)
+            max_x = x2;
+
+         if(y1 < min_y)
+            min_y = y1;
+         else if(y1 > max_y)
+            max_y = y1;
+
+         if(y2 < min_y)
+            min_y = y2;
+         else if(y2 > max_y)
+            max_y = y2;
       }
-
-      if(x1 < min_x)
-         min_x = x1;
-      else if(x1 > max_x)
-         max_x = x1;
-
-      if(x2 < min_x)
-         min_x = x2;
-      else if(x2 > max_x)
-         max_x = x2;
-
-      if(y1 < min_y)
-         min_y = y1;
-      else if(y1 > max_y)
-         max_y = y1;
-
-      if(y2 < min_y)
-         min_y = y2;
-      else if(y2 > max_y)
-         max_y = y2;
    }
      
    max_w = max_x - min_x;
@@ -576,17 +569,8 @@ static void AM_initVariables()
    plr = &players[pnum];
 
    {
-      if(mapportal_overlay && plr->mo->groupid > 0)
-      {
-         auto link = P_GetLinkOffset(plr->mo->groupid, 0);
-         m_x = M_FixedToDouble(plr->mo->x + link->x) - m_w/2;
-         m_y = M_FixedToDouble(plr->mo->y + link->y) - m_h/2;
-      }
-      else
-      {
-         m_x = M_FixedToDouble(plr->mo->x) - m_w/2;
-         m_y = M_FixedToDouble(plr->mo->y) - m_h/2;
-      }
+      m_x = M_FixedToDouble(plr->mo->x) - m_w/2;
+      m_y = M_FixedToDouble(plr->mo->y) - m_h/2;
    }
 
    AM_changeWindowLoc();
@@ -987,21 +971,12 @@ static void AM_doFollowPlayer()
 {
    if(f_oldloc.x != plr->mo->x || f_oldloc.y != plr->mo->y)
    {
-      if(mapportal_overlay && plr->mo->groupid > 0)
-      {
-         auto link = P_GetLinkOffset(plr->mo->groupid, 0);
-         m_x = FTOM(MTOF(M_FixedToDouble(plr->mo->x + link->x))) - m_w/2;
-         m_y = FTOM(MTOF(M_FixedToDouble(plr->mo->y + link->y))) - m_h/2;
-      }
-      else
-      {
-         m_x = FTOM(MTOF(M_FixedToDouble(plr->mo->x))) - m_w/2;
-         m_y = FTOM(MTOF(M_FixedToDouble(plr->mo->y))) - m_h/2;
-      }
+      m_x = FTOM(MTOF(M_FixedToDouble(plr->mo->x))) - m_w/2;
+      m_y = FTOM(MTOF(M_FixedToDouble(plr->mo->y))) - m_h/2;
       m_x2 = m_x + m_w;
       m_y2 = m_y + m_h;
-      f_oldloc.x = M_FixedToDouble(plr->mo->x);
-      f_oldloc.y = M_FixedToDouble(plr->mo->y);
+      f_oldloc.x = plr->mo->x;
+      f_oldloc.y = plr->mo->y;
    }
 }
 
@@ -1018,15 +993,17 @@ void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z)
 {
    if(followplayer || !map_point_coordinates)
    {
-      x = mo->x;
-      y = mo->y;
-      z = mo->z;
+      const linkoffset_t &link = *P_GetLinkOffset(mo->groupid, 0);
+      x = mo->x + link.x;
+      y = mo->y + link.y;
+      z = mo->z + link.z;
    }
    else
    {
-      x = M_DoubleToFixed(m_x + m_w / 2);
-      y = M_DoubleToFixed(m_y + m_h / 2);
-      z = R_PointInSubsector(x, y)->sector->floorheight;
+      const linkoffset_t &link = *P_GetLinkOffset(plr->mo->groupid, 0);
+      x = M_DoubleToFixed(m_x + m_w / 2) + link.x;
+      y = M_DoubleToFixed(m_y + m_h / 2) + link.y;
+      z = R_PointInSubsector(x, y)->sector->floorheight + link.z;
    }
 }
 
@@ -1086,8 +1063,20 @@ static void AM_clearFB(int color)
       // Must put round() or floor() because of stupid C (int) truncating, which
       // merely cuts off whatever's after the decimal, instead of rounding
       // *DOWN*.
-      int offx = static_cast<int>(round(-backdrop_fx / M_FixedToDouble(video.xscale)));
-      int offy = static_cast<int>(round(backdrop_fy / M_FixedToDouble(video.yscale)));
+      double bfx, bfy;
+      if(plr && plr->mo)
+      {
+         const linkoffset_t &link = *P_GetLinkOffset(plr->mo->groupid, 0);
+         bfx = backdrop_fx + MTOF(M_FixedToDouble(link.x));
+         bfy = backdrop_fy + MTOF(M_FixedToDouble(link.y));
+      }
+      else
+      {
+         bfx = backdrop_fx;
+         bfy = backdrop_fy;
+      }
+      int offx = static_cast<int>(round(-bfx / M_FixedToDouble(video.xscale)));
+      int offy = static_cast<int>(round(bfy / M_FixedToDouble(video.yscale)));
 
       int screenheight = (f_h << FRACBITS) / video.yscale;
 
@@ -1732,15 +1721,13 @@ static void AM_drawWalls()
          l.b.x = line->v2->fx;
          l.b.y = line->v2->fy;
 
-         if(line->frontsector->groupid > 0)
-         {
-            auto link = P_GetLinkOffset(line->frontsector->groupid, 0);
+         auto link = P_GetLinkOffset(line->frontsector->groupid, plrgroup);
 
-            l.a.x += M_FixedToDouble(link->x);
-            l.a.y += M_FixedToDouble(link->y);
-            l.b.x += M_FixedToDouble(link->x);
-            l.b.y += M_FixedToDouble(link->y);
-         }
+         l.a.x += M_FixedToDouble(link->x);
+         l.a.y += M_FixedToDouble(link->y);
+         l.b.x += M_FixedToDouble(link->x);
+         l.b.y += M_FixedToDouble(link->y);
+
          // if line has been seen or IDDT has been used
          if(ddt_cheating || (line->flags & ML_MAPPED))
          {
@@ -1785,9 +1772,9 @@ static void AM_drawWalls()
          if(line->frontsector && line->frontsector->groupid != plrgroup)
             continue;
 
-         if(line->frontsector && line->frontsector->groupid > 0)
+         if(line->frontsector)
          {
-            linkoffset_t *link = P_GetLinkOffset(line->frontsector->groupid, 0);
+            linkoffset_t *link = P_GetLinkOffset(line->frontsector->groupid, plrgroup);
 
             l.a.x += M_FixedToDouble(link->x);
             l.a.y += M_FixedToDouble(link->y);
@@ -2116,17 +2103,8 @@ static void AM_drawPlayers()
 
    if(!netgame)
    {
-      if(mapportal_overlay && plr->mo->groupid > 0)
-      {
-         auto link = P_GetLinkOffset(plr->mo->groupid, 0);
-         px = plr->mo->x + link->x;
-         py = plr->mo->y + link->y;
-      }
-      else
-      {
-         px = plr->mo->x;
-         py = plr->mo->y;
-      }
+      px = plr->mo->x;
+      py = plr->mo->y;
 
       if(ddt_cheating)
       {
@@ -2169,17 +2147,8 @@ static void AM_drawPlayers()
       if(!playeringame[i])
          continue;
       
-      if(mapportal_overlay && plr->mo->groupid > 0)
-      {
-         auto link = P_GetLinkOffset(plr->mo->groupid, 0);
-         px = p->mo->x + link->x;
-         py = p->mo->y + link->y;
-      }
-      else
-      {
-         px = p->mo->x;
-         py = p->mo->y;
-      }
+      px = p->mo->x;
+      py = p->mo->y;
 
       // haleyjd: add total invisibility
       
@@ -2237,9 +2206,9 @@ static void AM_drawThings(int colors, int colorrange)
          tx = t->x;
          ty = t->y;
 
-         if(mapportal_overlay && t->subsector->sector->groupid > 0)
+         if(mapportal_overlay && t->subsector->sector->groupid != plr->mo->groupid)
          {
-            auto link = P_GetLinkOffset(t->subsector->sector->groupid, 0);
+            auto link = P_GetLinkOffset(t->subsector->sector->groupid, plr->mo->groupid);
             tx += link->x;
             ty += link->y;
          }

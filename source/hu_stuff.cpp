@@ -1267,6 +1267,7 @@ static bool HU_ChatRespond(event_t *ev)
    
    if(ev->data1 == KEYD_RSHIFT) 
       shiftdown = (ev->type == ev_keydown);
+   (void)shiftdown;
 
    if(action == ka_frags)
       hu_showfrags = (ev->type == ev_keydown);

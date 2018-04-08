@@ -46,6 +46,7 @@
 #include "e_inventory.h"
 #include "e_player.h"
 #include "e_states.h"
+#include "e_weapons.h"
 #include "g_game.h"
 #include "metaapi.h"
 #include "m_argv.h"
@@ -59,6 +60,7 @@
 #include "sounds.h"
 #include "w_levels.h"
 #include "w_wad.h"
+#include "dhticstr.h"
 
 #define plyr (&players[consoleplayer])     /* the console player */
 
@@ -100,6 +102,10 @@ static void cheat_htickill(const void *);
 static void cheat_hticnoclip(const void *);
 static void cheat_hticwarp(const void *);
 static void cheat_hticbehold(const void *);
+static void cheat_hticgimme0(const void *);
+static void cheat_hticgimme1(const void *);
+static void cheat_hticgimme2(const void *);
+static void cheat_rambo(const void *);
 
 // Shared cheats
 static void cheat_pw(const void *);
@@ -189,6 +195,10 @@ cheat_s cheat[CHEAT_NUMCHEATS] =
    { "ravpowerf", Game_Heretic, not_sync, cheat_pw,          pw_flight          },
    { "ravpowerr", Game_Heretic, not_sync, cheat_pw,          pw_ironfeet        },
    { "ravpower",  Game_Heretic, not_sync, cheat_hticbehold,  0                  },
+   { "gimme",     Game_Heretic, not_sync, cheat_hticgimme0,  0                  },
+   { "gimme",     Game_Heretic, not_sync, cheat_hticgimme1, -1                  },
+   { "gimme",     Game_Heretic, not_sync, cheat_hticgimme2, -2                  },
+   { "rambo",     Game_Heretic, not_sync, cheat_rambo,       0                  },
 
    // Shared Cheats
    { "comp",     -1, not_sync, cheat_comp,     0             }, // phares
@@ -244,8 +254,10 @@ static void cheat_mus(const void *arg)
 // 'choppers' invulnerability & chainsaw
 static void cheat_choppers(const void *arg)
 {
-   // WEAPON_FIXME: choppers cheat
-   plyr->weaponowned[wp_chainsaw] = true;
+   weaponinfo_t *chainsaw = E_WeaponForDEHNum(wp_chainsaw);
+   if(!chainsaw)
+      return; // For whatever reason, the chainsaw isn't defined
+   E_GiveWeapon(plyr, chainsaw);
    doom_printf("%s", DEH_String("STSTR_CHOPPERS")); // Ty 03/27/98 - externalized
 }
 
@@ -281,11 +293,9 @@ static void cheat_one(const void *arg)
 
 static void cheat_fa(const void *arg)
 {
-   int i;
-   
    if(!E_PlayerHasBackpack(plyr))
       E_GiveBackpack(plyr);
-   
+
    itemeffect_t *armor = E_ItemEffectForName(ITEMNAME_IDFAARMOR);
    if(armor)
    {
@@ -294,15 +304,7 @@ static void cheat_fa(const void *arg)
       plyr->armordivisor = armor->getInt("savedivisor", 3);
    }
 
-   // WEAPON_FIXME: IDFA cheat
-   
-   // You can't own weapons that aren't in the game - phares 02/27/98
-   for(i = 0; i < NUMWEAPONS; i++)
-   {
-      if(!(((i == wp_plasma || i == wp_bfg) && GameModeInfo->id == shareware) ||
-         (i == wp_supershotgun && !enable_ssg)))
-         plyr->weaponowned[i] = true;
-   }
+   E_GiveAllClassWeapons(plyr);
 
    // give full ammo
    E_GiveAllAmmo(plyr, GAA_MAXAMOUNT);
@@ -340,7 +342,7 @@ static void cheat_pw(const void *arg)
       plyr->powers[pw] = pw!=pw_strength && pw!=pw_allmap && pw!=pw_silencer;  // killough
    else
    {
-      P_GivePower(plyr, pw);
+      P_GivePower(plyr, pw, 1, false);
       if(pw != pw_strength && !comp[comp_infcheat])
          plyr->powers[pw] = -1;      // infinite duration -- killough
    }
@@ -565,20 +567,18 @@ static void cheat_weapx(const void *arg)
 
    if(w == wp_fist)           // make '1' apply beserker strength toggle
       cheat_pw(&pwstr);
-   else
+   else if(w > wp_fist && w < NUMWEAPONS)
    {
-      if(w >= 0 && w < NUMWEAPONS)
+      weaponinfo_t *weapon = E_WeaponForDEHNum(w);
+      if(!E_PlayerOwnsWeapon(plyr, weapon))
       {
-         if((plyr->weaponowned[w] = !plyr->weaponowned[w]))
-            doom_printf("Weapon Added");  // Ty 03/27/98 - *not* externalized
-         else 
-         {
-            weapontype_t P_SwitchWeapon(const player_t *player);
-            
-            doom_printf("Weapon Removed"); // Ty 03/27/98 - *not* externalized
-            if(w == plyr->readyweapon)     // maybe switch if weapon removed
-               plyr->pendingweapon = P_SwitchWeapon(plyr);
-         }
+         E_GiveWeapon(plyr, weapon);
+         doom_printf("Weapon Added");  // Ty 03/27/98 - *not* externalized
+      }
+      else
+      {
+         E_RemoveInventoryItem(plyr, weapon->tracker, 1);
+         doom_printf("Weapon Removed"); // Ty 03/27/98 - *not* externalized
       }
    }
 }
@@ -740,6 +740,110 @@ static void cheat_hticiddqd(const void *arg)
 static void cheat_hticbehold(const void *arg)
 {
    player_printf(plyr, "inVuln, Ghost, Allmap, Torch, Fly or Rad");
+}
+
+//
+// Adapted CheatArtifact1Func from Choco Heretic
+// Initial stage of the gimme cheat (0 params)
+//
+static void cheat_hticgimme0(const void *)
+{
+   player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS1));
+}
+
+//
+// CheatArtifact2Func from Choco Heretic
+// Second stage of the gimme cheat (1 unused param)
+//
+static void cheat_hticgimme1(const void *)
+{
+   player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS2));
+}
+
+static constexpr char const *hartiNames[] =
+{
+   "ArtiInvulnerability",
+   "ArtiInvisibility",
+   "ArtiHealth",
+   "ArtiSuperHealth",
+   "ArtiTomeOfPower",
+   "ArtiTorch",
+   "ArtiTimeBomb",
+   "ArtiEgg",
+   "ArtiFly",
+   "ArtiTeleport"
+
+};
+
+static constexpr int numHArtifacts = earrlen(hartiNames);
+
+//
+// CheatArtifact3Func from Choco Heretic
+// Final stage of the gimme cheat (2 params)
+//
+static void cheat_hticgimme2(const void *arg)
+{
+   const char *args = static_cast<const char *>(arg);
+   int i;
+   int type;
+   int count;
+
+   type = args[0] - 'a';
+   count = args[1] - '0';
+   if(type == 25 && count == 0)
+   {                           // All artifacts
+      for(i = 0; i < numHArtifacts; i++)
+      {
+         itemeffect_t *artifact = E_ItemEffectForName(hartiNames[i]);
+         if(artifact == nullptr)
+            continue;
+         if((GameModeInfo->flags & GIF_SHAREWARE) && artifact->getInt("noshareware", 0))
+            continue;
+         E_GiveInventoryItem(plyr, artifact, E_GetMaxAmountForArtifact(plyr, artifact));
+      }
+      player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS3));
+   }
+   else if(type > 0 && type < numHArtifacts && count > 0 && count < 10)
+   {
+      itemeffect_t *artifact = E_ItemEffectForName(hartiNames[type]);
+      if(artifact == nullptr)
+      {
+         return;
+      }
+      if((GameModeInfo->flags & GIF_SHAREWARE) && artifact->getInt("noshareware", 0))
+      {
+         player_printf(plyr, DEH_String(TXT_CHEATARTIFACTSFAIL));
+         return;
+      }
+      E_GiveInventoryItem(plyr, artifact, count);
+      player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS3));
+   }
+   else
+   {                           // Bad input
+      player_printf(plyr, DEH_String(TXT_CHEATARTIFACTSFAIL));
+   }
+
+}
+
+static void cheat_rambo(const void *arg)
+{
+   if(!E_PlayerHasBackpack(plyr))
+      E_GiveBackpack(plyr);
+
+   itemeffect_t *armor = E_ItemEffectForName(ITEMNAME_RAMBOARMOR);
+   if(armor)
+   {
+      plyr->armorpoints  = armor->getInt("saveamount",  0);
+      plyr->armorfactor  = armor->getInt("savefactor",  1);
+      plyr->armordivisor = armor->getInt("savedivisor", 3);
+   }
+
+   E_GiveAllClassWeapons(plyr);
+
+   // give full ammo
+   E_GiveAllAmmo(plyr, GAA_MAXAMOUNT);
+
+   player_printf(plyr, DEH_String(TXT_CHEATWEAPONS));
 }
 
 //-----------------------------------------------------------------------------
@@ -1053,7 +1157,18 @@ CONSOLE_NETCMD(nuke, cf_server|cf_level, netcmd_nuke)
 //
 CONSOLE_COMMAND(GIVEARSENAL, cf_notnet|cf_level)
 {
-   cheat_fa(nullptr);
+   switch(GameModeInfo->type)
+   {
+   case Game_DOOM:
+      cheat_fa(nullptr);
+      break;
+   case Game_Heretic:
+      cheat_rambo(nullptr);
+      break;
+   default:
+      // TODO: I dunno
+      break;
+   }
 }
 
 CONSOLE_COMMAND(GIVEKEYS, cf_notnet|cf_level)

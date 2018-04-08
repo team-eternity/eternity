@@ -1407,7 +1407,7 @@ void M_SaveDefaultFile(defaultfile_t *df)
 {
    qstring tmpfile; //char *tmpfile = NULL;
    default_t *dp;
-   unsigned int line, blanks;
+   unsigned int blanks;
    FILE *f;
 
    // killough 10/98: for when exiting early
@@ -1445,7 +1445,7 @@ void M_SaveDefaultFile(defaultfile_t *df)
 
    // killough 10/98: output comment lines which were read in during input
 
-   for(blanks = 1, line = 0, dp = df->defaults; ; dp++, blanks = 0)
+   for(blanks = 1, dp = df->defaults; ; dp++, blanks = 0)
    {
       int brackets = 0;
 

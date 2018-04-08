@@ -216,5 +216,43 @@ Added a "restartmap" command. It's basically the same as using the "map"
 command but to the same level.
 
 ================================================================================
+Changes since Eternity Engine v4.00.00
+================================================================================
+-------------------------------------------------------------------------------
+2018/04/01
+Incremented version to 4.01.00.
+
+-------------------------------------------------------------------------------
+2018/04/05
+O-H-S-N-A-P-O-H-S-N-A-P-O-H-S-N-A-P-O-H-S
+|Merged edf-features-branch into master.|
+P-A-N-S-H-O-P-A-N-S-H-O-P-A-N-S-H-O-P-A-N  
+ 
+MAJOR CHANGES:
+ • Introduced EDF weapons:
+  - Users can now define brand new weapons.
+  - All the original Doom weapons are now defined through this system.
+  - Almost all Heretic weapons are now defined through this system (the others
+    aren't defined at all).
+  - Almost all of the Heretic weapon codepointers have been added.
+  - Additionally, weapondeltas have been added.
+ • Introduced EDF pickupeffects:
+  - Users can now define brand new pickups.
+  - These can define either thing-based or sprite-based pickups. They can also
+    be defined externally, or inside a thingtype definition.
+  - They encompass health, armor, ammo, power-ups, weapons, and artefacts.
+  - All the Doom and Heretic pickups now use this system.  
+  - PICKUPITEMS ARE DEPRECATED, PLEASE DO NOT USE THEM.
+ • Introduced support for Heretic-style inventory
+  - Items can only be used in Heretic at the moment, but support will be
+    extended to other IWADs.
+  - All the Heretic artefacts now use this system (except for the egg).
+ • EDF playerclasses now have more options.
+ • Added EDF playerdeltas.
+ 
+There's probably more stuff I'm forgetting but that's the big stuff.
+
+
+================================================================================
 EOF
 ================================================================================

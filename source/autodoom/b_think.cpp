@@ -498,6 +498,8 @@ bool Bot::checkItemType(const Mobj *special) const
 
    bool dropped = !!(special->flags & MF_DROPPED);
 
+#warning Need to rewrite this for the new item FX behaviour.
+#if 0
    switch(pickupfx[sprite].tempeffect)
    {
       case PFX_GREENARMOR:
@@ -634,7 +636,7 @@ bool Bot::checkItemType(const Mobj *special) const
       default:
          return false;
    }
-
+#endif
    return false;
 }
 
@@ -896,6 +898,9 @@ void Bot::pickRandomWeapon(const Target& target)
     
     if(pl->powers[pw_strength])
         guns[num++] = wp_fist;
+
+#warning Need to rewrite it for the new weapon system
+#if 0
     if(!pl->weaponowned[wp_supershotgun] && pl->weaponowned[wp_shotgun]
        && P_WeaponHasAmmo(pl, &weaponinfo[wp_shotgun]))
     {
@@ -931,7 +936,7 @@ void Bot::pickRandomWeapon(const Target& target)
     
     if(num == 0 && P_WeaponHasAmmo(pl, &weaponinfo[wp_pistol]))
         guns[num++] = wp_pistol;
-    
+#endif
     if(num == 0)
         guns[num++] = wp_fist;
     
@@ -1064,6 +1069,8 @@ void Bot::pickBestWeapon(const Target &target)
    const Mobj &t = *target.mobj;
    fixed_t dist = target.dist;
 
+#warning Need to rewrite this for the new weapon system
+#if 0
    const BotWeaponInfo &bwi = g_botweapons[pl->readyweapon];
    double currentDmgRate =
    bwi.calcHitscanDamage(dist, t.radius, t.height,
@@ -1106,6 +1113,7 @@ void Bot::pickBestWeapon(const Target &target)
       cmd->buttons |= BT_CHANGE;
       cmd->buttons |= maxI << BT_WEAPONSHIFT;
    }
+#endif
 }
 
 void Bot::doCombatAI(const PODCollection<Target>& targets)
@@ -1156,6 +1164,8 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
     rt.SafeAimLineAttack(pl->mo, pl->mo->angle, MISSILERANGE / 2, 0);
     if (rt.m_clip.linetarget && !rt.m_clip.linetarget->player)
     {
+#warning need to rewrite this for the new weapon system
+#if 0
        const BotWeaponInfo &bwi = g_botweapons[pl->readyweapon];
        const Mobj &t = *rt.m_clip.linetarget;
        fixed_t dist = B_ExactDistance(t.x - mx, t.y - my);
@@ -1178,8 +1188,11 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
              }
           }
        }
+#endif
     }
 
+#warning Need to update this to new weapon system
+#if 0
     if(targets[0].isLine)
     {
         angle_t vang[2];
@@ -1216,6 +1229,7 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
        // avoid using the rocket launcher for now...
         pickRandomWeapon(targets[0]);
     }
+#endif
 //    else if (random.range(1, 300) == 1)
 //    {
 //        pickRandomWeapon(targets[0]);
@@ -1226,6 +1240,8 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
 
        int explosion = B_MobjDeathExplosion(*targets[0].mobj);
 
+#warning Need to update this with the new weapon system
+#if 0
         if (pl->readyweapon == wp_fist || pl->readyweapon == wp_chainsaw)
         {
             if (highestThreat != &targets[0] || explosion > pl->health / 4)
@@ -1292,7 +1308,7 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
             }
 
         }
-
+#endif
     }
 }
 
@@ -1775,12 +1791,15 @@ void Bot::simulateBaseTiccmd()
    int newweapon = wp_nochange;
    if(!demo_compatibility && pl->attackdown && !P_CheckAmmo(pl))
    {
+#warning Need to update this to the new weapon system
+#if 0
       newweapon = P_SwitchWeapon(pl);
       if(newweapon != wp_nochange)
       {
          pl->cmd.buttons |= BT_CHANGE;
          pl->cmd.buttons |= newweapon << BT_WEAPONSHIFT;
       }
+#endif
    }
 }
 

@@ -668,9 +668,13 @@ void P_XYMovement(Mobj* mo)
    // no friction when airborne
    // haleyjd: OVER_UNDER
    // 06/5/12: flying players
+   // 2017/09/09: players when air friction is active
    if(mo->z > mo->floorz && !(mo->flags4 & MF4_FLY) &&
-      (!P_Use3DClipping() || !(mo->intflags & MIF_ONMOBJ)))
+      (!P_Use3DClipping() || !(mo->intflags & MIF_ONMOBJ)) &&
+      (!mo->player || LevelInfo.airFriction == 0))
+   {
       return;
+   }
 
    // killough 8/11/98: add bouncers
    // killough 9/15/98: add objects falling off ledges
@@ -742,8 +746,11 @@ void P_XYMovement(Mobj* mo)
       {
          fixed_t friction = P_GetFriction(mo, NULL);
 
-         mo->momx = FixedMul(mo->momx, friction);
-         mo->momy = FixedMul(mo->momy, friction);
+         if(friction != FRACUNIT)
+         {
+            mo->momx = FixedMul(mo->momx, friction);
+            mo->momy = FixedMul(mo->momy, friction);
+         }
 
          // killough 10/98: Always decrease player bobbing by ORIG_FRICTION.
          // This prevents problems with bobbing on ice, where it was not being
@@ -801,6 +808,12 @@ void P_PlayerHitFloor(Mobj *mo, bool onthing)
       else if(onthing || !E_GetThingFloorType(mo, true)->liquid)
          S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
    }
+}
+
+static void P_floorHereticBounceMissile(Mobj * mo)
+{
+   mo->momz = -mo->momz;
+   P_SetMobjState(mo, mobjinfo[mo->type]->deathstate);
 }
 
 //
@@ -984,7 +997,7 @@ floater:
       if(correct_lost_soul_bounce && (mo->flags & MF_SKULLFLY))
          mo->momz = -mo->momz; // the skull slammed into something
 
-      if((moving_down = (mo->momz < 0)))
+      if((moving_down = (mo->momz < 0)) && !(mo->flags4 & MF4_HERETICBOUNCES))
       {
          // killough 11/98: touchy objects explode on impact
          if(mo->flags & MF_TOUCHY && mo->intflags & MIF_ARMED &&
@@ -1016,8 +1029,16 @@ floater:
 
       if(!((mo->flags ^ MF_MISSILE) & (MF_MISSILE | MF_NOCLIP)))
       {
-         if(!(mo->flags3 & MF3_FLOORMISSILE)) // haleyjd
+         if(mo->flags4 & MF4_HERETICBOUNCES) // MaxW
+         {
+            P_floorHereticBounceMissile(mo);
+            return;
+         }
+         else if(!(mo->flags3 & MF3_FLOORMISSILE)) // haleyjd
+         {
             P_ExplodeMissile(mo, nullptr);
+            return;
+         }
          return;
       }
    }
@@ -2504,6 +2525,9 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
    // haleyjd 08/05/04: use new function
    z += P_SubRandom(pr_spawnpuff) << 10;
 
+   if(trace.puff)
+      th = P_SpawnMobj(x, y, z, trace.puff->index);
+
    th = P_SpawnMobj(x, y, z, E_SafeThingType(MT_PUFF));
    th->momz = FRACUNIT;
    th->tics -= P_Random(pr_spawnpuff) & 3;
@@ -2513,7 +2537,7 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
 
    // don't make punches spark on the wall
 
-   if(trace.attackrange == MELEERANGE)
+   if(!trace.puff && trace.attackrange == MELEERANGE)
       P_SetMobjState(th, E_SafeState(S_PUFF3));
 
    // haleyjd: for demo sync etc we still need to do the above, so
@@ -2995,7 +3019,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type)
    th = P_SpawnMobj(x, y, z, type);
 
    if(source->player && source->player->powers[pw_silencer] &&
-      P_GetReadyWeapon(source->player)->flags & WPF_SILENCER)
+      source->player->readyweapon->flags & WPF_SILENCEABLE)
    {
       S_StartSoundAtVolume(th, th->info->seesound, WEAPON_VOLUME_SILENCED, 
                            ATTN_NORMAL, CHAN_AUTO);
@@ -3026,6 +3050,55 @@ Mobj *P_SpawnMissileAngle(Mobj *source, mobjtype_t type,
    missileinfo.z      = z;
    missileinfo.angle  = angle;
    missileinfo.momz   = momz;
+   missileinfo.flags  = (missileinfo_t::USEANGLE | missileinfo_t::NOFUZZ);
+
+   return P_SpawnMissileEx(missileinfo);
+}
+
+//
+// Tries to aim at a nearby monster, but with angle parameter
+// Code lifted from P_SPMAngle in Chocolate Heretic, p_mobj.c
+//
+Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t angle)
+{
+   fixed_t z, slope = 0;
+   angle_t an = angle;
+
+   fixed_t playersightslope = P_PlayerPitchSlope(source->player);
+   if(autoaim)
+   {
+      // ioanch: reuse killough's code from P_SpawnPlayerMissile
+      int mask = demo_version < 203 ? 0 : MF_FRIEND;
+      do
+      {
+         slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
+         if(!clip.linetarget)
+            slope = P_AimLineAttack(source, an += 1<<26, 16*64*FRACUNIT, mask);
+         if(!clip.linetarget)
+            slope = P_AimLineAttack(source, an -= 2<<26, 16*64*FRACUNIT, mask);
+         if(!clip.linetarget)
+         {
+            an = angle;
+            // haleyjd: use true slope angle
+            slope = playersightslope;
+         }
+      } while(mask && (mask = 0, !clip.linetarget));  // killough 8/2/98
+   }
+   else
+      slope = playersightslope;
+
+   // NOTE: playersightslope is added to z in vanilla Heretic.
+   z = source->z + 4 * 8 * FRACUNIT + playersightslope;
+
+   edefstructvar(missileinfo_t, missileinfo);
+
+   memset(&missileinfo, 0, sizeof(missileinfo));
+
+   missileinfo.source = source;
+   missileinfo.type   = type;
+   missileinfo.z      = z;
+   missileinfo.angle  = an;
+   missileinfo.momz   = FixedMul(mobjinfo[type]->speed, slope);
    missileinfo.flags  = (missileinfo_t::USEANGLE | missileinfo_t::NOFUZZ);
 
    return P_SpawnMissileEx(missileinfo);

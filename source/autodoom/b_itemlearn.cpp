@@ -211,6 +211,8 @@ bool B_CheckBackpack(const player_t *pl)
 
 bool B_CheckWeapon(const player_t *pl, weapontype_t weapon, bool dropped)
 {
+#warning Need to update this to new weapon system
+#if 0
    if(!pl->weaponowned[weapon])
       return true;
 
@@ -223,6 +225,8 @@ bool B_CheckWeapon(const player_t *pl, weapontype_t weapon, bool dropped)
 
    int amount = dropped ? wp->dropammo : wp->giveammo;
    return B_checkAmmo(pl, wp->ammo, amount);
+#endif
+   return false;
 }
 
 // EOF

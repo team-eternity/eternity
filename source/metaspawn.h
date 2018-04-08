@@ -70,8 +70,8 @@ public:
    {
    }
 
-   virtual MetaObject *clone()    const { return new MetaCollectionSpawn(*this); }
-   virtual const char *toString() const { return type.constPtr(); }
+   virtual MetaObject *clone()    const override { return new MetaCollectionSpawn(*this); }
+   virtual const char *toString() const override { return type.constPtr(); }
 };
 
 #endif

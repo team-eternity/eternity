@@ -26,6 +26,7 @@
 
 #include "cam_common.h"
 #include "cam_sight.h"
+#include "d_player.h"
 #include "e_exdata.h"
 #include "p_inter.h"
 #include "p_mobj.h"
@@ -156,6 +157,8 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
       y += portaldata->deltay;
       z += portaldata->deltaz;
 
+      P_FitLinkOffsetsToPortal(*portaldata);
+
       State newstate(state);
       newstate.groupid = newfromid;
       newstate.origindist += dist;
@@ -271,6 +274,8 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
             x += data.deltax;
             y += data.deltay;
             z += data.deltaz;  // why not
+
+            P_FitLinkOffsetsToPortal(data);
 
             State newstate(context.state);
             newstate.groupid = newfromid;
@@ -389,7 +394,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          return true;
 
       if(th->flags3 & MF3_GHOST && context.thing->player
-         && P_GetReadyWeapon(context.thing->player)->flags & WPF_NOHITGHOSTS)
+         && context.thing->player->readyweapon->flags & WPF_NOHITGHOSTS)
       {
          return true;
       }

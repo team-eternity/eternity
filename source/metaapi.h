@@ -155,8 +155,8 @@ public:
    }
 
    // Virtual Methods
-   virtual MetaObject *clone()    const { return new MetaInteger(*this); }
-   virtual const char *toString() const; 
+   virtual MetaObject *clone()    const override { return new MetaInteger(*this); }
+   virtual const char *toString() const override;
 
    // Accessors
    int getValue() const { return value; }
@@ -237,8 +237,8 @@ public:
    }
 
    // Virtual Methods
-   virtual MetaObject *clone()    const { return new MetaDouble(*this); }
-   virtual const char *toString() const;
+   virtual MetaObject *clone()    const override { return new MetaDouble(*this); }
+   virtual const char *toString() const override;
 
    // Accessors
    double getValue() const { return value; }
@@ -281,8 +281,8 @@ public:
    }
 
    // Virtual Methods
-   virtual MetaObject *clone()    const { return new MetaString(*this); }
-   virtual const char *toString() const { return value; }
+   virtual MetaObject *clone()    const override { return new MetaString(*this); }
+   virtual const char *toString() const override { return value; }
 
    // Accessors
    const char *getValue() const { return value; }
@@ -339,8 +339,8 @@ public:
    MetaVariant(const MetaVariant &other);
 
    // Virtual Methods
-   virtual MetaObject *clone() const { return new MetaVariant(*this); }
-   virtual void setValue(const char *s, char **ret = NULL);
+   virtual MetaObject *clone() const override { return new MetaVariant(*this); }
+   virtual void setValue(const char *s, char **ret = NULL) override;
 
    // Accessors
    int    getInt();
@@ -382,8 +382,8 @@ public:
    virtual ~MetaConstString() {}
 
    // Virtual Methods
-   virtual MetaObject *clone()    const { return new MetaConstString(*this); }
-   virtual const char *toString() const { return value; }
+   virtual MetaObject *clone()    const override { return new MetaConstString(*this); }
+   virtual const char *toString() const override { return value; }
 
    // Accessors
    const char *getValue() const { return value; }
@@ -418,8 +418,8 @@ public:
    virtual ~MetaTable();
 
    // MetaObject overrides
-   virtual MetaObject *clone() const;
-   virtual const char *toString() const;
+   virtual MetaObject *clone() const override;
+   virtual const char *toString() const override;
 
    // EHashTable API exposures
    float        getLoadFactor() const; // returns load factor of the key hash table
@@ -527,6 +527,7 @@ public:
 
    // Managed strings
    void        addString(const char *key, const char *value);
+   const char *getString(size_t  keyIndex, const char *defValue) const;
    const char *getString(const char *key, const char *defValue) const;
    void        setString(const char *key, const char *newValue);
    char       *removeString(const char *key);
@@ -539,6 +540,14 @@ public:
    void        setConstString(size_t keyIndex, const char *newValue);
    void        setConstString(const char *key, const char *newValue);
    const char *removeConstString(const char *key);
+
+   // Nested MetaTable
+   void       addMetaTable(size_t keyIndex, MetaTable *value);
+   void       addMetaTable(const char *key, MetaTable *newValue);
+   MetaTable *getMetaTable(size_t keyIndex, MetaTable *defValue) const;
+   MetaTable *getMetaTable(const char *key, MetaTable *defValue) const;
+   void       setMetaTable(size_t keyIndex, MetaTable *value);
+   void       setMetaTable(const char *key, MetaTable *value);
 
    // Copy routine - clones the entire MetaTable
    void copyTableTo(MetaTable *dest) const;

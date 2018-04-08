@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -852,6 +852,7 @@
     </ClCompile>
     <ClCompile Include="..\source\mn_items.cpp" />
     <ClCompile Include="..\source\m_utils.cpp" />
+    <ClCompile Include="..\source\p_portalblockmap.cpp" />
     <ClCompile Include="..\source\p_portalclip.cpp" />
     <ClCompile Include="..\source\p_portalcross.cpp" />
     <ClCompile Include="..\source\sdl\i_sdltimer.cpp" />
@@ -2041,10 +2042,12 @@
     <ClInclude Include="..\Source\in_lude.h" />
     <ClInclude Include="..\source\metaspawn.h" />
     <ClInclude Include="..\source\mn_items.h" />
+    <ClInclude Include="..\source\m_avltree.h" />
     <ClInclude Include="..\source\m_binary.h" />
     <ClInclude Include="..\source\m_compare.h" />
     <ClInclude Include="..\source\m_ctype.h" />
     <ClInclude Include="..\source\m_utils.h" />
+    <ClInclude Include="..\source\p_portalblockmap.h" />
     <ClInclude Include="..\source\p_portalclip.h" />
     <ClInclude Include="..\source\p_portalcross.h" />
     <ClInclude Include="..\source\p_sector.h" />
