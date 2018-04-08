@@ -940,7 +940,7 @@ static void ST_DoomFSDrawer()
    int fontcolor;
 
    V_DrawPatch(3, SCREENHEIGHT - 24, &vbscreen, nfs_health);
-   tempstr << healthcolor() << plyr->health;
+   tempstr << HU_HealthColor() << plyr->health;
    V_FontWriteText(hud_fslarge, tempstr.constPtr(),
                    RJUSTIFY(hud_fslarge, tempstr, 3, 7 + nfs_health->width),
                    SCREENHEIGHT - 24, &vbscreen);
@@ -948,7 +948,7 @@ static void ST_DoomFSDrawer()
 
    tempstr.clear();
    V_DrawPatch(3, SCREENHEIGHT - 12, &vbscreen, nfs_armor);
-   tempstr << armorcolor() << plyr->armorpoints;
+   tempstr << HU_ArmorColor() << plyr->armorpoints;
    V_FontWriteText(hud_fslarge, tempstr.constPtr(),
                    RJUSTIFY(hud_fslarge, tempstr, 3, 7 + nfs_armor->width),
                    SCREENHEIGHT - 12, &vbscreen);
@@ -962,7 +962,7 @@ static void ST_DoomFSDrawer()
       if(E_PlayerOwnsWeaponForDEHNum(plyr, i))
       {
          weaponinfo_t *weapon = E_WeaponForDEHNum(i);
-         fontcolor = weapon->ammo ? fontcolor = weapcolor(weapon) : *FC_TAN;
+         fontcolor = weapon->ammo ? fontcolor = HU_WeapColor(weapon) : *FC_TAN;
       }
       else
          fontcolor = *FC_GRAY;
@@ -976,9 +976,9 @@ static void ST_DoomFSDrawer()
    if(plyr->readyweapon->ammo != nullptr)
    {
       tempstr.clear();
-      int ammo = wc_pammo(plyr->readyweapon);
-      int maxammo = wc_mammo(plyr->readyweapon);
-      fontcolor = weapcolor(plyr->readyweapon);
+      int ammo = HU_WC_PlayerAmmo(plyr->readyweapon);
+      int maxammo = HU_WC_MaxAmmo(plyr->readyweapon);
+      fontcolor = HU_WeapColor(plyr->readyweapon);
       tempstr << static_cast<char>(fontcolor) << ammo << FC_TAN " / " <<
                  static_cast<char>(fontcolor) << maxammo;
       V_FontWriteText(hud_fsmedium, tempstr.constPtr(), displayoffs, SCREENHEIGHT - 16, &vbscreen);

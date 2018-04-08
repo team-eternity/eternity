@@ -122,13 +122,13 @@ enum
 #define hu_player (players[displayplayer])
 
 // Get the player's ammo for the given weapon, or 0 if am_noammo
-int wc_pammo(weaponinfo_t *w)
+int HU_WC_PlayerAmmo(weaponinfo_t *w)
 {
    return E_GetItemOwnedAmount(&hu_player, w->ammo);
 }
 
 // Determine if the player has enough ammo for one shot with the given weapon
-bool wc_noammo(weaponinfo_t *w)
+bool HU_WC_NoAmmo(weaponinfo_t *w)
 {
    bool outofammo = false;
    itemeffect_t *ammo = w->ammo;
@@ -145,7 +145,7 @@ bool wc_noammo(weaponinfo_t *w)
 }
 
 // Get the player's maxammo for the given weapon, or 0 if am_noammo
-int wc_mammo(weaponinfo_t *w)
+int HU_WC_MaxAmmo(weaponinfo_t *w)
 {
    int amount = 0;
    itemeffect_t *ammo = w->ammo;
@@ -157,11 +157,11 @@ int wc_mammo(weaponinfo_t *w)
 }
 
 // Determine the color to use for the given weapon's number and ammo bar/count
-char weapcolor(weaponinfo_t *w)
+char HU_WeapColor(weaponinfo_t *w)
 {
-   int  maxammo = wc_mammo(w);
-   bool noammo  = wc_noammo(w);
-   int  pammo   = wc_pammo(w);
+   int  maxammo = HU_WC_MaxAmmo(w);
+   bool noammo  = HU_WC_NoAmmo(w);
+   int  pammo   = HU_WC_PlayerAmmo(w);
 
    return
       (!maxammo ? *FC_GRAY :
@@ -172,7 +172,7 @@ char weapcolor(weaponinfo_t *w)
 }
 
 // Determine the color to use for a given player's health
-char healthcolor()
+char HU_HealthColor()
 {
    return hu_player.health  < health_red    ? *FC_RED :
           hu_player.health  < health_yellow ? *FC_GOLD :
@@ -181,7 +181,7 @@ char healthcolor()
 }
 
 // Determine the color to use for a given player's armor
-char armorcolor()
+char HU_ArmorColor()
 {
    if(hu_player.armorpoints < armor_red)
       return *FC_RED;
@@ -201,10 +201,10 @@ char armorcolor()
 }
 
 // Get the amount of ammo the displayplayer has left in his/her readyweapon
-#define playerammo    wc_pammo(hu_player.readyweapon)
+#define playerammo    HU_WC_PlayerAmmo(hu_player.readyweapon)
 
 // Get the maximum amount the player could have for his/her readyweapon
-#define playermaxammo wc_mammo(hu_player.readyweapon)
+#define playermaxammo HU_WC_MaxAmmo(hu_player.readyweapon)
 
 //
 // setol
@@ -341,7 +341,7 @@ static void HU_drawHealth(int x, int y)
    x += GAP; // leave a gap between name and bar
   
    //psnprintf(tempstr, sizeof(tempstr), "%c", fontcolor);
-   tempstr << healthcolor();
+   tempstr << HU_HealthColor();
 
    // now make the actual bar
    HU_textBar(tempstr, hu_player.health);
@@ -367,7 +367,7 @@ static void HU_drawArmor(int x, int y)
    HU_WriteText(HUDCOLOR "Armor", x, y);
    x += GAP; // leave a gap between name and bar
 
-   tempstr << armorcolor();
+   tempstr << HU_ArmorColor();
 
    // make the bar
    HU_textBar(tempstr, hu_player.armorpoints);
@@ -392,7 +392,7 @@ static void HU_drawAmmo(int x, int y)
    HU_WriteText(HUDCOLOR "Ammo", x, y);
    x += GAP;
    
-   fontcolor = weapcolor(hu_player.readyweapon);
+   fontcolor = HU_WeapColor(hu_player.readyweapon);
    
    tempstr << static_cast<char>(fontcolor);
    
@@ -427,7 +427,7 @@ static void HU_drawWeapons(int x, int y)
       if(E_PlayerOwnsWeaponForDEHNum(&hu_player, i))
       {
          // got it
-         fontcolor = weapcolor(E_WeaponForDEHNum(i));
+         fontcolor = HU_WeapColor(E_WeaponForDEHNum(i));
          tempstr << static_cast<char>(fontcolor) << (i + 1) << ' ';
       }
    }

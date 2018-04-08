@@ -24,6 +24,15 @@
 struct vfont_t;
 struct weaponinfo_t;
 
+int HU_WC_PlayerAmmo(weaponinfo_t *w);
+bool HU_WC_NoAmmo(weaponinfo_t *w);
+int HU_WC_MaxAmmo(weaponinfo_t *w);
+char HU_WeapColor(weaponinfo_t *w);
+
+char HU_HealthColor();
+char HU_ArmorColor();
+
+
 // heads up font
 void HU_LoadFont();
 void HU_WriteText(const char *s, int x, int y);
@@ -39,14 +48,6 @@ extern char    *hud_fslargename;
 extern vfont_t *hud_fssmall;
 extern vfont_t *hud_fsmedium;
 extern vfont_t *hud_fslarge;
-
-int wc_pammo(weaponinfo_t *w);
-bool wc_noammo(weaponinfo_t *w);
-int wc_mammo(weaponinfo_t *w);
-char weapcolor(weaponinfo_t *w);
-
-char healthcolor();
-char armorcolor();
 
 // overlay interface
 void HU_OverlayDraw();
