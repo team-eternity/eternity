@@ -789,7 +789,7 @@ void G_DoLoadLevel()
 //
 // Get info needed to make ticcmd_ts for the players.
 //
-bool G_Responder(event_t* ev)
+bool G_Responder(const event_t* ev)
 {
    int action;
    invbarstate_t &invbarstate = players[consoleplayer].invbarstate;
@@ -1919,7 +1919,7 @@ void G_ForcedLoadGame(void)
 // killough 3/16/98: add slot info
 // killough 5/15/98: add command-line
 
-void G_LoadGame(char *name, int slot, bool command)
+void G_LoadGame(const char *name, int slot, bool command)
 {
    if(savename)
       efree(savename);
@@ -1951,7 +1951,7 @@ static void G_LoadGameErr(char *msg)
 // Description is a 24 byte text string
 //
 
-void G_SaveGame(int slot, char *description)
+void G_SaveGame(int slot, const char *description)
 {
    savegameslot = slot;
    strcpy(savedescription, description);
@@ -2003,7 +2003,7 @@ void G_SaveGameName(char *name, size_t len, int slot)
 //
 // killough 12/98: use faster algorithm which has less IO
 //
-uint64_t G_Signature(WadDirectory *dir)
+uint64_t G_Signature(const WadDirectory *dir)
 {
    uint64_t s = 0;
    int lump, i;
@@ -2521,7 +2521,7 @@ static void G_queuePlayerCorpse(Mobj *mo)
 // haleyjd 08/19/13: If an Mobj in the bodyque is removed elsewhere, a dangling
 // reference would remain in the array. Call this to cleanse the queue.
 //
-void G_DeQueuePlayerCorpse(Mobj *mo)
+void G_DeQueuePlayerCorpse(const Mobj *mo)
 {
    for(auto itr = bodyque.begin(); itr != bodyque.end(); itr++)
    {
@@ -3185,7 +3185,7 @@ void G_InitNewNum(skill_t skill, int episode, int map)
 // Can be called by the startup code or the menu task,
 // consoleplayer, displayplayer, playeringame[] should be set.
 //
-void G_InitNew(skill_t skill, char *name)
+void G_InitNew(skill_t skill, const char *name)
 {
    int i;
 
@@ -3268,7 +3268,7 @@ void G_InitNew(skill_t skill, char *name)
 // NETCODE_FIXME -- DEMO_FIXME: See the comment above where demos
 // are read. Some of the same issues may apply here.
 //
-void G_RecordDemo(char *name)
+void G_RecordDemo(const char *name)
 {
    int i;
    

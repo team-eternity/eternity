@@ -390,7 +390,7 @@ void ST_AutomapEvent(int type)
 // Respond to keyboard input events, intercept cheats.
 // This code is shared by all status bars.
 //
-bool ST_Responder(event_t *ev)
+bool ST_Responder(const event_t *ev)
 {
    // TODO: allow cheat input to be disabled
    // if a user keypress...

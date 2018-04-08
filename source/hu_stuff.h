@@ -41,7 +41,7 @@ extern char *chat_macros[10];
 void HU_Init(void);
 void HU_Drawer(void);
 void HU_Ticker(void);
-bool HU_Responder(event_t *ev);
+bool HU_Responder(const event_t *ev);
 
 void HU_Start(void);
 

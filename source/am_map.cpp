@@ -794,7 +794,7 @@ static void AM_maxOutWindowScale()
 //
 // haleyjd 07/07/04: rewritten to support new keybindings
 //
-bool AM_Responder(event_t *ev)
+bool AM_Responder(const event_t *ev)
 {
    // haleyjd 07/07/04: dynamic bindings
    int action = G_KeyResponder(ev, kac_map);

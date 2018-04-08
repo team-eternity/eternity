@@ -81,7 +81,7 @@ int obcolour = CR_BRICK;       // the colour of death messages
 vfont_t *hud_font;
 char *hud_fontname;
 
-static bool HU_ChatRespond(event_t *ev);
+static bool HU_ChatRespond(const event_t *ev);
 
 //=============================================================================
 //
@@ -344,7 +344,7 @@ bool altdown = false;
 // Called from G_Responder. Has priority over any other events
 // intercepted by that function.
 //
-bool HU_Responder(event_t *ev)
+bool HU_Responder(const event_t *ev)
 {
    if(ev->data1 == KEYD_LALT)
       altdown = (ev->type == ev_keydown);
@@ -1256,7 +1256,7 @@ static void HU_InitChat()
 //
 // Responds to chat-related events.
 //
-static bool HU_ChatRespond(event_t *ev)
+static bool HU_ChatRespond(const event_t *ev)
 {
    char ch = 0;
    static bool shiftdown;
