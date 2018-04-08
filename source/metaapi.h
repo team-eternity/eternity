@@ -137,7 +137,7 @@ class MetaInteger : public MetaObject
 
 protected:
    int value;
-   virtual bool readFromFile(InBuffer& inbuf);
+   virtual bool readFromFile(InBuffer& inbuf) override;
 
 public:
    MetaInteger() : Super(), value(0) {}
@@ -164,7 +164,7 @@ public:
 
    friend class MetaTable;
 
-   virtual bool writeToFile(OutBuffer& outbuf) const;
+   virtual bool writeToFile(OutBuffer& outbuf) const override;
 };
 
 //
@@ -179,7 +179,7 @@ class MetaV2Fixed : public MetaObject
    
 protected:
    v2fixed_t value;
-   virtual bool readFromFile(InBuffer& inbuf);
+   virtual bool readFromFile(InBuffer& inbuf) override;
    
 public:
    MetaV2Fixed() : Super()
@@ -200,8 +200,8 @@ public:
    }
    
    // Virtual Methods
-   virtual MetaObject *clone()    const { return new MetaV2Fixed(*this); }
-   virtual const char *toString() const;
+   virtual MetaObject *clone()    const override { return new MetaV2Fixed(*this); }
+   virtual const char *toString() const override;
    
    // Accessors
    v2fixed_t getValue() const { return value; }
@@ -209,7 +209,7 @@ public:
    
    friend class MetaTable;
 
-   virtual bool writeToFile(OutBuffer& outbuf) const;
+   virtual bool writeToFile(OutBuffer& outbuf) const override;
 };
 
 //
@@ -223,7 +223,7 @@ class MetaDouble : public MetaObject
 
 protected:
    double value;
-   virtual bool readFromFile(InBuffer& inbuf);
+   virtual bool readFromFile(InBuffer& inbuf) override;
 
 public:
    MetaDouble() : Super(), value(0.0) {}
@@ -246,7 +246,7 @@ public:
 
    friend class MetaTable;
 
-   virtual bool writeToFile(OutBuffer& outbuf) const;
+   virtual bool writeToFile(OutBuffer& outbuf) const override;
 };
 
 //
@@ -261,7 +261,7 @@ class MetaString : public MetaObject
 
 protected:
    char *value;
-   virtual bool readFromFile(InBuffer& inbuf);
+   virtual bool readFromFile(InBuffer& inbuf) override;
 
 public:
    MetaString() : Super(), value(estrdup("")) {}
@@ -290,7 +290,7 @@ public:
 
    friend class MetaTable;
 
-   virtual bool writeToFile(OutBuffer& outbuf) const;
+   virtual bool writeToFile(OutBuffer& outbuf) const override;
 };
 
 //
@@ -363,7 +363,7 @@ class MetaConstString : public MetaObject
 
 protected:
    const char *value;
-   virtual bool readFromFile(InBuffer& inbuf);
+   virtual bool readFromFile(InBuffer& inbuf) override;
 
 public:
    MetaConstString() : Super(), value(NULL) {}
@@ -391,7 +391,7 @@ public:
 
    friend class MetaTable;
 
-   virtual bool writeToFile(OutBuffer& outbuf) const;
+   virtual bool writeToFile(OutBuffer& outbuf) const override;
 };
 
 //
@@ -409,7 +409,7 @@ class MetaTable : public MetaObject
 private:
    // Private implementation details are in metaapi.cpp
    MetaTablePimpl *pImpl;
-   virtual bool readFromFile(InBuffer& inbuf);
+   virtual bool readFromFile(InBuffer& inbuf) override;
 
 public:
    MetaTable();
@@ -559,7 +559,7 @@ public:
    // Statics
    static size_t IndexForKey(const char *key);
 
-   virtual bool writeToFile(OutBuffer& outbuf) const;
+   virtual bool writeToFile(OutBuffer& outbuf) const override;
 };
 
 //
