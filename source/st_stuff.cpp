@@ -937,7 +937,7 @@ static bool st_fontsloaded = false;
 static void ST_DoomFSDrawer()
 {
    qstring tempstr;
-   int fontcolor;
+   char fontcolor;
 
    V_DrawPatch(3, SCREENHEIGHT - 24, &vbscreen, nfs_health);
    tempstr << HU_HealthColor() << plyr->health;
@@ -967,7 +967,7 @@ static void ST_DoomFSDrawer()
       else
          fontcolor = *FC_GRAY;
 
-      tempstr << static_cast<char>(fontcolor) << i + 1 << ' ';
+      tempstr << fontcolor << i + 1 << ' ';
    }
    V_FontWriteText(hud_fssmall, tempstr.constPtr(), 44, SCREENHEIGHT - 24, &vbscreen);
 
@@ -976,11 +976,10 @@ static void ST_DoomFSDrawer()
    if(plyr->readyweapon->ammo != nullptr)
    {
       tempstr.clear();
-      int ammo = HU_WC_PlayerAmmo(plyr->readyweapon);
-      int maxammo = HU_WC_MaxAmmo(plyr->readyweapon);
+      const int ammo = HU_WC_PlayerAmmo(plyr->readyweapon);
+      const int maxammo = HU_WC_MaxAmmo(plyr->readyweapon);
       fontcolor = HU_WeapColor(plyr->readyweapon);
-      tempstr << static_cast<char>(fontcolor) << ammo << FC_TAN " / " <<
-                 static_cast<char>(fontcolor) << maxammo;
+      tempstr << fontcolor << ammo << FC_TAN " / " << fontcolor << maxammo;
       V_FontWriteText(hud_fsmedium, tempstr.constPtr(), displayoffs, SCREENHEIGHT - 16, &vbscreen);
    }
 
@@ -994,6 +993,22 @@ static void ST_DoomFSDrawer()
          x += 8;
       }
    }
+
+   tempstr.clear();
+   tempstr << plyr->killcount << " / " << totalkills << "  " << "KILLS";
+   V_FontWriteText(hud_fssmall, tempstr.constPtr(),
+                   SCREENWIDTH - V_FontStringWidth(hud_fssmall, tempstr.constPtr()) - 3,
+                   SCREENHEIGHT - 24, &vbscreen);
+   tempstr.clear();
+   tempstr << plyr->itemcount << " / " << totalitems << "  " << "ITEMS";
+   V_FontWriteText(hud_fssmall, tempstr.constPtr(),
+                   SCREENWIDTH - V_FontStringWidth(hud_fssmall, tempstr.constPtr()) - 3,
+                   SCREENHEIGHT - 16, &vbscreen);
+   tempstr.clear();
+   tempstr << plyr->secretcount << " / " << totalsecret << "  " << "SCRTS";
+   V_FontWriteText(hud_fssmall, tempstr.constPtr(),
+                   SCREENWIDTH - V_FontStringWidth(hud_fssmall, tempstr.constPtr()) - 3,
+                   SCREENHEIGHT - 8, &vbscreen); 
 }
 
 //
