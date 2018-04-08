@@ -71,7 +71,7 @@ static int finalecount;
 
 void F_StartCast();
 void F_CastTicker();
-bool F_CastResponder(event_t *ev);
+bool F_CastResponder(const event_t *ev);
 void F_CastDrawer();
 
 void IN_checkForAccelerate();    // killough 3/28/98: used to
@@ -154,7 +154,7 @@ void F_StartFinale(bool secret)
 //
 // F_Responder
 //
-bool F_Responder(event_t *event)
+bool F_Responder(const event_t *event)
 {
    if(finalestage == 2)
       return F_CastResponder(event);
@@ -514,7 +514,7 @@ void F_CastTicker()
 //
 // F_CastResponder
 //
-bool F_CastResponder(event_t* ev)
+bool F_CastResponder(const event_t* ev)
 {
    if(ev->type != ev_keydown)
       return false;

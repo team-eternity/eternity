@@ -527,7 +527,7 @@ const char *G_FirstBoundKey(const char *action)
 //
 // The main driver function for the entire key binding system
 //
-int G_KeyResponder(event_t *ev, int bclass)
+int G_KeyResponder(const event_t *ev, int bclass)
 {
    int ret = ka_nothing;
    keyaction_t *action = NULL;

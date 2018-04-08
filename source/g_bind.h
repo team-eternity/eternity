@@ -28,7 +28,7 @@ struct event_t;
 class  qstring;
 
 void G_InitKeyBindings();
-int  G_KeyResponder(event_t *ev, int bclass);
+int  G_KeyResponder(const event_t *ev, int bclass);
 
 void G_ClearKeyStates();
 
