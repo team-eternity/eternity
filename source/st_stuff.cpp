@@ -961,8 +961,8 @@ static void ST_DoomFSDrawer()
    {
       if(E_PlayerOwnsWeaponForDEHNum(plyr, i))
       {
-         weaponinfo_t *weapon = E_WeaponForDEHNum(i);
-         fontcolor = weapon->ammo ? fontcolor = HU_WeapColor(weapon) : *FC_CUSTOM1;
+         const weaponinfo_t const *weapon = E_WeaponForDEHNum(i);
+         fontcolor = weapon->ammo ? HU_WeapColor(E_WeaponForDEHNum(i)) : *FC_CUSTOM1;
       }
       else
          fontcolor = *FC_GRAY;
