@@ -8,6 +8,12 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+09.04.2018
+
+FEATURE: Added the push activation from Hexen. The feature was long advertised
+         in ExtraData (and later UDMF) but only now it has been implemented.
+
+--------------------------------------------------------------------------------
 31.03.2018
 
 IMPROVEMENT: Polyobjects are now properly cut off by 1-sided walls, instead of
