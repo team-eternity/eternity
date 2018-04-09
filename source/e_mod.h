@@ -58,7 +58,7 @@ emod_t *E_DamageTypeForNum(int num);
 int     E_DamageTypeNumForName(const char *name);
 
 // This is actually in e_things.c but should be prototyped here.
-const char *E_ModFieldName(const char *base, emod_t *mod);
+const char *E_ModFieldName(const char *base, const emod_t *mod);
 
 // EDF-only stuff
 #ifdef NEED_EDF_DEFINITIONS

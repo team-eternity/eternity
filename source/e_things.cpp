@@ -1089,7 +1089,7 @@ static void E_RemoveMetaState(mobjinfo_t *mi, const char *name)
 // Gets a state that is stored inside an mobjinfo metatable.
 // Returns null if no such object exists.
 //
-static MetaState *E_GetMetaState(mobjinfo_t *mi, const char *name)
+static MetaState *E_GetMetaState(const mobjinfo_t *mi, const char *name)
 {
    return mi->meta->getObjectKeyAndTypeEx<MetaState>(name);
 }
@@ -1142,7 +1142,7 @@ static void E_ThingFrame(const char *data, const char *fieldname,
 // uses a mod name as a suffix.
 // Don't cache the return value.
 //
-const char *E_ModFieldName(const char *base, emod_t *mod)
+const char *E_ModFieldName(const char *base, const emod_t *mod)
 {
    static qstring namebuffer;
 
@@ -1155,10 +1155,11 @@ const char *E_ModFieldName(const char *base, emod_t *mod)
 // Returns the state from the given mobjinfo for the given mod type and
 // base label, if such exists. If not, null is returned.
 //
-state_t *E_StateForMod(mobjinfo_t *mi, const char *base, emod_t *mod)
+state_t *E_StateForMod(const mobjinfo_t *mi, const char *base,
+                       const emod_t *mod)
 {
    state_t   *ret = nullptr;
-   MetaState *mstate;
+   const MetaState *mstate;
 
    if((mstate = E_GetMetaState(mi, E_ModFieldName(base, mod))))
       ret = mstate->state;
@@ -1170,7 +1171,7 @@ state_t *E_StateForMod(mobjinfo_t *mi, const char *base, emod_t *mod)
 // Convenience wrapper routine to get the state node for a given
 // mod type by number, rather than with a pointer to the damagetype object.
 //
-state_t *E_StateForModNum(mobjinfo_t *mi, const char *base, int num)
+state_t *E_StateForModNum(const mobjinfo_t *mi, const char *base, int num)
 {
    emod_t  *mod = E_DamageTypeForNum(num);
    state_t *ret = nullptr;
@@ -1766,7 +1767,7 @@ static const char * gamemodeinfo_t::* defaultForBloodAction[NUMBLOODACTIONS] =
 // Returns -1 if there is not a valid blood type for this action. This may, in the
 // case of an @none indicator, mean that no blood is meant to be spawned.
 //
-int E_BloodTypeForThing(Mobj *mo, bloodaction_e action)
+int E_BloodTypeForThing(const Mobj *mo, bloodaction_e action)
 {
    const char *actionKey   = keyForBloodAction[action];
    const char *defaultType = GameModeInfo->*(defaultForBloodAction[action]);

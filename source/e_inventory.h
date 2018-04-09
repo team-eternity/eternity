@@ -63,7 +63,6 @@ enum
 typedef int artitype_t;
 
 // Hard-coded names for specially treated items (needed in DeHackEd, etc.)
-// INVENTORY_TODO: many may become unneeded when P_TouchSpecialThing is finished
 #define ITEMNAME_BERSERKHEALTH "BerserkHealth" // The health
 #define ITEMNAME_HEALTHBONUS   "HealthBonus"
 #define ITEMNAME_MEDIKIT       "Medikit"
@@ -73,10 +72,8 @@ typedef int artitype_t;
 #define ITEMNAME_GREENARMOR    "GreenArmor"
 #define ITEMNAME_BLUEARMOR     "BlueArmor"
 #define ITEMNAME_IDFAARMOR     "IDFAArmor"
-#define ITEMNAME_ENCHANTEDSHLD "EnchantedShield"
 #define ITEMNAME_ARMORBONUS    "ArmorBonus"
-
-#define ITEMNAME_BERZERKBOX    "Berserk" // The power
+#define ITEMNAME_RAMBOARMOR    "RAMBOArmor"
 
 // Hard-coded names for specially treated artifact types
 #define ARTI_BACKPACKITEM "BackpackItem"
@@ -190,19 +187,19 @@ itemeffect_t *E_KeyItemForIndex(size_t idx);
 int E_GiveAllKeys(player_t *player);
 
 // Take all "key" type artifacts from a player
-int E_TakeAllKeys(player_t *player);
+int E_TakeAllKeys(const player_t *player);
 
 // Check if a player is able to unlock a lock, by its lock ID.
-bool E_PlayerCanUnlock(player_t *player, int lockID, bool remote);
+bool E_PlayerCanUnlock(const player_t *player, int lockID, bool remote);
 
 // Get the automap color for a lockdef
 int E_GetLockDefColor(int lockID);
 
 // Tries to move the inventory cursor 'amount' right.
-bool E_MoveInventoryCursor(player_t *player, int amount, int &cursor);
+bool E_MoveInventoryCursor(const player_t *player, int amount, int &cursor);
 
 // Says if a player possesses at least one item w/ +invbar
-bool E_PlayerHasVisibleInvItem(player_t *player);
+bool E_PlayerHasVisibleInvItem(const player_t *player);
 
 // Tries to use the currently selected item.
 void E_TryUseItem(player_t *player, inventoryitemid_t ID);
@@ -211,40 +208,45 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID);
 itemeffect_t *E_EffectForInventoryItemID(inventoryitemid_t id);
 
 // Obtain an item effect definition for a player's inventory index
-itemeffect_t *E_EffectForInventoryIndex(player_t *player, inventoryindex_t idx);
+itemeffect_t *E_EffectForInventoryIndex(const player_t *player,
+                                        inventoryindex_t idx);
 
 // Get the slot being used for a particular inventory item, by ID, if one
 // exists. Returns NULL if the item isn't in the player's inventory.
-inventoryslot_t *E_InventorySlotForItemID(player_t *player, inventoryitemid_t id);
+inventoryslot_t *E_InventorySlotForItemID(const player_t *player,
+                                          inventoryitemid_t id);
 
 // Get the slot being used for a particular inventory item, by item pointer, if
 // one exists. Returns NULL if the item isn't in the player's inventory.
-inventoryslot_t *E_InventorySlotForItem(player_t *player, itemeffect_t *effect);
+inventoryslot_t *E_InventorySlotForItem(const player_t *player,
+                                        const itemeffect_t *effect);
 
 // Get the slot being used for a particular inventory item, by name, if one 
 // exists. Returns NULL if the item isn't in the player's inventory.
-inventoryslot_t *E_InventorySlotForItemName(player_t *player, const char *name);
+inventoryslot_t *E_InventorySlotForItemName(const player_t *player,
+                                            const char *name);
 
 // Special function to test for player backpack.
-bool E_PlayerHasBackpack(player_t *player);
+bool E_PlayerHasBackpack(const player_t *player);
 
 // Special function to give the player a backpack.
 bool E_GiveBackpack(player_t *player);
 
 // Special function to remove backpack.
-bool E_RemoveBackpack(player_t *player);
+bool E_RemoveBackpack(const player_t *player);
 
 // Lookup the maximum amount a player can carry of a specific artifact type.
-int E_GetMaxAmountForArtifact(player_t *player, itemeffect_t *artifact);
+int E_GetMaxAmountForArtifact(const player_t *player,
+                              const itemeffect_t *artifact);
 
 // Get amount of an item owned for a specific artifact type
-int E_GetItemOwnedAmount(player_t *player, itemeffect_t *artifact);
+int E_GetItemOwnedAmount(const player_t *player, const itemeffect_t *artifact);
 
 // Get amount of an item owned by name
-int E_GetItemOwnedAmountName(player_t *player, const char *name);
+int E_GetItemOwnedAmountName(const player_t *player, const char *name);
 
 // Place an item into a player's inventory. 
-bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact, int amount = -1);
+bool E_GiveInventoryItem(player_t *player, const itemeffect_t *artifact, int amount = -1);
 
 e_pickupfx_t *E_PickupFXForName(const char *name);
 e_pickupfx_t *E_PickupFXForSprNum(spritenum_t sprnum);
@@ -260,11 +262,12 @@ enum itemremoved_e
 };
 
 // Remove an item from a player's inventory.
-itemremoved_e E_RemoveInventoryItem(player_t *player, itemeffect_t *artifact, int amount);
+itemremoved_e E_RemoveInventoryItem(const player_t *player,
+                                    const itemeffect_t *artifact, int amount);
 
 // Call at the end of a hub, or a level that isn't part of a hub, to clear
 // out items that don't persist.
-void E_InventoryEndHub(player_t *player);
+void E_InventoryEndHub(const player_t *player);
 
 // Call to completely clear a player's inventory.
 void E_ClearInventory(player_t *player);
