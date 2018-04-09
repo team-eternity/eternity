@@ -39,6 +39,7 @@ armoreffect SilverShield
   saveamount  100
   savefactor  1
   savedivisor 2   // 50% absorption rate (1/2)
+  +setabsorption
 }
 
 armoreffect EnchantedShield
@@ -46,6 +47,7 @@ armoreffect EnchantedShield
   saveamount  200
   savefactor  3
   savedivisor 4   // 75% absorption rate (3/4)
+  +setabsorption
 }
 
 armoreffect RAMBOArmor
@@ -53,6 +55,7 @@ armoreffect RAMBOArmor
   saveamount  200
   savefactor  3
   savedivisor 4
+  +setabsorption
 }
 
 //=============================================================================

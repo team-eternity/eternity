@@ -1577,6 +1577,8 @@ void P_ShootSpecialLine(Mobj *thing, line_t *line, int side);
 
 // killough 11/98
 void P_CrossSpecialLine(line_t *, int side, Mobj *thing, polyobj_s *poly); 
+// ioanch
+void P_PushSpecialLine(Mobj &thing, line_t &line, int side);
 
 void P_PlayerInSpecialSector(player_t *player, sector_t *sector);
 void P_PlayerOnSpecialFlat(const player_t *player);

@@ -94,6 +94,7 @@ enum cheatnum_e
    CHEAT_HTICGIMME0,
    CHEAT_HTICGIMME1,
    CHEAT_HTICGIMME2,
+   CHEAT_HTICRAMBO,
 
    // Shared Cheats
    CHEAT_COMP,

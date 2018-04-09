@@ -105,6 +105,7 @@ static void cheat_hticbehold(const void *);
 static void cheat_hticgimme0(const void *);
 static void cheat_hticgimme1(const void *);
 static void cheat_hticgimme2(const void *);
+static void cheat_rambo(const void *);
 
 // Shared cheats
 static void cheat_pw(const void *);
@@ -197,6 +198,7 @@ cheat_s cheat[CHEAT_NUMCHEATS] =
    { "gimme",     Game_Heretic, not_sync, cheat_hticgimme0,  0                  },
    { "gimme",     Game_Heretic, not_sync, cheat_hticgimme1, -1                  },
    { "gimme",     Game_Heretic, not_sync, cheat_hticgimme2, -2                  },
+   { "rambo",     Game_Heretic, not_sync, cheat_rambo,       0                  },
 
    // Shared Cheats
    { "comp",     -1, not_sync, cheat_comp,     0             }, // phares
@@ -823,6 +825,27 @@ static void cheat_hticgimme2(const void *arg)
 
 }
 
+static void cheat_rambo(const void *arg)
+{
+   if(!E_PlayerHasBackpack(plyr))
+      E_GiveBackpack(plyr);
+
+   itemeffect_t *armor = E_ItemEffectForName(ITEMNAME_RAMBOARMOR);
+   if(armor)
+   {
+      plyr->armorpoints  = armor->getInt("saveamount",  0);
+      plyr->armorfactor  = armor->getInt("savefactor",  1);
+      plyr->armordivisor = armor->getInt("savedivisor", 3);
+   }
+
+   E_GiveAllClassWeapons(plyr);
+
+   // give full ammo
+   E_GiveAllAmmo(plyr, GAA_MAXAMOUNT);
+
+   player_printf(plyr, DEH_String(TXT_CHEATWEAPONS));
+}
+
 //-----------------------------------------------------------------------------
 // 2/7/98: Cheat detection rewritten by Lee Killough, to avoid
 // scrambling and to use a more general table-driven approach.
@@ -1134,7 +1157,18 @@ CONSOLE_NETCMD(nuke, cf_server|cf_level, netcmd_nuke)
 //
 CONSOLE_COMMAND(GIVEARSENAL, cf_notnet|cf_level)
 {
-   cheat_fa(nullptr);
+   switch(GameModeInfo->type)
+   {
+   case Game_DOOM:
+      cheat_fa(nullptr);
+      break;
+   case Game_Heretic:
+      cheat_rambo(nullptr);
+      break;
+   default:
+      // TODO: I dunno
+      break;
+   }
 }
 
 CONSOLE_COMMAND(GIVEKEYS, cf_notnet|cf_level)

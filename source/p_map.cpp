@@ -560,7 +560,7 @@ bool P_PortalTeleportMove(Mobj *thing, fixed_t x, fixed_t y)
 //
 // killough 11/98: reformatted
 
-static bool PIT_CrossLine(line_t *ld, polyobj_s *po)
+static bool PIT_CrossLine(line_t *ld, polyobj_s *po, void *context)
 {
    // SoM 9/7/02: wow a killoughism... * SoM is scared
    int flags = ML_TWOSIDED | ML_BLOCKING | ML_BLOCKMONSTERS;
@@ -671,7 +671,7 @@ static void SpechitOverrun(line_t *ld)
 //
 // ioanch: moved this here so it may be called from elsewhere too
 //
-void P_CollectSpechits(line_t *ld)
+void P_CollectSpechits(line_t *ld, PODCollection<line_t *> *pushhit)
 {
    // if contacted a special line, add it to the list
    // ioanch 20160121: check for PS_PASSABLE, to restrict just for linked portals
@@ -679,6 +679,8 @@ void P_CollectSpechits(line_t *ld)
    {
       if(ld->pflags & PS_PASSABLE)
          gGroupVisit[ld->portal->data.link.toid] = true;
+      else if(pushhit)  // don't attempt adding passable lines to pushables.
+         pushhit->add(ld);
       // 1/11/98 killough: remove limit on lines hit, by array doubling
       if(clip.numspechit >= clip.spechit_max)
       {
@@ -698,8 +700,9 @@ void P_CollectSpechits(line_t *ld)
 //
 // Adjusts tmfloorz and tmceilingz as lines are contacted
 //
-bool PIT_CheckLine(line_t *ld, polyobj_s *po)
+bool PIT_CheckLine(line_t *ld, polyobj_s *po, void *context)
 {
+   auto pushhit = static_cast<PODCollection<line_t *> *>(context);
    if(clip.bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   || 
       clip.bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  || 
       clip.bbox[BOXTOP]    <= ld->bbox[BOXBOTTOM] || 
@@ -724,15 +727,33 @@ bool PIT_CheckLine(line_t *ld, polyobj_s *po)
    if(!ld->backsector || (ld->extflags & EX_ML_BLOCKALL)) // one sided line
    {
       clip.blockline = ld;
-      return clip.unstuck && !untouched(ld) &&
+      bool result = clip.unstuck && !untouched(ld) &&
          FixedMul(clip.x-clip.thing->x,ld->dy) > FixedMul(clip.y-clip.thing->y,ld->dx);
+      if(!result && pushhit && ld->special &&
+         full_demo_version >= make_full_version(401, 0))
+      {
+         pushhit->add(ld);
+      }
+      return result;
    }
 
    // killough 8/10/98: allow bouncing objects to pass through as missiles
    if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
    {
       if(ld->flags & ML_BLOCKING)           // explicitly blocking everything
-         return clip.unstuck && !untouched(ld);  // killough 8/1/98: allow escape
+      {
+         bool result = clip.unstuck && !untouched(ld);  // killough 8/1/98: allow escape
+
+         // When it's Hexen, keep side 0 even when hitting from backside
+         if(!result && pushhit && ld->special &&
+            full_demo_version >= make_full_version(401, 0))
+         {
+            pushhit->add(ld);
+         }
+         // TODO: add the other push special checks.
+         // TODO: add for P_Map3D and P_PortalClip CPP files.
+         return result;
+      }
 
       // killough 8/9/98: monster-blockers don't affect friends
       // SoM 9/7/02: block monsters standing on 3dmidtex only
@@ -784,7 +805,7 @@ bool PIT_CheckLine(line_t *ld, polyobj_s *po)
       clip.passceilz = clip.ceilingz;
 
    // ioanch 20160113: moved to a special function
-   P_CollectSpechits(ld);
+   P_CollectSpechits(ld, pushhit);
    
    return true;
 }
@@ -1178,14 +1199,14 @@ bool Check_Sides(Mobj *actor, int x, int y)
 //  speciallines[]
 //  numspeciallines
 //
-bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y) 
+bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit) 
 {
    int xl, xh, yl, yh, bx, by;
    subsector_t *newsubsec;
 
    // haleyjd: OVER_UNDER
    if(P_Use3DClipping())
-      return P_CheckPosition3D(thing, x, y);
+      return P_CheckPosition3D(thing, x, y, pushhit);
    
    clip.thing = thing;
    
@@ -1261,7 +1282,7 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y)
    {
       for(by = yl; by <= yh; by++)
       {
-         if(!P_BlockLinesIterator(bx, by, PIT_CheckLine))
+         if(!P_BlockLinesIterator(bx, by, PIT_CheckLine, R_NOGROUP, pushhit))
             return false; // doesn't fit
       }
    }
@@ -1426,6 +1447,35 @@ static bool P_CheckDropOffEE(Mobj *thing, int dropoff)
 typedef bool (*dropoff_func_t)(Mobj *, int);
 
 //
+// Runs the spechit push specials
+//
+static void P_RunPushSpechits(Mobj &thing, PODCollection<line_t *> &pushhit)
+{
+   if(full_demo_version < make_full_version(401, 0) || thing.flags & (MF_TELEPORT | MF_NOCLIP))
+      return;
+   bool stacktop = true;
+   while(!pushhit.isEmpty())
+   {
+      line_t &line = *pushhit.pop();
+      const linkoffset_t *link = P_GetLinkOffset(thing.groupid, line.frontsector->groupid);
+
+      // Emulate vanilla Hexen not caring about impassable line side. Must also
+      // be the top of the stack.
+      int side;
+      if(P_LevelIsVanillaHexen() &&
+         stacktop && (!line.backsector || (line.flags & ML_BLOCKING &&
+                                           !(thing.flags & MF_MISSILE))))
+      {
+         side = 0;
+      }
+      else
+         side = P_PointOnLineSide(thing.x + link->x, thing.y + link->y, &line);
+      P_PushSpecialLine(thing, line, side);
+      stacktop = false;
+   }
+}
+
+//
 // P_TryMove
 //
 // Attempt to move to a new position,
@@ -1454,6 +1504,10 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 
    bool groupidchange = false, portalteleport = false;
    fixed_t prex, prey;
+
+   PODCollection<line_t *> pushhit;
+   PODCollection<line_t *> *pPushHit = full_demo_version >= make_full_version(401, 0) ? &pushhit : 
+      nullptr;
 
    // haleyjd: OVER_UNDER
    if(P_Use3DClipping())
@@ -1510,16 +1564,19 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       {
          oldgroupid = thing->groupid;
          thing->groupid = newgroupid;
-         check = P_CheckPosition3D(thing, x, y);
+         check = P_CheckPosition3D(thing, x, y, pPushHit);
          thing->groupid = oldgroupid;
       }
 
       if((groupidchange && !check)
-         || (!groupidchange && !P_CheckPosition3D(thing, x, y)))
+         || (!groupidchange && !P_CheckPosition3D(thing, x, y, pPushHit)))
       {
          // Solid wall or thing
          if(!clip.BlockingMobj || clip.BlockingMobj->player || !thing->player)
+         {
+            P_RunPushSpechits(*thing, pushhit);
             return false;
+         }
          else
          {
             // haleyjd: yikes...
@@ -1536,6 +1593,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
                (clip.ceilingz - (clip.BlockingMobj->z + clip.BlockingMobj->height) 
                  < thing->height))
             {
+               P_RunPushSpechits(*thing, pushhit);
                return false;
             }
             
@@ -1545,18 +1603,25 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             if(clip.BlockingMobj->flags & MF_TOUCHY)
             {
                if(clip.BlockingMobj->health <= 0)
+               {
+                  P_RunPushSpechits(*thing, pushhit);
                   return false;
+               }
             }
          }
          if(!(clip.thing->flags3 & MF3_PASSMOBJ))
          {
             thing->z = oldz;
+            P_RunPushSpechits(*thing, pushhit);
             return false;
          }
       }
    }
-   else if(!P_CheckPosition(thing, x, y))
+   else if(!P_CheckPosition(thing, x, y, pPushHit))
+   {
+      P_RunPushSpechits(*thing, pushhit);
       return false;   // solid wall or thing
+   }
 
    if(!(thing->flags & MF_NOCLIP))
    {
@@ -1569,13 +1634,21 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       // haleyjd: OVER_UNDER: broke up impossible-to-understand predicate
 
       if(clip.ceilingz - clip.floorz < thing->height) // doesn't fit
+      {
+         if(!ret)
+            P_RunPushSpechits(*thing, pushhit);
          return ret;
+      }
          
       // mobj must lower to fit
       clip.floatok = true;
       if(!(thing->flags & MF_TELEPORT) && !(thing->flags4 & MF4_FLY) &&
          clip.ceilingz - thing->z < thing->height)
-         return ret;          
+      {
+         if(!ret)
+            P_RunPushSpechits(*thing, pushhit);
+         return ret;
+      }
 
       // haleyjd 06/05/12: flying players - move up or down the lower/upper areas
       // of lines that are contacted when the player presses into them
@@ -1585,6 +1658,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          {
             thing->momz = -8*FRACUNIT;
             thing->intflags |= MIF_CLEARMOMZ;
+            P_RunPushSpechits(*thing, pushhit);
             return false;
          }
          else if(thing->z < clip.floorz && 
@@ -1592,6 +1666,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          {
             thing->momz = 8*FRACUNIT;
             thing->intflags |= MIF_CLEARMOMZ;
+            P_RunPushSpechits(*thing, pushhit);
             return false;
          }
       }
@@ -1600,7 +1675,11 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       {
          // too big a step up
          if(clip.floorz - thing->z > STEPSIZE)
+         {
+            if(!ret)
+               P_RunPushSpechits(*thing, pushhit);
             return ret;
+         }
          else if(P_Use3DClipping() && thing->z < clip.floorz)
          { 
             // haleyjd: OVER_UNDER:
@@ -1611,7 +1690,10 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             good = P_TestMobjZ(thing);
             thing->z = savedz;
             if(!good)
+            {
+               P_RunPushSpechits(*thing, pushhit);
                return false;
+            }
          }
       }
       
@@ -1626,6 +1708,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       else                                   // EE
          dropofffunc = P_CheckDropOffEE;
 
+      // ioanch: no P_RunPushSpechits on dropoff blocking.
       if(!dropofffunc(thing, dropoff))
          return false; // don't stand over a dropoff
 
@@ -1633,6 +1716,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          !(thing->flags & (MF_MISSILE|MF_NOGRAVITY)) &&
          !sentient(thing) && clip.floorz - thing->z > 16*FRACUNIT)
       {
+         P_RunPushSpechits(*thing, pushhit);
          return false; // too big a step up for bouncers under gravity
       }
 
@@ -1640,6 +1724,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       if(thing->intflags & MIF_FALLING && clip.floorz - thing->z >
          FixedMul(thing->momx,thing->momx)+FixedMul(thing->momy,thing->momy))
       {
+         // ioanch: don't push in this case, as the force is presumably too low.
          return false;
       }
 
@@ -1650,6 +1735,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
           clip.floorz - thing->z != 0))
       {
          // thing must stay within its current floor type
+         // ioanch: don't push
          return false;
       }
    }
@@ -1742,7 +1828,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 // If more than one linedef is contacted, the effects are cumulative,
 // so balancing is possible.
 //
-static bool PIT_ApplyTorque(line_t *ld, polyobj_s *po)
+static bool PIT_ApplyTorque(line_t *ld, polyobj_s *po, void *context)
 {
    // ioanch 20160116: portal aware
    const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid,
@@ -2792,7 +2878,7 @@ void P_DelSeclist(msecnode_t *node)
 // at this location, so don't bother with checking impassable or
 // blocking lines.
 //
-static bool PIT_GetSectors(line_t *ld, polyobj_s *po)
+static bool PIT_GetSectors(line_t *ld, polyobj_s *po, void *context)
 {
    // ioanch 20160115: portal aware
    fixed_t bbox[4];

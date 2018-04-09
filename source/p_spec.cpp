@@ -1105,6 +1105,14 @@ void P_ShootSpecialLine(Mobj *thing, line_t *line, int side)
    EV_ActivateSpecialLineWithSpac(line, side, thing, nullptr, SPAC_IMPACT);
 }
 
+//
+// Triggers a line using the SPAC_PUSH special. Mobj would need to support pushing
+//
+void P_PushSpecialLine(Mobj &thing, line_t &line, int side)
+{
+   EV_ActivateSpecialLineWithSpac(&line, side, &thing, nullptr, SPAC_PUSH);
+}
+
         // sf: changed to enable_nuke for console
 int enable_nuke = 1;  // killough 12/98: nukage disabling cheat
 

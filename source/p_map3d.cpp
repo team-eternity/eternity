@@ -53,6 +53,7 @@
 #include "p_maputl.h"
 #include "p_mobjcol.h"
 #include "p_inter.h"
+#include "p_map3d.h"
 #include "p_portal.h"
 #include "p_portalclip.h"  // ioanch 20160115
 #include "p_portalcross.h"
@@ -556,7 +557,7 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
 //
 // A 3D version of P_CheckPosition.
 //
-bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y) 
+bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit) 
 {
    subsector_t *newsubsec;
    fixed_t thingdropoffz;
@@ -738,11 +739,11 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
    }
 
    // ioanch 20160112: portal-aware
-   if(!P_TransPortalBlockWalker(bbox, thing->groupid, true, nullptr, 
+   if(!P_TransPortalBlockWalker(bbox, thing->groupid, true, pushhit, 
       [](int x, int y, int groupid, void *data) -> bool
    {
       // ioanch 20160112: try 3D portal check-line
-      if(!P_BlockLinesIterator(x, y, PIT_CheckLine3D, groupid))
+      if(!P_BlockLinesIterator(x, y, PIT_CheckLine3D, groupid, data))
          return false; // doesn't fit
       return true;
    }))
@@ -755,7 +756,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
    {
       // they will not change the spechit list
       if(gGroupVisit[clip.portalhit[i].ld->frontsector->groupid])
-         if(!PIT_CheckLine3D(clip.portalhit[i].ld, clip.portalhit[i].po))
+         if(!PIT_CheckLine3D(clip.portalhit[i].ld, clip.portalhit[i].po, pushhit))
             return false;
    }
 
@@ -829,6 +830,7 @@ static bool P_AdjustFloorCeil(Mobj *thing, bool midtex)
    if(midtex)
       thing->flags3 |= MF3_PASSMOBJ;
 
+   // don't trigger push specials when moving strictly vertically.
    isgood = P_CheckPosition3D(thing, thing->x, thing->y);
 
    thing->floorz     = clip.floorz;

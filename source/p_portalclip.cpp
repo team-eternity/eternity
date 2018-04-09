@@ -30,11 +30,13 @@
 #include "e_exdata.h"
 #include "m_bbox.h"
 #include "polyobj.h"
+#include "p_info.h"
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_portal.h"
 #include "p_portalclip.h"
 #include "p_portalcross.h"
+#include "p_spec.h"
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_portal.h"
@@ -136,8 +138,10 @@ static void P_addPortalHitLine(line_t *ld, polyobj_t *po)
 //
 // ioanch 20160112: Call this if there's a blocking line at a different level
 //
-static void P_blockingLineDifferentLevel(line_t *ld, polyobj_t *po, fixed_t thingmid, 
-                                         fixed_t linebottom, fixed_t linetop)
+static void P_blockingLineDifferentLevel(line_t *ld, polyobj_t *po, fixed_t thingz, 
+                                         fixed_t thingmid, fixed_t thingtopz,
+                                         fixed_t linebottom, fixed_t linetop, 
+                                         PODCollection<line_t *> *pushhit)
 {
    fixed_t linemid = linetop / 2 + linebottom / 2;
    bool moveup = thingmid >= linemid;
@@ -179,6 +183,13 @@ static void P_blockingLineDifferentLevel(line_t *ld, polyobj_t *po, fixed_t thin
    if(!moveup && clip.ceilingz < clip.passceilz)
       clip.passceilz = clip.ceilingz;
 
+   // We need now to collect spechits for push activation.
+   if(pushhit && full_demo_version >= make_full_version(401, 0) && 
+      (clip.thing->groupid == ld->frontsector->groupid || 
+      (linetop > thingz && linebottom < thingtopz && !(ld->pflags & PS_PASSABLE))))
+   {
+      pushhit->add(ld);
+   }
 }
 
 //
@@ -187,10 +198,10 @@ static void P_blockingLineDifferentLevel(line_t *ld, polyobj_t *po, fixed_t thin
 // ioanch 20160112: 3D (portal) version of PIT_CheckLine. If map has no portals,
 // fall back to PIT_CheckLine
 //
-bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
+bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
 {
    if(!useportalgroups || full_demo_version < make_full_version(340, 48))
-      return PIT_CheckLine(ld, po);
+      return PIT_CheckLine(ld, po, context);
 
    int linegroupid = ld->frontsector->groupid;
 
@@ -246,9 +257,9 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
    // clip.opensecceil
    // clip.touch3dside
 
-   fixed_t thingtopz = clip.thing->z + clip.thing->height;
-   fixed_t thingz = clip.thing->z;
-   fixed_t thingmid = thingz / 2 + thingtopz / 2;
+   const fixed_t thingtopz = clip.thing->z + clip.thing->height;
+   const fixed_t thingz = clip.thing->z;
+   const fixed_t thingmid = thingz / 2 + thingtopz / 2;
 
    // ioanch 20160121: possibility to postpone floorz, ceilz if it's from a
    // different group, to portalhits array
@@ -290,22 +301,37 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
       }
    }
 
+   auto pushhit = static_cast<PODCollection<line_t *> *>(context);
    if(linebottom <= thingz && linetop >= thingtopz)
    {
       // classic Doom behaviour
       if(!ld->backsector || (ld->extflags & EX_ML_BLOCKALL)) // one sided line
       {
          clip.blockline = ld;
-         return clip.unstuck && !untouchedViaOffset(ld, link) &&
-            FixedMul(clip.x-clip.thing->x,ld->dy) > 
-            FixedMul(clip.y-clip.thing->y,ld->dx);
+         bool result = clip.unstuck && !untouchedViaOffset(ld, link) &&
+            FixedMul(clip.x - clip.thing->x, ld->dy) >
+            FixedMul(clip.y - clip.thing->y, ld->dx);
+         if(!result && pushhit && ld->special &&
+            full_demo_version >= make_full_version(401, 0))
+         {
+            pushhit->add(ld);
+         }
+         return result;
       }
 
       // killough 8/10/98: allow bouncing objects to pass through as missiles
       if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
       {
          if(ld->flags & ML_BLOCKING)           // explicitly blocking everything
-            return clip.unstuck && !untouchedViaOffset(ld, link);  
+         {
+            bool result = clip.unstuck && !untouchedViaOffset(ld, link);
+            if(!result && pushhit && ld->special &&
+               full_demo_version >= make_full_version(401, 0))
+            {
+               pushhit->add(ld);
+            }
+            return result;
+         }
          // killough 8/1/98: allow escape
 
          // killough 8/9/98: monster-blockers don't affect friends
@@ -322,21 +348,24 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
       // same conditions as above
       if(!ld->backsector || (ld->extflags & EX_ML_BLOCKALL))
       {
-         P_blockingLineDifferentLevel(ld, po, thingmid, linebottom, linetop);
+         P_blockingLineDifferentLevel(ld, po, thingz, thingmid, thingtopz, linebottom, linetop, 
+            pushhit);
          return true;
       }
       if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
       {
          if(ld->flags & ML_BLOCKING)           // explicitly blocking everything
          {
-            P_blockingLineDifferentLevel(ld, po, thingmid, linebottom, linetop);
+            P_blockingLineDifferentLevel(ld, po, thingz, thingmid, thingtopz, linebottom, linetop, 
+               pushhit);
             return true;
          }
          if(!(clip.thing->flags & MF_FRIEND || clip.thing->player) && 
             ld->flags & ML_BLOCKMONSTERS && 
             !(ld->flags & ML_3DMIDTEX))
          {
-            P_blockingLineDifferentLevel(ld, po, thingmid, linebottom, linetop);
+            P_blockingLineDifferentLevel(ld, po, thingz, thingmid, thingtopz, linebottom, linetop, 
+               pushhit);
             return true;
          }
       }
@@ -436,7 +465,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po)
    if(samegroupid || (linetop > thingz && linebottom < thingtopz && 
       !(ld->pflags & PS_PASSABLE)))
    {
-      P_CollectSpechits(ld);
+      P_CollectSpechits(ld, pushhit);
    }
 
    return true;

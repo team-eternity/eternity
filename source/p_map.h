@@ -26,6 +26,8 @@
 #ifndef P_MAP_H__
 #define P_MAP_H__
 
+#include "m_collection.h"
+
 struct line_t;
 struct mobjinfo_t;
 struct msecnode_t;
@@ -68,14 +70,14 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff);
 
 bool P_AllowMissileDamage(const Mobj &shooter, const Mobj &target);
 
-bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y);
+bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit = nullptr);
 
-bool PIT_CheckLine(line_t *ld, polyobj_s *po);  // ioanch: used in the code
+bool PIT_CheckLine(line_t *ld, polyobj_s *po, void *context);  // ioanch: used in the code
 
 void P_SlideMove(Mobj *mo);
 
 // ioanch
-void P_CollectSpechits(line_t *ld);
+void P_CollectSpechits(line_t *ld, PODCollection<line_t *> *pushhit);
 
 //=============================================================================
 //

@@ -43,7 +43,7 @@ enum
    LINECLIP_UNDERPORTAL = 8,     // ceiling portal is above line, both sides
 };
 
-bool PIT_CheckLine3D(line_t *ld, polyobj_s *po);
+bool PIT_CheckLine3D(line_t *ld, polyobj_s *po, void *context);
 
 #endif
 
