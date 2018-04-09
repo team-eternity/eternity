@@ -311,11 +311,11 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
          bool result = clip.unstuck && !untouchedViaOffset(ld, link) &&
             FixedMul(clip.x - clip.thing->x, ld->dy) >
             FixedMul(clip.y - clip.thing->y, ld->dx);
-         if(!result && full_demo_version >= make_full_version(401, 0) && ld->special &&
+         if(!result && pushhit && ld->special &&
+            full_demo_version >= make_full_version(401, 0) &&
             !(clip.thing->intflags & MIF_CHECKPOSEXT))
          {
-            P_PushSpecialLine(*clip.thing, *ld, P_LevelIsVanillaHexen() ? 0 :
-               P_PointOnLineSide(clip.thing->x, clip.thing->y, ld));
+            pushhit->add(ld);
          }
          return result;
       }
@@ -326,11 +326,11 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
          if(ld->flags & ML_BLOCKING)           // explicitly blocking everything
          {
             bool result = clip.unstuck && !untouchedViaOffset(ld, link);
-            if(!result && full_demo_version >= make_full_version(401, 0) && ld->special &&
+            if(!result && pushhit && ld->special &&
+               full_demo_version >= make_full_version(401, 0) &&
                !(clip.thing->intflags & MIF_CHECKPOSEXT))
             {
-               P_PushSpecialLine(*clip.thing, *ld, P_LevelIsVanillaHexen() ? 0 :
-                  P_PointOnLineSide(clip.thing->x, clip.thing->y, ld));
+               pushhit->add(ld);
             }
             return result;
          }

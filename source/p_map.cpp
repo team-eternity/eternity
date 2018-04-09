@@ -702,6 +702,7 @@ void P_CollectSpechits(line_t *ld, PODCollection<line_t *> *pushhit)
 //
 bool PIT_CheckLine(line_t *ld, polyobj_s *po, void *context)
 {
+   auto pushhit = static_cast<PODCollection<line_t *> *>(context);
    if(clip.bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   || 
       clip.bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  || 
       clip.bbox[BOXTOP]    <= ld->bbox[BOXBOTTOM] || 
@@ -728,11 +729,11 @@ bool PIT_CheckLine(line_t *ld, polyobj_s *po, void *context)
       clip.blockline = ld;
       bool result = clip.unstuck && !untouched(ld) &&
          FixedMul(clip.x-clip.thing->x,ld->dy) > FixedMul(clip.y-clip.thing->y,ld->dx);
-      if(!result && full_demo_version >= make_full_version(401, 0) && ld->special &&
+      if(!result && pushhit && ld->special &&
+         full_demo_version >= make_full_version(401, 0) &&
          !(clip.thing->intflags & MIF_CHECKPOSEXT))
       {
-         P_PushSpecialLine(*clip.thing, *ld, P_LevelIsVanillaHexen() ? 0 :
-            P_PointOnLineSide(clip.thing->x, clip.thing->y, ld));
+         pushhit->add(ld);
       }
       return result;
    }
@@ -745,11 +746,11 @@ bool PIT_CheckLine(line_t *ld, polyobj_s *po, void *context)
          bool result = clip.unstuck && !untouched(ld);  // killough 8/1/98: allow escape
 
          // When it's Hexen, keep side 0 even when hitting from backside
-         if(!result && full_demo_version >= make_full_version(401, 0) && ld->special &&
+         if(!result && pushhit && ld->special &&
+            full_demo_version >= make_full_version(401, 0) &&
             !(clip.thing->intflags & MIF_CHECKPOSEXT))
          {
-            P_PushSpecialLine(*clip.thing, *ld, P_LevelIsVanillaHexen() ? 0 :
-               P_PointOnLineSide(clip.thing->x, clip.thing->y, ld));
+            pushhit->add(ld);
          }
          // TODO: add the other push special checks.
          // TODO: add for P_Map3D and P_PortalClip CPP files.
@@ -806,7 +807,7 @@ bool PIT_CheckLine(line_t *ld, polyobj_s *po, void *context)
       clip.passceilz = clip.ceilingz;
 
    // ioanch 20160113: moved to a special function
-   P_CollectSpechits(ld, static_cast<PODCollection<line_t *> *>(context));
+   P_CollectSpechits(ld, pushhit);
    
    return true;
 }
@@ -1454,12 +1455,25 @@ static void P_RunPushSpechits(Mobj &thing, PODCollection<line_t *> &pushhit)
 {
    if(full_demo_version < make_full_version(401, 0) || thing.flags & (MF_TELEPORT | MF_NOCLIP))
       return;
+   bool stacktop = true;
    while(!pushhit.isEmpty())
    {
       line_t &line = *pushhit.pop();
       const linkoffset_t *link = P_GetLinkOffset(thing.groupid, line.frontsector->groupid);
-      P_PushSpecialLine(thing, line, P_PointOnLineSide(thing.x + link->x, thing.y + link->y, 
-         &line));
+
+      // Emulate vanilla Hexen not caring about impassable line side. Must also
+      // be the top of the stack.
+      int side;
+      if(P_LevelIsVanillaHexen() &&
+         stacktop && (!line.backsector || (line.flags & ML_BLOCKING &&
+                                           !(thing.flags & MF_MISSILE))))
+      {
+         side = 0;
+      }
+      else
+         side = P_PointOnLineSide(thing.x + link->x, thing.y + link->y, &line);
+      P_PushSpecialLine(thing, line, side);
+      stacktop = false;
    }
 }
 
