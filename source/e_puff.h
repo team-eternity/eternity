@@ -28,8 +28,13 @@
 #define EDF_SEC_PUFFTYPE "pufftype"
 
 struct cfg_opt_t;
+struct cfg_t;
+class MetaTable;
 
 extern cfg_opt_t edf_puff_opts[];
+
+void E_ProcessPuffs(cfg_t *cfg);
+MetaTable *E_PuffForName(const char *name);
 
 #endif
 

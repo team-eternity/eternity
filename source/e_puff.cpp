@@ -22,9 +22,14 @@
 // Authors: Ioan Chera
 //
 
+#define NEED_EDF_DEFINITIONS
+
 #include "z_zone.h"
 #include "Confuse/confuse.h"
+#include "e_edf.h"
+#include "e_lib.h"
 #include "e_puff.h"
+#include "metaapi.h"
 
 // Differences we have so far:
 // thingtype
@@ -49,6 +54,8 @@
 #define ITEM_PUFF_PUFFHIT "PUFFHIT"
 #define ITEM_PUFF_SMOKEPARTICLES "SMOKEPARTICLES"
 
+static MetaTable e_puffTable; // the pufftype metatable
+
 //
 // EDF puff options
 //
@@ -58,7 +65,8 @@ cfg_opt_t edf_puff_opts[] =
    CFG_STR(ITEM_PUFF_SOUND, "", CFGF_NONE),
    CFG_STR(ITEM_PUFF_ALTDAMAGEPUFF, "", CFGF_NONE),
    CFG_FLOAT(ITEM_PUFF_UPSPEED, 0, CFGF_NONE),
-   CFG_FLOAT(ITEM_PUFF_BLOODCHANCE, 1, CFGF_NONE), // TODO: support percent
+   CFG_FLOAT(ITEM_PUFF_BLOODCHANCE, 1, CFGF_NONE),
+   // compatibility with trace.attackrange problem
    CFG_STR(ITEM_PUFF_PUNCHSTATE, "", CFGF_NONE),
 
    CFG_FLAG(ITEM_PUFF_RANDOMTICS, 0, CFGF_SIGNPREFIX),
@@ -66,5 +74,40 @@ cfg_opt_t edf_puff_opts[] =
    CFG_FLAG(ITEM_PUFF_PUFFHIT, 0, CFGF_SIGNPREFIX),
    CFG_FLAG(ITEM_PUFF_SMOKEPARTICLES, 0, CFGF_SIGNPREFIX)
 };
+
+//
+// Adds one individual type
+//
+static MetaTable *E_addPuffType(cfg_t *cfg)
+{
+   MetaTable *table;
+   const char *name = cfg_title(cfg);
+   if(!(table = E_PuffForName(name)))
+      e_puffTable.addObject((table = new MetaTable(name)));
+   E_MetaTableFromCfg(cfg, table);
+   return table;
+}
+
+//
+// Process the pufftype settings
+//
+void E_ProcessPuffs(cfg_t *cfg)
+{
+   unsigned numSections = cfg_size(cfg, EDF_SEC_PUFFTYPE);
+   E_EDFLogPrintf("\t* Processing %u defined puff types\n", numSections);
+   for(unsigned i = 0; i < numSections; ++i)
+   {
+      MetaTable *type = E_addPuffType(cfg_getnsec(cfg, EDF_SEC_PUFFTYPE, i));
+      E_EDFLogPrintf("\t\t* Processed puff type '%s'\n", type->getKey());
+   }
+}
+
+//
+// Get a puff for name
+//
+MetaTable *E_PuffForName(const char *name)
+{
+   return runtime_cast<MetaTable *>(e_puffTable.getObject(name));
+}
 
 // EOF
