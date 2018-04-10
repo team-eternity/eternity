@@ -1,0 +1,78 @@
+pufftype HereticStaffPuff
+{
+  thingtype   HereticStaffPuff
+  sound       ht_stfhit
+  upspeed     1.0
+  bloodchance 0.75
+
+  +RandomZ
+  +PuffHit
+  +SmokeParticles
+}
+
+pufftype HereticStaffPuff2
+{
+  thingtype   HereticStaffPuff2
+  sound       ht_stfpow
+  bloodchance 0.75
+  
+  +RandomZ
+  +PuffHit
+}
+
+pufftype HereticGoldWandPuff1
+{
+  thingtype   HereticGoldWandPuff1
+  bloodchance 0.75
+  
+  +RandomZ
+  +PuffHit
+}
+
+pufftype HereticGoldWandPuff2
+{
+  thingtype   HereticGoldWandPuff2
+  bloodchance 0.75
+
+  +RandomZ
+  +PuffHit
+}
+
+pufftype HereticBlasterPuff1
+{
+  thingtype     HereticBlasterPuff1
+  altdamagepuff HereticBlasterPuff2 
+  bloodchance   0.75
+
+  +RandomZ
+  +PuffHit
+}
+
+pufftype HereticBlasterPuff2
+{
+  thingtype   HereticBlasterPuff2
+  sound       ht_blshit
+  bloodchance 0.75
+  
+  +PuffHit
+}
+
+pufftype HereticGauntletPuff1
+{
+  thingtype   HereticGauntletPuff1
+  upspeed     0.8
+  bloodchance 0.75
+  
+  +RandomZ
+  +PuffHit
+}
+
+pufftype HereticGauntletPuff2
+{
+  thingtype   HereticGauntletPuff2
+  upspeed     0.8
+  bloodchance 0.75
+  
+  +RandomZ
+  +PuffHit
+}

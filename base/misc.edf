@@ -11,11 +11,15 @@ boss_spawner_types =
   Revenant, Arachnotron, Mancubus, HellKnight, BaronOfHell
 }
 
+include("doom/effects.edf")
+
 endif()
 
 # Heretic Intermission Strings
 
 ifgametype(HERETIC)
+
+include("heretic/effects.edf")
 
 string _IN_NAME_E1M1 { val = "THE DOCKS" }
 string _IN_NAME_E1M2 { val = "THE DUNGEONS" }

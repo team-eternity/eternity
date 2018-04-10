@@ -1,0 +1,10 @@
+pufftype BulletPuff
+{
+  thingtype  BulletPuff
+  upspeed    1.0
+  punchstate S_PUFF3
+  
+  +RandomTics
+  +RandomZ
+  +SmokeParticles
+}
