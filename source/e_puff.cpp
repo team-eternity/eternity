@@ -39,7 +39,7 @@
 
 #define ITEM_PUFF_THINGTYPE "thingtype"
 #define ITEM_PUFF_SOUND "sound"
-#define ITEM_PUFF_DAMAGEPUFFTYPE "damagepufftype"
+#define ITEM_PUFF_ALTDAMAGEPUFF "altdamagepuff"
 #define ITEM_PUFF_UPSPEED "upspeed"
 #define ITEM_PUFF_BLOODCHANCE "bloodchance"
 #define ITEM_PUFF_PUNCHSTATE "punchstate"
@@ -56,7 +56,7 @@ cfg_opt_t edf_puff_opts[] =
 {
    CFG_STR(ITEM_PUFF_THINGTYPE, "", CFGF_NONE),
    CFG_STR(ITEM_PUFF_SOUND, "", CFGF_NONE),
-   CFG_STR(ITEM_PUFF_DAMAGEPUFFTYPE, "", CFGF_NONE),
+   CFG_STR(ITEM_PUFF_ALTDAMAGEPUFF, "", CFGF_NONE),
    CFG_FLOAT(ITEM_PUFF_UPSPEED, 0, CFGF_NONE),
    CFG_FLOAT(ITEM_PUFF_BLOODCHANCE, 1, CFGF_NONE), // TODO: support percent
    CFG_STR(ITEM_PUFF_PUNCHSTATE, "", CFGF_NONE),
