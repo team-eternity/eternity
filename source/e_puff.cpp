@@ -29,7 +29,6 @@
 #include "e_edf.h"
 #include "e_lib.h"
 #include "e_puff.h"
-#include "metaapi.h"
 
 // Differences we have so far:
 // thingtype
@@ -42,6 +41,7 @@
 // override state for small range (just use "melee")
 // particle support? How many?
 
+// metakey vocabulary
 #define ITEM_PUFF_THINGTYPE "thingtype"
 #define ITEM_PUFF_SOUND "sound"
 #define ITEM_PUFF_ALTDAMAGEPUFF "altdamagepuff"
@@ -54,7 +54,17 @@
 #define ITEM_PUFF_PUFFHIT "PUFFHIT"
 #define ITEM_PUFF_SMOKEPARTICLES "SMOKEPARTICLES"
 
-static MetaTable e_puffTable; // the pufftype metatable
+// Interned metatable keys
+MetaKeyIndex keyPuffThingType(ITEM_PUFF_THINGTYPE);
+MetaKeyIndex keyPuffSound(ITEM_PUFF_SOUND);
+MetaKeyIndex keyPuffAltDamagePuff(ITEM_PUFF_ALTDAMAGEPUFF);
+MetaKeyIndex keyPuffUpSpeed(ITEM_PUFF_UPSPEED);
+MetaKeyIndex keyPuffBloodChance(ITEM_PUFF_BLOODCHANCE);
+MetaKeyIndex keyPuffPunchState(ITEM_PUFF_PUNCHSTATE);
+MetaKeyIndex keyPuffRandomTics(ITEM_PUFF_RANDOMTICS);
+MetaKeyIndex keyPuffRandomZ(ITEM_PUFF_RANDOMZ);
+MetaKeyIndex keyPuffPuffHit(ITEM_PUFF_PUFFHIT);
+MetaKeyIndex keyPuffSmokeParticles(ITEM_PUFF_SMOKEPARTICLES);
 
 //
 // EDF puff options
@@ -74,6 +84,8 @@ cfg_opt_t edf_puff_opts[] =
    CFG_FLAG(ITEM_PUFF_PUFFHIT, 0, CFGF_SIGNPREFIX),
    CFG_FLAG(ITEM_PUFF_SMOKEPARTICLES, 0, CFGF_SIGNPREFIX)
 };
+
+static MetaTable e_puffTable; // the pufftype metatable
 
 //
 // Adds one individual type

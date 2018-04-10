@@ -27,9 +27,22 @@
 
 #define EDF_SEC_PUFFTYPE "pufftype"
 
+#include "metaapi.h"
+
 struct cfg_opt_t;
 struct cfg_t;
 class MetaTable;
+
+extern MetaKeyIndex keyPuffThingType;
+extern MetaKeyIndex keyPuffSound;
+extern MetaKeyIndex keyPuffAltDamagePuff;
+extern MetaKeyIndex keyPuffUpSpeed;
+extern MetaKeyIndex keyPuffBloodChance;
+extern MetaKeyIndex keyPuffPunchState;
+extern MetaKeyIndex keyPuffRandomTics;
+extern MetaKeyIndex keyPuffRandomZ;
+extern MetaKeyIndex keyPuffPuffHit;
+extern MetaKeyIndex keyPuffSmokeParticles;
 
 extern cfg_opt_t edf_puff_opts[];
 
