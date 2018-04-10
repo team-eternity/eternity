@@ -164,19 +164,19 @@ char HU_WeapColor(weaponinfo_t *w)
    int  pammo   = HU_WC_PlayerAmmo(w);
 
    return
-      (!maxammo                                ? *FC_GRAY :
+      (!maxammo                                ? *FC_GRAY    :
        noammo                                  ? *FC_CUSTOM1 :
-       pammo == maxammo                        ? *FC_BLUE :
-       pammo < ((maxammo * ammo_red   ) / 100) ? *FC_RED  :
-       pammo < ((maxammo * ammo_yellow) / 100) ? *FC_GOLD :
+       pammo == maxammo                        ? *FC_BLUE    :
+       pammo < ((maxammo * ammo_red   ) / 100) ? *FC_RED     :
+       pammo < ((maxammo * ammo_yellow) / 100) ? *FC_GOLD    :
                                                  *FC_GREEN);
 }
 
 // Determine the color to use for a given player's health
 char HU_HealthColor()
 {
-   return hu_player.health  < health_red    ? *FC_RED :
-          hu_player.health  < health_yellow ? *FC_GOLD :
+   return hu_player.health  < health_red    ? *FC_RED   :
+          hu_player.health  < health_yellow ? *FC_GOLD  :
           hu_player.health <= health_green  ? *FC_GREEN :
                                               *FC_BLUE;
 }
