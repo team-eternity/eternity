@@ -61,9 +61,7 @@ struct weaponslot_t
    BDListItem<weaponslot_t> links; // link to next weapon in the same slot
 };
 
-#define NUMWEAPONSLOTS 16
-
-extern WeaponSlotTree *weaponslots[NUMWEAPONSLOTS];
+extern WeaponSlotTree *weaponslots[];
 
 // Global Functions
 weaponinfo_t *E_WeaponForID(int id);
