@@ -943,6 +943,18 @@ void E_MetaIntFromCfgInt(MetaTable *meta, cfg_t *cfg, const char *prop, int n, b
 }
 
 //
+// Get MetaFloat from cfg float
+//
+static void E_metaDoubleFromCfgFloat(MetaTable *meta, cfg_t *cfg,
+                                     const char *prop, int n, bool list)
+{
+   if(list && meta->getObjectKeyAndTypeEx<MetaDouble>(prop))
+      meta->addDouble(prop, cfg_getnfloat(cfg, prop, n));
+   else
+      meta->setDouble(prop, cfg_getfloat(cfg, prop));
+}
+
+//
 // E_MetaIntFromCfgBool
 //
 // Utility function.
@@ -1055,6 +1067,9 @@ void E_MetaTableFromCfg(cfg_t *cfg, MetaTable *table, MetaTable *prototype)
          {
          case CFGT_INT:
             E_MetaIntFromCfgInt(table, cfg, opt->name, i, list);
+            break;
+         case CFGT_FLOAT:
+            E_metaDoubleFromCfgFloat(table, cfg, opt->name, i, list);
             break;
          case CFGT_STR:
             E_MetaStringFromCfgString(table, cfg, opt->name, i, list);
