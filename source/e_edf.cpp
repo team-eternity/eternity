@@ -254,6 +254,7 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_SWITCH,      edf_switch_opts,   EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_ANIMATION,   edf_anim_opts,     EDF_NSEC_FLAGS),
    CFG_SEC(EDF_SEC_WEAPONINFO,  edf_wpninfo_opts,  EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_PUFFTYPE,    edf_puff_opts,     EDF_TSEC_FLAGS),
    CFG_STR(SEC_CASTORDER,       0,                 CFGF_LIST),
    CFG_STR(SEC_BOSSTYPES,       0,                 CFGF_LIST),
    CFG_INT(SEC_BOSSPROBS,       0,                 CFGF_LIST), // schepe
