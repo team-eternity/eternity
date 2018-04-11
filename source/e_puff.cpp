@@ -26,11 +26,10 @@
 
 #include "z_zone.h"
 #include "Confuse/confuse.h"
-#include "e_edf.h"
-#include "e_lib.h"
+#include "e_edfmetatable.h"
 #include "e_puff.h"
 
-// Differences we have so far:
+// Differences we have so far between the various puffs:
 // thingtype
 // random Z?
 // sound
@@ -66,54 +65,44 @@ MetaKeyIndex keyPuffRandomZ(ITEM_PUFF_RANDOMZ);
 MetaKeyIndex keyPuffPuffHit(ITEM_PUFF_PUFFHIT);
 MetaKeyIndex keyPuffSmokeParticles(ITEM_PUFF_SMOKEPARTICLES);
 
+#define PUFF_CONFIGS \
+CFG_STR(ITEM_PUFF_THINGTYPE, "", CFGF_NONE),            \
+CFG_STR(ITEM_PUFF_SOUND, "none", CFGF_NONE),            \
+CFG_STR(ITEM_PUFF_ALTDAMAGEPUFF, "", CFGF_NONE),        \
+CFG_FLOAT(ITEM_PUFF_UPSPEED, 0, CFGF_NONE),             \
+CFG_FLOAT(ITEM_PUFF_BLOODCHANCE, 1, CFGF_NONE),         \
+CFG_STR(ITEM_PUFF_PUNCHSTATE, "", CFGF_NONE),           \
+CFG_FLAG(ITEM_PUFF_RANDOMTICS, 0, CFGF_SIGNPREFIX),     \
+CFG_FLAG(ITEM_PUFF_RANDOMZ, 0, CFGF_SIGNPREFIX),        \
+CFG_FLAG(ITEM_PUFF_PUFFHIT, 0, CFGF_SIGNPREFIX),        \
+CFG_FLAG(ITEM_PUFF_SMOKEPARTICLES, 0, CFGF_SIGNPREFIX), \
+
 //
 // EDF puff options
 //
 cfg_opt_t edf_puff_opts[] =
 {
-   CFG_STR(ITEM_PUFF_THINGTYPE, "", CFGF_NONE),
-   CFG_STR(ITEM_PUFF_SOUND, "none", CFGF_NONE),
-   CFG_STR(ITEM_PUFF_ALTDAMAGEPUFF, "", CFGF_NONE),
-   CFG_FLOAT(ITEM_PUFF_UPSPEED, 0, CFGF_NONE),
-   CFG_FLOAT(ITEM_PUFF_BLOODCHANCE, 1, CFGF_NONE),
-   // compatibility with trace.attackrange problem
-   CFG_STR(ITEM_PUFF_PUNCHSTATE, "", CFGF_NONE),
+   CFG_TPROPS(edf_generic_tprops, CFGF_NOCASE),
+   PUFF_CONFIGS
+   CFG_END()
+};
 
-   CFG_FLAG(ITEM_PUFF_RANDOMTICS, 0, CFGF_SIGNPREFIX),
-   CFG_FLAG(ITEM_PUFF_RANDOMZ, 0, CFGF_SIGNPREFIX),
-   CFG_FLAG(ITEM_PUFF_PUFFHIT, 0, CFGF_SIGNPREFIX),
-   CFG_FLAG(ITEM_PUFF_SMOKEPARTICLES, 0, CFGF_SIGNPREFIX),
-
+cfg_opt_t edf_puff_delta_opts[] =
+{
+   CFG_STR("name", 0, CFGF_NONE),
+   PUFF_CONFIGS
    CFG_END()
 };
 
 static MetaTable e_puffTable; // the pufftype metatable
 
 //
-// Adds one individual type
-//
-static MetaTable *E_addPuffType(cfg_t *cfg)
-{
-   MetaTable *table;
-   const char *name = cfg_title(cfg);
-   if(!(table = E_PuffForName(name)))
-      e_puffTable.addObject((table = new MetaTable(name)));
-   E_MetaTableFromCfg(cfg, table);
-   return table;
-}
-
-//
 // Process the pufftype settings
 //
 void E_ProcessPuffs(cfg_t *cfg)
 {
-   unsigned numSections = cfg_size(cfg, EDF_SEC_PUFFTYPE);
-   E_EDFLogPrintf("\t* Processing %u defined puff types\n", numSections);
-   for(unsigned i = 0; i < numSections; ++i)
-   {
-      MetaTable *type = E_addPuffType(cfg_getnsec(cfg, EDF_SEC_PUFFTYPE, i));
-      E_EDFLogPrintf("\t\t* Processed puff type '%s'\n", type->getKey());
-   }
+   E_BuildGlobalMetaTableFromEDF(cfg, EDF_SEC_PUFFTYPE, EDF_SEC_PUFFDELTA,
+                                 e_puffTable);
 }
 
 //

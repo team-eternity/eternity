@@ -26,6 +26,7 @@
 #define E_PUFF_H_
 
 #define EDF_SEC_PUFFTYPE "pufftype"
+#define EDF_SEC_PUFFDELTA "puffdelta"
 
 #include "metaapi.h"
 
@@ -45,6 +46,7 @@ extern MetaKeyIndex keyPuffPuffHit;
 extern MetaKeyIndex keyPuffSmokeParticles;
 
 extern cfg_opt_t edf_puff_opts[];
+extern cfg_opt_t edf_puff_delta_opts[];
 
 void E_ProcessPuffs(cfg_t *cfg);
 MetaTable *E_PuffForName(const char *name);
