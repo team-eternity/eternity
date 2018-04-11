@@ -273,6 +273,7 @@
 		4F917D781F29243500131BE5 /* xl_umapinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F917D771F29243500131BE5 /* xl_umapinfo.cpp */; };
 		4F920FF01F642143008F105C /* e_anim.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F920FEF1F642143008F105C /* e_anim.cpp */; };
 		4F93B8B6207BEE3F0040A0B8 /* e_puff.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F93B8B4207BEE3F0040A0B8 /* e_puff.cpp */; };
+		4F93B8B9207E96800040A0B8 /* e_edfmetatable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F93B8B7207E96800040A0B8 /* e_edfmetatable.cpp */; };
 		4F950E351F35C84B000D9DC5 /* SDL2_mixer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F950E321F35C84B000D9DC5 /* SDL2_mixer.framework */; };
 		4F950E361F35C84B000D9DC5 /* SDL2_net.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F950E331F35C84B000D9DC5 /* SDL2_net.framework */; };
 		4F950E371F35C84B000D9DC5 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F950E341F35C84B000D9DC5 /* SDL2.framework */; };
@@ -385,6 +386,8 @@
 		4F920FEF1F642143008F105C /* e_anim.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = e_anim.cpp; path = ../source/e_anim.cpp; sourceTree = "<group>"; };
 		4F93B8B4207BEE3F0040A0B8 /* e_puff.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = e_puff.cpp; path = ../source/e_puff.cpp; sourceTree = "<group>"; };
 		4F93B8B5207BEE3F0040A0B8 /* e_puff.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = e_puff.h; path = ../source/e_puff.h; sourceTree = "<group>"; };
+		4F93B8B7207E96800040A0B8 /* e_edfmetatable.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = e_edfmetatable.cpp; path = ../source/e_edfmetatable.cpp; sourceTree = "<group>"; };
+		4F93B8B8207E96800040A0B8 /* e_edfmetatable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = e_edfmetatable.h; path = ../source/e_edfmetatable.h; sourceTree = "<group>"; };
 		4F950E321F35C84B000D9DC5 /* SDL2_mixer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2_mixer.framework; sourceTree = "<group>"; };
 		4F950E331F35C84B000D9DC5 /* SDL2_net.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2_net.framework; sourceTree = "<group>"; };
 		4F950E341F35C84B000D9DC5 /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2.framework; sourceTree = "<group>"; };
@@ -1321,6 +1324,8 @@
 				FA16D3DE15E01E96002318D1 /* e_dstate.h */,
 				FABF5CDA158BF42800C49E93 /* e_edf.cpp */,
 				FA16D3DF15E01E96002318D1 /* e_edf.h */,
+				4F93B8B7207E96800040A0B8 /* e_edfmetatable.cpp */,
+				4F93B8B8207E96800040A0B8 /* e_edfmetatable.h */,
 				FABF5CDB158BF42800C49E93 /* e_exdata.cpp */,
 				FA16D3E015E01E96002318D1 /* e_exdata.h */,
 				FABF5CDC158BF42800C49E93 /* e_fonts.cpp */,
@@ -2010,6 +2015,7 @@
 				4F5F3968182D9B820027813A /* w_zip.cpp in Sources */,
 				4F5F3969182D9B820027813A /* xl_scripts.cpp in Sources */,
 				4FAAD5941E583113001D7263 /* p_portalcross.cpp in Sources */,
+				4F93B8B9207E96800040A0B8 /* e_edfmetatable.cpp in Sources */,
 				4F5F396A182D9B820027813A /* z_native.cpp in Sources */,
 				4F914A171F61166F00968197 /* Serial.cpp in Sources */,
 				4F5F396B182D9B820027813A /* dsp.cpp in Sources */,
