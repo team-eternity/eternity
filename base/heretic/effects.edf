@@ -1,78 +1,58 @@
-pufftype HereticStaffPuff
+pufftype HereticPuffBase
+{
+  thingtype ""
+  bloodchance 0.75
+  +RandomZ
+  +PuffHit
+}
+
+pufftype HereticStaffPuff : HereticPuffBase
 {
   thingtype   HereticStaffPuff
   sound       ht_stfhit
   upspeed     1.0
-  bloodchance 0.75
 
-  +RandomZ
-  +PuffHit
   +SmokeParticles
 }
 
-pufftype HereticStaffPuff2
+pufftype HereticStaffPuff2 : HereticPuffBase
 {
   thingtype   HereticStaffPuff2
   sound       ht_stfpow
-  bloodchance 0.75
-  
-  +RandomZ
-  +PuffHit
 }
 
-pufftype HereticGoldWandPuff1
+pufftype HereticGoldWandPuff1 : HereticPuffBase
 {
   thingtype   HereticGoldWandPuff1
-  bloodchance 0.75
-  
-  +RandomZ
-  +PuffHit
 }
 
-pufftype HereticGoldWandPuff2
+pufftype HereticGoldWandPuff2 : HereticPuffBase
 {
   thingtype   HereticGoldWandPuff2
-  bloodchance 0.75
-
-  +RandomZ
-  +PuffHit
 }
 
-pufftype HereticBlasterPuff1
+pufftype HereticBlasterPuff1 : HereticPuffBase
 {
   thingtype     HereticBlasterPuff1
   altdamagepuff HereticBlasterPuff2 
-  bloodchance   0.75
-
-  +RandomZ
-  +PuffHit
 }
 
-pufftype HereticBlasterPuff2
+pufftype HereticBlasterPuff2 : HereticPuffBase
 {
   thingtype   HereticBlasterPuff2
   sound       ht_blshit
-  bloodchance 0.75
   
-  +PuffHit
+  -RandomZ
 }
 
-pufftype HereticGauntletPuff1
+pufftype HereticGauntletPuff1 : HereticPuffBase
 {
   thingtype   HereticGauntletPuff1
   upspeed     0.8
-  bloodchance 0.75
-  
-  +RandomZ
-  +PuffHit
 }
 
-pufftype HereticGauntletPuff2
+pufftype HereticGauntletPuff2 : HereticPuffBase
 {
   thingtype   HereticGauntletPuff2
   upspeed     0.8
-  bloodchance 0.75
-  
-  +RandomZ
-  +PuffHit
 }
