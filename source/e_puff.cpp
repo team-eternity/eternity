@@ -29,6 +29,8 @@
 #include "d_gi.h"
 #include "e_edfmetatable.h"
 #include "e_puff.h"
+#include "e_states.h"
+#include "e_things.h"
 
 // Differences we have so far between the various puffs:
 // thingtype
@@ -98,12 +100,48 @@ cfg_opt_t edf_puff_delta_opts[] =
 static MetaTable e_puffTable; // the pufftype metatable
 
 //
+// Replaces thing names with mobjtypes
+//
+static void E_postprocessThingType(MetaTable *table)
+{
+   const char *name = table->getString(keyPuffThingType, nullptr);
+   if(!name)
+      return;
+   table->addInt(keyPuffThingType, E_SafeThingName(name));
+   table->removeStringNR(keyPuffThingType);
+}
+
+//
+// Replaces punch state with actual state number
+//
+static void E_postprocessPunchState(MetaTable *table)
+{
+   const char *sname = table->getString(keyPuffPunchState, nullptr);
+   if(!sname)
+      return;
+   table->addInt(keyPuffPunchState, E_SafeStateName(sname));
+   table->removeStringNR(keyPuffPunchState);
+}
+
+//
 // Process the pufftype settings
 //
 void E_ProcessPuffs(cfg_t *cfg)
 {
    E_BuildGlobalMetaTableFromEDF(cfg, EDF_SEC_PUFFTYPE, EDF_SEC_PUFFDELTA,
                                  e_puffTable);
+
+   // Now perform some postprocessing
+   // Replace all alternate object names with tables, if available
+   MetaObject *object = nullptr;
+   while((object = e_puffTable.tableIterator(object)))
+   {
+      auto table = runtime_cast<MetaTable *>(object);
+      if(!table)
+         continue;
+      E_postprocessThingType(table);
+      E_postprocessPunchState(table);
+   }
 }
 
 //

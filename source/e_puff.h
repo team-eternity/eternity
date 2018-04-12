@@ -34,6 +34,7 @@ struct cfg_opt_t;
 struct cfg_t;
 class MetaTable;
 
+// NOTE: some of these properties are post-processes from the EDF appearance.
 extern MetaKeyIndex keyPuffThingType;
 extern MetaKeyIndex keyPuffSound;
 extern MetaKeyIndex keyPuffAltDamagePuff;
