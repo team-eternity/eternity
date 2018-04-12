@@ -109,7 +109,7 @@ void E_ProcessPuffs(cfg_t *cfg)
 //
 // Get a puff for name
 //
-const MetaTable *E_SafePuffForName(const char *name)
+const MetaTable *E_PuffForName(const char *name)
 {
    auto puff = e_puffTable.getObjectKeyAndTypeEx<MetaTable>(name);
    if(!puff)
@@ -117,7 +117,7 @@ const MetaTable *E_SafePuffForName(const char *name)
    return puff;
 }
 
-const MetaTable *E_SafePuffForIndex(size_t index)
+const MetaTable *E_PuffForIndex(size_t index)
 {
    auto puff = e_puffTable.getObjectKeyAndTypeEx<MetaTable>(index);
    if(!puff)
