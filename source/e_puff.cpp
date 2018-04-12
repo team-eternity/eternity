@@ -26,6 +26,7 @@
 
 #include "z_zone.h"
 #include "Confuse/confuse.h"
+#include "d_gi.h"
 #include "e_edfmetatable.h"
 #include "e_puff.h"
 
@@ -108,9 +109,20 @@ void E_ProcessPuffs(cfg_t *cfg)
 //
 // Get a puff for name
 //
-MetaTable *E_PuffForName(const char *name)
+const MetaTable *E_SafePuffForName(const char *name)
 {
-   return runtime_cast<MetaTable *>(e_puffTable.getObject(name));
+   auto puff = e_puffTable.getObjectKeyAndTypeEx<MetaTable>(name);
+   if(!puff)
+      return e_puffTable.getObjectKeyAndTypeEx<MetaTable>(GameModeInfo->puffType);
+   return puff;
+}
+
+const MetaTable *E_SafePuffForIndex(size_t index)
+{
+   auto puff = e_puffTable.getObjectKeyAndTypeEx<MetaTable>(index);
+   if(!puff)
+      return e_puffTable.getObjectKeyAndTypeEx<MetaTable>(GameModeInfo->puffType);
+   return puff;
 }
 
 // EOF
