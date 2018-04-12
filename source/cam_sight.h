@@ -36,7 +36,6 @@ struct camera_t;
 struct divline_t;
 struct intercept_t;
 struct player_t;  // ioanch 20160131: for use
-struct puffinfo_t;
 class  Mobj;
 
 struct camsightparams_t
@@ -65,7 +64,7 @@ fixed_t CAM_AimLineAttack(const Mobj *t1, angle_t angle, fixed_t distance,
                           uint32_t mask, Mobj **outTarget);
 // ioanch 20160101: bullet attack
 void CAM_LineAttack(Mobj *source, angle_t angle, fixed_t distance, 
-                    fixed_t slope, int damage, const puffinfo_t *puff);
+                    fixed_t slope, int damage, size_t puffidx);
 
 // ioanch 20160131: use lines
 void CAM_UseLines(const player_t *player);

@@ -37,6 +37,7 @@
 #include "e_exdata.h"
 #include "e_inventory.h"
 #include "e_player.h"
+#include "e_puff.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
@@ -2506,51 +2507,64 @@ spawnit:
 // P_SpawnPuff
 //
 void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
-                 int updown, bool ptcl, const puffinfo_t *puff, bool hit)
+                 int updown, bool ptcl, const MetaTable *pufftype, bool hit)
 {
-   Mobj* th;
-
-   if(P_puffIsDefined(puff))
+   if(!pufftype)
    {
-      if(hit && puff->hitinfo)
-         th = P_SpawnMobj(x, y, z, puff->hitinfo->index);
-      else
-      {
-         z += P_SubRandom(pr_spawnpuff) << 10;
-         th = P_SpawnMobj(x, y, z, puff->info->index);
-      }
-      S_StartSound(th, th->info->attacksound);
-      th->momz = puff->upspeed;
-
+      static const MetaTable *defaulttype;
+      if(!defaulttype)
+         defaulttype = E_PuffForName(GameModeInfo->puffType);
+      pufftype = defaulttype;
+      if(!pufftype)  // may still be null
+         return;
    }
-   else
+   if(hit)
    {
-      // DOOM typical.
-
-      z += P_SubRandom(pr_spawnpuff) << 10;
-      th = P_SpawnMobj(x, y, z, E_SafeThingType(MT_PUFF));
-
-      th->tics -= P_Random(pr_spawnpuff) & 3;
-      if(th->tics < 1)
-         th->tics = 1;
-
-      th->momz = FRACUNIT;
-
-      // don't make punches spark on the wall
-      if(trace.attackrange == MELEERANGE)
-         P_SetMobjState(th, E_SafeState(S_PUFF3));
-
-      // ioanch: only use particles for Doom puff.
-
-      // haleyjd: for demo sync etc we still need to do the above, so
-      // here we'll make the puff invisible and draw particles instead
-      if(ptcl && drawparticles && bulletpuff_particle &&
-         trace.attackrange != MELEERANGE)
+      const char *altname = pufftype->getString(keyPuffAltDamagePuff, nullptr);
+      if(altname)
       {
-         if(bulletpuff_particle != 2)
-            th->translucency = 0;
-         P_SmokePuff(32, x, y, z, dir, updown);
+         const MetaTable *otable = E_PuffForName(altname);
+         if(otable)
+            pufftype = otable;
       }
+   }
+
+   Mobj* th = nullptr;
+
+   if(pufftype->getInt(keyPuffRandomZ, 0))
+      z += P_SubRandom(pr_spawnpuff) << 10;
+   int mobjtype = pufftype->getInt(keyPuffThingType, D_MININT);
+   if(mobjtype != D_MININT)
+      th = P_SpawnMobj(x, y, z, mobjtype);
+
+   if(th)
+   {
+      if(pufftype->getInt(keyPuffRandomTics, 0))
+      {
+         th->tics -= P_Random(pr_spawnpuff) & 3;
+         if(th->tics < 1)
+            th->tics = 1;
+      }
+      S_StartSoundName(th, pufftype->getString(keyPuffSound, nullptr));
+      th->momz = M_DoubleToFixed(pufftype->getDouble(keyPuffUpSpeed, 0));
+
+      // preserve the Doom hack of melee fist puff
+      if(trace.attackrange == MELEERANGE)
+      {
+         int snum = pufftype->getInt(keyPuffPunchState, D_MININT);
+         if(snum != D_MININT)
+            P_SetMobjState(th, snum);
+      }
+   }
+
+   // ioanch: spawn particles even for melee range if nothing is spawned
+   if(ptcl && drawparticles && bulletpuff_particle &&
+      (trace.attackrange != MELEERANGE || !th) &&
+      pufftype->getInt(keyPuffSmokeParticles, 0))
+   {
+      if(th && bulletpuff_particle != 2)
+         th->translucency = 0;
+      P_SmokePuff(32, x, y, z, dir, updown);
    }
 }
 

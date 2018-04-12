@@ -28,6 +28,7 @@
 #include "cam_sight.h"
 #include "d_player.h"
 #include "e_exdata.h"
+#include "e_puff.h"
 #include "p_inter.h"
 #include "p_mobj.h"
 #include "p_portal.h"
@@ -66,7 +67,7 @@ public:
       fixed_t attackrange;
       fixed_t aimslope;
       int damage;
-      const puffinfo_t *puff;
+      size_t puffidx;
    };
 
    static void lineAttack(const params_t &params, const State *state);
@@ -393,62 +394,19 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          return false;
 
       P_SpawnPuff(x, y, z, P_PointToAngle(0, 0, li->dx, li->dy) - ANG90,
-         updown, true, context.params.puff);
+         updown, true, E_PuffForIndex(context.params.puffidx));
 
       return false;
    }
-   else
-   {
-      Mobj *th = in->d.thing;
-      // self and shootable checks already handled. Friendliness check not
-      // enabled anyway
-      if(!(th->flags & MF_SHOOTABLE) || th == context.params.thing)
-         return true;
-
-      if(th->flags3 & MF3_GHOST && context.params.thing->player
-         && context.params.thing->player->readyweapon->flags & WPF_NOHITGHOSTS)
-      {
-         return true;
-      }
-
-      fixed_t dist = FixedMul(context.params.attackrange, in->frac);
-      fixed_t thingtopslope = FixedDiv(th->z + th->height - context.state.z,
-         dist);
-      fixed_t thingbottomslope = FixedDiv(th->z - context.state.z, dist);
-
-      if(thingtopslope < context.params.aimslope)
-         return true;
-
-      if(thingbottomslope > context.params.aimslope)
-         return true;
-
-      // ioanch 20160102: compensate
-      fixed_t frac = in->frac - FixedDiv(10 * FRACUNIT, context.params.attackrange +
-         context.state.origindist);
-      fixed_t x = trace.x + FixedMul(trace.dx, frac);
-      fixed_t y = trace.y + FixedMul(trace.dy, frac);
-      fixed_t z = context.state.z + FixedMul(context.params.aimslope, FixedMul(frac,
-         context.params.attackrange));
-
-      angle_t puffangle = P_PointToAngle(0, 0, trace.dx, trace.dy) - ANG180;
-      if(th->flags & MF_NOBLOOD || th->flags2 & (MF2_INVULNERABLE | MF2_DORMANT))
-         P_SpawnPuff(x, y, z, puffangle, 2, true, context.params.puff, true);
-      else
-      {
-         if(P_puffIsDefined(context.params.puff))
-            P_SpawnPuff(x, y, z, puffangle, 2, true, context.params.puff, true);
-
-         if(!P_puffIsDefined(context.params.puff) || P_Random(pr_puffbloodportal) < 192)
-            BloodSpawner(th, x, y, z, context.params.damage, trace, context.params.thing).spawn(BLOOD_SHOT);
-      }
-      if(context.params.damage)
-      {
-         P_DamageMobj(th, context.params.thing, context.params.thing, context.params.damage,
-            context.params.thing->info->mod);
-      }
-
-      return false;
-   }
+   return P_ShootThing(in,
+                       context.params.thing,
+                       context.params.attackrange,
+                       context.state.z,
+                       context.params.aimslope,
+                       context.params.attackrange + context.state.origindist,
+                       trace,
+                       context.params.puffidx,
+                       context.params.damage);
 }
 
 //
@@ -485,7 +443,7 @@ void CAM_LineAttack(Mobj *source,
                     fixed_t distance,
                     fixed_t slope,
                     int damage,
-                    const puffinfo_t *puff)
+                    size_t puffidx)
 {
    edefstructvar(ShootContext::params_t, params);
    params.thing = source;
@@ -493,7 +451,7 @@ void CAM_LineAttack(Mobj *source,
    params.attackrange = distance;
    params.aimslope = slope;
    params.damage = damage;
-   params.puff = puff;
+   params.puffidx = puffidx;
    ShootContext::lineAttack(params, nullptr);
 }
 

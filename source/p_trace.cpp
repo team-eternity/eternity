@@ -30,6 +30,8 @@
 #include "d_gi.h"
 #include "doomstat.h"
 #include "e_exdata.h"
+#include "e_puff.h"
+#include "metaapi.h"
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
@@ -208,72 +210,105 @@ fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, int mask)
 // Shooting
 //
 
-//
-// P_shootThing
-//
-// haleyjd: shared code for shooting an Mobj
-//
-static bool P_shootThing(intercept_t *in, const puffinfo_t *puff)
+// trace.thing vs context.params.thing
+// trace.attackrange vs context.params.attackrange
+// trace.z vs context.state.z
+// trace.aimslope vs context.params.aimslope
+// trace.attackrange vs context.params.attackrange + context.state.origindist
+// trace.dl vs trace
+// puffidx vs context.params.puffidx
+// trace.la_damage vs context.params.damage
+
+bool P_ShootThing(const intercept_t *in,
+                  Mobj *shooter,
+                  fixed_t attackrange_local,
+                  fixed_t sourcez,
+                  fixed_t aimslope,
+                  fixed_t attackrange_total,
+                  const divline_t &dl,
+                  size_t puffidx,
+                  int damage)
 {
    Mobj *th = in->d.thing;
 
-   if(th == trace.thing)
+   if(th == shooter)
       return true; // can't shoot self
 
    if(!(th->flags & MF_SHOOTABLE))
       return true; // corpse or something
 
    // haleyjd: don't let players use melee attacks on ghosts
-   if((th->flags3 & MF3_GHOST) && 
-      trace.thing->player &&
-      trace.thing->player->readyweapon->flags & WPF_NOHITGHOSTS)
+   if((th->flags3 & MF3_GHOST) && shooter->player &&
+      shooter->player->readyweapon->flags & WPF_NOHITGHOSTS)
+   {
       return true;
+   }
 
    // check angles to see if the thing can be aimed at
-   fixed_t dist             = FixedMul(trace.attackrange, in->frac);
-   fixed_t thingtopslope    = FixedDiv(th->z + th->height - trace.z, dist);
-   fixed_t thingbottomslope = FixedDiv(th->z - trace.z, dist);
+   fixed_t dist             = FixedMul(attackrange_local, in->frac);
+   fixed_t thingtopslope    = FixedDiv(th->z + th->height - sourcez, dist);
+   fixed_t thingbottomslope = FixedDiv(th->z - sourcez, dist);
 
-   if(thingtopslope < trace.aimslope)
+   if(thingtopslope < aimslope)
       return true; // shot over the thing
 
-   if(thingbottomslope > trace.aimslope)
+   if(thingbottomslope > aimslope)
       return true;  // shot under the thing
 
    // hit thing
    // position a bit closer
-   fixed_t frac = in->frac - FixedDiv(10*FRACUNIT, trace.attackrange);
-   fixed_t x = trace.dl.x + FixedMul(trace.dl.dx, frac);
-   fixed_t y = trace.dl.y + FixedMul(trace.dl.dy, frac);
-   fixed_t z = trace.z    + FixedMul(trace.aimslope, FixedMul(frac, trace.attackrange));
+   fixed_t frac = in->frac - FixedDiv(10*FRACUNIT, attackrange_total);
+   fixed_t x = dl.x + FixedMul(dl.dx, frac);
+   fixed_t y = dl.y + FixedMul(dl.dy, frac);
+   fixed_t z = sourcez + FixedMul(aimslope, FixedMul(frac, attackrange_local));
 
    // Spawn bullet puffs or blood spots, depending on target type
    // haleyjd: and status flags!
-   angle_t puffangle = P_PointToAngle(0, 0, trace.dl.dx, trace.dl.dy) - ANG180;
+   const MetaTable *pufftype = E_PuffForIndex(puffidx);
+
+   angle_t puffangle = P_PointToAngle(0, 0, dl.dx, dl.dy) - ANG180;
    if(th->flags & MF_NOBLOOD ||
       th->flags2 & (MF2_INVULNERABLE | MF2_DORMANT))
    {
-      P_SpawnPuff(x, y, z, puffangle, 2, true, puff, true);
+      P_SpawnPuff(x, y, z, puffangle, 2, true, pufftype, true);
    }
    else
    {
-      // if we have a puff definition, it means it's like Heretic.
-      if(P_puffIsDefined(puff))
-         P_SpawnPuff(x, y, z, puffangle, 2, true, puff, true);
+      if(pufftype && pufftype->getInt(keyPuffPuffHit, 0))
+         P_SpawnPuff(x, y, z, puffangle, 2, true, pufftype, true);
 
       // If we have puff, only spawn blood 75% of the time.
-      if(!P_puffIsDefined(puff) || P_Random(pr_puffblood) < 192)
-         BloodSpawner(th, x, y, z, trace.la_damage, trace.dl, trace.thing).spawn(BLOOD_SHOT);
+      int bloodchance = pufftype ?
+      static_cast<int>(pufftype->getDouble(keyPuffBloodChance, 1) * 256) : 256;
+
+      // avoid calling P_Random if bloodchance is 100%
+      if(bloodchance >= 256 || P_Random(pr_puffblood) < bloodchance)
+         BloodSpawner(th, x, y, z, damage, dl, shooter).spawn(BLOOD_SHOT);
    }
 
-   if(trace.la_damage)
-   {
-      P_DamageMobj(th, trace.thing, trace.thing, trace.la_damage, 
-                   trace.thing->info->mod);
-   }
+   if(damage)
+      P_DamageMobj(th, shooter, shooter, damage, shooter->info->mod);
 
    // don't go any further
    return false;
+}
+
+//
+// P_shootThing
+//
+// haleyjd: shared code for shooting an Mobj
+//
+inline static bool P_shootThing(intercept_t *in, size_t puffidx)
+{
+   return P_ShootThing(in,
+                       trace.thing,
+                       trace.attackrange,
+                       trace.z,
+                       trace.aimslope,
+                       trace.attackrange,
+                       trace.dl,
+                       puffidx,
+                       trace.la_damage);
 }
 
 //
@@ -284,6 +319,7 @@ static bool P_shootThing(intercept_t *in, const puffinfo_t *puff)
 static bool PTR_ShootTraverseVanilla(intercept_t *in, void *context)
 {
    fixed_t x, y, z, frac;
+   auto puffidx = *static_cast<size_t *>(context);
  
    if(in->isaline)
    {
@@ -336,13 +372,13 @@ static bool PTR_ShootTraverseVanilla(intercept_t *in, void *context)
 
       // Spawn bullet puffs.
       P_SpawnPuff(x, y, z, P_PointToAngle(0, 0, li->dx, li->dy) - ANG90, 2, true,
-                  static_cast<const puffinfo_t *>(context));
+                  E_PuffForIndex(puffidx));
 
       // don't go any further
       return false;
    }
    else
-      return P_shootThing(in, static_cast<const puffinfo_t *>(context));
+      return P_shootThing(in, puffidx);
 }
 
 //
@@ -425,6 +461,7 @@ static bool P_ShotCheck2SLine(intercept_t *in, line_t *li, int lineside)
 //
 static bool PTR_ShootTraverse(intercept_t *in, void *context)
 {
+   auto puffidx = *static_cast<size_t *>(context);
    if(in->isaline)
    {
       line_t *li = in->d.line;
@@ -557,13 +594,13 @@ static bool PTR_ShootTraverse(intercept_t *in, void *context)
 
       // Spawn bullet puffs.
       P_SpawnPuff(x, y, z, P_PointToAngle(0, 0, li->dx, li->dy) - ANG90,
-                  updown, true, static_cast<const puffinfo_t *>(context));
+                  updown, true, E_PuffForIndex(puffidx));
       
       // don't go any further     
       return false;
    }
    else
-      return P_shootThing(in, static_cast<const puffinfo_t *>(context));
+      return P_shootThing(in, puffidx);
 }
 
 //
@@ -572,15 +609,19 @@ static bool PTR_ShootTraverse(intercept_t *in, void *context)
 // If damage == 0, it is just a test trace that will leave linetarget set.
 //
 void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance,
-                  fixed_t slope, int damage, puffinfo_t *puff)
+                  fixed_t slope, int damage, const char *pufftype)
 {
+   size_t puffidx = estrempty(pufftype) ?
+   MetaTable::IndexForKey(GameModeInfo->puffType) :
+   MetaTable::IndexForKey(pufftype);
+
    // ioanch 20151231: use new portal code
    if(full_demo_version >= make_full_version(340, 47) &&
       useportalgroups)
    {
       trace.attackrange = distance; // this needs to be set because P_SpawnPuff
                                     // depends on it
-      CAM_LineAttack(t1, angle, distance, slope, damage, puff);
+      CAM_LineAttack(t1, angle, distance, slope, damage, puffidx);
       return;
    }
 
@@ -602,7 +643,8 @@ void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance,
    else
       trav = PTR_ShootTraverse;
 
-   P_PathTraverse(t1->x, t1->y, x2, y2, PT_ADDLINES|PT_ADDTHINGS, trav, puff);
+   P_PathTraverse(t1->x, t1->y, x2, y2, PT_ADDLINES|PT_ADDTHINGS, trav,
+                  &puffidx);
 }
 
 //=============================================================================

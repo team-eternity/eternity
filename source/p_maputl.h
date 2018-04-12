@@ -129,6 +129,16 @@ bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
 
 angle_t P_PointToAngle(fixed_t xo, fixed_t yo, fixed_t x, fixed_t y);
 
+bool P_ShootThing(const intercept_t *in,
+                  Mobj *shooter,
+                  fixed_t attackrange_local,
+                  fixed_t sourcez,
+                  fixed_t aimslope,
+                  fixed_t attackrange_total,
+                  const divline_t &dl,
+                  size_t puffidx,
+                  int damage);
+
 extern linetracer_t trace;
 
 #endif  // __P_MAPUTL__

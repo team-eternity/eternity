@@ -33,7 +33,6 @@ struct mobjinfo_t;
 struct msecnode_t;
 struct player_t;
 struct polyobj_s; // ioanch 20160122
-struct puffinfo_t;
 struct sector_t;
 
 //=============================================================================
@@ -108,7 +107,7 @@ void P_UseLines(player_t *player);
 fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance,int mask);
 
 void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance, fixed_t slope, 
-                  int damage, puffinfo_t *puff = nullptr);
+                  int damage, const char *pufftype = nullptr);
 
 bool Check_Sides(Mobj *, int, int); // phares
 
