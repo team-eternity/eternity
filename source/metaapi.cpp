@@ -1213,14 +1213,14 @@ void MetaTable::addDouble(const char *key, double value)
 // Use of this routine only returns the first such value in the table.
 // This routine is meant for singleton fields.
 //
-double MetaTable::getDouble(const char *key, double defValue) const
+double MetaTable::getDouble(size_t keyIndex, double defValue) const
 {
    double retval;
    const MetaDouble *obj;
 
    metaerrno = META_ERR_NOERR;
 
-   if(!(obj = getObjectKeyAndTypeEx<MetaDouble>(key)))
+   if(!(obj = getObjectKeyAndTypeEx<MetaDouble>(keyIndex)))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
       retval = defValue;
@@ -1229,6 +1229,10 @@ double MetaTable::getDouble(const char *key, double defValue) const
       retval = obj->value;
 
    return retval;
+}
+double MetaTable::getDouble(const char *key, double defValue) const
+{
+   return getDouble(MetaKey(key).index, defValue);
 }
 
 //
@@ -1392,13 +1396,13 @@ char *MetaTable::removeString(const char *key)
 // alleviate any need the user code might have to free string values in
 // which it isn't interested.
 //
-void MetaTable::removeStringNR(const char *key)
+void MetaTable::removeStringNR(size_t keyIndex)
 {
    MetaString *obj;
 
    metaerrno = META_ERR_NOERR;
 
-   if(!(obj = getObjectKeyAndTypeEx<MetaString>(key)))
+   if(!(obj = getObjectKeyAndTypeEx<MetaString>(keyIndex)))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
       return;
@@ -1407,6 +1411,10 @@ void MetaTable::removeStringNR(const char *key)
    removeObject(obj);
 
    delete obj;
+}
+void MetaTable::removeStringNR(const char *key)
+{
+   removeStringNR(MetaKey(key).index);
 }
 
 //
