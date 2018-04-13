@@ -576,14 +576,14 @@ void A_GauntletAttack(actionargs_t *actionargs)
       damage = (1 + (P_Random(pr_gauntlets) & 7)) * 2;
       dist = 4 * MELEERANGE;
       angle += P_SubRandom(pr_gauntletsangle) * PO2(17);
-      puffname = "HereticGauntletPuff1";
+      puffname = "HereticGauntletPuff2";
    }
    else
    {
       damage = (1 + (P_Random(pr_gauntlets) & 7)) * 2;
       dist = MELEERANGE + 1;
       angle += P_SubRandom(pr_gauntletsangle) * PO2(18);
-      puffname = "HereticGauntletPuff2";
+      puffname = "HereticGauntletPuff1";
    }
 
    slope = P_DoAutoAim(mo, angle, dist);
