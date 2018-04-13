@@ -40,7 +40,7 @@ extern MetaKeyIndex keyPuffSound;
 extern MetaKeyIndex keyPuffAltDamagePuff;
 extern MetaKeyIndex keyPuffUpSpeed;
 extern MetaKeyIndex keyPuffBloodChance;
-extern MetaKeyIndex keyPuffPunchState;
+extern MetaKeyIndex keyPuffPunchHack;
 extern MetaKeyIndex keyPuffRandomTics;
 extern MetaKeyIndex keyPuffRandomZ;
 extern MetaKeyIndex keyPuffPuffHit;

@@ -2551,7 +2551,7 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
       // preserve the Doom hack of melee fist puff
       if(trace.attackrange == MELEERANGE)
       {
-         int snum = pufftype->getInt(keyPuffPunchState, D_MININT);
+         int snum = pufftype->getInt(keyPuffPunchHack, D_MININT);
          if(snum != D_MININT)
             P_SetMobjState(th, snum);
       }

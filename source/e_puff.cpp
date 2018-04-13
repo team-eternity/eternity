@@ -49,7 +49,7 @@
 #define ITEM_PUFF_ALTDAMAGEPUFF "altdamagepuff"
 #define ITEM_PUFF_UPSPEED "upspeed"
 #define ITEM_PUFF_BLOODCHANCE "bloodchance"
-#define ITEM_PUFF_PUNCHSTATE "punchstate"
+#define ITEM_PUFF_PUNCHHACK "punchhack"
 
 #define ITEM_PUFF_RANDOMTICS "RANDOMTICS"
 #define ITEM_PUFF_RANDOMZ "RANDOMZ"
@@ -62,7 +62,7 @@ MetaKeyIndex keyPuffSound(ITEM_PUFF_SOUND);
 MetaKeyIndex keyPuffAltDamagePuff(ITEM_PUFF_ALTDAMAGEPUFF);
 MetaKeyIndex keyPuffUpSpeed(ITEM_PUFF_UPSPEED);
 MetaKeyIndex keyPuffBloodChance(ITEM_PUFF_BLOODCHANCE);
-MetaKeyIndex keyPuffPunchState(ITEM_PUFF_PUNCHSTATE);
+MetaKeyIndex keyPuffPunchHack(ITEM_PUFF_PUNCHHACK);
 MetaKeyIndex keyPuffRandomTics(ITEM_PUFF_RANDOMTICS);
 MetaKeyIndex keyPuffRandomZ(ITEM_PUFF_RANDOMZ);
 MetaKeyIndex keyPuffPuffHit(ITEM_PUFF_PUFFHIT);
@@ -74,11 +74,11 @@ CFG_STR(ITEM_PUFF_SOUND, "none", CFGF_NONE),            \
 CFG_STR(ITEM_PUFF_ALTDAMAGEPUFF, "", CFGF_NONE),        \
 CFG_FLOAT(ITEM_PUFF_UPSPEED, 0, CFGF_NONE),             \
 CFG_FLOAT(ITEM_PUFF_BLOODCHANCE, 1, CFGF_NONE),         \
-CFG_STR(ITEM_PUFF_PUNCHSTATE, "", CFGF_NONE),           \
 CFG_FLAG(ITEM_PUFF_RANDOMTICS, 0, CFGF_SIGNPREFIX),     \
 CFG_FLAG(ITEM_PUFF_RANDOMZ, 0, CFGF_SIGNPREFIX),        \
 CFG_FLAG(ITEM_PUFF_PUFFHIT, 0, CFGF_SIGNPREFIX),        \
 CFG_FLAG(ITEM_PUFF_SMOKEPARTICLES, 0, CFGF_SIGNPREFIX), \
+CFG_STR(ITEM_PUFF_PUNCHHACK, "", CFGF_NONE),                 \
 
 //
 // EDF puff options
@@ -116,11 +116,11 @@ static void E_postprocessThingType(MetaTable *table)
 //
 static void E_postprocessPunchState(MetaTable *table)
 {
-   const char *sname = table->getString(keyPuffPunchState, nullptr);
+   const char *sname = table->getString(keyPuffPunchHack, nullptr);
    if(!sname)
       return;
-   table->addInt(keyPuffPunchState, E_SafeStateName(sname));
-   table->removeStringNR(keyPuffPunchState);
+   table->addInt(keyPuffPunchHack, E_SafeStateName(sname));
+   table->removeStringNR(keyPuffPunchHack);
 }
 
 //
