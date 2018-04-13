@@ -51,10 +51,10 @@
 #define ITEM_PUFF_ZSPREAD "zspread"
 #define ITEM_PUFF_BLOODCHANCE "bloodchance"
 #define ITEM_PUFF_PUNCHHACK "punchhack"
+#define ITEM_PUFF_PARTICLES "particles"
 
 #define ITEM_PUFF_RANDOMTICS "RANDOMTICS"
 #define ITEM_PUFF_PUFFHIT "PUFFHIT"
-#define ITEM_PUFF_SMOKEPARTICLES "SMOKEPARTICLES"
 
 // Interned metatable keys
 MetaKeyIndex keyPuffThingType(ITEM_PUFF_THINGTYPE);
@@ -66,7 +66,7 @@ MetaKeyIndex keyPuffBloodChance(ITEM_PUFF_BLOODCHANCE);
 MetaKeyIndex keyPuffPunchHack(ITEM_PUFF_PUNCHHACK);
 MetaKeyIndex keyPuffRandomTics(ITEM_PUFF_RANDOMTICS);
 MetaKeyIndex keyPuffPuffHit(ITEM_PUFF_PUFFHIT);
-MetaKeyIndex keyPuffSmokeParticles(ITEM_PUFF_SMOKEPARTICLES);
+MetaKeyIndex keyPuffParticles(ITEM_PUFF_PARTICLES);
 
 #define PUFF_CONFIGS \
 CFG_STR(ITEM_PUFF_THINGTYPE, "", CFGF_NONE),                 \
@@ -76,9 +76,9 @@ CFG_FLOAT(ITEM_PUFF_UPSPEED, 0, CFGF_NONE),                  \
 CFG_FLOAT(ITEM_PUFF_ZSPREAD, puffZSpreadDefault, CFGF_NONE), \
 CFG_FLOAT(ITEM_PUFF_BLOODCHANCE, 1, CFGF_NONE),              \
 CFG_STR(ITEM_PUFF_PUNCHHACK, "", CFGF_NONE),                 \
+CFG_INT(ITEM_PUFF_PARTICLES, 0, CFGF_NONE),                  \
 CFG_FLAG(ITEM_PUFF_RANDOMTICS, 0, CFGF_SIGNPREFIX),          \
 CFG_FLAG(ITEM_PUFF_PUFFHIT, 0, CFGF_SIGNPREFIX),             \
-CFG_FLAG(ITEM_PUFF_SMOKEPARTICLES, 0, CFGF_SIGNPREFIX),      \
 
 //
 // EDF puff options

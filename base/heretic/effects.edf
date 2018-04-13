@@ -10,8 +10,7 @@ pufftype HereticStaffPuff : HereticPuffBase
   thingtype     HereticStaffPuff
   sound         ht_stfhit
   upspeed       1.0
-
-  +SmokeParticles
+  particles     8
 }
 
 pufftype HereticStaffPuff2 : HereticPuffBase

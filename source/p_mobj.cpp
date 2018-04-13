@@ -2566,12 +2566,15 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
 
    // ioanch: spawn particles even for melee range if nothing is spawned
    if(ptcl && drawparticles && bulletpuff_particle &&
-      (trace.attackrange != MELEERANGE || !punchhack) &&
-      pufftype->getInt(keyPuffSmokeParticles, 0))
+      (trace.attackrange != MELEERANGE || !punchhack))
    {
-      if(th && bulletpuff_particle != 2)
-         th->translucency = 0;
-      P_SmokePuff(32, x, y, z, dir, updown);
+      int numparticles = pufftype->getInt(keyPuffParticles, 0);
+      if(numparticles > 0)
+      {
+         if(th && bulletpuff_particle != 2)
+            th->translucency = 0;
+         P_SmokePuff(numparticles, x, y, z, dir, updown);
+      }
    }
 }
 
