@@ -2540,6 +2540,7 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
    if(mobjtype != D_MININT)
       th = P_SpawnMobj(x, y, z, mobjtype);
 
+   bool punchhack = false;
    if(th)
    {
       if(pufftype->getInt(keyPuffRandomTics, 0))
@@ -2556,13 +2557,16 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
       {
          int snum = pufftype->getInt(keyPuffPunchHack, D_MININT);
          if(snum != D_MININT)
+         {
             P_SetMobjState(th, snum);
+            punchhack = true;
+         }
       }
    }
 
    // ioanch: spawn particles even for melee range if nothing is spawned
    if(ptcl && drawparticles && bulletpuff_particle &&
-      (trace.attackrange != MELEERANGE || !th) &&
+      (trace.attackrange != MELEERANGE || !punchhack) &&
       pufftype->getInt(keyPuffSmokeParticles, 0))
    {
       if(th && bulletpuff_particle != 2)
