@@ -34,15 +34,17 @@ struct cfg_opt_t;
 struct cfg_t;
 class MetaTable;
 
+static const double puffZSpreadDefault = 4;
+
 // NOTE: some of these properties are post-processes from the EDF appearance.
 extern MetaKeyIndex keyPuffThingType;
 extern MetaKeyIndex keyPuffSound;
 extern MetaKeyIndex keyPuffAltDamagePuff;
 extern MetaKeyIndex keyPuffUpSpeed;
+extern MetaKeyIndex keyPuffZSpread;
 extern MetaKeyIndex keyPuffBloodChance;
 extern MetaKeyIndex keyPuffPunchHack;
 extern MetaKeyIndex keyPuffRandomTics;
-extern MetaKeyIndex keyPuffRandomZ;
 extern MetaKeyIndex keyPuffPuffHit;
 extern MetaKeyIndex keyPuffSmokeParticles;
 

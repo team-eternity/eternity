@@ -5,6 +5,5 @@ pufftype BulletPuff
   punchhack  S_PUFF3
   
   +RandomTics
-  +RandomZ
   +SmokeParticles
 }

@@ -2531,8 +2531,11 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
 
    Mobj* th = nullptr;
 
-   if(pufftype->getInt(keyPuffRandomZ, 0))
-      z += P_SubRandom(pr_spawnpuff) << 10;
+   double zspread = pufftype->getDouble(keyPuffZSpread, puffZSpreadDefault);
+   if(zspread)
+      z += P_SubRandom(pr_spawnpuff) * M_DoubleToFixed(zspread / 256.0);
+
+   // mobjtype already checked to be safe.
    int mobjtype = pufftype->getInt(keyPuffThingType, D_MININT);
    if(mobjtype != D_MININT)
       th = P_SpawnMobj(x, y, z, mobjtype);
