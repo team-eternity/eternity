@@ -43,9 +43,9 @@ extern MetaKeyIndex keyPuffAltDamagePuff;
 extern MetaKeyIndex keyPuffUpSpeed;
 extern MetaKeyIndex keyPuffZSpread;
 extern MetaKeyIndex keyPuffPunchHack;
-extern MetaKeyIndex keyPuffRandomTics;
-extern MetaKeyIndex keyPuffPuffHit;
 extern MetaKeyIndex keyPuffParticles;
+extern MetaKeyIndex keyPuffPuffHit;
+extern MetaKeyIndex keyPuffRandomTics;
 
 extern cfg_opt_t edf_puff_opts[];
 extern cfg_opt_t edf_puff_delta_opts[];
