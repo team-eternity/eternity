@@ -49,7 +49,6 @@
 #define ITEM_PUFF_ALTDAMAGEPUFF "altdamagepuff"
 #define ITEM_PUFF_UPSPEED "upspeed"
 #define ITEM_PUFF_ZSPREAD "zspread"
-#define ITEM_PUFF_BLOODCHANCE "bloodchance"
 #define ITEM_PUFF_PUNCHHACK "punchhack"
 #define ITEM_PUFF_PARTICLES "particles"
 
@@ -62,7 +61,6 @@ MetaKeyIndex keyPuffSound(ITEM_PUFF_SOUND);
 MetaKeyIndex keyPuffAltDamagePuff(ITEM_PUFF_ALTDAMAGEPUFF);
 MetaKeyIndex keyPuffUpSpeed(ITEM_PUFF_UPSPEED);
 MetaKeyIndex keyPuffZSpread(ITEM_PUFF_ZSPREAD);
-MetaKeyIndex keyPuffBloodChance(ITEM_PUFF_BLOODCHANCE);
 MetaKeyIndex keyPuffPunchHack(ITEM_PUFF_PUNCHHACK);
 MetaKeyIndex keyPuffRandomTics(ITEM_PUFF_RANDOMTICS);
 MetaKeyIndex keyPuffPuffHit(ITEM_PUFF_PUFFHIT);
@@ -74,7 +72,6 @@ CFG_STR(ITEM_PUFF_SOUND, "none", CFGF_NONE),                 \
 CFG_STR(ITEM_PUFF_ALTDAMAGEPUFF, "", CFGF_NONE),             \
 CFG_FLOAT(ITEM_PUFF_UPSPEED, 0, CFGF_NONE),                  \
 CFG_FLOAT(ITEM_PUFF_ZSPREAD, puffZSpreadDefault, CFGF_NONE), \
-CFG_FLOAT(ITEM_PUFF_BLOODCHANCE, 1, CFGF_NONE),              \
 CFG_STR(ITEM_PUFF_PUNCHHACK, "", CFGF_NONE),                 \
 CFG_INT(ITEM_PUFF_PARTICLES, 0, CFGF_NONE),                  \
 CFG_FLAG(ITEM_PUFF_RANDOMTICS, 0, CFGF_SIGNPREFIX),          \

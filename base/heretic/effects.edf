@@ -1,7 +1,5 @@
 pufftype HereticPuffBase
 {
-  bloodchance   0.75
-
   +PuffHit
 }
 

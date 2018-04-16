@@ -274,15 +274,16 @@ bool P_ShootThing(const intercept_t *in,
    }
    else
    {
+      bool showpuff = false;
       if(pufftype && pufftype->getInt(keyPuffPuffHit, 0))
+      {
          P_SpawnPuff(x, y, z, puffangle, 2, true, pufftype, true);
+         showpuff = true;
+      }
 
       // If we have puff, only spawn blood 75% of the time.
-      int bloodchance = pufftype ?
-      static_cast<int>(pufftype->getDouble(keyPuffBloodChance, 1) * 256) : 256;
-
       // avoid calling P_Random if bloodchance is 100%
-      if(bloodchance >= 256 || P_Random(pr_puffblood) < bloodchance)
+      if(!showpuff || P_Random(pr_puffblood) < 192)
          BloodSpawner(th, x, y, z, damage, dl, shooter).spawn(BLOOD_SHOT);
    }
 
