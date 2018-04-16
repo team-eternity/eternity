@@ -39,6 +39,7 @@ static const double puffZSpreadDefault = 4;
 // NOTE: some of these properties are post-processes from the EDF appearance.
 extern MetaKeyIndex keyPuffThingType;
 extern MetaKeyIndex keyPuffSound;
+extern MetaKeyIndex keyPuffHitSound;
 extern MetaKeyIndex keyPuffAltDamagePuff;
 extern MetaKeyIndex keyPuffUpSpeed;
 extern MetaKeyIndex keyPuffZSpread;

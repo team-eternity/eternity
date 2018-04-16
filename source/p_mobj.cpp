@@ -2518,6 +2518,9 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
       if(!pufftype)  // may still be null
          return;
    }
+   const char *hitsound = pufftype->getString(keyPuffHitSound, nullptr);
+   if(hitsound && !strcasecmp(hitsound, "none"))
+      hitsound = nullptr;
    if(hit)
    {
       const char *altname = pufftype->getString(keyPuffAltDamagePuff, nullptr);
@@ -2525,7 +2528,13 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
       {
          const MetaTable *otable = E_PuffForName(altname);
          if(otable)
+         {
             pufftype = otable;
+            const char *althitsound = pufftype->getString(keyPuffHitSound,
+                                                          nullptr);
+            if(estrnonempty(althitsound) && strcasecmp(althitsound, "none"))
+               hitsound = althitsound;
+         }
       }
    }
 
@@ -2549,7 +2558,8 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
          if(th->tics < 1)
             th->tics = 1;
       }
-      S_StartSoundName(th, pufftype->getString(keyPuffSound, nullptr));
+      S_StartSoundName(th, hit && estrnonempty(hitsound) ? hitsound :
+                       pufftype->getString(keyPuffSound, nullptr));
       th->momz = M_DoubleToFixed(pufftype->getDouble(keyPuffUpSpeed, 0));
 
       // preserve the Doom hack of melee fist puff
