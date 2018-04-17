@@ -46,7 +46,6 @@ extern MetaKeyIndex keyPuffZSpread;
 extern MetaKeyIndex keyPuffPunchHack;
 extern MetaKeyIndex keyPuffParticles;
 extern MetaKeyIndex keyPuffLocalThrust;
-extern MetaKeyIndex keyPuffNoBlood;
 extern MetaKeyIndex keyPuffPuffHit;
 extern MetaKeyIndex keyPuffRandomTics;
 

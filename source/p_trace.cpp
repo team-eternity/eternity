@@ -284,13 +284,14 @@ bool P_ShootThing(const intercept_t *in,
          showpuff = true;
       }
 
+      bool bloodless = pufftype && puffmobj &&
+      puffmobj->flags4 & MF4_BLOODLESSIMPACT &&
+      pufftype->getInt(keyPuffLocalThrust, 0);
+
       // If we have puff, only spawn blood 75% of the time.
       // avoid calling P_Random if bloodchance is 100%
-      if((!pufftype || !pufftype->getInt(keyPuffNoBlood, 0)) &&
-         (!showpuff || P_Random(pr_puffblood) < 192))
-      {
+      if(!bloodless && (!showpuff || P_Random(pr_puffblood) < 192))
          BloodSpawner(th, x, y, z, damage, dl, shooter).spawn(BLOOD_SHOT);
-      }
    }
 
    if(damage)
