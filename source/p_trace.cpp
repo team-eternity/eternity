@@ -266,18 +266,21 @@ bool P_ShootThing(const intercept_t *in,
    // haleyjd: and status flags!
    const MetaTable *pufftype = E_PuffForIndex(puffidx);
 
+   Mobj *puffmobj = nullptr;
    angle_t puffangle = P_PointToAngle(0, 0, dl.dx, dl.dy) - ANG180;
    if(th->flags & MF_NOBLOOD ||
       th->flags2 & (MF2_INVULNERABLE | MF2_DORMANT))
    {
-      P_SpawnPuff(x, y, z, puffangle, 2, true, pufftype, true);
+      puffmobj = P_SpawnPuff(x, y, z, puffangle, 2, true, pufftype, true);
    }
    else
    {
+      // Need to have a separate bool for checking, if puff is only particles,
+      // but no mobj.
       bool showpuff = false;
       if(pufftype && pufftype->getInt(keyPuffPuffHit, 0))
       {
-         P_SpawnPuff(x, y, z, puffangle, 2, true, pufftype, true);
+         puffmobj = P_SpawnPuff(x, y, z, puffangle, 2, true, pufftype, true);
          showpuff = true;
       }
 
@@ -291,7 +294,11 @@ bool P_ShootThing(const intercept_t *in,
    }
 
    if(damage)
-      P_DamageMobj(th, shooter, shooter, damage, shooter->info->mod);
+   {
+      P_DamageMobj(th, pufftype && puffmobj &&
+                   pufftype->getInt(keyPuffLocalThrust, 0) ? puffmobj : shooter,
+                   shooter, damage, shooter->info->mod);
+   }
 
    // don't go any further
    return false;

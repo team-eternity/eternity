@@ -2506,8 +2506,8 @@ spawnit:
 //
 // P_SpawnPuff
 //
-void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
-                 int updown, bool ptcl, const MetaTable *pufftype, bool hit)
+Mobj *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
+                  int updown, bool ptcl, const MetaTable *pufftype, bool hit)
 {
    if(!pufftype)
    {
@@ -2516,7 +2516,7 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
          defaulttype = E_PuffForName(GameModeInfo->puffType);
       pufftype = defaulttype;
       if(!pufftype)  // may still be null
-         return;
+         return nullptr;
    }
    const char *hitsound = pufftype->getString(keyPuffHitSound, nullptr);
    if(hitsound && !strcasecmp(hitsound, "none"))
@@ -2586,6 +2586,8 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
          P_SmokePuff(numparticles, x, y, z, dir, updown);
       }
    }
+
+   return th;
 }
 
 //
