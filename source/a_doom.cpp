@@ -248,10 +248,12 @@ void A_SargAttack12(actionargs_t *actionargs)
 
    mod = E_ArgAsInt(actionargs->args, 0, 10);
    mul = E_ArgAsInt(actionargs->args, 1,  4);
+   // ioanch: also pufftype
+   const char *pufftype = E_ArgAsString(actionargs->args, 2, nullptr);
 
    A_FaceTarget(actionargs);
    damage = ((P_Random(pr_sargattack) % mod) + 1) * mul;
-   P_LineAttack(actor, actor->angle, MELEERANGE, 0, damage);
+   P_LineAttack(actor, actor->angle, MELEERANGE, 0, damage, pufftype);
 }
 
 //
