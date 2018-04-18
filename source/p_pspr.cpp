@@ -1379,6 +1379,7 @@ static argkeywd_t cpmkwds =
 // args[2] : berzerk multiplier
 // args[3] : angle deflection type (none, punch, chainsaw)
 // args[4] : sound to make (dehacked number)
+// args[5] : pufftype
 //
 void A_CustomPlayerMelee(actionargs_t *actionargs)
 {
@@ -1402,6 +1403,7 @@ void A_CustomPlayerMelee(actionargs_t *actionargs)
    berzerkmul = E_ArgAsInt(args, 2, 0);
    deftype    = E_ArgAsKwd(args, 3, &cpmkwds, 0);
    sfx        = E_ArgAsSound(args, 4);
+   const char *pufftype = E_ArgAsString(args, 5, nullptr);
 
    // adjust parameters
 
@@ -1430,7 +1432,7 @@ void A_CustomPlayerMelee(actionargs_t *actionargs)
    // WEAPON_FIXME: does this pointer fail to set the player into an attack state?
    // WEAPON_FIXME: check ALL new weapon pointers for this problem.
    
-   P_LineAttack(mo, angle, MELEERANGE, slope, damage);
+   P_LineAttack(mo, angle, MELEERANGE, slope, damage, pufftype);
    
    if(!clip.linetarget)
    {
