@@ -37,6 +37,7 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "m_compare.h"
 #include "metaapi.h"
 #include "p_enemy.h"
 #include "p_info.h"
@@ -697,20 +698,38 @@ void A_Explode(actionargs_t *actionargs)
       E_HitWater(thingy, P_ExtremeSectorAtPoint(thingy, false));
 }
 
+//
+// SMMU nailbomb.
+// Parameters: (damage, radius, numnails, dmgfactor, dmgmod, pufftype)
+// Defaults:   (128,    128,    30,       10,        1,      (default))
+//
 void A_Nailbomb(actionargs_t *actionargs)
 {
    Mobj *thing = actionargs->actor;
    int i;
+
+   arglist_t *args = actionargs->args;
+   int damage = E_ArgAsInt(args, 0, 128);
+   int radius = E_ArgAsInt(args, 1, 128);
+   int numnails = E_ArgAsInt(args, 2, 30);
+   int dmgfactor = E_ArgAsInt(args, 3, 10);
+   int dmgmod = eclamp(E_ArgAsInt(args, 4, 1), 1, 256);
+   const char *pufftype = E_ArgAsString(args, 5, nullptr);
    
-   P_RadiusAttack(thing, thing->target, 128, 128, thing->info->mod, 0);
+   P_RadiusAttack(thing, thing->target, damage, radius, thing->info->mod, 0);
 
    // haleyjd: added here as of 3.31b3 -- was overlooked
    // ioanch 20160116: portal aware Z
-   if(demo_version >= 331 && thing->z <= thing->secfloorz + 128*FRACUNIT)
+   if(demo_version >= 331 && thing->z <= thing->secfloorz + radius*FRACUNIT)
       E_HitWater(thing, P_ExtremeSectorAtPoint(thing, false));
 
-   for(i = 0; i < 30; ++i)
-      P_LineAttack(thing, i*(ANG180/15), MISSILERANGE, 0, 10);
+   for(i = 0; i < numnails; ++i)
+   {
+      int dmg = dmgfactor;
+      if(dmgmod > 1)
+         dmg *= P_Random(pr_nailbombshoot) % dmgmod + 1;
+      P_LineAttack(thing, i*(ANG180/numnails*2), MISSILERANGE, 0, dmg, pufftype);
+   }
 }
 
 
