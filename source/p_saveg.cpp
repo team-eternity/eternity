@@ -563,7 +563,7 @@ static void P_ArchivePlayers(SaveArchive &arc)
 
             slotIndex = p.readyweaponslot != nullptr ? p.readyweaponslot->slotindex : 0;
             arc << slotIndex;
-            slotIndex = p.pendingweaponslot != nullptr ? p.readyweaponslot->slotindex : 0;
+            slotIndex = p.pendingweaponslot != nullptr ? p.pendingweaponslot->slotindex : 0;
             arc << slotIndex;
 
             // Save numcounters, then counters if there's a need to
@@ -593,7 +593,8 @@ static void P_ArchivePlayers(SaveArchive &arc)
             arc << slotIndex;
             p.readyweaponslot = E_FindEntryForWeaponInSlot(&p, p.readyweapon, slotIndex);
             arc << slotIndex;
-            p.pendingweaponslot = E_FindEntryForWeaponInSlot(&p, p.pendingweapon, slotIndex);
+            if(p.pendingweapon != nullptr)
+               p.pendingweaponslot = E_FindEntryForWeaponInSlot(&p, p.pendingweapon, slotIndex);
 
             // Load counters if there's a need to
             P_loadWeaponCounters(arc, p);
