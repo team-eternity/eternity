@@ -1198,6 +1198,7 @@ static argkeywd_t fcbkwds =
 // args[5] : if not zero, set specific flash state; if < 0, don't change it.
 // args[6] : horizontal spread angle if args[1] is "custom"
 // args[7] : vertical spread angle if args[1] is "custom"
+// args[8] : optional pufftype ("" for default)
 //
 void A_FireCustomBullets(actionargs_t *actionargs)
 {
@@ -1228,6 +1229,8 @@ void A_FireCustomBullets(actionargs_t *actionargs)
 
    horizontal = E_ArgAsInt(args, 6, 0);
    vertical   = E_ArgAsInt(args, 7, 0);
+
+   const char *pufftype = E_ArgAsString(args, 8, nullptr);
 
    if(accurate == CBA_NONE)
       accurate = CBA_ALWAYS;
@@ -1269,7 +1272,7 @@ void A_FireCustomBullets(actionargs_t *actionargs)
          // convert pitch to the same "unit" as slope, then add it on
          slope += finetangent[(ANG90 - pitch) >> ANGLETOFINESHIFT];
 
-         P_LineAttack(mo, angle, MISSILERANGE, slope, dmg);
+         P_LineAttack(mo, angle, MISSILERANGE, slope, dmg, pufftype);
       }
       else if(accurate <= CBA_NEVER || accurate == CBA_MONSTER)
       {
@@ -1282,14 +1285,14 @@ void A_FireCustomBullets(actionargs_t *actionargs)
             angle += P_SubRandom(pr_custommisfire) << aimshift;
          }
 
-         P_LineAttack(mo, angle, MISSILERANGE, slope, dmg);
+         P_LineAttack(mo, angle, MISSILERANGE, slope, dmg, pufftype);
       }
       else if(accurate == CBA_SSG) // ssg spread
       {
          angle += P_SubRandom(pr_custommisfire) << 19;
          slope += P_SubRandom(pr_custommisfire) << 5;
 
-         P_LineAttack(mo, angle, MISSILERANGE, slope, dmg);
+         P_LineAttack(mo, angle, MISSILERANGE, slope, dmg, pufftype);
       }
    }
 }
