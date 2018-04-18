@@ -271,6 +271,7 @@ int P_RangeRandom(pr_class_t pr_class, int min, int max);
 // haleyjd 03/16/09: extended random functions
 unsigned int P_RandomEx(pr_class_t);
 unsigned int P_RangeRandomEx(pr_class_t, unsigned int, unsigned int);
+int P_SubRandomEx(pr_class_t pr_class, unsigned max);
 
 #define M_RandomEx() P_RandomEx(pr_misc)
 #define M_RangeRandomEx(min, max) P_RangeRandomEx(pr_misc, (min), (max))
