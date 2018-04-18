@@ -1263,9 +1263,9 @@ void A_FireCustomBullets(actionargs_t *actionargs)
       
       if(accurate == CBA_CUSTOM)
       {
-         angle += (P_RangeRandomEx(pr_custommisfire, -ANGLE_1, ANGLE_1) / 2) * horizontal;
-         const angle_t pitch = (P_RangeRandomEx(pr_custommisfire, -ANGLE_1, ANGLE_1) / 2) *
-                               vertical;
+         angle += P_SubRandomEx(pr_custommisfire, ANGLE_1) / 2 * horizontal;
+         const angle_t pitch = (P_SubRandomEx(pr_custommisfire, ANGLE_1) / 2) *
+                                vertical;
          // convert pitch to the same "unit" as slope, then add it on
          slope += finetangent[(ANG90 - pitch) >> ANGLETOFINESHIFT];
 
