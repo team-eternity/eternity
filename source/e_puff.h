@@ -40,7 +40,7 @@ static const double puffZSpreadDefault = 4;
 extern MetaKeyIndex keyPuffThingType;
 extern MetaKeyIndex keyPuffSound;
 extern MetaKeyIndex keyPuffHitSound;
-extern MetaKeyIndex keyPuffAltDamagePuff;
+extern MetaKeyIndex keyPuffHitPuffType;
 extern MetaKeyIndex keyPuffUpSpeed;
 extern MetaKeyIndex keyPuffZSpread;
 extern MetaKeyIndex keyPuffPunchHack;

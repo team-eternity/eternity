@@ -2523,7 +2523,7 @@ Mobj *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
       hitsound = nullptr;
    if(hit)
    {
-      const char *altname = pufftype->getString(keyPuffAltDamagePuff, nullptr);
+      const char *altname = pufftype->getString(keyPuffHitPuffType, nullptr);
       if(altname)
       {
          const MetaTable *otable = E_PuffForName(altname);
