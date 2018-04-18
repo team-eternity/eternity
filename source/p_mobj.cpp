@@ -2574,7 +2574,7 @@ Mobj *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
       if(trace.attackrange == MELEERANGE)
       {
          int snum = pufftype->getInt(keyPuffPunchHack, D_MININT);
-         if(snum != D_MININT)
+         if(snum != D_MININT && snum != NullStateNum)
          {
             P_SetMobjState(th, snum);
             punchhack = true;
