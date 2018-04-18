@@ -2507,7 +2507,8 @@ spawnit:
 // P_SpawnPuff
 //
 Mobj *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
-                  int updown, bool ptcl, const MetaTable *pufftype, bool hit)
+                  int updown, bool ptcl, const MetaTable *pufftype,
+                  const Mobj *hitmobj)
 {
    if(!pufftype)
    {
@@ -2521,15 +2522,20 @@ Mobj *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
    const char *hitsound = pufftype->getString(keyPuffHitSound, nullptr);
    if(hitsound && !strcasecmp(hitsound, "none"))
       hitsound = nullptr;
-   if(hit)
+   if(hitmobj)
    {
-      const char *altname = pufftype->getString(keyPuffHitPuffType, nullptr);
-      if(altname)
+      const char *altname = nullptr;
+      if(hitmobj->flags & MF_NOBLOOD)
+         altname = pufftype->getString(keyPuffNoBloodPuffType, nullptr);
+      if(estrempty(altname))
+         altname = pufftype->getString(keyPuffHitPuffType, nullptr);
+      if(estrnonempty(altname))
       {
          const MetaTable *otable = E_PuffForName(altname);
          if(otable)
          {
             pufftype = otable;
+            // If the alternate puff has its own hitsound, use that.
             const char *althitsound = pufftype->getString(keyPuffHitSound,
                                                           nullptr);
             if(estrnonempty(althitsound) && strcasecmp(althitsound, "none"))
@@ -2558,7 +2564,9 @@ Mobj *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
          if(th->tics < 1)
             th->tics = 1;
       }
-      S_StartSoundName(th, hit && estrnonempty(hitsound) ? hitsound :
+      // Input pufftype hitsound has priority over alternate pufftype miss
+      // sound, but less priority than alternate's own hit sound.
+      S_StartSoundName(th, hitmobj && estrnonempty(hitsound) ? hitsound :
                        pufftype->getString(keyPuffSound, nullptr));
       th->momz = M_DoubleToFixed(pufftype->getDouble(keyPuffUpSpeed, 0));
 

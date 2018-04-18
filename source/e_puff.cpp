@@ -48,6 +48,7 @@
 #define ITEM_PUFF_SOUND "sound"
 #define ITEM_PUFF_HITSOUND "hitsound"
 #define ITEM_PUFF_HITPUFFTYPE "hitpufftype"
+#define ITEM_PUFF_NOBLOODPUFFTYPE "nobloodpufftype"
 #define ITEM_PUFF_UPSPEED "upspeed"
 #define ITEM_PUFF_ZSPREAD "zspread"
 #define ITEM_PUFF_PUNCHHACK "punchhack"
@@ -62,6 +63,7 @@ MetaKeyIndex keyPuffThingType(ITEM_PUFF_THINGTYPE);
 MetaKeyIndex keyPuffSound(ITEM_PUFF_SOUND);
 MetaKeyIndex keyPuffHitSound(ITEM_PUFF_HITSOUND);
 MetaKeyIndex keyPuffHitPuffType(ITEM_PUFF_HITPUFFTYPE);
+MetaKeyIndex keyPuffNoBloodPuffType(ITEM_PUFF_NOBLOODPUFFTYPE);
 MetaKeyIndex keyPuffUpSpeed(ITEM_PUFF_UPSPEED);
 MetaKeyIndex keyPuffZSpread(ITEM_PUFF_ZSPREAD);
 MetaKeyIndex keyPuffPunchHack(ITEM_PUFF_PUNCHHACK);
@@ -75,6 +77,7 @@ CFG_STR(ITEM_PUFF_THINGTYPE, "", CFGF_NONE),                 \
 CFG_STR(ITEM_PUFF_SOUND, "none", CFGF_NONE),                 \
 CFG_STR(ITEM_PUFF_HITSOUND, "none", CFGF_NONE),              \
 CFG_STR(ITEM_PUFF_HITPUFFTYPE, "", CFGF_NONE),               \
+CFG_STR(ITEM_PUFF_NOBLOODPUFFTYPE, "", CFGF_NONE),           \
 CFG_FLOAT(ITEM_PUFF_UPSPEED, 0, CFGF_NONE),                  \
 CFG_FLOAT(ITEM_PUFF_ZSPREAD, puffZSpreadDefault, CFGF_NONE), \
 CFG_STR(ITEM_PUFF_PUNCHHACK, "", CFGF_NONE),                 \

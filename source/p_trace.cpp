@@ -271,7 +271,7 @@ bool P_ShootThing(const intercept_t *in,
    if(th->flags & MF_NOBLOOD ||
       th->flags2 & (MF2_INVULNERABLE | MF2_DORMANT))
    {
-      puffmobj = P_SpawnPuff(x, y, z, puffangle, 2, true, pufftype, true);
+      puffmobj = P_SpawnPuff(x, y, z, puffangle, 2, true, pufftype, th);
    }
    else
    {
@@ -280,7 +280,7 @@ bool P_ShootThing(const intercept_t *in,
       bool showpuff = false;
       if(pufftype && pufftype->getInt(keyPuffPuffHit, 0))
       {
-         puffmobj = P_SpawnPuff(x, y, z, puffangle, 2, true, pufftype, true);
+         puffmobj = P_SpawnPuff(x, y, z, puffangle, 2, true, pufftype, th);
          showpuff = true;
       }
 
