@@ -646,6 +646,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\source\e_puff.cpp" />
     <ClCompile Include="..\source\e_reverbs.cpp" />
     <ClCompile Include="..\source\e_rtti.cpp" />
     <ClCompile Include="..\Source\e_sound.cpp">
@@ -1963,6 +1964,7 @@
     <ClInclude Include="..\source\e_metastate.h" />
     <ClInclude Include="..\source\e_mod.h" />
     <ClInclude Include="..\source\e_player.h" />
+    <ClInclude Include="..\source\e_puff.h" />
     <ClInclude Include="..\source\e_reverbs.h" />
     <ClInclude Include="..\source\e_rtti.h" />
     <ClInclude Include="..\Source\e_sound.h" />

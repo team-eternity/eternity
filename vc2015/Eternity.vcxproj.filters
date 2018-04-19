@@ -999,6 +999,9 @@
     <ClCompile Include="..\source\a_weaponsdoom.cpp">
       <Filter>Source Files\A_\A_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\e_puff.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1774,6 +1777,9 @@
     </ClInclude>
     <ClInclude Include="..\source\m_avltree.h">
       <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\e_puff.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
