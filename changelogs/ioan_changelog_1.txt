@@ -8,6 +8,42 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+19.04.2018
+
+FEATURE: Added hitscan puff type EDF definitions, which is necessary for Heretic
+         support. Consideration has also been made for future Hexen and Strife
+         in Eternity. The syntax is as follows:
+
+         pufftype <name> [: <base>]
+         {
+           thingtype       <name>
+           sound           <name>
+           hitsound        <name>
+           hitpufftype     <name>
+           nobloodpufftype <name>
+           upspeed         <number>
+           zspread         <number>
+           punchhack       <name>
+           particles       <number>
+           +|-AlwaysPuff
+           +|-Bloodless
+           +|-LocalThrust
+           +|-RandomTics
+         }
+
+         effects.edf files have been added in base/doom and base/heretic.
+
+         Each pufftype defines how a hitscan attack should spawn a thing of a
+         given class, with options such as dragonclaw alternate blast, or Strife
+         mauler behaviour etc.
+
+IMPROVEMENT: Besides preparing all non-game-specific codepointers for setting
+             pufftype, Nailbomb is now fully customizable.
+
+IMPROVEMENT: Fixed the custom spread distribution of FireCustomBullets to be
+             triangular, just like the vanilla Doom hitscans.
+
+--------------------------------------------------------------------------------
 09.04.2018
 
 FEATURE: Added the push activation from Hexen. The feature was long advertised
