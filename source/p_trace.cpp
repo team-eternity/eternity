@@ -284,9 +284,10 @@ bool P_ShootThing(const intercept_t *in,
          showpuff = true;
       }
 
-      bool bloodless = pufftype && puffmobj &&
+      bool bloodless = pufftype && ((puffmobj &&
       puffmobj->flags4 & MF4_BLOODLESSIMPACT &&
-      pufftype->getInt(keyPuffLocalThrust, 0);
+      pufftype->getInt(keyPuffLocalThrust, 0)) ||
+                                    pufftype->getInt(keyPuffBloodless, 0));
 
       // If we have puff, only spawn blood 75% of the time.
       // avoid calling P_Random if bloodchance is 100%
