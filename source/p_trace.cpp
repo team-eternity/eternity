@@ -278,7 +278,7 @@ bool P_ShootThing(const intercept_t *in,
       // Need to have a separate bool for checking, if puff is only particles,
       // but no mobj.
       bool showpuff = false;
-      if(pufftype && pufftype->getInt(keyPuffPuffHit, 0))
+      if(pufftype && pufftype->getInt(keyPuffAlwaysPuff, 0))
       {
          puffmobj = P_SpawnPuff(x, y, z, puffangle, 2, true, pufftype, th);
          showpuff = true;
