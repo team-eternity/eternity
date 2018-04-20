@@ -1002,6 +1002,9 @@
     <ClCompile Include="..\source\e_puff.cpp">
       <Filter>Source Files\E_\E_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\e_edfmetatable.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1779,6 +1782,9 @@
       <Filter>Source Files\M_\M_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\source\e_puff.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\e_edfmetatable.h">
       <Filter>Source Files\E_\E_ Headers</Filter>
     </ClInclude>
   </ItemGroup>

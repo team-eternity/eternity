@@ -585,6 +585,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\source\e_edfmetatable.cpp" />
     <ClCompile Include="..\Source\e_exdata.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1955,6 +1956,7 @@
     <ClInclude Include="..\source\e_args.h" />
     <ClInclude Include="..\source\e_dstate.h" />
     <ClInclude Include="..\Source\e_edf.h" />
+    <ClInclude Include="..\source\e_edfmetatable.h" />
     <ClInclude Include="..\Source\e_exdata.h" />
     <ClInclude Include="..\source\e_fonts.h" />
     <ClInclude Include="..\source\e_gameprops.h" />
