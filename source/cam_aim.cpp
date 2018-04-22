@@ -426,8 +426,11 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata,
    {
       Mobj *th = in->d.thing;
       fixed_t thingtopslope, thingbottomslope;
-      if(!(th->flags & MF_SHOOTABLE) || th == context.thing)
+      if(!(th->flags & MF_SHOOTABLE) || th == context.thing ||
+         th->flags4 & MF4_NOTAUTOAIMED)
+      {
          return true;
+      }
       if(th->flags & context.thing->flags & context.aimflagsmask
          && !th->player)
       {

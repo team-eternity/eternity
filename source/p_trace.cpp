@@ -104,7 +104,7 @@ static bool PTR_AimTraverse(intercept_t *in, void *context)
       if(th == trace.thing)
          return true; // can't shoot self
 
-      if(!(th->flags & MF_SHOOTABLE))
+      if(!(th->flags & MF_SHOOTABLE) || th->flags4 & MF4_NOTAUTOAIMED)
          return true; // corpse or something
 
       // killough 7/19/98, 8/2/98:
