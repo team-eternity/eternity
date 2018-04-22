@@ -601,7 +601,7 @@ static fixed_t  viletryy;
 //
 // Detect a corpse that could be raised.
 //
-bool PIT_VileCheck(Mobj *thing)
+bool PIT_VileCheck(Mobj *thing, void *context)
 {
    int maxdist;
    int vileType = E_SafeThingType(MT_VILE);

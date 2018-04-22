@@ -117,11 +117,13 @@ void P_UnsetThingPosition(Mobj *thing);
 void P_SetThingPosition(Mobj *thing);
 bool P_BlockLinesIterator (int x, int y, bool func(line_t *, polyobj_s *, void *),
                            int groupid = R_NOGROUP, void *context = nullptr);
-bool P_BlockThingsIterator(int x, int y, int groupid, bool (*func)(Mobj *));
-inline static bool P_BlockThingsIterator(int x, int y, bool func(Mobj *))
+bool P_BlockThingsIterator(int x, int y, int groupid, bool (*func)(Mobj *, void *),
+                           void *context = nullptr);
+inline static bool P_BlockThingsIterator(int x, int y, bool func(Mobj *, void *),
+                                         void *context = nullptr)
 {
    // ioanch 20160108: avoid code duplication
-   return P_BlockThingsIterator(x, y, R_NOGROUP, func);
+   return P_BlockThingsIterator(x, y, R_NOGROUP, func, context);
 }
 bool ThingIsOnLine(const Mobj *t, const line_t *l);  // killough 3/15/98
 bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
