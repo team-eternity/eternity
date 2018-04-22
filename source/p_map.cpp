@@ -696,6 +696,15 @@ void P_CollectSpechits(line_t *ld, PODCollection<line_t *> *pushhit)
 }
 
 //
+// Returns true if line should be blocked by ML_BLOCKMONSTERS lines.
+//
+bool P_BlockedAsMonster(const Mobj &mo)
+{
+   return !(mo.flags & MF_FRIEND) && !mo.player &&
+          !(mo.flags4 & MF4_NOMONSTERBLOCK);
+}
+
+//
 // PIT_CheckLine
 //
 // Adjusts tmfloorz and tmceilingz as lines are contacted
@@ -757,10 +766,11 @@ bool PIT_CheckLine(line_t *ld, polyobj_s *po, void *context)
 
       // killough 8/9/98: monster-blockers don't affect friends
       // SoM 9/7/02: block monsters standing on 3dmidtex only
-      if(!(clip.thing->flags & MF_FRIEND || clip.thing->player) && 
-         ld->flags & ML_BLOCKMONSTERS && 
-         !(ld->flags & ML_3DMIDTEX))
+      if(ld->flags & ML_BLOCKMONSTERS && !(ld->flags & ML_3DMIDTEX) &&
+         P_BlockedAsMonster(*clip.thing))
+      {
          return false; // block monsters only
+      }
    }
 
    // set openrange, opentop, openbottom

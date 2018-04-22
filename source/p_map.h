@@ -78,6 +78,8 @@ void P_SlideMove(Mobj *mo);
 // ioanch
 void P_CollectSpechits(line_t *ld, PODCollection<line_t *> *pushhit);
 
+bool P_BlockedAsMonster(const Mobj &mo);
+
 //=============================================================================
 //
 // Teleportation
