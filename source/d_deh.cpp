@@ -343,6 +343,7 @@ dehflags_t deh_mobjflags[] =
   {"HERETICBOUNCES",     0x01000000, 3}, // thing bounces à la Heretic
   {"MONSTERPASS",        0x02000000, 3},
   {"NOTAUTOAIMED",       0x04000000, 3},
+  {"CARRY",              0x08000000, 3},
 
   { NULL,              0 }             // NULL terminator
 };

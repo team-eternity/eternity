@@ -44,6 +44,7 @@
 #include "p_maputl.h"
 #include "p_map.h"
 #include "p_map3d.h"
+#include "p_mobjcol.h"
 #include "p_partcl.h"
 #include "p_portal.h"
 #include "p_portalblockmap.h"
@@ -1515,7 +1516,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    clip.felldown = clip.floatok = false;               // killough 11/98
 
    bool groupidchange = false, portalteleport = false;
-   fixed_t prex, prey;
+   fixed_t prex = x, prey = y;
 
    PODCollection<line_t *> pushhit;
    PODCollection<line_t *> *pPushHit = full_demo_version >= make_full_version(401, 0) ? &pushhit : 
@@ -1755,6 +1756,16 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    // the move is ok,
    // so unlink from the old position and link into the new position
 
+   // Now check if it should carry things above it
+
+   MobjCollection carrylist;
+   if(thing->flags4 & MF4_CARRY)
+   {
+      doom_mapinter_t lclip;
+      P_FindAboveIntersectors(thing, lclip, carrylist);
+   }
+
+
    P_UnsetThingPosition (thing);
    
    // Check portal teleportation
@@ -1821,6 +1832,15 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 
       // haleyjd 01/09/07: do not leave numspechit == -1
       clip.numspechit = 0;
+   }
+
+   // Now carry things on top of this, if applicable
+   for(Mobj *carry : carrylist)
+   {
+      // Don't carry floating objects unless they're players pushing down
+      if(carry->flags & MF_NOGRAVITY && !(carry->flags4 & MF4_FLY))
+         continue;
+      P_TryMove(carry, carry->x + prex - oldx, carry->y + prey - oldy, 1);
    }
 
    return true;
