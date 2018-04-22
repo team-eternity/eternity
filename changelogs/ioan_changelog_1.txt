@@ -8,6 +8,12 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+22.04.2018
+
+BUGFIX: Fixed a long-standing problem with double skies (feature from Hexen) not
+        working at all as expected.
+
+--------------------------------------------------------------------------------
 19.04.2018
 
 FEATURE: Added hitscan puff type EDF definitions, which is necessary for Heretic
