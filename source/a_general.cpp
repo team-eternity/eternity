@@ -1049,7 +1049,7 @@ void A_ThingSummon(actionargs_t *actionargs)
    // If it is, then we don't allow the spawn.
    
    // ioanch 20160107: use position directly next to summoner.
-   if(Check_Sides(actor, relpos.x, relpos.y))
+   if(Check_Sides(actor, relpos.x, relpos.y, type))
       return;
 
    newmobj = P_SpawnMobj(x, y, z, type);

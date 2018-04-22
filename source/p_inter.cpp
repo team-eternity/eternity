@@ -1662,7 +1662,7 @@ void P_Whistle(Mobj *actor, int mobjtype)
       z = actor->z;
 
       // don't cross "solid" lines
-      if(Check_Sides(actor, x, y))
+      if(Check_Sides(actor, x, y, mo->type))
          return;
 
       // try the teleport

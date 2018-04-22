@@ -1664,7 +1664,7 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
       
       fixed_t z = (mobjinfo[type]->flags & MF_SPAWNCEILING) ? ONCEILINGZ : ONFLOORZ;
       
-      if(Check_Sides(plyr->mo, x, y))
+      if(Check_Sides(plyr->mo, x, y, type))
          return;
       
       newmobj = P_SpawnMobj(x, y, z, type);

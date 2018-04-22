@@ -1086,7 +1086,7 @@ void A_PainShootSkull(Mobj *actor, angle_t angle)
       // ioanch 20160107: check sides against the non-translated position. This 
       // way the two coordinates will be in valid range and it will only check
       // sides against the passable portal line
-      if (Check_Sides(actor, relpos.x, relpos.y))
+      if (Check_Sides(actor, relpos.x, relpos.y, skullType))
          return;
       
       newmobj = P_SpawnMobj(x, y, z, skullType);

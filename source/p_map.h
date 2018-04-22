@@ -111,7 +111,7 @@ fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance,int mask);
 void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance, fixed_t slope, 
                   int damage, const char *pufftype = nullptr);
 
-bool Check_Sides(Mobj *, int, int); // phares
+bool Check_Sides(Mobj *, int, int, mobjtype_t type); // phares
 
 //=============================================================================
 //

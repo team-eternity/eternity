@@ -562,8 +562,10 @@ bool P_PortalTeleportMove(Mobj *thing, fixed_t x, fixed_t y)
 
 static bool PIT_CrossLine(line_t *ld, polyobj_s *po, void *context)
 {
+   auto type = static_cast<const mobjtype_t *>(context);
    // SoM 9/7/02: wow a killoughism... * SoM is scared
-   int flags = ML_TWOSIDED | ML_BLOCKING | ML_BLOCKMONSTERS;
+   int flags = ML_TWOSIDED | ML_BLOCKING |
+      (mobjinfo[*type]->flags4 & MF4_NOMONSTERBLOCK ? 0 : ML_BLOCKMONSTERS);
 
    if(ld->flags & ML_3DMIDTEX)
       flags &= ~ML_BLOCKMONSTERS;
@@ -1148,7 +1150,7 @@ static bool PIT_CheckThing(Mobj *thing) // killough 3/26/98: make static
 // sides of the blocking line. If so, return true, otherwise
 // false.
 //
-bool Check_Sides(Mobj *actor, int x, int y)
+bool Check_Sides(Mobj *actor, int x, int y, mobjtype_t type)
 {
    int bx,by,xl,xh,yl,yh;
    
@@ -1176,7 +1178,7 @@ bool Check_Sides(Mobj *actor, int x, int y)
    validcount++; // prevents checking same line twice
    for(bx = xl ; bx <= xh ; bx++)
       for (by = yl ; by <= yh ; by++)
-         if(!P_BlockLinesIterator(bx,by,PIT_CrossLine))
+         if(!P_BlockLinesIterator(bx,by,PIT_CrossLine, R_NOGROUP, &type))
             return true;                                          //   ^
    return false;                                                  //   |
 }                                                                 // phares
