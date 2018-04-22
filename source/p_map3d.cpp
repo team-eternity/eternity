@@ -913,7 +913,7 @@ static bool PIT_FindAboveIntersectors(Mobj *thing, void *context)
    return true;
 }
 
-bool PIT_FindBelowIntersectors(Mobj *thing, void *context)
+static bool PIT_FindBelowIntersectors(Mobj *thing, void *context)
 {
    fixed_t blockdist;
    if(!(thing->flags & MF_SOLID) ||               // Can't hit thing?
