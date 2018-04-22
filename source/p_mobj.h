@@ -709,7 +709,7 @@ enum mobjflags4_e : unsigned int
    MF4_FRIENDFOEMISSILE   = 0x00400000, // friends and foes of same species hurt each other
    MF4_BLOODLESSIMPACT    = 0x00800000, // doesn't draw blood when it hits or rips a thing
    MF4_HERETICBOUNCES     = 0x01000000, // thing bounces à la Heretic
-   MF4_NOMONSTERBLOCK     = 0x02000000, // not blocked by blockmonsters.
+   MF4_MONSTERPASS        = 0x02000000, // not blocked by blockmonsters.
    MF4_NOTAUTOAIMED       = 0x04000000, // can't be autoaimed.
 };
 

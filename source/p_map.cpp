@@ -565,7 +565,7 @@ static bool PIT_CrossLine(line_t *ld, polyobj_s *po, void *context)
    auto type = static_cast<const mobjtype_t *>(context);
    // SoM 9/7/02: wow a killoughism... * SoM is scared
    int flags = ML_TWOSIDED | ML_BLOCKING |
-      (mobjinfo[*type]->flags4 & MF4_NOMONSTERBLOCK ? 0 : ML_BLOCKMONSTERS);
+      (mobjinfo[*type]->flags4 & MF4_MONSTERPASS ? 0 : ML_BLOCKMONSTERS);
 
    if(ld->flags & ML_3DMIDTEX)
       flags &= ~ML_BLOCKMONSTERS;
@@ -703,7 +703,7 @@ void P_CollectSpechits(line_t *ld, PODCollection<line_t *> *pushhit)
 bool P_BlockedAsMonster(const Mobj &mo)
 {
    return !(mo.flags & MF_FRIEND) && !mo.player &&
-          !(mo.flags4 & MF4_NOMONSTERBLOCK);
+          !(mo.flags4 & MF4_MONSTERPASS);
 }
 
 //
