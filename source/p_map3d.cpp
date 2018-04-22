@@ -947,8 +947,8 @@ bool PIT_FindBelowIntersectors(Mobj *thing, void *context)
 // Finds all the things above the thing being moved and puts them into an
 // MobjCollection (this is partially explained above). From zdoom.
 //
-static void P_FindAboveIntersectors(Mobj *actor, doom_mapinter_t &mapinter,
-                                    MobjCollection &coll)
+void P_FindAboveIntersectors(Mobj *actor, doom_mapinter_t &mapinter,
+                             MobjCollection &coll)
 {
    fixed_t x, y;
 
