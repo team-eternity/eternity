@@ -865,6 +865,15 @@ static bool P_AdjustFloorCeil(Mobj *thing, bool midtex)
 }
 
 //
+// Context for finding intersectors
+//
+struct intersectctx_t
+{
+   doom_mapinter_t &clip;
+   MobjCollection &coll;
+};
+
+//
 // PIT_FindAboveIntersectors
 //
 // haleyjd: From zdoom. I was about to implement this exact type of iterative
@@ -875,25 +884,31 @@ static bool P_AdjustFloorCeil(Mobj *thing, bool midtex)
 //
 static bool PIT_FindAboveIntersectors(Mobj *thing, void *context)
 {
+   auto &ctx = *static_cast<intersectctx_t *>(context);
+
    fixed_t blockdist;
    if(!(thing->flags & MF_SOLID) ||               // Can't hit thing?
       (thing->flags & MF_SPECIAL) ||  // Corpse or special?
-      thing == clip.thing)                         // clipping against self?
+      thing == ctx.clip.thing)                         // clipping against self?
       return true;
    
-   blockdist = thing->radius + clip.thing->radius;
+   blockdist = thing->radius + ctx.clip.thing->radius;
    
    // Be portal aware
-   const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid, thing->groupid);
+   const linkoffset_t *link = P_GetLinkOffset(ctx.clip.thing->groupid,
+                                              thing->groupid);
 
    // Didn't hit thing?
-   if(D_abs(thing->x - link->x - clip.x) >= blockdist || 
-      D_abs(thing->y - link->y - clip.y) >= blockdist)
+   if(D_abs(thing->x - link->x - ctx.clip.x) >= blockdist ||
+      D_abs(thing->y - link->y - ctx.clip.y) >= blockdist)
       return true;
 
    // Thing intersects above the base?
-   if(thing->z >= clip.thing->z && thing->z <= clip.thing->z + clip.thing->height)
-      intersectors.add(thing);
+   if(thing->z >= ctx.clip.thing->z &&
+      thing->z <= ctx.clip.thing->z + ctx.clip.thing->height)
+   {
+      ctx.coll.add(thing);
+   }
 
    return true;
 }
@@ -932,7 +947,8 @@ bool PIT_FindBelowIntersectors(Mobj *thing, void *context)
 // Finds all the things above the thing being moved and puts them into an
 // MobjCollection (this is partially explained above). From zdoom.
 //
-static void P_FindAboveIntersectors(Mobj *actor)
+static void P_FindAboveIntersectors(Mobj *actor, doom_mapinter_t &mapinter,
+                                    MobjCollection &coll)
 {
    fixed_t x, y;
 
@@ -942,24 +958,27 @@ static void P_FindAboveIntersectors(Mobj *actor)
    if(!(actor->flags & MF_SOLID))
       return;
 
-   clip.x = x = actor->x;
-   clip.y = y = actor->y;
-   clip.thing = actor;
+   mapinter.x = x = actor->x;
+   mapinter.y = y = actor->y;
+   mapinter.thing = actor;
 
-   clip.bbox[BOXTOP]    = y + actor->radius;
-   clip.bbox[BOXBOTTOM] = y - actor->radius;
-   clip.bbox[BOXRIGHT]  = x + actor->radius;
-   clip.bbox[BOXLEFT]   = x - actor->radius;
+   mapinter.bbox[BOXTOP]    = y + actor->radius;
+   mapinter.bbox[BOXBOTTOM] = y - actor->radius;
+   mapinter.bbox[BOXRIGHT]  = x + actor->radius;
+   mapinter.bbox[BOXLEFT]   = x - actor->radius;
 
    fixed_t bbox[4];
-   bbox[BOXLEFT] = clip.bbox[BOXLEFT] - MAXRADIUS;
-   bbox[BOXRIGHT] = clip.bbox[BOXRIGHT] + MAXRADIUS;
-   bbox[BOXBOTTOM] = clip.bbox[BOXBOTTOM] - MAXRADIUS;
-   bbox[BOXTOP] = clip.bbox[BOXTOP] + MAXRADIUS;
+   bbox[BOXLEFT] = mapinter.bbox[BOXLEFT] - MAXRADIUS;
+   bbox[BOXRIGHT] = mapinter.bbox[BOXRIGHT] + MAXRADIUS;
+   bbox[BOXBOTTOM] = mapinter.bbox[BOXBOTTOM] - MAXRADIUS;
+   bbox[BOXTOP] = mapinter.bbox[BOXTOP] + MAXRADIUS;
 
-   if(!P_TransPortalBlockWalker(bbox, actor->groupid, true, nullptr,
+   intersectctx_t ctx = { mapinter, coll };
+
+   if(!P_TransPortalBlockWalker(bbox, actor->groupid, true, &ctx,
       [](int x, int y, int groupid, void *data) -> bool {
-      return P_BlockThingsIterator(x, y, groupid, PIT_FindAboveIntersectors);
+      return P_BlockThingsIterator(x, y, groupid, PIT_FindAboveIntersectors,
+                                    data);
    }))
       return;
 
@@ -1088,7 +1107,7 @@ static int P_PushUp(Mobj *thing)
    if(thing->z + thing->height > thing->ceilingz)
       return 1;
 
-   P_FindAboveIntersectors(thing);
+   P_FindAboveIntersectors(thing, clip, intersectors);
    lastintersect = static_cast<unsigned>(intersectors.getLength());
    for(; firstintersect < lastintersect; ++firstintersect)
    {
