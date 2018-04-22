@@ -674,6 +674,8 @@ void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcol)
    
    column.texheight = 0; // killough 11/98
 
+   const byte *texend = tex->buffer + tex->width * tex->height + 1;
+
    while(tcol)
    {
       // calculate unclipped screen coordinates for post
@@ -689,9 +691,19 @@ void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcol)
          column.source = tex->buffer + tcol->ptroff;
          column.texmid = basetexturemid - (tcol->yoff << FRACBITS);
 
+         byte *last = tex->buffer + tcol->ptroff + tcol->len;
+         byte orig;
+         if(last < texend && last > tex->buffer)
+         {
+            orig = *last;
+            *last = last[-1];
+         }
+
          // Drawn by either R_DrawColumn
          //  or (SHADOW) R_DrawFuzzColumn.
          colfunc();
+         if(last < texend && last > tex->buffer)
+            *last = orig;
       }
 
       tcol = tcol->next;

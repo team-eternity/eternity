@@ -661,14 +661,6 @@ static void AddTexColumn(texture_t *tex, const byte *src, int srcstep,
          *mask = 255; mask++;
          len--;
       }
-
-      // Repeat last texel to cover one-pixel overflows in column drawing
-      // Accept from the ENTIRE buffer, see haleyjd's note in StartTexture()
-      if(dest > tex->buffer + ptroff &&
-         dest < tex->buffer + tex->width * tex->height + 4)
-      {
-         *dest = *(dest - 1);
-      }
    }
    else
    {
