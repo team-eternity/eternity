@@ -1479,6 +1479,12 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    if(target->health <= 0)
    {
       // death messages for players
+      if(target->flags3 & MF3_NOTHRESHOLD &&
+         full_demo_version >= make_full_version(401, 0))
+      {
+         // Also update target if MF3_NOTHRESHOLD when killed (except demos)
+         P_SetTarget(&target->target, source);
+      }
       if(player)
       {
          // haleyjd 12/29/10: immortality cheat
