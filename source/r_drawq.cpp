@@ -987,6 +987,93 @@ static void R_QDrawColumn()
    }
 } 
 
+//
+// Hexen-style double-sky drawer. Like R_QDrawColumn but avoids drawing if
+// source has index 0.
+//
+static void R_QDrawNewSkyColumn()
+{
+   int      count;
+   byte    *dest;            // killough
+   fixed_t  frac;            // killough
+   fixed_t  fracstep;
+
+   count = column.y2 - column.y1 + 1;
+
+   if(count <= 0)    // Zero length, column does not exceed a pixel.
+      return;
+
+#ifdef RANGECHECK
+   if(column.x  < 0 || column.x  >= video.width ||
+      column.y1 < 0 || column.y2 >= video.height)
+      I_Error("R_QDrawColumn: %i to %i at %i\n", column.y1, column.y2, column.x);
+#endif
+
+   // Framebuffer destination address.
+   // SoM: MAGIC
+   dest = R_GetBufferOpaque();
+
+   // Determine scaling, which is the only mapping to be done.
+
+   fracstep = column.step;
+   frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
+
+   // Inner loop that does the actual texture mapping,
+   //  e.g. a DDA-lile scaling.
+   // This is as fast as it gets.       (Yeah, right!!! -- killough)
+   //
+   // killough 2/1/98: more performance tuning
+
+   {
+      const byte *source = (const byte *)(column.source);
+      const lighttable_t *colormap = column.colormap;
+      int heightmask = column.texheight-1;
+
+      if(column.texheight & heightmask)   // not a power of 2 -- killough
+      {
+         heightmask++;
+         heightmask <<= FRACBITS;
+
+         if (frac < 0)
+            while ((frac += heightmask) <  0);
+         else
+            while (frac >= (int)heightmask)
+               frac -= heightmask;
+
+         do
+         {
+            // Re-map color indices from wall texture column
+            //  using a lighting/special effects LUT.
+
+            // heightmask is the Tutti-Frutti fix -- killough
+
+            if(source[frac>>FRACBITS])
+               *dest = colormap[source[frac>>FRACBITS]];
+            dest += 4; //SoM: Oh, Oh it's MAGIC! You know...
+            if((frac += fracstep) >= (int)heightmask)
+               frac -= heightmask;
+         }
+         while(--count);
+      }
+      else
+      {
+         while((count -= 2) >= 0)   // texture height is a power of 2 -- killough
+         {
+            if(source[(frac>>FRACBITS) & heightmask])
+               *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
+            dest += 4; //SoM: MAGIC
+            frac += fracstep;
+            if(source[(frac>>FRACBITS) & heightmask])
+               *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
+            dest += 4;
+            frac += fracstep;
+         }
+         if(count & 1 && source[(frac>>FRACBITS) & heightmask])
+            *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
+      }
+   }
+}
+
 static void R_QDrawTLColumn()                                           
 { 
    int      count; 
@@ -1547,6 +1634,7 @@ static void R_QDrawAddTRColumn(void)
 columndrawer_t r_quad_drawer =
 {
    R_QDrawColumn,
+   R_QDrawNewSkyColumn,
    R_QDrawTLColumn,
    R_QDrawTRColumn,
    R_QDrawTLTRColumn,

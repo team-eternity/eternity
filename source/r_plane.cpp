@@ -854,8 +854,6 @@ static void R_MakeSpans(int x, int t1, int b1, int t2, int b2)
       spanstart[b2--] = x;
 }
 
-extern void R_DrawNewSkyColumn();
-
 // haleyjd: moved here from r_newsky.c
 void do_draw_newsky(visplane_t *pl)
 {
@@ -916,6 +914,7 @@ void do_draw_newsky(visplane_t *pl)
    else
       column.step = M_FloatToFixed(view.pspriteystep);
       
+   colfunc = r_column_engine->DrawNewSkyColumn;
    for(x = pl->minx; (column.x = x) <= pl->maxx; x++)
    {
       if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
@@ -927,6 +926,7 @@ void do_draw_newsky(visplane_t *pl)
          colfunc();
       }
    }
+   colfunc = r_column_engine->DrawColumn;
 }
 
 // Log base 2 LUT
