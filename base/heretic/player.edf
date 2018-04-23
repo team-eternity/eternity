@@ -16,7 +16,7 @@ weaponinfo Staff
 
   sisterweapon StaffPowered
 
-  flags        FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS
+  flags        FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS|AUTOSWITCHFROM
   //mod          ""
   recoil       10
 
@@ -74,7 +74,7 @@ weaponinfo GoldWand
 
   sisterweapon GoldWandPowered
 
-  flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL
+  flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL|AUTOSWITCHFROM
   //mod          ""
   recoil       10
   hapticrecoil 1
