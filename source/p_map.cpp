@@ -1759,7 +1759,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    // Now check if it should carry things above it
 
    MobjCollection carrylist;
-   if(thing->flags4 & MF4_CARRY)
+   if(P_Use3DClipping() && thing->flags4 & MF4_CARRY)
    {
       doom_mapinter_t lclip;
       P_FindAboveIntersectors(thing, lclip, carrylist);
