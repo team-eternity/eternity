@@ -1478,13 +1478,12 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    // check for death
    if(target->health <= 0)
    {
-      // death messages for players
-      if(target->flags3 & MF3_NOTHRESHOLD &&
-         full_demo_version >= make_full_version(401, 0))
-      {
-         // Also update target if MF3_NOTHRESHOLD when killed (except demos)
+      // There's no need to also check the type or flags of source (vanilla He-
+      // retic pods can't initiate attacks).
+      if(target->flags4 & MF4_SETTARGETONDEATH && source)
          P_SetTarget(&target->target, source);
-      }
+
+      // death messages for players
       if(player)
       {
          // haleyjd 12/29/10: immortality cheat

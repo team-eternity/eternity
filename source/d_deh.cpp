@@ -344,6 +344,7 @@ dehflags_t deh_mobjflags[] =
   {"MONSTERPASS",        0x02000000, 3},
   {"NOTAUTOAIMED",       0x04000000, 3},
   {"CARRY",              0x08000000, 3},
+  {"SETTARGETONDEATH",   0x10000000, 3},
 
   { NULL,              0 }             // NULL terminator
 };
