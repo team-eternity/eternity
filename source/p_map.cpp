@@ -44,7 +44,6 @@
 #include "p_maputl.h"
 #include "p_map.h"
 #include "p_map3d.h"
-#include "p_mobjcol.h"
 #include "p_partcl.h"
 #include "p_portal.h"
 #include "p_portalblockmap.h"
@@ -165,7 +164,7 @@ static bool ignore_inerts = true;
 // telefragged. This simply will not do.
 static bool stomp3d = false;
 
-static bool PIT_StompThing3D(Mobj *thing, void *context)
+static bool PIT_StompThing3D(Mobj *thing)
 {
    fixed_t blockdist;
    
@@ -213,7 +212,7 @@ static bool PIT_StompThing3D(Mobj *thing, void *context)
 #endif
 
 
-static bool PIT_StompThing(Mobj *thing, void *context)
+static bool PIT_StompThing(Mobj *thing)
 {
    fixed_t blockdist;
    
@@ -392,7 +391,7 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
 {
    int xl, xh, yl, yh, bx, by;
    subsector_t *newsubsec;
-   bool (*func)(Mobj *, void *);
+   bool (*func)(Mobj *);
    
    // killough 8/9/98: make telefragging more consistent, preserve compatibility
    // haleyjd 03/25/03: TELESTOMP flag handling moved here (was thing->player)
@@ -948,7 +947,7 @@ bool P_AllowMissileDamage(const Mobj &shooter, const Mobj &target)
 //
 // PIT_CheckThing
 // 
-static bool PIT_CheckThing(Mobj *thing, void *context) // killough 3/26/98: make static
+static bool PIT_CheckThing(Mobj *thing) // killough 3/26/98: make static
 {
    fixed_t blockdist;
 
@@ -1516,7 +1515,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    clip.felldown = clip.floatok = false;               // killough 11/98
 
    bool groupidchange = false, portalteleport = false;
-   fixed_t prex = x, prey = y;
+   fixed_t prex, prey;
 
    PODCollection<line_t *> pushhit;
    PODCollection<line_t *> *pPushHit = full_demo_version >= make_full_version(401, 0) ? &pushhit : 
@@ -1756,16 +1755,6 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    // the move is ok,
    // so unlink from the old position and link into the new position
 
-   // Now check if it should carry things above it
-
-   MobjCollection carrylist;
-   if(P_Use3DClipping() && thing->flags4 & MF4_CARRY)
-   {
-      doom_mapinter_t lclip;
-      P_FindAboveIntersectors(thing, lclip, carrylist);
-   }
-
-
    P_UnsetThingPosition (thing);
    
    // Check portal teleportation
@@ -1832,15 +1821,6 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 
       // haleyjd 01/09/07: do not leave numspechit == -1
       clip.numspechit = 0;
-   }
-
-   // Now carry things on top of this, if applicable
-   for(Mobj *carry : carrylist)
-   {
-      // Don't carry floating objects unless they're players pushing down
-      if(carry->flags & MF_NOGRAVITY && !(carry->flags4 & MF4_FLY))
-         continue;
-      P_TryMove(carry, carry->x + prex - oldx, carry->y + prey - oldy, 1);
    }
 
    return true;
@@ -2434,7 +2414,7 @@ static bombdata_t *theBomb;        // it's the bomb, man. (the current explosion
 //
 // "bombsource" is the creature that caused the explosion at "bombspot".
 //
-static bool PIT_RadiusAttack(Mobj *thing, void *context)
+static bool PIT_RadiusAttack(Mobj *thing)
 {
    fixed_t dx, dy, dist;
    Mobj *bombspot     = theBomb->bombspot;
@@ -2581,7 +2561,7 @@ void P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int distance,
 //
 // PIT_ChangeSector
 //
-static bool PIT_ChangeSector(Mobj *thing, void *context)
+static bool PIT_ChangeSector(Mobj *thing)
 {
    if(P_ThingHeightClip(thing))
       return true; // keep checking
@@ -2720,7 +2700,7 @@ bool P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil)
          {
             n->visited  = true;              // mark thing as processed
             if(!(n->m_thing->flags & MF_NOBLOCKMAP)) //jff 4/7/98 don't do these
-               PIT_ChangeSector(n->m_thing, nullptr); // process it
+               PIT_ChangeSector(n->m_thing); // process it
             break;                           // exit and start over
          }
       }
