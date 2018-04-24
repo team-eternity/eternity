@@ -2441,7 +2441,7 @@ thingtype HereticPlayer : Mobj, -1, 398
   height       56.0
   painsound    ht_plrpai
   deathsound   ht_plrdth
-  cflags       SOLID|SHOOTABLE|DROPOFF|PICKUP|NOTDMATCH|FOOTCLIP|SLIDE|TELESTOMP|WINDTHRUST|PASSMOBJ|NOSOUNDCUTOFF
+  cflags       SOLID|SHOOTABLE|DROPOFF|PICKUP|NOTDMATCH|FOOTCLIP|SLIDE|TELESTOMP|WINDTHRUST|PASSMOBJ|NOSOUNDCUTOFF|STICKY
   mod          PlayerMisc
 
   firstdecoratestate S_HPLAY
