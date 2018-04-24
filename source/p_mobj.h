@@ -711,7 +711,7 @@ enum mobjflags4_e : unsigned int
    MF4_HERETICBOUNCES     = 0x01000000, // thing bounces à la Heretic
    MF4_MONSTERPASS        = 0x02000000, // not blocked by blockmonsters.
    MF4_NOTAUTOAIMED       = 0x04000000, // can't be autoaimed.
-   MF4_CARRY              = 0x08000000, // can carry other things on top of it.
+   MF4_STICKY             = 0x08000000, // can carry other things on top of it.
    MF4_SETTARGETONDEATH   = 0x10000000  // target is updated even when one-shot
 };
 
