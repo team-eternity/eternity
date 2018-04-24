@@ -1424,6 +1424,11 @@ void Mobj::Think()
             {
                P_PlayerHitFloor(this, true);
             }
+            if(player && onmo->flags4 & MF4_STICKY)
+            {
+               player->momx = momx = onmo->momx;
+               player->momy = momy = onmo->momy;
+            }
             if(onmo->z + onmo->height - z <= STEPSIZE)
             {
                if(player && player->mo == this)
