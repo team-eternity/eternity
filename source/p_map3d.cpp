@@ -166,32 +166,43 @@ floater:
 static Mobj *testz_mobj; // used to hold object found by P_TestMobjZ
 
 //
+// Data to carry to testmobjz
+//
+struct testmobjzdata_t
+{
+   doom_mapinter_t &clip;
+   Mobj *&testz_mobj;
+};
+
+//
 // PIT_TestMobjZ
 //
 // Derived from zdoom; iterator function for P_TestMobjZ
 //
 static bool PIT_TestMobjZ(Mobj *thing, void *context)
 {
-   fixed_t blockdist = thing->radius + clip.thing->radius;
+   testmobjzdata_t &data = *static_cast<testmobjzdata_t *>(context);
+
+   fixed_t blockdist = thing->radius + data.clip.thing->radius;
 
    if(!(thing->flags & MF_SOLID) ||                      // non-solid?
       thing->flags & (MF_SPECIAL|MF_NOCLIP) || // other is special?
-      clip.thing->flags & MF_SPECIAL ||                   // this is special?
-      thing == clip.thing ||                              // same as self?
-      clip.thing->z > thing->z + thing->height ||         // over?
-      clip.thing->z + clip.thing->height <= thing->z)      // under?
+      data.clip.thing->flags & MF_SPECIAL ||                   // this is special?
+      thing == data.clip.thing ||                              // same as self?
+      data.clip.thing->z > thing->z + thing->height ||         // over?
+      data.clip.thing->z + data.clip.thing->height <= thing->z)      // under?
    {
       return true;
    }
 
    // test against collision - from PIT_CheckThing:
    // ioanch 20160110: portal aware
-   if(D_abs(getThingX(clip.thing, thing) - clip.x) >= blockdist || 
-      D_abs(getThingY(clip.thing, thing) - clip.y) >= blockdist)
+   if(D_abs(getThingX(data.clip.thing, thing) - data.clip.x) >= blockdist ||
+      D_abs(getThingY(data.clip.thing, thing) - data.clip.y) >= blockdist)
       return true;
 
    // the thing may be blocking; save a pointer to it
-   testz_mobj = thing;
+   data.testz_mobj = thing;
    return false;
 }
 
@@ -200,7 +211,7 @@ static bool PIT_TestMobjZ(Mobj *thing, void *context)
 //
 // From zdoom; tests a thing's z position for validity.
 //
-bool P_TestMobjZ(Mobj *mo)
+bool P_TestMobjZ(Mobj *mo, doom_mapinter_t &clip, Mobj **testz_mobj)
 {
    // a no-clipping thing is always good
    if(mo->flags & MF_NOCLIP)
@@ -223,10 +234,12 @@ bool P_TestMobjZ(Mobj *mo)
    bbox[BOXBOTTOM] = clip.bbox[BOXBOTTOM] - MAXRADIUS;
    bbox[BOXTOP] = clip.bbox[BOXTOP] + MAXRADIUS;
 
-   if(!P_TransPortalBlockWalker(bbox, mo->groupid, true, nullptr, 
+   testmobjzdata_t data = { clip, testz_mobj ? *testz_mobj : ::testz_mobj };
+
+   if(!P_TransPortalBlockWalker(bbox, mo->groupid, true, &data,
       [](int x, int y, int groupid, void *data) -> bool
    {
-      return P_BlockThingsIterator(x, y, groupid, PIT_TestMobjZ);
+      return P_BlockThingsIterator(x, y, groupid, PIT_TestMobjZ, data);
    }))
       return false;
 
@@ -247,7 +260,7 @@ Mobj *P_GetThingUnder(Mobj *mo)
    // fake the move, then test
    P_ZMovementTest(mo);
    testz_mobj = NULL;
-   P_TestMobjZ(mo);
+   P_TestMobjZ(mo, clip);
 
    // restore z
    mo->z = mo_z;
@@ -1290,7 +1303,7 @@ static void PIT_CeilingRaise(Mobj *thing)
    else if(/*(thing->flags3 & MF3_PASSMOBJ) &&*/ !isgood && 
            thing->z + thing->height < thing->ceilingz)
    {
-      if(!P_TestMobjZ(thing) && testz_mobj->z <= thing->z)
+      if(!P_TestMobjZ(thing, clip) && testz_mobj->z <= thing->z)
       {
          fixed_t ceildiff = thing->ceilingz - thing->height;
          fixed_t thingtop = testz_mobj->z + testz_mobj->height;

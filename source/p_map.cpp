@@ -1699,7 +1699,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             fixed_t savedz = thing->z;
             bool good;
             thing->z = clip.floorz;
-            good = P_TestMobjZ(thing);
+            good = P_TestMobjZ(thing, clip);
             thing->z = savedz;
             if(!good)
             {
@@ -2230,7 +2230,7 @@ static bool PTR_SlideTraverse(intercept_t *in, void *context)
       bool good;
       fixed_t savedz = slidemo->z;
       slidemo->z = clip.openbottom;
-      good = P_TestMobjZ(slidemo);
+      good = P_TestMobjZ(slidemo, clip);
       slidemo->z = savedz;
       if(!good)
          goto isblocking;

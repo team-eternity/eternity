@@ -29,10 +29,11 @@
 #include "m_collection.h"
 
 class Mobj;
+struct doom_mapinter_t;
 struct sector_t;
 
 bool  P_Use3DClipping();
-bool  P_TestMobjZ(Mobj *mo);
+bool  P_TestMobjZ(Mobj *mo, doom_mapinter_t &clip, Mobj **testz_mobj = nullptr);
 bool  P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, 
    PODCollection<line_t *> *pushhit = nullptr);
 bool  P_CheckPositionExt(Mobj *mo, fixed_t x, fixed_t y, fixed_t z);

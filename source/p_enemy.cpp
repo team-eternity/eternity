@@ -534,7 +534,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
          // [RH] Check to make sure there's nothing in the way of the float
          if(P_Use3DClipping())
          {
-            if(P_TestMobjZ(actor))
+            if(P_TestMobjZ(actor, clip))
             {
                actor->flags |= MF_INFLOAT;
                return true;
