@@ -878,6 +878,15 @@ static bool P_AdjustFloorCeil(Mobj *thing, bool midtex)
 }
 
 //
+// Data for finding intersectors
+//
+struct intersectordata_t
+{
+   doom_mapinter_t &clip;
+   MobjCollection &intersectors;
+};
+
+//
 // PIT_FindAboveIntersectors
 //
 // haleyjd: From zdoom. I was about to implement this exact type of iterative
@@ -888,25 +897,31 @@ static bool P_AdjustFloorCeil(Mobj *thing, bool midtex)
 //
 static bool PIT_FindAboveIntersectors(Mobj *thing, void *context)
 {
+   intersectordata_t &data = *static_cast<intersectordata_t *>(context);
+
    fixed_t blockdist;
    if(!(thing->flags & MF_SOLID) ||               // Can't hit thing?
       (thing->flags & MF_SPECIAL) ||  // Corpse or special?
-      thing == clip.thing)                         // clipping against self?
+      thing == data.clip.thing)                         // clipping against self?
       return true;
    
-   blockdist = thing->radius + clip.thing->radius;
+   blockdist = thing->radius + data.clip.thing->radius;
    
    // Be portal aware
-   const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid, thing->groupid);
+   const linkoffset_t *link = P_GetLinkOffset(data.clip.thing->groupid,
+                                              thing->groupid);
 
    // Didn't hit thing?
-   if(D_abs(thing->x - link->x - clip.x) >= blockdist || 
-      D_abs(thing->y - link->y - clip.y) >= blockdist)
+   if(D_abs(thing->x - link->x - data.clip.x) >= blockdist ||
+      D_abs(thing->y - link->y - data.clip.y) >= blockdist)
       return true;
 
    // Thing intersects above the base?
-   if(thing->z >= clip.thing->z && thing->z <= clip.thing->z + clip.thing->height)
-      intersectors.add(thing);
+   if(thing->z >= data.clip.thing->z &&
+      thing->z <= data.clip.thing->z + data.clip.thing->height)
+   {
+      data.intersectors.add(thing);
+   }
 
    return true;
 }
@@ -945,7 +960,8 @@ static bool PIT_FindBelowIntersectors(Mobj *thing, void *context)
 // Finds all the things above the thing being moved and puts them into an
 // MobjCollection (this is partially explained above). From zdoom.
 //
-static void P_FindAboveIntersectors(Mobj *actor)
+void P_FindAboveIntersectors(Mobj *actor, doom_mapinter_t &clip,
+                             MobjCollection &coll)
 {
    fixed_t x, y;
 
@@ -970,9 +986,12 @@ static void P_FindAboveIntersectors(Mobj *actor)
    bbox[BOXBOTTOM] = clip.bbox[BOXBOTTOM] - MAXRADIUS;
    bbox[BOXTOP] = clip.bbox[BOXTOP] + MAXRADIUS;
 
-   if(!P_TransPortalBlockWalker(bbox, actor->groupid, true, nullptr,
+   intersectordata_t data = { clip, coll };
+
+   if(!P_TransPortalBlockWalker(bbox, actor->groupid, true, &data,
       [](int x, int y, int groupid, void *data) -> bool {
-      return P_BlockThingsIterator(x, y, groupid, PIT_FindAboveIntersectors);
+      return P_BlockThingsIterator(x, y, groupid, PIT_FindAboveIntersectors,
+                                   data);
    }))
       return;
 
@@ -1101,7 +1120,7 @@ static int P_PushUp(Mobj *thing)
    if(thing->z + thing->height > thing->ceilingz)
       return 1;
 
-   P_FindAboveIntersectors(thing);
+   P_FindAboveIntersectors(thing, clip, intersectors);
    lastintersect = static_cast<unsigned>(intersectors.getLength());
    for(; firstintersect < lastintersect; ++firstintersect)
    {
