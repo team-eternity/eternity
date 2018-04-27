@@ -44,6 +44,7 @@
 #include "p_maputl.h"
 #include "p_map.h"
 #include "p_map3d.h"
+#include "p_mobjcol.h"
 #include "p_partcl.h"
 #include "p_portal.h"
 #include "p_portalblockmap.h"
@@ -1488,6 +1489,61 @@ static void P_RunPushSpechits(Mobj &thing, PODCollection<line_t *> &pushhit)
 }
 
 //
+// Checks if a thing can carry upper things up from an intended floorz. Assumed
+// floorz > thing.z.
+//
+static bool P_checkCarryUp(Mobj &thing, fixed_t floorz)
+{
+   if(!(thing.flags4 & MF4_STICKY))
+      return false;
+   fixed_t orgz = thing.z;
+   thing.z = floorz;
+   MobjCollection coll;
+   PODCollection<fixed_t> orgzcoll;
+   doom_mapinter_t clip;
+   P_FindAboveIntersectors(&thing, clip, coll); // already aware of MF_SOLID
+   auto resetcoll = [&coll, orgz, &orgzcoll, &thing](const Mobj *other) {
+      size_t i = 0;
+      for(Mobj **previous = coll.begin(); *previous != other; ++previous)
+         (*previous)->z = orgzcoll[i++];
+      thing.z = orgz;
+   };
+   static Mobj *dummy;
+   for(Mobj *other : coll)
+   {
+      if(!other->player)   // already collided with a non-player? Fail.
+      {
+         resetcoll(other);
+         return false;
+      }
+      orgzcoll.add(other->z);
+      other->z = thing.z + thing.height; // move it on top
+      P_ZMovementTest(other); // it may bob back down due to ceiling
+      if(!P_TestMobjZ(other, clip, &dummy))  // if it gets stuck, fail.
+      {
+         other->z = orgzcoll.pop();
+         resetcoll(other);
+         return false;
+      }
+      other->z = thing.z + thing.height;   // remake position after the test
+   }
+   thing.z = orgz;
+   // Success? Check if any of these is a player
+   fixed_t *orgzit = orgzcoll.begin();
+   for(Mobj *other : coll)
+   {
+      if(other->player && other->player->mo == other)
+      {
+         other->player->viewheight += *orgzit - other->z;
+         other->player->deltaviewheight =
+         (VIEWHEIGHT - other->player->viewheight) >> 3;
+      }
+      ++orgzit;
+   }
+   return true;
+}
+
+//
 // P_TryMove
 //
 // Attempt to move to a new position,
@@ -1701,7 +1757,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             thing->z = clip.floorz;
             good = P_TestMobjZ(thing, clip);
             thing->z = savedz;
-            if(!good)
+            if(!good && !P_checkCarryUp(*thing, clip.floorz))
             {
                P_RunPushSpechits(*thing, pushhit);
                return false;
