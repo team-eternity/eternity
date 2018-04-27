@@ -170,7 +170,7 @@ static Mobj *testz_mobj; // used to hold object found by P_TestMobjZ
 //
 // Derived from zdoom; iterator function for P_TestMobjZ
 //
-static bool PIT_TestMobjZ(Mobj *thing)
+static bool PIT_TestMobjZ(Mobj *thing, void *context)
 {
    fixed_t blockdist = thing->radius + clip.thing->radius;
 
@@ -873,7 +873,7 @@ static bool P_AdjustFloorCeil(Mobj *thing, bool midtex)
 // over/under situations with an object being moved by a sector floor or
 // ceiling so that they can be dealt with uniformly at one time.
 //
-static bool PIT_FindAboveIntersectors(Mobj *thing)
+static bool PIT_FindAboveIntersectors(Mobj *thing, void *context)
 {
    fixed_t blockdist;
    if(!(thing->flags & MF_SOLID) ||               // Can't hit thing?
@@ -898,7 +898,7 @@ static bool PIT_FindAboveIntersectors(Mobj *thing)
    return true;
 }
 
-static bool PIT_FindBelowIntersectors(Mobj *thing)
+static bool PIT_FindBelowIntersectors(Mobj *thing, void *context)
 {
    fixed_t blockdist;
    if(!(thing->flags & MF_SOLID) ||               // Can't hit thing?

@@ -1005,7 +1005,7 @@ static int current_allaround;
 //
 // Finds monster targets for other monsters
 //
-static bool PIT_FindTarget(Mobj *mo)
+static bool PIT_FindTarget(Mobj *mo, void *context)
 {
    Mobj *actor = current_actor;
 
@@ -1283,7 +1283,7 @@ static bool P_LookForMonsters(Mobj *actor, int allaround)
             }
             else if(th->isInstanceOf(RTTI(Mobj)))
             {
-               if(!PIT_FindTarget(static_cast<Mobj *>(th))) // If target sighted
+               if(!PIT_FindTarget(static_cast<Mobj *>(th), nullptr)) // If target sighted
                   return true;
             }
          }
@@ -1342,7 +1342,7 @@ bool P_HelpFriend(Mobj *actor)
          if(mo->flags & MF_JUSTHIT &&
             mo->target && 
             mo->target != actor->target &&
-            !PIT_FindTarget(mo->target))
+            !PIT_FindTarget(mo->target, nullptr))
          {
             // Ignore any attacking monsters, while searching for 
             // friend

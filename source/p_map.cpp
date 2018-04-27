@@ -164,7 +164,7 @@ static bool ignore_inerts = true;
 // telefragged. This simply will not do.
 static bool stomp3d = false;
 
-static bool PIT_StompThing3D(Mobj *thing)
+static bool PIT_StompThing3D(Mobj *thing, void *context)
 {
    fixed_t blockdist;
    
@@ -212,7 +212,7 @@ static bool PIT_StompThing3D(Mobj *thing)
 #endif
 
 
-static bool PIT_StompThing(Mobj *thing)
+static bool PIT_StompThing(Mobj *thing, void *context)
 {
    fixed_t blockdist;
    
@@ -391,7 +391,7 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
 {
    int xl, xh, yl, yh, bx, by;
    subsector_t *newsubsec;
-   bool (*func)(Mobj *);
+   bool (*func)(Mobj *, void *);
    
    // killough 8/9/98: make telefragging more consistent, preserve compatibility
    // haleyjd 03/25/03: TELESTOMP flag handling moved here (was thing->player)
@@ -947,7 +947,7 @@ bool P_AllowMissileDamage(const Mobj &shooter, const Mobj &target)
 //
 // PIT_CheckThing
 // 
-static bool PIT_CheckThing(Mobj *thing) // killough 3/26/98: make static
+static bool PIT_CheckThing(Mobj *thing, void *context) // killough 3/26/98: make static
 {
    fixed_t blockdist;
 
@@ -2414,7 +2414,7 @@ static bombdata_t *theBomb;        // it's the bomb, man. (the current explosion
 //
 // "bombsource" is the creature that caused the explosion at "bombspot".
 //
-static bool PIT_RadiusAttack(Mobj *thing)
+static bool PIT_RadiusAttack(Mobj *thing, void *context)
 {
    fixed_t dx, dy, dist;
    Mobj *bombspot     = theBomb->bombspot;
@@ -2561,7 +2561,7 @@ void P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int distance,
 //
 // PIT_ChangeSector
 //
-static bool PIT_ChangeSector(Mobj *thing)
+static bool PIT_ChangeSector(Mobj *thing, void *context)
 {
    if(P_ThingHeightClip(thing))
       return true; // keep checking
@@ -2700,7 +2700,7 @@ bool P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil)
          {
             n->visited  = true;              // mark thing as processed
             if(!(n->m_thing->flags & MF_NOBLOCKMAP)) //jff 4/7/98 don't do these
-               PIT_ChangeSector(n->m_thing); // process it
+               PIT_ChangeSector(n->m_thing, nullptr); // process it
             break;                           // exit and start over
          }
       }
