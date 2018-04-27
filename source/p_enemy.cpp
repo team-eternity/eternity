@@ -251,7 +251,7 @@ bool P_HitFriend(Mobj *actor)
       angle = P_PointToAngle(actor->x, actor->y, tx, ty);
       dist  = P_AproxDistance(actor->x - tx, actor->y - ty);
 
-      P_AimLineAttack(actor, angle, dist, 0);
+      P_AimLineAttack(actor, angle, dist, false);
 
       if(clip.linetarget 
          && clip.linetarget != actor->target 
@@ -1900,7 +1900,7 @@ CONSOLE_COMMAND(mdk, cf_notnet|cf_level)
    fixed_t slope;
    int damage = 10000;
 
-   slope = P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, 0);
+   slope = P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, false);
 
    if(clip.linetarget
       && !(clip.linetarget->flags2 & MF2_INVULNERABLE) // use 10k damage to
@@ -1920,7 +1920,7 @@ CONSOLE_COMMAND(mdkbomb, cf_notnet|cf_level)
    {
       angle_t an = (ANG360/60)*i;
       
-      slope = P_AimLineAttack(plyr->mo, an, MISSILERANGE,0);
+      slope = P_AimLineAttack(plyr->mo, an, MISSILERANGE,false);
 
       if(clip.linetarget)
          damage = clip.linetarget->health;
@@ -1933,7 +1933,7 @@ CONSOLE_COMMAND(banish, cf_notnet|cf_level)
 {
    player_t *plyr = &players[consoleplayer];
 
-   P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, 0);
+   P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, false);
 
    if(clip.linetarget)
       clip.linetarget->remove();

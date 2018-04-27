@@ -232,7 +232,7 @@ void A_FireOldBFG(actionargs_t *actionargs)
       if(autoaim)
       {
          // killough 8/2/98: make autoaiming prefer enemies
-         int mask = MF_FRIEND;
+         bool mask = true;
          do
          {
             slope = P_AimLineAttack(mo, an, 16*64*FRACUNIT, mask);
@@ -246,7 +246,7 @@ void A_FireOldBFG(actionargs_t *actionargs)
                an = mo->angle;
             }
          }
-         while(mask && (mask=0, !clip.linetarget));     // killough 8/2/98
+         while(mask && (mask=false, !clip.linetarget));     // killough 8/2/98
          an1 += an - mo->angle;
          // sf: despite killough's infinite wisdom.. even
          // he is prone to mistakes. seems negative numbers
@@ -493,9 +493,9 @@ void A_BFGSpray(actionargs_t *actionargs)
       
       // killough 8/2/98: make autoaiming prefer enemies
       if(demo_version < 203 || 
-         (P_AimLineAttack(mo->target, an, 16*64*FRACUNIT, MF_FRIEND), 
+         (P_AimLineAttack(mo->target, an, 16*64*FRACUNIT, true),
          !clip.linetarget))
-         P_AimLineAttack(mo->target, an, 16*64*FRACUNIT, 0);
+         P_AimLineAttack(mo->target, an, 16*64*FRACUNIT, false);
       
       if(!clip.linetarget)
          continue;
@@ -530,7 +530,7 @@ void A_BouncingBFG(actionargs_t *actionargs)
       angle_t an2, an = (ANG360/40)*i;
       int dist;
       
-      P_AimLineAttack(mo, an, 16*64*FRACUNIT,0);
+      P_AimLineAttack(mo, an, 16*64*FRACUNIT,false);
       
       // haleyjd: track last target with mo->tracer, don't fire
       // at same target more than one time in a row
@@ -626,7 +626,7 @@ void A_BFG11KHit(actionargs_t *actionargs)
       
       // mo->target is the originator (player) of the missile
       
-      P_AimLineAttack(mo, an, 16*64*FRACUNIT,0);
+      P_AimLineAttack(mo, an, 16*64*FRACUNIT,false);
       
       if(!clip.linetarget) continue;
       if(clip.linetarget == mo->target)

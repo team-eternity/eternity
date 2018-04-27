@@ -3035,7 +3035,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type)
    if(autoaim)
    {
       // killough 8/2/98: prefer autoaiming at enemies
-      int mask = demo_version < 203 ? 0 : MF_FRIEND;
+      int mask = demo_version < 203 ? false : true;
       do
       {
          slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
@@ -3050,7 +3050,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type)
             slope = P_PlayerPitchSlope(source->player);
          }
       }
-      while(mask && (mask=0, !clip.linetarget));  // killough 8/2/98
+      while(mask && (mask=false, !clip.linetarget));  // killough 8/2/98
    }
    else
    {
@@ -3114,7 +3114,7 @@ Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t an
    if(autoaim)
    {
       // ioanch: reuse killough's code from P_SpawnPlayerMissile
-      int mask = demo_version < 203 ? 0 : MF_FRIEND;
+      int mask = demo_version < 203 ? false : true;
       do
       {
          slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
@@ -3128,7 +3128,7 @@ Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t an
             // haleyjd: use true slope angle
             slope = playersightslope;
          }
-      } while(mask && (mask = 0, !clip.linetarget));  // killough 8/2/98
+      } while(mask && (mask = false, !clip.linetarget));  // killough 8/2/98
    }
    else
       slope = playersightslope;

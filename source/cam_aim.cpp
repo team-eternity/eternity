@@ -58,14 +58,14 @@ public:
    };
 
    static fixed_t aimLineAttack(const Mobj *t1, angle_t angle, fixed_t distance,
-      uint32_t mask, const State *state, Mobj **outTarget, fixed_t *outDist);
+      bool mask, const State *state, Mobj **outTarget, fixed_t *outDist);
 
 private:
    AimContext(
       const Mobj *t1, 
       angle_t angle, 
       fixed_t distance, 
-      uint32_t mask,
+      bool mask,
       const State *state);
    static bool aimTraverse(const intercept_t *in, void *data,
       const divline_t &trace);
@@ -76,7 +76,7 @@ private:
 
    const Mobj *thing;
    fixed_t attackrange;
-   uint32_t aimflagsmask;
+   bool aimflagsmask;
    State state;
    fixed_t lookslope;
    fixed_t aimslope;
@@ -91,7 +91,7 @@ private:
 // Creates the context
 //
 AimContext::AimContext(const Mobj *t1, angle_t inangle, fixed_t distance,
-   uint32_t mask, const State *instate) :
+   bool mask, const State *instate) :
    thing(t1), attackrange(distance), aimflagsmask(mask), aimslope(0),
    linetarget(nullptr), targetdist(D_MAXINT), angle(inangle)
 {
@@ -426,13 +426,10 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata,
    {
       Mobj *th = in->d.thing;
       fixed_t thingtopslope, thingbottomslope;
-      if(!(th->flags & MF_SHOOTABLE) || th == context.thing ||
-         th->flags4 & MF4_NOTAUTOAIMED)
-      {
+      if(!(th->flags & MF_SHOOTABLE) || th == context.thing)
          return true;
-      }
-      if(th->flags & context.thing->flags & context.aimflagsmask
-         && !th->player)
+      if(context.aimflagsmask && ((th->flags & context.thing->flags & MF_FRIEND &&
+                                   !th->player) || th->flags4 & MF4_LOWAIMPRIO))
       {
          return true;
       }
@@ -483,7 +480,7 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata,
 // Starts aiming
 //
 fixed_t AimContext::aimLineAttack(const Mobj *t1, angle_t angle,
-   fixed_t distance, uint32_t mask,
+   fixed_t distance, bool mask,
    const State *state, Mobj **outTarget,
    fixed_t *outDist)
 {
@@ -529,7 +526,7 @@ fixed_t AimContext::aimLineAttack(const Mobj *t1, angle_t angle,
 // Reentrant autoaim
 //
 fixed_t CAM_AimLineAttack(const Mobj *t1, angle_t angle, fixed_t distance,
-   uint32_t mask, Mobj **outTarget)
+   bool mask, Mobj **outTarget)
 {
    return AimContext::aimLineAttack(t1, angle, distance, mask, nullptr,
       outTarget, nullptr);

@@ -342,7 +342,7 @@ dehflags_t deh_mobjflags[] =
   {"BLOODLESSIMPACT",    0x00800000, 3}, // doesn't draw blood when it hits or rips a thing
   {"HERETICBOUNCES",     0x01000000, 3}, // thing bounces à la Heretic
   {"MONSTERPASS",        0x02000000, 3},
-  {"NOTAUTOAIMED",       0x04000000, 3},
+  {"LOWAIMPRIO",         0x04000000, 3},
   {"STICKY",             0x08000000, 3},
   {"SETTARGETONDEATH",   0x10000000, 3},
 

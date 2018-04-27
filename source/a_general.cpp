@@ -959,7 +959,7 @@ void A_BulletAttack(actionargs_t *actionargs)
    A_FaceTarget(actionargs);
    S_StartSfxInfo(params.setNormalDefaults(actor));
 
-   slope = P_AimLineAttack(actor, actor->angle, MISSILERANGE, 0);
+   slope = P_AimLineAttack(actor, actor->angle, MISSILERANGE, false);
 
    // loop on numbullets
    for(i = 0; i < numbullets; i++)

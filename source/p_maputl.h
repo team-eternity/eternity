@@ -79,7 +79,7 @@ struct linetracer_t
    fixed_t     topslope;
    fixed_t     bottomslope;
    Mobj       *thing;
-   uint32_t    aimflagsmask; // killough 8/2/98: for more intelligent autoaiming
+   bool        aimflagsmask; // killough 8/2/98: for more intelligent autoaiming
    fixed_t     sin;
    fixed_t     cos;
 };

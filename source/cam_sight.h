@@ -61,7 +61,7 @@ struct camsightparams_t
 bool CAM_CheckSight(const camsightparams_t &params);
 
 fixed_t CAM_AimLineAttack(const Mobj *t1, angle_t angle, fixed_t distance, 
-                          uint32_t mask, Mobj **outTarget);
+                          bool mask, Mobj **outTarget);
 // ioanch 20160101: bullet attack
 void CAM_LineAttack(Mobj *source, angle_t angle, fixed_t distance, 
                     fixed_t slope, int damage, size_t puffidx);
