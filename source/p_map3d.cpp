@@ -85,7 +85,7 @@ bool P_Use3DClipping()
 // without any side-effects so that it's reversible: the only thing changed
 // is mo->z, which will be reset before the real move takes place.
 //
-static void P_ZMovementTest(Mobj *mo)
+void P_ZMovementTest(Mobj *mo)
 {
    // killough 7/11/98:
    // BFG fireballs bounced on floors and ceilings in Pre-Beta Doom

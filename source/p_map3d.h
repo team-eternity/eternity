@@ -42,6 +42,7 @@ bool  P_ChangeSector3D(sector_t *sector, int crunch, int amt, int floorOrCeil);
 Mobj *P_GetThingUnder(Mobj *mo);
 void P_FindAboveIntersectors(Mobj *actor, doom_mapinter_t &clip,
                              MobjCollection &coll);
+void P_ZMovementTest(Mobj *mo);
 
 #endif 
 
