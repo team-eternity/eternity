@@ -946,7 +946,7 @@ void HUDCrossHairWidget::ticker()
    fixed_t oldAttackRange = trace.attackrange;
    P_AimLineAttack(players[displayplayer].mo,
                    players[displayplayer].mo->angle, 
-                   16*64*FRACUNIT, 0);
+                   16*64*FRACUNIT, false);
    trace.attackrange = oldAttackRange;
 
    if(clip.linetarget)

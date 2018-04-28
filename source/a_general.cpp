@@ -959,7 +959,7 @@ void A_BulletAttack(actionargs_t *actionargs)
    A_FaceTarget(actionargs);
    S_StartSfxInfo(params.setNormalDefaults(actor));
 
-   slope = P_AimLineAttack(actor, actor->angle, MISSILERANGE, 0);
+   slope = P_AimLineAttack(actor, actor->angle, MISSILERANGE, false);
 
    // loop on numbullets
    for(i = 0; i < numbullets; i++)
@@ -1049,7 +1049,7 @@ void A_ThingSummon(actionargs_t *actionargs)
    // If it is, then we don't allow the spawn.
    
    // ioanch 20160107: use position directly next to summoner.
-   if(Check_Sides(actor, relpos.x, relpos.y))
+   if(Check_Sides(actor, relpos.x, relpos.y, type))
       return;
 
    newmobj = P_SpawnMobj(x, y, z, type);

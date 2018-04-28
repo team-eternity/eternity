@@ -1019,7 +1019,7 @@ fixed_t P_DoAutoAim(Mobj *mo, angle_t angle, fixed_t distance)
    if(demo_version >= 203)
    {
       // killough 8/2/98: make autoaiming prefer enemies
-      fixed_t slope = P_AimLineAttack(mo, angle, distance, MF_FRIEND);
+      fixed_t slope = P_AimLineAttack(mo, angle, distance, true);
 
       // autoaiming is disabled?
       if(full_demo_version > make_full_version(340, 15) && !autoaim && mo->player)
@@ -1029,7 +1029,7 @@ fixed_t P_DoAutoAim(Mobj *mo, angle_t angle, fixed_t distance)
          return slope;
    }
    
-   return P_AimLineAttack(mo, angle, distance, 0);
+   return P_AimLineAttack(mo, angle, distance, false);
 }
 
 //=============================================================================
@@ -1050,7 +1050,7 @@ void P_BulletSlope(Mobj *mo)
    angle_t an = mo->angle;    // see which target is to be aimed at
    
    // killough 8/2/98: make autoaiming prefer enemies
-   int mask = demo_version < 203 ? 0 : MF_FRIEND;
+   int mask = demo_version < 203 ? false : true;
 
    // haleyjd 08/09/11: allow autoaim disable
    if(full_demo_version > make_full_version(340, 15) && !autoaim && mo->player)
@@ -1068,7 +1068,7 @@ void P_BulletSlope(Mobj *mo)
       if(!clip.linetarget)
          bulletslope = P_AimLineAttack(mo, an -= 2<<26, 16*64*FRACUNIT, mask);
    }
-   while (mask && (mask=0, !clip.linetarget));  // killough 8/2/98
+   while (mask && (mask=false, !clip.linetarget));  // killough 8/2/98
 }
 
 void A_Light0(actionargs_t *actionargs)

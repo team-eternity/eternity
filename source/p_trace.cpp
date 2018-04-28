@@ -109,8 +109,12 @@ static bool PTR_AimTraverse(intercept_t *in, void *context)
 
       // killough 7/19/98, 8/2/98:
       // friends don't aim at friends (except players), at least not first
-      if(th->flags & trace.thing->flags & trace.aimflagsmask && !th->player)
+      // ioanch: also avoid aiming for LOWAIMPRIO things
+      if(trace.aimflagsmask && ((th->flags & trace.thing->flags & MF_FRIEND &&
+                                 !th->player) || th->flags4 & MF4_LOWAIMPRIO))
+      {
          return true;
+      }
 
       // check angles to see if the thing can be aimed at
       dist = FixedMul(trace.attackrange, in->frac);
@@ -144,7 +148,7 @@ static bool PTR_AimTraverse(intercept_t *in, void *context)
 // killough 8/2/98: add mask parameter, which, if set to MF_FRIEND,
 // makes autoaiming skip past friends.
 //
-fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, int mask)
+fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, bool mask)
 {
    // ioanch 20151231: use new portal code
    if(full_demo_version >= make_full_version(340, 47) &&
@@ -844,7 +848,7 @@ bool PIT_AddLineIntercepts(line_t *ld, polyobj_s *po, void *context)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-bool PIT_AddThingIntercepts(Mobj *thing)
+bool PIT_AddThingIntercepts(Mobj *thing, void *context)
 {
    fixed_t   x1, y1;
    fixed_t   x2, y2;

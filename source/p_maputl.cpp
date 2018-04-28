@@ -763,7 +763,8 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*, polyobj_t*, void *), 
 // killough 5/3/98: reformatted, cleaned up
 // ioanch 20160108: variant with groupid
 //
-bool P_BlockThingsIterator(int x, int y, int groupid, bool (*func)(Mobj *))
+bool P_BlockThingsIterator(int x, int y, int groupid, bool (*func)(Mobj *, void *),
+                           void *context)
 {
    if(!(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
    {
@@ -777,7 +778,7 @@ bool P_BlockThingsIterator(int x, int y, int groupid, bool (*func)(Mobj *))
          {
             continue;   // ignore objects from wrong groupid
          }
-         if(!func(mobj))
+         if(!func(mobj, context))
             return false;
       }
    }

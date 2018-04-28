@@ -682,6 +682,10 @@ void P_XYMovement(Mobj* mo)
       mo->floorz != P_ExtremeSectorAtPoint(mo, false)->floorheight)
       return;  // do not stop sliding if halfway off a step with some momentum
 
+   // Some objects never rest on other things
+   if(mo->intflags & MIF_ONMOBJ && mo->flags4 & MF4_SLIDEOVERTHINGS)
+      return;
+
    // killough 11/98:
    // Stop voodoo dolls that have come to rest, despite any
    // moving corresponding player, except in old demos:
@@ -1423,6 +1427,11 @@ void Mobj::Think()
                momz < -LevelInfo.gravity*8)
             {
                P_PlayerHitFloor(this, true);
+            }
+            if(player && onmo->flags4 & MF4_STICKYCARRY)
+            {
+               player->momx = momx = onmo->momx;
+               player->momy = momy = onmo->momy;
             }
             if(onmo->z + onmo->height - z <= STEPSIZE)
             {
@@ -3030,7 +3039,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type)
    if(autoaim)
    {
       // killough 8/2/98: prefer autoaiming at enemies
-      int mask = demo_version < 203 ? 0 : MF_FRIEND;
+      int mask = demo_version < 203 ? false : true;
       do
       {
          slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
@@ -3045,7 +3054,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type)
             slope = P_PlayerPitchSlope(source->player);
          }
       }
-      while(mask && (mask=0, !clip.linetarget));  // killough 8/2/98
+      while(mask && (mask=false, !clip.linetarget));  // killough 8/2/98
    }
    else
    {
@@ -3109,7 +3118,7 @@ Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t an
    if(autoaim)
    {
       // ioanch: reuse killough's code from P_SpawnPlayerMissile
-      int mask = demo_version < 203 ? 0 : MF_FRIEND;
+      int mask = demo_version < 203 ? false : true;
       do
       {
          slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
@@ -3123,7 +3132,7 @@ Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t an
             // haleyjd: use true slope angle
             slope = playersightslope;
          }
-      } while(mask && (mask = 0, !clip.linetarget));  // killough 8/2/98
+      } while(mask && (mask = false, !clip.linetarget));  // killough 8/2/98
    }
    else
       slope = playersightslope;

@@ -78,6 +78,8 @@ void P_SlideMove(Mobj *mo);
 // ioanch
 void P_CollectSpechits(line_t *ld, PODCollection<line_t *> *pushhit);
 
+bool P_BlockedAsMonster(const Mobj &mo);
+
 //=============================================================================
 //
 // Teleportation
@@ -104,12 +106,12 @@ bool P_CheckSight(Mobj *t1, Mobj *t2);
 void P_UseLines(player_t *player);
 
 // killough 8/2/98: add 'mask' argument to prevent friends autoaiming at others
-fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance,int mask);
+fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, bool mask);
 
 void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance, fixed_t slope, 
                   int damage, const char *pufftype = nullptr);
 
-bool Check_Sides(Mobj *, int, int); // phares
+bool Check_Sides(Mobj *, int, int, mobjtype_t type); // phares
 
 //=============================================================================
 //

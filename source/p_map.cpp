@@ -44,6 +44,7 @@
 #include "p_maputl.h"
 #include "p_map.h"
 #include "p_map3d.h"
+#include "p_mobjcol.h"
 #include "p_partcl.h"
 #include "p_portal.h"
 #include "p_portalblockmap.h"
@@ -164,7 +165,7 @@ static bool ignore_inerts = true;
 // telefragged. This simply will not do.
 static bool stomp3d = false;
 
-static bool PIT_StompThing3D(Mobj *thing)
+static bool PIT_StompThing3D(Mobj *thing, void *context)
 {
    fixed_t blockdist;
    
@@ -212,7 +213,7 @@ static bool PIT_StompThing3D(Mobj *thing)
 #endif
 
 
-static bool PIT_StompThing(Mobj *thing)
+static bool PIT_StompThing(Mobj *thing, void *context)
 {
    fixed_t blockdist;
    
@@ -391,7 +392,7 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
 {
    int xl, xh, yl, yh, bx, by;
    subsector_t *newsubsec;
-   bool (*func)(Mobj *);
+   bool (*func)(Mobj *, void *);
    
    // killough 8/9/98: make telefragging more consistent, preserve compatibility
    // haleyjd 03/25/03: TELESTOMP flag handling moved here (was thing->player)
@@ -562,8 +563,10 @@ bool P_PortalTeleportMove(Mobj *thing, fixed_t x, fixed_t y)
 
 static bool PIT_CrossLine(line_t *ld, polyobj_s *po, void *context)
 {
+   auto type = static_cast<const mobjtype_t *>(context);
    // SoM 9/7/02: wow a killoughism... * SoM is scared
-   int flags = ML_TWOSIDED | ML_BLOCKING | ML_BLOCKMONSTERS;
+   int flags = ML_TWOSIDED | ML_BLOCKING |
+      (mobjinfo[*type]->flags4 & MF4_MONSTERPASS ? 0 : ML_BLOCKMONSTERS);
 
    if(ld->flags & ML_3DMIDTEX)
       flags &= ~ML_BLOCKMONSTERS;
@@ -696,6 +699,15 @@ void P_CollectSpechits(line_t *ld, PODCollection<line_t *> *pushhit)
 }
 
 //
+// Returns true if line should be blocked by ML_BLOCKMONSTERS lines.
+//
+bool P_BlockedAsMonster(const Mobj &mo)
+{
+   return !(mo.flags & MF_FRIEND) && !mo.player &&
+          !(mo.flags4 & MF4_MONSTERPASS);
+}
+
+//
 // PIT_CheckLine
 //
 // Adjusts tmfloorz and tmceilingz as lines are contacted
@@ -757,10 +769,11 @@ bool PIT_CheckLine(line_t *ld, polyobj_s *po, void *context)
 
       // killough 8/9/98: monster-blockers don't affect friends
       // SoM 9/7/02: block monsters standing on 3dmidtex only
-      if(!(clip.thing->flags & MF_FRIEND || clip.thing->player) && 
-         ld->flags & ML_BLOCKMONSTERS && 
-         !(ld->flags & ML_3DMIDTEX))
+      if(ld->flags & ML_BLOCKMONSTERS && !(ld->flags & ML_3DMIDTEX) &&
+         P_BlockedAsMonster(*clip.thing))
+      {
          return false; // block monsters only
+      }
    }
 
    // set openrange, opentop, openbottom
@@ -935,7 +948,7 @@ bool P_AllowMissileDamage(const Mobj &shooter, const Mobj &target)
 //
 // PIT_CheckThing
 // 
-static bool PIT_CheckThing(Mobj *thing) // killough 3/26/98: make static
+static bool PIT_CheckThing(Mobj *thing, void *context) // killough 3/26/98: make static
 {
    fixed_t blockdist;
 
@@ -1138,7 +1151,7 @@ static bool PIT_CheckThing(Mobj *thing) // killough 3/26/98: make static
 // sides of the blocking line. If so, return true, otherwise
 // false.
 //
-bool Check_Sides(Mobj *actor, int x, int y)
+bool Check_Sides(Mobj *actor, int x, int y, mobjtype_t type)
 {
    int bx,by,xl,xh,yl,yh;
    
@@ -1166,7 +1179,7 @@ bool Check_Sides(Mobj *actor, int x, int y)
    validcount++; // prevents checking same line twice
    for(bx = xl ; bx <= xh ; bx++)
       for (by = yl ; by <= yh ; by++)
-         if(!P_BlockLinesIterator(bx,by,PIT_CrossLine))
+         if(!P_BlockLinesIterator(bx,by,PIT_CrossLine, R_NOGROUP, &type))
             return true;                                          //   ^
    return false;                                                  //   |
 }                                                                 // phares
@@ -1476,6 +1489,61 @@ static void P_RunPushSpechits(Mobj &thing, PODCollection<line_t *> &pushhit)
 }
 
 //
+// Checks if a thing can carry upper things up from an intended floorz. Assumed
+// floorz > thing.z.
+//
+static bool P_checkCarryUp(Mobj &thing, fixed_t floorz)
+{
+   if(!(thing.flags4 & MF4_STICKYCARRY))
+      return false;
+   fixed_t orgz = thing.z;
+   thing.z = floorz;
+   MobjCollection coll;
+   PODCollection<fixed_t> orgzcoll;
+   doom_mapinter_t clip;
+   P_FindAboveIntersectors(&thing, clip, coll); // already aware of MF_SOLID
+   auto resetcoll = [&coll, orgz, &orgzcoll, &thing](const Mobj *other) {
+      size_t i = 0;
+      for(Mobj **previous = coll.begin(); *previous != other; ++previous)
+         (*previous)->z = orgzcoll[i++];
+      thing.z = orgz;
+   };
+   static Mobj *dummy;
+   for(Mobj *other : coll)
+   {
+      if(!other->player)   // already collided with a non-player? Fail.
+      {
+         resetcoll(other);
+         return false;
+      }
+      orgzcoll.add(other->z);
+      other->z = thing.z + thing.height; // move it on top
+      P_ZMovementTest(other); // it may bob back down due to ceiling
+      if(!P_TestMobjZ(other, clip, &dummy))  // if it gets stuck, fail.
+      {
+         other->z = orgzcoll.pop();
+         resetcoll(other);
+         return false;
+      }
+      other->z = thing.z + thing.height;   // remake position after the test
+   }
+   thing.z = orgz;
+   // Success? Check if any of these is a player
+   fixed_t *orgzit = orgzcoll.begin();
+   for(Mobj *other : coll)
+   {
+      if(other->player && other->player->mo == other)
+      {
+         other->player->viewheight += *orgzit - other->z;
+         other->player->deltaviewheight =
+         (VIEWHEIGHT - other->player->viewheight) >> 3;
+      }
+      ++orgzit;
+   }
+   return true;
+}
+
+//
 // P_TryMove
 //
 // Attempt to move to a new position,
@@ -1687,9 +1755,9 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             fixed_t savedz = thing->z;
             bool good;
             thing->z = clip.floorz;
-            good = P_TestMobjZ(thing);
+            good = P_TestMobjZ(thing, clip);
             thing->z = savedz;
-            if(!good)
+            if(!good && !P_checkCarryUp(*thing, clip.floorz))
             {
                P_RunPushSpechits(*thing, pushhit);
                return false;
@@ -2218,7 +2286,7 @@ static bool PTR_SlideTraverse(intercept_t *in, void *context)
       bool good;
       fixed_t savedz = slidemo->z;
       slidemo->z = clip.openbottom;
-      good = P_TestMobjZ(slidemo);
+      good = P_TestMobjZ(slidemo, clip);
       slidemo->z = savedz;
       if(!good)
          goto isblocking;
@@ -2402,7 +2470,7 @@ static bombdata_t *theBomb;        // it's the bomb, man. (the current explosion
 //
 // "bombsource" is the creature that caused the explosion at "bombspot".
 //
-static bool PIT_RadiusAttack(Mobj *thing)
+static bool PIT_RadiusAttack(Mobj *thing, void *context)
 {
    fixed_t dx, dy, dist;
    Mobj *bombspot     = theBomb->bombspot;
@@ -2549,7 +2617,7 @@ void P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int distance,
 //
 // PIT_ChangeSector
 //
-static bool PIT_ChangeSector(Mobj *thing)
+static bool PIT_ChangeSector(Mobj *thing, void *context)
 {
    if(P_ThingHeightClip(thing))
       return true; // keep checking
@@ -2688,7 +2756,7 @@ bool P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil)
          {
             n->visited  = true;              // mark thing as processed
             if(!(n->m_thing->flags & MF_NOBLOCKMAP)) //jff 4/7/98 don't do these
-               PIT_ChangeSector(n->m_thing); // process it
+               PIT_ChangeSector(n->m_thing, nullptr); // process it
             break;                           // exit and start over
          }
       }

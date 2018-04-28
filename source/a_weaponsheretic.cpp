@@ -345,7 +345,7 @@ void A_DeathBallImpact(actionargs_t *actionargs)
          angle = 0;
          for(i = 0; i < 16; i++)
          {
-            P_AimLineAttack(ball, angle, 10 * 64 * FRACUNIT, 0);
+            P_AimLineAttack(ball, angle, 10 * 64 * FRACUNIT, false);
             if(clip.linetarget && ball->target != clip.linetarget)
             {
                P_SetTarget(&ball->tracer, clip.linetarget);

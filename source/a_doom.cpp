@@ -74,7 +74,7 @@ void A_PosAttack(actionargs_t *actionargs)
 
    A_FaceTarget(actionargs);
    angle = actor->angle;
-   slope = P_AimLineAttack(actor, angle, MISSILERANGE, 0); // killough 8/2/98
+   slope = P_AimLineAttack(actor, angle, MISSILERANGE, false); // killough 8/2/98
    S_StartSound(actor, sfx_pistol);
    
    // haleyjd 08/05/04: use new function
@@ -101,7 +101,7 @@ void A_SPosAttack(actionargs_t *actionargs)
    A_FaceTarget(actionargs);
    
    bangle = actor->angle;
-   slope = P_AimLineAttack(actor, bangle, MISSILERANGE, 0); // killough 8/2/98
+   slope = P_AimLineAttack(actor, bangle, MISSILERANGE, false); // killough 8/2/98
    
    for(i = 0; i < 3; ++i)
    {  
@@ -135,7 +135,7 @@ void A_CPosAttack(actionargs_t *actionargs)
    A_FaceTarget(actionargs);
    
    bangle = actor->angle;
-   slope = P_AimLineAttack(actor, bangle, MISSILERANGE, 0); // killough 8/2/98
+   slope = P_AimLineAttack(actor, bangle, MISSILERANGE, false); // killough 8/2/98
    
    // haleyjd 08/05/04: use new function
    angle = bangle + (P_SubRandom(pr_cposattack) << 20);
@@ -601,7 +601,7 @@ static fixed_t  viletryy;
 //
 // Detect a corpse that could be raised.
 //
-bool PIT_VileCheck(Mobj *thing)
+bool PIT_VileCheck(Mobj *thing, void *context)
 {
    int maxdist;
    int vileType = E_SafeThingType(MT_VILE);
@@ -1086,7 +1086,7 @@ void A_PainShootSkull(Mobj *actor, angle_t angle)
       // ioanch 20160107: check sides against the non-translated position. This 
       // way the two coordinates will be in valid range and it will only check
       // sides against the passable portal line
-      if (Check_Sides(actor, relpos.x, relpos.y))
+      if (Check_Sides(actor, relpos.x, relpos.y, skullType))
          return;
       
       newmobj = P_SpawnMobj(x, y, z, skullType);

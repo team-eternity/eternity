@@ -1478,6 +1478,11 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    // check for death
    if(target->health <= 0)
    {
+      // There's no need to also check the type or flags of source (vanilla He-
+      // retic pods can't initiate attacks).
+      if(target->flags4 & MF4_SETTARGETONDEATH && source)
+         P_SetTarget(&target->target, source);
+
       // death messages for players
       if(player)
       {
@@ -1662,7 +1667,7 @@ void P_Whistle(Mobj *actor, int mobjtype)
       z = actor->z;
 
       // don't cross "solid" lines
-      if(Check_Sides(actor, x, y))
+      if(Check_Sides(actor, x, y, mo->type))
          return;
 
       // try the teleport
