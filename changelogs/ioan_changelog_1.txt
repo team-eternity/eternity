@@ -8,6 +8,35 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+28.04.2018
+
+FEATURE: Fixed Heretic pods to act properly. For this, I had to add five new
+         thing flags to Eternity, all in the flags4 list:
+
+         1. MONSTERPASS: makes the object pass through monster-blocking lines
+            even if it's not a player or friend.
+
+         2. LOWAIMPRIO: object has low autoaim priority, like MBF friends do.
+            Useful for destructible props as well.
+
+         3. STICKYCARRY: needed for the weird Heretic pod (and player) specific
+            behaviour. Players on top move with the object, and have difficulty
+            moving themselves off. They can also be carried upstairs.
+
+         4. SETTARGETONDEATH: target (attacker) is registered even when thing is
+            instantly killed on first hit. Normally the target is only changed
+            if the thing is alive, but Raven discovered this is not enough for
+            pods if they're used in a chain reaction to damage and provoke
+            monsters or score frags.
+
+         5. SLIDEOVERTHINGS: emulate Heretic 3D-clipping behaviour where
+            non-player things (notably pods) don't stop when falling on other
+            things, but instead keep moving until they fall or hit a wall.
+
+         Due to shared behaviour, the HereticPlayer thingtype also has 
+         STICKYCARRY.
+
+--------------------------------------------------------------------------------
 22.04.2018
 
 BUGFIX: Fixed a long-standing problem with double skies (feature from Hexen) not
