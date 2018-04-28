@@ -345,6 +345,7 @@ dehflags_t deh_mobjflags[] =
   {"LOWAIMPRIO",         0x04000000, 3},
   {"STICKY",             0x08000000, 3},
   {"SETTARGETONDEATH",   0x10000000, 3},
+  {"SLIDEONTHINGS",      0x20000000, 3},
 
   { NULL,              0 }             // NULL terminator
 };

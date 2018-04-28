@@ -682,6 +682,10 @@ void P_XYMovement(Mobj* mo)
       mo->floorz != P_ExtremeSectorAtPoint(mo, false)->floorheight)
       return;  // do not stop sliding if halfway off a step with some momentum
 
+   // Some objects never rest on other things
+   if(mo->intflags & MIF_ONMOBJ && mo->flags4 & MF4_SLIDEONTHINGS)
+      return;
+
    // killough 11/98:
    // Stop voodoo dolls that have come to rest, despite any
    // moving corresponding player, except in old demos:
