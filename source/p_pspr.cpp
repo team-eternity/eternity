@@ -608,6 +608,8 @@ weaponinfo_t *P_GetPlayerWeapon(player_t *player, int slot)
 
    bool hit = false;
    BDListItem<weaponslot_t> *weaponslot, *baseslot;
+   const auto *wp = E_IsPoweredVariant(player->readyweapon) ?
+                    player->readyweapon->sisterWeapon : player->readyweapon;
    // This initial call assures us that
    // player->pclass->weaponslots[slot]->bdNext is valid.
    baseslot = E_FirstInSlot(player->pclass->weaponslots[slot]);
@@ -615,7 +617,7 @@ weaponinfo_t *P_GetPlayerWeapon(player_t *player, int slot)
    // Try finding the player's currently-equipped weapon.
    while(!baseslot->isDummy())
    {
-      if(baseslot->bdObject->weapon->id == player->readyweapon->id)
+      if(baseslot->bdObject->weapon->id == wp->id)
       {
          hit = true;
          break;
@@ -729,10 +731,18 @@ void A_WeaponReady(actionargs_t *actionargs)
       P_SetMobjState(mo, mo->info->spawnstate);
    }
 
-   if(E_WeaponIsCurrentDEHNum(player, wp_chainsaw) && 
-      psp->state == states[E_SafeState(S_SAW)])
+
+   // Play sound if the readyweapon has a sound to play and the current
+   // state is the ready state, and do it only 50% of the time if the
+   // according flag is set.
+   if(player->readyweapon->readysound &&
+      psp->state->index == player->readyweapon->readystate &&
+      (!(player->readyweapon->flags & WPF_READYSNDHALF) || M_Random() < 128))
+      S_StartSound(player->mo, player->readyweapon->readysound);
+
+   // WEAPON_FIXME: chainsaw particulars (haptic feedback)
+   if(E_WeaponIsCurrentDEHNum(player, wp_chainsaw) && psp->state == states[E_SafeState(S_SAW)])
    {
-      S_StartSound(player->mo, sfx_sawidl);
       if(player == &players[consoleplayer])
          I_StartHaptic(HALHapticInterface::EFFECT_CONSTANT, 3, 108);
    }

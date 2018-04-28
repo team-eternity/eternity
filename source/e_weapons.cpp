@@ -370,6 +370,15 @@ bool E_IsPoweredVariant(weaponinfo_t *wp)
 }
 
 //
+// Returns whether or not a weapon is the powered (tomed) version of a specific weapon
+//
+bool E_IsPoweredVariantOf(weaponinfo_t *untomed, weaponinfo_t *tomed)
+{
+   return untomed && untomed->sisterWeapon &&
+          untomed->sisterWeapon == tomed && tomed->flags & WPF_POWEREDUP;
+}
+
+//
 // Gets the first weapon in the given slot
 //
 BDListItem<weaponslot_t> *E_FirstInSlot(weaponslot_t *dummyslot)

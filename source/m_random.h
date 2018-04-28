@@ -223,7 +223,6 @@ typedef enum {
   pr_rogueblood,  // Strife blood spawning
   pr_drawblood,   // Missile blood-drawing chance
   pr_hexenteleport,  // ioanch 20160329: used by Hexen teleporters
-  // EDF_FEATURES_TODO: Reorder the below before final merge
   pr_goldwand,    // A_FireGoldWandPL1
   pr_goldwand2,   // A_FireGoldWandPL2
   pr_skullrod,    // A_FireSkullRodPL1
@@ -234,7 +233,6 @@ typedef enum {
   pr_gauntlets,   // A_GauntletAttack
   pr_gauntletsangle,
   pr_boltspark,   // A_BoltSpark
-  pr_readysound,  // Used for weapons that have a 50% of making a ready sound
   pr_firemace,    // A_FireMacePL1
   pr_phoenixrod2, // A_FirePhoenixPL2
 

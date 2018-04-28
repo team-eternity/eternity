@@ -401,7 +401,8 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
       if(players[consoleplayer].readyweapon)
       {
-         if(players[consoleplayer].readyweapon->id == newweapon)
+         if(players[consoleplayer].readyweapon->id == newweapon ||
+            E_IsPoweredVariantOf(E_WeaponForID(newweapon), players[consoleplayer].readyweapon))
             newweapon = -1;
       }
 

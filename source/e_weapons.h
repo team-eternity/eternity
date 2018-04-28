@@ -88,6 +88,7 @@ void E_GiveWeapon(player_t *player, weaponinfo_t *weapon);
 void E_GiveAllClassWeapons(player_t *player);
 
 bool E_IsPoweredVariant(weaponinfo_t *wp);
+bool E_IsPoweredVariantOf(weaponinfo_t *untomed, weaponinfo_t *tomed);
 
 BDListItem<weaponslot_t> *E_FirstInSlot(weaponslot_t *dummyslot);
 BDListItem<weaponslot_t> *E_LastInSlot(weaponslot_t *dummyslot);
