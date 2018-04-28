@@ -74,7 +74,7 @@ weaponinfo GoldWand
 
   sisterweapon GoldWandPowered
 
-  flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL|AUTOSWITCHFROM
+  flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL
   //mod          ""
   recoil       10
   hapticrecoil 1
@@ -357,7 +357,7 @@ weaponinfo Gauntlets
 
   sisterweapon GauntletsPowered
 
-  flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS
+  flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS|AUTOSWITCHFROM
   //mod          ""
   upsound      ht_gntact
 
