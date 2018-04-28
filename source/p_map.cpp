@@ -1494,7 +1494,7 @@ static void P_RunPushSpechits(Mobj &thing, PODCollection<line_t *> &pushhit)
 //
 static bool P_checkCarryUp(Mobj &thing, fixed_t floorz)
 {
-   if(!(thing.flags4 & MF4_STICKY))
+   if(!(thing.flags4 & MF4_STICKYCARRY))
       return false;
    fixed_t orgz = thing.z;
    thing.z = floorz;

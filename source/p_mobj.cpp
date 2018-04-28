@@ -683,7 +683,7 @@ void P_XYMovement(Mobj* mo)
       return;  // do not stop sliding if halfway off a step with some momentum
 
    // Some objects never rest on other things
-   if(mo->intflags & MIF_ONMOBJ && mo->flags4 & MF4_SLIDEONTHINGS)
+   if(mo->intflags & MIF_ONMOBJ && mo->flags4 & MF4_SLIDEOVERTHINGS)
       return;
 
    // killough 11/98:
@@ -1428,7 +1428,7 @@ void Mobj::Think()
             {
                P_PlayerHitFloor(this, true);
             }
-            if(player && onmo->flags4 & MF4_STICKY)
+            if(player && onmo->flags4 & MF4_STICKYCARRY)
             {
                player->momx = momx = onmo->momx;
                player->momy = momy = onmo->momy;
