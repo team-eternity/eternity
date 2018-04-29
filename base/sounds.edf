@@ -241,6 +241,7 @@ soundsequence EECeilingNormal
   commands
   @"
     playloop EE_FCMove 8
+	nostopcutoff
   "@
 }
 
