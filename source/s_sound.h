@@ -144,7 +144,7 @@ void S_SetMusicVolume(int volume);
 void S_SetSfxVolume(int volume);
 
 // haleyjd: rudimentary sound checker
-bool S_CheckSoundPlaying(PointThinker *, sfxinfo_t *sfx);
+bool S_CheckSoundPlaying(PointThinker *, sfxinfo_t *aliasinfo);
 
 // precache sound?
 extern int s_precache;

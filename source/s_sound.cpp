@@ -82,6 +82,7 @@ extern bool nosfxparm, nomusicparm;
 struct channel_t
 {
   sfxinfo_t *sfxinfo;      // sound information (if null, channel avail.)
+  sfxinfo_t *aliasinfo;    // original sound name if using an alias
   PointThinker *origin;    // origin of sound
   int subchannel;          // haleyjd 06/12/08: origin subchannel
   int volume;              // volume scale value for effect -- haleyjd 05/29/06
@@ -457,6 +458,8 @@ void S_StartSfxInfo(const soundparams_t &params)
    // haleyjd 05/12/09: Randomized sounds. Like aliases, these are links to 
    // other sounds, but we choose one at random.
 
+   sfxinfo_t *aliasinfo = sfx;
+
    while(sfx->alias || sfx->randomsounds)
    {
       if(sfx->alias)
@@ -629,6 +632,7 @@ void S_StartSfxInfo(const soundparams_t &params)
 #endif
 
    channels[cnum].sfxinfo = sfx;
+   channels[cnum].aliasinfo = aliasinfo;
    channels[cnum].origin  = origin;
 
    while(sfx->link)
@@ -977,15 +981,15 @@ void S_UpdateSounds(const Mobj *listener)
 //
 // haleyjd: rudimentary sound checking function
 //
-bool S_CheckSoundPlaying(PointThinker *mo, sfxinfo_t *sfx)
+bool S_CheckSoundPlaying(PointThinker *mo, sfxinfo_t *aliasinfo)
 {
    int cnum;
 
-   if(mo && sfx)
-   {   
+   if(mo && aliasinfo)
+   {
       for(cnum = 0; cnum < numChannels; cnum++)
       {
-         if(channels[cnum].origin == mo && channels[cnum].sfxinfo == sfx)
+         if(channels[cnum].origin == mo && channels[cnum].aliasinfo == aliasinfo)
          {
             if(I_SoundIsPlaying(channels[cnum].handle))
                return true;
