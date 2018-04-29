@@ -1618,6 +1618,7 @@ void P_DoorSequence(bool raise, bool turbo, bool bounced, sector_t *s); // haley
 
 // p_floor
 void P_FloorSequence(sector_t *s);
+void P_StairSequence(sector_t *s);
 
 // p_ceilng
 
