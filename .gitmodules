@@ -1,0 +1,4 @@
+[submodule "adlmidi"]
+	path = adlmidi
+	url = https://github.com/Wohlstand/libADLMIDI/
+	branch = master
