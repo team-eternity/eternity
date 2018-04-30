@@ -8,6 +8,19 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+29.04.2018
+
+BUGFIX: Sounds with "alias" or "random" entries didn't work correctly in sound
+        sequences with "playrepeat" and other similar commands.
+
+        Fixed wrong Heretic sound sequences, by adding more gamemode specific
+        implementations in EDF.
+
+        Fixed the ceiling movement sound sequence from being cut off on stop.
+        This was breaking mods which were replacing DSSTNMOV with something 
+        longer, which would only fully play when a ceiling stopped moving.
+
+--------------------------------------------------------------------------------
 28.04.2018
 
 FEATURE: Fixed Heretic pods to act properly. For this, I had to add five new
@@ -41,6 +54,10 @@ FEATURE: Fixed Heretic pods to act properly. For this, I had to add five new
 
 BUGFIX: Fixed a long-standing problem with double skies (feature from Hexen) not
         working at all as expected.
+
+        Fixed an off-by-one overflow (otherwise harmless) which caused
+        transparent midtextures to show extra black (or index 0) pixels below
+        most columns.
 
 --------------------------------------------------------------------------------
 19.04.2018
