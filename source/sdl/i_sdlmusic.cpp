@@ -53,6 +53,10 @@
 #include "../../snes_spc/spc.h"
 #endif
 
+#ifdef HAVE_ADLMIDILIB
+#include "adlmidi.h"
+#endif
+
 extern int audio_buffers;
 
 #define STEP sizeof(Sint16)
@@ -156,6 +160,46 @@ static void I_EffectSPC(void *udata, Uint8 *stream, int len)
       rightout += STEP;
    }
 }
+#endif
+
+#ifdef HAVE_ADLMIDILIB
+static ADL_MIDIPlayer *adlmidi_player = nullptr;
+volatile bool adlplaying = false;
+
+int midi_device      = 0;
+// TODO: Remove constexpr and uncomment all external instances of adlmidi_numcards,
+// and snd_numcards. Only do so once playback with > 2 is correct.
+constexpr int adlmidi_numcards = 2;
+int adlmidi_bank               = 72;
+
+//
+// Play a MIDI via libADLMIDI
+// FIXME: adlmidi_numcards (adlmidi_player->NumCards) > 2 causes playback issues
+//
+/*static void I_EffectADLMIDI(void *udata, Uint8 *stream, int len)
+{
+   adlplaying = true;
+   // TODO: Remove the exiting check once all atexit calls are erradicated
+   if(exiting || Mix_PausedMusic())
+   {
+      adlplaying = false;
+      return;
+   }
+
+   const int numsamples = len / ADLMIDISTEP;
+   Sint16 *outbuff = ecalloc(Sint16 *, numsamples, sizeof(Sint16));
+   const int gotlen = adl_play(adlmidi_player, numsamples, outbuff);
+   if(snd_MusicVolume == 15)
+      memcpy(stream, reinterpret_cast<Uint8 *>(outbuff), size_t(gotlen * ADLMIDISTEP));
+   else
+   {
+      SDL_MixAudioFormat(stream, reinterpret_cast<Uint8 *>(outbuff), MIX_DEFAULT_FORMAT,
+                         gotlen * ADLMIDISTEP, (snd_MusicVolume * 128) / 15);
+   }
+   efree(outbuff);
+   adlplaying = false;
+}*/
+
 #endif
 
 //
