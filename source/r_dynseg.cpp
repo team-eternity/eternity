@@ -633,16 +633,38 @@ void R_AttachPolyObject(polyobj_t *poly)
       dynavertex_t *v1 = R_GetFreeDynaVertex();
       dynavertex_t *v2 = R_GetFreeDynaVertex();
 
+      // NOTE: currently polyobjects with portals won't be interpolated. We need
+      // to implement portal transform interpolation first.
       *static_cast<vertex_t *>(v1) = *line->v1;
-      v1->backup.x = poly->tmpVerts[line->v1->polyindex].x;
-      v1->backup.y = poly->tmpVerts[line->v1->polyindex].y;
-      v1->fbackup.x = poly->tmpVerts[line->v1->polyindex].fx;
-      v1->fbackup.y = poly->tmpVerts[line->v1->polyindex].fy;
+      if(poly->numPortals)
+      {
+         v1->backup.x = v1->x;
+         v1->backup.y = v1->y;
+         v1->fbackup.x = v1->fx;
+         v1->fbackup.y = v1->fy;
+      }
+      else
+      {
+         v1->backup.x = poly->tmpVerts[line->v1->polyindex].x;
+         v1->backup.y = poly->tmpVerts[line->v1->polyindex].y;
+         v1->fbackup.x = poly->tmpVerts[line->v1->polyindex].fx;
+         v1->fbackup.y = poly->tmpVerts[line->v1->polyindex].fy;
+      }
       *static_cast<vertex_t *>(v2) = *line->v2;
-      v2->backup.x = poly->tmpVerts[line->v2->polyindex].x;
-      v2->backup.y = poly->tmpVerts[line->v2->polyindex].y;
-      v2->fbackup.x = poly->tmpVerts[line->v2->polyindex].fx;
-      v2->fbackup.y = poly->tmpVerts[line->v2->polyindex].fy;
+      if(poly->numPortals)
+      {
+         v2->backup.x = v2->x;
+         v2->backup.y = v2->y;
+         v2->fbackup.x = v2->fx;
+         v2->fbackup.y = v2->fy;
+      }
+      else
+      {
+         v2->backup.x = poly->tmpVerts[line->v2->polyindex].x;
+         v2->backup.y = poly->tmpVerts[line->v2->polyindex].y;
+         v2->fbackup.x = poly->tmpVerts[line->v2->polyindex].fx;
+         v2->fbackup.y = poly->tmpVerts[line->v2->polyindex].fy;
+      }
 
       R_SetDynaVertexRef(&idseg->seg.dyv1, v1);
       R_SetDynaVertexRef(&idseg->seg.dyv2, v2);
