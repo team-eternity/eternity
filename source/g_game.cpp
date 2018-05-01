@@ -103,6 +103,7 @@ static bool     netdemo;
 static byte    *demobuffer;   // made some static -- killough
 static size_t   maxdemosize;
 static byte    *demo_p;
+static size_t   demolength;
 static int16_t  consistency[MAXPLAYERS][BACKUPTICS];
 static int      g_destmap;
 
@@ -1083,10 +1084,8 @@ void G_DoPlayDemo(void)
       return;
    }
 
-   demobuffer = demo_p = (byte *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC)); // killough
-
    // Check for empty demo lumps
-   if(!demo_p)
+   if(!(demolength = wGlobalDir.lumpLength(lumpnum)))
    {
       if(singledemo)
          I_Error("G_DoPlayDemo: empty demo %s\n", basename);
@@ -1097,7 +1096,8 @@ void G_DoPlayDemo(void)
       }
       return;  // protect against zero-length lumps
    }
-   
+   demobuffer = demo_p = (byte *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC)); // killough
+
    // killough 2/22/98, 2/28/98: autodetect old demos and act accordingly.
    // Old demos turn on demo_compatibility => compatibility; new demos load
    // compatibility flag, and other flags as well, as a part of the demo.
@@ -1388,6 +1388,11 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
    if(*demo_p == DEMOMARKER)
    {
       G_CheckDemoStatus();      // end of demo data stream
+   }
+   else if(demoplayback && demo_p > demobuffer + demolength)
+   {
+      C_Printf(FC_ERROR "G_ReadDemoTiccmd: missing DEMOMARKER\n");
+      G_CheckDemoStatus();
    }
    else
    {
