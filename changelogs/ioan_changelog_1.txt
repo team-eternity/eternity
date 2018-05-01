@@ -8,6 +8,16 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+01.05.2018
+
+BUGFIX: Fixed a buffer reading runaway when a demo has no marker at the end.
+        Thanks to vita for the bug fix.
+
+        Disabled interpolation for polyobjects with portals, until we add inter-
+        polation for portal deltas and transforms. It was suffering from
+        flickering.
+
+--------------------------------------------------------------------------------
 29.04.2018
 
 BUGFIX: Sounds with "alias" or "random" entries didn't work correctly in sound
