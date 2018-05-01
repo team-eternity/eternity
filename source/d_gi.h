@@ -211,6 +211,7 @@ enum
    GIF_NODIEHI        = 0x00010000, // never plays PDIEHI sound
    GIF_LOSTSOULBOUNCE = 0x00020000, // gamemode or mission normally fixes Lost Soul bouncing
    GIF_IMPACTBLOOD    = 0x00040000, // blood is spawned when actors are impacted by projectiles
+   GIF_CHEATSOUND     = 0x00080000, // make menu open sound when cheating
 };
 
 // Game mode handling - identify IWAD version

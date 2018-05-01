@@ -168,6 +168,7 @@ static dehflags_t gmi_flags[] =
    { "NODIEHI",        GIF_NODIEHI        },
    { "LOSTSOULBOUNCE", GIF_LOSTSOULBOUNCE },
    { "IMPACTBLOOD",    GIF_IMPACTBLOOD    },
+   { "CHEATSOUND",     GIF_CHEATSOUND     },
    { NULL,             0                  }
 };
 

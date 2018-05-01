@@ -970,6 +970,8 @@ bool M_FindCheats(int key)
             matchedbefore = 1;            // responder has eaten key
             ret = true;
             curcht.func(&(curcht.arg));   // call cheat handler
+            if(GameModeInfo->flags & GIF_CHEATSOUND)
+               S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_ACTIVATE]);
          }
       }
    }
