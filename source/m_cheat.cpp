@@ -817,7 +817,7 @@ static void cheat_hticgimme2(const void *arg)
       }
       player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS3));
    }
-   else if(type > 0 && type < numHArtifacts && count > 0 && count < 10)
+   else if(type >= 0 && type < numHArtifacts && count > 0 && count < 10)
    {
       itemeffect_t *artifact = E_ItemEffectForName(hartiNames[type]);
       if(artifact == nullptr)
