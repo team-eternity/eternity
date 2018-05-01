@@ -670,7 +670,10 @@ void R_AttachPolyObject(polyobj_t *poly)
       R_SetDynaVertexRef(&idseg->seg.dyv2, v2);
 
       dynaseg_t *backdseg;
-      if(line->sidenum[1] != -1)
+      // Make sure not to render portal line backsides if they were generated
+      // 1-sided lines turned into 2-sided.
+      if(line->sidenum[1] != -1 && (!(line->intflags & MLI_1SPORTALLINE) ||
+                                    line->sidenum[1] != line->sidenum[0]))
       {
          // create backside dynaseg now
          backdseg = R_GetFreeDynaSeg();
