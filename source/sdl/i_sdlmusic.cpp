@@ -54,7 +54,7 @@
 #endif
 
 #ifdef HAVE_ADLMIDILIB
-#include "adlmidi.h"
+#include "adlmidi.hpp"
 #endif
 
 extern int audio_buffers;

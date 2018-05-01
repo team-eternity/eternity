@@ -62,7 +62,7 @@
 #include "w_wad.h"
 
 #ifdef HAVE_ADLMIDILIB
-#include "adlmidi.h"
+#include "adlmidi.hpp"
 extern int adlmidi_bank;
 #endif
 
