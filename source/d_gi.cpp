@@ -1154,6 +1154,7 @@ static gamemodeinfo_t giDoomSW =
    "DoomBlood",      // bloodDefaultRIP
    "DoomBlood",      // bloodDefaultCrush
    bloodTypeForActionDOOM, // default behavior for action array
+   2,                // skillAmmoMultiplier
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1273,6 +1274,7 @@ static gamemodeinfo_t giDoomReg =
    "DoomBlood",      // bloodDefaultRIP
    "DoomBlood",      // bloodDefaultCrush
    bloodTypeForActionDOOM, // default behavior for action array
+   2,                // skillAmmoMultiplier
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1392,6 +1394,7 @@ static gamemodeinfo_t giDoomRetail =
    "DoomBlood",      // bloodDefaultRIP
    "DoomBlood",      // bloodDefaultCrush
    bloodTypeForActionDOOM, // default behavior for action array
+   2,                // skillAmmoMultiplier
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1511,6 +1514,7 @@ static gamemodeinfo_t giDoomCommercial =
    "DoomBlood",      // bloodDefaultRIP
    "DoomBlood",      // bloodDefaultCrush
    bloodTypeForActionDOOM, // default behavior for action array
+   2,                // skillAmmoMultiplier
 
    INTERPIC_DOOM,     // interPic
    mus_dm2int,        // interMusNum
@@ -1630,6 +1634,7 @@ static gamemodeinfo_t giHereticSW =
    "HereticBlood",         // bloodDefaultRIP
    "HereticBlood",         // bloodDefaultCrush
    bloodTypeForActionHtic, // default blood behavior for action array
+   1.5,                // skillAmmoMultiplier
 
    INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum
@@ -1753,6 +1758,7 @@ static gamemodeinfo_t giHereticReg =
    "HereticBlood",         // bloodDefaultRIP
    "HereticBlood",         // bloodDefaultCrush
    bloodTypeForActionHtic, // default blood behavior for action array
+   1.5,               // skillAmmoMultiplier
 
    INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum

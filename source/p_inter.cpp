@@ -104,7 +104,7 @@ bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
 
    // give double ammo in trainer mode, you'll need in nightmare
    if(gameskill == sk_baby || gameskill == sk_nightmare)
-      num <<= 1;
+      num = static_cast<int>(floor(num * GameModeInfo->skillAmmoMultiplier));
 
    if(!E_GiveInventoryItem(player, ammo, num))
       return false; // don't need this ammo

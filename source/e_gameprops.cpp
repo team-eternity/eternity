@@ -85,6 +85,7 @@
 #define ITEM_GPROP_THRUSTFACTR "game.thrustfactor"
 #define ITEM_GPROP_DEFPCLASS   "game.defpclass"
 #define ITEM_GPROP_FINTYPE     "game.endgamefinaletype"
+#define ITEM_GPROP_SKILLMUL    "game.skillammomultiplier"
 #define ITEM_GPROP_FINALEX     "finale.text.x"
 #define ITEM_GPROP_FINALEY     "finale.text.y"
 #define ITEM_GPROP_CASTTITLEY  "castcall.title.y"
@@ -236,6 +237,7 @@ cfg_opt_t edf_game_opts[] =
    CFG_INT(ITEM_GPROP_THRUSTFACTR, 0,    CFGF_NONE),
    CFG_STR(ITEM_GPROP_DEFPCLASS,   "",   CFGF_NONE),
    CFG_STR(ITEM_GPROP_FINTYPE,     "",   CFGF_NONE),
+   CFG_FLOAT(ITEM_GPROP_SKILLMUL,  0,    CFGF_NONE),
    CFG_INT(ITEM_GPROP_FINALEX,     0,    CFGF_NONE),
    CFG_INT(ITEM_GPROP_FINALEY,     0,    CFGF_NONE),
    CFG_INT(ITEM_GPROP_CASTTITLEY,  0,    CFGF_NONE),
@@ -510,6 +512,9 @@ static void E_processGamePropsBlock(cfg_t *props)
       if(finaleType >= 0 && finaleType < FINALE_NUMFINALES)
          GameModeInfo->teleEndGameFinaleType = finaleType;
    }
+
+   if(IS_SET(ITEM_GPROP_SKILLMUL))
+      GameModeInfo->skillAmmoMultiplier = cfg_getfloat(props, ITEM_GPROP_SKILLMUL);
 
    // Finale Properties
 

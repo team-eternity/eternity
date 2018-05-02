@@ -424,6 +424,7 @@ struct gamemodeinfo_t
    const char *bloodDefaultRIP;    // thingtype of blood shown when thing is impcated by inflictor with "RIP" flag
    const char *bloodDefaultCrush;  // thingtype of blood shown when thing is crushed
    bloodtype_e *defBloodBehaviors; // default blood behavior for action array
+   double skillAmmoMultiplier;     // how much more ammo to give on baby and nightmare
 
    // Intermission and Finale stuff
    const char *interPic;          // default intermission backdrop
