@@ -64,6 +64,12 @@
 
 #define plyr (&players[consoleplayer])     /* the console player */
 
+// Various flags
+enum
+{
+   FLAG_ALWAYSCALL = 16    // apply this on top of negative arg
+};
+
 static int M_NukeMonsters();
 
 //=============================================================================
@@ -102,9 +108,7 @@ static void cheat_htickill(const void *);
 static void cheat_hticnoclip(const void *);
 static void cheat_hticwarp(const void *);
 static void cheat_hticbehold(const void *);
-static void cheat_hticgimme0(const void *);
-static void cheat_hticgimme1(const void *);
-static void cheat_hticgimme2(const void *);
+static void cheat_hticgimme(const void *);
 static void cheat_rambo(const void *);
 
 // Shared cheats
@@ -195,9 +199,7 @@ cheat_s cheat[CHEAT_NUMCHEATS] =
    { "ravpowerf", Game_Heretic, not_sync, cheat_pw,          pw_flight          },
    { "ravpowerr", Game_Heretic, not_sync, cheat_pw,          pw_ironfeet        },
    { "ravpower",  Game_Heretic, not_sync, cheat_hticbehold,  0                  },
-   { "gimme",     Game_Heretic, not_sync, cheat_hticgimme0,  0                  },
-   { "gimme",     Game_Heretic, not_sync, cheat_hticgimme1, -1                  },
-   { "gimme",     Game_Heretic, not_sync, cheat_hticgimme2, -2                  },
+   { "gimme",     Game_Heretic, not_sync, cheat_hticgimme, -(2 | FLAG_ALWAYSCALL) },
    { "rambo",     Game_Heretic, not_sync, cheat_rambo,       0                  },
 
    // Shared Cheats
@@ -713,8 +715,6 @@ static void cheat_htickeys(const void *arg)
       player_printf(plyr, "%s", DEH_String("TXT_CHEATKEYS"));
 }
 
-// HTIC_TODO: artifacts cheat "gimme"
-
 //
 // Heretic Warp cheat - engage
 //
@@ -756,23 +756,6 @@ static void cheat_hticbehold(const void *arg)
    player_printf(plyr, "inVuln, Ghost, Allmap, Torch, Fly or Rad");
 }
 
-//
-// Adapted CheatArtifact1Func from Choco Heretic
-// Initial stage of the gimme cheat (0 params)
-//
-static void cheat_hticgimme0(const void *)
-{
-   player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS1));
-}
-
-//
-// CheatArtifact2Func from Choco Heretic
-// Second stage of the gimme cheat (1 unused param)
-//
-static void cheat_hticgimme1(const void *)
-{
-   player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS2));
-}
 
 static constexpr char const *hartiNames[] =
 {
@@ -792,12 +775,21 @@ static constexpr char const *hartiNames[] =
 static constexpr int numHArtifacts = earrlen(hartiNames);
 
 //
-// CheatArtifact3Func from Choco Heretic
-// Final stage of the gimme cheat (2 params)
+// Adapted CheatArtifact1Func from Choco Heretic
 //
-static void cheat_hticgimme2(const void *arg)
+static void cheat_hticgimme(const void *varg)
 {
-   const char *args = static_cast<const char *>(arg);
+   auto args = static_cast<const char *>(varg);
+   if(!*args)
+   {
+      player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS1));
+      return;
+   }
+   if(!*(args + 1))
+   {
+      player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS2));
+      return;
+   }
    int i;
    int type;
    int count;
@@ -881,6 +873,7 @@ bool M_FindCheats(int key)
    static uint64_t sr;
    static char argbuf[CHEAT_ARGS_MAX+1], *arg;
    static int init, argsleft, cht;
+   static bool argsAlwaysCall;
    int i, matchedbefore; 
    bool ret;
 
@@ -894,8 +887,12 @@ bool M_FindCheats(int key)
    if(argsleft)
    {
       *arg++ = ectype::toLower(key);     // store key in arg buffer
-      if(!--argsleft)                    // if last key in arg list,
+      if(!--argsleft || argsAlwaysCall)  // if last key in arg list,
+      {
          cheat[cht].func(argbuf);        // process the arg buffer
+         if(GameModeInfo->flags & GIF_CHEATSOUND)
+            S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_ACTIVATE]);
+      }
       return true;                       // affirmative response
    }
 
@@ -962,8 +959,15 @@ bool M_FindCheats(int key)
          {
             cht = i;                      // remember this cheat code
             arg = argbuf;                 // point to start of arg buffer
-            argsleft = -curcht.arg;       // number of args expected
+            argsleft = -curcht.arg & ~FLAG_ALWAYSCALL;       // number of args expected
+            memset(arg, 0, argsleft);
             ret = true;                   // responder has eaten key
+            if((argsAlwaysCall = !!(-curcht.arg & FLAG_ALWAYSCALL)))
+            {
+               curcht.func(arg);
+               if(GameModeInfo->flags & GIF_CHEATSOUND)
+                  S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_ACTIVATE]);
+            }
          }
          else if(!matchedbefore)          // allow only one cheat at a time 
          {
