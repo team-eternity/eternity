@@ -8,6 +8,13 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+02.05.2018
+
+BUGFIX: The Heretic skills 1 and 5 now multiply the ammo per item correctly.
+
+FEATURE: Added game.skillammomultiplier EDF gameprop specifier to customize this.
+
+--------------------------------------------------------------------------------
 01.05.2018
 
 BUGFIX: Fixed a buffer reading runaway when a demo has no marker at the end.
