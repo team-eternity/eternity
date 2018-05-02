@@ -199,6 +199,8 @@ static bool P_giveBackpackAmmo(player_t *player)
    {
       auto ammoType = E_AmmoTypeForIndex(i);
       int giveamount = ammoType->getInt(keyBackpackAmount, 0);
+      if(!giveamount)
+         continue;
       given |= P_GiveAmmo(player, ammoType, giveamount);
    }
 
