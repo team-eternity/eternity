@@ -45,6 +45,7 @@ weaponinfo StaffPowered : Staff
 
   readysound   ht_stfcrk
   addflags     READYSNDHALF|POWERED_UP
+  mod          StaffPowered
 
   states
   @"

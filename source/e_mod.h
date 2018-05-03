@@ -30,6 +30,7 @@
 #define E_MOD_H__
 
 #include "m_dllist.h"
+#include "m_fixed.h"
 
 //
 // emod structure
@@ -48,6 +49,9 @@ struct emod_t
    bool obitIsBexString;
    bool selfObitIsBexString;
    bool sourceless;
+
+   fixed_t absolutePush;   // if set, push things by this amount
+   fixed_t absoluteHop;    // if set, hop gravity things by this amount
 
    // For faster damagetype lookups in metatables
    size_t dfKeyIndex;

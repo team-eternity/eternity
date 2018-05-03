@@ -1410,7 +1410,10 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
          thrust *= 4;
       }
 
-      P_ThrustMobj(target, ang, thrust);
+      P_ThrustMobj(target, ang,
+                   emod->absolutePush > 0 ? emod->absolutePush : thrust);
+      if(!(target->flags & MF_NOGRAVITY) && emod->absoluteHop)
+         target->momz += emod->absoluteHop;
       
       // killough 11/98: thrust objects hanging off ledges
       if(target->intflags & MIF_FALLING && target->gear >= MAXGEAR)

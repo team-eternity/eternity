@@ -3246,3 +3246,14 @@ thingtype HereticBloodSplatter : Mobj, -1, 433
     stop
   "@
 }
+
+// Damage Types ----------------------------------------------------------------
+
+//
+// Powered staff damage type: has special pushing behaviour
+//
+damagetype StaffPowered
+{
+  absolute.push 10
+  absolute.hop  5
+}
