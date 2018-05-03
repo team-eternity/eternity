@@ -1792,7 +1792,8 @@ extern fixed_t tmsecceilz;
 //
 // P_SpawnMobj
 //
-Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
+Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
+                  bool nolastlook)
 {
    Mobj       *mobj = new Mobj;
    mobjinfo_t *info = mobjinfo[type];
@@ -1857,7 +1858,8 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    if(gameskill != sk_nightmare)
       mobj->reactiontime = info->reactiontime;
 
-   mobj->lastlook = P_Random(pr_lastlook) % MAXPLAYERS;
+   if(!nolastlook)
+      mobj->lastlook = P_Random(pr_lastlook) % MAXPLAYERS;
 
    // do not set the state with P_SetMobjState,
    // because action routines can not be called yet
@@ -2267,6 +2269,7 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
 
    // check for players specially
 
+   bool norandomcall = false;
    if(mthing->type <= 4 && mthing->type > 0) // killough 2/26/98 -- fix crashes
    {
       // killough 7/19/98: Marine's best friend :)
@@ -2345,7 +2348,10 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
    // below must be caught here
 
    if(mthing->type >= 1200 && mthing->type < 1300)         // enviro sequences
+   {
       i = E_SafeThingName("EEEnviroSequence");
+      norandomcall = demo_version < 100;
+   }
    else if(mthing->type >= 1400 && mthing->type < 1500)    // sector sequence
       i = E_SafeThingName("EESectorSequence");
    else if(mthing->type >= 9027 && mthing->type <= 9033)   // particle fountains
@@ -2358,6 +2364,8 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
    {
       // killough 8/23/98: use table for faster lookup
       i = P_FindDoomedNum(mthing->type);
+      if(mthing->type == 7056)
+         norandomcall = demo_version < 100;
    }
 
    // phares 5/16/98:
@@ -2409,7 +2417,7 @@ spawnit:
    if(mobjinfo[i]->flags2 & MF2_SPAWNFLOAT)
       z = FLOATRANDZ;
 
-   mobj = P_SpawnMobj(x, y, z, i);
+   mobj = P_SpawnMobj(x, y, z, i, norandomcall);
 
    // haleyjd 10/03/05: Hexen-format mapthing support
    
