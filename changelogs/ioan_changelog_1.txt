@@ -8,6 +8,12 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+03.05.2018
+
+FEATURE: Added absolute.push and absolute.hop to damagetype. Needed by Heretic's
+         powered staff.
+
+--------------------------------------------------------------------------------
 02.05.2018
 
 BUGFIX: The Heretic skills 1 and 5 now multiply the ammo per item correctly.
