@@ -207,7 +207,7 @@ static void ST_HticTicker()
 
    // update chain wiggle value
    if(leveltime & 1)
-      chainwiggle = M_Random() & 1;
+      chainwiggle = P_Random(pr_chainwiggle) & 1;
 }
 
 static void ST_drawInvNum(int num, int x, int y)
