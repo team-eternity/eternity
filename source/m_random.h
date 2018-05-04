@@ -27,6 +27,8 @@
 #ifndef M_RANDOM_H__
 #define M_RANDOM_H__
 
+#include "doomstat.h"
+
 // killough 1/19/98: rewritten to use to use a better random number generator
 // in the new engine, although the old one is available for compatibility.
 
@@ -268,6 +270,14 @@ int P_SubRandom(pr_class_t);
 int P_RangeRandom(pr_class_t pr_class, int min, int max);
 
 #define M_RangeRandom(min, max) P_RangeRandom(pr_misc, (min), (max))
+
+//
+// Heretic demo compatibility switch
+//
+inline static int HT_Random(pr_class_t pr_class)
+{
+   return ancient_demo ? P_Random(pr_class) : M_Random();
+}
 
 // haleyjd 03/16/09: extended random functions
 unsigned int P_RandomEx(pr_class_t);
