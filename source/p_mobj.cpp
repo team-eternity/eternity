@@ -2350,7 +2350,7 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
    if(mthing->type >= 1200 && mthing->type < 1300)         // enviro sequences
    {
       i = E_SafeThingName("EEEnviroSequence");
-      norandomcall = demo_version < 100;
+      norandomcall = ancient_demo;
    }
    else if(mthing->type >= 1400 && mthing->type < 1500)    // sector sequence
       i = E_SafeThingName("EESectorSequence");
@@ -2365,7 +2365,7 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
       // killough 8/23/98: use table for faster lookup
       i = P_FindDoomedNum(mthing->type);
       if(mthing->type == 7056)
-         norandomcall = demo_version < 100;
+         norandomcall = ancient_demo;
    }
 
    // phares 5/16/98:
