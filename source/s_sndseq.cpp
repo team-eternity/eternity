@@ -625,7 +625,7 @@ static void S_ResetEnviroSeqEngine()
    EnviroSequence    = NULL;
    enviroSeqFinished = true;
 
-   if(!enviroSpots.isEmpty())
+   if(!enviroSpots.isEmpty() && !ancient_demo)
       nextEnviroSpot = enviroSpots.getRandom(pr_misc);
    else
       nextEnviroSpot = NULL; // broken, but shouldn't matter
@@ -713,11 +713,17 @@ static void S_RunEnviroSequence()
 
       // possibly randomize the starting volume
       enviroSeq.volume = 
-         edfSeq->randvol ? M_RangeRandom(edfSeq->minvolume, edfSeq->volume)
+      edfSeq->randvol ? ancient_demo ? P_Random(pr_envirospot) / 4 : M_RangeRandom(edfSeq->minvolume, edfSeq->volume)
                          : edfSeq->volume;
 
       EnviroSequence    = &enviroSeq; // now playing an enviro sequence
       enviroSeqFinished = false;      // sequence is not finished
+   }
+   else if(ancient_demo)
+   {
+      // Heretic demos only initialize the next sequence now.
+      enviroTics = 6 * TICRATE + P_Random(pr_envirotics);
+      nextEnviroSpot = enviroSpots.getRandom(pr_envirospot);
    }
 }
 

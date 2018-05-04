@@ -287,7 +287,8 @@ void P_Ticker()
    
    P_ParticleThinker(); // haleyjd: think for particles
 
-   S_RunSequences(); // haleyjd 06/06/06
+   if(!ancient_demo)
+      S_RunSequences(); // haleyjd 06/06/06
 
    // not if this is an intermission screen
    // haleyjd: players don't think during cinematic pauses
@@ -303,6 +304,8 @@ void P_Ticker()
    Thinker::RunThinkers();
    ACS_Exec();
    P_UpdateSpecials();
+   if(ancient_demo)
+      S_RunSequences();
    P_RespawnSpecials();
    if(demo_version >= 329)
       P_AnimateSurfaces(); // haleyjd 04/14/99
