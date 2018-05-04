@@ -31,6 +31,7 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "doomstat.h"
 #include "i_system.h"
 #include "c_runcmd.h"
 #include "p_mobjcol.h"
@@ -629,8 +630,11 @@ static void S_ResetEnviroSeqEngine()
    else
       nextEnviroSpot = NULL; // broken, but shouldn't matter
 
-   enviroTics = (int)M_RangeRandomEx(EnviroSeqManager.minStartWait,
-                                     EnviroSeqManager.maxStartWait);
+   if(ancient_demo)
+      enviroTics = 10 * TICRATE;
+   else
+      enviroTics = (int)M_RangeRandomEx(EnviroSeqManager.minStartWait,
+                                        EnviroSeqManager.maxStartWait);
 }
 
 //
@@ -663,11 +667,8 @@ static void S_RunEnviroSequence()
       return;
 
    // if waiting, count down the wait time
-   if(enviroTics)
-   {
-      enviroTics--;
+   if(ancient_demo ? --enviroTics : enviroTics--)
       return;
-   }
 
    // are we currently playing a sequence?
    if(EnviroSequence)
@@ -677,9 +678,14 @@ static void S_RunEnviroSequence()
       {
          memset(&enviroSeq, 0, sizeof(SndSeq_t));
          EnviroSequence = NULL;
-         enviroTics = (int)M_RangeRandomEx(EnviroSeqManager.minEnviroWait,
-                                           EnviroSeqManager.maxEnviroWait);
-         nextEnviroSpot = enviroSpots.getRandom(pr_misc);
+
+         if(ancient_demo)
+            enviroTics = 6 * TICRATE + P_Random(pr_envirotics);
+         else
+            enviroTics = (int)M_RangeRandomEx(EnviroSeqManager.minEnviroWait,
+                                              EnviroSeqManager.maxEnviroWait);
+
+         nextEnviroSpot = enviroSpots.getRandom(ancient_demo ? pr_envirospot : pr_misc);
       }
       else
          S_RunSequence(EnviroSequence);
@@ -691,7 +697,7 @@ static void S_RunEnviroSequence()
 
       if(!edfSeq) // woops, bad sequence, try another next time.
       {
-         nextEnviroSpot = enviroSpots.getRandom(pr_misc);
+         nextEnviroSpot = enviroSpots.getRandom(ancient_demo ? pr_envirospot : pr_misc);
          return;
       }
 
