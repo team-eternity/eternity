@@ -261,7 +261,7 @@ void A_Chase(actionargs_t *actionargs)
    // modify target threshold
    if(actor->threshold)
    {
-      if(!actor->target || actor->target->health <= 0)
+      if(!ancient_demo && (!actor->target || actor->target->health <= 0))
          actor->threshold = 0;
       else
          actor->threshold--;
