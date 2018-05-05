@@ -1124,9 +1124,9 @@ void A_BeastPuff(actionargs_t *actionargs)
       fixed_t x, y, z;
       Mobj *mo;
 
-      x = actor->x + (P_SubRandom(pr_puffy) << 10);      
-      y = actor->y + (P_SubRandom(pr_puffy) << 10);
       z = actor->z + (P_SubRandom(pr_puffy) << 10);
+      y = actor->y + (P_SubRandom(pr_puffy) << 10);
+      x = actor->x + (P_SubRandom(pr_puffy) << 10);
 
       mo = P_SpawnMobj(x, y, z, E_SafeThingType(MT_PUFFY));
 
