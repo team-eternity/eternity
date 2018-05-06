@@ -8,6 +8,12 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+06.05.2018
+
+BUGFIX: ChangeSkill (linedef special) must also update the fast parameters when
+        switching to or from nightmare or black plague mode.
+
+--------------------------------------------------------------------------------
 03.05.2018
 
 FEATURE: Added absolute.push and absolute.hop to damagetype. Needed by Heretic's
