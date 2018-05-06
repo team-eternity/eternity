@@ -270,10 +270,10 @@ void E_AddAnimation(const EAnimDef &extdef)
 //
 bool E_IsHexenAnimation(const char *startpic, EAnimDef::type_t type)
 {
-   const EAnimDef *def = nullptr;
+   EAnimDef *def = nullptr;
    do
    {
-      def = e_anim_namehash.objectForKey(startpic);
+      def = e_anim_namehash.keyIterator(def, startpic);
    }while(def && def->type != type);
    return def && def->pics.getLength() >= 1;
 }
