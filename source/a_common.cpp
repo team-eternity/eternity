@@ -267,6 +267,19 @@ void A_Chase(actionargs_t *actionargs)
          actor->threshold--;
    }
 
+   // Support Raven game Heretic actor speedup
+   if(GameModeInfo->flags & GIF_CHASEFAST && (gameskill >= sk_nightmare ||
+                                              fastparm) && actor->tics > 3)
+   {
+      // Unlike vanilla Heretic, don't make frames shorter than 3 tics actually
+      // longer. This shouldn't affect any monster from vanilla Heretic, except
+      // the enraged D'sparil Serpent, which instead gets an extra check in
+      // A_Sor1Chase.
+      actor->tics -= actor->tics / 2;
+      if(actor->tics < 3)
+         actor->tics = 3;
+   }
+
    // turn towards movement direction if not there yet
    // killough 9/7/98: keep facing towards target if strafing or backing out
 

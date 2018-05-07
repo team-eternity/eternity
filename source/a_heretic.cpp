@@ -403,6 +403,15 @@ void A_Sor1Chase(actionargs_t *actionargs)
       // don't make tics less than 1
       if(actor->tics < 1)
          actor->tics = 1;
+
+      // Make sure to account for the skill5 tic reset in vanilla Heretic
+      // (the tics -> 3 bump was not added in Eternity's A_Chase because that
+      // would prevent very fast custom monsters from working properly).
+      if(GameModeInfo->flags & GIF_CHASEFAST && (gameskill >= sk_nightmare ||
+                                                 fastparm) && actor->tics < 3)
+      {
+         actor->tics = 3;
+      }
    }
 
    A_Chase(actionargs);
