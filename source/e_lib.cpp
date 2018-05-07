@@ -1094,6 +1094,30 @@ void E_MetaTableFromCfg(cfg_t *cfg, MetaTable *table, MetaTable *prototype)
 }
 
 //
+// Sets flags by looking for + and - prefixed values
+//
+void E_SetFlagsFromPrefixCfg(cfg_t *cfg, unsigned &flags, const dehflags_t *set)
+{
+   for(auto opt = cfg->opts; opt->type != CFGT_NONE; opt++)
+   {
+      if(!cfg_size(cfg, opt->name) || opt->type != CFGT_FLAG)
+         continue;
+      // Look for the name in the set
+      for(const dehflags_t *item = set; item->name; item++)
+      {
+         if(strcasecmp(opt->name, item->name))
+            continue;
+         int v = cfg_getflag(cfg, opt->name);
+         if(v)
+            flags |= item->value;
+         else
+            flags &= ~item->value;
+         break;
+      }
+   }
+}
+
+//
 // E_GetHeredocLine
 //
 // Finds the start of the next line in the string, and modifies the string with

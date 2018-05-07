@@ -8,6 +8,26 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+07.05.2018
+
+FEATURE: Added a CHASEFAST EDF game property flag. Needed to support Raven games
+         (Heretic and Hexen) where the monster A_Chase frames are speeded up on
+         -fast and skill 5.
+
+         Added the SKILL5FAST prefix flag for non-Decorate frame and framedelta
+         definitions, which supports halving the frame time on skill 5 and -fast
+         (Doom's demons), same as what Decorate has been having with "fast".
+
+--------------------------------------------------------------------------------
+06.05.2018
+
+BUGFIX: ChangeSkill (linedef special) must also update the fast parameters when
+        switching to or from nightmare or black plague mode.
+
+        Fixed a lockup caused by having an EDF animation block of different tex-
+        ture type than something already defined internally.
+
+--------------------------------------------------------------------------------
 03.05.2018
 
 FEATURE: Added absolute.push and absolute.hop to damagetype. Needed by Heretic's
