@@ -268,8 +268,9 @@ void A_Chase(actionargs_t *actionargs)
    }
 
    // Support Raven game Heretic actor speedup
-   if(GameModeInfo->flags & GIF_CHASEFAST && (gameskill >= sk_nightmare ||
-                                              fastparm) && actor->tics > 3)
+   if(GameModeInfo->flags & GIF_CHASEFAST &&
+      (gameskill >= sk_nightmare || fastparm ||
+       actor->flags3 & MF3_ALWAYSFAST) && actor->tics > 3)
    {
       // Unlike vanilla Heretic, don't make frames shorter than 3 tics actually
       // longer. This shouldn't affect any monster from vanilla Heretic, except
