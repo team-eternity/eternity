@@ -191,11 +191,12 @@ enum
 //
 // Monster melee calculation
 //
-enum class meleecalc_e
+enum meleecalc_e
 {
-   doom,
-   raven
-   // TODO: how to classify Strife's own z-clipping rule?
+   meleecalc_doom,
+   meleecalc_raven,
+   // FIXME: how to classify Strife's own z-clipping rule?
+   meleecalc_NUM
 };
 
 //

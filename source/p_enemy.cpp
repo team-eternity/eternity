@@ -217,7 +217,7 @@ bool P_CheckMeleeRange(Mobj *actor)
    ty = pl->y;
 #endif
 
-   fixed_t range = GameModeInfo->monsterMeleeRange == meleecalc_e::raven ?
+   fixed_t range = GameModeInfo->monsterMeleeRange == meleecalc_raven ?
    MELEERANGE : MELEERANGE - 20 * FRACUNIT + pl->info->radius;
 
    return  // killough 7/18/98: friendly monsters don't attack other friends
