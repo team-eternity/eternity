@@ -432,7 +432,7 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
    // xintercept and yintercept can both be set ahead of mapx and mapy, so the
    // for loop would never advance anywhere.
 
-   if(abs(xstep) == FRACUNIT && abs(ystep) == FRACUNIT)
+   if(!ancient_demo && abs(xstep) == FRACUNIT && abs(ystep) == FRACUNIT)
    {
       if(ystep < 0)
          partialx = FRACUNIT - partialx;
@@ -450,7 +450,9 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
    mapx = xt1;
    mapy = yt1;
 
-   for(int count = 0; count < 100; count++)
+   int countmax = ancient_demo ? 64 : 100;
+
+   for(int count = 0; count < countmax; count++)
    {
       // if a flag is set, only accept blocks with line portals (needed for
       // some function in the code)
@@ -466,7 +468,25 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
       if((mapxstep | mapystep) == 0)
          break;
 
-#if 1
+      if(ancient_demo)
+      {
+         // vanilla Heretic demo compatibility
+         if(mapx == xt2 && mapy == yt2)
+            break;
+         // Original code - this fails to account for all cases.
+         if((yintercept >> FRACBITS) == mapy)
+         {
+            yintercept += ystep;
+            mapx += mapxstep;
+         }
+         else if((xintercept >> FRACBITS) == mapx)
+         {
+            xintercept += xstep;
+            mapy += mapystep;
+         }
+         continue;
+      }
+
       // From ZDoom (usable under the ZDoom code license):
       // This is the fix for the "Anywhere Moo" bug, which caused monsters to
       // occasionally see the player through an arbitrary number of walls in
@@ -527,19 +547,6 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
             mapystep = 0;
          break;
       }
-#else
-      // Original code - this fails to account for all cases.
-      if((yintercept >> FRACBITS) == mapy)
-      {
-         yintercept += ystep;
-         mapx += mapxstep;
-      }
-      else if((xintercept >> FRACBITS) == mapx)
-      {
-         xintercept += xstep;
-         mapy += mapystep;
-      }
-#endif
    }
 
    //
