@@ -203,6 +203,8 @@ bool P_CheckMeleeRange(Mobj *actor)
       if(pl->z > actor->z + actor->height || // pl is too far above
          actor->z > pl->z + pl->height)      // pl is too far below
          return false;
+      // TODO: add support for Strife's z-clipping which doesn't limit vertical
+      // range if target is below attacker!
    }
 
    // ioanch 20151225: make it linked-portal aware
@@ -215,10 +217,12 @@ bool P_CheckMeleeRange(Mobj *actor)
    ty = pl->y;
 #endif
 
+   fixed_t range = GameModeInfo->monsterMeleeRange == meleecalc_e::raven ?
+   MELEERANGE : MELEERANGE - 20 * FRACUNIT + pl->info->radius;
+
    return  // killough 7/18/98: friendly monsters don't attack other friends
       pl && !(actor->flags & pl->flags & MF_FRIEND) &&
-      (P_AproxDistance(tx - actor->x, ty - actor->y) <
-       MELEERANGE - 20*FRACUNIT + pl->info->radius) &&
+      (P_AproxDistance(tx - actor->x, ty - actor->y) < range) &&
       P_CheckSight(actor, actor->target);
 }
 
