@@ -189,6 +189,17 @@ enum
 };
 
 //
+// Monster melee calculation
+//
+enum meleecalc_e
+{
+   meleecalc_doom,
+   meleecalc_raven,
+   // FIXME: how to classify Strife's own z-clipping rule?
+   meleecalc_NUM
+};
+
+//
 // Game Mode Flags
 //
 enum
@@ -426,6 +437,7 @@ struct gamemodeinfo_t
    const char *bloodDefaultCrush;  // thingtype of blood shown when thing is crushed
    bloodtype_e *defBloodBehaviors; // default blood behavior for action array
    double skillAmmoMultiplier;     // how much more ammo to give on baby and nightmare
+   meleecalc_e monsterMeleeRange;  // how monster melee range is calculated
 
    // Intermission and Finale stuff
    const char *interPic;          // default intermission backdrop
