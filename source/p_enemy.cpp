@@ -492,7 +492,12 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
    // killough 12/98: rearrange, fix potential for stickiness on ice
 
    if(friction <= ORIG_FRICTION)
+   {
+      printf("%d: MOVEACTOR %d (%g %g %g) -> %g %g\n", gametic,
+             actor->info->doomednum, actor->x/65536., actor->y/65536.,
+             actor->z/65536., tryx/65536., tryy/65536.);
       try_ok = P_TryMove(actor, tryx, tryy, dropoff);
+   }
    else
    {
       fixed_t x = actor->x;

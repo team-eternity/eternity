@@ -61,6 +61,207 @@ const unsigned char rndtable[256] =  // 1/19/98 killough -- made const
    120, 163, 236, 249
 };
 
+//
+// Converts a class to a string
+//
+const char *M_prcString(pr_class_t pr_class)
+{
+#define CASE(a) case a: return #a
+   switch(pr_class)
+   {
+         CASE(pr_skullfly);                // #1
+         CASE(pr_damage);                  // #2
+         CASE(pr_crush);                   // #3
+         CASE(pr_genlift);                 // #4
+         CASE(pr_killtics);                // #5
+         CASE(pr_damagemobj);              // #6
+         CASE(pr_painchance);              // #7
+         CASE(pr_lights);                  // #8
+         CASE(pr_explode);                 // #9
+         CASE(pr_respawn);                 // #10
+         CASE(pr_lastlook);                // #11
+         CASE(pr_spawnthing);              // #12
+         CASE(pr_spawnpuff);               // #13
+         CASE(pr_spawnblood);              // #14
+         CASE(pr_missile);                 // #15
+         CASE(pr_shadow);                  // #16
+         CASE(pr_plats);                   // #17
+         CASE(pr_punch);                   // #18
+         CASE(pr_punchangle);              // #19
+         CASE(pr_saw);                     // #20
+         CASE(pr_plasma);                  // #21
+         CASE(pr_gunshot);                 // #22
+         CASE(pr_misfire);                 // #23
+         CASE(pr_shotgun);                 // #24
+         CASE(pr_bfg);                     // #25
+         CASE(pr_slimehurt);               // #26
+         CASE(pr_dmspawn);                 // #27
+         CASE(pr_missrange);               // #28
+         CASE(pr_trywalk);                 // #29
+         CASE(pr_newchase);                // #30
+         CASE(pr_newchasedir);             // #31
+         CASE(pr_see);                     // #32
+         CASE(pr_facetarget);              // #33
+         CASE(pr_posattack);               // #34
+         CASE(pr_sposattack);              // #35
+         CASE(pr_cposattack);              // #36
+         CASE(pr_spidrefire);              // #37
+         CASE(pr_troopattack);             // #38
+         CASE(pr_sargattack);              // #39
+         CASE(pr_headattack);              // #40
+         CASE(pr_bruisattack);             // #41
+         CASE(pr_tracer);                  // #42
+         CASE(pr_skelfist);                // #43
+         CASE(pr_scream);                  // #44
+         CASE(pr_brainscream);             // #45
+         CASE(pr_cposrefire);              // #46
+         CASE(pr_brainexp);                // #47
+         CASE(pr_spawnfly);                // #48
+         CASE(pr_misc);                    // #49
+         CASE(pr_all_in_one);              // #50
+         CASE(pr_opendoor);                // #51
+         CASE(pr_targetsearch);            // #52
+         CASE(pr_friends);                 // #53
+         CASE(pr_threshold);               // #54
+         CASE(pr_skiptarget);              // #55
+         CASE(pr_enemystrafe);             // #56
+         CASE(pr_avoidcrush);              // #57
+         CASE(pr_stayonlift);              // #58
+         CASE(pr_helpfriend);              // #59
+         CASE(pr_dropoff);                 // #60
+         CASE(pr_randomjump);              // #61
+         CASE(pr_defect);                  // #62
+         CASE(pr_script);                  // #63: FraggleScript
+         CASE(pr_minatk1);   // Minotaur attacks
+         CASE(pr_minatk2);
+         CASE(pr_minatk3);
+         CASE(pr_mindist);
+         CASE(pr_mffire);
+         CASE(pr_settics);   // SetTics codepointer
+         CASE(pr_volcano);   // Heretic volcano stuff
+         CASE(pr_svolcano);  // ditto
+         CASE(pr_clrattack);
+         CASE(pr_splash);    // TerrainTypes
+         CASE(pr_lightning); // lightning flashes
+         CASE(pr_nextflash);
+         CASE(pr_cloudpick);
+         CASE(pr_fogangle);
+         CASE(pr_fogcount);
+         CASE(pr_fogfloat);
+         CASE(pr_floathealth); // floatbobbing seed
+         CASE(pr_subtics);     // A_SubTics
+         CASE(pr_centauratk);  // A_CentaurAttack
+         CASE(pr_dropequip);   // A_DropEquipment
+         CASE(pr_bishop1);
+         CASE(pr_steamspawn); // steam spawn codepointer
+         CASE(pr_mincharge);  // minotaur inflictor special
+         CASE(pr_reflect);    // missile reflection
+         CASE(pr_tglitz);     // teleglitter z coord
+         CASE(pr_bishop2);
+         CASE(pr_custombullets); // parameterized pointers
+         CASE(pr_custommisfire);
+         CASE(pr_custompunch);
+         CASE(pr_tglit);      // teleglitter spawn
+         CASE(pr_spawnfloat); // random spawn float z flag
+         CASE(pr_mumpunch);   // mummy punches
+         CASE(pr_mumpunch2);
+         CASE(pr_hdrop1);     // heretic item drops
+         CASE(pr_hdrop2);
+         CASE(pr_hdropmom);
+         CASE(pr_clinkatk);   // clink scratch
+         CASE(pr_ghostsneak); // random failure to sight ghost player
+         CASE(pr_wizatk);     // wizard attack
+         CASE(pr_lookact);    // make seesound instead of active sound
+         CASE(pr_sorctele1);  // d'sparil stuff
+         CASE(pr_sorctele2);
+         CASE(pr_sorfx1xpl);
+         CASE(pr_soratk1);
+         CASE(pr_soratk2);
+         CASE(pr_bluespark);
+         CASE(pr_podpain);    // pod pain
+         CASE(pr_makepod);    // pod spawn
+         CASE(pr_knightat1);  // knight scratch
+         CASE(pr_knightat2);  // knight projectile choice
+         CASE(pr_dripblood);  // for A_DripBlood
+         CASE(pr_beastbite);  // beast bite
+         CASE(pr_puffy);      // beast ball puff spawn
+         CASE(pr_sorc1atk);   // sorcerer serpent attack
+         CASE(pr_monbullets); // BulletAttack ptr
+         CASE(pr_monmisfire);
+         CASE(pr_setcounter); // SetCounter ptr
+         CASE(pr_madmelee);   // Heretic mad fighting after player death
+         CASE(pr_whirlwind);  // Whirlwind inflictor
+         CASE(pr_lichmelee);  // Iron Lich attacks
+         CASE(pr_lichattack);
+         CASE(pr_whirlseek);  // Whirlwind seeking
+         CASE(pr_impcharge);  // Imp charge attack
+         CASE(pr_impmelee);   // Imp melee attack
+         CASE(pr_impmelee2);  // Leader imp melee
+         CASE(pr_impcrash);   // Imp crash
+         CASE(pr_rndwnewdir); // RandomWalk rngs
+         CASE(pr_rndwmovect);
+         CASE(pr_rndwspawn);
+         CASE(pr_weapsetctr); // WeaponSetCtr
+         CASE(pr_quake);      // T_QuakeThinker
+         CASE(pr_quakedmg);   // quake damage
+         CASE(pr_skullpop);   // Heretic skull flying
+         CASE(pr_centaurdef); // A_CentaurDefend
+         CASE(pr_bishop3);
+         CASE(pr_spawnblur);  // A_SpawnBlur
+         CASE(pr_chaosbite);  // A_DemonAttack1
+         CASE(pr_wraithm);    // A_WraithMelee
+         CASE(pr_wraithd);
+         CASE(pr_wraithfx2);
+         CASE(pr_wraithfx3);
+         CASE(pr_wraithfx4a);
+         CASE(pr_wraithfx4b);
+         CASE(pr_wraithfx4c);
+         CASE(pr_ettin);
+         CASE(pr_affritrock);  // A_AffritSpawnRock
+         CASE(pr_smbounce);    // A_SmBounce
+         CASE(pr_affrits);     // A_AffritSplotch
+         CASE(pr_icelook);     // A_IceGuyLook
+         CASE(pr_icelook2);
+         CASE(pr_icechase);    // A_IceGuyChase
+         CASE(pr_icechase2);
+         CASE(pr_dragonfx);    // A_DragonFX2
+         CASE(pr_dropmace);    // A_DropMace
+         CASE(pr_rip);         // ripper missile damage
+         CASE(pr_casing);      // A_CasingThrust
+         CASE(pr_genrefire);   // A_GenRefire
+         CASE(pr_decjump);     // A_Jump
+         CASE(pr_decjump2);
+         CASE(pr_spotspawn);   // For use with MobjCollection::spawnAtRandom
+         CASE(pr_moverandom);  // For use with MobjCollection::moveToRandom
+         CASE(pr_ravenblood);  // Raven blood spawning
+         CASE(pr_ripperblood); // Ripper blood spawning
+         CASE(pr_rogueblood);  // Strife blood spawning
+         CASE(pr_drawblood);   // Missile blood-drawing chance
+         CASE(pr_hexenteleport);  // ioanch 20160329: used by Hexen teleporters
+         CASE(pr_goldwand);    // A_FireGoldWandPL1
+         CASE(pr_goldwand2);   // A_FireGoldWandPL2
+         CASE(pr_skullrod);    // A_FireSkullRodPL1
+         CASE(pr_blaster);     // A_FireBlasterPL1
+         CASE(pr_staff);       // A_StaffAttackPL1
+         CASE(pr_staff2);      // A_StaffAttackPL2
+         CASE(pr_staffangle);
+         CASE(pr_gauntlets);   // A_GauntletAttack
+         CASE(pr_gauntletsangle);
+         CASE(pr_boltspark);   // A_BoltSpark
+         CASE(pr_firemace);    // A_FireMacePL1
+         CASE(pr_phoenixrod2); // A_FirePhoenixPL2
+         CASE(pr_hereticartiteleport); // A_ArtiTele
+         CASE(pr_puffblood);   // P_shootThing draw blood when Heretic-like puff is defined
+         CASE(pr_nailbombshoot);  // A_Nailbomb random damage
+         CASE(pr_chainwiggle);
+         CASE(pr_envirospot);
+         CASE(pr_envirotics);
+      default:
+         return "unknown";
+   }
+#undef CASE
+}
+
 rng_t rng;     // the random number state
 
 unsigned int rngseed = 1993;   // killough 3/26/98: The seed
@@ -85,6 +286,7 @@ int P_Random(pr_class_t pr_class)
    // much more unstable method by putting everything
    // except pr_misc into pr_all_in_one
 
+   pr_class_t prc = pr_class;
    compat = pr_class == pr_misc ?     // sf: moved here
       (rng.prndindex = (rng.prndindex + 1) & 255) :
       (rng.rndindex  = (rng.rndindex  + 1) & 255);
@@ -99,7 +301,11 @@ int P_Random(pr_class_t pr_class)
    rng.seed[pr_class] = boom * 1664525ul + 221297ul + pr_class*2;
 
    if(demo_compatibility)
+   {
+      if(pr_class != pr_misc)
+         printf("%s: %d: %d\n", M_prcString(prc), gametic, rndtable[compat]);
       return rndtable[compat];
+   }
 
    boom >>= 20;
 

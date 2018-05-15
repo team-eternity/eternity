@@ -1858,6 +1858,7 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
    if(gameskill != sk_nightmare)
       mobj->reactiontime = info->reactiontime;
 
+   printf("%d %d ", x/FRACUNIT, y/FRACUNIT);
    if(!nolastlook)
       mobj->lastlook = P_Random(pr_lastlook) % MAXPLAYERS;
 
