@@ -220,7 +220,7 @@ static default_t sysdefaults[] =
    DEFAULT_BOOL("gl_use_extensions", &cfg_gl_use_extensions, NULL, true, default_t::wad_no,
                 "1 to enable use of GL extensions in general"),
 
-   DEFAULT_BOOL("gl_arb_pixelbuffer", &cfg_gl_arb_pixelbuffer, NULL, true, default_t::wad_no,
+   DEFAULT_BOOL("gl_arb_pixelbuffer", &cfg_gl_arb_pixelbuffer, NULL, false, default_t::wad_no,
                 "1 to enable use of GL ARB pixelbuffer object extension"),
 
    DEFAULT_INT("gl_colordepth", &cfg_gl_colordepth, NULL, 32, 16, 32, default_t::wad_no,
