@@ -252,6 +252,16 @@ MAJOR CHANGES:
  
 There's probably more stuff I'm forgetting but that's the big stuff.
 
+-------------------------------------------------------------------------------
+2018/04/07
+Splitted armor's +bonus into +additive and -setabsorption.
+Added the RAMBO cheat from Heretic, and improved givearsenal to give armor in
+Heretic too.
+
+-------------------------------------------------------------------------------
+2018/05/17
+Added EDF fontdeltas.
+
 
 ================================================================================
 EOF

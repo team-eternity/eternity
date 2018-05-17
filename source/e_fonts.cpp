@@ -106,6 +106,8 @@
 #define ITEM_COLOR_CUSTOM3 "custom3"
 #define ITEM_COLOR_CUSTOM4 "custom4"
 
+#define ITEM_DELTA_NAME    "name"
+
 static cfg_opt_t filter_opts[] =
 {
    CFG_STR(ITEM_FILTER_CHARS, 0,  CFGF_LIST),
@@ -152,32 +154,41 @@ static cfg_opt_t color_opts[] =
    CFG_END()
 };
 
+#define FONT_FIELDS \
+   CFG_INT(ITEM_FONT_ID,     -1,          CFGF_NONE), \
+   CFG_STR(ITEM_FONT_START,  "",          CFGF_NONE), \
+   CFG_STR(ITEM_FONT_END,    "",          CFGF_NONE), \
+   CFG_INT(ITEM_FONT_CY,     0,           CFGF_NONE), \
+   CFG_INT(ITEM_FONT_SPACE,  0,           CFGF_NONE), \
+   CFG_INT(ITEM_FONT_DW,     0,           CFGF_NONE), \
+   CFG_INT(ITEM_FONT_ABSH,   0,           CFGF_NONE), \
+   CFG_INT(ITEM_FONT_CW,     0,           CFGF_NONE), \
+   CFG_STR(ITEM_FONT_LFMT,   "linear",    CFGF_NONE), \
+   CFG_STR(ITEM_FONT_LLUMP,  "",          CFGF_NONE), \
+   CFG_INT(ITEM_FONT_POFFS,  0,           CFGF_NONE), \
+   CFG_SEC(ITEM_FONT_FILTER, filter_opts, CFGF_MULTI|CFGF_NOCASE), \
+   CFG_SEC(ITEM_FONT_COLORS, color_opts,  CFGF_NOCASE), \
+   CFG_STR(ITEM_FONT_COLORD, "",          CFGF_NONE), \
+   CFG_STR(ITEM_FONT_COLORN, "",          CFGF_NONE), \
+   CFG_STR(ITEM_FONT_COLORH, "",          CFGF_NONE), \
+   CFG_STR(ITEM_FONT_COLORE, "",          CFGF_NONE), \
+                                                      \
+   CFG_BOOL(ITEM_FONT_COLOR,  false,      CFGF_NONE), \
+   CFG_BOOL(ITEM_FONT_UPPER,  false,      CFGF_NONE), \
+   CFG_BOOL(ITEM_FONT_CENTER, false,      CFGF_NONE), \
+   CFG_BOOL(ITEM_FONT_REQUAN, false,      CFGF_NONE), \
+                                                      \
+   CFG_END()
+
 cfg_opt_t edf_font_opts[] =
 {
-   CFG_INT(ITEM_FONT_ID,     -1,          CFGF_NONE),
-   CFG_STR(ITEM_FONT_START,  "",          CFGF_NONE),
-   CFG_STR(ITEM_FONT_END,    "",          CFGF_NONE),
-   CFG_INT(ITEM_FONT_CY,     0,           CFGF_NONE),
-   CFG_INT(ITEM_FONT_SPACE,  0,           CFGF_NONE),
-   CFG_INT(ITEM_FONT_DW,     0,           CFGF_NONE),
-   CFG_INT(ITEM_FONT_ABSH,   0,           CFGF_NONE),
-   CFG_INT(ITEM_FONT_CW,     0,           CFGF_NONE),
-   CFG_STR(ITEM_FONT_LFMT,   "linear",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_LLUMP,  "",          CFGF_NONE),
-   CFG_INT(ITEM_FONT_POFFS,  0,           CFGF_NONE),
-   CFG_SEC(ITEM_FONT_FILTER, filter_opts, CFGF_MULTI|CFGF_NOCASE),
-   CFG_SEC(ITEM_FONT_COLORS, color_opts,  CFGF_NOCASE),
-   CFG_STR(ITEM_FONT_COLORD, "",          CFGF_NONE),
-   CFG_STR(ITEM_FONT_COLORN, "",          CFGF_NONE),
-   CFG_STR(ITEM_FONT_COLORH, "",          CFGF_NONE),
-   CFG_STR(ITEM_FONT_COLORE, "",          CFGF_NONE),
+   FONT_FIELDS
+};
 
-   CFG_BOOL(ITEM_FONT_COLOR,  false,      CFGF_NONE),
-   CFG_BOOL(ITEM_FONT_UPPER,  false,      CFGF_NONE),
-   CFG_BOOL(ITEM_FONT_CENTER, false,      CFGF_NONE),
-   CFG_BOOL(ITEM_FONT_REQUAN, false,      CFGF_NONE),
-   
-   CFG_END()
+cfg_opt_t edf_fntdelta_opts[] =
+{
+   CFG_STR(ITEM_DELTA_NAME, nullptr, CFGF_NONE),
+   FONT_FIELDS
 };
 
 // linear font formats
@@ -769,17 +780,20 @@ static void E_loadTranslation(vfont_t *font, int index, const char *lumpname)
 //
 // Processes a single EDF font object.
 //
-static void E_ProcessFont(cfg_t *sec)
+static void E_ProcessFont(cfg_t *sec, bool delta)
 {
    vfont_t *font;
    const char *tempstr;
    int tempnum = 0;
 
-   const char *title = cfg_title(sec);
+   const char *title = delta ? cfg_getstr(sec, ITEM_DELTA_NAME) : cfg_title(sec);
 
    // The fonts were already pre-created; retrieve the vfont_t structure for
    // this definition.
    font = E_FontForName(title);
+
+   if(delta && font == nullptr)
+      E_EDFLoggedErr(2, "E_ProcessFont: Invalid delta 'name' value: '%s'\n", title);
 
    // If the font is neither linear nor has any filters, it hasn't been 
    // processed before, or in other words, this is a new font by name.
@@ -957,7 +971,7 @@ static void E_ProcessFont(cfg_t *sec)
    }
 
    E_EDFLogPrintf("\t\t%s font %s\n", 
-                  def ? "Defined" : "Modified", font->name);
+                  def && !delta ? "Defined" : "Modified", font->name);
 }
 
 //
@@ -1047,7 +1061,30 @@ void E_ProcessFonts(cfg_t *cfg)
    E_EDFLogPrintf("\t* Processing fonts\n");
 
    for(unsigned int i = 0; i < numfonts; i++)
-      E_ProcessFont(cfg_getnsec(cfg, EDF_SEC_FONT, i));
+      E_ProcessFont(cfg_getnsec(cfg, EDF_SEC_FONT, i), false);
+
+   // process global font variables
+   E_ProcessFontVars(cfg);
+}
+
+//
+// Adds all fonts in the given cfg_t.
+//
+void E_ProcessFontDeltas(cfg_t *cfg)
+{
+   unsigned int numfontdeltas = cfg_size(cfg, EDF_SEC_FNTDELTA);
+   
+   // process fonts
+   E_EDFLogPrintf("\t* Processing fontdeltas\n");
+
+   for(unsigned int i = 0; i < numfontdeltas; i++)
+   {
+      cfg_t *deltasec = cfg_getnsec(cfg, EDF_SEC_FNTDELTA, i);
+      if(!cfg_size(deltasec, ITEM_DELTA_NAME))
+         E_EDFLoggedErr(2, "E_ProcessWeaponDeltas: weapondelta requires name field\n");
+
+      E_ProcessFont(deltasec, true);
+   }
 
    // process global font variables
    E_ProcessFontVars(cfg);
