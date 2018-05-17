@@ -1081,7 +1081,7 @@ void E_ProcessFontDeltas(cfg_t *cfg)
    {
       cfg_t *deltasec = cfg_getnsec(cfg, EDF_SEC_FNTDELTA, i);
       if(!cfg_size(deltasec, ITEM_DELTA_NAME))
-         E_EDFLoggedErr(2, "E_ProcessWeaponDeltas: weapondelta requires name field\n");
+         E_EDFLoggedErr(2, "E_ProcessFontDeltas: fontdelta requires name field\n");
 
       E_ProcessFont(deltasec, true);
    }
