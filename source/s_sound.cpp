@@ -83,7 +83,7 @@ struct channel_t
 {
   sfxinfo_t *sfxinfo;      // sound information (if null, channel avail.)
   sfxinfo_t *aliasinfo;    // original sound name if using an alias
-  PointThinker *origin;    // origin of sound
+  const PointThinker *origin;    // origin of sound
   int subchannel;          // haleyjd 06/12/08: origin subchannel
   int volume;              // volume scale value for effect -- haleyjd 05/29/06
   int attenuation;         // attenuation type -- haleyjd 05/29/06
@@ -439,8 +439,8 @@ void S_StartSfxInfo(const soundparams_t &params)
    camera_t     *listener = &playercam;
    sector_t     *earsec   = NULL;
    sfxinfo_t    *sfx      = params.sfx;
-   PointThinker *origin   = params.origin;
-   Mobj *mo;
+   const PointThinker *origin   = params.origin;
+   const Mobj *mo;
 
    // haleyjd 09/03/03: allow NULL sounds to fall through
    if(!sfx)
@@ -474,7 +474,7 @@ void S_StartSfxInfo(const soundparams_t &params)
 
    // haleyjd:  we must weed out degenMobj's before trying to 
    // dereference these fields -- a thinker check perhaps?
-   if((mo = thinker_cast<Mobj *>(origin)))
+   if((mo = thinker_cast<const Mobj *>(origin)))
    {
       // haleyjd 08/11/13: check for no cut off flag
       if(mo->flags4 & MF4_NOSOUNDCUTOFF)
@@ -673,7 +673,7 @@ void S_StartSfxInfo(const soundparams_t &params)
 // removed, apparently by the BOOM team, because it was never used for 
 // anything useful (it was always called with snd_SfxVolume...).
 //
-void S_StartSoundAtVolume(PointThinker *origin, int sfx_id, 
+void S_StartSoundAtVolume(const PointThinker *origin, int sfx_id,
                           int volume, int attn, int subchannel)
 {
    soundparams_t params;
@@ -701,7 +701,7 @@ void S_StartSoundAtVolume(PointThinker *origin, int sfx_id,
 // retains full compatibility.
 // haleyjd 05/29/06: reimplemented in terms of the above function.
 //
-void S_StartSound(PointThinker *origin, int sfx_id)
+void S_StartSound(const PointThinker *origin, int sfx_id)
 {
    S_StartSoundAtVolume(origin, sfx_id, 127, ATTN_NORMAL, CHAN_AUTO);
 }
@@ -711,7 +711,7 @@ void S_StartSound(PointThinker *origin, int sfx_id)
 //
 // haleyjd 05/29/06: as below, but allows volume scaling.
 //
-void S_StartSoundNameAtVolume(PointThinker *origin, const char *name, 
+void S_StartSoundNameAtVolume(const PointThinker *origin, const char *name,
                               int volume, int attn, int subchannel)
 {
    soundparams_t params;
@@ -740,7 +740,7 @@ void S_StartSoundNameAtVolume(PointThinker *origin, const char *name,
 // WAD sounds.
 // haleyjd 05/29/06: reimplemented in terms of the above function.
 //
-void S_StartSoundName(PointThinker *origin, const char *name)
+void S_StartSoundName(const PointThinker *origin, const char *name)
 {
    S_StartSoundNameAtVolume(origin, name, 127, ATTN_NORMAL, CHAN_AUTO);
 }
@@ -981,7 +981,7 @@ void S_UpdateSounds(const Mobj *listener)
 //
 // haleyjd: rudimentary sound checking function
 //
-bool S_CheckSoundPlaying(PointThinker *mo, sfxinfo_t *aliasinfo)
+bool S_CheckSoundPlaying(const PointThinker *mo, sfxinfo_t *aliasinfo)
 {
    int cnum;
 
