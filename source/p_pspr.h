@@ -95,15 +95,17 @@ struct pspdef_t
 int P_WeaponPreferred(int w1, int w2);
 extern int action_from_pspr;                     // haleyjd 05/21/08
 
-void P_SetPspritePtr(player_t *player, pspdef_t *psp, statenum_t stnum);
+void P_SetPspritePtr(const player_t *player, pspdef_t *psp, statenum_t stnum);
 void P_SetPsprite(player_t *player, int position, statenum_t stnum);
 
-int P_NextWeapon(player_t *player, uint8_t *slotindex = nullptr);
-int P_PrevWeapon(player_t *player, uint8_t *slotindex = nullptr);
+bool P_WeaponHasAmmo(const player_t *player, const weaponinfo_t *weapon);
 
-weapontype_t P_SwitchWeaponOld(player_t *player);
+int P_NextWeapon(const player_t *player, uint8_t *slotindex = nullptr);
+int P_PrevWeapon(const player_t *player, uint8_t *slotindex = nullptr);
+
+weapontype_t P_SwitchWeaponOld(const player_t *player);
 bool P_CheckAmmo(player_t *player);
-void P_SubtractAmmo(player_t *player, int compat_amt);
+void P_SubtractAmmo(const player_t *player, int compat_amt);
 void P_SetupPsprites(player_t *curplayer);
 void P_MovePsprites(player_t *curplayer);
 void P_DropWeapon(player_t *player);
@@ -111,9 +113,7 @@ void P_DropWeapon(player_t *player);
 extern fixed_t bulletslope;
 void P_BulletSlope(Mobj *mo);
 
-// IOANCH 20140817
-bool P_WeaponHasAmmo(const player_t *player, const weaponinfo_t *weapon);
-weaponinfo_t *P_GetPlayerWeapon(player_t *player, int slot);
+weaponinfo_t *P_GetPlayerWeapon(const player_t *player, int slot);
 
 void P_WeaponSoundInfo(Mobj *mo, sfxinfo_t *sound);
 void P_WeaponSound(Mobj *mo, int sfx_id);

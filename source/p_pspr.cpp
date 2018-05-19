@@ -79,7 +79,7 @@
 //
 // haleyjd 06/22/13: Set psprite state from pspdef_t
 //
-void P_SetPspritePtr(player_t *player, pspdef_t *psp, statenum_t stnum)
+void P_SetPspritePtr(const player_t *player, pspdef_t *psp, statenum_t stnum)
 {
    // haleyjd 06/22/13: rewrote again to use actionargs structure
    do
@@ -215,7 +215,7 @@ bool P_WeaponHasAmmoAlt(player_t *player, weaponinfo_t *weapon)
 // haleyjd 05/31/14: Rewritten to use next and previous in cycle pointers
 // in weaponinfo_t, for friendliness with future dynamic weapons system.
 //
-int P_NextWeapon(player_t *player, uint8_t *slotindex)
+int P_NextWeapon(const player_t *player, uint8_t *slotindex)
 {
    weaponinfo_t             *currentweapon = player->readyweapon;
    weaponinfo_t             *newweapon     = player->readyweapon;
@@ -269,7 +269,7 @@ int P_NextWeapon(player_t *player, uint8_t *slotindex)
 //
 // haleyjd 03/06/09: Like the above.
 //
-int P_PrevWeapon(player_t *player, uint8_t *slotindex)
+int P_PrevWeapon(const player_t *player, uint8_t *slotindex)
 {
    weaponinfo_t             *currentweapon = player->readyweapon;
    weaponinfo_t             *newweapon     = player->readyweapon;
@@ -331,7 +331,7 @@ static int weapon_preferences[NUMWEAPONS+1] =
 // this won't matter, because the raised weapon has no ammo anyway. When called
 // from G_BuildTiccmd you want to toggle to a different weapon regardless.
 //
-weapontype_t P_SwitchWeaponOld(player_t *player)
+weapontype_t P_SwitchWeaponOld(const player_t *player)
 {
    int *prefer = weapon_preferences; // killough 3/22/98
    weapontype_t currentweapon = player->readyweapon->dehnum;
@@ -453,7 +453,7 @@ bool P_CheckAmmo(player_t *player)
 // Subtracts ammo from weapons in a uniform fashion. Unfortunately, this
 // operation is complicated by compatibility issues and extra features.
 //
-void P_SubtractAmmo(player_t *player, int compat_amt)
+void P_SubtractAmmo(const player_t *player, int compat_amt)
 {
    weaponinfo_t *weapon = player->readyweapon;
    itemeffect_t *ammo;
@@ -589,7 +589,7 @@ void P_DropWeapon(player_t *player)
 // haleyjd 09/16/07:
 // Gets weapon at given index for the given player.
 //
-weaponinfo_t *P_GetPlayerWeapon(player_t *player, int slot)
+weaponinfo_t *P_GetPlayerWeapon(const player_t *player, int slot)
 {
    if(demo_version < 401 && GameModeInfo->type == Game_DOOM)
       return E_WeaponForDEHNum(slot);
