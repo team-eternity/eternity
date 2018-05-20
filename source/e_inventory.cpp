@@ -1755,11 +1755,11 @@ inventoryslot_t *E_InventorySlotForItemName(const player_t *player,
 }
 
 //
-// E_findInventorySlot
+// E_FindInventorySlot
 //
 // Finds the first unused inventory slot index.
 //
-static inventoryindex_t E_findInventorySlot(inventory_t inventory)
+inventoryindex_t E_FindInventorySlot(inventory_t inventory)
 {
    // find the first unused slot and return it
    for(inventoryindex_t idx = 0; idx < e_maxitemid; idx++)
@@ -1949,7 +1949,7 @@ bool E_GiveInventoryItem(player_t *player, const itemeffect_t *artifact, int amo
    // If not, make a slot for it
    if(!slot)
    {
-      if((newSlot = E_findInventorySlot(player->inventory)) < 0)
+      if((newSlot = E_FindInventorySlot(player->inventory)) < 0)
          return false; // internal error, actually... shouldn't happen
       slot = &player->inventory[newSlot];
    }

@@ -228,6 +228,8 @@ inventoryslot_t *E_InventorySlotForItem(const player_t *player,
 inventoryslot_t *E_InventorySlotForItemName(const player_t *player,
                                             const char *name);
 
+inventoryindex_t E_FindInventorySlot(inventory_t inventory);
+
 // Special function to test for player backpack.
 bool E_PlayerHasBackpack(const player_t *player);
 
