@@ -261,7 +261,7 @@ public:
    // Returns NULL when the search has reached the end of the hash chain.
    // Overload for pre-computed unmodulated hash codes.
    //
-   item_type *keyIterator(item_type *object, param_key_type key, unsigned int unmodHC) const
+   item_type *keyIterator(const item_type *object, param_key_type key, unsigned int unmodHC) const
    {
       item_type *ret;
 
@@ -272,7 +272,7 @@ public:
          ret = objectForKey(key, unmodHC);
       else
       {
-         link_type *link = &(object->*linkPtr);
+         const link_type *link = &(object->*linkPtr);
 
          // start on next object in hash chain
          link = link->dllNext;
@@ -292,7 +292,7 @@ public:
    // same key. If passed NULL in object, it will start a new search.
    // Returns NULL when the search has reached the end of the hash chain.
    //
-   item_type *keyIterator(item_type *object, param_key_type key) const
+   item_type *keyIterator(const item_type *object, param_key_type key) const
    {
       item_type *ret;
 
@@ -303,7 +303,7 @@ public:
          ret = objectForKey(key);
       else
       {
-         link_type *link = &(object->*linkPtr);
+         const link_type *link = &(object->*linkPtr);
 
          // start on next object in hash chain
          link = link->dllNext;

@@ -482,6 +482,10 @@ public:
    MetaObject *getNextKeyAndType(MetaObject *object, size_t keyIdx,   const char *type) const;
    MetaObject *getNextKeyAndType(MetaObject *object, const char *key, const MetaObject::Type *type) const;
    MetaObject *getNextKeyAndType(MetaObject *object, size_t keyIdx,   const MetaObject::Type *type) const;
+   const MetaObject *getNextKeyAndType(const MetaObject *object, const char *key, const char *type) const;
+   const MetaObject *getNextKeyAndType(const MetaObject *object, size_t keyIdx,   const char *type) const;
+   const MetaObject *getNextKeyAndType(const MetaObject *object, const char *key, const MetaObject::Type *type) const;
+   const MetaObject *getNextKeyAndType(const MetaObject *object, size_t keyIdx,   const MetaObject::Type *type) const;
    // * Full table iterators
    MetaObject *tableIterator(MetaObject *object) const;
    const MetaObject *tableIterator(const MetaObject *object) const;
