@@ -1988,16 +1988,23 @@ bool E_GiveInventoryItem(player_t *player, const itemeffect_t *artifact, int amo
 //
 // Gets some private data
 //
-void E_GetInventoryItemDetails(const itemeffect_t *artifact,
+bool E_GetInventoryItemDetails(const player_t *player,
+                               const itemeffect_t *artifact,
                                itemeffecttype_t &fxtype,
                                inventoryitemid_t &itemid,
                                int &amountToGive,
+                               int &maxAmount,
                                int &fullAmount)
 {
    fxtype = artifact->getInt(keyClass, ITEMFX_NONE);
    itemid = artifact->getInt(keyItemID, -1);
+   // Just for safety.
+   if(fxtype != ITEMFX_ARTIFACT || itemid < 0)
+      return false;
    amountToGive = artifact->getInt(keyAmount, 1);
+   maxAmount = E_GetMaxAmountForArtifact(player, artifact);
    fullAmount = artifact->getInt(keyFullAmountOnly, 0);
+   return true;
 }
 
 //

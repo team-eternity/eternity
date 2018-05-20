@@ -31,6 +31,8 @@
 #include "../g_dmflag.h"
 #include "../doomstat.h"
 #include "../e_inventory.h"
+#include "../e_lib.h"
+#include "../e_weapons.h"
 #include "../metaapi.h"
 
 inline static bool B_checkWasted(int current, int added, int max)
@@ -38,27 +40,30 @@ inline static bool B_checkWasted(int current, int added, int max)
    return current + added <= max + added / 3;
 }
 
-bool B_CheckArmour(const player_t *pl, const char *effectname)
+bool B_CheckArmour(const player_t *pl, const itemeffect_t *effect)
 {
-   const itemeffect_t *effect = E_ItemEffectForName(effectname);
    if(!effect)
       return false;
 
-   int hits = effect->getInt("saveamount", 0);
+   int hits = effect->getInt("saveamount", -1);
    int savefactor = effect->getInt("savefactor", 1);
    int savedivisor = effect->getInt("savedivisor", 3);
+   int maxsaveamount = effect->getInt("maxsaveamount", 0);
+   bool additive = !!effect->getInt("additive", 0);
+   bool setabsorption = !!effect->getInt("setabsorption", 0);
 
-   if(!hits || !savefactor || !savedivisor)
+   if(hits < 0 || !savefactor || !savedivisor)
       return false;
 
-   if(!effect->getInt("alwayspickup", 0) && pl->armorpoints >= hits)
-      return false;
-
-   if(effect->getInt("bonus", 0))
+   if(!effect->getInt("alwayspickup", 0) &&
+      (pl->armorpoints >= (additive ? maxsaveamount : hits) ||
+       (!hits && (!pl->armorfactor || !setabsorption))))
    {
-      int maxsaveamount = effect->getInt("maxsaveamount", 0);
-      return B_checkWasted(pl->armorpoints, hits, maxsaveamount);
+      return false;
    }
+
+   if(additive)
+      return B_checkWasted(pl->armorpoints, hits, maxsaveamount);
 
    // FIXME: potential overflow in insane mods
    return (savedivisor ? hits * savefactor / savedivisor : 0) >
@@ -66,9 +71,8 @@ bool B_CheckArmour(const player_t *pl, const char *effectname)
     pl->armorpoints * pl->armorfactor / pl->armordivisor : 0);
 }
 
-bool B_CheckBody(const player_t *pl, const char *effectname)
+bool B_CheckBody(const player_t *pl, const itemeffect_t *effect)
 {
-   const itemeffect_t *effect = E_ItemEffectForName(effectname);
    if(!effect)
       return false;
 
@@ -97,35 +101,39 @@ bool B_CheckCard(const player_t *pl, const char *effectname)
    return !E_GetItemOwnedAmount(pl, effect);
 }
 
-bool B_CheckPower(const player_t *pl, int power)
+//
+// Checks if a given power should be pursued by bot.
+//
+bool B_CheckPowerForItem(const player_t *pl, const itemeffect_t *power)
 {
-   static const int expireTime = 5 * TICRATE;
-
-   switch(power)
+   const char *powerStr = power->getString("type", "");
+   if(estrempty(powerStr))
+      return false;
+   int powerNum;
+   if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) ==
+      NUMPOWERS)
    {
-      case pw_invulnerability:   // FIXME: only when monsters are nearby
-      case pw_invisibility:      // FIXME: only when certain monsters nearby
-      case pw_totalinvis:        // FIXME: only when worth going stealth
-      case pw_ghost:             // FIXME: only when certain monsters nearby
-      case pw_ironfeet:          // FIXME: only when planning to travel slime
-      case pw_infrared:          // FIXME: not necessary for bot
-      case pw_torch:
-         return pl->powers[power] >= 0 && pl->powers[power] < expireTime;
-      case pw_allmap:
-      case pw_silencer:
-         return !pl->powers[power];
-      case pw_strength:
-         return !pl->powers[power] || B_CheckBody(pl, ITEMNAME_BERSERKHEALTH);
-      case pw_flight:            // FIXME: only when planning to fly
-         return pl->powers[power] >= 0 && pl->powers[power] <= 4 * 32;
-      default:
-         return false;
+      return false;
    }
+   if(!power->getInt("overridesself", 0) && pl->powers[powerNum] > 4 * 32)
+      return false;
+
+   int duration = power->getInt("duration", 0);
+   bool additiveTime = false;
+   if(power->getInt("permanent", 0))
+      duration = -1;
+   else
+   {
+      duration *= TICRATE;
+      additiveTime = power->getInt("additivetime", 0) != 0;
+   }
+
+   static const int expireTime = 5 * TICRATE;
+   return pl->powers[powerNum] >= 0 && pl->powers[powerNum] < expireTime;
 }
 
-static bool E_checkInventoryItem(const player_t *pl,
-                                 const itemeffect_t *artifact,
-                                 int amount)
+bool B_CheckInventoryItem(const player_t *pl, const itemeffect_t *artifact,
+                          int amount)
 {
    if(!artifact)
       return false;
@@ -133,24 +141,35 @@ static bool E_checkInventoryItem(const player_t *pl,
    itemeffecttype_t fxtype;
    inventoryitemid_t itemid;
    int amountToGive;
+   int maxAmount;
    int fullAmount;
 
-   E_GetInventoryItemDetails(artifact, fxtype, itemid, amountToGive, fullAmount);
+   if(!E_GetInventoryItemDetails(pl, artifact, fxtype, itemid, amountToGive,
+                                 maxAmount, fullAmount))
+   {
+      return false;
+   }
 
    if(fxtype != ITEMFX_ARTIFACT || itemid < 0)
       return false;
 
-   int maxAmount = E_GetMaxAmountForArtifact(pl, artifact);
    if(amount > 0)
       amountToGive = amount;
 
    const inventoryslot_t *slot = E_InventorySlotForItemID(pl, itemid);
-   int slotAmount = slot ? slot->amount : 0;
 
-   if(fullAmount && slotAmount + amountToGive > maxAmount)
+   inventoryindex_t newSlot = -1;
+   if(!slot)
+   {
+      if((newSlot = E_FindInventorySlot(pl->inventory)) < 0)
+         return false;
+      slot = &pl->inventory[newSlot];
+   }
+
+   if(fullAmount && slot->amount + amountToGive > maxAmount)
       return false;
 
-   return B_checkWasted(slotAmount, amountToGive, maxAmount);
+   return B_checkWasted(slot->amount, amountToGive, maxAmount);
 }
 
 static bool B_checkAmmo(const player_t *pl, const itemeffect_t *ammo, int num)
@@ -167,13 +186,12 @@ static bool B_checkAmmo(const player_t *pl, const itemeffect_t *ammo, int num)
    if(gameskill == sk_baby || gameskill == sk_nightmare)
       num <<= 1;
 
-   return E_checkInventoryItem(pl, ammo, num);
+   return B_CheckInventoryItem(pl, ammo, num);
 }
 
-bool B_CheckAmmoPickup(const player_t *pl, const char *effectname, bool dropped,
-                       int dropamount)
+bool B_CheckAmmoPickup(const player_t *pl, const itemeffect_t *pickup,
+                       bool dropped, int dropamount)
 {
-   const itemeffect_t *pickup = E_ItemEffectForName(effectname);
    if(!pickup)
       return false;
 
@@ -209,23 +227,83 @@ bool B_CheckBackpack(const player_t *pl)
    return false;
 }
 
-bool B_CheckWeapon(const player_t *pl, weapontype_t weapon, bool dropped)
+//
+// Demo-compatible version
+//
+static bool B_checkWeaponCompat(const player_t *pl, const itemeffect_t *giver,
+                                bool dropped, const Mobj *special)
 {
-#warning Need to update this to new weapon system
-#if 0
-   if(!pl->weaponowned[weapon])
+   const weaponinfo_t *wp = E_WeaponForName(giver->getString("weapon", ""));
+   const itemeffect_t *ammogiven = nullptr;
+   ammogiven = giver->getNextKeyAndTypeEx(ammogiven, "ammogiven");
+
+   const itemeffect_t *ammo;
+   int giveammo, dropammo, dmstayammo, coopstayammo;
+   if(ammogiven)
+   {
+      ammo = E_ItemEffectForName(ammogiven->getString("type", ""));
+
+      giveammo = ammogiven->getInt("ammo.give", -1);
+      if((dropammo = ammogiven->getInt("ammo.dropped", -1)) < 0)
+         dropammo = giveammo;
+      if((dmstayammo = ammogiven->getInt("ammo.dmstay", -1)) < 0)
+         dmstayammo = giveammo;
+      if((coopstayammo = ammogiven->getInt("ammo.coopstay", -1)) < 0)
+         coopstayammo = giveammo;
+   }
+   else
+   {
+      ammo = nullptr;
+      giveammo = dropammo = dmstayammo = coopstayammo = 0;
+   }
+
+   if(!E_PlayerOwnsWeapon(pl, wp))
       return true;
 
+   // weapon owned
+
+   if(((dmflags & DM_WEAPONSTAY) && !dropped) || !ammo)
+      return false;  // if owned, it won't be picked up. Also ignore if no ammo
+
+   return B_checkAmmo(pl, ammo, dropped ? dropammo : giveammo);
+}
+
+//
+// Checks that a weapon is worth picking up
+//
+bool B_CheckWeapon(const player_t *pl, const itemeffect_t *giver, bool dropped,
+                   const Mobj *special)
+{
+   if(demo_version < 401)
+      return B_checkWeaponCompat(pl, giver, dropped, special);
+
+   const weaponinfo_t *wp = E_WeaponForName(giver->getString("weapon", ""));
+   if(!wp)
+      return false;
+   if(!E_PlayerOwnsWeapon(pl, wp))
+      return true;
    if((dmflags & DM_WEAPONSTAY) && !dropped)
       return false;
-
-   const weaponinfo_t *wp = &weaponinfo[weapon];
-   if(!wp->ammo)
-      return false;
-
-   int amount = dropped ? wp->dropammo : wp->giveammo;
-   return B_checkAmmo(pl, wp->ammo, amount);
-#endif
+   const itemeffect_t *ammogiven = nullptr;
+   while((ammogiven = giver->getNextKeyAndTypeEx(ammogiven, "ammogiven")))
+   {
+      const itemeffect_t *ammo = nullptr;
+      int giveammo = 0;
+      int dropammo = 0;
+      if(ammogiven)
+      {
+         if(!(ammo = E_ItemEffectForName(ammogiven->getString("type", ""))))
+            return false;
+         if((giveammo = ammogiven->getInt("ammo.give", -1)) < 0)
+            return false;
+         if((dropammo = ammogiven->getInt("ammo.dropped", -1)) < 0)
+            dropammo = giveammo;
+      }
+      // at this point, weapon is not staying
+      const int amount = dropped ? dropammo : giveammo;
+      if(ammo && amount && B_checkAmmo(pl, ammo, amount))
+         return true;
+   }
    return false;
 }
 

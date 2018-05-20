@@ -496,147 +496,59 @@ bool Bot::checkItemType(const Mobj *special) const
    if(sprite < 0 || sprite >= NUMSPRITES)
       return false;
 
+   const e_pickupfx_t *pickup = special->info->pickupfx ?
+   special->info->pickupfx : E_PickupFXForSprNum(sprite);
+   if(!pickup || (pickup->flags & PXFX_COMMERCIALONLY && demo_version < 335 &&
+                  GameModeInfo->id != commercial) || !pickup->numEffects)
+   {
+      return false;
+   }
+
    bool dropped = !!(special->flags & MF_DROPPED);
 
-#warning Need to rewrite this for the new item FX behaviour.
-#if 0
-   switch(pickupfx[sprite].tempeffect)
+   bool hadeffect = false;
+   for(unsigned i = 0; i < pickup->numEffects; ++i)
    {
-      case PFX_GREENARMOR:
-         return B_CheckArmour(pl, ITEMNAME_GREENARMOR);
-
-      case PFX_BLUEARMOR:
-         return B_CheckArmour(pl, ITEMNAME_BLUEARMOR);
-
-      case PFX_POTION:
-         return B_CheckBody(pl, ITEMNAME_HEALTHBONUS);
-
-      case PFX_ARMORBONUS:
-         return B_CheckArmour(pl, ITEMNAME_ARMORBONUS);
-
-      case PFX_SOULSPHERE:
-         return B_CheckBody(pl, ITEMNAME_SOULSPHERE);
-
-      case PFX_MEGASPHERE:
-         return B_CheckBody(pl, ITEMNAME_MEGASPHERE) ||
-         B_CheckArmour(pl, ITEMNAME_BLUEARMOR);
-
-      case PFX_BLUEKEY:
-         return B_CheckCard(pl, ARTI_BLUECARD);
-
-      case PFX_YELLOWKEY:
-         return B_CheckCard(pl, ARTI_YELLOWCARD);
-
-      case PFX_REDKEY:
-         return B_CheckCard(pl, ARTI_REDCARD);
-
-      case PFX_BLUESKULL:
-         return B_CheckCard(pl, ARTI_BLUESKULL);
-
-      case PFX_YELLOWSKULL:
-         return B_CheckCard(pl, ARTI_YELLOWSKULL);
-
-      case PFX_REDSKULL:
-         return B_CheckCard(pl, ARTI_REDSKULL);
-
-      case PFX_STIMPACK:
-         return B_CheckBody(pl, ITEMNAME_STIMPACK);
-
-      case PFX_MEDIKIT:
-         return B_CheckBody(pl, ITEMNAME_MEDIKIT);
-
-      case PFX_INVULNSPHERE:
-         return B_CheckPower(pl, pw_invulnerability);
-
-      case PFX_BERZERKBOX:
-         return B_CheckPower(pl, pw_strength);
-
-      case PFX_INVISISPHERE:
-         return B_CheckPower(pl, pw_invisibility);
-
-      case PFX_RADSUIT:
-         return B_CheckPower(pl, pw_ironfeet);
-
-      case PFX_ALLMAP:
-      case PFX_HMAP:
-         return B_CheckPower(pl, pw_allmap);
-
-      case PFX_LIGHTAMP:
-         return B_CheckPower(pl, pw_infrared);
-
-      case PFX_CLIP:
-         return B_CheckAmmoPickup(pl, "Clip", dropped, special->dropamount);
-
-      case PFX_CLIPBOX:
-         return B_CheckAmmoPickup(pl, "ClipBox", false, 0);
-
-      case PFX_ROCKET:
-         return B_CheckAmmoPickup(pl, "RocketAmmo", false, 0);
-
-      case PFX_ROCKETBOX:
-         return B_CheckAmmoPickup(pl, "RocketBox", false, 0);
-
-      case PFX_CELL:
-         return B_CheckAmmoPickup(pl, "Cell", false, 0);
-
-      case PFX_CELLPACK:
-         return B_CheckAmmoPickup(pl, "CellPack", false, 0);
-
-      case PFX_SHELL:
-         return B_CheckAmmoPickup(pl, "Shell", false, 0);
-
-      case PFX_SHELLBOX:
-         return B_CheckAmmoPickup(pl, "ShellBox", false, 0);
-
-      case PFX_BACKPACK:
-         return B_CheckBackpack(pl);
-
-      case PFX_BFG:
-         return B_CheckWeapon(pl, wp_bfg, false);
-
-      case PFX_CHAINGUN:
-         return B_CheckWeapon(pl, wp_chaingun, dropped);
-
-      case PFX_CHAINSAW:
-         return B_CheckWeapon(pl, wp_chainsaw, false);
-
-      case PFX_LAUNCHER:
-         return B_CheckWeapon(pl, wp_missile, false);
-
-      case PFX_PLASMA:
-         return B_CheckWeapon(pl, wp_plasma, false);
-
-      case PFX_SHOTGUN:
-         return B_CheckWeapon(pl, wp_shotgun, dropped);
-
-      case PFX_SSG:
-         return B_CheckWeapon(pl, wp_supershotgun, dropped);
-
-      case PFX_HGREENKEY:
-         return B_CheckCard(pl, ARTI_KEYGREEN);
-
-      case PFX_HBLUEKEY:
-         return B_CheckCard(pl, ARTI_KEYBLUE);
-
-      case PFX_HYELLOWKEY:
-         return B_CheckCard(pl, ARTI_KEYYELLOW);
-
-      case PFX_HPOTION:
-         return B_CheckBody(pl, "CrystalVial");
-
-      case PFX_SILVERSHIELD:
-         return B_CheckArmour(pl, ITEMNAME_SILVERSHIELD);
-
-      case PFX_ENCHANTEDSHIELD:
-         return B_CheckArmour(pl, ITEMNAME_ENCHANTEDSHLD);
-
-      case PFX_TOTALINVIS:
-         return B_CheckPower(pl, pw_totalinvis);
-
-      default:
-         return false;
+      const itemeffect_t *effect = pickup->effects[i];
+      if(!effect)
+         continue;
+      hadeffect = true;
+      switch(effect->getInt("class", ITEMFX_NONE))
+      {
+         case ITEMFX_HEALTH:
+            if(B_CheckBody(pl, effect))
+               return true;
+            break;
+         case ITEMFX_ARMOR:
+            if(B_CheckArmour(pl, effect))
+               return true;
+            break;
+         case ITEMFX_AMMO:
+            if(B_CheckAmmoPickup(pl, effect, dropped, special->dropamount))
+               return true;
+            break;
+         case ITEMFX_POWER:
+            if(B_CheckPowerForItem(pl, effect))
+               return true;
+            break;
+         case ITEMFX_WEAPONGIVER:
+            if(B_CheckWeapon(pl, effect, dropped, special))
+               return true;
+            break;
+         case ITEMFX_ARTIFACT:
+            if(B_CheckInventoryItem(pl, effect))
+               return true;
+            break;
+         default:
+            break;
+      }
    }
-#endif
+
+   if(!hadeffect)
+      return false;
+
+   if(pickup->flags & PFXF_GIVESBACKPACKAMMO && B_CheckBackpack(pl))
+      return true;
    return false;
 }
 

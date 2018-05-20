@@ -280,10 +280,12 @@ void E_ClearInventory(player_t *player);
 int E_GetInventoryAllocSize();
 
 // IOANCH: needed by bot
-void E_GetInventoryItemDetails(const itemeffect_t *artifact,
+bool E_GetInventoryItemDetails(const player_t *player,
+                               const itemeffect_t *artifact,
                                itemeffecttype_t &fxtype,
                                inventoryitemid_t &itemid,
                                int &amountToGive,
+                               int &maxAmount,
                                int &fullAmount);
 
 //
