@@ -750,8 +750,10 @@ void S_StartSoundName(const PointThinker *origin, const char *name)
 //
 // haleyjd 06/03/06: support playing looped sounds.
 //
-void S_StartSoundLooped(PointThinker *origin, char *name, int volume, 
-                        int attn, int subchannel)
+// FIXME: unused?
+//
+static void S_StartSoundLooped(PointThinker *origin, char *name, int volume,
+                               int attn, int subchannel)
 {
    soundparams_t params;
    

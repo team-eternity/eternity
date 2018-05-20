@@ -643,7 +643,7 @@ void MN_PopWidget()
 // been popped before then, since they won't be there when we come back to
 // the menus later.
 //
-void MN_ClearWidgetStack()
+static void MN_ClearWidgetStack()
 {
    menuwidget_stack.clear();
    current_menuwidget = NULL;

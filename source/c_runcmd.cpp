@@ -47,7 +47,6 @@
 #include "g_game.h"
 #include "m_argv.h"
 #include "m_misc.h"
-#include "m_qstr.h"
 #include "m_utils.h"
 #include "mn_engin.h"
 #include "v_misc.h"
@@ -1240,7 +1239,7 @@ void C_RemoveAlias(qstring *aliasname)
 
 // run an alias
 
-void C_RunAlias(alias_t *alias)
+static void C_RunAlias(alias_t *alias)
 {
    // store command line for use in macro
    while(*cmdoptions == ' ')
@@ -1285,7 +1284,7 @@ typedef struct cmdbuffer_s
 
 cmdbuffer buffers[C_CMDTYPES];
 
-void C_RunBufferedCommand(bufferedcmd *bufcmd)
+static void C_RunBufferedCommand(bufferedcmd *bufcmd)
 {
    // run command
    // restore variables

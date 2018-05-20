@@ -68,7 +68,6 @@
 #include "p_slopes.h"
 #include "p_spec.h"
 #include "p_things.h"
-#include "p_tick.h"
 #include "p_user.h"
 #include "polyobj.h"
 #include "m_argv.h"

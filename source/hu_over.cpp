@@ -230,7 +230,7 @@ void HU_LoadFont()
 // sf: write a text line to x, y
 // haleyjd 01/14/05: now uses vfont engine
 //
-void HU_WriteText(const char *s, int x, int y)
+static void HU_WriteText(const char *s, int x, int y)
 {
    if(hu_fontloaded)
       V_FontWriteText(hud_overfont, s, x, y, &subscreen43);

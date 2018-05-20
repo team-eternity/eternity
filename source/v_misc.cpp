@@ -114,7 +114,7 @@ void V_DrawBox(int x, int y, int w, int h)
    V_DrawPatchShadowed(j, i, &subscreen43, bgp[8], NULL, 65536);
 }
 
-void V_InitBox()
+static void V_InitBox()
 {
    bgp[0] = PatchLoader::CacheName(wGlobalDir, "BOXUL", PU_STATIC);
    bgp[1] = PatchLoader::CacheName(wGlobalDir, "BOXUC", PU_STATIC);
@@ -251,8 +251,8 @@ int v_ticker = 0;
 static int history[FPS_HISTORY];
 int current_count = 0;
 
-void V_ClassicFPSDrawer();
-void V_TextFPSDrawer();
+static void V_ClassicFPSDrawer();
+static void V_TextFPSDrawer();
 
 //
 // V_FPSDrawer
@@ -316,7 +316,7 @@ void V_FPSTicker()
 //
 // sf: classic fps ticker kept seperate
 //
-void V_ClassicFPSDrawer()
+static void V_ClassicFPSDrawer()
 {
   static int lasttic;
   
@@ -346,7 +346,7 @@ void V_ClassicFPSDrawer()
 //
 // V_TextFPSDrawer
 //
-void V_TextFPSDrawer()
+static void V_TextFPSDrawer()
 {
    static char fpsStr[16];
    static int  fhistory[16] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};

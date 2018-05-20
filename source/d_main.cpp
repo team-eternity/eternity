@@ -252,7 +252,7 @@ void D_PageTicker(void)
 //
 // killough 11/98: add credits screen
 //
-void D_PageDrawer()
+static void D_PageDrawer()
 {
    int l;
 
@@ -567,7 +567,7 @@ void D_DrawWings()
 // D_Display
 //  draw current display, possibly wiping it from the previous
 //
-void D_Display()
+static void D_Display()
 {
    if(nodrawers)                // for comparative timing / profiling
       return;
@@ -870,7 +870,7 @@ void D_InitPaths()
 // haleyjd 04/17/03: copied, slightly modified prboom's code to
 // allow quoted LFNs in response files.
 //
-void FindResponseFile()
+static void FindResponseFile()
 {
    int i;
 

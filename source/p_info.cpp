@@ -56,7 +56,6 @@
 #include "d_gi.h"
 #include "d_io.h"
 #include "doomstat.h"
-#include "doomdef.h"
 #include "dstrings.h"
 #include "e_lib.h"
 #include "e_hash.h"

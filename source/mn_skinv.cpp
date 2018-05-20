@@ -421,7 +421,7 @@ static void MN_SkinDrawer()
 // haleyjd 05/29/06: separated out from the drawer and added ticker
 // support to widgets to enable precise state transition timing.
 //
-void MN_SkinTicker()
+static void MN_SkinTicker()
 {
    if(skview_tics != -1 && menutime >= skview_tics)
    {

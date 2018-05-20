@@ -196,7 +196,7 @@ bool P_WeaponHasAmmo(const player_t *player, const weaponinfo_t *weapon)
 //
 // MaxW: 2018/01/03: Test if a player has alt ammo for a weapon
 //
-bool P_WeaponHasAmmoAlt(player_t *player, weaponinfo_t *weapon)
+static bool P_WeaponHasAmmoAlt(player_t *player, weaponinfo_t *weapon)
 {
    itemeffect_t *ammoType = weapon->ammo_alt;
 

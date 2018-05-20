@@ -44,7 +44,6 @@
 #include "e_things.h" // TODO: Move E_SplitTypeAndState and remove this include?
 #include "e_weapons.h"
 #include "metaapi.h"
-#include "m_avltree.h"
 
 #include "d_dehtbl.h"
 #include "d_items.h"

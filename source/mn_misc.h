@@ -33,10 +33,6 @@ void MN_Alert(const char *message, ...);
 void MN_Question(const char *message, const char *command);
 void MN_QuestionFunc(const char *message, void (*handler)(void));
 
-// help screens
-
-void MN_StartHelpScreen();
-
 // map colour selection
 
 void MN_SelectColour(const char *variable_name);

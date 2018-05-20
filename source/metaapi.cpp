@@ -32,7 +32,6 @@
 #include "i_system.h"
 #include "doomtype.h"
 #include "m_collection.h"
-#include "m_dllist.h"
 #include "e_hash.h"
 #include "m_qstr.h"
 #include "m_utils.h"

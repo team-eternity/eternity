@@ -657,7 +657,7 @@ static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
 // Creates the fontgfx array and precaches all patches as determined via
 // execution of the filter objects in the font.
 // 
-void E_LoadPatchFont(vfont_t *font)
+static void E_LoadPatchFont(vfont_t *font)
 {
    unsigned int i, j, k, m;
    char lumpname[9];

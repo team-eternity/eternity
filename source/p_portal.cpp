@@ -30,7 +30,6 @@
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "ev_specials.h"
-#include "m_collection.h"  // ioanch 20160106
 #include "p_chase.h"
 #include "polyobj.h"
 #include "p_portal.h"
