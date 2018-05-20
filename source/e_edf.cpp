@@ -462,7 +462,7 @@ void E_EDFLoggedWarning(int lv, const char *msg, ...)
 //
 // Displays the EDF warning count after EDF processing.
 //
-void E_EDFPrintWarningCount()
+static void E_EDFPrintWarningCount()
 {
    if(in_textmode && edf_warning_count)
    {
@@ -478,7 +478,7 @@ void E_EDFPrintWarningCount()
 //
 // Resets the count of warnings to zero.
 //
-void E_EDFResetWarnings()
+static void E_EDFResetWarnings()
 {
    edf_warning_count = 0;
 

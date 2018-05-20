@@ -220,7 +220,7 @@ void ScrollThinker::RemoveAllScrollers()
 //
 // Stop a scroller based on sector number
 //
-bool EV_stopFlatScrollerBySecnum(int type, int secnum)
+static bool EV_stopFlatScrollerBySecnum(int type, int secnum)
 {
    if(!scrollers)
       return false;

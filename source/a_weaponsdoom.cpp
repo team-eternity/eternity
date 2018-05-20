@@ -301,7 +301,7 @@ void A_FirePlasma(actionargs_t *actionargs)
 //
 // P_GunShot
 //
-void P_GunShot(Mobj *mo, bool accurate)
+static void P_GunShot(Mobj *mo, bool accurate)
 {
    int damage = 5 * (P_Random(pr_gunshot) % 3 + 1);
    angle_t angle = mo->angle;

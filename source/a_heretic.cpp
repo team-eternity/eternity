@@ -202,7 +202,7 @@ void A_HticDrop(actionargs_t *actionargs)
    A_Fall(actionargs);
 }
 
-void P_HticTracer(Mobj *actor, angle_t threshold, angle_t maxturn)
+static void P_HticTracer(Mobj *actor, angle_t threshold, angle_t maxturn)
 {
    angle_t exact, diff;
    Mobj   *dest;

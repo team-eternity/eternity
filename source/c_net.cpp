@@ -166,7 +166,7 @@ void C_NetInit(void)
   }  
 }
 
-void C_DealWithChar(unsigned char c, int source);
+static void C_DealWithChar(unsigned char c, int source);
 
 void C_NetTicker(void)
 {
@@ -185,7 +185,7 @@ void C_NetTicker(void)
    C_RunBuffer(c_netcmd);
 }
 
-void C_DealWithChar(unsigned char c, int source)
+static void C_DealWithChar(unsigned char c, int source)
 {
    int netcmdnum;
    

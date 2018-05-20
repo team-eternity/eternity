@@ -40,14 +40,6 @@ struct event_t;
 // Called by main loop.
 bool AM_Responder(const event_t *ev);
 
-// haleyjd 10/06/05: key binding handlers made global
-void AM_HandlerRight(event_t *ev);
-void AM_HandlerLeft(event_t *ev);
-void AM_HandlerUp(event_t *ev);
-void AM_HandlerDown(event_t *ev);
-void AM_HandlerZoomin(event_t *ev);
-void AM_HandlerZoomout(event_t *ev);
-
 // Called by main loop.
 void AM_Ticker(void);
 

@@ -588,7 +588,7 @@ extern vfont_t *menu_font_normal;
 //
 // Draw the prompt box
 //
-void G_BindDrawer()
+static void G_BindDrawer()
 {
    const char *msg = "\n -= input new key =- \n";
    int x, y, width, height;
@@ -613,7 +613,7 @@ void G_BindDrawer()
 //
 // Responder for widget
 //
-bool G_BindResponder(event_t *ev, int mnaction)
+static bool G_BindResponder(event_t *ev, int mnaction)
 {
    keyaction_t *action;
    

@@ -740,7 +740,7 @@ static void check_intercept()
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-bool PIT_AddLineIntercepts(line_t *ld, polyobj_s *po)
+static bool PIT_AddLineIntercepts(line_t *ld, polyobj_s *po)
 {
    int       s1;
    int       s2;
@@ -785,7 +785,7 @@ bool PIT_AddLineIntercepts(line_t *ld, polyobj_s *po)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-bool PIT_AddThingIntercepts(Mobj *thing)
+static bool PIT_AddThingIntercepts(Mobj *thing)
 {
    fixed_t   x1, y1;
    fixed_t   x2, y2;

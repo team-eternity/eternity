@@ -36,7 +36,6 @@
 #include "e_things.h"
 #include "m_bbox.h"
 #include "m_collection.h"
-#include "p_maputl.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "r_bsp.h"

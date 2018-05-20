@@ -134,9 +134,6 @@ extern cheat_s cheat[CHEAT_NUMCHEATS];
 bool M_FindCheats(int key);
 void M_DoCheat(char *cheatname);
 
-void M_AddNukeSpec(int mobjType, void (*func)(Mobj *)); // haleyjd
-void M_CopyNukeSpec(int destType, int srcType);
-
 extern int idmusnum;
 
 #endif

@@ -1284,7 +1284,7 @@ polyobj_t *Polyobj_GetForNum(int id)
 // Retrieves the mirroring polyobject if one exists. Returns NULL
 // otherwise.
 //
-polyobj_t *Polyobj_GetMirror(polyobj_t *po)
+static polyobj_t *Polyobj_GetMirror(polyobj_t *po)
 {
    return (po && po->mirror != -1) ? Polyobj_GetForNum(po->mirror) : NULL;
 }

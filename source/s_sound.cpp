@@ -747,8 +747,10 @@ void S_StartSoundName(const PointThinker *origin, const char *name)
 //
 // haleyjd 06/03/06: support playing looped sounds.
 //
-void S_StartSoundLooped(PointThinker *origin, char *name, int volume, 
-                        int attn, int subchannel)
+// FIXME: unused?
+//
+static void S_StartSoundLooped(PointThinker *origin, char *name, int volume,
+                               int attn, int subchannel)
 {
    soundparams_t params;
    
@@ -982,11 +984,11 @@ bool S_CheckSoundPlaying(const PointThinker *mo, sfxinfo_t *aliasinfo)
 {
    int cnum;
 
-   if(mo && sfx)
+   if(mo && aliasinfo)
    {   
       for(cnum = 0; cnum < numChannels; cnum++)
       {
-         if(channels[cnum].origin == mo && channels[cnum].sfxinfo == sfx)
+         if(channels[cnum].origin == mo && channels[cnum].sfxinfo == aliasinfo)
          {
             if(I_SoundIsPlaying(channels[cnum].handle))
                return true;

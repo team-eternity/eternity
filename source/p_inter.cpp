@@ -95,7 +95,7 @@ int bfgcells = 40;      // used in p_pspr.c
 //
 // Returns false if the ammo can't be picked up at all
 //
-bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
+static bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
 {
    if(!ammo)
       return false;

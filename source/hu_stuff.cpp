@@ -880,7 +880,7 @@ void HU_CenterMessage(const char *s)
 // haleyjd: timed center message. Originally for FraggleScript,
 // now revived for Small.
 //
-void HU_CenterMessageTimed(const char *s, int tics)
+static void HU_CenterMessageTimed(const char *s, int tics)
 {
    HU_CenterMessage(s);
    centermessage_widget.cleartic = leveltime + tics;
@@ -1014,7 +1014,7 @@ void HUDCrossHairWidget::drawer()
 //
 // Sets up the crosshair widget and associated globals.
 //
-void HU_InitCrossHair()
+static void HU_InitCrossHair()
 {
    // haleyjd TODO: support user-added crosshairs
    crosshairs[0] = W_CheckNumForName("CROSS1");

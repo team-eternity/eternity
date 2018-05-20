@@ -65,7 +65,7 @@
 #include "xl_scripts.h"
 
 // D_FIXME:
-char *D_CheckGameEDF();
+static char *D_CheckGameEDF();
 
 // haleyjd 11/09/09: wadfiles made a structure.
 // note: needed extern in g_game.c
@@ -1173,7 +1173,7 @@ void D_SetGamePath()
 // former over the latter when it exists. Returns the path of the file to use,
 // or NULL if neither location has that file.
 //
-char *D_CheckGamePathFile(const char *name, bool isDir)
+static char *D_CheckGamePathFile(const char *name, bool isDir)
 {
    struct stat sbuf;   
 
@@ -1227,7 +1227,7 @@ char *D_CheckAutoDoomPathFile(const char *name, bool isDir)
 //
 // Looks for an optional root.edf file in base/game
 //
-char *D_CheckGameEDF()
+static char *D_CheckGameEDF()
 {
    return D_CheckGamePathFile("root.edf", false);
 }

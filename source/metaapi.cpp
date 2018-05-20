@@ -33,7 +33,6 @@
 #include "doomtype.h"
 #include "m_buffer.h"   // IOANCH
 #include "m_collection.h"
-#include "m_dllist.h"
 #include "e_hash.h"
 #include "m_qstr.h"
 #include "m_utils.h"

@@ -766,7 +766,7 @@ static ev_sectorbinding_t *EV_findBinding(ev_sectorbinding_t *bindings,
 //
 // Look up a DOOM sector special binding.
 //
-ev_sectorbinding_t *EV_DOOMBindingForSectorSpecial(int special)
+static ev_sectorbinding_t *EV_DOOMBindingForSectorSpecial(int special)
 {
    return EV_findBinding(DoomSectorBindings, earrlen(DoomSectorBindings), special);
 }
@@ -777,7 +777,7 @@ ev_sectorbinding_t *EV_DOOMBindingForSectorSpecial(int special)
 // Look up a PSX sector type. Defers to DOOM's lookup if a PSX type is not
 // found first.
 //
-ev_sectorbinding_t *EV_PSXBindingForSectorSpecial(int special)
+static ev_sectorbinding_t *EV_PSXBindingForSectorSpecial(int special)
 {
    ev_sectorbinding_t *binding;
 
@@ -793,7 +793,7 @@ ev_sectorbinding_t *EV_PSXBindingForSectorSpecial(int special)
 //
 // Look up a Heretic sector special binding.
 //
-ev_sectorbinding_t *EV_HereticBindingForSectorSpecial(int special)
+static ev_sectorbinding_t *EV_HereticBindingForSectorSpecial(int special)
 {
    return EV_findBinding(HticSectorBindings, earrlen(HticSectorBindings), special);
 }
@@ -803,7 +803,7 @@ ev_sectorbinding_t *EV_HereticBindingForSectorSpecial(int special)
 //
 // Look up a Hexen sector special binding.
 //
-ev_sectorbinding_t *EV_HexenBindingForSectorSpecial(int special)
+static ev_sectorbinding_t *EV_HexenBindingForSectorSpecial(int special)
 {
    return EV_findBinding(HexenSectorBindings, earrlen(HexenSectorBindings), special);
 }
@@ -823,7 +823,7 @@ ev_sectorbinding_t *EV_GenBindingForSectorSpecial(int special)
 //
 // Look up a UDMF "Eternity" namespace sector special binding.
 //
-ev_sectorbinding_t *EV_UDMFEternityBindingForSectorSpecial(int special)
+static ev_sectorbinding_t *EV_UDMFEternityBindingForSectorSpecial(int special)
 {
    return EV_findBinding(UDMFEternitySectorBindings, earrlen(UDMFEternitySectorBindings), special);
 }

@@ -201,7 +201,7 @@ void P_InitSwitchList(void)
 //
 // haleyjd 04/16/08: Made buttons dynamic.
 //
-button_t *P_FindFreeButton()
+static button_t *P_FindFreeButton()
 {
    int i;
    int oldnumbuttons;

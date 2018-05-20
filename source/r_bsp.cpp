@@ -439,7 +439,9 @@ endclosed:
 // It assumes that Doom has already ruled out a door being closed because
 // of front-back closure (e.g. front floor is taller than back ceiling).
 //
-int R_DoorClosed(void)
+// FIXME: no longer used or needed in Eternity?
+//
+static int R_DoorClosed(void)
 {
    return
 
@@ -787,7 +789,7 @@ static bool R_ClipInitialSegRange(int *start, int *stop, float *clipx1, float *c
    return true;
 }
 
-void R_ClipSegToFPortal(void)
+static void R_ClipSegToFPortal(void)
 {
    int i, startx;
    float clipx1, clipx2;
@@ -855,7 +857,7 @@ void R_ClipSegToFPortal(void)
    }
 }
 
-void R_ClipSegToCPortal(void)
+static void R_ClipSegToCPortal(void)
 {
    int i, startx;
    float clipx1, clipx2;
@@ -918,7 +920,7 @@ void R_ClipSegToCPortal(void)
    }
 }
 
-void R_ClipSegToLPortal(void)
+static void R_ClipSegToLPortal(void)
 {
    int i, startx;
    float clipx1, clipx2;

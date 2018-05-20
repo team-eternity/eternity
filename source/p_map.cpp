@@ -521,24 +521,6 @@ bool P_TeleportMoveStrict(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    return res;
 }
 
-
-#ifdef R_LINKEDPORTALS
-//
-// P_PortalTeleportMove
-//
-// SoM: calls P_TeleportMove with the stomp3d flag set to true
-bool P_PortalTeleportMove(Mobj *thing, fixed_t x, fixed_t y)
-{
-   bool res;
-
-   stomp3d = true;
-   res = P_TeleportMove(thing, x, y, false);
-   stomp3d = false;
-
-   return res;
-}
-#endif
-
 //
 // MOVEMENT ITERATOR FUNCTIONS
 //

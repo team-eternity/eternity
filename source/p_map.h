@@ -91,12 +91,6 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y,bool boss);
 // haleyjd 06/06/05: new function that won't stick the thing inside inert objects
 bool P_TeleportMoveStrict(Mobj *thing, fixed_t x, fixed_t y, bool boss);
 
-// SoM: new function that won't telefrag things which the transporting mobj isn't
-// touching on the z axis.
-#ifdef R_LINKEDPORTALS
-bool P_PortalTeleportMove(Mobj *thing, fixed_t x, fixed_t y);
-#endif
-
 //=============================================================================
 //
 // Sight Checks, Tracers, Path Traversal

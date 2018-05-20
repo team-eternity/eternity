@@ -41,7 +41,6 @@
 #include "c_runcmd.h"
 #include "d_dehtbl.h"
 #include "d_gi.h"
-#include "d_player.h"
 #include "doomstat.h"
 #include "e_args.h"
 #include "e_weapons.h"

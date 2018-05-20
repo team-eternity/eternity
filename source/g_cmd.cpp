@@ -122,7 +122,7 @@ CONSOLE_COMMAND(pause, cf_server)
 //
 // haleyjd: Restoration of original exit behavior
 //
-void G_QuitDoom()
+static void G_QuitDoom()
 {
    // haleyjd: re-added code for playing random sound before exit
    extern int snd_card;

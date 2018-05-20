@@ -1150,7 +1150,7 @@ static void P_UnArchiveSndSeq(SaveArchive &arc)
    S_SetSequenceStatus(newSeq);
 }
 
-void P_ArchiveSoundSequences(SaveArchive &arc)
+static void P_ArchiveSoundSequences(SaveArchive &arc)
 {
    DLListItem<SndSeq_t> *item = SoundSequences;
    int count = 0;
@@ -1181,7 +1181,7 @@ void P_ArchiveSoundSequences(SaveArchive &arc)
       P_ArchiveSndSeq(arc, EnviroSequence);
 }
 
-void P_UnArchiveSoundSequences(SaveArchive &arc)
+static void P_UnArchiveSoundSequences(SaveArchive &arc)
 {
    int i, count = 0;
 
@@ -1208,7 +1208,7 @@ void P_UnArchiveSoundSequences(SaveArchive &arc)
 // never did so after loading the save. No longer!
 //
 
-void P_ArchiveButtons(SaveArchive &arc)
+static void P_ArchiveButtons(SaveArchive &arc)
 {
    int numsaved = 0;
 
@@ -1241,7 +1241,7 @@ void P_ArchiveButtons(SaveArchive &arc)
 // haleyjd 07/06/09: ACS Save/Load
 //
 
-void P_ArchiveACS(SaveArchive &arc)
+static void P_ArchiveACS(SaveArchive &arc)
 {
    ACS_Archive(arc);
 }

@@ -111,7 +111,7 @@ void IN_AddCameras()
 //
 // Set up the intermissions camera
 //
-void IN_StartCamera()
+static void IN_StartCamera()
 {
    if(!camerathings.isEmpty())
    {
