@@ -916,6 +916,12 @@ static void E_ProcessFont(cfg_t *sec, bool delta)
    // process linear lump - if defined, this is a linear font automatically
    if(cfg_size(sec, ITEM_FONT_LLUMP) > 0)
    {
+      if(delta && font->numfilters)
+      {
+         // handle disposal of pre-existing filters
+         E_FreeFontFilters(font);
+      }
+
       bool requantize = false;
       int format;
       const char *fmtstr;
@@ -942,6 +948,13 @@ static void E_ProcessFont(cfg_t *sec, bool delta)
    {
       unsigned int curnumfilters = font->numfilters;
       unsigned int numfilters    = cfg_size(sec, ITEM_FONT_FILTER);
+
+      if(delta && font->linear)
+      {
+         // TODO: Make E_UnloadLinearFont one day, we already have E_DisposePatches
+         E_EDFLoggedErr(2, "E_ProcessFont: fontdelta of font '%s' cannot change a linear "
+                           "font to filter-based (currently).\n", font->name);
+      }
 
       // at least one filter is required; if this font is being modified, it 
       // may already possess filters.
