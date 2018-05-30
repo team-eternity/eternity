@@ -1952,7 +1952,6 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
          ; //idkfa_armor_class = value;
       else if(!strcasecmp(key,deh_misc[14])) // BFG Cells/Shot
       {
-         // WEAPON_FIXME: BFG ammopershot
          // haleyjd 08/10/02: propagate to weapon info
          weaponinfo_t &bfginfo = *E_WeaponForDEHNum(wp_bfg);
          bfgcells = bfginfo.ammopershot = value;

@@ -575,8 +575,6 @@ static void cheat_weapx(const void *arg)
    int w = *buf - '1';
    int pwstr = pw_strength;
 
-   // WEAPON_FIXME: weap cheat
-
    if((w == wp_supershotgun && !enable_ssg) ||      // killough 2/28/98
       ((w == wp_bfg || w == wp_plasma) && GameModeInfo->id == shareware))
       return;

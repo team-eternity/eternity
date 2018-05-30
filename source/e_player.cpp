@@ -465,7 +465,7 @@ static void E_freeWeaponSlot(playerclass_t *pc, int slot)
 //
 static void E_processWeaponSlot(cfg_t *slot, playerclass_t *pc)
 {
-   const qstring titlestr = qstring(cfg_title(slot));
+   const qstring titlestr(cfg_title(slot));
    const int slotindex = titlestr.toInt() - 1;
    const int numweapons = cfg_size(slot, ITEM_WPNSLOT_WPNS);
 

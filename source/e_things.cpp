@@ -1926,7 +1926,7 @@ static inline void E_processThingPickupEffect(mobjinfo_t &mi, cfg_t *thingsec)
    {
       mi.pickupfx = estructalloc(e_pickupfx_t, 1);
       // TODO: Is setting name reuqired? Maybe this could be eliminated.
-      qstring qname = qstring("_");
+      qstring qname("_");
       qname += mi.name;
       mi.pickupfx->name = qname.duplicate();
    }
