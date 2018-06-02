@@ -3235,7 +3235,7 @@ thingtype HereticBloodSplatter : Mobj, -1, 433
 {
   radius 2.0
   height 4.0
-  cflags NOBLOCKMAP|MISSILE|DROPOFF|CANNOTPUSH|NOZERODAMAGE /*|NOTELEPORT*/
+  cflags NOBLOCKMAP|MISSILE|DROPOFF|CANNOTPUSH|NORANDOMIZE|NOZERODAMAGE /*|NOTELEPORT*/
   states
   @"
   Spawn:
