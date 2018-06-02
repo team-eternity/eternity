@@ -983,7 +983,7 @@ soundsequence EEHticAmbScream
   commands
   @"
     play ht_amb1
-	nostopcutoff
+    nostopcutoff
   "@
    
   randomplayvol true
@@ -997,7 +997,7 @@ soundsequence EEHticAmbSquish
   commands
   @"
     playuntildone ht_amb2
-	nostopcutoff
+    nostopcutoff
   "@
    
   randomplayvol true
@@ -1011,24 +1011,24 @@ soundsequence EEHticAmbDrops
   commands 
   @"
     play ht_amb3
-	delay 16
+    delay 16
     delayrand 0 31
     play ht_amb7
-	delay 16
+    delay 16
     delayrand 0 31
     play ht_amb3
-	delay 16
+    delay 16
     delayrand 0 31
     play ht_amb7
-	delay 16
+    delay 16
     delayrand 0 31
     play ht_amb3
-	delay 16
+    delay 16
     delayrand 0 31
     play ht_amb7
-	delay 16
+    delay 16
     delayrand 0 31
-	nostopcutoff
+    nostopcutoff
   "@
    
   randomplayvol true
@@ -1072,7 +1072,7 @@ soundsequence EEHticHeartBeat
     playtime ht_amb5 35
     playtime ht_amb5 35
     play ht_amb5
-	nostopcutoff
+    nostopcutoff
   "@
    
   randomplayvol true
@@ -1105,7 +1105,7 @@ soundsequence EEHticGrowl
   commands
   @"
     play ht_bstsit
-	nostopcutoff
+    nostopcutoff
   "@
    
   randomplayvol true
@@ -1119,7 +1119,7 @@ soundsequence EEHticMagic
   commands
   @"
     play ht_amb8
-	nostopcutoff
+    nostopcutoff
   "@
    
   randomplayvol true
