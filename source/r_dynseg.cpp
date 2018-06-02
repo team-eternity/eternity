@@ -31,7 +31,6 @@
 #include "m_bbox.h"
 #include "m_collection.h"
 #include "p_maputl.h"
-#include "r_defs.h"
 #include "r_main.h"
 #include "r_dynseg.h"
 #include "r_dynabsp.h"

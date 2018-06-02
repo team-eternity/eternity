@@ -32,7 +32,6 @@
 #include "i_system.h"
 #include "doomtype.h"
 #include "m_collection.h"
-#include "m_dllist.h"
 #include "e_hash.h"
 #include "m_qstr.h"
 #include "m_utils.h"
@@ -968,6 +967,28 @@ MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, const char *key, co
 
    return obj;
 }
+const MetaObject *MetaTable::getNextKeyAndType(const MetaObject *object, const char *key, const char *type) const
+{
+   const MetaObject *obj = object;
+
+   if(object)
+   {
+      // As above, allow null in either key or type to mean "same as current"
+      if(!key)
+         key = object->getKey();
+
+      if(!type)
+         type = object->getClassName();
+   }
+
+   while((obj = pImpl->keyhash.keyIterator(obj, key)))
+   {
+      if(obj->isInstanceOf(type))
+         break;
+   }
+
+   return obj;
+}
 
 //
 // MetaTable::getNextKeyAndType
@@ -977,6 +998,26 @@ MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, const char *key, co
 MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, size_t keyIdx, const char *type) const
 {
    MetaObject *obj    = object;
+   metakey_t  &keyObj = MetaKeyForIndex(keyIdx);
+
+   if(object)
+   {
+      // As above, allow NULL in type to mean "same as current"
+      if(!type)
+         type = object->getClassName();
+   }
+
+   while((obj = pImpl->keyhash.keyIterator(obj, keyObj.key, keyObj.unmodHC)))
+   {
+      if(obj->isInstanceOf(type))
+         break;
+   }
+
+   return obj;
+}
+const MetaObject *MetaTable::getNextKeyAndType(const MetaObject *object, size_t keyIdx, const char *type) const
+{
+   const MetaObject *obj    = object;
    metakey_t  &keyObj = MetaKeyForIndex(keyIdx);
 
    if(object)
@@ -1023,6 +1064,29 @@ MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, const char *key,
 
    return obj;
 }
+const MetaObject *MetaTable::getNextKeyAndType(const MetaObject *object, const char *key,
+                                               const MetaObject::Type *type) const
+{
+   const MetaObject *obj = object;
+
+   if(object)
+   {
+      // As above, allow null in either key or type to mean "same as current"
+      if(!key)
+         key = object->getKey();
+
+      if(!type)
+         type = object->getDynamicType();
+   }
+
+   while((obj = pImpl->keyhash.keyIterator(obj, key)))
+   {
+      if(obj->isInstanceOf(type))
+         break;
+   }
+
+   return obj;
+}
 
 //
 // MetaTable::getNextKeyAndType
@@ -1033,6 +1097,27 @@ MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, size_t keyIdx,
                                          const MetaObject::Type *type) const
 {
    MetaObject *obj    = object;
+   metakey_t  &keyObj = MetaKeyForIndex(keyIdx);
+
+   if(object)
+   {
+      // As above, allow null in type to mean "same as current"
+      if(!type)
+         type = object->getDynamicType();
+   }
+
+   while((obj = pImpl->keyhash.keyIterator(obj, keyObj.key, keyObj.unmodHC)))
+   {
+      if(obj->isInstanceOf(type))
+         break;
+   }
+
+   return obj;
+}
+const MetaObject *MetaTable::getNextKeyAndType(const MetaObject *object, size_t keyIdx,
+                                               const MetaObject::Type *type) const
+{
+   const MetaObject *obj    = object;
    metakey_t  &keyObj = MetaKeyForIndex(keyIdx);
 
    if(object)

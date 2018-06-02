@@ -219,7 +219,7 @@ int keylookspeed = 5;
 int cooldemo = 0;
 int cooldemo_tics;      // number of tics until changing view
 
-void G_CoolViewPoint();
+static void G_CoolViewPoint();
 
 static bool gameactions[NUMKEYACTIONS];
 
@@ -2583,7 +2583,9 @@ static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
 //
 // Will not return the spot marked in "notspot" if notspot is >= 0.
 //
-int G_ClosestDMSpot(fixed_t x, fixed_t y, int notspot)
+// FIXME: unused?
+//
+static int G_ClosestDMSpot(fixed_t x, fixed_t y, int notspot)
 {
    int j, numspots = int(deathmatch_p - deathmatchstarts);
    int closestspot = -1;
@@ -3771,7 +3773,7 @@ extern camera_t intercam;
 //
 // Change to new viewpoint
 //
-void G_CoolViewPoint()
+static void G_CoolViewPoint()
 {
    int viewtype;
    int old_displayplayer = displayplayer;

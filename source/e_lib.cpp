@@ -41,7 +41,6 @@
 #include "d_io.h"
 #include "d_main.h"
 #include "doomstat.h"
-#include "doomtype.h"
 #include "m_collection.h"
 #include "m_compare.h"
 #include "m_hash.h"
@@ -984,7 +983,7 @@ void E_MetaIntFromCfgFlag(MetaTable *meta, cfg_t *cfg, const char *prop, int n, 
       meta->setInt(prop, cfg_getflag(cfg, prop));
 }
 
-void E_MetaTableFromCfgMvprop(MetaTable *meta, cfg_t *cfg, const char *prop, bool allowmulti)
+static void E_MetaTableFromCfgMvprop(MetaTable *meta, cfg_t *cfg, const char *prop, bool allowmulti)
 {
    int numprop = cfg_size(cfg, prop);
 

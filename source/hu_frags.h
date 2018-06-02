@@ -25,7 +25,6 @@ extern bool hu_showfrags;
 
 void HU_FragsInit();
 
-void HU_FragsDump();
 void HU_FragsUpdate();
 void HU_FragsDrawer();
 

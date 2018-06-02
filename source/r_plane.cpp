@@ -161,7 +161,7 @@ VALLOCATION(slopespan)
 float slopevis; // SoM: used in slope lighting
 
 // BIG FLATS
-void R_Throw()
+static void R_Throw()
 {
    I_Error("R_Throw called.\n");
 }
@@ -855,7 +855,7 @@ static void R_MakeSpans(int x, int t1, int b1, int t2, int b2)
 }
 
 // haleyjd: moved here from r_newsky.c
-void do_draw_newsky(visplane_t *pl)
+static void do_draw_newsky(visplane_t *pl)
 {
    int x, offset, skyTexture, offset2, skyTexture2;
    skytexture_t *sky1, *sky2;

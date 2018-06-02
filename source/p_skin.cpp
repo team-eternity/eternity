@@ -36,7 +36,6 @@
 #include "d_player.h"
 #include "doomstat.h"
 #include "d_main.h"
-#include "info.h"
 #include "p_info.h"
 #include "p_skin.h"
 #include "r_things.h"

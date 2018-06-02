@@ -69,32 +69,33 @@ weaponinfo_t *E_WeaponForName(const char *name);
 weaponinfo_t *E_WeaponForDEHNum(int dehnum);
 weapontype_t E_WeaponNumForName(const char *name);
 
-weaponinfo_t *E_FindBestWeapon(player_t *player);
-weaponinfo_t *E_FindBestWeaponUsingAmmo(player_t *player, itemeffect_t *ammo);
-int *E_GetIndexedWepCtrForPlayer(player_t *player, int index);
+weaponinfo_t *E_FindBestWeapon(const player_t *player);
+weaponinfo_t *E_FindBestWeaponUsingAmmo(const player_t *player,
+                                        const itemeffect_t *ammo);
+int *E_GetIndexedWepCtrForPlayer(const player_t *player, int index);
 
-bool E_WeaponIsCurrentDEHNum(player_t *player, const int dehnum);
+bool E_WeaponIsCurrentDEHNum(const player_t *player, const int dehnum);
 
-bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon);
-bool E_PlayerOwnsWeaponForDEHNum(player_t *player, int dehnum);
-bool E_PlayerOwnsWeaponInSlot(player_t *player, int slot);
+bool E_PlayerOwnsWeapon(const player_t *player, const weaponinfo_t *weapon);
+bool E_PlayerOwnsWeaponForDEHNum(const player_t *player, int dehnum);
+bool E_PlayerOwnsWeaponInSlot(const player_t *player, int slot);
 
 state_t *E_GetStateForWeaponInfo(weaponinfo_t *wi, const char *label);
 
-bool E_WeaponHasAltFire(weaponinfo_t *wp);
+bool E_WeaponHasAltFire(const weaponinfo_t *wp);
 
-void E_GiveWeapon(player_t *player, weaponinfo_t *weapon);
+void E_GiveWeapon(player_t *player, const weaponinfo_t *weapon);
 
 void E_GiveAllClassWeapons(player_t *player);
 
-bool E_IsPoweredVariant(weaponinfo_t *wp);
-bool E_IsPoweredVariantOf(weaponinfo_t *untomed, weaponinfo_t *tomed);
+bool E_IsPoweredVariant(const weaponinfo_t *wp);
+bool E_IsPoweredVariantOf(const weaponinfo_t *untomed, const weaponinfo_t *tomed);
 
-BDListItem<weaponslot_t> *E_FirstInSlot(weaponslot_t *dummyslot);
-BDListItem<weaponslot_t> *E_LastInSlot(weaponslot_t *dummyslot);
+BDListItem<weaponslot_t> *E_FirstInSlot(const weaponslot_t *dummyslot);
+BDListItem<weaponslot_t> *E_LastInSlot(const weaponslot_t *dummyslot);
 
-weaponslot_t *E_FindEntryForWeaponInSlot(player_t *player, weaponinfo_t *wp, int slot);
-weaponslot_t *E_FindFirstWeaponSlot(player_t *player, weaponinfo_t *wp);
+weaponslot_t *E_FindEntryForWeaponInSlot(const player_t *player, const weaponinfo_t *wp, int slot);
+weaponslot_t *E_FindFirstWeaponSlot(const player_t *player, const weaponinfo_t *wp);
 
 void E_CollectWeapons(cfg_t *cfg);
 
@@ -181,7 +182,7 @@ public:
    //
    // Get counter pointer for the player's currently equipped weapon
    //
-   static int *getIndexedCounterForPlayer(player_t *player, int index)
+   static int *getIndexedCounterForPlayer(const player_t *player, int index)
    {
       return player->weaponctrs->getIndexedCounter(player->readyweapon->id, index);
    }

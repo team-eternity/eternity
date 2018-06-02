@@ -298,7 +298,7 @@ static void EV_initUDMFEternityStaticHash()
 // Always looks up a special in the DOOM gamemode's static init list, regardless
 // of the map format or gamemode in use. Returns 0 if no such special exists.
 //
-int EV_DOOMSpecialForStaticInit(int staticFn)
+static int EV_DOOMSpecialForStaticInit(int staticFn)
 {
    ev_static_t *binding;
 
@@ -315,7 +315,7 @@ int EV_DOOMSpecialForStaticInit(int staticFn)
 // regardless of the map format or gamemode in use. Returns 0 if the given special
 // isn't bound to a static init function.
 //
-int EV_DOOMStaticInitForSpecial(int special)
+static int EV_DOOMStaticInitForSpecial(int special)
 {
    ev_static_t *binding;
 
@@ -336,7 +336,7 @@ int EV_DOOMStaticInitForSpecial(int special)
 // regardless of the map format or gamemode in use. Returns 0 if no such 
 // special exists.
 //
-int EV_HereticSpecialForStaticInit(int staticFn)
+static int EV_HereticSpecialForStaticInit(int staticFn)
 {
    // There is only one difference between Heretic and DOOM regarding static
    // init specials; line type 99 is equivalent to BOOM extended type 85, 
@@ -355,7 +355,7 @@ int EV_HereticSpecialForStaticInit(int staticFn)
 // list, regardless of the map format or gamemode in use. Returns 0 if the given
 // special isn't bound to a static init function.
 //
-int EV_HereticStaticInitForSpecial(int special)
+static int EV_HereticStaticInitForSpecial(int special)
 {
    if(special == 99)
       return EV_STATIC_SCROLL_LINE_RIGHT;
@@ -370,7 +370,7 @@ int EV_HereticStaticInitForSpecial(int special)
 // regardless of the map format or gamemode in use. Returns 0 if no such special
 // exists.
 //
-int EV_HexenSpecialForStaticInit(int staticFn)
+static int EV_HexenSpecialForStaticInit(int staticFn)
 {
    ev_static_t *binding;
 
@@ -387,7 +387,7 @@ int EV_HexenSpecialForStaticInit(int staticFn)
 // list, regardless of the map format or gamemode in use. Returns 0 if the given
 // special isn't bound to a static init function.
 //
-int EV_HexenStaticInitForSpecial(int special)
+static int EV_HexenStaticInitForSpecial(int special)
 {
    ev_static_t *binding;
 
@@ -408,7 +408,7 @@ int EV_HexenStaticInitForSpecial(int special)
 // regardless of the map format or gamemode in use. Returns 0 if no such special
 // exists.
 //
-int EV_StrifeSpecialForStaticInit(int staticFn)
+static int EV_StrifeSpecialForStaticInit(int staticFn)
 {
    // TODO
    return 0;
@@ -419,7 +419,7 @@ int EV_StrifeSpecialForStaticInit(int staticFn)
 //
 // TODO
 //
-int EV_StrifeStaticInitForSpecial(int special)
+static int EV_StrifeStaticInitForSpecial(int special)
 {
    return 0;
 }
@@ -430,7 +430,7 @@ int EV_StrifeStaticInitForSpecial(int special)
 // Always looks up a special in the PSX mission's static init list, regardless
 // of the map format or gamemode in use. Returns 0 if no such special exists.
 //
-int EV_PSXSpecialForStaticInit(int staticFn)
+static int EV_PSXSpecialForStaticInit(int staticFn)
 {
    // small set, so, linear search
    for(size_t i = 0; i < earrlen(PSXStaticBindings); i++)
@@ -450,7 +450,7 @@ int EV_PSXSpecialForStaticInit(int staticFn)
 // regardless of the map format or gamemode in use. Returns 0 if no such special
 // exists.
 //
-int EV_PSXStaticInitForSpecial(int special)
+static int EV_PSXStaticInitForSpecial(int special)
 {
    for(size_t i = 0; i < earrlen(PSXStaticBindings); i++)
    {
@@ -469,7 +469,7 @@ int EV_PSXStaticInitForSpecial(int special)
 // regardless of the map format or gamemode in use. Returns 0 if no such 
 // special exists.
 //
-int EV_UDMFEternitySpecialForStaticInit(int staticFn)
+static int EV_UDMFEternitySpecialForStaticInit(int staticFn)
 {
    ev_static_t *binding;
 
@@ -489,7 +489,7 @@ int EV_UDMFEternitySpecialForStaticInit(int staticFn)
 // list, regardless of the map format or gamemode in use. Returns 0 if the given
 // special isn't bound to a static init function.
 //
-int EV_UDMFEternityStaticInitForSpecial(int special)
+static int EV_UDMFEternityStaticInitForSpecial(int special)
 {
    ev_static_t *binding;
 

@@ -48,7 +48,6 @@
 #include "ev_specials.h"
 #include "g_game.h"
 #include "m_bbox.h"
-#include "m_random.h"
 #include "metaapi.h"
 #include "p_anim.h"      // haleyjd
 #include "p_enemy.h"

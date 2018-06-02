@@ -75,7 +75,7 @@ enum
 
 struct soundparams_t
 {
-   PointThinker *origin;
+   const PointThinker *origin;
    sfxinfo_t    *sfx;
    int           volumeScale;
    int           attenuation;
@@ -101,11 +101,11 @@ struct soundparams_t
 //  using <sound_id> from sounds.h
 //
 void S_StartSfxInfo(const soundparams_t &params);
-void S_StartSound(PointThinker *origin, int sound_id);
-void S_StartSoundName(PointThinker *origin, const char *name);
-void S_StartSoundAtVolume(PointThinker *origin, int sfx_id, 
+void S_StartSound(const PointThinker *origin, int sound_id);
+void S_StartSoundName(const PointThinker *origin, const char *name);
+void S_StartSoundAtVolume(const PointThinker *origin, int sfx_id, 
                           int volume, int attn, int subchannel);
-void S_StartSoundNameAtVolume(PointThinker *origin, const char *name, 
+void S_StartSoundNameAtVolume(const PointThinker *origin, const char *name,
                               int volume, int attn,
                               int subchannel);
 void S_StartInterfaceSound(int sound_id);
@@ -144,7 +144,7 @@ void S_SetMusicVolume(int volume);
 void S_SetSfxVolume(int volume);
 
 // haleyjd: rudimentary sound checker
-bool S_CheckSoundPlaying(PointThinker *, sfxinfo_t *aliasinfo);
+bool S_CheckSoundPlaying(const PointThinker *, sfxinfo_t *aliasinfo);
 
 // precache sound?
 extern int s_precache;

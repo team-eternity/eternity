@@ -137,7 +137,7 @@ void EAnimDef::reset(type_t intype)
 //
 // Processes an animation
 //
-void E_processAnimation(cfg_t *cfg)
+static void E_processAnimation(cfg_t *cfg)
 {
    EAnimDef::type_t type;
    const char *firstpic;

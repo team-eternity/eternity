@@ -42,6 +42,9 @@
 // shotgun. This may need to change a bit when dynamic weapons are finished.
 bool enable_ssg = false;
 
+
+// MaxW: 2018/05/30: This comment preserved for historical purposes
+
 //
 // haleyjd 07/25/03: temporary hack to resolve weapon states
 // until EDF weapon support is in place
@@ -50,6 +53,8 @@ bool enable_ssg = false;
 //
 void D_InitWeaponInfo()
 {
+   // TODO: Remove SSG from weapon slots somehow if this is false?
+
    // haleyjd 11/28/08: SSG enable
    if(GameModeInfo->type == Game_DOOM && 
       W_CheckNumForNameNS("SHT2A0", lumpinfo_t::ns_sprites) > 0)

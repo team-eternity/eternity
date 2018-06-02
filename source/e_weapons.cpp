@@ -44,7 +44,6 @@
 #include "e_things.h" // TODO: Move E_SplitTypeAndState and remove this include?
 #include "e_weapons.h"
 #include "metaapi.h"
-#include "m_avltree.h"
 
 #include "d_dehtbl.h"
 #include "d_items.h"
@@ -285,7 +284,7 @@ static weapontype_t E_getWeaponNumForName(const char *name)
 // Check if the weaponsec in the slotnum is currently equipped
 // DON'T CALL THIS IN NEW CODE, IT EXISTS SOLELY FOR COMPAT.
 //
-bool E_WeaponIsCurrentDEHNum(player_t *player, const int dehnum)
+bool E_WeaponIsCurrentDEHNum(const player_t *player, const int dehnum)
 {
    const weaponinfo_t *weapon = E_WeaponForDEHNum(dehnum);
    return weapon ? player->readyweapon->id == weapon->id : false;
@@ -294,7 +293,7 @@ bool E_WeaponIsCurrentDEHNum(player_t *player, const int dehnum)
 //
 // Convenience function to check if a player owns a weapon
 //
-bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon)
+bool E_PlayerOwnsWeapon(const player_t *player, const weaponinfo_t *weapon)
 {
    return weapon ? E_GetItemOwnedAmount(player, weapon->tracker) : false;
 }
@@ -302,7 +301,7 @@ bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon)
 //
 // Convenience function to check if a player owns the weapon specific by dehnum
 //
-bool E_PlayerOwnsWeaponForDEHNum(player_t *player, int dehnum)
+bool E_PlayerOwnsWeaponForDEHNum(const player_t *player, int dehnum)
 {
    return E_PlayerOwnsWeapon(player, E_WeaponForDEHNum(dehnum));
 }
@@ -311,7 +310,7 @@ bool E_PlayerOwnsWeaponForDEHNum(player_t *player, int dehnum)
 // Checks if a player owns a weapon in the provided slot, useful for things like the
 // Doom weapon-number widget
 //
-bool E_PlayerOwnsWeaponInSlot(player_t *player, int slot)
+bool E_PlayerOwnsWeaponInSlot(const player_t *player, int slot)
 {
    if(!player->pclass->weaponslots[slot])
       return false;
@@ -329,12 +328,12 @@ bool E_PlayerOwnsWeaponInSlot(player_t *player, int slot)
 //
 // If it doesn't have an alt atkstate, it can't have an alt fire
 //
-bool E_WeaponHasAltFire(weaponinfo_t *wp)
+bool E_WeaponHasAltFire(const weaponinfo_t *wp)
 {
    return wp->atkstate_alt != E_SafeState(S_NULL);
 }
 
-void E_GiveWeapon(player_t *player, weaponinfo_t *weapon)
+void E_GiveWeapon(player_t *player, const weaponinfo_t *weapon)
 {
    if(!E_PlayerOwnsWeapon(player, weapon))
       E_GiveInventoryItem(player, weapon->tracker, 1);
@@ -363,7 +362,7 @@ void E_GiveAllClassWeapons(player_t *player)
 //
 // Returns whether or not a weapon is the powered (tomed) version of another weapon
 //
-bool E_IsPoweredVariant(weaponinfo_t *wp)
+bool E_IsPoweredVariant(const weaponinfo_t *wp)
 {
    // wp->sisterWeapon is guaranteed to be != nullptr elsewhere
    return wp && wp->flags & WPF_POWEREDUP;
@@ -372,7 +371,7 @@ bool E_IsPoweredVariant(weaponinfo_t *wp)
 //
 // Returns whether or not a weapon is the powered (tomed) version of a specific weapon
 //
-bool E_IsPoweredVariantOf(weaponinfo_t *untomed, weaponinfo_t *tomed)
+bool E_IsPoweredVariantOf(const weaponinfo_t *untomed, const weaponinfo_t *tomed)
 {
    return untomed && untomed->sisterWeapon &&
           untomed->sisterWeapon == tomed && tomed->flags & WPF_POWEREDUP;
@@ -381,7 +380,7 @@ bool E_IsPoweredVariantOf(weaponinfo_t *untomed, weaponinfo_t *tomed)
 //
 // Gets the first weapon in the given slot
 //
-BDListItem<weaponslot_t> *E_FirstInSlot(weaponslot_t *dummyslot)
+BDListItem<weaponslot_t> *E_FirstInSlot(const weaponslot_t *dummyslot)
 {
    // This should NEVER happen
    if(dummyslot->links.bdNext->isDummy())
@@ -393,7 +392,7 @@ BDListItem<weaponslot_t> *E_FirstInSlot(weaponslot_t *dummyslot)
 //
 // Gets the last weapon in the slot
 //
-BDListItem<weaponslot_t> *E_LastInSlot(weaponslot_t *dummyslot)
+BDListItem<weaponslot_t> *E_LastInSlot(const weaponslot_t *dummyslot)
 {
    // This should NEVER happen
    if(dummyslot->links.bdPrev->isDummy())
@@ -405,7 +404,7 @@ BDListItem<weaponslot_t> *E_LastInSlot(weaponslot_t *dummyslot)
 //
 // Looks for the given weapon  in an indexed slot
 //
-weaponslot_t *E_FindEntryForWeaponInSlot(player_t *player, weaponinfo_t *wp, int slot)
+weaponslot_t *E_FindEntryForWeaponInSlot(const player_t *player, const weaponinfo_t *wp, int slot)
 {
    auto baseslot = E_FirstInSlot(player->pclass->weaponslots[slot]);
 
@@ -425,7 +424,7 @@ weaponslot_t *E_FindEntryForWeaponInSlot(player_t *player, weaponinfo_t *wp, int
 //
 // Finds the first instance of a weapon in a player's weaponslots
 //
-weaponslot_t *E_FindFirstWeaponSlot(player_t *player, weaponinfo_t *wp)
+weaponslot_t *E_FindFirstWeaponSlot(const player_t *player, const weaponinfo_t *wp)
 {
    for(int i = 0; i < NUMWEAPONSLOTS; i++)
    {
@@ -446,7 +445,8 @@ weaponslot_t *E_FindFirstWeaponSlot(player_t *player, weaponinfo_t *wp)
 // Perform an in-order traversal of the select order tree
 // to try and find the best weapon the player can fire.
 //
-static weaponinfo_t *E_findBestWeapon(player_t *player, selectordernode_t *node)
+static weaponinfo_t *E_findBestWeapon(const player_t *player,
+                                      const selectordernode_t *node)
 {
    weaponinfo_t *ret = nullptr;
    if(node == nullptr)
@@ -467,7 +467,7 @@ static weaponinfo_t *E_findBestWeapon(player_t *player, selectordernode_t *node)
 // Initial function to call the function that recursively finds the
 // best weapon the player owns that they have the ammo to fire
 //
-weaponinfo_t *E_FindBestWeapon(player_t *player)
+weaponinfo_t *E_FindBestWeapon(const player_t *player)
 {
    return E_findBestWeapon(player, selectordertree->root);
 }
@@ -476,8 +476,9 @@ weaponinfo_t *E_FindBestWeapon(player_t *player)
 // Perform an in-order traversal of the select order tree
 // to try and find the best weapon the player can fire.
 //
-static weaponinfo_t *E_findBestWeaponUsingAmmo(player_t *player, itemeffect_t *ammo,
-                                               selectordernode_t *node)
+static weaponinfo_t *E_findBestWeaponUsingAmmo(const player_t *player,
+                                               const itemeffect_t *ammo,
+                                               const selectordernode_t *node)
 {
    bool correctammo;
    weaponinfo_t *ret = nullptr, *temp = node->object;
@@ -504,7 +505,8 @@ static weaponinfo_t *E_findBestWeaponUsingAmmo(player_t *player, itemeffect_t *a
 // Initial function to call the function that recursively finds the
 // best weapon the player owns that has the provided primary ammo
 //
-weaponinfo_t *E_FindBestWeaponUsingAmmo(player_t *player, itemeffect_t *ammo)
+weaponinfo_t *E_FindBestWeaponUsingAmmo(const player_t *player,
+                                        const itemeffect_t *ammo)
 {
    return E_findBestWeaponUsingAmmo(player, ammo, selectordertree->root);
 }
@@ -512,7 +514,7 @@ weaponinfo_t *E_FindBestWeaponUsingAmmo(player_t *player, itemeffect_t *ammo)
 //
 // Gets a pointer to the counter at a given index for a given player's readyweapon
 //
-int *E_GetIndexedWepCtrForPlayer(player_t *player, int index)
+int *E_GetIndexedWepCtrForPlayer(const player_t *player, int index)
 {
    return WeaponCounterTree::getIndexedCounterForPlayer(player, index);
 }
@@ -529,7 +531,8 @@ int *E_GetIndexedWepCtrForPlayer(player_t *player, int index)
 //
 // Adds a state to the mobjinfo metatable.
 //
-static void E_AddMetaState(weaponinfo_t *wi, state_t *state, const char *name)
+static void E_AddMetaState(const weaponinfo_t *wi, state_t *state,
+                           const char *name)
 {
    wi->meta->addObject(new MetaState(name, state));
 }
@@ -566,7 +569,7 @@ enum wepstatetypes_e
 // Gets a state that is stored inside an weaponinfo metatable.
 // Returns null if no such object exists.
 //
-static MetaState *E_GetMetaState(weaponinfo_t *wi, const char *name)
+static MetaState *E_GetMetaState(const weaponinfo_t *wi, const char *name)
 {
    return wi->meta->getObjectKeyAndTypeEx<MetaState>(name);
 }
@@ -576,7 +579,7 @@ static MetaState *E_GetMetaState(weaponinfo_t *wi, const char *name)
 // is a match for that field's corresponding DECORATE label. Returns null
 // if the name is not a match for a native state field.
 //
-int *E_GetNativeWepStateLoc(weaponinfo_t *wi, const char *label)
+static int *E_GetNativeWepStateLoc(weaponinfo_t *wi, const char *label)
 {
    int nativenum = E_StrToNumLinear(nativeWepStateLabels, NUMNATIVEWSTATES, label);
    int *ret = nullptr;
@@ -628,7 +631,8 @@ state_t *E_GetStateForWeaponInfo(weaponinfo_t *wi, const char *label)
 // by name. Returns null otherwise. Self-identity is *not* considered
 // inheritance.
 //
-weaponinfo_t *E_IsWeaponInfoDescendantOf(weaponinfo_t *wi, const char *type)
+static weaponinfo_t *E_IsWeaponInfoDescendantOf(const weaponinfo_t *wi,
+                                                const char *type)
 {
    weaponinfo_t *curwi = wi->parent;
    weapontype_t targettype = E_WeaponNumForName(type);
@@ -648,7 +652,8 @@ weaponinfo_t *E_IsWeaponInfoDescendantOf(weaponinfo_t *wi, const char *type)
 //
 // Deal with unresolved goto entries in the DECORATE state object.
 //
-static void E_processDecorateWepGotos(weaponinfo_t *wi, edecstateout_t *dso)
+static void E_processDecorateWepGotos(weaponinfo_t *wi,
+                                      const edecstateout_t *dso)
 {
    int i;
 
@@ -724,7 +729,8 @@ static void E_processDecorateWepGotos(weaponinfo_t *wi, edecstateout_t *dso)
 //
 // Add all labeled states from a DECORATE state block to the given weaponinfo.
 //
-static void E_processDecorateWepStates(weaponinfo_t *wi, edecstateout_t *dso)
+static void E_processDecorateWepStates(weaponinfo_t *wi,
+                                       const edecstateout_t *dso)
 {
    int i;
 

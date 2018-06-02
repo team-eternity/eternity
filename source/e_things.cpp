@@ -1727,7 +1727,7 @@ static void E_processItemRespawnAt(mobjinfo_t *mi, const char *name)
 //
 // Proceses a given blood property.
 //
-void E_ProcessBlood(int i, cfg_t *cfg, const char *searchedprop)
+static void E_ProcessBlood(int i, cfg_t *cfg, const char *searchedprop)
 {
    const char *bloodVal = cfg_getstr(cfg, searchedprop);
 
@@ -1926,7 +1926,7 @@ static inline void E_processThingPickupEffect(mobjinfo_t &mi, cfg_t *thingsec)
    {
       mi.pickupfx = estructalloc(e_pickupfx_t, 1);
       // TODO: Is setting name reuqired? Maybe this could be eliminated.
-      qstring qname = qstring("_");
+      qstring qname("_");
       qname += mi.name;
       mi.pickupfx->name = qname.duplicate();
    }
@@ -2204,7 +2204,7 @@ struct thingtitleprops_t
 // Retrieve all the values in the thing's title properties, if such
 // are defined.
 //
-void E_getThingTitleProps(cfg_t *thingsec, thingtitleprops_t &props, bool def)
+static void E_getThingTitleProps(cfg_t *thingsec, thingtitleprops_t &props, bool def)
 {
    cfg_t *titleprops;
 
