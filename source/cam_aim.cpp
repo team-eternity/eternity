@@ -139,7 +139,7 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
    fixed_t linehitz, fixedratio;
    int newfromid;
 
-   fixed_t x, y, newslope;
+   fixed_t x, y;
 
    if(state.topslope > 0 && sector->c_pflags & PS_PASSABLE &&
       (newfromid = sector->c_portal->data.link.toid) != state.groupid)
