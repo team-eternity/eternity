@@ -8,6 +8,12 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+02.06.2018
+
+BUGFIX: Fixed a regression with portal autoaiming. It would sometimes fail when
+        attempting to aim through a sector portal.
+
+--------------------------------------------------------------------------------
 07.05.2018
 
 FEATURE: Added a CHASEFAST EDF game property flag. Needed to support Raven games
