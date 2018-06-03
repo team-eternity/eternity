@@ -1414,10 +1414,15 @@ void Mobj::Think()
 
    if(flags2 & MF2_FLOATBOB)
    {
-      int idx = (floatbob + leveltime) & 63;
+      if(ancient_demo)  // apply this crazy rule here
+         lz = z = floorz + FloatBobOffsets[health++ & 63];
+      else
+      {
+         int idx = (floatbob + leveltime) & 63;
 
-      z += FloatBobDiffs[idx];
-      lz = z - FloatBobOffsets[idx];
+         z += FloatBobDiffs[idx];
+         lz = z - FloatBobOffsets[idx];
+      }
    }
 
    if(momz || clip.BlockingMobj || lz != floorz)
