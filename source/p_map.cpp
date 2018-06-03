@@ -269,7 +269,7 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
 
    bool onfloor = mo->z <= mo->floorz || (P_Use3DClipping() && mo->intflags & MIF_ONMOBJ);
 
-   if(mo->flags4 & MF4_FLY)
+   if(mo->flags4 & MF4_FLY && (!ancient_demo || !onfloor))
    {
       friction = FRICTION_FLY;
    }
@@ -278,6 +278,13 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
       // Air friction only affects players
       friction = FRACUNIT - LevelInfo.airFriction;
    }   
+   else if(ancient_demo &&
+           (sec = mo->subsector->sector)->flags & SECF_FRICTION &&
+           sec->friction != ORIG_FRICTION)
+   {
+      friction = sec->friction;
+      movefactor = sec->movefactor;
+   }
    else if(!(mo->flags & (MF_NOCLIP|MF_NOGRAVITY)) && 
            (demo_version >= 203 || (mo->player && !compatibility)) &&
            variable_friction)
