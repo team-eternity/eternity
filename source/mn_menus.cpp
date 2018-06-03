@@ -3091,7 +3091,7 @@ static menuitem_t mn_weapons_items[] =
    {it_toggle,     "Bfg type",                       "bfgtype"},
    {it_toggle,     "Bobbing",                        "bobbing"},
    {it_toggle,     "Recoil",                         "recoil"},
-   {it_toggle,     "Fist/SSG toggle",                "doom_weapon_toggles"},
+   {it_toggle,     "Weapon hotkey cycling",          "weapon_hotkey_cycling"},
    {it_toggle,     "Autoaiming",                     "autoaim"},
    {it_gap},
    {it_end},

@@ -610,6 +610,16 @@ weaponinfo_t *P_GetPlayerWeapon(const player_t *player, int slot)
    BDListItem<weaponslot_t> *weaponslot, *baseslot;
    const auto *wp = E_IsPoweredVariant(player->readyweapon) ?
                     player->readyweapon->sisterWeapon : player->readyweapon;
+
+   if(!weapon_hotkey_cycling)
+   {
+      weaponslot = E_LastInSlot(player->pclass->weaponslots[slot]);
+      if(!E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon))
+         return nullptr;
+      else
+         return weaponslot ? weaponslot->bdObject->weapon : nullptr;
+   }
+
    // This initial call assures us that
    // player->pclass->weaponslots[slot]->bdNext is valid.
    baseslot = E_FirstInSlot(player->pclass->weaponslots[slot]);
