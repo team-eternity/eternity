@@ -1086,7 +1086,8 @@ floater:
    }
 
    // new footclip system
-   P_AdjustFloorClip(mo);
+   if(!ancient_demo)
+      P_AdjustFloorClip(mo);
 
    if(mo->z + mo->height > mo->ceilingz)
    {
@@ -3300,6 +3301,18 @@ void P_AdjustFloorClip(Mobj *thing)
    fixed_t oldclip = thing->floorclip;
    fixed_t shallowestclip = 0x7fffffff;
    const msecnode_t *m;
+
+   if(ancient_demo)
+   {
+      thing->floorclip = E_SectorFloorClip(thing->subsector->sector);
+      if(thing->floorclip != oldclip && thing->player)
+      {
+         player_t *p = thing->player;
+         p->viewheight -= oldclip - thing->floorclip;
+         p->deltaviewheight = (VIEWHEIGHT - p->viewheight) / 8;
+      }
+      return;
+   }
 
    // absorb test for FOOTCLIP flag here
    if(comp[comp_terrain] || !(thing->flags2 & MF2_FOOTCLIP))
