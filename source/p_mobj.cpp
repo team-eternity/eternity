@@ -1040,6 +1040,12 @@ floater:
          }
          return;
       }
+      if(ancient_demo && mo->info->crashstate != NullStateNum &&
+         mo->flags & MF_CORPSE)
+      {
+         P_SetMobjState(mo, mo->info->crashstate);
+         return;
+      }
    }
    else if(mo->flags4 & MF4_FLY)
    {
@@ -1406,7 +1412,8 @@ void Mobj::Think()
          if(!(onmo = P_GetThingUnder(this)))
          {
             P_ZMovement(this);
-            intflags &= ~MIF_ONMOBJ;
+            if(!ancient_demo) // in vanilla Heretic it stays on all the time!
+               intflags &= ~MIF_ONMOBJ;
          }
          else
          {
@@ -1428,12 +1435,8 @@ void Mobj::Think()
             {
                P_PlayerHitFloor(this, true);
             }
-            if(player && onmo->flags4 & MF4_STICKYCARRY)
-            {
-               player->momx = momx = onmo->momx;
-               player->momy = momy = onmo->momy;
-            }
-            if(onmo->z + onmo->height - z <= STEPSIZE)
+
+            if(!ancient_demo && onmo->z + onmo->height - z <= STEPSIZE)
             {
                if(player && player->mo == this)
                {
@@ -1447,10 +1450,27 @@ void Mobj::Think()
                }
                z = onmo->z + onmo->height;
             }
-            intflags |= MIF_ONMOBJ;
-            momz = 0;
-
-            if(info->crashstate != NullStateNum
+            if(!ancient_demo || (player && momz < 0))
+            {
+               intflags |= MIF_ONMOBJ;
+               momz = 0;
+            }
+            if(player && onmo->flags4 & MF4_STICKYCARRY)
+            {
+               player->momx = momx = onmo->momx;
+               player->momy = momy = onmo->momy;
+               if(ancient_demo && onmo->z < onmo->floorz)
+               {
+                  z += onmo->floorz - onmo->z;
+                  if (onmo->player)
+                  {
+                     onmo->player->viewheight -= onmo->floorz - onmo->z;
+                     onmo->player->deltaviewheight = (VIEWHEIGHT - onmo->player->viewheight) >> 3;
+                  }
+                  onmo->z = onmo->floorz;
+               }
+            }
+            if(!ancient_demo && info->crashstate != NullStateNum
                && flags & MF_CORPSE
                && !(intflags & MIF_CRASHED))
             {
@@ -1487,7 +1507,7 @@ void Mobj::Think()
    // handle crashstate here
    if(info->crashstate != NullStateNum
       && flags & MF_CORPSE
-      && !(intflags & MIF_CRASHED)
+      && !(intflags & MIF_CRASHED) && !ancient_demo
       && z <= floorz)
    {
       intflags |= MIF_CRASHED;

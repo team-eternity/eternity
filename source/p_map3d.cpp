@@ -152,7 +152,15 @@ floater:
 
    // haleyjd 06/05/12: flying players
    if(mo->player && mo->flags4 & MF4_FLY && mo->z > mo->floorz)
-      mo->z += finesine[(FINEANGLES / 80 * leveltime) & FINEMASK] / 8;
+   {
+      if(ancient_demo)
+      {
+         if(leveltime & 2)
+            mo->z += finesine[(FINEANGLES / 20 * leveltime >> 2) & FINEMASK];
+      }
+      else
+         mo->z += finesine[(FINEANGLES / 80 * leveltime) & FINEMASK] / 8;
+   }
 
    // clip movement
    
@@ -175,6 +183,26 @@ struct testmobjzdata_t
 };
 
 //
+// Vanilla Heretic compatible variant
+//
+static bool P_testMobjZOldHeretic(Mobj *thing, testmobjzdata_t &data)
+{
+   fixed_t blockdist = thing->radius + data.clip.thing->radius;
+   if(!(thing->flags & (MF_SOLID | MF_SPECIAL | MF_SHOOTABLE)) ||
+      D_abs(thing->x - data.clip.x) >= blockdist ||
+      D_abs(thing->y - data.clip.y) >= blockdist ||
+      thing == data.clip.thing ||
+      data.clip.thing->z > thing->z + thing->height ||
+      data.clip.thing->z + data.clip.thing->height < thing->z)
+   {
+      return true;
+   }
+   if(thing->flags & MF_SOLID)
+      data.testz_mobj = thing;
+   return !(thing->flags & MF_SOLID);
+}
+
+//
 // PIT_TestMobjZ
 //
 // Derived from zdoom; iterator function for P_TestMobjZ
@@ -182,6 +210,9 @@ struct testmobjzdata_t
 static bool PIT_TestMobjZ(Mobj *thing, void *context)
 {
    testmobjzdata_t &data = *static_cast<testmobjzdata_t *>(context);
+
+   if(ancient_demo)
+      return P_testMobjZOldHeretic(thing, data);
 
    fixed_t blockdist = thing->radius + data.clip.thing->radius;
 
@@ -369,7 +400,7 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
    // haleyjd: from zdoom: OVER_UNDER
    topz = thing->z + thing->height;
 
-   if(!(clip.thing->flags & (MF_FLOAT|MF_MISSILE|MF_SKULLFLY|MF_NOGRAVITY)) &&
+   if(!ancient_demo && !(clip.thing->flags & (MF_FLOAT|MF_MISSILE|MF_SKULLFLY|MF_NOGRAVITY)) &&
       (thing->flags & MF_SOLID))
    {
       // [RH] Let monsters walk on actors as well as floors
@@ -401,7 +432,15 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
          }
       }
 
-      if((clip.thing->z >= topz) || (clip.thing->z + clip.thing->height <= thing->z))
+      if(ancient_demo)
+      {
+         if(!(thing->flags & MF_SPECIAL) &&
+            (clip.thing->z > topz || clip.thing->z + clip.thing->height < thing->z))
+         {
+            return true;
+         }
+      }
+      else if((clip.thing->z >= topz) || (clip.thing->z + clip.thing->height <= thing->z))
          return true;
    }
 
@@ -565,6 +604,12 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
           && (clip.thing->flags & MF_SOLID || demo_compatibility));
 }
 
+// Just for convenience
+inline static bool PIT_CheckThing3D(Mobj *thing, void *)
+{
+   return PIT_CheckThing3D(thing);
+}
+
 //
 // P_CheckPosition3D
 //
@@ -665,7 +710,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
    stepthing    = NULL;
 
    // [RH] Fake taller height to catch stepping up into things.
-   if(thing->player)   
+   if(thing->player && !ancient_demo)
       thing->height = realheight + STEPSIZE;
 
    // ioanch: portal aware
@@ -673,6 +718,8 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
    if(!P_TransPortalBlockWalker(bbox, thing->groupid, true,
       [thing, realheight, &thingblocker](int x, int y, int groupid) -> bool
    {
+         if(ancient_demo)
+            return P_BlockThingsIterator(x, y, PIT_CheckThing3D);
          // haleyjd: from zdoom:
          Mobj *robin = NULL;
 
@@ -773,7 +820,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
             return false;
    }
 
-   if(clip.ceilingz - clip.floorz < thing->height)
+   if(!ancient_demo && clip.ceilingz - clip.floorz < thing->height)
       return false;
          
    if(stepthing != NULL)

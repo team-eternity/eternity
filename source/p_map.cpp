@@ -1621,6 +1621,8 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       if((groupidchange && !check)
          || (!groupidchange && !P_CheckPosition3D(thing, x, y, pPushHit)))
       {
+         if(ancient_demo)
+            return false;
          // Solid wall or thing
          if(!clip.BlockingMobj || clip.BlockingMobj->player || !thing->player)
          {
@@ -1730,8 +1732,10 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
                P_RunPushSpechits(*thing, pushhit);
             return ret;
          }
-         else if(P_Use3DClipping() && thing->z < clip.floorz)
-         { 
+         else if(P_Use3DClipping() && thing->z < clip.floorz && !ancient_demo)
+         {
+            // TODO: make sure to add projectile impact checking if MISSILE
+
             // haleyjd: OVER_UNDER:
             // [RH] Check to make sure there's nothing in the way for the step up
             fixed_t savedz = thing->z;
