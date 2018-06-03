@@ -85,7 +85,7 @@ static void MetaHashRebuild(HashType &hash)
       int i;
 
       // find the next larger prime
-      for(i = 0; curNumChains < metaPrimes[i]; i++);
+      for(i = 0; metaPrimes[i] <= curNumChains; i++);
 
       hash.rebuild(metaPrimes[i]);
    }
