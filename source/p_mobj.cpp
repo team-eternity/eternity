@@ -473,6 +473,14 @@ void P_XYMovement(Mobj* mo)
       return;
    }
 
+   // handle winds here when demo compatible
+   if(ancient_demo && mo->flags3 & MF3_WINDTHRUST)
+   {
+      const sector_t &sec = *mo->subsector->sector;
+      if(sec.hticPushType == SECTOR_HTIC_WIND)
+         P_ThrustMobj(mo, sec.hticPushAngle, sec.hticPushForce);
+   }
+
    if(mo->momx > MAXMOVE)
       mo->momx = MAXMOVE;
    else if(mo->momx < -MAXMOVE)
@@ -1373,7 +1381,7 @@ void Mobj::Think()
    }
 
    // Heretic Wind transfer specials
-   if((flags3 & MF3_WINDTHRUST) && !(flags & MF_NOCLIP))
+   if(!ancient_demo && (flags3 & MF3_WINDTHRUST) && !(flags & MF_NOCLIP))
    {
       sector_t *sec = subsector->sector;
 
