@@ -986,7 +986,15 @@ floater:
 
    // haleyjd 06/05/12: flying players
    if(mo->player && mo->flags4 & MF4_FLY && mo->z > mo->floorz)
-      mo->z += finesine[(FINEANGLES / 80 * leveltime) & FINEMASK] / 8;
+   {
+      if(ancient_demo)
+      {
+         if(leveltime & 2)
+            mo->z += finesine[(FINEANGLES / 20 * leveltime >> 2) & FINEMASK];
+      }
+      else
+         mo->z += finesine[(FINEANGLES / 80 * leveltime) & FINEMASK] / 8;
+   }
 
    // clip movement
 
