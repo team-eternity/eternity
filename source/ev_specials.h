@@ -35,6 +35,8 @@ struct ev_action_t;
 struct line_t;
 class  Mobj;
 struct polyobj_t;
+struct sector_t;
+struct sectoraction_t;
 
 // Action flags
 enum EVActionFlags
@@ -63,16 +65,21 @@ enum EVActionFlags
 // Data related to an instance of a special activation.
 struct ev_instance_t
 {
-   Mobj      *actor;   // actor, if any
-   line_t    *line;    // line, if any
-   int        special; // special to activate (may == line->special)
-   int       *args;    // arguments (may point to line->args)
-   int        tag;     // tag (may == line->args[0])
-   int        side;    // side of activation
-   int        spac;    // special activation type
-   int        gentype; // generalized type, if is generalized (-1 otherwise)
-   int        genspac; // generalized activation type, if generalized
-   polyobj_t *poly;    // possible polyobject activator
+   Mobj           *actor;        // actor, if any
+   line_t         *line;         // line, if any
+   sectoraction_t *sectoraction; // sectoraction, if any
+   int             special;      // special to activate (may == line->special)
+   int            *args;         // arguments (may point to line->args)
+   int             tag;          // tag (may == line->args[0])
+   int             side;         // side of activation
+   union
+   {
+      int spac; // special activation type
+      int seac; // sector  activation type
+   };
+   int             gentype;      // generalized type, if is generalized (-1 otherwise)
+   int             genspac;      // generalized activation type, if generalized
+   polyobj_s      *poly;         // possible polyobject activator
 };
 
 //
@@ -211,6 +218,8 @@ bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing, polyobj
 bool EV_ActivateSpecialNum(int special, int *args, Mobj *thing);
 int  EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *thing, polyobj_t *poly);
 bool EV_ActivateAction(ev_action_t *action, int *args, Mobj *thing);
+
+int EV_ActivateSectorAction(sector_t *sector, Mobj *thing, int seac);
 
 //
 // Static Init Line Types

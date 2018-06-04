@@ -1700,12 +1700,18 @@ v3fixed_t P_GetArrivalTelefogLocation(v3fixed_t landing, angle_t angle);
 // haleyjd: parameterized lines
 
 // param special activation types
-enum
+enum specialactivation_e : int
 {
    SPAC_CROSS,
    SPAC_USE,
    SPAC_IMPACT,
    SPAC_PUSH,
+};
+
+enum sectoractivation_e : int
+{
+   SEAC_ENTER,
+   SEAC_EXIT,
 };
 
 extern void P_StartLineScript(line_t *line, int side, Mobj *thing, polyobj_t *po);

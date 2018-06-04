@@ -2608,6 +2608,12 @@ spawnit:
       mobj->args[0] = mthing->type - 14100;
    }
 
+   // MaxW: If the thing inherits from EESectorActionProto then we need to make
+   // a new sector action for this Mobj
+   if(mobjinfo[i]->parent &&
+      mobjinfo[i]->parent->index == E_GetThingNumForName("EESectorActionProto"))
+      P_NewSectorActionFromMobj(mobj);
+
    mobj->backupPosition();
 
    return mobj;

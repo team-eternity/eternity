@@ -314,6 +314,24 @@ thingtype EETerrainSludgeBase : Mobj, -1, 1050
   cflags      NOBLOCKMAP|NOGRAVITY|NOSPLASH
 }
 
+// Sector Action Objects -------------------------------------------------------
+
+thingtype EESectorActionProto
+{
+  spawnstate  S_TNT1
+  cflags NOBLOCKMAP|NOSECTOR|NOGRAVITY|NOSPLASH
+}
+
+thingtype EESectorActionExit : EESectorActionProto, 9997
+{
+  compatname  SecActExit
+}
+
+thingtype EESectorActionEnter : EESectorActionProto, 9998
+{
+  compatname  SecActEnter
+}
+
 // Eternity TC Objects ---------------------------------------------------------
 
 // WARNING: NONE of the thingtypes below here are considered documented, and 

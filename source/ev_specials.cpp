@@ -1625,6 +1625,78 @@ bool EV_IsParamLineSpec(int special)
    return ((EV_CompositeActionFlags(action) & EV_PARAMLINESPEC) == EV_PARAMLINESPEC);
 }
 
+static bool EV_checkSectorActionSpac(ev_action_t *action, ev_instance_t *instance)
+{
+   if(action->type->activation >= 0 || instance->gentype >= GenTypeFloor)
+      return false;
+   else // activation ability is determined by the linedef's flags
+   {
+      sectoraction_t *sectoraction = instance->sectoraction;
+      Mobj           *thing = instance->actor;
+      unsigned int    flags = 0;
+
+      REQUIRE_ACTOR(thing);
+      // check monster / missile enable flags
+      if(thing->flags3 & MF3_SPACMISSILE)  // treat as missile?
+         flags |= SEC_ACTION_PROJECTILE;
+      if(thing->flags3 & MF3_SPACMONSTER)  // treat as monster?
+         flags |= SEC_ACTION_MONSTER;
+
+      if(!thing->player && !(sectoraction->actionflags & flags))
+         return false;
+
+      switch(instance->seac)
+      {
+      case SEAC_ENTER:
+         flags = SEC_ACTION_ENTER;
+         break;
+      case SEAC_EXIT:
+         flags = SEC_ACTION_EXIT;
+         break;
+      }
+
+      return (sectoraction->actionflags & flags) != 0;
+   }
+}
+
+int EV_ActivateSectorAction(sector_t *sector, Mobj *thing, int seac)
+{
+   ev_action_t *action;
+   int          ret = 0;
+
+   for(auto *links = sector->actions; links; links = links->dllNext)
+   {
+      INIT_STRUCT(ev_instance_t, instance);
+      sectoraction_t *sectoraction = links->dllObject;
+
+      // setup instance
+      instance.actor        = thing;
+      instance.args         = sectoraction->args;
+      instance.sectoraction = sectoraction;
+      instance.poly         = nullptr;
+      instance.special      = sectoraction->special;
+      instance.side         = 0;
+      instance.seac         = seac;
+      instance.tag          = sectoraction->args[0];
+
+      // get action
+      if(!(action = EV_ActionForInstance(instance)))
+         continue;
+
+      // check for parameterized special behavior with tags
+      if(EV_CompositeActionFlags(action) & EV_PARAMLINESPEC)
+         instance.tag = instance.args[0];
+
+      // check for special instance
+      if(!EV_checkSectorActionSpac(action, &instance))
+         continue;
+
+      ret += !!EV_ActivateSpecial(action, &instance) ? 1 : 0;
+   }
+
+   return ret;
+}
+
 //=============================================================================
 //
 // Development Commands

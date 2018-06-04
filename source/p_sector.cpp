@@ -93,14 +93,27 @@ void SectorThinker::serialize(SaveArchive &arc)
 //
 void P_NewSectorActionFromMobj(Mobj *actor)
 {
-#if 0
    sectoraction_t *newAction = estructalloc(sectoraction_t, 1);
 
-   if(actor->type == E_ThingNumForName("EESectorActionEnter"))
+   newAction->special = actor->special;
+   memcpy(newAction->args, actor->args, sizeof(int) * NUMLINEARGS);
+   if(actor->type == E_ThingNumForName("EESectorActionExit"))
+      newAction->actionflags = SEC_ACTION_EXIT;
+   else if(actor->type == E_ThingNumForName("EESectorActionEnter"))
+      newAction->actionflags = SEC_ACTION_ENTER;
+   else
    {
-      // TODO
+      efree(newAction);
+      return;
    }
-#endif
+
+   if(actor->flags & MF_AMBUSH)
+      newAction->actionflags |= SEC_ACTION_MONSTER;
+   if(actor->flags2 & MF2_DORMANT)
+      newAction->actionflags |= SEC_ACTION_PROJECTILE;
+
+   sector_t *sec = actor->subsector->sector;
+   newAction->links.insert(newAction, &(sec->actions));
 }
 
 //
