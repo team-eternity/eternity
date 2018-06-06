@@ -437,7 +437,7 @@ BOOL tryCreateDir(NSString* basePath, NSString* name, NSWindow* window)
 	if(returnCode == NSAlertFirstButtonReturn)
 	{
 		[[alert window] orderOut:self];
-		[self addPwad:self];
+		[self addIwad:self];
 	}
 }
 
