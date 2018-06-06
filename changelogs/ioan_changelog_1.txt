@@ -8,6 +8,12 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+06.06.2018
+
+BUGFIX: Fixed a problem with the macOS launcher putting IWADs in the PWAD list
+        when user is alerted when attempting to start game with no IWAD.
+
+--------------------------------------------------------------------------------
 02.06.2018
 
 BUGFIX: Fixed a regression with portal autoaiming. It would sometimes fail when
