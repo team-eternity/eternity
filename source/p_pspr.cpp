@@ -216,11 +216,11 @@ static bool P_WeaponHasAmmoAlt(player_t *player, weaponinfo_t *weapon)
 //
 int P_NextWeapon(const player_t *player, uint8_t *slotindex)
 {
-   weaponinfo_t             *currentweapon = player->readyweapon;
-   weaponinfo_t             *newweapon     = player->readyweapon;
-   weaponslot_t             *newweaponslot = player->readyweaponslot;
-   BDListItem<weaponslot_t> *newweaponlink = &newweaponslot->links;
-   bool          ammototry;
+   const weaponinfo_t             *currentweapon = player->readyweapon;
+   const weaponinfo_t             *newweapon     = player->readyweapon;
+   const weaponslot_t             *newweaponslot = player->readyweaponslot;
+   const BDListItem<weaponslot_t> *newweaponlink = &newweaponslot->links;
+   bool                            ammototry;
 
    do
    {
@@ -229,8 +229,9 @@ int P_NextWeapon(const player_t *player, uint8_t *slotindex)
       if(newweaponlink->isDummy())
       {
          const int slotindex = newweaponlink->bdObject->slotindex;
-         for(int i = (slotindex + 1) % NUMWEAPONSLOTS; i  != slotindex;
-             i = (i + 1) % NUMWEAPONSLOTS)
+         bool firsttime = true;
+         for(int i = (slotindex + 1) % NUMWEAPONSLOTS;
+             i  != slotindex + 1 || firsttime; i = (i + 1) % NUMWEAPONSLOTS)
          {
             if(player->pclass->weaponslots[i] != nullptr)
             {
@@ -238,8 +239,8 @@ int P_NextWeapon(const player_t *player, uint8_t *slotindex)
                newweapon = newweaponlink->bdObject->weapon;
                break;
             }
+            firsttime = false;
          }
-
       }
       ammototry = P_WeaponHasAmmo(player, newweapon);
    }
@@ -270,11 +271,11 @@ int P_NextWeapon(const player_t *player, uint8_t *slotindex)
 //
 int P_PrevWeapon(const player_t *player, uint8_t *slotindex)
 {
-   weaponinfo_t             *currentweapon = player->readyweapon;
-   weaponinfo_t             *newweapon     = player->readyweapon;
-   weaponslot_t             *newweaponslot = player->readyweaponslot;
-   BDListItem<weaponslot_t> *newweaponlink = &newweaponslot->links;
-   bool          ammototry;
+   const weaponinfo_t             *currentweapon = player->readyweapon;
+   const weaponinfo_t             *newweapon     = player->readyweapon;
+   const weaponslot_t             *newweaponslot = player->readyweaponslot;
+   const BDListItem<weaponslot_t> *newweaponlink = &newweaponslot->links;
+   bool                            ammototry;
 
    do
    {
@@ -283,8 +284,9 @@ int P_PrevWeapon(const player_t *player, uint8_t *slotindex)
       if(newweaponlink->isDummy())
       {
          const int slotindex = newweaponlink->bdObject->slotindex;
-         for(int i = slotindex == 0 ? NUMWEAPONSLOTS - 1 : slotindex - 1; i  != slotindex;
-             i = i == 0 ? NUMWEAPONSLOTS - 1 : i - 1)
+         bool firsttime = true;
+         for(int i = slotindex == 0 ? NUMWEAPONSLOTS - 1 : slotindex - 1;
+             i  != slotindex - 1 || firsttime; i = i == 0 ? NUMWEAPONSLOTS - 1 : i - 1)
          {
             if(player->pclass->weaponslots[i] != nullptr)
             {

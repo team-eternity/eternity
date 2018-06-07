@@ -490,7 +490,7 @@ void MN_DrawCredits()
    }
 
    V_FontWriteText(menu_font_normal, 
-                   FC_ABSCENTER "Copyright 2017 Team Eternity et al.", 
+                   FC_ABSCENTER "Copyright 2018 Team Eternity et al.", 
                    0, y, &subscreen43);
 }
 

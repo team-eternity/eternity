@@ -406,6 +406,9 @@ BDListItem<weaponslot_t> *E_LastInSlot(const weaponslot_t *dummyslot)
 //
 weaponslot_t *E_FindEntryForWeaponInSlot(const player_t *player, const weaponinfo_t *wp, int slot)
 {
+   if(player->pclass->weaponslots[slot] == nullptr)
+      return nullptr;
+
    auto baseslot = E_FirstInSlot(player->pclass->weaponslots[slot]);
 
    // Try finding the player's currently-equipped weapon.
