@@ -208,6 +208,17 @@ static bool P_WeaponHasAmmoAlt(player_t *player, weaponinfo_t *weapon)
    return (E_GetItemOwnedAmount(player, ammoType) >= weapon->ammopershot_alt);
 }
 
+static weaponslot_t *P_findFirstNonNullWeaponSlot(const player_t *player)
+{
+   for(int i = 0; i < NUMWEAPONSLOTS; i++)
+   {
+      if(player->pclass->weaponslots[i] != nullptr)
+         return player->pclass->weaponslots[i];
+   }
+
+   return nullptr;
+}
+
 //
 // P_NextWeapon
 //
@@ -219,8 +230,12 @@ int P_NextWeapon(const player_t *player, uint8_t *slotindex)
    const weaponinfo_t             *currentweapon = player->readyweapon;
    const weaponinfo_t             *newweapon     = player->readyweapon;
    const weaponslot_t             *newweaponslot = player->readyweaponslot;
-   const BDListItem<weaponslot_t> *newweaponlink = &newweaponslot->links;
+   const BDListItem<weaponslot_t> *newweaponlink;
    bool                            ammototry;
+
+   if(newweaponslot == nullptr)
+      newweaponslot = P_findFirstNonNullWeaponSlot(player);
+   newweaponlink = &newweaponslot->links;
 
    do
    {
@@ -274,8 +289,12 @@ int P_PrevWeapon(const player_t *player, uint8_t *slotindex)
    const weaponinfo_t             *currentweapon = player->readyweapon;
    const weaponinfo_t             *newweapon     = player->readyweapon;
    const weaponslot_t             *newweaponslot = player->readyweaponslot;
-   const BDListItem<weaponslot_t> *newweaponlink = &newweaponslot->links;
+   const BDListItem<weaponslot_t> *newweaponlink;
    bool                            ammototry;
+
+   if(newweaponslot == nullptr)
+      newweaponslot = P_findFirstNonNullWeaponSlot(player);
+   newweaponlink = &newweaponslot->links;
 
    do
    {
