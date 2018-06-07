@@ -208,6 +208,9 @@ static bool P_WeaponHasAmmoAlt(player_t *player, weaponinfo_t *weapon)
    return (E_GetItemOwnedAmount(player, ammoType) >= weapon->ammopershot_alt);
 }
 
+//
+// Find the first weaponslot that isn't nullptr for a given player
+//
 static weaponslot_t *P_findFirstNonNullWeaponSlot(const player_t *player)
 {
    for(int i = 0; i < NUMWEAPONSLOTS; i++)

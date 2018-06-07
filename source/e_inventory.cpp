@@ -1930,7 +1930,7 @@ bool E_GiveInventoryItem(player_t *player, const itemeffect_t *artifact, int amo
    // Not an artifact??
    if(fxtype != ITEMFX_ARTIFACT || itemid < 0)
       return false;
-   
+
    inventoryindex_t newSlot = -1;
    int amountToGive = artifact->getInt(keyAmount, 1);
    int maxAmount    = E_GetMaxAmountForArtifact(player, artifact);
@@ -1950,9 +1950,9 @@ bool E_GiveInventoryItem(player_t *player, const itemeffect_t *artifact, int amo
          return false; // internal error, actually... shouldn't happen
       slot = &player->inventory[newSlot];
    }
-   
+
    // If must collect full amount, but it won't fit, return now.
-   if(artifact->getInt(keyFullAmountOnly, 0) && 
+   if(artifact->getInt(keyFullAmountOnly, 0) &&
       slot->amount + amountToGive > maxAmount)
       return false;
 

@@ -64,9 +64,9 @@ struct weaponslot_t
 extern WeaponSlotTree *weaponslots[];
 
 // Global Functions
-weaponinfo_t *E_WeaponForID(int id);
+weaponinfo_t *E_WeaponForID(const int id);
 weaponinfo_t *E_WeaponForName(const char *name);
-weaponinfo_t *E_WeaponForDEHNum(int dehnum);
+weaponinfo_t *E_WeaponForDEHNum(const int dehnum);
 weapontype_t E_WeaponNumForName(const char *name);
 
 weaponinfo_t *E_FindBestWeapon(const player_t *player);
@@ -77,8 +77,8 @@ int *E_GetIndexedWepCtrForPlayer(const player_t *player, int index);
 bool E_WeaponIsCurrentDEHNum(const player_t *player, const int dehnum);
 
 bool E_PlayerOwnsWeapon(const player_t *player, const weaponinfo_t *weapon);
-bool E_PlayerOwnsWeaponForDEHNum(const player_t *player, int dehnum);
-bool E_PlayerOwnsWeaponInSlot(const player_t *player, int slot);
+bool E_PlayerOwnsWeaponForDEHNum(const player_t *player, const int dehnum);
+bool E_PlayerOwnsWeaponInSlot(const player_t *player, const int slot);
 
 state_t *E_GetStateForWeaponInfo(weaponinfo_t *wi, const char *label);
 
@@ -94,7 +94,8 @@ bool E_IsPoweredVariantOf(const weaponinfo_t *untomed, const weaponinfo_t *tomed
 BDListItem<weaponslot_t> *E_FirstInSlot(const weaponslot_t *dummyslot);
 BDListItem<weaponslot_t> *E_LastInSlot(const weaponslot_t *dummyslot);
 
-weaponslot_t *E_FindEntryForWeaponInSlot(const player_t *player, const weaponinfo_t *wp, int slot);
+weaponslot_t *E_FindEntryForWeaponInSlot(const player_t *player, const weaponinfo_t *wp,
+                                         const int slot);
 weaponslot_t *E_FindFirstWeaponSlot(const player_t *player, const weaponinfo_t *wp);
 
 void E_CollectWeapons(cfg_t *cfg);

@@ -231,7 +231,7 @@ static
 //
 // Obtain a weaponinfo_t structure for its ID number.
 //
-weaponinfo_t *E_WeaponForID(int id)
+weaponinfo_t *E_WeaponForID(const int id)
 {
    return e_WeaponIDHash.objectForKey(id);
 }
@@ -247,7 +247,7 @@ weaponinfo_t *E_WeaponForName(const char *name)
 //
 // Obtain a weaponinfo_t structure by name.
 //
-weaponinfo_t *E_WeaponForDEHNum(int dehnum)
+weaponinfo_t *E_WeaponForDEHNum(const int dehnum)
 {
    return e_WeaponDehHash.objectForKey(dehnum);
 }
@@ -301,7 +301,7 @@ bool E_PlayerOwnsWeapon(const player_t *player, const weaponinfo_t *weapon)
 //
 // Convenience function to check if a player owns the weapon specific by dehnum
 //
-bool E_PlayerOwnsWeaponForDEHNum(const player_t *player, int dehnum)
+bool E_PlayerOwnsWeaponForDEHNum(const player_t *player, const int dehnum)
 {
    return E_PlayerOwnsWeapon(player, E_WeaponForDEHNum(dehnum));
 }
@@ -310,7 +310,7 @@ bool E_PlayerOwnsWeaponForDEHNum(const player_t *player, int dehnum)
 // Checks if a player owns a weapon in the provided slot, useful for things like the
 // Doom weapon-number widget
 //
-bool E_PlayerOwnsWeaponInSlot(const player_t *player, int slot)
+bool E_PlayerOwnsWeaponInSlot(const player_t *player, const int slot)
 {
    if(!player->pclass->weaponslots[slot])
       return false;
@@ -333,15 +333,17 @@ bool E_WeaponHasAltFire(const weaponinfo_t *wp)
    return wp->atkstate_alt != E_SafeState(S_NULL);
 }
 
+//
+// Give a player a weapon if they don't own it
+//
 void E_GiveWeapon(player_t *player, const weaponinfo_t *weapon)
 {
    if(!E_PlayerOwnsWeapon(player, weapon))
-      E_GiveInventoryItem(player, weapon->tracker, 1);
+      E_GiveInventoryItem(player, weapon->tracker);
 }
 
 //
 // Give the player all class weapons
-// TODO: Consider the global "weaponslots" variable
 //
 void E_GiveAllClassWeapons(player_t *player)
 {
@@ -404,7 +406,8 @@ BDListItem<weaponslot_t> *E_LastInSlot(const weaponslot_t *dummyslot)
 //
 // Looks for the given weapon  in an indexed slot
 //
-weaponslot_t *E_FindEntryForWeaponInSlot(const player_t *player, const weaponinfo_t *wp, int slot)
+weaponslot_t *E_FindEntryForWeaponInSlot(const player_t *player, const weaponinfo_t *wp,
+                                         const int slot)
 {
    if(player->pclass->weaponslots[slot] == nullptr)
       return nullptr;
@@ -582,7 +585,7 @@ static MetaState *E_GetMetaState(const weaponinfo_t *wi, const char *name)
 // is a match for that field's corresponding DECORATE label. Returns null
 // if the name is not a match for a native state field.
 //
-static int *E_GetNativeWepStateLoc(weaponinfo_t *wi, const char *label)
+static int *E_getNativeWepStateLoc(weaponinfo_t *wi, const char *label)
 {
    int nativenum = E_StrToNumLinear(nativeWepStateLabels, NUMNATIVEWSTATES, label);
    int *ret = nullptr;
@@ -619,7 +622,7 @@ state_t *E_GetStateForWeaponInfo(weaponinfo_t *wi, const char *label)
    // check metastates
    if((ms = E_GetMetaState(wi, label)))
       ret = ms->state;
-   else if((nativefield = E_GetNativeWepStateLoc(wi, label)))
+   else if((nativefield = E_getNativeWepStateLoc(wi, label)))
    {
       // only if not S_NULL
       if(*nativefield != NullStateNum)
@@ -634,8 +637,7 @@ state_t *E_GetStateForWeaponInfo(weaponinfo_t *wi, const char *label)
 // by name. Returns null otherwise. Self-identity is *not* considered
 // inheritance.
 //
-static weaponinfo_t *E_IsWeaponInfoDescendantOf(const weaponinfo_t *wi,
-                                                const char *type)
+static weaponinfo_t *E_isWeaponInfoDescendantOf(const weaponinfo_t *wi, const char *type)
 {
    weaponinfo_t *curwi = wi->parent;
    weapontype_t targettype = E_WeaponNumForName(type);
@@ -655,8 +657,7 @@ static weaponinfo_t *E_IsWeaponInfoDescendantOf(const weaponinfo_t *wi,
 //
 // Deal with unresolved goto entries in the DECORATE state object.
 //
-static void E_processDecorateWepGotos(weaponinfo_t *wi,
-                                      const edecstateout_t *dso)
+static void E_processDecorateWepGotos(weaponinfo_t *wi, const edecstateout_t *dso)
 {
    int i;
 
@@ -689,7 +690,7 @@ static void E_processDecorateWepGotos(weaponinfo_t *wi,
          if(!strcasecmp(typestr, "super") && wi->parent)
             type = wi->parent;
          else
-            type = E_IsWeaponInfoDescendantOf(wi, typestr);
+            type = E_isWeaponInfoDescendantOf(wi, typestr);
       }
       else
       {
@@ -732,8 +733,7 @@ static void E_processDecorateWepGotos(weaponinfo_t *wi,
 //
 // Add all labeled states from a DECORATE state block to the given weaponinfo.
 //
-static void E_processDecorateWepStates(weaponinfo_t *wi,
-                                       const edecstateout_t *dso)
+static void E_processDecorateWepStates(weaponinfo_t *wi, const edecstateout_t *dso)
 {
    int i;
 
@@ -742,7 +742,7 @@ static void E_processDecorateWepStates(weaponinfo_t *wi,
       int *nativefield;
 
       // first see if this is a native state
-      if((nativefield = E_GetNativeWepStateLoc(wi, dso->states[i].label)))
+      if((nativefield = E_getNativeWepStateLoc(wi, dso->states[i].label)))
          *nativefield = dso->states[i].state->index;
       else
       {
@@ -761,7 +761,7 @@ static void E_processDecorateWepStates(weaponinfo_t *wi,
 //
 // Processes the DECORATE state list in a weapon
 //
-static void E_ProcessDecorateWepStateList(weaponinfo_t *wi, const char *str,
+static void E_processDecorateWepStateList(weaponinfo_t *wi, const char *str,
                                           const char *firststate, bool recursive)
 {
    edecstateout_t *dso;
@@ -789,13 +789,13 @@ static void E_ProcessDecorateWepStateList(weaponinfo_t *wi, const char *str,
 //
 // Process DECORATE-format states
 //
-static void E_ProcessDecorateWepStatesRecursive(cfg_t *weaponsec, int wnum, bool recursive)
+static void E_processDecorateWepStatesRecursive(cfg_t *weaponsec, int wnum, bool recursive)
 {
    cfg_t *displaced;
 
    // 01/02/12: Process displaced sections recursively first.
    if((displaced = cfg_displaced(weaponsec)))
-      E_ProcessDecorateWepStatesRecursive(displaced, wnum, true);
+      E_processDecorateWepStatesRecursive(displaced, wnum, true);
 
    // haleyjd 06/22/10: Process DECORATE state block
    if(cfg_size(weaponsec, ITEM_WPN_STATES) > 0)
@@ -809,7 +809,7 @@ static void E_ProcessDecorateWepStatesRecursive(cfg_t *weaponsec, int wnum, bool
 
       // recursion should process states only if firststate is valid
       if(!recursive || firststate)
-         E_ProcessDecorateWepStateList(weaponinfo[wnum], tempstr, firststate, recursive);
+         E_processDecorateWepStateList(weaponinfo[wnum], tempstr, firststate, recursive);
    }
 
 }
@@ -818,7 +818,7 @@ static void E_ProcessDecorateWepStatesRecursive(cfg_t *weaponsec, int wnum, bool
 //
 // Function to reallocate the weaponinfo array safely.
 //
-static void E_ReallocWeapons(unsigned int numnewweapons)
+static void E_reallocWeapons(unsigned int numnewweapons)
 {
    static int numweaponsalloc = 0;
 
@@ -878,7 +878,7 @@ void E_CollectWeapons(cfg_t *cfg)
       // add space to the weaponinfo array
       curnewweapon = firstnewweapon = NUMWEAPONTYPES;
 
-      E_ReallocWeapons(numweapons);
+      E_reallocWeapons(numweapons);
 
       // set pointers in weaponinfo[] to the proper structures;
       // also set self-referential index member, and allocate a
@@ -966,7 +966,7 @@ static int   weapon_pindex = 0;
 // been inherited during the current inheritance chain. Returns
 // false if the check fails, and true if it succeeds.
 //
-static bool E_CheckWeaponInherit(int pnum)
+static bool E_checkWeaponInherit(int pnum)
 {
    for(int i = 0; i < NUMWEAPONTYPES; i++)
    {
@@ -985,7 +985,7 @@ static bool E_CheckWeaponInherit(int pnum)
 //
 // Adds a type number to the inheritance stack.
 //
-static void E_AddWeaponToPStack(weapontype_t num)
+static void E_addWeaponToPStack(weapontype_t num)
 {
    // Overflow shouldn't happen since it would require cyclic
    // inheritance as well, but I'll guard against it anyways.
@@ -1000,7 +1000,7 @@ static void E_AddWeaponToPStack(weapontype_t num)
 // Resets the weaponinfo inheritance stack, setting all the pstack
 // values to -1, and setting pindex back to zero.
 //
-static void E_ResetWeaponPStack()
+static void E_resetWeaponPStack()
 {
    for(int i = 0; i < NUMWEAPONTYPES; i++)
       weapon_pstack[i] = -1;
@@ -1011,7 +1011,7 @@ static void E_ResetWeaponPStack()
 //
 // Copies one weaponinfo into another.
 //
-static void E_CopyWeapon(weapontype_t num, weapontype_t pnum)
+static void E_copyWeapon(weapontype_t num, weapontype_t pnum)
 {
    weaponinfo_t *this_wi;
    DLListItem<weaponinfo_t> idlinks, namelinks, dehlinks;
@@ -1168,14 +1168,14 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
          weapontype_t pnum = E_resolveParentWeapon(weaponsec, titleprops); // Why's this here?
 
          // check against cyclic inheritance
-         if(!E_CheckWeaponInherit(pnum))
+         if(!E_checkWeaponInherit(pnum))
          {
             E_EDFLoggedErr(2, "E_processWeapon: cyclic inheritance "
                                "detected in weaponinfo '%s'\n", wp.name);
          }
 
          // add to inheritance stack
-         E_AddWeaponToPStack(pnum);
+         E_addWeaponToPStack(pnum);
 
          // process parent recursively
          // must use cfg_gettsec; note can return null
@@ -1183,7 +1183,7 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
          E_processWeapon(pnum, parent_tngsec, pcfg, true);
 
          // copy parent to this weapon
-         E_CopyWeapon(i, pnum);
+         E_copyWeapon(i, pnum);
 
          // keep track of parent explicitly
          wp.parent = weaponinfo[pnum];
@@ -1364,7 +1364,7 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
    }
 
    // Process DECORATE state block
-   E_ProcessDecorateWepStatesRecursive(weaponsec, i, false);
+   E_processDecorateWepStatesRecursive(weaponsec, i, false);
 }
 
 //
@@ -1393,10 +1393,10 @@ void E_ProcessWeaponInfo(cfg_t *cfg)
       weapontype_t weaponnum = E_WeaponNumForName(name);
 
       // reset the inheritance stack
-      E_ResetWeaponPStack();
+      E_resetWeaponPStack();
 
       // add this weapon to the stack
-      E_AddWeaponToPStack(weaponnum);
+      E_addWeaponToPStack(weaponnum);
 
       E_processWeapon(weaponnum, weaponsec, cfg, true);
 
