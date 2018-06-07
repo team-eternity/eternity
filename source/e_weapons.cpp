@@ -174,12 +174,37 @@ cfg_opt_t edf_wdelta_opts[] =
 //
 WeaponSlotTree *weaponslots[NUMWEAPONSLOTS];
 
-// The structure that provides the basis for the AVL tree used for
+// The class that provides the basis for the AVL tree used for
 // checking selection order. It's used due to its speed of access
 // over red-black trees, at the cost of slower mutation times.
-using selectordertree_t = AVLTree<int, weaponinfo_t>;
-using selectordernode_t = selectordertree_t::avlnode_t;
-static selectordertree_t *selectordertree = nullptr;
+using SelectOrderTreeBase = AVLTree<int, weaponinfo_t>;
+class SelectOrderTree : public SelectOrderTreeBase
+{
+public:
+   SelectOrderTree(int key, weaponinfo_t *object) :
+      SelectOrderTreeBase(key, object)
+   {}
+
+protected:
+   avlnode_t *handleCollision(avlnode_t *listroot, avlnode_t *toinsert) override
+   {
+      avlnode_t *curr;
+      for(curr = listroot; curr->next != nullptr && curr != toinsert; curr = curr->next);
+
+      if(curr->object == toinsert->object)
+      {
+         efree(toinsert);
+         return nullptr; // Ahh bugger
+      }
+      else
+      {
+         curr->next = toinsert;
+         return toinsert;
+      }
+   }
+};
+using selectordernode_t = SelectOrderTree::avlnode_t;
+static SelectOrderTree *selectordertree = nullptr;
 
 //=============================================================================
 //
@@ -448,7 +473,7 @@ weaponslot_t *E_FindFirstWeaponSlot(const player_t *player, const weaponinfo_t *
 //
 
 //
-// Perform an in-order traversal of the select order tree
+// Perform an augmented in-order traversal of the select order tree
 // to try and find the best weapon the player can fire.
 //
 static weaponinfo_t *E_findBestWeapon(const player_t *player,
@@ -462,6 +487,8 @@ static weaponinfo_t *E_findBestWeapon(const player_t *player,
       return ret;
    if(E_PlayerOwnsWeapon(player, node->object) && P_WeaponHasAmmo(player, node->object))
       return node->object;
+   if(node->next && (ret = E_findBestWeapon(player, node->next)))
+      return ret;
    if(node->right && (ret = E_findBestWeapon(player, node->right)))
       return ret;
 
@@ -479,7 +506,7 @@ weaponinfo_t *E_FindBestWeapon(const player_t *player)
 }
 
 //
-// Perform an in-order traversal of the select order tree
+// Perform an augmented in-order traversal of the select order tree
 // to try and find the best weapon the player can fire.
 //
 static weaponinfo_t *E_findBestWeaponUsingAmmo(const player_t *player,
@@ -500,6 +527,8 @@ static weaponinfo_t *E_findBestWeaponUsingAmmo(const player_t *player,
       return ret;
    if(E_PlayerOwnsWeapon(player, temp) && correctammo && P_WeaponHasAmmo(player, temp))
       return temp;
+   if(node->next && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->next)))
+      return ret;
    if(node->right && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->right)))
       return ret;
 
@@ -1105,10 +1134,10 @@ static weapontype_t E_resolveParentWeapon(cfg_t *weaponsec, const weapontitlepro
 static void E_insertSelectOrderNode(int sortorder, weaponinfo_t *wp, bool modify)
 {
    if(modify && (wp->intflags & WIF_HASSORTORDER))
-      selectordertree->deleteNode(wp->sortorder);
+      selectordertree->deleteNode(wp->sortorder, wp);
 
    if(selectordertree == nullptr)
-      selectordertree = new selectordertree_t(sortorder, wp);
+      selectordertree = new SelectOrderTree(sortorder, wp);
    else
       selectordertree->insert(sortorder, wp);
 
@@ -1118,7 +1147,7 @@ static void E_insertSelectOrderNode(int sortorder, weaponinfo_t *wp, bool modify
 static void E_insertWeaponSlotNode(int slotindex, fixed_t slotrank, weaponinfo_t *wp, bool modify)
 {
    if(modify && (wp->intflags & WIF_INGLOBALSLOT))
-      weaponslots[wp->defaultslotindex]->deleteNode(wp->defaultslotrank);
+      weaponslots[wp->defaultslotindex]->deleteNode(wp->defaultslotrank, wp);
 
    if(weaponslots[slotindex] == nullptr)
       weaponslots[slotindex] = new WeaponSlotTree(slotrank, wp);
@@ -1142,7 +1171,6 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
    bool inherits = false;
    weapontitleprops_t titleprops;
    weaponinfo_t &wp = *weaponinfo[i];
-   auto wp2 = weaponinfo[2];
 
    // if weaponsec is null, we are in the situation of inheriting from a weapon
    // that was processed in a previous EDF generation, so no processing is
