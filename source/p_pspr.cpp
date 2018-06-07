@@ -161,7 +161,7 @@ static void P_BringUpWeapon(player_t *player)
    {
       // haleyjd 06/28/13: weapon upsound
       if(pendingweapon->upsound)
-         S_StartSound(player->mo, pendingweapon->upsound);
+         S_StartSoundName(player->mo, pendingweapon->upsound);
   
       newstate = pendingweapon->upstate;
   
@@ -772,7 +772,7 @@ void A_WeaponReady(actionargs_t *actionargs)
    if(player->readyweapon->readysound &&
       psp->state->index == player->readyweapon->readystate &&
       (!(player->readyweapon->flags & WPF_READYSNDHALF) || M_Random() < 128))
-      S_StartSound(player->mo, player->readyweapon->readysound);
+      S_StartSoundName(player->mo, player->readyweapon->readysound);
 
    // WEAPON_FIXME: chainsaw particulars (haptic feedback)
    if(E_WeaponIsCurrentDEHNum(player, wp_chainsaw) && psp->state == states[E_SafeState(S_SAW)])

@@ -1056,6 +1056,9 @@ static void E_copyWeapon(weapontype_t num, weapontype_t pnum)
    this_wi->id          = id;
    this_wi->generation  = generation;
 
+   this_wi->upsound     = estrdup(weaponinfo[pnum]->upsound);
+   this_wi->readysound  = estrdup(weaponinfo[pnum]->readysound);
+
    // tracker inheritance is weird
    //if(!(this_wi->flags & WPF_[TomedVersionOfWeapon]))
    this_wi->tracker = tracker;
@@ -1139,6 +1142,7 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
    bool inherits = false;
    weapontitleprops_t titleprops;
    weaponinfo_t &wp = *weaponinfo[i];
+   auto wp2 = weaponinfo[2];
 
    // if weaponsec is null, we are in the situation of inheriting from a weapon
    // that was processed in a previous EDF generation, so no processing is
@@ -1351,16 +1355,26 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_UPSOUND);
       sfxinfo_t *tempsfx = E_EDFSoundForName(tempstr);
+      if(wp.upsound)
+      {
+         efree(const_cast<char *>(wp.upsound));
+         wp.upsound = nullptr;
+      }
       if(tempsfx)
-         wp.upsound = tempsfx->dehackednum;
+         wp.upsound = estrdup(tempstr);
    }
 
    if(IS_SET(ITEM_WPN_READYSOUND))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_READYSOUND);
       sfxinfo_t *tempsfx = E_EDFSoundForName(tempstr);
+      if(wp.readysound)
+      {
+         efree(const_cast<char *>(wp.readysound));
+         wp.readysound = nullptr;
+      }
       if(tempsfx)
-         wp.readysound = tempsfx->dehackednum;
+         wp.readysound = estrdup(tempstr);
    }
 
    // Process DECORATE state block
