@@ -186,6 +186,10 @@ public:
    {}
 
 protected:
+   //
+   // This version of handleCollision just slaps the node at the end of the list,
+   // unless a node with the same object is found.
+   //
    avlnode_t *handleCollision(avlnode_t *listroot, avlnode_t *toinsert) override
    {
       avlnode_t *curr;
