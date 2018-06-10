@@ -187,13 +187,34 @@ public:
 
 protected:
    //
-   // This version of handleCollision just slaps the node at the end of the list,
+   // This version of handleCollision add the new entry in alphabetically,
    // unless a node with the same object is found.
    //
    avlnode_t *handleCollision(avlnode_t *listroot, avlnode_t *toinsert) override
    {
       avlnode_t *curr;
-      for(curr = listroot; curr->next != nullptr && curr != toinsert; curr = curr->next);
+      if(strcmp(toinsert->object->name, listroot->object->name) < 0)
+      {
+         // We need to put the new node at the start of the list.
+         weaponinfo_t *object = listroot->object;
+         listroot->object = toinsert->object;
+         toinsert->object = object;
+         toinsert->next = listroot->next;
+         listroot->next = toinsert;
+         return toinsert;
+      }
+
+      for(curr = listroot; curr->next != nullptr && curr != toinsert; curr = curr->next)
+      {
+         if(strcmp(toinsert->object->name, curr->object->name) > 0 &&
+            strcmp(toinsert->object->name, curr->next->object->name) < 0)
+         {
+            // We need to put the new node in the middle of the list.
+            toinsert->next = curr->next;
+            curr->next = toinsert;
+            return toinsert;
+         }
+      }
 
       if(curr->object == toinsert->object)
       {
