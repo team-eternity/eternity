@@ -54,27 +54,19 @@ public:
       avlnode_t *left, *right, *next;
    } *root;
 
-   //
    // Default constructor
-   //
-   AVLTree()
-      : root(nullptr)
+   AVLTree() : root(nullptr)
    {
    }
 
-   //
    // Parameterised constructor
-   //
-   AVLTree(T key, U *object)
-      : root(estructalloc(avlnode_t, 1))
+   AVLTree(T key, U *object) : root(estructalloc(avlnode_t, 1))
    {
       root->key = key;
       root->object = object;
    }
 
-   //
    // Destructor. Delete the tree if there is one
-   //
    virtual ~AVLTree() { deleteTree(root, deleteobjects); }
 
    //
@@ -84,7 +76,7 @@ public:
    {
       avlnode_t *toinsert, *next, *prev;
       prev = next = nullptr;
-      toinsert = estructalloc(avlnode_t, 1); 
+      toinsert = estructalloc(avlnode_t, 1);
       toinsert->key = key;
       toinsert->object = object;
       toinsert->left = toinsert->right = nullptr;

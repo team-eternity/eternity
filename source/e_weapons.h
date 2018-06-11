@@ -32,9 +32,6 @@
 struct weaponinfo_t;
 struct cfg_t;
 
-using WeaponSlotTree = AVLTree<fixed_t, weaponinfo_t>;
-using WeaponSlotNode = WeaponSlotTree::avlnode_t;
-
 // Global Data
 
 extern int NUMWEAPONTYPES;
@@ -52,6 +49,134 @@ extern cfg_opt_t edf_wpninfo_opts[];
 extern cfg_opt_t edf_wdelta_opts[];
 
 #endif
+
+// Classes
+
+using SelectOrderTreeBase = AVLTree<int, weaponinfo_t>;
+using SelectOrderNode = SelectOrderTreeBase::avlnode_t;
+
+// The class that overrides parts of the base AVL tree used for
+// checking selection order. It's used due to its speed of access
+// over red-black trees, at the cost of slower mutation times.
+class SelectOrderTree : public SelectOrderTreeBase
+{
+public:
+   // Default constructor
+   SelectOrderTree() : SelectOrderTreeBase()
+   {
+   }
+
+   // Parameterized constructor
+   SelectOrderTree(int key, weaponinfo_t *object) : SelectOrderTreeBase(key, object)
+   {
+   }
+
+protected:
+   //
+   // This version of handleCollision add the new entry in alphabetically,
+   // unless a node with the same object is found.
+   //
+   avlnode_t *handleCollision(avlnode_t *listroot, avlnode_t *toinsert) override
+   {
+      avlnode_t *curr;
+      if(strcmp(toinsert->object->name, listroot->object->name) < 0)
+      {
+         // We need to put the new node at the start of the list.
+         weaponinfo_t *object = listroot->object;
+         listroot->object = toinsert->object;
+         toinsert->object = object;
+         toinsert->next = listroot->next;
+         listroot->next = toinsert;
+         return toinsert;
+      }
+
+      for(curr = listroot; curr->next != nullptr && curr != toinsert; curr = curr->next)
+      {
+         if(strcmp(toinsert->object->name, curr->object->name) > 0 &&
+            strcmp(toinsert->object->name, curr->next->object->name) < 0)
+         {
+            // We need to put the new node in the middle of the list.
+            toinsert->next = curr->next;
+            curr->next = toinsert;
+            return toinsert;
+         }
+      }
+
+      if(curr->object == toinsert->object)
+      {
+         efree(toinsert);
+         return nullptr; // Ahh bugger
+      }
+      else
+      {
+         curr->next = toinsert;
+         return toinsert;
+      }
+   }
+};
+
+using WeaponSlotTree = SelectOrderTree;
+using WeaponSlotNode = WeaponSlotTree::avlnode_t;
+
+#define NUMWEAPCOUNTERS 3
+using WeaponCounter = int[NUMWEAPCOUNTERS];
+using WeaponCounterTreeBase = AVLTree<int, WeaponCounter>;
+using WeaponCounterNode = WeaponCounterTreeBase::avlnode_t;
+
+// Tree of weapon counters
+class WeaponCounterTree : public WeaponCounterTreeBase
+{
+public:
+   // Default constructor
+   WeaponCounterTree() : WeaponCounterTreeBase()
+   {
+      deleteobjects = true;
+   }
+
+   //
+   // Set the indexed counter for the player's currently equipped weapon to value
+   //
+   void setCounter(player_t *player, int index, int value)
+   {
+      WeaponCounter &counters = getCounters(player->readyweapon->id);
+      counters[index] = value;
+   }
+
+   //
+   // Get counters for a given weapon.
+   // If the counters don't exist then create them
+   //
+   WeaponCounter &getCounters(int weaponid)
+   {
+      WeaponCounterNode *ctrnode;
+      if((ctrnode = find(weaponid)))
+         return *ctrnode->object;
+      else
+      {
+         // We didn't find the counter we want, so make a new one
+         WeaponCounter &counters = *estructalloc(WeaponCounter, 1);
+         insert(weaponid, &counters);
+         return counters;
+      }
+   }
+
+   //
+   // Get the index weapon counter
+   //
+   int *getIndexedCounter(int weaponid, int index)
+   {
+      WeaponCounter &counter = getCounters(weaponid);
+      return &counter[index];
+   }
+
+   //
+   // Get counter pointer for the player's currently equipped weapon
+   //
+   static int *getIndexedCounterForPlayer(const player_t *player, int index)
+   {
+      return player->weaponctrs->getIndexedCounter(player->readyweapon->id, index);
+   }
+};
 
 // Structures
 struct weaponslot_t
@@ -102,92 +227,6 @@ void E_CollectWeapons(cfg_t *cfg);
 
 void E_ProcessWeaponInfo(cfg_t *cfg);
 void E_ProcessWeaponDeltas(cfg_t *cfg);
-
-
-/*//
-// Tree that represents a single weapon slot
-//
-class WeaponSlotTree : public WeaponSlotTreeBase
-{
-public:
-   WeaponSlotTree() :
-      WeaponSlotTreeBase()
-   {
-   }
-
-   //
-   // Parameterised constructor
-   //
-   WeaponSlotTree(fixed_t key, weaponinfo_t *object)
-      : WeaponSlotTreeBase(key, object)
-   {
-   }
-
-   ~WeaponSlotTree() { }
-};*/
-
-#define NUMWEAPCOUNTERS 3
-using WeaponCounter = int[NUMWEAPCOUNTERS];
-using WeaponCounterTreeBase = AVLTree<int, WeaponCounter>;
-using WeaponCounterNode = WeaponCounterTreeBase::avlnode_t;
-//
-// Tree of weapon counters
-//
-class WeaponCounterTree : public WeaponCounterTreeBase
-{
-public:
-   WeaponCounterTree() :
-      WeaponCounterTreeBase()
-   {
-      deleteobjects = true;
-   }
-
-   ~WeaponCounterTree() { }
-
-   //
-   // Set the indexed counter for the player's currently equipped weapon to value
-   //
-   void setCounter(player_t *player, int index, int value)
-   {
-      WeaponCounter &counters = getCounters(player->readyweapon->id);
-      counters[index] = value;
-   }
-
-   //
-   // Get counters for a given weapon.
-   // If the counters don't exist then create them
-   //
-   WeaponCounter &getCounters(int weaponid)
-   {
-      WeaponCounterNode *ctrnode;
-      if((ctrnode = find(weaponid)))
-         return *ctrnode->object;
-      else
-      {
-         // We didn't find the counter we want, so make a new one
-         WeaponCounter &counters = *estructalloc(WeaponCounter, 1);
-         insert(weaponid, &counters);
-         return counters;
-      }
-   }
-
-   //
-   // Get the index weapon counter
-   //
-   int *getIndexedCounter(int weaponid, int index)
-   {
-      WeaponCounter &counter = getCounters(weaponid);
-      return &counter[index];
-   }
-
-   //
-   // Get counter pointer for the player's currently equipped weapon
-   //
-   static int *getIndexedCounterForPlayer(const player_t *player, int index)
-   {
-      return player->weaponctrs->getIndexedCounter(player->readyweapon->id, index);
-   }
-};
 
 #endif
 

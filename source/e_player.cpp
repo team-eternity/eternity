@@ -779,6 +779,9 @@ static void E_populateWeaponSlot(BDListItem<weaponslot_t> &slotlist, WeaponSlotN
    curslot->links.insert(curslot, slotlist);
    data++;
 
+   if(node->next)
+      E_populateWeaponSlot(slotlist, node->next, data);
+
    if(node->right)
       E_populateWeaponSlot(slotlist, node->right, data);
 }

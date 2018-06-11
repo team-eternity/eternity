@@ -174,61 +174,10 @@ cfg_opt_t edf_wdelta_opts[] =
 //
 WeaponSlotTree *weaponslots[NUMWEAPONSLOTS];
 
-// The class that provides the basis for the AVL tree used for
-// checking selection order. It's used due to its speed of access
-// over red-black trees, at the cost of slower mutation times.
-using SelectOrderTreeBase = AVLTree<int, weaponinfo_t>;
-class SelectOrderTree : public SelectOrderTreeBase
-{
-public:
-   SelectOrderTree(int key, weaponinfo_t *object) :
-      SelectOrderTreeBase(key, object)
-   {}
-
-protected:
-   //
-   // This version of handleCollision add the new entry in alphabetically,
-   // unless a node with the same object is found.
-   //
-   avlnode_t *handleCollision(avlnode_t *listroot, avlnode_t *toinsert) override
-   {
-      avlnode_t *curr;
-      if(strcmp(toinsert->object->name, listroot->object->name) < 0)
-      {
-         // We need to put the new node at the start of the list.
-         weaponinfo_t *object = listroot->object;
-         listroot->object = toinsert->object;
-         toinsert->object = object;
-         toinsert->next = listroot->next;
-         listroot->next = toinsert;
-         return toinsert;
-      }
-
-      for(curr = listroot; curr->next != nullptr && curr != toinsert; curr = curr->next)
-      {
-         if(strcmp(toinsert->object->name, curr->object->name) > 0 &&
-            strcmp(toinsert->object->name, curr->next->object->name) < 0)
-         {
-            // We need to put the new node in the middle of the list.
-            toinsert->next = curr->next;
-            curr->next = toinsert;
-            return toinsert;
-         }
-      }
-
-      if(curr->object == toinsert->object)
-      {
-         efree(toinsert);
-         return nullptr; // Ahh bugger
-      }
-      else
-      {
-         curr->next = toinsert;
-         return toinsert;
-      }
-   }
-};
-using selectordernode_t = SelectOrderTree::avlnode_t;
+//
+// The global select order tree, used to prioritise weapons and
+// is the way of objectively figuring out which weapon is "best".
+//
 static SelectOrderTree *selectordertree = nullptr;
 
 //=============================================================================
@@ -502,7 +451,7 @@ weaponslot_t *E_FindFirstWeaponSlot(const player_t *player, const weaponinfo_t *
 // to try and find the best weapon the player can fire.
 //
 static weaponinfo_t *E_findBestWeapon(const player_t *player,
-                                      const selectordernode_t *node)
+                                      const SelectOrderNode *node)
 {
    weaponinfo_t *ret = nullptr;
    if(node == nullptr)
@@ -536,7 +485,7 @@ weaponinfo_t *E_FindBestWeapon(const player_t *player)
 //
 static weaponinfo_t *E_findBestWeaponUsingAmmo(const player_t *player,
                                                const itemeffect_t *ammo,
-                                               const selectordernode_t *node)
+                                               const SelectOrderNode *node)
 {
    bool correctammo;
    weaponinfo_t *ret = nullptr, *temp = node->object;
