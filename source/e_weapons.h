@@ -26,6 +26,7 @@
 #ifndef E_WEAPONS_H__
 #define E_WEAPONS_H__
 
+#include "d_keywds.h"
 #include "m_avltree.h"
 #include "m_bdlist.h"
 
@@ -79,7 +80,7 @@ protected:
    avlnode_t *handleCollision(avlnode_t *listroot, avlnode_t *toinsert) override
    {
       avlnode_t *curr;
-      if(strcmp(toinsert->object->name, listroot->object->name) < 0)
+      if(strcasecmp(toinsert->object->name, listroot->object->name) < 0)
       {
          // We need to put the new node at the start of the list.
          weaponinfo_t *object = listroot->object;
@@ -92,8 +93,8 @@ protected:
 
       for(curr = listroot; curr->next != nullptr && curr != toinsert; curr = curr->next)
       {
-         if(strcmp(toinsert->object->name, curr->object->name) > 0 &&
-            strcmp(toinsert->object->name, curr->next->object->name) < 0)
+         if(strcasecmp(toinsert->object->name, curr->object->name) > 0 &&
+            strcasecmp(toinsert->object->name, curr->next->object->name) < 0)
          {
             // We need to put the new node in the middle of the list.
             toinsert->next = curr->next;
