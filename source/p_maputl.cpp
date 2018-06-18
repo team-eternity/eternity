@@ -684,7 +684,8 @@ bool ThingIsOnLine(const Mobj *t, const line_t *l)
 // ioanch 20160111: added groupid
 // ioanch 20160114: enhanced the callback
 //
-bool P_BlockLinesIterator(int x, int y, bool func(line_t*, polyobj_t*), int groupid)
+bool P_BlockLinesIterator(int x, int y, bool func(line_t*, polyobj_t*, void *), int groupid,
+   void *context)
 {
    int        offset;
    const int  *list;     // killough 3/1/98: for removal of blockmap limit
@@ -711,7 +712,7 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*, polyobj_t*), int grou
             if(po->lines[i]->validcount == validcount) // line has been checked
                continue;
             po->lines[i]->validcount = validcount;
-            if(!func(po->lines[i], po))
+            if(!func(po->lines[i], po, context))
                return false;
          }
       }
@@ -750,7 +751,7 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*, polyobj_t*), int grou
       if(ld->validcount == validcount)
          continue;       // line has already been checked
       ld->validcount = validcount;
-      if(!func(ld, nullptr))
+      if(!func(ld, nullptr, context))
          return false;
    }
    return true;  // everything was checked
@@ -762,7 +763,8 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*, polyobj_t*), int grou
 // killough 5/3/98: reformatted, cleaned up
 // ioanch 20160108: variant with groupid
 //
-bool P_BlockThingsIterator(int x, int y, int groupid, bool (*func)(Mobj *))
+bool P_BlockThingsIterator(int x, int y, int groupid, bool (*func)(Mobj *, void *),
+                           void *context)
 {
    if(!(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
    {
@@ -776,7 +778,7 @@ bool P_BlockThingsIterator(int x, int y, int groupid, bool (*func)(Mobj *))
          {
             continue;   // ignore objects from wrong groupid
          }
-         if(!func(mobj))
+         if(!func(mobj, context))
             return false;
       }
    }

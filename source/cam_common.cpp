@@ -57,11 +57,11 @@
 
 #include "cam_common.h"
 #include "cam_sight.h"
+#include "doomstat.h"
 #include "e_exdata.h"
-#include "m_collection.h"
 #include "m_compare.h"
-#include "p_maputl.h"
 #include "p_portal.h"
+#include "p_portalblockmap.h"
 #include "p_setup.h"
 #include "polyobj.h"
 #include "r_portal.h"
@@ -312,7 +312,11 @@ bool PathTraverser::blockLinesIterator(int x, int y)
    list = blockmaplump + offset;
 
    // skip 0 starting delimiter
-   ++list;
+   // MaxW: 2016/02/02: if before 3.42 always skip, skip if all blocklists start w/ 0
+   // killough 2/22/98: demo_compatibility check
+   // skip 0 starting delimiter -- phares
+   if((!demo_compatibility && demo_version < 342) || (demo_version >= 342 && skipblstart))
+      ++list;
 
    for(; *list != -1; list++)
    {

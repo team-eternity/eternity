@@ -40,8 +40,8 @@ protected:
    int mobjtype;
 
 public:
-   virtual void Think();
-   virtual void serialize(SaveArchive &arc);
+   virtual void Think() override;
+   virtual void serialize(SaveArchive &arc) override;
 
    static void Spawn(int pSpecial, int *pArgs, int pMobjType);
 };

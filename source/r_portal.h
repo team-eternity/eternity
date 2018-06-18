@@ -137,10 +137,17 @@ struct portaltransform_t
    double rot[2][2];
    v3double_t move;   // TODO: z offset
    double angle;
+
+   const line_t *sourceline;
+   const line_t *targetline;   // for rotating anchored portals
+   bool flipped;
+   fixed_t zoffset;
    
    void applyTo(fixed_t &x, fixed_t &y,
       float *fx = nullptr, float *fy = nullptr, bool nomove = false) const;
    void applyTo(float &x, float &y, bool nomove = false) const;
+
+   void updateFromLines(bool allowrotate);
 };
 
 // Represents the information needed for an anchored portal

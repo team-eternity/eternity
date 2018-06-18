@@ -31,6 +31,7 @@
 
 #include "doomtype.h"
 
+struct dehflags_t;
 struct dehflagset_t;
 
 typedef struct E_Enable_s
@@ -70,6 +71,9 @@ void E_MetaIntFromCfgInt(MetaTable *meta, cfg_t *cfg, const char *prop);
 void E_MetaIntFromCfgBool(MetaTable *meta, cfg_t *cfg, const char *prop);
 void E_MetaIntFromCfgFlag(MetaTable *meta, cfg_t *cfg, const char *prop);
 void E_MetaTableFromCfg(cfg_t *cfg, MetaTable *table, MetaTable *prototype = NULL);
+
+// Prefix flag stuff
+void E_SetFlagsFromPrefixCfg(cfg_t *cfg, unsigned &flags, const dehflags_t *set);
 
 // Advanced libConfuse utilities
 class qstring;

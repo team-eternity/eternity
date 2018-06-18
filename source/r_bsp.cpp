@@ -439,7 +439,9 @@ endclosed:
 // It assumes that Doom has already ruled out a door being closed because
 // of front-back closure (e.g. front floor is taller than back ceiling).
 //
-int R_DoorClosed(void)
+// FIXME: no longer used or needed in Eternity?
+//
+static int R_DoorClosed(void)
 {
    return
 
@@ -787,7 +789,7 @@ static bool R_ClipInitialSegRange(int *start, int *stop, float *clipx1, float *c
    return true;
 }
 
-void R_ClipSegToFPortal(void)
+static void R_ClipSegToFPortal(void)
 {
    int i, startx;
    float clipx1, clipx2;
@@ -855,7 +857,7 @@ void R_ClipSegToFPortal(void)
    }
 }
 
-void R_ClipSegToCPortal(void)
+static void R_ClipSegToCPortal(void)
 {
    int i, startx;
    float clipx1, clipx2;
@@ -918,7 +920,7 @@ void R_ClipSegToCPortal(void)
    }
 }
 
-void R_ClipSegToLPortal(void)
+static void R_ClipSegToLPortal(void)
 {
    int i, startx;
    float clipx1, clipx2;
@@ -2530,6 +2532,26 @@ static bool R_CheckBBox(fixed_t *bspcoord) // killough 1/28/98: static
 }
 
 //
+// R_interpolateViewPoint
+//
+// Interpolate a rendering view point based on the player's location.
+//
+static void R_interpolateVertex(dynavertex_t &v, v2fixed_t &org, v2float_t &forg)
+{
+   org.x = v.x;
+   org.y = v.y;
+   forg.x = v.fx;
+   forg.y = v.fy;
+   if(view.lerp != FRACUNIT)
+   {
+      v.x = lerpCoord(view.lerp, v.backup.x, v.x);
+      v.y = lerpCoord(view.lerp, v.backup.y, v.y);
+      v.fx = M_FixedToFloat(v.x);
+      v.fy = M_FixedToFloat(v.y);
+   }
+}
+
+//
 // R_RenderPolyNode
 //
 // Recurse through a polynode mini-BSP
@@ -2544,7 +2566,20 @@ static void R_RenderPolyNode(rpolynode_t *node)
       R_RenderPolyNode(node->children[side]);
 
       // render partition seg
-      R_AddLine(&(node->partition->seg), true);
+      v2fixed_t org[2];
+      v2float_t forg[2];
+      seg_t *seg = &node->partition->seg;
+      R_interpolateVertex(*seg->dyv1, org[0], forg[0]);
+      R_interpolateVertex(*seg->dyv2, org[1], forg[1]);
+      R_AddLine(seg, true);
+      seg->v1->x = org[0].x;
+      seg->v1->y = org[0].y;
+      seg->v2->x = org[1].x;
+      seg->v2->y = org[1].y;
+      seg->v1->fx = forg[0].x;
+      seg->v1->fy = forg[0].y;
+      seg->v2->fx = forg[1].x;
+      seg->v2->fy = forg[1].y;
 
       // continue to render backspace
       node = node->children[side^1];

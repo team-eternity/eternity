@@ -40,7 +40,8 @@ struct actionargs_t
    enum actiontype_e
    {
       MOBJFRAME,   // invoked from P_SetMobjState
-      WEAPONFRAME  // invoked from P_SetPsprite
+      WEAPONFRAME, // invoked from P_SetPsprite
+      ARTIFACT     // invoked from E_TryUseItem
    } actiontype;
 
    Mobj      *actor; // Actor for either type of invocation; use mo->player when needed

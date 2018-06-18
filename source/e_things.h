@@ -71,6 +71,7 @@ enum
 void E_CollectThings(cfg_t *cfg);
 void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def);
 void E_ProcessThings(cfg_t *cfg);
+void E_ProcessThingPickups(cfg_t *cfg);
 void E_ProcessThingDeltas(cfg_t *cfg);
 void E_ProcessThingGroups(cfg_t *cfg);
 bool E_AutoAllocThingDEHNum(int thingnum);
@@ -90,8 +91,9 @@ int E_ThingNumForCompatName(const char *name); //   ACS compat version
 void E_ThingDefaultGibHealth(mobjinfo_t *mi);
 
 // thingtype custom-damagetype pain/death states
-state_t *E_StateForMod(mobjinfo_t *mi, const char *base, emod_t *mod);
-state_t *E_StateForModNum(mobjinfo_t *mi, const char *base, int num);
+state_t *E_StateForMod(const mobjinfo_t *mi, const char *base,
+                       const emod_t *mod);
+state_t *E_StateForModNum(const mobjinfo_t *mi, const char *base, int num);
 
 void     E_SplitTypeAndState(char *src, char **type, char **state);
 int     *E_GetNativeStateLoc(mobjinfo_t *mi, const char *label);
@@ -120,7 +122,7 @@ enum bloodtype_e : int
    BLOODTYPE_MAX // must be last
 };
 
-int E_BloodTypeForThing(Mobj *mo, bloodaction_e action);
+int E_BloodTypeForThing(const Mobj *mo, bloodaction_e action);
 bloodtype_e E_GetBloodBehaviorForAction(mobjinfo_t *info, bloodaction_e action);
 
 #endif

@@ -124,7 +124,7 @@ static PushThinker *tmpusher; // pusher structure for blockmap searches
 //
 // killough 10/98: allow to affect things besides players
 //
-static bool PIT_PushThing(Mobj* thing)
+static bool PIT_PushThing(Mobj* thing, void *context)
 {
    if(demo_version < 203  ?     // killough 10/98: made more general
       thing->player && !(thing->flags & (MF_NOCLIP | MF_NOGRAVITY)) :

@@ -65,9 +65,9 @@ protected:
 public:
    SDLGamePad(int idx = 0);
 
-   virtual bool select();
-   virtual void deselect();
-   virtual void poll();
+   virtual bool select() override;
+   virtual void deselect() override;
+   virtual void poll() override;
 };
 
 #endif

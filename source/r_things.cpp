@@ -44,6 +44,7 @@
 #include "p_maputl.h"   // ioanch 20160125
 #include "p_partcl.h"
 #include "p_portal.h"
+#include "p_portalblockmap.h"
 #include "p_setup.h"
 #include "p_skin.h"
 #include "p_user.h"
@@ -673,6 +674,8 @@ void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcol)
    
    column.texheight = 0; // killough 11/98
 
+   const byte *texend = tex->buffer + tex->width * tex->height + 1;
+
    while(tcol)
    {
       // calculate unclipped screen coordinates for post
@@ -688,9 +691,19 @@ void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcol)
          column.source = tex->buffer + tcol->ptroff;
          column.texmid = basetexturemid - (tcol->yoff << FRACBITS);
 
+         byte *last = tex->buffer + tcol->ptroff + tcol->len;
+         byte orig;
+         if(last < texend && last > tex->buffer)
+         {
+            orig = *last;
+            *last = last[-1];
+         }
+
          // Drawn by either R_DrawColumn
          //  or (SHADOW) R_DrawFuzzColumn.
          colfunc();
+         if(last < texend && last > tex->buffer)
+            *last = orig;
       }
 
       tcol = tcol->next;
@@ -820,6 +833,20 @@ static void R_interpolateThingPosition(const Mobj *thing, spritepos_t &pos)
       pos.x = lerpCoord(view.lerp, thing->prevpos.x, thing->x);
       pos.y = lerpCoord(view.lerp, thing->prevpos.y, thing->y);
       pos.z = lerpCoord(view.lerp, thing->prevpos.z, thing->z);
+   }
+}
+
+static void R_interpolatePSpritePosition(const pspdef_t &pspr, v2fixed_t &pos)
+{
+   if(view.lerp == FRACUNIT)
+   {
+      pos.x = pspr.sx;
+      pos.y = pspr.sy;
+   }
+   else
+   {
+      pos.x = lerpCoord(view.lerp, pspr.prevpos.x, pspr.sx);
+      pos.y = lerpCoord(view.lerp, pspr.prevpos.y, pspr.sy);
    }
 }
 
@@ -1216,7 +1243,10 @@ static void R_DrawPSprite(pspdef_t *psp)
    flip = !!(sprframe->flip[0] ^ lefthanded);
    
    // calculate edges of the shape
-   tx  = M_FixedToFloat(psp->sx) - 160.0f;
+   v2fixed_t pspos;
+   R_interpolatePSpritePosition(*psp, pspos);
+
+   tx  = M_FixedToFloat(pspos.x) - 160.0f;
    tx -= M_FixedToFloat(spriteoffset[lump]);
 
       // haleyjd
@@ -1247,7 +1277,7 @@ static void R_DrawPSprite(pspdef_t *psp)
    
    // killough 12/98: fix psprite positioning problem
    vis->texturemid = (BASEYCENTER<<FRACBITS) /* + FRACUNIT/2 */ -
-                      (psp->sy - spritetopoffset[lump]);
+                      (pspos.y - spritetopoffset[lump]);
 
    vis->x1           = x1 < 0.0f ? 0 : (int)x1;
    vis->x2           = x2 >= view.width ? viewwindow.width - 1 : (int)x2;

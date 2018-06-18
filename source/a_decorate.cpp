@@ -76,7 +76,7 @@ void A_CheckPlayerDone(actionargs_t *actionargs)
    Mobj *actor = actionargs->actor;
    int statenum;
    
-   if((statenum = E_ArgAsStateNumNI(actionargs->args, 0, actor)) < 0)
+   if((statenum = E_ArgAsStateNumNI(actionargs->args, 0, actor, nullptr)) < 0)
       return;
 
    if(!actor->player)
@@ -142,8 +142,10 @@ void A_FadeOut(actionargs_t *actionargs)
 void A_Jump(actionargs_t *actionargs)
 {
    int        chance, choice;
-   Mobj      *actor = actionargs->actor;
-   arglist_t *al    = actionargs->args;
+   Mobj      *actor  = actionargs->actor;
+   player_t  *player = actor->player;
+   arglist_t *al     = actionargs->args;
+   auto       at     = actionargs->actiontype;
    state_t   *state;
 
    // no args?
@@ -163,8 +165,11 @@ void A_Jump(actionargs_t *actionargs)
    choice = (P_Random(pr_decjump2) % (al->numargs - 1)) + 1;
 
    // if the state is found, jump to it.
-   if((state = E_ArgAsStateLabel(actor, al, choice)))
+   if(at == actionargs_t::MOBJFRAME && (state = E_ArgAsStateLabel(actor, al, choice)))
       P_SetMobjState(actor, state->index);
+   else if(at == actionargs_t::WEAPONFRAME && (state = E_ArgAsStateLabelWpn(player, al, choice)))
+      P_SetPspritePtr(player, actionargs->pspr, state->index);
+
 }
 
 //
@@ -178,8 +183,8 @@ void A_JumpIfNoAmmo(actionargs_t *actionargs)
    if(actionargs->pspr)
    {
       player_t *p     = actionargs->actor->player;
-      int statenum    = E_ArgAsStateNumNI(actionargs->args, 0, NULL);
-      weaponinfo_t *w = P_GetReadyWeapon(p);
+      int statenum    = E_ArgAsStateNumNI(actionargs->args, 0, nullptr, p);
+      weaponinfo_t *w = p->readyweapon;
       int ammo;
 
       // validate state
@@ -224,7 +229,7 @@ void A_JumpIfTargetInLOS(actionargs_t *actionargs)
          return;
 
       // prepare to jump!
-      if((statenum = E_ArgAsStateNumNI(args, 0, NULL)) < 0)
+      if((statenum = E_ArgAsStateNumNI(args, 0, nullptr, player)) < 0)
          return;
 
       P_SetPspritePtr(player, pspr, statenum);
@@ -280,7 +285,7 @@ void A_JumpIfTargetInLOS(actionargs_t *actionargs)
          return;
 
       // prepare to jump!
-      if((statenum = E_ArgAsStateNumNI(args, 0, actor)) < 0)
+      if((statenum = E_ArgAsStateNumNI(args, 0, actor, nullptr)) < 0)
          return;
       
       P_SetMobjState(actor, statenum);
@@ -351,7 +356,8 @@ static const char *kwds_channel_old[] =
    "chan_body",   // 4 },
 };
 
-static argkeywd_t channelkwdsold = { kwds_channel_old, NUMSCHANNELS };
+// EDF_FEATURES_FIXME?
+static argkeywd_t channelkwdsold = { kwds_channel_old, earrlen(kwds_channel_old) };
 
 static const char *kwds_attn_old[] =
 {
@@ -374,7 +380,8 @@ static const char *kwds_channel_new[] =
    "body",   // 4
 };
 
-static argkeywd_t channelkwdsnew = { kwds_channel_new, NUMSCHANNELS };
+// EDF_FEATURES_FIXME?
+static argkeywd_t channelkwdsnew = { kwds_channel_new, earrlen(kwds_channel_old) };
 
 static const char *kwds_attn_new[] =
 {

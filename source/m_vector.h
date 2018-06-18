@@ -53,11 +53,34 @@ struct v2fixed_t
       v2fixed_t ret = { x - other.x, y - other.y };
       return ret;
    }
+
+   template<typename T>
+   v2fixed_t &operator -= (const T &other)
+   {
+      x -= other.x;
+      y -= other.y;
+      return *this;
+   }
+
+   v2fixed_t operator-() const
+   {
+      return { -x, -y };
+   }
+
+   v2fixed_t abs() const
+   {
+      return { D_abs(x), D_abs(y) };
+   }
 };
 
 struct v3float_t
 {
    float x, y, z;
+};
+
+struct v2double_t
+{
+   double x, y;
 };
 
 struct v3double_t

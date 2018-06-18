@@ -98,6 +98,7 @@ keyaction_t keyactions[NUMKEYACTIONS] =
    { "use",               kac_game,    at_variable },
    { "strafe",            kac_game,    at_variable },
    { "attack",            kac_game,    at_variable },
+   { "altattack",         kac_game,    at_variable },
    { "flip",              kac_game,    at_variable },
    { "speed",             kac_game,    at_variable },
    { "jump",              kac_game,    at_variable }, // -- joek 12/22/07
@@ -169,6 +170,13 @@ keyaction_t keyactions[NUMKEYACTIONS] =
    { "console_up",        kac_console, at_variable },
    { "console_down",      kac_console, at_variable },
    { "console_backspace", kac_console, at_variable },
+
+   // Inventory Actions
+
+   { "inventory_left",     kac_game,    at_variable },
+   { "inventory_right",    kac_game,    at_variable },
+   { "inventory_use",      kac_game,    at_variable },
+   { "inventory_drop",     kac_game,    at_variable },
 };
 
 // Console Bindings
@@ -519,7 +527,7 @@ const char *G_FirstBoundKey(const char *action)
 //
 // The main driver function for the entire key binding system
 //
-int G_KeyResponder(event_t *ev, int bclass)
+int G_KeyResponder(const event_t *ev, int bclass)
 {
    int ret = ka_nothing;
    keyaction_t *action = NULL;
@@ -580,7 +588,7 @@ extern vfont_t *menu_font_normal;
 //
 // Draw the prompt box
 //
-void G_BindDrawer()
+static void G_BindDrawer()
 {
    const char *msg = "\n -= input new key =- \n";
    int x, y, width, height;
@@ -605,7 +613,7 @@ void G_BindDrawer()
 //
 // Responder for widget
 //
-bool G_BindResponder(event_t *ev, int mnaction)
+static bool G_BindResponder(event_t *ev, int mnaction)
 {
    keyaction_t *action;
    

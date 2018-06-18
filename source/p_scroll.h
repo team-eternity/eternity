@@ -38,11 +38,11 @@ class ScrollThinker : public Thinker
    DECLARE_THINKER_TYPE(ScrollThinker, Thinker)
 
 protected:
-   void Think();
+   void Think() override;
 
 public:
    // Overridden Methods
-   virtual void serialize(SaveArchive &arc);
+   virtual void serialize(SaveArchive &arc) override;
 
    // Methods
    void addScroller();

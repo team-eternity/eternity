@@ -59,6 +59,23 @@ void P_FloorSequence(sector_t *s)
       S_StartSectorSequenceName(s, "EEFloor", SEQ_ORIGIN_SECTOR_F);
 }
 
+//
+// Some games have a dedicated stair sequence
+//
+void P_StairSequence(sector_t *s)
+{
+   if(silentmove(s))
+      return;
+
+   if(s->sndSeqID >= 0)
+      S_StartSectorSequence(s, SEQ_FLOOR);
+   else if(E_SequenceForName("EEFloorStair"))
+      S_StartSectorSequenceName(s, "EEFloorStair", SEQ_ORIGIN_SECTOR_F);
+   else
+      S_StartSectorSequenceName(s, "EEFloor", SEQ_ORIGIN_SECTOR_F);
+}
+
+
 IMPLEMENT_THINKER_TYPE(FloorMoveThinker)
 
 //
@@ -89,7 +106,7 @@ void FloorMoveThinker::Think()
          floordestheight = resetHeight;
          type = genResetStair;
          
-         P_FloorSequence(sector);
+         P_StairSequence(sector);
       }
 
       // While stair is building, the delay timer is counting down
@@ -119,7 +136,7 @@ void FloorMoveThinker::Think()
             delayTimer = stepRaiseTime;
             
             if(sector->floorheight != floordestheight)
-               P_FloorSequence(sector);
+               P_StairSequence(sector);
          }
          return;
       case genWaitStair:
@@ -852,7 +869,7 @@ int EV_BuildStairs(const line_t *line, stair_e type)
          
          texture = sec->floorpic;
 
-         P_FloorSequence(floor->sector);
+         P_StairSequence(floor->sector);
          
          // Find next sector to raise
          //   1. Find 2-sided line with same sector side[0] (lowest numbered)
@@ -920,7 +937,7 @@ int EV_BuildStairs(const line_t *line, stair_e type)
                   floor->crush = 10;
                   floor->emulateStairCrush = true;
                }
-               P_FloorSequence(floor->sector);
+               P_StairSequence(floor->sector);
                ok = 1;
                break;
             } // end for

@@ -157,7 +157,7 @@ if(BUTTON2 != nil) [(NAME) addButtonWithTitle:(BUTTON2)]; \
 {
 	if(self = [super init])
 	{
-		iwadSet = [[NSMutableSet alloc] init];
+		iwadSet = [[NSMutableArray alloc] init];
 		pwadTypes = [[NSArray alloc] initWithObjects:@"cfg", @"bex", @"deh", 
                    @"edf", @"csc", @"wad", @"gfs", @"rsp", @"lmp", @"pk3",
                    @"pke", @"zip", @"disk", nil];
@@ -437,7 +437,7 @@ BOOL tryCreateDir(NSString* basePath, NSString* name, NSWindow* window)
 	if(returnCode == NSAlertFirstButtonReturn)
 	{
 		[[alert window] orderOut:self];
-		[self addPwad:self];
+		[self addIwad:self];
 	}
 }
 

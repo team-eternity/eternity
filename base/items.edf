@@ -15,6 +15,17 @@ includeifenabled("heretic/items.edf", "HERETIC");
 // Shared Items ---------------------------------------------------------------
 
 //
+// The template for all weapon trackers.
+//
+artifact _WeaponTrackerTemplate
+{
+  interhubamount 1
+  +undroppable
+
+  artifacttype Weapon
+}
+
+//
 // BackpackItem
 //
 // This token item represents whether or not the player has a backpack, which
@@ -53,5 +64,17 @@ lockdef 228
 {
    message:       "$PD_ANY";
    remotemessage: "Any key will activate this object";
+}
+
+//
+// Global Powers
+//
+
+powereffect TotalInvisiSphere
+{
+  duration 60
+  type     PowerTotalInvisibility
+
+  +overridesself
 }
 

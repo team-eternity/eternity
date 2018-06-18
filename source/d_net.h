@@ -178,7 +178,6 @@ void D_InitNetGame();
 // Broadcasts special packets to other players
 //  to notify of game exit
 void D_QuitNetGame();
-void D_KickPlayer(int playernum);
 
 // how many ticks to run?
 void TryRunTics();

@@ -439,6 +439,16 @@ static const char *s_HGOTBLUEKEY = HGOTBLUEKEY;
 static const char *s_HGOTYELLOWKEY     = HGOTYELLOWKEY;
 static const char *s_HGOTGREENKEY      = HGOTGREENKEY;
 static const char *s_HITEMHEALTH       = HITEMHEALTH;
+static const char *s_HITEMSHADOWSPHERE = HITEMSHADOWSPHERE;
+static const char *s_HITEMQUARTZFLASK  = HITEMQUARTZFLASK;
+static const char *s_HITEMWINGSOFWRATH = HITEMWINGSOFWRATH;
+static const char *s_HITEMRINGOFINVINCIBILITY = HITEMRINGOFINVINCIBILITY;
+static const char *s_HITEMTOMEOFPOWER  = HITEMTOMEOFPOWER;
+static const char *s_HITEMMORPHOVUM    = HITEMMORPHOVUM;
+static const char *s_HITEMMYSTICURN    = HITEMMYSTICURN;
+static const char *s_HITEMTORCH        = HITEMTORCH;
+static const char *s_HITEMTIMEBOMB     = HITEMTIMEBOMB;
+static const char *s_HITEMTELEPORT     = HITEMTELEPORT;
 static const char *s_HITEMSHIELD1      = HITEMSHIELD1;
 static const char *s_HITEMSHIELD2      = HITEMSHIELD2;
 static const char *s_HITEMBAGOFHOLDING = HITEMBAGOFHOLDING;
@@ -457,6 +467,12 @@ static const char *s_HAMMOSKULLROD1 = HAMMOSKULLROD1;
 static const char *s_HAMMOSKULLROD2 = HAMMOSKULLROD2;
 static const char *s_HAMMOPHOENIXROD1 = HAMMOPHOENIXROD1;
 static const char *s_HAMMOPHOENIXROD2 = HAMMOPHOENIXROD2;
+static const char *s_HWEAPONMACE       = HWEAPONMACE;
+static const char *s_HWEAPONCROSSBOW   = HWEAPONCROSSBOW;
+static const char *s_HWEAPONBLASTER    = HWEAPONBLASTER;
+static const char *s_HWEAPONSKULLROD   = HWEAPONSKULLROD;
+static const char *s_HWEAPONPHOENIXROD = HWEAPONPHOENIXROD;
+static const char *s_HWEAPONGAUNTLETS  = HWEAPONGAUNTLETS;
 static const char *s_TXT_CHEATGODON         = TXT_CHEATGODON;
 static const char *s_TXT_CHEATGODOFF        = TXT_CHEATGODOFF;
 static const char *s_TXT_CHEATNOCLIPON      = TXT_CHEATNOCLIPON;
@@ -906,6 +922,16 @@ dehstr_t deh_strlookup[] =
    { &s_HGOTYELLOWKEY,     "HGOTYELLOWKEY"     },
    { &s_HGOTGREENKEY,      "HGOTGREENKEY"      },
    { &s_HITEMHEALTH,       "HITEMHEALTH"       },
+   { &s_HITEMSHADOWSPHERE, "HITEMSHADOWSPHERE" },
+   { &s_HITEMQUARTZFLASK,  "HITEMQUARTZFLASK"  },
+   { &s_HITEMWINGSOFWRATH, "HITEMWINGSOFWRATH" },
+   { &s_HITEMRINGOFINVINCIBILITY, "HITEMRINGOFINVINCIBILITY" },
+   { &s_HITEMTOMEOFPOWER,  "HITEMTOMEOFPOWER"  },
+   { &s_HITEMMORPHOVUM,    "HITEMMORPHOVUM"    },
+   { &s_HITEMMYSTICURN,    "HITEMMYSTICURN"    },
+   { &s_HITEMTORCH,        "HITEMTORCH"        },
+   { &s_HITEMTIMEBOMB,     "HITEMTIMEBOMB"     },
+   { &s_HITEMTELEPORT,     "HITEMTELEPORT"     },
    { &s_HITEMSHIELD1,      "HITEMSHIELD1"      },
    { &s_HITEMSHIELD2,      "HITEMSHIELD2"      },
    { &s_HITEMBAGOFHOLDING, "HITEMBAGOFHOLDING" },
@@ -922,6 +948,12 @@ dehstr_t deh_strlookup[] =
    { &s_HAMMOSKULLROD2,    "HAMMOSKULLROD2"    },
    { &s_HAMMOPHOENIXROD1,  "HAMMOPHOENIXROD1"  },
    { &s_HAMMOPHOENIXROD2,  "HAMMOPHOENIXROD2"  },
+   { &s_HWEAPONMACE,          "HWEAPONMACE"       },
+   { &s_HWEAPONCROSSBOW,      "HWEAPONCROSSBOW"   },
+   { &s_HWEAPONBLASTER,       "HWEAPONBLASTER"    },
+   { &s_HWEAPONSKULLROD,      "HWEAPONSKULLROD"   },
+   { &s_HWEAPONPHOENIXROD,    "HWEAPONPHOENIXROD" },
+   { &s_HWEAPONGAUNTLETS,     "HWEAPONGAUNTLETS"  },
    { &s_HPD_GREENO,        "HPD_GREENO"        },
    { &s_HPD_GREENK,        "HPD_GREENK"        },
    { &s_TXT_CHEATGODON,         "TXT_CHEATGODON"        },
@@ -1330,6 +1362,7 @@ void A_TargetJump(actionargs_t *);
 void A_ThingSummon(actionargs_t *);
 void A_KillChildren(actionargs_t *);
 void A_WeaponCtrJump(actionargs_t *);
+void A_WeaponCtrJumpEx(actionargs_t *);
 void A_WeaponCtrSwitch(actionargs_t *);
 void A_WeaponSetCtr(actionargs_t *);
 void A_WeaponCopyCtr(actionargs_t *);
@@ -1419,6 +1452,34 @@ void A_PlayerSkull(actionargs_t *);
 void A_FlameSnd(actionargs_t *actionargs);
 void A_ClearSkin(actionargs_t *);
 void A_PhoenixPuff(actionargs_t *);
+void A_FlameEnd(actionargs_t *);
+void A_FloatPuff(actionargs_t *);
+
+// MaxW: 2018/01/02: Heretic weapon pointers
+void A_StaffAttackPL1(actionargs_t *);
+void A_StaffAttackPL2(actionargs_t *);
+void A_FireGoldWandPL1(actionargs_t *);
+void A_FireGoldWandPL2(actionargs_t *);
+void A_FireMacePL1(actionargs_t *);
+void A_MacePL1Check(actionargs_t *);
+void A_MaceBallImpact(actionargs_t *);
+void A_MaceBallImpact2(actionargs_t *);
+void A_FireMacePL2(actionargs_t *);
+void A_DeathBallImpact(actionargs_t *);
+void A_FireCrossbowPL1(actionargs_t *);
+void A_FireCrossbowPL2(actionargs_t *);
+void A_BoltSpark(actionargs_t *);
+void A_FireBlasterPL1(actionargs_t *);
+void A_FireSkullRodPL1(actionargs_t *);
+void A_FirePhoenixPL1(actionargs_t *);
+void A_InitPhoenixPL2(actionargs_t *);
+void A_ShutdownPhoenixPL2(actionargs_t *);
+void A_FirePhoenixPL2(actionargs_t *);
+void A_GauntletAttack(actionargs_t *);
+
+// MaxW: 2018/01/02: Heretic artifact use pointers
+void A_HticArtiTele(actionargs_t *);
+void A_HticSpawnFireBomb(actionargs_t *);
 
 // haleyjd 10/04/08: Hexen pointers
 #if 0
@@ -1651,6 +1712,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(ThingSummon),
    POINTER(KillChildren),
    POINTER(WeaponCtrJump),
+   POINTER(WeaponCtrJumpEx),
    POINTER(WeaponCtrSwitch),
    POINTER(WeaponSetCtr),
    POINTER(WeaponCopyCtr),
@@ -1744,6 +1806,34 @@ deh_bexptr deh_bexptrs[] =
    POINTER(FlameSnd),
    POINTER(ClearSkin),
    POINTER(PhoenixPuff),
+   POINTER(FlameEnd),
+   POINTER(FloatPuff),
+
+   // MaxW: 2018/01/02: Heretic weapon pointers
+   POINTER(StaffAttackPL1),
+   POINTER(StaffAttackPL2),
+   POINTER(FireGoldWandPL1),
+   POINTER(FireGoldWandPL2),
+   POINTER(FireMacePL1),
+   POINTER(MacePL1Check),
+   POINTER(MaceBallImpact),
+   POINTER(MaceBallImpact2),
+   POINTER(FireMacePL2),
+   POINTER(DeathBallImpact),
+   POINTER(FireCrossbowPL1),
+   POINTER(FireCrossbowPL2),
+   POINTER(BoltSpark),
+   POINTER(FireBlasterPL1),
+   POINTER(FireSkullRodPL1),
+   POINTER(FirePhoenixPL1),
+   POINTER(InitPhoenixPL2),
+   POINTER(FirePhoenixPL2),
+   POINTER(ShutdownPhoenixPL2),
+   POINTER(GauntletAttack),
+
+   // MaxW: 2018/01/02: Heretic artifact use pointers
+   POINTER(HticArtiTele),
+   POINTER(HticSpawnFireBomb),
 
    // haleyjd 10/04/08: Hexen pointers
 #if 0

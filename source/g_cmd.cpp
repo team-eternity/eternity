@@ -122,7 +122,7 @@ CONSOLE_COMMAND(pause, cf_server)
 //
 // haleyjd: Restoration of original exit behavior
 //
-void G_QuitDoom()
+static void G_QuitDoom()
 {
    // haleyjd: re-added code for playing random sound before exit
    extern int snd_card;
@@ -230,8 +230,8 @@ CONSOLE_VARIABLE(sens_vanilla, mouseSensitivity_vanilla, 0) {}
 VARIABLE_BOOLEAN(player_bobbing, &default_player_bobbing, onoff);
 CONSOLE_NETVAR(bobbing, player_bobbing, cf_server, netcmd_bobbing) {}
 
-VARIABLE_BOOLEAN(doom_weapon_toggles, NULL, onoff);
-CONSOLE_VARIABLE(doom_weapon_toggles, doom_weapon_toggles, 0) {}
+VARIABLE_BOOLEAN(weapon_hotkey_cycling, NULL, onoff);
+CONSOLE_VARIABLE(weapon_hotkey_cycling, weapon_hotkey_cycling, 0) {}
 
 // turbo scale
 

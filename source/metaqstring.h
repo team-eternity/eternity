@@ -65,8 +65,8 @@ public:
    }
 
    // Virtuals
-   MetaObject *clone()    const { return new MetaQString(*this); }
-   const char *toString() const { return value.constPtr(); }
+   MetaObject *clone()    const override { return new MetaQString(*this); }
+   const char *toString() const override { return value.constPtr(); }
 };
 
 //
@@ -101,9 +101,9 @@ public:
    {
    }
 
-   MetaObject *clone() const { return new MetaMultiString(*this); }
+   MetaObject *clone() const override { return new MetaMultiString(*this); }
 
-   const char *toString() const
+   const char *toString() const override
    {
       return key;
    }

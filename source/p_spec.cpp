@@ -68,7 +68,6 @@
 #include "p_slopes.h"
 #include "p_spec.h"
 #include "p_things.h"
-#include "p_tick.h"
 #include "p_user.h"
 #include "polyobj.h"
 #include "m_argv.h"
@@ -1105,6 +1104,14 @@ void P_ShootSpecialLine(Mobj *thing, line_t *line, int side)
    EV_ActivateSpecialLineWithSpac(line, side, thing, nullptr, SPAC_IMPACT);
 }
 
+//
+// Triggers a line using the SPAC_PUSH special. Mobj would need to support pushing
+//
+void P_PushSpecialLine(Mobj &thing, line_t &line, int side)
+{
+   EV_ActivateSpecialLineWithSpac(&line, side, &thing, nullptr, SPAC_PUSH);
+}
+
         // sf: changed to enable_nuke for console
 int enable_nuke = 1;  // killough 12/98: nukage disabling cheat
 
@@ -1396,6 +1403,8 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
    
    P_SpawnPushers();   // phares 3/20/98: New pusher model using linedefs
 
+   P_FindPolyobjectSectorCouples();
+
    for(int i = 0; i < numlines; i++)
    {
       line_t *line = &lines[i];
@@ -1556,6 +1565,8 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
 
    // haleyjd 02/20/06: spawn polyobjects
    Polyobj_InitLevel();
+   if(!numPolyObjects)
+      P_MarkPortalClusters();
 
    // haleyjd 06/18/14: spawn level actions
    P_SpawnLevelActions();

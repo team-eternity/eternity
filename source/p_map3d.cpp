@@ -53,6 +53,7 @@
 #include "p_maputl.h"
 #include "p_mobjcol.h"
 #include "p_inter.h"
+#include "p_map3d.h"
 #include "p_portal.h"
 #include "p_portalclip.h"  // ioanch 20160115
 #include "p_portalcross.h"
@@ -84,7 +85,7 @@ bool P_Use3DClipping()
 // without any side-effects so that it's reversible: the only thing changed
 // is mo->z, which will be reset before the real move takes place.
 //
-static void P_ZMovementTest(Mobj *mo)
+void P_ZMovementTest(Mobj *mo)
 {
    // killough 7/11/98:
    // BFG fireballs bounced on floors and ceilings in Pre-Beta Doom
@@ -165,32 +166,43 @@ floater:
 static Mobj *testz_mobj; // used to hold object found by P_TestMobjZ
 
 //
+// Data to carry to testmobjz
+//
+struct testmobjzdata_t
+{
+   doom_mapinter_t &clip;
+   Mobj *&testz_mobj;
+};
+
+//
 // PIT_TestMobjZ
 //
 // Derived from zdoom; iterator function for P_TestMobjZ
 //
-static bool PIT_TestMobjZ(Mobj *thing)
+static bool PIT_TestMobjZ(Mobj *thing, void *context)
 {
-   fixed_t blockdist = thing->radius + clip.thing->radius;
+   testmobjzdata_t &data = *static_cast<testmobjzdata_t *>(context);
+
+   fixed_t blockdist = thing->radius + data.clip.thing->radius;
 
    if(!(thing->flags & MF_SOLID) ||                      // non-solid?
       thing->flags & (MF_SPECIAL|MF_NOCLIP) || // other is special?
-      clip.thing->flags & MF_SPECIAL ||                   // this is special?
-      thing == clip.thing ||                              // same as self?
-      clip.thing->z > thing->z + thing->height ||         // over?
-      clip.thing->z + clip.thing->height <= thing->z)      // under?
+      data.clip.thing->flags & MF_SPECIAL ||                   // this is special?
+      thing == data.clip.thing ||                              // same as self?
+      data.clip.thing->z > thing->z + thing->height ||         // over?
+      data.clip.thing->z + data.clip.thing->height <= thing->z)      // under?
    {
       return true;
    }
 
    // test against collision - from PIT_CheckThing:
    // ioanch 20160110: portal aware
-   if(D_abs(getThingX(clip.thing, thing) - clip.x) >= blockdist || 
-      D_abs(getThingY(clip.thing, thing) - clip.y) >= blockdist)
+   if(D_abs(getThingX(data.clip.thing, thing) - data.clip.x) >= blockdist ||
+      D_abs(getThingY(data.clip.thing, thing) - data.clip.y) >= blockdist)
       return true;
 
    // the thing may be blocking; save a pointer to it
-   testz_mobj = thing;
+   data.testz_mobj = thing;
    return false;
 }
 
@@ -199,7 +211,7 @@ static bool PIT_TestMobjZ(Mobj *thing)
 //
 // From zdoom; tests a thing's z position for validity.
 //
-bool P_TestMobjZ(Mobj *mo)
+bool P_TestMobjZ(Mobj *mo, doom_mapinter_t &clip, Mobj **testz_mobj)
 {
    // a no-clipping thing is always good
    if(mo->flags & MF_NOCLIP)
@@ -222,10 +234,12 @@ bool P_TestMobjZ(Mobj *mo)
    bbox[BOXBOTTOM] = clip.bbox[BOXBOTTOM] - MAXRADIUS;
    bbox[BOXTOP] = clip.bbox[BOXTOP] + MAXRADIUS;
 
-   if(!P_TransPortalBlockWalker(bbox, mo->groupid, true, nullptr, 
+   testmobjzdata_t data = { clip, testz_mobj ? *testz_mobj : ::testz_mobj };
+
+   if(!P_TransPortalBlockWalker(bbox, mo->groupid, true, &data,
       [](int x, int y, int groupid, void *data) -> bool
    {
-      return P_BlockThingsIterator(x, y, groupid, PIT_TestMobjZ);
+      return P_BlockThingsIterator(x, y, groupid, PIT_TestMobjZ, data);
    }))
       return false;
 
@@ -246,7 +260,7 @@ Mobj *P_GetThingUnder(Mobj *mo)
    // fake the move, then test
    P_ZMovementTest(mo);
    testz_mobj = NULL;
-   P_TestMobjZ(mo);
+   P_TestMobjZ(mo, clip);
 
    // restore z
    mo->z = mo_z;
@@ -556,7 +570,7 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
 //
 // A 3D version of P_CheckPosition.
 //
-bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y) 
+bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit) 
 {
    subsector_t *newsubsec;
    fixed_t thingdropoffz;
@@ -738,11 +752,11 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
    }
 
    // ioanch 20160112: portal-aware
-   if(!P_TransPortalBlockWalker(bbox, thing->groupid, true, nullptr, 
+   if(!P_TransPortalBlockWalker(bbox, thing->groupid, true, pushhit, 
       [](int x, int y, int groupid, void *data) -> bool
    {
       // ioanch 20160112: try 3D portal check-line
-      if(!P_BlockLinesIterator(x, y, PIT_CheckLine3D, groupid))
+      if(!P_BlockLinesIterator(x, y, PIT_CheckLine3D, groupid, data))
          return false; // doesn't fit
       return true;
    }))
@@ -755,7 +769,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
    {
       // they will not change the spechit list
       if(gGroupVisit[clip.portalhit[i].ld->frontsector->groupid])
-         if(!PIT_CheckLine3D(clip.portalhit[i].ld, clip.portalhit[i].po))
+         if(!PIT_CheckLine3D(clip.portalhit[i].ld, clip.portalhit[i].po, pushhit))
             return false;
    }
 
@@ -829,6 +843,7 @@ static bool P_AdjustFloorCeil(Mobj *thing, bool midtex)
    if(midtex)
       thing->flags3 |= MF3_PASSMOBJ;
 
+   // don't trigger push specials when moving strictly vertically.
    isgood = P_CheckPosition3D(thing, thing->x, thing->y);
 
    thing->floorz     = clip.floorz;
@@ -863,6 +878,15 @@ static bool P_AdjustFloorCeil(Mobj *thing, bool midtex)
 }
 
 //
+// Data for finding intersectors
+//
+struct intersectordata_t
+{
+   doom_mapinter_t &clip;
+   MobjCollection &intersectors;
+};
+
+//
 // PIT_FindAboveIntersectors
 //
 // haleyjd: From zdoom. I was about to implement this exact type of iterative
@@ -871,32 +895,38 @@ static bool P_AdjustFloorCeil(Mobj *thing, bool midtex)
 // over/under situations with an object being moved by a sector floor or
 // ceiling so that they can be dealt with uniformly at one time.
 //
-static bool PIT_FindAboveIntersectors(Mobj *thing)
+static bool PIT_FindAboveIntersectors(Mobj *thing, void *context)
 {
+   intersectordata_t &data = *static_cast<intersectordata_t *>(context);
+
    fixed_t blockdist;
    if(!(thing->flags & MF_SOLID) ||               // Can't hit thing?
       (thing->flags & MF_SPECIAL) ||  // Corpse or special?
-      thing == clip.thing)                         // clipping against self?
+      thing == data.clip.thing)                         // clipping against self?
       return true;
    
-   blockdist = thing->radius + clip.thing->radius;
+   blockdist = thing->radius + data.clip.thing->radius;
    
    // Be portal aware
-   const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid, thing->groupid);
+   const linkoffset_t *link = P_GetLinkOffset(data.clip.thing->groupid,
+                                              thing->groupid);
 
    // Didn't hit thing?
-   if(D_abs(thing->x - link->x - clip.x) >= blockdist || 
-      D_abs(thing->y - link->y - clip.y) >= blockdist)
+   if(D_abs(thing->x - link->x - data.clip.x) >= blockdist ||
+      D_abs(thing->y - link->y - data.clip.y) >= blockdist)
       return true;
 
    // Thing intersects above the base?
-   if(thing->z >= clip.thing->z && thing->z <= clip.thing->z + clip.thing->height)
-      intersectors.add(thing);
+   if(thing->z >= data.clip.thing->z &&
+      thing->z <= data.clip.thing->z + data.clip.thing->height)
+   {
+      data.intersectors.add(thing);
+   }
 
    return true;
 }
 
-bool PIT_FindBelowIntersectors(Mobj *thing)
+static bool PIT_FindBelowIntersectors(Mobj *thing, void *context)
 {
    fixed_t blockdist;
    if(!(thing->flags & MF_SOLID) ||               // Can't hit thing?
@@ -930,7 +960,8 @@ bool PIT_FindBelowIntersectors(Mobj *thing)
 // Finds all the things above the thing being moved and puts them into an
 // MobjCollection (this is partially explained above). From zdoom.
 //
-static void P_FindAboveIntersectors(Mobj *actor)
+void P_FindAboveIntersectors(Mobj *actor, doom_mapinter_t &clip,
+                             MobjCollection &coll)
 {
    fixed_t x, y;
 
@@ -955,9 +986,12 @@ static void P_FindAboveIntersectors(Mobj *actor)
    bbox[BOXBOTTOM] = clip.bbox[BOXBOTTOM] - MAXRADIUS;
    bbox[BOXTOP] = clip.bbox[BOXTOP] + MAXRADIUS;
 
-   if(!P_TransPortalBlockWalker(bbox, actor->groupid, true, nullptr,
+   intersectordata_t data = { clip, coll };
+
+   if(!P_TransPortalBlockWalker(bbox, actor->groupid, true, &data,
       [](int x, int y, int groupid, void *data) -> bool {
-      return P_BlockThingsIterator(x, y, groupid, PIT_FindAboveIntersectors);
+      return P_BlockThingsIterator(x, y, groupid, PIT_FindAboveIntersectors,
+                                   data);
    }))
       return;
 
@@ -1086,7 +1120,7 @@ static int P_PushUp(Mobj *thing)
    if(thing->z + thing->height > thing->ceilingz)
       return 1;
 
-   P_FindAboveIntersectors(thing);
+   P_FindAboveIntersectors(thing, clip, intersectors);
    lastintersect = static_cast<unsigned>(intersectors.getLength());
    for(; firstintersect < lastintersect; ++firstintersect)
    {
@@ -1288,7 +1322,7 @@ static void PIT_CeilingRaise(Mobj *thing)
    else if(/*(thing->flags3 & MF3_PASSMOBJ) &&*/ !isgood && 
            thing->z + thing->height < thing->ceilingz)
    {
-      if(!P_TestMobjZ(thing) && testz_mobj->z <= thing->z)
+      if(!P_TestMobjZ(thing, clip) && testz_mobj->z <= thing->z)
       {
          fixed_t ceildiff = thing->ceilingz - thing->height;
          fixed_t thingtop = testz_mobj->z + testz_mobj->height;

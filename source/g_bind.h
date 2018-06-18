@@ -28,7 +28,7 @@ struct event_t;
 class  qstring;
 
 void G_InitKeyBindings();
-int  G_KeyResponder(event_t *ev, int bclass);
+int  G_KeyResponder(const event_t *ev, int bclass);
 
 void G_ClearKeyStates();
 
@@ -70,6 +70,7 @@ enum keyaction_e
    ka_use,       
    ka_strafe,    
    ka_attack,    
+   ka_attack_alt,
    ka_flip,
    ka_speed,
    ka_jump,
@@ -126,6 +127,10 @@ enum keyaction_e
    ka_console_up,
    ka_console_down,
    ka_console_backspace,
+   ka_inventory_left,
+   ka_inventory_right,
+   ka_inventory_use,
+   ka_inventory_drop,
    NUMKEYACTIONS
 };
 

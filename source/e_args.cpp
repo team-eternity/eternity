@@ -24,6 +24,8 @@
 
 #include "z_zone.h"
 
+#include "d_items.h"
+#include "d_player.h"
 #include "e_args.h"
 #include "e_lib.h"
 #include "e_mod.h"
@@ -31,6 +33,7 @@
 #include "e_states.h"
 #include "e_string.h"
 #include "e_things.h"
+#include "e_weapons.h"
 #include "info.h"
 #include "m_utils.h"
 #include "p_mobj.h"
@@ -157,7 +160,7 @@ void E_ResetAllArgEvals()
 // This is just a safe method to get the argument string at the given
 // index. If the argument doesn't exist, defvalue is returned.
 //
-const char *E_ArgAsString(arglist_t *al, int index, const char *defvalue)
+const char *E_ArgAsString(const arglist_t *al, int index, const char *defvalue)
 {
    return (al && index < al->numargs) ? al->args[index] : defvalue;
 }
@@ -379,11 +382,54 @@ state_t *E_GetJumpInfo(mobjinfo_t *mi, const char *arg)
 }
 
 //
+// Returns the target state given an initial type and label text. Assuming that
+// the text does not contain a :: operator, the information returned will be 
+// the ordinary plain state named by the input string. Otherwise, both the weaponinfo
+// and statename may be redirected.
+//
+state_t *E_GetWpnJumpInfo(weaponinfo_t *wi, const char *arg)
+{
+   char *temparg = Z_Strdupa(arg);
+   char *colon   = strchr(temparg, ':');
+
+   char *statename = nullptr, *type = nullptr;
+
+   // if the statename does not contain a colon, there is no potential for 
+   // redirection.
+   if(!colon)
+      return E_GetStateForWeaponInfo(wi, arg);
+
+   // split temparg at the :: operator
+   E_SplitTypeAndState(temparg, &type, &statename);
+
+   // if both are not valid, we can't do this sort of operation
+   if(!(type && statename))
+      return E_GetStateForWeaponInfo(wi, arg);
+
+   // Check for super::, which is an explicit reference to the parent type;
+   // Otherwise, treat the left side as a weaponinfo EDF class name.
+   if(!strcasecmp(type, "super") && wi->parent)
+      wi = wi->parent;
+   else
+   {
+      int weapontype = E_WeaponNumForName(type);
+      
+      // non-existent weaponinfo is an error, no jump will happen
+      if(weapontype == -1)
+         return nullptr;
+      else
+         wi = E_WeaponForID(weapontype);
+   }
+
+   return E_GetStateForWeaponInfo(wi, statename);
+}
+
+//
 // This evaluator only allows DECORATE state labels or numbers, and will not 
 // make reference to global states. Because evaluation of this type of argument
 // is relative to the mobjinfo, this evaluation is never cached.
 //
-state_t *E_ArgAsStateLabel(Mobj *mo, arglist_t *al, int index)
+state_t *E_ArgAsStateLabel(const Mobj *mo, const arglist_t *al, int index)
 {
    const char *arg;
    char       *end   = nullptr;
@@ -409,11 +455,44 @@ state_t *E_ArgAsStateLabel(Mobj *mo, arglist_t *al, int index)
 }
 
 //
+// This evaluator only allows DECORATE state labels or numbers, and will not 
+// make reference to global states. Because evaluation of this type of argument
+// is relative to the player, this evaluation is never cached.
+//
+state_t *E_ArgAsStateLabelWpn(const player_t *player, const arglist_t *al,
+                              int index)
+{
+   weaponinfo_t *wi = player->readyweapon;
+   const char *arg;
+   char       *end   = nullptr;
+   state_t    *state = player->psprites->state;
+   long        num;
+
+   if(!al || index >= al->numargs)
+      return nullptr;
+
+   arg = al->args[index];
+
+   num = strtol(arg, &end, 0);
+
+   // if not a number, this is a state label
+   if(estrnonempty(end))
+      return E_GetWpnJumpInfo(wi, arg);
+   else
+   {
+      long idx = state->index + num;
+
+      return (idx >= 0 && idx < NUMSTATES) ? states[idx] : nullptr;
+   }
+}
+
+//
 // Gets the arg value at index i as a state number, if such argument exists.
 // The evaluated value will be cached so that it can be returned on subsequent
 // calls. If the arg does not exist, the null state is returned instead.
 //
-int E_ArgAsStateNum(arglist_t *al, int index, Mobj *mo)
+int E_ArgAsStateNum(arglist_t *al, int index, const Mobj *mo,
+                    const player_t *player)
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
@@ -452,6 +531,8 @@ int E_ArgAsStateNum(arglist_t *al, int index, Mobj *mo)
             state_t *state;
             if(mo && (state = E_ArgAsStateLabel(mo, al, index)))
                return state->index;
+            else if(player && (state = E_ArgAsStateLabelWpn(player, al, index)))
+               return state->index;
             else
             {
                // whatever it is, we dunno of it.
@@ -478,7 +559,8 @@ int E_ArgAsStateNum(arglist_t *al, int index, Mobj *mo)
 //
 // NI == No Invalid, because invalid states are not converted to the null state.
 //
-int E_ArgAsStateNumNI(arglist_t *al, int index, Mobj *mo)
+int E_ArgAsStateNumNI(arglist_t *al, int index, const Mobj *mo,
+                      const player_t *player)
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
@@ -517,6 +599,8 @@ int E_ArgAsStateNumNI(arglist_t *al, int index, Mobj *mo)
             state_t *state;
             if(mo && (state = E_ArgAsStateLabel(mo, al, index)))
                return state->index;
+            else if(player && (state = E_ArgAsStateLabelWpn(player, al, index)))
+               return state->index;
             else
             {
                // whatever it is, we dunno of it.
@@ -541,7 +625,8 @@ int E_ArgAsStateNumNI(arglist_t *al, int index, Mobj *mo)
 // equal to zero.
 // G0 == "greater than or equal to zero"
 //
-int E_ArgAsStateNumG0(arglist_t *al, int index, Mobj *mo)
+int E_ArgAsStateNumG0(arglist_t *al, int index, const Mobj *mo,
+                      const player_t *player)
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
@@ -579,6 +664,8 @@ int E_ArgAsStateNumG0(arglist_t *al, int index, Mobj *mo)
             // resolution is "virtual" (ie relative to the calling thingtype).
             state_t *state;
             if(mo && (state = E_ArgAsStateLabel(mo, al, index)))
+               return state->index;
+            else if(player && (state = E_ArgAsStateLabelWpn(player, al, index)))
                return state->index;
             else
             {
@@ -784,7 +871,7 @@ emod_t *E_ArgAsDamageType(arglist_t *al, int index, int defvalue)
 // keyword string, given the provided keyword set. Returns the default value
 // if the argument doesn't exist, or the keyword is not matched.
 //
-int E_ArgAsKwd(arglist_t *al, int index, argkeywd_t *kw, int defvalue)
+int E_ArgAsKwd(arglist_t *al, int index, const argkeywd_t *kw, int defvalue)
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.

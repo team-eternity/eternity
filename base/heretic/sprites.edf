@@ -1,0 +1,342 @@
+//
+// EDF for Eternity Engine v3.49.00+
+//
+// Pickup item definitions for Heretic gamemode.
+//
+
+// Keys
+pickupeffect HereticGreenKey
+{
+  effects KeyGreen
+  message $HGOTGREENKEY
+  sound   ht_keyup
+  flags   LEAVEINMULTI
+
+  sprite  AKYY
+  pfxname PFX_HGREENKEY
+}
+pickupeffect HereticBlueKey
+{
+  effects KeyBlue
+  message $HGOTBLUEKEY
+  sound   ht_keyup
+  flags   LEAVEINMULTI
+
+  sprite  BKYY
+  pfxname PFX_HBLUEKEY
+}
+pickupeffect HereticYellowKey
+{
+  effects KeyYellow
+  message $HGOTYELLOWKEY
+  sound   ht_keyup
+  flags   LEAVEINMULTI
+
+  sprite  CKYY
+  pfxname PFX_HYELLOWKEY
+}
+
+pickupeffect CrystalVial
+{
+  effects CrystalVial
+  message $HITEMHEALTH
+  sound   ht_itemup
+
+  sprite  PTN1
+  pfxname PFX_HPOTION
+}
+pickupeffect SilverShield
+{
+  effects SilverShield
+  message $HITEMSHIELD1
+  sound   ht_itemup
+
+  sprite  SHLD
+  pfxname PFX_SILVERSHIELD
+}
+pickupeffect EnchantedShield
+{
+  effects EnchantedShield
+  message $HITEMSHIELD2
+  sound   ht_itemup
+
+  sprite  SHD2
+  pfxname PFX_ENCHANTEDSHIELD
+}
+
+pickupeffect BagOfHolding
+{
+  effects BackpackItem
+  message $HITEMBAGOFHOLDING
+  sound   ht_itemup
+  flags   ALWAYSPICKUP|GIVESBACKPACKAMMO
+
+  sprite  BAGH
+  pfxname PFX_BAGOFHOLDING
+}
+
+pickupeffect MapScroll
+{
+  effects SuperMap
+  message $HITEMSUPERMAP
+  sound   ht_itemup
+
+  sprite  SPMP
+  pfxname PFX_HMAP
+}
+pickupeffect HArtiInvisibility
+{
+  effects ArtiInvisibility
+  message $HITEMSHADOWSPHERE
+  sound   ht_artiup
+  //flags   
+
+  sprite INVS
+}
+pickupeffect HArtiQuartzFlask
+{
+  effects ArtiHealth
+  message $HITEMQUARTZFLASK
+  sound   ht_artiup
+  //flags   
+
+  sprite PTN2
+}
+pickupeffect HArtiFly
+{
+  effects ArtiFly
+  message $HITEMWINGSOFWRATH
+  sound   ht_artiup
+  //flags   
+
+  sprite SOAR
+}
+pickupeffect HArtiInvulnerability
+{
+  effects ArtiInvulnerability
+  message $HITEMRINGOFINVINCIBILITY
+  sound   ht_artiup
+  //flags   
+
+  sprite INVU
+}
+pickupeffect HArtiTomeOfPower
+{
+  effects ArtiTomeOfPower
+  message $HITEMTOMEOFPOWER
+  sound   ht_artiup
+  //flags   
+
+  sprite PWBK
+}
+pickupeffect HArtiEgg
+{
+  effects ArtiEgg
+  message $HITEMMORPHOVUM
+  sound   ht_artiup
+  //flags   
+
+  sprite EGGC
+}
+pickupeffect HArtiSuperHeal
+{
+  effects ArtiSuperHealth
+  message $HITEMMYSTICURN
+  sound   ht_artiup
+  //flags   
+
+  sprite SPHL
+}
+pickupeffect HArtiTorch
+{
+  effects ArtiTorch
+  message $HITEMTORCH
+  sound   ht_artiup
+  //flags   
+
+  sprite TRCH
+}
+pickupeffect HArtiFireBomb
+{
+  effects ArtiTimeBomb
+  message $HITEMTIMEBOMB
+  sound   ht_artiup
+  //flags  
+
+  sprite FBMB 
+}
+pickupeffect HArtiTeleport
+{
+  effects ArtiTeleport
+  message $HITEMTELEPORT
+  sound   ht_artiup
+  //flags   
+
+  sprite ATLP
+}
+
+pickupeffect HAmmoWandWimpy
+{
+  effects GoldWandAmmo
+  message $HAMMOGOLDWAND1
+  sound   ht_itemup
+
+  sprite  AMG1
+  pfxname PFX_GWNDWIMPY
+}
+pickupeffect HAmmoWandHefty
+{
+  effects GoldWandHefty
+  message $HAMMOGOLDWAND2
+  sound   ht_itemup
+
+  sprite  AMG2
+  pfxname PFX_GWNDHEFTY
+}
+pickupeffect HAmmoMaceWimpy
+{
+  effects MaceAmmo
+  message $HAMMOMACE1
+  sound   ht_itemup
+
+  sprite  AMM1
+  pfxname PFX_MACEWIMPY
+}
+pickupeffect HAmmoMaceHefty
+{
+  effects MaceHefty
+  message $HAMMOMACE2
+  sound   ht_itemup
+
+  sprite  AMM2
+  pfxname PFX_MACEHEFTY
+}
+pickupeffect HAmmoCBowWimpy
+{
+  effects CrossbowAmmo
+  message $HAMMOCROSSBOW1
+  sound   ht_itemup
+
+  sprite  AMC1
+  pfxname PFX_CBOWWIMPY
+}
+pickupeffect HAmmoCBowHefty
+{
+  effects CrossbowHefty
+  message $HAMMOCROSSBOW2
+  sound   ht_itemup
+
+  sprite  AMC2
+  pfxname PFX_CBOWHEFTY
+}
+pickupeffect HAmmoBlasterWimpy
+{
+  effects BlasterAmmo
+  message $HAMMOBLASTER1
+  sound   ht_itemup
+
+  sprite  AMB1
+  pfxname PFX_BLSRWIMPY
+}
+pickupeffect HAmmoBlasterHefty
+{
+  effects BlasterHefty
+  message $HAMMOBLASTER2
+  sound   ht_itemup
+
+  sprite  AMB2
+  pfxname PFX_BLSRHEFTY
+}
+pickupeffect HAmmoSkullWimpy
+{
+  effects SkullRodAmmo
+  message $HAMMOSKULLROD1
+  sound   ht_itemup
+
+  sprite  AMS1
+  pfxname PFX_PHRDWIMPY
+}
+pickupeffect HAmmoSkullHefty
+{
+  effects SkullRodHefty
+  message $HAMMOSKULLROD2
+  sound   ht_itemup
+
+  sprite  AMS2
+  pfxname PFX_PHRDHEFTY
+}
+pickupeffect HAmmoPhoenixWimpy
+{
+  effects PhoenixRodAmmo
+  message $HAMMOPHOENIXROD1
+  sound   ht_itemup
+
+  sprite  AMP1
+  pfxname PFX_SKRDWIMPY
+}
+pickupeffect HAmmoPhoenixHefty
+{
+  effects PhoenixRodHefty
+  message $HAMMOPHOENIXROD2
+  sound   ht_itemup
+
+  sprite  AMP2
+  pfxname PFX_SKRDHEFTY
+}
+
+// Weapons
+
+pickupeffect HWeaponCrossbow
+{
+  effects GiverCrossbow
+  message $HWEAPONCROSSBOW
+  sound   ht_wpnup
+
+  sprite WBOW
+}
+
+pickupeffect HWeaponBlaster
+{
+  effects GiverBlaster
+  message $HWEAPONBLASTER
+  sound   ht_wpnup
+
+  sprite WBLS
+}
+
+pickupeffect HWeaponSkullRod
+{
+  effects GiverSkullRod
+  message $HWEAPONSKULLROD
+  sound   ht_wpnup
+
+  sprite WSKL
+}
+
+pickupeffect HWeaponPhoenixRod
+{
+  effects GiverPhoenixRod
+  message $HWEAPONPHOENIX
+  sound   ht_wpnup
+
+  sprite WPHX
+}
+
+pickupeffect HWeaponFireMace
+{
+  effects GiverMace
+  message $HWEAPONMACE
+  sound   ht_wpnup
+
+  sprite WMCE
+}
+
+pickupeffect HWeaponGauntlets
+{
+  effects GiverGauntlets
+  message $HWEAPONGAUNTLETS
+  sound   ht_wpnup
+
+  sprite WGNT
+}
+

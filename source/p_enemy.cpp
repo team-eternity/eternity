@@ -48,7 +48,6 @@
 #include "ev_specials.h"
 #include "g_game.h"
 #include "m_bbox.h"
-#include "m_random.h"
 #include "metaapi.h"
 #include "p_anim.h"      // haleyjd
 #include "p_enemy.h"
@@ -203,6 +202,8 @@ bool P_CheckMeleeRange(Mobj *actor)
       if(pl->z > actor->z + actor->height || // pl is too far above
          actor->z > pl->z + pl->height)      // pl is too far below
          return false;
+      // TODO: add support for Strife's z-clipping which doesn't limit vertical
+      // range if target is below attacker!
    }
 
    // ioanch 20151225: make it linked-portal aware
@@ -215,10 +216,12 @@ bool P_CheckMeleeRange(Mobj *actor)
    ty = pl->y;
 #endif
 
+   fixed_t range = GameModeInfo->monsterMeleeRange == meleecalc_raven ?
+   MELEERANGE : MELEERANGE - 20 * FRACUNIT + pl->info->radius;
+
    return  // killough 7/18/98: friendly monsters don't attack other friends
       pl && !(actor->flags & pl->flags & MF_FRIEND) &&
-      (P_AproxDistance(tx - actor->x, ty - actor->y) <
-       MELEERANGE - 20*FRACUNIT + pl->info->radius) &&
+      (P_AproxDistance(tx - actor->x, ty - actor->y) < range) &&
       P_CheckSight(actor, actor->target);
 }
 
@@ -251,7 +254,7 @@ bool P_HitFriend(Mobj *actor)
       angle = P_PointToAngle(actor->x, actor->y, tx, ty);
       dist  = P_AproxDistance(actor->x - tx, actor->y - ty);
 
-      P_AimLineAttack(actor, angle, dist, 0);
+      P_AimLineAttack(actor, angle, dist, false);
 
       if(clip.linetarget 
          && clip.linetarget != actor->target 
@@ -534,7 +537,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
          // [RH] Check to make sure there's nothing in the way of the float
          if(P_Use3DClipping())
          {
-            if(P_TestMobjZ(actor))
+            if(P_TestMobjZ(actor, clip))
             {
                actor->flags |= MF_INFLOAT;
                return true;
@@ -783,7 +786,7 @@ static void P_DoNewChaseDir(Mobj *actor, fixed_t deltax, fixed_t deltay)
 
 static fixed_t dropoff_deltax, dropoff_deltay, floorz;
 
-static bool PIT_AvoidDropoff(line_t *line, polyobj_s *po)
+static bool PIT_AvoidDropoff(line_t *line, polyobj_s *po, void *context)
 {
    if(line->backsector                          && // Ignore one-sided linedefs
       clip.bbox[BOXRIGHT]  > line->bbox[BOXLEFT]   &&
@@ -918,7 +921,7 @@ void P_NewChaseDir(Mobj *actor)
                   !(actor->flags2 & MF2_NOSTRAFE) &&
                   ((target->info->missilestate == NullStateNum && dist < MELEERANGE*2) ||
                    (target->player && dist < MELEERANGE*3 &&
-                    P_GetReadyWeapon(target->player)->flags & WPF_FLEEMELEE)))
+                    target->player->readyweapon->flags & WPF_FLEEMELEE)))
                {
                   // Back away from melee attacker
                   actor->strafecount = P_Random(pr_enemystrafe) & 15;
@@ -1005,7 +1008,7 @@ static int current_allaround;
 //
 // Finds monster targets for other monsters
 //
-static bool PIT_FindTarget(Mobj *mo)
+static bool PIT_FindTarget(Mobj *mo, void *context)
 {
    Mobj *actor = current_actor;
 
@@ -1283,7 +1286,7 @@ static bool P_LookForMonsters(Mobj *actor, int allaround)
             }
             else if(th->isInstanceOf(RTTI(Mobj)))
             {
-               if(!PIT_FindTarget(static_cast<Mobj *>(th))) // If target sighted
+               if(!PIT_FindTarget(static_cast<Mobj *>(th), nullptr)) // If target sighted
                   return true;
             }
          }
@@ -1342,7 +1345,7 @@ bool P_HelpFriend(Mobj *actor)
          if(mo->flags & MF_JUSTHIT &&
             mo->target && 
             mo->target != actor->target &&
-            !PIT_FindTarget(mo->target))
+            !PIT_FindTarget(mo->target, nullptr))
          {
             // Ignore any attacking monsters, while searching for 
             // friend
@@ -1664,7 +1667,7 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
       
       fixed_t z = (mobjinfo[type]->flags & MF_SPAWNCEILING) ? ONCEILINGZ : ONFLOORZ;
       
-      if(Check_Sides(plyr->mo, x, y))
+      if(Check_Sides(plyr->mo, x, y, type))
          return;
       
       newmobj = P_SpawnMobj(x, y, z, type);
@@ -1900,7 +1903,7 @@ CONSOLE_COMMAND(mdk, cf_notnet|cf_level)
    fixed_t slope;
    int damage = 10000;
 
-   slope = P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, 0);
+   slope = P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, false);
 
    if(clip.linetarget
       && !(clip.linetarget->flags2 & MF2_INVULNERABLE) // use 10k damage to
@@ -1920,7 +1923,7 @@ CONSOLE_COMMAND(mdkbomb, cf_notnet|cf_level)
    {
       angle_t an = (ANG360/60)*i;
       
-      slope = P_AimLineAttack(plyr->mo, an, MISSILERANGE,0);
+      slope = P_AimLineAttack(plyr->mo, an, MISSILERANGE,false);
 
       if(clip.linetarget)
          damage = clip.linetarget->health;
@@ -1933,7 +1936,7 @@ CONSOLE_COMMAND(banish, cf_notnet|cf_level)
 {
    player_t *plyr = &players[consoleplayer];
 
-   P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, 0);
+   P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, false);
 
    if(clip.linetarget)
       clip.linetarget->remove();

@@ -1012,7 +1012,7 @@ ev_action_t *EV_HexenActionForSpecial(int special)
 //
 // TODO
 //
-ev_action_t *EV_StrifeActionForSpecial(int special)
+static ev_action_t *EV_StrifeActionForSpecial(int special)
 {
    return NULL;
 }
@@ -1024,7 +1024,7 @@ ev_action_t *EV_StrifeActionForSpecial(int special)
 // regardless of the current gamemode or map format. Returns NULL if
 // the special is not bound to an action.
 //
-ev_binding_t *EV_PSXBindingForSpecial(int special)
+static ev_binding_t *EV_PSXBindingForSpecial(int special)
 {
    // small set, so simple linear search.
    for(size_t i = 0; i < PSXBindingsLen; i++)
@@ -1042,7 +1042,7 @@ ev_binding_t *EV_PSXBindingForSpecial(int special)
 //
 // Likewise as above but returning the action pointer if the binding exists.
 //
-ev_action_t *EV_PSXActionForSpecial(int special)
+static ev_action_t *EV_PSXActionForSpecial(int special)
 {
    ev_binding_t *bind = EV_PSXBindingForSpecial(special);
 
@@ -1056,7 +1056,7 @@ ev_action_t *EV_PSXActionForSpecial(int special)
 // regardless of the current gamemode or map format. Returns NULL if
 // the special is not bound to an action.
 //
-ev_binding_t *EV_UDMFEternityBindingForSpecial(int special)
+static ev_binding_t *EV_UDMFEternityBindingForSpecial(int special)
 {
    ev_binding_t *bind;
 
@@ -1076,7 +1076,7 @@ ev_binding_t *EV_UDMFEternityBindingForSpecial(int special)
 // Returns a special binding from the UDMFEternity gamemode's bindings array
 // by name.
 //
-ev_binding_t *EV_UDMFEternityBindingForName(const char *name)
+static ev_binding_t *EV_UDMFEternityBindingForName(const char *name)
 {
    ev_binding_t *bind;
 
@@ -1097,7 +1097,7 @@ ev_binding_t *EV_UDMFEternityBindingForName(const char *name)
 // regardless of the current gamemode or map format. Returns NULL if
 // the special is not bound to an action.
 //
-ev_action_t *EV_UDMFEternityActionForSpecial(int special)
+static ev_action_t *EV_UDMFEternityActionForSpecial(int special)
 {
    ev_binding_t *bind = EV_UDMFEternityBindingForSpecial(special);
 
@@ -1111,7 +1111,7 @@ ev_action_t *EV_UDMFEternityActionForSpecial(int special)
 // regardless of the current gamemode or map format. Returns NULL if
 // the special is not bound to an action.
 //
-ev_binding_t *EV_ACSBindingForSpecial(int special)
+static ev_binding_t *EV_ACSBindingForSpecial(int special)
 {
    ev_binding_t *bind;
 
@@ -1295,7 +1295,7 @@ int EV_ActionForACSAction(int acsActionNum)
 // Lockdef ID Lookups
 //
 
-int EV_DOOMLockDefIDForSpecial(int special)
+static int EV_DOOMLockDefIDForSpecial(int special)
 {
    for(size_t i = 0; i < DOOMLockDefsLen; i++)
    {
@@ -1306,7 +1306,7 @@ int EV_DOOMLockDefIDForSpecial(int special)
    return 0; // nothing was found
 }
 
-int EV_HereticLockDefIDForSpecial(int special)
+static int EV_HereticLockDefIDForSpecial(int special)
 {
    for(size_t i = 0; i < HereticLockDefsLen; i++)
    {
@@ -1424,11 +1424,7 @@ static bool EV_checkSpac(ev_action_t *action, ev_instance_t *instance)
 
       // check player / monster / missile / push enable flags
       if(thing->player)                    // treat as player?
-      {
          flags |= EX_ML_PLAYER;
-         if(instance->spac == SPAC_IMPACT)
-            flags |= EX_ML_MISSILE;
-      }
       if(thing->flags3 & MF3_SPACMISSILE)  // treat as missile?
          flags |= EX_ML_MISSILE;
       if(thing->flags3 & MF3_SPACMONSTER)  // treat as monster?
@@ -1442,9 +1438,6 @@ static bool EV_checkSpac(ev_action_t *action, ev_instance_t *instance)
             return false;
 
          flags |= EX_ML_MONSTER;
-
-         if(instance->spac == SPAC_IMPACT)
-            flags |= EX_ML_MISSILE;
       }
       if(thing->flags4 & MF4_SPACPUSHWALL) // treat as a wall pusher?
       {

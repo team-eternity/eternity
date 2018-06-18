@@ -34,7 +34,6 @@
 
 #include "d_diskfile.h"
 #include "d_files.h"
-#include "d_gi.h"
 #include "d_io.h"
 #include "d_findiwads.h"
 #include "d_iwad.h"
@@ -148,7 +147,7 @@ static void D_parseDoomWadPath()
 // will be returned which must be freed by the calling code, if the file is
 // found. Otherwise NULL is returned.
 //
-bool D_FindInDoomWadPath(qstring &out, const char *filename, const char *extension)
+static bool D_FindInDoomWadPath(qstring &out, const char *filename, const char *extension)
 {
    qstring qstr;
    bool success = false;

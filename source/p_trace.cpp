@@ -30,6 +30,8 @@
 #include "d_gi.h"
 #include "doomstat.h"
 #include "e_exdata.h"
+#include "e_puff.h"
+#include "metaapi.h"
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
@@ -53,7 +55,7 @@ linetracer_t trace;
 // Aiming
 //
 
-static bool PTR_AimTraverse(intercept_t *in)
+static bool PTR_AimTraverse(intercept_t *in, void *context)
 {
    fixed_t slope, dist;
 
@@ -107,8 +109,12 @@ static bool PTR_AimTraverse(intercept_t *in)
 
       // killough 7/19/98, 8/2/98:
       // friends don't aim at friends (except players), at least not first
-      if(th->flags & trace.thing->flags & trace.aimflagsmask && !th->player)
+      // ioanch: also avoid aiming for LOWAIMPRIO things
+      if(trace.aimflagsmask && ((th->flags & trace.thing->flags & MF_FRIEND &&
+                                 !th->player) || th->flags4 & MF4_LOWAIMPRIO))
+      {
          return true;
+      }
 
       // check angles to see if the thing can be aimed at
       dist = FixedMul(trace.attackrange, in->frac);
@@ -142,7 +148,7 @@ static bool PTR_AimTraverse(intercept_t *in)
 // killough 8/2/98: add mask parameter, which, if set to MF_FRIEND,
 // makes autoaiming skip past friends.
 //
-fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, int mask)
+fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, bool mask)
 {
    // ioanch 20151231: use new portal code
    if(full_demo_version >= make_full_version(340, 47) &&
@@ -208,63 +214,96 @@ fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, int mask)
 // Shooting
 //
 
-//
-// P_shootThing
-//
-// haleyjd: shared code for shooting an Mobj
-//
-static bool P_shootThing(intercept_t *in)
+// trace.thing vs context.params.thing
+// trace.attackrange vs context.params.attackrange
+// trace.z vs context.state.z
+// trace.aimslope vs context.params.aimslope
+// trace.attackrange vs context.params.attackrange + context.state.origindist
+// trace.dl vs trace
+// puffidx vs context.params.puffidx
+// trace.la_damage vs context.params.damage
+
+bool P_ShootThing(const intercept_t *in,
+                  Mobj *shooter,
+                  fixed_t attackrange_local,
+                  fixed_t sourcez,
+                  fixed_t aimslope,
+                  fixed_t attackrange_total,
+                  const divline_t &dl,
+                  size_t puffidx,
+                  int damage)
 {
    Mobj *th = in->d.thing;
 
-   if(th == trace.thing)
+   if(th == shooter)
       return true; // can't shoot self
 
    if(!(th->flags & MF_SHOOTABLE))
       return true; // corpse or something
 
    // haleyjd: don't let players use melee attacks on ghosts
-   if((th->flags3 & MF3_GHOST) && 
-      trace.thing->player &&
-      P_GetReadyWeapon(trace.thing->player)->flags & WPF_NOHITGHOSTS)
+   if((th->flags3 & MF3_GHOST) && shooter->player &&
+      shooter->player->readyweapon->flags & WPF_NOHITGHOSTS)
+   {
       return true;
+   }
 
    // check angles to see if the thing can be aimed at
-   fixed_t dist             = FixedMul(trace.attackrange, in->frac);
-   fixed_t thingtopslope    = FixedDiv(th->z + th->height - trace.z, dist);
-   fixed_t thingbottomslope = FixedDiv(th->z - trace.z, dist);
+   fixed_t dist             = FixedMul(attackrange_local, in->frac);
+   fixed_t thingtopslope    = FixedDiv(th->z + th->height - sourcez, dist);
+   fixed_t thingbottomslope = FixedDiv(th->z - sourcez, dist);
 
-   if(thingtopslope < trace.aimslope)
+   if(thingtopslope < aimslope)
       return true; // shot over the thing
 
-   if(thingbottomslope > trace.aimslope)
+   if(thingbottomslope > aimslope)
       return true;  // shot under the thing
 
    // hit thing
    // position a bit closer
-   fixed_t frac = in->frac - FixedDiv(10*FRACUNIT, trace.attackrange);
-   fixed_t x = trace.dl.x + FixedMul(trace.dl.dx, frac);
-   fixed_t y = trace.dl.y + FixedMul(trace.dl.dy, frac);
-   fixed_t z = trace.z    + FixedMul(trace.aimslope, FixedMul(frac, trace.attackrange));
+   fixed_t frac = in->frac - FixedDiv(10*FRACUNIT, attackrange_total);
+   fixed_t x = dl.x + FixedMul(dl.dx, frac);
+   fixed_t y = dl.y + FixedMul(dl.dy, frac);
+   fixed_t z = sourcez + FixedMul(aimslope, FixedMul(frac, attackrange_local));
 
    // Spawn bullet puffs or blood spots, depending on target type
    // haleyjd: and status flags!
+   const MetaTable *pufftype = E_PuffForIndex(puffidx);
+
+   Mobj *puffmobj = nullptr;
+   angle_t puffangle = P_PointToAngle(0, 0, dl.dx, dl.dy) - ANG180;
    if(th->flags & MF_NOBLOOD ||
       th->flags2 & (MF2_INVULNERABLE | MF2_DORMANT))
    {
-      P_SpawnPuff(x, y, z, 
-                  P_PointToAngle(0, 0, trace.dl.dx, trace.dl.dy) - ANG180,
-                  2, true);
+      puffmobj = P_SpawnPuff(x, y, z, puffangle, 2, true, pufftype, th);
    }
    else
    {
-      BloodSpawner(th, x, y, z, trace.la_damage, trace.dl, trace.thing).spawn(BLOOD_SHOT);
+      // Need to have a separate bool for checking, if puff is only particles,
+      // but no mobj.
+      bool showpuff = false;
+      if(pufftype && pufftype->getInt(keyPuffAlwaysPuff, 0))
+      {
+         puffmobj = P_SpawnPuff(x, y, z, puffangle, 2, true, pufftype, th);
+         showpuff = true;
+      }
+
+      bool bloodless = pufftype && ((puffmobj &&
+      puffmobj->flags4 & MF4_BLOODLESSIMPACT &&
+      pufftype->getInt(keyPuffLocalThrust, 0)) ||
+                                    pufftype->getInt(keyPuffBloodless, 0));
+
+      // If we have puff, only spawn blood 75% of the time.
+      // avoid calling P_Random if bloodchance is 100%
+      if(!bloodless && (!showpuff || P_Random(pr_puffblood) < 192))
+         BloodSpawner(th, x, y, z, damage, dl, shooter).spawn(BLOOD_SHOT);
    }
 
-   if(trace.la_damage)
+   if(damage)
    {
-      P_DamageMobj(th, trace.thing, trace.thing, trace.la_damage, 
-                   trace.thing->info->mod);
+      P_DamageMobj(th, pufftype && puffmobj &&
+                   pufftype->getInt(keyPuffLocalThrust, 0) ? puffmobj : shooter,
+                   shooter, damage, shooter->info->mod);
    }
 
    // don't go any further
@@ -272,13 +311,32 @@ static bool P_shootThing(intercept_t *in)
 }
 
 //
+// P_shootThing
+//
+// haleyjd: shared code for shooting an Mobj
+//
+inline static bool P_shootThing(intercept_t *in, size_t puffidx)
+{
+   return P_ShootThing(in,
+                       trace.thing,
+                       trace.attackrange,
+                       trace.z,
+                       trace.aimslope,
+                       trace.attackrange,
+                       trace.dl,
+                       puffidx,
+                       trace.la_damage);
+}
+
+//
 // PTR_ShootTraverseVanilla
 //
 // Compatibility codepath for shot traversal.
 //
-static bool PTR_ShootTraverseVanilla(intercept_t *in)
+static bool PTR_ShootTraverseVanilla(intercept_t *in, void *context)
 {
    fixed_t x, y, z, frac;
+   auto puffidx = *static_cast<size_t *>(context);
  
    if(in->isaline)
    {
@@ -330,13 +388,14 @@ static bool PTR_ShootTraverseVanilla(intercept_t *in)
       }
 
       // Spawn bullet puffs.
-      P_SpawnPuff(x, y, z, P_PointToAngle(0, 0, li->dx, li->dy) - ANG90, 2, true);
+      P_SpawnPuff(x, y, z, P_PointToAngle(0, 0, li->dx, li->dy) - ANG90, 2, true,
+                  E_PuffForIndex(puffidx));
 
       // don't go any further
       return false;
    }
    else
-      return P_shootThing(in);
+      return P_shootThing(in, puffidx);
 }
 
 //
@@ -417,8 +476,9 @@ static bool P_ShotCheck2SLine(intercept_t *in, line_t *li, int lineside)
 // floors and ceilings rather than along the line which they actually
 // intersected far below or above the ceiling.
 //
-static bool PTR_ShootTraverse(intercept_t *in)
+static bool PTR_ShootTraverse(intercept_t *in, void *context)
 {
+   auto puffidx = *static_cast<size_t *>(context);
    if(in->isaline)
    {
       line_t *li = in->d.line;
@@ -550,15 +610,14 @@ static bool PTR_ShootTraverse(intercept_t *in)
          return false;
 
       // Spawn bullet puffs.
-      P_SpawnPuff(x, y, z, 
-                  P_PointToAngle(0, 0, li->dx, li->dy) - ANG90,
-                  updown, true);
+      P_SpawnPuff(x, y, z, P_PointToAngle(0, 0, li->dx, li->dy) - ANG90,
+                  updown, true, E_PuffForIndex(puffidx));
       
       // don't go any further     
       return false;
    }
    else
-      return P_shootThing(in);
+      return P_shootThing(in, puffidx);
 }
 
 //
@@ -567,15 +626,19 @@ static bool PTR_ShootTraverse(intercept_t *in)
 // If damage == 0, it is just a test trace that will leave linetarget set.
 //
 void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance,
-                  fixed_t slope, int damage, mobjinfo_t *puff)
+                  fixed_t slope, int damage, const char *pufftype)
 {
+   size_t puffidx = estrempty(pufftype) ?
+   MetaTable::IndexForKey(GameModeInfo->puffType) :
+   MetaTable::IndexForKey(pufftype);
+
    // ioanch 20151231: use new portal code
    if(full_demo_version >= make_full_version(340, 47) &&
       useportalgroups)
    {
       trace.attackrange = distance; // this needs to be set because P_SpawnPuff
                                     // depends on it
-      CAM_LineAttack(t1, angle, distance, slope, damage);
+      CAM_LineAttack(t1, angle, distance, slope, damage, puffidx);
       return;
    }
 
@@ -591,14 +654,14 @@ void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance,
    trace.z = t1->z - t1->floorclip + (t1->height>>1) + 8*FRACUNIT;
    trace.attackrange = distance;
    trace.aimslope = slope;
-   trace.puff = puff;
 
    if(demo_version < 329)
       trav = PTR_ShootTraverseVanilla;
    else
       trav = PTR_ShootTraverse;
 
-   P_PathTraverse(t1->x, t1->y, x2, y2, PT_ADDLINES|PT_ADDTHINGS, trav);
+   P_PathTraverse(t1->x, t1->y, x2, y2, PT_ADDLINES|PT_ADDTHINGS, trav,
+                  &puffidx);
 }
 
 //=============================================================================
@@ -606,7 +669,7 @@ void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance,
 // Use Lines
 //
 
-static bool PTR_UseTraverse(intercept_t *in)
+static bool PTR_UseTraverse(intercept_t *in, void *context)
 {
    if(in->d.line->special)
    {
@@ -648,7 +711,7 @@ static bool PTR_UseTraverse(intercept_t *in)
 //
 // by Lee Killough
 //
-static bool PTR_NoWayTraverse(intercept_t *in)
+static bool PTR_NoWayTraverse(intercept_t *in, void *context)
 {
    line_t *ld = in->d.line; // This linedef
 
@@ -740,7 +803,7 @@ static void check_intercept()
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-bool PIT_AddLineIntercepts(line_t *ld, polyobj_s *po)
+static bool PIT_AddLineIntercepts(line_t *ld, polyobj_s *po, void *context)
 {
    int       s1;
    int       s2;
@@ -785,7 +848,7 @@ bool PIT_AddLineIntercepts(line_t *ld, polyobj_s *po)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-bool PIT_AddThingIntercepts(Mobj *thing)
+static bool PIT_AddThingIntercepts(Mobj *thing, void *context)
 {
    fixed_t   x1, y1;
    fixed_t   x2, y2;
@@ -843,7 +906,7 @@ bool PIT_AddThingIntercepts(Mobj *thing)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-bool P_TraverseIntercepts(traverser_t func, fixed_t maxfrac)
+static bool P_TraverseIntercepts(traverser_t func, fixed_t maxfrac, void *context)
 {
    intercept_t *in = nullptr;
    int count = static_cast<int>(intercept_p - intercepts);
@@ -859,7 +922,7 @@ bool P_TraverseIntercepts(traverser_t func, fixed_t maxfrac)
 
       if(in) // haleyjd: for safety
       {
-         if(!func(in))
+         if(!func(in, context))
             return false;           // don't bother going farther
          in->frac = D_MAXINT;
       }
@@ -878,7 +941,7 @@ bool P_TraverseIntercepts(traverser_t func, fixed_t maxfrac)
 // killough 5/3/98: reformatted, cleaned up
 //
 bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
-                    int flags, traverser_t trav)
+                    int flags, traverser_t trav, void *context)
 {
    fixed_t xt1, yt1;
    fixed_t xt2, yt2;
@@ -992,7 +1055,7 @@ bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
    }
 
    // go through the sorted list
-   return P_TraverseIntercepts(trav, FRACUNIT);
+   return P_TraverseIntercepts(trav, FRACUNIT, context);
 }
 
 // EOF

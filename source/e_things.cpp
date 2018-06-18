@@ -38,6 +38,7 @@
 #include "e_dstate.h"
 #include "e_edf.h"
 #include "e_hash.h"
+#include "e_inventory.h"
 #include "e_lib.h"
 #include "e_metastate.h"
 #include "e_mod.h"
@@ -45,6 +46,7 @@
 #include "e_sprite.h"
 #include "e_states.h"
 #include "e_things.h"
+#include "e_weapons.h"
 #include "g_game.h"
 #include "info.h"
 #include "m_cheat.h"
@@ -208,6 +210,14 @@ int UnknownThingType;
 
 #define ITEM_TNG_BB_ACTION   "action"
 #define ITEM_TNG_BB_BEHAVIOR "behavior"
+
+// Pickup Property
+#define ITEM_TNG_PFX_PICKUPFX  "pickupeffect"
+#define ITEM_TNG_PFX_EFFECTS   "effects"
+#define ITEM_TNG_PFX_CHANGEWPN "changeweapon"
+#define ITEM_TNG_PFX_MSG       "message"
+#define ITEM_TNG_PFX_SOUND     "sound"
+#define ITEM_TNG_PFX_FLAGS     "flags"
 
 //
 // Thing groups
@@ -487,6 +497,17 @@ static cfg_opt_t bloodbeh_opts[] =
    CFG_END()
 };
 
+static cfg_opt_t tngpfx_opts[] =
+{
+   CFG_STR(ITEM_TNG_PFX_EFFECTS,   0,          CFGF_LIST),
+   CFG_STR(ITEM_TNG_PFX_CHANGEWPN, NULL,       CFGF_NONE),
+   CFG_STR(ITEM_TNG_PFX_MSG,       NULL,       CFGF_NONE),
+   CFG_STR(ITEM_TNG_PFX_SOUND,     NULL,       CFGF_NONE),
+   CFG_STR(ITEM_TNG_PFX_FLAGS,     NULL,       CFGF_NONE),
+
+   CFG_END()
+};
+
 // translation value-parsing callback
 static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
 static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
@@ -575,6 +596,7 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_BLOODIMPACT,     "",            CFGF_NONE                ), \
    CFG_STR(ITEM_TNG_BLOODRIP,        "",            CFGF_NONE                ), \
    CFG_STR(ITEM_TNG_BLOODCRUSH,      "",            CFGF_NONE                ), \
+   CFG_SEC(ITEM_TNG_PFX_PICKUPFX,    tngpfx_opts,   CFGF_NOCASE              ), \
    CFG_END()
 
 cfg_opt_t edf_thing_opts[] =
@@ -1067,7 +1089,7 @@ static void E_RemoveMetaState(mobjinfo_t *mi, const char *name)
 // Gets a state that is stored inside an mobjinfo metatable.
 // Returns null if no such object exists.
 //
-static MetaState *E_GetMetaState(mobjinfo_t *mi, const char *name)
+static MetaState *E_GetMetaState(const mobjinfo_t *mi, const char *name)
 {
    return mi->meta->getObjectKeyAndTypeEx<MetaState>(name);
 }
@@ -1120,7 +1142,7 @@ static void E_ThingFrame(const char *data, const char *fieldname,
 // uses a mod name as a suffix.
 // Don't cache the return value.
 //
-const char *E_ModFieldName(const char *base, emod_t *mod)
+const char *E_ModFieldName(const char *base, const emod_t *mod)
 {
    static qstring namebuffer;
 
@@ -1133,10 +1155,11 @@ const char *E_ModFieldName(const char *base, emod_t *mod)
 // Returns the state from the given mobjinfo for the given mod type and
 // base label, if such exists. If not, null is returned.
 //
-state_t *E_StateForMod(mobjinfo_t *mi, const char *base, emod_t *mod)
+state_t *E_StateForMod(const mobjinfo_t *mi, const char *base,
+                       const emod_t *mod)
 {
    state_t   *ret = nullptr;
-   MetaState *mstate;
+   const MetaState *mstate;
 
    if((mstate = E_GetMetaState(mi, E_ModFieldName(base, mod))))
       ret = mstate->state;
@@ -1148,7 +1171,7 @@ state_t *E_StateForMod(mobjinfo_t *mi, const char *base, emod_t *mod)
 // Convenience wrapper routine to get the state node for a given
 // mod type by number, rather than with a pointer to the damagetype object.
 //
-state_t *E_StateForModNum(mobjinfo_t *mi, const char *base, int num)
+state_t *E_StateForModNum(const mobjinfo_t *mi, const char *base, int num)
 {
    emod_t  *mod = E_DamageTypeForNum(num);
    state_t *ret = nullptr;
@@ -1704,7 +1727,7 @@ static void E_processItemRespawnAt(mobjinfo_t *mi, const char *name)
 //
 // Proceses a given blood property.
 //
-void E_ProcessBlood(int i, cfg_t *cfg, const char *searchedprop)
+static void E_ProcessBlood(int i, cfg_t *cfg, const char *searchedprop)
 {
    const char *bloodVal = cfg_getstr(cfg, searchedprop);
 
@@ -1744,7 +1767,7 @@ static const char * gamemodeinfo_t::* defaultForBloodAction[NUMBLOODACTIONS] =
 // Returns -1 if there is not a valid blood type for this action. This may, in the
 // case of an @none indicator, mean that no blood is meant to be spawned.
 //
-int E_BloodTypeForThing(Mobj *mo, bloodaction_e action)
+int E_BloodTypeForThing(const Mobj *mo, bloodaction_e action)
 {
    const char *actionKey   = keyForBloodAction[action];
    const char *defaultType = GameModeInfo->*(defaultForBloodAction[action]);
@@ -1892,6 +1915,71 @@ bloodtype_e E_GetBloodBehaviorForAction(mobjinfo_t *info, bloodaction_e action)
 {
    MetaBloodBehavior *mbb = E_findBloodBehavior(info, action);   
    return mbb ? mbb->behavior : GameModeInfo->defBloodBehaviors[action];
+}
+
+static inline void E_processThingPickupEffect(mobjinfo_t &mi, cfg_t *thingsec)
+{
+   const char *str;
+   cfg_t *pfx_cfg = cfg_getsec(thingsec, ITEM_TNG_PFX_PICKUPFX);
+
+   if(mi.pickupfx == nullptr)
+   {
+      mi.pickupfx = estructalloc(e_pickupfx_t, 1);
+      // TODO: Is setting name reuqired? Maybe this could be eliminated.
+      qstring qname("_");
+      qname += mi.name;
+      mi.pickupfx->name = qname.duplicate();
+   }
+   // EDF_FEATURES_TODO: else efree? i.e. remove all the
+   // internal properties of the CFG_SEC that were set beforehand
+
+   e_pickupfx_t &pfx = *mi.pickupfx;
+
+   if((str = cfg_getstr(pfx_cfg, ITEM_TNG_PFX_EFFECTS)))
+   {
+      if(pfx.numEffects)
+         efree(pfx.effects);
+
+      if((pfx.numEffects = cfg_size(pfx_cfg, ITEM_TNG_PFX_EFFECTS)))
+      {
+         pfx.effects = ecalloc(itemeffect_t **, 1, sizeof(itemeffect_t **));
+         for(unsigned int i = 0; i < pfx.numEffects; i++)
+         {
+            str = cfg_getnstr(pfx_cfg, ITEM_TNG_PFX_EFFECTS, i);
+            if(!(pfx.effects[i] = E_ItemEffectForName(str)))
+            {
+               E_EDFLoggedWarning(2, "Warning: invalid pickup effect: '%s'\n", str);
+               return;
+            }
+         }
+      }
+   }
+   
+   if((str = cfg_getstr(pfx_cfg, ITEM_TNG_PFX_CHANGEWPN)))
+   {
+      if(estrnonempty(str) && !(pfx.changeweapon = E_WeaponForName(str)))
+      {
+         E_EDFLoggedWarning(2, "Warning: invalid changeweapon '%s' for pickup effect in "
+                               "thingtype '%s'\n", str, mi.name);
+      }
+   }
+
+   if((str = cfg_getstr(pfx_cfg, ITEM_TNG_PFX_MSG)))
+   {
+      if(pfx.message == nullptr)
+         efree(pfx.message);
+      pfx.message = estrdup(str);
+   }
+
+   if((str = cfg_getstr(pfx_cfg, ITEM_TNG_PFX_SOUND)))
+   {
+      if(pfx.sound == nullptr)
+         efree(pfx.sound);
+      pfx.sound = estrdup(str);
+   }
+
+   if((str = cfg_getstr(pfx_cfg, ITEM_TNG_PFX_FLAGS)))
+      pfx.flags = E_PickupFlagsForStr(str);
 }
 
 //
@@ -2116,7 +2204,7 @@ struct thingtitleprops_t
 // Retrieve all the values in the thing's title properties, if such
 // are defined.
 //
-void E_getThingTitleProps(cfg_t *thingsec, thingtitleprops_t &props, bool def)
+static void E_getThingTitleProps(cfg_t *thingsec, thingtitleprops_t &props, bool def)
 {
    cfg_t *titleprops;
 
@@ -3074,6 +3162,42 @@ bool E_ThingPairValid(mobjtype_t t1, mobjtype_t t2, unsigned flags)
 }
 
 //
+// Process a single thingtype's or thingdelta's pickupeffect
+// this cannot be done during first pass thingtype processing.
+//
+static inline void E_processThingPickup(cfg_t *sec, const char *thingname)
+{
+   int thingnum = E_ThingNumForName(thingname);
+   if(cfg_size(sec, ITEM_TNG_PFX_PICKUPFX) > 0)
+      E_processThingPickupEffect(*mobjinfo[thingnum], sec);
+
+   // TODO: Delete this if not needed.
+   /*if(cfg_size(sec, ITEM_TNG_PICKUPEFFECT))
+   {
+      const char *tempstr = cfg_getstr(sec, ITEM_TNG_PICKUPEFFECT);
+      if(!(mobjinfo[thingnum]->pickupfx = E_PickupFXForName(tempstr)))
+      {
+         E_EDFLoggedWarning(2, "Invalid pickupeffect '%s' in %s '%s'\n",
+                           tempstr, def ? "thingtype" : "thingdelta", thingname);
+      }
+   }*/
+}
+
+//
+// Process pickupeffects within thingtypes.
+//
+void E_ProcessThingPickups(cfg_t *cfg)
+{
+   unsigned int i, numthings = cfg_size(cfg, EDF_SEC_THING);;
+   for(i = 0; i < numthings; i++)
+   {
+      cfg_t *thingsec = cfg_getnsec(cfg, EDF_SEC_THING, i);
+      const char *name = cfg_title(thingsec);
+      E_processThingPickup(thingsec, name);
+   }
+}
+
+//
 // Does processing for thingdelta sections, which allow cascading
 // editing of existing things. The thingdelta shares most of its
 // fields and processing code with the thingtype section.
@@ -3102,6 +3226,7 @@ void E_ProcessThingDeltas(cfg_t *cfg)
       mobjType = E_GetThingNumForName(tempstr);
 
       E_ProcessThing(mobjType, deltasec, cfg, false);
+      E_processThingPickup(deltasec, tempstr);
 
       E_EDFLogPrintf("\t\tApplied thingdelta #%d to %s(#%d)\n",
                      i, mobjinfo[mobjType]->name, mobjType);
