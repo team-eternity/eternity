@@ -1102,7 +1102,7 @@ static byte *G_ReadDemoHeader(byte *demo_p)
          Z_ChangeTag(demobuffer, PU_CACHE);
          D_AdvanceDemo();
       }
-      return NULL;
+      return nullptr;
    }
    
    int dmtype = 0;
