@@ -60,6 +60,7 @@
 #include "g_game.h"
 #include "in_lude.h"
 #include "m_argv.h"
+#include "m_buffer.h"
 #include "m_collection.h"
 #include "m_misc.h"
 #include "m_random.h"
@@ -100,9 +101,10 @@ static char     eedemosig[] = "ETERN";
 //static size_t   savegamesize = SAVEGAMESIZE; // killough
 static char    *demoname;
 static bool     netdemo;
-static byte    *demobuffer;   // made some static -- killough
-static size_t   maxdemosize;
-static byte    *demo_p;
+static byte    *demobuffer;      // only for playback
+static OutBuffer demofp;         // only for recording
+static byte    *demo_p;          // used for both playing and recording
+static byte    *demo_continue_p; // only for rerecording
 static size_t   demolength;
 static int16_t  consistency[MAXPLAYERS][BACKUPTICS];
 static int      g_destmap;
@@ -136,6 +138,7 @@ int             gametic;
 int             levelstarttic; // gametic at level start
 int             basetic;       // killough 9/29/98: for demo sync
 int             totalkills, totalitems, totalsecret;    // for intermission
+bool            democontinue;
 bool            demorecording;
 bool            demoplayback;
 bool            singledemo;           // quit after playing a demo from cmdline
@@ -1054,49 +1057,13 @@ static void G_SetCompatibility(void)
 // avenue should be pursued but it might be a good idea. The current
 // system being used to send them at startup is garbage.
 //
-void G_DoPlayDemo(void)
+
+static byte *G_ReadDemoHeader(byte *demo_p)
 {
    skill_t skill;
    int i, episode, map;
    int demover;
-   char basename[9];
    byte *option_p = NULL;      // killough 11/98
-   int lumpnum;
-
-   memset(basename, 0, sizeof(basename));
-  
-   if(gameaction != ga_loadgame)      // killough 12/98: support -loadgame
-      basetic = gametic;  // killough 9/29/98
-      
-   M_ExtractFileBase(defdemoname, basename);         // killough
-   
-   // haleyjd 11/09/09: check ns_demos namespace first, then ns_global
-   if((lumpnum = wGlobalDir.checkNumForNameNSG(basename, lumpinfo_t::ns_demos)) < 0)
-   {
-      if(singledemo)
-         I_Error("G_DoPlayDemo: no such demo %s\n", basename);
-      else
-      {
-         C_Printf(FC_ERROR "G_DoPlayDemo: no such demo %s\n", basename);
-         gameaction = ga_nothing;
-         D_AdvanceDemo();
-      }
-      return;
-   }
-
-   // Check for empty demo lumps
-   if(!(demolength = wGlobalDir.lumpLength(lumpnum)))
-   {
-      if(singledemo)
-         I_Error("G_DoPlayDemo: empty demo %s\n", basename);
-      else
-      {
-         gameaction = ga_nothing;
-         D_AdvanceDemo();
-      }
-      return;  // protect against zero-length lumps
-   }
-   demobuffer = demo_p = (byte *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC)); // killough
 
    // killough 2/22/98, 2/28/98: autodetect old demos and act accordingly.
    // Old demos turn on demo_compatibility => compatibility; new demos load
@@ -1127,7 +1094,7 @@ void G_DoPlayDemo(void)
         (demover == 255)))                    // Eternity
    {
       if(singledemo)
-         I_Error("G_DoPlayDemo: unsupported demo format\n");
+         I_Error("G_ReadDemoHeader: unsupported demo format\n");
       else
       {
          C_Printf(FC_ERROR "Unsupported demo format\n");
@@ -1135,7 +1102,7 @@ void G_DoPlayDemo(void)
          Z_ChangeTag(demobuffer, PU_CACHE);
          D_AdvanceDemo();
       }
-      return;
+      return NULL;
    }
    
    int dmtype = 0;
@@ -1344,12 +1311,55 @@ void G_DoPlayDemo(void)
          G_ReadOptions(option_p);
    }
 
+   return demo_p;
+}
+
+void G_DoPlayDemo(void)
+{
+   char basename[9];
+   int lumpnum;
+
+   memset(basename, 0, sizeof(basename));
+
+   if(gameaction != ga_loadgame)      // killough 12/98: support -loadgame
+      basetic = gametic;  // killough 9/29/98
+
+   M_ExtractFileBase(defdemoname, basename);         // killough
+
+   // haleyjd 11/09/09: check ns_demos namespace first, then ns_global
+   if((lumpnum = wGlobalDir.checkNumForNameNSG(basename, lumpinfo_t::ns_demos)) < 0)
+   {
+      if(singledemo)
+         I_Error("G_DoPlayDemo: no such demo %s\n", basename);
+      else
+      {
+         C_Printf(FC_ERROR "G_DoPlayDemo: no such demo %s\n", basename);
+         gameaction = ga_nothing;
+         D_AdvanceDemo();
+      }
+      return;
+   }
+
+   // Check for empty demo lumps
+   if(!(demolength = wGlobalDir.lumpLength(lumpnum)))
+   {
+      if(singledemo)
+         I_Error("G_DoPlayDemo: empty demo %s\n", basename);
+      else
+      {
+         gameaction = ga_nothing;
+         D_AdvanceDemo();
+      }
+      return;  // protect against zero-length lumps
+   }
+   demobuffer = (byte *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC)); // killough
+
+   if(!(demo_p = G_ReadDemoHeader(demobuffer)))
+      return;
+
    precache = true;
    usergame = false;
    demoplayback = true;
-   
-   for(i=0; i<MAXPLAYERS;i++)         // killough 4/24/98
-      players[i].cheats = 0;
    
    gameaction = ga_nothing;
 
@@ -1383,6 +1393,79 @@ void G_DoPlayDemo(void)
 // ticcmds.
 //
 
+static byte *G_ReadTic(ticcmd_t *cmd, byte *p)
+{
+   cmd->forwardmove = ((signed char)*p++);
+   cmd->sidemove    = ((signed char)*p++);
+
+   if(longtics_demo) // haleyjd 10/08/06: longtics support
+   {
+      cmd->angleturn  =  *p++;
+      cmd->angleturn |= (*p++) << 8;
+   }
+   else
+      cmd->angleturn = ((unsigned char)*p++)<<8;
+
+   cmd->buttons = (unsigned char)*p++;
+
+   // old Heretic demo?
+   if(demo_version <= 4 && GameModeInfo->type == Game_Heretic)
+   {
+      p++;
+      p++; // TODO/FIXME: put into cmd->fly as is mostly compatible
+   }
+
+   if(demo_version >= 335)
+      cmd->actions = *p++;
+   else
+      cmd->actions = 0;
+
+   if(demo_version >= 333)
+   {
+      cmd->look  =  *p++;
+      cmd->look |= (*p++) << 8;
+   }
+   else if(demo_version >= 329)
+   {
+      // haleyjd: 329 and 331 store updownangle, but we can't use
+      // it any longer. Demos recorded with mlook will desync,
+      // but ones without can still play with this here.
+      p++;
+      cmd->look = 0;
+   }
+   else
+      cmd->look = 0;
+
+   if(full_demo_version >= make_full_version(340, 23))
+      cmd->fly = *p++;
+   else
+      cmd->fly = 0;
+
+   if(demo_version >= 401)
+   {
+      cmd->itemID =   *p++;
+      cmd->itemID |= (*p++) << 8;
+      cmd->weaponID = *p++;
+      cmd->weaponID |= (*p++) << 8;
+      cmd->slotIndex = *p++;
+   }
+   else
+   {
+      cmd->itemID = 0;
+      cmd->weaponID = 0;
+      cmd->slotIndex = 0;
+   }
+
+   // killough 3/26/98, 10/98: Ignore savegames in demos
+   if(demoplayback && cmd->buttons & BT_SPECIAL && cmd->buttons & BTS_SAVEGAME)
+   {
+      cmd->buttons &= ~BTS_SAVEGAME;
+      doom_printf("Game Saved (Suppressed)");
+   }
+
+   return p;
+}
+
 static void G_ReadDemoTiccmd(ticcmd_t *cmd)
 {
    if(*demo_p == DEMOMARKER)
@@ -1396,74 +1479,27 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
    }
    else
    {
-      cmd->forwardmove = ((signed char)*demo_p++);
-      cmd->sidemove    = ((signed char)*demo_p++);
-      
-      if(longtics_demo) // haleyjd 10/08/06: longtics support
-      {
-         cmd->angleturn  =  *demo_p++;
-         cmd->angleturn |= (*demo_p++) << 8;
-      }
-      else
-         cmd->angleturn = ((unsigned char)*demo_p++)<<8;
-      
-      cmd->buttons = (unsigned char)*demo_p++;
+      demo_p = G_ReadTic(cmd, demo_p);
+   }
+}
 
-      // old Heretic demo?
-      if(demo_version <= 4 && GameModeInfo->type == Game_Heretic)
-      {
-         demo_p++;
-         demo_p++; // TODO/FIXME: put into cmd->fly as is mostly compatible
-      }
-      
-      if(demo_version >= 335)
-         cmd->actions = *demo_p++;
-      else
-         cmd->actions = 0;
+//
+// G_ReadDemoContinueTiccmd
+//
+// Used for reading tics when rerecording.
+//
+static void G_ReadDemoContinueTiccmd(ticcmd_t *cmd)
+{
+   if(!demo_continue_p)
+      return;
 
-      if(demo_version >= 333)
-      {
-         cmd->look  =  *demo_p++;
-         cmd->look |= (*demo_p++) << 8;
-      }
-      else if(demo_version >= 329)
-      {
-         // haleyjd: 329 and 331 store updownangle, but we can't use
-         // it any longer. Demos recorded with mlook will desync, 
-         // but ones without can still play with this here.
-         ++demo_p;
-         cmd->look = 0;
-      }
-      else
-         cmd->look = 0;
-
-      if(full_demo_version >= make_full_version(340, 23))
-         cmd->fly = *demo_p++;
-      else
-         cmd->fly = 0;
-
-      if(demo_version >= 401)
-      {
-         cmd->itemID =   *demo_p++;
-         cmd->itemID |= (*demo_p++) << 8;
-         cmd->weaponID = *demo_p++;
-         cmd->weaponID |= (*demo_p++) << 8;
-         cmd->slotIndex = *demo_p++;
-      }
-      else
-      {
-         cmd->itemID = 0;
-         cmd->weaponID = 0;
-         cmd->slotIndex = 0;
-      }
-
-      // killough 3/26/98, 10/98: Ignore savegames in demos 
-      if(demoplayback && 
-         cmd->buttons & BT_SPECIAL && cmd->buttons & BTS_SAVEGAME)
-      {
-         cmd->buttons &= ~BTS_SAVEGAME;
-         doom_printf("Game Saved (Suppressed)");
-      }
+   if(demo_continue_p < demobuffer + demolength && *demo_continue_p != DEMOMARKER &&
+      !gameactions[ka_join_demo])
+      demo_continue_p = G_ReadTic(cmd, demo_continue_p);
+   else
+   {
+      demo_continue_p = nullptr;
+      democontinue = false;
    }
 }
 
@@ -1483,57 +1519,49 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
 //
 static void G_WriteDemoTiccmd(ticcmd_t *cmd)
 {
-   unsigned int position = static_cast<unsigned int>(demo_p - demobuffer);
-   int i = 0;
-   
-   demo_p[i++] = cmd->forwardmove;
-   demo_p[i++] = cmd->sidemove;
+   byte start[32], *p = start;
+   memset(start, 0, sizeof start);
+
+   *p++ = cmd->forwardmove;
+   *p++ = cmd->sidemove;
 
    // haleyjd 10/08/06: longtics support from Choco Doom.
    // If this is a longtics demo, record in higher resolution
    if(longtics_demo)
    {
-      demo_p[i++] =  cmd->angleturn & 0xff;
-      demo_p[i++] = (cmd->angleturn >> 8) & 0xff;
+      *p++ =  cmd->angleturn & 0xff;
+      *p++ = (cmd->angleturn >> 8) & 0xff;
    }
    else
-      demo_p[i++] = (cmd->angleturn + 128) >> 8; 
+      *p++ = (cmd->angleturn + 128) >> 8;
 
-   demo_p[i++] =  cmd->buttons;
+   *p++ = cmd->buttons;
 
    if(demo_version >= 335)
-      demo_p[i++] =  cmd->actions;         //  -- joek 12/22/07
+      *p++ = cmd->actions;         //  -- joek 12/22/07
 
    if(demo_version >= 333)
    {
-      demo_p[i++] =  cmd->look & 0xff;
-      demo_p[i++] = (cmd->look >> 8) & 0xff;
+      *p++ =  cmd->look & 0xff;
+      *p++ = (cmd->look >> 8) & 0xff;
    }
 
    if(full_demo_version >= make_full_version(340, 23))
-      demo_p[i++] = cmd->fly;
+      *p++ = cmd->fly;
    
    if(demo_version >= 401)
    {
-      demo_p[i++] =  cmd->itemID & 0xff;
-      demo_p[i++] = (cmd->itemID >> 8) & 0xff;
-      demo_p[i++] = cmd->weaponID & 0xff;
-      demo_p[i++] = (cmd->weaponID >> 8) & 0xff;
-      demo_p[i] = cmd->slotIndex;
+      *p++ =  cmd->itemID & 0xff;
+      *p++ = (cmd->itemID >> 8) & 0xff;
+      *p++ =  cmd->weaponID & 0xff;
+      *p++ = (cmd->weaponID >> 8) & 0xff;
+      *p++ =  cmd->slotIndex;
    }
 
-   // NOTE: the distance is *double* that of (ticcmd_t + trailer) because on
-   // Release builds, if ticcmd_t becomes larger, just using the simple value
-   // would lock up the program when calling realloc!
-   if(position + 2 * (sizeof(ticcmd_t) + sizeof(uint32_t)) > maxdemosize)   // killough 8/23/98
-   {
-      // no more space
-      maxdemosize += 128*1024;   // add another 128K  -- killough
-      demobuffer = erealloc(byte *, demobuffer, maxdemosize);
-      demo_p = position + demobuffer;  // back on track
-      // end of main demo limit changes -- killough
-   }
-   
+   if(!demofp.write(start, p - start))
+      I_Error("G_WriteDemoTiccmd: error writing demo\n");
+
+   demo_p = start; // alias demo_p so it can be read back
    G_ReadDemoTiccmd(cmd); // make SURE it is exactly the same
 }
 
@@ -2178,6 +2206,9 @@ void G_Ticker()
             
             memcpy(cmd, &netcmds[i][buf], sizeof *cmd);
             
+            if(democontinue)
+               G_ReadDemoContinueTiccmd(cmd);
+
             if(demoplayback)
                G_ReadDemoTiccmd(cmd);
             
@@ -3174,29 +3205,52 @@ void G_InitNew(skill_t skill, const char *name)
 //
 void G_RecordDemo(const char *name)
 {
-   int i;
-   
+   efree(demoname);
+   demoname = emalloc(char *, strlen(name) + 8);
+   M_AddDefaultExtension(strcpy(demoname, name), ".lmp");  // 1/18/98 killough
+
+   if(!demofp.createFile(demoname, 0x20000, OutBuffer::NENDIAN))
+   {
+      I_Error("G_RecordDemo: cannot open %s\n", demoname);
+      return;
+   }
+
    demo_insurance = (default_demo_insurance != 0); // killough 12/98
    
    usergame = false;
 
-   if(demoname)
-      efree(demoname);
-   demoname = emalloc(char *, strlen(name) + 8);
-
-   M_AddDefaultExtension(strcpy(demoname, name), ".lmp");  // 1/18/98 killough
-   
-   i = M_CheckParm("-maxdemo");
-   
-   if(i && i<myargc-1)
-      maxdemosize = atoi(myargv[i+1]) * 1024;
-   
-   if(maxdemosize < 0x20000)  // killough
-      maxdemosize = 0x20000;
-   
-   demobuffer = emalloc(byte *, maxdemosize); // killough
-   
    demorecording = true;
+}
+
+void G_RecordDemoContinue(const char *in, const char *name)
+{
+   democontinue = true;
+   char *tmp = emalloc(char *, strlen(in) + 8);
+   M_AddDefaultExtension(strcpy(tmp, in), ".lmp");
+   InBuffer fp;
+   if(!fp.openFile(tmp, InBuffer::NENDIAN))
+   {
+      I_Error("G_RecordDemoContinue: cannot open %s\n", tmp);
+   }
+   efree(tmp);
+   fp.seek(0, SEEK_END);
+   demolength = fp.tell();
+   fp.seek(0, SEEK_SET);
+   demobuffer = demo_continue_p = emalloc(byte *, demolength);
+   if(fp.read(demo_continue_p, demolength) != demolength)
+   {
+      I_Error("G_RecordDemoContinue: error reading demo\n");
+      return;
+   }
+   fp.close();
+   if(!(demo_continue_p = G_ReadDemoHeader(demo_continue_p)))
+      return;
+
+   netgame = false;
+   singledemo = true;
+   G_RecordDemo(name);
+   G_BeginRecording();
+   usergame = true;
 }
 
 // These functions are used to read and write game-specific options in demos
@@ -3482,7 +3536,7 @@ static void G_BeginRecordingOld()
    // haleyjd 01/16/11: set again to ensure consistency
    G_SetOldDemoOptions();
 
-   demo_p = demobuffer;
+   byte start[13], *demo_p = start; // vanilla header is always 13 bytes long
 
    *demo_p++ = demo_version;    
    *demo_p++ = gameskill;
@@ -3504,6 +3558,9 @@ static void G_BeginRecordingOld()
 
    for(i = 0; i < MAXPLAYERS; i++)
       *demo_p++ = playeringame[i];
+
+   if(!demofp.write(start, 13))
+      I_Error("G_BeginRecordingOld: error writing demo header\n");
 }
 
 /*
@@ -3530,13 +3587,13 @@ void G_BeginRecording()
    int i;
 
    // haleyjd 02/21/10: -vanilla will record v1.9-format demos
-   if(M_CheckParm("-vanilla"))
+   if(M_CheckParm("-vanilla") || demo_version < 200)
    {
       G_BeginRecordingOld();
       return;
    }
    
-   demo_p = demobuffer;
+   byte start[256], *demo_p = start;
 
    longtics_demo = true;
    
@@ -3598,6 +3655,9 @@ void G_BeginRecording()
    
    for(; i < MIN_MAXPLAYERS; i++)
       *demo_p++ = 0;
+
+   if(!demofp.write(start, demo_p - start))
+      I_Error("G_BeginRecording: error writing demo header\n");
 }
 
 //
@@ -3652,27 +3712,11 @@ bool G_CheckDemoStatus()
    if(demorecording)
    {
       demorecording = false;
-      if(demo_p)
-      {
-         *demo_p++ = DEMOMARKER;
 
-         if(!M_WriteFile(demoname, demobuffer, demo_p - demobuffer))
-         {
-            // killough 11/98
-            I_Error("Error recording demo %s: %s\n", demoname,
-               errno ? strerror(errno) : "(Unknown Error)");
-         }
-      }
-      
-      efree(demobuffer);
-      demobuffer = NULL;  // killough
-      if(demo_p)
-         I_ExitWithMessage("Demo %s recorded\n", demoname);
-      else
-      {
-         I_ExitWithMessage("Demo %s not recorded: exited prematurely\n", 
-            demoname);
-      }
+      demofp.writeUint8(DEMOMARKER);
+      demofp.close();
+
+      I_ExitWithMessage("Demo %s recorded\n", demoname);
       return false;  // killough
    }
 

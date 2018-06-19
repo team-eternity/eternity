@@ -50,6 +50,7 @@ void G_LoadGame(const char *name, int slot, bool is_command); // killough 5/15/9
 void G_ForcedLoadGame();                      // killough 5/15/98: forced loadgames
 void G_SaveGame(int slot, const char *description); // Called by M_Responder.
 void G_RecordDemo(const char *name);                // Only called by startup code.
+void G_RecordDemoContinue(const char *in, const char *name);
 void G_SetOldDemoOptions();
 void G_BeginRecording();
 void G_StopDemo();
