@@ -177,6 +177,10 @@ keyaction_t keyactions[NUMKEYACTIONS] =
    { "inventory_right",    kac_game,    at_variable },
    { "inventory_use",      kac_game,    at_variable },
    { "inventory_drop",     kac_game,    at_variable },
+
+   // Demos
+
+   { "joindemo",          kac_game,    at_variable },
 };
 
 // Console Bindings

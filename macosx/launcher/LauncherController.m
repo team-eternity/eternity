@@ -639,7 +639,7 @@ iwadMightBe:
 //
 -(BOOL)doAddIwadFromURL:(NSURL *)wURL atIndex:(NSInteger)ind
 {
-   if(ind < 0 || ind > [iwadPopUp numberOfItems])
+   if(ind < 0 || ind > [iwadPopUp numberOfItems] || !wURL)
       return NO;
    
 	NSMenuItem *last;
@@ -655,8 +655,12 @@ iwadMightBe:
       [iwadPopUp insertItemWithTitle:[[NSFileManager defaultManager] displayNameAtPath:iwadPath] atIndex:ind];
       
       SET_UNDO(iwadPopUp, doRemoveIwadAtIndex:ind, @"Add/Remove Game WAD")
-      
-		last = [[[iwadPopUp menu] itemArray] objectAtIndex:ind];
+
+      NSArray<NSMenuItem *> *items = iwadPopUp.menu.itemArray;
+      if(ind < 0 || ind >= items.count)
+         last = items.lastObject;
+      else
+         last = [items objectAtIndex:ind];
 		[last setRepresentedObject:wURL];
 		[last setImage:[[NSWorkspace sharedWorkspace] iconForFile:iwadPath]];
 		
@@ -666,7 +670,9 @@ iwadMightBe:
 		// NOTE: it's a very rare case to choose between two different IWADs with the same name. In any case…
 		// FIXME: implement path difference specifier in parentheses
 		
+      if(last)
 		[iwadPopUp selectItem:last];
+
       [self updateParameters:self];
 	} 
 	// FIXME: select the existing path component

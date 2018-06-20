@@ -131,6 +131,7 @@ enum keyaction_e
    ka_inventory_right,
    ka_inventory_use,
    ka_inventory_drop,
+   ka_join_demo,
    NUMKEYACTIONS
 };
 

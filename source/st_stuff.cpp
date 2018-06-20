@@ -636,8 +636,6 @@ static const char *st_AmmoForNum[NUMAMMO] =
 static void ST_updateWidgets()
 {
    // update ready weapon ammo
-   // WEAPON_FIXME
-   w_ready.data  = plyr->readyweapon->dehnum;
    auto weapon   = plyr->readyweapon;
    auto ammoType = weapon->ammo;
 
@@ -1224,10 +1222,6 @@ static void ST_createWidgets()
                  0, 0,
                  &st_statusbaron,
                  ST_AMMOWIDTH );
-
-   // WEAPON_FIXME
-   // the last weapon type
-   w_ready.data = plyr->readyweapon->dehnum;
 
    // health percentage
    STlib_initPercent(&w_health,
