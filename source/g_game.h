@@ -85,7 +85,7 @@ int G_TotalFoundItems();
 int G_TotalFoundSecrets();
 
 // killough 1/18/98: Doom-style printf;   killough 4/25/98: add gcc attributes
-void doom_printf(const char *, ...) __attribute__((format(printf,1,2)));
+void doom_printf(E_FORMAT_STRING(const char *), ...) E_PRINTF(1, 2);
 
         // sf: player_printf
 void player_printf(const player_t *player, const char *s, ...);
