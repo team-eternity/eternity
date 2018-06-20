@@ -1823,6 +1823,11 @@ static void D_DoomInit()
    // Support -loadgame with -record and reimplement -recordfrom.
    if((slot = M_CheckParm("-recordfrom")) && (p = slot+2) < myargc)
       G_RecordDemo(myargv[p]);
+   else if((p = M_CheckParm("-recordfromto")) && p < myargc - 2)
+   {
+      autostart = true;
+      G_RecordDemoContinue(myargv[p + 1], myargv[p + 2]);
+   }
    else
    {
       // haleyjd 01/17/11: allow -recorddemo as well
