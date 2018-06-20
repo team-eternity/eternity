@@ -1927,6 +1927,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4F5F3875182D97A20027813A /* Build configuration list for PBXNativeTarget "eternity" */;
 			buildPhases = (
+				4F4D96C620DAE7A20023C3A9 /* ShellScript */,
 				4F5F3867182D97A10027813A /* Sources */,
 				4F5F3868182D97A10027813A /* Frameworks */,
 			);
@@ -1966,6 +1967,22 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		4F4D96C620DAE7A20023C3A9 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\n# Check that we have each library\nif [ ! -d SDL2.framework || ! -d SDL2_mixer.framework || ! -d SDL2_net.framework ]; then\n\n    echo \"One of the SDL frameworks is missing. Getting them...\"\n\n    if [ -d sdl-mac-releases ]; then\n        pushd sdl-mac-releases\n        echo \"Will update the latest release git\"\n        git pull\n        popd\n    else\n        echo \"Will download the SDL releases\"\n        git clone https://github.com/ioan-chera/sdl-mac-releases.git\n    fi\n\n    ln -sf sdl-mac-releases/SDL2* .\nfi\n\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		4F5F3867182D97A10027813A /* Sources */ = {
