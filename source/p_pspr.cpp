@@ -794,12 +794,14 @@ void A_WeaponReady(actionargs_t *actionargs)
 
    // check for fire
    // certain weapons do not auto fire
-   if(demo_version >= 401 && P_tryFireWeapon(player))
-      return;
+   if(demo_version >= 401)
+   {
+      if(P_tryFireWeapon(player))
+         return;
+   }
    else if(player->cmd.buttons & BT_ATTACK)
    {
-      if(!(player->attackdown & AT_PRIMARY) ||
-         !(player->readyweapon->flags & WPF_NOAUTOFIRE))
+      if(!(player->attackdown & AT_PRIMARY) || !(player->readyweapon->flags & WPF_NOAUTOFIRE))
       {
          player->attackdown = AT_PRIMARY;
          P_FireWeapon(player);
