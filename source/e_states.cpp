@@ -1093,10 +1093,8 @@ static void E_ProcessCmpState(const char *value, int i)
       while(!early_args_end)
       {
          NEXTTOKEN();
-         
-         if(DEFAULTS(curtoken))
-            E_AddArgToList(states[i]->args, "");
-         else
+
+         if(!DEFAULTS(curtoken))
             E_AddArgToList(states[i]->args, E_GetArgument(curtoken));
       }
    }
@@ -1146,9 +1144,7 @@ static void E_ProcessCmpState(const char *value, int i)
       {
          NEXTTOKEN();
 
-         if(DEFAULTS(curtoken))
-            E_AddArgToList(states[i]->args, "");
-         else
+         if(!DEFAULTS(curtoken))
             E_AddArgToList(states[i]->args, E_GetArgument(curtoken));
       }
    }
