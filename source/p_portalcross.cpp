@@ -495,8 +495,6 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
    int groupid;
    fixed_t x, y;
 
-   const linkoffset_t *link;
-
    for(int i = 0; i < 2; ++i)
    {
       sector = csector;
@@ -506,9 +504,9 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
 
       while(sector->*pflags[i] & PS_PASSABLE)
       {
-         link = P_GetLinkOffset(groupid, (sector->*portal[i])->data.link.toid);
-         x += link->x;
-         y += link->y;
+         const linkdata_t &ldata = (sector->*portal[i])->data.link;
+         x += ldata.deltax;
+         y += ldata.deltay;
          sector = R_PointInSubsector(x, y)->sector;
          groupid = sector->groupid;
          if(groupid == tgroupid)
