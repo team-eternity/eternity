@@ -379,6 +379,23 @@ inline static double R_PartitionDistance(double x, double y, const fnode_t *node
 #define DS_EPSILON 0.3125
 
 //
+// Checks if seg is on top of a partition line
+//
+static bool R_segIsOnPartition(const seg_t &seg, const subsector_t &frontss)
+{
+   if(seg.backsector)
+      return true;
+   const line_t &line = *seg.linedef;
+   int sign = line.frontsector == seg.frontsector ? 1 : -1;
+   v2float_t midp = {
+      static_cast<float>((seg.v1->fx + seg.v2->fx) / 2 - line.nx * DS_EPSILON * sign),
+      static_cast<float>((seg.v1->fy + seg.v2->fy) / 2 - line.ny * DS_EPSILON * sign)
+   };
+
+   return R_PointInSubsector(M_FloatToFixed(midp.x), M_FloatToFixed(midp.y)) != &frontss;
+}
+
+//
 // Checks the subsector for any wall segs which should cut or totally remove dseg.
 // Necessary to avoid polyobject bleeding. Returns true if entire dynaseg is gone.
 //
@@ -398,6 +415,8 @@ static bool R_cutByWallSegs(dynaseg_t &dseg, dynaseg_t *backdseg, const subsecto
    for(int i = 0; i < ss.numlines; ++i)
    {
       const seg_t &wall = segs[ss.firstline + i];
+      if(R_segIsOnPartition(wall, ss))
+         continue;   // only check 1-sided lines
       const vertex_t &v1 = *wall.v1;
       const vertex_t &v2 = *wall.v2;
       const divline_t walldl = { v1.x, v1.y, v2.x - v1.x, v2.y - v1.y };
