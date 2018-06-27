@@ -452,7 +452,8 @@ bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj)
 //
 sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
                                         int cgroupid, int tgroupid,
-                                        sector_t *csector, fixed_t midzhint)
+                                        sector_t *csector, fixed_t midzhint,
+                                        uint8_t *floorceiling)
 {
    if(cgroupid == tgroupid)
       return csector;
@@ -469,6 +470,7 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
 
    unsigned sector_t::*pflags[2];
    portal_t *sector_t::*portal[2];
+   uint8_t fcflag[2];
 
    if(midzhint < cmidz)
    {
@@ -476,6 +478,8 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
       pflags[1] = &sector_t::c_pflags;
       portal[0] = &sector_t::f_portal;
       portal[1] = &sector_t::c_portal;
+      fcflag[0] = sector_t::floor;
+      fcflag[1] = sector_t::ceiling;
    }
    else
    {
@@ -483,6 +487,8 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
       pflags[1] = &sector_t::f_pflags;
       portal[0] = &sector_t::c_portal;
       portal[1] = &sector_t::f_portal;
+      fcflag[0] = sector_t::ceiling;
+      fcflag[1] = sector_t::floor;
    }
 
    sector_t *sector;
@@ -506,7 +512,11 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
          sector = R_PointInSubsector(x, y)->sector;
          groupid = sector->groupid;
          if(groupid == tgroupid)
+         {
+            if(floorceiling)
+               *floorceiling = fcflag[i];
             return sector;
+         }
          if(groupVisit[groupid])
             break;
          groupVisit[groupid] = true;

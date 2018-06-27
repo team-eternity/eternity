@@ -1170,8 +1170,9 @@ void P_MoveGroupCluster(int outgroup, int ingroup, bool *groupvisit, fixed_t dx,
 //
 fixed_t P_CeilingPortalZ(const sector_t &sector)
 {
-   return sector.c_pflags & PF_ATTACHEDPORTAL ? sector.ceilingheight :
-   sector.c_portal->data.link.planez;
+   return !sector.c_portal || sector.c_portal->type != R_LINKED ||
+   sector.c_pflags & PF_ATTACHEDPORTAL ?
+   sector.ceilingheight : sector.c_portal->data.link.planez;
 }
 
 //
@@ -1179,8 +1180,9 @@ fixed_t P_CeilingPortalZ(const sector_t &sector)
 //
 fixed_t P_FloorPortalZ(const sector_t &sector)
 {
-   return sector.f_pflags & PF_ATTACHEDPORTAL ? sector.floorheight :
-   sector.f_portal->data.link.planez;
+   return !sector.f_portal || sector.f_portal->type != R_LINKED ||
+   sector.f_pflags & PF_ATTACHEDPORTAL ?
+   sector.floorheight : sector.f_portal->data.link.planez;
 }
 
 // EOF

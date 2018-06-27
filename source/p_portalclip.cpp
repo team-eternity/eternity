@@ -274,8 +274,15 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
       i2 = inters;
       i2.x += FixedMul(FRACUNIT >> 12, finecosine[angle >> ANGLETOFINESHIFT]);
       i2.y += FixedMul(FRACUNIT >> 12, finesine[angle >> ANGLETOFINESHIFT]);
-      if(!P_PointReachesGroupVertically(i2.x, i2.y, (linebottom + linetop) / 2,
-         linegroupid, clip.thing->groupid, ld->frontsector, thingmid))
+
+      uint8_t floorceiling = 0;
+      const sector_t *reachedsec;
+      fixed_t linemid = (linebottom + linetop) / 2;
+
+      if(!(reachedsec =
+           P_PointReachesGroupVertically(i2.x, i2.y, linemid, linegroupid,
+                                         clip.thing->groupid, ld->frontsector,
+                                         thingmid, &floorceiling)))
       {
          if(ld->backsector)
          {
@@ -283,8 +290,11 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
             i2 = inters;
             i2.x += FixedMul(FRACUNIT >> 12, finecosine[angle >> ANGLETOFINESHIFT]);
             i2.y += FixedMul(FRACUNIT >> 12, finesine[angle >> ANGLETOFINESHIFT]);
-            if(!P_PointReachesGroupVertically(i2.x, i2.y, (linebottom + linetop) / 2,
-               linegroupid, clip.thing->groupid, ld->backsector, thingmid))
+            if(!(reachedsec =
+                 P_PointReachesGroupVertically(i2.x, i2.y, linemid, linegroupid,
+                                               clip.thing->groupid,
+                                               ld->backsector, thingmid,
+                                               &floorceiling)))
             {
                postpone = true;
             }
@@ -298,6 +308,19 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
       {
          P_addPortalHitLine(ld, po);
          return true;
+      }
+
+      // Cap the line bottom and top if it's a line from another portal
+      fixed_t planez;
+      if(floorceiling == sector_t::floor &&
+         linebottom < (planez = P_CeilingPortalZ(*reachedsec)))
+      {
+         linebottom = planez;
+      }
+      if(floorceiling == sector_t::ceiling &&
+         linetop > (planez = P_FloorPortalZ(*reachedsec)))
+      {
+         linetop = planez;
       }
    }
 
