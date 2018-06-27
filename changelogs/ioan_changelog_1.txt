@@ -8,6 +8,12 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+27.06.2018
+
+BUGFIX: Fixed a situation where linedefs would still block despite being in
+        different portal layers.
+
+--------------------------------------------------------------------------------
 20.06.2018
 
 BUGFIX: Fixed a rare glitch, which would sometimes even crash the macOS-based
