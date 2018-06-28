@@ -1552,7 +1552,8 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    
    clip.felldown = clip.floatok = false;               // killough 11/98
 
-   bool groupidchange = false, portalteleport = false;
+   bool groupidchange = false;
+   const line_t *portalteleport = nullptr;
    fixed_t prex, prey;
 
    PODCollection<line_t *> pushhit;

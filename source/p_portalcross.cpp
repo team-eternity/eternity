@@ -53,7 +53,7 @@ struct lineportalcrossing_t
    v2fixed_t *cur;
    v2fixed_t *fin;
    int *group;
-   bool *passed;
+   const line_t **passed;
    // Careful when adding new fields!
 };
 
@@ -97,7 +97,7 @@ static bool PTR_linePortalCrossing(const intercept_t *in, void *vdata,
    if(data.group)
       *data.group = link.toid;
    if(data.passed)
-      *data.passed = true;
+      *data.passed = line;
 
    return false;
 }
@@ -110,7 +110,7 @@ static bool PTR_linePortalCrossing(const intercept_t *in, void *vdata,
 // updating the target position correctly
 //
 v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
-                               int *group, bool *passed)
+                               int *group, const line_t **passed)
 {
    v2fixed_t cur = { x, y };
    v2fixed_t fin = { x + dx, y + dy };

@@ -38,7 +38,8 @@ struct sector_t;
 // others, and there's no other way to detect line portal change.
 //
 v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
-                               int *group = nullptr, bool *passed = nullptr);
+                               int *group = nullptr,
+                               const line_t **passed = nullptr);
 
 template <typename T>
 inline static v2fixed_t P_LinePortalCrossing(T &&u, fixed_t dx, fixed_t dy,
