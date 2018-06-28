@@ -914,25 +914,8 @@ void P_LinePortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
 
    // SoM: Boom's code for silent teleports. Fixes view bob jerk.
    // Adjust a player's view, in case there has been a height change
-   if(mo->player)
-   {
-      // Save the current deltaviewheight, used in stepping
-      fixed_t deltaviewheight = mo->player->deltaviewheight;
-
-      // Clear deltaviewheight, since we don't want any changes now
-      mo->player->deltaviewheight = 0;
-
-      // Set player's view according to the newly set parameters
-      P_CalcHeight(mo->player);
-
-      mo->player->prevviewz = mo->player->viewz;
-
-      // Reset the delta to have the same dynamics as before
-      mo->player->deltaviewheight = deltaviewheight;
-
-      if(mo->player == players + displayplayer)
-         P_ResetChasecam();
-   }
+   if(mo->player && mo->player == players + displayplayer)
+      P_ResetChasecam();
 
    //mo->backupPosition();
    P_AdjustFloorClip(mo);
