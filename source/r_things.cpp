@@ -820,7 +820,7 @@ struct spritepos_t
 };
 
 // ioanch 20160109: added offset arguments
-static void R_interpolateThingPosition(const Mobj *thing, spritepos_t &pos)
+static void R_interpolateThingPosition(Mobj *thing, spritepos_t &pos)
 {
    if(view.lerp == FRACUNIT)
    {
@@ -830,9 +830,23 @@ static void R_interpolateThingPosition(const Mobj *thing, spritepos_t &pos)
    }
    else
    {
-      pos.x = lerpCoord(view.lerp, thing->prevpos.x, thing->x);
-      pos.y = lerpCoord(view.lerp, thing->prevpos.y, thing->y);
-      pos.z = lerpCoord(view.lerp, thing->prevpos.z, thing->z);
+      const line_t *pline;
+      if((pline = thing->prevpos.portalline))
+      {
+         const linkdata_t &ldata = pline->portal->data.link;
+         pos.x = lerpCoord(view.lerp, thing->prevpos.x + ldata.deltax,
+                           thing->x);
+         pos.y = lerpCoord(view.lerp, thing->prevpos.y + ldata.deltay,
+                           thing->y);
+         pos.z = lerpCoord(view.lerp, thing->prevpos.z + ldata.deltaz,
+                           thing->z);
+      }
+      else
+      {
+         pos.x = lerpCoord(view.lerp, thing->prevpos.x, thing->x);
+         pos.y = lerpCoord(view.lerp, thing->prevpos.y, thing->y);
+         pos.z = lerpCoord(view.lerp, thing->prevpos.z, thing->z);
+      }
    }
 }
 
@@ -910,7 +924,7 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
    {
       const renderbarrier_t &barrier = portalrender.w->barrier;
       if(portalrender.w->line && portalrender.w->line != portalline &&
-         P_PointOnDivlineSide(spritepos.x, spritepos.y, &barrier.dln.dl) == 0)
+         P_PointOnDivlineSide(thing->x, thing->y, &barrier.dln.dl) == 0)
       {
          return;
       }

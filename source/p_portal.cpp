@@ -871,7 +871,6 @@ void P_LinePortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
    // Prevent bad interpolation
    // FIXME: this is not interpolation, it's just instant movement; must be
    // fixed to be real interpolation even for the player (camera)
-   mo->backupPosition();
 
    // Polyobject car enter and exit inertia
    const polyobj_t *poly[2] = { gGroupPolyobject[fromid],

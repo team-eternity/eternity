@@ -1746,6 +1746,7 @@ void Mobj::backupPosition()
    prevpos.y     = y;
    prevpos.z     = z;
    prevpos.angle = angle; // NB: only used for player objects
+   prevpos.portalline = nullptr;
 }
 
 //
