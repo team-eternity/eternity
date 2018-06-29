@@ -1256,6 +1256,7 @@ bool P_CheckPortalTeleport(Mobj *mobj)
       {
          P_avoidPortalEdges(*mobj, false);
          const linkdata_t *ldata = R_FPLink(sector);
+         mobj->prevpos.portalsec = ldata;
          EV_SectorPortalTeleport(mobj, ldata->deltax, ldata->deltay,
                                  ldata->deltaz, ldata->fromid, ldata->toid);
          ret = true;
@@ -1280,6 +1281,7 @@ bool P_CheckPortalTeleport(Mobj *mobj)
       {
          P_avoidPortalEdges(*mobj, true);
          linkdata_t *ldata = R_CPLink(sector);
+         mobj->prevpos.portalsec = ldata;
          EV_SectorPortalTeleport(mobj, ldata->deltax, ldata->deltay,
                                  ldata->deltaz, ldata->fromid, ldata->toid);
          ret = true;
@@ -1747,6 +1749,7 @@ void Mobj::backupPosition()
    prevpos.z     = z;
    prevpos.angle = angle; // NB: only used for player objects
    prevpos.portalline = nullptr;
+   prevpos.portalsec = nullptr;
 }
 
 //

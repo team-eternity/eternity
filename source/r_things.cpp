@@ -831,14 +831,16 @@ static void R_interpolateThingPosition(Mobj *thing, spritepos_t &pos)
    else
    {
       const line_t *pline;
-      if((pline = thing->prevpos.portalline))
+      const linkdata_t *ldata;
+      if(((pline = thing->prevpos.portalline) &&
+          (ldata = &pline->portal->data.link)) ||
+         (ldata = thing->prevpos.portalsec))
       {
-         const linkdata_t &ldata = pline->portal->data.link;
-         pos.x = lerpCoord(view.lerp, thing->prevpos.x + ldata.deltax,
+         pos.x = lerpCoord(view.lerp, thing->prevpos.x + ldata->deltax,
                            thing->x);
-         pos.y = lerpCoord(view.lerp, thing->prevpos.y + ldata.deltay,
+         pos.y = lerpCoord(view.lerp, thing->prevpos.y + ldata->deltay,
                            thing->y);
-         pos.z = lerpCoord(view.lerp, thing->prevpos.z + ldata.deltaz,
+         pos.z = lerpCoord(view.lerp, thing->prevpos.z + ldata->deltaz,
                            thing->z);
       }
       else
@@ -922,9 +924,15 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
    if(portalrender.w && portalrender.w->portal &&
       portalrender.w->portal->type != R_SKYBOX)
    {
+      v2fixed_t offsetpos = { thing->x, thing->y };
+      if(delta)
+      {
+         offsetpos.x += delta->x;
+         offsetpos.y += delta->y;
+      }
       const renderbarrier_t &barrier = portalrender.w->barrier;
       if(portalrender.w->line && portalrender.w->line != portalline &&
-         P_PointOnDivlineSide(thing->x, thing->y, &barrier.dln.dl) == 0)
+         P_PointOnDivlineSide(offsetpos.x, offsetpos.y, &barrier.dln.dl) == 0)
       {
          return;
       }
@@ -932,9 +940,9 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
       {
          dlnormal_t dl1, dl2;
          if(R_PickNearestBoxLines(barrier.bbox, dl1, dl2) &&
-            (P_PointOnDivlineSide(spritepos.x, spritepos.y, &dl1.dl) == 0 ||
+            (P_PointOnDivlineSide(offsetpos.x, offsetpos.y, &dl1.dl) == 0 ||
                (dl2.dl.x != D_MAXINT && 
-                  P_PointOnDivlineSide(spritepos.x, spritepos.y, &dl2.dl) == 0)))
+                  P_PointOnDivlineSide(offsetpos.x, offsetpos.y, &dl2.dl) == 0)))
          {
             return;
          }
