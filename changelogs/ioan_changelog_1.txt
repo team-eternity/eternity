@@ -8,6 +8,12 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+29.06.2018
+
+IMPROVEMENT: Movement through portals is finally interpolated. No more hops or
+             slight discontinuities.
+
+--------------------------------------------------------------------------------
 27.06.2018
 
 BUGFIX: Fixed a situation where linedefs would still block despite being in
