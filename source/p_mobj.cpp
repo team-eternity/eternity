@@ -1256,8 +1256,8 @@ bool P_CheckPortalTeleport(Mobj *mobj)
       {
          P_avoidPortalEdges(*mobj, false);
          const linkdata_t *ldata = R_FPLink(sector);
-         EV_PortalTeleport(mobj, ldata->deltax, ldata->deltay, ldata->deltaz,
-                           ldata->fromid, ldata->toid);
+         EV_SectorPortalTeleport(mobj, ldata->deltax, ldata->deltay,
+                                 ldata->deltaz, ldata->fromid, ldata->toid);
          ret = true;
       }
    }
@@ -1280,8 +1280,8 @@ bool P_CheckPortalTeleport(Mobj *mobj)
       {
          P_avoidPortalEdges(*mobj, true);
          linkdata_t *ldata = R_CPLink(sector);
-         EV_PortalTeleport(mobj, ldata->deltax, ldata->deltay, ldata->deltaz,
-                           ldata->fromid, ldata->toid);
+         EV_SectorPortalTeleport(mobj, ldata->deltax, ldata->deltay,
+                                 ldata->deltaz, ldata->fromid, ldata->toid);
          ret = true;
       }
    }

@@ -102,10 +102,10 @@ void P_MarkPortalClusters();
 
 void P_InitPortals();
 
-bool EV_PortalTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
-                       int fromid, int toid);
-void P_LinePortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
+bool EV_SectorPortalTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
                              int fromid, int toid);
+void P_PortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
+                         int fromid, int toid);
 
 void R_SetSectorGroupID(sector_t *sector, int groupid);
 

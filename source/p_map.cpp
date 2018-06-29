@@ -1816,8 +1816,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       // Passed through at least one portal
       // TODO: 3D teleport
       thing->prevpos.portalline = portalteleport;
-      P_LinePortalDidTeleport(thing, x - prex, y - prey, 0, oldgroupid,
-                              newgroupid);
+      P_PortalDidTeleport(thing, x - prex, y - prey, 0, oldgroupid, newgroupid);
    }
 
    // haleyjd 08/07/04: new footclip system

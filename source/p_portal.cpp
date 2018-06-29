@@ -865,8 +865,8 @@ void P_MarkPortalClusters()
 // The player passed a line portal from P_TryMove; just update viewport and
 // pass-polyobject velocity
 //
-void P_LinePortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
-                             int fromid, int toid)
+void P_PortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
+                         int fromid, int toid)
 {
    // Prevent bad interpolation
    // FIXME: this is not interpolation, it's just instant movement; must be
@@ -926,8 +926,8 @@ void P_LinePortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
 //
 // EV_PortalTeleport
 //
-bool EV_PortalTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
-                       int fromid, int toid)
+bool EV_SectorPortalTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
+                             int fromid, int toid)
 {
    if(!mo)
       return 0;
@@ -939,7 +939,7 @@ bool EV_PortalTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
    mo->z += dz;
    P_SetThingPosition(mo);
 
-   P_LinePortalDidTeleport(mo, dx, dy, dz, fromid, toid);
+   P_PortalDidTeleport(mo, dx, dy, dz, fromid, toid);
    
    return 1;
 }
