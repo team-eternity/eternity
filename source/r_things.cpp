@@ -2072,7 +2072,7 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
    int loopprot = 0;
    while(++loopprot < SECTOR_PORTAL_LOOP_PROTECTION && sector &&
          sector->f_pflags & PS_PASSABLE &&
-         P_FloorPortalZ(*sector) > mobj->z + scaledbottom)
+         P_FloorPortalZ(*sector) > emin(mobj->z, mobj->prevpos.z) + scaledbottom)
    {
       // always accept first sector
       data = R_FPLink(sector);
@@ -2084,7 +2084,7 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
    delta.x = delta.y = delta.z = 0;
    while(++loopprot < SECTOR_PORTAL_LOOP_PROTECTION && sector &&
          sector->c_pflags & PS_PASSABLE &&
-         P_CeilingPortalZ(*sector) < mobj->z + scaledtop)
+         P_CeilingPortalZ(*sector) < emax(mobj->z, mobj->prevpos.z) + scaledtop)
    {
       // always accept first sector
       data = R_CPLink(sector);
@@ -2096,10 +2096,10 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
    mobjprojinfo_t mpi;
    fixed_t xspan = M_FloatToFixed(span.side * mobj->xscale);
    mpi.mobj = mobj;
-   mpi.bbox[BOXLEFT] = mobj->x - xspan;
-   mpi.bbox[BOXRIGHT] = mobj->x + xspan;
-   mpi.bbox[BOXBOTTOM] = mobj->y - xspan;
-   mpi.bbox[BOXTOP] = mobj->y + xspan;
+   mpi.bbox[BOXLEFT] = emin(mobj->x, mobj->prevpos.x) - xspan;
+   mpi.bbox[BOXRIGHT] = emax(mobj->x, mobj->prevpos.x) + xspan;
+   mpi.bbox[BOXBOTTOM] = emin(mobj->y, mobj->prevpos.y) - xspan;
+   mpi.bbox[BOXTOP] = emax(mobj->y, mobj->prevpos.y) + xspan;
    mpi.scaledbottom = scaledbottom;
    mpi.scaledtop = scaledtop;
    mpi.item = &item;
