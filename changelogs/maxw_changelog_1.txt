@@ -270,6 +270,10 @@ Changed version name to "Tyrfing".
 2018/06/16
 Made A_Jump now work for weapons with DECORATE states.
 
+-------------------------------------------------------------------------------
+2018/07/01
+Added r_drawplayersprites, which lets players choose to not render weapons if
+they don't want to (for example, if taking photos).
 
 ================================================================================
 EOF

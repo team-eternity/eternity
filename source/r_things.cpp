@@ -30,6 +30,7 @@
 #include "i_system.h"
 
 #include "c_io.h"
+#include "c_runcmd.h"
 #include "d_main.h"
 #include "doomstat.h"
 #include "e_edf.h"
@@ -233,6 +234,9 @@ static poststack_t   *pstack       = NULL;
 static int            pstacksize   = 0;
 static int            pstackmax    = 0;
 static maskedrange_t *unusedmasked = NULL;
+
+// MaxW: 2018/07/01: Whether or not to draw psprites
+static bool r_drawplayersprites = true;
 
 VALLOCATION(pstack)
 {
@@ -1401,10 +1405,13 @@ static void R_DrawPlayerSprites()
    mfloorclip   = pscreenheightarray;
    mceilingclip = zeroarray;
 
-   // add all active psprites
-   for(i = 0, psp = viewplayer->psprites; i < NUMPSPRITES; i++, psp++)
-      if(psp->state)
-         R_DrawPSprite(psp);
+   if(r_drawplayersprites)
+   {
+      // add all active psprites
+      for(i = 0, psp = viewplayer->psprites; i < NUMPSPRITES; i++, psp++)
+         if(psp->state)
+            R_DrawPSprite(psp);
+   }
 }
 
 #define bcopyp(d, s, n) memcpy(d, s, (n) * sizeof(void *))
@@ -2468,6 +2475,14 @@ static void R_DrawParticle(vissprite_t *vis)
       } // end else [!general_translucency]
    } // end local block
 }
+
+//============================================================================
+//
+// Console Commands
+//
+
+VARIABLE_TOGGLE(r_drawplayersprites, NULL, onoff);
+CONSOLE_VARIABLE(r_drawplayersprites, r_drawplayersprites, 0) {}
 
 //----------------------------------------------------------------------------
 //
