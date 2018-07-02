@@ -1302,7 +1302,7 @@ DEFINE_ACTION(EV_ActionParamDoorRaise)
 
    dd.kind         = OdCDoor;
    dd.spac         = instance->spac;
-   dd.speed_value  = instance->args[1] * FRACUNIT / 8;
+   dd.speed_value  = instance->args[1] * (FRACUNIT / 8);
    dd.topcountdown = 0;
    dd.delay_value  = instance->args[2];
    dd.altlighttag  = instance->args[3];
@@ -1329,7 +1329,7 @@ DEFINE_ACTION(EV_ActionParamDoorOpen)
 
    dd.kind         = ODoor;
    dd.spac         = instance->spac;
-   dd.speed_value  = instance->args[1] * FRACUNIT / 8;
+   dd.speed_value  = instance->args[1] * (FRACUNIT / 8);
    dd.topcountdown = 0;
    dd.delay_value  = 0;
    dd.altlighttag  = instance->args[2];
@@ -1356,7 +1356,7 @@ DEFINE_ACTION(EV_ActionParamDoorClose)
 
    dd.kind         = CDoor;
    dd.spac         = instance->spac;
-   dd.speed_value  = instance->args[1] * FRACUNIT / 8;
+   dd.speed_value  = instance->args[1] * (FRACUNIT / 8);
    dd.topcountdown = 0;
    dd.delay_value  = 0;
    dd.altlighttag  = instance->args[2];
@@ -1383,7 +1383,7 @@ DEFINE_ACTION(EV_ActionParamDoorCloseWaitOpen)
 
    dd.kind         = CdODoor;
    dd.spac         = instance->spac;
-   dd.speed_value  = instance->args[1] * FRACUNIT / 8;
+   dd.speed_value  = instance->args[1] * (FRACUNIT / 8);
    dd.topcountdown = 0;
    dd.delay_value  = instance->args[2] * 35 / 8;   // OCTICS
    dd.altlighttag  = instance->args[3];
@@ -1410,7 +1410,7 @@ DEFINE_ACTION(EV_ActionParamDoorWaitRaise)
 
    dd.kind         = pDOdCDoor;
    dd.spac         = instance->spac;
-   dd.speed_value  = instance->args[1] * FRACUNIT / 8;
+   dd.speed_value  = instance->args[1] * (FRACUNIT / 8);
    dd.delay_value  = instance->args[2];
    dd.topcountdown = instance->args[3];
    dd.altlighttag  = instance->args[4];
@@ -1437,7 +1437,7 @@ DEFINE_ACTION(EV_ActionParamDoorWaitClose)
 
    dd.kind         = pDCDoor;
    dd.spac         = instance->spac;
-   dd.speed_value  = instance->args[1] * FRACUNIT / 8;
+   dd.speed_value  = instance->args[1] * (FRACUNIT / 8);
    dd.delay_value  = 0;
    dd.topcountdown = instance->args[2];
    dd.altlighttag  = instance->args[3];
@@ -1469,7 +1469,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToHighest)
    fd.spac        = instance->spac; // activated Hexen-style
    fd.flags       = FDF_HAVESPAC;
    fd.speed_type  = SpeedParam;
-   fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   fd.speed_value = instance->args[1] * (FRACUNIT / 8); // speed
    EV_floorChangeForArg(fd, instance->args[2]);       // change
    fd.crush       = instance->args[3];                // crush
    fd.changeOnStart = true;
@@ -1495,7 +1495,7 @@ DEFINE_ACTION(EV_ActionParamEEFloorLowerToHighest)
    fd.spac        = instance->spac; // activated Hexen-style
    fd.flags       = FDF_HAVESPAC;
    fd.speed_type  = SpeedParam;
-   fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   fd.speed_value = instance->args[1] * (FRACUNIT / 8); // speed
    EV_floorChangeForArg(fd, instance->args[2]);       // change
    fd.crush       = -1;
    
@@ -1518,7 +1518,7 @@ DEFINE_ACTION(EV_ActionParamFloorLowerToHighest)
    fd.spac = instance->spac;
    fd.flags = FDF_HAVESPAC | FDF_HACKFORDESTHNF;
    fd.speed_type = SpeedParam;
-   fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   fd.speed_value = instance->args[1] * (FRACUNIT / 8); // speed
    fd.crush = -1;
    fd.adjust = instance->args[2];
    fd.force_adjust = instance->args[3];
@@ -1565,7 +1565,7 @@ DEFINE_ACTION(EV_ActionParamFloorLowerToLowest)
    fd.spac        = instance->spac; // activated Hexen-style
    fd.flags       = FDF_HAVESPAC;
    fd.speed_type  = SpeedParam;    
-   fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   fd.speed_value = instance->args[1] * (FRACUNIT / 8); // speed
    EV_floorChangeForArg(fd, instance->args[2]);       // change
    fd.crush       = -1;
 
@@ -1588,7 +1588,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToNearest)
    fd.spac        = instance->spac; // activated Hexen-style
    fd.flags       = FDF_HAVESPAC;
    fd.speed_type  = SpeedParam;
-   fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   fd.speed_value = instance->args[1] * (FRACUNIT / 8); // speed
    EV_floorChangeForArg(fd, instance->args[2]);       // change
    fd.crush       = instance->args[3];                // crush
    fd.changeOnStart = true;
@@ -1615,7 +1615,7 @@ DEFINE_ACTION(EV_ActionParamFloorLowerToNearest)
    fd.spac        = instance->spac; // activated Hexen-style
    fd.flags       = FDF_HAVESPAC;
    fd.speed_type  = SpeedParam;
-   fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   fd.speed_value = instance->args[1] * (FRACUNIT / 8); // speed
    EV_floorChangeForArg(fd, instance->args[2]);       // change
    fd.crush       = -1;
 
@@ -1638,7 +1638,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToLowestCeiling)
    fd.spac        = instance->spac; // activated Hexen-style
    fd.flags       = FDF_HAVESPAC;
    fd.speed_type  = SpeedParam;
-   fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   fd.speed_value = instance->args[1] * (FRACUNIT / 8); // speed
    EV_floorChangeForArg(fd, instance->args[2]);       // change
    fd.crush       = instance->args[3];                // crush
    fd.adjust      = -instance->args[4] * FRACUNIT;
@@ -1663,7 +1663,7 @@ DEFINE_ACTION(EV_ActionParamFloorLowerToLowestCeiling)
    fd.spac        = instance->spac; // activated Hexen-style
    fd.flags       = FDF_HAVESPAC;
    fd.speed_type  = SpeedParam;
-   fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   fd.speed_value = instance->args[1] * (FRACUNIT / 8); // speed
    EV_floorChangeForArg(fd, instance->args[2]);       // change
    fd.crush       = -1;
 
@@ -1686,7 +1686,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToCeiling)
    fd.spac        = instance->spac; // activated Hexen-style
    fd.flags       = FDF_HAVESPAC;
    fd.speed_type  = SpeedParam;
-   fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   fd.speed_value = instance->args[1] * (FRACUNIT / 8); // speed
    EV_floorChangeForArg(fd, instance->args[2]);       // change
    fd.crush       = instance->args[3];                // crush
    fd.adjust      = -instance->args[4] * FRACUNIT;
@@ -1711,7 +1711,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseByTexture)
    fd.spac        = instance->spac; // activated Hexen-style
    fd.flags       = FDF_HAVESPAC;
    fd.speed_type  = SpeedParam;
-   fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   fd.speed_value = instance->args[1] * (FRACUNIT / 8); // speed
    EV_floorChangeForArg(fd, instance->args[2]);       // change
    fd.crush       = instance->args[3];                // crush
    fd.changeOnStart = true;
@@ -1735,7 +1735,7 @@ DEFINE_ACTION(EV_ActionParamFloorLowerByTexture)
    fd.spac        = instance->spac; // activated Hexen-style
    fd.flags       = FDF_HAVESPAC;
    fd.speed_type  = SpeedParam;
-   fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   fd.speed_value = instance->args[1] * (FRACUNIT / 8); // speed
    EV_floorChangeForArg(fd, instance->args[2]);       // change
    fd.crush       = -1;
 
@@ -1758,7 +1758,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseByValue)
    fd.spac         = instance->spac; // activated Hexen-style
    fd.flags        = FDF_HAVESPAC;
    fd.speed_type   = SpeedParam;
-   fd.speed_value  = instance->args[1] * FRACUNIT / 8; // speed
+   fd.speed_value  = instance->args[1] * (FRACUNIT / 8); // speed
    fd.height_value = instance->args[2] * FRACUNIT;     // height
    EV_floorChangeForArg(fd, instance->args[3]);        // change
    fd.crush        = instance->args[4];                // crush
@@ -1783,7 +1783,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseByValueTimes8)
    fd.spac         = instance->spac; // activated Hexen-style
    fd.flags        = FDF_HAVESPAC;
    fd.speed_type   = SpeedParam;
-   fd.speed_value  = instance->args[1] * FRACUNIT / 8; // speed
+   fd.speed_value  = instance->args[1] * (FRACUNIT / 8); // speed
    fd.height_value = instance->args[2] * FRACUNIT * 8; // height
    EV_floorChangeForArg(fd, instance->args[3]);        // change
    fd.crush        = instance->args[4];                // crush
@@ -1808,7 +1808,7 @@ DEFINE_ACTION(EV_ActionParamFloorLowerByValue)
    fd.spac         = instance->spac; // activated Hexen-style
    fd.flags        = FDF_HAVESPAC;
    fd.speed_type   = SpeedParam;
-   fd.speed_value  = instance->args[1] * FRACUNIT / 8; // speed
+   fd.speed_value  = instance->args[1] * (FRACUNIT / 8); // speed
    fd.height_value = instance->args[2] * FRACUNIT;     // height
    EV_floorChangeForArg(fd, instance->args[3]);        // change
    fd.crush        = -1;
@@ -1832,7 +1832,7 @@ DEFINE_ACTION(EV_ActionParamFloorLowerByValueTimes8)
    fd.spac         = instance->spac; // activated Hexen-style
    fd.flags        = FDF_HAVESPAC;
    fd.speed_type   = SpeedParam;
-   fd.speed_value  = instance->args[1] * FRACUNIT / 8; // speed
+   fd.speed_value  = instance->args[1] * (FRACUNIT / 8); // speed
    fd.height_value = instance->args[2] * FRACUNIT * 8; // height
    EV_floorChangeForArg(fd, instance->args[3]);        // change
    fd.crush        = -1;
@@ -1856,7 +1856,7 @@ DEFINE_ACTION(EV_ActionParamFloorMoveToValue)
    fd.spac         = instance->spac; // activated Hexen-style
    fd.flags        = FDF_HAVESPAC;
    fd.speed_type   = SpeedParam;
-   fd.speed_value  = instance->args[1] * FRACUNIT / 8; // speed
+   fd.speed_value  = instance->args[1] * (FRACUNIT / 8); // speed
    fd.height_value = instance->args[2] * FRACUNIT;     // height
    if(instance->args[3])                               // neg
       fd.height_value = -fd.height_value;
@@ -1882,7 +1882,7 @@ DEFINE_ACTION(EV_ActionParamFloorMoveToValueTimes8)
    fd.spac         = instance->spac; // activated Hexen-style
    fd.flags        = FDF_HAVESPAC;
    fd.speed_type   = SpeedParam;
-   fd.speed_value  = instance->args[1] * FRACUNIT / 8; // speed
+   fd.speed_value  = instance->args[1] * (FRACUNIT / 8); // speed
    fd.height_value = instance->args[2] * FRACUNIT * 8; // height
    if(instance->args[3])                               // neg
       fd.height_value = -fd.height_value;
@@ -1977,7 +1977,7 @@ DEFINE_ACTION(EV_ActionParamCeilingRaiseToHighest)
    cd.spac        = instance->spac; // activated Hexen-style
    cd.flags       = CDF_HAVESPAC;
    cd.speed_type  = SpeedParam;
-   cd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   cd.speed_value = instance->args[1] * (FRACUNIT / 8); // speed
    EV_ceilingChangeForArg(cd, instance->args[2]);     // change
    cd.crush       = -1;
 
@@ -2022,7 +2022,7 @@ DEFINE_ACTION(EV_ActionParamCeilingRaiseToNearest)
    cd.spac          = instance->spac; // activated Hexen-style
    cd.flags         = CDF_HAVESPAC;
    cd.speed_type    = SpeedParam;
-   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   cd.speed_value   = instance->args[1] * (FRACUNIT / 8); // speed
    EV_ceilingChangeForArg(cd, instance->args[2]);       // change
    cd.crush         = -1;
 
@@ -2045,7 +2045,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerToNearest)
    cd.spac          = instance->spac; // activated Hexen-style
    cd.flags         = CDF_HAVESPAC | CDF_CHANGEONSTART;
    cd.speed_type    = SpeedParam;
-   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   cd.speed_value   = instance->args[1] * (FRACUNIT / 8); // speed
    EV_ceilingChangeForArg(cd, instance->args[2]);       // change
    cd.crush         = instance->args[3];                // crush
 
@@ -2068,7 +2068,7 @@ DEFINE_ACTION(EV_ActionParamCeilingRaiseToLowest)
    cd.spac          = instance->spac; // activated Hexen-style
    cd.flags         = CDF_HAVESPAC;
    cd.speed_type    = SpeedParam;
-   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   cd.speed_value   = instance->args[1] * (FRACUNIT / 8); // speed
    EV_ceilingChangeForArg(cd, instance->args[2]);       // change
    cd.crush         = -1;
 
@@ -2091,7 +2091,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerToLowest)
    cd.spac          = instance->spac; // activated Hexen-style
    cd.flags         = CDF_HAVESPAC | CDF_CHANGEONSTART;
    cd.speed_type    = SpeedParam;
-   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   cd.speed_value   = instance->args[1] * (FRACUNIT / 8); // speed
    EV_ceilingChangeForArg(cd, instance->args[2]);       // change
    cd.crush         = instance->args[3];                // crush
 
@@ -2114,7 +2114,7 @@ DEFINE_ACTION(EV_ActionParamCeilingRaiseToHighestFloor)
    cd.spac          = instance->spac; // activated Hexen-style
    cd.flags         = CDF_HAVESPAC;
    cd.speed_type    = SpeedParam;
-   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   cd.speed_value   = instance->args[1] * (FRACUNIT / 8); // speed
    EV_ceilingChangeForArg(cd, instance->args[2]);       // change
    cd.crush         = -1;
 
@@ -2137,7 +2137,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerToHighestFloor)
    cd.spac          = instance->spac; // activated Hexen-style
    cd.flags         = CDF_HAVESPAC | CDF_HACKFORDESTF | CDF_CHANGEONSTART;
    cd.speed_type    = SpeedParam;
-   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   cd.speed_value   = instance->args[1] * (FRACUNIT / 8); // speed
    EV_ceilingChangeForArg(cd, instance->args[2]);       // change
    cd.crush         = instance->args[3];                // crush
    cd.ceiling_gap   = instance->args[4] * FRACUNIT;
@@ -2184,7 +2184,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerToFloor)
    cd.spac          = instance->spac; // activated Hexen-style
    cd.flags         = CDF_HAVESPAC | CDF_HACKFORDESTF | CDF_CHANGEONSTART;
    cd.speed_type    = SpeedParam;
-   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   cd.speed_value   = instance->args[1] * (FRACUNIT / 8); // speed
    EV_ceilingChangeForArg(cd, instance->args[2]);       // change
    cd.crush         = instance->args[3];                // crush
    cd.ceiling_gap   = instance->args[4] * FRACUNIT;
@@ -2208,7 +2208,7 @@ DEFINE_ACTION(EV_ActionParamCeilingRaiseByTexture)
    cd.spac          = instance->spac; // activated Hexen-style
    cd.flags         = CDF_HAVESPAC;
    cd.speed_type    = SpeedParam;
-   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   cd.speed_value   = instance->args[1] * (FRACUNIT / 8); // speed
    EV_ceilingChangeForArg(cd, instance->args[2]);       // change
    cd.crush         = -1;
 
@@ -2231,7 +2231,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerByTexture)
    cd.spac          = instance->spac; // activated Hexen-style
    cd.flags         = CDF_HAVESPAC | CDF_CHANGEONSTART;
    cd.speed_type    = SpeedParam;
-   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   cd.speed_value   = instance->args[1] * (FRACUNIT / 8); // speed
    EV_ceilingChangeForArg(cd, instance->args[2]);       // change
    cd.crush         = instance->args[3];                // crush
 
@@ -2254,7 +2254,7 @@ DEFINE_ACTION(EV_ActionParamCeilingRaiseByValue)
    cd.spac          = instance->spac; // activated Hexen-style
    cd.flags         = CDF_HAVESPAC;
    cd.speed_type    = SpeedParam;
-   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   cd.speed_value   = instance->args[1] * (FRACUNIT / 8); // speed
    cd.height_value  = instance->args[2] * FRACUNIT;     // height
    EV_ceilingChangeForArg(cd, instance->args[3]);       // change
    cd.crush         = -1;
@@ -2278,7 +2278,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerByValue)
    cd.spac          = instance->spac; // activated Hexen-style
    cd.flags         = CDF_HAVESPAC | CDF_CHANGEONSTART;
    cd.speed_type    = SpeedParam;
-   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   cd.speed_value   = instance->args[1] * (FRACUNIT / 8); // speed
    cd.height_value  = instance->args[2] * FRACUNIT;     // height
    EV_ceilingChangeForArg(cd, instance->args[3]);       // change
    cd.crush         = instance->args[4];                // crush
@@ -2301,7 +2301,7 @@ DEFINE_ACTION(EV_ActionParamCeilingRaiseByValueTimes8)
    cd.spac          = instance->spac; // activated Hexen-style
    cd.flags         = CDF_HAVESPAC;
    cd.speed_type    = SpeedParam;
-   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   cd.speed_value   = instance->args[1] * (FRACUNIT / 8); // speed
    cd.height_value  = instance->args[2] * FRACUNIT * 8; // height
    EV_ceilingChangeForArg(cd, instance->args[3]);       // change
    cd.crush         = -1;
@@ -2324,7 +2324,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerByValueTimes8)
    cd.spac          = instance->spac; // activated Hexen-style
    cd.flags         = CDF_HAVESPAC | CDF_CHANGEONSTART;
    cd.speed_type    = SpeedParam;
-   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   cd.speed_value   = instance->args[1] * (FRACUNIT / 8); // speed
    cd.height_value  = instance->args[2] * FRACUNIT * 8; // height
    EV_ceilingChangeForArg(cd, instance->args[3]);       // change
    cd.crush         = instance->args[4];                // crush
@@ -2348,7 +2348,7 @@ DEFINE_ACTION(EV_ActionParamCeilingMoveToValue)
    cd.spac          = instance->spac; // activated Hexen-style
    cd.flags         = CDF_HAVESPAC;
    cd.speed_type    = SpeedParam;
-   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   cd.speed_value   = instance->args[1] * (FRACUNIT / 8); // speed
    cd.height_value  = instance->args[2] * FRACUNIT;     // height
    if(instance->args[3])                                // neg
       cd.height_value = -cd.height_value;
@@ -2373,7 +2373,7 @@ DEFINE_ACTION(EV_ActionParamCeilingMoveToValueTimes8)
    cd.spac          = instance->spac; // activated Hexen-style
    cd.flags         = CDF_HAVESPAC;
    cd.speed_type    = SpeedParam;
-   cd.speed_value   = instance->args[1] * FRACUNIT / 8; // speed
+   cd.speed_value   = instance->args[1] * (FRACUNIT / 8); // speed
    cd.height_value  = instance->args[2] * FRACUNIT * 8; // height
    if(instance->args[3])                                // neg
       cd.height_value = -cd.height_value;
@@ -2444,7 +2444,7 @@ DEFINE_ACTION(EV_ActionParamStairsBuildUpDoom)
    sd.spac           = instance->spac; // Hexen-style activation
    sd.direction      = 1;              // up
    sd.speed_type     = SpeedParam;
-   sd.speed_value    = instance->args[1] * FRACUNIT / 8; // speed
+   sd.speed_value    = instance->args[1] * (FRACUNIT / 8); // speed
    sd.stepsize_type  = StepSizeParam;
    sd.stepsize_value = instance->args[2] * FRACUNIT;     // height
    sd.delay_value    = instance->args[3];                // delay
@@ -2468,7 +2468,7 @@ DEFINE_ACTION(EV_ActionParamStairsBuildDownDoom)
    sd.spac           = instance->spac; // Hexen-style activation
    sd.direction      = 0;              // down
    sd.speed_type     = SpeedParam;
-   sd.speed_value    = instance->args[1] * FRACUNIT / 8; // speed
+   sd.speed_value    = instance->args[1] * (FRACUNIT / 8); // speed
    sd.stepsize_type  = StepSizeParam;
    sd.stepsize_value = instance->args[2] * FRACUNIT;     // height
    sd.delay_value    = instance->args[3];                // delay
@@ -2492,7 +2492,7 @@ DEFINE_ACTION(EV_ActionParamStairsBuildUpDoomSync)
    sd.spac           = instance->spac; 
    sd.direction      = 1;
    sd.speed_type     = SpeedParam;
-   sd.speed_value    = instance->args[1] * FRACUNIT / 8; // speed
+   sd.speed_value    = instance->args[1] * (FRACUNIT / 8); // speed
    sd.stepsize_type  = StepSizeParam;
    sd.stepsize_value = instance->args[2] * FRACUNIT;     // height
    sd.delay_value    = 0;
@@ -2516,7 +2516,7 @@ DEFINE_ACTION(EV_ActionParamStairsBuildDownDoomSync)
    sd.spac           = instance->spac; 
    sd.direction      = 0;
    sd.speed_type     = SpeedParam;
-   sd.speed_value    = instance->args[1] * FRACUNIT / 8; // speed
+   sd.speed_value    = instance->args[1] * (FRACUNIT / 8); // speed
    sd.stepsize_type  = StepSizeParam;
    sd.stepsize_value = instance->args[2] * FRACUNIT;     // height
    sd.delay_value    = 0;
@@ -2538,7 +2538,7 @@ DEFINE_ACTION(EV_ActionPolyobjDoorSlide)
 
    pdd.doorType   = POLY_DOOR_SLIDE;
    pdd.polyObjNum = instance->args[0];                // id
-   pdd.speed      = instance->args[1] * FRACUNIT / 8; // speed
+   pdd.speed      = instance->args[1] * (FRACUNIT / 8); // speed
    pdd.angle      = instance->args[2];                // angle (byte angle)
    pdd.distance   = instance->args[3] * FRACUNIT;     // distance
    pdd.delay      = instance->args[4];                // delay in tics
@@ -2578,7 +2578,7 @@ DEFINE_ACTION(EV_ActionPolyobjMove)
    INIT_STRUCT(polymovedata_t, pmd);
 
    pmd.polyObjNum = instance->args[0];                // id
-   pmd.speed      = instance->args[1] * FRACUNIT / 8; // speed
+   pmd.speed      = instance->args[1] * (FRACUNIT / 8); // speed
    pmd.angle      = instance->args[2];                // angle (byte angle)
    pmd.distance   = instance->args[3] * FRACUNIT;     // distance
    pmd.overRide   = false;
@@ -2597,12 +2597,47 @@ DEFINE_ACTION(EV_ActionPolyobjMoveTimes8)
    INIT_STRUCT(polymovedata_t, pmd);
 
    pmd.polyObjNum = instance->args[0];                // id
-   pmd.speed      = instance->args[1] * FRACUNIT / 8; // speed
+   pmd.speed      = instance->args[1] * (FRACUNIT / 8); // speed
    pmd.angle      = instance->args[2];                // angle (byte angle)
    pmd.distance   = instance->args[3] * FRACUNIT * 8; // distance
    pmd.overRide   = false;
 
    return EV_DoPolyObjMove(&pmd);
+}
+
+//
+// Implements Polyobj_MoveTo(po, speed, pos_x, pos_y)
+// * ExtraData: 497
+// * Hexen: 88
+//
+DEFINE_ACTION(EV_ActionPolyobjMoveTo)
+{
+   INIT_STRUCT(polymoveto_t, pmd);
+   pmd.polyObjNum = instance->args[0];
+   pmd.speed = instance->args[1] * (FRACUNIT / 8);
+   pmd.targetMobj = false;
+   pmd.pos.x = instance->args[2] * FRACUNIT;
+   pmd.pos.y = instance->args[3] * FRACUNIT;
+   pmd.overRide = false;
+   pmd.activator = nullptr;   // absolute XY destination won't use activator, unlike spot TID
+   return EV_DoPolyObjMoveToSpot(pmd);
+}
+
+//
+// Implements Polyobj_MoveToSpot(po, speed, target)
+// * ExtraData: 496
+// * Hexen: 86
+//
+DEFINE_ACTION(EV_ActionPolyobjMoveToSpot)
+{
+   INIT_STRUCT(polymoveto_t, pmd);
+   pmd.polyObjNum = instance->args[0];
+   pmd.speed = instance->args[1] * (FRACUNIT / 8);
+   pmd.targetMobj = true;
+   pmd.tid = instance->args[2];
+   pmd.overRide = false;
+   pmd.activator = instance->actor;
+   return EV_DoPolyObjMoveToSpot(pmd);
 }
 
 //
@@ -2617,7 +2652,7 @@ DEFINE_ACTION(EV_ActionPolyobjORMove)
    INIT_STRUCT(polymovedata_t, pmd);
 
    pmd.polyObjNum = instance->args[0];                // id
-   pmd.speed      = instance->args[1] * FRACUNIT / 8; // speed
+   pmd.speed      = instance->args[1] * (FRACUNIT / 8); // speed
    pmd.angle      = instance->args[2];                // angle (byte angle)
    pmd.distance   = instance->args[3] * FRACUNIT;     // distance
    pmd.overRide   = true;
@@ -2636,12 +2671,47 @@ DEFINE_ACTION(EV_ActionPolyobjORMoveTimes8)
    INIT_STRUCT(polymovedata_t, pmd);
 
    pmd.polyObjNum = instance->args[0];                // id
-   pmd.speed      = instance->args[1] * FRACUNIT / 8; // speed
+   pmd.speed      = instance->args[1] * (FRACUNIT / 8); // speed
    pmd.angle      = instance->args[2];                // angle (byte angle)
    pmd.distance   = instance->args[3] * FRACUNIT * 8; // distance
    pmd.overRide   = true;
 
    return EV_DoPolyObjMove(&pmd);
+}
+
+//
+// Implements Polyobj_OR_MoveTo(po, speed, pos_x, pos_y)
+// * ExtraData: 498
+// * Hexen: 89
+//
+DEFINE_ACTION(EV_ActionPolyobjORMoveTo)
+{
+   INIT_STRUCT(polymoveto_t, pmd);
+   pmd.polyObjNum = instance->args[0];
+   pmd.speed = instance->args[1] * (FRACUNIT / 8);
+   pmd.targetMobj = false;
+   pmd.pos.x = instance->args[2] * FRACUNIT;
+   pmd.pos.y = instance->args[3] * FRACUNIT;
+   pmd.overRide = true;
+   pmd.activator = nullptr;
+   return EV_DoPolyObjMoveToSpot(pmd);
+}
+
+//
+// Implements Polyobj_OR_MoveToSpot(po, speed, target)
+// * ExtraData: 499
+// * Hexen: 59
+//
+DEFINE_ACTION(EV_ActionPolyobjORMoveToSpot)
+{
+   INIT_STRUCT(polymoveto_t, pmd);
+   pmd.polyObjNum = instance->args[0];
+   pmd.speed = instance->args[1] * (FRACUNIT / 8);
+   pmd.targetMobj = true;
+   pmd.tid = instance->args[2];
+   pmd.overRide = true;
+   pmd.activator = instance->actor;
+   return EV_DoPolyObjMoveToSpot(pmd);
 }
 
 //
@@ -2748,7 +2818,7 @@ DEFINE_ACTION(EV_ActionPillarBuild)
    INIT_STRUCT(pillardata_t, pd);
 
    pd.tag    = instance->tag;
-   pd.speed  = instance->args[1] * FRACUNIT / 8;
+   pd.speed  = instance->args[1] * (FRACUNIT / 8);
    pd.height = instance->args[2] * FRACUNIT;
    pd.crush  = 0;
 
@@ -2767,7 +2837,7 @@ DEFINE_ACTION(EV_ActionPillarBuildAndCrush)
    INIT_STRUCT(pillardata_t, pd);
 
    pd.tag    = instance->tag;
-   pd.speed  = instance->args[1] * FRACUNIT / 8;
+   pd.speed  = instance->args[1] * (FRACUNIT / 8);
    pd.height = instance->args[2] * FRACUNIT;
    pd.crush  = instance->args[3];
    // TODO: support ZDoom crush mode in args[4]
@@ -2787,7 +2857,7 @@ DEFINE_ACTION(EV_ActionPillarOpen)
    INIT_STRUCT(pillardata_t, pd);
 
    pd.tag   = instance->args[0];
-   pd.speed = instance->args[1] * FRACUNIT / 8;
+   pd.speed = instance->args[1] * (FRACUNIT / 8);
    pd.fdist = instance->args[2] * FRACUNIT;
    pd.cdist = instance->args[3] * FRACUNIT;
    pd.crush = 0;
@@ -3377,8 +3447,8 @@ DEFINE_ACTION(EV_ActionACSLockedExecuteDoor)
 DEFINE_ACTION(EV_ActionParamDonut)
 {
    // TODO: return param stuff.
-   fixed_t pspeed = instance->args[1] * FRACUNIT / 8;
-   fixed_t sspeed = instance->args[2] * FRACUNIT / 8;
+   fixed_t pspeed = instance->args[1] * (FRACUNIT / 8);
+   fixed_t sspeed = instance->args[2] * (FRACUNIT / 8);
    return EV_DoParamDonut(instance->line, instance->tag, true, pspeed, sspeed);
 }
 
@@ -3797,7 +3867,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseAndCrush)
    fd.spac        = instance->spac; // activated Hexen-style
    fd.flags       = FDF_HAVESPAC;
    fd.speed_type  = SpeedParam;
-   fd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   fd.speed_value = instance->args[1] * (FRACUNIT / 8); // speed
    fd.crush       = instance->args[2];                // crush
 
    return EV_DoParamFloor(instance->line, instance->tag, &fd);
@@ -3832,7 +3902,7 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingLowerByValue)
       fd.spac = instance->spac;
       fd.flags = FDF_HAVESPAC;
       fd.speed_type = SpeedParam;
-      fd.speed_value = instance->args[1] * FRACUNIT / 8;
+      fd.speed_value = instance->args[1] * (FRACUNIT / 8);
       fd.height_value = instance->args[2] * FRACUNIT;
       fd.crush = -1;
 
@@ -3843,7 +3913,7 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingLowerByValue)
       cd.speed_type = instance->spac;
       cd.flags = CDF_HAVESPAC;
       cd.speed_type = SpeedParam;
-      cd.speed_value = instance->args[1] * FRACUNIT / 8;
+      cd.speed_value = instance->args[1] * (FRACUNIT / 8);
       cd.height_value = instance->args[2] * FRACUNIT;
       cd.crush = -1;
 
@@ -3854,7 +3924,7 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingLowerByValue)
    // work: Boom elevator moved by value
 
    return EV_DoElevator(instance->line, instance->tag, elevateByValue,
-                        instance->args[1] * FRACUNIT / 8,
+                        instance->args[1] * (FRACUNIT / 8),
                        -instance->args[2] * FRACUNIT, true);
 
 }
@@ -3876,7 +3946,7 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingRaiseByValue)
       fd.spac = instance->spac;
       fd.flags = FDF_HAVESPAC;
       fd.speed_type = SpeedParam;
-      fd.speed_value = instance->args[1] * FRACUNIT / 8;
+      fd.speed_value = instance->args[1] * (FRACUNIT / 8);
       fd.height_value = instance->args[2] * FRACUNIT;
       fd.crush = -1;
 
@@ -3887,7 +3957,7 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingRaiseByValue)
       cd.speed_type = instance->spac;
       cd.flags = CDF_HAVESPAC;
       cd.speed_type = SpeedParam;
-      cd.speed_value = instance->args[1] * FRACUNIT / 8;
+      cd.speed_value = instance->args[1] * (FRACUNIT / 8);
       cd.height_value = instance->args[2] * FRACUNIT;
       cd.crush = -1;
 
@@ -3898,7 +3968,7 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingRaiseByValue)
    // work: Boom elevator moved by value
 
    return EV_DoElevator(instance->line, instance->tag, elevateByValue,
-                        instance->args[1] * FRACUNIT / 8,
+                        instance->args[1] * (FRACUNIT / 8),
                         instance->args[2] * FRACUNIT, true);
 }
 
@@ -3911,7 +3981,7 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingRaiseByValue)
 DEFINE_ACTION(EV_ActionParamElevatorUp)
 {
    return EV_DoElevator(instance->line, instance->tag, elevateUp,
-                        instance->args[1] * FRACUNIT / 8, 0, true);
+                        instance->args[1] * (FRACUNIT / 8), 0, true);
 }
 
 //
@@ -3923,7 +3993,7 @@ DEFINE_ACTION(EV_ActionParamElevatorUp)
 DEFINE_ACTION(EV_ActionParamElevatorDown)
 {
    return EV_DoElevator(instance->line, instance->tag, elevateDown,
-                        instance->args[1] * FRACUNIT / 8, 0, true);
+                        instance->args[1] * (FRACUNIT / 8), 0, true);
 }
 
 //
@@ -3935,7 +4005,7 @@ DEFINE_ACTION(EV_ActionParamElevatorDown)
 DEFINE_ACTION(EV_ActionParamElevatorCurrent)
 {
    return EV_DoElevator(instance->line, instance->tag, elevateCurrent,
-                        instance->args[1] * FRACUNIT / 8, 0, true);
+                        instance->args[1] * (FRACUNIT / 8), 0, true);
 }
 
 //
@@ -3952,6 +4022,7 @@ DEFINE_ACTION(EV_ActionChangeSkill)
       return 0;
 
    gameskill = (skill_t)instance->line->args[0];
+   G_SetFastParms(gameskill >= sk_nightmare || fastparm);
    return 1;
 }
 
@@ -4266,7 +4337,7 @@ DEFINE_ACTION(EV_ActionParamStairsBuildUpDoomCrush)
    sd.spac = instance->spac; // Hexen-style activation
    sd.direction = 1;              // up
    sd.speed_type = SpeedParam;
-   sd.speed_value = instance->args[1] * FRACUNIT / 8; // speed
+   sd.speed_value = instance->args[1] * (FRACUNIT / 8); // speed
    sd.stepsize_type = StepSizeParam;
    sd.stepsize_value = instance->args[2] * FRACUNIT;     // height
    sd.delay_value = instance->args[3];                // delay

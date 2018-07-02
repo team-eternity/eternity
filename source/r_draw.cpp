@@ -164,6 +164,92 @@ void CB_DrawColumn_8()
    }
 }
 
+// haleyjd: experimental column drawer for masked sky textures
+// ioanch: confirmed OK, but only for basic r_draw (non-quad) mode.
+static void CB_DrawNewSkyColumn_8()
+{
+   int      count;
+   byte    *dest;            // killough
+   fixed_t  frac;            // killough
+   fixed_t  fracstep;
+
+   count = column.y2 - column.y1 + 1;
+
+   if (count <= 0)    // Zero length, column does not exceed a pixel.
+      return;
+
+#ifdef RANGECHECK
+   if (column.x < 0
+       || column.x >= video.width
+       || column.y1 < 0
+       || column.y2 >= video.height)
+      I_Error ("R_DrawNewSkyColumn: %i to %i at %i\n", column.y1, column.y2, column.x);
+#endif
+
+   // Framebuffer destination address.
+   dest = R_ADDRESS(column.x, column.y1);
+
+   // Determine scaling, which is the only mapping to be done.
+
+   fracstep = column.step;
+   frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
+
+   // Inner loop that does the actual texture mapping,
+   //  e.g. a DDA-lile scaling.
+   // This is as fast as it gets.       (Yeah, right!!! -- killough)
+   //
+   // killough 2/1/98: more performance tuning
+
+   {
+      const byte *source = (byte *)(column.source);
+      const lighttable_t *colormap = column.colormap;
+      int heightmask = column.texheight-1;
+      if (column.texheight & heightmask)   // not a power of 2 -- killough
+      {
+         heightmask++;
+         heightmask <<= FRACBITS;
+
+         if (frac < 0)
+            while ((frac += heightmask) <  0);
+         else
+            while (frac >= heightmask)
+               frac -= heightmask;
+
+         do
+         {
+            // Re-map color indices from wall texture column
+            //  using a lighting/special effects LUT.
+
+            // heightmask is the Tutti-Frutti fix -- killough
+
+            // haleyjd
+            if(source[frac>>FRACBITS])
+               *dest = colormap[source[frac>>FRACBITS]];
+            dest += linesize;                     // killough 11/98
+            if ((frac += fracstep) >= heightmask)
+               frac -= heightmask;
+         }
+         while (--count);
+      }
+      else
+      {
+         while ((count-=2)>=0)   // texture height is a power of 2 -- killough
+         {
+            if(source[(frac>>FRACBITS) & heightmask])
+               *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
+            dest += linesize;   // killough 11/98
+            frac += fracstep;
+            if(source[(frac>>FRACBITS) & heightmask])
+               *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
+            dest += linesize;   // killough 11/98
+            frac += fracstep;
+         }
+         if ((count & 1) && source[(frac>>FRACBITS) & heightmask])
+            *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
+      }
+   }
+}
+
 // Here is the version of R_DrawColumn that deals with translucent  // phares
 // textures and sprites. It's identical to R_DrawColumn except      //    |
 // for the spot where the color index is stuffed into *dest. At     //    V
@@ -952,6 +1038,7 @@ void CB_DrawAddTRColumn_8(void)
 columndrawer_t r_normal_drawer =
 {
    CB_DrawColumn_8,
+   CB_DrawNewSkyColumn_8,
    CB_DrawTLColumn_8,
    CB_DrawTRColumn_8,
    CB_DrawTLTRColumn_8,
@@ -1302,93 +1389,7 @@ void R_DrawViewBorder()
 
    // copy bottom 
    R_VideoErase(0, scaledwindow.y + scaledwindow.height, SCREENWIDTH, scaledwindow.y);
-} 
-
-// haleyjd: experimental column drawer for masked sky textures
-void R_DrawNewSkyColumn() 
-{ 
-  int      count; 
-  byte    *dest;            // killough
-  fixed_t  frac;            // killough
-  fixed_t  fracstep;     
-
-  count = column.y2 - column.y1 + 1; 
-
-  if (count <= 0)    // Zero length, column does not exceed a pixel.
-    return; 
-                                 
-#ifdef RANGECHECK 
-  if (column.x < 0 
-      || column.x >= video.width
-      || column.y1 < 0
-      || column.y2 >= video.height) 
-    I_Error ("R_DrawNewSkyColumn: %i to %i at %i\n", column.y1, column.y2, column.x); 
-#endif 
-
-  // Framebuffer destination address.
-  dest = R_ADDRESS(column.x, column.y1);
-
-  // Determine scaling, which is the only mapping to be done.
-
-  fracstep = column.step; 
-  frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
-
-  // Inner loop that does the actual texture mapping,
-  //  e.g. a DDA-lile scaling.
-  // This is as fast as it gets.       (Yeah, right!!! -- killough)
-  //
-  // killough 2/1/98: more performance tuning
-
-  {
-    const byte *source = (byte *)(column.source);
-    const lighttable_t *colormap = column.colormap; 
-    int heightmask = column.texheight-1;
-    if (column.texheight & heightmask)   // not a power of 2 -- killough
-      {
-        heightmask++;
-        heightmask <<= FRACBITS;
-          
-        if (frac < 0)
-          while ((frac += heightmask) <  0);
-        else
-          while (frac >= heightmask)
-            frac -= heightmask;
-          
-        do
-          {
-            // Re-map color indices from wall texture column
-            //  using a lighting/special effects LUT.
-            
-            // heightmask is the Tutti-Frutti fix -- killough
-
-            // haleyjd
-            if(source[frac>>FRACBITS])
-              *dest = colormap[source[frac>>FRACBITS]];
-            dest += linesize;                     // killough 11/98
-            if ((frac += fracstep) >= heightmask)
-              frac -= heightmask;
-          } 
-        while (--count);
-      }
-    else
-      {
-        while ((count-=2)>=0)   // texture height is a power of 2 -- killough
-          {
-            if(source[(frac>>FRACBITS) & heightmask])
-              *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
-            dest += linesize;   // killough 11/98
-            frac += fracstep;
-            if(source[(frac>>FRACBITS) & heightmask])
-              *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
-            dest += linesize;   // killough 11/98
-            frac += fracstep;
-          }
-        if ((count & 1) && source[(frac>>FRACBITS) & heightmask])
-          *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
-      }
-  }
-} 
-
+}
 
 //----------------------------------------------------------------------------
 //

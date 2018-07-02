@@ -33,8 +33,10 @@
 #include "doomstat.h"
 #include "d_event.h"
 #include "d_gi.h"
+#include "e_inventory.h"
 #include "e_player.h"
 #include "e_states.h"
+#include "e_weapons.h"
 #include "g_game.h"
 #include "hu_stuff.h"
 #include "m_random.h"
@@ -353,23 +355,37 @@ void P_MovePlayer(player_t* player)
             P_Thrust(player, mo->angle-ANG90, 0, cmd->sidemove*movefactor);
          }
       }
-      else if(!comp[comp_aircontrol])  // Do not move player unless aircontrol
+      else if(LevelInfo.airControl > 0 || LevelInfo.airControl < -1)
       {
+         // Do not move player unless aircontrol
+         // -1 has a special meaning that totally disables air control, even
+         // if the compatibility flag is unset.
+
+         // This is a new EMAPINFO property and doesn't emulate Hexen and
+         // Strife. For those, look below.
+
+         int friction, movefactor = P_GetMoveFactor(mo, &friction);
+
+         movefactor = FixedMul(movefactor, LevelInfo.airControl);
+
          if(cmd->forwardmove)
-            P_Thrust(player, mo->angle, 0, FRACUNIT >> 8);
+            P_Thrust(player, mo->angle, 0, cmd->forwardmove*movefactor);
 
          // TODO: disable this part in Strife
          if(cmd->sidemove)
+            P_Thrust(player, mo->angle - ANG90, 0, cmd->sidemove*movefactor);
+      }
+      else if(LevelInfo.airControl == 0 && !comp[comp_aircontrol])
+      {
+         // Apply legacy Hexen/Strife primitive air control if air control is 0
+         // (default) and the compatibility setting is "NO".
+
+         if(cmd->forwardmove)
             P_Thrust(player, mo->angle, 0, FRACUNIT >> 8);
 
-         // NOTE: This movement behaviour is like in Hexen, and the sidemove
-         // case will also have to be removed in the Strife game mode, so we
-         // have accurate gameplay when attempting to jump on high objects.
-
-         // When we add user-settable air control in EMAPINFO or playerclass
-         // properties however, the P_Thrust vector will have to be as user
-         // expects: change velocity according to direction, no longer having
-         // to emulate these old games' behaviours.
+         // TODO: disable this in Strife
+         if(cmd->sidemove)
+            P_Thrust(player, mo->angle, 0, FRACUNIT >> 8);
       }
 
       if(mo->state == states[mo->info->spawnstate])
@@ -462,7 +478,12 @@ void P_DeathThink(player_t *player)
    }
       
    if(player->cmd.buttons & BT_USE)
+   {
+      if(player == &players[consoleplayer])
+         player->invbarstate.inv_ptr = 0;
+
       player->playerstate = PST_REBORN;
+   }
 }
 
 //
@@ -613,6 +634,10 @@ void P_PlayerThink(player_t *player)
    // chain saw run forward
 
    cmd = &player->cmd;
+
+   if(cmd->itemID && demo_version >= 401)
+      E_TryUseItem(player, cmd->itemID - 1); // ticcmd ID is off by one
+
    if(player->mo->flags & MF_JUSTATTACKED)
    {
       cmd->angleturn = 0;
@@ -718,7 +743,21 @@ void P_PlayerThink(player_t *player)
    if(cmd->buttons & BT_SPECIAL)
       cmd->buttons = 0;
 
-   if(cmd->buttons & BT_CHANGE)
+   if(demo_version >= 401)
+   {
+      if(cmd->weaponID)
+      {
+         weaponinfo_t *wp = E_WeaponForID(cmd->weaponID - 1); // weaponID is off by one
+         weaponinfo_t *sister = wp->sisterWeapon;
+         if(player->powers[pw_weaponlevel2] && E_IsPoweredVariant(sister))
+            player->pendingweapon = sister;
+         else
+            player->pendingweapon = wp;
+
+         player->pendingweaponslot = E_FindEntryForWeaponInSlot(player, wp, cmd->slotIndex);
+      }
+   }
+   else if(cmd->buttons & BT_CHANGE)
    {
       // The actual changing of the weapon is done
       //  when the weapon psprite can do it
@@ -739,14 +778,14 @@ void P_PlayerThink(player_t *player)
          //e6y
          newweapon = (cmd->buttons & BT_WEAPONMASK_OLD)>>BT_WEAPONSHIFT;
 
-         if(newweapon == wp_fist && player->weaponowned[wp_chainsaw] &&
-            (player->readyweapon != wp_chainsaw ||
+         if(newweapon == wp_fist && E_PlayerOwnsWeaponForDEHNum(player, wp_chainsaw) &&
+            (!E_WeaponIsCurrentDEHNum(player, wp_chainsaw) ||
              !player->powers[pw_strength]))
             newweapon = wp_chainsaw;
          if(enable_ssg &&
             newweapon == wp_shotgun &&
-            player->weaponowned[wp_supershotgun] &&
-            player->readyweapon != wp_supershotgun)
+            E_PlayerOwnsWeaponForDEHNum(player, wp_supershotgun) &&
+            !E_WeaponIsCurrentDEHNum(player, wp_supershotgun))
             newweapon = wp_supershotgun;
       }
 
@@ -754,7 +793,9 @@ void P_PlayerThink(player_t *player)
 
       // WEAPON_FIXME: setting pendingweapon
 
-      if(player->weaponowned[newweapon] && newweapon != player->readyweapon)
+      weaponinfo_t *pendingweapon = E_WeaponForDEHNum(newweapon);
+      if(E_PlayerOwnsWeapon(player, pendingweapon) &&
+         pendingweapon->id != player->readyweapon->id)
       {
          // Do not go to plasma or BFG in shareware, even if cheated.
          // haleyjd 06/28/13: generalized for EDF weapon system
@@ -764,7 +805,7 @@ void P_PlayerThink(player_t *player)
             !(GameModeInfo->flags & GIF_SHAREWARE && 
               pendingweapon->flags & WPF_NOTSHAREWARE))
          {
-            player->pendingweapon = newweapon;
+            player->pendingweapon = pendingweapon;
          }
       }
    }
@@ -833,6 +874,26 @@ void P_PlayerThink(player_t *player)
    {
       if(!--player->powers[pw_flight])
          P_PlayerStopFlight(player);
+   }
+
+   if(player->powers[pw_weaponlevel2] > 0) // MaxW: 2018/01/02
+   {
+      if(!--player->powers[pw_weaponlevel2])
+      {
+         // switch back to normal weapon if need be
+         if(E_IsPoweredVariant(player->readyweapon))
+         {
+            // Note: sisterWeapon is guaranteed to != nullptr elsewhere
+            weaponinfo_t *unpowered = player->readyweapon->sisterWeapon;
+            if(unpowered->readystate != player->readyweapon->readystate ||
+               unpowered->flags & WPF_FORCETOREADY)
+            {
+               P_SetPsprite(player, ps_weapon, unpowered->readystate);
+               player->refire = 0;
+            }
+            player->readyweapon = unpowered;
+         }
+      }
    }
 
    if(player->damagecount)

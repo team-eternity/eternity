@@ -212,7 +212,7 @@ void WadDirectory::incrementSource(const openwad_t &openData)
 //
 void WadDirectory::handleOpenError(openwad_t &openData,
                                    const wfileadd_t &addInfo,
-                                   const char *filename)
+                                   const char *filename) const
 {
    if(addInfo.flags & WFA_OPENFAILFATAL)
       I_Error("Error: couldn't open %s\n", filename);
@@ -233,7 +233,7 @@ void WadDirectory::handleOpenError(openwad_t &openData,
 // haleyjd 04/06/11: For normal wad files, the file needs to be found and 
 // opened.
 //
-WadDirectory::openwad_t WadDirectory::openFile(const wfileadd_t &addInfo)
+WadDirectory::openwad_t WadDirectory::openFile(const wfileadd_t &addInfo) const
 {
    edefstructvar(openwad_t, openData);
    qstring   filename;
@@ -298,7 +298,7 @@ lumpinfo_t *WadDirectory::reAllocLumpInfo(int numnew, int startlump)
 //
 // haleyjd 10/27/12: Load a single file into the wad directory.
 //
-bool WadDirectory::addSingleFile(openwad_t &openData, wfileadd_t &addInfo,
+bool WadDirectory::addSingleFile(openwad_t &openData, const wfileadd_t &addInfo,
                                  int startlump)
 {
    edefstructvar(filelump_t, singleinfo);
@@ -332,7 +332,8 @@ bool WadDirectory::addSingleFile(openwad_t &openData, wfileadd_t &addInfo,
 //
 // haleyjd 10/31/12: Add an id wadlink file stored in memory into the directory.
 //
-bool WadDirectory::addMemoryWad(openwad_t &openData, wfileadd_t &addInfo, int startlump)
+bool WadDirectory::addMemoryWad(openwad_t &openData, const wfileadd_t &addInfo,
+                                int startlump)
 {
    // haleyjd 04/07/11
    wadinfo_t    header;
@@ -404,7 +405,8 @@ bool WadDirectory::addMemoryWad(openwad_t &openData, wfileadd_t &addInfo, int st
 //
 // haleyjd 10/28/12: Add an id wadlink file into the directory.
 //
-bool WadDirectory::addWadFile(openwad_t &openData, wfileadd_t &addInfo, int startlump)
+bool WadDirectory::addWadFile(openwad_t &openData, const wfileadd_t &addInfo,
+                              int startlump)
 {
    // haleyjd 04/07/11
    HashData     wadHash  = HashData(HashData::SHA1);
@@ -554,7 +556,8 @@ bool WadDirectory::addWadFile(openwad_t &openData, wfileadd_t &addInfo, int star
 //
 // Add a zip file into the directory.
 //
-bool WadDirectory::addZipFile(openwad_t &openData, wfileadd_t &addInfo, int startlump)
+bool WadDirectory::addZipFile(openwad_t &openData,
+                              const wfileadd_t &addInfo, int startlump)
 {
    std::unique_ptr<ZipFile> zip(new ZipFile());
    int         numZipLumps;
@@ -635,7 +638,8 @@ bool WadDirectory::addZipFile(openwad_t &openData, wfileadd_t &addInfo, int star
 bool WadDirectory::addFile(wfileadd_t &addInfo)
 {
    // Directory file addition callback type
-   typedef bool (WadDirectory::* AddFileCB)(openwad_t &, wfileadd_t &, int);
+   typedef bool (WadDirectory::* AddFileCB)(openwad_t &, const wfileadd_t &,
+                                            int);
    
    static AddFileCB fileadders[W_FORMAT_MAX] =
    {
@@ -909,7 +913,8 @@ static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
 // namespace system. It's different from addDirectory.
 //
 bool WadDirectory::addDirectoryAsArchive(openwad_t &openData,
-                                         wfileadd_t &addInfo, int startlump)
+                                         const wfileadd_t &addInfo,
+                                         int startlump)
 {
    // Check if it's a directory
    struct stat sbuf;
@@ -1039,6 +1044,7 @@ static nsdata_t wadNameSpaces[lumpinfo_t::ns_max] =
    { "TX_START", "TX_END", lumpinfo_t::ns_textures     },
    { NULL,       NULL,     lumpinfo_t::ns_graphics     },
    { NULL,       NULL,     lumpinfo_t::ns_sounds       },
+   { "HI_START", "HI_END", lumpinfo_t::ns_hires        }, // TODO: Implement
 };
 
 //
@@ -1100,7 +1106,7 @@ public:
          switch(nsdata->li_namespace)
          {
          case lumpinfo_t::ns_sprites:
-            // sf 10/26/99: ignore sprite lumps smaller than 8 bytes (the 
+            // sf 10/26/99: ignore sprite lumps smaller than 8 bytes (the
             // smallest possible) in size -- this was used by some dmadds
             // wads as an 'empty' graphics resource
             if(lump->size > 8)
@@ -1110,6 +1116,10 @@ public:
             // SoM: Ignore marker lumps inside F_START and F_END
             if(lump->size > 0)
                addLump(lump);
+            break;
+         case lumpinfo_t::ns_hires:
+            // MaxW: Ignore these, as they're to be implemented later and cause issues otherwise
+            lump->li_namespace = nsdata->li_namespace;
             break;
          default:
             addLump(lump);
@@ -1196,13 +1206,13 @@ unsigned int WadDirectory::LumpNameHash(const char *s)
    using namespace ectype;
    unsigned int hash;
 
-   (void) ((void(hash =        toUpper(s[0])), s[1]) &&
-           (void(hash = hash*3+toUpper(s[1])), s[2]) &&
-           (void(hash = hash*2+toUpper(s[2])), s[3]) &&
-           (void(hash = hash*2+toUpper(s[3])), s[4]) &&
-           (void(hash = hash*2+toUpper(s[4])), s[5]) &&
-           (void(hash = hash*2+toUpper(s[5])), s[6]) &&
-           (void(hash = hash*2+toUpper(s[6])),
+   (void) ((hash =        toUpper(s[0]), s[1]) &&
+           (hash = hash*3+toUpper(s[1]), s[2]) &&
+           (hash = hash*2+toUpper(s[2]), s[3]) &&
+           (hash = hash*2+toUpper(s[3]), s[4]) &&
+           (hash = hash*2+toUpper(s[4]), s[5]) &&
+           (hash = hash*2+toUpper(s[5]), s[6]) &&
+           (hash = hash*2+toUpper(s[6]),
             hash = hash*2+toUpper(s[7]))
            );
    return hash;
@@ -1228,7 +1238,7 @@ unsigned int WadDirectory::LumpNameHash(const char *s)
 //
 // haleyjd 03/01/09: added InDir version.
 //
-int WadDirectory::checkNumForName(const char *name, int li_namespace)
+int WadDirectory::checkNumForName(const char *name, int li_namespace) const
 {
    // Hash function maps the name to one of possibly numlump chains.
    // It has been tuned so that the average chain length never exceeds 2.
@@ -1278,7 +1288,7 @@ int W_CheckNumForNameNS(const char *name, int li_namespace)
 // source than any global lump, it will be returned. Otherwise, if the
 // global lump exists, it will be returned.
 //
-int WadDirectory::checkNumForNameNSG(const char *name, int ns)
+int WadDirectory::checkNumForNameNSG(const char *name, int ns) const
 {
    int num = -1;
    int inNS, inGlobal;
@@ -1304,7 +1314,7 @@ int WadDirectory::checkNumForNameNSG(const char *name, int ns)
 //
 // Calls W_CheckNumForName, but bombs out if not found.
 //
-int WadDirectory::getNumForName(const char* name)     // killough -- const added
+int WadDirectory::getNumForName(const char* name) const     // killough -- const added
 {
    int i = checkNumForName(name);
    if(i == -1)
@@ -1315,7 +1325,7 @@ int WadDirectory::getNumForName(const char* name)     // killough -- const added
 //
 // WadDirectory::getNumForNameNSG
 //
-int WadDirectory::getNumForNameNSG(const char *name, int ns)
+int WadDirectory::getNumForNameNSG(const char *name, int ns) const
 {
    int i = checkNumForNameNSG(name, ns);
    if(i == -1)
@@ -1333,7 +1343,7 @@ int W_GetNumForName(const char *name)
 //
 // haleyjd 04/21/13: Support for looking up lumps by their long file name.
 //
-int WadDirectory::checkNumForLFN(const char *lfn, int li_namespace)
+int WadDirectory::checkNumForLFN(const char *lfn, int li_namespace) const
 {
    unsigned int hashkey = D_HashTableKeyCase(lfn) % (unsigned int)numlumps;
    int i = lumpinfo[hashkey]->lfnhash.index;
@@ -1356,7 +1366,7 @@ int WadDirectory::checkNumForLFN(const char *lfn, int li_namespace)
 // As above but falling back to ns_global if not initially found in
 // preferred namespace.
 //
-int WadDirectory::checkNumForLFNNSG(const char *name, int ns)
+int WadDirectory::checkNumForLFNNSG(const char *name, int ns) const
 {
    int num = -1;
    int inNS, inGlobal;
@@ -1393,7 +1403,7 @@ lumpinfo_t *WadDirectory::getLumpNameChain(const char *name) const
 //
 // haleyjd 02/04/14: Sometimes we need to go the opposite direction conveniently.
 //
-const char *WadDirectory::getLumpName(int lumpnum)
+const char *WadDirectory::getLumpName(int lumpnum) const
 {
    if(lumpnum < 0 || lumpnum >= numlumps)
       I_Error("WadDirectory::getLumpName: bad lump number %d\n", lumpnum);
@@ -1406,7 +1416,7 @@ const char *WadDirectory::getLumpName(int lumpnum)
 //
 // Get the filename of the file from which a particular lump came.
 //
-const char *WadDirectory::getLumpFileName(int lump)
+const char *WadDirectory::getLumpFileName(int lump) const
 {
    if(lump < 0 || lump >= numlumps)
       return nullptr;
@@ -1562,7 +1572,7 @@ bool WadDirectory::addNewPrivateFile(const char *filename)
 //
 // Returns the buffer size needed to load the given lump.
 //
-int WadDirectory::lumpLength(int lump)
+int WadDirectory::lumpLength(int lump) const
 {
    if(lump < 0 || lump >= numlumps)
       I_Error("WadDirectory::LumpLength: %i >= numlumps\n", lump);
@@ -1579,7 +1589,8 @@ int W_LumpLength(int lump)
 //
 // Loads the lump into the given buffer, which must be >= W_LumpLength().
 //
-void WadDirectory::readLump(int lump, void *dest, WadLumpLoader *lfmt)
+void WadDirectory::readLump(int lump, void *dest,
+                            const WadLumpLoader *lfmt) const
 {
    size_t c;
    lumpinfo_t *lptr;
@@ -1628,7 +1639,8 @@ void WadDirectory::readLump(int lump, void *dest, WadLumpLoader *lfmt)
 //
 // killough 4/25/98: simplified
 //
-void *WadDirectory::cacheLumpNum(int lump, int tag, WadLumpLoader *lfmt)
+void *WadDirectory::cacheLumpNum(int lump, int tag,
+                                 const WadLumpLoader *lfmt) const
 {
    lumpinfo_t::lumpformat fmt = lumpinfo_t::fmt_default;
 
@@ -1666,7 +1678,8 @@ void *WadDirectory::cacheLumpNum(int lump, int tag, WadLumpLoader *lfmt)
 // haleyjd 06/26/11: Restored to status as a method of WadDirectory instead of
 // being a macro, as it needs to take an optional parameter now.
 //
-void *WadDirectory::cacheLumpName(const char *name, int tag, WadLumpLoader *lfmt)
+void *WadDirectory::cacheLumpName(const char *name, int tag,
+                                  const WadLumpLoader *lfmt) const
 {
    return cacheLumpNum(getNumForName(name), tag, lfmt);
 }
@@ -1676,7 +1689,7 @@ void *WadDirectory::cacheLumpName(const char *name, int tag, WadLumpLoader *lfmt
 //
 // Cache a copy of a lump into a ZAutoBuffer, by lump num.
 //
-void WadDirectory::cacheLumpAuto(int lumpnum, ZAutoBuffer &buffer)
+void WadDirectory::cacheLumpAuto(int lumpnum, ZAutoBuffer &buffer) const
 {
    if(lumpnum < 0 || lumpnum >= numlumps)
       I_Error("WadDirectory::cacheLumpAuto: %i >= numlumps\n", lumpnum);
@@ -1692,7 +1705,7 @@ void WadDirectory::cacheLumpAuto(int lumpnum, ZAutoBuffer &buffer)
 //
 // Cache a copy of a lump into a ZAutoBuffer, by lump name.
 //
-void WadDirectory::cacheLumpAuto(const char *name, ZAutoBuffer &buffer)
+void WadDirectory::cacheLumpAuto(const char *name, ZAutoBuffer &buffer) const
 {
    cacheLumpAuto(getNumForName(name), buffer);
 }
@@ -1702,7 +1715,7 @@ void WadDirectory::cacheLumpAuto(const char *name, ZAutoBuffer &buffer)
 //
 // Write out a lump to a physical file.
 //
-bool WadDirectory::writeLump(const char *lumpname, const char *destpath)
+bool WadDirectory::writeLump(const char *lumpname, const char *destpath) const
 {
    int    lumpnum;
    size_t size;
@@ -1830,7 +1843,7 @@ static size_t W_DirectReadLump(lumpinfo_t *l, void *dest)
    directlump_t &direct = l->direct;
 
    // killough 10/98: Add flashing disk indicator
-   fseek(direct.file, direct.position, SEEK_SET);
+   fseek(direct.file, static_cast<long>(direct.position), SEEK_SET);
    ret = fread(dest, 1, size, direct.file);
 
    return ret;

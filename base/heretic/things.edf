@@ -48,7 +48,7 @@ thingtype CrystalVial : HereticPickup, 7081, 300
     num   23 
     modes heretic
   } 
-  
+
   firstdecoratestate S_ITEM_PTN1_1
   states
   @"
@@ -66,7 +66,7 @@ thingtype SilverShield : HereticPickup, 7085, 301
     num   68 
     modes heretic
   }
-  
+
   firstdecoratestate S_ITEM_SHLD1
   states
   @"
@@ -84,7 +84,7 @@ thingtype EnchantedShield : HereticPickup, 7031, 302
     num   69 
     modes heretic
   }
-  
+
   firstdecoratestate S_ITEM_SHD2_1
   states
   @"
@@ -102,7 +102,7 @@ thingtype BagOfHolding : HereticPickup, 7008, 303
     num   136 
     modes heretic
   }
-  
+
   firstdecoratestate S_ITEM_BAGH1
   states
   @"
@@ -121,7 +121,7 @@ thingtype MapScroll : HereticPickup, 7035, 304
     num 137
     modes heretic
   }
-  
+
   firstdecoratestate S_ITEM_SPMP1
   states
   @"
@@ -138,14 +138,14 @@ thingtype Pod : Mobj, 7235, 305
   deathsound  ht_podexp
   radius      16.0
   height      54.0
-  cflags      SOLID|SHOOTABLE|DROPOFF|NOBLOOD|NORESPAWN|PUSHABLE|SLIDE|TELESTOMP|WINDTHRUST|SPACMONSTER
+  cflags      SOLID|SHOOTABLE|DROPOFF|NOBLOOD|NORESPAWN|PUSHABLE|SLIDE|TELESTOMP|WINDTHRUST|SPACMONSTER|PASSMOBJ|MONSTERPASS|LOWAIMPRIO|STICKYCARRY|SETTARGETONDEATH|SLIDEOVERTHINGS
   mod         Barrel
   acs_spawndata
   {
     num   125 
     modes heretic
   }
-  
+
   firstdecoratestate S_POD_WAIT1
   states
   @"
@@ -172,7 +172,7 @@ thingtype PodGoo : Mobj, -1, 306
   radius 2.0
   height 4.0
   cflags NOBLOCKMAP|DROPOFF|MISSILE|LOGRAV|NOCROSS|NOSPLASH|CANNOTPUSH|NORANDOMIZE|NOZERODAMAGE
-  
+
   firstdecoratestate S_PODGOO1
   states
   @"
@@ -193,7 +193,7 @@ thingtype PodGenerator : Mobj, 7043, 307
     num   126 
     modes heretic
   }
-  
+
   firstdecoratestate S_PODGENERATOR
   states
   @"
@@ -208,7 +208,7 @@ thingtype HangingSkull70 : Mobj, 7017, 308
   compatname SkullHang70
   height     70.0
   cflags     SPAWNCEILING|NOGRAVITY
-  
+
   firstdecoratestate S_SKULLHANG70_1
   states
   @"
@@ -223,7 +223,7 @@ thingtype HangingSkull60 : Mobj, 7024, 309
   compatname SkullHang60
   height     60.0
   cflags     SPAWNCEILING|NOGRAVITY
-  
+
   firstdecoratestate S_SKULLHANG60_1
   states
   @"
@@ -238,7 +238,7 @@ thingtype HangingSkull45 : Mobj, 7025, 310
   compatname SkullHang45
   height     45.0
   cflags     SPAWNCEILING|NOGRAVITY
-  
+
   firstdecoratestate S_SKULLHANG45_1
   states
   @"
@@ -253,7 +253,7 @@ thingtype HangingSkull35 : Mobj, 7026, 311
   compatname SkullHang35
   height     35.0
   cflags     SPAWNCEILING|NOGRAVITY
-  
+
   firstdecoratestate S_SKULLHANG35_1
   states
   @"
@@ -267,7 +267,7 @@ thingtype Chandelier : Mobj, 7028, 312
 {
   height 60.0
   cflags SPAWNCEILING|NOGRAVITY
-  
+
   firstdecoratestate S_CHANDELIER1
   states
   @"
@@ -282,7 +282,7 @@ thingtype SerpentTorch : Mobj, 7027, 313
   radius 12.0
   height 54.0
   cflags SOLID
-  
+
   firstdecoratestate S_SERPTORCH1
   states
   @"
@@ -298,7 +298,7 @@ thingtype HereticPillarSmall : Mobj, 7029, 314
   radius     16.0
   height     34.0
   cflags     SOLID
-  
+
   firstdecoratestate S_SMALLPILLAR
   states
   @"
@@ -314,7 +314,7 @@ thingtype HereticStalagmiteSmall : Mobj, 7037, 315
   radius     8.0
   height     32.0
   cflags     SOLID
-  
+
   firstdecoratestate S_STALAGMITESMALL
   states
   @"
@@ -330,7 +330,7 @@ thingtype HereticStalagmiteLarge : Mobj, 7038, 316
   radius     12.0
   height     64.0
   cflags     SOLID
-  
+
   firstdecoratestate S_STALAGMITELARGE
   states
   @"
@@ -346,7 +346,7 @@ thingtype HereticStalactiteSmall : Mobj, 7039, 317
   radius     8.0
   height     36.0
   cflags     SOLID|SPAWNCEILING|NOGRAVITY
-  
+
   firstdecoratestate S_STALACTITESMALL
   states
   @"
@@ -362,7 +362,7 @@ thingtype HereticStalactiteLarge : Mobj, 7040, 318
   radius     12.0
   height     68.0
   cflags     SOLID|SPAWNCEILING|NOGRAVITY
-  
+
   firstdecoratestate S_STALACTITELARGE
   states
   @"
@@ -377,7 +377,7 @@ thingtype FireBrazier : Mobj, 7076, 319
   radius 16.0
   height 44.0
   cflags SOLID
-  
+
   firstdecoratestate S_FIREBRAZIER1
   states
   @"
@@ -393,7 +393,7 @@ thingtype HereticBarrel : Mobj, 7044, 320
   radius     12.0
   height     32.0
   cflags     SOLID
-  
+
   firstdecoratestate S_WOODBARREL
   states
   @"
@@ -409,7 +409,7 @@ thingtype HornedPillar : Mobj, 7047, 321
   radius     14.0
   height     128.0
   cflags     SOLID
-  
+
   firstdecoratestate S_BCOLUMN
   states
   @"
@@ -424,7 +424,7 @@ thingtype HereticMoss1 : Mobj, 7048, 322
   compatname Moss1
   height     23.0
   cflags     SPAWNCEILING|NOGRAVITY
-  
+
   firstdecoratestate S_MOSS1
   states
   @"
@@ -439,7 +439,7 @@ thingtype HereticMoss2 : Mobj, 7049, 323
   compatname Moss2
   height     27.0
   cflags     SPAWNCEILING|NOGRAVITY
-  
+
   firstdecoratestate S_MOSS2
   states
   @"
@@ -454,7 +454,7 @@ thingtype HereticWallTorch : Mobj, 7050, 324
 {
   compatname WallTorch
   cflags     NOGRAVITY
-  
+
   firstdecoratestate S_WALLTORCH1
   states
   @"
@@ -470,7 +470,7 @@ thingtype HereticCorpse : Mobj, 7051, 325
   radius     8.0
   height     104.0
   cflags     SOLID|SPAWNCEILING|NOGRAVITY
-  
+
   firstdecoratestate S_HTICCORPSE
   states
   @"
@@ -536,7 +536,7 @@ thingtype KeyGizmoOrb : Mobj, -1, 329
 {
   radius 16.0
   cflags SOLID|NOGRAVITY
-  
+
   firstdecoratestate S_KGZ_START
   states
   @"
@@ -559,7 +559,7 @@ thingtype TeleGlitterGenRed : Mobj, 7074, 330
 {
   compatname TeleGlitterGenerator1
   cflags     DONTDRAW
-  
+
   firstdecoratestate S_TELEGLITGEN1
   states
   @"
@@ -573,7 +573,7 @@ thingtype TeleGlitterGenBlue : Mobj, 7052, 331
 {
   compatname TeleGlitterGenerator2
   cflags     DONTDRAW
-  
+
   firstdecoratestate S_TELEGLITGEN2
   states
   @"
@@ -592,7 +592,7 @@ thingtype TeleGlitterRed : Mobj, -1, 332
     num   166 
     modes heretic
   }
-  
+
   firstdecoratestate S_TELEGLITTER1_1
   states
   @"
@@ -615,7 +615,7 @@ thingtype TeleGlitterBlue : Mobj, -1, 333
     num   167
     modes heretic
   }
-  
+
   firstdecoratestate S_TELEGLITTER2_1
   states
   @"
@@ -632,7 +632,7 @@ thingtype TeleGlitterBlue : Mobj, -1, 333
 thingtype HereticTeleFog : Mobj, -1, 334
 {
   cflags NOBLOCKMAP|NOGRAVITY
-  
+
   firstdecoratestate S_HTFOG1
   states
   @"
@@ -645,7 +645,7 @@ thingtype HereticTeleFog : Mobj, -1, 334
 thingtype HereticBlood : Mobj, -1, 335
 {
   cflags NOBLOCKMAP|NOSPLASH
-  
+
   firstdecoratestate S_HTICBLOOD1
   states
   @"
@@ -677,7 +677,7 @@ thingtype Golem : Mobj, 7068, 336
     num   4
     modes heretic
   }
-  
+
   firstdecoratestate S_MUMMY_LOOK1
   states
   @"
@@ -720,7 +720,7 @@ thingtype NitroGolem : Golem, 7045, 337
     num   2 
     modes heretic
   }
-  
+
   firstdecoratestate S_MUMMYL_ATK1
   states
   @"
@@ -763,7 +763,7 @@ thingtype GolemSoul : Mobj, -1, 340
 {
   compatname MummySoul
   cflags     NOBLOCKMAP|NOGRAVITY
-  
+
   firstdecoratestate S_MUMMY_SOUL1
   states
   @"
@@ -789,7 +789,7 @@ thingtype GolemShot : Mobj, -1, 341
     num   131
     modes heretic 
   }
-  
+
   firstdecoratestate S_MUMMYFX1_1
   states
   @"
@@ -828,7 +828,7 @@ thingtype Weredragon : Mobj, 7070, 342
     num   3
     modes heretic 
   }
-  
+
   firstdecoratestate S_BEAST_LOOK1
   states
   @"
@@ -881,7 +881,7 @@ thingtype WeredragonShot : Mobj, -1, 343
     num   120
     modes heretic
   }
-  
+
   firstdecoratestate S_BEASTBALL1
   states
   @"
@@ -902,7 +902,7 @@ thingtype WeredragonSmoke : Mobj, -1, 344
   height     8.0
   damage     2
   cflags     NOBLOCKMAP|NOGRAVITY|MISSILE|NOCROSS|NOSPLASH|NORANDOMIZE|DRAWSBLOOD
-  
+
   firstdecoratestate S_PUFFY1
   states
   @"
@@ -934,7 +934,7 @@ thingtype Ophidian : Mobj, 7092, 345
     num   132
     modes heretic 
   }
-  
+
   firstdecoratestate S_SNAKE_LOOK1
   states
   @"
@@ -979,7 +979,7 @@ thingtype OphidianShotA : Mobj, -1, 346
     num   138
     modes heretic 
   }
-  
+
   firstdecoratestate S_SNAKEPRO_A1
   states
   @"
@@ -1008,7 +1008,7 @@ thingtype OphidianShotB : Mobj, -1, 347
     num   139
     modes heretic
   }
-  
+
   firstdecoratestate S_SNAKEPRO_B1
   states
   @"
@@ -1044,7 +1044,7 @@ thingtype SabreClaw : Mobj, 7090, 348
     num   1
     modes heretic
   }
-  
+
   firstdecoratestate S_CLINK_LOOK1
   states
   @"
@@ -1096,7 +1096,7 @@ thingtype Disciple : Mobj, 7015, 349
     num   19
     modes heretic
   }
-  
+
   firstdecoratestate S_WIZARD_LOOK1
   states
   @"
@@ -1153,7 +1153,7 @@ thingtype DiscipleShot : Mobj, -1, 350
     num   140
     modes heretic
   }
-  
+
   firstdecoratestate S_WIZFX1_1
   states
   @"
@@ -1189,7 +1189,7 @@ thingtype DeathKnight : Mobj, 7064, 351
     num   6
     modes heretic
   }
-  
+
   firstdecoratestate S_KNIGHT_STND1
   states
   @"
@@ -1250,7 +1250,7 @@ thingtype KnightAxe : Mobj, -1, 353
     num   127
     modes heretic
   }
-  
+
   firstdecoratestate S_SPINAXE1
   states
   @"
@@ -1279,7 +1279,7 @@ thingtype KnightAxeRed : Mobj, -1, 354
     num   128
     modes heretic
   }
-  
+
   firstdecoratestate S_REDAXE1
   states
   @"
@@ -1315,7 +1315,7 @@ thingtype SerpentRiderDsparil : Mobj, 7007, 355
     num   142
     modes heretic 
   }
-  
+
   firstdecoratestate S_SRCR1_LOOK1
   states
   @"
@@ -1370,7 +1370,7 @@ thingtype SRDsparilShot1 : Mobj, -1, 356
     num   144
     modes heretic 
   }
-  
+
   firstdecoratestate S_SRCRFX1_1
   states
   @"
@@ -1404,7 +1404,7 @@ thingtype Dsparil : Mobj, -1, 357
     num   143
     modes heretic
   }
-  
+
   firstdecoratestate S_SOR2_RISE1
   states
   @"
@@ -1463,7 +1463,7 @@ thingtype DsparilShot1 : Mobj, -1, 358
     num   146
     modes heretic
   }
-  
+
   firstdecoratestate S_SOR2FX1_1
   states
   @"
@@ -1481,7 +1481,7 @@ thingtype DsparilSpark : Mobj, -1, 359
 {
   compatname Sorcerer2FXSpark
   cflags     NOBLOCKMAP|NOGRAVITY|NOCROSS|CANNOTPUSH
-  
+
   firstdecoratestate S_SOR2FXSPARK1
   states
   @"
@@ -1504,7 +1504,7 @@ thingtype DsparilShot2 : Mobj, -1, 360
     num   145
     modes heretic
   }
-  
+
   firstdecoratestate S_SOR2FX2_1
   states
   @"
@@ -1523,7 +1523,7 @@ thingtype DsparilTeleFade : Mobj, -1, 361
 {
   compatname Sorcerer2Telefade
   cflags     NOBLOCKMAP
-  
+
   firstdecoratestate S_SOR2TELEFADE1
   states
   @"
@@ -1543,7 +1543,7 @@ thingtype HereticGreenKey : Mobj, 7073, 362
     num   86
     modes heretic
   }
-  
+
   firstdecoratestate S_AKYY1
   states
   @"
@@ -1562,7 +1562,7 @@ thingtype HereticBlueKey : Mobj, 7079, 363
     num   85
     modes heretic
   }
-  
+
   firstdecoratestate S_BKYY1
   states
   @"
@@ -1581,7 +1581,7 @@ thingtype HereticYellowKey : Mobj, 7080, 364
     num   87
     modes heretic
   }
-  
+
   firstdecoratestate S_CKYY1
   states
   @"
@@ -1600,7 +1600,7 @@ thingtype HereticAmbienceWind : Mobj, 7042, 365
     num   110
     modes heretic
   }
-  
+
   firstdecoratestate S_SND_WIND
   states
   @"
@@ -1619,7 +1619,7 @@ thingtype HereticAmbienceWater : Mobj, 7041, 366
     num   111
     modes heretic
   }
-  
+
   firstdecoratestate S_SND_WATERFALL
   states
   @"
@@ -1648,7 +1648,7 @@ thingtype HereticVolcano : Mobj, 7087, 368
     num   150
     modes heretic
   }
-  
+
   firstdecoratestate S_VOLCANO1
   states
   @"
@@ -1675,7 +1675,7 @@ thingtype VolcanoBall : Mobj, -1, 369
     num   123
     modes heretic 
   }
-  
+
   firstdecoratestate S_VOLCANOBALL1
   states
   @"
@@ -1702,7 +1702,7 @@ thingtype VolcanoBallSmall : Mobj, -1, 370
     num   124
     modes heretic
   }
-  
+
   firstdecoratestate S_VOLCANOTBALL1
   states
   @"
@@ -1741,7 +1741,7 @@ thingtype Maulotaur : Mobj, 7009, 371
     num   114     // note: different from zdoom
     modes heretic
   }
-  
+
   firstdecoratestate S_MNTR_LOOK1
   states
   @"
@@ -1810,7 +1810,7 @@ thingtype MaulotaurShot : Mobj, -1, 372
     num   115     // note: different from zdoom  
     modes heretic
   }
-  
+
   firstdecoratestate S_MNTRFX1_1
   states
   @"
@@ -1829,7 +1829,7 @@ thingtype MaulotaurFireProto
   deathsound ht_phohit
   damage     4
   cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FIREDAMAGE|NOSPLASH|NORANDOMIZE|DRAWSBLOOD
-  
+
   firstdecoratestate S_MNTRFXI2_1
   states
   @"
@@ -1853,7 +1853,7 @@ thingtype MaulotaurFloorFire : MaulotaurFireProto, -1, 373
     num   116     // note: different from zdoom
     modes heretic
   }
-  
+
   firstdecoratestate S_MNTRFX2_1
   states
   @"
@@ -1872,7 +1872,7 @@ thingtype MaulotaurFloorFlame : MaulotaurFireProto, -1, 374
     num   117     // note : different from zdoom
     modes heretic
   }
-  
+
   firstdecoratestate S_MNTRFX3_1
   states
   @"
@@ -1889,7 +1889,7 @@ thingtype HereticPhoenixPuff : Mobj, -1, 375
   compatname   PhoenixPuff
   cflags       NOBLOCKMAP|NOGRAVITY|NOCROSS|CANNOTPUSH
   translucency 26624
-  
+
   firstdecoratestate S_PHOENIXPUFF1
   states
   @"
@@ -1922,7 +1922,7 @@ thingtype IronLich : Mobj, 7006, 376
     num   20
     modes heretic
   }
-  
+
   firstdecoratestate S_LICH_LOOK
   states
   @"
@@ -1965,7 +1965,7 @@ thingtype IronLichShot1 : Mobj, -1, 377
     num   164
     modes heretic
   }
-  
+
   firstdecoratestate S_LICHFX1_1
   states
   @"
@@ -1987,7 +1987,7 @@ thingtype IronLichShot2 : Mobj, -1, 378
   height     6.0
   damage     3
   cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|NORANDOMIZE|DRAWSBLOOD
-  
+
   firstdecoratestate S_LICHFX2_1
   states
   @"
@@ -2009,7 +2009,7 @@ thingtype IronLichShot3 : Mobj, -1, 379
   height     12.0
   damage     5
   cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|WINDTHRUST|NORANDOMIZE|DRAWSBLOOD
-  
+
   firstdecoratestate S_LICHFX3_1
   states
   @"
@@ -2040,7 +2040,7 @@ thingtype LichWhirlwind : Mobj, -1, 380
     num   165
     modes heretic
   }
-  
+
   firstdecoratestate S_LICHFX4_1
   states
   @"
@@ -2063,7 +2063,7 @@ thingtype HAmmoWandWimpy : HereticPickup, 7010, 381
     num   11
     modes heretic
   }
-  
+
   firstdecoratestate S_AMG1
   states
   @"
@@ -2082,7 +2082,7 @@ thingtype HAmmoWandHefty : HereticPickup, 7012, 382
     num   12
     modes heretic
   }
-  
+
   firstdecoratestate S_AMG2_1
   states
   @"
@@ -2102,7 +2102,7 @@ thingtype HAmmoMaceWimpy : HereticPickup, 7013, 383
     num   35
     modes heretic
   }
-  
+
   firstdecoratestate S_AMM1
   states
   @"
@@ -2122,7 +2122,7 @@ thingtype HAmmoMaceHefty : HereticPickup, 7016, 384
     num   36
     modes heretic
   }
-  
+
   firstdecoratestate S_AMM2
   states
   @"
@@ -2141,7 +2141,7 @@ thingtype HAmmoCBowWimpy : HereticPickup, 7018, 385
     num   33
     modes heretic
   }
-  
+
   firstdecoratestate S_AMC1
   states
   @"
@@ -2160,7 +2160,7 @@ thingtype HAmmoCBowHefty : HereticPickup, 7019, 386
     num   34
     modes heretic
   }
-  
+
   firstdecoratestate S_AMC2_1
   states
   @"
@@ -2180,7 +2180,7 @@ thingtype HAmmoSkullWimpy : HereticPickup, 7020, 387
     num   158 
     modes heretic
   }
-  
+
   firstdecoratestate S_AMS1_1
   states
   @"
@@ -2200,7 +2200,7 @@ thingtype HAmmoSkullHefty : HereticPickup, 7021, 388
     num   159
     modes heretic
   }
-  
+
   firstdecoratestate S_AMS2_1
   states
   @"
@@ -2220,7 +2220,7 @@ thingtype HAmmoPhoenixWimpy : HereticPickup, 7022, 389
     num   161
     modes heretic
   }
-  
+
   firstdecoratestate S_AMP1_1
   states
   @"
@@ -2240,7 +2240,7 @@ thingtype HAmmoPhoenixHefty : HereticPickup, 7023, 390
     num   162
     modes heretic
   }
-  
+
   firstdecoratestate S_AMP2_1
   states
   @"
@@ -2259,7 +2259,7 @@ thingtype HAmmoBlasterWimpy : HereticPickup, 7054, 391
     num   37
     modes heretic
   }
-  
+
   firstdecoratestate S_AMB1_1
   states
   @"
@@ -2278,7 +2278,7 @@ thingtype HAmmoBlasterHefty : HereticPickup, 7055, 392
     num   38
     modes heretic
   }
-  
+
   firstdecoratestate S_AMB2_1
   states
   @"
@@ -2308,7 +2308,7 @@ thingtype HereticImp : Mobj, 7066, 393
     num   5
     modes heretic
   }
-  
+
   firstdecoratestate S_IMP_LOOK1
   states
   @"
@@ -2366,7 +2366,7 @@ thingtype HereticImpLeader : HereticImp, 7005, 394
     num   7
     modes heretic
   }
-  
+
   firstdecoratestate S_IMP_MSATK2_1
   states
   @"
@@ -2419,7 +2419,7 @@ thingtype HereticImpShot : Mobj, -1, 397
     num   10
     modes heretic
   }
-  
+
   firstdecoratestate S_IMPFX1
   states
   @"
@@ -2441,9 +2441,9 @@ thingtype HereticPlayer : Mobj, -1, 398
   height       56.0
   painsound    ht_plrpai
   deathsound   ht_plrdth
-  cflags       SOLID|SHOOTABLE|DROPOFF|PICKUP|NOTDMATCH|FOOTCLIP|SLIDE|TELESTOMP|WINDTHRUST|PASSMOBJ|NOSOUNDCUTOFF
+  cflags       SOLID|SHOOTABLE|DROPOFF|PICKUP|NOTDMATCH|FOOTCLIP|SLIDE|TELESTOMP|WINDTHRUST|PASSMOBJ|NOSOUNDCUTOFF|STICKYCARRY
   mod          PlayerMisc
-  
+
   firstdecoratestate S_HPLAY
   states
   @"
@@ -2512,7 +2512,7 @@ thingtype HereticPlayerSkull : Mobj, -1, 399
   radius     4.0
   height     4.0
   cflags     CORPSE|DROPOFF|LOGRAV|CANNOTPUSH
-  
+
   firstdecoratestate S_HPLAYERSKULL1
   states
   @"
@@ -2532,7 +2532,7 @@ thingtype HArtiInvisibility : HereticArtifact, 7075, 400
   compatname   ArtiInvisibility
   addflags     COUNTITEM|FLOATBOB|SUPERITEM
   translucency 26624
-  
+
   firstdecoratestate S_ARTI_INVS1
   states
   @"
@@ -2546,7 +2546,7 @@ thingtype HArtiQuartzFlask : HereticArtifact, 7082, 401
 {
   compatname ArtiHealth
   addflags   COUNTITEM|FLOATBOB
-  
+
   firstdecoratestate S_ARTI_PTN2_1
   states
   @"
@@ -2560,7 +2560,7 @@ thingtype HArtiFly : HereticArtifact, 7083, 402
 {
   compatname ArtiFly
   addflags   COUNTITEM|FLOATBOB
-  
+
   firstdecoratestate S_ARTI_SOAR1
   states
   @"
@@ -2574,7 +2574,7 @@ thingtype HArtiInvulnerability : HereticArtifact, 7084, 403
 {
   compatname ArtiInvulnerability
   addflags   COUNTITEM|FLOATBOB|SUPERITEM
-  
+
   firstdecoratestate S_ARTI_INVU1
   states
   @"
@@ -2588,7 +2588,7 @@ thingtype HArtiTomeOfPower : HereticArtifact, 7086, 404
 {
   compatname ArtiTomeOfPower
   addflags   COUNTITEM|FLOATBOB
-  
+
   firstdecoratestate S_ARTI_PWBK1
   states
   @"
@@ -2602,7 +2602,7 @@ thingtype HArtiEgg : HereticArtifact, 7030, 405
 {
   compatname ArtiEgg
   addflags   COUNTITEM|FLOATBOB
-  
+
   firstdecoratestate S_ARTI_EGGC1
   states
   @"
@@ -2616,7 +2616,7 @@ thingtype HArtiSuperHeal : HereticArtifact, 7032, 406
 {
   compatname ArtiSuperHealth
   addflags   COUNTITEM|FLOATBOB|NOTSHAREWARE
-  
+
   firstdecoratestate S_ARTI_SPHL1
   states
   @"
@@ -2630,7 +2630,7 @@ thingtype HArtiTorch : HereticArtifact, 7033, 407
 {
   compatname ArtiTorch
   addflags   COUNTITEM|FLOATBOB
-  
+
   firstdecoratestate S_ARTI_TRCH1
   states
   @"
@@ -2644,7 +2644,7 @@ thingtype HArtiFireBomb : HereticArtifact, 7034, 408
 {
   compatname ArtiTimeBomb
   addflags   COUNTITEM|FLOATBOB
-  
+
   firstdecoratestate S_ARTI_FBMB1
   states
   @"
@@ -2660,7 +2660,7 @@ thingtype HereticFireBomb : Mobj, -1, 409
   deathsound   ht_phohit
   cflags       NOGRAVITY
   translucency 26624
-  
+
   firstdecoratestate S_HFIREBOMB1
   states
   @"
@@ -2677,7 +2677,7 @@ thingtype HArtiTeleport : HereticArtifact, 7036, 410
 {
   compatname ArtiTeleport
   addflags   COUNTITEM|FLOATBOB|NOTSHAREWARE
-  
+
   firstdecoratestate S_ARTI_ATLP1
   states
   @"
@@ -2692,7 +2692,7 @@ thingtype HArtiTeleport : HereticArtifact, 7036, 410
 thingtype HWeaponGauntlets : HereticPickup, 7205, 411
 {
   compatname Gauntlets
-  
+
   firstdecoratestate S_WGNT
   states
   @"
@@ -2719,7 +2719,7 @@ thingtype HWeaponSkullRod : HereticPickup, 7204, 413
 {
   compatname SkullRod
   addflags   NOTSHAREWARE
-  
+
   firstdecoratestate S_WSKL
   states
   @"
@@ -2733,7 +2733,7 @@ thingtype HWeaponPhoenixRod : HereticPickup, 7203, 414
 {
   compatname PhoenixRod
   addflags   NOTSHAREWARE
-  
+
   firstdecoratestate S_WPHX
   states
   @"
@@ -2763,7 +2763,7 @@ thingtype HereticStaffPuff : Mobj, -1, 416
   compatname  StaffPuff
   attacksound ht_stfhit
   cflags      NOBLOCKMAP|NOGRAVITY
-  
+
   firstdecoratestate S_STAFFPUFF1
   states
   @"
@@ -2779,7 +2779,7 @@ thingtype HereticStaffPuff2 : Mobj, -1, 417
   compatname  StaffPuff2
   attacksound ht_stfpow
   cflags      NOBLOCKMAP|NOGRAVITY
-  
+
   firstdecoratestate S_STAFFPUFF2_1
   states
   @"
@@ -2800,7 +2800,7 @@ thingtype HereticGauntletPuff1 : Mobj, -1, 419
   compatname   GauntletPuff1
   cflags       NOBLOCKMAP|NOGRAVITY
   translucency 26624
-  
+
   firstdecoratestate S_GAUNTLETPUFF1_1
   states
   @"
@@ -2815,7 +2815,7 @@ thingtype HereticGauntletPuff2 : Mobj, -1, 420
   compatname   GauntletPuff2
   cflags       NOBLOCKMAP|NOGRAVITY
   translucency 26624
-  
+
   firstdecoratestate S_GAUNTLETPUFF2_1
   states
   @"
@@ -2830,7 +2830,7 @@ thingtype HereticBlasterSmoke : Mobj, -1, 421
   compatname   BlasterSmoke
   cflags       NOBLOCKMAP|NOGRAVITY|CANNOTPUSH
   translucency 26624
-  
+
   firstdecoratestate S_BLASTERSMOKE1
   states
   @"
@@ -2849,7 +2849,7 @@ thingtype HereticRipper : Mobj, -1, 422
   height     6.0
   damage     1
   cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|RIP|NORANDOMIZE|DRAWSBLOOD
-  
+
   firstdecoratestate S_HRIPPER1
   states
   @"
@@ -2867,7 +2867,7 @@ thingtype HereticBlasterPuff1 : Mobj, -1, 423
 {
   compatname BlasterPuff
   cflags     NOBLOCKMAP|NOGRAVITY
-  
+
   firstdecoratestate S_BLASTERPUFF1_1
   states
   @"
@@ -2879,9 +2879,10 @@ thingtype HereticBlasterPuff1 : Mobj, -1, 423
 
 thingtype HereticBlasterPuff2 : Mobj, -1, 424
 {
-  compatname BlasterSmoke
-  cflags     NOBLOCKMAP|NOGRAVITY
-  
+  compatname  BlasterSmoke
+  cflags      NOBLOCKMAP|NOGRAVITY
+  attacksound ht_blshit
+
   firstdecoratestate S_BLASTERPUFF2_1
   states
   @"
@@ -2902,7 +2903,7 @@ thingtype HereticHornRodFX1 : Mobj, -1, 425
   seesound   ht_hrnsht
   deathsound ht_hrnhit
   cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|WINDTHRUST|NORANDOMIZE|DRAWSBLOOD
-  
+
   firstdecoratestate S_HRODFX1_1
   states
   @"
@@ -2926,7 +2927,7 @@ thingtype HereticGoldWandFX1 : Mobj, -1, 426
   damage     2
   deathsound ht_gldhit
   cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NORANDOMIZE|DRAWSBLOOD
-  
+
   firstdecoratestate S_GWANDFX1_1
   states
   @"
@@ -2945,7 +2946,7 @@ thingtype HereticGoldWandFX2 : HereticGoldWandFX1, -1, 427
   speed      18.0
   damage     1
   deathsound none
-  
+
   firstdecoratestate S_GWANDFX2_1
   states
   @"
@@ -2959,7 +2960,7 @@ thingtype HereticGoldWandPuff1 : Mobj, -1, 428
 {
   compatname GoldWandPuff1
   cflags     NOBLOCKMAP|NOGRAVITY
-  
+
   firstdecoratestate S_GWANDPUFF1_1
   states
   @"
@@ -2986,7 +2987,7 @@ thingtype HereticPhoenixFX1 : Mobj, -1, 430
   seesound   ht_phosht
   deathsound ht_phohit
   cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|THRUGHOST|NORANDOMIZE|DRAWSBLOOD
-  
+
   firstdecoratestate S_PHOENIXFX1_1
   states
   @"
@@ -2997,6 +2998,195 @@ thingtype HereticPhoenixFX1 : Mobj, -1, 430
     FX08 A     6 bright A_HticExplode
     FX08 BC    5 bright
     FX08 DEFGH 4 bright
+    stop
+  "@
+}
+
+thingtype HereticPhoenixFX2 : Mobj, -1, 442
+{
+  compatname PhoenixFX2
+  speed      10.0
+  radius     6.0
+  height     8.0
+  damage     2
+  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOSPLASH|NOTELEPORT|FIREDAMAGE
+
+  //firstdecoratestate S_PHOENIXFX2_1
+  states
+  @"
+  Spawn:
+    FX09 ABABA 2 Bright
+    FX09 B 2 Bright A_FlameEnd
+    FX09 CDEF 2 Bright
+    stop
+  Death:
+    FX09 G 3 Bright
+    FX09 H 3 Bright A_FloatPuff
+    FX09 I 4 Bright
+    FX09 JK 5 Bright
+    stop
+  "@
+}
+
+thingtype CrossbowFX1 : Mobj, -1, 434
+{
+  compatname CrossbowFX1
+  speed      30.0
+  radius     11.0
+  height     8.0
+  damage     10
+  seesound   ht_bowsht
+  deathsound ht_hrnhit
+  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOTELEPORT|NORANDOMIZE|DRAWSBLOOD
+
+  //firstdecoratestate S_CRBOWFX1_1
+  states
+  @"
+  Spawn:
+    FX03 B 1 bright
+    loop
+  Death:
+    FX03 HIJ 8 bright
+    stop
+  "@
+}
+
+thingtype CrossbowFX2 : CrossbowFX1, -1, 435
+{
+  compatname CrossboxFX1
+  speed      32.0
+  damage     6
+
+
+  //firstdecoratestate S_CRBOWFX2_1
+  states
+  @"
+  Spawn:
+    FX03 B 1 bright A_BoltSpark
+    loop
+  "@
+}
+
+thingtype CrossbowFX3 : Mobj, -1, 436
+{
+  compatname CrossbowFX3
+  speed      32.0
+  radius     11.0
+  height     8.0
+  damage     6
+  deathsound ht_hrnhit
+  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|WINDTHRUST|THRUGHOST|NOTELEPORT|NORANDOMIZE|DRAWSBLOOD
+
+  //firstdecoratestate S_CRBOWFX3_1
+  states
+  @"
+  Spawn:
+    FX03 A 1 bright
+    loop
+  Death:
+    FX03 CDE 8 bright
+    stop
+  "@
+}
+
+thingtype CrossbowFX4 : Mobj, -1, 437
+{
+  compatname CrossbowFX4
+  cflags NOBLOCKMAP|LOGRAV
+
+  //firstdecoratestate S_CRBOWFX4_1
+  states @"
+  Spawn:
+    FX03 FG 8 bright
+    stop
+  "@
+}
+
+thingtype MaceShotProto
+{
+  cflags NOBLOCKMAP|MISSILE|DROPOFF|HERETICBOUNCES|THRUGHOST|NOTELEPORT
+
+  //firstdecoratestate S_MACEFX1_1
+  states @"
+  Death:
+    FX02 F 4 bright A_MaceBallImpact
+    FX02 GHIJ 4 bright
+    stop
+  "@
+}
+
+thingtype MaceFX1 : MaceShotProto, -1, 438
+{
+  compatname MaceFX1
+  speed      20.0
+  radius     8.0
+  height     6.0
+  damage     2
+  seesound   ht_lobsht
+  addflags   NOGRAVITY
+
+  //firstdecoratestate S_MACEFX1_1
+  states @"
+  Spawn:
+    FX02 AB 4 A_MacePL1Check
+    loop
+  "@
+}
+
+thingtype MaceFX2 : MaceShotProto, -1, 439
+{
+  compatname MaceFX2
+  speed      10.0
+  radius     11.0
+  height     8.0
+  damage     6
+  addflags   LOGRAV
+
+  //firstdecoratestate S_MACEFX2_1
+  states @"
+  Spawn:
+    FX02 CD 4
+    loop
+  Death:
+    FX02 F 4 bright A_MaceBallImpact2
+    FX02 GHIJ 4 bright
+  "@
+}
+
+thingtype MaceFX3 : MaceShotProto, -1, 440
+{
+  compatname MaceFX3
+  speed      7.0
+  radius     4.0
+  height     6.0
+  damage     2
+  addflags   LOGRAV
+
+  //firstdecoratestate S_MACEFX2_1
+  states @"
+  Spawn:
+    FX02 AB 4
+    loop
+  "@
+}
+
+thingtype MaceFX4 : MaceShotProto, -1, 441
+{
+  compatname MaceFX4
+  speed      7.0
+  radius     8.0
+  height     6.0
+  damage     18
+  remflags   NOTELEPORT
+  addflags   LOGRAV|TELESTOMP
+
+  states @"
+  Spawn:
+    FX02 E 99
+    loop
+  Death:
+    FX02 C 4 Bright A_DeathBallImpact
+    FX02 GHIJ 4 Bright
     stop
   "@
 }
@@ -3027,7 +3217,7 @@ thingtype HWeaponFireMace : HereticPickup, -1, 432
 {
   compatname    Mace
   itemrespawnat HereticMaceSpot
-  
+
   firstdecoratestate S_WMCE
   states
   @"
@@ -3055,4 +3245,15 @@ thingtype HereticBloodSplatter : Mobj, -1, 433
     BLOD A 6
     stop
   "@
+}
+
+// Damage Types ----------------------------------------------------------------
+
+//
+// Powered staff damage type: has special pushing behaviour
+//
+damagetype StaffPowered
+{
+  absolute.push 10
+  absolute.hop  5
 }

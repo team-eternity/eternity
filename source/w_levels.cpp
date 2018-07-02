@@ -252,7 +252,9 @@ WadDirectory *W_AddManagedWad(const char *filename)
 //
 // Closes a managed wad directory. Returns true if anything was actually done.
 //
-bool W_CloseManagedWad(const char *filename)
+// FIXME: unused?
+//
+static bool W_CloseManagedWad(const char *filename)
 {
    ManagedDirectory *dir = NULL;
    bool retcode = false;
@@ -304,7 +306,7 @@ const char *W_GetManagedDirFN(WadDirectory *waddir)
 // map is not guaranteed to be valid; code in P_SetupLevel is expected to deal
 // with that possibility.
 //
-char *W_FindMapInLevelWad(WadDirectory *dir, bool mapxy)
+static char *W_FindMapInLevelWad(WadDirectory *dir, bool mapxy)
 {
    char *name = NULL;
    int          numlumps = dir->getNumLumps();

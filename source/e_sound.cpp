@@ -61,7 +61,6 @@
 #include "m_utils.h"
 #include "p_mobj.h"
 #include "p_skin.h"
-#include "sounds.h"
 #include "s_sndseq.h"
 #include "s_sound.h"
 #include "w_wad.h"

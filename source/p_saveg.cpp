@@ -39,11 +39,13 @@
 #include "e_edf.h"
 #include "e_inventory.h"
 #include "e_player.h"
+#include "e_weapons.h"
 #include "g_dmflag.h"
 #include "g_game.h"
 #include "m_argv.h"
 #include "m_buffer.h"
 #include "m_random.h"
+#include "p_info.h"
 #include "p_maputl.h"
 #include "p_spec.h"
 #include "p_tick.h"
@@ -366,6 +368,13 @@ SaveArchive &SaveArchive::operator << (inventoryslot_t &slot)
    return *this;
 }
 
+// Serializes a vector
+SaveArchive &SaveArchive::operator << (v2fixed_t &vec)
+{
+   *this << vec.x << vec.y;
+   return *this;
+}
+
 //=============================================================================
 //
 // Thinker Enumeration
@@ -456,6 +465,55 @@ static void P_ArchivePSprite(SaveArchive &arc, pspdef_t &pspr)
          pspr.state = states[statenum];
       else
          pspr.state = nullptr;
+      pspr.backupPosition();
+   }
+}
+
+//
+// Recursively save weapon counters
+//
+static void P_saveWeaponCounters(SaveArchive &arc, WeaponCounterNode *node)
+{
+   if(arc.isSaving())
+   {
+      if(node->left)
+         P_saveWeaponCounters(arc, node->left);
+      if(node->right)
+         P_saveWeaponCounters(arc, node->right);
+      arc.writeLString(E_WeaponForID(node->key)->name);
+      for(int i = 0; i < NUMWEAPCOUNTERS; i++)
+         arc << (*node->object)[i];
+   }
+}
+
+//
+// Load all the weapon counters if there are any
+// TODO: This function is kinda ugly, probably could be rewritten
+//
+static void P_loadWeaponCounters(SaveArchive &arc, player_t &p)
+{
+   int numCounters;
+
+   delete p.weaponctrs;
+   p.weaponctrs = new WeaponCounterTree();
+   arc << numCounters;
+   if(numCounters)
+   {
+      WeaponCounter *weaponCounters = estructalloc(WeaponCounter, numCounters);
+      for(int i = 0; i < numCounters; i++)
+      {
+         size_t len;
+         char *className = nullptr;
+
+         arc.archiveLString(className, len);
+         weaponinfo_t *wp = E_WeaponForName(className);
+         if(!wp)
+            I_Error("P_loadWeaponCounters: weapon '%s' not found\n", className);
+         WeaponCounter &wc = weaponCounters[i];
+         for(int j = 0; j < NUMWEAPCOUNTERS; j++)
+            arc << wc[j];
+         p.weaponctrs->insert(wp->id, &wc);
+      }
    }
 }
 
@@ -478,24 +536,68 @@ static void P_ArchivePlayers(SaveArchive &arc)
              << p.viewheight   << p.deltaviewheight << p.bob
              << p.pitch        << p.momx            << p.momy
              << p.health       << p.armorpoints     << p.armorfactor
-             << p.armordivisor << p.totalfrags
-             << p.readyweapon  << p.pendingweapon   << p.extralight
+             << p.armordivisor << p.totalfrags      << p.extralight
              << p.cheats       << p.refire          << p.killcount
              << p.itemcount    << p.secretcount     << p.didsecret
              << p.damagecount  << p.bonuscount      << p.fixedcolormap
-             << p.colormap     << p.quake           << p.jumptime;
+             << p.colormap     << p.quake           << p.jumptime
+             << p.inv_ptr;
 
          int inventorySize;
          if(arc.isSaving())
          {
+            int numCounters, slotIndex;
+
             inventorySize = E_GetInventoryAllocSize();
             arc << inventorySize;
+
+            // Save ready and pending weapon via string
+            if(p.readyweapon)
+               arc.writeLString(p.readyweapon->name);
+            else
+               arc.writeLString("");
+            if(p.pendingweapon)
+               arc.writeLString(p.pendingweapon->name);
+            else
+               arc.writeLString("");
+
+            slotIndex = p.readyweaponslot != nullptr ? p.readyweaponslot->slotindex : 0;
+            arc << slotIndex;
+            slotIndex = p.pendingweaponslot != nullptr ? p.pendingweaponslot->slotindex : 0;
+            arc << slotIndex;
+
+            // Save numcounters, then counters if there's a need to
+            numCounters = p.weaponctrs->numNodes();
+            arc << numCounters;
+            if(numCounters)
+               P_saveWeaponCounters(arc, p.weaponctrs->root); // Recursively save
          }
          else
          {
+            int slotIndex;
+            char *className = nullptr;
+            size_t len;
+
             arc << inventorySize;
             if(inventorySize != E_GetInventoryAllocSize())
                I_Error("P_ArchivePlayers: inventory size mismatch\n");
+
+            // Load ready and pending weapon via string
+            arc.archiveLString(className, len);
+            if(estrnonempty(className) && !(p.readyweapon = E_WeaponForName(className)))
+               I_Error("P_ArchivePlayers: readyweapon '%s' not found\n", className);
+            arc.archiveLString(className, len);
+            if(estrnonempty(className) && !(p.pendingweapon = E_WeaponForName(className)))
+               I_Error("P_ArchivePlayers: pendingweapon '%s' not found\n", className);
+
+            arc << slotIndex;
+            p.readyweaponslot = E_FindEntryForWeaponInSlot(&p, p.readyweapon, slotIndex);
+            arc << slotIndex;
+            if(p.pendingweapon != nullptr)
+               p.pendingweaponslot = E_FindEntryForWeaponInSlot(&p, p.pendingweapon, slotIndex);
+
+            // Load counters if there's a need to
+            P_loadWeaponCounters(arc, p);
          }
          P_ArchiveArray<inventoryslot_t>(arc, p.inventory, inventorySize);
 
@@ -504,15 +606,6 @@ static void P_ArchivePlayers(SaveArchive &arc)
 
          for(j = 0; j < MAXPLAYERS; j++)
             arc << p.frags[j];
-
-         for(j = 0; j < NUMWEAPONS; j++)
-            arc << p.weaponowned[j];
-
-         for(j = 0; j < NUMWEAPONS; j++)
-         {
-            for(int k = 0; k < 3; k++)
-               arc << p.weaponctrs[j][k];
-         }
 
          for(j = 0; j < NUMPSPRITES; j++)
             P_ArchivePSprite(arc, p.psprites[j]);
@@ -526,11 +619,14 @@ static void P_ArchivePlayers(SaveArchive &arc)
             p.attacker    = nullptr;
             p.skin        = nullptr;
             p.pclass      = nullptr;
-            p.attackdown  = false; // sf
-            p.usedown     = false; // sf
-            p.cmd.buttons = 0;     // sf
+            p.attackdown  = AT_NONE; // sf, MaxW
+            p.usedown     = false;   // sf
+            p.cmd.buttons = 0;       // sf
             p.prevviewz   = p.viewz;
             p.prevpitch   = p.pitch;
+
+            //if(i == consoleplayer)
+            p.invbarstate.inv_ptr = p.inv_ptr;
          }
       }
    }
@@ -621,6 +717,14 @@ static void P_ArchiveWorld(SaveArchive &arc)
 
    // ioanch: musinfo stuff
    S_MusInfoArchive(arc);
+}
+
+//
+// Dynamically alterable EMAPINFO stuff
+//
+static void P_ArchiveLevelInfo(SaveArchive &arc)
+{
+   arc << LevelInfo.airControl << LevelInfo.airFriction << LevelInfo.gravity;
 }
 
 //
@@ -1046,7 +1150,7 @@ static void P_UnArchiveSndSeq(SaveArchive &arc)
    S_SetSequenceStatus(newSeq);
 }
 
-void P_ArchiveSoundSequences(SaveArchive &arc)
+static void P_ArchiveSoundSequences(SaveArchive &arc)
 {
    DLListItem<SndSeq_t> *item = SoundSequences;
    int count = 0;
@@ -1077,7 +1181,7 @@ void P_ArchiveSoundSequences(SaveArchive &arc)
       P_ArchiveSndSeq(arc, EnviroSequence);
 }
 
-void P_UnArchiveSoundSequences(SaveArchive &arc)
+static void P_UnArchiveSoundSequences(SaveArchive &arc)
 {
    int i, count = 0;
 
@@ -1104,7 +1208,7 @@ void P_UnArchiveSoundSequences(SaveArchive &arc)
 // never did so after loading the save. No longer!
 //
 
-void P_ArchiveButtons(SaveArchive &arc)
+static void P_ArchiveButtons(SaveArchive &arc)
 {
    int numsaved = 0;
 
@@ -1137,7 +1241,7 @@ void P_ArchiveButtons(SaveArchive &arc)
 // haleyjd 07/06/09: ACS Save/Load
 //
 
-void P_ArchiveACS(SaveArchive &arc)
+static void P_ArchiveACS(SaveArchive &arc)
 {
    ACS_Archive(arc);
 }
@@ -1257,6 +1361,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
 
       P_ArchivePlayers(arc);
       P_ArchiveWorld(arc);
+      P_ArchiveLevelInfo(arc);
       P_ArchivePolyObjects(arc); // haleyjd 03/27/06
       P_ArchiveThinkers(arc);
       P_ArchiveRNG(arc);    // killough 1/18/98: save RNG information
@@ -1474,6 +1579,7 @@ void P_LoadGame(const char *filename)
       // dearchive all the modifications
       P_ArchivePlayers(arc);
       P_ArchiveWorld(arc);
+      P_ArchiveLevelInfo(arc);
       P_ArchivePolyObjects(arc);    // haleyjd 03/27/06
       P_ArchiveThinkers(arc);
       P_ArchiveRNG(arc);            // killough 1/18/98: load RNG information

@@ -30,6 +30,7 @@
 #include "i_system.h"
 
 #include "c_io.h"
+#include "c_runcmd.h"
 #include "d_main.h"
 #include "doomstat.h"
 #include "e_edf.h"
@@ -44,6 +45,7 @@
 #include "p_maputl.h"   // ioanch 20160125
 #include "p_partcl.h"
 #include "p_portal.h"
+#include "p_portalblockmap.h"
 #include "p_setup.h"
 #include "p_skin.h"
 #include "p_user.h"
@@ -232,6 +234,9 @@ static poststack_t   *pstack       = NULL;
 static int            pstacksize   = 0;
 static int            pstackmax    = 0;
 static maskedrange_t *unusedmasked = NULL;
+
+// MaxW: 2018/07/01: Whether or not to draw psprites
+static bool r_drawplayersprites = true;
 
 VALLOCATION(pstack)
 {
@@ -673,6 +678,8 @@ void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcol)
    
    column.texheight = 0; // killough 11/98
 
+   const byte *texend = tex->buffer + tex->width * tex->height + 1;
+
    while(tcol)
    {
       // calculate unclipped screen coordinates for post
@@ -688,9 +695,19 @@ void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcol)
          column.source = tex->buffer + tcol->ptroff;
          column.texmid = basetexturemid - (tcol->yoff << FRACBITS);
 
+         byte *last = tex->buffer + tcol->ptroff + tcol->len;
+         byte orig;
+         if(last < texend && last > tex->buffer)
+         {
+            orig = *last;
+            *last = last[-1];
+         }
+
          // Drawn by either R_DrawColumn
          //  or (SHADOW) R_DrawFuzzColumn.
          colfunc();
+         if(last < texend && last > tex->buffer)
+            *last = orig;
       }
 
       tcol = tcol->next;
@@ -807,7 +824,7 @@ struct spritepos_t
 };
 
 // ioanch 20160109: added offset arguments
-static void R_interpolateThingPosition(const Mobj *thing, spritepos_t &pos)
+static void R_interpolateThingPosition(Mobj *thing, spritepos_t &pos)
 {
    if(view.lerp == FRACUNIT)
    {
@@ -817,9 +834,39 @@ static void R_interpolateThingPosition(const Mobj *thing, spritepos_t &pos)
    }
    else
    {
-      pos.x = lerpCoord(view.lerp, thing->prevpos.x, thing->x);
-      pos.y = lerpCoord(view.lerp, thing->prevpos.y, thing->y);
-      pos.z = lerpCoord(view.lerp, thing->prevpos.z, thing->z);
+      const line_t *pline;
+      const linkdata_t *ldata;
+      if(((pline = thing->prevpos.portalline) &&
+          (ldata = &pline->portal->data.link)) ||
+         (ldata = thing->prevpos.portalsec))
+      {
+         pos.x = lerpCoord(view.lerp, thing->prevpos.x + ldata->deltax,
+                           thing->x);
+         pos.y = lerpCoord(view.lerp, thing->prevpos.y + ldata->deltay,
+                           thing->y);
+         pos.z = lerpCoord(view.lerp, thing->prevpos.z + ldata->deltaz,
+                           thing->z);
+      }
+      else
+      {
+         pos.x = lerpCoord(view.lerp, thing->prevpos.x, thing->x);
+         pos.y = lerpCoord(view.lerp, thing->prevpos.y, thing->y);
+         pos.z = lerpCoord(view.lerp, thing->prevpos.z, thing->z);
+      }
+   }
+}
+
+static void R_interpolatePSpritePosition(const pspdef_t &pspr, v2fixed_t &pos)
+{
+   if(view.lerp == FRACUNIT)
+   {
+      pos.x = pspr.sx;
+      pos.y = pspr.sy;
+   }
+   else
+   {
+      pos.x = lerpCoord(view.lerp, pspr.prevpos.x, pspr.sx);
+      pos.y = lerpCoord(view.lerp, pspr.prevpos.y, pspr.sy);
    }
 }
 
@@ -881,9 +928,15 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
    if(portalrender.w && portalrender.w->portal &&
       portalrender.w->portal->type != R_SKYBOX)
    {
+      v2fixed_t offsetpos = { thing->x, thing->y };
+      if(delta)
+      {
+         offsetpos.x += delta->x;
+         offsetpos.y += delta->y;
+      }
       const renderbarrier_t &barrier = portalrender.w->barrier;
       if(portalrender.w->line && portalrender.w->line != portalline &&
-         P_PointOnDivlineSide(spritepos.x, spritepos.y, &barrier.dln.dl) == 0)
+         P_PointOnDivlineSide(offsetpos.x, offsetpos.y, &barrier.dln.dl) == 0)
       {
          return;
       }
@@ -891,9 +944,9 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
       {
          dlnormal_t dl1, dl2;
          if(R_PickNearestBoxLines(barrier.bbox, dl1, dl2) &&
-            (P_PointOnDivlineSide(spritepos.x, spritepos.y, &dl1.dl) == 0 ||
+            (P_PointOnDivlineSide(offsetpos.x, offsetpos.y, &dl1.dl) == 0 ||
                (dl2.dl.x != D_MAXINT && 
-                  P_PointOnDivlineSide(spritepos.x, spritepos.y, &dl2.dl) == 0)))
+                  P_PointOnDivlineSide(offsetpos.x, offsetpos.y, &dl2.dl) == 0)))
          {
             return;
          }
@@ -1216,7 +1269,10 @@ static void R_DrawPSprite(pspdef_t *psp)
    flip = !!(sprframe->flip[0] ^ lefthanded);
    
    // calculate edges of the shape
-   tx  = M_FixedToFloat(psp->sx) - 160.0f;
+   v2fixed_t pspos;
+   R_interpolatePSpritePosition(*psp, pspos);
+
+   tx  = M_FixedToFloat(pspos.x) - 160.0f;
    tx -= M_FixedToFloat(spriteoffset[lump]);
 
       // haleyjd
@@ -1247,7 +1303,7 @@ static void R_DrawPSprite(pspdef_t *psp)
    
    // killough 12/98: fix psprite positioning problem
    vis->texturemid = (BASEYCENTER<<FRACBITS) /* + FRACUNIT/2 */ -
-                      (psp->sy - spritetopoffset[lump]);
+                      (pspos.y - spritetopoffset[lump]);
 
    vis->x1           = x1 < 0.0f ? 0 : (int)x1;
    vis->x2           = x2 >= view.width ? viewwindow.width - 1 : (int)x2;
@@ -1349,10 +1405,13 @@ static void R_DrawPlayerSprites()
    mfloorclip   = pscreenheightarray;
    mceilingclip = zeroarray;
 
-   // add all active psprites
-   for(i = 0, psp = viewplayer->psprites; i < NUMPSPRITES; i++, psp++)
-      if(psp->state)
-         R_DrawPSprite(psp);
+   if(r_drawplayersprites)
+   {
+      // add all active psprites
+      for(i = 0, psp = viewplayer->psprites; i < NUMPSPRITES; i++, psp++)
+         if(psp->state)
+            R_DrawPSprite(psp);
+   }
 }
 
 #define bcopyp(d, s, n) memcpy(d, s, (n) * sizeof(void *))
@@ -1371,7 +1430,7 @@ static void msort(vissprite_t **s, vissprite_t **t, int n)
       msort(s2, t, n2);
       
       while((*s1)->dist > (*s2)->dist ?
-            (void(*d++ = *s1++), --n1) : (void(*d++ = *s2++), --n2));
+            (*d++ = *s1++, --n1) : (*d++ = *s2++, --n2));
 
       if(n2)
          bcopyp(d, s2, n2);
@@ -2020,7 +2079,7 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
    int loopprot = 0;
    while(++loopprot < SECTOR_PORTAL_LOOP_PROTECTION && sector &&
          sector->f_pflags & PS_PASSABLE &&
-         P_FloorPortalZ(*sector) > mobj->z + scaledbottom)
+         P_FloorPortalZ(*sector) > emin(mobj->z, mobj->prevpos.z) + scaledbottom)
    {
       // always accept first sector
       data = R_FPLink(sector);
@@ -2032,7 +2091,7 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
    delta.x = delta.y = delta.z = 0;
    while(++loopprot < SECTOR_PORTAL_LOOP_PROTECTION && sector &&
          sector->c_pflags & PS_PASSABLE &&
-         P_CeilingPortalZ(*sector) < mobj->z + scaledtop)
+         P_CeilingPortalZ(*sector) < emax(mobj->z, mobj->prevpos.z) + scaledtop)
    {
       // always accept first sector
       data = R_CPLink(sector);
@@ -2044,10 +2103,10 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
    mobjprojinfo_t mpi;
    fixed_t xspan = M_FloatToFixed(span.side * mobj->xscale);
    mpi.mobj = mobj;
-   mpi.bbox[BOXLEFT] = mobj->x - xspan;
-   mpi.bbox[BOXRIGHT] = mobj->x + xspan;
-   mpi.bbox[BOXBOTTOM] = mobj->y - xspan;
-   mpi.bbox[BOXTOP] = mobj->y + xspan;
+   mpi.bbox[BOXLEFT] = emin(mobj->x, mobj->prevpos.x) - xspan;
+   mpi.bbox[BOXRIGHT] = emax(mobj->x, mobj->prevpos.x) + xspan;
+   mpi.bbox[BOXBOTTOM] = emin(mobj->y, mobj->prevpos.y) - xspan;
+   mpi.bbox[BOXTOP] = emax(mobj->y, mobj->prevpos.y) + xspan;
    mpi.scaledbottom = scaledbottom;
    mpi.scaledtop = scaledtop;
    mpi.item = &item;
@@ -2416,6 +2475,14 @@ static void R_DrawParticle(vissprite_t *vis)
       } // end else [!general_translucency]
    } // end local block
 }
+
+//============================================================================
+//
+// Console Commands
+//
+
+VARIABLE_TOGGLE(r_drawplayersprites, NULL, onoff);
+CONSOLE_VARIABLE(r_drawplayersprites, r_drawplayersprites, 0) {}
 
 //----------------------------------------------------------------------------
 //

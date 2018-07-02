@@ -193,7 +193,7 @@ public:
    bool loadSidedefs2();
    bool loadThings();
 
-   bool checkForCompatibilityFlag(const char *nstext);
+   bool checkForCompatibilityFlag(qstring nstext);
    bool parse(WadDirectory &setupwad, int lump);
 
    qstring error() const;
@@ -406,9 +406,9 @@ private:
          scroll_ceil_type("none"), scroll_floor_type("none"), friction(-1), damageinterval(32),
          damagetype("Unknown"), floorterrain("@flat"), ceilingterrain("@flat"),
          colormaptop("@default"), colormapmid("@default"), colormapbottom("@default"),
+         lightlevel(160),
          portal_ceil_overlaytype("none"), alphaceiling(1.0),
-         portal_floor_overlaytype("none"), alphafloor(1.0),
-         lightlevel(160)
+         portal_floor_overlaytype("none"), alphafloor(1.0)
       {
       }
    };

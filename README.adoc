@@ -35,8 +35,6 @@ for editors and players alike, including:
 
 * Heretic, Hexen, and Strife support in-progress.
 
-* Includes the Kate monster.
-
 For more on its features, check out the
 http://eternity.youfailit.net/index.php?title=Main_Page[Eternity
 Engine Wiki].
@@ -91,21 +89,8 @@ Building with Xcode
 ~~~~~~~~~~~~~~~~~~~
 You need Mac OS X 10.7 or more to run Eternity.
 
-* Download SDL2 macOS development library (SDL2-2.0.x.dmg) from 
-https://www.libsdl.org/download-2.0.php
-
-* Download SDL2_mixer macOS development library (SDL2_mixer-2.0.x.dmg) from
-https://www.libsdl.org/projects/SDL_mixer/
-
-* Download SDL2_net macOS development library (SDL2_net-2.0.x.dmg) from
-https://www.libsdl.org/projects/SDL_net/
-
-* Open each .dmg file you downloaded. Each of them has a *.framework file (icon
-should look like a shiny grey Lego brick). Extract (by copy-pasting) each
-framework into the macosx/ subfolder located along with this file.
-
-* Now you have the prerequisites. They'll be ignored by Git. Open Xcode and load
-macosx/EternityEngine.xcodeproj. This builds the main game executable.
+* Open Xcode and load macosx/EternityEngine.xcodeproj. This builds the main game
+executable. Any dependencies should be automatically downloaded.
 
 * If you want to build the full package, open 
 macosx/launcher/EternityLaunch.xcodeproj. It depends on EternityEngine.xcodeproj
@@ -125,9 +110,6 @@ You will then obtain a valid .app package.
 
 Building with Homebrew (OS X Mavericks and up)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-NOTE: this may be outdated if Eternity uses SDL2.
-
 The benefit of Homebrew compilation is that you don't need to "install"
 Eternity like a standard Mac application. However, this will require some
 extra work. You will also need to run Eternity as you would in Unix.
@@ -140,18 +122,19 @@ using an older cmake release folder, you will need to create a new one.
 * You will need the following libraries:
 +
  cmake
- sdl
- sdl_mixer
- sdl_net
+ sdl2
+ sdl2_mixer
+ sdl2_net
  libogg
  libvorbis
  flac
  libmpeg2
- libmikmod
+ libmodplug
 
 * Follow the cmake instructions.
 +
  cmake .. -DCMAKE_BUILD_TYPE=Release
+ make
 
 Building with Visual Studio (2015 and up)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

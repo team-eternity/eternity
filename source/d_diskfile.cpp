@@ -202,7 +202,7 @@ void *D_CacheDiskFileResource(diskfile_t *df, const char *path, bool text)
    // allocate a buffer, read the resource, and return it
    buffer = ecalloc(void *, 1, len);
 
-   if(fseek(dfi->f, entry->offset, SEEK_SET))
+   if(fseek(dfi->f, static_cast<long>(entry->offset), SEEK_SET))
       I_Error("D_CacheDiskFileResource: can't seek to resource %s\n", entry->name);
 
    if(fread(buffer, entry->length, 1, dfi->f) < 1)

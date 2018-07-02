@@ -36,6 +36,7 @@
 #include "dstrings.h"
 #include "e_inventory.h"
 #include "e_lib.h"
+#include "e_weapons.h"
 #include "hu_over.h"    // haleyjd
 #include "i_video.h"
 #include "metaapi.h"
@@ -320,6 +321,9 @@ static int      st_oldhealth = -1;
 // used for evil grin
 static int      oldweaponsowned[NUMWEAPONS];
 
+// used for number colouring
+static int      weaponsowned[NUMWEAPONS];
+
  // count until face changes
 static int      st_facecount = 0;
 
@@ -386,7 +390,7 @@ void ST_AutomapEvent(int type)
 // Respond to keyboard input events, intercept cheats.
 // This code is shared by all status bars.
 //
-bool ST_Responder(event_t *ev)
+bool ST_Responder(const event_t *ev)
 {
    // TODO: allow cheat input to be disabled
    // if a user keypress...
@@ -473,10 +477,10 @@ static void ST_updateFaceWidget()
 
          for(i = 0; i < NUMWEAPONS; i++)
          {
-            if(oldweaponsowned[i] != plyr->weaponowned[i])
+            if(oldweaponsowned[i] != weaponsowned[i])
             {
                doevilgrin = true;
-               oldweaponsowned[i] = plyr->weaponowned[i];
+               oldweaponsowned[i] = weaponsowned[i];
             }
          }
          if(doevilgrin)
@@ -613,6 +617,12 @@ static void ST_updateFaceWidget()
    st_facecount--;
 }
 
+static void ST_updateWeaponsOwned()
+{
+   for(int i = 0; i < NUMWEAPONS; i++)
+      weaponsowned[i] = E_PlayerOwnsWeaponInSlot(plyr, i) ? 1 : 0;
+}
+
 int sts_traditional_keys; // killough 2/28/98: traditional status bar keys
 
 static const char *st_AmmoForNum[NUMAMMO] =
@@ -626,8 +636,7 @@ static const char *st_AmmoForNum[NUMAMMO] =
 static void ST_updateWidgets()
 {
    // update ready weapon ammo
-   w_ready.data  = plyr->readyweapon;
-   auto weapon   = P_GetReadyWeapon(plyr);
+   auto weapon   = plyr->readyweapon;
    auto ammoType = weapon->ammo;
 
    w_ready.num = ammoType ? E_GetItemOwnedAmount(plyr, ammoType) : 1994;
@@ -683,6 +692,8 @@ static void ST_updateWidgets()
 static void ST_DoomTicker()
 {
    st_clock++;
+   // update weapons owned array
+   ST_updateWeaponsOwned();
    // refresh everything if this is him coming back to life
    ST_updateFaceWidget();
    st_oldhealth = plyr->health;
@@ -924,7 +935,7 @@ static void ST_DoomFSDrawer()
    ST_updateWidgets();
 
    // ammo
-   itemeffect_t *ammo = weaponinfo[w_ready.data].ammo;
+   itemeffect_t *ammo = plyr->readyweapon->ammo;
    if(ammo)
    {
       int num = E_StrToNumLinear(st_AmmoForNum, NUMAMMO, ammo->getKey());
@@ -1191,7 +1202,7 @@ static void ST_initData()
    st_oldhealth = -1;
 
    for(i = 0; i < NUMWEAPONS; i++)
-      oldweaponsowned[i] = plyr->weaponowned[i];
+      oldweaponsowned[i] = weaponsowned[i] = E_PlayerOwnsWeaponInSlot(plyr, i) ? 1 : 0;
 
    for(i = 0; i < 3; i++)
       keyboxes[i] = -1;
@@ -1211,9 +1222,6 @@ static void ST_createWidgets()
                  0, 0,
                  &st_statusbaron,
                  ST_AMMOWIDTH );
-
-   // the last weapon type
-   w_ready.data = plyr->readyweapon;
 
    // health percentage
    STlib_initPercent(&w_health,
@@ -1238,7 +1246,7 @@ static void ST_createWidgets()
       STlib_initMultIcon(&w_arms[i],
                          ST_ARMSX+(i%3)*ST_ARMSXSPACE,
                          ST_ARMSY+(i/3)*ST_ARMSYSPACE,
-                         arms[i], &plyr->weaponowned[i+1],
+                         arms[i], &weaponsowned[i+1],
                          &st_armson);
    }
 

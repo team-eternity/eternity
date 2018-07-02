@@ -50,7 +50,7 @@ public:
    virtual void ShutdownGraphicsPartway() = 0;
    virtual bool InitGraphicsMode()        = 0;
 
-   SDL_Window *window;
+   SDL_Window *window = nullptr;
 };
 
 void I_StartTic();

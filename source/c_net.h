@@ -58,6 +58,7 @@ enum
   netcmd_monhelpfriends,
   netcmd_mondistfriend,
   netcmd_map,
+  netcmd_restartmap,
   netcmd_nukage,
   netcmd_timelimit,
   netcmd_fraglimit,

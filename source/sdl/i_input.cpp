@@ -73,14 +73,14 @@ void UpdateGrab(SDL_Window *window)
       // When the cursor is hidden, grab the input.
       // Relative mode implicitly hides the cursor.
       SDL_SetRelativeMouseMode(SDL_TRUE);
-      SDL_GetRelativeMouseState(nullptr, nullptr);
+      SDL_SetWindowGrab(window, SDL_TRUE);
    }
    else if(!grab && currently_grabbed)
    {
       int window_w, window_h;
 
       SDL_SetRelativeMouseMode(SDL_FALSE);
-      SDL_GetRelativeMouseState(nullptr, nullptr);
+      SDL_SetWindowGrab(window, SDL_FALSE);
 
       // When releasing the mouse from grab, warp the mouse cursor to
       // the bottom-right of the screen. This is a minimally distracting
@@ -90,7 +90,6 @@ void UpdateGrab(SDL_Window *window)
 
       SDL_GetWindowSize(window, &window_w, &window_h);
       SDL_WarpMouseInWindow(window, window_w - 16, window_h - 16);
-      SDL_GetRelativeMouseState(nullptr, nullptr);
    }
 
    currently_grabbed = grab;
@@ -119,7 +118,7 @@ bool MouseShouldBeGrabbed()
    // when menu is active or game is paused, release the mouse, but:
    // * menu and console do not pause during netgames
    // * walkcam needs mouse when game is paused
-   if(((menuactive || consoleactive) && !netgame) || 
+   if(((menuactive || consoleactive) && !netgame) ||
       (paused && !walkcam_active))
       return false;
 
@@ -208,7 +207,7 @@ static int I_TranslateKey(SDL_Keysym *sym)
    case SDL_SCANCODE_RGUI:
       return KEYD_RALT;
    default:
-      if(scancode >= 0 && scancode < earrlen(scancode_translate_table))
+      if(scancode >= 0 && scancode < static_cast<int>(earrlen(scancode_translate_table)))
          return scancode_translate_table[scancode];
       else
          return 0;
@@ -347,24 +346,6 @@ static double CustomAccelerateMouse(int val)
 }
 
 //
-// CenterMouse
-//
-// haleyjd 10/23/08: from Choco-Doom:
-// Warp the mouse back to the middle of the screen
-//
-static void CenterMouse(SDL_Window *window)
-{
-   // Warp the the screen center
-
-   SDL_WarpMouseInWindow(window, int(video.width / 2), int(video.height / 2));
-
-   // Clear any relative movement caused by warping
-
-   SDL_PumpEvents();
-   SDL_GetRelativeMouseState(nullptr, nullptr);
-}
-
-//
 // I_ReadMouse
 //
 // haleyjd 10/23/08: from Choco-Doom:
@@ -406,9 +387,6 @@ static void I_ReadMouse(SDL_Window *window)
 
       D_PostEvent(&ev);
    }
-
-   if(MouseShouldBeGrabbed())
-      CenterMouse(window);
 }
 
 //
@@ -448,7 +426,7 @@ static DLList<deferredevent_t, &deferredevent_t::links> i_deferredfreelist;
 // I_AddDeferredEvent
 //
 // haleyjd 03/06/13: Some received input events need to be deferred until at
-// least one tic has passed before they are posted to the event queue. 
+// least one tic has passed before they are posted to the event queue.
 // "Trigger" style keys such as mousewheel up and down are the chief offenders.
 // Rather than shoehorning a bunch of code for this into I_GetEvent, it is
 // now handled here uniformly for all event types.
@@ -583,7 +561,7 @@ static void I_GetEvent(SDL_Window *window)
                I_QuitFast();
                break;
             }
-            else if(ev.key.keysym.scancode & SDL_SCANCODE_F)
+            else if(ev.key.keysym.scancode == SDL_SCANCODE_F)
             {
                I_ToggleFullscreen();
                break;

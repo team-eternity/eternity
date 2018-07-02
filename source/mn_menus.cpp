@@ -139,7 +139,7 @@ void MN_InitMenus()
 // Note: The main menu is modified dynamically to point to
 // the rest of the old menu system when appropriate.
 
-void MN_MainMenuDrawer()
+static void MN_MainMenuDrawer()
 {
    // hack for m_doom compatibility
    V_DrawPatch(94, 2, &subscreen43, 
@@ -1182,7 +1182,7 @@ CONSOLE_COMMAND(mn_chatmacros, 0)
 // Player Setup
 //
 
-void MN_PlayerDrawer(void);
+static void MN_PlayerDrawer(void);
 
 static menuitem_t mn_player_items[] =
 {
@@ -1276,7 +1276,7 @@ CONSOLE_COMMAND(mn_player, 0)
 // load/save box patches
 patch_t *patch_left, *patch_mid, *patch_right;
 
-void MN_SaveGame()
+static void MN_SaveGame()
 {
    int save_slot = 
       static_cast<int>((char **)(Console.command->variable->variable) - savegamenames);
@@ -1341,7 +1341,7 @@ void MN_CreateSaveCmds()
 //  read the strings from the savegame files
 // based on the mbf sources
 //
-void MN_ReadSaveStrings()
+static void MN_ReadSaveStrings()
 {
    for(int i = 0; i < SAVESLOTS; i++)
    {
@@ -1381,7 +1381,7 @@ void MN_ReadSaveStrings()
    }
 }
 
-void MN_DrawSaveLoadBorder(int x, int y)
+static void MN_DrawSaveLoadBorder(int x, int y)
 {
    patch_left  = PatchLoader::CacheName(wGlobalDir, "M_LSLEFT", PU_STATIC);
    patch_mid   = PatchLoader::CacheName(wGlobalDir, "M_LSCNTR", PU_STATIC);
@@ -1403,7 +1403,7 @@ void MN_DrawSaveLoadBorder(int x, int y)
    Z_ChangeTag(patch_right, PU_CACHE);
 }
 
-void MN_LoadGameDrawer();
+static void MN_LoadGameDrawer();
 
 // haleyjd: all saveslot names changed to be consistent
 
@@ -1431,7 +1431,7 @@ menu_t menu_loadgame =
 };
 
 
-void MN_LoadGameDrawer()
+static void MN_LoadGameDrawer()
 {
    static char *emptystr = NULL;
 
@@ -1544,7 +1544,7 @@ CONSOLE_COMMAND(qload, cf_hidden)
 // Save Game
 //
 
-void MN_SaveGameDrawer();
+static void MN_SaveGameDrawer();
 
 // haleyjd: fixes continue here from 8-17 build
 
@@ -1571,7 +1571,7 @@ menu_t menu_savegame =
    MN_SaveGameDrawer,
 };
 
-void MN_SaveGameDrawer()
+static void MN_SaveGameDrawer()
 {
    V_DrawPatch(72, 18, &subscreen43, PatchLoader::CacheName(wGlobalDir, "M_SAVEG", PU_CACHE));
 
@@ -2021,7 +2021,7 @@ static menu_t *mn_vidpage_menus[] =
    NULL
 };
 
-void MN_VideoModeDrawer();
+static void MN_VideoModeDrawer();
 
 static menuitem_t mn_video_items[] =
 {
@@ -2058,7 +2058,7 @@ menu_t menu_video =
    mn_vidpage_menus
 };
 
-void MN_VideoModeDrawer()
+static void MN_VideoModeDrawer()
 {
    int lump, y;
    patch_t *patch;
@@ -2082,7 +2082,7 @@ void MN_VideoModeDrawer()
    patch = PatchLoader::CacheNum(wGlobalDir, lump + firstspritelump, PU_CACHE);
    
    // approximately center box on "translucency" item in menu
-   y = menu_video.menuitems[13].y - 5;
+   y = menu_video.menuitems[14].y - 5;
    V_DrawBox(270, y, 20, 20);
    V_DrawPatchTL(282, y + 12, &subscreen43, patch, NULL, FTRANLEVEL);
 }
@@ -3091,7 +3091,7 @@ static menuitem_t mn_weapons_items[] =
    {it_toggle,     "Bfg type",                       "bfgtype"},
    {it_toggle,     "Bobbing",                        "bobbing"},
    {it_toggle,     "Recoil",                         "recoil"},
-   {it_toggle,     "Fist/SSG toggle",                "doom_weapon_toggles"},
+   {it_toggle,     "Weapon hotkey cycling",          "weapon_hotkey_cycling"},
    {it_toggle,     "Autoaiming",                     "autoaim"},
    {it_gap},
    {it_end},
@@ -3306,7 +3306,7 @@ static const char *mn_binding_contentnames[] =
 extern menu_t menu_movekeys;
 extern menu_t menu_advkeys;
 extern menu_t menu_weaponbindings;
-extern menu_t menu_envbindings;
+extern menu_t menu_envinvbindings;
 extern menu_t menu_funcbindings;
 extern menu_t menu_menukeys;
 extern menu_t menu_automapkeys;
@@ -3317,7 +3317,7 @@ static menu_t *mn_binding_contentpages[] =
    &menu_movekeys,
    &menu_advkeys,
    &menu_weaponbindings,
-   &menu_envbindings,
+   &menu_envinvbindings,
    &menu_funcbindings,
    &menu_menukeys,
    &menu_automapkeys,
@@ -3347,6 +3347,7 @@ static menuitem_t mn_movekeys_items[] =
    {it_binding,      "180 degree turn", "flip"},
    {it_binding,      "Use",             "use"},
    {it_binding,      "Attack/fire",     "attack"},
+   {it_binding,      "Alt-attack/fire", "altattack"},
    {it_binding,      "Toggle autorun",  "autorun"},
    {it_end}
 };
@@ -3436,7 +3437,7 @@ menu_t menu_weaponbindings =
 {
    mn_weaponbindings_items,
    &menu_advkeys,           // previous page
-   &menu_envbindings,       // next page
+   &menu_envinvbindings,       // next page
    &menu_movekeys,          // rootpage
    150, 15,                 // x,y offsets
    4,
@@ -3458,7 +3459,7 @@ CONSOLE_COMMAND(mn_weaponkeys, 0)
 
 // haleyjd 06/24/02: added quicksave/load
 
-static menuitem_t mn_envbindings_items[] =
+static menuitem_t mn_envinvbindings_items[] =
 {
    {it_title,   "Key Bindings", NULL, "M_KEYBND"},
    {it_gap},
@@ -3470,12 +3471,19 @@ static menuitem_t mn_envbindings_items[] =
    {it_binding, "Spectate prev",        "spectate_prev"},
    {it_binding, "Spectate next",        "spectate_next"},
    {it_binding, "Spectate self",        "spectate_self"},
+   {it_gap},
+   {it_info,    "Inventory Bindings", NULL, NULL, MENUITEM_CENTERED},
+   {it_gap},
+   {it_binding, "Inventory left",  "inventory_left"},
+   {it_binding, "Inventory right", "inventory_right"},
+   {it_binding, "Use inventory",   "inventory_use"},
+   {it_binding, "Drop inventory",  "inventory_drop"},
    {it_end}
 };
 
-menu_t menu_envbindings =
+menu_t menu_envinvbindings =
 {
-   mn_envbindings_items,
+   mn_envinvbindings_items,
    &menu_weaponbindings,    // previous page
    &menu_funcbindings,      // next page
    &menu_movekeys,          // rootpage
@@ -3489,7 +3497,7 @@ menu_t menu_envbindings =
 
 CONSOLE_COMMAND(mn_envkeys, 0)
 {
-   MN_StartMenu(&menu_envbindings);
+   MN_StartMenu(&menu_envinvbindings);
 }
 
 //------------------------------------------------------------------------
@@ -3513,13 +3521,15 @@ static menuitem_t mn_function_items[] =
    {it_binding, "Quick load",           "quickload"},
    {it_binding, "Quit",                 "mn_quit"},
    {it_binding, "Gamma correction",     "gamma /"},
+   {it_gap},
+   {it_binding, "Join (-recordfromto)", "joindemo"},
    {it_end}
 };
 
 menu_t menu_funcbindings =
 {
    mn_function_items,
-   &menu_envbindings,       // previous page
+   &menu_envinvbindings,       // previous page
    &menu_menukeys,          // next page
    &menu_movekeys,          // rootpage
    150, 15,                 // x,y offsets

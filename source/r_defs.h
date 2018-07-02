@@ -42,6 +42,7 @@ struct portal_t;
 struct sector_t;
 struct ereverb_t;
 struct ETerrain;
+struct dynavertex_t;
 
 // Silhouette, needed for clipping Segs (mainly)
 // and sprites representing things.
@@ -72,8 +73,7 @@ struct vertex_t
    // These should always be kept current to x and y
    float   fx, fy;
 
-   struct vertex_t *dynanext;
-   int refcount;
+   int polyindex;   // index inside hosting polyobject, if applicable
 };
 
 // SoM: for attaching surfaces (floors and ceilings) to each other
@@ -208,9 +208,9 @@ struct sectorinterp_t
 //
 struct sectorbox_t
 {
-   fixed_t box[4];   // bounding box per sector
-   int fframeid;     // updated to avoid visiting more than once
-   int cframeid;
+   fixed_t box[4];      // bounding box per sector
+   unsigned fframeid;   // updated to avoid visiting more than once
+   unsigned cframeid;
 };
 
 //
@@ -227,6 +227,13 @@ struct soundzone_t
 //
 struct sector_t
 {
+   // flag set for various uses
+   enum
+   {
+      floor = 1,
+      ceiling = 2
+   };
+
    fixed_t floorheight;
    fixed_t ceilingheight;
    int     floorpic;
@@ -494,7 +501,11 @@ struct msecnode_t
 //
 struct seg_t
 {
-  vertex_t *v1, *v2;
+  union 
+  {
+    struct { vertex_t *v1, *v2; };
+    struct { dynavertex_t *dyv1, *dyv2; };
+  };
   float     offset;
   side_t   *sidedef;
   line_t   *linedef;

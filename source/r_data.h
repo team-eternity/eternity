@@ -180,8 +180,6 @@ void R_InitTranMap(bool force);      // killough 3/6/98: translucency initializa
 void R_InitSubMap(bool force);
 int  R_ColormapNumForName(const char *name);      // killough 4/4/98
 
-void R_InitColormaps(void);   // killough 8/9/98
-
 // haleyjd: new global colormap method
 void R_SetGlobalLevelColormap(void);
 

@@ -85,6 +85,8 @@
 #define ITEM_GPROP_THRUSTFACTR "game.thrustfactor"
 #define ITEM_GPROP_DEFPCLASS   "game.defpclass"
 #define ITEM_GPROP_FINTYPE     "game.endgamefinaletype"
+#define ITEM_GPROP_SKILLMUL    "game.skillammomultiplier"
+#define ITEM_GPROP_MELEECALC   "game.monstermeleerange"
 #define ITEM_GPROP_FINALEX     "finale.text.x"
 #define ITEM_GPROP_FINALEY     "finale.text.y"
 #define ITEM_GPROP_CASTTITLEY  "castcall.title.y"
@@ -168,6 +170,8 @@ static dehflags_t gmi_flags[] =
    { "NODIEHI",        GIF_NODIEHI        },
    { "LOSTSOULBOUNCE", GIF_LOSTSOULBOUNCE },
    { "IMPACTBLOOD",    GIF_IMPACTBLOOD    },
+   { "CHEATSOUND",     GIF_CHEATSOUND     },
+   { "CHASEFAST",      GIF_CHASEFAST      },
    { NULL,             0                  }
 };
 
@@ -196,6 +200,12 @@ static dehflagset_t mission_flagset =
 {
    mission_flags,
    0,
+};
+
+const char *meleeCalcStrings[meleecalc_NUM] =
+{
+   "doom",
+   "raven"
 };
 
 // Main options for the gameproperties block
@@ -235,6 +245,8 @@ cfg_opt_t edf_game_opts[] =
    CFG_INT(ITEM_GPROP_THRUSTFACTR, 0,    CFGF_NONE),
    CFG_STR(ITEM_GPROP_DEFPCLASS,   "",   CFGF_NONE),
    CFG_STR(ITEM_GPROP_FINTYPE,     "",   CFGF_NONE),
+   CFG_FLOAT(ITEM_GPROP_SKILLMUL,  0,    CFGF_NONE),
+   CFG_STR(ITEM_GPROP_MELEECALC,   "",   CFGF_NONE),
    CFG_INT(ITEM_GPROP_FINALEX,     0,    CFGF_NONE),
    CFG_INT(ITEM_GPROP_FINALEY,     0,    CFGF_NONE),
    CFG_INT(ITEM_GPROP_CASTTITLEY,  0,    CFGF_NONE),
@@ -508,6 +520,16 @@ static void E_processGamePropsBlock(cfg_t *props)
 
       if(finaleType >= 0 && finaleType < FINALE_NUMFINALES)
          GameModeInfo->teleEndGameFinaleType = finaleType;
+   }
+
+   if(IS_SET(ITEM_GPROP_SKILLMUL))
+      GameModeInfo->skillAmmoMultiplier = cfg_getfloat(props, ITEM_GPROP_SKILLMUL);
+   if(IS_SET(ITEM_GPROP_MELEECALC))
+   {
+      int meleetype = E_StrToNumLinear(meleeCalcStrings, meleecalc_NUM,
+                                       cfg_getstr(props, ITEM_GPROP_MELEECALC));
+      if(meleetype >= 0 && meleetype < meleecalc_NUM)
+         GameModeInfo->monsterMeleeRange = static_cast<meleecalc_e>(meleetype);
    }
 
    // Finale Properties

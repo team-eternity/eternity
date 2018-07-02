@@ -28,6 +28,7 @@
 #include "cam_sight.h"
 #include "d_player.h"
 #include "e_exdata.h"
+#include "m_compare.h"
 #include "p_mobj.h"
 #include "p_portal.h"
 #include "r_defs.h"
@@ -58,14 +59,14 @@ public:
    };
 
    static fixed_t aimLineAttack(const Mobj *t1, angle_t angle, fixed_t distance,
-      uint32_t mask, const State *state, Mobj **outTarget, fixed_t *outDist);
+      bool mask, const State *state, Mobj **outTarget, fixed_t *outDist);
 
 private:
    AimContext(
       const Mobj *t1, 
       angle_t angle, 
       fixed_t distance, 
-      uint32_t mask,
+      bool mask,
       const State *state);
    static bool aimTraverse(const intercept_t *in, void *data,
       const divline_t &trace);
@@ -76,7 +77,7 @@ private:
 
    const Mobj *thing;
    fixed_t attackrange;
-   uint32_t aimflagsmask;
+   bool aimflagsmask;
    State state;
    fixed_t lookslope;
    fixed_t aimslope;
@@ -91,7 +92,7 @@ private:
 // Creates the context
 //
 AimContext::AimContext(const Mobj *t1, angle_t inangle, fixed_t distance,
-   uint32_t mask, const State *instate) :
+   bool mask, const State *instate) :
    thing(t1), attackrange(distance), aimflagsmask(mask), aimslope(0),
    linetarget(nullptr), targetdist(D_MAXINT), angle(inangle)
 {
@@ -138,7 +139,7 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
    fixed_t linehitz, fixedratio;
    int newfromid;
 
-   fixed_t x, y, newslope;
+   fixed_t x, y;
 
    if(state.topslope > 0 && sector->c_pflags & PS_PASSABLE &&
       (newfromid = sector->c_portal->data.link.toid) != state.groupid)
@@ -148,12 +149,6 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
       fixed_t planez = P_CeilingPortalZ(*sector);
       if(linehitz > planez)
       {
-         // update cam.bottomslope to be the top of the sector wall
-         newslope = FixedDiv(planez - state.cz, totalfrac);
-         // if totalfrac == 0, then it will just be a very big slope
-         if(newslope < state.bottomslope)
-            newslope = state.bottomslope;
-
          // get x and y of position
          if(linehitz == state.cz)
          {
@@ -187,7 +182,8 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
             newstate.cy = y;
             newstate.groupid = newfromid;
             newstate.origindist = totalfrac;
-            newstate.bottomslope = newslope;
+            // don't allow the bottom slope to keep going down
+            newstate.bottomslope = emax(0, state.bottomslope);
             newstate.reclevel = state.reclevel + 1;
 
             if(recurse(newstate, partialfrac, &outSlope, &outTarget, &outDist, *R_CPLink(sector)))
@@ -211,10 +207,6 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
       fixed_t planez = P_FloorPortalZ(*sector);
       if(linehitz < planez)
       {
-         newslope = FixedDiv(planez - state.cz, totalfrac);
-         if(newslope > state.topslope)
-            newslope = state.topslope;
-
          if(linehitz == state.cz)
          {
             x = trace.x + FixedMul(trace.dx, partialfrac);
@@ -241,7 +233,7 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
             newstate.cy = y;
             newstate.groupid = newfromid;
             newstate.origindist = totalfrac;
-            newstate.topslope = newslope;
+            newstate.topslope = emin(0, state.topslope);
             newstate.reclevel = state.reclevel + 1;
 
             if(recurse(newstate, partialfrac, &outSlope, &outTarget, &outDist, *R_FPLink(sector)))
@@ -428,8 +420,8 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata,
       fixed_t thingtopslope, thingbottomslope;
       if(!(th->flags & MF_SHOOTABLE) || th == context.thing)
          return true;
-      if(th->flags & context.thing->flags & context.aimflagsmask
-         && !th->player)
+      if(context.aimflagsmask && ((th->flags & context.thing->flags & MF_FRIEND &&
+                                   !th->player) || th->flags4 & MF4_LOWAIMPRIO))
       {
          return true;
       }
@@ -480,7 +472,7 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata,
 // Starts aiming
 //
 fixed_t AimContext::aimLineAttack(const Mobj *t1, angle_t angle,
-   fixed_t distance, uint32_t mask,
+   fixed_t distance, bool mask,
    const State *state, Mobj **outTarget,
    fixed_t *outDist)
 {
@@ -526,7 +518,7 @@ fixed_t AimContext::aimLineAttack(const Mobj *t1, angle_t angle,
 // Reentrant autoaim
 //
 fixed_t CAM_AimLineAttack(const Mobj *t1, angle_t angle, fixed_t distance,
-   uint32_t mask, Mobj **outTarget)
+   bool mask, Mobj **outTarget)
 {
    return AimContext::aimLineAttack(t1, angle, distance, mask, nullptr,
       outTarget, nullptr);

@@ -32,6 +32,7 @@
 
 struct actionargs_t;
 struct arglist_t;
+struct e_pickupfx_t;
 class  MetaTable;
 class  Mobj;
 
@@ -293,6 +294,35 @@ enum
 
   MT_HPLAYERSKULL = 399,
 
+  MT_HFIREBOMB = 409,
+
+  // Heretic weapon-associated things (not actual weapons)
+  MT_STAFFPUFF = 416,
+  MT_STAFFPUFF2,
+  MT_BEAKPUFF,
+  MT_GAUNTLETPUFF1,
+  MT_GAUNTLETPUFF2,
+  MT_BLASTERSMOKE,
+  MT_RIPPER,
+  MT_BLASTERPUFF1,
+  MT_BLASTERPUFF2,
+  MT_HORNRODFX1,
+  MT_GOLDWANDFX1,
+  MT_GOLDWANDFX2,
+  MT_GOLDWANDPUFF1,
+  MT_GOLDWANDPUFF2,
+  MT_PHOENIXFX1,
+
+  MT_CRBOWFX1 = 434,
+  MT_CRBOWFX2,
+  MT_CRBOWFX3,
+  MT_CRBOWFX4,
+  MT_MACEFX1,
+  MT_MACEFX2,
+  MT_MACEFX3,
+  MT_MACEFX4,
+  MT_PHOENIXFX2,
+
 // Start Eternity TC New Things
 
   MT_FOGPATCHS = 228,
@@ -390,6 +420,8 @@ struct mobjinfo_t
    int activatesound;   // haleyjd 03/19/11: Hexen activation sound
    int deactivatesound; // haleyjd 03/19/11: Hexen deactivation sound
    int gibhealth;       // haleyjd 09/12/13: health at which actor gibs
+
+   e_pickupfx_t *pickupfx;
 
    void (*nukespec)(actionargs_t *); // haleyjd 08/18/09: nukespec made a native property
    

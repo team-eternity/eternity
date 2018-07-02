@@ -42,6 +42,7 @@
 #include "e_ttypes.h"
 #include "e_udmf.h"  // IOANCH 20151206: UDMF
 #include "ev_specials.h"
+#include "g_demolog.h"
 #include "g_game.h"
 #include "hu_frags.h"
 #include "hu_stuff.h"
@@ -82,7 +83,7 @@
 #include "z_auto.h"
 
 extern const char *level_error;
-extern void R_DynaSegOffset(seg_t *lseg, line_t *line, int side);
+extern void R_DynaSegOffset(seg_t *lseg, const line_t *line, int side);
 
 //
 // Miscellaneous constants
@@ -175,8 +176,6 @@ fixed_t   bmaporgx, bmaporgy;     // origin of block map
 Mobj    **blocklinks;             // for thing chains
 
 byte     *portalmap;              // haleyjd: for portals
-// ioanch 20160106: more detailed info (list of groups for each block)
-int     **gBlockGroups; 
 
 bool      skipblstart;            // MaxW: Skip initial blocklist short
 
@@ -304,7 +303,7 @@ inline static int SafeRealUintIndex(uint16_t input, int limit,
 //
 // haleyjd 12/12/13: Support for console maps' fixed-point vertices.
 //
-void P_LoadConsoleVertexes(int lump)
+static void P_LoadConsoleVertexes(int lump)
 {
    ZAutoBuffer buf;
 
@@ -334,7 +333,7 @@ void P_LoadConsoleVertexes(int lump)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-void P_LoadVertexes(int lump)
+static void P_LoadVertexes(int lump)
 {
    ZAutoBuffer buf;
    
@@ -366,7 +365,7 @@ void P_LoadVertexes(int lump)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-void P_LoadSegs(int lump)
+static void P_LoadSegs(int lump)
 {
    int  i;
    byte *data;
@@ -502,7 +501,7 @@ void P_CalcSegLength(seg_t *lseg)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-void P_LoadSubsectors(int lump)
+static void P_LoadSubsectors(int lump)
 {
    mapsubsector_t *mss;
    byte *data;
@@ -638,7 +637,7 @@ void P_InitSector(sector_t *ss)
 //
 // haleyjd 12/12/13: support for PSX port's sector format.
 //
-void P_LoadPSXSectors(int lumpnum)
+static void P_LoadPSXSectors(int lumpnum)
 {
    ZAutoBuffer buf;
    char namebuf[9];
@@ -680,7 +679,7 @@ void P_LoadPSXSectors(int lumpnum)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-void P_LoadSectors(int lumpnum)
+static void P_LoadSectors(int lumpnum)
 {
    ZAutoBuffer buf;
    char namebuf[9];
@@ -864,7 +863,7 @@ static void P_CalcNodeCoefficients2(const node_t &node, fnode_t &fnode)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-void P_LoadNodes(int lump)
+static void P_LoadNodes(int lump)
 {
    byte *data;
    int  i;
@@ -1501,7 +1500,7 @@ bool P_CheckThingDoomBan(int16_t type)
 //
 // haleyjd: added missing player start detection
 //
-void P_LoadThings(int lump)
+static void P_LoadThings(int lump)
 {
    int  i;
    byte *data = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
@@ -1566,7 +1565,7 @@ void P_LoadThings(int lump)
 //
 // haleyjd: Loads a Hexen-format THINGS lump.
 //
-void P_LoadHexenThings(int lump)
+static void P_LoadHexenThings(int lump)
 {
    int  i;
    byte *data = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
@@ -1723,7 +1722,7 @@ void P_PostProcessLineFlags(line_t *ld)
 // killough 5/3/98: reformatted, cleaned up
 // haleyjd 2/26/05: ExtraData extensions
 //
-void P_LoadLineDefs(int lump)
+static void P_LoadLineDefs(int lump)
 {
    byte *data;
 
@@ -1830,7 +1829,7 @@ static void P_ConvertHexenLineFlags(line_t *line)
 //
 // haleyjd: Loads a Hexen-format LINEDEFS lump.
 //
-void P_LoadHexenLineDefs(int lump)
+static void P_LoadHexenLineDefs(int lump)
 {
    byte *data;
    int  i;
@@ -1875,7 +1874,7 @@ void P_LoadHexenLineDefs(int lump)
 // killough 4/4/98: delay using sidedefs until they are loaded
 // killough 5/3/98: reformatted, cleaned up
 //
-void P_LoadLineDefs2()
+static void P_LoadLineDefs2()
 {
    line_t *ld = lines;
 
@@ -1957,7 +1956,7 @@ void P_LoadLineDefs2()
 //
 // killough 4/4/98: split into two functions
 //
-void P_LoadSideDefs(int lump)
+static void P_LoadSideDefs(int lump)
 {
    numsides = setupwad->lumpLength(lump) / sizeof(mapsidedef_t);
    sides    = estructalloctag(side_t, numsides, PU_LEVEL);
@@ -2048,7 +2047,7 @@ void P_SetupSidedefTextures(side_t &sd, const char *bottomTexture,
 // after linedefs are loaded, to allow overloading.
 // killough 5/3/98: reformatted, cleaned up
 
-void P_LoadSideDefs2(int lumpnum)
+static void P_LoadSideDefs2(int lumpnum)
 {
    byte *lump = (byte *)(setupwad->cacheLumpNum(lumpnum, PU_STATIC));
    byte *data = lump;
@@ -2269,6 +2268,8 @@ static void P_CreateBlockMap()
          efree(bmap);    // Free uncompressed blockmap
       }
    }
+
+   skipblstart = true;
 }
 
 static const char *bmaperrormsg;
@@ -2359,7 +2360,7 @@ static bool P_VerifyBlockMap(int count)
 //
 // killough 3/30/98: Rewritten to remove blockmap limit
 //
-void P_LoadBlockMap(int lump)
+static void P_LoadBlockMap(int lump)
 {
    // IOANCH 20151215: no lump means no data. So that Eternity will generate.
    int len   = lump >= 0 ? setupwad->lumpLength(lump) : 0;
@@ -2424,9 +2425,6 @@ void P_LoadBlockMap(int lump)
    // haleyjd 05/17/13: setup portalmap
    count = sizeof(*portalmap) * bmapwidth * bmapheight;
    portalmap = ecalloctag(byte *, 1, count, PU_LEVEL, NULL);
-   // ioanch: what portals are in what blocks
-   gBlockGroups = ecalloctag(decltype(gBlockGroups), sizeof(*gBlockGroups), 
-                             bmapwidth * bmapheight, PU_LEVEL, nullptr);
 }
 
 
@@ -2451,7 +2449,7 @@ static void AddLineToSector(sector_t *s, line_t *l)
 // killough 5/3/98: reformatted, cleaned up
 // killough 8/24/98: rewrote to use faster algorithm
 //
-void P_GroupLines()
+static void P_GroupLines()
 {
    int i, total;
    line_t **linebuffer;
@@ -2590,7 +2588,7 @@ void P_GroupLines()
 //
 // Firelines (TM) is a Rezistered Trademark of MBF Productions
 //
-void P_RemoveSlimeTrails()             // killough 10/98
+static void P_RemoveSlimeTrails()             // killough 10/98
 {
    byte *hit; 
    int i;
@@ -3204,6 +3202,9 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 {
    lumpinfo_t **lumpinfo;
    int lumpnum, acslumpnum = -1;
+
+   G_DemoLog("%d\tSetup %s\n", gametic, mapname);
+   G_DemoLogSetExited(false);
 
    // haleyjd 07/28/10: we are no longer in GS_LEVEL during the execution of
    // this routine.

@@ -99,7 +99,18 @@ typedef enum
   // Savegame slot numbers occupy the second byte of buttons.    
   BTS_SAVEMASK    = (4+8+16),
   BTS_SAVESHIFT   = 2,
-  
+
+  // New buttons, used in v4.01+, as the old weapon bits (5 of them!) are unused
+
+  // Press "Alt-fire".
+  BTN_ATTACK_ALT = 4,
+
+  //
+  BTN_WEAPON_UP = 8,
+
+  //
+  BTN_WEAPON_DOWN = 16,
+
 } buttoncode_t;
 
 //

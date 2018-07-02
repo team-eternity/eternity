@@ -82,7 +82,7 @@
 
 	NSArray *pwadTypes;
 	NSMutableArray *pwadArray;
-  	NSMutableSet *iwadSet;  // set of IWADs
+  	NSMutableArray *iwadSet;  // set of IWADs
 	
 	ELCommandLineArray *param;
 	char *callName;

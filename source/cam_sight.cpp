@@ -68,7 +68,6 @@
 #include "m_compare.h"  // ioanch 20160103: refactor
 #include "e_exdata.h"
 #include "m_collection.h"
-#include "m_fixed.h"
 #include "p_chase.h"
 #include "p_inter.h"    // ioanch 20160101: for damage
 #include "p_portal.h"

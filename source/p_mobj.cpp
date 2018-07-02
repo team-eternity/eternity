@@ -37,6 +37,7 @@
 #include "e_exdata.h"
 #include "e_inventory.h"
 #include "e_player.h"
+#include "e_puff.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
@@ -662,9 +663,13 @@ void P_XYMovement(Mobj* mo)
    // no friction when airborne
    // haleyjd: OVER_UNDER
    // 06/5/12: flying players
+   // 2017/09/09: players when air friction is active
    if(mo->z > mo->floorz && !(mo->flags4 & MF4_FLY) &&
-      (!P_Use3DClipping() || !(mo->intflags & MIF_ONMOBJ)))
+      (!P_Use3DClipping() || !(mo->intflags & MIF_ONMOBJ)) &&
+      (!mo->player || LevelInfo.airFriction == 0))
+   {
       return;
+   }
 
    // killough 8/11/98: add bouncers
    // killough 9/15/98: add objects falling off ledges
@@ -676,6 +681,10 @@ void P_XYMovement(Mobj* mo)
        mo->momy > FRACUNIT/4 || mo->momy < -FRACUNIT/4) &&
       mo->floorz != P_ExtremeSectorAtPoint(mo, false)->floorheight)
       return;  // do not stop sliding if halfway off a step with some momentum
+
+   // Some objects never rest on other things
+   if(mo->intflags & MIF_ONMOBJ && mo->flags4 & MF4_SLIDEOVERTHINGS)
+      return;
 
    // killough 11/98:
    // Stop voodoo dolls that have come to rest, despite any
@@ -736,8 +745,11 @@ void P_XYMovement(Mobj* mo)
       {
          fixed_t friction = P_GetFriction(mo, NULL);
 
-         mo->momx = FixedMul(mo->momx, friction);
-         mo->momy = FixedMul(mo->momy, friction);
+         if(friction != FRACUNIT)
+         {
+            mo->momx = FixedMul(mo->momx, friction);
+            mo->momy = FixedMul(mo->momy, friction);
+         }
 
          // killough 10/98: Always decrease player bobbing by ORIG_FRICTION.
          // This prevents problems with bobbing on ice, where it was not being
@@ -795,6 +807,12 @@ void P_PlayerHitFloor(Mobj *mo, bool onthing)
       else if(onthing || !E_GetThingFloorType(mo, true)->liquid)
          S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
    }
+}
+
+static void P_floorHereticBounceMissile(Mobj * mo)
+{
+   mo->momz = -mo->momz;
+   P_SetMobjState(mo, mobjinfo[mo->type]->deathstate);
 }
 
 //
@@ -978,7 +996,7 @@ floater:
       if(correct_lost_soul_bounce && (mo->flags & MF_SKULLFLY))
          mo->momz = -mo->momz; // the skull slammed into something
 
-      if((moving_down = (mo->momz < 0)))
+      if((moving_down = (mo->momz < 0)) && !(mo->flags4 & MF4_HERETICBOUNCES))
       {
          // killough 11/98: touchy objects explode on impact
          if(mo->flags & MF_TOUCHY && mo->intflags & MIF_ARMED &&
@@ -1010,8 +1028,16 @@ floater:
 
       if(!((mo->flags ^ MF_MISSILE) & (MF_MISSILE | MF_NOCLIP)))
       {
-         if(!(mo->flags3 & MF3_FLOORMISSILE)) // haleyjd
+         if(mo->flags4 & MF4_HERETICBOUNCES) // MaxW
+         {
+            P_floorHereticBounceMissile(mo);
+            return;
+         }
+         else if(!(mo->flags3 & MF3_FLOORMISSILE)) // haleyjd
+         {
             P_ExplodeMissile(mo, nullptr);
+            return;
+         }
          return;
       }
    }
@@ -1230,8 +1256,9 @@ bool P_CheckPortalTeleport(Mobj *mobj)
       {
          P_avoidPortalEdges(*mobj, false);
          const linkdata_t *ldata = R_FPLink(sector);
-         EV_PortalTeleport(mobj, ldata->deltax, ldata->deltay, ldata->deltaz,
-                           ldata->fromid, ldata->toid);
+         mobj->prevpos.portalsec = ldata;
+         EV_SectorPortalTeleport(mobj, ldata->deltax, ldata->deltay,
+                                 ldata->deltaz, ldata->fromid, ldata->toid);
          ret = true;
       }
    }
@@ -1254,8 +1281,9 @@ bool P_CheckPortalTeleport(Mobj *mobj)
       {
          P_avoidPortalEdges(*mobj, true);
          linkdata_t *ldata = R_CPLink(sector);
-         EV_PortalTeleport(mobj, ldata->deltax, ldata->deltay, ldata->deltaz,
-                           ldata->fromid, ldata->toid);
+         mobj->prevpos.portalsec = ldata;
+         EV_SectorPortalTeleport(mobj, ldata->deltax, ldata->deltay,
+                                 ldata->deltaz, ldata->fromid, ldata->toid);
          ret = true;
       }
    }
@@ -1401,6 +1429,11 @@ void Mobj::Think()
                momz < -LevelInfo.gravity*8)
             {
                P_PlayerHitFloor(this, true);
+            }
+            if(player && onmo->flags4 & MF4_STICKYCARRY)
+            {
+               player->momx = momx = onmo->momx;
+               player->momy = momy = onmo->momy;
             }
             if(onmo->z + onmo->height - z <= STEPSIZE)
             {
@@ -1715,6 +1748,8 @@ void Mobj::backupPosition()
    prevpos.y     = y;
    prevpos.z     = z;
    prevpos.angle = angle; // NB: only used for player objects
+   prevpos.portalline = nullptr;
+   prevpos.portalsec = nullptr;
 }
 
 //
@@ -2484,35 +2519,96 @@ spawnit:
 //
 // P_SpawnPuff
 //
-void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
-                 int updown, bool ptcl)
+Mobj *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
+                  int updown, bool ptcl, const MetaTable *pufftype,
+                  const Mobj *hitmobj)
 {
-   Mobj* th;
-
-   // haleyjd 08/05/04: use new function
-   z += P_SubRandom(pr_spawnpuff) << 10;
-
-   th = P_SpawnMobj(x, y, z, E_SafeThingType(MT_PUFF));
-   th->momz = FRACUNIT;
-   th->tics -= P_Random(pr_spawnpuff) & 3;
-
-   if(th->tics < 1)
-      th->tics = 1;
-
-   // don't make punches spark on the wall
-
-   if(trace.attackrange == MELEERANGE)
-      P_SetMobjState(th, E_SafeState(S_PUFF3));
-
-   // haleyjd: for demo sync etc we still need to do the above, so
-   // here we'll make the puff invisible and draw particles instead
-   if(ptcl && drawparticles && bulletpuff_particle &&
-      trace.attackrange != MELEERANGE)
+   if(!pufftype)
    {
-      if(bulletpuff_particle != 2)
-         th->translucency = 0;
-      P_SmokePuff(32, x, y, z, dir, updown);
+      static const MetaTable *defaulttype;
+      if(!defaulttype)
+         defaulttype = E_PuffForName(GameModeInfo->puffType);
+      pufftype = defaulttype;
+      if(!pufftype)  // may still be null
+         return nullptr;
    }
+   const char *hitsound = pufftype->getString(keyPuffHitSound, nullptr);
+   if(hitsound && !strcasecmp(hitsound, "none"))
+      hitsound = nullptr;
+   if(hitmobj)
+   {
+      const char *altname = nullptr;
+      if(hitmobj->flags & MF_NOBLOOD)
+         altname = pufftype->getString(keyPuffNoBloodPuffType, nullptr);
+      if(estrempty(altname))
+         altname = pufftype->getString(keyPuffHitPuffType, nullptr);
+      if(estrnonempty(altname))
+      {
+         const MetaTable *otable = E_PuffForName(altname);
+         if(otable)
+         {
+            pufftype = otable;
+            // If the alternate puff has its own hitsound, use that.
+            const char *althitsound = pufftype->getString(keyPuffHitSound,
+                                                          nullptr);
+            if(estrnonempty(althitsound) && strcasecmp(althitsound, "none"))
+               hitsound = althitsound;
+         }
+      }
+   }
+
+   Mobj* th = nullptr;
+
+   double zspread = pufftype->getDouble(keyPuffZSpread, puffZSpreadDefault);
+   if(zspread)
+      z += P_SubRandom(pr_spawnpuff) * M_DoubleToFixed(zspread / 256.0);
+
+   // mobjtype already checked to be safe.
+   int mobjtype = pufftype->getInt(keyPuffThingType, D_MININT);
+   if(mobjtype != D_MININT)
+      th = P_SpawnMobj(x, y, z, mobjtype);
+
+   bool punchhack = false;
+   if(th)
+   {
+      if(pufftype->getInt(keyPuffRandomTics, 0))
+      {
+         th->tics -= P_Random(pr_spawnpuff) & 3;
+         if(th->tics < 1)
+            th->tics = 1;
+      }
+      // Input pufftype hitsound has priority over alternate pufftype miss
+      // sound, but less priority than alternate's own hit sound.
+      S_StartSoundName(th, hitmobj && estrnonempty(hitsound) ? hitsound :
+                       pufftype->getString(keyPuffSound, nullptr));
+      th->momz = M_DoubleToFixed(pufftype->getDouble(keyPuffUpSpeed, 0));
+
+      // preserve the Doom hack of melee fist puff
+      if(trace.attackrange == MELEERANGE)
+      {
+         int snum = pufftype->getInt(keyPuffPunchHack, D_MININT);
+         if(snum != D_MININT && snum != NullStateNum)
+         {
+            P_SetMobjState(th, snum);
+            punchhack = true;
+         }
+      }
+   }
+
+   // ioanch: spawn particles even for melee range if nothing is spawned
+   if(ptcl && drawparticles && bulletpuff_particle &&
+      (trace.attackrange != MELEERANGE || !punchhack))
+   {
+      int numparticles = pufftype->getInt(keyPuffParticles, 0);
+      if(numparticles > 0)
+      {
+         if(th && bulletpuff_particle != 2)
+            th->translucency = 0;
+         P_SmokePuff(numparticles, x, y, z, dir, updown);
+      }
+   }
+
+   return th;
 }
 
 //
@@ -2695,6 +2791,9 @@ BloodSpawner::BloodSpawner(Mobj *crushtarget, int pdamage)
 //
 void BloodSpawner::spawn(bloodaction_e action) const
 {
+   if(inflictor && inflictor->flags4 & MF4_BLOODLESSIMPACT)
+      return;
+
    mobjtype_t type = E_BloodTypeForThing(target, action);
    if(type < 0)
       return;
@@ -2944,7 +3043,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type)
    if(autoaim)
    {
       // killough 8/2/98: prefer autoaiming at enemies
-      int mask = demo_version < 203 ? 0 : MF_FRIEND;
+      int mask = demo_version < 203 ? false : true;
       do
       {
          slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
@@ -2959,7 +3058,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type)
             slope = P_PlayerPitchSlope(source->player);
          }
       }
-      while(mask && (void(mask=0), !clip.linetarget));  // killough 8/2/98
+      while(mask && (mask=false, !clip.linetarget));  // killough 8/2/98
    }
    else
    {
@@ -2974,7 +3073,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type)
    th = P_SpawnMobj(x, y, z, type);
 
    if(source->player && source->player->powers[pw_silencer] &&
-      P_GetReadyWeapon(source->player)->flags & WPF_SILENCER)
+      source->player->readyweapon->flags & WPF_SILENCEABLE)
    {
       S_StartSoundAtVolume(th, th->info->seesound, WEAPON_VOLUME_SILENCED, 
                            ATTN_NORMAL, CHAN_AUTO);
@@ -3005,6 +3104,55 @@ Mobj *P_SpawnMissileAngle(Mobj *source, mobjtype_t type,
    missileinfo.z      = z;
    missileinfo.angle  = angle;
    missileinfo.momz   = momz;
+   missileinfo.flags  = (missileinfo_t::USEANGLE | missileinfo_t::NOFUZZ);
+
+   return P_SpawnMissileEx(missileinfo);
+}
+
+//
+// Tries to aim at a nearby monster, but with angle parameter
+// Code lifted from P_SPMAngle in Chocolate Heretic, p_mobj.c
+//
+Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t angle)
+{
+   fixed_t z, slope = 0;
+   angle_t an = angle;
+
+   fixed_t playersightslope = P_PlayerPitchSlope(source->player);
+   if(autoaim)
+   {
+      // ioanch: reuse killough's code from P_SpawnPlayerMissile
+      int mask = demo_version < 203 ? false : true;
+      do
+      {
+         slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
+         if(!clip.linetarget)
+            slope = P_AimLineAttack(source, an += 1<<26, 16*64*FRACUNIT, mask);
+         if(!clip.linetarget)
+            slope = P_AimLineAttack(source, an -= 2<<26, 16*64*FRACUNIT, mask);
+         if(!clip.linetarget)
+         {
+            an = angle;
+            // haleyjd: use true slope angle
+            slope = playersightslope;
+         }
+      } while(mask && (mask = false, !clip.linetarget));  // killough 8/2/98
+   }
+   else
+      slope = playersightslope;
+
+   // NOTE: playersightslope is added to z in vanilla Heretic.
+   z = source->z + 4 * 8 * FRACUNIT + playersightslope;
+
+   edefstructvar(missileinfo_t, missileinfo);
+
+   memset(&missileinfo, 0, sizeof(missileinfo));
+
+   missileinfo.source = source;
+   missileinfo.type   = type;
+   missileinfo.z      = z;
+   missileinfo.angle  = an;
+   missileinfo.momz   = FixedMul(mobjinfo[type]->speed, slope);
    missileinfo.flags  = (missileinfo_t::USEANGLE | missileinfo_t::NOFUZZ);
 
    return P_SpawnMissileEx(missileinfo);

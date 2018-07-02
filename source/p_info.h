@@ -161,6 +161,9 @@ struct LevelInfo_t
 
    // sound environments
    int  defaultEnvironment;   // ID of default sound environment
+
+   fixed_t airControl;
+   fixed_t airFriction;
 };
 
 // the one and only LevelInfo object

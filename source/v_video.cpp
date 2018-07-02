@@ -31,14 +31,12 @@
 
 #include "c_io.h"
 #include "d_gi.h"
-#include "doomdef.h"
 #include "doomstat.h"
 #include "i_video.h"
 #include "m_bbox.h"
 #include "r_draw.h"
 #include "r_main.h"
 #include "v_block.h"
-#include "v_patch.h" // haleyjd
 #include "v_misc.h"
 #include "v_patchfmt.h"
 #include "v_video.h"

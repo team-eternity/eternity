@@ -302,8 +302,8 @@ int TXT_HoveringOverWidget(TXT_UNCAST_ARG(widget))
 
     TXT_GetMousePosition(&x, &y);
 
-    return (x >= widget->x && x < widget->x + widget->w
-         && y >= widget->y && y < widget->y + widget->h);
+    return (x >= widget->x && x < widget->x + (int)widget->w
+         && y >= widget->y && y < widget->y + (int)widget->h);
 }
 
 void TXT_SetWidgetBG(TXT_UNCAST_ARG(widget))

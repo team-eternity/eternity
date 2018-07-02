@@ -46,6 +46,7 @@
 #include "e_inventory.h"
 #include "e_player.h"
 #include "e_states.h"
+#include "e_weapons.h"
 #include "g_game.h"
 #include "metaapi.h"
 #include "m_argv.h"
@@ -59,8 +60,15 @@
 #include "sounds.h"
 #include "w_levels.h"
 #include "w_wad.h"
+#include "dhticstr.h"
 
 #define plyr (&players[consoleplayer])     /* the console player */
+
+// Various flags
+enum
+{
+   FLAG_ALWAYSCALL = 16    // apply this on top of negative arg
+};
 
 static int M_NukeMonsters();
 
@@ -100,6 +108,8 @@ static void cheat_htickill(const void *);
 static void cheat_hticnoclip(const void *);
 static void cheat_hticwarp(const void *);
 static void cheat_hticbehold(const void *);
+static void cheat_hticgimme(const void *);
+static void cheat_rambo(const void *);
 
 // Shared cheats
 static void cheat_pw(const void *);
@@ -189,6 +199,8 @@ cheat_s cheat[CHEAT_NUMCHEATS] =
    { "ravpowerf", Game_Heretic, not_sync, cheat_pw,          pw_flight          },
    { "ravpowerr", Game_Heretic, not_sync, cheat_pw,          pw_ironfeet        },
    { "ravpower",  Game_Heretic, not_sync, cheat_hticbehold,  0                  },
+   { "gimme",     Game_Heretic, not_sync, cheat_hticgimme, -(2 | FLAG_ALWAYSCALL) },
+   { "rambo",     Game_Heretic, not_sync, cheat_rambo,       0                  },
 
    // Shared Cheats
    { "comp",     -1, not_sync, cheat_comp,     0             }, // phares
@@ -244,8 +256,10 @@ static void cheat_mus(const void *arg)
 // 'choppers' invulnerability & chainsaw
 static void cheat_choppers(const void *arg)
 {
-   // WEAPON_FIXME: choppers cheat
-   plyr->weaponowned[wp_chainsaw] = true;
+   weaponinfo_t *chainsaw = E_WeaponForDEHNum(wp_chainsaw);
+   if(!chainsaw)
+      return; // For whatever reason, the chainsaw isn't defined
+   E_GiveWeapon(plyr, chainsaw);
    doom_printf("%s", DEH_String("STSTR_CHOPPERS")); // Ty 03/27/98 - externalized
 }
 
@@ -281,11 +295,9 @@ static void cheat_one(const void *arg)
 
 static void cheat_fa(const void *arg)
 {
-   int i;
-   
    if(!E_PlayerHasBackpack(plyr))
       E_GiveBackpack(plyr);
-   
+
    itemeffect_t *armor = E_ItemEffectForName(ITEMNAME_IDFAARMOR);
    if(armor)
    {
@@ -294,15 +306,7 @@ static void cheat_fa(const void *arg)
       plyr->armordivisor = armor->getInt("savedivisor", 3);
    }
 
-   // WEAPON_FIXME: IDFA cheat
-   
-   // You can't own weapons that aren't in the game - phares 02/27/98
-   for(i = 0; i < NUMWEAPONS; i++)
-   {
-      if(!(((i == wp_plasma || i == wp_bfg) && GameModeInfo->id == shareware) ||
-         (i == wp_supershotgun && !enable_ssg)))
-         plyr->weaponowned[i] = true;
-   }
+   E_GiveAllClassWeapons(plyr);
 
    // give full ammo
    E_GiveAllAmmo(plyr, GAA_MAXAMOUNT);
@@ -340,7 +344,21 @@ static void cheat_pw(const void *arg)
       plyr->powers[pw] = pw!=pw_strength && pw!=pw_allmap && pw!=pw_silencer;  // killough
    else
    {
-      P_GivePower(plyr, pw);
+      static const int tics[NUMPOWERS] =
+      {
+         INVULNTICS,
+         1,          // strength
+         INVISTICS,
+         IRONTICS,
+         1,          // allmap
+         INFRATICS,
+         INVISTICS,  // haleyjd: totalinvis
+         INVISTICS,  // haleyjd: ghost
+         1,          // haleyjd: silencer
+         FLIGHTTICS, // haleyjd: flight
+         INFRATICS,  // haleyjd: torch
+      };
+      P_GivePower(plyr, pw, tics[pw], false);
       if(pw != pw_strength && !comp[comp_infcheat])
          plyr->powers[pw] = -1;      // infinite duration -- killough
    }
@@ -557,28 +575,24 @@ static void cheat_weapx(const void *arg)
    int w = *buf - '1';
    int pwstr = pw_strength;
 
-   // WEAPON_FIXME: weap cheat
-
    if((w == wp_supershotgun && !enable_ssg) ||      // killough 2/28/98
       ((w == wp_bfg || w == wp_plasma) && GameModeInfo->id == shareware))
       return;
 
    if(w == wp_fist)           // make '1' apply beserker strength toggle
       cheat_pw(&pwstr);
-   else
+   else if(w > wp_fist && w < NUMWEAPONS)
    {
-      if(w >= 0 && w < NUMWEAPONS)
+      weaponinfo_t *weapon = E_WeaponForDEHNum(w);
+      if(!E_PlayerOwnsWeapon(plyr, weapon))
       {
-         if((plyr->weaponowned[w] = !plyr->weaponowned[w]))
-            doom_printf("Weapon Added");  // Ty 03/27/98 - *not* externalized
-         else 
-         {
-            weapontype_t P_SwitchWeapon(player_t *player);
-            
-            doom_printf("Weapon Removed"); // Ty 03/27/98 - *not* externalized
-            if(w == plyr->readyweapon)     // maybe switch if weapon removed
-               plyr->pendingweapon = P_SwitchWeapon(plyr);
-         }
+         E_GiveWeapon(plyr, weapon);
+         doom_printf("Weapon Added");  // Ty 03/27/98 - *not* externalized
+      }
+      else
+      {
+         E_RemoveInventoryItem(plyr, weapon->tracker, 1);
+         doom_printf("Weapon Removed"); // Ty 03/27/98 - *not* externalized
       }
    }
 }
@@ -699,8 +713,6 @@ static void cheat_htickeys(const void *arg)
       player_printf(plyr, "%s", DEH_String("TXT_CHEATKEYS"));
 }
 
-// HTIC_TODO: artifacts cheat "gimme"
-
 //
 // Heretic Warp cheat - engage
 //
@@ -742,6 +754,102 @@ static void cheat_hticbehold(const void *arg)
    player_printf(plyr, "inVuln, Ghost, Allmap, Torch, Fly or Rad");
 }
 
+
+static constexpr char const *hartiNames[] =
+{
+   "ArtiInvulnerability",
+   "ArtiInvisibility",
+   "ArtiHealth",
+   "ArtiSuperHealth",
+   "ArtiTomeOfPower",
+   "ArtiTorch",
+   "ArtiTimeBomb",
+   "ArtiEgg",
+   "ArtiFly",
+   "ArtiTeleport"
+
+};
+
+static constexpr int numHArtifacts = earrlen(hartiNames);
+
+//
+// Adapted CheatArtifact1Func from Choco Heretic
+//
+static void cheat_hticgimme(const void *varg)
+{
+   auto args = static_cast<const char *>(varg);
+   if(!*args)
+   {
+      player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS1));
+      return;
+   }
+   if(!*(args + 1))
+   {
+      player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS2));
+      return;
+   }
+   int i;
+   int type;
+   int count;
+
+   type = args[0] - 'a';
+   count = args[1] - '0';
+   if(type == 25 && count == 0)
+   {                           // All artifacts
+      for(i = 0; i < numHArtifacts; i++)
+      {
+         itemeffect_t *artifact = E_ItemEffectForName(hartiNames[i]);
+         if(artifact == nullptr)
+            continue;
+         if((GameModeInfo->flags & GIF_SHAREWARE) && artifact->getInt("noshareware", 0))
+            continue;
+         E_GiveInventoryItem(plyr, artifact, E_GetMaxAmountForArtifact(plyr, artifact));
+      }
+      player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS3));
+   }
+   else if(type >= 0 && type < numHArtifacts && count > 0 && count < 10)
+   {
+      itemeffect_t *artifact = E_ItemEffectForName(hartiNames[type]);
+      if(artifact == nullptr)
+      {
+         return;
+      }
+      if((GameModeInfo->flags & GIF_SHAREWARE) && artifact->getInt("noshareware", 0))
+      {
+         player_printf(plyr, DEH_String(TXT_CHEATARTIFACTSFAIL));
+         return;
+      }
+      E_GiveInventoryItem(plyr, artifact, count);
+      player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS3));
+   }
+   else
+   {                           // Bad input
+      player_printf(plyr, DEH_String(TXT_CHEATARTIFACTSFAIL));
+   }
+
+}
+
+static void cheat_rambo(const void *arg)
+{
+   if(!E_PlayerHasBackpack(plyr))
+      E_GiveBackpack(plyr);
+
+   itemeffect_t *armor = E_ItemEffectForName(ITEMNAME_RAMBOARMOR);
+   if(armor)
+   {
+      plyr->armorpoints  = armor->getInt("saveamount",  0);
+      plyr->armorfactor  = armor->getInt("savefactor",  1);
+      plyr->armordivisor = armor->getInt("savedivisor", 3);
+   }
+
+   E_GiveAllClassWeapons(plyr);
+
+   // give full ammo
+   E_GiveAllAmmo(plyr, GAA_MAXAMOUNT);
+
+   player_printf(plyr, DEH_String(TXT_CHEATWEAPONS));
+}
+
 //-----------------------------------------------------------------------------
 // 2/7/98: Cheat detection rewritten by Lee Killough, to avoid
 // scrambling and to use a more general table-driven approach.
@@ -763,6 +871,7 @@ bool M_FindCheats(int key)
    static uint64_t sr;
    static char argbuf[CHEAT_ARGS_MAX+1], *arg;
    static int init, argsleft, cht;
+   static bool argsAlwaysCall;
    int i, matchedbefore; 
    bool ret;
 
@@ -776,8 +885,12 @@ bool M_FindCheats(int key)
    if(argsleft)
    {
       *arg++ = ectype::toLower(key);     // store key in arg buffer
-      if(!--argsleft)                    // if last key in arg list,
+      if(!--argsleft || argsAlwaysCall)  // if last key in arg list,
+      {
          cheat[cht].func(argbuf);        // process the arg buffer
+         if(GameModeInfo->flags & GIF_CHEATSOUND)
+            S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_ACTIVATE]);
+      }
       return true;                       // affirmative response
    }
 
@@ -844,14 +957,23 @@ bool M_FindCheats(int key)
          {
             cht = i;                      // remember this cheat code
             arg = argbuf;                 // point to start of arg buffer
-            argsleft = -curcht.arg;       // number of args expected
+            argsleft = -curcht.arg & ~FLAG_ALWAYSCALL;       // number of args expected
+            memset(arg, 0, argsleft);
             ret = true;                   // responder has eaten key
+            if((argsAlwaysCall = !!(-curcht.arg & FLAG_ALWAYSCALL)))
+            {
+               curcht.func(arg);
+               if(GameModeInfo->flags & GIF_CHEATSOUND)
+                  S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_ACTIVATE]);
+            }
          }
          else if(!matchedbefore)          // allow only one cheat at a time 
          {
             matchedbefore = 1;            // responder has eaten key
             ret = true;
             curcht.func(&(curcht.arg));   // call cheat handler
+            if(GameModeInfo->flags & GIF_CHEATSOUND)
+               S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_ACTIVATE]);
          }
       }
    }
@@ -1033,7 +1155,7 @@ static int M_NukeMonsters()
          }
       }
    }
-   while(!killcount && mask ? void(mask = 0), 1 : 0);  // killough 7/20/98
+   while(!killcount && mask ? mask = 0, 1 : 0);  // killough 7/20/98
 
    return killcount;
 }
@@ -1049,11 +1171,22 @@ CONSOLE_NETCMD(nuke, cf_server|cf_level, netcmd_nuke)
 
 //
 // TODO: Perhaps make it so you can run cheats in console by name, like idkfa and such?
-// It would be useful for uses who want to bind cheats to a single button.
+// It would be useful for users who want to bind cheats to a single button.
 //
 CONSOLE_COMMAND(GIVEARSENAL, cf_notnet|cf_level)
 {
-   cheat_fa(nullptr);
+   switch(GameModeInfo->type)
+   {
+   case Game_DOOM:
+      cheat_fa(nullptr);
+      break;
+   case Game_Heretic:
+      cheat_rambo(nullptr);
+      break;
+   default:
+      // TODO: I dunno
+      break;
+   }
 }
 
 CONSOLE_COMMAND(GIVEKEYS, cf_notnet|cf_level)

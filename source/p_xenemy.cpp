@@ -36,7 +36,6 @@
 #include "m_random.h"
 #include "p_inter.h"
 #include "p_maputl.h"
-#include "p_mobj.h"
 #include "p_saveg.h"
 #include "p_tick.h"
 #include "p_xenemy.h"

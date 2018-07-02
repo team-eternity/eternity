@@ -134,7 +134,7 @@ void P_MakeLineNormal(line_t *line)
 // Returns the distance to the first line within the sector that
 // is intersected by a line parallel to the plane normal with the point (ox, oy)
 //
-float P_GetExtent(sector_t *sector, line_t *line, v3float_t *o, v2float_t *d)
+static float P_GetExtent(sector_t *sector, line_t *line, v3float_t *o, v2float_t *d)
 {
    float fardist = -1.0f;
    int i;
@@ -339,7 +339,7 @@ void P_SpawnSlope_Line(int linenum, int staticFn)
 //
 // Copies a slope plane (ceil/floor) from tagged sector to dest
 //
-void P_copyPlane(int tag, sector_t *dest, bool copyCeil)
+static void P_copyPlane(int tag, sector_t *dest, bool copyCeil)
 {
    for(int secnum = -1; (secnum = P_FindSectorFromTag(tag, secnum)) != -1; )
    {
@@ -368,7 +368,7 @@ void P_copyPlane(int tag, sector_t *dest, bool copyCeil)
 // * ExtraData: 493
 // * Hexen:     118
 //
-void P_copySectorSlopeParam(line_t *line)
+static void P_copySectorSlopeParam(line_t *line)
 {
    // If there's no backsector, only consider args[0] and args[1]
    for(int i = 0; i <= (line->backsector ? 3 : 1); i++)

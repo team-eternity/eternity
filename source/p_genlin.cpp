@@ -949,7 +949,7 @@ manual_stair:
       sec->nextsec   = -1;
       sec->prevsec   = -1;
 
-      P_FloorSequence(floor->sector);
+      P_StairSequence(floor->sector);
       
       osecnum = secnum;            // jff 3/4/98 preserve loop index  
       // Find next sector to raise
@@ -1028,7 +1028,7 @@ manual_stair:
             floor->stepRaiseTime = FixedDiv(stairsize, speed) >> FRACBITS;            
             floor->delayTimer    = floor->delayTime ? floor->stepRaiseTime : 0;
 
-            P_FloorSequence(floor->sector);
+            P_StairSequence(floor->sector);
             
             ok = 1;
             break;

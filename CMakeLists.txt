@@ -89,8 +89,8 @@ INCLUDE(InstallRequiredSystemLibraries)
 SET (CPACK_GENERATOR "DEB;RPM;STGZ;ZIP")
 SET (CPACK_PACKAGE_VENDOR "Team Eternity")
 SET (CPACK_PACKAGE_CONTACT "Team Eternity <haelyjd@hotmail.com>")
-SET (CPACK_PACKAGE_VERSION_MAJOR "3")
-SET (CPACK_PACKAGE_VERSION_MINOR "43")
+SET (CPACK_PACKAGE_VERSION_MAJOR "4")
+SET (CPACK_PACKAGE_VERSION_MINOR "1")
 SET (CPACK_PACKAGE_VERSION_PATCH "0")
 SET (CPACK_PACKAGE_NAME "Eternity Engine")
 SET (CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/COPYING")
@@ -156,7 +156,7 @@ endif()
 ################################################################################
 ######################### Compiler: Features  ##################################
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-   TRY_CXX_COMPILER_FLAG(-std=c++11 FLAG_CXX_stdcxx11)
+   TRY_CXX_COMPILER_FLAG(-std=c++17 FLAG_CXX_stdcxx17)
 endif()
 
 

@@ -32,6 +32,7 @@
 #include "z_zone.h"
 
 #include "i_system.h"
+#include "p_setup.h"
 #include "r_dynabsp.h"
 
 //=============================================================================
@@ -225,12 +226,10 @@ prune: ; // early exit and skip past the tests above
 //
 
 //
-// R_computeIntersection 
-//
 // Calculate the point of intersection of two lines
 //
-static void R_computeIntersection(dynaseg_t *part, dynaseg_t *seg,
-                                  double &outx, double &outy)
+void R_ComputeIntersection(const dynaseg_t *part, const dynaseg_t *seg, double &outx, double &outy, 
+   v2float_t *fbackup)
 {
    double a2, b2, l2, w, d;
    double dx, dy, dx2, dy2;
@@ -242,11 +241,19 @@ static void R_computeIntersection(dynaseg_t *part, dynaseg_t *seg,
 
    l2 = sqrt(dx2*dx2 + dy2*dy2);
 
+   const dynavertex_t *const segv1 = seg->seg.dyv1;
+   const dynavertex_t *const segv2 = seg->seg.dyv2;
+
    if(l2 == 0.0)
    {
       // feh.
       outx = seg->psx;
       outy = seg->psy;
+      if(fbackup)
+      {
+         fbackup->x = static_cast<float>(outx);
+         fbackup->y = static_cast<float>(outy);
+      }
       return;
    }
 
@@ -259,11 +266,28 @@ static void R_computeIntersection(dynaseg_t *part, dynaseg_t *seg,
       w = (dx * (seg->psy - part->psy) + dy * (part->psx - seg->psx)) / d;
       outx = seg->psx + (a2 * w);
       outy = seg->psy + (b2 * w);
+      if(fbackup)
+      {
+         // For interpolation, only use the backup positions of the seg to be split, not of the
+         // partition seg.
+         double bdx2 = segv2->fbackup.x - segv1->fbackup.x;
+         double bdy2 = segv2->fbackup.y - segv1->fbackup.y;
+         double bl2 = sqrt(bdx2 * bdx2 + bdy2 * bdy2);
+         double ba2 = bdx2 / bl2;
+         double bb2 = bdy2 / bl2;
+         double bd = dy * ba2 - dx * bb2;
+         double bw = (dx * (segv1->fbackup.y - part->psy) +
+            dy * (part->psx - segv1->fbackup.x)) / bd;
+         fbackup->x = static_cast<float>(segv1->fbackup.x + ba2 * bw);
+         fbackup->y = static_cast<float>(segv1->fbackup.y + bb2 * bw);
+      }
    }
    else
    {
       outx = seg->psx;
       outy = seg->psy;
+      if(fbackup)
+         *fbackup = segv1->fbackup;
    }
 }
 
@@ -293,7 +317,7 @@ enum
 //
 // The seg is either left, right, or on the partition line.
 //
-static int R_classifyDynaSeg(dynaseg_t *part, dynaseg_t *seg, double pdx, double pdy)
+static int R_classifyDynaSeg(const dynaseg_t *part, const dynaseg_t *seg, double pdx, double pdy)
 {
    double dx2, dy2, dx3, dy3, a, b;
 
@@ -311,7 +335,7 @@ static int R_classifyDynaSeg(dynaseg_t *part, dynaseg_t *seg, double pdx, double
       double x = 0.0, y = 0.0;
 
       // line is split
-      R_computeIntersection(part, seg, x, y);
+      R_ComputeIntersection(part, seg, x, y);
 
       // find distance from line start to split point
       dx2 = seg->psx - x;
@@ -399,31 +423,42 @@ static void R_divideSegs(rpolynode_t *rpn, dseglist_t *ts,
       if(val == SPLIT_SR_EL || val == SPLIT_SL_ER)
       {
          double x, y;
+         v2float_t fbackup;
 
          // seg is split by the partition
-         R_computeIntersection(best, seg, x, y);
+         R_ComputeIntersection(best, seg, x, y, &fbackup);
 
          // create a new vertex at the intersection point
-         vertex_t *nv = R_GetFreeDynaVertex();
+         dynavertex_t *nv = R_GetFreeDynaVertex();
          nv->fx = static_cast<float>(x);
          nv->fy = static_cast<float>(y);
+         nv->fbackup = fbackup;
          nv->x  = M_DoubleToFixed(x);
          nv->y  = M_DoubleToFixed(y);
+         nv->backup.x = M_FloatToFixed(nv->fbackup.x);
+         nv->backup.y = M_FloatToFixed(nv->fbackup.y);
 
          // create a new dynaseg from nv to v2
-         dynaseg_t *nds = R_CreateDynaSeg(seg, nv, seg->seg.v2);
+         dynaseg_t *nds = R_CreateDynaSeg(seg, nv, seg->seg.dyv2);
          R_setupDSForBSP(*nds);
          nds->seg.frontsector = seg->seg.frontsector;
          nds->seg.backsector  = seg->seg.backsector;
          nds->seg.len         = static_cast<float>(nds->len);
 
          // modify original seg to run from v1 to nv
-         R_SetDynaVertexRef(&(seg->seg.v2), nv);
+         bool notmarked = !seg->originalv2;
+         if(notmarked)   // only if not already marked!
+            R_SetDynaVertexRef(&seg->originalv2, seg->seg.dyv2);
+         R_SetDynaVertexRef(&seg->seg.dyv2, nv);
          R_setupDSForBSP(*seg);
+         seg->seg.len = static_cast<float>(seg->len);
 
          // add the new seg to the current node's ownership list,
          // so it can get freed later
          nds->ownerlink.insert(nds, &rpn->owned);
+
+         if(notmarked)
+            seg->alterlink.insert(seg, &rpn->altered);
 
          // classify left or right
          if(val == SPLIT_SR_EL)
@@ -566,11 +601,24 @@ static void R_returnOwnedList(rpolynode_t *node)
       dynaseg_t  *ds   = *dsl;
 
       // free dynamic vertices
-      R_FreeDynaVertex(&(ds->seg.v1));
-      R_FreeDynaVertex(&(ds->seg.v2));
+      R_FreeDynaVertex(&ds->seg.dyv1);
+      R_FreeDynaVertex(&ds->seg.dyv2);
 
       R_FreeDynaSeg(ds);
 
+      dsl = next;
+   }
+
+   // Now also fix altered polyobject dynasegs
+   dsl = node->altered;
+   while(dsl)
+   {
+      dseglink_t *next = dsl->dllNext;
+      dynaseg_t *ds = dsl->dllObject;
+      R_SetDynaVertexRef(&ds->seg.dyv2, ds->originalv2);
+      R_FreeDynaVertex(&ds->originalv2);
+      P_CalcSegLength(&ds->seg);
+      dsl->remove();
       dsl = next;
    }
 }

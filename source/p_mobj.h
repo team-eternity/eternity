@@ -158,8 +158,8 @@ public:
    PointThinker() : Super(), x(0), y(0), z(0), groupid(0) {}
 
    // Methods
-   virtual void serialize(SaveArchive &arc);
-   virtual void remove();
+   virtual void serialize(SaveArchive &arc) override;
+   virtual void remove() override;
    
    // Data Members
    fixed_t x, y, z;
@@ -212,17 +212,17 @@ protected:
    deswizzle_info *dsInfo; // valid only during deserialization
 
    // Methods
-   void Think();
+   void Think() override;
 
    bool shouldApplyTorque();
 
 public:   
    // Virtual methods (overridables)
    // Inherited from Thinker:
-   virtual void updateThinker();
-   virtual void remove();
-   virtual void serialize(SaveArchive &arc);
-   virtual void deSwizzle();
+   virtual void updateThinker() override;
+   virtual void remove() override;
+   virtual void serialize(SaveArchive &arc) override;
+   virtual void deSwizzle() override;
 
    // Methods
    void backupPosition();
@@ -400,13 +400,13 @@ protected:
    Mobj *target;
    unsigned int swizzled_target; // for serialization
 
-   virtual void Think();
+   virtual void Think() override;
 
 public:
    MobjFadeThinker() : Super(), target(NULL), swizzled_target(0) {}
-   virtual void remove();
-   virtual void serialize(SaveArchive &arc);
-   virtual void deSwizzle();
+   virtual void remove() override;
+   virtual void serialize(SaveArchive &arc) override;
+   virtual void deSwizzle() override;
 
    Mobj *getTarget() const { return target; }
    void setTarget(Mobj *pTarget);
@@ -437,7 +437,9 @@ void  P_RespawnSpecials();
 Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
 bool  P_SetMobjState(Mobj *mobj, statenum_t state);
 void  P_MobjThinker(Mobj *mobj);
-void  P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown, bool ptcl);
+Mobj *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown,
+                  bool ptcl, const MetaTable *pufftype = nullptr,
+                  const Mobj *hitmobj = nullptr);
 void  P_SpawnUnknownThings();
 Mobj *P_SpawnMapThing(mapthing_t *mt);
 bool  P_CheckMissileSpawn(Mobj *);  // killough 8/2/98
@@ -512,6 +514,7 @@ Mobj *P_SpawnMissileEx(const missileinfo_t &missileinfo);
 Mobj *P_SpawnMissile(Mobj *source, Mobj *dest, mobjtype_t type, fixed_t z);
 Mobj *P_SpawnPlayerMissile(Mobj *source, mobjtype_t type);
 Mobj *P_SpawnMissileAngle(Mobj *source, mobjtype_t type, angle_t angle, fixed_t momz, fixed_t z);
+Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t angle);
 Mobj *P_SpawnMissileWithDest(Mobj* source, Mobj* dest, mobjtype_t type, fixed_t srcz, 
                              fixed_t destx, fixed_t desty, fixed_t destz);
 
@@ -701,9 +704,16 @@ enum mobjflags4_e : unsigned int
    MF4_TOTALINVISIBLE = 0x00020000, // Thing is invisible to monsters
    MF4_DRAWSBLOOD     = 0x00040000, // For missiles, spawn blood when hitting bleeding things
    MF4_SPACPUSHWALL   = 0x00080000, // thing can activate push walls
-   MF4_NOSPECIESINFIGHT = 0x00100000,  // no infighting in this species, but still damage
-   MF4_HARMSPECIESMISSILE = 0x00200000,   // harmed even by projectiles of same species
-   MF4_FRIENDFOEMISSILE = 0x00400000,  // friends and foes of same species hurt each other
+   MF4_NOSPECIESINFIGHT   = 0x00100000, // no infighting in this species, but still damage
+   MF4_HARMSPECIESMISSILE = 0x00200000, // harmed even by projectiles of same species
+   MF4_FRIENDFOEMISSILE   = 0x00400000, // friends and foes of same species hurt each other
+   MF4_BLOODLESSIMPACT    = 0x00800000, // doesn't draw blood when it hits or rips a thing
+   MF4_HERETICBOUNCES     = 0x01000000, // thing bounces à la Heretic
+   MF4_MONSTERPASS        = 0x02000000, // not blocked by blockmonsters.
+   MF4_LOWAIMPRIO         = 0x04000000, // can't be autoaimed.
+   MF4_STICKYCARRY        = 0x08000000, // can carry other things on top of it.
+   MF4_SETTARGETONDEATH   = 0x10000000, // target is updated even when one-shot
+   MF4_SLIDEOVERTHINGS    = 0x20000000  // thing will keep sliding when on top of things
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh

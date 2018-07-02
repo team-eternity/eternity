@@ -987,6 +987,24 @@
     <ClCompile Include="..\source\e_switch.cpp">
       <Filter>Source Files\E_\E_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\g_demolog.cpp">
+      <Filter>Source Files\G_\G_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\p_portalblockmap.cpp">
+      <Filter>Source Files\P_\P_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\a_weaponsheretic.cpp">
+      <Filter>Source Files\A_\A_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\a_weaponsdoom.cpp">
+      <Filter>Source Files\A_\A_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\e_puff.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\e_edfmetatable.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1752,6 +1770,21 @@
       <Filter>Source Files\E_\E_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\source\e_switch.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\g_demolog.h">
+      <Filter>Source Files\G_\G_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\p_portalblockmap.h">
+      <Filter>Source Files\P_\P_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\m_avltree.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\e_puff.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\e_edfmetatable.h">
       <Filter>Source Files\E_\E_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
