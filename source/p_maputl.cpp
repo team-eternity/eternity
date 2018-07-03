@@ -180,6 +180,19 @@ v2fixed_t P_BoxLinePoint(const fixed_t bbox[4], const line_t *ld)
 }
 
 //
+// Utility function which returns true if the divline dl crosses line
+// Returns -1 if there's no crossing, or the starting point's 0 or 1 side.
+//
+int P_LineIsCrossed(const line_t &line, const divline_t &dl)
+{
+   int a;
+   return P_PointOnLineSide(dl.x, dl.y, &line) !=
+   P_PointOnLineSide(dl.x + dl.dx, dl.y + dl.dy, &line) &&
+   (a = P_PointOnDivlineSide(line.v1->x, line.v1->y, &dl)) !=
+   P_PointOnDivlineSide(line.v1->x + line.dx, line.v1->y + line.dy, &dl) ? a : -1;
+}
+
+//
 // Returns true if two bounding boxes intersect. Assumes they're correctly set.
 //
 bool P_BoxesIntersect(const fixed_t bbox1[4], const fixed_t bbox2[4])

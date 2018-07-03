@@ -1188,7 +1188,8 @@ void P_NightmareRespawn(Mobj* mobj)
 //
 // The mobj is already assumed to be sunk into the sector portal.
 //
-static void P_avoidPortalEdges(Mobj &mobj, bool isceiling)
+static void P_avoidPortalEdges(Mobj &mobj, bool isceiling,
+                               const line_t *&crossedge)
 {
    const sector_t &sector = *mobj.subsector->sector;
    unsigned flag = isceiling ? EX_ML_UPPERPORTAL : EX_ML_LOWERPORTAL;
@@ -1201,17 +1202,25 @@ static void P_avoidPortalEdges(Mobj &mobj, bool isceiling)
    box[BOXRIGHT] = displace.x + AVOID_EDGE_PORTAL_RANGE;
    box[BOXTOP] = displace.y + AVOID_EDGE_PORTAL_RANGE;
 
+   crossedge = nullptr;
+
    for(int i = 0; i < sector.linecount; ++i)
    {
       const line_t &line = *sector.lines[i];
 
+      if(line.frontsector == &sector || !(line.extflags & flag))
+         continue;
+
+      divline_t dl = { mobj.prevpos.x, mobj.prevpos.y, mobj.x - mobj.prevpos.x,
+         mobj.y - mobj.prevpos.y };
+
+      if(P_LineIsCrossed(line, dl) == 0)
+         crossedge = &line;  // TODO
+
       // line must be an edge portal with its back towards the sector.
       // The thing's centre must be very close to the line
-      if(line.frontsector == &sector || !(line.extflags & flag) ||
-         !P_BoxesIntersect(box, line.bbox) || P_BoxOnLineSide(box, &line) != -1)
-      {
+      if(!P_BoxesIntersect(box, line.bbox) || P_BoxOnLineSide(box, &line) != -1)
          continue;
-      }
 
       // Got one. Add to the vector
       angle_t angle = P_PointToAngle(0, 0, line.dx, line.dy) + ANG90;
@@ -1241,22 +1250,30 @@ bool P_CheckPortalTeleport(Mobj *mobj)
 
    if(sector->f_pflags & PS_PASSABLE)
    {
-      fixed_t passheight;
+      fixed_t passheight, prevpassheight;
 
       if(mobj->player)
       {
          P_CalcHeight(mobj->player);
          passheight = mobj->player->viewz;
+         prevpassheight = mobj->player->prevviewz;
       }
       else
+      {
          passheight = mobj->z + (mobj->height >> 1);
+         prevpassheight = mobj->prevpos.z + (mobj->height >> 1);
+      }
 
       // ioanch 20160109: link offset outside
-      if(passheight < P_FloorPortalZ(*sector))
+      fixed_t planez = P_FloorPortalZ(*sector);
+      if(passheight < planez)
       {
-         P_avoidPortalEdges(*mobj, false);
+         const line_t *crossedge;
+         P_avoidPortalEdges(*mobj, false, crossedge);
          const linkdata_t *ldata = R_FPLink(sector);
-         mobj->prevpos.portalsec = ldata;
+         mobj->prevpos.ldata = ldata;
+         if(prevpassheight < planez)
+            mobj->prevpos.portalline = crossedge;
          EV_SectorPortalTeleport(mobj, ldata->deltax, ldata->deltay,
                                  ldata->deltaz, ldata->fromid, ldata->toid);
          ret = true;
@@ -1266,22 +1283,30 @@ bool P_CheckPortalTeleport(Mobj *mobj)
    if(!ret && sector->c_pflags & PS_PASSABLE)
    {
       // Calculate the height at which the mobj should pass through the portal
-      fixed_t passheight;
+      fixed_t passheight, prevpassheight;
 
       if(mobj->player)
       {
          P_CalcHeight(mobj->player);
          passheight = mobj->player->viewz;
+         prevpassheight = mobj->player->prevviewz;
       }
       else
+      {
          passheight = mobj->z + (mobj->height >> 1);
+         prevpassheight = mobj->prevpos.z + (mobj->height >> 1);
+      }
 
       // ioanch 20160109: link offset outside
-      if(passheight >= P_CeilingPortalZ(*sector))
+      fixed_t planez = P_CeilingPortalZ(*sector);
+      if(passheight >= planez)
       {
-         P_avoidPortalEdges(*mobj, true);
+         const line_t *crossedge;
+         P_avoidPortalEdges(*mobj, true, crossedge);
          linkdata_t *ldata = R_CPLink(sector);
-         mobj->prevpos.portalsec = ldata;
+         mobj->prevpos.ldata = ldata;
+         if(prevpassheight >= planez)
+            mobj->prevpos.portalline = crossedge;
          EV_SectorPortalTeleport(mobj, ldata->deltax, ldata->deltay,
                                  ldata->deltaz, ldata->fromid, ldata->toid);
          ret = true;
@@ -1749,7 +1774,7 @@ void Mobj::backupPosition()
    prevpos.z     = z;
    prevpos.angle = angle; // NB: only used for player objects
    prevpos.portalline = nullptr;
-   prevpos.portalsec = nullptr;
+   prevpos.ldata = nullptr;
 }
 
 //

@@ -834,11 +834,8 @@ static void R_interpolateThingPosition(Mobj *thing, spritepos_t &pos)
    }
    else
    {
-      const line_t *pline;
       const linkdata_t *ldata;
-      if(((pline = thing->prevpos.portalline) &&
-          (ldata = &pline->portal->data.link)) ||
-         (ldata = thing->prevpos.portalsec))
+      if((ldata = thing->prevpos.ldata))
       {
          pos.x = lerpCoord(view.lerp, thing->prevpos.x + ldata->deltax,
                            thing->x);

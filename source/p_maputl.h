@@ -105,6 +105,7 @@ fixed_t P_InterceptVector(const divline_t *v2, const divline_t *v1);
 int     P_BoxOnLineSide(const fixed_t *tmbox, const line_t *ld);
 // ioanch 20160123: for linedef portal clipping.
 v2fixed_t P_BoxLinePoint(const fixed_t bbox[4], const line_t *ld);
+int P_LineIsCrossed(const line_t &line, const divline_t &dl);
 bool P_BoxesIntersect(const fixed_t bbox1[4], const fixed_t bbox2[4]);
 int P_BoxOnDivlineSide(const fixed_t *tmbox, const divline_t &dl);
 
