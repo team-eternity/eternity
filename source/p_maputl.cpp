@@ -186,9 +186,9 @@ v2fixed_t P_BoxLinePoint(const fixed_t bbox[4], const line_t *ld)
 int P_LineIsCrossed(const line_t &line, const divline_t &dl)
 {
    int a;
-   return P_PointOnLineSide(dl.x, dl.y, &line) !=
+   return (a = P_PointOnLineSide(dl.x, dl.y, &line)) !=
    P_PointOnLineSide(dl.x + dl.dx, dl.y + dl.dy, &line) &&
-   (a = P_PointOnDivlineSide(line.v1->x, line.v1->y, &dl)) !=
+   P_PointOnDivlineSide(line.v1->x, line.v1->y, &dl) !=
    P_PointOnDivlineSide(line.v1->x + line.dx, line.v1->y + line.dy, &dl) ? a : -1;
 }
 
