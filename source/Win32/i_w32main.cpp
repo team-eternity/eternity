@@ -103,6 +103,28 @@ void I_DisableSysMenu(SDL_Window *window)
    }
 }
 
+// FIXME: When we finally axe XP support we can remove all this Windows 10 nonsense
+#ifndef _WIN32_WINNT_WIN10
+#define _WIN32_WINNT_WIN10 0x0A00
+#endif
+
+//
+// Checks if Windows version is 10 or higher, for audio kludge
+//
+bool I_IsWindows10OrHigher()
+{
+   OSVERSIONINFOEXW osvi = { sizeof(osvi), 0, 0, 0, 0,{ 0 }, 0, 0 };
+   const DWORDLONG dwlConditionMask =
+      VerSetConditionMask(
+         VerSetConditionMask(0, VER_MAJORVERSION, VER_GREATER_EQUAL),
+      VER_MINORVERSION, VER_GREATER_EQUAL);
+   osvi.dwMajorVersion = HIBYTE(_WIN32_WINNT_WIN10);
+   osvi.dwMinorVersion = LOBYTE(_WIN32_WINNT_WIN10);
+   osvi.wServicePackMajor = 1;
+
+   return VerifyVersionInfoW(&osvi, VER_MAJORVERSION | VER_MINORVERSION, dwlConditionMask) != FALSE;
+}
+
 #endif
 
 // EOF
