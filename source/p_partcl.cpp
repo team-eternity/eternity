@@ -391,9 +391,6 @@ void P_ParticleThinker(void)
       i = particle->next;
 
       // haleyjd: unlink the particle from the world
-      bool usedportal = false;
-      int oldgroupid = particle->subsector->sector->groupid;
-      int newgroupid = oldgroupid;
       P_UnsetParticlePosition(particle);
 
       // haleyjd: particles with fall to ground style don't start
@@ -422,10 +419,9 @@ void P_ParticleThinker(void)
       if(gMapHasLinePortals && particle->velx | particle->vely)
       {
          v2fixed_t destination = P_LinePortalCrossing(particle->x, particle->y, 
-            particle->velx, particle->vely, &newgroupid);
+            particle->velx, particle->vely);
          particle->x = destination.x;
          particle->y = destination.y;
-         usedportal = newgroupid != oldgroupid;
       }
       else
       {
@@ -435,7 +431,7 @@ void P_ParticleThinker(void)
       }
       particle->z += particle->velz;
       P_SetParticlePosition(particle);
-      if(!usedportal && particle->subsector->sector->groupid != oldgroupid)
+      if(P_IsInVoid(particle->x, particle->y, *particle->subsector))
       {
          particle->ttl = 1;
          particle->trans = 0;

@@ -193,6 +193,22 @@ int P_LineIsCrossed(const line_t &line, const divline_t &dl)
 }
 
 //
+// Checks if a point is behind a subsector's 1-sided seg
+//
+bool P_IsInVoid(fixed_t x, fixed_t y, const subsector_t &ss)
+{
+   for(int i = 0; i < ss.numlines; ++i)
+   {
+      const seg_t &seg = segs[ss.firstline + i];
+      if(seg.backsector)
+         continue;
+      if(P_PointOnLineSide(x, y, seg.linedef))
+         return true;
+   }
+   return false;
+}
+
+//
 // Returns true if two bounding boxes intersect. Assumes they're correctly set.
 //
 bool P_BoxesIntersect(const fixed_t bbox1[4], const fixed_t bbox2[4])
