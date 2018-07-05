@@ -8,6 +8,12 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+05.07.2018
+
+BUGFIX: Fixed a problem where particles appeared in the wrong place, because of
+        nearby portals.
+
+--------------------------------------------------------------------------------
 29.06.2018
 
 IMPROVEMENT: Movement through portals is finally interpolated. No more hops or
