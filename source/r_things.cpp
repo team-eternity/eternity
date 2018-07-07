@@ -2100,10 +2100,20 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
    mobjprojinfo_t mpi;
    fixed_t xspan = M_FloatToFixed(span.side * mobj->xscale);
    mpi.mobj = mobj;
-   mpi.bbox[BOXLEFT] = emin(mobj->x, mobj->prevpos.x) - xspan;
-   mpi.bbox[BOXRIGHT] = emax(mobj->x, mobj->prevpos.x) + xspan;
-   mpi.bbox[BOXBOTTOM] = emin(mobj->y, mobj->prevpos.y) - xspan;
-   mpi.bbox[BOXTOP] = emax(mobj->y, mobj->prevpos.y) + xspan;
+   if(mobj->prevpos.ldata)
+   {
+      mpi.bbox[BOXLEFT] = mobj->x - xspan;
+      mpi.bbox[BOXRIGHT] = mobj->x + xspan;
+      mpi.bbox[BOXBOTTOM] = mobj->y - xspan;
+      mpi.bbox[BOXTOP] = mobj->y + xspan;
+   }
+   else
+   {
+      mpi.bbox[BOXLEFT] = emin(mobj->x, mobj->prevpos.x) - xspan;
+      mpi.bbox[BOXRIGHT] = emax(mobj->x, mobj->prevpos.x) + xspan;
+      mpi.bbox[BOXBOTTOM] = emin(mobj->y, mobj->prevpos.y) - xspan;
+      mpi.bbox[BOXTOP] = emax(mobj->y, mobj->prevpos.y) + xspan;
+   }
    mpi.scaledbottom = scaledbottom;
    mpi.scaledtop = scaledtop;
    mpi.item = &item;
