@@ -562,6 +562,7 @@ static void D_determineIWADVersion(const qstring &fullpath)
    version.freedoom    = false;
    version.freedm      = false;
    version.bfgedition  = false;
+   version.rekkr       = false;
    version.error       = false;
    version.flags       = IWADF_NOERRORS;
 
@@ -587,6 +588,11 @@ static void D_determineIWADVersion(const qstring &fullpath)
       { 
          if(estrempty(gi_path_fdoomu)) // Ultimate FreeDoom
             var = &gi_path_fdoomu;
+      }
+      else if(version.rekkr)
+      {
+         if(estrempty(gi_path_rekkr)) // Rekkr
+            var = &gi_path_rekkr;
       }
       else if(estrempty(gi_path_doomu)) // Ultimate Doom
          var = &gi_path_doomu;
