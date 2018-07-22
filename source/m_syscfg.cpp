@@ -81,6 +81,7 @@ extern int disable_sysmenu;
 #define ITEM_IWAD_FREEDOOM      "iwad_freedoom"
 #define ITEM_IWAD_FREEDOOMU     "iwad_freedoomu"
 #define ITEM_IWAD_FREEDM        "iwad_freedm"
+#define ITEM_IWAD_REKKR         "iwad_rekkr"
 #define ITEM_IWAD_CHOICE        "iwad_choice"
 
 // system defaults array
@@ -140,6 +141,9 @@ static default_t sysdefaults[] =
 
    DEFAULT_STR(ITEM_IWAD_FREEDM, &gi_path_freedm, NULL, "", default_t::wad_no,
                "IWAD path for FreeDM (Freedoom Deathmatch IWAD)"),
+
+   DEFAULT_STR(ITEM_IWAD_REKKR, &gi_path_rekkr, NULL, "", default_t::wad_no,
+               "IWAD path for Rekkr (Ultimate Doom gamemission)"),
 
    DEFAULT_INT(ITEM_IWAD_CHOICE, &iwad_choice, NULL, -1, -1, NUMPICKIWADS, default_t::wad_no,
                "Number of last IWAD chosen from the IWAD picker"),

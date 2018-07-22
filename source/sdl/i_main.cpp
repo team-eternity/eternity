@@ -43,6 +43,10 @@
 #define main common_main
 #endif
 
+#ifdef _MSC_VER
+extern bool I_IsWindows10OrHigher();
+#endif
+
 #endif // (EE_CURRENT_PLATFORM==EE_PLATFORM_WINDOWS)&&!defined(_WIN32_WCE)
 
 // SoM 3/11/2002: Disable the parachute for debugging.
@@ -65,7 +69,10 @@ int main(int argc, char **argv)
 
    // SDL_FIXME: If this is removed then all sound effects are pitched too high. Why?
 #if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS)
-   SDL_setenv("SDL_AUDIODRIVER", "winmm", true);
+   if(I_IsWindows10OrHigher())
+      SDL_setenv("SDL_AUDIODRIVER", "directsound", true);
+   else
+      SDL_setenv("SDL_AUDIODRIVER", "winmm", true);
 #endif
 
    // MaxW: 2017/09/16: Now prints the error on failure

@@ -57,8 +57,8 @@ struct sfxinfo_t;
 #define WEAPON_VOLUME_SILENCED 50
 
 // Defines needed for weapon codepointers
-#define LOWERSPEED   (6)
-#define RAISESPEED   (6)
+#define LOWERSPEED   (FRACUNIT*6)
+#define RAISESPEED   (FRACUNIT*6)
 #define WEAPONBOTTOM (FRACUNIT*128)
 #define WEAPONTOP    (FRACUNIT*32)
 

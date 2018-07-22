@@ -66,34 +66,36 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Midl>
-      <TypeLibraryName>.\$(Configuration)/Eternity.tlb</TypeLibraryName>
+      <TypeLibraryName>.\$(Configuration)\Eternity.tlb</TypeLibraryName>
       <HeaderFileName>..\midiproc\midiproc.h</HeaderFileName>
       <OutputDirectory>..\midiproc\</OutputDirectory>
       <GenerateStublessProxies>true</GenerateStublessProxies>
@@ -116,10 +118,6 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <PrecompiledHeaderOutputFile>.\Release/Eternity.pch</PrecompiledHeaderOutputFile>
-      <AssemblerListingLocation>.\Release/</AssemblerListingLocation>
-      <ObjectFileName>.\Release/</ObjectFileName>
-      <ProgramDataBaseFileName>.\Release/</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </ClCompile>
@@ -128,24 +126,18 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>./Release/snes_spc.lib;./Release/libpng.lib;./Release/zlib.lib;./Release/ACSVM.lib;$(SDL2_0)\lib\x86\sdl2.lib;$(SDLMIXER2_0)\lib\x86\sdl2_mixer.lib;$(SDLNET2_0)\lib\x86\sdl2_net.lib;oldnames.lib;opengl32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>.\Release/Eternity.exe</OutputFile>
+      <AdditionalDependencies>$(OutDir)snes_spc.lib;$(OutDir)libpng.lib;$(OutDir)zlib.lib;$(OutDir)ACSVM.lib;$(SDL2_0)\lib\$(PlatformTarget)\SDL2.lib;$(SDLMIXER2_0)\lib\$(PlatformTarget)\SDL2_mixer.lib;$(SDLNET2_0)\lib\$(PlatformTarget)\SDL2_net.lib;oldnames.lib;opengl32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <ProgramDatabaseFile>.\Release/Eternity.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
-      <MapFileName>.\Release/Eternity.map</MapFileName>
+      <MapFileName>.\Release\Eternity.map</MapFileName>
       <SubSystem>Console</SubSystem>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
-      <TargetMachine>MachineX86</TargetMachine>
     </Link>
-    <Bscmake>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\Release/Eternity.bsc</OutputFile>
-    </Bscmake>
+    <Bscmake />
     <Manifest>
       <AdditionalManifestFiles>%(AdditionalManifestFiles)</AdditionalManifestFiles>
       <EnableDpiAwareness>true</EnableDpiAwareness>
@@ -159,7 +151,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Midl>
-      <TypeLibraryName>.\$(Configuration)/Eternity.tlb</TypeLibraryName>
+      <TypeLibraryName>.\$(Configuration)\Eternity.tlb</TypeLibraryName>
       <HeaderFileName>..\midiproc\midiproc.h</HeaderFileName>
       <OutputDirectory>..\midiproc\</OutputDirectory>
       <GenerateStublessProxies>true</GenerateStublessProxies>
@@ -182,10 +174,6 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <PrecompiledHeaderOutputFile>.\x64/Release/Eternity.pch</PrecompiledHeaderOutputFile>
-      <AssemblerListingLocation>.\x64/Release/</AssemblerListingLocation>
-      <ObjectFileName>.\x64/Release/</ObjectFileName>
-      <ProgramDataBaseFileName>.\x64/Release/</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </ClCompile>
@@ -194,23 +182,18 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>./x64/Release/snes_spc.lib;./x64/Release/libpng.lib;./x64/Release/zlib.lib;./x64/Release/ACSVM.lib;$(SDL2_0)\lib\x64\sdl2.lib;$(SDLMIXER2_0)\lib\x64\sdl2_mixer.lib;$(SDLNET2_0)\lib\x64\sdl2_net.lib;oldnames.lib;opengl32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>.\x64/Release/Eternity.exe</OutputFile>
+      <AdditionalDependencies>$(OutDir)snes_spc.lib;$(OutDir)libpng.lib;$(OutDir)zlib.lib;$(OutDir)ACSVM.lib;$(SDL2_0)\lib\$(PlatformTarget)\SDL2.lib;$(SDLMIXER2_0)\lib\$(PlatformTarget)\SDL2_mixer.lib;$(SDLNET2_0)\lib\$(PlatformTarget)\SDL2_net.lib;oldnames.lib;opengl32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <ProgramDatabaseFile>.\Release/Eternity.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
-      <MapFileName>.\x64/Release/Eternity.map</MapFileName>
+      <MapFileName>.\x64\Release\Eternity.map</MapFileName>
       <SubSystem>Console</SubSystem>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
     </Link>
-    <Bscmake>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\x64/Release/Eternity.bsc</OutputFile>
-    </Bscmake>
+    <Bscmake />
     <Manifest>
       <AdditionalManifestFiles>%(AdditionalManifestFiles)</AdditionalManifestFiles>
       <EnableDpiAwareness>true</EnableDpiAwareness>
@@ -224,7 +207,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Midl>
-      <TypeLibraryName>.\$(Configuration)/Eternity.tlb</TypeLibraryName>
+      <TypeLibraryName>.\$(Configuration)\Eternity.tlb</TypeLibraryName>
       <HeaderFileName>..\midiproc\midiproc.h</HeaderFileName>
       <OutputDirectory>..\midiproc\</OutputDirectory>
       <GenerateStublessProxies>true</GenerateStublessProxies>
@@ -238,10 +221,6 @@
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <PrecompiledHeaderOutputFile>.\Debug/Eternity.pch</PrecompiledHeaderOutputFile>
-      <AssemblerListingLocation>.\Debug/</AssemblerListingLocation>
-      <ObjectFileName>.\Debug/</ObjectFileName>
-      <ProgramDataBaseFileName>.\Debug/</ProgramDataBaseFileName>
       <BrowseInformation>true</BrowseInformation>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -253,23 +232,17 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>./Debug/snes_spc.lib;./Debug/libpng.lib;./Debug/zlib.lib;./Debug/ACSVM.lib;$(SDL2_0)\lib\x86\sdl2.lib;$(SDLMIXER2_0)\lib\x86\sdl2_mixer.lib;$(SDLNET2_0)\lib\x86\sdl2_net.lib;oldnames.lib;opengl32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>.\Debug/Eternity.exe</OutputFile>
+      <AdditionalDependencies>$(OutDir)snes_spc.lib;$(OutDir)libpng.lib;$(OutDir)zlib.lib;$(OutDir)ACSVM.lib;$(SDL2_0)\lib\$(PlatformTarget)\SDL2.lib;$(SDLMIXER2_0)\lib\$(PlatformTarget)\SDL2_mixer.lib;$(SDLNET2_0)\lib\$(PlatformTarget)\SDL2_net.lib;oldnames.lib;opengl32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>.\Debug/Eternity.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
-      <TargetMachine>MachineX86</TargetMachine>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
-    <Bscmake>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\Debug/Eternity.bsc</OutputFile>
-    </Bscmake>
+    <Bscmake />
     <Manifest>
       <AdditionalManifestFiles>%(AdditionalManifestFiles)</AdditionalManifestFiles>
       <EnableDpiAwareness>true</EnableDpiAwareness>
@@ -283,7 +256,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Midl>
-      <TypeLibraryName>.\$(Configuration)/Eternity.tlb</TypeLibraryName>
+      <TypeLibraryName>.\$(Configuration)\Eternity.tlb</TypeLibraryName>
       <HeaderFileName>..\midiproc\midiproc.h</HeaderFileName>
       <OutputDirectory>..\midiproc\</OutputDirectory>
       <GenerateStublessProxies>true</GenerateStublessProxies>
@@ -296,10 +269,6 @@
       <PreprocessorDefinitions>_DEBUG;RANGECHECK;INSTRUMENTED;ZONEIDCHECK;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;HAVE_SPCLIB;EE_FEATURE_OPENGL;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;EE_FEATURE_REGISTRYSCAN;EE_FEATURE_MIDIRPC;EE_FEATURE_XINPUT;KATE_MEMORIAL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <PrecompiledHeaderOutputFile>.\x64/Debug/Eternity.pch</PrecompiledHeaderOutputFile>
-      <AssemblerListingLocation>.\x64/Debug/</AssemblerListingLocation>
-      <ObjectFileName>.\x64/Debug/</ObjectFileName>
-      <ProgramDataBaseFileName>.\x64/Debug/</ProgramDataBaseFileName>
       <BrowseInformation>true</BrowseInformation>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -313,22 +282,17 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>./x64/Debug/snes_spc.lib;./x64/Debug/libpng.lib;./x64/Debug/zlib.lib;./x64/Debug/ACSVM.lib;$(SDL2_0)\lib\x64\sdl2.lib;$(SDLMIXER2_0)\lib\x64\sdl2_mixer.lib;$(SDLNET2_0)\lib\x64\sdl2_net.lib;oldnames.lib;opengl32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>.\x64/Debug/Eternity.exe</OutputFile>
+      <AdditionalDependencies>$(OutDir)snes_spc.lib;$(OutDir)libpng.lib;$(OutDir)zlib.lib;$(OutDir)ACSVM.lib;$(SDL2_0)\lib\$(PlatformTarget)\SDL2.lib;$(SDLMIXER2_0)\lib\$(PlatformTarget)\SDL2_mixer.lib;$(SDLNET2_0)\lib\$(PlatformTarget)\SDL2_net.lib;oldnames.lib;opengl32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>.\Debug/Eternity.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
-    <Bscmake>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\x64/Debug/Eternity.bsc</OutputFile>
-    </Bscmake>
+    <Bscmake />
     <Manifest>
       <AdditionalManifestFiles>%(AdditionalManifestFiles)</AdditionalManifestFiles>
       <EnableDpiAwareness>true</EnableDpiAwareness>

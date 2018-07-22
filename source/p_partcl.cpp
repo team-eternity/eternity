@@ -431,6 +431,11 @@ void P_ParticleThinker(void)
       }
       particle->z += particle->velz;
       P_SetParticlePosition(particle);
+      if(P_IsInVoid(particle->x, particle->y, *particle->subsector))
+      {
+         particle->ttl = 1;
+         particle->trans = 0;
+      }
 
       // apply accelerations
       particle->velx += particle->accx;

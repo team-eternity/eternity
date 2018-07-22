@@ -41,7 +41,7 @@ struct prevpos_t
    fixed_t z;
    angle_t angle;
    const line_t *portalline;  // portal line being passed for interpolation
-   const linkdata_t *portalsec;  // portal sector data being passed
+   const linkdata_t *ldata;   // portal sector data being passed
 };
 
 //

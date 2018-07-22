@@ -915,7 +915,7 @@ void A_Lower(actionargs_t *actionargs)
    pspdef_t     *psp;
    arglist_t    *args = actionargs->args;
    // WEAPON_FIXME: Default LOWERSPEED property of EDF weapons?
-   const fixed_t lowerspeed = FRACUNIT * E_ArgAsInt(args, 1, LOWERSPEED);
+   const fixed_t lowerspeed = FixedMul(FRACUNIT, E_ArgAsFixed(args, 0, LOWERSPEED));
 
    if(!(player = actionargs->actor->player))
       return;
@@ -965,7 +965,7 @@ void A_Raise(actionargs_t *actionargs)
    pspdef_t     *psp;
    arglist_t    *args = actionargs->args;
    // WEAPON_FIXME: Default RAISESPEED property of EDF weapons?
-   const fixed_t raisespeed = FRACUNIT * E_ArgAsInt(args, 1, RAISESPEED);
+   const fixed_t raisespeed = FixedMul(FRACUNIT, E_ArgAsFixed(args, 0, RAISESPEED));
 
    if(!(player = actionargs->actor->player))
       return;
