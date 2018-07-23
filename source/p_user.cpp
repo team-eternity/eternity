@@ -754,7 +754,7 @@ void P_PlayerThink(player_t *player)
          else
             player->pendingweapon = wp;
 
-         player->pendingweaponslot = E_FindEntryForWeaponInSlot(player, wp, cmd->slotIndex);
+         player->pendingweaponslot = E_FindEntryForWeaponInSlotIndex(player, wp, cmd->slotIndex);
       }
    }
    else if(cmd->buttons & BT_CHANGE)

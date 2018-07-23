@@ -220,8 +220,8 @@ bool E_IsPoweredVariantOf(const weaponinfo_t *untomed, const weaponinfo_t *tomed
 BDListItem<weaponslot_t> *E_FirstInSlot(const weaponslot_t *dummyslot);
 BDListItem<weaponslot_t> *E_LastInSlot(const weaponslot_t *dummyslot);
 
-weaponslot_t *E_FindEntryForWeaponInSlot(const player_t *player, const weaponinfo_t *wp,
-                                         const int slot);
+weaponslot_t *E_FindEntryForWeaponInSlotIndex(const player_t *player, const weaponinfo_t *wp,
+                                              const int slotindex);
 weaponslot_t *E_FindFirstWeaponSlot(const player_t *player, const weaponinfo_t *wp);
 
 void E_CollectWeapons(cfg_t *cfg);

@@ -470,9 +470,8 @@ void P_LocateFollowCam(Mobj *target, fixed_t &destX, fixed_t &destY)
    });
 
    // Find the furthest one from which the target is visible
-   for(auto vitr = cvertexes.begin(); vitr != cvertexes.end(); vitr++)
+   for(vertex_t *&v : cvertexes)
    {
-      vertex_t *v = *vitr;
       camsightparams_t camparams;
 
       camparams.cx       = v->x;
@@ -480,7 +479,7 @@ void P_LocateFollowCam(Mobj *target, fixed_t &destX, fixed_t &destY)
       camparams.cz       = sec->floorheight;
       camparams.cheight  = 41 * FRACUNIT;
       camparams.cgroupid = sec->groupid;
-      camparams.prev     = NULL;
+      camparams.prev     = nullptr;
       camparams.setTargetMobj(target);
 
       if(CAM_CheckSight(camparams))
@@ -492,7 +491,7 @@ void P_LocateFollowCam(Mobj *target, fixed_t &destX, fixed_t &destY)
          destY = v->y + 10 * finesine[ang >> ANGLETOFINESHIFT];
 
          return; // We've found our location
-      }                   
+      }
    }
 
    // If we got here, somehow the target isn't visible... (shouldn't happen)

@@ -213,10 +213,10 @@ static bool P_WeaponHasAmmoAlt(player_t *player, weaponinfo_t *weapon)
 //
 static weaponslot_t *P_findFirstNonNullWeaponSlot(const player_t *player)
 {
-   for(int i = 0; i < NUMWEAPONSLOTS; i++)
+   for(weaponslot_t *&weaponslot : player->pclass->weaponslots)
    {
-      if(player->pclass->weaponslots[i] != nullptr)
-         return player->pclass->weaponslots[i];
+      if(weaponslot != nullptr)
+         return weaponslot;
    }
 
    return nullptr;
@@ -1157,11 +1157,11 @@ void A_Light2(actionargs_t *actionargs)
 void P_SetupPsprites(player_t *player)
 {
    int i;
-   
+
    // remove all psprites
-   for(i = 0; i < NUMPSPRITES; ++i)
-      player->psprites[i].state = nullptr;
-   
+   for(pspdef_t &psprite : player->psprites)
+      psprite.state = nullptr;
+
    // spawn the gun
    player->pendingweapon = player->readyweapon;
    player->pendingweaponslot = player->readyweaponslot;

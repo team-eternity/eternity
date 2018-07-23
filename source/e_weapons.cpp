@@ -346,12 +346,12 @@ void E_GiveWeapon(player_t *player, const weaponinfo_t *weapon)
 //
 void E_GiveAllClassWeapons(player_t *player)
 {
-   for(auto &currslot : player->pclass->weaponslots)
+   for(weaponslot_t *&slot : player->pclass->weaponslots)
    {
-      if(!currslot)
+      if(!slot)
          continue;
 
-      BDListItem<weaponslot_t> *weaponslot = E_FirstInSlot(currslot);
+      BDListItem<weaponslot_t> *weaponslot = E_FirstInSlot(slot);
       do
       {
          E_GiveWeapon(player, weaponslot->bdObject->weapon);
@@ -405,13 +405,13 @@ BDListItem<weaponslot_t> *E_LastInSlot(const weaponslot_t *dummyslot)
 //
 // Looks for the given weapon  in an indexed slot
 //
-weaponslot_t *E_FindEntryForWeaponInSlot(const player_t *player, const weaponinfo_t *wp,
-                                         const int slot)
+static weaponslot_t *E_findEntryForWeaponInSlot(const player_t *player, const weaponinfo_t *wp,
+                                                const weaponslot_t *slot)
 {
-   if(player->pclass->weaponslots[slot] == nullptr)
+   if(slot == nullptr)
       return nullptr;
 
-   auto baseslot = E_FirstInSlot(player->pclass->weaponslots[slot]);
+   auto baseslot = E_FirstInSlot(slot);
 
    // Try finding the player's currently-equipped weapon.
    while(!baseslot->isDummy())
@@ -426,15 +426,20 @@ weaponslot_t *E_FindEntryForWeaponInSlot(const player_t *player, const weaponinf
    return nullptr;
 }
 
+weaponslot_t *E_FindEntryForWeaponInSlotIndex(const player_t *player, const weaponinfo_t *wp,
+                                              const int slotindex)
+{
+   return E_findEntryForWeaponInSlot(player, wp, player->pclass->weaponslots[slotindex]);
+}
 //
 // Finds the first instance of a weapon in a player's weaponslots
 //
 weaponslot_t *E_FindFirstWeaponSlot(const player_t *player, const weaponinfo_t *wp)
 {
-   for(int i = 0; i < NUMWEAPONSLOTS; i++)
+   for(const weaponslot_t *const &slot : player->pclass->weaponslots)
    {
       weaponslot_t *ret;
-      if((ret = E_FindEntryForWeaponInSlot(player, wp, i)) != nullptr)
+      if((ret = E_findEntryForWeaponInSlot(player, wp, slot)) != nullptr)
          return ret;
    }
    return nullptr;

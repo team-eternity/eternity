@@ -197,8 +197,8 @@ void M_ClearRandom()
 {
    int i;
    unsigned int seed = rngseed * 2 + 1; // add 3/26/98: add rngseed
-   for(i = 0; i < NUMPRCLASS; ++i)       // go through each pr_class and set
-      rng.seed[i] = seed *= 69069ul;     // each starting seed differently
+   for(unsigned int &currseed : rng.seed)         // go through each pr_class and set
+      currseed = seed *= 69069ul;        // each starting seed differently
    rng.prndindex = rng.rndindex = 0;     // clear two compatibility indices
 }
 

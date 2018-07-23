@@ -230,10 +230,9 @@ char *G_GetNameForMap(int episode, int map);
 void C_SendNetData()
 {
   command_t *command;
-  int i;
 
   C_SetConsole();
-  
+
   // display message according to what we're about to do
 
   C_Printf(consoleplayer ?
@@ -241,14 +240,12 @@ void C_SendNetData()
            FC_HI "Please Wait" FC_NORMAL " Sending game data..\n");
 
 
-  // go thru all hash chains, check for net sync variables  
-  for(i = 0; i < CMDCHAINS; i++)
+  // go thru all hash chains, check for net sync variables
+  for(command_t *command : cmdroots)
   {
-     command = cmdroots[i];
-
      while(command)
      {
-        if(command->type == ct_variable && command->flags & cf_netvar && 
+        if(command->type == ct_variable && command->flags & cf_netvar &&
            (consoleplayer == 0 || !(command->flags & cf_server)))
         {
            C_UpdateVar(command);
@@ -258,7 +255,7 @@ void C_SendNetData()
   }
 
   demo_insurance = 1;      // always use 1 in multiplayer
-  
+
   if(consoleplayer == 0)      // if server, send command to warp to map
   {
      char tempstr[100];

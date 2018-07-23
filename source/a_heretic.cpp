@@ -800,15 +800,15 @@ void A_HticBossDeath(actionargs_t *actionargs)
    Thinker *th;
    line_t   junk;
 
-   for(int i = 0; i < NUM_HBOSS_SPECS; ++i)
+   for(boss_spec_htic_t &hboss_spec : hboss_specs)
    {
-      unsigned int flags = 
-         hboss_specs[i].flagfield == 2 ? actor->flags2 : actor->flags3;
-      
+      unsigned int flags =
+         hboss_spec.flagfield == 2 ? actor->flags2 : actor->flags3;
+
       // to activate a special, the thing must be a boss that triggers
       // it, and the map must have the special enabled.
-      if((flags & hboss_specs[i].thing_flag) &&
-         (LevelInfo.bossSpecs & hboss_specs[i].level_flag))
+      if((flags & hboss_spec.thing_flag) &&
+         (LevelInfo.bossSpecs & hboss_spec.level_flag))
       {
          for(th = thinkercap.next; th != &thinkercap; th = th->next)
          {
@@ -816,16 +816,16 @@ void A_HticBossDeath(actionargs_t *actionargs)
             if((mo = thinker_cast<Mobj *>(th)))
             {
                unsigned int moflags =
-                  hboss_specs[i].flagfield == 2 ? mo->flags2 : mo->flags3;
-               if(mo != actor && 
-                  (moflags & hboss_specs[i].thing_flag) && 
+                  hboss_spec.flagfield == 2 ? mo->flags2 : mo->flags3;
+               if(mo != actor &&
+                  (moflags & hboss_spec.thing_flag) && 
                   mo->health > 0)
                   return;         // other boss not dead
             }
          }
 
          // victory!
-         switch(hboss_specs[i].level_flag)
+         switch(hboss_spec.level_flag)
          {
          default:
          case BSPEC_E2M8:
@@ -835,7 +835,7 @@ void A_HticBossDeath(actionargs_t *actionargs)
             // if a friendly boss dies, kill only friends
             // if an enemy boss dies, kill only enemies
             P_Massacre((actor->flags & MF_FRIEND) ? 1 : 2);
-            
+
             // fall through
          case BSPEC_E1M8:
             junk.tag = junk.args[0] = 666;

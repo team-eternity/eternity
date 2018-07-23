@@ -177,10 +177,8 @@ bool HUDWidget::AddWidgetToHash(HUDWidget *widget)
 void HUDWidget::StartWidgets()
 {
    // call all widget clear functions
-   for(int i = 0; i < NUMWIDGETCHAINS; i++)
+   for(HUDWidget *widget : hu_chains)
    {
-      HUDWidget *widget = hu_chains[i];
-
       while(widget)
       {
          widget->clear();
@@ -197,10 +195,8 @@ void HUDWidget::StartWidgets()
 void HUDWidget::DrawWidgets()
 {
    // call all widget drawer functions
-   for(int i = 0; i < NUMWIDGETCHAINS; i++)
+   for(HUDWidget *widget : hu_chains)
    {
-      HUDWidget *widget = hu_chains[i];
-
       while(widget && !widget->disabled)
       {
          widget->drawer();
@@ -217,10 +213,8 @@ void HUDWidget::DrawWidgets()
 void HUDWidget::TickWidgets()
 {
    // call all widget ticker functions
-   for(int i = 0; i < NUMWIDGETCHAINS; i++)
+   for(HUDWidget *widget : hu_chains)
    {
-      HUDWidget *widget = hu_chains[i];
-
       while(widget)
       {
          widget->ticker();

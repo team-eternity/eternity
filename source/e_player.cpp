@@ -345,10 +345,9 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
    if(cfg_size(skinsec, ITEM_SKIN_SOUNDS) > 0)
    {
       cfg_t *sndsec = cfg_getsec(skinsec, ITEM_SKIN_SOUNDS);
-      int i;
 
       // get sounds from the sounds section
-      for(i = 0; i < NUMSKINSOUNDS; ++i)
+      for(int i = 0; i < NUMSKINSOUNDS; ++i)
          E_DoSkinSound(sndsec, def, newSkin, i, skin_sound_names[i]);
    }
 }
@@ -829,10 +828,8 @@ static void E_addGlobalWeaponsToSlot(WeaponSlotTree *slot, WeaponSlotNode *node,
 //
 void E_ProcessFinalWeaponSlots()
 {
-   for(int i = 0; i < NUMEDFPCLASSCHAINS; ++i)
+   for(playerclass_t *chain : edf_player_classes)
    {
-      playerclass_t *chain = edf_player_classes[i];
-
       while(chain)
       {
          for(int i = NUMWEAPONSLOTS; i--> 0;)
@@ -881,13 +878,9 @@ void E_ProcessFinalWeaponSlots()
 //
 bool E_IsPlayerClassThingType(mobjtype_t motype)
 {
-   int i;
-
    // run down all hash chains
-   for(i = 0; i < NUMEDFPCLASSCHAINS; ++i)
+   for(playerclass_t *chain : edf_player_classes)
    {
-      playerclass_t *chain = edf_player_classes[i];
-
       while(chain)
       {
          if(chain->type == motype) // found a match
@@ -953,22 +946,17 @@ bool E_PlayerInWalkingState(player_t *player)
 //
 void E_ApplyTurbo(int ts)
 {
-   int i;
-   playerclass_t *pc;
-
    // run down all hash chains
-   for(i = 0; i < NUMEDFPCLASSCHAINS; ++i)
+   for(playerclass_t *pc : edf_player_classes)
    {
-      pc = edf_player_classes[i];
-
       while(pc)
       {
          pc->forwardmove[0] = pc->oforwardmove[0] * ts / 100;
          pc->forwardmove[1] = pc->oforwardmove[1] * ts / 100;
-         
+
          pc->sidemove[0] = pc->osidemove[0] * ts / 100;
          pc->sidemove[1] = pc->osidemove[1] * ts / 100;
-         
+
          pc = pc->next;
       }
    }

@@ -424,10 +424,10 @@ void A_Chase(actionargs_t *actionargs)
 void A_RandomWalk(actionargs_t *actionargs)
 {
    Mobj *actor = actionargs->actor;
-   int i, checkdirs[NUMDIRS];
+   int checkdirs[NUMDIRS];
 
-   for(i = 0; i < NUMDIRS; ++i)
-      checkdirs[i] = 0;
+   for(int &checkdir : checkdirs)
+      checkdir = 0;
 
    // turn toward movement direction
    if(actor->movedir < 8)

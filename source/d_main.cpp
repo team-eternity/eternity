@@ -1047,10 +1047,8 @@ static void D_ProcessWadPreincludes()
    // haleyjd 09/30/08: don't do in shareware
    if(!M_CheckParm("-noload") && !(GameModeInfo->flags & GIF_SHAREWARE))
    {
-      int i;
-      char *s;
-      for(i = 0; i < MAXLOADFILES; ++i)
-         if((s = wad_files[i]))
+      for(char *s : wad_files)
+         if(s)
          {
             while(ectype::isSpace(*s))
                s++;
@@ -1075,11 +1073,9 @@ static void D_ProcessDehPreincludes(void)
 {
    if(!M_CheckParm ("-noload"))
    {
-      int i;
-      char *s;
-      for(i = 0; i < MAXLOADFILES; i++)
+      for(char *s : deh_files)
       {
-         if((s = deh_files[i]))
+         if(s)
          {
             while(ectype::isSpace(*s))
                s++;
@@ -1118,10 +1114,9 @@ static void D_AutoExecScripts()
 
    if(!M_CheckParm("-nocscload")) // separate param from above
    {
-      char *s;
-      for(int i = 0; i < MAXLOADFILES; i++)
+      for(char *s : csc_files)
       {
-         if((s = csc_files[i]))
+         if(s)
          {
             while(ectype::isSpace(*s))
                s++;

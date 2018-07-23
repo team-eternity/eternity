@@ -811,14 +811,14 @@ void D_FindIWADs()
    D_collectIWADPaths(paths);
 
    // Check all paths that were found for IWADs
-   for(auto i = paths.begin(); i != paths.end(); i++)
-      D_checkPathForIWADs(*i);
+   for(qstring &path : paths)
+      D_checkPathForIWADs(path);
 
    // Check for special WADs
    D_checkForNoRest(); // NR4TL
 
    // TODO: DKotDC, when Hexen is supported
-   
+
    // Master Levels detection
    D_findMasterLevels();
 }

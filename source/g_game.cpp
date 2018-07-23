@@ -388,8 +388,8 @@ void G_BuildTiccmd(ticcmd_t *cmd)
             weaponinfo_t *weapon = P_GetPlayerWeapon(&players[consoleplayer], i - ka_weapon1);
             if(weapon)
             {
-               const auto slot = E_FindEntryForWeaponInSlot(&players[consoleplayer],
-                                                            weapon, i - ka_weapon1);
+               const auto slot = E_FindEntryForWeaponInSlotIndex(&players[consoleplayer],
+                                                                 weapon, i - ka_weapon1);
                newweapon = weapon->id;
                cmd->slotIndex = slot->slotindex;
                break;
@@ -2467,10 +2467,10 @@ static void G_queuePlayerCorpse(Mobj *mo)
 //
 void G_DeQueuePlayerCorpse(const Mobj *mo)
 {
-   for(auto itr = bodyque.begin(); itr != bodyque.end(); itr++)
+   for(Mobj *&body : bodyque)
    {
-      if(mo == *itr)
-         *itr = NULL;
+      if(mo == body)
+         body = nullptr;
    }
 }
 
