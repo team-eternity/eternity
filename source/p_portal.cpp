@@ -30,7 +30,6 @@
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "ev_specials.h"
-#include "m_collection.h"  // ioanch 20160106
 #include "p_chase.h"
 #include "polyobj.h"
 #include "p_portal.h"
@@ -866,13 +865,12 @@ void P_MarkPortalClusters()
 // The player passed a line portal from P_TryMove; just update viewport and
 // pass-polyobject velocity
 //
-void P_LinePortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
-                             int fromid, int toid)
+void P_PortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
+                         int fromid, int toid)
 {
    // Prevent bad interpolation
    // FIXME: this is not interpolation, it's just instant movement; must be
    // fixed to be real interpolation even for the player (camera)
-   mo->backupPosition();
 
    // Polyobject car enter and exit inertia
    const polyobj_t *poly[2] = { gGroupPolyobject[fromid],
@@ -916,25 +914,8 @@ void P_LinePortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
 
    // SoM: Boom's code for silent teleports. Fixes view bob jerk.
    // Adjust a player's view, in case there has been a height change
-   if(mo->player)
-   {
-      // Save the current deltaviewheight, used in stepping
-      fixed_t deltaviewheight = mo->player->deltaviewheight;
-
-      // Clear deltaviewheight, since we don't want any changes now
-      mo->player->deltaviewheight = 0;
-
-      // Set player's view according to the newly set parameters
-      P_CalcHeight(mo->player);
-
-      mo->player->prevviewz = mo->player->viewz;
-
-      // Reset the delta to have the same dynamics as before
-      mo->player->deltaviewheight = deltaviewheight;
-
-      if(mo->player == players + displayplayer)
-         P_ResetChasecam();
-   }
+   if(mo->player && mo->player == players + displayplayer)
+      P_ResetChasecam();
 
    //mo->backupPosition();
    P_AdjustFloorClip(mo);
@@ -945,8 +926,8 @@ void P_LinePortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
 //
 // EV_PortalTeleport
 //
-bool EV_PortalTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
-                       int fromid, int toid)
+bool EV_SectorPortalTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
+                             int fromid, int toid)
 {
    if(!mo)
       return 0;
@@ -958,7 +939,7 @@ bool EV_PortalTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
    mo->z += dz;
    P_SetThingPosition(mo);
 
-   P_LinePortalDidTeleport(mo, dx, dy, dz, fromid, toid);
+   P_PortalDidTeleport(mo, dx, dy, dz, fromid, toid);
    
    return 1;
 }
@@ -1171,8 +1152,9 @@ void P_MoveGroupCluster(int outgroup, int ingroup, bool *groupvisit, fixed_t dx,
 //
 fixed_t P_CeilingPortalZ(const sector_t &sector)
 {
-   return sector.c_pflags & PF_ATTACHEDPORTAL ? sector.ceilingheight :
-   sector.c_portal->data.link.planez;
+   return !sector.c_portal || sector.c_portal->type != R_LINKED ||
+   sector.c_pflags & PF_ATTACHEDPORTAL ?
+   sector.ceilingheight : sector.c_portal->data.link.planez;
 }
 
 //
@@ -1180,8 +1162,9 @@ fixed_t P_CeilingPortalZ(const sector_t &sector)
 //
 fixed_t P_FloorPortalZ(const sector_t &sector)
 {
-   return sector.f_pflags & PF_ATTACHEDPORTAL ? sector.floorheight :
-   sector.f_portal->data.link.planez;
+   return !sector.f_portal || sector.f_portal->type != R_LINKED ||
+   sector.f_pflags & PF_ATTACHEDPORTAL ?
+   sector.floorheight : sector.f_portal->data.link.planez;
 }
 
 // EOF

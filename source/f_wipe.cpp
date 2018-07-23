@@ -142,31 +142,29 @@ static void Wipe_meltDrawer(void)
 static bool Wipe_meltTicker(void)
 {
    bool done;
-   int x;
-  
+
    done = true;  // default to true
 
    // SoM 2-4-04: ANYRES
-   for(x = 0; x < SCREENWIDTH; ++x)
+   for(int &worm : worms)
    {
-      if(worms[x] < 0)
+      if(worm < 0)
       {
-         ++worms[x];
+         ++worm;
          done = false;
       }
-      else if(worms[x] < SCREENHEIGHT)
+      else if(worm < SCREENHEIGHT)
       {
          int dy;
 
-         dy = (worms[x] < 16) ? worms[x] + 1 : 8;
+         dy = (worm < 16) ? worm + 1 : 8;
 
-         if(worms[x] + dy >= SCREENHEIGHT)
-            dy = SCREENHEIGHT - worms[x];
-         worms[x] += dy;
+         if(worm + dy >= SCREENHEIGHT)
+            dy = SCREENHEIGHT - worm;
+         worm += dy;
          done = false;
       }
    }
-  
    return done;
 }
 

@@ -41,7 +41,6 @@
 #include "c_runcmd.h"
 #include "d_dehtbl.h"
 #include "d_gi.h"
-#include "d_player.h"
 #include "doomstat.h"
 #include "e_args.h"
 #include "e_weapons.h"
@@ -233,7 +232,7 @@ cfg_opt_t edf_healthfx_opts[] =
 // Armor fields
 cfg_opt_t edf_armorfx_opts[] =
 {
-   CFG_INT(KEY_SAVEAMOUNT,     0,  CFGF_NONE), // amount of armor given
+   CFG_INT(KEY_SAVEAMOUNT,    -1,  CFGF_NONE), // amount of armor given
    CFG_INT(KEY_SAVEFACTOR,     1,  CFGF_NONE), // numerator of save percentage
    CFG_INT(KEY_SAVEDIVISOR,    3,  CFGF_NONE), // denominator of save percentage
    CFG_INT(KEY_MAXSAVEAMOUNT,  0,  CFGF_NONE), // max save amount, for bonuses
@@ -871,7 +870,8 @@ static void E_processLockDefs(cfg_t *cfg)
 //
 // Routine to call when unlocking a lock has failed.
 //
-static void E_failPlayerUnlock(player_t *player, lockdef_t *lock, bool remote)
+static void E_failPlayerUnlock(const player_t *player, const lockdef_t *lock,
+                               bool remote)
 {
    const char *msg = NULL;
 
@@ -905,7 +905,7 @@ static void E_failPlayerUnlock(player_t *player, lockdef_t *lock, bool remote)
 // Check if a player has the keys necessary to unlock an object that is
 // protected by a lock with the given ID.
 //
-bool E_PlayerCanUnlock(player_t *player, int lockID, bool remote)
+bool E_PlayerCanUnlock(const player_t *player, int lockID, bool remote)
 {
    lockdef_t *lock;
 
@@ -1047,7 +1047,7 @@ int E_GiveAllKeys(player_t *player)
 // Take away every artifact a player has that is of "key" type.
 // Returns the number of keys taken away.
 //
-int E_TakeAllKeys(player_t *player)
+int E_TakeAllKeys(const player_t *player)
 {
    size_t numKeys = E_GetNumKeyItems();
    int keysTaken  = 0;
@@ -1298,7 +1298,7 @@ static void E_processPickupEffect(cfg_t *sec)
 
    if((pfx->numEffects = cfg_size(sec, ITEM_PICKUP_EFFECTS)))
    {
-      pfx->effects = ecalloc(itemeffect_t **, 1, sizeof(itemeffect_t **));
+      pfx->effects = ecalloc(itemeffect_t **, pfx->numEffects, sizeof(itemeffect_t **));
       for(unsigned int i = 0; i < pfx->numEffects; i++)
       {
          str = cfg_getnstr(sec, ITEM_PICKUP_EFFECTS, i);
@@ -1321,7 +1321,7 @@ static void E_processPickupEffect(cfg_t *sec)
       if(estrnonempty(str) && !(pfx->changeweapon = E_WeaponForName(str)))
       {
          E_EDFLoggedWarning(2, "Warning: invalid changeweapon '%s' for pickup effect '%s'\n",
-            str, title);
+                            str, title);
       }
    }
 
@@ -1406,7 +1406,7 @@ inventoryindex_t e_maxvisiblesortorder = INT_MIN;
 // Tries to move the inventory cursor 'amount' right.
 // Returns true if cursor wasn't adjusted (outside of amount being added).
 //
-bool E_MoveInventoryCursor(player_t *player, int amount, int &cursor)
+bool E_MoveInventoryCursor(const player_t *player, int amount, int &cursor)
 {
    if(cursor + amount < 0)
    {
@@ -1432,7 +1432,7 @@ bool E_MoveInventoryCursor(player_t *player, int amount, int &cursor)
 //
 // Says if a player possesses at least one item w/ +invbar
 //
-bool E_PlayerHasVisibleInvItem(player_t *player)
+bool E_PlayerHasVisibleInvItem(const player_t *player)
 {
    int i = -1;
    return E_MoveInventoryCursor(player, 1, i);
@@ -1693,7 +1693,8 @@ itemeffect_t *E_EffectForInventoryItemID(inventoryitemid_t id)
 //
 // Get the item effect for a particular index in a given player's inventory.
 //
-itemeffect_t *E_EffectForInventoryIndex(player_t *player, inventoryindex_t idx)
+itemeffect_t *E_EffectForInventoryIndex(const player_t *player,
+                                        inventoryindex_t idx)
 {
    return (idx >= 0 && idx < e_maxitemid) ? 
       E_EffectForInventoryItemID(player->inventory[idx].item) : NULL;
@@ -1705,7 +1706,8 @@ itemeffect_t *E_EffectForInventoryIndex(player_t *player, inventoryindex_t idx)
 // Find the slot being used by an item in the player's inventory, if one exists.
 // NULL is returned if the item is not in the player's inventory.
 //
-inventoryslot_t *E_InventorySlotForItemID(player_t *player, inventoryitemid_t id)
+inventoryslot_t *E_InventorySlotForItemID(const player_t *player,
+                                          inventoryitemid_t id)
 {
    inventory_t inventory = player->inventory;
 
@@ -1725,7 +1727,8 @@ inventoryslot_t *E_InventorySlotForItemID(player_t *player, inventoryitemid_t id
 // if one exists. NULL is returned if the item is not in the player's 
 // inventory.
 //
-inventoryslot_t *E_InventorySlotForItem(player_t *player, itemeffect_t *effect)
+inventoryslot_t *E_InventorySlotForItem(const player_t *player,
+                                        const itemeffect_t *effect)
 {
    inventoryitemid_t id;
 
@@ -1742,7 +1745,8 @@ inventoryslot_t *E_InventorySlotForItem(player_t *player, itemeffect_t *effect)
 // if one exists. NULL is returned if the item is not in the player's 
 // inventory.
 //
-inventoryslot_t *E_InventorySlotForItemName(player_t *player, const char *name)
+inventoryslot_t *E_InventorySlotForItemName(const player_t *player,
+                                            const char *name)
 {
    return E_InventorySlotForItem(player, E_ItemEffectForName(name));
 }
@@ -1771,7 +1775,8 @@ static inventoryindex_t E_findInventorySlot(inventory_t inventory)
 // After a new slot is added to the inventory, it needs to be placed into its
 // proper sorted position based on the item effects' sortorder fields.
 //
-static void E_sortInventory(player_t *player, inventoryindex_t newIndex, int sortorder)
+static void E_sortInventory(const player_t *player, inventoryindex_t newIndex,
+                            int sortorder)
 {
    inventory_t     inventory = player->inventory;
    inventoryslot_t tempSlot  = inventory[newIndex];
@@ -1804,7 +1809,7 @@ static void E_sortInventory(player_t *player, inventoryindex_t newIndex, int sor
 //
 // Special lookup function to test if the player has a backpack.
 //
-bool E_PlayerHasBackpack(player_t *player)
+bool E_PlayerHasBackpack(const player_t *player)
 {
    auto backpackItem = runtime_cast<itemeffect_t *>(e_effectsTable.getObject(keyBackpackItem));
    return (E_GetItemOwnedAmount(player, backpackItem) > 0);
@@ -1827,7 +1832,7 @@ bool E_GiveBackpack(player_t *player)
 //
 // Special function to remove a backpack.
 //
-bool E_RemoveBackpack(player_t *player)
+bool E_RemoveBackpack(const player_t *player)
 {
    auto backpackItem = runtime_cast<itemeffect_t *>(e_effectsTable.getObject(keyBackpackItem));
    bool removed = false;
@@ -1860,7 +1865,8 @@ bool E_RemoveBackpack(player_t *player)
 // Get the max amount of an artifact that can be carried. There are some
 // special cases for different token subtypes of artifact.
 //
-int E_GetMaxAmountForArtifact(player_t *player, itemeffect_t *artifact)
+int E_GetMaxAmountForArtifact(const player_t *player,
+                              const itemeffect_t *artifact)
 {
    if(!artifact)
       return 0;
@@ -1888,7 +1894,7 @@ int E_GetMaxAmountForArtifact(player_t *player, itemeffect_t *artifact)
 // If you do not need the inventory slot for any other purpose, you can lookup
 // the amount of an item owned in one step by using this function.
 //
-int E_GetItemOwnedAmount(player_t *player, itemeffect_t *artifact)
+int E_GetItemOwnedAmount(const player_t *player, const itemeffect_t *artifact)
 {
    auto slot = E_InventorySlotForItem(player, artifact);
 
@@ -1900,7 +1906,7 @@ int E_GetItemOwnedAmount(player_t *player, itemeffect_t *artifact)
 //
 // As above, but also doing a lookup on name.
 //
-int E_GetItemOwnedAmountName(player_t *player, const char *name)
+int E_GetItemOwnedAmountName(const player_t *player, const char *name)
 {
    auto slot = E_InventorySlotForItemName(player, name);
 
@@ -1913,7 +1919,7 @@ int E_GetItemOwnedAmountName(player_t *player, const char *name)
 //
 // Place an artifact effect into the player's inventory, if it will fit.
 //
-bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact, int amount)
+bool E_GiveInventoryItem(player_t *player, const itemeffect_t *artifact, int amount)
 {
    if(!artifact)
       return false;
@@ -1924,7 +1930,7 @@ bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact, int amount)
    // Not an artifact??
    if(fxtype != ITEMFX_ARTIFACT || itemid < 0)
       return false;
-   
+
    inventoryindex_t newSlot = -1;
    int amountToGive = artifact->getInt(keyAmount, 1);
    int maxAmount    = E_GetMaxAmountForArtifact(player, artifact);
@@ -1944,9 +1950,9 @@ bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact, int amount)
          return false; // internal error, actually... shouldn't happen
       slot = &player->inventory[newSlot];
    }
-   
+
    // If must collect full amount, but it won't fit, return now.
-   if(artifact->getInt(keyFullAmountOnly, 0) && 
+   if(artifact->getInt(keyFullAmountOnly, 0) &&
       slot->amount + amountToGive > maxAmount)
       return false;
 
@@ -1981,7 +1987,7 @@ bool E_GiveInventoryItem(player_t *player, itemeffect_t *artifact, int amount)
 //
 // Remove a slot from the player's inventory.
 //
-static void E_removeInventorySlot(player_t *player, inventoryslot_t *slot)
+static void E_removeInventorySlot(const player_t *player, inventoryslot_t *slot)
 {
    inventory_t inventory = player->inventory;
 
@@ -2008,7 +2014,8 @@ static void E_removeInventorySlot(player_t *player, inventoryslot_t *slot)
 // Remove some amount of a specific item from the player's inventory, if
 // possible. If amount is less than zero, then all of the item will be removed.
 //
-itemremoved_e E_RemoveInventoryItem(player_t *player, itemeffect_t *artifact, int amount)
+itemremoved_e E_RemoveInventoryItem(const player_t *player,
+                                    const itemeffect_t *artifact, int amount)
 {
    inventoryslot_t *slot = E_InventorySlotForItem(player, artifact);
 
@@ -2053,7 +2060,7 @@ itemremoved_e E_RemoveInventoryItem(player_t *player, itemeffect_t *artifact, in
 // function to strip all inventory items that are not meant to remain across
 // levels to their max hub amount.
 //
-void E_InventoryEndHub(player_t *player)
+void E_InventoryEndHub(const player_t *player)
 {
    for(inventoryindex_t i = 0; i < e_maxitemid; i++)
    {

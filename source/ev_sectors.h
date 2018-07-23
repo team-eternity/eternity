@@ -40,11 +40,6 @@ struct ev_sectorbinding_t
    EVSectorSpecialFunc apply; // function which applies the special
 };
 
-ev_sectorbinding_t *EV_DOOMBindingForSectorSpecial(int special);
-ev_sectorbinding_t *EV_HereticBindingForSectorSpecial(int special);
-ev_sectorbinding_t *EV_GenBindingForSectorSpecial(int special);
-ev_sectorbinding_t *EV_BindingForSectorSpecial(int special);
-
 bool EV_IsGenSectorSpecial(int special);
 
 void EV_SpawnSectorSpecials();

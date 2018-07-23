@@ -638,7 +638,7 @@ static ETerrain **TerrainTypes = NULL;
 //
 void E_InitTerrainTypes(void)
 {
-   int numf, i;
+   int numf;
 
    // if TerrainTypes already exists, free it
    if(TerrainTypes)
@@ -649,15 +649,13 @@ void E_InitTerrainTypes(void)
    TerrainTypes = ecalloc(ETerrain **, numf, sizeof(ETerrain*));
 
    // initialize all flats to Solid terrain
-   for(i = 0; i < numf; ++i)
+   for(int i = 0; i < numf; ++i)
       TerrainTypes[i] = &solid;
 
    // run down each chain of the Floor hash table and assign each
    // Floor object to the proper TerrainType
-   for(i = 0; i < NUMFLOORCHAINS; ++i)
+   for(EFloor *floor : FloorChains)
    {
-      EFloor *floor = FloorChains[i];
-
       while(floor)
       {
          int tnum = R_CheckForFlat(floor->name);

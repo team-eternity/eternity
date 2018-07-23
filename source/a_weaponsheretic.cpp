@@ -55,10 +55,7 @@ void A_StaffAttackPL1(actionargs_t *actionargs)
    angle_t  angle  = mo->angle + (P_SubRandom(pr_staffangle) * PO2(18));
    fixed_t  slope  = P_DoAutoAim(mo, angle, MELEERANGE);
 
-   const int   tnum = E_SafeThingType(MT_STAFFPUFF);
-   mobjinfo_t *puff = mobjinfo[tnum];
-
-   P_LineAttack(mo, angle, MELEERANGE, slope, damage, puff);
+   P_LineAttack(mo, angle, MELEERANGE, slope, damage, "HereticStaffPuff");
    if(clip.linetarget)
    {
       //S_StartSound(player->mo, sfx_stfhit);
@@ -74,10 +71,7 @@ void A_StaffAttackPL2(actionargs_t *actionargs)
    angle_t  angle = mo->angle + (P_SubRandom(pr_staffangle) * PO2(18));
    fixed_t  slope = P_DoAutoAim(mo, angle, MELEERANGE);
 
-   const int   tnum = E_SafeThingType(MT_STAFFPUFF2);
-   mobjinfo_t *puff = mobjinfo[tnum];
-
-   P_LineAttack(mo, angle, MELEERANGE, slope, damage, puff);
+   P_LineAttack(mo, angle, MELEERANGE, slope, damage, "HereticStaffPuff2");
    if(clip.linetarget)
    {
       //S_StartSound(player->mo, sfx_stfhit);
@@ -101,10 +95,8 @@ void A_FireGoldWandPL1(actionargs_t *actionargs)
    if(player->refire)
       angle += P_SubRandom(pr_goldwand) * PO2(18);
 
-   const int    tnum = E_SafeThingType(MT_GOLDWANDPUFF1);
-   mobjinfo_t  *puff = mobjinfo[tnum];
-
-   P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage, puff);
+   P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage,
+                "HereticGoldWandPuff1");
    P_WeaponSound(mo, sfx_gldhit);
 }
 
@@ -134,10 +126,9 @@ void A_FireGoldWandPL2(actionargs_t *actionargs)
 
    for(i = 0; i < 5; i++)
    {
-      const int    pnum = E_SafeThingType(MT_GOLDWANDPUFF2);
-      mobjinfo_t  *puff = mobjinfo[pnum];
       damage = 1 + (P_Random(pr_goldwand2) & 7);
-      P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage, puff);
+      P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage,
+                   "HereticGoldWandPuff2");
       angle += ((ANG45 / 8) * 2) / 4;
    }
 
@@ -354,7 +345,7 @@ void A_DeathBallImpact(actionargs_t *actionargs)
          angle = 0;
          for(i = 0; i < 16; i++)
          {
-            P_AimLineAttack(ball, angle, 10 * 64 * FRACUNIT, 0);
+            P_AimLineAttack(ball, angle, 10 * 64 * FRACUNIT, false);
             if(clip.linetarget && ball->target != clip.linetarget)
             {
                P_SetTarget(&ball->tracer, clip.linetarget);
@@ -449,10 +440,8 @@ void A_FireBlasterPL1(actionargs_t *actionargs)
    if(player->refire)
       angle += P_SubRandom(pr_blaster) * PO2(18);
 
-   const int    tnum = E_SafeThingType(MT_BLASTERPUFF1);
-   mobjinfo_t  *puff = mobjinfo[tnum];
-
-   P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage, puff);
+   P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage,
+                "HereticBlasterPuff1");
    P_WeaponSound(mo, sfx_blssht);
 }
 
@@ -570,8 +559,8 @@ void A_GauntletAttack(actionargs_t *actionargs)
    pspdef_t   *psp    = actionargs->pspr;
    fixed_t     dist;
    angle_t     angle;
-   mobjinfo_t *puff;
-   int damage, slope, randVal, tnum;
+   int damage, slope, randVal;
+   const char *puffname;
 
    if(!player || !psp)
       return;
@@ -587,19 +576,18 @@ void A_GauntletAttack(actionargs_t *actionargs)
       damage = (1 + (P_Random(pr_gauntlets) & 7)) * 2;
       dist = 4 * MELEERANGE;
       angle += P_SubRandom(pr_gauntletsangle) * PO2(17);
-      tnum = E_SafeThingType(MT_GAUNTLETPUFF2);
+      puffname = "HereticGauntletPuff2";
    }
    else
    {
       damage = (1 + (P_Random(pr_gauntlets) & 7)) * 2;
       dist = MELEERANGE + 1;
       angle += P_SubRandom(pr_gauntletsangle) * PO2(18);
-      tnum = E_SafeThingType(MT_GAUNTLETPUFF1);
+      puffname = "HereticGauntletPuff1";
    }
 
-   puff  = mobjinfo[tnum];
    slope = P_DoAutoAim(mo, angle, dist);
-   P_LineAttack(mo, angle, dist, slope, damage, puff);
+   P_LineAttack(mo, angle, dist, slope, damage, puffname);
 
    if(!clip.linetarget)
    {

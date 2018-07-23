@@ -130,6 +130,13 @@ template<typename T> inline T thinker_cast(Thinker *th)
    return (th && !th->isRemoved() && th->isDescendantOf(&base_type::StaticType)) ?
       static_cast<T>(th) : NULL;
 }
+template<typename T> inline T thinker_cast(const Thinker *th)
+{
+   typedef typename std::remove_pointer<T>::type base_type;
+
+   return (th && !th->isRemoved() && th->isDescendantOf(&base_type::StaticType)) ?
+   static_cast<T>(th) : NULL;
+}
 
 
 // Called by C_Ticker, can call G_PlayerExited.

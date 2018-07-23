@@ -409,6 +409,10 @@ public:
    MetaObject *getNextKeyAndType(MetaObject *object, size_t keyIdx,   const char *type) const;
    MetaObject *getNextKeyAndType(MetaObject *object, const char *key, const MetaObject::Type *type) const;
    MetaObject *getNextKeyAndType(MetaObject *object, size_t keyIdx,   const MetaObject::Type *type) const;
+   const MetaObject *getNextKeyAndType(const MetaObject *object, const char *key, const char *type) const;
+   const MetaObject *getNextKeyAndType(const MetaObject *object, size_t keyIdx,   const char *type) const;
+   const MetaObject *getNextKeyAndType(const MetaObject *object, const char *key, const MetaObject::Type *type) const;
+   const MetaObject *getNextKeyAndType(const MetaObject *object, size_t keyIdx,   const MetaObject::Type *type) const;
    // * Full table iterators
    MetaObject *tableIterator(MetaObject *object) const;
    const MetaObject *tableIterator(const MetaObject *object) const;
@@ -443,6 +447,7 @@ public:
    // Double floating-point
    void   addDouble(const char *key, double value);
    double getDouble(const char *key, double defValue) const;
+   double getDouble(size_t keyIndex, double defValue) const;
    void   setDouble(const char *key, double newValue);
    double removeDouble(const char *key);
 
@@ -453,6 +458,7 @@ public:
    void        setString(const char *key, const char *newValue);
    char       *removeString(const char *key);
    void        removeStringNR(const char *key);
+   void        removeStringNR(size_t keyIndex);
 
    // Constant shared strings
    void        addConstString(size_t keyIndex, const char *value);

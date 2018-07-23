@@ -137,7 +137,7 @@ void EAnimDef::reset(type_t intype)
 //
 // Processes an animation
 //
-void E_processAnimation(cfg_t *cfg)
+static void E_processAnimation(cfg_t *cfg)
 {
    EAnimDef::type_t type;
    const char *firstpic;
@@ -270,10 +270,10 @@ void E_AddAnimation(const EAnimDef &extdef)
 //
 bool E_IsHexenAnimation(const char *startpic, EAnimDef::type_t type)
 {
-   const EAnimDef *def = nullptr;
+   EAnimDef *def = nullptr;
    do
    {
-      def = e_anim_namehash.objectForKey(startpic);
+      def = e_anim_namehash.keyIterator(def, startpic);
    }while(def && def->type != type);
    return def && def->pics.getLength() >= 1;
 }

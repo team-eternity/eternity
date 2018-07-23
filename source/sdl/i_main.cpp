@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright (C) 2017 James Haley et al.
+// Copyright (C) 2018 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -43,6 +43,10 @@
 #define main common_main
 #endif
 
+#ifdef _MSC_VER
+extern bool I_IsWindows10OrHigher();
+#endif
+
 #endif // (EE_CURRENT_PLATFORM==EE_PLATFORM_WINDOWS)&&!defined(_WIN32_WCE)
 
 // SoM 3/11/2002: Disable the parachute for debugging.
@@ -62,10 +66,13 @@ int main(int argc, char **argv)
 {
    myargc = argc;
    myargv = argv;
-   
+
    // SDL_FIXME: If this is removed then all sound effects are pitched too high. Why?
 #if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS)
-   SDL_setenv("SDL_AUDIODRIVER", "winmm", true);
+   if(I_IsWindows10OrHigher())
+      SDL_setenv("SDL_AUDIODRIVER", "directsound", true);
+   else
+      SDL_setenv("SDL_AUDIODRIVER", "winmm", true);
 #endif
 
    // MaxW: 2017/09/16: Now prints the error on failure
@@ -88,9 +95,9 @@ int main(int argc, char **argv)
    // in debug builds, verify SDL versions are the same
    VerifySDLVersions();
 #endif
-   
+
    D_DoomMain();
-   
+
    return 0;
 }
 
@@ -119,7 +126,7 @@ static void VerifySDLVersions()
 
    // expected versions
    // must update these when SDL is updated.
-   static SDL_version ex_vers[3] = 
+   static SDL_version ex_vers[3] =
    {
       { 2, 0, 7 }, // SDL
       { 2, 0, 2 }, // SDL_mixer
@@ -139,11 +146,11 @@ static void VerifySDLVersions()
    }
 
    if(lv.major != ex_vers[0].major || lv.minor != ex_vers[0].minor ||
-      lv.patch != ex_vers[0].patch)
+      lv.patch < ex_vers[0].patch)
    {
       error |= ERROR_SDL;
       printf("WARNING: SDL linked version is not the expected version\n"
-             "%d.%d.%d (linked) != %d.%d.%d (expected)\n",
+             "%d.%d.%d (linked) != %d.%d.(%d+) (expected)\n",
              lv.major, lv.minor, lv.patch,
              ex_vers[0].major, ex_vers[0].minor, ex_vers[0].patch);
    }
@@ -164,17 +171,17 @@ static void VerifySDLVersions()
              "%d.%d.%d (compiled) != %d.%d.%d (linked)\n\n",
              cv.major, cv.minor, cv.patch, lv2->major, lv2->minor, lv2->patch);
    }
-   
+
    if(lv2->major != ex_vers[1].major || lv2->minor != ex_vers[1].minor ||
-      lv2->patch != ex_vers[1].patch)
+      lv2->patch < ex_vers[1].patch)
    {
       error |= ERROR_SDL_MIXER;
       printf("WARNING: SDL_mixer linked version is not the expected version\n"
-             "%d.%d.%d (linked) != %d.%d.%d (expected)\n",
+             "%d.%d.%d (linked) != %d.%d.(%d+) (expected)\n",
              lv2->major, lv2->minor, lv2->patch,
              ex_vers[1].major, ex_vers[1].minor, ex_vers[1].patch);
    }
-   
+
    if(!(error & ERROR_SDL_MIXER))
       printf("DEBUG: Using SDL_mixer version %d.%d.%d\n",
              lv2->major, lv2->minor, lv2->patch);
@@ -191,15 +198,15 @@ static void VerifySDLVersions()
    }
 
    if(lv2->major != ex_vers[2].major || lv2->minor != ex_vers[2].minor ||
-      lv2->patch != ex_vers[2].patch)
+      lv2->patch < ex_vers[2].patch)
    {
       error |= ERROR_SDL_NET;
       printf("WARNING: SDL_net linked version is not the expected version\n"
-             "%d.%d.%d (linked) != %d.%d.%d (expected)\n\n",
+             "%d.%d.%d (linked) != %d.%d.(%d+) (expected)\n\n",
              lv2->major, lv2->minor, lv2->patch,
              ex_vers[2].major, ex_vers[2].minor, ex_vers[2].patch);
    }
-   
+
    if(!(error & ERROR_SDL_NET))
       printf("DEBUG: Using SDL_net version %d.%d.%d\n",
              lv2->major, lv2->minor, lv2->patch);

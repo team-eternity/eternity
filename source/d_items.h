@@ -31,6 +31,7 @@
 #include "m_fixed.h"
 
 using itemeffect_t = class MetaTable;
+class qstring;
 
 //
 // haleyjd 09/11/07: weapon flags
@@ -97,8 +98,8 @@ struct weaponinfo_t
    int          recoil;
    int          hapticrecoil; // haptic recoil strength, from 1 to 10
    int          haptictime;   // haptic recoil duration, from 1 to 10
-   int          upsound;      // sound made when weapon is being brought up
-   int          readysound;   // sound made when weapon is ready
+   const char  *upsound;      // sound made when weapon is being brought up
+   const char  *readysound;   // sound made when weapon is ready
 
    itemeffect_t *tracker;     // tracker artifact for weapon
 

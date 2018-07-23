@@ -89,21 +89,8 @@ Building with Xcode
 ~~~~~~~~~~~~~~~~~~~
 You need Mac OS X 10.7 or more to run Eternity.
 
-* Download SDL2 macOS development library (SDL2-2.0.x.dmg) from 
-https://www.libsdl.org/download-2.0.php
-
-* Download SDL2_mixer macOS development library (SDL2_mixer-2.0.x.dmg) from
-https://www.libsdl.org/projects/SDL_mixer/
-
-* Download SDL2_net macOS development library (SDL2_net-2.0.x.dmg) from
-https://www.libsdl.org/projects/SDL_net/
-
-* Open each .dmg file you downloaded. Each of them has a *.framework file (icon
-should look like a shiny grey Lego brick). Extract (by copy-pasting) each
-framework into the macosx/ subfolder located along with this file.
-
-* Now you have the prerequisites. They'll be ignored by Git. Open Xcode and load
-macosx/EternityEngine.xcodeproj. This builds the main game executable.
+* Open Xcode and load macosx/EternityEngine.xcodeproj. This builds the main game
+executable. Any dependencies should be automatically downloaded.
 
 * If you want to build the full package, open 
 macosx/launcher/EternityLaunch.xcodeproj. It depends on EternityEngine.xcodeproj

@@ -137,7 +137,7 @@ static void WriteCenteredText(char *message)
    V_FontWriteText(menu_font_normal, buffer, x, y, &subscreen43);   
 }
 
-void MN_PopupDrawer(void)
+static void MN_PopupDrawer(void)
 {
    // haleyjd 08/31/12: If we popped up over another widget, draw it.
    if(popup_widget.prev && popup_widget.prev->drawer)
@@ -146,7 +146,7 @@ void MN_PopupDrawer(void)
    WriteCenteredText(popup_message);
 }
 
-bool MN_PopupResponder(event_t *ev, int action)
+static bool MN_PopupResponder(event_t *ev, int action)
 {
    int *menuSounds = GameModeInfo->menuSounds;
    char ch;
@@ -489,14 +489,19 @@ void MN_DrawCredits()
       y += V_FontStringHeight(menu_font_normal, "");
    }
 
-   V_FontWriteText(menu_font_normal, 
-                   FC_ABSCENTER "Copyright 2017 Team Eternity et al.", 
-                   0, y, &subscreen43);
+   // MaxW: I'm going to hell for this. Automatically update copyright year.
+   static const char *const copyright_text = []() {
+      static char temp[] = FC_ABSCENTER "Copyright YEAR Team Eternity et al.";
+      memcpy(temp + 11, __DATE__ + 7, 4); // Overwrite YEAR in temp.
+      return temp;
+   }();
+
+   V_FontWriteText(menu_font_normal, copyright_text, 0, y, &subscreen43);
 }
 
 extern menuwidget_t helpscreen_widget; // actually just below...
 
-void MN_HelpDrawer()
+static void MN_HelpDrawer()
 {
    if(helpscreens[viewing_helpscreen].Drawer)
    {
@@ -520,7 +525,7 @@ void MN_HelpDrawer()
 // haleyjd 05/29/06: record state of menu activation
 static bool help_prev_menuactive;
 
-bool MN_HelpResponder(event_t *ev, int action)
+static bool MN_HelpResponder(event_t *ev, int action)
 {
    int *menuSounds = GameModeInfo->menuSounds;
    
@@ -612,7 +617,7 @@ int selected_colour;
 
 #define HIGHLIGHT_COLOUR (GameModeInfo->whiteIndex)
 
-void MN_MapColourDrawer()
+static void MN_MapColourDrawer()
 {
    patch_t *patch;
    int x, y;
@@ -655,7 +660,7 @@ void MN_MapColourDrawer()
    }
 }
 
-bool MN_MapColourResponder(event_t *ev, int action)
+static bool MN_MapColourResponder(event_t *ev, int action)
 {
    if(action == ka_menu_left)
       selected_colour--;

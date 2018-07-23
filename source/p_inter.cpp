@@ -90,7 +90,7 @@ int bfgcells = 40;      // used in p_pspr.c
 //
 // Returns false if the ammo can't be picked up at all
 //
-bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
+static bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
 {
    if(!ammo)
       return false;
@@ -104,7 +104,7 @@ bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
 
    // give double ammo in trainer mode, you'll need in nightmare
    if(gameskill == sk_baby || gameskill == sk_nightmare)
-      num <<= 1;
+      num = static_cast<int>(floor(num * GameModeInfo->skillAmmoMultiplier));
 
    if(!E_GiveInventoryItem(player, ammo, num))
       return false; // don't need this ammo
@@ -162,7 +162,7 @@ bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
 //
 // Give the player ammo from an ammoeffect pickup.
 //
-bool P_GiveAmmoPickup(player_t *player, itemeffect_t *pickup, bool dropped, int dropamount)
+bool P_GiveAmmoPickup(player_t *player, const itemeffect_t *pickup, bool dropped, int dropamount)
 {
    if(!pickup)
       return false;
@@ -199,6 +199,8 @@ static bool P_giveBackpackAmmo(player_t *player)
    {
       auto ammoType = E_AmmoTypeForIndex(i);
       int giveamount = ammoType->getInt(keyBackpackAmount, 0);
+      if(!giveamount)
+         continue;
       given |= P_GiveAmmo(player, ammoType, giveamount);
    }
 
@@ -221,7 +223,7 @@ static void P_consumeSpecial(player_t *activator, Mobj *special)
 //
 // Compat P_giveWeapon, to stop demos catching on fire for some reason
 //
-static bool P_giveWeaponCompat(player_t *player, itemeffect_t *giver, bool dropped, Mobj *special)
+static bool P_giveWeaponCompat(player_t *player, const itemeffect_t *giver, bool dropped, Mobj *special)
 {
    bool gaveweapon = false;
    weaponinfo_t *wp = E_WeaponForName(giver->getString("weapon", ""));
@@ -283,7 +285,7 @@ static bool P_giveWeaponCompat(player_t *player, itemeffect_t *giver, bool dropp
 //
 // The weapon name may have a MF_DROPPED flag ored in.
 //
-static bool P_giveWeapon(player_t *player, itemeffect_t *giver, bool dropped, Mobj *special)
+static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropped, Mobj *special)
 {
    if(demo_version < 401)
       return P_giveWeaponCompat(player, giver, dropped, special);
@@ -390,7 +392,7 @@ static bool P_giveWeapon(player_t *player, itemeffect_t *giver, bool dropped, Mo
 //
 // Returns false if the body isn't needed at all
 //
-bool P_GiveBody(player_t *player, itemeffect_t *effect)
+bool P_GiveBody(player_t *player, const itemeffect_t *effect)
 {
    if(!effect)
       return false;
@@ -460,25 +462,29 @@ bool EV_DoHealThing(Mobj *actor, int amount, int max)
 // Returns false if the armor is worse
 // than the current armor.
 //
-bool P_GiveArmor(player_t *player, itemeffect_t *effect)
+bool P_GiveArmor(player_t *player, const itemeffect_t *effect)
 {
    if(!effect)
       return false;
 
-   int  hits          =   effect->getInt("saveamount",    0);
+   int  hits          =   effect->getInt("saveamount",   -1);
    int  savefactor    =   effect->getInt("savefactor",    1);
    int  savedivisor   =   effect->getInt("savedivisor",   3);
    int  maxsaveamount =   effect->getInt("maxsaveamount", 0);
    bool additive      = !!effect->getInt("additive",      0);
+   bool setabsorption = !!effect->getInt("setabsorption", 0);
 
    // check for validity
-   if(!hits || !savefactor || !savedivisor)
+   if(hits < 0 || !savefactor || !savedivisor)
       return false;
 
    // check if needed
    if(!(effect->getInt("alwayspickup", 0)) &&
-      player->armorpoints >= (additive ? maxsaveamount : hits))
+      (player->armorpoints >= (additive ? maxsaveamount : hits) ||
+       (hits == 0 && (!player->armorfactor || !setabsorption))))
+   {
       return false; // don't pick up
+   }
 
    if(additive)
    {
@@ -491,7 +497,7 @@ bool P_GiveArmor(player_t *player, itemeffect_t *effect)
 
    // only set armour quality if the armour always sets it,
    // or if the player had no armour prior to this pickup
-   if(!player->armorfactor || effect->getInt("setabsorption", 0))
+   if((!player->armorfactor || setabsorption))
    {
       player->armorfactor  = savefactor;
       player->armordivisor = savedivisor;
@@ -611,7 +617,7 @@ const char *powerStrings[NUMPOWERS] =
 //
 // Takes a powereffect and applies the power accordingly
 //
-bool P_GivePowerForItem(player_t *player, itemeffect_t *power)
+bool P_GivePowerForItem(player_t *player, const itemeffect_t *power)
 {
    int powerNum;
    const char *powerStr;
@@ -717,7 +723,7 @@ static inline const char *P_getSpecialMessage(Mobj *special, const char *def)
 void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 {
    player_t       *player;
-   e_pickupfx_t   *pickup, *temp;
+   const e_pickupfx_t *pickup, *temp;
    bool            pickedup = false;
    bool            dropped = false;
    bool            hadeffect = false;
@@ -764,7 +770,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 
    for(unsigned int i = 0; i < pickup->numEffects; i++)
    {
-      itemeffect_t *effect = pickup->effects[i];
+      const itemeffect_t *effect = pickup->effects[i];
       if(!effect)
          continue;
       hadeffect = true;
@@ -1404,7 +1410,10 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
          thrust *= 4;
       }
 
-      P_ThrustMobj(target, ang, thrust);
+      P_ThrustMobj(target, ang,
+                   emod->absolutePush > 0 ? emod->absolutePush : thrust);
+      if(!(target->flags & MF_NOGRAVITY) && emod->absoluteHop > 0)
+         target->momz += emod->absoluteHop;
       
       // killough 11/98: thrust objects hanging off ledges
       if(target->intflags & MIF_FALLING && target->gear >= MAXGEAR)
@@ -1474,6 +1483,11 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    // check for death
    if(target->health <= 0)
    {
+      // There's no need to also check the type or flags of source (vanilla He-
+      // retic pods can't initiate attacks).
+      if(target->flags4 & MF4_SETTARGETONDEATH && source)
+         P_SetTarget(&target->target, source);
+
       // death messages for players
       if(player)
       {
@@ -1658,7 +1672,7 @@ void P_Whistle(Mobj *actor, int mobjtype)
       z = actor->z;
 
       // don't cross "solid" lines
-      if(Check_Sides(actor, x, y))
+      if(Check_Sides(actor, x, y, mo->type))
          return;
 
       // try the teleport

@@ -68,7 +68,6 @@
 #include "p_slopes.h"
 #include "p_spec.h"
 #include "p_things.h"
-#include "p_tick.h"
 #include "p_user.h"
 #include "polyobj.h"
 #include "m_argv.h"
@@ -1103,6 +1102,14 @@ void P_ShootSpecialLine(Mobj *thing, line_t *line, int side)
    // EV_SPECIALS TODO: This function should return success or failure to 
    // the caller.
    EV_ActivateSpecialLineWithSpac(line, side, thing, nullptr, SPAC_IMPACT);
+}
+
+//
+// Triggers a line using the SPAC_PUSH special. Mobj would need to support pushing
+//
+void P_PushSpecialLine(Mobj &thing, line_t &line, int side)
+{
+   EV_ActivateSpecialLineWithSpac(&line, side, &thing, nullptr, SPAC_PUSH);
 }
 
         // sf: changed to enable_nuke for console

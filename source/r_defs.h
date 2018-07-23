@@ -227,6 +227,13 @@ struct soundzone_t
 //
 struct sector_t
 {
+   // flag set for various uses
+   enum
+   {
+      floor = 1,
+      ceiling = 2
+   };
+
    fixed_t floorheight;
    fixed_t ceilingheight;
    int     floorpic;

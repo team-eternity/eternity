@@ -193,7 +193,7 @@ public:
    bool loadSidedefs2();
    bool loadThings();
 
-   bool checkForCompatibilityFlag(const char *nstext);
+   bool checkForCompatibilityFlag(qstring nstext);
    bool parse(WadDirectory &setupwad, int lump);
 
    qstring error() const;

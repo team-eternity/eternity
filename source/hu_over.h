@@ -35,7 +35,6 @@ char HU_ArmorColor();
 
 // heads up font
 void HU_LoadFont();
-void HU_WriteText(const char *s, int x, int y);
 int  HU_StringWidth(const char *s);
 int  HU_StringHeight(const char *s);
 

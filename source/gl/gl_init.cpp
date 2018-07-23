@@ -53,7 +53,9 @@ GL_versioninfo GL_version;
 //
 // Retrieves the version of OpenGL that is active.
 //
-void GL_GetVersion()
+// FIXME: unused?
+//
+static void GL_GetVersion()
 {
    const char *versionStr;
    int majversion = 0, minversion = 0;

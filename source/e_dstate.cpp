@@ -1687,7 +1687,7 @@ static psfunc_t pstatefuncs[PSTATE_NUMSTATES] =
 //
 // Gets the next line of DECORATE state input.
 //
-bool E_GetDSLine(const char **src, pstate_t *ps)
+static bool E_GetDSLine(const char **src, pstate_t *ps)
 {
    bool isdone = false;
    const char *srctxt = *src;

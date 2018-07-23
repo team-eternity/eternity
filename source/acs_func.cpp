@@ -2484,7 +2484,7 @@ bool ACS_CF_ThingCountStr(ACS_CF_ARGS)
 //
 // ACS_thingCountSec
 //
-static uint32_t ACS_thingCountSec(int32_t tag, mobjtype_t type, int32_t tid)
+static uint32_t ACS_thingCountSec(mobjtype_t type, int32_t tid, int32_t tag)
 {
    sector_t *sector;
    uint32_t  count  = 0;
@@ -2513,18 +2513,18 @@ static uint32_t ACS_thingCountSec(int32_t tag, mobjtype_t type, int32_t tid)
 //
 // ACS_CF_ThingCountSec
 //
-// int ThingCountSector(int tag, int type, int tid);
+// int ThingCountSector(int type, int tid, int tag);
 //
 bool ACS_CF_ThingCountSec(ACS_CF_ARGS)
 {
-   int32_t tag  = argV[0];
-   int32_t type = argV[1];
-   int32_t tid  = argV[2];
+   int32_t type = argV[0];
+   int32_t tid  = argV[1];
+   int32_t tag  = argV[2];
 
    if(type == 0)
-      thread->dataStk.push(ACS_thingCountSec(tag, 0, tid));
+      thread->dataStk.push(ACS_thingCountSec(0, tid, tag));
    else if(type > 0 && type < ACS_NUM_THINGTYPES)
-      thread->dataStk.push(ACS_thingCountSec(tag, ACS_thingtypes[type], tid));
+      thread->dataStk.push(ACS_thingCountSec(ACS_thingtypes[type], tid, tag));
    else
       thread->dataStk.push(0);
 
@@ -2534,15 +2534,15 @@ bool ACS_CF_ThingCountSec(ACS_CF_ARGS)
 //
 // ACS_CF_ThingCountSecStr
 //
-// int ThingCountNameSector(int tag, str type, int tid);
+// int ThingCountNameSector(str type, int tid, int tag);
 //
 bool ACS_CF_ThingCountSecStr(ACS_CF_ARGS)
 {
-   int32_t    tag  = argV[0];
-   mobjtype_t type = E_ThingNumForCompatName(thread->scopeMap->getString(argV[1])->str);
-   int32_t    tid  = argV[2];
+   mobjtype_t type = E_ThingNumForCompatName(thread->scopeMap->getString(argV[0])->str);
+   int32_t    tid  = argV[1];
+   int32_t    tag  = argV[2];
 
-   thread->dataStk.push(ACS_thingCountSec(tag, type, tid));
+   thread->dataStk.push(ACS_thingCountSec(type, tid, tag));
 
    return false;
 }

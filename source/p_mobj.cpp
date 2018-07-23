@@ -37,6 +37,7 @@
 #include "e_exdata.h"
 #include "e_inventory.h"
 #include "e_player.h"
+#include "e_puff.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
@@ -681,6 +682,10 @@ void P_XYMovement(Mobj* mo)
       mo->floorz != P_ExtremeSectorAtPoint(mo, false)->floorheight)
       return;  // do not stop sliding if halfway off a step with some momentum
 
+   // Some objects never rest on other things
+   if(mo->intflags & MIF_ONMOBJ && mo->flags4 & MF4_SLIDEOVERTHINGS)
+      return;
+
    // killough 11/98:
    // Stop voodoo dolls that have come to rest, despite any
    // moving corresponding player, except in old demos:
@@ -1183,7 +1188,8 @@ void P_NightmareRespawn(Mobj* mobj)
 //
 // The mobj is already assumed to be sunk into the sector portal.
 //
-static void P_avoidPortalEdges(Mobj &mobj, bool isceiling)
+static void P_avoidPortalEdges(Mobj &mobj, bool isceiling,
+                               const line_t *&crossedge)
 {
    const sector_t &sector = *mobj.subsector->sector;
    unsigned flag = isceiling ? EX_ML_UPPERPORTAL : EX_ML_LOWERPORTAL;
@@ -1196,17 +1202,25 @@ static void P_avoidPortalEdges(Mobj &mobj, bool isceiling)
    box[BOXRIGHT] = displace.x + AVOID_EDGE_PORTAL_RANGE;
    box[BOXTOP] = displace.y + AVOID_EDGE_PORTAL_RANGE;
 
+   crossedge = nullptr;
+
    for(int i = 0; i < sector.linecount; ++i)
    {
       const line_t &line = *sector.lines[i];
 
+      if(line.frontsector == &sector || !(line.extflags & flag))
+         continue;
+
+      divline_t dl = { mobj.prevpos.x, mobj.prevpos.y, mobj.x - mobj.prevpos.x,
+         mobj.y - mobj.prevpos.y };
+
+      if(P_LineIsCrossed(line, dl) == 0)
+         crossedge = &line;  // TODO
+
       // line must be an edge portal with its back towards the sector.
       // The thing's centre must be very close to the line
-      if(line.frontsector == &sector || !(line.extflags & flag) ||
-         !P_BoxesIntersect(box, line.bbox) || P_BoxOnLineSide(box, &line) != -1)
-      {
+      if(!P_BoxesIntersect(box, line.bbox) || P_BoxOnLineSide(box, &line) != -1)
          continue;
-      }
 
       // Got one. Add to the vector
       angle_t angle = P_PointToAngle(0, 0, line.dx, line.dy) + ANG90;
@@ -1236,23 +1250,32 @@ bool P_CheckPortalTeleport(Mobj *mobj)
 
    if(sector->f_pflags & PS_PASSABLE)
    {
-      fixed_t passheight;
+      fixed_t passheight, prevpassheight;
 
       if(mobj->player)
       {
          P_CalcHeight(mobj->player);
          passheight = mobj->player->viewz;
+         prevpassheight = mobj->player->prevviewz;
       }
       else
+      {
          passheight = mobj->z + (mobj->height >> 1);
+         prevpassheight = mobj->prevpos.z + (mobj->height >> 1);
+      }
 
       // ioanch 20160109: link offset outside
-      if(passheight < P_FloorPortalZ(*sector))
+      fixed_t planez = P_FloorPortalZ(*sector);
+      if(passheight < planez)
       {
-         P_avoidPortalEdges(*mobj, false);
+         const line_t *crossedge;
+         P_avoidPortalEdges(*mobj, false, crossedge);
          const linkdata_t *ldata = R_FPLink(sector);
-         EV_PortalTeleport(mobj, ldata->deltax, ldata->deltay, ldata->deltaz,
-                           ldata->fromid, ldata->toid);
+         mobj->prevpos.ldata = ldata;
+         if(prevpassheight < planez)
+            mobj->prevpos.portalline = crossedge;
+         EV_SectorPortalTeleport(mobj, ldata->deltax, ldata->deltay,
+                                 ldata->deltaz, ldata->fromid, ldata->toid);
          ret = true;
       }
    }
@@ -1260,23 +1283,32 @@ bool P_CheckPortalTeleport(Mobj *mobj)
    if(!ret && sector->c_pflags & PS_PASSABLE)
    {
       // Calculate the height at which the mobj should pass through the portal
-      fixed_t passheight;
+      fixed_t passheight, prevpassheight;
 
       if(mobj->player)
       {
          P_CalcHeight(mobj->player);
          passheight = mobj->player->viewz;
+         prevpassheight = mobj->player->prevviewz;
       }
       else
+      {
          passheight = mobj->z + (mobj->height >> 1);
+         prevpassheight = mobj->prevpos.z + (mobj->height >> 1);
+      }
 
       // ioanch 20160109: link offset outside
-      if(passheight >= P_CeilingPortalZ(*sector))
+      fixed_t planez = P_CeilingPortalZ(*sector);
+      if(passheight >= planez)
       {
-         P_avoidPortalEdges(*mobj, true);
+         const line_t *crossedge;
+         P_avoidPortalEdges(*mobj, true, crossedge);
          linkdata_t *ldata = R_CPLink(sector);
-         EV_PortalTeleport(mobj, ldata->deltax, ldata->deltay, ldata->deltaz,
-                           ldata->fromid, ldata->toid);
+         mobj->prevpos.ldata = ldata;
+         if(prevpassheight >= planez)
+            mobj->prevpos.portalline = crossedge;
+         EV_SectorPortalTeleport(mobj, ldata->deltax, ldata->deltay,
+                                 ldata->deltaz, ldata->fromid, ldata->toid);
          ret = true;
       }
    }
@@ -1422,6 +1454,11 @@ void Mobj::Think()
                momz < -LevelInfo.gravity*8)
             {
                P_PlayerHitFloor(this, true);
+            }
+            if(player && onmo->flags4 & MF4_STICKYCARRY)
+            {
+               player->momx = momx = onmo->momx;
+               player->momy = momy = onmo->momy;
             }
             if(onmo->z + onmo->height - z <= STEPSIZE)
             {
@@ -1736,6 +1773,8 @@ void Mobj::backupPosition()
    prevpos.y     = y;
    prevpos.z     = z;
    prevpos.angle = angle; // NB: only used for player objects
+   prevpos.portalline = nullptr;
+   prevpos.ldata = nullptr;
 }
 
 //
@@ -2505,38 +2544,96 @@ spawnit:
 //
 // P_SpawnPuff
 //
-void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
-                 int updown, bool ptcl)
+Mobj *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
+                  int updown, bool ptcl, const MetaTable *pufftype,
+                  const Mobj *hitmobj)
 {
-   Mobj* th;
-
-   // haleyjd 08/05/04: use new function
-   z += P_SubRandom(pr_spawnpuff) << 10;
-
-   if(trace.puff)
-      th = P_SpawnMobj(x, y, z, trace.puff->index);
-
-   th = P_SpawnMobj(x, y, z, E_SafeThingType(MT_PUFF));
-   th->momz = FRACUNIT;
-   th->tics -= P_Random(pr_spawnpuff) & 3;
-
-   if(th->tics < 1)
-      th->tics = 1;
-
-   // don't make punches spark on the wall
-
-   if(!trace.puff && trace.attackrange == MELEERANGE)
-      P_SetMobjState(th, E_SafeState(S_PUFF3));
-
-   // haleyjd: for demo sync etc we still need to do the above, so
-   // here we'll make the puff invisible and draw particles instead
-   if(ptcl && drawparticles && bulletpuff_particle &&
-      trace.attackrange != MELEERANGE)
+   if(!pufftype)
    {
-      if(bulletpuff_particle != 2)
-         th->translucency = 0;
-      P_SmokePuff(32, x, y, z, dir, updown);
+      static const MetaTable *defaulttype;
+      if(!defaulttype)
+         defaulttype = E_PuffForName(GameModeInfo->puffType);
+      pufftype = defaulttype;
+      if(!pufftype)  // may still be null
+         return nullptr;
    }
+   const char *hitsound = pufftype->getString(keyPuffHitSound, nullptr);
+   if(hitsound && !strcasecmp(hitsound, "none"))
+      hitsound = nullptr;
+   if(hitmobj)
+   {
+      const char *altname = nullptr;
+      if(hitmobj->flags & MF_NOBLOOD)
+         altname = pufftype->getString(keyPuffNoBloodPuffType, nullptr);
+      if(estrempty(altname))
+         altname = pufftype->getString(keyPuffHitPuffType, nullptr);
+      if(estrnonempty(altname))
+      {
+         const MetaTable *otable = E_PuffForName(altname);
+         if(otable)
+         {
+            pufftype = otable;
+            // If the alternate puff has its own hitsound, use that.
+            const char *althitsound = pufftype->getString(keyPuffHitSound,
+                                                          nullptr);
+            if(estrnonempty(althitsound) && strcasecmp(althitsound, "none"))
+               hitsound = althitsound;
+         }
+      }
+   }
+
+   Mobj* th = nullptr;
+
+   double zspread = pufftype->getDouble(keyPuffZSpread, puffZSpreadDefault);
+   if(zspread)
+      z += P_SubRandom(pr_spawnpuff) * M_DoubleToFixed(zspread / 256.0);
+
+   // mobjtype already checked to be safe.
+   int mobjtype = pufftype->getInt(keyPuffThingType, D_MININT);
+   if(mobjtype != D_MININT)
+      th = P_SpawnMobj(x, y, z, mobjtype);
+
+   bool punchhack = false;
+   if(th)
+   {
+      if(pufftype->getInt(keyPuffRandomTics, 0))
+      {
+         th->tics -= P_Random(pr_spawnpuff) & 3;
+         if(th->tics < 1)
+            th->tics = 1;
+      }
+      // Input pufftype hitsound has priority over alternate pufftype miss
+      // sound, but less priority than alternate's own hit sound.
+      S_StartSoundName(th, hitmobj && estrnonempty(hitsound) ? hitsound :
+                       pufftype->getString(keyPuffSound, nullptr));
+      th->momz = M_DoubleToFixed(pufftype->getDouble(keyPuffUpSpeed, 0));
+
+      // preserve the Doom hack of melee fist puff
+      if(trace.attackrange == MELEERANGE)
+      {
+         int snum = pufftype->getInt(keyPuffPunchHack, D_MININT);
+         if(snum != D_MININT && snum != NullStateNum)
+         {
+            P_SetMobjState(th, snum);
+            punchhack = true;
+         }
+      }
+   }
+
+   // ioanch: spawn particles even for melee range if nothing is spawned
+   if(ptcl && drawparticles && bulletpuff_particle &&
+      (trace.attackrange != MELEERANGE || !punchhack))
+   {
+      int numparticles = pufftype->getInt(keyPuffParticles, 0);
+      if(numparticles > 0)
+      {
+         if(th && bulletpuff_particle != 2)
+            th->translucency = 0;
+         P_SmokePuff(numparticles, x, y, z, dir, updown);
+      }
+   }
+
+   return th;
 }
 
 //
@@ -2971,7 +3068,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type)
    if(autoaim)
    {
       // killough 8/2/98: prefer autoaiming at enemies
-      int mask = demo_version < 203 ? 0 : MF_FRIEND;
+      int mask = demo_version < 203 ? false : true;
       do
       {
          slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
@@ -2986,7 +3083,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type)
             slope = P_PlayerPitchSlope(source->player);
          }
       }
-      while(mask && (mask=0, !clip.linetarget));  // killough 8/2/98
+      while(mask && (mask=false, !clip.linetarget));  // killough 8/2/98
    }
    else
    {
@@ -3050,7 +3147,7 @@ Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t an
    if(autoaim)
    {
       // ioanch: reuse killough's code from P_SpawnPlayerMissile
-      int mask = demo_version < 203 ? 0 : MF_FRIEND;
+      int mask = demo_version < 203 ? false : true;
       do
       {
          slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
@@ -3064,7 +3161,7 @@ Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t an
             // haleyjd: use true slope angle
             slope = playersightslope;
          }
-      } while(mask && (mask = 0, !clip.linetarget));  // killough 8/2/98
+      } while(mask && (mask = false, !clip.linetarget));  // killough 8/2/98
    }
    else
       slope = playersightslope;

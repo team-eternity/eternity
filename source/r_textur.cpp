@@ -557,7 +557,7 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup,
 // Add lone-patch textures that exist in the TX_START/TX_END or textures/
 // namespace.
 //
-int R_ReadTextureNamespace(int texnum)
+static int R_ReadTextureNamespace(int texnum)
 {
    WadNamespaceIterator wni(wGlobalDir, lumpinfo_t::ns_textures);
 

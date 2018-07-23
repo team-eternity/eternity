@@ -36,7 +36,6 @@
 #include "d_player.h"
 #include "doomstat.h"
 #include "d_main.h"
-#include "info.h"
 #include "p_info.h"
 #include "p_skin.h"
 #include "r_things.h"
@@ -176,13 +175,9 @@ void P_InitSkins(void)
 //
 static void P_AddEDFSkins(void)
 {
-   int i;
-
    // go down every hash chain
-   for(i = 0; i < NUMEDFSKINCHAINS; ++i)
+   for(skin_t *chain : edf_skins)
    {
-      skin_t *chain = edf_skins[i];
-
       while(chain)
       {
          // add the skin only if one of this name doesn't already exist

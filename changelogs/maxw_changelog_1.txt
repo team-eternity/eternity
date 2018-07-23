@@ -252,6 +252,37 @@ MAJOR CHANGES:
  
 There's probably more stuff I'm forgetting but that's the big stuff.
 
+-------------------------------------------------------------------------------
+2018/04/07
+Splitted armor's +bonus into +additive and -setabsorption.
+Added the RAMBO cheat from Heretic, and improved givearsenal to give armor in
+Heretic too.
+
+-------------------------------------------------------------------------------
+2018/05/17
+Added EDF fontdeltas.
+
+-------------------------------------------------------------------------------
+2018/06/13
+Changed version name to "Tyrfing".
+
+-------------------------------------------------------------------------------
+2018/06/16
+Made A_Jump now work for weapons with DECORATE states.
+
+-------------------------------------------------------------------------------
+2018/07/20
+Add support for the Rekkr stand-alone IWAD.
+
+-------------------------------------------------------------------------------
+2018/07/01
+Added r_drawplayersprites, which lets players choose to not render weapons if
+they don't want to (for example, if taking photos).
+
+-------------------------------------------------------------------------------
+2018/07/23
+Fix ev_text events causing some issues, such as menu navigation occuring when
+inserting specific keys for key bindings on certain menus.
 
 ================================================================================
 EOF

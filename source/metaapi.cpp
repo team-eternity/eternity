@@ -32,7 +32,6 @@
 #include "i_system.h"
 #include "doomtype.h"
 #include "m_collection.h"
-#include "m_dllist.h"
 #include "e_hash.h"
 #include "m_qstr.h"
 #include "m_utils.h"
@@ -86,7 +85,7 @@ static void MetaHashRebuild(HashType &hash)
       int i;
 
       // find the next larger prime
-      for(i = 0; curNumChains < metaPrimes[i]; i++);
+      for(i = 0; metaPrimes[i] <= curNumChains; i++);
 
       hash.rebuild(metaPrimes[i]);
    }
@@ -968,6 +967,28 @@ MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, const char *key, co
 
    return obj;
 }
+const MetaObject *MetaTable::getNextKeyAndType(const MetaObject *object, const char *key, const char *type) const
+{
+   const MetaObject *obj = object;
+
+   if(object)
+   {
+      // As above, allow null in either key or type to mean "same as current"
+      if(!key)
+         key = object->getKey();
+
+      if(!type)
+         type = object->getClassName();
+   }
+
+   while((obj = pImpl->keyhash.keyIterator(obj, key)))
+   {
+      if(obj->isInstanceOf(type))
+         break;
+   }
+
+   return obj;
+}
 
 //
 // MetaTable::getNextKeyAndType
@@ -977,6 +998,26 @@ MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, const char *key, co
 MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, size_t keyIdx, const char *type) const
 {
    MetaObject *obj    = object;
+   metakey_t  &keyObj = MetaKeyForIndex(keyIdx);
+
+   if(object)
+   {
+      // As above, allow NULL in type to mean "same as current"
+      if(!type)
+         type = object->getClassName();
+   }
+
+   while((obj = pImpl->keyhash.keyIterator(obj, keyObj.key, keyObj.unmodHC)))
+   {
+      if(obj->isInstanceOf(type))
+         break;
+   }
+
+   return obj;
+}
+const MetaObject *MetaTable::getNextKeyAndType(const MetaObject *object, size_t keyIdx, const char *type) const
+{
+   const MetaObject *obj    = object;
    metakey_t  &keyObj = MetaKeyForIndex(keyIdx);
 
    if(object)
@@ -1023,6 +1064,29 @@ MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, const char *key,
 
    return obj;
 }
+const MetaObject *MetaTable::getNextKeyAndType(const MetaObject *object, const char *key,
+                                               const MetaObject::Type *type) const
+{
+   const MetaObject *obj = object;
+
+   if(object)
+   {
+      // As above, allow null in either key or type to mean "same as current"
+      if(!key)
+         key = object->getKey();
+
+      if(!type)
+         type = object->getDynamicType();
+   }
+
+   while((obj = pImpl->keyhash.keyIterator(obj, key)))
+   {
+      if(obj->isInstanceOf(type))
+         break;
+   }
+
+   return obj;
+}
 
 //
 // MetaTable::getNextKeyAndType
@@ -1033,6 +1097,27 @@ MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, size_t keyIdx,
                                          const MetaObject::Type *type) const
 {
    MetaObject *obj    = object;
+   metakey_t  &keyObj = MetaKeyForIndex(keyIdx);
+
+   if(object)
+   {
+      // As above, allow null in type to mean "same as current"
+      if(!type)
+         type = object->getDynamicType();
+   }
+
+   while((obj = pImpl->keyhash.keyIterator(obj, keyObj.key, keyObj.unmodHC)))
+   {
+      if(obj->isInstanceOf(type))
+         break;
+   }
+
+   return obj;
+}
+const MetaObject *MetaTable::getNextKeyAndType(const MetaObject *object, size_t keyIdx,
+                                               const MetaObject::Type *type) const
+{
+   const MetaObject *obj    = object;
    metakey_t  &keyObj = MetaKeyForIndex(keyIdx);
 
    if(object)
@@ -1213,14 +1298,14 @@ void MetaTable::addDouble(const char *key, double value)
 // Use of this routine only returns the first such value in the table.
 // This routine is meant for singleton fields.
 //
-double MetaTable::getDouble(const char *key, double defValue) const
+double MetaTable::getDouble(size_t keyIndex, double defValue) const
 {
    double retval;
    const MetaDouble *obj;
 
    metaerrno = META_ERR_NOERR;
 
-   if(!(obj = getObjectKeyAndTypeEx<MetaDouble>(key)))
+   if(!(obj = getObjectKeyAndTypeEx<MetaDouble>(keyIndex)))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
       retval = defValue;
@@ -1229,6 +1314,10 @@ double MetaTable::getDouble(const char *key, double defValue) const
       retval = obj->value;
 
    return retval;
+}
+double MetaTable::getDouble(const char *key, double defValue) const
+{
+   return getDouble(MetaKey(key).index, defValue);
 }
 
 //
@@ -1392,13 +1481,13 @@ char *MetaTable::removeString(const char *key)
 // alleviate any need the user code might have to free string values in
 // which it isn't interested.
 //
-void MetaTable::removeStringNR(const char *key)
+void MetaTable::removeStringNR(size_t keyIndex)
 {
    MetaString *obj;
 
    metaerrno = META_ERR_NOERR;
 
-   if(!(obj = getObjectKeyAndTypeEx<MetaString>(key)))
+   if(!(obj = getObjectKeyAndTypeEx<MetaString>(keyIndex)))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
       return;
@@ -1407,6 +1496,10 @@ void MetaTable::removeStringNR(const char *key)
    removeObject(obj);
 
    delete obj;
+}
+void MetaTable::removeStringNR(const char *key)
+{
+   removeStringNR(MetaKey(key).index);
 }
 
 //

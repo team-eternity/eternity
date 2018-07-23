@@ -34,7 +34,6 @@
 
 #include "d_diskfile.h"
 #include "d_files.h"
-#include "d_gi.h"
 #include "d_io.h"
 #include "d_findiwads.h"
 #include "d_iwad.h"
@@ -148,7 +147,7 @@ static void D_parseDoomWadPath()
 // will be returned which must be freed by the calling code, if the file is
 // found. Otherwise NULL is returned.
 //
-bool D_FindInDoomWadPath(qstring &out, const char *filename, const char *extension)
+static bool D_FindInDoomWadPath(qstring &out, const char *filename, const char *extension)
 {
    qstring qstr;
    bool success = false;
@@ -552,6 +551,7 @@ static char **iwadVarForNum[NUMPICKIWADS] =
    &gi_path_hacx,                                       // HACX
    &gi_path_hticsw, &gi_path_hticreg,  &gi_path_sosr,   // Heretic
    &gi_path_fdoom,  &gi_path_fdoomu,   &gi_path_freedm, // Freedoom
+   &gi_path_rekkr,                                      // Rekkr
 };
 
 //
@@ -655,7 +655,8 @@ static iwadpathmatch_t iwadMatchers[] =
    { MATCH_IWAD, "freedoom1", { &gi_path_fdoomu,   NULL,              NULL            } },
    { MATCH_IWAD, "freedm",    { &gi_path_freedm,   NULL,              NULL            } },
    { MATCH_IWAD, "bfgdoom2",  { &gi_path_bfgdoom2, NULL,              NULL,           } },
-   
+   { MATCH_IWAD, "rekkr",     { &gi_path_rekkr,    NULL,              NULL,           } },
+
    // Terminating entry
    { MATCH_NONE, NULL,        { NULL,              NULL,              NULL            } }
 };
@@ -865,6 +866,8 @@ static void D_checkIWAD_WAD(FILE *fp, const char *iwadname, iwadcheck_t &version
         if(bfg >= 5) // demand all 5 new lumps for safety.
            version.bfgedition = true;
       }
+      else if(!lumpnamecmp(n, "REKCREDS"))
+         version.rekkr = true;
    }
 
    fclose(fp);
@@ -1112,14 +1115,15 @@ const char *const standard_iwads[]=
    "/heretic1.wad",  // Shareware Heretic
 
    // Unofficial IWADs
-   "/freedoom2.wad", // Freedoom Phase 2        -- haleyjd 01/11/14
-   "/freedoom1.wad", // Freedoom "Demo"/Phase 1 -- haleyjd 03/07/10
-   "/freedoom.wad",  // Freedoom                -- haleyjd 01/31/03 (deprecated)
-   "/freedoomu.wad", // "Ultimate" Freedoom     -- haleyjd 03/07/10 (deprecated)
-   "/freedm.wad",    // FreeDM IWAD             -- haleyjd 08/28/11
-   "/hacx.wad",      // HACX standalone version -- haleyjd 08/19/09
-   "/bfgdoom.wad",   // BFG Edition UDoom IWAD  -- haleyjd 11/03/12
-   "/bfgdoom2.wad",  // BFG Edition DOOM2 IWAD  -- haleyjd 11/03/12
+   "/freedoom2.wad", // Freedoom Phase 2         -- haleyjd 01/11/14
+   "/freedoom1.wad", // Freedoom "Demo"/Phase 1  -- haleyjd 03/07/10
+   "/freedoom.wad",  // Freedoom                 -- haleyjd 01/31/03 (deprecated)
+   "/freedoomu.wad", // "Ultimate" Freedoom      -- haleyjd 03/07/10 (deprecated)
+   "/freedm.wad",    // FreeDM IWAD              -- haleyjd 08/28/11
+   "/hacx.wad",      // HACX standalone version  -- haleyjd 08/19/09
+   "/bfgdoom.wad",   // BFG Edition UDoom IWAD   -- haleyjd 11/03/12
+   "/bfgdoom2.wad",  // BFG Edition DOOM2 IWAD   -- haleyjd 11/03/12
+   "/rekkrsa.wad",   // Rekkr standalone version -- MaxW: 2018/07/15
 };
 
 int nstandard_iwads = earrlen(standard_iwads);

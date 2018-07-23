@@ -341,6 +341,11 @@ dehflags_t deh_mobjflags[] =
   {"FRIENDFOEMISSILE",   0x00400000, 3}, // friends and foes of same species hurt each other
   {"BLOODLESSIMPACT",    0x00800000, 3}, // doesn't draw blood when it hits or rips a thing
   {"HERETICBOUNCES",     0x01000000, 3}, // thing bounces à la Heretic
+  {"MONSTERPASS",        0x02000000, 3},
+  {"LOWAIMPRIO",         0x04000000, 3},
+  {"STICKYCARRY",        0x08000000, 3},
+  {"SETTARGETONDEATH",   0x10000000, 3},
+  {"SLIDEOVERTHINGS",    0x20000000, 3},
 
   { NULL,              0 }             // NULL terminator
 };
@@ -1947,7 +1952,6 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
          ; //idkfa_armor_class = value;
       else if(!strcasecmp(key,deh_misc[14])) // BFG Cells/Shot
       {
-         // WEAPON_FIXME: BFG ammopershot
          // haleyjd 08/10/02: propagate to weapon info
          weaponinfo_t &bfginfo = *E_WeaponForDEHNum(wp_bfg);
          bfgcells = bfginfo.ammopershot = value;

@@ -51,6 +51,8 @@
 #define ITEM_DAMAGETYPE_OBIT       "obituary"
 #define ITEM_DAMAGETYPE_SELFOBIT   "obituaryself"
 #define ITEM_DAMAGETYPE_SOURCELESS "sourceless"
+#define ITEM_DAMAGETYPE_ABSPUSH    "absolute.push"
+#define ITEM_DAMAGETYPE_ABSHOP     "absolute.hop"
 
 cfg_opt_t edf_dmgtype_opts[] =
 {
@@ -58,6 +60,8 @@ cfg_opt_t edf_dmgtype_opts[] =
    CFG_STR(ITEM_DAMAGETYPE_OBIT,        NULL,  CFGF_NONE),
    CFG_STR(ITEM_DAMAGETYPE_SELFOBIT,    NULL,  CFGF_NONE),
    CFG_BOOL(ITEM_DAMAGETYPE_SOURCELESS, false, CFGF_NONE),
+   CFG_FLOAT(ITEM_DAMAGETYPE_ABSPUSH,   0,     CFGF_NONE),
+   CFG_FLOAT(ITEM_DAMAGETYPE_ABSHOP,    0,     CFGF_NONE),
    CFG_END()
 };
 
@@ -296,6 +300,17 @@ static void E_ProcessDamageType(cfg_t *dtsec)
    // process sourceless flag
    if(IS_SET(dtsec, ITEM_DAMAGETYPE_SOURCELESS))
       mod->sourceless = cfg_getbool(dtsec, ITEM_DAMAGETYPE_SOURCELESS);
+
+   if(IS_SET(dtsec, ITEM_DAMAGETYPE_ABSPUSH))
+   {
+      mod->absolutePush = M_DoubleToFixed(cfg_getfloat(dtsec,
+                                                       ITEM_DAMAGETYPE_ABSPUSH));
+   }
+   if(IS_SET(dtsec, ITEM_DAMAGETYPE_ABSHOP))
+   {
+      mod->absoluteHop = M_DoubleToFixed(cfg_getfloat(dtsec,
+                                                      ITEM_DAMAGETYPE_ABSHOP));
+   }
 
    E_EDFLogPrintf("\t\t%s damagetype %s\n", 
                   def ? "Defined" : "Modified", mod->name);

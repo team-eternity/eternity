@@ -481,8 +481,8 @@ static void P_saveWeaponCounters(SaveArchive &arc, WeaponCounterNode *node)
       if(node->right)
          P_saveWeaponCounters(arc, node->right);
       arc.writeLString(E_WeaponForID(node->key)->name);
-      for(int i = 0; i < NUMWEAPCOUNTERS; i++)
-         arc << (*node->object)[i];
+      for(int &counter : *node->object)
+         arc << counter;
    }
 }
 
@@ -510,8 +510,8 @@ static void P_loadWeaponCounters(SaveArchive &arc, player_t &p)
          if(!wp)
             I_Error("P_loadWeaponCounters: weapon '%s' not found\n", className);
          WeaponCounter &wc = weaponCounters[i];
-         for(int j = 0; j < NUMWEAPCOUNTERS; j++)
-            arc << wc[j];
+         for(int &counter : wc)
+            arc << counter;
          p.weaponctrs->insert(wp->id, &wc);
       }
    }
@@ -563,7 +563,7 @@ static void P_ArchivePlayers(SaveArchive &arc)
 
             slotIndex = p.readyweaponslot != nullptr ? p.readyweaponslot->slotindex : 0;
             arc << slotIndex;
-            slotIndex = p.pendingweaponslot != nullptr ? p.readyweaponslot->slotindex : 0;
+            slotIndex = p.pendingweaponslot != nullptr ? p.pendingweaponslot->slotindex : 0;
             arc << slotIndex;
 
             // Save numcounters, then counters if there's a need to
@@ -591,23 +591,24 @@ static void P_ArchivePlayers(SaveArchive &arc)
                I_Error("P_ArchivePlayers: pendingweapon '%s' not found\n", className);
 
             arc << slotIndex;
-            p.readyweaponslot = E_FindEntryForWeaponInSlot(&p, p.readyweapon, slotIndex);
+            p.readyweaponslot = E_FindEntryForWeaponInSlotIndex(&p, p.readyweapon, slotIndex);
             arc << slotIndex;
-            p.pendingweaponslot = E_FindEntryForWeaponInSlot(&p, p.pendingweapon, slotIndex);
+            if(p.pendingweapon != nullptr)
+               p.pendingweaponslot = E_FindEntryForWeaponInSlotIndex(&p, p.pendingweapon, slotIndex);
 
             // Load counters if there's a need to
             P_loadWeaponCounters(arc, p);
          }
          P_ArchiveArray<inventoryslot_t>(arc, p.inventory, inventorySize);
 
-         for(j = 0; j < NUMPOWERS; j++)
-            arc << p.powers[j];
+         for(int &power : p.powers)
+            arc << power;
 
          for(j = 0; j < MAXPLAYERS; j++)
             arc << p.frags[j];
 
-         for(j = 0; j < NUMPSPRITES; j++)
-            P_ArchivePSprite(arc, p.psprites[j]);
+         for(pspdef_t &psprite : p.psprites)
+            P_ArchivePSprite(arc, psprite);
 
          arc.archiveCString(p.name, 20);
 
@@ -1149,7 +1150,7 @@ static void P_UnArchiveSndSeq(SaveArchive &arc)
    S_SetSequenceStatus(newSeq);
 }
 
-void P_ArchiveSoundSequences(SaveArchive &arc)
+static void P_ArchiveSoundSequences(SaveArchive &arc)
 {
    DLListItem<SndSeq_t> *item = SoundSequences;
    int count = 0;
@@ -1180,7 +1181,7 @@ void P_ArchiveSoundSequences(SaveArchive &arc)
       P_ArchiveSndSeq(arc, EnviroSequence);
 }
 
-void P_UnArchiveSoundSequences(SaveArchive &arc)
+static void P_UnArchiveSoundSequences(SaveArchive &arc)
 {
    int i, count = 0;
 
@@ -1207,7 +1208,7 @@ void P_UnArchiveSoundSequences(SaveArchive &arc)
 // never did so after loading the save. No longer!
 //
 
-void P_ArchiveButtons(SaveArchive &arc)
+static void P_ArchiveButtons(SaveArchive &arc)
 {
    int numsaved = 0;
 
@@ -1240,7 +1241,7 @@ void P_ArchiveButtons(SaveArchive &arc)
 // haleyjd 07/06/09: ACS Save/Load
 //
 
-void P_ArchiveACS(SaveArchive &arc)
+static void P_ArchiveACS(SaveArchive &arc)
 {
    ACS_Archive(arc);
 }

@@ -47,7 +47,6 @@
 #include "g_game.h"
 #include "m_argv.h"
 #include "m_misc.h"
-#include "m_qstr.h"
 #include "m_utils.h"
 #include "mn_engin.h"
 #include "v_misc.h"
@@ -1019,9 +1018,8 @@ static void CheckTabs()
 //
 static void GetTabs(qstring &qkey)
 {
-   int i;
    size_t pos, keylen;
-   
+
    numtabs = 0;
 
    origkey.clearOrCreate(128);
@@ -1032,21 +1030,19 @@ static void GetTabs(qstring &qkey)
    // find the first non-space character; if none, we can't do this
    if((pos = qkey.findFirstNotOf(' ')) == qstring::npos)
       return;
-   
+
    // save the input from the first non-space character, and lowercase it
    origkey = qkey.bufferAt(pos);
    origkey.toLower();
 
    gotkey = true;
-      
+
    keylen = origkey.length();
 
    // check each hash chain in turn
-   
-   for(i = 0; i < CMDCHAINS; i++)
+
+   for(command_t *browser : cmdroots)
    {
-      command_t *browser = cmdroots[i];
-      
       // go through each link in this chain
       for(; browser; browser = browser->next)
       {
@@ -1240,7 +1236,7 @@ void C_RemoveAlias(qstring *aliasname)
 
 // run an alias
 
-void C_RunAlias(alias_t *alias)
+static void C_RunAlias(alias_t *alias)
 {
    // store command line for use in macro
    while(*cmdoptions == ' ')
@@ -1285,7 +1281,7 @@ typedef struct cmdbuffer_s
 
 cmdbuffer buffers[C_CMDTYPES];
 
-void C_RunBufferedCommand(bufferedcmd *bufcmd)
+static void C_RunBufferedCommand(bufferedcmd *bufcmd)
 {
    // run command
    // restore variables

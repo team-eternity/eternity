@@ -437,7 +437,9 @@ void  P_RespawnSpecials();
 Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
 bool  P_SetMobjState(Mobj *mobj, statenum_t state);
 void  P_MobjThinker(Mobj *mobj);
-void  P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown, bool ptcl);
+Mobj *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown,
+                  bool ptcl, const MetaTable *pufftype = nullptr,
+                  const Mobj *hitmobj = nullptr);
 void  P_SpawnUnknownThings();
 Mobj *P_SpawnMapThing(mapthing_t *mt);
 bool  P_CheckMissileSpawn(Mobj *);  // killough 8/2/98
@@ -707,6 +709,11 @@ enum mobjflags4_e : unsigned int
    MF4_FRIENDFOEMISSILE   = 0x00400000, // friends and foes of same species hurt each other
    MF4_BLOODLESSIMPACT    = 0x00800000, // doesn't draw blood when it hits or rips a thing
    MF4_HERETICBOUNCES     = 0x01000000, // thing bounces à la Heretic
+   MF4_MONSTERPASS        = 0x02000000, // not blocked by blockmonsters.
+   MF4_LOWAIMPRIO         = 0x04000000, // can't be autoaimed.
+   MF4_STICKYCARRY        = 0x08000000, // can carry other things on top of it.
+   MF4_SETTARGETONDEATH   = 0x10000000, // target is updated even when one-shot
+   MF4_SLIDEOVERTHINGS    = 0x20000000  // thing will keep sliding when on top of things
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh

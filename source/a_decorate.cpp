@@ -142,8 +142,10 @@ void A_FadeOut(actionargs_t *actionargs)
 void A_Jump(actionargs_t *actionargs)
 {
    int        chance, choice;
-   Mobj      *actor = actionargs->actor;
-   arglist_t *al    = actionargs->args;
+   Mobj      *actor  = actionargs->actor;
+   player_t  *player = actor->player;
+   arglist_t *al     = actionargs->args;
+   auto       at     = actionargs->actiontype;
    state_t   *state;
 
    // no args?
@@ -163,8 +165,11 @@ void A_Jump(actionargs_t *actionargs)
    choice = (P_Random(pr_decjump2) % (al->numargs - 1)) + 1;
 
    // if the state is found, jump to it.
-   if((state = E_ArgAsStateLabel(actor, al, choice)))
+   if(at == actionargs_t::MOBJFRAME && (state = E_ArgAsStateLabel(actor, al, choice)))
       P_SetMobjState(actor, state->index);
+   else if(at == actionargs_t::WEAPONFRAME && (state = E_ArgAsStateLabelWpn(player, al, choice)))
+      P_SetPspritePtr(player, actionargs->pspr, state->index);
+
 }
 
 //

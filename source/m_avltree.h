@@ -51,30 +51,22 @@ public:
    {
       T key;
       U *object;
-      avlnode_t *left, *right;
+      avlnode_t *left, *right, *next;
    } *root;
 
-   //
    // Default constructor
-   //
-   AVLTree()
-      : root(nullptr)
+   AVLTree() : root(nullptr)
    {
    }
 
-   //
    // Parameterised constructor
-   //
-   AVLTree(T key, U *object)
-      : root(estructalloc(avlnode_t, 1))
+   AVLTree(T key, U *object) : root(estructalloc(avlnode_t, 1))
    {
       root->key = key;
       root->object = object;
    }
 
-   //
    // Destructor. Delete the tree if there is one
-   //
    virtual ~AVLTree() { deleteTree(root, deleteobjects); }
 
    //
@@ -84,7 +76,7 @@ public:
    {
       avlnode_t *toinsert, *next, *prev;
       prev = next = nullptr;
-      toinsert = estructalloc(avlnode_t, 1); 
+      toinsert = estructalloc(avlnode_t, 1);
       toinsert->key = key;
       toinsert->object = object;
       toinsert->left = toinsert->right = nullptr;
@@ -100,11 +92,8 @@ public:
                next = next->left;
             else if(key > next->key)
                next = next->right;
-            else // FIXME: This triggers due to inheritance. That needs sorting out.
-            {
-               efree(toinsert);
-               return nullptr; // Ahh bugger
-            }
+            else
+               return handleCollision(next, toinsert);
          }
          if(key > prev->key)
             prev->right = toinsert;
@@ -119,10 +108,10 @@ public:
    //
    // Delete the node with the provided key, then rebalance the tree
    //
-   bool deleteNode(T key)
+   bool deleteNode(T key, U *object)
    {
       avlnode_t *prev = nullptr, *node = root;
-      bool found = false, onleft = false;
+      bool found = false, onleft = false, removedslot = true;
 
       while(!found)
       {
@@ -144,10 +133,33 @@ public:
          }
          else if(key == node->key)
          {
-            // We found the node
+            // We found the root node
             found = true;
+            removedslot = node->next == nullptr;
 
-            if((node->left == nullptr) || (node->right == nullptr))
+            if(!removedslot)
+            {
+               if(node->object == object)
+               {
+                  if(onleft)
+                     prev->left = node->next;
+                  else
+                     prev->right = node->next;
+               }
+               else
+               {
+                  avlnode_t *previnslot = node, *curr = node->next;
+                  while(curr != nullptr && curr->object != object)
+                  {
+                     previnslot = curr;
+                     curr = curr->next;
+                  }
+                  previnslot->next = curr->next;
+
+                  efree(curr);
+               }
+            }
+            else if((node->left == nullptr) || (node->right == nullptr))
             {
                // Either the found node with key has no child or one child.
                // Both share the same logic, just using different values.
@@ -196,7 +208,8 @@ public:
          }
       }
 
-      balance(root);
+      if(removedslot)
+         balance(root);
       return true;
    }
 
@@ -238,6 +251,15 @@ public:
 
 protected:
    bool deleteobjects = false;
+
+   //
+   // Handle a collision (entering a new node with a key of a node already in the tree)
+   //
+   virtual avlnode_t *handleCollision(avlnode_t *listroot, avlnode_t *toinsert)
+   {
+      efree(toinsert);
+      return nullptr; // Ahh bugger
+   }
 
    //
    // Get the node to replace the deleted node, as well as its parent

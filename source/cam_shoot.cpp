@@ -28,6 +28,7 @@
 #include "cam_sight.h"
 #include "d_player.h"
 #include "e_exdata.h"
+#include "e_puff.h"
 #include "p_inter.h"
 #include "p_mobj.h"
 #include "p_portal.h"
@@ -56,8 +57,20 @@ public:
       int reclevel;
    };
 
-   static void lineAttack(Mobj *source, angle_t angle, fixed_t distance,
-      fixed_t slope, int damage, const State *state);
+   //
+   // Parameters given from input
+   //
+   struct params_t
+   {
+      Mobj *thing;
+      angle_t angle;
+      fixed_t attackrange;
+      fixed_t aimslope;
+      int damage;
+      size_t puffidx;
+   };
+
+   static void lineAttack(const params_t &params, const State *state);
 private:
 
    bool checkShootFlatPortal(const sector_t *sector, fixed_t infrac) const;
@@ -66,14 +79,9 @@ private:
    bool shotCheck2SLine(line_t *li, int lineside, fixed_t dist) const;
    static bool shootTraverse(const intercept_t *in, void *data,
       const divline_t &trace);
-   ShootContext(Mobj *source, angle_t inangle, fixed_t distance, fixed_t slope,
-      int indamage, const State *instate);
+   ShootContext(const params_t &params, const State *instate);
 
-   Mobj *thing;
-   angle_t angle;
-   int damage;
-   fixed_t attackrange;
-   fixed_t aimslope;
+   const params_t params;
    fixed_t cos, sin;
    State state;
 };
@@ -81,12 +89,13 @@ private:
 //
 // Caller
 //
-void ShootContext::lineAttack(Mobj *source, angle_t angle, fixed_t distance,
-   fixed_t slope, int damage, const State *state)
+void ShootContext::lineAttack(const params_t &params, const State *state)
 {
-   ShootContext context(source, angle, distance, slope, damage, state);
-   fixed_t x2 = context.state.x + (distance >> FRACBITS) * context.cos;
-   fixed_t y2 = context.state.y + (distance >> FRACBITS) * context.sin;
+   ShootContext context(params, state);
+   fixed_t x2 = context.state.x + (context.params.attackrange >>
+                                   FRACBITS) * context.cos;
+   fixed_t y2 = context.state.y + (context.params.attackrange >>
+                                   FRACBITS) * context.sin;
 
    PTDef def;
    def.flags = CAM_ADDLINES | CAM_ADDTHINGS;
@@ -112,7 +121,8 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
    fixed_t pfrac = 0;
    fixed_t absratio = 0;
    int newfromid = R_NOGROUP;
-   fixed_t z = state.z + FixedMul(aimslope, FixedMul(infrac, attackrange));
+   fixed_t z = state.z + FixedMul(params.aimslope,
+                                  FixedMul(infrac, params.attackrange));
 
    if(sidesector->c_pflags & PS_PASSABLE)
    {
@@ -120,7 +130,7 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
       fixed_t planez = P_CeilingPortalZ(*sidesector);
       if(z > planez)
       {
-         pfrac = FixedDiv(planez - state.z, aimslope);
+         pfrac = FixedDiv(planez - state.z, params.aimslope);
          absratio = FixedDiv(planez - state.z, z - state.z);
          z = planez;
          portaldata = R_CPLink(sidesector);
@@ -133,7 +143,7 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
       fixed_t planez = P_FloorPortalZ(*sidesector);
       if(z < planez)
       {
-         pfrac = FixedDiv(planez - state.z, aimslope);
+         pfrac = FixedDiv(planez - state.z, params.aimslope);
          absratio = FixedDiv(planez - state.z, z - state.z);
          z = planez;
          portaldata = R_FPLink(sidesector);
@@ -150,8 +160,8 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
          return false;
 
       // NOTE: for line attacks, sightzstart also moves!
-      fixed_t dist = FixedMul(FixedMul(attackrange, infrac), absratio);
-      fixed_t remdist = attackrange - dist;
+      fixed_t dist = FixedMul(FixedMul(params.attackrange, infrac), absratio);
+      fixed_t remdist = params.attackrange - dist;
 
       x += portaldata->deltax;
       y += portaldata->deltay;
@@ -168,7 +178,9 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
       newstate.z = z;
       newstate.reclevel++;
 
-      lineAttack(thing, angle, remdist, aimslope, damage, &newstate);
+      params_t newparams(params);
+      newparams.attackrange = remdist;
+      lineAttack(newparams, &newstate);
 
       return true;
    }
@@ -182,11 +194,11 @@ bool ShootContext::shoot2SLine(line_t *li, int lineside, fixed_t dist,
    const lineopening_t &lo) const
 {
    // ioanch: no more need for demo version < 333 check. Also don't allow comp.
-   if(FixedDiv(lo.openbottom - state.z, dist) <= aimslope &&
-      FixedDiv(lo.opentop - state.z, dist) >= aimslope)
+   if(FixedDiv(lo.openbottom - state.z, dist) <= params.aimslope &&
+      FixedDiv(lo.opentop - state.z, dist) >= params.aimslope)
    {
       if(li->special)
-         P_ShootSpecialLine(thing, li, lineside);
+         P_ShootSpecialLine(params.thing, li, lineside);
       return true;
    }
    return false;
@@ -226,7 +238,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
       // same as the source thing origin, as it happens in PTR_ShootTraverse
       int lineside = P_PointOnLineSide(trace.x, trace.y, li);
 
-      fixed_t dist = FixedMul(context.attackrange, in->frac);
+      fixed_t dist = FixedMul(context.params.attackrange, in->frac);
       if(context.shotCheck2SLine(li, lineside, dist))
       {
          // ioanch 20160101: line portal aware
@@ -234,21 +246,21 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          if(li->extflags & EX_ML_LOWERPORTAL && li->backsector &&
             li->backsector->f_pflags & PS_PASSABLE &&
             FixedDiv(li->backsector->floorheight - context.state.z, dist)
-            >= context.aimslope)
+            >= context.params.aimslope)
          {
             portal = li->backsector->f_portal;
          }
          else if(li->extflags & EX_ML_UPPERPORTAL && li->backsector &&
             li->backsector->c_pflags & PS_PASSABLE &&
             FixedDiv(li->backsector->ceilingheight - context.state.z, dist)
-            <= context.aimslope)
+            <= context.params.aimslope)
          {
             portal = li->backsector->c_portal;
          }
          else if(li->pflags & PS_PASSABLE &&
             (!(li->extflags & EX_ML_LOWERPORTAL) ||
                FixedDiv(li->backsector->floorheight - context.state.z, dist)
-               < context.aimslope))
+               < context.params.aimslope))
          {
             portal = li->portal;
          }
@@ -264,10 +276,10 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
             // NOTE: for line attacks, sightzstart also moves!
             fixed_t x = trace.x + FixedMul(trace.dx, in->frac);
             fixed_t y = trace.y + FixedMul(trace.dy, in->frac);
-            fixed_t z = context.state.z + FixedMul(context.aimslope,
-               FixedMul(in->frac, context.attackrange));
-            fixed_t dist = FixedMul(context.attackrange, in->frac);
-            fixed_t remdist = context.attackrange - dist;
+            fixed_t z = context.state.z + FixedMul(context.params.aimslope,
+               FixedMul(in->frac, context.params.attackrange));
+            fixed_t dist = FixedMul(context.params.attackrange, in->frac);
+            fixed_t remdist = context.params.attackrange - dist;
 
             const linkdata_t &data = portal->data.link;
 
@@ -286,8 +298,9 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
             newstate.origindist += dist;
             ++newstate.reclevel;
 
-            lineAttack(context.thing, context.angle, remdist, context.aimslope,
-               context.damage, &newstate);
+            params_t newparams(context.params);
+            newparams.attackrange = remdist;
+            lineAttack(newparams, &newstate);
 
             return false;
          }
@@ -296,12 +309,12 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
       }
 
       // ioanch 20160102: compensate the current range with the added one
-      fixed_t frac = in->frac - FixedDiv(4 * FRACUNIT, context.attackrange +
+      fixed_t frac = in->frac - FixedDiv(4 * FRACUNIT, context.params.attackrange +
          context.state.origindist);
       fixed_t x = trace.x + FixedMul(trace.dx, frac);
       fixed_t y = trace.y + FixedMul(trace.dy, frac);
-      fixed_t z = context.state.z + FixedMul(context.aimslope,
-         FixedMul(frac, context.attackrange));
+      fixed_t z = context.state.z + FixedMul(context.params.aimslope,
+         FixedMul(frac, context.params.attackrange));
 
       const sector_t *sidesector = lineside ? li->backsector : li->frontsector;
       bool hitplane = false;
@@ -317,7 +330,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          if(z < sidesector->floorheight)
          {
             fixed_t pfrac = FixedDiv(sidesector->floorheight
-               - context.state.z, context.aimslope);
+               - context.state.z, context.params.aimslope);
 
             if(R_IsSkyFlat(sidesector->floorpic) ||
                R_IsSkyLikePortalFloor(*sidesector))
@@ -335,7 +348,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          else if(z > sidesector->ceilingheight)
          {
             fixed_t pfrac = FixedDiv(sidesector->ceilingheight
-               - context.state.z, context.aimslope);
+               - context.state.z, context.params.aimslope);
             if(sidesector->intflags & SIF_SKY ||
                R_IsSkyLikePortalCeiling(*sidesector))
             {
@@ -351,7 +364,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
       }
 
       if(!hitplane && li->special)
-         P_ShootSpecialLine(context.thing, li, lineside);
+         P_ShootSpecialLine(context.params.thing, li, lineside);
 
       if(R_IsSkyFlat(li->frontsector->ceilingpic) || li->frontsector->c_portal)
       {
@@ -381,83 +394,39 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          return false;
 
       P_SpawnPuff(x, y, z, P_PointToAngle(0, 0, li->dx, li->dy) - ANG90,
-         updown, true);
+         updown, true, E_PuffForIndex(context.params.puffidx));
 
       return false;
    }
-   else
-   {
-      Mobj *th = in->d.thing;
-      // self and shootable checks already handled. Friendliness check not
-      // enabled anyway
-      if(!(th->flags & MF_SHOOTABLE) || th == context.thing)
-         return true;
-
-      if(th->flags3 & MF3_GHOST && context.thing->player
-         && context.thing->player->readyweapon->flags & WPF_NOHITGHOSTS)
-      {
-         return true;
-      }
-
-      fixed_t dist = FixedMul(context.attackrange, in->frac);
-      fixed_t thingtopslope = FixedDiv(th->z + th->height - context.state.z,
-         dist);
-      fixed_t thingbottomslope = FixedDiv(th->z - context.state.z, dist);
-
-      if(thingtopslope < context.aimslope)
-         return true;
-
-      if(thingbottomslope > context.aimslope)
-         return true;
-
-      // ioanch 20160102: compensate
-      fixed_t frac = in->frac - FixedDiv(10 * FRACUNIT, context.attackrange +
-         context.state.origindist);
-      fixed_t x = trace.x + FixedMul(trace.dx, frac);
-      fixed_t y = trace.y + FixedMul(trace.dy, frac);
-      fixed_t z = context.state.z + FixedMul(context.aimslope, FixedMul(frac,
-         context.attackrange));
-
-      if(th->flags & MF_NOBLOOD || th->flags2 & (MF2_INVULNERABLE | MF2_DORMANT))
-      {
-         P_SpawnPuff(x, y, z, P_PointToAngle(0, 0, trace.dx, trace.dy)
-            - ANG180, 2, true);
-      }
-      else
-      {
-         BloodSpawner(th, x, y, z, context.damage, trace, context.thing).spawn(BLOOD_SHOT);
-      }
-      if(context.damage)
-      {
-         P_DamageMobj(th, context.thing, context.thing, context.damage,
-            context.thing->info->mod);
-      }
-
-      return false;
-   }
+   return P_ShootThing(in,
+                       context.params.thing,
+                       context.params.attackrange,
+                       context.state.z,
+                       context.params.aimslope,
+                       context.params.attackrange + context.state.origindist,
+                       trace,
+                       context.params.puffidx,
+                       context.params.damage);
 }
 
 //
 // ShootContext::ShootContext
 //
-ShootContext::ShootContext(Mobj *source, angle_t inangle, fixed_t distance,
-   fixed_t slope, int indamage,
-   const State *instate) :
-   thing(source), angle(inangle), damage(indamage), attackrange(distance),
-   aimslope(slope)
+ShootContext::ShootContext(const params_t &params, const State *instate) :
+   params(params)
 {
-   inangle >>= ANGLETOFINESHIFT;
+   unsigned inangle = params.angle >> ANGLETOFINESHIFT;
    cos = finecosine[inangle];
    sin = finesine[inangle];
    if(instate)
       state = *instate;
    else
    {
-      state.x = source->x;
-      state.y = source->y;
-      state.z = source->z - source->floorclip + (source->height >> 1) +
-         8 * FRACUNIT;
-      state.groupid = source->groupid;
+      state.x = params.thing->x;
+      state.y = params.thing->y;
+      state.z = params.thing->z - params.thing->floorclip +
+      (params.thing->height >> 1) + 8 * FRACUNIT;
+      state.groupid = params.thing->groupid;
       state.prev = nullptr;
       state.origindist = 0;
       state.reclevel = 0;
@@ -469,13 +438,22 @@ ShootContext::ShootContext(Mobj *source, angle_t inangle, fixed_t distance,
 //
 // Portal-aware bullet attack
 //
-void CAM_LineAttack(Mobj *source, angle_t angle, fixed_t distance,
-   fixed_t slope, int damage)
+void CAM_LineAttack(Mobj *source,
+                    angle_t angle,
+                    fixed_t distance,
+                    fixed_t slope,
+                    int damage,
+                    size_t puffidx)
 {
-   ShootContext::lineAttack(source, angle, distance, slope, damage, nullptr);
+   edefstructvar(ShootContext::params_t, params);
+   params.thing = source;
+   params.angle = angle;
+   params.attackrange = distance;
+   params.aimslope = slope;
+   params.damage = damage;
+   params.puffidx = puffidx;
+   ShootContext::lineAttack(params, nullptr);
 }
-
-
 
 // EOF
 

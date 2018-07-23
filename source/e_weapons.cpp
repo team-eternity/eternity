@@ -44,7 +44,6 @@
 #include "e_things.h" // TODO: Move E_SplitTypeAndState and remove this include?
 #include "e_weapons.h"
 #include "metaapi.h"
-#include "m_avltree.h"
 
 #include "d_dehtbl.h"
 #include "d_items.h"
@@ -175,12 +174,11 @@ cfg_opt_t edf_wdelta_opts[] =
 //
 WeaponSlotTree *weaponslots[NUMWEAPONSLOTS];
 
-// The structure that provides the basis for the AVL tree used for
-// checking selection order. It's used due to its speed of access
-// over red-black trees, at the cost of slower mutation times.
-using selectordertree_t = AVLTree<int, weaponinfo_t>;
-using selectordernode_t = selectordertree_t::avlnode_t;
-static selectordertree_t *selectordertree = nullptr;
+//
+// The global select order tree, used to prioritise weapons and
+// is the way of objectively figuring out which weapon is "best".
+//
+static SelectOrderTree *selectordertree = nullptr;
 
 //=============================================================================
 //
@@ -232,7 +230,7 @@ static
 //
 // Obtain a weaponinfo_t structure for its ID number.
 //
-weaponinfo_t *E_WeaponForID(int id)
+weaponinfo_t *E_WeaponForID(const int id)
 {
    return e_WeaponIDHash.objectForKey(id);
 }
@@ -248,7 +246,7 @@ weaponinfo_t *E_WeaponForName(const char *name)
 //
 // Obtain a weaponinfo_t structure by name.
 //
-weaponinfo_t *E_WeaponForDEHNum(int dehnum)
+weaponinfo_t *E_WeaponForDEHNum(const int dehnum)
 {
    return e_WeaponDehHash.objectForKey(dehnum);
 }
@@ -285,7 +283,7 @@ static weapontype_t E_getWeaponNumForName(const char *name)
 // Check if the weaponsec in the slotnum is currently equipped
 // DON'T CALL THIS IN NEW CODE, IT EXISTS SOLELY FOR COMPAT.
 //
-bool E_WeaponIsCurrentDEHNum(player_t *player, const int dehnum)
+bool E_WeaponIsCurrentDEHNum(const player_t *player, const int dehnum)
 {
    const weaponinfo_t *weapon = E_WeaponForDEHNum(dehnum);
    return weapon ? player->readyweapon->id == weapon->id : false;
@@ -294,7 +292,7 @@ bool E_WeaponIsCurrentDEHNum(player_t *player, const int dehnum)
 //
 // Convenience function to check if a player owns a weapon
 //
-bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon)
+bool E_PlayerOwnsWeapon(const player_t *player, const weaponinfo_t *weapon)
 {
    return weapon ? E_GetItemOwnedAmount(player, weapon->tracker) : false;
 }
@@ -302,7 +300,7 @@ bool E_PlayerOwnsWeapon(player_t *player, weaponinfo_t *weapon)
 //
 // Convenience function to check if a player owns the weapon specific by dehnum
 //
-bool E_PlayerOwnsWeaponForDEHNum(player_t *player, int dehnum)
+bool E_PlayerOwnsWeaponForDEHNum(const player_t *player, const int dehnum)
 {
    return E_PlayerOwnsWeapon(player, E_WeaponForDEHNum(dehnum));
 }
@@ -311,7 +309,7 @@ bool E_PlayerOwnsWeaponForDEHNum(player_t *player, int dehnum)
 // Checks if a player owns a weapon in the provided slot, useful for things like the
 // Doom weapon-number widget
 //
-bool E_PlayerOwnsWeaponInSlot(player_t *player, int slot)
+bool E_PlayerOwnsWeaponInSlot(const player_t *player, const int slot)
 {
    if(!player->pclass->weaponslots[slot])
       return false;
@@ -329,29 +327,31 @@ bool E_PlayerOwnsWeaponInSlot(player_t *player, int slot)
 //
 // If it doesn't have an alt atkstate, it can't have an alt fire
 //
-bool E_WeaponHasAltFire(weaponinfo_t *wp)
+bool E_WeaponHasAltFire(const weaponinfo_t *wp)
 {
    return wp->atkstate_alt != E_SafeState(S_NULL);
 }
 
-void E_GiveWeapon(player_t *player, weaponinfo_t *weapon)
+//
+// Give a player a weapon if they don't own it
+//
+void E_GiveWeapon(player_t *player, const weaponinfo_t *weapon)
 {
    if(!E_PlayerOwnsWeapon(player, weapon))
-      E_GiveInventoryItem(player, weapon->tracker, 1);
+      E_GiveInventoryItem(player, weapon->tracker);
 }
 
 //
 // Give the player all class weapons
-// TODO: Consider the global "weaponslots" variable
 //
 void E_GiveAllClassWeapons(player_t *player)
 {
-   for(auto &currslot : player->pclass->weaponslots)
+   for(weaponslot_t *&slot : player->pclass->weaponslots)
    {
-      if(!currslot)
+      if(!slot)
          continue;
 
-      BDListItem<weaponslot_t> *weaponslot = E_FirstInSlot(currslot);
+      BDListItem<weaponslot_t> *weaponslot = E_FirstInSlot(slot);
       do
       {
          E_GiveWeapon(player, weaponslot->bdObject->weapon);
@@ -363,16 +363,25 @@ void E_GiveAllClassWeapons(player_t *player)
 //
 // Returns whether or not a weapon is the powered (tomed) version of another weapon
 //
-bool E_IsPoweredVariant(weaponinfo_t *wp)
+bool E_IsPoweredVariant(const weaponinfo_t *wp)
 {
    // wp->sisterWeapon is guaranteed to be != nullptr elsewhere
    return wp && wp->flags & WPF_POWEREDUP;
 }
 
 //
+// Returns whether or not a weapon is the powered (tomed) version of a specific weapon
+//
+bool E_IsPoweredVariantOf(const weaponinfo_t *untomed, const weaponinfo_t *tomed)
+{
+   return untomed && untomed->sisterWeapon &&
+          untomed->sisterWeapon == tomed && tomed->flags & WPF_POWEREDUP;
+}
+
+//
 // Gets the first weapon in the given slot
 //
-BDListItem<weaponslot_t> *E_FirstInSlot(weaponslot_t *dummyslot)
+BDListItem<weaponslot_t> *E_FirstInSlot(const weaponslot_t *dummyslot)
 {
    // This should NEVER happen
    if(dummyslot->links.bdNext->isDummy())
@@ -384,7 +393,7 @@ BDListItem<weaponslot_t> *E_FirstInSlot(weaponslot_t *dummyslot)
 //
 // Gets the last weapon in the slot
 //
-BDListItem<weaponslot_t> *E_LastInSlot(weaponslot_t *dummyslot)
+BDListItem<weaponslot_t> *E_LastInSlot(const weaponslot_t *dummyslot)
 {
    // This should NEVER happen
    if(dummyslot->links.bdPrev->isDummy())
@@ -396,9 +405,13 @@ BDListItem<weaponslot_t> *E_LastInSlot(weaponslot_t *dummyslot)
 //
 // Looks for the given weapon  in an indexed slot
 //
-weaponslot_t *E_FindEntryForWeaponInSlot(player_t *player, weaponinfo_t *wp, int slot)
+static weaponslot_t *E_findEntryForWeaponInSlot(const player_t *player, const weaponinfo_t *wp,
+                                                const weaponslot_t *slot)
 {
-   auto baseslot = E_FirstInSlot(player->pclass->weaponslots[slot]);
+   if(slot == nullptr)
+      return nullptr;
+
+   auto baseslot = E_FirstInSlot(slot);
 
    // Try finding the player's currently-equipped weapon.
    while(!baseslot->isDummy())
@@ -413,15 +426,20 @@ weaponslot_t *E_FindEntryForWeaponInSlot(player_t *player, weaponinfo_t *wp, int
    return nullptr;
 }
 
+weaponslot_t *E_FindEntryForWeaponInSlotIndex(const player_t *player, const weaponinfo_t *wp,
+                                              const int slotindex)
+{
+   return E_findEntryForWeaponInSlot(player, wp, player->pclass->weaponslots[slotindex]);
+}
 //
 // Finds the first instance of a weapon in a player's weaponslots
 //
-weaponslot_t *E_FindFirstWeaponSlot(player_t *player, weaponinfo_t *wp)
+weaponslot_t *E_FindFirstWeaponSlot(const player_t *player, const weaponinfo_t *wp)
 {
-   for(int i = 0; i < NUMWEAPONSLOTS; i++)
+   for(const weaponslot_t *const &slot : player->pclass->weaponslots)
    {
       weaponslot_t *ret;
-      if((ret = E_FindEntryForWeaponInSlot(player, wp, i)) != nullptr)
+      if((ret = E_findEntryForWeaponInSlot(player, wp, slot)) != nullptr)
          return ret;
    }
    return nullptr;
@@ -434,10 +452,11 @@ weaponslot_t *E_FindFirstWeaponSlot(player_t *player, weaponinfo_t *wp)
 //
 
 //
-// Perform an in-order traversal of the select order tree
+// Perform an augmented in-order traversal of the select order tree
 // to try and find the best weapon the player can fire.
 //
-static weaponinfo_t *E_findBestWeapon(player_t *player, selectordernode_t *node)
+static weaponinfo_t *E_findBestWeapon(const player_t *player,
+                                      const SelectOrderNode *node)
 {
    weaponinfo_t *ret = nullptr;
    if(node == nullptr)
@@ -447,6 +466,8 @@ static weaponinfo_t *E_findBestWeapon(player_t *player, selectordernode_t *node)
       return ret;
    if(E_PlayerOwnsWeapon(player, node->object) && P_WeaponHasAmmo(player, node->object))
       return node->object;
+   if(node->next && (ret = E_findBestWeapon(player, node->next)))
+      return ret;
    if(node->right && (ret = E_findBestWeapon(player, node->right)))
       return ret;
 
@@ -458,17 +479,18 @@ static weaponinfo_t *E_findBestWeapon(player_t *player, selectordernode_t *node)
 // Initial function to call the function that recursively finds the
 // best weapon the player owns that they have the ammo to fire
 //
-weaponinfo_t *E_FindBestWeapon(player_t *player)
+weaponinfo_t *E_FindBestWeapon(const player_t *player)
 {
    return E_findBestWeapon(player, selectordertree->root);
 }
 
 //
-// Perform an in-order traversal of the select order tree
+// Perform an augmented in-order traversal of the select order tree
 // to try and find the best weapon the player can fire.
 //
-static weaponinfo_t *E_findBestWeaponUsingAmmo(player_t *player, itemeffect_t *ammo,
-                                               selectordernode_t *node)
+static weaponinfo_t *E_findBestWeaponUsingAmmo(const player_t *player,
+                                               const itemeffect_t *ammo,
+                                               const SelectOrderNode *node)
 {
    bool correctammo;
    weaponinfo_t *ret = nullptr, *temp = node->object;
@@ -484,6 +506,8 @@ static weaponinfo_t *E_findBestWeaponUsingAmmo(player_t *player, itemeffect_t *a
       return ret;
    if(E_PlayerOwnsWeapon(player, temp) && correctammo && P_WeaponHasAmmo(player, temp))
       return temp;
+   if(node->next && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->next)))
+      return ret;
    if(node->right && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->right)))
       return ret;
 
@@ -495,7 +519,8 @@ static weaponinfo_t *E_findBestWeaponUsingAmmo(player_t *player, itemeffect_t *a
 // Initial function to call the function that recursively finds the
 // best weapon the player owns that has the provided primary ammo
 //
-weaponinfo_t *E_FindBestWeaponUsingAmmo(player_t *player, itemeffect_t *ammo)
+weaponinfo_t *E_FindBestWeaponUsingAmmo(const player_t *player,
+                                        const itemeffect_t *ammo)
 {
    return E_findBestWeaponUsingAmmo(player, ammo, selectordertree->root);
 }
@@ -503,7 +528,7 @@ weaponinfo_t *E_FindBestWeaponUsingAmmo(player_t *player, itemeffect_t *ammo)
 //
 // Gets a pointer to the counter at a given index for a given player's readyweapon
 //
-int *E_GetIndexedWepCtrForPlayer(player_t *player, int index)
+int *E_GetIndexedWepCtrForPlayer(const player_t *player, int index)
 {
    return WeaponCounterTree::getIndexedCounterForPlayer(player, index);
 }
@@ -520,7 +545,8 @@ int *E_GetIndexedWepCtrForPlayer(player_t *player, int index)
 //
 // Adds a state to the mobjinfo metatable.
 //
-static void E_AddMetaState(weaponinfo_t *wi, state_t *state, const char *name)
+static void E_AddMetaState(const weaponinfo_t *wi, state_t *state,
+                           const char *name)
 {
    wi->meta->addObject(new MetaState(name, state));
 }
@@ -557,7 +583,7 @@ enum wepstatetypes_e
 // Gets a state that is stored inside an weaponinfo metatable.
 // Returns null if no such object exists.
 //
-static MetaState *E_GetMetaState(weaponinfo_t *wi, const char *name)
+static MetaState *E_GetMetaState(const weaponinfo_t *wi, const char *name)
 {
    return wi->meta->getObjectKeyAndTypeEx<MetaState>(name);
 }
@@ -567,7 +593,7 @@ static MetaState *E_GetMetaState(weaponinfo_t *wi, const char *name)
 // is a match for that field's corresponding DECORATE label. Returns null
 // if the name is not a match for a native state field.
 //
-int *E_GetNativeWepStateLoc(weaponinfo_t *wi, const char *label)
+static int *E_getNativeWepStateLoc(weaponinfo_t *wi, const char *label)
 {
    int nativenum = E_StrToNumLinear(nativeWepStateLabels, NUMNATIVEWSTATES, label);
    int *ret = nullptr;
@@ -604,7 +630,7 @@ state_t *E_GetStateForWeaponInfo(weaponinfo_t *wi, const char *label)
    // check metastates
    if((ms = E_GetMetaState(wi, label)))
       ret = ms->state;
-   else if((nativefield = E_GetNativeWepStateLoc(wi, label)))
+   else if((nativefield = E_getNativeWepStateLoc(wi, label)))
    {
       // only if not S_NULL
       if(*nativefield != NullStateNum)
@@ -619,7 +645,7 @@ state_t *E_GetStateForWeaponInfo(weaponinfo_t *wi, const char *label)
 // by name. Returns null otherwise. Self-identity is *not* considered
 // inheritance.
 //
-weaponinfo_t *E_IsWeaponInfoDescendantOf(weaponinfo_t *wi, const char *type)
+static weaponinfo_t *E_isWeaponInfoDescendantOf(const weaponinfo_t *wi, const char *type)
 {
    weaponinfo_t *curwi = wi->parent;
    weapontype_t targettype = E_WeaponNumForName(type);
@@ -639,7 +665,7 @@ weaponinfo_t *E_IsWeaponInfoDescendantOf(weaponinfo_t *wi, const char *type)
 //
 // Deal with unresolved goto entries in the DECORATE state object.
 //
-static void E_processDecorateWepGotos(weaponinfo_t *wi, edecstateout_t *dso)
+static void E_processDecorateWepGotos(weaponinfo_t *wi, const edecstateout_t *dso)
 {
    int i;
 
@@ -672,7 +698,7 @@ static void E_processDecorateWepGotos(weaponinfo_t *wi, edecstateout_t *dso)
          if(!strcasecmp(typestr, "super") && wi->parent)
             type = wi->parent;
          else
-            type = E_IsWeaponInfoDescendantOf(wi, typestr);
+            type = E_isWeaponInfoDescendantOf(wi, typestr);
       }
       else
       {
@@ -715,7 +741,7 @@ static void E_processDecorateWepGotos(weaponinfo_t *wi, edecstateout_t *dso)
 //
 // Add all labeled states from a DECORATE state block to the given weaponinfo.
 //
-static void E_processDecorateWepStates(weaponinfo_t *wi, edecstateout_t *dso)
+static void E_processDecorateWepStates(weaponinfo_t *wi, const edecstateout_t *dso)
 {
    int i;
 
@@ -724,7 +750,7 @@ static void E_processDecorateWepStates(weaponinfo_t *wi, edecstateout_t *dso)
       int *nativefield;
 
       // first see if this is a native state
-      if((nativefield = E_GetNativeWepStateLoc(wi, dso->states[i].label)))
+      if((nativefield = E_getNativeWepStateLoc(wi, dso->states[i].label)))
          *nativefield = dso->states[i].state->index;
       else
       {
@@ -743,7 +769,7 @@ static void E_processDecorateWepStates(weaponinfo_t *wi, edecstateout_t *dso)
 //
 // Processes the DECORATE state list in a weapon
 //
-static void E_ProcessDecorateWepStateList(weaponinfo_t *wi, const char *str,
+static void E_processDecorateWepStateList(weaponinfo_t *wi, const char *str,
                                           const char *firststate, bool recursive)
 {
    edecstateout_t *dso;
@@ -771,13 +797,13 @@ static void E_ProcessDecorateWepStateList(weaponinfo_t *wi, const char *str,
 //
 // Process DECORATE-format states
 //
-static void E_ProcessDecorateWepStatesRecursive(cfg_t *weaponsec, int wnum, bool recursive)
+static void E_processDecorateWepStatesRecursive(cfg_t *weaponsec, int wnum, bool recursive)
 {
    cfg_t *displaced;
 
    // 01/02/12: Process displaced sections recursively first.
    if((displaced = cfg_displaced(weaponsec)))
-      E_ProcessDecorateWepStatesRecursive(displaced, wnum, true);
+      E_processDecorateWepStatesRecursive(displaced, wnum, true);
 
    // haleyjd 06/22/10: Process DECORATE state block
    if(cfg_size(weaponsec, ITEM_WPN_STATES) > 0)
@@ -791,7 +817,7 @@ static void E_ProcessDecorateWepStatesRecursive(cfg_t *weaponsec, int wnum, bool
 
       // recursion should process states only if firststate is valid
       if(!recursive || firststate)
-         E_ProcessDecorateWepStateList(weaponinfo[wnum], tempstr, firststate, recursive);
+         E_processDecorateWepStateList(weaponinfo[wnum], tempstr, firststate, recursive);
    }
 
 }
@@ -800,7 +826,7 @@ static void E_ProcessDecorateWepStatesRecursive(cfg_t *weaponsec, int wnum, bool
 //
 // Function to reallocate the weaponinfo array safely.
 //
-static void E_ReallocWeapons(unsigned int numnewweapons)
+static void E_reallocWeapons(unsigned int numnewweapons)
 {
    static int numweaponsalloc = 0;
 
@@ -860,7 +886,7 @@ void E_CollectWeapons(cfg_t *cfg)
       // add space to the weaponinfo array
       curnewweapon = firstnewweapon = NUMWEAPONTYPES;
 
-      E_ReallocWeapons(numweapons);
+      E_reallocWeapons(numweapons);
 
       // set pointers in weaponinfo[] to the proper structures;
       // also set self-referential index member, and allocate a
@@ -948,7 +974,7 @@ static int   weapon_pindex = 0;
 // been inherited during the current inheritance chain. Returns
 // false if the check fails, and true if it succeeds.
 //
-static bool E_CheckWeaponInherit(int pnum)
+static bool E_checkWeaponInherit(int pnum)
 {
    for(int i = 0; i < NUMWEAPONTYPES; i++)
    {
@@ -967,7 +993,7 @@ static bool E_CheckWeaponInherit(int pnum)
 //
 // Adds a type number to the inheritance stack.
 //
-static void E_AddWeaponToPStack(weapontype_t num)
+static void E_addWeaponToPStack(weapontype_t num)
 {
    // Overflow shouldn't happen since it would require cyclic
    // inheritance as well, but I'll guard against it anyways.
@@ -982,7 +1008,7 @@ static void E_AddWeaponToPStack(weapontype_t num)
 // Resets the weaponinfo inheritance stack, setting all the pstack
 // values to -1, and setting pindex back to zero.
 //
-static void E_ResetWeaponPStack()
+static void E_resetWeaponPStack()
 {
    for(int i = 0; i < NUMWEAPONTYPES; i++)
       weapon_pstack[i] = -1;
@@ -993,7 +1019,7 @@ static void E_ResetWeaponPStack()
 //
 // Copies one weaponinfo into another.
 //
-static void E_CopyWeapon(weapontype_t num, weapontype_t pnum)
+static void E_copyWeapon(weapontype_t num, weapontype_t pnum)
 {
    weaponinfo_t *this_wi;
    DLListItem<weaponinfo_t> idlinks, namelinks, dehlinks;
@@ -1037,6 +1063,9 @@ static void E_CopyWeapon(weapontype_t num, weapontype_t pnum)
    this_wi->dehnum      = dehnum;
    this_wi->id          = id;
    this_wi->generation  = generation;
+
+   this_wi->upsound     = estrdup(weaponinfo[pnum]->upsound);
+   this_wi->readysound  = estrdup(weaponinfo[pnum]->readysound);
 
    // tracker inheritance is weird
    //if(!(this_wi->flags & WPF_[TomedVersionOfWeapon]))
@@ -1084,10 +1113,10 @@ static weapontype_t E_resolveParentWeapon(cfg_t *weaponsec, const weapontitlepro
 static void E_insertSelectOrderNode(int sortorder, weaponinfo_t *wp, bool modify)
 {
    if(modify && (wp->intflags & WIF_HASSORTORDER))
-      selectordertree->deleteNode(wp->sortorder);
+      selectordertree->deleteNode(wp->sortorder, wp);
 
    if(selectordertree == nullptr)
-      selectordertree = new selectordertree_t(sortorder, wp);
+      selectordertree = new SelectOrderTree(sortorder, wp);
    else
       selectordertree->insert(sortorder, wp);
 
@@ -1097,7 +1126,7 @@ static void E_insertSelectOrderNode(int sortorder, weaponinfo_t *wp, bool modify
 static void E_insertWeaponSlotNode(int slotindex, fixed_t slotrank, weaponinfo_t *wp, bool modify)
 {
    if(modify && (wp->intflags & WIF_INGLOBALSLOT))
-      weaponslots[wp->defaultslotindex]->deleteNode(wp->defaultslotrank);
+      weaponslots[wp->defaultslotindex]->deleteNode(wp->defaultslotrank, wp);
 
    if(weaponslots[slotindex] == nullptr)
       weaponslots[slotindex] = new WeaponSlotTree(slotrank, wp);
@@ -1150,14 +1179,14 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
          weapontype_t pnum = E_resolveParentWeapon(weaponsec, titleprops); // Why's this here?
 
          // check against cyclic inheritance
-         if(!E_CheckWeaponInherit(pnum))
+         if(!E_checkWeaponInherit(pnum))
          {
             E_EDFLoggedErr(2, "E_processWeapon: cyclic inheritance "
                                "detected in weaponinfo '%s'\n", wp.name);
          }
 
          // add to inheritance stack
-         E_AddWeaponToPStack(pnum);
+         E_addWeaponToPStack(pnum);
 
          // process parent recursively
          // must use cfg_gettsec; note can return null
@@ -1165,7 +1194,7 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
          E_processWeapon(pnum, parent_tngsec, pcfg, true);
 
          // copy parent to this weapon
-         E_CopyWeapon(i, pnum);
+         E_copyWeapon(i, pnum);
 
          // keep track of parent explicitly
          wp.parent = weaponinfo[pnum];
@@ -1333,20 +1362,30 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_UPSOUND);
       sfxinfo_t *tempsfx = E_EDFSoundForName(tempstr);
+      if(wp.upsound)
+      {
+         efree(const_cast<char *>(wp.upsound));
+         wp.upsound = nullptr;
+      }
       if(tempsfx)
-         wp.upsound = tempsfx->dehackednum;
+         wp.upsound = estrdup(tempstr);
    }
 
    if(IS_SET(ITEM_WPN_READYSOUND))
    {
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_READYSOUND);
       sfxinfo_t *tempsfx = E_EDFSoundForName(tempstr);
+      if(wp.readysound)
+      {
+         efree(const_cast<char *>(wp.readysound));
+         wp.readysound = nullptr;
+      }
       if(tempsfx)
-         wp.readysound = tempsfx->dehackednum;
+         wp.readysound = estrdup(tempstr);
    }
 
    // Process DECORATE state block
-   E_ProcessDecorateWepStatesRecursive(weaponsec, i, false);
+   E_processDecorateWepStatesRecursive(weaponsec, i, false);
 }
 
 //
@@ -1375,10 +1414,10 @@ void E_ProcessWeaponInfo(cfg_t *cfg)
       weapontype_t weaponnum = E_WeaponNumForName(name);
 
       // reset the inheritance stack
-      E_ResetWeaponPStack();
+      E_resetWeaponPStack();
 
       // add this weapon to the stack
-      E_AddWeaponToPStack(weaponnum);
+      E_addWeaponToPStack(weaponnum);
 
       E_processWeapon(weaponnum, weaponsec, cfg, true);
 

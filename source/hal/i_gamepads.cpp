@@ -85,13 +85,10 @@ IMPLEMENT_RTTI_TYPE(HALGamePad)
 HALGamePad::HALGamePad()
    : Super(), num(-1), name(), numAxes(0), numButtons(0)
 {
-   // init state and prevstate
-   int i;
-
-   for(i = 0; i < MAXBUTTONS; i++)
-      state.buttons[i] = false;
-   for(i = 0; i < MAXAXES; i++)
-      state.axes[i] = 0.0;
+   for(bool &button : state.buttons)
+      button = false;
+   for(float &axis : state.axes)
+      axis = 0.0;
 
    backupState();
 }
@@ -229,8 +226,8 @@ void I_EnumerateGamePads()
       {
          PODCollection<HALGamePad *> &pads = item->driver->devices;
 
-         for(auto itr = pads.begin(); itr != pads.end(); itr++)
-            masterGamePadList.add(*itr);
+         for(HALGamePad *&pad : pads)
+            masterGamePadList.add(pad);
       }
       ++item;
    }

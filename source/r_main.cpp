@@ -774,10 +774,40 @@ static void R_interpolateViewPoint(player_t *player, fixed_t lerp)
    }
    else
    {
-      viewx     = lerpCoord(lerp, player->mo->prevpos.x,     player->mo->x);
-      viewy     = lerpCoord(lerp, player->mo->prevpos.y,     player->mo->y);
-      viewz     = lerpCoord(lerp, player->prevviewz,         player->viewz);
-      viewangle = lerpAngle(lerp, player->mo->prevpos.angle, player->mo->angle);
+      viewz = lerpCoord(lerp, player->prevviewz, player->viewz);
+      const line_t *pline;
+      const linkdata_t *psec;
+      Mobj *thing = player->mo;
+
+      if((psec = thing->prevpos.ldata))
+      {
+         v2fixed_t orgtarg =
+         {
+            thing->x - psec->deltax,
+            thing->y - psec->deltay
+         };
+         viewx = lerpCoord(lerp, thing->prevpos.x, orgtarg.x);
+         viewy = lerpCoord(lerp, thing->prevpos.y, orgtarg.y);
+         if(((pline = thing->prevpos.portalline) &&
+             P_PointOnLineSide(viewx, viewy, pline)) ||
+            (!pline && FixedMul(viewz - psec->planez,
+                                player->prevviewz - psec->planez) < 0))
+         {
+            // Once it crosses it, we're done
+            thing->prevpos.portalline = nullptr;
+            thing->prevpos.ldata = nullptr;
+            thing->prevpos.x += psec->deltax;
+            thing->prevpos.y += psec->deltay;
+            viewx += psec->deltax;
+            viewy += psec->deltay;
+         }
+      }
+      else
+      {
+         viewx = lerpCoord(lerp, thing->prevpos.x, thing->x);
+         viewy = lerpCoord(lerp, thing->prevpos.y, thing->y);
+      }
+      viewangle = lerpAngle(lerp, thing->prevpos.angle, thing->angle);
       viewpitch = lerpAngle(lerp, player->prevpitch,         player->pitch);
    }
 }

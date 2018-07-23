@@ -41,7 +41,6 @@
 #include "d_io.h"
 #include "d_main.h"
 #include "doomstat.h"
-#include "doomtype.h"
 #include "m_collection.h"
 #include "m_compare.h"
 #include "m_hash.h"
@@ -943,6 +942,18 @@ void E_MetaIntFromCfgInt(MetaTable *meta, cfg_t *cfg, const char *prop, int n, b
 }
 
 //
+// Get MetaFloat from cfg float
+//
+static void E_metaDoubleFromCfgFloat(MetaTable *meta, cfg_t *cfg,
+                                     const char *prop, int n, bool list)
+{
+   if(list && meta->getObjectKeyAndTypeEx<MetaDouble>(prop))
+      meta->addDouble(prop, cfg_getnfloat(cfg, prop, n));
+   else
+      meta->setDouble(prop, cfg_getfloat(cfg, prop));
+}
+
+//
 // E_MetaIntFromCfgBool
 //
 // Utility function.
@@ -972,7 +983,7 @@ void E_MetaIntFromCfgFlag(MetaTable *meta, cfg_t *cfg, const char *prop, int n, 
       meta->setInt(prop, cfg_getflag(cfg, prop));
 }
 
-void E_MetaTableFromCfgMvprop(MetaTable *meta, cfg_t *cfg, const char *prop, bool allowmulti)
+static void E_MetaTableFromCfgMvprop(MetaTable *meta, cfg_t *cfg, const char *prop, bool allowmulti)
 {
    int numprop = cfg_size(cfg, prop);
 
@@ -1056,6 +1067,9 @@ void E_MetaTableFromCfg(cfg_t *cfg, MetaTable *table, MetaTable *prototype)
          case CFGT_INT:
             E_MetaIntFromCfgInt(table, cfg, opt->name, i, list);
             break;
+         case CFGT_FLOAT:
+            E_metaDoubleFromCfgFloat(table, cfg, opt->name, i, list);
+            break;
          case CFGT_STR:
             E_MetaStringFromCfgString(table, cfg, opt->name, i, list);
             break;
@@ -1074,6 +1088,30 @@ void E_MetaTableFromCfg(cfg_t *cfg, MetaTable *table, MetaTable *prototype)
          default:
             break;
          }
+      }
+   }
+}
+
+//
+// Sets flags by looking for + and - prefixed values
+//
+void E_SetFlagsFromPrefixCfg(cfg_t *cfg, unsigned &flags, const dehflags_t *set)
+{
+   for(auto opt = cfg->opts; opt->type != CFGT_NONE; opt++)
+   {
+      if(!cfg_size(cfg, opt->name) || opt->type != CFGT_FLAG)
+         continue;
+      // Look for the name in the set
+      for(const dehflags_t *item = set; item->name; item++)
+      {
+         if(strcasecmp(opt->name, item->name))
+            continue;
+         int v = cfg_getflag(cfg, opt->name);
+         if(v)
+            flags |= item->value;
+         else
+            flags &= ~item->value;
+         break;
       }
    }
 }

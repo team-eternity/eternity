@@ -1,0 +1,53 @@
+pufftype HereticPuffBase
+{
+  +AlwaysPuff
+}
+
+pufftype HereticStaffPuff : HereticPuffBase
+{
+  thingtype     HereticStaffPuff
+  sound         ht_stfhit
+  upspeed       1.0
+  particles     8
+}
+
+pufftype HereticStaffPuff2 : HereticPuffBase
+{
+  thingtype     HereticStaffPuff2
+  sound         ht_stfpow
+}
+
+pufftype HereticGoldWandPuff1 : HereticPuffBase
+{
+  thingtype     HereticGoldWandPuff1
+}
+
+pufftype HereticGoldWandPuff2 : HereticPuffBase
+{
+  thingtype     HereticGoldWandPuff2
+}
+
+pufftype HereticBlasterPuff1 : HereticPuffBase
+{
+  thingtype     HereticBlasterPuff1
+  hitpufftype   HereticBlasterPuff2 
+}
+
+pufftype HereticBlasterPuff2 : HereticPuffBase
+{
+  thingtype     HereticBlasterPuff2
+  sound         ht_blshit
+  zspread       0
+}
+
+pufftype HereticGauntletPuff1 : HereticPuffBase
+{
+  thingtype     HereticGauntletPuff1
+  upspeed       0.8
+}
+
+pufftype HereticGauntletPuff2 : HereticPuffBase
+{
+  thingtype     HereticGauntletPuff2
+  upspeed       0.8
+}

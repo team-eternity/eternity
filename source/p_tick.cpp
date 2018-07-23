@@ -76,11 +76,9 @@ IMPLEMENT_RTTI_TYPE(Thinker)
 //
 void Thinker::InitThinkers(void)
 {
-   int i;
-   
-   for(i = 0; i < NUMTHCLASS; i++)  // killough 8/29/98: initialize threaded lists
-      thinkerclasscap[i].cprev = thinkerclasscap[i].cnext = &thinkerclasscap[i];
-   
+   for(Thinker &thinker : thinkerclasscap)  // killough 8/29/98: initialize threaded lists
+      thinker.cprev = thinker.cnext = &thinker;
+
    thinkercap.prev = thinkercap.next  = &thinkercap;
 }
 
