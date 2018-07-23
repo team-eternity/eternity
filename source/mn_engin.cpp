@@ -592,8 +592,9 @@ int hide_menu = 0;      // hide the menu for a duration of time
 int menutime = 0;
 
 // menu widget for alternate drawer + responder
-menuwidget_t *current_menuwidget = NULL;
+menuwidget_t *current_menuwidget  = nullptr;
 static PODCollection<menuwidget_t *> menuwidget_stack;
+static bool widget_consume_text = false; // consume text after widget is closed
 
 int quickSaveSlot;  // haleyjd 02/23/02: restored from MBF
 
@@ -626,14 +627,15 @@ void MN_PopWidget()
       menuwidget_stack.pop();
 
    if(current_menuwidget)
-      current_menuwidget->prev = NULL;
+      current_menuwidget->prev = nullptr;
 
    // If there's still an active widget, return to it.
    // Otherwise, cancel out.
    if((len = menuwidget_stack.getLength()) > 0)
       current_menuwidget = menuwidget_stack[len - 1];
    else
-      current_menuwidget = NULL;
+      current_menuwidget = nullptr;
+   widget_consume_text = true;
 }
 
 //
@@ -810,6 +812,12 @@ bool MN_Responder(event_t *ev)
    // menu doesn't want keyup events
    if(ev->type == ev_keyup)
       return false;
+
+   if(widget_consume_text && ev->type == ev_text)
+   {
+      widget_consume_text = false;
+      return true;
+   }
 
    if(ev->repeat)
    {
