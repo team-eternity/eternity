@@ -937,13 +937,14 @@ static void ST_DoomFSDrawer()
    qstring tempstr;
    char fontcolor;
 
+   // Health graphic and number display
    V_DrawPatch(3, SCREENHEIGHT - 24, &vbscreen, nfs_health);
    tempstr << HU_HealthColor() << plyr->health;
    V_FontWriteText(hud_fslarge, tempstr.constPtr(),
                    RJUSTIFY(hud_fslarge, tempstr, 3, 7 + nfs_health->width),
                    SCREENHEIGHT - 24, &vbscreen);
 
-
+   // Armour graphic and number display
    tempstr.clear();
    V_DrawPatch(3, SCREENHEIGHT - 12, &vbscreen, nfs_armor);
    tempstr << HU_ArmorColor() << plyr->armorpoints;
@@ -953,8 +954,9 @@ static void ST_DoomFSDrawer()
    V_DrawPatch(40, SCREENHEIGHT - 22, &vbscreen, nfs_divider);
 
 
+   // Weapons display
    tempstr.clear();
-   tempstr << "ARMS  ";
+   tempstr << "ARMS ";
    for(int i = 0; i < NUMWEAPONS; i++)
    {
       if(E_PlayerOwnsWeaponForDEHNum(plyr, i))
@@ -969,6 +971,7 @@ static void ST_DoomFSDrawer()
    }
    V_FontWriteText(hud_fssmall, tempstr.constPtr(), 44, SCREENHEIGHT - 24, &vbscreen);
 
+   // Ammo display
    const int displayoffs = 44 + V_FontStringWidth(hud_fssmall, "AMMO") + 1;
    V_FontWriteText(hud_fssmall, "AMMO", 44, SCREENHEIGHT - 16, &vbscreen);
    if(plyr->readyweapon->ammo != nullptr)
@@ -981,6 +984,7 @@ static void ST_DoomFSDrawer()
       V_FontWriteText(hud_fsmedium, tempstr.constPtr(), displayoffs, SCREENHEIGHT - 16, &vbscreen);
    }
 
+   // Keys display
    V_FontWriteText(hud_fssmall, "KEYS", 44, SCREENHEIGHT - 8, &vbscreen);
    for(int i = 0, x = displayoffs; i < GameModeInfo->numHUDKeys; i++)
    {
@@ -992,6 +996,7 @@ static void ST_DoomFSDrawer()
       }
    }
 
+   // Kill-count, item-count, and secret-count display
    if(!hud_hidestatus)
    {
       tempstr.clear();
