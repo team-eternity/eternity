@@ -24,6 +24,121 @@
 struct vfont_t;
 struct weaponinfo_t;
 
+// HUD styles
+enum hudstyle_e : unsigned int
+{
+   HUD_OFF,
+   HUD_BOOM,
+   HUD_FLAT,
+   HUD_DISTRIB,
+   HUD_GRAPHICAL,
+   HUD_NUMHUDS
+};
+
+// overlay enumeration
+enum overlay_e : unsigned int
+{
+   ol_status,
+   ol_health,
+   ol_armor,
+   ol_weap,
+   ol_ammo,
+   ol_key,
+   ol_frag,
+   NUMOVERLAY
+};
+
+//
+// HUD Overlay Base Class
+//
+// All HUD overlays should inherit this interface.
+//
+class HUDOverlay
+{
+protected:
+   struct
+   {
+      int x, y;
+      bool enabled;
+   } drawerdata[NUMOVERLAY];
+
+   virtual void DrawStatus (int x, int y) = 0;
+   virtual void DrawHealth (int x, int y) = 0;
+   virtual void DrawArmor  (int x, int y) = 0;
+   virtual void DrawWeapons(int x, int y) = 0;
+   virtual void DrawAmmo   (int x, int y) = 0;
+   virtual void DrawKeys   (int x, int y) = 0;
+   virtual void DrawFrags  (int x, int y) = 0;
+
+public:
+   inline void DrawOverlay(overlay_e overlay)
+   {
+      if(!drawerdata[overlay].enabled)
+         return;
+
+      // TODO: Structured binding when we move over to C++17 fully
+      const int x = drawerdata[overlay].x;
+      const int y = drawerdata[overlay].y;
+
+      switch(overlay)
+      {
+      case ol_status:
+         DrawStatus(x, y);
+         break;
+      case ol_health:
+         DrawHealth(x, y);
+         break;
+      case ol_armor:
+         DrawArmor(x, y);
+         break;
+      case ol_weap:
+         DrawWeapons(x, y);
+         break;
+      case ol_ammo:
+         DrawAmmo(x, y);
+         break;
+      case ol_key:
+         DrawKeys(x, y);
+         break;
+      case ol_frag:
+         DrawFrags(x, y);
+         break;
+      default:
+         break;
+      }
+   }
+
+   inline void SetupOverlay(overlay_e o, int x, int y)
+   {
+      drawerdata[o].x = x;
+      drawerdata[o].y = y;
+   }
+
+   void SetOverlayEnabled(overlay_e overlay, bool enabled)
+   {
+      drawerdata[overlay].enabled = enabled;
+   }
+
+   bool GetOverlayEnabled(overlay_e overlay) const
+   {
+      return drawerdata[overlay].enabled;
+   }
+
+   HUDOverlay()
+   {
+      for(auto &data : drawerdata)
+         data = { 0, 0, false };
+   }
+};
+
+// Overlays enumeration
+enum hudoverlay_e : unsigned int
+{
+   HUO_BOOM,
+   HUO_MODERN,
+   HUO_MAXOVERLAYS
+};
+
 int HU_WC_PlayerAmmo(weaponinfo_t *w);
 bool HU_WC_NoAmmo(weaponinfo_t *w);
 int HU_WC_MaxAmmo(weaponinfo_t *w);
