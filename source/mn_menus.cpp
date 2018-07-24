@@ -2771,7 +2771,7 @@ static menuitem_t mn_hud_items[] =
    {it_toggle,     "Obituary color",               "hu_obitcolor"},
    {it_gap},
    {it_info,       "BOOM HUD options"},
-   {it_toggle,     "Display type",                 "hu_overlay"},
+   {it_toggle,     "Display type",                 "hu_overlaystyle"},
    {it_toggle,     "Hide secrets",                 "hu_hidesecrets"},
    {it_end}
 };
@@ -3514,7 +3514,7 @@ static menuitem_t mn_function_items[] =
    {it_binding, "Save game",            "mn_savegame"}, 
    {it_binding, "Load game",            "mn_loadgame"},
    {it_binding, "Volume",               "mn_sound"},
-   {it_binding, "Toggle hud",           "hu_overlay /"},
+   {it_binding, "Toggle hud",           "hu_overlaystyle /"},
    {it_binding, "Quick save",           "quicksave"},
    {it_binding, "End game",             "mn_endgame"},
    {it_binding, "Toggle messages",      "hu_messages /"},

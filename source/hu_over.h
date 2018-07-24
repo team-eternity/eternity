@@ -168,7 +168,7 @@ void HU_OverlayDraw();
 void HU_ToggleHUD();
 void HU_DisableHUD();
 
-extern int hud_overlaystyle;
+extern int hud_overlaylayout;
 extern int hud_enabled;
 extern int hud_hidestatus;
 

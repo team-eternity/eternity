@@ -262,7 +262,7 @@ char HU_ArmorColor()
 #define HUDCOLOR FC_GRAY
 
 // Globals
-int hud_overlaystyle = 1;
+int hud_overlaylayout = 1;
 int hud_enabled      = 1;
 int hud_hidestatus   = 0;
 
@@ -672,7 +672,7 @@ static void HU_overlaySetup()
 
    // now build according to style
 
-   switch(hud_overlaystyle)
+   switch(hud_overlaylayout)
    {
    case HUD_OFF:       // 'off'
    case HUD_GRAPHICAL: // 'graphical' -- haleyjd 01/11/05: this is handled by status bar
@@ -807,8 +807,8 @@ const char *str_style[HUD_NUMHUDS] =
    "graphical",   // haleyjd 01/11/05
 };
 
-VARIABLE_INT(hud_overlaystyle, NULL, HUD_OFF, HUD_GRAPHICAL, str_style);
-CONSOLE_VARIABLE(hu_overlay, hud_overlaystyle, 0) {}
+VARIABLE_INT(hud_overlaylayout, NULL, HUD_OFF, HUD_GRAPHICAL, str_style);
+CONSOLE_VARIABLE(hu_overlaystyle, hud_overlaylayout, 0) {}
 
 VARIABLE_BOOLEAN(hud_hidestatus, NULL, yesno);
 CONSOLE_VARIABLE(hu_hidesecrets, hud_hidestatus, 0) {}

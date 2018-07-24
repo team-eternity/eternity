@@ -661,8 +661,8 @@ default_t defaults[] =
                "Duration of normal Doom messages (ms)"),
    
    //sf : fullscreen hud style
-   DEFAULT_INT("hud_overlaystyle",&hud_overlaystyle, NULL, 1, 0, 4, default_t::wad_yes,
-               "fullscreen hud style"),
+   DEFAULT_INT("hud_overlaylayout",&hud_overlaylayout, NULL, 1, 0, 4, default_t::wad_yes,
+               "fullscreen hud layout"),
 
    DEFAULT_INT("hud_enabled",&hud_enabled, NULL, 1, 0, 1, default_t::wad_yes,
                "fullscreen hud enabled"),
@@ -849,10 +849,10 @@ default_t defaults[] =
 default_or_t HereticDefaultORs[] =
 {
    // misc
-   { "pitched_sounds",   1 }, // pitched sounds should be on
-   { "allowmlook",       1 }, // mlook defaults to on
-   { "wipetype",         2 }, // use crossfade wipe by default
-   { "hud_overlaystyle", 4 }, // use graphical HUD style
+   { "pitched_sounds",    1 }, // pitched sounds should be on
+   { "allowmlook",        1 }, // mlook defaults to on
+   { "wipetype",          2 }, // use crossfade wipe by default
+   { "hud_overlaylayout", 4 }, // use graphical HUD style
    
    // compatibility
    { "comp_terrain",   0 }, // terrain active
