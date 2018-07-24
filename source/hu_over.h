@@ -134,8 +134,8 @@ public:
 // Overlays enumeration
 enum hudoverlay_e : unsigned int
 {
-   HUO_BOOM,
    HUO_MODERN,
+   HUO_BOOM,
    HUO_MAXOVERLAYS
 };
 
@@ -168,6 +168,7 @@ void HU_OverlayDraw();
 void HU_ToggleHUD();
 void HU_DisableHUD();
 
+extern int hud_overlayid;
 extern int hud_overlaylayout;
 extern int hud_enabled;
 extern int hud_hidestatus;

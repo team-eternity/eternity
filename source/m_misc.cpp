@@ -659,6 +659,9 @@ default_t defaults[] =
    // killough 11/98
    DEFAULT_INT("message_timer",&message_timer, NULL, 4000, 0, UL, default_t::wad_no,
                "Duration of normal Doom messages (ms)"),
+
+   DEFAULT_INT("hud_overlayid", &hud_overlayid, NULL, -1, -1, VDR_MAXDRIVERS - 1, default_t::wad_no,
+               "Select HUD overlay (-1 = default, 0 = modern, 1 = boom"),
    
    //sf : fullscreen hud style
    DEFAULT_INT("hud_overlaylayout",&hud_overlaylayout, NULL, 1, 0, 4, default_t::wad_yes,

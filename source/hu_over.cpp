@@ -110,18 +110,18 @@ struct hudoverlayitem_t
 // Driver table
 static hudoverlayitem_t hudOverlayItemTable[HUO_MAXOVERLAYS] =
 {
-   // BOOM HUD Overlay
-   {
-      HUO_BOOM,
-      "BOOM Overlay",
-      &boom_overlay
-   },
-
    // Modern HUD Overlay
    {
       HUO_MODERN,
       "Modern Overlay",
       &modern_overlay
+   },
+
+   // BOOM HUD Overlay
+   {
+      HUO_BOOM,
+      "BOOM Overlay",
+      &boom_overlay
    }
 };
 
@@ -789,7 +789,7 @@ static const char *hud_overlaynames[] =
 };
 
 VARIABLE_INT(hud_overlayid, NULL, -1, HUO_MAXOVERLAYS - 1, hud_overlaynames);
-CONSOLE_VARIABLE(hud_overlayid, hud_overlayid, 0)
+CONSOLE_VARIABLE(hu_overlayid, hud_overlayid, 0)
 {
    hudoverlayitem_t *item = I_defaultHUDOverlay();
    hud_overlayid = item->id;
