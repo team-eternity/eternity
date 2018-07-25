@@ -1008,6 +1008,9 @@
     <ClCompile Include="..\source\hu_boom.cpp">
       <Filter>Source Files\HU_\HU_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\hu_modern.cpp">
+      <Filter>Source Files\HU_\HU_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1791,6 +1794,9 @@
       <Filter>Source Files\E_\E_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\source\hu_boom.h">
+      <Filter>Source Files\HU_\HU_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\hu_modern.h">
       <Filter>Source Files\HU_\HU_ Headers</Filter>
     </ClInclude>
   </ItemGroup>

@@ -28,10 +28,14 @@
 #include "e_weapons.h"
 #include "e_inventory.h"
 #include "hu_boom.h"
-#include "hu_over.h"
-#include "metaqstring.h"
+#include "m_qstr.h"
 #include "v_font.h"
 #include "v_misc.h"
+
+//=============================================================================
+//
+// Internal Defines
+//
 
 // The HUD always displays information on the displayplayer
 #define hu_player (players[displayplayer])
@@ -50,10 +54,6 @@
 // Heads Up Font
 //
 
-// note to programmers from other ports: hu_font is the heads up font
-// *not* the general doom font as it is in the original sources and
-// most ports
-
 //
 // sf: write a text line to x, y
 // haleyjd 01/14/05: now uses vfont engine
@@ -62,28 +62,6 @@ static void HU_WriteText(const char *s, int x, int y)
 {
    if(hud_fontsloaded)
       V_FontWriteText(hud_overfont, s, x, y, &subscreen43);
-}
-
-//
-// HU_StringWidth
-//
-// Calculates the width in pixels of a string in heads-up font
-// haleyjd 01/14/05: now uses vfont engine
-//
-int HU_StringWidth(const char *s)
-{
-   return V_FontStringWidth(hud_overfont, s);
-}
-
-//
-// HU_StringHeight
-//
-// Calculates the height in pixels of a string in heads-up font
-// haleyjd 01/14/05: now uses vfont engine
-//
-int HU_StringHeight(const char *s)
-{
-   return V_FontStringHeight(hud_overfont, s);
 }
 
 #define BARSIZE 15
@@ -128,8 +106,24 @@ static void HU_textBar(qstring &s, int pct)
 #define GAP 40
 
 //
-// HU_drawHealth
+// Draw the status (number of kills etc)
 //
+void BoomHUD::DrawStatus(int x, int y)
+{
+   qstring tempstr;
+
+   HU_WriteText(HUDCOLOR "Status", x, y); // draw, leave a gap
+   x += GAP;
+
+   // haleyjd 06/14/06: restored original colors to K/I/S
+   tempstr
+      << FC_RED  "K " FC_GREEN << hu_player.killcount << '/' << totalkills << ' '
+      << FC_BLUE "I " FC_GREEN << hu_player.itemcount << '/' << totalitems << ' '
+      << FC_GOLD "S " FC_GREEN << hu_player.secretcount << '/' << totalsecret;
+
+   HU_WriteText(tempstr.constPtr(), x, y);
+}
+
 void BoomHUD::DrawHealth(int x, int y)
 {
    qstring tempstr;
@@ -152,9 +146,7 @@ void BoomHUD::DrawHealth(int x, int y)
 
 
 //
-// HU_drawArmor
-//
-// Very similar to drawhealth.
+// Very similar to DrawHealth.
 //
 void BoomHUD::DrawArmor(int x, int y)
 {
@@ -175,8 +167,6 @@ void BoomHUD::DrawArmor(int x, int y)
    HU_WriteText(tempstr.constPtr(), x, y);
 }
 
-//
-// HU_drawAmmo
 //
 // Drawing Ammo
 //
@@ -207,8 +197,6 @@ void BoomHUD::DrawAmmo(int x, int y)
 }
 
 //
-// HU_drawWeapons
-//
 // Weapons List
 //
 void BoomHUD::DrawWeapons(int x, int y)
@@ -235,8 +223,6 @@ void BoomHUD::DrawWeapons(int x, int y)
 extern patch_t *keys[NUMCARDS+3];
 
 //
-// HU_drawKeys
-//
 // Draw the keys
 //
 void BoomHUD::DrawKeys(int x, int y)
@@ -257,8 +243,6 @@ void BoomHUD::DrawKeys(int x, int y)
 }
 
 //
-// HU_drawFrags
-//
 // Draw the Frags
 //
 void BoomHUD::DrawFrags(int x, int y)
@@ -269,27 +253,6 @@ void BoomHUD::DrawFrags(int x, int y)
    x += GAP;
 
    tempstr << HUDCOLOR << hu_player.totalfrags;
-   HU_WriteText(tempstr.constPtr(), x, y);
-}
-
-//
-// HU_drawStatus
-//
-// Draw the status (number of kills etc)
-//
-void BoomHUD::DrawStatus(int x, int y)
-{
-   qstring tempstr;
-
-   HU_WriteText(HUDCOLOR "Status", x, y); // draw, leave a gap
-   x += GAP;
-
-   // haleyjd 06/14/06: restored original colors to K/I/S
-   tempstr
-      << FC_RED  "K " FC_GREEN << hu_player.killcount   << '/' << totalkills << ' '
-      << FC_BLUE "I " FC_GREEN << hu_player.itemcount   << '/' << totalitems << ' '
-      << FC_GOLD "S " FC_GREEN << hu_player.secretcount << '/' << totalsecret;
-
    HU_WriteText(tempstr.constPtr(), x, y);
 }
 
