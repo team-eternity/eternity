@@ -342,7 +342,6 @@ void BoomHUD::Setup()
    }
 }
 
-
 // The solitary instance of the BOOM HUD overlay
 BoomHUD boom_overlay;
 

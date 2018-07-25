@@ -239,6 +239,8 @@ void ModernHUD::DrawKeys(int x, int y)
 //
 void ModernHUD::DrawFrags(int x, int y)
 {
+   qstring tempstr = qstring(FC_GRAY "FRAG ") << hu_player.totalfrags;
+   V_FontWriteText(hud_fssmall, tempstr.constPtr(), x, y); // draw then leave a gap
 }
 
 //
@@ -246,7 +248,7 @@ void ModernHUD::DrawFrags(int x, int y)
 //
 void ModernHUD::Setup()
 {
-   int x, y;
+   int y;
 
    // decide where to put all the widgets
 
@@ -291,13 +293,13 @@ void ModernHUD::Setup()
       break;
 
    case HUD_FLAT: // all at bottom of screen
-
       SetupOverlay(ol_status, SCREENWIDTH - 3, SCREENHEIGHT - 24);
       SetupOverlay(ol_health, 3,  SCREENHEIGHT - 24);
       SetupOverlay(ol_armor,  3,  SCREENHEIGHT - 12);
       SetupOverlay(ol_weap,   44, SCREENHEIGHT - 24);
       SetupOverlay(ol_ammo,   44, SCREENHEIGHT - 16);
       SetupOverlay(ol_key,    44, SCREENHEIGHT - 8);
+      SetupOverlay(ol_frag,   44, SCREENHEIGHT - 8);
       break;
 
    case HUD_DISTRIB: // similar to boom 'distributed' style
@@ -320,8 +322,7 @@ void ModernHUD::Setup()
    }
 }
 
-
-
+// The solitary instance of the modern HUD overlay
 ModernHUD modern_overlay;
 
 // EOF
