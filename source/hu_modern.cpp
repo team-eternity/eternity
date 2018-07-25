@@ -80,7 +80,14 @@ void ModernHUD::DrawStatus(int x, int y)
 {
    qstring tempstr;
 
-   if(hud_overlaylayout == HUD_BOOM || hud_overlaylayout == HUD_DISTRIB)
+   if(hud_overlaylayout == HUD_BOOM)
+   {
+      tempstr << FC_RED   "K" FC_GRAY "  " << hu_player.killcount   << " / " << totalkills <<
+                 FC_BLUE " I" FC_GRAY "  " << hu_player.itemcount   << " / " << totalitems <<
+                 FC_GOLD " S" FC_GRAY "  " << hu_player.secretcount << " / " << totalsecret;
+      V_FontWriteText(hud_fssmall, tempstr.constPtr(), x, y, &vbscreen);
+   }
+   else if(hud_overlaylayout == HUD_DISTRIB)
    {
       tempstr << FC_RED "KILLS" FC_GRAY "  " << hu_player.killcount << " / " << totalkills;
       V_FontWriteText(hud_fssmall, tempstr.constPtr(), x, y - 16, &vbscreen);
@@ -108,7 +115,24 @@ void ModernHUD::DrawHealth(int x, int y)
 {
    qstring tempstr;
 
-   if(hud_overlaylayout != HUD_DISTRIB)
+   if(hud_overlaylayout == HUD_BOOM)
+   {
+      //V_DrawPatch(x, y, &vbscreen, nfs_health);
+      V_FontWriteText(hud_fssmall, "HLTH ", x, y, &vbscreen);
+      x += V_FontStringWidth(hud_fssmall, "HLTH ");
+      tempstr << HU_HealthColor() << hu_player.health;
+      V_FontWriteText(hud_fsmedium, tempstr.constPtr(),
+                      RJustify(hud_fsmedium, tempstr, 3, x),
+                      y, &vbscreen);
+   }
+   else if(hud_overlaylayout == HUD_DISTRIB)
+   {
+      V_DrawPatch(x - nfs_health->width, y, &vbscreen, nfs_health);
+      tempstr << HU_HealthColor() << hu_player.health;
+      FontWriteTextRAlign(hud_fslarge, tempstr.constPtr(),
+                          x - (4 + nfs_health->width), y, &vbscreen);
+   }
+   else
    {
       V_DrawPatch(x, y, &vbscreen, nfs_health);
       tempstr << HU_HealthColor() << hu_player.health;
@@ -117,13 +141,6 @@ void ModernHUD::DrawHealth(int x, int y)
                       y, &vbscreen);
       if(hud_overlaylayout == HUD_FLAT)
          V_DrawPatch(x + 37, y + 1, &vbscreen, nfs_divider);
-   }
-   else
-   {
-      V_DrawPatch(x - nfs_health->width, y, &vbscreen, nfs_health);
-      tempstr << HU_HealthColor() << hu_player.health;
-      FontWriteTextRAlign(hud_fslarge, tempstr.constPtr(),
-                          x - (4 + nfs_health->width), y, &vbscreen);
    }
 }
 
@@ -134,20 +151,30 @@ void ModernHUD::DrawArmor(int x, int y)
 {
    qstring tempstr;
 
-   if(hud_overlaylayout != HUD_DISTRIB)
+   if(hud_overlaylayout == HUD_BOOM)
+   {
+      //V_DrawPatch(x, y, &vbscreen, nfs_armor);
+      V_FontWriteText(hud_fssmall, "ARMR ", x, y, &vbscreen);
+      x += V_FontStringWidth(hud_fssmall, "ARMR ");
+      tempstr << HU_ArmorColor() << hu_player.armorpoints;
+      V_FontWriteText(hud_fsmedium, tempstr.constPtr(),
+                      RJustify(hud_fsmedium, tempstr, 3, x),
+                      y, &vbscreen);
+   }
+   else if(hud_overlaylayout == HUD_DISTRIB)
+   {
+      V_DrawPatch(x - nfs_armor->width, y, &vbscreen, nfs_armor);
+      tempstr << HU_ArmorColor() << hu_player.armorpoints;
+      FontWriteTextRAlign(hud_fslarge, tempstr.constPtr(),
+                          x - (4 + nfs_armor->width), y, &vbscreen);
+   }
+   else
    {
       V_DrawPatch(x, y, &vbscreen, nfs_armor);
       tempstr << HU_ArmorColor() << hu_player.armorpoints;
       V_FontWriteText(hud_fslarge, tempstr.constPtr(),
                       RJustify(hud_fslarge, tempstr, 3, x + 4 + nfs_armor->width),
                       y, &vbscreen);
-   }
-   else
-   {
-      V_DrawPatch(x - nfs_armor->width, y, &vbscreen, nfs_armor);
-      tempstr << HU_ArmorColor() << hu_player.armorpoints;
-      FontWriteTextRAlign(hud_fslarge, tempstr.constPtr(),
-                          x - (4 + nfs_armor->width), y, &vbscreen);
    }
 }
 
@@ -279,7 +306,7 @@ void ModernHUD::Setup()
    case HUD_BOOM: // 'bottom left' / 'BOOM' style
       y = SCREENHEIGHT - 8;
 
-      for(int i = NUMOVERLAY - 1; i >= ol_weap; --i)
+      for(int i = NUMOVERLAY - 1; i >= 0; --i)
       {
          if(GetOverlayEnabled(static_cast<overlay_e>(i)))
          {
@@ -287,9 +314,9 @@ void ModernHUD::Setup()
             y -= 8;
          }
       }
-      SetupOverlay(ol_armor,  3, y - 4);
+      /*SetupOverlay(ol_armor,  3, y - 4);
       SetupOverlay(ol_health, 3, y - 16);
-      SetupOverlay(ol_status, 3, y - 24);
+      SetupOverlay(ol_status, 3, y - 24);*/
       break;
 
    case HUD_FLAT: // all at bottom of screen

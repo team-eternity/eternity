@@ -309,7 +309,7 @@ void BoomHUD::Setup()
       // haleyjd 06/14/06: rewrote to restore a sensible ordering
       for(int i = NUMOVERLAY - 1; i >= 0; --i)
       {
-         if(GetOverlayEnabled(static_cast<overlay_e>(i)))
+         if(drawerdata[i].enabled)
          {
             SetupOverlay(static_cast<overlay_e>(i), x, y);
             y -= 8;
