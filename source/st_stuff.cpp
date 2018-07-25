@@ -34,24 +34,20 @@
 #include "doomdef.h"
 #include "doomstat.h"
 #include "dstrings.h"
-#include "e_fonts.h"
 #include "e_inventory.h"
 #include "e_lib.h"
 #include "e_weapons.h"
 #include "hu_over.h"    // haleyjd
-#include "i_system.h"
 #include "i_video.h"
 #include "metaapi.h"
 #include "m_cheat.h"
 #include "m_random.h"
 #include "p_skin.h"
 #include "r_main.h"
-#include "r_patch.h"
 #include "s_sound.h"
 #include "sounds.h"
 #include "st_lib.h"
 #include "st_stuff.h"
-#include "v_font.h"
 #include "v_misc.h"
 #include "v_patchfmt.h"
 #include "v_video.h"
@@ -910,23 +906,8 @@ static void ST_DoomDrawer()
    ST_doRefresh();     // If just after ST_Start(), refresh all
 }
 
-static patch_t *nfs_armor;
-static patch_t *nfs_divider;
-static patch_t *nfs_health;
-
-char       *hud_fssmallname;
-char       *hud_fsmediumname;
-char       *hud_fslargename;
-vfont_t    *hud_fssmall;
-vfont_t    *hud_fsmedium;
-vfont_t    *hud_fslarge;
-static bool st_fontsloaded = false;
-
 #define ST_ALPHA (st_fsalpha * FRACUNIT / 100)
 
-#define RJUSTIFY(font, qstr, maxlen, x)  (x + \
-                                          ((V_FontMaxWidth(font) * maxlen) - \
-                                          (V_FontStringWidth(font, qstr.constPtr()))))
 //
 // ST_DoomFSDrawer
 //
@@ -934,87 +915,36 @@ static bool st_fontsloaded = false;
 //
 static void ST_DoomFSDrawer()
 {
-   qstring tempstr;
-   char fontcolor;
+   // possibly update widget positions
+   ST_moveWidgets(true);
 
-   // Health graphic and number display
-   V_DrawPatch(3, SCREENHEIGHT - 24, &vbscreen, nfs_health);
-   tempstr << HU_HealthColor() << plyr->health;
-   V_FontWriteText(hud_fslarge, tempstr.constPtr(),
-                   RJUSTIFY(hud_fslarge, tempstr, 3, 7 + nfs_health->width),
-                   SCREENHEIGHT - 24, &vbscreen);
+   // draw graphics
 
-   // Armour graphic and number display
-   tempstr.clear();
-   V_DrawPatch(3, SCREENHEIGHT - 12, &vbscreen, nfs_armor);
-   tempstr << HU_ArmorColor() << plyr->armorpoints;
-   V_FontWriteText(hud_fslarge, tempstr.constPtr(),
-                   RJUSTIFY(hud_fslarge, tempstr, 3, 7 + nfs_armor->width),
-                   SCREENHEIGHT - 12, &vbscreen);
-   V_DrawPatch(40, SCREENHEIGHT - 22, &vbscreen, nfs_divider);
+   // health
+   V_DrawPatchTL(ST_FSGFX_X, 152, &subscreen43, fs_health, NULL, ST_ALPHA);
+   
+   // armor
+   fixed_t armorclass = 0;
+   if(plyr->armordivisor)
+      armorclass = (plyr->armorfactor * FRACUNIT) / plyr->armordivisor;
+   if(armorclass > FRACUNIT/3)
+      V_DrawPatchTL(ST_FSGFX_X, ST_FS_BY, &subscreen43, fs_armorb, NULL, ST_ALPHA);
+   else
+      V_DrawPatchTL(ST_FSGFX_X, ST_FS_BY, &subscreen43, fs_armorg, NULL, ST_ALPHA);
 
+   ST_updateWidgets();
 
-   // Weapons display
-   tempstr.clear();
-   tempstr << "ARMS ";
-   for(int i = 0; i < NUMWEAPONS; i++)
+   // ammo
+   itemeffect_t *ammo = plyr->readyweapon->ammo;
+   if(ammo)
    {
-      if(E_PlayerOwnsWeaponForDEHNum(plyr, i))
-      {
-         const weaponinfo_t *weapon = E_WeaponForDEHNum(i);
-         fontcolor = weapon->ammo ? HU_WeapColor(E_WeaponForDEHNum(i)) : *FC_GRAY;
-      }
-      else
-         fontcolor = *FC_CUSTOM2;
-
-      tempstr << fontcolor << i + 1 << ' ';
-   }
-   V_FontWriteText(hud_fssmall, tempstr.constPtr(), 44, SCREENHEIGHT - 24, &vbscreen);
-
-   // Ammo display
-   const int displayoffs = 44 + V_FontStringWidth(hud_fssmall, "AMMO") + 1;
-   V_FontWriteText(hud_fssmall, "AMMO", 44, SCREENHEIGHT - 16, &vbscreen);
-   if(plyr->readyweapon->ammo != nullptr)
-   {
-      tempstr.clear();
-      const int ammo = HU_WC_PlayerAmmo(plyr->readyweapon);
-      const int maxammo = HU_WC_MaxAmmo(plyr->readyweapon);
-      fontcolor = HU_WeapColor(plyr->readyweapon);
-      tempstr << fontcolor << ammo << FC_GRAY " / " << fontcolor << maxammo;
-      V_FontWriteText(hud_fsmedium, tempstr.constPtr(), displayoffs, SCREENHEIGHT - 16, &vbscreen);
+      int num = E_StrToNumLinear(st_AmmoForNum, NUMAMMO, ammo->getKey());
+      if(num != NUMAMMO)
+         V_DrawPatchTL(256, ST_FS_BY, &subscreen43, fs_ammo[num], NULL, ST_ALPHA);
    }
 
-   // Keys display
-   V_FontWriteText(hud_fssmall, "KEYS", 44, SCREENHEIGHT - 8, &vbscreen);
-   for(int i = 0, x = displayoffs; i < GameModeInfo->numHUDKeys; i++)
-   {
-      if(E_GetItemOwnedAmountName(plyr, GameModeInfo->cardNames[i]) > 0)
-      {
-         // got that key
-         V_DrawPatch(x, SCREENHEIGHT - 8, &vbscreen, keys[i]);
-         x += 8;
-      }
-   }
-
-   // Kill-count, item-count, and secret-count display
-   if(!hud_hidestatus)
-   {
-      tempstr.clear();
-      tempstr << plyr->killcount << " / " << totalkills << "  " << FC_RED "KILLS";
-      V_FontWriteText(hud_fssmall, tempstr.constPtr(),
-                      SCREENWIDTH - V_FontStringWidth(hud_fssmall, tempstr.constPtr()) - 3,
-                      SCREENHEIGHT - 24, &vbscreen);
-      tempstr.clear();
-      tempstr << plyr->itemcount << " / " << totalitems << "  " << FC_BLUE "ITEMS";
-      V_FontWriteText(hud_fssmall, tempstr.constPtr(),
-                      SCREENWIDTH - V_FontStringWidth(hud_fssmall, tempstr.constPtr()) - 3,
-                      SCREENHEIGHT - 16, &vbscreen);
-      tempstr.clear();
-      tempstr << plyr->secretcount << " / " << totalsecret << "  " << FC_GOLD "SCRTS";
-      V_FontWriteText(hud_fssmall, tempstr.constPtr(),
-                      SCREENWIDTH - V_FontStringWidth(hud_fssmall, tempstr.constPtr()) - 3,
-                      SCREENHEIGHT - 8, &vbscreen);
-   }
+   // draw common number widgets (always refresh since no background)
+   ST_drawCommonWidgets(ST_ALPHA);
 }
 
 //
@@ -1041,7 +971,7 @@ void ST_Drawer(bool fullscreen)
    if(fullscreen && !automapactive)
    {
       // haleyjd: call game mode's fullscreen drawer when 
-      // hud is enabled and hud_overlaylayout is "graphical"
+      // hud is enabled and hud_overlaystyle is "graphical"
       if(fshud)
          StatusBar->FSDrawer();
    }
@@ -1159,10 +1089,6 @@ static void ST_loadGraphics()
       fs_ammo[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
 
-   nfs_armor   = PatchLoader::CacheName(wGlobalDir, "nhud_amr", PU_STATIC);
-   nfs_divider = PatchLoader::CacheName(wGlobalDir, "nhud_div", PU_STATIC);
-   nfs_health  = PatchLoader::CacheName(wGlobalDir, "nhud_hlt", PU_STATIC);
-
    ST_CacheFaces(default_faces, "STF");
 }
 
@@ -1207,24 +1133,9 @@ void ST_CacheFaces(patch_t **faces, const char *facename)
    faces[facenum]   = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
 }
 
-static void ST_loadFonts()
-{
-   if(!(hud_fssmall = E_FontForName(hud_fssmallname)))
-      I_Error("ST_loadFonts: bad EDF hu_font name %s\n", hud_fssmallname);
-
-   if(!(hud_fsmedium = E_FontForName(hud_fsmediumname)))
-      I_Error("ST_loadFonts: bad EDF hu_font name %s\n", hud_fsmediumname);
-
-   if(!(hud_fslarge = E_FontForName(hud_fslargename)))
-      I_Error("ST_loadFonts: bad EDF hu_font name %s\n", hud_fslarge);
-
-   st_fontsloaded = true;
-}
-
 static void ST_loadData()
 {
    ST_loadGraphics();
-   ST_loadFonts();
 }
 
 #if 0

@@ -257,7 +257,13 @@ int hud_hidestatus   = 0;
 
 // haleyjd 02/25/09: hud font set by EDF:
 char    *hud_overfontname;
+char    *hud_fssmallname;
+char    *hud_fsmediumname;
+char    *hud_fslargename;
 vfont_t *hud_overfont;
+vfont_t *hud_fssmall;
+vfont_t *hud_fsmedium;
+vfont_t *hud_fslarge;
 bool     hud_fontsloaded = false;
 
 //
@@ -270,6 +276,12 @@ void HU_LoadFonts()
 {
    if(!(hud_overfont = E_FontForName(hud_overfontname)))
       I_Error("HU_LoadFonts: bad EDF hu_font name %s\n", hud_overfontname);
+   if(!(hud_fssmall = E_FontForName(hud_fssmallname)))
+      I_Error("HU_LoadFonts: bad EDF hu_font name %s\n", hud_fssmallname);
+   if(!(hud_fsmedium = E_FontForName(hud_fsmediumname)))
+      I_Error("HU_LoadFonts: bad EDF hu_font name %s\n", hud_fsmediumname);
+   if(!(hud_fslarge = E_FontForName(hud_fslargename)))
+      I_Error("HU_LoadFonts: bad EDF hu_font name %s\n", hud_fslarge);
 
    hud_fontsloaded = true;
 }

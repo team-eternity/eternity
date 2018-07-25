@@ -293,7 +293,7 @@ void BoomHUD::DrawStatus(int x, int y)
    HU_WriteText(tempstr.constPtr(), x, y);
 }
 
-
+// The solitary instance of the BOOM HUD overlay
 BoomHUD boom_overlay;
 
 // EOF

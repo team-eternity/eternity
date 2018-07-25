@@ -27,7 +27,7 @@
 #define HU_BOOM_H__
 
 // Required for HUDOverlay
-#include "Hu_over.h"
+#include "hu_over.h"
 
 class BoomHUD : public HUDOverlay
 {
