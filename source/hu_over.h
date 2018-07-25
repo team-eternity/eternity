@@ -149,12 +149,13 @@ char HU_ArmorColor();
 
 
 // heads up font
-void HU_LoadFont();
+void HU_LoadFonts();
 int  HU_StringWidth(const char *s);
 int  HU_StringHeight(const char *s);
 
 extern char    *hud_overfontname;
 extern vfont_t *hud_overfont;
+extern bool     hud_fontsloaded;
 
 extern char    *hud_fssmallname;
 extern char    *hud_fsmediumname;

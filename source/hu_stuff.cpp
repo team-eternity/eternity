@@ -269,7 +269,7 @@ void HU_Init()
    if(!(hud_font = E_FontForName(hud_fontname)))
       I_Error("HU_Init: bad EDF font name %s\n", hud_fontname);
 
-   HU_LoadFont(); // overlay font
+   HU_LoadFonts(); // overlay font
    HU_InitNativeWidgets();
 }
 
