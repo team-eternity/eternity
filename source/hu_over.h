@@ -71,6 +71,8 @@ protected:
    virtual void DrawFrags  (int x, int y) = 0;
 
 public:
+   virtual void Setup() = 0;
+
    inline void DrawOverlay(overlay_e overlay)
    {
       if(!drawerdata[overlay].enabled)
@@ -119,7 +121,7 @@ public:
       drawerdata[overlay].enabled = enabled;
    }
 
-   bool GetOverlayEnabled(overlay_e overlay) const
+   inline bool GetOverlayEnabled(overlay_e overlay) const
    {
       return drawerdata[overlay].enabled;
    }

@@ -295,10 +295,8 @@ int HU_StringHeight(const char *s)
 //
 // HU_overlaySetup
 //
-static void HU_overlaySetup()
+static inline void HU_overlaySetup()
 {
-   int x, y;
-
    if(!hu_overlay)
    {
       hudoverlayitem_t *item = I_defaultHUDOverlay();
@@ -306,83 +304,7 @@ static void HU_overlaySetup()
       hu_overlay = item->overlay;
    }
 
-   // decide where to put all the widgets
-
-   for(unsigned int i = 0; i < NUMOVERLAY; i++)
-      hu_overlay->SetOverlayEnabled(static_cast<overlay_e>(i), true); // turn em all on
-
-   // turn off status if we aren't using it
-   if(hud_hidestatus)
-      hu_overlay->SetOverlayEnabled(ol_status, false);
-
-   // turn off frag counter or key display,
-   // according to if we're in a deathmatch game or not
-   if(GameType == gt_dm)
-      hu_overlay->SetOverlayEnabled(ol_key, false);
-   else
-      hu_overlay->SetOverlayEnabled(ol_frag, false);
-
-   // now build according to style
-
-   switch(hud_overlaylayout)
-   {
-   case HUD_OFF:       // 'off'
-   case HUD_GRAPHICAL: // 'graphical' -- haleyjd 01/11/05: this is handled by status bar
-      for(unsigned int i = 0; i < NUMOVERLAY; i++)
-         hu_overlay->SetOverlayEnabled(static_cast<overlay_e>(i), false);
-      break;
-
-   case HUD_BOOM: // 'bottom left' / 'BOOM' style
-      y = SCREENHEIGHT - 8;
-
-      for(int i = NUMOVERLAY - 1; i >= 0; --i)
-      {
-         if(hu_overlay->GetOverlayEnabled(static_cast<overlay_e>(i)))
-         {
-            hu_overlay->SetupOverlay(static_cast<overlay_e>(i), 0, y);
-            y -= 8;
-         }
-      }
-      break;
-
-   case HUD_FLAT: // all at bottom of screen
-      x = 160;
-      y = SCREENHEIGHT - 8;
-
-      // haleyjd 06/14/06: rewrote to restore a sensible ordering
-      for(int i = NUMOVERLAY - 1; i >= 0; --i)
-      {
-         if(hu_overlay->GetOverlayEnabled(static_cast<overlay_e>(i)))
-         {
-            hu_overlay->SetupOverlay(static_cast<overlay_e>(i), x, y);
-            y -= 8;
-         }
-         if(i == ol_weap)
-         {
-            x = 0;
-            y = SCREENHEIGHT - 8;
-         }
-      }
-      break;
-
-   case HUD_DISTRIB: // similar to boom 'distributed' style
-      hu_overlay->SetupOverlay(ol_health, SCREENWIDTH-138,   0);
-      hu_overlay->SetupOverlay(ol_armor,  SCREENWIDTH-138,   8);
-      hu_overlay->SetupOverlay(ol_weap,   SCREENWIDTH-138, 184);
-      hu_overlay->SetupOverlay(ol_ammo,   SCREENWIDTH-138, 192);
-
-      if(GameType == gt_dm)  // if dm, put frags in place of keys
-         hu_overlay->SetupOverlay(ol_frag, 0, 192);
-      else
-         hu_overlay->SetupOverlay(ol_key, 0, 192);
-
-      if(!hud_hidestatus)
-         hu_overlay->SetupOverlay(ol_status, 0, 184);
-      break;
-
-   default:
-      break;
-   }
+   hu_overlay->Setup();
 }
 
 //=============================================================================

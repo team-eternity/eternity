@@ -146,7 +146,7 @@ void BoomHUD::DrawHealth(int x, int y)
 
 
 //
-// Very similar to DrawHealth.
+// Very similar to DrawHealth
 //
 void BoomHUD::DrawArmor(int x, int y)
 {
@@ -255,6 +255,93 @@ void BoomHUD::DrawFrags(int x, int y)
    tempstr << HUDCOLOR << hu_player.totalfrags;
    HU_WriteText(tempstr.constPtr(), x, y);
 }
+
+//
+// This is the same as the old HU_overlaySetup.
+//
+void BoomHUD::Setup()
+{
+      int x, y;
+
+   // decide where to put all the widgets
+
+   for(unsigned int i = 0; i < NUMOVERLAY; i++)
+      SetOverlayEnabled(static_cast<overlay_e>(i), true); // turn em all on
+
+   // turn off status if we aren't using it
+   if(hud_hidestatus)
+      SetOverlayEnabled(ol_status, false);
+
+   // turn off frag counter or key display,
+   // according to if we're in a deathmatch game or not
+   if(GameType == gt_dm)
+      SetOverlayEnabled(ol_key, false);
+   else
+      SetOverlayEnabled(ol_frag, false);
+
+   // now build according to style
+
+   switch(hud_overlaylayout)
+   {
+   case HUD_OFF:       // 'off'
+   case HUD_GRAPHICAL: // 'graphical' -- haleyjd 01/11/05: this is handled by status bar
+      for(unsigned int i = 0; i < NUMOVERLAY; i++)
+         SetOverlayEnabled(static_cast<overlay_e>(i), false);
+      break;
+
+   case HUD_BOOM: // 'bottom left' / 'BOOM' style
+      y = SCREENHEIGHT - 8;
+
+      for(int i = NUMOVERLAY - 1; i >= 0; --i)
+      {
+         if(GetOverlayEnabled(static_cast<overlay_e>(i)))
+         {
+            SetupOverlay(static_cast<overlay_e>(i), 0, y);
+            y -= 8;
+         }
+      }
+      break;
+
+   case HUD_FLAT: // all at bottom of screen
+      x = 160;
+      y = SCREENHEIGHT - 8;
+
+      // haleyjd 06/14/06: rewrote to restore a sensible ordering
+      for(int i = NUMOVERLAY - 1; i >= 0; --i)
+      {
+         if(GetOverlayEnabled(static_cast<overlay_e>(i)))
+         {
+            SetupOverlay(static_cast<overlay_e>(i), x, y);
+            y -= 8;
+         }
+         if(i == ol_weap)
+         {
+            x = 0;
+            y = SCREENHEIGHT - 8;
+         }
+      }
+      break;
+
+   case HUD_DISTRIB: // similar to boom 'distributed' style
+      SetupOverlay(ol_health, SCREENWIDTH-138,   0);
+      SetupOverlay(ol_armor,  SCREENWIDTH-138,   8);
+      SetupOverlay(ol_weap,   SCREENWIDTH-138, 184);
+      SetupOverlay(ol_ammo,   SCREENWIDTH-138, 192);
+
+      if(GameType == gt_dm)  // if dm, put frags in place of keys
+         SetupOverlay(ol_frag, 0, 192);
+      else
+         SetupOverlay(ol_key, 0, 192);
+
+      if(!hud_hidestatus)
+         SetupOverlay(ol_status, 0, 184);
+      break;
+
+   default:
+      break;
+   }
+}
+
 
 // The solitary instance of the BOOM HUD overlay
 BoomHUD boom_overlay;

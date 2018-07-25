@@ -39,6 +39,7 @@ protected:
    virtual void DrawAmmo   (int x, int y);
    virtual void DrawKeys   (int x, int y);
    virtual void DrawFrags  (int x, int y);
+   virtual void Setup();
 };
 
 extern ModernHUD modern_overlay;
