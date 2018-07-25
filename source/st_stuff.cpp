@@ -253,6 +253,11 @@ patch_t *keys[NUMCARDS+3];
 // face status patches
 patch_t *default_faces[ST_NUMFACES];
 
+// New HUD patches
+patch_t *nfs_health;
+patch_t *nfs_divider;
+patch_t *nfs_armor;
+
 // face background
 static patch_t *faceback; // sf: change to use one and colormap
 
@@ -999,6 +1004,12 @@ static void ST_unloadOldGraphics(patch_t **faces)
       efree(keys[i]);
       keys[i] = nullptr;
    }
+   efree(nfs_health);
+   nfs_health = nullptr;
+   efree(nfs_armor);
+   nfs_armor = nullptr;
+   efree(nfs_divider);
+   nfs_divider = nullptr;
    efree(armsbg);
    armsbg = nullptr;
    for(int i = 0; i < 6; ++i)
@@ -1055,6 +1066,11 @@ static void ST_loadGraphics()
       sprintf(namebuf, "STKEYS%d", i);
       keys[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
+
+   // new hud patches
+   nfs_health  = PatchLoader::CacheName(wGlobalDir, "nhud_hlt", PU_STATIC);
+   nfs_armor   = PatchLoader::CacheName(wGlobalDir, "nhud_amr", PU_STATIC);
+   nfs_divider = PatchLoader::CacheName(wGlobalDir, "nhud_div", PU_STATIC);
 
    // arms background
    armsbg = PatchLoader::CacheName(wGlobalDir, "STARMS", PU_STATIC);
